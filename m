@@ -1,41 +1,72 @@
-From: Nick Piggin <piggin@cyberone.com.au>
-Subject: Re: [PATCH] as i/o hang with aacraid driver 2.6.0-test1
-Date: Thu, 17 Jul 2003 19:56:41 +1000
+From: "Mohan Kumar M." <MohanKumarM@AmiIndia.co.in>
+Subject: Re: Driver Problem
+Date: Thu, 17 Jul 2003 15:54:01 +0530
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3F1672D9.7070309@cyberone.com.au>
-References: <1058310172.981.7.camel@markh1.pdx.osdl.net> <1058359278.1856.8.camel@mulgrave> <20030716124549.GX833@suse.de> <1058360162.1850.15.camel@mulgrave> <20030716132036.GB833@suse.de> <1058364455.1856.28.camel@mulgrave> <20030716170456.GK833@suse.de> <20030717015756.135a3f5a.akpm@osdl.org> <20030717085952.GX833@suse.de>
+Message-ID: <00c701c34c4d$8e0a0540$5b00000a@RiseOfMachine>
+References: <005e01c34c40$20383bc0$5b00000a@RiseOfMachine>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain;
+	charset="x-user-defined"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from dyn-ctb-210-9-246-41.webone.com.au ([210.9.246.41]:15633 "EHLO
-	chimp.local.net") by vger.kernel.org with ESMTP id S271357AbTGQJmN
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 17 Jul 2003 05:42:13 -0400
-In-Reply-To: <20030717085952.GX833@suse.de>
+Received: from [203.129.222.186] ([203.129.222.186]:3589 "EHLO miami.chance")
+	by vger.kernel.org with ESMTP id S271372AbTGQKEu (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 17 Jul 2003 06:04:50 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: Jens Axboe <axboe@suse.de>
-Cc: Andrew Morton <akpm@osdl.org>, James.Bottomley@steeleye.com, markh@osdl.org, cliffw@osdl.org, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
+The problem I am facing in the driver is:
 
+When I give
+   dd if=/dev/zero of=/dev/sda bs=1024 count=100
+It works, if I give
+   dd if=/dev/zero of=/dev/sda bs=1024 count=1000 (Samething works in Kernel
+2.4.18-3)
+System crashes.
 
-Jens Axboe wrote:
+I am not using interrupt handler and scatter gather lists.
 
->On Thu, Jul 17 2003, Andrew Morton wrote:
+Here is my driver_template structure:
+
+#define MY_SCSI \
+{ \
+ name: DRVR_NAME, \
+ proc_info: myscsi_proc_info,\
+ bios_param:myscsi_bios_param,\
+ detect:myscsi_detect, \
+ info:myscsi_info,\
+ release:myscsi_release,\
+ command:myscsi_command,\
+ queuecommand:myscsi_queuecommand,\
+ can_queue:0, \
+ this_id:7,\
+ cmd_per_lun:1,\
+ sg_tablesize:SG_NONE, \
+ unchecked_isa_dma:0,\
+ highmem_io:1, \
+}
+
+          =-=
+Thanks n Regards,
+        Mohan.
+          =-=
+----- Original Message -----
+From: "Mohan Kumar M." <MohanKumarM@AmiIndia.co.in>
+To: <linux-scsi@vger.kernel.org>
+Sent: Thursday, July 17, 2003 2:17 PM
+Subject: Driver Problem
+
+> Hi all,
+> I have written a low level scsi driver for our scsi/raid controller.
 >
->>So this is what I ended up with.  Could we please have confirmation that it
->>fixes the aacraid hang?
->>
+> The driver is working fine in Kernel v.2.4.18-3, but its not working in
+> Kernel v.2.4.19 onwards! (System crashes!!!!!)
 >
->It doesn't, it's just a pre-requisite to fixing the bug :-)
+> I am not using interrupts, SG Lists.
 >
->Nick should chime in with how we wants it to be handled from
->blk_requeue_request(), he needs to decrease dispatched from there. We
->could always add some hook for it of course, but...
+> Is SCSI subsystem has been changed from 2.4.18 to 2.4.19??
 >
-
-Well you could just put an elv_completed_request in there, but
-I suppose it really wants an elv_requeue_request - which would
-just default to elv_add_request for other schedulers.
+> Can anyone help me to solve this problem?
 
 
