@@ -1,52 +1,39 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: scsi "target1:0:0"
-Date: Tue, 16 Nov 2004 17:10:18 +0000
-Message-ID: <20041116171018.GK26623@parcelfarce.linux.theplanet.co.uk>
-References: <1100622096.8606.104.camel@localhost.localdomain> <1100622800.2574.41.camel@mulgrave> <1100624154.8606.122.camel@localhost.localdomain>
+From: Marc Zyngier <mzyngier@freesurf.fr>
+Subject: Re: EISA 53c825 - where to start?
+Date: Tue, 16 Nov 2004 18:15:21 +0100
+Message-ID: <wrp4qjplnpy.fsf@panther.wild-wind.fr.eu.org>
+References: <Pine.SOC.4.61.0411161109430.12745@math.ut.ee>
+	<1100618553.2770.16.camel@mulgrave>
+	<Pine.SOC.4.61.0411161728190.26610@math.ut.ee>
+Reply-To: mzyngier@freesurf.fr
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:41129 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S262057AbUKPRKZ
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 16 Nov 2004 12:10:25 -0500
-Content-Disposition: inline
-In-Reply-To: <1100624154.8606.122.camel@localhost.localdomain>
+Received: from lopsy-lu.misterjones.org ([62.4.18.26]:53636 "EHLO
+	young-lust.wild-wind.fr.eu.org") by vger.kernel.org with ESMTP
+	id S262060AbUKPRPb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 16 Nov 2004 12:15:31 -0500
+In-Reply-To: <Pine.SOC.4.61.0411161728190.26610@math.ut.ee> (Meelis Roos's
+ message of "Tue, 16 Nov 2004 18:33:55 +0200 (EET)")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Kay Sievers <kay.sievers@vrfy.org>
-Cc: James Bottomley <jejb@steeleye.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Meelis Roos <mroos@linux.ee>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, Linux SCSI list <linux-scsi@vger.kernel.org>
 
-On Tue, Nov 16, 2004 at 05:55:53PM +0100, Kay Sievers wrote:
-> We sit there with the hald daemon and listen to sysfs add/remove events.
-> We need an event for every /sys/devices/ devices to get a unbroken chain
-> of devices we can sort together until we reach a root device. This is
-> how _all_ devices in sysfs are working and scsi was before the change.
+>>>>> "Meelis" == Meelis Roos <mroos@linux.ee> writes:
 
-On *your* machine, maybe.  On a parisc machine, you get a PCI root device
-with no bus type in the middle of a tree, like this:
+>> Are you sure it's an 825?  The reason I ask is because the 825 chip is
+>> both a SCSI chip and a PCI chip with on-board BIOS.  The only real way I
+>> could see it working as EISA is if it were glued to a EISA<->PCI
+>> converter, which I didn't think existed.
 
-/sys/devices/parisc/10/10:4/pci0000:02/0000:02:01.0/0000:03:07.0
+Meelis> Well, the chip has
+Meelis> NCR
+Meelis> 53C825
 
-here, parisc and pci0000:02 have no bus type.  10 and 10:4 are of type
-"parisc" and 0000:02:01.0 and 0000:03:07.0 are "pci".
+There is probably a converter chip somewhere near the 825 (look for a
+PLX chip with EISA written on it...)
 
-> device chain '/sys/devices/pci0000:00/0000:00:1d.1':
->     BUS="pci"
->     ID="0000:00:1d.1"
-> 
-> device chain '/sys/devices/pci0000:00':
->     BUS=""
->     ID="pci0000:00"
->     SYSFS{detach_state}="0"
-
-There you go, it's just another example of this one.  It's just faulty
-assumptions in hald by the looks of things.
-
+	M.
 -- 
-"Next the statesmen will invent cheap lies, putting the blame upon 
-the nation that is attacked, and every man will be glad of those
-conscience-soothing falsities, and will diligently study them, and refuse
-to examine any refutations of them; and thus he will by and by convince 
-himself that the war is just, and will thank God for the better sleep 
-he enjoys after this process of grotesque self-deception." -- Mark Twain
+And if you don't know where you're going, any road will take you there...
