@@ -1,66 +1,64 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: smartmontools
-Date: Tue, 11 Mar 2003 22:45:46 +1000
+From: "MARAMARA Erotik Market" <aysen@yahoo.com>
+Subject: BU FIRSATTAN RARARLANIN.
+Date: Tue, 11 Mar 2003 15:46:00 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3E6DDA7A.4010304@torque.net>
-Reply-To: dougg@torque.net
+Message-ID: <20030311133431Z262921-25575+28770__26295.6624421806$1047390295@vger.kernel.org>
+Reply-To: aysen@yahoo.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: ballen@gravity.phys.uwm.edu
+To: linux-fsdevel@vger.kernel.org
 
-Self-Monitoring, Analysis and Reporting Technology System
-(S.M.A.R.T.) is built into most modern ATA and SCSI hard
-disks (or at least that is what the manufacturers claim).
+DIKKAT
 
-smartmontools grew out of the smartsuite project which
-does not seem to be maintained anymore. The home page
-for smartmontools is:
-   http://smartmontools.sourceforge.net/
+VIDEO CD :
+Iddia ediyoruz.. Hic bir yerden temin edemeyeceginiz ses ve g=F6runtu k=
+alitesi ile=20
+yuzlerce porno video CD. arSivimiz yenilenmistir. istemis oldugunuz vid=
+eo CD.ler=20
+bire bir yollanir kesinlikle isteginiz harici alakasiz baSka video CD.l=
+er yollanmaz.
 
-The chief maintainer of smartmontools has a farm of ATA
-disks and is requesting help with SCSI disks (there is
-also some SCSI tape test code in there). Even though
-the support for SCSI devices lags that of ATA devices,
-smartmontools is still useful.
+Anal. Oral. Vajinal. Grup. Zenci. FethiS. Ayak fethiS. Gay. Zenci gay. =
+Trans. Transexual.
+Lezbiyen ve daha bircok ceSit ....  <http://www.erotik.sites.cc/>
 
-For example, the "-a" option lists all available "SMART"
-data (most derived from LOG SENSE responses in SCSI):
+ZENGIN URUN CESITLERIMIZ :
 
-# smartctl -a /dev/sda
-smartctl version 5.1-9 Copyright (C) 2002-3 Bruce Allen
-Home page is http://smartmontools.sourceforge.net/
+Sisme Bebekler ..... (Erkek & Bayan) Kesinlikle size hayir demeyecek.
+Vibrat=F6rler ........ Istediginiz boy ve ebatlarda (Vajinal/Anal/catal=
+=2EPilli.Motorlu.TitreSimli)
+Suni Vajinalar ..... Asla gerceginden ayirt edemeyeceksiniz (Gercek ten=
+ hassasiyetinde)
+Reailistik Penisler. Gercek ten hassasiyetinde ve dokusunda (Vantuzlu/D=
+eri kemer kilotlu)
+Vakum Pompalari .... Ereksiyonu kolaylastirici ve duzenli kullanimlarda=
+ peniste irilesme saglar.
+Geciktiriciler ..... Erken boSalmayi dert etmeyin (Sprey ceSitleri/Krem=
+ler)
+Kremler ............ Anal ve Vajinal iliSkilerde kullanabileceginiz kay=
+ganlaStirici krem ceSitleri
+Uyandiricilar ...... Cinsel istek uyandirici haplar ve damlalar.
 
-Device: FUJITSU  MAM3184MP        Version: 0105
-Local Time is: Tue Mar 11 22:27:38 2003 EST
-Device supports S.M.A.R.T. and is Enabled
-Temperature Warning Disabled or Not Supported
-S.M.A.R.T. Sense: Ok!
-Current Drive Temperature:     43 C
-Drive Trip Temperature:        65 C
-Current start stop count:      328 times
-Recommended start stop count:  10000 times
-
-SMART Self-test log
-Num  Test              Status                 segment  LifeTime
-      Description                              number   (hours)
-# 1  Background long   Self test in progress ...   -   NOW
-# 2  Background short  Completed                   -   830
-# 3  Background short  Completed                   -   703
-......
-
-
-A self test can be started manually with:
-# smartctl -t long /dev/sda
-
-
-Hope this tool is of some help. The smartmontools
-maintainer (Bruce Allen) will welcome feedback.
-
-Doug Gilbert
+Yapmaniz gereken tek Sey <http://www.erotik.sites.cc/>   TIKLAMAK ..
 
 
 
+NOT : BU MAIL REKLAM AMAcLI OLUP HIcBIR SEKILDE TARAFIMIZDA KAYDINIZ BU=
+LUNMAMAKTADIR.
+      ILGI ALANINIZIN DISINDA ISE EGER LUTFEN DIKKATE ALMAYINIZ TESEKKU=
+RLER..=20
+
+
+
+
+
+
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
