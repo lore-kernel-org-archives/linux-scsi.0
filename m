@@ -1,42 +1,33 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: Linux version 2.6.6 // libata 1.02 // sata_promise version 0.92
- // problem with Promise FastTrack S150 SX4
-Date: Wed, 19 May 2004 18:32:58 -0400
+From: Patrick Mansfield <patmans@us.ibm.com>
+Subject: Re: PATCH: (as284) Add BLIST_INQUIRY_36 to existing blacklist USB entries
+Date: Wed, 19 May 2004 15:36:42 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <40ABE09A.10802@pobox.com>
-References: <!~!UENERkVCMDkAAQACAAAAAAAAAAAAAAAAABgAAAAAAAAA6/QqhRnc20Gp8M2IBiikcMKAAAAQAAAAoC6hppJpiEatjNFHGy82SgEAAAAA@nawan.hostinguk.com> <40A8FF29.7090701@pobox.com> <20040519185302.GE5547@tpkurt.garloff.de>
+Message-ID: <20040519153642.A23286@beaverton.ibm.com>
+References: <20040518123306.A12344@beaverton.ibm.com> <Pine.LNX.4.44L0.0405181709180.933-100000@ida.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:62165 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S264660AbUESWdL
+Received: from e34.co.us.ibm.com ([32.97.110.132]:60146 "EHLO
+	e34.co.us.ibm.com") by vger.kernel.org with ESMTP id S264670AbUESWgw
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 19 May 2004 18:33:11 -0400
-In-Reply-To: <20040519185302.GE5547@tpkurt.garloff.de>
+	Wed, 19 May 2004 18:36:52 -0400
+Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.44L0.0405181709180.933-100000@ida.rowland.org>; from stern@rowland.harvard.edu on Tue, May 18, 2004 at 05:12:07PM -0400
 List-Id: linux-scsi@vger.kernel.org
-To: Kurt Garloff <garloff@suse.de>
-Cc: Linux SCSI list <linux-scsi@vger.kernel.org>
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: James Bottomley <James.Bottomley@steeleye.com>, SCSI development list <linux-scsi@vger.kernel.org>
 
-Kurt Garloff wrote:
-> On Mon, May 17, 2004 at 02:06:33PM -0400, Jeff Garzik wrote:
+On Tue, May 18, 2004 at 05:12:07PM -0400, Alan Stern wrote:
+> This is a report of an earlier message that may not have gotten through...
 > 
->>This is normal.
->>
->>Promise proprietary RAID is not supported under Linux, by the kernel 
->>drivers.
-> 
-> 
-> They should publish the metadata format of their fakeRAID stuff.
-> Somebody could parse this and setup linux SW raid accordingly
-> from userspace.
+> > While I'm at it, this patch is needed to prevent existing blacklist 
+> > entries from overriding the BLIST_INQUIRY_36 flag for various USB devices.
+> > 
+> > Alan Stern
 
+Alan -
 
-Promise did, and somebody did.  :)  But not in the kernel.
+How is it being overridden? I don't see usb storage setting
+BLIST_INQUIRY_36.
 
-See Carl-Denial Hailfinger's "raiddetect" work...
-
-	Jeff
-
-
-
+-- Patrick Mansfield
