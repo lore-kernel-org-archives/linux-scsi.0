@@ -1,77 +1,137 @@
 From: Patrick Mansfield <patmans@us.ibm.com>
-Subject: Re: [PATCH] 3/7 consolidate single_lun code
-Date: Thu, 27 Mar 2003 14:43:26 -0800
+Subject: Re: [PATCH] 6/7 add and use a per-scsi_device queue_lock
+Date: Thu, 27 Mar 2003 16:30:47 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030327144326.A14457@beaverton.ibm.com>
-References: <20030324175337.A14957@beaverton.ibm.com> <20030324175422.A14996@beaverton.ibm.com> <20030324180227.A15047@beaverton.ibm.com> <20030324180247.B15047@beaverton.ibm.com> <3E80BDC3.7000503@splentec.com> <20030326111146.A3548@beaverton.ibm.com> <3E822415.2080306@splentec.com>
+Message-ID: <20030327163047.A14782@beaverton.ibm.com>
+References: <20030324175337.A14957@beaverton.ibm.com> <20030324175422.A14996@beaverton.ibm.com> <20030324180227.A15047@beaverton.ibm.com> <20030324180247.B15047@beaverton.ibm.com> <20030324180304.C15047@beaverton.ibm.com> <20030324180325.D15047@beaverton.ibm.com> <20030324180341.E15047@beaverton.ibm.com> <1048627234.2883.156.camel@mulgrave> <20030325180133.A1874@beaverton.ibm.com> <1048781376.1789.49.camel@mulgrave>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <3E822415.2080306@splentec.com>; from luben@splentec.com on Wed, Mar 26, 2003 at 05:05:09PM -0500
+In-Reply-To: <1048781376.1789.49.camel@mulgrave>; from James.Bottomley@SteelEye.com on Thu, Mar 27, 2003 at 10:09:34AM -0600
 List-Id: linux-scsi@vger.kernel.org
-To: Luben Tuikov <luben@splentec.com>
-Cc: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Wed, Mar 26, 2003 at 05:05:09PM -0500, Luben Tuikov wrote:
-> Patrick Mansfield wrote:
+On Thu, Mar 27, 2003 at 10:09:34AM -0600, James Bottomley wrote:
+> On Tue, 2003-03-25 at 20:01, Patrick Mansfield wrote: 
+
+> > The above doesn't happen because of the while() check: if anyone gets put
+> > on or re-added to the starved list, we drop out of the while loop. The
+> > current code also allows mutiple IO completions to run starved queues in
+> > parallel (I doubt it helps any, but I have no evidence one way or the
+> > other).
+> 
+> Well, not necessarily.  Dropping out of the while loop assumes that
+> host_busy goes below can_queue.  However, if something else is sourcing
+
+(Assume you meant hits can_queue.)
+
+> requests, it may get in between dropping the host_lock and acquiring the
+> queue_lock.  In this case, running the block queues would simply re-add
+> the request and keep host_busy at can_queue, thus we could get into a
+> loop. 
+
+I don't see how new requests can cause a loop there, since a new request
+will increment host_busy.
+
+Or do you mean new IO can prevent other IO? It's possible for a new IO
+(iff 1 request is sent) sneaking in and preventing a starved queue from
+running (even with a list_splice algorithm).
+
+Or do you mean the following case?
+
+An IO completion with highly unlikely synchronization could lead to
+a loop, for example:
+
+       cpu1                                   cpu2
+
+t1:
+
+       in scsi_queue_next_request
+       pulled sdev off starved
+       list, called __blk_run_queue,
+       one IO was sent, sdev was put
+       back on starved_list
+
+t2:
+                                             got host_lock, decremented
+					     host_busy
+
+t3:
+       waits for host_lock just
+       at the end of the while loop
+
+                                             releases host_lock
+
+       go to t1
+
+					     calls scsi_queue_next_request
+					     and generally does nothing
+					     since cpu1 ran the queue(s)
+
+					     go to t2
+
+It is probably impossible to keep the above syncronization, I don't know
+if the irqs will route to another cpu in such a synchronized fashion (use
+cpu1, but then use cpu2 for other interrupts from the same adapter).
+
+Using list_splice (or somehow limiting it to one iteration accross all
+sdev's) would prevent the above from occuring.
+
+> > > I'd also like to see avoidance of the locking hierarchy where possible. 
+> > > i.e. in the scsi_request_fn for instance, can we move the actions that
+> > > need the host_lock outside the queue_lock?
 > > 
-> > But the last single_lun LU that ran should have priority over any other
-> > LU's on that same target (well it should really get some slice of IO time,
-> > rather than allowing IO til it is no longer busy), and separately, the
-> > first starved device should have priority over all other starved devices,
-> > I can't do that (simply) with one list. 
-> > 
-> > single_lun devices are likely slow (CDROM), and we really don't want to
-> > give them priority over other starved devices.
-
-> So, using the starved_list as a priority queue will not work?
-
-> Given: consumer of starved_list takes from its front.
+> > I tried coding to avoid the lock hierarchy but did not quite make it.
 > 
-> ``the last single_lun LU that run'' has priority over all others,
-> *IF* added at the front. (LIFO) (since any latter one of the same
-> sort (single lun) will be added at the front)
-
-Yes if using the list_splice code, and if it is added even for cases when
-it is able to send IO. This would differ from the current code - given 3
-single_lun devices on a target, one can be prevented from sending IO (in
-addition to all cases where one single_lun device can prevent IO to
-other single_lun devices).
-
-> The *first* starved device DOES HAVE priority over all others,
-> *IF* added at the tail. (FIFO)  (since all others of the same
-> sort (non-single lun) all *also* be added at the tail)
-
-Then it has priority over other starved devices, but not over single_lun
-devices put on the head. So a single_lun device put on the head of the
-starved_list could potentially prevent other non-single_lun devices on the
-same scsi_host from sending IO.
-
-We could add another list_head for the single_lun, but I don't think it
-is worth the extra code, data, and effort.
-
-> > Also the same lock has to be used to protect the scsi_host->starved_list
-> > and scsi_device->starved_entry. In the above code the first
-> > list_splice_init above touches the shost->starved_devs->next->prev,
-> > corresponding to a scsi_device->starved_entry->prev, while holding
-> > starved_devs_lock but the following list_del_init is done holding the
-> > queue_lock.
+> OK.
 > 
-> We're working with the local list now!
-> 
-> So that starved_entry is in the local starved list now,
-> and shost->starved_list is EMPTY!
-> 
-> On the ``following list_del_init'' dev->starved_entry is in
-> the local ``starved'' list!
+> What about making the host processing in the scsi_request_fn exceptional
+> (i.e. putting it outside the queue lock after the request has been
+> dequeued).  That way we'd have to do a queue push back if it was
+> unacceptable (and get the counter decrements correct)?
 
-dev->starved_entry is still visible and used in scsi_request_fn, removing
-it from the starved list does not prevent scsi_request_fn from being
-called and referencing it (if we have two locks and no lock hierarchy in
-scsi_request_fn).
+I missed the dequeueing step.
 
-I'm not against using the list_splice, it does not clean up the
-locking, but it probably fixes James issue (possible loop).
+> Hmm, moving them should be OK.  The !req case probably wants to be
+> treated the same as starvation (except you have to beware the
+> device_busy == 0 && host_busy == 0 case where the queue needs plugging).
+> 
+
+OK, I'll try to move those up, and do host locking/checking after the
+blkdev_dequeue_request, and then push req back on the queue if the host
+can't queue.
+
+> > There is a still an issue with the single_lun checks, where we allow
+> > continued IO to a device that has device_busy set, but not for a device
+> > that has device_busy == 0 and target_busy != 0; so we have to get the
+> > lock for device_busy, and the lock for target busy. I could keep the lock
+> > hierarchy only in single_lun cases, or add another target lock that would
+> > be part of a lock hierarchy.
+> 
+> That's probably OK, since these checks are now exceptional (we only get
+> into the logic if the flag is set).
+
+OK - so I will keep the lock hierarchy for single_lun.
+
+> > Should I add a target lock? 
+> 
+> Not unless you can provide an *extremely* good justification for it.
+
+Good, no target lock.
+
+> > Related note: the new workq code in blk probably messes up our device_blocked
+> > and host_blocked handling, since there is now a 3 millisecond timeout (see
+> > blk_plug_queue). device_blocked and host_blocked should really be use some
+> > type of timeout mechanism. Maybe a new blk_plug_timeout(). This might also
+> > allow us to get rid of the one remaining recursive call into
+> > scsi_request_fn.
+> 
+> Since we never gave any guarantees other than "eventually" about the
+> restart time, I don't necessarily think it does.
+
+It won't fail but we will quickly retry IO for a host busy or queue full
+(when host_busy or device_busy == 0).
 
 -- Patrick Mansfield
