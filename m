@@ -1,42 +1,92 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH scsi-misc-2.6 10/13] scsi: rewrite scsi_request_fn()
-Date: Fri, 1 Apr 2005 14:44:34 +0900
-Message-ID: <20050401054434.GJ11318@htj.dyndns.org>
-References: <20050331090647.FEDC3964@htj.dyndns.org> <20050331090647.ED6FDDE0@htj.dyndns.org> <20050331111416.GA14857@infradead.org>
+From: Grant Grundler <grundler@parisc-linux.org>
+Subject: Re: Symbios PCI error recovery [Was: Re: [PATCH/RFC] ppc64: EEH +
+	SCSI recovery (IPR only)]
+Date: Thu, 31 Mar 2005 23:08:34 -0700
+Message-ID: <20050401060834.GB29734@colo.lackof.org>
+References: <20050223002409.GA10909@austin.ibm.com>
+	<20050223174356.GH13081@kroah.com>
+	<1109207532.5384.32.camel@gaston>
+	<20050224013137.GF2088@austin.ibm.com>
+	<20050226063609.GC7036@colo.lackof.org>
+	<20050321231028.GV498@austin.ibm.com>
+	<20050322175728.GE12675@colo.lackof.org>
+	<20050331200622.GG15596@austin.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from wproxy.gmail.com ([64.233.184.199]:10253 "EHLO wproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S262641AbVDAFok (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 1 Apr 2005 00:44:40 -0500
-Received: by wproxy.gmail.com with SMTP id 68so800850wra
-        for <linux-scsi@vger.kernel.org>; Thu, 31 Mar 2005 21:44:39 -0800 (PST)
+Return-path: <linuxppc64-dev-bounces@ozlabs.org>
 Content-Disposition: inline
-In-Reply-To: <20050331111416.GA14857@infradead.org>
-Sender: linux-scsi-owner@vger.kernel.org
+In-Reply-To: <20050331200622.GG15596@austin.ibm.com>
+List-Unsubscribe: <https://ozlabs.org/cgi-bin/mailman/listinfo/linuxppc64-dev>,
+	<mailto:linuxppc64-dev-request@ozlabs.org?subject=unsubscribe>
+List-Archive: <http://ozlabs.org/pipermail/linuxppc64-dev>
+List-Post: <mailto:linuxppc64-dev@ozlabs.org>
+List-Help: <mailto:linuxppc64-dev-request@ozlabs.org?subject=help>
+List-Subscribe: <https://ozlabs.org/cgi-bin/mailman/listinfo/linuxppc64-dev>,
+	<mailto:linuxppc64-dev-request@ozlabs.org?subject=subscribe>
+Sender: linuxppc64-dev-bounces@ozlabs.org
+Errors-To: linuxppc64-dev-bounces@ozlabs.org
+To: Linas Vepstas <linas@austin.ibm.com>
+Cc: linuxppc64-dev@ozlabs.org, linux-scsi@vger.kernel.org, matthew@wil.cx
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>, James.Bottomley@steeleye.com, axboe@suse.de, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
- Hello, Christoph.
+On Thu, Mar 31, 2005 at 02:06:22PM -0600, Linas Vepstas wrote:
+> > Does this process cause a SCSI bus reset?
+> 
+> Don't get a chance to get that far.  Have to bring up the PCI interfaces
+> first, before any scsi command can be issued.
 
-On Thu, Mar 31, 2005 at 12:14:16PM +0100, Christoph Hellwig wrote:
-> the changes look good to me (although I haven't tested any of your patches
-> yet), but the code flow is rather confusing.  What do you think about
-> the not even compile version of scsi_request_fn() below that should be
-> functionally identical to yours:
+My point is you want the scsi bus to get reset so devices
+drop all pending IO and stop trying to tell you how much work
+they've done. I thought this was possible by banging on registers
+in the 53c8xx chips.
 
- Yes, it's rather confusing.  I was a bit concerned about forward
-gotos which are not error handling/exit and possible needs for
-unlikely()'s by putting error handling on hotter path, IOW, untaken
-forward branch.  For the records, I think the likely/unlikely thingies
-are ugly & over-optimization in many cases.
+> > BTW, when did sym2 get a chance to cleanup "pending" requests?
+> 
+> Yes, the sym2 driver has mechanisms for that.
 
- However, your code is aesthetically much better.  If there are no
-opjections regarding the forward non-error-exit jumps, I'll reorganize
-the code mostly as you suggested in the next take of this patchset.
+Uhm, *when*?
+It wasn't clear from your previous description.
+I would take care of this *before* trying to get the card
+back on it's feet.
 
- Thanks a lot. :-)
+> > You want everything moved back to the "queued" state or failed
+> > (flush pending IO so upper layers can retry if they want).
+> 
+> Upper layer is the linux block device; my understanding is that it does
+> not retry, nor do the filesystems above that.  Passing errors upwards
+> seems to be pretty darned fatal.  My goal is to limit retries to the
+> driver.
 
--- 
-tejun
+That's a bad idea. Been there done that.
 
+Upper layers can be alot smarter about retries than the driver ever
+could be. While the driver knows more about the transport and why
+someting might fail, upper layers will know alternate pathes 
+to the same devices or to the same data on different devices.
+Upper layers also set the recovery policy for particular storage.
+
+Trying to do recovery transperently in the drivers is going to also
+mess up other high level SW like Service Guard or LifeKeeper.
+They want to know when a path has failed, log it, and make sure
+someone gets sent to service the HW if threshholds are exceeded.
+
+Let higher layers like dm, VxFS, LVM worry about recovery.
+
+> > > Sometimes, I get the PCI error while the card is sitting there idly
+> > > after the #RST, but more often, I get the error in sym_chip_reset(),
+> > > immediately after the   OUTB (nc_istat, SRST);
+> > 
+> > Oh? Is this the driver trying to issue SCSI Reset?
+> 
+> No I am trying to reinitialize the scsi card after the pci bus has been
+> reset.  This has nothing to do with scsi bus resets, as far as I know
+> ... 
+
+Ok. Sounds like the card hasn't yet recovered from the PCI Bus reset.
+I don't know enough about programming 53c8xx chips to tell you where
+in the process it's dying or why. If you collect traces of which
+registers get read/written before it dies again, that would
+a necessary step in for whoever tries to sort this out.
+
+hth,
+grant
