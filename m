@@ -1,49 +1,73 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: [RFC] SCSI Enclosure Services (SES) simulator
-Date: Tue, 15 Feb 2005 22:34:11 +1000
-Message-ID: <4211EC43.3030704@torque.net>
-Reply-To: dougg@torque.net
+From: Matt Domsch <Matt_Domsch@dell.com>
+Subject: Re: LUN discovery by SCSI midlayer?
+Date: Tue, 15 Feb 2005 08:06:42 -0600
+Message-ID: <20050215140642.GA2431@lists.us.dell.com>
+References: <7526e30505021420354e6a1707@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Received: from borg.st.net.au ([65.23.158.22]:52621 "EHLO borg.st.net.au")
-	by vger.kernel.org with ESMTP id S261682AbVBOMdf (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 15 Feb 2005 07:33:35 -0500
+Content-Type: text/plain; charset=us-ascii
+Received: from lists.us.dell.com ([143.166.224.162]:35260 "EHLO
+	lists.us.dell.com") by vger.kernel.org with ESMTP id S261732AbVBOOGs
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 15 Feb 2005 09:06:48 -0500
+Content-Disposition: inline
+In-Reply-To: <7526e30505021420354e6a1707@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: sakimathew@yahoo.com
+To: Joe Scsi <joe.scsi@gmail.com>
+Cc: linux-scsi@vger.kernel.org
 
-SCSI Enclosure Services (SES) permit "the management and
-sense the state of power supplies, cooling devices, displays,
-indicators, individual drives, and other non-SCSI elements
-installed in an enclosure". The scsi_ses adapter driver
-simulates a SES device. The default action is to appear as a
-disk (actually an 8 MB ramdisk) with associated Enclosure
-Services. This is similar to a fibre channel disk with a
-SCA-2 connector which includes an Enclosure Services
-Interface (ESI). Alternatively the scsi_ses driver can
-simulate a simple SES device.
-
-This SES simulator is closely related to the scsi_debug
-driver. Unlike scsi_debug which can simulate many disks
-(or other scsi device types), scsi_ses simulates a
-single disk with an attached SES device. Alternatively it
-can simulate a freestanding SES device when the "ses_only=1"
-parameter is given.
-
-Further information, usage examples and patches against
-lk 2.6.11-rc4 can be found at
-http://sg.torque.net/sg/scsi_ses.html
-
-RFC: Does this driver warrant inclusion in the lk 2.6 series?
-
-
-The current scsi_ses patches do not take into account Mike
-Christie's "scsi bus for virtual drivers" changes. These
-can be easily applied and will bring the same advantages
-as they do to the existing scsi_debug and iSCSI drivers.
+On Mon, Feb 14, 2005 at 08:35:25PM -0800, Joe Scsi wrote:
+> Hi,
+> 
+> I'm working on a driver for a SCSI protocol that is transported over a network.
+> My basic plan is that when the driver is loaded, it will create a SCSI
+> host structure
+> for its initiator port.  Then target ports will be discovered
+> asynchronously (and
+> may appear/disappear as target devices come and go on the network).
+> 
+> I'm wondering what the best way to handle LUN discovery is.  Unfortunately it
+> seems that scsi_add_device() can only add a single LUN at a time.  However,
+> for my protocol, I see target ports and then need to find the LUNs.  So far I've
+> come up with a couple of ideas but I'm not totally happy with either:
+> 
+>   (ugly) Do all the REPORT_LUNs stuff in my driver every time I find a new
+>   target port, or
+> 
+>   (ab)use the "channel" index and call scsi_scan_single_target() every time
+>   I connect to a new target port.  This seems OK but I'm a little put off by the
+>   fact that a quick grep shows no callers of scsi_scan_single_target in the
+>   current kernel tree.
+> 
+> So what is the correct way to handle this?  I'm sure the FC and iSCSI people
+> must have dealt with a similar issue.
 
 
-Doug Gilbert + Zacharia Mathew
+Can you take a look at the patches I posted last week and see if that
+would work for you?
+
+http://marc.theaimsgroup.com/?l=linux-scsi&m=110780092314985&w=2
+
+  See then the megaraid_mbox.c driver patch in the thread for how it
+converts logical drive numbers into HCTL values and invokes the
+hotplug subsystem.  In your case, you'd use whatever your addressing
+mechanism is, and convert it into HCTL before invoking the hotplug calls.
+
+Then you've got 2 options:
+1) if you have a userspace app that knows when LUNs appear and
+   disappear, then you write to /sys/class/scsi_host/hostN/lun_found
+   (akin to logical_drive_created).
+
+2) if your driver is what sees LUN arrivals/removals on the topology,
+   then the driver just invokes the hotplug calls directly rather than
+   expecting the event to originate via a sysfs file.
+
+
+Thanks,
+Matt
+
+-- 
+Matt Domsch
+Software Architect
+Dell Linux Solutions linux.dell.com & www.dell.com/linux
+Linux on Dell mailing lists @ http://lists.us.dell.com
