@@ -1,23 +1,45 @@
-From: Ryan Anderson <ryan@autoweb.net>
-Subject: aacraid on Dell PE 2650
-Date: Tue, 19 Oct 2004 09:30:00 -0400
+From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
+Subject: RE: aacraid on Dell PE 2650
+Date: Tue, 19 Oct 2004 09:48:05 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1098192600.22753.554.camel@ryan2.internal.autoweb.net>
+Message-ID: <60807403EABEB443939A5A7AA8A7458B40B1BF@otce2k01.adaptec.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-opTfT+F/Ty+VD3HHUDYf"
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.autoweb.net ([198.172.237.26]:16646 "EHLO mail.autoweb.net")
-	by vger.kernel.org with ESMTP id S269398AbUJSNaD (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 19 Oct 2004 09:30:03 -0400
+Received: from magic.adaptec.com ([216.52.22.17]:44730 "EHLO magic.adaptec.com")
+	by vger.kernel.org with ESMTP id S269403AbUJSNsI convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 19 Oct 2004 09:48:08 -0400
+content-class: urn:content-classes:message
 List-Id: linux-scsi@vger.kernel.org
+To: Ryan Anderson <ryan@autoweb.net>, linux-scsi@vger.kernel.org
+Cc: markh@osdl.org
+
+Have you contacted Dell technical support?
+
+The controller on the 2650 can suffer from problems resulting from a bad
+power supply, pci transaction problems on the motherboard, scsi device
+misbehavior locking the scsi bus, and (ghasp!) F/W bugs. Those issues
+need to be investigated by the technical support cookbook.
+
+As for the F/W, there are issues exasperate with increased horsepower on
+the mainboard CPU, Hyperthreading, errant bus activity triggering an
+adapter cache flush, etc. The problem with the adapter getting
+constipated under these load conditions by a cache flush can be resolved
+by turning the controller cache off. But this may be unnecessary if the
+issue is rooted in the above hardware issues outlined above.
+
+Sincerely -- Mark Salyzyn
+
+-----Original Message-----
+From: linux-scsi-owner@vger.kernel.org
+[mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of Ryan Anderson
+Sent: Tuesday, October 19, 2004 9:30 AM
 To: linux-scsi@vger.kernel.org
-Cc: markh@osdl.org, aacraid@adaptec.com
-
-
---=-opTfT+F/Ty+VD3HHUDYf
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Cc: markh@osdl.org; AACRAID
+Subject: aacraid on Dell PE 2650
 
 I'm having some problems that I hope you can help with, or at least,
 suggest a workaround that may make the problem go away.
@@ -45,22 +67,8 @@ machine is under a decent amount of load.
 Any assistance you can provide would be greatly appreciated.
 
 
---=20
+-- 
 
-Ryan Anderson               =20
-AutoWeb Communications, Inc.=20
-email: ryan@autoweb.net=20
-
---=-opTfT+F/Ty+VD3HHUDYf
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.2.4 (GNU/Linux)
-
-iD8DBQBBdRbYvV/uNaz8d+gRAiM5AJ9dO2jL9s5hdRABro9yy81aUALjKwCfX9MW
-GgDf5pPvGWS1rVGV57u9ge4=
-=p9tb
------END PGP SIGNATURE-----
-
---=-opTfT+F/Ty+VD3HHUDYf--
+Ryan Anderson                
+AutoWeb Communications, Inc. 
+email: ryan@autoweb.net 
