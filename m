@@ -1,50 +1,83 @@
-From: Omkhar Arasaratnam <iamroot@ca.ibm.com>
-Subject: [ERROR] 2.6.1 drivers/scsi/aic7xxx/aicasm fails with allmodconfig
-Date: Tue, 20 Jan 2004 13:10:48 -0500
+From: Brian King <brking@us.ibm.com>
+Subject: Re: [RFC] IBM Power RAID driver (ipr)
+Date: Tue, 20 Jan 2004 13:13:38 -0600
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1074622248.6831.86.camel@localhost>
+Message-ID: <400D7DE2.2080402@us.ibm.com>
+References: <40085EDA.4010802@us.ibm.com> <20040119183400.A4182@infradead.org> <400C3E70.9040702@us.ibm.com> <20040120133858.A15671@infradead.org> <400D5A28.1000301@us.ibm.com> <20040120180151.A18616@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e4.ny.us.ibm.com ([32.97.182.104]:25252 "EHLO e4.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S265641AbUATSLD (ORCPT
+Received: from e6.ny.us.ibm.com ([32.97.182.106]:26074 "EHLO e6.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S265734AbUATTOF (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 20 Jan 2004 13:11:03 -0500
-Received: from northrelay02.pok.ibm.com (northrelay02.pok.ibm.com [9.56.224.150])
-	by e4.ny.us.ibm.com (8.12.10/8.12.2) with ESMTP id i0KIB2vM759506
-	for <linux-scsi@vger.kernel.org>; Tue, 20 Jan 2004 13:11:02 -0500
-Received: from www.bldcgw01.boulder.ibm.com (d01av02.pok.ibm.com [9.56.224.216])
-	by northrelay02.pok.ibm.com (8.12.10/NCO/VER6.6) with ESMTP id i0KIB0oY200250
-	for <linux-scsi@vger.kernel.org>; Tue, 20 Jan 2004 13:11:01 -0500
+	Tue, 20 Jan 2004 14:14:05 -0500
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-scsi@vger.kernel.org
 
-Seems this module fails - anyone else seeing this? 
+Christoph Hellwig wrote
+>>Ok, but I will still need that interface to send commands directed to=
+=20
+>>the adapter.
+>=20
+>=20
+> commands as in scsi commands or as in internal commands?
 
-omkhar linux-clean # make allmodconfig; make
-<...snip...>
-  LD [M]  drivers/scsi/aacraid/aacraid.o
-  LD      drivers/scsi/aic7xxx/built-in.o
-make -C drivers/scsi/aic7xxx/aicasm
-yacc -d -b aicasm_gram aicasm_gram.y
-mv aicasm_gram.tab.c aicasm_gram.c
-mv aicasm_gram.tab.h aicasm_gram.h
-yacc -d -b aicasm_macro_gram -p mm aicasm_macro_gram.y
-mv aicasm_macro_gram.tab.c aicasm_macro_gram.c
-mv aicasm_macro_gram.tab.h aicasm_macro_gram.h
-lex  -oaicasm_scan.c aicasm_scan.l
-lex  -Pmm -oaicasm_macro_scan.c aicasm_macro_scan.l
-gcc -I/usr/include -I. aicasm.c aicasm_symbol.c aicasm_gram.c aicasm_macro_gram.c aicasm_scan.c aicasm_macro_scan.c -o aicasm -ldb
-/tmp/cc3HQvfD.o(.text+0x1d0): In function `symtable_open':
-: undefined reference to `__db185_open'
-collect2: ld returned 1 exit status
-make[4]: *** [aicasm] Error 1
-make[3]: *** [drivers/scsi/aic7xxx/aicasm/aicasm] Error 2
-make[2]: *** [drivers/scsi/aic7xxx] Error 2
-make[1]: *** [drivers/scsi] Error 2
-make: *** [drivers] Error 2
+Internal commands. As you look through the driver, they will look very=20
+similar, as the interface to the adapter maps to scsi pretty close. I=20
+could use the mid-layer for these commands, but I would need some way t=
+o=20
+send them when the adapter is self blocked and would probably need to=20
+call scsi_add_host before the adapter is functional so I could send the=
+=20
+adapter initialization sequence.
 
--- 
-Omkhar
 
+>>>>Build a command in DMA'able host memory (struct ipr_ioarcb), write =
+the=20
+>>>>PCI address to a register on the adapter, the adapter DMAs down the=
+=20
+>>>>control block, executes the command, writes the=20
+>>>>ipr_ioarcb.host_response_handle in the command control block to the=
+ host=20
+>>>>request/response queue in host memory, and signals an interrupt.
+>>>>
+>>>>Does that help at all?
+>>>
+>>>What's the relation of all these command lists to that?
+>>
+>>Sorry, I guess I'm missing something here. Are you saying a LLD=20
+>>shouldn't need to maintain of queue of its command blocks (like my=20
+>>pending_q and free_q)?
+>=20
+>=20
+> Unless you allocate the blocks in ->queuecommand (like most modern dr=
+ivers
+> do) you'll need some form of freelist of course.  What you shouldn't =
+need i=DF
+> the pendig_q as the midlayer already keeps track of pending commands.
+> This of course only works if you actually do send all commands via th=
+e
+> midlayer (which you should).
+
+The reason I have a pending_q is so that when I reset the adapter=20
+without the mid-layer knowing about it, I need to fail back any=20
+outstanding ops so they get retried as appropriate. I suppose a way=20
+around this would be a mid-layer interface that an LLD could call which=
+=20
+would cause a host reset. Then the midlayer could drive the reset and=20
+take care of doing the right thing with any outstanding ops.
+
+
+--=20
+Brian King
+eServer Storage I/O
+IBM Linux Technology Center
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
