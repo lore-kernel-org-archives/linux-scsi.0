@@ -1,42 +1,48 @@
-From: Chris Adams <cmadams@hiwaay.net>
+From: Matt Domsch <Matt_Domsch@dell.com>
 Subject: Re: Why are MegaRAID drivers mutually exclusive?
-Date: Wed, 10 Nov 2004 13:38:38 -0600
-Message-ID: <20041110193838.GE1061425@hiwaay.net>
+Date: Wed, 10 Nov 2004 13:42:21 -0600
+Message-ID: <20041110194221.GA28524@lists.us.dell.com>
 References: <0E3FA95632D6D047BA649F95DAB60E570562C128@exa-atlanta>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bee.hiwaay.net ([216.180.54.11]:57033 "EHLO bee.hiwaay.net")
-	by vger.kernel.org with ESMTP id S262109AbUKJTim (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 10 Nov 2004 14:38:42 -0500
-Received: from bee.hiwaay.net (bee.hiwaay.net [216.180.54.11])
-	by bee.hiwaay.net (8.13.0/8.13.0) with ESMTP id iAAJcdKh1155480
-	for <linux-scsi@vger.kernel.org>; Wed, 10 Nov 2004 13:38:40 -0600 (CST)
-Received: (from cmadams@localhost)
-	by bee.hiwaay.net (8.13.0/8.13.0/DefSubmit) id iAAJcdDV1154630
-	for linux-scsi@vger.kernel.org; Wed, 10 Nov 2004 13:38:39 -0600 (CST)
+Received: from linux.us.dell.com ([143.166.224.162]:31101 "EHLO
+	lists.us.dell.com") by vger.kernel.org with ESMTP id S262049AbUKJTmt
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 10 Nov 2004 14:42:49 -0500
 Content-Disposition: inline
 In-Reply-To: <0E3FA95632D6D047BA649F95DAB60E570562C128@exa-atlanta>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: "Bagalkote, Sreenivas" <sreenib@lsil.com>
+Cc: 'Chris Adams' <cmadams@hiwaay.net>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
 
-Once upon a time, Bagalkote, Sreenivas <sreenib@lsil.com> said:
+On Wed, Nov 10, 2004 at 02:24:06PM -0500, Bagalkote, Sreenivas wrote:
 > The new and old drivers are mutually exclusive to the extent that
 > both cannot be loaded simultaneously as they both work on same
 > hardware. It only seems logical that this exclusivity is represented
 > in Kconfig as well.
 
-That then means they cannot be both built as modules, which is a valid
-configuration, because then you can choose to either load the old or new
-driver at module load time (and even switch between the two drivers
-without having the reconfigure and rebuild the kernel).
+There are three issues here that need to be addressed.
+1) megaraid_mbox doesn't currently handle all of Chris's hardware.
+   It's missing some PCI IDs which it should be able to handle.
+   101e:1960 101e:0475, aka PCI_VENDOR_ID_AMI, PCI_DEVICE_ID_AMI_MEGARAID3
+			    PCI_DEVICE_ID_AMI, PCI_SUBSYS_ID_PERC3_SC 
 
-They don't both work on the same hardware either; that is the source of
-the problem.  megaraid_mbox works on a subset of hardware that megaraid
-works on.
+2) megaraid_mbox doesn't handle other sets of hardware it should be
+   able to handle (Dell PERC2/{SC,DC}).  I am not sure why.
+
+3) no megaraid_ioport driver has ever been produced, which was the
+   original reason for splitting megaraid_mm and megaraid_mbox.  This
+   driver is necessary for Chris's other older hardware.
+   PCI 101e:9010, aka PCI_VENDOR_ID_AMI, PCI_DEVICE_ID_MEGARAID
+
+
+Thanks,
+Matt
+
 -- 
-Chris Adams <cmadams@hiwaay.net>
-Systems and Network Administrator - HiWAAY Internet Services
-I don't speak for anybody but myself - that's enough trouble.
+Matt Domsch
+Sr. Software Engineer, Lead Engineer
+Dell Linux Solutions linux.dell.com & www.dell.com/linux
+Linux on Dell mailing lists @ http://lists.us.dell.com
