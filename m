@@ -1,108 +1,75 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH scsi-misc-2.6 04/08] scsi: remove meaningless volatile qualifiers from structure definitions
-Date: Wed, 23 Mar 2005 14:28:38 +0900
-Message-ID: <20050323052838.GA31878@htj.dyndns.org>
-References: <20050323021335.960F95F8@htj.dyndns.org> <20050323021335.2655518E@htj.dyndns.org> <1111551327.5520.99.camel@mulgrave> <4240EEFF.8030703@pobox.com>
+Subject: Re: [PATCH scsi-misc-2.6 01/08] scsi: remove unused bounce-buffer
+ release path
+Date: Wed, 23 Mar 2005 15:08:57 +0900
+Message-ID: <424107F9.5070807@gmail.com>
+References: <20050323021335.960F95F8@htj.dyndns.org>	 <20050323021335.F07B64D9@htj.dyndns.org> <1111550846.5520.90.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Received: from wproxy.gmail.com ([64.233.184.201]:36815 "EHLO wproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S262798AbVCWF2o (ORCPT
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Received: from wproxy.gmail.com ([64.233.184.195]:56078 "EHLO wproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S262823AbVCWGgu (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 23 Mar 2005 00:28:44 -0500
-Received: by wproxy.gmail.com with SMTP id 69so99636wri
-        for <linux-scsi@vger.kernel.org>; Tue, 22 Mar 2005 21:28:43 -0800 (PST)
-Content-Disposition: inline
-In-Reply-To: <4240EEFF.8030703@pobox.com>
+	Wed, 23 Mar 2005 01:36:50 -0500
+Received: by wproxy.gmail.com with SMTP id 70so79849wra
+        for <linux-scsi@vger.kernel.org>; Tue, 22 Mar 2005 22:36:49 -0800 (PST)
+In-Reply-To: <1111550846.5520.90.camel@mulgrave>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, Jens Axboe <axboe@suse.de>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Jens Axboe <axboe@suse.de>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
 
- Hello, guys.
 
-On Tue, Mar 22, 2005 at 11:22:23PM -0500, Jeff Garzik wrote:
-> James Bottomley wrote:
-> >On Wed, 2005-03-23 at 11:14 +0900, Tejun Heo wrote:
-> >
-> >>	scsi_device->device_busy, Scsi_Host->host_busy and
-> >>	->host_failed have volatile qualifiers, but the qualifiers
-> >>	don't serve any purpose.  Kill them.  While at it, protect
-> >>	->host_failed update in scsi_error for consistency and clarity.
-> >
-> >
-> >Well ... the data here is volatile so what you're advocating is a move
-> >away from a volatile variable model to a protected variable one ... did
-> >you audit all users of both of these to make sure we have protection on
-> >all of them?  It looks like the sata strategy handlers would still rely
-> >on the volatile data.
+  Hello, James.
 
- Yes, I did (well, tried :-).  Adding locking/unlocking was just for
-clarity.  We have synchronization w/ implied memory barrier before and
-after eh processing, so we don't really need to acquire the lock
-there.  And while adding it, I forgot about libata strategy function.
-Sorry about that.  I removed the locking from scsi_error and added
-comments to data structure definition that those fields can be
-accessed without acquiring the host lock.  I think it's clearer this
-way.
-
-> volatile is almost always (a) buggy, or (b) hiding bugs.  At the very 
-> least, barriers are usually needed.
+James Bottomley wrote:
+> On Wed, 2005-03-23 at 11:14 +0900, Tejun Heo wrote:
 > 
-> Almost every case really wants to be inside a spinlock, or atomic_t, or 
-> similarly protected.
+>>01_scsi_remove_scsi_release_buffers.patch
+>>
+>>	Buffer bouncing hasn't been done inside the scsi midlayer for
+>>	quite sometime now, but bounce-buffer release paths are still
+>>	around.  This patch removes these unused paths.
 > 
-> Specifically for SATA, I am making the presumption that SCSI is smart 
-> enough not to mess with host_failed until my error handler completes.
+> 
+> Yes, but scsi_release_buffers isn't referring to bounce buffers anymore,
+> it's simply releasing the sg buffers.
+> 
 
- Yes, volatile only instructs the compiler to not cache the variable
-in the register and not move around accesses to the variable.  The
-only valid usage would be raw synchronization with variables (busy
-checking, two flag variable synchronization, etc...), but even those
-usages are better off with explicit barriers and cpu relaxations to
-clarify what's going on.
+  That's what I did.  Replacing scsi_release_buffers() calls with calls 
+to scsi_free_sgtable().  The only logic removed is bounce-buffer 
+release/copy-back.
 
- Currently all accesses outside eh are properly protected with locks
-except for the following two cases.
+> [...]
+> 
+>>-	else if (cmd->buffer != req->buffer) {
+>>-		if (rq_data_dir(req) == READ) {
+>>-			unsigned long flags;
+>>-			char *to = bio_kmap_irq(req->bio, &flags);
+>>-			memcpy(to, cmd->buffer, cmd->bufflen);
+>>-			bio_kunmap_irq(to, &flags);
+>>-		}
+>>-		kfree(cmd->buffer);
+>>-	}
+> 
+> 
+> I'll defer to Jens here, but I don't thing you can just remove this ...
+> sg_io with a misaligned buffer will fail without this.
 
- * sg_proc_seq_show_dev(): read access, informational.  doesn't matter.
- * check looping in scsi_device_quiesce(): we have proper barrier.
+  AFAIK, those are done by blk_rq_map_user() and blk_rq_unmap_user(), 
+both of which are invoked directly by sg_io().
 
+> That rather nasty code freeing cmd->buffer needs to be in there as
+> well ... so it does make sense to keep this API
 
- Signed-off-by: Tejun Heo <htejun@gmail.com>
+  That code is invoked only for REQ_BLOCK_PC requests without bio, and I 
+digged pretty hard but, in those cases, AFAICT, the callers are 
+responsible for supplying dma-able buffers and nothing seems to alter 
+cmd->buffer after the cmd gets initialized, but I might be missing 
+things here.  If so, please point out.
 
+  Thanks.
 
-Index: scsi-export/include/scsi/scsi_device.h
-===================================================================
---- scsi-export.orig/include/scsi/scsi_device.h	2005-03-23 09:40:12.000000000 +0900
-+++ scsi-export/include/scsi/scsi_device.h	2005-03-23 14:04:59.000000000 +0900
-@@ -43,7 +43,8 @@ struct scsi_device {
- 	struct list_head    siblings;   /* list of all devices on this host */
- 	struct list_head    same_target_siblings; /* just the devices sharing same target id */
- 
--	volatile unsigned short device_busy;	/* commands actually active on low-level */
-+	unsigned short device_busy;	/* commands actually active on
-+					 * low-level. protected by sdev_lock. */
- 	spinlock_t sdev_lock;           /* also the request queue_lock */
- 	spinlock_t list_lock;
- 	struct list_head cmd_list;	/* queue of in use SCSI Command structures */
-Index: scsi-export/include/scsi/scsi_host.h
-===================================================================
---- scsi-export.orig/include/scsi/scsi_host.h	2005-03-23 09:40:12.000000000 +0900
-+++ scsi-export/include/scsi/scsi_host.h	2005-03-23 14:04:59.000000000 +0900
-@@ -448,8 +448,14 @@ struct Scsi_Host {
- 	wait_queue_head_t       host_wait;
- 	struct scsi_host_template *hostt;
- 	struct scsi_transport_template *transportt;
--	volatile unsigned short host_busy;   /* commands actually active on low-level */
--	volatile unsigned short host_failed; /* commands that failed. */
-+
-+	/*
-+	 * The following two fields are protected with host_lock;
-+	 * however, eh routines can safely access during eh processing
-+	 * without acquiring the lock.
-+	 */
-+	unsigned short host_busy;	   /* commands actually active on low-level */
-+	unsigned short host_failed;	   /* commands that failed. */
-     
- 	unsigned short host_no;  /* Used for IOCTL_GET_IDLUN, /proc/scsi et al. */
- 	int resetting; /* if set, it means that last_reset is a valid value */
+-- 
+tejun
+
