@@ -1,13 +1,56 @@
-From: Mukul Kotwani <mkotwani@yahoo.com>
-Subject: Enhanced error handling
-Date: Mon, 22 Jul 2002 20:16:32 -0700 (PDT)
+From: "Martin Peschke3" <MPESCHKE@de.ibm.com>
+Subject: Re: Enhanced error handling
+Date: Tue, 23 Jul 2002 12:43:16 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20020723031633.44218.qmail@web14008.mail.yahoo.com>
+Message-ID: <OF5603E9AB.B82FF85C-ONC1256BFF.0039F1EB@de.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Mukul Kotwani <mkotwani@yahoo.com>
+Cc: linux-scsi@vger.kernel.org
+
+
+Hi,
+
+we solved this for the zfcp driver this way:
+
+my_eh_abort_handler() {
+
+      /* unlock and enable interrupts */
+      spin_unlock_irq(&io_request_lock);
+
+      do abort and sleep if necessary
+
+      /* lock and disable interrupts */
+      spin_lock_irq(&io_request_lock);
+}
+
+All those HBA routines should be called without this lock held.
+I assume that is or will be changed in 2.5.
+
+Mit freundlichen Gr=FC=DFen / with kind regards
+
+Martin Peschke
+
+IBM Deutschland Entwicklung GmbH
+Linux for eServer Development
+Phone: +49-(0)7031-16-2349
+
+
+Mukul Kotwani <mkotwani@yahoo.com>@vger.kernel.org on 07/23/2002 05:16:=
+32
+AM
+
+Sent by:    linux-scsi-owner@vger.kernel.org
+
+
+To:    linux-scsi@vger.kernel.org
+cc:
+Subject:    Enhanced error handling
+
+
 
 Hello!
 After reading a bunch about the new error handling
@@ -68,3 +111,16 @@ __________________________________________________
 Do You Yahoo!?
 Yahoo! Health - Feel better, live better
 http://health.yahoo.com
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
