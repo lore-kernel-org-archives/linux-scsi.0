@@ -1,26 +1,37 @@
 From: Pavel Machek <pavel@suse.cz>
 Subject: Re: [PATCH] /proc/scsi/map
-Date: Sat, 22 Jun 2002 20:42:20 +0200
+Date: Sat, 22 Jun 2002 20:25:29 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20020622184220.GD105@elf.ucw.cz>
-References: <Pine.LNX.4.33.0206201230190.654-100000@geena.pdx.osdl.net> <3D125735.7000805@evision-ventures.com>
+Message-ID: <20020622182529.GB105@elf.ucw.cz>
+References: <200206202259.IAA01298@thucydides.inspired.net.au> <Pine.LNX.4.33.0206201608510.1222-100000@penguin.transmeta.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <3D125735.7000805@evision-ventures.com>
+In-Reply-To: <Pine.LNX.4.33.0206201608510.1222-100000@penguin.transmeta.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Martin Dalecki <dalecki@evision-ventures.com>
-Cc: Patrick Mochel <mochel@osdl.org>, Linus Torvalds <torvalds@transmeta.com>, Kurt Garloff <garloff@suse.de>, Linux kernel list <linux-kernel@vger.kernel.org>, Linux SCSI list <linux-scsi@vger.kernel.org>
+To: Linus Torvalds <torvalds@transmeta.com>
+Cc: Martin Schwenke <martin@meltin.net>, Andries Brouwer <aebr@win.tue.nl>, Kurt Garloff <garloff@suse.de>, Linux kernel list <linux-kernel@vger.kernel.org>, Linux SCSI list <linux-scsi@vger.kernel.org>, Patrick Mochel <mochel@osdl.org>
 
 Hi!
 
-> That's called /. BTW. If anything I'm missing there is the
-> representation of the very first BUS out there: CPU!!!
+> (Tha ACPI "shouting disease" is really sad. I remember my old VIC-20, and
+> how you used all-caps, but I don't think the ACPI people were sentimental.  
+> They apparently just _like_ ugly four-letter ALL-CAPS names).
 
-And if you have four cpus, two of them having southbridge with PCI?
-You might make cpu%d the root....
+"Keep ACPI shouting disease out of kernel!"
+
+;-)
+
+[Just went to canada and they give me some meaningless flyier on
+mounth-and-foot disease.]
+
+What if we just invert case on everything acpi related? But their
+names will not look nice anyway. But what we could do is having
+devices/acpi (not devices/ACPI).
 									Pavel
+
+
 -- 
 (about SSSCA) "I don't say this lightly.  However, I really think that the U.S.
 no longer is classifiable as a democracy, but rather as a plutocracy." --hpa
