@@ -1,42 +1,49 @@
-From: Matthew Wilcox <willy@debian.org>
-Subject: Re: 2.6.8.1-mm3
-Date: Sat, 21 Aug 2004 22:47:33 +0100
+From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+Subject: Re: [PATCH] clean up some more tmscsim scan logic
+Date: Sun, 22 Aug 2004 00:00:02 +0200 (CEST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040821214733.GE9660@parcelfarce.linux.theplanet.co.uk>
-References: <200408211838.i7LIcUdl025108@harpo.it.uu.se> <20040821191417.GA3402@beaverton.ibm.com> <1093116298.2092.388.camel@mulgrave>
+Message-ID: <Pine.LNX.4.60.0408212346290.15226@poirot.grange>
+References: <20040817163323.GA16799@lst.de> <Pine.LNX.4.60.0408172136340.5224@poirot.grange>
+ <20040819113327.GA21326@lst.de> <Pine.LNX.4.60.0408192300530.5248@poirot.grange>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:60328 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S267922AbUHUVrf
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 21 Aug 2004 17:47:35 -0400
-Content-Disposition: inline
-In-Reply-To: <1093116298.2092.388.camel@mulgrave>
+Received: from pop.gmx.net ([213.165.64.20]:12965 "HELO mail.gmx.net")
+	by vger.kernel.org with SMTP id S267936AbUHUWAo (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 21 Aug 2004 18:00:44 -0400
+In-Reply-To: <Pine.LNX.4.60.0408192300530.5248@poirot.grange>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Patrick Mansfield <patmans@us.ibm.com>, Mikael Pettersson <mikpe@csd.uu.se>, Andrew Morton <akpm@osdl.org>, Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: James Bottomley <James.Bottomley@steeleye.com>
+Cc: Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org
 
-On Sat, Aug 21, 2004 at 03:24:56PM -0400, James Bottomley wrote:
-> Either we could provide a helper routine to do it and convert all the
-> internal uses over, or we could define a new ioctl that is correctly
-> unique, something like
-> 
-> #define SCSI_TEST_UNIT_READY	_IOR('S', 8, int)
-> or perhaps just 0x5388
-> 
-> and convert the internal users over to it.
-> 
-> Opinions?
+On Thu, 19 Aug 2004, Guennadi Liakhovetski wrote:
 
-I prefer the former, something like
+> On Thu, 19 Aug 2004, Christoph Hellwig wrote:
+>
+>> None should be in the LLDD.  I have an experimental patch that doesn't
+>> remove the per-device queue yet but only does the easier part of
+>> returning MLQUEUE_DEVICE_BUSY in ->queuecommand but doesn't do the
+>> requeueing from the isr yet.  I'll send it out ASAP.
+>
+> Looks good, thanks! Compiles too. I'll test it on the hardware tomorrow,
 
-int scsi_test_unit_ready(struct scsi_device *sdev);
+Ok, tested, works. So, James, please, apply. As for the proc-removal 
+patch, don't know. The whole /proc/scsi and its subdirs are not going to 
+disappear tomorrow, and a few other LLDs have their subdirs there (e.g., 
+aic7xxx, sym53c8xx - those I can see here at least) so, don't know if it 
+is the right thing to remove the tmscsim subdir. What's the current trend?
 
--- 
-"Next the statesmen will invent cheap lies, putting the blame upon 
-the nation that is attacked, and every man will be glad of those
-conscience-soothing falsities, and will diligently study them, and refuse
-to examine any refutations of them; and thus he will by and by convince 
-himself that the war is just, and will thank God for the better sleep 
-he enjoys after this process of grotesque self-deception." -- Mark Twain
+On a side note - my suspicion that INQUIRY outside of initial bus-scan was 
+not such an exceptional situation turned right:-) E.g., scsiinfo issues 
+it. And then my fix for bug 2139 breaks - it only handles those broken 
+drives on initial scan. I've tried to improve that fix to generally not 
+use tags for INQUIRY - it worked. But, I guess, unless anybody else 
+complains, I will not apply / submit this patch - it is better to switch 
+to tcq altogether, and the midlayer doesn't tag INQUIRY, right?
+
+Thanks
+Guennadi
+---
+Guennadi Liakhovetski
+
