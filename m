@@ -1,52 +1,81 @@
-From: James Bottomley <James.Bottomley@steeleye.com>
-Subject: Re: bug 2400
-Date: 02 Apr 2004 19:25:23 -0500
+From: Kai Makisara <Kai.Makisara@kolumbus.fi>
+Subject: Re: ST alloc failures
+Date: Sat, 3 Apr 2004 10:19:51 +0300 (EEST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1080951925.1829.172.camel@mulgrave>
-References: <20040401131502.41136788.akpm@osdl.org>
-	<1080862354.2118.78.camel@mulgrave> <20040402084338.GA3547@us.ibm.com>
-	<1080921450.1804.66.camel@mulgrave> <20040402164531.GB3880@us.ibm.com>
-	<1080925518.1830.93.camel@mulgrave> <20040402174442.GE3880@us.ibm.com>
-	<1080929583.1804.122.camel@mulgrave>  <20040402234051.GB1472@us.ibm.com>
+Message-ID: <Pine.LNX.4.58.0404030958510.7955@kai.makisara.local>
+References: <20040402051355.GA1604@frodo> <20040402073207.A31736@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat1.steeleye.com ([65.114.3.130]:23464 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S261425AbUDCA0C (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 2 Apr 2004 19:26:02 -0500
-In-Reply-To: <20040402234051.GB1472@us.ibm.com>
+Received: from fep19-0.kolumbus.fi ([193.229.0.45]:37509 "EHLO
+	fep19-app.kolumbus.fi") by vger.kernel.org with ESMTP
+	id S261619AbUDCHTz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 3 Apr 2004 02:19:55 -0500
+In-Reply-To: <20040402073207.A31736@infradead.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Anderson <andmike@us.ibm.com>
-Cc: Andrew Morton <akpm@osdl.org>, greg@kroah.com, Jens Axboe <axboe@suse.de>, linux-usb-devel@lists.sourceforge.net, SCSI Mailing List <linux-scsi@vger.kernel.org>, stern@rowland.harvard.edu
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Nathan Scott <nathans@sgi.com>, linux-scsi@vger.kernel.org
 
-On Fri, 2004-04-02 at 18:40, Mike Anderson wrote:
-> Greg stopped by and after talking this over I think I see why sd is
-> racing in its current form. The race happens when sd_remove and do_open
-> race. Even though I do not like adding a lock_kernel it would appear
-> adding on to sd_remove would serialize sd_remove and do_open. This would
-> ensure either do_open's get_gendisk returns a gendisk struct and sd
-> ref's are incremented or we will start cleaning up and sd_open will not
-> be called.
+On Fri, 2 Apr 2004, Christoph Hellwig wrote:
+
+> [linux-scsi is the right list for st problems, moving the thread there]
 > 
-> I would believe similar alignment in sr.c to what sd is doing plus
-> agreement on the lock_kernel should fix both drivers.
+> On Fri, Apr 02, 2004 at 03:13:55PM +1000, Nathan Scott wrote:
+> > Hi all,
+> > 
+> > I'm seeing a bunch of large allocation attempts failing from
+> > the SCSI tape driver when doing dumps and restores ... (this
+> > is with a stock 2.6.4 kernel).
+> > 
+> > xfsdump: page allocation failure. order:8, mode:0xd0
+> > Call Trace:
+> >  [<c013982b>] __alloc_pages+0x33b/0x3d0
+> >  [<c03805ac>] enlarge_buffer+0xdc/0x1b0
+> >  [<c03819a3>] st_map_user_pages+0x33/0x90
+> >  [<c037cf24>] setup_buffering+0xb4/0x160
 > 
-> I think the "error out correctly" on trying to get a ref on sdev_gendev
-> may need some higher serialization as I think there is a race on a release
-> function starting and the reference count trying to be taken to 1 (i.e.
-> you need something subsystem wide as you cannot look at the item you
-> maybe deleting.
+> This looks like the driver tries to pin down the userpages first
+> (st_map_user_pages) but then fails and needs to use an inkernel
+> buffer.  Can you put some debug printks into st_map_user_pages
+> to see why it fails?
 
-I'm not convinced we need any other serialisation.  As long as we get
-the reference we may use the device (of course if the device is being
-removed and sd_remove is being called, then I/O to it will fail, but I
-think that's fine). Leaving the user with an open device that won't
-accept I/O is also fine (as long as it returns the correct error codes).
+Pinning down pages should not fail with most modern hardware except for 
+the following three cases:
 
-Could you outline what the consequences of this race are?
+1) A change in 2.6.4 (*) mandates st (and sg) not to use direct transfers 
+unless the user buffer is aligned at 512 byte boundary. This means, for 
+instance, that in most cases transfers from/to malloced/calloced buffers 
+are forced to use bounce buffers (alignment at 8 or 16 byte boundaries).
 
-James
+2) There is a bug in checking the allowed address range. Most SCSI 
+adapters support 64-bit addresses and so even lots of memory should not 
+prevent using direct transfers.
 
+3) Some resource shortage that happened just now. This is not a bug.
 
+> The actual message is harmless, it's the
+> same thing we had in the XFS log code:  It tries to allocate
+> an as large as possible buffer and if that fails tries the next
+> smaller power of two size.  We should probably add an __GFP_NOWARN
+> here.
+
+Yes. st prints a message if the allocation finally fails.
+
+(*) Some history for those who have not followed this development:
+
+In 2.6.3, st (and sg) started checking the user buffer alignment with 
+queue_dma_alignment(). The overall default is 512 bytes. A change was 
+added to the scsi code to set the limit for SCSI devices to 8 bytes.
+
+In 2.6.4, the code setting the SCSI device alignment to 8 bytes was, for 
+some reason unknown to me, removed and this put the requirement to 512 
+bytes.
+
+The alignment requirement defaults can be set using many strategies. The 
+current one is very safe. The low-level drivers (practically every 
+driver in this case) can relax the constraints but this is not currently 
+done. Another strategy (the 8-byte limit) sets the requirements safe for 
+most devices. The exceptions can then enforce more strict limits.
+
+-- 
+Kai
