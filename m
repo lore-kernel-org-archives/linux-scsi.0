@@ -1,40 +1,42 @@
-From: Geert Uytterhoeven <geert@linux-m68k.org>
+From: Rask Ingemann Lambertsen <rask@sygehus.dk>
 Subject: Re: State of NCR53c7xx based drivers
-Date: Sun, 23 Nov 2003 11:24:44 +0100 (MET)
+Date: Sun, 23 Nov 2003 17:50:45 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.GSO.4.21.0311231122500.14422-100000@waterleaf.sonytel.be>
+Message-ID: <20031123175041.A1461@sygehus.dk>
 References: <20031122113834.GA8098@lst.de>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from witte.sonytel.be ([80.88.33.193]:3064 "EHLO witte.sonytel.be")
-	by vger.kernel.org with ESMTP id S263345AbTKWKYt (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 23 Nov 2003 05:24:49 -0500
-In-Reply-To: <20031122113834.GA8098@lst.de>
+Received: from 0x50a144f4.albnxx15.adsl-dhcp.tele.dk ([80.161.68.244]:4 "EHLO
+	0x50a144f4.albnxx15.adsl-dhcp.tele.dk") by vger.kernel.org with ESMTP
+	id S262369AbTKWQur (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 23 Nov 2003 11:50:47 -0500
+Content-Disposition: inline
+In-Reply-To: <20031122113834.GA8098@lst.de>; from hch@lst.de on Sat, Nov 22, 2003 at 12:38:34PM +0100
 List-Id: linux-scsi@vger.kernel.org
 To: Christoph Hellwig <hch@lst.de>
-Cc: Linux/m68k <linux-m68k@lists.linux-m68k.org>, linux-scsi@vger.kernel.org
+Cc: linux-m68k@lists.linux-m68k.org, linux-scsi@vger.kernel.org
 
-On Sat, 22 Nov 2003, Christoph Hellwig wrote:
-> As for amgia7xx is there a reason we have four different config
-> options for this single tiny driver?
+On Sat, Nov 22, 2003 at 12:38:34PM +0100, Christoph Hellwig wrote:
 
-I already fixed this in my local tree, for both 2.4.x and 2.6.0, as Willy
-suggested this a while ago.
+> what's the status of the 53c7xx based drivers, namely amiga7xx,
+> mvme16x and bvme6000?  These are the last ones still using the
+> old 53x7xx instead of the new 53c700 core which despite the
+> name also handles 53c710 chips.
 
-However, I do lack the hardware (and the time, just in case you want to send me
-more hardware ;-) to do more clean ups.
+It might be a good idea to update the comments in the code to say so more
+clearly. At least in 2.6.0-test8, only two changelog entries say so.
 
-Gr{oetje,eeting}s,
+What about the 53c770? This chip is supported by 53c7xx, isn't it? But it
+seems as if 53c7xx uses the exact same code for both 53c710 and 53c770, so
+perhaps you can deal with that easily. Grep did not find any drivers that
+actually make use of the 53c770 support, although it is not unlikely that I
+might have missed something.
 
-						Geert
+And while we are at amiga7xx and 53c770: There are Amiga SCSI host adapters
+with the 53c770 (CyberStorm PPC/MkIII), although amiga7xx doesn't support
+them. Why?
 
---
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
-
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-							    -- Linus Torvalds
-
-
+-- 
+Regards,
+Rask Ingemann Lambertsen
