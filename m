@@ -1,51 +1,74 @@
-From: " Moore, Eric Dean" <Eric.Moore@lsil.com>
-Subject: [SAS ANNOUNCEMENT] MPT Fusion driver 3.02.07 update
-Date: Fri, 5 Nov 2004 17:21:06 -0700
-Message-ID: <91888D455306F94EBD4D168954A9457C2D18BA@nacos172.co.lsil.com>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: Kernel 2.6.x hangs with Symbios Logic 53c1010 Ultra3 SCSI Ada pter
+Date: Sat, 6 Nov 2004 03:59:51 +0000
+Message-ID: <20041106035951.GC24690@parcelfarce.linux.theplanet.co.uk>
+References: <D5169CBBC6369D4CBFFABD7905CC9D695D31@tehran.Fars-Robotics.local>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:46847 "EHLO mail0.lsil.com")
-	by vger.kernel.org with ESMTP id S261275AbUKFAVI convert rfc822-to-8bit
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:34785 "EHLO
+	www.linux.org.uk") by vger.kernel.org with ESMTP id S261309AbUKFD7w
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 5 Nov 2004 19:21:08 -0500
-Received: from milmhbs0.lsil.com (mhbs.lsil.com [147.145.1.30])
-	by mail0.lsil.com (8.12.8/8.12.8) with ESMTP id iA60Jbcq025695
-	for <linux-scsi@vger.kernel.org>; Fri, 5 Nov 2004 16:19:37 -0800 (PST)
-Received: from nacos172.ad.lsil.com (nacos172.co.lsil.com [172.21.35.122])
-	by milmhbs0.lsil.com (8.12.11/8.12.11) with ESMTP id iA60L7Ek016667
-	for <linux-scsi@vger.kernel.org>; Fri, 5 Nov 2004 16:21:07 -0800
+	Fri, 5 Nov 2004 22:59:52 -0500
+Content-Disposition: inline
+In-Reply-To: <D5169CBBC6369D4CBFFABD7905CC9D695D31@tehran.Fars-Robotics.local>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Richard Waltham <richard@fars-robotics.net>
+Cc: Matthew Wilcox <matthew@wil.cx>, SUPPORT <support@4bridgeworks.com>, Thomas Babut <thomas@babut.net>, linux-kernel@vger.kernel.org, Linux SCSI <linux-scsi@vger.kernel.org>, groudier@free.fr
 
-We are pleased to announce the MPT Fusion release candidate for lk 2.6
+On Sat, Nov 06, 2004 at 12:02:32AM -0000, Richard Waltham wrote:
+> Good as a backup but the original PPR capability is defined in
+> scan_scsi.c. Shouldn't scan_scsi.c take note of the bus mode and enable
+> PPR capabilities accordingly? This would then cover this issue for all
+> relevant LLDDs wouldn't it?
 
-Highlights of this release:
-=B7	SAS Support - 1064, 1066, 1068
-=B7	mpi headers v1.5.2
+scan_scsi.c doesn't know what mode the bus is in.  scan_scsi.c doesn't
+even know whether the bus is SPI, FC, iSCSI, SAS or SATA.
 
-=B7	Also included are hch@ suggestions from previous 3.02.06 release
-- 	remove ioc->chip_type checks, using the new bus_type member
--	removing SAS CSMI Ioctls
--	using scsi_remove_device and scsi_add_device =3D> for hot swap suppor=
-t
+> > Thanks, those are interesting.  It's good to see that we 
+> > really are spitting PPR out onto the wire when we shouldn't be.
+> 
+> And from what I've seen is the PPR negotiation keeps on being retied on
+> all subsequent commands. So performance really is killed by this.
 
-This patch applied against bk://linux-scsi.bkbits.net/scsi-misc-2.6
+Yes, we'll do that as long as the device target parameters differ from
+the achieved parameters.
 
-Here is a link to this patch:
-ftp://ftp.lsil.com/HostAdapterDrivers/linux/Fusion-MPT/2.6-kernel/3.02.=
-07/mp
-tlinux-3.02.07.patch
-=46ull source are also provided at link above.
+> > I think disabling PPR on an SE bus should be a better fix than that.
+> 
+> And don't forget HVD as well;)   
 
-Eric Moore
-Standard Storage Products Division
-LSI Logic Corporation
-Web: http://www.lsilogic.com/
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Yes, I thought about HVD and decided that I wanted to code the check
+against LVD rather than against SE ;-)
+
+> My main concern with my patch to scan_scsi.c was to handle SCSI 3 LVD
+> devices that caused problems. Scan_scsi.c sets all SCSI 3 devices as PPR
+> capable - SE, HVD as well as LVD. I have no issue with explicitly
+> disallowing PPR for SE and HVD devices. But what about SCSI 3 and LVD
+> devices that don't handle PPR - OK they may be broken but...
+
+I've got some devices that fail PPR when the bus is in SE mode but
+work fine when the bus is in LVD mode.  So this patch certainly fixes
+those problems.  THe question is whether there exist devices that:
+
+ - Claim to be SCSI3 compliant
+ - Fail PPR when on an LVD bus
+
+> There is an issue that needs resolving where a drive appears to indicate
+> it is capable of PPR, i.e. says it is SCSI 3 + LVD, but does not
+> actually support PPR. Then when it receives at PPR message it causes
+> problems in the driver because it terminates the PPR MSG OUT early with
+> an unexpected phase change.
+
+I think those devices need blacklisting.  Either that, or we need to do
+DV in non-approved ways.  Perhaps start with SDTR+WDTR.  If we get up
+to Fast-40, then try PPR.  I suspect James has Opinions on this though ;-)
+
+-- 
+"Next the statesmen will invent cheap lies, putting the blame upon 
+the nation that is attacked, and every man will be glad of those
+conscience-soothing falsities, and will diligently study them, and refuse
+to examine any refutations of them; and thus he will by and by convince 
+himself that the war is just, and will thank God for the better sleep 
+he enjoys after this process of grotesque self-deception." -- Mark Twain
