@@ -1,47 +1,27 @@
-From: Jeff Garzik <jgarzik@pobox.com>
+From: Christoph Hellwig <hch@infradead.org>
 Subject: Re: [bk patches] move scsi headers
-Date: Tue, 27 May 2003 01:19:36 -0400
+Date: Tue, 27 May 2003 06:35:13 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3ED2F568.7060501@pobox.com>
-References: <20030527034239.GA16376@gtf.org> <20030527061444.A1905@infradead.org>
+Message-ID: <20030527063513.A2357@infradead.org>
+References: <20030527034239.GA16376@gtf.org> <20030527061444.A1905@infradead.org> <3ED2F568.7060501@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:54217 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S263452AbTE0FGe
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 27 May 2003 01:06:34 -0400
-In-Reply-To: <20030527061444.A1905@infradead.org>
+Received: from phoenix.infradead.org ([195.224.96.167]:35079 "EHLO
+	phoenix.infradead.org") by vger.kernel.org with ESMTP
+	id S263528AbTE0FWC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 27 May 2003 01:22:02 -0400
+Content-Disposition: inline
+In-Reply-To: <3ED2F568.7060501@pobox.com>; from jgarzik@pobox.com on Tue, May 27, 2003 at 01:19:36AM -0400
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
+To: Jeff Garzik <jgarzik@pobox.com>
 Cc: linux-scsi@vger.kernel.org
 
-Christoph Hellwig wrote:
-> On Mon, May 26, 2003 at 11:42:39PM -0400, Jeff Garzik wrote:
-> 
->>James, please do a
->>
->>	bk pull bk://kernel.bkbits.net/jgarzik/scsi-misc-2.5
-> 
-> 
-> Also I already told you that the header organisation is crap.  include/scsi
-> exists for a reason, the scsi.h/host.h split is broken and scsi_obsolete.h
-> should go away not moved around.
-> 
-> If you want to do something useful you could start removing scsi_obsolete.h,
-> make the scsi core and scsi.h/hosts.h clean of the obsolete typedefs first.
+On Tue, May 27, 2003 at 01:19:36AM -0400, Jeff Garzik wrote:
+>This is too ambitious this close to 2.6-pre,
 
+No, it's not.  Eihet we do it properly or not at all.  Having to use
+different headers for 2.4,2.6and 2.7/2.8 is just extremly stupid.
 
-This is too ambitious this close to 2.6-pre, and there is also 
-disagreement about use of include/scsi.  I took the minimal patch.
-
-As we are very close to 2.6-pre, your suggestions may even want waiting 
-until 2.7.  I'll leave it up to James...
-
-Consider this a first step.  The world does not change in a day :)
-
-	Jeff
-
-
+Also we have more intrusive stuff in scsi pending, 2.6.pre or not.
 
