@@ -1,42 +1,56 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: lsscsi-0.11
-Date: Fri, 09 Jan 2004 17:41:13 +1000
+From: "Hammer, Jack" <Jack_Hammer@adaptec.com>
+Subject: RE: [PATCH] ips driver for 2.4.23-pre4
+Date: Fri, 9 Jan 2004 07:35:50 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3FFE5B19.7050404@torque.net>
-Reply-To: dougg@torque.net
+Message-ID: <A121ABA5B472B74EB59076B8E3C8F0190129F9@rtpe2k01.adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bunyip.cc.uq.edu.au ([130.102.2.1]:23566 "EHLO
-	bunyip.cc.uq.edu.au") by vger.kernel.org with ESMTP id S266430AbUAIHnM
+Received: from magic-mail.adaptec.com ([216.52.22.10]:32949 "EHLO
+	magic.adaptec.com") by vger.kernel.org with ESMTP id S261575AbUAIMg2
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 9 Jan 2004 02:43:12 -0500
-Received: from torque.net (d-240-123.stlucia.uq.net.au [203.101.240.123])
-	by bunyip.cc.uq.edu.au (8.12.10/8.12.10) with ESMTP id i097h6ci009661
-	for <linux-scsi@vger.kernel.org>; Fri, 9 Jan 2004 17:43:08 +1000 (GMT+1000)
+	Fri, 9 Jan 2004 07:36:28 -0500
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Xose Vazquez Perez <xose@wanadoo.es>, linux-scsi <linux-scsi@vger.kernel.org>, Tosatti <marcelo.tosatti@cyclades.com>
 
-lsscsi is a utility the uses sysfs in the linux 2.6 series kernels
-to list information about all SCSI devices (including devices
-that use the SCSI stack such as USB mass storage devices)
-or all SCSI hosts that are attached to the system. Both a compact
-format (default), one line per device, and a "classic" format (like
-the output of 'cat /proc/scsi/scsi') are supported for devices.
+James,
 
-Version 0.11 is available at
-http://www.torque.net/scsi/lsscsi.html
+OK by me ...  I have no problem at all with that. 
 
-This version has been reworked for lk 2.6.1-rc1 (and later)
-since sysfs support for st and sg devices has been (re-)added.
+Jack
 
-lsscsi does not yet use libsysfs but may well soon. One thing
-that lsscsi does that is not yet available in libsysfs is
-to sort (and filter) directory entries. This is most likely
-not relevant for most libsysfs based applications but is
-convenient for those applications that display information
-for human consumption.
 
-Doug Gilbert
+-----Original Message-----
+From: James Bottomley [mailto:James.Bottomley@SteelEye.com] 
+Sent: Thursday, January 08, 2004 4:16 PM
+To: Hammer, Jack
+Cc: Christoph Hellwig; Xose Vazquez Perez; linux-scsi; Tosatti
+Subject: RE: [PATCH] ips driver for 2.4.23-pre4
+
+On Thu, 2004-01-08 at 15:18, Hammer, Jack wrote:
+> The reason this compiler warning exists is that these are the only 
+> hardware platforms that support this adapter.  Use of this adapter is 
+> any other box can cause serious problems and is not supported by 
+> anyone.  Removal of this warning has no effect on the executable code 
+> and would not improve the driver in my opinion.  If I was including a 
+> module in my system that is not going to work, I'd like to know about it.
+[...]
+> > -#if !defined(__i386__) && !defined(__ia64__) -#error "This driver 
+> > has only been tested on the x86/ia64 platforms"
+> > +#if !defined(__i386__) && !defined(__ia64__) && 
+> > +!defined(__x86_64__) #error "This driver has only been tested on 
+> > +the x86/ia64/x86_64
+> platforms"
+> >  #endif
+
+This is actually an #error though, not a #warning...could we at least
+downgrade it to #warning (like has already been done for ips) so I don't get
+spurious compile failure reports from people doing make allyes
+configurations on non-x86 boxes?
+
+Thanks,
+
+James
+
 
