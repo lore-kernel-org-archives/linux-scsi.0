@@ -1,45 +1,66 @@
-From: Greg KH <greg@kroah.com>
-Subject: Re: [PATCH] zfcp: kfree patch
-Date: Mon, 10 Jan 2005 00:18:15 -0800
-Message-ID: <20050110081815.GA13612@kroah.com>
-References: <20050110070639.GC13078@kroah.com> <OF21502B2A.CFA7983A-ONC1256F85.002AC44A-C1256F85.002CDDA7@de.ibm.com>
+From: Matti Aarnio <matti.aarnio@zmailer.org>
+Subject: Re: linux-scsi list filtering
+Date: Mon, 10 Jan 2005 10:41:24 +0200
+Message-ID: <20050110084124.GL8704@mea-ext.zmailer.org>
+References: <41E1B79A.3080706@torque.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kroah.org ([69.55.234.183]:44690 "EHLO perch.kroah.org")
-	by vger.kernel.org with ESMTP id S262142AbVAJISe (ORCPT
+Received: from mail.zmailer.org ([62.78.96.67]:18632 "EHLO mail.zmailer.org")
+	by vger.kernel.org with ESMTP id S262155AbVAJIl1 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 10 Jan 2005 03:18:34 -0500
+	Mon, 10 Jan 2005 03:41:27 -0500
 Content-Disposition: inline
-In-Reply-To: <OF21502B2A.CFA7983A-ONC1256F85.002AC44A-C1256F85.002CDDA7@de.ibm.com>
+In-Reply-To: <41E1B79A.3080706@torque.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Heiko Carstens <Heiko.Carstens@de.ibm.com>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Douglas Gilbert <dougg@torque.net>
+Cc: linux-scsi@vger.kernel.org, James.Bottomley@SteelEye.com
 
-On Mon, Jan 10, 2005 at 09:10:21AM +0100, Heiko Carstens wrote:
-> > > > As nothing has changed in the patch, I still object to it. Actually,
-> > > > krefs will BUG() out if you try to do this, so I might as well add a
-> > > > patch so that kobjects do the same thing...
-> > > So what's the fix for this generic (non-zfcp specific) problem then?
-> > As no other code uses this type of "solution" I don't see how you can
-> > say it is "generic".
+On Mon, Jan 10, 2005 at 09:00:42AM +1000, Douglas Gilbert wrote:
+> Date:	Mon, 10 Jan 2005 09:00:42 +1000
+> From:	Douglas Gilbert <dougg@torque.net>
+> To:	linux-scsi@vger.kernel.org
+> Cc:	James.Bottomley@SteelEye.com
+> Subject: linux-scsi list filtering
+> Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+
+You really should ask this kind of questions from
+   <postmaster@vger.kernel.org>
+as you can read at  http://vger.kernel.org/
+
+
+Possibly it is this one:
+
+   Subject: BOUNCE linux-scsi@vger.kernel.org:
+            global taboo header: /charset=.*windows-/i
+
+
+That pattern bites on quite a lot of spams and viruses, but
+unfortunately also on some amount of legitimate list messages.
+
+Reviewing past weeks worth of monitoring logs, it does appear
+that of 10-20 daily hits with that patterns there is always
+also some other pattern present when it genuinely is spam/virus/junk.
+
+I will now remove that block, and we shall see, what
+leaks thru...  (if any.)
+
+
+> Twice yesterday I tried to reply to the "spin down idle
+> SATA disks" thread. The first was sent to the original
+> poster and cc-ed to this list. When my reply didn't appear
+> after 12 hours, I resent my reply directly to this list.
+> Neither appeared on the linux-scsi list (at least not via
+> my subscription or the marc.theaimsgroup.com archive).
 > 
-> Since you still don't like the patch I would like to know how it should
-> look like that you would accept it.
+> Obviously the original poster received my mail as he has
+> recently responded to the list. That tends to suggest
+> that incoming mail is being filtered by the linux-scsi
+> list.
+> 
+> Is anyone else experiencing this type of behaviour?
+> 
+> Doug Gilbert
 
-As I don't know the scsi subsystem, I can only rely on the fact that
-kfree should never be used as a release call.  So fix that, and I'm
-happy :)
-
-> Also in my original post I described what the problem is. If that problem
-> exists then it is generic.
-> Please see also "Module unloading in a reference counted world"
-> -> http://lwn.net/Articles/67421/
-
-I understand the "generic" issue, however no other subsystem needs to
-use kfree as a release call.  Now either everyone else is broken or...
-
-thanks,
-
-greg k-h
+/Matti Aarnio -- one of  <postmaster@vger.kernel.org>
