@@ -1,44 +1,50 @@
-From: Brian King <brking@us.ibm.com>
-Subject: Re: How to add/drop SCSI drives from within the driver?
-Date: Wed, 08 Dec 2004 17:46:38 -0600
-Message-ID: <41B7925E.5070700@us.ibm.com>
-References: <0E3FA95632D6D047BA649F95DAB60E570230CA8C@exa-atlanta>
-Reply-To: brking@us.ibm.com
+From: "DR.  Largen" <th0406@hotmail.com>
+Subject: Gourmet Healthy Coffee now available                 SLHZZVM
+Date: Wed, 08 Dec 2004 06:30:50 -0500
+Message-ID: <20041208112800.CFA525CB349@host.erresoft.com>
+Reply-To: th0406@hotmail.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain;
+	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e3.ny.us.ibm.com ([32.97.182.143]:1436 "EHLO e3.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S261406AbULHXqk (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Dec 2004 18:46:40 -0500
-In-Reply-To: <0E3FA95632D6D047BA649F95DAB60E570230CA8C@exa-atlanta>
+Received: from [195.43.182.66] ([195.43.182.66]:28893 "EHLO host.erresoft.com")
+	by vger.kernel.org with ESMTP id S261415AbULIAK6 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Dec 2004 19:10:58 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Bagalkote, Sreenivas" <sreenib@lsil.com>
-Cc: Matt Domsch <Matt_Domsch@dell.com>, 'James Bottomley' <James.Bottomley@SteelEye.com>, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, "'bunk@fs.tum.de'" <bunk@fs.tum.de>, 'Andrew Morton' <akpm@osdl.org>, "Ju, Seokmann" <sju@lsil.com>, "Doelfel, Hardy" <hdoelfel@lsil.com>, "Mukker, Atul" <Atulm@lsil.com>
+To: linux-scsi@vger.kernel.org, dggioiosoi@oioidsgigo.ye, bcharlton@state.mt.us, nfvsapmc@baronmeds.com, mikez@nextgenelectronics.com, bbelt5583@overstaywelcome.com, spamtrap@example.com, mariam_golenaz2004@yahoo.com, soporte@creatividadfeminista.org, igdiosioog@odisigoigo.cf
 
-Bagalkote, Sreenivas wrote:
-> Adding a drive:- For application to use sysfs to scan newly added drive,
-> it needs to know the HCTL (SCSI address - Host, Channel, Target & Lun)
-> of the drive. Driver is the only one that knows the mapping between a 
-> drive and the corresponding HCTL.
-
-Can you explain from a high level how megaraid adds logical devices?
-I assume a management app of some sort sends a command to the adapter
-to create a disk array. What interface is used for this?
-Does this trigger any notification from the adapter to the device
-driver?
-
-> Removing a drive:- There is no sane way for the application to map out
-> drives to /dev/sd<x>. 
-
-This information is all available in sysfs. Have you looked at libsysfs
-at all?
+You have just been contacted to introduce you to a great business opportunity now
+just coming to North America!
 
 
+We are 10 year old Malaysian company. (well established)
 
--- 
-Brian King
-eServer Storage I/O
-IBM Linux Technology Center
+
+Operating successfully in over 14 countries, (soon to be 100)
+
+
+$130 Million Dollars in sales last year alone (not some small want-a-be start-up)
+
+
+Over 1 Million consumers (you can’t fool a million people)
+
+
+Success based on a 2000 year old ingredient known to promote a Healthier 
+Mind and Body and then incorporating this wonderful ingredient into Coffee, 
+North Americans Drink 3-5 cups of coffee per day. That is over 500 Million cups consumed daily!!
+
+(2000 years! That's long history of evidence and an established market of coffee drinkers, no training required)
+
+
+
+If you drink coffee or know someone who drinks coffee then you have the basics to creating a 6 figure income 
+in a short time!!
+
+
+Check us out here
+http://www.makebigcashnow.com
+
+
 
