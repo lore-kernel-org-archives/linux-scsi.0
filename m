@@ -1,96 +1,84 @@
-From: Mark Haverkamp <markh@osdl.org>
-Subject: RE: 2.5.59-dcl2
-Date: 29 Jan 2003 12:09:56 -0800
+From: Patrick Mansfield <patmans@us.ibm.com>
+Subject: Re: scsi command slab allocation under memory pressure
+Date: Wed, 29 Jan 2003 12:11:17 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1043870995.11929.12.camel@markh1.pdx.osdl.net>
-References: <0E3FA95632D6D047BA649F95DAB60E570185EEEF@EXA-ATLANTA.se.lsil.com>
+Message-ID: <20030129121117.A3389@beaverton.ibm.com>
+References: <20030129104731.A2811@beaverton.ibm.com> <3E382E2C.4030201@splentec.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <0E3FA95632D6D047BA649F95DAB60E570185EEEF@EXA-ATLANTA.se.lsil.com>
+Content-Disposition: inline
+In-Reply-To: <3E382E2C.4030201@splentec.com>; from luben@splentec.com on Wed, Jan 29, 2003 at 02:40:28PM -0500
 List-Id: linux-scsi@vger.kernel.org
-To: "Mukker, Atul" <atulm@lsil.com>
-Cc: "'Matt_Domsch@Dell.com'" <Matt_Domsch@Dell.com>, andmike@us.ibm.com, linux-scsi@vger.kernel.org
+To: Luben Tuikov <luben@splentec.com>
+Cc: linux-scsi@vger.kernel.org
 
-On Wed, 2003-01-29 at 11:41, Mukker, Atul wrote:
-> What might be happening here is, FW is retrying the command for some
-> iterations and each of them times out. The total timeout is greater than the
-> expected window.
+On Wed, Jan 29, 2003 at 02:40:28PM -0500, Luben Tuikov wrote:
+> Patrick Mansfield wrote:
 > 
-> A SCSI trace would tell us exactly what is going on there.
+> Is this a question, narrative, comment or flame?  I'll try to answer
+> this anyway.
 
-Unfortunately we don't have a SCSI analyzer here.
+Yes, except for the flame part :)
 
-Mark.
+> James had this comment, just because I put the mechanism there to allow
+> for more than one command to be in the store of backup command structs.
+> See my reply to his email in the archives.
 > 
-> Thanks
-> -Atul Mukker
+> The reason for populating free_list with just one command on host init,
+> is quite obvious, but to elaborate, the choices are 1 and N, where N is
+> a natural number greater than 1.
 > 
-> -----Original Message-----
-> From: Matt_Domsch@Dell.com [mailto:Matt_Domsch@Dell.com]
-> Sent: Wednesday, January 29, 2003 12:35 AM
-> To: markh@osdl.org
-> Cc: andmike@us.ibm.com; linux-scsi@vger.kernel.org; atulm@lsil.com
-> Subject: RE: 2.5.59-dcl2
-> 
-> 
-> > From: Mark Haverkamp [mailto:markh@osdl.org]
-> > I sent a bug report the the kernel bugzilla a while ago. It 
-> > got assigned
-> > to someone at IBM by default.  This is a problem we have been having
-> > between our megaraid cards and an IBM enclosure for some time.  I get
-> > around it by disabling report luns in my kernel configuration.  
-> > 
-> > Could you take a look at the bug and let me know if I've 
-> > included enough
-> > information to make sense.  I included debug output for the 
-> > 1.18 and 2.0 driver.
-> > 
-> > http://bugme.osdl.org/show_bug.cgi?id=183
-> > 
-> > or
-> > 
-> > http://bugzilla.kernel.org/show_bug.cgi?id=183
-> 
-> Mark, your description in the bug appears accurate.  Here's what happens:
-> 
-> 1) REPORT_LUNS is sent to the IBM enclosure, command times out.
-> 2) scsi_unjam_host() runs, trying the error handlers...
-> 3) megaraid abort handler, then the reset handler called (3 times), none of
-> which do anything at all because the command has already been issued to the
-> firmware, and the card itself isn't getting reset.  Both those routines
-> return failure.
-> 4) so scsi_unjam_host() offlines the device
-> 5) scsi_decide_disposition() sees device is offline and returns success,
-> freeing the command for future use again.
-> 6) command eventually completes and the mega_rundoneq() calls
-> cmd->scsi_done() on it, but cmd has been filled with 0x5a's so it Oopses.
-> 
-> 
-> The scsi mid-layer shouldn't free a command that hasn't actually been
-> aborted/reset because it *could* come back from the firmware after the
-> timeout has expired, and the driver has a reference to it (need
-> refcounting...)  This could potentially lead to an exhaustion of the command
-> pool though, if a command *never* comes back.
-> 
-> How long does it take for the IBM enclosure to return REPORT LUNS?  Since
-> this works on aic7xxx within the timeout period, I'm guessing the megaraid
-> firmware takes a long time to deal with it since it's a pass-through device.
-> 
-> I believe there is a way to issue an adapter reset command to the megaraid
-> firmware, though neither driver series 1.18 or 2.00 do so presently.
-> Copying Atul for insight as to what effects this would have on the
-> controller and commands in flight...
-> 
-> Thanks,
-> Matt
-> 
-> --
-> Matt Domsch
-> Sr. Software Engineer, Lead Engineer, Architect
-> Dell Linux Solutions www.dell.com/linux
-> Linux on Dell mailing lists @ http://lists.us.dell.com
--- 
-Mark Haverkamp <markh@osdl.org>
+> The problem with N is that I do *not* have a heuristic which will tell me
+> what a suitable value for N is.  How about 5, hmm, what about 10, or maybe
+> 1e10?
 
+We do have bounds on the number of commands.
+
+Assuming N is the minimum number of commands we want available:
+
+Currently (plain 2.5.59) we have N being at the number of scsi_device's on
+the system, and we always have at least one command available for each
+scsi_device.
+
+It is not clear if N should be the number of scsi commands that might be
+outstanding on the system (what it used to be prior to Doug L's queue
+depth changes, and what we have in 2.4).
+
+So N should be at least the number of scsi_devices on the system, and at
+most the sum of all the commands that can potentially be used by all
+scsi_devices on the system.
+
+> Furthermore, N may be a constant or it may be a function of how much
+> memory we currently have, how many commands have been queued into the host,
+> etc, or it may just be N = can_queue - num_queued_commands + 1, which is
+> dynamic, which is pointless (Homework: show why).
+> 
+> We want to waste as little memory as possible (thus 1 per host), since
+> SCSI Core is not the only subsystem running on the machine.  Hint:
+> see the flags the slabs are allocated with.  Using the Central Limit
+> Theorem, I hope that by the time we get low on memory pressure, the scsi
+> command cache pool size has settled*.  Unless we started with very little
+> memory, which would be quite unusual in this day and age.
+
+If we must allocate enough space to ensure proper swapout behavour, it is
+not a waste!
+
+IMO we need something similiar to the request_queue_t free list, where
+we allocate a bunch of items up front out of a slab.
+
+> * Lots of assumptions here, but all valid for a *server* machine.
+> 
+> Let's get some experience with this thing running and actually have a
+> *natural* failing example, and we can twiddle with the initial value
+> of N, and/or can develop a f(N) which would be computed occasionally
+> and free_list varied upon scsi_put_command().
+
+Are you saying we will always be able to get a command under low memory
+situtations? 
+
+If not, the code should be changed, otherwise please explain how.
+
+We should not wait for a failure to occur to answer the question.
+
+-- Patrick Mansfield
