@@ -1,39 +1,39 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: How to force abort of a SCSI command
-Date: Tue, 18 Nov 2003 11:36:34 -0500 (EST)
+From: Liran Schour <LIRANS@il.ibm.com>
+Subject: Bidirectional support
+Date: Tue, 18 Nov 2003 19:41:05 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44L0.0311181112210.783-100000@ida.rowland.org>
+Message-ID: <OFADB546DA.E3228E33-ONC2256DE2.005FDDD5-C2256DE2.0061252A@il.ibm.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ida.rowland.org ([192.131.102.52]:15876 "HELO ida.rowland.org")
-	by vger.kernel.org with SMTP id S261841AbTKRQgg (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 18 Nov 2003 11:36:36 -0500
+Received: from mtagate1.de.ibm.com ([195.212.29.150]:22180 "EHLO
+	mtagate1.de.ibm.com") by vger.kernel.org with ESMTP id S263733AbTKRRnD
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 18 Nov 2003 12:43:03 -0500
+Received: from d12relay02.megacenter.de.ibm.com (d12relay02.megacenter.de.ibm.com [9.149.165.196] (may be forged))
+	by mtagate1.de.ibm.com (8.12.10/8.12.10) with ESMTP id hAIHh1Bs041308
+	for <linux-scsi@vger.kernel.org>; Tue, 18 Nov 2003 17:43:01 GMT
+Received: from d10ml001.telaviv.ibm.com (d12av02.megacenter.de.ibm.com [9.149.165.228])
+	by d12relay02.megacenter.de.ibm.com (8.12.9/NCO/VER6.6) with ESMTP id hAIHgxN9275440
+	for <linux-scsi@vger.kernel.org>; Tue, 18 Nov 2003 18:43:00 +0100
 List-Id: linux-scsi@vger.kernel.org
-To: SCSI development list <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org, Muli Ben-Yehuda <MULI@il.ibm.com>
 
-I'm starting to work on a kernel driver that will submit SCSI requests 
-directly to a device queue -- rather like the sg driver except that mine 
-will operate as a bottom half, not in process context.  There won't be any 
-predetermined timeouts for the commands, but sometimes my driver will need 
-to abort a command and perform a device reset.
 
-I see that scsi_reset_provider() is available to implement device reset
-requests (although it needs to run in a process, no big deal).  But it
-won't abort a command that's already in progress.
 
-So I need to know how to abort a queued request.  That actually involves 
-two problems: how to abort a request that hasn't yet made it to the head 
-of the queue and begun processing, and how to abort a command that has 
-already gone to the low-level device driver.  The first problem probably 
-doesn't matter much; I'm assuming that nobody else will be using the 
-device at the same time as my driver.  But it would be nice to know how to 
-cancel _all_ the outstanding requests on the device queue.
 
-The second problem is the real one I have to face.  Is there some way to 
-abort an ongoing command, perhaps by following pointers to the scsi_cmnd 
-structure and invoking the timeout routine directly?
 
-Alan Stern
+The OSD standard requires support for bidirectional commands (write and get
+obj attribute at the same command for example). The SAM-3 defines that in
+order to execute a SCSI command the caller should supply an input an output
+buffer. It seems that in the current Linux SCSI implementation the API
+accept only one buffer, input our output buffer depends on the
+data_direction flag.
+Is there some work going on trying to implement bidirectional support?
+Is it sound reasonable to extend the scatter-gather structure to include
+data direction flag and by that bypass the interface problem and allow
+support for bidirectional commands?
+
+Thanks,
+- Liran
 
