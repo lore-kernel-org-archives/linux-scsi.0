@@ -1,137 +1,56 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH] LDM-based scsi host lookup
-Date: Tue, 27 May 2003 13:25:50 +0200
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: [RFR] a new SCSI driver
+Date: Tue, 27 May 2003 21:38:50 +1000
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030527112550.GB13798@lst.de>
+Message-ID: <3ED34E4A.8040601@torque.net>
+References: <20030524195123.GA8394@gtf.org>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([212.34.189.10]:23216 "EHLO mail.lst.de")
-	by vger.kernel.org with ESMTP id S263246AbTE0LMj (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 27 May 2003 07:12:39 -0400
-Content-Disposition: inline
+Received: from bunyip.cc.uq.edu.au ([130.102.2.1]:49936 "EHLO
+	bunyip.cc.uq.edu.au") by vger.kernel.org with ESMTP id S263274AbTE0LYZ
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 27 May 2003 07:24:25 -0400
+In-Reply-To: <20030524195123.GA8394@gtf.org>
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@steeleye.com
+To: linux-kernel@vger.kernel.org
 Cc: linux-scsi@vger.kernel.org
 
-Replace scsi_host_hn_get with scsi_host_lookup that walks
-through the shost class and gets a proper reference to the
-host.  This should fix the OOPS that Douglas saw last week.
+Jeff Garzik wrote:
+> 
+<snip>
 
+> * Only supports Intel PATA and SATA right now
 
---- 1.67/drivers/scsi/hosts.c	Mon May 26 14:17:48 2003
-+++ edited/drivers/scsi/hosts.c	Mon May 26 15:06:44 2003
-@@ -522,16 +522,33 @@
- }
- 
- /**
-- * scsi_host_hn_get - get a Scsi_Host by host no and inc ref count
-- * @host_no:	host number to locate
-- *
-- * Return value:
-- * 	A pointer to located Scsi_Host or NULL.
-- **/
--struct Scsi_Host *scsi_host_hn_get(unsigned short host_no)
-+ * scsi_host_lookup - get a reference to a Scsi_Host by host no
-+ *
-+ * @hostnum:	host number to locate
-+ *
-+ * Return value:
-+ *	A pointer to located Scsi_Host or NULL.
-+ **/
-+struct Scsi_Host *scsi_host_lookup(unsigned short hostnum)
- {
--	/* XXX Inc ref count */
--	return scsi_find_host_by_num(host_no);
-+	struct class *class = class_get(&shost_class);
-+	struct class_device *cdev;
-+	struct Scsi_Host *shost = NULL, *p;
-+
-+	if (class) {
-+		down_read(&class->subsys.rwsem);
-+		list_for_each_entry(cdev, &class->children, node) {
-+			p = class_to_shost(cdev);
-+			if (p->host_no == hostnum) {
-+				scsi_host_get(p);
-+				shost = p;
-+				break;
-+			}
-+		}
-+		up_read(&class->subsys.rwsem);
-+	}
-+
-+	return shost;
- }
- 
- /**
-@@ -540,10 +557,8 @@
-  **/
- void scsi_host_get(struct Scsi_Host *shost)
- {
--
- 	get_device(&shost->host_gendev);
- 	class_device_get(&shost->class_dev);
--	return;
- }
- 
- /**
-@@ -555,7 +570,6 @@
- 
- 	class_device_put(&shost->class_dev);
- 	put_device(&shost->host_gendev);
--	return;
- }
- 
- /**
-===== drivers/scsi/scsi_priv.h 1.9 vs edited =====
---- 1.9/drivers/scsi/scsi_priv.h	Mon May 26 14:17:48 2003
-+++ edited/drivers/scsi/scsi_priv.h	Mon May 26 15:06:30 2003
-@@ -56,7 +56,7 @@
- extern void scsi_host_busy_inc(struct Scsi_Host *, Scsi_Device *);
- extern void scsi_host_busy_dec_and_test(struct Scsi_Host *, Scsi_Device *);
- extern struct Scsi_Host *scsi_host_get_next(struct Scsi_Host *);
--extern struct Scsi_Host *scsi_host_hn_get(unsigned short);
-+extern struct Scsi_Host *scsi_host_lookup(unsigned short);
- extern void scsi_host_put(struct Scsi_Host *);
- extern void scsi_host_init(void);
- 
-@@ -128,5 +128,7 @@
-  * class and device attributes */
- extern struct class_device_attribute *scsi_sysfs_shost_attrs[];
- extern struct device_attribute *scsi_sysfs_sdev_attrs[];
-+
-+extern struct class shost_class;
- 
- #endif /* _SCSI_PRIV_H */
---- 1.23/drivers/scsi/scsi_proc.c	Mon May 12 16:26:15 2003
-+++ edited/drivers/scsi/scsi_proc.c	Mon May 26 15:07:09 2003
-@@ -250,7 +214,7 @@
- 	struct scsi_device *sdev;
- 	int error = -ENODEV;
- 
--	shost = scsi_host_hn_get(host);
-+	shost = scsi_host_lookup(host);
- 	if (!shost)
- 		return -ENODEV;
- 
-@@ -272,7 +236,7 @@
- 	struct Scsi_Host *shost;
- 	int error = -ENODEV;
- 
--	shost = scsi_host_hn_get(host);
-+	shost = scsi_host_lookup(host);
- 	if (!shost)
- 		return -ENODEV;
- 	sdev = scsi_find_device(shost, channel, id, lun);
---- 1.19/drivers/scsi/scsi_sysfs.c	Mon May 26 14:17:48 2003
-+++ edited/drivers/scsi/scsi_sysfs.c	Mon May 26 15:06:07 2003
-@@ -54,7 +54,7 @@
- 	NULL
- };
- 
--static struct class shost_class = {
-+struct class shost_class = {
- 	.name		= "scsi_host",
- };
- 
+Jeff,
+Your patch applies to lk 2.5.70 without problems.
+
+I found that my dual Celeron (abit mobo) has this
+Intel IDE controller:
+   00:07.1 IDE interface: Intel Corp. 82371AB/EB/MB PIIX4 IDE (rev 01)
+
+so I tried a 2.5.70 kernel with this patch. Two disks
+connected:
+   - SCSI disk to a Tekram 390u3w controller (sym53c8xx_2
+     driver). Root partition on this disk
+   - a Maxtor ATA disk (D740X-6L) to the Intel IDE
+     controller.
+
+Didn't get too far. After finding the SCSI controller and
+SCSI disk at boot up, this came out just before it locked up:
+  ata1:PATA max UDMA/33 cmd 0x1F0 ctl 0x3F6 bmdma 0xF000 irq 14
+
+So I disabled the IDE controllers in the BIOS and then
+this came out:
+  ....
+  PCI: Enabling device 00:07.1 (0000->0001)
+  ata1:PATA max UDMA/33 cmd 0x1F0 ctl 0x3F6 bmdma 0xF000 irq 14
+  ATA: abnormal status 0xFF on port 0x1F7
+  ATA: abnormal status 0xFF on port 0x1F7
+
+and it locked up again.
+
+Doug Gilbert
+
