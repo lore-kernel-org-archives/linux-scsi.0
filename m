@@ -1,185 +1,77 @@
-From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
-Subject: [PATCH] dpt_i2o changes for 2.4.24 kernel in support of 64 bit and bitrot (CHANGELOG)
-Date: Tue, 10 Feb 2004 15:07:06 -0500
+From: James Bottomley <James.Bottomley@steeleye.com>
+Subject: Re: [PATCH] allow drivers to hook into watchdog timeout
+Date: 10 Feb 2004 15:05:40 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <547AF3BD0F3F0B4CBDC379BAC7E4189F255009@otce2k03.adaptec.com>
+Message-ID: <1076443541.2080.56.camel@mulgrave>
+References: <20040120132052.GA6740@lst.de>		<2432440000.1076430858@aslan.btc.adaptec.com
+	>	<1076431366.1804.24.camel@mulgrave>
+		<2472850000.1076435243@aslan.btc.adaptec.com>
+	<1076438507.2165.38.camel@mulgrave>
+	<2520610000.1076442259@aslan.btc.adaptec.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="----_=_NextPart_001_01C3F011.74E83ECA"
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from magic.adaptec.com ([216.52.22.17]:217 "EHLO magic.adaptec.com")
-	by vger.kernel.org with ESMTP id S266056AbUBJUHK (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 10 Feb 2004 15:07:10 -0500
-Received: from redfish.adaptec.com (redfish.adaptec.com [162.62.50.11])
-	by magic.adaptec.com (8.11.6/8.11.6) with ESMTP id i1AK79J32223
-	for <linux-scsi@vger.kernel.org>; Tue, 10 Feb 2004 12:07:09 -0800
-Received: from otce2k03.adaptec.com (otce2k03.adaptec.com [10.12.1.72])
-	by redfish.adaptec.com (8.11.6/8.11.6) with ESMTP id i1AK77817362
-	for <linux-scsi@vger.kernel.org>; Tue, 10 Feb 2004 12:07:07 -0800
-content-class: urn:content-classes:message
+Received: from stat1.steeleye.com ([65.114.3.130]:15852 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S266020AbUBJUGA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 10 Feb 2004 15:06:00 -0500
+In-Reply-To: <2520610000.1076442259@aslan.btc.adaptec.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>
+To: "Justin T. Gibbs" <gibbs@scsiguy.com>
+Cc: Christoph Hellwig <hch@lst.de>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-This is a multi-part message in MIME format.
+On Tue, 2004-02-10 at 14:44, Justin T. Gibbs wrote:
+> > If you need to stall a command after you've accepted it by returning
+> > zero from queuecommand, you return it to the mid-layer with status
+> > either BUSY or QUEUE_FULL.
+> 
+> BUSY and QUEUE_FULL status have particular meanings when associated
+> with an SCSI peripheral.  Using them for this purpose will only confuse
+> the mid-layer into taking unwarranted action, like trying to throttle
+> the queue depth.  The times that I want to use this have nothing to
+> do with BUSY or QUEUE_FULL in their SCSI sense.
 
-------_=_NextPart_001_01C3F011.74E83ECA
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+So if I give you an error code for this, like DID_REQEUEUE, you'll
+eliminate the driver queueing from your queucommand and from your done
+processing?
 
-This documents all the changes performed.
+> >> 1) A counting "device frozen semaphore" that the LLD or the mid-layer
+> >>    can decrement when I/O to this device needs to be halted.
+> > 
+> > If you really need to halt everything after returning BUSY, then the
+> > scsi_block_requests()/scsi_unblock_requests() can be used for this.
+> 
+> scsi_block_requests() blocks the whole controller up.  I only want
+> and need to block the transactions going to a particular lun.
+> 
+> >> 2) An explicit scsi cmd code indicating "requeue this request - don't
+> >>    attempt recovery" for commands that are in internal queues that were
+> >>    innocently affected by a recovery or transport event.
+> > 
+> > commands in the controller issue queue innocently affected by recovery
+> > should be returned to the mid-layer with DID_RESET, where they will be
+> > reissued.
+> 
+> They will only be issued up to their command retry count which may be zero
+> for certain commands.  This may also confuse the peripheral or mid-layer
+> drivers into believing that a unit attention condition is expected and
+> should be ignored.  The commands that were affected by the recovery action
+> should be marked accordingly, but marking the commands that are still waiting
+> on the sidelines is the equivalent of a drive-by-shooting.
 
-Sincerely -- Mark Salyzyn
+No, they won't.  DID_RESET doesn't count against the retry count (the
+only things that affect the retry count are conditions that go through
+the maybe_retry label in scsi_device_disposition()).
 
------Original Message-----
-From: Salyzyn, Mark=20
-Sent: Tuesday, February 10, 2004 3:05 PM
-To: 'linux-scsi'
-Subject: [PATCH] dpt_i2o changes for 2.4.24 kernel in support of 64 bit
-and bitrot
+DID_RESET is designed for returning an uncompleted command where
+recovery in one command affected another, which is what you say you
+need.
 
-Read the CHANGELOG in set of patches for complete description of all the
-history and modifications to the driver.
+It will not cause any unit attention exception processing.  That only
+happens if the error handler knows it reset something, or the driver
+reports that it is resetting something.
 
-This is a whole scale synchronization of the driver in the 2.4.24 tree
-to the Adaptec source code. I know the drill, this is just too big to be
-accepted ;-> but it will be very difficult to separate out such a
-fundamental set of changes in the driver.
+James
 
-Sincerely -- Mark Salyzyn
 
-------_=_NextPart_001_01C3F011.74E83ECA
-Content-Type: application/octet-stream;
-	name="dpt_i2o.CHANGELOG.2.4.patch"
-Content-Transfer-Encoding: base64
-Content-Description: dpt_i2o.CHANGELOG.2.4.patch
-Content-Disposition: attachment;
-	filename="dpt_i2o.CHANGELOG.2.4.patch"
-
-ZGlmZiAtdSAtUCAtLXJlY3Vyc2l2ZSBsaW51eC0yLjQuMjQvZHJpdmVycy9zY3NpL0NIQU5HRUxP
-RyBsaW51eC0yLjQuMjQtMjMyMi9kcml2ZXJzL3Njc2kvQ0hBTkdFTE9HCi0tLSBsaW51eC0yLjQu
-MjQvZHJpdmVycy9zY3NpL0NIQU5HRUxPRwlXZWQgRGVjIDMxIDE2OjAwOjAwIDE5NjkKKysrIGxp
-bnV4LTIuNC4yNC0yMzIyL2RyaXZlcnMvc2NzaS9DSEFOR0VMT0cJV2VkIEZlYiAgNCAxMDoxODo1
-MyAyMDA0CkBAIC0wLDAgKzEsMTkxIEBACitWZXJzaW9uOiAyLjQuNQorCisJLSBWYXJpb3VzIHRp
-bWVvdXRzIG5lY2Vzc2FyaWx5IG5lZWRlZCB0byBhbGxvdyBtZW1vcnkgYWxsb2NhdGlvbnMgdG8K
-KwkgIGxlYWsgcmF0aGVyIHRoYW4gZ2VuZXJhdGUgYSBwb3NzaWJsZSB0aW1lYm9tYiBjb3JydXB0
-aW9uLgorCitWZXJzaW9uOiAyLjQuNworCisJLSBCdW1wIHZlcnNpb24sIG5ldyBwYWNrYWdpbmcg
-YXMgYSByZXN1bHQgb2YgbWFueSBjaGFuZ2VzIGluIHRoZQorCSAgYWFjcmFpZCBkcml2ZXIuCisK
-K1ZlcnNpb246IDIuNC45CisKK1JFQURNRS5kcHRpOgorCS0gQWRkZWQgY29tbWVudHMgYWJvdXQg
-NjQgYml0CisKK2RwdGlfaW9jdGwuaDoKKwktIEFkZGVkIGF1dGhvciBjb21tZW50CisKK2RwdF9p
-Mm8uYzoKKwktIEFkZGVkIGF1dGhvciBjb21tZW50CisJLSBSZW1vdmVkIEFERFIzMiBjb25zdHJ1
-Y3QKKwktIE1lcmdlZCAyLjYuMCBjb25jZXB0IGNoYW5nZXMgYXMgZGlzY292ZXJkIGluIGFhY3Jh
-aWQgZHJpdmVyIChtYW55CisJICBjb3NtZXRpYyBjaGFuZ2VzIGFuZCBhZGRpdGlvbmFsIGlmZGVm
-cykuCisJLSBBZGRlZCBwYWVfc3VwcG9ydCAoNjQgYml0KSBhbmQgcGVyZm9ybWVkIGZpcnN0IHBh
-c3MgNjQgYml0CisJICBjbGFyaXR5IHRvIGRyaXZlci4KKwktIENoYW5nZWQgdG8gdXRpbGl6ZSBw
-Y2lfYWxsb2NfY29uc2lzdGVudCBhcyBuZWNlc3NhcnkuCisJLSBSZW1vdmUgdmlydF90b19idXMg
-cm91dGluZXMuCisJLSB1dGlsaXplZCBjcHVfdG9fbGUjIyBhbmQgbGUjI190b19jcHUgaGFuZGxl
-cnMuCisJLSB1c2VkIHNlY3Rvcl9kaXYgZnVuY3Rpb24gdG8gcHJldmVudCBtYXRoIG92ZXJmbG93
-LgorCS0gZm9ydGlmaWVkIHByb2NfaW50byB0byByZWZsZWN0IG1vcmUgYWNjdXJhdGUgZGV0YWls
-cyBhYm91dCB0aGUgZHJpdmVyCisJLSBzZWdyZWdhdGUgdmEgKHZpcnR1YWwgYWRkcmVzcykgYW5k
-IHBhIChwaHlzaWNhbCBhZGRyZXNzKS4KKwktIGNvbW1udCB1bmxvY2sgYXJvdW5kIHdhaXQgZm9y
-IGNvbW1hbmQgY29tcGxldGlvbiBiZWNhdXNlIG9mIGZhdWx0CisJICBpbiBwcmUtZW1wdGl2ZSBr
-ZXJuZWwuCisJLSBpcnEgcm91dGluZXMgcmV0dXJuIGEgdmFsdWUgaW4gbGF0ZXIga2VybmVscy4K
-KworZHB0aS5oOgorCS0gQWRkZWQgYXV0aG9yIGNvbW1lbnQKKwktIE1lcmdlZCAyLjYuMCBjb25j
-ZXB0IGNoYW5nZXMgYXMgZGlzY292ZXJkIGluIGFhY3JhaWQgZHJpdmVyIChtYW55CisJICBjb3Nt
-ZXRpYyBjaGFuZ2VzIGFuZCBhZGRpdGlvbmFsIGlmZGVmcykuCisKK1ZlcnNpb246IDIuNS4wLTIx
-NTkKKworZHB0X2kyby5jOgorCS0gcmVwbGFjZSBkZXByZWNhdGVkIGNtZC0+Y2hhbm5lbCB3aXRo
-IGNtZC0+ZGV2aWNlLT5jaGFubmVsCisJLSByZXBsYWNlIGRlcHJlY2F0ZWQgY21kLT50YXJnZXQg
-d2l0aCBjbWQtPmRldmljZS0+aWQKKwktIHJlcGxhY2UgZGVwcmVjYXRlZCBjbWQtPmx1biB3aXRo
-IGNtZC0+ZGV2aWNlLT5sdW4KKworVmVyc2lvbjogMi41LjAtMjE4MglTZXAgMTIgMjAwMworVmVy
-c2lvbjogMi41LjAtMjE4OAlTZXAgMTggMjAwMworVmVyc2lvbjogMi41LjAtMjIwMQlTZXAgMjkg
-MjAwMworVmVyc2lvbjogMi41LjAtMjIwNworVmVyc2lvbjogMi41LjAtMjIxNwlPY3QgIDcgMjAw
-MworCitkcHRfaTJvLmM6CisJLSBBZGRlZCBwY2lfc2V0X2RtYV9tYXNrIGluIHN1cHBvcnQgb2Yg
-b2xkZXIgKDIuNC4yKSBrZXJuZWxzCisKK1ZlcnNpb246IDIuNS4wLTIyMjYKKworZHB0X2kyby5j
-OgorCS0gUmVtb3ZlZCBlcnJvciBpZmRlZiBhc2tpbmcgZm9yIGRyaXZlciB0byBiZSBjb252ZXJ0
-ZWQgdG8gRE1BLW1hcHBpbmcKKwktIEFkZGVkIF9feDg2XzY0X18gaWZkZWYgZm9yIHNpZ25hdHVy
-ZSwgcmVwb3J0aW5nIFBST0NfU0VYSVVNIGZvcgorCSAgcHJvY2Vzc29yIHR5cGUuCisJLSBwY2kg
-dGFibGUgY2FuIHJlbWFpbiBpbiBhbGwgdmVyc2lvbnMgb2YgdGhlIGRyaXZlci4KKwktIEFkZGVk
-IHN1cHBvcnQgZm9yIGFzbS14ODZfNjQvaW9jdGwzMi5oIGluIG9yZGVyIHRvIHN1cHBvcnQgdGhl
-IDMyCisJICBiaXQgbWFuYWdlbWVudCBhcHBsaWNhdGlvbnMgaW4gdGhlIEFNRDY0IGVudmlyb25t
-ZW50LiBBZGRlZCBjYWxscworCSAgdG8gYm90aCByZWdpc3Rlcl9pb2N0bDMyX2NvbnZlcnNpb24g
-b24gbG9hZCwgYW5kCisJICB1bnJlZ2lzdGVyX2lvY3RsX2NvbnZlcnNpb24gdXBvbiB1bmxvYWQg
-Zm9yIHRoZSBrbm93biBzZXQgb2YgdXNlZAorCSAgaW9jdGxzLgorCS0gTW92ZWQgaW5pdGlhbGl6
-YXRpb24gb2YgcHJvY19kaXIgdG8gdGVtcGxhdGUuCisJLSBVc2UgY21kLT5kZXZpY2UtPmhvc3Qg
-cmF0aGVyIHRoYW4gdGhlIGRlcHJlY2F0ZWQgY21kLT5ob3N0IHJlZmVyZW5jZS4KKwktIFVzZSBj
-bWQtPmRldmljZS0+Y2hhbm5lbCByYXRoZXIgdGhhbiB0aGUgZGVwcmVjYXRlZCBjbWQtPmNoYW5u
-ZWwKKwkgIHJlZmVyZW5jZS4KKwktIEZvciA2NCBiaXQgZW52aXJvbm1lbnRzLCBjaGFuZ2UgdGhl
-IHUzMiBjb21tYW5kIHRhZyBmcm9tIHRoZSBjb21tYW5kCisJICBwb2ludGVyIHRvIHRoZSBjb21t
-YW5kIHNlcmlhbF9udW1iZXIsIHdpdGggcmV2ZXJzZSByZWZlcmVuY2luZyB3aGVuCisJICB0aGUg
-aW50ZXJydXB0IG9jY3Vycy4gQWRkZWQgYSBhZHB0X2NtZF9mcm9tX2NvbnRleHQgcm91dGluZSB0
-bworCSAgcGVyZm9ybSB0aGUgcmV2ZXJzZSByZWZlcmVuY2luZy4KKwktIGJhc2VfYWRkcl92aXJ0
-LCBtc2dfYWRkcl92aXJ0IGFuZCBmcmllbmRzIGNoYW5nZSBmcm9tIHVuc2lnbmVkIGxvbmcKKwkg
-IHR5cGUgdG8gY2hhciAqIHR5cGUgaW4gc3VwcG9ydCBvZiA2NCBiaXQgZW52aXJvbm1lbnRzLiBU
-aGlzIGluY2x1ZGVzCisJICBlZmZlY3RzIG9uIHJldHVybnMgZnJvbSBpb3JlbWFwIGFuZCB1dGls
-aXphdGlvbnMgb2YgaW8gaGVscGVyCisJICBmdW5jdGlvbnMgbGlrZSByZWFkYiBldGMuIFRoaXMg
-YWxzbyBzcGlsbHMgaW50byBpcnFfbWFzaywgcG9zdF9wb3J0CisJICBhbmQgcmVwbHlfcG9ydCBk
-ZWZpbml0aW9ucy4KKwktIHVubG9jayBpb19yZXF1ZXN0X2xvY2ssIG9yIGhvc3QtPmhvc3RfbG9j
-ayBzdXJyb3VuZGluZyB3YWl0IGZvcgorCSAgY29tbWFuZCBjb21wbGV0aW9uLgorCS0gaW50ZXJu
-YWwgcGFzc3Rocm91Z2ggc2dfbGlzdCBjaGFuZ2VzIGZyb20gdWxvbmcgdG8gdm9pZCAqLgorCS0g
-U3dpdGNoIHRvIGltaW5vciwgaW5zdGVhZCBvZiBib3RoIHRoZSBkZXByZWNhdGVkIG1pbm9yIGFu
-ZCBNSU5PUgorCSAgZnVuY3Rpb25zLgorCS0gdXNlIGRlZmluZWQgX19zcGFyY19fIHJhdGhlciB0
-aGFuIHByZXByb2Nlc3NvciBzeW50YWN0aWNhbGx5CisJICBpbmNvcnJlY3QgZGVmaW5lIF9fc3Bh
-cmNfXworCitkcHRpLmg6CisJLSBiYXNlX2FkZHJfdmlydCwgbXNnX2FkZHJfdmlydCBhbmQgZnJp
-ZW5kcyBjaGFuZ2UgZnJvbSB1bnNpZ25lZCBsb25nCisJICB0eXBlIHRvIGNoYXIgKiB0eXBlIGlu
-IHN1cHBvcnQgb2YgNjQgYml0IGVudmlyb25tZW50cy4gVGhpcyBpbmNsdWRlcworCSAgZWZmZWN0
-cyBvbiByZXR1cm5zIGZyb20gaW9yZW1hcCBhbmQgdXRpbGl6YXRpb25zIG9mIGlvIGhlbHBlcgor
-CSAgZnVuY3Rpb25zIGxpa2UgcmVhZGIgZXRjLiBUaGlzIGFsc28gc3BpbGxzIGludG8gaXJxX21h
-c2ssIHBvc3RfcG9ydAorCSAgYW5kIHJlcGx5X3BvcnQgZGVmaW5pdGlvbnMuCisJLSBTd2l0Y2gg
-dG8gaW1pbm9yLCBpbnN0ZWFkIG9mIGJvdGggdGhlIGRlcHJlY2F0ZWQgbWlub3IgYW5kIE1JTk9S
-CisJICBmdW5jdGlvbnMuIE1ha2UgYSBkZWZpbml0aW9uIGZvciBpbWlub3IgYXMgbmVjZXNzYXJ5
-IGZvciBvbGRlcgorCSAga2VybmVscy4KKwktIERlZmluZSBzZXRfY3VycmVudF9zdGF0ZSBmb3Ig
-b2xkZXIga2VybmVscy4KKwktIFN3aXRjaCB0byB3aG9sZXNhbGUgaWZkZWYgb2YgcHJvdG90eXBl
-cyBmcm9tIG1pZC1wcm90b3R5cGUgaWZkZWZzLgorCitWZXJzaW9uOiAyLjUuMC0yMjUzCU9jdCAx
-NyAyMDAzCitWZXJzaW9uOiAyLjUuMC0yMjU0CU9jdCAxNyAyMDAzCisKK2RwdF9pMm8uYzoKKwkt
-IENvcnJlY3RlZCBzaWduYXR1cmVzIHRvIG1hdGNoIGxhdGVzdCBkcHRzaWcuaCBkZWZpbml0aW9u
-cy4KKworZHB0L2RwdHNpZy5oOgorCS0gVXBkYXRlZCB0byBsYXRlc3Qgc25hcHNob3QKKwktIE5v
-dGFibGUgc2lkZSBlZmZlY3Qgd2FzIGFkZGl0aW9uIG9mIElUQU5JVU0gYW5kIFNFWElVTSBkZWZp
-bml0aW9ucy4KKworVmVyc2lvbjogMi41LjAtMjI1NglPY3QgMjAgMjAwMworVmVyc2lvbjogMi41
-LjAtMjI1NwlPY3QgMjAgMjAwMworVmVyc2lvbjogMi41LjAtMjI2MQlPY3QgMjEgMjAwMyAoRGVi
-dWcpCitWZXJzaW9uOiAyLjUuMC0yMjY2CU9jdCAyMSAyMDAzIChEZWJ1ZykKKworZHB0X2kyby5j
-OgorCS0gTW92ZWQgaW5pdGlhbGl6YXRpb24gb2YgdXNlX25ld19laF9jb2RlIHRvIHRlbXBsYXRl
-LgorCS0gQWRkZWQgY29kZSB0byBpbml0aWFsaXplIHRoZSB0ZW1wbGF0ZSBwcmVzZW50IG1lbWJl
-ciB0byBtYXRjaAorCSAgYWFjcmFpZCBjb2RlLgorCitWZXJzaW9uOiAyLjUuMC0yMjY3CU9jdCAy
-MiAyMDAzCisKK2RwdF9pMm8uYzoKKwktIFVubG9jayBpb19yZXF1ZXN0X2xvY2sgb3IgaG9zdC0+
-aG9zdF9sb2NrIGJlZm9yZSBnb2luZyB0byBzbGVlcAorCSAgd2FpdGluZyBvbiBjb21tYW5kIGNv
-bXBsZXRpb24uIERvIHNvICpvbmx5KiBpZiB0aGUgbG9jayBpcyBoZWxkLAorCSAgYW5kIHJlLWxv
-Y2sgb25seSBpZiBpdCB3YXMgaGVsZC4gRm9ybWVybHkgdGhpcyBjb2RlIHdvdWxkIHBpbmctcG9u
-ZworCSAgaGFyZCBjb2RlZCBlbmFibGVkIGFuZCBkaXNhYmxlZCwgaGlkaW5nIHRoZSBmYWN0IHRo
-YXQgdGhpcyBjb2RlIHBhdGgKKwkgIGlzIGNhbGxlZCBhdCBpbml0aWFsaXphdGlvbiB0aW1lIGFu
-ZCBhdCBydW50aW1lIHdpdGggZGlmZmVyaW5nCisJICBsb2NraW5nIGNvbmRpdGlvbnMuCisKK1Zl
-cnNpb246IDIuNS4wLTIyNjgJT2N0IDIyIDIwMDMKK1ZlcnNpb246IDIuNS4wLTIyNjkJT2N0IDIy
-IDIwMDMKKworZHB0X2kyby5jOgorCS0gUmVtb3ZlZCBpbml0aWFsaXphdGlvbiBvZiBwcmVzZW50
-IGluIHRlbXBsYXRlIGFzIGFsbCBjdXJyZW50CisJICBrZXJuZWxzIHVwZGF0ZSB0aGUgdmFsdWUg
-YmFzZWQgb24gdGhlIHJldHVybiB2YWx1ZSBmcm9tIHRoZSBkZXRlY3QKKwkgIHJvdXRpbmUuCisK
-K1ZlcnNpb246IDIuNS4wLTIyNzAJT2N0IDI0IDIwMDMKK1ZlcnNpb246IDIuNS4wLTIyNzEJT2N0
-IDI0IDIwMDMKK1ZlcnNpb246IDIuNS4wLTIyNzIJT2N0IDI0IDIwMDMKK1ZlcnNpb246IDIuNS4w
-LTIyNzMJT2N0IDI0IDIwMDMKK1ZlcnNpb246IDIuNS4wLTIyNzUJT2N0IDI3IDIwMDMKK1ZlcnNp
-b246IDIuNS4wLTIyNzYJT2N0IDI3IDIwMDMKKworZHB0X2kyby5jOgorCS0gQmFjayByZWZlcmVu
-Y2UgdG8gbGFzdCBzZyBlbGVtZW50J3MgZmxhZ3Mgd2FzIGZsYXdlZCBpbiBwYWVfc3VwcG9ydCdk
-CisJICBjYXNlLgorCitWZXJzaW9uOiAyLjUuMC0yMjgyCisKK2RwdF9pMm8uYzoKKwktIHJlcWxl
-biB3YXMgZmxhd2VkIGluIHBhZV9zdXBwb3J0J2QgY2FzZS4KKworVmVyc2lvbjogMi41LjAtMjMw
-MgorCitkcHRfaTJvLmM6CisJLSBzZXQgbWF4X3NlY3RvciB0byA0MDk2ICgyTUIpIGluc3RlYWQg
-b2YgbGV0dGluZyBpdCBiZSB0aGUgZGVmYXVsdAorCSAgb2YgMjU1ICgxIGJsb2NrIGxlc3MgdGhh
-biAxMjhLQikuCisJLSBDYWxjdWxhdGUgdGhlIHNjYXR0ZXIgZ2F0aGVyIGxpbWl0IGZvciB0aGUg
-NjQgYml0IFNHIGNhc2UgYXMgd2VsbAorCSAgd2hlbiBlbmFibGVkLgorCS0gc2luZ2xlIHJlcXVl
-c3RzIGRvIG5vdCBnZXQgdW5tYXBwZWQgcHJvcGVybHksIHVzaW5nIHRoZSA2NCBiaXQKKwkgIGRt
-YV9oYW5kbGUgaW5zdGVhZCBvZiBwdHIuCisJLSBTY2F0dGVyIGdhdGhlciBmaXh1cHMgZm9yIGxh
-c3QgU0cgZWxlbWVudCBhcmUgaW5jb3JyZWN0IGluIHRoZQorCSAgNjQgYml0IFNHIGNhc2UuCisK
-K1ZlcnNpb246IDIuNS4wLTIzMTQKKworZHB0X2kyby5jICYgZHB0aS5oOgorCS0gaW1pbm9yIHRh
-a2VzIGlub2RlLCBub3QgaW5vZGUtPmlfcmRldiBhcmd1bWVudC4KKworZHB0X2kyby5jOgorCS0g
-dXNlIGluX3JlY292ZXJ5LCBzaG9zdF9zdGF0ZSwgZGV2aWNlX2J1c3kgb3IgYWNjZXNzX2NvdW50
-IHdoZXJlCisJICBhcHByb3ByaWF0ZS4gUmVwbGFjZXMgc2ltcGxlIHVzZSBvZiBhY2Nlc3NfY291
-bnQgZm9yIGFsbCB2ZXJzaW9ucworCSAgb2YgdGhlIG9wZXJhdGluZyBzeXN0ZW0uCisJLSBpZiB0
-aGUgZGV2aWNlIGlzIG5vbmUgREFTRCwgdGhlbiBkbyBub3Qgb3ZlcnJpZGUgdGhlIGluY29taW5n
-CisJICB0aW1lb3V0IHRvIDUgbWludXRlcy4gVGhlIDUgbWludXRlIHRpbWVvdXQgaXMgdG8gZGVh
-bCB3aXRoIHRoZQorCSAgd29yc3QgY2FzZSBjb21tYW5kIG9wZXJhdGlvbiB1bmRlciBoZWF2eSBs
-b2FkIGFzIGEgcmVzdWx0IG9mCisJICB0aGUgY29udHJvbGxlcnMgZGlzayBvcGVyYXRpb24gb3B0
-aW1pemF0aW9uIGhhbmRsaW5nLgorCitWZXJzaW9uOiAyLjUuMC0yMzE1CisKK2RwdF9pMm8uYzog
-S2VuIEJlYXR5IDxrZW5Abm92YS5vcmc+CisJLSBBZGp1c3RlZCBpZmRlZnMgZm9yIGtlcm5lbCB2
-ZXJzaW9uIHRvIG1ha2UgbW9yZSBzZW5zZS4KKworZHB0X2kyby5jOiBNYXJrX1NhbHl6eW5AYWRh
-cHRlYy5jb20KKwktIFdoZW4gd2UgdGltZSBvdXQsIGJlZm9yZSB3ZSBleGl0LCB3ZSBtdXN0IG51
-bGwgb3V0IHRoZSB3YWtlX3VwCisJICByZWZlcmVuY2UgdG8gcHJldmVudCBhIGtlcm5lbCBwYW5p
-Yy4KKworVmVyc2lvbjogMi41LjAtMjMxOQo=
-
-------_=_NextPart_001_01C3F011.74E83ECA--
