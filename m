@@ -1,64 +1,52 @@
-From: Brad Campbell <brad@wasp.net.au>
-Subject: max_sectors in libata when using md
-Date: Thu, 26 Aug 2004 19:20:09 +0400
-Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <412DFFA9.8030504@wasp.net.au>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+From: Pat LaVarre <p.lavarre@ieee.org>
+Subject: Re: Incorrect response to SK/ASC/ASCQ = x 02/04/01 (becoming ready)
+Date: Thu, 26 Aug 2004 09:29:20 -0600
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <B347A14C-F774-11D8-B3DA-00039398BB5E@ieee.org>
+References: <99D30EDE-F773-11D8-B3DA-00039398BB5E@ieee.org>
+Mime-Version: 1.0 (Apple Message framework v619)
+Content-Type: text/plain;
+	charset=US-ASCII;
+	format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-To: linux-ide@vger.kernel.org, SCSI Mailing List <linux-scsi@vger.kernel.org>, RAID Linux <linux-raid@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from email-out1.iomega.com ([147.178.1.82]:1426 "EHLO
+	email.iomega.com") by vger.kernel.org with ESMTP id S269052AbUHZP3V
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 26 Aug 2004 11:29:21 -0400
+In-Reply-To: <99D30EDE-F773-11D8-B3DA-00039398BB5E@ieee.org>
 List-Id: linux-scsi@vger.kernel.org
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: linux-scsi@vger.kernel.org
 
-G'day all,
+P.S.
 
-Hot on the trail of this libata oddity.
+> > > 02/04/01 should be treated like a Busy status.
+> > ...
+> > a) the spin-up implied by insert or power on,
+>
+> Many devices use x 2 04 01 to mean a spin-up implied by insert or 
+> power on.
+>
+> I hear x 2 04 01 had a pre-Windows history of meaning please rapidly 
+> retry, but Windows support was so poor - including rapidly counted 
+> retries - that those other uses of x 2 04 01 have migrate out of PC 
+> peripheral device designs.
 
-static Scsi_Host_Template svia_sht = {
-         .module                 = THIS_MODULE,
-         .name                   = DRV_NAME,
-         .queuecommand           = ata_scsi_queuecmd,
-         .eh_strategy_handler    = ata_scsi_error,
-         .can_queue              = ATA_DEF_QUEUE,
-         .this_id                = ATA_SHT_THIS_ID,
-         .sg_tablesize           = LIBATA_MAX_PRD,
-         .max_sectors            = ATA_MAX_SECTORS,
+I should also mention a practice I remember seeing and deprecating.
 
-ATA_MAX_SECTORS == 200.
+I've seen devices use x 2 04 01 to mean the host rudely sent a second 
+command while a device with no command queue was still completing an 
+"immediate" command or a disconnected command.  That's x 2 04 01 
+meaning "busy" in the sense of resource conflict: hello, the heads are 
+busy elsewhere, hello, there is only one arm.
 
-Should then the scsi layer be able to do this and queue 1/2 a Meg in a single request?
+Me, I argue that the host half of x 2 04 01 is such an ad hoc mess 
+across platforms that any PC peripheral device should instead choose to 
+delay its response to such a command.  Wait for the conflicting command 
+to complete, only then begin the new command, and let the host worry 
+about the worst case of the second command taking as long to complete 
+as two commands in sequence.
 
-sd_rw_intr: sda: res=0x0
-1024 sectors total, 524288 bytes done.
-use_sg is 128
-sd_init_command: disk=sda, block=0, count=1024
-sda : block=0
-sda : writing 1024/1024 512 byte blocks.
-scsi_add_timer: scmd: dfc48a00, time: 30000, (c0283910)
-ata_scsi_dump_cdb: CDB (13:0,0,0) 2a 00 00 00 00 00 00 04 00
-ata_scsi_translate: ENTER
-ata_scsi_rw_xlat: ten-byte command
-ata_sg_setup: ENTER, ata13
-ata_sg_setup: 128 sg elements mapped
+Pat LaVarre
 
-And queue 1024 sectors in one hit?
-
-If I talk to the drive directly with
-dd if=/dev/zero of=/dev/sda bs=1024k count=1
-
-The SCSI layer seems to break the request up into nice neat 127 sector chunks and send it on through.
-
-If I talk to it via an md device.
-
-mdadm --create --force --level=0 --raid-devices=1 /dev/md0 /dev/sda
-dd if=/dev/zero of=/dev/md0 bs=1024k count=1
-
-Then we get what we see above, and my PATA->SATA adaptor intermittently locks up with transfers that 
-long. (It does not appear to if I crank the speed down to UDMA66 from UDMA100 but that is another story)
-
-
-Am I looking at something completely weird? Is the block layer doing something I should know about? 
-Can SATA transfers handle 1024 sectors in one go? Will Batman make it out of the cave alive?
-
-Regards,
-Brad
