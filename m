@@ -1,116 +1,74 @@
-From: Mike Anderson <andmike@us.ibm.com>
-Subject: Re: [PATCH] Flexible timout intfrastructure take II
-Date: Thu, 17 Jun 2004 14:52:30 -0700
+From: Krzysztof Halasa <khc@pm.waw.pl>
+Subject: Re: Proposal for new generic device API: dma_get_required_mask()
+Date: Fri, 18 Jun 2004 02:46:46 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040617215229.GA2204@us.ibm.com>
-References: <1087421869.2796.80.camel@mulgrave>
+Message-ID: <m33c4tsnex.fsf@defiant.pm.waw.pl>
+References: <1087481331.2210.27.camel@mulgrave>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e34.co.us.ibm.com ([32.97.110.132]:60110 "EHLO
-	e34.co.us.ibm.com") by vger.kernel.org with ESMTP id S263828AbUFQVwg
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 17 Jun 2004 17:52:36 -0400
-Content-Disposition: inline
-In-Reply-To: <1087421869.2796.80.camel@mulgrave>
+Received: from hq.pm.waw.pl ([195.116.170.10]:59816 "EHLO hq.pm.waw.pl")
+	by vger.kernel.org with ESMTP id S264898AbUFRBAC (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 17 Jun 2004 21:00:02 -0400
+In-Reply-To: <1087481331.2210.27.camel@mulgrave> (James Bottomley's message
+ of "17 Jun 2004 09:08:51 -0500")
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@steeleye.com>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
+Cc: Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+
+James Bottomley <James.Bottomley@steeleye.com> writes:
+
+> If the driver decides to use the mask, it would do another
+> dma_set_mask() to confirm it (this gives the platform the opportunity if
+> it so chooses to return a mask that doesn't quite cover memory, but
+> would be more optimal...say for platforms that have all memory under 4GB
+> bar one small chunk at 64GB or something).
+
+What I think drivers such as AIC7xxx should do is:
+
+#define OUR_COST_32 = 4
+#define OUR_COST_39 = 8
+#define OUR_COST_64 = 10
+
+int cost32 = check_dma_mask(32 bits);
+int cost39 = check_dma_mask(39 bits);
+int cost64 = check_dma_mask(64 bits);
+
+if (!cost32  && !cost39 && !cost64)
+	printk(KERN_ERR "64 bits aren't enough for RAM addressing?\n")
+else
+	use_mode_with_minimal_cost(cost32 * OUR_COST_32,
+				   cost39 * OUR_COST_39,
+				   cost64 * OUR_COST_64);
+
+This check_dma_mask() should be renamed + extended to cover different
+RAM access types:
+- coherent vs non-coherent memory
+- preallocated/initialized memory (such as skb->data passed to
+  hard_start_xmit()) vs uninitialized memory (such as returned by
+  kmalloc()).
+
+The "cost" is needed for cases where both the host and the device can
+support many addressing modes, such as with AIC7xxx, > 4GB of RAM
+and (costly) IO MMU or bounce buffers.
 
 
-Just an FYI. I applied the patch to scsi-misc-2.6. I patched scsi_debug
-to add the new eh_timed_out interface and added support for the
-scsi_debug opts modules param to control the return values so I could
-test the three cases. 
-
-I provide output below from this artificial test running a single dd and
-selecting each return value. I also attached the messages output with
-scsi_error logging selected.
-
--andmike
---
-Michael Anderson
-andmike@us.ibm.com
-
-1.) Output of test running.
-# ./test_eh_timed_out /dev/sdc
-andmike: Starting eh_timed_out tests
-andmike: Starting eh_timed_out EH_HANDLED test
-dev.scsi.logging_level = 0x7
-1+0 records in
-1+0 records out
-512 bytes transferred in 30.017646 seconds (17 bytes/sec)
-dev.scsi.logging_level = 0
-
-andmike: Starting eh_timed_out EH_NOT_HANDLED test
-dev.scsi.logging_level = 0x7
-1+0 records in
-1+0 records out
-512 bytes transferred in 30.241254 seconds (17 bytes/sec)
-dev.scsi.logging_level = 0
-
-andmike: Starting eh_timed_out EH_RESET_TIMER test
-dev.scsi.logging_level = 0x7
-1+0 records in
-1+0 records out
-512 bytes transferred in 60.017334 seconds (9 bytes/sec)
-dev.scsi.logging_level = 0
-andmike: Ending eh_timed_out tests
+Currently, set_dma_mask(less than 32 bits) can return success but then
+the mapping functions can return addresses which don't fit in the
+requested number of bits. In fact set_dma_mask() has any meaning
+only to *alloc functions. The statement "pci_set_consistent_dma_mask()
+will always be able to set the same or a smaller mask as
+pci_set_dma_mask()" doesn't make IMHO sense.
 
 
-2.) /var/log/messages output
-Jun 17 19:22:05 elm andmike: Starting eh_timed_out tests
+If we fix the API we should IMHO also remove set_dma_mask() and add
+the number of address bits to the arguments of actual mapping
+functions. It would make it possible to use different masks for
+different tasks, I'm told there is hardware which can benefit from it.
+Done correctly it wouldn't have any runtime overhead.
 
-#
-# EH_HANDLED
-#
-Jun 17 19:22:05 elm andmike: Starting eh_timed_out EH_HANDLED test
-Jun 17 19:22:05 elm kernel: scsi_block_when_processing_errors: rtn: 1
-Jun 17 19:22:05 elm kernel: scsi_add_timer: scmd: c9ccce98, time: 30000, (c028cd50)
-Jun 17 19:22:05 elm kernel: scsi_debug: scmd: c9ccce98 28 00 00 00 00 00 00 00 80 00 
-Jun 17 19:22:35 elm kernel: scsi_debug_timed_out: scmd: c9ccce98
-
-
-#
-# EH_NOT_HANDLED
-#
-Jun 17 19:22:35 elm andmike: Starting eh_timed_out EH_NOT_HANDLED test
-Jun 17 19:22:35 elm kernel: scsi_block_when_processing_errors: rtn: 1
-Jun 17 19:22:35 elm kernel: scsi_add_timer: scmd: c9ccce98, time: 30000, (c028cd50)
-Jun 17 19:22:35 elm kernel: scsi_debug: scmd: c9ccce98 28 00 00 00 00 00 00 00 80 00
-Jun 17 19:23:05 elm kernel: scsi_debug_timed_out: scmd: c9ccce98
-Jun 17 19:23:05 elm kernel: scsi_debug_timed_out: scmd: c9ccce98 NOT_HNDLD
-Jun 17 19:23:05 elm kernel: Waking error handler thread
-Jun 17 19:23:05 elm kernel: Error handler scsi_eh_2 waking up
-Jun 17 19:23:05 elm kernel: scsi_eh_prt_fail_stats: 2:0:0:0 cmds failed: 0, cancel: 1
-Jun 17 19:23:05 elm kernel: Total of 1 commands on 1 devices require eh work
-Jun 17 19:23:05 elm kernel: scsi_eh_2: aborting cmd:0xc9ccce98
-Jun 17 19:23:05 elm kernel: scsi_debug: abort
-Jun 17 19:23:05 elm kernel: scsi_add_timer: scmd: c9ccce98, time: 10000, (c028cfe0)
-Jun 17 19:23:05 elm kernel: scsi_debug: scmd: c9ccce98 00 00 00 00 00 00 
-Jun 17 19:23:05 elm kernel: scsi_add_timer: scmd: cc59ee98, time: 30000, (c028cd50)
-Jun 17 19:23:05 elm kernel: scsi_eh_done scmd: c9ccce98 result: 0
-Jun 17 19:23:05 elm kernel: scsi_send_eh_cmnd: scmd: c9ccce98, rtn:2002
-Jun 17 19:23:05 elm kernel: scsi_send_eh_cmnd: scsi_eh_completed_normally 2002
-Jun 17 19:23:05 elm kernel: scsi_eh_tur: scmd c9ccce98 rtn 2002
-Jun 17 19:23:05 elm kernel: scsi_eh_2: flush retry cmd: c9ccce98
-Jun 17 19:23:05 elm kernel: scsi_delete_timer: scmd: c9ccce98, rtn: 0
-Jun 17 19:23:05 elm kernel: scsi_add_timer: scmd: c9ccce98, time: 30000, (c028cd50)
-Jun 17 19:23:05 elm kernel: scsi_debug: scmd: c9ccce98 28 00 00 00 00 00 00 00 80 00 
-Jun 17 19:23:05 elm kernel: Error handler scsi_eh_2 sleeping
-Jun 17 19:23:05 elm kernel: scsi_delete_timer: scmd: c9ccce98, rtn: 1
-
-
-#
-# EH_RESET_TIMER
-#
-Jun 17 19:23:05 elm andmike: Starting eh_timed_out EH_RESET_TIMER test
-Jun 17 19:23:05 elm kernel: scsi_block_when_processing_errors: rtn: 1
-Jun 17 19:23:05 elm kernel: scsi_add_timer: scmd: c9ccce98, time: 30000, (c028cd50)
-Jun 17 19:23:05 elm kernel: scsi_debug: scmd: c9ccce98 28 00 00 00 00 00 00 00 80 00 
-Jun 17 19:23:35 elm kernel: scsi_debug_timed_out: scmd: c9ccce98
-Jun 17 19:23:35 elm kernel: scsi_debug_timed_out: scmd: c9ccce98 RST_TIME
-Jun 17 19:23:35 elm kernel: scsi_add_timer: scmd: c9ccce98, time: 30000, (c028cd50)
-Jun 17 19:24:05 elm kernel: scsi_delete_timer: scmd: c9ccce98, rtn: 1
-Jun 17 19:24:05 elm andmike: Ending eh_timed_out tests
-
+I would also change the "u64 mask" into plain number of bits.
+It would be easier for people, cpp, gcc and CPU.
+-- 
+Krzysztof Halasa, B*FH
