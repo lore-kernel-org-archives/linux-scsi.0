@@ -1,51 +1,68 @@
-From: Paul Wagland <paul@kungfoocoder.org>
-Subject: Re: Megaraid driver updates and kernel 2.6.2
-Date: Thu, 12 Feb 2004 12:32:39 +0100
+From: James Bottomley <James.Bottomley@steeleye.com>
+Subject: Re: [PATCH] allow drivers to hook into watchdog timeout
+Date: 12 Feb 2004 09:42:23 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1076585558.1875.4606.camel@paulw-desktop.allshare.nl>
-References: <1076581679.1875.4533.camel@paulw-desktop.allshare.nl>
-	 <20040212040437.F20727@cs.ualberta.ca>
+Message-ID: <1076596943.2196.71.camel@mulgrave>
+References: <20040120132052.GA6740@lst.de>		<2432440000.1076430858@aslan.btc.adaptec.com
+	 >	<1076431366.1804.24.camel@mulgrave>		<2472850000.1076435243@aslan.btc.ad
+	a	ptec.com>	<1076438507.2165.38.camel@mulgrave>	<2520610000.1076442259@aslan
+	 .btc.adaptec.com>	<1076443541.2080.56.camel@mulgrave>
+	<2549730000.1076444817@aslan.btc.adaptec.com>
+	<1076527539.1737.83.camel@mulgrave>
+	<3156030000.1076544910@aslan.btc.adaptec.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp-out2.xs4all.nl ([194.109.24.12]:9738 "EHLO
-	smtp-out2.xs4all.nl") by vger.kernel.org with ESMTP id S266334AbUBLLcv
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 12 Feb 2004 06:32:51 -0500
-In-Reply-To: <20040212040437.F20727@cs.ualberta.ca>
+Received: from stat1.steeleye.com ([65.114.3.130]:45730 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S266445AbUBLOmd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 12 Feb 2004 09:42:33 -0500
+In-Reply-To: <3156030000.1076544910@aslan.btc.adaptec.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Steve Sutphen <steve@cs.ualberta.ca>
-Cc: SCSI development list <linux-scsi@vger.kernel.org>, atulm@lsil.com
+To: "Justin T. Gibbs" <gibbs@scsiguy.com>
+Cc: Christoph Hellwig <hch@lst.de>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Thu, 2004-02-12 at 12:04, Steve Sutphen wrote:
-> That is interesting.  I was having some problems with the SCSI 
-> version of the MegaRAID (MegaRAID SCSI 320-2 model), and I had 
-> similar lock up problems (under heavy I/O when a rebuild or 
-> consitancy check was in progress) and I (think I) found that it 
-> was a motherboard problem.  I was using a Tyan S2469 (dual AMD MP's) 
-> and the solution was to change the Primary PCI bus speed to 
-> 33MHz (using jumper J92).  Perhaps though there were driver
-> problems that the slower bus speed did not tickle.
+On Wed, 2004-02-11 at 19:15, Justin T. Gibbs wrote: 
+> > But that's by design.  The application using SG_IO receives the error
+> > code directly and is in control of deciding to retry.
+> 
+> That's fine if the application has good information to go on.  Most
+> of the comments in the SCSI layer indicate that DID_RESET means that
+> a bus reset event happened, not that the LLD wanted to unconditionally
+> retry a command that has never seen the transport.
 
-AFAI understand this :
+DID_RESET doesn't mean the LLD wants to retry the command
+unconditionally.  It means that the LLD is reporting that the command
+was affected by error recovery actions and should be retried. 
 
-iii.	New abort and reset handling. In these situations, driver allows more
-	time for the firmware to complete outstanding requests instead of
-	failing handlers right-away.
+In the normal course of events, the mid-layer will do the retry without
+incrementing the retry count. 
 
-means that the fix is in the 2.00.4 driver, since the timeouts happen
-(again AFAIU) when the firmware is too busy doing other stuff (i.e.
-rebuilding) to handle all of the requests within the time out specified
-by the driver/mid scsi layer.
+applications issuing direct commands get to decide what the policy
+should be. 
 
-cc.ing the linux-scsi list and Atul Mukker, since I have only just
-started to do the background investigation into this card/driver and I
-would hate to give out incorrect information :-). If I am wrong please
-correct me! :-)
+> > The rule is that the mid-layer only delays for events it initiated.
+> 
+> Well, this breaks lots of devices like external RAID controllers that
+> need at least a few hundred ms bus settle delay before they will handle
+> a new command.  This controllers often initiate the bus reset when they
+> do a module failover or shutdown (e.g. upgrading one of the two controllers
+> in a redundant controller).  Without a bus settle delay, these devices
+> are taken offline by the mid-layer.
+> 
+> You have to enforce the delay regardless of where the reset event comes
+> from.  The devices on the bus don't care who reset the bus, and their
+> behavior doesn't differ when Linux does the reset or some third party
+> does.
 
-Cheers,
-Paul
+Well, there are two delays, aren't there: the bus settle delay and the
+device ready delay.  The latter isn't really determinable, but the
+device is supposed to return NOT_READY while in it.
 
+For the former, it only applies to a bus reset on SPI, so I'd like to
+handle it in the transport class.
+
+James
 
 
