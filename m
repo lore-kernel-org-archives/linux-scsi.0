@@ -1,47 +1,29 @@
-From: Simon Burley <simonb@lipsyncpost.co.uk>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
 Subject: Re: Pb between an UltraTrak SX8000 and an Adaptec 29160
-Date: Wed, 20 Nov 2002 15:22:16 +0000
+Date: 20 Nov 2002 16:08:51 +0000
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3DDBA8A8.F370532E@lipsyncpost.co.uk>
-References: <000501c28f02$934b3000$13e2cf82@darkwolf> <1037626683.7486.10.camel@irongate.swansea.linux.org.uk>
+Message-ID: <1037808531.3267.33.camel@irongate.swansea.linux.org.uk>
+References: <000501c28f02$934b3000$13e2cf82@darkwolf>
+	<1037626683.7486.10.camel@irongate.swansea.linux.org.uk>
+	<3DDBA8A8.F370532E@lipsyncpost.co.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <3DDBA8A8.F370532E@lipsyncpost.co.uk>
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+To: Simon Burley <simonb@lipsyncpost.co.uk>
 Cc: didier@ece.gatech.edu, "'Justin T. Gibbs'" <gibbs@scsiguy.com>, linux-scsi@vger.kernel.org
 
-Alan Cox wrote:
+On Wed, 2002-11-20 at 15:22, Simon Burley wrote:
+> Can I ask what the symptoms of this failure to support >1Tb volumes
+> would be? Failure to identify the device? Random read/write failures?
+> Completely corrupted disk? It's the first time I've heard this!
 
-<snip>
+There is a fundamental 2Gb minus a bit limit (2^32 sectors). One or two
+bits of the kernel (LVM1 I believe is one) use signed maths here and
+there. So 1-2Gb generally works but its not something to guarantee.
 
-> Linux 2.4.x doesnt support single volumes over 1Tb. Thats fixed in 2.5
-
-Can I ask what the symptoms of this failure to support >1Tb volumes
-would be? Failure to identify the device? Random read/write failures?
-Completely corrupted disk? It's the first time I've heard this!
-
-The reason I ask is because we have a Storcase IDE to SCSI raid
-enclosure with RAID controller here containing 8x Maxtor 160Gb disks
-(configured as one RAID 3 volume), and it has been 100% reliable since
-day one. No strangeness, failures of any sort, errors in syslog etc.
-
-Vendor: DS570     Model:                   Rev: 0001
-Type:   Direct-Access                      ANSI SCSI revision: 03
-scsi2:A:6:0: Tagged Queuing enabled.  Depth 253
-
-(scsi2:A:6): 160.000MB/s transfers (80.000MHz DT, offset 31, 16bit)
-SCSI device sdb: -2053816320 512-byte hdwr sectors (47958 MB)
-
-So I see the same problem as Didier, but fdisk version 2.11f got the
-size right under 2.4.19-ac4:
-
-df -kl
-Filesystem           1k-blocks      Used Available Use% Mounted on
-/dev/sdb1            1102989912 847397312 199563908  81% /local
+2.5.x supports wy more
 
 
-Or am I missing something?
-
-Simon
