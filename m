@@ -1,86 +1,136 @@
-From: Bryan Henderson <hbryan@us.ibm.com>
-Subject: Re: [ANNOUNCE 0/6] Open-iSCSI High-Performance Initiator for Linux
-Date: Wed, 9 Mar 2005 11:29:03 -0800
-Message-ID: <OF44130B14.D1B3F38E-ON85256FBF.0068AD48-88256FBF.006AACD8@us.ibm.com>
-References: <422E96D9.6090202@yahoo.com>
+From: <Stuart_Hayes@Dell.com>
+Subject: [PATCH 2.6.11] ide-scsi: map sg buffers in idescsi_input/output_buffers() to kernel virtual address
+Date: Wed, 9 Mar 2005 14:26:03 -0600
+Message-ID: <7A8F92187EF7A249BF847F1BF4903C04010EE9A6@ausx2kmpc103.aus.amer.dell.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
-Received: from e1.ny.us.ibm.com ([32.97.182.141]:46724 "EHLO e1.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S262189AbVCIT3F (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Mar 2005 14:29:05 -0500
-Received: from d01relay02.pok.ibm.com (d01relay02.pok.ibm.com [9.56.227.234])
-	by e1.ny.us.ibm.com (8.12.11/8.12.11) with ESMTP id j29JT5xI015739
-	for <linux-scsi@vger.kernel.org>; Wed, 9 Mar 2005 14:29:05 -0500
-Received: from d01av03.pok.ibm.com (d01av03.pok.ibm.com [9.56.224.217])
-	by d01relay02.pok.ibm.com (8.12.10/NCO/VER6.6) with ESMTP id j29JT5nA075232
-	for <linux-scsi@vger.kernel.org>; Wed, 9 Mar 2005 14:29:05 -0500
-Received: from d01av03.pok.ibm.com (loopback [127.0.0.1])
-	by d01av03.pok.ibm.com (8.12.11/8.12.11) with ESMTP id j29JT4Zc009619
-	for <linux-scsi@vger.kernel.org>; Wed, 9 Mar 2005 14:29:04 -0500
-Received: from d01ml604.pok.ibm.com (d01ml604.pok.ibm.com [9.56.227.90])
-	by d01av03.pok.ibm.com (8.12.11/8.12.11) with ESMTP id j29JT4eG009616
-	for <linux-scsi@vger.kernel.org>; Wed, 9 Mar 2005 14:29:04 -0500
-In-Reply-To: <422E96D9.6090202@yahoo.com>
+Content-Type: multipart/mixed;
+	boundary="----_=_NextPart_001_01C524E6.36E7BE64"
+Received: from ausc60pc101.us.dell.com ([143.166.85.206]:41761 "EHLO
+	ausc60pc101.us.dell.com") by vger.kernel.org with ESMTP
+	id S262376AbVCIU0L (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 9 Mar 2005 15:26:11 -0500
+content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alex Aizman <itn780@yahoo.com>
-Cc: linux-scsi@vger.kernel.org, Matt Mackall <mpm@selenic.com>
+To: axboe@suse.de
+Cc: linux-scsi@vger.kernel.org, Joshua_Giles@Dell.com
 
->The 
->short and long of it: the problem can be solved, and it will. Couple 
->simple things we already do: mlockall() to keep the daemon un-swapped, 
->and also looking into potential dependency created by syslog (there's 
->one for 2.4 kernel, not sure if this is an issue for 2.6).
+This is a multi-part message in MIME format.
 
-I think it's probably possible and good to do most of this complex stuff 
-in user space, but it looks to me like it's going down exactly the wrong 
-road.
-
-Its fundamental to Unix architecture that user programs sit above the 
-kernel and get services from the kernel, and turning that on its head so 
-that the kernel depends on a user space program to do something as 
-fundamental as a pageout can't come to any good.  Even if we're able to 
-identify every assumption in Linux design that's being broken and patch it 
-up with something like mlockall, tomorrow someone will change something, 
-using his vast experience with engineering user space programs, and break 
-it again.
-
-Maybe a more important point is that to the extent that you make a user 
-space process a proxy of the kernel, you lose all those advantages that 
-are supposed to come with user space engineering:  you can now totally 
-hose your system by making a mistake in the code; you have to be 
-intimately familiar with kernel internals to get the code right, etc.
-
-mlockall is meant to provide performance characteristics to a user space 
-process.  If it can be used to create resource ordering correctness, it's 
-an accident.
-
-Syslog is one of those things you're not supposed to have to think about. 
-If every time you issue a message you have to visualize the entire syslog 
-system with all of its options to know if you've broken something, the 
-simplicity of user space is gone.
-
-I would think as a basic design principle that if kernel code ever has to 
-wait for a user process to do something, it should do it high in a system 
-call, in user context, interruptibly, etc.  I don't know if it's possible 
-to arrange to have the ISCSI initiator waiting there, but I think it's the 
-only way having a user space process can do what it's supposed to do.
+------_=_NextPart_001_01C524E6.36E7BE64
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 
 
-I'd like to remind everyone that user space processes aside, there's still 
-a basic ISCSI initiator resource inversion that needs to be fixed to avoid 
-deadlock:
+This patch will map the sg buffers to kernel virtual memory space in the
+functions idescsi_input_buffers() and idescsi_output_buffers().  Without
+this patch, idescsi passes a null pointer to atapi_input_bytes() and
+atapi_output_bytes() when sg pages are in high memory (i686
+architecture).
 
-ISCSI initiator driver sits below the memory pool
-  (I..e a pageout involving ISCSI might be prerequisite to getting memory)
-Socket layer sits below ISCSI
-  (ISCSI initiator driver relies on socket services)
-Memory pool sits below socket layer
-  (socket layer allocates memory from the main pool)
+I'm attaching as a file, too, as the text will certainly be wrapped.
 
-One might say as long as that's there, close is good enough on the user 
-space initiator component.
+(Sorry for the subject rename--I'm trying to use the correct format for
+patch emails.)
 
---
-Bryan Henderson                               San Jose California
-IBM Almaden Research Center                   Filesystems
+Thanks
+Stuart
+
+
+Signed-off-by: Stuart Hayes <stuart_hayes@dell.com>
+
+
+--- linux-2.6.11.orig/drivers/scsi/ide-scsi.c	2005-03-09
+14:13:48.000000000 -0500
++++ linux-2.6.11.new/drivers/scsi/ide-scsi.c	2005-03-09
+13:56:38.000000000 -0500
+@@ -143,6 +143,7 @@ static void idescsi_input_buffers (ide_d
+ {
+ 	int count;
+ 	char *buf;
++	unsigned long flags;
+=20
+ 	while (bcount) {
+ 		if (pc->sg - (struct scatterlist *)
+pc->scsi_cmd->request_buffer > pc->scsi_cmd->use_sg) {
+@@ -151,8 +152,11 @@ static void idescsi_input_buffers (ide_d
+ 			return;
+ 		}
+ 		count =3D min(pc->sg->length - pc->b_count, bcount);
+-		buf =3D page_address(pc->sg->page) + pc->sg->offset;
++		local_irq_save(flags);
++		buf =3D kmap_atomic(pc->sg->page, KM_USER0) +
+pc->sg->offset;
+ 		drive->hwif->atapi_input_bytes(drive, buf + pc->b_count,
+count);
++		kunmap_atomic(buf - pc->sg->offset, KM_USER0);
++		local_irq_restore(flags);
+ 		bcount -=3D count; pc->b_count +=3D count;
+ 		if (pc->b_count =3D=3D pc->sg->length) {
+ 			pc->sg++;
+@@ -165,6 +169,7 @@ static void idescsi_output_buffers (ide_
+ {
+ 	int count;
+ 	char *buf;
++	unsigned long flags;
+=20
+ 	while (bcount) {
+ 		if (pc->sg - (struct scatterlist *)
+pc->scsi_cmd->request_buffer > pc->scsi_cmd->use_sg) {
+@@ -173,8 +178,11 @@ static void idescsi_output_buffers (ide_
+ 			return;
+ 		}
+ 		count =3D min(pc->sg->length - pc->b_count, bcount);
+-		buf =3D page_address(pc->sg->page) + pc->sg->offset;
++		local_irq_save(flags);
++		buf =3D kmap_atomic(pc->sg->page, KM_USER0) +
+pc->sg->offset;
+ 		drive->hwif->atapi_output_bytes(drive, buf +
+pc->b_count, count);
++		kunmap_atomic(buf - pc->sg->offset, KM_USER0);
++		local_irq_restore(flags);
+ 		bcount -=3D count; pc->b_count +=3D count;
+ 		if (pc->b_count =3D=3D pc->sg->length) {
+ 			pc->sg++;
+
+------_=_NextPart_001_01C524E6.36E7BE64
+Content-Type: application/octet-stream;
+	name="ide-scsi.2.6.11.try3.patch"
+Content-Transfer-Encoding: base64
+Content-Description: ide-scsi.2.6.11.try3.patch
+Content-Disposition: attachment;
+	filename="ide-scsi.2.6.11.try3.patch"
+
+LS0tIGxpbnV4LTIuNi4xMS5vcmlnL2RyaXZlcnMvc2NzaS9pZGUtc2NzaS5jCTIwMDUtMDMtMDkg
+MTQ6MTM6NDguMDAwMDAwMDAwIC0wNTAwCisrKyBsaW51eC0yLjYuMTEubmV3L2RyaXZlcnMvc2Nz
+aS9pZGUtc2NzaS5jCTIwMDUtMDMtMDkgMTM6NTY6MzguMDAwMDAwMDAwIC0wNTAwCkBAIC0xNDMs
+NiArMTQzLDcgQEAgc3RhdGljIHZvaWQgaWRlc2NzaV9pbnB1dF9idWZmZXJzIChpZGVfZAogewog
+CWludCBjb3VudDsKIAljaGFyICpidWY7CisJdW5zaWduZWQgbG9uZyBmbGFnczsKIAogCXdoaWxl
+IChiY291bnQpIHsKIAkJaWYgKHBjLT5zZyAtIChzdHJ1Y3Qgc2NhdHRlcmxpc3QgKikgcGMtPnNj
+c2lfY21kLT5yZXF1ZXN0X2J1ZmZlciA+IHBjLT5zY3NpX2NtZC0+dXNlX3NnKSB7CkBAIC0xNTEs
+OCArMTUyLDExIEBAIHN0YXRpYyB2b2lkIGlkZXNjc2lfaW5wdXRfYnVmZmVycyAoaWRlX2QKIAkJ
+CXJldHVybjsKIAkJfQogCQljb3VudCA9IG1pbihwYy0+c2ctPmxlbmd0aCAtIHBjLT5iX2NvdW50
+LCBiY291bnQpOwotCQlidWYgPSBwYWdlX2FkZHJlc3MocGMtPnNnLT5wYWdlKSArIHBjLT5zZy0+
+b2Zmc2V0OworCQlsb2NhbF9pcnFfc2F2ZShmbGFncyk7CisJCWJ1ZiA9IGttYXBfYXRvbWljKHBj
+LT5zZy0+cGFnZSwgS01fVVNFUjApICsgcGMtPnNnLT5vZmZzZXQ7CiAJCWRyaXZlLT5od2lmLT5h
+dGFwaV9pbnB1dF9ieXRlcyhkcml2ZSwgYnVmICsgcGMtPmJfY291bnQsIGNvdW50KTsKKwkJa3Vu
+bWFwX2F0b21pYyhidWYgLSBwYy0+c2ctPm9mZnNldCwgS01fVVNFUjApOworCQlsb2NhbF9pcnFf
+cmVzdG9yZShmbGFncyk7CiAJCWJjb3VudCAtPSBjb3VudDsgcGMtPmJfY291bnQgKz0gY291bnQ7
+CiAJCWlmIChwYy0+Yl9jb3VudCA9PSBwYy0+c2ctPmxlbmd0aCkgewogCQkJcGMtPnNnKys7CkBA
+IC0xNjUsNiArMTY5LDcgQEAgc3RhdGljIHZvaWQgaWRlc2NzaV9vdXRwdXRfYnVmZmVycyAoaWRl
+XwogewogCWludCBjb3VudDsKIAljaGFyICpidWY7CisJdW5zaWduZWQgbG9uZyBmbGFnczsKIAog
+CXdoaWxlIChiY291bnQpIHsKIAkJaWYgKHBjLT5zZyAtIChzdHJ1Y3Qgc2NhdHRlcmxpc3QgKikg
+cGMtPnNjc2lfY21kLT5yZXF1ZXN0X2J1ZmZlciA+IHBjLT5zY3NpX2NtZC0+dXNlX3NnKSB7CkBA
+IC0xNzMsOCArMTc4LDExIEBAIHN0YXRpYyB2b2lkIGlkZXNjc2lfb3V0cHV0X2J1ZmZlcnMgKGlk
+ZV8KIAkJCXJldHVybjsKIAkJfQogCQljb3VudCA9IG1pbihwYy0+c2ctPmxlbmd0aCAtIHBjLT5i
+X2NvdW50LCBiY291bnQpOwotCQlidWYgPSBwYWdlX2FkZHJlc3MocGMtPnNnLT5wYWdlKSArIHBj
+LT5zZy0+b2Zmc2V0OworCQlsb2NhbF9pcnFfc2F2ZShmbGFncyk7CisJCWJ1ZiA9IGttYXBfYXRv
+bWljKHBjLT5zZy0+cGFnZSwgS01fVVNFUjApICsgcGMtPnNnLT5vZmZzZXQ7CiAJCWRyaXZlLT5o
+d2lmLT5hdGFwaV9vdXRwdXRfYnl0ZXMoZHJpdmUsIGJ1ZiArIHBjLT5iX2NvdW50LCBjb3VudCk7
+CisJCWt1bm1hcF9hdG9taWMoYnVmIC0gcGMtPnNnLT5vZmZzZXQsIEtNX1VTRVIwKTsKKwkJbG9j
+YWxfaXJxX3Jlc3RvcmUoZmxhZ3MpOwogCQliY291bnQgLT0gY291bnQ7IHBjLT5iX2NvdW50ICs9
+IGNvdW50OwogCQlpZiAocGMtPmJfY291bnQgPT0gcGMtPnNnLT5sZW5ndGgpIHsKIAkJCXBjLT5z
+ZysrOwo=
+
+------_=_NextPart_001_01C524E6.36E7BE64--
