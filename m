@@ -1,79 +1,84 @@
-From: Mike Anderson <andmike@us.ibm.com>
-Subject: Re: [PATCH] instrument ide-scsi in 2.5.68
-Date: Mon, 5 May 2003 01:46:17 -0700
+From: Andrew Morton <akpm@digeo.com>
+Subject: Re: illegal context for sleeping ... rmmod ide-cd + ide-scsi
+Date: Mon, 5 May 2003 02:01:04 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030505084617.GG8416@beaverton.ibm.com>
-References: <3EB11AD3.2070503@torque.net> <3EB22F09.7060906@torque.net> <20030502095536.76dba4dd.rddunlap@osdl.org> <3EB385F3.6010708@torque.net>
+Message-ID: <20030505020104.0abc66ba.akpm@digeo.com>
+References: <3EB62347.8020109@torque.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e32.co.us.ibm.com ([32.97.110.130]:52207 "EHLO
-	e32.co.us.ibm.com") by vger.kernel.org with ESMTP id S262102AbTEEIb7
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 5 May 2003 04:31:59 -0400
-Content-Disposition: inline
-In-Reply-To: <3EB385F3.6010708@torque.net>
+Received: from [12.47.58.20] ([12.47.58.20]:33913 "EHLO pao-ex01.pao.digeo.com")
+	by vger.kernel.org with ESMTP id S262105AbTEEIrD (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 5 May 2003 04:47:03 -0400
+In-Reply-To: <3EB62347.8020109@torque.net>
 List-Id: linux-scsi@vger.kernel.org
-To: Douglas Gilbert <dougg@torque.net>
-Cc: "Randy.Dunlap" <rddunlap@osdl.org>, linux-scsi@vger.kernel.org, alan@lxorguk.ukuu.org.uk
+To: dougg@torque.net
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>
 
-Douglas Gilbert [dougg@torque.net] wrote:
-> The issued command is a MODE SENSE (10 byte) for page 0x2a
-> and just the first 2 bytes (i.e. tell me the length you
-> will return). There must have been 10 of the exact same
-> commands executed successfully prior to this point.
+Douglas Gilbert <dougg@torque.net> wrote:
+>
+> In lk 2.5.69 (and in 68) both the ide-cd and ide-scsi
+> modules generate a "sleeping function called from illegal
+> context" stack trace when removed.
 > 
-> "hdd: lost interrupt" seems to indicate a timeout (ide-scsi
-> sets its timeouts to max(10, whatever_app_wants) seconds).
-> Then it re-enters the ide-scsi driver in the
-> idescsi_pc_intr() routine and things look corrupted. It tries
-> to finish off a DMA transfer but that 2 byte data_in request
-> was not set up as DMA. It is all downhill from there.
-> 
-> Naturally I don't see any errors on my box. However I can
-> shorten the timeout so it will go off on a READ command.
-> The timeout log looks quite different from yours and
-> my driver continues in a healthy state.
-> 
-> ide-scsi: hdd: que 11417, cmd = [ 28 0 0 0 0 0 0 0 1 0 ]
-> hdd: irq timeout: status=0xd0 { Busy }
-> hdd: ATAPI reset complete
-> hdd: irq timeout: status=0xc0 { Busy }
-> hdd: ATAPI reset complete
-> hdd: irq timeout: status=0xc0 { Busy }
-> ide-scsi: hdd: I/O error for 11417
-> 
-> 
-> Does anyone have any suggestions for further testing?
-> 
+> After "rmmod ide-cd" this appears:
+>   Debug: sleeping function called from illegal context
+>          at include/asm/semaphore.h:119
+>   Call Trace:
+>    [<c011dcec>] __might_sleep+0x5c/0x70
 
-It might be interesting if timeouts are happening to see what the error
-handler is doing. If SCSI_LOGGING is config'd. Then 
+ide_unregister_subdriver() does spin_lock_irqsave(&ide_lock), then
+calls auto_remove_settings(), which does down(&ide_setting_sem);
 
-echo scsi log error 4 > /proc/scsi/scsi
+A simple fix might be:
 
-should not be too verbose.
+diff -puN drivers/ide/ide.c~ide_setting_sem-fix drivers/ide/ide.c
+--- 25/drivers/ide/ide.c~ide_setting_sem-fix	2003-05-05 01:59:01.000000000 -0700
++++ 25-akpm/drivers/ide/ide.c	2003-05-05 02:00:21.000000000 -0700
+@@ -1131,13 +1131,12 @@ ide_settings_t *ide_find_setting_by_name
+  *
+  *	Automatically remove all the driver specific settings for this
+  *	drive. This function may sleep and must not be called from IRQ
+- *	context. Takes the settings_lock
++ *	context. The caller must hold ide_setting_sem.
+  */
+  
+ static void auto_remove_settings (ide_drive_t *drive)
+ {
+ 	ide_settings_t *setting;
+-	down(&ide_setting_sem);
+ repeat:
+ 	setting = drive->settings;
+ 	while (setting) {
+@@ -1147,7 +1146,6 @@ repeat:
+ 		}
+ 		setting = setting->next;
+ 	}
+-	up(&ide_setting_sem);
+ }
+ 
+ /**
+@@ -2350,9 +2348,11 @@ int ide_unregister_subdriver (ide_drive_
+ {
+ 	unsigned long flags;
+ 	
++	down(&ide_setting_sem);
+ 	spin_lock_irqsave(&ide_lock, flags);
+ 	if (drive->usage || drive->driver == &idedefault_driver || DRIVER(drive)->busy) {
+ 		spin_unlock_irqrestore(&ide_lock, flags);
++		up(&ide_setting_sem);
+ 		return 1;
+ 	}
+ #if defined(CONFIG_BLK_DEV_IDEPNP) && defined(CONFIG_PNP) && defined(MODULE)
+@@ -2363,6 +2363,7 @@ int ide_unregister_subdriver (ide_drive_
+ 	ide_remove_proc_entries(drive->proc, generic_subdriver_entries);
+ #endif
+ 	auto_remove_settings(drive);
++	up(&ide_setting_sem);
+ 	drive->driver = &idedefault_driver;
+ 	setup_driver_defaults(drive);
+ 	spin_unlock_irqrestore(&ide_lock, flags);
 
-
-> I have cleaned up the logging messages a little but
-> that does not justify releasing a new version yet.
-> 
-> 
-> An additional observation concerning Randy's capture:
-> the failed command (MODE SENSE) has serial number 91.
-> After ide-scsi thinks it has cleared the timeout and
-> the DMA transfer it issues a TEST UNIT READY which
-> also get 91 as a serial number. This looks like a
-> bug in the mid level.
-> 
-
-Well ++serial_number and scsi_pid++ are not very safe, but is the TUR
-coming from the error handler as it will have the same serial number
-that the timed out command had. Alan Stern was asking about this in
-another thread a few days ago.
-
--andmike
---
-Michael Anderson
-andmike@us.ibm.com
+_
 
