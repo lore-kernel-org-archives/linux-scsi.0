@@ -1,42 +1,66 @@
-From: James Bottomley <James.Bottomley@steeleye.com>
-Subject: Re: [linux-usb-devel] FW: USB 2.0 external hard drive problem
-Date: 09 Feb 2004 11:50:13 -0500
+From: Patrick Mansfield <patmans@us.ibm.com>
+Subject: Re: WWID / SerialNo in sysfs?
+Date: Mon, 9 Feb 2004 09:04:21 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1076345415.2090.30.camel@mulgrave>
-References: <Pine.LNX.4.44L0.0402091132000.1650-100000@ida.rowland.org>
+Message-ID: <20040209090421.B1568@beaverton.ibm.com>
+References: <20040209160856.GS3944@tpkurt.garloff.de> <1076343628.1804.19.camel@mulgrave> <20040209162906.GV3944@tpkurt.garloff.de>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat1.steeleye.com ([65.114.3.130]:11409 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S265269AbUBIQup (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 9 Feb 2004 11:50:45 -0500
-In-Reply-To: <Pine.LNX.4.44L0.0402091132000.1650-100000@ida.rowland.org>
+Received: from e32.co.us.ibm.com ([32.97.110.130]:9673 "EHLO e32.co.us.ibm.com")
+	by vger.kernel.org with ESMTP id S265303AbUBIREy (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 9 Feb 2004 12:04:54 -0500
+Content-Disposition: inline
+In-Reply-To: <20040209162906.GV3944@tpkurt.garloff.de>; from garloff@suse.de on Mon, Feb 09, 2004 at 05:29:06PM +0100
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: Matthew Dharm <mdharm-scsi@one-eyed-alien.net>, Joerg Schilling <schilling@fokus.fraunhofer.de>, magliery@csb.yale.edu, appro@fy.chalmers.se, USB development list <linux-usb-devel@lists.sourceforge.net>, SCSI development list <linux-scsi@vger.kernel.org>
+To: Kurt Garloff <garloff@suse.de>, James Bottomley <James.Bottomley@steeleye.com>, Linux SCSI list <linux-scsi@vger.kernel.org>
 
-On Mon, 2004-02-09 at 11:40, Alan Stern wrote:
-> In the absence of anything better, we're forced to assume "bad" status 
-> corresponds to Check Condition...
+On Mon, Feb 09, 2004 at 05:29:06PM +0100, Kurt Garloff wrote:
+> Hi,
 > 
-> What do you think, Matt?  Should we remove the auto-sense for short 
-> transfers when we get "good" status?  Bearing in mind that it's 
-> technically legal, but other drivers or programs may not expect it?  Also 
-> bearing in mind that we have no choice but to auto-sense for non-IN 
-> transfers with the CB transport.
+> On Mon, Feb 09, 2004 at 11:20:26AM -0500, James Bottomley wrote:
+> > The SCSI part of udev already has most of this implemented at the user
+> > level, so you should just be able to reuse that code.
+> 
+> As you know I have everything in scsidev as well already since long ;-)
+> Nice code duplication though ...
 
-OK, if you want to understand what the mid-layer problem is, look at
-scsi_finish_command().  You see in there we set DRIVER_SENSE if we find
-any valid sense code in the sense buffer (including NO SENSE)
+Yes ;-) 
 
-We will return this to the user as a sense error at various points.
+I was hoping you were supporting scsidev as backward compatible with 2.6,
+and you could get users to migrate to udev + scsi_id.
 
-The safest course, if you want to send unsolicited request sense
-commands is probably to zero out the sense buffer if you get NO SENSE
-back.
+I made scsi_id as an only functional with sysfs (only 2.6), and it must be
+disconnected from the naming done by udev. Plus, disconnecting it from the
+naming means it can be used by multipath configuration code.
 
-James
+Also it gets model + vendor via sysfs, mainly to avoid potential issues
+avoided in scsi_scan.c when sending a standard INQUIRY (well, AFAICT no
+one is using BLIST_INQUIRY_36 or BLIST_INQUIRY_58, but if they did, it
+avoids those issue). This still saves an extra INQUIRY command from being
+sent to the device.
 
+Being able to store the serial number in the udev database would be nice,
+since we potentially have multiple users: standard interface (upper level
+driver sd/sr/st/osst), sg, and multipath. We could store it into a sysfs
+scsi_device attribute, but I am not pushing for that, and for now would
+rather have the same commands sent multiple times.
 
+Also has these items that could be done in scsidev:
+
+- a white/black list text file, so we don't need to rebuild a kernel or
+  recompile the user binary to add or remove devices from the lists
+
+- page 0x80 support
+
+- supports page 0x83 types 0 (vendor specific) and 1 (T10 vendor
+  identification).
+
+> The nontrivial thing was always to make the relation sg/sd/... device
+> to C:B:T:U tuple. With sysfs it's at least possible to do that in
+> a reliable way.
+
+As James said we can send SG_IO commands to sd, plus all of the upper
+level drivers, the only one not yet completed is osst.
+
+-- Patrick Mansfield
