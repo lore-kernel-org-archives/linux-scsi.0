@@ -1,48 +1,37 @@
-From: Marc Zyngier <mzyngier@freesurf.fr>
+From: "Justin T. Gibbs" <gibbs@scsiguy.com>
 Subject: Re: [PATCH][2.5] Aic7xxx and EISA API
-Date: 19 May 2003 17:47:59 +0200
+Date: Mon, 19 May 2003 10:15:02 -0600
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <wrp8yt3545s.fsf@hina.wild-wind.fr.eu.org>
-References: <wrpel2v54y9.fsf@hina.wild-wind.fr.eu.org>
-	<1328050000.1053359007@aslan.btc.adaptec.com>
-Reply-To: mzyngier@freesurf.fr
+Message-ID: <1353820000.1053360902@aslan.btc.adaptec.com>
+References: <wrpel2v54y9.fsf@hina.wild-wind.fr.eu.org>	<1328050000.1053359007@aslan.btc.adaptec.com> <wrp8yt3545s.fsf@hina.wild-wind.fr.eu.org>
+Reply-To: "Justin T. Gibbs" <gibbs@scsiguy.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from lopsy-lu.misterjones.org ([62.4.18.26]:6411 "EHLO
-	young-lust.wild-wind.fr.eu.org") by vger.kernel.org with ESMTP
-	id S262525AbTESPmB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 19 May 2003 11:42:01 -0400
-In-Reply-To: <1328050000.1053359007@aslan.btc.adaptec.com>
+Received: from magic-mail.adaptec.com ([208.236.45.100]:64655 "EHLO
+	magic.adaptec.com") by vger.kernel.org with ESMTP id S261322AbTESQCF
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 19 May 2003 12:02:05 -0400
+In-Reply-To: <wrp8yt3545s.fsf@hina.wild-wind.fr.eu.org>
+Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
-To: "Justin T. Gibbs" <gibbs@scsiguy.com>
+To: mzyngier@freesurf.fr
 Cc: linux-scsi@vger.kernel.org
 
->>>>> "Justin" == Justin T Gibbs <gibbs@scsiguy.com> writes:
+> No, VLB cards are treated as EISA cards in the core EISA code. You
+> have to enable CONFIG_EISA_VLB_PRIMING though :
 
-Justin> I will perform a more careful review later today, but my main
-Justin> concern about this change is that it looks like it will
-Justin> prevent the probing of VLB cards in non-EISA systems.
+I would expect the EISA probe code to stop its probe short if an EISA
+mainboard (Slot 0), is not detected.  This avoids spamming PCI boards
+that happen to reside in what was formally slot space.  So long as this
+check is disabled when EISA_VLB_PRIMING is specified, it looks like this
+will work.
 
-No, VLB cards are treated as EISA cards in the core EISA code. You
-have to enable CONFIG_EISA_VLB_PRIMING though :
+There are a few other things in the patch that need to be cleaned up before
+it is taken, but I will comment more thoroughly on that when I have some
+more time later today.
 
-config EISA_VLB_PRIMING
-        bool "Vesa Local Bus priming"
-        depends on X86_PC && EISA
-        default n
-        ---help---
-          Activate this option if your system contains a Vesa Local
-          Bus (VLB) card that identify itself as an EISA card (such as
-          the Adaptec AHA-284x).
+--
+Justin
 
-          When in doubt, say N.
-
-With this option, the magic sequence to wake up VLB cards is run while
-enumerating the bus. Does it address your concerns ?
-
-Thanks,
-
-        M.
--- 
-Places change, faces change. Life is so very strange.
