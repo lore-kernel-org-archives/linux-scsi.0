@@ -1,48 +1,76 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: What "tarnsport attributes" are really for?
-Date: 30 Aug 2004 09:59:28 -0400
+From: Brian King <brking@us.ibm.com>
+Subject: Re: [PATCH] fix more ipr kref problems
+Date: Mon, 30 Aug 2004 09:01:54 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1093874370.2036.12.camel@mulgrave>
-References: <1093842055.9886.57.camel@sipan.org>
+Message-ID: <41333352.9060303@us.ibm.com>
+References: <1093816265.1708.45.camel@mulgrave>
+Reply-To: brking@us.ibm.com
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat16.steeleye.com ([209.192.50.48]:17368 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S268088AbUH3N7h (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 30 Aug 2004 09:59:37 -0400
-In-Reply-To: <1093842055.9886.57.camel@sipan.org>
+Received: from e32.co.us.ibm.com ([32.97.110.130]:62607 "EHLO
+	e32.co.us.ibm.com") by vger.kernel.org with ESMTP id S268138AbUH3OCu
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 30 Aug 2004 10:02:50 -0400
+In-Reply-To: <1093816265.1708.45.camel@mulgrave>
 List-Id: linux-scsi@vger.kernel.org
-To: Sergey Panov <sipan@sipan.org>
-Cc: SCSI development list <linux-scsi@vger.kernel.org>
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Andrew Morton <akpm@osdl.org>, greg@kroah.com, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Mon, 2004-08-30 at 01:00, Sergey Panov wrote:
-> Hello,
-> I searched and read all threads about "transport attributes" I could
-> find in linux-scsi archive, but real design goals of this API still is
-> not clear. Is it supposed to be:
+Patch looks good. Thanks.
+
+-Brian
+
+James Bottomley wrote:
+> This was caused by
 > 
-> 1) way to store and expose to admin (via syfs) specifics of the
-> underlying transport layer (such as FC, iSCSI, SPI, ...).
+> KREF: make kref_get() return void as it makes sense to do so.
+>   
+> drivers/scsi/ipr.c: In function `ipr_worker_thread':
+> drivers/scsi/ipr.c:1825: error: wrong type argument to unary exclamation
+> mark
+> make[2]: *** [drivers/scsi/ipr.o] Error 1
 > 
-> 2) way to store transport specific per-device (per LUN) attributes.
+> The fix is fairly simple.
 > 
-> 3) way to access transport specific per-device (per LUN) attributes
-> stored in the driver.
+> James
+> 
+> ===== drivers/scsi/ipr.c 1.25 vs edited =====
+> --- 1.25/drivers/scsi/ipr.c	2004-08-16 01:40:17 -05:00
+> +++ edited/drivers/scsi/ipr.c	2004-08-29 16:25:31 -05:00
+> @@ -1822,10 +1822,11 @@
+>  
+>  	if (ioa_cfg->sdt_state == GET_DUMP) {
+>  		dump = ioa_cfg->dump;
+> -		if (!dump || !kref_get(&dump->kref)) {
+> +		if (!dump) {
+>  			spin_unlock_irqrestore(ioa_cfg->host->host_lock, lock_flags);
+>  			return;
+>  		}
+> +		kref_get(&dump->kref);
+>  		spin_unlock_irqrestore(ioa_cfg->host->host_lock, lock_flags);
+>  		ipr_get_ioa_dump(ioa_cfg, dump);
+>  		kref_put(&dump->kref, ipr_release_dump);
+> @@ -2423,11 +2424,11 @@
+>  	spin_lock_irqsave(ioa_cfg->host->host_lock, lock_flags);
+>  	dump = ioa_cfg->dump;
+>  
+> -	if (ioa_cfg->sdt_state != DUMP_OBTAINED || !dump || !kref_get(&dump->kref)) {
+> +	if (ioa_cfg->sdt_state != DUMP_OBTAINED || !dump) {
+>  		spin_unlock_irqrestore(ioa_cfg->host->host_lock, lock_flags);
+>  		return 0;
+>  	}
+> -
+> +	kref_get(&dump->kref);
+>  	spin_unlock_irqrestore(ioa_cfg->host->host_lock, lock_flags);
+>  
+>  	if (off > dump->driver_dump.hdr.len) {
+> 
+> 
 
-Well, it's not really supposed to be any of them.  The goal is to create
-a library that encapsulates the service delivery subsystem (transport)
-part of SAM.  The ideal is not to have a transport API between the
-mid-layer and the transport classes but instead have the transport class
-provide autonomous services to the drivers, but I still don't know if
-this is possible.  It's a class because it exposes the additional
-transport attributes to the user via sysfs.
-
-The FC transport class is pretty vestigial at the moment, if you want to
-see the capabilities of doing this, look at the SPI one.here we've been
-moving the fairly complex DV code out of the drivers and into the
-transport class.
-
-James
+-- 
+Brian King
+eServer Storage I/O
+IBM Linux Technology Center
 
