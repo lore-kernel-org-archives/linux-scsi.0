@@ -1,65 +1,83 @@
 From: Andre Hedrick <andre@linux-ide.org>
-Subject: Re: Request for review of Linux iSCSI driver version 4.0.0.1
-Date: Thu, 30 Oct 2003 15:42:58 -0800 (PST)
+Subject: Re: requeuing a Scsi_Cmnd?
+Date: Thu, 30 Oct 2003 15:48:16 -0800 (PST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.10.10310301538570.23682-100000@master.linux-ide.org>
-References: <3FA015EC.6030102@us.ibm.com>
+Message-ID: <Pine.LNX.4.10.10310301544250.23682-100000@master.linux-ide.org>
+References: <3EC03A69.1060302@pobox.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from astound-64-85-224-253.ca.astound.net ([64.85.224.253]:13829
+Received: from astound-64-85-224-253.ca.astound.net ([64.85.224.253]:14853
 	"EHLO master.linux-ide.org") by vger.kernel.org with ESMTP
-	id S262955AbTJ3Xn6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 30 Oct 2003 18:43:58 -0500
-In-Reply-To: <3FA015EC.6030102@us.ibm.com>
+	id S262913AbTJ3Xs2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 30 Oct 2003 18:48:28 -0500
+In-Reply-To: <3EC03A69.1060302@pobox.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <mikenc@us.ibm.com>
-Cc: Clay Haapala <chaapala@cisco.com>, linux-scsi@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Luben Tuikov <tluben@rogers.com>, James Bottomley <James.Bottomley@steeleye.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
 
-How about if IBM releases the patent clauses on iBOOT so that any body can
-use the INT13/INT19 BIOS callers so Linux can be found as a bootable iscsi
-disk during POST?
+Jeff,
 
-Just a comment, given IBM's statements of "open spec" and/or "open
-standards".  Clearly this would cause IBM to lose a market position, and
-would be bad business practices, but see the fore mentioned position the
-organization promotes.
+If the goal is to add a queue depth to hba's w/o a qdma ring, you need a
+whole pile of tasklets and thread queues.
+
+If you have a hba with qdma ring(s) then it is just like standard scsi.
 
 Cheers,
 
 Andre Hedrick
 LAD Storage Consulting Group
 
-On Wed, 29 Oct 2003, Mike Christie wrote:
+On Mon, 12 May 2003, Jeff Garzik wrote:
 
-> Clay Haapala wrote:
-> 
-> > On Wed, 29 Oct 2003, Mike Christie outgrape:
+> Luben Tuikov wrote:
+> > James Bottomley wrote:
 > > 
-> >>>This may turn out to be a discussion about where this code resides
-> >>>and what code is best to (re)use, not if it is needed.  "Early
-> >>>boot" here is from PXE -- setting up the iSCSI initiator to reach a
-> >>>target at some IP where the rest of the boot (initrd and friends)
-> >>>is.
+> >> On Sun, 2003-05-11 at 15:25, Jeff Garzik wrote:
+> >>
+> >>> This question applies to 2.4 as well as 2.5 (I believe the strategies 
+> >>> are different for the two?)
 > >>>
+> >>> Suppose I am passed several Scsi_Cmnd structures via ->queuecommand. 
+> >>> TCQ depth is >1.  An event causes the entire queue to be aborted, but 
+> >>> I know that the majority of the queue was actually ok.  So, my LLD 
+> >>> would need to requeue and resend most of the recently-aborted 
+> >>> Scsi_Cmnds.
 > >>
-> >>Oops. I forgot you guys use iNBP.com. I was thinking of pxelinux.
 > >>
-> >>Mike
+> >>
+> >> You keep finding these unhandled condidions, sigh.  The correct thing to
+> >> do (since this is a situation identical to QErr set) is to return a
+> >> check condition to the failing command and to return a status of TASK
+> >> ABORTED for all the others (SPC3).  Of course, the SCSI-2 behaviour was
+> >> just to expect all tasks to be silently aborted on QErr=1.  Neither of
+> >> these, of course, is coded into the mid-layer.
 > > 
-> > Oh, now I have to find out about pxelinux ... google ... OK. :-)
 > > 
-> > Yeah, like that only different -- using iSCSI to a target to fetch
-> > blocks rather than TFTP of files from a filestore.
+> > Iff TAS is set and if TST is 001, and there is more than one initiator
+> > whose task are being nuked, then this is correct.
+> > 
+> > Jeff didn't give much information, but it sounds like ABORT/CLEAR TASK SET.
+> > Anyway, no point in speculating.
 > 
-> Once inbp.com reads in the kernel and initrd, it looks like your linuxrc 
-> just insmods the netwrok driver and iscsi mod. At this point (after you 
-> insmod the network driver but before you insmod iscsi.ko.) you can start 
-> the networking interface from userspace. Include a statically compiled 
-> dhcp program and run it from the linuxrc.
 > 
-> Mike
+> I'm working on a SCSI low-level driver that drives SATA host 
+> controllers.  For ATAPI, it's mainly a passthru.  The headache comes in 
+> the translation of SCSI->ATA, and in the error handling.  The SCSI->ATA 
+> translator can be effectively considered a SCSI simulator (or at least 
+> that's how I look at it), so like iSCSI I'm creating a software target, 
+> and I want my target to be compliant to spec.  (Which spec, you ask? 
+> Well, initially SCSI-2, but long term James has convinced me SCSI-3)
+> 
+> So for my specific example, I'm passed a bunch of Scsi_Cmnds.  I queue 
+> them.  And then according to spec, an error on the active command will 
+> cause the entire queue to abort.  Clearly, I do not want to error-out 
+> the other probably-valid commands, only the specific one that caused the 
+> error.  So, the remaining ones need to be retried.
+> 
+> 	Jeff
+> 
 > 
 > -
 > To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
