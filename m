@@ -1,60 +1,50 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: [PATCH] Add compat_ioctl to st
-Date: Tue, 18 Jan 2005 12:54:59 +0000
-Message-ID: <20050118125459.GO30982@parcelfarce.linux.theplanet.co.uk>
-References: <20050118110613.GC43344@muc.de> <20050118122524.GN30982@parcelfarce.linux.theplanet.co.uk> <20050118123024.GA68224@muc.de>
+From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
+Subject: RE: the problem about a320raid driver
+Date: Tue, 18 Jan 2005 08:28:30 -0500
+Message-ID: <60807403EABEB443939A5A7AA8A7458BA3C428@otce2k01.adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:19885 "EHLO
-	parcelfarce.linux.theplanet.co.uk") by vger.kernel.org with ESMTP
-	id S261286AbVARMzA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 18 Jan 2005 07:55:00 -0500
-Content-Disposition: inline
-In-Reply-To: <20050118123024.GA68224@muc.de>
+Received: from magic.adaptec.com ([216.52.22.17]:26009 "EHLO magic.adaptec.com")
+	by vger.kernel.org with ESMTP id S261293AbVARN2c convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 18 Jan 2005 08:28:32 -0500
+content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andi Kleen <ak@muc.de>
-Cc: Matthew Wilcox <matthew@wil.cx>, James.Bottomley@SteelEye.com, Kai.Makisara@kolumbus.fi, linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>, Richard Cai <richardc@sz.webex.com>
+Cc: linux-scsi@vger.kernel.org
 
-On Tue, Jan 18, 2005 at 01:30:24PM +0100, Andi Kleen wrote:
-> > How about having a macro ...
-> > 
-> > 	.ioctl =	st_ioctl,
-> > 	COMPAT_IOCTL_ENTRY(st_compat_ioctl)
-> > 	.open =		st_open,
-> > 
-> > which could be defined something like:
-> > 
-> > #ifdef CONFIG_COMPAT
-> > #define COMPAT_IOCTL_ENTRY(x)	.compat_ioctl = x,
-> > #else
-> > #define COMPAT_IOCTL_ENTRY(x)	/* */
-> > #endif
-> 
-> To be honest I prefer the ifdef. It makes it clear 
-> what is going on, without any unneeded abstraction.
-> The macro in comparison looks unnatural in the definition
-> block.
+Christoph Hellwig writes:
+On Tue, Jan 18, 2005 at 05:39:03PM +0800, Richard Cai wrote:
+>>    I am using intel SE7501WV2 server, with a AIC 7902(A) SCSI control
+,
+>> a320raid driver. OS is redhat 8.0 , kernel is 2.4.18-14. if I run
+lsmod,
+>> it showes the a320raid module is right. Now I want to recompile to
+>> kernel , but every time when I run the command make install, it will
+>> prompt : "No module a320raid found for kernel 2.4.18-14custom " . Who
+>> can lead me a right way ? thanks. 
+> There's never been an a320raid module in the kernel tree.  Try to find
+> out where you got it from and ask them for the driver source.
 
-It would have prevented the mistake you made in sg (which message I only
-read after writing this).  Another way of managing without ifdefs would
-be:
+The driver is from Adaptec, and contains proprietary RAID code, and was
+release as a binary only.
 
-	.compat_ioctl = COMPAT_IOCTL_ENTRY(st),
+You have three options:
+1) Risky, recompile using a `standard' RH configuration name (ie: drop
+custom) or be willing to do a forced load of the module, ignore the
+error or circumvent it, and reuse the distributed a320raid module as-is.
+If internal kernel structures change with your custom config, you will
+be SOL.
+2) Acquire the emd driver in combination with aic79xx. Emd reads the
+RAID metadata from the drives. Emd was released by Adaptec (Justin
+Gibbs) as reported in the raid list last year and is a public domain
+replacement for the a320raid driver.
+3) Drop the driver arrays and minimize your data losses, turn off
+HostRAID mode on the adapter and use the aic79xx driver. If you need the
+arrays, transition to one of dm, md or emd software RAID drivers.
 
-with
-
-#ifdef CONFIG_COMPAT
-#define COMPAT_IOCTL_ENTRY(x)	x##_compat_ioctl
-#else
-#define COMPAT_IOCTL_ENTRY(x)	NULL
-#endif
-
--- 
-"Next the statesmen will invent cheap lies, putting the blame upon 
-the nation that is attacked, and every man will be glad of those
-conscience-soothing falsities, and will diligently study them, and refuse
-to examine any refutations of them; and thus he will by and by convince 
-himself that the war is just, and will thank God for the better sleep 
-he enjoys after this process of grotesque self-deception." -- Mark Twain
+Sincerely -- Mark Salyzyn
