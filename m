@@ -1,56 +1,50 @@
 From: Doug Ledford <dledford@redhat.com>
 Subject: Re: aic7xxx sets CDR offline, how to reset?
-Date: Tue, 3 Sep 2002 18:50:36 -0400
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <20020903185036.G12201@redhat.com>
-References: <alan@lxorguk.ukuu.org.uk> <200209032132.g83LWdD09043@localhost.localdomain>
+Date: Tue, 3 Sep 2002 18:52:51 -0400
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <20020903185251.H12201@redhat.com>
+References: <dledford@redhat.com> <200209032148.g83LmeP09177@localhost.localdomain> <20020903184216.F12201@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <200209032132.g83LWdD09043@localhost.localdomain>; from James.Bottomley@SteelEye.com on Tue, Sep 03, 2002 at 04:32:38PM -0500
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, "Justin T. Gibbs" <gibbs@scsiguy.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+In-Reply-To: <20020903184216.F12201@redhat.com>; from dledford@redhat.com on Tue, Sep 03, 2002 at 06:42:16PM -0400
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>, "Justin T. Gibbs" <gibbs@scsiguy.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-> alan@lxorguk.ukuu.org.uk said:
-> > Next you only need to return stuff if commands have been issued
-> > between the aborting command and a barrier. Since most sane systems
-> > will never be causing REQ_BARRIER
+On Tue, Sep 03, 2002 at 06:42:16PM -0400, Doug Ledford wrote:
+> 
+> Case 2: you want to do an abort, but you need to preserve ordering around 
+> any possible REQ_BARRIERs on the bus.  This requires that we keep a 
+> REQ_BARRIER count for the device, it is after all possible that we could 
+> have multiple barriers active at once, so as each command is put on the 
+> active_list, if it is a barrier, then we increment SDpnt->barrier_count 
+> and as we complete commands (at the interrupt context completion, not the 
+> final completion) if it is a barrier command we decrement the count.
+> 
+> 	[ oops we timed out ]
+> 	while(SDpnt->barrier_count && cmd) {
+> 		// when the aborted command is returned via the done()
+> 		// it will remove it from the active_list, so don't remove
+> 		// it here
+> 		abort_cmd = list_get_tail(SDpnt->active_list);
+> 		if(hostt->abort(abort_cmd) != SUCCESS) {
+> 			[ oops, go on to more drastic action ]
+> 		} else {
+> 			if(abort_cmd->type == BARRIER)
+> 				SDpnt->barrier_count--;
 
-Hmmm...I thought a big reason for adding REQ_BARRIER was to be able to 
-support more robust journaling with order requirement verification.  If 
-that's true, then REQ_BARRIER commands could become quite common on disks 
-using ext3.
+Oops, delete those last two lines....the done() function decrements the 
+barrier_count for us.
 
-On Tue, Sep 03, 2002 at 04:32:38PM -0500, James Bottomley wrote:
-> However, in all honesty, I have to say that I just don't believe ABORTs are 
-> ever particularly effective.  As part of error recovery, If a device is 
-> tipping over into failure, adding another message isn't a good way to pull it 
-                             ^^^^^^^^^^^^^^^^^^^^^^
-Then you might as well skip device resets since they are implemented using 
-messages and go straight to bus resets.  Shot deflected, no score.
-
-> back.  ABORT is really part of the I/O cancellation API, and, like all 
-> cancellation implementations, it's potentially full of holes.  The only uses 
-> it might have---like oops I didn't mean to fixate that CD, give it back to me 
-> now---aren't clearly defined in the SPEC to produce the desired effect (stop 
-> the fixation so the drive door can be opened).
-
-In my experience, aborts have always actually worked fairly well in any 
-scenario where a bus device reset will work.  Generally speaking, the 
-problems I've always ran into with SCSI busses have been either A) this 
-command is screwing up but it isn't confusing the drive so we can abort it 
-or BDR it because the drive still responds to us or B) the bus is hung 
-hard and no transfers or messages of any kind can make it through.  In the 
-B case, a full bus reset is the only thing that works.  In the A case, 
-aborts work just as often as anything else.
-
-> The pain of coming back from a reset (and I grant, it isn't trivial) is well 
-> known and well implemented in SCSI.  It also, from error handlings point of 
-> view, sets the device back to a known point in the state model.
-
-So does a successful abort.
+> 			if(abort_cmd == cmd)
+> 				cmd = NULL;
+> 		}
+> 	}
+> 	if(cmd) {
+> 		if(hostt->abort(cmd) != SUCCESS)
+> 			[ oops, go on to more drastic action ]
+> 	}
 
 -- 
   Doug Ledford <dledford@redhat.com>     919-754-3700 x44233
