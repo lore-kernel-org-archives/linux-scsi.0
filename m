@@ -1,93 +1,135 @@
-From: James Bottomley <James.Bottomley@steeleye.com>
-Subject: bkbits.net problems and work arounds
-Date: 02 May 2003 14:34:59 -0500
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: [PATCH] instrument ide-scsi in 2.5.68
+Date: Sat, 03 May 2003 19:03:47 +1000
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1051904100.1819.70.camel@mulgrave>
+Message-ID: <3EB385F3.6010708@torque.net>
+References: <3EB11AD3.2070503@torque.net>	<3EB22F09.7060906@torque.net> <20030502095536.76dba4dd.rddunlap@osdl.org>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nat9.steeleye.com ([65.114.3.137]:23813 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S263126AbTEBTWk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 2 May 2003 15:22:40 -0400
-Received: from mulgrave-w.il.steeleye.com (il-ppp.sc.steeleye.com [172.17.6.240])
-	by hancock.sc.steeleye.com (8.11.6/linuxconf) with ESMTP id h42JZ0I19917
-	for <linux-scsi@vger.kernel.org>; Fri, 2 May 2003 15:35:00 -0400
+Received: from bunyip.cc.uq.edu.au ([130.102.2.1]:37391 "EHLO
+	bunyip.cc.uq.edu.au") by vger.kernel.org with ESMTP id S263277AbTECIs4
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 3 May 2003 04:48:56 -0400
+In-Reply-To: <20030502095536.76dba4dd.rddunlap@osdl.org>
 List-Id: linux-scsi@vger.kernel.org
-To: SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: "Randy.Dunlap" <rddunlap@osdl.org>
+Cc: linux-scsi@vger.kernel.org, alan@lxorguk.ukuu.org.uk
+
+Randy.Dunlap wrote:
+> On Fri, 02 May 2003 18:40:41 +1000 Douglas Gilbert <dougg@torque.net> wrote:
+> 
+> | Douglas Gilbert wrote:
+> | > <snip/>
+> | >   - instrument driver with 2 parameters (as examples)
+> | >       - ide-scsi.debug + ide-scsi.suppress_reset
+> | >         [kernel load time]
+> | >       - debug + suppress_reset [module load time]
+> | >       - debug + suppress_reset [sysfs: read/write
+> | >         in /sys/bus/ide/drivers/ide-scsi directory]
+> | >   - downgrade (simple) tag queuing to no tag queuing
+> | >     [set some other things to more conservative values]
+> | >   - add scsi_host::release() method
+> | >   - make provision for 16 byte SCSI commands
+> | >   - cleanup printk()s
+> |  > <snip/>
+> | 
+> | As Randy has found the setting of kernel boot time parameters
+> | doesn't work. The problem seems to be that the ide subsystem
+> | asserts ownership over all parameters that start with "ide".
+> | I was unable to bend moduleparam.h to accept a leading underscore
+> | so I went back to the old "__setup" method: the kernel boot time
+> | parameters are now:
+> |    - _ide_scsi_debug + _ide_scsi_suppress_reset
+> 
+> I'll confirm that those work.  I.e., I saw values 3 and 1 in
+> /sys/bus/ide/drivers/ide-scsi/*.
+> 
+> | Module load time and sysfs parameters remain the same.
+> | 
+> | A new patch against lk 2.5.68 is attached.
+> 
+> Used that patch instead of v1 of it.  Got an oops in ide-scsi.
+
+Randy,
+Thanks for testing this. At this stage I have no
+solution but can offer some analysis.
+
+Firstly, it seems like Mandrake 9.0 has some
+program like RedHat's "magicdev" that polls
+cd/dvds every second or so. Nuke it please!
+It won't fix the problem but will make it easier
+to see the wood for the trees.
+
+Over 50 commands were issued successfully to /dev/hdd
+until the latter part of your capture file:
+
+> ide-scsi: hdd: que 91, cmd = [ 5a 0 2a 0 0 0 0 0 2 0 ]
+> 
+> Mandrake Linux release 9.0 (dolphin) for i586
+> Kernel 2.5.68 on a Dual-processor i686 / l
+> 
+> gargoyle.pdx.osdl.net login: hdd: lost interrupt
+> ide-scsi: Reached idescsi_pc_intr interrupt handler
+> ide-scsi: hdd: DMA complete
+> ide-scsi: CoD != 0 in idescsi_pc_intr
+> hdd: DMA disabled
+> ide-scsi: abort ignored
+> ide-scsi: device reset ignored
+> ide-scsi: hdd: que 91, cmd = [ 0 0 0 0 0 0 ]
+> hdd: ATAPI reset complete
+> hdd: irq timeout: status=0x80 { Busy }
+> hdd: ATAPI reset complete
+> hdd: irq timeout: status=0x80 { Busy }
+> hdd: ATAPI reset complete
+> hdd: irq timeout: status=0x80 { Busy }
+> ide-scsi: hdd: I/O error for 91
+> ide-scsi: Reached idescsi_pc_intr interrupt handler
+> Packet command completed, 0 bytes transferred
+> ide-scsi: hdd: suc 1802201963
+> Unable to handle kernel paging request at virtual address 6b6b6b8b
+<oooops>
+
+The issued command is a MODE SENSE (10 byte) for page 0x2a
+and just the first 2 bytes (i.e. tell me the length you
+will return). There must have been 10 of the exact same
+commands executed successfully prior to this point.
+
+"hdd: lost interrupt" seems to indicate a timeout (ide-scsi
+sets its timeouts to max(10, whatever_app_wants) seconds).
+Then it re-enters the ide-scsi driver in the
+idescsi_pc_intr() routine and things look corrupted. It tries
+to finish off a DMA transfer but that 2 byte data_in request
+was not set up as DMA. It is all downhill from there.
+
+Naturally I don't see any errors on my box. However I can
+shorten the timeout so it will go off on a READ command.
+The timeout log looks quite different from yours and
+my driver continues in a healthy state.
+
+ide-scsi: hdd: que 11417, cmd = [ 28 0 0 0 0 0 0 0 1 0 ]
+hdd: irq timeout: status=0xd0 { Busy }
+hdd: ATAPI reset complete
+hdd: irq timeout: status=0xc0 { Busy }
+hdd: ATAPI reset complete
+hdd: irq timeout: status=0xc0 { Busy }
+ide-scsi: hdd: I/O error for 11417
 
 
-For those of you tracking the scsi-misc-2.5 repository, there seems to
-be a bkbits.net problem that prevents me from updating it.
+Does anyone have any suggestions for further testing?
 
-Temporarily, I've pushed the latest tree up to
-
-http://linux-scsi.bkbits.net/scsi-misc1-2.5
-
-Please use this for the time being to get the current tree.  I'm hoping
-scsi-misc-2.5 will be back online shortly.
-
-The changes in this are:
+I have cleaned up the logging messages a little but
+that does not justify releasing a new version yet.
 
 
-<heiko.carstens:de.ibm.com>:
-  o set data direction in sd_synchronize_cache in sd.c
+An additional observation concerning Randy's capture:
+the failed command (MODE SENSE) has serial number 91.
+After ide-scsi thinks it has cleared the timeout and
+the DMA transfer it issues a TEST UNIT READY which
+also get 91 as a serial number. This looks like a
+bug in the mid level.
 
-Anton Blanchard:
-  o Re: Make sym2 driver use pci_enable_device
-
-Christoph Hellwig:
-  o remove scsi_device proc printing from drivers
-  o update NCR_D700 for new-style probing
-  o nuke some superflous externs
-  o Re: unchecked_isa_dma on sparcv9
-  o move max_sectors intitalization fully to scsi_register
-  o scsi_requeuest_fn
-  o remove dead scsi_cmnd members
-  o remove dead struct scsi_device members
-  o fix scsi_debug compile warning
-  o use scsi_report_bus_reset() in scsi_erroc.c
-  o kill pcmcia driver bind_info horror
-  o kill scsi_dump_status
-  o split private and public scsi headers
-
-Douglas Gilbert:
-  o blk SCSI_IOCTL_SEND_COMMAND
-
-James Bottomley:
-  o Fix NCR_D700 driver
-
-Justin T. Gibbs:
-  o fix aci7xxx locking problem
-  o Aic7xxx Driver Update (6.2.33)
-  o Update Aic79xx and Aic7xxx Documenation
-  o Aic79xx Driver Update (version 1.3.8)
-  o Aic7xxx and Aic79xx Driver Updates
-  o Aic79xx and Aic7xxx driver Update
-  o aic7xxx_osm.h, aic7xxx_osm.c, aic79xx_osm.h, aic79xx_osm.c
-  o Aic79xx Driver Upate
-  o Aic79xx Driver Update
-  o Aic79xx Driver Update
-  o Aic79xx Driver Update
-  o Aic7xxx Driver Update
-  o Aic7xxx and Aic79xx Driver Updates
-  o Aic7xxx and Aic79xx driver Update
-  o Aic7xxx and Aic79xx driver updates
-  o Aic7xxx and Aic79xx driver updates
-  o Aic7xxx and Aic79xx Driver Update
-  o Aic7xxx and Aic79xx driver Update
-  o Aic79xx Driver Update
-  o Aic7xxx Driver Update (version 6.2.32)
-  o Aic79xx Driver Update (version 1.3.6)
-  o Change the callback argument for aic brace option parsing to u_long
-to avoid casting problems with different architectures.
-
-Patrick Mansfield:
-  o Compile fix for scsi_syms.c
-
-Paul Mackerras:
-  o Update mesh.c and mac53c94.c drivers
-
-
+Doug Gilbert
 
