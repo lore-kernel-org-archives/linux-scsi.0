@@ -1,35 +1,35 @@
-From: Andries Brouwer <aebr@win.tue.nl>
-Subject: Re: [PATCH] oops in sd_shutdown
-Date: Tue, 12 Aug 2003 10:51:37 +0200
+From: Jamie Lenehan <lenehan@twibble.org>
+Subject: Re: [Dc395x] Re: [PATCH] dc395x - 1/3 remove-static-eeprom-struct
+Date: Tue, 12 Aug 2003 20:29:13 +1000
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030812085137.GA6168@win.tue.nl>
-References: <Pine.LNX.4.53.0308111426570.16008@thevillage.soulcatcher> <20030812002844.B1353@pclin040.win.tue.nl> <20030812075353.A18547@infradead.org>
+Message-ID: <20030812102913.GA5999@twibble.org>
+References: <20030803082718.GA4594@twibble.org> <20030803082759.GA4611@twibble.org> <1059922898.10960.3.camel@mulgrave> <1059923048.5692.1.camel@localhost> <1059923631.10853.6.camel@mulgrave> <1059924971.5837.5.camel@localhost> <1059932143.10853.112.camel@mulgrave> <1060661529.2750.1.camel@localhost>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from kweetal.tue.nl ([131.155.3.6]:777 "EHLO kweetal.tue.nl")
-	by vger.kernel.org with ESMTP id S275108AbTHLIvj (ORCPT
+Received: from tuon.twibble.org ([203.217.29.157]:49370 "EHLO tuon.twibble.org")
+	by vger.kernel.org with ESMTP id S269736AbTHLK3K (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 12 Aug 2003 04:51:39 -0400
+	Tue, 12 Aug 2003 06:29:10 -0400
 Content-Disposition: inline
-In-Reply-To: <20030812075353.A18547@infradead.org>
+In-Reply-To: <1060661529.2750.1.camel@localhost>
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, linux-usb-devel@lists.sourceforge.net, linux-kernel@vger.kernel.org
+To: Ali Akcaagac <aliakc@web.de>
+Cc: James Bottomley <James.Bottomley@steeleye.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Tue, Aug 12, 2003 at 07:53:53AM +0100, Christoph Hellwig wrote:
+On Tue, Aug 12, 2003 at 06:12:09AM +0200, Ali Akcaagac wrote:
+[...]
+> Can you now please include the 3 new patches in the test3 ? As long as
+> no one contributes other patches it's the chance to do it.
 
-> > I see an Oops in the SCSI code, caused by the fact that sdkp is NULL
-> > in sd_shutdown. "How can that be?", you will ask - dev->driver_data was set
-> > in sd_probe. But in my case sd_probe never finished. An insmod usb-storage
-> > hangs forever, or at least for more than six hours, giving ample opportunity
-> > to observe this race between sd_probe and sd_shutdown.
-> > (Of course sd_probe hangs in sd_revalidate disk.)
-> 
-> Well, this same problem could show upb in any other driver.  Could
-> you instead send a patch to Pat that the driver model never calls
-> the shutdown method for a driver that hasn't finished ->probe?
+The patches were added to the scsi-misc when the were originally sent
+to linux-scsi (see http://linux-scsi.bkbits.net:8080/scsi-misc-2.5).
 
-Yes, that is the next stage. But it takes a few hours instead of a
-few seconds.
+They are not critical and they will get pushed along when James is
+ready to push them in.
+
+So there's nothing to worry about.
 
 
+-- 
+ Jamie Lenehan <lenehan@twibble.org>
