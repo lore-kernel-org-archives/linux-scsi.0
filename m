@@ -1,79 +1,60 @@
-From: Andrew Vasquez <praka@san.rr.com>
-Subject: Re: Qlogic driver hang
-Date: Fri, 3 Oct 2003 11:15:20 -0700
+From: Patrick Mansfield <patmans@us.ibm.com>
+Subject: Re: [linux-usb-devel] Re: USB storage problems on OHCI..
+Date: Fri, 3 Oct 2003 14:35:18 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20031003181520.GA2077@praka.local.home>
-References: <B179AE41C1147041AA1121F44614F0B060ED34@AVEXCH02.qlogic.org> <1065109530.24236.6127.camel@localhost.localdomain>
+Message-ID: <20031003143518.A16624@beaverton.ibm.com>
+References: <Pine.LNX.4.44L0.0310031013370.1676-100000@ida.rowland.org> <1065193559.1887.52.camel@mulgrave>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from orngca-mls02.socal.rr.com ([66.75.160.17]:6273 "EHLO
-	orngca-mls02.socal.rr.com") by vger.kernel.org with ESMTP
-	id S263842AbTJCSgn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 3 Oct 2003 14:36:43 -0400
-Received: from praka.san.rr.com (66-75-133-254.san.rr.com [66.75.133.254])
-	by orngca-mls02.socal.rr.com (8.11.4/8.11.3) with ESMTP id h93IW4k23715
-	for <linux-scsi@vger.kernel.org>; Fri, 3 Oct 2003 11:32:05 -0700 (PDT)
-Received: from san.rr.com (localhost [127.0.0.1])
-	by san.rr.com (8.12.3/8.12.3/SuSE Linux 0.6) with ESMTP id h93IFMZB002100
-	for <linux-scsi@vger.kernel.org>; Fri, 3 Oct 2003 11:15:22 -0700
-Received: (from praka@localhost)
-	by san.rr.com (8.12.3/8.12.3/Submit) id h93IFK6M002099
-	for linux-scsi@vger.kernel.org; Fri, 3 Oct 2003 11:15:20 -0700
+Received: from e34.co.us.ibm.com ([32.97.110.132]:55500 "EHLO
+	e34.co.us.ibm.com") by vger.kernel.org with ESMTP id S261311AbTJCVhq
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 3 Oct 2003 17:37:46 -0400
 Content-Disposition: inline
-In-Reply-To: <1065109530.24236.6127.camel@localhost.localdomain>
+In-Reply-To: <1065193559.1887.52.camel@mulgrave>; from James.Bottomley@SteelEye.com on Fri, Oct 03, 2003 at 10:05:52AM -0500
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Alan Stern <stern@rowland.harvard.edu>, Linus Torvalds <torvalds@osdl.org>, Ruud Linders <rkmp@xs4all.nl>, Christoph Hellwig <hch@infradead.org>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, David Brownell <david-b@pacbell.net>, Greg KH <greg@kroah.com>, USB development list <linux-usb-devel@lists.sourceforge.net>, SCSI development list <linux-scsi@vger.kernel.org>, Andries.Brouwer@cwi.nl
 
-On Thu, 02 Oct 2003, Chris Worley wrote:
+On Fri, Oct 03, 2003 at 10:05:52AM -0500, James Bottomley wrote:
 
-> In using the 6.06.00 version of the qlogic driver, the module load gets
-> to:
+> Well, the patch isn't quite correct because if it's not going to probe
+> the cache it should set up a write through cache (or disabled cache) as
+> the default.
+
+Alan's original patch is included in my patch.
+
+> Patrick's patch
 > 
-> 	Verifying chip...      
+> http://marc.theaimsgroup.com/?l=linux-scsi&m=106366112221507
 > 
-> And hangs the system.  The older driver would print out:
-> 
-> 	Firmware version:  3.01.13, Driver version 6.01.00
-> 
-> at this point.  Any ideas what I'm doing wrong?
-> 
+> Does get this right.
 
-So much for forward progress :O
+I am re-rolling the patch based on current 2.6, plus a couple comments
+Christoph had, I'll resend to you and linux-scsi.
 
-Would it be possible to get the logs mentioned below?  I'm rather
-curious where exactly (or as close as possible) the hang is occuring.
-How 'hard' is the hang?  Is the cap-locks key available (light
-flashes)?  Is the HBA connected to anything at the time of module
-load?
+> But my principle objection, as I've stated before, is that it isn't true
+> that we don't need to manage the caches of hot pluggable devices, fibre
+> channel being the counter example.
 
+I agree - the type of transport does not indicate the capabilties of the
+device. If connectors were free and took no space (yeh never), we would
+have usb, firewire, spi, and fcp available on all disk drives.
 
-> > I'd suggest we start from there.  If you are still experiencing
-> > problems, forward the /var/log/messages file after you enable
-> > 'Extended Error Logging' from the BIOS utility.  If you feel
-> > comfortable changing some lines in the driver source, more descript
-> > (helpful) logs can be obtained with the following three changes:
-> > 
-> > 	o In the qla_settings.h file change the following line from:
-> > 
-> > 		#define DEBUG_QLA2100		0  /* For Debug of qla2x00 */
-> > 	 to
-> > 		#define DEBUG_QLA2100		1  /* For Debug of qla2x00 */
-> > 
-> > 	o In the qla2x00.h file change the following line from:
-> > 
-> > 		/* #define QL_DEBUG_LEVEL_2  */ /* Output error msgs to COM1 */
-> > 	  to
-> > 		#define QL_DEBUG_LEVEL_2   /* Output error msgs to COM1 */
-> > 
-> > 	o In the qla2x00.c file change the following line from:
-> > 
-> > 		static int extended_error_logging = 0;	/* 0 = off, 1 = log errors */
-> > 	  to
-> > 		static int extended_error_logging = 1;	/* 0 = off, 1 = log errors */
-> > 
-> > Recompile & load the driver.
-> > 
+But for some reason with USB, we are more likely to have devices that
+cannot handle mode sense page 8 (cache). So shove some code into the
+usb-storage driver, and make it possible to set policy allowing us to
+disable page 8 for any device.
 
-Regards,
-Andrew Vasquez
+Though I do not see the utility in syncing the cache, especially given the
+failure to figure out the caching method. 
+
+High end storage won't care (probably battery backed ram, redundant
+storage, and separate out-of-band monitoring facilities). 
+
+If the cache sync fails, the best we can do is notify the user, we can't
+reissue the write or even tell the user what block failed to make it to
+disk, the best we can do is say "your hosed".
+
+-- Patrick Mansfield
