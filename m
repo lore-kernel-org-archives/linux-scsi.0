@@ -1,38 +1,34 @@
-From: Marcelo Tosatti <marcelo.tosatti@cyclades.com>
-Subject: Re: program scsi_unique_id is using a deprecated SCSI ioctl, please convert it to SG_IO
-Date: Mon, 28 Mar 2005 09:34:30 -0300
-Message-ID: <20050328123430.GC29310@logos.cnet>
-References: <20050328103324.GB28175@logos.cnet> <1112024363.5531.5.camel@mulgrave>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: program scsi_unique_id is using a deprecated SCSI ioctl,
+	please convert it to SG_IO
+Date: Mon, 28 Mar 2005 11:35:52 -0600
+Message-ID: <1112031352.5531.41.camel@mulgrave>
+References: <20050328103324.GB28175@logos.cnet>
+	 <1112024363.5531.5.camel@mulgrave>  <20050328123430.GC29310@logos.cnet>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hera.kernel.org ([209.128.68.125]:1205 "EHLO hera.kernel.org")
-	by vger.kernel.org with ESMTP id S261963AbVC1RZO (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 28 Mar 2005 12:25:14 -0500
-Content-Disposition: inline
-In-Reply-To: <1112024363.5531.5.camel@mulgrave>
+Received: from stat16.steeleye.com ([209.192.50.48]:28114 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S261195AbVC1Rfz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 28 Mar 2005 12:35:55 -0500
+In-Reply-To: <20050328123430.GC29310@logos.cnet>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@steeleye.com>
+To: Marcelo Tosatti <marcelo.tosatti@cyclades.com>
 Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Mon, Mar 28, 2005 at 09:39:23AM -0600, James Bottomley wrote:
-> On Mon, 2005-03-28 at 07:33 -0300, Marcelo Tosatti wrote:
-> > You probably already know about this, but just in case:
-> > 
-> > v2.6.12-rc1 yields
-> > 
-> > program scsi_unique_id is using a deprecated SCSI ioctl, please convert it to SG_IO
+On Mon, 2005-03-28 at 09:34 -0300, Marcelo Tosatti wrote:
+> I'm using FC2 - FC3 probably has it updated.
 > 
-> Actually, a lot of programs do this.  Since about 2.6.11 (I think, might
-> be earlier), the SCSI subsystem has actually begun warning about the use
-> of ioctls which have been deprecated for a while.
-> 
-> The solution is to fix up the scsi_unique_id program to use SG_IO.
+> Sorry for the noise.
 
-Doh. 
+Heh, not necessarily ... the reason for making the SCSI subsystem print
+these messages is that no-one was updating any user level programs to
+move to the new API ... now at least we're worrying people enough to ask
+questions.
 
-I'm using FC2 - FC3 probably has it updated.
+James
 
-Sorry for the noise.
+
