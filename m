@@ -1,84 +1,35 @@
-From: =?ISO-8859-1?Q?Gustavo_Mart=EDn?= <gmartin@filmayer.es>
-Subject: Re: Problems with SCSI device
-Date: Thu, 27 Mar 2003 17:49:54 +0100
+From: Viktor Hornak <hornak@csb.sunysb.edu>
+Subject: limit on size of a SCSI drive?
+Date: 27 Mar 2003 12:14:52 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3E832BB2.8070707@filmayer.es>
-References: <200303261713.h2QHDXLr090443@mail5.mx.voyager.net> <3E81E9A9.5040502@filmayer.es> <Pine.LNX.4.52.0303262017410.2462@kai.makisara.local>
+Message-ID: <1048785293.26909.49.camel@frodo.bio.sunysb.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from frodo.bio.sunysb.edu (frodo.bio.sunysb.edu [129.49.94.57])
+	by ilion.bio.sunysb.edu (SGI-8.12.5/8.12.5) with ESMTP id h2RHT6Ud398173
+	for <linux-scsi@vger.kernel.org>; Thu, 27 Mar 2003 12:29:06 -0500 (EST)
 List-Id: linux-scsi@vger.kernel.org
-To: Kai Makisara <Kai.Makisara@kolumbus.fi>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
 
-Hi again,
+Hello,
 
-after executing stinit /dev/st0, this is what I can see in the log.....=
-=2E
+I was wondering if someone could help with the following issue. We are
+planning to buy a Promise UltraTrak SX8000 drive enclosure, which can
+hold up to 8 IDE disks. The UltraTrak presents itself as a single SCSI
+drive. With the disks we are planning to buy, the size of this 'fake'
+SCSI drive would be about 2.1TB! Now, my question is if SCSI module or
+linux kernel have any limitations on a size of a single SCSI drive, i.e.
+if we will have troubles to get such a monstrous SCSI drive running. We
+are using RedHat Linux 7.3 with kernel 2.4.18 (we can upgrade to newer
+kernel if that would solve the potential problem though).
 
-[root@ns2 root]# dmesg
-(scsi0:A:5): 20.000MB/s transfers (10.000MHz, offset 15, 16bit)
-st0: Block limits 8 - 589576 bytes.
-(scsi0:A:5): 3.300MB/s transfers
-(scsi0:A:5): 20.000MB/s transfers (10.000MHz, offset 15, 16bit)
-st0: Mode 0 options: buffer writes: 1, async writes: 1, read ahead: 1
-st0:    can bsr: 1, two FMs: 0, fast mteom: 0, auto lock: 1,
-st0:    defs for wr: 0, no block limits: 0, partitions: 0, s2 log: 1
-st0:    sysv: 0 nowait: 0
-st0: Compression default set to 1
-st0: Error with sense data: Info fld=3D0x8000800 (nonstd), Current=20
-st09:00: sense
-key Aborted Command
+Please respond to my e-mail address because I am not a regular member of
+the SCSI reflector.
 
-Stinit replays: "Can't find defaults for tape number 0. Definitions for=
-=20
-/dev/st0 failed"
-These are my defaults in stinit.def file:
+Many thanks,
 
-manufacturer=3DQUANTUM model=3D"DLT8000" revision=3D0250
-{
-scsi2logical=3D1
-mode1 compresion=3D1
-buffering=3D1 async-writes=3D1 read-ahead=3D1
-can-bsr=3D1 two-fms=3D0 fast-eom=3D0 auto-lock=3D1
-defs-for-writes=3D0 noblklimits=3D0 can-partitions=3D0
-sysv=3D0 no-wait=3D0
-}
-
-Where can be now the problem?
-
-Thanks,
-GUSTAVO
-
-Kai Makisara wrote:
-
->On Wed, 26 Mar 2003, Gustavo Mart=EDn wrote:
->
-> =20
->
->>Hi again,
->>
->>I made some changes on my .def file. The manufacturer, model, etc see=
-ms
->>to be correct. I changed the modes and now I recive errno 5, can't op=
-en
->>tape device /dev/nst0.
->>
->>I'm getting crazy with this stuff. Any other idea?
->>
->>   =20
->>
->What messages do you see in the system log (or with dmesg)? What are t=
-he
->definitions in stinit.def? Are you defining 'can-partitions'?
->
-> =20
->
+-Viktor
 
 
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
