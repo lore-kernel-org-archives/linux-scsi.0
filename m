@@ -1,148 +1,67 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: BUG: CD driver sends command during host removal
-Date: Mon, 27 Sep 2004 14:18:51 -0400 (EDT)
+From: James.Smart@Emulex.Com
+Subject: RE: [RFC] Allow transport classes to attach to host, target or device
+Date: Mon, 27 Sep 2004 14:28:39 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44L0.0409271358300.1928-100000@ida.rowland.org>
-References: <20040926082926.GA1944@uniball>
+Message-ID: <0B1E13B586976742A7599D71A6AC733C02F1DB@xbl3.ma.emulex.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ida.rowland.org ([192.131.102.52]:29700 "HELO ida.rowland.org")
-	by vger.kernel.org with SMTP id S261232AbUI0SSw (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 27 Sep 2004 14:18:52 -0400
-In-Reply-To: <20040926082926.GA1944@uniball>
+Received: from emulex.emulex.com ([138.239.112.1]:60625 "EHLO
+	emulex.emulex.com") by vger.kernel.org with ESMTP id S266912AbUI0S2n convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 27 Sep 2004 14:28:43 -0400
+content-class: urn:content-classes:message
 List-Id: linux-scsi@vger.kernel.org
-To: SCSI development list <linux-scsi@vger.kernel.org>
-Cc: Mohammed Sameer <uniball@gmx.net>, USB users list <linux-usb-users@lists.sourceforge.net>
+To: James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org
 
-I received the following error report, showing that something in the CD 
-driver attempts to send a command to a USB CD-RW drive when the host is 
-removed, leading to an oops.  This was on a 2.6.9-rc2 system (Mohammed 
-please correct me if that's wrong).
 
-The initial part of the log shows a perfectly normal probe and scan of the 
-drive.  Here are the important bits:
+FYI - I've been prototyping host and target attributes in the fc transport using a 9/12 snapshot of the scsi-target-2.6 tree.
 
-On Sun, 26 Sep 2004, Mohammed Sameer wrote:
+I have one issue that I would hope someone with more experience in the underlying class code can help with.
 
-> Sep 26 11:20:48 localhost kernel: usb-storage: Command INQUIRY (6 bytes)
-> Sep 26 11:20:48 localhost kernel: usb-storage:  12 00 00 00 24 00
-> Sep 26 11:20:48 localhost kernel: usb-storage: scsi cmd done, result=0x0
-> Sep 26 11:20:48 localhost kernel:   Vendor: MSI       Model: CD-RW CR52        Rev: 3.70
-> Sep 26 11:20:48 localhost kernel:   Type:   CD-ROM                             ANSI SCSI revision: 02
+Here's a summary of what's happening...
+- If I insmod a test lldd, which attaches a host, passes discovery, and finds 1 device - I can see the classes, and all the attribute files in sysfs. If I never attempt to access the sysfs attributes, I can rmmod the test lldd fine.
+- If I repeat, I can access all the attributes in the sdev and starget classes, and I can rmmod the test lldd fine.
+- If I repeat, and then access only a host attribute (which works fine), the subsequent rrmod encounters the oops described below.
 
-> Sep 26 11:20:48 localhost kernel: usb-storage: Command TEST_UNIT_READY (6 bytes)
-> Sep 26 11:20:48 localhost kernel: usb-storage:  00 00 00 00 00 00
-> Sep 26 11:20:48 localhost kernel: usb-storage: -- transport indicates command failure
-> Sep 26 11:20:48 localhost kernel: usb-storage: Issuing auto-REQUEST_SENSE
-> Sep 26 11:20:48 localhost kernel: usb-storage: -- code: 0x70, key: 0x6, ASC: 0x29, ASCQ: 0x0
-> Sep 26 11:20:48 localhost kernel: usb-storage: Unit Attention: Power on, reset, or bus device reset occurred
-> Sep 26 11:20:48 localhost kernel: usb-storage: scsi cmd done, result=0x2
+In trying repeated scenarios, I have the following observations. I have 3 rd only attributes and 1 rdwr attribute on the host. I can access the rdwr attribute all I want and rmmod with no problems. If I access one of the rd only attributes, the rmmod fails. Other than the rd vs rdwr distinction, there is no other real difference. Also - other than where the attributes come from (shost, starget, or sdev), there is no difference in declaration or use of the attributes in the different classes.
 
-> Sep 26 11:20:48 localhost kernel: usb-storage: Command TEST_UNIT_READY (6 bytes)
-> Sep 26 11:20:48 localhost kernel: usb-storage:  00 00 00 00 00 00
-> Sep 26 11:20:48 localhost kernel: usb-storage: scsi cmd done, result=0x0
+Any help in tracking this down further is appreciated. I can forward the patch of the prototype for those that want to look at it.
 
-> Sep 26 11:20:48 localhost kernel: usb-storage: Command MODE_SENSE_10 (10 bytes)
-> Sep 26 11:20:48 localhost kernel: usb-storage:  5a 00 2a 00 00 00 00 00 80 00
-> Sep 26 11:20:48 localhost kernel: usb-storage: scsi cmd done, result=0x0
-> Sep 26 11:20:48 localhost kernel: sr0: scsi3-mmc drive: 40x/40x writer cd/rw xa/form2 cdda tray
-> Sep 26 11:20:48 localhost kernel: Attached scsi CD-ROM sr0 at scsi0, channel 0, id 0, lun 0Sep 26 11:20:54 localhost kernel: usb 1-2: USB disconnect, address 2
+-- james
 
-Up to here everything looks okay.  Then the user unplugged the USB cable:
 
-> Sep 26 11:20:54 localhost kernel: usb-storage: storage_disconnect() called
-> Sep 26 11:20:54 localhost kernel: usb-storage: usb_stor_stop_transport called
+The oops is:
 
-Next usb-storage called scsi_remove_host().  Apparently this caused some 
-component of the CD driver to queue a command:
+>> A NULL pointer dereference in list_del_init() in class_device_del()
 
-> Sep 26 11:20:54 localhost kernel: usb-storage: queuecommand called
-> Sep 26 11:20:54 localhost kernel: usb-storage: *** thread awakened.
-> Sep 26 11:20:54 localhost kernel: usb-storage: No command during disconnect
-> Sep 26 11:20:54 localhost kernel: usb-storage: *** thread sleeping.
+Unable to handle kernel NULL pointer dereference at virtual address 00000000
+ printing eip:
+c01f46fd
+*pde = 00000000
+Oops: 0002 [#1]
+Modules linked in: lpfc scsi_transport_fc autofs4 sunrpc pcnet32 mii ipt_REJECT iptable_filter ip_tables vmhgfs floppy sg microcode uhci_hcd usbcore button battery asus_acpi ac ext3 jbd BusLogic sd_mod scsi_mod
+CPU:    0
+EIP:    0060:[<c01f46fd>]    Tainted: P   VLI
+EFLAGS: 00010246   (2.6.9-rc1) 
+EIP is at class_device_del+0x3d/0xc0
+eax: f0e1d2c3   ebx: c21d6ddc   ecx: 00000000   edx: 00000000
+esi: c21d6ddc   edi: cc91a340   ebp: c9c9e000   esp: c9c9ff3c
+ds: 007b   es: 007b   ss: 0068
+Process rmmod (pid: 3537, threadinfo=c9c9e000 task=ca094560)
+Stack: cc91a38c c21d6ddc c02ddea0 00000000 c9c9e000 c01f4788 c21d6c00 cc9bb14c 
+       c21d6c00 cc91c440 cc91c5b0 cc91d200 c012fafd 00000000 6366706c 00000000 
+       ca0d2dc0 c0d6d6b4 c014643a b7fea000 b7feb000 c0146769 b7fea000 b7feb000 
+Call Trace:
+ [<c01f4788>] class_device_unregister+0x8/0x10
+ [<cc9bb14c>] scsi_remove_host+0x4c/0x50 [scsi_mod]
+ [<cc91c440>] lpfc_exit+0x30/0x55 [lpfc]
+ [<c012fafd>] sys_delete_module+0x12d/0x170
+ [<c014643a>] unmap_vma_list+0x1a/0x30
+ [<c0146769>] do_munmap+0x109/0x150
+ [<c01178e0>] do_page_fault+0x0/0x54c
+ [<c0105e1d>] sysenter_past_esp+0x52/0x71
+Code: 4c ba 42 00 00 00 89 04 24 b8 a0 90 2a c0 e8 2b 5f f2 ff ba 01 00 ff ff 8b 04 24 0f c1 10 85 d2 0f 85 b4 02 00 00 8b 06 8b 56 04 <89> 02 89 36 8b 5f 60 89 50 04 89 76 04 8b 03 0f 18 00 90 8d 6f 
 
-usb-storage accepted the command but then ignored it because the host was
-in process of removal.  Should the queuecommand routine have rejected the
-command?  This would involve a race, because it's possible for
-queuecommand to accept a command and then scsi_remove_host() to be called
-before the command is carried out.
-
-After five seconds the command timed out:
-
-> Sep 26 11:20:59 localhost kernel: usb-storage: command_abort called
-> Sep 26 11:20:59 localhost kernel: usb-storage: -- nothing to abort
-
-usb-storage ignored the request to abort the command (the command_abort
-routine returned FAILED because no command was running).  So error
-recovery proceeded to try a device reset and then a bus reset.  Neither 
-one was allowed:
-
-> Sep 26 11:20:59 localhost kernel: usb-storage: device_reset called
-> Sep 26 11:20:59 localhost kernel: usb-storage: No reset during disconnect
-> Sep 26 11:20:59 localhost kernel: usb-storage: bus_reset called
-> Sep 26 11:20:59 localhost kernel: usb-storage: No reset during disconnect
-
-usb-storage doesn't define a host reset, so error recovery gave up:
-
-> Sep 26 11:20:59 localhost kernel: scsi: Device offlined - not ready after error recovery: host 0 channel 0 id 0 lun 0
-> Sep 26 11:20:59 localhost kernel: Badness in scsi_device_set_state at drivers/scsi/scsi_lib.c:1688
-> Sep 26 11:20:59 localhost kernel:  [<cf92d24f>] scsi_device_set_state+0xc4/0x112 [scsi_mod]Sep 26 11:20:59 localhost kernel:  [<cf92afa0>] scsi_eh_offline_sdevs+0x64/0x80 [scsi_mod]
-> Sep 26 11:20:59 localhost kernel:  [<cf92b4b0>] scsi_unjam_host+0xb6/0x1eb [scsi_mod]
-> Sep 26 11:20:59 localhost kernel:  [<c0115777>] default_wake_function+0x0/0x12
-> Sep 26 11:20:59 localhost kernel:  [<cf92b6b4>] scsi_error_handler+0xcf/0x16b [scsi_mod]
-> Sep 26 11:20:59 localhost kernel:  [<cf92b5e5>] scsi_error_handler+0x0/0x16b [scsi_mod]
-> Sep 26 11:20:59 localhost kernel:  [<c010425d>] kernel_thread_helper+0x5/0xb
-> Sep 26 11:20:59 localhost kernel: Badness in kref_get at lib/kref.c:32
-> Sep 26 11:20:59 localhost kernel:  [<c01aa017>] kref_get+0x44/0x46
-> Sep 26 11:20:59 localhost kernel:  [<c01a9c65>] kobject_get+0x1a/0x24
-> Sep 26 11:20:59 localhost kernel:  [<c0218ec6>] get_device+0x18/0x21
-> Sep 26 11:20:59 localhost kernel:  [<cf92c9c4>] scsi_request_fn+0x25/0x367 [scsi_mod]
-> Sep 26 11:20:59 localhost kernel:  [<c021f1e2>] blk_insert_request+0xae/0xcc
-> Sep 26 11:20:59 localhost kernel:  [<c0106428>] dump_stack+0x1c/0x20
-> Sep 26 11:20:59 localhost kernel:  [<cf92ba11>] scsi_queue_insert+0x89/0xd0 [scsi_mod]
-> Sep 26 11:20:59 localhost kernel:  [<cf92b381>] scsi_eh_flush_done_q+0x6f/0xe8 [scsi_mod]
-> Sep 26 11:20:59 localhost kernel:  [<cf92b47c>] scsi_unjam_host+0x82/0x1eb [scsi_mod]
-> Sep 26 11:20:59 localhost kernel:  [<c0115777>] default_wake_function+0x0/0x12
-> Sep 26 11:20:59 localhost kernel:  [<cf92b6b4>] scsi_error_handler+0xcf/0x16b [scsi_mod]
-> Sep 26 11:20:59 localhost kernel:  [<cf92b5e5>] scsi_error_handler+0x0/0x16b [scsi_mod]
-> Sep 26 11:20:59 localhost kernel:  [<c010425d>] kernel_thread_helper+0x5/0xb
-> Sep 26 11:20:59 localhost kernel: cf92ee79
-> Sep 26 11:20:59 localhost kernel: Modules linked in: sr_mod usb_storage ipv6 thermal fan button processor ac battery microcode e100 yenta_socket pcmcia_core ehci_hcd usbcore ext2 dm_mod eepro100 mii toshiba_acpi psmouse pcspkr msr snd_seq_midi snd_intel8x0 snd_ac97_codec snd_pcm_oss snd_mixer_oss snd_pcm snd_page_alloc gameport snd_mpu401_uart snd_rawmidi snd_seq_oss snd_seq_midi_event snd_seq snd_timer snd_seq_device snd soundcore ide_cd cdrom sd_mod scsi_mod rtc unix
-> Sep 26 11:20:59 localhost kernel: CPU:    0
-> Sep 26 11:20:59 localhost kernel: EIP:    0060:[<cf92ee79>]    Not tainted VLI
-> Sep 26 11:20:59 localhost kernel: EFLAGS: 00010082   (2.6.9-rc2-Uniball-1) 
-> Sep 26 11:20:59 localhost kernel: EIP is at scsi_device_dev_release+0x26/0xeb [scsi_mod]
-> Sep 26 11:20:59 localhost kernel: eax: c974dd84   ebx: c974dc08   ecx: 00200200   edx: 00100100
-> Sep 26 11:20:59 localhost kernel: esi: c974dc00   edi: 00000282   ebp: cef084b4   esp: c9091e80
-> Sep 26 11:20:59 localhost kernel: ds: 007b   es: 007b   ss: 0068
-> Sep 26 11:20:59 localhost kernel: Process scsi_eh_0 (pid: 2103, threadinfo=c9090000 task=cd2b8aa0)
-> Sep 26 11:20:59 localhost kernel: Stack: 00000046 c974dda8 c0334488 c03344a0 cef084d8 c0218bf8 c974dd84 c974dda8 
-> Sep 26 11:20:59 localhost kernel:        c0334488 c03344a0 c01a9d07 c974dda8 c974ddc0 c01a9d09 cef08400 cec76128 
-> Sep 26 11:20:59 localhost kernel:        c01aa052 c974dda8 cef08400 cec76128 c974dd84 cef302b0 c974dc00 c01a9d31 
-> Sep 26 11:20:59 localhost kernel: Call Trace:
-> Sep 26 11:20:59 localhost kernel:  [<c0218bf8>] device_release+0x58/0x5c
-> Sep 26 11:20:59 localhost kernel:  [<c01a9d07>] kobject_cleanup+0x98/0x9a
-> Sep 26 11:20:59 localhost kernel:  [<c01a9d09>] kobject_release+0x0/0xa
-> Sep 26 11:20:59 localhost kernel:  [<c01aa052>] kref_put+0x39/0x93
-> Sep 26 11:20:59 localhost kernel:  [<c01a9d31>] kobject_put+0x1e/0x22
-> Sep 26 11:20:59 localhost kernel:  [<c01a9d09>] kobject_release+0x0/0xa
-> Sep 26 11:20:59 localhost kernel:  [<cf92cb82>] scsi_request_fn+0x1e3/0x367 [scsi_mod]
-> Sep 26 11:20:59 localhost kernel:  [<c021f1e2>] blk_insert_request+0xae/0xcc
-> Sep 26 11:20:59 localhost kernel:  [<c0106428>] dump_stack+0x1c/0x20
-> Sep 26 11:20:59 localhost kernel:  [<cf92ba11>] scsi_queue_insert+0x89/0xd0 [scsi_mod]
-> Sep 26 11:20:59 localhost kernel:  [<cf92b381>] scsi_eh_flush_done_q+0x6f/0xe8 [scsi_mod]
-> Sep 26 11:20:59 localhost kernel:  [<cf92b47c>] scsi_unjam_host+0x82/0x1eb [scsi_mod]
-> Sep 26 11:20:59 localhost kernel:  [<c0115777>] default_wake_function+0x0/0x12
-> Sep 26 11:20:59 localhost kernel:  [<cf92b6b4>] scsi_error_handler+0xcf/0x16b [scsi_mod]
-> Sep 26 11:20:59 localhost kernel:  [<cf92b5e5>] scsi_error_handler+0x0/0x16b [scsi_mod]
-> Sep 26 11:20:59 localhost kernel:  [<c010425d>] kernel_thread_helper+0x5/0xb
-> Sep 26 11:20:59 localhost kernel: Code: e9 7c a0 8e f0 55 57 56 53 83 ec 04 8b 44 24 18 8b 68 20 8d b0 7c fe ff ff 9c 5f fa 8d 98 84 fe ff ff 8b 90 84 fe ff ff 8b 4b 04 <89> 4a 04 89 11 c7 43 04 00 02 20 00 8d 98 8c fe ff ff 8b 90 8c 
-
-I've omitted the remaining parts of the fault cascade.
-
-Can anyone help?
-
-Alan Stern
-
+ 
