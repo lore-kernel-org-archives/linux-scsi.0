@@ -1,29 +1,23 @@
-From: "David Anderson" <david-ander2023@mail.com>
-Subject: Reading data from a file
-Date: Fri, 27 Dec 2002 10:34:27 -0500
+From: Douglas Gilbert <dougg@torque.net>
+Subject: aic7xxx build quirk in 2.5.53
+Date: Sat, 28 Dec 2002 10:54:27 +1100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20021227153427.70720.qmail@mail.com>
+Message-ID: <3E0CE833.60604@torque.net>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
+Received: from torque.net (dm1-91.triode.net.au [202.147.125.91])
+	by iggy.triode.net.au (8.11.6/8.11.6) with ESMTP id gBRNq2i08493
+	for <linux-scsi@vger.kernel.org>; Sat, 28 Dec 2002 10:52:03 +1100
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-Hi,
+I noticed that parts of the aic7xxx driver build
+each time "make modules" is run even though there has
+been no change to aic7xxx code since the previous time
+"make modules" was run.
 
-I am reading some data from a file byte by byte in my driver. Although it's not a good thing to read a file in the driver I have to do it. My file is quite big can contain about 1000 lines each line containing anywhere from 0 to 500 characters. I believe carry out 500000 reads is not a good thing. 
-
-Any suggestions on how I can improve ??
-
-Thanks and Regards,
-David
--- 
-__________________________________________________________
-Sign-up for your own FREE Personalized E-mail at Mail.com
-http://www.mail.com/?sr=signup
-
-Meet Singles
-http://corp.mail.com/lavalife
+Doug Gilbert
 
