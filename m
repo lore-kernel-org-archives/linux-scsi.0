@@ -1,78 +1,45 @@
-From: Naveen Burmi <naveenb@cisco.com>
-Subject: Linux iscsi driver update 4.0.1.9
-Date: Fri, 17 Sep 2004 22:07:47 +0530
+From: Jesse Barnes <jbarnes@engr.sgi.com>
+Subject: Re: SCSI QLA not working on latest *-mm SN2
+Date: Fri, 17 Sep 2004 10:21:20 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <200409172207.47253.naveenb@cisco.com>
-Reply-To: naveenb@cisco.com
+Message-ID: <200409171021.20263.jbarnes@engr.sgi.com>
+References: <B179AE41C1147041AA1121F44614F0B060EF48@AVEXCH02.qlogic.org> <20040916152552.232ccbe7.akpm@osdl.org> <200409161529.10122.jbarnes@engr.sgi.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
-  charset="us-ascii"
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sj-iport-2-in.cisco.com ([171.71.176.71]:7184 "EHLO
-	sj-iport-2.cisco.com") by vger.kernel.org with ESMTP
-	id S269001AbUIQQiB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 17 Sep 2004 12:38:01 -0400
-Received: from naveenb-lnx.cisco.com (naveenb-lnx.cisco.com [10.77.7.56])
-	by sj-core-1.cisco.com (8.12.10/8.12.6) with ESMTP id i8HGbv7Y020958
-	for <linux-scsi@vger.kernel.org>; Fri, 17 Sep 2004 09:37:58 -0700 (PDT)
-Received: from localhost (localhost [[UNIX: localhost]])
-	by naveenb-lnx.cisco.com (8.11.6/8.11.6) id i8HGblv22841
-	for linux-scsi@vger.kernel.org; Fri, 17 Sep 2004 22:07:47 +0530
+Received: from omx3-ext.sgi.com ([192.48.171.20]:42450 "EHLO omx3.sgi.com")
+	by vger.kernel.org with ESMTP id S268864AbUIQRVw (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 17 Sep 2004 13:21:52 -0400
+In-Reply-To: <200409161529.10122.jbarnes@engr.sgi.com>
 Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
-To: Linux-SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Andrew Morton <akpm@osdl.org>
+Cc: Andrew Vasquez <andrew.vasquez@qlogic.com>, pj@sgi.com, linux-scsi@vger.kernel.org, mdr@cthulhu.engr.sgi.com, jeremy@cthulhu.engr.sgi.com, djh@cthulhu.engr.sgi.com, jbarnes@cthulhu.engr.sgi.com
 
+On Thursday, September 16, 2004 3:29 pm, Jesse Barnes wrote:
+> On Thursday, September 16, 2004 3:25 pm, Andrew Morton wrote:
+> > Andrew Vasquez <andrew.vasquez@qlogic.com> wrote:
+> > > Andrew, please add Jesse's patch along with the patch I'm attaching to
+> > > your tree.  I'll be sure to add the ia64 machine back into our test
+> > > ring.
+> >
+> > Could someone send me Jesse's patch?
+>
+> Here it is.
+>
+> Reduce some overaggressive compensation for PCI write posting.  In some
+> cases we don't actually want to read a value back, since the card could be
+> resetting.
+>
+> Signed-off-by: Jesse Barnes <jbarnes@sgi.com>
 
-Folks,
-
-Thanks to all of you for providing and reviewing patches.
-Special thanks to Christopher and James Bottomley.
-https://sourceforge.net/project/shownotes.php?release_id=268685
-
-This version of the iSCSI driver (4.0.1.9) contains the following changes
-since 4.0.1.8:
-
-1)The iSCSI driver has undergone architectural changes. The driver now 
-supports one HBA per transport end point( i.e., per iSCSI session).
-
-2)Earlier the iSCSI driver had it's own code to probe LUNs. Now it uses 
-SCSI-ml provided scsi_scan_host() to probe and configure LUNs.
-
-3)Multiple kmaps from rx path have now been removed.
-
-4)The driver used to provide persistant naming of iSCSI devices using 'udev'.
-The names used to be based on bus id and target id of the session which
-inturn were kept persistant across boots. The driver no longer supports this.
-This is to be consistent with the rest of HBA drivers.
-
-5)The code has been cleaned up further. We no longer have mixed case names
-in the kernel files.
-
-
-The following items are being worked on/debated:
-
-a)cleanup of threading, signals, interfaces.
-  removal of dead code
-  cleaning up of error paths
- some cleanup of timer, ipv6,logging
-
-b)Changes so as to be compliant with driver model.
-
-c)Usage of mid layer provided APIs to traverse through device list instead
-of using session_list link in iscsi_dev_data.
-
-d)Usage of new timeout infrastructure to get rid  of iSCSI driver's
-eh_timeout modifications.
-
-e)Removal of portal-failover feature.
-
-f)Usage of new TCQ APIs(yet to provided in linux 2.6) to get rid of iSCSI 
-driver's mechanism to generate tags.
-
-h)Replacement of ioctls with sysfs interface.
-
-PS The current driver is tested against 2.6.8.1 linux kernel.
+Btw Andrew (Vasquez), there's a small doc I put together that should describe 
+when you have to worry about PCI posting.  It's in the tree:  
+Documentation/io_ordering.txt.  If it's incomplete or confusing, just let me 
+know and I'll update it.
 
 Thanks,
-Naveen.
+Jesse
