@@ -1,58 +1,77 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: SCSI vs IDE
-Date: Tue, 31 Aug 2004 17:28:16 +1000
+From: <news@globaltt.com>
+Subject: =?iso-8859-1?Q?Internet_High-speed_connection_by_satellite_//_connexion_h?=
+	=?iso-8859-1?Q?aut-d=E9bit_par_satellite?=
+Date: Tue, 31 Aug 2004 11:15:47 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <41342890.3050501@torque.net>
-References: <20040831050117.80689.qmail@web53204.mail.yahoo.com>
-Reply-To: dougg@torque.net
+Message-ID: <1a8c01c48f3b$19f97dc0$0542a8c0@DevsoftThree>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from borg.st.net.au ([65.23.158.22]:53676 "EHLO borg.st.net.au")
-	by vger.kernel.org with ESMTP id S267310AbUHaH26 (ORCPT
+Received: from ns2.globaltt.com ([217.30.16.2]:35011 "EHLO mx2.globaltt.com")
+	by vger.kernel.org with ESMTP id S267612AbUHaJOt (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 31 Aug 2004 03:28:58 -0400
-In-Reply-To: <20040831050117.80689.qmail@web53204.mail.yahoo.com>
+	Tue, 31 Aug 2004 05:14:49 -0400
+Received: from globaltt.com (imail.globaltt.com [217.30.16.4])
+	by mx2.globaltt.com (8.12.11/8.12.11) with ESMTP id i7V9BxN6003742
+	for <linux-scsi@vger.kernel.org>; Tue, 31 Aug 2004 11:11:59 +0200 (CEST)
+Content-Class: urn:content-classes:message
 List-Id: linux-scsi@vger.kernel.org
-To: Linux Explorer <erforschen_linux@yahoo.com>
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-Linux Explorer wrote:
-> Hi,
-> 
-> I am using SCSI disk for backup operation, and I found
-> out that it takes long time than IDE disk.
-> 
-> Herewith I attach the two text files they give the
-> time taken for SCSI and IDE disks for writing 4728MB
-> of data using dd command.
-> 
-> Can anyone tell me , why SCSI disk takes approximately
-> 3 times as IDE disk?
-> 
-> Herewith I attach one more text file inq.txt which
-> gives the Inquiry information of the attached scsi
-> disk.
-> 
-> I have tried this with adaptec and LSI logic scsi
-> controllers, both are taking same time.
+Dear Sir,
 
-It is good to see that Digital Equipment Corporation SCSI-2
-disks are still going strong. So I guess it is not a Ultra
-320 or SAS disk running at 15,000 rpm. Current SCSI disks
-are approaching transfer speeds of 100 MB/sec while your
-measurement shows a write speed of 11 MB/sec.
+>From now, you can get anywhere in Africa, a broadband shared high-spee=
+d satellite access :
+        - 24h/24
+        - From 99 Euro by month (without equipment)
+        - 1 to 13 users/PC can share the same connection or the same su=
+bscription.
+        - Speed from 64Kbps to 2Mbps
 
-What vintage is the IDE (ATA) disk that you are using for
-comparison? Your measurement shows a write speed of 33
-MB/sec.
+=46or more information I invite you on our web site on the following ad=
+dress:
+http://www.globaltt.com
 
-About the only thing that might be tweaked with your
-hardware is write caching. ATA disks seem to have it
-on all the time. For your SCSI disk, in scu try:
-"show pages cache-control" and look at the "Write Cache Enable"
-state. If it says "No" then use scu to set it to "Yes" and
-retest.
+The GT&T team and myself are free to be in touch with you for any infor=
+mation.
+Yours faithfully,
 
-Doug Gilbert
+Sales account manager
+news@globaltt.com
+
+------------------------------------------------------------------
+
+Cher Monsieur,
+
+Il est d=E9sormais possible, partout en Afrique, d'avoir un acc=E8s Int=
+ernet par satellite :
+        - A haut-d=E9bit (type adsl)=20
+        - 24h/24
+        - A partir de 99 euro par mois (hors =E9quipement)
+        - 1 =E0 13 utilisateurs/PC peuvent partager la m=EAme connexion=
+ et le m=EAme abonnement.
+        - vitesse de 64 Kbps =E0 2 Mbps
+
+Pour plus d'informations, je vous invite =E0 visiter notre site =E0 l'a=
+dresse suivante :
+http://www.globaltt.com
+
+Mon =E9quipe et moi-m=EAme sommes =E0 votre disposition pour toutes inf=
+ormations.
+Je vous prie de croire, Cher Monsieur, en l'expression de mes sentiment=
+s distingu=E9s,
+
+Responsable client
+news@globaltt.com
+
+
+*Si cet e-mail ne devait par r=E9pondre =E0 vos besoins vous pouvez ren=
+voyer ce mail avec le sujet "no needs"
+*If this email doesn't match with your need you can return this mail wi=
+th the subject "no needs"
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
