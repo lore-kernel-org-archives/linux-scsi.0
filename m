@@ -1,35 +1,36 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: Problem : QLogic QLA104x PCI SCSI Adapter with HP CDWriter+ 9200
-Date: Fri, 19 Apr 2002 18:36:31 -0400
+From: Stephen Cameron <steve.cameron@compaq.com>
+Subject: Re: compaq smart array 5i raid controller
+Date: Mon, 22 Apr 2002 08:08:43 -0600
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3CC09BEF.3491B987@torque.net>
-References: <20020419184727.A16159@yenveedu.com>
+Message-ID: <20020422080843.A9129@zuul.cca.cpqcorp.net>
+Reply-To: steve.cameron@compaq.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
+Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
-To: Dionysius Wilson Almeida <dwilson@yenveedu.com>
+To: radu.alexa@mobilcom.de
 Cc: linux-scsi@vger.kernel.org
 
-Dionysius Wilson Almeida wrote:
-> 
-> Hi Everyone,
-> 
-> I'm using QLogic QLA104x PCI SCSI Adapter with HP CDWriter+ 9200.
-> The QLogic BIOS version is 6.14, ISP Firmware 4.50.
-> 
-> During the bootup, I see :
-> 
-> scsi : aborting command due to timeout : pid 6, scsi0, channel 0, id 6, lun 0 0x12 00 00 00 ff 00
-> 
-> But eventually it recognizes the CD Writer and configures it.
+radu.alexa@mobilcom.de wrote:
+> I have a compaq dl380g2 server with a smart array 5i raid controller and 
+> a dat dds4 scsi tape drive attached to it. distribution suse7.3, kernel 
+> 2.4.16 from suse. I'm using the cciss driver but I can't access the tape 
+> drive - it is not recognized.
+> in documenation/cciss.txt of kernel 2.4.18 it is written:
 
-This looks like a scsi bus termination problem.
+Yes.  For some reason, perhaps by accident, Linus accepted the 
+documentation portion of the tape support patch to the cciss
+driver much before accepting the code with implemented what the
+documentation described.  So for a period, the documentation
+claimed tape drives were supported when actually, they were not.
 
-It seems as though the QLogic controller is ultra wide (16 bit)
-while the HP cdwriter is "scsi-2" (8 bit wide) and is the only
-thing on the scsi bus. How are you terminating the scsi bus with 
-this configuration?
+(a version of) the cciss tape support code got accepted into 
+2.4.19-pre1, if I recall correctly.
 
-Doug Gilbert
+Hope that explains things.
+
+(sorry for the late response, I don't read linux-scsi much lately.)
+
+-- steve
+
