@@ -1,53 +1,58 @@
-From: Pat LaVarre <p.lavarre@ieee.org>
-Subject: Re: usb storage traces
-Date: 10 Nov 2003 15:04:34 -0700
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1068501874.6380.19.camel@patrh9>
-Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from email-out1.iomega.com ([147.178.1.82]:18142 "EHLO
-	email.iomega.com") by vger.kernel.org with ESMTP id S264128AbTKJWFE
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 10 Nov 2003 17:05:04 -0500
-Received: from royntex01.iomegacorp.com (unknown [147.178.90.120])
-	by email.iomega.com (Postfix) with ESMTP id 7069C27F8
-	for <linux-scsi@vger.kernel.org>; Mon, 10 Nov 2003 15:05:03 -0700 (MST)
+From: Andries.Brouwer@cwi.nl
+Subject: Re: usb-storage and Sony Handycam
+Date: Mon, 10 Nov 2003 23:21:42 +0100 (MET)
+Sender: linux-usb-devel-admin@lists.sourceforge.net
+Message-ID: <UTC200311102221.hAAMLgV04712.aeb@smtp.cwi.nl>
+Return-path: <linux-usb-devel-admin@lists.sourceforge.net>
+Errors-To: linux-usb-devel-admin@lists.sourceforge.net
+List-Help: <mailto:linux-usb-devel-request@lists.sourceforge.net?subject=help>
+List-Post: <mailto:linux-usb-devel@lists.sourceforge.net>
+List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-devel>,
+	<mailto:linux-usb-devel-request@lists.sourceforge.net?subject=subscribe>
+List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-devel>,
+	<mailto:linux-usb-devel-request@lists.sourceforge.net?subject=unsubscribe>
+List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=linux-usb-devel>
+To: dmitrik@users.sourceforge.net, patmans@us.ibm.com
+Cc: idan@idanso.dyndns.org, linux-scsi@vger.kernel.org, linux-usb-devel@lists.sourceforge.net, ronald@kuetemeier.com, stern@rowland.harvard.edu
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-If anyone here already has ...
+    Can someone verify my decoding? (This matches what Dmitri sent earlier
+    that did not make it to the list, execept it looks like it starts with an
+    INQUIRY VPD page 0 - get a list of supported VPD pages).
 
-... traces of Win XP/2K with DVD/CD as life begins after plug in ...
+No, that is not a SCSI command.
 
-... you could save me some work by sharing those now.
+    > TransferBuffer: 0x00000012 (18) length
+    > 0000: 12 01 00 01 00 00 00 08 4c 05 2e 00 00 03 01 02 
+    > 0010: 00 01 
 
-Pat LaVarre
+The meaning is decoded below.
 
-P.S. Yes I am now continuing that effort last snapshot as:
+    >     bLength            : 0x12 (18)
+    >     bDescriptorType    : 0x01 (1)
+    >     bcdUSB             : 0x0100 (256)
+    >     bDeviceClass       : 0x00 (0)
+    >     bDeviceSubClass    : 0x00 (0)
+    >     bDeviceProtocol    : 0x00 (0)
+    >     bMaxPacketSize0    : 0x08 (8)
+    >     idVendor           : 0x054c (1356)
+    >     idProduct          : 0x002e (46)
+    >     bcdDevice          : 0x0300 (768)
+    >     iManufacturer      : 0x01 (1)
+    >     iProduct           : 0x02 (2)
+    >     iSerialNumber      : 0x00 (0)
+    >     bNumConfigurations : 0x01 (1)
 
-> http://marc.theaimsgroup.com/?l=linux-scsi&m=106427309605764
->
-> List: linux-scsi
-> Subject: usb storage traces
-> Date: 2003-09-22 23:25:17
-> From: Pat LaVarre ...
->
-> > > Tell me we care to hear specifically what
-> > > some win sends to some of my usb hdd/rmb,
-> > > and I'll go collect a few sample usb bus
-> > > traces.
-> >
-> > From: Andries... Brouwer...
-> > Date: Tue, 23 Sep 2003 01:07:59 +0200 (MEST)	
-> >
-> > I'll collect and publish.
-> > (Change the subject line to "USB storage
-> > traces" or so.)
-> > Must have some old traces somewhere myself too.
->
-> ... I'm replying before you publish
-> only to confirm we agree we wish to survey ...
+It is the device that reports that it is 054c:002e
+a Sony HandyCam MemoryStick Reader.
 
 
+-------------------------------------------------------
+This SF.Net email sponsored by: ApacheCon 2003,
+16-19 November in Las Vegas. Learn firsthand the latest
+developments in Apache, PHP, Perl, XML, Java, MySQL,
+WebDAV, and more! http://www.apachecon.com/
+_______________________________________________
+linux-usb-devel@lists.sourceforge.net
+To unsubscribe, use the last form field at:
+https://lists.sourceforge.net/lists/listinfo/linux-usb-devel
