@@ -1,132 +1,63 @@
-From: Fabien Salvi <fabien@cri74.org>
-Subject: Re: Qlogic FC driver(s)
-Date: Wed, 07 May 2003 18:24:43 +0200
+From: Mike Anderson <andmike@us.ibm.com>
+Subject: Re: [RFC] scsi host sysfs support again [0/4]
+Date: Wed, 7 May 2003 09:15:46 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3EB9334B.7020409@cri74.org>
-References: <995FF289C9D69747A09E42992644595405B2372F@penguin.adic.com>
+Message-ID: <20030507161546.GA3368@beaverton.ibm.com>
+References: <20030505083315.GB8416@beaverton.ibm.com> <20030505093833.A13506@infradead.org> <20030505094818.GH8416@beaverton.ibm.com> <20030505111735.A16914@infradead.org> <20030506010521.GB3852@beaverton.ibm.com> <20030507164427.A28899@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aravis.cur-archamps.fr ([195.202.0.99]:23748 "EHLO
-	aravis.cur-archamps.fr") by vger.kernel.org with ESMTP
-	id S264116AbTEGQMK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 7 May 2003 12:12:10 -0400
+Received: from e33.co.us.ibm.com ([32.97.110.131]:8600 "EHLO e33.co.us.ibm.com")
+	by vger.kernel.org with ESMTP id S264095AbTEGQBR (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 7 May 2003 12:01:17 -0400
+Content-Disposition: inline
+In-Reply-To: <20030507164427.A28899@infradead.org>
 List-Id: linux-scsi@vger.kernel.org
-To: brian.auld@adic.com
+To: Christoph Hellwig <hch@infradead.org>
 Cc: linux-scsi@vger.kernel.org
 
+Christoph Hellwig [hch@infradead.org] wrote:
+> > > Then we'd have:
+> > > 
+> > > 	scsi_alloc_host
+> > > 		- allocate storage for struct Scsi_Host, some
+> > > 		  basic initalization.  refcount set to 1;
+> > 
+> > I am using sysfs ref counting and increment the ref count on the Scsi_Host
+> > through device_register and device_get. The scsi_get/put_host wrapper
+> > would call device_get/put.
+> 
+> right.
+> 
+> > > 	scsi_get_host
+> > > 		- get a reference to an existing struct Scsi_Host
+> > > 	scsi_put_host
+> > > 		- decrement usecount of an existing struct Scsi_Host,
+> > > 		  free it if this was the last reference
+> > 
+> > The sysfs model splits the registering / unregistering so that is why I
+> > am unregistering in scsi_remove_host, but may not call the free until
+> > someone calls the final put.
+> 
+> I completly agree with that.  (did something above read like I was
+> disagreeing?  I'm a bit confused on this comment..)
 
+No I did not read that you where disagreeing I was just indicating that
+I was not calling any sysfs functions from scsi_register do that the
+Scsi_Host's struct device and struct class where not initialized until
+scsi_add_host.
 
-brian.auld@adic.com a =E9crit:
-> Hello,
->=20
-> Can someone in the 'know' comment on the differences/background as to=
- why there is a Qlogic Fibre Channel driver in the kernel tree and a se=
-parate driver released by qlogic.=20
->=20
-> Is one preferable over the other?
->=20
-> I'm doing some iSCSI target driver work. I have an FC target driver a=
-s a reference that was superimposed on top of the qlogic intitiator dri=
-ver found in the kernel tree (as opposed to glogic). I want to make sur=
-e this base driver (kernel tree vs. qlogic) is the preferred choice bef=
-ore proceeding.=20
->=20
+After reading you mail the other day I believe a better model would be
+to split the device_register using the device_initialize and device_add
+functions. This will mean that after the return of scsi_register
+(scsi_alloc_host) that refcount will be 1 and the Scsi_Host struct is
+ready to be used.
 
-Hello Brian,
+I am writing this down write now so it is a little better explained. I
+hope to have it out in just a bit.
 
-There are a lot of differences between the kernel one and the Qlogic=20
-official driver.
-The first one is based on an old driver, it's not really maintained.
-I can't use it when I use FC switch in F_port.
+-andmike
+--
+Michael Anderson
+andmike@us.ibm.com
 
-The official Qlogic driver works betten in my opinion, but it's not=20
-integrated because of specific coding not accepted by scsi maintainer :
-
-Here is what Christoph Hellwig said :
-
-
-=46irst thing is of course to actually port the driver to 2.5-CURRENT, =
-there's
-no way it'll get into 2.4 before 2.5.
-
-The it needs some massaging into an actual linux driver:
-
-* remove typedef abuse
-* remove #ifdef abuse.  The current driver is ifdef hell at it's best.
-   examples:
-
-#ifdef UNIQUE_FW_NAME
-unsigned short fw2300ip_version =3D 3*1024+1;
-#else
-unsigned short risc_code_version =3D 3*1024+1;
-#endif
-
-   just always use the unique name, it can't harm
-
-#if QLA2X_PERFORMANCE
-
-   WTF?  Either your performance changes work and can always be enabled
-   or you should remove them from a submitted driver.
-   The useful remaining options should be turned into CONFIG_* symbols
-   for use with the kernel config tools.
-
-* the source file organization is a mess.  Don't ever include c files
-   in other c files.  Reorganize the code into qla2100/qla2200/qla2300
-   specific sources and common sources instead of the ifdef mess and
-   turn the shared code into a library module (e.g. qla2x00.ko)
-
-* don't delcare the host template in a header but as normal struct,
-   see the many 2.5 driver that underwent that change (i.e. aic7xxx)
-
-Second there's a bunch of functional changes that need to be done:
-
-* Convert to the new pci API and scsi_add_host/scsi_remove_host for
-   proper PCI hotplug support.
-* Remove failover/multipath support.  It has been frequently stated
-   multipathing for linux schould be handle in the driver-independant
-   later, like the merged md-level support or IBM's scsi midlayer
-   MP patches.
-* Don't use deprecated functions like check_region :)
-* Use proper abstraction instead of version checking hell in the
-   source files.  I.e. the many occurances of
-
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,5,0)
-         spin_lock_irq(&io_request_lock);
-#else
-	spin_lock_irq(ha->host->host_lock);
-#endif
-
-   should be hidden behing a proper wrapper.
-* scsi_block_requests/scsi_unblock_requests instead of queueing command=
-s
-   yourself in ->queuecommand if the port stated is "dead" and remove
-   much of the then obsolete queueing code.
-
-
-Janitoral stuff:
-
-* there seems to be lots of missing error return checks (i.e.=20
-copy_from_user)
-* rename kmem_zalloc or just use kmalloc directly - Linux 2.5 already h=
-as
-   a kmem_zalloc (in XFS)
-
-I guess there's some more stuff that can be found once the driver is in
-a saner shape, but the list is already huge enough 8)
-
-
-
-
---=20
-=46abien SALVI      Centre de Ressources Informatiques
-                   Archamps, France -- http://www.cri74.org
-                   PingOO GNU/linux distribution : http://www.pingoo.or=
-g
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
