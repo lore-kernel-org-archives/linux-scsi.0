@@ -1,182 +1,85 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: Re: buggy scsi_register behaviour in 2.5.51
-Date: Tue, 17 Dec 2002 14:27:10 +1100
+From: Doug Ledford <dledford@redhat.com>
+Subject: Re: slave_destroy called in scsi_scan.c:scsi_probe_and_add_lun()
+Date: Tue, 17 Dec 2002 00:41:02 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3DFE998E.1080103@interlog.com>
-Reply-To: dgilbert@interlog.com
+Message-ID: <20021217054102.GH13989@redhat.com>
+References: <170040000.1040080786@aslan.btc.adaptec.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------040902040901040805090509"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <170040000.1040080786@aslan.btc.adaptec.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: wrlk@riede.org
+To: "Justin T. Gibbs" <gibbs@btc.adaptec.com>
+Cc: linux-scsi@vger.kernel.org
 
-This is a multi-part message in MIME format.
---------------040902040901040805090509
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+On Mon, Dec 16, 2002 at 04:19:46PM -0700, Justin T. Gibbs wrote:
+> In debugging a different bug in the new 2.5.X port of the aic7xxx driver,
+> I came across this behavior in scsi_probe_and_add_lun()
+> 
+>         /*
+>          * Since we reuse the same sdevscan over and over with different
+>          * target and lun values, we have to destroy and then recreate
+>          * any possible low level attachments since they very will might
+>          * also store the id and lun numbers in some form and need updating
+>          * with each scan.
+>          */
+>         if (sdevscan->host->hostt->slave_destroy)
+>                 sdevscan->host->hostt->slave_destroy(sdevscan);
+>         if (sdevscan->host->hostt->slave_alloc)
+>                 sdevscan->host->hostt->slave_alloc(sdevscan);
+> 
+> So, you cannot rely on slave_destroy as an indication of a device really
+> going away in the physical sense.
 
-Willem,
-Can't fix all those problems but I did notice that
-idescsi_release() was missing a call to scsi_unregister().
-With this patch the ide-scsi entry remains dangling in
-sysfs (ide problem??) but the scsi host gets cleaned up
-after rmmod.
+No, you can.  In the code snippet above you might be destroying something 
+at scsi0:0:0:0 and adding something at scsi0:0:1:0.  Regardless, the thing 
+being destroyed is in fact going away permanently.  Whenever we do find a 
+device, we actually allocate a new device struct identical to our current 
+device struct and call slave_alloc() for the newly created device.  So, 
+whenever we find a new device, there will be a momentary point in time at 
+which two device structs will exist that point to the same device.  After 
+the new device is allocated and set up, the original sdevscan device is 
+simply renumbered in place (by updating the target or lun value) and then 
+we call slave_destroy()/slave_alloc() so that the low level driver can 
+also update their target/lun values to match.
 
-The attachment is against lk 2.5.52 . The ide-scsi
-driver in lk 2.5.52 needs cleaning up in several
-areas. If no-one else wants to attack it then I
-will.
+>  In SPI, for example, the driver can only
+> tell that the device is gone if a command is issued to it.  I had hoped that
+> I could detect hot-pull/scsi-remove-single-device operations via this
+> callback.
 
-Doug Gilbert
+You can.  On any device we find, at device tear down time your 
+slave_destroy() entry point will get called right before the device struct 
+itself is kfree()ed.
 
+> Granted, for some drivers, recreating and destroying state associated with a
+> particular device might be pretty cheap, but certainly not in all cases.
+> The
+> aic7xxx and aic79xx drivers maintain domain validation and other negotiation
+> state in these structures.  You certainly don't want to go through another
+> full
+> Domain Validation sequence the next time a device is allocated via
+> slave_alloc() if the device isn't really "new".
 
-Willem Riede wrote:
- > I was investigating why I get
- >
- > Dec 14 14:50:55 fallguy kernel: Badness in kobject_register at lib/kobject.c:113
- > Dec 14 14:50:55 fallguy kernel: Call Trace:
- > Dec 14 14:50:55 fallguy kernel:  [<c01c7c88>] kobject_register+0x58/0x70
- > Dec 14 14:50:55 fallguy kernel:  [<c01db442>] bus_add_driver+0x82/0xd0
- > Dec 14 14:50:55 fallguy kernel:  [<c022bd00>] ide_drive_remove+0x0/0x30
- > Dec 14 14:50:55 fallguy kernel:  [<c022bdec>] ide_register_driver+0xbc/0xf0
- > Dec 14 14:50:55 fallguy kernel:  [<c0133f6a>] sys_init_module+0x1ba/0x1d0
- > Dec 14 14:50:55 fallguy kernel:  [<c010b643>] syscall_call+0x7/0xb
- >
- > when re-insmod-ing ide-scsi, and the "badness" is in sysfs create_dir,
- > appearently because the ide-scsi directory is not removed when ide-scsi
- > is unloaded so the create fails because it already exists.
- >
- > But that's not the only thing going wrong when repeatedly (un)loading.
- > See below for some really horrible effects:
- >
- > [root@fallguy linux-2.5.51]# insmod drivers/scsi/ide-scsi.ko
- > [root@fallguy linux-2.5.51]# cat /proc/scsi/scsi
- > Attached devices:
- > Host: scsi0 Channel: 00 Id: 03 Lun: 00
- >   Vendor: OnStream Model: SC-30            Rev: 1.09
- >   Type:   Sequential-Access                ANSI SCSI revision: 02
- > Host: scsi0 Channel: 00 Id: 06 Lun: 00
- >   Vendor: MATSHITA Model: CD-R   CW-7502   Rev: 4.17
- >   Type:   CD-ROM                           ANSI SCSI revision: 02
- > Host: scsi1 Channel: 00 Id: 00 Lun: 00
- >   Vendor: IBM      Model: DNES-318350W     Rev: SA30
- >   Type:   Direct-Access                    ANSI SCSI revision: 03
- > Host: scsi1 Channel: 00 Id: 01 Lun: 00
- >   Vendor: IBM      Model: DGHS09U          Rev: 0350
- >   Type:   Direct-Access                    ANSI SCSI revision: 03
- > Host: scsi3 Channel: 00 Id: 00 Lun: 00
- >   Vendor: CONNER   Model: CTT8000-A        Rev: 2.08
- >   Type:   Sequential-Access                ANSI SCSI revision: 02
- > Host: scsi3 Channel: 00 Id: 01 Lun: 00
- >   Vendor: OnStream Model: DI-30            Rev: 1.09
- >   Type:   Sequential-Access                ANSI SCSI revision: 02
- > Host: scsi3 Channel: 00 Id: 02 Lun: 00
- >   Vendor: OnStream Model: ADR Series       Rev: 5.05
- >   Type:   Sequential-Access                ANSI SCSI revision: 02
- > [root@fallguy linux-2.5.51]# ls -l /sysfs/bus/ide/drivers/ide-scsi
- > total 0
- > [root@fallguy linux-2.5.51]# ls -ld /sysfs/bus/ide/drivers/ide-scsi
- > drwxr-xr-x    2 root     root            0 Dec 15 15:54 
-/sysfs/bus/ide/drivers/ide-scsi
- > [root@fallguy linux-2.5.51]# rmmod ide_scsi
- > [root@fallguy linux-2.5.51]# ls -ld /sysfs/bus/ide/drivers/ide-scsi
- > drwxr-xr-x    2 root     root            0 Dec 15 15:54 
-/sysfs/bus/ide/drivers/ide-scsi
- >
- >         ^^ the directory is still there ! ^^
- >
- > [root@fallguy linux-2.5.51]# cat /proc/scsi/scsi
- > Attached devices:
- > Host: scsi0 Channel: 00 Id: 03 Lun: 00
- >   Vendor: OnStream Model: SC-30            Rev: 1.09
- >   Type:   Sequential-Access                ANSI SCSI revision: 02
- > Host: scsi0 Channel: 00 Id: 06 Lun: 00
- >   Vendor: MATSHITA Model: CD-R   CW-7502   Rev: 4.17
- >   Type:   CD-ROM                           ANSI SCSI revision: 02
- > Host: scsi1 Channel: 00 Id: 00 Lun: 00
- >   Vendor: IBM      Model: DNES-318350W     Rev: SA30
- >   Type:   Direct-Access                    ANSI SCSI revision: 03
- > Host: scsi1 Channel: 00 Id: 01 Lun: 00
- >   Vendor: IBM      Model: DGHS09U          Rev: 0350
- >   Type:   Direct-Access                    ANSI SCSI revision: 03
- > [root@fallguy linux-2.5.51]# insmod drivers/scsi/ide-scsi.ko
- > [root@fallguy linux-2.5.51]# ls -ld /sysfs/bus/ide/drivers/ide-scsi
- > drwxr-xr-x    2 root     root            0 Dec 15 15:54 
-/sysfs/bus/ide/drivers/ide-scsi
- > [root@fallguy linux-2.5.51]# cat /proc/scsi/scsi
- > Attached devices:
- > Host: scsi0 Channel: 00 Id: 03 Lun: 00
- >   Vendor: OnStream Model: SC-30            Rev: 1.09
- >   Type:   Sequential-Access                ANSI SCSI revision: 02
- > Host: scsi0 Channel: 00 Id: 06 Lun: 00
- >   Vendor: MATSHITA Model: CD-R   CW-7502   Rev: 4.17
- >   Type:   CD-ROM                           ANSI SCSI revision: 02
- > Host: scsi1 Channel: 00 Id: 00 Lun: 00
- >   Vendor: IBM      Model: DNES-318350W     Rev: SA30
- >   Type:   Direct-Access                    ANSI SCSI revision: 03
- > Host: scsi1 Channel: 00 Id: 01 Lun: 00
- >   Vendor: IBM      Model: DGHS09U          Rev: 0350
- >   Type:   Direct-Access                    ANSI SCSI revision: 03
- > Host: scsi3 Channel: 00 Id: 00 Lun: 00
- >   Vendor: OnStream Model: ADR Series       Rev: 5.05
- >   Type:   Sequential-Access                ANSI SCSI revision: 02
- > Host: scsi3 Channel: 00 Id: 01 Lun: 00
- >   Vendor: OnStream Model: DI-30            Rev: 1.09
- >   Type:   Sequential-Access                ANSI SCSI revision: 02
- > Host: scsi3 Channel: 00 Id: 02 Lun: 00
- >   Vendor: CONNER   Model: CTT8000-A        Rev: 2.08
- >   Type:   Sequential-Access                ANSI SCSI revision: 02
- > Host: scsi4 Channel: 00 Id: 00 Lun: 00
- >   Vendor: OnStream Model: ADR Series       Rev: 5.05
- >   Type:   Sequential-Access                ANSI SCSI revision: 02
- > Host: scsi4 Channel: 00 Id: 01 Lun: 00
- >   Vendor: OnStream Model: DI-30            Rev: 1.09
- >   Type:   Sequential-Access                ANSI SCSI revision: 02
- > Host: scsi4 Channel: 00 Id: 02 Lun: 00
- >   Vendor: CONNER   Model: CTT8000-A        Rev: 2.08
- >   Type:   Sequential-Access                ANSI SCSI revision: 02
- >
- > ide-scsi has now been assigned both scsi3 and scsi4?? Its devices appear twice!
- >
- > Clearly not correct. I'll work on fixing this, but first I have a question.
- >
- > Reading the source (hosts.c), it appears that a host adapter will only get
- > the same number as it had before, if it has been specified in the module
- > parameter "scsihosts".
- >
- > Is it a concious design decision to not try and re-assign the same number as
- > before if an adapter not in "scsihosts" gets (un)loaded repeatedly?
- >
- > I think a fix for this would be different if I would try to reassign the
- > same number than if the intention is to keep assigning new numbers.
- >
- > Thanks for your advise. Willem Riede.
- >
- > -
- > To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
- > the body of a message to majordomo@vger.kernel.org
- > More majordomo info at  http://vger.kernel.org/majordomo-info.html
- >
+In this case I would suggest that the better course of action is to delay 
+any domain validation stuff until the slave_configure() call.  The 
+original intent of slave_alloc() was for it to be as lightweight as 
+possible simply because I knew that it would get called for every single 
+target/lun value scanned.  Once we do find a device though, and once we 
+have retrieved INQUIRY data so we know what the device is capable of, then 
+we get the slave_configure() call which is a much more appropriate place 
+for heavier initializations once you know a device has been found and not 
+that we are just scanning.
 
---------------040902040901040805090509
-Content-Type: text/plain;
- name="ide-scsi_2552x.diff"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="ide-scsi_2552x.diff"
+> Any chance in changing this behavior?
 
---- linux/drivers/scsi/ide-scsi.c	2002-12-10 17:38:29.000000000 +1100
-+++ linux/drivers/scsi/ide-scsi.c2552x	2002-12-17 13:06:39.000000000 +1100
-@@ -658,6 +658,7 @@
- 		if (drive)
- 			DRIVER(drive)->busy--;
- 	}
-+	scsi_unregister(host);
- 	return 0;
- }
- 
+Possibly.  But, does the explanation above and the one suggestion above 
+solve your issues?
 
---------------040902040901040805090509--
-
+-- 
+  Doug Ledford <dledford@redhat.com>     919-754-3700 x44233
+         Red Hat, Inc. 
+         1801 Varsity Dr.
+         Raleigh, NC 27606
+  
