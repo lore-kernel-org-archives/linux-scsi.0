@@ -1,152 +1,215 @@
 From: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Subject: PATCH [7/18]  qla2xxx: Tape command handling fixes
-Date: Mon, 21 Jun 2004 22:53:32 -0700
+Subject: PATCH [8/18]  qla2xxx: Remove dead code
+Date: Mon, 21 Jun 2004 22:54:17 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040622055332.GA8432@linux.local.home>
+Message-ID: <20040622055417.GA8439@linux.local.home>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ms-smtp-01-qfe0.socal.rr.com ([66.75.162.133]:424 "EHLO
+Received: from ms-smtp-01-qfe0.socal.rr.com ([66.75.162.133]:25257 "EHLO
 	ms-smtp-01-eri0.socal.rr.com") by vger.kernel.org with ESMTP
-	id S266594AbUFVFts (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 22 Jun 2004 01:49:48 -0400
+	id S266597AbUFVFuc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 22 Jun 2004 01:50:32 -0400
 Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
 To: SCSI Mailing List <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@steeleye.com>
 
 ChangeSet
-  1.1843 04/06/04 08:09:21 andrew.vasquez@apc.qlogic.com +3 -0
-  Fix several tape handling issue:
-  
-  1) When the firmware receives the LOGO from the device, any
-  active exchanges will be returned with a completion status
-  of 0x29 -- this will cause the port to be marked as lost and
-  request made to the DPC routine to begin a relogin attempt.
-  The problem is, since we've never actually logged out of the
-  device and cannot do so in interrupt context, we must be
-  sure to perform the logout before the qla2x00_fabric_login()
-  in the RELOGIN_NEEDED code.
-  
-  2) Sets the Get Port Database options to ZERO when issuing
-  the call to qla2x00_get_port_database().  This consolidates
-  actuall login handling in the place it should be, in the
-  previous qla2x00_fabric_login() call rather than depending
-  on any 'hidden' behaviour of the firmware.  If a device did
-  a LOGO after the login, then any subsequent exachanges will
-  be returned with an 0x29 completion status and the
-  RELOGIN_NEEDED code will handle the login.
-  
-  3) Finally, if the master and slave state do not indicate a
-  logged-in state from the Get Port Database call, then one
-  cannot depend on the information returned from the firmware
-  -- the firmware typically wipes out the PCB information for
-  a given loopID when logged out.  So, return immediately with
-  a failed status.
+  1.1844 04/06/04 08:20:44 andrew.vasquez@apc.qlogic.com +2 -0
+  Remove several unused failover variables and functions from
+  the embedded driver.
 
 Signed-off-by: Andrew Vasquez <andrew.vasquez@qlogic.com>
 
- drivers/scsi/qla2xxx/qla_init.c |    2 -
- drivers/scsi/qla2xxx/qla_mbx.c  |   54 ++++++++++++++++++++--------------------
- drivers/scsi/qla2xxx/qla_os.c   |    9 +++++-
- 3 files changed, 36 insertions(+), 29 deletions(-)
+ drivers/scsi/qla2xxx/qla_gbl.h |    2 
+ drivers/scsi/qla2xxx/qla_os.c  |  114 -----------------------------------------
+ 2 files changed, 1 insertion(+), 115 deletions(-)
 
-diff -Nru a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
---- a/drivers/scsi/qla2xxx/qla_init.c	2004-06-21 15:37:56 -07:00
-+++ b/drivers/scsi/qla2xxx/qla_init.c	2004-06-21 15:37:56 -07:00
-@@ -2886,7 +2886,7 @@
+diff -Nru a/drivers/scsi/qla2xxx/qla_gbl.h b/drivers/scsi/qla2xxx/qla_gbl.h
+--- a/drivers/scsi/qla2xxx/qla_gbl.h	2004-06-21 15:38:12 -07:00
++++ b/drivers/scsi/qla2xxx/qla_gbl.h	2004-06-21 15:38:12 -07:00
+@@ -75,8 +75,6 @@
+ #if defined(MODULE)
+ extern char *ql2xopts;
+ #endif
+-extern struct list_head qla_hostlist;
+-extern rwlock_t qla_hostlist_lock;
  
- 	rval = qla2x00_fabric_login(ha, fcport, next_loopid);
- 	if (rval == QLA_SUCCESS) {
--		rval = qla2x00_get_port_database(ha, fcport, BIT_1 | BIT_0);
-+		rval = qla2x00_get_port_database(ha, fcport, 0);
- 		if (rval != QLA_SUCCESS) {
- 			qla2x00_fabric_logout(ha, fcport->loop_id);
- 		} else {
-diff -Nru a/drivers/scsi/qla2xxx/qla_mbx.c b/drivers/scsi/qla2xxx/qla_mbx.c
---- a/drivers/scsi/qla2xxx/qla_mbx.c	2004-06-21 15:37:56 -07:00
-+++ b/drivers/scsi/qla2xxx/qla_mbx.c	2004-06-21 15:37:56 -07:00
-@@ -1431,35 +1431,37 @@
- 	mcp->flags = MBX_DMA_IN;
- 	mcp->tov = (ha->login_timeout * 2) + (ha->login_timeout / 2);
- 	rval = qla2x00_mailbox_command(ha, mcp);
-+	if (rval != QLA_SUCCESS)
-+		goto gpd_error_out;
+ extern char *qla2x00_get_fw_version_str(struct scsi_qla_host *, char *);
  
--	if (rval == QLA_SUCCESS) {
--		/* Names are little-endian. */
--		memcpy(fcport->node_name, pd->node_name, WWN_SIZE);
--		memcpy(fcport->port_name, pd->port_name, WWN_SIZE);
--
--		/* Get port_id of device. */
--		fcport->d_id.b.al_pa = pd->port_id[2];
--		fcport->d_id.b.area = pd->port_id[3];
--		fcport->d_id.b.domain = pd->port_id[0];
--		fcport->d_id.b.rsvd_1 = 0;
--
--		/* Check for device require authentication. */
--		pd->common_features & BIT_5 ? (fcport->flags |= FCF_AUTH_REQ) :
--		    (fcport->flags &= ~FCF_AUTH_REQ);
--
--		/* If not target must be initiator or unknown type. */
--		if ((pd->prli_svc_param_word_3[0] & BIT_4) == 0) {
--			fcport->port_type = FCT_INITIATOR;
--		} else {
--			fcport->port_type = FCT_TARGET;
--
--			/* Check for logged in. */
--			if (pd->master_state != PD_STATE_PORT_LOGGED_IN &&
--			    pd->slave_state != PD_STATE_PORT_LOGGED_IN)
--				rval = QLA_FUNCTION_FAILED;
--		}
-+	/* Check for logged in state. */
-+	if (pd->master_state != PD_STATE_PORT_LOGGED_IN &&
-+	    pd->slave_state != PD_STATE_PORT_LOGGED_IN) {
-+		rval = QLA_FUNCTION_FAILED;
-+		goto gpd_error_out;
- 	}
- 
-+	/* Names are little-endian. */
-+	memcpy(fcport->node_name, pd->node_name, WWN_SIZE);
-+	memcpy(fcport->port_name, pd->port_name, WWN_SIZE);
-+
-+	/* Get port_id of device. */
-+	fcport->d_id.b.al_pa = pd->port_id[2];
-+	fcport->d_id.b.area = pd->port_id[3];
-+	fcport->d_id.b.domain = pd->port_id[0];
-+	fcport->d_id.b.rsvd_1 = 0;
-+
-+	/* Check for device require authentication. */
-+	pd->common_features & BIT_5 ? (fcport->flags |= FCF_AUTH_REQ) :
-+	    (fcport->flags &= ~FCF_AUTH_REQ);
-+
-+	/* If not target must be initiator or unknown type. */
-+	if ((pd->prli_svc_param_word_3[0] & BIT_4) == 0)
-+		fcport->port_type = FCT_INITIATOR;
-+	else
-+		fcport->port_type = FCT_TARGET;
-+
-+gpd_error_out:
- 	pci_free_consistent(ha->pdev, PORT_DATABASE_SIZE, pd, pd_dma);
- 
- 	if (rval != QLA_SUCCESS) {
 diff -Nru a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
---- a/drivers/scsi/qla2xxx/qla_os.c	2004-06-21 15:37:56 -07:00
-+++ b/drivers/scsi/qla2xxx/qla_os.c	2004-06-21 15:37:56 -07:00
-@@ -3428,10 +3428,15 @@
- 				    fcport->login_retry) {
+--- a/drivers/scsi/qla2xxx/qla_os.c	2004-06-21 15:38:12 -07:00
++++ b/drivers/scsi/qla2xxx/qla_os.c	2004-06-21 15:38:12 -07:00
+@@ -135,13 +135,6 @@
+ static void copy_mem_info(struct info_str *, char *, int);
+ static int copy_info(struct info_str *, char *, ...);
  
- 					fcport->login_retry--;
--					if (fcport->flags & FCF_FABRIC_DEVICE)
-+					if (fcport->flags & FCF_FABRIC_DEVICE) {
-+						if (fcport->flags &
-+						    FCF_TAPE_PRESENT)
-+							qla2x00_fabric_logout(
-+							    ha,
-+							    fcport->loop_id);
- 						status = qla2x00_fabric_login(
- 						    ha, fcport, &next_loopid);
--					else 	
-+					} else
- 						status =
- 						    qla2x00_local_device_login(
- 							ha, fcport->loop_id);
+-
+-/*
+- * List of host adapters
+- */
+-LIST_HEAD(qla_hostlist);
+-rwlock_t qla_hostlist_lock = RW_LOCK_UNLOCKED;
+-
+ static void qla2x00_free_device(scsi_qla_host_t *);
+ 
+ static void qla2x00_config_dma_addressing(scsi_qla_host_t *ha);
+@@ -190,8 +183,6 @@
+ 
+ static void qla2x00_display_fc_names(scsi_qla_host_t *);
+ 
+-void qla2x00_blink_led(scsi_qla_host_t *);
+-
+ /* TODO Convert to inlines
+  *
+  * Timer routines
+@@ -2118,15 +2109,9 @@
+ 	}
+ 	spin_unlock_irqrestore(&ha->hardware_lock, flags);
+ 
+-
+ 	/* Enable chip interrupts. */
+ 	qla2x00_enable_intrs(ha);
+ 
+-	/* Insert new entry into the list of adapters */
+-	write_lock(&qla_hostlist_lock);
+-	list_add_tail(&ha->list, &qla_hostlist);
+-	write_unlock(&qla_hostlist_lock);
+-
+ 	/* v2.19.5b6 */
+ 	/*
+ 	 * Wait around max loop_reset_delay secs for the devices to come
+@@ -2188,10 +2173,6 @@
+ 
+ 	ha = pci_get_drvdata(pdev);
+ 
+-	write_lock(&qla_hostlist_lock);
+-	list_del(&ha->list);
+-	write_unlock(&qla_hostlist_lock);
+-
+ 	sysfs_remove_bin_file(&ha->host->shost_gendev.kobj,
+ 	    &sysfs_fw_dump_attr);
+ 	sysfs_remove_bin_file(&ha->host->shost_gendev.kobj, &sysfs_nvram_attr);
+@@ -2335,7 +2316,6 @@
+ 	uint32_t        tmp_sn;
+ 	uint32_t	*flags;
+ 	uint8_t		*loop_state;
+-	int	found;
+ 	scsi_qla_host_t *ha;
+ 	char fw_info[30];
+  
+@@ -2343,27 +2323,7 @@
+ 	    "Entering proc_info buff_in=%p, offset=0x%lx, length=0x%x\n",
+ 	    buffer, offset, length);)
+ 
+-	ha = NULL;
+-
+-	/* Find the host that was specified */
+-	found = 0;
+-	read_lock(&qla_hostlist_lock);
+-	list_for_each_entry(ha, &qla_hostlist, list) {
+-		if (ha->host == shost) {
+-			found++;
+-			break;
+-		}
+-	}
+-	read_unlock(&qla_hostlist_lock);
+-
+-	/* if host wasn't found then exit */
+-	if (!found) {
+-		DEBUG2_3(printk(KERN_WARNING
+-		    "%s: Can't find adapter for host %p\n", 
+-		    __func__, shost);)
+-
+-		return (retval);
+-	}
++	ha = (scsi_qla_host_t *) shost->hostdata;
+ 
+ 	if (inout == TRUE) {
+ 		/* Has data been written to the file? */
+@@ -3645,73 +3605,6 @@
+ }
+ 
+ /**************************************************************************
+- * qla2x00_blink_led
+- *
+- * Description:
+- *   This function sets the colour of the LED while preserving the
+- *   unsued GPIO pins every sec.
+- *
+- * Input:
+- *       ha - Host adapter structure
+- *      
+- * Return:
+- * 	None
+- *
+- * Context: qla2x00_timer() Interrupt
+- ***************************************************************************/
+-void
+-qla2x00_blink_led(scsi_qla_host_t *ha)
+-{
+-	uint16_t	gpio_enable, gpio_data, led_color;
+-	unsigned long	cpu_flags = 0;
+-	device_reg_t	*reg = ha->iobase;
+-
+-	/* Save the Original GPIOE */ 
+-	spin_lock_irqsave(&ha->hardware_lock, cpu_flags);
+-	gpio_enable = RD_REG_WORD(&reg->gpioe);
+-	gpio_data = RD_REG_WORD(&reg->gpiod);
+-	spin_unlock_irqrestore(&ha->hardware_lock, cpu_flags);
+-
+-	DEBUG2(printk("%s Original data of gpio_enable_reg=0x%x"
+-	    " gpio_data_reg=0x%x\n",
+-	    __func__,gpio_enable,gpio_data));
+-
+-	if (ha->beacon_green_on){
+-		led_color = GPIO_LED_GREEN_ON_AMBER_OFF;
+-		ha->beacon_green_on = 0;
+-	} else {
+-		led_color = GPIO_LED_GREEN_OFF_AMBER_OFF;
+-		ha->beacon_green_on = 1;
+-	}
+-
+-	/* Set the modified gpio_enable values */
+-	gpio_enable |= GPIO_LED_GREEN_ON_AMBER_OFF;
+-
+-	DEBUG2(printk("%s Before writing enable : gpio_enable_reg=0x%x"
+-	    " gpio_data_reg=0x%x led_color=0x%x\n",
+-	    __func__, gpio_enable, gpio_data, led_color));
+-
+-	spin_lock_irqsave(&ha->hardware_lock, cpu_flags);
+-	WRT_REG_WORD(&reg->gpioe,gpio_enable);
+-	spin_unlock_irqrestore(&ha->hardware_lock, cpu_flags);
+-
+-	/* Clear out the previously set LED colour */
+-	gpio_data &= ~GPIO_LED_GREEN_ON_AMBER_OFF;
+-
+-	/* Set the new input LED colour to GPIOD */
+-	gpio_data |= led_color;
+-
+-	DEBUG2(printk("%s Before writing data: gpio_enable_reg=0x%x"
+-	    " gpio_data_reg=0x%x led_color=0x%x\n",
+-	    __func__,gpio_enable,gpio_data,led_color));
+-
+-	/* Set the modified gpio_data values */
+-	spin_lock_irqsave(&ha->hardware_lock, cpu_flags);
+-	WRT_REG_WORD(&reg->gpiod,gpio_data);
+-	spin_unlock_irqrestore(&ha->hardware_lock, cpu_flags);
+-}
+-
+-/**************************************************************************
+ *   qla2x00_timer
+ *
+ * Description:
+@@ -3744,11 +3637,6 @@
+ 		set_bit(SCSI_RESTART_NEEDED, &ha->dpc_flags);
+ 		start_dpc++;
+ 	}
+-
+-	/* Check if beacon LED needs to be blinked */
+-	if (!IS_QLA2100(ha) && !IS_QLA2200(ha) && ha->beacon_blink_led)
+-		qla2x00_blink_led(ha);
+-
+ 
+ 	/*
+ 	 * Ports - Port down timer.
