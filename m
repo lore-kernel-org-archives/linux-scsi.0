@@ -1,53 +1,75 @@
-From: Adrian Bunk <bunk@fs.tum.de>
-Subject: Re: [patch] 2.6: modular scsi/mca_53c9x doesn't work (fwd)
-Date: Tue, 15 Jun 2004 00:53:36 +0200
+From: "Alma & Lowell" <lowell_a@wowmail.com>
+Subject: Tell Me More
+Date: Tue, 15 Jun 2004 14:02:23 +0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040614225335.GP13951@fs.tum.de>
-References: <20040614185256.GJ13951@fs.tum.de> <20040614192215.GA5360@infradead.org>
+Message-ID: <200406150602.i5F62CPh000808@zeus.kernel.org>
+Reply-To: "Alma & Lowell" <lowell_a@wowmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hermes.fachschaften.tu-muenchen.de ([129.187.202.12]:40932 "HELO
-	hermes.fachschaften.tu-muenchen.de") by vger.kernel.org with SMTP
-	id S263864AbUFNWxo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 14 Jun 2004 18:53:44 -0400
-Content-Disposition: inline
-In-Reply-To: <20040614192215.GA5360@infradead.org>
+Received: from zeus.kernel.org ([204.152.189.113]:31396 "EHLO zeus.kernel.org")
+	by vger.kernel.org with ESMTP id S265302AbUFOGC1 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 15 Jun 2004 02:02:27 -0400
+Received: from wowmail.com ([210.23.164.206])
+	by zeus.kernel.org (8.12.11/8.11.6) with SMTP id i5F62CPh000808
+	for <linux-scsi@vger.kernel.org>; Mon, 14 Jun 2004 23:02:22 -0700
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>, James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Mon, Jun 14, 2004 at 08:22:15PM +0100, Christoph Hellwig wrote:
-> On Mon, Jun 14, 2004 at 08:52:56PM +0200, Adrian Bunk wrote:
-> > The issue described in the mail forwarded below is still present in 
-> > 2.6.7-rc3-mm2 (but not specific to -mm).
-> > 
-> > I'd suggest the following workaround:
-> 
-> Please add the exports instead.  It'll affect all the other 53C9X-based
-> drivers aswell.
+Hello fellow computer user,
 
-This sounds like a better solution.
+Imagine you having an on line computer technical support
+24 hours a day, 7 days a week wherever you are in the world.
 
-Patch below.
+Imagine not paying anymore hundreds of dollars for the service
+of a computer technician to troubleshoot your computer. =85
 
-cu
-Adrian
+Imagine if the answer to your computer problem=20
+is just a click away from your own home or office
+anytime of the day wherever you are=85..
 
---- linux-2.6.7-rc3-mm2-modular-no-smp/drivers/scsi/NCR53C9x.c.old	2004-06-15 00:44:36.000000000 +0200
-+++ linux-2.6.7-rc3-mm2-modular-no-smp/drivers/scsi/NCR53C9x.c	2004-06-15 00:47:23.000000000 +0200
-@@ -3646,4 +3646,15 @@
- }
- #endif
- 
-+EXPORT_SYMBOL(esp_abort);
-+EXPORT_SYMBOL(esp_allocate);
-+EXPORT_SYMBOL(esp_deallocate);
-+EXPORT_SYMBOL(esp_initialize);
-+EXPORT_SYMBOL(esp_intr);
-+EXPORT_SYMBOL(esp_queue);
-+EXPORT_SYMBOL(esp_reset);
-+EXPORT_SYMBOL(esp_slave_alloc);
-+EXPORT_SYMBOL(esp_slave_destroy);
-+EXPORT_SYMBOL(esps_in_use);
-+
- MODULE_LICENSE("GPL");
+Imagine, you owning a search engine with=20
+cost per click advertisement as the highest revenue=20
+making industry in the internet today.
+
+Imagine, you having computer related educational CDs
+for all ages, for your kids,relatives and friends.
+
+And much more..
+
+Most of all....
+Having all of the above and supported by=20
+a brilliant program in the net today,imagine=20
+you earning residual income from your own home by just
+promoting this global and growing billion dollar industry
+to millions of internet users that are joining every month!!!
+
+You are just a click away of having all of these NOW!.=20
+No skills required. Can be done in your home=20
+together with your kids and family anytime of the day.
+
+To know more about it, please
+mailto: lowell_r@wowmail.com
+subject: Tell Me More
+Include also your first & last name.
+
+Internet is the future of communication.
+We are part of this global and growing billion dollar industry.
+And we are on top of it NOW.
+Do not miss this opportunity=85.
+
+Successfully yours,
+
+Lowell
+lowell_r@wowmail.com
+
+
+Please reply "Tell Me More" to lowell_r@wowmail.com if interested,
+"delist me" to receive no more updates.
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
