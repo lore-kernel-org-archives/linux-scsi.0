@@ -1,65 +1,34 @@
-From: "Ross Macintyre" <raz@macs.hw.ac.uk>
-Subject: getting mail notification working (Adaptec 2120S + RedHat)
-Date: Mon, 7 Jun 2004 15:44:14 +0100 (BST)
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: iRiver H100 series and usb-storage issues
+Date: Mon, 7 Jun 2004 10:47:31 -0400 (EDT)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <2852.137.195.14.4.1086619454.squirrel@www.macs.hw.ac.uk>
+Message-ID: <Pine.LNX.4.44L0.0406071040310.1800-100000@ida.rowland.org>
+References: <1086533333.10787.45.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from izanami.macs.hw.ac.uk ([137.195.13.6]:1961 "EHLO
-	izanami.macs.hw.ac.uk") by vger.kernel.org with ESMTP
-	id S264705AbUFGOoP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 7 Jun 2004 10:44:15 -0400
-Received: from surya.macs.hw.ac.uk ([137.195.13.8])
-	by izanami.macs.hw.ac.uk with esmtp (Exim 4.34)
-	id 1BXLME-0003XU-K0
-	for linux-scsi@vger.kernel.org; Mon, 07 Jun 2004 15:44:14 +0100
-Received: from localhost ([127.0.0.1] helo=www.macs.hw.ac.uk)
-	by surya.macs.hw.ac.uk with smtp (Exim 4.10)
-	id 1BXLME-0005H0-00
-	for linux-scsi@vger.kernel.org; Mon, 07 Jun 2004 15:44:14 +0100
+Received: from ida.rowland.org ([192.131.102.52]:11780 "HELO ida.rowland.org")
+	by vger.kernel.org with SMTP id S264720AbUFGOrb (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Jun 2004 10:47:31 -0400
+In-Reply-To: <1086533333.10787.45.camel@mulgrave>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@steeleye.com>, Philippe Troin <phil@fifi.org>
+Cc: USB Storage list <usb-storage@lists.one-eyed-alien.net>, SCSI development list <linux-scsi@vger.kernel.org>
 
-I hope someone can help.
-I am trying to set up mail notification on a machine that has an
-Adaptec 2120S card. This machine runs RedHat 8.0
+I just noticed this thread on linux-kernel:
 
-Firstly, is there an easy way to test this rather than pull
-a disk out and see if I get an email message or not? Saying that,
-this is how I did test it and sure enough I didn't get a message.
-I did check the log on my SMTP server though and I saw that my RAID
-machine did try and connect but got this result:
-(the mail server runs exim)
+http://marc.theaimsgroup.com/?l=linux-kernel&m=108372064000188&w=2
 
-2004-06-04 15:01:53 SMTP protocol violation: synchronization error
-(input sent without waiting for greeting): rejected connection
-from H=buddha.macs.hw.ac.uk [137.195.24.3] U=root
+Apparently under some circumstances the iRiver H100 returns 0 bytes 
+transferred with GOOD status and residue=512 for a READ(10) command 
+asking for 1 sector.  As far as I know this is legal, and it indicates the 
+command should simply be retried.
 
+But apparently the sd driver doesn't realize what has happened and assumes 
+the transfer was successful.  If I'm right then the sd driver should be 
+fixed, but I'm not sure what is the best thing to do.
 
-Also, when I set it up originally, it doesn't seem to display
-corectly when I run 'anotifyd -c'; like this is what happens:
+James, can you offer some advice?
 
-<1013-52>buddha# ./anotifyd -c
-Would you like to enable logging of events to your system log?y
+Alan Stern
 
-You have currently selected:criticalwarningCritical error
-messagesWarning messagesInformational messagesDoneToggle which
-message type?4
-
-
-I have just put the RPMs that come with the CD on to the system, but
-maybe I should be getting the lastest RPMs and also the latest
-firware upgrades.
-
-Any feed back much appreciated.
-
-Thanks in advance,
-
-Ross
-
-
-
--- 
-Ross Macintyre (raz@macs.hw.ac.uk)
