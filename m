@@ -1,80 +1,123 @@
-From: Luben Tuikov <tluben@rogers.com>
-Subject: Re: [PATCH] scsi_set_host_offline (resend)
-Date: Wed, 09 Apr 2003 18:59:39 -0400
+From: Patrick Mansfield <patmans@us.ibm.com>
+Subject: [patch] 1/5 scsi-locking-2.5 single_lun store scsi_device pointer
+Date: Wed, 9 Apr 2003 16:46:12 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3E94A5DB.2020007@rogers.com>
-References: <20030325100704.GC3868@beaverton.ibm.com> <200303301926.17166.oliver@neukum.org> <3E9482FA.6060504@rogers.com> <200304100032.11400.oliver@neukum.org>
+Message-ID: <20030409164612.A23701@beaverton.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fep04-mail.bloor.is.net.cable.rogers.com ([66.185.86.74]:49078
-	"EHLO fep04-mail.bloor.is.net.cable.rogers.com") by vger.kernel.org
-	with ESMTP id S263954AbTDIWsG
-	(for <rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Apr 2003 18:48:06 -0400
-In-Reply-To: <200304100032.11400.oliver@neukum.org>
+Received: from e33.co.us.ibm.com ([32.97.110.131]:15498 "EHLO
+	e33.co.us.ibm.com") by vger.kernel.org with ESMTP id S263938AbTDIXiT (for <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 9 Apr 2003 19:38:19 -0400
+Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
-To: oliver@neukum.name
-Cc: James Bottomley <James.Bottomley@steeleye.com>, Matthew Dharm <mdharm-scsi@one-eyed-alien.net>, linux-hotplug-devel@lists.sourceforge.net, Mike Anderson <andmike@us.ibm.com>, mochel@osdl.org, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: James Bottomley <James.Bottomley@steeleye.com>, linux-scsi@vger.kernel.org
 
-Oliver Neukum wrote:
-> 
-> Please explain yourself further. We cannot deal with wait sometimes.
+Change single_lun code to use a struct scsi_device *, so that we do not
+need an sdev (or queue_lock) while checking if a single_lun target is in
+use by a particular scsi_device.
 
-No need to -- we agree.
-
-> Either we may wait or we may not wait. If we may wait,
-> we must always deal with it like we will wait and deal with results,
-> which is impossible, as the only result we can deal with is success.
-> 
-> Notification is absolutely no problem. _Requiring_ the kernel
-> to wait for user space to act so that the process of removal
-> can be completed as far as the the low level driver is concerned
-> is a major problem.
-
-No, a LLDD will not be required to wait on userspace.  No one wants
-this and the fault in this is quite evident that no one would want it.
-
-The only point is notification, and we seem to agree on this.
+diff -purN -X /home/patman/dontdiff sl-base-2.5/drivers/scsi/scsi.h 01_slun_mod/drivers/scsi/scsi.h
+--- sl-base-2.5/drivers/scsi/scsi.h	Wed Apr  9 11:34:36 2003
++++ 01_slun_mod/drivers/scsi/scsi.h	Wed Apr  9 12:39:15 2003
+@@ -532,10 +532,11 @@ extern int scsi_dev_info_list_add_str(ch
  
-> All is well if a low level driver can consider a device gone for good
-> as soon as "/sbin/hotplug" is spawned. The key here is spawned
-> , not doing something or finish, but spawned.
-
-Ideally:
-
-You can assume even better than that: as soon as your interconnect
-tells you that the device is gone, a LLDD (== transport portal) does this:
----> calls xxx_dev_removal(dev) (marks device as gone in this subsystem),
-(and which in turn:
-  ---> calls scsi_device_removal(dev) (mark dev as gone in this subsys),
-    ... (see my other posting))
-(none of which blocks, more work/discussion is needed here, but this is
-different topic)
-
-and then the LLDD can free *its* resources which it allocated on the
-device.
-
-*But*, the _important__point_ is that the LLDD must be able to handle
-requests (queuecommand()) to non-existant (== just removed) devices,
-and not oops, or whatever.
-
-So, in effect, you just call usb_dev_removal(dev) (to be written),
-and free _your_ resources on the device. (note important point above)
-
-> We have indeed discussed this before and the need to notify
-> user space was never questioned, as far as I recall.
-> The point of contention always was whether the notification
-> had to do specific things for the process of unplugging to finish
-> as far as it concerns the low level driver.
-
-Right.  As far as I can see, those subsystem entries, xxx_dev_removal(dev),
-would do things which do not block, like flip a bit, flags, integer,
-wake up a thread, etc, call the above subsystem's xxx_dev_removal(dev),
-and return immediately. (as per my other posting)
-(this needs more thinking though)
-
--- 
-Luben
-
-
+ /*
+  * scsi_target: representation of a scsi target, for now, this is only
+- * used for single_lun devices.
++ * used for single_lun devices. If no one has active IO to the target,
++ * starget_sdev_user is NULL, else it points to the active sdev.
+  */
+ struct scsi_target {
+-	unsigned int starget_busy;
++	struct scsi_device *starget_sdev_user;
+ 	unsigned int starget_refcnt;
+ };
+ 
+diff -purN -X /home/patman/dontdiff sl-base-2.5/drivers/scsi/scsi_lib.c 01_slun_mod/drivers/scsi/scsi_lib.c
+--- sl-base-2.5/drivers/scsi/scsi_lib.c	Wed Apr  9 11:34:37 2003
++++ 01_slun_mod/drivers/scsi/scsi_lib.c	Wed Apr  9 12:39:15 2003
+@@ -327,9 +327,9 @@ void scsi_setup_cmd_retry(struct scsi_cm
+ }
+ 
+ /*
+- * Called for single_lun devices on IO completion. Clear starget_busy, and
+- * Call __blk_run_queue for all the scsi_devices on the target - including
+- * current_sdev first.
++ * Called for single_lun devices on IO completion. Clear starget_sdev_user,
++ * and call __blk_run_queue for all the scsi_devices on the target -
++ * including current_sdev first.
+  *
+  * Called with *no* scsi locks held.
+  */
+@@ -338,19 +338,33 @@ static void scsi_single_lun_run(struct s
+ 	struct scsi_device *sdev;
+ 	unsigned int flags, flags2;
+ 
+-	spin_lock_irqsave(current_sdev->request_queue->queue_lock, flags2);
+ 	spin_lock_irqsave(current_sdev->host->host_lock, flags);
+-	WARN_ON(!current_sdev->sdev_target->starget_busy);
+-	if (current_sdev->device_busy == 0)
+-		current_sdev->sdev_target->starget_busy = 0;
++	WARN_ON(!current_sdev->sdev_target->starget_sdev_user);
++	current_sdev->sdev_target->starget_sdev_user = NULL;
+ 	spin_unlock_irqrestore(current_sdev->host->host_lock, flags);
+ 
+ 	/*
+ 	 * Call __blk_run_queue for all LUNs on the target, starting with
+-	 * current_sdev.
++	 * current_sdev. We race with others (to set starget_sdev_user),
++	 * but in most cases, we will be first. Ideally, each LU on the
++	 * target would get some limited time or requests on the target.
+ 	 */
++	spin_lock_irqsave(current_sdev->request_queue->queue_lock, flags2);
+ 	__blk_run_queue(current_sdev->request_queue);
+ 	spin_unlock_irqrestore(current_sdev->request_queue->queue_lock, flags2);
++
++	spin_lock_irqsave(current_sdev->host->host_lock, flags);
++	if (current_sdev->sdev_target->starget_sdev_user) {
++		/*
++		 * After unlock, this races with anyone clearing
++		 * starget_sdev_user, but we (should) always enter this
++		 * function again, avoiding any problems.
++		 */
++		spin_unlock_irqrestore(current_sdev->host->host_lock, flags);
++		return;
++	}
++	spin_unlock_irqrestore(current_sdev->host->host_lock, flags);
++
+ 	list_for_each_entry(sdev, &current_sdev->same_target_siblings,
+ 			    same_target_siblings) {
+ 		spin_lock_irqsave(sdev->request_queue->queue_lock, flags2);
+@@ -1158,8 +1172,8 @@ static void scsi_request_fn(request_queu
+ 		if (!scsi_host_queue_ready(q, shost, sdev))
+ 			goto after_host_lock;
+ 
+-		if (sdev->single_lun && !sdev->device_busy &&
+-		    sdev->sdev_target->starget_busy)
++		if (sdev->single_lun && sdev->sdev_target->starget_sdev_user &&
++		    (sdev->sdev_target->starget_sdev_user != sdev))
+ 			goto after_host_lock;
+ 
+ 		/*
+@@ -1198,7 +1212,7 @@ static void scsi_request_fn(request_queu
+ 			blkdev_dequeue_request(req);
+ 	
+ 		if (sdev->single_lun)
+-			sdev->sdev_target->starget_busy = 1;
++			sdev->sdev_target->starget_sdev_user = sdev;
+ 
+ 		shost->host_busy++;
+ 		spin_unlock_irqrestore(shost->host_lock, flags);
+diff -purN -X /home/patman/dontdiff sl-base-2.5/drivers/scsi/scsi_scan.c 01_slun_mod/drivers/scsi/scsi_scan.c
+--- sl-base-2.5/drivers/scsi/scsi_scan.c	Wed Apr  9 11:34:37 2003
++++ 01_slun_mod/drivers/scsi/scsi_scan.c	Wed Apr  9 12:39:15 2003
+@@ -1283,7 +1283,7 @@ static int scsi_add_lun(Scsi_Device *sde
+ 				return SCSI_SCAN_NO_RESPONSE;
+ 			}
+ 			starget->starget_refcnt = 0;
+-			starget->starget_busy = 0;
++			starget->starget_sdev_user = NULL;
+ 		}
+ 		starget->starget_refcnt++;
+ 		sdev->sdev_target = starget;
