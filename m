@@ -1,50 +1,127 @@
-From: Brian King <brking@us.ibm.com>
-Subject: Re: [PATCH] IBM Power RAID driver (ipr) 2.0.6
-Date: Mon, 10 May 2004 17:54:50 -0400
+From: James Bottomley <James.Bottomley@steeleye.com>
+Subject: [BK PATCH] SCSI updates for 2.6.6
+Date: 10 May 2004 17:59:31 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <409FFA2A.2070402@us.ibm.com>
-References: <4097D863.8040505@us.ibm.com> <1084221540.2659.353.camel@mulgrave> <20040510213901.GH16118@parcelfarce.linux.theplanet.co.uk>
+Message-ID: <1084229974.1763.512.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e4.ny.us.ibm.com ([32.97.182.104]:3547 "EHLO e4.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S261631AbUEJVyy (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 10 May 2004 17:54:54 -0400
-In-Reply-To: <20040510213901.GH16118@parcelfarce.linux.theplanet.co.uk>
+Received: from stat1.steeleye.com ([65.114.3.130]:34999 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S261880AbUEJW7g convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 10 May 2004 18:59:36 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <willy@debian.org>
-Cc: James Bottomley <James.Bottomley@steeleye.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
 
-Matthew Wilcox wrote:
-> On Mon, May 10, 2004 at 03:38:57PM -0500, James Bottomley wrote:
-> 
->>On Tue, 2004-05-04 at 12:52, Brian King wrote:
->>
->>>Here is the latest version of the LLD for the IBM Power RAID family of
->>>adapters. This includes several IBM iSeries and pSeries SCSI adapters.
->>>Please apply.
->>
->>The problem is your use of list_head pointers in packed structures.  You
->>can't simply pass a pointer to a misaligned structure to a common kernel
->>function and expect it to work: the packed attribute is lost doing this
->>and what you end up with is a misaligned pointer reference.
-> 
-> 
-> It also causes gcc to pessimise references to this structure; often
-> doing byte-loads instead of larger quantities.  Why does this struct
-> need to be packed? 
+This is the latest set of assorted fixes, plus one new driver: the IBM
+Power Raid (ipr).
 
-It is a shared structure with the adapter with a little bit of added
-driver data at the end of it. I'll roll a patch to clean this up. The
-better way to do this is probably to break out the data that needs to be
-packed into its own structure.
+The patch can be pulled from:
 
--Brian
+bk://linux-scsi.bkbits.net/scsi-for-linus-2.6
 
--- 
-Brian King
-eServer Storage I/O
-IBM Linux Technology Center
+The short changelog is:
 
+<aradford:amcc.com>:
+  o 3ware driver update
+
+<noodles:earth.li>:
+  o Initio INI-9X00U/UW error handling in 2.6
+
+<praka:users.sourceforge.net>:
+  o qla2xxx set current state fixes
+
+Alan Stern:
+  o (as255) Handle Unit Attention during INQUIRY better
+
+Andrew Morton:
+  o aic7xxx deadlock fix
+  o scsi_disk_release() warning fix
+
+Andrew Vasquez:
+  o qla2100 fabric fixes
+  o [15/15] qla2xxx: Update driver version
+  o [14/15] qla2xxx: Resync with latest released firmware -- 3.02.28
+  o [13/15] qla2xxx: Misc. code scrubbing
+  o [12/15] qla2xxx: RIO/ZIO fixes
+  o [11/15] qla2xxx: /proc fixes
+  o [10/15] qla2xxx: Use readX_relaxed
+  o [9/15]  qla2xxx: Tape command handling fixes
+  o [8/15]  qla2xxx: Volatile topology fixes
+  o [7/15]  qla2xxx: Firmware options fixes
+  o [6/15]  qla2xxx: LoopID downcast fix
+  o [5/15]  qla2xxx: Debug messages during ISP abort
+  o [4/15]  qla2xxx: PortID binding fixes
+  o [3/15]  qla2xxx: 2100 request-q contraints
+  o [2/15]  qla2xxx: Remove flash routines
+  o [1/15]  qla2xxx: Firmware dump fixes
+
+Aristeu Sergio Rozanski Filho:
+  o qlogic_cs: use qlogicfas408 module
+  o qlogicfas: split and create a new module
+  o qlogicfas: kill horrible irq probing
+
+Bob Tracy:
+  o sym53c500_cs remove irq,ioport scsi attributes
+  o sym53c500_cs PCMCIA SCSI driver (round 5)
+
+Brian King:
+  o Add IBM power RAID driver 2.0.6
+  o Make SCSI timeout modifiable
+
+Chris Wright:
+  o Update aacraid MAINTAINERS entry
+
+Christoph Hellwig:
+  o mca_53c9x needs CONFIG_MCA_LEGACY
+  o missing pci_set_master in megaraid
+  o imm/ppa style police
+
+Eric Dean Moore:
+  o MPT Fusion driver 3.01.06 update
+  o MPT Fusion add back FC909 support
+
+Herbert Xu:
+  o aic7xxx: fix oops whe hardware is not present
+
+James Bottomley:
+  o fix LLD module refcounting in sr.c
+  o Add SCSI IPR PCI Ids to pci_ids.h
+  o Fix errors in [PATCH] aic7xxx: fix oops whe hardware is not present
+  o Cset exclude: jejb@mulgrave.(none)|ChangeSet|20040404150128|05866
+  o aic7xxx: compile fix for EISA only case
+
+Jeremy Higdon:
+  o minor changes to qla1280 driver
+
+Kai M=E4kisara:
+  o SCSI tape log message fixes
+
+Kurt Garloff:
+  o scsi: don't attach device if PQ indicates not connected
+
+Mark Haverkamp:
+  o aacraid reset handler fix
+
+Michael Veeck:
+  o (3/5) ncr53c8x: use kernel.h min/max
+  o (4/5) nsp32 (ninja): use kernel.h min/max/ARRAY_SIZE
+  o (2/5) aic7xyz_old: use kernel.h min/max/ARRAY_SIZE
+  o (5/5) pcmcia/nsp: use kernel.h min/max/ARRAY_SIZE
+
+Mike Anderson:
+  o fix module unload problem in sd
+
+Pavel Machek:
+  o support swsusp for aic7xxx
+
+James
+
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
