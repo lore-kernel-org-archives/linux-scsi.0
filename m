@@ -1,52 +1,48 @@
-From: Arjan van de Ven <arjanv@redhat.com>
-Subject: RE: [PATCH] dead code and missing statics in lpfc
-Date: Thu, 10 Jun 2004 16:43:52 +0200
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+Subject: SCSI_DPT_I2O (was: Re: Linux 2.6.7-rc2)
+Date: Thu, 10 Jun 2004 17:03:35 +0200 (MEST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1086878631.2733.13.camel@laptop.fenrus.com>
-References: <3356669BBE90C448AD4645C843E2BF28034F9495@xbl.ma.emulex.com>
-Reply-To: arjanv@redhat.com
+Message-ID: <Pine.GSO.4.58.0406101659430.19315@waterleaf.sonytel.be>
+References: <Pine.LNX.4.58.0405292349110.1632@ppc970.osdl.org>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-BbmA2EVgb486cwy05U85"
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:62342 "EHLO mx1.redhat.com")
-	by vger.kernel.org with ESMTP id S261396AbUFJOoA (ORCPT
+Received: from witte.sonytel.be ([80.88.33.193]:41364 "EHLO witte.sonytel.be")
+	by vger.kernel.org with ESMTP id S261426AbUFJPD4 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 10 Jun 2004 10:44:00 -0400
-In-Reply-To: <3356669BBE90C448AD4645C843E2BF28034F9495@xbl.ma.emulex.com>
+	Thu, 10 Jun 2004 11:03:56 -0400
+In-Reply-To: <Pine.LNX.4.58.0405292349110.1632@ppc970.osdl.org>
 List-Id: linux-scsi@vger.kernel.org
-To: "Smart, James" <James.Smart@Emulex.Com>
-Cc: 'Christoph Hellwig' <hch@infradead.org>, linux-scsi@vger.kernel.org
+To: Linus Torvalds <torvalds@osdl.org>, Andrew Morton <akpm@osdl.org>, "James E.J. Bottomley" <James.Bottomley@SteelEye.com>, Go Taniguchi <go@turbolinux.co.jp>
+Cc: Linux Kernel Development <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
 
+On Sat, 29 May 2004, Linus Torvalds wrote:
+> Summary of changes from v2.6.7-rc1 to v2.6.7-rc2
+> ============================================
+> Go Taniguchi:
+>   o Fix dpt_i2o
 
---=-BbmA2EVgb486cwy05U85
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+I have the impression SCSI_DPT_I2O should depend on PCI.
 
+--- linux-2.6.7-rc3/drivers/scsi/Kconfig	2004-06-09 14:50:53.000000000 +0200
++++ linux-m68k-2.6.7-rc3/drivers/scsi/Kconfig	2004-06-10 11:01:45.000000000 +0200
+@@ -352,7 +352,7 @@ source "drivers/scsi/aic7xxx/Kconfig.aic
+ # All the I2O code and drivers do not seem to be 64bit safe.
+ config SCSI_DPT_I2O
+ 	tristate "Adaptec I2O RAID support "
+-	depends on !64BIT && SCSI
++	depends on !64BIT && SCSI && PCI
+ 	help
+ 	  This driver supports all of Adaptec's I2O based RAID controllers as
+ 	  well as the DPT SmartRaid V cards.  This is an Adaptec maintained
 
->=20
->  Many would consider including this content, for no
-> "standard" purpose, is another way to add crud to the driver.  Making
-> symbols available was a means to avoiding this latter issue.
+Gr{oetje,eeting}s,
 
-a separate .c file that conditionally compiles into the driver is in my
-opinion far less "crud" than blind hooks. The former allows for a
-cleaner implementation I'm sure, AND has the benefit of being able to
-see what is being done, so that any restructuring can 1) take it into
-account and 2) fix it up on the go.
+						Geert
 
+--
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
 
-
---=-BbmA2EVgb486cwy05U85
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.2.4 (GNU/Linux)
-
-iD8DBQBAyHOnxULwo51rQBIRAmwiAKCBPzYm7YBlz+b6qzy11a153HLtegCeMcJn
-+N1lZ+jwq07FcWgjKYB/lkU=
-=KQv4
------END PGP SIGNATURE-----
-
---=-BbmA2EVgb486cwy05U85--
-
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+							    -- Linus Torvalds
