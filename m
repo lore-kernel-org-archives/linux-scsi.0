@@ -1,41 +1,38 @@
-From: Nathan Bryant <nbryant@optonline.net>
-Subject: Re: Suspending SCSI devices and buses
-Date: Fri, 20 Aug 2004 18:32:07 -0400
+From: Pat LaVarre <p.lavarre@ieee.org>
+Subject: Re: [PATCH] DVD-RAM rewritable again
+Date: 20 Aug 2004 16:40:21 -0600
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <41267BE7.20502@optonline.net>
-References: <7C828B3E-F2EA-11D8-B9BF-00039398BB5E@ieee.org>
- <"41266F71.906020 7"@optonline.net>
- <31E92B97-F2F5-11D8-8CAE-00039398BB5E@ieee.org>
+Message-ID: <1093041620.11453.6.camel@patlinux.iomegacorp.com>
+References: <20040804045839.GA8139@suse.de><1091619347.5681.6.camel@patibmrh
+	9>  <20040804115723.GB9653@logos.cnet>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mta7.srv.hcvlny.cv.net ([167.206.5.74]:53459 "EHLO
-	mta7.srv.hcvlny.cv.net") by vger.kernel.org with ESMTP
-	id S268783AbUHTWcI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 20 Aug 2004 18:32:08 -0400
-Received: from [67.86.72.128] (ool-43564880.dyn.optonline.net [67.86.72.128])
- by mta7.srv.hcvlny.cv.net
- (iPlanet Messaging Server 5.2 HotFix 1.25 (built Mar  3 2004))
- with ESMTP id <0I2R00L33NXJMP@mta7.srv.hcvlny.cv.net> for
- linux-scsi@vger.kernel.org; Fri, 20 Aug 2004 18:32:07 -0400 (EDT)
-In-reply-to: <31E92B97-F2F5-11D8-8CAE-00039398BB5E@ieee.org>
+Received: from email-out1.iomega.com ([147.178.1.82]:22739 "EHLO
+	email.iomega.com") by vger.kernel.org with ESMTP id S268468AbUHTWlm
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 20 Aug 2004 18:41:42 -0400
+Received: from royntex01.iomegacorp.com (edison [10.1.1.82])
+	by email.iomega.com (Postfix) with ESMTP id C364A1F62
+	for <linux-scsi@vger.kernel.org>; Fri, 20 Aug 2004 16:41:41 -0600 (MDT)
+In-Reply-To: <20040804115723.GB9653@logos.cnet>
 List-Id: linux-scsi@vger.kernel.org
-To: Pat LaVarre <p.lavarre@ieee.org>
-Cc: linux-scsi@vger.kernel.org, Alan Stern <stern@rowland.harvard.edu>
+To: linux-scsi@vger.kernel.org
 
-Pat LaVarre wrote:
+> Go to http://linux.bkbits.net/linux-2.4
+> then you can easily see the changesets...
 
->> S3
->
->
-> I know this is popular PC jargon, I don't personally know what it means.
+Yes, thank you, I found:
 
-ACPI suspend-to-RAM. Power is cut to almost everything except RAM and 
-wakeup event circuitry, some PCI slots may be left in D3hot with wake 
-events enabled. Motherboard signals the ATX power supply to cut power to 
-all the peripheral connectors.
+http://linux.bkbits.net:8080/linux-2.4
 
-It's very similar to powerdown with the RAM refresh turned on.
+And then:
 
-Nathan
+http://linux.bkbits.net:8080/linux-2.4/gnupatch@410e3186Ls2xs-p-21YhVWn-m0byNw
+http://linux.bkbits.net:8080/linux-2.4/gnupatch@40c3adcb7pPfs09Pc46DvR2DTq6v5g
+http://linux.bkbits.net:8080/linux-2.4/gnupatch@410e91ddoZNIQrI8VWJjHKxro-BH7w
+http://linux.bkbits.net:8080/linux-2.4/gnupatch@40c4c87778sEsIcHpeYmVIOFfCtwNQ 
+Pat LaVarre
+
+
