@@ -1,82 +1,38 @@
-From: christophe varoqui <christophe.varoqui@free.fr>
-Subject: [ANNOUNCE] multipath-tools-0.3.9
-Date: Sun, 05 Dec 2004 16:43:12 +0100
-Message-ID: <1102261392.29843.2.camel@zezette>
-References: <1096071849.4466.31.camel@zezette>
-	 <1097054573.4163b96d1262c@imp5-q.free.fr>
-	 <1097495416.416a73787e0ae@imp1-q.free.fr> <1098021787.5433.8.camel@zezette>
-	 <1098269169.417641f18a234@imp1-q.free.fr>
-	 <1098656088.9350.88.camel@zezette>
-	 <1098785191.417e21a7a7c28@imp1-q.free.fr>
-	 <1099328918.5525.10.camel@zezette> <1100214617.10251.92.camel@zezette>
-	 <1101394541.5820.71.camel@zezette>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [PATCH] Blacklist devices that falsely claim an echo buffer
+Date: 06 Dec 2004 08:59:13 -0600
+Message-ID: <1102345160.2018.1.camel@mulgrave>
+References: <20041203201937.GJ29370@parcelfarce.linux.theplanet.co.uk>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp5.wanadoo.fr ([193.252.22.26]:60361 "EHLO smtp5.wanadoo.fr")
-	by vger.kernel.org with ESMTP id S261199AbULEPnO (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 5 Dec 2004 10:43:14 -0500
-In-Reply-To: <1101394541.5820.71.camel@zezette>
+Received: from stat16.steeleye.com ([209.192.50.48]:30419 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S261479AbULFO71 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 6 Dec 2004 09:59:27 -0500
+In-Reply-To: <20041203201937.GJ29370@parcelfarce.linux.theplanet.co.uk>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: device-mapper development <dm-devel@redhat.com>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "linux-hotplug-devel@lists.sourceforge.net" <linux-hotplug-devel@lists.sourceforge.net>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-Hello,
+On Fri, 2004-12-03 at 14:19, Matthew Wilcox wrote:
+> +	if ((sreq->sr_device->scsi_level < SCSI_3) &&
+> +		((buffer[0] & 0xfe) || buffer[1] || (buffer[2] & 0xe0))) {
+> +		/* Device is probably lying to us.  Skip write tests. */
+> +		SPI_PRINTK(sreq->sr_device->sdev_target, KERN_INFO,
+> +				"Target reports bogus echo buffer\n");
+> +		return 0;
+> +	}
+> +
 
-here goes multipath-tools-0.3.9
+Well ... I'm not very keen on this.  Does the device support LVD?  i.e.
+could we use the sreq->sr_device->ppr flag as a discriminator?  Write
+echo buffer tests are really most useful for validating high LVD
+transfer speeds, so it wouldn't be unreasonable simply to skip them if
+the device isn't ppr capable.
 
-This release implements the new kernel multipath policies : 
-      * no table reload when possible 
-      * use of "switch_group" and "reinstate_path" DM messages instead
-
-A much improved and informational output format too.
-And a new '-l' flag to list current multipath topology 
-
-Full ChangeLog for the release :
-
-        * [multipath] add a "-l" flag to list the current
-          multipath maps and their status info
-        * [priority] zalloc controler to avoid random path_count
-          at allocation time
-        * [multipath] add configlet pointers in struct multipath
-          to avoid searching for an entry over and over again
-        * [multipath] new reinstate policy : on multipath exec,
-          reinstate all failed paths the checkers report as ready
-          if they belong to enabled path groups (not disabled, not
-          active path group)
-        * [multipath] fork a print_mp() out of print_all_mp()
-        * [multipath] introduce PG priority, which is the sum of
-          its path priorities. Set first_pg in the map string to
-          the highest prio PG index.
-        * [multipath] assemble maps scaning PG top down now that
-          PG vector is unsorted
-        * [multipath] move select_*() to propsel.c
-        * [multipath] move devinfo() to devinfo.c
-        * [multipath] move h/b/t/l fetching to sysfs_devinfo()
-        * [multipath] move devt2devname() to devinfo.c so we can
-          use it from dmparser.c too
-        * [multipath] introduce select_alias() and clarify a bit
-          of code
-        * [multipath] don't sort PG anymore. We want the map as
-          static as possible.
-        * [multipath] fix a segfault in apply_format() triggered
-          when no config file found.
-        * [multipath] kill unused vars all over the place
-        * [multipath] add a struct pathgroup in struct multipath
-          Store the pathvec in it. We now have a place to store
-          PG status, etc ...
-        * [multipath] new dmparser.c, with disassemble_map(),
-          disassemble_status()
-        * [multipath] suppress *selector_args keywords. Merge
-          in the selector string. Update config file templates.
-
-As usual, doc and download at :
-http://christophe.varoqui.free.fr/
-
-regards,
--- 
-christophe varoqui <christophe.varoqui@free.fr>
+James
 
 
