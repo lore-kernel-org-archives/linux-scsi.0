@@ -1,47 +1,31 @@
-From: Josef =?iso-8859-1?Q?M=F6llers?=
-	<josef.moellers@fujitsu-siemens.com>
-Subject: Re: Why REPORT LUN only for SCSI-2?
-Date: Fri, 18 Jul 2003 08:38:13 +0200
+From: Jens Axboe <axboe@suse.de>
+Subject: Re: Assigning tag values?
+Date: Fri, 18 Jul 2003 09:00:24 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3F1795D5.F1FBECFB@fujitsu-siemens.com>
-References: <3F140D30.D2B5C4D8@fujitsu-siemens.com> <20030715073927.A8218@beaverton.ibm.com> <3F14F7FA.BA551505@fujitsu-siemens.com> <20030716123519.A19244@beaverton.ibm.com> <3F16649C.239EC87B@fujitsu-siemens.com> <20030717184909.GD2520@nbkurt.garloff.de>
+Message-ID: <20030718070024.GV833@suse.de>
+References: <3F174A6D.8050702@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from plam.fujitsu-siemens.com ([217.115.66.9]:65323 "EHLO
-	plam.fujitsu-siemens.com") by vger.kernel.org with ESMTP
-	id S271722AbTGRGXA convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 18 Jul 2003 02:23:00 -0400
+Received: from ns.virtualhost.dk ([195.184.98.160]:9132 "EHLO virtualhost.dk")
+	by vger.kernel.org with ESMTP id S271682AbTGRGpa (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 18 Jul 2003 02:45:30 -0400
+Content-Disposition: inline
+In-Reply-To: <3F174A6D.8050702@pobox.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Kurt Garloff <garloff@suse.de>
-Cc: Patrick Mansfield <patmans@us.ibm.com>, linux-scsi@vger.kernel.org, "Wichert, Gerhard" <Gerhard.Wichert@fujitsu-siemens.com>
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-Kurt Garloff wrote:
+On Thu, Jul 17 2003, Jeff Garzik wrote:
+> Is there a standard scsi way to assign tag values?
+> 
+> Can I use the block layer helpers, or do those not work for scsi?
 
-> > As a side note (probably starting a new thread) why does BLIST_LARG=
-ELUN
-> > override max_scsi_luns?
->=20
-> It shouldn't. Did I really do this? (... checking 2.4 code ...)
-> No, I plead innocent.
+Which kernel? In 2.5 you can get the scsi mid layer to do it for you
+(via the block layer helpers), by calling scsi_activate_tcq(scsi_device,
+depth). See scsi_tcq.h and 53c700.c for a working example.
 
-Oops, I didn't check the info I got from a third party or I should go
-and wash my ears B-{(
-It's SPARSELUN which overrides max_scsi_luns:
-	if (bflags & BLIST_SPARSELUN) {
-		*max_dev_lun =3D shpnt->max_lun;
-		*sparse_lun =3D 1;
-                return 1;
-        }
-The objection still stands ...
+-- 
+Jens Axboe
 
---=20
-Josef M=F6llers (Pinguinpfleger bei FSC)
-	If failure had no penalty success would not be a prize
-						-- T.  Pratchett
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
