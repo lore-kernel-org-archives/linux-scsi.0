@@ -1,76 +1,53 @@
-From: christophe varoqui <christophe.varoqui@free.fr>
-Subject: [ANNOUNCE] multipath-tools-0.2.9
-Date: Sat, 25 Sep 2004 02:24:09 +0200
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] 2.6.9 aacraid: dynamic dev update
+Date: Sat, 25 Sep 2004 01:33:17 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1096071849.4466.31.camel@zezette>
+Message-ID: <20040925013317.A1441@infradead.org>
+References: <1096049918.31620.33.camel@markh1.pdx.osdl.net>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp10.wanadoo.fr ([193.252.22.21]:17130 "EHLO
-	mwinf1009.wanadoo.fr") by vger.kernel.org with ESMTP
-	id S269147AbUIYAYM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 24 Sep 2004 20:24:12 -0400
+Received: from imladris.demon.co.uk ([193.237.130.41]:26898 "EHLO
+	phoenix.infradead.org") by vger.kernel.org with ESMTP
+	id S269151AbUIYAdY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 24 Sep 2004 20:33:24 -0400
+Content-Disposition: inline
+In-Reply-To: <1096049918.31620.33.camel@markh1.pdx.osdl.net>; from markh@osdl.org on Fri, Sep 24, 2004 at 11:18:38AM -0700
 List-Id: linux-scsi@vger.kernel.org
-To: dm-devel@redhat.com
-Cc: linux-raid@vger.kernel.org, linux-hotplug-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org
+To: Mark Haverkamp <markh@osdl.org>
+Cc: James Bottomley <James.Bottomley@steeleye.com>, linux-scsi <linux-scsi@vger.kernel.org>, Mark Salyzyn <mark_salyzyn@adaptec.com>
 
-Hello,
+> -	struct fsa_scsi_hba *fsa_dev_ptr;
+> +	struct fsa_dev_info *fsa_dev_ptr;
+>  	u32 index; 
+>  	int status = 0;
+> -	struct aac_query_mount *dinfo;
+> -	struct aac_mount *dresp;
+>  	struct fib * fibptr;
+>  	unsigned instance;
+>  
+> -	fsa_dev_ptr = &(dev->fsa_dev);
+>  	instance = dev->scsi_host_ptr->unique_id;
+>  
+>  	if (!(fibptr = fib_alloc(dev)))
+>  		return -ENOMEM;
+>  
+> -	for (index = 0; index < MAXIMUM_NUM_CONTAINERS; index++) {
+> +	{
+> +		struct aac_get_container_count *dinfo;
+> +		struct aac_get_container_count_resp *dresp;
+> +		int maximum_num_containers = MAXIMUM_NUM_CONTAINERS;
 
-here goes multipath-tools-0.2.9
+Please don't introduce such scopes for the sake of it, it makes the code really hard to
+read.
 
-The ChangeLog is pretty big this time : changes accumulated while
-waiting for scsi_id-0.6 and while background-battling with an IA64
-compilation glitch.
+> @@ -635,6 +633,8 @@
+>  	iounmap((void * )aac->regs.sa);
+>   out_free_fibs:
+>  	kfree(aac->fibs);
+> +	if (aac->fsa_dev)
+> +		kfree(aac->fsa_dev);
 
-In short :
+kfree(NULL) is fine.
 
-	* compiles on IA64
-	* implement the alias OSDL CGL preconisation
-	* more work on single path devices and JBOD handling
-
-Regression testing is even lighter than the previous release, because I
-temporarily lost access to my favorite SAN.
-
-Full ChangeLog for the release :
-
-        * [multipathd] finally tame the clone compilation glitch on IA64
-          move from sys_clone to __clone / __clone2
-        * [kpartx] rework from Stephan Bader, IBM :
-                * handle s390x arch
-                * endianness fixes
-                * push the partname string size to handle wwwids
-                * quieten implicit cast warnings
-        * [multipath] add an 'alias' multipath keyword for friendlier
-	  device
-          names. This was "asked" by OSDL' CGL board of secret reviewers
-        * [multipath] last pass with JBOD and parallel SCSI support :
-          hard-code scsi_id as a fallback when disk strings doesn't
-	  match any hwtable entry
-        * [multipath & multipathd] change the parser to not coalesce
-          consecutive spaces (Patrick Mansfield)
-        * [multipath] remove the [UN]: output prefix, so that stdout can
-	  be easily fed to a tool like dmsetup
-        * [multipathd] DEBUG=3 logs more readable/usefull
-        * [multipathd] add a multipath_tool config keyword
-        * [multipathd] move to execute_program() like multipath already
-          did
-        * [multipath] don't print the "no path" msg in quiet mode
-        * [multipathd] include linux/unistd.h for _syscall2
-          definition on RedHat systems. Remove superfluous
-          asm/unistd.h include
-        * [libsysfs] forked : last version uses mntent, which
-          klibc doesn't provide. That, plus the fact we use
-          only 1/3 of the lib, pushed me to freeze the version
-          and strip all unused stuff.
-        * [multipathd] prepare_namespace() cleanup : no more "multipath"
-          special casing since we push it to binvec vector, like the
-          other callouts detected in the config file.
-
-As usual, doc and download at :
-http://christophe.varoqui.free.fr/
-
-regards,
--- 
-christophe varoqui <christophe.varoqui@free.fr>
 
