@@ -1,33 +1,39 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: Summary of the Multi-Path BOF at OLS and future directions
-Date: 07 Aug 2003 12:00:37 +0100
+From: Matthew Wilcox <willy@debian.org>
+Subject: Re: advansys driver vs 2.6 breakage
+Date: Thu, 7 Aug 2003 12:21:57 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1060254037.3123.0.camel@dhcp22.swansea.linux.org.uk>
-References: <1060042082.1985.53.camel@fuzzy>
-	 <1060102084.1188.10.camel@dhcp22.swansea.linux.org.uk>
-	 <1060103209.2044.20.camel@fuzzy>
+Message-ID: <20030807112157.GF22222@parcelfarce.linux.theplanet.co.uk>
+References: <200308070422.41412.gene.heskett@verizon.net>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pc1-cwma1-5-cust4.swan.cable.ntl.com ([80.5.120.4]:30850 "EHLO
-	lxorguk.ukuu.org.uk") by vger.kernel.org with ESMTP id S275278AbTHGLE1
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:52393 "EHLO
+	www.linux.org.uk") by vger.kernel.org with ESMTP id S275200AbTHGLV7
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 7 Aug 2003 07:04:27 -0400
-In-Reply-To: <1060103209.2044.20.camel@fuzzy>
+	Thu, 7 Aug 2003 07:21:59 -0400
+Content-Disposition: inline
+In-Reply-To: <200308070422.41412.gene.heskett@verizon.net>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Gene Heskett <gene.heskett@verizon.net>
+Cc: bfrey@turbolinux.com.cn, linux-scsi@vger.kernel.org, Janitors <kernel-janitor-discuss@lists.sourceforge.net>
 
-On Maw, 2003-08-05 at 18:06, James Bottomley wrote:
-> On Tue, 2003-08-05 at 09:48, Alan Cox wrote:
-> > On Maw, 2003-08-05 at 04:54, James Bottomley wrote:
-> > > transport errors (relevant to multi-path) and medium errors (relevant to
-> > > software raid).
-> > 
-> > And multimedia..
+On Thu, Aug 07, 2003 at 04:22:41AM -0400, Gene Heskett wrote:
+> This is, FWIW, not the only code that is apparently broken by that 
+> ioports.h header redefinition.
 > 
-> Yes, multi-media probably wants all error indications.
+> I'm getting messages from other modules squawking about the 
+> __deprecated status of "check_region" during the compile too.
 
-More importantly it wants to control retries
+This seems to be a fundamental misunderstanding on your part.
 
+check_region is not broken.  It is deprecated.  That means we asked the
+compiler to emit a warning when someone tries to use it.  It does not
+mean that it will crash.
+
+Something else is going on here, and someone with one of these cards
+needs to debug it properly.
+
+-- 
+"It's not Hollywood.  War is real, war is primarily not about defeat or
+victory, it is about death.  I've seen thousands and thousands of dead bodies.
+Do you think I want to have an academic debate on this subject?" -- Robert Fisk
