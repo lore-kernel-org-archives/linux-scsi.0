@@ -1,60 +1,68 @@
-From: Rusty Trivial Russell <rusty@rustcorp.com.au>
-Subject: [TRIVIAL] [2.5 patch] remove unneeded #define LinuxVersionCode from eata.c (fwd)
-Date: Mon, 05 May 2003 14:48:58 +1000
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030505050415.7E4AB2C2A0@lists.samba.org>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from dp.samba.org ([66.70.73.150]:32979 "EHLO lists.samba.org")
-	by vger.kernel.org with ESMTP id S261928AbTEEEvp (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 5 May 2003 00:51:45 -0400
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: [PATCH] scsi-misc-2.5 remove scsi_scan.c EVPD code
+Date: Mon, 05 May 2003 17:58:28 +1000
+Sender: linux-usb-devel-admin@lists.sourceforge.net
+Message-ID: <3EB619A4.5090407@torque.net>
+References: <UTC200304250047.h3P0lhl03517.aeb@smtp.cwi.nl>
+Reply-To: dougg@torque.net
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-usb-devel-admin@lists.sourceforge.net>
+In-Reply-To: <UTC200304250047.h3P0lhl03517.aeb@smtp.cwi.nl>
+Errors-To: linux-usb-devel-admin@lists.sourceforge.net
+List-Help: <mailto:linux-usb-devel-request@lists.sourceforge.net?subject=help>
+List-Post: <mailto:linux-usb-devel@lists.sourceforge.net>
+List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-devel>,
+	<mailto:linux-usb-devel-request@lists.sourceforge.net?subject=subscribe>
+List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-devel>,
+	<mailto:linux-usb-devel-request@lists.sourceforge.net?subject=unsubscribe>
+List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=linux-usb-devel>
+To: Andries.Brouwer@cwi.nl
+Cc: James.Bottomley@steeleye.com, linux-scsi@vger.kernel.org, linux-usb-devel@lists.sourceforge.net, mdharm-scsi@one-eyed-alien.net, patmans@us.ibm.com
 List-Id: linux-scsi@vger.kernel.org
-To: Linus Torvalds <torvalds@transmeta.com>
-Cc: Dario Ballabio <ballabio_dario@emc.com>, linux-scsi@vger.kernel.org
 
-From:  Adrian Bunk <bunk@fs.tum.de>
+Andries.Brouwer@cwi.nl wrote:
+>>Remove the scsi EVPD code.
+> 
+> 
+> Good! That simplifies many things.
 
-  Hi Linus,
-  
-  the trivial patch in the mail below still applies against and compiles 
-  under 2.5.63.
-  
-  Please apply
-  Adrian
-  
-  
-  ----- Forwarded message from Adrian Bunk <bunk@fs.tum.de> -----
-  
-  Date: Sun, 12 Jan 2003 09:42:53 +0100
-  From: Adrian Bunk <bunk@fs.tum.de>
-  To: ballabio_dario@emc.com
-  Subject: [2.5 patch] remove unneeded #define LinuxVersionCode from eata.c
-  
-  Hi Dario,
-  
-  the patch below removes the unneeded #define LinuxVersionCode from 
-  eata.c. It's not used and if it was needed KERNEL_VERSION in 
-  include/linux/version.h does the same.
-  
-  I've tested the compilation with 2.5.56.
-  
-  Please apply
-  Adrian
-  
+Good?? Just because there are millions of brain damaged
+devices that can't implement rule 0 of a protocol,
+Patrick removes one of the best features added to
+the scsi subsystem in the 2.5 development series.
 
---- trivial-2.5.69/drivers/scsi/eata.c.orig	2003-05-05 14:46:14.000000000 +1000
-+++ trivial-2.5.69/drivers/scsi/eata.c	2003-05-05 14:46:14.000000000 +1000
-@@ -449,10 +449,6 @@
- 
- #include <linux/version.h>
- 
--#ifndef LinuxVersionCode
--#define LinuxVersionCode(v, p, s) (((v)<<16)+((p)<<8)+(s))
--#endif
--
- #define MAX_INT_PARAM 10
- 
- #if defined(MODULE)
--- 
-  What is this? http://www.kernel.org/pub/linux/kernel/people/rusty/trivial/
-  Don't blame me: the Monkey is driving
-  File: Adrian Bunk <bunk@fs.tum.de>: [2.5 patch] remove unneeded #define LinuxVersionCode from eata.c (fwd)
+Patrick's patch is now in lk 2.5.69 .
+
+So we are back to all the fun games of opening/
+querying/closing likely looking device nodes in
+the /dev space (and I speak from experience).
+What a joy.
+
+Surely there is a better way. Why not do the VPD=0x83
+query on devices that claim to be SCSI-3 compliant
+or better. The scsi mid level driver (and/or the
+usb-storage + sbp2 LLDs) could have a sysfs parameter
+such as "simple_scan". The filters discussion
+showed more promise than this blunt approach.
+
+I have contemplated putting the VPD=0x83 code in
+lsscsi but it won't be pretty (e.g. requiring root
+privilege, side effects including locking up
+certain USB storage devices :-) ).
+
+Doug Gilbert
+
+
+
+
+
+-------------------------------------------------------
+This sf.net email is sponsored by:ThinkGeek
+Welcome to geek heaven.
+http://thinkgeek.com/sf
+_______________________________________________
+linux-usb-devel@lists.sourceforge.net
+To unsubscribe, use the last form field at:
+https://lists.sourceforge.net/lists/listinfo/linux-usb-devel
