@@ -1,38 +1,49 @@
-From: Mike Anderson <andmike@us.ibm.com>
-Subject: Re: Fw: 2.6.0-test9 kernel oops
-Date: Mon, 24 Nov 2003 07:41:48 -0800
+From: Micah Anderson <micah@riseup.net>
+Subject: Cannot get device recognized on a megaraid
+Date: Mon, 24 Nov 2003 10:30:35 -0600
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20031124154148.GA7715@beaverton.ibm.com>
-References: <20031123231037.44115c6f.akpm@osdl.org> <1069687425.1900.9.camel@mulgrave>
+Message-ID: <20031124163035.GK4399@riseup.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e33.co.us.ibm.com ([32.97.110.131]:64496 "EHLO
-	e33.co.us.ibm.com") by vger.kernel.org with ESMTP id S263771AbTKXPiF
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 24 Nov 2003 10:38:05 -0500
+Received: from mail.riseup.net ([216.162.217.191]:34983 "EHLO mail.riseup.net")
+	by vger.kernel.org with ESMTP id S263766AbTKXQal (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 24 Nov 2003 11:30:41 -0500
+Received: from pond (adsl-68-73-117-216.dsl.emhril.ameritech.net [68.73.117.216])
+	(using TLSv1 with cipher EDH-RSA-DES-CBC3-SHA (168/168 bits))
+	(No client certificate requested)
+	by mail.riseup.net (Postfix) with ESMTP id 27694711D9
+	for <linux-scsi@vger.kernel.org>; Mon, 24 Nov 2003 08:30:40 -0800 (PST)
 Content-Disposition: inline
-In-Reply-To: <1069687425.1900.9.camel@mulgrave>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@steeleye.com>
-Cc: Andrew Morton <akpm@osdl.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, "Justin T. Gibbs" <gibbs@scsiguy.com>, Tomas Kostrian <kostrian@deepblue.sk>
+To: linux-scsi@vger.kernel.org
 
-James Bottomley [James.Bottomley@steeleye.com] wrote:
-> On Mon, 2003-11-24 at 01:10, Andrew Morton wrote:
-> > Can anyone else with an aic7xxx reproduce (and hence fix) this?
-> > /proc/scsi/aic7xxx/0 works happily on my test box.
-> 
-> Actually (since I managed to dig out an x86 aic7xxx based machine), I've
-> tried this and not seen the problem...it could be because I've been
-> testing out with the two SCSI refcount fixes as well...I'll try
-> stripping them back.
+Hi,
 
-I tried with just plain test9 and cannot get the error to reproduce. 
+I've been fighting a megaraid card with one device, just trying to get
+it recognized. The card has the latest bios, the drive is in a RAID 0
+container. Boot up doesn't show it at all:
 
-Tomas, Can you send the dmesg output of the driver loading.
+ megaraid: no BIOS enabled.
+ 
+ There are two other scsi devices that we have on the machine, they are
+ recognized fine:
+ 
+ Attached scsi disk sda at scsi0, channel 0, id 0, lun 0
+ Attached scsi disk sdb at scsi1, channel 0, id 2, lun 0
+ SCSI device sda: 17783240 512-byte hdwr sectors (9105 MB)
+ Partition check:
+  sda: sda1 sda2 sda3 sda4
+ sym53c875-0-<2,*>: FAST-20 SCSI 20.0 MB/s (50.0 ns, offset 15)
+ SCSI device sdb: 8888924 512-byte hdwr sectors (4551 MB)
+  sdb: sdb1
 
--andmike
---
-Michael Anderson
-andmike@us.ibm.com
+What do we need to do to get the drive attached to the megaraid card
+recognized? 
 
+Thanks,
+micah
+
+
+ 
