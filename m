@@ -1,59 +1,48 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: 1st  REVIEW : UNH iSCSI for 2.6-test5
-Date: Thu, 25 Sep 2003 09:19:49 +0100
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030925091949.A6827@infradead.org>
-References: <20030924151228.8206.qmail@web60208.mail.yahoo.com>
+From: Denis Zaitsev <zzz@anda.ru>
+Subject: [PATCH][TRIVIAL] (2.4.22) Allow aic7xxx_osm.c to be compiled without CONFIG_PCI
+Date: Thu, 25 Sep 2003 15:16:18 +0600
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <20030925151618.C15849@natasha.ward.six>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pub234.cambridge.redhat.com ([213.86.99.234]:35851 "EHLO
-	phoenix.infradead.org") by vger.kernel.org with ESMTP
-	id S261600AbTIYITu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 25 Sep 2003 04:19:50 -0400
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20030924151228.8206.qmail@web60208.mail.yahoo.com>; from jpd_hp_linux_scsi@yahoo.com on Wed, Sep 24, 2003 at 08:12:28AM -0700
+To: linux-scsi@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, gibbs@scsiguy.com, dledford@redhat.com
 List-Id: linux-scsi@vger.kernel.org
-To: jd <jpd_hp_linux_scsi@yahoo.com>
-Cc: linux-scsi@vger.kernel.org
 
-More comments:
+This is the trivial #ifdef patch for CONFIG_PCI/EISA.  In my case it
+allows the Adaptec SCSI driver (the "new" one) to be compiled for
+non-PCI (EISA) system.  Else there are an <undefined symbol> errors.
+The 2.6 branch needs the same patch, as I understand.
 
- - unh_iscsi/security should really go away.  We have a nice crypto API
-   in 2.6 and late 2.4, but authentification really shouldn't be done
-   in kernelspace anyway.
- - kill iscsi_device.c.  A scsi LLDD has no business messing with device
-   nodes..
- - you're comment style is strange.  In kernel code we tend to use
-
-/*
- * Foo, blah
- * baz..
- */
-
-not
-
-/*
-
-*/
-
-but that's just a minor nitpick.
-
-Having the module description over the copyright boilerplate also is
-very strange.
-
- - your split into common/ and initiator/ is strange.  You can build
-   multiple modules in one directory and that would cleanup your
-   includes mess nicely
- - having a single host for all of iscsi looks strange.  Why do you
-   do that?
- - the #ifdef K26 is totally unreadble.  Especially when it's around
-   code that works for both 2.4 and 2.6..
- - kill my_kmallocd / my_free
- - you seems to not handle lots of error returns, e.g. from down_interruptible
-   or kernel_thread
- - the UNH_LOCK/UNH_UNLOCK obsfucation hinders reading
- - kill ISCSI_INITIATOR, there's no need for this #define - just initialize
-   the host template directly
+Please, apply it.  (I don't know who is the maintainer for now!)
 
 
+--- drivers/scsi/aic7xxx/aic7xxx_osm.c.orig	2003-09-15 01:56:14.000000000 +0600
++++ drivers/scsi/aic7xxx/aic7xxx_osm.c	2003-09-16 22:57:11.000000000 +0600
+@@ -1552,6 +1552,7 @@ ahc_softc_comp(struct ahc_softc *lahc, s
+ 
+ 	/* Still equal.  Sort by BIOS address, ioport, or bus/slot/func. */
+ 	switch (rvalue) {
++#ifdef CONFIG_PCI
+ 	case AHC_PCI:
+ 	{
+ 		char primary_channel;
+@@ -1584,6 +1585,8 @@ ahc_softc_comp(struct ahc_softc *lahc, s
+ 			value = 1;
+ 		break;
+ 	}
++#endif
++#ifdef CONFIG_EISA
+ 	case AHC_EISA:
+ 		if ((rahc->flags & AHC_BIOS_ENABLED) != 0) {
+ 			value = rahc->platform_data->bios_address
+@@ -1593,6 +1596,7 @@ ahc_softc_comp(struct ahc_softc *lahc, s
+ 			      - lahc->bsh.ioport; 
+ 		}
+ 		break;
++#endif
+ 	default:
+ 		panic("ahc_softc_sort: invalid bus type");
+ 	}
