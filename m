@@ -1,41 +1,80 @@
-From: Dave Richards <drichards@mahinetworks.com>
-Subject: sym53c8xx_2 / Promise UltraTrak RM8000
-Date: Tue, 25 Feb 2003 15:27:36 -0800
+From: Rolf Eike Beer <eike-kernel@sf-tec.de>
+Subject: [PATCH] Hex numbers in NCR53c406a.c
+Date: Wed, 26 Feb 2003 17:51:16 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <9D6D37E97A57D411BB7C00508BAE29C902D242C8@main.mahinetworks.com>
+Message-ID: <200302261751.16090@bilbo.math.uni-mannheim.de>
 Mime-Version: 1.0
 Content-Type: text/plain;
-	charset="iso-8859-1"
+  charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
+Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
-To: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
+To: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-Our IS folks have had problems with the Promise Tech. UltraTrak RM8000 under
-2.4.20 (and earlier versions).  I've diagnosed the problem, but I am not
-familiar enough with the SCSI specs to know who to blame.  So, here's the
-data and you can decide.
+This patch makes sure that there is a "0x" in front of all hex numbers and
+makes all outputs use a single style (all %x instead of mixed %x and %X).
 
-The following is a dump of the INQUIRY data returned by the RM8000:
+Eike
 
-00 00 03 03 3b 00 00 32 50 72 6f 6d 69 73 65 20 ....;..2Promise
-34 20 44 69 73 6b 20 52 41 49 44 35 20 20 20 20 4 Disk RAID5
-31 2e 31 30 39 38 30 33 31 36 31 32 00 00 00 00 1.1098031612....
-00 00 00 00 00 00 00 00 0c 00 00 00 00 00 00 00 ................
-
-The problem with this INQUIRY data (from the 8xx driver's perspective) is
-that the SCSI version is ANSI 3 and the INQUIRY data format is 3 (not 2).  I
-changed sym_misc.c line 297: (2.4.20)
-
-#if 0
-        if (inq_version >= 2 && (inq_data[3] & 0xf) == 2) {
-#else
-        if (inq_version >= 2 && (inq_data[3] & 0xf) >= 2) {
-#endif
-
-This causes the Promise box to come up Fast-80 Wide16 (as it should).
-
-So, whose bug is this?  Is it the sym53c8xx_2 driver for not recognizing the
-valid INQUIRY data format version 3, or is it Promise's for returning the
-invalid INQUIRY data format version 3?
-
-	Dave
+--- linux-2.5.63/drivers/scsi/NCR53c406a.c	Mon Feb 24 20:05:32 2003
++++ linux-2.5.63-eike/drivers/scsi/NCR53c406a.c	Wed Feb 26 17:43:27 2003
+@@ -472,7 +472,7 @@
+ 		return 0;
+ 	}
+ 
+-	DEB(printk("NCR53c406a BIOS found at %X\n", (unsigned int) bios_base);
++	DEB(printk("NCR53c406a BIOS found at 0x%x\n", (unsigned int) bios_base);
+ 	    );
+ #endif				/* USE_BIOS */
+ 
+@@ -487,14 +487,14 @@
+ 	} else {
+ 		for (i = 0; i < PORT_COUNT && !port_base; i++) {
+ 			if (!request_region(ports[i], 0x10, "NCR53c406a")) {
+-				DEB(printk("NCR53c406a: port %x in use\n", ports[i]));
++				DEB(printk("NCR53c406a: port 0x%x in use\n", ports[i]));
+ 			} else {
+-				VDEB(printk("NCR53c406a: port %x available\n", ports[i]));
++				VDEB(printk("NCR53c406a: port 0x%x available\n", ports[i]));
+ 				outb(C5_IMG, ports[i] + 0x0d);	/* reg set 1 */
+ 				if ((inb(ports[i] + 0x0e) ^ inb(ports[i] + 0x0e)) == 7 && (inb(ports[i] + 0x0e) ^ inb(ports[i] + 0x0e)) == 7 && (inb(ports[i] + 0x0e) & 0xf8) == 0x58) {
+ 					port_base = ports[i];
+ 					VDEB(printk("NCR53c406a: Sig register valid\n"));
+-					VDEB(printk("port_base=%x\n", port_base));
++					VDEB(printk("port_base=0x%x\n", port_base));
+ 					break;
+ 				}
+ 				release_region(ports[i], 0x10);
+@@ -523,7 +523,7 @@
+ 	}
+ #endif
+ 
+-	DEB(printk("NCR53c406a: using port_base %x\n", port_base));
++	DEB(printk("NCR53c406a: using port_base 0x%x\n", port_base));
+ 
+ 	tpnt->present = 1;
+ 	tpnt->proc_name = "NCR53c406a";
+@@ -611,11 +611,11 @@
+ 	for (i = 0; i < PORT_COUNT && !port_base; i++)
+ 		if (ports[i] == ints[1]) {
+ 			port_base = ints[1];
+-			DEB(printk("NCR53c406a: Specified port_base 0x%X\n", port_base);
++			DEB(printk("NCR53c406a: Specified port_base 0x%x\n", port_base);
+ 			    )
+ 		}
+ 	if (!port_base) {
+-		printk("NCR53c406a: Invalid PORTBASE 0x%X specified\n", ints[1]);
++		printk("NCR53c406a: Invalid PORTBASE 0x%x specified\n", ints[1]);
+ 		return;
+ 	}
+ 
+@@ -638,7 +638,7 @@
+ 	if (ints[0] > 2)
+ 		fast_pio = ints[3];
+ 
+-	DEB(printk("NCR53c406a: port_base=0x%X, irq=%d, fast_pio=%d\n", port_base, irq_level, fast_pio);)
++	DEB(printk("NCR53c406a: port_base=0x%x, irq=%d, fast_pio=%d\n", port_base, irq_level, fast_pio);)
+ }
+ 
+ __setup("ncr53c406a=", NCR53c406a_setup);
