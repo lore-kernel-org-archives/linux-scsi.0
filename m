@@ -1,126 +1,79 @@
-From: Roman Kagan <rkagan@mail.ru>
-Subject: [PATCH] drivers/scsi: add hotplug with MODNAME env var
-Date: Fri, 4 Mar 2005 13:49:07 +0300
-Message-ID: <20050304104903.GA2311@katya>
+From: "Kotian, Deepak" <Deepak.Kotian@patni.com>
+Subject: FW: A bug RedHat AS 4.0 kernel , is it correct, can anyone confirm
+Date: Fri, 4 Mar 2005 17:14:00 +0530
+Message-ID: <374639AB1012AA4C840022842AA95BC204716B36@ruby.patni.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Received: from apachihuilliztli.mtu.ru ([195.34.32.124]:13578 "EHLO
-	Apachihuilliztli.mtu.ru") by vger.kernel.org with ESMTP
-	id S262762AbVCDKtu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 4 Mar 2005 05:49:50 -0500
-Content-Disposition: inline
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Received: from pcsmail.patni.com ([203.124.139.197]:35286 "EHLO
+	pcsmail.patni.com") by vger.kernel.org with ESMTP id S262852AbVCDLzO convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 4 Mar 2005 06:55:14 -0500
+Received: from ruby.patni.com (ruby [204.165.186.9])
+	by pcsmail.patni.com (8.12.11/8.12.9) with ESMTP id j24BuTKt011223
+	for <linux-scsi@vger.kernel.org>; Fri, 4 Mar 2005 17:26:35 +0530
+Content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Greg KH <gregkh@suse.de>, linux-hotplug-devel@lists.sourceforge.net
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-  Hi,
+Can linux-scsi@vger.kernel.org comment on this one if the understanding is
+correct. 
 
-The patch below adds hotplug callout to scsi_bus_type, and makes it
-generate MODNAME environment variable for use with modprobe.  Also it
-adds a few matching MODULE_ALIAS() macros to the appropriate modules.
+Thanks and Regards
+Deepak
 
-Two caveats:
 
- 1) I'm not particularly certain about the "scsi-type-" prefix: it may
-    resemble cases where request_module() is used;  the reason I used
-    dashes was that MODULE_ALIAS() macros were put manually into the
-    code, rather that automatically generated from a corresponding
-    *_dev_id table;
+-----Original Message-----
+From: kernelnewbies-bounce@nl.linux.org
+[mailto:kernelnewbies-bounce@nl.linux.org]On Behalf Of Kotian, Deepak
+Sent: Friday, March 04, 2005 1:57 AM
+To: kernelnewbies@nl.linux.org
+Subject: A bug RedHat AS 4.0 kernel , is it correct, can anyone confirm
 
- 2) TYPE_* macros in include/scsi/scsi.h are in hex and can't be
-    conveniently __stringify()-ed, so I've hardcoded the values and
-    inserted comments next to them referring to those macros.
 
-It handles only sd, sr, st, and osst cases.  I'd like to leave it to
-scsi folks to decide whether sg should be "scsi-type-*" or the explicit
-list of types not handled by other modules.
+A bug RedHat AS 4.0 kernel , is it correct, can anyone confirm
 
-Roman.
+Bug Description :-
+The SCSI_IOCTL_GET_IDLUN ioctl fails for LUN number > 255
 
-Signed-off-by: Roman Kagan <rkagan@mail.ru>
+Bug Details :-
+The  scsi_idlun structure is defined as follows
+typedef struct scsi_idlun {
+__u32 dev_id;
+__u32 host_unique_id;
+} Scsi_Idlun;
 
- drivers/scsi/scsi_sysfs.c |   16 ++++++++++++++++
- drivers/scsi/sd.c         |    2 ++
- drivers/scsi/sr.c         |    3 +++
- drivers/scsi/st.c         |    2 ++
- drivers/scsi/osst.c       |    2 ++
- 5 files changed, 25 insertions(+)
+The dev_id is a 32 bit value and the HCLT is encoded here.
+This is derived from the following code in scsi_ioctl.c
 
-diff -rup linux-2.6.11/drivers/scsi/scsi_sysfs.c linux-2.6.11.modname/drivers/scsi/scsi_sysfs.c
---- linux-2.6.11/drivers/scsi/scsi_sysfs.c	2005-03-02 10:37:49.000000000 +0300
-+++ linux-2.6.11.modname/drivers/scsi/scsi_sysfs.c	2005-03-04 13:18:05.000000000 +0300
-@@ -202,9 +202,25 @@ static int scsi_bus_match(struct device 
- 	return (sdp->inq_periph_qual == SCSI_INQ_PQ_CON)? 1: 0;
- }
- 
-+static int scsi_hotplug(struct device *dev, char **envp,
-+			int num_envp, char *buffer, int buffer_size)
-+{
-+	struct scsi_device *sdev = to_scsi_device(dev);
-+	int i = 0;
-+	int length = 0;
-+
-+	if (add_hotplug_env_var(envp, num_envp, &i, buffer, buffer_size, &length,
-+				"MODNAME=scsi-type-%d", sdev->type))
-+		return -ENOMEM;
-+
-+	envp[i] = NULL;
-+	return 0;
-+}
-+
- struct bus_type scsi_bus_type = {
-         .name		= "scsi",
-         .match		= scsi_bus_match,
-+	.hotplug	= scsi_hotplug,
- };
- 
- int scsi_sysfs_register(void)
-diff -rup linux-2.6.11/drivers/scsi/sd.c linux-2.6.11.modname/drivers/scsi/sd.c
---- linux-2.6.11/drivers/scsi/sd.c	2005-03-02 10:38:17.000000000 +0300
-+++ linux-2.6.11.modname/drivers/scsi/sd.c	2005-03-04 13:16:22.000000000 +0300
-@@ -1653,6 +1653,8 @@ static void __exit exit_sd(void)
- MODULE_LICENSE("GPL");
- MODULE_AUTHOR("Eric Youngdale");
- MODULE_DESCRIPTION("SCSI disk (sd) driver");
-+MODULE_ALIAS("scsi-type-0");	/*	TYPE_DISK	*/
-+MODULE_ALIAS("scsi-type-7");	/*	TYPE_MOD	*/
- 
- module_init(init_sd);
- module_exit(exit_sd);
-diff -rup linux-2.6.11/drivers/scsi/sr.c linux-2.6.11.modname/drivers/scsi/sr.c
---- linux-2.6.11/drivers/scsi/sr.c	2005-03-02 10:38:37.000000000 +0300
-+++ linux-2.6.11.modname/drivers/scsi/sr.c	2005-03-04 13:16:22.000000000 +0300
-@@ -956,6 +956,9 @@ static void __exit exit_sr(void)
- 	unregister_blkdev(SCSI_CDROM_MAJOR, "sr");
- }
- 
-+MODULE_ALIAS("scsi-type-4");	/*	TYPE_WORM	*/
-+MODULE_ALIAS("scsi-type-5");	/*	TYPE_ROM	*/
-+
- module_init(init_sr);
- module_exit(exit_sr);
- MODULE_LICENSE("GPL");
-diff -rup linux-2.6.11/drivers/scsi/st.c linux-2.6.11.modname/drivers/scsi/st.c
---- linux-2.6.11/drivers/scsi/st.c	2005-03-02 10:38:12.000000000 +0300
-+++ linux-2.6.11.modname/drivers/scsi/st.c	2005-03-04 13:16:22.000000000 +0300
-@@ -4090,6 +4090,8 @@ static void __exit exit_st(void)
- 	printk(KERN_INFO "st: Unloaded.\n");
- }
- 
-+MODULE_ALIAS("scsi-type-1");	/*	TYPE_TAPE	*/
-+
- module_init(init_st);
- module_exit(exit_st);
- 
-diff -rup linux-2.6.11/drivers/scsi/osst.c linux-2.6.11.modname/drivers/scsi/osst.c
---- linux-2.6.11/drivers/scsi/osst.c	2005-03-02 10:38:08.000000000 +0300
-+++ linux-2.6.11.modname/drivers/scsi/osst.c	2005-03-04 13:20:45.000000000 +0300
-@@ -5888,5 +5888,7 @@ static void __exit exit_osst (void)
- 	printk(KERN_INFO "osst :I: Unloaded.\n");
- }
- 
-+MODULE_ALIAS("scsi-type-1");	/*	TYPE_TAPE	*/
-+
- module_init(init_osst);
- module_exit(exit_osst);
+int scsi_ioctl(struct scsi_device *sdev, int cmd, void *arg)
+{
+.....
+ case SCSI_IOCTL_GET_IDLUN:
+if (verify_area(VERIFY_WRITE, arg, sizeof(struct scsi_idlun)))
+ 	return -EFAULT;
+__put_user((sdev->id & 0xff)
+	+ ((sdev->lun & 0xff) << 8)
+	+ ((sdev->channel & 0xff) << 16)
+	+ ((sdev->host->host_no & 0xff) << 24),
+	&((struct scsi_idlun *)arg)->dev_id);
+	__put_user(sdev->host->unique_id,
+		&((struct scsi_idlun *)arg)->host_unique_id);
+.......
+}
+
+This code clearly indicates that all the values (i.e H,C,L and T) are anded with 0xff and hence the limitation for each value (including LUN value) becomes 255.
+
+But the scsi mid layer has the support for 512 LUNs.
+
+So if one has to obtain the LUN number for LUNs > 255 the SCSI_IOCTL_GET_IDLUN ioctl would fail.
+
+Thanks and Regards
+Dee[al
+
+--
+Kernelnewbies: Help each other learn about the Linux kernel.
+Archive:       http://mail.nl.linux.org/kernelnewbies/
+FAQ:           http://kernelnewbies.org/faq/
+
