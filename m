@@ -1,32 +1,34 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH] [RFC] Advanced TCA SCSI Disk Hotswap
-Date: 25 Oct 2002 11:04:29 +0100
+From: Alexy Khrabrov <braver@pobox.com>
+Subject: Re: Ultra320
+Date: Fri, 25 Oct 2002 08:52:01 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1035540269.13032.7.camel@irongate.swansea.linux.org.uk>
-References: <Pine.LNX.4.33L2.0210241350230.20950-100000@dragon.pdx.osdl.net>
-	<Pine.LNX.4.33.0210241839490.10937-100000@rancor.yyz.somanetworks.com>
-	<20021024232258.GA26093@kroah.com>  <3DB886B9.3060304@mvista.com>
+Message-ID: <20021025125201.GB15683@angle.setup.org>
+References: <20021023160415.GA5702@angle.setup.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <3DB886B9.3060304@mvista.com>
+Content-Disposition: inline
+In-Reply-To: <20021023160415.GA5702@angle.setup.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Steven Dake <sdake@mvista.com>
-Cc: Greg KH <greg@kroah.com>, Scott Murray <scottm@somanetworks.com>, "Randy.Dunlap" <rddunlap@osdl.org>, James Bottomley <James.Bottomley@steeleye.com>, linux-scsi@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+To: Alexy Khrabrov <braver@pobox.com>
+Cc: linux-scsi@vger.kernel.org
 
-On Fri, 2002-10-25 at 00:48, Steven Dake wrote:
-> Surprise extraction is not a simple problem especially to ensure the 
-> device drivers exit
-> cleanly without dumping more data on the PCI bus to a PCI device that 
-> may not
-> exist.
+So, is this obvious to others/unknown/off-topic/all of the above?  :-)  A.K.
 
-Thats primarily about resource handling orders. Making sure we don't
-release the claimed pci resources in the driver until the driver itself
-is sure it has shut up.
+On Wed, Oct 23, 2002 at 12:04:15PM -0400, Alexy Khrabrov wrote:
+> 
+> If I get an Ultra320 card, will existing hard drives work 
+> at 320, or the hard drive itself should be new and aware?
+> Will current Linux drivers support Ultra320?
+> 
+> -- 
+> Cheers,
+> Alexy Khrabrov :: www.setup.org :: Age Quod Agis
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-I'm doing suprise removal ok with the thinkpad 600 (in 2.4 with some
-limits due to the 2.4 pci layer). Network stuff seems to be fine. The
-block layer has major issues.
-
+-- 
+Cheers,
+Alexy Khrabrov :: www.setup.org :: Age Quod Agis
