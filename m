@@ -1,74 +1,49 @@
-From: Patrick Mansfield <patmans@us.ibm.com>
+From: Luben Tuikov <luben@splentec.com>
 Subject: Re: SCSI woes (followup)
-Date: Tue, 24 Sep 2002 11:18:47 -0700
+Date: Tue, 24 Sep 2002 14:16:11 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20020924111847.A4151@eng2.beaverton.ibm.com>
-References: <rmk@arm.linux.org.uk> <200209241346.g8ODkER09516@localhost.localdomain> <20020924145852.A28042@flint.arm.linux.org.uk>
+Message-ID: <3D90ABEB.E540C8D1@splentec.com>
+References: <200209241429.g8OET2r10804@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <20020924145852.A28042@flint.arm.linux.org.uk>; from rmk@arm.linux.org.uk on Tue, Sep 24, 2002 at 02:58:52PM +0100
 List-Id: linux-scsi@vger.kernel.org
-To: Russell King <rmk@arm.linux.org.uk>
-Cc: James Bottomley <James.Bottomley@steeleye.com>, linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@steeleye.com>
+Cc: Russell King <rmk@arm.linux.org.uk>, linux-scsi@vger.kernel.org
 
-On Tue, Sep 24, 2002 at 02:58:52PM +0100, Russell King wrote:
-> On Tue, Sep 24, 2002 at 09:46:14AM -0400, James Bottomley wrote:
-> > I think it's method of operation is misplaced.
+James Bottomley wrote:
 > 
-> I think it is misplaced.  It locks the doors of devices that aren't even
-> in use, which is just plain stupid.
+> A better fix is probably to implement a flag to say whether the door should be
+> locked or not.
 > 
-> > However, for your case does simply moving the queue empty check to the top 
-> > cause the problems to go away? (That would be hiding the problem not fixing 
-> > it, but still...)
-> 
-> I #if 0'd it out, and it makes the problem go away.
 
-The scan will only send INQUIRY commands, and after all scanning is
-done, the upper level drivers might send a TUR.
+This would really depend on the command to be executed.
+I.e. does the command need access to the media, or not.
 
-After a new Scsi_Device is added in scsi_scan.c it calls
-scsi_release_commandblocks() and sets queue_depth = 0.
+> The whole lock door before a command goes down philosophy looks slightly wrong
+> to me.  I can see we want to lock the door for a mounted device and other
+> conditions, but locking the door just to send down a test unit ready or
+> inquiry doesn't seem correct.
 
-Any call to scsi_request_fn() for the device at this point will just
-return (break statements) after scsi_allocate_device() returns NULL,
-and if scsi_ioctl() was called from scsi_request_fn() it will hang
-forever.
+Well, SAM-3 is the place to check this out. For TUR (7.27) it would seem that
+one does indeed need to lock the door/media into place in order to
+be ``able to accept an appropriate medium-access command without returning
+CHECK CONDITION status''.
+ 
+> Door locking is very similar to reservation maintenance.  Perhaps adding
+> kernel code to maintain certain persistent but fragile states of the device
+> might be in order.
 
-The problem is that we try to send a command via scsi_request_fn() to
-a device that has no command blocks allocated - it's initializatin
-is incomplete.
+This is the job of the task manager for the LU, and if not implemented
+by the LU, it should be implemented by the LLDD, which would complicate
+things considerably for the LLDD.
 
-Moving the empty check up sounds like good and simple fix for 2.4, or
-check if queue_depth == 0. Anything else would be difficult to get right.
+As to your suggestion, there may be generic code, which LLDD may want to use,
+but nevetheless, has to be no higher than the LLDD, and ideally in the LU itself.
 
-Moving the the SCSI_IOCTL_DOORLOCK doesn't fix the problem if it is
-still called on a incompletely initialized device.
+The idea is that SCSI core should be quite minimal as I've been suggesting
+for some time now.
 
-And, perhaps do not allow the error handler to run during scanning, let
-later IO (to any discovered device) kick off the error handler. It's
-hard to say if this is good or not - for example, if this is your root
-device, you want it online. But if it some other device, and we try hard
-to scan and use it, it can cause more problems (if it keeps getting errors,
-and we keeping running the error handler/reset cycle, blocking other IO).
-
-The problem happens via:
-
-1) device A is found that has removable media during scan
-
-2) INQUIRY to another device B kicks off error handling before the
-scan has completed, so device A has no command blocks.
-
-3) Error handler completion calls scsi_request_fn() for A.
-
-4) scsi_request_fn() for A sees the reset happened, and calls scsi_ioctl().
-
-5) scsi_ioctl() calls scsi_request_fn(), it cannot get a Scsi_Cmnd, so
-it just returns, incorrectly assuming that another request must be
-outstanding.
-
-6) The scsi_ioctl() never completes. The error handling thread should
-be hung.
-
--- Patrick Mansfield
+-- 
+Luben
