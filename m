@@ -1,32 +1,43 @@
-From: Patrick Mansfield <patmans@us.ibm.com>
-Subject: [PATCH] have CONFIG_SCSI_PROC_FS depend on CONFIG_PROC_FS
-Date: Wed, 18 Feb 2004 10:08:12 -0800
+From: Ken Schneider <kschneider@bout-tyme.net>
+Subject: RE: new driver
+Date: Wed, 18 Feb 2004 18:57:48 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040218100812.A21561@beaverton.ibm.com>
+Message-ID: <1077148668.14308.6.camel@pc1.bout-tyme.net>
+References: <7076215DFAA4574099E5CD59FE4222620427ACDF@pcssrv42.pcs.pc.ome.toshiba.co.jp>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e33.co.us.ibm.com ([32.97.110.131]:5090 "EHLO e33.co.us.ibm.com")
-	by vger.kernel.org with ESMTP id S267726AbUBRSI7 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 18 Feb 2004 13:08:59 -0500
-Content-Disposition: inline
+Received: from user224.net1222.fl.sprint-hsd.net ([69.68.131.224]:51845 "EHLO
+	pc1.bout-tyme.net") by vger.kernel.org with ESMTP id S267092AbUBRX54
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 18 Feb 2004 18:57:56 -0500
+In-Reply-To: <7076215DFAA4574099E5CD59FE4222620427ACDF@pcssrv42.pcs.pc.ome.toshiba.co.jp>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@steeleye.com>
+To: "Tomita, Haruo" <haruo.tomita@toshiba.co.jp>
+Cc: Arjan van de Ven <arjanv@redhat.com>, "Moore, Eric Dean" <Emoore@lsil.com>, linux-scsi@vger.kernel.org, "Doelfel, Hardy" <hdoelfel@lsil.com>, "Mukker, Atul" <Atulm@lsil.com>, "Jarrett, Peter B." <Peterj@lsil.com>
 
-Patch against recent 2.6: have CONFIG_SCSI_PROC_FS depend on
-CONFIG_PROC_FS, as configuring CONFIG_SCSI_PROC_FS without
-CONFIG_PROC_FS prevents scsi core from initializing.
+On Wed, 2004-02-18 at 18:39, Tomita, Haruo wrote:
+> Hi ken,
+> 
+> Eric> There was an effort I started to open source some of
+> Eric> the driver, which was linked to a pre-compiled library. 
+> 
+> Haruo> The pre-compiled library(megaide_lib.o) is included. 
+> 
+> Arjan> Then the driver is not available under the terms of the GPL.... 
+> Arjan> (and not compatible with the kernel license so inclusion is not possible)
+>  
+> Ken> And therefore should not any reference to the GPL in the 
+> Ken> other files. I think this should be all or nothing.
+> 
+> Is it that the source code of megaide_lib.o should be opened?
 
-===== drivers/scsi/Kconfig 1.54 vs edited =====
---- 1.54/drivers/scsi/Kconfig	Sat Feb  7 08:38:00 2004
-+++ edited/drivers/scsi/Kconfig	Wed Feb 18 09:50:09 2004
-@@ -23,7 +23,7 @@
- 
- config SCSI_PROC_FS
- 	bool "legacy /proc/scsi/ support"
--	depends on SCSI
-+	depends on SCSI && PROC_FS
- 	default y
- 	---help---
- 	  This option enables support for the various files in
+I was told by people on another list that if any part is closed the
+entire package will not be included in the kernel tree. So yes
+negaide.lib.o should be open sourced or LSI should provide drivers to
+linux users as well as any other platform that uses their hardware.
+
+-- 
+Ken Schneider <kschneider@bout-tyme.net>
+
