@@ -1,66 +1,48 @@
-From: Heiko Carstens <Heiko.Carstens@de.ibm.com>
-Subject: Re: Stack overflow when lldd returns SCSI_MLQUEUE_DEVICE_BUSY
-Date: Wed, 19 May 2004 17:09:21 +0200
+From: "Surekha.PC" <surekhap@cisco.com>
+Subject: What factors limit the SCSI I/O request size?
+Date: Wed, 19 May 2004 21:13:28 +0530
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <OF22748B6C.BE9F273F-ONC1256E99.005228D8-C1256E99.00535E43@de.ibm.com>
-References: <1084916831.2101.56.camel@mulgrave>
+Message-ID: <!~!UENERkVCMDkAAQACAAAAAAAAAAAAAAAAABgAAAAAAAAANoIxZIFzbEaqwjJgytz2AeKAAAAQAAAAtCTpDJFaLE2uBc3buWekQgEAAAAA@cisco.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtagate2.de.ibm.com ([195.212.29.151]:63616 "EHLO
-	mtagate2.de.ibm.com") by vger.kernel.org with ESMTP id S264231AbUESPJ2
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 19 May 2004 11:09:28 -0400
-In-Reply-To: <1084916831.2101.56.camel@mulgrave>
+Received: from sj-iport-1-in.cisco.com ([171.71.176.70]:50436 "EHLO
+	sj-iport-1.cisco.com") by vger.kernel.org with ESMTP
+	id S264276AbUESPng (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 19 May 2004 11:43:36 -0400
+Received: from surekhapw2k (dhcp-10-77-7-183.cisco.com [10.77.7.183])
+	by sj-core-2.cisco.com (8.12.10/8.12.6) with ESMTP id i4JFhTSu028192
+	for <linux-scsi@vger.kernel.org>; Wed, 19 May 2004 08:43:30 -0700 (PDT)
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: 'SCSI Mailing List' <linux-scsi@vger.kernel.org>
 
-> > I just experienced a stack overflow (see below for part of the call 
-trace)
-> > when an lldd returns SCSI_MLQUEUE_DEVICE_BUSY. Problem seems to be 
-that
-> > scsi_dispatch_cmd calls scsi_queue_insert if the LLDD queuecommand 
-function
-> > failed.
->
-> Could you do some more debugging...there's something wierd going on
-> here.  a SCSI_MLQUEUE_DEVICE_BUSY return sets device_blocked.  As long
-> as sdev->max_device_blocked is two or more, this should cause an exit
-> from the next scsi_request_fn() (at the if(!req ||
-> !scsi_dev_queue_ready(q, sdev))
 
-This happened when sending out the inquiry command and the LLDD was in
-recovery for the specific LUN and returned SCSI_MLQUEUE_DEVICE_BUSY.
-Problem is that max_device_blocked gets set _after_ the inquiry command
-finished. In this specific case max_device_blocked was 0 and thus the
-device was never blocked resulting in the observed stack overflow.
-I moved the initializazion of max_device_blocked from scsi_add_lun to
-sdev_alloc_sdev and the problem is gone. See patch below.
-Thanks for pointing out where to look at!
+Hi,
 
-diff -u -r1.44 scsi_scan.c
---- scsi_scan.c 10 May 2004 09:21:32 -0000      1.44
-+++ scsi_scan.c 19 May 2004 14:54:19 -0000
-@@ -212,6 +212,10 @@
-        INIT_LIST_HEAD(&sdev->starved_entry);
-        spin_lock_init(&sdev->list_lock);
+ I have been testing linux iSCSI driver with 2.6 kernel and
+ following are my observations on the SCSI I/O requests being
+ sent to iSCSI driver.
+
+ The sg_table_size and max_sectors are initialised to 64 and
+ 256 in scsi_host template. I am aware that these parameters
+ have effect on the maximum SCSI I/O request queued to HBA driver.
+
+I am doing 512K raw I/O on the iSCSI disk. By tuning sg_table_size
+and max_sectors setting in scsi_host temple following was the
+SCSI I/O request size being sent per command.
+
+Sg_table_size            max_sectors          SCSI I/O size
+   64                       256                   128k
+  128                       256                   128k
+   64                      1024                   256k
+  128                      1024                   512k
  
-+       /* if the device needs this changing, it may do so in the detect
-+        * function */
-+       sdev->max_device_blocked = SCSI_DEFAULT_DEVICE_BLOCKED;
-+
-        /*
-         * Some low level driver could use device->type
-         */
-@@ -626,10 +630,6 @@
-                sdev->sdev_target = starget;
-                spin_unlock_irqrestore(sdev->host->host_lock, flags);
-        }
--
--       /* if the device needs this changing, it may do so in the detect
--        * function */
--       sdev->max_device_blocked = SCSI_DEFAULT_DEVICE_BLOCKED;
- 
-        sdev->use_10_for_rw = 1;
- 
+ I would like to know on what basis the SCSI I/O request size per
+command is determined. What are the other factors apart from
+sg_table_size and max_sectors which can limit the I/O size?
+
+thanks,
+surekha 
+
