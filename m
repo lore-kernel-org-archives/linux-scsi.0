@@ -1,52 +1,114 @@
-From: Jan-Frode Myklebust <janfrode@parallab.uib.no>
-Subject: Re: LSI Logic FC HBA / mptscsih hang
-Date: Sat, 17 Apr 2004 17:45:40 +0200
+From: Carl-Daniel Hailfinger <c-d.hailfinger.kernel.2004@gmx.net>
+Subject: Re: [RFC] [DRAFT] [udev PATCH] First attempt at vendor RAID support
+ in 2.6
+Date: Sat, 17 Apr 2004 19:35:40 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040417154540.GA23053@ii.uib.no>
-References: <0E3FA95632D6D047BA649F95DAB60E570442C23E@exa-atlanta.se.lsil.com> <20040414211645.GA21837@ii.uib.no>
+Message-ID: <40816AEC.6020309@gmx.net>
+References: <Pine.LNX.4.40.0404151458450.30892-100000@jehova.dsm.dk> <40803C61.503@gmx.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from eik.ii.uib.no ([129.177.16.3]:6604 "EHLO eik.ii.uib.no")
-	by vger.kernel.org with ESMTP id S263991AbUDQPpo (ORCPT
+Received: from mail.gmx.de ([213.165.64.20]:59275 "HELO mail.gmx.net")
+	by vger.kernel.org with SMTP id S263997AbUDQRfp (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 17 Apr 2004 11:45:44 -0400
-Content-Disposition: inline
-In-Reply-To: <20040414211645.GA21837@ii.uib.no>
+	Sat, 17 Apr 2004 13:35:45 -0400
+In-Reply-To: <40803C61.503@gmx.net>
 List-Id: linux-scsi@vger.kernel.org
-To: "Moore, Eric Dean" <Emoore@lsil.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Cc: Thomas Horsten <thomas@horsten.com>, medley@lists.infowares.com, linux-hotplug-devel@lists.sourceforge.net, Wilfried Weissmann <Wilfried.Weissmann@gmx.at>, Jeff Garzik <jgarzik@pobox.com>, Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>, Greg KH <greg@kroah.com>, Linux RAID Mailing List <linux-raid@vger.kernel.org>, Martins Krikis <mkrikis@yahoo.com>, ataraid-list@redhat.com, linux-scsi@vger.kernel.org
 
-On Wed, Apr 14, 2004 at 11:16:45PM +0200, Jan-Frode Myklebust wrote:
-> On Wed, Apr 14, 2004 at 05:01:14PM -0400, Moore, Eric Dean wrote:
-> > I can send you update 2.05.16 mpt driver RPM's for redhat 
-> > in seperate email. Let me know if you can accept 
-> > 17MB zip file.  
+[crossposting this to hopefully relevant lists]
+Hi,
 
-I saw the same problem with this 2.05.16 mpt driver. Now I also tried
-upgrading to both the kernel-smp-2.6.5-1.326.i686.rpm from
-http://people.redhat.com/arjanv/, and plain 2.6.6-rc1 kernel, and
-these are also hanging with the same error:
+since on one side ATARAID support has vanished from 2.6 and on the other
+side some parties are pushing for an enhanced MD driver in the kernel, why
+ don't we do the setup and metadata handling of all those types of RAID in
+userspace?
 
-Fusion MPT base driver 3.01.03
-Copyright (c) 1999-2004 LSI Logic Corporation
-PCI: Enabling device 0000:01:06.0 (0000 -> 0003)
-mptbase: Initiating ioc0 bringup
-ioc0: FC919X: Capabilities={Initiator,Target,LAN}
-mptbase: Initiating ioc0 recovery
-mptbase: Initiating ioc0 recovery
-mptbase: Initiating ioc0 recovery
-Fusion MPT SCSI Host driver 3.01.03
-scsi1 : ioc0: LSIFC919X, FwRev=01000000h, Ports=1, MaxQ=1023, IRQ=11
-mptscsih: ioc0: >> Attempting task abort! (sc=f7cccb00)
-mptscsih: ioc0: >> Attempting target reset! (sc=f7cccb00)
-mptbase: Initiating ioc0 recovery
-mptbase: Initiating ioc0 recovery
-mptscsih: ioc0: >> Attempting bus reset! (sc=f7cccb00)
+I got positive feedback by private mail from several kernel developers for
+the last incarnations of raiddetect, so if you disagree, speak up now.
 
-btw: I also seem unable to send BREAK-t (or other magic sysrq
-commands) via the serial console after this hang.. Maybe sysrq hasn't
-been enabled that early in the boot, or the kernel is hanging too
-hard..? 
+Raiddetect is a program to find vendor software RAID superblocks, analyze
+them for validity, group them by RAID vendor and (later on) set them up
+via MD/DM. It is small (~35kB compiled statically against klibc) and
+designed to be run from initrd/initramfs.
+
+raiddetect now supports the following metadata formats:
+-Promise RAID
+-Highpoint RAID
+-Medley RAID
+-Intel RAID
+
+If you want support for another metadata format, please tell me which and
+I'll try to add it. Patches are preferred ;-) My current wishlist is:
+- Adaptec ASR HostRAID
+- DDF RAID
+
+Hot-add and hot-remove features can be added easily if raiddetect is
+called by an udev rule on block device removal/insertion. If raiddetect
+stays loaded into memory or is allowed to save its state, hotplug events
+will not trigger any access to devices not related to that particular RAID
+array.
+
+It seems that there are some host adapter drivers out there implementing
+their own RAID engine which could be consolidated into a single RAID
+"library" instead. If you know about such drivers, please speak up.
+
+The following issues remain still to be sorted out:
+
+Carl-Daniel Hailfinger wrote:
+
+> Greg: Would you accept this patch into your udev package?
+> 
+> Thomas Horsten wrote:
+> 
+>>On Thu, 15 Apr 2004, Carl-Daniel Hailfinger wrote:
+>>
+>>
+>>>What I need:
+>>>- Criticism of coding style/ missing abstraction
+> 
+> 
+> I got a mail from Barlomiej Zolnierkiewicz where he suggested to split the
+> vendor dependent code out of raiddetect.c. This will happen in one of the
+> next revisions.
+
+This is on hold until I receive feedback from Greg K-H whether this will
+be accepted into udev or not.
 
 
-   -jf
+>>>- People checking the numerous FIXMEs
+> 
+> 
+> I now have the following FIXMEs (aka "I have no idea about it"):
+> - 5 FIXMEs in the Medley RAID code. Thomas, could you comment once you're
+> back?
+> - 3 FIXMEs in the Highpoint RAID code. Wilfried, could you please take a
+> look at them?
+> - 2 FIXMEs in the Promise RAID code. I will work on those myself.
+> 
+> - some generic FIXMEs:
+>   - Is the sector size of a harddisk always 512 bytes?
+>   - Is /sys/block/*/size always in 512-byte units?
+>   - Are there controllers out there which occupy more than one PCI device?
+>   - How can I find out if a block device under /sys/block is a disk?
+
+Do you have an idea about the generic FIXMEs listed above?
+
+
+>>>- Help with sorting out who owns which copyrights
+> 
+> This is still a _big issue_.
+
+Since the patch is already too big (~42kB) for some mailing lists, please
+get the latest version from
+http://www.hailfinger.org/carldani/linux/patches/raiddetect/
+
+The patch is against the latest udev bitkeeper tree and applies fine to
+udev-024 if you prefer working with officially released versions.
+
+
+Regards,
+Carl-Daniel
+
