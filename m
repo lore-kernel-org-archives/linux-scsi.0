@@ -1,33 +1,36 @@
-From: Doug Maxey <dwm@maxeymade.com>
-Subject: PATAPI via libata promise 20275 (was: RFC: moving drivers to a new drivers/ata directory)
-Date: Thu, 21 Oct 2004 12:04:45 -0500
+From: Al Viro <viro@parcelfarce.linux.theplanet.co.uk>
+Subject: Re: [PATCH] qla1820 iomem annotations
+Date: Thu, 21 Oct 2004 18:30:57 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <200410211704.i9LH4jMR008268@falcon30.maxeymade.com>
-References: <4176883D.7070905@pobox.com>
+Message-ID: <20041021173057.GC24336@parcelfarce.linux.theplanet.co.uk>
+References: <20041020235837.GC23987@parcelfarce.linux.theplanet.co.uk> <20041021090032.GA1941@infradead.org> <20041021151406.GB24336@parcelfarce.linux.theplanet.co.uk> <20041021172547.GA8242@infradead.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from falcon30.maxeymade.com ([24.173.215.190]:16782 "EHLO
-	falcon30.maxeymade.com") by vger.kernel.org with ESMTP
-	id S270746AbUJURFF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 21 Oct 2004 13:05:05 -0400
-In-reply-to: <4176883D.7070905@pobox.com> 
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:45727 "EHLO
+	www.linux.org.uk") by vger.kernel.org with ESMTP id S270732AbUJURa6
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 21 Oct 2004 13:30:58 -0400
+Content-Disposition: inline
+In-Reply-To: <20041021172547.GA8242@infradead.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Christoph Hellwig <hch@infradead.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Albert CC Lee <albertcc@tw.ibm.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Linus Torvalds <torvalds@osdl.org>, linux-scsi@vger.kernel.org
 
-Continuing down a somewhat related path,  what is the outlook for PATAPI
-via libata?
+On Thu, Oct 21, 2004 at 06:25:47PM +0100, Christoph Hellwig wrote:
+> On Thu, Oct 21, 2004 at 04:14:06PM +0100, Al Viro wrote:
+> > On Thu, Oct 21, 2004 at 10:00:32AM +0100, Christoph Hellwig wrote:
+> > > This breaks old-style PIO support in this driver which is required for the
+> > > Visual Workstations.
+> > 
+> > Where?  __iomem is #defined to nothing for gcc.  So that leaves only
+> > the chunk below as theoretically possible source of changes, right?
+> 
+> Sorry, this was totlly misworked.  What I actually meant is that it gives
+> the sparse warnings again in the PIO-config, so you trade sparse warnings
+> for one variant vs ones for another variant.
 
-There is a high level of interest to have hotplug controllers for ppc64, and 
-the primary (exclusive at this point) application is to drive PATAPI optical.
+Huh?  We _already_ have these guys as pointers; so PIO variants were not
+any happier with non-iomem ones.
 
-I know you have indicated that you have some WIP to get there.  I would like 
-to offer any help to reach that goal.
-
-Would you point me to any code available?
-
-++doug
-
-
-
+Details, please...
