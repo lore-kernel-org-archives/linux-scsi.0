@@ -1,35 +1,33 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH] kill tmscsim ->proc_info
-Date: Tue, 17 Aug 2004 18:48:24 +0200
+From: Matt Domsch <Matt_Domsch@dell.com>
+Subject: Re: merge megaraid 2.20.x in kernel 2.6?
+Date: Tue, 17 Aug 2004 11:51:16 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040817164824.GA17074@lst.de>
-References: <20040817161858.GA16589@lst.de> <4122366E.1040204@yk.rim.or.jp>
+Message-ID: <20040817165116.GD7127@lists.us.dell.com>
+References: <20040817160128.GA7127@lists.us.dell.com> <1092760835.1775.303.camel@mulgrave> <20040817174755.A23872@infradead.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.210]:42987 "EHLO mail.lst.de")
-	by vger.kernel.org with ESMTP id S268341AbUHQQs0 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 17 Aug 2004 12:48:26 -0400
+Received: from linux.us.dell.com ([143.166.224.162]:57505 "EHLO
+	lists.us.dell.com") by vger.kernel.org with ESMTP id S266505AbUHQQva
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 17 Aug 2004 12:51:30 -0400
 Content-Disposition: inline
-In-Reply-To: <4122366E.1040204@yk.rim.or.jp>
+In-Reply-To: <20040817174755.A23872@infradead.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Chiaki <ishikawa@yk.rim.or.jp>
-Cc: Christoph Hellwig <hch@lst.de>, g.liakhovetski@gmx.de, linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, atulm@lsil.com, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Wed, Aug 18, 2004 at 01:46:38AM +0900, Chiaki wrote:
-> Christoph Hellwig wrote:
-> >hrrible code like all proc_info implementations and no really usefull
-> >information.  We might want to add sysfs attributes if some users really
-> >miss anything.
-> >
-> 
-> Setting aside the horribleness of the code and suitability
-> of the code for 2.6.x kernel,
-> I found the information very useful when I did the debugging
-> with tmscsim driver code with
-> a rather obscure CD changer device and
-> other odd SCSI devices.
+On Tue, Aug 17, 2004 at 05:47:55PM +0100, Christoph Hellwig wrote:
+> Does this driver release have the queue removal James wanted?
 
-What particular information?
+Not yet, that was one of the changes Atul requested he be allowed to
+make post-merge.
 
+Thanks,
+Matt
+
+-- 
+Matt Domsch
+Sr. Software Engineer, Lead Engineer
+Dell Linux Solutions linux.dell.com & www.dell.com/linux
+Linux on Dell mailing lists @ http://lists.us.dell.com
