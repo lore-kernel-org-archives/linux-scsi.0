@@ -1,37 +1,60 @@
-From: Karsten Wiese <annabellesgarden@yahoo.de>
-Subject: Re: Help needed: No CD-Recording on 2.6.9 / 2.6.10 for TEAC CD-R55S @ sym53c8xx
-Date: Wed, 15 Dec 2004 01:05:54 +0100
-Message-ID: <200412150105.54482.annabellesgarden@yahoo.de>
-References: <200412141738.01763.annabellesgarden@yahoo.de> <m3ekhsfvoq.fsf@merlin.emma.line.org>
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: drivers/block/scsi_ioctl problem
+Date: Wed, 15 Dec 2004 15:32:47 +1000
+Message-ID: <41BFCC7F.2050005@torque.net>
+References: <41BF7C18.9090303@us.ibm.com>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp001.mail.ukl.yahoo.com ([217.12.11.32]:14194 "HELO
-	smtp001.mail.ukl.yahoo.com") by vger.kernel.org with SMTP
-	id S261730AbULOAFn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 14 Dec 2004 19:05:43 -0500
-In-Reply-To: <m3ekhsfvoq.fsf@merlin.emma.line.org>
-Content-Disposition: inline
+Received: from borg.st.net.au ([65.23.158.22]:45266 "EHLO borg.st.net.au")
+	by vger.kernel.org with ESMTP id S261888AbULOFbq (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 15 Dec 2004 00:31:46 -0500
+In-Reply-To: <41BF7C18.9090303@us.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthias Andree <ma@dt.e-technik.uni-dortmund.de>
-Cc: linux-scsi@vger.kernel.org, matthew@wil.cx
+To: brking@us.ibm.com
+Cc: linux-scsi@vger.kernel.org
 
-Am Dienstag 14 Dezember 2004 21:53 schrieb Matthias Andree:
-> Karsten Wiese <annabellesgarden@yahoo.de> writes:
+Brian King wrote:
+> Can someone explain to me the need for this bit of code in 
+> drivers/block/scsi_ioctl.c:
 > 
-> > IIRC stuff also ill behaved with 2.4 kernel and sym53c8xx_2 module.
-> > 2.4 kernel with ncr53c8xx module lets cdrecord work just fine. (Just
-> > verified with knoppix 3.4 boot cd.)
+> if (!(type & CMD_WARNED)) {
+>     cmd_type[cmd[0]] = CMD_WARNED;
+>     printk(KERN_WARNING "scsi: unknown opcode 0x%02x\n", cmd[0]);
+> }
 > 
-> Are you using cdrecord setuid? If so, remove the setuid bit and retry
-> with "sudo".
-> 
-I ran those tests as root. So the setuid bit should be irrelevant, no?
-And it is not set anyhow, just checked.
-Me still thinks, this failure is related to the sym53c8xx module not working correctly with the scsi card.
-Should I try to port 2.4's ncr53c8xx to 2.6 ? hrm.... =:)
+> I'm trying to convert an application to use SG_IO to /dev/sd* devices 
+> rather than using /dev/sg* devices and this is one problem I have been 
+> running into. Any time I issue a vendor specific scsi opcode I end up 
+> getting one of these error logs. Is there a good reason this error log 
+> is needed?
 
-Karsten
+Brian,
+I think command filtering was retrofitted into the block
+SG_IO code. You only need read permissions to execute an
+ioctl and FORMAT could be unfortunate.
+
+
+IMO this code snippet should be moved from below the snippet
+you showed to the top of the procedural lines in that function:
+
+         /* And root can do any command.. */
+         if (capable(CAP_SYS_RAWIO))
+                 return 0;
+
+
+That command filtering seems pretty haphazard, aimed mainly at
+cd/dvd devices. The START STOP command is regarded as "safe
+for read"** while SERVICE ACTION IN (12), (16), MAINTENANCE IN
+and PERSISTENT RESERVE IN are _not_ considered "safe for read".
+
+** the sd driver doesn't react well when some other mechanism
+explicity spins down a dsik.
+
+Doug Gilbert
+
+
