@@ -1,35 +1,43 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: qla2xxx tcq question/bug
-Date: 09 Jul 2004 21:44:15 -0500
+From: Adrian Bunk <bunk@fs.tum.de>
+Subject: [2.6 patch] update contact address for SCSI megaraid.c
+Date: Sat, 10 Jul 2004 17:25:51 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1089427459.2342.149.camel@mulgrave>
-References: <40EF2697.20804@us.ibm.com>
-	<20040709234644.GB14787@praka.san.rr.com>
-	<20040709235443.GA14953@praka.san.rr.com>
+Message-ID: <20040710152551.GL28324@fs.tum.de>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat16.steeleye.com ([209.192.50.48]:20445 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S266105AbUGJCom (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 9 Jul 2004 22:44:42 -0400
-In-Reply-To: <20040709235443.GA14953@praka.san.rr.com>
+Received: from hermes.fachschaften.tu-muenchen.de ([129.187.202.12]:54270 "HELO
+	hermes.fachschaften.tu-muenchen.de") by vger.kernel.org with SMTP
+	id S266293AbUGJPZ5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 10 Jul 2004 11:25:57 -0400
+Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Vasquez <praka@users.sourceforge.net>
-Cc: Mike Christie <mikenc@us.ibm.com>, andrew.vasquez@qlogic.com, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
 
-On Fri, 2004-07-09 at 18:54, Andrew Vasquez wrote:
-> BTW: 53c700.c appears to be the only scsi driver which calls
-> scsi_activate_tcq()???
+If you send an email to linux-megaraid-devel@dell.com, you get an 
+automated response to send the mail to linux-scsi@vger.kernel.org 
+instead.
 
-That would be because two years ago the scsi maintainer tried to make it
-an example to other driver writers of how to use the block layer tag
-command queueing.
+The patch below updates megaraid.c accordingly.
 
-You could say that was one of the less successful instances of leading
-by example...
 
-James
+Signed-off-by: Adrian Bunk <bunk@fs.tum.de>
 
+--- linux-2.6.7-mm7-full/drivers/scsi/megaraid.c.old	2004-07-10 16:25:33.000000000 +0200
++++ linux-2.6.7-mm7-full/drivers/scsi/megaraid.c	2004-07-10 17:16:51.000000000 +0200
+@@ -25,11 +25,8 @@
+  *					518, 520, 531, 532
+  *
+  * This driver is supported by LSI Logic, with assistance from Red Hat, Dell,
+- * and others. Please send updates to the public mailing list
+- * linux-megaraid-devel@dell.com, and subscribe to and read archives of this
+- * list at http://lists.us.dell.com/.
+- *
+- * For history of changes, see ChangeLog.megaraid.
++ * and others. Please send updates to the mailing list
++ * linux-scsi@vger.kernel.org .
+  *
+  */
+ 
 
