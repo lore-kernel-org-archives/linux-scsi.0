@@ -1,66 +1,50 @@
-From: Chris Gamache <cgg007@yahoo.com>
-Subject: Assistance with an upgraded scsi driver
-Date: Thu, 1 Jul 2004 09:24:31 -0700 (PDT)
+From: Mark Haverkamp <markh@osdl.org>
+Subject: [PATCH] aacraid reset handler
+Date: Thu, 01 Jul 2004 09:26:17 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040701162431.40296.qmail@web13810.mail.yahoo.com>
-Reply-To: cgg007@yahoo.com
+Message-ID: <1088699175.22606.15.camel@markh1.pdx.osdl.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from web13810.mail.yahoo.com ([216.136.175.218]:55195 "HELO
-	web13810.mail.yahoo.com") by vger.kernel.org with SMTP
-	id S266009AbUGAQYc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 1 Jul 2004 12:24:32 -0400
+Received: from fire.osdl.org ([65.172.181.4]:57053 "EHLO fire-2.osdl.org")
+	by vger.kernel.org with ESMTP id S266031AbUGAQ0U (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Jul 2004 12:26:20 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@steeleye.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, Mark Salyzyn <mark_salyzyn@adaptec.com>
 
-Linux 2.6.5 (Obtained via Gentoo's portage tree)
+This restores a fix to the aacraid reset handler.  It makes sure that
+there are no active commands on any attached device before exiting with
+SUCCESS.
 
-I'm sure that the SCSI Driver developers know the answer to this without even
-thinking. I'm sincerely hoping that you all will be kind and give me a point in
-the right direction. :)
+Signed-off-by: Mark Haverkamp <markh@osdl.org>
 
-The megaraid driver the compiles with the rest of the kernel modules in the
-source tree doesn't (seem to) function for me... I can't get the controller
-up-and-running. It is an ooold version of the driver. I want to compile the
-shiny new megaraid driver to see if I have some better luck. I'm a bit lost,
-though... The files in the new driver tarball are different than the ones in
-the source tree. 
+===== drivers/scsi/aacraid/linit.c 1.31 vs edited =====
+--- 1.31/drivers/scsi/aacraid/linit.c	2004-06-18 13:19:24 -07:00
++++ edited/drivers/scsi/aacraid/linit.c	2004-06-29 11:22:58 -07:00
+@@ -409,13 +409,15 @@
+ 				}
+ 			}
+ 			spin_unlock_irqrestore(&dev->list_lock, flags);
++			if (active)
++				break;
+ 
+-			/*
+-			 * We can exit If all the commands are complete
+-			 */
+-			if (active == 0)
+-				return SUCCESS;
+ 		}
++		/*
++		 * We can exit If all the commands are complete
++		 */
++		if (active == 0)
++			return SUCCESS;
+ 		spin_unlock_irq(host->host_lock);
+ 		scsi_sleep(HZ);
+ 		spin_lock_irq(host->host_lock);
 
-Link to new tarball:
-ftp://ftp.lsil.com/pub/linux-megaraid/drivers/version-2.20.1.0/
+-- 
+Mark Haverkamp <markh@osdl.org>
 
-Source tree: 
-
-megaraid.c megaraid.h
-
-New tarball:
-Makefile     mega_common.h  megaraid_mbox.c  megaraid_mm.c
-Kconfig.megaraid    mbox_defs.h  megaraid_ioctl.h     
-megaraid_mbox.h  megaraid_mm.h
-
-...
-
-I've created a megaraid directory under /usr/src/linux/drivers/scsi
-
-I modified the Makefile and Kconfig in /usr/src/linux/drivers/scsi
-
-I cleaned out the old files
-
-I re-configured to include the new options for compiling the MEGARAID_NEWGEN as
-a module
-
-I ran make all
-
-... ... ...
-
-No new module code was generated. :(
-
-Where have I gone wrong?
-
-
-		
-__________________________________
-Do you Yahoo!?
-Yahoo! Mail - 50x more storage than other providers!
-http://promotions.yahoo.com/new_mail
