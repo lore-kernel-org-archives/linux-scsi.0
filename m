@@ -1,72 +1,67 @@
-From: "Sachin Mhatre \(smhatre\)" <smhatre@cisco.com>
-Subject: RE: Request for review of Linux iSCSI driver version 4.0.0.1
-Date: Thu, 13 Nov 2003 20:00:11 +0530
+From: Pat LaVarre <p.lavarre@ieee.org>
+Subject: Re: [PATCH] fix Sony USB mass storage - pass larger receive buffer
+Date: Thu, 13 Nov 2003 07:21:01 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <008d01c3a9f2$a56e60c0$8f074d0a@apac.cisco.com>
-References: <20031027153932.A16679@infradead.org>
-Reply-To: <smhatre@cisco.com>
-Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
+Message-ID: <9B540282-15E4-11D8-9DF1-0050E416C45B@ieee.org>
+Mime-Version: 1.0 (Apple Message framework v552)
+Content-Type: text/plain; charset=US-ASCII; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from india-ironport-1.cisco.com ([64.104.129.195]:2377 "EHLO
-	india-ironport-1.cisco.com") by vger.kernel.org with ESMTP
-	id S264298AbTKMOa3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 13 Nov 2003 09:30:29 -0500
-In-Reply-To: <20031027153932.A16679@infradead.org>
+Received: from rly-ip04.mx.aol.com ([64.12.138.8]:51106 "EHLO
+	rly-ip04.mx.aol.com") by vger.kernel.org with ESMTP id S264300AbTKMOWb
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 13 Nov 2003 09:22:31 -0500
 List-Id: linux-scsi@vger.kernel.org
-To: 'Christoph Hellwig' <hch@infradead.org>
-Cc: linux-scsi@vger.kernel.org, davmyers@cisco.com
+To: linux-scsi@vger.kernel.org
+Cc: p.lavarre@ieee.org, mdharm-scsi@one-eyed-alien.net
 
-Hi,
-	We need the md5 and crc functions from the user level as well as
-from the kernel. The crypto API and the CRC32 kernel  library functions
-can solve the problem of md5 and crc computation in the kernel. But its
-not possible to use these APIs from the user level. One way could be to
-use system calls. But wouldn't that make the code cumbersome?
+ > This is a terrible idea.
+ > There is a large number of devices
+ > which choke if those two values do not match.
 
-Thanks,
-Sachin
+Did I miss our record of the search for plscsi parameters that Sony's 
+USB mass storage would accept?
 
------Original Message-----
-From: linux-scsi-owner@vger.kernel.org
-[mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of Christoph Hellwig
-Sent: Monday, October 27, 2003 9:10 PM
-To: Krishna Murthy
-Cc: linux-scsi@vger.kernel.org; davmyers@cisco.com
-Subject: Re: Request for review of Linux iSCSI driver version 4.0.0.1
+I remember seeing we did try mode sense of header and whole page, but 
+not being convinced we had tried every reasonably variation of that.
 
+ > > should not affect other devices since
+ > > we are not changing the requested length,
+ > > just the size of the receive
+ > > buffer.
 
-On Thu, Oct 23, 2003 at 05:34:10PM +0530, Krishna Murthy wrote:
-> Hi,
-> 	Linux iSCSI driver 4.0.0.1 (linux-iscsi-4.0.0.1.tgz) is
-available at
-> 
-> http://sf.net/projects/linux-iscsi/
+Sorry.  The size of the receive buffer crosses the bus at least to USB 
+and to FireWire devices.  Assaulting devices with noise then finds 
+hits, yes.
 
-Here's a list of a few comments I've come up with.  I haven't yet looked
-at the data structurws much, but it seems there's a complete lack of
-refcounting.  Also there's lots of comments were ysou complain about
-scsi midlayer misbehaviour or bugs - please submit patches or submit
-workarounds when you encounter them, that's what open source is all
-about!
+Also in a robust SCSI over whatever host, the bytes per buffer 
+parameter also alters the behaviour of ATAPI PIO drivers, though I do 
+not yet know myself if Linux ATAPI is robust in that way.
 
-Also the same question that went to the unh folks goes to you:  why do
-you think your implementation is better than theirs and why do you think
-cooperation on one iscsi stack is impossible.
+ > > Can we use a minium buffer length of 12 for
+ > > any requests of less than 13 bytes?
+ >
+ > You can try.... I don't know if it will work.
 
-here's the list:
+Me neither.
 
+A device refusing to agree to copy as few bytes as a header is a device 
+telling us we're not talking like Windows.  From the thread "usb 
+storage traces" we know Windows does sometimes fetch header, calculate 
+available length, fetch whole ... but apparently not for mode page x08 
+from this Sony device.
 
-highlevel:
-	- kill md5.c and iscsi-crc.c and use common cryptoapi
-	md5 / common crc code instead.
-	- please kill you thousands of atoi/aton reimplementations
-	and look for proper linux functions like simple_strtoul.
+ > > Else, I give up ...
 
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-the body of a message to majordomo@vger.kernel.org More majordomo info
-at  http://vger.kernel.org/majordomo-info.html
+We can give up on PDT x00 HDD/Flash that is writable except when the 
+write-protect tab is flipped ... without necessarily giving up on the 
+PDT x05 DVD/CD where those "usb storage traces" show us Windows 
+actually bothering to try the politically correct speech we see 
+implicitly blessed at t10.org.
+
+Pat LaVarre
+
+P.S. If this mail appears in the correct thread and appears labelled 
+"Pat LaVarre" rather than "Steve Jobs", I will have achieved a new high 
+in my understanding of `nslookup -q=mx $domain` etc.
 
