@@ -1,107 +1,29 @@
-From: Jens Axboe <axboe@suse.de>
+From: James Bottomley <James.Bottomley@SteelEye.com>
 Subject: Re: queue <-> sdev reference counting problem
-Date: Mon, 21 Mar 2005 15:59:00 +0100
-Message-ID: <20050321145900.GH25452@suse.de>
-References: <20050318113609.GC1821@suse.de>
+Date: Mon, 21 Mar 2005 09:43:48 -0600
+Message-ID: <1111419828.5504.11.camel@mulgrave>
+References: <20050318113609.GC1821@suse.de> <20050321145900.GH25452@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Received: from ns.virtualhost.dk ([195.184.98.160]:61831 "EHLO virtualhost.dk")
-	by vger.kernel.org with ESMTP id S261830AbVCUPd4 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 21 Mar 2005 10:33:56 -0500
-Content-Disposition: inline
-In-Reply-To: <20050318113609.GC1821@suse.de>
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Received: from stat16.steeleye.com ([209.192.50.48]:1224 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S261824AbVCUPnv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 21 Mar 2005 10:43:51 -0500
+In-Reply-To: <20050321145900.GH25452@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: James Bottomley <James.Bottomley@steeleye.com>
+To: Jens Axboe <axboe@suse.de>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Fri, Mar 18 2005, Jens Axboe wrote:
-> Hi,
-> 
-> There is a problem with the way sdev is freed currently. The reason is
-> really that there is a circular referencing problem: the sdev needs to
-> hold on to the queue, but the queue (through the request function) also
-> needs to hold on to the sdev.
-> 
-> The easiest way to work-around this problem is to kill the sdev
-> reference in the queue when the sdev is freed. On invocation of
-> scsi_request_fn(), kill io to this device.
-> 
-> Signed-off-by: Jens Axboe <axboe@suse.de>
-> 
-> ===== drivers/scsi/scsi_lib.c 1.151 vs edited =====
-> --- 1.151/drivers/scsi/scsi_lib.c	2005-02-17 20:17:22 +01:00
-> +++ edited/drivers/scsi/scsi_lib.c	2005-03-18 12:33:09 +01:00
-> @@ -1233,6 +1233,22 @@ static inline int scsi_host_queue_ready(
->  }
->  
->  /*
-> + * Kill requests for a dead device
-> + */
-> +static void scsi_kill_requests(request_queue_t *q)
-> +{
-> +	struct request *req;
-> +
-> +	while ((req = elv_next_request(q)) != NULL) {
-> +		blkdev_dequeue_request(req);
-> +		req->flags |= REQ_QUIET;
-> +		while (end_that_request_first(req, 0, req->nr_sectors))
-> +			;
-> +		end_that_request_last(req);
-> +	}
-> +}
-> +
-> +/*
->   * Function:    scsi_request_fn()
->   *
->   * Purpose:     Main strategy routine for SCSI.
-> @@ -1246,10 +1262,16 @@ static inline int scsi_host_queue_ready(
->  static void scsi_request_fn(struct request_queue *q)
->  {
->  	struct scsi_device *sdev = q->queuedata;
-> -	struct Scsi_Host *shost = sdev->host;
-> +	struct Scsi_Host *shost;
->  	struct scsi_cmnd *cmd;
->  	struct request *req;
->  
-> +	if (!sdev) {
-> +		printk("scsi: killing requests for dead queue\n");
-> +		scsi_kill_requests(q);
-> +		return;
-> +	}
-> +
->  	if(!get_device(&sdev->sdev_gendev))
->  		/* We must be tearing the block queue down already */
->  		return;
-> @@ -1258,6 +1280,7 @@ static void scsi_request_fn(struct reque
->  	 * To start with, we keep looping until the queue is empty, or until
->  	 * the host is no longer able to accept any more requests.
->  	 */
-> +	shost = sdev->host;
->  	while (!blk_queue_plugged(q)) {
->  		int rtn;
->  		/*
-> ===== drivers/scsi/scsi_sysfs.c 1.69 vs edited =====
-> --- 1.69/drivers/scsi/scsi_sysfs.c	2005-02-17 02:05:37 +01:00
-> +++ edited/drivers/scsi/scsi_sysfs.c	2005-03-18 12:32:57 +01:00
-> @@ -168,8 +168,10 @@ void scsi_device_dev_release(struct devi
->  	list_del(&sdev->starved_entry);
->  	spin_unlock_irqrestore(sdev->host->host_lock, flags);
->  
-> -	if (sdev->request_queue)
-> +	if (sdev->request_queue) {
-> +		sdev->request_queue->queuedata = NULL;
->  		scsi_free_queue(sdev->request_queue);
-> +	}
->  
->  	scsi_target_reap(scsi_target(sdev));
->  
+On Mon, 2005-03-21 at 15:59 +0100, Jens Axboe wrote:
+> This is not even enough, since the queue lock is embedded in sdev
+> structure. Guys, this is a serious issue. Oopsing a kernel is trivial
+> with a hotplug device like a usb stick.
 
-This is not even enough, since the queue lock is embedded in sdev
-structure. Guys, this is a serious issue. Oopsing a kernel is trivial
-with a hotplug device like a usb stick.
+Do you have the instructions to reproduce and a trace ... I've got a USB
+pendrive I can try with.
 
--- 
-Jens Axboe
+James
+
 
