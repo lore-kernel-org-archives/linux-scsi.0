@@ -1,32 +1,34 @@
-From: "Moore, Eric Dean" <Emoore@lsil.com>
-Subject: RE: [ANNOUNCE] MPT Fusion driver 3.01.09 update
-Date: Mon, 21 Jun 2004 14:43:58 -0400
+From: "Lee Xing" <lxing@Crossroads.com>
+Subject: Help - a question on scsi_debug and mid-layer
+Date: Mon, 21 Jun 2004 13:53:23 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <0E3FA95632D6D047BA649F95DAB60E5704925053@exa-atlanta>
+Message-ID: <519672568F040C41B6FAC21ADF51B18FF03D@mailnode1.commstor.crossroads.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:56205 "EHLO mail0.lsil.com")
-	by vger.kernel.org with ESMTP id S266397AbUFUSoM (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 21 Jun 2004 14:44:12 -0400
+Received: from email.crossroads.com ([65.68.235.6]:60132 "HELO
+	email.crossroads.com") by vger.kernel.org with SMTP id S264154AbUFUSxc convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 21 Jun 2004 14:53:32 -0400
+content-class: urn:content-classes:message
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>, "Moore, Eric Dean" <Emoore@lsil.com>
-Cc: linux-scsi@vger.kernel.org, James.Bottomley@steeleye.com
+To: linux-scsi@vger.kernel.org
+Cc: Douglas Gilbert <dougg@torque.net>
 
-I would need to keep linux_compat.h for compatibility
-between lk 2.6 kernels variants.
+Hi,
 
-Example - I'm building SuSE 9.1 drivers for the 2.6.4-52 , this
-kernel doesn't define scsi_device_online; coming later in the 2.6.6.
-I suggest keeping compatibity in the headers as 
-opposed to the .c files.
+I'm playing with scsi_debug (a low-level driver) of lk2.4 and notice that scsi_debug_queuecommand(...) defined in scsi_debug returns sometimes before the SCSI command completes (i.e. before done(cmd) is invoked), and sometimes after done(cmd) is invoked.  Can SCSI mid-layer really handle both cases without any problems, and why?
 
-Eric
+I assume that before scsi_debug_queuecommand() returns the control to mid-layer, mid-layer has no way to know whether that SCSI command has been successfully queued in low-level driver, therefore scsi_debug should not invoke done(cmd) before completing scsi_debug_queuecommand(...), correct?
+
+Thanks,
 
 
-> I don't think we need to keep around linux_compat.h in the 
-> 2.6 tree, just
-> remove it completely in 2.6 and keep it around in 2.4.
-> 
+T.
+
+Lee Xing
+Crossroads Systems, Inc.
+(512) 928-7297
+
+
