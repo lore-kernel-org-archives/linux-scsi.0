@@ -1,117 +1,129 @@
 From: Matthew Wilcox <matthew@wil.cx>
-Subject: [PATCH] Remove lasi700.h
-Date: Wed, 29 Dec 2004 20:19:56 +0000
-Message-ID: <20041229201956.GB18338@parcelfarce.linux.theplanet.co.uk>
+Subject: [PATCH] Misc zalon fixes
+Date: Wed, 29 Dec 2004 20:32:56 +0000
+Message-ID: <20041229203256.GC18338@parcelfarce.linux.theplanet.co.uk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:13461 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S261405AbUL2UT5
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:53911 "EHLO
+	www.linux.org.uk") by vger.kernel.org with ESMTP id S261411AbUL2Uc4
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 29 Dec 2004 15:19:57 -0500
+	Wed, 29 Dec 2004 15:32:56 -0500
 Received: from willy by www.linux.org.uk with local (Exim 4.33)
-	id 1CjkIW-0005hn-Gp
-	for linux-scsi@vger.kernel.org; Wed, 29 Dec 2004 20:19:56 +0000
+	id 1CjkV6-00079s-8o
+	for linux-scsi@vger.kernel.org; Wed, 29 Dec 2004 20:32:56 +0000
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
 
-Inline lasi700.h into lasi700.c to cut down on the size of the
-drivers/scsi directory.
+Some miscellaneous cleanups for the Zalon driver:
 
-diff -urpNX dontdiff linus-2.6/drivers/scsi/lasi700.c parisc-2.6/drivers/scsi/lasi700.c
---- linus-2.6/drivers/scsi/lasi700.c	2004-12-26 14:03:10.000000000 -0700
-+++ parisc-2.6/drivers/scsi/lasi700.c	2004-12-24 16:39:59.000000000 -0700
-@@ -54,13 +54,33 @@
- #include <scsi/scsi_transport.h>
- #include <scsi/scsi_transport_spi.h>
+ - Remove unused definitions of sync_scsi_data_for_cpu and
+   sync_scsi_data_for_device
+ - Fill in dev->irq in the zalon driver
+ - Request the interrupt in the name of the driver, not the bus address
+ - Change the driver name to look better in sysfs
+ - Call ncr53c8xx_exit() in zalon7xx_exit()
+
+Signed-off-by: Matthew Wilcox <matthew@wil.cx>
+
+diff -urpNX dontdiff linus-2.6/drivers/scsi/sym53c8xx_comm.h parisc-2.6/drivers/scsi/sym53c8xx_comm.h
+--- linus-2.6/drivers/scsi/sym53c8xx_comm.h	2004-12-26 14:03:11.000000000 -0700
++++ parisc-2.6/drivers/scsi/sym53c8xx_comm.h	2004-12-24 16:40:00.000000000 -0700
+@@ -505,8 +505,6 @@ static int __map_scsi_sg_data(struct dev
+ #define unmap_scsi_data(np, cmd)	__unmap_scsi_data(np->dev, cmd)
+ #define map_scsi_single_data(np, cmd)	__map_scsi_single_data(np->dev, cmd)
+ #define map_scsi_sg_data(np, cmd)	__map_scsi_sg_data(np->dev, cmd)
+-#define sync_scsi_data_for_cpu(np, cmd)	__sync_scsi_data_for_cpu(np->dev, cmd)
+-#define sync_scsi_data_for_device(np, cmd) __sync_scsi_data_for_device(np->dev, cmd)
  
--#include "lasi700.h"
- #include "53c700.h"
+ /*==========================================================
+ **
+diff -urpNX dontdiff linus-2.6/drivers/scsi/zalon.c parisc-2.6/drivers/scsi/zalon.c
+--- linus-2.6/drivers/scsi/zalon.c	2004-12-26 14:03:11.000000000 -0700
++++ parisc-2.6/drivers/scsi/zalon.c	2004-12-24 16:40:00.000000000 -0700
+@@ -87,7 +87,7 @@ zalon_probe(struct parisc_device *dev)
+ {
+ 	struct gsc_irq gsc_irq;
+ 	u32 zalon_vers;
+-	int irq, error = -ENODEV;
++	int error = -ENODEV;
+ 	unsigned long zalon = dev->hpa;
+ 	unsigned long io_port = zalon + GSC_SCSI_ZALON_OFFSET;
+ 	static int unit = 0;
+@@ -107,10 +107,10 @@ zalon_probe(struct parisc_device *dev)
+ 	/* Setup the interrupts first.
+ 	** Later on request_irq() will register the handler.
+ 	*/
+-	irq = gsc_alloc_irq(&gsc_irq);
++	dev->irq = gsc_alloc_irq(&gsc_irq);
  
- MODULE_AUTHOR("James Bottomley");
- MODULE_DESCRIPTION("lasi700 SCSI Driver");
- MODULE_LICENSE("GPL");
+ 	printk("%s: Zalon vers field is 0x%x, IRQ %d\n", __FUNCTION__,
+-		zalon_vers, irq);
++		zalon_vers, dev->irq);
  
-+#define LASI_700_SVERSION 0x00071
-+#define LASI_710_SVERSION 0x00082
-+
-+#define LASI700_ID_TABLE {			\
-+	.hw_type	= HPHW_FIO,		\
-+	.sversion	= LASI_700_SVERSION,	\
-+	.hversion	= HVERSION_ANY_ID,	\
-+	.hversion_rev	= HVERSION_REV_ANY_ID,	\
-+}
-+
-+#define LASI710_ID_TABLE {			\
-+	.hw_type	= HPHW_FIO,		\
-+	.sversion	= LASI_710_SVERSION,	\
-+	.hversion	= HVERSION_ANY_ID,	\
-+	.hversion_rev	= HVERSION_REV_ANY_ID,	\
-+}
-+
-+#define LASI700_CLOCK	25
-+#define LASI710_CLOCK	40
-+#define LASI_SCSI_CORE_OFFSET 0x100
-+
- static struct parisc_device_id lasi700_ids[] = {
- 	LASI700_ID_TABLE,
- 	LASI710_ID_TABLE,
-diff -urpNX dontdiff linus-2.6/drivers/scsi/lasi700.h parisc-2.6/drivers/scsi/lasi700.h
---- linus-2.6/drivers/scsi/lasi700.h	2004-12-26 14:03:10.000000000 -0700
-+++ parisc-2.6/drivers/scsi/lasi700.h	1969-12-31 17:00:00.000000000 -0700
-@@ -1,49 +0,0 @@
--/* -*- mode: c; c-basic-offset: 8 -*- */
--
--/* PARISC LASI driver for the 53c700 chip
-- *
-- * Copyright (C) 2001 by James.Bottomley@HansenPartnership.com
--**-----------------------------------------------------------------------------
--**  
--**  This program is free software; you can redistribute it and/or modify
--**  it under the terms of the GNU General Public License as published by
--**  the Free Software Foundation; either version 2 of the License, or
--**  (at your option) any later version.
--**
--**  This program is distributed in the hope that it will be useful,
--**  but WITHOUT ANY WARRANTY; without even the implied warranty of
--**  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
--**  GNU General Public License for more details.
--**
--**  You should have received a copy of the GNU General Public License
--**  along with this program; if not, write to the Free Software
--**  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
--**
--**-----------------------------------------------------------------------------
-- */
--
--#ifndef _LASI700_H
--#define _LASI700_H
--
--#define LASI_710_SVERSION	0x082
--#define LASI_700_SVERSION	0x071
--
--#define LASI700_ID_TABLE {			\
--	.hw_type	= HPHW_FIO,		\
--	.sversion	= LASI_700_SVERSION,	\
--	.hversion	= HVERSION_ANY_ID,	\
--	.hversion_rev	= HVERSION_REV_ANY_ID,	\
--}
--
--#define LASI710_ID_TABLE {			\
--	.hw_type	= HPHW_FIO,		\
--	.sversion	= LASI_710_SVERSION,	\
--	.hversion	= HVERSION_ANY_ID,	\
--	.hversion_rev	= HVERSION_REV_ANY_ID,	\
--}
--
--#define LASI700_CLOCK	25
--#define LASI710_CLOCK	40
--#define LASI_SCSI_CORE_OFFSET 0x100
--
--#endif
+ 	__raw_writel(gsc_irq.txn_addr | gsc_irq.txn_data, dev->hpa + IO_MODULE_EIM);
+ 
+@@ -130,16 +130,16 @@ zalon_probe(struct parisc_device *dev)
+ 	device.dev		= &dev->dev;
+ 	device.slot.base	= (u_long)io_port;
+ 	device.slot.base_c	= (u_long)io_port;
+-	device.slot.irq		= irq;
++	device.slot.irq		= dev->irq;
+ 	device.differential	= 2;
+ 
+ 	host = ncr_attach(&zalon7xx_template, unit, &device);
+ 	if (!host)
+ 		goto fail;
+ 
+-	if (request_irq(irq, ncr53c8xx_intr, SA_SHIRQ, dev->dev.bus_id, host)) {
++	if (request_irq(dev->irq, ncr53c8xx_intr, SA_SHIRQ, "zalon", host)) {
+ 		printk(KERN_ERR "%s: irq problem with %d, detaching\n ",
+-			dev->dev.bus_id, irq);
++			dev->dev.bus_id, dev->irq);
+ 		goto fail;
+ 	}
+ 
+@@ -155,7 +155,7 @@ zalon_probe(struct parisc_device *dev)
+ 	return 0;
+ 
+  fail_free_irq:
+-	free_irq(irq, host);
++	free_irq(dev->irq, host);
+  fail:
+ 	ncr53c8xx_release(host);
+ 	return error;
+@@ -171,18 +171,16 @@ MODULE_DEVICE_TABLE(parisc, zalon_tbl);
+ static int __exit zalon_remove(struct parisc_device *dev)
+ {
+ 	struct Scsi_Host *host = dev_get_drvdata(&dev->dev);
+-	int irq = host->irq;
+ 
+ 	scsi_remove_host(host);
+ 	ncr53c8xx_release(host);
+-	free_irq(irq, host);
++	free_irq(dev->irq, host);
+ 
+ 	return 0;
+ }
+-	
+ 
+ static struct parisc_driver zalon_driver = {
+-	.name =		"GSC SCSI (Zalon)",
++	.name =		"zalon",
+ 	.id_table =	zalon_tbl,
+ 	.probe =	zalon_probe,
+ 	.remove =	__devexit_p(zalon_remove),
+@@ -201,6 +199,7 @@ static int __init zalon7xx_init(void)
+ static void __exit zalon7xx_exit(void)
+ {
+ 	unregister_parisc_driver(&zalon_driver);
++	ncr53c8xx_exit();
+ }
+ 
+ module_init(zalon7xx_init);
 
 -- 
 "Next the statesmen will invent cheap lies, putting the blame upon 
