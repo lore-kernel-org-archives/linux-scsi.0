@@ -1,29 +1,30 @@
 From: "J.E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
-Subject: [PATCH] MCA sysfs part III - moving dma_mask
-Date: Thu, 21 Nov 2002 14:35:11 -0600
+Subject: [PATCH] MCA sysfs part IV - implementation in the SCSI NCR_D700 driver
+Date: Thu, 21 Nov 2002 14:58:12 -0600
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <200211212035.gALKZB405335@localhost.localdomain>
+Message-ID: <200211212058.gALKwCi05471@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: multipart/mixed ;
-	boundary="==_Exmh_-11858096660"
+	boundary="==_Exmh_-11824017980"
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Received: (from root@localhost)
-	by pogo.mtv1.steeleye.com (8.9.3/8.9.3) id MAA27613
-	for <linux-scsi@vger.kernel.org>; Thu, 21 Nov 2002 12:35:26 -0800
+	by pogo.mtv1.steeleye.com (8.9.3/8.9.3) id MAA31181
+	for <linux-scsi@vger.kernel.org>; Thu, 21 Nov 2002 12:58:20 -0800
 List-Id: linux-scsi@vger.kernel.org
 To: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
-Cc: James.Bottomley@HansenPartnership.com, Project MCA Team <mcalinux@acc.umu.se>, David Weinehall <tao@acc.umu.se>
+Cc: Project MCA Team <mcalinux@acc.umu.se>, David Weinehall <tao@acc.umu.se>
 
 This is a multipart MIME message.
 
---==_Exmh_-11858096660
+--==_Exmh_-11824017980
 Content-Type: text/plain; charset=us-ascii
 
-This is really a repriese of the the dma_mask move patch posted a while ago, 
-tidied up with everyones's feedback.  The patch also removes the struct 
-pci_dev in the Scsi_Host.
+Well, this was what the previous patches were all aiming for:  a SCSI 
+implementation which gives me a D700 driver that's correctly plumbed into 
+sysfs and which can also DMA happily to/from all 4Gb on an x86.
 
-The second patch below it adds using the dma_mask to drivers/mca
+I'll look at converting other devices over (probably the smc-mca, since that's 
+my current ethernet card).
 
 All of the patches are also available in the bitkeeper tree at:
 
@@ -32,203 +33,356 @@ http://linux-voyager.bkbits.net/mca-sysfs-2.5
 James
 
 
---==_Exmh_-11858096660
-Content-Type: text/plain ; name="dma_mask.diff"; charset=us-ascii
-Content-Description: dma_mask.diff
-Content-Disposition: attachment; filename="dma_mask.diff"
+--==_Exmh_-11824017980
+Content-Type: text/plain ; name="mca-sysfs-d700.diff"; charset=us-ascii
+Content-Description: mca-sysfs-d700.diff
+Content-Disposition: attachment; filename="mca-sysfs-d700.diff"
 
 # This is a BitKeeper generated patch for the following project:
 # Project Name: Linux kernel tree
 # This patch format is intended for GNU patch command version 2.5 or higher.
 # This patch includes the following deltas:
-#	           ChangeSet	1.844   -> 1.845  
-#	drivers/scsi/hosts.h	1.38    -> 1.39   
-#	   drivers/scsi/st.c	1.44    -> 1.45   
-#	 drivers/pci/probe.c	1.18    -> 1.19   
-#	drivers/scsi/scsi_scan.c	1.37    -> 1.38   
-#	include/linux/device.h	1.60    -> 1.61   
-#	drivers/scsi/scsi_ioctl.c	1.12    -> 1.13   
+#	           ChangeSet	1.846   -> 1.847  
+#	drivers/scsi/NCR_D700.c	1.3     -> 1.4    
+#	 include/linux/mca.h	1.3     -> 1.4    
 #
 # The following is the BitKeeper ChangeSet Log
 # --------------------------------------------
-# 02/11/21	jejb@mulgrave.(none)	1.845
-# move dma_mask into struct device
+# 02/11/21	jejb@mulgrave.(none)	1.847
+# Move NCR_D700 to MCA sysfs
 # 
-# Attached is a patch which moves dma_mask into struct device and cleans up the 
-# scsi mid-layer to use it (instead of using struct pci_dev).  The advantage to 
-# doing this is probably most apparent on non-pci bus architectures where 
-# currently you have to construct a fake pci_dev just so you can get the bounce 
-# buffers to work correctly.
-# 
-# The patch tries to perturb the minimum amount of code, so dma_mask in struct 
-# device is simply a pointer to the one in pci_dev.  However, it will make it 
-# easy for me now to add generic device to MCA without having to go the fake pci 
-# route.
-# 
-# This patch completely removes knowledge of pci devices from the SCSI mid-layer.
-# 
-# I have compiled and tested this, but obviously, since I have an MCA machine, 
-# it's not of much value to the pci code changes, so if someone with a PCI 
-# machine could check those out, I'd be grateful.
-# 
-# The main problem SCSI has with this is the scsi_ioctl_get_pci which is used to 
-# get the pci slot name.  Although, this can be fixed up afterwards with Matthew 
-# Wilcox's name change patch.
-# 
-# I'd like to see this as the beginning of a move away from bus specific code to 
-# using generic device code (where possible).  Comments and feedback welcome.
+# Make D700 use the sysfs based device probing code and the new
+# MCA API entirely.
 # --------------------------------------------
 #
-diff -Nru a/drivers/pci/probe.c b/drivers/pci/probe.c
---- a/drivers/pci/probe.c	Thu Nov 21 14:33:31 2002
-+++ b/drivers/pci/probe.c	Thu Nov 21 14:33:31 2002
-@@ -448,6 +448,7 @@
+diff -Nru a/drivers/scsi/NCR_D700.c b/drivers/scsi/NCR_D700.c
+--- a/drivers/scsi/NCR_D700.c	Thu Nov 21 14:44:50 2002
++++ b/drivers/scsi/NCR_D700.c	Thu Nov 21 14:44:50 2002
+@@ -103,6 +103,7 @@
+ #include <linux/sched.h>
+ #include <linux/proc_fs.h>
+ #include <linux/init.h>
++#include <linux/device.h>
+ #include <linux/mca.h>
+ #include <asm/dma.h>
+ #include <asm/system.h>
+@@ -182,131 +183,140 @@
+ __setup("NCR_D700=", param_setup);
+ #endif
  
- 	/* now put in global tree */
- 	strcpy(dev->dev.bus_id,dev->slot_name);
-+	dev->dev.dma_mask = &dev->dma_mask;
- 
- 	device_register(&dev->dev);
- 	return dev;
-diff -Nru a/drivers/scsi/hosts.h b/drivers/scsi/hosts.h
---- a/drivers/scsi/hosts.h	Thu Nov 21 14:33:31 2002
-+++ b/drivers/scsi/hosts.h	Thu Nov 21 14:33:31 2002
-@@ -467,12 +467,6 @@
-      */
-     unsigned int max_host_blocked;
- 
--    /*
--     * For SCSI hosts which are PCI devices, set pci_dev so that
--     * we can do BIOS EDD 3.0 mappings
--     */
--    struct pci_dev *pci_dev;
--
-     /* 
-      * Support for driverfs filesystem
-      */
-@@ -517,11 +511,16 @@
- 	shost->host_lock = lock;
- }
- 
-+static inline void scsi_set_device(struct Scsi_Host *shost,
-+                                   struct device *dev)
-+{
-+        shost->host_driverfs_dev.parent = dev;
-+}
++/* private stack allocated structure for passing device information from
++ * detect to probe */
++struct NCR_700_info {
++	Scsi_Host_Template *tpnt;
++	int found;
++};
 +
- static inline void scsi_set_pci_device(struct Scsi_Host *shost,
-                                        struct pci_dev *pdev)
+ /* Detect a D700 card.  Note, because of the set up---the chips are
+  * essentially connectecd to the MCA bus independently, it is easier
+  * to set them up as two separate host adapters, rather than one
+  * adapter with two channels */
+-STATIC int __init
+-D700_detect(Scsi_Host_Template *tpnt)
++static int
++NCR_D700_probe(struct device *dev)
  {
--	shost->pci_dev = pdev;
--	shost->host_driverfs_dev.parent=&pdev->dev;
-+        scsi_set_device(shost, &pdev->dev);
+-	int slot = 0;
+-	int found = 0;
+ 	int differential;
+-	int banner = 1;
+-
+-	if(!MCA_bus)
+-		return 0;
+-
+-#ifdef MODULE
+-	if(NCR_D700)
+-		param_setup(NCR_D700);
+-#endif
++	static int banner = 1;
++	struct mca_device *mca_dev = to_mca_device(dev);
++	int slot = mca_dev->slot;
++	struct NCR_700_info *info = to_mca_driver(dev->driver)->driver_data;
++	int found = 0;
++	int irq, i;
++	int pos3j, pos3k, pos3a, pos3b, pos4;
++	__u32 base_addr, offset_addr;
++	struct Scsi_Host *host = NULL;
++
++	/* enable board interrupt */
++	pos4 = mca_device_read_pos(mca_dev, 4);
++	pos4 |= 0x4;
++	mca_device_write_pos(mca_dev, 4, pos4);
++
++	mca_device_write_pos(mca_dev, 6, 9);
++	pos3j = mca_device_read_pos(mca_dev, 3);
++	mca_device_write_pos(mca_dev, 6, 10);
++	pos3k = mca_device_read_pos(mca_dev, 3);
++	mca_device_write_pos(mca_dev, 6, 0);
++	pos3a = mca_device_read_pos(mca_dev, 3);
++	mca_device_write_pos(mca_dev, 6, 1);
++	pos3b = mca_device_read_pos(mca_dev, 3);
++
++	base_addr = ((pos3j << 8) | pos3k) & 0xfffffff0;
++	offset_addr = ((pos3a << 8) | pos3b) & 0xffffff70;
++
++	irq = (pos4 & 0x3) + 11;
++	if(irq >= 13)
++		irq++;
++	if(banner) {
++		printk(KERN_NOTICE "NCR D700: Driver Version " NCR_D700_VERSION "\n"
++		       "NCR D700:  Copyright (c) 2001 by James.Bottomley@HansenPartnership.com\n"
++		       "NCR D700:\n");
++		banner = 0;
++	}
++	/* now do the bus related transforms */
++	irq = mca_device_transform_irq(mca_dev, irq);
++	base_addr = mca_device_transform_ioport(mca_dev, base_addr);
++	offset_addr = mca_device_transform_ioport(mca_dev, offset_addr);
++
++	printk(KERN_NOTICE "NCR D700: found in slot %d  irq = %d  I/O base = 0x%x\n", slot, irq, offset_addr);
++
++	info->tpnt->proc_name = "NCR_D700";
++
++	/*outb(BOARD_RESET, base_addr);*/
++
++	/* clear any pending interrupts */
++	(void)inb(base_addr + 0x08);
++	/* get modctl, used later for setting diff bits */
++	switch(differential = (inb(base_addr + 0x08) >> 6)) {
++	case 0x00:
++		/* only SIOP1 differential */
++		differential = 0x02;
++		break;
++	case 0x01:
++		/* Both SIOPs differential */
++		differential = 0x03;
++		break;
++	case 0x03:
++		/* No SIOPs differential */
++		differential = 0x00;
++		break;
++	default:
++		printk(KERN_ERR "D700: UNEXPECTED DIFFERENTIAL RESULT 0x%02x\n",
++		       differential);
++		differential = 0x00;
++		break;
++	}
+ 
+-	for(slot = 0; (slot = mca_find_adapter(NCR_D700_MCA_ID, slot)) != MCA_NOTFOUND; slot++) {
+-		int irq, i;
+-		int pos3j, pos3k, pos3a, pos3b, pos4;
+-		__u32 base_addr, offset_addr;
+-		struct Scsi_Host *host = NULL;
+-
+-		/* enable board interrupt */
+-		pos4 = mca_read_pos(slot, 4);
+-		pos4 |= 0x4;
+-		mca_write_pos(slot, 4, pos4);
+-
+-		mca_write_pos(slot, 6, 9);
+-		pos3j = mca_read_pos(slot, 3);
+-		mca_write_pos(slot, 6, 10);
+-		pos3k = mca_read_pos(slot, 3);
+-		mca_write_pos(slot, 6, 0);
+-		pos3a = mca_read_pos(slot, 3);
+-		mca_write_pos(slot, 6, 1);
+-		pos3b = mca_read_pos(slot, 3);
+-
+-		base_addr = ((pos3j << 8) | pos3k) & 0xfffffff0;
+-		offset_addr = ((pos3a << 8) | pos3b) & 0xffffff70;
+-
+-		irq = (pos4 & 0x3) + 11;
+-		if(irq >= 13)
+-			irq++;
+-		if(banner) {
+-			printk(KERN_NOTICE "NCR D700: Driver Version " NCR_D700_VERSION "\n"
+-			       "NCR D700:  Copyright (c) 2001 by James.Bottomley@HansenPartnership.com\n"
+-			       "NCR D700:\n");
+-			banner = 0;
++	/* plumb in both 700 chips */
++	for(i=0; i<2; i++) {
++		__u32 region = offset_addr | (0x80 * i);
++		struct NCR_700_Host_Parameters *hostdata =
++			kmalloc(sizeof(struct NCR_700_Host_Parameters),
++				GFP_KERNEL);
++		if(hostdata == NULL) {
++			printk(KERN_ERR "NCR D700: Failed to allocate host data for channel %d, detatching\n", i);
++			continue;
+ 		}
+-		printk(KERN_NOTICE "NCR D700: found in slot %d  irq = %d  I/O base = 0x%x\n", slot, irq, offset_addr);
+-
+-		tpnt->proc_name = "NCR_D700";
+-
+-		/*outb(BOARD_RESET, base_addr);*/
+-
+-		/* clear any pending interrupts */
+-		(void)inb(base_addr + 0x08);
+-		/* get modctl, used later for setting diff bits */
+-		switch(differential = (inb(base_addr + 0x08) >> 6)) {
+-		case 0x00:
+-			/* only SIOP1 differential */
+-			differential = 0x02;
+-			break;
+-		case 0x01:
+-			/* Both SIOPs differential */
+-			differential = 0x03;
+-			break;
+-		case 0x03:
+-			/* No SIOPs differential */
+-			differential = 0x00;
+-			break;
+-		default:
+-			printk(KERN_ERR "D700: UNEXPECTED DIFFERENTIAL RESULT 0x%02x\n",
+-			       differential);
+-			differential = 0x00;
+-			break;
++		memset(hostdata, 0, sizeof(struct NCR_700_Host_Parameters));
++		if(request_region(region, 64, "NCR_D700") == NULL) {
++			printk(KERN_ERR "NCR D700: Failed to reserve IO region 0x%x\n", region);
++			kfree(hostdata);
++			continue;
+ 		}
+-
+-		/* plumb in both 700 chips */
+-		for(i=0; i<2; i++) {
+-			__u32 region = offset_addr | (0x80 * i);
+-			struct NCR_700_Host_Parameters *hostdata =
+-				kmalloc(sizeof(struct NCR_700_Host_Parameters),
+-					GFP_KERNEL);
+-			if(hostdata == NULL) {
+-				printk(KERN_ERR "NCR D700: Failed to allocate host data for channel %d, detatching\n", i);
+-				continue;
+-			}
+-			memset(hostdata, 0, sizeof(struct NCR_700_Host_Parameters));
+-			if(request_region(region, 64, "NCR_D700") == NULL) {
+-				printk(KERN_ERR "NCR D700: Failed to reserve IO region 0x%x\n", region);
+-				kfree(hostdata);
+-				continue;
+-			}
+-
+-			/* Fill in the three required pieces of hostdata */
+-			hostdata->base = region;
+-			hostdata->differential = (((1<<i) & differential) != 0);
+-			hostdata->clock = NCR_D700_CLOCK_MHZ;
+-			/* and register the chip */
+-			if((host = NCR_700_detect(tpnt, hostdata)) == NULL) {
+-				kfree(hostdata);
+-				release_region(host->base, 64);
+-				continue;
+-			}
+-			host->irq = irq;
+-			/* FIXME: Read this from SUS */
+-			host->this_id = id_array[slot * 2 + i];
+-			printk(KERN_NOTICE "NCR D700: SIOP%d, SCSI id is %d\n",
+-			       i, host->this_id);
+-			if(request_irq(irq, NCR_700_intr, SA_SHIRQ, "NCR_D700", host)) {
+-				printk(KERN_ERR "NCR D700, channel %d: irq problem, detatching\n", i);
+-				scsi_unregister(host);
+-				NCR_700_release(host);
+-				continue;
+-			}
+-			found++;
+-			mca_set_adapter_name(slot, "NCR D700 SCSI Adapter (version " NCR_D700_VERSION ")");
++		
++		/* Fill in the three required pieces of hostdata */
++		hostdata->base = region;
++		hostdata->differential = (((1<<i) & differential) != 0);
++		hostdata->clock = NCR_D700_CLOCK_MHZ;
++		/* and register the chip */
++		if((host = NCR_700_detect(info->tpnt, hostdata)) == NULL) {
++			kfree(hostdata);
++			release_region(host->base, 64);
++			continue;
+ 		}
++		host->irq = irq;
++		/* FIXME: Read this from SUS */
++		host->this_id = id_array[slot * 2 + i];
++		printk(KERN_NOTICE "NCR D700: SIOP%d, SCSI id is %d\n",
++		       i, host->this_id);
++		if(request_irq(irq, NCR_700_intr, SA_SHIRQ, "NCR_D700", host)) {
++			printk(KERN_ERR "NCR D700, channel %d: irq problem, detatching\n", i);
++			scsi_unregister(host);
++			NCR_700_release(host);
++			continue;
++		}
++		scsi_set_device(host, dev);
++		found++;
++	}
++	info->found += found;
++
++	if(found) {
++		mca_device_set_claim(mca_dev, 1);
++		strncpy(dev->name, "NCR_D700", sizeof(dev->name));
+ 	}
+ 
+-	return found;
++	return found? 0 : -ENODEV;
  }
  
  
-diff -Nru a/drivers/scsi/scsi_ioctl.c b/drivers/scsi/scsi_ioctl.c
---- a/drivers/scsi/scsi_ioctl.c	Thu Nov 21 14:33:31 2002
-+++ b/drivers/scsi/scsi_ioctl.c	Thu Nov 21 14:33:31 2002
-@@ -393,12 +393,13 @@
-  *          any copy_to_user() error on failure there
-  */
- static int
--scsi_ioctl_get_pci(Scsi_Device * dev, void *arg)
-+scsi_ioctl_get_pci(Scsi_Device * sdev, void *arg)
- {
-+	struct device *dev = sdev->host->host_driverfs_dev.parent;
- 
--        if (!dev->host->pci_dev) return -ENXIO;
--        return copy_to_user(arg, dev->host->pci_dev->slot_name,
--                            sizeof(dev->host->pci_dev->slot_name));
-+        if (!dev) return -ENXIO;
-+        return copy_to_user(arg, dev->bus_id,
-+                            sizeof(dev->bus_id));
+@@ -323,7 +333,38 @@
+ 	return 1;
  }
  
++static short NCR_D700_id_table[] = { NCR_D700_MCA_ID, 0 };
++
++struct mca_driver NCR_D700_driver = {
++	.id_table = NCR_D700_id_table,
++	.driver = {
++		.name = "NCR_D700",
++		.bus = &mca_bus_type,
++		.probe = NCR_D700_probe,
++	},
++};
++		
++
++STATIC int __init
++D700_detect(Scsi_Host_Template *tpnt)
++{
++	struct NCR_700_info info;
++
++	if(!MCA_bus)
++		return 0;
++
++#ifdef MODULE
++	if(NCR_D700)
++		param_setup(NCR_D700);
++#endif
++	info.tpnt = tpnt;
++	info.found = 0;
++	NCR_D700_driver.driver_data = &info;
++	mca_register_driver(&NCR_D700_driver);
  
-diff -Nru a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
---- a/drivers/scsi/scsi_scan.c	Thu Nov 21 14:33:31 2002
-+++ b/drivers/scsi/scsi_scan.c	Thu Nov 21 14:33:31 2002
-@@ -433,11 +433,12 @@
- {
- 	request_queue_t *q = &sd->request_queue;
- 	struct Scsi_Host *sh = sd->host;
-+	struct device *dev = sh->host_driverfs_dev.parent;
- 	u64 bounce_limit;
++	return info.found;
++}
++	
+ static Scsi_Host_Template driver_template = NCR_D700_SCSI;
  
- 	if (sh->highmem_io) {
--		if (sh->pci_dev && PCI_DMA_BUS_IS_PHYS) {
--			bounce_limit = sh->pci_dev->dma_mask;
-+		if (dev && dev->dma_mask && PCI_DMA_BUS_IS_PHYS) {
-+			bounce_limit = *dev->dma_mask;
- 		} else {
- 			/*
- 			 * Platforms with virtual-DMA translation
-diff -Nru a/drivers/scsi/st.c b/drivers/scsi/st.c
---- a/drivers/scsi/st.c	Thu Nov 21 14:33:31 2002
-+++ b/drivers/scsi/st.c	Thu Nov 21 14:33:31 2002
-@@ -3780,13 +3780,14 @@
- 	tpnt->try_dio = try_direct_io && !SDp->host->unchecked_isa_dma;
- 	bounce_limit = BLK_BOUNCE_HIGH; /* Borrowed from scsi_merge.c */
- 	if (SDp->host->highmem_io) {
-+		struct device *dev = SDp->host->host_driverfs_dev.parent;
- 		if (!PCI_DMA_BUS_IS_PHYS)
- 			/* Platforms with virtual-DMA translation
- 			 * hardware have no practical limit.
- 			 */
- 			bounce_limit = BLK_BOUNCE_ANY;
--		else if (SDp->host->pci_dev)
--			bounce_limit = SDp->host->pci_dev->dma_mask;
-+		else if (dev && dev->dma_mask)
-+			bounce_limit = *dev->dma_mask;
- 	} else if (SDp->host->unchecked_isa_dma)
- 		bounce_limit = BLK_BOUNCE_ISA;
- 	bounce_limit >>= PAGE_SHIFT;
-diff -Nru a/include/linux/device.h b/include/linux/device.h
---- a/include/linux/device.h	Thu Nov 21 14:33:31 2002
-+++ b/include/linux/device.h	Thu Nov 21 14:33:31 2002
-@@ -303,6 +303,7 @@
- 					   being off. */
+ #include "scsi_module.c"
+diff -Nru a/include/linux/mca.h b/include/linux/mca.h
+--- a/include/linux/mca.h	Thu Nov 21 14:44:50 2002
++++ b/include/linux/mca.h	Thu Nov 21 14:44:50 2002
+@@ -94,6 +94,7 @@
  
- 	unsigned char *saved_state;	/* saved device state */
-+	u64		*dma_mask;	/* dma mask (if dma'able device) */
- 
- 	void	(*release)(struct device * dev);
+ struct mca_driver {
+ 	const short		*id_table;
++	void			*driver_data;
+ 	struct device_driver	driver;
  };
-
---==_Exmh_-11858096660
-Content-Type: text/plain ; name="mca-sysfs-III.diff"; charset=us-ascii
-Content-Description: mca-sysfs-III.diff
-Content-Disposition: attachment; filename="mca-sysfs-III.diff"
-
-# This is a BitKeeper generated patch for the following project:
-# Project Name: Linux kernel tree
-# This patch format is intended for GNU patch command version 2.5 or higher.
-# This patch includes the following deltas:
-#	           ChangeSet	1.845   -> 1.846  
-#	drivers/mca/mca-bus.c	1.1     -> 1.2    
-#
-# The following is the BitKeeper ChangeSet Log
-# --------------------------------------------
-# 02/11/21	jejb@mulgrave.(none)	1.846
-# make mca-bus.c use generic device dma_mask
-# --------------------------------------------
-#
-diff -Nru a/drivers/mca/mca-bus.c b/drivers/mca/mca-bus.c
---- a/drivers/mca/mca-bus.c	Thu Nov 21 14:33:46 2002
-+++ b/drivers/mca/mca-bus.c	Thu Nov 21 14:33:46 2002
-@@ -143,9 +143,7 @@
- 	mca_dev->dev.bus = &mca_bus_type;
- 	sprintf (mca_dev->dev.bus_id, "%02d:%02X", bus, mca_dev->slot);
- 	mca_dev->dma_mask = mca_bus->default_dma_mask;
--	/* FIXME: uncomment this when we get a global idea of where
--	 * dma_mask goes */
--	//mca_dev->dev.dma_mask = &mca_dev->dma_mask;
-+	mca_dev->dev.dma_mask = &mca_dev->dma_mask;
+ #define to_mca_driver(mdriver) container_of(mdriver, struct mca_driver, driver)
+@@ -119,6 +120,11 @@
+ extern enum MCA_AdapterStatus mca_device_status(struct mca_device *mca_dev);
  
- 	if (device_register(&mca_dev->dev))
- 		return 0;
+ extern struct bus_type mca_bus_type;
++
++static inline void mca_register_driver(struct mca_driver *drv)
++{
++	driver_register(&drv->driver);
++}
+ 
+ /* for now, include the legacy API */
+ #include <linux/mca-legacy.h>
 
---==_Exmh_-11858096660--
+--==_Exmh_-11824017980--
 
 
