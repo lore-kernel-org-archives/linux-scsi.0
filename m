@@ -1,37 +1,77 @@
-From: Patrick Mansfield <patmans@us.ibm.com>
-Subject: Re: Why REPORT LUN only for SCSI-2?
-Date: Thu, 17 Jul 2003 16:46:42 -0700
+From: Daniel McNeil <daniel@osdl.org>
+Subject: Re: [PATCH] as i/o hang with aacraid driver 2.6.0-test1
+Date: 17 Jul 2003 16:47:01 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030717164642.A9253@beaverton.ibm.com>
-References: <3F140D30.D2B5C4D8@fujitsu-siemens.com> <20030715073927.A8218@beaverton.ibm.com> <3F14F7FA.BA551505@fujitsu-siemens.com> <20030716123519.A19244@beaverton.ibm.com> <3F16649C.239EC87B@fujitsu-siemens.com> <20030717184909.GD2520@nbkurt.garloff.de>
+Message-ID: <1058485621.7424.30.camel@dell_ss5.pdx.osdl.net>
+References: <20030716132036.GB833@suse.de>
+	<1058364455.1856.28.camel@mulgrave> <20030716170456.GK833@suse.de>
+	<20030717015756.135a3f5a.akpm@osdl.org> <20030717085952.GX833@suse.de>
+	<3F1672D9.7070309@cyberone.com.au> <20030717102926.GE833@suse.de>
+	<3F167F98.60006@cyberone.com.au> <20030717105641.GF833@suse.de>
+	<3F1683F5.4030107@cyberone.com.au> <20030717111059.GI833@suse.de>
+	<3F168846.90902@cyberone.com.au>
+	<1058474814.4638.11.camel@markh1.pdx.osdl.net>
+	<1058481553.19508.5.camel@markh1.pdx.osdl.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e5.ny.us.ibm.com ([32.97.182.105]:17892 "EHLO e5.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S271635AbTGQXbr (ORCPT
+Received: from fw.osdl.org ([65.172.181.6]:48047 "EHLO mail.osdl.org")
+	by vger.kernel.org with ESMTP id S271634AbTGQXb3 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 17 Jul 2003 19:31:47 -0400
-Content-Disposition: inline
-In-Reply-To: <20030717184909.GD2520@nbkurt.garloff.de>; from garloff@suse.de on Thu, Jul 17, 2003 at 08:49:09PM +0200
+	Thu, 17 Jul 2003 19:31:29 -0400
+In-Reply-To: <1058481553.19508.5.camel@markh1.pdx.osdl.net>
 List-Id: linux-scsi@vger.kernel.org
-To: Kurt Garloff <garloff@suse.de>, =?iso-8859-1?Q?Josef_M=F6llers?= <josef.moellers@fujitsu-siemens.com>, linux-scsi@vger.kernel.org, "Wichert, Gerhard" <Gerhard.Wichert@fujitsu-siemens.com>
+To: Mark Haverkamp <markh@osdl.org>
+Cc: Nick Piggin <piggin@cyberone.com.au>, Jens Axboe <axboe@suse.de>, Andrew Morton <akpm@osdl.org>, James Bottomley <James.Bottomley@steeleye.com>, Cliff White <cliffw@osdl.org>, linux-scsi <linux-scsi@vger.kernel.org>
 
-On Thu, Jul 17, 2003 at 08:49:09PM +0200, Kurt Garloff wrote:
-
-> > As a side note (probably starting a new thread) why does BLIST_LARGELUN
-> > override max_scsi_luns? 
+On Thu, 2003-07-17 at 15:39, Mark Haverkamp wrote:
 > 
-> It shouldn't. Did I really do this? (... checking 2.4 code ...)
-> No, I plead innocent.
-> 
-> > If I specify on the command line that I want
-> > only 8 LUNs, I want only 8 LUNs and BLIST_LARGELUN overrides this with
-> > the HA's max_lun.
-> 
-> Sure. If I don't misparse the code, this should work in 2.4.
+> ===== drivers/block/as-iosched.c 1.5 vs edited =====
+> --- 1.5/drivers/block/as-iosched.c	Sat Jul 12 04:28:01 2003
+> +++ edited/drivers/block/as-iosched.c	Thu Jul 17 15:31:27 2003
+> @@ -1306,6 +1306,29 @@
+>  	as_update_arq(ad, arq); /* keep state machine up to date */
+>  }
+>  
+> +/*
+> + * requeue the request. The request has not been completed, nor is it a
+> + * new request, so don't touch accounting.
+> + */
+> +static void as_requeue_request(request_queue_t *q, struct request *rq)
+> +{
+> +	struct as_data *ad = q->elevator.elevator_data;
+> +	struct as_rq *arq = RQ_DATA(rq);
+> +
+> +	if (arq && arq->io_context && arq->io_context->aic)
+> +		atomic_inc(&arq->io_context->aic->nr_dispatched);
+> +
+> +	list_add(&rq->queuelist, ad->dispatch->prev);
+> +
+> +	/* Stop anticipating - let this request get through */
+> +	if (!list_empty(ad->dispatch)
+> +		&& (ad->antic_status == ANTIC_WAIT_REQ
+> +			|| ad->antic_status == ANTIC_WAIT_NEXT))
+> +		as_antic_stop(ad);
+> +
+> +	return;
+> +}
+> +
 
-The code looks right in 2.6 also - if SCSI-3 or BLIST_LARGELUN, we use the
-min of max_lun and max_scsi_luns; else (SCSI-2 and not large lun) the min
-of 8, max_lun, and max_scsi_luns.
+2 questions:
 
--- Patrick Mansfield
+Should	
+	list_add(&rq->queuelist, ad->dispatch->prev);
+be
+	list_add_tail(&rq->queuelist, ad->dispatch);
+
+It is equivalent, but makes the code clearer that we're adding to the
+end.
+
+Also, isn't the: !list_empty(ad->dispatch) unnecessary since a
+list_add was just done, so the list cannot be empty?
+
+Daniel <daniel@osdl.org>
+
+
+
