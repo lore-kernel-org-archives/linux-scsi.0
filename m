@@ -1,48 +1,46 @@
-From: Adrian Bunk <bunk@fs.tum.de>
-Subject: [2.6 patch] SCSI nsp32.c: missing parts of inline removal patch
-Date: Tue, 3 Aug 2004 14:21:20 +0200
+From: Luben Tuikov <luben_tuikov@adaptec.com>
+Subject: Re: [2.6 patch] let AIC7{9,X}XX_BUILD_FIRMWARE depend on !PREVENT_FIRMWARE_BUILD
+Date: Tue, 03 Aug 2004 10:47:19 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040803122120.GZ2746@fs.tum.de>
+Message-ID: <410FA577.4040602@adaptec.com>
+References: <20040801185543.GB2746@fs.tum.de> <20040801191118.GA7402@mars.ravnborg.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hermes.fachschaften.tu-muenchen.de ([129.187.202.12]:47572 "HELO
-	hermes.fachschaften.tu-muenchen.de") by vger.kernel.org with SMTP
-	id S265900AbUHCMV0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 3 Aug 2004 08:21:26 -0400
-Content-Disposition: inline
+Received: from magic.adaptec.com ([216.52.22.17]:18411 "EHLO magic.adaptec.com")
+	by vger.kernel.org with ESMTP id S266580AbUHCOrl (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Aug 2004 10:47:41 -0400
+In-Reply-To: <20040801191118.GA7402@mars.ravnborg.org>
 List-Id: linux-scsi@vger.kernel.org
-To: yokota@netlab.is.tsukuba.ac.jp, gotom@debian.or.jp
-Cc: James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Sam Ravnborg <sam@ravnborg.org>
+Cc: "Justin T. Gibbs" <gibbs@scsiguy.com>, Adrian Bunk <bunk@fs.tum.de>, James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
+Hi Sam,
 
-The SCSI tree as included in 2.6.8-rc2-mm2 only removes the inline's 
-from the functions prototypes, but the part of my original patch that 
-also removes the inline's from the functions was lost.
+You can forward it to Linus and I'll also integrate it
+to the latest version of the drivers, yet to be integrated
+to the mainline kernel.
 
-Please additionally apply the patch below.
+Thanks!
 
+Sam Ravnborg wrote:
+> On Sun, Aug 01, 2004 at 08:55:44PM +0200, Adrian Bunk wrote:
+>  >
+>  > The patch below lets AIC7{9,X}XX_BUILD_FIRMWARE depend on
+>  > !PREVENT_FIRMWARE_BUILD.
+> 
+> Justin, I agree with this change. Please let me know if I shall forward
+> the patch to Linus, or you will take care.
+> 
+>         Sam
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
 
-Signed-off-by: Adrian Bunk <bunk@fs.tum.de>
+-- 
+Luben
 
---- linux-2.6.8-rc1-mm1-full-3.4/drivers/scsi/nsp32.c.old	2004-07-16 00:34:49.000000000 +0200
-+++ linux-2.6.8-rc1-mm1-full-3.4/drivers/scsi/nsp32.c	2004-07-16 00:37:26.000000000 +0200
-@@ -3387,7 +3387,7 @@
- 	return val;
- }
- 
--static inline void nsp32_prom_set(nsp32_hw_data *data, int bit, int val)
-+static void nsp32_prom_set(nsp32_hw_data *data, int bit, int val)
- {
- 	int base = data->BaseAddress;
- 	int tmp;
-@@ -3405,7 +3405,7 @@
- 	udelay(10);
- }
- 
--static inline int nsp32_prom_get(nsp32_hw_data *data, int bit)
-+static int nsp32_prom_get(nsp32_hw_data *data, int bit)
- {
- 	int base = data->BaseAddress;
- 	int tmp, ret;
 
