@@ -1,25 +1,30 @@
-From: Mukul Kotwani <mkotwani@yahoo.com>
-Subject: Performance
-Date: Fri, 2 Aug 2002 00:50:37 -0700 (PDT)
+From: Fabien Salvi <fabien@cri74.org>
+Subject: Re: Performance
+Date: Fri, 02 Aug 2002 11:16:34 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20020802075037.66373.qmail@web14001.mail.yahoo.com>
-References: <20020802065548.87405.qmail@web14006.mail.yahoo.com>
+Message-ID: <3D4A4DF2.539B1168@cri74.org>
+References: <20020802075037.66373.qmail@web14001.mail.yahoo.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <20020802065548.87405.qmail@web14006.mail.yahoo.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Mukul Kotwani <mkotwani@yahoo.com>
+Cc: linux-scsi@vger.kernel.org
 
-Hello!
-Does anyone have any performace numbers of a Qlogic
-HBA? No of IOps/sec Max MBs /sec?
+Mukul Kotwani wrote:
+> 
+> Hello!
+> Does anyone have any performace numbers of a Qlogic
+> HBA? No of IOps/sec Max MBs /sec?
 
-Thanks!
-M
+I think it depends more on your controllers than on the HBA...
 
+In our tests with a CMD 7240 controller, we have approx. 40 MB/s for
+large file transfers.
+I don't remember IO/s values...
 
-__________________________________________________
-Do You Yahoo!?
-Yahoo! Health - Feel better, live better
-http://health.yahoo.com
+-------------
+Fabien SALVI      Centre de Ressources Informatiques
+                  Archamps, France -- http://www.cri74.org
+                  PingOO GNU/linux distribution : http://www.pingoo.org
