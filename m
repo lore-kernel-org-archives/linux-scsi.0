@@ -1,51 +1,47 @@
-From: Jeff Garzik <jgarzik@pobox.com>
+From: Douglas Gilbert <dougg@torque.net>
 Subject: Re: [PATCH] add extra inquiry byte 56 data to struct scsi_device
-Date: Sat, 21 Aug 2004 00:57:19 -0400
+Date: Sat, 21 Aug 2004 23:03:16 +1000
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040821045719.GA31752@havoc.gtf.org>
-References: <1093053368.3318.569.camel@mulgrave> <4126BFCC.2000702@pobox.com> <20040820213857.4014b981.rddunlap@osdl.org>
+Message-ID: <41274814.4090903@torque.net>
+References: <1093053368.3318.569.camel@mulgrave>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from havoc.gtf.org ([216.162.42.101]:43431 "EHLO havoc.gtf.org")
-	by vger.kernel.org with ESMTP id S268846AbUHUE6O (ORCPT
+Received: from borg.st.net.au ([65.23.158.22]:18093 "EHLO borg.st.net.au")
+	by vger.kernel.org with ESMTP id S264884AbUHUNDy (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 21 Aug 2004 00:58:14 -0400
-Content-Disposition: inline
-In-Reply-To: <20040820213857.4014b981.rddunlap@osdl.org>
+	Sat, 21 Aug 2004 09:03:54 -0400
+In-Reply-To: <1093053368.3318.569.camel@mulgrave>
 List-Id: linux-scsi@vger.kernel.org
-To: "Randy.Dunlap" <rddunlap@osdl.org>
-Cc: James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Fri, Aug 20, 2004 at 09:38:57PM -0700, Randy.Dunlap wrote:
-> On Fri, 20 Aug 2004 23:21:48 -0400 Jeff Garzik wrote:
+James Bottomley wrote:
+> The idea here is to get a full range of device capabilites in the
+> scsi_device structure so there's absolutely no need at all for drivers
+> to snoop the inquiry data.
 > 
-> | James Bottomley wrote:
-> | > +	if (sdev->inquiry_len > 56) {
-> | > +		if (inq_result[56] & 0x04)
-> | > +			sdev->ppr = 1;
-> | > +		if ((inq_result[56] & 0x0c) == 0x04)
-> | > +			sdev->dt_only = 1;
-> | > +		if (inq_result[56] & 0x01)
-> | > +			sdev->ius = 1;
-> | > +		if (inq_result[56] & 0x02)
-> | > +			sdev->qas = 1;
-> | > +	}
-> | 
-> | 
-> | Do you forsee ever adding more feature bits like this?
-> | 
-> | It seems to me that a more maintainable approach is to cache relevant 
-> | INQUIRY data in a buffer, and then create accessor macros for 
-> | programmers' use.
-> | 
-> | That way you don't have to keep adding members (really, mnemonics) to a 
+> The missing parameters were:
 > 
-> Mnemonics would be names, not numbers.
+> dt_only - means the device only supports DT transfers (not ST)
+> ius - means the device supports information unit (IU) transfers
+> qas - means the device supports the Quick Arbitration and Selection
+> protocol
+> 
+> Our rather misnamed ones are:
+> 
+> ppr - means the device does DT (DT negotiation may only be done via PPR)
+> wdtr - means the device does wide
+> sdtr - means the device does sync
 
-Nod.  I was referring to the names being added to the struct.
+James,
+What you are proposing is only relevant for the SPI
+transport. Maybe the accessors should be placed in
+scsi_tranport_spi.c and struct scsi_device get a
+a transport dependent "hang on". Then some of that older
+SPI stuff could get migrated out of struct scsi_device
+so it stops growing.
 
-	Jeff
-
-
-
+Doug Gilbert
