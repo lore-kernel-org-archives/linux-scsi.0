@@ -1,41 +1,28 @@
-From: James Bottomley <James.Bottomley@steeleye.com>
-Subject: Re: [PATCH / RFC] scsi_error handler update. (3/4)
-Date: 11 Feb 2003 16:38:59 -0600
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH / RFC] scsi_error handler update. (1/4)
+Date: Tue, 11 Feb 2003 22:41:19 +0000
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1045003141.4253.22.camel@mulgrave>
-References: <20030211081351.GA1368@beaverton.ibm.com>
-	<20030211081536.GB1368@beaverton.ibm.com>
-	<20030211081744.GC1368@beaverton.ibm.com>
+Message-ID: <20030211224119.A23149@infradead.org>
+References: <20030211081351.GA1368@beaverton.ibm.com> <3E492992.90502@splentec.com> <20030211172256.GC3164@beaverton.ibm.com> <3E494977.1070706@splentec.com> <3E495862.3050709@splentec.com> <20030211212048.GC1114@beaverton.ibm.com> <3E49698D.3030402@splentec.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: (from root@localhost)
-	by pogo.mtv1.steeleye.com (8.9.3/8.9.3) id OAA18405
-	for <linux-scsi@vger.kernel.org>; Tue, 11 Feb 2003 14:39:04 -0800
-In-Reply-To: <20030211081744.GC1368@beaverton.ibm.com>
+Content-Disposition: inline
+In-Reply-To: <3E49698D.3030402@splentec.com>; from luben@splentec.com on Tue, Feb 11, 2003 at 04:22:21PM -0500
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Anderson <andmike@us.ibm.com>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Luben Tuikov <luben@splentec.com>
+Cc: Mike Anderson <andmike@us.ibm.com>, linux-scsi@vger.kernel.org
 
-On Tue, 2003-02-11 at 02:17, Mike Anderson wrote:
-> This patch series is against scsi-misc-2.5.
+On Tue, Feb 11, 2003 at 04:22:21PM -0500, Luben Tuikov wrote:
+> :-)  yes, I know -- I was just saying that I don't like this policy
+> that much.
 > 
-> 02_serror-hndlr-1.diff:
-> 	- Change to using eh_cmd_list.
-> 	- Change scsi_unjam_host to get sense, abort cmds, ready
-> 	  devices, and disposition cmds for retry or finish.
-> 	- Moved retries outside of eh.
-> 
-> -andmike
+> It's an oxymoronic to grab a spin lock and say to someone, ok
+> you can sleep, and then release the spin lock...
 
-I have some qualms about the locking: you protect the eh_cmd_list with
-the host_lock when adding, but not when traversing in the eh_thread.  I
-know this is because the eh_thread has quiesced the host before
-beginning, thus there should theoretically be no returning commmands to
-tamper with the list while the eh_thread is using it.  However, I think
-it might be worthwhile pointing this out in a comment over the
-list_for_each_entry().
+Agreed.  One of the things we really need to do is to change the calling
+conventions of the eh methods to not have the lock held on entry.
 
-James
+I just wonder how we can archive that best without silently breaking
+drivers.
 
