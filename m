@@ -1,75 +1,101 @@
-From: Stefan Bader <Stefan.Bader@de.ibm.com>
-Subject: Re: [Q] 2.4.x: how to handle driver aborts in sd/sr
-Date: Fri, 10 May 2002 17:28:32 +0200
+From: Patrick Mansfield <patmans@us.ibm.com>
+Subject: [RFC][PATCH] scsi mid-layer multi-path
+Date: Fri, 10 May 2002 12:20:58 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <200205101536.g4AFa9L136556@d12relay01.de.ibm.com>
-References: <OF789CF225.896237A6-ONC1256BB1.004E87CD@de.ibm.com> <20020508090729.A5368@eng2.beaverton.ibm.com>
+Message-ID: <200205101920.g4AJKw921753@eng2.beaverton.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7Bit
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from d12relay01.de.ibm.com (d12relay01.de.ibm.com [9.165.215.22])
-	by d12lmsgate-2.de.ibm.com (8.12.3/8.12.3) with ESMTP id g4AFaNCo014890
-	for <linux-scsi@vger.kernel.org>; Fri, 10 May 2002 17:36:23 +0200
+Received: from northrelay03.pok.ibm.com (northrelay03.pok.ibm.com [9.56.224.151])
+	by e1.ny.us.ibm.com (8.12.2/8.12.2) with ESMTP id g4AJL2AH102174
+	for <linux-scsi@vger.kernel.org>; Fri, 10 May 2002 15:21:04 -0400
+Received: from gateway.beaverton.ibm.com (gateway.beaverton.ibm.com [138.95.180.1])
+	by northrelay03.pok.ibm.com (8.11.1m3/8.11.2) with ESMTP id g4AJL0o19642
+	for <linux-scsi@vger.kernel.org>; Fri, 10 May 2002 15:21:00 -0400
+Received: from eng2.beaverton.ibm.com (eng2.beaverton.ibm.com [9.47.57.17])
+	by gateway.beaverton.ibm.com (8.10.0.Beta10/8.11.6) with ESMTP id g4AJKxL24663
+	for <linux-scsi@vger.kernel.org>; Fri, 10 May 2002 12:20:59 -0700 (PDT)
+Received: (from patman@localhost)
+	by eng2.beaverton.ibm.com (8.10.0.Beta10/8.8.5/token.aware-1.2) id g4AJKw921753
+	for linux-scsi@vger.kernel.org; Fri, 10 May 2002 12:20:58 -0700 (PDT)
 List-Id: linux-scsi@vger.kernel.org
-To: Patrick Mansfield <patmans@us.ibm.com>, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-Patrick,
+Hi -
 
-actually that is what is done for now. And it worked so far for disks. Couldn't
-try that for tapes, yet. But I was wondering whether it would help recovery to
-know a bit more about what happened exactly.
-I just thought it more logical to set DID_ABORT for aborted commands. If I 
-understood the SCSI-spec correctly it is just like an soft error just a bit 
-more specific.
+Here's a linux scsi mid-layer multi-path patch against 2.5.14 that I have
+been working on with assistance from Mike Anderson and Brian Beattie:
 
-/Stefan
+http://www-124.ibm.com/storageio/multipath/scsi-multipath/releases/0.1/patch-2.5.14-mpath-0.1.0.gz
 
-Patrick Mansfield wrote:
+Any comments, suggestions, or testing would be greatly appreciated.
 
-> Stefan,
-> 
-> Why not return DID_SOFT_ERROR? Disks (SCpnt->allowed > 0) will retry the
-> IO some limited number of times, and tape (SCpnt->allowed == 0) will complete
-> the IO with DID_SOFT_ERROR in the result.
-> 
-> Or, do you have to handle an arbitrary numbers of retries?
-> 
-> -- Patrick
-> 
-> On Wed, May 08, 2002 at 01:35:52PM +0200, Stefan Bader wrote:
->> Hi,
->> 
->> I've got some sort of error handling design question which I need some
->> advice whether
->> this might be done the way I think.
->> In some error situations our low-level driver has to abort all currently
->> active commands.
->> The device may work if the requests are retried. This works for disk for
->> now by triggering
->> the mid-layer retry mechanism. This is ok for disks but a big problem for
->> tapes which need
->> to handle this situation with more effort.
->> Now for that, the low-level driver can (and probably should) return
->> DID_ABORT and let the
->> upper layer handle the situation. But then the sd driver would fail the
->> request(s) because it
->> takes a result != 0 (aside from MEDIUM_ERROR) as 'no successful sectors'
->> (which wouldn't
->> hurt) and there is no special catch for the condition in
->> scsi_io_completion() from scsi_lib.c.
->> The desired action for the the abort case for disks would be just to
->> requeue the whole request
->> (as it is done in the case of DID_RESET).
->> The only two highlevel drivers that seem to use scsi_io-completion seem to
->> be sd.c and sr.c
->> and in the reset case the request would just requeued as well. So, would
->> there be a problem
->> in adding this to scsi_lib.c?
->> 
->> /Stefan Bader
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Further details:
 
+SCSI mid-layer multi-path IO Version 0.1.0
+
+This release note, the multi-path patch (against 2.5.14), qla 6.0 patch,
+documentation, and TODO list can be found under:
+
+http://www-124.ibm.com/storageio/multipath/scsi-multipath/index.php
+
+The qla 6.0 Beta 20 drivers (for use with the Qlogic 2200 or 2300) can be
+found under:
+
+http://www.qlogic.com/support/os_detail.asp?seriesid=76&osid=26
+
+Or directly at:
+
+http://download.qlogic.com/drivers/3945/qla2x00src-v6.0b20.tgz
+
+Install the patch, and configure the mid layer multi-path IO support
+(CONFIG_SCSI_MULTI_PATH_IO). If you have multi-port devices with no
+penalty for switching ports, or only multi-path hosts (multi-initiated
+fabrics and busses), use round-robin multipath routing
+(CONFIG_SCSI_PATH_POLICY_RR); if you are unsure, use the last path used
+selection (CONFIG_SCSI_PATH_POLICY_LPU).
+
+Currently, multi-path support requires a SCSI device that supports the
+SCSI INQUIRY vital product device identification page (0x83). Devices not
+supporting page 0x83 have multiple paths treated as if they are attached to
+separate device.
+
+Tests were run using an IBM 3542 (LSI Triton), as well as dual-ported FCP
+Seagate drives (ST39173F, in a Clariion DAE), with all devices attached
+via multiple adapters connected to an IBM 2109 (Brocade) fibre channel
+switch.  Only qlogic 2200 and 2300 fibre adapters were tested - the
+qlogicfc and qla2200 drivers were used with the 2200, and the qla2300
+driver was used with the 2300. 
+
+Switch portdisable/portenable commands were used to simulate failures.
+The /proc/scsi/scsi_path/paths interface was used to re-enable failed
+paths.
+
+In addition, systems were booted (with only single paths to devices)
+using:
+
+	Adaptec 7896 with the aic7xxx driver, with IBM-PSG ST318203LC disks
+	IPS adapter and driver
+
+Simple single path tape IO was tested using a ISP1020 adapter with the
+qlogicisp driver, and a single DLT drive.
+
+No tests were run using multiple paths (multiple initiators or dual ported
+devices) on SCSI parallel interfaces.
+
+The multi-path patch removes several structures commonly used by adapter
+drivers, the main patch includes fixes for the AIC, qlogicfc, and IPS
+drivers; there is a separate patch for the qla 6.0 beta 20 drivers. It's
+likely you'll have to make modifications if you use an adapter and driver
+combination other than the those listed.
+
+Some of the more significant items in the TODO list include: adding proper
+SMP locking support; separating queue_lock from host_lock; fixing the error
+handling code (currently, if all paths fail, the error handler will run
+but not be able to retry any IO).
+
+Ideally, the CONFIG_SCSI_MULTI_PATH_IO would be removed, and any code
+not compiled when it is not defined also removed.
+
+-- Patrick Mansfield
