@@ -1,44 +1,77 @@
-From: akdeniz6357474@mail.com
-Subject: =?ISO-8859-1?Q?=20YEN=DD?= YILINIZI EN  =?ISO-8859-1?Q?=20=DD=C7TEN?=  =?ISO-8859-1?Q?=20D?=
-	=?ISO-8859-1?Q?=DDLEKLER=DDM=DDZLE?= KUTLARIZ
-Date: Mon, 15 Dec 2003 14:14:23 +0-200
+From: Fabien Salvi <fabien@cri74.org>
+Subject: Re: Status of qlogic tcp/ip (fc0) support
+Date: Mon, 15 Dec 2003 15:42:47 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <vyes.n@a>
-Reply-To: AkdenizLens0212_6357474@yahoo.com
+Message-ID: <3FDDC867.9040500@cri74.org>
+References: <1071483139.1433.3.camel@cala> <3FDD9D52.2060405@cri74.org> <3FDDC8FF.2090403@leosandbox.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1;
+	format=flowed
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [62.29.0.128] ([62.29.0.128]:36111 "HELO a")
-	by vger.kernel.org with SMTP id S263561AbTLOMOf (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 15 Dec 2003 07:14:35 -0500
+Received: from aravis.cur-archamps.fr ([195.202.0.99]:31942 "EHLO
+	aravis.cur-archamps.fr") by vger.kernel.org with ESMTP
+	id S263723AbTLOOmt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 15 Dec 2003 09:42:49 -0500
 List-Id: linux-scsi@vger.kernel.org
-To: akdeniz@vger.kernel.org
+To: r35157anc3 <leo@leosandbox.org>
+Cc: linux-scsi@vger.kernel.org
+
+Hello, I've CC the email to the list, other people could be interested.=
+=2E.
+
+Well, it wasn't very difficult.
+After building qla2?00.o with IP option and building qlaip, you just=20
+have to load these 2 modules.
+Then, you can see a new network interface (see ifconfig -a).
+You can use it like any ethernet devices...
+
+You may also encounter difficulties related to FC connection between=20
+your servers. In my test, I was using Qlogic Sanbox2 switch with=20
+broadcasting activated.
 
 
-AKDEN=DDZGOZE UGRAMADAN YEN=DD YILA G=DDRMEY=DDN   =20
-TUM LENSLERDE UYGUN F=DDYATLAR
+r35157anc3 a =E9crit:
+> Hello,
+>=20
+> Do you know where I can get instructions on setting up ip for qla? I=20
+> configured the qla ip drivers. I just can't figure out how to mount=20
+> after setting it up.
+>=20
+> &Leo();
+>=20
+> Fabien Salvi wrote:
+>=20
+>>
+>>
+>> Mario Giammarco a =E9crit:
+>>
+>>> Hello,
+>>> I now have a qlogic 2200 card and I am trying tcp/ip support:
+>>>
+>>> - standard qlogicfc built in kernel seems to not support ip (I hear=
+d
+>>> there is a patch somewhere, is it right?)
+>>>
+>>> - qla drivers 6.00 of qlogic website should support it but I am not=
+ able
+>>> to compile them with IP=3D1 option (I have tried on kernels 2.4.22 =
+2.4.23)
+>>
+>>
+>>
+>> Hello, using qla2200 from qlogic is IMHO the good solution.
+>> I've already tested it a few months ago and it worked fine except ve=
+ry=20
+>> poor performance (around 20MB/s with a Qlogic switch despite of no=20
+>> load at all).
+>>
+>> You should send your compile errors...
 
-BAUSCH&LOMB YILLIK RENKL=DD  LENSLERDE KAMPANYA
-
-OPT=DDMA COLOR      1 =E7ift     75.000.000 T.L
-NATUREL LOOK     1 =E7ift      90.000.000 T.L.
-
-    En ucuz lensler icin lutfen tiklayin.
-    Bir telefonla adrese teslim.
-
-            www.akdenizgoz.com
-
-         Akdeniz Goz=20
-=46evzipa=FEa No:73 Fatih    0 212 635 74 74
 
 
-BU KAMPANYA 31 ARALIK 2003 TAR=DDH=DDNE KADAR GE=C7ERL=DDD=DDR
-
-
-Listeden cikmak icin    remove@akdenizgo.com adresine bos mail gonderin=
-iz
+--=20
+=46abien SALVI
 
 -
 To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
