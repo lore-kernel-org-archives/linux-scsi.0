@@ -1,45 +1,35 @@
-From: Marcelo Tosatti <marcelo.tosatti@cyclades.com>
-Subject: program scsi_unique_id is using a deprecated SCSI ioctl, please convert it to SG_IO
-Date: Mon, 28 Mar 2005 07:33:25 -0300
-Message-ID: <20050328103324.GB28175@logos.cnet>
+From: Arjan van de Ven <arjan@infradead.org>
+Subject: Re: [2.6 patch] SCSI: cleanups
+Date: Mon, 28 Mar 2005 17:29:17 +0200
+Message-ID: <1112023757.6003.27.camel@laptopd505.fenrus.org>
+References: <20050327202139.GQ4285@stusta.de>
+	 <1112023305.5531.2.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hera.kernel.org ([209.128.68.125]:42670 "EHLO hera.kernel.org")
-	by vger.kernel.org with ESMTP id S261876AbVC1PYI (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 28 Mar 2005 10:24:08 -0500
-Received: from logos.cnet (localhost [127.0.0.1])
-	by hera.kernel.org (8.12.11/8.12.8) with ESMTP id j2SFO6s0022053
-	for <linux-scsi@vger.kernel.org>; Mon, 28 Mar 2005 07:24:06 -0800
-Content-Disposition: inline
+Received: from pentafluge.infradead.org ([213.146.154.40]:24461 "EHLO
+	pentafluge.infradead.org") by vger.kernel.org with ESMTP
+	id S261907AbVC1P3X (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 28 Mar 2005 10:29:23 -0500
+In-Reply-To: <1112023305.5531.2.camel@mulgrave>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Adrian Bunk <bunk@stusta.de>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
+
+On Mon, 2005-03-28 at 09:21 -0600, James Bottomley wrote:
+\
+> > - remove the following unused functions:
+> >   - scsi.h: print_driverbyte
+> >   - scsi.h: print_hostbyte
+> > - #if 0 the following unused functions:
+> >   - constants.c: scsi_print_hostbyte
+> >   - constants.c: scsi_print_driverbyte
+> 
+> These are useful to those of us who debug drivers.
+
+how about a CONFIG_SCSI_DRIVER_DEBUG ?
 
 
-Hi SCSI gurus,
-
-You probably already know about this, but just in case:
-
-v2.6.12-rc1 yields
-
-program scsi_unique_id is using a deprecated SCSI ioctl, please convert it to SG_IO
-program scsi_unique_id is using a deprecated SCSI ioctl, please convert it to SG_IO
-program scsi_unique_id is using a deprecated SCSI ioctl, please convert it to SG_IO
-program scsi_unique_id is using a deprecated SCSI ioctl, please convert it to SG_IO
-program scsi_unique_id is using a deprecated SCSI ioctl, please convert it to SG_IO
-program scsi_unique_id is using a deprecated SCSI ioctl, please convert it to SG_IO
-program scsi_unique_id is using a deprecated SCSI ioctl, please convert it to SG_IO
-program scsi_unique_id is using a deprecated SCSI ioctl, please convert it to SG_IO
-program scsi_unique_id is using a deprecated SCSI ioctl, please convert it to SG_IO
-program scsi_unique_id is using a deprecated SCSI ioctl, please convert it to SG_IO
-program scsi_unique_id is using a deprecated SCSI ioctl, please convert it to SG_IO
-program scsi_unique_id is using a deprecated SCSI ioctl, please convert it to SG_IO
-
-On my Fusion MPT based machine, on bootup.
-
-[marcelo@xeon linux-216]$ dmesg | grep Fus
-Fusion MPT base driver 3.01.19
-Fusion MPT SCSI Host driver 3.01.19
 
