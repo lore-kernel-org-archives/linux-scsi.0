@@ -1,29 +1,23 @@
-From: Marc Zyngier <mzyngier@freesurf.fr>
-Subject: Re: 2.5.74: aha1740.c doesn't compile
-Date: Thu, 03 Jul 2003 14:03:38 +0200
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <wrpy8zfizqd.fsf@hina.wild-wind.fr.eu.org>
-References: <Pine.LNX.4.44.0307021433520.2323-100000@home.osdl.org>
-	<20030703101846.GH282@fs.tum.de>
-Reply-To: mzyngier@freesurf.fr
+From: "Tomita, Haruo" <haruo.tomita@toshiba.co.jp>
+Subject: (unknown)
+Date: Thu, 3 Jul 2003 22:35:50 +0900
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <200307031336.WAA08557@toshiba.co.jp>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
-In-Reply-To: <20030703101846.GH282@fs.tum.de> (Adrian Bunk's message of
- "Thu, 3 Jul 2003 12:18:47 +0200")
-To: Adrian Bunk <bunk@fs.tum.de>
-Cc: Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
+Content-Type: text/plain;
+	charset="iso-2022-jp"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from inet-tsb.toshiba.co.jp ([202.33.96.40]:50884 "EHLO
+	inet-tsb.toshiba.co.jp") by vger.kernel.org with ESMTP
+	id S262872AbTGCNVy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 3 Jul 2003 09:21:54 -0400
+Received: from tsb-wall.toshiba.co.jp ([133.199.160.134])
+	by inet-tsb.toshiba.co.jp  with ESMTP id h63DaJVj024516
+	for <linux-scsi@vger.kernel.org>; Thu, 3 Jul 2003 22:36:19 +0900 (JST)
+Received: (from root@localhost)
+	by tsb-wall.toshiba.co.jp  id h63DaJCS026268
+	for <linux-scsi@vger.kernel.org>; Thu, 3 Jul 2003 22:36:19 +0900 (JST)
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
->>>>> "Adrian" == Adrian Bunk <bunk@fs.tum.de> writes:
-
-Adrian> drivers/scsi/aha1740.c fails to build on 2.5.74 withthe
-Adrian> following error:
-
-Weird error.
-
-Compiles just fine here... Please send your .config.
-
-         M.
--- 
-Places change, faces change. Life is so very strange.
+subscribe linux-scsi
