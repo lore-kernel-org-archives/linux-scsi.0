@@ -1,37 +1,41 @@
-From: "Redmanbroadcasting" <nores@e-ticket-marketing.com>
-Subject: Get Paid To Shop & Eat!
-Date: Tue, 20 Jul 2004 09:40:09 -0400
+From: "Mukker, Atul" <Atulm@lsil.com>
+Subject: RE: [ANNOUNCE]: megaraid driver version 2.20.0.1
+Date: Wed, 21 Jul 2004 09:48:16 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040720094009.lmpinzvwdo__33226.89822312$1090367267$gmane$org@whitebroadcasting.com>
-Reply-To: r.763.31613425@whitebroadcasting.com
+Message-ID: <0E3FA95632D6D047BA649F95DAB60E57033BC89C@exa-atlanta>
 Mime-Version: 1.0
 Content-Type: text/plain;
 	charset="iso-8859-1"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail241.whitebroadcasting.com ([216.171.174.241]:6844 "HELO
-	mail241.whitebroadcasting.com") by vger.kernel.org with SMTP
-	id S266212AbUGTXqr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 20 Jul 2004 19:46:47 -0400
+Received: from mail0.lsil.com ([147.145.40.20]:29112 "EHLO mail0.lsil.com")
+	by vger.kernel.org with ESMTP id S266327AbUGUNve (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 21 Jul 2004 09:51:34 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: 'James Bottomley' <James.Bottomley@SteelEye.com>
+Cc: 'Christoph Hellwig' <hch@infradead.org>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
 
-Get paid to shop, eat in restaurants, play golf, take cruises and more! Visit our site for all of the details concerning this fantastic program!
+> The philosophy for scsi drivers for a while has been to 
+> remove internal
+> queueing, which is why yours attracted my attention, so the question I
+> was asking is can you use these APIs instead of having to 
+> maintain this
+> internal queue?
+The internal pending queue is fed not only from the mid-layer packets but
+also the packets from the management module and (forthcoming) sysfs module.
+Both of these modules rely on the fact that the commands issued by them
+would be issued sooner or later.
 
+In addition, in certain situations (logical drive deletion) driver has to
+stop sending commands to the FW before these operations can be initiated.
+This is also implemented using the pending queue mechanism. Although would
+be minor change to move over to scsi_block_requests and scsi_unblock_request
+to achieve this.
 
+This is not to say that I am reluctant to implement SCSI_MLQUEUE_HOST_BUSY,
+but just a precursor where additional impacts would be so that reviewers can
+focus on those areas as well.
 
-http://whitebroadcasting.com/dbm83/l.php?1043&31613425&riceez420/shopuyd
-
---------------------------------------------
-We hope you enjoyed receiving this email, but if you no longer wish to 
-receive our emails please respond here: http://whitebroadcasting.com/dbm83/un.php?763&31613425
-
-To Remove by Mail
-Removal Department
-PO Box 9
-Irvine Ca 92650
-
-hguqbse
-
-       
-
-
+Thanks
+-Atul Mukker
+ 
