@@ -1,80 +1,61 @@
-From: "Moore, Eric Dean" <Emoore@lsil.com>
-Subject: RE: [RFC][PATCH]SCSI signal(I/O) failure causes no response
-Date: Wed, 14 Apr 2004 11:56:20 -0400
+From: Jan-Frode Myklebust <janfrode@parallab.uib.no>
+Subject: LSI Logic FC HBA / mptscsih hang
+Date: Wed, 14 Apr 2004 22:30:02 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <0E3FA95632D6D047BA649F95DAB60E570442C1B2@exa-atlanta.se.lsil.com>
+Message-ID: <20040414203000.GA21276@ii.uib.no>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:23250 "EHLO mail0.lsil.com")
-	by vger.kernel.org with ESMTP id S263663AbUDNP4Y (ORCPT
+Received: from eik.ii.uib.no ([129.177.16.3]:28122 "EHLO eik.ii.uib.no")
+	by vger.kernel.org with ESMTP id S261615AbUDNUaH (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 14 Apr 2004 11:56:24 -0400
+	Wed, 14 Apr 2004 16:30:07 -0400
+Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>, Masao Fukuchi <fukuchi.masao@jp.fujitsu.com>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-For this particular issue, Mr Masao Fukuchi has a
-scsi bus test analyzer, in which he set the C/D signal 
-to low during read operation.  The MPT firmware
-returned MPI_IOCSTATUS_SCSI_PROTOCAL_ERROR, which from
-the mpt manual means " An unrecoverable bus protocal error
-as terminated the SCSI I/O" and the driver will 
-return DID_RESET.
+I just got a LSI Logic LSI7102XP-LC Single 2Gb/s Fibre Channel HBA,
+and installed it in a IBM x330 (Dual Pentium III). Booting the redhat
+kernel-2.4.21-4.EL and kernel-2.4.21-9.0.1.EL works fine, but the
+smp-versions of the same kernels (kernel-smp-2.4.21-4.EL and
+kernel-smp-2.4.21-9.0.1.EL) hangs every time after:
 
-Here are some of the other cases which return
-DID_RESET, however I doubt were returned with 
-Mr Masao Fukuchi's test anaylzer:
+Loading mptbase.Fusion MPT base driver 2.05.05+
+o module
+Copyright (c) 1999-2002 LSI Logic Corporation
+PCI: Enabling device 01:05.0 (0000 -> 0003)
+mptbase: Initiating ioc0 bringup
+ioc0: FC919X: Capabilities={Initiator,Target,LAN}
+mptbase: Initiating ioc0 recovery
+mptbase: Initiating ioc0 recovery
+mptbase: Initiating ioc0 recovery
+mptbase: 1 MPT adapter found, 1 installed.
+Loading mptscsihFusion MPT SCSI Host driver 2.05.05+
+.o module
+scsi1 : ioc0: LSIFC919X, FwRev=01000000h, Ports=1, MaxQ=1023, IRQ=11
+Starting timer : 0 0
+blk: queue f752d618, I/O limit 4294967295Mb (mask 0xffffffffffffffff)
+scsi : aborting command due to timeout : pid 25, scsi1, channel 0, id
+0, lun 0 Inquiry 00 00 00 ff 00
+mptscsih: OldAbort scheduling ABORT SCSI IO (sc=f752d400)
+  IOs outstanding = 1
+mptscsih: Attempting ABORT SCSI IO! (mf=f74e0100:sc=f752d400)
+SCSI host 1 abort (pid 25) timed out - resetting
+SCSI bus is being reset for host 1 channel 0.
+mptscsih: OldReset scheduling BUS_RESET (sc=f752d400)
+  IOs outstanding = 1
+SCSI host 1 channel 0 reset (pid 25) timed out - trying harder
+SCSI bus is being reset for host 1 channel 0.
+mptscsih: OldReset scheduling BUS_RESET (sc=f752d400)
+  IOs outstanding = 1
+SCSI host 1 reset (pid 25) timed out again -
+probably an unrecoverable SCSI bus or device hang.
+mptbase: Initiating ioc0 recovery
+SCSI host 1 reset (pid 26) timed out again -
+probably an unrecoverable SCSI bus or device hang.
+[hangs forever..]
 
-MPI_IOCSTATUS_SCSI_TASK_TERMINATED
-MPI_IOCSTATUS_SCSI_IOC_TERMINATED
-MPI_IOCSTATUS_SCSI_EXT_TERMINATED
+Any advice?
 
 
-
-On Wednesday, April 14, 2004 9:28 AM, James Bottomley wrote:
-
-> 
-> 
-> On Tue, 2004-04-13 at 20:07, Masao Fukuchi wrote:
-> > 1.Fusion MPT driver issues read command to its firmware.
-> >   (our server has LSI53C1030 as SCSI adapter)
-> >   Then the firmware returns protocol error for the command.
-> >   Fusion MPT driver makes DID_RESET status by protocol error 
-> >   and sends it to SCSI midlayer.
-> > 
-> > 2.SCSI midlayer analyzes the status from LLD.
-> >   SCSI midlayer schedules command retry because the status is just
-> >   DID_RESET status.
-> >   (When the status has DID_RESET plus some sense code, the retry
-> >    sequence depends on the sense code. But when the status has only
-> >    DID_RESET, SCSI midlayer schedules command retry)
-> > 
-> > Sequence 1. and 2. are repeated infinitely and it causes no 
-> response.
-> > 
-> > To prevent this problem, I proposed Eric Moore to change 
-> the DID_RESET
-> > status to DID_SOFT_ERROR in fusion MPT driver.
-> > But he suggested me to change SCSI midlayer to prevent 
-> infinite loop.
-> 
-> Well, there clearly is a problem, because we can't retry no-rety
-> commands that return DID_RESET (like tape commands or fastfail).
-> 
-> However, DID_RESET is supposed to be returned for events where it was
-> determined that the command was lost because the bus or 
-> device was reset
-> (either as part of error handling or because an external entity issued
-> the reset).  Since these events, if they originate externally, can be
-> beyond the control of the device, making retryable commands subject to
-> the retry limit would be asking for unnecessary I/O errors because of
-> something we couldn't do anything about.
-> 
-> Why is the LSI driver returning DID_RESET for the problem (i.e. is it
-> some type of external bus reset, or is something else going on)?
-> 
-> James
-> 
-> 
+   -jf
