@@ -1,52 +1,62 @@
 From: Adrian Bunk <bunk@fs.tum.de>
-Subject: How to contact AdvanSys/ConnectCom?
-Date: Thu, 13 May 2004 01:00:47 +0200
+Subject: [2.6 patch] fix aic7xxx_old.c for !PCI
+Date: Thu, 13 May 2004 01:55:55 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040512230047.GC21408@fs.tum.de>
+Message-ID: <20040512235555.GF21408@fs.tum.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hermes.fachschaften.tu-muenchen.de ([129.187.202.12]:51158 "HELO
+Received: from hermes.fachschaften.tu-muenchen.de ([129.187.202.12]:46547 "HELO
 	hermes.fachschaften.tu-muenchen.de") by vger.kernel.org with SMTP
-	id S263033AbUELXAz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 12 May 2004 19:00:55 -0400
+	id S263551AbUELXz5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 12 May 2004 19:55:57 -0400
 Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
 
-Hi,
-
-I tried to contact AdvanSys/ConnectCom regarding a patch (also sent to 
-these lists) a few minutes ago.
-
-The URLs in drivers/scsi/advansys.c as well as the Email address 
-support@connectcom.net listed as contact address in this file no longer 
-exist.
-
-The Email address linux@advansys.com in MAINTAINERS doesn't work since 
-they have a broken MTA setup:
+I got the following compile error in 2.6.6-mm1 (but it's not specific to 
+-mm) with CONFIG_PCI=n:
 
 <--  snip  -->
 
-Hi. This is the qmail-send program at hermes.fachschaften.tu-muenchen.de.
-I'm afraid I wasn't able to deliver your message to the following addresses.
-This is a permanent error; I've given up. Sorry it didn't work out.
-   
-<linux@advansys.com>:
-Connected to 207.155.252.71 but sender was rejected.
-Remote host said: 550 Invalid domain fs.tum.de
-  
+...
+  CC      drivers/scsi/aic7xxx_old.o
+drivers/scsi/aic7xxx_old.c: In function `aic7xxx_release':
+drivers/scsi/aic7xxx_old.c:10971: warning: implicit declaration of function `pci_release_regions'
+...
+  LD      .tmp_vmlinux1
+drivers/built-in.o(.text+0x2bf0ff): In function `aic7xxx_release':
+: undefined reference to `pci_release_regions'
+make: *** [.tmp_vmlinux1] Error 1
+
 <--  snip  -->
 
-Does anyone know how to contact them?
+The patch below fixes this issue.
 
-TIA
+Please apply
 Adrian
 
--- 
-
-       "Is there not promise of rain?" Ling Tan asked suddenly out
-        of the darkness. There had been need of rain for many days.
-       "Only a promise," Lao Er said.
-                                       Pearl S. Buck - Dragon Seed
-
+--- linux-2.6.6-mm1-full/drivers/scsi/aic7xxx_old.c.old	2004-05-13 01:23:42.000000000 +0200
++++ linux-2.6.6-mm1-full/drivers/scsi/aic7xxx_old.c	2004-05-13 01:25:05.000000000 +0200
+@@ -9675,7 +9675,9 @@
+           found++;
+ 	  continue;
+ skip_pci_controller:
++#ifdef CONFIG_PCI
+ 	  pci_release_regions(temp_p->pdev);
++#endif
+ 	  kfree(temp_p);
+         }  /* Found an Adaptec PCI device. */
+         else /* Well, we found one, but we couldn't get any memory */
+@@ -10967,8 +10969,10 @@
+ #endif /* MMAPIO */
+   if(!p->pdev)
+     release_region(p->base, MAXREG - MINREG);
++#ifdef CONFIG_PCI
+   else
+     pci_release_regions(p->pdev);
++#endif
+   prev = NULL;
+   next = first_aic7xxx;
+   while(next != NULL)
