@@ -1,30 +1,34 @@
-From: Willem Riede <wrlk@riede.org>
-Subject: Re: buggy scsi_register behaviour in 2.5.51
-Date: Fri, 20 Dec 2002 09:46:48 -0500
+From: "Justin T. Gibbs" <gibbs@btc.adaptec.com>
+Subject: scsi_malloc fragmentation in 2.4.X
+Date: Fri, 20 Dec 2002 13:31:58 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20021220144648.GW7990@linnie.riede.org>
-References: <3DFE998E.1080103@interlog.com> <20021217114730.GE7990@linnie.riede.org> <3E006692.7020503@torque.net>
-Reply-To: wrlk@riede.org
+Message-ID: <70300000.1040416318@aslan.btc.adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from redfish.adaptec.com (redfish.adaptec.com [162.62.50.11])
+	by magic.adaptec.com (8.11.6+Sun/8.11.6) with ESMTP id gBKKW2j25474
+	for <linux-scsi@vger.kernel.org>; Fri, 20 Dec 2002 12:32:02 -0800 (PST)
+Received: from btc.btc.adaptec.com (btc.btc.adaptec.com [10.100.0.52])
+	by redfish.adaptec.com (8.8.8+Sun/8.8.8) with ESMTP id MAA26775
+	for <linux-scsi@vger.kernel.org>; Fri, 20 Dec 2002 12:32:01 -0800 (PST)
+Received: from [10.100.253.70] (aslan [10.100.253.70])
+	by btc.btc.adaptec.com (8.8.8+Sun/8.8.8) with ESMTP id NAA29716
+	for <linux-scsi@vger.kernel.org>; Fri, 20 Dec 2002 13:31:57 -0700 (MST)
 Content-Disposition: inline
-In-Reply-To: <3E006692.7020503@torque.net>; from dougg@torque.net on Wed, Dec 18, 2002 at 07:14:10 -0500
 List-Id: linux-scsi@vger.kernel.org
-To: dougg@torque.net
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On 2002.12.18 07:14 Douglas Gilbert wrote:
-> 
-> These are documented in Documentation/scsi/scsi_mid_low_api.txt .
-> If you find mistakes or the explanation is not clear then
-> complain to me. 
+Are there any plans to correct the scsi_malloc fragmentation problems
+in 2.4.X?  It looks like this problem has been addressed in 2.5.X by using
+memory pools, but the current 2.4.X solution of just "backing off a bit"
+if scsi_malloc returns NULL, is much less than ideal.  At least the user
+isn't assaulted by lots of "Running really short on DMA buffers" messages,
+but performance does suffer when the only reason you can't queue an I/O
+is that the pre-allocated S/G list memory is so poorly managed that the
+available memory can't be used.
 
-Your doc doesn't define the second parameter to scsi_add_host.
-Can you explain what the purpose is of the struct device *dev
-and how I'm supposed to pull one out of my hat in __init?
-I notice that the old style registration doesn't bother with
-shost->host_gendev.
+--
+Justin
 
-Thanks, Willem Riede.
