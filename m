@@ -1,53 +1,32 @@
-From: "Mukker, Atul" <Atulm@lsil.com>
-Subject: RE: How to add/drop SCSI drives from within the driver?
-Date: Thu, 16 Dec 2004 09:27:02 -0500
-Message-ID: <0E3FA95632D6D047BA649F95DAB60E57058BF9C9@exa-atlanta>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: How to add/drop SCSI drives from within the driver?
+Date: Thu, 16 Dec 2004 14:41:34 +0000
+Message-ID: <1103208085.21806.1.camel@localhost.localdomain>
+References: <60807403EABEB443939A5A7AA8A7458B7F5071@otce2k01.adaptec.com>
+	 <1102536081.4218.0.camel@localhost.localdomain>
+	 <20041215072453.GB17274@lists.us.dell.com>
+	 <1103136559.5232.1.camel@mulgrave>
+	 <20041215213001.GA9284@lists.us.dell.com>
+	 <1103190852.4136.12.camel@laptopd505.fenrus.org>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:38120 "EHLO mail0.lsil.com")
-	by vger.kernel.org with ESMTP id S261936AbULPOfh (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 16 Dec 2004 09:35:37 -0500
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+glk-linux-kernel=40m.gmane.org-S261414AbULPPuJ@vger.kernel.org>
+In-Reply-To: <1103190852.4136.12.camel@laptopd505.fenrus.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Arjan van de Ven <arjan@infradead.org>
+Cc: Matt Domsch <Matt_Domsch@dell.com>, James Bottomley <James.Bottomley@SteelEye.com>, "Salyzyn, Mark" <mark_salyzyn@adaptec.com>, "Bagalkote, Sreenivas" <sreenib@lsil.com>, brking@us.ibm.com, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, bunk@fs.tum.de, Andrew Morton <akpm@osdl.org>, "Ju, Seokmann" <sju@lsil.com>, "Doelfel, Hardy" <hdoelfel@lsil.com>, "Mukker, Atul" <Atulm@lsil.com>
 List-Id: linux-scsi@vger.kernel.org
-To: 'Arjan van de Ven' <arjan@infradead.org>, 'Matt Domsch' <Matt_Domsch@dell.com>
-Cc: 'James Bottomley' <James.Bottomley@SteelEye.com>, "'Salyzyn, Mark'" <mark_salyzyn@adaptec.com>, "Bagalkote, Sreenivas" <sreenib@lsil.com>, "'brking@us.ibm.com'" <brking@us.ibm.com>, 'Linux Kernel' <linux-kernel@vger.kernel.org>, 'SCSI Mailing List' <linux-scsi@vger.kernel.org>, "'bunk@fs.tum.de'" <bunk@fs.tum.de>, 'Andrew Morton' <akpm@osdl.org>, "Ju, Seokmann" <sju@lsil.com>, "Doelfel, Hardy" <hdoelfel@lsil.com>, "Mukker, Atul" <Atulm@lsil.com>
 
-> On Wed, 2004-12-15 at 15:30 -0600, Matt Domsch wrote:
-> > Do you plan to apply LSI's driver patch which adds the 
-> driver-private 
-> > ioctl to provide the mapping from logical drive address to 
-> HCTL value?
-> > Both Dell and LSI have products which are lined up to use this new 
-> > ioctl because it's the most expedient thing to do, 
-> maintains internal 
-> > project schedules, etc, which delaying until this sysfs 
-> mechanism hits 
-> > will greatly impact those schedules. (I know, many folks on 
-> this list 
-> > don't care about business-side impacts of choices made on-list.)
-> 
-> I'm strongly against adding this. The reason for that is that 
-> once an ioctl is added, it realistically will and can never go away.
+On Iau, 2004-12-16 at 09:54, Arjan van de Ven wrote:
+> I'm strongly against adding this. The reason for that is that once an
+> ioctl is added, it realistically will and can never go away.
+> LSI is free to have their own fork and give that to dell; but they
+> should and could have known that it wasn't going to fly. (same I guess
+> for adaptec ioctls). The companies who then commit to some schedule
+> realize they take a huge risk, but that is no reason to foul up the
+> kernel more. 
 
-This issue has gone from the utility of the ioctl in question (which has
-been discussed in detail on the list) to now outright rejection of the
-driver ioctls. If this is the idea, drivers would need to consciously move
-the driver only ioctls to sysfs. Which may be good for simple ioctls like
-these but might now be elegant for complex transfers. So, IMO, drivers need
-both of the interfaces and should make a good judgment call on services
-provided by each interface.
-
->
-> that is no reason to foul up the kernel more. 
-> 
-The ioctl in question has been discussed in detail and was deemed
-appropriate ioctl to provide important service to the management
-applications for device hot plugging. Schedules are one side of the story,
-but we must not overlook the importance of the reason to have this ioctl in
-the first place. If there are other preferred ways to implement the similar
-functionality, we would be more than happy to consider that.
-
-Thanks
--Atul Mukker
+I agree. I'd like to see an agreed standard interface for dropping and
+managing physical volumes and drives, as well as a standard interface
+for dropping/managing logical volumes.
