@@ -1,50 +1,116 @@
-From: Jeremy Higdon <jeremy@sgi.com>
+From: Grant Grundler <grundler@parisc-linux.org>
 Subject: Re: SCSI QLA not working on latest *-mm SN2
-Date: Fri, 17 Sep 2004 19:36:24 -0700
+Date: Sat, 18 Sep 2004 00:10:01 -0600
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040918023624.GD119218@sgi.com>
-References: <B179AE41C1147041AA1121F44614F0B0DD04CA@AVEXCH02.qlogic.org> <1095465337.1944.3.camel@mulgrave> <20040918011510.GA31628@praka.san.rr.com> <20040918012517.GA642@parcelfarce.linux.theplanet.co.uk>
+Message-ID: <20040918061001.GC21456@colo.lackof.org>
+References: <20040917183029.GW642@parcelfarce.linux.theplanet.co.uk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from omx3-ext.sgi.com ([192.48.171.20]:23186 "EHLO omx3.sgi.com")
-	by vger.kernel.org with ESMTP id S264991AbUIRChI (ORCPT
+Received: from colo.lackof.org ([198.49.126.79]:50060 "EHLO colo.lackof.org")
+	by vger.kernel.org with ESMTP id S269139AbUIRGKE (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 17 Sep 2004 22:37:08 -0400
+	Sat, 18 Sep 2004 02:10:04 -0400
 Content-Disposition: inline
-In-Reply-To: <20040918012517.GA642@parcelfarce.linux.theplanet.co.uk>
+In-Reply-To: <200409171021.20263.jbarnes@engr.sgi.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <willy@debian.org>
-Cc: Andrew Vasquez <andrew.vasquez@qlogic.com>, James Bottomley <James.Bottomley@SteelEye.com>, Jesse Barnes <jbarnes@engr.sgi.com>, Paul Jackson <pj@sgi.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, mdr@cthulhu.engr.sgi.com, jeremy@cthulhu.engr.sgi.com, djh@cthulhu.engr.sgi.com, jbarnes@cthulhu.engr.sgi.com, Andrew Morton <akpm@osdl.org>
-
-On Sat, Sep 18, 2004 at 02:25:17AM +0100, Matthew Wilcox wrote:
-> On Fri, Sep 17, 2004 at 06:15:10PM -0700, Andrew Vasquez wrote:
-> > On Fri, 17 Sep 2004, James Bottomley wrote:
-> > > Just to confirm if we absolutely have to do this...the offending reads
-> > > to issue the posting flush were to the register you just wrote to to get
-> > > the chip to reset.  However, any MMIO read to any region of that card
-> > > would also trigger a posted write flush.  Does the chip drop entirely
-> > > off the PCI bus during the execution of reset, or could we perhaps issue
-> > > an innocuous read to somewhere in PCI configuration space for the card?
-> > 
-> > I had asked the hardware guy a similar question -- for the soft-reset
-> > operation, we'll _not_ be able to issue additional readw()s until '16
-> > PCI clocks elapse.'  So, it seems we'll have to settle with the
-> > udelay() in this particular instance.
-> 
-> But the write that starts the reset can be delayed arbitrarily, so we need
-> to do *some* kind of read from the device to be know that it got there.
-> Can we access config space instead of mmio space?
+To: Jesse Barnes <jbarnes@engr.sgi.com>
+Cc: Andrew Vasquez <andrew.vasquez@qlogic.com>, pj@sgi.com, linux-scsi@vger.kernel.org, mdr@cthulhu.engr.sgi.com, jeremy@cthulhu.engr.sgi.com, djh@cthulhu.engr.sgi.com, Andrew Morton <akpm@osdl.org>
 
 
-This is where some sort of generic primitive for flushing posted writes
-would be handy.  For any PCI implementation, there will be registers
-unrelated to the chip in question that one should be able to read and
-which flush the posted write.
+Jesse Barnes wrote:
+...
+> Btw Andrew (Vasquez), there's a small doc I put together that should describe 
+> when you have to worry about PCI posting.  It's in the tree:  
+> Documentation/io_ordering.txt.  If it's incomplete or confusing, just let me 
+> know and I'll update it.
 
-On Altix, we have the sn_mmiob()  :-)
+Jesse,
+Both. incomplete and confusing.
+"concrete example of a hypothetical driver" wasn't my first warning
+this document needed work. :^)
 
-A pci_config_read_word() is not quite the same as a readw(), I don't
-think, so maybe that would be okay?
+I've hacked up the 2.6.9 version and even what I did still needs more work.
+Have time to correct my mistakes and answer the questions I ask?
 
-jeremy
+I'd be happy to review it again after you've done another round on it.
+
+[]'s should all go away - used those to mark editorial notes.
+
+hth,
+grant
+
+
+--------------------- cut here ------------------
+
+Weakly Ordered Memory Mapped IO
+-------------------------------
+
+SGI Altix chipset implements weakly ordered Memory-Mapped I/O writes.
+On this platform, driver writers are responsible for ensuring I/O writes
+to memory-mapped addresses arrive in the order intended.
+
+Like for PCI write posting problems, this is done by reading
+a 'safe' device or bridge register, causing the I/O chipset to
+flush pending writes to the device before any reads are issued.
+A driver would issue the "safe" read immediately prior to the exit
+of a critical section of code protected by spinlocks.  This would
+ensure subsequent writes to I/O space arrived only after all prior
+writes (much like a memory barrier op, mb(), only with respect to I/O).
+
+Note: MMIO reads are expensive! Don't add MMIO reads after *every* MMIO
+      write unless the device programming model absolutely requires it.
+
+
+An example from a hypothetical device driver might help:
+
+        ...
+CPU A:  spin_lock_irqsave(&dev_lock, flags)
+CPU A:  val = readl(my_status);
+CPU A:  ...
+CPU A:  writel(newval, ring_ptr);
+CPU A:  spin_unlock_irqrestore(&dev_lock, flags)
+        ...
+CPU B:  spin_lock_irqsave(&dev_lock, flags)
+CPU B:  val = readl(my_status);
+CPU B:  ...
+CPU B:  writel(newval2, ring_ptr);
+CPU B:  spin_unlock_irqrestore(&dev_lock, flags)
+        ...
+
+In the case above, the device may receive newval2 before it receives newval,
+which could cause problems.
+
+[ Is this example broken or am I just staying up too late?
+  The example is doing a readl() in the second critical section.
+  Shouldn't that enforce the write ordering?
+]
+
+Fixing it is easy enough though:
+
+        ...
+CPU A:  spin_lock_irqsave(&dev_lock, flags)
+CPU A:  val = readl(my_status);
+CPU A:  ...
+CPU A:  writel(newval, ring_ptr);
+CPU A:  (void)readl(safe_register); /* maybe a config register? */
+CPU A:  spin_unlock_irqrestore(&dev_lock, flags)
+        ...
+CPU B:  spin_lock_irqsave(&dev_lock, flags)
+CPU B:  val = readl(my_status);
+CPU B:  ...
+CPU B:  writel(newval2, ring_ptr);
+CPU B:  (void)readl(safe_register); /* maybe a config register? */
+CPU B:  spin_unlock_irqrestore(&dev_lock, flags)
+
+The reads from safe_register will cause the I/O chipset to flush any
+pending writes before actually posting the read to the chipset, preventing
+possible data corruption.
+
+[ How about interactions with:
+  o read_relaxed()?
+  o DMA?
+  o IO Port space reads?
+  o IO Port space writes?
+]
+
