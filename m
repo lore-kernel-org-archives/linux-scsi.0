@@ -1,71 +1,455 @@
-From: christophe varoqui <christophe.varoqui@free.fr>
-Subject: [ANNOUNCE] multipath-tools-0.2.6
-Date: Sat, 17 Jul 2004 17:45:58 +0200
+From: 'Christoph Hellwig' <hch@infradead.org>
+Subject: Re: [Emulex] Ready for next round...
+Date: Sat, 17 Jul 2004 21:17:35 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1090079158.4535.3.camel@zezette>
-References: <1084519750.40a47546dd0e6@imp1-q.free.fr>
-	 <1086256342.40bef4d61b3e9@imp3-q.free.fr>
-	 <1086619426.40c47f220de01@imp5-q.free.fr>
-	 <1087209011.40cd7e338ca44@imp5-q.free.fr>
-	 <1088441934.40e04e4ebe7e8@imp1-q.free.fr>
-	 <1089213139.40ec12d3a447b@imp2-q.free.fr>
+Message-ID: <20040717201735.GA2575@infradead.org>
+References: <3356669BBE90C448AD4645C843E2BF28034F968E@xbl.ma.emulex.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.wanadoo.fr ([193.252.22.30]:63680 "EHLO
-	mwinf0109.wanadoo.fr") by vger.kernel.org with ESMTP
-	id S266185AbUGQPqA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 17 Jul 2004 11:46:00 -0400
-In-Reply-To: <1089213139.40ec12d3a447b@imp2-q.free.fr>
+Received: from [213.146.154.40] ([213.146.154.40]:39597 "EHLO
+	pentafluge.infradead.org") by vger.kernel.org with ESMTP
+	id S261563AbUGQURh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 17 Jul 2004 16:17:37 -0400
+Content-Disposition: inline
+In-Reply-To: <3356669BBE90C448AD4645C843E2BF28034F968E@xbl.ma.emulex.com>
 List-Id: linux-scsi@vger.kernel.org
-To: device-mapper development <dm-devel@redhat.com>
-Cc: linux-raid@vger.kernel.org, linux-hotplug-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org
+To: "Smart, James" <James.Smart@Emulex.Com>
+Cc: 'Christoph Hellwig' <hch@infradead.org>, Linux SCSI Reflector <linux-scsi@vger.kernel.org>
 
-Hello,
-here goes multipath-tools-0.2.6
-It's a really big feature update.
-I hope I'll get feedback on the new features :
+On Sat, Jul 17, 2004 at 07:26:32AM -0400, Smart, James wrote:
+> Christoph,
+> 
+> We've updated the driver on SourceForge again.  This addresses the rework of
+> the clk functions. Also rids the driver of Report Lun use.
+> 
+> I know this next week will probably be busy due to the OLS, but we would
+> appreciate comments any time that you can provide them.
 
-1) system-disk-on-SAN corner case treated with private namespace and
-ramfs for callback programs. Next release I'll move the mknod to the
-ramfs too by binding the ramfs to /tmp so scsi_id's mknod will have the
-safety net too. See prepare_namespace() in main.c for review.
+Okay, this starts to look better.  There's lots of dead code again, see the
+patch below to remove it.  Also while the parameter rework in the last drop
+is already much better it still needs some more work I think.
 
-2) multipath config tool now get path id from callback proggys.
-/bin/scsi_id by default. The tools now rely heavily on callbacks, so I'd
-like to have insights about how to treat the out-of-memory case with
-regard to these execv(). I'm also pondering ripping off the
-get_evpd_wiid() fallback : does someone care ?
+Instead of the array + index approach use a simple variable in struct
+lpfc_hba, that of cousr makes your paraneter checking a little more difficult,
+but I'd suggest to just reomve it like the other drivers - after all it's
+root only.
+Easiest would be to just drop the range checking, as all other drivers do
 
-Finally note you *need* to update your config file. Not because I want
-you to ackowledge to huge work put into reformatting and commenting, but
-simply because the synthax has changed.
 
-Changelog for this release :
-        * [multipathd] implement the system-disk-on-SAN safety net
-        * [multipathd] add exit_daemon() wrapper function
-        * [multipathd] mlockall() all daemon threads
-        * [multipath] fix a bug in the mp_iopolicy_handler that kept
-          the iopolicy per LUN override from working
-        * [multipath] display the tur bit value in print_path
-          as requested by SUN
-        * try to open /$udev/reverse/$major:$minor before falling back
-          to mknod
-        * add "udev_dir" to the defaults block in the config file
-        * merge "daemon" & "device_maps" config blocks into a new
-          "defaults" block
-        * [multipath] properly comment the config file
-        * [multipath] generalize the dbg() macro usage
-          Makefile now has a DEBUG flag
-        * [multipath] move to callout based WWID fetching. Default to
-          scsi_id callout. I merged execute_program from udev for that
-          (so credit goes to GregKH)
-        * [multipath] get rid of "devnodes in /dev" assumption
-          ie move to "maj:min" device mapper target synthax
-
-Downloads and docs at http://christophe.varoqui.free.fr
-
-regards,
-cvaroqui
-
+diff -uNr -X /home/hch/dontdiff lpfcdriver-2.6-8.0.6/lpfc.h lpfcdriver-2.6-8.0.6-hch/lpfc.h
+--- lpfcdriver-2.6-8.0.6/lpfc.h	2004-07-16 20:59:54.000000000 +0200
++++ lpfcdriver-2.6-8.0.6-hch/lpfc.h	2004-07-17 21:07:40.000000000 +0200
+@@ -411,9 +411,7 @@
+ 	/* pci_mem_pools */
+ 	struct pci_pool *lpfc_scsi_dma_ext_pool;
+ 	struct pci_pool *lpfc_mbuf_pool;
+-	struct pci_pool *lpfc_page_pool;
+ 	struct lpfc_dma_pool lpfc_mbuf_safety_pool;
+-	struct lpfc_dma_pool lpfc_page_safety_pool;
+ 	mempool_t *scsibuf_mem_pool;
+ 
+ 	mempool_t *iocb_mem_pool;
+diff -uNr -X /home/hch/dontdiff lpfcdriver-2.6-8.0.6/lpfc_crtn.h lpfcdriver-2.6-8.0.6-hch/lpfc_crtn.h
+--- lpfcdriver-2.6-8.0.6/lpfc_crtn.h	2004-07-16 20:59:54.000000000 +0200
++++ lpfcdriver-2.6-8.0.6-hch/lpfc_crtn.h	2004-07-17 20:57:50.000000000 +0200
+@@ -76,13 +76,9 @@
+ void lpfc_disc_start(struct lpfc_hba *);
+ void lpfc_disc_flush_list(struct lpfc_hba *);
+ void lpfc_linkdown_timeout(unsigned long);
+-void lpfc_nodev_timeout(unsigned long);
+ void lpfc_establish_link_tmo(unsigned long);
+ void lpfc_disc_timeout(unsigned long);
+ struct lpfc_lun *lpfc_find_lun(struct lpfc_hba *, uint32_t, uint64_t, int);
+-struct lpfc_scsi_buf *lpfc_build_scsi_cmd(struct lpfc_hba *,
+-					  struct lpfc_nodelist *,
+-					  uint32_t, uint64_t);
+ void lpfc_set_failmask(struct lpfc_hba *, struct lpfc_nodelist *, uint32_t,
+ 		       uint32_t);
+ 
+@@ -223,7 +219,6 @@
+ 			    uint16_t);
+ void lpfc_mbox_timeout(unsigned long);
+ 
+-void lpfc_free_scsi_buf(struct lpfc_scsi_buf *);
+ void lpfc_map_fcp_cmnd_to_bpl(struct lpfc_hba *, struct lpfc_scsi_buf *);
+ void lpfc_free_scsi_cmd(struct lpfc_scsi_buf *);
+ uint32_t lpfc_os_timeout_transform(struct lpfc_hba *, uint32_t);
+@@ -242,9 +237,6 @@
+ void lpfc_sli_wake_iocb_high_priority(struct lpfc_hba * phba,
+ 				      struct lpfc_iocbq * queue1,
+ 				      struct lpfc_iocbq * queue2);
+-void *lpfc_page_alloc(struct lpfc_hba *, int, dma_addr_t *);
+-void lpfc_page_free(struct lpfc_hba *, void *, dma_addr_t);
+-
+ void *lpfc_mbuf_alloc(struct lpfc_hba *, int, dma_addr_t *);
+ void lpfc_mbuf_free(struct lpfc_hba *, void *, dma_addr_t);
+ 
+diff -uNr -X /home/hch/dontdiff lpfcdriver-2.6-8.0.6/lpfc_hbadisc.c lpfcdriver-2.6-8.0.6-hch/lpfc_hbadisc.c
+--- lpfcdriver-2.6-8.0.6/lpfc_hbadisc.c	2004-07-16 20:59:54.000000000 +0200
++++ lpfcdriver-2.6-8.0.6-hch/lpfc_hbadisc.c	2004-07-17 20:57:30.000000000 +0200
+@@ -2450,7 +2450,7 @@
+ 	return;
+ }
+ 
+-void
++static void
+ lpfc_nodev_timeout(unsigned long ptr)
+ {
+ 	struct lpfc_hba *phba;
+diff -uNr -X /home/hch/dontdiff lpfcdriver-2.6-8.0.6/lpfc_mem.c lpfcdriver-2.6-8.0.6-hch/lpfc_mem.c
+--- lpfcdriver-2.6-8.0.6/lpfc_mem.c	2004-07-16 20:59:54.000000000 +0200
++++ lpfcdriver-2.6-8.0.6-hch/lpfc_mem.c	2004-07-17 21:08:10.000000000 +0200
+@@ -40,12 +40,8 @@
+ static void lpfc_mem_safety_pool_destroy(struct lpfc_hba *);
+ static void lpfc_mbuf_safety_pool_create(struct lpfc_hba *, uint32_t );
+ static void lpfc_mbuf_safety_pool_destroy(struct lpfc_hba *);
+-static void lpfc_page_safety_pool_create(struct lpfc_hba *, uint32_t );
+-static void lpfc_page_safety_pool_destroy(struct lpfc_hba *);
+ void *lpfc_mbuf_alloc(struct lpfc_hba *, int, dma_addr_t *);
+ void lpfc_mbuf_free(struct lpfc_hba *, void *, dma_addr_t);
+-void *lpfc_page_alloc(struct lpfc_hba *, int, dma_addr_t *);
+-void lpfc_page_free(struct lpfc_hba *, void *, dma_addr_t);
+ static void *lpfc_scsibuf_pool_alloc(int , void *);
+ static void  lpfc_scsibuf_pool_free(void *, void *);
+ 
+@@ -66,8 +62,6 @@
+ 
+ 	phba->lpfc_scsi_dma_ext_pool = 0;
+ 	phba->lpfc_mbuf_pool = 0;
+-	phba->lpfc_page_pool = 0;
+-
+ 
+ 	phba->lpfc_scsi_dma_ext_pool =
+ 		pci_pool_create("lpfc_scsi_dma_ext_pool",
+@@ -83,21 +77,12 @@
+ 				8,
+ 				0);
+ 
+-	phba->lpfc_page_pool =
+-		pci_pool_create("lpfc_page_pool",
+-				phba->pcidev,
+-				LPFC_SCSI_PAGE_BUF_SZ,
+-				8,
+-				0);
+-
+-	if ((!phba->lpfc_scsi_dma_ext_pool) || (!phba->lpfc_mbuf_pool) ||
+-	   (!phba->lpfc_page_pool)) {
++	if (!phba->lpfc_scsi_dma_ext_pool || !phba->lpfc_mbuf_pool)
+ 		lpfc_mem_free(phba);
+ 		return (0);
+ 	}
+ 
+ 	lpfc_mbuf_safety_pool_create(phba, LPFC_MBUF_POOL_SIZE);
+-	lpfc_page_safety_pool_create(phba, LPFC_PAGE_POOL_SIZE);
+ 	lpfc_mem_safety_pool_create(phba, LPFC_MEM_POOL_SIZE);
+ 
+ 	return (1);
+@@ -126,7 +111,6 @@
+ 	}
+ 
+ 	lpfc_mbuf_safety_pool_destroy(phba);
+-	lpfc_page_safety_pool_destroy(phba);
+ 	lpfc_mem_safety_pool_destroy(phba);
+ 
+ 	if (phba->lpfc_scsi_dma_ext_pool)
+@@ -134,11 +118,7 @@
+ 
+ 	if (phba->lpfc_mbuf_pool)
+ 		pci_pool_destroy(phba->lpfc_mbuf_pool);
+-
+-	if (phba->lpfc_page_pool)
+-		pci_pool_destroy(phba->lpfc_page_pool);
+-
+-	return (1);
++	return 1;
+ }
+ 
+ void
+@@ -232,51 +212,6 @@
+ 	kfree(pool->elements);
+ }
+ 
+-
+-static void
+-lpfc_page_safety_pool_create(struct lpfc_hba * phba, uint32_t count)
+-{
+-	int i;
+-
+-	struct lpfc_dma_pool *pool =
+-		&(phba->lpfc_page_safety_pool);
+-
+-	pool->elements = kmalloc(sizeof(struct lpfc_dmabuf) * count,
+-				 GFP_KERNEL);
+-	pool->max_count = 0;
+-	pool->current_count = 0;
+-	for ( i=0; i<count; i++) {
+-		pool->elements[i].virt =
+-			pci_pool_alloc(phba->lpfc_page_pool,
+-				       GFP_KERNEL,
+-				       &(pool->elements[i].phys));
+-
+-		if (!pool->elements[i].virt)
+-			break;
+-		pool->max_count++;
+-		pool->current_count++;
+-	}
+-}
+-
+-static void
+-lpfc_page_safety_pool_destroy(struct lpfc_hba * phba)
+-{
+-	struct lpfc_dma_pool *pool =
+-		&(phba->lpfc_page_safety_pool);
+-	int i;
+-
+-	if ( pool->max_count != pool->current_count)
+-		printk("Memory leaked in page safety pool \n");
+-
+-	for (i=0; i< pool->current_count; i++) {
+-		pci_pool_free(phba->lpfc_page_pool,
+-			      pool->elements[i].virt,
+-			      pool->elements[i].phys);
+-	}
+-
+-	kfree(pool->elements);
+-}
+-
+ void *
+ lpfc_mbuf_alloc(struct lpfc_hba * phba, int mem_flags, dma_addr_t * handle)
+ {
+@@ -315,44 +250,6 @@
+ 	return;
+ }
+ 
+-void *
+-lpfc_page_alloc(struct lpfc_hba * phba, int mem_flags, dma_addr_t * handle)
+-{
+-	void *ret;
+-	struct lpfc_dma_pool *pool =
+-		&(phba->lpfc_page_safety_pool);
+-
+-	ret = pci_pool_alloc(phba->lpfc_page_pool, GFP_ATOMIC, handle);
+-	/*
+-	   If we are low in memory and is priority memory allocation
+-	   use safety pool
+-	*/
+-	if ((!ret) && ( mem_flags & MEM_PRI)
+-	    && (pool->current_count)) {
+-		pool->current_count--;
+-		ret = pool->elements[pool->current_count].virt;
+-		*handle = pool->elements[pool->current_count].phys;
+-	}
+-	return ret;
+-}
+-
+-void
+-lpfc_page_free(struct lpfc_hba * phba, void *virt, dma_addr_t dma)
+-{
+-	struct lpfc_dma_pool *pool =
+-		&(phba->lpfc_page_safety_pool);
+-
+-	if ( pool->current_count < pool->max_count) {
+-		pool->elements[pool->current_count].virt = virt;
+-		pool->elements[pool->current_count].phys = dma;
+-		pool->current_count++;
+-		return;
+-	}
+-
+-	pci_pool_free(phba->lpfc_page_pool, virt, dma);
+-	return;
+-}
+-
+ static void *
+ lpfc_scsibuf_pool_alloc(int gfp_flags, void *data) {
+ 	void * ret;
+diff -uNr -X /home/hch/dontdiff lpfcdriver-2.6-8.0.6/lpfc_scsiport.c lpfcdriver-2.6-8.0.6-hch/lpfc_scsiport.c
+--- lpfcdriver-2.6-8.0.6/lpfc_scsiport.c	2004-07-16 20:59:54.000000000 +0200
++++ lpfcdriver-2.6-8.0.6-hch/lpfc_scsiport.c	2004-07-17 20:56:01.000000000 +0200
+@@ -185,7 +185,7 @@
+ }
+ 
+ /* This routine frees a scsi buffer, both DMAable and non-DMAable regions */
+-void
++static void
+ lpfc_free_scsi_buf(struct lpfc_scsi_buf * psb)
+ {
+ 	struct lpfc_hba *phba;
+@@ -1127,177 +1127,6 @@
+ 	return ret;
+ }
+ 
+-struct lpfc_scsi_buf *
+-lpfc_build_scsi_cmd(struct lpfc_hba * phba,
+-		    struct lpfc_nodelist * nlp, uint32_t scsi_cmd, uint64_t lun)
+-{
+-	struct lpfc_sli *psli;
+-	struct lpfc_target *targetp;
+-	struct lpfc_lun *lunp;
+-	struct lpfc_dmabuf *mp;
+-	struct lpfc_scsi_buf *lpfc_cmd;
+-	struct lpfc_iocbq *piocbq;
+-	IOCB_t *piocb;
+-	struct fcp_cmnd *fcpCmnd;
+-	struct ulp_bde64 *bpl;
+-	uint32_t tgt, size;
+-	struct scsi_cmnd *lnx_cmd;
+-	struct scsi_device *scsi_dev;
+-
+-	tgt = nlp->nlp_sid;
+-	lunp = lpfc_find_lun(phba, tgt, lun, 1);
+-	lpfc_cmd = 0;
+-	/* First see if the SCSI ID has an allocated struct lpfc_target */
+-	if (lunp && lunp->pTarget) {
+-		targetp = lunp->pTarget;
+-		psli = &phba->sli;
+-
+-		/* Get a buffer to hold SCSI data */
+-		mp = kmalloc(sizeof (struct lpfc_dmabuf), GFP_ATOMIC);
+-		if (mp == 0) {
+-			return (0);
+-		}
+-
+-		INIT_LIST_HEAD(&mp->list);
+-		/* Get resources to send a SCSI command */
+-		lpfc_cmd = lpfc_get_scsi_buf(phba, GFP_ATOMIC);
+-		if (lpfc_cmd == 0) {
+-			kfree(mp);
+-			return (0);
+-		}
+-		lpfc_cmd->pLun = lunp;
+-		/* Internal-generated cmd, so we need to create a temporary
+-		 * linux scsi_cmnd and scsi_device.
+-		 * Also means when this internal cmd done, we need to free
+-		 * this scsi_cmnd and scsi_device structures.
+-		 */
+-		lnx_cmd = kmalloc(sizeof(struct scsi_cmnd), GFP_ATOMIC);
+-		if (lnx_cmd == 0) {
+-			kfree(mp);
+-			lpfc_free_scsi_buf(lpfc_cmd);
+-			return (0);
+-		}
+-		scsi_dev = kmalloc(sizeof(struct scsi_device), GFP_ATOMIC);
+-		if (scsi_dev == 0) {
+-			kfree(mp);
+-			kfree(lnx_cmd);
+-			lpfc_free_scsi_buf(lpfc_cmd);
+-			return (0);
+-		}
+-		scsi_dev->id = tgt;
+-		scsi_dev->lun = lun;
+-		scsi_dev->hostdata = lunp;
+-		lnx_cmd->device = scsi_dev;
+-		lpfc_cmd->pCmd = lnx_cmd;
+-		lpfc_cmd->timeout = 30 + phba->fcp_timeout_offset;
+-
+-		/* Finish building BPL with the I/O dma ptrs.
+-		 * setup FCP CMND, and setup IOCB.
+-		 */
+-
+-		fcpCmnd = lpfc_cmd->fcp_cmnd;
+-
+-		putLunHigh(fcpCmnd->fcpLunMsl, lun);	/* LUN */
+-		putLunLow(fcpCmnd->fcpLunLsl, lun);	/* LUN */
+-
+-		switch (scsi_cmd) {
+-		case REPORT_LUNS:
+-			size = LPFC_SCSI_PAGE_BUF_SZ;
+-			fcpCmnd->fcpCdb[0] = scsi_cmd;
+-			/* 0x1000 = LPFC_SCSI_PAGE_BUF_SZ */
+-			fcpCmnd->fcpCdb[8] = 0x10;
+-			fcpCmnd->fcpCdb[9] = 0x00;
+-			fcpCmnd->fcpCntl3 = READ_DATA;
+-			fcpCmnd->fcpDl = be32_to_cpu(LPFC_SCSI_PAGE_BUF_SZ);
+-			/* Get a buffer to hold SCSI data */
+-			if ((mp->virt =
+-			     lpfc_page_alloc(phba, 0, &(mp->phys))) == 0) {
+-				if (mp)
+-					kfree(mp);
+-				lpfc_free_scsi_buf(lpfc_cmd);
+-				return (0);
+-			}
+-			break;
+-		case INQUIRY:
+-			fcpCmnd->fcpCdb[0] = scsi_cmd;	/* SCSI Inquiry
+-							   Command */
+-			fcpCmnd->fcpCdb[4] = 0xff;	/* allocation length */
+-			fcpCmnd->fcpCntl3 = READ_DATA;
+-			fcpCmnd->fcpDl = be32_to_cpu(LPFC_SCSI_BUF_SZ);
+-			/* drop thru to get a buffer */
+-		default:
+-			size = LPFC_SCSI_BUF_SZ;
+-			/* Get a buffer to hold SCSI data */
+-			if ((mp->virt =
+-			     lpfc_mbuf_alloc(phba, 0, &(mp->phys))) == 0) {
+-				if (mp)
+-					kfree(mp);
+-				lpfc_free_scsi_buf(lpfc_cmd);
+-				return (0);
+-			}
+-			break;
+-		}
+-
+-		bpl = lpfc_cmd->fcp_bpl;
+-		bpl += 2;	/* Bump past FCP CMND and FCP RSP */
+-
+-		/* no scatter-gather list case */
+-		bpl->addrLow = le32_to_cpu(putPaddrLow(mp->phys));
+-		bpl->addrHigh = le32_to_cpu(putPaddrHigh(mp->phys));
+-		bpl->tus.f.bdeSize = size;
+-		bpl->tus.f.bdeFlags = BUFF_USE_RCV;
+-		bpl->tus.w = le32_to_cpu(bpl->tus.w);
+-		bpl++;
+-		bpl->addrHigh = 0;
+-		bpl->addrLow = 0;
+-		bpl->tus.w = 0;
+-
+-		piocbq = &lpfc_cmd->cur_iocbq;
+-		piocb = &piocbq->iocb;
+-		piocb->ulpCommand = CMD_FCP_IREAD64_CR;
+-		piocb->ulpPU = PARM_READ_CHECK;
+-		piocb->un.fcpi.fcpi_parm = size;
+-		piocb->un.fcpi64.bdl.bdeSize += sizeof (struct ulp_bde64);
+-		piocb->ulpBdeCount = 1;
+-		piocb->ulpLe = 1;	/* Set the LE bit in the iocb */
+-
+-		/* Get an iotag and finish setup of IOCB  */
+-		piocb->ulpIoTag = lpfc_sli_next_iotag(phba,
+-					      &phba->sli.ring[psli->fcp_ring]);
+-		piocb->ulpContext = nlp->nlp_rpi;
+-		if (nlp->nlp_fcp_info & NLP_FCP_2_DEVICE) {
+-			piocb->ulpFCP2Rcvy = 1;
+-		}
+-		piocb->ulpClass = (nlp->nlp_fcp_info & 0x0f);
+-
+-		/* ulpTimeout is only one byte */
+-		if (lpfc_cmd->timeout > 0xff) {
+-			/*
+-			 * Do not timeout the command at the firmware level.
+-			 * The driver will provide the timeout mechanism.
+-			 */
+-			piocb->ulpTimeout = 0;
+-		} else {
+-			piocb->ulpTimeout = lpfc_cmd->timeout;
+-		}
+-
+-		/*
+-		 * Setup driver timeout, in case the command does not complete
+-		 * Driver timeout should be greater than ulpTimeout
+-		 */
+-
+-		piocbq->drvrTimeout = lpfc_cmd->timeout + LPFC_DRVR_TIMEOUT;
+-
+-		/* set up iocb return path by setting the context fields
+-		 * and the completion function.
+-		 */
+-		piocbq->context1 = lpfc_cmd;
+-		piocbq->context2 = mp;
+-
+-	}
+-	return (lpfc_cmd);
+-}
+-
+ void
+ lpfc_scsi_timeout_handler(unsigned long ptr)
+ {
