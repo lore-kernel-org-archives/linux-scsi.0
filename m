@@ -1,106 +1,118 @@
-From: Mark Haverkamp <markh@osdl.org>
-Subject: Re: [PATCH] as i/o hang with aacraid driver 2.6.0-test1
-Date: 31 Jul 2003 07:40:44 -0700
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Revised PATCH: (as73b) Do a minimal transfer for disk-cache mode-sense
+ page
+Date: Thu, 31 Jul 2003 11:12:38 -0400 (EDT)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1059662443.27432.2.camel@markh1.pdx.osdl.net>
-References: <20030716132036.GB833@suse.de>
-	 <1058364455.1856.28.camel@mulgrave>	<20030716170456.GK833@suse.de>
-	 <20030717015756.135a3f5a.akpm@osdl.org>	<20030717085952.GX833@suse.de>
-	 <3F1672D9.7070309@cyberone.com.au>	<20030717102926.GE833@suse.de>
-	 <3F167F98.60006@cyberone.com.au>	<20030717105641.GF833@suse.de>
-	 <3F1683F5.4030107@cyberone.com.au>	<20030717111059.GI833@suse.de>
-	 <3F168846.90902@cyberone.com.au>
-	 <1058474814.4638.11.camel@markh1.pdx.osdl.net>
-	 <1058481553.19508.5.camel@markh1.pdx.osdl.net>
-	 <1058485621.7424.30.camel@dell_ss5.pdx.osdl.net>
-	 <20030717170055.5dbe20c1.akpm@osdl.org>  <3F17821A.307@cyberone.com.au>
-	 <1058540605.20130.48.camel@markh1.pdx.osdl.net>
-	 <1058545730.20130.62.camel@markh1.pdx.osdl.net>
-	 <1058547377.1826.61.camel@mulgrave>
-	 <1058550386.20130.75.camel@markh1.pdx.osdl.net>
-	 <1058559719.1826.106.camel@mulgrave>  <3F28C24B.2020604@cyberone.com.au>
+Message-ID: <Pine.LNX.4.44L0.0307311101130.1018-100000@ida.rowland.org>
+References: <1059599085.1849.264.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fw.osdl.org ([65.172.181.6]:9432 "EHLO mail.osdl.org")
-	by vger.kernel.org with ESMTP id S272498AbTGaOk4 (ORCPT
+Received: from ida.rowland.org ([192.131.102.52]:5892 "HELO ida.rowland.org")
+	by vger.kernel.org with SMTP id S272509AbTGaPMj (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 31 Jul 2003 10:40:56 -0400
-In-Reply-To: <3F28C24B.2020604@cyberone.com.au>
+	Thu, 31 Jul 2003 11:12:39 -0400
+In-Reply-To: <1059599085.1849.264.camel@mulgrave>
 List-Id: linux-scsi@vger.kernel.org
-To: Nick Piggin <piggin@cyberone.com.au>
-Cc: James Bottomley <James.Bottomley@steeleye.com>, Andrew Morton <akpm@osdl.org>, Daniel McNeil <daniel@osdl.org>, Jens Axboe <axboe@suse.de>, Cliff White <cliffw@osdl.org>, linux-scsi <linux-scsi@vger.kernel.org>
+To: James Bottomley <James.Bottomley@steeleye.com>
+Cc: SCSI development list <linux-scsi@vger.kernel.org>
 
-On Thu, 2003-07-31 at 00:16, Nick Piggin wrote:
-> James Bottomley wrote:
-> 
-> >On Fri, 2003-07-18 at 12:46, Mark Haverkamp wrote:
-> >
-> >>I'll try out your test harness on our hardware and see what happens.
-> >>
-> 
-> Sorry for coming in a few weeks late here. Thanks everyone who
-> has been taking time on this.
-> 
-> What is the status of this stuff? I see Andrew's latest tree still
-> has your "HACK: ***" in it, James. Who is putting together a complete
-> patch for Andrew?
-> 
-> >
-> >OK, I think I found the problem.
-> >
-> 
-> Yes, the problem with AS just the I-don't-know-about-requeue thing.
-> As you have found there are other non AS problems there.
-> 
-> Thanks again everyone.
+On 30 Jul 2003, James Bottomley wrote:
 
-Nick,
+> On Wed, 2003-07-30 at 15:36, Alan Stern wrote:
+> > 	It sets the DBD flag to prevent the transfer of unwanted Block 
+> > Descriptors.
+> 
+> I'm afraid I think we've already been around the houses on this one and
+> decided that we can't do it.
+> 
+> The problem is that most CD-ROMS and some USB storage devices follow one
+> of the ATAPI packet specifications which has the DBD bit as reserved,
+> and someone actually found one which gets annoyed if DBD is set.
 
-Here is the requeue function I have been using for a while.  It is based
-on your original requeue function.  It has been working for me.
+Okay.  The revised patch doesn't set DBD and adds an explanatory comment.
 
-Mark.
+> > 	It transfers only the first 4 bytes of the cache page; the 
+> > information we want is in the 3rd byte.
+> 
+> I didn't actually spot this anywhere in the patch.
 
-===== drivers/block/as-iosched.c 1.9 vs edited =====
---- 1.9/drivers/block/as-iosched.c	Fri Jul 25 11:19:44 2003
-+++ edited/drivers/block/as-iosched.c	Thu Jul 31 07:30:04 2003
-@@ -1307,12 +1307,30 @@
- }
+It's in the line where len is set to the sum of the two headers plus 4.
+
+> Won't work.  SAM_STAT_BUSY will cause an immediate retry, which still
+> won't get satisfied.  I think you need to follow the original logic but
+> change 128 to 512
+
+I disagree.  All that will happen is that res will fail the 
+scsi_status_is_good() test, so the routine will by default assume a 
+write-through cache.
+
+However, there would be nothing wrong with changing SAM_STAT_BUSY to a 
+different error code, such as SAM_STAT_TASK_SET_FULL.  It doesn't matter 
+what the value is, so long as it doesn't pass scsi_status_is_good().
+
+Alan Stern
+
+
+===== sd.c 1.52 vs edited =====
+--- 1.52/drivers/scsi/sd.c	Tue Jul  1 17:54:19 2003
++++ edited/drivers/scsi/sd.c	Thu Jul 31 11:05:01 2003
+@@ -1080,6 +1080,7 @@
+ sd_read_write_protect_flag(struct scsi_disk *sdkp, char *diskname,
+ 		   struct scsi_request *SRpnt, unsigned char *buffer) {
+ 	int res;
++	const int dbd = 0;	   /* Some devices don't like DBD */
+ 	struct scsi_mode_data data;
  
- /*
-- * FIXME: HACK for AS requeue problems
-+ * requeue the request. The request has not been completed, nor is it a
-+ * new request, so don't touch accounting.
-  */
- static void as_requeue_request(request_queue_t *q, struct request *rq)
- {
--	elv_completed_request(q, rq);
--	__elv_add_request(q, rq, 0, 0);
-+	struct as_data *ad = q->elevator.elevator_data;
-+	struct as_rq *arq = RQ_DATA(rq);
-+
-+	if (arq) {
-+		if (arq->io_context && arq->io_context->aic) {
-+			arq->state = AS_RQ_DISPATCHED;
-+			atomic_inc(&arq->io_context->aic->nr_dispatched);
-+		}
-+	} else
-+		WARN_ON(!(rq->flags & REQ_HARDBARRIER) && blk_fs_request(rq));
-+
-+	list_add_tail(&rq->queuelist, ad->dispatch);
-+
-+	/* Stop anticipating - let this request get through */
-+	if (ad->antic_status == ANTIC_WAIT_REQ
-+			|| ad->antic_status == ANTIC_WAIT_NEXT)
-+		as_antic_stop(ad);
-+
-+	return;
- }
+ 	/*
+@@ -1087,7 +1088,7 @@
+ 	 * We have to start carefully: some devices hang if we ask
+ 	 * for more than is available.
+ 	 */
+-	res = sd_do_mode_sense(SRpnt, 0, 0x3F, buffer, 4, &data);
++	res = sd_do_mode_sense(SRpnt, dbd, 0x3F, buffer, 4, &data);
  
- static void
-
--- 
-Mark Haverkamp <markh@osdl.org>
+ 	/*
+ 	 * Second attempt: ask for page 0
+@@ -1095,13 +1096,13 @@
+ 	 * Sense Key 5: Illegal Request, Sense Code 24: Invalid field in CDB.
+ 	 */
+ 	if (!scsi_status_is_good(res))
+-		res = sd_do_mode_sense(SRpnt, 0, 0, buffer, 4, &data);
++		res = sd_do_mode_sense(SRpnt, dbd, 0, buffer, 4, &data);
+ 
+ 	/*
+ 	 * Third attempt: ask 255 bytes, as we did earlier.
+ 	 */
+ 	if (!scsi_status_is_good(res))
+-		res = sd_do_mode_sense(SRpnt, 0, 0x3F, buffer, 255, &data);
++		res = sd_do_mode_sense(SRpnt, dbd, 0x3F, buffer, 255, &data);
+ 
+ 	if (!scsi_status_is_good(res)) {
+ 		printk(KERN_WARNING
+@@ -1124,7 +1125,7 @@
+ 		   struct scsi_request *SRpnt, unsigned char *buffer) {
+ 	int len = 0, res;
+ 
+-	const int dbd = 0;	   /* DBD */
++	const int dbd = 0;	   /* Some devices don't like DBD */
+ 	const int modepage = 0x08; /* current values, cache page */
+ 	struct scsi_mode_data data;
+ 
+@@ -1134,10 +1135,11 @@
+ 
+ 	if (scsi_status_is_good(res)) {
+ 		/* that went OK, now ask for the proper length */
+-		len = data.length;
+-		if (len > 128)
+-			len = 128;
+-		res = sd_do_mode_sense(SRpnt, dbd, modepage, buffer,
++		len = data.header_length + data.block_descriptor_length + 4;
++		if (len > 512)
++			res = SAM_STAT_BUSY;
++		else
++			res = sd_do_mode_sense(SRpnt, dbd, modepage, buffer,
+ 				       len, &data);
+ 	}
+ 
 
