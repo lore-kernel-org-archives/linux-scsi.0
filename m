@@ -1,110 +1,70 @@
 From: Thomas Gleixner <tglx@linutronix.de>
-Subject: [PATCH] SCSI: Replace semaphores with wait_even
-Date: Wed, 20 Oct 2004 21:29:39 +0200
+Subject: [PATCH] SCSI: Replace semaphore with completion
+Date: Wed, 20 Oct 2004 21:31:39 +0200
 Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <1098300579.20821.65.camel@thomas>
+Message-ID: <1098300699.20821.68.camel@thomas>
 Reply-To: tglx@linutronix.de
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel=40m.gmane.org-S270442AbUJTTjp@vger.kernel.org>
+Return-path: <linux-kernel-owner+glk-linux-kernel=40m.gmane.org-S269007AbUJUGiz@vger.kernel.org>
 To: Andrew Morton <akpm@osdl.org>
-Cc: Ingo Molnar <mingo@elte.hu>, LKML <linux-kernel@vger.kernel.org>, SCSI <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Ingo Molnar <mingo@elte.hu>, SCSI <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, James Bottomley <James.Bottomley@SteelEye.com>
 List-Id: linux-scsi@vger.kernel.org
 
 
-Use wait_event instead of semaphores. Semaphores are slower
-and trigger owner conflicts during semaphore debugging.
+Use completion instead of semaphore
 
 Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
 Acked-by: Ingo Molnar <mingo@elte.hu>
 ---
 
- 2.6.9-bk-041020-thomas/drivers/scsi/hosts.c      |    2 +-
- 2.6.9-bk-041020-thomas/drivers/scsi/scsi_error.c |   19
-++++++++-----------
- 2.6.9-bk-041020-thomas/include/scsi/scsi_host.h  |    2 +-
- 3 files changed, 10 insertions(+), 13 deletions(-)
+ 2.6.9-bk-041020-thomas/drivers/scsi/sym53c8xx_2/sym_glue.c |    8
+++++----
+ 1 files changed, 4 insertions(+), 4 deletions(-)
 
-diff -puN drivers/scsi/scsi_error.c~scsihost drivers/scsi/scsi_error.c
---- 2.6.9-bk-041020/drivers/scsi/scsi_error.c~scsihost	2004-10-20
-15:58:57.000000000 +0200
-+++ 2.6.9-bk-041020-thomas/drivers/scsi/scsi_error.c	2004-10-20
-16:02:57.000000000 +0200
-@@ -49,7 +49,7 @@
- void scsi_eh_wakeup(struct Scsi_Host *shost)
- {
- 	if (shost->host_busy == shost->host_failed) {
--		up(shost->eh_wait);
-+		wake_up(shost->eh_wait);
- 		SCSI_LOG_ERROR_RECOVERY(5,
- 				printk("Waking error handler thread\n"));
- 	}
-@@ -1598,7 +1598,7 @@ int scsi_error_handler(void *data)
- {
- 	struct Scsi_Host *shost = (struct Scsi_Host *) data;
- 	int rtn;
--	DECLARE_MUTEX_LOCKED(sem);
-+ 	DECLARE_WAIT_QUEUE_HEAD(eh_wait);
+diff -puN drivers/scsi/sym53c8xx_2/sym_glue.c~sym53c8xx
+drivers/scsi/sym53c8xx_2/sym_glue.c
+---
+2.6.9-bk-041020/drivers/scsi/sym53c8xx_2/sym_glue.c~sym53c8xx	2004-10-20
+16:04:34.000000000 +0200
++++
+2.6.9-bk-041020-thomas/drivers/scsi/sym53c8xx_2/sym_glue.c	2004-10-20
+16:04:50.000000000 +0200
+@@ -135,7 +135,7 @@ m_addr_t __vtobus(m_pool_ident_t dev_dma
+  *  It is allocated on the eh thread stack.
+  */
+ struct sym_eh_wait {
+-	struct semaphore sem;
++	struct completion done;
+ 	struct timer_list timer;
+ 	void (*old_done)(struct scsi_cmnd *);
+ 	int to_do;
+@@ -798,7 +798,7 @@ static void __sym_eh_done(struct scsi_cm
  
- 	/*
- 	 *    Flush resources
-@@ -1608,7 +1608,7 @@ int scsi_error_handler(void *data)
+ 	/* Wake up the eh thread if it wants to sleep */
+ 	if (ep->to_do == SYM_EH_DO_WAIT)
+-		up(&ep->sem);
++		complete(&ep->done);
+ }
  
- 	current->flags |= PF_NOFREEZE;
- 
--	shost->eh_wait = &sem;
-+	shost->eh_wait = &eh_wait;
- 	shost->ehandler = current;
- 
- 	/*
-@@ -1630,15 +1630,12 @@ int scsi_error_handler(void *data)
- 						  " sleeping\n",shost->host_no));
- 
- 		/*
--		 * Note - we always use down_interruptible with the semaphore
--		 * even if the module was loaded as part of the kernel.  The
--		 * reason is that down() will cause this thread to be counted
--		 * in the load average as a running process, and down
--		 * interruptible doesn't.  Given that we need to allow this
--		 * thread to die if the driver was loaded as a module, using
--		 * semaphores isn't unreasonable.
-+		 * Wait, until somebody decides to wake us due to an error
-+		 * or because we should be killed
- 		 */
--		down_interruptible(&sem);
-+		wait_event_interruptible(eh_wait, shost->eh_kill ||
-+				(shost->host_busy == shost->host_failed));
-+
- 		if (shost->eh_kill)
- 			break;
- 
-diff -puN drivers/scsi/hosts.c~scsihost drivers/scsi/hosts.c
---- 2.6.9-bk-041020/drivers/scsi/hosts.c~scsihost	2004-10-20
-16:00:04.000000000 +0200
-+++ 2.6.9-bk-041020-thomas/drivers/scsi/hosts.c	2004-10-20
-16:00:35.000000000 +0200
-@@ -157,7 +157,7 @@ static void scsi_host_dev_release(struct
- 		DECLARE_COMPLETION(sem);
- 		shost->eh_notify = &sem;
- 		shost->eh_kill = 1;
--		up(shost->eh_wait);
-+		wake_up(shost->eh_wait);
- 		wait_for_completion(&sem);
- 		shost->eh_notify = NULL;
- 	}
-diff -puN include/scsi/scsi_host.h~scsihost include/scsi/scsi_host.h
---- 2.6.9-bk-041020/include/scsi/scsi_host.h~scsihost	2004-10-20
-16:00:12.000000000 +0200
-+++ 2.6.9-bk-041020-thomas/include/scsi/scsi_host.h	2004-10-20
-16:00:29.000000000 +0200
-@@ -396,7 +396,7 @@ struct Scsi_Host {
- 
- 	struct list_head	eh_cmd_q;
- 	struct task_struct    * ehandler;  /* Error recovery thread. */
--	struct semaphore      * eh_wait;   /* The error recovery thread waits
-+	wait_queue_head_t     * eh_wait;   /* The error recovery thread waits
- 					      on this. */
- 	struct completion     * eh_notify; /* wait for eh to begin or end */
- 	struct semaphore      * eh_action; /* Wait for specific actions on the
+ /*
+@@ -858,7 +858,7 @@ prepare:
+ 	case SYM_EH_DO_IGNORE:
+ 		break;
+ 	case SYM_EH_DO_WAIT:
+-		init_MUTEX_LOCKED(&ep->sem);
++		init_completion(&ep->done);
+ 		/* fall through */
+ 	case SYM_EH_DO_COMPLETE:
+ 		ep->old_done = cmd->scsi_done;
+@@ -909,7 +909,7 @@ prepare:
+ 		ep->timed_out = 1;	/* Be pessimistic for once :) */
+ 		add_timer(&ep->timer);
+ 		spin_unlock_irq(np->s.host->host_lock);
+-		down(&ep->sem);
++		wait_for_completion(&ep->done);
+ 		spin_lock_irq(np->s.host->host_lock);
+ 		if (ep->timed_out)
+ 			sts = -2;
 _
