@@ -1,47 +1,66 @@
-From: Jes Sorensen <jes@sgi.com>
-Subject: Re: qla1280 endiannes and 64/32bit fixes
-Date: 18 Jan 2004 16:59:33 -0500
+From: Willem Riede <wrlk@riede.org>
+Subject: Re: devices with more than one node
+Date: Sun, 18 Jan 2004 17:08:02 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1074463172.1591.2.camel@lappy.trained-monkey.org>
-References: <1074382860.1756.20.camel@mulgrave>
-	 <20040118024326.GA381527@sgi.com> <1074395819.1756.31.camel@mulgrave>
-	 <20040118062157.GA11083@praka.local.home> <20040118073321.GC383498@sgi.com>
-	  <1074437655.1804.12.camel@mulgrave>
+Message-ID: <20040118220802.GA25501@linnie.riede.org>
+References: <20040113193842.GA29887@suse.de> <20040113194631.GA3818@kroah.com> <20040113211122.GA28100@suse.de> <20040113212058.GA2595@kroah.com> <20040113150147.A9902@beaverton.ibm.com> <20040113231813.GA7409@kroah.com> <1074042776.4004979822819@wwws.torque.net> <20040114030847.GG4339@linnie.riede.org> <4006499A.4070302@torque.net>
+Reply-To: wrlk@riede.org
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtvcafw.sgi.com ([192.48.171.6]:13376 "EHLO zok.sgi.com")
-	by vger.kernel.org with ESMTP id S264163AbUARWAX (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 18 Jan 2004 17:00:23 -0500
-In-Reply-To: <1074437655.1804.12.camel@mulgrave>
+Received: from sccrmhc13.comcast.net ([204.127.202.64]:467 "EHLO
+	sccrmhc13.comcast.net") by vger.kernel.org with ESMTP
+	id S264238AbUARWIE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 18 Jan 2004 17:08:04 -0500
+Content-Disposition: inline
+In-Reply-To: <4006499A.4070302@torque.net> (from dougg@torque.net on Thu, Jan 15, 2004 at 03:04:42 -0500)
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Jeremy Higdon <jeremy@sgi.com>, Andrew Vasquez <praka@users.sourceforge.net>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: dougg@torque.net
+Cc: linux-scsi@vger.kernel.org, Kai.Makisara@kolumbus.fi
 
-On Sun, 2004-01-18 at 09:54, James Bottomley wrote:
-> On Sun, 2004-01-18 at 02:33, Jeremy Higdon wrote:
-> > James, with your code as it is now, ha->flags.enable_64bit_addressing
-> > is always 0.  You'd need to add code to read the value out of the
-> > nvram.  Then we'll need an nvram override for Altix.
+On 2004.01.15 03:04, Douglas Gilbert wrote:
 > 
-> Actually, I found it.  There was a missed endianness problem in the 64
-> bit path (see patch).
+> To test it I modded scsi_debug to fake OnStream tape
+> drives and ran a 2.6.1-mm2 kernel. The attached
+> output of "cd /sys/class; tree scsi* osst" is instructive.
+> Two peculiar entries are:
+>      scsi_generic/sg0/driver -> ../../../bus/scsi/drivers/osst
+>      scsi_generic/sg1/driver -> ../../../bus/scsi/drivers/osst
 > 
-> However, I have another question for you:  Does the card BIOS actually
-> get to run on bootup?  It doesn't (because it can't) on PA, so I get
-> strange values for certain NVRAM quantities (like the 32 bit mode, but
-> more importantly, the offset of all my devices gets set to 1).  I was
-> thinking about doing an override to set them more sensibly and wondered
-> if you were having the same problem.
+> This symlink only appears if the osst driver is loaded
+> _before_ the sg driver! It is also left dangling by
+> "rmmod osst". 
 
-Hi James,
+I see the same with real OnStream tape drives.
+It appears that when an upper level driver like osst is
+(un)loaded, your (sg) attach doesn't get a chance to
+reconsider...
 
-Same problem on Altix, the BIOS can't run as there is no x86 emulation
-in the EFI firmware on the box.
+By the way, I notice that st produces links in scsi_device
+that osst doesn't - 0:0:3:0 and 3:0:0:0 are OnStream drives:
 
-Cheers,
-Jes
+scsi_device
+|-- 0:0:3:0
+|   `-- device -> ../../../devices/pci0000:00/0000:00:0e.0/host0/0:0:3:0
+|-- 0:0:6:0
+|   `-- device -> ../../../devices/pci0000:00/0000:00:0e.0/host0/0:0:6:0
+|-- 1:0:0:0
+|   |-- device -> ../../../devices/pci0000:00/0000:00:0e.1/host1/1:0:0:0
+|   `-- driver -> ../../../bus/scsi/drivers/sd
+|-- 1:0:1:0
+|   |-- device -> ../../../devices/pci0000:00/0000:00:0e.1/host1/1:0:1:0
+|   `-- driver -> ../../../bus/scsi/drivers/sd
+|-- 2:0:0:0
+|   |-- device -> ../../../devices/pci0000:00/0000:00:07.1/ide0/0.1/host2/2:0:0:0
+|   `-- driver -> ../../../bus/scsi/drivers/st
+|-- 3:0:0:0
+|   `-- device -> ../../../devices/pci0000:00/0000:00:07.1/ide1/1.0/host3/3:0:0:0
+`-- 4:0:0:0
+    |-- device -> ../../../devices/pci0000:00/0000:00:07.1/ide1/1.1/host4/4:0:0:0
+    `-- driver -> ../../../bus/scsi/drivers/st
 
+Should I emulate what st does to create these entries?
+
+Thanks, Willem Riede.
 
