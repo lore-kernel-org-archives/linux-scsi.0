@@ -1,33 +1,26 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH] Re: libata: BLKFLSBUF ioctl broken
-Date: Fri, 22 Oct 2004 21:31:43 +0100
+From: Bryan Henderson <hbryan@us.ibm.com>
+Subject: Re: [PATCH] Re: libata:  BLKFLSBUF ioctl broken
+Date: Fri, 22 Oct 2004 13:58:39 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1098477101.19435.46.camel@localhost.localdomain>
-References: <200410221942.i9MJguMR017671@falcon30.maxeymade.com>
+Message-ID: <OF07E8A316.708939F4-ON88256F35.0072E805-88256F35.0073320E@us.ibm.com>
+References: <1098469018.19463.26.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="US-ASCII"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from clock-tower.bc.nu ([81.2.110.250]:39138 "EHLO
-	localhost.localdomain") by vger.kernel.org with ESMTP
-	id S268001AbUJVVew (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 22 Oct 2004 17:34:52 -0400
-In-Reply-To: <200410221942.i9MJguMR017671@falcon30.maxeymade.com>
+Received: from e4.ny.us.ibm.com ([32.97.182.104]:47338 "EHLO e4.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S267549AbUJVU75 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 22 Oct 2004 16:59:57 -0400
+In-Reply-To: <1098469018.19463.26.camel@localhost.localdomain>
 List-Id: linux-scsi@vger.kernel.org
-To: Doug Maxey <dwm@maxeymade.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, Mark Lord <lsml@rtr.ca>, linux-scsi@vger.kernel.org, Jens Axboe <axboe@suse.de>
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Jens Axboe <axboe@suse.de>, Jeff Garzik <jgarzik@pobox.com>, linux-scsi@vger.kernel.org, linux-scsi-owner@vger.kernel.org, Mark Lord <lsml@rtr.ca>
 
-On Gwe, 2004-10-22 at 20:42, Doug Maxey wrote:
-> >We are slowly fixing the abusers of -EINVAL/-EOPNOTSUPP. Note btw that
-> >networking stuff is in many places a little different in its returns.
-> 
-> What about the case of "This is normally a valid command, but this
-> particulat device is incapable of this particular subcommand"?
-> 
-> Hypothetical instance: a disk drive that indicates it is not capable of 
-> changing it's write cache setting?
+>-EINVAL: "I recognize this ioctl but the arguments are bogus"
+>-ENOTTY: "I don't recognize this ioctl at all"
 
-Thats less clear. Traditional Unix has tended to use EINVAL for that
-too, while Linux re-uses things like EOPNOTSUPP and that may well be a
-better approach - its at least fairly consistent in Linux.
+You mean of course "this ioctl command code."
 
+--
+Bryan Henderson                          IBM Almaden Research Center
+San Jose CA                              Filesystems
