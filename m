@@ -1,33 +1,46 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [Announce] Emulex lpfcdriver v8.0.9 available
-Date: Mon, 16 Aug 2004 21:46:44 +0100
+From: Andrew Vasquez <praka@pobox.com>
+Subject: Re: qla2xxx driver/firmware versions & thermal stability
+Date: Mon, 16 Aug 2004 14:19:43 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040816214644.A15044@infradead.org>
-References: <0B1E13B586976742A7599D71A6AC733C02F164@xbl3.ma.emulex.com> <20040816212706.A14780@infradead.org>
+Message-ID: <20040816211943.GA16524@praka.san.rr.com>
+References: <41206B59.5070703@zeroth.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from imladris.demon.co.uk ([193.237.130.41]:38661 "EHLO
-	phoenix.infradead.org") by vger.kernel.org with ESMTP
-	id S267947AbUHPUqv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 16 Aug 2004 16:46:51 -0400
+Received: from ms-smtp-02-qfe0.socal.rr.com ([66.75.162.134]:22445 "EHLO
+	ms-smtp-02-eri0.socal.rr.com") by vger.kernel.org with ESMTP
+	id S267957AbUHPVUY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 16 Aug 2004 17:20:24 -0400
 Content-Disposition: inline
-In-Reply-To: <20040816212706.A14780@infradead.org>; from hch@infradead.org on Mon, Aug 16, 2004 at 09:27:06PM +0100
+In-Reply-To: <41206B59.5070703@zeroth.org>
 List-Id: linux-scsi@vger.kernel.org
-To: James.Smart@Emulex.Com
+To: Jamie Clark <jamie@zeroth.org>
 Cc: linux-scsi@vger.kernel.org
 
-On Mon, Aug 16, 2004 at 09:27:06PM +0100, Christoph Hellwig wrote:
-> > To date, the known todos are:
-> > - Use mid-layer I/O timers
-> > - No Peeking into timer structures
-> > - Need to get approvals on all the clock changes, parameter changes, etc.
-> > - Add calls to scan functions on new device detection, remove_device on device loss.
-> > - Add interfaces to support managability.
-> 
-> 
->  - streamline I/O submission path
->  - sort out memory allocation issues
+On Mon, 16 Aug 2004, Jamie Clark wrote:
 
-- get rid of persistant lun binding support in the driver
+> 
+> In the recent past we ran qla2300 driver version 6.04.00 with qla2300F 
+> cards. The driver/card often died with the following messages  (kernel  
+> 2.4.19-pre10aa4):
+> 
+> Jan 12 12:54:56 prodapp4 kernel: qla2x00: Status Entry invalid handle.
+> Jan 12 12:54:56 prodapp4 kernel: qla2x00: Performing ISP error recovery 
+> - ha= c493c07c.
+> ...
+> Jan 12 12:55:22 prodapp4 kernel: qla2x00(2): ISP error recovery failed - 
+> board disabled
+> 
+> These failures seem to be temperature related. A slight upward shift in 
+> the computer room temperature (from very cold to not-quite-as-cold) 
+> *always* precipitated these errors. After upgrading all the machines to 
+> qla2340 boards we still have the same problem.
+> 
 
+Could you report your findings to QLogic tech-support
+(www.qlogic.com/support), they'll be able to assist in
+troubleshooting.  
+
+Regards,
+Andrew Vasquez
+QLogic Corporation
