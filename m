@@ -1,46 +1,84 @@
-From: Abhishek Rai <abba@cs.sunysb.edu>
-Subject: Re: Help - how to identify the callers in a SCSI lower-leveldriver
-Date: Wed, 7 Apr 2004 21:09:15 -0400 (EDT)
+From: Andrew Morton <akpm@osdl.org>
+Subject: sym2 probs in bk-scsi tree
+Date: Wed, 7 Apr 2004 23:18:20 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.GSO.4.53.0404072106530.12925@compserv1>
-References: <519672568F040C41B6FAC21ADF51B18FEFA0@mailnode1.commstor.crossroads.com>
- <20040407205701.GA27311@devserv.devel.redhat.com>
+Message-ID: <20040407231820.66dd76cd.akpm@osdl.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sbcs.sunysb.edu ([130.245.1.15]:29885 "EHLO sbcs.cs.sunysb.edu")
-	by vger.kernel.org with ESMTP id S261378AbUDHBLw (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Apr 2004 21:11:52 -0400
-In-Reply-To: <20040407205701.GA27311@devserv.devel.redhat.com>
+Received: from fw.osdl.org ([65.172.181.6]:6352 "EHLO mail.osdl.org")
+	by vger.kernel.org with ESMTP id S261992AbUDHGSa (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Apr 2004 02:18:30 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: Arjan van de Ven <arjanv@redhat.com>
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org, Matthew Wilcox <willy@debian.org>
 
 
-> > The shim (a pseudo SCSI lower-level driver) we are working on sits in
-> > between Linux SCSI mid-level driver and our existing kernel driver which
-> > interfaces with a FC driver which interacts with the FC HBA.
->
-> wow that sounds like a great way to kill performance, that many extra layers
->
-> >
-> > To track SCSI initiators' tasks, it would be great if our existing kernel
-> > driver knows which application makes the (SCSI passthrough ioctl) call to
-> > /dev/sda.
->
-> well... it's a fundamentally hard problem. For example the application that
-> submitted the IO may no longer exist on disk by the time you get to see the
-> IO, or the process may already have exited. It sounds like a fundamentally
-> fragile/broken concept to use this information for *anything*, it's still
-> not clear to me what you'd use it for (other than doing a gross hack by
-> faking IO priorities based on application name but that's sooo not the right
-> solution to that problem)
->
+This is on the power4 machine, which has previously worked quite happily.
 
-If it is just a feature you want in your development driver, you can do it
-at the file system level, e.g., modify an existing file system, or better
-still, have a thin stackable file system layer that does that. Then you
-can mount the file system on your /dev/sda so that the stackable file
-system sits in between the underlying file system and the VFS.
+During boot the system spends maybe one minute dicking with the SCSI
+controller and emitting scary new reset and abort messages.
 
-Abhishek
+
+scsi(0:0:10:0): Beginning Domain Validation                       
+sym0:10: wide asynchronous.                
+sym0:10: FAST-80 WIDE SCSI 160.0 MB/s DT (12.5 ns, offset 31)
+scsi(0:0:10:0): Ending Domain Validation                     
+  Vendor: IBM       Model: IC35L036UCD210-0  Rev: S5BS
+  Type:   Direct-Access                      ANSI SCSI revision: 03
+sym0:11:0: tagged command queuing enabled, command queue depth 16. 
+scsi(0:0:11:0): Beginning Domain Validation                       
+sym0:11: wide asynchronous.                
+sym0:11: FAST-80 WIDE SCSI 160.0 MB/s DT (12.5 ns, offset 31)
+scsi(0:0:11:0): Ending Domain Validation                     
+  Vendor: IBM       Model: HSBPD4E  PU3SCSI  Rev: 0013
+  Type:   Enclosure                          ANSI SCSI revision: 02
+scsi(0:0:15:0): Beginning Domain Validation                        
+sym0:15:0:phase change 6-7 6@28050390 resid=4.
+sym0:15:0:phase change 6-7 5@28050390 resid=3.
+sym0:15:0:phase change 6-7 9@28050390 resid=7.
+sym0:15:0:phase change 6-7 6@28050390 resid=4.
+sym0:15:0: DEVICE RESET operation started.    
+sym0:15:0: DEVICE RESET operation complete.
+sym0:15:control msgout: c.                 
+sym0: TARGET 15 has been reset.
+sym0:15:0: ABORT operation started.
+sym0:15:0: ABORT operation complete.
+sym0:15:0: BUS RESET operation started.
+sym0:15:0: BUS RESET operation complete.
+sym0: SCSI BUS reset detected.          
+sym0: SCSI BUS has been reset.
+sym0:15:0: DEVICE RESET operation started.
+sym0:15:0: DEVICE RESET operation complete.
+sym0:15:control msgout: c.                 
+sym0: TARGET 15 has been reset.
+sym0:15:0: ABORT operation started.
+sym0:15:0: ABORT operation complete.
+sym0:15:0: BUS RESET operation started.
+sym0:15:0: BUS RESET operation complete.
+sym0: SCSI BUS reset detected.          
+sym0: SCSI BUS has been reset.
+sym0:15:0: DEVICE RESET operation started.
+sym0:15:0: DEVICE RESET operation complete.
+sym0:15:control msgout: c.                 
+sym0: TARGET 15 has been reset.
+sym0:15:0: ABORT operation started.
+sym0:15:0: ABORT operation complete.
+sym0:15:0: BUS RESET operation started.
+sym0:15:0: BUS RESET operation complete.
+sym0: SCSI BUS reset detected.          
+sym0: SCSI BUS has been reset.
+scsi(0:0:15:0): Domain Validation skipping write tests
+scsi(0:0:15:0): Ending Domain Validation              
+sym1: <1010-66> rev 0x1 at pci 0000:41:01.1 irq 104
+sym1: No NVRAM, ID 7, Fast-80, LVD, parity checking
+sym1: SCSI BUS has been reset.                     
+scsi1 : sym-2.1.18j           
+sym2: <875> rev 0x3 at pci 0001:21:01.0 irq 117
+sym2: No NVRAM, ID 7, Fast-20, SE, parity checking
+sym2: SCSI BUS has been reset.                    
+scsi2 : sym-2.1.18j           
+st: Version 20040318, fixed bufsize 32768, s/g segs 256
+SCSI device sda: 71096640 512-byte hdwr sectors (36401 MB)
+SCSI device sda: drive cache: write through               
+ sda: sda1 sda2 sda3 sda4 < sda5 >         
