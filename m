@@ -1,38 +1,30 @@
-From: "Justin T. Gibbs" <gibbs@scsiguy.com>
-Subject: underflow field
-Date: Thu, 30 Jan 2003 16:45:48 -0700
+From: Andrew Morton <akpm@digeo.com>
+Subject: Re: scsi command slab allocation under memory pressure
+Date: Thu, 30 Jan 2003 22:57:38 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <43220000.1043970348@aslan.btc.adaptec.com>
-Reply-To: "Justin T. Gibbs" <gibbs@scsiguy.com>
+Message-ID: <20030130225738.1874c2e0.akpm@digeo.com>
+References: <20030129104731.A2811@beaverton.ibm.com>
+	<3E382E2C.4030201@splentec.com>
+	<20030129121117.A3389@beaverton.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from redfish.adaptec.com (redfish.adaptec.com [162.62.50.11])
-	by magic.adaptec.com (8.11.6+Sun/8.11.6) with ESMTP id h0UNk0D17597
-	for <linux-scsi@vger.kernel.org>; Thu, 30 Jan 2003 15:46:00 -0800 (PST)
-Received: from btc.btc.adaptec.com (btc.btc.adaptec.com [10.100.0.52])
-	by redfish.adaptec.com (8.8.8+Sun/8.8.8) with ESMTP id PAA15630
-	for <linux-scsi@vger.kernel.org>; Thu, 30 Jan 2003 15:45:49 -0800 (PST)
-Received: from [10.100.253.70] (aslan [10.100.253.70])
-	by btc.btc.adaptec.com (8.8.8+Sun/8.8.8) with ESMTP id QAA26500
-	for <linux-scsi@vger.kernel.org>; Thu, 30 Jan 2003 16:45:47 -0700 (MST)
-Content-Disposition: inline
+Received: from digeo-nav01.digeo.com (digeo-nav01.digeo.com [192.168.1.233])
+	by packet.digeo.com (8.9.3+Sun/8.9.3) with SMTP id WAA10142
+	for <linux-scsi@vger.kernel.org>; Thu, 30 Jan 2003 22:56:59 -0800 (PST)
+In-Reply-To: <20030129121117.A3389@beaverton.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Patrick Mansfield <patmans@us.ibm.com>
+Cc: luben@splentec.com, linux-scsi@vger.kernel.org
 
-I received a recent report of the aic7xxx driver reporting:
+Patrick Mansfield <patmans@us.ibm.com> wrote:
+>
+> IMO we need something similiar to the request_queue_t free list, where
+> we allocate a bunch of items up front out of a slab.
 
-(scsi0:A:0:0): CDB: 0x12 0x1 0x80 0x0 0x60 0x0
-(scsi0:A:0:0): Saw underflow (80 of 96 bytes). Treated as error
+Please do not reinvent the mm/mempool.c functionality.
 
-This is because the aic7xxx driver (and the aic79xx driver) honors
-the underflow field.  Has this field been deprecated and thus should
-be ignored by HBA drivers?  If not, why is it that scsi_scan.c doesn't
-set underflow to 0 (or maybe 1 in this case) for commands that can have
-variable length responses?  The above is a fetch of the serial number
-from VPD page 0x80.
+'twould be better to just use it ;)
 
---
-Justin
 
