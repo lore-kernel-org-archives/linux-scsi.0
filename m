@@ -1,36 +1,60 @@
-From: Andrew Morton <akpm@osdl.org>
-Subject: Re: -test4 detects scsi hdds in another order than -test2 does
-Date: Fri, 29 Aug 2003 10:03:56 -0700
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030829100356.512debe7.akpm@osdl.org>
-References: <m33cfm19ar.fsf@bzzz.home.net>
-	<3F4E4605.6040706@wmich.edu>
-	<m3vfshrola.fsf@bzzz.home.net>
-	<3F4F7129.1050506@wmich.edu>
-	<m3vfsgpj8b.fsf@bzzz.home.net>
-	<20030829091135.559a121f.akpm@osdl.org>
-	<m3d6eopfvt.fsf_-_@bzzz.home.net>
+From: Samuel Flory <sflory@rackable.com>
+Subject: Re: libata update posted (was Re: VIA Serial ATA chipset)
+Date: Fri, 29 Aug 2003 10:21:43 -0700
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <3F4F8BA7.1080002@rackable.com>
+References: <20030813074535.C3AB427AC8@mail.medav.de> <3F4F6863.4080400@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fw.osdl.org ([65.172.181.6]:63922 "EHLO mail.osdl.org")
-	by vger.kernel.org with ESMTP id S261469AbTH2RUH (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 29 Aug 2003 13:20:07 -0400
-In-Reply-To: <m3d6eopfvt.fsf_-_@bzzz.home.net>
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+In-Reply-To: <3F4F6863.4080400@pobox.com>
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Alex Tomas <bzzz@tmi.comex.ru>
-Cc: linux-scsi@vger.kernel.org
 
-Alex Tomas <bzzz@tmi.comex.ru> wrote:
->
-> output for -test4:
->
-> ...
-> 
-> output for -test2:
-> 
+Jeff Garzik wrote:
 
-Make it easy for us please.  What is the difference between these two?  What
-bug are we looking for?
+>
+> So, here are the 2.4 and 2.6 versions of the VIA SATA support for 
+> libata, contained in the latest libata update.
+>
+> 2.4 BK: bk://kernel.bkbits.net/jgarzik/atascsi-2.4
+> 2.4 Patch: 
+> ftp://ftp.kernel.org/pub/linux/kernel/people/jgarzik/patchkits/2.4/2.4.23-pre1-libata3.patch.bz2 
+>
+>
+> 2.6 BK: bk://kernel.bkbits.net/jgarzik/atascsi-2.6
+> 2.6 Patch: 
+> ftp://ftp.kernel.org/pub/linux/kernel/people/jgarzik/patchkits/2.6/2.6.0-test4-bk2-libata3.patch.bz2 
+>
+>
+>
+> Changes:
+> * add VIA SATA driver
+> * fixes to software reset.
+> * other fixes
+> * split scsi-related code into separate file, libata-scsi.c.
+> * continue work on phy layer
+> * continue work towards fully async taskfile API:  you call 
+> submit_tf(), and later on, your callback is called when the taskfile 
+> completes or times out.   async taskfile API is required for ATAPI and 
+> supporting more advanced host controllers like Promise or AHCI (SATA2).
+> * some cleanups
+>
+>  
+>
+
+   I'm guessing there is no support for Promise yet? 
+
+  I'm just asking because I've got this dual amd64 with 4 Promise sata 
+ports.  Which for some reason there aren't drivers any 64 bit OS;-(
+
+
+PS-  The driver works great on the silcon image chipset.  (Once I 
+realized that my Seagate drive needed newer firmware.)
+
+-- 
+Once you have their hardware. Never give it back.
+(The First Rule of Hardware Acquisition)
+Sam Flory  <sflory@rackable.com>
