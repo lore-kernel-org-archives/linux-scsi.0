@@ -1,32 +1,59 @@
-From: James.Smart@Emulex.Com
-Subject: RE: [ANNOUNCE] MPT Fusion driver 3.02.06 update
-Date: Tue, 26 Oct 2004 13:20:37 -0400
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <0B1E13B586976742A7599D71A6AC733C02F234@xbl3.ma.emulex.com>
+From: Mike Christie <mikenc@us.ibm.com>
+Subject: Re: [dm-devel] Re: [ANNOUNCE] multipath-tools-0.3.4
+Date: Tue, 26 Oct 2004 10:52:25 -0700
+Sender: linux-hotplug-devel-admin@lists.sourceforge.net
+Message-ID: <417E8ED9.7070506@us.ibm.com>
+References: <1096071849.4466.31.camel@zezette>	<1097054573.4163b96d1262c@imp5-q.free.fr>	<1097495416.416a73787e0ae@imp1-q.free.fr>	<1098021787.5433.8.camel@zezette>	<1098269169.417641f18a234@imp1-q.free.fr>	<1098656088.9350.88.camel@zezette>	<1098692559.2798.7.camel@laptop.fenrus.org>	<1098697123.417cc9a3b5bc5@imp1-q.free.fr> <20041025210304.GH3714@marowsky-bree.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emulex.emulex.com ([138.239.112.1]:20726 "EHLO
-	emulex.emulex.com") by vger.kernel.org with ESMTP id S261345AbUJZRVW convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 26 Oct 2004 13:21:22 -0400
-content-class: urn:content-classes:message
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-hotplug-devel-admin@lists.sourceforge.net>
+In-Reply-To: <20041025210304.GH3714@marowsky-bree.de>
+Errors-To: linux-hotplug-devel-admin@lists.sourceforge.net
+List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux-hotplug-devel>,
+	<mailto:linux-hotplug-devel-request@lists.sourceforge.net?subject=unsubscribe>
+List-Post: <mailto:linux-hotplug-devel@lists.sourceforge.net>
+List-Help: <mailto:linux-hotplug-devel-request@lists.sourceforge.net?subject=help>
+List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux-hotplug-devel>,
+	<mailto:linux-hotplug-devel-request@lists.sourceforge.net?subject=subscribe>
+List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=linux-hotplug-devel>
+To: device-mapper development <dm-devel@redhat.com>
+Cc: Arjan van de Ven <arjan@infradead.org>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "linux-hotplug-devel@lists.sourceforge.net" <linux-hotplug-devel@lists.sourceforge.net>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Emoore@lsil.com, hch@infradead.org, jeremy@sgi.com
-Cc: linux-scsi@vger.kernel.org
 
-> The failures to compiled in 2.6.10-rc is due to someone changing
-> the defines in scsi_transport_fc.h.
-> 
-> 2.6.9				2.6.10-rc				
-> ---------			---------
-> fc_port_id			fc_starget_port_id
-> fc_node_name		fc_starget_node_name
-> fc_port_name		fc_starget_port_name
+Lars Marowsky-Bree wrote:
 
-Then you haven't been paying attention to linux-scsi. As part of Emulex's desire to move upstream, and commonize FC information, the transport got corrected so that the 3 attributes are target based rather than sdev based. See the following patch (http://marc.theaimsgroup.com/?l=linux-scsi&m=109663907926965&w=2). This became part of 2.6.9-bk1/2.6.10-rc. Also - I've proposed more attributes to the host to better align with FC HBAAPI management infrastructures - see the following patches: http://marc.theaimsgroup.com/?l=linux-scsi&m=109776541400698&w=2; http://marc.theaimsgroup.com/?l=linux-scsi&m=109776541525816&w=2; http://marc.theaimsgroup.com/?l=linux-scsi&m=109813309907129&w=2.
+> On 2004-10-25T11:38:43, christophe.varoqui@free.fr wrote:
+>=20
+>=20
+>>In fact all the sg stuff I use is done with the SG_IO ioctl (see
+>>libcheckers/*.c) But somehow, it doesn't work as expected. I don't
+>>remember how exactly it failed in my tests but it did ... I remembered
+>>receiving bad path status and experiencing blocked checkers.
+>=20
+>=20
+> Can you please clarify the error you saw? I didn't experience that yet
+> with the SG_IO ioctl().
+>=20
 
-There are still more attributes coming, as the target/remote port attributes get expanded. Now that I know you're support the FC transport, I'll involve you in the discussions.
+I think it was because of this bug
+http://marc.theaimsgroup.com/?l=3Dlinux-scsi&m=3D108617935710955&w=3D2
 
--- James
+If you are using qla2xxx and you unplug the cable, the qlogic driver
+will return did_not_connect in the host byte. If you used
+the block layer sg io code you will then not get the host bytes
+returned to you, and the checker will always think the patch
+is back up.
+
+
+> Sincerely,
+>     Lars Marowsky-Br=E9e <lmb@suse.de>
+>=20
+
+
+
+-------------------------------------------------------
+This SF.Net email is sponsored by:
+Sybase ASE Linux Express Edition - download now for FREE
+LinuxWorld Reader's Choice Award Winner for best database on Linux.
+http://ads.osdn.com/?ad_id=5588&alloc_id=12065&op=click
