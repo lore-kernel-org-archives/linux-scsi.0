@@ -1,157 +1,79 @@
-From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
-Subject: RE: [patch-kj] kernel_thread() audit drivers/scsi/aacraid/rkt.c
-Date: Mon, 21 Jun 2004 13:57:20 -0400
+From: maximilian attems <janitor@sternwelten.at>
+Subject: [patch-kj] remove old ifdef'd code from aic79xx.h
+Date: Mon, 21 Jun 2004 20:01:41 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <547AF3BD0F3F0B4CBDC379BAC7E4189FD2428B@otce2k03.adaptec.com>
+Message-ID: <20040621180141.GK1545@sputnik.stro.at>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from magic.adaptec.com ([216.52.22.17]:28037 "EHLO magic.adaptec.com")
-	by vger.kernel.org with ESMTP id S264247AbUFUR5X convert rfc822-to-8bit
+Received: from baikonur.stro.at ([213.239.196.228]:61391 "EHLO
+	baikonur.stro.at") by vger.kernel.org with ESMTP id S266359AbUFUSBj
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 21 Jun 2004 13:57:23 -0400
-content-class: urn:content-classes:message
+	Mon, 21 Jun 2004 14:01:39 -0400
+Received: from localhost (localhost [127.0.0.1])
+	by baikonur.stro.at (Postfix) with ESMTP id 0B1B85C0A4
+	for <linux-scsi@vger.kernel.org>; Mon, 21 Jun 2004 20:01:39 +0200 (CEST)
+Received: from baikonur.stro.at ([127.0.0.1])
+	by localhost (baikonur [127.0.0.1]) (amavisd-new, port 10024)
+	with ESMTP id 19600-05 for <linux-scsi@vger.kernel.org>;
+	Mon, 21 Jun 2004 20:01:38 +0200 (CEST)
+Received: from sputnik (unknown [62.47.144.54])
+	by baikonur.stro.at (Postfix) with ESMTP id 43F615C002
+	for <linux-scsi@vger.kernel.org>; Mon, 21 Jun 2004 20:01:38 +0200 (CEST)
+Received: from max by sputnik with local (Exim 4.32)
+	id 1BcT6z-0004AN-QE
+	for linux-scsi@vger.kernel.org; Mon, 21 Jun 2004 20:01:41 +0200
+Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
-To: maximilian attems <janitor@sternwelten.at>, linux-scsi@vger.kernel.org
-
-Note, this and the rx.c and sa.c patches are out of date with respect to
-my recent patches (for 2.4) and sources (for 2.6) submitted to Mark
-Haverkamp.
-
-In the latest code, Aac_comm_init performs the freeing of the queues
-upon failure, this should not be done in these low level interface
-files.
-
-In the latest code as well, the mapping of the device is performed by
-the caller, not by the low level routines.
-
-However, there does remain the freeing of the registered interrupt upon
-failure that still needs to be cleared in the latest code and I have
-taken note of that.
-
-Good catches.
-
-Sincerely -- Mark Salyzyn
-
------Original Message-----
-From: linux-scsi-owner@vger.kernel.org
-[mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of maximilian attems
-Sent: Monday, June 21, 2004 1:42 PM
 To: linux-scsi@vger.kernel.org
-Subject: [patch-kj] kernel_thread() audit drivers/scsi/aacraid/rkt.c
 
 
- Cleaned up code for error handing. Added checks to unmap memory,
- release IRQ's, and freeing up dev->queue.
 
-Signed-off-by: MJK <mkemp@cs.nmsu.edu>
+ From: Domen Puncer <domen@coderock.org>
+ Patches to remove some old ifdefs.
+ remove unused #include <linux/version.h>
+ kill compat cruft like #define ahd_pci_set_dma_mask pci_set_dma_mask
+
 Signed-off-by: Maximilian Attems <janitor@sternwelten.at>
 
 
 
 ---
 
- linux-2.6.7-max/drivers/scsi/aacraid/rkt.c |   25
-++++++++++++++++++-------
- 1 files changed, 18 insertions(+), 7 deletions(-)
+ linux-2.6.7-max/drivers/scsi/aic7xxx/aic79xx.h |    8 ++++----
+ 1 files changed, 4 insertions(+), 4 deletions(-)
 
-diff -puN drivers/scsi/aacraid/rkt.c~kernel_thread-aacraid-rkt
-drivers/scsi/aacraid/rkt.c
---- linux-2.6.7/drivers/scsi/aacraid/rkt.c~kernel_thread-aacraid-rkt
-2004-06-18 09:08:15.000000000 +0200
-+++ linux-2.6.7-max/drivers/scsi/aacraid/rkt.c	2004-06-18
-09:08:15.000000000 +0200
-@@ -383,21 +383,21 @@ int aac_rkt_init(struct aac_dev *dev, un
- 	if((dev->regs.rkt = (struct rkt_registers *)ioremap((unsigned
-long)dev->scsi_host_ptr->base, 8192))==NULL)
- 	{	
- 		printk(KERN_WARNING "aacraid: unable to map i960.\n" );
--		return -1;
-+		goto error_iounmap;
- 	}
- 	/*
- 	 *	Check to see if the board failed any self tests.
- 	 */
- 	if (rkt_readl(dev, IndexRegs.Mailbox[7]) & SELF_TEST_FAILED) {
- 		printk(KERN_ERR "%s%d: adapter self-test failed.\n",
-dev->name, instance);
--		return -1;
-+		goto error_iounmap;
- 	}
- 	/*
- 	 *	Check to see if the board panic'd while booting.
- 	 */
- 	if (rkt_readl(dev, IndexRegs.Mailbox[7]) & KERNEL_PANIC) {
- 		printk(KERN_ERR "%s%d: adapter kernel panic'd.\n",
-dev->name, instance);
--		return -1;
-+		goto error_iounmap;
- 	}
- 	start = jiffies;
- 	/*
-@@ -409,7 +409,7 @@ int aac_rkt_init(struct aac_dev *dev, un
- 		{
- 			status = rkt_readl(dev, IndexRegs.Mailbox[7]) >>
-16;
- 			printk(KERN_ERR "%s%d: adapter kernel failed to
-start, init status = %ld.\n", dev->name, instance, status);
--			return -1;
-+			goto error_iounmap;
- 		}
- 		set_current_state(TASK_UNINTERRUPTIBLE);
- 		schedule_timeout(1);
-@@ -417,7 +417,7 @@ int aac_rkt_init(struct aac_dev *dev, un
- 	if (request_irq(dev->scsi_host_ptr->irq, aac_rkt_intr,
-SA_SHIRQ|SA_INTERRUPT, "aacraid", (void *)dev)<0) 
- 	{
- 		printk(KERN_ERR "%s%d: Interrupt unavailable.\n", name,
-instance);
--		return -1;
-+		goto error_iounmap;
- 	}
- 	/*
- 	 *	Fill in the function dispatch table.
-@@ -430,7 +430,7 @@ int aac_rkt_init(struct aac_dev *dev, un
- 	dev->a_ops.adapter_check_health = aac_rkt_check_health;
+diff -puN drivers/scsi/aic7xxx/aic79xx.h~remove-old-ifdefs-aic79xx drivers/scsi/aic7xxx/aic79xx.h
+--- linux-2.6.7/drivers/scsi/aic7xxx/aic79xx.h~remove-old-ifdefs-aic79xx	2004-06-18 09:13:35.000000000 +0200
++++ linux-2.6.7-max/drivers/scsi/aic7xxx/aic79xx.h	2004-06-18 09:13:35.000000000 +0200
+@@ -549,7 +549,7 @@ struct ahd_dma64_seg {
  
- 	if (aac_init_adapter(dev) == NULL)
--		return -1;
-+		goto error_irq;
- 	/*
- 	 *	Start any kernel threads needed
- 	 */
-@@ -438,7 +438,7 @@ int aac_rkt_init(struct aac_dev *dev, un
- 	if(dev->thread_pid < 0)
- 	{
- 		printk(KERN_ERR "aacraid: Unable to create rkt
-thread.\n");
--		return -1;
-+		goto error_kfree;
- 	}	
- 	/*
- 	 *	Tell the adapter that all is configured, and it can
-start
-@@ -446,4 +446,15 @@ int aac_rkt_init(struct aac_dev *dev, un
- 	 */
- 	aac_rkt_start_adapter(dev);
- 	return 0;
-+
-+error_kfree:
-+	kfree(dev->queues);
-+
-+error_irq:
-+	free_irq(dev->scsi_host_ptr->irq, (void *)dev);
-+
-+error_iounmap:
-+	iounmap(dev->regs.rkt);
-+
-+	return -1;
- }
+ struct map_node {
+ 	bus_dmamap_t		 dmamap;
+-	bus_addr_t		 physaddr;
++	dma_addr_t		 physaddr;
+ 	uint8_t			*vaddr;
+ 	SLIST_ENTRY(map_node)	 links;
+ };
+@@ -626,8 +626,8 @@ struct scb {
+ 	struct map_node	 	 *sense_map;
+ 	void			 *sg_list;
+ 	uint8_t			 *sense_data;
+-	bus_addr_t		  sg_list_busaddr;
+-	bus_addr_t		  sense_busaddr;
++	dma_addr_t		  sg_list_busaddr;
++	dma_addr_t		  sense_busaddr;
+ 	u_int			  sg_count;/* How full ahd_dma_seg is */
+ #define	AHD_MAX_LQ_CRC_ERRORS 5
+ 	u_int			  crc_retry_count;
+@@ -1198,7 +1198,7 @@ struct ahd_softc {
+ 	bus_dma_tag_t		  parent_dmat;
+ 	bus_dma_tag_t		  shared_data_dmat;
+ 	bus_dmamap_t		  shared_data_dmamap;
+-	bus_addr_t		  shared_data_busaddr;
++	dma_addr_t		  shared_data_busaddr;
+ 
+ 	/* Information saved through suspend/resume cycles */
+ 	struct ahd_suspend_state  suspend_state;
 
 _
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
