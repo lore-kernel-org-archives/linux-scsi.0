@@ -1,82 +1,87 @@
-From: Matthew Dharm <mdharm-scsi@one-eyed-alien.net>
-Subject: Re: [linux-usb-devel] FW: USB 2.0 external hard drive problem
-Date: Fri, 6 Feb 2004 12:59:29 -0800
+From: Ming Zhang <mingz@ele.uri.edu>
+Subject: aic7xxx problem
+Date: Fri, 06 Feb 2004 16:01:58 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040206205929.GB23264@one-eyed-alien.net>
-References: <Pine.LNX.4.44L0.0402060946350.830-100000@ida.rowland.org> <1076081067.1823.5.camel@mulgrave>
+Message-ID: <1076101318.2492.38.camel@dyn251.ele.uri.edu>
+Reply-To: mingz@ele.uri.edu
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="wq9mPyueHGvFACwf"
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from multivac.one-eyed-alien.net ([64.169.228.101]:24800 "EHLO
-	multivac.one-eyed-alien.net") by vger.kernel.org with ESMTP
-	id S265595AbUBFU7v (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 6 Feb 2004 15:59:51 -0500
-Content-Disposition: inline
-In-Reply-To: <1076081067.1823.5.camel@mulgrave>
+Received: from leviathan.ele.uri.edu ([131.128.51.64]:16034 "EHLO
+	leviathan.ele.uri.edu") by vger.kernel.org with ESMTP
+	id S265604AbUBFVB4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 6 Feb 2004 16:01:56 -0500
+Received: from localhost.localdomain (leviathan [131.128.51.64])
+	by leviathan.ele.uri.edu (8.12.9/8.12.9) with ESMTP id i16L1rPf021397
+	for <linux-scsi@vger.kernel.org>; Fri, 6 Feb 2004 16:01:53 -0500 (EST)
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Alan Stern <stern@rowland.harvard.edu>, Joerg Schilling <schilling@fokus.fraunhofer.de>, magliery@csb.yale.edu, appro@fy.chalmers.se, USB development list <linux-usb-devel@lists.sourceforge.net>, SCSI development list <linux-scsi@vger.kernel.org>
+To: SCSI Mailing List <linux-scsi@vger.kernel.org>
+
+Hi, folks
 
 
---wq9mPyueHGvFACwf
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+I want to use the adaptec 39160 controller on my xscale board with new
+linux 2.6.0 kernel, but no luck.
 
-On Fri, Feb 06, 2004 at 10:24:25AM -0500, James Bottomley wrote:
-> On Fri, 2004-02-06 at 09:59, Alan Stern wrote:
-> > Who says it's wrong to retrieve sense information when there is an
-> > underrun but not Check Condition?  Can you provide a reference to a
-> > published (or draft) document that states this?
->=20
-> It's not wrong according to the SCSI standards, a REQUEST SENSE issued
-> to a device with no sense data will produce a NO SENSE key.
->=20
-> However, because of the way sense is processed in contingent allegiance
-> conditions (suspending the I_T_L nexus until sense is cleared) it is
-> dangerous to issue arbitrary request sense commands because you may
-> receive sense for a different command (and prevent that command from
-> erroring correctly).
+with new aic7xxx driver, it keeps printing for every operation on it.
 
-You'll excuse me if I stare at you blankly after you say this?
+Current sda: sense key No Sense
+end_request: I/O error, dev sda, sector 110
+Buffer I/O error on device sda, logical block 55
+SCSI error : <0 0 1 0> return code = 0x8000002
+Current sda: sense key No Sense
+end_request: I/O error, dev sda, sector 112
+Buffer I/O error on device sda, logical block 56
+SCSI error : <0 0 1 0> return code = 0x8000002
+Current sda: sense key No Sense
+end_request: I/O error, dev sda, sector 114
+Buffer I/O error on device sda, logical block 57
+SCSI error : <0 0 1 0> return code = 0x8000002
+Current sda: sense key No Sense
+end_request: I/O error, dev sda, sector 116
+Buffer I/O error on device sda, logical block 58
+SCSI error : <0 0 1 0> return code = 0x8000002
+Current sda: sense key No Sense
+end_request: I/O error, dev sda, sector 118
+Buffer I/O error on device sda, logical block 59
+SCSI error : <0 0 1 0> return code = 0x8000002
 
-If I'm guessing correctly, this is only an issue with multiple pending
-commands (i.e. TCQ or somesuch)?
 
-A USB device only ever has one command at a time.
+with old deriver, it hangs when system boots after printing
 
-> The SCSI mid-layer definitely does not expect this behaviour.  A driver
-> either does not do any sense commands at all or it only issues a REQUEST
-> SENSE in response to a Check Condition status in order not to have the
-> nexus halted because of a contingent allegiance condition (simulating
-> ACA if you will).
+scsi0) <Adaptec AIC-7899 Ultra 160/m SCSI host adapter> found at PCI
+0/6/0
+(scsi0) Wide Channel A, SCSI ID=5, 32/255 SCBs
+(scsi0) Downloading sequencer code... 396 instructions downloaded
+(scsi1) <Adaptec AIC-7899 Ultra 160/m SCSI host adapter> found at PCI
+0/6/1
+(scsi1) Wide Channel B, SCSI ID=5, 32/255 SCBs
+(scsi1) Downloading sequencer code... 396 instructions downloaded
+scsi0 : Adaptec AHA274x/284x/294x (EISA/VLB/PCI-Fast SCSI) 5.2.6/5.2.0
+       <Adaptec AIC-7899 Ultra 160/m SCSI host adapter>
+Using anticipatory io scheduler
+  Vendor: <4>(scsi0:-1:-1:-1) CMDCMPLT without command for SCB 0, SCB
+flags 0x0,
+ cmd 0x0
+          Model:                   Rev:
+  Type:   Direct-Access                      ANSI SCSI revision: 00
+scsi1 : Adaptec AHA274x/284x/294x (EISA/VLB/PCI-Fast SCSI) 5.2.6/5.2.0
+       <Adaptec AIC-7899 Ultra 160/m SCSI host adapter>
+(scsi1:0:0:-1) Unexpected busfree, LASTPHASE = 0x1, SEQADDR = 0x9
+(scsi1:-1:-1:-1) aic7xxx_isr - referenced scb not valid during scsiint
+0x7 scb(2
+55)
+      SIMODE0 0x0, SIMODE1 0xa4, SSTAT0 0x10, SEQADDR 0x3
+(scsi1:0:0:-1) Unexpected busfree, LASTPHASE = 0x1, SEQADDR = 0x8
+(scsi1:-1:-1:-1) aic7xxx_isr - referenced scb not valid during scsiint
+0x7 scb(0
+)
+      SIMODE0 0x0, SIMODE1 0xa4, SSTAT0 0x10, SEQADDR 0x3
 
-'Check Condition' isn't something we can directly observe.  We get 2 status
-bits back which encode "good", "bad", or "you're screwed -- you are now
-required to perform a reset".
 
-Matt
+can anybody give me a clue? thx a lot.
 
---=20
-Matthew Dharm                              Home: mdharm-usb@one-eyed-alien.=
-net=20
-Maintainer, Linux USB Mass Storage Driver
+Ming
 
-Stef, you just got beaten by a ball of DIRT.
-					-- Greg
-User Friendly, 12/7/1997
 
---wq9mPyueHGvFACwf
-Content-Type: application/pgp-signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.2.1 (GNU/Linux)
-
-iD8DBQFAJAAxIjReC7bSPZARApoqAKCA0jClMpPFQ5L1yfYhlmQpQv2AQgCgvLKd
-2sRpAx5kWHn1w0SgObldBjU=
-=p9ux
------END PGP SIGNATURE-----
-
---wq9mPyueHGvFACwf--
