@@ -1,54 +1,75 @@
-From: James Bottomley <James.Bottomley@steeleye.com>
-Subject: Re: Trivial patch for scsi logging text string
-Date: 15 Apr 2003 16:42:07 -0500
+From: Patrick Mansfield <patmans@us.ibm.com>
+Subject: Re: [PATCH] Re: 2.5.67: ppa driver & preempt == oops
+Date: Tue, 15 Apr 2003 14:40:51 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1050442929.2571.31.camel@mulgrave>
-References: <Pine.LNX.4.44L0.0304151524010.699-100000@ida.rowland.org>
+Message-ID: <20030415144051.A31514@beaverton.ibm.com>
+References: <3E982AAC.3060606@hccnet.nl> <1050172083.2291.459.camel@localhost> <3E993C54.40805@hccnet.nl> <1050255133.733.6.camel@localhost> <3E99A1E4.30904@hccnet.nl> <20030415120000.A30422@beaverton.ibm.com> <3E9C6F10.10001@hccnet.nl>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nat9.steeleye.com ([65.114.3.137]:25094 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S264099AbTDOVaw (for <rfc822;linux-scsi@vger.kernel.org>); Tue, 15 Apr 2003 17:30:52 -0400
-In-Reply-To: <Pine.LNX.4.44L0.0304151524010.699-100000@ida.rowland.org>
+Received: from e35.co.us.ibm.com ([32.97.110.133]:50607 "EHLO
+	e35.co.us.ibm.com") by vger.kernel.org with ESMTP id S264105AbTDOVda
+	(for <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 15 Apr 2003 17:33:30 -0400
+Content-Disposition: inline
+In-Reply-To: <3E9C6F10.10001@hccnet.nl>; from gert.vervoort@hccnet.nl on Tue, Apr 15, 2003 at 10:44:00PM +0200
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: Greg KH <greg@kroah.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Gert Vervoort <gert.vervoort@hccnet.nl>
+Cc: tconnors@astro.swin.edu.au, Robert Love <rml@tech9.net>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Tue, 2003-04-15 at 14:31, Alan Stern wrote:
-> On 15 Apr 2003, James Bottomley wrote:
+On Tue, Apr 15, 2003 at 10:44:00PM +0200, Gert Vervoort wrote:
+
+> The patch compiles and the warning messages are gone now.
+> But, I still can't mount a zip disk.
 > 
-> > On Tue, 2003-04-15 at 12:03, Greg KH wrote:
-> > > Hm, I don't think I can submit scsi patches to Linus :)
-> > > Why not send them to the scsi maintainers...
-> > 
-> > The SCSI maintainers are linux-scsi@vger.kernel.org, so we've already
-> > been copied on this one.
-> > 
-> > James
+> Kernel messages after mounting a zip disk (mount -t ext2 /dev/sda1 
+> /mnt/zip):
 > 
-> Does that mean that linux-scsi will forward my patch to Linus?  I hope so,
-> because I've got another one to submit (to Marcelo), more substantive this
-> time.
-
-Yes, for 2.5
-
-> In 2.4.21-pre7, when the scsi error-handler decides that it has cleaned 
-> things up and retries the original command, it neglects to zero out the 
-> command's sense buffer first.  In all likelihood the sense buffer will 
-> contain old data left over from the error recovery operations.  This 
-> confuses scan_scsis(), which thinks that because there is valid sense data 
-> its INQUIRY probe must have failed.  This patch clears the sense buffer 
-> before a retry.
+> SCSI device sda: 196608 512-byte hdwr sectors (101 MB)
+> sda: Write Protect is off
+> sda: Mode Sense: 25 00 00 08
+> sda: cache data unavailable
+> sda: assuming drive cache: write through
+> SCSI device sda: 196608 512-byte hdwr sectors (101 MB)
+> sda: Write Protect is off
+> sda: Mode Sense: 25 00 00 08
+> sda: cache data unavailable
+> sda: assuming drive cache: write through
+>  sda:
 > 
-> If nobody on the linux-scsi list objects to it, this patch should be 
-> applied.
+> The kernel messages are showing twice, does it try to mount the zip disk 
+> two times?
 
-2.4 is more tricky.  Since fixing 2.5 is pretty much a full time job,
-there's no-one really who looks after SCSI in 2.4.  It's probably best
-to send it to Marcelo along with an explanation of what the problem is.
+It opens sd twice (AFAIK) - I think mount scans the block devices (an open
+of sd) and then mounts (internal open). The code path in question is
+probably via sd.c functions sd_media_changed and sd_revalidate_disk, and
+the block_dev.c check_disk_change. sd_open calls check_disk_change.
 
-James
+This could be the same problem others are seeing with removable media
+accessed via USB mass storage.
 
+Can you dd to and from the media OK?
 
+Can you capture output for the mount with scsi logging on?
+
+It may or may not help track down what is happening.
+
+If you haven't done much scsi, some scsi logging info:
+
+Check that your .config has CONFIG_SCSI_LOGGING on.
+
+Then do something like:
+
+sync
+sync
+echo scsi log all > /proc/scsi/scsi 
+mount /dev/sdw1 /mnt/sdw1
+echo scsi log none > /proc/scsi/scsi
+umount /mnt/sdw1
+
+Turn off syslogd if you are logging to a scsi disk (and then you need a
+serial line to capture output, and all printk's have to go to the
+console), and sync if you are booted off scsi before turning on logging.
+In either case, you could get a flood of messages.
+
+-- Patrick Mansfield
