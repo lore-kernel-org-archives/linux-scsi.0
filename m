@@ -1,49 +1,68 @@
-From: Michael Heinz <mheinz@infiniconsys.com>
+From: Michael Clark <michael@metaparadigm.com>
 Subject: Re: [PATCH] Additional BLIST_LARGELUN devices
-Date: Thu, 27 Jun 2002 08:44:55 -0400
+Date: Thu, 27 Jun 2002 22:09:11 +0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <B9408107.1C51%mheinz@infiniconsys.com>
-References: <20020626220724.GH4818@gum01m.etpnet.phys.tue.nl>
+Message-ID: <3D1B1C87.4020504@metaparadigm.com>
+References: <20020626164744.GH3023@gum01m.etpnet.phys.tue.nl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <20020626220724.GH4818@gum01m.etpnet.phys.tue.nl>
 List-Id: linux-scsi@vger.kernel.org
-To: Kurt Garloff <garloff@suse.de>, Marcelo Tosatti <marcelo@conectiva.com.br>, Dave Jones <davej@suse.de>, Linux SCSI list <linux-scsi@vger.kernel.org>
+To: Kurt Garloff <garloff@suse.de>
+Cc: Marcelo Tosatti <marcelo@conectiva.com.br>, Dave Jones <davej@suse.de>, Linux SCSI list <linux-scsi@vger.kernel.org>
 
-Gee, I thought I suggested this the other week and got sneered at.
 
-On 6/26/02 6:07 PM, "    Kurt Garloff" <garloff@suse.de> wrote:
 
-> Hi,
->=20
-> sorry to follow up myself:
->=20
-> On Wed, Jun 26, 2002 at 06:47:44PM +0200, Kurt Garloff wrote:
->> Hi Marcello, Dave,
->>=20
->> here are some additional devices that need the BLIST_LARGELUN flag.
->> When I sent the patch to implement the flag, I only knew about the E=
-MC
->> Symmetrix. Some more have turned up ...
->=20
-> A related question: It might be useful to such a flag at the kernel c=
-ommand
-> line. Like a "largelun=3Dc2b0t9" parameter. Would people consider thi=
-s useful?
-> Would it be accepted into the std. kernel? If yes=B2, I can code a pa=
-tch ...
->=20
-> Regards.
+On 06/27/02 00:47, Kurt Garloff wrote:
 
---=20
-Michael Heinz <mheinz@infiniconsys.com>
-Principal Software Engineer
-InfiniCon Systems, Inc.
+>Hi Marcello, Dave,
+>
+>here are some additional devices that need the BLIST_LARGELUN flag.
+>
 
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+[snip]
+
+>-	{"CNSI", "G7324", "*", BLIST_SPARSELUN},     // Chaparral G7324 RAID
+>-	{"CNSi", "G8324", "*", BLIST_SPARSELUN},     // Chaparral G8324 RAID
+>+	{"CMD", "CRA-7280", "*", BLIST_SPARSELUN | BLIST_LARGELUN},   // CMD RAID Controller
+>+	{"CNSI", "G7324", "*", BLIST_SPARSELUN | BLIST_LARGELUN},     // Chaparral G7324 RAID
+>+	{"CNSi", "G8324", "*", BLIST_SPARSELUN | BLIST_LARGELUN},     // Chaparral G8324 RAID
+>
+
+The G8324 correctly identifies itself as SCSI-3 so doesn't
+need the BLIST_LARGELUN flag (proc output below
+from 2.4.18 with automated large lun scanning).
+
+This is as long as my fix for scanning large luns automatically
+on SCSI-3 devices that went into 2.4.17-pre5 hasn't been
+reverted in 2.4.19-pre
+
+# cat /proc/scsi/scsi
+Attached devices:
+Host: scsi0 Channel: 00 Id: 00 Lun: 00
+  Vendor: SEAGATE  Model: ST318405LC       Rev: 0105
+  Type:   Direct-Access                    ANSI SCSI revision: 03
+Host: scsi0 Channel: 00 Id: 06 Lun: 00
+  Vendor: ESG-SHV  Model: SCA HSBP M10     Rev: 0.06
+  Type:   Processor                        ANSI SCSI revision: 02
+Host: scsi2 Channel: 00 Id: 00 Lun: 00
+  Vendor: CNSi     Model: G8324            Rev: L411
+  Type:   Direct-Access                    ANSI SCSI revision: 03
+Host: scsi2 Channel: 00 Id: 00 Lun: 50
+  Vendor: CNSi     Model: G8324            Rev: L411
+  Type:   Processor                        ANSI SCSI revision: 03
+Host: scsi2 Channel: 00 Id: 00 Lun: 51
+  Vendor: CNSi     Model: G8324            Rev: L411
+  Type:   Processor                        ANSI SCSI revision: 03
+Host: scsi2 Channel: 00 Id: 00 Lun: 52
+  Vendor: CNSi     Model: G8324            Rev: L411
+  Type:   Processor                        ANSI SCSI revision: 03
+Host: scsi2 Channel: 00 Id: 00 Lun: 53
+  Vendor: CNSi     Model: G8324            Rev: L411
+  Type:   Processor                        ANSI SCSI revision: 03
+Host: scsi2 Channel: 00 Id: 00 Lun: 63
+  Vendor: CNSi     Model: G8324            Rev: L411
+  Type:   Processor                        ANSI SCSI revision: 03
+
+
