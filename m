@@ -1,36 +1,34 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] sg version 3.5.28 for lk 2.5.64
-Date: Tue, 11 Mar 2003 14:28:36 +0000
+From: William Lee Irwin III <wli@holomorphy.com>
+Subject: Re: 2.5.56-mm1 fails to detect cd burner
+Date: Tue, 11 Mar 2003 08:03:58 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030311142836.A22992@infradead.org>
-References: <3E6B405B.3010509@torque.net>
+Message-ID: <20030311160358.GN465@holomorphy.com>
+References: <20030311063627.GJ1399@holomorphy.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <3E6B405B.3010509@torque.net>; from dougg@torque.net on Sun, Mar 09, 2003 at 11:23:39PM +1000
+In-Reply-To: <20030311063627.GJ1399@holomorphy.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Douglas Gilbert <dougg@torque.net>
+To: gibbs@scsiguy.com
 Cc: linux-scsi@vger.kernel.org
 
-On Sun, Mar 09, 2003 at 11:23:39PM +1000, Douglas Gilbert wrote:
-> ** Christoph moved the host listing functionality into
->     a more central sysfs position (i.e. not dependent on
->     sg). However scsi_debug is the only LLD that I can
->     get to post any "host" info under the new arrangement.
+On Mon, Mar 10, 2003 at 10:36:27PM -0800, William Lee Irwin III wrote:
+>  scsi0 : Adaptec AIC7XXX EISA/VLB/PCI SCSI HBA
+>  DRIVER, Rev 6.2.26
+>          <Adaptec 3960D Ultra160 SCSI adapter>
+>          aic7899: Ultra160 Wide Channel A, SCSI Id=7, 32/253 SCBs
+>  
+>  (scsi0:A:0:0): Completed command without status.
+>  (scsi0:A:0:0): Protocol violation in Message-in phase.  Attempting to abort.
+>  (scsi0:A:0:0): Abort Message Sent
+>  (scsi0:A:0:0): SCB 3 - Abort Completed.
+>  scsi0:A:0:0: DV failed to configure device. Please file a bug report against this driver.
+> 
+> It's had other problems burning CD's in 2.5.x
 
-Hmm, it works for me with aic7xxx (that's how I tested it).
+jejb referred me to you (gibbs) for this after guiding me through a
+cable check.
 
->     Should devices, device_strs and device_hdrs also be
->     moved out of sg's procfs interface?
 
-Sounds like a good idea to me,
-
-> *** I find sg's "debug" in its procfs interface very
->      useful for debugging (sg itself amongst other things).
->      However it does not seem suitable for sysfs. Should
->      it move?
-
-Let it stay for now - maybe someone comes up with a better way
-to do that,
-
+-- wli
