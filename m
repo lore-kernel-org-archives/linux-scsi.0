@@ -1,31 +1,31 @@
-From: 'Christoph Hellwig' <hch@infradead.org>
-Subject: Re: Emulex lpfcdriver v8.0.2 available
-Date: Tue, 8 Jun 2004 18:03:15 +0100
+From: Mike Anderson <andmike@us.ibm.com>
+Subject: Re: Requested changes for the SCSI error handler
+Date: Tue, 8 Jun 2004 10:19:25 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040608170315.GA6751@infradead.org>
-References: <3356669BBE90C448AD4645C843E2BF28034F9465@xbl.ma.emulex.com>
+Message-ID: <20040608171925.GC4757@us.ibm.com>
+References: <1086122775.2061.87.camel@mulgrave> <Pine.LNX.4.44L0.0406041655550.843-100000@ida.rowland.org> <20040604232344.GA3214@us.ibm.com> <1086711994.2105.18.camel@mulgrave>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [213.146.154.40] ([213.146.154.40]:53477 "EHLO
-	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S265264AbUFHRDS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 8 Jun 2004 13:03:18 -0400
+Received: from e32.co.us.ibm.com ([32.97.110.130]:23235 "EHLO
+	e32.co.us.ibm.com") by vger.kernel.org with ESMTP id S265258AbUFHRTQ
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 8 Jun 2004 13:19:16 -0400
 Content-Disposition: inline
-In-Reply-To: <3356669BBE90C448AD4645C843E2BF28034F9465@xbl.ma.emulex.com>
+In-Reply-To: <1086711994.2105.18.camel@mulgrave>
 List-Id: linux-scsi@vger.kernel.org
-To: "Smart, James" <James.Smart@Emulex.Com>
-Cc: Anton Blanchard <anton@samba.org>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Alan Stern <stern@rowland.harvard.edu>, SCSI development list <linux-scsi@vger.kernel.org>
 
-On Tue, Jun 08, 2004 at 10:54:27AM -0400, Smart, James wrote:
-> FYI - and status update.
+James Bottomley [James.Bottomley@SteelEye.com] wrote:
+> So, what about Alan's approach using a single flag to give the LLD
+> control, but give it control for both the host and bus resets?
 > 
-> A malloc or two was condense on the fast path. However, the reorg so alloc
-> was not under lock is not done yet. Should be in the next drop. In
-> queuecommand, we will: unload the host lock, perform all allocations and do
-> prep data, then take the driver lock, complete state checks and submit to
-> hardware. Should allow all the ATOMIC allocations to go back to normal for
-> the queuecommand sequence.
 
-Not quite normal, it still needs to be GFP_NOIO to avoid deadlocks.
+This sounds good.
+
+-andmike
+--
+Michael Anderson
+andmike@us.ibm.com
 
