@@ -1,111 +1,97 @@
-From: Jonathan McDowell <noodles@earth.li>
-Subject: Re: Initio INI-9X00U/UW error handling in 2.6
-Date: Tue, 4 May 2004 23:52:54 +0100
+From: Doug Ledford <dledford@redhat.com>
+Subject: Re: [PATCH] 2.4.27-pre2: another loss of SCSI I/O initiative and
+	system freeze
+Date: Tue, 04 May 2004 20:31:12 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040504225254.GQ2360@earth.li>
-References: <opr619y8b4psnffn@mail.mcaserta.com> <20040430183349.GX2360@earth.li> <opr7d7clzzpsnffn@mail.mcaserta.com>
+Message-ID: <1083717070.2942.5207.camel@compaq.xsintricity.com>
+References: <OFA9ADACA9.EF1DD108-ONC1256E8A.005FBA48-C1256E8A.0063BC83@de.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from the.earth.li ([193.201.200.66]:47568 "EHLO the.earth.li")
-	by vger.kernel.org with ESMTP id S261497AbUEDWwz (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 4 May 2004 18:52:55 -0400
-Content-Disposition: inline
-In-Reply-To: <opr7d7clzzpsnffn@mail.mcaserta.com>
+Received: from mx1.redhat.com ([66.187.233.31]:11747 "EHLO mx1.redhat.com")
+	by vger.kernel.org with ESMTP id S261900AbUEEAfa (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 4 May 2004 20:35:30 -0400
+In-Reply-To: <OFA9ADACA9.EF1DD108-ONC1256E8A.005FBA48-C1256E8A.0063BC83@de.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Mirko Caserta <mirko@mcaserta.com>
-Cc: Linux Kernel ML <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
+To: Martin Peschke3 <MPESCHKE@de.ibm.com>
+Cc: Marcelo Tosatti <marcelo.tosatti@cyclades.com>, linux-scsi mailing list <linux-scsi@vger.kernel.org>, andmike@us.ibm.com, axboe@suse.de, garloff@suse.de
 
-On Sun, May 02, 2004 at 11:58:59PM +0200, Mirko Caserta wrote:
-> On Fri, 30 Apr 2004 19:33:49 +0100, Jonathan McDowell <noodles@earth.li>  
-> wrote:
-> >On Mon, Apr 26, 2004 at 01:24:34PM +0200, Mirko Caserta wrote:
-> >>I was just wondering if someone is working on a fix for this:
-> >>
-> >>i91u: PCI Base=0xD000, IRQ=11, BIOS=0xFF000, SCSI ID=7
-> >>i91u: Reset SCSI Bus ...
-> >>ERROR: SCSI host `INI9100U' has no error handling
-> >>ERROR: This is not a safe way to run your SCSI host
-> >...
-> >
-> >Try the attached; I wrote it a while back and made a cleanup based on
-> >comments from James Bottomley, but no one else seemed to be using the
-> >driver. It worked for me however.
-> I had to hack it a little bit to make it cleanly patch my 2.6.6-rc2-mm2  
-> and it works great.
+On Tue, 2004-05-04 at 14:04, Martin Peschke3 wrote:
+> 
+> 
+> Marcelo, Doug,
+> 
+> Please consider the following patch for inclusion. It fixes a severe
+> loss-of-initiative SCSI problem that can cause a system freeze.
 
-Cool, glad it works for you.
+Marcelo, I have no objection to this, but I haven't personally verified
+it either (and my bk trees are out of date so integrating it yourself is
+probably quickest).
 
-> Thanks, could you please let this patch make its way upstream?
-
-I guess the right people to ask are the folk on linux-scsi; is there
-any chance of it going into the linux-scsi bk patches that akpm is
-pulling into -mm?
-
-J.
-
+> The problem is that blk_finish_sectors() needs a valid block
+> queue pointer in order to kick more I/Os off, while _scsi_insert_special()
+> appears to have a license to kill the block queue pointers of SCSI
+> requests.
+> Hence, the problem is likely to occur if SCSI commands are retried,
+> e.g. after a QUEUE_FULL or BUSY response. Since this hitch slowly
+> builds up by losing more and more valid pointers and generating
+> misfires more often, I also suspect a SCSI performance decrease
+> prior to a total freeze.
+> 
+> The fix is to have blk_finish_sectors() take a block queue pointer
+> instead of a request pointer.
+> 
+> We found the problem during tests and subsequent debugging
+> with the zfcp driver on the SUSE Linux Enterprise Server.
+> This is Jens' version of the fix, which made it into newer SUSE kernels.
+> 
+> Please apply.
+> 
+> Martin
+> 
+> 
+> diff -ur linux-2.4.27-pre2-ref/drivers/block/ll_rw_blk.c linux-2.4.27-pre2/drivers/block/ll_rw_blk.c
+> --- linux-2.4.27-pre2-ref/drivers/block/ll_rw_blk.c   2004-04-14 15:05:29.000000000 +0200
+> +++ linux-2.4.27-pre2/drivers/block/ll_rw_blk.c 2004-05-04 19:13:42.000000000 +0200
+> @@ -1465,7 +1465,7 @@
+>       if ((bh = req->bh) != NULL) {
+>             nsect = bh->b_size >> 9;
+>             blk_finished_io(nsect);
+> -           blk_finished_sectors(req, nsect);
+> +           blk_finished_sectors(req->q, nsect);
+>             req->bh = bh->b_reqnext;
+>             bh->b_reqnext = NULL;
+>             bh->b_end_io(bh, uptodate);
+> diff -ur linux-2.4.27-pre2-ref/drivers/scsi/scsi_lib.c linux-2.4.27-pre2/drivers/scsi/scsi_lib.c
+> --- linux-2.4.27-pre2-ref/drivers/scsi/scsi_lib.c     2004-04-14 15:05:31.000000000 +0200
+> +++ linux-2.4.27-pre2/drivers/scsi/scsi_lib.c   2004-05-04 19:13:42.000000000 +0200
+> @@ -378,7 +378,7 @@
+>             if ((bh = req->bh) != NULL) {
+>                   nsect = bh->b_size >> 9;
+>                   blk_finished_io(nsect);
+> -                 blk_finished_sectors(req, nsect);
+> +                 blk_finished_sectors(q, nsect);
+>                   req->bh = bh->b_reqnext;
+>                   bh->b_reqnext = NULL;
+>                   sectors -= nsect;
+> diff -ur linux-2.4.27-pre2-ref/include/linux/blkdev.h linux-2.4.27-pre2/include/linux/blkdev.h
+> --- linux-2.4.27-pre2-ref/include/linux/blkdev.h      2004-02-18 14:36:32.000000000 +0100
+> +++ linux-2.4.27-pre2/include/linux/blkdev.h    2004-05-04 19:13:42.000000000 +0200
+> @@ -323,9 +323,8 @@
+>       }
+>  }
+> 
+> -static inline void blk_finished_sectors(struct request *rq, int count)
+> +static inline void blk_finished_sectors(request_queue_t *q, int count)
+>  {
+> -     request_queue_t *q = rq->q;
+>       if (q && q->can_throttle) {
+>             atomic_sub(count, &q->nr_sectors);
 -- 
-Revd. Jonathan McDowell, ULC | noodles is criminal
+  Doug Ledford <dledford@redhat.com>     919-754-3700 x44233
+         Red Hat, Inc.
+         1801 Varsity Dr.
+         Raleigh, NC 27606
 
-------------
-diff -ruN linux-2.6.5.orig/drivers/scsi/ini9100u.c linux-2.6.5/drivers/scsi/ini9100u.c
---- linux-2.6.5.orig/drivers/scsi/ini9100u.c	2004-04-30 19:36:05.000000000 +0100
-+++ linux-2.6.5/drivers/scsi/ini9100u.c	2004-04-30 19:40:06.000000000 +0100
-@@ -106,6 +106,8 @@
-  *		- Changed the assumption that HZ = 100
-  * 10/17/03 mc	- v1.04
-  *		- added new DMA API support
-+ * 06/01/04 jmd	- v1.04a
-+ *		- Re-add reset_bus support
-  **************************************************************************/
- 
- #define CVT_LINUX_VERSION(V,P,S)        (V * 65536 + P * 256 + S)
-@@ -149,6 +151,7 @@
- 	.queuecommand	= i91u_queue,
- //	.abort		= i91u_abort,
- //	.reset		= i91u_reset,
-+	.eh_bus_reset_handler = i91u_bus_reset,
- 	.bios_param	= i91u_biosparam,
- 	.can_queue	= 1,
- 	.this_id	= 1,
-@@ -161,7 +164,7 @@
- char *i91uCopyright = "Copyright (C) 1996-98";
- char *i91uInitioName = "by Initio Corporation";
- char *i91uProductName = "INI-9X00U/UW";
--char *i91uVersion = "v1.04";
-+char *i91uVersion = "v1.04a";
- 
- #define TULSZ(sz)     (sizeof(sz) / sizeof(sz[0]))
- #define TUL_RDWORD(x,y)         (short)(inl((int)((ULONG)((ULONG)x+(UCHAR)y)) ))
-@@ -550,6 +553,15 @@
- 		return tul_device_reset(pHCB, (ULONG) SCpnt, SCpnt->device->id, reset_flags);
- }
- 
-+int i91u_bus_reset(Scsi_Cmnd * SCpnt)
-+{
-+	HCS *pHCB;
-+
-+	pHCB = (HCS *) SCpnt->device->host->base;
-+	tul_reset_scsi(pHCB, 0);
-+	return SUCCESS;
-+}
-+
- /*
-  * Return the "logical geometry"
-  */
-diff -ruN linux-2.6.5.orig/drivers/scsi/ini9100u.h linux-2.6.5/drivers/scsi/ini9100u.h
---- linux-2.6.5.orig/drivers/scsi/ini9100u.h	2003-12-18 02:58:56.000000000 +0000
-+++ linux-2.6.5/drivers/scsi/ini9100u.h	2004-04-30 19:39:30.000000000 +0100
-@@ -82,10 +82,11 @@
- extern int i91u_queue(Scsi_Cmnd *, void (*done) (Scsi_Cmnd *));
- extern int i91u_abort(Scsi_Cmnd *);
- extern int i91u_reset(Scsi_Cmnd *, unsigned int);
-+extern int i91u_bus_reset(Scsi_Cmnd *);
- extern int i91u_biosparam(struct scsi_device *, struct block_device *,
- 		sector_t, int *);
- 
--#define i91u_REVID "Initio INI-9X00U/UW SCSI device driver; Revision: 1.03g"
-+#define i91u_REVID "Initio INI-9X00U/UW SCSI device driver; Revision: 1.04a"
- 
- #define VIRT_TO_BUS(i)  (unsigned int) virt_to_bus((void *)(i))
- #define ULONG   unsigned long
+
