@@ -1,37 +1,41 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: [sg3_utils] report target group
-Date: Sat, 01 Jan 2005 14:14:55 +1000
-Message-ID: <41D623BF.8060304@torque.net>
-References: <1104233396.41d143b44e073@imp5-q.free.fr> <41D21DDD.5010109@torque.net> <1104307397.41d264c5c5d3c@imp5-q.free.fr> <41D2AF42.5050007@torque.net> <1104327781.41d2b4654846d@imp5-q.free.fr> <41D38DBF.6010303@torque.net> <1104415233.41d40a018c287@imp5-q.free.fr> <1104415927.41d40cb782493@imp5-q.free.fr>
-Reply-To: dougg@torque.net
+From: Matthias Andree <ma@dt.e-technik.uni-dortmund.de>
+Subject: Re: SYM8xx_2 driver ignores certain EEPROM settings
+Date: Sat, 01 Jan 2005 23:16:43 +0100
+Message-ID: <m3pt0okd6c.fsf@merlin.emma.line.org>
+References: <200412311343.42484.peter.missel@onlinehome.de>
+	<20041231145306.GB18080@parcelfarce.linux.theplanet.co.uk>
+	<200412311620.44488.peter.missel@onlinehome.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns1.triode.net.au ([202.147.124.1]:50655 "EHLO
-	iggy.triode.net.au") by vger.kernel.org with ESMTP id S262186AbVAAENP
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 31 Dec 2004 23:13:15 -0500
-In-Reply-To: <1104415927.41d40cb782493@imp5-q.free.fr>
+Received: from mail.dt.E-Technik.Uni-Dortmund.DE ([129.217.163.1]:38291 "EHLO
+	mail.dt.e-technik.uni-dortmund.de") by vger.kernel.org with ESMTP
+	id S261184AbVAAWQq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 1 Jan 2005 17:16:46 -0500
+In-Reply-To: <200412311620.44488.peter.missel@onlinehome.de> (Peter Missel's
+	message of "Fri, 31 Dec 2004 16:20:44 +0100")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: christophe.varoqui@free.fr
-Cc: linux-scsi@vger.kernel.org
+To: Peter Missel <peter.missel@onlinehome.de>
+Cc: Matthew Wilcox <matthew@wil.cx>, linux-scsi@vger.kernel.org
 
-christophe.varoqui@free.fr wrote:
->>All in all, I don't really see how one can use the result of RTPG.
->>
-> 
-> Ok, sorry to bug around.
-> the response is at chapter 7.6.8 of SPC-3 :
-> VPD page 88h contains the mapping between relative port ids and port ids
+Peter Missel <peter.missel@onlinehome.de> writes:
 
-sg_inq -s /dev/sda
+> I'm fine with the additional safety from the Domain Validation. Nonetheless, 
+> the driver shouldn't validate speeds and/or transfer widths that have been 
+> forbidden by the user.
+> Another example (which I can't verify right now) is negotiation width. 
+> External HDD enclosures might be connected through a Narrow cable but 
+> actually contain a Wide drive. That'll be one thing where the user would use 
+> the SCSI BIOS to limit the particular unit to Narrow. This however would 
+> possibly be caught by the DM failing.
 
-decodes the SCSI Ports VPD (0x88) page. Evidentally it will
-be present in SAS dual ported disks.
+No external enclosure necessary. There are also wide chips with only
+narrow connectors, for instance, on the Tekram DC-310U, DC-390U boards -
+they use a SYM53C860 or SYM53C875, a wide capable chip, but provide only
+narrow (50-pin) connectors. I last tried some 2.4.X kernel on such a
+setup, and haven't used the DC-390U in a long time (I replaced it by a
+DC-390F) - so I cannot test at this time.
 
-So is sg_rtpg of any use?
-
-Doug Gilbert
-
+-- 
+Matthias Andree
