@@ -1,39 +1,57 @@
-From: Thomas Tonino <ttonino@users.sf.net>
-Subject: MPT Fusion performance
-Date: Mon, 03 Mar 2003 15:17:10 +0100
+From: "Randy.Dunlap" <rddunlap@osdl.org>
+Subject: Re: [RFC][PATCH] scsi-misc-2.5 software enqueue when can_queue reached
+Date: Mon, 3 Mar 2003 07:52:18 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3E6363E6.7070504@users.sf.net>
+Message-ID: <20030303075218.79c0fcf8.rddunlap@osdl.org>
+References: <20030228111924.A32018@beaverton.ibm.com>
+	<20030302085728.A11407@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from users.sf.net ([24.132.6.5]) by amsfep11-int.chello.nl
-          (InterMail vM.5.01.05.17 201-253-122-126-117-20021021) with ESMTP
-          id <20030303141710.FULS9305.amsfep11-int.chello.nl@users.sf.net>
-          for <linux-scsi@vger.kernel.org>; Mon, 3 Mar 2003 15:17:10 +0100
+In-Reply-To: <20030302085728.A11407@infradead.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: patmans@us.ibm.com, linux-scsi@vger.kernel.org
 
-Our server manufacturer changed from Adaptec to the LSI53C1030 controller for 
-the on board SCSI in their new models.
+On Sun, 2 Mar 2003 08:57:28 +0000
+Christoph Hellwig <hch@infradead.org> wrote:
 
-We see a performance problem; there seems to be a throughput limit around 15 to 
-20 megabytes a second, with 2.4.20 and 2.4.20aa1 kernels, when writing to a 
-single drive.
+| The patch looks fine to me in principle, a few nitpicks are below.
+| (btw, any chance you could post a current scsi midlayer multipathing
+| patch?  I see there is BK activity.. :))
+| 
+| > +++ edited/drivers/scsi/hosts.c	Thu Feb 27 16:21:09 2003
+| > @@ -383,6 +383,7 @@
+| >  	scsi_assign_lock(shost, &shost->default_lock);
+| >  	INIT_LIST_HEAD(&shost->my_devices);
+| >  	INIT_LIST_HEAD(&shost->eh_cmd_q);
+| > +	INIT_LIST_HEAD(&shost->pending_queue);
+| 
+| This isn't consistant, either ew use _q in all new code or _queue.
+| (peronally I prefer the latter)
 
-The same kernels perform much better on the old systems with AIC driver. We 
-tried updating to driver 2.04 from lsil.com, and running the Red Hat Phoebe beta 
-on the box.
+I agree; looks/reads better, easier to remember.
 
-Write speed with the latter fuctuates between 16 and 20 megabytes a second on a 
-single drive. Read speed is fine: 54 MB/second on the same drive and file system.
+| > +void scsi_host_send_pending (struct Scsi_Host *shost)
+| 
+| codingstyle issue:  no space between function name and opening brace.
 
-Above performance was measured with iostat -x 5 and doing a dd if=/dev/zero 
-of=testfile2 bs=10240 count=202400 on a reiserfs file system.
+It's much more readable with the space there IMO.
 
-I wouldn't have expected an improvement goint to U320 SCSI, but neither this 
-degradation. Any suggestions on what to try next?
+| > +{
+| > +	struct scsi_cmnd *scmd;
+| > +	unsigned long flags;
+| > +
+| > +	spin_lock_irqsave(shost->host_lock, flags);
+| > +	while (!shost->host_self_blocked
+| > +	       && !list_empty(&shost->pending_queue)) {
+| 
+| Linux codingstyle sais the && should be before the line break.
 
+While I also prefer the && at the end of the line, I don't see that as
+a requirement anywhere... and not in Documentation/CodingStyle (and I'm
+not saying that you said it's in there).
 
-Thomas
-
+--
+~Randy
