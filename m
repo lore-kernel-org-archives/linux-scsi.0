@@ -1,81 +1,55 @@
-From: James Bottomley <James.Bottomley@steeleye.com>
-Subject: Re: [PATCH] Transport Attributes Export API
-Date: 04 Jan 2004 09:44:32 -0600
+From: Willem Riede <wrlk@riede.org>
+Subject: Scsi error handler strategy question
+Date: Sun, 4 Jan 2004 18:24:25 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1073231073.2069.8.camel@mulgrave>
-References: <20031231190849.GE3066@localhost>
-	<20040102211848.A1894@infradead.org>
+Message-ID: <20040104232425.GM4339@linnie.riede.org>
+Reply-To: wrlk@riede.org
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat1.steeleye.com ([65.114.3.130]:34494 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S265699AbUADPom (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 4 Jan 2004 10:44:42 -0500
-In-Reply-To: <20040102211848.A1894@infradead.org>
+Received: from rwcrmhc11.comcast.net ([204.127.198.35]:6559 "EHLO
+	rwcrmhc11.comcast.net") by vger.kernel.org with ESMTP
+	id S265768AbUADXZ2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 4 Jan 2004 18:25:28 -0500
+Received: from linnie.riede.org (localhost.localdomain [127.0.0.1])
+	by linnie.riede.org (8.12.10/8.12.10) with ESMTP id i04NOPEM029626
+	for <linux-scsi@vger.kernel.org>; Sun, 4 Jan 2004 18:24:25 -0500
+Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Martin Hicks <mort@wildopensource.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
 
-On Fri, 2004-01-02 at 15:18, Christoph Hellwig wrote:
-> You could get rid of most code in the drivers by placing a pointer
-> to the transport attributes and the desired transport class into
-> the host template and letting the common code do all setup for you.
+While testing the ide-scsi error handling, I observed that my ATAPI
+device gets offlined too easily.
 
-Yes, that's what I was thinking: just make the transport class an object
-that embeds the device class.  it could then contain the useful
-parameters (which drivers would use directly).  We could then use a
-transport specific API for updating their values (which the driver could
-choose to implement, but the attribute would be exported ro if it
-didn't).
+At some point, the host + device are getting reset. That's desired.
+The error handler is programmed to then expect a "CC/UA" (check
+condition / unit attention) when it does TUR (test unit ready)
+following reset. That's appropriate.
 
-> That's also consistant to how we handle all the other attributes.
-> 
-> > - Separate the transports out into two separate .c files
-> 
-> probably a good idea.
-> 
-> > (so they can be loaded as modules).
-> 
-> for the sysfs code alone that's total overkill.
+But here is my first question: is there typically any need to wait 
+some time between doing the host/bus/device reset and the first TUR?
+Is there a standard that governs how fast devices have to be done
+resetting to the point that they can respond to commands (if only to
+say they're not ready?
 
-But if the the error handler (and domain validation for SPI) are bound
-up in here, it won't be...when someone offers to do work for you you
-don't say no.
+When the first TUR completes, the CC/UA expected flag takes care of
+the reported sense 06:29:00 (power on reset or device reset occurred).
+So far so good. Second TUR issued. That one typically gets 02:04:01
+(not ready - in the process of becoming ready) reported. The error
+handler is programmed to retry TUR once if it sees this.
 
-> > This also plays in to future work I'm thinking
-> > about: make the error handler more transport specific.
-> 
-> Yupp, that's a good idea, but not really much related to this patch.
-> 
-> > - Then, the class register/unregister can be done in the
-> > module_init/exit routines
-> > - Probably move all the show/store routines in .h files so they can be
-> > used equally for fc and parallel
-> > - This switch on ttype (and the enum transport_type) in
-> 
-> > scsi_add_transport_attributes is not scaleable.  I think a better
-> > solution might be to have a struct scsi_transport which has the class
-> > device and a pointer to the overridden attribute.  Then, this is the
-> > thing pointed to in the scsi host structure (and it can contain the
-> > attributes, the class and a pointer to the default attributes, so most
-> > of the trying to find the defaults code goes away).
-> 
-> Or no extra structure and put the two pointers directly in the host
-> template as I suggested above.  Yes, that means drivers that support
-> multiple transports need a template for each of them, but that's not
-> a big overhead anyway.
+Second question: if the device firmware takes some time to re-initiate
+the device, this code can be returned multiple times. So am I allowed
+to submit a patch to increase that retry count? What would be a good
+number? Hard to say in general, as this depends on what devices you
+have and how fast commands get executed :-(
 
-Actually, I think we really only need one set of overrideable
-attributes, which we have in the sdev class.  All the other classes we
-add (for transport or anything else) should be API driven---that is,
-after all, the job of a class: to embody an interface, so I think the
-transport classes will only ever have a fixed set of attributes.
+Finally, at least my device, the OnStream DI-30, will eventually want 
+to report 06:28:00 (not ready to ready transition, medium may have
+changed). The error handler considers that an error, and is guaranteed
+to take the device offline, just as it came back to life :-(
 
-Of course, the mechanism will exist to allow arbitrary transport classes
-to be registered for drivers that wish to create them...
+Am I allowed to submit a patch that will also retry on that condition?
 
-James
-
-
+Thanks, Willem Riede.
