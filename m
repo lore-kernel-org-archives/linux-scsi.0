@@ -1,60 +1,34 @@
-From: Fabio Coatti <cova@ferrara.linux.it>
-Subject: Re: 2.6.10-rc2-mm2 usb storage still oopses
-Date: Tue, 30 Nov 2004 10:13:45 +0100
-Message-ID: <200411301013.46888.cova@ferrara.linux.it>
-References: <200411182203.02176.cova@ferrara.linux.it> <20041129163231.33affbde.akpm@osdl.org> <1101784930.2022.116.camel@mulgrave>
+From: Graham Wood <linux@dragonhold.org>
+Subject: Re: [PATCH] qla1280.c patch against 2.6.9 to allow settings of Initiator ID
+Date: Tue, 30 Nov 2004 10:36:04 +0000
+Message-ID: <20041130103604.GA3539@dragonhold.org>
+References: <20041105011830.GG8974@dragonhold.org> <yq0is7n63lw.fsf@jaguar.mkp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-15
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 4s.enrico.unife.it ([192.167.219.82]:34998 "EHLO
-	quatresse.ferrara.linux.it") by vger.kernel.org with ESMTP
-	id S261876AbUK3JNu convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 30 Nov 2004 04:13:50 -0500
-In-Reply-To: <1101784930.2022.116.camel@mulgrave>
+Received: from ramoth.dragonhold.org ([80.229.192.20]:38024 "EHLO
+	ramoth.dragonhold.org") by vger.kernel.org with ESMTP
+	id S262038AbUK3KgD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 30 Nov 2004 05:36:03 -0500
 Content-Disposition: inline
+In-Reply-To: <yq0is7n63lw.fsf@jaguar.mkp.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@steeleye.com>
-Cc: Andrew Morton <akpm@osdl.org>, Pete Zaitcev <zaitcev@redhat.com>, Linux Kernel <linux-kernel@vger.kernel.org>, linux-usb-devel@lists.sourceforge.net, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Jes Sorensen <jes@wildopensource.com>
+Cc: linux-scsi@vger.kernel.org
 
-Alle 04:22, marted=EC 30 novembre 2004, James Bottomley ha scritto:
+On Tue, Nov 30, 2004 at 05:19:39AM -0500, Jes Sorensen wrote:
+> What would be the reasoning for this patch? 
+I've got a pair of dual 10160 controller cards that I've salvaged and don't have a PC BIOS on them - which means I've got no way to set the SCSI ID other than through the driver.  They both default to ID7, which causes a problem when I attempt to dual-attach storage.
 
+I couldn't find any way to do that, so I patched the driver.  Since I wasn't sure if this would help other people, I thought I'd offer it as a patch.  It also seemed a simple enough change to be a good place to start, since I want to get a better understanding of the stuff I'm running as well.
 
-> > >
-> > > This looks as if SCSI falls victim of the general problem which u=
-b
-> > > addresses with the following fragment:
-> >
-> > Guys, is this problem still present in Linus's tree?  If so, is a f=
-ix for
-> > 2.6.10 looking feasible?
->
-> Al Viro has a tentative one at
->
-> http://ftp.linux.org.uk/pub/people/viro/register_disk-hack
->
-> If someone could try it out and verify that it fixes the problem, we
-> could put it in.
+> higher level rather than by the individual drivers IMHO.
+Definitely - it would be better if there was a standard way to specify the SCSI ID, but since this gets set during the module initialisation, I'm not sure what sort of higher level API would make sense.
+
+AFAIK, without unloading & reloading the driver, I don't think there's a sane way to change the ID on these cards, or indeed probably any card - since it involves a complete reset of the card (again, AFAIK).
+
+There are similar options on a couple of the drivers, which is why I thought just adding it here would be the simplest way to do it.
 
 
-Now I'm at work; this evening I'll try and I'll report asap the results=
-=2E on=20
-wich kernel does it apply? last kernels that I've tried are 2.6.10-rcX-=
-mmY=20
-series, but I can try the most suitable version for debugging, just let=
- me=20
-know.
-
-
-
---=20
-=46abio "Cova" Coatti    http://members.ferrara.linux.it/cova    =20
-=46errara Linux Users Group           http://ferrara.linux.it
-GnuPG fp:9765 A5B6 6843 17BC A646  BE8C FA56 373A 5374 C703
-Old SysOps never die... they simply forget their password.
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Graham
