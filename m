@@ -1,237 +1,112 @@
-From: Matthew Wilcox <willy@debian.org>
-Subject: Re: VPD in sysfs
-Date: Fri, 20 Aug 2004 15:21:43 +0100
+From: Nathan Bryant <nbryant@optonline.net>
+Subject: Re: Suspending SCSI devices and buses
+Date: Fri, 20 Aug 2004 10:33:46 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040820142143.GB14144@parcelfarce.linux.theplanet.co.uk>
-References: <20040814182932.GT12936@parcelfarce.linux.theplanet.co.uk>
+Message-ID: <41260BCA.6000904@optonline.net>
+References: <Pine.LNX.4.44L0.0408191647170.2106-100000@ida.rowland.org> <4125EEE4.50102@optonline.net> <4125FE3B.7070608@adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:9395 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S268098AbUHTOVo
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 20 Aug 2004 10:21:44 -0400
-Content-Disposition: inline
-In-Reply-To: <20040814182932.GT12936@parcelfarce.linux.theplanet.co.uk>
+Received: from pegasus.allegientsystems.com ([208.251.178.236]:60932 "EHLO
+	pegasus.lawaudit.com") by vger.kernel.org with ESMTP
+	id S268110AbUHTOdw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 20 Aug 2004 10:33:52 -0400
+In-Reply-To: <4125FE3B.7070608@adaptec.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <willy@debian.org>
-Cc: Greg KH <greg@kroah.com>, Patrick Mochel <mochel@osdl.org>, martins@au.ibm.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Luben Tuikov <luben_tuikov@adaptec.com>
+Cc: Alan Stern <stern@rowland.harvard.edu>, SCSI development list <linux-scsi@vger.kernel.org>
 
-On Sat, Aug 14, 2004 at 07:29:32PM +0100, Matthew Wilcox wrote:
-> Thoughts?  Since there's at least four and probably more ways of getting
-> at VPD, we either need to fill in some VPD structs at initialisation or
-> have some kind of vpd_ops that a driver can fill in so the core can get
-> at the data.
+Luben Tuikov wrote:
+> Nathan Bryant wrote:
+> 
+>> Alan Stern wrote:
+>>
+>>  >Thanks.  Looking at your patch, I have a question.  It doesn't look 
+>> like
+>>  >the resume path is careful to check for Unit Attention with Power On or
+>>  >Medium May Have Changed sense.  What happens if somebody changes the
+>>  >medium while the drive is suspended?  Or am I missing something?
+>>  >
+>> You're not missing anything. :(
+>>
+>> Thanks for the feedback, looks like you've found a real problem with the
+>> patch: that is, due to the unconditonal spinup call on resume, we clear
+>> any UNIT ATTENTION state before any of the upper layers ever see it, so
+>> nobody will notice a possible media change.
+> 
+> 
+> If UA exists for the initiator port, commands other INQURY, REPORT LUNS
+> and REPORT SENSE, get terminated and UA reported (CHECK CONDITION with
+> sense data).  So spinup (TUR + START STOP UNIT) could report the media
+> change (on TUR).
+> 
+>>
+>> Unfortunately, I think that the current media change detection code in
+>> the Linux kernel can not distinguish power-on events from media change
+>> events. I'm not sure doing so is even possible for SCSI devices.
+> 
+> 
+> It would really depend on the device (if it kept state over power 
+> failures).
+> But it is true that the code should be able to handle it.  (Also UAs could
+> be queued by the device server--the code could use this.)
+> 
+>> (Comments on that?) Proposed solutions:
+>>
+>> Approach #1:
+>> * Continue to do the unconditional spinup, but only for devices that are
+>> already mounted.
+>> This may miss some media change events, but if we really can't
+>> distinguish power-on from media change, maybe that's somebody else's
+>> problem if the device was already mounted. (Changing mounted media is
+>> the user's fault.)
+>>
+>> (Hmm, what about devices that are opened for read/write but not mounted?)
+>>
+>> Approach #2:
+>> * Test for UNIT_ATTENTION before spinning up and report this as a media
+>> change.
+>> Safer, but may report "false positive" media change events if the device
+>> was only powered down/up.
+> 
+> 
+> UA can tell you when "removable medium may have changed" (SAM3r13, 
+> 5.9.7, b)
+> and "LU inventory has been changed" (same, g).
 
-I've tried the first option -- creating a large block of sysfs entries for
-all the VPD entries that are present.  However, I've come upon a problem
-with sysfs that prevents me from doing so.
+The additional sense code for this is 0x28 0x00, or NOT READY TO READY 
+TRANSITION (MEDIUM MAY HAVE CHANGED)
 
-Basically, the problem is that sysfs doesn't pass the attribute that's
-being invoked to the attribute ->show method.  So I can't determine
-which one is being read.  This isn't a problem for any other sysfs attribute
-because they're all static, but for dynamically created attributes, it's
-not possible to work this way.
+The kernel doesn't check for this sense code, currently we interpret all 
+UNIT_ATTENTION states as a media change. Might changing to check the 
+additional sense code regress things for older devices? I see that the 
+0x28 0x00 code is defined in SCSI-2, but I don't know whether it was 
+defined in SCSI-1.
 
-What I wanted to have was:
+I suspect that some (perhaps many) devices will see a power up as a 
+media load event, for mechanical reasons. Also technically speaking, a 
+not-ready-to-ready state transition could be interpreted to occur every 
+time we spin the device up, no?
 
-/sys/devices/pci0000:00/0000:00:00.0/vpd/
-/sys/devices/pci0000:00/0000:00:00.0/vpd/PN (contents "6181682A")
-/sys/devices/pci0000:00/0000:00:00.0/vpd/EC (contents "4950262536")
-/sys/devices/pci0000:00/0000:00:00.0/vpd/SN (contents "00000194")
-/sys/devices/pci0000:00/0000:00:00.0/vpd/FN (contents "135722")
-/sys/devices/pci0000:00/0000:00:00.0/vpd/MN (contents "1037")
-...
+Well, I don't really use removable SCSI devices anymore, but I have an 
+old 1Gig Jaz drive that I can play with when I find some time, assuming 
+it still works. It used to seem a little flaky, but maybe that was my 
+bus. This device also does an auto-spindown, I think, and it would be 
+interesting to know what status it reports when it spins back up.
 
-(note, this example is taken from table 6-8 in PCI 2.1)
+Nathan
 
-So I have code that iterates over each element in a block of raw VPD,
-extracts each name and value and creates sysfs entries for them ... but
-I can't write the show method.  Here's the VPD file (compiles, haven't
-hooked any code up to it yet):
+> 
+> But it is true -- I can imagine media being changed without the device
+> knowing it (old enclosure + power off + screw-driver :-) ).
+> 
+>         Luben
+> 
+> 
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
 
-
-/*
- * drivers/base/vpd.c
- *
- * Expose Vital Product Data through sysfs
- *
- * Copyright (c) Matthew Wilcox 2004
- */
-
-#include <linux/device.h>
-
-/* This should really be in a common file shared with drivers/pnp/isapnp */
-
-enum isapnp_tag {
-	ISA_TAG_COMPAT = 0x03,
-	ISA_TAG_VEND_S = 0x0e,
-	ISA_TAG_END = 0x0f,
-	ISA_TAG_IDSTR = 0x82,
-	ISA_TAG_VEND_L = 0x84,
-	ISA_TAG_VPD = 0x90,
-};
-
-static inline int vpd_get_len(char *data, int *idx, enum isapnp_tag *tag)
-{
-	int i, x, len;
-
-	i = *idx;
-	x = data[i++];
-
-	if (x & 0x80) {
-		len = data[i] | (data[i + 1] << 8);
-		i += 2;
-	} else {
-		len = x & 7;
-		x >>= 3;
-	}
-
-	*idx = i;
-	*tag = x;
-	return len;
-}
-
-static int vpd_count_items(char *data)
-{
-	int i = 0;
-	int count = 0;
-
-	for (;;) {
-		int j;
-		enum isapnp_tag tag;
-		int len = vpd_get_len(data, &i, &tag);
-		if (tag == ISA_TAG_END)
-			break;
-		if (tag != ISA_TAG_VPD)
-			continue;
-		j = i;
-		while (j < i + len) {
-			count++;
-			j += 2;
-			j += data[j] + 1;
-		}
-	}
-	return count;
-}
-
-static ssize_t vpd_show(struct device *dev, char *buf)
-{
-	return 0;
-}
-
-static struct attribute * vpd_create_attr(unsigned char *data)
-{
-	struct device_attribute *attr;
-	char *buf;
-	unsigned int len = data[2];
-
-	attr = kmalloc(sizeof(*attr) + 4 + len, GFP_KERNEL);
-	if (!attr)
-		return NULL;
-	buf = (char *)(attr + 1);
-
-	buf[0] = data[0];
-	buf[1] = data[1];
-	buf[2] = '\0';
-	memcpy(buf, data + 3, len);
-
-	attr->attr.name = buf;
-	attr->attr.mode = 0644;
-	attr->show = vpd_show;
-	attr->store = NULL;
-
-	return &attr->attr;
-}
-
-static int vpd_create_attrs(struct attribute **attrs, int count, unsigned char *data)
-{
-	int i = 0;
-	int k = 0;
-
-	for (;;) {
-		int j;
-		enum isapnp_tag tag;
-		int len = vpd_get_len(data, &i, &tag);
-		if (tag == ISA_TAG_END)
-			break;
-		if (tag != ISA_TAG_VPD)
-			continue;
-		j = i;
-		while (j < i + len) {
-			attrs[k] = vpd_create_attr(data + j);
-			if (!attrs[k])
-				return -ENOMEM;
-			k++;
-			j += 2;
-			j += data[j] + 1;
-		}
-	}
-
-	BUG_ON(k != count);
-	attrs[count] = NULL;
-	return 0;
-}
-
-/**
- * device_add_vpd - Add VPD files to a device
- * @dev: The device that this VPD pertains to
- * @vpd: A memory region containing VPD data
- */
-int device_add_vpd(struct device *dev, unsigned char *data)
-{
-	int err, i;
-	int count = vpd_count_items(data);
-	if (count < 1)
-		return count;
-
-	dev->vpd = kmalloc(sizeof(*dev->vpd) + (count + 1) * sizeof(void *),
-			GFP_KERNEL);
-	if (!dev->vpd)
-		return -ENOMEM;
-	memset(dev->vpd, 0, sizeof(*dev->vpd) + (count + 1) * sizeof(void *));
-
-	dev->vpd->name = "vpd";
-	dev->vpd->attrs = (struct attribute **)(dev->vpd + 1);
-
-	err = vpd_create_attrs(dev->vpd->attrs, count, data);
-	if (err)
-		goto fail;
-
-	err = sysfs_create_group(&dev->kobj, dev->vpd);
-	if (err)
-		goto fail;
-
-	return 0;
-
- fail:
-	for (i = 0; i < count; i++) {
-		kfree(dev->vpd->attrs[i]);
-	}
-	kfree(dev->vpd);
-	return err;
-}
-
-void device_remove_vpd(struct device *dev)
-{
-	int i = 0;
-	sysfs_remove_group(&dev->kobj, dev->vpd);
-	while (dev->vpd->attrs[i] != NULL) {
-		kfree(dev->vpd->attrs[i]);
-		i++;
-	}
-	kfree(dev->vpd->attrs);
-	kfree(dev->vpd);
-	dev->vpd = NULL;
-}
-
-EXPORT_SYMBOL(device_add_vpd);
-EXPORT_SYMBOL(device_remove_vpd);
-
--- 
-"Next the statesmen will invent cheap lies, putting the blame upon 
-the nation that is attacked, and every man will be glad of those
-conscience-soothing falsities, and will diligently study them, and refuse
-to examine any refutations of them; and thus he will by and by convince 
-himself that the war is just, and will thank God for the better sleep 
-he enjoys after this process of grotesque self-deception." -- Mark Twain
