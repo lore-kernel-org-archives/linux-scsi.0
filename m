@@ -1,40 +1,62 @@
-From: Mark Lord <lkml@rtr.ca>
-Subject: Re: [PATCH] New QStor SATA/RAID Driver for 2.6.9-rc2
-Date: Tue, 14 Sep 2004 14:03:28 -0400
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <41473270.3070405@rtr.ca>
-References: <41471163.10709@rtr.ca> <414723B0.1090600@pobox.com> <41472FA0.2090108@rtr.ca> <414730D9.3000003@pobox.com>
+From: Mark Haverkamp <markh@osdl.org>
+Subject: Re: [PATCH] 2.6.9 aacraid: aac_count fix
+Date: Tue, 14 Sep 2004 14:37:41 -0700
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <1095197861.25727.13.camel@markh1.pdx.osdl.net>
+References: <1095192761.25727.7.camel@markh1.pdx.osdl.net>
+	 <20040914221427.A12989@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel=40m.gmane.org-S269685AbUINSMp@vger.kernel.org>
-In-Reply-To: <414730D9.3000003@pobox.com>
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-kernel@vger.kernel.org, SCSI Mailing List <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@steeleye.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from fire.osdl.org ([65.172.181.4]:32727 "EHLO fire-1.osdl.org")
+	by vger.kernel.org with ESMTP id S269199AbUINVh5 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 14 Sep 2004 17:37:57 -0400
+In-Reply-To: <20040914221427.A12989@infradead.org>
 List-Id: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: James Bottomley <James.Bottomley@steeleye.com>, linux-scsi <linux-scsi@vger.kernel.org>, Mark Salyzyn <mark_salyzyn@adaptec.com>
 
- >The SCSI LLD API really needs to -not- spinlock on the EH hooks,
- >and instead simply guarantee that ->queuecommand and other hooks
- >will not be called while the driver is in EH.
- >
- >ISTR James didn't disagree, so maybe a patch can be worked out...
+On Tue, 2004-09-14 at 14:14, Christoph Hellwig wrote:
+> On Tue, Sep 14, 2004 at 01:12:42PM -0700, Mark Haverkamp wrote:
+> > +	for (; (unique_id < aac_count) && aac_devices[unique_id]; ++unique_id)
+> > +		continue;
+> > +	if (unique_id >= MAXIMUM_NUM_ADAPTERS)
+> > +		goto out;
+> 
+> Do we need an upper limit at all?
 
-It looks to me as if the eh code prevents further queuecommand()
-calls while the LLD *_reset_handler() code is running.
-I wonder if it also does so for the eh_strategy_handler() ?
+It could be changed to have aac_devices be a **pointer and
+allocate/extend it as devices are added for more than 8 adapters.  Would
+it be worth doing?
 
-Have to look at it, I guess.
+> 
+> > +	scsi_set_device(shost, &pdev->dev);
+> 
+> This one is bogus.  scsi_add_host already sets the device.
 
- >Of course, you could always just use ->eh_strategy_handler
- >and do 100% of the error handling yourself.
+I'll remove it.
 
-Mmmm.. yes, that may be better, perhaps.
+> 
+> > @@ -682,6 +693,8 @@
+> >  	error = pci_module_init(&aac_pci_driver);
+> >  	if (error)
+> >  		return error;
+> > +	if (!aac_count)
+> > +		return -ENODEV;
+> 
+> This hunk is definitly wrong, 
+> 
+>  a) want the module stay loaded for hot plugging if explicitly loaded
+>     as module
+>  b) you're missing an pci driver unregistration here
+> 
+> So just remove this hunk
 
-Whatever this driver does, it has to be reasonably portable
-back to early 2.4.xx kernels, so it cannot depend too much
-upon newly (or to-be) implemented semantics in 2.6.xx.
+OK.
 
-Cheers
+
 -- 
-Mark Lord
-(hdparm keeper & the original "Linux IDE Guy")
+Mark Haverkamp <markh@osdl.org>
+
