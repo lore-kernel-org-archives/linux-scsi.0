@@ -1,43 +1,101 @@
-From: Kevin Tappe <kevin@zerodivide.de>
-Subject: compile warning g_NCR5380 2.6.0-test6
-Date: Mon, 29 Sep 2003 22:51:34 +0200
+From: Daniel Stekloff <dsteklof@us.ibm.com>
+Subject: [RFC] scsi_device printk helper macro - sdev_printk
+Date: Mon, 29 Sep 2003 14:03:04 +0000
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030929205134.GA462@nihil.tappe.netz>
+Message-ID: <200309291403.04443.dsteklof@us.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:32421 "HELO mail.gmx.net")
-	by vger.kernel.org with SMTP id S262813AbTI2Uwe (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 29 Sep 2003 16:52:34 -0400
-Received: from kevin by nihil.tappe.netz with local (Exim 3.35 #1 (Debian))
-	id 1A44zW-00007f-00
-	for <linux-scsi@vger.kernel.org>; Mon, 29 Sep 2003 22:51:34 +0200
-Content-Disposition: inline
+Received: from e5.ny.us.ibm.com ([32.97.182.105]:48594 "EHLO e5.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S262412AbTI2VEJ convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 29 Sep 2003 17:04:09 -0400
+Received: from northrelay04.pok.ibm.com (northrelay04.pok.ibm.com [9.56.224.206])
+	by e5.ny.us.ibm.com (8.12.10/8.12.2) with ESMTP id h8TL48Ed730694
+	for <linux-scsi@vger.kernel.org>; Mon, 29 Sep 2003 17:04:08 -0400
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
+Cc: Larry Kessler <lkessler@us.ibm.com>, James Keniston <kenistoj@us.ibm.com>
 
-Hi,
 
-i hope this is the right emailaddress...
+The purpose of the sdev_printk macro, which is intended for the scsi mid-layer 
+and LLDs, is to help with the following:
 
-I've just installed the new kernel 2.6.0-test6 and get a compile 
-warning in the g_NCR5380 module:
+- Adding consistency to printk messages in mid-layer and LLDs where 
+scsi_device is concerned. Scsi_device information will be printed in the same 
+consistent format. A consistent format will help readability and provide a 
+means to automate responding to log messages.
 
-  CC [M]  drivers/block/rd.o
-  CC [M]  drivers/block/nbd.o
-  CC [M]  drivers/char/genrtc.o
-  CC [M]  drivers/net/3c59x.o
-  CC [M]  drivers/net/dummy.o
-  CC [M]  drivers/scsi/g_NCR5380.o
-drivers/scsi/g_NCR5380.h:55: warning:
-`generic_NCR5380_biosparam' declared `static' but never defined
-drivers/scsi/g_NCR5380.c:925: warning: `id_table' defined
-but not used
-  CC [M]  drivers/video/console/fbcon.o
-  CC [M]  drivers/video/console/fonts.o
-  CC [M]  drivers/video/console/font_8x8.o
-  CC [M]  drivers/video/console/font_8x16.o
+- Identifing a printk with a specific scsi_device. 
 
-Bye,
-Kevin
+- Providing one point for changing what identification information is printed. 
+Instead of having to edit every single printk, one could simply change the 
+macro. 
+
+The patch below does a couple things:
+
+1) Moves setting scsi_device's sdev_gendev struct device bus_id from 
+scsi_sysfs.c to scsi_scan.c.
+
+2) Adds sdev_printk definition to scsi_device.h
+
+3) Replaces many printks in the mid-layer with sdev_printk.
+
+Please take a look, all comments and suggestions are welcome.
+
+Thanks,
+
+Dan
+
+
+Example Output - Rescan
+-----------------------------
+
+
+Sep 26 13:31:48 elm3b99 kernel: scsi_scan_host_selected: 
+<3:4294967295:4294967295:4294967295>
+Sep 26 13:31:48 elm3b99 kernel: scsi <3:0:0:0>: scan: device found
+Sep 26 13:31:48 elm3b99 kernel: scsi <3:0:0:0>: scan: Sending REPORT LUNS (try 
+0)
+Sep 26 13:31:48 elm3b99 kernel: scsi <3:0:0:0>: scan: REPORT LUNS failed (try 
+0) result 0x8000002
+Sep 26 13:31:48 elm3b99 kernel: scsi scan: Sequential scan of host 3 channel 0 
+id 0
+Sep 26 13:31:48 elm3b99 kernel: scsi <3:0:0:1>: scan: INQUIRY to host
+Sep 26 13:31:48 elm3b99 kernel: scsi <3:0:0:1>: scan: 1st INQUIRY failed with 
+code 0x10000
+Sep 26 13:31:48 elm3b99 kernel: scsi <3:0:1:0>: scan: device found
+Sep 26 13:31:48 elm3b99 kernel: scsi <3:0:1:0>: scan: Sending REPORT LUNS (try 
+0)
+Sep 26 13:31:48 elm3b99 kernel: scsi <3:0:1:0>: scan: REPORT LUNS failed (try 
+0) result 0x8000002
+Sep 26 13:31:48 elm3b99 kernel: scsi scan: Sequential scan of host 3 channel 0 
+id 1
+Sep 26 13:31:48 elm3b99 kernel: scsi <3:0:1:1>: scan: INQUIRY to host
+Sep 26 13:31:48 elm3b99 kernel: scsi <3:0:1:1>: scan: 1st INQUIRY failed with 
+code 0x10000
+Sep 26 13:31:48 elm3b99 kernel: scsi <3:0:2:0>: scan: device found
+Sep 26 13:31:48 elm3b99 kernel: scsi scan: Sequential scan of host 3 channel 0 
+id 2
+Sep 26 13:31:48 elm3b99 kernel: scsi <3:0:2:1>: scan: INQUIRY to host
+Sep 26 13:31:48 elm3b99 kernel: scsi <3:0:2:1>: scan: 1st INQUIRY failed with 
+code 0x10000
+Sep 26 13:31:48 elm3b99 kernel: scsi <3:0:3:0>: scan: device found
+Sep 26 13:31:48 elm3b99 kernel: scsi <3:0:3:0>: scan: Sending REPORT LUNS (try 
+0)
+Sep 26 13:31:49 elm3b99 kernel: scsi <3:0:3:0>: scan: REPORT LUNS failed (try 
+0) result 0x8000002
+Sep 26 13:31:49 elm3b99 kernel: scsi scan: Sequential scan of host 3 channel 0 
+id 3
+Sep 26 13:31:49 elm3b99 kernel: scsi <3:0:3:1>: scan: INQUIRY to host
+Sep 26 13:31:49 elm3b99 kernel: scsi <3:0:3:1>: scan: 1st INQUIRY failed with 
+code 0x10000
+
+
+Example Patch Follows:
+--------------------------
+
+
+
