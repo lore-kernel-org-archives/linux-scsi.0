@@ -1,48 +1,67 @@
-From: Patrick Mansfield <patmans@us.ibm.com>
-Subject: [PATCH] 2.5.44 scsi-misc-2.5 fix queue depth setting
-Date: Mon, 28 Oct 2002 15:08:02 -0800
+From: Mark Lobo <ntdeveloper2002@yahoo.com>
+Subject: Re: kernel addresses
+Date: Mon, 28 Oct 2002 15:54:33 -0800 (PST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20021028150802.A5891@eng2.beaverton.ibm.com>
+Message-ID: <20021028235433.90095.qmail@web80309.mail.yahoo.com>
+References: <1035847574.3550.109.camel@irongate.swansea.linux.org.uk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <1035847574.3550.109.camel@irongate.swansea.linux.org.uk>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>, linux-scsi@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: linux-scsi@vger.kernel.org
 
-James -
+Alan
+Can vmalloced memory be used for DMA? an API will be
+needed to get the physical address and sizes of the
+segments of the buffer. Looks like virt_to_phys and
+phys_to_virt work only on kernel "logical" addresses,
+i.e. a constant offset difference. So is there any API
+to get the physical addresses of the vmalloced
+buffers?
+( I havent dug into the DMA API in great detail, so
+pardon me if that is exactly what it does)Also, Im
+still not sure why we even need kernel logical
+addresses separate from kernel "virtual" address? Why
+not have just a single kernel virtual address?
 
-Here's a simple patch against your bk tree to not reset the desired
-queue depth in scsi_release_commandblocks. Without this patch, if the
-upper level drivers are inited after the adapters, the queue
-depth is set to 1.
-
-i.e.:
-
-Current scsi-misc-2.5 gives me:
-
-[patman@elm3a50 patman]$ ]$ cat /proc/scsi/sg/device_hdr /proc/scsi/sg/devices
-host    chan    id      lun     type    opens   qdepth  busy    online
-0       0       0       0       0       2       1       0       1
-0       0       1       0       0       1       1       0       1
-0       0       15      0       3       0       1       0       1
-
-With this patch:
-
-[patman@elm3a50 patman]$ cat /proc/scsi/sg/device_hdr /proc/scsi/sg/devices
-host    chan    id      lun     type    opens   qdepth  busy    online
-0       0       0       0       0       2       253     0       1
-0       0       1       0       0       1       253     0       1
-0       0       15      0       3       0       2       0       1
-
-===== drivers/scsi/scsi.c 1.53 vs edited =====
---- 1.53/drivers/scsi/scsi.c	Mon Oct 28 08:54:38 2002
-+++ edited/drivers/scsi/scsi.c	Mon Oct 28 13:40:22 2002
-@@ -1517,7 +1517,6 @@
- 		kfree((char *) SCpnt);
- 	}
- 	SDpnt->current_queue_depth = 0;
--	SDpnt->new_queue_depth = 0;
- 	spin_unlock_irqrestore(&device_request_lock, flags);
- }
+Also, I still dont understand what is "low memory" and
+"high memory". Why/how dont the older kernels support
+high memory? 
  
--- Patrick Mansfield
+Sorry if Im bothering you too much with these newbie
+questions!
+
+Thanks a lot!
+Mark
+
+--- Alan Cox <alan@lxorguk.ukuu.org.uk> wrote:
+> kmalloc memory comes out of the pool requested 
+> GFP_DMA selects the ISA
+> space, GFP_HIGH allows all 36bits (if I remember
+> rightly). vmalloc comes
+> from the whole of memory space.
+> 
+> the highmem I/O stuff is a 2.4 patch some people use
+> so that DMA aware
+> drivers that support the full 32bit DMA range can
+> avoid bounce buffers. 
+> 
+> This comes from a 2.4 transition thing. Older
+> drivers assume memory they
+> access is always mapped (eg when doing PIO) so the
+> scsi code makes sure
+> this is true. The bounce patch lets drivers that
+> don't do PIO avoid
+> this.
+> 
+> 2.5 does the job properly instead as part of the
+> block rewrite
+> 
+
+
+__________________________________________________
+Do you Yahoo!?
+New DSL Internet Access from SBC & Yahoo!
+http://sbc.yahoo.com
