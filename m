@@ -1,129 +1,63 @@
-From: "tester7 A." <benew666@hotmail.com>
-Subject: RE: QLA2300, Infortrand and LBD?
-Date: Mon, 21 Jun 2004 10:24:55 +0900
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: [ADVANSYS] Add basic highmem/DMA support
+Date: Mon, 21 Jun 2004 18:41:58 +1000
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <BAY22-F18XkYgxWLR2O00004ca6@hotmail.com>
+Message-ID: <40D69F56.2000307@torque.net>
+References: <20040508003906.GA26338@gondor.apana.org.au> 	<20040519103800.GA9891@gondor.apana.org.au> <1086026538.2004.7.camel@mulgrave>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain; format=flowed
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bay22-f18.bay22.hotmail.com ([64.4.16.68]:1035 "EHLO
-	hotmail.com") by vger.kernel.org with ESMTP id S265517AbUFUBXO
+Received: from mailhub2.uq.edu.au ([130.102.149.128]:21516 "EHLO
+	mailhub2.uq.edu.au") by vger.kernel.org with ESMTP id S266163AbUFUImc
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 20 Jun 2004 21:23:14 -0400
+	Mon, 21 Jun 2004 04:42:32 -0400
+In-Reply-To: <1086026538.2004.7.camel@mulgrave>
 List-Id: linux-scsi@vger.kernel.org
-To: bugzilla@watkins-home.com
-Cc: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@steeleye.com>
+Cc: Herbert Xu <herbert@gondor.apana.org.au>, Gene Heskett <gene.heskett@verizon.net>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Andrew Morton <akpm@osdl.org>
 
-LVM is not an option for  me, because I will not do volume management for 
-this 3.5TB.
+James Bottomley wrote:
+> On Wed, 2004-05-19 at 05:38, Herbert Xu wrote:
+> 
+>>Hi:
+>>
+>>This is a resend of my patch that adds basic support for highmem
+>>on i386 to the advansys driver.  It has been tested in
+>>http://bugs.debian.org/245238.
+>>
+>>The maintainer email address listed in the MAINTAINERS file bounced
+>>so someone else will need to look at this.
+> 
+> 
+> I converted your patch to use the DMA-API.  This will be necessary to
+> use the EISA advansys boards---Of course, EISA won't work properly until
+> the entire driver is converted to the driverfs probing API, sigh, but
+> I'll get around to that eventually.
+> 
+> OK, and I couldn't resist getting rid of the stupid in_isr locking on
+> the done function.
+> 
+> Could someone who actually has one of these things please test?  Thanks,
 
-Thanks.
+James,
+I just tested it in lk 2.6.7-bk2 and the advansys driver is
+broken. The disk access light stays on for several seconds
+while it tries to read the partition table after which it
+announces "unknown partition table". Since my rootfs is on
+that disk it's all downhill from there.
+
+HBA is a ASB3940U2VV (PCI) and it worked ok in lk 2.6.6 .
+I haven't tried lk 2.6.7 (release yet).
 
 
->From: "Guy" <bugzilla@watkins-home.com>
->To: "'tester7 A.'" <benew666@hotmail.com>
->Subject: RE: QLA2300, Infortrand and LBD?
->Date: Sun, 20 Jun 2004 21:03:44 -0400
->
->I am not a driver god, so I don't know.  There may be a 2T limit that can't
->be crossed.  What about using LVM?
->
->Send your request back to the list.  Someone should answer, this seems like
->a real good question, or a bug!
->
->Guy
->
->-----Original Message-----
->From: tester7 A. [mailto:benew666@hotmail.com]
->Sent: Sunday, June 20, 2004 8:43 PM
->To: bugzilla@watkins-home.com
->Subject: RE: QLA2300, Infortrand and LBD?
->
->Yes. if I split it, it works. But I do not want to use Software RAID0 for
->them.
->Is there any way to make the kernel recognize the whole volume?
->
->
-> >From: "Guy" <bugzilla@watkins-home.com>
-> >To: "'tester7 A.'" <benew666@hotmail.com>
-> >Subject: RE: QLA2300, Infortrand and LBD?
-> >Date: Sun, 20 Jun 2004 12:04:05 -0400
-> >
-> >If you can split your ARRAY into 2 logical disks of 1.75TB each, it may
-> >work.
-> >
-> >-----Original Message-----
-> >From: linux-scsi-owner@vger.kernel.org
-> >[mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of tester7 A.
-> >Sent: Sunday, June 20, 2004 4:43 AM
-> >To: linux-scsi@vger.kernel.org
-> >Cc: tech@storageone.co.kr
-> >Subject: QLA2300, Infortrand and LBD?
-> >
-> >Hi,
-> >
-> >I am using Kernel 2.6.7 and I want to use the Large Block Device for the
-> >3.5TB Infortrend FC-Sata RAID.
-> >
-> >My H/W is QLA2300, Infortrend A16F-G1A2 FC-SATA RAID, and a Intel Xeon 
->SMP
-> >box.
-> >
-> >I also turned on the "LBD support" in the kernel config.
-> >
-> >But the kernel recognize only 1.5TB out of 3.5TB, even though it is one
-> >volume with 3.5TB.
-> >
-> >qla2300 0000:03:09.0: Found an ISP2300, irq 27, iobase 0xf8c5c000
-> >qla2300 0000:03:09.0: Configuring PCI space...
-> >qla2300 0000:03:09.0: Configure NVRAM parameters...
-> >qla2300 0000:03:09.0: Verifying loaded RISC code...
-> >qla2300 0000:03:09.0: Waiting for LIP to complete...
-> >qla2300 0000:03:09.0: LIP reset occured (f8f7).
-> >qla2300 0000:03:09.0: LIP occured (f8f7).
-> >qla2300 0000:03:09.0: LOOP UP detected (2 Gbps).
-> >qla2300 0000:03:09.0: Topology - (Loop), Host Loop address 0x0
-> >scsi3 : qla2xxx
-> >qla2300 0000:03:09.0:
-> >QLogic Fibre Channel HBA Driver: 8.00.00b12-k
-> >   QLogic QLA2310 -
-> >   ISP2300: PCI-X (66 MHz) @ 0000:03:09.0 hdma-, host#=3, fw=3.02.28 IPX
-> >   Vendor: IFT       Model: A16F-G1A2         Rev: 334B
-> >   Type:   Direct-Access                      ANSI SCSI revision: 03
-> >qla2300 0000:03:09.0: scsi(3:0:0:0): Enabled tagged queuing, queue depth
-> >32.
-> >SCSI device sdc: 3022966784 512-byte hdwr sectors (1547759 MB)
-> >SCSI device sdc: drive cache: write through
-> >sdc: sdc1
-> >Attached scsi disk sdc at scsi3, channel 0, id 0, lun 0
-> >
-> >Do I need to do something about qla2300 driver or else, in order to make
-> >the
-> >
-> >kernel recognize 3.5TB?
-> >
-> >Please help me. Any help will be appreciated.
-> >
-> >Thanks in advance.
-> >
-> >_________________________________________________________________
-> >MSN Toolbar provides one-click access to Hotmail from any Web page - FREE
-> >download! http://toolbar.msn.click-url.com/go/onm00200413ave/direct/01/
-> >
-> >-
-> >To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> >the body of a message to majordomo@vger.kernel.org
-> >More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> >
-> >
->
->_________________________________________________________________
->STOP MORE SPAM with the new MSN 8 and get 2 months FREE*
->http://join.msn.com/?page=features/junkmail
->
->
+Also when I put an ISA Advansys HBA in the box (with the PCI
+advansys HBA) it causes an oops during bootup in
+AscInitGetConfig+0x75/0x1d0
+which is called from advansys_detect().
+I think this ISA HBA has been causing this oops each
+time I have tried it in the lk 2.6 series (not just
+with lk 2.6.7-bk2).
 
-_________________________________________________________________
-Tired of spam? Get advanced junk mail protection with MSN 8. 
-http://join.msn.com/?page=features/junkmail
-
+Doug Gilbert
