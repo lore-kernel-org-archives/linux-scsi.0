@@ -1,67 +1,95 @@
 From: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Subject: PATCH [11/15] qla2xxx: Add login-retry-count override
-Date: Sun, 14 Mar 2004 00:25:45 -0800
+Subject: PATCH [12/15] qla2xxx: Restore update state during resync
+Date: Sun, 14 Mar 2004 00:25:55 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040314082545.GA3458@linux.local.home>
+Message-ID: <20040314082555.GA3465@linux.local.home>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ms-smtp-02-qfe0.socal.rr.com ([66.75.162.134]:33469 "EHLO
-	ms-smtp-02-eri0.socal.rr.com") by vger.kernel.org with ESMTP
-	id S263323AbUCNIXP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 14 Mar 2004 03:23:15 -0500
+Received: from ms-smtp-03-qfe0.socal.rr.com ([66.75.162.135]:63900 "EHLO
+	ms-smtp-03-eri0.socal.rr.com") by vger.kernel.org with ESMTP
+	id S263325AbUCNIX0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 14 Mar 2004 03:23:26 -0500
 Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@steeleye.com>
 Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
 ChangeSet
-  1.1667 04/03/01 15:40:41 andrew.vasquez@apc.qlogic.com +3 -0
-  Add a module parameter to override the NVRAM's login retry count
-  value.
+  1.1668 04/03/02 07:13:34 andrew.vasquez@apc.qlogic.com +2 -0
+  Restore the UPDATE state of the HA if a resync event occurs during
+  a device (re)discovery.  
 
- drivers/scsi/qla2xxx/qla_gbl.h  |    1 +
- drivers/scsi/qla2xxx/qla_init.c |    2 ++
- drivers/scsi/qla2xxx/qla_os.c   |    5 +++++
- 3 files changed, 8 insertions(+)
+ drivers/scsi/qla2xxx/qla_init.c |   25 ++++++++++++++++++++++++-
+ drivers/scsi/qla2xxx/qla_isr.c  |    1 +
+ 2 files changed, 25 insertions(+), 1 deletion(-)
 
-ftp://ftp.qlogic.com/outgoing/linux/patches/8.x/8.00.00b11k/20_add_nvr_login_retry_cnt.patch
+ftp://ftp.qlogic.com/outgoing/linux/patches/8.x/8.00.00b11k/21_restore_update_state.patch
 
-diff -Nru a/drivers/scsi/qla2xxx/qla_gbl.h b/drivers/scsi/qla2xxx/qla_gbl.h
---- a/drivers/scsi/qla2xxx/qla_gbl.h	Fri Mar 12 17:09:07 2004
-+++ b/drivers/scsi/qla2xxx/qla_gbl.h	Fri Mar 12 17:09:07 2004
-@@ -65,6 +65,7 @@
- extern int displayConfig;
- extern int ql2xplogiabsentdevice;
- extern int ql2xintrdelaytimer;
-+extern int ql2xloginretrycount;
- 
- extern int ConfigRequired;
- 
 diff -Nru a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
---- a/drivers/scsi/qla2xxx/qla_init.c	Fri Mar 12 17:09:07 2004
-+++ b/drivers/scsi/qla2xxx/qla_init.c	Fri Mar 12 17:09:07 2004
-@@ -1363,6 +1363,8 @@
- 		ha->login_retry_count = ha->port_down_retry_count;
- 	else if (ha->port_down_retry_count > (int)ha->login_retry_count)
- 		ha->login_retry_count = ha->port_down_retry_count;
-+	if (ql2xloginretrycount)
-+		ha->login_retry_count = ql2xloginretrycount;
+--- a/drivers/scsi/qla2xxx/qla_init.c	Fri Mar 12 17:09:24 2004
++++ b/drivers/scsi/qla2xxx/qla_init.c	Fri Mar 12 17:09:24 2004
+@@ -1497,7 +1497,7 @@
+ {
+ 	int  rval;
+ 	uint8_t  rval1 = 0;
+-	static unsigned long  flags, save_flags;
++	unsigned long flags, save_flags;
  
- 	ha->binding_type = Bind;
- 	if (ha->binding_type != BIND_BY_PORT_NAME &&
-diff -Nru a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
---- a/drivers/scsi/qla2xxx/qla_os.c	Fri Mar 12 17:09:07 2004
-+++ b/drivers/scsi/qla2xxx/qla_os.c	Fri Mar 12 17:09:07 2004
-@@ -110,6 +110,11 @@
- 		"Signal mid-layer to perform scan after driver load: 0 -- no "
- 		"signal sent to mid-layer.");
+ 	rval = QLA_SUCCESS;
  
-+int ql2xloginretrycount = 0;
-+module_param(ql2xloginretrycount, int, 0);
-+MODULE_PARM_DESC(ql2xloginretrycount,
-+		"Specify an alternate value for the NVRAM login retry count.");
+@@ -1597,6 +1597,14 @@
+ 		DEBUG3(printk("%s: exiting normally\n", __func__));
+ 	}
+ 
++	/* Restore state if a resync event occured during processing */
++	if (test_bit(LOOP_RESYNC_NEEDED, &ha->dpc_flags)) {
++		if (test_bit(LOCAL_LOOP_UPDATE, &save_flags))
++			set_bit(LOCAL_LOOP_UPDATE, &ha->dpc_flags);
++		if (test_bit(RSCN_UPDATE, &save_flags))
++			set_bit(RSCN_UPDATE, &ha->dpc_flags);
++	}
++
+ 	return (rval);
+ }
+ 
+@@ -1805,6 +1813,20 @@
+ 	return (rval);
+ }
+ 
++static void
++qla2x00_probe_for_all_luns(scsi_qla_host_t *ha) 
++{
++	fc_port_t	*fcport;
++
++	qla2x00_mark_all_devices_lost(ha); 
++ 	list_for_each_entry(fcport, &ha->fcports, list) {
++		if (fcport->port_type != FCT_TARGET)
++			continue;
++
++		qla2x00_update_fcport(ha, fcport); 
++	}
++}
 +
  /*
-  * Proc structures and functions
-  */
+  * qla2x00_update_fcport
+  *	Updates device on list.
+@@ -3194,6 +3216,7 @@
+ 
+ 		rescan_done = 1;
+ 	}
++	qla2x00_probe_for_all_luns(ha); 
+ 
+ 	/* Update OS target and lun structures if necessary. */
+ 	if (rescan_done) {
+diff -Nru a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
+--- a/drivers/scsi/qla2xxx/qla_isr.c	Fri Mar 12 17:09:24 2004
++++ b/drivers/scsi/qla2xxx/qla_isr.c	Fri Mar 12 17:09:24 2004
+@@ -452,6 +452,7 @@
+ 		if (atomic_read(&ha->loop_state) != LOOP_DOWN) {
+ 			atomic_set(&ha->loop_state, LOOP_DOWN);
+ 			atomic_set(&ha->loop_down_timer, LOOP_DOWN_TIME);
++			ha->device_flags |= DFLG_NO_CABLE;
+ 			qla2x00_mark_all_devices_lost(ha);
+ 		}
+ 
