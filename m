@@ -1,33 +1,46 @@
-From: Greg KH <greg@kroah.com>
-Subject: Re: [linux-usb-devel] Re: [PATCH] oops in sd_shutdown
-Date: Tue, 12 Aug 2003 14:35:49 -0700
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <20030812213549.GA2158@kroah.com>
-References: <Pine.LNX.4.53.0308111426570.16008@thevillage.soulcatcher> <20030812002844.B1353@pclin040.win.tue.nl> <20030812075353.A18547@infradead.org>
+From: Anton Blanchard <anton@samba.org>
+Subject: Re: [PATCH] Convert sym2 to be hotplug-capable
+Date: Wed, 13 Aug 2003 09:41:33 +1000
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <20030812234133.GA30156@krispykreme>
+References: <20030716210059.GR23808@parcelfarce.linux.theplanet.co.uk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from dp.samba.org ([66.70.73.150]:45739 "EHLO lists.samba.org")
+	by vger.kernel.org with ESMTP id S271235AbTHLXlm (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 12 Aug 2003 19:41:42 -0400
 Content-Disposition: inline
-In-Reply-To: <20030812075353.A18547@infradead.org>
-To: Christoph Hellwig <hch@infradead.org>, Andries Brouwer <aebr@win.tue.nl>, linux-scsi@vger.kernel.org, linux-usb-devel@lists.sourceforge.net, linux-kernel@vger.kernel.org
+In-Reply-To: <20030716210059.GR23808@parcelfarce.linux.theplanet.co.uk>
 List-Id: linux-scsi@vger.kernel.org
+To: Matthew Wilcox <willy@debian.org>
+Cc: linux-scsi@vger.kernel.org
 
-On Tue, Aug 12, 2003 at 07:53:53AM +0100, Christoph Hellwig wrote:
-> On Tue, Aug 12, 2003 at 12:28:44AM +0200, Andries Brouwer wrote:
-> > I see an Oops in the SCSI code, caused by the fact that sdkp is NULL
-> > in sd_shutdown. "How can that be?", you will ask - dev->driver_data was set
-> > in sd_probe. But in my case sd_probe never finished. An insmod usb-storage
-> > hangs forever, or at least for more than six hours, giving ample opportunity
-> > to observe this race between sd_probe and sd_shutdown.
-> > (Of course sd_probe hangs in sd_revalidate disk.)
-> 
-> Well, this same problem could show upb in any other driver.  Could
-> you instead send a patch to Pat that the driver model never calls
-> the shutdown method for a driver that hasn't finished ->probe?
 
-I think it already will not do that due to taking the bus->subsys.rwsem
-before calling either probe() or remove().
+Hi,
 
-thanks,
+> This patch is on top of the patch I posted yesterday.  It..
+>  - Stops using Scsi_Cmnd etc typedefs
+>  - Removes the unused Scsi_Host_Template argument from sym53c8xx_pci_init
+>  - Converts sym53c8xx_2 to be a hotplug-capable driver
 
-greg k-h
+One problem we found when we hit a bad adapter, we need to use scsi_host_put.
+
+James, what are the chances of getting Willy's sym2 fixes in? Its much
+more predictable than the current probe order.
+
+Anton
+
+--- gr13_work_miltonm_l4/drivers/scsi/sym53c8xx_2/sym_glue.c~	2003-08-12 18:33:03.000000000 -0500
++++ gr13_work_miltonm_l4/drivers/scsi/sym53c8xx_2/sym_glue.c	2003-08-12 18:33:45.000000000 -0500
+@@ -2030,7 +2030,7 @@
+ 	printf_info("%s: giving up ...\n", sym_name(np));
+ 	if (np)
+ 		sym_free_resources(np);
+-	scsi_unregister(instance);
++	scsi_host_put(instance);
+ 
+         return -1;
+  }
+
