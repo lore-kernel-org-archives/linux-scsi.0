@@ -1,55 +1,295 @@
-From: Mike Anderson <andmike@us.ibm.com>
-Subject: Re: [PATCH] allow NULL dev argument to scsi_add_host
-Date: Sat, 11 Jan 2003 17:17:20 -0800
+From: Andries.Brouwer@cwi.nl
+Subject: [PATCH] sd.c
+Date: Sun, 12 Jan 2003 03:07:09 +0100 (MET)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030112011720.GC1878@beaverton.ibm.com>
-References: <20030111203317.A25836@lst.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Message-ID: <UTC200301120207.h0C279Q18364.aeb@smtp.cwi.nl>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20030111203317.A25836@lst.de>
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: James.Bottomley@steeleye.com, linux-scsi@vger.kernel.org
+To: torvalds@transmeta.com
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Christoph Hellwig [hch@lst.de] wrote:
-> We need scsi_add_host sometimes without having a struct device (i.e.
-> eisa/vlb drivers, ieee1394 storage), so handle that case gracefully.
-> 
-> 
-> --- 1.41/drivers/scsi/hosts.c	Mon Dec 16 10:59:41 2002
-> +++ edited/drivers/scsi/hosts.c	Sat Jan 11 19:06:56 2003
-> @@ -314,9 +314,10 @@
->   **/
->  int scsi_add_host(struct Scsi_Host *shost, struct device *dev)
->  {
-> -	dev->class_data = shost;
-> -	shost->host_gendev = dev;
-> -
-> +	if (dev) {
-> +		dev->class_data = shost;
-> +		shost->host_gendev = dev;
-> +	}
->  	return __scsi_add_host(shost);
->  }
->  
+The below does two things:
+(i) do not try to spin up a CF reader without media
+(ii) be careful when asking for the cache parameters mode page
 
-This will cause all scsi device registers to show up in the root of the sysfs
-tree. The goal was that children of the adapter would be equal to the
-my_devices member. I also thought that callers of this interface would
-be converted to support sysfs.
+[do not ask for this page when no media are present:
+it is meaningless, and some devices react badly if we do;
+check the reply so that we do not read past the end of the reply;
+first give a small transport length - some USB devices are unhappy
+if we ask for more than they provide]
 
-If there are going to be many pseudo adapters that do not want to go
-through the overhead of creating a sysfs bus entry like ide-scsi
-then maybe I should work on a sysfs SCSI sub-system like block and if
-dev is null it means you are pseudo and we would create an entry for
-the adapter under (? /sysfs/scsi/pseudo ?). This could then be the value
-we stuff in host_gendev. Though the sysfs entry would not be much use to
-the caller, but useful for SCSI.
+Andries
 
--andmike
---
-Michael Anderson
-andmike@us.ibm.com
 
+--- /linux/2.5/linux-2.5.56/linux/drivers/scsi/sd.c	Thu Jan  2 14:32:08 2003
++++ sd.c	Sun Jan 12 01:50:53 2003
+@@ -79,7 +79,7 @@
+ 	u8		media_present;
+ 	u8		write_prot;
+ 	unsigned	WCE : 1;	/* state of disk WCE bit */
+-	unsigned	RCD : 1;	/* state of disk RCD bit */
++	unsigned	RCD : 1;	/* state of disk RCD bit, unused */
+ };
+ 
+ static LIST_HEAD(sd_devlist);
+@@ -217,7 +217,7 @@
+ 	block = SCpnt->request->sector;
+ 	this_count = SCpnt->request_bufflen >> 9;
+ 
+-	SCSI_LOG_HLQUEUE(1, printk("sd_command_init: disk=%s, block=%llu, "
++	SCSI_LOG_HLQUEUE(1, printk("sd_init_command: disk=%s, block=%llu, "
+ 			    "count=%d\n", disk->disk_name, (unsigned long long)block, this_count));
+ 
+ 	if (!sdp || !sdp->online ||
+@@ -809,9 +809,22 @@
+ 		if (media_not_present(sdkp, SRpnt))
+ 			return;
+ 
+-		/* Look for devices that return NOT_READY.
+-		 * Issue command to spin up drive for these cases. */
+-		if (the_result && SRpnt->sr_sense_buffer[2] == NOT_READY) {
++		if (the_result == 0)
++			break;		/* all is well now */
++
++		/*
++		 * If manual intervention is required, or this is an
++		 * absent USB storage device, a spinup is meaningless.
++		 */
++		if (SRpnt->sr_sense_buffer[2] == NOT_READY &&
++		    SRpnt->sr_sense_buffer[12] == 4 /* not ready */ &&
++		    SRpnt->sr_sense_buffer[13] == 3)
++			break;		/* manual intervention required */
++
++		/*
++		 * Issue command to spin up drive when not ready
++		 */
++		if (SRpnt->sr_sense_buffer[2] == NOT_READY) {
+ 			unsigned long time1;
+ 			if (!spintime) {
+ 				printk(KERN_NOTICE "%s: Spinning up disk...",
+@@ -839,7 +852,7 @@
+ 			} while(time1);
+ 			printk(".");
+ 		}
+-	} while (the_result && spintime &&
++	} while (spintime &&
+ 		 time_after(spintime_value + 100 * HZ, jiffies));
+ 
+ 	if (spintime) {
+@@ -851,80 +864,6 @@
+ }
+ 
+ /*
+- * sd_read_cache_type - called only from sd_init_onedisk()
+- */
+-static void
+-sd_read_cache_type(struct scsi_disk *sdkp, char *diskname,
+-		   struct scsi_request *SRpnt, unsigned char *buffer) {
+-
+-	unsigned char cmd[10];
+-	int the_result, retries;
+-
+-	retries = 3;
+-	do {
+-
+-		memset((void *) &cmd[0], 0, 10);
+-		cmd[0] = MODE_SENSE;
+-		cmd[1] = 0x08;	/* DBD */
+-		cmd[2] = 0x08;	/* current values, cache page */
+-		cmd[4] = 128;	/* allocation length */
+-
+-
+-		memset((void *) buffer, 0, 24);
+-		SRpnt->sr_cmd_len = 0;
+-		SRpnt->sr_sense_buffer[0] = 0;
+-		SRpnt->sr_sense_buffer[2] = 0;
+-
+-		SRpnt->sr_data_direction = SCSI_DATA_READ;
+-		scsi_wait_req(SRpnt, (void *) cmd, (void *) buffer,
+-			    128, SD_TIMEOUT, SD_MAX_RETRIES);
+-
+-		the_result = SRpnt->sr_result;
+-		retries--;
+-
+-	} while (the_result && retries);
+-
+-	if (the_result) {
+-		if(status_byte(the_result) == CHECK_CONDITION
+-		   && (SRpnt->sr_sense_buffer[0] & 0x70) == 0x70
+-		   && (SRpnt->sr_sense_buffer[2] & 0x0f) == ILLEGAL_REQUEST
+-		   /* The next are ASC 0x24 ASCQ 0x00: Invalid field in CDB */
+-		   && SRpnt->sr_sense_buffer[12] == 0x24
+-		   && SRpnt->sr_sense_buffer[13] == 0x00) {
+-			printk(KERN_NOTICE "SCSI device %s: cache data unavailable\n", diskname);
+-		} else {
+-			printk(KERN_ERR "%s : MODE SENSE failed.\n"
+-			       "%s : status = %x, message = %02x, host = %d, driver = %02x \n",
+-			       diskname, diskname,
+-			       status_byte(the_result),
+-			       msg_byte(the_result),
+-			       host_byte(the_result),
+-			       driver_byte(the_result)
+-			       );
+-			if (driver_byte(the_result) & DRIVER_SENSE)
+-				print_req_sense("sd", SRpnt);
+-			else
+-				printk(KERN_ERR "%s : sense not available. \n", diskname);
+-			
+-			printk(KERN_ERR "%s : assuming drive cache: write through\n", diskname);
+-		}
+-		sdkp->WCE = 0;
+-		sdkp->RCD = 0;
+-	} else {
+-		const char *types[] = { "write through", "none", "write back", "write back, no read (daft)" };
+-		int ct = 0;
+-		int offset = buffer[3] + 4; /* offset to start of mode page */
+-
+-		sdkp->WCE = (buffer[offset + 2] & 0x04) == 0x04;
+-		sdkp->RCD = (buffer[offset + 2] & 0x01) == 0x01;
+-
+-		ct =  sdkp->RCD + 2*sdkp->WCE;
+-
+-		printk(KERN_NOTICE "SCSI device %s: drive cache: %s\n", diskname, types[ct]);
+-	}
+-}
+-
+-/*
+  * read disk capacity - called only in sd_init_onedisk()
+  */
+ static void
+@@ -1102,11 +1041,12 @@
+ 
+ static int
+ sd_do_mode_sense6(struct scsi_device *sdp, struct scsi_request *SRpnt,
+-		  int modepage, unsigned char *buffer, int len) {
++		  int dbd, int modepage, unsigned char *buffer, int len) {
+ 	unsigned char cmd[8];
+ 
+ 	memset((void *) &cmd[0], 0, 8);
+ 	cmd[0] = MODE_SENSE;
++	cmd[1] = dbd;
+ 	cmd[2] = modepage;
+ 	cmd[4] = len;
+ 
+@@ -1115,6 +1055,8 @@
+ 	SRpnt->sr_sense_buffer[2] = 0;
+ 	SRpnt->sr_data_direction = SCSI_DATA_READ;
+ 
++	memset((void *) buffer, 0, len);
++
+ 	scsi_wait_req(SRpnt, (void *) cmd, (void *) buffer,
+ 		      len, SD_TIMEOUT, SD_MAX_RETRIES);
+ 
+@@ -1135,7 +1077,7 @@
+ 	 * We have to start carefully: some devices hang if we ask
+ 	 * for more than is available.
+ 	 */
+-	res = sd_do_mode_sense6(sdp, SRpnt, 0x3F, buffer, 4);
++	res = sd_do_mode_sense6(sdp, SRpnt, 0, 0x3F, buffer, 4);
+ 
+ 	/*
+ 	 * Second attempt: ask for page 0
+@@ -1143,13 +1085,13 @@
+ 	 * Sense Key 5: Illegal Request, Sense Code 24: Invalid field in CDB.
+ 	 */
+ 	if (res)
+-		res = sd_do_mode_sense6(sdp, SRpnt, 0, buffer, 4);
++		res = sd_do_mode_sense6(sdp, SRpnt, 0, 0, buffer, 4);
+ 
+ 	/*
+ 	 * Third attempt: ask 255 bytes, as we did earlier.
+ 	 */
+ 	if (res)
+-		res = sd_do_mode_sense6(sdp, SRpnt, 0x3F, buffer, 255);
++		res = sd_do_mode_sense6(sdp, SRpnt, 0, 0x3F, buffer, 255);
+ 
+ 	if (res) {
+ 		printk(KERN_WARNING
+@@ -1163,6 +1105,65 @@
+ 	}
+ }
+ 
++/*
++ * sd_read_cache_type - called only from sd_init_onedisk()
++ */
++static void
++sd_read_cache_type(struct scsi_disk *sdkp, char *diskname,
++		   struct scsi_request *SRpnt, unsigned char *buffer) {
++	struct scsi_device *sdp = sdkp->device;
++	int len = 0, res;
++
++	const int dbd = 0x08;	   /* DBD */
++	const int modepage = 0x08; /* current values, cache page */
++
++	/* cautiously ask */
++	res = sd_do_mode_sense6(sdp, SRpnt, dbd, modepage, buffer, 4);
++
++	if (res == 0) {
++		/* that went OK, now ask for the proper length */
++		len = buffer[0] + 1;
++		if (len > 128)
++			len = 128;
++		res = sd_do_mode_sense6(sdp, SRpnt, dbd, modepage, buffer, len);
++	}
++
++	if (res == 0 && buffer[3] + 6 < len) {
++		const char *types[] = {
++			"write through", "none", "write back",
++			"write back, no read (daft)"
++		};
++		int ct = 0;
++		int offset = buffer[3] + 4; /* start of mode page */
++
++		sdkp->WCE = ((buffer[offset + 2] & 0x04) != 0);
++		sdkp->RCD = ((buffer[offset + 2] & 0x01) != 0);
++
++		ct =  sdkp->RCD + 2*sdkp->WCE;
++
++		printk(KERN_NOTICE "SCSI device %s: drive cache: %s\n",
++		       diskname, types[ct]);
++	} else {
++		if (res == 0 ||
++		    (status_byte(res) == CHECK_CONDITION
++		     && (SRpnt->sr_sense_buffer[0] & 0x70) == 0x70
++		     && (SRpnt->sr_sense_buffer[2] & 0x0f) == ILLEGAL_REQUEST
++		     /* ASC 0x24 ASCQ 0x00: Invalid field in CDB */
++		     && SRpnt->sr_sense_buffer[12] == 0x24
++		     && SRpnt->sr_sense_buffer[13] == 0x00)) {
++			printk(KERN_NOTICE "%s: cache data unavailable\n",
++			       diskname);
++		} else {
++			printk(KERN_ERR "%s: asking for cache data failed\n",
++			       diskname);
++		}
++		printk(KERN_ERR "%s: assuming drive cache: write through\n",
++		       diskname);
++		sdkp->WCE = 0;
++		sdkp->RCD = 0;
++	}
++}
++
+ /**
+  *	sd_init_onedisk - called the first time a new disk is seen,
+  *	performs disk spin up, read_capacity, etc.
+@@ -1208,15 +1209,20 @@
+ 	sdkp->device->sector_size = 512;
+ 	sdkp->media_present = 1;
+ 	sdkp->write_prot = 0;
++	sdkp->WCE = 0;
++	sdkp->RCD = 0;
+ 
+ 	sd_spinup_disk(sdkp, disk->disk_name, SRpnt, buffer);
+-	sd_read_cache_type(sdkp, disk->disk_name, SRpnt, buffer);
+ 
+ 	if (sdkp->media_present)
+ 		sd_read_capacity(sdkp, disk->disk_name, SRpnt, buffer);
+ 	
+ 	if (sdp->removable && sdkp->media_present)
+ 		sd_read_write_protect_flag(sdkp, disk->disk_name, SRpnt, buffer);
++	/* without media there is no reason to ask;
++	   moreover, some devices react badly if we do */
++	if (sdkp->media_present)
++		sd_read_cache_type(sdkp, disk->disk_name, SRpnt, buffer);
+ 		
+ 	SRpnt->sr_device->ten = 1;
+ 	SRpnt->sr_device->remap = 1;
