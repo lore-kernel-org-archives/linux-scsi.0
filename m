@@ -1,40 +1,34 @@
 From: Mike Anderson <andmike@us.ibm.com>
-Subject: Re: 2.5.63-mm2
-Date: Wed, 5 Mar 2003 10:52:31 -0800
+Subject: Re: [rob@osinvestor.com: Re: SCSI broken]
+Date: Wed, 5 Mar 2003 10:56:48 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030305185231.GE1090@beaverton.ibm.com>
-References: <20030302180959.3c9c437a.akpm@digeo.com> <1046815078.12931.79.camel@ibm-b> <20030304234042.2553deed.akpm@digeo.com> <20030305173854.GA1090@beaverton.ibm.com>
+Message-ID: <20030305185648.GF1090@beaverton.ibm.com>
+References: <20030305144336.GA13722@osinvestor.com> <20030305180346.GB1090@beaverton.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20030305173854.GA1090@beaverton.ibm.com>
+In-Reply-To: <20030305180346.GB1090@beaverton.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@digeo.com>, Mark Wong <markw@osdl.org>, linux-scsi@vger.kernel.org
+To: Rob Radez <rob@osinvestor.com>, linux-scsi@vger.kernel.org
 
-The patch below fixed the problem on my system. I had my list empty
-checks reversed if aborting and bus device reset failed. The condition
-that causes the error handler to run is still unknown. I will look at it
-when I get a chance.
+Rob,
+	The patch below fixed a error handler problem on my system when
+	I switch to using the old aic7xxx. Could you try it and let me
+	know if it fixes your problem.
+
+I had my list empty checks reversed if aborting and bus device reset
+failed. The condition that causes the error handler to run is config
+related and I cannot recreate your config with my equipment.
 
 Mike Anderson [andmike@us.ibm.com] wrote:
-> I can also reproduce the problem on my system now that I switch from new
-> AIC7xxx to old AIC7xxx. I am looking at the problem now.
+> Rob,
+> 	Would it possible for you to build with CONFIG_SCSI_LOGGING=y
+> 	and boot with scsi_logging=1. Then send the output to me.  The
+> 	output is quite noisy and if you do not have a serial connected
+> 	the last messages maybe all that is needed. This would help
+> 	narrow down the section in the diff.
 > 
-> Andrew Morton [akpm@digeo.com] wrote:
-> > Mark Wong <markw@osdl.org> wrote:
-> > >
-> > > It appears something is conflicting with the old Adapatec AIC7xxx.  My
-> > > system halts when it attempts to probe the devices (I think it's that.) 
-> > > So I started using the new AIC7xxx driver and all is well.  I don't see
-> > > any messages to the console that points to any causes.  Is there
-> > > someplace I can look for a clue to the problem?
-> > > 
-> > > I actually didn't realize I was using the old driver and have no qualms
-> > > about not using it, but if it'll help someone else, I can help gather
-> > > information.
-> > > 
-> > 
 -andmike
 --
 Michael Anderson
