@@ -1,60 +1,94 @@
-From: James Bottomley <James.Bottomley@steeleye.com>
-Subject: Re: Patch for reset in ini9100u [Initio 9100U(W)]
-Date: 07 Jan 2004 18:56:04 -0600
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: sysfs support for sg
+Date: Thu, 08 Jan 2004 11:50:03 +1000
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1073523364.1883.12.camel@mulgrave>
-References: <20040106231426.GR1845@earth.li>
+Message-ID: <3FFCB74B.9090102@torque.net>
+References: <20040107223341.GA23799@suse.de> <20040107224028.GA24290@suse.de>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed;
+ boundary="------------080800000602080808000907"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat1.steeleye.com ([65.114.3.130]:39619 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S262705AbUAHA4g (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 7 Jan 2004 19:56:36 -0500
-In-Reply-To: <20040106231426.GR1845@earth.li>
+Received: from bunyip.cc.uq.edu.au ([130.102.2.1]:26634 "EHLO
+	bunyip.cc.uq.edu.au") by vger.kernel.org with ESMTP id S263062AbUAHBwI
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 7 Jan 2004 20:52:08 -0500
+In-Reply-To: <20040107224028.GA24290@suse.de>
 List-Id: linux-scsi@vger.kernel.org
-To: Jonathan McDowell <noodles@earth.li>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
+To: Olaf Hering <olh@suse.de>
+Cc: linux-scsi@vger.kernel.org, patmans@ibm.com
 
-On Tue, 2004-01-06 at 17:14, Jonathan McDowell wrote:
-> I have an IWill 2935UW SCSI controller which uses the ini9100u driver.
-> This has been working fine under 2.4 but I've recently built up a box of
-> spare bits including the controller and installed 2.6 on it. The driver
-> is marked broken in 2.6, apparently because of a lack of reset/abort
-> functionality as it compiles and runs ok. So I've taken a stab at
-> getting reset support back. Patch is below and it's received minimal
-> testing - it boots, removes the callback trace and error message and
-> doesn't seem to cause problems (the only disk in the machine is on this
-> card).
+This is a multi-part message in MIME format.
+--------------080800000602080808000907
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 
-I think it's a good beginning.  However, there are some things that
-could be done to improve it.
+Olaf Hering wrote:
+>  On Wed, Jan 07, Olaf Hering wrote:
+> 
+> 
+>>Hello,
+>>
+>>are there any plans to add sysfs support to the sg driver?
+>>I see no 'dev' nodes for it.
+>>Can stuff like 'sg_start /dev/sg2 0' be done in another way?
+> 
+> 
+> I missed the /sys/block/sda/device/generic symlink. But still, no dev
+> node. Is that supposed to work that way?
 
-> +int i91u_bus_reset(Scsi_Cmnd * SCpnt)
-> +{
-> +	HCS *pHCB;
-> +
-> +	pHCB = (HCS *) SCpnt->device->host->base;
-> +	tul_reset_scsi_bus(pHCB);
+Olaf,
+lk 2.6.0-rc1 has added sysfs support for sg with
+/sys/cdev/major/sg<n> . In that directory
+is a symlink to the corresponding SCSI device. When that symlink
+is followed the target directory has a symlink called 'generic'
+back to /sys/cdev/major/sg<n>. The st driver has similar cdev
+bidirectional mapping (and hopefully osst will soon follow).
 
-This won't quite do beacuse tul_reset_scsi_bus() has some really nasty
-properties
+An example is attached. [BTW 'getcwd' returns the "true" path
+as described in "man 3 getcwd".]
 
-Under the old error handler, the reset routine was responsible for
-resetting the bus, waiting the timeout (which tul_reset_scsi_bus() does
-with a busy wait) and flushing the queue.
+The "cdev" changes in the sg and st drivers allow more than
+256 devices to be handled. The sg driver limits the number
+of devices to 8192. I believe sd is still limited to
+128 devices and I not sure about the device limits of sr.
 
-In the new scheme, the eh thread takes care of all of this (including a
-nice thread based wait).
+Currently the sg driver lacks driver parameter support within sysfs
+(e.g. 'allow_dio' as found in the /proc/scsi/sg directory).
+Interestingly the st and osst drivers have /sys/bus/scsi/drivers/st
+and osst directories (sd and st drivers also get directories if
+their drivers are loaded). It is useful to be able to access
+ULDs _prior_ to any (scsi) devices being attached which is not
+possible under lk 2.4 .
 
-I think this may all work correctly if you change this call to:
+I have been looking at the lsscsi program again which has been
+dormant for 6 months. A symlink that I miss is from a scsi host
+(enumerated in the /sys/class/scsi_host directory) to the
+driver (and its name) that controls it.
 
-tul_reset_scsi(pHCB, 0);
 
-instead.  That should simply reset the bus and not busy wait at all,
-which is really what the error handler is expecting.
+BTW Is there a definitive libsysfs site anywhere? I noticed that
+scsi_id provided in the "extras" directory of udev-009 doesn't
+build with the libsysfs provided by udev-009.
 
-James
+Doug Gilbert
 
+
+
+
+--------------080800000602080808000907
+Content-Type: text/plain;
+ name="sg_sysfs.txt"
+Content-Transfer-Encoding: base64
+Content-Disposition: inline;
+ filename="sg_sysfs.txt"
+
+IyBjZCAvc3lzL2NkZXYvbWFqb3Ivc2cwCiMgbHMKZGV2aWNlCiMgdHJlZQouCmAtLSBkZXZp
+Y2UgLT4gLi4vLi4vLi4vZGV2aWNlcy9wY2kwMDAwOjAwLzAwMDA6MDA6MGUuMC9ob3N0MC8w
+OjA6MTowCgoxIGRpcmVjdG9yeSwgMCBmaWxlcwojIGNkIGRldmljZS8KIyBscwpibG9jayAg
+IGRldGFjaF9zdGF0ZSAgICBnZW5lcmljICBvbmxpbmUgIHF1ZXVlX2RlcHRoICByZXYgICAg
+ICAgICB0eXBlCmRlbGV0ZSAgZGV2aWNlX2Jsb2NrZWQgIG1vZGVsICAgIHBvd2VyICAgcmVz
+Y2FuICAgICAgIHNjc2lfbGV2ZWwgIHZlbmRvcgojIGNkIGdlbmVyaWMvCiMgZ2V0Y3dkCi9z
+eXMvY2Rldi9tYWpvci9zZzAK
+--------------080800000602080808000907--
 
