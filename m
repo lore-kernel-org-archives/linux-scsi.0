@@ -1,63 +1,82 @@
-From: christophe varoqui <christophe.varoqui@free.fr>
+From: James.Smart@Emulex.Com
 Subject: RE: [dm-devel] [ANNOUNCE] multipath-tools-0.4.1
-Date: Wed, 22 Dec 2004 22:52:34 +0100
-Message-ID: <1103752354.7432.4.camel@zezette>
-References: <EA4DC661A6353747A2E5C0DE8792DDDE07501278@orsmsx404.amr.corp.intel.com>
+Date: Wed, 22 Dec 2004 16:05:44 -0500
+Message-ID: <0B1E13B586976742A7599D71A6AC733C02F2CB@xbl3.ma.emulex.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp4.wanadoo.fr ([193.252.22.27]:64182 "EHLO smtp4.wanadoo.fr")
-	by vger.kernel.org with ESMTP id S262019AbULVToS (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 22 Dec 2004 14:44:18 -0500
-In-Reply-To: <EA4DC661A6353747A2E5C0DE8792DDDE07501278@orsmsx404.amr.corp.intel.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain;
+	charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-hotplug-devel-admin@lists.sourceforge.net>
+Content-class: urn:content-classes:message
+Sender: linux-hotplug-devel-admin@lists.sourceforge.net
+Errors-To: linux-hotplug-devel-admin@lists.sourceforge.net
+List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux-hotplug-devel>,
+	<mailto:linux-hotplug-devel-request@lists.sourceforge.net?subject=unsubscribe>
+List-Post: <mailto:linux-hotplug-devel@lists.sourceforge.net>
+List-Help: <mailto:linux-hotplug-devel-request@lists.sourceforge.net?subject=help>
+List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux-hotplug-devel>,
+	<mailto:linux-hotplug-devel-request@lists.sourceforge.net?subject=subscribe>
+List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=linux-hotplug-devel>
+To: dm-devel@redhat.com
+Cc: linux-raid@vger.kernel.org, linux-hotplug-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: device-mapper development <dm-devel@redhat.com>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "linux-hotplug-devel@lists.sourceforge.net" <linux-hotplug-devel@lists.sourceforge.net>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-Le mercredi 22 d?embre 2004 =C3=A0 11:26 -0800, Caushik, Ramesh a =C3=A9=
-crit :
-> On my system I have a Qlogic 2310 driver running on a 2.6.9 kernel. T=
-he fc_transport=20
-> directory in sysfs looks like=20
->=20
-> ls -ll /sys/class/fc_transport/
-> total 0
-> drwxr-xr-x   6 root root 0 Dec 16 13:59 .
-> drwxr-xr-x  20 root root 0 Dec 15 14:31 ..
-> drwxr-xr-x   2 root root 0 Dec 16 13:59 2:0:0:0
-> drwxr-xr-x   2 root root 0 Dec 16 13:59 2:0:1:0
-> drwxr-xr-x   2 root root 0 Dec 16 13:59 2:0:2:0
-> drwxr-xr-x   2 root root 0 Dec 16 13:59 2:0:3:0 =20
->=20
-> The patch addresses only this format. So please disregard the patch, =
-and sorry about the confusion.
->=20
-=2E..
-> [root@cl039 multipath]# ll /sys/class/fc_transport/
-> total 0
-> drwxr-xr-x    2 root     root            0 Dec 14 16:26 target2:0:0
-> drwxr-xr-x    2 root     root            0 Dec 14 16:26 target2:0:1
-> drwxr-xr-x    2 root     root            0 Dec 14 16:26 target2:0:2
-> drwxr-xr-x    2 root     root            0 Dec 14 16:27 target2:0:3
-> drwxr-xr-x    2 root     root            0 Dec 14 16:27 target3:0:0
-> drwxr-xr-x    2 root     root            0 Dec 14 16:27 target3:0:1
-> drwxr-xr-x    2 root     root            0 Dec 14 16:27 target3:0:2
-> drwxr-xr-x    2 root     root            0 Dec 14 16:27 target3:0:3
->=20
-Can someone, maybe from Qlogic, comment on these differences ?
-Is there a grant unified plan for driver objects representation through
-sysfs, and if so which is the right path name to fetch the node_name.
+UWxvZ2ljIHNob3VsZG4ndCBiZSBzdHJ1bmcgb3V0LiBJdCB3YXNuJ3QgdGhlbS4uLi4NCg0KQXMg
+cGFydCBvZiBhIGNoYW5nZSB0aGF0IHdlbnQgaW50byB0aGUgRkMgdHJhbnNwb3J0IC0gdGhlIGRl
+dmljZSByZXBvcnRlZCB1bmRlciB0aGlzIGRpcmVjdG9yeSB3YXMgbW92ZWQgZnJvbSB0aGUgTFVO
+IGRldmljZSB0byB0aGUgVGFyZ2V0IGRldmljZSAtIHRodXMgdGhlIGNoYW5nZSBpbiBuYW1lIGZv
+cm1hdCAoaXQga2lsbGVkIHJlcGxpY2F0aW9uIG9mIHRhcmdldCBkYXRhIHRoYXQgd2FzIGJlaW5n
+IGRvbmUgZm9yIGFsbCBsdW5zKS4gVGhlIGF0dHJpYnV0ZXMgdW5kZXJuZWF0aCByZW1haW4gdGhl
+IHNhbWUuIEkgYmVsaWV2ZSB0aGlzIGNoYW5nZSBvY2N1cnJlZCBpbiB0aGUgZmlyc3QgcmMxIHBh
+dGNoIHRvIDIuNi45Lg0KDQpBcyB0byB0aGUgZ3JhbmQgcGxhbiAtIHlvdSBzaG91bGQgYmUgZmlu
+ZSBpZiB5b3UgOg0KIHByZS0yLjYuMTA6IGl0J3MgdGhlIG9sZGVyIG5hbWUgZm9ybWF0ICIvc3lz
+L2NsYXNzL2ZjX3RyYW5zcG9ydC88aG9zdD46PGNoYW5uZWw+Ojx0YXJnZXQ+OjxsdW4+Ig0KIDIu
+Ni4xMCBhbmQgbGF0ZXIgOiBpdCdzIHRoZSBuZXcgZm9ybWF0ICIvc3lzL2NsYXNzL2ZjX3RyYW5z
+cG9ydC90YXJnZXQ8aG9zdD46PGNoYW5uZWw+Ojx0YXJnZXQ+Ig0KDQogYW5kIHRoZSBmb2xrcyBy
+dW5uaW5nIGEgcGF0Y2hlZCAyLjYuOSBoYXZlIHRvIGxpdmUgYnkgdGhlIG5ldyBmb3JtYXQuDQoN
+Ci0tIEphbWVzIFMuDQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogZG0t
+ZGV2ZWwtYm91bmNlc0ByZWRoYXQuY29tIA0KPiBbbWFpbHRvOmRtLWRldmVsLWJvdW5jZXNAcmVk
+aGF0LmNvbV1Pbg0KPiBCZWhhbGYgT2YgY2hyaXN0b3BoZSB2YXJvcXVpDQo+IFNlbnQ6IFdlZG5l
+c2RheSwgRGVjZW1iZXIgMjIsIDIwMDQgNDo1MyBQTQ0KPiBUbzogZGV2aWNlLW1hcHBlciBkZXZl
+bG9wbWVudA0KPiBDYzogbGludXgtcmFpZEB2Z2VyLmtlcm5lbC5vcmc7DQo+IGxpbnV4LWhvdHBs
+dWctZGV2ZWxAbGlzdHMuc291cmNlZm9yZ2UubmV0OyBsaW51eC1zY3NpQHZnZXIua2VybmVsLm9y
+Zw0KPiBTdWJqZWN0OiBSRTogW2RtLWRldmVsXSBbQU5OT1VOQ0VdIG11bHRpcGF0aC10b29scy0w
+LjQuMQ0KPiANCj4gDQo+IExlIG1lcmNyZWRpIDIyIGQ/ZW1icmUgMjAwNCDDoCAxMToyNiAtMDgw
+MCwgQ2F1c2hpaywgUmFtZXNoIGEgw6ljcml0IDoNCj4gPiBPbiBteSBzeXN0ZW0gSSBoYXZlIGEg
+UWxvZ2ljIDIzMTAgZHJpdmVyIHJ1bm5pbmcgb24gYSAyLjYuOSANCj4ga2VybmVsLiBUaGUgZmNf
+dHJhbnNwb3J0IA0KPiA+IGRpcmVjdG9yeSBpbiBzeXNmcyBsb29rcyBsaWtlIA0KPiA+IA0KPiA+
+IGxzIC1sbCAvc3lzL2NsYXNzL2ZjX3RyYW5zcG9ydC8NCj4gPiB0b3RhbCAwDQo+ID4gZHJ3eHIt
+eHIteCAgIDYgcm9vdCByb290IDAgRGVjIDE2IDEzOjU5IC4NCj4gPiBkcnd4ci14ci14ICAyMCBy
+b290IHJvb3QgMCBEZWMgMTUgMTQ6MzEgLi4NCj4gPiBkcnd4ci14ci14ICAgMiByb290IHJvb3Qg
+MCBEZWMgMTYgMTM6NTkgMjowOjA6MA0KPiA+IGRyd3hyLXhyLXggICAyIHJvb3Qgcm9vdCAwIERl
+YyAxNiAxMzo1OSAyOjA6MTowDQo+ID4gZHJ3eHIteHIteCAgIDIgcm9vdCByb290IDAgRGVjIDE2
+IDEzOjU5IDI6MDoyOjANCj4gPiBkcnd4ci14ci14ICAgMiByb290IHJvb3QgMCBEZWMgMTYgMTM6
+NTkgMjowOjM6MCAgDQo+ID4gDQo+ID4gVGhlIHBhdGNoIGFkZHJlc3NlcyBvbmx5IHRoaXMgZm9y
+bWF0LiBTbyBwbGVhc2UgZGlzcmVnYXJkIA0KPiB0aGUgcGF0Y2gsIGFuZCBzb3JyeSBhYm91dCB0
+aGUgY29uZnVzaW9uLg0KPiA+IA0KPiAuLi4NCj4gPiBbcm9vdEBjbDAzOSBtdWx0aXBhdGhdIyBs
+bCAvc3lzL2NsYXNzL2ZjX3RyYW5zcG9ydC8NCj4gPiB0b3RhbCAwDQo+ID4gZHJ3eHIteHIteCAg
+ICAyIHJvb3QgICAgIHJvb3QgICAgICAgICAgICAwIERlYyAxNCAxNjoyNiB0YXJnZXQyOjA6MA0K
+PiA+IGRyd3hyLXhyLXggICAgMiByb290ICAgICByb290ICAgICAgICAgICAgMCBEZWMgMTQgMTY6
+MjYgdGFyZ2V0MjowOjENCj4gPiBkcnd4ci14ci14ICAgIDIgcm9vdCAgICAgcm9vdCAgICAgICAg
+ICAgIDAgRGVjIDE0IDE2OjI2IHRhcmdldDI6MDoyDQo+ID4gZHJ3eHIteHIteCAgICAyIHJvb3Qg
+ICAgIHJvb3QgICAgICAgICAgICAwIERlYyAxNCAxNjoyNyB0YXJnZXQyOjA6Mw0KPiA+IGRyd3hy
+LXhyLXggICAgMiByb290ICAgICByb290ICAgICAgICAgICAgMCBEZWMgMTQgMTY6MjcgdGFyZ2V0
+MzowOjANCj4gPiBkcnd4ci14ci14ICAgIDIgcm9vdCAgICAgcm9vdCAgICAgICAgICAgIDAgRGVj
+IDE0IDE2OjI3IHRhcmdldDM6MDoxDQo+ID4gZHJ3eHIteHIteCAgICAyIHJvb3QgICAgIHJvb3Qg
+ICAgICAgICAgICAwIERlYyAxNCAxNjoyNyB0YXJnZXQzOjA6Mg0KPiA+IGRyd3hyLXhyLXggICAg
+MiByb290ICAgICByb290ICAgICAgICAgICAgMCBEZWMgMTQgMTY6MjcgdGFyZ2V0MzowOjMNCj4g
+PiANCj4gQ2FuIHNvbWVvbmUsIG1heWJlIGZyb20gUWxvZ2ljLCBjb21tZW50IG9uIHRoZXNlIGRp
+ZmZlcmVuY2VzID8NCj4gSXMgdGhlcmUgYSBncmFudCB1bmlmaWVkIHBsYW4gZm9yIGRyaXZlciBv
+YmplY3RzIA0KPiByZXByZXNlbnRhdGlvbiB0aHJvdWdoDQo+IHN5c2ZzLCBhbmQgaWYgc28gd2hp
+Y2ggaXMgdGhlIHJpZ2h0IHBhdGggbmFtZSB0byBmZXRjaCB0aGUgbm9kZV9uYW1lLg0KPiANCj4g
+cmVnYXJkcywNCj4gLS0gDQo+IGNocmlzdG9waGUgdmFyb3F1aSA8Y2hyaXN0b3BoZS52YXJvcXVp
+QGZyZWUuZnI+DQo+IA0KPiANCj4gLS0NCj4gZG0tZGV2ZWwgbWFpbGluZyBsaXN0DQo+IGRtLWRl
+dmVsQHJlZGhhdC5jb20NCj4gaHR0cHM6Ly93d3cucmVkaGF0LmNvbS9tYWlsbWFuL2xpc3RpbmZv
+L2RtLWRldmVsDQo+IA0K
 
-regards,
---=20
-christophe varoqui <christophe.varoqui@free.fr>
 
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-------------------------------------------------------
+SF email is sponsored by - The IT Product Guide
+Read honest & candid reviews on hundreds of IT Products from real users.
+Discover which products truly live up to the hype. Start reading now. 
+http://productguide.itmanagersjournal.com/
