@@ -1,96 +1,79 @@
-From: Lars Marowsky-Bree <lmb@suse.de>
+From: Doug Ledford <dledford@redhat.com>
 Subject: Re: [RFC] Multi-path IO in 2.5/2.6 ?
-Date: Wed, 11 Sep 2002 21:52:32 +0200
+Date: Wed, 11 Sep 2002 16:30:13 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20020911195232.GH1212@marowsky-bree.de>
-References: <20020911191701.GE1212@marowsky-bree.de> <200209111937.g8BJbfQ02442@localhost.localdomain>
+Message-ID: <20020911163013.B26367@redhat.com>
+References: <patmans@us.ibm.com> <200209111420.g8BEKdx01979@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <200209111937.g8BJbfQ02442@localhost.localdomain>
+In-Reply-To: <200209111420.g8BEKdx01979@localhost.localdomain>; from James.Bottomley@steeleye.com on Wed, Sep 11, 2002 at 09:20:38AM -0500
 List-Id: linux-scsi@vger.kernel.org
-To: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@steeleye.com>
+Cc: Patrick Mansfield <patmans@us.ibm.com>, Lars Marowsky-Bree <lmb@suse.de>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On 2002-09-11T14:37:40,
-   James Bottomley <James.Bottomley@steeleye.com> said:
+On Wed, Sep 11, 2002 at 09:20:38AM -0500, James Bottomley wrote:
+> patmans@us.ibm.com said:
+> > The scsi multi-path code is not in 2.5.x, and I doubt it will be
+> > accepted without the support of James and others. 
+> 
+> I haven't said "no" yet (and Doug and Jens haven't said anything).
 
-> I think I see driverfs as the solution here.  Topology is deduced by
-> examining certain device and HBA parameters.  As long as these parame=
-ters
-> can be exposed as nodes in the device directory for driverfs, a user =
-level
-> daemon map the topology and connect the paths at the top.  It should =
-even be
-> possible to weight the constructed multi-paths.
+Well, I for one was gone on vacation, and I'm allowed to ignore linux-scsi
+in such times, so, as Bill de Cat would say, thptptptppt! :-)
 
-Perfect, I agree, should've thought of it. As long as this is simple en=
-ough
-that it can be done in initrd (if / is on a multipath device...).
+>  I did say 
+> when the patches first surfaced that I didn't like the idea of replacing 
+> Scsi_Device with Scsi_Path at the bottom and the concomitant changes to all 
+> the Low Level Drivers which want to support multi-pathing.  If this is to go 
+> in the SCSI subsystem it has to be self contained, transparent and easily 
+> isolated.  That means the LLDs shouldn't have to be multipath aware.
 
-The required weighting has already been implemented in the LVM1 patch b=
-y IBM.
-While it appeared overkill to me for "simple" cases, I think it is suit=
-ed to
-expressing proximity.
+I agree with this.
 
-> This solution appeals because the kernel doesn't have to dictate poli=
-cy,=20
+> I think we all agree:
+> 
+> 1) that multi-path in SCSI isn't the way to go in the long term because other 
+> devices may have a use for the infrastructure.
 
-Right.
+I'm not so sure about this.  I think in the long run this is going to end 
+up blurring the line between SCSI layer and block layer IMHO.
 
-> I've been think about this separately.  FC in particular needs some t=
-ype of
-> event notification API (something like "I've just seen this disk" or =
-"my
-> loop just went down").  I'd like to leverage a mid-layer api into hot=
- plug
-> for some of this, but I don't have the details worked out.
+> 2) that the scsi-error handler is the big problem
 
-This isn't just FC, but also dasd on S/390. Potentially also network bl=
-ock
-devices, which can notice a link down.
+Aye, it is, and for more than just this issue.
 
-> The probing issue is an interesting one.  At least SCSI has the abili=
-ty to=20
-> probe with no IO (something like a TEST UNIT READY) and I assume othe=
-r block=20
-> devices have something similar.  Would it make sense to tie this to a=
- single=20
-> well known ioctl so that you can probe any device that supports it wi=
-thout=20
-> having to send real I/O?
+> 3) that errors (both medium and transport) may need to be propagated 
+> immediately up the block layer in order for multi-path to be handled 
+> efficiently.
 
-Not sufficient. The test is policy, so the above applies here too ;-)=20
+This is why I'm not sure I agree with 1.  If we are doing this, then we
+are sending up SCSI errors at which point the block layer now needs to
+know SCSI specifics in order to properly decide what to do with the error.  
+That, or we are building specific "is this error multipath relevant" logic
+into the SCSI layer and then passing the result up to the block layer.  
+I'm the kind of person that my preference would be that either A) the SCSI
+layer doesn't know jack about multipath and the block layer handles it all
+or B) the block layer doesn't know about our multipath and the SCSI layer
+handles it all.  I don't like the idea of mixing them at this current
+point in time (there really isn't much of a reason to mix them yet, and
+people can only speculate that there might be reason to do so later).
 
-In the case of talking to a dual headed RAID box for example, TEST UNIT=
- READY
-might return OK, but the controller might refuse actual IO, or the path=
- may be
-somehow damaged in a way which is only detected by doing some "large" I=
-O. Now,
-this might be total overkill for other scenarios.
+> Although I outlined my ideas for a rework of the error handler, they got lost 
+> in the noise of the abort vs reset debate.  These are some of the salient 
+> features that will help in this case
 
-I vote for exposing the path via driverfs (which, I think, is already
-concensus so the multipath group, topology etc can be used) and allowin=
-g
-user-space to reenable them after doing whatever probing deemed necessa=
-ry.
+[ snipped eh features ]
 
-What are your ideas on the potential timeframe?
+I'll have to respond to these items separately.  They cross over some with 
+these issues, but really they aren't tired directly together and deserve 
+separate consideration.
 
 
-
-Sincerely,
-    Lars Marowsky-Br=E9e <lmb@suse.de>
-
---=20
-Immortality is an adequate definition of high availability for me.
-	--- Gregory F. Pfister
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+  Doug Ledford <dledford@redhat.com>     919-754-3700 x44233
+         Red Hat, Inc. 
+         1801 Varsity Dr.
+         Raleigh, NC 27606
+  
