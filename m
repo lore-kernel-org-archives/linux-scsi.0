@@ -1,40 +1,70 @@
-From: "'Patrick Mansfield'" <patmans@us.ibm.com>
-Subject: Re: How to add/drop SCSI drives from within the driver?
-Date: Thu, 9 Dec 2004 10:00:37 -0800
-Message-ID: <20041209180037.GA7221@us.ibm.com>
-References: <0E3FA95632D6D047BA649F95DAB60E57057A1B87@exa-atlanta>
+From: "Russell Johnson" <rjohnson@rtlogic.com>
+Subject: RE: Megaraid corruption?
+Date: Thu, 9 Dec 2004 11:26:06 -0700
+Message-ID: <003401c4de1c$8c5fddc0$1e01a8c0@rtlogic.com>
+References: <1102613697.8512.31.camel@TroysLinux.verari.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="US-ASCII"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 216-99-218-173.dsl.aracnet.com ([216.99.218.173]:33481 "EHLO
-	localhost.localdomain") by vger.kernel.org with ESMTP
-	id S261575AbULISD0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 9 Dec 2004 13:03:26 -0500
-Content-Disposition: inline
-In-Reply-To: <0E3FA95632D6D047BA649F95DAB60E57057A1B87@exa-atlanta>
+Received: from eagle.rtlogic.com ([216.87.68.236]:30695 "EHLO
+	eagle.rtlogic.com") by vger.kernel.org with ESMTP id S261567AbULIS0K
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 9 Dec 2004 13:26:10 -0500
+In-Reply-To: <1102613697.8512.31.camel@TroysLinux.verari.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Mukker, Atul" <Atulm@lsil.com>
-Cc: 'James Bottomley' <James.Bottomley@steeleye.com>, "Bagalkote, Sreenivas" <sreenib@lsil.com>, 'Matt Domsch' <Matt_Domsch@Dell.com>, "'brking@us.ibm.com'" <brking@us.ibm.com>, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, 'SCSI Mailing List' <linux-scsi@vger.kernel.org>, "'bunk@fs.tum.de'" <bunk@fs.tum.de>, 'Andrew Morton' <akpm@osdl.org>, "Ju, Seokmann" <sju@lsil.com>, "Doelfel, Hardy" <hdoelfel@lsil.com>
+To: res1uo0c@verizon.net
+Cc: 'Tom Coughlan' <coughlan@redhat.com>, linux-scsi@vger.kernel.org
 
-On Thu, Dec 09, 2004 at 12:31:37PM -0500, Mukker, Atul wrote:
+I'm running 2.6.7.
 
-> > How does the driver supply the mapping if it does not know 
-> > about the "change"? Is it reserving or telling user space the 
-> > hctl that will be used?
-> This point was thoroughly explained in my previous post item 2. Yes, driver
-> reserves a virtual bus on which all logical drives would be exported.
+Did you try running a test without the megamgr running?  The bug that I had
+didn't exhibit itself if nothing was running ioctls to the driver.  So by
+disabling megamgr you would be possibly getting rid of the source of the
+data corruption if your bug is the same that mine was.
 
-OK ... 
+Once you figure that out you can determine if you want to update to the 2.6
+series or not.
 
-> > If so, why can't the driver call scsi_add_device(h,c,t,l) 
-> > after the ioctl to create the logical drive completes?
-> This idea was already turned down, see mails on linux-scsi on 12/3
+Russ
 
-Well you can call scsi_add_device() from the driver, the objections I saw
-were to add an ioctl that would just call scsi_add_device().
+> -----Original Message-----
+> From: Troy Klein [mailto:res1uo0c@verizon.net] 
+> Sent: Thursday, December 09, 2004 10:35 AM
+> To: Russell Johnson
+> Cc: 'Tom Coughlan'; linux-scsi@vger.kernel.org
+> Subject: RE: Megaraid corruption?
+> 
+> 
+> What kernel version are you running?  I am running 
+> 2.4.21-20.ELsmp (RedHat EL).
+> 
+> Does the megaraid compile with 2.4 kernels and if so how is 
+> that done the source appears to be for 2.6?
+> 
+> Troy
+> 
+> On Thu, 2004-12-09 at 10:26 -0700, Russell Johnson wrote:
+> > There was a recent patch to the megaraid2 driver that fixed 
+> corruption 
+> > while some ioctl's were executing during file operations.  You 
+> > mentioned using
+> > megamgr.  If that is running in the background while you are
+> > performing the
+> > file copies, it could be causing the bug that was fixed in the most
+> > recent
+> > megaraid2 driver.
+> > 
+> > Try disabling megamgr and run your test...
+> > 
+> > Or try updating megaraid2 to the latest version.  I'm using
+> > megaraid cmm: 2.20.2.0 (Release Date: Thu Aug 19 09:58:33 EDT 2004)
+> > megaraid: 2.20.4.0 (Release Date: Mon Sep 27 22:15:07 EDT)
+> > 
+> 
+> 
 
-But it doesn't matter if adding driver post-ioctl specific actions is not
-an option.
 
--- Patrick Mansfield
+
