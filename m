@@ -1,48 +1,41 @@
-From: Alan Stern <stern@rowland.harvard.edu>
+From: Christoph Hellwig <hch@infradead.org>
 Subject: Re: Notify about errors during initialization
-Date: Mon, 5 Jan 2004 17:04:59 -0500 (EST)
+Date: Mon, 5 Jan 2004 22:13:02 +0000
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44L0.0401051659180.604-100000@ida.rowland.org>
-References: <20040105021047.GD30408@one-eyed-alien.net>
+Message-ID: <20040105221302.A7678@infradead.org>
+References: <20040105021047.GD30408@one-eyed-alien.net> <Pine.LNX.4.44L0.0401051659180.604-100000@ida.rowland.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ida.rowland.org ([192.131.102.52]:2820 "HELO ida.rowland.org")
-	by vger.kernel.org with SMTP id S265969AbUAEWFA (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 5 Jan 2004 17:05:00 -0500
-In-Reply-To: <20040105021047.GD30408@one-eyed-alien.net>
+Received: from phoenix.infradead.org ([213.86.99.234]:50183 "EHLO
+	phoenix.infradead.org") by vger.kernel.org with ESMTP
+	id S265967AbUAEWNK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 5 Jan 2004 17:13:10 -0500
+Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.44L0.0401051659180.604-100000@ida.rowland.org>; from stern@rowland.harvard.edu on Mon, Jan 05, 2004 at 05:04:59PM -0500
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@steeleye.com>, Matthew Dharm <mdharm-scsi@one-eyed-alien.net>
-Cc: USB Storage List <usb-storage@one-eyed-alien.net>, SCSI development list <linux-scsi@vger.kernel.org>
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: James Bottomley <James.Bottomley@steeleye.com>, Matthew Dharm <mdharm-scsi@one-eyed-alien.net>, USB Storage List <usb-storage@one-eyed-alien.net>, SCSI development list <linux-scsi@vger.kernel.org>
 
-James:
+On Mon, Jan 05, 2004 at 05:04:59PM -0500, Alan Stern wrote:
+> James:
+> 
+> Can you or someone else on the SCSI development list answer this question?
+> 
+> When a new host is registered and scanned for devices, are we guaranteed
+> that the scanning procedure will be finished when scsi_scan_host()  
+> returns?
 
-Can you or someone else on the SCSI development list answer this question?
+With the current code the scanning activity has finished when we return.
+But I'm not sure whether we should document that assumption - if we're
+moving to parallel scanning that assumption might soon be void.
 
-When a new host is registered and scanned for devices, are we guaranteed
-that the scanning procedure will be finished when scsi_scan_host()  
-returns?
+> The reason for asking is so that the usb-storage driver can test whether 
+> any devices were found.  Depressingly often some incompatibility causes 
+> the scan to fail, and when that happens it would be nice to put a 
+> notification in the system log, unregister the host, and generally avoid 
+> loading the driver as though everything was okay.
 
-It sure looks that way to me, but I want to be certain -- Matt Dharm 
-expressed some doubts.
-
-The reason for asking is so that the usb-storage driver can test whether 
-any devices were found.  Depressingly often some incompatibility causes 
-the scan to fail, and when that happens it would be nice to put a 
-notification in the system log, unregister the host, and generally avoid 
-loading the driver as though everything was okay.
-
-Thanks,
-
-Alan Stern
-
-
-> > On Sat, 6 Dec 2003, Matthew Dharm wrote:
-> > 
-> > > Question: Are we guaranteed that scsi_scan_host() doesn't return until the
-> > > scanning process is complete?
-> > 
-> > > I recall a problem that we had with the setting of flags and the call to
-> > > scan the host -- without pre-emption, it worked, but with pre-emption
-> > > things happened in the wrong order.  Could that happen here?
-
+Hmm.  maybe we should guarantee that scsi_scan_host will have finished
+and introduce a scsi_scan_host_parallel when we go down that route.  Or
+do it the other way and add a serialized version for usb-storage..
