@@ -1,22 +1,46 @@
 From: Andre Hedrick <andre@linux-ide.org>
 Subject: Re: Request for review of Linux iSCSI driver version 4.0.0.1
-Date: Mon, 1 Dec 2003 10:48:31 -0800 (PST)
+Date: Mon, 1 Dec 2003 11:23:42 -0800 (PST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.10.10312011048260.17836-100000@master.linux-ide.org>
+Message-ID: <Pine.LNX.4.10.10312011048410.17836-100000@master.linux-ide.org>
 References: <03120119384002.08627@naveenb-lnx.cisco.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from astound-64-85-224-253.ca.astound.net ([64.85.224.253]:48137
+Received: from astound-64-85-224-253.ca.astound.net ([64.85.224.253]:48905
 	"EHLO master.linux-ide.org") by vger.kernel.org with ESMTP
-	id S263895AbTLASxo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 1 Dec 2003 13:53:44 -0500
+	id S263906AbTLAT1k (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 1 Dec 2003 14:27:40 -0500
 In-Reply-To: <03120119384002.08627@naveenb-lnx.cisco.com>
 List-Id: linux-scsi@vger.kernel.org
 To: Naveen Burmi <naveenb@cisco.com>
 Cc: hch@infradead.org, linux-scsi@vger.kernel.org
 
 
+Sorry spaz attack on the first reply.
+
+Naveen, all your memcpy of buffers did was insure the content you want
+down never got there.  Committing CRC32C's on the fly in a ZERO Copy call
+will require the higher levels of ERL support. ERL < 1 is a "JOKE".
+Sync-and-Steering with at least ERL >= 1 will allow for content in each
+PDU to be independent from the other.  Additionally one can logically
+retry segments and not the entire command.
+
+If your initiator can not tell or process the difference and know to
+retry, to put it nicely "EWW".  Anyone who has ever dealt with the storage
+stack in Linux knows, failing commands back up to originator is a last
+effort and basically hopeless.  There are no paths back for direct
+notification on real or virtual HBA to the caller.  Only if you lose a
+channel or device would one abort and fail itself.
+
+Additionally, since the Cisco 4.0.0 is just a virtual HBA, where does the
+Qlogic error occur?  If the target is not capable of mapping and retrying
+(real disk + real hba) transport errors to notify the initiator to retry,
+well lets not go there because it will hurt.
+
+Well I think I am going off task, sigh.
+
+Cheers,
 
 Andre Hedrick
 LAD Storage Consulting Group
