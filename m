@@ -1,62 +1,51 @@
-From: Adrian Bunk <bunk@fs.tum.de>
-Subject: 2.6.0-test4-mm5: SCSI imm driver doesn't compile
-Date: Wed, 3 Sep 2003 19:02:56 +0200
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <20030903170256.GA18025@fs.tum.de>
-References: <20030902231812.03fae13f.akpm@osdl.org>
+From: Patrick Mansfield <patmans@us.ibm.com>
+Subject: Re: [PATCH] remove MULTI_LUN config option
+Date: Wed, 3 Sep 2003 14:21:17 -0700
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <20030903142117.A5715@beaverton.ibm.com>
+References: <20030902021145.GC1941@krispykreme>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from e35.co.us.ibm.com ([32.97.110.133]:8383 "EHLO e35.co.us.ibm.com")
+	by vger.kernel.org with ESMTP id S261271AbTICVVg (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Sep 2003 17:21:36 -0400
 Content-Disposition: inline
-In-Reply-To: <20030902231812.03fae13f.akpm@osdl.org>
-To: Andrew Morton <akpm@osdl.org>, Arnaldo Carvalho de Melo <acme@conectiva.com.br>
-Cc: linux-kernel@vger.kernel.org, campbell@torque.net, linux-scsi@vger.kernel.org
+In-Reply-To: <20030902021145.GC1941@krispykreme>; from anton@samba.org on Tue, Sep 02, 2003 at 12:11:45PM +1000
 List-Id: linux-scsi@vger.kernel.org
+To: Anton Blanchard <anton@samba.org>
+Cc: linux-scsi@vger.kernel.org
 
-The following compile error (tested with gcc 2.95) seems to come from 
-Linus' tree:
+Anton -
 
-<--  snip  -->
+On Tue, Sep 02, 2003 at 12:11:45PM +1000, Anton Blanchard wrote:
 
-...
-  CC [M]  drivers/scsi/imm.o
-In file included from drivers/scsi/imm.c:55:
-drivers/scsi/imm.h:105: duplicate array index in initializer
-drivers/scsi/imm.h:105: (near initialization for `IMM_MODE_STRING')
-make[2]: *** [drivers/scsi/imm.o] Error 1
+> Hi,
+> 
+> We already have a module_param to limit how many LUNs we scan, so I
+> think we can remove the config option. It means one less config option
+> to worry about.
+> 
+> Anton
+> 
 
-<--  snip  -->
+> diff -Nru a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+> --- a/drivers/scsi/scsi_scan.c	Tue Sep  2 10:20:06 2003
+> +++ b/drivers/scsi/scsi_scan.c	Tue Sep  2 10:20:06 2003
+> @@ -68,11 +68,7 @@
+>  
+>  #define MAX_SCSI_LUNS	512
+>  
+> -#ifdef CONFIG_SCSI_MULTI_LUN
+>  static unsigned int max_scsi_luns = MAX_SCSI_LUNS;
+> -#else
+> -static unsigned int max_scsi_luns = 1;
+> -#endif
 
-The problem is the following code in imm.h (with 
-CONFIG_SCSI_IZIP_EPP16 enabled):
+The above defaulted to 1 because there are broken devices (unknown what
+vendors and models) that hang when anything other than LUN 0 is probed.
+Defaulting to 1 means such systems might no longer boot.
 
-<--  snip  -->
+There was a post from Alan (or Doug L?)  about this some time back.
 
-...
-static char *IMM_MODE_STRING[] =
-{
-        [IMM_AUTODETECT] = "Autodetect",
-        [IMM_NIBBLE]     = "SPP",
-        [IMM_PS2]        = "PS/2",
-        [IMM_EPP_8]      = "EPP 8 bit",
-        [IMM_EPP_16]     = "EPP 16 bit",
-#ifdef CONFIG_SCSI_IZIP_EPP16
-        [IMM_EPP_16]     = "EPP 16 bit",
-#else
-        [IMM_EPP_32]     = "EPP 32 bit",
-#endif
-        [IMM_UNKNOWN]    = "Unknown",
-};
-...
-
-<--  snip  -->
-
-cu
-Adrian
-
--- 
-
-       "Is there not promise of rain?" Ling Tan asked suddenly out
-        of the darkness. There had been need of rain for many days.
-       "Only a promise," Lao Er said.
-                                       Pearl S. Buck - Dragon Seed
+-- Patrick Mansfield
