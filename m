@@ -1,70 +1,88 @@
-From: Marcelo Tosatti <marcelo.tosatti@cyclades.com>
-Subject: Re: [PATCH 2.4.30-pre1] aic7xxx: don't reset chip on pause]
-Date: Fri, 25 Feb 2005 17:48:03 -0300
-Message-ID: <20050225204803.GA14373@logos.cnet>
-References: <20050225180105.GA13880@lists.us.dell.com>
+From: "Guy" <bugzilla@watkins-home.com>
+Subject: RE: Problem with tape drive: illegal seek
+Date: Fri, 25 Feb 2005 22:23:30 -0500
+Message-ID: <200502260323.j1Q3NZ904511@www.watkins-home.com>
+References: <200502260016.11954.chrivers@iversen-net.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:14058 "EHLO
-	parcelfarce.linux.theplanet.co.uk") by vger.kernel.org with ESMTP
-	id S262152AbVBZBYQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 25 Feb 2005 20:24:16 -0500
-Content-Disposition: inline
-In-Reply-To: <20050225180105.GA13880@lists.us.dell.com>
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Received: from rwcrmhc14.comcast.net ([216.148.227.89]:21128 "EHLO
+	rwcrmhc11.comcast.net") by vger.kernel.org with ESMTP
+	id S261394AbVBZDXj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 25 Feb 2005 22:23:39 -0500
+In-Reply-To: <200502260016.11954.chrivers@iversen-net.dk>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matt Domsch <Matt_Domsch@dell.com>, "Justin T. Gibbs" <gibbs@scsiguy.com>
-Cc: linux-scsi@vger.kernel.org
+To: 'Christian Iversen' <chrivers@iversen-net.dk>, 'linux-scsi' <linux-scsi@vger.kernel.org>
+
+Your dd issue may be related to block size.
+Tar defaults to 10k blocks, dd defaults to 512 bytes blocks.
+
+Try this dd command:
+dd if=/dev/tape of=dump bs=10k
+
+No idea about the verify.
+
+Guy
+
+-----Original Message-----
+From: linux-scsi-owner@vger.kernel.org
+[mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of Christian Iversen
+Sent: Friday, February 25, 2005 6:16 PM
+To: linux-scsi
+Subject: Problem with tape drive: illegal seek
 
 
-Applied, thanks. 
+Whenever I use --verify for tar, I get problems. Specifically, I get 
+"Illegal seek" when tar gets to the verify phase. 
 
-On Fri, Feb 25, 2005 at 12:01:05PM -0600, Matt Domsch wrote:
-> (resend)
-> Patch below taken from RHEL3 Update 4 kernel 2.4.21-27.EL, fixes a bug
-> in the aic79xx and aic7xxx drivers, where upon trying to pause the
-> controller chip, it is accidentally hard-reset.  This causes PCI
-> Parity errors to appear on Dell PowerEdge 4600 servers as the inb()
-> immediately after accidental reset receives corrupted data.
-> 
-> Patch was submitted by Justin Gibbs many moons ago, but never applied
-> to mainline 2.4.  It's in mainlin 2.6.  Marcelo, please apply.
-> 
-> Signed-off-by: Matt Domsch <Matt_Domsch@dell.com>
-> 
-> -- 
-> Matt Domsch
-> Software Architect
-> Dell Linux Solutions linux.dell.com & www.dell.com/linux
-> Linux on Dell mailing lists @ http://lists.us.dell.com
-> 
-> diff -urNp --exclude-from=/home/mdomsch/excludes --minimal ./aic79xx_pci.c /home/mdomsch/kernels/linux-2.4.21-27.EL/drivers/scsi/aic7xxx/aic79xx_pci.c
-> --- ./aic79xx_pci.c	Fri Feb 18 14:38:22 2005
-> +++ linux/drivers/scsi/aic7xxx/aic79xx_pci.c	Wed Dec  1 20:49:28 2004
-> @@ -451,8 +457,10 @@ ahd_pci_test_register_access(struct ahd_
->  	 * or read prefetching could be initiated by the
->  	 * CPU or host bridge.  Our device does not support
->  	 * either, so look for data corruption and/or flaged
-> -	 * PCI errors.
-> +	 * PCI errors.  First pause without causing another
-> +	 * chip reset.
->  	 */
-> +	hcntrl &= ~CHIPRST;
->  	ahd_outb(ahd, HCNTRL, hcntrl|PAUSE);
->  	while (ahd_is_paused(ahd) == 0)
->  		;
-> diff -urNp --exclude-from=/home/mdomsch/excludes --minimal ./aic7xxx_pci.c /home/mdomsch/kernels/linux-2.4.21-27.EL/drivers/scsi/aic7xxx/aic7xxx_pci.c
-> --- ./aic7xxx_pci.c	Fri Feb 18 14:38:22 2005
-> +++ /home/mdomsch/kernels/linux-2.4.21-27.EL/drivers/scsi/aic7xxx/aic7xxx_pci.c	Wed Dec  1 20:49:28 2004
-> @@ -1284,8 +1284,10 @@ ahc_pci_test_register_access(struct ahc_
->  	 * or read prefetching could be initiated by the
->  	 * CPU or host bridge.  Our device does not support
->  	 * either, so look for data corruption and/or flagged
-> -	 * PCI errors.
-> +	 * PCI errors.  First pause without causing another
-> +	 * chip reset.
->  	 */
-> +	hcntrl &= ~CHIPRST;
->  	ahc_outb(ahc, HCNTRL, hcntrl|PAUSE);
->  	while (ahc_is_paused(ahc) == 0)
->  		;
+I'm trying this on a Compaq SDT-10000 on an Adaptec AHA-3940U2x/395U2x, 
+according to lspci.
+
+
+The following simulates my backup script.. to some extend :)
+
+[root@boreas]/tmp #dd if=/dev/urandom of=random-data bs=1024 count=1024
+
+1024+0 records in
+1024+0 records out
+1048576 bytes transferred in 0,324788 seconds (3228493 bytes/sec)
+[root@boreas]/tmp #mt rewind
+[root@boreas]/tmp #tar --create --verify --file /dev/tape random-data
+tar: /dev/tape: Warning: Cannot seek: Illegal seek
+[root@boreas]/tmp #dmesg | tail
+program smartd is using a deprecated SCSI ioctl, please convert it to SG_IO
+program smartd is using a deprecated SCSI ioctl, please convert it to SG_IO
+program smartd is using a deprecated SCSI ioctl, please convert it to SG_IO
+program smartd is using a deprecated SCSI ioctl, please convert it to SG_IO
+program smartd is using a deprecated SCSI ioctl, please convert it to SG_IO
+program smartd is using a deprecated SCSI ioctl, please convert it to SG_IO
+program smartd is using a deprecated SCSI ioctl, please convert it to SG_IO
+program smartd is using a deprecated SCSI ioctl, please convert it to SG_IO
+program smartd is using a deprecated SCSI ioctl, please convert it to SG_IO
+ReiserFS: md0: warning: vs-8115: get_num_ver: not directory item
+[root@boreas]/tmp #
+
+Should I look into the buggy'dness of this, or am I doing something wrong?
+
+Please note that I can restore the data just fine, if I use tar. If I try to
+
+use dd, I get strange errors as well:
+
+[root@boreas]/tmp #dd if=/dev/tape of=dump
+dd: reading `/dev/tape': Cannot allocate memory
+0+0 records in
+0+0 records out
+0 bytes transferred in 3,699040 seconds (0 bytes/sec)
+
+I hope you can help me.
+
+-- 
+Regards,
+Christian Iversen
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
