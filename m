@@ -1,440 +1,274 @@
-From: Dmitri Katchalov <dmitrik@users.sourceforge.net>
-Subject: Re: [linux-usb-devel] usb-storage and Sony Handycam
-Date: Sun,  9 Nov 2003 19:45:46 +1100
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: AIO for SG
+Date: Sun, 09 Nov 2003 18:24:26 +1000
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1068367546.3fadfebaf39b5@webmail.netregistry.net>
-References: <Pine.LNX.4.44L0.0311082220430.7127-100000@netrider.rowland.org>
+Message-ID: <3FADF9BA.3050802@torque.net>
+References: <20031108070525.33552.qmail@web9501.mail.yahoo.com>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: multipart/mixed;
+ boundary="------------000607050800070803070408"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from webmail.netregistry.net ([203.202.16.21]:7055 "EHLO
-	webmail.netregistry.net") by vger.kernel.org with ESMTP
-	id S262197AbTKIIqI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 9 Nov 2003 03:46:08 -0500
-In-Reply-To: <Pine.LNX.4.44L0.0311082220430.7127-100000@netrider.rowland.org>
+Received: from bunyip.cc.uq.edu.au ([130.102.2.1]:30730 "EHLO
+	bunyip.cc.uq.edu.au") by vger.kernel.org with ESMTP id S262224AbTKII7x
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 9 Nov 2003 03:59:53 -0500
+In-Reply-To: <20031108070525.33552.qmail@web9501.mail.yahoo.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: Patrick Mansfield <patmans@us.ibm.com>, Idan Sofer <idan@idanso.dyndns.org>, "ronald@kuetemeier.com" <ronald@kuetemeier.com>, USB development list <linux-usb-devel@lists.sourceforge.net>, SCSI development list <linux-scsi@vger.kernel.org>
+To: Mark Lobo <ntdeveloper2002@yahoo.com>
+Cc: linux-scsi@vger.kernel.org
 
-[My previous msg didn't make it to the list, resending]
+This is a multi-part message in MIME format.
+--------------000607050800070803070408
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 
-Attached here for your perusal is USB log for this device on win98.
+Mark Lobo wrote:
+> Guys,
+> Is there a patch available which adds the aio
+> interface to SG? (aio_read, aio_complete etc) 
 
-Regards,
-Dmitri
+Mark,
+I have ported the aio support from lk 2.5.69 to my latest
+version of sg which I sent to this list a few days ago.
 
+The 2 attachments:
+   1) incremental against my patch a few days ago. This makes
+      it simpler to see the changes associated with aio
+   2) against the version of sg found in lk 2.6.0-test9 (so
+      it includes my cdev and seqfile patches)
 
-1	in down	n/a	0.062	GET_DESCRIPTOR_FROM_DEVICE		
-URB Header (length: 80)
-SequenceNumber: 1
-Function: 000b (GET_DESCRIPTOR_FROM_DEVICE)
-1	in up	n/a	0.066	CONTROL_TRANSFER	12 01 00 01 00 00 00 08
-	0x00000000
-URB Header (length: 80)
-SequenceNumber: 1
-Function: 0008 (CONTROL_TRANSFER)
-PipeHandle: c1565d8c
+The sg3_utils-1.05 package found at http://www.torque.net/sg
+has a file called sg_simple_aio.c ** in its "examples" directory.
+You need libaio to link it. Links ok with libaio-0.3.92 but
+libaio-0.3.93 gives undefines (seems to be related to i64, ppc
+etc support added in 0.3.93, strange).
 
-SetupPacket:
-0000: 80 06 00 01 00 00 12 00 
-bmRequestType: 80
-  DIR: Device-To-Host
-  TYPE: Standard
-  RECIPIENT: Device
-bRequest: 06  
-  GET_DESCRIPTOR
-Descriptor Type: 0x0001
-  DEVICE
+** beware of the "sleep(3)" before read() [best remove it].
 
-
-TransferBuffer: 0x00000012 (18) length
-0000: 12 01 00 01 00 00 00 08 4c 05 2e 00 00 03 01 02 
-0010: 00 01 
-    bLength            : 0x12 (18)
-    bDescriptorType    : 0x01 (1)
-    bcdUSB             : 0x0100 (256)
-    bDeviceClass       : 0x00 (0)
-    bDeviceSubClass    : 0x00 (0)
-    bDeviceProtocol    : 0x00 (0)
-    bMaxPacketSize0    : 0x08 (8)
-    idVendor           : 0x054c (1356)
-    idProduct          : 0x002e (46)
-    bcdDevice          : 0x0300 (768)
-    iManufacturer      : 0x01 (1)
-    iProduct           : 0x02 (2)
-    iSerialNumber      : 0x00 (0)
-    bNumConfigurations : 0x01 (1)
-2	in down	n/a	0.066	GET_DESCRIPTOR_FROM_DEVICE		
-URB Header (length: 80)
-SequenceNumber: 2
-Function: 000b (GET_DESCRIPTOR_FROM_DEVICE)
-2	in up	n/a	0.076	CONTROL_TRANSFER	09 02 27 00 01 01 00 40
-	0x00000000
-URB Header (length: 80)
-SequenceNumber: 2
-Function: 0008 (CONTROL_TRANSFER)
-PipeHandle: c1565d8c
-
-SetupPacket:
-0000: 80 06 00 02 00 00 09 02 
-bmRequestType: 80
-  DIR: Device-To-Host
-  TYPE: Standard
-  RECIPIENT: Device
-bRequest: 06  
-  GET_DESCRIPTOR
-Descriptor Type: 0x0002
-  CONFIGURATION
+Doug Gibert
 
 
-TransferBuffer: 0x00000027 (39) length
-0000: 09 02 27 00 01 01 00 40 01 09 04 00 00 03 08 ff 
-0010: 01 00 07 05 01 02 40 00 00 07 05 82 02 40 00 00 
-0020: 07 05 83 03 08 00 ff 
-    bLength            : 0x09 (9)
-    bDescriptorType    : 0x02 (2)
-    wTotalLength       : 0x0027 (39)
-    bNumInterfaces     : 0x01 (1)
-    bConfigurationValue: 0x01 (1)
-    iConfiguration     : 0x00 (0)
-    bmAttributes       : 0x40 (64)
-    MaxPower           : 0x01 (1)
-3	??? down	n/a	0.076	SELECT_CONFIGURATION		
-URB Header (length: 100)
-SequenceNumber: 3
-Function: 0000 (SELECT_CONFIGURATION)
-Configuration Descriptor:
-bLength: 9 (0x09)
-bDescriptorType: 2 (0x02)
-wTotalLength: 39 (0x0027)
-bNumInterfaces: 1 (0x01)
-bConfigurationValue: 1 (0x01)
-iConfiguration: 0 (0x00)
-bmAttributes: 64 (0x40)
-  0x40: Self Powered
-MaxPower: 1 (0x01)
-  (in 2 mA units, therefore 2 mA power consumption)
+--------------000607050800070803070408
+Content-Type: application/x-gzip;
+ name="sg_aio_260t9dpg.diff.gz"
+Content-Transfer-Encoding: base64
+Content-Disposition: inline;
+ filename="sg_aio_260t9dpg.diff.gz"
 
-Number of interfaces: 1
-Interface[0]:
-  Length: 0x004c
-  InterfaceNumber: 0x00
-  AlternateSetting: 0x00
-  Class             = 0x34
-  SubClass          = 0x6d
-  Protocol          = 0x37
-  InterfaceHandle   = 0x00000000
-  NumberOfPipes     = 0x00000003
-  Pipe[0]:
-    MaximumPacketSize = 0xaff0
-    EndpointAddress   = 0x4b
-    Interval          = 0xc1
-    PipeType          = 0x00
-      UsbdPipeTypeControl
-    PipeHandle        = 0x0000ce54
-    MaxTransferSize   = 0x00010000
-    PipeFlags         = 0x00
-  Pipe[1]:
-    MaximumPacketSize = 0x2f68
-    EndpointAddress   = 0x5b
-    Interval          = 0xbc
-    PipeType          = 0x206a2b1b
-      !!! INVALID !!!
-    PipeHandle        = 0x4e4f5300
-    MaxTransferSize   = 0x00010000
-    PipeFlags         = 0x00
-  Pipe[2]:
-    MaximumPacketSize = 0x000d
-    EndpointAddress   = 0x00
-    Interval          = 0x00
-    PipeType          = 0xc15667d0
-      !!! INVALID !!!
-    PipeHandle        = 0xc1566810
-    MaxTransferSize   = 0x00010000
-    PipeFlags         = 0x00
-3	??? up	n/a	0.076	SELECT_CONFIGURATION		0x00000000
-URB Header (length: 100)
-SequenceNumber: 3
-Function: 0000 (SELECT_CONFIGURATION)
-Configuration Descriptor:
-bLength: 9 (0x09)
-bDescriptorType: 2 (0x02)
-wTotalLength: 39 (0x0027)
-bNumInterfaces: 1 (0x01)
-bConfigurationValue: 1 (0x01)
-iConfiguration: 0 (0x00)
-bmAttributes: 64 (0x40)
-  0x40: Self Powered
-MaxPower: 1 (0x01)
-  (in 2 mA units, therefore 2 mA power consumption)
+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
+MmdqTDyKQRAvkmP41Nj4HycrR1RtHwAA
+--------------000607050800070803070408
+Content-Type: application/x-gzip;
+ name="sg_aio_260t9.diff.gz"
+Content-Transfer-Encoding: base64
+Content-Disposition: inline;
+ filename="sg_aio_260t9.diff.gz"
 
-Number of interfaces: 1
-Interface[0]:
-  Length: 0x004c
-  InterfaceNumber: 0x00
-  AlternateSetting: 0x00
-  Class             = 0x08
-  SubClass          = 0xff
-  Protocol          = 0x01
-  InterfaceHandle   = 0xc1567700
-  NumberOfPipes     = 0x00000003
-  Pipe[0]:
-    MaximumPacketSize = 0x0040
-    EndpointAddress   = 0x01
-    Interval          = 0x00
-    PipeType          = 0x02
-      UsbdPipeTypeBulk
-    PipeHandle        = 0xc1567718
-    MaxTransferSize   = 0x00010000
-    PipeFlags         = 0x00
-  Pipe[1]:
-    MaximumPacketSize = 0x0040
-    EndpointAddress   = 0x82
-    Interval          = 0x00
-    PipeType          = 0x02
-      UsbdPipeTypeBulk
-    PipeHandle        = 0xc156772c
-    MaxTransferSize   = 0x00010000
-    PipeFlags         = 0x00
-  Pipe[2]:
-    MaximumPacketSize = 0x0008
-    EndpointAddress   = 0x83
-    Interval          = 0xff
-    PipeType          = 0x03
-      UsbdPipeTypeInterrupt
-    PipeHandle        = 0xc1567740
-    MaxTransferSize   = 0x00010000
-    PipeFlags         = 0x00
-4	out down	n/a	3.142	CLASS_INTERFACE	12 00 00 00 24 00 00 00	
-URB Header (length: 80)
-SequenceNumber: 4
-Function: 001b (CLASS_INTERFACE)
-PipeHandle: c146f640
-
-SetupPacket:
-0000: 21 00 00 00 00 00 00 00 
-bmRequestType: 21
-  DIR: Host-To-Device
-  TYPE: Class
-  RECIPIENT: Interface
-bRequest: 00  
-
-
-TransferBuffer: 0x0000000c (12) length
-0000: 12 00 00 00 24 00 00 00 00 00 00 00 
-4	out up	n/a	3.146	CONTROL_TRANSFER	-	0x00000000
-URB Header (length: 80)
-SequenceNumber: 4
-Function: 0008 (CONTROL_TRANSFER)
-PipeHandle: c1565d8c
-
-SetupPacket:
-0000: 21 00 00 00 00 00 0c 00 
-bmRequestType: 21
-  DIR: Host-To-Device
-  TYPE: Class
-  RECIPIENT: Interface
-bRequest: 00  
-
-
-No TransferBuffer
-
-5	in down	0x82	3.146	BULK_OR_INTERRUPT_TRANSFER	-	
-URB Header (length: 72)
-SequenceNumber: 5
-Function: 0009 (BULK_OR_INTERRUPT_TRANSFER)
-TransferFlags: 0x00000003
-
-No TransferBuffer
-
-5	in up	0x82	3.146	BULK_OR_INTERRUPT_TRANSFER	00 80 00 01 1f 
-00 00 00	0x00000000
-URB Header (length: 72)
-SequenceNumber: 5
-Function: 0009 (BULK_OR_INTERRUPT_TRANSFER)
-TransferFlags: 0x00000003
-
-TransferBuffer: 0x00000024 (36) length
-0000: 00 80 00 01 1f 00 00 00 53 6f 6e 79 20 20 20 20 
-0010: 53 6f 6e 79 20 44 53 43 20 20 20 20 20 20 20 20 
-0020: 33 2e 30 30 
-6	in down	0x82	3.146	CLASS_INTERFACE	25 00 00 00 00 00 00 00	
-URB Header (length: 80)
-SequenceNumber: 6
-Function: 001b (CLASS_INTERFACE)
-PipeHandle: c156772c
-
-SetupPacket:
-0000: 21 00 00 00 00 00 0c 00 
-bmRequestType: 21
-  DIR: Host-To-Device
-  TYPE: Class
-  RECIPIENT: Interface
-bRequest: 00  
-
-
-TransferBuffer: 0x0000000c (12) length
-0000: 25 00 00 00 00 00 00 00 00 00 00 00 
-6	out up	n/a	3.152	CONTROL_TRANSFER	-	0x00000000
-URB Header (length: 80)
-SequenceNumber: 6
-Function: 0008 (CONTROL_TRANSFER)
-PipeHandle: c1565d8c
-
-SetupPacket:
-0000: 21 00 00 00 00 00 0c 00 
-bmRequestType: 21
-  DIR: Host-To-Device
-  TYPE: Class
-  RECIPIENT: Interface
-bRequest: 00  
-
-
-No TransferBuffer
-
-7	in down	0x82	3.152	BULK_OR_INTERRUPT_TRANSFER	-	
-URB Header (length: 72)
-SequenceNumber: 7
-Function: 0009 (BULK_OR_INTERRUPT_TRANSFER)
-TransferFlags: 0x00000003
-
-No TransferBuffer
-
-7	in up	0x82	3.156	BULK_OR_INTERRUPT_TRANSFER	00 00 1e df 00 
-00 02 00	0x00000000
-URB Header (length: 72)
-SequenceNumber: 7
-Function: 0009 (BULK_OR_INTERRUPT_TRANSFER)
-TransferFlags: 0x00000003
-
-TransferBuffer: 0x00000008 (8) length
-0000: 00 00 1e df 00 00 02 00 
-8	in down	0x82	3.166	CLASS_INTERFACE	00 00 00 00 00 00 00 00	
-URB Header (length: 80)
-SequenceNumber: 8
-Function: 001b (CLASS_INTERFACE)
-PipeHandle: c156772c
-
-SetupPacket:
-0000: 21 00 00 00 00 00 0c 00 
-bmRequestType: 21
-  DIR: Host-To-Device
-  TYPE: Class
-  RECIPIENT: Interface
-bRequest: 00  
-
-
-TransferBuffer: 0x0000000c (12) length
-0000: 00 00 00 00 00 00 00 00 00 00 00 00 
-8	out up	n/a	3.171	CONTROL_TRANSFER	-	0x00000000
-URB Header (length: 80)
-SequenceNumber: 8
-Function: 0008 (CONTROL_TRANSFER)
-PipeHandle: c1565d8c
-
-SetupPacket:
-0000: 21 00 00 00 00 00 0c 00 
-bmRequestType: 21
-  DIR: Host-To-Device
-  TYPE: Class
-  RECIPIENT: Interface
-bRequest: 00  
-
-
-No TransferBuffer
-
-9	out down	n/a	3.172	CLASS_INTERFACE	25 00 00 00 00 00 00 00	
-URB Header (length: 80)
-SequenceNumber: 9
-Function: 001b (CLASS_INTERFACE)
-PipeHandle: c1565d8c
-
-SetupPacket:
-0000: 21 00 00 00 00 00 0c 00 
-bmRequestType: 21
-  DIR: Host-To-Device
-  TYPE: Class
-  RECIPIENT: Interface
-bRequest: 00  
-
-
-TransferBuffer: 0x0000000c (12) length
-0000: 25 00 00 00 00 00 00 00 00 00 00 00 
-9	out up	n/a	3.176	CONTROL_TRANSFER	-	0x00000000
-URB Header (length: 80)
-SequenceNumber: 9
-Function: 0008 (CONTROL_TRANSFER)
-PipeHandle: c1565d8c
-
-SetupPacket:
-0000: 21 00 00 00 00 00 0c 00 
-bmRequestType: 21
-  DIR: Host-To-Device
-  TYPE: Class
-  RECIPIENT: Interface
-bRequest: 00  
-
-
-No TransferBuffer
-
-10	in down	0x82	3.181	BULK_OR_INTERRUPT_TRANSFER	-	
-URB Header (length: 72)
-SequenceNumber: 10
-Function: 0009 (BULK_OR_INTERRUPT_TRANSFER)
-TransferFlags: 0x00000003
-
-No TransferBuffer
-
-10	in up	0x82	3.182	BULK_OR_INTERRUPT_TRANSFER	00 00 1e df 00 
-00 02 00	0x00000000
-URB Header (length: 72)
-SequenceNumber: 10
-Function: 0009 (BULK_OR_INTERRUPT_TRANSFER)
-TransferFlags: 0x00000003
-
-TransferBuffer: 0x00000008 (8) length
-0000: 00 00 1e df 00 00 02 00 
-11	in down	0x82	3.191	CLASS_INTERFACE	28 00 00 00 00 00 00 00	
-URB Header (length: 80)
-SequenceNumber: 11
-Function: 001b (CLASS_INTERFACE)
-PipeHandle: c156772c
-
-SetupPacket:
-0000: 21 00 00 00 00 00 0c 00 
-bmRequestType: 21
-  DIR: Host-To-Device
-  TYPE: Class
-  RECIPIENT: Interface
-bRequest: 00  
-
-
-TransferBuffer: 0x0000000c (12) length
-0000: 28 00 00 00 00 00 00 00 80 00 00 00 
-11	out up	n/a	3.196	CONTROL_TRANSFER	-	0x00000000
-URB Header (length: 80)
-SequenceNumber: 11
-Function: 0008 (CONTROL_TRANSFER)
-PipeHandle: c1565d8c
-
-SetupPacket:
-0000: 21 00 00 00 00 00 0c 00 
-bmRequestType: 21
-  DIR: Host-To-Device
-  TYPE: Class
-  RECIPIENT: Interface
-bRequest: 00  
-
-
-No TransferBuffer
-
-12	in down	0x82	3.201	BULK_OR_INTERRUPT_TRANSFER	-	
-URB Header (length: 72)
-SequenceNumber: 12
-Function: 0009 (BULK_OR_INTERRUPT_TRANSFER)
-TransferFlags: 0x00000003
-
-No TransferBuffer
+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
+MofvsPgX8fjD2O1+AAA=
+--------------000607050800070803070408--
 
 
