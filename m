@@ -1,68 +1,36 @@
-From: "Frank Borich" <Frank_Borich@us.xyratex.com>
-Subject: RE: QLA2300, Infortrand and LBD?
-Date: Mon, 21 Jun 2004 07:28:07 -0700
+From: James Bottomley <James.Bottomley@steeleye.com>
+Subject: Re: [ADVANSYS] Add basic highmem/DMA support
+Date: 21 Jun 2004 09:28:01 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <47F3C2BE74738E4683574107469DFA20433950@XYUSEX01.xyus.xyratex.com>
+Message-ID: <1087828082.1797.17.camel@mulgrave>
+References: <20040508003906.GA26338@gondor.apana.org.au>
+		<20040519103800.GA9891@gondor.apana.org.au>
+	<1086026538.2004.7.camel@mulgrave>  <40D69F56.2000307@torque.net>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from xyratexus11.xyratex.com ([65.203.33.11]:62420 "EHLO
-	XYUSEX01.xyus.xyratex.com") by vger.kernel.org with ESMTP
-	id S264165AbUFUO2M convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 21 Jun 2004 10:28:12 -0400
-Content-class: urn:content-classes:message
+Received: from stat1.steeleye.com ([65.114.3.130]:51919 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S266257AbUFUO20 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 21 Jun 2004 10:28:26 -0400
+In-Reply-To: <40D69F56.2000307@torque.net>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@steeleye.com>, "tester7 A." <benew666@hotmail.com>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, tech@storageone.co.kr
+To: Douglas Gilbert <dougg@torque.net>
+Cc: Herbert Xu <herbert@gondor.apana.org.au>, Gene Heskett <gene.heskett@verizon.net>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Andrew Morton <akpm@osdl.org>
 
-Is this true of both 2.4 and 2.6 ?
+On Mon, 2004-06-21 at 03:41, Douglas Gilbert wrote:
+> I just tested it in lk 2.6.7-bk2 and the advansys driver is
+> broken. The disk access light stays on for several seconds
+> while it tries to read the partition table after which it
+> announces "unknown partition table". Since my rootfs is on
+> that disk it's all downhill from there.
 
-Frank Borich
-------------------------------------------------------------------
-Xyratex Inc.
-Systems Engineer
-Direct 630 654 6089
-Fax 630 325 2513
-e-mail frank_borich@us.xyratex.com
- 
+To be sure: the inquiry goes through and produces the correct result,
+and the read capacity, but then the read partition table fails?
 
->>-----Original Message-----
->>From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-
->>owner@vger.kernel.org] On Behalf Of James Bottomley
->>Sent: Monday, June 21, 2004 9:10 AM
->>To: tester7 A.
->>Cc: SCSI Mailing List; tech@storageone.co.kr
->>Subject: Re: QLA2300, Infortrand and LBD?
->>
->>On Sun, 2004-06-20 at 03:43, tester7 A. wrote:
->>> SCSI device sdc: 3022966784 512-byte hdwr sectors (1547759 MB)
->>> SCSI device sdc: drive cache: write through
->>> sdc: sdc1
->>> Attached scsi disk sdc at scsi3, channel 0, id 0, lun 0
->>
->>The drive itself replied with that capacity, which is incorrect.  It's
->>supposed to reply with the largest possible capacity (0xffffffff) and
-we
->>use that as a signal to retry with READ_CAPACITY_16.
->>
->>Could you contact the support line of the array and make sure of two
->>things:
->>
->>1) It does actually support single LUNs with a capacity of >2TB (lots
-of
->>arrays don't)
->>2) And if 1) is true, why is it not responding correctly to the READ
->>CAPACITY(10)? The spec (spc-2 Rev 8, 5.2.11) says "If the number of
->>logical blocks exceeds the maximum value[...]the device server shall
->>transfer FFFFFFFFh in the RETURNED LOGICAL BLOCK ADDRESS field"
->>
->>James
->>
->>
->>-
->>To unsubscribe from this list: send the line "unsubscribe linux-scsi"
-in
->>the body of a message to majordomo@vger.kernel.org
->>More majordomo info at  http://vger.kernel.org/majordomo-info.html
+If so, I think that sounds like a failure in the use_sg != 0 path.
+
+James
+
+
