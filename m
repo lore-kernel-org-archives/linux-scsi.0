@@ -1,94 +1,193 @@
-From: Jean Tourrilhes <jt@hpl.hp.com>
-Subject: Problem with MPT in 2.4.X
-Date: Tue, 15 Mar 2005 16:29:17 -0800
-Message-ID: <20050316002917.GA2331@bougret.hpl.hp.com>
-Reply-To: jt@hpl.hp.com
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: [BK PATCH] SCSI updates for 2.6.11
+Date: Tue, 15 Mar 2005 18:53:30 -0600
+Message-ID: <1110934411.5685.39.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Received: from palrel12.hp.com ([156.153.255.237]:65159 "EHLO palrel12.hp.com")
-	by vger.kernel.org with ESMTP id S262186AbVCPA3S (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 15 Mar 2005 19:29:18 -0500
-Received: from tomil.hpl.hp.com (tomil.hpl.hp.com [15.0.152.100])
-	by palrel12.hp.com (Postfix) with ESMTP id 994D7400365
-	for <linux-scsi@vger.kernel.org>; Tue, 15 Mar 2005 16:29:17 -0800 (PST)
-Received: from bougret.hpl.hp.com (Debian-exim@bougret.hpl.hp.com [15.9.72.130])
-	by tomil.hpl.hp.com (8.9.3 (PHNE_29774)/8.9.3 HPLabs Timeshare Server) with ESMTP id QAA05077
-	for <linux-scsi@vger.kernel.org>; Tue, 15 Mar 2005 16:29:28 -0800 (PST)
-Received: from jt by bougret.hpl.hp.com with local (Exim 4.44)
-	id 1DBMPV-0000dk-Db
-	for linux-scsi@vger.kernel.org; Tue, 15 Mar 2005 16:29:17 -0800
-Content-Disposition: inline
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Received: from stat16.steeleye.com ([209.192.50.48]:56267 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S262171AbVCPAxo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 15 Mar 2005 19:53:44 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
 
-	Hi,
+This is my current tranch of patches that were waiting the transition
+from -rc to released (sorry it's late ... I've been on holiday).
 
-	I have a problem with a system which use a MPT SCSI host and a
-Maxtor drive. After a few days the scsi subsystem throw zillions of
-errors and can't access the disk anymore. The only way out is the
-reset button.
-	The system came with SCSI preinstalled, the MPT is on the
-motherboard, both the cable and the drive were factory installed, and
-I checked that it looks ok. I've installed a second drive after the
-last reset, just in case, but the crashes were without it.
-	I've found in the log some SCSI errors, a few samples are
-listed below. I think there were more than those, but without a disk
-to save them on...
-	What I'm wondering is which part is bad, the drive, the cable
-or the driver (I'm using 2.4.29). Thanks in advance for clues...
+The patch is available here:
 
-	Regards,
+bk://linux-scsi.bkbits.net/scsi-for-linus-2.6
 
-	Jean
+The short log is:
 
--------------------------------------------------------------
+Adrian Bunk:
+  o SCSI NCR_D700.c: make some code static
+  o SCSI sim710.c: make some code static
 
-SCSI subsystem driver Revision: 1.00
-kmod: failed to exec /sbin/modprobe -s -k scsi_hostadapter, errno = 2
-Fusion MPT base driver 2.05.16
-Copyright (c) 1999-2004 LSI Logic Corporation
-mptbase: Initiating ioc0 bringup
-ioc0: 53C1030: Capabilities={Initiator}
-mptbase: Initiating ioc1 bringup
-ioc1: 53C1030: Capabilities={Initiator}
-mptbase: 2 MPT adapters found, 2 installed.
-Fusion MPT SCSI Host driver 2.05.16
-scsi0 : ioc0: LSI53C1030, FwRev=01030800h, Ports=1, MaxQ=222, IRQ=30
-scsi1 : ioc1: LSI53C1030, FwRev=01030800h, Ports=1, MaxQ=222, IRQ=31
-blk: queue f7bf2c18, I/O limit 4294967295Mb (mask 0xffffffffffffffff)
-  Vendor: MAXTOR    Model: ATLAS15K2_146WLS  Rev: HPM0
-  Type:   Direct-Access                      ANSI SCSI revision: 03
-blk: queue f7bf2a18, I/O limit 4294967295Mb (mask 0xffffffffffffffff)
-  Vendor: SEAGATE   Model: ST34501W          Rev: 8301
-  Type:   Direct-Access                      ANSI SCSI revision: 02
-blk: queue f7bf2618, I/O limit 4294967295Mb (mask 0xffffffffffffffff)
-Attached scsi disk sda at scsi0, channel 0, id 0, lun 0
-Attached scsi disk sdb at scsi0, channel 0, id 3, lun 0
-SCSI device sda: 286749488 512-byte hdwr sectors (146816 MB)
-Partition check:
- sda: sda1 sda2 sda3 < sda5 sda6 sda7 >
-SCSI device sdb: 8887200 512-byte hdwr sectors (4550 MB)
- sdb:
---------------
-SCSI Error: (0:0:0) Status=02h (CHECK CONDITION)
- Key=Bh (ABORTED COMMAND); FRU=00h
- ASC/ASCQ=47h/03h ""
- CDB: 2A 00 00 18 00 5F 00 00 28 00
----------------
-scsi0 channel 0 : resetting for second half of retries.
-SCSI bus is being reset for host 0 channel 0.
-mptscsih: OldReset scheduling BUS_RESET (sc=f7b22a00)
----------------
-SCSI disk error : host 0 channel 0 id 0 lun 0 return code = 18000002
-Info fld=0x7c0077, Current sd08:01: sense key Aborted Command
-Additional sense indicates Information unit CRC error detected
- I/O error: dev 08:01, sector 8126520
----------------
-scsi0 channel 0 : resetting for second half of retries.
-SCSI bus is being reset for host 0 channel 0.
-mptscsih: OldReset scheduling BUS_RESET (sc=f7b22a00)
-scsi : aborting command due to timeout : pid 722035, scsi0, channel 0, id 0, lun 0 Write (10) 00 00 00 2e 07 00 00 88 00 
----------------
+Alan Stern:
+  o Add a NOREPORTLUN blacklist flag
+  o Retry supposedly "unrecoverable" hardware errors
 
+Andi Kleen:
+  o Fix selection of command serial numbers and pids
+  o Add compat_ioctl to mptctl
+  o Convert megaraid2 to compat_ioctl
+  o Add compat_ioctl to SG
+  o Convert aacraid to compat_ioctl
+  o Add compat_ioctl to osst
+  o Add comment for compat_ioctl to SR
+  o Add compat_ioctl to st
+  o Add compat_ioctl to SD
+
+Andrew Morton:
+  o st msleep warning fix
+
+Andrew Vasquez:
+  o target code updates to support scanned targets
+
+Brian King:
+  o ipr: Handle new RAID 6 errors
+  o ipr: Bump driver version to 2.0.13
+  o ipr: Send uevent change notifications
+  o ipr: Sparse fixes
+  o ipr: Use bitwise types
+  o ipr: Remove tcq_active flag from resource entry
+  o ipr: Remove resource qdepth field
+  o ipr: Remove tcq_enable device attribute
+  o ipr: Use change queue type API
+  o ipr: Fast failure module options
+  o ipr: Support dynamic IDs
+  o ipr: Setup max_sectors based on device type
+  o ipr: Device remove cleanup
+  o ipr: New adapter support
+  o ipr: PCI ID table update
+  o PCI: update ipr PCI ids
+
+Christoph Hellwig:
+  o mark qlogicisp broken
+  o mark eata_pio broken
+  o qla1280: update changelog
+  o qla1280: use pci_map_single
+  o qla1280: remove qla1280_proc_info
+  o drop some attibutes from the FC transport class
+
+Dave Jones:
+  o blacklist microtek scanmaker III
+
+Eric Moore:
+  o mptfusion: delete watchdogs timers from mptctl and mptscsih
+
+Guennadi Liakhovetski:
+  o dc395x: Fix support for highmem
+
+James Bottomley:
+  o FC Remote Port Patch
+  o SCSI: dc395x.c add missing #include <linux/vmalloc.h>
+  o SCSI: fix transport statistics mismerge
+  o Add statistics to generic transport class
+  o SCSI: revamp target scanning routines
+  o SCSI: fix io statistics compile warnings
+  o SCSI: Add device io statistics
+  o SCSI: fix compat_ioctl compile warnings
+
+James Smart:
+  o add per scsi-host workqueues for defered processing
+
+Kai M=E4kisara:
+  o SCSI tape security: require CAP_ADMIN for SG_IO etc
+  o SCSI tape fixes: remove f_pos handling
+  o SCSI tape fixes (new version): sense descriptor
+  o SCSI tape fixes: sense descriptor init, bsf->weof, blkno,
+  o SCSI tape: write filemark before rewind etc. when writing
+  o SCSI tape descriptor based sense data support
+
+Kenn Humborg:
+  o NCR5380 delayed work fix and locking fix
+
+Mark Haverkamp:
+  o aacraid: adapter naming fix
+
+Matthew Wilcox:
+  o sym2 version 2.2.0
+  o Use spi_display_xfer_agreement() in 53c700
+  o Display SPI transfer agreement in common code
+  o scsi: remove device_request_lock
+
+Mike Anderson:
+  o SCSI: Add TASK_ABORTED to status_byte macro
+
+And the diffstat is:
+
+ b/Documentation/kernel-parameters.txt   |    3=20
+ b/Documentation/scsi/st.txt             |    5=20
+ b/Documentation/scsi/sym53c8xx_2.txt    |    2=20
+ b/drivers/base/transport_class.c        |   24=20
+ b/drivers/message/fusion/mptbase.h      |   10=20
+ b/drivers/message/fusion/mptctl.c       |  630 +++++---------
+ b/drivers/message/fusion/mptscsih.c     |  185 +---
+ b/drivers/pci/pci.ids                   |    7=20
+ b/drivers/scsi/53c700.c                 |   16=20
+ b/drivers/scsi/Kconfig                  |    4=20
+ b/drivers/scsi/NCR5380.c                |   15=20
+ b/drivers/scsi/NCR_D700.c               |    4=20
+ b/drivers/scsi/aacraid/linit.c          |  115 +-
+ b/drivers/scsi/dc395x.c                 |   49 -
+ b/drivers/scsi/hosts.c                  |   41=20
+ b/drivers/scsi/ipr.c                    |  248 +++--
+ b/drivers/scsi/ipr.h                    |  201 ++--
+ b/drivers/scsi/megaraid/megaraid_mm.c   |   26=20
+ b/drivers/scsi/osst.c                   |   19=20
+ b/drivers/scsi/qla1280.c                |  146 ---
+ b/drivers/scsi/scsi.c                   |  105 ++
+ b/drivers/scsi/scsi_devinfo.c           |    4=20
+ b/drivers/scsi/scsi_error.c             |   13=20
+ b/drivers/scsi/scsi_lib.c               |   61 +
+ b/drivers/scsi/scsi_scan.c              |  266 ++++--
+ b/drivers/scsi/scsi_sysfs.c             |  188 +---
+ b/drivers/scsi/scsi_transport_fc.c      | 1092 ++++++++++++++++++++---=
+--
+ b/drivers/scsi/scsi_transport_iscsi.c   |   30=20
+ b/drivers/scsi/scsi_transport_spi.c     |  213 +++--
+ b/drivers/scsi/sd.c                     |   39=20
+ b/drivers/scsi/sg.c                     |   26=20
+ b/drivers/scsi/sim710.c                 |    6=20
+ b/drivers/scsi/sr.c                     |    4=20
+ b/drivers/scsi/st.c                     |  426 +++++-----
+ b/drivers/scsi/st.h                     |   19=20
+ b/drivers/scsi/sym53c8xx_2/Makefile     |    2=20
+ b/drivers/scsi/sym53c8xx_2/sym53c8xx.h  |   60 +
+ b/drivers/scsi/sym53c8xx_2/sym_defs.h   |    4=20
+ b/drivers/scsi/sym53c8xx_2/sym_fw.c     |    2=20
+ b/drivers/scsi/sym53c8xx_2/sym_glue.c   |  628 +++++---------
+ b/drivers/scsi/sym53c8xx_2/sym_glue.h   |  299 -------
+ b/drivers/scsi/sym53c8xx_2/sym_hipd.c   | 1354 +++++++++++++++--------=
+---------
+ b/drivers/scsi/sym53c8xx_2/sym_hipd.h   |  231 ++---
+ b/drivers/scsi/sym53c8xx_2/sym_malloc.c |  124 +-
+ b/drivers/scsi/sym53c8xx_2/sym_nvram.c  |   94 +-
+ b/drivers/scsi/sym53c8xx_2/sym_nvram.h  |   11=20
+ b/include/linux/pci_ids.h               |    1=20
+ b/include/linux/transport_class.h       |   18=20
+ b/include/scsi/scsi.h                   |    6=20
+ b/include/scsi/scsi_cmnd.h              |    3=20
+ b/include/scsi/scsi_device.h            |   17=20
+ b/include/scsi/scsi_devinfo.h           |    1=20
+ b/include/scsi/scsi_host.h              |   33=20
+ b/include/scsi/scsi_transport.h         |   14=20
+ b/include/scsi/scsi_transport_fc.h      |  207 +++-
+ b/include/scsi/scsi_transport_spi.h     |    1=20
+ drivers/scsi/sym53c8xx_2/sym_conf.h     |  110 --
+ drivers/scsi/sym53c8xx_2/sym_misc.c     |  111 --
+ 58 files changed, 3991 insertions(+), 3582 deletions(-)
+
+James
+
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
