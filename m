@@ -1,41 +1,46 @@
-From: Jeremy Higdon <jeremy@sgi.com>
-Subject: Control Mode page (0xA) QERR bit setting
-Date: Mon, 30 Aug 2004 19:45:20 -0700
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: Control Mode page (0xA) QERR bit setting
+Date: 30 Aug 2004 23:33:46 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040831024520.GA2118@sgi.com>
+Message-ID: <1093923230.3731.22.camel@mulgrave>
+References: <20040831024520.GA2118@sgi.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from omx2-ext.sgi.com ([192.48.171.19]:53941 "EHLO omx2.sgi.com")
-	by vger.kernel.org with ESMTP id S266296AbUHaCpX (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 30 Aug 2004 22:45:23 -0400
-Received: from cthulhu.engr.sgi.com (cthulhu.engr.sgi.com [192.26.80.2])
-	by omx2.sgi.com (8.12.11/8.12.9/linux-outbound_gateway-1.1) with ESMTP id i7V3pIit024658
-	for <linux-scsi@vger.kernel.org>; Mon, 30 Aug 2004 20:51:18 -0700
-Received: from classic.engr.sgi.com (classic.engr.sgi.com [163.154.5.111])
-	by cthulhu.engr.sgi.com (SGI-8.12.5/8.12.5) with ESMTP id i7V2jLY97002534
-	for <linux-scsi@vger.kernel.org>; Mon, 30 Aug 2004 19:45:21 -0700 (PDT)
-Received: from classic.engr.sgi.com (localhost [127.0.0.1])
-	by classic.engr.sgi.com (SGI-8.12.5/8.12.5) with ESMTP id i7V2jKjn002229
-	for <linux-scsi@vger.kernel.org>; Mon, 30 Aug 2004 19:45:20 -0700 (PDT)
-Received: (from jeremy@localhost)
-	by classic.engr.sgi.com (SGI-8.12.5/8.12.5/Submit) id i7V2jK6P002228
-	for linux-scsi@vger.kernel.org; Mon, 30 Aug 2004 19:45:20 -0700 (PDT)
-Content-Disposition: inline
+Received: from stat16.steeleye.com ([209.192.50.48]:11405 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S266451AbUHaDeI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 30 Aug 2004 23:34:08 -0400
+In-Reply-To: <20040831024520.GA2118@sgi.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Jeremy Higdon <jeremy@sgi.com>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-It looks as though the midlayer assumes that QERR is 0.  Is that correct?
+On Mon, 2004-08-30 at 22:45, Jeremy Higdon wrote:
+> It looks as though the midlayer assumes that QERR is 0.  Is that correct?
 
-If QERR is 0, then a check condition for one command will not affect other
-commands, whereas if QERR is 1, then when one command gets a check condition,
-all others for that ITL are silently aborted.
+Actually, no, the mid-layer is agnostic to the setting of QERR.  On
+error, it simply quiesces the host and waits for all the commands to
+timeout or complete.
 
-Since I wasn't able to find any code (other than in the ipr driver) that
-completed all outstanding commands to a Lun when a check condition is
-received, I figure that we depend on QERR=0.
+> If QERR is 0, then a check condition for one command will not affect other
+> commands, whereas if QERR is 1, then when one command gets a check condition,
+> all others for that ITL are silently aborted.
 
-thanks
+Yes, so we see them time out in the error handler.
 
-jeremy
+> Since I wasn't able to find any code (other than in the ipr driver) that
+> completed all outstanding commands to a Lun when a check condition is
+> received, I figure that we depend on QERR=0.
+
+No, we work for either.  QERR != 0 is very rare in mode pages, primarily
+because it's almost impossible to predict what tags actually got dropped
+on the floor because you don't know the status of the head scheduler
+(only tasks accepted and scheduled behind the failing tag actually get
+dropped; executing tasks ahead of it are allowed to complete as long as
+the failing condition doesn't impact them).
+
+James
+
+
