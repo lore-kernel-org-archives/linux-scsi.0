@@ -1,45 +1,39 @@
-From: Francois Petillon <fantec@proxad.net>
-Subject: Re: Fw: 2.6.9-rc2-mm2: 3ware card info not in /proc/scsi
-Date: Fri, 24 Sep 2004 10:24:38 +0200
+From: Stas Nikiforov <stas@itam.nsc.ru>
+Subject: Huge 1.2TB partition
+Date: Fri, 24 Sep 2004 16:50:17 +0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <4153D9C6.3000205@proxad.net>
-References: <20040923194322.78fb1c59.akpm@osdl.org>
+Message-ID: <1096019417.2726.61.camel@whirl.lab7.lan>
+Reply-To: stas@itam.nsc.ru
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fanfan.staff.proxad.net ([213.228.1.105]:17616 "EHLO
-	fanfan.staff.proxad.net") by vger.kernel.org with ESMTP
-	id S268589AbUIXIYj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 24 Sep 2004 04:24:39 -0400
-Received: from proxad.net (localhost [127.0.0.1])
-	by fanfan.staff.proxad.net (Postfix) with ESMTP id 571F035A72E
-	for <linux-scsi@vger.kernel.org>; Fri, 24 Sep 2004 10:24:38 +0200 (CEST)
-In-Reply-To: <20040923194322.78fb1c59.akpm@osdl.org>
+Received: from ns.itam.nsc.ru ([194.226.179.15]:49541 "EHLO ns.itam.nsc.ru")
+	by vger.kernel.org with ESMTP id S268576AbUIXJus (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 24 Sep 2004 05:50:48 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Linux-scsi list <linux-scsi@vger.kernel.org>, rocks_list <npaci-rocks-discussion@sdsc.edu>
 
-Andrew Morton wrote:
-> I have a 3Ware-7500 series card.  I was trying the 2.6.9-rc2-mm2 kern=
-el
-> and discovered that the 3dmd utility was not working.  A little pokin=
-g
-> around revealed that the cause was because the 3Ware directory was no=
-t
-> in /proc/scsi, even though I have CONFIG_SCSI_PROC_FS=3Dy in my confi=
-g
-> file.  The 3dmd utility works fine with mainline 2.6.9-rc2 and it wor=
-ked
-> with the 2.6.8-mm series of kernels.  Those kernels have a 3w-xxxx
-> directory in /proc/scsi.
+Hi,
+I have RAID 5 6x250 SATA storage.
+Is it a good idea to have one huge partition
+or it is better to split it on smaller logical drives and then use LVM,
+for example?
 
-You need to update 3Ware tools using "engeneering phase software" at :=20
-http://www.3ware.com/support/index.asp
+In any way, what is a preferred filesystem for this storage?
+I plan to use it as a mass storage for CFD results.
 
-   Fran=E7ois
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Thanks in advance,
+Stas.
+-- 
+Mr. Nikiforov Stanislav
+
+Intsitute of Theoretical and Applied Mechanics
+4/1, Institutskaya str., 
+Novosibirsk, 930090, 
+Russia
+
+Voice: +7 3832 343163
+E-mail: stas@itam.nsc.ru  
+
