@@ -1,41 +1,41 @@
-From: "Tony Battersby" <tonyb@cybernetics.com>
-Subject: RE: [PATCH] 2.4.21 fix race condition in sg.c
-Date: Fri, 27 Jun 2003 11:38:30 -0400
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH] fix an aha1740 merge error
+Date: Fri, 27 Jun 2003 19:50:36 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <002b01c33cc2$2a353d40$e0019d89@cybernetics.com>
-References: <1056726720.1825.27.camel@mulgrave>
-Reply-To: <tonyb@cybernetics.com>
+Message-ID: <20030627175036.GA20040@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from host02.cybernetics.com ([206.246.200.18]:21253 "EHLO
-	cybernetics.com") by vger.kernel.org with ESMTP id S264810AbTF0PYS
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 27 Jun 2003 11:24:18 -0400
-In-Reply-To: <1056726720.1825.27.camel@mulgrave>
+Received: from verein.lst.de ([212.34.189.10]:34014 "EHLO mail.lst.de")
+	by vger.kernel.org with ESMTP id S264537AbTF0Rga (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 27 Jun 2003 13:36:30 -0400
+Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
-To: 'James Bottomley' <James.Bottomley@steeleye.com>
-Cc: 'Alan Cox' <alan@lxorguk.ukuu.org.uk>, 'SCSI Mailing List' <linux-scsi@vger.kernel.org>, marcelo@conectiva.com.br, dougg@torque.net
+To: James.Bottomley@steeleye.com
+Cc: linux-scsi@vger.kernel.org
 
-> > Isn't smp_wmb() necessary to prevent the CPU from 
-> > re-ordering the stores?
-> 
-> Ah, OK.  The answer's yes and no.  Your example is true for lockless
-> access, but horribly racy (which is why, in practice, it's 
-> almost never
-> done).  The original code had locked access to done which prevents the
-> race.  If we've lost the locked access, I don't think the fix can be
-> correct.
+it should use scsi_host_alloc/scsi_host_put now.
 
-I looked at the locking before attempting the patch, but I didn't see
-anything protecting the done flag or status return fields.  It is true
-that the done flag was set (without the patch) holding sg_dev_arr_lock,
-but the code that looks at the done flag doesn't touch that lock.
 
-If you think it needs a spinlock to be correct, then I will wait for
-Doug's input, since he knows how it is supposed to work.
-
-Anthony J. Battersby
-Cybernetics
-
+diff -Nru a/drivers/scsi/aha1740.c b/drivers/scsi/aha1740.c
+--- a/drivers/scsi/aha1740.c	Thu Jun 26 21:56:47 2003
++++ b/drivers/scsi/aha1740.c	Thu Jun 26 21:56:47 2003
+@@ -606,7 +606,7 @@
+ 	       dev->name, slotbase, irq_level);
+ 	printk(KERN_INFO "aha174x: Extended translation %sabled.\n",
+ 	       translation ? "en" : "dis");
+-	shpnt = scsi_register(&aha1740_template,
++	shpnt = scsi_host_alloc(&aha1740_template,
+ 			      sizeof(struct aha1740_hostdata));
+ 	if(shpnt == NULL)
+ 		goto err_release;
+@@ -658,7 +658,7 @@
+ 			  sizeof (host->ecb), DMA_BIDIRECTIONAL);
+ 	release_region (shpnt->io_port, SLOTSIZE);
+ 
+-	scsi_unregister (shpnt);
++	scsi_host_put (shpnt);
+ 	
+ 	return 0;
+ }
