@@ -1,61 +1,39 @@
-From: Rusty Trivial Russell <rusty@rustcorp.com.au>
-Subject: [TRIVIAL] [2.5 patch] remove an unused function from NCR53c406a.c
-Date: Mon, 07 Jul 2003 17:46:24 +1000
+From: James Bottomley <James.Bottomley@steeleye.com>
+Subject: Re: [TRIVIAL] [2.5 patch] remove an unused function from
+	NCR53c406a.c
+Date: 07 Jul 2003 08:56:42 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030707080051.AD4242C2C6@lists.samba.org>
+Message-ID: <1057586204.1812.2.camel@mulgrave>
+References: <20030707080051.AD4242C2C6@lists.samba.org>
+Mime-Version: 1.0
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from dp.samba.org ([66.70.73.150]:25523 "EHLO lists.samba.org")
-	by vger.kernel.org with ESMTP id S264801AbTGGHqR (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Jul 2003 03:46:17 -0400
+Received: from nat9.steeleye.com ([65.114.3.137]:39940 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S264991AbTGGNmK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 7 Jul 2003 09:42:10 -0400
+In-Reply-To: <20030707080051.AD4242C2C6@lists.samba.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, axboe@suse.de
+To: Rusty Trivial Russell <rusty@rustcorp.com.au>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, Jens Axboe <axboe@suse.de>
 
-From:  Adrian Bunk <bunk@fs.tum.de>
+On Mon, 2003-07-07 at 02:46, Rusty Trivial Russell wrote:
+> From:  Adrian Bunk <bunk@fs.tum.de>
+> 
+>   The patch below removes an unused function from 
+>   drivers/scsi/NCR53c406a.c .
+>    
+>   I've tested the compilation with 2.5.72-mm2.
 
-  The patch below removes an unused function from 
-  drivers/scsi/NCR53c406a.c .
-   
-  I've tested the compilation with 2.5.72-mm2.
-   
+Rusty, I'm not going to remove this immediately.
 
---- trivial-2.5.74-bk4/drivers/scsi/NCR53c406a.c.orig	2003-07-07 17:36:33.000000000 +1000
-+++ trivial-2.5.74-bk4/drivers/scsi/NCR53c406a.c	2003-07-07 17:36:33.000000000 +1000
-@@ -170,7 +170,6 @@
- /* Static function prototypes */
- static void NCR53c406a_intr(int, void *, struct pt_regs *);
- static irqreturn_t do_NCR53c406a_intr(int, void *, struct pt_regs *);
--static void wait_intr(void);
- static void chip_init(void);
- static void calc_port_addr(void);
- #ifndef IRQ_LEV
-@@ -664,26 +663,6 @@
- 	return (info_msg);
- }
- 
--static void wait_intr(void)
--{
--	unsigned long i = jiffies + WATCHDOG;
--
--	while (time_after(i, jiffies) && !(inb(STAT_REG) & 0xe0)) {	/* wait for a pseudo-interrupt */
--		cpu_relax();
--		barrier();
--	}
--
--	if (time_before_eq(i, jiffies)) {	/* Timed out */
--		rtrc(0);
--		current_SC->result = DID_TIME_OUT << 16;
--		current_SC->SCp.phase = idle;
--		current_SC->scsi_done(current_SC);
--		return;
--	}
--
--	NCR53c406a_intr(0, NULL, NULL);
--}
--
- static int NCR53c406a_queue(Scsi_Cmnd * SCpnt, void (*done) (Scsi_Cmnd *))
- {
- 	int i;
--- 
-  What is this? http://www.kernel.org/pub/linux/kernel/people/rusty/trivial/
-  Don't blame me: the Monkey is driving
-  File: Adrian Bunk <bunk@fs.tum.de>: [2.5 patch] remove an unused function from NCR53c406a.c
+It's the old polling interface for the chip.  It was unplumbed when the
+->command() API was removed, but these chips were strangely connected to
+soundblaster cards and may need to operate in no-interrupt mode (in
+which case we'll need to ressurect it).  I'm just waiting to see if
+anyone complains that their sound card attached CDROM no-longer works.
+
+James
+
+
