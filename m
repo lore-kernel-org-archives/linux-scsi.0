@@ -1,211 +1,47 @@
-From: "Moore, Eric Dean" <Eric.Moore@lsil.com>
-Subject: [PATCH 5/7] - MPT FUSION - SPLITTING SCSI HOST DRIVERS
-Date: Thu, 24 Mar 2005 16:57:02 -0700
-Message-ID: <91888D455306F94EBD4D168954A9457C01B70564@nacos172.co.lsil.com>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [PATCH scsi-misc-2.6 08/08] scsi: fix hot unplug sequence
+Date: Thu, 24 Mar 2005 18:45:58 -0600
+Message-ID: <1111711558.5612.52.camel@mulgrave>
+References: <20050323021335.960F95F8@htj.dyndns.org>
+	 <20050323021335.4682C732@htj.dyndns.org>
+	 <1111550882.5520.93.camel@mulgrave> <4240F5A9.80205@gmail.com>
+	 <20050323071920.GJ24105@suse.de> <1111591213.5441.19.camel@mulgrave>
+	 <20050323152550.GB16149@suse.de>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="----_=_NextPart_000_01C530CD.2CA16210"
-Received: from mail0.lsil.com ([147.145.40.20]:7393 "EHLO mail0.lsil.com")
-	by vger.kernel.org with ESMTP id S261260AbVCXX5E (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 24 Mar 2005 18:57:04 -0500
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Received: from stat16.steeleye.com ([209.192.50.48]:32410 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S261341AbVCYAqJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 24 Mar 2005 19:46:09 -0500
+In-Reply-To: <20050323152550.GB16149@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Jens Axboe <axboe@suse.de>
+Cc: Tejun Heo <htejun@gmail.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
 
-This message is in MIME format. Since your mail reader does not understand
-this format, some or all of this message may not be legible.
+On Wed, 2005-03-23 at 16:25 +0100, Jens Axboe wrote:
+> Let me guess, it is hanging in wait_for_completion()?
 
-------_=_NextPart_000_01C530CD.2CA16210
-Content-Type: text/plain;
-	charset="iso-8859-1"
+Yes, I have the trace now.  Why is curious.  This is the trace of the
+failure:
 
-These patches are for the mpt fusion scsi host drivers, which separate
-the scsi host drivers into separate bus type kernel modules.  This was
-requested
-by several people on the linux-scsi@ forum, so our driver can properly
-support 
-the various transport layers; e.g. SPI, FC, and eventually SAS.  In these
-set of patches
-the Fiber Channel controllers are moved to a new driver called mptfch.ko.
-The current
-Parallel SCSI controllers will remain with mptscsih.ko.  Eventually we will
-be adding SAS support
-in the new modules that will be mptsash.ko.  
+Mar 24 18:40:34 localhost kernel: usb 4-2: USB disconnect, address 3
+Mar 24 18:40:34 localhost kernel: sd 0:0:0:0: CMD c25c98b0 done, completing
+Mar 24 18:40:34 localhost kernel:  0:0:0:0: cmd c25c98b0 returning
+Mar 24 18:40:34 localhost kernel:  0:0:0:0: cmd c25c98b0 going out <6>Read Capacity (10) 25 00 00 00 00 00 00 00 00 00
+Mar 24 18:40:34 localhost kernel: scsi0 (0:0): rejecting I/O to dead device (req c25c98b0)
+Mar 24 18:40:34 localhost kernel: usb 4-2: new full speed USB device using uhci_hcd and address 4
+Mar 24 18:40:34 localhost kernel: scsi1 : SCSI emulation for USB Mass Storage devices
+Mar 24 18:40:34 localhost kernel:  1:0:0:0: cmd c1a1b4b0 going out <6>Inquiry 12 00 00 00 24 00
 
-Overview of attached patch
+The problem occurs when the mid-layer rejects the I/O to the dead
+device.  Here it returns BLKPREP_KILL to the prep function, but after
+that we never get a completion back.
 
-(5) mptlinux-3.03.00-5-mptscsi-h - formerly mptscsih.c
+I'll dig around in ll_rw_blk.c to see if I can trace the problem, but
+you know this code better than I do ...
 
-Please apply this patch against the 3.01.20 version of the mpt driver
-in http://linux-scsi.bkbits.net:8080/scsi-misc-2.6
-
-Backup of these patches can be found at this ftp:
-ftp://ftp.lsil.com/HostAdapterDrivers/linux/Fusion-MPT/2.6-kernel/3.03.00/
-
-Signed-off-by: Eric Moore <Eric.Moore@lsil.com>
+James
 
 
-
-
-
-------_=_NextPart_000_01C530CD.2CA16210
-Content-Type: application/octet-stream;
-	name="mptlinux-3.03.00-5-mptscsi-h"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: attachment;
-	filename="mptlinux-3.03.00-5-mptscsi-h"
-
-diff -uarN drivers/message/fusion-3.01.20/mptscsi.h =
-drivers/message/fusion/mptscsi.h=0A=
---- drivers/message/fusion-3.01.20/mptscsi.h	1969-12-31 =
-17:00:00.000000000 -0700=0A=
-+++ drivers/message/fusion/mptscsi.h	2005-03-23 10:42:57.000000000 =
--0700=0A=
-@@ -0,0 +1,111 @@=0A=
-+/*=0A=
-+ *  linux/drivers/message/fusion/mptscsi.h=0A=
-+ *      High performance SCSI / Fibre Channel SCSI Host device =
-driver.=0A=
-+ *      For use with PCI chip/adapter(s):=0A=
-+ *          LSIFC9xx/LSI409xx Fibre Channel=0A=
-+ *      running LSI Logic Fusion MPT (Message Passing Technology) =
-firmware.=0A=
-+ *=0A=
-+ *  Copyright (c) 1999-2005 LSI Logic Corporation=0A=
-+ *  (mailto:mpt_linux_developer@lsil.com)=0A=
-+ *=0A=
-+ */=0A=
-+/*=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D=
--=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D=
--=3D-=3D*/=0A=
-+/*=0A=
-+    This program is free software; you can redistribute it and/or =
-modify=0A=
-+    it under the terms of the GNU General Public License as published =
-by=0A=
-+    the Free Software Foundation; version 2 of the License.=0A=
-+=0A=
-+    This program is distributed in the hope that it will be useful,=0A=
-+    but WITHOUT ANY WARRANTY; without even the implied warranty of=0A=
-+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the=0A=
-+    GNU General Public License for more details.=0A=
-+=0A=
-+    NO WARRANTY=0A=
-+    THE PROGRAM IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES =
-OR=0A=
-+    CONDITIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED INCLUDING, =
-WITHOUT=0A=
-+    LIMITATION, ANY WARRANTIES OR CONDITIONS OF TITLE, =
-NON-INFRINGEMENT,=0A=
-+    MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE. Each =
-Recipient is=0A=
-+    solely responsible for determining the appropriateness of using =
-and=0A=
-+    distributing the Program and assumes all risks associated with =
-its=0A=
-+    exercise of rights under this Agreement, including but not limited =
-to=0A=
-+    the risks and costs of program errors, damage to or loss of =
-data,=0A=
-+    programs or equipment, and unavailability or interruption of =
-operations.=0A=
-+=0A=
-+    DISCLAIMER OF LIABILITY=0A=
-+    NEITHER RECIPIENT NOR ANY CONTRIBUTORS SHALL HAVE ANY LIABILITY =
-FOR ANY=0A=
-+    DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR =
-CONSEQUENTIAL=0A=
-+    DAMAGES (INCLUDING WITHOUT LIMITATION LOST PROFITS), HOWEVER =
-CAUSED AND=0A=
-+    ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, =
-OR=0A=
-+    TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF =
-THE=0A=
-+    USE OR DISTRIBUTION OF THE PROGRAM OR THE EXERCISE OF ANY RIGHTS =
-GRANTED=0A=
-+    HEREUNDER, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGES=0A=
-+=0A=
-+    You should have received a copy of the GNU General Public =
-License=0A=
-+    along with this program; if not, write to the Free Software=0A=
-+    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  =
-02111-1307  USA=0A=
-+*/=0A=
-+=0A=
-+#ifndef SCSIHOST_H_INCLUDED=0A=
-+#define SCSIHOST_H_INCLUDED=0A=
-+=0A=
-+/*=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D=
--=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D=
--=3D-=3D*/=0A=
-+/*=0A=
-+ *	SCSI Public stuff...=0A=
-+ */=0A=
-+=0A=
-+#define MPT_SCSI_CMD_PER_DEV_HIGH	31=0A=
-+#define MPT_SCSI_CMD_PER_DEV_LOW	7=0A=
-+=0A=
-+#define MPT_SCSI_CMD_PER_LUN		7=0A=
-+=0A=
-+#define MPT_SCSI_MAX_SECTORS    8192=0A=
-+=0A=
-+/* To disable domain validation, uncomment the=0A=
-+ * following line. No effect for FC devices.=0A=
-+ * For SCSI devices, driver will negotiate to=0A=
-+ * NVRAM settings (if available) or to maximum adapter=0A=
-+ * capabilities.=0A=
-+ */=0A=
-+=0A=
-+#define MPTSCSIH_ENABLE_DOMAIN_VALIDATION=0A=
-+=0A=
-+=0A=
-+/* SCSI driver setup structure. Settings can be overridden=0A=
-+ * by command line options.=0A=
-+ */=0A=
-+#define MPTSCSIH_DOMAIN_VALIDATION      1=0A=
-+#define MPTSCSIH_MAX_WIDTH              1=0A=
-+#define MPTSCSIH_MIN_SYNC               0x08=0A=
-+#define MPTSCSIH_SAF_TE                 0=0A=
-+=0A=
-+=0A=
-+#endif=0A=
-+=0A=
-+extern void mpt_core_remove(struct pci_dev *);=0A=
-+extern void mpt_core_shutdown(struct device *);=0A=
-+#ifdef CONFIG_PM=0A=
-+extern int mpt_core_suspend(struct pci_dev *pdev, u32 state);=0A=
-+extern int mpt_core_resume(struct pci_dev *pdev);=0A=
-+#endif=0A=
-+=0A=
-+extern int mpt_core_proc_info(struct Scsi_Host *host, char *buffer, =
-char **start, off_t offset, int length, int func);=0A=
-+extern const char * mpt_core_info(struct Scsi_Host *SChost);=0A=
-+extern int mpt_core_qcmd(struct scsi_cmnd *SCpnt, void (*done)(struct =
-scsi_cmnd *));=0A=
-+extern int mpt_core_slave_alloc(struct scsi_device *device);=0A=
-+extern void mpt_core_slave_destroy(struct scsi_device *device);=0A=
-+extern int mpt_core_slave_configure(struct scsi_device *device);=0A=
-+extern int mpt_core_abort(struct scsi_cmnd * SCpnt);=0A=
-+extern int mpt_core_dev_reset(struct scsi_cmnd * SCpnt);=0A=
-+extern int mpt_core_bus_reset(struct scsi_cmnd * SCpnt);=0A=
-+extern int mpt_core_host_reset(struct scsi_cmnd *SCpnt);=0A=
-+extern int mpt_core_bios_param(struct scsi_device * sdev, struct =
-block_device *bdev, sector_t capacity, int geom[]);=0A=
-+=0A=
-+=0A=
-+extern int mpt_core_io_done(MPT_ADAPTER *ioc, MPT_FRAME_HDR *mf, =
-MPT_FRAME_HDR *r);=0A=
-+extern int mpt_core_taskmgmt_complete(MPT_ADAPTER *ioc, MPT_FRAME_HDR =
-*mf, MPT_FRAME_HDR *r);=0A=
-+extern int mpt_core_scandv_complete(MPT_ADAPTER *ioc, MPT_FRAME_HDR =
-*mf, MPT_FRAME_HDR *r);=0A=
-+extern int mpt_core_event_process(MPT_ADAPTER *ioc, =
-EventNotificationReply_t *pEvReply);=0A=
-+extern int mpt_core_ioc_reset(MPT_ADAPTER *ioc, int post_reset);=0A=
-+=0A=
-+extern ssize_t mpt_core_store_queue_depth(struct device *dev, const =
-char *buf, size_t count);=0A=
-+extern void mpt_core_timer_expired(unsigned long data);=0A=
-
-------_=_NextPart_000_01C530CD.2CA16210--
