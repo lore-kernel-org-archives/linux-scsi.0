@@ -1,33 +1,56 @@
-From: "Mr. James W. Laferriere" <babydr@baby-dragons.com>
-Subject: Re: Fyi: HP CD-Writer Plus Drives - Firmware Update
-Date: Thu, 5 Dec 2002 21:15:02 -0500 (EST)
+From: Rusty Trivial Russell <rusty@rustcorp.com.au>
+Subject: [TRIVIAL] Re: Kernel patches...
+Date: Fri, 06 Dec 2002 14:45:59 +1100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.50.0212052112240.15430-100000@filesrv1.baby-dragons.com>
-References: <Pine.LNX.4.50.0212052041180.15328-100000@filesrv1.baby-dragons.com>
-Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Message-ID: <20021206035754.B2B912C256@lists.samba.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from localhost (babydr@localhost)
-	by filesrv1.baby-dragons.com (8.11.4/8.11.4) with ESMTP id gB62F2Q15441
-	for <linux-scsi@vger.kernel.org>; Thu, 5 Dec 2002 21:15:02 -0500
-In-Reply-To: <Pine.LNX.4.50.0212052041180.15328-100000@filesrv1.baby-dragons.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Linux Scsi maillist <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
+From:  Woody Suwalski <woodys@xandros.com>
 
-	Hello All ,  Sorry about the noise .  But I was mis-lead by the
-	hp search engine showing dates of 2002-11-12 .  The acutal file
-	date is 2000-03-23 .  But this file is newer than the firmware on
-	my drive .  Sorry ,  JimL
+  >Yes agreed, a hdX=multilun is what I'm after.
+  >
+  >  
+  >
+  >>This works for me, no dice on getting me to bite on this whopper.
+  >>    
+  >>
+  >
+  >I'm sure woody will supply such a patch :)
+  >
+  >  
+  >
+  OK, so here is the new patch.
+  It takes advantage of hdXlun, so no changes to the config files are needed.
+  By default keeps IDE LUN at zero, unless hdXlun=n specified on command line.
+  Compiles with 2.4.20.
+  
+  Thanks, Woody
+  
 
-On Thu, 5 Dec 2002, Mr. James W. Laferriere wrote:
-> 	Hello All ,  I have been experiencing difficulties like this
-> 	announcement mentions .  So for those with simular problems .
-> 		Hth ,  JimL
-> 	http://h20015.www2.hp.com/en/document.jhtml?lc=en&docName=lpg40348
+--- trivial-2.5-bk/drivers/scsi/ide-scsi.c.orig	2002-12-06 13:56:56.000000000 +1100
++++ trivial-2.5-bk/drivers/scsi/ide-scsi.c	2002-12-06 13:56:56.000000000 +1100
+@@ -640,8 +640,17 @@
+ 	if(host == NULL)
+ 		return 0;
+ 		
+-	for (id = 0; id < MAX_HWIFS * MAX_DRIVES && idescsi_drives[id]; id++)
+-		last_lun = IDE_MAX(last_lun, idescsi_drives[id]->last_lun);
++/*
++ * by default do not trust multiple LUN support on IDE devices.
++ * Too many broken IDE controllers respond to LUN != 0
++ * To reenable this feature, specify "hdxlun=n" on the command line.
++ */
++	for (id = 0; id < MAX_HWIFS * MAX_DRIVES && idescsi_drives[id]; id++) {
++		if (idescsi_drives[id]->forced_lun)
++			last_lun = IDE_MAX(last_lun, idescsi_drives[id]->last_lun);
++		else
++			last_lun = 0;
++	}
+ 	host->max_id = id;
+ 	host->max_lun = last_lun + 1;
+ 	host->can_queue = host->cmd_per_lun * id;
 -- 
-       +------------------------------------------------------------------+
-       | James   W.   Laferriere | System    Techniques | Give me VMS     |
-       | Network        Engineer |     P.O. Box 854     |  Give me Linux  |
-       | babydr@baby-dragons.com | Coudersport PA 16915 |   only  on  AXP |
-       +------------------------------------------------------------------+
+  Don't blame me: the Monkey is driving
+  File: Woody Suwalski <woodys@xandros.com>: Re: Kernel patches...
