@@ -1,57 +1,75 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH] add scsi_driver.h
-Date: Thu, 26 Jun 2003 09:16:16 +0200
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] always check write protect
+Date: Thu, 26 Jun 2003 08:37:19 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030626071616.GA27218@lst.de>
-References: <20030624064941.GB26582@lst.de> <1056601098.1846.47.camel@mulgrave>
+Message-ID: <20030626083719.A22880@infradead.org>
+References: <20030624210448.486.qmail@emc.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([212.34.189.10]:55742 "EHLO mail.lst.de")
-	by vger.kernel.org with ESMTP id S265438AbTFZHCN (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 26 Jun 2003 03:02:13 -0400
+Received: from phoenix.infradead.org ([195.224.96.167]:23821 "EHLO
+	phoenix.infradead.org") by vger.kernel.org with ESMTP
+	id S265447AbTFZHXI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 26 Jun 2003 03:23:08 -0400
 Content-Disposition: inline
-In-Reply-To: <1056601098.1846.47.camel@mulgrave>
+In-Reply-To: <20030624210448.486.qmail@emc.com>; from pc-linscsi2@crowcastle.net on Tue, Jun 24, 2003 at 09:04:48PM -0000
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: pc-linscsi2@crowcastle.net
+Cc: linux-scsi@vger.kernel.org
 
-On Wed, Jun 25, 2003 at 11:18:16PM -0500, James Bottomley wrote:
-> On Tue, 2003-06-24 at 01:49, Christoph Hellwig wrote:
-> > include/scsi/scsi_driver.h contains ?verything related to upper
-> > level drivers.  Unlike the other header moves there's no compatiblity
-> > this time as it's easy to fix up the few users.
-> 
-> This patch actually doesn't seem to contain scsi/scsi_driver.h
+On Tue, Jun 24, 2003 at 09:04:48PM -0000, pc-linscsi2@crowcastle.net wrote:
+> The current version of sd.c only checks the write protect status for
+> removable media.  This is wrong--you can have write-protected non-removable
+> media.  This is common with high-end storage arrays.  This patch corrects
+> the behaviour.  It applies with slight line offsets to recent 2.4 kernels,
+> including 2.4.21.
 
-Looks like I forgot to check it in.  Here it is:
-
-
-#ifndef _SCSI_SCSI_DRIVER_H
-#define _SCSI_SCSI_DRIVER_H
-
-#include <linux/device.h>
-
-struct module;
+What about a patch like the following for 2.5?  It also address your
+fixme by calling check_disk_change (and thus sd_revalidate_disk) in
+->open when the write_prot flag is set.
 
 
-struct scsi_driver {
-	struct module		*owner;
-	struct device_driver	gendrv;
-
-	int (*init_command)(struct scsi_cmnd *);
-	void (*rescan)(struct device *);
-};
-#define to_scsi_driver(drv) \
-	container_of((drv), struct scsi_driver, gendrv)
-
-extern int scsi_register_driver(struct device_driver *);
-#define scsi_unregister_driver(drv) \
-	driver_unregister(drv);
-
-extern int scsi_register_interface(struct class_interface *);
-#define scsi_unregister_interface(intf) \
-	class_interface_unregister(intf)
-
-#endif /* _SCSI_SCSI_DRIVER_H */
+diff -Nru a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+--- a/drivers/scsi/sd.c	Wed Jun 25 11:47:26 2003
++++ b/drivers/scsi/sd.c	Wed Jun 25 11:47:26 2003
+@@ -368,25 +368,24 @@
+ 	if (!scsi_block_when_processing_errors(sdev))
+ 		goto error_out;
+ 
+-	if (sdev->removable) {
++	if (sdev->removable || sdkp->write_prot)
+ 		check_disk_change(inode->i_bdev);
+ 
+-		/*
+-		 * If the drive is empty, just let the open fail.
+-		 */
+-		retval = -ENOMEDIUM;
+-		if ((!sdkp->media_present) && !(filp->f_flags & O_NDELAY))
+-			goto error_out;
++	/*
++	 * If the drive is empty, just let the open fail.
++	 */
++	retval = -ENOMEDIUM;
++	if (sdev->removable && !sdkp->media_present &&
++	    !(filp->f_flags & O_NDELAY))
++		goto error_out;
+ 
+-		/*
+-		 * Similarly, if the device has the write protect tab set,
+-		 * have the open fail if the user expects to be able to write
+-		 * to the thing.
+-		 */
+-		retval = -EROFS;
+-		if ((sdkp->write_prot) && (filp->f_mode & FMODE_WRITE))
+-			goto error_out;
+-	}
++	/*
++	 * If the device has the write protect tab set, have the open fail
++	 * if the user expects to be able to write to the thing.
++	 */
++	retval = -EROFS;
++	if ((sdkp->write_prot) && (filp->f_mode & FMODE_WRITE))
++		goto error_out;
+ 
+ 	/*
+ 	 * It is possible that the disk changing stuff resulted in
