@@ -1,127 +1,114 @@
-From: Matthew Wilcox <willy@debian.org>
-Subject: Re: 53c8xx_2 driver for SymBios SCSI adapters
-Date: Thu, 17 Jun 2004 19:36:06 +0100
+From: "Randy.Dunlap" <rddunlap@osdl.org>
+Subject: Fw: 2.6.7 scsi regression
+Date: Thu, 17 Jun 2004 11:39:08 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040617183606.GC20511@parcelfarce.linux.theplanet.co.uk>
-References: <42DB3021E70A164EB14AAD5181F8280D2B8461@mer-exch2.corp.nasdaq.com>
+Message-ID: <20040617113908.0fa1f887.rddunlap@osdl.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:47576 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S261685AbUFQSgH
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 17 Jun 2004 14:36:07 -0400
-Content-Disposition: inline
-In-Reply-To: <42DB3021E70A164EB14AAD5181F8280D2B8461@mer-exch2.corp.nasdaq.com>
+Received: from fw.osdl.org ([65.172.181.6]:61092 "EHLO mail.osdl.org")
+	by vger.kernel.org with ESMTP id S261704AbUFQSlc (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 17 Jun 2004 14:41:32 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: "Smith, Hibbard" <Hibbard.Smith@nasdaq.com>
-Cc: Matthew Wilcox <willy@debian.org>, linux-scsi@vger.kernel.org, matthew@wil.cx
+To: scsi <linux-scsi@vger.kernel.org>
+Cc: kernel@linuxace.com
 
-On Thu, Jun 17, 2004 at 12:05:51PM -0400, Smith, Hibbard wrote:
-> I apologize if you feel my message was incorrect or inappropriate.
-> I posted this problem to this list at the end of May and got no response
-> whatsoever.
 
-Guess I missed it.  Sorry.
 
-> I took the liberty of writing directly to you at matthew@wil.cx
-> and that was returned by some server along the way as undeliverable.
-> My email setup is not broken.
+[should be on linux-scsi:]
 
-It's entirely possible that it's broken or blacklisted.  If you can send
-the bounce to my debian.org address, I'll take a look at it for you.
-
-> When I searched this list's archive at
-> google with the search term "53c"  the only things I found posted by
-> you were in April and July of 2003.
-
-Umm.  I've definitely posted patches more recently than that.
-
-http://www.uwsg.iu.edu/hypermail/linux/kernel/0310.1/1123.html is from
-last October.  I can't find the 2.1.18j patch posted anywhere, but it
-went in at 2.6.5.
-
-> However, back to the real issue.  Is there anything I can do to
-> increase the verbosity of the driver to get more information about
-> what's happening?  I would be happy to build a kernel in order to obtain
-> more detail.  Since the kernel never really gets up and running, I'll
-> have to transcribe the output and mail it to you.
-
-Can you try
+Willy says the patch you want is probably:
 http://linux-scsi.bkbits.net:8080/scsi-misc-2.6/gnupatch@40cf3658X57h5m24maf1efBL-aVHPw
 
-I suspect it will cure the problem.
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2.6.7 won't boot on a box with a sym53c896 scsi controller, but boots fine
+on 2.6.6.  Dmesg output below.
 
-> 
-> Hibbard T. Smith, JR
-> smitty@essnjay.com
-> 
-> -----Original Message-----
-> From: willy@www.linux.org.uk [mailto:willy@www.linux.org.uk]On Behalf Of
-> Matthew Wilcox
-> Sent: Thursday, June 17, 2004 11:45 AM
-> To: Smith, Hibbard
-> Cc: linux-scsi@vger.kernel.org; matthew@wil.cx
-> Subject: Re: 53c8xx_2 driver for SymBios SCSI adapters
-> 
-> 
-> On Thu, Jun 17, 2004 at 11:31:42AM -0400, Smith, Hibbard wrote:
-> > Is anyone actually maintaining or working on this driver??
-> 
-> Er, yes.
-> 
-> > Somewhere between 2.4.26 and 2.6.5 it got broken.  It's still broken
-> > in 2.6.6 and 2.6.7 rc2.  The MAINTAINERs file lists the maintainer as
-> > Matthew Wilcox (email matthew@wil.cx).  Emails to that address bounce.
-> 
-> Why do they bounce?  I suspect you have a broken mail setup.
-> 
-> > Articles to this list get no response from anyone.  The last posting
-> > in this list from Matthew (that I can find) is back in 2003.  I have
-> > previously posted to this list about this problem.
-> 
-> I suggest you try harder then.  I've posted several times in the last week.
-> 
-> > The bug has been reported in this mailing list which, apparently, is the
-> > only way to communicate with the developer listed in the MAINTAINERS file.
-> > The bug has also been reported a couple of times in the Fedora Bugzilla
-> > for core 2.
-> 
-> I don't go round reading random distro bugzillas.
-> 
-> > When the kernel is initializing, the driver recognizes the SymBios
-> > 53c1010-33 chips on the motherboard, goes through several initialization
-> > messages and then begins domain validation.  At this point, everything
-> > hangs for awhile, then aborts and starts a cycle of SCSI bus resets from
-> > which it never recovers.  The system then hangs for up to a half hour.
-> > That's the longest I've let it sit.  I'm sure it's gone for good.
-> 
-> I had a report of this last week.  I was travelling so didn't have time
-> to deal with it yet.
-> 
-> > I would be happy to attempt to get more information, if someone could
-> > tell me how to get more verbosity from the driver.  The 53c8xx_2.txt
-> > file in the Documentation/scsi directory is very old and out of date,
-> > and the driver options it talks about appear to no longer work.
-> 
-> I have been updating it.  Send a patch.
-> 
-> -- 
-> "Next the statesmen will invent cheap lies, putting the blame upon 
-> the nation that is attacked, and every man will be glad of those
-> conscience-soothing falsities, and will diligently study them, and refuse
-> to examine any refutations of them; and thus he will by and by convince 
-> himself that the war is just, and will thank God for the better sleep 
-> he enjoys after this process of grotesque self-deception." -- Mark Twain
-> 
-> 
-> 
-> 
+2.6.6:
 
--- 
-"Next the statesmen will invent cheap lies, putting the blame upon 
-the nation that is attacked, and every man will be glad of those
-conscience-soothing falsities, and will diligently study them, and refuse
-to examine any refutations of them; and thus he will by and by convince 
-himself that the war is just, and will thank God for the better sleep 
-he enjoys after this process of grotesque self-deception." -- Mark Twain
+sym0: <896> rev 0x5 at pci 0000:00:0b.0 irq 17
+sym0: using 64 bit DMA addressing
+sym0: Symbios NVRAM, ID 7, Fast-40, LVD, parity checking
+sym0: open drain IRQ line driver, using on-chip SRAM
+sym0: using LOAD/STORE-based firmware.
+sym0: handling phase mismatch from SCRIPTS.
+sym0: SCSI BUS has been reset.
+scsi0 : sym-2.1.18j
+Using anticipatory io scheduler
+  Vendor: IBM       Model: DDYS-T09170N      Rev: S80D
+  Type:   Direct-Access                      ANSI SCSI revision: 03
+sym0:0:0: tagged command queuing enabled, command queue depth 16.
+scsi(0:0:0:0): Beginning Domain Validation
+sym0:0: wide asynchronous.
+sym0:0: FAST-40 WIDE SCSI 80.0 MB/s ST (25.0 ns, offset 31)
+scsi(0:0:0:0): Domain Validation skipping write tests
+scsi(0:0:0:0): Ending Domain Validation
+
+
+2.6.7:
+
+sym0: <896> rev 0x5 at pci 0000:00:0b.0 irq 17
+sym0: using 64 bit DMA addressing
+sym0: Symbios NVRAM, ID 7, Fast-40, LVD, parity checking
+sym0: open drain IRQ line driver, using on-chip SRAM
+sym0: using LOAD/STORE-based firmware.
+sym0: handling phase mismatch from SCRIPTS.
+sym0: SCSI BUS has been reset.
+scsi0 : sym-2.1.18j
+Using anticipatory io scheduler
+  Vendor: IBM       Model: DDYS-T09170N      Rev: S80D
+  Type:   Direct-Access                      ANSI SCSI revision: 03
+sym0:0:0: tagged command queuing enabled, command queue depth 16.
+scsi(0:0:0:0): Beginning Domain Validation
+sym0:0: wide asynchronous.
+sym0:0: FAST-40 WIDE SCSI 80.0 MB/s ST (25.0 ns, offset 31)
+scsi(0:0:0:0): Echo buffer size 6552 is too big, trimming to 4096
+scsi(0:0:0:0): Write Buffer failure 8000002
+scsi(0:0:0:0): Domain Validation detected failure, dropping back
+sym0:0: FAST-20 WIDE SCSI 40.0 MB/s ST (50.0 ns, offset 31)
+scsi(0:0:0:0): Write Buffer failure 8000002
+scsi(0:0:0:0): Domain Validation detected failure, dropping back
+sym0:0: FAST-20 WIDE SCSI 38.5 MB/s ST (52.0 ns, offset 31)
+scsi(0:0:0:0): Write Buffer failure 8000002
+scsi(0:0:0:0): Domain Validation detected failure, dropping back
+sym0:0: FAST-20 WIDE SCSI 26.3 MB/s ST (76.0 ns, offset 31)
+scsi(0:0:0:0): Write Buffer failure 8000002
+scsi(0:0:0:0): Domain Validation detected failure, dropping back
+sym0:0: FAST-10 WIDE SCSI 17.9 MB/s ST (112.0 ns, offset 31)
+scsi(0:0:0:0): Write Buffer failure 8000002
+scsi(0:0:0:0): Domain Validation detected failure, dropping back
+sym0:0: FAST-10 WIDE SCSI 11.9 MB/s ST (168.0 ns, offset 31)
+scsi(0:0:0:0): Write Buffer failure 8000002
+scsi(0:0:0:0): Domain Validation detected failure, dropping back
+sym0:0: FAST-5 WIDE SCSI 7.9 MB/s ST (252.0 ns, offset 31)
+scsi(0:0:0:0): Write Buffer failure 8000002
+scsi(0:0:0:0): Domain Validation detected failure, dropping back
+sym0:0: wide asynchronous.
+sym0:0:0:M_REJECT to send for : 1-3-1-5e-1f.
+scsi(0:0:0:0): Write Buffer failure 8000002
+....
+
+This goes on forever - goes through all different speeds, then starts over.
+
+Difference seems to be in 2.6.6, it says:
+
+scsi(0:0:0:0): Domain Validation skipping write tests
+
+but does not skip these tests in 2.6.7.
+
+Ideas?
+
+
+Phil Oester
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Please read the FAQ at  http://www.tux.org/lkml/
+
+
+--
+~Randy
