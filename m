@@ -1,47 +1,44 @@
-From: us_ib022@jumpy.it
-Subject: FROM MR USMAN IBRAHIM
-Date: Tue, 28 Sep 2004 11:47:20 +0100
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: [RFC PATCH 2.6.9-rc2] add ability to set device queue depth to mptfusion
+Date: Tue, 28 Sep 2004 12:43:24 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <40FF87BB00051EA3@mail15.jumpyint.it>
-References: <40FC74170002662B@mail16.jumpyint.it>
+Message-ID: <20040928114324.GT16153@parcelfarce.linux.theplanet.co.uk>
+References: <20040928075846.GA190230@sgi.com> <20040928114814.A794@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from outgoing1.jumpy.it ([213.215.144.9]:55949 "EHLO mail.jumpy.it")
-	by vger.kernel.org with ESMTP id S267375AbUI1Kxw convert rfc822-to-8bit
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:45259 "EHLO
+	www.linux.org.uk") by vger.kernel.org with ESMTP id S267651AbUI1Ln3
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 28 Sep 2004 06:53:52 -0400
-In-Reply-To: <40FC74170002662B@mail16.jumpyint.it>
+	Tue, 28 Sep 2004 07:43:29 -0400
+Content-Disposition: inline
+In-Reply-To: <20040928114814.A794@infradead.org>
 List-Id: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Jeremy Higdon <jeremy@sgi.com>, Emoore@lsil.com, linux-scsi@vger.kernel.org
 
-DEAR FRIEND,
+On Tue, Sep 28, 2004 at 11:48:14AM +0100, Christoph Hellwig wrote:
+> > +			else if (((pTarget->inq_data[0] & 0x1f) == 0x00)
+> > +			  && (pTarget->minSyncFactor <= MPT_ULTRA160 ))
+> 
+> 
+> 			else if (!(pTarget->inq_data[0] & 0x1f) &&
+> 				 (pTarget->minSyncFactor <= MPT_ULTRA160)
 
-I AM MR USMAN IBRAHIM FROM IRAQ I AM CONTACTING YOU IN
-CONNECTION WITH THE $12.5 MILLION USD I HAVE IN MY
-POSSESION WHICH I HAVE MOVE INTO A BANK IN ABIDJAN,
+I'm not sure about converting
+	if ((pTarget->inq_data[0] & 0x1f) == 0x00)
+to
+	if (!(pTarget->inq_data[0] & 0x1f))
 
-PLEASE COULD YOU HELP IN PROVIDING AN ACCOUNT SO
-THAT THIS MONEY COULD BE TRANSFERED TO YOU SO THAT I
-CAN COME OVER TO YOUR COUNTRY FOR RESETTLEMENT AND
-START A NEW LIFE AND INVEST THE MONEY.
-PLEASE FOR THE CONDITION OF ME AND MY FAMILY AND
-WHERE WE ARE STAYING I CAN NOT DO THIS MY SELF SO,
+It really depends on the semantics -- in this case I think it's "this 5
+bit field has the value 0", rather than "this field is not set".  It's the
+same reason I hate people using if (!strcmp()) -- it's not that strcmp()
+failed, it's that it returned 0.
 
-IF YOU ARE INTRESTED I WILL GIVE YOU THE FULL NAME
-E-MAIL/PHONE CONTACTS OF THE BANK SO THAT YOU CAN
-CONTACT THE BANK ON HOW THE TRANSFER WILL BE MADE TO
-YOU INTO YOUR ACCOUNT.
-THANKS I BEG TO STOP SO FAR TILL YOU REPLY
- 
-ALLAH BLESS YOU.
-
-MR USMAN IBRAHIM
-
-
-
-
-________________________________________
-Crea la tshirt con il tuo nick! http://www.mediasetshop.it/JumpyChat/
-
-
+-- 
+"Next the statesmen will invent cheap lies, putting the blame upon 
+the nation that is attacked, and every man will be glad of those
+conscience-soothing falsities, and will diligently study them, and refuse
+to examine any refutations of them; and thus he will by and by convince 
+himself that the war is just, and will thank God for the better sleep 
+he enjoys after this process of grotesque self-deception." -- Mark Twain
