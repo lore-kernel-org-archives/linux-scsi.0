@@ -1,41 +1,53 @@
-From: Alexander Viro <viro@math.psu.edu>
-Subject: Re: Why /dev/sdc1 doesn't show up...
-Date: Sun, 17 Nov 2002 15:16:13 -0500 (EST)
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <Pine.GSO.4.21.0211171505540.23400-100000@steklov.math.psu.edu>
-References: <Pine.GSO.4.21.0211171457290.23400-100000@steklov.math.psu.edu>
+From: Doug Ledford <dledford@redhat.com>
+Subject: Several Misc SCSI updates...
+Date: Sun, 17 Nov 2002 15:28:26 -0500
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <20021117202826.GE3280@redhat.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
-In-Reply-To: <Pine.GSO.4.21.0211171457290.23400-100000@steklov.math.psu.edu>
-To: Doug Ledford <dledford@redhat.com>
-Cc: Linux Scsi Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Rusty Russell <rusty@rustcorp.com.au>, Linus Torvalds <torvalds@transmeta.com>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
+To: Linus Torvalds <torvalds@transmeta.com>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Linux Scsi Mailing List <linux-scsi@vger.kernel.org>
+
+These bring the scsi subsys up to the new module loader semantics.  There 
+is more work to be done on inter-module locking here, but we need to solve 
+the whole module->live is 0 during init problem first or else it's a waste 
+of time.
+
+bk://linux-scsi.bkbits.net/scsi-dledford
+
+ChangeSet@1.866, 2002-11-17 15:02:31-05:00, dledford@flossy.devel.redhat.com
+  Merge bk://linux.bkbits.net/linux-2.5
+  into flossy.devel.redhat.com:/usr/local/home/dledford/bk/linus-2.5
+
+ChangeSet@1.810.1.5, 2002-11-16 21:31:05-05:00, dledford@aladin.rdu.redhat.com
+  Christoph Hellwig posted a patch that conflicted with a lot of my own
+  changes, so this is the merge of his work into my own.
+
+ChangeSet@1.810.1.4, 2002-11-16 21:22:06-05:00, dledford@aladin.rdu.redhat.com
+  aic7xxx_old: fix check_region/request_region usage so that the module
+        may be loaded/unloaded/reloaded
+
+ChangeSet@1.810.1.3, 2002-11-16 20:59:23-05:00, dledford@aladin.rdu.redhat.com
+  Update high level scsi drivers to use struct list_head in templates
+  Update scsi.c for struct list_head in upper layer templates
+  Update scsi.c for new module loader semantics
+
+ChangeSet@1.810.1.2, 2002-11-16 14:51:42-05:00, dledford@aladin.rdu.redhat.com
+  scsi.c:
+  - Comment out GET_USE_COUNT, it's a bogus test anyway
+  - Don't panic on failure to allocate sg table slab slots, fail gracefully
+  - init_scsi() leaks all sorts of crap on failed module load
+
+ChangeSet@1.805.6.1, 2002-11-11 18:02:55-05:00, dledford@aladin.rdu.redhat.com
+  mptscsih.h: compile fix
 
 
-
-On Sun, 17 Nov 2002, Alexander Viro wrote:
-
-> There is a purpose?  Seriously, "no use of ones object during init" is
-> WRONG.  Rusty, remember I've told you that block devices need to be
-> able to open() during init?  That's what it is.
-> 
-> We _might_ eventually kludge around that, but IMO the ->live checks on
-> the init side are just plain wrong.
-
-PS: logics in case of block devices is very simple: by the time when you
-can handle open and IO on a disk, you are already set up - no point
-bailing out after that point; if other disks served by the same driver
-do not work, it means that they should be left out, not that driver
-should fail init.  IOW, logics of init, regardless of modular/nonmodular
-makes that a point where you are past failure exits.
-
-And I'd rather see similar rules for other interfaces.  Yes, it might
-require API changes - e.g. old block API was badly b0rken in that respect
-since register_blkdev() allowed open() attempts, no matter whether you are
-ready or not, so block drivers used to be seriously racy in that area.
-
-Right way is "don't export an object until you are ready to serve it" and
-once your API is of that sort, you are pretty much done.  Note that non-modular
-case _also_ need that sort of logics, simply because we might get userland
-up and running before the initcalls are done.
+-- 
+  Doug Ledford <dledford@redhat.com>     919-754-3700 x44233
+         Red Hat, Inc. 
+         1801 Varsity Dr.
+         Raleigh, NC 27606
+  
