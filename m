@@ -1,50 +1,64 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+From: Doug Ledford <dledford@redhat.com>
 Subject: Re: aic7xxx sets CDR offline, how to reset?
-Date: 03 Sep 2002 21:59:37 +0100
+Date: Tue, 3 Sep 2002 17:13:21 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1031086777.21579.33.camel@irongate.swansea.linux.org.uk>
-References: <200209031909.g83J9iG07312@localhost.localdomain>
+Message-ID: <20020903171321.A12201@redhat.com>
+References: <dledford@redhat.com> <200209031909.g83J9iG07312@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <200209031909.g83J9iG07312@localhost.localdomain>
+Content-Disposition: inline
+In-Reply-To: <200209031909.g83J9iG07312@localhost.localdomain>; from James.Bottomley@SteelEye.com on Tue, Sep 03, 2002 at 02:09:44PM -0500
 List-Id: linux-scsi@vger.kernel.org
-Cc: James Bottomley <James.Bottomley@steeleye.com>, "Justin T. Gibbs" <gibbs@scsiguy.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: "Justin T. Gibbs" <gibbs@scsiguy.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Tue, 2002-09-03 at 20:09, James Bottomley wrote:
+On Tue, Sep 03, 2002 at 02:09:44PM -0500, James Bottomley wrote:
 > dledford@redhat.com said:
 > > Leave abort active.  It does actually work in certain scenarios.  The
 > > CD  burner scenario that started this thread is an example of
 > > somewhere that  an abort should actually do the job. 
 > 
 > Unfortunately, it would destroy the REQ_BARRIER approach in the block layer.  
+
+REQ_BARRIER is used for filesystem devices (disks mainly) while the 
+devices that might benefit most from working aborts would likely be other 
+devices.  But, regardless, the REQ_BARRIER ordering *can* be preserved 
+while using abort processing.  Since the command that needs aborting is, 
+as you are hypothesizing, before the REQ_BARRIER command, and since it 
+hasn't completed, then the REQ_BARRIER command can not be complete and 
+neither can any of the commands behind the REQ_BARRIER.  On direct access 
+devices you are only concerned about ordering around the barrier, not 
+ordering of the actual tagged commands, so for abort you can actually call 
+abort on all the commands past the REQ_BARRIER command first, then the 
+REQ_BARRIER command, then the hung command.  That would do the job and 
+preserve REQ_BARRIER ordering while still using aborts.
+
 > At best, abort probably causes a command to overtake a barrier it shouldn't, 
 > at worst we abort the ordered tag that is the barrier and transactional 
 > integrity is lost.
+> 
+> When error correction is needed, we have to return all the commands for that 
+> device to the block layer so that ordering and barrier issues can be taken 
+> care of in the reissue.
 
-What do we plan to do for the cases where reset is disabled because we
-have shared disk scsi so don't want to reset and hose the reservations ?
+Not really, this would be easily enough done in the ML_QUEUE area of the 
+scsi layer, but it matters not to me.  However, if you throw a BDR, then 
+you have cancelled all outstanding commands and (typically) initiated a 
+hard reset of the device which then requires a device settle time.  All of 
+this is more drastic and typically takes longer than the individual aborts 
+which are completed in a single connect->disconnect cycle without ever 
+hitting a data phase and without triggering a full device reset and 
+requiring a settle time.
 
-If your error correction always requires all commands return to the
-block layer then the block layer is IMHO broken. Its messy enough doing
-that before you hit the fun situations where insert scsi commands of
-their own the block layer never initiated.
+>  This makes LUN RESET (for those that support it) the 
+> minimum level of error correction we can apply.
 
-Next you only need to return stuff if commands have been issued between
-the aborting command and a barrier. Since most sane systems will never
-be causing REQ_BARRIER that should mean the general case for an abort is
-going to be fine. The CD burner example is also true for this. If we
-track barrier sequences then we will know the barrier count for the
-command we are aborting and the top barrier count for commands issued to
-the device. Finally you only need to go to the large hammer approach
-when you are dealing with a media changing command (ie WRITE*) - if we
-abort a read then knowing we don't queue overlapping read then write to
-disk we already know that the read will not break down the tag ordering
-as I understand it ?
+Not true.
 
-If we get to the point we need an abort we don't want to issue a reset.
-Not every device comes back sane from a reset and in some cases we have
-to issue a whole sequence of commands to get the state of the device
-back (door locking, power management, ..)
-
+-- 
+  Doug Ledford <dledford@redhat.com>     919-754-3700 x44233
+         Red Hat, Inc. 
+         1801 Varsity Dr.
+         Raleigh, NC 27606
+  
