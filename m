@@ -1,82 +1,48 @@
-From: Duncan Gibb <duncangibb@uk.dmgworldmedia.com>
-Subject: RE: aic79xx U320 + e1000 Intel hangs on Idual Xeon 7505
-Date: 10 Apr 2003 22:00:51 +0100
+From: Andries.Brouwer@cwi.nl
+Subject: Re: [patch for playing] Patch to support 4000 disks and maintain backward compatibility
+Date: Fri, 11 Apr 2003 00:09:51 +0200 (MEST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1050008453.23304.52.camel@astrognat>
-References: <A5974D8E5F98D511BB910002A50A66470580D766@hdsmsx103.hd.intel.com>	<10499198
-	02.16880.84.camel@astrognat> 	<239330000.1049920048@aslan.btc.adaptec.com>
-	<1049925671.16881.104.camel@astrognat>
-	<530360000.1049993706@aslan.btc.adaptec.com>
-Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Message-ID: <UTC200304102209.h3AM9pf11795.aeb@smtp.cwi.nl>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [217.169.3.187] ([217.169.3.187]:61066 "EHLO
-	localhost.localdomain") by vger.kernel.org with ESMTP
-	id S264166AbTDJUtk (for <rfc822;linux-scsi@vger.kernel.org>); Thu, 10 Apr 2003 16:49:40 -0400
-In-Reply-To: <530360000.1049993706@aslan.btc.adaptec.com>
+Received: from hera.cwi.nl ([192.16.191.8]:50894 "EHLO hera.cwi.nl")
+	by vger.kernel.org with ESMTP id S264188AbTDJV6R (for <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 10 Apr 2003 17:58:17 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: "Justin T. Gibbs" <gibbs@scsiguy.com>
-Cc: "Cress, Andrew R" <andrew.r.cress@intel.com>, Rohit Gupta <rohit@davsys.com>, linux-scsi@vger.kernel.org
+To: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, pbadari@us.ibm.com
 
-On Thu, 2003-04-10 at 17:55, Justin T. Gibbs wrote:
+[I noticed that I have been unsubscribed for a day or so,
+so may not have seen earlier mail.]
 
-JG> Do you have the nmi_watchdog enabled?
+	From: Badari Pulavarty <pbadari@us.ibm.com>
 
-Not normally.  I tried booting with "nmi_watchdog=1" and it made no
-difference.  Note that in my case (unlike Rohit Gupta's), it's not a
-complete kernel lockup - the system is fine apart from one dead SCSI
-channel.  Processes which try to touch devices on ChB hang apparently
-indefinitely.
+	--- linux-2.5.67/drivers/scsi/sd.c	Wed Apr  9 13:12:38 2003
+	+++ linux-2.5.67.new/drivers/scsi/sd.c	Thu Apr 10 13:23:49 2003
+	@@ -56,7 +56,9 @@
+	  * Remaining dev_t-handling stuff
+	  */
+	 #define SD_MAJORS	16
+	-#define SD_DISKS	(SD_MAJORS << 4)
+	+#define SD_DISKS	((SD_MAJORS - 1) << 4)
+	+#define LAST_MAJOR_DISKS	(1 << (KDEV_MINOR_BITS - 4))
+	+#define TOTAL_SD_DISKS	(SD_DISKS + LAST_MAJOR_DISKS)
+	 
+	-static unsigned long sd_index_bits[SD_DISKS / BITS_PER_LONG];
+	+static unsigned long sd_index_bits[TOTAL_SD_DISKS / BITS_PER_LONG];
 
-JG> What bus speed are you running for the aic7902 and the gig-E card?
+I try to make sure there are no assumptions about the
+size or structure of device numbers anywhere outside kdev_t.h.
+In particular I object to the use of KDEV_MINOR_BITS.
 
-The BIOS says "AUTO"; /proc/pci says 66MHz.
+Apart from this formal point, there is also the practical point:
+suppose 64 = 32+32 is used, so that KDEV_MINOR_BITS equals 32.
+Then LAST_MAJOR_DISKS is 2^28 and sd_index_bits[] would be 32 MB array.
+Unreasonable.
 
-JG> Are the on the same physical PCI/PCI-X bus?
+The conclusion is that the easy way out is to define MAX_NR_DISKS.
+A different way out, especially when we use 32+32, is to kill this
+sd_index_bits[] array, and give each disk a new number: replace
+	index = find_first_zero_bit(sd_index_bits, SD_DISKS);
+by
+	index = next_index++;
 
-No.  SuperMicro built the board such that PCI-X slots 1 and 2 and the
-SCSI controller are on one bus, and PCI-X slot 3 and the Ethernet
-interface are on another.  All the slots are empty.
-
-
-DG> the driver has negotiated "Max Tagged Openings 0" with
-DG> all the devices on this bus.
-
-JG> That seems really wierd - like you disabled disconnection.
-
-I don't know how I would do that with this hardware.  SCSIselect doesn't
-have that as an option (and has everything defaulted except ChB
-termination), and none of my hardware can be jumpered that way AFAIK.
-
-
-DG> /proc/scsi/aic79xx/1 {..} controller as Channel B,
-DG> but all the device info says Channel A.
-
-JG> The two channels are actually two independent, single channel,
-JG> controllers.  The user doesn't know that
-
-The user has been misled by the marketing info and the motherboard
-manual ;-)
-
-JG> I'll review the code to see if I can make it less confusing
-JG> (perhaps just omit the channel identifier).
-
-Presumably channel identifiers are useful in some cases, so IMHO the
-most logical option would be to make them match what's reported by
-/proc/scsi/scsi.  There the channels are all called "00".
-
-
-JG> send me privately {..} the output of "cat /proc/scsi/aic79xx/*"
-JG> and "cat /proc/scsi/scsi" as well as a dmesg from the system.
-JG> {..} If you compile the driver with debugging enabled and a
-JG> debug mask of 8, I can also see the content of the serial
-JG> eeprom to see if the settings are strange.
-
-OK.  I noticed you released new source today, so I will download that
-and play 'make' again.
-
-
-Duncan
-
-
+Andries
