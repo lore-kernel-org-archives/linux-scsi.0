@@ -1,211 +1,209 @@
-From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
-Subject: [PATCH] aha152x-2.6.1
-Date: Sat, 17 Jan 2004 23:25:51 +0100 (CET)
+From: James Bottomley <James.Bottomley@steeleye.com>
+Subject: qla1280 endiannes and 64/32bit fixes
+Date: 17 Jan 2004 18:40:58 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44.0401172318380.963-100000@poirot.grange>
+Message-ID: <1074382860.1756.20.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.gmx.de ([213.165.64.20]:34973 "HELO mail.gmx.net")
-	by vger.kernel.org with SMTP id S265898AbUAQW0f (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 17 Jan 2004 17:26:35 -0500
-Received: from lyakh (helo=localhost)
-	by poirot.grange with local-esmtp (Exim 3.35 #1 (Debian))
-	id 1Ahyt5-0000Nh-00
-	for <linux-scsi@vger.kernel.org>; Sat, 17 Jan 2004 23:25:51 +0100
+Received: from stat1.steeleye.com ([65.114.3.130]:64746 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S266211AbUAQXlF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 17 Jan 2004 18:41:05 -0500
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Jes Sorensen <jes@wildopensource.com>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-Hi
+Well, I finally got this to work for me on the parisc.
 
-Below is a patch for aha152x to fix check / request_region, plus make it
-fail explicitly in the case of busy address-range. Compiles, untested
-(yet).
+There were three specific problems
 
-While on that - what about the advansys-patch with a similar (check_region
-vs. request_region) scope, I sent earlier to the list - was it wrong, or
-just not important enough?
+1. The Fimware reading routine is still wrong.  If you reverse all the
+words, then the byte quantities will be correct but the word quantities
+still need reversing again.
 
-Guennadi
----
-Guennadi Liakhovetski
+2. The new qla1280_return_status() routine wasn't endian neutral
 
---- linux-2.6.1/drivers/scsi/aha152x.c~	Sat Jan 17 22:47:27 2004
-+++ linux-2.6.1/drivers/scsi/aha152x.c	Sat Jan 17 23:12:22 2004
-@@ -860,9 +860,6 @@
+3. You can't simply override the nvram 64/32 bit mode without actually
+telling the card you're doing it.
+
+To fix 3, I just removed the override, but since I was actually running
+on a 64 bit platform (parisc64) there should be a command to tell the
+card this...I'll see if I can find it.
+
+With the attached patch, the card works nicely on parisc.
+
+James
+
+===== drivers/scsi/qla1280.c 1.53 vs edited =====
+--- 1.53/drivers/scsi/qla1280.c	Thu Jan  8 15:42:46 2004
++++ edited/drivers/scsi/qla1280.c	Sat Jan 17 17:26:33 2004
+@@ -765,7 +765,7 @@
  {
- 	int i;
-
--	if (check_region(io_port, IO_RANGE))
--		return 0;
--
- 	SETPORT(io_port + O_DMACNTRL1, 0);	/* reset stack pointer */
- 	for (i = 0; i < 16; i++)
- 		SETPORT(io_port + O_STACK, i);
-@@ -878,9 +875,6 @@
+ 	uint16_t *wptr;
+ 	uint8_t chksum;
+-	int cnt;
++	int cnt, i;
+ 	struct nvram *nv;
+ 
+ 	ENTER("qla1280_read_nvram");
+@@ -812,6 +812,28 @@
+ 	} else
+ 		ha->nvram_valid = 1;
+ 
++	/* The firmware interface is, um, interesting, in that the
++	 * actual firmware image on the chip is little endian, thus,
++	 * the process of taking that image to the CPU would end up
++	 * little endian.  However, the firmare interface requires it
++	 * to be read a word (two bytes) at a time.
++	 *
++	 * The net result of this would be that the word (and
++	 * doubleword) quantites in the firmware would be correct, but
++	 * the bytes would be pairwise reversed.  Since most of the
++	 * firmware quantites are, in fact, bytes, we do an extra
++	 * le16_to_cpu() in the firmware read routine.
++	 *
++	 * The upshot of all this is that the bytes in the firmware
++	 * are in the correct places, but the 16 and 32 bit quantites
++	 * are still in little endian format.  We fix that up below by
++	 * doing extra reverses on them */
++	nv->isp_parameter = cpu_to_le16(nv->isp_parameter);
++	nv->firmware_feature.w = cpu_to_le16(nv->firmware_feature.w);
++	for(i = 0; i < MAX_BUSES; i++) {
++		nv->bus[i].selection_timeout = cpu_to_le16(nv->bus[i].selection_timeout);
++		nv->bus[i].max_queue_depth = cpu_to_le16(nv->bus[i].max_queue_depth);
++	}
+ 	dprintk(1, "qla1280_read_nvram: Completed Reading NVRAM\n");
+ 	LEAVE("qla1280_read_nvram");
+ 
+@@ -1558,6 +1580,10 @@
+ qla1280_return_status(struct response * sts, struct scsi_cmnd *cp)
  {
- 	int i;
-
--	if (check_region(io_port, IO_RANGE))
--		return 0;
--
- 	SETPORT(io_port + O_TC_DMACNTRL1, 0);	/* reset stack pointer */
- 	for (i = 0; i < 16; i++)
- 		SETPORT(io_port + O_STACK, i);
-@@ -1033,9 +1027,6 @@
- 	       DELAY,
- 	       EXT_TRANS ? "enabled" : "disabled");
-
--	if (!request_region(shpnt->io_port, IO_RANGE, "aha152x"))
--		goto out_unregister;
--
- 	/* not expecting any interrupts */
- 	SETPORT(SIMODE0, 0);
- 	SETPORT(SIMODE1, 0);
-@@ -1085,15 +1076,13 @@
- out_unregister_host:
- 	aha152x_host[registered_count] = NULL;
- out_release_region:
--	release_region(shpnt->io_port, IO_RANGE);
--out_unregister:
- 	scsi_unregister(shpnt);
- 	return NULL;
+ 	int host_status = DID_ERROR;
++	uint16_t comp_status = le16_to_cpu(sts->comp_status);
++	uint16_t state_flags = le16_to_cpu(sts->state_flags);
++	uint16_t residual_length = le16_to_cpu(sts->residual_length);
++	uint16_t scsi_status = le16_to_cpu(sts->scsi_status);
+ #if DEBUG_QLA1280_INTR
+ 	static char *reason[] = {
+ 		"DID_OK",
+@@ -1578,26 +1604,27 @@
+ #if DEBUG_QLA1280_INTR
+ 	/*
+ 	  dprintk(1, "qla1280_return_status: compl status = 0x%04x\n",
+-	  sts->comp_status);
++	  comp_status);
+ 	*/
+ #endif
+-	switch (sts->comp_status) {
++
++	switch (comp_status) {
+ 	case CS_COMPLETE:
+ 		host_status = DID_OK;
+ 		break;
+ 
+ 	case CS_INCOMPLETE:
+-		if (!(sts->state_flags & SF_GOT_BUS))
++		if (!(state_flags & SF_GOT_BUS))
+ 			host_status = DID_NO_CONNECT;
+-		else if (!(sts->state_flags & SF_GOT_TARGET))
++		else if (!(state_flags & SF_GOT_TARGET))
+ 			host_status = DID_BAD_TARGET;
+-		else if (!(sts->state_flags & SF_SENT_CDB))
++		else if (!(state_flags & SF_SENT_CDB))
+ 			host_status = DID_ERROR;
+-		else if (!(sts->state_flags & SF_TRANSFERRED_DATA))
++		else if (!(state_flags & SF_TRANSFERRED_DATA))
+ 			host_status = DID_ERROR;
+-		else if (!(sts->state_flags & SF_GOT_STATUS))
++		else if (!(state_flags & SF_GOT_STATUS))
+ 			host_status = DID_ERROR;
+-		else if (!(sts->state_flags & SF_GOT_SENSE))
++		else if (!(state_flags & SF_GOT_SENSE))
+ 			host_status = DID_ERROR;
+ 		break;
+ 
+@@ -1614,14 +1641,14 @@
+ 		break;
+ 
+ 	case CS_DATA_OVERRUN:
+-		dprintk(2, "Data overrun 0x%x\n", sts->residual_length);
++		dprintk(2, "Data overrun 0x%x\n", residual_length);
+ 		dprintk(2, "qla1280_isr: response packet data\n");
+ 		qla1280_dump_buffer(2, (char *)sts, RESPONSE_ENTRY_SIZE);
+ 		host_status = DID_ERROR;
+ 		break;
+ 
+ 	case CS_DATA_UNDERRUN:
+-		if ((cp->request_bufflen - sts->residual_length) <
++		if ((cp->request_bufflen - residual_length) <
+ 		    cp->underflow) {
+ 			printk(KERN_WARNING
+ 			       "scsi: Underflow detected - retrying "
+@@ -1638,12 +1665,12 @@
+ 
+ #if DEBUG_QLA1280_INTR
+ 	dprintk(1, "qla1280 ISP status: host status (%s) scsi status %x\n",
+-		reason[host_status], sts->scsi_status);
++		reason[host_status], scsi_status);
+ #endif
+ 
+ 	LEAVE("qla1280_return_status");
+ 
+-	return (sts->scsi_status & 0xff) | (host_status << 16);
++	return (scsi_status & 0xff) | (host_status << 16);
  }
-
- static int aha152x_detect(Scsi_Host_Template * tpnt)
- {
--	int i, j, ok;
-+	int i, j, ok = 0;
- #if defined(AUTOCONF)
- 	aha152x_config conf;
- #endif
-@@ -1102,14 +1091,22 @@
- #endif
-
- 	if (setup_count) {
--		printk(KERN_INFO "aha152x: processing commandline: ");
-+		printk(KERN_INFO "aha152x: processing commandline:\n");
-
- 		for (i = 0; i < setup_count; i++)
--			if (!checksetup(&setup[i])) {
--				printk(KERN_ERR "\naha152x: %s\n", setup[i].conf);
-+			if (request_region(setup[i].io_port, IO_RANGE, "aha152x") == NULL)
-+				printk(KERN_WARNING "aha152x: port 0x%x[%d] busy\n", setup[i].io_port, IO_RANGE);
-+			else if (!checksetup(&setup[i])) {
-+				release_region(setup[i].io_port, IO_RANGE);
-+				printk(KERN_ERR "aha152x: %s\n", setup[i].conf);
- 				printk(KERN_ERR "aha152x: invalid line\n");
-+			} else {
-+				ok++;
-+				printk("aha152x: 0x%x: ok\n", setup[i].io_port);
- 			}
--		printk("ok\n");
-+		/* If nothing found at command-line specified addresses, fail */
-+		if (!ok)
-+			return 0;
- 	}
-
- #if defined(SETUP0)
-@@ -1117,7 +1114,10 @@
- 		struct aha152x_setup override = SETUP0;
-
- 		if (setup_count == 0 || (override.io_port != setup[0].io_port)) {
--			if (!checksetup(&override)) {
-+			if (request_region(override.io_port, IO_RANGE, "aha152x") == NULL)
-+				printk(KERN_WARNING "aha152x: port 0x%x[%d] busy\n", override.io_port, IO_RANGE);
-+			else if (!checksetup(&override)) {
-+				release_region(override.io_port, IO_RANGE);
- 				printk(KERN_ERR "\naha152x: invalid override SETUP0={0x%x,%d,%d,%d,%d,%d,%d,%d}\n",
- 				       override.io_port,
- 				       override.irq,
-@@ -1138,7 +1138,10 @@
- 		struct aha152x_setup override = SETUP1;
-
- 		if (setup_count == 0 || (override.io_port != setup[0].io_port)) {
--			if (!checksetup(&override)) {
-+			if (request_region(override.io_port, IO_RANGE, "aha152x") == NULL)
-+				printk(KERN_WARNING "aha152x: port 0x%x[%d] busy\n", override.io_port, IO_RANGE);
-+			else if (!checksetup(&override)) {
-+				release_region(override.io_port, IO_RANGE);
- 				printk(KERN_ERR "\naha152x: invalid override SETUP1={0x%x,%d,%d,%d,%d,%d,%d,%d}\n",
- 				       override.io_port,
- 				       override.irq,
-@@ -1184,9 +1187,12 @@
- #endif
- 		}
-
--          	if (checksetup(&setup[setup_count]))
-+		if (request_region(setup[setup_count].io_port, IO_RANGE, "aha152x") == NULL)
-+			printk(KERN_WARNING "aha152x: port 0x%x[%d] busy\n", setup[setup_count].io_port, IO_RANGE);
-+		else if (checksetup(&setup[setup_count]))
- 			setup_count++;
--		else
-+		else {
-+			release_region(setup[setup_count].io_port, IO_RANGE);
- 			printk(KERN_ERR "aha152x: invalid module params io=0x%x, irq=%d,scsiid=%d,reconnect=%d,parity=%d,sync=%d,delay=%d,exttrans=%d\n",
- 			       setup[setup_count].io_port,
- 			       setup[setup_count].irq,
-@@ -1196,6 +1202,7 @@
- 			       setup[setup_count].synchronous,
- 			       setup[setup_count].delay,
- 			       setup[setup_count].ext_trans);
-+		}
- 	}
-
- 	if (setup_count<ARRAY_SIZE(setup) && (aha152x1[0]!=0 || io[1]!=0 || irq[1]!=0)) {
-@@ -1226,9 +1233,12 @@
- 			setup[setup_count].debug       = debug[1];
- #endif
- 		}
--		if (checksetup(&setup[setup_count]))
-+		if (request_region(setup[setup_count].io_port, IO_RANGE, "aha152x") == NULL)
-+			printk(KERN_WARNING "aha152x: port 0x%x[%d] busy\n", setup[setup_count].io_port, IO_RANGE);
-+		else if (checksetup(&setup[setup_count]))
- 			setup_count++;
--		else
-+		else {
-+			release_region(setup[setup_count].io_port, IO_RANGE);
- 			printk(KERN_ERR "aha152x: invalid module params io=0x%x, irq=%d,scsiid=%d,reconnect=%d,parity=%d,sync=%d,delay=%d,exttrans=%d\n",
- 			       setup[setup_count].io_port,
- 			       setup[setup_count].irq,
-@@ -1238,6 +1248,7 @@
- 			       setup[setup_count].synchronous,
- 			       setup[setup_count].delay,
- 			       setup[setup_count].ext_trans);
-+		}
- 	}
- #endif
-
-@@ -1298,7 +1309,9 @@
- 			if ((setup_count == 1) && (setup[0].io_port == ports[i]))
- 				continue;
-
--			if (aha152x_porttest(ports[i])) {
-+			if (request_region(ports[i], IO_RANGE, "aha152x") == NULL)
-+				printk(KERN_WARNING "aha152x: port 0x%x[%d] busy\n", ports[i], IO_RANGE);
-+			else if (aha152x_porttest(ports[i])) {
- 				ok++;
- 				setup[setup_count].io_port = ports[i];
- 				setup[setup_count].tc1550  = 0;
-@@ -1336,7 +1349,8 @@
- 				setup[setup_count].debug = DEBUG_DEFAULT;
- #endif
- 				setup_count++;
--			}
-+			} else
-+				release_region(ports[i], IO_RANGE);
- 		}
-
- 		if (ok)
-@@ -1347,7 +1361,8 @@
- 	printk("detected %d controller(s)\n", setup_count);
-
- 	for (i=0; i<setup_count; i++) {
--		aha152x_probe_one(&setup[i]);
-+		if (aha152x_probe_one(&setup[i]) == NULL)
-+			release_region(setup[i].io_port, IO_RANGE);
- 		if (aha152x_host[registered_count]) {
- #ifdef __ISAPNP__
- 			if(pnpdev[i])
+ 
+ /****************************************************************************/
+@@ -2393,16 +2420,6 @@
+ 	/* Disable RISC load of firmware. */
+ 	ha->flags.disable_risc_code_load =
+ 		nv->cntr_flags_1.disable_loading_risc_code;
+-
+-#ifdef QLA_64BIT_PTR
+-	/* Enable 64bit addressing for OS/System combination supporting it   */
+-	/* actual NVRAM bit is: nv->cntr_flags_1.enable_64bit_addressing     */
+-	/* but we will ignore it and use BITS_PER_LONG macro to setup for    */
+-	/* 64 or 32 bit access of host memory in all x86/ia-64/Alpha systems */
+-	ha->flags.enable_64bit_addressing = 1;
+-#else
+-	ha->flags.enable_64bit_addressing = 0;
+-#endif
+ 
+ 	if (ha->flags.enable_64bit_addressing) {
+ 		dprintk(2, "scsi(%li): 64 Bit PCI Addressing Enabled\n",
+===== drivers/scsi/qla1280.h 1.23 vs edited =====
+--- 1.23/drivers/scsi/qla1280.h	Sun Jan  4 23:07:47 2004
++++ edited/drivers/scsi/qla1280.h	Sat Jan 17 13:04:48 2004
+@@ -309,16 +309,19 @@
+ 	} cntr_flags_1;		/* 5 */
+ 
+ 	struct {
+-		uint16_t boot_lun_number:5;
+-		uint16_t scsi_bus_number:1;
+-		uint16_t unused_6:1;
+-		uint16_t unused_7:1;
+-		uint16_t boot_target_number:4;
+-		uint16_t unused_12:1;
+-		uint16_t unused_13:1;
+-		uint16_t unused_14:1;
+-		uint16_t unused_15:1;
+-	} cntr_flags_2;		/* 6, 7 */
++		uint8_t boot_lun_number:5;
++		uint8_t scsi_bus_number:1;
++		uint8_t unused_6:1;
++		uint8_t unused_7:1;
++	} cntr_flags_2l;	/* 7 */
++
++	struct {
++		uint8_t boot_target_number:4;
++		uint8_t unused_12:1;
++		uint8_t unused_13:1;
++		uint8_t unused_14:1;
++		uint8_t unused_15:1;
++	} cntr_flags_2h;	/* 8 */
+ 
+ 	uint16_t unused_8;	/* 8, 9 */
+ 	uint16_t unused_10;	/* 10, 11 */
 
