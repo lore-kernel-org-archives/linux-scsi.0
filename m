@@ -1,30 +1,53 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: Fw: ACARD SCSI driver update for Linux kernel v2.6
-Date: Fri, 7 Jan 2005 10:11:44 +0000
-Message-ID: <20050107101144.GA6094@infradead.org>
-References: <026801c4ee56$1e802810$6200a8c0@jameshsu> <1105052325.17166.284.camel@localhost.localdomain> <035001c4f4a0$6b3b4e50$6200a8c0@jameshsu>
+From: Andrew Schulman <andrex@alumni.utexas.net>
+Subject: Re: dc395x: can't write to tape
+Date: Fri, 7 Jan 2005 05:52:57 -0500
+Message-ID: <200501070552.57607.andrex@alumni.utexas.net>
+References: <200501060518.25782.andrex@alumni.utexas.net> <Pine.LNX.4.60.0501062138580.7568@poirot.grange>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [213.146.154.40] ([213.146.154.40]:23482 "EHLO
-	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S261339AbVAGKLs (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 7 Jan 2005 05:11:48 -0500
+Received: from sccrmhc13.comcast.net ([204.127.202.64]:30693 "EHLO
+	sccrmhc13.comcast.net") by vger.kernel.org with ESMTP
+	id S261181AbVAGKw6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 7 Jan 2005 05:52:58 -0500
+In-Reply-To: <Pine.LNX.4.60.0501062138580.7568@poirot.grange>
 Content-Disposition: inline
-In-Reply-To: <035001c4f4a0$6b3b4e50$6200a8c0@jameshsu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: jameshsu <jameshsu@mail.acard.com>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-scsi@vger.kernel.org, James.Bottomley@SteelEye.com, EdwardLian <edwardlian@mail.acard.com>, Jason Wu <jason_wu@acard.com>
+To: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+Cc: linux-scsi@vger.kernel.org, Jamie Lenehan <lenehan@twibble.org>
 
-> New driver will be submit around 1-2 week later.
-> During these period, if you have more suggestions, please let us know ASAP
-> while testing.
+> > Jan  5 22:50:18 helium kernel: dc395x: sg_update_list: sg_to_virt failed
+>
+> This doesn't look good. However, after a brief look at the code, I cannot
+> say what exactly went wrong there. Jamie?
 
-In general life for us and you is easier if you submit changes as you
-make them in small chunks.  E.g. submit the new PCI ID asap, submit
-small fixes you think are needed in the driver ASAP, etc..
+I didn't mention it before, but I've gotten that particular message for a long 
+time, even when the tape drive used to work.  I reported on it several months 
+ago on this list 
+(http://marc.theaimsgroup.com/?l=linux-scsi&m=108039964822342&w=2) in 
+connection with a balky CD burner, which I've since junked.  After some work 
+and upgrading my kernel, I got the CD burner working again, but the flood of 
+sg_to_virt failed messages continued.  Jaime finally recommended that I just 
+disable them, which I did until I got rid of the CD burner.  Maybe 
+relevant...
 
-Small patches are much easier review, and and you get obviously correct
-pieces out ASAP.
+> > Jan  5 22:50:18 helium kernel: st0: Error with sense data: Info fld=0x67,
+> > Current st0: sense = f0  4
+>
+> Sense key 4 - hardware error.
+>
+> > Jan  5 22:50:18 helium kernel: ASC=80 ASCQ=98
+>
+> Additional sense code 0x80 - vendor specific.
+>
+> So, the sense codes indicate a hardware problem on the tape drive, but the
+> first message might mean a software bug. You don't have highmem on that
+> machine (> 1GB RAM), do you?
 
+CONFIG_HIGHMEM4G is enabled in the kernel, and I have 1 GiB of RAM.
+
+Thanks,
+Andrew.
