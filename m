@@ -1,48 +1,56 @@
 From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: how to change sector size on fibrechannel drives
-Date: Thu, 13 Jun 2002 19:56:55 -0400
+Subject: Re: SCSI host/channel/lun/part to /dev/sd* or maj/minor mapping
+Date: Fri, 14 Jun 2002 00:16:09 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3D093147.3C64CB43@torque.net>
-References: <20020613093514.B25071@nuvox.net>
+Message-ID: <3D096E09.B58901A7@torque.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: David Nedved <dnedved@nuvox.net>
-Cc: linux-scsi@vger.kernel.org
+To: Mark Atwood <mra@pobox.com>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, kurt@garloff.de
 
-David Nedved wrote:
+Mark Atwood write:
+> Is there a mapping between the Host,Channel,Id,Lun of a SCSI device as
+> reported in /proc/scsi/scsi, and the the /dev/sd* names and/or the
+> major/minor device numbers?
 > 
-> Hi All,
-> 
-> I've salvaged some drives from a MTI fibre channel RAID device, and I'm
-> trying to use them in linux 2.4.18.  When the scsi module loads, it sees
-> the drives, but reports them all as having the dreaded
-> "unsupported sector size 528" message.  All the searches I've done seem
-> to indicate a low-level format of the drives.   The FC card I'm using,
-> however (Emulex LP8000), doesn't seem to have an option for low-level
-> formatting in the BIOS.  I've also tried the lputil command that comes with
-> the driver, but it seems to have trouble finding the adapter, and it doesn't
-> seem to have any utilities that would help me anyway.
-> 
-> My fibre channel toys are rather limited, in other words, I don't have
-> any other controllers with which to low-level these drives.  In a pinch
-> I could probably find a wintel machine to throw the card into if I had to
-> in order to low-level format the drives, but this would be rather hard
-> since I don't have any windows machines.
-> 
-> Am I out of luck?  I wouldn't mind the inefficiency of only using 512
-> of the 528 bytes in each block if there's some way to override the
-> default setting... although I would much rather reformat them...
-> 
-> Oh, the drives are all ST136403FC drives if that matters.
+> I've done some experamentation, and the more obvious ways of doing
+> the mapping dont seem to be 100%.
 
-David,
-Have a look at the scu utility at this url:
-http://www.bit-net.com/~rmiller/scu.html
+Mark,
+There are several utilities discussed at this url:
+http://www.torque.net/sg/u_index.html
+including scsidev and sg_map. Devfs shows you this mapping
+via its hierarchy:
+$ ls -l
+total 0
+brw-------    1 root     root       8,   0 Dec 31  1969 disc
+crw-r-----    1 root     root      21,   0 Dec 31  1969 generic
+brw-------    1 root     root       8,   1 Dec 31  1969 part1
+$ pwd
+/dev/scsi/host1/bus0/target0/lun0/
 
-You should be able to use the format to resize your sectors.
+
+None of these approaches is completely satisfactory. Kurt Garloff
+is working on a patch that seems to address this problem quite
+cleanly:
+
+$ cat /proc/scsi/map
+# C,B,T,U	Type	onl	sg_nm	sg_dev	nm	dev
+0,0,00,00	05	1	sg0	c:15:00	sr0	b:0b:00
+1,0,01,00	05	1	sg1	c:15:01	sr1	b:0b:01
+1,0,03,00	05	1	sg3	c:15:03	sr2	b:0b:02
+1,0,05,00	00	1	sg4	c:15:04	sda	b:08:00
+1,0,09,00	00	1	sg5	c:15:05	sdb	b:08:10
+1,0,02,00	01	1	sg2	c:15:02	osst0	c:ce:00
+2,0,01,00	05	1	sg6	c:15:06	sr3	b:0b:03
+2,0,02,00	01	1	sg7	c:15:07	osst1	c:ce:01
+2,0,03,00	05	1	sg8	c:15:08	sr4	b:0b:04
+2,0,09,00	00	1	sg10	c:15:0a	sdd	b:08:30
+3,0,10,00	00	1	sg11	c:15:0b	sde	b:08:40
+3,0,12,00	00	1	sg12	c:15:0c	sdf	b:08:50
+
 
 Doug Gilbert
-
