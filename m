@@ -1,108 +1,72 @@
-From: "Sachin Mhatre \(smhatre\)" <smhatre@cisco.com>
-Subject: RE: Request for review of Linux iSCSI driver version 4.0.0.1
-Date: Thu, 6 Nov 2003 15:12:51 +0530
+From: Jens Axboe <axboe@suse.de>
+Subject: Re: [ANNOUNCE] QLogic qla2xxx driver update available (v8.00.00b6).
+Date: Thu, 6 Nov 2003 10:17:51 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <005801c3a44a$5847c6e0$8f074d0a@apac.cisco.com>
-References: <20031027153932.A16679@infradead.org>
-Reply-To: <smhatre@cisco.com>
+Message-ID: <20031106091751.GC1379@suse.de>
+References: <B179AE41C1147041AA1121F44614F0B060ED64@AVEXCH02.qlogic.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from india-ironport-1.cisco.com ([64.104.129.195]:64814 "EHLO
-	india-ironport-1.cisco.com") by vger.kernel.org with ESMTP
-	id S263462AbTKFJm5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 6 Nov 2003 04:42:57 -0500
-In-Reply-To: <20031027153932.A16679@infradead.org>
+Received: from ns.suse.de ([195.135.220.2]:53135 "EHLO Cantor.suse.de")
+	by vger.kernel.org with ESMTP id S263478AbTKFJ7A (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Nov 2003 04:59:00 -0500
+Content-Disposition: inline
+In-Reply-To: <B179AE41C1147041AA1121F44614F0B060ED64@AVEXCH02.qlogic.org>
 List-Id: linux-scsi@vger.kernel.org
-To: 'Christoph Hellwig' <hch@infradead.org>
-Cc: linux-scsi@vger.kernel.org, davmyers@cisco.com
+To: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Cc: Mike Anderson <andmike@us.ibm.com>, Linux-Kernel <linux-kernel@vger.kernel.org>, Linux-SCSI <linux-scsi@vger.kernel.org>
 
-
-Hi,
-	The following is the reason for sending the TEST_UNIT_READY and
-START_STOP initialization command in the iSCSI driver:- 
-
-The iSCSI driver receives a CHECK CONDITION with sense key, NOT READY
-and ASC/ASCQ=04/02 (i.e. an initialization command required). The Linux
-SCSI mid-layer does not handle this condition. Hence the TUR and START
-STOP initialization commands are sent from the iSCSI driver.
-
-Should this condition be necessarily handled in the SCSI mid-layer or
-the low-level driver?
-
-Thanks,
-Sachin
-
------Original Message-----
-From: linux-scsi-owner@vger.kernel.org
-[mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of Christoph Hellwig
-Sent: Monday, October 27, 2003 9:10 PM
-To: Krishna Murthy
-Cc: linux-scsi@vger.kernel.org; davmyers@cisco.com
-Subject: Re: Request for review of Linux iSCSI driver version 4.0.0.1
-
-
-On Thu, Oct 23, 2003 at 05:34:10PM +0530, Krishna Murthy wrote:
-> Hi,
-> 	Linux iSCSI driver 4.0.0.1 (linux-iscsi-4.0.0.1.tgz) is
-available at
+On Wed, Nov 05 2003, Andrew Vasquez wrote:
+> Mike,
 > 
-> http://sf.net/projects/linux-iscsi/
+> > > A new version of the 8.x series driver for Linux 2.6.x kernels has
+> > > been uploaded to SourceForge:
+> > 
+> > Thanks for the update.
+> > 
+> > Can you give more information on why clustering was turned off
+> > starting in b5?
+> > 
+> 
+> This change was part of a relatively large performance-patch that was
+> originally against the 6.x series driver.  There were two main reasons
+> for disabling clustering support:
+> 
+> 	o Given the ability of the ISP to efficiently DMA to and from
+> 	  a significant number of data segment descriptors (via
+> 	  command/continuation type IOCBs), there were some questions
+> 	  regarding the benefits that clustering provided given the
+> 	  overhead incurred by the mid-layer attempting merge the
+> 	  requests.
 
-Here's a list of a few comments I've come up with.  I haven't yet looked
-at the data structurws much, but it seems there's a complete lack of
-refcounting.  Also there's lots of comments were ysou complain about
-scsi midlayer misbehaviour or bugs - please submit patches or submit
-workarounds when you encounter them, that's what open source is all
-about!
+That is valid.
 
-Also the same question that went to the unh folks goes to you:  why do
-you think your implementation is better than theirs and why do you think
-cooperation on one iscsi stack is impossible.
+> 	o Given the ISPs inability to handle data segments that cross
+> 	  32-bit page boundaries, and the overhead in defensive logic
+> 	  within the driver to prevent these cases (compare the 6.x
+> 	  code to the 8.x code and you will see what I mean), by
+> 	  disabling clustering we guarantee that a single SG element
+> 	  never crosses a 4GB boundary.
 
-here's the list:
+That is not, however. Linux will never give you a segment crossing a 4GB
+boundary, exactly because most hardware cannot handle this.
 
+> Now, in 2.6 there are some significant changes.  For one, with the
+> block layer rewrite and the ability to limit segment boundaries of a
+> block queue request with the blk_queue_segment_boundary() call, a LLDD
+> need not concern itself with any defensive fast-path logic to handle
+> the 4GB cross.
 
-iscsi-probe.c:
-	- lots of unchecked kmalloc()s
-	- you can't allocate scsi_cmnds yourself but _must_ use
-scsi_get_command
-	- dito for scsi_device.
-	- the whole iscsi_do_cmnd use looks very very strange.  you're
-probably
-	much better of to use the scsi_request based interfaces and use
-midlayer
-	queueing and sometimes even higher level interfaces, e.g. your
-iscsi_send_tur
-	coudld be replaced by an scsi_ioctl(sdp,
-SCSI_IOCTL_TEST_UNIT_READY, NULL)
-	I still don't understand, though why the heck you need to do a
-TUR in
-	a lowlevel driver and even more need a thread do a single TUR,
-started from
-	another kernel tread.  there more I dig into it your probing and
-thread
-	abuse looks horribly screwed.
-	- reinitilialize disk is another such candidate.  again why do
-you
-	need to send START_STOP commands from the LLDD, why do you need
-another
-	thread instead of a state machine and again life would be a lot
-simpler
-	by using the midlayer queueing infrastructure.
-	- dito for the reports luns and inquiry code in
-iscsi_detect_luns.
-	I'm very very unhappy to see a lowlevel driver mess with all
-this.
-	Even if you need to do it from a LLDD use the midlayer
-functionality for
-	it.  But I still want to see a very good explanation why you
-need this at all.
+Ditto 2.4. See BH_PHYS_4G().
 
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-the body of a message to majordomo@vger.kernel.org More majordomo info
-at  http://vger.kernel.org/majordomo-info.html
+> So, we're left with the benefits of the overhead of this merge process
+> done by the block layer.  I'm certainly receptive to the notion of
+> reexamining the use of clustering given some solid data points showing
+> an (significant -- this is subjective) increase in performance and/or a
+> resounding 'yeah, enable it!' from those in the block-layer 'know.'
+
+In 2.6 clustering comes for free, so it would be silly not to enable it.
+
+-- 
+Jens Axboe
 
