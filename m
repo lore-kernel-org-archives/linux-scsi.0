@@ -1,60 +1,45 @@
-From: Greg KH <greg@kroah.com>
-Subject: Re: [PATCH] Add attribute container to the generic device model
-Date: Tue, 11 Jan 2005 23:08:02 -0800
-Message-ID: <20050112070802.GB2085@kroah.com>
-References: <1105506370.10378.26.camel@mulgrave>
+From: Heiko Carstens <Heiko.Carstens@de.ibm.com>
+Subject: Re: [PATCH] zfcp: kfree patch
+Date: Wed, 12 Jan 2005 09:48:58 +0100
+Message-ID: <OF79A72E0D.6A084E26-ONC1256F87.002F452C-C1256F87.00306E70@de.ibm.com>
+References: <20050112064756.GC1928@kroah.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="US-ASCII"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kroah.org ([69.55.234.183]:43448 "EHLO perch.kroah.org")
-	by vger.kernel.org with ESMTP id S263027AbVALHIK (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 12 Jan 2005 02:08:10 -0500
-Content-Disposition: inline
-In-Reply-To: <1105506370.10378.26.camel@mulgrave>
+Received: from mtagate4.de.ibm.com ([195.212.29.153]:25265 "EHLO
+	mtagate4.de.ibm.com") by vger.kernel.org with ESMTP id S261245AbVALIsh
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 12 Jan 2005 03:48:37 -0500
+Received: from d12nrmr1607.megacenter.de.ibm.com (d12nrmr1607.megacenter.de.ibm.com [9.149.167.49])
+	by mtagate4.de.ibm.com (8.12.10/8.12.10) with ESMTP id j0C8mZvU136218
+	for <linux-scsi@vger.kernel.org>; Wed, 12 Jan 2005 08:48:35 GMT
+Received: from d12av02.megacenter.de.ibm.com (d12av02.megacenter.de.ibm.com [9.149.165.228])
+	by d12nrmr1607.megacenter.de.ibm.com (8.12.10/NCO/VER6.6) with ESMTP id j0C8nTj9043952
+	for <linux-scsi@vger.kernel.org>; Wed, 12 Jan 2005 09:49:29 +0100
+Received: from d12av02.megacenter.de.ibm.com (loopback [127.0.0.1])
+	by d12av02.megacenter.de.ibm.com (8.12.11/8.12.11) with ESMTP id j0C8mZCE010351
+	for <linux-scsi@vger.kernel.org>; Wed, 12 Jan 2005 09:48:35 +0100
+In-Reply-To: <20050112064756.GC1928@kroah.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
+To: Greg KH <greg@kroah.com>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Tue, Jan 11, 2005 at 11:06:10PM -0600, James Bottomley wrote:
-> Attribute containers allows a single device to belong to an arbitrary
-> number of classes, each with an arbitrary number of attributes.
+> > drivers/usb/serial/usb-serial.c does this right and keeps the release
+> > function from being called after usb-serial.ko got unloaded?
+> usb-serial can not get unloaded if there is a reference held on a sysfs
+> file owned by it, or if a user has a port open.  This is due to the
+> module reference counting logic in sysfs attributes, and in the module
+> reference count stuff in the usb-serial core itself.
 
-But classes could always have an arbitrary number of attributes, right?
+Makes sense. Just wondering if there isn't a race in fs/sysfs/file.c:
+the function check_perm() first gets a reference to a kobject in
+question and afterwards does a try_module_get(). Now if
+sysfs_get_kobject() succeeds but try_module_get() fails, this means
+you end up with a kobject where the corresponding module code is
+missing and the kobject_put() at the end of check_perm() could
+result in a release() call to already unloaded code.
+Or not?
 
-> This will be used as the basis for a generic transport class, but I did
-> it like this in case anyone found the abstraction useful.
+Heiko
 
-Hm, I like the idea, but we already allow devices belonging to arbitrary
-number of classes (through class_device) today.  What makes this
-different?
-
-And how does this change, if at all, sysfs representations of devices
-that use this?
-
-Some minor comments about the code:
-
-> +EXPORT_SYMBOL(attribute_container_classdev_to_container);
-
-Can these all be EXPORT_SYMBOL_GPL?  It's your choice, as you wrote the
-code, but we're trying to keep the driver model stuff all GPL explicit,
-as there's no way someone can say it's a "derived work" from long ago
-that's using these new functions.
-
-> +/**
-> + * attribute_container_add_device - see if any container is interested in dev
-> + *
-> + * @dev: device to add attributes to
-> + * @fn:	 function to trigger addition of class device.
-> + *
-> + * If no fn is provided, the code will simply register the class
-> + * device via class_device_add.
-
-You mean the class_device of the "container", right?
-
-The code looks sane, if not a bit confusing as there's no user of it :)
-
-thanks,
-
-greg k-h
