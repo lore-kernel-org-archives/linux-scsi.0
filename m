@@ -1,64 +1,58 @@
-From: Matthew Wilcox <willy@debian.org>
-Subject: Re: [PATCH][2.6.8-rc1-mm1] drivers/scsi/sg.c gcc341 inlining fix
-Date: Thu, 15 Jul 2004 16:58:15 +0100
+From: Mike Christie <mikenc@us.ibm.com>
+Subject: Re: [PATCH] iscsi driver update 4.0.1.8
+Date: Thu, 15 Jul 2004 10:24:23 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040715155815.GH32326@parcelfarce.linux.theplanet.co.uk>
-References: <200407150946.i6F9kqXn010635@harpo.it.uu.se> <40F68212.2020405@pobox.com>
+Message-ID: <40F6BDC7.2090405@us.ibm.com>
+References: <200407151602.45830.naveenb@cisco.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:63153 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S266227AbUGOP6T
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 15 Jul 2004 11:58:19 -0400
-Content-Disposition: inline
-In-Reply-To: <40F68212.2020405@pobox.com>
+Received: from e3.ny.us.ibm.com ([32.97.182.103]:34963 "EHLO e3.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S266254AbUGOR0z (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 15 Jul 2004 13:26:55 -0400
+In-Reply-To: <200407151602.45830.naveenb@cisco.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Mikael Pettersson <mikpe@csd.uu.se>, axboe@suse.de, wli@holomorphy.com, B.Zolnierkiewicz@elka.pw.edu.pl, akpm@osdl.org, dgilbert@interlog.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: naveenb@cisco.com
+Cc: Linux-SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Thu, Jul 15, 2004 at 09:09:38AM -0400, Jeff Garzik wrote:
-> >Compilers for top-down (define-before-use) languages like C
-> >have traditionally also worked in a top-down fashion, processing
-> >one top-level declaration at a time. Forward references are
-> >either errors, or are (when a proper declaration is in scope)
-> >left to the linker to resolve.
-> >
-> >Processing an entire compilation-unit (e.g. whole C file)
-> >as a single unit is typically _only_ done when either the
-> >language semantics requires it (not C, but e.g. Haskell),
-> >or when very high optimisation levels are requested.
+Naveen Burmi wrote:
+
+> This version of the iSCSI driver (4.0.1.8) contains the following changes
+> since 4.0.1.7:
 > 
-> Or in the case where you parse the entire file, then generate code for 
-> the entire file in a separate pass.  Which does NOT imply 
-> unit-at-a-time, for the readers at home.  It just implies generation of 
-> the AST.
-
-... which GCC didn't use to do.  It used to generate RTL directly from
-the source.  From the GCC news and announcements page:
-
-October 5, 2001
-    Alexandre Oliva of Red Hat has generalized the tree inlining
-    infrastructure, formerly in the C++ front end, so that it is now
-    used in the C front end too.
-
-> >In the case of gcc-3.4.1 failing to inline, you are asking
-> >gcc to do something (peeking forward) which it never has
-> >promised to do. And with the kernel using -fno-unit-at-a-time
-> >for stack conservation reasons, gcc is actually being _told_
-> >not to do global compilation.
-> >
-> >This is not a gcc bug, nor is it being "exceedingly dumb".
+> 1. The issue of deadlock due to multiple kmaps has been partially resolved.
+>    We now use sendpage along the xmit path.
+> 2. The driver used to overwrite scsi midlayer naming. This has been removed.
+>    Now proc_name field is used for iSCSI device lookup in sysfs.
+> 3. The driver's queuecommand now returns SCSI_MLQUEUE_DEVICE_BUSY and
+>    SCSI_MLQUEUE_HOST_BUSY on failure.
+> 4. We have removed bus reset handler from the code.
 > 
-> Actually, yes it is.
+> The following items are being worked on/debated:
+> 
+> a) Per target probe via hotplug.
+> In earlier reviews, it was debated that the hotplug mechanism should be used
+> for target activation. Though scsi_scan_host() is exported,
+> scsi_scan_host_selected() isn't. So, an adapter scan is exported to LLDD
+> whereas anything else (target or lun scan) has to go through hotplug.
+> Network oriented storage like iSCSI has to deal with delays in targets
+> getting discovered through SendTargets discovery and poll for SLP
+> discoveries.
+> It would help a lot to use scsi_scan_host_selected() in such cases and needs
+> to be exported for such LLDDs.
 
-No, it's not.  It's always been this way.  You seemed to ignore that
-message I posted yesterday.
+What is wrong with doing everything from userspace? If we do discovery 
+in userspace and send down that info from usrspace, why not kick off the 
+scanning from userspace once the establish session ioctl has completed? 
+The driver today does not handle userspace initiated scans correctly, so 
+this needs to be addressed regardless?
 
--- 
-"Next the statesmen will invent cheap lies, putting the blame upon 
-the nation that is attacked, and every man will be glad of those
-conscience-soothing falsities, and will diligently study them, and refuse
-to examine any refutations of them; and thus he will by and by convince 
-himself that the war is just, and will thank God for the better sleep 
-he enjoys after this process of grotesque self-deception." -- Mark Twain
+The other question is are you advocating that the report luns data 
+changed event no longer be handled from userspace? If 
+scsi_scan_host_selected() is exported are you going to detect the event 
+in the driver, kick off to userpace, then have some event agent go back 
+down to the driver to use scsi_scan_host_selected()? Or are you wanting 
+scsi_scan_host_selected() for your lun masking. I sent patches to kill 
+the latter and it will hopefully not exists in this lld in the near future.
