@@ -1,43 +1,72 @@
-From: Matthew Wilcox <willy@debian.org>
-Subject: Re: [SUBJECT CHANGE]: megaraid unified driver version 2.20.0.0-al pha1
-Date: Fri, 19 Mar 2004 22:26:24 +0000
+From: Adrian Bunk <bunk@fs.tum.de>
+Subject: [patch] 2.6.5-rc2: fix scsi_transport_spi.c with gcc 2.95
+Date: Sat, 20 Mar 2004 13:18:54 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040319222624.GT25059@parcelfarce.linux.theplanet.co.uk>
-References: <0E3FA95632D6D047BA649F95DAB60E57033BC49E@exa-atlanta.se.lsil.com>
+Message-ID: <20040320121853.GF19464@fs.tum.de>
+References: <Pine.LNX.4.58.0403191937160.1106@ppc970.osdl.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:44763 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S263127AbUCSW00
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 19 Mar 2004 17:26:26 -0500
+Received: from hermes.fachschaften.tu-muenchen.de ([129.187.202.12]:4834 "HELO
+	hermes.fachschaften.tu-muenchen.de") by vger.kernel.org with SMTP
+	id S263386AbUCTMTI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 20 Mar 2004 07:19:08 -0500
 Content-Disposition: inline
-In-Reply-To: <0E3FA95632D6D047BA649F95DAB60E57033BC49E@exa-atlanta.se.lsil.com>
+In-Reply-To: <Pine.LNX.4.58.0403191937160.1106@ppc970.osdl.org>
 List-Id: linux-scsi@vger.kernel.org
-To: "Mukker, Atul" <Atulm@lsil.com>
-Cc: 'Matthew Wilcox' <willy@debian.org>, 'Arjan van de Ven' <arjanv@redhat.com>, 'Christoph Hellwig' <hch@infradead.org>, 'James Bottomley' <James.Bottomley@SteelEye.com>, "'matt_domsch@dell.com'" <matt_domsch@dell.com>, 'Paul Wagland' <paul@wagland.net>, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
+To: Linus Torvalds <torvalds@osdl.org>
+Cc: Kernel Mailing List <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@osdl.org>, Martin Hicks <mort@wildopensource.com>, James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org
 
-On Fri, Mar 19, 2004 at 05:17:35PM -0500, Mukker, Atul wrote:
-> 
-> > that you don't do things like
-> > 
-> > #if defined(__x86_64__) || defined(__ia64__)
-> > #endif
-> > 
-> > when you really mean
-> > 
-> > #ifdef CONFIG_COMPAT
-> > #endif
-> What does CONFIG_COMPAT do anyway? We could not find much information about
-> it's usage
+I got the following compile error in 2.6.5-rc2 using gcc 2.95:
 
-CONFIG_COMPAT is defined by the 64-bit architectures when they want to
-be able to run 32-bit binaries.
+<--  snip  -->
 
--- 
-"Next the statesmen will invent cheap lies, putting the blame upon 
-the nation that is attacked, and every man will be glad of those
-conscience-soothing falsities, and will diligently study them, and refuse
-to examine any refutations of them; and thus he will by and by convince 
-himself that the war is just, and will thank God for the better sleep 
-he enjoys after this process of grotesque self-deception." -- Mark Twain
+...
+  CC      drivers/scsi/scsi_transport_spi.o
+drivers/scsi/scsi_transport_spi.c: In function `spi_dv_retrain':
+drivers/scsi/scsi_transport_spi.c:388: parse error before `;'
+drivers/scsi/scsi_transport_spi.c:392: parse error before `;'
+drivers/scsi/scsi_transport_spi.c: In function `spi_dv_device_internal':
+drivers/scsi/scsi_transport_spi.c:463: parse error before `;'
+drivers/scsi/scsi_transport_spi.c:475: parse error before `;'
+drivers/scsi/scsi_transport_spi.c:494: parse error before `;'
+drivers/scsi/scsi_transport_spi.c: In function `spi_dv_device':
+drivers/scsi/scsi_transport_spi.c:539: parse error before `;'
+drivers/scsi/scsi_transport_spi.c:543: parse error before `;'
+make[2]: *** [drivers/scsi/scsi_transport_spi.o] Error 1
+
+<--  snip  -->
+
+
+I found the patch below in -mm that fixes this problem.
+
+
+Please apply
+Adrian
+
+
+<--  snip  -->
+
+
+Work around the gcc-2.95 token pasting bug.
+
+
+---
+
+ 25-akpm/drivers/scsi/scsi_transport_spi.c |    2 +-
+ 1 files changed, 1 insertion(+), 1 deletion(-)
+
+diff -puN drivers/scsi/scsi_transport_spi.c~scsi_transport_spi-build-fix drivers/scsi/scsi_transport_spi.c
+--- 25/drivers/scsi/scsi_transport_spi.c~scsi_transport_spi-build-fix	2004-03-14 02:45:22.999909632 -0800
++++ 25-akpm/drivers/scsi/scsi_transport_spi.c	2004-03-14 02:45:29.938854752 -0800
+@@ -33,7 +33,7 @@
+ #include <scsi/scsi_transport.h>
+ #include <scsi/scsi_transport_spi.h>
+ 
+-#define SPI_PRINTK(x, l, f, a...)	printk(l "scsi(%d:%d:%d:%d): " f, (x)->host->host_no, (x)->channel, (x)->id, (x)->lun, ##a)
++#define SPI_PRINTK(x, l, f, a...)	printk(l "scsi(%d:%d:%d:%d): " f, (x)->host->host_no, (x)->channel, (x)->id, (x)->lun , ##a)
+ 
+ static void transport_class_release(struct class_device *class_dev);
+ 
+
+_
