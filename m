@@ -1,44 +1,44 @@
-From: Mark Lord <lkml@rtr.ca>
+From: James Bottomley <James.Bottomley@SteelEye.com>
 Subject: Re: [PATCH] QStor SATA/RAID driver for 2.6.9-rc3
-Date: Fri, 08 Oct 2004 11:38:54 -0400
+Date: 08 Oct 2004 10:47:40 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <4166B48E.3020006@rtr.ca>
-References: <4161A06D.8010601@rtr.ca>	<416547B6.5080505@rtr.ca>	<20041007150709.B12688@infradead.org>	<4165624C.5060405@rtr.ca>	<416565DB.4050006@pobox.com>	<4165A45D.2090200@rtr.ca>	<4165A766.1040104@pobox.com>	<4165A85D.7080704@rtr.ca>	<4165AB1B.8000204@pobox.com>	<4165ACF8.8060208@rtr.ca> 	<20041007221537.A17712@infradead.org>	<1097241583.2412.15.camel@mulgrave>  <4166AF2F.6070904@rtr.ca> <1097249266.1678.40.camel@mulgrave>
+Message-ID: <1097250465.2412.49.camel@mulgrave>
+References: <4161A06D.8010601@rtr.ca>	<416547B6.5080505@rtr.ca>	<20041007150709.B12688@i
+	nfradead.org>	<4165624C.5060405@rtr.ca>	<416565DB.4050006@pobox.com>	<4165A4
+	5D.2090200@rtr.ca>	<4165A766.1040104@pobox.com>	<4165A85D.7080704@rtr.ca>	<4
+	165AB1B.8000204@pobox.com>	<4165ACF8.8060208@rtr.ca>
+		<20041007221537.A17712@infradead.org>	<1097241583.2412.15.camel@mulgrave>
+	<4166AF2F.6070904@rtr.ca> <1097249266.1678.40.camel@mulgrave>
+	<4166B48E.3020006@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cpu1185.adsl.bellglobal.com ([207.236.110.166]:63166 "EHLO
-	mail.rtr.ca") by vger.kernel.org with ESMTP id S270040AbUJHPkp
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 8 Oct 2004 11:40:45 -0400
-In-Reply-To: <1097249266.1678.40.camel@mulgrave>
+Received: from stat16.steeleye.com ([209.192.50.48]:45250 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S270042AbUJHPr4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 8 Oct 2004 11:47:56 -0400
+In-Reply-To: <4166B48E.3020006@rtr.ca>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
+To: Mark Lord <lkml@rtr.ca>
 Cc: Christoph Hellwig <hch@infradead.org>, Jeff Garzik <jgarzik@pobox.com>, Mark Lord <lsml@rtr.ca>, Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-James Bottomley wrote:
-> On Fri, 2004-10-08 at 10:15, Mark Lord wrote:
+On Fri, 2004-10-08 at 10:38, Mark Lord wrote:
+> Can deadlock occur here, since qstor.c is already using schedule_work()
+> as part of it's internal bottom-half handling for abnormal conditions?
 > 
->>>Actually, the driver has no need for a thread at all.  Since you're
->>>simply using it to fire hotplug events, use schedule_work instead.
->>
->>That worries me some, because the mid-layer will perform blocking I/O
->>and the like, and I'm not sure how much that stuff may depend on its
->>own usage (any?) of workqueues.  If you believe it to be safe,
->>then I'll nuke the kthread entirely.
+> Eg.  hotplug event -> schedule_work -> mid-layer -> queuecommand
+>        --> sleep  :: interrupt -> schedule_work -> deadlock?
 > 
-> 
-> We use this already for other entities that require user context like
-> domain validation.  It seems to work as advertised.
 
-Can deadlock occur here, since qstor.c is already using schedule_work()
-as part of it's internal bottom-half handling for abnormal conditions?
+Since you wouldn't go straight from schedule_work->mid-layer, I assume
+you mean that when the workqueue thread runs the work?
 
-Eg.  hotplug event -> schedule_work -> mid-layer -> queuecommand
-       --> sleep  :: interrupt -> schedule_work -> deadlock?
+With that assumption, this is legal and won't deadlock.
 
-Just checking.. we all want this to function well.
--- 
-Mark Lord
-(hdparm keeper & the original "Linux IDE Guy")
+However, I assume you know you can't sleep in queuecommand since it may
+be run from the scsi tasklet?
+
+James
+
+
