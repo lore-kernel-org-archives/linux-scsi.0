@@ -1,64 +1,74 @@
-From: Jure =?UTF-8?B?UGXEjWFy?= <pegasus@telemach.net>
-Subject: qlogicisp error handling
-Date: Sat, 28 Feb 2004 11:29:25 +0100
+From: James Bottomley <James.Bottomley@steeleye.com>
+Subject: Re: [PATCH] Fix aic7xxx del_timer_sync() deadlock
+Date: 28 Feb 2004 09:39:48 -0600
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040228112925.50ce14ff.pegasus@telemach.net>
+Message-ID: <1077982791.2020.25.camel@mulgrave>
+References: <1077906383.2157.98.camel@mulgrave>
+		<3462370000.1077909838@aslan.btc.adaptec.com>
+	<1077910452.2157.110.camel@mulgrave>
+	<3492060000.1077915050@aslan.btc.adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pegasus.siol.net ([193.189.160.25]:62933 "EHLO pegasus.siol.net")
-	by vger.kernel.org with ESMTP id S261270AbUB1K31 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 28 Feb 2004 05:29:27 -0500
-Received: from kudu.siol.net ([10.10.10.22]) by pegasus.siol.net
-          (InterMail vK.4.03.05.03 201-232-132-103 license 1cbf71897a39210db31154c99f0b4628)
-          with ESMTP id <20040228102925.WRAC15612.pegasus@kudu.siol.net>
-          for <linux-scsi@vger.kernel.org>; Sat, 28 Feb 2004 11:29:25 +0100
-Received: from open.pecar.org ([193.95.219.68]) by kudu.siol.net
-          (InterMail vK.4.03.05.03 201-232-132-103 license 1cbf71897a39210db31154c99f0b4628)
-          with SMTP id <20040228102925.TTAG1595.kudu@open.pecar.org>
-          for <linux-scsi@vger.kernel.org>; Sat, 28 Feb 2004 11:29:25 +0100
+Received: from stat1.steeleye.com ([65.114.3.130]:58316 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S261871AbUB1Pjz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 28 Feb 2004 10:39:55 -0500
+In-Reply-To: <3492060000.1077915050@aslan.btc.adaptec.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: "Justin T. Gibbs" <gibbs@scsiguy.com>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, Andrew Morton <akpm@osdl.org>
 
+On Fri, 2004-02-27 at 14:50, Justin T. Gibbs wrote:
+> Well, experience shows that if you implement a SCSI system based solely
 
-Hi all,
+Heh, well, I won't disagree with that.
 
-qlogicisp module on my alphaserver spits this out on 2.6.3-mm1:
+> There are lots of devices out there that require a delay of at least
+> 250ms in order to not deadlock their internal SCSI processor.  The
+> I/O load of the system has no bearing on when a device will become
+> "unbusy" (we can't even say why it is "busy"), so I fail to see why
+> it should have any effect on how long we wait in response to this
+> condition.
 
-ERROR: SCSI host `isp1020' has no error handling
-ERROR: This is not a safe way to run your SCSI host
-ERROR: The error handling must be added to this driver
-fffffc00001f7da8 0000000000000003 fffffc000048b640 fffffc0000685030=20
-       fffffc0000685030 fffffc001bf7b800 fffffc0000685030 fffffc001bd7d=
-400=20
-       fffffc0000000000 fffffc00001f7df0 fffffc00001f7df0 fffffc001bf7b=
-800=20
-       fffffc00004c0007 fffffc0000685030 fffffc00004c2bac fffffc0000685=
-030=20
-       0000000000000000 0000000000000000 fffffc0000603308 fffffc0000685=
-030=20
-       0000000000000000 fffffc0000685108 fffffc000060e400 fffffc000057e=
-400=20
-Trace:fffffc000048b640 fffffc00004c0007 fffffc00004c2bac fffffc00003101=
-9c
-fffffc0000315408=20
+Could you give the most common example ... I'll see if I can persuade
+the OSDL test people to try it out with the current stack?
 
-It looks to me that the error handling is not yet imlemented in this dr=
-iver.
+What we currently do is by design ... on busy or queue full at zero
+depth we pause for three unplugs.  The first will be the returning queue
+unplug, but the other two depend on the I/O pressure or the unplug
+timer.  If you tell me what the inquiry strings of these devices are, I
+can blacklist them to have a much larger max_device_blocked count, so if
+there is a problem with them, *all* drivers will work rather than just
+the Adaptec ones.
 
-How much work is this? Can a kernel hacker wannabe like me do this? Any
-pointers?
+> In order to issue a DV command to the end device via the mid-layer, the
+> host queue and the device queue must not be blocked.  But, for DV to be
+> effective, it must be the only activity occurring on that device.  How do
+> you reconcile the two while using the mid-layer to do your I/O?  The
+> mid-layer has no concept of allowing a client to freeze the queue,
+> wait for the active count to go to zero, effectively pre-empt
+> the command stream with a series of special commands, and then unblock
+> everyone else only at the end.  The closest the mid-layer comes to this
+> is in some of its error recovery handling but those are internal
+> interfaces.
 
-Thanks,
+But domain validation is a pretty intrusive thing.  It's only really
+supposed to be run in two places:
 
+1. At start of day, which you should do from slave_configure, where you
+are guaranteed that nothing else is using the device
 
---=20
+2. On indication of transport problems.  This you would run for a single
+target from the bus or device reset handler after issuing the command
+and pausing for the settle time (OK, that's bad because the settle time
+is also built into the error handler, but that will improve when error
+handling becomes more transport specific and I can build domain
+validation directly into the SPI transport error handling).
 
-Jure Pe=C4=8Dar
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+In both of these cases, you are guaranteed a quiescent device queue, so
+I don't see what the problem is.
+
+James
+
