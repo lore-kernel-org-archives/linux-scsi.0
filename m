@@ -1,88 +1,53 @@
-From: "David Peterson \(Eng\)" <david_peterson@cnt.com>
-Subject: RE: WWN on FC LUN targets
-Date: Wed, 28 Jul 2004 09:22:39 -0500
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: RE: suspending I/Os to a device
+Date: 28 Jul 2004 10:41:55 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <82C736F456CA3E4EA3D0DC6CC31AA5CB011B05D3@esply09.cnt.ad.cnt.com>
+Message-ID: <1091025718.2072.75.camel@mulgrave>
+References: <3356669BBE90C448AD4645C843E2BF28025AB7AA@xbl.ma.emulex.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gatehider.cnt.com ([139.93.128.13]:5037 "EHLO esply07.cnt.com")
-	by vger.kernel.org with ESMTP id S267168AbUG1OWj convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 28 Jul 2004 10:22:39 -0400
-Content-class: urn:content-classes:message
+Received: from stat16.steeleye.com ([209.192.50.48]:65494 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S267189AbUG1OmO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 28 Jul 2004 10:42:14 -0400
+In-Reply-To: <3356669BBE90C448AD4645C843E2BF28025AB7AA@xbl.ma.emulex.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Bryan Henderson <hbryan@us.ibm.com>, Rock Gordon <rockgordon@yahoo.com>
-Cc: linux-scsi@vger.kernel.org
+To: "Ely, Paul" <Paul.Ely@Emulex.Com>
+Cc: 'Christoph Hellwig' <hch@infradead.org>, "Smart, James" <James.Smart@Emulex.Com>, Linux SCSI Reflector <linux-scsi@vger.kernel.org>
 
-If supported by the device, use the Device Identification VPD page
-(0x83) to identify the Logical Unit. See SPC-3.
-The preferred identifier type is NAA (which is a Worldwide_Name). Annex
-D in FCP-2/FCP-3 may also be of assistance to you.
+On Mon, 2004-07-26 at 15:11, Ely, Paul wrote: 
+> I think the sysfs implementation for the nodevice_tmo
+> attribute needs to be rethought.
+> 
+> The nodevice_tmo really is a scsi device-specific attribute
+> and although it could apply to Fibre Channel, iSCSI,
+> or usb-connected storage, defining it in the scsi_transport_fc.c/h
+> files doesn't really work since:
+> 	1. The midlayer doesn't interface with the transport
+> 	   interface directly.
+> 	2. Each transport type would need to replicate the
+> 	   transport_fc at least for the nodevice_tmo.
+> 	3. Implementing this is messy.
 
-...Dave 
+Surely not if the implementation is done in scsi_lib.c?  The idea being
+that you provide the storage area in the transport attributes but the
+routines for handling it are all in scsi_lib so any transport that needs
+it can hook in easily and transports that don't care don't bother and
+don't waste the storage space.
 
------Original Message-----
-From: linux-scsi-owner@vger.kernel.org
-[mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of Bryan Henderson
-Sent: Tuesday, July 27, 2004 7:54 PM
-To: Rock Gordon
-Cc: linux-scsi@vger.kernel.org
-Subject: Re: WWN on FC LUN targets
+This concept applies to a few other attributes we might do, which is why
+I'm interested in seeing how it could work.
 
->I am looking at ways to find out particular WWN (world wide names) for 
->SCSI target LUNs
+> I am working on a modification to move the nodevice_timeout
+> value and timeout error handler into the scsi_device structure
+> since it really is a scsi device attribute that needs to be
+> managed by the midlayer.
 
-LUNS don't actually have fibre channel WWNs.  And neither do SCSI
-logical units, which is probably what you meant (a LUN is a logical unit
-number). 
-WWNs come in two flavors - World Wide Node Name (WWNN), which identifies
-a SCSI target, and World Wide Port Name (WWPN), which identifies a port
-on a target.  Neither of those is what you want, since you probably have
-multiple logical units per target.
+It's a device attribute, but since it's use should be optional I'm not
+convinced it needs to be in every SCSI device.
 
-If you're like most FC users, your LUNs aren't stable even within a
-target, so you can't use a combination of WWNN and LUN either.
+James
 
-So what people use is either SCSI device serial number or SCSI device
-ID. 
-The latter is newer and better.  There are device IDs for targets,
-ports, and logical units.  There are device IDs in each of various name
-spaces, some defined by public standards.  You can read all about that
-in SCSI specifications.  Device IDs are part of the Vital Product Data
-(VPD).
 
-The basic programming interface to get that information is the SCSI
-INQUIRY command.
-
-People have written programs to do the INQUIRY and give you the results
-in usable form and even create the device special files named after the
-device IDs.  I'm afraid I can't name one at the moment, but I hope
-someone else on the list chimes in with the specifics.
-
-You could do this with devfs, but you'd be happier doing it with a user
-space program that just queries the devices at all the relevant
-major/minor number combinations and creates the /dev files you want.
-And the same for responding to hotplug events.  In Linux 2.6, that
-process is even formalized in 'udev'.
-
-This is, by the way, something people have been doing for years.  It's
-only starting to become standard so that everyone doesn't have to write
-his own.
-
->I can mount particular [logical units] from any server without worrying
-
->about changes in the device naming conventions.
-
-Of course, naming conventions are the least of your problems.  When you
-try to use the /dev/sda etc. names, they will change every time the
-slightest thing in your system changes -- recabling, adding adapter
-cards, changing adapter card brand, creating new LUs, and on and on.
-And they will be different on every system.
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-the body of a message to majordomo@vger.kernel.org More majordomo info
-at  http://vger.kernel.org/majordomo-info.html
