@@ -1,39 +1,25 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [BK PATCH] SCSI updates for 2.6.11
-Date: Wed, 16 Mar 2005 15:31:19 -0500
-Message-ID: <42389797.7000004@pobox.com>
-References: <1110934411.5685.39.camel@mulgrave> <42387C7C.9040407@pobox.com> <1111003679.5635.3.camel@mulgrave>
+From: Arjan van de Ven <arjan@infradead.org>
+Subject: RE: memcpy_toio/memcpy_fromio 64 bit safe?
+Date: Wed, 16 Mar 2005 21:43:00 +0100
+Message-ID: <1111005781.6292.61.camel@laptopd505.fenrus.org>
+References: <60807403EABEB443939A5A7AA8A7458BED2493@otce2k01.adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:58775 "EHLO
-	parcelfarce.linux.theplanet.co.uk") by vger.kernel.org with ESMTP
-	id S262786AbVCPUbx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 16 Mar 2005 15:31:53 -0500
-In-Reply-To: <1111003679.5635.3.camel@mulgrave>
+Received: from pentafluge.infradead.org ([213.146.154.40]:36312 "EHLO
+	pentafluge.infradead.org") by vger.kernel.org with ESMTP
+	id S261302AbVCPUnG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 16 Mar 2005 15:43:06 -0500
+In-Reply-To: <60807403EABEB443939A5A7AA8A7458BED2493@otce2k01.adaptec.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
+To: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
+Cc: Matthew Wilcox <matthew@wil.cx>, linux-scsi@vger.kernel.org
 
-James Bottomley wrote:
-> On Wed, 2005-03-16 at 13:35 -0500, Jeff Garzik wrote:
-> 
->>Are my 3ware bugfixes in the queue?  Currently 3ware claims it handled 
->>the interrupt, even the interrupt is a shared one and the event was 
->>meant for another driver.
-> 
-> 
-> Not in my queue ... you could try Adam Radford directly ...
+On Wed, 2005-03-16 at 15:19 -0500, Salyzyn, Mark wrote:
+> Unsigned long is less than pointer, the reference passed in to the 'dst'
+> variable.
 
-More info?  Were they dropped on purpose, or just never arrived?
-If dropped on purpose, what was the reason?
 
-http://marc.theaimsgroup.com/?l=linux-scsi&m=110974795732192&w=2
-http://marc.theaimsgroup.com/?l=linux-scsi&m=110974807701325&w=2
-http://marc.theaimsgroup.com/?l=linux-scsi&m=110974812119775&w=2
-http://marc.theaimsgroup.com/?l=linux-scsi&m=110974869410494&w=2
-
-	Jeff
-
+that's on that other OS, not this one ;)
 
