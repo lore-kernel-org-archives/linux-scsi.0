@@ -1,30 +1,50 @@
-From: Andries Brouwer <aebr@win.tue.nl>
-Subject: Re: [PATCH] MODE SENSE in sd.c; sddr09.c
-Date: Mon, 2 Sep 2002 14:38:09 +0200
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20020902123809.GA9286@win.tue.nl>
-References: <UTC200209020041.g820fGS22828.aeb@smtp.cwi.nl> <akvg26$7nt$1@ncc1701.cistron.net>
+From: James Bottomley <James.Bottomley@steeleye.com>
+Subject: Re: aic7xxx sets CDR offline, how to reset?
+Date: Tue, 03 Sep 2002 09:35:02 -0500
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <200209031435.g83EZ2F03562@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <akvg26$7nt$1@ncc1701.cistron.net>
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+To: "Justin T. Gibbs" <gibbs@scsiguy.com>, Doug Ledford <dledford@redhat.com>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Rob Turk <r.turk@chello.nl>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Mon, Sep 02, 2002 at 01:00:39PM +0200, Rob Turk wrote:
-
-> > The patch below first separates out the MODE SENSE call,
-> > and then tries it three times: on all pages (3F), only the first
-> > four bytes; on the vendor page (0), only the first four bytes;
-> > on all pages (3F), 255 bytes.
+> Doug Ledford writes:
 > 
-> Would it be possible to move away from using 'standard' 255 bytes? Many SCSI
-> device don't like requests for odd byte counts on 16-bit SCSI busses, and
-> IDE isn't too crazy about it either. How about asking for 254 instead??
+>  > took the device off line.  So, in short, the mid layer isn't waiting
+> long   > enough, or when it gets sense indicated not ready it needs to
+> implement a   > waiting queue with a timeout to try rekicking things a
+> few times and don't   > actually mark the device off line until a longer
+> period of time has   > elasped without the device coming back.
+> 
+> There is a kernel config CONFIG_AIC7XXX_RESET_DELAY_MS (default 15s).
+> Would increasing it help?
 
-Well, as you can see I did move away from the 255. I ask for 4 bytes.
-Only if that fails do I fall back on what we do today.
+Justin Gibbs writes:
+> This currently only effects the initial bus reset delay.  If the
+> driver holds off commands after subsequent bus resets, it can cause
+> undeserved timeouts on the commands it has intentionally deferred.
+> The mid-layer has a 5 second delay after bus resets, but I haven't
+> verified that this is honored correctly during error recovery.
 
-Andries
+I'm planning a major re-write of this area in the error handler.  The way I 
+think it should go is:
+
+1) Quiesce host (set in_recovery flag)
+2) Suspend active timers on this host
+3) Proceed down the error correction track (eliminate abort and go down 
+device, bus and host resets and finally set the device offline).
+5) On each error recovery wait out a recovery timer for the device to become 
+active before talking to it again.  Send all affected commands back to the 
+block layer to await reissue (note: it would now be illegal for commands to 
+lie to the mid layer and say they've done the reset when they haven't).
+6) issue a TUR using a command allocated to the eh for that purpose.  Process 
+the return code (in particular, if the device says NOT READY, wait some more). 
+ Only if the TUR definitively fails proceed up the recovery chain all the way 
+to taking the device offline.
+
+I also plan to expose the suspend and resume timers API in some form for FC 
+drivers to use.
+
+James
