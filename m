@@ -1,46 +1,46 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: Failure to reread partition tables on non-busy devices
-Date: Mon, 18 Nov 2002 11:35:07 +1100
+From: "J.E.J. Bottomley" <James.Bottomley@steeleye.com>
+Subject: Re: aic7xxx_biosparam
+Date: Sun, 17 Nov 2002 18:36:25 -0600
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3DD835BB.5050608@torque.net>
-References: <20021118000505.GM3280@redhat.com>
-Reply-To: dougg@torque.net
+Message-ID: <200211180036.gAI0aPY15894@localhost.localdomain>
+References: <dledford@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: (from root@localhost)
+	by pogo.mtv1.steeleye.com (8.9.3/8.9.3) id QAA26746
+	for <linux-scsi@vger.kernel.org>; Sun, 17 Nov 2002 16:36:28 -0800
+Received: from localhost.localdomain (sshppp-200.mtv1.steeleye.com [172.16.1.200])
+	by pogo.mtv1.steeleye.com (8.9.3/8.9.3) with ESMTP id QAA26655
+	for <linux-scsi@vger.kernel.org>; Sun, 17 Nov 2002 16:36:26 -0800
+Received: from mulgrave (jejb@localhost)
+	by localhost.localdomain (8.11.6/linuxconf) with ESMTP id gAI0aPY15894
+	for <linux-scsi@vger.kernel.org>; Sun, 17 Nov 2002 18:36:25 -0600
+In-Reply-To: Message from Doug Ledford <dledford@redhat.com>
+   of "Sun, 17 Nov 2002 19:27:42 EST." <20021118002742.GO3280@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Doug Ledford <dledford@redhat.com>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Linux Scsi Mailing List <linux-scsi@vger.kernel.org>
+To: Linux Scsi Mailing List <linux-scsi@vger.kernel.org>
 
-Doug,
-Your patch below fixes the problem I was seeing with fdisk
-creating new partitions (on a scsi_debug ram disk) not being
-visible outside fdisk.
+dledford@redhat.com said:
+> So, this is the change I made to update it so that it won't puke on
+> large  devices.  It seems to be working OK for me, but I didn't check
+> the gcc  assembly output to see if it's horrible.  Unless someone
+> tells me I'm  smoking crack for making this change, I'll submit it
+> pretty soon (I don't  consider myself a partition expert, I'm just
+> trying to make sure that when  geometry does get defined on my driver
+> that it at least is something the  Adaptec BIOS will accept, and the
+> Adaptec BIOS *only* accepts the two  listed head/sector combos). 
 
-Doug Gilbert
+Well, SCSI doesn't implement the BIG_GETGEO ioctl, so this isn't really much 
+use.  You can use sector_div to do the divisions.
 
-Doug Ledford wrote:
-> This patch (almost certainly wrong BTW) makes it work.  Obviously, 
-> somewhere there should be a call to invalidate_bdev(); that doesn't exist.  
-> I'm not sure A) where that call should be and B) what checks there should 
-> be to avoid calling invalidate_bdev() on a device that is busy.
-> 
-> fs/partitions/check.c:  1.85 1.86 dledford 02/11/17 17:22:37 (modified, 
-> needs delta)
-> 
-> @@ -453,8 +453,8 @@ int rescan_partitions()
->  	struct parsed_partitions *state;
->  	int p, res;
->  
-> -	if (!bdev->bd_invalidated)
-> -		return 0;
-> +	//if (!bdev->bd_invalidated)
-> +	//	return 0;
->  	if (bdev->bd_part_count)
->  		return -EBUSY;
->  	res = invalidate_device(dev, 1);
-> 
+However, Andries Brower assures me that the geometry stuff is unused (at least 
+from the cylinders point of view), so all of this is unnecessary anyway.  
+There's a large thread about it on linux-scsi (don't have the reference).  The 
+upshot was the code you can see in scsicam.c:scsicam_bios_param().
 
+So the short answer is that this should be unnecessary.
+
+James
 
 
