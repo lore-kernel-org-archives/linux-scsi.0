@@ -1,26 +1,21 @@
-From: Fabien Penso <penso@linuxfr.org>
-Subject: Re: megaraid problem
-Date: Mon, 05 Apr 2004 13:11:52 +0200
+From: Christoph Hellwig <hch@infradead.org>
+Subject: scsi-misc BK tree: Fix scsi_device_get to allow NULL devices
+Date: Mon, 5 Apr 2004 12:55:31 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <87u0zybrwn.fsf@linuxfr>
-References: <873c7id6sa.fsf@linuxfr> <87y8pabs18.fsf@linuxfr>
+Message-ID: <20040405125531.A4910@infradead.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from main.uucpssh.org ([212.27.33.224]:62686 "EHLO main.uucpssh.org")
-	by vger.kernel.org with ESMTP id S261942AbUDELMS (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 5 Apr 2004 07:12:18 -0400
-Received: from localhost (localhost [127.0.0.1])
-	by main.uucpssh.org (Postfix) with ESMTP id 49E162EEFF
-	for <linux-scsi@vger.kernel.org>; Mon,  5 Apr 2004 13:12:17 +0200 (CEST)
-In-Reply-To: <87y8pabs18.fsf@linuxfr> (Fabien Penso's message of "Mon, 05
- Apr 2004 13:09:07 +0200")
+Received: from phoenix.infradead.org ([213.86.99.234]:18954 "EHLO
+	phoenix.infradead.org") by vger.kernel.org with ESMTP
+	id S262130AbUDELzf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 5 Apr 2004 07:55:35 -0400
+Received: from hch by phoenix.infradead.org with local (Exim 4.30 #5 (Red Hat Linux))
+	id 1BAShP-0001Hb-OS
+	for linux-scsi@vger.kernel.org; Mon, 05 Apr 2004 12:55:31 +0100
+Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-
- > Sorry I didn't see the message has been through the list before, I was
- > subscribed to the list.
-
-You noticed you had to read "I wasn't subscribed"... :) Must stop beer
-on morning.
+Can the SuSE guys please elaborate what this patch is supposed to solve?
+We should never pass a NULL pointer to scsi_device_get..
