@@ -1,35 +1,57 @@
-From: Patrick Mansfield <patmans@us.ibm.com>
-Subject: Re: PATCH: (as283) Use 192-byte ms flag for page 08
-Date: Tue, 18 May 2004 12:33:06 -0700
+From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+Subject: Re: [BK PATCH] SCSI updates for 2.6.6
+Date: Tue, 18 May 2004 21:47:56 +0200 (CEST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040518123306.A12344@beaverton.ibm.com>
-References: <Pine.LNX.4.44L0.0405181112070.1407-100000@ida.rowland.org>
+Message-ID: <Pine.LNX.4.44.0405182140050.3207-100000@poirot.grange>
+References: <20040518184527.GC4859@tpkurt.garloff.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e33.co.us.ibm.com ([32.97.110.131]:11393 "EHLO
-	e33.co.us.ibm.com") by vger.kernel.org with ESMTP id S261711AbUERTdW
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 18 May 2004 15:33:22 -0400
-Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.44L0.0405181112070.1407-100000@ida.rowland.org>; from stern@rowland.harvard.edu on Tue, May 18, 2004 at 11:30:44AM -0400
+Received: from mail.gmx.net ([213.165.64.20]:40424 "HELO mail.gmx.net")
+	by vger.kernel.org with SMTP id S262138AbUERTsC (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 18 May 2004 15:48:02 -0400
+In-Reply-To: <20040518184527.GC4859@tpkurt.garloff.de>
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: SCSI development list <linux-scsi@vger.kernel.org>, USB Storage list <usb-storage@lists.one-eyed-alien.net>, James Bottomley <James.Bottomley@steeleye.com>
+To: Kurt Garloff <garloff@suse.de>
+Cc: James Bottomley <James.Bottomley@steeleye.com>, Linux SCSI list <linux-scsi@vger.kernel.org>, Linux kernel list <linux-kernel@vger.kernel.org>
 
-On Tue, May 18, 2004 at 11:30:44AM -0400, Alan Stern wrote:
-> Patrick:
-> 
-> Is there any objection to applying the patch below?  It changes the name 
-> of the BLIST_MS_192_BYTES_FOR_3F and use_192_bytes_for_3f flags, and uses 
-> them to select the transfer length for MODE SENSE queries of page 0x08 in 
-> sd.c as well as page 0x3f.
-> 
-> If you do accept the patch let me know, because a corresponding name 
-> change will be needed in the usb-storage driver at the same time.
+On Tue, 18 May 2004, Kurt Garloff wrote:
 
-Looks good to me, but James has to accept it.
+> On Tue, May 11, 2004 at 02:54:33PM -0500, James Bottomley wrote:
+> > On Tue, 2004-05-11 at 14:29, Guennadi Liakhovetski wrote:
+> > > I hoped the tmscsim 64-bit bugfix would somehow find its way into the
+> > > mainstream after 2.6. Does it still have a chance?
+> >
+> > The DC390 is a maintained driver:
+> >
+> > DC390/AM53C974 SCSI driver
+> > P:	Kurt Garloff
+> > M:	garloff@suse.de
+> > W:	http://www.garloff.de/kurt/linux/dc390/
+> > S:	Maintained
+> >
+> > You need to get the maintainer to approve acceptance.
+>
+> Granted ;-)
+>
+> Actually, I had discussed the patch before with Guennadi and agreed to
+> it. As I don't really have much time any more for it, I would suggest
+> that Guennadi takes over, if he wants to.
 
-PS: linux-scsi is apparently not sending anything out today.
+Well, Kurt, thanks for the offer. I am prepared and willing to do the work
+on supporting the driver, but I am, perhaps, not skilled enough to be a
+maintainer of a SCSI LDD. My knowledge of the SCSI protocol and the SCSI
+Linux subsystem is pretty limited. On one hand, the driver is little used,
+so, even if I badly break something it is not likely to cause major
+problems. On the other hand, I would feel more comfortable if, at least at
+the beginning, somebody would review my patches. Besides, it would be a
+good opportunity for me to really learn a bit more about SCSI, SCSI Linux
+driver, BIO,...  oh well...
 
--- Patrick Mansfield
+Thanks
+Guennadi
+---
+Guennadi Liakhovetski
+
+
