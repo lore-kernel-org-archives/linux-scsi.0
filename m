@@ -1,117 +1,172 @@
-From: Rusty Lynch <rusty@stinkycat.com>
-Subject: Re:[BUG][2.5.49 SCSI]Duplicate Proc Entries for SCSI
-Date: Tue, 26 Nov 2002 22:41:50 -0800
+From: Mike Anderson <andmike@us.ibm.com>
+Subject: [PATCH] scsi sysfs update 3
+Date: Tue, 26 Nov 2002 23:11:01 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <200211270641.gAR6foX11138@stinkycat.com>
+Message-ID: <20021127071100.GC1353@beaverton.ibm.com>
+Mime-Version: 1.0
+Content-Type: multipart/mixed; boundary="eAbsdosE1cNLO4uF"
 Return-path: <linux-scsi-owner@vger.kernel.org>
+Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
-To: patsman@us.ibm.com
-Cc: groudier@free.fr, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: wrlk@riede.org
 
-On Tue, 2002-11-26 at 14:24, Patrick Mansfield wrote:
-> Did you figure out anything? Was there anything of interest in your dmesg?
-> 
-> I tried out 2.5.49, and all scsi devices showed up just once, both for
-> the aic driver built into the kernel, and for qla driver built as a
-> module, with SCSI revision 2 and 3 devices attached to the qla.
-> 
-> Maybe it is specific to ide-scsi or the usb-scsi pseudo adapter drivers.
-> 
 
-I only see the duplicate entries when I have the "Probe All LUNs on
-each  SCI device (SCSI_MULTI_LUN) turned on.
+--eAbsdosE1cNLO4uF
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-To make things more complicated, my flash drive doesn't seem to be
-working (I have never got this cheap little flash drive to work on
-Linux and it just barely works on Windows), but cdrom is doing the
-same thing.
+I have attached an updated combined patch of my previously posted sysfs
+changes. 
 
-Here is what I see when I plug in usb flash reader:
-scsi logging level set to 0x00000100
-drivers/usb/core/hub.c: new USB device 00:1f.4-2.2, assigned address 3
-Product: USB to CF + SM Combo (LC1)
-Manufacturer: DataFab Systems Inc.
-SerialNumber: B574D25574
-scsi0 : SCSI emulation for USB Mass Storage devices
-scsi scan: INQUIRY to host 0 channel 0 id 0 lun 0
-scsi scan: 1st INQUIRY successful with code 0x0
-  Vendor: Datafab   Model: USB to CF + SM C  Rev: 0017
-  Type:   Direct-Access                      ANSI SCSI revision: 02
-scsi scan: host 0 channel 0 id 0 lun 0 name/id: ''
-scsi scan: Sequential scan of host 0 channel 0 id 0
-scsi scan: INQUIRY to host 0 channel 0 id 0 lun 1
-scsi scan: 1st INQUIRY successful with code 0x0
-  Vendor: Datafab   Model: USB to CF + SM C  Rev: 0017
-  Type:   Direct-Access                      ANSI SCSI revision: 02
-scsi scan: host 0 channel 0 id 0 lun 1 name/id: ''
-scsi scan: INQUIRY to host 0 channel 0 id 0 lun 2
-scsi scan: 1st INQUIRY failed with code 0x40000
-scsi scan: INQUIRY to host 0 channel 0 id 1 lun 0
-scsi scan: 1st INQUIRY failed with code 0x40000
-scsi scan: INQUIRY to host 0 channel 0 id 2 lun 0
-scsi scan: 1st INQUIRY failed with code 0x40000
-scsi scan: INQUIRY to host 0 channel 0 id 3 lun 0
-scsi scan: 1st INQUIRY failed with code 0x40000
-scsi scan: INQUIRY to host 0 channel 0 id 4 lun 0
-scsi scan: 1st INQUIRY failed with code 0x40000
-scsi scan: INQUIRY to host 0 channel 0 id 5 lun 0
-scsi scan: 1st INQUIRY failed with code 0x40000
-scsi scan: INQUIRY to host 0 channel 0 id 6 lun 0
-scsi scan: 1st INQUIRY failed with code 0x40000
-scsi scan: INQUIRY to host 0 channel 0 id 7 lun 0
-scsi scan: 1st INQUIRY failed with code 0x40000
+This patch is against linux-scsi.bkbits.net/scsi-misc-2.5
 
-If I turn off the multi lun option the I see the same
-output minus the:
-scsi scan: Sequential scan of host 0 channel 0 id 0
+This patch contains these updates:
+	- update to osst.c to support sysfs cleanups.
+	- oops fix in osst.c detach if no device attached. A better
+	  method than this quick fix is needed.
+	- removed scsi_bus_hotplug function do to bug and not really
+	  needed now as default gives path data. If needed in future can
+	  be added with better definition.
 
-... and the extra:
-  Vendor: Datafab   Model: USB to CF + SM C  Rev: 0017
-  Type:   Direct-Access                      ANSI SCSI revision: 02
-scsi scan: host 0 channel 0 id 0 lun 1 name/id: ''
-scsi scan: INQUIRY to host 0 channel 0 id 0 lun 2
+-andmike
+--
+Michael Anderson
+andmike@us.ibm.com
 
-This is one of those Compaq/SmartMedia combo drives so
-maybe that is screwing things up, except the cdrom does
-the same thing.
 
-Oh well, the cdrom appears to be working, so the duplicate /proc/scsi/scsi might just be cosmetic.
+--eAbsdosE1cNLO4uF
+Content-Type: application/octet-stream
+Content-Disposition: attachment; filename="00_scsi-sysfs-core-3.diff.gz"
+Content-Transfer-Encoding: base64
 
-	-rusty
+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
+D3uqHVQBawAA
 
-> Try turning on scsi scan logging before inserting the flash card via:
-> 
-> echo scsi log scan 4  >/proc/scsi/scsi
-> 
-> And send the output.
-> 
-> My single lun scsi 2 disks display the following, showing that
-> lun 1 is (correctly) not configured off of id 1 and id 2:
-> 
-> [ junk deleted ]
-> scsi scan: INQUIRY to host 2 channel 0 id 1 lun 0
-> scsi scan: 1st INQUIRY successful with code 0x0
-> scsi scan: 2nd INQUIRY successful with code 0x0
->   Vendor: SEAGATE   Model: ST39173F CLAR09   Rev: 351B
->   Type:   Direct-Access                      ANSI SCSI revision: 02
-> scsi scan: host 2 channel 0 id 1 lun 0 name/id: '32000002037109657'
-> scsi scan: Sequential scan of host 2 channel 0 id 1
-> scsi scan: INQUIRY to host 2 channel 0 id 1 lun 1
-> scsi scan: 1st INQUIRY successful with code 0x0
-> scsi scan: 2nd INQUIRY successful with code 0x0
-> scsi scan: peripheral qualifier of 3, no device added
-> scsi scan: INQUIRY to host 2 channel 0 id 2 lun 0
-> scsi scan: 1st INQUIRY successful with code 0x0
-> scsi scan: 2nd INQUIRY successful with code 0x0
->   Vendor: SEAGATE   Model: ST39173F CLAR09   Rev: 351B
->   Type:   Direct-Access                      ANSI SCSI revision: 02
-> scsi scan: host 2 channel 0 id 2 lun 0 name/id: '32000002037109db0'
-> scsi scan: Sequential scan of host 2 channel 0 id 2
-> scsi scan: INQUIRY to host 2 channel 0 id 2 lun 1
-> scsi scan: 1st INQUIRY successful with code 0x0
-> scsi scan: 2nd INQUIRY successful with code 0x0
-> scsi scan: peripheral qualifier of 3, no device added
-> [ lots of stuff deleted, as this fcp adapter goes up to id 255 ]
-> 
-> -- Patrick Mansfield
-
+--eAbsdosE1cNLO4uF--
