@@ -1,38 +1,41 @@
-From: Mike Anderson <andmike@us.ibm.com>
-Subject: Re: [BK PATCH] SCSI host num allocation improvement
-Date: Fri, 27 Feb 2004 08:33:41 -0800
+From: James Bottomley <James.Bottomley@steeleye.com>
+Subject: Re: FWD: [BK PATCH] SCSI host num allocation improvement
+Date: 27 Feb 2004 10:37:13 -0600
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040227163341.GB1424@beaverton.ibm.com>
-References: <20040226235412.GA819@phunnypharm.org> <20040226171928.750f5f6f.akpm@osdl.org> <20040226173743.2bf473b4.akpm@osdl.org> <20040227030428.GA707@phunnypharm.org>
+Message-ID: <1077899833.2157.82.camel@mulgrave>
+References: <1077842444.2662.123.camel@mulgrave>
+	<20040227124811.A32109@infradead.org> <1077894499.1806.14.camel@mulgrave>
+	<20040227151551.GK4019@phunnypharm.org> <1077895775.2157.22.camel@mulgrave>
+	 <20040227153247.GL4019@phunnypharm.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e35.co.us.ibm.com ([32.97.110.133]:18656 "EHLO
-	e35.co.us.ibm.com") by vger.kernel.org with ESMTP id S263039AbUB0Qef
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 27 Feb 2004 11:34:35 -0500
-Content-Disposition: inline
-In-Reply-To: <20040227030428.GA707@phunnypharm.org>
+Received: from stat1.steeleye.com ([65.114.3.130]:59613 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S263038AbUB0QhW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 27 Feb 2004 11:37:22 -0500
+In-Reply-To: <20040227153247.GL4019@phunnypharm.org>
 List-Id: linux-scsi@vger.kernel.org
 To: Ben Collins <bcollins@debian.org>
-Cc: Andrew Morton <akpm@osdl.org>, James.Bottomley@steeleye.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Cc: Christoph Hellwig <hch@infradead.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-Ben Collins [bcollins@debian.org] wrote:
->  static void scsi_host_cls_release(struct class_device *class_dev)
->  {
-> +	down(&host_num_lock);
-> +	idr_remove(&allocated_hosts, class_to_shost(class_dev)->host_no);
-> +	up(&host_num_lock);
->  	put_device(&class_to_shost(class_dev)->shost_gendev);
->  }
->  
+On Fri, 2004-02-27 at 09:32, Ben Collins wrote:
+> On the same token, if you hot plug/unplug a single device (not a host)
+> on the same host, you will already have this problem. This wont make the
+> problem any worse or better. Devices are more likely to get
+> plugged/unplugged anyway (well, in the case of usb/firewire you
+> plug/unplug a host/dev combination, but still).
 
-Should the idr_remove be done in scsi_host_dev_release instead? We
-really should not make this number available until everyone is done with
-this host.
+Simply having races is not an excuse for introducing more, particularly
+when they're under our control.
 
--andmike
---
-Michael Anderson
-andmike@us.ibm.com
+This represents a behaviour change in a stable kernel introducing a
+potential problem in hotplug and solving a fixable issue in a single
+user application tool.
+
+What I'm not yet convinced of is that the benefits outweigh the risks.
+
+James
+
 
