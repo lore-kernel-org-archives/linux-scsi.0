@@ -1,57 +1,104 @@
-From: Doug Ledford <dledford@redhat.com>
-Subject: Re: [linux-usb-devel] Re: inquiry in scsi_scan.c
-Date: Mon, 6 Jan 2003 17:23:22 -0500
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030106222322.GC29126@redhat.com>
-References: <UTC200301061918.h06JIjB21034.aeb@smtp.cwi.nl> <20030106112259.B13916@one-eyed-alien.net>
+From: "Cress, Andrew R" <andrew.r.cress@intel.com>
+Subject: RE: Re: inquiry in scsi_scan.c
+Date: Mon, 6 Jan 2003 14:30:56 -0800
+Sender: linux-usb-devel-admin@lists.sourceforge.net
+Message-ID: <A5974D8E5F98D511BB910002A50A66470580D4F6@hdsmsx103.hd.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20030106112259.B13916@one-eyed-alien.net>
+Content-Type: text/plain
+Return-path: <linux-usb-devel-admin@lists.sourceforge.net>
+Errors-To: linux-usb-devel-admin@lists.sourceforge.net
+List-Help: <mailto:linux-usb-devel-request@lists.sourceforge.net?subject=help>
+List-Post: <mailto:linux-usb-devel@lists.sourceforge.net>
+List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-devel>,
+	<mailto:linux-usb-devel-request@lists.sourceforge.net?subject=subscribe>
+List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-devel>,
+	<mailto:linux-usb-devel-request@lists.sourceforge.net?subject=unsubscribe>
+List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=linux-usb-devel>
+To: 'Matthew Dharm' <mdharm-scsi@one-eyed-alien.net>, Luben Tuikov <luben@splentec.com>
+Cc: Andries.Brouwer@cwi.nl, stern@rowland.harvard.edu, linux-scsi@vger.kernel.org, linux-usb-devel@lists.sourceforge.net
 List-Id: linux-scsi@vger.kernel.org
-To: Andries.Brouwer@cwi.nl, luben@splentec.com, stern@rowland.harvard.edu, linux-scsi@vger.kernel.org, linux-usb-devel@lists.sourceforge.net
 
-On Mon, Jan 06, 2003 at 11:22:59AM -0800, Matthew Dharm wrote:
+
+I think SCSI-Core should care about offsets 36-48, since that is where the
+serial number usually is returned.  Special error handling for emulated
+devices would be better than limiting the inquiry up front I think.
+
+Andy
+
+-----Original Message-----
+From: Matthew Dharm [mailto:mdharm-scsi@one-eyed-alien.net] 
+Sent: Monday, January 06, 2003 4:06 PM
+To: Luben Tuikov
+Cc: Andries.Brouwer@cwi.nl; stern@rowland.harvard.edu;
+linux-scsi@vger.kernel.org; linux-usb-devel@lists.sourceforge.net
+Subject: Re: [linux-usb-devel] Re: inquiry in scsi_scan.c
+
+
+I'm told this is a bad idea because there are some HBA which snoop the
+INQUIRY data.  Since I don't know how that snooping works, I can't comment
+further.
+
+Matt
+
+On Mon, Jan 06, 2003 at 03:49:08PM -0500, Luben Tuikov wrote:
+> Matthew Dharm wrote:
+> > 
+> > Perhaps the "best" fix here is to simply make scsi_scan.c only send 36
+byte
+> > inquiry requests if the bus is 'emulated'.  That would solve a world of
+> > problems....
 > 
-> The first case:  If the additional length indicates < 36 bytes, we should
-> never issue the second request (which is where this device choked).  This
-> should be a sanity check in scsi_scan.c, and it works for reasons I've
-> previously outlined.
-
-No, this should be fixed in usb code.  It's a hack, I know, but it's a 
-hack to work around the fact that usb devices are broken by and large much 
-more so than non-usb scsi devices.  Basically, the usb code has the 
-ability to tell that 36 bytes were actually transferred, so the usb code 
-should set the length byte in the return to max(actual_transfer - 5, 
-current_length_byte);  In actuality, other scsi HBAs that know how many 
-bytes were transferred by devices could do this as well, but they don't 
-need to because their SCSI devices aren't so braindead....
-
-> The second case:  This is a bad device.  A classic off-by-one error.  But
-> what can usb-storage do?  We don't know that the device is bad.  But,
-> focusing on this case, what happens?  Short data is returned... if the
-> resid field is set to indicate this, then scsi_scan.c should be able to do
-> something sane here.
-
-Yep, as my previous email, scsi_scan.c should simply ignore the extra byte 
-because we don't care about it in the least.
-
-> Perhaps the "best" fix here is to simply make scsi_scan.c only send 36 byte
-> inquiry requests if the bus is 'emulated'.  That would solve a world of
-> problems....
-
-Except that if a device *does* transfer 36 bytes and then lies and says it 
-only transferred 5 then we are missing information that might actually be 
-usefull, hence the reason to set the transfer length up to the real amount 
-transferred (and BTW, I would only do this for INQUIRY responses, for 
-anything else the device is simply too buggy to live if it lies about the 
-transfer length).
-
+> When scsi_scan.c does it's own scanning for SCSI Core, maybe it's best to
+> ignore 36 < INQUIRY_DATA_LEN < 57, since this is just vendor specific
+> data and SCSI Core is not interested in it.
+> 
+> In descriptive-C this looks like this:
+> 
+> </issue a 36 byte buffer INQUIRY/>
+> </now dissect:/>
+> 
+> int bytes_got = max(bytes_requested - cmd->resid, 0);
+> 
+> if (31 < buffer[4] && buffer[4] < 52) {
+> 	/* we don't care, do not issue another INQUIRY */	
+> else if (buffer[4] >= 52) {
+> 	bytes_requested = 5+buffer[4];
+> 	/* issue another INQUIRY to get the additional flags, */
+> 	/* plus any version descriptors if available */
+> 	</insert code here/>
+> 	bytes_got = max(bytes_requested - cmd->resid, 0);
+> }
+> 
+> if (bytes_got != buffer[4]+5) {
+> 	/* let's rely on the transport to have correctly set */
+> 	/* cmd->resid and report a broken device server */
+> 	</insert code here/>
+> }
+> 
+> /* Now we rely on bytes_got */
+> 
+> </rest of scanning code/>
+> 
+> -- 
+> Luben
+> 
 
 -- 
-  Doug Ledford <dledford@redhat.com>     919-754-3700 x44233
-         Red Hat, Inc. 
-         1801 Varsity Dr.
-         Raleigh, NC 27606
-  
+Matthew Dharm                              Home:
+mdharm-usb@one-eyed-alien.net 
+Maintainer, Linux USB Mass Storage Driver
+
+Would you mind not using our Web server? We're trying to have a game of 
+Quake here.
+					-- Greg
+User Friendly, 5/11/1998
+
+
+-------------------------------------------------------
+This sf.net email is sponsored by:ThinkGeek
+Welcome to geek heaven.
+http://thinkgeek.com/sf
+_______________________________________________
+linux-usb-devel@lists.sourceforge.net
+To unsubscribe, use the last form field at:
+https://lists.sourceforge.net/lists/listinfo/linux-usb-devel
