@@ -1,56 +1,62 @@
-From: Tommaso Moroni <tommaso.m@tiscalinet.it>
-Subject: extracting infos from struct scsi_cmnd
-Date: Sat, 27 Nov 2004 13:42:22 +0100
-Message-ID: <20041127124222.GA1200@abulafia>
+From: Jens Axboe <axboe@suse.de>
+Subject: Re: extracting infos from struct scsi_cmnd
+Date: Sat, 27 Nov 2004 16:48:49 +0100
+Message-ID: <20041127154849.GA24460@suse.de>
+References: <20041127124222.GA1200@abulafia>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from vsmtp3alice.tin.it ([212.216.176.143]:63360 "EHLO vsmtp3.tin.it")
-	by vger.kernel.org with ESMTP id S261203AbUK0MmY (ORCPT
+Received: from ns.virtualhost.dk ([195.184.98.160]:58505 "EHLO virtualhost.dk")
+	by vger.kernel.org with ESMTP id S261161AbUK0Psx (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 27 Nov 2004 07:42:24 -0500
-Received: from hope.hyperuranous (80.180.121.150) by vsmtp3.tin.it (7.0.027)
-        id 41A03E2F0029F5E7 for linux-scsi@vger.kernel.org; Sat, 27 Nov 2004 13:42:24 +0100
-Received: from tommaso by hope.hyperuranous with local (Exim 4.34)
-	id 1CY1uA-0000Jy-AF
-	for linux-scsi@vger.kernel.org; Sat, 27 Nov 2004 13:42:22 +0100
+	Sat, 27 Nov 2004 10:48:53 -0500
 Content-Disposition: inline
+In-Reply-To: <20041127124222.GA1200@abulafia>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org, tommaso.m@tiscalinet.it
 
-Hi!
+On Sat, Nov 27 2004, Tommaso Moroni wrote:
+> Hi!
+> 
+> I'm writing a module for the 2.6.9 kernel which tracks accesses on a
+> usb-storage device; in particular I'm interested in extracting from a
+> struct scsi_cmnd the data read/written and the associated sector. 
+> 
+> 
+> The code I'vr written till now looks like the following:
+> 
+> 
+> struct scsi_cmnd * cmd;
+> [...]
+> if (cmd->use_sg == 0)
+> {
+> 	buf = cmd->buffer;
+> 	buflen = cmd->bufflen;
+> 	sector = cmd->request->sector;
 
-I'm writing a module for the 2.6.9 kernel which tracks accesses on a usb-storage device;
-in particular I'm interested in extracting from a struct scsi_cmnd the data read/written 
-and the associated sector. 
+->request_bufflen and ->request_buffer.
 
+> } else {
+> 	struct scatterlist * sl = (struct scatterlist *) cmd->buffer;
+> 	for (i = 0; i < cmd->use_sg; i++)
+> 	{
+> 		buf = page_address(sl[i].page) + sl[i].offset;
+>                 buflen = sl[i].length;
+> 		/* sector? */
+> 	}
+> }
 
-The code I'vr written till now looks like the following:
+This only works on non-highmem pages, you should use kmap/kmap_atomic
+instead.
 
+> Is it correct?
+> Where can I find the sector involved in the operation if the
+> scatter-gather is used?
 
-struct scsi_cmnd * cmd;
-[...]
-if (cmd->use_sg == 0)
-{
-	buf = cmd->buffer;
-	buflen = cmd->bufflen;
-	sector = cmd->request->sector;
-} else {
-	struct scatterlist * sl = (struct scatterlist *) cmd->buffer;
-	for (i = 0; i < cmd->use_sg; i++)
-	{
-		buf = page_address(sl[i].page) + sl[i].offset;
-                buflen = sl[i].length;
-		/* sector? */
-	}
-}
+It's ->request->sector as well. The total length is just the sum of the
+sg elements.
 
-
-Is it correct?
-Where can I find the sector involved in the operation if the scatter-gather is used?
-
-
-Thank you in advance
 -- 
-Tommaso Moroni <tommaso.m@tiscalinet.it>
+Jens Axboe
+
