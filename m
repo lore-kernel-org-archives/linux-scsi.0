@@ -1,70 +1,66 @@
-From: Luben Tuikov <luben_tuikov@adaptec.com>
-Subject: Re: 2.6.6 Kernel + Adaptec aic7890/91 = Kernel panic
-Date: Wed, 04 Aug 2004 17:41:08 -0400
+From: brking@us.ibm.com
+Subject: [PATCH 01/16] ipr: New PCI IDs
+Date: Wed, 04 Aug 2004 17:31:32 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <411157F4.7070807@adaptec.com>
-References: <40C30644.2020307@dasralph.de> <166998953.1086771720@stonetable> <40C76B6F.3010103@dasralph.de> <123170000.1086819395@aslan.scsiguy.com> <41113ECF.3050506@dasralph.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Message-ID: <200408042231.i74MVXoo334442@westrelay02.boulder.ibm.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from magic.adaptec.com ([216.52.22.17]:27076 "EHLO magic.adaptec.com")
-	by vger.kernel.org with ESMTP id S267443AbUHDVlx (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Aug 2004 17:41:53 -0400
-In-Reply-To: <41113ECF.3050506@dasralph.de>
+Received: from e33.co.us.ibm.com ([32.97.110.131]:36770 "EHLO
+	e33.co.us.ibm.com") by vger.kernel.org with ESMTP id S267466AbUHDWbg
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 4 Aug 2004 18:31:36 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: Ralph Bergmann <ralph@dasralph.de>
-Cc: "Justin T. Gibbs" <gibbs@scsiguy.com>, linux-scsi@vger.kernel.org
-
-Taken off linux-scsi.
-
-Ralph Bergmann wrote:
-> Justin T. Gibbs wrote:
-> 
->  >>Justin T. Gibbs wrote:
->  >>
->  >>
->  >>>...  Can you provide the output of
->  >>>"lspci -vv -n" which will indicate the PCI ID information of your
->  >>>controller?
->  >>
->  >>
->  >>yes of course
->  >>
->  >>0000:02:01.0 Class 0100: 9005:0010
->  >>         Subsystem: 9005:a180
->  >
->  >
->  > Hmm.  Those IDs should be supported in the driver.  Can you add
->  > printk statements in aic7xxx_osm_pci.c just before each location
->  > where the driver returns "-ENODEV".  This should help narrow down
->  > why the driver is refusing to attach to the controller.  If I
->  > had to guess, I would say that pci_enable_device() is failing for
->  > some strange reason.
->  >
->  > --
->  > Justin
->  >
-> 
-> First of all I have to excuse, because you have to wait so long for my
-> answer. But I've got good news: the problem is partially fixed. I put
-> the scsi-adapter in another pci-slot (now a 32bit one in contradiction
-> to the 64bit one I used before), and now it's working. But I've got some
-> questions concerning this:
-> 
-> 1. should it have worked, no matter, which kind of pci-slot I use? When
-> i used the 2.4 kernel, there were no error-messages, but when i switched
-> to 2.6 kernel, I run into trouble as you know... So is it a
-> kernel-problem or a hardware-thing?
-> 
-> 2. And if you want to have the specific output nevertheless,  I would
-> prefer, that you send me the special adjusted file I have to use,
-> because I have no idea about kernel-programming at all...
-> 
-> Ralph
-> 
-
--- 
-Luben
+To: James.Bottomley@steeleye.com
+Cc: linux-scsi@vger.kernel.org, brking@us.ibm.com
 
 
+Add a couple new devices supported by the ipr device driver. This patch
+has already been sent to pciids-devel@lists.sourceforge.net.
+
+Signed-off-by: Brian King <brking@us.ibm.com>
+---
+
+ linux-2.6.8-rc3-bjking1/drivers/pci/pci.ids     |    5 +++++
+ linux-2.6.8-rc3-bjking1/include/linux/pci_ids.h |    1 +
+ 2 files changed, 6 insertions(+)
+
+diff -puN include/linux/pci_ids.h~ipr_new_pci_ids include/linux/pci_ids.h
+--- linux-2.6.8-rc3/include/linux/pci_ids.h~ipr_new_pci_ids	2004-08-04 09:57:34.000000000 -0500
++++ linux-2.6.8-rc3-bjking1/include/linux/pci_ids.h	2004-08-04 09:57:34.000000000 -0500
+@@ -438,6 +438,7 @@
+ #define	PCI_DEVICE_ID_IBM_405GP		0x0156
+ #define PCI_DEVICE_ID_IBM_SNIPE		0x0180
+ #define PCI_DEVICE_ID_IBM_SERVERAIDI960	0x01bd
++#define PCI_DEVICE_ID_IBM_CITRINE		0x028C
+ #define PCI_DEVICE_ID_IBM_GEMSTONE		0xB166
+ #define PCI_DEVICE_ID_IBM_MPIC_2	0xffff
+ 
+diff -puN drivers/pci/pci.ids~ipr_new_pci_ids drivers/pci/pci.ids
+--- linux-2.6.8-rc3/drivers/pci/pci.ids~ipr_new_pci_ids	2004-08-04 09:57:34.000000000 -0500
++++ linux-2.6.8-rc3-bjking1/drivers/pci/pci.ids	2004-08-04 09:57:34.000000000 -0500
+@@ -924,6 +924,7 @@
+ 	0180  Snipe chipset SCSI controller
+ 		1014 0241  iSeries 2757 DASD IOA
+ 		1014 0264  Quad Channel PCI-X U320 SCSI RAID Adapter (2780)
++		1014 02BD  Quad Channel PCI-X U320 DDR SCSI RAID Adapter (570F)
+ 	01a7  PCI-X to PCI-X Bridge
+ 	01bd  ServeRAID Controller
+ 		1014 01be  ServeRAID-4M
+@@ -946,6 +947,8 @@
+ 	0266  PCI-X Dual Channel SCSI
+ 	0268  Gigabit Ethernet-SX Adapter (PCI-X)
+ 	0269  10/100/1000 Base-TX Ethernet Adapter (PCI-X)
++	028C  Citrine chipset SCSI controller
++		1014 02BE  Dual Channel PCI-X U320 DDR SCSI RAID Adapter (571B)
+ 	0302  XA-32 chipset [Summit]
+ 	ffff  MPIC-2 interrupt controller
+ 1015  LSI Logic Corp of Canada
+@@ -2070,6 +2073,8 @@
+ 		1014 0242  iSeries 2872 DASD IOA
+ 		1014 0266  Dual Channel PCI-X U320 SCSI Adapter
+ 		1014 0278  Dual Channel PCI-X U320 SCSI RAID Adapter
++		1014 02D3  Dual Channel PCI-X U320 SCSI Adapter
++		1014 02D4  Dual Channel PCI-X U320 SCSI RAID Adapter
+ 	ba55  eXtremeRAID 1100 support Device
+ 	ba56  eXtremeRAID 2000/3000 support Device
+ 106a  Aten Research Inc
+_
