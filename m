@@ -1,51 +1,41 @@
-From: "David A. Lethe" <david@santools.com>
-Subject: Patch to scsi_scan.c to look for LUNs on XYRATEX RAID subsystems
-Date: Wed, 11 Jun 2003 08:58:56 -0500
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <11e901c33021$9a8928c0$6301a8c0@DLETHE>
+From: "Tony Battersby" <tonyb@cybernetics.com>
+Subject: [PATCH] make sym53c8xx_2 not reject autosense IWR
+Date: Wed, 11 Jun 2003 12:59:51 -0400
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <000c01c3303a$e0251970$e0019d89@cybernetics.com>
+Reply-To: <tonyb@cybernetics.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
+Content-Type: text/plain; charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
-To: linux-kernel@vger.kernel.org
-Cc: linux-scsi@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from cyborg.cybernetics.com ([206.246.200.18]:27653 "EHLO
+	cybernetics.com") by vger.kernel.org with ESMTP id S262861AbTFKQqG
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 11 Jun 2003 12:46:06 -0400
 List-Id: linux-scsi@vger.kernel.org
+To: groudier@free.fr
+Cc: linux-scsi@vger.kernel.org
 
-To all:
+This patch against recent 2.4.x makes sym53c8xx_2 silently ignore the Ignore
+Wide Residue message on autosense commands rather than rejecting it.  This
+makes the SCSI communications cleaner for targets that return an odd number
+of sense bytes.
 
-This contains a patch that must be made to the scsi_scan.c file which
-instructs the O/S to scan
-for LUNS on XYRATEX family RAID subsystems.
+Anthony J. Battersby
+Cybernetics
 
-I created the patch against the 2.4.20 kernel, but all things considered, I
-would like to get this single
-line of new text added to all 2.4 kernels, and all future kernels.
+--- drivers/scsi/sym53c8xx_2/sym_hipd.c.orig	Wed Jun 11 12:29:11 2003
++++ drivers/scsi/sym53c8xx_2/sym_hipd.c	Wed Jun 11 12:38:54 2003
+@@ -4641,7 +4641,10 @@
+ 		case M_IGN_RESIDUE:
+ 			if (DEBUG_FLAGS & DEBUG_POINTER)
+ 				sym_print_msg(cp,"ign wide residue", np->msgin);
+-			sym_modify_dp(np, tp, cp, -1);
++			if (cp->host_flags & HF_SENSE)
++				OUTL_DSP (SCRIPTA_BA (np, clrack));
++			else
++				sym_modify_dp(np, tp, cp, -1);
+ 			return;
+ 		case M_REJECT:
+ 			if (INB (HS_PRT) == HS_NEGOTIATE)
 
-Note that I only tested against the "RS" string. This is by design, as we
-have 12 different productID strings
-depending on the RAID engine and enclosure model. Just testing against RS
-will work for us as well as save
-valuable CPU cycles and kernel space for all.
-
-Any questions, comments, concerns should be addressed to me,
-david_lethe@us.xyratex.com
-or david@santools.com
-
-Phone number: 972-618-2265
-
-P.S. Acknowledgement that this have been incorporated will be appreciated.
-
-
-
-========================================================
---- linux-2.4/drivers/scsi/scsi_scan.c  2003-05-29 05:41:09.000000000 -0500
-+++ linux/drivers/scsi/scsi_scan.c      2003-06-11 08:00:50.000000000 -0500
-@@ -194,6 +194,7 @@
-        {"SGI", "TP9400", "*", BLIST_SPARSELUN | BLIST_LARGELUN},
-        {"SGI", "TP9500", "*", BLIST_SPARSELUN | BLIST_LARGELUN},
-        {"MYLEX", "DACARMRB", "*", BLIST_SPARSELUN | BLIST_LARGELUN},
-+       {"XYRATEX", "RS", "*", BLIST_SPARSELUN | BLIST_LARGELUN},
-
-        /*
-         * Must be at end of list...
