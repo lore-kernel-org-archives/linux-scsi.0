@@ -1,30 +1,75 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [Patch] Fix oops on rmmod usb-storage
-Date: Wed, 29 Sep 2004 18:22:04 +0100
+From: "Miller, Mike (OS Dev)" <mike.miller@hp.com>
+Subject: RE: patch so cciss stats are collected in /proc/stat
+Date: Wed, 29 Sep 2004 12:25:33 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040929182204.A15308@infradead.org>
-References: <415A67B8.2080003@suse.de> <20040929130332.A11785@infradead.org> <415AAB0F.2080802@suse.de> <20040929171251.GA5368@us.ibm.com> <1096478376.2123.32.camel@mulgrave>
+Message-ID: <D4CFB69C345C394284E4B78B876C1CF107DBFE10@cceexc23.americas.cpqcorp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from imladris.demon.co.uk ([193.237.130.41]:47108 "EHLO
-	phoenix.infradead.org") by vger.kernel.org with ESMTP
-	id S268728AbUI2RWO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 29 Sep 2004 13:22:14 -0400
-Content-Disposition: inline
-In-Reply-To: <1096478376.2123.32.camel@mulgrave>; from James.Bottomley@SteelEye.com on Wed, Sep 29, 2004 at 01:19:28PM -0400
+Received: from ztxmail04.ztx.compaq.com ([161.114.1.208]:55048 "EHLO
+	ztxmail04.ztx.compaq.com") by vger.kernel.org with ESMTP
+	id S268729AbUI2RZm convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 29 Sep 2004 13:25:42 -0400
+Content-class: urn:content-classes:message
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Mike Anderson <andmike@us.ibm.com>, Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@infradead.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Andrew Morton <akpm@osdl.org>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, Alan Stern <stern@rowland.harvard.edu>
+To: Andreas Haumer <andreas@xss.co.at>, arjanv@redhat.com
+Cc: Christoph Hellwig <hch@infradead.org>, mikem@beardog.cca.cpqcorp.net, marcelo.tosatti@cyclades.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, "Baker, Brian (ISS - Houston)" <brian.b@hp.com>
 
-On Wed, Sep 29, 2004 at 01:19:28PM -0400, James Bottomley wrote:
-> On Wed, 2004-09-29 at 13:12, Mike Anderson wrote:
-> > We may want to reconsider a method to distinguish unexpected removals
-> > from clean removals.
+> Arjan van de Ven wrote:
+> > On Wed, 2004-09-29 at 18:29, Miller, Mike (OS Dev) wrote:
+> >
+> >
+> >>>This patch has been reject about half a million times, why 
+> are people
+> >>>submitting it again and again?
+> >>
+> >>As I said in my mail, it's a customer driven issue. As long 
+> as customers rely on /proc/stat we'll keep trying. You can't 
+> tell a customer how he/she should be doing things on their systems.
+> >
+> >
+> > I doubt you have many customers using 2.4.28.... I suspect 
+> that by now
+> > the majority of people is either using an (ancient) 2.4 
+> vendor kernel or
+> > a 2.6 kernel. The very low number of reports on lkml about 
+> 2.4 seems to
+> > confirm that ...
 > 
-> Technically we have this: it's the recovery flag to scsi_host_cancel(). 
-> Unfortunately, scsi_remove_host doesn't have such a flag so it's always
-> set to zero at the moment.
+> "25% of accidents are caused by drunken drivers. That means
+> 75% of accidents are caused by drivers which did not drink.
+> So why keep people complaining about alcohol and driving?"
+> 
+> Is that what you mean? You must be kidding!
+> 
+> The majority of _our_ customers are using 2.4.x kernels
+> (x beeing in the range from 19 to 28pre3) and it looks like
+> it will stay that for quite a while...
+> 
+> - - andreas
+> 
+> PS: I know this is somewhat off topic, but I just want to raise
+> my voice if I get the impression kernel developers forget about
+> the "real world outside". I will shut up in a moment! Thank you!
 
-and ->remove for the bus drivers doesn't know either, so adding such
-a flag wouldn't help us much.
+Thank you, Andreas. I forgot to mention that very salient point!
+
+mikem
+
+> 
+> - --
+> Andreas Haumer                     | mailto:andreas@xss.co.at
+> *x Software + Systeme              | http://www.xss.co.at/
+> Karmarschgasse 51/2/20             | Tel: +43-1-6060114-0
+> A-1100 Vienna, Austria             | Fax: +43-1-6060114-71
+> -----BEGIN PGP SIGNATURE-----
+> Version: GnuPG v1.2.1 (GNU/Linux)
+> Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org
+> 
+> iD8DBQFBWum9xJmyeGcXPhERArzMAKCYhHvVvwpFObCzrPby2qY9u9MURQCgrelJ
+> BpeZ2tG8zw0po/5ByYKFuZk=
+> =RlQc
+> -----END PGP SIGNATURE-----
+> 
+> 
