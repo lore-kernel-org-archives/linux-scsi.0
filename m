@@ -1,38 +1,31 @@
-From: "Lee Xing" <lxing@Crossroads.com>
-Subject: RE: Help - can Linux SCSI sub-system add newly-attached devices to/dev on the fly?
-Date: Thu, 20 May 2004 13:04:10 -0500
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: Help - can Linux SCSI sub-system add newly-attached devices to/dev on the fly?
+Date: Thu, 20 May 2004 19:07:40 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <519672568F040C41B6FAC21ADF51B18FEFFE@mailnode1.commstor.crossroads.com>
+Message-ID: <20040520190740.A10863@infradead.org>
+References: <519672568F040C41B6FAC21ADF51B18FEFFE@mailnode1.commstor.crossroads.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from email.crossroads.com ([65.68.235.6]:42938 "HELO
-	email.crossroads.com") by vger.kernel.org with SMTP id S265234AbUETSEN convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 20 May 2004 14:04:13 -0400
-content-class: urn:content-classes:message
+Received: from phoenix.infradead.org ([213.86.99.234]:29710 "EHLO
+	phoenix.infradead.org") by vger.kernel.org with ESMTP
+	id S265235AbUETSHl (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 20 May 2004 14:07:41 -0400
+Content-Disposition: inline
+In-Reply-To: <519672568F040C41B6FAC21ADF51B18FEFFE@mailnode1.commstor.crossroads.com>; from lxing@Crossroads.com on Thu, May 20, 2004 at 01:04:10PM -0500
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
+To: Lee Xing <lxing@Crossroads.com>
 Cc: linux-scsi@vger.kernel.org
 
->> Mid-layer in lk 2.6 defines two functions, scsi_add_device() and scsi_add_host(),
->> that can be called by low-level drivers based on the document.  I'm not familiar 
->> with lk2.6.  Can low-level drivers in lk2.6 call scsi_add_device( ) to add 
->> newly-attached disks to mid-layer on the fly?
+> Does any one know if lk2.4 has **any other ways** low-level drivers can use to notify mid-layer the changes on the attached devices on the fly?
 
->Yes.  For an example take a look at drivers/ieee1394/sbp2.c.
+No.  In 2.4.x even the /proc/scsi/scsi variant from userspace is a bug
+strictly speaking because any touching of the device list will be racy.
 
->> Does lk2.4 provide a similar 
->> function to scsi_add_device( ) in lk2.6?
+If you want my 2cent as one of the persons who rewrote large portions of
+the scsi midlayer during 2.6 in that area:  don't use 2.4.x for any product
+that requires dynamic addition/removal of any devices.
 
->No.
-
-Thanks for the information (i.e. lk2.4 doesn't provide similar function to scsi_add_device() in lk2.6).
-
-Does any one know if lk2.4 has **any other ways** low-level drivers can use to notify mid-layer the changes on the attached devices on the fly?
-
-Thanks,
-
-
-Lee
+Btw, what kind of driver are you working on?  Judging from your mails and
+the Crossroads websistes I guess it's yet another iSCSI initiator.  In that
+case helping one of the existing projects might make more sense..
