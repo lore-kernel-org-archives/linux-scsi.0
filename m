@@ -1,110 +1,79 @@
-From: Bruno Cornec <Bruno.Cornec@hp.com>
-Subject: Re: megaraid driver (proposed patch)
-Date: Fri, 25 Mar 2005 20:59:22 +0100
-Message-ID: <20050325195922.GG8591@morley.grenoble.hp.com>
-References: <20050325182252.GA4268@morley.grenoble.hp.com> <1111775992.5692.25.camel@mulgrave> <20050325184718.GA15215@infradead.org> <1111777477.5692.29.camel@mulgrave> <20050325190732.GA15497@infradead.org> <1111778657.5692.40.camel@mulgrave>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCH scsi-misc-2.6 08/08] scsi: fix hot unplug sequence
+Date: Sat, 26 Mar 2005 06:43:42 +0900
+Message-ID: <4244860E.5090800@gmail.com>
+References: <20050323021335.960F95F8@htj.dyndns.org>	 <20050323021335.4682C732@htj.dyndns.org>	 <1111550882.5520.93.camel@mulgrave> <4240F5A9.80205@gmail.com>	 <20050323071920.GJ24105@suse.de> <1111591213.5441.19.camel@mulgrave>	 <20050323152550.GB16149@suse.de> <1111711558.5612.52.camel@mulgrave>	 <20050325031511.GA22114@htj.dyndns.org> <1111726965.5612.62.camel@mulgrave>	 <20050325053842.GA24499@htj.dyndns.org> <1111778388.5692.38.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Received: from grerelbul01.net.external.hp.com ([155.208.255.36]:15295 "EHLO
-	grerelbul01.net.external.hp.com") by vger.kernel.org with ESMTP
-	id S261771AbVCYUAG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 25 Mar 2005 15:00:06 -0500
-Content-Disposition: inline
-In-Reply-To: <1111778657.5692.40.camel@mulgrave>
+Content-Type: text/plain; charset=EUC-KR
+Content-Transfer-Encoding: 7bit
+Received: from wproxy.gmail.com ([64.233.184.203]:5868 "EHLO wproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S261819AbVCYVnr (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 25 Mar 2005 16:43:47 -0500
+Received: by wproxy.gmail.com with SMTP id 68so885334wra
+        for <linux-scsi@vger.kernel.org>; Fri, 25 Mar 2005 13:43:47 -0800 (PST)
+In-Reply-To: <1111778388.5692.38.camel@mulgrave>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <jejb@steeleye.com>, linux-megaraid-devel@dell.com, linux-scsi@vger.kernel.org
-Cc: Christoph Hellwig <hch@infradead.org>, Bruno Cornec <Bruno.Cornec@hp.com>, Linux Kernel <linux-kernel@vger.kernel.org>, tvignaud@mandrakesoft.com
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Jens Axboe <axboe@suse.de>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
 
-Hello,
 
-After a first attempt of discussion on lkml, I'd like to get your
-feedback on the following points.
+ Hello, James.
 
-I've noticed that since recent kernel versions, it's not possible
-anymore to use simultaneously new and old megaraid driver.
+James Bottomley wrote:
+> On Fri, 2005-03-25 at 14:38 +0900, Tejun Heo wrote:
+> 
+>> We have users of scsi_do_req() other than scsi_wait_req() and they
+>>use different done() functions to do different things.  I've checked
+>>other done functions and none uses contents inside the passed
+>>scsi_cmnd, so using a dummy command should be okay with them.  Am I
+>>missing something here?
+> 
+> 
+> Well ... the other users are supposed to be going away.  They're
+> actually all coded wrongly in some way or other ... perhaps I should
+> speed up the process.
 
-It seems to have been introduced by that changeset:
-http://linux.bkbits.net:8080/linux-2.5/diffs/drivers/scsi/megaraid/Kconfig.megar
-aid@1.1??nav=index.html|src/.|src/drivers|src/drivers/scsi|src/drivers/scsi/mega
-raid|hist/drivers/scsi/megaraid/Kconfig.megaraid
+ Sounds great.  :-)
 
-It particularly makes life of people developing kernel for distro
-difficult as it forces them to drop support for legacy hardware which is
-working just fine with 2.6, or to patch their own kernel build.
-As well it prevents simultaneous usage of new and old cards in the same
-system.
+>> Oh, and I would really appreciate if you can fill me in / give a
+>>pointer about the scsi_request/scsi_cmnd distinction.
+> 
+> The block layer speaks in terms of requests and the scsi layers in terms
+> of commands.  The scsi_request_fn() actually associates a request with a
+> command.  However, since SCSI uses the block layer for queueing, all the
+> internal scsi command submit paths have to use requests.  This is what a
+> scsi_request is.  The reason for the special casing is that we can't use
+> the normal REQ_CMD or REQ_BLOCK_PC paths because they need ULD
+> initialisation and back end processing.
 
-As notes by James Bottomley and Christoph Hellwig the best thing to do
-is probably to remove support for cards in the old driver that are still
-supported by the new driver.
+ What I meant was we could just use scsi_cmnd instead of scsi_request
+for commands.  Currently, we do the following for special commands.
 
-I'd like to propose a patch but looking at the code I have the following
-question: the card id 101E:1960 seems to be supported by the new driver
-as per the header of megaraid_mbox.c but in reality I was unable to boot
-my system which uses that precise card with the new driver.
+ 1. Allocate scsi_request and request (two are linked)
+ 2. Initialize scsi_request as needed
+ 3. queue the request
+ 4. the request is dispatched
+ 5. scsi_cmnd is initialized from scsi_request
+ 6. scsi_cmnd is executed
+ 7. result code and sense copied back to scsi_request
+ 8. request is completed
 
-Are they mistakes in the header file ? Should they be removed from the
-new driver (if they don't work) or from the old if they work ?
+ Instead, we can
 
-My current status is the following (just for discussion)
+ 1. Allocate scsi_cmnd and request (two are linked)
+ 2. Initialize scsi_cmnd as needed
+ 3. queue the request
+ 4. the request is dispatched
+ 5. scsi_cmnd is executed
+ 6. request is completed
 
-diff -Nru drivers/scsi/megaraid/Kconfig.megaraid
-drivers.new/scsi/megaraid/Kconfig.megaraid
---- drivers/scsi/megaraid/Kconfig.megaraid      Fri Mar 25 20:34:06 2005
-+++ drivers.new/scsi/megaraid/Kconfig.megaraid  Fri Mar 25 20:53:37 2005
-@@ -64,15 +64,12 @@
-        To compile this driver as a module, choose M here: the
-        module will be called megaraid_mbox
- 
--if MEGARAID_NEWGEN=n
- config MEGARAID_LEGACY
-        tristate "LSI Logic Legacy MegaRAID Driver"
-        depends on PCI && SCSI
-        help
-        This driver supports the LSI MegaRAID 418, 428, 438, 466, 762,
-490
--       and 467 SCSI host adapters. This driver also support the all
-        U320
--       RAID controllers
-+       and 467 SCSI host adapters.
- 
-        To compile this driver as a module, choose M here: the
-        module will be called megaraid
--endif
-diff -Nru drivers/scsi/megaraid.c drivers.new/scsi/megaraid.c
---- drivers/scsi/megaraid.c     Fri Mar 25 20:28:29 2005
-+++ drivers.new/scsi/megaraid.c Fri Mar 25 20:57:25 2005
-@@ -5033,12 +5033,6 @@
- }
- 
- static struct pci_device_id megaraid_pci_tbl[] = {
--       {PCI_VENDOR_ID_DELL, PCI_DEVICE_ID_DISCOVERY,
--               PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
--       {PCI_VENDOR_ID_DELL, PCI_DEVICE_ID_PERC4_DI,
--               PCI_ANY_ID, PCI_ANY_ID, 0, 0, BOARD_64BIT},
--       {PCI_VENDOR_ID_LSI_LOGIC, PCI_DEVICE_ID_PERC4_QC_VERDE,
--               PCI_ANY_ID, PCI_ANY_ID, 0, 0, BOARD_64BIT},
-        {PCI_VENDOR_ID_AMI, PCI_DEVICE_ID_AMI_MEGARAID,
-                PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
-        {PCI_VENDOR_ID_AMI, PCI_DEVICE_ID_AMI_MEGARAID2,
-diff -Nru drivers/scsi/megaraid.h drivers.new/scsi/megaraid.h
---- drivers/scsi/megaraid.h     Fri Mar 25 20:28:25 2005
-+++ drivers.new/scsi/megaraid.h Fri Mar 25 20:57:03 2005
-@@ -73,10 +73,6 @@
- #define PCI_DEVICE_ID_AMI_MEGARAID3    0x1960
- #endif
- 
--#define PCI_DEVICE_ID_DISCOVERY                0x000E
--#define PCI_DEVICE_ID_PERC4_DI         0x000F
--#define PCI_DEVICE_ID_PERC4_QC_VERDE   0x0407
--
- /* Sub-System Vendor IDs */
- #define        AMI_SUBSYS_VID                  0x101E
- #define DELL_SUBSYS_VID                        0x1028
+ As the latter seemed more straight-forward to me, I was wondering if
+there were reasons that I wasn't aware of.
+
+ Thanks.
 
 -- 
-Linux Solution Consultant   /   Open Source Evangelist   \    HP C&I EMEA ISG
-HP/Intel Solution Center http://hpintelco.net Hewlett-Packard Grenoble/France
-Des infos sur Linux?  http://www.HyPer-Linux.org      http://www.hp.com/linux
-La musique ancienne?  http://www.musique-ancienne.org http://www.medieval.org
+tejun
+
