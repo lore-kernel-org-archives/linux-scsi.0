@@ -1,26 +1,47 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: [update] scsi changes in 2.4 kernel series
-Date: Wed, 20 Nov 2002 21:30:29 +1100
+From: "didier" <didier@ece.gatech.edu>
+Subject: RE: Pb between an UltraTrak SX8000 and an Adaptec 29160
+Date: Wed, 20 Nov 2002 08:53:07 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3DDB6445.2040200@torque.net>
-Reply-To: dougg@torque.net
+Message-ID: <000b01c2909c$28370eb0$13e2cf82@darkwolf>
+References: <1037626683.7486.10.camel@irongate.swansea.linux.org.uk>
+Reply-To: <didier@ece.gatech.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain;
+	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from torque.net (dm1-14.triode.net.au [202.147.125.14])
-	by iggy.triode.net.au (8.11.6/8.11.6) with ESMTP id gAKAUZA28451
-	for <linux-scsi@vger.kernel.org>; Wed, 20 Nov 2002 21:30:36 +1100
+In-Reply-To: <1037626683.7486.10.camel@irongate.swansea.linux.org.uk>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: 'Alan Cox' <alan@lxorguk.ukuu.org.uk>
+Cc: "'Justin T. Gibbs'" <gibbs@scsiguy.com>, linux-scsi@vger.kernel.org
 
-Finally got around to updating the SCSI-2.4-HOWTO
-document (now in xml rather than sgml). My website
-is updated and a copy has been sent to tldp.
 
-This page tracks major changes in the 2.4 series
-and has new entries for lk 2.4.19:
-http://www.torque.net/scsi/SCSI-2.4-HOWTO/apbs06.html
 
-Doug Gilbert
+
+> Linux 2.4.x doesnt support single volumes over 1Tb. Thats fixed in 2.5
+
+Doh. My mistake.
+
+However I am still experiencing some weird behaviour even with small
+Raid5 Array.
+
+I have recreated a new Raid 5 array with 4 drives (size = 558GB,
+CHS map = 72944/254/63).
+
+Nov 20 08:38:49 dagdhasrv kernel: SCSI device sda: 1171874688 
+                          512-byte hdwr sectors (-499511 MB)
+                                                 ^^^^^^^^^^^
+                                
+Nov 20 08:38:49 dagdhasrv kernel:  sda: sda1
+
+Nov 20 08:43:45 dagdhasrv kernel: ^INo terminal CRC packet recevied
+Nov 20 08:43:45 dagdhasrv kernel: (scsi0:A:0:0): parity error detected
+in Data-out phase. SEQADDR(0x8a) SCSIRATE(0xc2) 
+Nov 20 08:43:45 dagdhasrv kernel: ^INo terminal CRC packet recevied
+Nov 20 08:43:45 dagdhasrv kernel: (scsi0:A:0:0): parity error detected
+in Data-out phase. SEQADDR(0x55) SCSIRATE(0xc2) 
+
+Any idea ?
+
+Thanks - Didier
 
