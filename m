@@ -1,27 +1,35 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: Returned info from mid-level to low-level driver
-Date: Mon, 10 May 2004 16:18:29 +0100
+From: Matthew Wilcox <willy@debian.org>
+Subject: Re: [(re)Announce] Emulex LightPulse Device Driver
+Date: Mon, 10 May 2004 17:34:58 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040510161829.A3856@infradead.org>
-References: <519672568F040C41B6FAC21ADF51B18FEFE7@mailnode1.commstor.crossroads.com>
+Message-ID: <20040510163458.GD19144@parcelfarce.linux.theplanet.co.uk>
+References: <3356669BBE90C448AD4645C843E2BF28034F92F0@xbl.ma.emulex.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from phoenix.infradead.org ([213.86.99.234]:58892 "EHLO
-	phoenix.infradead.org") by vger.kernel.org with ESMTP
-	id S264762AbUEJPSa (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 10 May 2004 11:18:30 -0400
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:31376 "EHLO
+	www.linux.org.uk") by vger.kernel.org with ESMTP id S264856AbUEJQfA
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 10 May 2004 12:35:00 -0400
 Content-Disposition: inline
-In-Reply-To: <519672568F040C41B6FAC21ADF51B18FEFE7@mailnode1.commstor.crossroads.com>; from lxing@Crossroads.com on Mon, May 10, 2004 at 10:15:36AM -0500
+In-Reply-To: <3356669BBE90C448AD4645C843E2BF28034F92F0@xbl.ma.emulex.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Lee Xing <lxing@Crossroads.com>
-Cc: linux-scsi@vger.kernel.org
+To: "Smart, James" <James.Smart@Emulex.com>
+Cc: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>
 
-On Mon, May 10, 2004 at 10:15:36AM -0500, Lee Xing wrote:
-> Thanks for the info.  
-> 
-> I guess it probably won't be possible either for the low-level driver to specify which sdx/sgx special file to use for a registered disk.  Can some one confirm or correct this please?
+On Sun, May 09, 2004 at 12:33:35AM -0400, Smart, James wrote:
+> The source for the driver can be downloaded from it's project page on source
+> forge - http://sourceforge.net/projects/lpfcxxxx/ . Be sure to download the
+> 20040507 snapshot - and the version for the 2.6 kernel.
 
-sd or sg will always assign the first free device number to a newly
-detected lun, so no, there's no way to control it.
+You might want to consider changing the name of this driver.  aic7xxx
+trips a number of spamfilters, so maybe just lpfc would be a good name
+for it?
 
+-- 
+"Next the statesmen will invent cheap lies, putting the blame upon 
+the nation that is attacked, and every man will be glad of those
+conscience-soothing falsities, and will diligently study them, and refuse
+to examine any refutations of them; and thus he will by and by convince 
+himself that the war is just, and will thank God for the better sleep 
+he enjoys after this process of grotesque self-deception." -- Mark Twain
