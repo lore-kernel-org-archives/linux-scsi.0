@@ -1,28 +1,29 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH, 2.6] tmscsim - no internal command-queuing
-Date: Thu, 19 Feb 2004 15:13:33 +0000
+From: Patrick Mansfield <patmans@us.ibm.com>
+Subject: Re: Patches to add support for Cloverleaf SCSI devices
+Date: Thu, 19 Feb 2004 08:23:53 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040219151333.A24006@infradead.org>
-References: <20040201111726.A14042@infradead.org> <Pine.LNX.4.44.0402032337230.3772-100000@poirot.grange>
+Message-ID: <20040219082353.A30080@beaverton.ibm.com>
+References: <200402191509.41289.Cyril.Plisko@CloverleafComm.COM>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from phoenix.infradead.org ([213.86.99.234]:7173 "EHLO
-	phoenix.infradead.org") by vger.kernel.org with ESMTP
-	id S267395AbUBSPNl (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 19 Feb 2004 10:13:41 -0500
+Received: from e6.ny.us.ibm.com ([32.97.182.106]:4059 "EHLO e6.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S267343AbUBSQYb (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 19 Feb 2004 11:24:31 -0500
 Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.44.0402032337230.3772-100000@poirot.grange>; from g.liakhovetski@gmx.de on Tue, Feb 03, 2004 at 11:41:43PM +0100
+In-Reply-To: <200402191509.41289.Cyril.Plisko@CloverleafComm.COM>; from Cyril.Plisko@CloverleafComm.COM on Thu, Feb 19, 2004 at 03:09:41PM +0200
 List-Id: linux-scsi@vger.kernel.org
-To: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, Kurt Garloff <kurt@garloff.de>
+To: Cyril Plisko <Cyril.Plisko@CloverleafComm.COM>
+Cc: linux-scsi@vger.kernel.org
 
-> Ouch. Whereas the rest are either rather intelligent things I didn't know
-> about, or something I didn't want / dare to modify without a burning need,
-> this is definitely just a plain simple bug - I did see it was a noop, and
-> I did think at some point to preserve its consistency, until I forgot
-> about it:-)
+On Thu, Feb 19, 2004 at 03:09:41PM +0200, Cyril Plisko wrote:
+> Hello,
+> 
+> Attached are patches for linux-2.4 and -2.6 series to add support
+> for Cloverleaf SCSI devices.
 
-Kurt, do you have any opinion on those patches?  I'd love to see them going
-in for 2.6.4
+Does REPORT LUN work for the device? If so you do not need a patch for
+2.6.
 
+-- Patrick Mansfield
