@@ -1,39 +1,62 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: Request for review of Linux iSCSI driver version 4.0.0.1
-Date: Wed, 19 Nov 2003 14:48:09 +0000
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20031119144809.A13541@infradead.org>
-References: <200310231734.10263.krmurthy@cisco.com> <20031027153932.A16679@infradead.org> <03111920183201.15831@naveenb-lnx.cisco.com>
+From: James Bottomley <James.Bottomley@steeleye.com>
+Subject: Re: Re: Unaligned scatter-gather buffers and
+	usb-storage
+Date: 19 Nov 2003 08:58:22 -0600
+Sender: linux-usb-devel-admin@lists.sourceforge.net
+Message-ID: <1069253904.10768.13.camel@mulgrave>
+References: <20031110095914.B22518@beaverton.ibm.com>
+	<20031118143720.A6411@beaverton.ibm.com> <20031119084729.GA1106@suse.de>
+	<200311191401.34540.oliver@neukum.org> <20031119130400.GG1106@suse.de>
+	<1069252642.10768.7.camel@mulgrave>  <20031119143901.GI1106@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pub234.cambridge.redhat.com ([213.86.99.234]:61192 "EHLO
-	phoenix.infradead.org") by vger.kernel.org with ESMTP
-	id S264110AbTKSOsK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 19 Nov 2003 09:48:10 -0500
-Content-Disposition: inline
-In-Reply-To: <03111920183201.15831@naveenb-lnx.cisco.com>; from naveenb@cisco.com on Wed, Nov 19, 2003 at 08:18:32PM +0530
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-usb-devel-admin@lists.sourceforge.net>
+In-Reply-To: <20031119143901.GI1106@suse.de>
+Errors-To: linux-usb-devel-admin@lists.sourceforge.net
+List-Help: <mailto:linux-usb-devel-request@lists.sourceforge.net?subject=help>
+List-Post: <mailto:linux-usb-devel@lists.sourceforge.net>
+List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-devel>,
+	<mailto:linux-usb-devel-request@lists.sourceforge.net?subject=subscribe>
+List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-devel>,
+	<mailto:linux-usb-devel-request@lists.sourceforge.net?subject=unsubscribe>
+List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=linux-usb-devel>
+To: Jens Axboe <axboe@suse.de>
+Cc: Oliver Neukum <oliver@neukum.org>, Patrick Mansfield <patmans@us.ibm.com>, Alan Stern <stern@rowland.harvard.edu>, Douglas Gilbert <dougg@torque.net>, SCSI development list <linux-scsi@vger.kernel.org>, USB development list <linux-usb-devel@lists.sourceforge.net>
 List-Id: linux-scsi@vger.kernel.org
-To: Naveen Burmi <naveenb@cisco.com>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, davmyers@cisco.com
 
-On Wed, Nov 19, 2003 at 08:18:32PM +0530, Naveen Burmi wrote:
-> On Monday 27 October 2003 09:09 pm, Christoph Hellwig wrote:
+On Wed, 2003-11-19 at 08:39, Jens Axboe wrote:
+> > but, regardless, the queue is already set up (for all devices, including
+> > st) in either slave_alloc, or slave_configure, so you could call the
+> > alignment setting routine there.
 > 
-> > iscsi-probe.c:
-> > 	- the whole iscsi_do_cmnd use looks very very strange.  
+> That was my point, yes.
+
+I know, just driving it home.  I'll hand back the reins now...
+
 > 
-> After a device gets detected by iSCSI LLD, it uses iscsi_do_cmnd to send scsi 
-> commands to that device even before registering it with the scsi mid-layer.
->  
-> For example user can configure in iscsi LLD configuration (iscsi.conf) file 
-> what various LUNs of a particular target needs to be activated. To acheive 
-> this we need to execute REPORT LUN command on target, to find out what 
-> various luns are present and selectively issue scsi_add_device for luns that 
-> needs to be activated.
+> > Alternatively, we could add this as yet another parameter to the host
+> > and template structures.  Any preferences?
+> 
+> I suppose you have to, if you want LLD to be able to pass it down.
 
-Couldn't you just use scsi_scan_host_selected from scsi_scan.c for that
-if it was exported?  We already have all that big and perfectly multi-lun
-capable probing code in the scsi midlayer and it would be a shame to not
-use it.
+Well, what I was fishing for: Is this property useful enough to want
+every device driver writer to think about it (i.e. document and place in
+the template),  or is it rare enough that it should only be accessible
+to those who know what they're doing (via the direct block queue
+interfaces in slave_alloc/configure)?
 
+James
+
+
+
+
+-------------------------------------------------------
+This SF.net email is sponsored by: SF.net Giveback Program.
+Does SourceForge.net help you be more productive?  Does it
+help you create better code?  SHARE THE LOVE, and help us help
+YOU!  Click Here: http://sourceforge.net/donate/
+_______________________________________________
+linux-usb-devel@lists.sourceforge.net
+To unsubscribe, use the last form field at:
+https://lists.sourceforge.net/lists/listinfo/linux-usb-devel
