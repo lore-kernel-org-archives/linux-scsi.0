@@ -1,31 +1,41 @@
-From: Patrick Mansfield <patmans@us.ibm.com>
+From: Alan Stern <stern@rowland.harvard.edu>
 Subject: Re: [PATCH/RFT] mode sense madness always use page 8
-Date: Thu, 30 Oct 2003 10:25:28 -0800
+Date: Thu, 30 Oct 2003 13:56:36 -0500 (EST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20031030102528.A7468@beaverton.ibm.com>
-References: <Pine.LNX.4.44L0.0310301004010.852-100000@ida.rowland.org> <1067531731.4250.11.camel@pathost1.iomegacorp.com> <20031030091808.A6781@beaverton.ibm.com> <1067535485.6411.42.camel@pathost1.iomegacorp.com> <20031030100501.A7250@beaverton.ibm.com> <1067537697.1133.131.camel@ronald.kuetemeier.com>
+Message-ID: <Pine.LNX.4.44L0.0310301351380.1440-100000@ida.rowland.org>
+References: <20031030100501.A7250@beaverton.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e1.ny.us.ibm.com ([32.97.182.101]:5330 "EHLO e1.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S262745AbTJ3S0i (ORCPT
+Received: from ida.rowland.org ([192.131.102.52]:17668 "HELO ida.rowland.org")
+	by vger.kernel.org with SMTP id S262774AbTJ3S4i (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 30 Oct 2003 13:26:38 -0500
-Content-Disposition: inline
-In-Reply-To: <1067537697.1133.131.camel@ronald.kuetemeier.com>; from ronald@kuetemeier.com on Thu, Oct 30, 2003 at 11:14:57AM -0700
+	Thu, 30 Oct 2003 13:56:38 -0500
+In-Reply-To: <20031030100501.A7250@beaverton.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Ronald Kuetemeier <ronald@kuetemeier.com>
-Cc: Pat LaVarre <p.lavarre@ieee.org>, stern@rowland.harvard.edu, linux-scsi@vger.kernel.org, usb-storage@one-eyed-alien.net, james.bottomley@steeleye.com
+To: Patrick Mansfield <patmans@us.ibm.com>
+Cc: Pat LaVarre <p.lavarre@ieee.org>, ronald@kuetemeier.com, linux-scsi@vger.kernel.org, usb-storage@one-eyed-alien.net, james.bottomley@steeleye.com
 
-On Thu, Oct 30, 2003 at 11:14:57AM -0700, Ronald Kuetemeier wrote:
-> Patrick,
-> should I leave the prev. scsi.h patch in or take it out before this try?
-> BTW: I will be off for the rest of the week, but will give you feedback
-> on this one today ( I hope).
-> Ronald
+On Thu, 30 Oct 2003, Patrick Mansfield wrote:
 
-Leave it in, it will hopefully not matter. I ran without it, mainly so I
-could trivially get a clean patch, I am not good at managing patch
-collections.
+> Here's a patch, per Pat Lavarre's suggestion, this can't go in without
+> others verifying and testing it, and without input or comment from others
+> (at least James).
 
--- Patrick Mansfield
+Why bother to test and shorten len in __scsi_mode_sense() if the callers 
+have already taken care of that?  Right now the only users of 
+__scsi_mode_sense() are the read-write-flag and cache-type routines in 
+sd.c, and your patch makes them use the values you want for len.  If in 
+the future other routines decide to call __scsi_mode_sense(), they might 
+not appreciate having len changed out from under them.
+
+> Again no USB testing here, tested on 2 sets of SPI attached disks, and 2
+> sets of FCP attached disks. It really needs testing on removable media to
+> actually hit the write protect check.
+
+I am very doubtful that this will work, or rather that it will work with
+all devices.  I've seen _lots_ of reports of USB devices that can't handle
+page 8, with all sorts of combinations of values for len attempted.
+
+Alan Stern
+
