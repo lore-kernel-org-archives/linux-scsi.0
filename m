@@ -1,46 +1,106 @@
-From: Mike Anderson <andmike@us.ibm.com>
-Subject: Re: [Patch] Fix oops on rmmod usb-storage
-Date: Wed, 29 Sep 2004 10:52:30 -0700
+From: Luben Tuikov <luben_tuikov@adaptec.com>
+Subject: Re: BUG: CD driver sends command during host removal
+Date: Wed, 29 Sep 2004 14:02:14 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040929175230.GC5368@us.ibm.com>
-References: <415A67B8.2080003@suse.de> <20040929130332.A11785@infradead.org> <415AAB0F.2080802@suse.de> <20040929171251.GA5368@us.ibm.com> <1096478376.2123.32.camel@mulgrave> <20040929182204.A15308@infradead.org> <20040929173642.GB5368@us.ibm.com> <20040929183858.A15586@infradead.org>
+Message-ID: <415AF8A6.2080705@adaptec.com>
+References: <Pine.LNX.4.44L0.0409291239250.1167-100000@ida.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e31.co.us.ibm.com ([32.97.110.129]:45192 "EHLO
-	e31.co.us.ibm.com") by vger.kernel.org with ESMTP id S268755AbUI2Rw7
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 29 Sep 2004 13:52:59 -0400
-Content-Disposition: inline
-In-Reply-To: <20040929183858.A15586@infradead.org>
+Received: from magic.adaptec.com ([216.52.22.17]:12171 "EHLO magic.adaptec.com")
+	by vger.kernel.org with ESMTP id S268752AbUI2SCb (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 29 Sep 2004 14:02:31 -0400
+In-Reply-To: <Pine.LNX.4.44L0.0409291239250.1167-100000@ida.rowland.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, Hannes Reinecke <hare@suse.de>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Andrew Morton <akpm@osdl.org>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, Alan Stern <stern@rowland.harvard.edu>
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: SCSI development list <linux-scsi@vger.kernel.org>, Mohammed Sameer <uniball@gmx.net>, USB users list <linux-usb-users@lists.sourceforge.net>
 
-Christoph Hellwig [hch@infradead.org] wrote:
-> Well, we're certainly not going to change the scsi_remove_host signature,
-> but we could add a separate one.
+Alan Stern wrote:
+> 
+>>>Next usb-storage called scsi_remove_host().  Apparently this caused some
+>>>component of the CD driver to queue a command:
+> 
+> 
+> This sounds like a bug, by the way.  Commands shouldn't be queued because 
+> of a call to scsi_remove_host!
 
-No we would not want to change the signature of scsi_remove_host. That
-is why I tried to come up with the more complicated patch previously,
-but as you state below it would be better if the function was more
-foolproof
+Yes.
+
+>>>usb-storage accepted the command but then ignored it because the host was
+>>>in process of removal.  Should the queuecommand routine have rejected the
+>>>command?
+>>
+>>Yes, if the service delivery subsystem (SDS) knows that the device is gone
+>>and the command wouldn't be delivered, it should *not* "ignore" the
+>>command, but return it with error.
+>>
+>>I.e. if the LLDD has active/most recent knowledge about the device
+>>whereto the command is destined, it should act on that and return
+>>an appropriate error.  After all, this is what a properly implemented
+>>SDS would do.
+> 
+> 
+> According to Documentation/scsi/scsi_mid_low_api.txt, the only possible 
+> error returns are SCSI_MLQUEUE_DEVICE_BUSY and SCSI_MLQUEUE_HOST_BUSY.  
+> Neither is appropriate; should the second one be returned?
+
+I believe internally SCSI Core returns DID_ERROR.
 
 > 
-> But I don't like that change at all as we would still have that problem
-> with all driver that don't have a way to magically find out.  We should
-> really try to make scsi_remove_host foolprof.
+>>> This would involve a race, because it's possible for
+>>>queuecommand to accept a command and then scsi_remove_host() to be called
+>>>before the command is carried out.
+>>
+>>If the command hasn't been carried out, then delivery would fail and SDS
+>>would return the appropriate error back to SCSI Core.
 > 
+> 
+> How?  The SCSI core deallocates the scsi_cmnd before the SDS has a chance 
+> to return anything.
 
-Well I believe the issue is not that we sent the command. It is that the
-command will not be processed and we start up the error handler. We
-could know that we are in the context of scsi_remove_host (possibly with
-a state change or other method) and do not start of the error handler. We
-would just try to send then and then cancel them with the call to
-scsi_host_cancel in scsi_remove_host post the call to scsi_forget_host.
+Hmm, once queuecommand() has been called, SCSI Core *should NOT* touch
+the struct command until the LLDD calls scsi_done() or it times
+out and ownership is given back indirectly via the appropriate
+return result of the times_out() function.
 
--andmike
---
-Michael Anderson
-andmike@us.ibm.com
+>>Where *was* the command?  From the point of time when queuecommand() is
+>>called until scsi_done() is called, the command belongs to the LLDD.
+>>It should honor any TMF, regardless of the _state_ of the task.
+> 
+> 
+> If the command belongs to the LLDD, why does scsi_remove_host do the
+> following:
+> 
+> 	calls scsi_host_cancel,
+> 	which calls scsi_device_cancel_cb for each device,
+> 	which calls scsi_device_cancel,
+> 	which calls scsi_finish_command for each active command,
+> 	which passes the command back to the upper layer
+> 
+> Either there's a bug in the host removal sequence, or else the LLDD 
+> doesn't own any requests once scsi_remove_host has been called.
+
+Ah, definitely sounds like a bug -- the LLDD has not been given
+a chance to "return" the struct command.
+
+One thing I wanted to point out is that in scsi_remove_host()
+the _very_ first thing which should be done is setting
+the proper shost_state, SHOST_DEL, which should imply
+SHOST_CANCEL (by virtue of meaning), as opposed to "doubly"
+setting it.
+
+_Thought_ experiment: is it possibe to "catch" a command between
+a non-canceled host but canceled device (of that host)?
+
+So, first the host state is set to "cancelled", then each
+device is set accordingly, then commands sent to each device
+are "recovered" (all this top->down); and then
+the resources freed in opposite order: commands, devices,
+hosts.  This may involve waiting for the LLDD to respond
+in the recovery process.
+
+	Luben
+
 
