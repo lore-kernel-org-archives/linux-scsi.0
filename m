@@ -1,25 +1,25 @@
 From: Alex Aizman <itn780@yahoo.com>
-Subject: [ANNOUNCE 3/6] Open-iSCSI High-Performance Initiator for Linux
-Date: Sun, 06 Mar 2005 23:15:20 -0800
-Message-ID: <422BFF88.50205@yahoo.com>
+Subject: [ANNOUNCE 4/6] Open-iSCSI High-Performance Initiator for Linux
+Date: Sun, 06 Mar 2005 23:15:56 -0800
+Message-ID: <422BFFAC.6090509@yahoo.com>
 Mime-Version: 1.0
 Content-Type: multipart/mixed;
- boundary="------------000906040700070605030506"
-Received: from smtp111.mail.sc5.yahoo.com ([66.163.170.9]:64185 "HELO
-	smtp111.mail.sc5.yahoo.com") by vger.kernel.org with SMTP
-	id S261667AbVCGHPv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 7 Mar 2005 02:15:51 -0500
+ boundary="------------050606000201070809070804"
+Received: from smtp015.mail.yahoo.com ([216.136.173.59]:40624 "HELO
+	smtp015.mail.yahoo.com") by vger.kernel.org with SMTP
+	id S261669AbVCGHQ0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 7 Mar 2005 02:16:26 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: linux-kernel@vger.kernel.org
 
 This is a multi-part message in MIME format.
---------------000906040700070605030506
+--------------050606000201070809070804
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 
-          drivers/scsi/Kconfig changes.
+          drivers/scsi/Makefile changes.
 
           Signed-off-by: Alex Aizman <itn780@yahoo.com>
           Signed-off-by: Dmitry Yusupov <dmitry_yus@yahoo.com>
@@ -32,61 +32,24 @@ Content-Transfer-Encoding: 7bit
 
 
 
---------------000906040700070605030506
+--------------050606000201070809070804
 Content-Type: text/plain;
- name="open-iscsi-kconfig.patch"
+ name="open-iscsi-makefile.patch"
 Content-Transfer-Encoding: 7bit
 Content-Disposition: inline;
- filename="open-iscsi-kconfig.patch"
+ filename="open-iscsi-makefile.patch"
 
-diff -Nru --exclude 'iscsi*' --exclude Makefile linux-2.6.11.orig/drivers/scsi/Kconfig linux-2.6.11.dima/drivers/scsi/Kconfig
---- linux-2.6.11.orig/drivers/scsi/Kconfig	2005-03-01 23:38:25.000000000 -0800
-+++ linux-2.6.11.dima/drivers/scsi/Kconfig	2005-03-04 17:50:11.141413333 -0800
-@@ -185,6 +185,44 @@
- 	  there should be no noticeable performance impact as long as you have
- 	  logging turned off.
+--- linux-2.6.11.orig/drivers/scsi/Makefile	2005-03-01 23:38:19.000000000 -0800
++++ linux-2.6.11.dima/drivers/scsi/Makefile	2005-03-04 17:50:11.142413217 -0800
+@@ -30,6 +30,8 @@
+ obj-$(CONFIG_SCSI_FC_ATTRS) 	+= scsi_transport_fc.o
+ obj-$(CONFIG_SCSI_ISCSI_ATTRS)	+= scsi_transport_iscsi.o
  
-+config ISCSI_IF
-+	tristate "iSCSI Open Transport Interface"
-+	depends on SCSI && INET
-+	---help---
-+	To compile this driver as a module, choose M here: the
-+	module will be called iscsi_if.
-+
-+	This driver manages multiple iSCSI transports. This module is required
-+	for normal iscsid operation.
-+
-+	See more detailed information here:
-+
-+ 	http://www.open-iscsi.org
-+
-+config ISCSI_TCP
-+	tristate "iSCSI Initiator over TCP/IP"
-+	depends on ISCSI_IF
-+	default y
-+	select CRYPTO
-+	select CRYPTO_MD5
-+	select CRYPTO_CRC32C
-+	---help---
-+	To compile this driver as a module, choose M here: the
-+	module will be called iscsi_tcp.
-+
-+ 	The iSCSI Driver provides a host with the ability to access storage
-+	through an IP network. The driver uses the iSCSI protocol to transport
-+	SCSI requests and responses over a TCP/IP network between the host
-+	(the "initiator") and "targets".  Architecturally, the iSCSI driver
-+	combines with the host's TCP/IP stack, network drivers, and Network
-+	Interface Card (NIC) to provide the same functions as a SCSI or a
-+	Fibre Channel (FC) adapter driver with a Host Bus Adapter (HBA).
-+ 
-+ 	The userspace component needed to initialize the driver, documentation,
-+	and sample configuration files can be found here:
-+ 
-+ 	http://www.open-iscsi.org
-+
- menu "SCSI Transport Attributes"
- 	depends on SCSI
- 
++obj-$(CONFIG_ISCSI_IF)		+= iscsi_if.o
++obj-$(CONFIG_ISCSI_TCP) 	+= iscsi_tcp.o
+ obj-$(CONFIG_SCSI_AMIGA7XX)	+= amiga7xx.o	53c7xx.o
+ obj-$(CONFIG_A3000_SCSI)	+= a3000.o	wd33c93.o
+ obj-$(CONFIG_A2091_SCSI)	+= a2091.o	wd33c93.o
 
 
 
@@ -97,4 +60,4 @@ diff -Nru --exclude 'iscsi*' --exclude Makefile linux-2.6.11.orig/drivers/scsi/K
 
 
 
---------------000906040700070605030506--
+--------------050606000201070809070804--
