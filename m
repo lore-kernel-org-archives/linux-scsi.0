@@ -1,78 +1,66 @@
-From: "goggin, edward" <egoggin@emc.com>
-Subject: RE: Mid-Layer handling of NOT READY conditions...
-Date: Mon, 31 Jan 2005 09:07:37 -0500
-Message-ID: <C2EEB4E538D3DC48BF57F391F422779321A734@SRMANNING.eng.emc.com>
+From: "Kit Gerrits" <kit@gerritsacc.nl>
+Subject: Disk errors
+Date: Mon, 31 Jan 2005 15:27:59 +0100
+Message-ID: <20050131142340.DA5EFC4@frisbee.gerritsacc.nl>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mailhub.lss.emc.com ([168.159.2.31]:26014 "EHLO
-	mailhub.lss.emc.com") by vger.kernel.org with ESMTP id S261207AbVAaOHw
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 31 Jan 2005 09:07:52 -0500
+Received: from www.gerritsaa.nl ([82.168.101.83]:15684 "EHLO
+	frisbee.gerritsacc.nl") by vger.kernel.org with ESMTP
+	id S261217AbVAaO1f (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 31 Jan 2005 09:27:35 -0500
+Received: from localhost (localhost [127.0.0.1])
+	by frisbee.gerritsacc.nl (Postfix) with ESMTP id D45C0867
+	for <linux-scsi@vger.kernel.org>; Mon, 31 Jan 2005 15:23:47 +0100 (CET)
+Received: from frisbee.gerritsacc.nl ([127.0.0.1])
+ by localhost (Frisbee [127.0.0.1]) (amavisd-new, port 10024) with ESMTP
+ id 50836-04 for <linux-scsi@vger.kernel.org>;
+ Mon, 31 Jan 2005 15:23:41 +0100 (CET)
+Received: from kaglapxp (unknown [10.2.2.121])
+	by frisbee.gerritsacc.nl (Postfix) with ESMTP id DA5EFC4
+	for <linux-scsi@vger.kernel.org>; Mon, 31 Jan 2005 15:23:40 +0100 (CET)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
-Cc: 'EXT / DEVOTEAM VAROQUI Christophe' <ext.devoteam.varoqui@sncf.fr>
+To: linux-scsi@vger.kernel.org
 
- 
+Exactly how many errors is a SCSI disk allowed to have?
 
-> -----Original Message-----
-> From: linux-scsi-owner@vger.kernel.org 
-> [mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of EXT / 
-> DEVOTEAM VAROQUI Christophe
-> Sent: Monday, January 31, 2005 4:46 AM
-> To: 'linux-scsi@vger.kernel.org'
-> Subject: Re: Mid-Layer handling of NOT READY conditions...
-> 
-> Hello,
-> 
-> a related discussion is ongoing in the multipath area.
-> 
-> Edward Goggin, EMC, noted a LU can be remapped anytime, by 
-> way of an HBA
-> recabling, or a LUN masking reconfiguration or a LU renaming. 
-> If IO are
-> queued to sda (LU id == 1234), sda goes unreachable (say 
-> because of a cable
-> unplug), when sda come back online it may not be 1234 anymore 
-> but 4321.
-> Requeuing the IO to sda will then silently corrupt 4321.
-> 
-> There needs to be a way to ask the HBA driver to error out 
-> immediatly IO
-> submitted to sda.
-> Can you confirm a "timeout" driver module parameter set to 0 
-> can bring us
-> this behaviour ?
-> 
+I have a PE2400 with a PERC2/Si with 4x9GB
 
-Looks like the SCSI mid-layer may be already doing __most__ of the
-"right thing" - but (1) the right thing isn't happening for EMC CLARiion
-or Symmetrix logical units (maybe other storage also) because they are
-not being treated as "removable" units by the mid-layer and (2) there
-Does not seem to be any refresh of the cached inquiry data
-(vendor/model/rev) in the mid-layer's scsi_device data structure.
-Not clear to me if these storage systems should be setting the RMB
-bit of the standard inquiry reply (which CLARiion and Symmetrix are
-not doing) or if the linux SCSI mid-layer should just be treating all
-SAN storage units as removable units, independent of the state of this bit.
+My disks show:
+AFA0> disk show defects 0
+Executing: disk show defects (ID=0)
+Number of PRIMARY defects on drive: 1912
+Number of GROWN defects on drive: 0
 
-The SCSI mid-layer (scsi_io_completion()) detects a SCSI sense key of
-UNIT_ATTENTION after most any attempt to access the SCSI logical unit
-With the "new" identity for the first time.  As long as the logical unit
-is viewed as "removable" media, the most of right thing happens, namely,
-the I/O in question is failed and the device is marked to prevent any
-further I/O.  Apparently calling check_disk_change() from the next
-sd_open() will at least clear the changed field of the scsi_device,
-thereby allowing I/O to the device.  But, the cached inquiry fields
-are not updated (possibly via scsi_probe_lun()) to reflect the
-possibly new device identity.
+AFA0> disk show defects 1
+Executing: disk show defects (ID=1)
+Number of PRIMARY defects on drive: 952
+Number of GROWN defects on drive: 1
 
-> regards,
-> cvaroqui
-> -
-> To unsubscribe from this list: send the line "unsubscribe 
-> linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+AFA0> disk show defects 2
+Executing: disk show defects (ID=2)
+Number of PRIMARY defects on drive: 2457
+Number of GROWN defects on drive: 0
+
+AFA0> disk show defects 3
+Executing: disk show defects (ID=3)
+Number of PRIMARY defects on drive: 2794
+Number of GROWN defects on drive: 0
+
+The reason I ask is tha tmy O/S (RedHat Enterprise Linux 3.0) has recently
+hung with the error:
+
+I/O Error Dev 08:05 Sector 529712
+
+I would assume that this error is generated by the harddrive, but shouldn't
+the controller catch SCSI errors (and relocate sectors automagically)?
+
+Thanks in advance,
+
+Kit Gerrits
+
+kit@gerritsaa.nl
+
