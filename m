@@ -1,114 +1,65 @@
-From: Masao Fukuchi <fukuchi.masao@jp.fujitsu.com>
-Subject: Re: [PATCH] fix dma mapping leak in fusion
-Date: Fri, 20 Aug 2004 12:05:15 +0900
+From: Douglas Gilbert <dougg@torque.net>
+Subject: lsscsi-0-13 released
+Date: Fri, 20 Aug 2004 15:04:42 +1000
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <200408200305.AA03495@fukuchi.jp.fujitsu.com>
-References: <0E3FA95632D6D047BA649F95DAB60E5704DE6953@exa-atlanta>
+Message-ID: <4125866A.4050008@torque.net>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fgwmail6.fujitsu.co.jp ([192.51.44.36]:7134 "EHLO
-	fgwmail6.fujitsu.co.jp") by vger.kernel.org with ESMTP
-	id S266188AbUHTDFL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 19 Aug 2004 23:05:11 -0400
-Received: from m5.gw.fujitsu.co.jp ([10.0.50.75]) by fgwmail6.fujitsu.co.jp (8.12.10/Fujitsu Gateway)
-	id i7K35AwH003291 for <linux-scsi@vger.kernel.org>; Fri, 20 Aug 2004 12:05:10 +0900
-	(envelope-from fukuchi.masao@jp.fujitsu.com)
-Received: from s4.gw.fujitsu.co.jp by m5.gw.fujitsu.co.jp (8.12.10/Fujitsu Domain Master)
-	id i7K359mZ017527 for <linux-scsi@vger.kernel.org>; Fri, 20 Aug 2004 12:05:09 +0900
-	(envelope-from fukuchi.masao@jp.fujitsu.com)
-Received: from fjmail506.fjmail.jp.fujitsu.com (fjmail506-0.fjmail.jp.fujitsu.com [10.59.80.106]) by s4.gw.fujitsu.co.jp (8.12.11)
-	id i7K359o3008811 for <linux-scsi@vger.kernel.org>; Fri, 20 Aug 2004 12:05:09 +0900
-	(envelope-from fukuchi.masao@jp.fujitsu.com)
-Received: from fukuchi.jp.fujitsu.com
- (fjscan501-0.fjmail.jp.fujitsu.com [10.59.80.120])
- by fjmail506.fjmail.jp.fujitsu.com
- (Sun Internet Mail Server sims.4.0.2001.07.26.11.50.p9)
- with SMTP id <0I2Q00K725WKW3@fjmail506.fjmail.jp.fujitsu.com> for
- linux-scsi@vger.kernel.org; Fri, 20 Aug 2004 12:05:09 +0900 (JST)
-In-reply-to: <0E3FA95632D6D047BA649F95DAB60E5704DE6953@exa-atlanta>
+Received: from mailhub2.uq.edu.au ([130.102.149.128]:36614 "EHLO
+	mailhub2.uq.edu.au") by vger.kernel.org with ESMTP id S267357AbUHTFFe
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 20 Aug 2004 01:05:34 -0400
+Received: from smtp2.uq.edu.au (smtp2.uq.edu.au [130.102.5.53])
+	by mailhub2.uq.edu.au (8.12.11/8.12.11) with ESMTP id i7K55S4N032575
+	for <linux-scsi@vger.kernel.org>; Fri, 20 Aug 2004 15:05:28 +1000 (EST)
+Received: from [192.168.48.80] (d-239-61.stlucia.uq.net.au [203.101.239.61])
+	by smtp2.uq.edu.au (8.12.10/8.12.10) with ESMTP id i7K55PO4006734
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NOT)
+	for <linux-scsi@vger.kernel.org>; Fri, 20 Aug 2004 15:05:27 +1000 (EST)
 List-Id: linux-scsi@vger.kernel.org
-To: "Moore, Eric Dean" <Emoore@lsil.com>
-Cc: Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-Eric,
+lsscsi is a utility that uses sysfs in linux 2.6 series kernels
+to list information about all SCSI devices (including devices
+that use the SCSI stack such as USB mass storage devices)
+and SCSI hosts. Both a compact format (default) which is one line
+per device and a "classic" format (like the output of
+'cat /proc/scsi/scsi') are supported. Some examples:
 
-I applyed your patch and tested it, but the patch didn't work well.
-I didn't met Oops. 
-But after read command finishing with fail, keyboard and mouse click 
-didn't work.
-And also I couldn't login from other server.
+$ lsscsi
+[0:0:0:0]    disk    Linux    scsi_debug       0004  /dev/sda
+[1:0:6:0]    tape    SONY     SDT-7000         0192  /dev/st0
 
-The message was almost same as Fusion MPT driver 3.01.15.
+$ lsscsi --classic
+Attached devices:
+Host: scsi0 Channel: 00 Id: 00 Lun: 00
+   Vendor: Linux    Model: scsi_debug       Rev: 0004
+   Type:   Direct-Access                    ANSI SCSI revision: 03
+Host: scsi1 Channel: 00 Id: 06 Lun: 00
+   Vendor: SONY     Model: SDT-7000         Rev: 0192
+   Type:   Sequential-Access                ANSI SCSI revision: 02
 
-Masao Fukuchi
+Version 0.13 is available at
+http://www.torque.net/scsi/lsscsi.html
 
-Moore, Eric Dean wrote:
->Here is a patch to apply against 3.01.15. It will have a small
->fix in mptscsih_abort which should work with Christoph's suggestion
->of removing the "is the device is offline" check in 
->mptscsih_flush_running_cmds.  Pls test and let me know if you still 
->hit the oops.
->
->Eric
->
->
->On Thursday, August 19, 2004 7:15 AM, Masao Fukuchi wrote:
->> 
->> I tried fusion MPT driver 3.01.15 and I didn't met Oops.
->> (Eric fixed Oops problem by Fusion MPT driver 3.01.04)
->> 
->> Masao Fukuchi
->> 
->> Message:
->>  18:19:01 kernel: mptscsih: ioc3: >> Attempting task abort! 
->> (sc=e00000007c205080)
->>  18:19:01 kernel: mptscsih: ioc3: >> Attempting target reset! 
->> (sc=e00000007c205080)
->>  18:19:01 kernel: mptscsih: ioc3: >> Attempting bus reset! 
->> (sc=e00000007c205080)
->>  18:19:03 kernel: mptbase: Initiating ioc3 recovery
->>  18:19:28 kernel: mptscsih: ioc3: >> Attempting task abort! 
->> (sc=e00000007c205080)
->>  18:19:28 kernel: mptscsih: ioc3: >> Attempting host reset! 
->> (sc=e00000007c205080)
->>  18:19:28 kernel: mptbase: Initiating ioc3 recovery
->>  18:19:52 kernel: mptscsih: ioc3: >> Attempting task abort! 
->> (sc=e00000007c205080)
->>  18:19:52 kernel: scsi: Device offlined - not ready after 
->> error recovery: host 3 channel 0 id 1 lun 0
->>  18:19:52 kernel: scsi3 (1:0): rejecting I/O to offline device
->>  18:19:52 kernel: Buffer I/O error on device sdb, logical block 0
->>  18:19:52 kernel: Buffer I/O error on device sdb, logical block 1
->>  18:19:52 kernel: Buffer I/O error on device sdb, logical block 2
->>  18:19:52 kernel: Buffer I/O error on device sdb, logical block 3
->>  18:19:52 kernel: Buffer I/O error on device sdb, logical block 4
->>  18:19:52 kernel: Buffer I/O error on device sdb, logical block 5
->>  18:19:52 kernel: Buffer I/O error on device sdb, logical block 6
->>  18:19:52 kernel: Buffer I/O error on device sdb, logical block 7
->>  18:19:52 kernel: scsi3 (1:0): rejecting I/O to offline device
->>  18:19:52 kernel: Buffer I/O error on device sdb, logical block 0
->>  18:19:52 kernel: Buffer I/O error on device sdb, logical block 1
->>  18:19:54 kernel: mptbase: Initiating ioc3 recovery
->> 
->> 
->> Christoph Hellwig wrote:
->> >On Thu, Aug 19, 2004 at 12:01:11PM +0900, Masao Fukuchi wrote:
->> >> Hi Christoph,
->> >> 
->> >> I applyed attached patch into latest fusion MPT driver(3.01.15) and
->> >> tested it, but I still met Oops.
->> >> Then I also applyed your latest patch(it gets rid of the 
->> fusion pendingQ
->> >> in favour of using the scsi midlayer queuing), but I met 
->> Oops again.
->> >
->> >Can you try the patch Eric posted instead?
->> >
->> >-
->> >To unsubscribe from this list: send the line "unsubscribe 
->> linux-scsi" in
->> >the body of a message to majordomo@vger.kernel.org
->> >More majordomo info at  http://vger.kernel.org/majordomo-info.html
->> 
->
+This version has been tested with lk 2.6.8.1 .
+
+Changelog: Version 0.13 2004/8/12
+   - add 'timeout' to long device option output
+   - quiet (unless verbose) if no mid level (hence
+     no SCSI devices or hosts)
+
+
+
+
+There is also a pre-release version of lsscsi-0.14 which
+is a port to use the libsysfs library. It awaits a new
+dlist function called dlist_sort_custom() being added to
+libsysfs. This function allows an application (such as
+lsscsi) to sort sysfs directories. lsscsi uses this facility
+to numerically sort <h,c,t,l> tuples.
+
+Doug Gilbert
