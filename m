@@ -1,36 +1,48 @@
-From: Mike Anderson <andmike@us.ibm.com>
-Subject: Re: [patch 2.5] ips queue depths
-Date: Tue, 15 Oct 2002 13:24:50 -0700
+From: James Bottomley <James.Bottomley@steeleye.com>
+Subject: Re: [RFC PATCH] consolidate SCSI-2 command lun setting
+Date: Tue, 15 Oct 2002 13:29:59 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20021015202450.GC1049@beaverton.ibm.com>
-References: <A3B9245C291EEF4785A24A1DBE8D852B0376BC@rtpexc01.adaptec.com> <20021015194705.GD4391@redhat.com>
+Message-ID: <200210152029.g9FKTxD03950@localhost.localdomain>
+References: <patmans@us.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20021015194705.GD4391@redhat.com>
+Received: (from root@localhost)
+	by pogo.mtv1.steeleye.com (8.9.3/8.9.3) id NAA09414
+	for <linux-scsi@vger.kernel.org>; Tue, 15 Oct 2002 13:30:02 -0700
+Received: from localhost.localdomain (sshppp-200.mtv1.steeleye.com [172.16.1.200])
+	by pogo.mtv1.steeleye.com (8.9.3/8.9.3) with ESMTP id NAA09325
+	for <linux-scsi@vger.kernel.org>; Tue, 15 Oct 2002 13:30:00 -0700
+Received: from mulgrave (jejb@localhost)
+	by localhost.localdomain (8.11.6/linuxconf) with ESMTP id g9FKTxD03950
+	for <linux-scsi@vger.kernel.org>; Tue, 15 Oct 2002 13:29:59 -0700
+In-Reply-To: Message from Patrick Mansfield <patmans@us.ibm.com>
+   of "Tue, 15 Oct 2002 09:55:02 PDT." <20021015095502.A25647@eng2.beaverton.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: "Jeffery, David" <David_Jeffery@adaptec.com>, 'Dave Hansen' <haveblue@us.ibm.com>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
 
-Style question below.
+This all looks OK, except here:
 
-Doug Ledford [dledford@redhat.com] wrote:
-> @@ -481,7 +482,8 @@
->      eh_host_reset_handler : ips_eh_reset, \
->      abort : NULL,                         \
->      reset : NULL,                         \
-> -    slave_attach : NULL,                  \
-> +    slave_attach : ips_slave_attach,      \
-> +    slave_detach : NULL,                  \
->      bios_param : ips_biosparam,           \
->      can_queue : 0,                        \
->      this_id: -1,                          \
++++ b/drivers/scsi/scsi_lib.c	Tue Oct 15 09:46:06 2002
+@@ -972,6 +972,14 @@
+ 				continue;
+ 			}
+ 		}
++		/* 
++		 * If SCSI-2 or lower, store the LUN value in cmnd.
++		 */
++		if (SDpnt->scsi_level <= SCSI_2)
++			SCpnt->cmnd[1] = (SCpnt->cmnd[1] & 0x1f) |
++				(SCpnt->lun << 5 & 0xe0);
++
++
+ 		/*
+ 		 * Finally, initialize any error handling parameters, and set up
+ 		 * the timers for timeouts.
 
-Can we stop setting struct members to NULL. If we later change the
-interface it makes the patch just that much larger. 
+Shouldn't this code go early in scsi_dispatch_io instead? (with something 
+similar in scsi_send_eh_cmnd)
 
--andmike
---
-Michael Anderson
-andmike@us.ibm.com
+James
+
 
