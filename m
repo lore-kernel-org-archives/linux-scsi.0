@@ -1,86 +1,35 @@
-From: Luben Tuikov <luben@splentec.com>
-Subject: [RFC] Some comments on ``pending'' and Coding Style
-Date: Mon, 10 Mar 2003 15:48:46 -0500
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH] Update to ide-scsi error handling
+Date: 10 Mar 2003 23:41:25 +0000
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3E6CFA2E.6080604@splentec.com>
+Message-ID: <1047339684.16969.9.camel@irongate.swansea.linux.org.uk>
+References: <20030126205831.GM24610@linnie.riede.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from splentec.com (canoe.splentec.com [209.47.35.250])
-	by pepsi.splentec.com (8.11.6/8.11.0) with ESMTP id h2AKmiL03863
-	for <linux-scsi@vger.kernel.org>; Mon, 10 Mar 2003 15:48:44 -0500
+In-Reply-To: <20030126205831.GM24610@linnie.riede.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: wrlk@riede.org
+Cc: linux-scsi@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 
- > though SAM-3 references
- > pending, I don't see any SAM references to deferred.
+On Sun, 2003-01-26 at 20:58, Willem Riede wrote:
+> One of my ATAPI drives developed a real dislike to 2.5.55 and above, which gave
+> me plenty of opportunity to improve ide-scsi's error handling :-) .
 
-Ok, so you should've seen the definition of ``pending command'' then.
+Cool. I've rewritten the do_reset logic in the 2.5.64-ac code so that it
+has a few less races
 
-The comments in brackets ([]) are mine.
+> To handle ide device resets and be able to wait for them in the scsi context, I 
+> have changed ide_do_reset and friends in drivers/ide/ide-iops.c to set the busy 
+> flag on the hwgroup while the reset is in progress.
 
-SAM-3r05 gives the following definition:
+Duplicated work, but I'm kind of happy because we both agreed on that
+part of the solution being safe 8)
 
-   3.1.72 pending command: From the point of view of the
-   application client [SCSI Core], the description of command
-   between the time that the application client [SCSI Core] calls
-   the Send SCSI Command SCSI transport protocol service [queuecommand()]
-   and the time one of the SCSI target device responses described in
-   5.5 is received [scsi_done()].
+> I noticed, that ide-scsi didn't consistently use the printk priorities, so I
+> touched that up while I was at it.
 
-This is what ``pending_q'' describes.  This is how I've used
-it in mini-scsi-core: insert just before a call to queuecommand()
-into pending_q, move to done_q at scsi_done().
+Thanks
 
-[[This way you get a nice closed logical loop of the entities
-who the command, from the slab, through the queues, back to the
-slab.]]
-
-And this is why I want the variable names to be from the point of
-view of SCSI Core.
-
-Documentation/CodingStyle: Most of the things in there, clearly, are from
-``The Elements of Programming Style'' by Kernighan and Plauger,
-2nd ed, 1988, McGraw-Hill.
-
-In the same line of thought, earlier today I submitted this patch:
-
---- linux-2.5.64/Documentation/CodingStyle.orig	2003-03-10 11:23:46.000000000 -0500
-+++ linux-2.5.64/Documentation/CodingStyle	2003-03-10 11:37:18.000000000 -0500
-@@ -1,3 +1,4 @@
-+Updated: Mon Mar 10 16:34:35 UTC 2003
-
-  		Linux kernel coding style
-
-@@ -264,3 +265,26 @@
-
-  Remember: if another thread can find your data structure, and you don't
-  have a reference count on it, you almost certainly have a bug.
-+
-+
-+		Chapter 9: Organization
-+
-+Writing efficient code is important in both complexity and
-+implementation.  In other words your code organization should NOT be
-+too complex to understand.  Complexity directly depends on the choice
-+of data representation and code organization.  To help you stay in
-+line, here are a few guidelines to follow:
-+
-+      Modularize.
-+      Use subroutines.
-+      Each subroutine/module should do one thing well.
-+      Make sure every module/subroutine hides something.
-+      Localize input and output in subroutines.
-+
-+And the most important:
-+
-+    Choose the data representation that makes the program simple.
-+
-+
-+			      ----------
-+
-
--- 
-Luben
 
