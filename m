@@ -1,51 +1,67 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: [PATCH] 2.4.25-pre8: loss of SCSI I/O initiative
-Date: Tue, 3 Feb 2004 10:07:38 +0100
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: PATCH: (as141b) Unaligned scatter-gather buffers and usb-storage
+Date: Tue, 3 Feb 2004 10:47:38 -0500 (EST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040203090738.GX11683@suse.de>
-References: <OFA5E0980A.777ADFCB-ONC1256E2C.00131EB3-C1256E2E.0061B28C@de.ibm.com> <1075747729.3248.17.camel@compaq.xsintricity.com>
+Message-ID: <Pine.LNX.4.44L0.0402031044390.1161-100000@ida.rowland.org>
+References: <1075737065.1897.7.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns.virtualhost.dk ([195.184.98.160]:37289 "EHLO virtualhost.dk")
-	by vger.kernel.org with ESMTP id S265954AbUBCJHv (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Feb 2004 04:07:51 -0500
-Content-Disposition: inline
-In-Reply-To: <1075747729.3248.17.camel@compaq.xsintricity.com>
+Received: from ida.rowland.org ([192.131.102.52]:16132 "HELO ida.rowland.org")
+	by vger.kernel.org with SMTP id S266014AbUBCPrj (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Feb 2004 10:47:39 -0500
+In-Reply-To: <1075737065.1897.7.camel@mulgrave>
 List-Id: linux-scsi@vger.kernel.org
-To: Doug Ledford <dledford@redhat.com>
-Cc: Martin Peschke3 <MPESCHKE@de.ibm.com>, Marcelo Tosatti <marcelo.tosatti@cyclades.com>, linux-scsi mailing list <linux-scsi@vger.kernel.org>, andmike@us.ibm.com, garloff@suse.de
+To: James Bottomley <James.Bottomley@steeleye.com>
+Cc: SCSI development list <linux-scsi@vger.kernel.org>
 
-On Mon, Feb 02 2004, Doug Ledford wrote:
-> On Mon, 2004-02-02 at 12:42, Martin Peschke3 wrote:
-> > 
-> > 
-> > Marcelo, Doug,
-> > 
-> > here is another patch, which corrects some 'loss of initiative' problems.
+On 2 Feb 2004, James Bottomley wrote:
+
+> On Mon, 2004-01-05 at 16:58, Alan Stern wrote:
+> > ===== st.c 1.45 vs edited =====
+> > --- 1.45/drivers/scsi/st.c	Fri Sep  5 12:16:40 2003
+> > +++ edited/drivers/scsi/st.c	Fri Nov 21 12:30:34 2003
+> > @@ -1267,7 +1267,8 @@
+> >  		i = STp->try_dio && try_rdio;
+> >  	else
+> >  		i = STp->try_dio && try_wdio;
+> > -	if (i) {
+> > +	if (i && ((unsigned int)buf & queue_dma_alignment(
 > 
-> Hi Martin.  Both of the patches you posted touch areas of code that are
-> also touched by some of the patches I'm merging for the everything
-> tree.  So, Marcelo, whether or not to take these depends partially on
-> your decision as to what to do with the other scsi patches we've got
-> here and that SuSE has.  In particular, it's possible that the mlqueue
-> patch that I haven't got in my 2.4-everything tree yet may very well
-> obsolete the need for one of these, and another patch in our tree may
-> obsolete the need for the other.  I'm not sure yet.  Anyway, just wanted
-> to let you know that if you are considering the bigger set of SCSI
-> patches (and yes, I'm sure you want to see them before you would ever
-> say yes, I'm just not sure if you've already decided that your answer is
-> "no") then both of these patches from Martin would have to be merged
-> with the final product and might not be necessary in the end, or if they
-> are necessary I'm sure they'll have a slightly different form.
+> This needs to be unsigned long, otherwise it will print a warning on a
+> 64 bit compile.
 
-The patches Martin sent could be merged before any pending bigger
-merges - they are pretty straight forward. I'd rather not put smaller
-changes like that into bigger trees and merge all of those at one time
-if only because it doesn't exactly help bug finding...
+Really?  I'm surprised.  Although I know nothing about the details of 
+using gcc on a 64-bit platform, it seems odd that an explicit cast would 
+generate a warning.  Was that done deliberately, to try and catch 
+inadvertent bugs in address arithmetic?
 
-So in my opinion, they should just go straight to Marcelo.
+> > ===== scsi_lib.c 1.49 vs edited =====
+> > --- 1.49/drivers/scsi/scsi_lib.c	Sat Nov 22 11:20:45 2003
+> > +++ edited/drivers/scsi/scsi_lib.c	Mon Jan  5 16:55:32 2004
+> > @@ -1287,6 +1287,15 @@
+> >  	blk_queue_max_sectors(q, shost->max_sectors);
+> >  	blk_queue_bounce_limit(q, scsi_calculate_bounce_limit(shost));
+> >  	blk_queue_segment_boundary(q, shost->dma_boundary);
+> > + 
+> > +	/*
+> > +	 * Set the queue's mask to require a mere 8-byte alignment for
+> > +	 * DMA buffers, rather than the default 512.  This shouldn't
+> > +	 * inconvenience any user programs and should be okay for most
+> > +	 * host adapters.  A host driver can alter this mask in its
+> > +	 * slave_alloc() or slave_configure() callback if necessary.
+> > +	 */
+> > +	blk_queue_dma_alignment(sdev->request_queue, (8 - 1));
+> 
+> sdev->request_queue is NULL here (it's filled in by the return from this
+> function.  The argument should be q.
 
--- 
-Jens Axboe
+Whoops.  I cut and pasted the code from somewhere else and didn't notice 
+that the variable needed to be changed.
+
+> I'll make the changes and apply the patch.
+
+Thank you.
+
+Alan Stern
 
