@@ -1,48 +1,51 @@
-From: Philippe Troin <phil@fifi.org>
+From: Alan Stern <stern@rowland.harvard.edu>
 Subject: Re: iRiver H100 series and usb-storage issues
-Date: 07 Jun 2004 12:43:02 -0700
+Date: Mon, 7 Jun 2004 16:22:48 -0400 (EDT)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <87brjvw3w9.fsf@ceramic.fifi.org>
-References: <Pine.LNX.4.44L0.0406071040310.1800-100000@ida.rowland.org>
+Message-ID: <Pine.LNX.4.44L0.0406071616200.666-100000@ida.rowland.org>
+References: <87brjvw3w9.fsf@ceramic.fifi.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from tantale.fifi.org ([216.27.190.146]:15516 "EHLO tantale.fifi.org")
-	by vger.kernel.org with ESMTP id S265015AbUFGTnK (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Jun 2004 15:43:10 -0400
-In-Reply-To: <Pine.LNX.4.44L0.0406071040310.1800-100000@ida.rowland.org>
+Received: from ida.rowland.org ([192.131.102.52]:4356 "HELO ida.rowland.org")
+	by vger.kernel.org with SMTP id S265035AbUFGUWs (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Jun 2004 16:22:48 -0400
+In-Reply-To: <87brjvw3w9.fsf@ceramic.fifi.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
+To: Philippe Troin <phil@fifi.org>
 Cc: James Bottomley <James.Bottomley@steeleye.com>, USB Storage list <usb-storage@lists.one-eyed-alien.net>, SCSI development list <linux-scsi@vger.kernel.org>
 
-Alan Stern <stern@rowland.harvard.edu> writes:
+On 7 Jun 2004, Philippe Troin wrote:
 
-> I just noticed this thread on linux-kernel:
+> Alan Stern <stern@rowland.harvard.edu> writes:
 > 
-> http://marc.theaimsgroup.com/?l=linux-kernel&m=108372064000188&w=2
+> > I just noticed this thread on linux-kernel:
+> > 
+> > http://marc.theaimsgroup.com/?l=linux-kernel&m=108372064000188&w=2
+> > 
+> > Apparently under some circumstances the iRiver H100 returns 0 bytes 
+> > transferred with GOOD status and residue=512 for a READ(10) command 
+> > asking for 1 sector.  As far as I know this is legal, and it indicates the 
+> > command should simply be retried.
 > 
-> Apparently under some circumstances the iRiver H100 returns 0 bytes 
-> transferred with GOOD status and residue=512 for a READ(10) command 
-> asking for 1 sector.  As far as I know this is legal, and it indicates the 
-> command should simply be retried.
+> That's correct.  However, the iRiver H1xx will also commit a USB
+> protocol violation by not returning a CSW (Command Status
+> Wrapper).  That's what screws up the transfer.
 
-That's correct.  However, the iRiver H1xx will also commit a USB
-protocol violation by not returning a CSW (Command Status
-Wrapper).  That's what screws up the transfer.
- 
-> But apparently the sd driver doesn't realize what has happened and assumes 
-> the transfer was successful.  If I'm right then the sd driver should be 
-> fixed, but I'm not sure what is the best thing to do.
+In the log you posted (at the URL above) the CSW was returned correctly.  
+The same is true for the messages you referred to.  So that was not the 
+source of the problem.
 
-I am not sure the SCSI layer can recover given that the USB layer is
-confused...
+> Please note that:
+> 
+>  1. I am just repeating what I have been told by various people and
+>     claim no knowledge of the USB or SCSI layers.  In other words, I
+>     could be all wrong :-)
+> 
+>  2. I do not own a H1xx anymore, having returned mine.
 
-Please note that:
+Do you know of anyone who has contributed to any versions of this thread 
+and still does have an H1xx?
 
- 1. I am just repeating what I have been told by various people and
-    claim no knowledge of the USB or SCSI layers.  In other words, I
-    could be all wrong :-)
+Alan Stern
 
- 2. I do not own a H1xx anymore, having returned mine.
- 
-Phil.
