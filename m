@@ -1,23 +1,20 @@
-From: Christoph Hellwig <hch@infradead.org>
+From: Douglas Gilbert <dougg@torque.net>
 Subject: Re: RFC: moving drivers to a new drivers/ata directory
-Date: Fri, 15 Oct 2004 08:46:27 +0100
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20041015074627.GA18977@infradead.org>
+Date: Fri, 15 Oct 2004 18:37:13 +1000
+Sender: linux-ide-owner@vger.kernel.org
+Message-ID: <416F8C39.6010804@torque.net>
 References: <416F5757.8000306@pobox.com>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from phoenix.infradead.org ([81.187.226.98]:25862 "EHLO
-	phoenix.infradead.org") by vger.kernel.org with ESMTP
-	id S266459AbUJOHqc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 15 Oct 2004 03:46:32 -0400
-Content-Disposition: inline
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
 In-Reply-To: <416F5757.8000306@pobox.com>
-List-Id: linux-scsi@vger.kernel.org
 To: Jeff Garzik <jgarzik@pobox.com>
 Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>
+List-Id: linux-scsi@vger.kernel.org
 
-On Fri, Oct 15, 2004 at 12:51:35AM -0400, Jeff Garzik wrote:
+Jeff Garzik wrote:
 > 
 > Eventually I would like to move libata, and a few non-libata driver like 
 > 3ware, to drivers/ata.  It would appear in the makefile (and link order) 
@@ -25,6 +22,15 @@ On Fri, Oct 15, 2004 at 12:51:35AM -0400, Jeff Garzik wrote:
 > 
 > Comments/objections?
 
-Only if your stop using the scsi subsystem.  The handfull scsi drivers outside
-drivers/scsi are a pain already.
+A comment: if SAS HBAs ever get installed on motherboards then
+it won't be obvious to the average user which susbsystem they
+should configure (i.e. ATA/SATA or SCSI/SAS). In both cases an
+internal SATA disk could be connected via a SATA cable to a
+plug on the motherboard.
+
+So if you do move the drivers to the ata directory it may be
+useful to stress that it is the category of HBA that is
+signficant rather than the device at the far end of the cable.
+
+Doug Gilbert
 
