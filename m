@@ -1,89 +1,167 @@
-From: "Hironobu Ishii" <ishii.hironobu@jp.fujitsu.com>
-Subject: [PATCH] Adding device name to messages from sr.c
-Date: Wed, 31 Mar 2004 21:30:43 +0900
+From: aris@cathedrallabs.org (Aristeu Sergio Rozanski Filho)
+Subject: [patch][1/3] qlogicfas: kill horrible irq probing
+Date: Wed, 31 Mar 2004 10:03:28 -0300
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <040901c4171c$4e4870f0$2987110a@lsd.css.fujitsu.com>
-Reply-To: "Hironobu Ishii" <ishii.hironobu@jp.fujitsu.com>
+Message-ID: <20040331130328.GA28021@cathedrallabs.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-2022-jp"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="oLBj+sq0vYjzfsbl"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fgwmail6.fujitsu.co.jp ([192.51.44.36]:28327 "EHLO
-	fgwmail6.fujitsu.co.jp") by vger.kernel.org with ESMTP
-	id S261932AbUCaMdg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 31 Mar 2004 07:33:36 -0500
+Received: from panda.sul.com.br ([200.219.150.4]:4624 "EHLO panda.sul.com.br")
+	by vger.kernel.org with ESMTP id S261942AbUCaNFP (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 31 Mar 2004 08:05:15 -0500
+Received: from cathedrallabs.org (3-133.ctame701-3.telepar.net.br [200.181.174.133])
+	by panda.sul.com.br (Postfix) with ESMTP id 9E800328AA
+	for <linux-scsi@vger.kernel.org>; Wed, 31 Mar 2004 10:05:38 -0300 (EST)
+Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
-To: Jens Axboe <axboe@suse.de>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>
-
-Hi Jens,
-
-sr.c has some messages that does not tell us the error device.
-This patch adds device name to such messages.
-This is a patch for linux-2.6.5-rc3.
-
-Please apply!
-
-Thanks,
-Hironobu Ishii
+To: linux-scsi@vger.kernel.org
 
 
-diff -urN linux-2.6.5-rc3/drivers/scsi/sr.c linux-2.6.5-rc3-work/drivers/scsi/sr.c
---- linux-2.6.5-rc3/drivers/scsi/sr.c 2004-03-30 19:02:47.000000000 +0900
-+++ linux-2.6.5-rc3-work/drivers/scsi/sr.c 2004-03-30 20:39:16.000000000 +0900
-@@ -321,11 +321,13 @@
-   if (!in_interrupt())
-    sr_set_blocklength(cd, 2048);
-   else
--   printk("sr: can't switch blocksize: in interrupt\n");
-+   printk("%s: can't switch blocksize: in interrupt\n",
-+    cd->cdi.name);
-  }
- 
-  if (s_size != 512 && s_size != 1024 && s_size != 2048) {
--  printk("sr: bad sector size %d\n", s_size);
-+  printk("%s: bad sector size %d\n", 
-+   cd->cdi.name, s_size);
-   return 0;
-  }
- 
-@@ -349,7 +351,8 @@
-    size += sg[i].length;
- 
-   if (size != SCpnt->request_bufflen && SCpnt->use_sg) {
--   printk(KERN_ERR "sr: mismatch count %d, bytes %d\n",
-+   printk(KERN_ERR "%s: mismatch count %d, bytes %d\n",
-+     cd->cdi.name,
-      size, SCpnt->request_bufflen);
-    if (SCpnt->request_bufflen > size)
-     SCpnt->request_bufflen = SCpnt->bufflen = size;
-@@ -361,7 +364,7 @@
-   */
-  if (((unsigned int)SCpnt->request->sector % (s_size >> 9)) ||
-      (SCpnt->request_bufflen % s_size)) {
--  printk("sr: unaligned transfer\n");
-+  printk("%s: unaligned transfer\n", cd->cdi.name);
-   return 0;
-  }
- 
-@@ -724,15 +727,15 @@
-  /* allocate a request for the TEST_UNIT_READY */
-  SRpnt = scsi_allocate_request(cd->device, GFP_KERNEL);
-  if (!SRpnt) {
--  printk(KERN_WARNING "(get_capabilities:) Request allocation "
--         "failure.\n");
-+  printk(KERN_WARNING "%s: (get_capabilities:) Request allocation "
-+   "failure.\n", cd->cdi.name);
-   return;
-  }
- 
-  /* allocate transfer buffer */
-  buffer = kmalloc(512, GFP_KERNEL | GFP_DMA);
-  if (!buffer) {
--  printk(KERN_ERR "sr: out of memory.\n");
-+  printk(KERN_ERR "%s: out of memory.\n", cd->cdi.name);
-   scsi_release_request(SRpnt);
-   return;
-  }
+--oLBj+sq0vYjzfsbl
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
+hi,
+	this patch kills irq probe and also I/O because isn't useful to
+	probe I/O if we can't probe irq later.
+
+--=20
+aris
+
+
+--oLBj+sq0vYjzfsbl
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: attachment; filename="01-qlogicfas-remove_io_and_irq_probe.patch"
+Content-Transfer-Encoding: quoted-printable
+
+diff -ur linux-2.6.4-applied/drivers/scsi/qlogicfas.c linux-2.6.4-work/driv=
+ers/scsi/qlogicfas.c
+--- linux-2.6.4-applied/drivers/scsi/qlogicfas.c	2004-03-13 15:10:48.000000=
+000 -0300
++++ linux-2.6.4-work/drivers/scsi/qlogicfas.c	2004-03-18 08:31:52.000000000=
+ -0300
+@@ -475,7 +475,6 @@
+ struct Scsi_Host *__qlogicfas_detect(Scsi_Host_Template *host, int qbase,
+ 								int qlirq)
+ {
+-	int i, j;		/* these are only used by IRQ detect */
+ 	int qltyp;		/* type of chip */
+ 	int qinitid;
+ 	struct Scsi_Host *hreg;	/* registered host structure */
+@@ -490,20 +489,26 @@
+ 	 *	the second card, but I haven't tested this.
+ 	 */
+=20
+-	if (!qbase) {
+-		for (qbase =3D 0x230; qbase < 0x430; qbase +=3D 0x100) {
+-			if (!request_region(qbase, 0x10, qlogicfas_name))
+-				continue;
+-			REG1;
+-			if (((inb(qbase + 0xe) ^ inb(qbase + 0xe)) =3D=3D 7)
+-			    && ((inb(qbase + 0xe) ^ inb(qbase + 0xe)) =3D=3D 7))
+-				break;
+-			release_region(qbase, 0x10);
+-		}
+-		if (qbase =3D=3D 0x430)
+-			return NULL;;
+-	} else
+-		printk(KERN_INFO "Ql: Using preset base address of %03x\n", qbase);
++	if (!qbase || qlirq =3D=3D -1)
++		goto err;
++
++	if (!request_region(qbase, 0x10, qlogicfas_name)) {
++		printk(KERN_INFO "%s: address %#x is busy\n", qlogicfas_name,
++							      qbase);
++		goto err;
++	}
++
++	REG1;
++	if (((inb(qbase + 0xe) ^ inb(qbase + 0xe)) !=3D 7)
++	    || ((inb(qbase + 0xe) ^ inb(qbase + 0xe)) !=3D 7)) {
++		printk(KERN_WARNING "%s: probe failed for %#x\n",
++								qlogicfas_name,
++								qbase);
++		goto err_release_mem;
++	}
++
++	printk(KERN_INFO "%s: Using preset base address of %03x,"
++			 " IRQ %d\n", qlogicfas_name, qbase, qlirq);
+=20
+ 	qltyp =3D inb(qbase + 0xe) & 0xf8;
+ 	qinitid =3D host->this_id;
+@@ -524,32 +529,6 @@
+ 	REG0;
+ #endif
+=20
+-	/*
+-	 *	IRQ probe - toggle pin and check request pending=20
+-	 */
+-
+-	if (qlirq =3D=3D -1) {
+-		i =3D 0xffff;
+-		j =3D 3;
+-		outb(0x90, qbase + 3);	/* illegal command - cause interrupt */
+-		REG1;
+-		outb(10, 0x20);	/* access pending interrupt map */
+-		outb(10, 0xa0);
+-		while (j--) {
+-			outb(0xb0 | QL_INT_ACTIVE_HIGH, qbase + 0xd);	/* int pin off */
+-			i &=3D ~(inb(0x20) | (inb(0xa0) << 8));		/* find IRQ off */
+-			outb(0xb4 | QL_INT_ACTIVE_HIGH, qbase + 0xd);	/* int pin on */
+-			i &=3D inb(0x20) | (inb(0xa0) << 8);		/* find IRQ on */
+-		}
+-		REG0;
+-		while (inb(qbase + 5));	/* purge int */
+-		j =3D -1;
+-		while (i)	/* find on bit */
+-			i >>=3D 1, j++;	/* should check for exactly 1 on */
+-		qlirq =3D j;
+-	} else
+-		printk(KERN_INFO "Ql: Using preset IRQ %d\n", qlirq);
+-
+ 	hreg =3D scsi_host_alloc(host, sizeof(struct qlogicfas_priv));
+ 	if (!hreg)
+ 		goto err_release_mem;
+@@ -587,6 +566,7 @@
+=20
+ err_release_mem:
+ 	release_region(qbase, 0x10);
++err:
+ 	return NULL;
+ }
+=20
+@@ -603,10 +583,9 @@
+ {
+ 	struct Scsi_Host	*shost;
+ 	qlogicfas_priv_t	priv;
+-	int	i,
+-		num =3D 0;
++	int	num;
+=20
+-	for (i =3D 0; i < MAX_QLOGICFAS; i++) {
++	for (num =3D 0; num < MAX_QLOGICFAS; num++) {
+ 		shost =3D __qlogicfas_detect(sht, iobase[num], irq[num]);
+ 		if (shost =3D=3D NULL) {
+ 			/* no more devices */
+@@ -615,7 +594,6 @@
+ 		priv =3D (qlogicfas_priv_t)&(shost->hostdata[0]);
+ 		priv->next =3D cards;
+ 		cards =3D priv;
+-		num++;
+ 	}
+=20
+ 	return num;
+@@ -747,6 +725,9 @@
+ {
+ 	if (!qlogicfas_detect(&qlogicfas_driver_template)) {
+ 		/* no cards found */
++		printk(KERN_INFO "%s: no cards were found, please specify "
++				 "I/O address and IRQ using iobase=3D and irq=3D "
++				 "options", qlogicfas_name);
+ 		return -ENODEV;
+ 	}
+=20
+
+--oLBj+sq0vYjzfsbl--
