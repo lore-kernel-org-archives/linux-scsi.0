@@ -1,295 +1,279 @@
-From: Robert Sertic <robert@philosys.de>
-Subject: [PATCH][RFC] ST Tape assignement
-Date: Fri, 19 Jul 2002 19:30:17 +0200 (CEST)
+From: ishikawa@yk.rim.or.jp
+Subject: Ungraceful handling of scsi tape drive error condition
+Date: Sat, 20 Jul 2002 03:53:39 +0900 (JST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.21.0207191901010.7412-200000@ftp.philosys.de>
-Mime-Version: 1.0
-Content-Type: MULTIPART/MIXED; BOUNDARY="1690387710-1397572302-1027099816=:7412"
+Message-ID: <m17Vcsl-000HcIC@standard.erephon>
 Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: by yk.rim.or.jp
+	via sendmail from stdin
+	id <m17Vcsl-000HcIC@standard.erephon> (Debian Smail3.2.0.114)
+	for linux-scsi@vger.kernel.org; Sat, 20 Jul 2002 03:53:39 +0900 (JST)
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: Robert.Sertic@gmx.net
-
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
-  Send mail to mime@docserver.cac.washington.edu for more info.
-
---1690387710-1397572302-1027099816=:7412
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Cc: Kai.Makisara@metla.fi, dc390@garloff.de, garloff@suse
 
 
-Hi!
+Hi,
 
-We are working with a SAN-Environment with a lot of 
-Tapedrives visible for every client .....
+I would like to report a problem of ungraceful handling of
+tape device error by SCSI subsystem and
+DC390 (tmscsim) driver.
 
-The Problem is that some of the drives are reconfigured and so
-the state of visible drives for the linux client rapidly changing.
+I am not sure exactly where the problem lies, and so
+send to various e-mail addresses.
 
-To overcome this problem we supplied a patch, with whom an assignment
-SCSI-Adress - Tapedevice is possible with a Parameter:
+(To be honest, I am not sure if the software
+can cope with the situation at all, but
+here it goes anyway.)
 
-insmod st tape_ordering=a-b-c-d-e[,a-b-c-d-e]
+Background:
 
-where a = scsi host
-      b = scsi channel
-      c = scsi id
-      d = scsi lun
-      e = wanted device file number
+I have an HP DDS2 DAT tape drive.
 
-Patch is for 2.4.18-pre1
+The external drive is connected  to my linux PC
+using Tekram DC390 scsi adaptor. (I have
+a separate active terminator block and 
+more or less good SCSI cable. The combination worked flawlessly
+previously and since I tested out the connection
+carefully before I began using this, I am more or less
+confident that the cabling and terminator is not the problem.)
+This DAT drive was used to make backup archive of various files.
+This worked fine under 2.4.16 (and 2.4.17, I think.)
+SCSI tape support is used as module: st.o
 
-Greetings,
-	Robert
+This week, I tried to make another backup copy of
+many files I have brought from external source.
+
+Then I have encountered a problem.
+The tar program got hung in the middle of
+operation. 
+
+I thought OK, maybe a drive proble, but then I
+was surprised to find that I could not even kill
+the tar process. "kill -KILL pid" won't remove it
+from the ps output.
+It seems that it got stuck inside the
+write system call.
+
+I suspect the cause of the problem is drive-related.  (Maybe a dirty
+head or something causing the drive to respond very slowly or even
+triggered a firmware problme or something.)
+
+While I will go out and buy a cleaning tape to remedy the
+supposedly dirty head, I am reporting this
+so that we can improve the error handling in SCSI subsystem.
+That is, it would be nice
+if we can make sure that the tar program 
+can be killed by interrut (control-C), etc. even
+in the presence of lower-level physical problem.
+
+I agree that if the drive behaves in a very strange manner
+due to temporary hardware problem, there may be
+few options to deal with it, but I still would like
+to be able to kill a program that accesses that drive.
+This is because I could not even try to remove the st (scsi tape)
+driver module to see if the older st.c from older
+kernel might work, etc..
+Since tar was holding the /dev/st0, I could not remove the
+st module. Also, if I recall correctly,
+trying to rewind the tape was refused since the
+device was in use, etc.. (But I may be confused about this.)
+
+Again, I am reporting this so that
+someone may notice that there are places
+where SCSI error handlings can be improved, specifically
+for tape drives. I will try to solve the physical problem
+by firstly trying head cleaing tape on my end.
+
+By the way, I do think the drive is at fault. (Not the
+cable, etc.)  I have an HP tape
+library utility (a Windows program made by HP and downloadable from
+HP's web site) to test and diagnose problems of HP DAT drives.
+The drive passes all the self-diagnotics and the like
+that didn't touch the recording medium. The test includes
+the SCSI connection to/from the tape drive.
+The diagnostics that looked at internal log buffer of the drive
+did suggest maybe I need to clean the tape head(!).
+Then by invoking media validation test of HP program,
+I found that my DAT drive in current condition 
+has a difficulty in reading/writing the
+tape medium. 
+(It did write without problems only a couple of days ago, though.) 
+Hence, my current suspcition is the dirty read/write head.  
+
+
+REPEAT-BY:
+
+The sequence of operation that led to the problem of hung "tar" which
+is not killable at all is explained below.
+(Actually, I tried various combinations of
+OS versions (2.4.18, 2.4.17), max transfer speed (10MB/s, 8MB/s,
+6.6MB/s, etc.)
+set in DC390 BIOS (and honoured by the tmscsim driver),
+and the problem surfaced after a while during the copying of
+large tar file. So I am more or less certain that the
+problem is caused by the device physical error.)
+
+    insmod st
+    mt -f /dev/st0 datcompression
+    tar cvXbf exclude-file-list 20 /dev/st0 MANY-DIRECTORIES-AND-FILES
+
+Luckily I got a few messages from the syslog file which may be
+relevant (and listed below), but unfortunately I didn't notice this
+while I was dealing with the malfunctioning drive and so my
+explanation may be a little out of sync with what truely happened.
+
+Anyway, here is the log with my explanation.
+I believe the following was recorded while I booted
+2.4.17 kernel. 
+
+LOG and the sequence of event.
+
+****  "insmod st" was executed from my backup script.
+
+Jul 18 23:49:20 duron kernel: st: Version 20011103, bufsize 32768, wrt 30720, max init. bufs 4, s/g segs 16
+Jul 18 23:49:20 duron kernel: Attached scsi tape st0 at scsi1, channel 0, id 3, lun 0
+Jul 18 23:49:20 duron kernel: DC390: Target 3: Sync transfer 10.0 MHz, Offset 15
+Jul 18 23:49:20 duron kernel: st0: Block limits 1 - 16777215 bytes.
+
+**** After mt -f /dev/st0 datcompression
+**** tar began execution.
+
+    ... tar began writing to /dev/st0 
+    ... But at some point, the drive seemed to encountered an error,
+    ... maybe due to a dirty head, which requires cleaning.
+    ... 
+    ... Instead of gracefully handling the situation caused by
+    ... the timeout of the drive,
+    ... the tar program got hung.
+    ... DC390 drive (tmscsim driver)  printed out diagnostics in a
+    ... neat manner.
+
+Jul 19 00:14:17 duron kernel: scsi : aborting command due to timeout : pid 54817, scsi1, channel 0, id 3, lun 0 Write (6) 00 00 28 00 00 
+Jul 19 00:14:17 duron kernel: DC390: Abort command (pid 54817, Device 03-00)
+Jul 19 00:14:17 duron kernel: DC390: SRB: Xferred 00000000, Remain 00000000, State 00000080, Phase 04
+Jul 19 00:14:17 duron kernel: DC390: AdpaterStatus: 00, SRB Status 00
+Jul 19 00:14:17 duron kernel: DC390: Status of last IRQ (DMA/SC/Int/IRQ): 0890cc20
+Jul 19 00:14:17 duron kernel: DC390: Register dump: SCSI block:
+Jul 19 00:14:17 duron kernel: DC390: XferCnt  Cmd Stat IntS IRQS FFIS Ctl1 Ctl2 Ctl3 Ctl4
+Jul 19 00:14:17 duron kernel: DC390:  000000   44   10   cc   00   80   17   48   18   04
+Jul 19 00:14:17 duron kernel: DC390: Register dump: DMA engine:
+Jul 19 00:14:17 duron kernel: DC390: Cmd   STrCnt    SBusA    WrkBC    WrkAC Stat SBusCtrl
+Jul 19 00:14:17 duron kernel: DC390:  00 00002800 002f8000 00000000 002fa800   00 03080000
+Jul 19 00:14:17 duron kernel: DC390: Register dump: PCI Status: 0200
+Jul 19 00:14:17 duron kernel: DC390: In case of driver trouble read linux/drivers/scsi/README.tmscsim
+Jul 19 00:14:17 duron kernel: DC390: Aborted pid 54817 with status 0
+
+
+    ... I was doing something else and didn't realize the hung tar
+    ... program until I checked the terminal window about 15 minutes later.
+    ... I now noticed the problem and tried to kill the tar process by
+    ... control-C, etc..
+    ... However, I found that the tar program could not be killed!
+    ... While my doing this, the system seemed to record another set of
+    ... messages. Maybe due to my forceful removal of the tape medium, etc..
+
+Jul 19 00:29:23 duron kernel: scsi : aborting command due to timeout : pid 54817, scsi1, channel 0, id 3, lun 0 Write (6) 00 00 28 00 00 
+Jul 19 00:29:23 duron kernel: DC390: Abort command (pid 54817, Device 03-00)
+Jul 19 00:29:23 duron kernel: DC390: SRB: Xferred 00000000, Remain 00000000, State 00000080, Phase 04
+Jul 19 00:29:23 duron kernel: DC390: AdpaterStatus: 00, SRB Status 00
+Jul 19 00:29:23 duron kernel: DC390: Status of last IRQ (DMA/SC/Int/IRQ): 0890cc20
+Jul 19 00:29:23 duron kernel: DC390: Register dump: SCSI block:
+Jul 19 00:29:23 duron kernel: DC390: XferCnt  Cmd Stat IntS IRQS FFIS Ctl1 Ctl2 Ctl3 Ctl4
+Jul 19 00:29:23 duron kernel: DC390:  000000   44   10   cc   00   80   17   48   18   04
+Jul 19 00:29:23 duron kernel: DC390: Register dump: DMA engine:
+Jul 19 00:29:23 duron kernel: DC390: Cmd   STrCnt    SBusA    WrkBC    WrkAC Stat SBusCtrl
+Jul 19 00:29:23 duron kernel: DC390:  00 00002800 002f8000 00000000 002fa800   00 03080000
+Jul 19 00:29:23 duron kernel: DC390: Register dump: PCI Status: 0200
+Jul 19 00:29:23 duron kernel: DC390: In case of driver trouble read linux/drivers/scsi/README.tmscsim
+Jul 19 00:29:23 duron kernel: DC390: Aborted pid 54817 with status 0
+Jul 19 00:29:23 duron kernel: SCSI host 1 abort (pid 54817) timed out - resetting
+Jul 19 00:29:23 duron kernel: SCSI bus is being reset for host 1 channel 0.
+Jul 19 00:29:23 duron kernel: DC390: RESET ... done
+Jul 19 00:29:23 duron kernel: st0: Error 26030000 (sugg. bt 0x20, driver bt 0x6, host bt 0x3).
+Jul 19 00:29:23 duron kernel: DC390: Target 3: Sync transfer 10.0 MHz, Offset 15
+Jul 19 00:29:23 duron kernel: SCSI error: host 1 id 3 lun 0 return code = 28000002
+Jul 19 00:29:23 duron kernel: ^ISense class 7, sense error 0, extended sense 0
 
 
 
+PS: I don't know if there is a timeout value which could be
+    enlarged to accommodate this particular error of HP drive, but
+    I think the drive requires servicing as explained above. So
+    even a much larger value won't help. 
+    What worries me, though is this.
+    I am wondering why the error condition reported by DC390 (tmscsim)
+    driver is not noticed by the upper layer of SCSI system
+    so that the write system call returned an error and we could kill the tar
+    program that called it. That would be a more graceful handling
+    of the situation IMHO.
+    
+
+cf. 
+>From README.st
+
+I noticed this excellent file only after I wrote the above
+to look for the maintainer address.
+ 
+>To enable debugging messages, edit st.c and #define DEBUG 1. As seen
+>above, debugging can be switched off with an ioctl if debugging is
+>compiled into the driver. The debugging output is not voluminuous.
+
+I will try to do this after I buy the cleaning tape.
+
+>If the tape seems to hang, I would be very interested to hear where
+>the driver is waiting. With the command 'ps -l' you can see the state
+>of the process using the tape. If the state is D, the process is
+>waiting for something. The field WCHAN tells where the driver is
+>waiting. If you have the current System.map in the correct place (in
+>/boot for the procps I use) or have updated /etc/psdatabase (for kmem
+>ps), ps writes the function name in the WCHAN field. If not, you have
+>to look up the function from System.map.
+>
+
+I am sorry that the above log was collected using
+2.4.17 kenrel while the main OS I use is nowadays 2.4.18 kernel.
+I think the System.map was incorrect. Actually I hit ALT+SysReq+t
+to see where the tar program got hung during the trials and errors,
+(but to my dismay, I didn't see the output immediately on
+the console. I was running X. Then later on, while I wrote the
+above memo, I notice the call trace was in the syslog file!)
 
 
 
---1690387710-1397572302-1027099816=:7412
-Content-Type: TEXT/PLAIN; charset=US-ASCII; name=TapeOrder
-Content-Transfer-Encoding: BASE64
-Content-ID: <Pine.LNX.4.21.0207191930160.7412@ftp.philosys.de>
-Content-Description: 
-Content-Disposition: attachment; filename=TapeOrder
+>From my own log: I didn't realize the output from Alt+SysReq+t is
+directed to syslog, etc.. 
+I am not sure if the symbols are correct due to the version mismatch
+above.
 
-ZGlmZiAtdSBsaW51eC9kcml2ZXJzL3Njc2kvUkVBRE1FLnN0IGxpbnV4LXBh
-dGNoZWQvZHJpdmVycy9zY3NpL1JFQURNRS5zdA0KLS0tIGxpbnV4L2RyaXZl
-cnMvc2NzaS9SRUFETUUuc3QJTW9uIEZlYiAyNSAyMDozODowNCAyMDAyDQor
-KysgbGludXgtcGF0Y2hlZC9kcml2ZXJzL3Njc2kvUkVBRE1FLnN0CUZyaSBK
-dWwgMTkgMTk6MTA6NTYgMjAwMg0KQEAgLTE4MywxMSArMTgzLDE5IEBADQog
-VGhlIGJ1ZmZlciBzaXplLCB3cml0ZSB0aHJlc2hvbGQsIGFuZCB0aGUgbWF4
-aW11bSBudW1iZXIgb2YgYWxsb2NhdGVkIGJ1ZmZlcnMNCiBhcmUgY29uZmln
-dXJhYmxlIHdoZW4gdGhlIGRyaXZlciBpcyBsb2FkZWQgYXMgYSBtb2R1bGUu
-IFRoZSBrZXl3b3JkcyBhcmU6DQogDQotYnVmZmVyX2ticz14eHggICAgICAg
-ICAgICAgdGhlIGJ1ZmZlciBzaXplIGluIGtpbG9ieXRlcyBpcyBzZXQgdG8g
-eHh4DQotd3JpdGVfdGhyZXNob2xkX2ticz14eHggICAgdGhlIHdyaXRlIHRo
-cmVzaG9sZCBpbiBraWxvYnl0ZXMgc2V0IHRvIHh4eA0KLW1heF9idWZmZXJz
-PXh4eCAgICAgICAgICAgIHRoZSBtYXhpbXVtIG51bWJlciBvZiB0YXBlIGJ1
-ZmZlciBzZXQgdG8geHh4DQotbWF4X3NnX3NlZ3M9eHh4CQkgICB0aGUgbWF4
-aW11bSBudW1iZXIgb2Ygc2NhdHRlci9nYXRoZXINCi0JCQkgICBzZWdtZW50
-cw0KK2J1ZmZlcl9rYnM9eHh4ICAgICAgICAgICAgIAkJdGhlIGJ1ZmZlciBz
-aXplIGluIGtpbG9ieXRlcyBpcyBzZXQgdG8geHh4DQord3JpdGVfdGhyZXNo
-b2xkX2ticz14eHggICAgCQl0aGUgd3JpdGUgdGhyZXNob2xkIGluIGtpbG9i
-eXRlcyBzZXQgdG8geHh4DQorbWF4X2J1ZmZlcnM9eHh4ICAgICAgICAgICAg
-CQl0aGUgbWF4aW11bSBudW1iZXIgb2YgdGFwZSBidWZmZXIgc2V0IHRvIHh4
-eA0KK21heF9zZ19zZWdzPXh4eAkJICAgCQl0aGUgbWF4aW11bSBudW1iZXIg
-b2Ygc2NhdHRlci9nYXRoZXINCisJCQkgICAJCXNlZ21lbnRzDQordGFwZV9v
-cmRlcmluZz0iYS1iLWMtZC1lWzthLWItYy1kLWVdIiAJdGhlIHByZXNldHRp
-bmcgb2YgdGhlIGRldmljZSB0byBhIA0KKyAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAJY2VydGFpbiB0YXBlIHdoZXJlDQorDQorCQkJCQlh
-ID0gc2NzaSBob3N0DQorCQkJCQliID0gc2NzaSBjaGFubmVsDQorCQkJCQlj
-ID0gc2NzaSBpZA0KKwkJCQkJZCA9IHNjc2kgbHVuDQorCQkJCQllID0gd2Fu
-dGVkIGRldmljZSBudW1iZXIgDQogDQogTm90ZSB0aGF0IGlmIHRoZSBidWZm
-ZXIgc2l6ZSBpcyBjaGFuZ2VkIGJ1dCB0aGUgd3JpdGUgdGhyZXNob2xkIGlz
-IG5vdA0KIHNldCwgdGhlIHdyaXRlIHRocmVzaG9sZCBpcyBzZXQgdG8gdGhl
-IG5ldyBidWZmZXIgc2l6ZSAtIDIga0IuDQpDb21tb24gc3ViZGlyZWN0b3Jp
-ZXM6IGxpbnV4L2RyaXZlcnMvc2NzaS9hYWNyYWlkIGFuZCBsaW51eC1wYXRj
-aGVkL2RyaXZlcnMvc2NzaS9hYWNyYWlkDQpDb21tb24gc3ViZGlyZWN0b3Jp
-ZXM6IGxpbnV4L2RyaXZlcnMvc2NzaS9haWM3eHh4IGFuZCBsaW51eC1wYXRj
-aGVkL2RyaXZlcnMvc2NzaS9haWM3eHh4DQpDb21tb24gc3ViZGlyZWN0b3Jp
-ZXM6IGxpbnV4L2RyaXZlcnMvc2NzaS9haWM3eHh4X29sZCBhbmQgbGludXgt
-cGF0Y2hlZC9kcml2ZXJzL3Njc2kvYWljN3h4eF9vbGQNCkNvbW1vbiBzdWJk
-aXJlY3RvcmllczogbGludXgvZHJpdmVycy9zY3NpL2RwdCBhbmQgbGludXgt
-cGF0Y2hlZC9kcml2ZXJzL3Njc2kvZHB0DQpDb21tb24gc3ViZGlyZWN0b3Jp
-ZXM6IGxpbnV4L2RyaXZlcnMvc2NzaS9wY21jaWEgYW5kIGxpbnV4LXBhdGNo
-ZWQvZHJpdmVycy9zY3NpL3BjbWNpYQ0KZGlmZiAtdSBsaW51eC9kcml2ZXJz
-L3Njc2kvc3QuYyBsaW51eC1wYXRjaGVkL2RyaXZlcnMvc2NzaS9zdC5jDQot
-LS0gbGludXgvZHJpdmVycy9zY3NpL3N0LmMJTW9uIEZlYiAyNSAyMDozODow
-NCAyMDAyDQorKysgbGludXgtcGF0Y2hlZC9kcml2ZXJzL3Njc2kvc3QuYwlG
-cmkgSnVsIDE5IDE5OjAyOjAwIDIwMDINCkBAIC03NSw2ICs3NSw3IEBADQog
-c3RhdGljIGludCB3cml0ZV90aHJlc2hvbGRfa2JzOw0KIHN0YXRpYyBpbnQg
-bWF4X2J1ZmZlcnMgPSAoLTEpOw0KIHN0YXRpYyBpbnQgbWF4X3NnX3NlZ3M7
-DQorc3RhdGljIGNoYXIgKnRhcGVfb3JkZXJpbmcgPSBOVUxMOw0KIA0KIE1P
-RFVMRV9BVVRIT1IoIkthaSBNYWtpc2FyYSIpOw0KIE1PRFVMRV9ERVNDUklQ
-VElPTigiU0NTSSBUYXBlIERyaXZlciIpOw0KQEAgLTg4LDYgKzg5LDggQEAN
-CiBNT0RVTEVfUEFSTV9ERVNDKG1heF9idWZmZXJzLCAiTWF4aW11bSBudW1i
-ZXIgb2YgYnVmZmVyIGFsbG9jYXRlZCBhdCBpbml0aWFsaXNhdGlvbiAoNCki
-KTsNCiBNT0RVTEVfUEFSTShtYXhfc2dfc2VncywgImkiKTsNCiBNT0RVTEVf
-UEFSTV9ERVNDKG1heF9zZ19zZWdzLCAiTWF4aW11bSBudW1iZXIgb2Ygc2Nh
-dHRlci9nYXRoZXIgc2VnbWVudHMgdG8gdXNlICgzMikiKTsNCitNT0RVTEVf
-UEFSTSh0YXBlX29yZGVyaW5nLCAicyIpOw0KK01PRFVMRV9QQVJNX0RFU0Mo
-dGFwZV9vcmRlcmluZywgIk9yZGVyaW5nIG9mIHRoZSBzY3NpIGFkcmVzc2Vz
-IHRvIHRoZSBkZXZpY2UgbnVtYmVycyIpOw0KIA0KIEVYUE9SVF9OT19TWU1C
-T0xTOw0KIA0KQEAgLTEwNyw2ICsxMTAsOSBAQA0KIAl9LA0KIAl7DQogCQki
-bWF4X3NnX3NlZ3MiLCAmbWF4X3NnX3NlZ3MNCisJfSwNCisJew0KKwkJInRh
-cGVfb3JkZXJpbmciLCBOVUxMDQogCX0NCiB9Ow0KICNlbmRpZg0KQEAgLTE4
-NCw2ICsxOTAsOCBAQA0KIA0KIHN0YXRpYyBpbnQgc3RfaW50X2lvY3RsKFNj
-c2lfVGFwZSAqLCB1bnNpZ25lZCBpbnQsIHVuc2lnbmVkIGxvbmcpOw0KIA0K
-K3N0YXRpYyBTVF90YWJsZSBzdF9kZXZpY2VfZW50cnlbU1RfTUFYX1RBUEVT
-XTsNCisNCiAMDQogI2luY2x1ZGUgIm9zc3RfZGV0ZWN0LmgiDQogI2lmbmRl
-ZiBTSUdTX0ZST01fT1NTVA0KQEAgLTMyNSw3ICszMzMsNyBAQA0KIA0KIAlz
-dF9uYnIgPSBUQVBFX05SKFNDcG50LT5yZXF1ZXN0LnJxX2Rldik7DQogCXJl
-YWRfbG9jaygmc3RfZGV2X2Fycl9sb2NrKTsNCi0JU1RwID0gc2NzaV90YXBl
-c1tzdF9uYnJdOw0KKwlTVHAgPSBzY3NpX3RhcGVzW3N0X2RldmljZV9lbnRy
-eVtzdF9uYnJdLmluZGV4XTsNCiAJcmVhZF91bmxvY2soJnN0X2Rldl9hcnJf
-bG9jayk7DQogCWlmICgoU1RwLT5idWZmZXIpLT53cml0aW5nICYmDQogCSAg
-ICAoU0NwbnQtPnNlbnNlX2J1ZmZlclswXSAmIDB4NzApID09IDB4NzAgJiYN
-CkBAIC04NjIsMTEgKzg3MCwxNiBAQA0KIAlTY3NpX1RhcGUgKlNUcDsNCiAJ
-U1RfcGFydHN0YXQgKlNUcHM7DQogCWludCBkZXYgPSBUQVBFX05SKGlub2Rl
-LT5pX3JkZXYpOw0KKwlpbnQgZGV2aWNlX2VudHJ5Ow0KIAl1bnNpZ25lZCBs
-b25nIGZsYWdzOw0KIA0KIAl3cml0ZV9sb2NrX2lycXNhdmUoJnN0X2Rldl9h
-cnJfbG9jaywgZmxhZ3MpOw0KLQlTVHAgPSBzY3NpX3RhcGVzW2Rldl07DQot
-CWlmIChkZXYgPj0gc3RfdGVtcGxhdGUuZGV2X21heCB8fCBTVHAgPT0gTlVM
-TCkgew0KKwlkZXZpY2VfZW50cnkgPSBzdF9kZXZpY2VfZW50cnlbZGV2XS5p
-bmRleDsNCisJU1RwID0gc2NzaV90YXBlc1tkZXZpY2VfZW50cnldOw0KKw0K
-KwlpZiAoZGV2aWNlX2VudHJ5ID49IHN0X3RlbXBsYXRlLmRldl9tYXggfHwg
-DQorCQlzdF9kZXZpY2VfZW50cnlbZGV2XS5zdGF0ZSAhPSBFTlRSWV9VU0VE
-IHx8IA0KKwkJU1RwID09IE5VTEwpIHsNCiAJCXdyaXRlX3VubG9ja19pcnFy
-ZXN0b3JlKCZzdF9kZXZfYXJyX2xvY2ssIGZsYWdzKTsNCiAJCXJldHVybiAo
-LUVOWElPKTsNCiAJfQ0KQEAgLTk3MCw3ICs5ODMsNyBAQA0KIA0KIAlkZXYg
-PSBUQVBFX05SKGRldnQpOw0KIAlyZWFkX2xvY2soJnN0X2Rldl9hcnJfbG9j
-ayk7DQotCVNUcCA9IHNjc2lfdGFwZXNbZGV2XTsNCisJU1RwID0gc2NzaV90
-YXBlc1tzdF9kZXZpY2VfZW50cnlbZGV2XS5pbmRleF07DQogCXJlYWRfdW5s
-b2NrKCZzdF9kZXZfYXJyX2xvY2spOw0KIAlTVG0gPSAmKFNUcC0+bW9kZXNb
-U1RwLT5jdXJyZW50X21vZGVdKTsNCiAJU1RwcyA9ICYoU1RwLT5wc1tTVHAt
-PnBhcnRpdGlvbl0pOw0KQEAgLTEwODMsNyArMTA5Niw3IEBADQogDQogCWRl
-diA9IFRBUEVfTlIoZGV2dCk7DQogCXJlYWRfbG9jaygmc3RfZGV2X2Fycl9s
-b2NrKTsNCi0JU1RwID0gc2NzaV90YXBlc1tkZXZdOw0KKwlTVHAgPSBzY3Np
-X3RhcGVzW3N0X2RldmljZV9lbnRyeVtkZXZdLmluZGV4XTsNCiAJcmVhZF91
-bmxvY2soJnN0X2Rldl9hcnJfbG9jayk7DQogDQogCWlmIChTVHAtPmRvb3Jf
-bG9ja2VkID09IFNUX0xPQ0tFRF9BVVRPKQ0KQEAgLTExMjgsNyArMTE0MSw3
-IEBADQogCWludCBkZXYgPSBUQVBFX05SKGlub2RlLT5pX3JkZXYpOw0KIA0K
-IAlyZWFkX2xvY2soJnN0X2Rldl9hcnJfbG9jayk7DQotCVNUcCA9IHNjc2lf
-dGFwZXNbZGV2XTsNCisJU1RwID0gc2NzaV90YXBlc1tzdF9kZXZpY2VfZW50
-cnlbZGV2XS5pbmRleF07DQogCXJlYWRfdW5sb2NrKCZzdF9kZXZfYXJyX2xv
-Y2spOw0KIA0KIAlpZiAoZG93bl9pbnRlcnJ1cHRpYmxlKCZTVHAtPmxvY2sp
-KQ0KQEAgLTE2NTIsNyArMTY2NSw3IEBADQogCWludCBkZXYgPSBUQVBFX05S
-KGlub2RlLT5pX3JkZXYpOw0KIA0KIAlyZWFkX2xvY2soJnN0X2Rldl9hcnJf
-bG9jayk7DQotCVNUcCA9IHNjc2lfdGFwZXNbZGV2XTsNCisJU1RwID0gc2Nz
-aV90YXBlc1tzdF9kZXZpY2VfZW50cnlbZGV2XS5pbmRleF07DQogCXJlYWRf
-dW5sb2NrKCZzdF9kZXZfYXJyX2xvY2spOw0KIA0KIAlpZiAoZG93bl9pbnRl
-cnJ1cHRpYmxlKCZTVHAtPmxvY2spKQ0KQEAgLTI5OTgsNyArMzAxMSw3IEBA
-DQogCWludCBkZXYgPSBUQVBFX05SKGlub2RlLT5pX3JkZXYpOw0KIA0KIAly
-ZWFkX2xvY2soJnN0X2Rldl9hcnJfbG9jayk7DQotCVNUcCA9IHNjc2lfdGFw
-ZXNbZGV2XTsNCisJU1RwID0gc2NzaV90YXBlc1tzdF9kZXZpY2VfZW50cnlb
-ZGV2XS5pbmRleF07DQogCXJlYWRfdW5sb2NrKCZzdF9kZXZfYXJyX2xvY2sp
-Ow0KIA0KIAlpZiAoZG93bl9pbnRlcnJ1cHRpYmxlKCZTVHAtPmxvY2spKQ0K
-QEAgLTM1NTksNiArMzU3Miw4MSBAQA0KIAlyZXR1cm4gMDsNCiB9DQogDQor
-LyogQ2hlY2sgaWYgcHJlc2V0IHRhcGUtb3JkZXJpbmcgaXMgdXNlZCwgaWYg
-bm90IGp1c3QgaW5jcmVtZW50IHRoZQ0KKyAgIGRldmljZSBudW1iZXJzIGFz
-IHVzdWFsbHkgKi8NCitpbnQgY2hlY2tfdGFibGUoU1RfYWRyZXNzIHRhcGUp
-IA0KK3sNCisJaW50IGRldmljZTsNCisJaW50IGJ1c3kgPSAtMTsNCisNCisJ
-Zm9yIChkZXZpY2UgPSAwOyBkZXZpY2UgPCBTVF9NQVhfVEFQRVM7IGRldmlj
-ZSsrKSB7DQorCQlpZiAoYnVzeSA8IDAgJiYgDQorCQkgICBzdF9kZXZpY2Vf
-ZW50cnlbZGV2aWNlXS5zdGF0ZSA9PSBFTlRSWV9FTVBUWSkNCisJCQlidXN5
-ID0gZGV2aWNlOw0KKw0KKwkJaWYgKCAoc3RfZGV2aWNlX2VudHJ5W2Rldmlj
-ZV0uc3RhdGUgPT0gRU5UUllfSU5JVCkgJiYgDQorCQkgICAgICh0YXBlLmNt
-cCA9PSBzdF9kZXZpY2VfZW50cnlbZGV2aWNlXS5hZHJlc3MuY21wKSkgew0K
-KwkJCSBzdF9kZXZpY2VfZW50cnlbZGV2aWNlXS5zdGF0ZT0gRU5UUllfVVNF
-RDsNCisJCQlyZXR1cm4gZGV2aWNlOw0KKwkJfQ0KKwl9DQorCXN0X2Rldmlj
-ZV9lbnRyeVtidXN5XS5hZHJlc3MgPSB0YXBlOwkNCisJc3RfZGV2aWNlX2Vu
-dHJ5W2J1c3ldLnN0YXRlID0gRU5UUllfVVNFRDsNCisJDQorCXJldHVybiBi
-dXN5Ow0KK30NCisNCisvKiBJbml0aWFsaXplIHRoZSBwcmVzZXQgdGFwZS1v
-cmRlcmluZyBhcnJheSAqLw0KK3ZvaWQgaW5pdF90YWJsZSh2b2lkKSANCit7
-DQorCWNoYXIgKmJlZ2luID0gdGFwZV9vcmRlcmluZzsNCisJY2hhciAqbmV4
-dCwgKmVuZCwgKndoaXRlOw0KKwlpbnQgaSwgdG1wID0gMSwgbGVuOw0KKwlT
-VF9hZHJlc3MgZW50cnk7DQorDQorCWlmICghKGVuZCA9IHN0cnN0cih0YXBl
-X29yZGVyaW5nLCAiLCIpKSkgDQorCQlsZW4gPSBzdHJubGVuICh0YXBlX29y
-ZGVyaW5nLCAzNzUpOwkNCisJZWxzZQ0KKwkJbGVuID0gZW5kIC0gYmVnaW47
-DQorDQorCWRvIHsNCisJCWlmICghKGVuZCA9IChzdHJzdHIoYmVnaW4sICI7
-IikpKSkgew0KKwkJCWlmIChiZWdpbiA9PSB0YXBlX29yZGVyaW5nKSANCisJ
-CQkJYnJlYWs7DQorCQkJZWxzZQ0KKwkJCQllbmQgPSB0YXBlX29yZGVyaW5n
-ICsgbGVuOw0KKwkJfQ0KKw0KKwkJZm9yICh3aGl0ZSA9IGJlZ2luOyB3aGl0
-ZSA8IGVuZDsgd2hpdGUrKykgew0KKwkJCWlmICgoKCp3aGl0ZSAgPCAnMCcp
-IHx8ICgqd2hpdGUgICA+ICc5JykpICYmIA0KKyAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgKCp3aGl0ZSAhPSAnLScpKSAgew0KKwkJCQl0bXAgPSAw
-Ow0KKwkJCQlicmVhazsNCisJCQl9DQorCQl9CQ0KKwkJaSA9IDA7DQorCQlp
-ZiAodG1wKSB7CQ0KKwkJCWRvIHsNCisJCQkJaWYgKCEobmV4dCA9IChzdHJz
-dHIoYmVnaW4sICItIikpKSkNCisJCQkJCW5leHQgPSBlbmQ7DQorCQkJCXRt
-cCA9IHNpbXBsZV9zdHJ0b3VsKGJlZ2luLCAmbmV4dCwgMCk7DQorCQkJCWlm
-ICggaSA8ICA0ICkgDQorCQkJCQllbnRyeS52YWxbaSsrXSA9ICh1bnNpZ25l
-ZCBjaGFyKSB0bXA7DQorDQorCQkJCWJlZ2luID0gbmV4dCArIDE7DQorCQkJ
-fSB3aGlsZSAoKGJlZ2luIDwgZW5kKSAmJiAoaSA8IDUpICk7CQ0KKw0KKwkJ
-CWlmICggKHRtcCA8IFNUX01BWF9UQVBFUykgJiYNCisJCSAgICAgCQkoc3Rf
-ZGV2aWNlX2VudHJ5W3RtcF0uc3RhdGUgPT0gRU5UUllfRU1QVFkpKSB7DQor
-CQkJCSBzdF9kZXZpY2VfZW50cnlbdG1wXS5hZHJlc3MgPSBlbnRyeTsNCisJ
-CQkJIHN0X2RldmljZV9lbnRyeVt0bXBdLnN0YXRlICA9IEVOVFJZX0lOSVQ7
-DQorCQkJfQ0KKwkJfQ0KKwkJdG1wID0gMTsNCisJCWJlZ2luID0gZW5kICsg
-MTsJCQ0KKwl9IHdoaWxlIChiZWdpbiA8ICh0YXBlX29yZGVyaW5nICsgbGVu
-KSk7DQorfQ0KKw0KIA0KIC8qIFZhbGlkYXRlIHRoZSBvcHRpb25zIGZyb20g
-Y29tbWFuZCBsaW5lIG9yIG1vZHVsZSBwYXJhbWV0ZXJzICovDQogc3RhdGlj
-IHZvaWQgdmFsaWRhdGVfb3B0aW9ucyh2b2lkKQ0KQEAgLTM1NzgsNiArMzY2
-Niw4IEBADQogCQlzdF9tYXhfYnVmZmVycyA9IG1heF9idWZmZXJzOw0KIAlp
-ZiAobWF4X3NnX3NlZ3MgPj0gU1RfRklSU1RfU0cpDQogCQlzdF9tYXhfc2df
-c2VncyA9IG1heF9zZ19zZWdzOw0KKwlpZiAodGFwZV9vcmRlcmluZykgDQor
-CQlpbml0X3RhYmxlKCk7DQogfQ0KIA0KICNpZm5kZWYgTU9EVUxFDQpAQCAt
-MzU5OSw4ICszNjg5LDExIEBADQogCQkJCWxlbiA9IHN0cmxlbihwYXJtc1tp
-XS5uYW1lKTsNCiAJCQkJaWYgKCFzdHJuY21wKHN0cCwgcGFybXNbaV0ubmFt
-ZSwgbGVuKSAmJg0KIAkJCQkgICAgKCooc3RwICsgbGVuKSA9PSAnOicgfHwg
-KihzdHAgKyBsZW4pID09ICc9JykpIHsNCi0JCQkJCSpwYXJtc1tpXS52YWwg
-PQ0KLSAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgIHNpbXBsZV9zdHJ0b3VsKHN0cCArIGxlbiArIDEsIE5VTEwsIDAp
-Ow0KKwkJCQkJaWYgKGkgPT0gNCkgew0KKwkJCQkJCXRhcGVfb3JkZXJpbmcg
-PSBzdHAgKyBsZW4gKyAxOw0KKwkJCQkJfSBlbHNlDQorCQkJCQkJKnBhcm1z
-W2ldLnZhbCA9DQorICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAJc2ltcGxlX3N0cnRvdWwoc3RwICsgbGVuICsgMSwg
-TlVMTCwgMCk7DQogCQkJCQlicmVhazsNCiAJCQkJfQ0KIAkJCX0NCkBAIC0z
-NjQyLDYgKzM3MzUsNyBAQA0KIAlpbnQgaSwgbW9kZSwgdGFyZ2V0X25iciwg
-ZGV2X251bTsNCiAJdW5zaWduZWQgbG9uZyBmbGFncyA9IDA7DQogCWNoYXIg
-KnN0cDsNCisJU1RfYWRyZXNzIHRhcGU7DQogDQogCWlmIChTRHAtPnR5cGUg
-IT0gVFlQRV9UQVBFKQ0KIAkJcmV0dXJuIDE7DQpAQCAtMzcxNyw3ICszODEx
-LDEyIEBADQogCX0NCiAJbWVtc2V0KHRwbnQsIDAsIHNpemVvZihTY3NpX1Rh
-cGUpKTsNCiAJc2NzaV90YXBlc1tpXSA9IHRwbnQ7DQotCWRldl9udW0gPSBp
-Ow0KKwl0YXBlLnZhbFtTVF9IT1NUXSAgICA9ICh1bnNpZ25lZCBjaGFyICkg
-U0RwLT5ob3N0LT5ob3N0X25vOw0KKwl0YXBlLnZhbFtTVF9DSEFOTkVMXSA9
-ICh1bnNpZ25lZCBjaGFyICkgU0RwLT5jaGFubmVsOw0KKwl0YXBlLnZhbFtT
-VF9JRF0gICAgICA9ICh1bnNpZ25lZCBjaGFyICkgU0RwLT5pZDsNCisJdGFw
-ZS52YWxbU1RfTFVOXSAgICAgPSAodW5zaWduZWQgY2hhciApIFNEcC0+bHVu
-Ow0KKwlkZXZfbnVtID0gY2hlY2tfdGFibGUodGFwZSk7ICAgDQorCXN0X2Rl
-dmljZV9lbnRyeVtkZXZfbnVtXS5pbmRleCA9IGk7DQogDQogCWZvciAobW9k
-ZSA9IDA7IG1vZGUgPCBTVF9OQlJfTU9ERVM7ICsrbW9kZSkgew0KIAkgICAg
-Y2hhciBuYW1lWzhdOw0KQEAgLTM3MjcsMTQgKzM4MjYsMTQgQEANCiAJICAg
-IHNwcmludGYgKG5hbWUsICJtdCVzIiwgZm9ybWF0c1ttb2RlXSk7DQogCSAg
-ICB0cG50LT5kZV9yW21vZGVdID0NCiAJCWRldmZzX3JlZ2lzdGVyIChTRHAt
-PmRlLCBuYW1lLCBERVZGU19GTF9ERUZBVUxULA0KLQkJCQlNQUpPUl9OUiwg
-aSArIChtb2RlIDw8IDUpLA0KKwkJCQlNQUpPUl9OUiwgZGV2X251bSArICht
-b2RlIDw8IDUpLA0KIAkJCQlTX0lGQ0hSIHwgU19JUlVHTyB8IFNfSVdVR08s
-DQogCQkJCSZzdF9mb3BzLCBOVUxMKTsNCiAJICAgIC8qICBOby1yZXdpbmQg
-ZW50cnkgICovDQogCSAgICBzcHJpbnRmIChuYW1lLCAibXQlc24iLCBmb3Jt
-YXRzW21vZGVdKTsNCiAJICAgIHRwbnQtPmRlX25bbW9kZV0gPQ0KIAkJZGV2
-ZnNfcmVnaXN0ZXIgKFNEcC0+ZGUsIG5hbWUsIERFVkZTX0ZMX0RFRkFVTFQs
-DQotCQkJCU1BSk9SX05SLCBpICsgKG1vZGUgPDwgNSkgKyAxMjgsDQorCQkJ
-CU1BSk9SX05SLCBkZXZfbnVtICsgKG1vZGUgPDwgNSkgKyAxMjgsDQogCQkJ
-CVNfSUZDSFIgfCBTX0lSVUdPIHwgU19JV1VHTywNCiAJCQkJJnN0X2ZvcHMs
-IE5VTEwpOw0KIAl9DQpAQCAtMzc0Niw3ICszODQ1LDcgQEANCiAJCXRwbnQt
-PnRhcGVfdHlwZSA9IE1UX0lTU0NTSTI7DQogDQogICAgICAgICB0cG50LT5p
-bml0ZWQgPSAwOw0KLQl0cG50LT5kZXZ0ID0gTUtERVYoU0NTSV9UQVBFX01B
-Sk9SLCBpKTsNCisJdHBudC0+ZGV2dCA9IE1LREVWKFNDU0lfVEFQRV9NQUpP
-UiwgZGV2X251bSk7DQogCXRwbnQtPmRpcnR5ID0gMDsNCiAJdHBudC0+aW5f
-dXNlID0gMDsNCiAJdHBudC0+ZHJ2X2J1ZmZlciA9IDE7CS8qIFRyeSBidWZm
-ZXJpbmcgaWYgbm8gbW9kZSBzZW5zZSAqLw0KQEAgLTM4NjgsNyArMzk2Nyw3
-IEBADQogDQogCXdyaXRlX2xvY2tfaXJxc2F2ZSgmc3RfZGV2X2Fycl9sb2Nr
-LCBmbGFncyk7DQogCWZvciAoaSA9IDA7IGkgPCBzdF90ZW1wbGF0ZS5kZXZf
-bWF4OyBpKyspIHsNCi0JCXRwbnQgPSBzY3NpX3RhcGVzW2ldOw0KKwkJdHBu
-dCA9IHNjc2lfdGFwZXNbc3RfZGV2aWNlX2VudHJ5W2ldLmluZGV4XTsNCiAJ
-CWlmICh0cG50ICE9IE5VTEwgJiYgdHBudC0+ZGV2aWNlID09IFNEcCkgew0K
-IAkJCXRwbnQtPmRldmljZSA9IE5VTEw7DQogCQkJZm9yIChtb2RlID0gMDsg
-bW9kZSA8IFNUX05CUl9NT0RFUzsgKyttb2RlKSB7DQpAQCAtMzg3OCw3ICsz
-OTc3LDkgQEANCiAJCQkJdHBudC0+ZGVfblttb2RlXSA9IE5VTEw7DQogCQkJ
-fQ0KIAkJCWtmcmVlKHRwbnQpOw0KLQkJCXNjc2lfdGFwZXNbaV0gPSAwOw0K
-KwkJCXNjc2lfdGFwZXNbc3RfZGV2aWNlX2VudHJ5W2ldLmluZGV4XSA9IDA7
-DQorCQkJc3RfZGV2aWNlX2VudHJ5W2ldLmluZGV4ID0gMDsNCisJCQlzdF9k
-ZXZpY2VfZW50cnlbaV0uc3RhdGUgPSBFTlRSWV9FTVBUWTsNCiAJCQlTRHAt
-PmF0dGFjaGVkLS07DQogCQkJc3RfdGVtcGxhdGUubnJfZGV2LS07DQogCQkJ
-c3RfdGVtcGxhdGUuZGV2X25vdGljZWQtLTsNCmRpZmYgLXUgbGludXgvZHJp
-dmVycy9zY3NpL3N0LmggbGludXgtcGF0Y2hlZC9kcml2ZXJzL3Njc2kvc3Qu
-aA0KLS0tIGxpbnV4L2RyaXZlcnMvc2NzaS9zdC5oCU1vbiBGZWIgMjUgMjA6
-Mzg6MDQgMjAwMg0KKysrIGxpbnV4LXBhdGNoZWQvZHJpdmVycy9zY3NpL3N0
-LmgJRnJpIEp1bCAxOSAxOTowMjoyMiAyMDAyDQpAQCAtMTMwLDYgKzEzMCwy
-OCBAQA0KICNlbmRpZg0KIH0gU2NzaV9UYXBlOw0KIA0KK3R5cGVkZWYgdW5p
-b24gew0KKwlpbnQgY21wOw0KKwl1bnNpZ25lZCBjaGFyIHZhbFs0XTsNCit9
-IFNUX2FkcmVzczsNCisNCit0eXBlZGVmIHN0cnVjdCB7DQorCWludCBzdGF0
-ZTsNCisJaW50IGluZGV4Ow0KKwlTVF9hZHJlc3MgYWRyZXNzOw0KK30gU1Rf
-dGFibGU7DQorDQorLyogVmFsdWVzIGZvciBhZHJlc3MgYXJyYXkgKi8NCisj
-ZGVmaW5lIFNUX0hPU1QJCTANCisjZGVmaW5lIFNUX0NIQU5ORUwJMQ0KKyNk
-ZWZpbmUgU1RfSUQJCTINCisjZGVmaW5lIFNUX0xVTgkJMw0KKw0KKy8qIFZh
-bHVlcyBvZiBidXN5IHN0YXRlICovDQorI2RlZmluZSBFTlRSWV9FTVBUWQkw
-DQorI2RlZmluZSBFTlRSWV9JTklUCTENCisjZGVmaW5lIEVOVFJZX1VTRUQJ
-Mg0KKw0KIC8qIEJpdCBtYXNrcyBmb3IgdXNlX3BmICovDQogI2RlZmluZSBV
-U0VfUEYgICAgICAxDQogI2RlZmluZSBQRl9URVNURUQgICAyDQpDb21tb24g
-c3ViZGlyZWN0b3JpZXM6IGxpbnV4L2RyaXZlcnMvc2NzaS9zeW01M2M4eHhf
-MiBhbmQgbGludXgtcGF0Y2hlZC9kcml2ZXJzL3Njc2kvc3ltNTNjOHh4XzIN
-Cg==
---1690387710-1397572302-1027099816=:7412--
+	...
+
+>Jul 19 00:26:03 duron kernel: bash          S 00000000  2656   406    405   409               (NOTLB)
+>Jul 19 00:26:03 duron kernel: Call Trace: [sys_wait4+862/912] [system_call+51/56] 
+>Jul 19 00:26:03 duron kernel: tar           D D961E000  5000   409    406                     (NOTLB)
+>Jul 19 00:26:03 duron kernel: Call Trace: [wait_for_completion+114/144] [ide-cd:ignore+37481379/72914909] [ide-cd:ignore+37485815/72910473] [file_read_actor+0/96] [sys_write+150/208] 
+>Jul 19 00:26:03 duron kernel:    [system_call+51/56] 
+
+        ...
+
+
+if the drive still behaves in a funny manner after
+applying cleaning tape,
+I will try to gather the information above.
+
+Oh, for that matter, if the information is really
+important, I will try to gather the data WITHOUT
+applying the cleaning tape. That is I will try to
+see if I can coerce the misbehaving DAT tape drive
+into accepting tar output even for a few seconds and
+then when tar gets hung, I can try Alt+SysReq+t.
+
+Please advise me if necessary.
+
+>Note also that the timeouts are very long compared to most other
+>drivers. This means that the Linux driver may appear hung although the
+>real reason is that the tape firmware has got confused.
+
+It seems like the case since the drive now operates
+in a rather funny manner even under windows 98 when it is tested
+using HP's excellent diagnostics tool.
