@@ -1,35 +1,37 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: RE: [PATCH]: megaraid 2.20.4: Fixes a data corruption bug
-Date: 01 Oct 2004 19:09:14 -0400
+From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+Subject: Re: [PATCH] tmscsim: INQUIRY always only untagged
+Date: Sat, 2 Oct 2004 01:44:25 +0200 (CEST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1096672161.1766.127.camel@mulgrave>
-References: <0E3FA95632D6D047BA649F95DAB60E570230C989@exa-atlanta>
+Message-ID: <Pine.LNX.4.60.0410020142590.23298@poirot.grange>
+References: <Pine.LNX.4.60.0409040033310.5266@poirot.grange>
+ <20040904140102.A15247@infradead.org> <Pine.LNX.4.60.0409050022570.3092@poirot.grange>
+ <20040904233835.A18659@infradead.org> <Pine.LNX.4.60.0409051654460.3039@poirot.grange>
+ <1094398979.10977.9.camel@mulgrave> <20040905173134.A31521@infradead.org>
+ <1094422949.10977.15.camel@mulgrave> <Pine.LNX.4.60.0409061042240.6252@poirot.grange>
+ <Pine.LNX.4.60.0410012255410.3951@poirot.grange> <20041001233151.A8853@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat16.steeleye.com ([209.192.50.48]:41886 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S266810AbUJAXJ3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 1 Oct 2004 19:09:29 -0400
-In-Reply-To: <0E3FA95632D6D047BA649F95DAB60E570230C989@exa-atlanta>
+Received: from pop.gmx.de ([213.165.64.20]:45954 "HELO mail.gmx.net")
+	by vger.kernel.org with SMTP id S267333AbUJBHSV (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 2 Oct 2004 03:18:21 -0400
+In-Reply-To: <20041001233151.A8853@infradead.org>
 List-Id: linux-scsi@vger.kernel.org
-To: "Bagalkote, Sreenivas" <sreenib@lsil.com>
-Cc: "Mukker, Atul" <Atulm@lsil.com>, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, "'bunk@fs.tum.de'" <bunk@fs.tum.de>, 'Andrew Morton' <akpm@osdl.org>, "'Matt_Domsch@dell.com'" <Matt_Domsch@dell.com>, "Ju, Seokmann" <sju@lsil.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Fri, 2004-10-01 at 18:52, Bagalkote, Sreenivas wrote:
-> Would you please send us your version of megaraid driver that will
-> most likely go into 2.6.9? We would like baseline your version and
-> make our internal releases off of that. I appreciate your help.
+On Fri, 1 Oct 2004, Christoph Hellwig wrote:
 
-You can get my tree in bitkeeper here
+> I get rejects in every single hunk when trying to apply your patches.  It
+> looks like some kind of whitespace messup, but I don't see in what way.
+>
+> Did you recently switch mailers?
 
-bk://linux-scsi.bkbits.net/scsi-misc-2.6
+Ouch... I thought it did work eventually, apparently, not:-( I didn't 
+switch - I sent patches as attachments up to now - will have to do this in 
+the future too. Will re-send. Thanks for pointing out.
 
-Or, you can get it (with a slight time lag) in the -mm tree:
-
-http://www.kernel.org/pub/linux/kernel/people/akpm/patches/2.6/
-
-James
-
+Guennadi
+---
+Guennadi Liakhovetski
 
