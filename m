@@ -1,146 +1,36 @@
-From: Gabriel <gabrie1@freemail.hu>
-Subject: Re: SCSI-hdd bug
-Date: Fri, 23 Jan 2004 13:49:58 +0100
+From: jd <jpd_hp_linux_scsi@yahoo.com>
+Subject: ANNOUNCE: UNH ISCSI drivers for 2.6.1
+Date: Fri, 23 Jan 2004 05:19:34 -0800 (PST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <40111876.1070406@freemail.hu>
-References: <4010D8C3.9080902@freemail.hu> <20040123004848.2f696e10.akpm@osdl.org>
+Message-ID: <20040123131934.911.qmail@web60205.mail.yahoo.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------080708040500070806070400"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [193.224.69.67] ([193.224.69.67]:53232 "EHLO pisztacia.ehf.hu")
-	by vger.kernel.org with ESMTP id S263448AbUAWMuz (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 23 Jan 2004 07:50:55 -0500
-In-Reply-To: <20040123004848.2f696e10.akpm@osdl.org>
+Received: from web60205.mail.yahoo.com ([216.109.118.100]:64136 "HELO
+	web60205.mail.yahoo.com") by vger.kernel.org with SMTP
+	id S261775AbUAWNTe (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 23 Jan 2004 08:19:34 -0500
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
-Cc: linux-scsi@vger.kernel.org
-
-This is a multi-part message in MIME format.
---------------080708040500070806070400
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 8bit
-
-Andrew Morton írta:
-
->Gabriel <gabrie1@freemail.hu> wrote:
->  
->
->>Hi!
->>
->>I cant use my SCSI-hdd.
->>/mnt/scsi/sda1# tar -xjf /home/gabriel/linux-2.6.x.tar.bz2
->>working..., after 3minute: OOPS 0000
->>I attach my patrial messages.log and config.gz
->>
->>    
->>
->
->That's one for the SCSI guys.  2.6.2-rc1, aha152x0 died in busfree_run().
->
->Is it repeatable?
->
-yes - i send new messges.log-, after ~200 sec, my cpu 96%wait,
-and i cant with keybord writen, but mice cut&paste work  (eg.: ps, df,
-ls...), and system rq key work to.
-
-bye
-gabriel
+To: linux-scsi@vger.kernel.org
 
 
 
---------------080708040500070806070400
-Content-Type: application/x-bzip2;
- name="scsi-err2.bz2"
-Content-Transfer-Encoding: base64
-Content-Disposition: inline;
- filename="scsi-err2.bz2"
+ The UNH iSCSI Initiator driver and iSCSI Target emulator 
+ have been ported to 2.6.1 kernels.
 
-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
---------------080708040500070806070400--
+ Stand alone RPMS (1.5.01) and Source TarBalls are available from :
 
+  http://sourceforge.net/projects/unh-iscsi
+
+ Visit the Project page for news and update information.
+
+ 
+
+
+
+
+
+__________________________________
+Do you Yahoo!?
+Yahoo! SiteBuilder - Free web site building tool. Try it!
+http://webhosting.yahoo.com/ps/sb/
