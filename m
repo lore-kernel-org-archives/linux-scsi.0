@@ -1,45 +1,39 @@
-From: Bjarne Thomsen <bjarne.thomsen@get2net.dk>
-Subject: cp from SATA to SCSI freeze
-Date: Sun, 24 Oct 2004 12:13:15 +0200
+From: Marc Bevand <bevand_m@epita.fr>
+Subject: Re: cp from SATA to SCSI freeze
+Date: Sun, 24 Oct 2004 11:02:41 +0000 (UTC)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1098612795.11032.20.camel@tycho.astronomy.dk>
-Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Message-ID: <clg24h$ep$1@sea.gmane.org>
+References: <1098612795.11032.20.camel@tycho.astronomy.dk>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fitch1.uni2.net ([130.227.52.104]:63438 "EHLO fitch1.uni2.net")
-	by vger.kernel.org with ESMTP id S261427AbUJXKNV (ORCPT
+Received: from main.gmane.org ([80.91.229.2]:46509 "EHLO main.gmane.org")
+	by vger.kernel.org with ESMTP id S261437AbUJXLCp (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 24 Oct 2004 06:13:21 -0400
-Received: from [192.168.1.102] (83.72.33.52.ip.tele2adsl.dk [83.72.33.52])
-	by fitch1.uni2.net (8.12.6/8.11.6) with ESMTP id i9OADE3J019753
-	for <linux-scsi@vger.kernel.org>; Sun, 24 Oct 2004 12:13:14 +0200
+	Sun, 24 Oct 2004 07:02:45 -0400
+Received: from list by main.gmane.org with local (Exim 3.35 #1 (Debian))
+	id 1CLg96-0003me-00
+	for <linux-scsi@vger.kernel.org>; Sun, 24 Oct 2004 13:02:44 +0200
+Received: from ivry-1-81-57-179-18.fbx.proxad.net ([81.57.179.18])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-scsi@vger.kernel.org>; Sun, 24 Oct 2004 13:02:44 +0200
+Received: from bevand_m by ivry-1-81-57-179-18.fbx.proxad.net with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-scsi@vger.kernel.org>; Sun, 24 Oct 2004 13:02:44 +0200
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-When I copy a directory containing about 6Gb of files
-from a SATA disk to my SCSI system disk the system freezes
-so I have to press the reset button. This happens with
-cp -r, but is does not happen with mv. cp -r works fine
-from the SCSI to the SATA disk. The problem reproduces
-every time I try to cp from SATA to SCSI.
+On 2004-10-24, Bjarne Thomsen <bjarne.thomsen@get2net.dk> wrote:
+|  [...]
+|  Is there something that I can to to locate the
+|  problem?
 
-Is this a known issue?
+When it freezes, do you see some kernel messages displayed on
+the console ?
 
-OS: Mandrake 2.6.8.1-12.5mdksmp x86_64 2 AMD Opteron(tm) Processors
-MB: Tyan S2885 Thunder K8W
-SCSI IF: Adaptec 29160
-Advanced Micro Devices|AMD-8131 PCI-X
-Advanced Micro Devices|K8 [Athlon64/Opteron]
-sata_sil: Silicon Image|Sil3114A Serial ATA
-aic7xxx : Adaptec|7892A
-
-Is there something that I can to to locate the
-problem?
-
- -- Bjarne
+Also, how many SATA disks and how many SCSI disks are involved ?
+Are you using software RAID ?
 
 -- 
-Bjarne Thomsen <bjarne.thomsen@get2net.dk>
-Institute of Physics & Astronomy
+Marc Bevand                          http://www.epita.fr/~bevand_m
+Computer Science School EPITA - System, Network and Security Dept.
 
