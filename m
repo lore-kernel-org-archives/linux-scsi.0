@@ -1,69 +1,37 @@
-From: Mike Anderson <andmike@us.ibm.com>
-Subject: [PATCH] 2.5 ips.c pci_module_init
-Date: Thu, 16 Jan 2003 15:09:37 -0800
+From: Oliver Neukum <oliver@neukum.name>
+Subject: Re: [linux-usb-devel] Re: [PATCH] USB changes for 2.5.58
+Date: Fri, 17 Jan 2003 00:43:36 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030116230937.GA5561@beaverton.ibm.com>
+Message-ID: <200301170043.36577.oliver@neukum.name>
+References: <10426732153816@kroah.com> <3E2718A0.5020905@pacbell.net> <20030116204818.GC1137@beaverton.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
+In-Reply-To: <20030116204818.GC1137@beaverton.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: David_Jeffery@adaptec.com
+To: Mike Anderson <andmike@us.ibm.com>, David Brownell <david-b@pacbell.net>
+Cc: Greg KH <greg@kroah.com>, linux-usb-devel@lists.sourceforge.net, Linux SCSI list <linux-scsi@vger.kernel.org>
 
-This patch is against 2.5.58 but also applies to scsi-misc-2.5 with a
-offset 1 line warning.
+Am Donnerstag, 16. Januar 2003 21:48 schrieb Mike Anderson:
+> David Brownell [david-b@pacbell.net] wrote:
+> > Have any of the SCSI people been looking much at SCSI hotplug on 2.5?
+> > I attach "/etc/hotplug/scsi.agent" from one of my desktops; all it
+> > does is make sure the right drivers are loaded, it doesn't have a
+> > clue yet about whether/how/where to mount disks or do other stuff.
+>
+> SCSI has added newer interfaces for host drivers to use that allow
+> single adds and removes. The api document is located in
+> /Documentation/scsi/scsi_mid_low_api.txt. I believe it is fairly
+> current.
 
-This error started near 2.5.56 with badness warnings when the driver
-loaded and has progressed to the driver probe routine not being called
-at all as sysfs error propagation patches have been added. Since my
-ServeRAID card is old it is the last pci_module_init to be called.
+This is good news in principle.
+But what use is a function like scsi_remove_host() if it can fail?
+If a device is gone, it is gone and all the complaining in the world
+won't alter that.
+Could you explain how a LLD can ensure that this function will always
+succeed?
 
-The patch just changes the name field in the ips pci_driver struct as
-the three pci_driver names where not unique and cause EEXIST errors.
-
-I have cc'd David Jeffery the driver maintainer.
-
--andmike
---
-Michael Anderson
-andmike@us.ibm.com
-
- ips.c |    8 +++-----
- 1 files changed, 3 insertions(+), 5 deletions(-)
-------
-
---- 1.38/drivers/scsi/ips.c	Fri Jan 10 11:40:07 2003
-+++ edited/drivers/scsi/ips.c	Thu Jan 16 11:42:00 2003
-@@ -271,27 +271,25 @@
- 
-    MODULE_DEVICE_TABLE( pci, ips_pci_table );
- 
--   static char ips_hot_plug_name[] = "ips";
--   
-    static int __devinit  ips_insert_device(struct pci_dev *pci_dev, const struct pci_device_id *ent);
-    static void __devexit ips_remove_device(struct pci_dev *pci_dev);
-    
-    struct pci_driver ips_pci_driver = {
--       .name		= ips_hot_plug_name,
-+       .name		= "ips",
-        .id_table	= ips_pci_table,
-        .probe		= ips_insert_device,
-        .remove		= __devexit_p(ips_remove_device),
-    }; 
-            
-    struct pci_driver ips_pci_driver_5i = {
--       .name		= ips_hot_plug_name,
-+       .name		= "ips_5i",
-        .id_table	= ips_pci_table_5i,
-        .probe		= ips_insert_device,
-        .remove		= __devexit_p(ips_remove_device),
-    };
- 
-    struct pci_driver ips_pci_driver_i960 = {
--       .name		= ips_hot_plug_name,
-+       .name		= "ips_i960",
-        .id_table	= ips_pci_table_i960,
-        .probe		= ips_insert_device,
-        .remove		= __devexit_p(ips_remove_device),
+	Regards
+		Oliver
 
