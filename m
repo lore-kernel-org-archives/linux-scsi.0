@@ -1,53 +1,41 @@
-From: "Ravi Anand" <ravi.anand@qlogic.com>
-Subject: RE: Autosense requirement
-Date: Mon, 29 Jul 2002 15:28:14 -0700
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3679966B84813344B908D418BA3F6A4AA83FAD@AVEXCH01.qlogic.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-content-class: urn:content-classes:message
-List-Id: linux-scsi@vger.kernel.org
-To: Mike Anderson <andmike@us.ibm.com>, Doug Ledford <dledford@redhat.com>
-Cc: linux-scsi@vger.kernel.org
-
-Does this also mean low level driver will be responsible for taking action on the basis of the sense data coming back from the device ?
-
-Ravi
------Original Message-----
-From: Mike Anderson [mailto:andmike@us.ibm.com]
-Sent: Monday, July 29, 2002 2:53 PM
-To: Doug Ledford
-Cc: linux-scsi@vger.kernel.org
+From: Doug Ledford <dledford@redhat.com>
 Subject: Re: Autosense requirement
+Date: Mon, 29 Jul 2002 19:00:48 -0400
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <20020729190048.V20905@redhat.com>
+References: <3D453CE8.5A15FCD6@splentec.com> <3D457FF3.C7A02C57@torque.net> <20020729155518.B20905@redhat.com> <20020729145326.A23512@beaverton.ibm.com> <20020729175827.N20905@redhat.com> <20020729151027.A2657@eng2.beaverton.ibm.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20020729151027.A2657@eng2.beaverton.ibm.com>; from patmans@us.ibm.com on Mon, Jul 29, 2002 at 03:10:27PM -0700
+List-Id: linux-scsi@vger.kernel.org
+To: Patrick Mansfield <patmans@us.ibm.com>
+Cc: linux-scsi@vger.kernel.org
 
+On Mon, Jul 29, 2002 at 03:10:27PM -0700, Patrick Mansfield wrote:
+> Doug -
+> 
+> I'm also doing some scsi changes - scsi_scan.c cleanup, and
+> multi-path IO support.
 
-Doug Ledford [dledford@redhat.com] wrote:
-> It will be mandatory for the LLDD to do autosense.  All remnants of code 
-> to perform a follow up request sense operation *will* dissappear from the 
-> mid layer.  OTOH, the sense command and sense buffer will be pre-set for 
-> each device so at least the LLDD won't have to build their own command any 
-> longer, they can just change the command pointer from the original command 
-> to the sense command and the data buffer to the sense buffer and reissue 
-> the request.
+I saw the posts you made on this.  I was just getting ready to look 
+at/integrate your scsi_scan.c changes then add on the additional stuff I 
+had in mind.  I thought I saw you say you were forward porting the changes 
+to 2.5.28 so it will apply cleanly.  Once I saw that patch come out I was 
+going to grab it.
 
-Doug,
-	I assume from your message that you are removing the call from
-	scsi_unjam_host to do request sense (which is good). 
-	
-	Does this imply that your reworking all of the eh handling in
-	scsi_error.c?
+> Do you have a tree or such that we can sync up with?
 
-	I was doing some rework in this area, but it sounds like it might
-	be counter to your work.
+Not anything available yet (it's too broken right now).
 
--Mike
+> Any moderate changes to scsi will likely affect the multi-path changes.
+
+Yep, that I can see for sure...
+
 -- 
-Michael Anderson
-andmike@us.ibm.com
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+  Doug Ledford <dledford@redhat.com>     919-754-3700 x44233
+         Red Hat, Inc. 
+         1801 Varsity Dr.
+         Raleigh, NC 27606
+  
