@@ -1,44 +1,62 @@
-From: "Andrew Vasquez" <andrew.vasquez@qlogic.com>
-Subject: RE: [ANNOUNCE] QLogic qla2xxx driver update available (v8.00.00b6).
-Date: Mon, 1 Dec 2003 15:21:44 -0800
+From: "Randy.Dunlap" <rddunlap@osdl.org>
+Subject: Re: 2.6test10: Annoying "CDROM not ready" messages once a second
+Date: Mon, 1 Dec 2003 15:17:07 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <B179AE41C1147041AA1121F44614F0B060ED86@AVEXCH02.qlogic.org>
+Message-ID: <20031201151707.0f5d4eca.rddunlap@osdl.org>
+References: <20031126134041.25698.qmail@mailshell.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [198.70.193.2] ([198.70.193.2]:4479 "EHLO AVEXCH01.qlogic.org")
-	by vger.kernel.org with ESMTP id S264155AbTLAXVi convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 1 Dec 2003 18:21:38 -0500
-content-class: urn:content-classes:message
+Received: from fw.osdl.org ([65.172.181.6]:33673 "EHLO mail.osdl.org")
+	by vger.kernel.org with ESMTP id S264144AbTLAXYC (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 1 Dec 2003 18:24:02 -0500
+In-Reply-To: <20031126134041.25698.qmail@mailshell.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Jeremy Higdon <jeremy@sgi.com>
-Cc: Jes Sorensen <jes@wildopensource.com>, Linux-SCSI <linux-scsi@vger.kernel.org>, jbarnes@sgi.com, mdr@sgi.com
+To: linux-scsi-031126@amos.mailshell.com
+Cc: linux-scsi@vger.kernel.org
 
-On Wednesday, November 26, 2003 5:20 PM, Jeremy Higdon wrote:
+On Wed, 26 Nov 2003 15:41:38 +0200 linux-scsi-031126@amos.mailshell.com wrote:
 
-> I've found a problem with the driver on our SN2 system.  There needs
-> to be a register read after updating the Request Queue In index,
-> prior to releasing the host spin lock.
-> 
-> The calls to sn_mmiob() will need to be replaced by reading an
-> appropriate register on the chip.  sn_mmiob() is a lightweight way
-> of doing the same thing without having to go to the chip, but only
-> on SGI SN platforms. 
-> 
+| Hello,
+| 
+| I've just moved to 2.6test10 from test9 and startted getting messages
+| like:
+| 
+| sr0: CDROM not ready.  Make sure there is a disc in the drive.
+| 
+| Once a second.  From googling around I see that it's a very old problem
+| but I haven't found a solution for it.
+| 
+| It seems to come from drivers/scsi/sr_ioctl.c line 139, where there
+| is:
+| 
+|       138                         if (!cgc->quiet)
+|       139                                 printk(KERN_INFO "%s: CDROM not
+| ready.
+|       139 Make sure there is a disc in the drive.\n", cd->cdi.name);
+|       140 #ifdef DEBUG
+|       141                         print_req_sense("sr", SRpnt);
+|       142 #endif
+|       143                         err = -ENOMEDIUM;
+| 
+| But I don't see where can I set cgc->quiet to be non-zero.
 
-I'm curious, what types of symptoms were exibited without the
-sn_mmiob() call?  Did I/O stall?
+Most of the calls to sr_do_ioctl() declare a local 'cgc' and
+set cgc.quiet to 0 or 1 before calling sr_do_ioctl().
 
-BTW: The CACHE_FLUSH() call:
+| For now I stick some CD in the drive to keep this quite, but I'd rather
+| not do this because if the machine reboots it delays on trying to boot
+| from the CD.
+| 
+| My system is an AMD Athlon, no SCSI devices (I need generic SCSI only
+| for cd burning software and USB access, I'm aware that it's supposed to
+| be gone in 2.6 but the software I use is still not aware of this).
+| Preemption enabled (no problems from that part).
+| 
+| Please CC me with replys, I'm not on the list.
 
-	/* Set chip new ring index. */
-	reg_flushed = CACHE_FLUSH(ISP_REQ_Q_IN(reg));
 
-preceeding the WRT_REG_WORD() has been removed from my working tree
-(remnants of an ancient motherboard problem with an on-board ISP while
-using PIO).
-
-Regards,
-Andrew Vasquez
+--
+~Randy
+MOTD:  Always include version info.
