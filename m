@@ -1,33 +1,27 @@
-From: christophe.varoqui@free.fr
-Subject: [ANNOUNCE] multipath-tools-0.1.7
-Date: Mon, 10 May 2004 10:08:28 +0200
-Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <1084176508.409f387c1e110@imp5-q.free.fr>
+From: support <support@degrp.de>
+Subject: Megaraid problem.
+Date: Mon, 10 May 2004 14:51:17 +0200
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <1269894521.20040510145117@degrp.de>
+Reply-To: support <support@degrp.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-raid-owner@vger.kernel.org>
-To: linux-hotplug-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org, dm-devel@redhat.com, linux-raid@vger.kernel.org
-Cc: nickyin@hotmail.com
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.degrp.org ([62.225.179.11]:60429 "EHLO mail.degrp.de")
+	by vger.kernel.org with ESMTP id S264674AbUEJMvZ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 10 May 2004 08:51:25 -0400
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-Hello,
+Hi
 
-here goes multipath-tools-0.1.7
+the megaraid driver doesn't load when correctly when the local APIC or
+SMP is enabled in the kernel. Is this problem know or is anyone
+working on this problem?
 
-Changelog for this release :
-
-        * bugfixes from Andy <genanr@emsphone.com> :
-                * read the last line of the config file
-                * add an entry for the 3PARData storage ctlrs
-                * read the last char of vendor and model strings
-        * dmadm exits cleanly when it has nothing to do
-
-Downloads and docs at http://christophe.varoqui.free.fr
-
-[Nick, you were certainly hit by the bugs Andy spotted.
-Please try this release.]
-
-regards,
-cvaroqui
 -- 
+Best regards,
+ Thomas                          mailto:support@degrp.de
+
