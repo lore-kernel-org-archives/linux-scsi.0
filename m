@@ -1,33 +1,45 @@
-From: Jeremy Higdon <jeremy@sgi.com>
-Subject: Re: [RFC PATCH 2.6.9-rc2] Add sysfs queue depth override to qla2xxx
-Date: Tue, 28 Sep 2004 17:36:11 -0700
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Core scsi layer crashes in 2.6.8.1
+Date: Tue, 28 Sep 2004 21:03:07 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040929003611.GK192475@sgi.com>
-References: <B179AE41C1147041AA1121F44614F0B0012AD92B@AVEXCH02.qlogic.org> <20040928193614.GB192475@sgi.com> <1096401196.2008.97.camel@mulgrave>
+Message-ID: <1096401785.13936.5.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from omx2-ext.sgi.com ([192.48.171.19]:45459 "EHLO omx2.sgi.com")
-	by vger.kernel.org with ESMTP id S268113AbUI2AgZ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 28 Sep 2004 20:36:25 -0400
-Content-Disposition: inline
-In-Reply-To: <1096401196.2008.97.camel@mulgrave>
+Received: from clock-tower.bc.nu ([81.2.110.250]:5257 "EHLO
+	localhost.localdomain") by vger.kernel.org with ESMTP
+	id S268122AbUI2ArE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 28 Sep 2004 20:47:04 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Andrew Vasquez <andrew.vasquez@qlogic.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
 
-So do we have a consensus on what the driver should limit queue
-depth to?  Currently, it's 32 or ql2xmaxqdepth, if that was specified.
->From what I can see, ql2xmaxqdepth is effectively limited to 65535.
+I've been doing some stress testing for Fedora Core 3 and lets say the
+SCSI layer came apart under stress. 
 
-We don't want one lun to use host driver or host adapter resources
-to the point that it starves other luns.  Ideally, the max would
-depend on what else was attached, but I don't think we want to
-make this too complicated.  Anyone changing the queue depth should
-have a clue about what they're doing.
+First problem was a device with 256 byte sector sizes. When it probes I
+get a chain of errors. If I then try and mount it then it hangs the
+mount forever. If you remove the USB scsi device to try and unjam it you
+get errors logged about Invalid State 256 in USB reset and it doesn't
+recover.
 
-Andrew, how many command slots are there in the various adapters,
-and do the continuation entries each eat a command slot?
+Second problem is with the scsi handling logic for errors. If you rmmod
+a scsi driver while it is error handling you get a chain of errors
+starting with
 
-jeremy
+	Illegal transition Cancel->Offline
+	Badness is scsi_device_set_state
+	path:
+	scsi_device_set_state
+	scsi_unjam_host
+	scsi_error_handler
+
+This is followed by a series of further errors including kobject errors
+and oopses. Then the machine dies.
+
+The set up is fairly simple. Its a a disk and two scsi cd multichangers
+configured so that I can also badly terminate them. In that situation
+identify works but other commands tend to fail which allows good error
+stressing.
+
+
