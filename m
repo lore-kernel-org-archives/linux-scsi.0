@@ -1,88 +1,211 @@
-From: Andrew Vasquez <praka@users.sourceforge.net>
-Subject: Re: pulling failover out of qla2xxx
-Date: Sat, 17 Jan 2004 13:52:03 -0800
+From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+Subject: [PATCH] aha152x-2.6.1
+Date: Sat, 17 Jan 2004 23:25:51 +0100 (CET)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040117215203.GA9041@praka.local.home>
-References: <B179AE41C1147041AA1121F44614F0B0598E34@AVEXCH02.qlogic.org> <40084860.90902@pobox.com> <20040117205230.GB8301@praka.local.home> <1074373727.4429.4.camel@laptop.fenrus.com>
+Message-ID: <Pine.LNX.4.44.0401172318380.963-100000@poirot.grange>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ms-smtp-02-qfe0.socal.rr.com ([66.75.162.134]:18402 "EHLO
-	ms-smtp-02-eri0.socal.rr.com") by vger.kernel.org with ESMTP
-	id S265840AbUAQWDp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 17 Jan 2004 17:03:45 -0500
-Received: from praka.san.rr.com (66-75-130-8.san.rr.com [66.75.130.8])
-	by ms-smtp-02-eri0.socal.rr.com (8.12.10/8.12.7) with ESMTP id i0HM3fNR029651
-	for <linux-scsi@vger.kernel.org>; Sat, 17 Jan 2004 14:03:42 -0800 (PST)
-Content-Disposition: inline
-In-Reply-To: <1074373727.4429.4.camel@laptop.fenrus.com>
+Received: from mail.gmx.de ([213.165.64.20]:34973 "HELO mail.gmx.net")
+	by vger.kernel.org with SMTP id S265898AbUAQW0f (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 17 Jan 2004 17:26:35 -0500
+Received: from lyakh (helo=localhost)
+	by poirot.grange with local-esmtp (Exim 3.35 #1 (Debian))
+	id 1Ahyt5-0000Nh-00
+	for <linux-scsi@vger.kernel.org>; Sat, 17 Jan 2004 23:25:51 +0100
 List-Id: linux-scsi@vger.kernel.org
-To: Linux-SCSI <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
 
-On Sat, 17 Jan 2004, Arjan van de Ven wrote:
+Hi
 
-> On Sat, 2004-01-17 at 21:52, Andrew Vasquez wrote:
-> > I certainly hope this to be the case.  Perhaps I'm still viewing this
-> > with an eye as an external module maintainer.  When a user compiles
-> > the qla2xxx driver she's given the following options:
-> > 
-> > 	...
-> >         [ ] QLogic ISP2100 host adapter family support
-> >         [ ] QLogic ISP2200 host adapter family support
-> >         [ ] QLogic ISP2300 host adapter family support
-> >         [ ] QLogic ISP2322 host adapter family support
-> >         [ ] QLogic ISP6312 host adapter family support
-> >         [ ] QLogic ISP6322 host adapter family support
-> > 	...
-> > 
-> > how will she know which option to select for her QLA2362 HBA?  
-> 
-> fwiw there is no rule to have a Kconfig line for each driver; you could
-> just have one "QLogic fiber channel drivers" question, maybe with a
-> subquestion about "enable all chipsets" with a pull down thingy for
-> selected ones if the user wants to pick and choose. There is also help
-> text for more info.
+Below is a patch for aha152x to fix check / request_region, plus make it
+fail explicitly in the case of busy address-range. Compiles, untested
+(yet).
 
-Funny, that's how the Kconfig format was laid out in earlier drivers
-8.00.00b7):
+While on that - what about the advansys-patch with a similar (check_region
+vs. request_region) scope, I sent earlier to the list - was it wrong, or
+just not important enough?
 
-	config SCSI_QLA2XXX
-		bool "QLogic ISP2xxx PCI/PCI-X Fibre Channel HBA Support"
-		depends on PCI && SCSI
-		---help---
-		These drivers support the QLogic 2xxx host adapter family of
-		SCSI FCP HBAs.
+Guennadi
+---
+Guennadi Liakhovetski
 
-	config SCSI_QLA21XX
-		tristate "ISP2100 host adapter family support"
-		depends on SCSI_QLA2XXX
-		---help---
-		This driver supports the QLogic 21xx (ISP2100) host adapter
-		family.
+--- linux-2.6.1/drivers/scsi/aha152x.c~	Sat Jan 17 22:47:27 2004
++++ linux-2.6.1/drivers/scsi/aha152x.c	Sat Jan 17 23:12:22 2004
+@@ -860,9 +860,6 @@
+ {
+ 	int i;
 
-	config SCSI_QLA22XX
-		tristate "ISP2200 host adapter family support"
-		depends on SCSI_QLA2XXX
+-	if (check_region(io_port, IO_RANGE))
+-		return 0;
+-
+ 	SETPORT(io_port + O_DMACNTRL1, 0);	/* reset stack pointer */
+ 	for (i = 0; i < 16; i++)
+ 		SETPORT(io_port + O_STACK, i);
+@@ -878,9 +875,6 @@
+ {
+ 	int i;
 
-	...
+-	if (check_region(io_port, IO_RANGE))
+-		return 0;
+-
+ 	SETPORT(io_port + O_TC_DMACNTRL1, 0);	/* reset stack pointer */
+ 	for (i = 0; i < 16; i++)
+ 		SETPORT(io_port + O_STACK, i);
+@@ -1033,9 +1027,6 @@
+ 	       DELAY,
+ 	       EXT_TRANS ? "enabled" : "disabled");
 
-There seemed to be some resistence to that and in the end it was
-changed to the current form.
+-	if (!request_region(shpnt->io_port, IO_RANGE, "aha152x"))
+-		goto out_unregister;
+-
+ 	/* not expecting any interrupts */
+ 	SETPORT(SIMODE0, 0);
+ 	SETPORT(SIMODE1, 0);
+@@ -1085,15 +1076,13 @@
+ out_unregister_host:
+ 	aha152x_host[registered_count] = NULL;
+ out_release_region:
+-	release_region(shpnt->io_port, IO_RANGE);
+-out_unregister:
+ 	scsi_unregister(shpnt);
+ 	return NULL;
+ }
 
-> (and most people who have qlogic fiber adapters will just say "m" to
-> all, as will distros)
+ static int aha152x_detect(Scsi_Host_Template * tpnt)
+ {
+-	int i, j, ok;
++	int i, j, ok = 0;
+ #if defined(AUTOCONF)
+ 	aha152x_config conf;
+ #endif
+@@ -1102,14 +1091,22 @@
+ #endif
 
-I'll just throw this out, if in fact as you say request_firmware()
-won't work with the current initrd's used by the distros then perhaps
-we could simply build the firmware images as modules (minus the
-per-firmware loader) and have a generic qlafc.ko (or whatever the name
-you'd like) loader that the user would modprobe. The qlafc driver
-would then register the pci_device_id tables for all ISP chips and
-wait for the pci_driver callback to signify which firmwares modules to
-load.  Load the firmware, call probe(), then move on.  
+ 	if (setup_count) {
+-		printk(KERN_INFO "aha152x: processing commandline: ");
++		printk(KERN_INFO "aha152x: processing commandline:\n");
 
-Nothing fancy or genuine, but perhaps a smooth transition to when in
-fact request_firmware() will do.
+ 		for (i = 0; i < setup_count; i++)
+-			if (!checksetup(&setup[i])) {
+-				printk(KERN_ERR "\naha152x: %s\n", setup[i].conf);
++			if (request_region(setup[i].io_port, IO_RANGE, "aha152x") == NULL)
++				printk(KERN_WARNING "aha152x: port 0x%x[%d] busy\n", setup[i].io_port, IO_RANGE);
++			else if (!checksetup(&setup[i])) {
++				release_region(setup[i].io_port, IO_RANGE);
++				printk(KERN_ERR "aha152x: %s\n", setup[i].conf);
+ 				printk(KERN_ERR "aha152x: invalid line\n");
++			} else {
++				ok++;
++				printk("aha152x: 0x%x: ok\n", setup[i].io_port);
+ 			}
+-		printk("ok\n");
++		/* If nothing found at command-line specified addresses, fail */
++		if (!ok)
++			return 0;
+ 	}
 
---
-Andrew
+ #if defined(SETUP0)
+@@ -1117,7 +1114,10 @@
+ 		struct aha152x_setup override = SETUP0;
+
+ 		if (setup_count == 0 || (override.io_port != setup[0].io_port)) {
+-			if (!checksetup(&override)) {
++			if (request_region(override.io_port, IO_RANGE, "aha152x") == NULL)
++				printk(KERN_WARNING "aha152x: port 0x%x[%d] busy\n", override.io_port, IO_RANGE);
++			else if (!checksetup(&override)) {
++				release_region(override.io_port, IO_RANGE);
+ 				printk(KERN_ERR "\naha152x: invalid override SETUP0={0x%x,%d,%d,%d,%d,%d,%d,%d}\n",
+ 				       override.io_port,
+ 				       override.irq,
+@@ -1138,7 +1138,10 @@
+ 		struct aha152x_setup override = SETUP1;
+
+ 		if (setup_count == 0 || (override.io_port != setup[0].io_port)) {
+-			if (!checksetup(&override)) {
++			if (request_region(override.io_port, IO_RANGE, "aha152x") == NULL)
++				printk(KERN_WARNING "aha152x: port 0x%x[%d] busy\n", override.io_port, IO_RANGE);
++			else if (!checksetup(&override)) {
++				release_region(override.io_port, IO_RANGE);
+ 				printk(KERN_ERR "\naha152x: invalid override SETUP1={0x%x,%d,%d,%d,%d,%d,%d,%d}\n",
+ 				       override.io_port,
+ 				       override.irq,
+@@ -1184,9 +1187,12 @@
+ #endif
+ 		}
+
+-          	if (checksetup(&setup[setup_count]))
++		if (request_region(setup[setup_count].io_port, IO_RANGE, "aha152x") == NULL)
++			printk(KERN_WARNING "aha152x: port 0x%x[%d] busy\n", setup[setup_count].io_port, IO_RANGE);
++		else if (checksetup(&setup[setup_count]))
+ 			setup_count++;
+-		else
++		else {
++			release_region(setup[setup_count].io_port, IO_RANGE);
+ 			printk(KERN_ERR "aha152x: invalid module params io=0x%x, irq=%d,scsiid=%d,reconnect=%d,parity=%d,sync=%d,delay=%d,exttrans=%d\n",
+ 			       setup[setup_count].io_port,
+ 			       setup[setup_count].irq,
+@@ -1196,6 +1202,7 @@
+ 			       setup[setup_count].synchronous,
+ 			       setup[setup_count].delay,
+ 			       setup[setup_count].ext_trans);
++		}
+ 	}
+
+ 	if (setup_count<ARRAY_SIZE(setup) && (aha152x1[0]!=0 || io[1]!=0 || irq[1]!=0)) {
+@@ -1226,9 +1233,12 @@
+ 			setup[setup_count].debug       = debug[1];
+ #endif
+ 		}
+-		if (checksetup(&setup[setup_count]))
++		if (request_region(setup[setup_count].io_port, IO_RANGE, "aha152x") == NULL)
++			printk(KERN_WARNING "aha152x: port 0x%x[%d] busy\n", setup[setup_count].io_port, IO_RANGE);
++		else if (checksetup(&setup[setup_count]))
+ 			setup_count++;
+-		else
++		else {
++			release_region(setup[setup_count].io_port, IO_RANGE);
+ 			printk(KERN_ERR "aha152x: invalid module params io=0x%x, irq=%d,scsiid=%d,reconnect=%d,parity=%d,sync=%d,delay=%d,exttrans=%d\n",
+ 			       setup[setup_count].io_port,
+ 			       setup[setup_count].irq,
+@@ -1238,6 +1248,7 @@
+ 			       setup[setup_count].synchronous,
+ 			       setup[setup_count].delay,
+ 			       setup[setup_count].ext_trans);
++		}
+ 	}
+ #endif
+
+@@ -1298,7 +1309,9 @@
+ 			if ((setup_count == 1) && (setup[0].io_port == ports[i]))
+ 				continue;
+
+-			if (aha152x_porttest(ports[i])) {
++			if (request_region(ports[i], IO_RANGE, "aha152x") == NULL)
++				printk(KERN_WARNING "aha152x: port 0x%x[%d] busy\n", ports[i], IO_RANGE);
++			else if (aha152x_porttest(ports[i])) {
+ 				ok++;
+ 				setup[setup_count].io_port = ports[i];
+ 				setup[setup_count].tc1550  = 0;
+@@ -1336,7 +1349,8 @@
+ 				setup[setup_count].debug = DEBUG_DEFAULT;
+ #endif
+ 				setup_count++;
+-			}
++			} else
++				release_region(ports[i], IO_RANGE);
+ 		}
+
+ 		if (ok)
+@@ -1347,7 +1361,8 @@
+ 	printk("detected %d controller(s)\n", setup_count);
+
+ 	for (i=0; i<setup_count; i++) {
+-		aha152x_probe_one(&setup[i]);
++		if (aha152x_probe_one(&setup[i]) == NULL)
++			release_region(setup[i].io_port, IO_RANGE);
+ 		if (aha152x_host[registered_count]) {
+ #ifdef __ISAPNP__
+ 			if(pnpdev[i])
+
