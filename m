@@ -1,59 +1,50 @@
-From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
-Subject: Re: [PATCH] aha152x
-Date: Sat, 24 Jan 2004 15:02:12 +0100 (CET)
+From: James Bottomley <James.Bottomley@steeleye.com>
+Subject: [BK PATCH] small SCSI fixes for 2.6.2-rc1
+Date: 24 Jan 2004 10:09:56 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44.0401241459190.1116-100000@poirot.grange>
-References: <20040124120700.GA27434@linux-buechse.de>
+Message-ID: <1074957001.2660.3.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=koi8-r
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.gmx.de ([213.165.64.20]:32672 "HELO mail.gmx.net")
-	by vger.kernel.org with SMTP id S264922AbUAXOCw convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 24 Jan 2004 09:02:52 -0500
-In-Reply-To: <20040124120700.GA27434@linux-buechse.de>
+Received: from stat1.steeleye.com ([65.114.3.130]:8130 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S266948AbUAXPKH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 24 Jan 2004 10:10:07 -0500
 List-Id: linux-scsi@vger.kernel.org
-To: "Juergen E. Fischer" <fischer@linux-buechse.de>
-Cc: Andrew Morton <akpm@osdl.org>, James Bottomley <James.Bottomley@steeleye.com>, Linux SCSI mailing list <linux-scsi@vger.kernel.org>
+To: Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
 
-On Sat, 24 Jan 2004, Juergen E. Fischer wrote:
+This is basically just an assortment of small warnings, doc changes and
+API conformancy updates (it also includes the parallel build fix for
+aic7xxx which has been annoying the OSDL builds).
 
-> Hi,
->
-> attached my patch for the aha152x driver.  Tested for pcmcia and not
-> pcmcia and various devices.
->
-> changes in the aha152x driver:
-> - gather code that is not used by PCMCIA at the end
-> - move request_region for !PCMCIA case to detection
+The patch is here:
 
-Correct and forgive me if I am wrong, it looks like you are now poking =
-at
-ports without requesting them - in *_porttest. Is it a good idea?
+bk://linux-scsi.bkbits.net/scsi-for-linus-2.6
 
-Guennadi
+and the short changelog is:
 
-> - migration to new scsi host api (remove legacy code)
-> - free host scribble before scsi_done
-> - fix error handling
-> - one isapnp device added to id_table
->
-> and in the pcmcia stub module:
-> - default to synchronous transfers
-> - release_region hack removed
-> - let core module do the scsi host api calls.
->
->
-> J=FCrgen
->
+Andrew Morton:
+  o aha1542 warning fix
 
----
-Guennadi Liakhovetski
+James Bottomley:
+  o aic7xxx parallel build
+  o drivers/scsi/Kconfig URL update: resource.cx
+
+Mark Haverkamp:
+  o Fix for aacraid and high memory on 2.6.1
+
+The diffstat is
+
+ Kconfig                 |    2 -
+ aacraid/aacraid.h       |    8 ++++++
+ aacraid/linit.c         |   56 +++++++++++++++++++++++++++++++-----------------
+ aha1542.c               |    4 +--
+ aic7xxx/Makefile        |   16 ++++++++++++-
+ aic7xxx/aicasm/Makefile |    8 ++++++
+ 6 files changed, 71 insertions(+), 23 deletions(-)
+
+James
 
 
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
