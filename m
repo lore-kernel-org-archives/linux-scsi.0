@@ -1,91 +1,48 @@
-From: Paul Wagland <paul@kungfoocoder.org>
-Subject: Re: [ANNOUNCE][RELEASE]: megaraid unified driver version 2.20.0.B1
-Date: Fri, 09 Apr 2004 01:56:59 +0200
+From: "Mukker, Atul" <Atulm@lsil.com>
+Subject: RE: [ANNOUNCE][RELEASE]: megaraid unified driver version 2.20.0.B
+	1
+Date: Fri, 9 Apr 2004 00:05:49 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1081468618.2084.57.camel@morsel.kungfoocoder.org>
-References: <0E3FA95632D6D047BA649F95DAB60E570230C7B4@exa-atlanta.se.lsil.com>
+Message-ID: <0E3FA95632D6D047BA649F95DAB60E57033BC50C@exa-atlanta.se.lsil.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="=-owmnXfLL3swEf1WPF1k2"
+Content-Type: text/plain;
+	charset="iso-8859-1"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp-out1.xs4all.nl ([194.109.24.11]:28947 "EHLO
-	smtp-out1.xs4all.nl") by vger.kernel.org with ESMTP id S261865AbUDHX7H
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 8 Apr 2004 19:59:07 -0400
-In-Reply-To: <0E3FA95632D6D047BA649F95DAB60E570230C7B4@exa-atlanta.se.lsil.com>
+Received: from mail0.lsil.com ([147.145.40.20]:16870 "EHLO mail0.lsil.com")
+	by vger.kernel.org with ESMTP id S261158AbUDIEGy (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 9 Apr 2004 00:06:54 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: "Bagalkote, Sreenivas" <sreenib@lsil.com>
+To: 'Paul Wagland' <paul@kungfoocoder.org>, "Bagalkote, Sreenivas" <sreenib@lsil.com>
 Cc: "'jgarzik@pobox.com'" <jgarzik@pobox.com>, "'Matt_Domsch@dell.com'" <Matt_Domsch@dell.com>, "'James.Bottomley@SteelEye.com'" <James.Bottomley@SteelEye.com>, "'arjanv@redhat.com'" <arjanv@redhat.com>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>
 
+>OK, I have started to look at this driver, I have come across one
+Good!
 
---=-owmnXfLL3swEf1WPF1k2
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+>problem, which the attached patch fixes. This patch has been sent
+>through the list several times and has been accepted into 2.6.5.
+Taken, would be added asap
 
-Hi all,
+>1. The Kconfig.megaraid and Makefile.2.6 files from the alpha release
+>are not in the beta.
+Will be added in next drop
 
-On Thu, 2004-04-08 at 01:18, Bagalkote, Sreenivas wrote:
-> Hello All,
-> 
-> We are releasing the megaraid unified driver version 2.20.0.0.
-> The source is available at our public ftp site:
+>2. In mraid_pci_blk_pool_destroy(), the caller "guarantees that no more
+>memory from the pool is in use", however, they don't have to guarantee
+>that pool is not null. Why? In fact, in the code it appears that this
+>guarantee is also made...
+Now you are reading between the lines :-) Just consider clib to be
+independently implemented and has some safety checks
 
-OK, I have started to look at this driver, I have come across one
-problem, which the attached patch fixes. This patch has been sent
-through the list several times and has been accepted into 2.6.5.
+>3. I am not sure what the local conventions on this are, but in
+>megaraid_alloc_cmd_packets() if the first allocation fails then we
+>return straight away, in all other cases we do a goto fail_alloc_cmds;
+Accepted..
 
-If you don't set the module owner, then the module can be removed while
-it is in use, with quite disastrous results.
+>4. Also a consistency issue: In megaraid_mbox_mm_cmd() we handle the
+>deletion of a logical drive specially, by calling
+>megaraid_mbox_del_logdrv(), which just ensures that the drives are
+Good catch.
 
-A couple of other comments:
-
-1. The Kconfig.megaraid and Makefile.2.6 files from the alpha release
-are not in the beta.
-
-2. In mraid_pci_blk_pool_destroy(), the caller "guarantees that no more
-memory from the pool is in use", however, they don't have to guarantee
-that pool is not null. Why? In fact, in the code it appears that this
-guarantee is also made...
-
-3. I am not sure what the local conventions on this are, but in
-megaraid_alloc_cmd_packets() if the first allocation fails then we
-return straight away, in all other cases we do a goto fail_alloc_cmds;
-This is correct (of course) but personally I would prefer that they all
-behave in a consistent fashion, and that the first failed alloc test
-also did the goto. Otherwise, there is no need for the
-alloc_common_mbox_f local, since whenever you go to fail_alloc_cmds
-common_mbox will have been allocated (otherwise we have returned).
-
-4. Also a consistency issue: In megaraid_mbox_mm_cmd() we handle the
-deletion of a logical drive specially, by calling
-megaraid_mbox_del_logdrv(), which just ensures that the drives are
-"quiescent" and then calls megaraid_mbox_internal_command(), otherwise,
-we just call megaraid_mbox_internal_command(). My preference, would be
-for megaraid_mbox_del_logdrv() to just return when the drives are quiet
-and then to call megaraid_mbox_internal_command() as per normal, makes
-the flow easier to follow in my opinion. However, when we look at
-megaraid_mbox_internal_done() it has the deleting of logical drive logic
-inlined. I would prefer either that both functions have the special
-logic inlined, or that they both have helper functions to deal with the
-special case.
-
-Anyway, hope that this helps,
-Paul
-
---=-owmnXfLL3swEf1WPF1k2
-Content-Disposition: attachment; filename=megaraid.b1.1.patch
-Content-Type: text/x-patch; name=megaraid.b1.1.patch; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-
---- megaraid.c.orig	2004-04-09 01:07:11.000000000 +0200
-+++ megaraid.c	2004-04-09 01:09:38.000000000 +0200
-@@ -342,6 +342,7 @@
-  */
- #define MRAID_TEMPLATE							\
- {									\
-+	.module				= THIS_MODULE,			\
- 	.name				= "MegaRAID",			\
- 	.proc_name			= "megaraid",			\
- 	.info				= megaraid_info,		\
-
---=-owmnXfLL3swEf1WPF1k2--
-
+Thanks!
+-Atul Mukker
+LSI Logic
