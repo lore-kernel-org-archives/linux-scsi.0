@@ -1,48 +1,76 @@
-From: James Bottomley <James.Bottomley@steeleye.com>
-Subject: Re: [RFC]: 64 bit LUN/Tags, dummy device in host_queue, host_lock <->
- LLDD reentrancy
-Date: Mon, 26 Aug 2002 12:15:46 -0500
+From: Patrick Mansfield <patmans@us.ibm.com>
+Subject: Re: [RFC]: 64 bit LUN/Tags, dummy device in host_queue, host_lock <-> LLDD reentrancy
+Date: Mon, 26 Aug 2002 10:17:49 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <200208261715.g7QHFkX00637@localhost.localdomain>
-References: <ARZEH@de.ibm.com>
+Message-ID: <20020826101748.B6694@eng2.beaverton.ibm.com>
+References: <OF80DCCDBC.5B147AD9-ONC1256C21.002BB3EE@de.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: (from root@localhost)
-	by pogo.mtv1.steeleye.com (8.9.3/8.9.3) id KAA22058
-	for <linux-scsi@vger.kernel.org>; Mon, 26 Aug 2002 10:15:49 -0700
-In-Reply-To: Message from "Aron Zeh" <ARZEH@de.ibm.com>
-   of "Mon, 26 Aug 2002 19:01:55 +0200." <OF7CB8B7A6.7888F8DC-ONC1256C21.005CA55A@de.ibm.com>
+In-Reply-To: <OF80DCCDBC.5B147AD9-ONC1256C21.002BB3EE@de.ibm.com>; from ARZEH@de.ibm.com on Mon, Aug 26, 2002 at 10:02:47AM +0200
 List-Id: linux-scsi@vger.kernel.org
 To: Aron Zeh <ARZEH@de.ibm.com>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, Luben Tuikov <luben@splentec.com>, linux-scsi <linux-scsi@vger.kernel.org>
+Cc: Luben Tuikov <luben@splentec.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
-ARZEH@de.ibm.com said:
-> If you say scanning is legacy only does that mean you expect it to be
-> gone by kernel 2.6? 
+On Mon, Aug 26, 2002 at 10:02:47AM +0200, Aron Zeh wrote:
+> 
+> 
+> 
+> > * SAM-3 specifies that a LUN is 64 bit. While there may not
+> > be any devices which actually even come close to using this
+> > huge space, it provides different _addressing__modes_.
+> >
+> > This very nicely fits LUN virtualization (iSCSI, LUN masking, etc),
+> > and would allow one to do magic for storage devices (IP SANs, etc).
+> >
+> > A 64 bit LUN could be presented to userspace which may/can then
+> > present a nice ``picture'' (GUI or what not) of the underlying
+> > physical/virtual (depending on the SCSI port name/id) storage
+> > network.
+> >
+> > (E.g. iSCSI communicates 64 bit LUNs only...)
+> 
+> To me all of the proposed changes look good. The one above I'd be
+> interested in particularly. It would help sorting out a lot of woes we had
+> with writing a fibre-channel HBA driver. For fibre-channel LUNs and port
+> IDs (WWPN) are 64-bit and depending on configuration, high values can be
+> (and in our case are) common.
+> 
+> Aron
 
-Not unless someone else is working on it...We currently don't have any of the 
-replacement infrastructure in place.  It also depends on projects outside SCSI 
-(hotplug, driverfs, initramfs etc.).
+Exactly what high values do have you in the LUN? What kind of storage is it? 
 
-> I currently don't know of a way that SCSI devices (LUNs) generate
-> hotplug notifications by. (FC sends RSCNs and other nasty stuff for
-> ports, which are one level higher up. I don't think reconfiguring the
-> LUNs behind a port would generate any message, would it?) Even of
-> messages are generated, they'd probably differ according to the
-> underlying hardware. Would HBA drivers have to catch them and use more
-> generic callbacks to tell the SCSI stack? 
+I thought the FC ID was 24 bits (or is it 32), why do you need the WWPN?
+Or, is this internal to the adapter? If the code was setup in scsi_scan.c
+and an adpater (some functional callout to an iterator), the FC ID could
+be stored in the Scsi_Device::id.
 
-There would have to be a generic notify mechanism implemented within SCSI.  
-Probably via a skeleton Scsi_Device with attached driverfs entry passed up.  
-These would then trigger the hotplug events so we get hotplug event 
-consistency.
+If we are to add an 8 byte LUN:
 
-The idea is that this would occur at the PUN (device) level, not the LUN (you 
-don't want 65,535 notifications for a large array...).  Once the device has 
-been noticed, it's up to the hotplug system to do something (or even if it 
-chooses, nothing) about the device (like probe its LUNs, etc.).
+We still need to allow a smaller lun for all of the current open source
+adapter drivers (AFAIK all open source drivers except the qlogic drivers
+use a one byte lun, and the qlogic uses a two byte lun) - either a field
+in Scsi_Device and/or Scsi_Cmnd, or a functional interface to get the
+equivalent four byte value (and then it can be assigned to a one or two
+byte value as is done today) in addition to any new 8 byte lun field.
 
-James
+The Scsi_Host::max_lun usage would have to remain for the old four byte
+Scsi_Device::lun, and perhaps for the 8 byte lun - it would be nice if the
+adapter could just return "LUN out of bounds" or such, rather than having
+to set (via adapter driver code) and check (in the mid-layer) the max_lun
+value. Users of the 8 byte lun might be able to set a flag (or overload
+max_lun with 0) such that max_lun is not checked. 
 
+There might need to be some sort of result from the adapter that says
+"I can't handle any more LUNs", otherwise any scan/probe (even via
+REPORT LUNS) might end up with lots of errors (but that might not be
+really bad since it would be a first or one-time occurence when hooking
+up a many LUN target). This probably is not hit (ever?) today since the
+max_lun values are always set so low - even for the qlogic, 255 (I was
+not able to up their max without major problems in the driver some time
+ago, I haven't tried this with any of the recent qla beta drivers).
 
+Both an 8 byte LUN capable adapter and storage are needed to implement and
+test such changes.
+
+-- Patrick Mansfield
