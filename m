@@ -1,38 +1,37 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: Bidirectional support
-Date: Tue, 18 Nov 2003 17:50:15 +0000
+From: Mario Giammarco <mgiammarco@virgilio.it>
+Subject: Re: Best driver for qlogic 2200 fc?
+Date: Tue, 18 Nov 2003 20:19:52 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20031118175015.A29355@infradead.org>
-References: <OFADB546DA.E3228E33-ONC2256DE2.005FDDD5-C2256DE2.0061252A@il.ibm.com>
+Message-ID: <1069183192.4927.3.camel@cala>
+References: <200311171711.36441.mgiammarco@virgilio.it>
+	 <1069085218.14602.63.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pub234.cambridge.redhat.com ([213.86.99.234]:21252 "EHLO
-	phoenix.infradead.org") by vger.kernel.org with ESMTP
-	id S263752AbTKRRuQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 18 Nov 2003 12:50:16 -0500
-Content-Disposition: inline
-In-Reply-To: <OFADB546DA.E3228E33-ONC2256DE2.005FDDD5-C2256DE2.0061252A@il.ibm.com>; from LIRANS@il.ibm.com on Tue, Nov 18, 2003 at 07:41:05PM +0200
+Received: from vsmtp4.tin.it ([212.216.176.224]:41137 "EHLO vsmtp4.tin.it")
+	by vger.kernel.org with ESMTP id S263770AbTKRTUB (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 18 Nov 2003 14:20:01 -0500
+In-Reply-To: <1069085218.14602.63.camel@localhost.localdomain>
 List-Id: linux-scsi@vger.kernel.org
-To: Liran Schour <LIRANS@il.ibm.com>
-Cc: linux-scsi@vger.kernel.org, Muli Ben-Yehuda <MULI@il.ibm.com>
+To: Craig Tierney <ctierney@hpti.com>, linux-scsi@vger.kernel.org
 
-On Tue, Nov 18, 2003 at 07:41:05PM +0200, Liran Schour wrote:
-> The OSD standard requires support for bidirectional commands (write and get
-> obj attribute at the same command for example). The SAM-3 defines that in
-> order to execute a SCSI command the caller should supply an input an output
-> buffer. It seems that in the current Linux SCSI implementation the API
-> accept only one buffer, input our output buffer depends on the
-> data_direction flag.
-> Is there some work going on trying to implement bidirectional support?
+Il lun, 2003-11-17 alle 17:06, Craig Tierney ha scritto:
 
-I haven't heard about such work beeing done.
+> > Unfortunately it gives me slow performance (sequential read of 30mb/sec on a 
+> > seagate 318452fc that can do 60mb/sec sequential read).
+> > 
+> 
+> What is your write performance?  Have you tried
+> to tune /proc/sys/vm/{min,max}-readahead?
 
-> Is it sound reasonable to extend the scatter-gather structure to include
-> data direction flag and by that bypass the interface problem and allow
-> support for bidirectional commands?
+I have tuned readahead and not it goes 50 mb.
+I am shocked, why I need to tune it?
+Usually I do an hdparm -t -T to see if hard disk is good
+(and eventually hdparm again to tune ide interface)
+Without tuning I can reach sequential read of more than 60 mb using raid0.
+I do not understand why the OS cannot use the full speed of this FC drive.
 
-Why do you need the flag in the scatterlist?  We already have a dma_direction
-enum in the scsi_cmnd that's pased to the dma mapping routines, it may
-be DMA_BIDRECTIONAL although that's currently not used by any code.
+OTOH side I discovered that (in a raid1 array ) the two seagate write speed is very low: 10mb/s, why?
 
