@@ -1,172 +1,129 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: LDM scsi upper level updates and scsihosts parm
-Date: Tue, 3 Jun 2003 21:08:26 +0100
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH] don't create /proc/scsi/ entries for drivers without ->proc_info
+Date: Tue, 3 Jun 2003 22:19:16 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030603210826.A27004@infradead.org>
-References: <20030531010844.GA25468@beaverton.ibm.com> <20030531103255.A28131@infradead.org>
+Message-ID: <20030603201916.GB8874@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from carisma.slowglass.com ([195.224.96.167]:61969 "EHLO
-	phoenix.infradead.org") by vger.kernel.org with ESMTP
-	id S263980AbTFCTzA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 3 Jun 2003 15:55:00 -0400
+Received: from verein.lst.de ([212.34.189.10]:61608 "EHLO mail.lst.de")
+	by vger.kernel.org with ESMTP id S264078AbTFCUFv (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Jun 2003 16:05:51 -0400
 Content-Disposition: inline
-In-Reply-To: <20030531103255.A28131@infradead.org>; from hch@infradead.org on Sat, May 31, 2003 at 10:32:55AM +0100
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@steeleye.com, linux-scsi@vger.kernel.org
+To: James.Bottomley@steeleye.com
+Cc: linux-scsi@vger.kernel.org
 
-On Sat, May 31, 2003 at 10:32:55AM +0100, Christoph Hellwig wrote:
-> I think we should remove it.  It's racy and we have proper ways to identify
-> filesysystems by label/uuid or scsi hosts by the sysfs output nowdays.
-
-Okay, here's a patch to kill it.  
+Current code just puts the driver name into it which is utterly useless
 
 
-diff -Nru a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
---- a/drivers/scsi/hosts.c	Tue Jun  3 00:18:19 2003
-+++ b/drivers/scsi/hosts.c	Tue Jun  3 00:18:19 2003
-@@ -51,96 +51,6 @@
- static spinlock_t scsi_host_list_lock = SPIN_LOCK_UNLOCKED;
+diff -Nru a/drivers/scsi/scsi_proc.c b/drivers/scsi/scsi_proc.c
+--- a/drivers/scsi/scsi_proc.c	Tue May 27 14:52:15 2003
++++ b/drivers/scsi/scsi_proc.c	Tue May 27 14:52:15 2003
+@@ -42,48 +42,15 @@
+ EXPORT_SYMBOL(proc_scsi);
  
- static int scsi_host_next_hn;		/* host_no for next new host */
--static char *scsihosts;
--
--MODULE_PARM(scsihosts, "s");
--MODULE_PARM_DESC(scsihosts, "scsihosts=driver1,driver2,driver3");
--#ifndef MODULE
--int __init scsi_setup(char *str)
+ 
+-/* Used if the driver currently has no own support for /proc/scsi */
+-static int generic_proc_info(char *buffer, char **start, off_t offset,
+-			     int count, const char *(*info)(struct Scsi_Host *),
+-			     struct Scsi_Host *shost)
 -{
--	scsihosts = str;
--	return 1;
--}
+-	int len, pos, begin = 0;
+-	static const char noprocfs[] =
+-		"The driver does not yet support the proc-fs\n";
 -
--__setup("scsihosts=", scsi_setup);
--#endif
+-	if (info && shost)
+-		len = sprintf(buffer, "%s\n", info(shost));
+-	else
+-		len = sprintf(buffer, "%s\n", noprocfs);
 -
--/**
--  * scsi_find_host_by_num - get a Scsi_Host by host no
--  *
--  * @host_no:	host number to locate
--  *
--  * Return value:
--  *	A pointer to located Scsi_Host or NULL.
--  **/
--static struct Scsi_Host *scsi_find_host_by_num(unsigned short host_no)
--{
--	struct Scsi_Host *shost, *shost_found = NULL;
--
--	spin_lock(&scsi_host_list_lock);
--	list_for_each_entry(shost, &scsi_host_list, sh_list) {
--		if (shost->host_no > host_no) {
--			/*
--			 * The list is sorted.
--			 */
--			break;
--		} else if (shost->host_no == host_no) {
--			shost_found = shost;
--			break;
--		}
+-	pos = len;
+-	if (pos < offset) {
+-		len = 0;
+-		begin = pos;
 -	}
--	spin_unlock(&scsi_host_list_lock);
--	return shost_found;
+-
+-	*start = buffer + (offset - begin);
+-	len -= (offset - begin);
+-	if (len > count)
+-		len = count;
+-
+-	return len;
 -}
 -
--/**
-- * scsi_alloc_hostnum - choose new SCSI host number based on host name.
-- * @name:	String to store in name field
-- *
-- * Return value:
-- *	Pointer to a new Scsi_Host_Name
-- **/
--static int scsi_alloc_host_num(const char *name)
--{
--	int hostnum;
--	int namelen;
--	const char *start, *end;
--
--	if (name) {
--		hostnum = 0;
--		namelen = strlen(name);
--		start = scsihosts; 
--		while (1) {
--			int hostlen;
--
--			if (start && start[0] != '\0') {
--				end = strpbrk(start, ",:");
--				if (end) {
--					hostlen = (end - start);
--					end++;
--				} else
--					hostlen = strlen(start);
--				/*
--				 * Look for a match on the scsihosts list.
--				 */
--				if ((hostlen == namelen) && 
--				    (strncmp(name, start, hostlen) == 0) && 
--				    (!scsi_find_host_by_num(hostnum)))
--					return hostnum;
--				start = end;
--			} else  {
--				/*
--				 * Look for any unused numbers.
--				 */
--				if (!scsi_find_host_by_num(hostnum))
--					return hostnum;
--			}
--			hostnum++;
--		}
--	} else
--		return scsi_host_next_hn++;
--}
--
- 
- /**
-  * scsi_tp_for_each_host - call function for each scsi host off a template
-@@ -331,7 +241,7 @@
- 
- 	memset(shost, 0, sizeof(struct Scsi_Host) + xtr_bytes);
- 
--	shost->host_no = scsi_alloc_host_num(shost_tp->proc_name);
-+	shost->host_no = scsi_host_next_hn++; /* XXX(hch): still racy */
- 
- 	spin_lock_init(&shost->default_lock);
- 	scsi_assign_lock(shost, &shost->default_lock);
-@@ -536,26 +446,8 @@
-  **/
- void scsi_host_put(struct Scsi_Host *shost)
+ static int proc_scsi_read(char *buffer, char **start, off_t offset,
+ 			  int length, int *eof, void *data)
  {
+ 	struct Scsi_Host *shost = data;
+ 	int n;
+ 
+-	if (shost->hostt->proc_info == NULL)
+-		n = generic_proc_info(buffer, start, offset, length,
+-				      shost->hostt->info, shost);
+-	else
+-		n = shost->hostt->proc_info(shost, buffer, start, offset,
+-					   length, 0);
 -
- 	class_device_put(&shost->class_dev);
- 	put_device(&shost->host_gendev);
--}
--
--/**
-- * scsi_host_init - set up the scsi host number list based on any entries
-- * scsihosts.
-- **/
--void __init scsi_host_init(void)
--{
--	char *shost_hn;
--
--	shost_hn = scsihosts;
--	while (shost_hn) {
--		scsi_host_next_hn++;
--		shost_hn = strpbrk(shost_hn, ":,");
--		if (shost_hn)
--			shost_hn++;
--	}
++	n = shost->hostt->proc_info(shost, buffer, start, offset, length, 0);
+ 	*eof = (n < length);
++
+ 	return n;
  }
  
- void scsi_host_busy_inc(struct Scsi_Host *shost, Scsi_Device *sdev)
-diff -Nru a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
---- a/drivers/scsi/scsi.c	Tue Jun  3 00:18:19 2003
-+++ b/drivers/scsi/scsi.c	Tue Jun  3 00:18:19 2003
-@@ -1003,7 +1003,6 @@
- 	for (i = 0; i < NR_CPUS; i++)
- 		INIT_LIST_HEAD(&done_q[i]);
+@@ -95,8 +62,6 @@
+ 	char *page;
+ 	char *start;
+     
+-	if (!shost->hostt->proc_info)
+-		return -ENOSYS;
+ 	if (count > PROC_BLOCK_SIZE)
+ 		return -EOVERFLOW;
  
--	scsi_host_init();
- 	devfs_mk_dir("scsi");
- 	open_softirq(SCSI_SOFTIRQ, scsi_softirq, NULL);
- 	printk(KERN_NOTICE "SCSI subsystem initialized\n");
+@@ -118,6 +83,9 @@
+ 	struct proc_dir_entry *p;
+ 	char name[10];
+ 
++	if (!sht->proc_info)
++		return;
++
+ 	if (!sht->proc_dir) {
+ 		sht->proc_dir = proc_mkdir(sht->proc_name, proc_scsi);
+         	if (!sht->proc_dir) {
+@@ -130,27 +98,29 @@
+ 
+ 	sprintf(name,"%d", shost->host_no);
+ 	p = create_proc_read_entry(name, S_IFREG | S_IRUGO | S_IWUSR,
+-			shost->hostt->proc_dir, proc_scsi_read, shost);
++			sht->proc_dir, proc_scsi_read, shost);
+ 	if (!p) {
+ 		printk(KERN_ERR "%s: Failed to register host %d in"
+ 		       "%s\n", __FUNCTION__, shost->host_no,
+-		       shost->hostt->proc_name);
++		       sht->proc_name);
+ 		return;
+ 	} 
+ 
+ 	p->write_proc = proc_scsi_write_proc;
+ 	p->owner = shost->hostt->module;
+-
+ }
+ 
+ void scsi_proc_host_rm(struct Scsi_Host *shost)
+ {
++	Scsi_Host_Template *sht = shost->hostt;
+ 	char name[10];
+ 
+-	sprintf(name,"%d", shost->host_no);
+-	remove_proc_entry(name, shost->hostt->proc_dir);
+-	if (!shost->hostt->present)
+-		remove_proc_entry(shost->hostt->proc_name, proc_scsi);
++	if (sht->proc_info) {
++		sprintf(name,"%d", shost->host_no);
++		remove_proc_entry(name, sht->proc_dir);
++		if (!sht->present)
++			remove_proc_entry(sht->proc_name, proc_scsi);
++	}
+ }
+ 
+ static int proc_print_scsidevice(struct device *dev, void *data)
