@@ -1,35 +1,42 @@
-From: James Bottomley <James.Bottomley@steeleye.com>
-Subject: Qlogic qla2xxx driver up for testing
-Date: 19 May 2003 16:11:19 -0500
+From: Patrick Mansfield <patmans@us.ibm.com>
+Subject: Re: [PATCH] switch scsi upper driver probing to the driver model
+Date: Mon, 19 May 2003 14:38:28 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1053378680.1850.24.camel@mulgrave>
+Message-ID: <20030519143828.A7204@beaverton.ibm.com>
+References: <20030516182039.A7369@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nat9.steeleye.com ([65.114.3.137]:42759 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S261790AbTESU61 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 19 May 2003 16:58:27 -0400
+Received: from e5.ny.us.ibm.com ([32.97.182.105]:437 "EHLO e5.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S262955AbTESV3d (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 19 May 2003 17:29:33 -0400
+Content-Disposition: inline
+In-Reply-To: <20030516182039.A7369@lst.de>; from hch@lst.de on Fri, May 16, 2003 at 06:20:39PM +0200
 List-Id: linux-scsi@vger.kernel.org
-To: SCSI Mailing List <linux-scsi@vger.kernel.org>
-Cc: Andrew Vasquez <andrew.vasquez@qlogic.com>, Andrew Morton <akpm@digeo.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: James.Bottomley@steeleye.com, linux-scsi@vger.kernel.org
 
-I've taken the Qlogic 8.00.00.b1 driver and put it up under bitkeeper at
+On Fri, May 16, 2003 at 06:20:39PM +0200, Christoph Hellwig wrote:
+> Upper drivers now use the LDM ->probe/->remove callbacks and the
+> core list code.  Note that this means there is only one driver per
+> scsi device and not multiple, e.g. you can't have sd _and_ sg for
+> the same device.  Personally I think that's not a problem anymore
+> with the generic SG_IO in place, but if you scream loud enough I
+> could come up with a hack that makes the sg nodes a property of the
+> scsi midlayer instead of a LDM-style driver and we could get the
+> old behaviour back.
 
-http://linux-scsi.bkbits.net/scsi-qla2xxx-2.5
+The sg attributes (calls to device_create_file) should be removed (at
+least until sg has its own class or place to put the attributes), since
+sg_probe creates a "type" attribute, then when we return back into
+scsi_device_register and try to create the scsi_device "type" attribute,
+we fail and call scsi_device_unregister.
 
-I've moved the text files into Documentation/scsi, but other than that
-made no alterations to the qlogic driver.
+And scsi_scan.c ignores the failure, probably leading to some strangeness
+or at best a memory leak.
 
-It will build for the qla2300, but the builds fail for qla2100 and
-qla2200 giving me no way to test it.
+The end result is that there is no scsi_device under sysfs if sg_probe
+attached to the scsi_device.
 
-The qla2xxx/Makefile is rather convoluted, and makes it look like
-building more than one type of driver non-modular may be a problem.
-
-Anyway, for those that can, try it out and see what you think.
-
-James
-
-
+-- Patrick Mansfield
