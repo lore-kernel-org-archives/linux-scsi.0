@@ -1,94 +1,46 @@
-From: James Bottomley <James.Bottomley@steeleye.com>
-Subject: Re: [patch for playing] Patch to support 4000 disks and maintain
-	backward compatibility
-Date: 12 Apr 2003 09:14:38 -0500
+From: Laurent Pinchart <laurent.pinchart@skynet.be>
+Subject: Medium errors
+Date: Sat, 12 Apr 2003 18:09:29 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1050156880.2016.15.camel@mulgrave>
-References: <OFAD4FBC86.382E53DF-ON88256D06.0006AAF3@us.ibm.com>
+Message-ID: <200304121809.29289.laurent.pinchart@skynet.be>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain;
+  charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nat9.steeleye.com ([65.114.3.137]:9223 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S262219AbTDLODI (for <rfc822;linux-scsi@vger.kernel.org>); Sat, 12 Apr 2003 10:03:08 -0400
-In-Reply-To: <OFAD4FBC86.382E53DF-ON88256D06.0006AAF3@us.ibm.com>
+Received: from sojef.skynet.be ([195.238.2.127]:64726 "EHLO sojef.skynet.be")
+	by vger.kernel.org with ESMTP id S263324AbTDLP5g (for <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 12 Apr 2003 11:57:36 -0400
+Received: from 11.210-136-217.adsl.skynet.be (11.210-136-217.adsl.skynet.be [217.136.210.11])
+        by sojef.skynet.be (8.12.9/8.12.9/Skynet-OUT-2.21) with ESMTP id h3CG9GcG020666
+        for <linux-scsi@vger.kernel.org>; Sat, 12 Apr 2003 18:09:16 +0200
+        (envelope-from <laurent.pinchart@skynet.be>)
+Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
-To: Paul McKenney <Paul.McKenney@us.ibm.com>
-Cc: Andries.Brouwer@cwi.nl, Linux Kernel <linux-kernel@vger.kernel.org>, linux-kernel-owner@vger.kernel.org, SCSI Mailing List <linux-scsi@vger.kernel.org>, pbadari@us.ibm.com
+To: linux-scsi@vger.kernel.org
 
-On Fri, 2003-04-11 at 20:13, Paul McKenney wrote:
-> Some compatibility needs more code than other compatibility.
-> The desired compatibility includes the following, much of which
-> has been noted earlier in this thread, and some of which may
-> need to wait for multipath I/O and other of which might be best
-> provided by a volume manager:
+Hi everybody,
 
-We're talking about two types of compatibility.  The first (which
-everyone agrees on) is that /dev names don't change between 2.4 and
-2.5.  The second is direct numerical compatibility so that a /dev still
-using the old 8:8 scheme works.
+I'm trying to read data from an audio CD. Some sectors are damaged and can't 
+be read. The CIRC layer is not able to correct the errors. The CD unit 
+reports a Medium Error / Unrecoved Read Error. This results in small cracks 
+in the audio data, which are quite annoying.
 
-What you're asking for is more a wish list of enhancements:
+To fix the problem, I tried to set the TB (Transfer Block) bit in the Error 
+Recovery Parameters page (0x01), so that the unit would transfer the date 
+before returning the CHECK CONDITION status.
 
-> o     It must be possible to switch between 2.4 and 2.5/6
->       kernels without a given disk's name changing.
+Unfortunately, I don't get the data back. I had a look at cdrom_do_cmd in 
+drivers/cdrom/cdrom.c, and found that the data is not copied back to 
+userspace when an error occurs. I fixed that, but the data I get are random, 
+and come from the host memory (content of recently opened files, ...).
 
-By and large, this is true.  There will be problems where probe order
-has altered because of changes to bus enumeration schemes or for other
-reasons.
+I would like to know if the SCSI implementation (I'm using ide-scsi) has 
+similar checks implemented that prevents returned data to be sent back to 
+userspace when an error occurs. If so, could anyone point me to the place 
+where those checks are implemented ?
 
-> o     New 2.5/6 installations should se a clean disk naming
->       scheme without historical cruft.
+Thanks in advance for your help.
 
-They'll all see /dev/sd<A>[n] as in 2.4
-
-> o     Removing or adding one disk should not affect the
->       names of other disks.  Ideally, moving a given disk
->       from one place to another should not change its
->       name.  "The good news is that we repaired your
->       disk.  The bad news is that, due to the resulting
->       name changes, your application thoroughly
->       corrupted all of its data."
-
-True until a reboot, as in 2.4
-
-> o     Adding or removing a FC or SCSI adapter should not
->       affect the names of disks hanging off of other
->       FC or SCSI controllers.  Ideally, the name of
->       a disk should not change when its FC or SCSI
->       controller is moved from one slot to another.
-
-That's not a 2.4 guarantee, it won't be a 2.5 one.
-
-> o     Failures of or repairs to the FC fabric should
->       not change the names of any of the disks (though
->       a sufficiently thorough failure might make some
->       of the disks unreachable).
-
-True until reboot, as in 2.4
-
-> o     Cluster nodes should ideally have the same name
->       for a given disk.  Extra credit, though greatly
->       appreciated by anyone who has ever had to deal
->       with a cluster where different nodes have different
->       names for the same disk.  ;-)
-
-That has never been true in Linux, and not in most commerical unixes,
-either.  Cluster tools are used to do this mapping and most commercially
-available linux cluster tools solve this problem, so there's no need for
-the kernel to do it.
-
-A lot of these enhancements will be covered (or at least a solution will
-be facilitated) by udev.  See
-
-http://marc.theaimsgroup.com/?t=105003184600001&r=1&w=2
-
-(unfortunately, the announcement thread has grown rather big).
-
-James
-
-
-James
-
+Laurent Pinchart
 
