@@ -1,45 +1,60 @@
-From: Anton Blanchard <anton@samba.org>
-Subject: emulex FC driver on ppc64
-Date: Sat, 10 Apr 2004 12:21:24 +1000
+From: Gregoire Favre <Gregoire.Favre@freesurf.ch>
+Subject: Only multiple lun for one device?
+Date: Sat, 10 Apr 2004 14:22:20 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040410022124.GI18493@krispykreme>
+Message-ID: <20040410122154.GA23394@magma.epfl.ch>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ozlabs.org ([203.10.76.45]:54708 "EHLO ozlabs.org")
-	by vger.kernel.org with ESMTP id S261815AbUDJCZD (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 9 Apr 2004 22:25:03 -0400
+Received: from mail3.epfl.ch ([128.178.50.19]:10760 "HELO mail3.epfl.ch")
+	by vger.kernel.org with SMTP id S262009AbUDJMWX convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 10 Apr 2004 08:22:23 -0400
 Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
-To: James.Smart@emulex.com
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
+Hello,
 
-Hi James,
+I have some devices on my computer which uses SCSI, and only one which
+need multiple lun, so I have to enable multiple lun in kernel which slw
+down the boot process a lot...
 
-I gave the sourceforge version of the emulex FC driver a spin on my
-ppc64 box. Good news is it worked out of the box. I had a few
-observations:
+usb 1-4: device not accepting address 2, error -71
+usb 1-4: new high speed USB device using address 3
+scsi2 : SCSI emulation for USB Mass Storage devices
+  Vendor: SMSC      Model: USB 2 HS-CF       Rev: 1.97
+  Type:   Direct-Access                      ANSI SCSI revision: 02
+Attached scsi removable disk sdc at scsi2, channel 0, id 0, lun 0
+Attached scsi generic sg5 at scsi2, channel 0, id 0, lun 0,  type 0
+  Vendor: SMSC      Model: USB 2 HS-MS       Rev: 1.97
+  Type:   Direct-Access                      ANSI SCSI revision: 02
+Attached scsi removable disk sdd at scsi2, channel 0, id 0, lun 1
+Attached scsi generic sg6 at scsi2, channel 0, id 0, lun 1,  type 0
+  Vendor: SMSC      Model: USB 2 HS-SM       Rev: 1.97
+  Type:   Direct-Access                      ANSI SCSI revision: 02
+Attached scsi removable disk sde at scsi2, channel 0, id 0, lun 2
+Attached scsi generic sg7 at scsi2, channel 0, id 0, lun 2,  type 0
+  Vendor: SMSC      Model: USB 2 HS-SD/MMC   Rev: 1.97
+  Type:   Direct-Access                      ANSI SCSI revision: 02
+Attached scsi removable disk sdf at scsi2, channel 0, id 0, lun 3
+Attached scsi generic sg8 at scsi2, channel 0, id 0, lun 3,  type 0
+USB Mass Storage device found at 3
 
-1. request_irq uses SA_INTERRUPT and SA_SHIRQ. I cant see mixing these
-flags could be safe, and I doubt you need the SA_INTERRUPT in the first
-place. Removing it also makes it easier to use timer tick profiling
-because the interrupt routing runs with irqs on.
+Is there a way to enable multiple lun only for the 8-1 cards readers?
 
-2. We now have dma_mapping_error so you can kill the NO_TCE, -1 hacks.
+Please CC to me as I am not on this ml :-)
 
-3. A number of the files need to be un dosified, they have carriage
-returns in them.
+Thank you very much,
 
-4. lpfc_bad_scatterlist is pretty nasty stuff. If its going to be
-impossible to get your firmware guys to fix this issue we could look at
-working around it in the ppc64 IOMMU code. At least then we wont have to
-walk each SG list, however theres every chance another architecture is
-going to have the same problem.
-
-5. #define MAX_ELX_BRDS 32
-Do we need a hard limit? Can we just dynamically allocate the
-structures? 32 is going to be way too small for some of our setups.
-btw your MODULE_PARM code is scary :)
-
-Anton
+	Gr=E9goire
+_______________________________________________________________________=
+___
+http://algebra.epfl.ch/greg ICQ:16624071 mailto:Gregoire.Favre@freesurf=
+=2Ech
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
