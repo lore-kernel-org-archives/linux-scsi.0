@@ -1,53 +1,63 @@
-From: "Tony Battersby" <tonyb@cybernetics.com>
-Subject: [PATCH 2.4] MPT fusion data transfer residuals
-Date: Wed, 13 Oct 2004 11:39:42 -0400
+From: Dave Olien <dmo@osdl.org>
+Subject: Re: Question about Request Sense case in scsi_lib.c
+Date: Wed, 13 Oct 2004 10:56:55 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <04Oct13.113932edt.333165@cyborg.cybernetics.com>
-Reply-To: <tonyb@cybernetics.com>
+Message-ID: <20041013175655.GA30013@osdl.org>
+References: <20041012000058.GA26569@osdl.org> <eada2a07041012092973d35415@mail.gmail.com> <20041012165919.GA27526@osdl.org> <1097601199.2044.91.camel@mulgrave> <416C8E8D.7050000@torque.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from host02.cybernetics.com ([206.246.200.18]:16390 "EHLO
-	cybernetics.com") by vger.kernel.org with ESMTP id S269748AbUJMQve
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 13 Oct 2004 12:51:34 -0400
+Received: from fw.osdl.org ([65.172.181.6]:48573 "EHLO mail.osdl.org")
+	by vger.kernel.org with ESMTP id S269768AbUJMR53 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 13 Oct 2004 13:57:29 -0400
+Content-Disposition: inline
+In-Reply-To: <416C8E8D.7050000@torque.net>
 List-Id: linux-scsi@vger.kernel.org
-To: mpt_linux_developer@lsil.com
-Cc: linux-scsi@vger.kernel.org
+To: Douglas Gilbert <dougg@torque.net>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, Tim Pepper <tpepper@gmail.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-This patch to lk 2.4.27 fixes two problems with the MPT fusion driver:
 
-1) Data transfer commands that transfer no data but have GOOD status should
-not return DID_SOFT_ERROR.
+Here's what seeing out of the SCSI log:
 
-2) Set the data transfer residual for commands that return CHECK CONDITION
-status.  Without this patch, only commands that return GOOD status have the
-data transfer residual set.
+        command = Write (10) 00 00 00 84 00 00 04 00 00
+Current sdx: sense key Unit Attention
+ASC=8b ASCQ= 2
+P<6>scsi <2:0:2:3> done SUCCESS        2 scsi2 : destination target 2, lun 3
+        command = Write (10) 00 00 00 88 00 00 04 00 00
+Current sdx: sense key Unit Attention
+ASC=8b ASCQ= 2
+P<6>scsi <2:0:2:0> done SUCCESS        2 scsi2 : destination target 2, lun 0
+        command = Write (10) 00 00 00 00 48 00 04 00 00
+Current sdu: sense key Unit Attention
+ASC=8b ASCQ= 2
+P<3>Incorrect number of segments after building list
+counted 11, received 5
+req nr_sec 1024, cur_nr_sec 8
 
-Anthony J. Battersby
-Cybernetics
 
---- linux-2.4.27-vanilla/drivers/message/fusion/mptscsih.c	Sat Aug  7 19:26:04 2004
-+++ linux-2.4.27-mpt/drivers/message/fusion/mptscsih.c	Wed Oct 13 10:34:22 2004
-@@ -885,7 +885,7 @@
- 				 */
- 				;
- 			} else {
--				if ( (xfer_cnt == 0) || (sc->underflow > xfer_cnt)) {
-+				if (sc->underflow > xfer_cnt) {
- 					sc->result = DID_SOFT_ERROR << 16;
- 				}
- 				if (scsi_state & (MPI_SCSI_STATE_AUTOSENSE_FAILED | MPI_SCSI_STATE_NO_SCSI_STATUS)) {
-@@ -1004,6 +1004,10 @@
- 						sc->buffer,
- 						xfer_cnt);
- 			}
-+
-+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,3,0)
-+			sc->resid = sc->request_bufflen - xfer_cnt;
-+#endif
- 			break;
- 
- 		case MPI_IOCSTATUS_SCSI_PROTOCOL_ERROR:		/* 0x0047 */
-
+On Wed, Oct 13, 2004 at 12:10:21PM +1000, Douglas Gilbert wrote:
+> UNIT ATTENTION and NOT READY are both sense keys so a
+> device can't yield both on one command. However you may be
+> on the right track as there is an ever increasing number of
+> reasons a device could issue a UNIT ATTENTION. [See SPC-3
+> rev 21 and I believe these ASC codes (and all their associated
+> ASCQ codes) occur with a sense key of UNIT ATTENTION:
+> 0x28, 0x29, 0x2a, 0x3f, 0x5b/0x1 and 0x5d.]
+> 
+> Unlikely in this case but a sense key of UNIT ATTENTION
+> (or perhaps RECOVERED ERROR)  with an additional sense
+> of "Hardware impending failure, seek error rate too high"
+> may slip by without even a log entry.
+> 
+> >As for the error, I still don't understand that, but it looks like
+> >something went wrong in setting up or tearing down the dma mapping, so
+> >that it was incorrectly described when this happened a second time.
+> 
+> I hope to address the code in the scsi_io_completion() error/warning
+> processing paths with the descriptor_sense cleanup. There seems to
+> be a missing scsi_print_sense() call on the UNIT ATTENTION path.
+> 
+> Dave, does your log show a bus error (ASC/ASCQ=0x29/0x2) has occurred?
+> 
+> Doug Gilbert
