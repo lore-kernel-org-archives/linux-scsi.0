@@ -1,62 +1,35 @@
-From: Kurt Garloff <garloff@suse.de>
-Subject: Re: TMSCSIM [2.6] (cards)
-Date: Sat, 29 Nov 2003 19:14:02 +0100
+From: James Bottomley <James.Bottomley@steeleye.com>
+Subject: Re: TMSCSIM [2.6]
+Date: 29 Nov 2003 12:36:50 -0600
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20031129181402.GM3049@tpkurt.garloff.de>
-References: <3FC64CD9.8040505@yk.rim.or.jp> <Pine.LNX.4.44.0311272338560.12446-100000@poirot.grange>
+Message-ID: <1070131012.1927.6.camel@mulgrave>
+References: <3FC7FC89.4060601@yk.rim.or.jp>
+	<Pine.LNX.4.44.0311291030500.1672-100000@poirot.grange>
+	<20031129181131.GL3049@tpkurt.garloff.de>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="2YJj5f1P6Th4nBRw"
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns.suse.de ([195.135.220.2]:24711 "EHLO Cantor.suse.de")
-	by vger.kernel.org with ESMTP id S263861AbTK2SOE (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 29 Nov 2003 13:14:04 -0500
-Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.44.0311272338560.12446-100000@poirot.grange>
+Received: from nat9.steeleye.com ([65.114.3.137]:3076 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S264439AbTK2ShB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 29 Nov 2003 13:37:01 -0500
+In-Reply-To: <20031129181131.GL3049@tpkurt.garloff.de>
 List-Id: linux-scsi@vger.kernel.org
-To: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
-Cc: linux-scsi@vger.kernel.org
+To: Kurt Garloff <kurt@garloff.de>
+Cc: Guennadi Liakhovetski <g.liakhovetski@gmx.de>, Chiaki <ishikawa@yk.rim.or.jp>, Linux SCSI list <linux-scsi@vger.kernel.org>, Thorsten Leemhuis <Thorsten_Leemhuis@gmx.de>, gl@dsa-ac.de
+
+On Sat, 2003-11-29 at 12:11, Kurt Garloff wrote:
+> I can put it for download on my site; 
+> we should try to push it into 2.6.0/1, of course.
+
+It's too late for 2.6.0, I'm afraid.  I'll keep it in the queue for
+scsi-misc-2.7.
+
+I anticipate the driver updates gate opening again before 2.7 begins, so
+it may be able to go into 2.6.1 or later, but that depends on Andrew's
+policy.
+
+James
 
 
---2YJj5f1P6Th4nBRw
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
-
-Guennadi,
-
-On Thu, Nov 27, 2003 at 11:43:03PM +0100, Guennadi Liakhovetski wrote:
-> What are the best (for testing) tmscsim-supported cards (tekram (t) /
-> dawicontrol / ...)?=20
-
-Dawi2974, TekramDC390(T), onboard 53c974/79c974 chipsets.
-I doubt you can easily find new hardware with this chipset nowadays ...
-
-> My on-board am53c974 is way too simple...=20
-
-They are all the same ...
-
-> Or does the
-> probability of getting bugs depend of what devices hang on it?
-
-Yep. Scanners did tend to trigger bugs in the driver in the past.
-
-Regards,
---=20
-Kurt Garloff  <garloff@suse.de>                            Cologne, DE=20
-SUSE LINUX AG, Nuernberg, DE                          SUSE Labs (Head)
-
---2YJj5f1P6Th4nBRw
-Content-Type: application/pgp-signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.2.2 (GNU/Linux)
-
-iD8DBQE/yOHqxmLh6hyYd04RAhn8AKC/XGl6ZpG6qS1w2rcRm2Bx1kPWuwCfeoeN
-iXvF4n9iKNJX1a0XgcbJkag=
-=6sqK
------END PGP SIGNATURE-----
-
---2YJj5f1P6Th4nBRw--
