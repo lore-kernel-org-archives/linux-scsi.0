@@ -1,151 +1,111 @@
-From: "Jeffery, David" <David_Jeffery@adaptec.com>
-Subject: [PATCH] ips driver 3/4: remove LinuxVersionCode
-Date: Thu, 13 Feb 2003 09:35:28 -0500
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH / RFC] scsi_error handler update. (1/4)
+Date: Thu, 13 Feb 2003 15:47:48 +0000
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <A3B9245C291EEF4785A24A1DBE8D852B037750@rtpexc01.adaptec.com>
+Message-ID: <20030213154748.A1965@infradead.org>
+References: <3E492992.90502@splentec.com> <20030211172256.GC3164@beaverton.ibm.com> <3E494977.1070706@splentec.com> <3E495862.3050709@splentec.com> <20030211212048.GC1114@beaverton.ibm.com> <3E49698D.3030402@splentec.com> <20030211224119.A23149@infradead.org> <3E4AAA3F.8040002@splentec.com> <20030212204634.A17425@infradead.org> <3E4AC0B5.9030208@splentec.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="----_=_NextPart_000_01C2D36D.2771F170"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from redfish.adaptec.com (redfish.adaptec.com [162.62.50.11])
-	by magic.adaptec.com (8.11.6+Sun/8.11.6) with ESMTP id h1DEXvD27690
-	for <linux-scsi@vger.kernel.org>; Thu, 13 Feb 2003 06:33:57 -0800 (PST)
-Received: from rtpexc01.adaptec.com (rtpexc01.adaptec.com [10.110.12.22])
-	by redfish.adaptec.com (8.8.8+Sun/8.8.8) with ESMTP id GAA14527
-	for <linux-scsi@vger.kernel.org>; Thu, 13 Feb 2003 06:33:56 -0800 (PST)
+Content-Disposition: inline
+In-Reply-To: <3E4AC0B5.9030208@splentec.com>; from luben@splentec.com on Wed, Feb 12, 2003 at 04:46:29PM -0500
 List-Id: linux-scsi@vger.kernel.org
-To: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
+To: Luben Tuikov <luben@splentec.com>
+Cc: Mike Anderson <andmike@us.ibm.com>, linux-scsi@vger.kernel.org
 
-This message is in MIME format. Since your mail reader does not understand
-this format, some or all of this message may not be legible.
+On Wed, Feb 12, 2003 at 04:46:29PM -0500, Luben Tuikov wrote:
+> > The history is that in 2.4 the cli and BKL based serialization got replaced
+> > with io_request_lock held over all entry points, in 2.5 that got changed
+> > to the host lock.  So the purpose seems to be avoiding driver changes so
+> > far.
+> 
+> I was trying to identify a clear and precise reason for the lock.
+> (I know the history...)
 
-------_=_NextPart_000_01C2D36D.2771F170
-Content-Type: text/plain;
-	charset="iso-8859-1"
+I can't see any reason except the history of this lock.  And no this
+reason is probably not clear and precise :)
 
-This patch removes the old LinuxVersionCode()
-and replaces it with KERNEL_VERSION().  Thanks
-go to Adrian Bunk for sending the initial version.
+> It doesn't seem to be purposeful enough (the lock), since the LLDD is
+> allowed to sleep, and would most likely drop it. (see below)
 
-David Jeffery
+*nod*
 
- ips.c |   10 +++++-----
- ips.h |   12 ++++--------
- 2 files changed, 9 insertions(+), 13 deletions(-)
+> Actually I think since it is a pointer which LLDD may set to their
+> own lock, it looks like it's trying to prevent LLDD from being
+> too simplistic (to be politically correct).
+
+Once again I donm't thiuk this can be explained with anything but
+history :)
 
 
-------_=_NextPart_000_01C2D36D.2771F170
-Content-Type: text/plain;
-	name="ipspatch3.txt"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: attachment;
-	filename="ipspatch3.txt"
+> But the matter of the fact is that LLDD writers will have to
+> be more ``vigilent'', and if they don't know how to make their
+> driver functions re-entrant, they can read up on it, or take
+> a gradute level OS course, or get their sorry a*ses fired.
 
-diff -ur linux-2.5.60_p2/drivers/scsi/ips.c =
-linux-2.5.60_p3/drivers/scsi/ips.c=0A=
---- linux-2.5.60_p2/drivers/scsi/ips.c	Tue Feb 11 11:47:23 2003=0A=
-+++ linux-2.5.60_p3/drivers/scsi/ips.c	Tue Feb 11 11:47:41 2003=0A=
-@@ -202,7 +202,7 @@=0A=
-    #error "This driver has only been tested on the x86/ia64 =
-platforms"=0A=
- #endif=0A=
- =0A=
--#if LINUX_VERSION_CODE <=3D LinuxVersionCode(2,5,0)=0A=
-+#if LINUX_VERSION_CODE <=3D KERNEL_VERSION(2,5,0)=0A=
-     #include "sd.h"=0A=
-     #define IPS_SG_ADDRESS(sg)       ((sg)->address)=0A=
-     #define IPS_LOCK_SAVE(lock,flags) =
-spin_lock_irqsave(&io_request_lock,flags)=0A=
-@@ -1136,7 +1136,7 @@=0A=
- /*                                                                     =
-     */=0A=
- =
-/***********************************************************************=
-*****/=0A=
- static int=0A=
--#if LINUX_VERSION_CODE < LinuxVersionCode(2,5,0)=0A=
-+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,5,0)=0A=
- ips_biosparam(Disk *disk, kdev_t dev, int geom[]) {=0A=
-    ips_ha_t         *ha =3D (ips_ha_t *) =
-disk->device->host->hostdata;=0A=
-    unsigned long     capacity =3D disk->capacity;=0A=
-@@ -1182,7 +1182,7 @@=0A=
- =0A=
-    return (0);=0A=
- }=0A=
--#if LINUX_VERSION_CODE < LinuxVersionCode(2,5,0)=0A=
-+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,5,0)=0A=
- =
-/***********************************************************************=
-*****/=0A=
- /*                                                                     =
-     */=0A=
- /* Routine Name: ips_select_queue_depth                                =
-     */=0A=
-@@ -6755,7 +6755,7 @@=0A=
- 	sh->unchecked_isa_dma =3D sh->hostt->unchecked_isa_dma;=0A=
- 	sh->use_clustering =3D sh->hostt->use_clustering;=0A=
- =0A=
--#if LINUX_VERSION_CODE >=3D LinuxVersionCode(2,4,7)=0A=
-+#if LINUX_VERSION_CODE >=3D KERNEL_VERSION(2,4,7)=0A=
- 	sh->max_sectors =3D 128;=0A=
- #endif =0A=
- =0A=
-@@ -7138,7 +7138,7 @@=0A=
- }=0A=
- =0A=
- =0A=
--#if LINUX_VERSION_CODE >=3D LinuxVersionCode(2,4,9)=0A=
-+#if LINUX_VERSION_CODE >=3D KERNEL_VERSION(2,4,9)=0A=
- MODULE_LICENSE("GPL");=0A=
- #endif=0A=
- =0A=
-diff -ur linux-2.5.60_p2/drivers/scsi/ips.h =
-linux-2.5.60_p3/drivers/scsi/ips.h=0A=
---- linux-2.5.60_p2/drivers/scsi/ips.h	Tue Feb 11 08:26:38 2003=0A=
-+++ linux-2.5.60_p3/drivers/scsi/ips.h	Tue Feb 11 11:01:33 2003=0A=
-@@ -64,11 +64,7 @@=0A=
-    /*=0A=
-     * Some handy macros=0A=
-     */=0A=
--   #ifndef LinuxVersionCode=0A=
--      #define LinuxVersionCode(x,y,z)  (((x)<<16)+((y)<<8)+(z))=0A=
--   #endif=0A=
--=0A=
--   #if LINUX_VERSION_CODE >=3D LinuxVersionCode(2,4,20) || defined =
-CONFIG_HIGHIO=0A=
-+   #if LINUX_VERSION_CODE >=3D KERNEL_VERSION(2,4,20) || defined =
-CONFIG_HIGHIO=0A=
-       #define IPS_HIGHIO=0A=
-       #define IPS_HIGHMEM_IO     .highmem_io =3D 1,=0A=
-    #else=0A=
-@@ -97,12 +93,12 @@=0A=
-     #define IPS_SGLIST_SIZE(ha)       (IPS_USE_ENH_SGLIST(ha) ? \=0A=
-                                          sizeof(IPS_ENH_SG_LIST) : =
-sizeof(IPS_STD_SG_LIST))=0A=
- =0A=
--   #if LINUX_VERSION_CODE < LinuxVersionCode(2,4,4)=0A=
-+   #if LINUX_VERSION_CODE < KERNEL_VERSION(2,4,4)=0A=
-       #define pci_set_dma_mask(dev,mask) (1)=0A=
-       #define scsi_set_pci_device(sh,dev) (0)=0A=
-    #endif=0A=
- =0A=
--   #if LINUX_VERSION_CODE < LinuxVersionCode(2,5,0)=0A=
-+   #if LINUX_VERSION_CODE < KERNEL_VERSION(2,5,0)=0A=
-       #define scsi_register_host(x)    =
-scsi_register_module(MODULE_SCSI_HA,x)=0A=
-       #define scsi_unregister_host(x)  =
-scsi_unregister_module(MODULE_SCSI_HA,x)=0A=
-    #endif=0A=
-@@ -439,7 +435,7 @@=0A=
-    /*=0A=
-     * Scsi_Host Template=0A=
-     */=0A=
--#if LINUX_VERSION_CODE < LinuxVersionCode(2,5,0)=0A=
-+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,5,0)=0A=
-    static void ips_select_queue_depth(struct Scsi_Host *, Scsi_Device =
-*);=0A=
-    static int ips_biosparam(Disk *disk, kdev_t dev, int geom[]);=0A=
- #define IPS {	\=0A=
+Hey, that's a bit harsh (but ture..).  The real problem is that most
+scsi drivers don't have a maintainer anymore, they're just odd fixed
+by people who care enough for the hardware.
 
-------_=_NextPart_000_01C2D36D.2771F170--
+> If a LLDD drops the lock on entry and gains it again on exit, then clearly
+> it doesn't need it.
+> 
+> Else if it doesn't, it then must be relying on it elsewhere, which is
+> asking for trouble from eh_* point of view.  A search and replace
+> will do ok, with a local lock,
+
+right.
+
+> unless it sets the pointer, in which case this is much easier.
+
+which pointer?  the host lock?
+
+> So, yes, I think that the host_lock can be eliminated from LLDD point of view.
+> It will take a bit more time than the host, lun, target work but is doable.
+> 
+> I think I can find the time to start working on this, as long as I know
+> that it's worthwhile.
+
+I think it's absolutely worth the effort!
+
+> [On new queuecommand() prototype]
+> 
+> Yes, I actually think that this is *more*/easier doable than the host_lock
+> issue above.  Again, I'll wait for the powers that be to say
+> nay or yea, I just don't like wasting my time.
+
+James, any comments on this one?  I think it's something that is save for
+2.5.
+
+> > If you have anough time a prototype now won't hurt though - the scsi code
+> > shouldn't really change during early 2.6.
+> 
+> Yes, I've been thinking of rewriting SCSI Core completely for 2.7, so maybe
+> this prototype will be its embryonic state?
+
+Maybe :)
+
+> 
+> Some features would be that target/lun scanning will be a completely *distinct*
+> functionality and one can even move it to userspace.
+
+James, outlined something similar on the last kernel summit.  I think it's
+a worthwile change for 2.7 (let's hope initramfs is useable then)
+
+> Another feature is that new-scsi-core will *not* do any memory allocation
+> for sg lists for commands -- this is the task of the application client
+> (block layer, app, scanning code, etc).
+
+i.e. the scsi upper layer driver?
+
+> BTW, what kind of prototype are you talking about, functional or non-functional?
+
+limited functionality (i.e. just a single driver or so converted)
+
+> BTW2, we can babble about this all we want here, the important
+> thing is what the powers that be have to say about all this.
+
+Yes, it would be interesting to hear from James on whether he ACKs the concept.
+I think he has been travelling yesterday, so maybve he's still catching up
+on mail.
+
