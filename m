@@ -1,106 +1,282 @@
-From: "Andrew Vasquez" <andrew.vasquez@qlogic.com>
-Subject: Multiple invocations of scsi_scan_host() on a given host...
-Date: Fri, 16 Apr 2004 14:44:38 -0700
+From: "Mukker, Atul" <Atulm@lsil.com>
+Subject: RE: [PATCH][RELEASE]: megaraid unified driver version 2.20.0.B1
+Date: Fri, 16 Apr 2004 18:50:48 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <B179AE41C1147041AA1121F44614F0B060EE65@AVEXCH02.qlogic.org>
+Message-ID: <0E3FA95632D6D047BA649F95DAB60E57033BC543@exa-atlanta.se.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain;
+	charset="iso-8859-1"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pat.qlogic.com ([198.70.193.2]:50858 "EHLO avexch01.qlogic.com")
-	by vger.kernel.org with ESMTP id S263811AbUDPVpK convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 16 Apr 2004 17:45:10 -0400
-content-class: urn:content-classes:message
+Received: from mail0.lsil.com ([147.145.40.20]:10982 "EHLO mail0.lsil.com")
+	by vger.kernel.org with ESMTP id S263920AbUDPWwM (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 16 Apr 2004 18:52:12 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: Linux-SCSI <linux-scsi@vger.kernel.org>
+To: 'Jeff Garzik' <jgarzik@pobox.com>, "Bagalkote, Sreenivas" <sreenib@lsil.com>, 'Christoph Hellwig' <hch@infradead.org>
+Cc: "'Matt_Domsch@dell.com'" <Matt_Domsch@dell.com>, "'paul@kungfoocoder.org'" <paul@kungfoocoder.org>, "Mukker, Atul" <Atulm@lsil.com>, "'James.Bottomley@SteelEye.com'" <James.Bottomley@SteelEye.com>, "'arjanv@redhat.com'" <arjanv@redhat.com>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>
+
+> 0) Am I to judge from megaraid_mbox_build_cmd that megaraid does not 
+> really support SCSI, but it translates instead?  This may imply that 
+> implementation as a SCSI driver is inappropriate.
+
+MegaRAID is a very SCSI stack :-)
+
+> 
+> 
+> 1) Remove back-compat code from kdep.h.  It's OK for devel and for 
+> vendor-specific branch, but we wouldn't want this in 2.6.x mainline.
+
+The 2.4 portion of the code has a very small footprint in the driver. Thanks
+to earlier inputs from Christoph Hellwig, it will be even smaller.
+Maintaining single code for lk 2.4 and 2.6 makes very sense from logistics
+and maintenance point of view. lk 2.4 is still very popular :-) and we would
+like to provide support for the same with the latest drivers as well. 
+
+> 
+> 
+> 2) Buggy ADDR definitions:
+> 
+> +#define ADDR_LO(addr)  (((unsigned long)(addr)) & 0xffffffff)
+> +#define ADDR_HI(addr)  ((((ulong)(addr)) & 
+> 0xffffffff00000000ULL) >> 32)
+> +#define ADDR_64(hi, lo)        ((((uint64_t)(hi)) << 32) | (lo))
+> 
+> Don't cast to unsigned long, cast to u64.
+This will be removed, it is not used in the driver anyway
+
+> 
+> 
+> 3) Delete non-standard types:  ulong
+ok
+
+> 
+> 
+> 5) No foo_t structures.  Linux kernel style is "struct foo" 
+> not "foo_t":
+> 
+> +typedef struct mraid_hba_info {
+> +} __attribute__ ((packed)) mraid_hba_info_t;
+> +
+> +typedef struct mcontroller {
+> +} __attribute__ ((packed)) mcontroller_t;
+We also prefer to have "struct foo" mostly. But this should not be a rule.
+E.g., having adapter_t instead of "struct adapter" is very convenient,
+simply because it used so widely throughout the driver. But point taken :-)
+
+> 
+> 
+> 6) Kill uses of "volatile".  _Most_ of the time, this indicates buggy 
+> code.  You should have the proper barriers in place:  mb(), wmb(), 
+> rmb(), barrier(), and cpu_relax().  This has been mentioned before :)
+We have carefully used "volatile" only on the fields, which are touch by the
+hardware and/or firmware. The proper barriers are used when we want to make
+sure access is properly sequenced.
+
+> 
+> 
+> 7) Allow me to compliment you on proper kernel-doc documentation.
+> 
+Thanks!
+
+> 
+> 8) Consider adding ____cacheline_aligned markers to the definition of 
+> struct adapter (a.k.a. adapter_t, before item #5 is fixed).  
+> Re-arrange 
+> your adapter structure so that struct members that are used 
+> together are 
+> kept in the same cacheline.  For example, in net drivers, I usually 
+> split the structures into "TX", "RX", and "everything else" sections. 
+> Keep in mind that cacheline size varies (32/64/128 usually), 
+> so this is 
+> not an absolute limit, just a marker where to physically 
+> separate into 
+> distinct cachelines.
+ok
+
+> 
+> 
+> 9) {SET,IS}_PRV_INTF_AVAILABLE's use of atomic_foo() seems racy.
+> 
+This is not necessary and will be removed.
 
 
-All,
+> 
+> 10) In 2.6, use the type-safe module_param() rather than MODULE_PARM()
+> 
+We will explore and reply
 
-Mid-last year, scsi_scan_host() was stripped from scsi_add_host() to
-allow LLDs to decide whether or not to initiate a scan.  I recently
-ran into a slight snag while attempting to call scsi_scan_host() more
-than once for a given host, i.e. 1st invocation during initial probe
-of hba0 (scsi_scan_host(hba0->host)), then a 2nd call
-(scsi_scan_host(hba0->host)) during the probe function of a second
-controller, hba1.
+> 
+> 11) Why is PAGE_SIZE chosen here?
+> 
+> +       /*
+> +        * Allocate all pages in a loop
+> +        */
+> +       for (i = 0; i < num_pages; i++) {
+> +
+> +               pool->page_arr[i] = pci_alloc_consistent( 
+> dev, PAGE_SIZE-1,
+> + 
+> &pool->dmah_arr[i] );
+> +               if (pool->page_arr[i] == NULL) {
+> +                       con_log(CL_ANN, (KERN_WARNING
+> +                               "megaraid: Failed to alloc 
+> page # %d\n", 
+> i ));
+> +                       goto memlib_fail_alloc;
+> +               }
+> +       }
+> 
+This API will only be used by low level drivers which require multiple small
+chunks of DMAable memory. This chunk are assumed to be much smaller than a
+PAGE therefore many can fit in a single PAGE. Driver portions requiring
+bigger buffers (>4KB) use pci_alloc_consistent directly.
 
-Looking through the code in scsi_scan.c, scsi_scan_host() calls
-scsi_scan_host_selected() with the 'rescan' flag cleared (0).  With
-the flag cleared, the check in scsi_probe_and_add_lun() to check for a
-previously allocated device (via scsi_device_lookup()) is skipped, and
-we run the risk of allocating duplicate devices (scsi_alloc_sdev())
-hanging off a scsi_host during the 2nd invocation of scsi_scan_host().
-Basically, scsi_sysfs_add_sdev() errors out:
+> 
+> 12) Don't invent your own printk() wrappers.  I don't see the 
+> need for 
+> con_log()
+Actually we do, since the debug level can be changed on the fly using ioctl
+and sysfs
 
-	scsi: unknown device type 12
-	   Vendor: COMPAQ    Model: MSA1000           Rev: 4.24
-	   Type:   RAID                               ANSI SCSI revision: 04
-	qla2300 0000:01:01.0: scsi(2:0:0:0): Enabled tagged queuing, queue depth 32.
-	error 1
+> 
+> 
+> 13) try_assertion{}, catch_assertion{}, and end_assertion attempt to 
+> turn C code into C++ code.  This will inevitably fail :)
+We see it as better error handling. It would be very useful specially when
+we move to more fine-grained locks in the drivers.
 
-and during module unload, we get a panic:
+> 
+> 
+> 14) the following check doesn't scale, please remove:
+> 
+> +       if (subsysvid && (subsysvid != PCI_VENDOR_ID_AMI) &&
+> +                       (subsysvid != PCI_VENDOR_ID_DELL) &&
+> +                       (subsysvid != PCI_VENDOR_ID_HP) &&
+> +                       (subsysvid != PCI_VENDOR_ID_INTEL) &&
+> +                       (subsysvid != PCI_SUBSYS_ID_FSC) &&
+> +                       (subsysvid != PCI_VENDOR_ID_LSI_LOGIC)) {
+> +
+> +               con_log(CL_ANN, (KERN_WARNING
+> +                       "megaraid: not loading for 
+> subsysvid:%#4.04x\n",
+> +                       subsysvid));
+> +
+> +               return -ENODEV;
+> +       }
+> 
+Please elaborate. We simply want to make sure the pci vendor, device and
+subsystem ID are appropriate before loading the driver. 
 
-	Unable to handle kernel NULL pointer dereference at virtual address 0000000c
-	 printing eip:
-	c01a114c
-	*pde = 00000000
-	Oops: 0000 [#1]
-	SMP 
-	CPU:    3
-	EIP:    0060:[<c01a114c>]    Tainted: GF 
-	EFLAGS: 00010282   (2.6.5-6-smp) 
-	EIP is at sysfs_hash_and_remove+0xc/0x80
-	eax: 00000000   ebx: f7e9be44   ecx: f9190000   edx: c0357d26
-	esi: 00000000   edi: f91575e0   ebp: f9157644   esp: f44b9ec4
-	ds: 007b   es: 007b   ss: 0068
-	Process modprobe (pid: 7176, threadinfo=f44b8000 task=f7b9f8f0)
-	Stack: f7e9be44 f7e9be3c c024730d f915762c f7e9be3c 00000246 f544fc00 00000000 
-	       c0247338 f7e9bc00 f914474c f53dc000 00000246 f9142c30 f53dc000 f7fb4c44 
-	       f906d724 f913d888 f53dc1e0 f903f168 f7fb4c00 f906d724 c0206718 f7fb4c44 
-	Call Trace:
-	 [<c024730d>] class_device_del+0xad/0xd0
-	 [<c0247338>] class_device_unregister+0x8/0x10
-	 [<f914474c>] scsi_remove_device+0x3c/0xa0 [scsi_mod]
-	 [<f9142c30>] scsi_forget_host+0x40/0x70 [scsi_mod]
-	 [<f913d888>] scsi_remove_host+0x18/0x40 [scsi_mod]
-	 [<f903f168>] qla2x00_remove_one+0x68/0x90 [qla2xxx]
-	 [<c0206718>] pci_device_remove+0x28/0x30
-	 [<c0246856>] device_release_driver+0x56/0x60
-	 [<c02468a8>] bus_remove_driver+0x48/0xa0
-	 [<c0246c98>] driver_unregister+0x8/0x30
-	 [<c02068bd>] pci_unregister_driver+0xd/0x70
-	 [<c013e452>] sys_delete_module+0x132/0x1d0
-	 [<c01091c9>] sysenter_past_esp+0x52/0x79
+> 
+> 15) Don't set a DMA mask, then change it.  in 
+> megaraid_probe_one() you 
+> have enough info to decide whether 64-bit can be supported.
+> 
+> 
+ok
 
-	Code: 8b 40 0c 8d 48 6c f0 ff 48 6c 0f 88 af 01 00 00 89 f0 e8 6d 
- 
-So, my questions are:
+> 16) Use normal Linux kernel style to handle errors.  Don't duplicate
+> +               kfree(adapter);
+> +
+> +               pci_disable_device(pdev);
+> 
+> in multiple error handling paths.
+ok
 
-1) Is this simply a violation by the LLD of the calling requirement
-for scsi_scan_host() -- given the function should *only* be called
-once.  If that's the case, could we have that defined in
-scsi_mid_low_api.txt (seems the latest doesn't mention the function).
+> 
+> 
+> 17) Eliminate MAX_CONTROLLERS.  There is no reason for this limit. 
+> Global structures such as mraid_driver_g are generally not needed.
+We need it, since management module and applications need to see a global
+picture of all adapters in the system
 
-2) If multiple invocations of scsi_scan_host() are allowed for a given
-host, would a satisfactory fix be:
+> 
+> 
+> 18) Use pci_request_regions() in megaraid_probe_one(), rather than 
+> request_region or request_mem_region.  To free, you use 
+> pci_release_regions().
+ok
 
-	@@ -1248,7 +1248,7 @@
-	 void scsi_scan_host(struct Scsi_Host *shost)
-	 {
-		scsi_scan_host_selected(shost, SCAN_WILD_CARD, SCAN_WILD_CARD,
-	-                               SCAN_WILD_CARD, 0);
-	+                               SCAN_WILD_CARD, 1);
-	 }
-	 
-	 void scsi_forget_host(struct Scsi_Host *shost)
+> 
+> 
+> 19) When hardware is malfunctioning or removed, the following 
+> code turns 
+> into an infinite loop:
+> 
+> +               // FIXME: this may not be required
+> +               while (RDINDOOR(raid_dev) & 0x02) cpu_relax();
+Is there is bette way to do it. If there is, please suggest - we will
+definitely us it. In fact, this is not the only such loop in the ISR - there
+are two more.
 
-(or better yet, removing the rescan flag and performing the duplicate
-check all the time) which mimics the behaviour of the user-space
-initiated wildcard device-scan via the sysfs 'scan' mechanism:
+> 
+> 
+> 20) You don't need spin_lock_irqsave() in interrupt handler, only 
+> spin_lock()
+ok
 
-	# echo "- - -" > /sys/class/scsi_host/host2/scan
+> 
+> 
+> 21) VERY unfriendly to shared interrupts.  
+> megaraid_iombox_ack_sequence 
+> MUST check immediately for
+> 	(a) no irq at all (shared interrupt)
+> 	(b) status return of 0xffffffff (hardware is 
+> malfunctioning/unplugged)
+This is for EOL controllers. We are planning to phase out this portion.
 
-Thanks,
-Andrew Vasquez
+> 
+> 
+> 22) MAJOR bug:  sleep inside spinlock.  The SCSI error 
+> handler calls its 
+> error handling hooks with the adapter lock held.  You cannot yield() 
+> inside mbox_post_sync_cmd
+> 
+> 
+> 23) Alongside #22, the following code is unacceptable:
+> 
+> +               // wait for maximum 1 second for status to post
+> +               for (i = 0; i < 40000; i++) {
+> +                       if (mbox->numstatus != 0xFF) break;
+> +                       udelay(25); yield();
+> +               }
+> 
+> Besides yield(), the maximum delay with spinlock held is far too long.
+> 
+> 
+> 24) Same issues as #22 and #23 in __megaraid_busywait_mbox: 
+> unacceptable delay inside spinlock, and schedule inside spinlock:
+> 
+> +       for (counter = 0; counter < 10000; counter++) {
+> +
+> +               if (!mbox->busy) return MRAID_SUCCESS;
+> +
+> +               udelay(100); yield();
+> +       }
+> 
+
+Very good point! We would fix in the next drop.
+
+> 
+> 
+> 25) sleep_on_timeout() is deprecated and should not be used:
+> 
+> +       while (adp->outstanding_cmds > 0)
+> +               sleep_on_timeout( &wq, 1*HZ );
+> 
+What is the recommended way to do it?
+
+> 
+> 
+> 26) General question:  do you ever call down() inside a 
+> spinlock?  I did 
+> not look closely, but I think you do.  That would be wrong, as down() 
+> can sleep.
+That should not happen since down() is only done in ioctl() through
+management module. Will double check though.
+
+> 
+> 
+> 27) drivers/scsi/megaraid/readme belongs in the 
+> Documentation/ directory
+ok
