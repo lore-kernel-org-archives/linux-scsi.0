@@ -1,40 +1,37 @@
-From: Greg KH <greg@kroah.com>
-Subject: Re: [RFC] put symbolic links between drivers and modules in the sysfs tree
-Date: Sat, 25 Sep 2004 09:46:21 -0700
+From: Rik van Riel <riel@redhat.com>
+Subject: Re: [RFC]transient transport error report for LLD timeout
+Date: Sat, 25 Sep 2004 20:28:30 -0400 (EDT)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040925164621.GA9098@kroah.com>
-References: <1095701390.2016.34.camel@mulgrave> <20040925073819.GT23987@parcelfarce.linux.theplanet.co.uk>
+Message-ID: <Pine.LNX.4.44.0409252026210.28582-100000@chimarrao.boston.redhat.com>
+References: <200409232332.AA03619@fukuchi.jp.fujitsu.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kroah.org ([69.55.234.183]:36552 "EHLO perch.kroah.org")
-	by vger.kernel.org with ESMTP id S269217AbUIYQsK (ORCPT
+Received: from mx1.redhat.com ([66.187.233.31]:41697 "EHLO mx1.redhat.com")
+	by vger.kernel.org with ESMTP id S269454AbUIZA2j (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 25 Sep 2004 12:48:10 -0400
-Content-Disposition: inline
-In-Reply-To: <20040925073819.GT23987@parcelfarce.linux.theplanet.co.uk>
+	Sat, 25 Sep 2004 20:28:39 -0400
+In-Reply-To: <200409232332.AA03619@fukuchi.jp.fujitsu.com>
 List-Id: linux-scsi@vger.kernel.org
-To: viro@parcelfarce.linux.theplanet.co.uk
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, Rusty Russell <rusty@rustcorp.com.au>, Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Masao Fukuchi <fukuchi.masao@jp.fujitsu.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Sat, Sep 25, 2004 at 08:38:19AM +0100, viro@parcelfarce.linux.theplanet.co.uk wrote:
-> On Mon, Sep 20, 2004 at 01:29:44PM -0400, James Bottomley wrote:
-> > This functionality is essential for us to work out which drivers are
-> > supplied by which modules.  We use this in turn to work out which
-> > modules are necessary to find the root device (and hence what
-> > initrd/initramfs needs to insert).
-> 
-> So what will your userland code do when you run it on a system with
-> non-modular kernel currently running?
-> 
-> IOW, that's a fundamentally broken interface - you really want the same
-> information regardless of modular vs. built-in.
+On Fri, 24 Sep 2004, Masao Fukuchi wrote:
 
-I agree, and Rusty has some pending patches that provide that
-information for all drivers built into the system.  When they are
-merged, this symlink will be created for those also (with a bit of
-tweaking, but it will happen.)
+> We are now planning to use linux for enterprise system.
+> In enterprise system, response time is important factor and it requires 
+> response time within 30sec even if hardware(software) fails.
 
-thanks,
+Makes some sense, I guess.  However it could lead to
+spurious IO errors under high load since some disk
+arrays are known to take longer than 10 seconds to
+finish an IO operation under extremely heavy loads.
 
-greg k-h
+I'm not convinced that enterprise systems need latency
+more than reliability, but maybe that's ust me ;)
+
+-- 
+"Debugging is twice as hard as writing the code in the first place.
+Therefore, if you write the code as cleverly as possible, you are,
+by definition, not smart enough to debug it." - Brian W. Kernighan
+
