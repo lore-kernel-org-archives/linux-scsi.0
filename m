@@ -1,54 +1,68 @@
 From: Mike Anderson <andmike@us.ibm.com>
-Subject: Re: 2.5.63-mm2
-Date: Wed, 5 Mar 2003 09:38:54 -0800
+Subject: Re: [rob@osinvestor.com: Re: SCSI broken]
+Date: Wed, 5 Mar 2003 10:03:46 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030305173854.GA1090@beaverton.ibm.com>
-References: <20030302180959.3c9c437a.akpm@digeo.com> <1046815078.12931.79.camel@ibm-b> <20030304234042.2553deed.akpm@digeo.com>
+Message-ID: <20030305180346.GB1090@beaverton.ibm.com>
+References: <20030305144336.GA13722@osinvestor.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20030304234042.2553deed.akpm@digeo.com>
+In-Reply-To: <20030305144336.GA13722@osinvestor.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@digeo.com>
-Cc: Mark Wong <markw@osdl.org>, linux-scsi@vger.kernel.org
+To: Rob Radez <rob@osinvestor.com>
+Cc: linux-scsi@vger.kernel.org
 
-I can also reproduce the problem on my system now that I switch from new
-AIC7xxx to old AIC7xxx. I am looking at the problem now.
+Rob,
+	Would it possible for you to build with CONFIG_SCSI_LOGGING=y
+	and boot with scsi_logging=1. Then send the output to me.  The
+	output is quite noisy and if you do not have a serial connected
+	the last messages maybe all that is needed. This would help
+	narrow down the section in the diff.
 
-Andrew Morton [akpm@digeo.com] wrote:
-> Mark Wong <markw@osdl.org> wrote:
-> >
-> > It appears something is conflicting with the old Adapatec AIC7xxx.  My
-> > system halts when it attempts to probe the devices (I think it's that.) 
-> > So I started using the new AIC7xxx driver and all is well.  I don't see
-> > any messages to the console that points to any causes.  Is there
-> > someplace I can look for a clue to the problem?
-> > 
-> > I actually didn't realize I was using the old driver and have no qualms
-> > about not using it, but if it'll help someone else, I can help gather
-> > information.
-> > 
+Rob Radez [rob@osinvestor.com] wrote:
+> [forgot to cc: linux-scsi@]
 > 
-> Well aic7xxx_old fails for me in 2.5.62, as well as later kernels.
-> Always in the same way.  It gets stuck at boot:
+> Also forgot to mention that 2.5.64 hangs in the same spot as 2.5.63.
 > 
-> (gdb) bt
-> #0  wait_for_completion (x=0xc8dbfea8) at kernel/sched.c:1408
-> #1  0xc024295d in scsi_wait_req (SRpnt=0xf7e22a00, cmnd=0xc8dbfeec, buffer=0xc03fce60, bufflen=36, timeout=6000, 
->     retries=3) at drivers/scsi/scsi.c:673
-> #2  0xc024839f in scsi_probe_lun (sreq=0xf7e22a00, inq_result=0xc03fce60 "", bflags=0xc8dbff20)
->     at drivers/scsi/scsi_scan.c:1050
-> #3  0xc024877e in scsi_probe_and_add_lun (host=0xf7e92600, q=0xc8dbff80, channel=0, id=2, lun=0, bflagsp=0xc8dbff54)
->     at drivers/scsi/scsi_scan.c:1372
-> #4  0xc0248a8e in scsi_scan_target (shost=0xf7e92600, q=0xc8dbff80, channel=0, id=2) at drivers/scsi/scsi_scan.c:1835
-> #5  0xc0248b7e in scsi_scan_host (shost=0xf7e92600) at drivers/scsi/scsi_scan.c:1892
-> #6  0xc0243b9e in scsi_add_host (shost=0xf7e92600, dev=0x0) at drivers/scsi/hosts.c:314
-> #7  0xc0243fbd in scsi_register_host (shost_tp=<incomplete type>) at drivers/scsi/hosts.c:513
-> #8  0xc03b3259 in init_this_scsi_driver () at drivers/scsi/scsi_module.c:38
-> #9  0xc03a07d5 in do_initcalls () at init/main.c:472
-> #10 0xc03a0803 in do_basic_setup () at init/main.c:497
-> #11 0xc01050a7 in init (unused=0x0) at init/main.c:535
+> ----- Forwarded message from Rob Radez <rob@osinvestor.com> -----
+> 
+> From: rob@osinvestor.com (Rob Radez)
+> To: David van Hoose <davidvh@cox.net>
+> Cc: linux-kernel@vger.kernel.org
+> Date: Wed, 5 Mar 2003 00:44:57 -0500
+> Subject: Re: SCSI broken
+> 
+> On Tue, Mar 04, 2003 at 11:42:41PM -0600, David van Hoose wrote:
+> > Kernels 2.5.63 and 2.5.64 lock up when displaying the information for my 
+> > ZipDrive during SCSI probe. Attached is my .config for 2.5.64.
+> 
+> I suspect I'm seeing something similar.  On SPARC, I'm getting a hang
+> after displaying the information for my SCSI CD-ROM drive.
+> 
+> scsi0 : Sparc ESP100A-FAST
+> Vendor: SEAGATE   Model: ST31200W SUN1.05  Rev: 8724
+> Type:   Direct-Access                      ANSI SCSI revision: 02
+> Vendor: SEAGATE   Model: ST32155W SUN2.1G  Rev: 8456
+> Type:   Direct-Access                      ANSI SCSI revision: 02
+> Vendor: TOSHIBA   Model: XM-4101TASUNSLCD  Rev: 1755
+> Type:   CD-ROM                             ANSI SCSI revision: 02
+> <hang>
+> 
+> .config available on request.  Worked fine in 2.5.62, hangs in 2.5.63.
+> Reverting the scsi changes listed at
+> http://osinvestor.com/sparc/patch/2.5.63-revertscsi.diff allows 2.5.63
+> to boot.
+> 
+> Regards,
+> Rob Radez
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
+> 
+> ----- End forwarded message -----
 > -
 > To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
 > the body of a message to majordomo@vger.kernel.org
