@@ -1,57 +1,49 @@
-From: =?ISO-8859-1?Q?Erik_Inge_Bols=F8?= <knan@mo.himolde.no>
-Subject: Re: Megaraid, I/O error...
-Date: Sun, 7 Apr 2002 18:36:01 +0200 (CEST)
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: cleanup of sd driver in lk2.5
+Date: Sun, 7 Apr 2002 19:50:08 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44.0204071826480.17889-100000@yme.mo.himolde.no>
-References: <E16tz8F-0002s8-00@the-village.bc.nu>
+Message-ID: <20020407195008.A9452@infradead.org>
+References: <3CAD2C8A.595DC7A5@torque.net> <20020405122253.A2038@infradead.org> <3CAE61B7.562CA94A@torque.net>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-In-Reply-To: <E16tz8F-0002s8-00@the-village.bc.nu>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <3CAE61B7.562CA94A@torque.net>; from dougg@torque.net on Fri, Apr 05, 2002 at 09:47:19PM -0500
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: linux-scsi@vger.kernel.org, knan@tvilsom.org
+To: Douglas Gilbert <dougg@torque.net>
+Cc: linux-scsi@vger.kernel.org
 
-On Sat, 6 Apr 2002, Alan Cox wrote:
->> SCSI disk error : host 0 channel 2 id 0 lun 0 return code =3D3D 2504=
-0001
->>  I/O error: dev 08:06, sector 4749296
->> SCSI disk error : host 0 channel 2 id 0 lun 0 return code =3D3D 2504=
-0001
->>  I/O error: dev 08:06, sector 4749304
->>
->> Do this mean what I suspect, that a disk is failing?
->
->I've also seen it when a cable came loose.
+On Fri, Apr 05, 2002 at 09:47:19PM -0500, Douglas Gilbert wrote:
+> 
+> Christoph,
+> My major concern in this area is the hot unplugging of
+> IDE and 1394 disks. The natural thing for them to do
+> is call sd_detach() but from which context? ** Also the
+> block subsystem could be just about to send a command
+> to that device (I make the assumption if sd_detach()
+> is called any scsi packets "in flight" will not 
+> call sd_rw_intr() thereafter).
+> 
+> Data integrity on the hot unplugged device is obviously
+> compromised, however fsck can take care of that later.
+> The challenge is to make the sd driver robust enough
+> not to die a horrible death ...
 
-Just checked the cables, seems I'm out of luck. One of two identical di=
-sks
-failing after two months is not good. And on a saturday, too.
+Hmm, okay - I missed some other users from interrupt context
+than just the error handling.
 
-Thanks for the help.
+> ** are we sure that couldn't be an interrupt context?
+> One thought that crossed my mind is that since all
+> scsi hosts have a scsi_eh_<n> thread in 2.5 then some 
+> device attaches and detaches could be sent/queued through 
+> that thread.
 
-Time to go for RAID 5, I think.
+Either this or through keventd is the way to go, IMHO.
 
->> How do I find out which disk is failing, when linux only knows about=
- th=3D
->> em as one logical disk? Listen for which disk makes bad noises? :/
->
->I've never found a way to do that without checking the BIOS - that wil=
-l
->say which drive it thinks failed if you are lucky
+> While I am musing, does anyone know whether the driverfs
+> structure might be useful to put in Scsi_Host objects?
+> It might standardize information about HBAs or, for
+> pseudo adapters, what other protocol stack to visit
+> for more information.
 
-Ah. Megamon told me the physical drive by mail to root, when I installe=
-d
-it and fired it up. "Medium error count: 249" does not sound good for
-that drive.
-
---
-Erik I. Bols=F8 | email: <knan at mo.himolde.no>
-The UNIX philosophy basically involves giving you enough rope to
-hang yourself.  And then a couple of feet more, just to be sure.
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+I think we want driverfs all through the scsi layer, and that
+includes Scsi_Host.
