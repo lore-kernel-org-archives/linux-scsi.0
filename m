@@ -1,29 +1,48 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: kernel addresses
-Date: 28 Oct 2002 23:26:14 +0000
+From: Patrick Mansfield <patmans@us.ibm.com>
+Subject: [PATCH] 2.5.44 scsi-misc-2.5 fix queue depth setting
+Date: Mon, 28 Oct 2002 15:08:02 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1035847574.3550.109.camel@irongate.swansea.linux.org.uk>
-References: <20021028230140.79410.qmail@web80305.mail.yahoo.com>
+Message-ID: <20021028150802.A5891@eng2.beaverton.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <20021028230140.79410.qmail@web80305.mail.yahoo.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Mark Lobo <ntdeveloper2002@yahoo.com>
-Cc: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>, linux-scsi@vger.kernel.org
 
-kmalloc memory comes out of the pool requested  GFP_DMA selects the ISA
-space, GFP_HIGH allows all 36bits (if I remember rightly). vmalloc comes
-from the whole of memory space.
+James -
 
-the highmem I/O stuff is a 2.4 patch some people use so that DMA aware
-drivers that support the full 32bit DMA range can avoid bounce buffers. 
+Here's a simple patch against your bk tree to not reset the desired
+queue depth in scsi_release_commandblocks. Without this patch, if the
+upper level drivers are inited after the adapters, the queue
+depth is set to 1.
 
-This comes from a 2.4 transition thing. Older drivers assume memory they
-access is always mapped (eg when doing PIO) so the scsi code makes sure
-this is true. The bounce patch lets drivers that don't do PIO avoid
-this.
+i.e.:
 
-2.5 does the job properly instead as part of the block rewrite
+Current scsi-misc-2.5 gives me:
 
+[patman@elm3a50 patman]$ ]$ cat /proc/scsi/sg/device_hdr /proc/scsi/sg/devices
+host    chan    id      lun     type    opens   qdepth  busy    online
+0       0       0       0       0       2       1       0       1
+0       0       1       0       0       1       1       0       1
+0       0       15      0       3       0       1       0       1
+
+With this patch:
+
+[patman@elm3a50 patman]$ cat /proc/scsi/sg/device_hdr /proc/scsi/sg/devices
+host    chan    id      lun     type    opens   qdepth  busy    online
+0       0       0       0       0       2       253     0       1
+0       0       1       0       0       1       253     0       1
+0       0       15      0       3       0       2       0       1
+
+===== drivers/scsi/scsi.c 1.53 vs edited =====
+--- 1.53/drivers/scsi/scsi.c	Mon Oct 28 08:54:38 2002
++++ edited/drivers/scsi/scsi.c	Mon Oct 28 13:40:22 2002
+@@ -1517,7 +1517,6 @@
+ 		kfree((char *) SCpnt);
+ 	}
+ 	SDpnt->current_queue_depth = 0;
+-	SDpnt->new_queue_depth = 0;
+ 	spin_unlock_irqrestore(&device_request_lock, flags);
+ }
+ 
+-- Patrick Mansfield
