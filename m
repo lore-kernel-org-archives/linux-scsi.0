@@ -1,55 +1,79 @@
-From: Alex Williamson <alex.williamson@hp.com>
-Subject: mpt sets 64bit consistent mask yet requires mapping in same 4GB
-	chunk?!?
-Date: Fri, 13 Feb 2004 09:12:05 -0700
-Sender: linux-ia64-owner@vger.kernel.org
-Message-ID: <1076688724.2462.16.camel@patsy.fc.hp.com>
+From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
+Subject: RE: [PATCH] aacraid changes for 2.4.24 kernel to ride through SCSI hang ?
+Date: Fri, 13 Feb 2004 13:56:40 -0500
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <547AF3BD0F3F0B4CBDC379BAC7E4189F25528E@otce2k03.adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ia64-owner@vger.kernel.org>
-To: Emoore@lsil.com
-Cc: linux-scsi@vger.kernel.org, linux-ia64@vger.kernel.org
+Content-Type: multipart/mixed;
+	boundary="----_=_NextPart_001_01C3F263.1D771F2D"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from magic.adaptec.com ([216.52.22.17]:43920 "EHLO magic.adaptec.com")
+	by vger.kernel.org with ESMTP id S267194AbUBMS4n (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 13 Feb 2004 13:56:43 -0500
+Received: from redfish.adaptec.com (redfish.adaptec.com [162.62.50.11])
+	by magic.adaptec.com (8.11.6/8.11.6) with ESMTP id i1DIugJ14978
+	for <linux-scsi@vger.kernel.org>; Fri, 13 Feb 2004 10:56:42 -0800
+Received: from otce2k03.adaptec.com (otce2k03.adaptec.com [10.12.1.72])
+	by redfish.adaptec.com (8.11.6/8.11.6) with ESMTP id i1DIug809211
+	for <linux-scsi@vger.kernel.org>; Fri, 13 Feb 2004 10:56:42 -0800
+content-class: urn:content-classes:message
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi <linux-scsi@vger.kernel.org>
 
-Eric,
+This is a multi-part message in MIME format.
 
-   I think I found a bug in the version 3.00.02 mpt driver that's
-currently in Linus' 2.6 tree (latest linux-2.5).  Here's the code
-snippet:
+------_=_NextPart_001_01C3F263.1D771F2D
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 
-message/fusion/mptbase.c: PrimeIocFifos()
-...
-    if (sizeof(dma_addr_t) == sizeof(u64)) {
-        /* Check: upper 32-bits of the request and reply frame
-         * physical addresses must be the same.
-         */
-        if (((u64)ioc->req_frames_dma >> 32) != ((u64)ioc->reply_frames_dma >> 32)){
-            goto out_fail;
-    }
+This patch allows the system to ride through an Adapter that is
+temporarily reticent to commands.
 
-req_frames_dma and reply_frames_dma are aligned version of dma addresses
-retrieved via two separate pci_alloc_consistent() calls.  The mpt driver
-sets a 64bit consistent dma mask.  How is it reasonable to assume two
-separate mappings will fall within the same 4GB chunk of memory?  I
-recently added support for consistent mapping bypass in the sba_iommu
-driver for the ia64 zx1 chipset.  Randomly on bootup, the MPT driver
-fails.  Checking the mappings, I get a things like this:
+The cause of this reticence is usually a combination of a Fast Host
+Processors loading up the adapter full with commands and a less than
+perfect SCSI cable or drive triggering an Adapter Cache Flush operation.
+Some Adapters with large cache configuration have been clocked as being
+unresponsive for more than 90 seconds.
 
-mptbase: Initiating ioc0 bringup
-ioc0: 53C1030: Capabilities={Initiator}
-sba_alloc_coherent() bypassing, dma_handle: 0x1fffb8000, addr: 0xe0000001fffb8000
-sba_alloc_coherent() bypassing, dma_handle: 0x40ffcd8000, addr: 0xe0000040ffcd8000
-PrimeIocFifos() req_frames_dma: 0x40ffcd8000, reply_frames_dma: 0x1fffb8000
-mptbase: WARNING - ioc0 did not initialize properly! (-3)
+When the SCSI subsystem times out and asks for the Adapter to be reset,
+we wait a minute longer for the Adapter to complete all outstanding
+commands before giving up and returning to the SCSI layers recovery
+code. Without this delay, the first test unit ready issued to the device
+times out and the device is taken offline; usually resulting in a panic
+of the filesystem driver.
 
-These are two perfectly valid consistent mappings as far as the platform
-code is concerned.  I think mpt really needs to either set a 32bit
-consistent map of do a single allocation when it requires this type of
-thing.  Thanks,
+Sincerely -- Mark Salyzyn
 
-	Alex
+------_=_NextPart_001_01C3F263.1D771F2D
+Content-Type: application/octet-stream;
+	name="aac_eh_reset.patch"
+Content-Transfer-Encoding: base64
+Content-Description: aac_eh_reset.patch
+Content-Disposition: attachment;
+	filename="aac_eh_reset.patch"
 
--- 
-Alex Williamson                             HP Linux & Open Source Lab
+ZGlmZiAtdSAtUCAtLXJlY3Vyc2l2ZSBsaW51eC0yLjQuMjQuZ2VuZXJpYy9kcml2ZXJzL3Njc2kv
+YWFjcmFpZC9saW5pdC5jIGxpbnV4LTIuNC4yNC0yMzIyL2RyaXZlcnMvc2NzaS9hYWNyYWlkL2xp
+bml0LmMKLS0tIGxpbnV4LTIuNC4yNC5nZW5lcmljL2RyaXZlcnMvc2NzaS9hYWNyYWlkL2xpbml0
+LmMJTW9uIE9jdCAyMCAxMDo0MzoyNiAyMDAzCisrKyBsaW51eC0yLjQuMjQtMjMyMi9kcml2ZXJz
+L3Njc2kvYWFjcmFpZC9saW5pdC5jCVdlZCBGZWIgIDQgMTI6NTQ6MDEgMjAwNApAQCAtNjEwLDgg
+KzcyNSwzNSBAQAogCiBzdGF0aWMgaW50IGFhY19laF9yZXNldChTY3NpX0NtbmQqIGNtZCkKIHsK
+KwlTY3NpX0RldmljZSAqIGRldiA9IGNtZC0+ZGV2aWNlOworCXN0cnVjdCBTY3NpX0hvc3QgKiBo
+b3N0ID0gZGV2LT5ob3N0OworCVNjc2lfQ21uZCAqIGNvbW1hbmQ7CisJaW50IGNvdW50OworCiAJ
+cHJpbnRrKEtFUk5fRVJSICIlczogSG9zdCBhZGFwdGVyIHJlc2V0IHJlcXVlc3QuIFNDU0kgaGFu
+ZyA/XG4iLCBBQUNfRFJJVkVSX05BTUUpOwotCXJldHVybiBGQUlMRUQ7CisKKwkvKgorCSAqIFdh
+aXQgZm9yIGFsbCBjb21tYW5kcyB0byBjb21wbGV0ZSB0byB0aGlzIHNwZWNpZmljCisJICogdGFy
+Z2V0IChibG9jayBtYXhpbXVtIDYwIHNlY29uZHMpLgorCSAqLworCWZvciAoY291bnQgPSA2MDsg
+Y291bnQ7IC0tY291bnQpIHsKKwkJaW50IGFjdGl2ZSA9IDA7CisJCWZvciAoZGV2ID0gaG9zdC0+
+aG9zdF9xdWV1ZTsgZGV2ICE9IChTY3NpX0RldmljZSAqKU5VTEw7IGRldiA9IGRldi0+bmV4dCkg
+eworCQkJZm9yKGNvbW1hbmQgPSBkZXYtPmRldmljZV9xdWV1ZTsgY29tbWFuZDsgY29tbWFuZCA9
+IGNvbW1hbmQtPm5leHQpIHsKKwkJCQlpZiAoY29tbWFuZC0+c2VyaWFsX251bWJlcikgeworCQkJ
+CQkrK2FjdGl2ZTsKKwkJCQkJYnJlYWs7CisJCQkJfQorCQkJfQorCQl9CisJCWlmIChhY3RpdmUg
+PT0gMCkKKwkJCXJldHVybiBTVUNDRVNTOworCQlzcGluX3VubG9ja19pcnEoJmlvX3JlcXVlc3Rf
+bG9jayk7CisJCXNjc2lfc2xlZXAoSFopOworCQlzcGluX2xvY2tfaXJxKCZpb19yZXF1ZXN0X2xv
+Y2spOworCX0KKwlwcmludGsoS0VSTl9FUlIgIiVzOiBTQ1NJIGJ1cyBhcHBlYXJzIGh1bmdcbiIs
+IEFBQ19EUklWRVJfTkFNRSk7CisJcmV0dXJuIC1FVElNRURPVVQ7CiB9CiAKIC8qKgo=
 
+------_=_NextPart_001_01C3F263.1D771F2D--
