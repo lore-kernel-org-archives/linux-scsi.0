@@ -1,42 +1,49 @@
-From: James Bottomley <James.Bottomley@steeleye.com>
-Subject: Re: I2O enhancement for Adaptec management software
-Date: 07 Apr 2004 16:10:01 -0500
+From: "Bagalkote, Sreenivas" <sreenib@lsil.com>
+Subject: [ANNOUNCE][RELEASE]: megaraid unified driver version 2.20.0.B1
+Date: Wed, 7 Apr 2004 19:18:02 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1081370204.1747.5.camel@mulgrave>
-References: <40712A47.4090903@shadowconnect.com>
-	<1081159378.4679.1.camel@laptop.fenrus.com>
-	<20040405110524.A3987@infradead.org>
-	<20040405101007.GA27710@devserv.devel.redhat.com>
-	<20040405111245.A4077@infradead.org>
+Message-ID: <0E3FA95632D6D047BA649F95DAB60E570230C7B4@exa-atlanta.se.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="iso-8859-1"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat1.steeleye.com ([65.114.3.130]:39832 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S264193AbUDGVK3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 7 Apr 2004 17:10:29 -0400
-In-Reply-To: <20040405111245.A4077@infradead.org>
+Received: from mail0.lsil.com ([147.145.40.20]:40397 "EHLO mail0.lsil.com")
+	by vger.kernel.org with ESMTP id S261244AbUDGXTp (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Apr 2004 19:19:45 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Arjan van de Ven <arjanv@redhat.com>, Markus Lidel <Markus.Lidel@shadowconnect.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: "'jgarzik@pobox.com'" <jgarzik@pobox.com>, "'Matt_Domsch@dell.com'" <Matt_Domsch@dell.com>, "'paul@kungfoocoder.org'" <paul@kungfoocoder.org>
+Cc: "'James.Bottomley@SteelEye.com'" <James.Bottomley@SteelEye.com>, "'arjanv@redhat.com'" <arjanv@redhat.com>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>
 
-On Mon, 2004-04-05 at 05:12, Christoph Hellwig wrote:
-> SG_IO is for scsi passthrough.  now you could invent fake scsi command
-> opcodes for native messages, but at that point it starts to get silly.
+Hello All,
 
-Actually, no it's not.  SG_IO will to IDE taskfile passthrough just as
-well.  As arjan says, it's for native command passthrough.
+We are releasing the megaraid unified driver version 2.20.0.0.
+The source is available at our public ftp site:
 
-Now, since the dpt_i20 commontly accepts SCSI commands it would have to
-have some way to distinguish these "native" commands from other SCSI
-commands, but surely a vendor specific service action would do that.
+ftp://ftp.lsil.com/pub/linux-megaraid/drivers/version-unified-2.20.0.B1.04.0
+7.2004/
 
-The consummate advantage is that we don't have to have the driver trying
-to construct the SG list on its own (which is what about 50% of this
-patch is doing), it can use the block layer to do that on a passed in
-area of application memory.
+Kernels:
+---------
+This driver is primarily for lk 2.6. While this also works on lk 2.4
+this is not a replacement for the extant 2.x driver on 2.4 kernel.
 
-James
+Thanks to:
+-----------
+This driver has been designed according to the great inputs by
+Jeff Garzik and Matt Domsch. 'readme' in the source tgz has more
+details. Thanks in advance also to Paul Wagland for the sysfs
+support that he agreed to add.
 
+Near-term goals:
+------------------
+i.	A new class of controllers will be added under this umbrella.
+ii.	Paul Wagland has agreed to start off adding sysfs support to 
+	the common module.
+iii.	Information exported via sysfs will be fully augmented to allow
+	sophisticated monitoring.
+iv.	Write support will be added through sysfs.
+v.	We are NOT planning to have /proc support in this driver.
 
+Thanks,
+Sreenivas
+LSI Logic
