@@ -1,59 +1,52 @@
-From: "Bagalkote, Sreenivas" <sreenib@lsil.com>
-Subject: RE: [PATCH][RELEASE] megaraid 2.10.2 Driver
-Date: Tue, 23 Mar 2004 11:00:59 -0500
+From: Doug Ledford <dledford@redhat.com>
+Subject: Re: [PATCH 2.4] export scsi_finish_command ACK?
+Date: Tue, 23 Mar 2004 11:18:55 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <0E3FA95632D6D047BA649F95DAB60E570230C77D@exa-atlanta.se.lsil.com>
+Message-ID: <1080058735.14308.0.camel@compaq.xsintricity.com>
+References: <40604D8F.6080505@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:2439 "EHLO mail0.lsil.com")
-	by vger.kernel.org with ESMTP id S262623AbUCWQB6 (ORCPT
+Received: from mx1.redhat.com ([66.187.233.31]:51670 "EHLO mx1.redhat.com")
+	by vger.kernel.org with ESMTP id S262648AbUCWQWV (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 23 Mar 2004 11:01:58 -0500
+	Tue, 23 Mar 2004 11:22:21 -0500
+In-Reply-To: <40604D8F.6080505@pobox.com>
 List-Id: linux-scsi@vger.kernel.org
-To: 'Matthew Wilcox' <willy@debian.org>, Christoph Hellwig <hch@infradead.org>, "Bagalkote, Sreenivas" <sreenib@lsil.com>, 'Jeff Garzik' <jgarzik@pobox.com>, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, "'marcelo@cyclades.com.br'" <marcelo@cyclades.com.br>, "'marcelo.tosatti@cyclades.com'" <marcelo.tosatti@cyclades.com>
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
->> > I don't think you understand how CONFIG_COMPAT works.  
->x86-64 defines it
->> > when it wants it:
->> 
->> But not in 2.4, and this is a 2.4-only patch..
->
->It is?  I didn't see that mentioned anywhere.
+On Tue, 2004-03-23 at 09:45, Jeff Garzik wrote:
+> Doug,
+> 
+> Can I get your ACK on the attached patch?
 
-My fault. I will be more thorough from now on. Thanks for pointing that out.
+ACK.
 
->
->Anyway, it's wrong to define LSI_CONFIG_COMPAT based solely on 
->__x86_64__.
->You'd also need to check IA32_EMULATION.  Really, it would be simpler
->to add CONFIG_COMPAT to 2.4.
->
+> I am about to submit libata to Marcelo (again :)), and this export is 
+> needed by all users of ->eh_strategy_handler, of which libata is one.
+> 
+> 	Jeff
+> 
+> 
+> 
+> ______________________________________________________________________
+> diff -Nru a/drivers/scsi/scsi_syms.c b/drivers/scsi/scsi_syms.c
+> --- a/drivers/scsi/scsi_syms.c	Tue Mar 23 09:43:29 2004
+> +++ b/drivers/scsi/scsi_syms.c	Tue Mar 23 09:43:29 2004
+> @@ -43,6 +43,7 @@
+>  EXPORT_SYMBOL(scsi_do_cmd);
+>  EXPORT_SYMBOL(scsi_command_size);
+>  EXPORT_SYMBOL(scsi_ioctl);
+> +EXPORT_SYMBOL(scsi_finish_command);
+>  EXPORT_SYMBOL(print_command);
+>  EXPORT_SYMBOL(print_sense);
+>  EXPORT_SYMBOL(print_req_sense);
+-- 
+  Doug Ledford <dledford@redhat.com>     919-754-3700 x44233
+         Red Hat, Inc.
+         1801 Varsity Dr.
+         Raleigh, NC 27606
 
-Most of the objections centered around CONFIG_COMPAT issue. If we have 
-to support 32-bit applications on lk 2.4, what is the right way to do it?
-Any
-helpful suggestions are appreciated.
 
->So you can only copy to the bottom 4GB of user address space? That
->seems like a recipe for disaster. Particularly on ia64.
-
-This interface is only for 32-bit applications. If and when we have 64-bit
-apps,
-they use a different (new) interface.
-
->and everything will be fine. Please don't introduce this stupid
->unnecessary LSI_CONFIG_COMPAT. That just makes people say "what the
->**** are they doing?".
-
-May I also respectfully suggest that you don't use any F* or similar words
-in
-your mails, for the sole reason that our corporate server filters those
-mails out.
-We had to infer from Christoph's mail that you had responded earlier. We
-don't
-want to miss your valuable feedback.
-
-Thank you,
-Sreenivas
