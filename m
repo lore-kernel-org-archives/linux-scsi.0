@@ -1,33 +1,43 @@
-From: Andrew Morton <akpm@osdl.org>
-Subject: Re: [Bug 3244] New: megaraid_mbox.c broken: unimplemented parts
-Date: Thu, 19 Aug 2004 14:22:27 -0700
+From: Nathan Bryant <nbryant@optonline.net>
+Subject: Re: Suspending SCSI devices and buses
+Date: Thu, 19 Aug 2004 17:20:09 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040819142227.16ddf987.akpm@osdl.org>
-References: <0E3FA95632D6D047BA649F95DAB60E57033BC97E@exa-atlanta>
+Message-ID: <41251989.3020306@optonline.net>
+References: <Pine.LNX.4.44L0.0408191647170.2106-100000@ida.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fw.osdl.org ([65.172.181.6]:24477 "EHLO mail.osdl.org")
-	by vger.kernel.org with ESMTP id S267415AbUHSVSv (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 19 Aug 2004 17:18:51 -0400
-In-Reply-To: <0E3FA95632D6D047BA649F95DAB60E57033BC97E@exa-atlanta>
+Received: from pegasus.allegientsystems.com ([208.251.178.236]:36102 "EHLO
+	pegasus.lawaudit.com") by vger.kernel.org with ESMTP
+	id S267407AbUHSVUL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 19 Aug 2004 17:20:11 -0400
+In-Reply-To: <Pine.LNX.4.44L0.0408191647170.2106-100000@ida.rowland.org>
 List-Id: linux-scsi@vger.kernel.org
-To: "Mukker, Atul" <Atulm@lsil.com>
-Cc: linux-scsi@vger.kernel.org
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: SCSI development list <linux-scsi@vger.kernel.org>
 
-"Mukker, Atul" <Atulm@lsil.com> wrote:
->
-> Is this something specific to gcc 3.4.1.
+Alan Stern wrote:
 
-yes,
+> Thanks.  Looking at your patch, I have a question.  It doesn't look like
+> the resume path is careful to check for Unit Attention with Power On or
+> Medium May Have Changed sense.  What happens if somebody changes the
+> medium while the drive is suspended?  Or am I missing something?
 
-> I do not see any such issue with
-> 3.3.3 (this driver was tested on IA32, x86-64, and Itenium). Would, what
-> Matt Domsch mentioned in his post on 7/27 "Re: [ANNOUNCE]: megaraid driver
-> version 2.20.0.1, now 2.20.2.0" help. He talked about defining the inline
-> function before they are actually used.
+I just do the same checks that we do on boot. I suppose if somebody does 
+this with a mounted filesystem on removeable media the results might be 
+rather comical...
 
-yes, inlining requires that the implementation appear earlier in the compilation
-unit than the call site(s).
+Does "Medium May Have Changed" show up reliably if somebody changes the 
+medium in a cartridge drive, Zip drive, etc while it is powered down? 
+Doesn't the kernel already notice that sense if it happens during normal 
+operation?
+
+
+Nathan
+
+> 
+> Alan Stern
+> 
+> 
+
