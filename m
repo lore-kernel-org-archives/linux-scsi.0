@@ -1,35 +1,36 @@
-From: Patrick Mansfield <patmans@us.ibm.com>
-Subject: Re: oops when removing sbp2 module
-Date: Sun, 5 Oct 2003 20:36:06 -0700
+From: Pat LaVarre <p.lavarre@ieee.org>
+Subject: Re: max GiB written per boot
+Date: 06 Oct 2003 11:12:16 -0600
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20031005203606.A3829@beaverton.ibm.com>
-References: <16256.6322.388402.857084@cargo.ozlabs.ibm.com> <20031005074902.A26284@beaverton.ibm.com> <16256.56491.671416.205944@cargo.ozlabs.ibm.com>
+Message-ID: <1065460336.10804.1.camel@patehci2>
+References: <1064271322.4797.9.camel@patehci2>
+	 <1064847281.24854.2.camel@patehci2> <1064850600.25057.7.camel@patehci2>
+	 <20030929164654.GS15415@suse.de>  <1064855570.3184.3.camel@patehci2>
+	 <1064865746.4262.63.camel@patehci2>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e4.ny.us.ibm.com ([32.97.182.104]:27581 "EHLO e4.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S263968AbTJFDhH (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 5 Oct 2003 23:37:07 -0400
-Content-Disposition: inline
-In-Reply-To: <16256.56491.671416.205944@cargo.ozlabs.ibm.com>; from paulus@samba.org on Mon, Oct 06, 2003 at 01:08:27PM +1000
+Received: from email-out1.iomega.com ([147.178.1.82]:28134 "EHLO
+	email.iomega.com") by vger.kernel.org with ESMTP id S264031AbTJFRM2
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 6 Oct 2003 13:12:28 -0400
+Received: from royntex01.iomegacorp.com (unknown [147.178.90.120])
+	by email.iomega.com (Postfix) with ESMTP id 978C91A21
+	for <linux-scsi@vger.kernel.org>; Mon,  6 Oct 2003 11:12:27 -0600 (MDT)
+In-Reply-To: <1064865746.4262.63.camel@patehci2>
 List-Id: linux-scsi@vger.kernel.org
-To: Paul Mackerras <paulus@samba.org>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux1394-devel@lists.sourceforge.net
+To: linux-scsi@vger.kernel.org
 
-On Mon, Oct 06, 2003 at 01:08:27PM +1000, Paul Mackerras wrote:
+I wish in the Subject line had mentioned so far I've tried writing GiB
+only via usb where it dies, not elsewhere.  Today I returned after
+leaving a drive idle for some days.  Nothing had appeared in the `dmesg`
+meanwhile, but trying to talk to the drive provoked:
 
-> That fixes it, it no longer oopses on removing sbp2.  As before I get
-> a message saying "Device 'fw-host0' does not have a release()
-> function, it is broken and must be fixed."  I assume that is a problem
-> with the sbp2 module.
-> 
-> The code in the patch looks a little worrying to me, though.  Is there
-> some lock we have taken to ensure that no other process could be
-> modifying sdev->access_count at the same time?  Also, what is to stop
-> some other process from noticing that sdev->access_count is 0 and
-> calling device_del(&sdev->sdev_gendev) ?
+scsi: Device offlined - not ready after error recovery: host 0 channel 0
+id 0 lun 0
 
-Yes, it's a known problem, there is also a comment in the code, Christoph
-was working on it.
+Time to reboot I guess.  Pat LaVarre
 
--- Patrick Mansfield
+
+
