@@ -1,42 +1,38 @@
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: Linux v2.5.47
-Date: Wed, 13 Nov 2002 00:22:22 +0000
+Subject: Re: [PATCH] 2.5 scsi-misc-2.5 remove scsi_host_hn_list
+Date: Wed, 13 Nov 2002 00:25:30 +0000
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20021113002222.B323@infradead.org>
-References: <Pine.LNX.4.44.0211101944030.17742-100000@penguin.transmeta.com>
+Message-ID: <20021113002530.A684@infradead.org>
+References: <20021112104759.A21739@eng2.beaverton.ibm.com> <20021112122431.A23657@eng2.beaverton.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.44.0211101944030.17742-100000@penguin.transmeta.com>; from torvalds@transmeta.com on Sun, Nov 10, 2002 at 07:46:06PM -0800
+In-Reply-To: <20021112122431.A23657@eng2.beaverton.ibm.com>; from patmans@us.ibm.com on Tue, Nov 12, 2002 at 12:24:31PM -0800
 List-Id: linux-scsi@vger.kernel.org
-To: Linus Torvalds <torvalds@transmeta.com>
-Cc: Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
+To: Patrick Mansfield <patmans@us.ibm.com>
+Cc: linux-scsi@vger.kernel.org
 
-On Sun, Nov 10, 2002 at 07:46:06PM -0800, Linus Torvalds wrote:
-> 
-> I still have stuff pending, but this is what's currently merged. 
+> +MODULE_PARM(scsihosts, "s");
+> +MODULE_PARM_DESC(scsihosts, "scsihosts=driver1,driver2,driver3");
+> +#ifndef MODULE
+> +int __init scsi_setup(char *str)
+> +{
+> +	scsihosts = str;
+> +	return 1;
+> +}
+> +
+> +__setup("scsihosts=", scsi_setup);
+> +#endif
 
-Btw, here's a little headsup for all maintainers of scsi host adapter
-drivers.  In 2.5.47 the detect and release methods of the Scsi_Host_Template
-have become optional.  If you had an old pci driver with the following
-loop in foo_detcect:
+With rusty's new module loader this is probably obsolete :P
 
-	while ((pdev = pci_find_device())) {
-		[do basic setup]
-		sdev = scsi_register();
-		[do more setup]
-	}
+> -void __exit scsi_host_hn_release()
+> +void __init scsi_host_hn_init(void)
 
-You can convert it easily into a new-style pci driver with the following
-probe routine:
+What about calling this scsi_host_init()?  That way we can stuff in any
+other initialization private to hosts.c if needed without having a
+misleading name.
 
-	[do basic setup]
-	sdev = scsi_register();
-	[do more setup]
-	return scsi_add_host();
-
-Similarly a new routine, scsi_remove_host exist to call at the end
-of the remove routine.
-
+Otherwise the patch looks really nice.
 
