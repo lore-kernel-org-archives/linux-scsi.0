@@ -1,27 +1,59 @@
-From: James.Smart@Emulex.Com
-Subject: RE: [Patch RFC] Add FC transport host attributes
-Date: Thu, 14 Oct 2004 16:11:22 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [Patch RFC] Add FC transport host attributes
+Date: Thu, 14 Oct 2004 19:38:14 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <0B1E13B586976742A7599D71A6AC733C02F214@xbl3.ma.emulex.com>
+Message-ID: <20041014183814.GA12264@infradead.org>
+References: <0B1E13B586976742A7599D71A6AC733C0866D0@xbl3.ma.emulex.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emulex.emulex.com ([138.239.112.1]:57578 "EHLO
-	emulex.emulex.com") by vger.kernel.org with ESMTP id S267421AbUJNUL4 convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 14 Oct 2004 16:11:56 -0400
-content-class: urn:content-classes:message
+Received: from phoenix.infradead.org ([81.187.226.98]:3590 "EHLO
+	phoenix.infradead.org") by vger.kernel.org with ESMTP
+	id S267294AbUJNSiS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 14 Oct 2004 14:38:18 -0400
+Content-Disposition: inline
+In-Reply-To: <0B1E13B586976742A7599D71A6AC733C0866D0@xbl3.ma.emulex.com>
 List-Id: linux-scsi@vger.kernel.org
-To: hch@infradead.org
+To: James.Smart@Emulex.Com
 Cc: linux-scsi@vger.kernel.org, andrew.vasquez@qlogic.com, michaelc@cs.wisc.edu
 
-
+On Thu, Oct 14, 2004 at 10:52:52AM -0400, James.Smart@Emulex.Com wrote:
 > 
-> Any chance you can kill all those host_port prefixes?
+> This patch updates the fc_transport with attributes for local FC ports
+> (e.g. Hosts).  The port attributes are defined per HBAAPI v2.0 definitions.
+> 
+> Caveats:
+> ------------
+> - This patch applies to the scsi-target-2.6 bitkeeper tree. It is dependent
+>   upon the previous "host statistics" and "fc statistics" patches.
+> 
+> - This does not address remote port (target) information. This will be in
+>   a subsequent patch.
+> 
+> - The information below is supplied by a simple test driver that does not
+>   talk to real hardware, but fully acts as a LLDD that supports the
+>   fc transport.
+> 
+> 
+> This patch results in the following in /sys/class:
+> -----------------------------------------------------
+> 
+> [jsmart@elxware class]$ cd /sys/class
+> [jsmart@elxware class]$ ls
+> fc_host       graphics  misc     pci_bus       scsi_host  usb_host
+> fc_transport  input     net      scsi_device   tty        vc
+> firmware      mem       netlink  scsi_generic  usb
+> [jsmart@elxware class]$ cd fc_host
+> [jsmart@elxware fc_host]$ ls
+> host4
+> 
+> [jsmart@elxware fc_host]$ cd host4
+> [jsmart@elxware host4]$ ls
+> device                 host_port_maxframe_size      host_port_supported_speeds
+> host_fabric_name       host_port_name               host_port_symbolic_name
+> host_link_down_tmo     host_port_speed              host_port_type
+> host_node_name         host_port_state              host_tgtid_bind_type
+> host_port_active_fc4s  host_port_supported_classes  statistics
+> host_port_id           host_port_supported_fc4s
 
-The "host" prefix is a byproduct of declaring host, target, and sdev attributes in the same file via CLASS_DEVICE_ATTR(), as we have it today in the transport files. Works fine if there is no name collision between the different objects. However, the names do collide between the target and host objects for FC. Do you have a suggestion ? (splitting the file into multiple files ?) 
-
-The "port" prefix - sure, we can kill it. It simply inherited the name as per the hbaapi definition. I'd like to hear another couple aye's before making this change. 
-
--- James
+Any chance you can kill all those host_port prefixes?
