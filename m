@@ -1,20 +1,34 @@
-From: Domen Puncer <domen@coderock.org>
-Subject: Re: [patch 06/11] drivers/scsi/aacraid/*: convert to pci_register_driver
-Date: Tue, 15 Mar 2005 16:57:12 +0100
-Message-ID: <20050315155712.GE3955@nd47.coderock.org>
-References: <60807403EABEB443939A5A7AA8A7458BE5AF5F@otce2k01.adaptec.com>
+From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
+Subject: RE: [patch 06/11] drivers/scsi/aacraid/*: convert to pci_register_driver
+Date: Tue, 15 Mar 2005 10:59:10 -0500
+Message-ID: <60807403EABEB443939A5A7AA8A7458BE5B057@otce2k01.adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Received: from coderock.org ([193.77.147.115]:482 "EHLO trashy.coderock.org")
-	by vger.kernel.org with ESMTP id S261344AbVCOP5W (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 15 Mar 2005 10:57:22 -0500
-Content-Disposition: inline
-In-Reply-To: <60807403EABEB443939A5A7AA8A7458BE5AF5F@otce2k01.adaptec.com>
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Received: from magic.adaptec.com ([216.52.22.17]:20641 "EHLO magic.adaptec.com")
+	by vger.kernel.org with ESMTP id S261352AbVCOP7M convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 15 Mar 2005 10:59:12 -0500
+content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
+To: Domen Puncer <domen@coderock.org>
 Cc: James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org, c.lucas@ifrance.com
+
+We have tested and seen a positive number being returned on late model
+distributions (FC3)
+
+Sincerely -- Mark Salyzyn
+
+-----Original Message-----
+From: Domen Puncer [mailto:domen@coderock.org] 
+Sent: Tuesday, March 15, 2005 10:57 AM
+To: Salyzyn, Mark
+Cc: James.Bottomley@SteelEye.com; linux-scsi@vger.kernel.org;
+c.lucas@ifrance.com
+Subject: Re: [patch 06/11] drivers/scsi/aacraid/*: convert to
+pci_register_driver
 
 On 15/03/05 08:38 -0500, Salyzyn, Mark wrote:
 > I have to reject this change since pci_module_init() has a different
@@ -25,7 +39,8 @@ pci.h: #define pci_module_init pci_register_driver
 pci-driver.c: pci_register_driver:
 	"Returns a negative value on error, otherwise 0."
 
-So... since it can't return positive number, these conditions are the same.
+So... since it can't return positive number, these conditions are the
+same.
 
 
 > 
@@ -45,7 +60,8 @@ So... since it can't return positive number, these conditions are the same.
 > domen@coderock.org
 > Sent: Sunday, March 06, 2005 5:27 PM
 > To: James.Bottomley@SteelEye.com
-> Cc: linux-scsi@vger.kernel.org; domen@coderock.org; c.lucas@ifrance.com
+> Cc: linux-scsi@vger.kernel.org; domen@coderock.org;
+c.lucas@ifrance.com
 > Subject: [patch 06/11] drivers/scsi/aacraid/*: convert to
 > pci_register_driver
 > 
@@ -65,7 +81,8 @@ So... since it can't return positive number, these conditions are the same.
 > drivers/scsi/aacraid/linit.c~pci_register_driver-drivers_scsi_aacraid
 > drivers/scsi/aacraid/linit.c
 > ---
-> kj/drivers/scsi/aacraid/linit.c~pci_register_driver-drivers_scsi_aacraid
+>
+kj/drivers/scsi/aacraid/linit.c~pci_register_driver-drivers_scsi_aacraid
 > 2005-03-05 16:12:51.000000000 +0100
 > +++ kj-domen/drivers/scsi/aacraid/linit.c	2005-03-05
 > 16:12:51.000000000 +0100
@@ -80,6 +97,7 @@ So... since it can't return positive number, these conditions are the same.
 >  
 > _
 > -
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi"
+in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
