@@ -1,40 +1,44 @@
-From: Matthias Jaenichen <mj2@percomp.de>
-Subject: RE: SCSI IO Errors
-Date: Fri, 12 Sep 2003 20:33:38 +0200
+From: Pat LaVarre <p.lavarre@ieee.org>
+Subject: Re: [linux-usb-devel] [2.6-test] Bug in usb-storage or scsi?
+Date: 12 Sep 2003 13:18:09 -0600
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <4.3.2.7.2.20030912202942.00f3feb0@127.0.0.1>
-References: <E5DA6395B8F9614EB7A784D628184B200D9A54@hdsmsx402.hd.intel.
- com>
+Message-ID: <1063394289.3677.48.camel@patehci2>
+References: <Pine.LNX.4.44L0.0309111551410.2667-100000@ida.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"; format=flowed
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gateway.percomp.de ([192.88.4.5]:15832 "HELO gateway.percomp.de")
-	by vger.kernel.org with SMTP id S261837AbTILShw (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 12 Sep 2003 14:37:52 -0400
-In-Reply-To: <E5DA6395B8F9614EB7A784D628184B200D9A54@hdsmsx402.hd.intel.
- com>
+Received: from email-out1.iomega.com ([147.178.1.82]:29334 "EHLO
+	email.iomega.com") by vger.kernel.org with ESMTP id S261838AbTILTRJ
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 12 Sep 2003 15:17:09 -0400
+In-Reply-To: <Pine.LNX.4.44L0.0309111551410.2667-100000@ida.rowland.org>
 List-Id: linux-scsi@vger.kernel.org
-To: "Cress, Andrew R" <andrew.r.cress@intel.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Jan-Benedict Glaw <jbglaw@lug-owl.de>, linux-scsi@vger.kernel.org
+To: stern@rowland.harvard.edu
+Cc: patmans@us.ibm.com, mdharm-usb@one-eyed-alien.net, usb-storage@one-eyed-alien.net, linux-scsi@vger.kernel.org
 
-At 11:10 09.09.03 -0400, Cress, Andrew R wrote:
->You probably should also ask Seagate about the disk firmware rev 0010
->for ST318436LW.
->It may not be the latest firmware.  From what you indicate about the
->traces, the disk
->firmware is the most likely at fault.
 
-I'm just now giving the system a last try, but exchanged the HDD to a 
-IBMDDYS-T1835N
+> From: Alan Stern <stern@rowland.harvard.edu>
+>
+> the MODE SENSE page 0x3f (to check the write
+> protect) ... (I haven't seen ... problems,
+> but others have.)
 
-Uptime of the drive is now about 6 hours and no problems yet. Seems the 
-guess with the old firmware might work...
+I imagine page x3F is an sd issue only?
 
-I still wonder, why a ASUS-P2B and a drive sold a milion times do cause 
-such problems and noone has ever senn similar behavour so that it got fixed.
+I remember Ansi says the mode sense header reports writability only for
+pdt x00 hdd.
 
-I'll keep you updated
+I remember pdt x05 dvd/cd devices misbehaving when their available x3f
+AllPages data exceeded the xFF bytes that x1A MODE_SENSE can copy,
+though x5A MODE_SENSE_10 worked fine.
 
-Matthias
+And I often repeat, I remember clearly that the popular OS doesn't often
+ask only for a four-byte x1A MODE_SENSE header, because I saw that
+actually doing that crashes Win 2K kernels up thru SP3, if Windows has
+concluded the device needs the host to translate to x5A MODE_SENSE_10.
+
+Pat LaVarre
+
+
 
