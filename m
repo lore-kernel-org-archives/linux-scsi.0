@@ -1,23 +1,45 @@
 From: "Tony Battersby" <tonyb@cybernetics.com>
-Subject: RE: ide-scsi data transfer residuals
-Date: Mon, 8 Jul 2002 15:33:46 -0400
+Subject: ide-scsi command status bug
+Date: Mon, 8 Jul 2002 16:49:47 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <000201c226b6$613a76c0$e0019d89@cybernetics.com>
-References: <3D265179.BB1444E1@torque.net>
+Message-ID: <000301c226c0$ffcd0dc0$e0019d89@cybernetics.com>
 Reply-To: <tonyb@cybernetics.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <3D265179.BB1444E1@torque.net>
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-Douglas Gilbert wrote:
-> However here is the calculation it should do:
->   Scsi_Cmnd::resid = Scsi_Cmnd::bufflen - <actual_bytes_transferred>
+Hello,
 
-Thanks.  With this info it was easy enough to figure out the rest.
+I have tracked down a problem with incorrect status being returned for a
+command sent through sg and ide-scsi.  I am using vanilla 2.4.17.  Here is
+what is happening:
+
+The device returns CHECK CONDITION for a command sent to it from sg and
+ide-scsi.
+The following line executes in idescsi_end_request() in ide-scsi.c:
+pc->scsi_cmd->result = (CHECK_CONDITION << 1) | (DID_OK << 16);
+ide-scsi calls the callback completion function.
+An internal request sense is queued.
+The request sense completes successfully.
+The following line executes in idescsi_end_request() in ide-scsi.c:
+pc->scsi_cmd->result = (DID_OK << 16)
+ide-scsi calls the callback completion function for the request sense
+command.
+
+In my userspace program, sg_io_hdr_t { status, masked_status } are both
+zero, but sg_io_hdr_t { driver_status } & DRIVER_SENSE is set and the sense
+data is valid.  It appears to me as if the status from the request sense
+command overwrote the original CHECK CONDITION status.  I verified this by
+forcing all request sense commands to return a status of 0x01 (reserved bit
+set) in idescsi_end_request() in ide-scsi.c, and sure enough, I got a status
+of 0x01 for the failed command in sg_io_hdr_t { status }.
+
+I have not tested any other kernel versions.  I am working around the
+problem for now by faking a CHECK CONDITION status when driver_status &
+DRIVER_SENSE in my program.
 
 Anthony J. Battersby
 Cybernetics
