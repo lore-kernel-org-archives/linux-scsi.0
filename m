@@ -1,135 +1,159 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: [PATCH] instrument ide-scsi in 2.5.68
-Date: Sat, 03 May 2003 19:03:47 +1000
+From: James Bottomley <James.Bottomley@steeleye.com>
+Subject: [RFC] support for sysfs string based properties for SCSI (1/3)
+Date: 03 May 2003 14:11:36 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3EB385F3.6010708@torque.net>
-References: <3EB11AD3.2070503@torque.net>	<3EB22F09.7060906@torque.net> <20030502095536.76dba4dd.rddunlap@osdl.org>
-Reply-To: dougg@torque.net
+Message-ID: <1051989099.2036.7.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="=-Kzt6hz80jBNnN16K3x6c"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bunyip.cc.uq.edu.au ([130.102.2.1]:37391 "EHLO
-	bunyip.cc.uq.edu.au") by vger.kernel.org with ESMTP id S263277AbTECIs4
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 3 May 2003 04:48:56 -0400
-In-Reply-To: <20030502095536.76dba4dd.rddunlap@osdl.org>
+Received: from nat9.steeleye.com ([65.114.3.137]:37892 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S263381AbTECS7S (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 3 May 2003 14:59:18 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: "Randy.Dunlap" <rddunlap@osdl.org>
-Cc: linux-scsi@vger.kernel.org, alan@lxorguk.ukuu.org.uk
-
-Randy.Dunlap wrote:
-> On Fri, 02 May 2003 18:40:41 +1000 Douglas Gilbert <dougg@torque.net> wrote:
-> 
-> | Douglas Gilbert wrote:
-> | > <snip/>
-> | >   - instrument driver with 2 parameters (as examples)
-> | >       - ide-scsi.debug + ide-scsi.suppress_reset
-> | >         [kernel load time]
-> | >       - debug + suppress_reset [module load time]
-> | >       - debug + suppress_reset [sysfs: read/write
-> | >         in /sys/bus/ide/drivers/ide-scsi directory]
-> | >   - downgrade (simple) tag queuing to no tag queuing
-> | >     [set some other things to more conservative values]
-> | >   - add scsi_host::release() method
-> | >   - make provision for 16 byte SCSI commands
-> | >   - cleanup printk()s
-> |  > <snip/>
-> | 
-> | As Randy has found the setting of kernel boot time parameters
-> | doesn't work. The problem seems to be that the ide subsystem
-> | asserts ownership over all parameters that start with "ide".
-> | I was unable to bend moduleparam.h to accept a leading underscore
-> | so I went back to the old "__setup" method: the kernel boot time
-> | parameters are now:
-> |    - _ide_scsi_debug + _ide_scsi_suppress_reset
-> 
-> I'll confirm that those work.  I.e., I saw values 3 and 1 in
-> /sys/bus/ide/drivers/ide-scsi/*.
-> 
-> | Module load time and sysfs parameters remain the same.
-> | 
-> | A new patch against lk 2.5.68 is attached.
-> 
-> Used that patch instead of v1 of it.  Got an oops in ide-scsi.
-
-Randy,
-Thanks for testing this. At this stage I have no
-solution but can offer some analysis.
-
-Firstly, it seems like Mandrake 9.0 has some
-program like RedHat's "magicdev" that polls
-cd/dvds every second or so. Nuke it please!
-It won't fix the problem but will make it easier
-to see the wood for the trees.
-
-Over 50 commands were issued successfully to /dev/hdd
-until the latter part of your capture file:
-
-> ide-scsi: hdd: que 91, cmd = [ 5a 0 2a 0 0 0 0 0 2 0 ]
-> 
-> Mandrake Linux release 9.0 (dolphin) for i586
-> Kernel 2.5.68 on a Dual-processor i686 / l
-> 
-> gargoyle.pdx.osdl.net login: hdd: lost interrupt
-> ide-scsi: Reached idescsi_pc_intr interrupt handler
-> ide-scsi: hdd: DMA complete
-> ide-scsi: CoD != 0 in idescsi_pc_intr
-> hdd: DMA disabled
-> ide-scsi: abort ignored
-> ide-scsi: device reset ignored
-> ide-scsi: hdd: que 91, cmd = [ 0 0 0 0 0 0 ]
-> hdd: ATAPI reset complete
-> hdd: irq timeout: status=0x80 { Busy }
-> hdd: ATAPI reset complete
-> hdd: irq timeout: status=0x80 { Busy }
-> hdd: ATAPI reset complete
-> hdd: irq timeout: status=0x80 { Busy }
-> ide-scsi: hdd: I/O error for 91
-> ide-scsi: Reached idescsi_pc_intr interrupt handler
-> Packet command completed, 0 bytes transferred
-> ide-scsi: hdd: suc 1802201963
-> Unable to handle kernel paging request at virtual address 6b6b6b8b
-<oooops>
-
-The issued command is a MODE SENSE (10 byte) for page 0x2a
-and just the first 2 bytes (i.e. tell me the length you
-will return). There must have been 10 of the exact same
-commands executed successfully prior to this point.
-
-"hdd: lost interrupt" seems to indicate a timeout (ide-scsi
-sets its timeouts to max(10, whatever_app_wants) seconds).
-Then it re-enters the ide-scsi driver in the
-idescsi_pc_intr() routine and things look corrupted. It tries
-to finish off a DMA transfer but that 2 byte data_in request
-was not set up as DMA. It is all downhill from there.
-
-Naturally I don't see any errors on my box. However I can
-shorten the timeout so it will go off on a READ command.
-The timeout log looks quite different from yours and
-my driver continues in a healthy state.
-
-ide-scsi: hdd: que 11417, cmd = [ 28 0 0 0 0 0 0 0 1 0 ]
-hdd: irq timeout: status=0xd0 { Busy }
-hdd: ATAPI reset complete
-hdd: irq timeout: status=0xc0 { Busy }
-hdd: ATAPI reset complete
-hdd: irq timeout: status=0xc0 { Busy }
-ide-scsi: hdd: I/O error for 11417
+To: Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+Cc: Patrick Mochel <mochel@osdl.org>, Greg KH <greg@kroah.com>, Mike Anderson <andmike@us.ibm.com>
 
 
-Does anyone have any suggestions for further testing?
+--=-Kzt6hz80jBNnN16K3x6c
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 
-I have cleaned up the logging messages a little but
-that does not justify releasing a new version yet.
+
+This first patch is of general interest (the other two are going to the
+SCSI list only).
+
+The problem this seeks to solve is that we have a bunch of properties in
+SCSI that we'd like to expose through the sysfs interface.  The
+mid-layer can get their values, but setting them requires co-operation
+from the host drivers, thus we'd like to expose a show/store interface
+to all the SCSI drivers.
+
+The current one call back per sysfs file is a bit unwieldy for
+encapsulating in an interface like this.  what this patch does is to
+allow a fallback show/store method of the bus type (if the device type
+doesn't exist).  However, the bus_type show/store passes in the
+attribute so a comparison may be done against the name of the attribute.
+
+For details of how all this gets used, see the following SCSI patches.
+
+James
 
 
-An additional observation concerning Randy's capture:
-the failed command (MODE SENSE) has serial number 91.
-After ide-scsi thinks it has cleared the timeout and
-the DMA transfer it issues a TEST UNIT READY which
-also get 91 as a serial number. This looks like a
-bug in the mid level.
+--=-Kzt6hz80jBNnN16K3x6c
+Content-Disposition: inline; filename=tmp.diff
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; name=tmp.diff; charset=ISO-8859-1
 
-Doug Gilbert
+=3D=3D=3D=3D=3D drivers/scsi/NCR_D700.c 1.8 vs edited =3D=3D=3D=3D=3D
+--- 1.8/drivers/scsi/NCR_D700.c	Sun Apr 27 05:31:39 2003
++++ edited/drivers/scsi/NCR_D700.c	Thu May  1 11:11:48 2003
+@@ -169,16 +169,18 @@
+ 	struct Scsi_Host	*hosts[2];
+ };
+=20
+-static int NCR_D700_probe_one(struct NCR_D700_private *p, int chan,
++static int=20
++NCR_D700_probe_one(struct NCR_D700_private *p, int siop,
+ 		int irq, int slot, u32 region, int differential)
+ {
+ 	struct NCR_700_Host_Parameters *hostdata;
+ 	struct Scsi_Host *host;
++	int ret;
+=20
+ 	hostdata =3D kmalloc(sizeof(*hostdata), GFP_KERNEL);
+ 	if (!hostdata) {
+-		printk(KERN_ERR "NCR D700: Failed to allocate host data "
+-				"for channel %d, detatching\n", chan);
++		printk(KERN_ERR "NCR D700: SIOP%d: Failed to allocate host"
++		       "data, detatching\n", siop);
+ 		return -ENOMEM;
+ 	}
+ 	memset(hostdata, 0, sizeof(*hostdata));
+@@ -186,41 +188,49 @@
+ 	if (!request_region(region, 64, "NCR_D700")) {
+ 		printk(KERN_ERR "NCR D700: Failed to reserve IO region 0x%x\n",
+ 				region);
+-		kfree(hostdata);
+-		return -ENODEV;
++		ret =3D -ENODEV;
++		goto region_failed;
+ 	}
+ 	=09
+ 	/* Fill in the three required pieces of hostdata */
+ 	hostdata->base =3D region;
+-	hostdata->differential =3D (((1<<chan) & differential) !=3D 0);
++	hostdata->differential =3D (((1<<siop) & differential) !=3D 0);
+ 	hostdata->clock =3D NCR_D700_CLOCK_MHZ;
+=20
+-	/* and register the chip */
++	/* and register the siop */
+ 	host =3D NCR_700_detect(&NCR_D700_driver_template, hostdata);
+ 	if (!host) {
+-		kfree(hostdata);
+-		release_region(host->base, 64);
+-		return -ENOMEM;
++		ret =3D -ENOMEM;
++		goto detect_failed;
+ 	}
+=20
+ 	host->irq =3D irq;
+ 	/* FIXME: Read this from SUS */
+-	host->this_id =3D id_array[slot * 2 + chan];
++	host->this_id =3D id_array[slot * 2 + siop];
+ 	printk(KERN_NOTICE "NCR D700: SIOP%d, SCSI id is %d\n",
+-			chan, host->this_id);
++			siop, host->this_id);
+ 	if (request_irq(irq, NCR_700_intr, SA_SHIRQ, "NCR_D700", host)) {
+-		printk(KERN_ERR "NCR D700, channel %d: irq problem, "
+-				"detatching\n", chan);
+-		scsi_unregister(host);
+-		NCR_700_release(host);
+-		return -ENODEV;
++		printk(KERN_ERR "NCR D700: SIOP%d: irq problem, "
++				"detatching\n", siop);
++		ret =3D -ENODEV;
++		goto irq_failed;
+ 	}
+=20
+-	scsi_add_host(host, NULL);
++	scsi_add_host(host, p->dev);
+=20
+-	p->hosts[chan] =3D host;
++	p->hosts[siop] =3D host;
+ 	hostdata->dev =3D p->dev;
+ 	return 0;
++
++ irq_failed:
++	scsi_unregister(host);
++	NCR_700_release(host);
++ detect_failed:
++	release_region(host->base, 64);
++ region_failed:
++	kfree(hostdata);
++
++	return ret;
+ }
+=20
+ /* Detect a D700 card.  Note, because of the setup --- the chips are
+@@ -305,8 +315,15 @@
+=20
+ 	/* plumb in both 700 chips */
+ 	for (i =3D 0; i < 2; i++) {
+-		found |=3D NCR_D700_probe_one(p, i, irq, slot,
+-				offset_addr | (0x80 * i), differential);
++		int err;
++
++		if ((err =3D NCR_D700_probe_one(p, i, irq, slot,
++					      offset_addr + (0x80 * i),
++					      differential)) !=3D 0)
++			printk("D700: SIOP%d: probe failed, error =3D %d\n",
++			       i, err);
++		else
++			found++;
+ 	}
+=20
+ 	if (!found) {
+
+--=-Kzt6hz80jBNnN16K3x6c--
 
