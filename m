@@ -1,72 +1,107 @@
-From: Kurt Garloff <garloff@suse.de>
-Subject: Re: [PATCH] sd_many done right (1/5)
-Date: Sun, 28 Jul 2002 02:42:35 +0200
+From: Matthew Dharm <mdharm-scsi@one-eyed-alien.net>
+Subject: Re: [usb-storage] Re: 2 PATCHES: fix request_tranferlength
+Date: Sat, 27 Jul 2002 19:55:03 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20020728004235.GA7691@nbkurt.etpnet.phys.tue.nl>
-References: <20020726154533.GD19721@nbkurt.etpnet.phys.tue.nl> <Pine.GSO.4.21.0207261245070.21586-100000@weyl.math.psu.edu> <20020726165411.GI19721@nbkurt.etpnet.phys.tue.nl> <20020726175027.GC2746@clusterfs.com> <20020726185545.B18629@infradead.org> <20020726223224.GJ19721@nbkurt.etpnet.phys.tue.nl> <20020727104119.A5992@infradead.org>
+Message-ID: <20020727195503.C3121@one-eyed-alien.net>
+References: <UTC200207272248.g6RMm3h14110.aeb@smtp.cwi.nl>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="n8g4imXOkfNTN/H1"
+Content-Type: multipart/signed; micalg=pgp-md5;
+	protocol="application/pgp-signature"; boundary="3siQDZowHQqNOShm"
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20020727104119.A5992@infradead.org>
+In-Reply-To: <UTC200207272248.g6RMm3h14110.aeb@smtp.cwi.nl>; from Andries.Brouwer@cwi.nl on Sun, Jul 28, 2002 at 12:48:03AM +0200
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>, Alexander Viro <viro@math.psu.edu>, Linux SCSI list <linux-scsi@vger.kernel.org>, Linux kernel list <linux-kernel@vger.kernel.org>
+To: Andries.Brouwer@cwi.nl
+Cc: linux-scsi@vger.kernel.org, usb-storage@one-eyed-alien.net
 
 
---n8g4imXOkfNTN/H1
+--3siQDZowHQqNOShm
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
 Content-Transfer-Encoding: quoted-printable
 
-Hi Christoph, Al,
+ARGH!!
 
-On Sat, Jul 27, 2002 at 10:41:19AM +0100, Christoph Hellwig wrote:
-> On Sat, Jul 27, 2002 at 12:32:24AM +0200, Kurt Garloff wrote:
-> Linus wants this, and he stated that again on the kernel summit. =20
+Okay search the linux-scsi archives for May 29-30.  We've had this
+discussion before.
 
-I've not been there :-(
+At that time, I proposed adding a field to indicate the actual amount of
+data being requested, as opposed to the buffer size.  At the time (again,
+see the archives), I was told that the request_bufflen field _was_ that
+field.... any case where the request_bufflen didn't match up with the
+command was a bug and needed to be fixed.
 
-> But to do this porperly (=3D not the EVMS way) it needs preparation. =20
-> Al currently does lots of work in that area to make the block drivers
-> largely independent of the major number.
+So which is it?  This needs to be fixed one way or another.
 
-So he should port my sd patch to 2.5. All the data it uses is in a per-major
-data structure. Currently, in most function it uses the kdev_t passed to fi=
-nd
-the right pointer. But that's very easy to replace.
-Of course, sd still assumes it gets a whole major and not parts of one. Oth=
-er-
-wise, more splitting would be needed.
+Emulated SCSI busses _need_ to know how much data to move.  usb-storage has
+a large table to try to figure it out, but it only gets the correct answer
+in _most_ cases, not all cases.  Only the originator of the command truly
+knows how much data is going to be moved, so the only mechanism that makes
+sense is to make the originator of the command indicate that number via
+some mechanism.
 
-> Once the drivers don't need the major number anymore
-> internally the only that needs sorting out is userlevel backwards-compati=
-nlity.
+Matt
 
-That takes more effort than the change itself, I guess.
+On Sun, Jul 28, 2002 at 12:48:03AM +0200, Andries.Brouwer@cwi.nl wrote:
+>     I haven't seen these patches integrated into a kernel yet... have I j=
+ust
+>     missed them, or is there some reason they have been rejected?
+>=20
+>     > +++ b/drivers/scsi/scsi_scan.c    Sun Jul 21 00:55:37 2002
+>     > -              256, SCSI_TIMEOUT+4*HZ, 3);
+>     > +              scsi_cmd[4], SCSI_TIMEOUT+4*HZ, 3);
+>=20
+>     > +++ b/drivers/scsi/sd.c    Sun Jul 21 00:55:44 2002
+>     > -              512, SD_TIMEOUT, MAX_RETRIES);
+>     > +              255, SD_TIMEOUT, MAX_RETRIES);
+>=20
+> There are many more possibilities.
+> Since the number of hours in a day is very finite, Linus cannot
+> look at everything, so even if the patch is perfect it can be ignored.
+>=20
+> There is not really a SCSI maintainer, but there are people that are
+> well-known as active in the SCSI area. You may try to submit via
+> one of them.
+>=20
+> But then the question is whether these are good patches.
+>=20
+> I booted 2.5.29 earlier this evening and was greeted by
+> kernel BUG at transport.c: 351 and
+> kernel BUG at scsiglue.c: 150.
+> (And the usb-storage module now hangs initializing; rmmod fails,
+> reboot is necessary.)
+>=20
+> The former BUG_ON wants to have len =3D=3D srb->request_bufflen.
+> But I don't know whether that is wise. It is less confusing
+> when bufflen indicates the size of the buffer available,
+> rather than the number of bytes you expect to move.
+> It is not unusual to get one byte more than you asked for,
+> in case you ask for an odd number of bytes.
+>=20
+> So, maybe these patches aren't clear improvements.
+>=20
+> Andries
 
-> I'm pretty sure the preparation will be finished for 2.6, also I can't co=
-mment
-> whether the unified disk major will be done. (Al?)
-
-Would certainly be nice.
-
-Regards,
 --=20
-Kurt Garloff  <garloff@suse.de>                          Eindhoven, NL
-GPG key: See mail header, key servers         Linux kernel development
-SuSE Linux AG, Nuernberg, DE                            SCSI, Security
+Matthew Dharm                              Home: mdharm-usb@one-eyed-alien.=
+net=20
+Maintainer, Linux USB Mass Storage Driver
 
---n8g4imXOkfNTN/H1
+I could always suspend a few hundred accounts and watch what happens.
+					-- Tanya
+User Friendly, 7/31/1998
+
+--3siQDZowHQqNOShm
 Content-Type: application/pgp-signature
 Content-Disposition: inline
 
 -----BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.0.7 (GNU/Linux)
+Version: GnuPG v1.0.6 (GNU/Linux)
+Comment: For info see http://www.gnupg.org
 
-iD8DBQE9Qz37xmLh6hyYd04RAjIIAJ9g87rIiH2xsaT88ZD2BOx0LaRq/wCgiyJw
-2X1f1rb+Ll+nar92MwQ6pok=
-=/2ox
+iD8DBQE9Q10HIjReC7bSPZARAufvAJ9tme86sut29/qxs5Lg3UCC5wHnNwCgldsv
+GLNSMIdZ066jQRol2Bfv914=
+=Q08z
 -----END PGP SIGNATURE-----
 
---n8g4imXOkfNTN/H1--
+--3siQDZowHQqNOShm--
