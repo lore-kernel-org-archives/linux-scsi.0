@@ -1,28 +1,48 @@
-From: Matthew Jacob <mjacob@feral.com>
-Subject: RE: A different look at block device hotswap in the Linux kernel
-Date: Fri, 24 Jan 2003 10:09:32 -0800 (PST)
+From: Joel Becker <Joel.Becker@oracle.com>
+Subject: Re: Fwd: 32bit dev_t
+Date: Fri, 24 Jan 2003 10:29:53 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030124100832.Y1605-100000@wonky.in0.lcl>
-References: <OF73A095F7.76CA02FF-ON87256CB8.0060AF6A-88256CB8.006323FB@us.ibm.com>
-Reply-To: mjacob@feral.com
+Message-ID: <20030124182952.GF20972@ca-server1.us.oracle.com>
+References: <3E2DC21D.9010204@torque.net> <20030123183131.GA2126@nbkurt.garloff.de> <20030123221805.A2468@infradead.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <OF73A095F7.76CA02FF-ON87256CB8.0060AF6A-88256CB8.006323FB@us.ibm.com>
+Received: from inet-mail2.oracle.com (localhost [127.0.0.1])
+	by inet-mail2.oracle.com (Switch-2.2.3/Switch-2.2.3) with ESMTP id h0OIU2n26027
+	for <linux-scsi@vger.kernel.org>; Fri, 24 Jan 2003 10:30:02 -0800 (PST)
+Received: from rgmgw6.us.oracle.com (rgmgw6.us.oracle.com [138.1.191.15])
+	by inet-mail2.oracle.com (Switch-2.2.3/Switch-2.2.3) with ESMTP id h0OIU2a25896
+	for <linux-scsi@vger.kernel.org>; Fri, 24 Jan 2003 10:30:02 -0800 (PST)
+Received: from rgmgw6.us.oracle.com (localhost [127.0.0.1])
+	by rgmgw6.us.oracle.com (Switch-2.1.3/Switch-2.1.0) with ESMTP id h0OIU1w23784
+	for <linux-scsi@vger.kernel.org>; Fri, 24 Jan 2003 11:30:01 -0700 (MST)
+Content-Disposition: inline
+In-Reply-To: <20030123221805.A2468@infradead.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Bryan Henderson <hbryan@us.ibm.com>
-Cc: "Cress, Andrew R" <andrew.r.cress@intel.com>, andmike@us.ibm.com, David Brownell <david-b@pacbell.net>, Greg KH <greg@kroah.com>, Linux SCSI list <linux-scsi@vger.kernel.org>, linux-usb-devel@lists.sourceforge.net, Luben Tuikov <luben@splentec.com>, Matthew Dharm <mdharm-scsi@one-eyed-alien.net>, Oliver Neukum <oliver@neukum.name>, Steven Dake <sdake@mvista.com>, Alan Stern <stern@rowland.harvard.edu>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Kurt Garloff <kurt@garloff.de>, Douglas Gilbert <dougg@torque.net>, Linux SCSI list <linux-scsi@vger.kernel.org>
 
->
-> It's like when I pull the power plug because my system is totally hosed and
-> I want to start over.  I know I can cause damage by doing that, but I would
-> be upset if the new system booted back to the broken state it was in when I
-> unplugged it.
+On Thu, Jan 23, 2003 at 10:18:05PM +0000, Christoph Hellwig wrote:
+> the Linux 2.5 sd and sr drivers are only limited by the number of majors
+> allocated to them.  There's no more architectural limit or any global
+> array.
 
-I had this conversation with doug offlist- this is a policy choice. You
-may want your device to reattach as totally new. You may, on the other
-hand, want your device to resume where you left off. I can see valid
-reasons for wanting either behaviour (but it can't/shouldn't be deduced
-by the OS).
+	How are they allocated?  Is this dynamic, or compiled in?  In
+addition, what is the maximum amount?  If it's less than 1000 disks,
+it's too small for today.  If it's less than 2000 disks, it's probably
+too small for 2.6's lifetime.
+
+Joel
 
 
+-- 
+
+ "Practice random acts of kindness and senseless acts of beauty."
+
+ Oh, and don't forget where your towel is.
+
+Joel Becker
+Senior Member of Technical Staff
+Oracle Corporation
+E-mail: joel.becker@oracle.com
+Phone: (650) 506-8127
