@@ -1,16 +1,13 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: usb-storage / scsi : new scsi host on each
- plug
-Date: Fri, 07 Nov 2003 16:24:16 +1000
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: usb-storage and Sony Handycam
+Date: Fri, 7 Nov 2003 11:21:48 -0500 (EST)
 Sender: linux-usb-devel-admin@lists.sourceforge.net
-Message-ID: <3FAB3A90.402@torque.net>
-References: <Pine.LNX.4.44L0.0310291020430.874-100000@ida.rowland.org> <1067442814.1829.21.camel@mulgrave>
-Reply-To: dougg@torque.net
+Message-ID: <Pine.LNX.4.44L0.0311071117160.1577-100000@ida.rowland.org>
+References: <1068207145.3fab8c2988d43@webmail.netregistry.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-usb-devel-admin@lists.sourceforge.net>
-In-Reply-To: <1067442814.1829.21.camel@mulgrave>
+In-Reply-To: <1068207145.3fab8c2988d43@webmail.netregistry.net>
 Errors-To: linux-usb-devel-admin@lists.sourceforge.net
 List-Help: <mailto:linux-usb-devel-request@lists.sourceforge.net?subject=help>
 List-Post: <mailto:linux-usb-devel@lists.sourceforge.net>
@@ -19,44 +16,72 @@ List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-devel>,
 List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-devel>,
 	<mailto:linux-usb-devel-request@lists.sourceforge.net?subject=unsubscribe>
 List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=linux-usb-devel>
-To: James Bottomley <James.Bottomley@steeleye.com>
-Cc: Alan Stern <stern@rowland.harvard.edu>, martin@lorenz.eu.org, USB development list <linux-usb-devel@lists.sourceforge.net>, SCSI development list <linux-scsi@vger.kernel.org>
+To: Dmitri Katchalov <dmitrik@users.sourceforge.net>, Patrick Mansfield <patmans@us.ibm.com>
+Cc: USB development list <linux-usb-devel@lists.sourceforge.net>, SCSI development list <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-James Bottomley wrote:
-> On Wed, 2003-10-29 at 09:24, Alan Stern wrote:
+On Fri, 7 Nov 2003, Dmitri Katchalov wrote:
+
+> Greetings,
 > 
->>>no matter which USB-storage-device I attach (tried CD-ROM, 
->>>Flash Card Reader and memory stick) I get a new scsi host
->>>every time i plug a device in.
->>>
->>>so when changing devices for several times I finally end up
->>>with /dev/scsi/host0 to 17 or more (diden't go on)
->>
->>This is a SCSI issue, not a USB one.  Maybe someone on the 
->>SCSI development list can enlighten us.  As far as I can tell, the host 
->>number is simply incremented every time a new host, of whatever sort, is 
->>added.  The numbers never get reused.
+> I finally managet to get Sony DCR-TRV17E memory stick
+> working with usb-storage.
+> The solution turned out to be very simple:
 > 
+> echo "Sony:Sony DSC:0" > /proc/scsi/device_info
 > 
-> This is really a design feature.  Not reusing hosts gives us time to
-> clean up the old one before the new one is initialised (and prevents
-> races where we could be trying to plug in a new host at the same time
-> we're cleaning up the old one).
+> But I'm puzzled as to why didn't it work in the first 
+> place despite several reports to the contrary. My guess
+> is it used to work in earlier kernels and then some
+> seemingly unrelated change broke it.
+> 
+> I investigated it a little and that's what I found:
+> This device uses CB transport (SENSE status not reported).
+> This device does not support MODE_SENSE at all.
+> MODE_SENSE(6) fails with STALL condition. Subsequent 
+> REQUEST-SENSE reports ILLEGAL REQUEST. SCSI layer is 
+> able to handle this situation, the only drawback is 
+> that write-protect status is not reported.
+> 
+> Unfortunately usb-storage sets use_10_for_ms flag 
+> by default which causes SCSI to try MODE_SENSE(10)
+> first. 
+> The device responds to MODE_SENSE(10) with "babble" 
+> (-EOVERFLOW). scsiglue sees transport error and 
+> tries to do a soft reset (which also fails).
+> Note that scsiglue does not automatically send 
+> REQUEST-SENSE in this case.
+> 
+> scsiglue then gives up after several attempts and 
+> reports the error to the upper layer. Upper layer
+> (SCSI) correctly realises that MODE_SENSE(10) does
+> not work and attempts to fallback to MODE_SENSE(6) 
+> but before that it issues TEST_UNIT_READY. 
+> 
+> This time the device responds with ILLEGAL REQUEST.
+> Now SCSI gets totally confused and decides to give up.
+> 
+> As I understand it this ILLEGAL REQUEST actually refers
+> to the previous MODE_SENSE(10) command because this 
+> error condition has never been cleared properly.
 
-This "design feature" highlights the inadequacy of the
-SCSI_IOCTL_GET_IDLUN ioctl which only allocates 8 bits for
-the host number. Back to using the SCSI_IOCTL_GET_BUS_NUMBER
-ioctl for mapping programs that want to work in both lk 2.4
-and lk 2.6 . Since target port ids in iSCSI are url-like
-(up to 255 chars) and luns can be 64 bits, a more robust
-"GET_IDLUN" ioctl is needed at some stage.
+You're probably right.  But that's not how TEST-UNIT-READY is _supposed_ 
+to behave.  It shouldn't be reporting the status from a previous command; 
+it should indicate the device's current status.
 
-Perhaps re-using host numbers after they are known to be
-fully shut down would be saner.
+> If I change interpret_usb_result() in transport.c 
+> to ignore "babble" then the next REQUEST-SENSE 
+> reports ILLEGAL REQUEST, SCSI handles that and 
+> everything sort of works.
+> 
+> Regards,
+> Dmitri
 
-Doug Gilbert
+Patrick, what do you think about implementing that change to have the 
+response checker retry when it gets ILLEGAL REQUEST from a 
+TEST-UNIT-READY?
 
+Alan Stern
 
 
 
