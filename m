@@ -1,33 +1,51 @@
-From: Adrian Bunk <bunk@fs.tum.de>
-Subject: [2.6 patch] let "PCMCIA SCSI adapter support" menu depend on MODULES
-Date: Thu, 4 Sep 2003 01:23:34 +0200
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <20030903232334.GL18025@fs.tum.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
-Content-Disposition: inline
-To: linux-scsi@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, trivial@rustcorp.com.au
+From: Rusty Trivial Russell <trivial@rustcorp.com.au>
+Subject: [TRIVIAL] [2.5 patch] remove an unused function from wd7000.c
+Date: Thu, 04 Sep 2003 13:12:12 +1000
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <20030904033018.C07B42C10E@lists.samba.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from dp.samba.org ([66.70.73.150]:19392 "EHLO lists.samba.org")
+	by vger.kernel.org with ESMTP id S264616AbTIDDaT (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Sep 2003 23:30:19 -0400
 List-Id: linux-scsi@vger.kernel.org
+To: John Boyd <boyd@cis.ohio-state.edu>, Miroslav Zagorac <zaga@fly.cc.fer.hr>, linux-scsi@vger.kernel.org, axboe@suse.de
 
-When configuring a kernel without modules support "PCMCIA SCSI adapter 
-support" is a menu with no available items in it (all drivers depend on 
-"m").
+From:  Adrian Bunk <bunk@fs.tum.de>
 
-The patch below only shows this menu when MODULES is enabled.
+  The patch below removes an unused function from drivers/scsi/wd7000.c .
+  
+  I've tested the compilation with 2.5.72-mm2.
+  
+  cu
+  Adrian
+  
 
-Please apply
-Adrian
-
---- linux-2.6.0-test4-mm5/drivers/scsi/pcmcia/Kconfig.old	2003-09-04 01:18:17.000000000 +0200
-+++ linux-2.6.0-test4-mm5/drivers/scsi/pcmcia/Kconfig	2003-09-04 01:19:03.000000000 +0200
-@@ -3,7 +3,7 @@
- #
+--- trivial-2.6.0-test4-bk5/drivers/scsi/wd7000.c.orig	2003-09-04 13:01:35.000000000 +1000
++++ trivial-2.6.0-test4-bk5/drivers/scsi/wd7000.c	2003-09-04 13:01:35.000000000 +1000
+@@ -1605,22 +1605,6 @@
+ }
  
- menu "PCMCIA SCSI adapter support"
--	depends on SCSI!=n && PCMCIA!=n
-+	depends on SCSI!=n && PCMCIA!=n && MODULES
+ /*
+- *  I have absolutely NO idea how to do an abort with the WD7000...
+- */
+-static int wd7000_abort(Scsi_Cmnd * SCpnt)
+-{
+-	Adapter *host = (Adapter *) SCpnt->device->host->hostdata;
+-
+-	if (inb(host->iobase + ASC_STAT) & INT_IM) {
+-		printk("wd7000_abort: lost interrupt\n");
+-		wd7000_intr_handle(host->irq, NULL, NULL);
+-		return FAILED;
+-	}
+-	return FAILED;
+-}
+-
+-
+-/*
+  *  I also have no idea how to do a reset...
+  */
  
- config PCMCIA_AHA152X
- 	tristate "Adaptec AHA152X PCMCIA support"
+-- 
+  What is this? http://www.kernel.org/pub/linux/kernel/people/rusty/trivial/
+  Don't blame me: the Monkey is driving
+  File: Adrian Bunk <bunk@fs.tum.de>: [2.5 patch] remove an unused function from wd7000.c
