@@ -1,233 +1,45 @@
 From: janitor@sternwelten.at
-Subject: [patch 1/1]  remove old ifdefs aic7xxx
-Date: Thu, 21 Oct 2004 10:31:12 +0200
+Subject: [patch 10/10]  scsi/st: replace 	schedule_timeout() with msleep_interruptible()
+Date: Thu, 21 Oct 2004 10:47:22 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <E1CKYLp-00024N-0d@sputnik>
+Message-ID: <E1CKYbS-0004Uu-MB@sputnik>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from baikonur.stro.at ([213.239.196.228]:56461 "EHLO
-	baikonur.stro.at") by vger.kernel.org with ESMTP id S270718AbUJUIbP
+Received: from baikonur.stro.at ([213.239.196.228]:55433 "EHLO
+	baikonur.stro.at") by vger.kernel.org with ESMTP id S270409AbUJUIrY
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 21 Oct 2004 04:31:15 -0400
+	Thu, 21 Oct 2004 04:47:24 -0400
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@SteelEye.com
-Cc: linux-scsi@vger.kernel.org, janitor@sternwelten.at, domen@coderock.org
+Cc: linux-scsi@vger.kernel.org, janitor@sternwelten.at, nacc@us.ibm.com, Kai.Makisara@kolumbus.fi
 
 
 
- Patches to remove some old ifdefs.
- remove most of the #include <linux/version.h>
- kill compat cruft like #define ahd_pci_set_dma_mask pci_set_dma_mask
 
- this part of the patch did not get merged,
- i guess due his rejects.
+Any comments would be appreciated.
 
+Description: Use msleep_interruptible() instead of
+schedule_timeout() to guarantee the task delays as expected.
+
+Acked-by: Kai Makisara <Kai.Makisara@kolumbus.fi>
+Signed-off-by: Nishanth Aravamudan <nacc@us.ibm.com>
 Signed-off-by: Maximilian Attems <janitor@sternwelten.at>
-
 
 ---
 
- linux-2.6.9-max/drivers/scsi/aic7xxx/aic7xxx_osm_pci.c |   99 -----------------
- 1 files changed, 99 deletions(-)
+ linux-2.6.9-max/drivers/scsi/st.c |    3 +--
+ 1 files changed, 1 insertion(+), 2 deletions(-)
 
-diff -puN drivers/scsi/aic7xxx/aic7xxx_osm_pci.c~remove-old-ifdefs-aic7xxx_osm_pci drivers/scsi/aic7xxx/aic7xxx_osm_pci.c
---- linux-2.6.9/drivers/scsi/aic7xxx/aic7xxx_osm_pci.c~remove-old-ifdefs-aic7xxx_osm_pci	2004-10-21 02:34:33.000000000 +0200
-+++ linux-2.6.9-max/drivers/scsi/aic7xxx/aic7xxx_osm_pci.c	2004-10-21 02:34:33.000000000 +0200
-@@ -42,12 +42,6 @@
- #include "aic7xxx_osm.h"
- #include "aic7xxx_pci.h"
+diff -puN drivers/scsi/st.c~msleep_interruptible-drivers_scsi_st drivers/scsi/st.c
+--- linux-2.6.9/drivers/scsi/st.c~msleep_interruptible-drivers_scsi_st	2004-10-21 02:41:55.000000000 +0200
++++ linux-2.6.9-max/drivers/scsi/st.c	2004-10-21 02:41:55.000000000 +0200
+@@ -760,8 +760,7 @@ static int test_ready(Scsi_Tape *STp, in
  
--#if LINUX_VERSION_CODE < KERNEL_VERSION(2,4,0)
--struct pci_device_id
--{
--};
--#endif
--
- static int	ahc_linux_pci_dev_probe(struct pci_dev *pdev,
- 					const struct pci_device_id *ent);
- static int	ahc_linux_pci_reserve_io_region(struct ahc_softc *ahc,
-@@ -55,7 +49,6 @@ static int	ahc_linux_pci_reserve_io_regi
- static int	ahc_linux_pci_reserve_mem_region(struct ahc_softc *ahc,
- 						 u_long *bus_addr,
- 						 uint8_t **maddr);
--#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0)
- static void	ahc_linux_pci_dev_remove(struct pci_dev *pdev);
- 
- /* Define the macro locally since it's different for different class of chips.
-@@ -169,7 +162,6 @@ ahc_linux_pci_dev_remove(struct pci_dev 
- 	} else
- 		ahc_list_unlock(&l);
- }
--#endif /* !LINUX_VERSION_CODE < KERNEL_VERSION(2,4,0) */
- 
- static int
- ahc_linux_pci_dev_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
-@@ -219,7 +211,6 @@ ahc_linux_pci_dev_probe(struct pci_dev *
- 	ahc = ahc_alloc(NULL, name);
- 	if (ahc == NULL)
- 		return (-ENOMEM);
--#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0)
- 	if (pci_enable_device(pdev)) {
- 		ahc_free(ahc);
- 		return (-ENODEV);
-@@ -239,57 +230,24 @@ ahc_linux_pci_dev_probe(struct pci_dev *
- 		}
- 		ahc->platform_data->hw_dma_mask = 0xFFFFFFFF;
- 	}
--#endif
- 	ahc->dev_softc = pci;
- 	error = ahc_pci_config(ahc, entry);
- 	if (error != 0) {
- 		ahc_free(ahc);
- 		return (-error);
- 	}
--#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0)
- 	pci_set_drvdata(pdev, ahc);
- 	if (aic7xxx_detect_complete) {
--#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,5,0)
- 		ahc_linux_register_host(ahc, &aic7xxx_driver_template);
--#else
--		printf("aic7xxx: ignoring PCI device found after "
--		       "initialization\n");
--		return (-ENODEV);
--#endif
- 	}
--#endif
- 	return (0);
- }
- 
- int
- ahc_linux_pci_init(void)
- {
--#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0)
- 	/* Translate error or zero return into zero or one */
- 	return pci_module_init(&aic7xxx_pci_driver) ? 0 : 1;
--#else
--	struct pci_dev *pdev;
--	u_int class;
--	int found;
--
--	/* If we don't have a PCI bus, we can't find any adapters. */
--	if (pci_present() == 0)
--		return (0);
--
--	found = 0;
--	pdev = NULL;
--	class = PCI_CLASS_STORAGE_SCSI << 8;
--	while ((pdev = pci_find_class(class, pdev)) != NULL) {
--		ahc_dev_softc_t pci;
--		int error;
--
--		pci = pdev;
--		error = ahc_linux_pci_dev_probe(pdev, /*pci_devid*/NULL);
--		if (error == 0)
--			found++;
--	}
--	return (found);
--#endif
- }
- 
- void
-@@ -304,22 +262,11 @@ ahc_linux_pci_reserve_io_region(struct a
- 	if (aic7xxx_allow_memio == 0)
- 		return (ENOMEM);
- 
--#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,3,0)
- 	*base = pci_resource_start(ahc->dev_softc, 0);
--#else
--	*base = ahc_pci_read_config(ahc->dev_softc, PCIR_MAPS, 4);
--	*base &= PCI_BASE_ADDRESS_IO_MASK;
--#endif
- 	if (*base == 0)
- 		return (ENOMEM);
--#if LINUX_VERSION_CODE < KERNEL_VERSION(2,4,0)
--	if (check_region(*base, 256) != 0)
--		return (ENOMEM);
--	request_region(*base, 256, "aic7xxx");
--#else
- 	if (request_region(*base, 256, "aic7xxx") == 0)
- 		return (ENOMEM);
--#endif
- 	return (0);
- }
- 
-@@ -334,29 +281,18 @@ ahc_linux_pci_reserve_mem_region(struct 
- 	int	error;
- 
- 	error = 0;
--#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,3,0)
- 	start = pci_resource_start(ahc->dev_softc, 1);
- 	base_page = start & PAGE_MASK;
- 	base_offset = start - base_page;
--#else
--	start = ahc_pci_read_config(ahc->dev_softc, PCIR_MAPS+4, 4);
--	base_offset = start & PCI_BASE_ADDRESS_MEM_MASK;
--	base_page = base_offset & PAGE_MASK;
--	base_offset -= base_page;
--#endif
- 	if (start != 0) {
- 		*bus_addr = start;
--#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0)
- 		if (request_mem_region(start, 0x1000, "aic7xxx") == 0)
- 			error = ENOMEM;
--#endif
- 		if (error == 0) {
- 			*maddr = ioremap_nocache(base_page, base_offset + 256);
- 			if (*maddr == NULL) {
- 				error = ENOMEM;
--#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0)
- 				release_mem_region(start, 0x1000);
--#endif
- 			} else
- 				*maddr += base_offset;
- 		}
-@@ -400,10 +336,8 @@ ahc_pci_map_registers(struct ahc_softc *
- 			       ahc_get_pci_slot(ahc->dev_softc),
- 			       ahc_get_pci_function(ahc->dev_softc));
- 			iounmap((void *)((u_long)maddr & PAGE_MASK));
--#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0)
- 			release_mem_region(ahc->platform_data->mem_busaddr,
- 					   0x1000);
--#endif
- 			ahc->bsh.maddr = NULL;
- 			maddr = NULL;
- 		} else
-@@ -456,38 +390,5 @@ ahc_pci_map_int(struct ahc_softc *ahc)
- void
- ahc_power_state_change(struct ahc_softc *ahc, ahc_power_state new_state)
- {
--#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0)
- 	pci_set_power_state(ahc->dev_softc, new_state);
--#else
--	uint32_t cap;
--	u_int cap_offset;
--
--	/*
--	 * Traverse the capability list looking for
--	 * the power management capability.
--	 */
--	cap = 0;
--	cap_offset = ahc_pci_read_config(ahc->dev_softc,
--					 PCIR_CAP_PTR, /*bytes*/1);
--	while (cap_offset != 0) {
--
--		cap = ahc_pci_read_config(ahc->dev_softc,
--					  cap_offset, /*bytes*/4);
--		if ((cap & 0xFF) == 1
--		 && ((cap >> 16) & 0x3) > 0) {
--			uint32_t pm_control;
--
--			pm_control = ahc_pci_read_config(ahc->dev_softc,
--							 cap_offset + 4,
--							 /*bytes*/4);
--			pm_control &= ~0x3;
--			pm_control |= new_state;
--			ahc_pci_write_config(ahc->dev_softc,
--					     cap_offset + 4,
--					     pm_control, /*bytes*/2);
--			break;
--		}
--		cap_offset = (cap >> 8) & 0xFF;
--	}
--#endif 
- }
+ 			if (scode == NOT_READY) {
+ 				if (waits < max_wait) {
+-					set_current_state(TASK_INTERRUPTIBLE);
+-					schedule_timeout(HZ);
++					msleep_interruptible(1000);
+ 					if (signal_pending(current)) {
+ 						retval = (-EINTR);
+ 						break;
 _
