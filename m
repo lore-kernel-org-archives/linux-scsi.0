@@ -1,34 +1,73 @@
-From: Patrick Mansfield <patmans@us.ibm.com>
-Subject: Re: [RFC]: 64 bit LUN/Tags, dummy device in host_queue, host_lock <-> LLDD reentrancy
-Date: Mon, 26 Aug 2002 09:16:28 -0700
+From: "Aron Zeh" <ARZEH@de.ibm.com>
+Subject: Re: [RFC]: 64 bit LUN/Tags, dummy device in host_queue, host_lock <-> LLDD
+ reentrancy
+Date: Mon, 26 Aug 2002 18:29:51 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20020826091628.A6694@eng2.beaverton.ibm.com>
-References: <3D669AC2.4C5D522A@splentec.com>
+Message-ID: <OFA9BD559F.ACA1BDCD-ONC1256C21.005981BE@de.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <3D669AC2.4C5D522A@splentec.com>; from luben@splentec.com on Fri, Aug 23, 2002 at 04:27:46PM -0400
 List-Id: linux-scsi@vger.kernel.org
-To: Luben Tuikov <luben@splentec.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>
+To: James Bottomley <James.Bottomley@steeleye.com>
+Cc: Luben Tuikov <luben@splentec.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
-On Fri, Aug 23, 2002 at 04:27:46PM -0400, Luben Tuikov wrote:
 
-> * In scsi_scan.c :: void scan_scsis(), select_queue_depths() is called
-> when there is a _dummy_ device in host_queue. This comes from
-> doing that juggle with SDpnt and oldSDpnt, allocating it in one
-> place and freeing it in another...
-> 
-> So when select_queue_depths() is called, in the host_queue, there's
-> _one__more_ device than there really should be, because of that SDpnt/oldSDpnt.
-> 
-> I filter the dummy SDpnt in select_queue_depths() by checking
-> vendor, model, rev and attached. But I'd rather
-> just get only the _actual_ devices in the host_queue, by
-> probably getting rid of that SDpnt/oldSDpnt juggle logic.
+> ARZEH@de.ibm.com said:
+> > To me all of the proposed changes look good. The one above I'd be
+> > interested in particularly. It would help sorting out a lot of woes we
+> > had with writing a fibre-channel HBA driver. For fibre-channel LUNs
+> > and port IDs (WWPN) are 64-bit and depending on configuration, high
+> > values can be (and in our case are) common.
+>
+> Actually, I'd like to see us moving towards adopting the capabilities of
+> driverfs for this.
+>
+> PUN is to all intents and purposes now an abstraction in the FC realm.
+LUNs
+> too, as long as they retain the grouping abstraction with PUNs.  The mid
+layer
+> really doesn't need to know what these are (there are a few pieces of
+code
+> that populate the LUN field for SCSI-1 devices that would need rework).
+All
+> the mid layer really needs is the Scsi_Device structure that describes an
 
-The above is for the "hardcoded" scans; the cleaned-up scsi_scan.c has
-this change and is in the latest linus bk tree, so it should show up
-in 2.5.31.
+> individual LUN (and some knowledge of LUN and PUN grouping for reset
+action
+> prediction).  It doesn't need to know or care about the current PUN and
+LUN
+> numbers.
+>
+> If FC drivers move straight to using driverfs, you can populate the
+driverfs
+> names with whatever is meaningful to you for PUN (WWN, portid etch) and
+LUN
+> and thus avoid this problem (and also the mapping code most have to take
+these
+> to and from the PUN/LUN numbers).  Since driverfs is a tree, the PUN/LUN
+> division is done in a directory (and could, theoretically be done on more
+than
+> just a two level split).
+>
+> James
 
--- Patrick Mansfield
+James, there are some things that I don't fully understand, yet.
+
+Does the use of driverfs-names mean that the HBA driver somehow comes into
+the discovery-loop for devices (e.g. scan_scsis somehow interacts with the
+HBA driver to determine which driverfs entry to create.)?
+Shouldn't there be some sort of rule for LUN (or unit) naming within at
+least the same hardware class? That is for: parallel, iSCSI, FC, etc.
+Will the SCSI stack automatically try to discover all devices behind the
+HBA (e.g, on the FC SAN)? Or will there be an interface to restrict the
+range, etc?
+Lastly, how will you keep track of LUNs in the SCSI stack? Will the current
+LUN field disappear in favour of a generic character string?
+
+Cheers,
+Aron
+
+
+
+
+
