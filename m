@@ -1,62 +1,49 @@
 From: Martin Hicks <mort@bork.org>
 Subject: Re: Transport Attributes -- attempt#3
-Date: Fri, 16 Jan 2004 11:40:03 -0500
+Date: Fri, 16 Jan 2004 11:47:40 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040116164003.GH27591@localhost>
-References: <20040107185420.GA30627@localhost> <20040108131717.A9700@infradead.org> <20040114181241.GK27591@localhost> <20040114233457.GA23840@praka.local.home>
+Message-ID: <20040116164740.GJ27591@localhost>
+References: <OF2D4C46F4.BCE421EB-ONC1256E1C.0045A5CA-C1256E1C.00472906@de.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from galileo.bork.org ([66.11.174.156]:62100 "HELO galileo.bork.org")
-	by vger.kernel.org with SMTP id S265695AbUAPQkE (ORCPT
+Received: from galileo.bork.org ([66.11.174.156]:1429 "HELO galileo.bork.org")
+	by vger.kernel.org with SMTP id S265579AbUAPQrk (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 16 Jan 2004 11:40:04 -0500
+	Fri, 16 Jan 2004 11:47:40 -0500
 Content-Disposition: inline
-In-Reply-To: <20040114233457.GA23840@praka.local.home>
+In-Reply-To: <OF2D4C46F4.BCE421EB-ONC1256E1C.0045A5CA-C1256E1C.00472906@de.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Vasquez <praka@users.sourceforge.net>, linux-scsi@vger.kernel.org
+To: Martin Peschke3 <MPESCHKE@de.ibm.com>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org
 
 
 
-On Wed, Jan 14, 2004 at 03:34:57PM -0800, Andrew Vasquez wrote:
-> On Wed, 14 Jan 2004, Martin Hicks wrote:
+On Thu, Jan 15, 2004 at 01:52:16PM +0100, Martin Peschke3 wrote:
+> Hi,
 > 
-> > +
-> > +/* the FiberChannel Tranport Attributes: */
-> > +fc_transport_rd_attr_cast(node_name, "0x%llx\n", unsigned long long);
-> > +fc_transport_rd_attr_cast(port_name, "0x%llx\n", unsigned long long);
-> > +fc_transport_rd_attr(port_id, "0x%x\n");
-> > +
+> +     if (sdev->transport_classdev.class) {
+> +           attrs = sdev->host->transportt->attrs;
+> +           for (i = 0; attrs[i]; i++) {
+> +                 error = class_device_create_file
+> (&sdev->transport_classdev,
+> +                                         attrs[i]);
+> +                 if (error)
+> +                       scsi_remove_device(sdev);
+> +           }
+> +     }
 > 
-> Purely aesthetics : PortIDs are typically viewed as three hex bytes
-> padded with zeros, i.e. 010203.  Perhaps this may be more appropriate:
-> 
-> 	fc_transport_rd_attr(port_id, "0x%06x\n");
+> Isn't there a break needed in the error case to quit
+> the loop after scsi_remove_device(sdev) in order to
+> avoid trouble with sdev in subsequent iterations?
+> I am not very familiar with the 2.6 SCSI code. But,
+> is scsi_remove_device(sdev) an appropriate answer
+> to the failed registration of sysfs attributes?
 
-Okay.  Will do.
+It looks that way.  There are a couple other places in the same function
+that need similar fixes.
 
-> 
-> [snip]
-> > +	attrs = (struct fc_transport_attrs *)sdev->transport_attr_values;
-> > +	list_for_each_entry(fc, &ha->fcports, list) {
-> > +		if (fc->os_target_id == sdev->id) {
-> > +			attrs->port_name = __be64_to_cpu(*(uint64_t *)fc->port_name);
-> > +			attrs->node_name = __be64_to_cpu(*(uint64_t *)fc->node_name);
-> > +			attrs->port_id = fc->d_id.b24;
-> 
-> This port_id assignment will not give you what you expect on
-> big-endian machines.  Given the previous port_id example value
-> (010203), on BE machines, the attribute will read as 030201 when
-> displayed.  A more endian safe way if you want to continue with the
-> pure-type usages (uint64_t/int) rather than byte arrays would be:
-> 
-> 	attrs->port_id = fc->d_id.b.domain << 16 |
-> 		fc->d_id.b.area << 8 |
-> 		fc->d_id.b.al_pa;
-
-I'll fix that up.
-
-Thanks,
+Thanks
 mh
 
 -- 
