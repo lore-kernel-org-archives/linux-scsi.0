@@ -1,35 +1,29 @@
 From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: program scsi_unique_id is using a deprecated SCSI ioctl,
-	please convert it to SG_IO
-Date: Mon, 28 Mar 2005 09:39:23 -0600
-Message-ID: <1112024363.5531.5.camel@mulgrave>
-References: <20050328103324.GB28175@logos.cnet>
+Subject: Re: [2.6 patch] SCSI: cleanups
+Date: Mon, 28 Mar 2005 10:00:17 -0600
+Message-ID: <1112025617.5531.16.camel@mulgrave>
+References: <20050327202139.GQ4285@stusta.de>
+	 <1112023305.5531.2.camel@mulgrave>
+	 <1112023757.6003.27.camel@laptopd505.fenrus.org>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat16.steeleye.com ([209.192.50.48]:61648 "EHLO
+Received: from stat16.steeleye.com ([209.192.50.48]:15057 "EHLO
 	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S261899AbVC1Pjc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 28 Mar 2005 10:39:32 -0500
-In-Reply-To: <20050328103324.GB28175@logos.cnet>
+	id S261908AbVC1QB1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 28 Mar 2005 11:01:27 -0500
+In-Reply-To: <1112023757.6003.27.camel@laptopd505.fenrus.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Marcelo Tosatti <marcelo.tosatti@cyclades.com>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Arjan van de Ven <arjan@infradead.org>
+Cc: Adrian Bunk <bunk@stusta.de>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
 
-On Mon, 2005-03-28 at 07:33 -0300, Marcelo Tosatti wrote:
-> You probably already know about this, but just in case:
-> 
-> v2.6.12-rc1 yields
-> 
-> program scsi_unique_id is using a deprecated SCSI ioctl, please convert it to SG_IO
+On Mon, 2005-03-28 at 17:29 +0200, Arjan van de Ven wrote:
+> how about a CONFIG_SCSI_DRIVER_DEBUG ?
 
-Actually, a lot of programs do this.  Since about 2.6.11 (I think, might
-be earlier), the SCSI subsystem has actually begun warning about the use
-of ioctls which have been deprecated for a while.
-
-The solution is to fix up the scsi_unique_id program to use SG_IO.
+In principle, that's fine ... in practice does the few bytes saved by
+this really justify adding yet another option?
 
 James
 
