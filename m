@@ -1,36 +1,40 @@
-From: "ferdinand" <shelley21katie@hotmail.com>
-Subject: Buy prescriptions in bulk, SAVE THOUSANDS!
-Date: Sat, 07 Aug 2004 11:48:51 GMT
+From: Dan Merillat <harik.attar@gmail.com>
+Subject: Re: Megaraid lockup on 2.6.[7-8]
+Date: Sat, 7 Aug 2004 12:26:12 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1091879331-31668__34583.4969929003$1091879399$gmane$org@excite.com>
-Content-Type: text/plain;
+Message-ID: <c0c06790040807092682a9ef0@mail.gmail.com>
+References: <c0c067900408061855df4dcae@mail.gmail.com> <1091882205l.7352l.1l@serve.riede.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [203.197.29.40] ([203.197.29.40]:9342 "HELO verslo.is")
-	by vger.kernel.org with SMTP id S261602AbUHGLtE (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 7 Aug 2004 07:49:04 -0400
+Received: from rproxy.gmail.com ([64.233.170.202]:5460 "EHLO mproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S263626AbUHGQ0M (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 7 Aug 2004 12:26:12 -0400
+Received: by mproxy.gmail.com with SMTP id 73so69695rnk
+        for <linux-scsi@vger.kernel.org>; Sat, 07 Aug 2004 09:26:12 -0700 (PDT)
+In-Reply-To: <1091882205l.7352l.1l@serve.riede.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-kernel@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-Buy your meds through our Canadian Pharmacy,
+> Did you consider power supply instability? Temperature problems?
 
-Save up to 80% on EXACTLY THE SAME DRUGS!
+Given that it's kept in a 70 degree machine room, I don't think it's
+temperature related.
 
-Click here: http://www.we49fm.com/_85924943b9db73ac62baa654773c6a8e/7
+It's a 450 watt redundant powersupply.  It's possible that it has
+failed, but unlikely. (both halves
+are independant)
 
-On medication long term?
-Buy bulk through us and LITERALLY SAVE THOUSANDS!
+Wouldn't power supply/thermal problems manifest as random errors,
+though?   Memory generally
+fails the same way if it's a specific address flaking out (and that
+address is in kernel space) but
+I've already replaced it.
 
-Click here: http://www.we49fm.com/_85924943b9db73ac62baa654773c6a8e/7
+Also, I checked the archives and I'm not the only one that's getting
+this.  Apparently it's a 2.6 specific problem, 2.4 did not have it.
 
-
-
-
-
-
-
-
-
-
-dirk whitneycenter surf frederic bobcat whitney apple1 
-fozzie olivierjulia mission reynolds
-sbdc julia diane 
+What is the latest driver for a LSI Megaraid Express 500?  As I said,
+2.20 seems to be only for
+the U320/SATA cards, or at least it dosn't detect mine.
