@@ -1,36 +1,100 @@
-From: "Oliver Pitzeier" <oliver@linux-kernel.at>
-Subject: RE: Kernel Panic: kernel-2.6.1 for alpha in scsi context ll_rw_blk.c
-Date: Sun, 11 Jan 2004 11:26:23 +0100
+From: Thomas Steudten <alpha@steudten.com>
+Subject: Problems with kernel 2.6.1 on alpha (scsi, modules, unaligned trap)
+Date: Sun, 11 Jan 2004 13:09:05 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <023d01c3d82d$5d7013e0$020b10ac@pitzeier.priv.at>
-References: <40002F69.9020302@steudten.com>
+Message-ID: <40013CE1.6070305@steudten.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=ISO-8859-1;
+	format=flowed
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from indianer.linux-kernel.at ([212.24.125.53]:14490 "EHLO
-	indianer.linux-kernel.at") by vger.kernel.org with ESMTP
-	id S265821AbUAKK2t convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 11 Jan 2004 05:28:49 -0500
-In-Reply-To: <40002F69.9020302@steudten.com>
+Received: from 217-162-71-11.dclient.hispeed.ch ([217.162.71.11]:60032 "EHLO
+	steudten.com") by vger.kernel.org with ESMTP id S265867AbUAKMJI
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 11 Jan 2004 07:09:08 -0500
 List-Id: linux-scsi@vger.kernel.org
-To: 'Thomas Steudten' <alpha@steudten.com>
-Cc: 'Ivan Kokshaysky' <ink@jurassic.park.msu.ru>, 'Falk Hueffner' <falk.hueffner@student.uni-tuebingen.de>, 'Richard Henderson' <rth@twiddle.net>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-alpha@vger.kernel.org, akpm@osdl.org
+To: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-alpha@vger.kernel.org
 
-> I test the new 2.6.1 kernel and run in the same problem as=20
-> before. The reason is, that the patch from Ivan isn=B4t there=20
-> in the kernel source tree.
->=20
-> Please add the patch to the mainline.
+Hello
 
-=46or me it works without patching anything. I still use my Digital Alp=
-ha AS
-1000A for testing new kernels. I currently have no Compaq DS10 availabl=
-e,
-else I would try this as well :-(
+After some trouble to port my linux kernel on alpha sx614 from kernel
+2.4.21 to 2.6.1 i collect here my problems found. Sure, on some alpha
+systems this problems aren=B4t there.
 
-Best regards,
- Oliver
+Kernel 2.6.1:
+1. BUG: "unaligned trap" in kernel mode (patch there, but not in the 2.=
+6.1=20
+mainline)
+2. BUG: "Relocation overflow vs section" by trying to load some modules=
+=20
+with modprobe or insmod (patch there, but not in the 2.6.1 mainline)
+3. Kernel boot message "***WARNING*** No MII transceivers found" after
+soft reboot (no power off/on).
+4. Kernel boot message "Unable to reserve mem region #2:1000@a051000 fo=
+r=20
+device 0000:00:07.0" "aic7xxx: I/O ports already in use, ignoring."
+5. Some modules (floppy, lp, loop..) won=B4t be autoloaded any more sin=
+ce=20
+2.4.21. There=B4s no block-major aso. request in the kernel-ring buffer=
+=2E
+I have /etc/modules.conf and /etc/modprobe.conf with modutils-2.4.21-23=
+=2E1
+and depmod -V: module-init-tools 3.0-pre5. How i can track this down?
+
+Else no major problems with this kernel until know.
+(I think the ipt_unclean from netfilter and the kerneld (or whatever) a=
+re
+gone in 2.6.x) Sorry, if i miss something to read.
+
+---------------8<----8<--------------
+
+To 3)
+00:09.0 Ethernet controller: 3Com Corporation 3c905B 100BaseTX [Cyclone=
+]=20
+(rev 30)
+         Subsystem: 3Com Corporation 3C905B Fast Etherlink XL 10/100
+         Flags: bus master, medium devsel, latency 32, IRQ 24
+         I/O ports at 8800 [size=3D128]
+         Memory at 000000000a053000 (32-bit, non-prefetchable) [size=3D=
+128]
+         Expansion ROM at 000000000a020000 [disabled] [size=3D128K]
+         Capabilities: [dc] Power Management version 1
+
+To 4)
+scsi0:A:2:0: Tagged Queuing enabled.  Depth 128
+(scsi0:A:3): 40.000MB/s transfers (20.000MHz, offset 8, 16bit)
+   Vendor: IBM       Model: DDYS-T18350N      Rev: SA2A
+   Type:   Direct-Access                      ANSI SCSI revision: 03
+scsi0:A:3:0: Tagged Queuing enabled.  Depth 128
+PCI: Unable to reserve mem region #2:1000@a051000 for device 0000:00:07=
+=2E0
+PCI: Unable to reserve mem region #2:1000@a051000 for device 0000:00:07=
+=2E0
+aic7xxx: <Adaptec AHA-294X Ultra SCSI host adapter> at PCI 0/7/0
+aic7xxx: I/O ports already in use, ignoring.
+SCSI device sda: 71687340 512-byte hdwr sectors (36704 MB)
+SCSI device sda: drive cache: write back
+
+00:07.0 SCSI storage controller: Adaptec AHA-2940U/UW/D / AIC-7881U (re=
+v 01)
+         Subsystem: Adaptec AHA-2940UW SCSI Host Adapter
+         Flags: bus master, medium devsel, latency 32, IRQ 26
+         I/O ports at 8400 [size=3D256]
+         Memory at 000000000a051000 (32-bit, non-prefetchable) [size=3D=
+4K]
+         Expansion ROM at 000000000a040000 [disabled] [size=3D64K]
+         Capabilities: [dc] Power Management version 1
+ From /proc/ioports:
+8400-84ff : 0000:00:07.0
+
+--=20
+Tom
+
+LINUX user since kernel 0.99.x 1994.
+RPM Alpha packages at http://alpha.steudten.com/packages
+Want to know what S.u.S.E 1995 cdrom-set contains?
+
+
 
 -
 To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
