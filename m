@@ -1,147 +1,110 @@
-From: Stuart Hayes <Stuart_Hayes@dell.com>
-Subject: Re: [PATCH] ide-scsi.c:  Fix tape drive block limits problem
-Date: Wed, 10 Sep 2003 14:49:45 -0500 (CDT)
+From: Pat LaVarre <p.lavarre@ieee.org>
+Subject: Re: sg MiB writes scheduling while atomic
+Date: 10 Sep 2003 13:30:16 -0600
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44.0309101445080.28523-100000@humbolt.us.dell.com>
-References: <CE41BFEF2481C246A8DE0D2B4DBACF4F128A13@ausx2kmpc106.aus.amer.dell.com>
+Message-ID: <1063222216.3669.87.camel@patehci2>
+References: <Pine.LNX.4.44L0.0309101219190.905-100000@ida.rowland.org>
+	 <1063217791.3669.43.camel@patehci2>  <1063219776.3669.72.camel@patehci2>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp14.us.dell.com ([143.166.85.137]:20456 "EHLO
-	smtp14.us.dell.com") by vger.kernel.org with ESMTP id S265692AbTIJTtr
+Received: from email-out1.iomega.com ([147.178.1.82]:7308 "EHLO
+	email.iomega.com") by vger.kernel.org with ESMTP id S265680AbTIJT3N
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 10 Sep 2003 15:49:47 -0400
-Received: from koskovpd.us.dell.com (koskovpd.us.dell.com [143.166.6.46])
-	by smtp14.us.dell.com (8.12.9/8.12.9) with ESMTP id h8AJnaIm001861
-	for <linux-scsi@vger.kernel.org>; Wed, 10 Sep 2003 14:49:36 -0500
-Received: from humbolt.us.dell.com (insidelists.us.dell.com [10.9.160.254])
-	by koskovpd.us.dell.com (8.8.8p2+Sun/8.8.8/Dell.IT.04.09.03) with ESMTP id OAA18812
-	for <linux-scsi@vger.kernel.org>; Wed, 10 Sep 2003 14:49:46 -0500 (CDT)
-In-Reply-To: <CE41BFEF2481C246A8DE0D2B4DBACF4F128A13@ausx2kmpc106.aus.amer.dell.com>
+	Wed, 10 Sep 2003 15:29:13 -0400
+In-Reply-To: <1063219776.3669.72.camel@patehci2>
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
 
-Resending with (hopefully) unmolested text.
---Stuart
+By the way, I notice I can quickly repeat the first couple of lines of
+Call Trace if I interrupt the default 0.25 MiB writes of sg_dd with
+Ctrl+C:
 
-On Wed, 10 Sep 2003, Hayes, Stuart wrote:
+> http://www.tldp.org/HOWTO/SCSI-Generic-HOWTO/sg3_utils.html
+> Appendix A. Sg3_utils package
+> variants of the Unix dd command:
+> sg_dd, sgp_dd, sgq_dd and sgm_dd, ...
+> ...
+> http://www.torque.net/sg/
+> http://www.torque.net/sg/p/sg3_utils-1.05.tgz
+> $ tar -zx ...
+> $ cd sg3_utils-1.05
+> $ make
+> $ sudo ./sg_scan -i
+> $ sudo ./sg_dd of=/dev/sg1 if=/dev/zero bs=2k
+> ^C
 
->=20
-> IDE tape drives return "st0: Error with sense data: Current st09:00:
-> sense key illegal request ... Additional sense indicates Invalid comm=
-and
-> operation code" error message when using drive.=A0 This occurs becaus=
-e st.c
-> tries to issue a "read block limits" SCSI command when opening the
-> device.=A0 IDE tape drives are not required to support this command (=
-SCSI
-> tapes are), but IDE tapes do have to report the block sizes they supp=
-ort
-> (512 and/or 1024 bytes only) in mode page 0x2A.
->=20
-> This patch looks for "read block limits" commands being sent to tape
-> drives, and changes them into "mode sense" commands to read mode page
-> 0x2A.=A0 The data that's returned is reformatted to look like the res=
-ults
-> of a "read block limits" command (it will return block limits of mini=
-mum
-> 512 (or 1024, if 512 isn't supported), maximum of 1024 (or 512, if 10=
-24
-> isn't supported), with a granularity of 9 (512 bytes).
->=20
-> This patch is for kernel 2.4.22 (for ide-scsi.c ver 0.93).
->=20
-> Thanks
-> Stuart
-> ---------------
+Where I quote ^C I mean I use Ctrl+C to interrupt sg i/o.  I see I
+provoke such dmsg as:
+
+...
+usb-storage: Command WRITE_10 (10 bytes)
+usb-storage:  2a 00 00 00 0f 80 00 00 80 00
+usb-storage: Bulk Command S 0x43425355 T 0x1dfbf L 262144 F 0 Trg 0 LUN 0 CL 10
+usb-storage: usb_stor_bulk_transfer_buf: xfer 31 bytes
+usb-storage: Status code 0; transferred 31/31
+usb-storage: -- transfer complete
+usb-storage: Bulk command transfer result=0
+usb-storage: usb_stor_bulk_transfer_sglist: xfer 262144 bytes, 8 entries
+usb-storage: Status code 0; transferred 262144/262144
+usb-storage: -- transfer complete
+usb-storage: Bulk data transfer result 0x0
+usb-storage: Attempting to get CSW...
+usb-storage: usb_stor_bulk_transfer_buf: xfer 13 bytes
+usb-storage: Status code 0; transferred 13/13
+usb-storage: -- transfer complete
+usb-storage: Bulk status result = 0
+usb-storage: Bulk Status S 0x53425355 T 0x1dfbf R 0 Stat 0x0
+usb-storage: scsi cmd done, result=0x0
+usb-storage: *** thread sleeping.
+usb-storage: queuecommand called
+usb-storage: *** thread awakened.
+usb-storage: Command WRITE_10 (10 bytes)
+usb-storage:  2a 00 00 00 10 00 00 00 80 00
+usb-storage: Bulk Command S 0x43425355 T 0x1dfc0 L 262144 F 0 Trg 0 LUN 0 CL 10
+usb-storage: usb_stor_bulk_transfer_buf: xfer 31 bytes
+usb-storage: Status code 0; transferred 31/31
+usb-storage: -- transfer complete
+usb-storage: Bulk command transfer result=0
+usb-storage: usb_stor_bulk_transfer_sglist: xfer 262144 bytes, 8 entries
+usb-storage: Status code 0; transferred 262144/262144
+usb-storage: -- transfer complete
+usb-storage: Bulk data transfer result 0x0
+usb-storage: Attempting to get CSW...
+usb-storage: usb_stor_bulk_transfer_buf: xfer 13 bytes
+usb-storage: Status code 0; transferred 13/13
+usb-storage: -- transfer complete
+usb-storage: Bulk status result = 0
+usb-storage: Bulk Status S 0x53425355 T 0x1dfc0 R 0 Stat 0x0
+usb-storage: scsi cmd done, result=0x0
+usb-storage: *** thread sleeping.
+Debug: sleeping function called from invalid context at include/linux/rwsem.h:66
+Call Trace:
+ [<c0121f16>] __might_sleep+0x5f/0x72
+ [<c0280ec0>] scsi_device_put+0x3c/0xfe
+ [<df9263e3>] sg_cmd_done+0x19e/0x266 [sg]
+ [<c0280ba6>] scsi_finish_command+0x78/0xb0
+ [<c0280ad2>] scsi_softirq+0xb4/0xd9
+ [<c0128c0b>] do_softirq+0xd3/0xd5
+ [<c012912f>] ksoftirqd+0xbf/0xf8
+ [<c0129070>] ksoftirqd+0x0/0xf8
+ [<c0109245>] kernel_thread_helper+0x5/0xb
+
+Another time:
+
+Debug: sleeping function called from invalid context at include/linux/rwsem.h:66
+Call Trace:
+ [<c0121f16>] __might_sleep+0x5f/0x72
+ [<c0280ec0>] scsi_device_put+0x3c/0xfe
+ [<df9263e3>] sg_cmd_done+0x19e/0x266 [sg]
+ [<c021fa59>] read_chan+0x0/0x98c
+ [<c0280ba6>] scsi_finish_command+0x78/0xb0
+ [<c0280ad2>] scsi_softirq+0xb4/0xd9
+ [<c0128c0b>] do_softirq+0xd3/0xd5
+ [<c011b4a0>] smp_apic_timer_interrupt+0xd8/0x140
+ [<c010beae>] apic_timer_interrupt+0x1a/0x20
 
 
 
-
-diff -uNr linux-2.4.21-1.1931.2.421.ent/drivers/scsi/ide-scsi.c linux-2=
-=2E4.21-1.1931.2.421.ent.idescsifix/drivers/scsi/ide-scsi.c
---- linux-2.4.21-1.1931.2.421.ent/drivers/scsi/ide-scsi.c	2003-09-02 16=
-:52:26.000000000 -0500
-+++ linux-2.4.21-1.1931.2.421.ent.idescsifix/drivers/scsi/ide-scsi.c	20=
-03-09-09 11:16:51.000000000 -0500
-@@ -1,5 +1,5 @@
- /*
-- * linux/drivers/scsi/ide-scsi.c	Version 0.93    June 10, 2002
-+ * linux/drivers/scsi/ide-scsi.c	Version 0.94    Sept 09, 2003
-  *
-  * Copyright (C) 1996 - 1999 Gadi Oxman <gadio@netvision.net.il>
-  * Copyright (C) 2001 - 2002 Andre Hedrick <andre@linux-ide.org>
-@@ -35,9 +35,12 @@
-  * Ver 0.92  Mar 21 02   Include DevFs support
-  *                        Borsenkow Andrej <Andrej.Borsenkow@mow.sieme=
-ns.ru>
-  * Ver 0.93  Jun 10 02   Fix "off by one" error in transforms
-+ * Ver 0.94  Sep 09 03   Added transform for reading ATAPI tape drive =
-block
-+ *                        limits (ATAPI tapes report block limits in m=
-ode
-+ *                        page 0x2A, not by "read block limits" comman=
-d)
-  */
-=20
--#define IDESCSI_VERSION "0.93"
-+#define IDESCSI_VERSION "0.94"
-=20
- #include <linux/module.h>
- #include <linux/config.h>
-@@ -234,6 +237,25 @@
- 			pc->buffer_size +=3D 4;
- 		}
- 	}
-+	if (drive->media =3D=3D ide_tape) {
-+		if (sc[0] =3D=3D READ_BLOCK_LIMITS) {	/* IDE tapes have blk lmts in =
-mode page 0x2a */
-+			if (!scsi_buf)
-+				return;
-+			/* buffer size should be 6 for READ_BLOCK_LIMITS    */
-+			/* we need 12 bytes (4 for header + 8 for mode page */
-+			if ((atapi_buf =3D kmalloc(12, GFP_ATOMIC)) =3D=3D NULL)
-+				return;
-+			memset(atapi_buf, 0, 12);
-+			memset (c, 0, 12);
-+			c[0] =3D MODE_SENSE;
-+			c[1] =3D 8;  	/* no block descriptors     */
-+			c[2] =3D 0x2A;	/* mode page 0x2A           */
-+			c[4] =3D 12;	/* buffer length 12 decimal */
-+			pc->buffer =3D atapi_buf;
-+			pc->request_transfer =3D 12;
-+			pc->buffer_size =3D 12;
-+		}
-+	}
- }
-=20
- static inline void idescsi_transform_pc2 (ide_drive_t *drive, idescsi_=
-pc_t *pc)
-@@ -262,7 +284,19 @@
- 			/* response data format */
- 			scsi_buf[3] =3D (scsi_buf[3] & 0xf0) | 2;
- 		}
-+	}=09
-+	if (drive->media =3D=3D ide_tape) {
-+		if (sc[0] =3D=3D READ_BLOCK_LIMITS) {
-+			memset(scsi_buf, 0, pc->scsi_cmd->request_bufflen);
-+			/* granularity of 9 (always 9 for ide tapes) */
-+			scsi_buf[0] =3D 9;
-+			/* block length of 1024 bytes supported? */
-+			scsi_buf[2] =3D (atapi_buf[11] & 0x04) ? 4 : 2;
-+			/* block length of 512 bytes supported?  */
-+			scsi_buf[4] =3D (atapi_buf[11] & 0x02) ? 2 : 4;
-+		}
- 	}
-+
- 	if (atapi_buf && atapi_buf !=3D scsi_buf)
- 		kfree(atapi_buf);
- }
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
