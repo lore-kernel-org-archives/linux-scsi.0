@@ -1,25 +1,52 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [ANNOUNCE]: version 2.00.3 megaraid driver for 2.4.x and 2.5.67 kernels
-Date: Thu, 17 Apr 2003 14:56:20 +0100
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <20030417145620.A14452@infradead.org>
-References: <20030417135719.A13189@infradead.org> <200304171323.h3HDNYm17322@devserv.devel.redhat.com>
+From: James Bottomley <James.Bottomley@steeleye.com>
+Subject: Re: [ANNOUNCE]: version 2.00.3 megaraid driver for 2.4.x and 2.5.67
+	kernels
+Date: 17 Apr 2003 09:41:59 -0500
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <1050590521.2026.76.camel@mulgrave>
+References: <0E3FA95632D6D047BA649F95DAB60E570185F10F@EXA-ATLANTA.se.lsil.com>
+	<20030417133820.A12503@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <200304171323.h3HDNYm17322@devserv.devel.redhat.com>; from alan@redhat.com on Thu, Apr 17, 2003 at 09:23:34AM -0400
-To: Alan Cox <alan@redhat.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Mukker Atul <atulm@lsil.com>, "'James.Bottomley@steeleye.com'" <James.Bottomley@steeleye.com>, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, "'linux-megaraid-devel@dell.com'" <linux-megaraid-devel@dell.com>, "'linux-megaraid-announce@dell.com'" <linux-megaraid-announce@dell.com>
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from nat9.steeleye.com ([65.114.3.137]:9735 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S261595AbTDQOhM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 17 Apr 2003 10:37:12 -0400
+In-Reply-To: <20030417133820.A12503@infradead.org>
 List-Id: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: "Mukker, Atul" <atulm@lsil.com>, "'alan@redhat.com'" <alan@redhat.com>, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, "'linux-megaraid-devel@dell.com'" <linux-megaraid-devel@dell.com>, "'linux-megaraid-announce@dell.com'" <linux-megaraid-announce@dell.com>
 
-On Thu, Apr 17, 2003 at 09:23:34AM -0400, Alan Cox wrote:
-> > This is a 2.5-only driver (in fact a 2.5 only patch against a 2.4 driver)
-> 
-> 2.0 exists for 2.4 as well. I dont know about for 2.2
+On Thu, 2003-04-17 at 07:38, Christoph Hellwig wrote:
+> On Wed, Apr 16, 2003 at 04:34:22PM -0400, Mukker, Atul wrote:
+> > New megaraid driver 2.00.3 is now available at
+> > ftp://ftp.lsil.com/pub/linux-megaraid For this driver, a patch is also
+> > available for 2.5.67 kernel.
+[...]
 
-Is my English that bad? :)
+I'm not inclined to force style changes in any drivers with active
+maintainers on the grounds that we already have much worse offenders in
+the tree (and style changes do make merging a pain).
 
-Currently the megaraid2 driver is distributed as a tarball that works _only_
-with Linux 2.4 (and it looks like only with rather recent 2.4 versions), and
-there is a patch against it to make it work with 2.5 and only 2.5.
+I counted one serious issue:
+
+The try_module_get problem
+
+One future compatibility issue:
+
+->detect moved to scsi_add_host (for the device model).
+
+One issue that would improve the driver internally:
+
+move hba_soft_state array to dynamic ->hostdata
+
+plus a list of other more style related issues.
+
+I'll fix up the first one, Atul, can you take the other two for a future
+patch (the others Christoph mentions might be nice, too...)?
+
+James
+
+
