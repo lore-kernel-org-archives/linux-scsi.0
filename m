@@ -1,58 +1,177 @@
-From: Brian King <brking@us.ibm.com>
-Subject: Re: host_self_blocked question/bug?
-Date: Tue, 25 Nov 2003 16:31:09 -0600
+From: Chiaki <ishikawa@yk.rim.or.jp>
+Subject: Re: TMSCSIM [2.6]
+Date: Wed, 26 Nov 2003 07:44:38 +0900
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3FC3D82D.2030604@us.ibm.com>
-References: <3FC3CDCF.4030105@us.ibm.com> <1069797320.1787.220.camel@mulgrave>
+Message-ID: <3FC3DB56.6020104@yk.rim.or.jp>
+References: <Pine.LNX.4.44.0311252311360.14624-100000@poirot.grange>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e4.ny.us.ibm.com ([32.97.182.104]:14776 "EHLO e4.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S263203AbTKYWbL (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 25 Nov 2003 17:31:11 -0500
-Received: from northrelay02.pok.ibm.com (northrelay02.pok.ibm.com [9.56.224.150])
-	by e4.ny.us.ibm.com (8.12.10/8.12.2) with ESMTP id hAPMVAh3842976
-	for <linux-scsi@vger.kernel.org>; Tue, 25 Nov 2003 17:31:10 -0500
-Received: from us.ibm.com (d01av02.pok.ibm.com [9.56.224.216])
-	by northrelay02.pok.ibm.com (8.12.9/NCO/VER6.6) with ESMTP id hAPMV9je156530
-	for <linux-scsi@vger.kernel.org>; Tue, 25 Nov 2003 17:31:09 -0500
+Received: from pl901.nas911.n-yokohama.nttpc.ne.jp ([210.139.42.133]:38349
+	"EHLO standard.erephon") by vger.kernel.org with ESMTP
+	id S263274AbTKYWpE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 25 Nov 2003 17:45:04 -0500
+Received: from (client is using the wrong hostname!) yk.rim.or.jp (really [127.0.0.1]) by yk.rim.or.jp
+	via smail with esmtp
+	id <m1AOlvV-00391fC@standard.erephon> (Debian Smail3.2.0.115)
+	for <linux-scsi@vger.kernel.org>; Wed, 26 Nov 2003 07:44:57 +0900 (JST)
+In-Reply-To: <Pine.LNX.4.44.0311252311360.14624-100000@poirot.grange>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+Cc: linux-scsi@vger.kernel.org
 
-James Bottomley wrote:
-> The original design was to allow short hiatuses when the HBA couldn't
-> accept I/O.  It doesn't work if there's I/O pending (unless the stop is
-> very short), because the SCSI timers are still ticking and error
-> recovery doesn't see this flag.
+Guennadi Liakhovetski wrote:
+> On Wed, 26 Nov 2003, Chiaki wrote:
 > 
-> There has been talk of making this interface robust to pending commands
-> (halt the timers and freeze the error handler) for FC HBA's that take
-> ages to process loop events, but no work has been done on this---it's
-> quite a bit more work than simply not allowing the eh to emit TURs.
+> 
+>>I am using TEKRAM dc390. I use tmscsim driver as a module.
+>>There is a PD/CD combo on the dc390 scsi bus. (PD is
+>>a somewhat outdated optomagnetic drive. The drive has
+>>two LUNs, one for CD, and one for PD. PD side is recognized as
+>>rewritable removable media at least under 2.4.22.)
+>>
+>>With the modified tmscsim driver under 2.6.0-test10,
+>>(the bzipped patch submitted to linux-scsi worked without rejection)
+>>I got a panic after module insertion during booting.
+>>tmscsim is mentioned in /etc/modules and so inserted automatically
+>>during booting.
+>>
+>>(More background: related stuff I can think of.
+>>       kernel 2.6.0-test10.
+>>       tmscsim ... used as module
+>>       sr ... module as sr_mod
+>>       event mechanism enabled in the kernel.
+>>       gcc 3.3 used...)
+>>
+>>Here is the panic message left on the screen which I scribbed down
+>>manually.
+>>
+>>	... anything above is scrolled and disappeared but I saw the
+>>         module insertion began. ...
+>>esi: ef63a2f0 edi: 00000001 ebp: c03a5e4c esp: c03a5e3c
+>>ds: 007b es: 007b ss: 0068
+>>
+>>Process swapper (pid:0, threadinfo = c03a4000, task=c0338680)
+>>
+>>Stack: 00000000 ef63a2f0 efc617c0 ef5e92c0 c0ea5e8c f09451d1 ef63a2f0
+>>ef63a2f0
+>>        ef5e92c0 ef5e92c0 c03a5ea4 f09451d1 ef63a2f0 4f89f21d 00000021
+>>00000001
+>>        cc000092 ef63a2f0 efc617c0 ef63a208 c03a5ec4 f0946e36 ef63a208
+>>ef5e92c0
+>>
+>>Call trace:
+>>   [<f09451d1>] dc390_StartSCCSI+0x41/0x330    [tmscsim]
+>>   [<f09451d1>] dc390_StartSCCSI+0x41/0x330    [tmscsim]
+>>   [<f0946e36>] dc390_SRBdone+0x306/0x5b0      [tmscsim]
+>>   [<f09472f3>] dc390_RequestSense+0x53/0x90   [tmscsim]
+>>   [<f0946714>] dc390_Disconnect+0x104/0x160    [tmscsim]
+>>   [<f094574a>] do_DC390_Interrupt:0x28d/0x350 [tmscsim]
+>>   [<c025dc88>] scsi_softirq+0xe8/0x240
+>>   [<c010da4b>] handle_IRQ_event:0x3b/0x70
+>>   [<c010e060>] do_IRQ+0x140/0x390
+>>   [<c0105000>] _stext+0x0/0xf0
+>>   [<c010c0ec>] common_interrupt:0x18/0x20
+>>   [<c0105000>] _stext+0x0/0xf0
+>>   [<c0108ea6>] default_idel+0x26/0x30
+>>   [<c0108f24>] cpu_idle+0x34/0x40
+>>   [<c03a6797>] start_kernel+0x1e7/0x270
+>>   [<c03a6480>] unknown_bootoption+0x0/0x100
+>>
+>>Code: 0f 0b 28 00 77 9d 94 f0 eb c5 0f 0b 25 00 77 9d 94 f0 eb e8
+>>
+>><0> Kernel panic: Fatal exception in interrupt
+>>     In interrupt handler --- not syncing
+> 
+> 
+> Aha, now that's getting interesting - or I was started to feel borref
+> already:-) A couple of things, that would definitely help:
+> 
 
-I'd like a way to be able to stop the mid-layer from sending me any 
-commands. The scenarios I have today are:
+Hi,
 
-1. Fatal error on the adapter.
-2. microcode download to the adapter.
-3. Adapter cache recovery commands.
+> 1) is this the only computer you have? If you had another one - could you
+> attach a serial console  and get a complete Oops?
 
-All of these cases require me to run BIST on the adapter and bring it 
-back up. To do this may take 20-30 seconds. I call scsi_block_requests, 
-fail all pending ops back with DID_ERROR, reset the adapter, then call 
-scsi_unblock_requests. My usage of it gets around the ticking timer 
-problem. I agree that the error recovery thread doesn't see this either 
-and that this is a potential problem. I had planned to work around that 
-by failing abort and device reset, forcing the host_reset to be called, 
-which would wait on the completion of the adapter reset, but it would be 
-nice if I didn't have to do that.
+I will try this later today.
+
+> 2) gcc-3.3 could be ok, but I don't really feel quite secure about it...
+> If we don't find an obvious bug somewhere, I'll ask you to try recompile
+> it with 2.95.3, ok?
+
+No problem. I will try this also.
+
+
+> 3) are you sure you copied the Oops exactly from the terminal? It didn't
+> get into /var/log/messages, I presume. Some things in that Oops above look
+> a bit strange... E.g. the double
+
+As far as manual copying goes, I did my best.
+Indeed, I noticed the duplicate lines and I thought that was quite strange!
+I suspect that it might lead to the cause of the problem.
+
+
+> I'll try to think about it a bit, but without a complete and exact Oops it
+> is a bit difficult, also, that the code, generated by your 3.3 seems to be
+> very different, from what 2.95.3 produces. Your .config (bzipped) could be
+> useful too. I guess, you have the multiple LUNs option enabled, I'll try
+> that too, but my hardware is very different from what you have there -
+> just a AM53C974 and a single hard-drive on it.
+> 
+
+I will try to capture the complete oops and
+send it as well as the .config file together.
+
+Yes, my hardware is a rather quirky kind for home use
+and it has found a few problems in the kernel and driver before.
+
+I will get back with the information
+hopefully in 24 hours.
+
+
+>>OBSERVATION:
+>>
+>>	alt sysreq magic key combination worked.
+>>	I could run emergency sync and reboot.
+>>
+>>	From the kernel panic message, and the call trace, it looks to
+>>	me that the interrupt is recursively entered somehow.
+>>	(Or unexpected interrupt came in.)
+>>
+>>
+>>So what next?
+>>I can enable debugging macro if necessary and re-try.
+>>
+>>Or, I can disable tmscsim module insertion during booting,
+>>and try "insmod tmscsim" after the kernel is up and running and
+>>see if it makes difference.
+>>
+>>(Under 2.6.0-test9, and manually fixed patched tmscsim files (due to
+>>whitespace problems of the patch), I could insert the tmscsim module
+>>but "insmod tmscsim" took unusually long time, but eventually
+>>returned. However, /proc/scsi/ didn't show the 2nd LUN of the
+>>PD/CD combo I have on dc390 bus. Maybe it was a problem of
+>>insertion of sr_mod due to my misconfiguration of module set up
+>>for 2.6.0-testXX which I believe is now corrected.
+>>Since immediately
+>>afterward when I tried automatic insertion of dc390 during booting,
+>>I got a similar panic which I reported above, I didn't pursue
+>>the insertion testing after the kernel is up and running.
+>>I thought fixing the panic of auto insertion needs to be handled first.
+>>But maybe I should re-try under test10 if this gives more insight.)
+> 
+> 
+> 
+
+
 
 
 
 -- 
-Brian King
-eServer Storage I/O
-IBM Linux Technology Center
+int main(void){int j=2003;/*(c)2003 cishikawa. */
+char t[] ="<CI> @abcdefghijklmnopqrstuvwxyz.,\n\"";
+char *i ="g>qtCIuqivb,gCwe\np@.ietCIuqi\"tqkvv is>dnamz";
+while(*i)((j+=strchr(t,*i++)-(int)t),(j%=sizeof t-1),
+(putchar(t[j])));return 0;}/* under GPL */
 
