@@ -1,54 +1,31 @@
-From: Paul Wagland <paul@wagland.net>
-Subject: Re: reiser4 and megaraid problems with debian 2.6.5
-Date: Wed, 14 Apr 2004 15:25:13 +0200
-Message-ID: <295743F0-8E17-11D8-A41D-000A95CD704C@wagland.net>
-References: <36927C82-8DE0-11D8-A41D-000A95CD704C@wagland.net> <20040414090547.GB13578@raptus.homelinux.org> <6699459A-8E10-11D8-A41D-000A95CD704C@wagland.net> <16509.14375.539110.986025@laputa.namesys.com>
-Mime-Version: 1.0 (Apple Message framework v613)
-Content-Type: multipart/signed; protocol="application/pgp-signature"; micalg=pgp-sha1; boundary="Apple-Mail-42-562698587"
-Content-Transfer-Encoding: 7bit
-Return-path: <reiserfs-list-return-17931-reiserfs=m.gmane.org@namesys.com>
-list-help: <mailto:reiserfs-list-help@namesys.com>
-list-unsubscribe: <mailto:reiserfs-list-unsubscribe@namesys.com>
-list-post: <mailto:reiserfs-list@namesys.com>
-Errors-To: flx@namesys.com
-In-Reply-To: <16509.14375.539110.986025@laputa.namesys.com>
-To: Nikita Danilov <Nikita@Namesys.COM>
-Cc: reiserfs-list@Namesys.COM, Linux mailing list SCSI <linux-scsi@vger.kernel.org>, Atul Mukker <atulm@lsil.com>, Domenico Andreoli <cavok@libero.it>, Hans Reiser <reiser@Namesys.COM>, Linux mailing list kernel <linux-kernel@vger.kernel.org>
+From: "Bagalkote, Sreenivas" <sreenib@lsil.com>
+Subject: RE: megaraid: ABORTING problem
+Date: Wed, 14 Apr 2004 09:43:34 -0400
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <0E3FA95632D6D047BA649F95DAB60E570230C7D2@exa-atlanta.se.lsil.com>
+Mime-Version: 1.0
+Content-Type: text/plain;
+	charset="iso-2022-jp"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail0.lsil.com ([147.145.40.20]:29110 "EHLO mail0.lsil.com")
+	by vger.kernel.org with ESMTP id S264214AbUDNNnm (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 14 Apr 2004 09:43:42 -0400
 List-Id: linux-scsi@vger.kernel.org
+To: "'Tomita, Haruo'" <haruo.tomita@toshiba.co.jp>, "Mukker, Atul" <Atulm@lsil.com>, 'Paul Wagland' <paul@kungfoocoder.org>
+Cc: Linux SCSI mailing list <linux-scsi@vger.kernel.org>
 
---Apple-Mail-42-562698587
-Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset=US-ASCII; format=flowed
+>Please teach me how to build
+>the latest unified driver(2.20.B1) by 2.6.5.
 
+1. mkdir -p drivers/scsi/unified/beta
+2. Extract the driver files into the directory
+3. From that directory, run 
+	make -C /usr/src/linux SUBDIRS=$PWD modules
 
-On Apr 14, 2004, at 15:09, Nikita Danilov wrote:
+>Is there any update patch from 2.00.3 to 2.20.B1?
 
->>> Paul Wagland writes:
->>>> If I can help debug this situation (I am probably the only person
->>>> trying this combination :-) please let me know how I should go about
->>>> it.
->
-> Is there anything in the logs?
+2.20.B1 is a new effort. It doesn't have any incremental
+patch from an older driver.
 
-Sadly I forgot to check... though I will check again tonight since the 
-problem is quite reproducible for me. Will report back later...
-
-Cheers,
-Paul
-
---Apple-Mail-42-562698587
-content-type: application/pgp-signature; x-mac-type=70674453;
-	name=PGP.sig
-content-description: This is a digitally signed message part
-content-disposition: inline; filename=PGP.sig
-content-transfer-encoding: 7bit
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.2.4 (Darwin)
-
-iD8DBQFAfTu8tch0EvEFvxURAkSpAJ9q77nelUzZi6ALkpTvnnsChgNnagCgzQQk
-O3v9PaA4jd8ALQ9akqtd8SI=
-=f17s
------END PGP SIGNATURE-----
-
---Apple-Mail-42-562698587--
+Sreenivas
