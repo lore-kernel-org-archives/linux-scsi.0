@@ -1,87 +1,84 @@
-From: Patrick Mansfield <patmans@us.ibm.com>
-Subject: Re: bug 2400
-Date: Mon, 5 Apr 2004 15:10:31 -0700
-Sender: linux-usb-devel-admin@lists.sourceforge.net
-Message-ID: <20040405151031.A5470@beaverton.ibm.com>
-References: <1081098273.2112.18.camel@mulgrave> <Pine.LNX.4.44L0.0404042235420.23916-100000@netrider.rowland.org>
+From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
+Subject: RE: [PATCH] dpt_i2o changes for 2.6.2 kernel in support of 64 bit and bitrot (part 1)
+Date: Mon, 5 Apr 2004 18:23:49 -0400
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <547AF3BD0F3F0B4CBDC379BAC7E4189F64F24F@otce2k03.adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-usb-devel-admin@lists.sourceforge.net>
-Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.44L0.0404042235420.23916-100000@netrider.rowland.org>; from stern@rowland.harvard.edu on Sun, Apr 04, 2004 at 11:17:55PM -0400
-Errors-To: linux-usb-devel-admin@lists.sourceforge.net
-List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-devel>,
-	<mailto:linux-usb-devel-request@lists.sourceforge.net?subject=unsubscribe>
-List-Post: <mailto:linux-usb-devel@lists.sourceforge.net>
-List-Help: <mailto:linux-usb-devel-request@lists.sourceforge.net?subject=help>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-devel>,
-	<mailto:linux-usb-devel-request@lists.sourceforge.net?subject=subscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=linux-usb-devel>
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: James Bottomley <James.Bottomley@steeleye.com>, Mike Anderson <andmike@us.ibm.com>, Andrew Morton <akpm@osdl.org>, greg@kroah.com, Jens Axboe <axboe@suse.de>, linux-usb-devel@lists.sourceforge.net, SCSI Mailing List <linux-scsi@vger.kernel.org>
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from magic.adaptec.com ([216.52.22.17]:19845 "EHLO magic.adaptec.com")
+	by vger.kernel.org with ESMTP id S263503AbUDEWXx convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 5 Apr 2004 18:23:53 -0400
+content-class: urn:content-classes:message
 List-Id: linux-scsi@vger.kernel.org
-
-On Sun, Apr 04, 2004 at 11:17:55PM -0400, Alan Stern wrote:
-
-> As it turns out, the block layer guarantees that when sd_open runs the
-> bd_disk pointer will be valid.  It does this by following the pattern I
-> mentioned in an earlier message -- drivers/base/map.c uses a
-> subsystem-wide semaphore, domain_sem, to properly synchronize lookups and
-> deletes.
-> 
-> Next, the scsi_disk inline function returns:
-> 
-> 	container_of(disk->private_data, struct scsi_disk, driver);
-> 
-> How do you know that the scsi_disk pointed to by disk->private_data still 
-> exists?  So far as I can see, the gendisk doesn't take any references to 
-> it.  Correct me if I'm wrong, but there doesn't seem to be anything 
-> preventing a disconnect event from arriving after the open() call has got 
-> a valid reference to the gendisk, and succeeding in deallocating the 
-> scsi_disk before this code executes.  There's only one reference between 
-> the scsi_disk and the gendisk, and it goes the wrong way: the scsi_disk 
-> owns a reference to the gendisk.
-> 
-> But let's suppose that works okay, so sdkp is a valid pointer.  Then 
-> the code calls scsi_disk_get(), which in turn calls scsi_device_get() for 
-> sdkp->device.  How do you know that this doesn't point to deallocated 
-> storage?  The only reference to the scsi_device is taken (in a rather 
-> convoluted way) by the gendisk, and it is dropped during del_gendisk() -- 
-> not when the gendisk is released.  Hence it is entirely possible for a 
-> disconnect event to have freed the scsi_device when this code executes.
-> 
-> 
-> There's two potential oopses for you.  I don't have a full grasp of the
-> web of interlocking references (and interlocking code) in the SCSI,
-> gendisk, and block layers, but it seems likely that at least one of
-> these might actually happen.
-
-Yes. 
-
-If we are in middle opening an sd, and are anywhere between the
-kobj_lookup having completed call to up_read(domain->sem) [called via
-do_open calling get_gendisk] and sd_open calling scsi_device_get(), and
-separately an sd_remove call completes [freeing the scsi_disk and the
-scsi_device] there could be an oops.
-
-Much as I hate it, simply adding a lock_kernel in sd_remove would solve
-the problem, since do_open uses lock_kernel.
-
-And I don't see why the kobject_get/put use an atomic_inc/dec, it just
-obscures the need for a lock. We already have a reference to the kobject
-(it's passed as an argument). The calls to the get/put must either be
-protected with a lock or other method, or we have already gotten a
-reference to the object and getting another is meaningless.
-
--- Patrick Mansfield
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
 
--------------------------------------------------------
-This SF.Net email is sponsored by: IBM Linux Tutorials
-Free Linux tutorial presented by Daniel Robbins, President and CEO of
-GenToo technologies. Learn everything from fundamentals to system
-administration.http://ads.osdn.com/?ad_id=1470&alloc_id=3638&op=click
-_______________________________________________
-linux-usb-devel@lists.sourceforge.net
-To unsubscribe, use the last form field at:
-https://lists.sourceforge.net/lists/listinfo/linux-usb-devel
+Christoph Hellwig [mailto:hch@infradead.org] writes:
+>On Mon, Apr 05, 2004 at 01:56:12PM -0400, Salyzyn, Mark wrote:
+>> We need a means for an application to tell if a scsi device is 
+>> currently in use; one of in-error or with any I/O still pending or 
+>> opened or mounted.
+>We had this a few times already.  If your applications wants to remove
+a >volume it'll do exactly that, and that's expected behaviour in unix
+land >where you have enough rope to shoot yourself in the foot.
+
+You mean Linux land, all other operating systems, other UNIXii included,
+offer the ability to determine if a device is in-use in a timely manner.
+Does this mean Windoze has a feature that Linux does not have?
+
+What about something more generic than being in scsi LLDD land, pick a
+level ... however we do need to know if *any* of the possible slices for
+a scsi addressed device object are in use, not just the individual
+device exports.
+
+	static int fn(struct device * dev, void * arg)
+	{
+        busy_arg * busy = (busy_arg *)arg;
+        struct scsi_device * sdev = to_scsi_device(dev);
+
+        if ((busy->host_no == sdev->host->host_no)
+         && (busy->channel == sdev->channel)
+         && (busy->id == sdev->id)
+         && (busy->lun == sdev->lun))
+		return magic_missing_dev_busy_check_routine(dev);
+        return 0;
+	}
+	. . .
+	static scsi_busy(host_no, channel, id, lun)
+	{
+	  busy_arg busy;
+	  busy.host_no = host_no;
+	  busy.channel = channel;
+	  busy.id = id;
+	  busy.lun = lun;
+	  return bus_for_each_device(&scsi_bus_type, NULL, &busy, fn);
+	}
+
+>> Are there any suggestions, either for the application, or for the
+scsi
+>> driver to meter disk in-use?
+>The simple answer is:  don't do it.
+
+This would be unacceptable to our OEMs and users of our applications.
+The fact that an operating system can not tell us that a specific device
+is currently in-use would be considered criminal operating system
+behavior along the lines of not being able to determine if a network
+interface is up or down or a semaphore may, or may not, be taken. We are
+not making abstract paintings for a living folks ...
+
+In user land, lsmod tells us how many users of a module exist, what is
+so secret about a scsi disk devices that we are afraid of telling them
+if any of the access points are being used?
+
+> As for userland tools making the system unsuable, try a simple
+>
+>	cat /dev/zero > /dev/kmem
+
+Good to know ...
+
+Sincerely -- Mark Salyzyn
