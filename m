@@ -1,91 +1,176 @@
-From: Martin Peschke3 <MPESCHKE@de.ibm.com>
-Subject: [PATCH] retry HARDWARE ERROR for IBM ESS
-Date: Fri, 10 Dec 2004 22:15:32 +0100
-Message-ID: <OFAB4C7073.5C612549-ONC1256F66.0072A931-C1256F66.00756163@de.ibm.com>
+From: James.Smart@Emulex.Com
+Subject: [PATCH] add  starget_for_each_device() helper function
+Date: Fri, 10 Dec 2004 17:09:14 -0500
+Message-ID: <0B1E13B586976742A7599D71A6AC733C12E899@xbl3.ma.emulex.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtagate2.de.ibm.com ([195.212.29.151]:30343 "EHLO
-	mtagate2.de.ibm.com") by vger.kernel.org with ESMTP id S261208AbULJVPX
+Received: from emulex.emulex.com ([138.239.112.1]:44247 "EHLO
+	emulex.emulex.com") by vger.kernel.org with ESMTP id S261840AbULJWJT convert rfc822-to-8bit
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 10 Dec 2004 16:15:23 -0500
-Received: from d12nrmr1507.megacenter.de.ibm.com (d12nrmr1507.megacenter.de.ibm.com [9.149.167.1])
-	by mtagate2.de.ibm.com (8.12.10/8.12.10) with ESMTP id iBALFMbP147820
-	for <linux-scsi@vger.kernel.org>; Fri, 10 Dec 2004 21:15:22 GMT
-Received: from d12av02.megacenter.de.ibm.com (d12av02.megacenter.de.ibm.com [9.149.165.228])
-	by d12nrmr1507.megacenter.de.ibm.com (8.12.10/NCO/VER6.6) with ESMTP id iBALFFTw115670
-	for <linux-scsi@vger.kernel.org>; Fri, 10 Dec 2004 22:15:15 +0100
-Received: from d12av02.megacenter.de.ibm.com (loopback [127.0.0.1])
-	by d12av02.megacenter.de.ibm.com (8.12.11/8.12.11) with ESMTP id iBALFLDC008934
-	for <linux-scsi@vger.kernel.org>; Fri, 10 Dec 2004 22:15:22 +0100
+	Fri, 10 Dec 2004 17:09:19 -0500
+Received: from xbl3.ad.emulex.com (xbl3.ma.emulex.com [138.239.73.12])
+	by emulex.emulex.com (8.12.10/8.12.10) with ESMTP id iBAM9Fni023533
+	for <linux-scsi@vger.kernel.org>; Fri, 10 Dec 2004 14:09:15 -0800 (PST)
+content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@SteelEye.com
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+
+
+   This patch deprecates the use of device_for_each_child() with stargets.
+   The reasoning behind this is due to issues regarding:
+      Semaphores that device_for_each_child() takes.
+      Implicit assumptions that each child is an sdev device.
+
+   The patch adds a new helper function, starget_for_each_device(), and
+   replaces all previous uses of device_for_each_child().
+
+-- James S
 
 
 
-
-
-James,
-
-I did not see objections to the patch below. Please apply.
-
-Martin
-
-
-Signed-off-by: Martin Peschke <mpeschke@de.ibm.com>
-
-
-diff -ur scsi-rc-fixes-2.6-ref/drivers/scsi/scsi_devinfo.c scsi-rc-fixes-2.6/drivers/scsi/scsi_devinfo.c
---- scsi-rc-fixes-2.6-ref/drivers/scsi/scsi_devinfo.c 2004-12-10 21:50:00.000000000 +0000
-+++ scsi-rc-fixes-2.6/drivers/scsi/scsi_devinfo.c     2004-12-10 22:03:01.000000000 +0000
-@@ -159,6 +159,7 @@
-      {"HP", "C3323-300", "4269", BLIST_NOTQ},
-      {"IBM", "AuSaV1S2", NULL, BLIST_FORCELUN},
-      {"IBM", "ProFibre 4000R", "*", BLIST_SPARSELUN | BLIST_LARGELUN},
-+     {"IBM", "2105", NULL, BLIST_RETRY_HWERROR},
-      {"iomega", "jaz 1GB", "J.86", BLIST_NOTQ | BLIST_NOLUN},
-      {"IOMEGA", "Io20S         *F", NULL, BLIST_KEY},
-      {"INSITE", "Floptical   F*8I", NULL, BLIST_KEY},
-diff -ur scsi-rc-fixes-2.6-ref/drivers/scsi/scsi_error.c scsi-rc-fixes-2.6/drivers/scsi/scsi_error.c
---- scsi-rc-fixes-2.6-ref/drivers/scsi/scsi_error.c   2004-12-10 21:50:00.000000000 +0000
-+++ scsi-rc-fixes-2.6/drivers/scsi/scsi_error.c 2004-12-10 22:03:03.000000000 +0000
-@@ -31,6 +31,7 @@
- #include <scsi/scsi_host.h>
- #include <scsi/scsi_ioctl.h>
- #include <scsi/scsi_request.h>
-+#include <scsi/scsi_devinfo.h>
-
- #include "scsi_priv.h"
- #include "scsi_logging.h"
-@@ -325,10 +326,18 @@
-      case MEDIUM_ERROR:
-            return NEEDS_RETRY;
-
-+     case HARDWARE_ERROR:
-+           if (scsi_get_device_flags(scmd->device,
-+                               scmd->device->vendor,
-+                               scmd->device->model)
-+               & BLIST_RETRY_HWERROR)
-+                 return NEEDS_RETRY;
-+           else
-+                 return SUCCESS;
+diff -upNr linux-2.6.10-rc3/drivers/scsi/scsi.c linux-2.6.10-rc3.patch/drivers/scsi/scsi.c
+--- linux-2.6.10-rc3/drivers/scsi/scsi.c	2004-12-10 15:45:15.118916176 -0500
++++ linux-2.6.10-rc3.patch/drivers/scsi/scsi.c	2004-12-10 15:45:15.136913440 -0500
+@@ -1075,6 +1075,28 @@ struct scsi_device *__scsi_iterate_devic
+ EXPORT_SYMBOL(__scsi_iterate_devices);
+ 
+ /**
++ * starget_for_each_device  -  helper to walk all devices of a target
++ * @starget:	target whose devices we want to iterate over.
++ *
++ * This traverses over each devices of @shost.  The devices have
++ * a reference that must be released by scsi_host_put when breaking
++ * out of the loop.
++ */
++void starget_for_each_device(struct scsi_target *starget, void * data,
++		     void (*fn)(struct scsi_device *, void *))
++{
++	struct Scsi_Host *shost = dev_to_shost(starget->dev.parent);
++	struct scsi_device *sdev;
 +
-      case ILLEGAL_REQUEST:
-      case BLANK_CHECK:
-      case DATA_PROTECT:
--     case HARDWARE_ERROR:
-      default:
-            return SUCCESS;
-      }
-diff -ur scsi-rc-fixes-2.6-ref/include/scsi/scsi_devinfo.h scsi-rc-fixes-2.6/include/scsi/scsi_devinfo.h
---- scsi-rc-fixes-2.6-ref/include/scsi/scsi_devinfo.h 2004-12-10 21:50:32.000000000 +0000
-+++ scsi-rc-fixes-2.6/include/scsi/scsi_devinfo.h     2004-12-10 22:03:04.000000000 +0000
-@@ -27,4 +27,5 @@
- #define BLIST_NOT_LOCKABLE   0x80000     /* don't use PREVENT-ALLOW commands */
- #define BLIST_NO_ULD_ATTACH  0x100000 /* device is actually for RAID config */
- #define BLIST_SELECT_NO_ATN  0x200000 /* select without ATN */
-+#define BLIST_RETRY_HWERROR  0x400000 /* retry HARDWARE_ERROR */
- #endif
-
++	shost_for_each_device(sdev, shost) {
++		if ((sdev->channel == starget->channel) &&
++		    (sdev->id == starget->id))
++			fn(sdev, data);
++	}
++}
++EXPORT_SYMBOL(starget_for_each_device);
++
++/**
+  * scsi_device_lookup - find a device given the host (UNLOCKED)
+  * @shost:	SCSI host pointer
+  * @channel:	SCSI channel (zero if only one channel)
+diff -upNr linux-2.6.10-rc3/drivers/scsi/scsi_lib.c linux-2.6.10-rc3.patch/drivers/scsi/scsi_lib.c
+--- linux-2.6.10-rc3/drivers/scsi/scsi_lib.c	2004-12-10 15:45:15.227899608 -0500
++++ linux-2.6.10-rc3.patch/drivers/scsi/scsi_lib.c	2004-12-10 15:45:15.229899304 -0500
+@@ -1768,31 +1768,29 @@ scsi_device_resume(struct scsi_device *s
+ }
+ EXPORT_SYMBOL(scsi_device_resume);
+ 
+-static int
+-device_quiesce_fn(struct device *dev, void *data)
++static void
++device_quiesce_fn(struct scsi_device *sdev, void *data)
+ {
+-	scsi_device_quiesce(to_scsi_device(dev));
+-	return 0;
++	scsi_device_quiesce(sdev);
+ }
+ 
+ void
+ scsi_target_quiesce(struct scsi_target *starget)
+ {
+-	device_for_each_child(&starget->dev, NULL, device_quiesce_fn);
++	starget_for_each_device(starget, NULL, device_quiesce_fn);
+ }
+ EXPORT_SYMBOL(scsi_target_quiesce);
+ 
+-static int
+-device_resume_fn(struct device *dev, void *data)
++static void
++device_resume_fn(struct scsi_device *sdev, void *data)
+ {
+-	scsi_device_resume(to_scsi_device(dev));
+-	return 0;
++	scsi_device_resume(sdev);
+ }
+ 
+ void
+ scsi_target_resume(struct scsi_target *starget)
+ {
+-	device_for_each_child(&starget->dev, NULL, device_resume_fn);
++	starget_for_each_device(starget, NULL, device_resume_fn);
+ }
+ EXPORT_SYMBOL(scsi_target_resume);
+ 
+diff -upNr linux-2.6.10-rc3/drivers/scsi/scsi_transport_fc.c linux-2.6.10-rc3.patch/drivers/scsi/scsi_transport_fc.c
+--- linux-2.6.10-rc3/drivers/scsi/scsi_transport_fc.c	2004-12-10 15:45:15.269893224 -0500
++++ linux-2.6.10-rc3.patch/drivers/scsi/scsi_transport_fc.c	2004-12-10 15:45:15.271892920 -0500
+@@ -331,10 +331,9 @@ EXPORT_SYMBOL(fc_release_transport);
+  * @dev:	scsi device
+  * @data:	unused
+  **/
+-static int fc_device_block(struct device *dev, void *data)
++static void fc_device_block(struct scsi_device *sdev, void *data)
+ {
+-	scsi_internal_device_block(to_scsi_device(dev));
+-	return 0;
++	scsi_internal_device_block(sdev);
+ }
+ 
+ /**
+@@ -342,10 +341,9 @@ static int fc_device_block(struct device
+  * @dev:	scsi device
+  * @data:	unused
+  **/
+-static int fc_device_unblock(struct device *dev, void *data)
++static void fc_device_unblock(struct scsi_device *sdev, void *data)
+ {
+-	scsi_internal_device_unblock(to_scsi_device(dev));
+-	return 0;
++	scsi_internal_device_unblock(sdev);
+ }
+ 
+ /**
+@@ -365,7 +363,7 @@ static void fc_timeout_blocked_tgt(unsig
+ 	 * unblock this device, then IO errors will probably
+ 	 * result if the host still isn't ready.
+ 	 */
+-	device_for_each_child(&starget->dev, NULL, fc_device_unblock);
++	starget_for_each_device(starget, NULL, fc_device_unblock);
+ }
+ 
+ /**
+@@ -393,7 +391,7 @@ fc_target_block(struct scsi_target *star
+ 	if (timeout < 0 || timeout > SCSI_DEVICE_BLOCK_MAX_TIMEOUT)
+ 		return -EINVAL;
+ 
+-	device_for_each_child(&starget->dev, NULL, fc_device_block);
++	starget_for_each_device(starget, NULL, fc_device_block);
+ 
+ 	/* The scsi lld blocks this target for the timeout period only. */
+ 	timer->data = (unsigned long)starget;
+@@ -426,7 +424,7 @@ fc_target_unblock(struct scsi_target *st
+ 	 */
+ 	del_timer_sync(&fc_starget_dev_loss_timer(starget));
+ 
+-	device_for_each_child(&starget->dev, NULL, fc_device_unblock);
++	starget_for_each_device(starget, NULL, fc_device_unblock);
+ }
+ EXPORT_SYMBOL(fc_target_unblock);
+ 
+diff -upNr linux-2.6.10-rc3/include/scsi/scsi_device.h linux-2.6.10-rc3.patch/include/scsi/scsi_device.h
+--- linux-2.6.10-rc3/include/scsi/scsi_device.h	2004-12-10 15:45:15.180906752 -0500
++++ linux-2.6.10-rc3.patch/include/scsi/scsi_device.h	2004-12-10 15:45:15.203903256 -0500
+@@ -172,6 +172,8 @@ extern struct scsi_device *scsi_device_l
+ 					      uint, uint, uint);
+ extern struct scsi_device *__scsi_device_lookup(struct Scsi_Host *,
+ 						uint, uint, uint);
++extern void starget_for_each_device(struct scsi_target *, void *,
++		     void (*fn)(struct scsi_device *, void *));
+ 
+ /* only exposed to implement shost_for_each_device */
+ extern struct scsi_device *__scsi_iterate_devices(struct Scsi_Host *,
