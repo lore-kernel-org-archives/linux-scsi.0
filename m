@@ -1,34 +1,57 @@
-From: Matthew Jacob <mjacob@feral.com>
-Subject: Re: qla2xxx and feral ISP updates in their respective BK trees
-Date: Fri, 20 Jun 2003 10:25:23 -0700 (PDT)
+From: "Ranade, Prakash" <prakashr@intgroup.com>
+Subject: RE: how to connect 2 nodes to a SCSI disk (cabinet)
+Date: Fri, 20 Jun 2003 12:01:02 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030620102448.O305@wonky.in0.lcl>
-References: <1055971780.2075.484.camel@mulgrave>  <20030620101224.B305@wonky.in0.lcl>
- <1056129548.2102.19.camel@mulgrave>
-Reply-To: mjacob@feral.com
+Message-ID: <7F2171947E956F4ABE17D12CA19617B40279C0@intermarksrv001.intermark.local>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from beppo.feral.com ([192.67.166.79]:19212 "EHLO beppo.feral.com")
-	by vger.kernel.org with ESMTP id S263633AbTFTRMy (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 20 Jun 2003 13:12:54 -0400
-In-Reply-To: <1056129548.2102.19.camel@mulgrave>
+Received: from gw.intgroup.com ([65.83.52.2]:12164 "HELO
+	intermarksrv001.intermark.local") by vger.kernel.org with SMTP
+	id S263398AbTFTQrD convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 20 Jun 2003 12:47:03 -0400
+content-class: urn:content-classes:message
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, Andrew Vasquez <praka@san.rr.com>, Andrew Morton <akpm@digeo.com>
+To: Mike Dresser <mdresser_l@windsormachine.com>
+Cc: linux-scsi@vger.kernel.org
+
+isent it true that...
+you cannot have two seperate SCSI controllers trying to maintain the same bus.They will fight..for same bus?
+
+Prakash S. Ranade
+OCP - Oracle Certified DBA 8i, 9i
+205 776 2320
+
+"Lets document it and call it a feature"
+
+
+-----Original Message-----
+From: Mike Dresser [mailto:mdresser_l@windsormachine.com]
+Sent: Friday, June 20, 2003 11:57 AM
+To: Ranade, Prakash
+Cc: linux-scsi@vger.kernel.org
+Subject: RE: how to connect 2 nodes to a SCSI disk (cabinet)
 
 
 
-> On Fri, 2003-06-20 at 12:12, Matthew Jacob wrote:
-> > HPMC?
+
+On Fri, 20 Jun 2003, Ranade, Prakash wrote:
+
+> node1 and node2 both running redhat linux 7.2...both have Adaptec scsi card in it...scsi disk is  DataSilo DS-100 (see attached manual) using Seagate HD.
+> node1:scsi id = 14 - scsi termination is disabled
+> node1:scsi id = 15 - scsi termination is automatic (i tried all enabled/disabled/automatic nothing works)
+> external scsi disk id = 0
 >
-> High Priority Machine Check.  They usually occur if the driver pokes a
-> non-existent register using I/O cycles, or a DMA transfer overruns or
-> something.  The parisc platform I use has an IOMMU as well.
+> node 1 							node 2
+> 	|							|
+> 	|							|
+> 	---------external SCSI drive---------------
+>
 
-Oh- is parisc like PPC and doesn't really support io space? That is,
-prefers memory mapped registers?
+Any internal connections on either SCSI card?
 
--matt
+If not, set both node's to enabled scsi termination.
+
+Mike
 
