@@ -1,33 +1,94 @@
 From: James Bottomley <James.Bottomley@steeleye.com>
-Subject: Re: [garloff@suse.de: Re: [linux-usb-devel] Re: /proc/scsi/map]
-Date: Mon, 17 Jun 2002 09:29:11 -0500
+Subject: Re: [linux-usb-devel] Re: /proc/scsi/map
+Date: Mon, 17 Jun 2002 09:54:56 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <200206171429.g5HETBV02481@localhost.localdomain>
-References: <kurt@garloff.de>
+Message-ID: <200206171454.g5HEsu802593@localhost.localdomain>
+References: <oliver@neukum.name>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Received: (from root@localhost)
-	by pogo.mtv1.steeleye.com (8.9.3/8.9.3) id HAA22626
-	for <linux-scsi@vger.kernel.org>; Mon, 17 Jun 2002 07:29:29 -0700
-In-Reply-To: Message from Kurt Garloff <kurt@garloff.de>
-   of "Mon, 17 Jun 2002 03:24:00 +0200." <20020617012400.GH21461@gum01m.etpnet.phys.tue.nl>
+	by pogo.mtv1.steeleye.com (8.9.3/8.9.3) id HAA29858
+	for <linux-scsi@vger.kernel.org>; Mon, 17 Jun 2002 07:55:09 -0700
+In-Reply-To: Message from Oliver Neukum <oliver@neukum.name>
+   of "Mon, 17 Jun 2002 07:19:52 +0200." <200206170719.52136.oliver@neukum.name>
 List-Id: linux-scsi@vger.kernel.org
-To: Kurt Garloff <kurt@garloff.de>, Oliver Neukum <oliver@neukum.name>, dougg@torque.net, Linux SCSI list <linux-scsi@vger.kernel.org>, Linux kernel list <linux-kernel@vger.kernel.org>, James Bottomley <James.Bottomley@SteelEye.com>, David Brownell <david-b@pacbell.net>, Andries.Brouwer@cwi.nl, sancho@dauskardt.de, linux-usb-devel@lists.sourceforge.net, linux1394-devel@lists.sourceforge.net
+To: Oliver Neukum <oliver@neukum.name>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, David Brownell <david-b@pacbell.net>, Andries.Brouwer@cwi.nl, garloff@suse.de, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, sancho@dauskardt.de, linux-usb-devel@lists.sourceforge.net, linux1394-devel@lists.sourceforge.net, dougg@torque.net
 
-kurt@garloff.de said:
-> This may work for your disks. You just can't open the device node for
-> a tape, if there is no medium inserted. If you know the mapping
-> between to a sg device you can use it.
+oliver@neukum.name said:
+>  These may be an exception. You usually want to get drivers involved
+> even if only for synchronisation. Failing to do so has already let to
+> problems with usb storage. 
 
-Actually, you have to use sg for a disc as well since you send a scsi CDB 
-directly to the device for inquiry page 0x83.
+I don't deny that there may be devices that need some type of vendor specific 
+probe to get the information.
 
-> That's the second piece of information that /proc/scsi/map provides. 
+> That is the point. The driver knows best what kind of devices it works
+> on. You can forget about the whole identification method business, if
+> you go for the driver. In case of usb storage and firewire that data
+> is already sitting there ready for taking. I suspect the same for
+> fibrechannel. 
 
-Oh no question.  The way the current code doing this works is that it opens 
-all scsi devices and issues a GET_IDLUN to compile a database of the nodes and 
-then matches them up to sg nodes.
+But, in SCSI, you can't.  Just for a simple device showing up as a SCSI disc 
+(that's a real SCSI disc, attached say by parallel connectors), there are 
+several potential ways to get a unique ID.  No one way works for all such 
+disks, that is the nub of the problem.
+
+I think, by driver, we may mean different things.  A scsi disc attaches like 
+this:
+
+   +----+
+   | sd |
+   +----+
+      |
+ +-------+
+ | mid   |
+ | layer |
+ +-------+
+     |
+  +-----+
+  | lld |
+  +-----+
+     |
+ +--------+
+ | real   |
+ | device |
+ +--------+
+
+but the only piece that has disc specific logic is sd.  The lld is specific to 
+the host adapter card (not shown), not the real device, so it is not the right 
+element to probe for an ID.
+
+In USB, things look slightly different:
+
+   +----+
+   | sd |
+   +----+
+      |
+ +-------+
+ | mid   |
+ | layer |
+ +-------+
+     |
++---------+
+| usb     |
+| storage |
++---------+
+     |
+ +--------+
+ | real   |
+ | device |
+ +--------+
+
+Here, the usb-storage driver does know about the real device (and already has 
+a huge exception table), so it has enough knowledge to probe for an identifier.
+
+The thing I think is a bad idea is having to code the logic to look up a 
+unique identifier (plus all the exceptions) in sd.  But for the pure SCSI 
+stack, there's nowhere else to place it.  Even if you get usb-storage to 
+supply an API for providing the id, it will be one of the few llds that can 
+retrieve this, so it will become just another exception sd has to cope with.
 
 James
 
