@@ -1,47 +1,72 @@
-From: Dave Jones <davej@redhat.com>
-Subject: blacklist microtek scanmaker III
-Date: Wed, 23 Feb 2005 14:31:38 -0500
-Message-ID: <20050223193138.GI32098@redhat.com>
+From: "Nicholas A. Bellinger" <nick@pyxtechnologies.com>
+Subject: [ANNOUNCE] iSCSI Initiator Core Stack v1.6.1.20
+Date: Wed, 23 Feb 2005 11:45:35 -0800
+Message-ID: <1109187935.15154.164.camel@haakon>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Received: from mx1.redhat.com ([66.187.233.31]:21385 "EHLO mx1.redhat.com")
-	by vger.kernel.org with ESMTP id S261543AbVBWTbi (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 23 Feb 2005 14:31:38 -0500
-Received: from int-mx1.corp.redhat.com (int-mx1.corp.redhat.com [172.16.52.254])
-	by mx1.redhat.com (8.12.11/8.12.11) with ESMTP id j1NJVc6g008137
-	for <linux-scsi@vger.kernel.org>; Wed, 23 Feb 2005 14:31:38 -0500
-Received: from devserv.devel.redhat.com (devserv.devel.redhat.com [172.16.58.1])
-	by int-mx1.corp.redhat.com (8.11.6/8.11.6) with ESMTP id j1NJVcK11052
-	for <linux-scsi@vger.kernel.org>; Wed, 23 Feb 2005 14:31:38 -0500
-Received: from devserv.devel.redhat.com (localhost.localdomain [127.0.0.1])
-	by devserv.devel.redhat.com (8.12.11/8.12.11) with ESMTP id j1NJVcW2018679
-	for <linux-scsi@vger.kernel.org>; Wed, 23 Feb 2005 14:31:38 -0500
-Received: (from davej@localhost)
-	by devserv.devel.redhat.com (8.12.11/8.12.11/Submit) id j1NJVcLO018675
-	for linux-scsi@vger.kernel.org; Wed, 23 Feb 2005 14:31:38 -0500
-Content-Disposition: inline
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Received: from smtp813.mail.sc5.yahoo.com ([66.163.170.83]:8843 "HELO
+	smtp813.mail.sc5.yahoo.com") by vger.kernel.org with SMTP
+	id S261548AbVBWTst (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 23 Feb 2005 14:48:49 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>, Christoph Hellwig <hch@lst.de>, Mike Christie <mikenc@us.ibm.com>, Andre Hedrick <andre@pyxtechnologies.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
-To try and escape the madness of adding a zillion USB card readers
-to the SCSI whitelist, I flipped the scan all lun's by default switch
-in the fedora kernel recently to see just what breaks, in the hope
-of moving from a whitelist solution to a blacklist.
+The following is the first public release of the PyX Technologies iSCSI
+Initiator Core Stack v1.6.1.20 for Linux 2.6.11-rc4.  This is a full
+featured iSCSI Initiator stack that is capable of mulitplexing coast to
+coast across multiple independant backbone providers using various
+network transports _TODAY_.  This is the first release of the core stack
+and assoicated userspace tools, the accompanying authentication daemon
+will be released shortly.
 
-Here's the first (hopefully of not too many) devices that broke.
-(See https://bugzilla.redhat.com/beta/show_bug.cgi?id=149402 for more info)
+There is ongoing work in taking advantage of the very latest 2.6
+kernel's SCSI functionality, namely drivers/scsi/scsi_transport_iscsi.c.
+The near term work for the iSCSI Initiator Core Stack includes taking
+advantage of these new abstractions in scsi_transport_scsi.c in a manner
+to reduce code duplication across the iSCSI Initiator Core Stack and
+linux-sfnet implementations.  An initial patch to scsi_transport_scsi.c
+will be provided in order stay in line with the iSCSI Session/Connection
+contexts definied in section 12 of RFC 3720.  Additionally this patch
+will add initial support for iSCSI Extentions for RDMA (iSER)
+optertional keys in order to help facilitate development of iSCSI with
+RDMA Capable Protocols (RCP) in the Linux 2.6 environment.
 
-Signed-off-by: Dave Jones <davej@redhat.com>
+The patch against 2.6.11-rc4 in diff format can be found at:
 
---- linux-2.6.10/drivers/scsi/scsi_devinfo.c~	2005-02-23 14:27:53.000000000 -0500
-+++ linux-2.6.10/drivers/scsi/scsi_devinfo.c	2005-02-23 14:29:06.000000000 -0500
-@@ -63,6 +63,7 @@ static struct {
- 	{"MAXTOR", "XT-4170S", "B5A", BLIST_NOLUN},	/* locks up */
- 	{"MAXTOR", "XT-8760S", "B7B", BLIST_NOLUN},	/* locks up */
- 	{"MEDIAVIS", "RENO CD-ROMX2A", "2.03", BLIST_NOLUN},	/* responds to all lun */
-+	{"MICROTEK", "ScanMakerIII", "2.30", BLIST_NOLUN},	/* responds to all lun */
- 	{"NEC", "CD-ROM DRIVE:841", "1.0", BLIST_NOLUN},/* locks up */
- 	{"PHILIPS", "PCA80SC", "V4-2", BLIST_NOLUN},	/* responds to all lun */
- 	{"RODIME", "RO3000S", "2.33", BLIST_NOLUN},	/* locks up */
+http://www.kernel.org/pub/linux/kernel/people/nab/iscsi-initiator-core
+
+The assoicated userspace tools and documentation:
+
+http://www.kernel.org/pub/linux/utils/storage/iscsi
+
+For more information on the Internet Small Computer Systems Interface
+(iSCSI) standard, please see:
+
+http://www.ietf.org/rfc/rfc3720.txt
+
+The iSCSI Initiator Core Stack contains, but is not limited to the
+following features:
+
+1) Full support for Internet Small Computer Systems Interface (iSCSI)
+state machine as defined by RFC 3720.
+2) Full support for ErrorRecoveryLevel=0 feature set as defined for RFC
+3720.
+3) Full support for Multiple Connections per Session that can be brought
+up and down on the fly.
+4) Full support for DataPDUInOrder=No, DataSequenceInOrder=No,
+MaxOutstandingR2T>1.
+5) Full support for Sync and Steering using Fixed Interval Markers. (See
+RFC 3720 Appendix A)
+6) Full support for TCP and SCTP network transports.
+7) Robust set of iSCSI Channel management options for iSCSI SAN
+Administrators.
+8) Tested on UP/SMP 32/64-bit Big/Little Endian architectures.
+
+
+-- 
+Nicholas A. Bellinger <nick@pyxtechnologies.com>
+Chief Architect, PyX Technologies, Inc.
+
