@@ -1,34 +1,23 @@
-From: Thomas Soddemann <Thomas.Soddemann@rzg.mpg.de>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
 Subject: Re: ide-scsi with ide-hd?
-Date: Fri, 06 Dec 2002 11:48:47 +0100
+Date: 06 Dec 2002 13:03:15 +0000
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3DF0808F.2010405@rzg.mpg.de>
-References: <3DF06AD0.5070507@rzg.mpg.de> <3DF07BDF.8070907@torque.net>
+Message-ID: <1039179795.22971.1.camel@irongate.swansea.linux.org.uk>
+References: <3DF06AD0.5070507@rzg.mpg.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <3DF06AD0.5070507@rzg.mpg.de>
 List-Id: linux-scsi@vger.kernel.org
-To: dougg@torque.net
+To: Thomas Soddemann <Thomas.Soddemann@rzg.mpg.de>
 Cc: linux-scsi@vger.kernel.org
 
-Hi Doug,
+On Fri, 2002-12-06 at 09:16, Thomas Soddemann wrote:
+> Hi,
+> 
+> does anybody know whether there is there a possibility to use ide-scsi 
+> in connection with an IDE HD?
 
-thanks for your quick and detailed response.
-I guess we have to start beta testing for IBM in that case ;).
-
-Cheers,
-Thomas
-
-
--- 
---------------------------------------------------
- Dr. Thomas Soddemann     |  Boltzmannstrasse 2
- Applications Consultant  |  85748 Garching
- Rechenzentrum der MPG    |  Germany 
- am MPI fuer Plasmaphysik |
----------------------------------------------------
- phone: +49 89 3299 2694  |  fax: +49 89 3299 1301
----------------------------------------------------
-
+Basically no - IDE disks don't support ATAPI.
 
