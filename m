@@ -1,112 +1,45 @@
-From: Osamu Tomita <tomita@cinet.co.jp>
-Subject: RE: Complete support PC-9800 for 2.5.64-ac4 (11/11) SCSI
-Date: Mon, 17 Mar 2003 10:22:36 +0900
+From: "Justin T. Gibbs" <gibbs@scsiguy.com>
+Subject: Re: 2.5.56-mm1 fails to detect cd burner
+Date: Mon, 17 Mar 2003 08:27:23 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <E6D19EE98F00AB4DB465A44FCF3FA46903A348@ns.cinet.co.jp>
+Message-ID: <3196100000.1047914843@aslan.scsiguy.com>
+References: <20030311063627.GJ1399@holomorphy.com> <20030311160358.GN465@holomorphy.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-2022-jp"
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <20030311160358.GN465@holomorphy.com>
+Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
-To: 'James Bottomley ' <James.Bottomley@steeleye.com>
-Cc: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, 'Linux Kernel Mailing List ' <linux-kernel@vger.kernel.org>, 'Alan Cox ' <alan@lxorguk.ukuu.org.uk>, 'Christoph Hellwig ' <hch@infradead.org>, 'Geert Uytterhoeven ' <geert@linux-m68k.org>
+To: William Lee Irwin III <wli@holomorphy.com>
+Cc: linux-scsi@vger.kernel.org
 
-Thanks for the comments.
+> On Mon, Mar 10, 2003 at 10:36:27PM -0800, William Lee Irwin III wrote:
+>>  scsi0 : Adaptec AIC7XXX EISA/VLB/PCI SCSI HBA
+>>  DRIVER, Rev 6.2.26
+>>          <Adaptec 3960D Ultra160 SCSI adapter>
+>>          aic7899: Ultra160 Wide Channel A, SCSI Id=7, 32/253 SCBs
+>>  
+>>  (scsi0:A:0:0): Completed command without status.
+>>  (scsi0:A:0:0): Protocol violation in Message-in phase.  Attempting to abort.
+>>  (scsi0:A:0:0): Abort Message Sent
+>>  (scsi0:A:0:0): SCB 3 - Abort Completed.
+>>  scsi0:A:0:0: DV failed to configure device. Please file a bug report against this driver.
+>> 
+>> It's had other problems burning CD's in 2.5.x
+> 
+> jejb referred me to you (gibbs) for this after guiding me through a
+> cable check.
 
------Original Message-----
-From: James Bottomley
-To: Osamu Tomita
-Cc: Linux Kernel Mailing List; Alan Cox; Christoph Hellwig; Geert
-Uytterhoeven
-Sent: 2003/03/17 2:47
-Subject: Re: Complete support PC-9800 for 2.5.64-ac4 (11/11) SCSI
+Can you try the latest driver 6.2.30, from here:
 
-> On Sat, 2003-03-15 at 19:15, Osamu Tomita wrote:
-> > This is the patch to support NEC PC-9800 subarchitecture
-> > against 2.5.64-ac4. (11/11)
-> 
-> > SCSI host adapter support.
-> >  - BIOS parameter change for PC98.
-> >  - Add pc980155 driver for old PC98.
-> >  - wd33c93.c update error handler for eh_*.
-> >  - wd33c93.h register to int for PIO mode.
-> 
-> I suppose the first thing to point out is that it would be helpful if
-> you could send this to linux-scsi@vger.kernel.org.  Although most SCSI
-> people also read linux-kernel, it is easy to lose things in the noise.
-I see.
+http://people.FreeBSD.org/~gibbs/linux/SRC/
 
-> > diff -Nru linux/drivers/scsi/sd.c linux98/drivers/scsi/sd.c
-> > --- linux/drivers/scsi/sd.c	2003-03-05 12:29:32.000000000 +0900
-> > +++ linux98/drivers/scsi/sd.c	2003-03-08 11:13:28.000000000 +0900
-> > @@ -485,6 +485,15 @@
-> >  	else
-> >  		scsicam_bios_param(bdev, sdkp->capacity, diskinfo);
-> >  
-> > +#ifdef CONFIG_X86_PC9800
-> > +	{
-> > +		extern int pc98_bios_param(struct scsi_device *,
-> > +					   struct block_device *,
-> > +					   sector_t, int *);
-> > +		pc98_bios_param(sdp, bdev, sdkp->capacity, diskinfo);
-> > +	}
-> > +#endif
-> > +
-> >  	if (put_user(diskinfo[0], &loc->heads))
-> >  		return -EFAULT;
-> >  	if (put_user(diskinfo[1], &loc->sectors))
-> 
-> You already have the pc98_bios_param as part of your local driver.  Why
-> do you need this in addition?
-We need this for other SCSI cards not only wd33c93. For example, we
-have cards for PC98 that use aha152x, aic7xxx, advansys and sym53c8xx
-drivers. 
-PC98 architecture has own boot selector and can boot any of 16 partitions
-per 1 drive. The partition table conatins C/H/S geometry. And we can
-assign non zero head or sector. Boot selector reads the partition table
-and call BIOS by C/H/S parameters on boottime. If geometry is not mach
-to BIOS, cannot boot from the partition created on linux. 
+Just untar the 2.5.X tarball into your source tree and recompile.
+If you still are having problems with the driver at that point, I'll
+guide you through other steps to enable debugging and get additional
+information.
 
-> [...]
-> >  static inline uchar
-> >  read_aux_stat(const wd33c93_regs regs)
-> >  {
-> > -	return inb(*regs.SASR);
-> > +	return inb(regs.SASR);
-> >  }
-> >  
-> >  static inline void
-> >  write_wd33c93(const wd33c93_regs regs, uchar reg_num, uchar value)
-> >  {
-> > -      outb(reg_num, *regs.SASR);
-> > -      outb(value, *regs.SCMD);
-> > +      outb(reg_num, regs.SASR);
-> > +      outb(value, regs.SCMD);
-> >  }
-> >  
-> [...]
-> >     /* This is what the 3393 chip looks like to us */
-> >  typedef struct {
-> > +#ifdef CONFIG_WD33C93_PIO
-> > +   unsigned int   SASR;
-> > +   unsigned int   SCMD;
-> > +#else
-> >     volatile unsigned char  *SASR;
-> >     volatile unsigned char  *SCMD;
-> > +#endif
-> >  } wd33c93_regs;
-> >  
-> 
-> This really doesn't look right.  For non PIO (which is all drivers apart
-> from yours), they expect to dereference SASR to get the port number (as
-> an unsigned char).  If you remove the dereference, don't they all break?
-> 
-> Perhaps the better thing to do is to make your driver use an unsigned
-> int *, so the dereference works in all cases.
-> 
-> James
-I supposed, I use this patch with "#ifdef CONFIG_WD33C93_PIO" in
-wd33c98.c. 
+--
+Justin
 
-Regards,
-Osamu Tomita
