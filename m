@@ -1,101 +1,62 @@
-From: John Donnelly <jpd_hp_linux_scsi@yahoo.com>
-Subject: 2.6-test4: mpspec.h:6:25: mach_mpspec.h: Missing file
-Date: Thu, 4 Sep 2003 15:19:27 -0700 (PDT)
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030904221927.22799.qmail@web20703.mail.yahoo.com>
-References: <20030903170256.GA18025@fs.tum.de>
-Reply-To: dead_emaill@nospam.com
+From: Pat LaVarre <p.lavarre@ieee.org>
+Subject: Re: [PATCH] mount -w of dvd+rw etc. in vanilla 2.6
+Date: 04 Sep 2003 16:36:02 -0600
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <1062714962.5959.17.camel@lintel>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="0-818752078-1062713967=:22782"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from web20703.mail.yahoo.com ([216.136.226.176]:21084 "HELO
-	web20703.mail.yahoo.com") by vger.kernel.org with SMTP
-	id S265510AbTIDWT2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 4 Sep 2003 18:19:28 -0400
-In-Reply-To: <20030903170256.GA18025@fs.tum.de>
-List-Id: linux-scsi@vger.kernel.org
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
 To: linux-scsi@vger.kernel.org
-
---0-818752078-1062713967=:22782
-Content-Type: text/plain; charset=us-ascii
-Content-Id: 
-Content-Disposition: inline
-
-Hi. 
-I'm trying to build a (add-on) module 
-on a machine booted from a 2.6-test4 kernel,
-And keep running into this error. I've 
-included the  gcc command line, sample
-and the fatal error that mach_mpspec.h can't be found.
-
-I built the kernel as :
-
-make defconfig; 
-
-It is a 2W SMP (Compaq ML850)
-2 modes to select enet & SCSI device
-
-make
-
-My general question is, should I include the 
-
--I/work/src/<build>/include/asm-i386/mach-generic/mach_mpspec.h
-
-in my gcc command line or is my build area incorrect
-is
-some way that the correct mpspec.h file can't be found ?
-
-Thx. JD.
-
-__________________________________
-Do you Yahoo!?
-Yahoo! SiteBuilder - Free, easy-to-use web site design software
-http://sitebuilder.yahoo.com
---0-818752078-1062713967=:22782
-Content-Type: text/plain; name="test.txt"
-Content-Description: test.txt
-Content-Disposition: inline; filename="test.txt"
-
-In file included from /work/src/linux-2.6.0-test4/include/asm/smp.h:18,
-                 from /work/src/linux-2.6.0-test4/include/linux/smp.h:17,
-                 from /work/src/linux-2.6.0-test4/include/linux/topology.h:33,
-                 from /work/src/linux-2.6.0-test4/include/linux/mmzone.h:294,
-                 from /work/src/linux-2.6.0-test4/include/linux/gfp.h:4,
-                 from /work/src/linux-2.6.0-test4/include/linux/slab.h:15,
-                 from test.c:8:
-/work/src/linux-2.6.0-test4/include/asm/mpspec.h:6:25: mach_mpspec.h: No such file or directory
-/work/src/linux-2.6.0-test4/include/asm/mpspec.h:8: `MAX_MP_BUSSES' undeclared here (not in a function)
+Cc: linux-kernel@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 
 
+> mount -w -t udf works with my dvd-ram ...
+> mistakenly sees my dvd+rw as read-only ...
 
- gcc -g -D__KERNEL__ -DMODULE -I/work/src/linux-2.6.0-test4/include \
-	-I/work/src/linux-2.6.0-test4/drivers/scsi -c test.c
+Besides that Andy Polyakov patch for mount -w of dvd+rw, the web has
+Jens Axboe patches for mount -w of cd-rw, via the udf faq (Not via the
+udftools faq):
 
-//  -- snip sample 
+http://sourceforge.net/projects/linux-udf/
+udf-0.9.7.tar.gz
+FAQ
+http://w1.894.telia.com/~u89404340/patches/packet/
 
-#include <linux/version.h>	// 2.6 ++
-#include <linux/config.h>	// 2.6 ++
-#include <linux/kernel.h>
-#include <linux/types.h>
-#include <linux/spinlock.h>
-#include <asm/io.h>
-#include <asm/system.h>
-#include <linux/slab.h>
-#include <linux/interrupt.h>  
+---
 
-#define MEMORY_TABLE_SIZE	512
+>From these two clues, kindly offline people have identified the Four
+fragments of kernel source that cooperate to conclude erroneously that
+dvd+rw etc. are not writable:
 
-void *
-my_kmalloc(unsigned int size, char *id)
-{
-	char *ptr ;
-	if ((ptr =
-	     kmalloc(size,
-		     (in_interrupt()? GFP_ATOMIC : GFP_KERNEL))) == NULL) {
-		kprintf("Cannot allocate %u bytes for %s\n", size, id);
-	}
-}
+1)
 
+drivers/scsi/sr.c understands only the CDC_DVD_RAM profile of the seven
+standard mmc "writable" device "profile"s, because sr.c neglects to look
+beyond the "Capabilities" mode page x2a i.e. does not look beyond the
+mmc 1 standard of 1997.  Ansi did not publish an op x46 Get
+Configuration standard until the mmc 2 of 1999.
 
+2)
 
---0-818752078-1062713967=:22782--
+include/scsi/scsi.h does not yet #define GET_CONFIGURATION 0x46.
+
+3)
+
+drivers/cdrom/cdrom.c also understands only CDC_DVD_RAM: cdrom.c
+erroneously claims all mmc profiles except CDC_DVD_RAM are not
+FMODE_WRITE-able.
+
+4)
+
+include/linux/cdrom.h names only CDC_DVD_RAM.
+
+---
+
+Anyone have an idea of how best to patch this?
+
+I've seen a few linux-2.6.0-test4/ and linux-2.4.22/ alternatives mostly
+work.  Anyone interested in evaluating some of them?
+
+Pat LaVarre
