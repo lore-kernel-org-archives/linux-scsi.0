@@ -1,38 +1,46 @@
-From: Meelis Roos <mroos@linux.ee>
+From: James Bottomley <James.Bottomley@SteelEye.com>
 Subject: Re: EISA 53c825 - where to start?
-Date: Tue, 16 Nov 2004 20:07:23 +0200 (EET)
-Message-ID: <Pine.SOC.4.61.0411161923330.26610@math.ut.ee>
+Date: 16 Nov 2004 12:20:51 -0600
+Message-ID: <1100629257.2770.48.camel@mulgrave>
 References: <Pine.SOC.4.61.0411161109430.12745@math.ut.ee>
- <1100618553.2770.16.camel@mulgrave> <Pine.SOC.4.61.0411161728190.26610@math.ut.ee>
- <wrp4qjplnpy.fsf@panther.wild-wind.fr.eu.org>
+	<1100618553.2770.16.camel@mulgrave>
+	<Pine.SOC.4.61.0411161728190.26610@math.ut.ee>
+	<wrp4qjplnpy.fsf@panther.wild-wind.fr.eu.org>
+	<Pine.SOC.4.61.0411161923330.26610@math.ut.ee>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from math.ut.ee ([193.40.5.125]:63920 "EHLO math.ut.ee")
-	by vger.kernel.org with ESMTP id S262083AbUKPSHb (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 16 Nov 2004 13:07:31 -0500
-In-Reply-To: <wrp4qjplnpy.fsf@panther.wild-wind.fr.eu.org>
+Received: from stat16.steeleye.com ([209.192.50.48]:50393 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S262087AbUKPSVE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 16 Nov 2004 13:21:04 -0500
+In-Reply-To: <Pine.SOC.4.61.0411161923330.26610@math.ut.ee>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Marc Zyngier <mzyngier@freesurf.fr>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, Linux SCSI list <linux-scsi@vger.kernel.org>
+To: Meelis Roos <mroos@linux.ee>
+Cc: Marc Zyngier <mzyngier@freesurf.fr>, Linux SCSI list <linux-scsi@vger.kernel.org>
 
-> There is probably a converter chip somewhere near the 825 (look for a
-> PLX chip with EISA written on it...)
+On Tue, 2004-11-16 at 12:07, Meelis Roos wrote:
+> No PLX but there is a Motorola chip near it with
+> SC02RH004DK08
+> 142203-002
+> 
+> And another similar Motorola a bit further:
+> SC38SG003CN04
+> 127053-002
+> 
+> Google finds both bot I see no realtion with neither pci nor eisa.
+> 
+> There is also a NCR 0390784 chip ner but this seems to be another scsi 
+> controller for cdrom and tape.
 
-No PLX but there is a Motorola chip near it with
-SC02RH004DK08
-142203-002
+Well, the good news is that if you can find this chip and its
+documentation then you can simply construct it as an EISA<->PCI bridge
+and then the sym_2 driver should work with the 825 chip without
+modification.  The Bad news, of course, is that you have to find the
+chip and its documentation...
 
-And another similar Motorola a bit further:
-SC38SG003CN04
-127053-002
+James
 
-Google finds both bot I see no realtion with neither pci nor eisa.
 
-There is also a NCR 0390784 chip ner but this seems to be another scsi 
-controller for cdrom and tape.
-
--- 
-Meelis Roos (mroos@linux.ee)
