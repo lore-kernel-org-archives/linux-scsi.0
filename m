@@ -1,46 +1,68 @@
-From: Pat LaVarre <p.lavarre@ieee.org>
-Subject: Re: [usb-storage] Re: [PATCH] fix Sony USB mass storage -
-	pass	larger receive buffer
-Date: 13 Nov 2003 17:16:42 -0700
+From: Patrick Mansfield <patmans@us.ibm.com>
+Subject: Re: [usb-storage] Re: [PATCH] fix Sony USB mass storage - pass larger receive buffer
+Date: Thu, 13 Nov 2003 16:24:01 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1068769001.2851.2.camel@patrh9>
-References: <Pine.LNX.4.44L0.0311131702560.949-100000@ida.rowland.org>
-	 <1068766852.2851.155.camel@patrh9>
-	 <1068767483.3fb418fb45b65@webmail.netregistry.net>
+Message-ID: <20031113162401.A29775@beaverton.ibm.com>
+References: <Pine.LNX.4.44L0.0311131638320.949-100000@ida.rowland.org> <1068766632.2851.142.camel@patrh9>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from email-out2.iomega.com ([147.178.1.83]:27285 "EHLO
-	email.iomega.com") by vger.kernel.org with ESMTP id S264472AbTKNARQ
+Received: from e34.co.us.ibm.com ([32.97.110.132]:25232 "EHLO
+	e34.co.us.ibm.com") by vger.kernel.org with ESMTP id S264470AbTKNAY7
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 13 Nov 2003 19:17:16 -0500
-In-Reply-To: <1068767483.3fb418fb45b65@webmail.netregistry.net>
+	Thu, 13 Nov 2003 19:24:59 -0500
+Content-Disposition: inline
+In-Reply-To: <1068766632.2851.142.camel@patrh9>; from p.lavarre@ieee.org on Thu, Nov 13, 2003 at 04:37:12PM -0700
 List-Id: linux-scsi@vger.kernel.org
-To: dmitrik@users.sourceforge.net
-Cc: usb-storage@one-eyed-alien.net, linux-scsi@vger.kernel.org, stern@rowland.harvard.edu, mdharm-scsi@one-eyed-alien.net, patmans@us.ibm.com, james.bottomley@steeleye.com, ronald@kuetemeier.com, idan@idanso.dyndns.org
+To: Pat LaVarre <p.lavarre@ieee.org>
+Cc: stern@rowland.harvard.edu, mdharm-scsi@one-eyed-alien.net, james.bottomley@steeleye.com, linux-scsi@vger.kernel.org, usb-storage@one-eyed-alien.net, ronald@kuetemeier.com, dmitrik@users.sourceforge.net, idan@idanso.dyndns.org
 
-> > > > Anybody able to clue me in quickly as to why classifying a
-> device as
-> > > > writable or not, rather than a disc, can ever be meaningful?
-> > > 
-> > > The notion makes sense for tape drives as well.
-> > 
-> > Re write-protect, personally I know only of discs that have
-> > write-protect tabs.
+On Thu, Nov 13, 2003 at 04:37:12PM -0700, Pat LaVarre wrote:
+
+> Maybe here I mean to ask: can we easily nutshell for me how well
+> write-protect works now in sd?  I understand that we find mode sense of
+> header alone and mode sense of xFF troublesome.
 > 
-> Memory sticks have write-protect switches on them.
+> I'm not clear how often we try those techniques.  Do we try only soon
+> after plug in or also soon after each disc insertion?
 
-Ouch again I feel confused sorry.
+For removable media, we try once when found (sd_probe calls
+sd_revalidate_disk), and generally on each open of the device as follows:
 
-The memory stick is like a disc, yes?  We insert the stick into a slot,
-yes?  The slot does not itself have a switch - only the stick has a
-switch.  We cannot speak of the slot being write-protected, we can only
-speak of the stick being write-protected, yes?
+sd_open calls check_disk_change, calls sd_media_changed. sd_media_changed
+returns 1 if media changed and if so check_disk_change calls
+sd_revalidate_disk to figure out if the media is writable and whether to
+set write_prot.
 
-Therefore, with a memory stick as with a classic "1.44MB" floppy, we say
-the "disc" has a write-protect tab but the "drive" does not?
+On open if write_prot is set and we try to open for writing the open fails
+with EROFS.
 
-Pat LaVarre
+write_prot can only be set for removable media.
+
+AFAICT, the sd write_prot setting is never passed on up to the block layer.
 
 
+(Verified with with an ide cd) if the mount syscall returns EROFS, the
+mount command tries again with a read-only mount.
+
+If we check after the open for a write failure to read only media, we
+cannot keep the same open semantics (return EROFS on open). Is this
+important? I don't know.
+
+For file systems, the write out of page cache would get an error, but
+AFAIUI those errors can't be passed back to the application since the
+application thinks the write has already completed once it goes into the
+page cache (I think this was a bug in 2.4, maybe just readahead, where we
+did not report such write failures).
+
+I don't have any sd removable read only media.
+
+If you want to test with your read only media, just use the dev flags:
+
+	echo "vendor:model:0x4000" > /proc/scsi/device_info 
+
+Then add your device, see if it comes back as writable, and try to mount
+or write it, and compare without the above (you can't remove device_info
+entry without rebooting or rmmod-ing scsi).
+
+-- Patrick Mansfield
