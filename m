@@ -1,42 +1,31 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [patch 05/11] drivers/scsi/*: convert to pci_register_driver
-Date: Sun, 06 Mar 2005 17:36:50 -0500
-Message-ID: <422B8602.2030908@pobox.com>
-References: <20050306222705.3AADE1EC90@trashy.coderock.org>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: [patch 09/11] drivers/scsi/sym53c8xx_2/*: convert to pci_register_driver
+Date: Mon, 7 Mar 2005 00:35:15 +0000
+Message-ID: <20050307003515.GX28741@parcelfarce.linux.theplanet.co.uk>
+References: <20050306222717.C0F441F205@trashy.coderock.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:3818 "EHLO
+Content-Type: text/plain; charset=us-ascii
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:62864 "EHLO
 	parcelfarce.linux.theplanet.co.uk") by vger.kernel.org with ESMTP
-	id S261573AbVCFWhH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 6 Mar 2005 17:37:07 -0500
-In-Reply-To: <20050306222705.3AADE1EC90@trashy.coderock.org>
+	id S261578AbVCGAfS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 6 Mar 2005 19:35:18 -0500
+Content-Disposition: inline
+In-Reply-To: <20050306222717.C0F441F205@trashy.coderock.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: domen@coderock.org
 Cc: James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org, c.lucas@ifrance.com
 
-domen@coderock.org wrote:
->  kj-domen/drivers/scsi/ahci.c         |    2 +-
->  kj-domen/drivers/scsi/ata_piix.c     |    2 +-
+On Sun, Mar 06, 2005 at 11:27:17PM +0100, domen@coderock.org wrote:
+> convert from pci_module_init to pci_register_driver
+> (from:http://kerneljanitors.org/TODO).
 
->  kj-domen/drivers/scsi/sata_nv.c      |    2 +-
->  kj-domen/drivers/scsi/sata_promise.c |    2 +-
->  kj-domen/drivers/scsi/sata_sil.c     |    2 +-
->  kj-domen/drivers/scsi/sata_sis.c     |    2 +-
->  kj-domen/drivers/scsi/sata_svw.c     |    2 +-
->  kj-domen/drivers/scsi/sata_sx4.c     |    2 +-
->  kj-domen/drivers/scsi/sata_uli.c     |    2 +-
->  kj-domen/drivers/scsi/sata_via.c     |    2 +-
->  kj-domen/drivers/scsi/sata_vsc.c     |    2 +-
+Already applied to the sym2 driver in my tree, thanks.
 
-
-NAK. These drivers are actively maintained in 2.4, and pci_module_init() 
-is a compatibility wrapper for these drivers.
-
-Also, you need to split off patches for these drivers and send them to 
-me and linux-ide@vger.kernel.org.
-
-	Jeff
-
-
+-- 
+"Next the statesmen will invent cheap lies, putting the blame upon 
+the nation that is attacked, and every man will be glad of those
+conscience-soothing falsities, and will diligently study them, and refuse
+to examine any refutations of them; and thus he will by and by convince 
+himself that the war is just, and will thank God for the better sleep 
+he enjoys after this process of grotesque self-deception." -- Mark Twain
