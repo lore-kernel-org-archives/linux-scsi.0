@@ -1,39 +1,33 @@
-From: Matthew Wilcox <willy@debian.org>
+From: James Bottomley <James.Bottomley@SteelEye.com>
 Subject: Re: [RFC] exposing the sdev_target in sysfs
-Date: Mon, 6 Sep 2004 02:58:36 +0100
+Date: 05 Sep 2004 22:05:42 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040906015836.GX642@parcelfarce.linux.theplanet.co.uk>
-References: <1094254851.1712.28.camel@mulgrave> <41394901.3050804@us.ibm.com> <1094306082.1924.0.camel@mulgrave>
+Message-ID: <1094436343.10976.29.camel@mulgrave>
+References: <1094254851.1712.28.camel@mulgrave>
+	<41394901.3050804@us.ibm.com> <1094306082.1924.0.camel@mulgrave>
+	<20040906015836.GX642@parcelfarce.linux.theplanet.co.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:31723 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S267393AbUIFB6k
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 5 Sep 2004 21:58:40 -0400
-Content-Disposition: inline
-In-Reply-To: <1094306082.1924.0.camel@mulgrave>
+Received: from stat16.steeleye.com ([209.192.50.48]:30407 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S267396AbUIFCFq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 5 Sep 2004 22:05:46 -0400
+In-Reply-To: <20040906015836.GX642@parcelfarce.linux.theplanet.co.uk>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
+To: Matthew Wilcox <willy@debian.org>
 Cc: Mike Christie <mikenc@us.ibm.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Sat, Sep 04, 2004 at 09:54:40AM -0400, James Bottomley wrote:
-> On Sat, 2004-09-04 at 00:48, Mike Christie wrote:
-> > device_add calls kobject_add which can sleep.
-> 
-> Yes, I'll move it outside the lock.
-> 
-> I suppose I should add a comment somewhere about our critical dependence
-> on sequential LUN scanning as well just in case someone tries to
-> parallelise it.
+On Sun, 2004-09-05 at 21:58, Matthew Wilcox wrote:
+> sequential on a given bus, rather than globally, right?  There's no
+> problem with scanning different busses simultanously, is there?
 
-sequential on a given bus, rather than globally, right?  There's no
-problem with scanning different busses simultanously, is there?
+Actually, no, sequential within a given target.  Ensuring this
+sequentiality is entirely the province of the scsi subsystem, so as long
+as we do the right thing it doesn't matter how parallel we make the bus
+scans.
 
--- 
-"Next the statesmen will invent cheap lies, putting the blame upon 
-the nation that is attacked, and every man will be glad of those
-conscience-soothing falsities, and will diligently study them, and refuse
-to examine any refutations of them; and thus he will by and by convince 
-himself that the war is just, and will thank God for the better sleep 
-he enjoys after this process of grotesque self-deception." -- Mark Twain
+James
+
+
