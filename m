@@ -1,65 +1,66 @@
-From: "Cress, Andrew R" <andrew.r.cress@intel.com>
-Subject: RE: Seagate Cheetah: Firmware, Bugs, Compatibility?
-Date: Mon, 6 Jan 2003 07:51:55 -0800
+From: "Justin T. Gibbs" <gibbs@scsiguy.com>
+Subject: Re: aic7xxx broken in 2.5.53/54 ?
+Date: Mon, 06 Jan 2003 09:16:53 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <A5974D8E5F98D511BB910002A50A66470580D4F1@hdsmsx103.hd.intel.com>
+Message-ID: <274040000.1041869813@aslan.scsiguy.com>
+References: <20030103101618.GB8582@in.ibm.com>
+ <596830816.1041606846@aslan.scsiguy.com> <20030106073204.GA1875@in.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from petasus.fm.intel.com (petasus.fm.intel.com [10.1.192.37])
-	by hermes.fm.intel.com (8.11.6/8.11.6/d: outer.mc,v 1.51 2002/09/23 20:43:23 dmccart Exp $) with ESMTP id h06Fksd22513
-	for <linux-scsi@vger.kernel.org>; Mon, 6 Jan 2003 15:46:54 GMT
-Received: from fmsmsxvs041.fm.intel.com (fmsmsxvs041.fm.intel.com [132.233.42.126])
-	by petasus.fm.intel.com (8.11.6/8.11.6/d: inner.mc,v 1.27 2002/10/16 23:46:59 dmccart Exp $) with SMTP id h06FiaE23831
-	for <linux-scsi@vger.kernel.org>; Mon, 6 Jan 2003 15:44:36 GMT
+In-Reply-To: <20030106073204.GA1875@in.ibm.com>
+Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
-To: 'Dan Jones' <dmjones@ix.netcom.com>, Mikael Abrahamsson <swmike@swm.pp.se>
-Cc: Linux-SCSI <linux-scsi@vger.kernel.org>
+To: dipankar@in.ibm.com
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Mikael,
-
-For your own system, you know when it is really idle, so you can do it when
-you wish.  
-
-The recommended way to do this on a production system (assuming some kind of
-RAID) is to take one disk out of the raid, update its firmware, add it back
-to the raid, then do the same to the next one.  This can all be scripted,
-and even if it takes a bit longer, it's worth it to most HA customers to
-keep the system running throughout the update.
-
-Each OS is different in handling live disk firmware updates.  Some OSs
-handle the 'not ready' sense condition while the download is happening
-robustly enough so that it can be done almost at will.  Most disk vendors
-only support DOS tools, because that's the easiest way.  
-
-Andy
-
------Original Message-----
-From: Dan Jones [mailto:dmjones@ix.netcom.com] 
-Sent: Saturday, January 04, 2003 5:24 PM
-To: Mikael Abrahamsson
-Cc: Linux-SCSI
-Subject: Re: Seagate Cheetah: Firmware, Bugs, Compatibility?
-
-
-Mikael Abrahamsson wrote:
+> Hi Justin,
 > 
-> On Fri, 3 Jan 2003, Cress, Andrew R wrote:
+> On Fri, Jan 03, 2003 at 08:14:06AM -0700, Justin T. Gibbs wrote:
+>> > Looks like the aic7xxx driver in 2.5.53 and 54 are broken on my
+>> > hardware.
+>> 
+>> It looks like the driver recovers fine.
 > 
-> It's not clear from the docs if it's a good idea to flash the drives when
-> the system is up and running normally, any comments on that?
+> Not for long. It dies shortly afterwards.
+
+In what fashion?
+
+>> > aic7xxx: PCI Device 0:1:0 failed memory mapped test.  Using PIO.
+>> > Uhhuh. NMI received for unknown reason 25 on CPU 0.
+>> 
+>> SERR must be enabled by your BIOS.  I will change the driver so
+>> that, should the memory mapped I/O test fail, an SERR (and thus an
+>> NMI) is not generated.
 > 
+> I guess having to use PIO with aic7xxx is bad. MMIO failure is
+> what we need to investigate.
 
-Yes, never flash a drive that is not idle. A real-time update to running
-code 
-is not trivial and drive vendors don't support it.
+The only way that I know how to investigate these issues is
+with a PCI bus analyzer.  We're in the process of going through
+all of the systems we have in our lab to see which ones fail and
+why, but I certainly don't have one of every failing system on
+the planet. 8-)
 
--- 
-Dan Jones           "'Tis hard to say, if greater want of skill
-                     Appear in writing or in judging ill;
-                     But of the two, less dangerous is th' offence 
-                     To tire our patience, than mislead our sense." Pope
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>> Just out of curiosity, do you have any strange PCI options enabled
+>> in your BIOS?  I remeber seeing memory mapped I/O failures on this
+>> ServerWorks chipset under FreeBSD in the past, but an updated BIOS
+>> resolved the issue for the affected users.  It seemed that the BIOS
+>> incorrectly placed the Adaptec controller in a prefetchable region.
+>> 
+> 
+> I didn't change anything in that box since it was delivered to me. FYI
+> it is an IBM x250. Would it help if I can get a PCI space dump and mtrr 
+> dump ? FWIW, the older driver works fine. Does the older driver use 
+> only PIO ?
+
+It would be good to know the chipset on the motherboard.  As to why
+the old driver worked, for 6.X.X drivers, you may have just been lucky.
+For 5.X.X drivers, they perform a read after every register write to
+"manually" prevent any byte-merging.  These reads are actually more
+expensive than just using PIO.  Neither of these older drivers included
+a test to try and catch fishy behavior.
+
+--
+Justin
