@@ -1,399 +1,127 @@
 From: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Subject: PATCH [1/15] qla2xxx:  Update copyright banner
-Date: Sun, 14 Mar 2004 00:24:04 -0800
+Subject: PATCH [0/15] qla2xxx: summary of changes...
+Date: Sun, 14 Mar 2004 00:22:49 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040314082404.GA3388@linux.local.home>
+Message-ID: <20040314082249.GA3374@linux.local.home>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ms-smtp-03-qfe0.socal.rr.com ([66.75.162.135]:61336 "EHLO
-	ms-smtp-03-eri0.socal.rr.com") by vger.kernel.org with ESMTP
-	id S263313AbUCNIVg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 14 Mar 2004 03:21:36 -0500
+Received: from ms-smtp-02-qfe0.socal.rr.com ([66.75.162.134]:40120 "EHLO
+	ms-smtp-02-eri0.socal.rr.com") by vger.kernel.org with ESMTP
+	id S263199AbUCNIU1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 14 Mar 2004 03:20:27 -0500
 Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@steeleye.com>
+To: Andrew Vasquez <andrew.vasquez@qlogic.com>, James Bottomley <James.Bottomley@steeleye.com>
 Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
+
+James,
+
+Please apply the following patches I'm about to send to update the
+qla2xxx driver.  A summary of the patches can be found towards the end
+of this message.
+
+With the exception of the rather large firmware image update (direct
+pointer to bzip'd patch listed), subsequent messages will contain
+inlined patches.
+
+All patches can be found at the following URL:
+
+	ftp://ftp.qlogic.com/outgoing/linux/patches/8.x/8.00.00b11k/
+
+What this batch of patches does not contain:
+
+  Fixes for the following outstanding issues logged against qla2xxx:
+
+	o Loading qla2300 on ia64 during RSCN flood (Grant Grundler)
+
+	o I/O problems with 2100 (Ricky Beam)
+
+  Extras:
+
+	o readX_relaxed additions (Jeremy Higdon)
+	  will be present in the next round of patches.
+
+	o Transport Attributes
+
+Thanks,
+Andrew Vasquez
+
 
 ChangeSet
   1.1657 04/02/28 20:30:48 andrew.vasquez@qlogic.com +29 -0
   Update copyright banner for all source files.
 
- drivers/scsi/qla2xxx/ql2100.c       |    2 +-
- drivers/scsi/qla2xxx/ql2100_fw.c    |    2 +-
- drivers/scsi/qla2xxx/ql2200.c       |    2 +-
- drivers/scsi/qla2xxx/ql2200_fw.c    |    2 +-
- drivers/scsi/qla2xxx/ql2300.c       |    2 +-
- drivers/scsi/qla2xxx/ql2300_fw.c    |    2 +-
- drivers/scsi/qla2xxx/ql2322.c       |    2 +-
- drivers/scsi/qla2xxx/ql2322_fw.c    |    2 +-
- drivers/scsi/qla2xxx/ql6312.c       |    2 +-
- drivers/scsi/qla2xxx/ql6312_fw.c    |    2 +-
- drivers/scsi/qla2xxx/ql6322.c       |    2 +-
- drivers/scsi/qla2xxx/ql6322_fw.c    |    2 +-
- drivers/scsi/qla2xxx/qla_dbg.c      |    2 +-
- drivers/scsi/qla2xxx/qla_dbg.h      |    2 +-
- drivers/scsi/qla2xxx/qla_def.h      |    2 +-
- drivers/scsi/qla2xxx/qla_gbl.h      |    2 +-
- drivers/scsi/qla2xxx/qla_gs.c       |    2 +-
- drivers/scsi/qla2xxx/qla_init.c     |    2 +-
- drivers/scsi/qla2xxx/qla_inline.h   |    2 +-
- drivers/scsi/qla2xxx/qla_iocb.c     |    2 +-
- drivers/scsi/qla2xxx/qla_isr.c      |    2 +-
- drivers/scsi/qla2xxx/qla_listops.h  |    2 +-
- drivers/scsi/qla2xxx/qla_mbx.c      |    2 +-
- drivers/scsi/qla2xxx/qla_os.c       |    2 +-
- drivers/scsi/qla2xxx/qla_os.h       |    2 +-
- drivers/scsi/qla2xxx/qla_rscn.c     |    2 +-
- drivers/scsi/qla2xxx/qla_settings.h |    2 +-
- drivers/scsi/qla2xxx/qla_sup.c      |    2 +-
- drivers/scsi/qla2xxx/qla_version.h  |    2 +-
- 29 files changed, 29 insertions(+), 29 deletions(-)
+ChangeSet
+  1.1658 04/02/28 21:34:23 andrew.vasquez@qlogic.com +3 -0
+  Track the number of DSDs and request entries required for an
+  SRB in case of a request-entry or command-slot shortage.
 
-ftp://ftp.qlogic.com/outgoing/linux/patches/8.x/8.00.00b11k/10_cright_update.patch
+ChangeSet
+  1.1659 04/02/28 21:50:11 andrew.vasquez@qlogic.com +1 -0
+  Fix a problem where during heavy I/O the driver would
+  improperly timeout an outstanding MBX IOCB before the
+  firmware itself had a chance to issue and wait for the
+  command to timeout.
 
-diff -Nru a/drivers/scsi/qla2xxx/ql2100.c b/drivers/scsi/qla2xxx/ql2100.c
---- a/drivers/scsi/qla2xxx/ql2100.c	Fri Mar 12 17:06:10 2004
-+++ b/drivers/scsi/qla2xxx/ql2100.c	Fri Mar 12 17:06:10 2004
-@@ -1,7 +1,7 @@
- /*
-  * QLogic ISP2100 device driver for Linux 2.6.x
-  * Copyright (C) 2003 Christoph Hellwig.
-- * Copyright (C) 2003 QLogic Corporation (www.qlogic.com)
-+ * Copyright (C) 2003-2004 QLogic Corporation (www.qlogic.com)
-  *
-  * Released under GPL v2.
-  */
-diff -Nru a/drivers/scsi/qla2xxx/ql2100_fw.c b/drivers/scsi/qla2xxx/ql2100_fw.c
---- a/drivers/scsi/qla2xxx/ql2100_fw.c	Fri Mar 12 17:06:10 2004
-+++ b/drivers/scsi/qla2xxx/ql2100_fw.c	Fri Mar 12 17:06:10 2004
-@@ -2,7 +2,7 @@
-  *                  QLOGIC LINUX SOFTWARE
-  *
-  * QLogic ISP2x00 device driver for Linux 2.6.x
-- * Copyright (C) 2003 QLogic Corporation
-+ * Copyright (C) 2003-2004 QLogic Corporation
-  * (www.qlogic.com)
-  *
-  * This program is free software; you can redistribute it and/or modify it
-diff -Nru a/drivers/scsi/qla2xxx/ql2200.c b/drivers/scsi/qla2xxx/ql2200.c
---- a/drivers/scsi/qla2xxx/ql2200.c	Fri Mar 12 17:06:09 2004
-+++ b/drivers/scsi/qla2xxx/ql2200.c	Fri Mar 12 17:06:09 2004
-@@ -1,7 +1,7 @@
- /*
-  * QLogic ISP2200 device driver for Linux 2.6.x
-  * Copyright (C) 2003 Christoph Hellwig.
-- * Copyright (C) 2003 QLogic Corporation (www.qlogic.com)
-+ * Copyright (C) 2003-2004 QLogic Corporation (www.qlogic.com)
-  *
-  * Released under GPL v2.
-  */
-diff -Nru a/drivers/scsi/qla2xxx/ql2200_fw.c b/drivers/scsi/qla2xxx/ql2200_fw.c
---- a/drivers/scsi/qla2xxx/ql2200_fw.c	Fri Mar 12 17:06:10 2004
-+++ b/drivers/scsi/qla2xxx/ql2200_fw.c	Fri Mar 12 17:06:10 2004
-@@ -2,7 +2,7 @@
-  *                  QLOGIC LINUX SOFTWARE
-  *
-  * QLogic ISP2x00 device driver for Linux 2.6.x
-- * Copyright (C) 2003 QLogic Corporation
-+ * Copyright (C) 2003-2004 QLogic Corporation
-  * (www.qlogic.com)
-  *
-  * This program is free software; you can redistribute it and/or modify it
-diff -Nru a/drivers/scsi/qla2xxx/ql2300.c b/drivers/scsi/qla2xxx/ql2300.c
---- a/drivers/scsi/qla2xxx/ql2300.c	Fri Mar 12 17:06:10 2004
-+++ b/drivers/scsi/qla2xxx/ql2300.c	Fri Mar 12 17:06:10 2004
-@@ -1,7 +1,7 @@
- /*
-  * QLogic ISP2300 device driver for Linux 2.6.x
-  * Copyright (C) 2003 Christoph Hellwig.
-- * Copyright (C) 2003 QLogic Corporation (www.qlogic.com)
-+ * Copyright (C) 2003-2004 QLogic Corporation (www.qlogic.com)
-  *
-  * Released under GPL v2.
-  */
-diff -Nru a/drivers/scsi/qla2xxx/ql2300_fw.c b/drivers/scsi/qla2xxx/ql2300_fw.c
---- a/drivers/scsi/qla2xxx/ql2300_fw.c	Fri Mar 12 17:06:10 2004
-+++ b/drivers/scsi/qla2xxx/ql2300_fw.c	Fri Mar 12 17:06:10 2004
-@@ -2,7 +2,7 @@
-  *                  QLOGIC LINUX SOFTWARE
-  *
-  * QLogic ISP2x00 device driver for Linux 2.6.x
-- * Copyright (C) 2003 QLogic Corporation
-+ * Copyright (C) 2003-2004 QLogic Corporation
-  * (www.qlogic.com)
-  *
-  * This program is free software; you can redistribute it and/or modify it
-diff -Nru a/drivers/scsi/qla2xxx/ql2322.c b/drivers/scsi/qla2xxx/ql2322.c
---- a/drivers/scsi/qla2xxx/ql2322.c	Fri Mar 12 17:06:10 2004
-+++ b/drivers/scsi/qla2xxx/ql2322.c	Fri Mar 12 17:06:10 2004
-@@ -1,6 +1,6 @@
- /*
-  * QLogic ISP2322 device driver for Linux 2.6.x
-- * Copyright (C) 2003 QLogic Corporation (www.qlogic.com)
-+ * Copyright (C) 2003-2004 QLogic Corporation (www.qlogic.com)
-  *
-  * Released under GPL v2.
-  */
-diff -Nru a/drivers/scsi/qla2xxx/ql2322_fw.c b/drivers/scsi/qla2xxx/ql2322_fw.c
---- a/drivers/scsi/qla2xxx/ql2322_fw.c	Fri Mar 12 17:06:09 2004
-+++ b/drivers/scsi/qla2xxx/ql2322_fw.c	Fri Mar 12 17:06:10 2004
-@@ -2,7 +2,7 @@
-  *                  QLOGIC LINUX SOFTWARE
-  *
-  * QLogic ISP2x00 device driver for Linux 2.6.x
-- * Copyright (C) 2003 QLogic Corporation
-+ * Copyright (C) 2003-2004 QLogic Corporation
-  * (www.qlogic.com)
-  *
-  * This program is free software; you can redistribute it and/or modify it
-diff -Nru a/drivers/scsi/qla2xxx/ql6312.c b/drivers/scsi/qla2xxx/ql6312.c
---- a/drivers/scsi/qla2xxx/ql6312.c	Fri Mar 12 17:06:10 2004
-+++ b/drivers/scsi/qla2xxx/ql6312.c	Fri Mar 12 17:06:10 2004
-@@ -1,6 +1,6 @@
- /*
-  * QLogic ISP6312 device driver for Linux 2.6.x
-- * Copyright (C) 2003 QLogic Corporation (www.qlogic.com)
-+ * Copyright (C) 2003-2004 QLogic Corporation (www.qlogic.com)
-  *
-  * Released under GPL v2.
-  */
-diff -Nru a/drivers/scsi/qla2xxx/ql6312_fw.c b/drivers/scsi/qla2xxx/ql6312_fw.c
---- a/drivers/scsi/qla2xxx/ql6312_fw.c	Fri Mar 12 17:06:10 2004
-+++ b/drivers/scsi/qla2xxx/ql6312_fw.c	Fri Mar 12 17:06:10 2004
-@@ -2,7 +2,7 @@
-  *                  QLOGIC LINUX SOFTWARE
-  *
-  * QLogic ISP2x00 device driver for Linux 2.6.x
-- * Copyright (C) 2003 QLogic Corporation
-+ * Copyright (C) 2003-2004 QLogic Corporation
-  * (www.qlogic.com)
-  *
-  * This program is free software; you can redistribute it and/or modify it
-diff -Nru a/drivers/scsi/qla2xxx/ql6322.c b/drivers/scsi/qla2xxx/ql6322.c
---- a/drivers/scsi/qla2xxx/ql6322.c	Fri Mar 12 17:06:10 2004
-+++ b/drivers/scsi/qla2xxx/ql6322.c	Fri Mar 12 17:06:10 2004
-@@ -1,6 +1,6 @@
- /*
-  * QLogic ISP6322 device driver for Linux 2.6.x
-- * Copyright (C) 2003 QLogic Corporation (www.qlogic.com)
-+ * Copyright (C) 2003-2004 QLogic Corporation (www.qlogic.com)
-  *
-  * Released under GPL v2.
-  */
-diff -Nru a/drivers/scsi/qla2xxx/ql6322_fw.c b/drivers/scsi/qla2xxx/ql6322_fw.c
---- a/drivers/scsi/qla2xxx/ql6322_fw.c	Fri Mar 12 17:06:10 2004
-+++ b/drivers/scsi/qla2xxx/ql6322_fw.c	Fri Mar 12 17:06:10 2004
-@@ -2,7 +2,7 @@
-  *                  QLOGIC LINUX SOFTWARE
-  *
-  * QLogic ISP2x00 device driver for Linux 2.6.x
-- * Copyright (C) 2003 QLogic Corporation
-+ * Copyright (C) 2003-2004 QLogic Corporation
-  * (www.qlogic.com)
-  *
-  * This program is free software; you can redistribute it and/or modify it
-diff -Nru a/drivers/scsi/qla2xxx/qla_dbg.c b/drivers/scsi/qla2xxx/qla_dbg.c
---- a/drivers/scsi/qla2xxx/qla_dbg.c	Fri Mar 12 17:06:10 2004
-+++ b/drivers/scsi/qla2xxx/qla_dbg.c	Fri Mar 12 17:06:10 2004
-@@ -2,7 +2,7 @@
-  *                  QLOGIC LINUX SOFTWARE
-  *
-  * QLogic ISP2x00 device driver for Linux 2.6.x
-- * Copyright (C) 2003 QLogic Corporation
-+ * Copyright (C) 2003-2004 QLogic Corporation
-  * (www.qlogic.com)
-  *
-  * This program is free software; you can redistribute it and/or modify it
-diff -Nru a/drivers/scsi/qla2xxx/qla_dbg.h b/drivers/scsi/qla2xxx/qla_dbg.h
---- a/drivers/scsi/qla2xxx/qla_dbg.h	Fri Mar 12 17:06:10 2004
-+++ b/drivers/scsi/qla2xxx/qla_dbg.h	Fri Mar 12 17:06:10 2004
-@@ -2,7 +2,7 @@
-  *                  QLOGIC LINUX SOFTWARE
-  *
-  * QLogic ISP2x00 device driver for Linux 2.6.x
-- * Copyright (C) 2003 QLogic Corporation
-+ * Copyright (C) 2003-2004 QLogic Corporation
-  * (www.qlogic.com)
-  *
-  * This program is free software; you can redistribute it and/or modify it
-diff -Nru a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
---- a/drivers/scsi/qla2xxx/qla_def.h	Fri Mar 12 17:06:10 2004
-+++ b/drivers/scsi/qla2xxx/qla_def.h	Fri Mar 12 17:06:10 2004
-@@ -2,7 +2,7 @@
- *                  QLOGIC LINUX SOFTWARE
- *
- * QLogic ISP2x00 device driver for Linux 2.6.x
--* Copyright (C) 2003 QLogic Corporation
-+* Copyright (C) 2003-2004 QLogic Corporation
- * (www.qlogic.com)
- *
- * This program is free software; you can redistribute it and/or modify it
-diff -Nru a/drivers/scsi/qla2xxx/qla_gbl.h b/drivers/scsi/qla2xxx/qla_gbl.h
---- a/drivers/scsi/qla2xxx/qla_gbl.h	Fri Mar 12 17:06:10 2004
-+++ b/drivers/scsi/qla2xxx/qla_gbl.h	Fri Mar 12 17:06:10 2004
-@@ -2,7 +2,7 @@
- *                  QLOGIC LINUX SOFTWARE
- *
- * QLogic ISP2x00 device driver for Linux 2.6.x
--* Copyright (C) 2003 QLogic Corporation
-+* Copyright (C) 2003-2004 QLogic Corporation
- * (www.qlogic.com)
- *
- * This program is free software; you can redistribute it and/or modify it
-diff -Nru a/drivers/scsi/qla2xxx/qla_gs.c b/drivers/scsi/qla2xxx/qla_gs.c
---- a/drivers/scsi/qla2xxx/qla_gs.c	Fri Mar 12 17:06:10 2004
-+++ b/drivers/scsi/qla2xxx/qla_gs.c	Fri Mar 12 17:06:10 2004
-@@ -2,7 +2,7 @@
-  *                  QLOGIC LINUX SOFTWARE
-  *
-  * QLogic ISP2x00 device driver for Linux 2.6.x
-- * Copyright (C) 2003 QLogic Corporation
-+ * Copyright (C) 2003-2004 QLogic Corporation
-  * (www.qlogic.com)
-  *
-  * This program is free software; you can redistribute it and/or modify it
-diff -Nru a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
---- a/drivers/scsi/qla2xxx/qla_init.c	Fri Mar 12 17:06:10 2004
-+++ b/drivers/scsi/qla2xxx/qla_init.c	Fri Mar 12 17:06:10 2004
-@@ -2,7 +2,7 @@
-  *                  QLOGIC LINUX SOFTWARE
-  *
-  * QLogic ISP2x00 device driver for Linux 2.6.x
-- * Copyright (C) 2003 QLogic Corporation
-+ * Copyright (C) 2003-2004 QLogic Corporation
-  * (www.qlogic.com)
-  *
-  * This program is free software; you can redistribute it and/or modify it
-diff -Nru a/drivers/scsi/qla2xxx/qla_inline.h b/drivers/scsi/qla2xxx/qla_inline.h
---- a/drivers/scsi/qla2xxx/qla_inline.h	Fri Mar 12 17:06:10 2004
-+++ b/drivers/scsi/qla2xxx/qla_inline.h	Fri Mar 12 17:06:10 2004
-@@ -2,7 +2,7 @@
-  *                  QLOGIC LINUX SOFTWARE
-  *
-  * QLogic ISP2x00 device driver for Linux 2.6.x
-- * Copyright (C) 2003 QLogic Corporation
-+ * Copyright (C) 2003-2004 QLogic Corporation
-  * (www.qlogic.com)
-  *
-  * This program is free software; you can redistribute it and/or modify it
-diff -Nru a/drivers/scsi/qla2xxx/qla_iocb.c b/drivers/scsi/qla2xxx/qla_iocb.c
---- a/drivers/scsi/qla2xxx/qla_iocb.c	Fri Mar 12 17:06:10 2004
-+++ b/drivers/scsi/qla2xxx/qla_iocb.c	Fri Mar 12 17:06:10 2004
-@@ -2,7 +2,7 @@
-  *                  QLOGIC LINUX SOFTWARE
-  *
-  * QLogic ISP2x00 device driver for Linux 2.6.x
-- * Copyright (C) 2003 QLogic Corporation
-+ * Copyright (C) 2003-2004 QLogic Corporation
-  * (www.qlogic.com)
-  *
-  * This program is free software; you can redistribute it and/or modify it
-diff -Nru a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
---- a/drivers/scsi/qla2xxx/qla_isr.c	Fri Mar 12 17:06:10 2004
-+++ b/drivers/scsi/qla2xxx/qla_isr.c	Fri Mar 12 17:06:10 2004
-@@ -2,7 +2,7 @@
-  *                  QLOGIC LINUX SOFTWARE
-  *
-  * QLogic ISP2x00 device driver for Linux 2.6.x
-- * Copyright (C) 2003 QLogic Corporation
-+ * Copyright (C) 2003-2004 QLogic Corporation
-  * (www.qlogic.com)
-  *
-  * This program is free software; you can redistribute it and/or modify it
-diff -Nru a/drivers/scsi/qla2xxx/qla_listops.h b/drivers/scsi/qla2xxx/qla_listops.h
---- a/drivers/scsi/qla2xxx/qla_listops.h	Fri Mar 12 17:06:10 2004
-+++ b/drivers/scsi/qla2xxx/qla_listops.h	Fri Mar 12 17:06:10 2004
-@@ -2,7 +2,7 @@
-  *                  QLOGIC LINUX SOFTWARE
-  *
-  * QLogic ISP2x00 device driver for Linux 2.6.x
-- * Copyright (C) 2003 QLogic Corporation
-+ * Copyright (C) 2003-2004 QLogic Corporation
-  * (www.qlogic.com)
-  *
-  * This program is free software; you can redistribute it and/or modify it
-diff -Nru a/drivers/scsi/qla2xxx/qla_mbx.c b/drivers/scsi/qla2xxx/qla_mbx.c
---- a/drivers/scsi/qla2xxx/qla_mbx.c	Fri Mar 12 17:06:10 2004
-+++ b/drivers/scsi/qla2xxx/qla_mbx.c	Fri Mar 12 17:06:10 2004
-@@ -2,7 +2,7 @@
-  *                  QLOGIC LINUX SOFTWARE
-  *
-  * QLogic ISP2x00 device driver for Linux 2.6.x
-- * Copyright (C) 2003 QLogic Corporation
-+ * Copyright (C) 2003-2004 QLogic Corporation
-  * (www.qlogic.com)
-  *
-  * This program is free software; you can redistribute it and/or modify it
-diff -Nru a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
---- a/drivers/scsi/qla2xxx/qla_os.c	Fri Mar 12 17:06:10 2004
-+++ b/drivers/scsi/qla2xxx/qla_os.c	Fri Mar 12 17:06:10 2004
-@@ -2,7 +2,7 @@
-  *                  QLOGIC LINUX SOFTWARE
-  *
-  * QLogic ISP2x00 device driver for Linux 2.6.x
-- * Copyright (C) 2003 QLogic Corporation
-+ * Copyright (C) 2003-2004 QLogic Corporation
-  * (www.qlogic.com)
-  *
-  * This program is free software; you can redistribute it and/or modify it
-diff -Nru a/drivers/scsi/qla2xxx/qla_os.h b/drivers/scsi/qla2xxx/qla_os.h
---- a/drivers/scsi/qla2xxx/qla_os.h	Fri Mar 12 17:06:10 2004
-+++ b/drivers/scsi/qla2xxx/qla_os.h	Fri Mar 12 17:06:10 2004
-@@ -2,7 +2,7 @@
-  *                  QLOGIC LINUX SOFTWARE
-  *
-  * QLogic ISP2x00 device driver for Linux 2.6.x
-- * Copyright (C) 2003 QLogic Corporation
-+ * Copyright (C) 2003-2004 QLogic Corporation
-  * (www.qlogic.com)
-  *
-  * Portions (C) Arjan van de Ven <arjanv@redhat.com> for Red Hat, Inc.
-diff -Nru a/drivers/scsi/qla2xxx/qla_rscn.c b/drivers/scsi/qla2xxx/qla_rscn.c
---- a/drivers/scsi/qla2xxx/qla_rscn.c	Fri Mar 12 17:06:10 2004
-+++ b/drivers/scsi/qla2xxx/qla_rscn.c	Fri Mar 12 17:06:10 2004
-@@ -2,7 +2,7 @@
-  *                  QLOGIC LINUX SOFTWARE
-  *
-  * QLogic ISP2x00 device driver for Linux 2.6.x
-- * Copyright (C) 2003 QLogic Corporation
-+ * Copyright (C) 2003-2004 QLogic Corporation
-  * (www.qlogic.com)
-  *
-  * This program is free software; you can redistribute it and/or modify it
-diff -Nru a/drivers/scsi/qla2xxx/qla_settings.h b/drivers/scsi/qla2xxx/qla_settings.h
---- a/drivers/scsi/qla2xxx/qla_settings.h	Fri Mar 12 17:06:10 2004
-+++ b/drivers/scsi/qla2xxx/qla_settings.h	Fri Mar 12 17:06:10 2004
-@@ -2,7 +2,7 @@
-  *                  QLOGIC LINUX SOFTWARE
-  *
-  * QLogic ISP2x00 device driver for Linux 2.6.x
-- * Copyright (C) 2003 QLogic Corporation
-+ * Copyright (C) 2003-2004 QLogic Corporation
-  * (www.qlogic.com)
-  *
-  * This program is free software; you can redistribute it and/or modify it
-diff -Nru a/drivers/scsi/qla2xxx/qla_sup.c b/drivers/scsi/qla2xxx/qla_sup.c
---- a/drivers/scsi/qla2xxx/qla_sup.c	Fri Mar 12 17:06:10 2004
-+++ b/drivers/scsi/qla2xxx/qla_sup.c	Fri Mar 12 17:06:10 2004
-@@ -2,7 +2,7 @@
-  *                  QLOGIC LINUX SOFTWARE
-  *
-  * QLogic ISP2x00 device driver for Linux 2.6.x
-- * Copyright (C) 2003 QLogic Corporation
-+ * Copyright (C) 2003-2004 QLogic Corporation
-  * (www.qlogic.com)
-  *
-  * This program is free software; you can redistribute it and/or modify it
-diff -Nru a/drivers/scsi/qla2xxx/qla_version.h b/drivers/scsi/qla2xxx/qla_version.h
---- a/drivers/scsi/qla2xxx/qla_version.h	Fri Mar 12 17:06:10 2004
-+++ b/drivers/scsi/qla2xxx/qla_version.h	Fri Mar 12 17:06:10 2004
-@@ -2,7 +2,7 @@
-  *                  QLOGIC LINUX SOFTWARE
-  *
-  * QLogic ISP2x00 device driver for Linux 2.6.x
-- * Copyright (C) 2003 QLogic Corporation
-+ * Copyright (C) 2003-2004 QLogic Corporation
-  * (www.qlogic.com)
-  *
-  * This program is free software; you can redistribute it and/or modify it
+ChangeSet
+  1.1660 04/02/28 22:02:06 andrew.vasquez@qlogic.com +2 -0
+  Return firmware statistics retrieved from
+  qla2x00_get_link_status() in host-endian form.
+
+ChangeSet
+  1.1661 04/02/28 22:35:59 andrew.vasquez@qlogic.com +3 -0
+  Limit SG entry size to make more efficient use of the
+  size contraints of the request-queue.
+  
+ChangeSet
+  1.1662 04/03/01 09:39:39 andrew.vasquez@apc.qlogic.com +3 -0
+  Consistenly track the error-state of a failed SRB.
+
+ChangeSet
+  1.1663 04/03/01 14:21:11 andrew.vasquez@apc.qlogic.com +5 -0
+  Misc. updates due to resync with non-embedded (failover-aware) driver.
+  
+   o Add ancillary support definitions.
+   o Remove extraneous *_IOCTL #ifs.
+   o Make qla2x00_cmd_timeout() and its support routines visible to the 
+     non-embedded driver.
+
+ChangeSet
+  1.1664 04/03/01 14:26:47 andrew.vasquez@apc.qlogic.com +1 -0
+  Fix issue where the driver would reference the incorrect HA
+  during loop state check.
+  
+  Note: This could only occur during failover mode.
+
+ChangeSet
+  1.1665 04/03/01 14:34:32 andrew.vasquez@apc.qlogic.com +1 -0
+  Resync with latest NVRAM subsystem ID list.
+
+ChangeSet
+  1.1666 04/03/01 15:37:16 andrew.vasquez@apc.qlogic.com +1 -0
+  Consistently use the fcports list of an HA to iterate through the
+  known target devices.
+
+ChangeSet
+  1.1667 04/03/01 15:40:41 andrew.vasquez@apc.qlogic.com +3 -0
+  Add a module parameter to override the NVRAM's login retry count
+  value.
+
+ChangeSet
+  1.1668 04/03/02 07:13:34 andrew.vasquez@apc.qlogic.com +2 -0
+  Restore the UPDATE state of the HA if a resync event occurs during
+  a device (re)discovery.  
+
+ChangeSet
+  1.1669 04/03/02 07:19:11 andrew.vasquez@apc.qlogic.com +1 -0
+  During a back-door device reset call, hold off execution of
+  commands until the reset is complete.
+
+ChangeSet
+  1.1670 04/03/11 10:15:39 andrew.vasquez@apc.qlogic.com +4 -0
+  Resync with latest released firmware -- 3.02.26.
+
+ChangeSet
+  1.1671 04/03/13 00:00:09 andrew.vasquez@apc.qlogic.com +4 -0
+  Update version number to 8.00.00b11-k (to indicate embedded driver).
