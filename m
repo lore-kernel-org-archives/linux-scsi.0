@@ -1,141 +1,44 @@
-From: "Bagalkote, Sreenivas" <sreenib@lsil.com>
-Subject: [RESEND][PATCH]: megaraid 2.20.4: Fixes a data corruption bug
-Date: Thu, 30 Sep 2004 13:00:16 -0400
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [Patch] Fix oops on rmmod usb-storage
+Date: Thu, 30 Sep 2004 14:14:00 -0400 (EDT)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <0E3FA95632D6D047BA649F95DAB60E570230C97D@exa-atlanta>
+Message-ID: <Pine.LNX.4.44L0.0409301411240.1060-100000@ida.rowland.org>
+References: <415BBF38.2080300@suse.de>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="----_=_NextPart_000_01C4A70E.F57BF9A0"
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:50835 "EHLO mail0.lsil.com")
-	by vger.kernel.org with ESMTP id S269357AbUI3RIS (ORCPT
+Received: from ida.rowland.org ([192.131.102.52]:10244 "HELO ida.rowland.org")
+	by vger.kernel.org with SMTP id S269386AbUI3SOE (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 30 Sep 2004 13:08:18 -0400
+	Thu, 30 Sep 2004 14:14:04 -0400
+In-Reply-To: <415BBF38.2080300@suse.de>
 List-Id: linux-scsi@vger.kernel.org
-To: 'James Bottomley' <James.Bottomley@SteelEye.com>, "Mukker, Atul" <Atulm@lsil.com>
-Cc: "Bagalkote, Sreenivas" <sreenib@lsil.com>, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, "'bunk@fs.tum.de'" <bunk@fs.tum.de>, 'Andrew Morton' <akpm@osdl.org>, "'Matt_Domsch@dell.com'" <Matt_Domsch@dell.com>
+To: Hannes Reinecke <hare@suse.de>
+Cc: Mike Anderson <andmike@us.ibm.com>, Christoph Hellwig <hch@infradead.org>, James Bottomley <James.Bottomley@SteelEye.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Andrew Morton <akpm@osdl.org>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>
 
-This message is in MIME format. Since your mail reader does not understand
-this format, some or all of this message may not be legible.
+On Thu, 30 Sep 2004, Hannes Reinecke wrote:
 
-------_=_NextPart_000_01C4A70E.F57BF9A0
-Content-Type: text/plain;
-	charset="iso-8859-1"
+> Ok, since this is essential the same thread then on linux-scsi
+> (cf. "Bug: CD driver sends commands during host removal") the same 
+> solution applies here also.
+> 
+> Alan, I did a different patch which omit the special case handling in
+> scsiglue.c and rather reorders usb_stor_control_thread. I'd prefer mine 
+> (naturally), but any of those will do.
+> And yes, both patches fix the problem.
+> 
+> Back to the maintainer for patch inclusion.
+> 
+> Cheers,
+> 
+> Hannes
 
-Hello All,
+No, your patch is incorrect.  In fact, it resembles the way the driver 
+used to work -- which caused an occasional oops.  The problem is that by 
+the time the usb_stor_control_thread() wakes up and sees that it has a new 
+command to process, the SCSI core may already have deallocated the 
+scsi_cmnd structure.  So the line where you assign to us->srb->result is 
+liable to raise an addressing exception.
 
-I am resending this patch as an attachment.
+Alan Stern
 
-Thanks,
-Sreenivas
-
-
-
->-----Original Message-----
->From: James Bottomley [mailto:James.Bottomley@SteelEye.com]
->Sent: Wednesday, September 29, 2004 11:16 PM
->To: Mukker, Atul
->Cc: Bagalkote, Sreenivas; 'linux-kernel@vger.kernel.org';
->'linux-scsi@vger.kernel.org'; 'bunk@fs.tum.de'; 'Andrew Morton';
->'Matt_Domsch@dell.com'
->Subject: RE: [PATCH]: megaraid 2.20.4: Fixes a data corruption bug
->
->
->On Wed, 2004-09-29 at 17:28, Mukker, Atul wrote:
->> Considering the criticality of this fix, we hope it make 
->into the 2.6.9
->> release candidate as soon as possible. Can you update us 
->with your views on
->> this.
->
->The attached patch is mangled by the emailer...do you have a pristine
->version?
->
->James
->
->
-
-
-------_=_NextPart_000_01C4A70E.F57BF9A0
-Content-Type: application/octet-stream;
-	name="megaraid-2.20.4.0.patch"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: attachment;
-	filename="megaraid-2.20.4.0.patch"
-
-diff -Naur linux-2.6.9-rc2-mrbug/Documentation/scsi/ChangeLog.megaraid =
-linux-2.6.9-rc2-fixed/Documentation/scsi/ChangeLog.megaraid=0A=
---- linux-2.6.9-rc2-mrbug/Documentation/scsi/ChangeLog.megaraid	=
-2004-09-28 17:31:10.000000000 -0400=0A=
-+++ linux-2.6.9-rc2-fixed/Documentation/scsi/ChangeLog.megaraid	=
-2004-09-28 17:43:50.000000000 -0400=0A=
-@@ -1,3 +1,11 @@=0A=
-+Release Date	: Mon Sep 27 22:15:07 EDT 2004 - Atul Mukker =
-<atulm@lsil.com>=0A=
-+Current Version	: 2.20.4.0 (scsi module), 2.20.2.0 (cmm module)=0A=
-+Older Version	: 2.20.3.1 (scsi module), 2.20.2.0 (cmm module)=0A=
-+=0A=
-+i.	Fix data corruption. Because of a typo in the driver, the IO =
-packets=0A=
-+	were wrongly shared by the ioctl path. This causes a whole IO =
-command=0A=
-+	to be replaced by an incoming ioctl command.=0A=
-+=0A=
- Release Date	: Tue Aug 24 09:43:35 EDT 2004 - Atul Mukker =
-<atulm@lsil.com>=0A=
- Current Version	: 2.20.3.1 (scsi module), 2.20.2.0 (cmm module)=0A=
- Older Version	: 2.20.3.0 (scsi module), 2.20.2.0 (cmm module)=0A=
-diff -Naur linux-2.6.9-rc2-mrbug/drivers/scsi/megaraid/megaraid_mbox.c =
-linux-2.6.9-rc2-fixed/drivers/scsi/megaraid/megaraid_mbox.c=0A=
---- linux-2.6.9-rc2-mrbug/drivers/scsi/megaraid/megaraid_mbox.c	=
-2004-09-28 17:31:33.000000000 -0400=0A=
-+++ linux-2.6.9-rc2-fixed/drivers/scsi/megaraid/megaraid_mbox.c	=
-2004-09-28 17:43:50.000000000 -0400=0A=
-@@ -10,7 +10,7 @@=0A=
-  *	   2 of the License, or (at your option) any later version.=0A=
-  *=0A=
-  * FILE		: megaraid_mbox.c=0A=
-- * Version	: v2.20.3.1 (August 24 2004)=0A=
-+ * Version	: v2.20.4 (September 27 2004)=0A=
-  *=0A=
-  * Authors:=0A=
-  * 	Atul Mukker		<Atul.Mukker@lsil.com>=0A=
-@@ -197,7 +197,7 @@=0A=
-  * ### global data ###=0A=
-  */=0A=
- static uint8_t megaraid_mbox_version[8] =3D=0A=
--	{ 0x02, 0x20, 0x02, 0x00, 7, 22, 20, 4 };=0A=
-+	{ 0x02, 0x20, 0x04, 0x00, 9, 27, 20, 4 };=0A=
- =0A=
- =0A=
- /*=0A=
-@@ -3562,7 +3562,7 @@=0A=
- 	for (i =3D 0; i < MBOX_MAX_USER_CMDS; i++) {=0A=
- =0A=
- 		scb			=3D adapter->uscb_list + i;=0A=
--		ccb			=3D raid_dev->ccb_list + i;=0A=
-+		ccb			=3D raid_dev->uccb_list + i;=0A=
- =0A=
- 		scb->ccb		=3D (caddr_t)ccb;=0A=
- 		ccb->mbox64		=3D raid_dev->umbox64 + i;=0A=
-diff -Naur linux-2.6.9-rc2-mrbug/drivers/scsi/megaraid/megaraid_mbox.h =
-linux-2.6.9-rc2-fixed/drivers/scsi/megaraid/megaraid_mbox.h=0A=
---- linux-2.6.9-rc2-mrbug/drivers/scsi/megaraid/megaraid_mbox.h	=
-2004-09-28 17:31:33.000000000 -0400=0A=
-+++ linux-2.6.9-rc2-fixed/drivers/scsi/megaraid/megaraid_mbox.h	=
-2004-09-28 17:43:50.000000000 -0400=0A=
-@@ -21,8 +21,8 @@=0A=
- #include "megaraid_ioctl.h"=0A=
- =0A=
- =0A=
--#define MEGARAID_VERSION	"2.20.3.1"=0A=
--#define MEGARAID_EXT_VERSION	"(Release Date: Tue Aug 24 09:43:35 EDT =
-2004)"=0A=
-+#define MEGARAID_VERSION	"2.20.4.0"=0A=
-+#define MEGARAID_EXT_VERSION	"(Release Date: Mon Sep 27 22:15:07 EDT =
-2004)"=0A=
- =0A=
- =0A=
- /*=0A=
-
-------_=_NextPart_000_01C4A70E.F57BF9A0--
