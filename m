@@ -1,26 +1,32 @@
-From: Xose Vazquez Perez <xose@wanadoo.es>
-Subject: Re: [PATCH] ips driver for 2.4.23-pre4
-Date: Thu, 08 Jan 2004 20:30:23 +0100
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [ANNOUNCE] QLogic qla2xxx driver update available (v8.00.00b7).
+Date: Thu, 8 Jan 2004 19:34:27 +0000
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3FFDAFCF.3000908@wanadoo.es>
-References: <3FFC5B2C.6000302@wanadoo.es>	 <20040108171531.B12595@infradead.org> <3FFD9F0E.4060604@wanadoo.es>	 <20040108182135.A13623@infradead.org>  <3FFDA639.7090005@wanadoo.es> <1073588778.4429.5.camel@laptop.fenrus.com>
+Message-ID: <20040108193427.A14545@infradead.org>
+References: <B179AE41C1147041AA1121F44614F0B060EDD4@AVEXCH02.qlogic.org> <20040108165414.A12233@infradead.org> <20040108193336.GB10243@beaverton.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp12.eresmas.com ([62.81.235.112]:43990 "EHLO
-	smtp12.eresmas.com") by vger.kernel.org with ESMTP id S265928AbUAHTbn
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 8 Jan 2004 14:31:43 -0500
+Received: from phoenix.infradead.org ([213.86.99.234]:20241 "EHLO
+	phoenix.infradead.org") by vger.kernel.org with ESMTP
+	id S266226AbUAHTee (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 8 Jan 2004 14:34:34 -0500
+Content-Disposition: inline
+In-Reply-To: <20040108193336.GB10243@beaverton.ibm.com>; from andmike@us.ibm.com on Thu, Jan 08, 2004 at 11:33:36AM -0800
 List-Id: linux-scsi@vger.kernel.org
-To: arjanv@redhat.com
-Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi <linux-scsi@vger.kernel.org>, Tosatti <marcelo.tosatti@cyclades.com>
+To: Andrew Vasquez <andrew.vasquez@qlogic.com>, James Bottomley <James.Bottomley@SteelEye.com>, Linux Kernel <linux-kernel@vger.kernel.org>, Linux-SCSI <linux-scsi@vger.kernel.org>
 
-Arjan van de Ven wrote:
+On Thu, Jan 08, 2004 at 11:33:36AM -0800, Mike Anderson wrote:
+> This sounds good. It would seem that HBA API adapter and port
+> information through sysfs (libsysfs) should be doable through the
+> transport class.
 
-> who (at least in the RH case) often say "get it in upstream kernel
-> first".
+Yes.
 
-that is a recent policy for _Fedora_. Or tell me why RHEL kernel
-patches are so big ;-)
+> Also some partial information of the other hba api
+> functions could be supported though other sysfs attributes but the sends
+> would still need to use the old interface.
 
+With sends are you referring to function that support certain scsi
+commands like report luns and report capacity?  We have a perfectly
+fine interface for that and it's SG_IO.. 
