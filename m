@@ -1,46 +1,54 @@
-From: Lukas Hejtmanek <xhejtman@mail.muni.cz>
-Subject: 2.6.9 aacraid
-Date: Tue, 9 Nov 2004 21:56:59 +0100
-Message-ID: <20041109205659.GI1309@mail.muni.cz>
+From: Patrick Mansfield <patmans@us.ibm.com>
+Subject: Re: Report luns [was: Apple Xserve RAID and qlogic ISP2312 (qla2300)]
+Date: Tue, 9 Nov 2004 13:10:55 -0800
+Message-ID: <20041109211055.GA11459@us.ibm.com>
+References: <20041028143734.GA16358@beaverton.ibm.com> <20041028153522.GC1915@astral.ro> <20041028164210.GA16905@beaverton.ibm.com> <20041028172143.GA20949@praka.san.rr.com> <20041029085800.GF6671@astral.ro> <20041029180633.GA27267@beaverton.ibm.com> <20041101105611.GJ22603@astral.ro> <20041101194845.GA27913@us.ibm.com> <41903031.3050205@torque.net> <4190DCE0.1070606@adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-2
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hell.sks3.muni.cz ([147.251.210.30]:29397 "EHLO
-	hell.sks3.muni.cz") by vger.kernel.org with ESMTP id S261677AbUKIU5F
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 9 Nov 2004 15:57:05 -0500
+Received: from e3.ny.us.ibm.com ([32.97.182.103]:2217 "EHLO e3.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S261689AbUKIVLD (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 9 Nov 2004 16:11:03 -0500
+Received: from d01relay02.pok.ibm.com (d01relay02.pok.ibm.com [9.56.227.234])
+	by e3.ny.us.ibm.com (8.12.10/8.12.9) with ESMTP id iA9LB1aJ512794
+	for <linux-scsi@vger.kernel.org>; Tue, 9 Nov 2004 16:11:02 -0500
+Received: from d01av02.pok.ibm.com (d01av02.pok.ibm.com [9.56.224.216])
+	by d01relay02.pok.ibm.com (8.12.10/NCO/VER6.6) with ESMTP id iA9LB14l285082
+	for <linux-scsi@vger.kernel.org>; Tue, 9 Nov 2004 16:11:01 -0500
+Received: from d01av02.pok.ibm.com (loopback [127.0.0.1])
+	by d01av02.pok.ibm.com (8.12.11/8.12.11) with ESMTP id iA9LAxZt014838
+	for <linux-scsi@vger.kernel.org>; Tue, 9 Nov 2004 16:11:01 -0500
 Content-Disposition: inline
+In-Reply-To: <4190DCE0.1070606@adaptec.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
-Cc: linux-scsi@vger.kernel.org
+To: Luben Tuikov <luben_tuikov@adaptec.com>
+Cc: dougg@torque.net, linux-scsi@vger.kernel.org
 
-Hello,
+> Douglas Gilbert wrote:
+> >So if that fails scsi_scan.c might issue a REPORT LUNS command to
+> >this lun: 0xc101 which is the value of the REPORT LUNS well-known lu.
+> > Note that this is a 16 bit quantity (not 64 bit as I said in a
+> >previous post about luns). For simplicity let us assume that
+> >that it is at the top level. [If a device returns HiSup=1 in its
+> >standard INQUIRY response then it claims to support a 4 level
+> >hierarchy in its luns (with 16 bits in each level).]
+> 
+> And also supports REPORT LUNS.
+> 
+> So in either case, we send REPORT LUNS to LUN 0 and if
+> this fails to REPORT LUNS W-LUN (0xC101...).
 
-as I have 2.6.9 kernel and ASR 2200S controller (now without hang probl=
-ems)
+Do we also have to change to send the INQUIRY to the well known LUN?
 
-I can see this on totaly unloaded server (load 0.0 0.0 0.1)
+And then someday add black and white list flags and code for them ...
 
-undomiel:~# dd if=3D/dev/sda of=3D/dev/null bs=3D1M count=3D1024
-1024+0 records in
-1024+0 records out
-1073741824 bytes transferred in 24.339853 seconds (44114557 bytes/sec)
-undomiel:~# dd if=3D/dev/sda of=3D/dev/null bs=3D1M count=3D1024
-1024+0 records in
-1024+0 records out
-1073741824 bytes transferred in 26.839943 seconds (40005369 bytes/sec)
+Why is stuff like this even added to the standard??? Why not use LUN 0
+(all zeroes) or at worst have one well known LUN like the all f's?
 
-I have 8x 73GB SCSI disks (4 per channel) set up into hardware RAID 5 a=
-rray.
+The hierarchical LUN stuff and the various address modes are dumb, just
+treat the LUN as a tag/identifier (similiar to a TCP/IP network port) and
+leave the interpretation of it up to the target device (or at worst the
+transport).
 
-Should not I see more performance?
-
---=20
-Luk=E1=B9 Hejtm=E1nek
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- Patrick Mansfield
