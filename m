@@ -1,35 +1,34 @@
-From: Matthew Wilcox <willy@debian.org>
-Subject: Re: [PATCH] New QStor SATA/RAID Driver for 2.6.9-rc2
-Date: Wed, 15 Sep 2004 14:13:11 +0100
+From: Luben Tuikov <luben_tuikov@adaptec.com>
+Subject: Re: SSC-2 support in Linux
+Date: Wed, 15 Sep 2004 09:25:59 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040915131311.GD642@parcelfarce.linux.theplanet.co.uk>
-References: <414711AC.5030200@rtr.ca> <41471A84.4090200@pobox.com> <4147C38C.3000104@torque.net> <414839F0.20008@rtr.ca> <20040915125545.GE4111@suse.de>
+Message-ID: <414842E7.2020800@adaptec.com>
+References: <82C736F456CA3E4EA3D0DC6CC31AA5CB01651157@esply09.cnt.ad.cnt.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:49558 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S264113AbUIONNQ
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 15 Sep 2004 09:13:16 -0400
-Content-Disposition: inline
-In-Reply-To: <20040915125545.GE4111@suse.de>
+Received: from magic.adaptec.com ([216.52.22.17]:6044 "EHLO magic.adaptec.com")
+	by vger.kernel.org with ESMTP id S266006AbUION0G (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 15 Sep 2004 09:26:06 -0400
+In-Reply-To: <82C736F456CA3E4EA3D0DC6CC31AA5CB01651157@esply09.cnt.ad.cnt.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Jens Axboe <axboe@suse.de>
-Cc: Mark Lord <lsml@rtr.ca>, dougg@torque.net, Jeff Garzik <jgarzik@pobox.com>, linux-scsi@vger.kernel.org
+To: "David Peterson (Eng)" <david_peterson@cnt.com>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Wed, Sep 15, 2004 at 02:55:46PM +0200, Jens Axboe wrote:
-> The remaining piece (well the biggest one at least) is a nice /dev/disk
-> abstraction. That's currently the biggest obstacle to nice generic block
-> drivers, not the infrastructure.
+David Peterson (Eng) wrote:
+> I'd like to hear from anyone interested, or has looked into, adding
+> support for SSC-2 (SCSI Stream Commands -2, i.e., tape devices) explicit
+> address mode into the Linux OS.
+> 
+> In summary, SSC-2 explicit address mode enables for tape devices:
+> - robust tagged command queuing
+> - multi-path I/O
+> - enhanced error detection and recovery
 
-I'll just take this opportunity to plug /dev/drive over /dev/disk.
-Not only does it avoid the disc/disk dialect problem, it is also more
-accurate in the case of removable media.
+Looks like those should all be part of a larger effort,
+as they are needed across SCSI Core.
 
--- 
-"Next the statesmen will invent cheap lies, putting the blame upon 
-the nation that is attacked, and every man will be glad of those
-conscience-soothing falsities, and will diligently study them, and refuse
-to examine any refutations of them; and thus he will by and by convince 
-himself that the war is just, and will thank God for the better sleep 
-he enjoys after this process of grotesque self-deception." -- Mark Twain
+	Luben
+
