@@ -1,47 +1,35 @@
-From: James Bottomley <James.Bottomley@steeleye.com>
-Subject: RE: [ANNOUNCE] QLogic qla2xxx driver update available (v8.00.00b7).
-Date: 29 Dec 2003 11:32:46 -0600
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <1072719168.1878.34.camel@mulgrave>
-References: <B179AE41C1147041AA1121F44614F0B060ED8F@AVEXCH02.qlogic.org>
+From: "Randy.Dunlap" <rddunlap@osdl.org>
+Subject: Re: buslogic-update.patch
+Date: Mon, 29 Dec 2003 10:09:03 -0800
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <20031229100903.6ebc4ce0.rddunlap@osdl.org>
+References: <20031229033515.32bc0576.akpm@osdl.org>
+	<20031229115710.A27694@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
-In-Reply-To: <B179AE41C1147041AA1121F44614F0B060ED8F@AVEXCH02.qlogic.org>
-To: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Cc: Linux Kernel <linux-kernel@vger.kernel.org>, Linux-SCSI <linux-scsi@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from fw.osdl.org ([65.172.181.6]:20954 "EHLO mail.osdl.org")
+	by vger.kernel.org with ESMTP id S263667AbTL2SOw (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 29 Dec 2003 13:14:52 -0500
+In-Reply-To: <20031229115710.A27694@infradead.org>
 List-Id: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: akpm@osdl.org, James.Bottomley@steeleye.com, linux-scsi@vger.kernel.org
 
-On Fri, 2003-12-05 at 19:15, Andrew Vasquez wrote:
-> > A new version of the 8.x series driver for Linux 2.6.x kernels has
-> > been uploaded to SourceForge: 
-> > 
-> > 	http://sourceforge.net/projects/linux-qla2xxx/
-> >
-> 
-> False start.  I've uploaded 8.00.00b8 to the SF site.  This driver
-> instructs the mid-layer to perform its initial scan with
-> scsi_scan_host().  During testing, I disable the scan.  Sorry for
-> the confusion.
+On Mon, 29 Dec 2003 11:57:10 +0000 Christoph Hellwig <hch@infradead.org> wrote:
 
-OK, I've begun the BK process again.
+| On Mon, Dec 29, 2003 at 03:35:15AM -0800, Andrew Morton wrote:
+| > 
+| > James, can I unload this on you?   Thanks.
+| 
+| The patch needs rework anyway as I outlined to Randy in a previous mail.
 
-This driver is now in BK at
+ACK.
 
-bk://linux-scsi.bkbits.net/scsi-qla2xxx-2.6
+Andrew, I don't see it as very important that you merge this
+patch now, although it did seem to help one person.
 
-I didn't see any comments about Christoph's patches, so is it OK if I
-apply them?
-
-I plan to let it mature in it's own tree for a short while with the
-object being to get it into the right shape for a 2.6 inclusion
-candidate.
-
-The two items we still need to do something about are:
-
-- Multi Pathing.  This really doesn't belong in the kernel
-- The odd ioctl set to the qla device...I'd much rather see something
-more standard that all FC drivers can use.
-
-James
+--
+~Randy  [a.k.a. randy_vacation]
