@@ -1,107 +1,57 @@
-From: Matthew Dharm <mdharm-scsi@one-eyed-alien.net>
+From: Patrick Mansfield <patmans@us.ibm.com>
 Subject: Re: [PATCH as470] Add a NOREPORTLUN blacklist flag
-Date: Sun, 20 Feb 2005 22:47:09 -0800
-Message-ID: <20050221064709.GA30205@one-eyed-alien.net>
-References: <20050220195927.398c57e4.vsu@altlinux.ru> <Pine.LNX.4.44L0.0502202236350.9805-100000@netrider.rowland.org>
+Date: Mon, 21 Feb 2005 09:52:05 -0800
+Message-ID: <20050221175205.GA7495@us.ibm.com>
+References: <20050220195927.398c57e4.vsu@altlinux.ru> <Pine.LNX.4.44L0.0502202236350.9805-100000@netrider.rowland.org> <20050221064709.GA30205@one-eyed-alien.net>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="n8g4imXOkfNTN/H1"
-Received: from multivac.one-eyed-alien.net ([64.169.228.101]:40585 "EHLO
-	multivac.one-eyed-alien.net") by vger.kernel.org with ESMTP
-	id S261899AbVBUGrS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 21 Feb 2005 01:47:18 -0500
+Content-Type: text/plain; charset=us-ascii
+Received: from e33.co.us.ibm.com ([32.97.110.131]:56477 "EHLO
+	e33.co.us.ibm.com") by vger.kernel.org with ESMTP id S262053AbVBURws
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 21 Feb 2005 12:52:48 -0500
+Received: from westrelay02.boulder.ibm.com (westrelay02.boulder.ibm.com [9.17.195.11])
+	by e33.co.us.ibm.com (8.12.10/8.12.9) with ESMTP id j1LHqV0D660390
+	for <linux-scsi@vger.kernel.org>; Mon, 21 Feb 2005 12:52:32 -0500
+Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
+	by westrelay02.boulder.ibm.com (8.12.10/NCO/VER6.6) with ESMTP id j1LHqV8D126480
+	for <linux-scsi@vger.kernel.org>; Mon, 21 Feb 2005 10:52:31 -0700
+Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av02.boulder.ibm.com (8.12.11/8.12.11) with ESMTP id j1LHqUai010380
+	for <linux-scsi@vger.kernel.org>; Mon, 21 Feb 2005 10:52:31 -0700
 Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.44L0.0502202236350.9805-100000@netrider.rowland.org>
+In-Reply-To: <20050221064709.GA30205@one-eyed-alien.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, Sergey Vlasov <vsu@altlinux.ru>, Samuel Colin <Samuel.Colin3@wanadoo.fr>, SCSI development list <linux-scsi@vger.kernel.org>, USB Storage list <usb-storage@lists.one-eyed-alien.net>
+To: Alan Stern <stern@rowland.harvard.edu>, James Bottomley <James.Bottomley@SteelEye.com>, Sergey Vlasov <vsu@altlinux.ru>, Samuel Colin <Samuel.Colin3@wanadoo.fr>, SCSI development list <linux-scsi@vger.kernel.org>, USB Storage list <usb-storage@lists.one-eyed-alien.net>
 
+On Sun, Feb 20, 2005 at 10:47:09PM -0800, Matthew Dharm wrote:
+> On Sun, Feb 20, 2005 at 10:44:21PM -0500, Alan Stern wrote:
 
---n8g4imXOkfNTN/H1
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+> > Matt, it looks like the best way to solve this problem is to go back to
+> > the old strategy of always setting the SCSI revision to 2 (no matter what
+> > it might actually be), at least for Direct Access devices.  That would
+> > suppress the REPORT_LUNS command.  Would we lose anything by doing this?
+> 
+> Besides the use of REPORT_LUNS on devices which actually support it?  I
+> don't think so...
 
-On Sun, Feb 20, 2005 at 10:44:21PM -0500, Alan Stern wrote:
-> On Sun, 20 Feb 2005, Sergey Vlasov wrote:
->=20
-> > On Thu, 17 Feb 2005 17:31:04 -0500 (EST) Alan Stern wrote:
-> >=20
-> > > James:
-> > >=20
-> > > This patch adds a NOREPORTLUN blacklist flag for a disk made by "WDC"=
-=20
-> > > (Winchester?).  The drive's firmware crashes when it receives
-> > > REPORT_LUNS,  even though it claims to be SCSI rev 04.
-> > >=20
-> > > Alan Stern
-> > >=20
-> > >=20
-> > >=20
-> > > Signed-off-by: Alan Stern <stern@rowland.harvard.edu>
-> > >=20
-> > > =3D=3D=3D=3D=3D drivers/scsi/scsi_devinfo.c 1.14 vs edited =3D=3D=3D=
-=3D=3D
-> > > --- 1.14/drivers/scsi/scsi_devinfo.c	2004-12-10 11:54:56 -05:00
-> > > +++ edited/drivers/scsi/scsi_devinfo.c	2005-02-16 11:30:56 -05:00
-> > > @@ -201,6 +201,7 @@
-> > >  	{"WangDAT", "Model 2600", "01.7", BLIST_SELECT_NO_ATN},
-> > >  	{"WangDAT", "Model 3200", "02.2", BLIST_SELECT_NO_ATN},
-> > >  	{"WangDAT", "Model 1300", "02.4", BLIST_SELECT_NO_ATN},
-> > > +	{"WDC WD25", "00JB-00FUA0", NULL, BLIST_NOREPORTLUN},
-> >=20
-> > This does not look like a right solution.  WD2500JB is an IDE disk made
-> > by Western Digital:
-> >=20
-> > http://www.wdc.com/en/products/Products.asp?DriveID=3D42
-> >=20
-> > Therefore the problematic LaCie device is really an USB/Firewire-to-IDE
-> > adapter with the WD2500JB drive in a box.  And it is the USB-IDE part
-> > which fails on the REPORT_LUNS command, not the IDE disk.  Probably
-> > there are other LaCie devices with the same adapter but different disks
-> > inside; adding all such IDE disks to the SCSI blacklist does not seem
-> > like a good solution.  The usb-storage blacklist seems like a better
-> > place for such entry.
->=20
-> You are quite correct.  In fact, another user with a different brand of=
-=20
-> USB-IDE converter just wrote in with exactly the same problem.
->=20
-> James, please withdraw the patch above.
->=20
-> Matt, it looks like the best way to solve this problem is to go back to
-> the old strategy of always setting the SCSI revision to 2 (no matter what
-> it might actually be), at least for Direct Access devices.  That would
-> suppress the REPORT_LUNS command.  Would we lose anything by doing this?
+It would only matter if the device had sparse luns (multiple luns/disks
+that are not consecutively numbered).
 
-Besides the use of REPORT_LUNS on devices which actually support it?  I
-don't think so...
+You can always dynamically add it to the black list to force REPORT LUN
+usage (for SCSI_2 devices) via BLIST_REPORTLUN2, and if it did not support
+REPORT LUNS add it as sparse lun via BLIST_SPARSELUN.
 
-I wonder if printing a warning if sdev->scsi_level > SCSI_2 would be
-useful...
+Samuel or other owners of the hardware: did you check for firmware
+updates? You should make sure the hardware vendor at least knows about the
+problem.
 
-Matt
+The bridge hardware (USB/firewire to ide) should probably mark it as SCSI
+2, and it should be fixed to handle and fail the REPORT LUN in a sane way. 
 
---=20
-Matthew Dharm                              Home: mdharm-usb@one-eyed-alien.=
-net=20
-Maintainer, Linux USB Mass Storage Driver
+> I wonder if printing a warning if sdev->scsi_level > SCSI_2 would be
+> useful...
 
-You are needink to look more evil.  You likink very strong coffee?
-					-- Pitr to Dust Puppy
-User Friendly, 10/16/1998
+Probably not.
 
---n8g4imXOkfNTN/H1
-Content-Type: application/pgp-signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.2.1 (GNU/Linux)
-
-iD8DBQFCGYPtIjReC7bSPZARAnYJAJ0QsbpB0PR2ObniyIPRMbbW6qZKAQCg1tJT
-kmX8YPzszmidc7ubncWoExc=
-=+wJL
------END PGP SIGNATURE-----
-
---n8g4imXOkfNTN/H1--
+-- Patrick Mansfield
