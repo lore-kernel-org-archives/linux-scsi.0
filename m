@@ -1,116 +1,52 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH] remove sd_disks global array from sd.c
-Date: Sun, 27 Oct 2002 17:09:49 +0100
+Subject: Re: [PATCH] fix sector_div use in scsicam.c
+Date: Sun, 27 Oct 2002 17:23:07 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20021027170949.B15779@lst.de>
+Message-ID: <20021027172307.A15930@lst.de>
+References: <hch@lst.de> <200210271621.g9RGLik11263@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Content-Disposition: inline
+In-Reply-To: <200210271621.g9RGLik11263@localhost.localdomain>; from James.Bottomley@steeleye.com on Sun, Oct 27, 2002 at 10:21:44AM -0600
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@steeleye.com>
 Cc: linux-scsi@vger.kernel.org
 
-Add a pointer to struct scsi_disk instead.  This also obsoletes
-sd_dskname().
+On Sun, Oct 27, 2002 at 10:21:44AM -0600, James Bottomley wrote:
+> hch@lst.de said:
+> > sector_div has the same slightly strange calling convention do_div
+> > has: it's return value is the modulo of the two operators, the
+> > division result is in the first parameter.  Also optimize one of the
+> > expensive 64bit division away (okay, okay - it's not exactly an
+> > fast-path :)) 
+> 
+> Oops, I thought the semantics were the other way around...
+> 
+> > -		ip[2] = sector_div(capacity, ip[0] * ip[1]);
+> > +		ip[2] = capacity; 
+> 
+> This doesn't look right.  We updated the divisors (ip[0] and ip[1]) in the if 
+> statement, so surely we have to recalculate the division?
+
+Umm, right.
 
 
---- 1.77/drivers/scsi/sd.c	Fri Oct 25 21:20:04 2002
-+++ edited/drivers/scsi/sd.c	Sun Oct 27 15:54:59 2002
-@@ -85,6 +85,7 @@
- 
- struct scsi_disk {
- 	struct scsi_device *device;
-+	struct gendisk	*disk;
- 	sector_t	capacity;	/* size in 512-byte sectors */
- 	u8		media_present;
- 	u8		write_prot;
-@@ -258,25 +259,6 @@
- 	}
- }
- 
--static void sd_dskname(unsigned int dsk_nr, char *buffer)
--{
--	if (dsk_nr < 26)
--		sprintf(buffer, "sd%c", 'a' + dsk_nr);
--	else {
--		unsigned int min1;
--		unsigned int min2;
--		/*
--		 * For larger numbers of disks, we need to go to a new
--		 * naming scheme.
--		 */
--		min1 = dsk_nr / 26;
--		min2 = dsk_nr % 26;
--		sprintf(buffer, "sd%c%c", 'a' + min1 - 1, 'a' + min2);
--	}
--}
--
--static struct gendisk **sd_disks;
--
- /**
-  *	sd_init_command - build a scsi (read or write) command from
-  *	information in the request structure.
-@@ -1271,11 +1253,8 @@
- 			sd_dsk_arr[k] = sdkp;
+--- 1.11/drivers/scsi/scsicam.c	Fri Oct 25 13:31:53 2002
++++ edited/drivers/scsi/scsicam.c	Sun Oct 27 15:18:13 2002
+@@ -80,11 +80,13 @@
+ 	if (ret || ip[0] > 255 || ip[1] > 63) {
+ 		ip[0] = 64;
+ 		ip[1] = 32;
+-		if (sector_div(capacity, ip[0] * ip[1]) > 65534) {
++		sector_div(capacity, ip[0] * ip[1]);
++		if (capacity > 65534) {
+ 			ip[0] = 255;
+ 			ip[1] = 63;
  		}
+-		ip[2] = sector_div(capacity, ip[0] * ip[1]);
++		sector_div(capacity, ip[0] * ip[1]);
++		ip[2] = capacity;
  	}
--	init_mem_lth(sd_disks, sd_template.dev_max);
--	if (sd_disks)
--		zero_mem_lth(sd_disks, sd_template.dev_max);
- 
--	if (!sd_dsk_arr || !sd_disks)
-+	if (!sd_dsk_arr)
- 		goto cleanup_mem;
  
  	return 0;
-@@ -1284,8 +1263,6 @@
- #undef zero_mem_lth
- 
- cleanup_mem:
--	vfree(sd_disks);
--	sd_disks = NULL;
- 	if (sd_dsk_arr) {
-                 for (k = 0; k < sd_template.dev_max; ++k)
- 			vfree(sd_dsk_arr[k]);
-@@ -1394,8 +1371,7 @@
- 
- 	set_capacity(gd, sdkp->capacity);
- 	add_disk(gd);
--
--	sd_disks[dsk_nr] = gd;
-+	sdkp->disk = gd;
- 
- 	printk(KERN_NOTICE "Attached scsi %sdisk %s at scsi%d, channel %d, "
- 	       "id %d, lun %d\n", sdp->removable ? "removable " : "",
-@@ -1461,12 +1437,11 @@
- 	sdkp->capacity = 0;
- 	/* sdkp->detaching = 1; */
- 
--	del_gendisk(sd_disks[dsk_nr]);
-+	del_gendisk(sdkp->disk);
- 	sdp->attached--;
- 	sd_template.dev_noticed--;
- 	sd_template.nr_dev--;
--	put_disk(sd_disks[dsk_nr]);
--	sd_disks[dsk_nr] = NULL;
-+	put_disk(sdkp->disk);
- }
- 
- /**
-@@ -1556,13 +1531,8 @@
- 	if (!SDpnt->online)
- 		return 0;
- 
--	if(verbose) {
--		char buf[16];
--
--		sd_dskname(index, buf);
--
--		printk("%s ", buf);
--	}
-+	if (verbose)
-+		printk("%s ", sdkp->disk->disk_name);
- 
- 	SRpnt = scsi_allocate_request(SDpnt);
- 	if(!SRpnt) {
