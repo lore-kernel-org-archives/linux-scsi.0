@@ -1,56 +1,65 @@
-From: James.Smart@Emulex.Com
-Subject: RE: [Announce] Emulex lpfcdriver v8.0.20 available
-Date: Tue, 25 Jan 2005 17:22:50 -0500
-Message-ID: <0B1E13B586976742A7599D71A6AC733C02F318@xbl3.ma.emulex.com>
+From: "Mukker, Atul" <Atulm@lsil.com>
+Subject: RE: How to add/drop SCSI drives from within the driver?
+Date: Tue, 25 Jan 2005 18:37:49 -0500
+Message-ID: <0E3FA95632D6D047BA649F95DAB60E5705B837C3@exa-atlanta>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emulex.emulex.com ([138.239.112.1]:56005 "EHLO
-	emulex.emulex.com") by vger.kernel.org with ESMTP id S262202AbVAYWXG convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 25 Jan 2005 17:23:06 -0500
-Content-class: urn:content-classes:message
+Received: from mail0.lsil.com ([147.145.40.20]:7350 "EHLO mail0.lsil.com")
+	by vger.kernel.org with ESMTP id S262180AbVAYXiJ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 25 Jan 2005 18:38:09 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: hch@infradead.org
-Cc: linux-scsi@vger.kernel.org
+To: 'Patrick Mansfield' <patmans@us.ibm.com>, "Mukker, Atul" <Atulm@lsil.com>
+Cc: 'James Bottomley' <James.Bottomley@SteelEye.com>, 'Linux Kernel' <linux-kernel@vger.kernel.org>, 'SCSI Mailing List' <linux-scsi@vger.kernel.org>
 
-I can easily disable the them. However, I won't sign up for dealing
-with this change in the other FC drivers as it could be rather
-extensive. A patch to back out the attributes would disable FC
-transport support in the other drivers. Their maintainers would need
-to re-add support.
+Thanks for the suggestion. After more exploration, looks like different
+distribution have different implementations for /sbin/hotplug. This may
+aggravate the issue for applications. For now, we will stick with a wait and
+watch after bus scan :-(
 
--- james s
+Will probe the linux-hotplug-devel@lists.sourceforge.net list for more
+pointers
+
+Thanks
+
+===========================
+Atul Mukker
+Architect, Drivers and BIOS
+LSI Logic Corporation
 
 
-Christoph Hellwig wrote:
-> On Thu, Jan 20, 2005 at 11:26:00AM -0500, 
-> James.Smart@Emulex.Com wrote:
-> > > This sounds like a good idea, but I wonder if we have 
-> userland relying
-> > > on those attributes already.  But given that the fc 
-> transport class
-> > > was mostly a joke before you encehanced it it might be 
-> worth breaking
-> > > it..
-> > 
-> > You and James would have to give the approval for this one. 
-> I already
-> > encountered issues with these attributes when then went 
-> from scsi_device
-> > to scsi_target. The most significant hiccup was to udev and 
-> the projects
-> > depending on it... Also, given the potential amount of change may be
-> > needed to move to rports, I wouldn't want to pull the rug 
-> out from under
-> > the other drivers until they are ready...
+> -----Original Message-----
+> From: Patrick Mansfield [mailto:patmans@us.ibm.com] 
+> Sent: Tuesday, January 25, 2005 11:52 AM
+> To: Mukker, Atul
+> Cc: 'James Bottomley'; Linux Kernel; SCSI Mailing List
+> Subject: Re: How to add/drop SCSI drives from within the driver?
 > 
-> James just returned from a long journey and he hasn't read 
-> the thread yet,
-> but after a short discussion we agree that it's better to 
-> move the attributes
-> over to the rnode.  If we're seeing compatiblity problems 
-> we'll have to
-> add symlinks.
+> Atul -
+> 
+> On Tue, Jan 25, 2005 at 11:27:36AM -0500, Mukker, Atul wrote:
+> > After writing the "- - -" to the scan attribute, the management 
+> > applications assume the udev has created the relevant 
+> entries in the 
+> > /dev directly and try to use the devices _immediately_ and 
+> fail to see 
+> > the devices
+> > 
+> > Is there a hotplug event which would tell the management 
+> applications 
+> > that the device nodes have actually been created now and 
+> ready to be used?
+> 
+> Read the udev man page section, the part right before 
+> "FILES". Try putting a script under /etc/dev.d/default/*.dev. 
+> Then you can get more specific with an /etc/dev.d/scsi/*.dev 
+> script or something else.
+> 
+> I just tried something simple but did not get it working.
+> 
+> Try linux-hotplug-devel@lists.sourceforge.net list for help.
+> 
+> -- Patrick Mansfield
+> 
