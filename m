@@ -1,21 +1,41 @@
-From: Matthew Wilcox <willy@debian.org>
-Subject: Re: 53c8xx_2 driver for SymBios SCSI adapters
-Date: Thu, 17 Jun 2004 16:44:59 +0100
+From: "Smith, Hibbard" <Hibbard.Smith@nasdaq.com>
+Subject: RE: 53c8xx_2 driver for SymBios SCSI adapters
+Date: Thu, 17 Jun 2004 12:05:51 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040617154459.GB20511@parcelfarce.linux.theplanet.co.uk>
-References: <42DB3021E70A164EB14AAD5181F8280D2B8460@mer-exch2.corp.nasdaq.com>
+Message-ID: <42DB3021E70A164EB14AAD5181F8280D2B8461@mer-exch2.corp.nasdaq.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:16814 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S266546AbUFQPo7
+Received: from mer-tsm1.nasdaq.com ([206.200.253.23]:58888 "EHLO
+	MER-TSM1.NASDAQ.COM") by vger.kernel.org with ESMTP id S264851AbUFQQGC convert rfc822-to-8bit
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 17 Jun 2004 11:44:59 -0400
-Content-Disposition: inline
-In-Reply-To: <42DB3021E70A164EB14AAD5181F8280D2B8460@mer-exch2.corp.nasdaq.com>
+	Thu, 17 Jun 2004 12:06:02 -0400
+content-class: urn:content-classes:message
 List-Id: linux-scsi@vger.kernel.org
-To: "Smith, Hibbard" <Hibbard.Smith@nasdaq.com>
+To: Matthew Wilcox <willy@debian.org>
 Cc: linux-scsi@vger.kernel.org, matthew@wil.cx
+
+Matthew,
+
+I apologize if you feel my message was incorrect or inappropriate.  I posted this problem to this list at the end of May and got no response whatsoever.  I took the liberty of writing directly to you at matthew@wil.cx and that was returned by some server along the way as undeliverable.  My email setup is not broken.  When I searched this list's archive at google with the search term "53c"  the only things I found posted by you were in April and July of 2003.
+
+Obviously, I reached an incorrect conclusion about the state of this driver and it's support.  I am sorry for that.
+
+However, back to the real issue.  Is there anything I can do to increase the verbosity of the driver to get more information about what's happening?  I would be happy to build a kernel in order to obtain more detail.  Since the kernel never really gets up and running, I'll have to transcribe the output and mail it to you.  
+
+
+Hibbard T. Smith, JR
+smitty@essnjay.com
+
+-----Original Message-----
+From: willy@www.linux.org.uk [mailto:willy@www.linux.org.uk]On Behalf Of
+Matthew Wilcox
+Sent: Thursday, June 17, 2004 11:45 AM
+To: Smith, Hibbard
+Cc: linux-scsi@vger.kernel.org; matthew@wil.cx
+Subject: Re: 53c8xx_2 driver for SymBios SCSI adapters
+
 
 On Thu, Jun 17, 2004 at 11:31:42AM -0400, Smith, Hibbard wrote:
 > Is anyone actually maintaining or working on this driver??
@@ -65,3 +85,5 @@ conscience-soothing falsities, and will diligently study them, and refuse
 to examine any refutations of them; and thus he will by and by convince 
 himself that the war is just, and will thank God for the better sleep 
 he enjoys after this process of grotesque self-deception." -- Mark Twain
+
+
