@@ -1,17 +1,38 @@
-From: Shobhit Mathur <shobhitmmathur@yahoo.com>
-Subject: SCSI-ID persistence query...
-Date: Thu, 13 May 2004 04:00:21 -0700 (PDT)
+From: "Parthiban  Manickam - NPD, Chennai" <pamanick@npd.hcltech.com>
+Subject: RE: SCSI-ID persistence query...
+Date: Thu, 13 May 2004 17:12:34 +0530
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040513110021.36867.qmail@web51006.mail.yahoo.com>
+Message-ID: <D8618A5F56A61941822B3F4B6FCA6D7908EC1E@npd-mail.hclt-ntl.co.in>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from web51006.mail.yahoo.com ([206.190.38.137]:51885 "HELO
-	web51006.mail.yahoo.com") by vger.kernel.org with SMTP
-	id S264093AbUEMLAX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 13 May 2004 07:00:23 -0400
+Received: from [202.54.64.17] ([202.54.64.17]:16911 "EHLO hclnpd.hcltech.com")
+	by vger.kernel.org with ESMTP id S264119AbUEMLo3 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 13 May 2004 07:44:29 -0400
 List-Id: linux-scsi@vger.kernel.org
+To: Shobhit Mathur <shobhitmmathur@yahoo.com>, linux-scsi@vger.kernel.org
+
+Hi Shobhit
+
+In case of Directed Attached Storage(DAS)
+SCSI ID is configurable using jumper settings.
+The vendor will provide the details about 
+the configuration. You have to make sure that id
+assigned is unique.
+
+In the SAN(FC or iSCSI Based) environment initiator
+will assign unique id.
+
+thanks
+Parthi
+
+-----Original Message-----
+From: Shobhit Mathur [mailto:shobhitmmathur@yahoo.com]
+Sent: Thursday, May 13, 2004 4:30 PM
 To: linux-scsi@vger.kernel.org
+Subject: SCSI-ID persistence query...
+
 
 Hello,
 
@@ -42,3 +63,7 @@ __________________________________
 Do you Yahoo!?
 Yahoo! Movies - Buy advance tickets for 'Shrek 2'
 http://movies.yahoo.com/showtimes/movie?mid=1808405861 
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
