@@ -1,26 +1,35 @@
-From: Andrew Morton <akpm@osdl.org>
+From: Jesse Barnes <jbarnes@engr.sgi.com>
 Subject: Re: [PATCH] use mmiowb in qla1280.c
-Date: Mon, 25 Oct 2004 12:02:23 -0700
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <20041025120223.3633ea4c.akpm@osdl.org>
-References: <200410211613.19601.jbarnes@engr.sgi.com>
-	<200410211617.14809.jbarnes@engr.sgi.com>
-	<1098634812.10906.38.camel@mulgrave>
-	<200410250918.01786.jbarnes@engr.sgi.com>
+Date: Mon, 25 Oct 2004 12:33:17 -0700
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <200410251233.17683.jbarnes@engr.sgi.com>
+References: <200410211613.19601.jbarnes@engr.sgi.com> <200410250918.01786.jbarnes@engr.sgi.com> <20041025120223.3633ea4c.akpm@osdl.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel=40m.gmane.org-S261251AbUJYTLp@vger.kernel.org>
-In-Reply-To: <200410250918.01786.jbarnes@engr.sgi.com>
-To: Jesse Barnes <jbarnes@engr.sgi.com>
-Cc: James.Bottomley@steeleye.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, jeremy@sgi.com, jes@sgi.com
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from omx3-ext.sgi.com ([192.48.171.20]:3226 "EHLO omx3.sgi.com")
+	by vger.kernel.org with ESMTP id S261160AbUJYTdf (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 25 Oct 2004 15:33:35 -0400
+In-Reply-To: <20041025120223.3633ea4c.akpm@osdl.org>
+Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
+To: Andrew Morton <akpm@osdl.org>
+Cc: James.Bottomley@steeleye.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, jeremy@sgi.com, jes@sgi.com
 
-Jesse Barnes <jbarnes@engr.sgi.com> wrote:
+On Monday, October 25, 2004 12:02 pm, Andrew Morton wrote:
+> Jesse Barnes <jbarnes@engr.sgi.com> wrote:
+> > > *** Warning: "mmiowb" [drivers/scsi/qla1280.ko] undefined!
+> >
+> >  Only works in Andrew's tree until he pushes mmiowb to Linus.
 >
-> > *** Warning: "mmiowb" [drivers/scsi/qla1280.ko] undefined!
-> 
->  Only works in Andrew's tree until he pushes mmiowb to Linus.
+> I haven't been following this stuff at all closely and I need help
+> determining which patches should be pushed, and when.  Please.
 
-I haven't been following this stuff at all closely and I need help
-determining which patches should be pushed, and when.  Please.
+I think it's safe to push the main mmiowb() patch now, then James and the 
+netdev tree can start including driver changes to make use of it.
+
+Thanks,
+Jesse
