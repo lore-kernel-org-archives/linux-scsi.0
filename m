@@ -1,52 +1,38 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: Sym2 driver timeouts on powerstacks
-Date: Fri, 7 Jan 2005 14:48:22 +0000
-Message-ID: <20050107144822.GS27371@parcelfarce.linux.theplanet.co.uk>
-References: <200501041354.50294.marvin24@gmx.de>
+From: Maurice Volaski <mvolaski@aecom.yu.edu>
+Subject: Why is the kernel complaining about large SCSI LUNs
+Date: Fri, 7 Jan 2005 11:07:09 -0500
+Message-ID: <a06100533be0463eff562@[129.98.90.227]>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="us-ascii" ; format="flowed"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:5770 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S261442AbVAGOsY
+Received: from mailgw.aecom.yu.edu ([129.98.1.16]:52972 "EHLO
+	mailgw.aecom.yu.edu") by vger.kernel.org with ESMTP id S261477AbVAGQG4
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 7 Jan 2005 09:48:24 -0500
-Content-Disposition: inline
-In-Reply-To: <200501041354.50294.marvin24@gmx.de>
+	Fri, 7 Jan 2005 11:06:56 -0500
+Received: from mailvx.aecom.yu.edu (mailvx.aecom.yu.edu [129.98.1.17])
+	by mailgw.aecom.yu.edu (8.12.11/8.12.11) with SMTP id j07G6qsM029066
+	for <linux-scsi@vger.kernel.org>; Fri, 7 Jan 2005 11:06:52 -0500
+Received: from post.aecom.yu.edu ([129.98.1.126])
+ by mailvx.aecom.yu.edu (SAVSMTP 3.1.1.32) with SMTP id M2005010711065121164
+ for <linux-scsi@vger.kernel.org>; Fri, 07 Jan 2005 11:06:51 -0500
+Received: from [129.98.90.227] (usseinstein.aecom.yu.edu [129.98.90.227])
+	by post.aecom.yu.edu (8.11.7p1+Sun/8.11.7) with ESMTP id j07G6p302155
+	for <linux-scsi@vger.kernel.org>; Fri, 7 Jan 2005 11:06:51 -0500 (EST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Marc Dietrich <marvin24@gmx.de>
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Tue, Jan 04, 2005 at 01:54:49PM +0100, Marc Dietrich wrote:
-> I'm trying to get a 2.6.10 kernel to run on a Motorola Powerstack II (Utah). 
-> This is a PReP (powerpc) machine.
+I am running kernel 2.6.9 on an Opteron box with an LSI 320 card and 
+am seeing the following message repeatedly in dmesg:
 
-I just had a thought:
+scsi: host 1 channel 0 id 0 lun 0x5a5a5a5a5a5a5a5a has a LUN larger 
+than currently supported.
 
-sym0: SCSI BUS has been reset.
-scsi0 : sym-2.1.18m
-elevator: using anticipatory as default io scheduler
-sym0:0:0:ccb @c7d9ac00 using tag 256.
-sym0: queuepos=2.  
-sym0:0:0: ABORT operation started.
-sym0:0:0: ABORT operation timed-out.
-sym0:0:0: DEVICE RESET operation started.
-sym0:0:0: DEVICE RESET operation timed-out.
-sym0:0:0: BUS RESET operation started.
-sym0:0:0: BUS RESET operation timed-out.
-sym0:0:0: HOST RESET operation started.
-sym0:0:0:ccb @c7d9ac00 freeing tag 256.
-sym0: SCSI BUS has been reset.
-
-This is sym2's typical behaviour when it receives no interrupts.
-I think if you were to NFS-root this box, you'd see equal problems with
-the network driver.  Try asking on the powerpc lists, see if there's a
-known interrupt routing problem.
-
+Is this just cosmetic or there is a bug somewhere? It appears that 
+scsi_scan.c has logic where this message is actually valid, but how 
+can that be?
 -- 
-"Next the statesmen will invent cheap lies, putting the blame upon 
-the nation that is attacked, and every man will be glad of those
-conscience-soothing falsities, and will diligently study them, and refuse
-to examine any refutations of them; and thus he will by and by convince 
-himself that the war is just, and will thank God for the better sleep 
-he enjoys after this process of grotesque self-deception." -- Mark Twain
+
+Maurice Volaski, mvolaski@aecom.yu.edu
+Computing Support, Rose F. Kennedy Center
+Albert Einstein College of Medicine of Yeshiva University
