@@ -1,29 +1,31 @@
-From: christophe.varoqui@free.fr
-Subject: Re: [sg3_utils] report target group
-Date: Thu, 30 Dec 2004 15:12:07 +0100
-Message-ID: <1104415927.41d40cb782493@imp5-q.free.fr>
-References: <1104233396.41d143b44e073@imp5-q.free.fr> <41D21DDD.5010109@torque.net> <1104307397.41d264c5c5d3c@imp5-q.free.fr> <41D2AF42.5050007@torque.net> <1104327781.41d2b4654846d@imp5-q.free.fr> <41D38DBF.6010303@torque.net> <1104415233.41d40a018c287@imp5-q.free.fr>
+From: "Angelo G. Devine" <ofeamegwk@chartertn.net>
+Subject: Finished
+Date: Thu, 30 Dec 2004 14:55:13 -0600
+Message-ID: <2300165175423-eZVEN0__9912.83638072691$1104445023$gmane$org@SKKXLUQK>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain;lebanon-24-159-25-242.midtn.chartertn.net
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from postfix3-2.free.fr ([213.228.0.169]:7120 "EHLO
-	postfix3-2.free.fr") by vger.kernel.org with ESMTP id S261638AbUL3OMI
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 30 Dec 2004 09:12:08 -0500
-In-Reply-To: <1104415233.41d40a018c287@imp5-q.free.fr>
+Received: from lebanon-24-159-25-242.midtn.chartertn.net ([24.159.25.242]:23556
+	"HELO lebanon-24-159-25-242.midtn.chartertn.net") by vger.kernel.org
+	with SMTP id S261732AbUL3WOS (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 30 Dec 2004 17:14:18 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: christophe.varoqui@free.fr
-Cc: dougg@torque.net, linux-scsi@vger.kernel.org
+To: Buckner <linux-kernel@vger.kernel.org>
 
->
-> All in all, I don't really see how one can use the result of RTPG.
->
-Ok, sorry to bug around.
-the response is at chapter 7.6.8 of SPC-3 :
-VPD page 88h contains the mapping between relative port ids and port ids
+Thu, 30 Dec 2004 14:56:51 -0600
 
-regards,
-cvaroqui
---
+Hello,
+
+my cheif has authorized me to send you update about your  m o rtga g e 
+a p p roval. Mr. Buckner called from our bank yesterday
+to update your situation. Our company will   a p prove   you for 
+3.25 % (c r e dit does not matter) but some of our information is 
+missing, so please fill this form to update:
+http://www.qeekcy.com/
+
+Thanks for your time.
+
+Angelo G. Devine
+
