@@ -1,31 +1,52 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: RE: [PATCH]: megaraid 2.20.4: Fixes a data corruption bug
-Date: 05 Oct 2004 14:27:36 -0500
+From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+Subject: Re: [PATCH] Add transport class and domain validation to ncr53c8xx
+Date: Tue, 5 Oct 2004 21:31:31 +0200 (CEST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1097004463.2064.85.camel@mulgrave>
-References: <0E3FA95632D6D047BA649F95DAB60E570230C98F@exa-atlanta>
+Message-ID: <Pine.LNX.4.60.0410052116000.5094@poirot.grange>
+References: <1096992032.2173.30.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat16.steeleye.com ([209.192.50.48]:30096 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S263540AbUJET1u (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 5 Oct 2004 15:27:50 -0400
-In-Reply-To: <0E3FA95632D6D047BA649F95DAB60E570230C98F@exa-atlanta>
+Received: from mail.gmx.net ([213.165.64.20]:31150 "HELO mail.gmx.net")
+	by vger.kernel.org with SMTP id S263117AbUJEUPP (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Oct 2004 16:15:15 -0400
+In-Reply-To: <1096992032.2173.30.camel@mulgrave>
 List-Id: linux-scsi@vger.kernel.org
-To: "Bagalkote, Sreenivas" <sreenib@lsil.com>
-Cc: "Mukker, Atul" <Atulm@lsil.com>, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, "'bunk@fs.tum.de'" <bunk@fs.tum.de>, 'Andrew Morton' <akpm@osdl.org>, "'Matt_Domsch@dell.com'" <Matt_Domsch@dell.com>, "Ju, Seokmann" <sju@lsil.com>
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Tue, 2004-10-05 at 14:15, Bagalkote, Sreenivas wrote:
-> The latest megaraid driver on bk://linux-scsi.bkbits.net/scsi-misc-2.6 still
-> has
-> CONFIG_COMPAT around register_ioctl32_conversion. Will it remain in the
-> source
-> or should it go?
+On Tue, 5 Oct 2004, James Bottomley wrote:
 
-I'd like to see a patch taking it out, please.
+> @@ -6235,10 +6243,13 @@
+>  
+>  		case NS_SYNC:
+>  			ncr_setsync (np, cp, 0, 0xe0);
+> +			spi_period(starget) = 0;
+> +			spi_offset(starget) = 0;
 
-James
+Documentation/CodingStyle:
 
+<quote>
+Things to avoid when using macros:
+
+....
+
+3) macros with arguments that are used as l-values: FOO(x) = y; will
+bite you if somebody e.g. turns FOO into an inline function.
+</quote>
+
+A trivial alternative would be to
+#define spi_set_period(st, val) spi_period(st) = (val)
+#define spi_set_offset(st, val) spi_offset(st) = (val)
+....
+
+Not too important, but, looks a bit nicer:
+
+> +			spi_set_period(starget, 0);
+> +			spi_set_offset(starget, 0);
+
+Thanks
+Guennadi
+---
+Guennadi Liakhovetski
 
