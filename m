@@ -1,39 +1,80 @@
-From: Andrew Morton <akpm@digeo.com>
+From: Andre Hedrick <andre@linux-ide.org>
 Subject: Re: scsi command slab allocation under memory pressure
-Date: Mon, 3 Feb 2003 15:19:28 -0800
+Date: Mon, 3 Feb 2003 22:15:40 -0800 (PST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030203151928.1f13c88a.akpm@digeo.com>
-References: <20030129104731.A2811@beaverton.ibm.com>
-	<3E382E2C.4030201@splentec.com>
-	<20030129121117.A3389@beaverton.ibm.com>
-	<20030130225738.1874c2e0.akpm@digeo.com>
-	<1044020591.2002.16.camel@mulgrave>
-	<20030131124412.086f2d1c.akpm@digeo.com>
-	<20030203225550.GJ29516@redhat.com>
-	<1044313513.1777.91.camel@mulgrave>
+Message-ID: <Pine.LNX.4.10.10302032204170.2810-100000@master.linux-ide.org>
+References: <20030203225550.GJ29516@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from digeo-nav01.digeo.com (digeo-nav01.digeo.com [192.168.1.233])
-	by packet.digeo.com (8.9.3+Sun/8.9.3) with SMTP id PAA21883
-	for <linux-scsi@vger.kernel.org>; Mon, 3 Feb 2003 15:24:42 -0800 (PST)
-In-Reply-To: <1044313513.1777.91.camel@mulgrave>
+In-Reply-To: <20030203225550.GJ29516@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@steeleye.com>
-Cc: dledford@redhat.com, patmans@us.ibm.com, luben@splentec.com, linux-scsi@vger.kernel.org
+To: Doug Ledford <dledford@redhat.com>
+Cc: Andrew Morton <akpm@digeo.com>, James Bottomley <James.Bottomley@steeleye.com>, patmans@us.ibm.com, luben@splentec.com, linux-scsi@vger.kernel.org
 
-James Bottomley <James.Bottomley@steeleye.com> wrote:
->
-> Andrew, these patches are now in Linus' BK, so if you want to take a
-> look and see how our loaded behaviour is, I'd be grateful.
 
-Looks pretty straightforward.  Most of the allocations are GFP_KERNEL, which
-is a good sign.
+Doug,
 
-One could have designed it to support a pool of >1 command from the outset,
-but it's unlikely to be necessary.
+I had argued some time ago for reserved and priority allocation for swap
+under block period.  Regardless if this is scsi/ata/sas/sata the issue is
+fundamential.  I spent a fair amount of time debating memory pressure
+against swap in combination of saturated device request queues, with Rik
+Riel.  This is one layer above the LLDD and regardless if you reserve
+1,2,N-1,N command slots in the queuedcommand list.  If the request can
+not be obtained from block because all request slots are stuffed full, you
+have to deploy an out-of-bounds operation.
 
-(linux-scsi@vger doesn't send messages to or from oneself to or from oneself.
- This upsets one's filing system.  Does this irritate otherselves as much as
-this self?)
+Progress will not happen period.  Elevator sorting on swap is silly!
+If it is still done, you can not get there from here.  Any swap-io run via
+the elevator must be inserted in the front of the request queue, period.
+This will provide you N+1 jump without fracturing all the commands in
+process or in flight.  Since it would be priority, one can stuff it with
+the SPECIAL marker and boost it to the head of the queuedcommand list.
+
+Maybe I am on crack, but so is the design delpoyed to date.
+	(from top->bottom and not bottom->up)
+
+Cheers,
+
+
+Andre Hedrick
+LAD Storage Consulting Group
+
+
+On Mon, 3 Feb 2003, Doug Ledford wrote:
+
+> On Fri, Jan 31, 2003 at 12:44:12PM -0800, Andrew Morton wrote:
+> > Bear in mind that on the swapout path, the calling process has PF_MEMALLOC
+> > set.  This is a strong and successful mechanism - it allows the caller to dip
+> > into the final page reserves which are denied to even GFP_ATOMIC allocations.
+> > There's maybe a megabyte or two there.
+> > 
+> > Could be that there's no problem to be solved here.  It depends on whether
+> > these allocations are occurring in process context or not.
+> 
+> I think the case is that there is no problem to be solved.  One command 
+> per host is enough to keep each host running, and that's enough to keep 
+> the system running.  If we are ever low enough on mem that we get down to 
+> failing scsi command allocations, the system is already hurting.  The 
+> complaint was that a device doing something other than swap could starve a 
+> swap device.  I don't buy that.  If the device is doing constant reads 
+> then it's going to run out of mem eventually and block just like our 
+> allocations are, if it's writing then it very likely is freeing up just as 
+> many pages as the swap operation would be.  In short, I think if we keep 
+> the disk subsystem running, even if crippled with just one command, the 
+> problem becomes self correcting and there isn't much for us to solve.  Of 
+> course, that's just my 5 minute analysis, someone feel free to prove me 
+> wrong.
+> 
+> -- 
+>   Doug Ledford <dledford@redhat.com>     919-754-3700 x44233
+>          Red Hat, Inc. 
+>          1801 Varsity Dr.
+>          Raleigh, NC 27606
+>   
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+
