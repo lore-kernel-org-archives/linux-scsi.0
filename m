@@ -1,65 +1,93 @@
-From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
-Subject: BK: scsi-misc cs inconsistencies?
-Date: Wed, 14 Jul 2004 12:24:29 +0200 (CEST)
+From: Mikael Pettersson <mikpe@csd.uu.se>
+Subject: [PATCH][2.6.8-rc1-mm1] drivers/scsi/sg.c gcc341 inlining fix
+Date: Wed, 14 Jul 2004 14:16:17 +0200 (MEST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.60.0407141209450.2892@poirot.grange>
-Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Message-ID: <200407141216.i6ECGHxg008332@harpo.it.uu.se>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pop.gmx.net ([213.165.64.20]:27023 "HELO mail.gmx.net")
-	by vger.kernel.org with SMTP id S267353AbUGNK1u (ORCPT
+Received: from aun.it.uu.se ([130.238.12.36]:31705 "EHLO aun.it.uu.se")
+	by vger.kernel.org with ESMTP id S267253AbUGNMQ1 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 14 Jul 2004 06:27:50 -0400
+	Wed, 14 Jul 2004 08:16:27 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@steeleye.com>
-Cc: linux-scsi@vger.kernel.org
+To: akpm@osdl.org
+Cc: dgilbert@interlog.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Hello
+gcc-3.4.1 errors out in 2.6.8-rc1-mm1 at drivers/scsi/sg.c:
 
-I've searched scsi-misc cs-entries on bk, and they don't seem to be quite 
-consistent:
+drivers/scsi/sg.c: In function `sg_ioctl':
+drivers/scsi/sg.c:209: sorry, unimplemented: inlining failed in call to 'sg_jif_to_ms': function body not available
+drivers/scsi/sg.c:930: sorry, unimplemented: called from here
+make[2]: *** [drivers/scsi/sg.o] Error 1
+make[1]: *** [drivers/scsi] Error 2
+make: *** [drivers] Error 2
 
-Linux kernel tree Search results for "tmscsim" in ChangeSet comments
+sg_jif_to_ms() is marked inline but used defore its function
+body is available. Moving it nearer the top of sg.c (together
+with sg_ms_to_jif() for consistency) fixes the problem.
 
-Filename  Rev		Match
+Signed-off-by: Mikael Pettersson <mikpe@csd.uu.se>
 
-ChangeSet 1.1861	[PATCH] tmscsim: kernel bugzilla bug #2139 
-ChangeSet 1.1760.31.6	[PATCH] kill obsolete typedefs and wrappers from tmscsim 
-ChangeSet 1.1760.31.5	[PATCH] some tmscsim consolidation 
-(6)
-ChangeSet 1.1760.31.5	> I've looked through my old tmscsim patch queue and found this one: 
-(7)
-ChangeSet 1.1739.2.17	[PATCH] tmscsim: host_lock use in LLD 
-(1)
-ChangeSet 1.1739.2.17	While reviewing tmscsim, I noticed something, I didn't quite like / 
-(2)
-ChangeSet 1.1739.2.16	[PATCH] tmscsim: init / exit cleanup 
-ChangeSet 1.1722.73.26	[PATCH] tmscsim: 64-bit cleanup 
-(3)
-ChangeSet 1.1722.73.26	tmscsim.c. 
-(4)
-ChangeSet 1.1722.73.5	[PATCH] tmscsim: Store pDCB in device->hostdata 
-ChangeSet 1.1722.45.17	[PATCH] tmscsim: convert to slave_... 
-ChangeSet 1.1722.45.15	[PATCH] tmscsim: remove DeviceCnt 
-ChangeSet 1.1722.45.14	[PATCH] tmscsim: Update version after "new API" 
-ChangeSet 1.1612.6.20	[PATCH] tmscsim: trivial updates 
-ChangeSet 1.1612.6.14	[PATCH] tmscsim: remove legacy and void code 
-ChangeSet 1.1612.6.13	tmscsim: remove procfs write support from tmscsim 
-ChangeSet 1.1612.6.11	[PATCH] tmscsim: no internal queue 
-ChangeSet 1.1612.6.9	[PATCH] tmscsim: 64-bit cleanup 
-(5)
-ChangeSet 1.1371.1.378	[PATCH] Fix tmscsim on amd64 
-ChangeSet 1.1371.94.3	SCSI: Fix tmscsim driver 
-ChangeSet 1.1046.250.59	PCI: remove pci_present() from drivers/scsi/tmscsim.c
-
-Here, (6), (7); (1), (2); and (3), (4) have the same cs-number, (3) and 
-(5) have the same description. Is it a problem with the BK itself, or with 
-the way these entries have been committed? In the former case I can 
-forward this to Larry / BitMover support / whatever. Or is just my 
-understanding wrong and all those fields do not have to be unique?...
-
-Thanks
-Guennadi
----
-Guennadi Liakhovetski
-
+--- linux-2.6.8-rc1-mm1/drivers/scsi/sg.c.~1~	2004-07-14 12:58:34.000000000 +0200
++++ linux-2.6.8-rc1-mm1/drivers/scsi/sg.c	2004-07-14 13:45:26.000000000 +0200
+@@ -225,6 +225,30 @@
+ #define SZ_SG_REQ_INFO sizeof(sg_req_info_t)
+ 
+ static int
++sg_ms_to_jif(unsigned int msecs)
++{
++	if ((UINT_MAX / 2U) < msecs)
++		return INT_MAX;	/* special case, set largest possible */
++	else
++		return ((int) msecs <
++			(INT_MAX / 1000)) ? (((int) msecs * HZ) / 1000)
++		    : (((int) msecs / 1000) * HZ);
++}
++
++static inline unsigned
++sg_jif_to_ms(int jifs)
++{
++	if (jifs <= 0)
++		return 0U;
++	else {
++		unsigned int j = (unsigned int) jifs;
++		return (j <
++			(UINT_MAX / 1000)) ? ((j * 1000) / HZ) : ((j / HZ) *
++								  1000);
++	}
++}
++
++static int
+ sg_open(struct inode *inode, struct file *filp)
+ {
+ 	int dev = iminor(inode);
+@@ -2575,30 +2599,6 @@
+ 	free_pages((unsigned long) buff, order);
+ }
+ 
+-static int
+-sg_ms_to_jif(unsigned int msecs)
+-{
+-	if ((UINT_MAX / 2U) < msecs)
+-		return INT_MAX;	/* special case, set largest possible */
+-	else
+-		return ((int) msecs <
+-			(INT_MAX / 1000)) ? (((int) msecs * HZ) / 1000)
+-		    : (((int) msecs / 1000) * HZ);
+-}
+-
+-static inline unsigned
+-sg_jif_to_ms(int jifs)
+-{
+-	if (jifs <= 0)
+-		return 0U;
+-	else {
+-		unsigned int j = (unsigned int) jifs;
+-		return (j <
+-			(UINT_MAX / 1000)) ? ((j * 1000) / HZ) : ((j / HZ) *
+-								  1000);
+-	}
+-}
+-
+ static unsigned char allow_ops[] = { TEST_UNIT_READY, REQUEST_SENSE,
+ 	INQUIRY, READ_CAPACITY, READ_BUFFER, READ_6, READ_10, READ_12,
+ 	MODE_SENSE, MODE_SENSE_10, LOG_SENSE
