@@ -1,32 +1,38 @@
-From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
-Subject: RE: [PATCH] 2.6.9 aacraid: aac_count fix
-Date: Wed, 15 Sep 2004 07:47:45 -0400
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <60807403EABEB443939A5A7AA8A7458B1AAAB7@otce2k01.adaptec.com>
+From: Mark Lord <lkml@rtr.ca>
+Subject: Re: [PATCH] New QStor SATA/RAID Driver for 2.6.9-rc2
+Date: Wed, 15 Sep 2004 08:35:23 -0400
+Sender: linux-ide-owner@vger.kernel.org
+Message-ID: <4148370B.4070704@rtr.ca>
+References: <41471163.10709@rtr.ca> <414723B0.1090600@pobox.com> <1095186343.2008.29.camel@mulgrave> <4147AB5A.4060804@rtr.ca> <20040915024720.GA23694@havoc.gtf.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from magic.adaptec.com ([216.52.22.17]:17106 "EHLO magic.adaptec.com")
-	by vger.kernel.org with ESMTP id S265887AbUIOLrs convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 15 Sep 2004 07:47:48 -0400
-content-class: urn:content-classes:message
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <20040915024720.GA23694@havoc.gtf.org>
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Mark Lord <lsml@rtr.ca>, James Bottomley <James.Bottomley@SteelEye.com>, Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>
 List-Id: linux-scsi@vger.kernel.org
-To: Mark Haverkamp <markh@osdl.org>, Christoph Hellwig <hch@infradead.org>
-Cc: James Bottomley <James.Bottomley@steeleye.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
-Christoph Hellwig writes:
+I would really like to work on consolidating the ATA code in libata,
+though.  As the name implies, it's a library -- don't feel that your
+driver must conform to the libata driver API in order to make use of all
+its functions.  And feel free to add to it.
 
-> > +	scsi_set_device(shost, &pdev->dev);
-> 
-> This one is bogus.  scsi_add_host already sets the device.
+Yes, there are definite code sharing possibilities there to be explored.
+Right now, my first priority is to get support for this hardware
+into the kernel.  This same driver source will also be backported
+to mid-2.4.xx series, both Redhat and generic.
 
-Which path sets the device? I got an intermittent panic as a result of
-the device not being set in my unit test (of the kernel of the day at
-the time of this modification, can't remember which version of the
-kernel ...). Which version of this kernel sets it?
+After that, we can modify some interfaces to reduce the small overlaps
+that may present.
 
-Sincerely -- Mark Salyzyn
+Next revision is due out later today.  It may still have a few warts
+to work out, but I think it is looking much better than before.
 
+Better to have a decent hardware driver within the tree,
+than an unknown vendor-only binary driver outside the tree.
+
+Cheers
+-- 
+Mark Lord
+(hdparm keeper & the original "Linux IDE Guy")
