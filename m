@@ -1,38 +1,30 @@
-From: Doug Ledford <dledford@redhat.com>
-Subject: Re: [PATCH] sym53c8xx PPR negotiation fix
-Date: Wed, 29 Oct 2003 13:45:48 -0500
+From: Mike Christie <mikenc@us.ibm.com>
+Subject: Re: Request for review of Linux iSCSI driver version 4.0.0.1
+Date: Wed, 29 Oct 2003 11:01:50 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1067453148.3112.369.camel@compaq.xsintricity.com>
-References: <1067447221.3112.336.camel@compaq.xsintricity.com>
-	 <1067447490.1829.30.camel@mulgrave>
-	 <20031029175045.GC25237@parcelfarce.linux.theplanet.co.uk>
-	 <1067450547.3112.363.camel@compaq.xsintricity.com>
-	 <20031029183159.GE25237@parcelfarce.linux.theplanet.co.uk>
+Message-ID: <3FA00E9E.7000704@us.ibm.com>
+References: <20031027153932.A16679@infradead.org>	<018b01c39e1f$e013bab0$a0074d0a@apac.cisco.com>	<20031029134557.A17523@infradead.org> <3F9FF8C7.70909@us.ibm.com> <yqujd6cf51cp.fsf@chaapala-lnx2.cisco.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:24068 "EHLO mx1.redhat.com")
-	by vger.kernel.org with ESMTP id S261276AbTJ2Sqp (ORCPT
+Received: from e1.ny.us.ibm.com ([32.97.182.101]:54270 "EHLO e1.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S261152AbTJ2TCt (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 29 Oct 2003 13:46:45 -0500
-In-Reply-To: <20031029183159.GE25237@parcelfarce.linux.theplanet.co.uk>
+	Wed, 29 Oct 2003 14:02:49 -0500
+In-Reply-To: <yqujd6cf51cp.fsf@chaapala-lnx2.cisco.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <willy@debian.org>
-Cc: James Bottomley <James.Bottomley@steeleye.com>, Marcelo Tosatti <marcelo@conectiva.com.br>, linux-scsi mailing list <linux-scsi@vger.kernel.org>
+To: Clay Haapala <chaapala@cisco.com>
+Cc: linux-scsi@vger.kernel.org
 
-On Wed, 2003-10-29 at 13:31, Matthew Wilcox wrote:
 
-> Ahhh.  Then I'm misusing it.  We haven't sent an INQUIRY to the drive
-> at this point, so of course it will be zero.  Some more pondering required.
+> This may turn out to be a discussion about where this code resides and
+> what code is best to (re)use, not if it is needed.  "Early boot" here
+> is from PXE -- setting up the iSCSI initiator to reach a target at
+> some IP where the rest of the boot (initrd and friends) is.
+> 
 
-Yeah, the appropriate time to check that bit would be at
-slave_configure() time.  (Hmmm...I should have documented that...)
+Oops. I forgot you guys use iNBP.com. I was thinking of pxelinux.
 
--- 
-  Doug Ledford <dledford@redhat.com>     919-754-3700 x44233
-         Red Hat, Inc.
-         1801 Varsity Dr.
-         Raleigh, NC 27606
-
+Mike
 
