@@ -1,40 +1,39 @@
-From: Mike Anderson <andmike@us.ibm.com>
+From: Oliver Neukum <oliver@neukum.name>
 Subject: Re: [PATCH] SCSI hotplug support
-Date: Mon, 14 Oct 2002 15:10:00 -0700
+Date: Tue, 15 Oct 2002 00:19:53 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20021014220959.GA1478@beaverton.ibm.com>
-References: <20021014054035.GA10686@codepoet.org> <20021014000602.F30278@one-eyed-alien.net> <20021014071252.GB13512@codepoet.org> <20021014154719.GE21010@nbkurt.casa-etp.nl> <20021014161922.GB2940@beaverton.ibm.com> <20021014204122.GB24904@codepoet.org>
+Message-ID: <200210150019.53689.oliver@neukum.name>
+References: <200210142107.g9EL7IX04354@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20021014204122.GB24904@codepoet.org>
+In-Reply-To: <200210142107.g9EL7IX04354@localhost.localdomain>
 List-Id: linux-scsi@vger.kernel.org
-To: Erik Andersen <andersen@codepoet.org>
-Cc: Kurt Garloff <garloff@suse.de>, Linux SCSI list <linux-scsi@vger.kernel.org>, USB Storage List <usb-storage@one-eyed-alien.net>
+To: James Bottomley <James.Bottomley@steeleye.com>, andersen@codepoet.org
+Cc: linux-scsi@vger.kernel.org
 
-Erik Andersen [andersen@codepoet.org] wrote:
-> It was my understanding that the comments (which were present
-> long before I changed anything) refer mainly to the fact that
-> hotswapping with a normal SCSI subsystem (without additional
-> electronic support for hotswapping) is electrically unsafe and is
-> likely to fry up your drives and your SCSI host controller.  For
-> people with hotswap safe hardware (or using ieee1394 or usb mass
-> storage devices), hotswapping is perfectly normal and safe, and
-> the scarry comments do not apply.
+Am Montag, 14. Oktober 2002 23:07 schrieb James Bottomley:
+> andersen@codepoet.org said:
+> > If the user space interface were perfectly adequate, I would not have
+> > written this patch.  User space does not have sufficient information
+> > to know _which_ devices must to be added or removed. The best we can
+> > do from user space is a full rescan of _all_ scsi host adaptors (http:/
+> > /www.garloff.de/kurt/linux/rescan-scsi-bus.sh)  using something like
+>
+> The API you expose has identical inputs to the user space one.
+>
+> Therefore it seems to me that your spb2 driver must already know the values
+> to fill in to use the API.  So what's wrong with triggering a hotplug event
+> from this driver that causes the add/remove single device to be done from
+> user level?
 
-I agree on the comment being more about hardware.
+It's harder than doing it the simple way. User space really can do nothing but
+do the call. Plus, you can use such a kernel API to really free the device's
+memory, because you cannot know when user space, or indeed if, has
+freed the device.
+Doing it in kernel is the only sane thing.
 
-but..
-
-While it may run many times the transversal of a list and references off
-a element in that list concurrent with a process that might be removing
-a entry from the list will eventually cause a problem. This is probably
-hard to hit, but many drivers and the SCSI proc interface iterate over
-the host_queue list so it is possible.
-
--andmike
---
-Michael Anderson
-andmike@us.ibm.com
+	Regards
+		Oliver
 
