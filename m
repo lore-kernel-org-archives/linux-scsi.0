@@ -1,37 +1,31 @@
-From: Mike Anderson <andmike@us.ibm.com>
-Subject: Re: [PATCH] scsi_error device offline fix
-Date: Mon, 21 Oct 2002 09:51:32 -0700
+From: "Bryan Henderson" <hbryan@us.ibm.com>
+Subject: Re: Lun 0
+Date: Mon, 21 Oct 2002 11:17:21 -0600
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20021021165132.GD1069@beaverton.ibm.com>
-References: <20021021073718.GB3197@beaverton.ibm.com> <200210211639.g9LGdAX06195@vindaloo.ras.ucalgary.ca>
+Message-ID: <OF3D6EEFA2.FF91CFF9-ON87256C59.005E879D@boulder.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <200210211639.g9LGdAX06195@vindaloo.ras.ucalgary.ca>
 List-Id: linux-scsi@vger.kernel.org
-To: Richard Gooch <rgooch@ras.ucalgary.ca>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: MShetty <mranalini.shetty@patni.com>
+Cc: linux-raid <linux-raid@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
 
-Sorry for not making it clear in the mail this patch is against 2.5.44
 
-Richard Gooch [rgooch@ras.ucalgary.ca] wrote:
-> Mike Anderson writes:
-> > This patch corrects a problem in scsi error handling.
-> 
-> For which kernel version?
-> 
-> 				Regards,
-> 
-> 					Richard....
-> Permanent: rgooch@atnf.csiro.au
-> Current:   rgooch@ras.ucalgary.ca
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
--andmike
---
-Michael Anderson
-andmike@us.ibm.com
+>A piece of code I am reading sends the Inquiry cmd to lun 0 first and then
+to
+>the actual lun to be probed. As only SCSI devices have the concept of
+luns... I
+>think the 1st probe to lun 0 is to check if it is a SCSI device
+
+That doesn't make much sense.  It's also true that only SCSI devices have
+the concept of the SCSI Inquiry command.  There's no interface with which
+you could send an Inquiry command to a device which is not in some way
+SCSI.
+
+But I can imagine using such a sequence to distinguish the absence of a
+particular logical unit from the absence of the entire physical unit.  It
+would be useful in problem diagnosis to know which of those is the case.
+
+
+
 
