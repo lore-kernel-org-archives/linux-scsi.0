@@ -1,57 +1,30 @@
-From: Patrick Mansfield <patmans@us.ibm.com>
-Subject: [PATCH] 2.5.46 (or so) sysfs changes that allow rmmod scsi-adapter
-Date: Wed, 6 Nov 2002 17:35:46 -0800
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [hch@infradead.org: Re: [PATCH] fix 2.5 scsi queue depth setting]
+Date: Thu, 7 Nov 2002 02:13:20 +0000
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20021106173546.A20958@eng2.beaverton.ibm.com>
+Message-ID: <20021107021320.A9844@infradead.org>
+References: <20021106210542.A32241@infradead.org> <20021106212040.GI22177@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from hch by phoenix.infradead.org with local (Exim 4.10)
+	id 189cAa-0002Yz-00
+	for linux-scsi@vger.kernel.org; Thu, 07 Nov 2002 02:13:20 +0000
+Content-Disposition: inline
+In-Reply-To: <20021106212040.GI22177@redhat.com>; from dledford@redhat.com on Wed, Nov 06, 2002 at 04:20:40PM -0500
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, Patrick Mochel <mochel@osdl.org>, Mike Anderson <andmike@us.ibm.com>
+To: linux-scsi@vger.kernel.org
 
-Hi -
+On Wed, Nov 06, 2002 at 04:20:40PM -0500, Doug Ledford wrote:
+> > I'm all for the second option, but I don't think we should specify the
+> > NULLing out, the device will go away anyway.
+> 
+> Hmmm...I thought this was being done on upper level de-attachment, which 
+> doesn't always imply device removal.  I'm not sure the device is going 
+> away in all cases....
 
-I'm not asking for inclusion of these anywhere, but they work for me.
+In this context it implies that the last upperlayer user of the device
+goes away and thus the device can't be access from the upperlayer
+anymore.  If a new driver attaches we'll call slave_attach again
+after Patrick's changes.
 
-Mike A figured most of these out, and already sent some of them to Pat
-Mochel. This combined with the scsi_scan patch allows me to repeatedly
-insmod/rmmod a scsi adapter - primarily scsi_debug.
-
---- 1.22/drivers/base/bus.c	Thu Oct 31 08:20:23 2002
-+++ edited/drivers/base/bus.c	Wed Nov  6 17:03:24 2002
-@@ -209,8 +209,10 @@
- 				attach(dev);
- 			else
- 				dev->driver = NULL;
--		} else 
-+		} else  {
- 			attach(dev);
-+			error = 0;
-+		}
- 	}
- 	return error;
- }
-===== drivers/base/core.c 1.50 vs edited =====
---- 1.50/drivers/base/core.c	Thu Oct 31 08:20:23 2002
-+++ edited/drivers/base/core.c	Wed Nov  6 17:03:42 2002
-@@ -173,8 +173,6 @@
- 		return -EINVAL;
- 
- 	device_initialize(dev);
--	if (dev->parent)
--		get_device(dev->parent);
- 	error = device_add(dev);
- 	if (error && dev->parent)
- 		put_device(dev->parent);
-===== drivers/base/driver.c 1.14 vs edited =====
---- 1.14/drivers/base/driver.c	Wed Oct 30 16:35:48 2002
-+++ edited/drivers/base/driver.c	Wed Nov  6 16:44:13 2002
-@@ -127,6 +127,8 @@
- 	drv->present = 0;
- 	spin_unlock(&device_lock);
- 	pr_debug("driver %s:%s: unregistering\n",drv->bus->name,drv->name);
-+	bus_remove_driver(drv);
-+	kobject_unregister(&drv->kobj);
- 	put_driver(drv);
- }
- 
