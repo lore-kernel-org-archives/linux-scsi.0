@@ -1,88 +1,50 @@
-From: Rusty Trivial Russell <rusty@rustcorp.com.au>
-Subject: [TRIVIAL] [patch, 2.5] scsi_qla1280.c free on error path
-Date: Mon, 06 Jan 2003 14:53:16 +1100
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030106041153.137002C2C9@lists.samba.org>
-Return-path: <linux-scsi-owner@vger.kernel.org>
+From: Dipankar Sarma <dipankar@in.ibm.com>
+Subject: Re: aic7xxx broken in 2.5.53/54 ?
+Date: Mon, 6 Jan 2003 13:02:04 +0530
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <20030106073204.GA1875@in.ibm.com>
+References: <20030103101618.GB8582@in.ibm.com> <596830816.1041606846@aslan.scsiguy.com>
+Reply-To: dipankar@in.ibm.com
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <596830816.1041606846@aslan.scsiguy.com>
+To: "Justin T. Gibbs" <gibbs@scsiguy.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: jes@trained-monkey.org, linux-scsi@vger.kernel.org
 
-[ Jes, is this OK? ]
-From:  Marcus Alanen <maalanen@ra.abo.fi>
+Hi Justin,
 
-  Remove check_region in favour of request_region. Free resources 
-  properly on error path. Horribly subtle ioremap/iounmap lurks here I 
-  think, in qla1280_pci_config(), which the below patch should take care 
-  of.
-  
-  I'm wondering if there couldn't / shouldn't be a better way to 
-  allocate resources. Obviously lots of drivers have broken error paths.
-  Is this even necessary?
-  
-  Marcus
-  
-  
-  #
-  # create_patch: qla1280_release_on_error_path-2002-12-08-A.patch
-  # Date: Sun Dec  8 22:32:33 EET 2002
-  #
+On Fri, Jan 03, 2003 at 08:14:06AM -0700, Justin T. Gibbs wrote:
+> > Looks like the aic7xxx driver in 2.5.53 and 54 are broken on my hardware.
+> 
+> It looks like the driver recovers fine.
 
---- trivial-2.5-bk/drivers/scsi/qla1280.c.orig	2003-01-06 14:10:52.000000000 +1100
-+++ trivial-2.5-bk/drivers/scsi/qla1280.c	2003-01-06 14:10:52.000000000 +1100
-@@ -866,19 +866,17 @@
- 			"qla1280", ha)) {
- 		printk("qla1280 : Failed to reserve interrupt %d already "
- 		       "in use\n", host->irq);
--		goto error_mem_alloced;
-+		goto error_unmap;
- 	}
- #if !MEMORY_MAPPED_IO
- 	/* Register the I/O space with Linux */
--	if (check_region(host->io_port, 0xff)) {
-+	if (!request_region(host->io_port, 0xff, "qla1280")) {
- 		printk("qla1280 : Failed to reserve i/o region 0x%04lx-0x%04lx"
- 		       " already in use\n",
- 		       host->io_port, host->io_port + 0xff);
--		free_irq(host->irq, ha);
--		goto error_mem_alloced;
-+		goto error_irq;
- 	}
- 
--	request_region(host->io_port, 0xff, "qla1280");
- #endif
- 
- 	reg = ha->iobase;
-@@ -886,7 +884,7 @@
- 	/* load the F/W, read paramaters, and init the H/W */
- 	if (qla1280_initialize_adapter(ha)) {
- 		printk(KERN_INFO "qla1x160:Failed to initialize adapter\n");
--		goto error_mem_alloced;
-+		goto error_region;
- 	}
- 
- 	/* set our host ID  (need to do something about our two IDs) */
-@@ -894,6 +892,21 @@
- 
- 	return host;
- 
-+ error_region:
-+#if !MEMORY_MAPPED_IO
-+	release_region(host->io_port, 0xff);
-+#endif
-+
-+ error_irq:
-+	free_irq(host->irq, ha);
-+
-+ error_unmap:
-+#if MEMORY_MAPPED_IO
-+	if (ha->mmpbase)
-+		iounmap((void *)(((unsigned long) ha->mmpbase) & PAGE_MASK));
-+#endif
-+
-+
-  error_mem_alloced:
- 	qla1280_mem_free(ha);
- 
--- 
-  Don't blame me: the Monkey is driving
-  File: Marcus Alanen <maalanen@ra.abo.fi>: [patch, 2.5] scsi_qla1280.c free on error path
+Not for long. It dies shortly afterwards.
+
+> > aic7xxx: PCI Device 0:1:0 failed memory mapped test.  Using PIO.
+> > Uhhuh. NMI received for unknown reason 25 on CPU 0.
+> 
+> SERR must be enabled by your BIOS.  I will change the driver so
+> that, should the memory mapped I/O test fail, an SERR (and thus an
+> NMI) is not generated.
+
+I guess having to use PIO with aic7xxx is bad. MMIO failure is
+what we need to investigate.
+
+> 
+> Just out of curiosity, do you have any strange PCI options enabled
+> in your BIOS?  I remeber seeing memory mapped I/O failures on this
+> ServerWorks chipset under FreeBSD in the past, but an updated BIOS
+> resolved the issue for the affected users.  It seemed that the BIOS
+> incorrectly placed the Adaptec controller in a prefetchable region.
+> 
+
+I didn't change anything in that box since it was delivered to me. FYI
+it is an IBM x250. Would it help if I can get a PCI space dump and mtrr 
+dump ? FWIW, the older driver works fine. Does the older driver use 
+only PIO ?
+
+Thanks
+Dipankar
