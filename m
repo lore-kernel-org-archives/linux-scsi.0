@@ -1,182 +1,119 @@
-From: "Smart, James" <James.Smart@Emulex.Com>
-Subject: RE: [(re)Announce] Emulex LightPulse Device Driver
-Date: Mon, 17 May 2004 17:25:26 -0400
+From: Kurt Garloff <garloff@suse.de>
+Subject: Re: [BK PATCH] SCSI updates for 2.6.6
+Date: Mon, 17 May 2004 21:52:42 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3356669BBE90C448AD4645C843E2BF28034F9368@xbl.ma.emulex.com>
+Message-ID: <20040517195241.GA4747@tpkurt.garloff.de>
+References: <1084229974.1763.512.camel@mulgrave> <20040511123441.GL4828@tpkurt.garloff.de> <1084282961.1886.8.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="YZ5djTAD1cGYuMQK"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emulex.emulex.com ([138.239.112.1]:41960 "EHLO
-	emulex.emulex.com") by vger.kernel.org with ESMTP id S262085AbUEQV0I
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 17 May 2004 17:26:08 -0400
+Received: from cantor.suse.de ([195.135.220.2]:52944 "EHLO Cantor.suse.de")
+	by vger.kernel.org with ESMTP id S263089AbUEQXG0 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 17 May 2004 19:06:26 -0400
+Content-Disposition: inline
+In-Reply-To: <1084282961.1886.8.camel@mulgrave>
 List-Id: linux-scsi@vger.kernel.org
-To: 'Christoph Hellwig' <hch@infradead.org>
-Cc: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>
+To: James Bottomley <James.Bottomley@steeleye.com>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
 
 
+--YZ5djTAD1cGYuMQK
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-> -----Original Message-----
-> From: 'Christoph Hellwig' [mailto:hch@infradead.org]
-> Sent: Friday, May 14, 2004 4:03 PM
->
-> On Fri, May 14, 2004 at 03:51:14PM -0400, Smart, James wrote:
-> >  - please explain USE_HGP_HOST_SLIM and why only ppc64 sets it,
-> >    per-arch ifdefs in LLDDs are very suspect
-> > 
-> >      Our hardware allows for control structures to be 
-> placed in adapter
-> > 	 memory rather than host memory. In general, this is the most
-> > 	 efficient mode of operation. USE_HGP_HOST_SLIM instructs us to
-> > override
-> > 	 this optimization and place them in host memory.
-> > 	 For PPC64, to work around byte ordering issues 
-> relative to how the
-> > 	 hardware is accessing the control structures, we found 
-> it easier to
-> > 	 just use the unoptimized location.
-> 
-> Still not an explanation.  What exact issue is that?  Is is 
-> just faster
-> this way or doesn't it work another way?  Why is ppc64 so 
-> different from
-> other plattforms, e.g. why does ist this set when I boot my 
-> (well, if I had
-> one :)) G5 mac with a 64bit kernel and why not when I boot it 
-> with a 32bit
-> kernel?  As you mention byte ordering why is it not needed for other
-> big endian system.
+Hi James,
 
-I'm tracking the details on this down. It's rather dated and prior to my
-joining Emulex. It is possible that ppc64 was the only platform on Emulex's
-support matrix that was subject to the issue. If this issue applies to other
-architectures as well, we will obviously need to correct this (e.g. Emulex's
-support matrix doesn't matter - we must do the right things for every
-architecture).
+sorry for the late response.
 
- 
-> 
-> > 
-> >  - lpfc_clock.c should go away, just use add_timer/etc. diretly and
-> >    embedd the timer into your structures.  Yes, I know that's not
-> >    how SVR4-derivates work, but Linux does.  You also have an
-> >    unchecked kmalloc and a list_head cast in there..
-> > 
-> >      It's not an SVR4 vs linux thing.  This wrapper 
-> function does two
-> > 	 things - start the timer, and allocate/link a small control
-> > structure.
-> > 	 The control structure allows us to just keep a record of every
-> > 	 outstanding timer. This is a safety check, for driver
-> > 	 unloads/kills/etc, to ensure that we have cancelled 
-> all the timers
-> > 	 that have been registered with the OS.
-> 
-> No.  The timer should be embedded into the object it's 
-> associated with,
-> and you must call del_timer_sync in the object destructor.  
-> BTW, you have
-> a lot of timers, more than the other fc drivers counted 
-> together.  This
-> looks slightly fishy.
-> 
+On Tue, May 11, 2004 at 08:42:41AM -0500, James Bottomley wrote:
+> On Tue, 2004-05-11 at 07:34, Kurt Garloff wrote:
+> > Should I resubmit the other SCSI scanning/blacklist patches or are they
+> > queued? Or rejected?
+>=20
+> I thought' I'd put in all the necessary ones, what's missing?
 
-We could embed the timer into the associated object. This is mainly an
-approach issue - it was just a simplistic choice to track the timers via the
-hba object. Given the amount of code churn changing this would incur, I'm
-inclined to ask why, other than for style and approach, must this be
-changed?
-
-As far as timer count goes... (shrug) we do manage discovery and port login
-in the driver, which other driver's don't do, which adds quite a bit. We
-could certainly delineate what we have and why...
-
-> >  - lpfcDRVR_t should go away in favour of a bunch of global 
-> variables
-> > 
-> >      Can you explain this comment further ?
-> 
-> You have a structure type lpfcDRVR_t but just a single global instance
-> of it.  Aka the data structure is just obsfucation and each 
-> member should
-> be a driver-wide variable of it's own.
-
-Ok - so I can see just killing the structure and making it's elements
-globals. But, is this all you are asking ?  The elements are just a linked
-list of the per-hba structures. You aren't recommending that we make arrays
-of the per-hba structures are you ? 
+(0) scsi-log-unlikely
+    Add unlikely to SCSI_CHECK_LOGGING() macro
+(1) scsi-scan-deprecate-forcelun
+    Mark BLIST_FORCELUN as deprecated; it should not be used.
+    Don't discourage CONFIG_SCSI_MULTI_LUN so strongly.
+    (Actually I believe it should always be switched on and=20
+     people with completely broken hardware should get it=20
+     blacklisted rather than "black"listing perfectly working
+     devices. max_luns=3D1 can still be used to override it, but,
+     for some reason there was no agreement about this on LSML,
+     so I agreed on merging the patch as is ...)
+(2) scsi-scan-blist_replun
+    Introduce blacklist flags BLIST_NOREPORTLUN and BLIST_REPORTLUN2,
+    so the use of REPORT_LUNS can turned off by passing dev_flags
+    for a device or by default_dev_flags globally. The other flag
+    allows to explicitly ask the kernel to try REPORT_LUNS on SCSI-2
+    devices as well (normally it only uses it for SCSI-3 devices)
+    if the host adapter does support more than 8 LUNs. This is=20
+    mostly for RAIDs that are connected via FC (which supports more=20
+    than 8 LUNs unlike SPI) that report as SCSI-2, so this flag can
+    often be turned on. Just look at all the devices with=20
+    BLIST_SPARSELUN | BLIST_LARGELUN. Could all be nuked on the long
+    term ...
+    The CONFIG_SCSI_REPORT_LUNS option is killed by this patch.
+(3) scsi-scan-no-offl-pq-notcon
+    Don't set devices to offline if the Periph Qual is non-zero.
+    Instead don't connect to them from highlevel drivers except
+    for sg.
+(4) scsi-scan-inq-timeout
+    Make the inquiry timeout configurable by boot/module parameter;
+    there are some sick devices out there who need >20s to recover
+    from a bus reset; we obviously don't want to bump the default
+    to 25s because of that sickness.
 
 
-> 
-> > 
-> >  - lpfc_linux_attach should be merged into lpfc_pci_detect, 
-> which would
-> >    better be named lpfc_{,pci_}probe{,one}
-> > 
-> > 	 We've kept this organization so it's more in line with the
-> > 	 organization of the 2.4 driver. I don't see a real 
-> need to change
-> > 	 this.
-> >      Note: we have renamed the probe functions...
-> 
-> It's really awkward to follow.  See qla1280.c to see how to 
-> use 2.6-style
-> probe/release calls in a 2.4ish enviroment.  Been there, done that.
-
-Ok - so why is this a significant issue ?
+Only patch 3 can be found in 2.6.6.
 
 
-> 
-> > 
-> >  - same for lpfc_linux_detach into lpfc_pci_release
-> >      
-> > 	 Same as last item
-> 
-> Dito.  Note that this one is especially awkward because of 
-> the brainded
-> pass index instead of object calling convention.
+Patch 0 should be a no-brainer.
+It allows vendors to enable CONFIG_SCSI_LOGGING
+without incurring possibly mispredicted branches.
 
-It is a little awkward, with the only difference whether the base structure
-is found in the lpfc_pci_release routine or not. Still doesn't seem a
-significant issue.
+Patch 1 should go in; so we announce that the insanity of blacklisting
+perfectly fine SCSI devices will stop at some point in the future (2.7.)
 
-> 
-> >  - you don't need a pci_pool per hba, just one per driver
-> > 
-> > 	 The pools are pre-dma mapped. As there are systems that require
-> > 	 dma maps to be specific to the adapter using them, 
-> we're maintaing
-> > 	 a pool per hba.
-> 
-> Ok, braino.  Of course you're right, I was thinking of the mempool.
-> 
-> >  - four mempool per hba seems a little much, care to 
-> explain why they're
-> >    needed?
-> > 
-> >      These are the safety pools just mentioned. 1 pool is 
-> for non-dma
-> > 	 mapped structures - which are used during discovery. 
-> The other 3
-> > 	 pools are pre-dma mapped buffers - of different 
-> allocation sizes
-> > 	 (256 bytes, 1k, and 4k). It's just an optimization on 
-> the amount
-> > 	 of memory used by the pool. I'm sure there's other 
-> methods, but...
-> 
-> Still doesn't say why they can't be global.  You'd need to uncomment
-> mempool_resize in mm/mempool.c for that, though.
+Patch 2 should go in; a config option is only useful for people
+compiling their own kernels, i.e. developers. Thus there should be the
+possibility to influence the use of REPORT_LUNS at boot or runtime.=20
+Meanwhile the conflicting BLIST_MS_192_BYTES_FOR_3F has been defined,=20
+which is less than optimal. The patch would need to be rediffed and=20
+non-conflicting constants be used.
 
-Also doesn't say they need to be global. Again - what's the significant
-issue ? Seems to be just a style - whether things are done on a per-instance
-basis or on a global basis. As the size requirements for this pool is based
-on the number of instances - per-hba pools scales with far less effort when
-more adapters are present. Growing/shrinking the pool each time an instance
-attaches/detaches actually makes the global pool implementation more
-complex. Coding for a global vs per-hba pool is roughly identical - the only
-difference being whether the data structure is anchored globally or in the
-per-hba structure.  And if you've already got per-hba pool code (the pre-dma
-mapped pools), making the pool global seems to just add code.
+Patch 4 should go in; it allows users to work around sick SCSI devices
+without needing to create crazy defaults.
 
+
+All of these patches live in the SUSE Enterprise kernel and were
+introduced because there was a need for them when supporting customers.
+
+All patches have been discussed extensively on LSML and were changed
+until opposition vanished.
+
+If wanted, I can rediff and resubmit.
+
+Regards,
+--=20
+Kurt Garloff  <garloff@suse.de>                            Cologne, DE=20
+SUSE LINUX AG, Nuernberg, DE                        Director SUSE Labs
+
+--YZ5djTAD1cGYuMQK
+Content-Type: application/pgp-signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.2.4 (GNU/Linux)
+
+iD8DBQFAqRgJxmLh6hyYd04RAlNBAKCus7Ltr49TLbAiwmktNXyFoYDxxQCeN35m
+pEwyvsZmEam2H2lFqPMioZA=
+=Msym
+-----END PGP SIGNATURE-----
+
+--YZ5djTAD1cGYuMQK--
