@@ -1,44 +1,118 @@
-From: christophe.varoqui@free.fr
-Subject: [ANNOUNCE] multipath-tools-0.2.4
-Date: Mon, 28 Jun 2004 18:58:54 +0200
-Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <1088441934.40e04e4ebe7e8@imp1-q.free.fr>
-References: <1084519750.40a47546dd0e6@imp1-q.free.fr> <1086256342.40bef4d61b3e9@imp3-q.free.fr> <1086619426.40c47f220de01@imp5-q.free.fr> <1087209011.40cd7e338ca44@imp5-q.free.fr>
+From: Brian King <brking@us.ibm.com>
+Subject: Re: PATCH: Fix assorted dma_addr_t typing errors in ipr driver
+Date: Mon, 28 Jun 2004 13:11:15 -0500
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <40E05F43.7040602@us.ibm.com>
+References: <20040628140721.GA10393@devserv.devel.redhat.com>
+Reply-To: brking@us.ibm.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1087209011.40cd7e338ca44@imp5-q.free.fr>
-To: device-mapper development <dm-devel@redhat.com>, linux-raid@vger.kernel.org, linux-hotplug-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from e4.ny.us.ibm.com ([32.97.182.104]:7671 "EHLO e4.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S265103AbUF1SLd (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 28 Jun 2004 14:11:33 -0400
+In-Reply-To: <20040628140721.GA10393@devserv.devel.redhat.com>
 List-Id: linux-scsi@vger.kernel.org
+To: Alan Cox <alan@redhat.com>
+Cc: linux-scsi@vger.kernel.org
 
-Hello,
+Alan Cox wrote:
+> (Not cc the author since the authors email address seems to be an IBM state
+>  secret.. 8))
 
-here goes multipath-tools-0.2.4
+Yep. I buried it in the MODULE_AUTHOR macro;) I'll add it to the comment 
+block at the start of the driver on the next driver update as well, as I 
+assume that is where you were looking for it.
 
-Changelog for this release :
- 
-2004-06-28 multipath-tools-0.2.4
-        * [multipathd] break free from system's libsysfs for now
-          as it is not that common these days
-        * [multipath] introduce per LUN policies in the config
-          file : path_grouping_policy, path_selector and
-          path_selector_args are supported.
-          See updated sample config file.
-        * [multipath] move ->iopolicy to multipath struct (from
-          path struct)
-        * [multipath] fill the voids left in the config file with
-          defaults
-        * [multipath] group config & flags in a global struct *
-        * [multipath] fix segfault when no config file (was a 
-          regression since hwtable vectorisation in 0.2.2)
-        * [multipath] default path selector override in config file
-        * [multipath] don't play with strings in pgpolicies, leave
-          that to a new assemble_map fn. policies now use vectors
-        * [multipathd] compilation fix for gentoo (Franck Denis)
-        * [multipath] strcmp fix (Franck Denis)
+Thanks for the patch. It looks fine to me.
 
-Downloads and docs at http://christophe.varoqui.free.fr
+-Brian
 
-regards,
-cvaroqui
+> diff -u --new-file --recursive --exclude-from /usr/src/exclude linux-2.6.7/drivers/scsi/ipr.c linux-2.6.7-viroized/drivers/scsi/ipr.c
+> --- linux-2.6.7/drivers/scsi/ipr.c	2004-06-16 21:11:36.000000000 +0100
+> +++ linux-2.6.7-viroized/drivers/scsi/ipr.c	2004-06-27 20:07:29.218694904 +0100
+> @@ -5441,7 +5441,7 @@
+>  {
+>  	struct ipr_cmnd *ipr_cmd;
+>  	struct ipr_ioarcb *ioarcb;
+> -	u32 dma_addr;
+> +	dma_addr_t dma_addr;
+>  	int i;
+>  
+>  	ioa_cfg->ipr_cmd_pool = pci_pool_create (IPR_NAME, ioa_cfg->pdev,
+> diff -u --new-file --recursive --exclude-from /usr/src/exclude linux-2.6.7/drivers/scsi/ipr.h linux-2.6.7-viroized/drivers/scsi/ipr.h
+> --- linux-2.6.7/drivers/scsi/ipr.h	2004-06-16 21:11:36.000000000 +0100
+> +++ linux-2.6.7-viroized/drivers/scsi/ipr.h	2004-06-27 20:09:47.231713736 +0100
+> @@ -19,6 +19,8 @@
+>   * along with this program; if not, write to the Free Software
+>   * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+>   *
+> + * Alan Cox <alan@redhat.com> - Removed several careless u32/dma_addr_t errors
+> + *				that broke 64bit platforms.
+>   */
+>  
+>  #ifndef _IPR_H
+> @@ -667,7 +669,7 @@
+>  
+>  struct ipr_hostrcb {
+>  	struct ipr_hcam hcam;
+> -	u32 hostrcb_dma;
+> +	dma_addr_t hostrcb_dma;
+>  	struct list_head queue;
+>  };
+>  
+> @@ -850,7 +852,7 @@
+>  	char cfg_table_start[8];
+>  #define IPR_CFG_TBL_START		"cfg"
+>  	struct ipr_config_table *cfg_table;
+> -	u32 cfg_table_dma;
+> +	dma_addr_t cfg_table_dma;
+>  
+>  	char resource_table_label[8];
+>  #define IPR_RES_TABLE_LABEL		"res_tbl"
+> @@ -861,12 +863,12 @@
+>  	char ipr_hcam_label[8];
+>  #define IPR_HCAM_LABEL			"hcams"
+>  	struct ipr_hostrcb *hostrcb[IPR_NUM_HCAMS];
+> -	u32 hostrcb_dma[IPR_NUM_HCAMS];
+> +	dma_addr_t hostrcb_dma[IPR_NUM_HCAMS];
+>  	struct list_head hostrcb_free_q;
+>  	struct list_head hostrcb_pending_q;
+>  
+>  	u32 *host_rrq;
+> -	u32 host_rrq_dma;
+> +	dma_addr_t host_rrq_dma;
+>  #define IPR_HRRQ_REQ_RESP_HANDLE_MASK	0xfffffffc
+>  #define IPR_HRRQ_RESP_BIT_SET			0x00000002
+>  #define IPR_HRRQ_TOGGLE_BIT				0x00000001
+> @@ -905,7 +907,7 @@
+>  	enum ipr_sdt_state sdt_state;
+>  
+>  	struct ipr_misc_cbs *vpd_cbs;
+> -	u32 vpd_cbs_dma;
+> +	dma_addr_t vpd_cbs_dma;
+>  
+>  	struct pci_pool *ipr_cmd_pool;
+>  
+> 
+> 
+> 
+> ----
+> 
+> Signed-off-by: Alan Cox <alan@redhat.com>
+> 
+> Developer's Certificate of Origin 1.0 included herein by reference.
+> 
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+
+-- 
+Brian King
+eServer Storage I/O
+IBM Linux Technology Center
+
