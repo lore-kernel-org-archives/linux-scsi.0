@@ -1,54 +1,43 @@
-From: Paul Mackerras <paulus@samba.org>
-Subject: Re: [PATCH 1/1] build modular usb isd200 with modular ide
-Date: Tue, 26 Oct 2004 12:05:29 +1000
+From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+Subject: Re: [OT] Iomega Zip external power supply polarity?
+Date: Tue, 26 Oct 2004 01:03:55 +0200 (CEST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <16765.45289.684525.732044@cargo.ozlabs.ibm.com>
-References: <16765.34908.93713.977225@cargo.ozlabs.ibm.com>
-	<200410252355.i9PNtlSp025091@falcon10.austin.ibm.com>
+Message-ID: <Pine.LNX.4.60.0410260056320.24570@poirot.grange>
+References: <OFC2901EBB.BD57E7EB-ON88256F38.006EFB5A-88256F38.006F5A64@us.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ozlabs.org ([203.10.76.45]:936 "EHLO ozlabs.org")
-	by vger.kernel.org with ESMTP id S262117AbUJZEY4 (ORCPT
+Received: from pop.gmx.net ([213.165.64.20]:54160 "HELO mail.gmx.net")
+	by vger.kernel.org with SMTP id S262116AbUJZFmz (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 26 Oct 2004 00:24:56 -0400
-In-Reply-To: <200410252355.i9PNtlSp025091@falcon10.austin.ibm.com>
+	Tue, 26 Oct 2004 01:42:55 -0400
+In-Reply-To: <OFC2901EBB.BD57E7EB-ON88256F38.006EFB5A-88256F38.006F5A64@us.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Doug Maxey <dwm@austin.ibm.com>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Christoph Hellwig <hch@lst.de>, Greg Kroah-Hartman <greg@kroah.com>, Linux SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux IDE Mailing List <linux-ide@vger.kernel.org>, linuxppc64-dev@ozlabs.org
+To: Bryan Henderson <hbryan@us.ibm.com>
+Cc: linux-scsi@vger.kernel.org
 
-Doug Maxey writes:
+On Mon, 25 Oct 2004, Bryan Henderson wrote:
 
-> Oh yes, I am aware.  Just happen to be working on PPC64.  Have been
-> writing drivers for this base for several years.  It's the olde LE
+> >I've got an external 100MB Iomega Zip without a power supply.  On the box 
+> 
+> >it says just 5V, but what polarity?  Is it plus or minus on the internal 
+> >pin?  Would it tolerate 4.5 / 6V, or does it need exactly 5?
+> 
+> Coincidentally, I found one of these in a box last week and noticed that 
+> it doesn't have its power requirements labelled (which is not unusual for 
+> most people, but I make it a point of labelling my stuff).  Fortunately, 
+> the power supply that came with it was in the box too.  It's center 
+> positive.
+> It has a 1 ampere capacity.  It doesn't appear to be a regulated power 
+> supply.
 
-For Linux or some other OS?
+Thanks very much! Just checked - seems to work - at least makes the 
+"correct" noise on disk insertion, not like the one, that one gets when 
+reversing the polarity:-) Now just have to get myself a (standard) DB25 / 
+50 Sub-D cable.
 
-> device vs BE host.  The transfers are done as a 16 bit quantity, PIO.
-> And yes, I understand, "we have always done it this way".  Works well
-> when you only have to deal with single arch.
+Thanks
+Guennadi
+---
+Guennadi Liakhovetski
 
-No, we haven't always done it this way on PPC. :)  Various different
-ways have been tried over the years and this is the only way that
-doesn't suck.
-
-> Possibly I am not making point very well, that one is preserving the
-> correct byte order and let the structures reflect to native location.
-
-I can't parse that sentence unambiguously...
-
-> Strings get swapped, 16, 32, and 64 bit fields likewise.  I just missed the 
-> LE order that is is being preserved for *some* few fields only.
-
-Strings shouldn't get swapped, or at least, strings should only need
-to be swapped on a BE platform if they also need to be swapped on an
-LE platform.
-
-> There is not a single reference to byte field in the ATA spec for
-> IDENTIFY DEVICE.  It just happens that some of the fields are 8 bits long. Or 
-> 32 or 64.
-
-And your point is...  ?
-
-Paul.
