@@ -1,74 +1,97 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: merge megaraid 2.20.x in kernel 2.6?
-Date: 17 Aug 2004 12:58:53 -0400
+From: Chiaki <ishikawa@yk.rim.or.jp>
+Subject: Re: [PATCH] kill tmscsim ->proc_info
+Date: Wed, 18 Aug 2004 02:03:22 +0900
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1092761934.1775.326.camel@mulgrave>
-References: <20040817160128.GA7127@lists.us.dell.com>
-	<1092760835.1775.303.camel@mulgrave> <20040817174755.A23872@infradead.org>
-	<20040817165116.GD7127@lists.us.dell.com>
+Message-ID: <41223A5A.8090409@yk.rim.or.jp>
+References: <20040817161858.GA16589@lst.de> <4122366E.1040204@yk.rim.or.jp> <20040817164824.GA17074@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat16.steeleye.com ([209.192.50.48]:3780 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S268348AbUHQQ7E (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 17 Aug 2004 12:59:04 -0400
-In-Reply-To: <20040817165116.GD7127@lists.us.dell.com>
+Received: from serio.al.rim.or.jp ([202.247.191.123]:64399 "EHLO
+	serio.al.rim.or.jp") by vger.kernel.org with ESMTP id S268346AbUHQRDa
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 17 Aug 2004 13:03:30 -0400
+In-Reply-To: <20040817164824.GA17074@lst.de>
 List-Id: linux-scsi@vger.kernel.org
-To: Matt Domsch <Matt_Domsch@Dell.com>
-Cc: Christoph Hellwig <hch@infradead.org>, atulm@lsil.com, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: g.liakhovetski@gmx.de, linux-scsi@vger.kernel.org
 
-On Tue, 2004-08-17 at 12:51, Matt Domsch wrote:
-> Not yet, that was one of the changes Atul requested he be allowed to
-> make post-merge.
+Christoph Hellwig wrote:
+> On Wed, Aug 18, 2004 at 01:46:38AM +0900, Chiaki wrote:
+> 
+>>Christoph Hellwig wrote:
+>>
+>>>hrrible code like all proc_info implementations and no really usefull
+>>>information.  We might want to add sysfs attributes if some users really
+>>>miss anything.
+>>>
+>>
+>>Setting aside the horribleness of the code and suitability
+>>of the code for 2.6.x kernel,
+>>I found the information very useful when I did the debugging
+>>with tmscsim driver code with
+>>a rather obscure CD changer device and
+>>other odd SCSI devices.
+> 
+> 
+> What particular information?
+> 
+> 
 
-OK, this seems to be what fixes the COMPAT_IOCTL problem.
+In the removed code section, there is a loop
+that begins with
+"for (dev = 0; dev < pACB->DCBCnt; dev++)".
 
-James
+I found the information printed by the code up to it
+very informative.
+Now my memory is getting hazy, but from the end user's view
+point those are the informatin very useful.
+A stupid user/administrator mistake like
+forgetting to set lun search in the kernel is
+made pretty obvious by the display.
+(And I remember finding the problem with old linux
+kernel code that the maximum limit of
+added hard disk or removable devices was way too
+low for modern PCs [even for home usage]. As a result of
+input from users like me, the maximum added device limit
+is increased very much if I recall correctly.)
+Also, sometimes the available spec of disks and such
+may not reflect the reality (the real shipped product
+and the specification published may not agree,
+or the difference between
+the spec and the latest ROM information. By looking at the
+display from the tmscsim module, I can learn the
+real characteristics of the device as opposed to
+the paper spec, and this was very useful for
+a home user who doesn't have elaborate scsi inquiry tools.
+Yes I know some free/non-free tools exist today, but
+being able to look at such output of information
+as understood by the driver itself, and sharing it
+with the original author without requiring the
+installation of additional tool when a problem occured was
+very useful.
 
-===== drivers/scsi/megaraid/megaraid_mm.c 1.1 vs edited =====
---- 1.1/drivers/scsi/megaraid/megaraid_mm.c	2004-06-23 14:36:31 -05:00
-+++ edited/drivers/scsi/megaraid/megaraid_mm.c	2004-08-17 11:56:03 -05:00
-@@ -1075,7 +1075,7 @@
- /**
-  * mraid_mm_compat_ioctl	: 32bit to 64bit ioctl conversion routine
-  */
--#ifdef LSI_CONFIG_COMPAT
-+#ifdef CONFIG_COMPAT
- static int
- mraid_mm_compat_ioctl(unsigned int fd, unsigned int cmd,
- 			unsigned long arg, struct file *filep)
-===== drivers/scsi/megaraid/megaraid_mm.h 1.1 vs edited =====
---- 1.1/drivers/scsi/megaraid/megaraid_mm.h	2004-06-23 10:53:53 -05:00
-+++ edited/drivers/scsi/megaraid/megaraid_mm.h	2004-08-17 11:54:14 -05:00
-@@ -41,18 +41,7 @@
- /*
-  * Localizing ioctl32 differences
-  */
--#if defined (CONFIG_COMPAT) || defined(__x86_64__) || defined(IA32_EMULATION)
--#if !defined(CONFIG_IA64)
--#define LSI_CONFIG_COMPAT
--#endif
--#endif
--
--#ifdef LSI_CONFIG_COMPAT
--#include <asm/ioctl32.h>
--#else
--#define register_ioctl32_conversion(a,b)	do{}while(0)
--#define unregister_ioctl32_conversion(a)	do{}while(0)
--#endif /* LSI_CONFIG_COMPAT */
-+#include <linux/ioctl32.h>
- 
- /**
-  * mimd_t	: Old style ioctl packet structure (deprecated)
-@@ -137,7 +126,7 @@
- static void mraid_mm_free_adp_resources(mraid_mmadp_t *);
- static void mraid_mm_teardown_dma_pools(mraid_mmadp_t *);
- 
--#ifdef LSI_CONFIG_COMPAT
-+#ifdef CONFIG_COMPAT
- static int mraid_mm_compat_ioctl(unsigned int, unsigned int, unsigned long,
- 		struct file *);
- #endif
+Sorry, I am not using 2.6.xx series kernel myself,
+and writing sysfs support for the driver is beyond my
+skill now.
 
+
+I believe the output produced by the code below
+the loop mentioned above would be
+useful to the code maintainers who need to
+learn what is going on (performance-wise, or
+logical incorrectness, etc..), but I am not
+sure on this part. (At one point during 2.2.x series,
+a long time ago, I found an obscure list processing
+problem possibly caused by the main kernel code.
+But it was such a long time ago, I can't recall
+the details now.)
+
+
+-- 
+int main(void){int j=2003;/*(c)2003 cishikawa. */
+char t[] ="<CI> @abcdefghijklmnopqrstuvwxyz.,\n\"";
+char *i ="g>qtCIuqivb,gCwe\np@.ietCIuqi\"tqkvv is>dnamz";
+while(*i)((j+=strchr(t,*i++)-(int)t),(j%=sizeof t-1),
+(putchar(t[j])));return 0;}/* under GPL */
