@@ -1,32 +1,29 @@
-From: Andries.Brouwer@cwi.nl
-Subject: Re: [linux-usb-devel] USB storage problems (2.5.69 BK)
-Date: Tue, 27 May 2003 01:02:25 +0200 (MEST)
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [RFR] a new SCSI driver
+Date: 27 May 2003 01:52:08 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <UTC200305262302.h4QN2PF04675.aeb@smtp.cwi.nl>
+Message-ID: <1053996727.17151.47.camel@dhcp22.swansea.linux.org.uk>
+References: <200305250944.h4P9i5Ct000456@81-2-122-30.bradfords.org.uk>
+	 <20030525103553.A26555@flint.arm.linux.org.uk>
+Mime-Version: 1.0
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hera.cwi.nl ([192.16.191.8]:45483 "EHLO hera.cwi.nl")
-	by vger.kernel.org with ESMTP id S262358AbTEZWt3 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 26 May 2003 18:49:29 -0400
+Received: from pc2-cwma1-4-cust86.swan.cable.ntl.com ([213.105.254.86]:19148
+	"EHLO lxorguk.ukuu.org.uk") by vger.kernel.org with ESMTP
+	id S262257AbTE0BhM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 26 May 2003 21:37:12 -0400
+In-Reply-To: <20030525103553.A26555@flint.arm.linux.org.uk>
 List-Id: linux-scsi@vger.kernel.org
-To: jochen@scram.de, linux-usb-devel@lists.sourceforge.net
-Cc: linux-scsi@vger.kernel.org
+To: Russell King <rmk@arm.linux.org.uk>
+Cc: john@grabjohn.com, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, jgarzik@pobox.com, linux-scsi@vger.kernel.org
 
-    under 2.5.68 and current 2.5.69 BK, my card reader doesn't work. Under
-    2.4.20, i have no such problems. Log with verbose usb-storage debug
-    attached.
+On Sul, 2003-05-25 at 10:35, Russell King wrote:
+> Rubbish.  PIO mode ATA will be around for some years to come - there
+> is just too much invested there (especially in the embedded world) for
+> it to vanish this quickly.  For example, think about compact flash cards,
+> many of which are still driven using PIO mode accesses in todays PDAs.
 
-    --jochen
+For CF IDE you might as well drop the IDE layer too and write a small
+custom CF-IDE driver if you are doing heavily embedded stuff. 
 
-    Content-Type: APPLICATION/octet-stream; name="usb.log.gz"
-
-(i) attachment - yuk
-(ii) gzipped - yuk - plain text allows grep, Google, etc.
-(iii) maybe your device wants to return more bytes than 4;
-      the error is -EOVERFLOW, that is, "babble".
-      I expect my recent patch would help.
-      (have no time to dig it up, and will be away the coming days;
-       basically I think things are under control, we just need to
-       push these scsi changes, and then these usb changes)
-
-Andries
