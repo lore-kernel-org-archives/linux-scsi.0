@@ -1,33 +1,51 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: queue <-> sdev reference counting problem
-Date: Mon, 21 Mar 2005 16:54:15 +0100
-Message-ID: <20050321155414.GI25452@suse.de>
-References: <20050318113609.GC1821@suse.de> <20050321145900.GH25452@suse.de> <1111419828.5504.11.camel@mulgrave>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: [PATCH] scsi_mid_low_api doesn't mention scsi_scan_host
+Date: Mon, 21 Mar 2005 15:59:22 +0000
+Message-ID: <20050321155922.GU21986@parcelfarce.linux.theplanet.co.uk>
+References: <9BB4DECD4CFE6D43AA8EA8D768ED51C201AB43@xbl3.ad.emulex.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Received: from ns.virtualhost.dk ([195.184.98.160]:2963 "EHLO virtualhost.dk")
-	by vger.kernel.org with ESMTP id S261842AbVCUPyT (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 21 Mar 2005 10:54:19 -0500
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:63135 "EHLO
+	parcelfarce.linux.theplanet.co.uk") by vger.kernel.org with ESMTP
+	id S261840AbVCUP7X (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 21 Mar 2005 10:59:23 -0500
 Content-Disposition: inline
-In-Reply-To: <1111419828.5504.11.camel@mulgrave>
+In-Reply-To: <9BB4DECD4CFE6D43AA8EA8D768ED51C201AB43@xbl3.ad.emulex.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: James.Smart@Emulex.Com
+Cc: matthew@wil.cx, dgilbert@interlog.com, linux-scsi@vger.kernel.org
 
-On Mon, Mar 21 2005, James Bottomley wrote:
-> On Mon, 2005-03-21 at 15:59 +0100, Jens Axboe wrote:
-> > This is not even enough, since the queue lock is embedded in sdev
-> > structure. Guys, this is a serious issue. Oopsing a kernel is trivial
-> > with a hotplug device like a usb stick.
+On Mon, Mar 21, 2005 at 09:50:07AM -0500, James.Smart@Emulex.Com wrote:
+> > + *      successful call to scsi_host_alloc().  The LLD must call
+> > + *	scsi_scan_host() in order to scan the bus.  The LLD must set up
+> > + *	the transport template before calling this function and may only
+> > + *	access the transport class data after this function has 
+> > been called.
 > 
-> Do you have the instructions to reproduce and a trace ... I've got a USB
-> pendrive I can try with.
+> It is not mandatory that the LLD call scsi_scan_host(). Although this used
+> to be the case, a few changes have been made in the midlayer recently as we
+> attempted to have the transports perform scanning on behalf of the LLD's.
+> The scsi_scan_target() function can now be used instead of scsi_scan_host().
+> (note: the symbol scsi_scan_single_target() was added briefly, then removed
+> as scsi_scan_target was exported).  In the case of the LLD's using the FC
+> transport, the need not call any scan function. The FC transport calls
+> scsi_scan_target() for them.
 
-Let a little app open/close the device, run that. Then remove and
-reinsert the device, boom.
+Thanks for the correction.  How does this look?
+
+ *      Notes: Only required in "hotplug initialization model" after a
+ *      successful call to scsi_host_alloc().  This function does not
+ *      scan the bus; this can be done by calling scsi_scan_host() or
+ *      in some other transport-specific way.  The LLD must set up
+ *      the transport template before calling this function and may only
+ *      access the transport class data after this function has been called.
+
 
 -- 
-Jens Axboe
-
+"Next the statesmen will invent cheap lies, putting the blame upon 
+the nation that is attacked, and every man will be glad of those
+conscience-soothing falsities, and will diligently study them, and refuse
+to examine any refutations of them; and thus he will by and by convince 
+himself that the war is just, and will thank God for the better sleep 
+he enjoys after this process of grotesque self-deception." -- Mark Twain
