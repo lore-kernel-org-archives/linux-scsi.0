@@ -1,20 +1,42 @@
-From: James Bottomley <James.Bottomley@steeleye.com>
-Subject: Re: [PATCH] 2.4.19 scsi_rescan patch (2nd pass)
-Date: Wed, 02 Oct 2002 12:29:01 -0400
+From: "Cress, Andrew R" <andrew.r.cress@intel.com>
+Subject: RE: [PATCH] 2.4.19 scsi_rescan patch (2nd pass)
+Date: Wed, 2 Oct 2002 09:40:06 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <200210021629.g92GT1G02805@localhost.localdomain>
-References: <andrew.r.cress@intel.com>
+Message-ID: <A5974D8E5F98D511BB910002A50A66470580D251@hdsmsx103.hd.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: (from root@localhost)
-	by pogo.mtv1.steeleye.com (8.9.3/8.9.3) id JAA02107
-	for <linux-scsi@vger.kernel.org>; Wed, 2 Oct 2002 09:29:06 -0700
-In-Reply-To: Message from "Cress, Andrew R" <andrew.r.cress@intel.com>
-   of "Wed, 02 Oct 2002 09:26:17 PDT." <A5974D8E5F98D511BB910002A50A66470580D250@hdsmsx103.hd.intel.com>
+Received: from fmsmsxv040-1.fm.intel.com (fmsmsxvs040.fm.intel.com [132.233.42.124])
+	by petasus.ch.intel.com (8.11.6/8.11.6/d: solo.mc,v 1.46 2002/09/23 20:41:22 dmccart Exp $) with SMTP id g92GeeW15789
+	for <linux-scsi@vger.kernel.org>; Wed, 2 Oct 2002 16:40:40 GMT
 List-Id: linux-scsi@vger.kernel.org
-To: "Cress, Andrew R" <andrew.r.cress@intel.com>
+To: 'James Bottomley' <James.Bottomley@steeleye.com>, "Cress, Andrew R" <andrew.r.cress@intel.com>
 Cc: linux-scsi@vger.kernel.org
+
+James,
+
+A user-space hotplug event can't be guaranteed to have enough information in
+all cases.
+Possible cases:
+  1) Administrator "knows" and manually issues a hot-plug command. 
+  2) A daemon detects a SAF-TE or SES event by slot number.  
+     Not sure if we can really determine what we need from just a slot
+number?
+  3) Other external disk enclosure (JBOD) that doesn't expose a 
+     SAF-TE or SES interface.
+     This case is out in the cold without the kernel-level rescan.
+
+I'm disregarding case (1), since my target customer environment won't
+tolerate the manual step.
+
+Andy
+
+-----Original Message-----
+From: James Bottomley [mailto:James.Bottomley@steeleye.com] 
+Sent: Wednesday, October 02, 2002 12:29 PM
+To: Cress, Andrew R
+Cc: linux-scsi@vger.kernel.org
+Subject: Re: [PATCH] 2.4.19 scsi_rescan patch (2nd pass) 
 
 andrew.r.cress@intel.com said:
 > I had been trying to do that with a user-level daemon I've written
@@ -23,13 +45,15 @@ andrew.r.cress@intel.com said:
 > can't detect that a new device has been inserted, and it doesn't have
 > any way to detect which device it might be.   
 
-Right, that's why the hotplug event has to carry enough information to allow 
-the script to identify what needs to be scanned (i.e. SCSI hostadapter number 
-and PUN if possible). the scsi add-single-device mechanism can then be used to 
+Right, that's why the hotplug event has to carry enough information to allow
+
+the script to identify what needs to be scanned (i.e. SCSI hostadapter
+number 
+and PUN if possible). the scsi add-single-device mechanism can then be used
+to 
 do the attachment (and scanning).
 
 James
-
 
 
 
