@@ -1,23 +1,43 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] update MESH scsi driver
-Date: Sun, 23 Mar 2003 08:12:23 +0000
+From: "Subodh S" <subodh_s_1975@mail.com>
+Subject: Servicing of requests
+Date: Sun, 23 Mar 2003 07:18:50 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030323081223.A6568@infradead.org>
-References: <15997.13267.498276.509580@nanango.paulus.ozlabs.org>
+Message-ID: <20030323121850.48607.qmail@mail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <15997.13267.498276.509580@nanango.paulus.ozlabs.org>; from paulus@samba.org on Sun, Mar 23, 2003 at 03:10:59PM +1100
 List-Id: linux-scsi@vger.kernel.org
-To: Paul Mackerras <paulus@samba.org>
-Cc: linux-scsi@vger.kernel.org, torvalds@transmeta.com
+To: linux-kernel@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org
 
-On Sun, Mar 23, 2003 at 03:10:59PM +1100, Paul Mackerras wrote:
-> This patch updates the `mesh' scsi driver used on older powermacs to
-> correspond with recent changes in the scsi subsystem (things like
-> using cmd->device->id instead of cmd->target).
+Hi,
 
-Looks good, please also make all functions static while you're at it.
+Whenever I read data of 'x'k size using one read() system call, I find batches of some 'y' no. of make_requests calls followed by the same no. of end_io's. Something like :
+make_req
+make_req
+make_req
+end_io
+end_io
+end_io
+make_req
+make_req
+make_req
+end_io
+end_io
+end_io
 
-(dito for mac53c94)
+The output above gives me an idea that 3(hypothetical no.) buffer_heads above form a request.
+(since 1 make_request corresponds to 1 buffer_head) and maybe since 1 request is serviced at a time I can see 3 make_req's together. Is my understanding right ??
+
+But, I have read that sd uses some optimization algorithm to club requests so that the disk seek time is reduced. In which case since all requests are to adjecents sectors it should create a single request of all 'x'k assuming 1 buffer_head is of size 1k.
+
+Does this make sense ??
+
+-subodh
+-- 
+__________________________________________________________
+Sign-up for your own FREE Personalized E-mail at Mail.com
+http://www.mail.com/?sr=signup
+
