@@ -1,68 +1,45 @@
-From: Jeremy Higdon <jeremy@sgi.com>
-Subject: Re: [PATCH] 2.6.3 qla2xxx driver -- use readX_relaxed
-Date: Mon, 1 Mar 2004 17:02:28 -0800
+From: Aristeu Sergio Rozanski Filho <aris@cathedrallabs.org>
+Subject: Re: [patch] qlogic: don't use qinfo as name
+Date: Mon, 1 Mar 2004 22:27:36 -0300
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040302010227.GA583940@sgi.com>
-References: <B179AE41C1147041AA1121F44614F0B060EE25@AVEXCH02.qlogic.org>
+Message-ID: <20040302012735.GA656@cathedrallabs.org>
+References: <20031020232200.GA473@cathedrallabs.org> <20040219150747.A23822@infradead.org> <20040219172619.GA667@cathedrallabs.org> <1077399404.2285.10.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; x-action=pgp-signed
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtvcafw.SGI.COM ([192.48.171.6]:54696 "EHLO zok.sgi.com")
-	by vger.kernel.org with ESMTP id S261525AbUCBBDV (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 1 Mar 2004 20:03:21 -0500
+Received: from panda.sul.com.br ([200.219.150.4]:65038 "EHLO panda.sul.com.br")
+	by vger.kernel.org with ESMTP id S261544AbUCBBaa (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 1 Mar 2004 20:30:30 -0500
 Content-Disposition: inline
-In-Reply-To: <B179AE41C1147041AA1121F44614F0B060EE25@AVEXCH02.qlogic.org>
+In-Reply-To: <1077399404.2285.10.camel@mulgrave>
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Cc: linux-scsi@vger.kernel.org, jbarnes@sgi.com
+To: James Bottomley <James.Bottomley@steeleye.com>
+Cc: Christoph Hellwig <hch@infradead.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Mon, Mar 01, 2004 at 04:45:49PM -0800, Andrew Vasquez wrote:
-> On Wednesday, February 25, 2004 8:06 PM,
-> linux-scsi-owner@vger.kernel.org wrote:  (really me)
-> > For those to whom this is new (it was discussed on linux-kernel and
-> > linux-ia64 I believe), normal PCI register reads imply that PCI DMA
-> > writes that occured prior to the PCI MMR (memory mapped register)
-> > read (on the PCI bus) will be reflected in system memory once the
-> > MMR read is complete.
-> > 
-> > On our platforms, we can speed up the MMR read significantly if that
-> > ordering requirement is "relaxed".
-> > 
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
+
+Hi James,
+> I'll put them in, but first I think the qlogicfas attachment type needs
+> to be all new style.
 > 
-> Interesting...but this implementation seems to be applying a different
-> set of semantic rules to the term 'relaxed' in comparison to the
-> 'relaxed ordering' rules defined by PCI-X and PCI-Express, no?
-
-It is similar, but not the same, unfortunately.
-We could have used, for example, readb_nodmasync, or readb_nosync.  I
-think I like _relaxed better, but ultimately, I'd be willing to bend.
-
-> > So I attempted to find the common register reads that don't have a
-> > need for this ordering so that I could make them use this faster
-> > read.
-> > 
-> > I did not change this line (111 of drivers/scsi/qla2xxx/qla_isr.c),
-> > because it may in some cases imply that a DMA write has completed.
-> > 
-> > 		stat = RD_REG_DWORD(&reg->u.isp2300.host_status);
-> > 
+> This:
 > 
-> Yes in several cases it would.
+> > +#ifdef PCMCIA
+> > +	hreg = scsi_host_alloc(host, 0);
+> > +#else
+> >  	hreg = scsi_register(host, 0);	/* no host data */
+> > +#endif
 > 
-> > Andrew, if you have a chance to look at this and incorporate it in
-> > the driver, it would be great.  Also, any comments would be welcome.
-> > 
-> 
-> Sounds good, I just wish I had an Altix machine to test with.  You
-> seem to have covered most of the fast-path cases, I'll look some more
-> tonight for any others.  I guess my only nit-pick is the lowercase
-> _relaxed() suffix applied to RD_REG* #defines.
+> Mixing of new and old styles is bound to cause difficulty.
+I'm working on that, sorry for the delay, I took last week off.
 
-You can certainly change the #defines in the driver to match what you
-want.  If you want to change the underlying pci codes, we'd have to
-patch the kernel a bit.  If there's a good consensus that _relaxed
-is bad and something else is better, we could do that, right Jesse?  :-)
+- --
+aris
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.2.4 (GNU/Linux)
 
-In any case, thanks for taking a look at this.
-
-jeremy
+iD8DBQFAQ+MHRRJOudsVYbMRAr9nAKCYVr/FAhiaYYscKvAkKu9g2IeFJQCgmPyx
+dTWt0tZsQyFag3xBlhMSqDE=
+=xsMc
+-----END PGP SIGNATURE-----
