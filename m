@@ -1,51 +1,93 @@
-From: Ronald Kuetemeier <ronald@kuetemeier.com>
-Subject: Re: [usb-storage] Re: [PATCH] SCSI: limit mode sense usage
-Date: Tue, 28 Oct 2003 19:16:21 -0700
+From: Jeffrey Lane <bladernr@samuraipoet.com>
+Subject: ips.o driver for ServRAID cards works so far on Opteron and RHEL
+ 3
+Date: Tue, 28 Oct 2003 22:27:33 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1067393780.1469.9.camel@ronald.kuetemeier.com>
-References: <1067376788.1056.5.camel@ronald.kuetemeier.com>
-	 <Pine.LNX.4.44L0.0310281737350.6912-100000@ida.rowland.org>
-	 <20031028175157.A14803@beaverton.ibm.com>
+Message-ID: <3F9F33A5.7030203@samuraipoet.com>
+References: <E1AEBNm-0007gk-SL@svr16.ehostpros.com> <3F9D59F7.2090900@wanadoo.es> <3F9DB238.10400@samuraipoet.com> <3F9DB64B.2010703@wanadoo.es>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 12-254-105-101.client.attbi.com ([12.254.105.101]:34564 "EHLO
-	gw.kuetemeier.com") by vger.kernel.org with ESMTP id S261838AbTJ2CQd
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 28 Oct 2003 21:16:33 -0500
-In-Reply-To: <20031028175157.A14803@beaverton.ibm.com>
+Received: from pimout3-ext.prodigy.net ([207.115.63.102]:19856 "EHLO
+	pimout3-ext.prodigy.net") by vger.kernel.org with ESMTP
+	id S261845AbTJ2D0i (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 28 Oct 2003 22:26:38 -0500
+In-Reply-To: <3F9DB64B.2010703@wanadoo.es>
 List-Id: linux-scsi@vger.kernel.org
-To: Patrick Mansfield <patmans@us.ibm.com>
-Cc: Alan Stern <stern@rowland.harvard.edu>, SCSI development list <linux-scsi@vger.kernel.org>, USB Storage List <usb-storage@one-eyed-alien.net>
+To: taroon-list@redhat.com
 
+Just FYI Everyone, I ran tests on the ServRAID cards using the IPS 
+driver that I had to compile for the Opteron processor, and it worked 
+like a champ.
 
-> > Even the successful logfile had an odd feature.  The sd driver knew enough
-> > to skip both the page 3F and the page 8 MODE-SENSE(10) calls.  But then it
-> > went ahead and issued MODE-SENSE(6) for page 8!  Fortunately this worked
-> > (or rather, failed cleanly enough) for things to progress okay.  Patrick,
-> > can you explain that too?
+Just a recap,  the x86-64 version of AS3 does not include a driver for 
+teh ServRAID cards (ips.o)
+
+So, I compiled the driver using the kernel source that comes with AS3.
+
+The code is ips.c and ips.h.  To compile it, you will have to comment 
+out the three lines (or is it 4) that test to see if the machine 
+architecture is x86 or itanium.  Those lines test arch, and if arch is 
+not x86 or itanium then the compile dies with an error saying that the 
+driver has not been compiled.
+
+So, comment out those lines, edit the kernel make file to make sure you 
+remove the work custom from the verson (teh version numbers have to 
+match the kernel you are running) and then do the following:
+
+make mrproper
+cp configs/<version>-x86_64.config .config
+make menuconfig
+
+then in the scsi drivers section, select M (module) support for the IBM 
+ServRAID cards (this is the ips.o driver) save the config and exit.
+
+next you do this:
+
+make dep && make SUBDIRS=drivers/scsi modules (this will make only the 
+scsi drivers)
+
+cp drivers/scsi/ips.o /lib/modules/<kernelversion>/kernel/drivers/scsi/
+insmod ips.o
+
+and you should then be able to see any disks or arrays connected to the 
+ServRAID cards...
+
+I ahve tested this so far on a 4Lx card and a 6M card, and both worked 
+well when tested overnight under load.
+
+THought I would throw that out there for anyone using these cards.
+
+Cheers
+J
+Xose Vazquez Perez wrote:
+> Jeffrey Lane wrote:
 > 
-> The scsi_dev_flags overrides the host adapter setting, and we did not tell
-> it to skip page 8. Since it worked it does not matter, but we could have
-> used (given BLIST_MS_SKIP_PAGE_08 is 0x2000 and BLIST_MS_SKIP_PAGE_3F is
-> 0x4000):
-Patrick,
-isn't BLIST_MS_SKIP_PAGE_08 always turned "on"?
->From drivers/usb/storage/scsiglue.c
-
-        /* modify scsi_device bits on probe */
-        .flags = (BLIST_MS_SKIP_PAGE_08 | BLIST_USE_10_BYTE_MS),
-
-that's why I put the  BLIST_MS_SKIP_PAGE_3F there at the beginning, to
-test if it's really a 3F problem, seemed like the place put it.
-BTW, if you need a call tree,I most certainly can cook up some code next
-week to generate one.
-Ronald 
-
-> 	
-> 	echo "model:vendor:0x6000" > /proc/scsi/device_info
 > 
-> -- Patrick Mansfield
+>>make clean
 > 
+>   ^^^^^^^^^^
+> this step is -->>
+> 
+>>make mrproper
+>>cp configs/<version>-x86_64.config .config
+>>make menuconfig
+> 
+> 
+>>turned on the IBM ServRAID support (set to M for module) then:
+>>
+>>make dep && make SUBDIRS=drivers/scsi modules
+> 
+>           ^
+> -->> HERE
+> 
+> 
+>>Officially, yes, but unofficially, no, it does work on an AMD 64.
+> 
+> 
+> If it's reliable send a note to ipslinux@adaptec.com and
+> to linux-scsi@vger.kernel.org ;-)
+> 
+> -thanks-
 
