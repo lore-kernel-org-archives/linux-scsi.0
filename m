@@ -1,31 +1,34 @@
-From: Matt_Domsch@Dell.com
-Subject: RE: [PATCH 2.5] fix megaraid driver compile error
-Date: Thu, 6 Feb 2003 13:59:16 -0600
+From: 'Christoph Hellwig' <hch@infradead.org>
+Subject: Re: [PATCH] ips driver 2/4: initialization reordering
+Date: Thu, 6 Feb 2003 20:00:01 +0000
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20BF5713E14D5B48AA289F72BD372D680211AAD4@AUSXMPC122.aus.amer.dell.com>
+Message-ID: <20030206200001.A16467@infradead.org>
+References: <A3B9245C291EEF4785A24A1DBE8D852B03773F@rtpexc01.adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
- charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <A3B9245C291EEF4785A24A1DBE8D852B03773F@rtpexc01.adaptec.com>; from David_Jeffery@adaptec.com on Thu, Feb 06, 2003 at 02:58:18PM -0500
 List-Id: linux-scsi@vger.kernel.org
-To: hch@infradead.org, markh@osdl.org, atulm@lsil.com
-Cc: torvalds@transmeta.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: "Jeffery, David" <David_Jeffery@adaptec.com>
+Cc: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
 
-> Any reason we can't jump straight to the v2 driver instead of fixing
-> the now obsolete driver?
+On Thu, Feb 06, 2003 at 02:58:18PM -0500, Jeffery, David wrote:
+> > Please don't use the obsolete scsi_register_host() interface=20
+> > but switch
+> > to the hotplug-aware scsi_add_host.  Also please just make=20
+> > the template
+> > a normal struct in ips.c instead of the magic macro initializ=E6tio=
+n.
+>=20
+> Using scsi_add_host is on my todo list.  I'll also convert
+> the evil IPS macro when I get a chance.
 
-Atul told linux-megaraid-devel last week that there's at least one important
-change to the ISR interaction with firmware that needs to be made, as well
-as a broken SCSI RESERVATION_STATUS command.  He is addressing these and
-will submit a 2.00.3 driver soon (I hope).
+Cool!
 
-Thanks,
-Matt
-
---
-Matt Domsch
-Sr. Software Engineer, Lead Engineer, Architect
-Dell Linux Solutions www.dell.com/linux
-Linux on Dell mailing lists @ http://lists.us.dell.com
-
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
