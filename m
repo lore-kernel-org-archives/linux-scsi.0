@@ -1,47 +1,30 @@
-From: Matthew Wilcox <willy@debian.org>
+From: Bryan Henderson <hbryan@us.ibm.com>
 Subject: Re: SCSI HBA in wrong order
-Date: Fri, 9 Jul 2004 17:43:59 +0100
+Date: Fri, 9 Jul 2004 10:40:41 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040709164359.GF5889@parcelfarce.linux.theplanet.co.uk>
-References: <Pine.LNX.4.58.0407091027580.12759@rray1.jam.rr.com>
+Message-ID: <OF6EBED15C.7C0610C9-ON88256ECC.00609EC2-88256ECC.00611D8B@us.ibm.com>
+References: <20040709164359.GF5889@parcelfarce.linux.theplanet.co.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="US-ASCII"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:28568 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S265093AbUGIQoC
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 9 Jul 2004 12:44:02 -0400
-Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.58.0407091027580.12759@rray1.jam.rr.com>
+Received: from e6.ny.us.ibm.com ([32.97.182.106]:23029 "EHLO e6.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S265119AbUGIRky (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 9 Jul 2004 13:40:54 -0400
+In-Reply-To: <20040709164359.GF5889@parcelfarce.linux.theplanet.co.uk>
 List-Id: linux-scsi@vger.kernel.org
-To: raray@jam.rr.com
-Cc: linux-scsi@vger.kernel.org
+To: Matthew Wilcox <willy@debian.org>
+Cc: linux-scsi@vger.kernel.org, raray@jam.rr.com
 
-On Fri, Jul 09, 2004 at 10:29:34AM -0500, raray@jam.rr.com wrote:
-> I have 3 Compaq Proliant ML370 servers with RedHat 9.0 and 2.4.23 kernel.
-> Each of these machines has an optical jukebox with 6 drives attached.
-> The 2 internal SCSI drives are attached to the HBA built into the system
-> board.
-> The jukebox is attached to a LSIU40HVD HBA.
-> Linux assigns the built in HBAs as scsi0 and scsi1 and assigns the
-> LSIU40HVD as scsi2 and scsi3.
-> I upgraded one server to Fedora Core 2 with 2.6.6 kernel.
-> Now Linux assigns the built in HBAs as scsi2 and scsi3 and assigns the
-> LSIU40HVD as scsi0 and scsi1.
-> This really screws things up. Anybody got any ideas how to fix this?
+>> I upgraded one server to Fedora Core 2 with 2.6.6 kernel.
+>> Now Linux assigns the built in HBAs as scsi2 and scsi3 and assigns the
+>> LSIU40HVD as scsi0 and scsi1.
+>> This really screws things up.
+>
+>There is no way to fix this. 
 
-There is no way to fix this.  Supporting hotplug means that the sym2
-driver is told about the HBAs in PCI bus scan order.  I assume all your
-HBAs are driven by the sym2 driver?  If not, you could load the modules
-in the other order to get the internal HBAs before the external HBAs.
+It's worth mentioning that the broader problem -- that of things getting 
+really screwed up by such a reversal -- can be fixed by using another way, 
+such as udev, instead of the Linux host number to identify the devices. 
+Which is why this "unfixable" problem has been accepted.
 
-In any case, this is a Red Hat kernel, you should be complaining to them,
-not here.
 
--- 
-"Next the statesmen will invent cheap lies, putting the blame upon 
-the nation that is attacked, and every man will be glad of those
-conscience-soothing falsities, and will diligently study them, and refuse
-to examine any refutations of them; and thus he will by and by convince 
-himself that the war is just, and will thank God for the better sleep 
-he enjoys after this process of grotesque self-deception." -- Mark Twain
