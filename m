@@ -1,127 +1,64 @@
-From: "Robert T. Johnson" <rtjohnso@eecs.berkeley.edu>
-Subject: PATCH: 2.6.7-rc3 drivers/scsi/cpqfcTSinit.c several user/kernel
-	pointer bugs
-Date: 09 Jun 2004 15:23:34 -0700
+From: "Aleks Sheynkman" <aleks@Narus.com>
+Subject: RE: blocked mailbox error!!
+Date: Wed, 9 Jun 2004 15:58:00 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1086819814.14180.86.camel@dooby.cs.berkeley.edu>
+Message-ID: <FA6D803197D0E14C88E1B74C5A021B8202E7D8@snitch.narus.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from relay2.EECS.Berkeley.EDU ([169.229.60.28]:8188 "EHLO
-	relay2.EECS.Berkeley.EDU") by vger.kernel.org with ESMTP
-	id S266016AbUFIWXg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 9 Jun 2004 18:23:36 -0400
+Received: from mx2.narus.com ([66.236.101.211]:65002 "EHLO mx2.narus.com")
+	by vger.kernel.org with ESMTP id S266178AbUFIW6E convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 9 Jun 2004 18:58:04 -0400
+content-class: urn:content-classes:message
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Linux Kernel <linux-kernel@vger.kernel.org>
+To: "Mukker, Atul" <Atulm@lsil.com>, linux-scsi@vger.kernel.org
 
-Since "ioc" is copied from user-space, vendor_cmd = ioc.argp cannot be trusted,
-so derefing vendor_cmd via expressions like "vendor_cmd->len" is unsafe.
+It seems that every time I boot 2.10.3 driver it's hangs on boot 
+on following line
+scsi%d: scanning scsi channel %d ",  adapter->host->host_no, cmd->channel).
 
-Let me know if you have any questions, and I apologize if I've made a mistake 
-in my analysis.
+Anyone seen this problem before ?
 
-Best,
-Rob
+thanks !!!
 
+-Aleks
 
---- linux-2.6.7-rc3-full/drivers/scsi/cpqfcTSinit.c.orig	Wed Jun  9 12:20:15 2004
-+++ linux-2.6.7-rc3-full/drivers/scsi/cpqfcTSinit.c	Wed Jun  9 12:18:50 2004
-@@ -556,7 +556,7 @@ int cpqfcTS_ioctl( struct scsi_device *S
-   struct scsi_cmnd *DumCmnd;
-   int i, j;
-   VENDOR_IOCTL_REQ ioc;
--  cpqfc_passthru_t *vendor_cmd;
-+  cpqfc_passthru_t vendor_cmd;
-   Scsi_Device *SDpnt;
-   Scsi_Request *ScsiPassThruReq;
-   cpqfc_passthru_private_t *privatedata;
-@@ -590,12 +590,14 @@ int cpqfcTS_ioctl( struct scsi_device *S
-         if( copy_from_user( &ioc, arg, sizeof( VENDOR_IOCTL_REQ)))
- 		return( -EFAULT);
- 
--	vendor_cmd = ioc.argp;  // i.e., CPQ specific command struct
-+        // CPQ specific command struct
-+	if (copy_from_user(&vendor_cmd, ioc.argp, sizeof(vendor_cmd)))
-+		return (-EFAULT); 
- 
- 	// If necessary, grab a kernel/DMA buffer
--	if( vendor_cmd->len)
-+	if( vendor_cmd.len)
- 	{
--  	  buf = kmalloc( vendor_cmd->len, GFP_KERNEL);
-+  	  buf = kmalloc( vendor_cmd.len, GFP_KERNEL);
- 	  if( !buf)
- 	    return -ENOMEM;
- 	}
-@@ -613,10 +615,10 @@ int cpqfcTS_ioctl( struct scsi_device *S
- 		return -ENOMEM;
- 	}
- 
--	if (vendor_cmd->rw_flag == VENDOR_WRITE_OPCODE) {
--		if (vendor_cmd->len) { // Need data from user?
--        		if (copy_from_user(buf, vendor_cmd->bufp, 
--						vendor_cmd->len)) {
-+	if (vendor_cmd.rw_flag == VENDOR_WRITE_OPCODE) {
-+		if (vendor_cmd.len) { // Need data from user?
-+        		if (copy_from_user(buf, vendor_cmd.bufp, 
-+						vendor_cmd.len)) {
- 				kfree(buf);
- 				cpqfc_free_private_data(cpqfcHBAdata, 
- 					ScsiPassThruReq->upper_private_data);
-@@ -625,7 +627,7 @@ int cpqfcTS_ioctl( struct scsi_device *S
- 			}
- 		}
- 		ScsiPassThruReq->sr_data_direction = SCSI_DATA_WRITE; 
--	} else if (vendor_cmd->rw_flag == VENDOR_READ_OPCODE) {
-+	} else if (vendor_cmd.rw_flag == VENDOR_READ_OPCODE) {
- 		ScsiPassThruReq->sr_data_direction = SCSI_DATA_READ; 
- 	} else
- 		// maybe this means a bug in the user app
-@@ -642,12 +644,12 @@ int cpqfcTS_ioctl( struct scsi_device *S
- 	// FC Link events with our "worker thread".
- 
- 	privatedata = ScsiPassThruReq->upper_private_data;
--	privatedata->bus = vendor_cmd->bus;
--	privatedata->pdrive = vendor_cmd->pdrive;
-+	privatedata->bus = vendor_cmd.bus;
-+	privatedata->pdrive = vendor_cmd.pdrive;
- 	
-         // eventually gets us to our own _quecommand routine
- 	scsi_wait_req(ScsiPassThruReq, 
--		&vendor_cmd->cdb[0], buf, vendor_cmd->len, 
-+		&vendor_cmd.cdb[0], buf, vendor_cmd.len, 
- 		10*HZ,  // timeout
- 		1);	// retries
-         result = ScsiPassThruReq->sr_result;
-@@ -655,12 +657,12 @@ int cpqfcTS_ioctl( struct scsi_device *S
-         // copy any sense data back to caller
-         if( result != 0 )
- 	{
--	  memcpy( vendor_cmd->sense_data, // see struct def - size=40
-+	  memcpy( vendor_cmd.sense_data, // see struct def - size=40
- 		  ScsiPassThruReq->sr_sense_buffer, 
- 		  sizeof(ScsiPassThruReq->sr_sense_buffer) <
--                  sizeof(vendor_cmd->sense_data)           ?
-+                  sizeof(vendor_cmd.sense_data)           ?
-                   sizeof(ScsiPassThruReq->sr_sense_buffer) :
--                  sizeof(vendor_cmd->sense_data)
-+                  sizeof(vendor_cmd.sense_data)
-                 ); 
- 	}
-         SDpnt = ScsiPassThruReq->sr_device;
-@@ -669,9 +671,9 @@ int cpqfcTS_ioctl( struct scsi_device *S
-         ScsiPassThruReq = NULL;
- 
- 	// need to pass data back to user (space)?
--	if( (vendor_cmd->rw_flag == VENDOR_READ_OPCODE) &&
--	     vendor_cmd->len )
--        if(  copy_to_user( vendor_cmd->bufp, buf, vendor_cmd->len))
-+	if( (vendor_cmd.rw_flag == VENDOR_READ_OPCODE) &&
-+	     vendor_cmd.len )
-+        if(  copy_to_user( vendor_cmd.bufp, buf, vendor_cmd.len))
- 		result = -EFAULT;
- 
-         if( buf) 
-
+> -----Original Message-----
+> From: Mukker, Atul [mailto:Atulm@lsil.com]
+> Sent: Wednesday, June 09, 2004 1:21 PM
+> To: Aleks Sheynkman; Pat LaVarre; Jens Axboe
+> Cc: dougg@torque.net; linux-scsi@vger.kernel.org
+> Subject: RE: blocked mailbox error!!
+> 
+> 
+> All you would need to do is to replace ".vary_io = 1" by 
+> ".can_do_varyio =1"
+> in megaraid2.h
+> 
+> -Atul Mukker
+> 
+> > -----Original Message-----
+> > From: Aleks Sheynkman [mailto:aleks@Narus.com]
+> > Sent: Wednesday, June 09, 2004 2:56 PM
+> > To: Pat LaVarre; Jens Axboe
+> > Cc: dougg@torque.net; linux-scsi@vger.kernel.org
+> > Subject: blocked mailbox error!!
+> > 
+> > 
+> > Hello,
+> >  I was wondering to ask if someone had any luck running 
+> > megraid 2.x drivers on RH 7.3.
+> >  
+> > Please advice ,
+> >  
+> >  Thanks!!
+> >  
+> > -
+> > To unsubscribe from this list: send the line "unsubscribe 
+> > linux-scsi" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > 
+> 
