@@ -1,42 +1,41 @@
-From: Mike Anderson <andmike@us.ibm.com>
+From: James Bottomley <James.Bottomley@steeleye.com>
 Subject: Re: Possible explanation for SCSI benchmark problems in 2.5
-Date: Sun, 29 Sep 2002 14:32:46 -0700
+Date: Sun, 29 Sep 2002 23:40:50 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20020929213246.GA3743@beaverton.ibm.com>
-References: <200209292048.g8TKmN424799@localhost.localdomain>
+Message-ID: <200209300340.g8U3eob03613@localhost.localdomain>
+References: <andmike@us.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <200209292048.g8TKmN424799@localhost.localdomain>
+Received: (from root@localhost)
+	by pogo.mtv1.steeleye.com (8.9.3/8.9.3) id UAA14991
+	for <linux-scsi@vger.kernel.org>; Sun, 29 Sep 2002 20:41:00 -0700
+In-Reply-To: Message from Mike Anderson <andmike@us.ibm.com>
+   of "Sun, 29 Sep 2002 14:32:46 PDT." <20020929213246.GA3743@beaverton.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@steeleye.com>
-Cc: linux-scsi@vger.kernel.org, Andrew Morton <akpm@digeo.com>, Jens Axboe <axboe@suse.de>
+To: andmike@us.ibm.com, linux-scsi@vger.kernel.org, Andrew Morton <akpm@digeo.com>, Jens Axboe <axboe@suse.de>, Kai.Makisara@metla.fi
 
-James Bottomley [James.Bottomley@steeleye.com] wrote:
-> Hi All,
-> 
-> While looking at other code (OK, how to get the MCA drivers not to use bounce 
-> buffers...)  I discovered that the way scsi_scan.c calls 
-> scsi_initialize_merge_fn() guarantees (on an x86) that the 
-> blk_queue_bounce_limit is always called with BLK_BOUNCE_HIGH.  This will 
-> probably hurt benchmarks on machines with 1Gb or more of memory.
-> 
-> The problem is that scsi_initialize_merge_fn() checks sdev->type, but this is 
-> always -1 in scsi_alloc_sdev, and thus it never uses the pci dma mask for disk 
-> devices.
-> 
-> The attached patch moves the initialisation to after sdev->type has the 
-> correct value.
+andmike@us.ibm.com said:
+> I thought this was previously discussed on this thread. http://
+> marc.theaimsgroup.com/?l=linux-kernel&m=103064539622958&w=2
 
-I thought this was previously discussed on this thread.
-http://marc.theaimsgroup.com/?l=linux-kernel&m=103064539622958&w=2
+I remember the thread (well now that my memory's been refreshed).
 
-and I believe the comment from Jens was that this could be killed
-off in 2.5 if someone did a check for safety on all the devices.
+> and I believe the comment from Jens was that this could be killed off
+> in 2.5 if someone did a check for safety on all the devices. 
 
--andmike
---
-Michael Anderson
-andmike@us.ibm.com
+I'm not really an expert in st, which is where it looks like the problems are. 
+ On cursory reading of the code, I think the st driver does dio only if all 
+pages are below the HIGHMEM zone, otherwise it does intermediate buffering.  
+Thus, the st driver will never put anything in the highmem zone in the queue 
+and Andrew Morton's version should be fine.
+
+Does everyone agree with this analysis?
+
+James
+
+
+
+
+
 
