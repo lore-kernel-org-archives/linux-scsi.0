@@ -1,122 +1,309 @@
-From: "Mukker, Atul" <Atulm@lsil.com>
-Subject: RE: [PATCH] LLDD dynamic scan aids
-Date: Fri, 19 Nov 2004 16:07:04 -0500
-Message-ID: <0E3FA95632D6D047BA649F95DAB60E570562CBF1@exa-atlanta>
+From: "Moore, Eric Dean" <Eric.Moore@lsil.com>
+Subject: RE: [patch 5/8] mptfusion: command line parameters
+Date: Fri, 19 Nov 2004 14:09:57 -0700
+Message-ID: <91888D455306F94EBD4D168954A9457C546BCE@nacos172.co.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: multipart/mixed;
+	boundary="----_=_NextPart_000_01C4CE7C.1FBF16E0"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:25854 "EHLO mail0.lsil.com")
-	by vger.kernel.org with ESMTP id S261589AbUKSVIG (ORCPT
+Received: from mail0.lsil.com ([147.145.40.20]:56574 "EHLO mail0.lsil.com")
+	by vger.kernel.org with ESMTP id S261567AbUKSVLV (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 19 Nov 2004 16:08:06 -0500
+	Fri, 19 Nov 2004 16:11:21 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: 'Patrick Mansfield' <patmans@us.ibm.com>, 'Christoph Hellwig' <hch@infradead.org>
-Cc: "'Salyzyn, Mark'" <mark_salyzyn@adaptec.com>, "'James.Smart@Emulex.Com'" <James.Smart@Emulex.Com>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, 'Mark Haverkamp' <markh@osdl.org>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: James.Bottomley@steeleye.com, linux-scsi@vger.kernel.org
 
-Since it is widely accepted that bringing new devices online, have an
-ability to dynamically mark them offline, report changes in size etc, are
-crucial for high performance computing solutions, it can only be good if the
-most of the situations are enumerated. After which the possible and
-optimized solutions are laid out.
+This message is in MIME format. Since your mail reader does not understand
+this format, some or all of this message may not be legible.
 
-The following conditions are the minimum IMO
+------_=_NextPart_000_01C4CE7C.1FBF16E0
+Content-Type: text/plain;
+	charset="iso-8859-1"
 
-1.	Few new devices are added (for example some new raid volumes are
-created by configuration program)
+No problem. Here is a new patch with that removed.
 
-	a.	If the LLDD 'knows' the bus, target, and lun, it may call
-scsi_add_device() for each of new entries
-	b.	Do a scsi_scan_host_selected(shost, chan, id,
-SCAN_WILD_CARD, 0) or scsi_scan_host_selected(shost, chan, SCAN_WILD_CARD,
-SCAN_WILD_CARD, 0) as appropriate
-	c.	Applications use proc/sysfs to update
+Signed-off-by: Eric Moore <Eric.Moore@lsil.com>
 
 
-2.	Few devices are deleted
-
-	a.	LLDD call scsi_remove_device() for each of the deleted
-volume.
-	b.	???
-	c.	Applications use proc/sysfs to update
-
-
-3.	Many new devices are added (for example new configuration is
-created)
-
-	a.	If the LLDD 'knows' the bus, target, and lun, it may call
-scsi_add_device() for each of new entries
-	b.	Do a scsi_scan_host_selected(shost, SCAN_WILD_CARD,
-SCAN_WILD_CARD, SCAN_WILD_CARD, 0)
-	c.	Applications use proc/sysfs to update
-
-
-4.	Many devices are removed(for example configuration is cleared)
-
-	a.	LLDD call scsi_remove_device() for each of the deleted
-volume.
-	b.	Do a scsi_scan_host_selected(shost, SCAN_WILD_CARD,
-SCAN_WILD_CARD, SCAN_WILD_CARD, 1)???
-	c.	Applications use proc/sysfs to update
-
-
-5.	Sizes of the existing volumes changed.
-
-	a.	scsi_rescan_device()
-	b.	???
-	c.	???
-
-
-Best Regards
--Atul Mukker
-Architect, Drivers and BIOS
-LSI Logic Corporation
-
-> -----Original Message-----
-> From: Patrick Mansfield [mailto:patmans@us.ibm.com] 
-> Sent: Thursday, November 18, 2004 10:48 AM
-> To: Christoph Hellwig
-> Cc: Salyzyn, Mark; James.Smart@Emulex.Com; 
-> linux-scsi@vger.kernel.org; Mark Haverkamp
-> Subject: Re: [PATCH] LLDD dynamic scan aids
+On Friday, November 19, 2004 12:08 PM, Christoph Hellwig wrote:
+> -/* Set string for command line args from insmod */
+>  #ifdef MODULE
+> -char *mptscsih = NULL;
+> -module_param(mptscsih, charp, 0);
+> +static int dv = MPTSCSIH_DOMAIN_VALIDATION;
+> +module_param(dv, int, 0);
+> +MODULE_PARM_DESC(dv, "DV Algorithm: enhanced = 1, basic = 0 
+> (default=MPTSCSIH_DOMAIN_VALIDATION=1)");
 > 
-> On Thu, Nov 18, 2004 at 02:36:44PM +0000, Christoph Hellwig wrote:
-> > On Thu, Nov 18, 2004 at 09:32:09AM -0500, Salyzyn, Mark wrote:
-> > > But scsi_rescan_device and scsi_scan_host_selected both target 
-> > > specific ids though? As long as we stay away from the 
-> wildcards for 
-> > > scsi_scan_host_selected, or am I mistaken?
-> > 
-> > scsi_rescan_device should be exported.  For the target scan 
-> something 
-> > like the second hunk of James' patch looks good to me.
-> 
-> Why not export scsi_scan_host_selected (and SCAN_WILD_CARD)? 
-> If a driver used it wrong then change the driver.
-> 
-> Suppose a driver wants to scan a given channel. (Would one 
-> ever want to scan for a particular a LUN? I can't think of a reason).
-> 
-> If the driver wants to rescan the host (it knows it it has 
-> already called any scsi scan functions), it would call:
-> 
-> 	scsi_scan_host_selected(shost, SCAN_WILD_CARD,
-> 		SCAN_WILD_CARD, SCAN_WILD_CARD, 1);
-> 
-> And new target scan:
-> 
-> 	scsi_scan_host_selected(shost, chan, id, SCAN_WILD_CARD, 0);
-> 
-> Target rescan:
-> 
-> 	scsi_scan_host_selected(shost, chan, id, SCAN_WILD_CARD, 1);
-> 
-> Instead of any shost->rescan logic.
-> 
-> -- Patrick Mansfield
-> -
-> To unsubscribe from this list: send the line "unsubscribe 
-> linux-scsi" in the body of a message to 
-> majordomo@vger.kernel.org More majordomo info at  
-> http://vger.kernel.org/majordomo-info.html
-> 
+> please remove the ifdef MODULE - module_param is fine for 
+> builtin drivers
+> aswell, then you can use mptscsih.<option>=<value>
+>
+
+
+ 
+
+
+------_=_NextPart_000_01C4CE7C.1FBF16E0
+Content-Type: application/octet-stream;
+	name="mptfusion-5.patch"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: attachment;
+	filename="mptfusion-5.patch"
+
+diff -uarN b/drivers/message/fusion/mptscsih.c =
+a/drivers/message/fusion/mptscsih.c=0A=
+--- b/drivers/message/fusion/mptscsih.c	2004-11-19 14:06:56.020018608 =
+-0700=0A=
++++ a/drivers/message/fusion/mptscsih.c	2004-11-19 14:02:33.000000000 =
+-0700=0A=
+@@ -96,11 +96,21 @@=0A=
+ MODULE_DESCRIPTION(my_NAME);=0A=
+ MODULE_LICENSE("GPL");=0A=
+ =0A=
+-/* Set string for command line args from insmod */=0A=
+-#ifdef MODULE=0A=
+-char *mptscsih =3D NULL;=0A=
+-module_param(mptscsih, charp, 0);=0A=
+-#endif=0A=
++static int dv =3D MPTSCSIH_DOMAIN_VALIDATION;=0A=
++module_param(dv, int, 0);=0A=
++MODULE_PARM_DESC(dv, "DV Algorithm: enhanced =3D 1, basic =3D 0 =
+(default=3DMPTSCSIH_DOMAIN_VALIDATION=3D1)");=0A=
++=0A=
++static int width =3D MPTSCSIH_MAX_WIDTH;=0A=
++module_param(width, int, 0);=0A=
++MODULE_PARM_DESC(width, "Max Bus Width: wide =3D 1, narrow =3D 0 =
+(default=3DMPTSCSIH_MAX_WIDTH=3D1)");=0A=
++=0A=
++static ushort factor =3D MPTSCSIH_MIN_SYNC;=0A=
++module_param(factor, ushort, 0);=0A=
++MODULE_PARM_DESC(factor, "Min Sync Factor: =
+(default=3DMPTSCSIH_MIN_SYNC=3D0x08)");=0A=
++=0A=
++static int saf_te =3D MPTSCSIH_SAF_TE;=0A=
++module_param(saf_te, int, 0);=0A=
++MODULE_PARM_DESC(saf_te, "Force enabling SEP Processor: =
+(default=3DMPTSCSIH_SAF_TE=3D0)");=0A=
+ =0A=
+ =
+/*=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D=
+-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D=
+-=3D-=3D*/=0A=
+ =0A=
+@@ -200,9 +210,6 @@=0A=
+ static void	mptscsih_dv_parms(MPT_SCSI_HOST *hd, DVPARAMETERS *dv,void =
+*pPage);=0A=
+ static void	mptscsih_fillbuf(char *buffer, int size, int index, int =
+width);=0A=
+ #endif=0A=
+-#ifdef MODULE=0A=
+-static int	mptscsih_setup(char *str);=0A=
+-#endif=0A=
+ /* module entry point */=0A=
+ static int  __init   mptscsih_init  (void);=0A=
+ static void __exit   mptscsih_exit  (void);=0A=
+@@ -245,11 +252,9 @@=0A=
+ static int scandv_wait_done =3D 1;=0A=
+ =0A=
+ =0A=
+-/* Driver default setup=0A=
++/* Driver command line structure=0A=
+  */=0A=
+-static struct mptscsih_driver_setup=0A=
+-	driver_setup =3D MPTSCSIH_DRIVER_SETUP;=0A=
+-=0A=
++static struct mptscsih_driver_setup driver_setup;=0A=
+ static struct scsi_host_template driver_template;=0A=
+ =0A=
+ =
+/*=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D=
+-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D=
+-=3D-=3D*/=0A=
+@@ -1242,9 +1247,9 @@=0A=
+ 		}=0A=
+ =0A=
+ 		if (ioc->spi_data.minSyncFactor <=0A=
+-		  driver_setup.min_sync_fac) {=0A=
++		  driver_setup.min_sync_factor) {=0A=
+ 			ioc->spi_data.minSyncFactor =3D=0A=
+-			  driver_setup.min_sync_fac;=0A=
++			  driver_setup.min_sync_factor;=0A=
+ 		}=0A=
+ =0A=
+ 		if (ioc->spi_data.minSyncFactor =3D=3D MPT_ASYNC) {=0A=
+@@ -1271,7 +1276,7 @@=0A=
+ 			"dv %x width %x factor %x saf_te %x\n",=0A=
+ 			ioc->name, driver_setup.dv,=0A=
+ 			driver_setup.max_width,=0A=
+-			driver_setup.min_sync_fac,=0A=
++			driver_setup.min_sync_factor,=0A=
+ 			driver_setup.saf_te));=0A=
+ 	}=0A=
+ =0A=
+@@ -1488,11 +1493,15 @@=0A=
+ 		  ": Registered for IOC reset notifications\n"));=0A=
+ 	}=0A=
+ =0A=
+-#ifdef MODULE=0A=
+-	/* Evaluate the command line arguments, if any */=0A=
+-	if (mptscsih)=0A=
+-		mptscsih_setup(mptscsih);=0A=
+-#endif=0A=
++	dinitprintk((KERN_INFO MYNAM=0A=
++		": Command Line Args: dv=3D%d max_width=3D%d "=0A=
++		"factor=3D0x%x saf_te=3D%d\n",=0A=
++		dv, width, factor, saf_te));=0A=
++=0A=
++	driver_setup.dv =3D (dv) ? 1 : 0;=0A=
++	driver_setup.max_width =3D (width) ? 1 : 0;=0A=
++	driver_setup.min_sync_factor =3D factor;=0A=
++	driver_setup.saf_te =3D (saf_te) ? 1 : 0;;=0A=
+ =0A=
+ 	if(mpt_device_driver_register(&mptscsih_driver,=0A=
+ 	  MPTSCSIH_DRIVER) !=3D 0 ) {=0A=
+@@ -6074,107 +6083,6 @@=0A=
+ #endif /* ~MPTSCSIH_ENABLE_DOMAIN_VALIDATION */=0A=
+ =0A=
+ =
+/*=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D=
+-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D=
+-=3D-=3D*/=0A=
+-/* Commandline Parsing routines and defines.=0A=
+- *=0A=
+- * insmod format:=0A=
+- *	insmod mptscsih mptscsih=3D"width:1 dv:n factor:0x09 saf-te:1"=0A=
+- *  boot format:=0A=
+- *	mptscsih=3Dwidth:1,dv:n,factor:0x8,saf-te:1=0A=
+- *=0A=
+- */=0A=
+-#ifdef MODULE=0A=
+-#define	ARG_SEP	' '=0A=
+-#else=0A=
+-#define	ARG_SEP	','=0A=
+-#endif=0A=
+-=0A=
+-#ifdef MODULE=0A=
+-static char setup_token[] __initdata =3D=0A=
+-	"dv:"=0A=
+-	"width:"=0A=
+-	"factor:"=0A=
+-	"saf-te:"=0A=
+-       ;	/* DO NOT REMOVE THIS ';' */=0A=
+-#endif=0A=
+-       =0A=
+-#define OPT_DV			1=0A=
+-#define OPT_MAX_WIDTH		2=0A=
+-#define OPT_MIN_SYNC_FACTOR	3=0A=
+-#define OPT_SAF_TE		4=0A=
+-=0A=
+-/*=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D=
+*/=0A=
+-#ifdef MODULE=0A=
+-static int=0A=
+-get_setup_token(char *p)=0A=
+-{=0A=
+-	char *cur =3D setup_token;=0A=
+-	char *pc;=0A=
+-	int i =3D 0;=0A=
+-=0A=
+-	while (cur !=3D NULL && (pc =3D strchr(cur, ':')) !=3D NULL) {=0A=
+-		++pc;=0A=
+-		++i;=0A=
+-		if (!strncmp(p, cur, pc - cur))=0A=
+-			return i;=0A=
+-		cur =3D pc;=0A=
+-	}=0A=
+-	return 0;=0A=
+-}=0A=
+-=0A=
+-/*=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D=
+*/=0A=
+-static int=0A=
+-mptscsih_setup(char *str)=0A=
+-{=0A=
+-	char *cur =3D str;=0A=
+-	char *pc, *pv;=0A=
+-	unsigned long val;=0A=
+-	int  c;=0A=
+-=0A=
+-	while (cur !=3D NULL && (pc =3D strchr(cur, ':')) !=3D NULL) {=0A=
+-		char *pe;=0A=
+-=0A=
+-		val =3D 0;=0A=
+-		pv =3D pc;=0A=
+-		c =3D *++pv;=0A=
+-=0A=
+-		if	(c =3D=3D 'n')=0A=
+-			val =3D 0;=0A=
+-		else if	(c =3D=3D 'y')=0A=
+-			val =3D 1;=0A=
+-		else=0A=
+-			val =3D (int) simple_strtoul(pv, &pe, 0);=0A=
+-=0A=
+-		printk("Found Token: %s, value %x\n", cur, (int)val);=0A=
+-		switch (get_setup_token(cur)) {=0A=
+-		case OPT_DV:=0A=
+-			driver_setup.dv =3D val;=0A=
+-			break;=0A=
+-=0A=
+-		case OPT_MAX_WIDTH:=0A=
+-			driver_setup.max_width =3D val;=0A=
+-			break;=0A=
+-=0A=
+-		case OPT_MIN_SYNC_FACTOR:=0A=
+-			driver_setup.min_sync_fac =3D val;=0A=
+-			break;=0A=
+-=0A=
+-		case OPT_SAF_TE:=0A=
+-			driver_setup.saf_te =3D val;=0A=
+-			break;=0A=
+-=0A=
+-		default:=0A=
+-			printk("mptscsih_setup: unexpected boot option '%.*s' ignored\n", =
+(int)(pc-cur+1), cur);=0A=
+-			break;=0A=
+-		}=0A=
+-=0A=
+-		if ((cur =3D strchr(cur, ARG_SEP)) !=3D NULL)=0A=
+-			++cur;=0A=
+-	}=0A=
+-	return 1;=0A=
+-}=0A=
+-#endif=0A=
+-/*=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D=
+-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D=
+-=3D-=3D*/=0A=
+-=0A=
+ =0A=
+ module_init(mptscsih_init);=0A=
+ module_exit(mptscsih_exit);=0A=
+diff -uarN b/drivers/message/fusion/mptscsih.h =
+a/drivers/message/fusion/mptscsih.h=0A=
+--- b/drivers/message/fusion/mptscsih.h	2004-11-17 16:24:38.000000000 =
+-0700=0A=
++++ a/drivers/message/fusion/mptscsih.h	2004-11-18 12:10:00.000000000 =
+-0700=0A=
+@@ -95,17 +95,8 @@=0A=
+ {=0A=
+         u8      dv;=0A=
+         u8      max_width;=0A=
+-        u8      min_sync_fac;=0A=
++        u8      min_sync_factor;=0A=
+         u8      saf_te;=0A=
+ };=0A=
+ =0A=
+-=0A=
+-#define MPTSCSIH_DRIVER_SETUP                   \=0A=
+-{                                               \=0A=
+-        MPTSCSIH_DOMAIN_VALIDATION,             \=0A=
+-        MPTSCSIH_MAX_WIDTH,                     \=0A=
+-        MPTSCSIH_MIN_SYNC,                      \=0A=
+-        MPTSCSIH_SAF_TE,                        \=0A=
+-}=0A=
+-=0A=
+ #endif=0A=
+
+------_=_NextPart_000_01C4CE7C.1FBF16E0--
