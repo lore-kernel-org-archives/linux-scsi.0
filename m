@@ -1,32 +1,33 @@
-From: "Ju, Seokmann" <sju@lsil.com>
-Subject: RE: [PATCH 15/19] drivers/scsi/megaraid: Use the DMA_{64,32}BIT_M
-	ASK constants
-Date: Tue, 22 Feb 2005 08:46:49 -0500
-Message-ID: <0E3FA95632D6D047BA649F95DAB60E57036626CE@exa-atlanta>
+From: Greg Stark <gsstark@mit.edu>
+Subject: Re: [PATCH] scsi/sata write barrier support
+Date: 22 Feb 2005 12:06:09 -0500
+Message-ID: <874qg4v81q.fsf@stark.xeocode.com>
+References: <20050127120244.GO2751@suse.de> <87acpxurwf.fsf@stark.xeocode.com>
+	<20050222071340.GC2835@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain
-Received: from mail0.lsil.com ([147.145.40.20]:28577 "EHLO mail0.lsil.com")
-	by vger.kernel.org with ESMTP id S262311AbVBVNrE (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 22 Feb 2005 08:47:04 -0500
+Content-Type: text/plain; charset=us-ascii
+Received: from gsstark.mtl.istop.com ([66.11.160.162]:14477 "EHLO
+	stark.xeocode.com") by vger.kernel.org with ESMTP id S261187AbVBVRGT
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 22 Feb 2005 12:06:19 -0500
+In-Reply-To: <20050222071340.GC2835@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: 'Tobias Klauser' <tklauser@nuerscht.ch>, kernel-janitors@lists.osdl.org
-Cc: linux-scsi@vger.kernel.org, "Ju, Seokmann" <sju@lsil.com>
+To: Jens Axboe <axboe@suse.de>
+Cc: Greg Stark <gsstark@mit.edu>, Linux Kernel <linux-kernel@vger.kernel.org>, Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>, Jeff Garzik <jgarzik@pobox.com>, linux-scsi@vger.kernel.org
 
-On Sunday, February 20, 2005 12:10 PM, Tobias wrote:
-> Hello,
-> 
-> Description: Use the DMA_{64,32}BIT_MASK constants from dma-mapping.h
-> when calling pci_set_dma_mask() or pci_set_consistent_dma_mask()
-> See http://marc.theaimsgroup.com/?t=108001993000001&r=1&w=2 for details
 
-Thanks for your input.
+Jens Axboe <axboe@suse.de> writes:
 
-Next release driver will have this change included.
+> fsync has been working all along, since the initial barrier support for
+> ide. only ext3 and reiserfs support it.
 
-Thanks again.
+Really? That's huge news. Since what kernel version(s) is that?
 
-Seokmann
-LSI Logic Corporation.
+What about a non-journaled fs, or at least a meta-data-only-journaled fs?
+Journaled FS's don't mix well with transaction based databases since they're
+basically doing their own journaling anyways.
+
+-- 
+greg
 
