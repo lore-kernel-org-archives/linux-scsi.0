@@ -1,84 +1,70 @@
 From: James Bottomley <James.Bottomley@steeleye.com>
 Subject: Re: aic7xxx sets CDR offline, how to reset?
-Date: Tue, 03 Sep 2002 16:32:38 -0500
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <200209032132.g83LWdD09043@localhost.localdomain>
-References: <alan@lxorguk.ukuu.org.uk>
+Date: Tue, 03 Sep 2002 16:48:39 -0500
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <200209032148.g83LmeP09177@localhost.localdomain>
+References: <dledford@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
-In-Reply-To: Message from Alan Cox <alan@lxorguk.ukuu.org.uk>
-   of "03 Sep 2002 21:59:37 BST." <1031086777.21579.33.camel@irongate.swansea.linux.org.uk>
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, "Justin T. Gibbs" <gibbs@scsiguy.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: (from root@localhost)
+	by pogo.mtv1.steeleye.com (8.9.3/8.9.3) id OAA29343
+	for <linux-scsi@vger.kernel.org>; Tue, 3 Sep 2002 14:48:48 -0700
+In-Reply-To: Message from Doug Ledford <dledford@redhat.com>
+   of "Tue, 03 Sep 2002 17:13:21 EDT." <20020903171321.A12201@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>, "Justin T. Gibbs" <gibbs@scsiguy.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-alan@lxorguk.ukuu.org.uk said:
-> What do we plan to do for the cases where reset is disabled because we
-> have shared disk scsi so don't want to reset and hose the reservations
+dledford@redhat.com said:
+> But, regardless, the REQ_BARRIER ordering *can* be preserved  while
+> using abort processing.  Since the command that needs aborting is,  as
+> you are hypothesizing, before the REQ_BARRIER command, and since it
+> hasn't completed, then the REQ_BARRIER command can not be complete and
+>  neither can any of the commands behind the REQ_BARRIER.
 
-The reset gets issued and the reservation gets broken.  Good HA or other 
-software knows the reservation may be lost and takes this into account in the 
-cluster algorithm.
+You are correct.  However, as soon as you abort the problem command (assuming 
+the device recovers from this), it will go on its merry way processing the 
+remaining commands in the queue.  Assuming one of these is the barrier, you've 
+no way now of re-queueing the aborted command so that it comes before the 
+ordered tag barrier.  You can try using a head of queue tag, but it's still a 
+nasty race.
 
-With SCSI-2 reservations, there's no way to preserve the reservation and have 
-the reset be effective (I know, in theory, that this can be circumvented by 
-the soft reset alternative, but I've never seen a device that implements it 
-correctly).  I suppose we hope SCSI-3 Persistent Group Reservations come along 
-quickly.
+> On direct access  devices you are only concerned about ordering around
+> the barrier, not  ordering of the actual tagged commands, so for abort
+> you can actually call  abort on all the commands past the REQ_BARRIER
+> command first, then the  REQ_BARRIER command, then the hung command.
+> That would do the job and  preserve REQ_BARRIER ordering while still
+> using aborts.
 
-> If your error correction always requires all commands return to the
-> block layer then the block layer is IMHO broken. Its messy enough
-> doing that before you hit the fun situations where insert scsi
-> commands of their own the block layer never initiated. 
+I agree, but the most likely scenario is that now you're trying to abort 
+almost every tag for that device in the system.  Isn't reset a simpler 
+alternative to this?
 
-This is part of the slim SCSI down approach.  The block layer already has 
-handling for tag errors like this.  Inserted SCSI commands should now work 
-correctly since we're deprecating the scsi_do_cmnd() in favour of scsi_do_req, 
-which means the command is always associated with a request and goes into the 
-block queue just like any other request.
+> > At best, abort probably causes a command to overtake a barrier it shouldn't, 
+> > at worst we abort the ordered tag that is the barrier and transactional 
+> > integrity is lost.
+> > 
+> > When error correction is needed, we have to return all the commands for that 
+> > device to the block layer so that ordering and barrier issues can be taken 
+> > care of in the reissue.
 
-I think the block layer, which already knows about the barrier ordering, is 
-the appropriate place for this.  If you think the scsi error handler is a 
-hairy wart now, just watch it grow into a stonking great carbuncle as I try to 
-introduce it to the concept of command queue ordering and appropriate recovery.
+> Not really, this would be easily enough done in the ML_QUEUE area of
+> the  scsi layer, but it matters not to me.  However, if you throw a
+> BDR, then  you have cancelled all outstanding commands and (typically)
+> initiated a  hard reset of the device which then requires a device
+> settle time.  All of  this is more drastic and typically takes longer
+> than the individual aborts  which are completed in a single connect->
+> disconnect cycle without ever  hitting a data phase and without
+> triggering a full device reset and  requiring a settle time. 
 
-> Next you only need to return stuff if commands have been issued
-> between the aborting command and a barrier. Since most sane systems
-> will never be causing REQ_BARRIER that should mean the general case
-> for an abort is going to be fine. The CD burner example is also true
-> for this. If we track barrier sequences then we will know the barrier
-> count for the command we are aborting and the top barrier count for
-> commands issued to the device. Finally you only need to go to the
-> large hammer approach when you are dealing with a media changing
-> command (ie WRITE*) - if we abort a read then knowing we don't queue
-> overlapping read then write to disk we already know that the read will
-> not break down the tag ordering as I understand it ? 
-
-I agree with your reasoning.  However, errors occur infrequently enough (I 
-hope) so that its just not worth the extra code complexity to make the error 
-handler look for that case.
-
-However, in all honesty, I have to say that I just don't believe ABORTs are 
-ever particularly effective.  As part of error recovery, If a device is 
-tipping over into failure, adding another message isn't a good way to pull it 
-back.  ABORT is really part of the I/O cancellation API, and, like all 
-cancellation implementations, it's potentially full of holes.  The only uses 
-it might have---like oops I didn't mean to fixate that CD, give it back to me 
-now---aren't clearly defined in the SPEC to produce the desired effect (stop 
-the fixation so the drive door can be opened).
-
-> If we get to the point we need an abort we don't want to issue a
-> reset. Not every device comes back sane from a reset and in some cases
-> we have to issue a whole sequence of commands to get the state of the
-> device back (door locking, power management, ..)
-
-Well, this is SCSI---the first thing most controllers do for parallel SCSI at 
-least is reset the BUS.  Some FC drivers do the FC equivalent as well (not 
-that they should, but that's another issue).
-
-The pain of coming back from a reset (and I grant, it isn't trivial) is well 
-known and well implemented in SCSI.  It also, from error handlings point of 
-view, sets the device back to a known point in the state model.
+I agree.  I certainly could do it.  I'm just a lazy so-and-so.  However, think 
+what it does.  Apart from me having to do more work, the code becomes longer 
+and the error recovery path more convoluted and difficult to follow.  The 
+benefit?  well, error recovery might be faster in certain circumstances.  I 
+just don't see that it's a cost effective change.  If you're hitting error 
+recovery so often that whether it recovers in  half a second or several 
+seconds makes a difference, I'd say there's something else wrong.
 
 James
+
+
