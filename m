@@ -1,167 +1,100 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: Is this /dev/sg security hole from 2.2.* already fixed?
-Date: Mon, 08 Apr 2002 23:59:06 -0400
+From: sullivan <sullivan@austin.ibm.com>
+Subject: Re: [RFC] Persistent naming of scsi devices
+Date: Tue, 9 Apr 2002 08:35:36 -0600
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3CB2670A.DBB86416@torque.net>
-References: <Pine.A32.3.95.1020408100124.31868A-100000@werner.exp-math.uni-essen.de>
+Message-ID: <20020409083536.M7333@austin.ibm.com>
+References: <200204081917.g38JHg905081@localhost.localdomain> <3CB23461.1FA57A9E@torque.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
+In-Reply-To: <3CB23461.1FA57A9E@torque.net>; from dougg@torque.net on Mon, Apr 08, 2002 at 08:22:57PM -0400
 List-Id: linux-scsi@vger.kernel.org
-To: "Dr. Michael Weller" <eowmob@exp-math.uni-essen.de>
+To: Douglas Gilbert <dougg@torque.net>
 Cc: linux-scsi@vger.kernel.org
 
-"Dr. Michael Weller" wrote:
+On Mon, Apr 08, 2002 at 08:22:57PM -0400, Douglas Gilbert wrote:
+> James Bottomley wrote:
+> > 
+> > patmans@us.ibm.com said:
+> > > We could have a set of interfaces to get a SCSI UUID, and then have
+> > > hotplug tell us which interface (or module?) to use. That way we don't
+> > > require sg.
+> > 
+> > I'm in two minds about this one.  Deciding exactly what constitutes the UUID
+> > for a particular device can be non trivial.  Usually you have to probe for the
+> > supported vital product pages, and if they have the WWN one use that otherwise
+> > fall back to the (less guaranteed to be unique) SCSI-2 serial number page or
+> > finally make something up dependent on what unique numbers you can get from
+> > the device.
+> > 
+> > It makes sense to me that this type of complex rule (of thumb almost) based
+> > lookup is best done from user level by doing the explicit SCSI commands if
+> > necessary.
+> > 
+> > However, I'm biased.  From a philosophical point of view, I like the hotplug
+> > approach because it allows us to eject a lot of the use once initialisation
+> > code into user space from the kernel.
 > 
-> On Fri, 5 Apr 2002, Douglas Gilbert wrote:
+> Interesting discussion.
 > 
-> >
-> > Michael,
-> > Pass through drivers that allow normal users to get to
-> > hardware always have a worrying security aspect **. A
-> > system that is open to malicious users should have drivers
-> > like sg removed (or root only permissions on all /dev/sg<n>
-> > device names).
-> >
-> > Your observations are correct. There is no need to look at
-> > later sg drivers as they will be similar in this respect.
-> > The design of the sg driver favours speed over security.
-> > If this was considered a major problem then it shouldn't
-> > be too difficult to zero out all kernel buffers obtained
-> > for non-root users. That would leave the situation where
-> > a user could see "left over" data from previous scsi
-> > commands  performed on the current file descriptor: not
-> > a major concern in my opinion.
+> To see what the hotplug subsystem approach might look like,
+> see http://www.torque.net/scsi/scsimon.html . This is a
+> proposed scsi subsystem upper level driver (gathering dust). 
+> What sets it apart from the others is that it is not device
+> based. It has a single (misc) device name and can be thought 
+> of as a window through to the scsi mid level. It supplies 
+> hotplug alerts whenever a scsi device is attached or detached.
+> [Unfortunately scsi hosts being registered or unregistered
+> does not cause hotplug alerts.] Attaches and detaches are
+> given event numbers (ascending sequence) and a time_since_boot.
 > 
-> Ok, thanx for that info. I was just surprised noticing it when
-> playing around with scsiinfo (in the little time I currently have I'm
-> extending it a bit (/dev/sg support to get longish defect lists (>4K);
+> That said, I like the devfs/devfsd approach as well.
+>  
+Thanks Doug. I've taken a look at it looks like it would work very well in providing the event generation support in the non devfs case.
 
-Michael,
-http://www.torque.net/sg  sg_utils-0.98 for lk 2.2 series
-contains sginfo which does just that. As you say, it is
-fun to play around with. There is also the more
-substantial "Scsi Command Utility" at 
-http://www.bit-net.com/~rmiller/scu.html
 
-> more mode pages; support for log pages.. it's more a fun style
-> project: look and see what those funny scsi-devices are willing to tell
-> you).
-
-Modern scsi disks are providing interesting log sense
-information so I wrote sg_logs recently to experiment.
-[It is in sg3_utils-0.99 for the lk 2.4 series.]
-There is smartsuite for ATA and SCSI disks:
-   http://sourceforge.net/projects/smartsuite
-
-> I really would have considered it standard to clear those
-> buffers. At least the allocated part not used by the command.
+> > > The device_list[] (black/white list) should also come from user land.
+> > > Maybe hotplug could get the device_list[] characteristics, including
+> > > the UUID method for the device.
+> > 
+> > > I'd also like a uuid stored in Scsi_Device for multi-path support in
+> > > the mid-layer (independent of how it's set). This uuid could not be
+> > > stored in the partition or as part of the file system.
+> > 
+> > If we can come up with a nice, general mechanism, there's no reason why it
+> > cannot apply outside the SCSI system, so I wouldn't necessarily tie it to
+> > Scsi_Devce.  More likely (and actually what the persistent binding begins) is
+> > to tie it to the concept of the Mochel internal device tree.
 > 
-> But as I see in the API definition and hear from criticism from other
-> scsi tool authors (cdrecord, for example), sg does not provide info about
-> residual counts (read: how many bytes actually transferred by scsi
-> device).
+Patrick Mochel had mentioned before that he was looking at providing a unique identifier field as part of the common driverfs infrastructure. I'll check and see what his current thoughts are.
 
-I wonder who that could be :-)
-Actually there was an additional interface added to sg
-as recently as 15 months ago that addressed that (lk 2.4.0).
+> In Patrick Mansfield's and my report_lun/twin_inquiry patch
+> the full INQUIRY response (evpd=0 cmdtt=0) is placed in
+> Scsi_Device. It could be useful to make that available 
+> (in ascii-hex) via driverfs/hot_plug to the user space.
+Sounds good. I'll take a look at the patch and see about adding the driverfs implementation needed to support it.
 
-> It's too long since I played with the scsi mid and lower layers
-> to tell how difficult it would be to provide this infor.
-
-Several lower level drivers provide residual count information
-that is made available to the user by the additional sg interface.
-SANE tried to use it for a while but some other issues arose.
- 
-> About the security concern, and misuse of /dev/sg. Yes you are right.
-> In principle, /dev/sg shouldn't be accessible to malicious users at all.
 > 
-> But /dev/sg is required to access standard hardware used by many 'office
-> style' users, namely scanners and CD writers. One might wish to have a
-> workstation with several non-root users which can, however, access a
-> scanner or CD-Writer, but without risking a root exploit.
-
-Recent versions of cdrecord have started to use the
-cdrom pass through interface. I am more than happy
-to see that happen (although Jens may regret it).
- 
-> One could be attempted to trust the linux security in that those users can
-> be given access to a specific sg device only and that the kernel ensures
-> commands are only send to this device. This would leave the hole that an
-> intentionally or not send SCSI command might hang the bus or access data
-> from other scsi devices (AFAIK their exist some target 2 target copy
-> operations).
+> Eric's point is a good one about dirty INQUIRY data. This
+> is especially the case with what might be a large
+> group of "scsi" devices that linux needs to cope with:
+> usb2 and ieee1394 talking to an external ATA disk. For
+> the same Maxtor disk one INQUIRY (1394) tells me that it
+> is a scsi 6 compliant device while the other INQUIRY (usb2)
+> truncates the response at 28 bytes. I'm pretty sure they ignore
+> the evpd bit as well.
 > 
-> Probably a more sensible security approach on such a system would be to
-> have /dev/sg accessible by a certain uid only and all those tools
-> accessing it to be setuid this uid. Plus have all those tool be accessible
-> to a certain gid only and only selected users in this group.
 > 
-> > ** there was a lkml thread some time back in which Andre
-> > Hedrick was suggesting that commands be filtered in the
-> > (proposed ?) IDE pass through driver. Most respondents
-> > thought that was overkill.
+> I'm attempting to get this patch working against 2.5.7-dj3
+> (as it has captured most of the good patches from the list
+> that haven't made it any further to date). There is a long
+> way to go but here are some notes:
+>   - driverfs is documented in:
+>      Documentation/driver-model.txt
+>      Documentation/filesystems/driverfs.txt
+>   - driverfs in built into 2.5 kernels but needs to be
+>     mounted. The documentation uses "/devices" as a
+>     mount point; driverfs seems more comfortable with me:
+>       mkdir /driverfs ; mount -t driverfs none /driverfs
 > 
-> Yes, I read that thread and think similar (overkill). At least as far as
-> the driver can ensure that only a certain IDE device is accessed. If
-> that's not the case, the access has to be root only. Here, I think,
-> filtering commands even for the root user was discussed, to protect the
-> superuser from doing stupid things to the device. I think (as probably
-> most of the other people in the thread thought), that a) the root user
-> must be assumed to know what he does (if not there are zillions of other
-> places where he can do bad), and b) if not, or if one wants to aid him not
-> doing stupid things, the right place is a warning in the application
-> interfacing with the driver.
-> 
-> Note that this is slightly different from the /dev/sg buffer issue. I
-> (naively) thought, if Joe Blow User has write access to /dev/sg5 (a
-> scanner, say) this shouldn't allow possible read access to other users
-> data. I've no concerns about Joe Blow User seeing buffers previously used
-> on the same file descriptor (or sg device), only buffers from kernel or
-> other devices; I didn't look into the sg sources to say if this can be
-> achieved easily though.. 
-
-A question just occurred to me; does glib's malloc()
-call take any precautions to clear out memory?
-
-> Alternatively (to avoid wasting time clearing
-> buffers) one could allow the application to read back only the amount of
-> data actually returned by the scsi device, but that's not how the api
-> works currently.
-
-I believe clearing out buffers is more practical of the two.
-
-> Talking about wasting time clearing buffers, is read() from /dev/sg really
-> zero copy? Why not just copy the 'really commans return' data in read()
-> and leave the rest of the user apps memory untouched? Won't that be even
-> faster?
-
-Again the additional interface added in lk 2.4 now offers
-two methods of getting "zero copy" IO:
-  - "direct" IO which is based on kiobufs
-  - mmap-ed IO which memory maps sg's reserve buffer (of which
-    there is one per sg file descriptor) into the user space.
-    The size of the reserve buffer can be controlled by the
-    user.
-
-On a Athlon 1.2 GHz DDR box I can get > 900 MB/sec from
-scsi_debug (which is a RAM disk) through sg into the
-user space. That is in the 2.5 series, although direct IO
-is significantly slower in the lk 2.4 series.
- 
-> Or, one can say, we only wish to give access to /dev/sg for root (or users
-> as powerful as root anyway), then I agree that this is a no issue. I just
-> wasn't aware that /dev/sg is meant like that (It doesn't really matter for
-> my scsiinfo needs; I just hope linux distributions and other, standard
-> scanner & cdwriter application writers, consider it this way and allow
-> 'safe' (maybe suid based) access schemes.
-> 
-> Well, anyway, I don't want to waste your time or anyoneelse's on the list.
-> I know well that rather than blathering about what /dev/sg all could do, I
-> should just extend it myself and suggest patches.
-> 
-> I was just concerned this would be a new, unknown security hole. At least
-> based on how *I* expected /dev/sg. If everyone is already aware about it
-> and this is how it is expected to work.. well, that's ok for me.
-
-Doug Gilbert
+> Doug Gilbert
