@@ -1,53 +1,89 @@
-From: Eric Kerin <eric@bootseg.com>
-Subject: Re: Kernel oops in 2.6.1 when loading aha152x_cs.ko
-Date: Sat, 10 Jan 2004 01:38:18 -0500
+From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+Subject: Re: Driver for Adaptec AHA-1530P
+Date: Sat, 10 Jan 2004 13:48:50 +0100 (CET)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1073716698.2026.18.camel@opiate>
-References: <6.0.0.22.0.20040109124348.01b86068@pop-server.kc.rr.com>
-	 <1073698638.2026.3.camel@opiate>
-	 <6.0.0.22.0.20040109221955.01b86f28@pop-server.kc.rr.com>
+Message-ID: <Pine.LNX.4.44.0401101348010.9458-100000@poirot.grange>
+References: <0af101c3d710$72c57e60$060ba8c0@AldiP4>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mxsf07.cluster1.charter.net ([209.225.28.207]:57100 "EHLO
-	mxsf07.cluster1.charter.net") by vger.kernel.org with ESMTP
-	id S265071AbUAJGxI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 10 Jan 2004 01:53:08 -0500
-In-Reply-To: <6.0.0.22.0.20040109221955.01b86f28@pop-server.kc.rr.com>
+Received: from pop.gmx.de ([213.165.64.20]:54178 "HELO mail.gmx.net")
+	by vger.kernel.org with SMTP id S265150AbUAJMt2 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 10 Jan 2004 07:49:28 -0500
+In-Reply-To: <0af101c3d710$72c57e60$060ba8c0@AldiP4>
 List-Id: linux-scsi@vger.kernel.org
-To: "Larry W. Finger" <Larry.Finger@lwfinger.net>
+To: Kai Ruhnau <kai@tragetaschen.dyndns.org>
 Cc: linux-scsi@vger.kernel.org
 
-On Sat, 2004-01-10 at 00:27, Larry W. Finger wrote:
-> Unfortunately, this patch doesn't work. When I compile with it, I get the 
-> following errors:
+Hi
 
-<snip>
+Can you send the relevant lines from 2.4.10 boot?
 
-No idea what I was thinking when I wrote that fix, oh well.
+Cheers
+Guennadi
 
-Let's try this again, with the proper check. This one even compiles!
+On Sat, 10 Jan 2004, Kai Ruhnau wrote:
 
-Sorry about that first patch,
-Eric
+> Hi,
+>
+> I have an old scsi-only P200. It has an Adaptec AHA-1530P ISA-board.
+>
+> I had and have a running Kernel 2.4.10. It uses the driver aha152x
+> successfully. I tried to update to 2.4.16, 2.4.20 and now I try 2.4.24. All
+> show the same behaviour:
+>
+> Kernel-parameter: 'aha152x=0x340'
+>
+> <snip>
+> SCSI subsystem driver Revision: 1.00
+> aha152x: processing commandline: <3>
+> aha152x: 0x340
+> aha152x: Invalid line
+> ok
+> aha152x: BIOS test: passed, detected 1 controller(s)
+> aha152x: resetting bus...
+> aha152x0: vital data: rev=7, io=0x340 (0x340/0x340), irq=11, scsiid=7,
+> reconnect=enabled, parity=enabled, synchronous=enabled, delay=1000, extended
+> translation=disabled
+> aha152x0: trying software interrupt, ok.
+> scsi0 : Adaptec 152x SCSI driver; $Revision: 2.5 $
+> (long pause)
+> aha152x: ABORT timed out - removed from issue queue
+> scsi: device set offline - not ready or command retry failed after bus
+> reset: host 0 channel 0 id 0 lun 0
+> scsi: unknown type 22
+> Vendor: [crap] Model: [more crap] Rev:
+> Type: Unknown
+> (again long pause)
+> </snip>
+>
+> And the last seven lines count up the lun and the id up to 'id 7 lun 7'.
+> After that, I end up with a kernel-panic due to the missing root-device.
+> The [crap] and [more crap] are always the same characters.
+>
+> In kernel 2.6.0 the aha152x-driver does not find any appropiate device. Here
+> I also tried the aha1542, but I can't read any error, it scrolls up too
+> fast.
+>
+>
+> I know from the Changelogs that there were a couple of changes since 2.4.10,
+> but is it possible to convince the aha152x (or any other) driver to work
+> with my card?
+>
+> Of course I'm willing to help everybody as I can.
+>
+> Greetings
+> Kai
+>
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+>
 
-
---- drivers/scsi/aha152x.c.orig 2003-12-31 11:04:14.000000000 -0500
-+++ drivers/scsi/aha152x.c      2004-01-10 01:23:31.568684000 -0500
-@@ -965,6 +965,12 @@ struct Scsi_Host *aha152x_probe_one(stru
- {
-        struct Scsi_Host *shpnt;
-
-+#ifdef PCMCIA
-+       if(!aha152x_driver_template.legacy_hosts.next){
-+               INIT_LIST_HEAD(&aha152x_driver_template.legacy_hosts);
-+       }
-+#endif
-+
-        shpnt = scsi_register(&aha152x_driver_template, sizeof(struct
-aha152x_hostdata));
-        if (!shpnt) {
-                printk(KERN_ERR "aha152x: scsi_register failed\n");
+---
+Guennadi Liakhovetski
 
 
