@@ -1,92 +1,53 @@
-From: Douglas Gilbert <dougg@torque.net>
+From: Kurt Garloff <garloff@suse.de>
 Subject: Re: [RFC] Persistent naming of scsi devices
-Date: Mon, 08 Apr 2002 20:22:57 -0400
+Date: Tue, 9 Apr 2002 02:48:32 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3CB23461.1FA57A9E@torque.net>
-References: <200204081917.g38JHg905081@localhost.localdomain>
+Message-ID: <20020409024832.F24465@gum01m.etpnet.phys.tue.nl>
+References: <20020408091844.L7333@austin.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="CEUtFxTsmBsHRLs3"
+Content-Disposition: inline
+In-Reply-To: <20020408091844.L7333@austin.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Patrick Mansfield <patmans@us.ibm.com>, Christoph Hellwig <hch@infradead.org>, sullivan <sullivan@austin.ibm.com>, linux-scsi@vger.kernel.org
-
-James Bottomley wrote:
-> 
-> patmans@us.ibm.com said:
-> > We could have a set of interfaces to get a SCSI UUID, and then have
-> > hotplug tell us which interface (or module?) to use. That way we don't
-> > require sg.
-> 
-> I'm in two minds about this one.  Deciding exactly what constitutes the UUID
-> for a particular device can be non trivial.  Usually you have to probe for the
-> supported vital product pages, and if they have the WWN one use that otherwise
-> fall back to the (less guaranteed to be unique) SCSI-2 serial number page or
-> finally make something up dependent on what unique numbers you can get from
-> the device.
-> 
-> It makes sense to me that this type of complex rule (of thumb almost) based
-> lookup is best done from user level by doing the explicit SCSI commands if
-> necessary.
-> 
-> However, I'm biased.  From a philosophical point of view, I like the hotplug
-> approach because it allows us to eject a lot of the use once initialisation
-> code into user space from the kernel.
-
-Interesting discussion.
-
-To see what the hotplug subsystem approach might look like,
-see http://www.torque.net/scsi/scsimon.html . This is a
-proposed scsi subsystem upper level driver (gathering dust). 
-What sets it apart from the others is that it is not device
-based. It has a single (misc) device name and can be thought 
-of as a window through to the scsi mid level. It supplies 
-hotplug alerts whenever a scsi device is attached or detached.
-[Unfortunately scsi hosts being registered or unregistered
-does not cause hotplug alerts.] Attaches and detaches are
-given event numbers (ascending sequence) and a time_since_boot.
-
-That said, I like the devfs/devfsd approach as well.
- 
-> > The device_list[] (black/white list) should also come from user land.
-> > Maybe hotplug could get the device_list[] characteristics, including
-> > the UUID method for the device.
-> 
-> > I'd also like a uuid stored in Scsi_Device for multi-path support in
-> > the mid-layer (independent of how it's set). This uuid could not be
-> > stored in the partition or as part of the file system.
-> 
-> If we can come up with a nice, general mechanism, there's no reason why it
-> cannot apply outside the SCSI system, so I wouldn't necessarily tie it to
-> Scsi_Devce.  More likely (and actually what the persistent binding begins) is
-> to tie it to the concept of the Mochel internal device tree.
-
-In Patrick Mansfield's and my report_lun/twin_inquiry patch
-the full INQUIRY response (evpd=0 cmdtt=0) is placed in
-Scsi_Device. It could be useful to make that available 
-(in ascii-hex) via driverfs/hot_plug to the user space.
-
-Eric's point is a good one about dirty INQUIRY data. This
-is especially the case with what might be a large
-group of "scsi" devices that linux needs to cope with:
-usb2 and ieee1394 talking to an external ATA disk. For
-the same Maxtor disk one INQUIRY (1394) tells me that it
-is a scsi 6 compliant device while the other INQUIRY (usb2)
-truncates the response at 28 bytes. I'm pretty sure they ignore
-the evpd bit as well.
+To: sullivan <sullivan@austin.ibm.com>
+Cc: linux-scsi@vger.kernel.org
 
 
-I'm attempting to get this patch working against 2.5.7-dj3
-(as it has captured most of the good patches from the list
-that haven't made it any further to date). There is a long
-way to go but here are some notes:
-  - driverfs is documented in:
-     Documentation/driver-model.txt
-     Documentation/filesystems/driverfs.txt
-  - driverfs in built into 2.5 kernels but needs to be
-    mounted. The documentation uses "/devices" as a
-    mount point; driverfs seems more comfortable with me:
-      mkdir /driverfs ; mount -t driverfs none /driverfs
+--CEUtFxTsmBsHRLs3
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Doug Gilbert
+Hi,
 
+just reading this discussion, I hope you all are aware of scsidev, which
+provides some of the functionality needed.
+Apart from allowing you to specify devces according to the bus topology
+(just as devfs does), it also allows for aliases, based on various things,
+such as names, device types, model or serial numbers (got from INQUIRY
+with page code 0x80).
+It may miss some mechanisms to deal with devices without this serial no,
+e.g., but in general I do not really see why it would not be useable.
+http://www.garloff.de/kurt/linux/scsidev/
+
+Regards,
+--=20
+Kurt Garloff  <garloff@suse.de>                          Eindhoven, NL
+GPG key: See mail header, key servers         Linux kernel development
+SuSE Linux AG, Nuernberg, DE                            SCSI, Security
+
+--CEUtFxTsmBsHRLs3
+Content-Type: application/pgp-signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.0.6 (GNU/Linux)
+Comment: For info see http://www.gnupg.org
+
+iD8DBQE8sjpfxmLh6hyYd04RAlECAKDN5FYGtuFiiIQLAdvnl4skYSOiZgCfaMgO
+ZeNxOFe4hParYBjzB5aQjmU=
+=btYs
+-----END PGP SIGNATURE-----
+
+--CEUtFxTsmBsHRLs3--
