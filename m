@@ -1,36 +1,43 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
+From: Oliver Neukum <oliver@neukum.org>
 Subject: Re: Core scsi layer crashes in 2.6.8.1
-Date: 05 Oct 2004 11:01:02 -0500
+Date: Tue, 5 Oct 2004 18:26:11 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1096992068.1765.32.camel@mulgrave>
-References: <1096401785.13936.5.camel@localhost.localdomain>	<4162B345.9000806@rtr.ca>
-	<1096988167.2064.7.camel@mulgrave> 	<200410051749.22245.oliver@neukum.org>
-	<1096991666.2064.25.camel@mulgrave>  <4162C474.8010505@rtr.ca>
+Message-ID: <200410051826.11892.oliver@neukum.org>
+References: <1096401785.13936.5.camel@localhost.localdomain> <200410051801.03677.oliver@neukum.org> <1096992458.2173.35.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat16.steeleye.com ([209.192.50.48]:4527 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S270002AbUJEQBT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 5 Oct 2004 12:01:19 -0400
-In-Reply-To: <4162C474.8010505@rtr.ca>
+Received: from mail1.kontent.de ([81.88.34.36]:33418 "EHLO Mail1.KONTENT.De")
+	by vger.kernel.org with ESMTP id S269136AbUJEQ0O (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Oct 2004 12:26:14 -0400
+In-Reply-To: <1096992458.2173.35.camel@mulgrave>
+Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
-To: Mark Lord <lsml@rtr.ca>
-Cc: Oliver Neukum <oliver@neukum.org>, Anton Blanchard <anton@samba.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Mark Lord <lsml@rtr.ca>, Anton Blanchard <anton@samba.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Tue, 2004-10-05 at 10:57, Mark Lord wrote:
-> James Bottomley wrote:
-> >
-> > It would add quite a bit of complexity to the reference counted
-> > aynchronous model to try and force synchronicity between queuecommand
-> > and scsi_remove_host in the mid-layer.  Therefore it's much easier to
-> > let the LLD decide what to do with the command.
+Am Dienstag, 5. Oktober 2004 18:07 schrieb James Bottomley:
+> On Tue, 2004-10-05 at 11:01, Oliver Neukum wrote:
+> > Why is it in any way difficult to decide whether to issue a command in the
+> > first place? The command is generated upon being notified by the lower layer.
+> > There is no issue of synchronisation here. It is simply stupid to give
+> > commands that are bound to fail, if the information is already available.
 > 
-> Presumably the same is also true for scsi_remove_device() ?
+> a) we don't know that they are ... for notified ejection they will
+> succeed.
 
-Yes.
+Yes, that is why I proposed that you let the lower levels tell you whether
+the devices in questions are still operative or not.
 
-James
+> b) The scsi bus is a scanned model ... drivers must be prepared to
+> accept commands for non-existent devices. How does the removal case
+> differ from the never present case?
 
+It doesn't. But that doesn't explain why you want to issue the command
+in all cases, even if we coule easily tell you whether it makes sense or
+not? It makes no sense to me to throw away information you already have.
 
+	Regards
+		Oliver
