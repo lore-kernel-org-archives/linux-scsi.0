@@ -1,48 +1,40 @@
-From: Patrick Mansfield <patmans@us.ibm.com>
+From: James Bottomley <James.Bottomley@steeleye.com>
 Subject: Re: [patch for playing] Patch to support 4000 disks and maintain
-Date: Fri, 11 Apr 2003 11:12:32 -0700
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <20030411111232.A7756@beaverton.ibm.com>
-References: <200304101339.49895.pbadari@us.ibm.com> <XFMail.20030411100430.pochini@shiny.it> <20030411154450.GW31739@ca-server1.us.oracle.com> <200304110928.32978.pbadari@us.ibm.com> <20030411175736.GY31739@ca-server1.us.oracle.com>
+	backward compatibility
+Date: 11 Apr 2003 14:12:18 -0500
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <1050088340.1750.205.camel@mulgrave>
+References: <UTC200304111807.h3BI7Or07403.aeb@smtp.cwi.nl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20030411175736.GY31739@ca-server1.us.oracle.com>; from Joel.Becker@oracle.com on Fri, Apr 11, 2003 at 10:57:37AM -0700
-To: Joel Becker <Joel.Becker@oracle.com>
-Cc: Badari Pulavarty <pbadari@us.ibm.com>, Giuliano Pochini <pochini@shiny.it>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Mike Anderson <andmike@us.ibm.com>
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from nat9.steeleye.com ([65.114.3.137]:56326 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S261488AbTDKTAs (for <rfc822;linux-scsi@vger.kernel.org>); Fri, 11 Apr 2003 15:00:48 -0400
+In-Reply-To: <UTC200304111807.h3BI7Or07403.aeb@smtp.cwi.nl>
 List-Id: linux-scsi@vger.kernel.org
+To: Andries.Brouwer@cwi.nl
+Cc: Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, pbadari@us.ibm.com
 
-On Fri, Apr 11, 2003 at 10:57:37AM -0700, Joel Becker wrote:
+On Fri, 2003-04-11 at 13:07, Andries.Brouwer@cwi.nl wrote:
+> It is just that Badari and I were talking about the numbering scheme
+> index = next_index++ and he pointed out that the current system
+> has a certain weak number preservation guarantee that this
+> index = next_index++ does not have. True.
 
-> > Fortunately, the multipath solution Mike Anderson & Patrick Mansfield
-> > working on, colapses all the disks you see thro multiple paths into 
-> > number of  realdisks (4000). So you don't really need extra devices 
-> > to support multipathing.
-> 
-> 	Yes, but what if I want to see the multiple paths?  Does their
-> solution allow you to specify the path behind the 'realdisk'?  Does it
-> allow querying of the paths?
-> 
-> Joel
+Yes. I was just pointing out this was a byproduct of our compaction
+requirement in 8:8, not necessarily a guarantee I think needs
+preserving.
 
-Seeing the path to disk relationship - yes (via proc for now, eventually
-via sysfs).
+> It is me who wants compatibility as far as 8+8 device numbers are
+> concerned, while I can see lots of ways to use new number space.
 
-Specifying from user space what path goes with what disk (explicitly): no,
-that might require user level scanning.
+This, I'm not too sure about.  I see the value to kernel developers who
+boot between different versions of the kernel, but I think when 2.6 goes
+live and ships to end users, it's better not to have such numeric
+equivalency crufting up the SCSI interfaces.
 
-Query a path - seeing and setting path states yes (via proc right now).
-Using sg with a specified path - no, but on the TODO list.
+James
 
-I'm trying to pull the current multi-path patch up to 2.5.66 (ouch). 
 
-The last functioning patch was against 2.5.59, some general info:
-
-http://www-124.ibm.com/storageio/multipath/scsi-multipath/index.php
-
-Or the patch:
-
-http://www-124.ibm.com/storageio/multipath/scsi-multipath/releases/2.5.59-mpath-1.patch.gz
-
--- Patrick Mansfield
