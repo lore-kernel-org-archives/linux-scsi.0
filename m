@@ -1,40 +1,45 @@
-From: Dag Nygren <dag@newtech.fi>
+From: "Randy.Dunlap" <rddunlap@osdl.org>
 Subject: Re: Bug in the sg driver
-Date: Mon, 06 Oct 2003 21:47:42 +0300
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20031006184742.18117.qmail@dag.newtech.fi>
-References: <rddunlap@osdl.org>
+Date: Mon, 6 Oct 2003 11:52:45 -0700
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <20031006115245.17d73f0c.rddunlap@osdl.org>
+References: <20031006112028.1242199d.rddunlap@osdl.org>
+	<20031006184742.18117.qmail@dag.newtech.fi>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ip213-185-39-113.laajakaista.mtv3.fi ([213.185.39.113]:7145
-	"HELO dag.newtech.fi") by vger.kernel.org with SMTP id S261239AbTJFSro
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 6 Oct 2003 14:47:44 -0400
-In-Reply-To: Message from "Randy.Dunlap" <rddunlap@osdl.org>
-   of "Mon, 06 Oct 2003 11:20:28 PDT." <20031006112028.1242199d.rddunlap@osdl.org>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+In-Reply-To: <20031006184742.18117.qmail@dag.newtech.fi>
+Cc: dag@newtech.fi, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Randy.Dunlap" <rddunlap@osdl.org>
-Cc: Dag Nygren <dag@newtech.fi>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.orgdag@newtech.fi
 
-> 
-> from MAINTAINERS file:
-> SCSI SG DRIVER
-> P:	Doug Gilbert
-> M:	dgilbert@interlog.com
-> L:	linux-scsi@vger.kernel.org
-> W:	http://www.torque.net/sg
-> S:	Maintained
+On Mon, 06 Oct 2003 21:47:42 +0300 Dag Nygren <dag@newtech.fi> wrote:
 
-Should I send a bug report to him or is he online here?
+| > 
+| > from MAINTAINERS file:
+| > SCSI SG DRIVER
+| > P:	Doug Gilbert
+| > M:	dgilbert@interlog.com
+| > L:	linux-scsi@vger.kernel.org
+| > W:	http://www.torque.net/sg
+| > S:	Maintained
+| 
+| Should I send a bug report to him or is he online here?
 
-> Any details, like kernel version, oops or panic logs, etc.?
+Um, if he's around, he'll see it, although ISTR that he's away
+for awhile (like 6 weeks ?).
 
-Kernel version is 2.4.20 (Redhat 9.0 + newest upgrade)
+| > Any details, like kernel version, oops or panic logs, etc.?
+| 
+| Kernel version is 2.4.20 (Redhat 9.0 + newest upgrade)
+| 
+| The oops and the panic logs were not written down as the major focus
+| was getting this (production) system up and running, sorry for that
 
-The oops and the panic logs were not written down as the major focus
-was getting this (production) system up and running, sorry for that
+Well, unless someone happens to know something about your exact
+reported problem....
+in general, you will get better help/responses the better your
+problem reports are (IMHO).
 
- Dag
-
-
+--
+~Randy
