@@ -1,47 +1,37 @@
-From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
-Subject: RE: [2.6 patch] SCSI aacraid: make some code static
-Date: Mon, 15 Nov 2004 11:53:15 -0500
-Message-ID: <60807403EABEB443939A5A7AA8A7458B5C0F02@otce2k01.adaptec.com>
+From: Adrian Bunk <bunk@stusta.de>
+Subject: Re: [2.6 patch] SCSI t128.c: remove an unused function
+Date: Mon, 15 Nov 2004 18:03:22 +0100
+Message-ID: <20041115170322.GB19860@stusta.de>
+References: <20041115023859.GE2249@stusta.de> <1100529621.27202.9.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from magic.adaptec.com ([216.52.22.17]:29114 "EHLO magic.adaptec.com")
-	by vger.kernel.org with ESMTP id S261635AbUKOQxS convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 15 Nov 2004 11:53:18 -0500
-content-class: urn:content-classes:message
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>, Adrian Bunk <bunk@stusta.de>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner+glk-linux-kernel=40m.gmane.org-S261642AbUKORGm@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1100529621.27202.9.camel@localhost.localdomain>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
 Cc: James Bottomley <James.Bottomley@SteelEye.com>, linux-scsi@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+List-Id: linux-scsi@vger.kernel.org
 
-I've already incorporated the changes :-) I probably should have chimed
-in with my support for this patch.
-
-Sincerely -- Mark Salyzyn 
-
------Original Message-----
-From: linux-scsi-owner@vger.kernel.org
-[mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of Alan Cox
-Sent: Monday, November 15, 2004 9:27 AM
-To: Adrian Bunk
-Cc: James Bottomley; linux-scsi@vger.kernel.org; Linux Kernel Mailing
-List
-Subject: Re: [2.6 patch] SCSI aacraid: make some code static
-
-On Llu, 2004-11-15 at 01:49, Adrian Bunk wrote:
-> The patch below makes some needlessly global code static.
+On Mon, Nov 15, 2004 at 02:40:39PM +0000, Alan Cox wrote:
+> On Llu, 2004-11-15 at 02:38, Adrian Bunk wrote:
+> > The patch below removes the unused function t128_setup.
+> > 
+> > Please review whether it's correct.
 > 
-> It also removes the completely unused global function 
-> aac_consumer_avail.
+> Its wrong. The fix is to make the setup function get called, IFF you can
+> find anyone with a t128 any more
 
-Looks good to me but make sure you send a copy on to the maintainer
-<mark_salyzyn@adaptec.com> as he'll want it for the development drivers
-(and we want that because there are a pile of new cards 8))
+Ah, it seems your t128 fix which did this in 2.4.17-pre7 is (like your 
+dtc cleanup in the same patch) among the fixes not yet forward-ported 
+from 2.4 to 2.6 ...
 
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+cu
+Adrian
+
+-- 
+
+       "Is there not promise of rain?" Ling Tan asked suddenly out
+        of the darkness. There had been need of rain for many days.
+       "Only a promise," Lao Er said.
+                                       Pearl S. Buck - Dragon Seed
