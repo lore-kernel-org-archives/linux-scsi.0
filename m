@@ -1,69 +1,49 @@
-From: "Lee Xing" <lxing@Crossroads.com>
-Subject: RE: A question on Linux SCSI low-level driver
-Date: Mon, 10 May 2004 12:55:59 -0500
+From: Mark Haverkamp <markh@osdl.org>
+Subject: [PATCH 2.6] aacraid reset handler fix
+Date: Mon, 10 May 2004 13:29:33 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <519672568F040C41B6FAC21ADF51B18FEFEA@mailnode1.commstor.crossroads.com>
+Message-ID: <1084220973.31146.26.camel@markh1.pdx.osdl.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from email.crossroads.com ([65.68.235.6]:64190 "HELO
-	email.crossroads.com") by vger.kernel.org with SMTP id S261351AbUEJR4A convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 10 May 2004 13:56:00 -0400
-content-class: urn:content-classes:message
+Received: from fire.osdl.org ([65.172.181.4]:7555 "EHLO fire-2.osdl.org")
+	by vger.kernel.org with ESMTP id S261551AbUEJU3h (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 10 May 2004 16:29:37 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: dougg@torque.net
-Cc: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@steeleye.com>, linux-scsi <linux-scsi@vger.kernel.org>
+Cc: Mark Salyzyn <mark_salyzyn@adaptec.com>
 
-Thanks for the information, Doug.  It helps a lot!
+This fixes a situation where the handler can exit too early.
 
-I downloaded scsi_debug from the Internet.  scsi_debug.c and scsi_debug.h also exist under RH Linux 9 /usr/src/linux-2.4.20-8/drivers/scsi/.  I tried to compile it as a module but got errors like this:
+Mark.
 
-[root@localhost scsi]# pwd
-/usr/src/linux-2.4.20-8/drivers/scsi
-[root@localhost scsi]#
-[root@localhost scsi]# make modules
-make -C aic7xxx modules
-make[1]: Entering directory `/usr/src/linux-2.4.20-8/drivers/scsi/aic7xxx'
-make[1]: Nothing to be done for `modules'.
-make[1]: Leaving directory `/usr/src/linux-2.4.20-8/drivers/scsi/aic7xxx'
-[root@localhost scsi]#
-[root@localhost scsi]#
-[root@localhost scsi]# make
-make -C aic7xxx
-make[1]: Entering directory `/usr/src/linux-2.4.20-8/drivers/scsi/aic7xxx'
-make all_targets
-make[2]: Entering directory `/usr/src/linux-2.4.20-8/drivers/scsi/aic7xxx'
-make[2]: Nothing to be done for `all_targets'.
-make[2]: Leaving directory `/usr/src/linux-2.4.20-8/drivers/scsi/aic7xxx'
-make[1]: Leaving directory `/usr/src/linux-2.4.20-8/drivers/scsi/aic7xxx'
-make all_targets
-make[1]: Entering directory `/usr/src/linux-2.4.20-8/drivers/scsi'
-make[1]: Nothing to be done for `all_targets'.
-make[1]: Leaving directory `/usr/src/linux-2.4.20-8/drivers/scsi'
-[root@localhost scsi]#
-[root@localhost scsi]#
+===== linit.c 1.28 vs edited =====
+--- 1.28/drivers/scsi/aacraid/linit.c	Tue Mar 16 00:57:16 2004
++++ edited/linit.c	Mon May 10 11:42:31 2004
+@@ -381,13 +381,15 @@
+ 				}
+ 			}
+ 			spin_unlock_irqrestore(&dev->list_lock, flags);
++			if (active)
++				break;
+ 
+-			/*
+-			 * We can exit If all the commands are complete
+-			 */
+-			if (active == 0)
+-				return SUCCESS;
+ 		}
++		/*
++		 * We can exit If all the commands are complete
++		 */
++		if (active == 0)
++			return SUCCESS;
+ 		spin_unlock_irq(host->host_lock);
+ 		scsi_sleep(HZ);
+ 		spin_lock_irq(host->host_lock);
 
-I'm not familiar with the process.  What did I miss and how to compile each low-level driver under /usr/src/linux-2.4.20-8/drivers/scsi as a module from the command line?
+-- 
+Mark Haverkamp <markh@osdl.org>
 
-Thanks,
-
-
-Lee
-
-
-======================================
-
-> 
-> My questions are: 
-> 
-> - is it (i.e. registering the disks with mid-level driver and doing some
->   simple I/Os) doable if this low-level driver only provides mid-level with
->   bus/target/lun numbers (without any hardware-related information)?
-
-Lee,
-See the scsi_debug driver (either in the lk 2.4 or lk 2.6
-series). It is a scsi subsystem LLD that is basically a
-ram disk so there is no "hardware" information to exchange
-with the mid level.
