@@ -1,31 +1,38 @@
-From: Andries Brouwer <aebr@win.tue.nl>
-Subject: Re: [PATCH] oops in sd_shutdown
-Date: Tue, 12 Aug 2003 04:49:01 +0200
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <20030812044901.A1650@pclin040.win.tue.nl>
-References: <Pine.LNX.4.53.0308111426570.16008@thevillage.soulcatcher> <Pine.LNX.4.53.0308111426570.16008@thevillage.soulcatcher> <20030812002844.B1353@pclin040.win.tue.nl> <5.2.1.1.0.20030811180413.01a67dc0@no.incoming.mail>
+From: Ali Akcaagac <aliakc@web.de>
+Subject: Re: [Dc395x] Re: [PATCH] dc395x - 1/3 remove-static-eeprom-struct
+Date: Tue, 12 Aug 2003 06:12:09 +0200
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <1060661529.2750.1.camel@localhost>
+References: <20030803082718.GA4594@twibble.org>
+	 <20030803082759.GA4611@twibble.org>  <1059922898.10960.3.camel@mulgrave>
+	 <1059923048.5692.1.camel@localhost>  <1059923631.10853.6.camel@mulgrave>
+	 <1059924971.5837.5.camel@localhost>  <1059932143.10853.112.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <5.2.1.1.0.20030811180413.01a67dc0@no.incoming.mail>; from kazrak+kernel@cesmail.net on Mon, Aug 11, 2003 at 06:13:50PM -0700
-To: Jeff Woods <kazrak+kernel@cesmail.net>
-Cc: Andries Brouwer <aebr@win.tue.nl>, linux-scsi@vger.kernel.org, linux-usb-devel@lists.sourceforge.net, linux-kernel@vger.kernel.org
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp02.web.de ([217.72.192.151]:50970 "EHLO smtp.web.de")
+	by vger.kernel.org with ESMTP id S275003AbTHLEM3 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 12 Aug 2003 00:12:29 -0400
+In-Reply-To: <1059932143.10853.112.camel@mulgrave>
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@steeleye.com>
+Cc: Jamie Lenehan <lenehan@twibble.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Mon, Aug 11, 2003 at 06:13:50PM -0700, Jeff Woods wrote:
+On Sun, 2003-08-03 at 19:31, James Bottomley wrote:
+> That's not actually possible for me: the -bkX snapshots aren't tagged in
+> the main BK tree.  However, as long as no further updates are coming
+> from elsewhere, the tree head is usually "good enough" to apply patches
+> to.
+> 
+> In this case, it looks like with the exclusion I can apply to the tree
+> head, so I'll merge the scsi-misc-2.5 repository up there.
 
-> Looking only at the above code snippet, I'd suggest something more like:
+Can you now please include the 3 new patches in the test3 ? As long as
+no one contributes other patches it's the chance to do it.
 
-> +       if (!sdp || 
+http://www.twibble.org/dist/dc395x/2.05/
 
+01-03 should fit on bk3 w/o problems.
 
-This is not meaningful.
-
-A general kind of convention is that a pointer will be NULL either
-by mistake, when it is uninitialized, or on purpose, when no object
-is present or no action (other than the default) needs to be performed.
-
-But that general idea is broken by container_of(), which just subtracts
-a constant. So, one should check before subtracting that the pointer
-is non-NULL. Checking afterwards is meaningless.
