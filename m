@@ -1,40 +1,48 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [SCSI] Driver Broken in 2.6.x (attemp 2)
-Date: Tue, 05 Apr 2005 12:48:23 -0500
-Message-ID: <1112723304.6463.17.camel@mulgrave>
-References: <4252CA25.70803@punkt.pl>
+From: Russell King <rmk+lkml@arm.linux.org.uk>
+Subject: Re: iomapping a big endian area
+Date: Tue, 5 Apr 2005 19:55:06 +0100
+Message-ID: <20050405195506.A16617@flint.arm.linux.org.uk>
+References: <1112475134.5786.29.camel@mulgrave> <20050403013757.GB24234@parcelfarce.linux.theplanet.co.uk> <20050402183805.20a0cf49.davem@davemloft.net> <20050403031000.GC24234@parcelfarce.linux.theplanet.co.uk> <1112499639.5786.34.camel@mulgrave> <20050405084219.A21615@flint.arm.linux.org.uk> <1112709915.5764.4.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat16.steeleye.com ([209.192.50.48]:11398 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S261847AbVDERsb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 5 Apr 2005 13:48:31 -0400
-In-Reply-To: <4252CA25.70803@punkt.pl>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner+glk-linux-kernel=40m.gmane.org-S261892AbVDETAU@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1112709915.5764.4.camel@mulgrave>; from James.Bottomley@SteelEye.com on Tue, Apr 05, 2005 at 09:05:15AM -0500
+Sender: linux-kernel-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Matthew Wilcox <matthew@wil.cx>, "David S. Miller" <davem@davemloft.net>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: |TEcHNO| <techno@punkt.pl>
-Cc: Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Tue, 2005-04-05 at 19:25 +0200, |TEcHNO| wrote:
-> 	This is my second attemp to make anyone notice the bug that is in the 
-> 2.6.x tree. While many people tried to put blame on nvidia, here's a log 
-> that shows that it's purely kernel fault not to work.
-> 	At the end of this mail you can find some logs which show how 2.4.x and 
-> 2.6.x kernels work with my card. I hope now someone can really  show 
-> intrest into this, it's a shame something in 2.4.x worked (not perfect 
-> but worked), and fails completely (system hang) in 2.6.x.
-> 	It's also not nice if the system hangs (in 2.4.x) for a few seconds 
-> while getting a preview (form the scanner), and gets jaggy and useless 
-> while scanning, a userspace app (runned form normal user) shoudl not do 
-> so, and it's not using more than 20% of CPU.
+On Tue, Apr 05, 2005 at 09:05:15AM -0500, James Bottomley wrote:
+> On Tue, 2005-04-05 at 08:42 +0100, Russell King wrote:
+> > Not so.  There are two different styles of big endian.  (Lets just face
+> > it, BE is fucked in the head anyway...)
+> > 
+> > physical bus:	31...24	23...16	15...8	7...0
+> > 
+> > BE version 1 (word invariant)
+> >   byte access	byte 0	byte 1	byte 2	byte 3
+> >   word access	31-24	23-16	15-8	7-0
+> > 
+> > BE version 2 (byte invariant)
+> >   byte access	byte 3	byte 2	byte 1	byte 0
+> >   word access	7-0	15-8	23-16	31-24
+> 
+> These are just representations of the same thing.  However, I did
+> deliberately elect not to try to solve this problem in the accessors.  I
+> know all about the register relayout, because 53c700 has to do that on
+> parisc.
 
-I don't think anyone has the actual hardware, without which it's quite
-difficult to fix the problem.
+They aren't.  On some of our platforms, we have to exclusive-or the address
+for byte accesses with 3 to convert to the right endian-ness.
 
-What was the last 2.6 kernel version that this worked with?
+Sure, from the point of view of which byte each byte of a word represents,
+it's true that they're indentical.  But as far as the hardware is concerned,
+they're definitely different.
 
-James
+See the Intel IXP platforms for an example.
 
-
+-- 
+Russell King
+ Linux kernel    2.6 ARM Linux   - http://www.arm.linux.org.uk/
+ maintainer of:  2.6 Serial core
