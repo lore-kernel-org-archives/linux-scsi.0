@@ -1,61 +1,35 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: possible use-after-free in 2.5.44 scsi changes
-Date: Thu, 31 Oct 2002 19:46:39 +0100
+From: Matthew Jacob <mjacob@feral.com>
+Subject: Re: [PATCH] Ghost devices being reported with AIC7XXX version 6.2.6
+Date: Thu, 31 Oct 2002 11:30:57 -0800 (PST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20021031184639.GA21263@suse.de>
-References: <OFEC523B9C.2F14772C-ON88256C63.00626B8B@boulder.ibm.com>
+Message-ID: <Pine.BSF.4.21.0210311126360.23076-100000@beppo>
+References: <1036092072.8584.118.camel@irongate.swansea.linux.org.uk>
+Reply-To: mjacob@feral.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <OFEC523B9C.2F14772C-ON88256C63.00626B8B@boulder.ibm.com>
+In-Reply-To: <1036092072.8584.118.camel@irongate.swansea.linux.org.uk>
 List-Id: linux-scsi@vger.kernel.org
-To: Badari Pulavarty <badari@us.ibm.com>
-Cc: linux-scsi@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: "Justin T. Gibbs" <gibbs@scsiguy.com>, Mike Brown <mbrown@emc.com>, bferjul@emc.com, jkrasner@emc.com, conway_heather@emc.com, linux-scsi@vger.kernel.org
 
-On Thu, Oct 31 2002, Badari Pulavarty wrote:
+
+
+> On Thu, 2002-10-31 at 18:28, Matthew Jacob wrote:
+> > > 3) Linux should be using the Report Luns command to determine how
+> > >    many luns are on a device and at what locations.  This might
+> > >    even allow you to never probe more than 8 luns on a SCSI 2
+> > >    device unless they support this command.  Does the Symetrix support
+> > >    it?  Going beyond 8 luns on a SCSI2 device is really a hack
+> > >    otherwise.
+> > 
+> > Absolutely.
+> 
+> Now is the right time to fix this properly for 2.5
 > 
 > 
-> > Badari, I'm not so sure that Merlin's and your bug are the same. Is
-> > yours solved by the patch I sent out earlier? AFAICT, that should fix
-> > the segment miscounting.
-> 
-> Jens,
-> 
-> Yes. Your patch did fix my problem. But still I think BIOVEC_VIRT_MERGEABLE
 
-Great
+Well, yes.
 
-> () is not doing
-> the correct thing for x86. (It is returning FALSE for everything).
 
-It's supposed to :-)
-
-> #define BIOVEC_VIRT_MERGEABLE(vec1, vec2)       \
->         ((((bvec_to_phys((vec1)) + (vec1)->bv_len) | bvec_to_phys((vec2)))
-> & (BIO_VMERGE_BOUNDARY -1)) == 0)
-> 
-> I think BIO_VMERGE_BOUNDARY should be set to "1" instead of "0" for the
-> archs where this is not needed.
-> That will force it to return TRUE always.
-
-Why should it? We will always be creating a new hardware segment. I
-think the logic is cleaner with my patch, in fact I think it was wrong
-before. The cluster check is for a plain physical contig segment. We
-can't do any sort of funky remapping tricks to make two non-contig pages
-appear as one sg segment, so BIOVEC_VIRT_MERGEABLE is supposed to always
-return false. But it's not supposed to hinder physical segment
-clustering as it did before.
-
-> And also, I was wondering for x86, where do we check to see if the
-> IO/segment crossing 4GB boundary.
-> (something similar to 2.4 BH_PHYS_4G()). Don't we need this for drivers
-> which  can't handle
-> IO crossing 4GB boundary ?
-
-BIO_SEG_BOUNDARY and BIOVEC_SEG_BOUNDARY checks for that, see
-blk_queue_segment_boundary(). Default is 0xffffffff.
-
--- 
-Jens Axboe
 
