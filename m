@@ -1,35 +1,35 @@
-From: Pat LaVarre <p.lavarre@ieee.org>
-Subject: Re: [PATCH] fix Sony USB mass storage - pass larger receive buffer
-Date: Thu, 13 Nov 2003 07:28:26 -0700
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [usb-storage] Re: [PATCH] fix Sony USB mass storage - pass larger
+ receive buffer
+Date: Thu, 13 Nov 2003 09:54:12 -0500 (EST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <A4BED5DA-15E5-11D8-B482-0050E416C45B@ieee.org>
-References: <9B540282-15E4-11D8-9DF1-0050E416C45B@ieee.org>
-Mime-Version: 1.0 (Apple Message framework v552)
-Content-Type: text/plain; charset=US-ASCII; format=flowed
-Content-Transfer-Encoding: 7bit
+Message-ID: <Pine.LNX.4.44L0.0311130950090.843-100000@ida.rowland.org>
+References: <20031112175627.B10818@one-eyed-alien.net>
+Mime-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rly-ip03.mx.aol.com ([64.12.138.7]:40442 "EHLO
-	rly-ip03.mx.aol.com") by vger.kernel.org with ESMTP id S264288AbTKMOcX
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 13 Nov 2003 09:32:23 -0500
-In-Reply-To: <9B540282-15E4-11D8-9DF1-0050E416C45B@ieee.org>
+Received: from ida.rowland.org ([192.131.102.52]:2308 "HELO ida.rowland.org")
+	by vger.kernel.org with SMTP id S264303AbTKMOyO (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 13 Nov 2003 09:54:14 -0500
+In-Reply-To: <20031112175627.B10818@one-eyed-alien.net>
 List-Id: linux-scsi@vger.kernel.org
-Cc: linux-scsi@vger.kernel.org, mdharm-scsi@one-eyed-alien.net, p.lavarre@ieee.org
+To: Matthew Dharm <mdharm-scsi@one-eyed-alien.net>
+Cc: Patrick Mansfield <patmans@us.ibm.com>, James Bottomley <James.Bottomley@steeleye.com>, linux-scsi@vger.kernel.org, usb-storage@one-eyed-alien.net, ronald@kuetemeier.com, dmitrik@users.sourceforge.net, idan@idanso.dyndns.org
 
-P.S.
+On Wed, 12 Nov 2003, Matthew Dharm wrote:
 
-Another thought: have we yet begun to experiment with disks that we can 
-write protect?
+> I'm starting to think that this may be the best solution -- blacklist all
+> MODE_SENSE[_10] commands from all Direct-Access devices.
 
-I am, I have an Iomega Zip disk - all those have soft write-protect 
-tabs inside.
+I was just going to suggest that myself -- or rather, blacklist all 
+MODE-SENSE(x) commands from all USB disk-type devices.
 
-For the sake of experimenting with other kinds of disks I'm thinking we 
-could easily write a small patch to add a virtual write protect tab 
-inside Linux to any usb-storage PDT x00 HDD/Flash.  I think the change 
-is as small as catching mode sense headers to flip the Writable bit of 
-the device-specific-parameter, and catching write ops to fail via SK 
-ASC ASCQ = x 7 27 00 NotWritable.
+Is there any strong reason not to do this?  Bear in mind that Windows 
+apparently does not use these commands.  I don't see how not knowing the 
+true read-write status or caching type will hurt anything.  (And the 
+read-write status can be adjusted, if necessary, when a WRITE command 
+fails with Medium Error: Write Protected sense.)
 
-Pat LaVarre
+Alan Stern
 
