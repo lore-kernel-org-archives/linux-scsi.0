@@ -1,79 +1,117 @@
 From: Pat LaVarre <p.lavarre@ieee.org>
 Subject: Re: sense visible despite ide-floppy in 2.6 maybe
-Date: 13 Jun 2004 12:48:23 -0600
+Date: 13 Jun 2004 13:06:13 -0600
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1087152503.3172.11.camel@patibmrh9>
-References: <1086807083.3741.21.camel@patibmrh9><1086823857.5997.124.camel@
-	patibmrh9> <20040611093027.GW13836@suse.de><20040611093815.GX13836@suse.de>
+Message-ID: <1087153573.3172.24.camel@patibmrh9>
+References: <1086710016.3647.4.camel@patibmrh9><40C8FB79.1050706@torque.net>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from email-out2.iomega.com ([147.178.1.83]:61407 "EHLO
-	email.iomega.com") by vger.kernel.org with ESMTP id S265245AbUFMSsg
+Received: from email-out1.iomega.com ([147.178.1.82]:42701 "EHLO
+	email.iomega.com") by vger.kernel.org with ESMTP id S265247AbUFMTG0
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 13 Jun 2004 14:48:36 -0400
-In-Reply-To: <20040611093815.GX13836@suse.de>
+	Sun, 13 Jun 2004 15:06:26 -0400
+In-Reply-To: <40C8FB79.1050706@torque.net>
 List-Id: linux-scsi@vger.kernel.org
-To: Jens Axboe <axboe@suse.de>
+To: dougg@torque.net
 Cc: linux-scsi@vger.kernel.org
 
-> > should work, I think.
+Doug G:
 
-Yes, thank you!
+> The underlying serial protocols used by sATA and SAS do
+> seem to be in units of "dwords" (i.e. 4 byte quantities).
+> I have noticed several SCSI standards changing the maximum
+> allocation length of a one byte field (e.g. in an INQUIRY
+> and MODE SENSE(6) ) from 255 to 252. The intent seems to be
+> to have lengths that are multiples of 4.
 
-I reverted drivers/ide/ide.c ide-floppy.c to 2.6.7-rc3 and then saw your
-updated version applied clean.
+Aye, analogously, I remember noticing that t10.org op x7F claims to max
+out CDB length at x104 rather than the x107 that that additional length
+could express.
 
-> Here's an updated version.
+> > 			int vn = 0;
+> > 			if (0 <= ioctl(fd, SG_GET_VERSION_NUM, &vn)) {
+> > 				if (vn < 30000) {
+> > 					perror("ioctl SG_GET_VERSION_NUM");
+> > 					continue;
+> > 				}
+> 
+> Note: I have started to drop this SG_GET_VERSION_NUM ioctl()
+> check. It is still needed in the special case where the sg
+> driver is working asynchronously (i.e. sending commands with
+> write() and receiving the response with read() ).
 
-For me now ioctl SG_GET_VERSION_NUM works, and ioctl SG_IO works, ...
+Help?
 
-Except ioctl SG_IO sg_io_hdr_t.resid always comes back unchanged from
-its initial dxfer_len value.  I see nonzero residue reported by the
-trivial code I mentioned before, same there as in plscsi.
+I thought the purpose of ioctl SG_GET_VERSION_NUM was to avoid sending
+ioctl SG_IO on a Linux so old that ioctl SG_IO meant something
+different.
+
+Is that wrong?  Can I expect Linux to behave reasonably whenever I
+assault it with a root-privileged ioctl SG_IO, no matter what the ioctl
+SG_GET_VERSION_NUM results are?
+
+> > 	sih->dxferp = static_data;
+> > 	sih->dxfer_len = 0x24;
+> > 	sih->dxfer_direction = SG_DXFER_NONE;
+> > 	sih->dxfer_direction = SG_DXFER_TO_DEV;
+> > 	sih->dxfer_direction = SG_DXFER_FROM_DEV;
+> 
+> The three above lines look a bit strange :-)
+
+Help?  Why strange?
+
+These three lines exist because I can easily reorder them to change
+quickly among the three main options of expecting data in, data out, or
+no data.  Commenting out the two lines that have no effect would
+actually make that edit more difficult.
+
+Maybe your ":-)" means you understood that?
+
+> Perhaps you could sent me the "strace" of this failure so
+> I can have a closer look at what is going on.
+
+I will try to remember to strace next time I report a failing ioctl.
+
+I will believe the progress of this thread has obsoleted that specific
+request unless you say different.
+
+> > Can ioctl SG_IO fetch the offset 7 Additional Length field of op x03
+> > "REQUEST SENSE" data?
+> > 
+> > Naively I thought yes of course, I know that works with /dev/scd$n.
+> > 
+> > But then I tried a /dev/hd$v ide-floppy.  No joy.  perror tells me ioctl
+> > SG_IO fails via "Invalid argument", ...
+> 
+> My method with the SG_IO ioctl was to yield errnos
+> if the SCSI command could not be sent (or was rejected
+> at the point of transmission). So if there is an errno
+> there will be no sense buffer (or any other valid
+> response data).
+
+This much I did understand correctly from the doc.
+
+I did eventually write:
+
+	ii = ioctl(fd, SG_IO, sih);
+	if (ii < 0) {
+		perror("ioctl SG_IO");
+		... die ...
+	} else {
+		fwrite(sih->dxferp, sih->dxfer_len, 1, stdout);
+		if ((sih->info & SG_INFO_OK_MASK) != SG_INFO_OK) {
+			... die ...
+		} else if (sih->resid != 0) {
+			... die ...
+		}
+		...
+	}
+
+The case that falls thru without "die"ing is my guess of when SG_IO
+actually has reported complete success.
 
 Pat LaVarre
-
-$ echo -n $'\xAE' >xae.bin
-$ hexdump -C xae.bin
-00000000  ae                                                |.|
-00000001
-$
-$ sudo plscsi /dev/hdd -f xae.bin -i x24 -x "12 00:00:00 24 00" -v
-x 00000000 12 00:00:00 24 00 .. .. .. .. .. .. .. .. .. .. "R@@@$@"
-x 00000000 00:80:00:01 75:00:00:00 49:4F:4D:45 47:41:20:20 "@@@Au@@@IOMEGA  "
-x 00000010 5A:49:50:20 32:35:30:20 20:20:20:20 20:20:20:20 "ZIP 250         "
-x 00000020 32:35:2E:51 .. .. .. .. .. .. .. .. .. .. .. .. "25.Q"
-// 36 = x24 = plscsi.main exit int
-$
-$ sudo plscsi /dev/hdd -f xae.bin -i x7A -x "12 00:00:00 7A 00" -v
-x 00000000 12 00:00:00 7A 00 .. .. .. .. .. .. .. .. .. .. "R@@@z@"
-x 00000000 00:80:00:01 75:00:00:00 49:4F:4D:45 47:41:20:20 "@@@Au@@@IOMEGA  "
-x 00000010 5A:49:50:20 32:35:30:20 20:20:20:20 20:20:20:20 "ZIP 250         "
-x 00000020 32:35:2E:51 30:36:2F:31 33:2F:30:32 00:00:00:00 "25.Q06/13/02@@@@"
-x 00000030 00:00:00:00 00:00:00:00 00:00:00:00 00:00:00:00 "@@@@@@@@@@@@@@@@"
-...
-x 00000050 00:00:00:00 00:00:00:00 00:00:00:00 00:00:00:00 "@@@@@@@@@@@@@@@@"
-x 00000060 28:63:29:20 43:6F:70:79 72:69:67:68 74:20:49:4F "(c) Copyright IO"
-x 00000070 4D:45:47:41 20:32:30:30 30:20 .. .. .. .. .. .. "MEGA 2000 "
-// 122 = x7A = plscsi.main exit int
-$
-$ sudo plscsi /dev/hdd -f xae.bin -i xFF -x "12 00:00:00 FF 00" -v
-x 00000000 12 00:00:00 FF 00 .. .. .. .. .. .. .. .. .. .. "R@@@?@"
-x 00000000 00:80:00:01 75:00:00:00 49:4F:4D:45 47:41:20:20 "@@@Au@@@IOMEGA  "
-x 00000010 5A:49:50:20 32:35:30:20 20:20:20:20 20:20:20:20 "ZIP 250         "
-x 00000020 32:35:2E:51 30:36:2F:31 33:2F:30:32 00:00:00:00 "25.Q06/13/02@@@@"
-x 00000030 00:00:00:00 00:00:00:00 00:00:00:00 00:00:00:00 "@@@@@@@@@@@@@@@@"
-...
-x 00000050 00:00:00:00 00:00:00:00 00:00:00:00 00:00:00:00 "@@@@@@@@@@@@@@@@"
-x 00000060 28:63:29:20 43:6F:70:79 72:69:67:68 74:20:49:4F "(c) Copyright IO"
-x 00000070 4D:45:47:41 20:32:30:30 30:20:00:00 00:00:00:00 "MEGA 2000 @@@@@@"
-x 00000080 00:00:00:00 00:00:00:00 00:00:00:00 00:00:00:00 "@@@@@@@@@@@@@@@@"
-...
-x 000000E0 00:00:00:00 00:00:00:00 00:00:00:00 00:00:00:00 "@@@@@@@@@@@@@@@@"
-x 000000F0 00:00:00:00 00:00:00:00 00:00:00:00 00:00:00 .. "@@@@@@@@@@@@@@@"
-// 255 = xFF = plscsi.main exit int
-$
 
 
