@@ -1,60 +1,53 @@
-From: Kurt Garloff <garloff@suse.de>
-Subject: Re: Patches for SCSI scanning
-Date: Wed, 21 Apr 2004 15:52:47 +0200
+From: Lester Hightower <hightowe@10east.com>
+Subject: [FEATURE REQUEST] megaraid2 driver
+Date: Wed, 21 Apr 2004 10:09:05 -0400 (EDT)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040421135247.GR28633@tpkurt.garloff.de>
-References: <20040418185751.GC4868@tpkurt.garloff.de> <1082330192.1969.37.camel@mulgrave> <20040420115419.GG4356@tpkurt.garloff.de> <1082471881.1804.34.camel@mulgrave> <20040420092650.A7749@beaverton.ibm.com> <20040420164238.GT4356@tpkurt.garloff.de> <20040420104408.B8602@beaverton.ibm.com>
+Message-ID: <Pine.LNX.4.58.0404210952220.29661@les5.10east.com>
+References: <0E3FA95632D6D047BA649F95DAB60E57033BC510@exa-atlanta.se.lsil.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="WjWU9mUuKzTKEtBb"
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns.suse.de ([195.135.220.2]:20632 "EHLO Cantor.suse.de")
-	by vger.kernel.org with ESMTP id S262584AbUDUNyZ (ORCPT
+Received: from docs1.10east.com ([63.238.77.220]:42463 "EHLO 10east.com")
+	by vger.kernel.org with ESMTP id S262874AbUDUOJL (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 21 Apr 2004 09:54:25 -0400
-Content-Disposition: inline
-In-Reply-To: <20040420104408.B8602@beaverton.ibm.com>
+	Wed, 21 Apr 2004 10:09:11 -0400
+In-Reply-To: <0E3FA95632D6D047BA649F95DAB60E57033BC510@exa-atlanta.se.lsil.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Patrick Mansfield <patmans@us.ibm.com>
-Cc: Linux SCSI list <linux-scsi@vger.kernel.org>, Andrew Morton <akpm@osdl.org>, James Bottomley <James.Bottomley@steeleye.com>
+To: "Mukker, Atul" <Atulm@lsil.com>
+Cc: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
 
+Atul / readers of linux-scsi,
 
---WjWU9mUuKzTKEtBb
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+I am a very long time user of DCA960-based Mylex raid controllers; we have
+dozens of them in our servers.  In fact, I have even tied u320 disks to
+u160 Mylex controllers in recent years due to how stable both the cards
+and Linux drivers are.  Recently we purchased a couple of LSI MegaRaid
+cards and are starting to get our feet wet with those cards and the
+megaraid2 Linux driver.
 
-On Tue, Apr 20, 2004 at 10:44:08AM -0700, Patrick Mansfield wrote:
-> Again that is not compatible with the current 2.6.x code, users with
-> non-black listed single lun devices will get failures if we default to
-> max_scsi_luns > 1.
+Yesterday we ran a test where we pulled a drive from a logical drive set
+that had a hot spare.  The MegaRaid card rebuilt automatically, and after
+we inserted a fresh disk it automatically marked as a hot spare.  That
+went well, however, it took almost two hours to rebuild 73G on u320 disks
+in raid-1, which surprised me since the Mylex Acceleraid 170 (u160) took
+less than an hour in the same test.  I'm not complaining about the speed,
+however, but making a feature request.
 
-Failure is good sometimes.=20
-They can work around with default_dev_flags=3D1 or better with=20
-dev_flags=3DVendor:Model:1 or in the worst case with max_luns=3D1.
+One thing the DAC960 driver does is publish the real-time progress of a
+rebuild operation, both in /proc and by klog every few minutes.  The Linux
+MegaRaid driver is completely silent start to finish, only showing that it
+is in a Rebuild state.  Because the DAC960 card had already given us an
+idea of how much time to expect the rebuild to take, the second hour that
+the MegaRaid consumed was unnerving, and primarily due to the fact that we
+had no rebuild progress indication available to us.
 
-I suggest to not accept any more FORCELUN entries for now and
-remove them all in 2.7.
+I searched through all of the structs in megariad2.h and do not readily
+see any data available that would indicate the progress of a rebuild, else
+I would code this myself and submit a patch.  Instead I am asking Atul,
+and anyone else with expertise in this area, for assistance or advice in
+implementing that feature.
 
-I still think expecting multi lun devices to work with max_luns=3D1
-(aka CONFIG_SCSI_MUiLTI_LUN=3Dn) is just a configuration error.
-I don't like fixing sysadmins' mistakes by adding blacklist entries.
+Thanks,
 
-Regards,
---=20
-Kurt Garloff  <garloff@suse.de>                            Cologne, DE=20
-SUSE LINUX AG, Nuernberg, DE                          SUSE Labs (Head)
-
---WjWU9mUuKzTKEtBb
-Content-Type: application/pgp-signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.2.4 (GNU/Linux)
-
-iD8DBQFAhnyuxmLh6hyYd04RAqYbAJsGpYqjtetaWl55SVV5gkSbw8AUmACgyiYi
-QPm10Eo+fjikqoVpTsBs2ho=
-=Kf3K
------END PGP SIGNATURE-----
-
---WjWU9mUuKzTKEtBb--
+--
+Lester Hightower
