@@ -1,67 +1,33 @@
-From: Dave Hansen <haveblue@us.ibm.com>
-Subject: Re: [patch 2.5] ips queue depths
-Date: Tue, 15 Oct 2002 12:30:45 -0700
+From: James Bottomley <James.Bottomley@steeleye.com>
+Subject: Re: [PATCH] SCSI hotplug support
+Date: Tue, 15 Oct 2002 12:45:24 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3DAC6CE5.5020503@us.ibm.com>
-References: <A3B9245C291EEF4785A24A1DBE8D852B0376BC@rtpexc01.adaptec.com>
+Message-ID: <200210151945.g9FJjOs03736@localhost.localdomain>
+References: <andersen@codepoet.org>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------040300090706060504070307"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: (from root@localhost)
+	by pogo.mtv1.steeleye.com (8.9.3/8.9.3) id MAA30103
+	for <linux-scsi@vger.kernel.org>; Tue, 15 Oct 2002 12:45:28 -0700
+In-Reply-To: Message from Erik Andersen <andersen@codepoet.org>
+   of "Tue, 15 Oct 2002 13:32:16 MDT." <20021015193216.GE15778@codepoet.org>
 List-Id: linux-scsi@vger.kernel.org
-To: "Jeffery, David" <David_Jeffery@adaptec.com>
-Cc: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
+To: andersen@codepoet.org
+Cc: linux-scsi@vger.kernel.org
 
-This is a multi-part message in MIME format.
---------------040300090706060504070307
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+andersen@codepoet.org said:
+> I suspect the 1394 maintainers would reject patches that infect the
+> nodemgr with SBP-2 and/or SCSI specific stuff.  Sigh.  We seem to be
+> at an impasse.  We either screw up SCSI or we screw up 1394... 
 
-Jeffery, David wrote:
-> Dave,
-> 
-> Here's a patch that should restore the queue depths to what they were before
-> the
-> queue depths change was merged in.  Hopefully this well restore your lost
-> performance.  If I don't hear or find anything bad about it, it will be
-> going
-> to Linus shortly.
-> 
-> And thanks goes to Mike Anderson for his initial version.  That made writing
-> this patch all the easier.
+Not necessarily.  We're back around to my original though which was that the 
+hotplug event isn't carrying enough information.  Since 1394 can have may 
+different types of device attaching, it stands to reason that some of them 
+will need to pass extra information through the hotplug event.
 
-Thank you for taking care of that so quickly.  I've tested it and it 
-shows that I'm within 0.5% of where I was before.  this is well within 
-the margin of error for my test.
+Driverfs can be used for this in 2.5, but in 2.4 I suspect you need to enhance the 1394 nodemgr to allow customisable information.  Note, this doesn't require nodemgr to know about sbp-2, but it does require nodemgr to know "this device wants to add this information to the hotplug event", which does sound generic enough to be acceptable without layering violations.
 
-On another (completely cosmetic)  note, ips.c is spitting out warnings 
-because of the IPS_*LOCK_RESTORE macros which don't use the flags 
-argument in 2.5.  If you're sending an update to Linus, could you 
-include something like what I've attached to get rid of them?
--- 
-Dave Hansen
-haveblue@us.ibm.com
+James
 
---------------040300090706060504070307
-Content-Type: text/plain;
- name="ips-warning-fix-2.5.42+bk-0.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="ips-warning-fix-2.5.42+bk-0.patch"
-
---- ips.c.orig	Tue Oct 15 12:24:25 2002
-+++ ips.c	Tue Oct 15 12:25:24 2002
-@@ -248,8 +248,8 @@
- #else
-     #define IPS_SG_ADDRESS(sg)      (page_address((sg)->page) ? \
-                                      page_address((sg)->page)+(sg)->offset : 0)
--    #define IPS_LOCK_SAVE(lock,flags) spin_lock(lock)
--    #define IPS_UNLOCK_RESTORE(lock,flags) spin_unlock(lock)
-+    #define IPS_LOCK_SAVE(lock,flags) do { spin_lock(lock); (void)flags } while (0)
-+    #define IPS_UNLOCK_RESTORE(lock,flags) { spin_unlock(lock); (void)flags } while (0)
- #endif
- 
- #define IPS_DMA_DIR(scb) ((!scb->scsi_cmd || ips_is_passthru(scb->scsi_cmd) || \
-
---------------040300090706060504070307--
 
