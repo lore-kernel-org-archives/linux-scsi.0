@@ -1,47 +1,54 @@
-From: Stefan Smietanowski <stesmi@stesmi.com>
+From: Eduard Bloch <edi@gmx.de>
 Subject: Re: Binary-only firmware covered by the GPL?
-Date: Fri, 26 Mar 2004 15:19:38 +0100
+Date: Fri, 26 Mar 2004 15:29:17 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <40643BFA.1000302@stesmi.com>
-References: <20040325225423.GT9248@cheney.cx> <MDEHLPKNGKAHNMBLJOLKCEEOLEAA.davids@webmaster.com> <20040326131629.GB26910@zombie.inka.de>
+Message-ID: <20040326142917.GB30664@zombie.inka.de>
+References: <20040325225423.GT9248@cheney.cx> <MDEHLPKNGKAHNMBLJOLKCEEOLEAA.davids@webmaster.com> <20040326131629.GB26910@zombie.inka.de> <40643BFA.1000302@stesmi.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 1-2-2-1a.has.sth.bostream.se ([82.182.130.86]:13480 "EHLO
-	K-7.stesmi.com") by vger.kernel.org with ESMTP id S262157AbUCZOTq
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 26 Mar 2004 09:19:46 -0500
-In-Reply-To: <20040326131629.GB26910@zombie.inka.de>
+Received: from quechua.inka.de ([193.197.184.2]:32969 "EHLO mail.inka.de")
+	by vger.kernel.org with ESMTP id S262796AbUCZO3G (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 26 Mar 2004 09:29:06 -0500
+Content-Disposition: inline
+In-Reply-To: <40643BFA.1000302@stesmi.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Eduard Bloch <edi@gmx.de>
+To: Stefan Smietanowski <stesmi@stesmi.com>
 Cc: David Schwartz <davids@webmaster.com>, debian-devel@lists.debian.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Eduard Bloch wrote:
+#include <hallo.h>
+* Stefan Smietanowski [Fri, Mar 26 2004, 03:19:38PM]:
 
-> #include <hallo.h>
-> * David Schwartz [Thu, Mar 25 2004, 04:41:23PM]:
-> 
-> 
->>>IMHO code that can be compiled would probably be the preferred form
->>>of the work.
->>
->>	You are seriously arguing that the obfuscated binary of the firmware is the
->>preferred form of the firmware for the purpose of making modifications to
->>it?!
-> 
-> 
-> Yes, the driver authors PREFERS to make the changes on the C source
-> code, he never has to modify the firmware. Exactly what the GPL
-> requests, where is your problem?
+> >Yes, the driver authors PREFERS to make the changes on the C source
+> >code, he never has to modify the firmware. Exactly what the GPL
+> >requests, where is your problem?
+>=20
+> But the firmware didn't appear out of thin air - someone wrote it
+> somehow. If that's using a hex editor or inside the C code doesn't
 
-But the firmware didn't appear out of thin air - someone wrote it
-somehow. If that's using a hex editor or inside the C code doesn't
-matter, but most likely they used some other language like either
-C or assembly (no, not all firmware is written using assembly), and
-there are cases where some are in fact written using a hex editor but
-I can't remember any that has been for the last 30 or so years but
-I'm sure there has been cases where there hasn't been a working
-assembler.
+The GPL does not talk about the code to create things, but code to
+_modify_ things. If you never have to modify the firmware file, where i=
+s
+the point?
 
-// Stefan
+I do not see a big difference between firmware data stored in a flash
+rom inside of the hardware part and the same data loaded during the
+driver initialisation. In contrary, it saves money and makes things mor=
+e
+flexible. You should thank your hardware manufacturer instead of
+bitching about bogus things.
+
+Regards,
+Eduard.
+--=20
+Wenn du einen verhungernden Hund aufliest und machst ihn satt, dann
+wird er dich nicht bei=DFen. Das ist der Grundunterschied zwischen Hund
+und Mensch.
+		-- Mark Twain (eigl. Samuel Langhorne Clemens)
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
