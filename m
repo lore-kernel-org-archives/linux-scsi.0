@@ -1,37 +1,40 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: [PATCH] scsi/sata write barrier support
-Date: Tue, 1 Mar 2005 09:47:42 +0100
-Message-ID: <20050301084741.GD12295@suse.de>
-References: <20050127120244.GO2751@suse.de> <87acpxurwf.fsf@stark.xeocode.com> <20050222071340.GC2835@suse.de> <874qg4v81q.fsf@stark.xeocode.com>
+From: "Zhao, Forrest" <forrest.zhao@intel.com>
+Subject: One question about SCSI device hotplug
+Date: Tue, 1 Mar 2005 17:06:55 +0800
+Message-ID: <8126E4F969BA254AB43EA03C59F44E840184FB09@pdsmsx404>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Received: from ns.virtualhost.dk ([195.184.98.160]:30672 "EHLO virtualhost.dk")
-	by vger.kernel.org with ESMTP id S261804AbVCAIrv (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Mar 2005 03:47:51 -0500
-Content-Disposition: inline
-In-Reply-To: <874qg4v81q.fsf@stark.xeocode.com>
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Received: from fmr19.intel.com ([134.134.136.18]:6067 "EHLO
+	orsfmr004.jf.intel.com") by vger.kernel.org with ESMTP
+	id S261836AbVCAJIW convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Mar 2005 04:08:22 -0500
+Received: from orsfmr100.jf.intel.com (orsfmr100.jf.intel.com [10.7.209.16])
+	by orsfmr004.jf.intel.com (8.12.10/8.12.10/d: major-outer.mc,v 1.1 2004/09/17 17:50:56 root Exp $) with ESMTP id j2198Lt4014774
+	for <linux-scsi@vger.kernel.org>; Tue, 1 Mar 2005 09:08:21 GMT
+Received: from pdsmsxvs01.pd.intel.com (pdsmsxvs01.pd.intel.com [172.16.12.122])
+	by orsfmr100.jf.intel.com (8.12.10/8.12.10/d: major-inner.mc,v 1.2 2004/09/17 18:05:01 root Exp $) with SMTP id j2198Ek1032039
+	for <linux-scsi@vger.kernel.org>; Tue, 1 Mar 2005 09:08:21 GMT
+Received: from pdsmsx331.ccr.corp.intel.com ([172.16.12.58])
+ by pdsmsxvs01.pd.intel.com (SAVSMTP 3.1.7.47) with SMTP id M2005030117082004621
+ for <linux-scsi@vger.kernel.org>; Tue, 01 Mar 2005 17:08:20 +0800
+Content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Greg Stark <gsstark@mit.edu>
-Cc: Linux Kernel <linux-kernel@vger.kernel.org>, Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>, Jeff Garzik <jgarzik@pobox.com>, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: "Caushik, Ramesh" <ramesh.caushik@intel.com>
 
-On Tue, Feb 22 2005, Greg Stark wrote:
-> 
-> Jens Axboe <axboe@suse.de> writes:
-> 
-> > fsync has been working all along, since the initial barrier support for
-> > ide. only ext3 and reiserfs support it.
-> 
-> Really? That's huge news. Since what kernel version(s) is that?
+Hi, list
 
-Since 2.6.9.
+If I surprisingly hot-remove a SCSI disk from HBA manually 
+without executing "echo "scsi remove-single-device
+ <h> <b> <t <l>" > /proc/scsi/scsi", can the "hotplug"
+event be notified to SCSI mid-layer or user space?
 
-> What about a non-journaled fs, or at least a meta-data-only-journaled fs?
-> Journaled FS's don't mix well with transaction based databases since they're
-> basically doing their own journaling anyways.
+I briefly browse some code of LLDD, it seems that LLDD never
+report "hotplug" event to upper-level layer. Am I right?
 
-Only works on ext3 and reiserfs currently.
 
--- 
-Jens Axboe
-
+Thanks,
+Forrest
