@@ -1,13 +1,13 @@
 From: janitor@sternwelten.at
-Subject: [patch 5/7]  scsi/sata_sx4: replace schedule_timeout() 	with msleep()
-Date: Wed, 01 Sep 2004 21:55:05 +0200
+Subject: [patch 6/7]  scsi/sd: replace schedule_timeout() with 	msleep()
+Date: Wed, 01 Sep 2004 21:55:10 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <E1C2bCD-0005sH-CE@sputnik>
+Message-ID: <E1C2bCI-0005sz-S6@sputnik>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from baikonur.stro.at ([213.239.196.228]:37013 "EHLO
-	baikonur.stro.at") by vger.kernel.org with ESMTP id S267480AbUIATzK
+Received: from baikonur.stro.at ([213.239.196.228]:24556 "EHLO
+	baikonur.stro.at") by vger.kernel.org with ESMTP id S267523AbUIATzL
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 1 Sep 2004 15:55:10 -0400
+	Wed, 1 Sep 2004 15:55:11 -0400
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: James.Bottomley@SteelEye.com, janitor@sternwelten.at
@@ -32,31 +32,41 @@ Signed-off-by: Maximilian Attems <janitor@sternwelten.at>
 
 ---
 
- linux-2.6.9-rc1-bk7-max/drivers/scsi/sata_sx4.c |    6 ++----
- 1 files changed, 2 insertions(+), 4 deletions(-)
+ linux-2.6.9-rc1-bk7-max/drivers/scsi/sd.c |    8 ++------
+ 1 files changed, 2 insertions(+), 6 deletions(-)
 
-diff -puN drivers/scsi/sata_sx4.c~msleep-drivers_scsi_sata_sx4 drivers/scsi/sata_sx4.c
---- linux-2.6.9-rc1-bk7/drivers/scsi/sata_sx4.c~msleep-drivers_scsi_sata_sx4	2004-09-01 19:35:48.000000000 +0200
-+++ linux-2.6.9-rc1-bk7-max/drivers/scsi/sata_sx4.c	2004-09-01 19:35:48.000000000 +0200
-@@ -1189,8 +1189,7 @@ static unsigned int pdc20621_prog_dimm_g
- 	   		error = 0;
- 	   		break;     
- 		}
--		set_current_state(TASK_UNINTERRUPTIBLE);
--		schedule_timeout((i * 100) * HZ / 1000 + 1);
-+		msleep(i*100);
-    	}
-    	return error;
- }
-@@ -1223,8 +1222,7 @@ static unsigned int pdc20621_dimm_init(s
- 	readl(mmio + PDC_TIME_CONTROL);
+diff -puN drivers/scsi/sd.c~msleep-drivers_scsi_sd drivers/scsi/sd.c
+--- linux-2.6.9-rc1-bk7/drivers/scsi/sd.c~msleep-drivers_scsi_sd	2004-09-01 19:35:48.000000000 +0200
++++ linux-2.6.9-rc1-bk7-max/drivers/scsi/sd.c	2004-09-01 19:35:48.000000000 +0200
+@@ -48,6 +48,7 @@
+ #include <linux/blkdev.h>
+ #include <linux/blkpg.h>
+ #include <linux/kref.h>
++#include <linux/delay.h>
+ #include <asm/uaccess.h>
  
- 	/* Wait 3 seconds */
--	set_current_state(TASK_UNINTERRUPTIBLE);
--	schedule_timeout(3 * HZ);
-+	msleep(3000);
- 
- 	/* 
- 	   When timer is enabled, counter is decreased every internal
+ #include <scsi/scsi.h>
+@@ -943,7 +944,6 @@ sd_spinup_disk(struct scsi_disk *sdkp, c
+ 		 * Issue command to spin up drive when not ready
+ 		 */
+ 		} else if (SRpnt->sr_sense_buffer[2] == NOT_READY) {
+-			unsigned long time1;
+ 			if (!spintime) {
+ 				printk(KERN_NOTICE "%s: Spinning up disk...",
+ 				       diskname);
+@@ -962,12 +962,8 @@ sd_spinup_disk(struct scsi_disk *sdkp, c
+ 				spintime_value = jiffies;
+ 			}
+ 			spintime = 1;
+-			time1 = HZ;
+ 			/* Wait 1 second for next try */
+-			do {
+-				current->state = TASK_UNINTERRUPTIBLE;
+-				time1 = schedule_timeout(time1);
+-			} while(time1);
++			msleep(1000);
+ 			printk(".");
+ 		} else {
+ 			/* we don't understand the sense code, so it's
 
 _
