@@ -1,70 +1,56 @@
-From: Matthew Wilcox <willy@debian.org>
-Subject: Re: 2.6-test4: mpspec.h:6:25: mach_mpspec.h: Missing file
-Date: Fri, 5 Sep 2003 15:02:08 +0100
+From: =?iso-8859-1?q?Sulamita=20Garcia?= <sulagarcia@yahoo.com.br>
+Subject: Kernel panic - Ththththaats all folks
+Date: Fri, 5 Sep 2003 11:01:00 -0300 (ART)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030905140208.GI18654@parcelfarce.linux.theplanet.co.uk>
-References: <20030903170256.GA18025@fs.tum.de> <20030904221927.22799.qmail@web20703.mail.yahoo.com>
+Message-ID: <20030905140100.53464.qmail@web21106.mail.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:7892 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S262681AbTIEOCQ
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 5 Sep 2003 10:02:16 -0400
-Content-Disposition: inline
-In-Reply-To: <20030904221927.22799.qmail@web20703.mail.yahoo.com>
+Received: from web21106.mail.yahoo.com ([216.136.227.108]:7304 "HELO
+	web21106.mail.yahoo.com") by vger.kernel.org with SMTP
+	id S262665AbTIEOBL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 5 Sep 2003 10:01:11 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: John Donnelly <jpd_hp_linux_scsi@yahoo.com>
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Thu, Sep 04, 2003 at 03:19:27PM -0700, John Donnelly wrote:
-> I'm trying to build a (add-on) module 
-> on a machine booted from a 2.6-test4 kernel,
-> And keep running into this error. I've 
-> included the  gcc command line, sample
-> and the fatal error that mach_mpspec.h can't be found.
+Hi
 
-I think you'd be much better off integrating your code into the tree as
-a drivers/scsi/ subdirectory; see how little Makefile code has to be
-written for (eg) sym53c8xx_2/
+I have a RocketRAID 404 (HPT374) controller adapter on
+a RedHat 9.0 box. I compiled a new fresh kernel
+2.4.22, because errors I get with 2.4.20 from
+instalation default, and rebuild module from source
+because kernel module didn't work. Now I have a Raid 0
+by hardware, which is a 800Gb partition. I formated
+this as ext3, and for while, was good.=20
+But I doing this for a high availabity cluster, with
+drbd (mirroring). And I can't sync machines, I get
+this kernel panic:
 
-> My general question is, should I include the 
-> 
-> -I/work/src/<build>/include/asm-i386/mach-generic/mach_mpspec.h
-> 
-> in my gcc command line or is my build area incorrect
-> is
-> some way that the correct mpspec.h file can't be found ?
+Incorrect number of segments after building list
+nr_segments is 10
+counted segments is 1
+=46lags 0 0
+Kernel Panic: Ththththaats all folks. To dangerous to
+continue
+In interrupt handler - not syncing.
 
-There are many bits of the 2.6 build system that work differently from 2.4,
-see below..
+I found this message in scsi_merge, and I don't know
+that did it mean. It's kernel problem, scsi problem,
+chipset problem, or what?=20
 
-> In file included from /work/src/linux-2.6.0-test4/include/asm/smp.h:18,
->                  from /work/src/linux-2.6.0-test4/include/linux/smp.h:17,
->                  from /work/src/linux-2.6.0-test4/include/linux/topology.h:33,
->                  from /work/src/linux-2.6.0-test4/include/linux/mmzone.h:294,
->                  from /work/src/linux-2.6.0-test4/include/linux/gfp.h:4,
->                  from /work/src/linux-2.6.0-test4/include/linux/slab.h:15,
->                  from test.c:8:
-> /work/src/linux-2.6.0-test4/include/asm/mpspec.h:6:25: mach_mpspec.h: No such file or directory
-> /work/src/linux-2.6.0-test4/include/asm/mpspec.h:8: `MAX_MP_BUSSES' undeclared here (not in a function)
-> 
->  gcc -g -D__KERNEL__ -DMODULE -I/work/src/linux-2.6.0-test4/include \
-> 	-I/work/src/linux-2.6.0-test4/drivers/scsi -c test.c
+Thanks
 
-Here's the command line for a normal file (as compiled on my laptop,
-your tree will no doubt use subtly diffeent options.  Use `make V=1'
-to see the verbose output from make)
+Sulamita Garcia
 
-  gcc -Wp,-MD,mm/.fadvise.o.d -Wall -Wstrict-prototypes -Wno-trigraphs -O2 -fno-strict-aliasing -fno-common -pipe -mpreferred-stack-boundary=2 -march=k6 -Iinclude/asm-i386/mach-default -D__KERNEL__ -Iinclude -Wall -Wstrict-prototypes -Wno-trigraphs -O2 -fno-strict-aliasing -fno-common -pipe -mpreferred-stack-boundary=2 -march=k6 -Iinclude/asm-i386/mach-default -fomit-frame-pointer -nostdinc -iwithprefix include    -DKBUILD_BASENAME=fadvise -DKBUILD_MODNAME=fadvise -c -o mm/fadvise.o mm/fadvise.c
 
-For building outside the tree, I guess you wouldn't need some of it, but
-I think your problem is caused by missing -Iinclude/asm-i386/mach-default
-
-But build inside the tree.  You're going to want to do that eventually
-anyway and it saves you from this problem and several like it.
-
--- 
-"It's not Hollywood.  War is real, war is primarily not about defeat or
-victory, it is about death.  I've seen thousands and thousands of dead bodies.
-Do you think I want to have an academic debate on this subject?" -- Robert Fisk
+_______________________________________________________________________
+Desafio AntiZona: participe do jogo de perguntas e respostas que vai
+dar um Renault Clio, computadores, c=E2meras digitais, videogames e mui=
+to
+mais! www.cade.com.br/antizona
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
