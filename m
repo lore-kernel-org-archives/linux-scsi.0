@@ -1,36 +1,60 @@
-From: "Randy.Dunlap" <rddunlap@osdl.org>
-Subject: Re: advansys driver vs 2.6 breakage
-Date: Tue, 12 Aug 2003 09:54:18 -0700
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030812095418.3672568b.rddunlap@osdl.org>
-References: <200308070422.41412.gene.heskett@verizon.net>
-	<20030807112157.GF22222@parcelfarce.linux.theplanet.co.uk>
-	<200308071444.55616.gene.heskett@verizon.net>
-	<20030807195656.GJ22222@parcelfarce.linux.theplanet.co.uk>
+From: Paul Blazejowski <paulb@blazebox.homeip.net>
+Subject: Re: Linux [2.6.0-test3/mm1] aic7xxx problems.
+Date: Tue, 12 Aug 2003 14:09:20 -0400
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <1060711760.854.6.camel@blaze.homeip.net>
+References: <1060543928.887.19.camel@blaze.homeip.net>
+	 <2425882704.1060622541@aslan.btc.adaptec.com>
+	 <1060623576.2826.9.camel@blaze.homeip.net> <3F37F1A4.2030404@genebrew.com>
+	 <31044.199.181.174.146.1060650619.squirrel@www.blazebox.homeip.net>
+	 <3F384819.4070108@genebrew.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fw.osdl.org ([65.172.181.6]:23206 "EHLO mail.osdl.org")
-	by vger.kernel.org with ESMTP id S271150AbTHLQ5U (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 12 Aug 2003 12:57:20 -0400
-In-Reply-To: <20030807195656.GJ22222@parcelfarce.linux.theplanet.co.uk>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-ZUldGi/aqxACuvx8Ez/Y"
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+In-Reply-To: <3F384819.4070108@genebrew.com>
+To: Rahul Karnik <rahul@genebrew.com>, "Justin T. Gibbs" <gibbs@scsiguy.com>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <willy@debian.org>
-Cc: gene.heskett@verizon.net, linux-scsi@vger.kernel.org
 
-On Thu, 7 Aug 2003 20:56:56 +0100 Matthew Wilcox <willy@debian.org> wrote:
 
-| So you're willing to help debug this properly?  OK.  I'd like you to
-| turn on ADVANSYS_DEBUG (around line 828 of the driver).  Then send me
-| the debug messages the driver emits during bootup.
-| 
-| For comparison, I'd also like to see them from 2.4.
+--=-ZUldGi/aqxACuvx8Ez/Y
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Gene, did you make a 2.4 ADVANSYS_DEBUG module and run it
-and post the log from it?  I'd like to see that.
+On Mon, 2003-08-11 at 21:51, Rahul Karnik wrote:
 
---
-~Randy				For Linux-2.6, see:
-http://www.kernel.org/pub/linux/kernel/people/davej/misc/post-halloween-2.5.txt
+> acpi=3Doff turns off ACPI
+> pci=3Dnoacpi turns off the use of ACPI for PCI IRQ routing
+>=20
+> I have APIC off both in BIOS and in my kernel, as I had problems when I=20
+> tried it last. However, you should try again with the -mm kernels, as I=20
+> think they have some work in them to make all of this start working again=
+.
+>=20
+> Hope this helps,
+> Rahul
+
+I've tried all these options...regardless of ACPI being enabled or
+disabled the driver still does not see the SCSI drive, both of my cdroms
+are seen though.
+
+Justin, I would be willing to test the 6.2.36 aic7xxx driver or variant
+of if it was made available for 2.6.0-test3 kernel.
+
+What else i could try? Any other suggestions would be welcome.
+
+Paul
+
+--=-ZUldGi/aqxACuvx8Ez/Y
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.2.2 (GNU/Linux)
+
+iD8DBQA/OS1PIymMQsXoRDARAlStAJ4uFXgqa9P5Z1s8do0+s+pvbduqhgCfWBlZ
+fa5puIo4y4y7Ce6RdtJlHYU=
+=pGhW
+-----END PGP SIGNATURE-----
+
+--=-ZUldGi/aqxACuvx8Ez/Y--
