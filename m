@@ -1,70 +1,81 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [PATCH] fusion: streamline ->queuecommand
-Date: 05 Oct 2004 19:48:18 -0500
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: [PATCH] add device_configure to the transport classes
+Date: Wed, 06 Oct 2004 14:59:38 +1000
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1097023705.2173.340.camel@mulgrave>
-References: <0E3FA95632D6D047BA649F95DAB60E570526235F@exa-atlanta>
-	<1097017890.1765.216.camel@mulgrave>
-	<20041005233714.GA18081@beaverton.ibm.com>
+Message-ID: <41637BBA.804@torque.net>
+References: <OF2154D688.D97183DA-ONC1256F24.005BD3E3-C1256F24.005EE95C@de.ibm.com> <1096996724.2064.56.camel@mulgrave>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat16.steeleye.com ([209.192.50.48]:46496 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S266547AbUJFAsp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 5 Oct 2004 20:48:45 -0400
-In-Reply-To: <20041005233714.GA18081@beaverton.ibm.com>
+Received: from borg.st.net.au ([65.23.158.22]:32933 "EHLO borg.st.net.au")
+	by vger.kernel.org with ESMTP id S267232AbUJFFAE (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Oct 2004 01:00:04 -0400
+In-Reply-To: <1096996724.2064.56.camel@mulgrave>
 List-Id: linux-scsi@vger.kernel.org
-To: Patrick Mansfield <patmans@us.ibm.com>
-Cc: Eric Dean Moore <Emoore@lsil.com>, "Stephens, Larry" <larry.stephens@lsil.com>, "Shirron, Stephen" <Stephen.Shirron@lsil.com>, "Gibbons, Terry" <Terry.Gibbons@lsil.com>, Christoph Hellwig <hch@infradead.org>, Matthew Wilcox <matthew@wil.cx>, Christoph Hellwig <hch@lst.de>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Martin Peschke3 <MPESCHKE@de.ibm.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Tue, 2004-10-05 at 18:37, Patrick Mansfield wrote:
-> On Tue, Oct 05, 2004 at 06:11:22PM -0500, James Bottomley wrote:
-> Yes, we want drivers to move forward, but with our current model, we don't
-> have any 2.6.x kernel.org stable kernels. 
-
->From the API point of view, that's correct
-
-> When we first went to this model I thought it did not matter, you could
-> just get stable kernels from a distro, but now I see problems with it.
+James Bottomley wrote:
+> On Tue, 2004-10-05 at 12:10, Martin Peschke3 wrote:
 > 
-> If code changes for a mainline kernel scsi driver, there is no place to
-> keep a stable driver as part of a stable kernel.org series.
+>>now that there is more and more stuff handed over to transport classes,
+>>would it be feasible to put LUN there as well, as its form appears to be
+>>transport specific as well? (e.g. 64 bit for FC while other transports
+>>may be unable to convey 64 bit LUNs)
+> 
+> 
+> Well, I'm not sure about that, primarily because the LUN specifications
+> in the standards aren't transport specific.
 
-True, but on the other hand no-one really keeps their stable drivers in
-vanilla 2.4 either.
+That is right, 64 bit LUNs were mandated in SAM-2
+(standardized in 2003) and SAM-3 (soon to become a standard).
+So the Linux SCSI subsystem's 32 bit LUNs have been deficient
+for some time. [Incidentally I am probably responsible for
+bumping the lun representation from 8 bit to 32 bit some years
+back. From memory the only reason we didn't go to 64 bits
+was uncertainties about 64 bit arithmetic on various target
+platforms. Those days are long since gone.]
 
-> Driver maintainers are getting requests to backport current 2.6.x code to
-> distributions in order to support stable kernel series, else they have to
-> (effectively) maintain a driver version for each distro.
+When SCSI devices start using advanced LUN features like
+"well known logical units" (SPC-3 rev 21 section 8)
+we are really going to start hurting.
 
-This is normal.
+So I sympathize with Martin; in the past he has tried to get
+the mid-level's representation expanded from 32 bits to 64 bits
+and failed. Now that he tries to shadow luns in the FCP
+transport (like is already being done for port identifiers
+and names which _are_ transport defined (i.e. arguably should
+not be in the mid-level)) he seems to get turned down on the
+basis of architecture.
 
-> When we had 2.4 stable and 2.5 development, there was a single repository
-> for stable kernels, and one for development. Maintainers did not have to
-> track distros, the distros could (generally) pull from the latest 2.4.x
-> tree to sync up with the latest driver fixes.
+>>I see that this particular patch is not exactly what was needed to achieve
+>>this, because at the time of the evaluation INQUIRY data the LUN has
+>>already been adapted to the way LUNs are stored in scsi_device.
 
-This isn't really the case.  In the 2.4 timeframe, distribution kernels
-were positively awash with backports from 2.5 (and generally different
-backports or implementations too) ... you only have to look at something
-like the adaptec driver with it's redhat specific pieces to appreciate
-this.
+The SCSI INQUIRY command seems a pretty fluid beast. There is
+potentially a large amount of very important information in
+its vital product pages (especially the device identification
+page descriptors) with other information formerly held by the
+INQUIRY command being passed off to new SCSI commands
+(e.g. REPORT SUPPORTED OPERATION CODES).
 
-A distribution is a snapshot, so there'll always be a backport issue for
-vendors who interact directly with distribution kernels.  However, the
-difference between sles 9 and the current 2.6 is a lot less than between
-sles 8 and 2.5.  So, I accept that there's backport work to be done but
-I don't accept necessarily that the situation is worse than what we had
-in 2.4 where the amount of distribution patches were bigger and no
-vendor tracked the 2.5 tree.
+The ugliest aspect of an INQUIRY is the way SPI information
+is conveyed in byte 56. That information should have been in
+the protocol specific port control mode page (and is for more
+recently defined protocols and transports).
 
-In theory, the vendor promise of "upstream first" means that the vendor
-kernels should be tracking 2.6 more closely and thus the backports
-should be easier ... and the requirement is that the vendor feature be
-in vanilla 2.6 first.
+>>I am also not sure yet how this approach would go with REPORT_LUNS,
+>>which returns 64 bit LUNs for all transports. But for everybody interested
+>>in 64 bit LUNs, it would certainly clean things up.
+> 
+> 
+> Yes, that's another reason to make it transport specific.  Even SPI code
+> has to understand 64 bit LUN returns.
 
-James
+So does James now support Martin's proposal or is there a "not"
+missing in the first sentence of the above paragraph?
 
+Doug Gilbert
 
