@@ -1,24 +1,46 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] sym53c8xx PPR negotiation fix
-Date: Tue, 4 Nov 2003 07:10:02 +0000
+From: Matthias Andree <ma+lscsi@dt.e-technik.uni-dortmund.de>
+Subject: Ultra 160 - what HA works well with 2.4 and 2.6?
+Date: Tue, 4 Nov 2003 11:39:29 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20031104071001.A10128@infradead.org>
-References: <1067450547.3112.363.camel@compaq.xsintricity.com> <20031029183159.GE25237@parcelfarce.linux.theplanet.co.uk> <1067453148.3112.369.camel@compaq.xsintricity.com> <4159000000.1067644546@aslan.btc.adaptec.com> <1067644902.1782.20.camel@mulgrave> <1067645285.3112.538.camel@compaq.xsintricity.com> <4168130000.1067645818@aslan.btc.adaptec.com> <20031101012231.GA2346@beaverton.ibm.com> <1067654044.2464.29.camel@mulgrave> <20031103181051.GA21012@beaverton.ibm.com>
+Message-ID: <20031104103929.GA9585@merlin.emma.line.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pub234.cambridge.redhat.com ([213.86.99.234]:47885 "EHLO
-	phoenix.infradead.org") by vger.kernel.org with ESMTP
-	id S263768AbTKDHKI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 4 Nov 2003 02:10:08 -0500
+Received: from mail.dt.e-technik.Uni-Dortmund.DE ([129.217.163.1]:37553 "EHLO
+	mail.dt.e-technik.uni-dortmund.de") by vger.kernel.org with ESMTP
+	id S264059AbTKDKjc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 4 Nov 2003 05:39:32 -0500
+Received: from m2a2.dyndns.org (krusty.dt.e-technik.uni-dortmund.de [129.217.163.1])
+	by mail.dt.e-technik.uni-dortmund.de (Postfix) with ESMTP id 8BECFFFB4
+	for <linux-scsi@vger.kernel.org>; Tue,  4 Nov 2003 11:39:31 +0100 (CET)
 Content-Disposition: inline
-In-Reply-To: <20031103181051.GA21012@beaverton.ibm.com>; from andmike@us.ibm.com on Mon, Nov 03, 2003 at 10:10:51AM -0800
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@steeleye.com>, "Justin T. Gibbs" <gibbs@scsiguy.com>, Doug Ledford <dledford@redhat.com>, Matthew Wilcox <willy@debian.org>, Marcelo Tosatti <marcelo@conectiva.com.br>, linux-scsi mailing list <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
 
-Umm, the code implementing ->slave_destroy may no more exist when the
-scsi_device reference count hits zero..
+Hi,
+
+I have marc'ed (as in googled or marc.theaimsgroup.com) this list a bit
+to figure recommendations for SCSI host adaptors. Leaving Adaptec aside
+(unaffordable), it appears as though qlogic 12160 and LSI 53C1010 based
+adaptors were well supported and had maintained drivers, in 2.4 as in
+2.6, with two drivers to choose from for qlogic.
+
+The board is supposed to be used in software RAID1. (AMD XP1700+ w/ VIA
+KT333).
+
+Are there concerns that I should be aware of, for instance Dave Jones'
+post-halloween-2003 doc (http://www.codemonkey.org.uk/post-halloween-2.5.txt)
+mentions error handling, are there non-obvious concerns affecting the
+qla1280 and sym53c8xx_2 drivers? Which works better? Anything else I
+should consider?
+
+Does it make a difference which brand the card will be? I have good
+experience with the 53C875 based Tekram cards so far, but U160 is a
+different League than UWSCSI.
+
+Thanks in advance,
 
 -- 
-Christoph Hellwig <hch@lst.de>		-	Freelance Hacker
-Contact me for driver hacking and kernel development consulting
+Matthias Andree
+
+Encrypt your mail: my GnuPG key ID is 0x052E7D95
