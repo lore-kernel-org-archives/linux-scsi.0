@@ -1,44 +1,59 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: [PATCH] [4/5] ncr53c8xx update
-Date: Sun, 20 Mar 2005 01:32:28 +0000
-Message-ID: <20050320013228.GO21986@parcelfarce.linux.theplanet.co.uk>
-References: <20050319035637.16128496108@palinux.hppa> <1111278727.5525.33.camel@mulgrave>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:52411 "EHLO
-	parcelfarce.linux.theplanet.co.uk") by vger.kernel.org with ESMTP
-	id S261960AbVCTBca (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 19 Mar 2005 20:32:30 -0500
-Content-Disposition: inline
-In-Reply-To: <1111278727.5525.33.camel@mulgrave>
+From: willy@parisc-linux.org (Matthew Wilcox)
+Subject: [PATCH] Reformat comments in scsi_cmnd.h
+Date: Sat, 19 Mar 2005 20:41:41 -0700 (MST)
+Message-ID: <20050320034141.D0AE1496109@palinux.hppa>
+Received: from palinux.external.hp.com ([192.25.206.14]:58776 "EHLO
+	palinux.hppa") by vger.kernel.org with ESMTP id S261495AbVCTDln
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 19 Mar 2005 22:41:43 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Matthew Wilcox <willy@parisc-linux.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: James.Bottomley@SteelEye.com
+Cc: linux-scsi@vger.kernel.org
 
-On Sat, Mar 19, 2005 at 06:32:07PM -0600, James Bottomley wrote:
-> On Fri, 2005-03-18 at 20:56 -0700, Matthew Wilcox wrote:
-> > ncr53c8xx update
-> 
-> There's actually a slight problem with this one: on my Q720 it produces
-> messages like this:
-> 
-> ncr53c720-1: ID 7, Fast-10, Parity Checking
-> scsi1 : ncr53c8xx-3.4.3g
->  target1:0:1: target did not report SYNC.
-> 
-> Although everything is fine.  The initial "target did not report SYNC"
-> is because the driver is trying to negotiate over the initial inquiry
-> (so, naturally we don't know if it supports sync yet).  The solution is
-> to rip out the last remnants of the spontaneous attempts at negotiation
-> to force it to wait for the DV negotiation in slave_configure.
 
-Wonderful, thanks for finding & fixing that.
+Reformat the comments to make them easy to read in 80 columns.
 
--- 
-"Next the statesmen will invent cheap lies, putting the blame upon 
-the nation that is attacked, and every man will be glad of those
-conscience-soothing falsities, and will diligently study them, and refuse
-to examine any refutations of them; and thus he will by and by convince 
-himself that the war is just, and will thank God for the better sleep 
-he enjoys after this process of grotesque self-deception." -- Mark Twain
+Signed-off-by: Matthew Wilcox <willy@parisc-linux.org>
+
+Index: ./include/scsi/scsi_cmnd.h
+===================================================================
+RCS file: /var/lib/cvs/linux-2.6/include/scsi/scsi_cmnd.h,v
+retrieving revision 1.6
+diff -u -p -r1.6 scsi_cmnd.h
+--- ./include/scsi/scsi_cmnd.h	18 Mar 2005 13:17:53 -0000	1.6
++++ ./include/scsi/scsi_cmnd.h	18 Mar 2005 13:21:29 -0000
+@@ -114,10 +114,10 @@ struct scsi_cmnd {
+ 				   	   working on */
+ 
+ #define SCSI_SENSE_BUFFERSIZE 	96
+-	unsigned char sense_buffer[SCSI_SENSE_BUFFERSIZE];		/* obtained by REQUEST SENSE
+-						 * when CHECK CONDITION is
+-						 * received on original command 
+-						 * (auto-sense) */
++	unsigned char sense_buffer[SCSI_SENSE_BUFFERSIZE];
++				/* obtained by REQUEST SENSE when
++				 * CHECK CONDITION is received on original
++				 * command (auto-sense) */
+ 
+ 	/* Low-level done function - can be used by low-level driver to point
+ 	 *        to completion function.  Not used by mid/upper level code. */
+@@ -130,12 +130,12 @@ struct scsi_cmnd {
+ 	struct scsi_pointer SCp;	/* Scratchpad used by some host adapters */
+ 
+ 	unsigned char *host_scribble;	/* The host adapter is allowed to
+-					   * call scsi_malloc and get some memory
+-					   * and hang it here.     The host adapter
+-					   * is also expected to call scsi_free
+-					   * to release this memory.  (The memory
+-					   * obtained by scsi_malloc is guaranteed
+-					   * to be at an address < 16Mb). */
++					 * call scsi_malloc and get some memory
++					 * and hang it here.  The host adapter
++					 * is also expected to call scsi_free
++					 * to release this memory.  (The memory
++					 * obtained by scsi_malloc is guaranteed
++					 * to be at an address < 16Mb). */
+ 
+ 	int result;		/* Status code from lower level driver */
+ 
