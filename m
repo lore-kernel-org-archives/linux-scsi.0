@@ -1,34 +1,31 @@
-From: Doug Ledford <dledford@redhat.com>
-Subject: Re: Why /dev/sdc1 doesn't show up...
-Date: Mon, 18 Nov 2002 19:09:24 -0500
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <20021119000924.GD6989@redhat.com>
-References: <Pine.GSO.4.21.0211180403440.23400-100000@steklov.math.psu.edu> <20021118235221.637162C456@lists.samba.org>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: scsi_add_host() context
+Date: Tue, 19 Nov 2002 00:02:33 +0000
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <20021119000233.A3015@infradead.org>
+References: <3DD841CE.3010309@torque.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20021118235221.637162C456@lists.samba.org>
-To: Rusty Russell <rusty@rustcorp.com.au>
-Cc: Alexander Viro <viro@math.psu.edu>, Linux Scsi Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Linus Torvalds <torvalds@transmeta.com>
+In-Reply-To: <3DD841CE.3010309@torque.net>; from dougg@torque.net on Mon, Nov 18, 2002 at 12:26:38PM +1100
 List-Id: linux-scsi@vger.kernel.org
+To: Douglas Gilbert <dougg@torque.net>
+Cc: linux-scsi@vger.kernel.org
 
-On Tue, Nov 19, 2002 at 10:49:21AM +1100, Rusty Russell wrote:
-> In message <Pine.GSO.4.21.0211180403440.23400-100000@steklov.math.psu.edu> you 
-> write:
-> > Not really.  For case in question (block devices) there is only one path
-> > and I'd rather keep it that way, thank you very much.
+On Mon, Nov 18, 2002 at 12:26:38PM +1100, Douglas Gilbert wrote:
+> While examining the various calls in the mid level that
+> can be called from a LLD, most are designed to
+> be called from an interrupt or related context
+> (e.g. scsi_adjust_queue_depth() ).
 > 
-> See other posting.  This is a fundamental design decision, and it's
-> not changing.  Sorry.
+> However, the detection of a new host requires a LLD to call 
+> scsi_register() and scsi_add_host(). The latter call does
+> a SCSI bus scan which takes time and sends commands like
+> INQUIRY and REPORT_LUNS back through the LLD. So scsi_add_host()
+> should not be called from an interrupt context. Can this be
+> guaranteed in a hotplug environment? Is a worker thread
+> required?
 
-Then you'll have to back out the patch to module.c because it's already 
-changed.
+For the driver model ->probe is defined to run in process context, yes.
 
-
--- 
-  Doug Ledford <dledford@redhat.com>     919-754-3700 x44233
-         Red Hat, Inc. 
-         1801 Varsity Dr.
-         Raleigh, NC 27606
-  
