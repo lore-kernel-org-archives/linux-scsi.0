@@ -1,27 +1,30 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] gdth driver for 2.4.23-pre4
-Date: Thu, 8 Jan 2004 18:33:17 +0000
+From: Xose Vazquez Perez <xose@wanadoo.es>
+Subject: Re: [PATCH] ips driver for 2.4.23-pre4
+Date: Thu, 08 Jan 2004 19:49:29 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040108183317.A13824@infradead.org>
-References: <3FFC5644.9060200@wanadoo.es> <20040108171314.A12595@infradead.org> <3FFDA08B.6030901@wanadoo.es>
+Message-ID: <3FFDA639.7090005@wanadoo.es>
+References: <3FFC5B2C.6000302@wanadoo.es> <20040108171531.B12595@infradead.org> <3FFD9F0E.4060604@wanadoo.es> <20040108182135.A13623@infradead.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from phoenix.infradead.org ([213.86.99.234]:49936 "EHLO
-	phoenix.infradead.org") by vger.kernel.org with ESMTP
-	id S265908AbUAHSdT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 8 Jan 2004 13:33:19 -0500
-Content-Disposition: inline
-In-Reply-To: <3FFDA08B.6030901@wanadoo.es>; from xose@wanadoo.es on Thu, Jan 08, 2004 at 07:25:15PM +0100
+Received: from smtp13.eresmas.com ([62.81.235.113]:46826 "EHLO
+	smtp13.eresmas.com") by vger.kernel.org with ESMTP id S265692AbUAHSuk
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 8 Jan 2004 13:50:40 -0500
 List-Id: linux-scsi@vger.kernel.org
-To: Xose Vazquez Perez <xose@wanadoo.es>
+To: Christoph Hellwig <hch@infradead.org>
 Cc: linux-scsi <linux-scsi@vger.kernel.org>, Tosatti <marcelo.tosatti@cyclades.com>
 
-On Thu, Jan 08, 2004 at 07:25:15PM +0100, Xose Vazquez Perez wrote:
-> But if the maintainer only hangs the patch in the vendor web
-> and _nobody_ take care for it. what can we do?
+Christoph Hellwig wrote:
 
-The update doesn't look like critical fixes.  And if the vendors don't
-want to update their drivers that's the best sign for possible customers
-to buy other hardware instead..
+> Please tell them to go through linux-scsi, again.
+
+*Already done* , two times at least for every vendor.
+
+I sent to *all* SCSI drivers maintainers a msg to submit the
+updates to linux-scsi ml instead only to put it on the web.
+
+But they have the bad habit to do updates and patches only for
+the kernels of the distributions or hang it on his web
 
