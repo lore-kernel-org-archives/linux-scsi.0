@@ -1,23 +1,53 @@
-From: Phil Thompson <philt@4bridgeworks.com>
-Subject: Broken NVRAM Detection in sym53c8xx Driver
-Date: Tue, 13 Apr 2004 11:53:45 +0100
+From: "Guennadi Liakhovetski" <g.liakhovetski@gmx.de>
+Subject: Re: tmscsim broken on amd64 with 2.6.5?
+Date: Tue, 13 Apr 2004 13:05:06 +0200 (MEST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <C18BA5DDB58DD511BD0700C0DF0DD45028B294@NTSERVER4>
+Message-ID: <17727.1081854306@www36.gmx.net>
+References: <200404131025.43474.info@roessner-net.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mailhost.digitalinterfacesltd.com ([62.69.87.37]:64269 "EHLO
-	ntserver4.diluk.co.uk") by vger.kernel.org with ESMTP
-	id S263540AbUDMKxs (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 13 Apr 2004 06:53:48 -0400
+Received: from mail.gmx.de ([213.165.64.20]:23009 "HELO mail.gmx.net")
+	by vger.kernel.org with SMTP id S263544AbUDMLFI (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 13 Apr 2004 07:05:08 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
+To: Christian Roessner <info@roessner-net.com>
+Cc: linux-scsi@vger.kernel.org
 
-Apologies if this is fixed in a later version - I'm using the sym-2.1.17a
-version of the driver that's in Linux 2.4.25.
+Hi
 
-The NVRAM detection code in sym_nvram.c is broken for big endian CPUs. The
-NVRAM is in little endian format, but the code doesn't do the necessary
-conversions for fields bigger than a byte.
+> drivers/scsi/tmscsim.c: In function `dc390_pci_map':
+> drivers/scsi/tmscsim.c:1028: warning: unsigned int format, different type
+> arg
+> (arg 4)
+> drivers/scsi/tmscsim.c:1049: warning: unsigned int format, different type
+> arg
+> (arg 4)
+> drivers/scsi/tmscsim.c: In function `dc390_pci_unmap':
+> drivers/scsi/tmscsim.c:1066: warning: unsigned int format, different type
+> arg
+> (arg 3)
+> drivers/scsi/tmscsim.c:1076: warning: unsigned int format, different type
+> arg
+> (arg 3)
 
-Phil
+Ok, just some printk's formats. Will fix that, thanks.
+
+> > kern.*                          -/var/log/tmscsim.log
+> 
+> I use metalong and I have not spent time looking for the configuration. I
+> thin /var/log/everthing/current should also contain kern.*
+
+Doesn't look like that. I think, at least, KERN_DEBUG messages are missing.
+So, now you have both patches applied, right? Could you then uncomment
+additionally DC390_DEBUG0 and DC390_DCBDEBUG, and also specify
+scsi_logging_level=0x1ff, when loading the scsi_mod module (which also means
+you need scsi-logging enabled in scsi configuration), or scsi_logging=0x1ff
+as a kernel boot-parameter. Of course, this is only feasible, if you can
+refrain from using SCSI for anything else during these tests.
+
+Thanks
+Guennadi
+
