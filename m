@@ -1,35 +1,37 @@
-From: Liran Schour <LIRANS@il.ibm.com>
-Subject: Support for CDB length > 16
-Date: Tue, 18 Nov 2003 10:49:44 +0200
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: Support for CDB length > 16
+Date: Tue, 18 Nov 2003 19:33:43 +1000
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <OFA910CD2E.7013EC62-ONC2256DE2.002FD991-C2256DE2.00307FFC@il.ibm.com>
+Message-ID: <3FB9E777.6020404@torque.net>
+References: <OFA910CD2E.7013EC62-ONC2256DE2.002FD991-C2256DE2.00307FFC@il.ibm.com>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtagate1.de.ibm.com ([195.212.29.150]:51893 "EHLO
-	mtagate1.de.ibm.com") by vger.kernel.org with ESMTP id S261763AbTKRIwI
+Received: from bunyip.cc.uq.edu.au ([130.102.2.1]:56080 "EHLO
+	bunyip.cc.uq.edu.au") by vger.kernel.org with ESMTP id S262149AbTKRJfj
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 18 Nov 2003 03:52:08 -0500
-Received: from d12relay01.megacenter.de.ibm.com (d12relay01.megacenter.de.ibm.com [9.149.165.180] (may be forged))
-	by mtagate1.de.ibm.com (8.12.10/8.12.10) with ESMTP id hAI8pxBs085960
-	for <linux-scsi@vger.kernel.org>; Tue, 18 Nov 2003 08:52:00 GMT
-Received: from d10ml001.telaviv.ibm.com (d12av02.megacenter.de.ibm.com [9.149.165.228])
-	by d12relay01.megacenter.de.ibm.com (8.12.9/NCO/VER6.6) with ESMTP id hAI8ph9f104750
-	for <linux-scsi@vger.kernel.org>; Tue, 18 Nov 2003 09:51:43 +0100
+	Tue, 18 Nov 2003 04:35:39 -0500
+In-Reply-To: <OFA910CD2E.7013EC62-ONC2256DE2.002FD991-C2256DE2.00307FFC@il.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Liran Schour <LIRANS@il.ibm.com>
+Cc: linux-scsi@vger.kernel.org
 
+Liran Schour wrote:
+> 
+> I need a support from the Linux SCSI subsystem for CDB length > 16 byte.
+> Is it possible to do that without recompiling the kernel with a new
+> MAX_COMMAND_SIZE definition. 
 
+It is hard to imagine any other way at the moment (definitely
+in lk 2.4 and it is probably a bit late for lk 2.6).
 
+Is there an upper limit on the size of the cdb you are interested in
+(e.g. XDWRITE EXTENDED in SBC-2 is 64 bytes)?
 
+How were you planning to pass the cdb (length > 16) to the kernel?
 
-Hi all,
+Doug Gilbert
 
-I need a support from the Linux SCSI subsystem for CDB length > 16 byte.
-Is it possible to do that without recompiling the kernel with a new
-MAX_COMMAND_SIZE definition. I assume that I can find an iscsi driver that
-is able to support CDB > 16 byte.
-
-Thanks,
-- Liran
 
