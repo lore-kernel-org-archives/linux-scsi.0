@@ -1,61 +1,58 @@
-From: Matthew Dharm <mdharm-scsi@one-eyed-alien.net>
-Subject: Re: increasing host numbers
-Date: Tue, 24 Jun 2003 09:04:02 -0700
+From: Adrian Bunk <bunk@fs.tum.de>
+Subject: [PATCH] NCR53C9x compile fix (fwd)
+Date: Tue, 24 Jun 2003 19:51:38 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030624090402.A19535@one-eyed-alien.net>
-References: <3EF808FA.5020503@torque.net> <20030624124327.A8155@infradead.org>
+Message-ID: <20030624175138.GX3710@fs.tum.de>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-md5;
-	protocol="application/pgp-signature"; boundary="7JfCtLOvnd9MIVvH"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ziggy.one-eyed-alien.net ([64.169.228.100]:12808 "EHLO
-	ziggy.one-eyed-alien.net") by vger.kernel.org with ESMTP
-	id S262955AbTFXPuM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 24 Jun 2003 11:50:12 -0400
-Content-Disposition: inline
-In-Reply-To: <20030624124327.A8155@infradead.org>; from hch@infradead.org on Tue, Jun 24, 2003 at 12:43:27PM +0100
-List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Douglas Gilbert <dougg@torque.net>, SCSI Mailing List <linux-scsi@vger.kernel.org>
-
-
---7JfCtLOvnd9MIVvH
 Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from hermes.fachschaften.tu-muenchen.de ([129.187.202.12]:978 "HELO
+	hermes.fachschaften.tu-muenchen.de") by vger.kernel.org with SMTP
+	id S262430AbTFXRhi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 24 Jun 2003 13:37:38 -0400
 Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+List-Id: linux-scsi@vger.kernel.org
+To: "David S. Miller" <davem@redhat.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Geert Uytterhoeven <geert@linux-m68k.org>, trivial@rustcorp.com.au
 
-On Tue, Jun 24, 2003 at 12:43:27PM +0100, Christoph Hellwig wrote:
-> On Tue, Jun 24, 2003 at 06:16:58PM +1000, Douglas Gilbert wrote:
-> > It seems as though host numbers are no longer re-used.
-> > This pattern started in lk 2.5.73:
->=20
-> So far this was intentional, so I'd call it a feature.  If you think
-> this is not good we can add some kind of bitmap to get free host number.
+The patch forwarded below is still needed in 2.5.73.
 
-Is there any danger of 'running out'?  i.e is rollover handled properly?
+Please apply
+Adrian
 
-Matt
 
---=20
-Matthew Dharm                              Home: mdharm-usb@one-eyed-alien.=
-net=20
-Maintainer, Linux USB Mass Storage Driver
+----- Forwarded message from Geert Uytterhoeven <geert@linux-m68k.org> -----
 
-I need a computer?
-					-- Customer
-User Friendly, 2/19/1998
+Date:	Sun, 15 Jun 2003 20:38:40 +0200
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+To: Linus Torvalds <torvalds@transmeta.com>
+Cc: Linux Kernel Development <linux-kernel@vger.kernel.org>,
+    Geert Uytterhoeven <geert@linux-m68k.org>
+Subject: [PATCH] NCR53C9x compile fix
 
---7JfCtLOvnd9MIVvH
-Content-Type: application/pgp-signature
-Content-Disposition: inline
+NCR53C9x SCSI: Fix compilation after breakage in 2.5.71
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.0.6 (GNU/Linux)
-Comment: For info see http://www.gnupg.org
+--- linux-2.5.x/drivers/scsi/NCR53C9x.c	Sun Jun 15 10:04:26 2003
++++ linux-m68k-2.5.x/drivers/scsi/NCR53C9x.c	Sun Jun 15 11:49:32 2003
+@@ -893,7 +893,7 @@
+ int esp_proc_info(struct Scsi_Host *shost, char *buffer, char **start, off_t offset, int length,
+ 		  int inout)
+ {
+-	struct NCR_ESP *esp = (struct NCR_ESP *) SCpnt->device->host->hostdata;
++	struct NCR_ESP *esp = (struct NCR_ESP *)shost->hostdata;
+ 
+ 	if(inout)
+ 		return -EINVAL; /* not yet */
 
-iD8DBQE++HZyIjReC7bSPZARAmyxAKDR98jvhBL2iKV8Zv3Y6wLneiLMuACgxfnl
-n3ETm1Hu9wTMoY0HLuHdndc=
-=JkVp
------END PGP SIGNATURE-----
+Gr{oetje,eeting}s,
 
---7JfCtLOvnd9MIVvH--
+						Geert
+
+--
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+							    -- Linus Torvalds
+
+----- End forwarded message -----
