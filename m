@@ -1,49 +1,109 @@
-From: "Martin Jimenez Diego" <dmartin@sopragroup.com>
-Subject: scsi-backup errors with dell
-Date: Mon, 20 Dec 2004 15:01:45 +0100
-Message-ID: <53742A4D424C2645BFC5E98B2013B12B7FC22B@WEXCHBE01-VS.ptx.fr.sopra>
+From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+Subject: Re: [PATCH] convert 53c700 driver to use change_queue_depth API
+Date: Mon, 20 Dec 2004 16:42:02 +0100 (CET)
+Message-ID: <Pine.LNX.4.60.0412201605360.15046@poirot.grange>
+References: <1102812847.5232.6.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from outbound1.z-ptx-11.fr.sopragroup.com ([81.80.239.198]:16267
-	"EHLO outbound1.sopragroup.com") by vger.kernel.org with ESMTP
-	id S261299AbULTODA convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 20 Dec 2004 09:03:00 -0500
-Received: by outbound1.sopragroup.com (8.12.10/8.12.10/outbound-A02) with ESMTP id iBKE2sKx003968
-          for <linux-scsi@vger.kernel.org>; Mon, 20 Dec 2004 15:02:57 +0100
-content-class: urn:content-classes:message
+Received: from mail.gmx.de ([213.165.64.20]:55758 "HELO mail.gmx.net")
+	by vger.kernel.org with SMTP id S261576AbULTPoM (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 20 Dec 2004 10:44:12 -0500
+In-Reply-To: <1102812847.5232.6.camel@mulgrave>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-hello.
-we had PE2550 server with RH7.1. it has a PERC3/DC card atached to a Po=
-wervault 220s and to a Powervault 110t dlt, each device in each separat=
-e cable.
-the disk cabin had 3 disks and reciently we added three disks more. we =
-made the new logical volume (raid5) with no problem, and the new partit=
-ion is working ok. BUT since then our dlt is experiencing problems.
-when we launch backups they don=B4t work, and in 'messages' we get the =
-following error:
+In the comment to the method declaration:
 
-Dec 14 06:31:16 bond2 kernel: st0: Error 250400fb (sugg. bt 0x20, drive=
-r bt 0x5, host bt 0x4).
-Dec 14 06:31:24 bond2 kernel: st0: Error with sense data: [valid=3D0] I=
-nfo fld=3D0x0, Current st09:00: sense key Unit Attention
-Dec 14 06:31:24 bond2 kernel: Additional sense indicates Power on,reset=
-,or bus device reset
+On Sat, 11 Dec 2004, James Bottomley wrote:
 
-the firmware version of PERC is 161J, BIOS version 3.17, driver version=
- 1.14g
+> 	/*
+> +	 * fill in this function to allow the queue depth of this host
+> +	 * to be changeable (on a per device basis).  returns either
+> +	 * the current queue depth setting (may be different from what
+> +	 * was passed in) or an error.  An error should only be
+> +	 * returned if the requested depth is legal but the driver was
+> +	 * unable to set it.  If the requested depth is illegal, the
+> +	 * driver should set and return the closest legal queue depth.
+> +	 *
+> +	 */
+> +	int (* change_queue_depth)(struct scsi_device *, int);
 
-any help would be ver y very appreciated
+And then you implement it for the 53c700 as follows:
 
-no backup in xmas is no good  :-(
+> ===== drivers/scsi/53c700.c 1.58 vs edited =====
+> --- 1.58/drivers/scsi/53c700.c	2004-10-20 19:41:52 -05:00
+> +++ edited/drivers/scsi/53c700.c	2004-12-11 17:48:57 -06:00
 
-diego martin
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+...
+
+> @@ -2102,18 +2104,14 @@
+>  	/* to do here: deallocate memory */
+>  }
+>  
+> -static ssize_t
+> -NCR_700_store_queue_depth(struct device *dev, const char *buf, size_t count)
+> +static int
+> +NCR_700_change_queue_depth(struct scsi_device *SDp, int depth)
+>  {
+> -	int depth;
+> -
+> -	struct scsi_device *SDp = to_scsi_device(dev);
+> -	depth = simple_strtoul(buf, NULL, 0);
+>  	if(depth > NCR_700_MAX_TAGS)
+> -		return -EINVAL;
+> +		depth = NCR_700_MAX_TAGS;
+>  	scsi_adjust_queue_depth(SDp, MSG_ORDERED_TAG, depth);
+>  
+> -	return count;
+> +	return depth;
+>  }
+>  
+>  static ssize_t
+
+Shouldn't it really be something like
+
+ 	if(depth > NCR_700_MAX_TAGS)
+-		return -EINVAL;
++		depth = NCR_700_MAX_TAGS;
++	if (depth < 0)
++		depth = 0;
+ 	scsi_adjust_queue_depth(SDp, MSG_ORDERED_TAG, depth);
+ 
+-	return count;
++	return SDp->queue_depth == depth ? depth : -EFAIL;
+ }
+
+And, actually (nitpicking), shouldn't the comment rather be
+
+--- include/scsi/scsi_host.h~	Tue Dec 14 22:14:07 2004
++++ include/scsi/scsi_host.h	Mon Dec 20 16:21:08 2004
+@@ -219,11 +219,10 @@
+ 	 * fill in this function to allow the queue depth of this host
+ 	 * to be changeable (on a per device basis).  returns either
+ 	 * the current queue depth setting (may be different from what
+-	 * was passed in) or an error.  An error should only be
+-	 * returned if the requested depth is legal but the driver was
+-	 * unable to set it.  If the requested depth is illegal, the
+-	 * driver should set and return the closest legal queue depth.
+-	 *
++	 * was passed in) or an error.  If the requested depth is illegal,
++	 * the driver should set and return the closest legal queue depth.
++	 * An error should only be returned if the driver was unable to
++	 * set the new depth.
+ 	 */
+ 	int (* change_queue_depth)(struct scsi_device *, int);
+ 
+? And one more (unrelated) question (possibly, known / discussed before): 
+simple_strtoul converts "-1" to 0, whereas, glibc strtoul would return 
+(unsigned long)-1. It is the intended behaviour, isn't it? Perhaps, worth 
+documenting in vsprintf.c...
+
+Thanks
+Guennadi
+---
+Guennadi Liakhovetski
+
