@@ -1,128 +1,79 @@
-From: Linus Torvalds <torvalds@osdl.org>
+From: Andries.Brouwer@cwi.nl
 Subject: Re: [linux-usb-devel] Re: USB storage problems on OHCI..
-Date: Mon, 22 Sep 2003 12:55:30 -0700 (PDT)
+Date: Mon, 22 Sep 2003 21:56:38 +0200 (MEST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44.0309221250470.1673-100000@home.osdl.org>
-References: <1064253312.15409.19.camel@mulgrave>
-Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Message-ID: <UTC200309221956.h8MJucs21996.aeb@smtp.cwi.nl>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fw.osdl.org ([65.172.181.6]:20452 "EHLO mail.osdl.org")
-	by vger.kernel.org with ESMTP id S263304AbTIVTz4 (ORCPT
+Received: from hera.cwi.nl ([192.16.191.8]:60323 "EHLO hera.cwi.nl")
+	by vger.kernel.org with ESMTP id S263310AbTIVT7p (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 22 Sep 2003 15:55:56 -0400
-In-Reply-To: <1064253312.15409.19.camel@mulgrave>
+	Mon, 22 Sep 2003 15:59:45 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Patrick Mansfield <patmans@us.ibm.com>, Christoph Hellwig <hch@infradead.org>, Alan Stern <stern@rowland.harvard.edu>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, David Brownell <david-b@pacbell.net>, Greg KH <greg@kroah.com>, USB development list <linux-usb-devel@lists.sourceforge.net>, SCSI development list <linux-scsi@vger.kernel.org>, Andries.Brouwer@cwi.nl
+To: Andries.Brouwer@cwi.nl, James.Bottomley@steeleye.com
+Cc: david-b@pacbell.net, greg@kroah.com, hch@infradead.org, linux-scsi@vger.kernel.org, linux-usb-devel@lists.sourceforge.net, mdharm-usb@one-eyed-alien.net, patmans@us.ibm.com, stern@rowland.harvard.edu, torvalds@osdl.org
+
+    From James.Bottomley@SteelEye.com  Mon Sep 22 21:29:06 2003
+
+    On Mon, 2003-09-22 at 13:55, Andries.Brouwer@cwi.nl wrote:
+    >         if (sdkp->media_present) {
+    >                 sd_read_capacity(sdkp, disk->disk_name, sreq, buffer);
+    >                 if (sdp->removable)
+    >                         sd_read_write_protect_flag(sdkp, disk->disk_name,
+    >                                         sreq, buffer);
+    >                 sd_read_cache_type(sdkp, disk->disk_name, sreq, buffer);
+    >         }
+    > 
+    > and I suppose we could skip sd_read_cache_type() in the
+    > hot-pluggable case - a flag that USB storage could set.
+
+    what about just having a conservative mode for sd?  This could still
+    internally be a set of flags, just one single way of clearing them all
+    from slave configure.  For the most conservative setting, we could
+    probably dump spin up, read write protect, and read cache type.
+
+Maybe.
+
+[By the way - reading Write Protect is meaningful and works,
+for my Smart Media card readers.]
+
+I have seen proposals around here for flags that are far too specific
+(like "do not ask for mode page 8"). If we go to that level of detail
+then we'll soon have fifty flags.
+Black lists, and flags that describe various ways of being broken
+are a bad idea in my opinion. I will not deny that they may be needed
+in some cases, but they are never the preferred solution.
+
+Also "conservative mode" sounds like a flag that describes some
+way of being broken.
+
+On the other hand "hot-pluggable" describes a positive asset,
+and if we can conclude from that that it is unnecessary to ask
+for mode page 8 then we achieve the same effect in a positive way.
 
 
-On 22 Sep 2003, James Bottomley wrote:
-> 
-> I think we could try 4 bytes for this (even to avoid wide residue
-> problems) and see how it goes.
+There is another comment here.
+A scsi device declares its level of scsi compliance.
+Most USB storage devices are not very scsi compliant at all,
+and report 0 there.
+To everybody's surprise USB storage does
 
-How about just trusting the size (and as far as I can tell from the SCSI 
-specs, the size is the size _without_ the header and block descriptors), 
-and capping it at 20?
+        US_DEBUGP("Fixing INQUIRY data to show SCSI rev 2 - was %d\n",
+                  data_ptr[2] & 7);
 
-If the device reports a size that is smaller than the required one (3), we 
-just fail the request - instead of doing a small read and then making 
-decisions on data that isn't even there, like we used to do!
+        /* Change the SCSI revision number */
+        data_ptr[2] = (data_ptr[2] & ~7) | 2;
 
-(The old code would use the "size" as the read length argument, which
-really looks fundamentally wrong. At the very least it should add in the
-header length etc).
+It claims that the device is SCSI-2 compliant, even when the
+device itself does not make that claim at all.
 
-Can people try this attached patch? It looks bigger than it is - in order 
-to do sane error handling for the "size is too small" case I re-organized 
-the thing a bit. The real change is just
 
- - capping size at 20 (real value) instead of 128 (random crud)
- - properly add in the header and block descriptor sizes
+Suppose that we stop changing this compliance level.
+Then getting SCSI-1 or no compliance level could be a
+"conservative mode" flag.
 
-Comments?
+[Of course this was done for a reason - USB storage was written
+assuming the SCSI layer given. If we stop changing the SCSI level
+that may require changes in the SCSI code. Probably Matt remembers
+what the problems were.]
 
-			Linus
-
------
-===== drivers/scsi/sd.c 1.134 vs edited =====
---- 1.134/drivers/scsi/sd.c	Wed Jun 25 04:47:26 2003
-+++ edited/drivers/scsi/sd.c	Mon Sep 22 12:42:32 2003
-@@ -1108,14 +1108,26 @@
- 	/* cautiously ask */
- 	res = sd_do_mode_sense(SRpnt, dbd, modepage, buffer, 4, &data);
- 
--	if (scsi_status_is_good(res)) {
--		/* that went OK, now ask for the proper length */
--		len = data.length;
--		if (len > 128)
--			len = 128;
--		res = sd_do_mode_sense(SRpnt, dbd, modepage, buffer,
--				       len, &data);
--	}
-+	if (!scsi_status_is_good(res))
-+		goto bad_sense;
-+
-+	/* that went OK, now ask for the proper length */
-+	len = data.length;
-+
-+	/*
-+	 * We're only interested in the first three bytes, actually.
-+	 * But the data cache page is defined for the first 20.
-+	 */
-+	if (len < 3)
-+		goto bad_sense;
-+	if (len > 20)
-+		len = 20;
-+
-+	/* Take headers and block descriptors into account */
-+	len += data.header_length + data.block_descriptor_length;
-+
-+	/* Get the data */
-+	res = sd_do_mode_sense(SRpnt, dbd, modepage, buffer, len, &data);
- 
- 	if (scsi_status_is_good(res)) {
- 		const char *types[] = {
-@@ -1133,23 +1145,26 @@
- 
- 		printk(KERN_NOTICE "SCSI device %s: drive cache: %s\n",
- 		       diskname, types[ct]);
-+
-+		return;
-+	}
-+
-+bad_sense:
-+	if ((SRpnt->sr_sense_buffer[0] & 0x70) == 0x70
-+	     && (SRpnt->sr_sense_buffer[2] & 0x0f) == ILLEGAL_REQUEST
-+	     /* ASC 0x24 ASCQ 0x00: Invalid field in CDB */
-+	     && SRpnt->sr_sense_buffer[12] == 0x24
-+	     && SRpnt->sr_sense_buffer[13] == 0x00) {
-+		printk(KERN_NOTICE "%s: cache data unavailable\n",
-+		       diskname);
- 	} else {
--		if ((SRpnt->sr_sense_buffer[0] & 0x70) == 0x70
--		     && (SRpnt->sr_sense_buffer[2] & 0x0f) == ILLEGAL_REQUEST
--		     /* ASC 0x24 ASCQ 0x00: Invalid field in CDB */
--		     && SRpnt->sr_sense_buffer[12] == 0x24
--		     && SRpnt->sr_sense_buffer[13] == 0x00) {
--			printk(KERN_NOTICE "%s: cache data unavailable\n",
--			       diskname);
--		} else {
--			printk(KERN_ERR "%s: asking for cache data failed\n",
--			       diskname);
--		}
--		printk(KERN_ERR "%s: assuming drive cache: write through\n",
-+		printk(KERN_ERR "%s: asking for cache data failed\n",
- 		       diskname);
--		sdkp->WCE = 0;
--		sdkp->RCD = 0;
- 	}
-+	printk(KERN_ERR "%s: assuming drive cache: write through\n",
-+	       diskname);
-+	sdkp->WCE = 0;
-+	sdkp->RCD = 0;
- }
- 
- /**
-
+Andries
