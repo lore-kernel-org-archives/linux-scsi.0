@@ -1,39 +1,52 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: SCSI breaks 'make allyesconfig'
-Date: 17 Nov 2004 10:21:22 -0600
-Message-ID: <1100708492.2319.2.camel@mulgrave>
-References: <419B5292.7080305@pobox.com>  <419B5AA2.7030801@pobox.com>
+From: Marcelo Tosatti <marcelo.tosatti@cyclades.com>
+Subject: Re: [PATCH 2.4] sym53c8xx_2 error handler fix
+Date: Wed, 17 Nov 2004 11:59:24 -0200
+Message-ID: <20041117135924.GE20533@logos.cnet>
+References: <04Nov1.162535est.332407@cyborg.cybernetics.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat16.steeleye.com ([209.192.50.48]:42666 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S262365AbUKQQVi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 17 Nov 2004 11:21:38 -0500
-In-Reply-To: <419B5AA2.7030801@pobox.com>
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:25516 "EHLO
+	www.linux.org.uk") by vger.kernel.org with ESMTP id S262467AbUKQSGr
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 17 Nov 2004 13:06:47 -0500
+Content-Disposition: inline
+In-Reply-To: <04Nov1.162535est.332407@cyborg.cybernetics.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, Andrew Morton <akpm@osdl.org>
+To: Tony Battersby <tonyb@cybernetics.com>
+Cc: linux-scsi@vger.kernel.org
 
-On Wed, 2004-11-17 at 08:05, Jeff Garzik wrote:
-> > drivers/scsi/osst.o(.bss+0x0): In function `exit_osst':
-> > drivers/scsi/osst.c:195: multiple definition of `ST_partstat'
-> > drivers/scsi/st.o(.bss+0x0):drivers/scsi/st.c:244: first defined here
-> > make[2]: *** [drivers/scsi/built-in.o] Error 1
-> > make[1]: *** [drivers/scsi] Error 2
-> > make: *** [drivers] Error 2
+
+Tony, 
+
+I've applied all of your patches. Thanks!
+
+On Mon, Nov 01, 2004 at 04:25:58PM -0500, Tony Battersby wrote:
+> The sym53c8xx_2 driver in lk 2.4.x is unmaintained.  This is a backported
+> fix from lk 2.6.x for a problem with the error handler never successfully
+> completing an abort, bus reset, device reset, or host reset.  This patch has
+> been well tested at my company.  Please apply.
+> 
+> --- linux-2.4.26-vanilla/drivers/scsi/sym53c8xx_2/sym_glue.c	Thu Nov 28 18:53:14 2002
+> +++ linux-2.4.26-asp/drivers/scsi/sym53c8xx_2/sym_glue.c	Fri May 21 11:43:51 2004
+> @@ -1149,7 +1149,6 @@
+>  	switch(to_do) {
+>  	default:
+>  	case SYM_EH_DO_IGNORE:
+> -		goto finish;
+>  		break;
+>  	case SYM_EH_DO_WAIT:
+>  #if LINUX_VERSION_CODE > LinuxVersionCode(2,3,0)
+> @@ -1193,7 +1192,6 @@
+>  		to_do = SYM_EH_DO_IGNORE;
+>  	}
+>  
+> -finish:
+>  	ep->to_do = to_do;
+>  	/* Complete the command with locks held as required by the driver */
+>  	if (to_do == SYM_EH_DO_COMPLETE)
 > 
 > 
->   ...and the attached patch fixes it.  'ST_partstat' is defined in 
-> drivers/scsi/st.h, but never used.
-
-Yes, this was reported and fixed yesterday.  The fix is already in the
-SCSI BK repo:
-
-http://linux-scsi.bkbits.net:8080/scsi-rc-fixes-2.6/cset@419a6d19FQrj1AswswaWWZLXreWppw
-
-James
-
-
+> Anthony J. Battersby
+> Cybernetics
