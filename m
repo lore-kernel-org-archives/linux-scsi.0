@@ -1,45 +1,41 @@
-From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
-Subject: Re: [PATCH] clean up some more tmscsim scan logic
-Date: Fri, 20 Aug 2004 22:36:25 +0200 (CEST)
+From: Nathan Bryant <nbryant@optonline.net>
+Subject: Re: Suspending SCSI devices and buses
+Date: Fri, 20 Aug 2004 18:32:07 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.60.0408202128060.5097@poirot.grange>
-References: <20040817163323.GA16799@lst.de> <Pine.LNX.4.60.0408172136340.5224@poirot.grange>
- <20040819113327.GA21326@lst.de> <Pine.LNX.4.60.0408192300530.5248@poirot.grange>
- <412524BE.1030002@adaptec.com>
+Message-ID: <41267BE7.20502@optonline.net>
+References: <7C828B3E-F2EA-11D8-B9BF-00039398BB5E@ieee.org>
+ <"41266F71.906020 7"@optonline.net>
+ <31E92B97-F2F5-11D8-8CAE-00039398BB5E@ieee.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.gmx.de ([213.165.64.20]:7884 "HELO mail.gmx.net")
-	by vger.kernel.org with SMTP id S268775AbUHTWKl (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 20 Aug 2004 18:10:41 -0400
-In-Reply-To: <412524BE.1030002@adaptec.com>
+Received: from mta7.srv.hcvlny.cv.net ([167.206.5.74]:53459 "EHLO
+	mta7.srv.hcvlny.cv.net") by vger.kernel.org with ESMTP
+	id S268783AbUHTWcI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 20 Aug 2004 18:32:08 -0400
+Received: from [67.86.72.128] (ool-43564880.dyn.optonline.net [67.86.72.128])
+ by mta7.srv.hcvlny.cv.net
+ (iPlanet Messaging Server 5.2 HotFix 1.25 (built Mar  3 2004))
+ with ESMTP id <0I2R00L33NXJMP@mta7.srv.hcvlny.cv.net> for
+ linux-scsi@vger.kernel.org; Fri, 20 Aug 2004 18:32:07 -0400 (EDT)
+In-reply-to: <31E92B97-F2F5-11D8-8CAE-00039398BB5E@ieee.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Luben Tuikov <luben_tuikov@adaptec.com>
-Cc: Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org
+To: Pat LaVarre <p.lavarre@ieee.org>
+Cc: linux-scsi@vger.kernel.org, Alan Stern <stern@rowland.harvard.edu>
 
-On Thu, 19 Aug 2004, Luben Tuikov wrote:
+Pat LaVarre wrote:
 
-> The device server should send sense information when the task
-> finishes with CHECK CONDITION status _with_ the same transaction.
-> (SAM-3r13, 5.9.6, SPC-3r18, 4.5.1).  This used to be called
-> "autosense" a couple of years back, but no more as it is now
-> protocol.
+>> S3
 >
-> This has been off-loaded to LLDD when the device doesn't support
-> it, so that SCSI Core is basically SAM.
 >
-> BTW, the state and task queue would most likely change between
-> the time SCSI Core gets CHECK CONDITION (with no sense) until
-> the time it issues REQUEST SENSE, to get the sense for _that_
-> command which failed.  Thus we want LLDDs to emulate it for
-> devices which do not support it, since it has better (closer)
-> control of the device.
+> I know this is popular PC jargon, I don't personally know what it means.
 
-Thanks for the explanations, Luben! Sounds reasonable, and crystalises my 
-suspicions and guesses into a solid medium:-)
+ACPI suspend-to-RAM. Power is cut to almost everything except RAM and 
+wakeup event circuitry, some PCI slots may be left in D3hot with wake 
+events enabled. Motherboard signals the ATX power supply to cut power to 
+all the peripheral connectors.
 
-Guennadi
----
-Guennadi Liakhovetski
+It's very similar to powerdown with the RAM refresh turned on.
 
+Nathan
