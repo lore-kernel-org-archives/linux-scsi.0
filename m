@@ -1,81 +1,31 @@
-From: Patrick Mansfield <patmans@us.ibm.com>
-Subject: [patch] Re: 2.5.42 kernel BUG at drivers/base/core.c:251!
-Date: Tue, 15 Oct 2002 11:18:03 -0700
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <20021015111803.A27953@eng2.beaverton.ibm.com>
-References: <200210151724.g9FHOI426577@eng2.beaverton.ibm.com>
+From: Doug Ledford <dledford@redhat.com>
+Subject: Re: [PATCH] SCSI hotplug support
+Date: Tue, 15 Oct 2002 14:22:47 -0400
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <20021015182247.GA4391@redhat.com>
+References: <andersen@codepoet.org> <20021014203749.GA24904@codepoet.org> <200210142107.g9EL7IX04354@localhost.localdomain> <20021014215416.GB25941@codepoet.org> <20021014222515.GD1274@redhat.com> <20021015052521.GA1967@codepoet.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
-In-Reply-To: <200210151724.g9FHOI426577@eng2.beaverton.ibm.com>; from pbadari@us.ibm.com on Tue, Oct 15, 2002 at 10:24:18AM -0700
-To: Badari Pulavarty <pbadari@us.ibm.com>
-Cc: lkml <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20021015052521.GA1967@codepoet.org>
 List-Id: linux-scsi@vger.kernel.org
+To: Erik Andersen <andersen@codepoet.org>
+Cc: James Bottomley <James.Bottomley@steeleye.com>, linux-scsi@vger.kernel.org
 
-On Tue, Oct 15, 2002 at 10:24:18AM -0700, Badari Pulavarty wrote:
-> Is this a known problem on 2.5.42 ? Happens all the time with rmmod.
+On Mon, Oct 14, 2002 at 11:25:22PM -0600, Erik Andersen wrote:
 > 
-> - Badari
+> It is called from within the insmod's context.
 
-I hit a similiar bug for the put_device(&shpnt->host_driverfs_dev) of the
-Scsi_Host, here's a patch for the scsi changes, I can't fully test it
-since my devices seen via insmod aren't showing up properly right now, but
-rmmod works, and the scsi remove-single-device also works without BUG-ing
-or doing other bad things by leaving a dev model reference around:
+So it's called by what module then?  And what happens if we have a user 
+add a hard drive and it gets the module loaded and then attaches the 
+drive, then we attach another drive sometime later, and this time hotplug 
+doesn't do anything because the right module is already loaded?  How does 
+the drive get added then?  Am I missing something?
 
---- linux-2.5.42/drivers/scsi/st.c	Fri Oct 11 21:22:11 2002
-+++ linux-2.5.42-scsi-unreg/drivers/scsi/st.c	Tue Oct 15 10:49:14 2002
-@@ -3909,12 +3909,12 @@
- 						   &dev_attr_type);
- 				device_remove_file(&tpnt->driverfs_dev_r[mode],
- 						   &dev_attr_kdev);
--				put_device(&tpnt->driverfs_dev_r[mode]);
-+				device_unregister(&tpnt->driverfs_dev_r[mode]);
- 				device_remove_file(&tpnt->driverfs_dev_n[mode],
- 						   &dev_attr_type);
- 				device_remove_file(&tpnt->driverfs_dev_n[mode],
- 						   &dev_attr_kdev);
--				put_device(&tpnt->driverfs_dev_n[mode]);
-+				device_unregister(&tpnt->driverfs_dev_n[mode]);
- 			}
- 			if (tpnt->buffer) {
- 				tpnt->buffer->orig_frp_segs = 0;
---- linux-2.5.42/drivers/scsi/sg.c	Fri Oct 11 21:22:07 2002
-+++ linux-2.5.42-scsi-unreg/drivers/scsi/sg.c	Tue Oct 15 10:49:29 2002
-@@ -1611,7 +1611,7 @@
- 		sdp->de = NULL;
- 		device_remove_file(&sdp->sg_driverfs_dev, &dev_attr_type);
- 		device_remove_file(&sdp->sg_driverfs_dev, &dev_attr_kdev);
--		put_device(&sdp->sg_driverfs_dev);
-+		device_unregister(&sdp->sg_driverfs_dev);
- 		if (NULL == sdp->headfp)
- 			vfree((char *) sdp);
- 	}
---- linux-2.5.42/drivers/scsi/scsi.c	Fri Oct 11 21:22:08 2002
-+++ linux-2.5.42-scsi-unreg/drivers/scsi/scsi.c	Tue Oct 15 10:49:51 2002
-@@ -1965,6 +1965,7 @@
- 			if (HBA_ptr->hostt->slave_detach)
- 				(*HBA_ptr->hostt->slave_detach) (scd);
- 			devfs_unregister (scd->de);
-+			device_unregister(&scd->sdev_driverfs_dev);
- 			scsi_release_commandblocks(scd);
- 
- 			/* Now we can remove the device structure */
-@@ -2254,7 +2255,7 @@
- 			if (shpnt->hostt->slave_detach)
- 				(*shpnt->hostt->slave_detach) (SDpnt);
- 			devfs_unregister (SDpnt->de);
--			put_device(&SDpnt->sdev_driverfs_dev);
-+			device_unregister(&SDpnt->sdev_driverfs_dev);
- 		}
- 	}
- 
-@@ -2305,7 +2306,7 @@
- 		/* Remove the /proc/scsi directory entry */
- 		sprintf(name,"%d",shpnt->host_no);
- 		remove_proc_entry(name, tpnt->proc_dir);
--		put_device(&shpnt->host_driverfs_dev);
-+		device_unregister(&shpnt->host_driverfs_dev);
- 		if (tpnt->release)
- 			(*tpnt->release) (shpnt);
- 		else {
+-- 
+  Doug Ledford <dledford@redhat.com>     919-754-3700 x44233
+         Red Hat, Inc. 
+         1801 Varsity Dr.
+         Raleigh, NC 27606
+  
