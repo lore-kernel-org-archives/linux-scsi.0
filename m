@@ -1,25 +1,25 @@
 From: Matthew Wilcox <willy@debian.org>
-Subject: Re: [patch] sym53c8xx_2: warning: "BYTE_ORDER" is not defined
-Date: Sat, 7 Feb 2004 20:41:56 +0000
+Subject: Re: [patch] sym53c8xx_2 uses SYM_MEM_CLUSTER_SHIFT before its #define'd
+Date: Sat, 7 Feb 2004 20:45:32 +0000
 Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <20040207204156.GZ24334@parcelfarce.linux.theplanet.co.uk>
-References: <20040207190051.GN26093@fs.tum.de>
+Message-ID: <20040207204532.GA24334@parcelfarce.linux.theplanet.co.uk>
+References: <20040207203058.GA7388@fs.tum.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20040207190051.GN26093@fs.tum.de>
+In-Reply-To: <20040207203058.GA7388@fs.tum.de>
 To: Adrian Bunk <bunk@fs.tum.de>
-Cc: Gerard Roudier <groudier@free.fr>, matthew@wil.cx, linux-scsi@vger.kernel.org, James.Bottomley@SteelEye.com, linux-kernel@vger.kernel.org
+Cc: matthew@wil.cx, linux-scsi@vger.kernel.org, James.Bottomley@SteelEye.com, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Sat, Feb 07, 2004 at 08:00:51PM +0100, Adrian Bunk wrote:
-> Hi,
+On Sat, Feb 07, 2004 at 09:30:58PM +0100, Adrian Bunk wrote:
+> This seems to be a bug:
+> SYM_MEM_CLUSTER_SIZE is used before it's #define'd.
 > 
-> when compiling 2.6.2-mm1 (this problem doesn't seem to be specific
-> to -mm)) with -Wundef I got many of the following warnings:
+> The patch below fixes this issue.
 
-Thanks for the patch; I've taken it into my tree.
+Thanks, I've taken this patch too.
 
 -- 
 "Next the statesmen will invent cheap lies, putting the blame upon 
