@@ -1,59 +1,55 @@
-From: Andrew Morton <akpm@digeo.com>
-Subject: Re: slave_destroy called in scsi_scan.c:scsi_probe_and_add_lun()
-Date: Tue, 17 Dec 2002 17:22:08 -0800
+From: Willem Riede <wrlk@riede.org>
+Subject: Re: buggy scsi_register behaviour in 2.5.51
+Date: Tue, 17 Dec 2002 20:52:33 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3DFFCDC0.C456BBDB@digeo.com>
-References: <170040000.1040080786@aslan.btc.adaptec.com> <20021217054102.GH13989@redhat.com> <797140000.1040156703@aslan.btc.adaptec.com> <20021217222459.GD28100@redhat.com> <20021217223341.A26529@infradead.org> <3DFFAB33.F174D272@digeo.com> <20021218010050.GF28100@redhat.com>
+Message-ID: <20021218015233.GM7990@linnie.riede.org>
+References: <3DFE998E.1080103@interlog.com>
+Reply-To: wrlk@riede.org
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="UlVJffcvxoiEqYs2"
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from digeo-nav01.digeo.com (digeo-nav01.digeo.com [192.168.1.233])
-	by packet.digeo.com (8.9.3+Sun/8.9.3) with SMTP id RAA21226
-	for <linux-scsi@vger.kernel.org>; Tue, 17 Dec 2002 17:22:09 -0800 (PST)
+Content-Disposition: inline
+In-Reply-To: <3DFE998E.1080103@interlog.com>; from dgilbert@interlog.com on Mon, Dec 16, 2002 at 22:27:10 -0500
 List-Id: linux-scsi@vger.kernel.org
-To: Doug Ledford <dledford@redhat.com>
-Cc: Christoph Hellwig <hch@infradead.org>, "Justin T. Gibbs" <gibbs@scsiguy.com>, linux-scsi@vger.kernel.org
+To: dgilbert@interlog.com
+Cc: linux-scsi@vger.kernel.org
 
-Doug Ledford wrote:
-> 
-> On Tue, Dec 17, 2002 at 02:54:43PM -0800, Andrew Morton wrote:
-> >
-> > wakes up.
-> >
-> > I think (hope) the plan there is to do away with the preallocated
-> > per-queue request lists altogether.  Just allocate the requests
-> > direct from slab at __make_request().
-> 
-> So, what is the overhead of using the slab allocator on each command?  If
-> you prealloc a reasonable queue, allocation from that queue is O(1).
-> Would we suffer no/little/large penalty using slab instead?
-> 
-> /me hasn't gone looking in the slab allocator and has no idea how well it
-> actually works at being a cache...
 
-It's wickedly quick.  There won't be a problem there...
+--UlVJffcvxoiEqYs2
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
 
-> Second issue I have is that overly large request queues have never seemed
-> to help performance in my experience.  At a certain point the overhead of
-> the queue and merging so many requests, etc. becomes greater than the gain
-> of the increased depth and starts to slow things back down.  So, my
-> question to you, is why would we *want* to be able to have huge queues?
-> 
+On 2002.12.16 22:27 Douglas Gilbert wrote:
+> Willem,
+> Can't fix all those problems but I did notice that
+> idescsi_release() was missing a call to scsi_unregister().
+> With this patch the ide-scsi entry remains dangling in
+> sysfs (ide problem??) 
 
-Generally, huge queues don't appear to buy us much.  And in principle
-they shouldn't, because we should be ordering write better at the VFS layer.
+Indeed. There is a call to driver_register in ide_register_driver
+but no call to driver_unregister in ide_unregister_driver.
 
-In practice, I expect there will be certain workloads at which the VFS
-is known to behave very suboptimally in which the huge queues will
-make a large difference.  Mainly the "seek all around a huge file writing
-stuff" workload.
+I put one in, and that takes care of it. PATCH to ide.c attached.
 
-The other "in principle" thing here is that the VM/VFS should _not_
-be dependent on request exhaustion for its own throttling, because
-that will fail if there are a large number of disks, or if the
-machine has a teeny amount of memory.
+Regards, Willem Riede.
 
-So I expect that in practice we would be unlikely to go beyond
-128 requests per direction per queue.  But it should be an
-option, and it should work well.
+
+--UlVJffcvxoiEqYs2
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: attachment; filename="ide.patch"
+
+--- ide.c-l2552	2002-12-09 21:45:52.000000000 -0500
++++ ide.c	2002-12-17 20:43:29.000000000 -0500
+@@ -2314,6 +2314,8 @@
+ {
+ 	ide_drive_t *drive;
+ 
++	driver_unregister(&driver->gen_driver);
++
+ 	spin_lock(&drivers_lock);
+ 	list_del(&driver->drivers);
+ 	spin_unlock(&drivers_lock);
+
+--UlVJffcvxoiEqYs2--
