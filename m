@@ -1,66 +1,60 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: Is scsi_cmnd::underflow still useful?
-Date: Tue, 13 Jul 2004 18:09:00 -0400
+From: Willem Riede <osst@riede.org>
+Subject: [PATCH] Re: no set_current_state() before schedule_timeout() (OSST)
+Date: Tue, 13 Jul 2004 23:07:32 +0000
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <40F45D7C.3030903@torque.net>
-References: <40F2E93B.3040607@torque.net> <1089680114.2074.198.camel@mulgrave>
-Reply-To: dougg@torque.net
+Message-ID: <1089760052l.26949l.0l@serve.riede.org>
+References: <40F41EA6.9000900@us.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII;
+	Format=Flowed
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from tomts20.bellnexxia.net ([209.226.175.74]:5512 "EHLO
-	tomts20-srv.bellnexxia.net") by vger.kernel.org with ESMTP
-	id S266917AbUGMWJE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 13 Jul 2004 18:09:04 -0400
-In-Reply-To: <1089680114.2074.198.camel@mulgrave>
+Received: from rwcrmhc12.comcast.net ([216.148.227.85]:28593 "EHLO
+	rwcrmhc12.comcast.net") by vger.kernel.org with ESMTP
+	id S266924AbUGMWR0 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 13 Jul 2004 18:17:26 -0400
+In-Reply-To: <40F41EA6.9000900@us.ibm.com> (from nacc@us.ibm.com on Tue, Jul
+	13, 2004 at 13:40:54 -0400)
+Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, bunk@fs.tum.de
+To: Nishanth Aravamudan <nacc@us.ibm.com>
+Cc: osst-users@lists.sourceforge.net, linux-scsi@vger.kernel.org, kernel-janitors@lists.osdl.org
 
-James Bottomley wrote:
-> On Mon, 2004-07-12 at 14:40, Douglas Gilbert wrote:
+On 07/13/2004 01:40:54 PM, Nishanth Aravamudan wrote:
+> Hi,
 > 
->>Doesn't look like many LLDs act on scsi_cmnd::underflow.
->>Seems to me that scsi_cmnd::resid is a more general
->>replacement.
+> In continuing to replace, where appropriate, code with msleep() calls, I
+> ran across the following file(s) / function(s), which do not invoke
+> set_current_state() before schedule_timeout(), which causes the latter
+> to return immediately:
 > 
+> drivers/scsi/osst.c::osst_reposition_and_retry()
 > 
-> well, I know I suggested a recent use of it to the USB people , so I
-> don't think it's entirely unused.  resid can't be a replacement because
-> they mean different things:
-> 
-> resid - number of bytes left over after a transaction
-> underflow - driver must return error if less than this amount
-> transferred.
+> If someone could tell me which state (TASK_INTERRUPTIBLE or
+> TASK_UNINTERRUPTIBLE) is desired, I can fix this and perhaps replace the
+> calls with msleep().
 
-James,
-Here is a code snippet from one of the few LLDs that acts on
-scsi_cmnd::underflow: qla2xxx/qla_isr.c . It shows
-the relationship between request_buflen, resid and underflow:
+You're right, there is a set_current_state(TASK_INTERRUPTIBLE) missing.
+I don't know why we would want to change to use msleep() though.
+Below is the patch to add the missing statement.
 
-    if ((unsigned)(cp->request_bufflen - resid) <
-                   cp->underflow) {
-        qla_printk(KERN_INFO, ha,
-                   "scsi(%ld:%d:%d:%d): Mid-layer underflow "
-                   "detected (%x of %x bytes)...returning "
-                   "error status.\n",
-                   ha->host_no, b, t, l, resid,
-                   cp->request_bufflen);
-                   cp->result = DID_ERROR << 16;
-                   break;
-     }
+James Bottomley, can you apply this patch?
 
-Rather than ask the LLD report an error (and leave the upper
-layers wondering if any data was sent or received) wouldn't
-it be better to allow the issuer of the scsi_cmnd object to
-decide whether the response was deficient (based on resid)?
+Regards, Willem Riede.
 
-I am responsible for resid being added (in the lk 2.3 series)
-at the prompting of Joerg Schilling. The scsi_cmnd::underflow
-parameter was not of use to him, even if I exposed it to
-applications via sg_io_hdr. resid is a "steal" from CAM and
-the only complaints I have received about it are concerning
-LLDs that do _not_ implement it.
+Signed-off-by: Willem Riede <osst@riede.org>
 
-Doug Gilbert
+--- linux-2.6.8-rc1/drivers/scsi/osst.c.orig	2004-07-13
+18:59:16.026349000 -0400
++++ linux-2.6.8-rc1/drivers/scsi/osst.c	2004-07-13 19:01:58.040719208
+-0400
+@@ -1555,6 +1555,7 @@
+ 			debugging = 0;
+ 		}
+ #endif
++		set_current_state(TASK_INTERRUPTIBLE);
+ 		schedule_timeout(HZ / 10);
+ 	}
+ 	printk(KERN_ERR "%s:E: Failed to find valid tape media\n", name);
+
+
