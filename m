@@ -1,69 +1,33 @@
-From: Jesse Barnes <jbarnes@engr.sgi.com>
+From: Jeremy Higdon <jeremy@sgi.com>
 Subject: Re: SCSI QLA not working on latest *-mm SN2
-Date: Tue, 21 Sep 2004 15:40:32 -0400
+Date: Tue, 21 Sep 2004 13:39:40 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <200409211540.32554.jbarnes@engr.sgi.com>
-References: <20040917183029.GW642@parcelfarce.linux.theplanet.co.uk> <200409211409.11095.jbarnes@engr.sgi.com> <20040921190625.GB11708@colo.lackof.org>
+Message-ID: <20040921203940.GA146363@sgi.com>
+References: <B179AE41C1147041AA1121F44614F0B0012AD90D@AVEXCH02.qlogic.org> <20040921162535.GB11446@parcelfarce.linux.theplanet.co.uk> <1095784395.2507.195.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from omx2-ext.sgi.com ([192.48.171.19]:10449 "EHLO omx2.sgi.com")
-	by vger.kernel.org with ESMTP id S268019AbUIUTla (ORCPT
+Received: from omx2-ext.sgi.com ([192.48.171.19]:16528 "EHLO omx2.sgi.com")
+	by vger.kernel.org with ESMTP id S267872AbUIUUkJ (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 21 Sep 2004 15:41:30 -0400
-In-Reply-To: <20040921190625.GB11708@colo.lackof.org>
+	Tue, 21 Sep 2004 16:40:09 -0400
 Content-Disposition: inline
+In-Reply-To: <1095784395.2507.195.camel@mulgrave>
 List-Id: linux-scsi@vger.kernel.org
-To: Grant Grundler <grundler@parisc-linux.org>
-Cc: James Bottomley <James.Bottomley@steeleye.com>, Matthew Wilcox <willy@debian.org>, Andrew Vasquez <andrew.vasquez@qlogic.com>, pj@sgi.com, SCSI Mailing List <linux-scsi@vger.kernel.org>, mdr@cthulhu.engr.sgi.com, jeremy@cthulhu.engr.sgi.com, djh@cthulhu.engr.sgi.com, Andrew Morton <akpm@osdl.org>
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Matthew Wilcox <matthew@wil.cx>, Andrew Vasquez <andrew.vasquez@qlogic.com>, Jesse Barnes <jbarnes@engr.sgi.com>, Grant Grundler <grundler@parisc-linux.org>, pj@sgi.com, SCSI Mailing List <linux-scsi@vger.kernel.org>, mdr@cthulhu.engr.sgi.com, jeremy@cthulhu.engr.sgi.com, djh@cthulhu.engr.sgi.com, Andrew Morton <akpm@osdl.org>
 
-On Tuesday, September 21, 2004 3:06 pm, Grant Grundler wrote:
-> The qla example Jeremy gave earlier wasn't clear on where the
-> mmio write reordering was taking place.  Based on my understanding
-> (and I've been wrong before) of ia64 .rel/.acq semantics the reordering
-> didn't happen in the CPU coherency - ie writes are ordered WRT
-> to each other out to the Mckinley bus. That really only leaves
-> the chipset suspect - ie anything between Mckinley bus and PCI bus.
+On Tue, Sep 21, 2004 at 12:33:08PM -0400, James Bottomley wrote:
+> On Tue, 2004-09-21 at 12:25, Matthew Wilcox wrote:
+> >    Configuration writes are not posted. (I/O writes can be posted in the
+> >    Host Bridge, but some restrictions apply.) Read transactions (Memory,
+> >    I/O, or Configuration) are not posted.
+> 
+> Erk, depending on what "some restrictions apply" means, that blows a
+> hole in the idea of using PIO writes to guarantee no posting.
+> 
+> James
 
-Yep, that's where the reordering occurs for us.
+I don't think that P(ort)IO writes are the answer, either.
 
-> Or hurt them.
-> We haven't talked about the flip side of this workaround much.
->
-> Normally, I expect the chipset is responsible for maintaining
-> order of MMIO writes - though that sounds near impossible on
-> a large fabric where the spinlock transactions may take a different
-> path than the IO transactions.
-
-I think it is.  I wouldn't be surprised if your hw guys told you the same 
-thing for your large machines.
-
-> But allowing out of order MMIO 
-> write transactions is a big deal if we want high performance
-> devices that can operate correctly by only consuming MMIO
-> writes and doing DMA for everything else. Adding the MMIO
-> reads to enforcing MMIO write ordering will set us all back
-> a few years in terms of performance.
-
-But *only* prior to releasing a lock.  Writes in program order will arrive in 
-order, it's just that writes from some other CPU may beat them to the device.  
-So you'll only have one read for every so many writes.  And if your chipset 
-supports it, you don't have to do a full read out to the target bus, but just 
-to the local chipset.
-
-> This behavior (bug?) essentially means drivers that only do MMIO
-> writes during normal operation (and MMIO reads during set up) will
-> not operate correctly on Altix (or similar if they exist) boxes.
-
-It's a pretty hard bug to hit, as Jeremy mentioned.  You'll only see it on 
-large boxes.  The performance gain for us comes from not doing a full read 
-from the device, but just making sure our local hub has sent the write to its 
-destination hub, where ordering is guaranteed.  Of course, it's only a gain 
-if one assumes that the necessary full reads are already in place.  If not, 
-then the hardware is already imposing I/O space write penalties anyway, 
-except for all writes.  I'd think that's worse than just flushing the ones 
-you care about, and only when you need to.
-
-Jesse
+jeremy
