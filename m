@@ -1,34 +1,41 @@
-From: Matthias Andree <ma@dt.e-technik.uni-dortmund.de>
-Subject: Re: Megaraid problem.
-Date: Mon, 10 May 2004 16:23:55 +0200
+From: "Lee Xing" <lxing@Crossroads.com>
+Subject: RE: Returned info from mid-level to low-level driver
+Date: Mon, 10 May 2004 10:15:36 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <m34qqotl6s.fsf@merlin.emma.line.org>
-References: <1269894521.20040510145117@degrp.de>
+Message-ID: <519672568F040C41B6FAC21ADF51B18FEFE7@mailnode1.commstor.crossroads.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from krusty.dt.e-technik.Uni-Dortmund.DE ([129.217.163.1]:54505 "EHLO
-	mail.dt.e-technik.uni-dortmund.de") by vger.kernel.org with ESMTP
-	id S264706AbUEJOX6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 10 May 2004 10:23:58 -0400
-In-Reply-To: <1269894521.20040510145117@degrp.de> (support@degrp.de's
- message of "Mon, 10 May 2004 14:51:17 +0200")
+Received: from email.crossroads.com ([65.68.235.6]:39600 "HELO
+	email.crossroads.com") by vger.kernel.org with SMTP id S264737AbUEJPPi convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 10 May 2004 11:15:38 -0400
+content-class: urn:content-classes:message
 List-Id: linux-scsi@vger.kernel.org
-To: support <support@degrp.de>
+To: Christoph Hellwig <hch@infradead.org>
 Cc: linux-scsi@vger.kernel.org
 
-support <support@degrp.de> writes:
+Thanks for the info.  
 
-> the megaraid driver doesn't load when correctly when the local APIC or
-> SMP is enabled in the kernel. Is this problem know or is anyone
-> working on this problem?
+I guess it probably won't be possible either for the low-level driver to specify which sdx/sgx special file to use for a registered disk.  Can some one confirm or correct this please?
 
-Not a problem for me.
+Thanks,
 
-Please add system configuration details, mainboard, BIOS manufacturer
-and version, exact megaraid hardware and so on.
 
--- 
-Matthias Andree
+Lee
 
-Encrypted mail welcome: my GnuPG key ID is 0x052E7D95
+-----Original Message-----
+From: Christoph Hellwig [mailto:hch@infradead.org]
+Sent: Friday, May 07, 2004 3:31 PM
+To: Lee Xing
+Cc: linux-scsi@vger.kernel.org
+Subject: Re: Returned info from mid-level to low-level driver
+
+
+On Fri, May 07, 2004 at 01:57:35PM -0500, Lee Xing wrote:
+> After the low-level driver registers a physical disk into mid-level driver, which (with high-level driver) presents it as both sd and sg special files (say /sdb and /sgc) in user space, can low-level
+driver know which sd/sg special files (for example, sda/sga or sdb/sgb, etc.) the disk is presented in user space?
+
+No.
+
