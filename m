@@ -1,8 +1,8 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH] abstract out more scsi_device acess out of the low-level drivers
-Date: Thu, 28 Nov 2002 16:07:54 +0100
+Subject: [PATCH] clean up sd bdev methods
+Date: Thu, 28 Nov 2002 16:59:06 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20021128160754.A848@lst.de>
+Message-ID: <20021128165906.A1550@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
@@ -11,476 +11,591 @@ List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
 Cc: linux-scsi@vger.kernel.org
 
-Two new helpers: scsi_device_get and scsi_device_put that get/release a
-reference to the underlying HBA driver and increment/decrement
-->access_count.  Cleanup ->attach/->detach routines in the upper layer
-drivers a bit to consolidate the error pathes once we're cleaning them
-up.
-
-->attach and ->detach in upper layer drivers are mandatory now (not
-having them would be rather pointless).
-
-(note that the sd.c changes are not in this patch, it'll be part of
-my next, bigger patch)
+(1) move all bdev methods in one place instead of spreading them all
+    around the file
+(2) consistant naming: everything is sd_<operation> now
+(3) use scsi_device_get/scsi_device_put
+(4) remove bogus checks scsi_disk->device set, since 2.5.4x it always is
+(5) clean up some coding style issues
 
 
---- 1.31/drivers/scsi/osst.c	Sat Nov 23 19:53:29 2002
-+++ edited/drivers/scsi/osst.c	Thu Nov 28 15:01:07 2002
-@@ -4232,14 +4232,14 @@
- #endif
- 		return (-EBUSY);
- 	}
--	if (!try_module_get(STp->device->host->hostt->module)) {
-+
-+	if (!scsi_device_get(STp->device)) {
- 		write_unlock(&os_scsi_tapes_lock);
- #if DEBUG
--                printk(OSST_DEB_MSG "%s:D: Failed try_module_get.\n", name);
-+                printk(OSST_DEB_MSG "%s:D: Failed scsi_device_get.\n", name);
- #endif
- 		return (-ENXIO);
- 	}
--	STp->device->access_count++;
- 	filp->private_data = STp;
- 	STp->in_use = 1;
- 	write_unlock(&os_scsi_tapes_lock);
-@@ -4587,9 +4587,7 @@
- 	normalize_buffer(STp->buffer);
- 	STp->header_ok = 0;
- 	STp->in_use = 0;
--	STp->device->access_count--;
+--- 1.93/drivers/scsi/sd.c	Sun Nov 17 23:31:56 2002
++++ edited/drivers/scsi/sd.c	Thu Nov 28 15:39:22 2002
+@@ -87,9 +87,6 @@
+ static LIST_HEAD(sd_devlist);
+ static spinlock_t sd_devlist_lock = SPIN_LOCK_UNLOCKED;
+ 
+-static int check_scsidisk_media_change(struct gendisk *);
+-static int sd_revalidate(struct gendisk *);
 -
--	module_put(STp->device->host->hostt->module);
-+	scsi_device_put(STp->device);
+ static void sd_init_onedisk(struct scsi_disk * sdkp, struct gendisk *disk);
+ static void sd_rw_intr(struct scsi_cmnd * SCpnt);
  
- 	return retval;
- }
-@@ -4717,9 +4715,8 @@
- 	write_lock(&os_scsi_tapes_lock);
- 	STp->in_use = 0;
- 	write_unlock(&os_scsi_tapes_lock);
--	STp->device->access_count--;
- 
--	module_put(STp->device->host->hostt->module);
-+	scsi_device_put(STp->device);
- 
- 	return result;
- }
-===== drivers/scsi/scsi.c 1.75 vs edited =====
---- 1.75/drivers/scsi/scsi.c	Sat Nov 23 03:58:22 2002
-+++ edited/drivers/scsi/scsi.c	Thu Nov 28 14:09:53 2002
-@@ -1875,24 +1875,16 @@
- int scsi_attach_device(struct scsi_device *sdev)
- {
- 	struct Scsi_Device_Template *sdt;
- 
- 	down_read(&scsi_devicelist_mutex);
--	list_for_each_entry(sdt, &scsi_devicelist, list)
--		if (sdt->attach) {
--			/*
--			 * XXX check result when the upper level attach
--			 * return values are fixed, and on failure goto
--			 * fail.
--			 */
--			if(try_module_get(sdt->module)) {
--				(*sdt->attach)(sdev);
--				module_put(sdt->module);
--			} else {
--				printk(KERN_WARNING "SCSI module %s not ready, skipping attach.\n", sdt->name);
--			}
--		}
-+	list_for_each_entry(sdt, &scsi_devicelist, list) {
-+		if (!try_module_get(sdt->module))
-+			continue;
-+		(*sdt->attach)(sdev);
-+		module_put(sdt->module);
-+	}
- 	up_read(&scsi_devicelist_mutex);
- 	return 0;
+@@ -148,91 +145,6 @@
  }
  
- void scsi_detach_device(struct scsi_device *sdev)
-@@ -1900,18 +1896,30 @@
- 	struct Scsi_Device_Template *sdt;
- 
- 	down_read(&scsi_devicelist_mutex);
--	list_for_each_entry(sdt, &scsi_devicelist, list)
--		if (sdt->detach) {
--			if(try_module_get(sdt->module)) {
--				(*sdt->detach)(sdev);
--				module_put(sdt->module);
--			} else {
--				printk(KERN_WARNING "SCSI module %s not ready, skipping detach.\n", sdt->name);
--			}
--		}
-+	list_for_each_entry(sdt, &scsi_devicelist, list) {
-+		if (!try_module_get(sdt->module))
-+			continue;
-+		(*sdt->detach)(sdev);
-+		module_put(sdt->module);
-+	}
- 	up_read(&scsi_devicelist_mutex);
- }
- 
-+int scsi_device_get(struct scsi_device *sdev)
-+{
-+	if (!try_module_get(sdev->host->hostt->module))
-+		return -ENXIO;
-+
-+	sdev->access_count++;
-+	return 0;
-+}
-+
-+void scsi_device_put(struct scsi_device *sdev)
-+{
-+	sdev->access_count--;
-+	module_put(sdev->host->hostt->module);
-+}
-+
- /*
-  * Function:	scsi_slave_attach()
-  *
-@@ -1935,7 +1943,7 @@
- 			printk(KERN_ERR "scsi: Allocation failure during"
- 			       " attach, some SCSI devices might not be"
- 			       " configured\n");
--			return 1;
-+			return -ENOMEM;
- 		}
- 		if (sdev->host->hostt->slave_configure != NULL) {
- 			if (sdev->host->hostt->slave_configure(sdev) != 0) {
-@@ -1943,7 +1951,7 @@
- 				       " attach, some SCSI device might not be"
- 				       " configured\n");
- 				scsi_release_commandblocks(sdev);
--				return 1;
-+				return -ENOMEM;
- 			}
- 		} else if (sdev->host->cmd_per_lun != 0)
- 			scsi_adjust_queue_depth(sdev, 0,
-===== drivers/scsi/scsi.h 1.48 vs edited =====
---- 1.48/drivers/scsi/scsi.h	Thu Nov 28 01:25:58 2002
-+++ edited/drivers/scsi/scsi.h	Thu Nov 28 14:09:53 2002
-@@ -451,8 +451,10 @@
- extern void scsi_build_commandblocks(Scsi_Device * SDpnt);
- extern void scsi_adjust_queue_depth(Scsi_Device *, int, int);
- extern int scsi_track_queue_full(Scsi_Device *, int);
--extern int scsi_slave_attach(struct scsi_device *sdev);
--extern void scsi_slave_detach(struct scsi_device *sdev);
-+extern int scsi_slave_attach(struct scsi_device *);
-+extern void scsi_slave_detach(struct scsi_device *);
-+extern int scsi_device_get(struct scsi_device *);
-+extern void scsi_device_put(struct scsi_device *);
- extern void scsi_done(Scsi_Cmnd * SCpnt);
- extern void scsi_finish_command(Scsi_Cmnd *);
- extern int scsi_retry_command(Scsi_Cmnd *);
-===== drivers/scsi/scsi_scan.c 1.45 vs edited =====
---- 1.45/drivers/scsi/scsi_scan.c	Thu Nov 28 01:25:58 2002
-+++ edited/drivers/scsi/scsi_scan.c	Thu Nov 28 14:09:53 2002
-@@ -1419,7 +1419,7 @@
- 	return SCSI_SCAN_LUN_PRESENT;
- }
- 
--static int scsi_remove_lun(struct scsi_device *sdev)
-+static void scsi_remove_lun(struct scsi_device *sdev)
- {
- 	devfs_unregister(sdev->de);
- 	device_unregister(&sdev->sdev_driverfs_dev);
-===== drivers/scsi/scsi_syms.c 1.21 vs edited =====
---- 1.21/drivers/scsi/scsi_syms.c	Thu Nov 21 18:55:52 2002
-+++ edited/drivers/scsi/scsi_syms.c	Thu Nov 28 14:09:53 2002
-@@ -81,6 +81,8 @@
- EXPORT_SYMBOL(scsi_deregister_blocked_host);
- EXPORT_SYMBOL(scsi_slave_attach);
- EXPORT_SYMBOL(scsi_slave_detach);
-+EXPORT_SYMBOL(scsi_device_get);
-+EXPORT_SYMBOL(scsi_device_put);
- 
- /*
-  * This symbol is for the highlevel drivers (e.g. sg) only.
---- 1.41/drivers/scsi/sg.c	Thu Nov 21 19:00:56 2002
-+++ edited/drivers/scsi/sg.c	Thu Nov 28 14:09:53 2002
-@@ -259,9 +259,9 @@
- 
- 	/* This driver's module count bumped by fops_get in <linux/fs.h> */
- 	/* Prevent the device driver from vanishing while we sleep */
--	if (!try_module_get(sdp->device->host->hostt->module))
--		return -ENXIO;
--	sdp->device->access_count++;
-+	retval = scsi_device_get(sdp->device);
-+	if (retval)
-+		return retval;
- 
- 	if (!((flags & O_NONBLOCK) ||
- 	      scsi_block_when_processing_errors(sdp->device))) {
-@@ -314,8 +314,7 @@
- 	return 0;
- 
-       error_out:
--	sdp->device->access_count--;
--	module_put(sdp->device->host->hostt->module);
-+	scsi_device_put(sdp->device);
- 	return retval;
- }
- 
-@@ -332,8 +331,7 @@
- 	sg_fasync(-1, filp, 0);	/* remove filp from async notification list */
- 	if (0 == sg_remove_sfp(sdp, sfp)) {	/* Returns 1 when sdp gone */
- 		if (!sdp->detached) {
--			sdp->device->access_count--;
--			module_put(sdp->device->host->hostt->module);
-+			scsi_device_put(sdp->device);
- 		}
- 		sdp->exclude = 0;
- 		wake_up_interruptible(&sdp->o_excl_wait);
-@@ -1296,8 +1294,7 @@
- 		if (NULL == sfp->headrp) {
- 			SCSI_LOG_TIMEOUT(1, printk("sg...bh: already closed, final cleanup\n"));
- 			if (0 == sg_remove_sfp(sdp, sfp)) {	/* device still present */
--				sdp->device->access_count--;
--				module_put(sdp->device->host->hostt->module);
-+				scsi_device_put(sdp->device);
- 			}
- 			sfp = NULL;
- 		}
-@@ -1372,15 +1369,19 @@
- static int
- sg_attach(Scsi_Device * scsidp)
- {
--	struct gendisk *disk = alloc_disk(1);
-+	struct gendisk *disk;
- 	Sg_device *sdp = NULL;
- 	unsigned long iflags;
--	int k;
-+	int k, error;
- 
-+	disk = alloc_disk(1);
- 	if (!disk)
--		return 1;
--	if (scsi_slave_attach(scsidp))
--		return 1;
-+		return -ENOMEM;
-+
-+	error = scsi_slave_attach(scsidp);
-+	if (error)
-+		goto out_put;
-+		
- 	write_lock_irqsave(&sg_dev_arr_lock, iflags);
- 	if (sg_nr_dev >= sg_dev_max) {	/* try to resize */
- 		Sg_device **tmp_da;
-@@ -1392,9 +1393,8 @@
- 		if (NULL == tmp_da) {
- 			printk(KERN_ERR
- 			       "sg_attach: device array cannot be resized\n");
--			put_disk(disk);
--			scsi_slave_detach(scsidp);
--			return 1;
-+			error = -ENOMEM;
-+			goto out_detach;
- 		}
- 		write_lock_irqsave(&sg_dev_arr_lock, iflags);
- 		memset(tmp_da, 0, tmp_dev_max * sizeof (Sg_device *));
-@@ -1418,9 +1418,8 @@
- 		       scsidp->lun, scsidp->type, SG_MAX_DEVS_MASK);
- 		if (NULL != sdp)
- 			vfree((char *) sdp);
--		put_disk(disk);
--		scsi_slave_detach(scsidp);
--		return 1;
-+		error = -ENODEV;
-+		goto out_detach;
- 	}
- 	if (k < sg_dev_max) {
- 		if (NULL == sdp) {
-@@ -1435,9 +1434,8 @@
- 	if (NULL == sdp) {
- 		write_unlock_irqrestore(&sg_dev_arr_lock, iflags);
- 		printk(KERN_ERR "sg_attach: Sg_device cannot be allocated\n");
--		put_disk(disk);
--		scsi_slave_detach(scsidp);
--		return 1;
-+		error = -ENOMEM;
-+		goto out_detach;
- 	}
- 
- 	SCSI_LOG_TIMEOUT(3, printk("sg_attach: dev=%d \n", k));
-@@ -1490,6 +1488,12 @@
- 		       scsidp->lun, scsidp->type);
- 	}
- 	return 0;
-+
-+out_detach:
-+	scsi_slave_detach(scsidp);
-+out_put:
-+	put_disk(disk);
-+	return error;
- }
- 
- static void
-@@ -1521,8 +1525,7 @@
- 						sg_finish_rem_req(srp);
- 				}
- 				if (sfp->closed) {
--					sdp->device->access_count--;
--					module_put(sdp->device->host->hostt->module);
-+					scsi_device_put(sdp->device);
- 					__sg_remove_sfp(sdp, sfp);
- 				} else {
- 					delay = 1;
-@@ -2510,8 +2513,7 @@
- 		/* MOD_INC's to inhibit unloading sg and associated adapter driver */
- 		/* only bump the access_count if we actually succeeded in
- 		 * throwing another counter on the host module */
--		if(try_module_get(sdp->device->host->hostt->module))
--			sdp->device->access_count++;
-+		scsi_device_get(sdp->device);	/* XXX: retval ignored? */	
- 		sfp->closed = 1;	/* flag dirty state on this fd */
- 		SCSI_LOG_TIMEOUT(1, printk("sg_remove_sfp: worrisome, %d writes pending\n",
- 				  dirty));
-===== drivers/scsi/sr.c 1.66 vs edited =====
---- 1.66/drivers/scsi/sr.c	Sun Nov 17 23:22:12 2002
-+++ edited/drivers/scsi/sr.c	Thu Nov 28 14:09:53 2002
-@@ -85,6 +85,8 @@
- static spinlock_t sr_devlist_lock = SPIN_LOCK_UNLOCKED;
- 
- static int sr_open(struct cdrom_device_info *, int);
-+static void sr_release(struct cdrom_device_info *);
-+
- static void get_sectorsize(struct scsi_cd *);
- static void get_capabilities(struct scsi_cd *);
- 
-@@ -122,16 +124,6 @@
- 	spin_unlock(&sr_devlist_lock);
- }
- 
--static void sr_release(struct cdrom_device_info *cdi)
+ /**
+- *	sd_ioctl - process an ioctl
+- *	@inode: only i_rdev member may be used
+- *	@filp: only f_mode and f_flags may be used
+- *	@cmd: ioctl command number
+- *	@arg: this is third argument given to ioctl(2) system call.
+- *	Often contains a pointer.
+- *
+- *	Returns 0 if successful (some ioctls return postive numbers on
+- *	success as well). Returns a negated errno value in case of error.
+- *
+- *	Note: most ioctls are forward onto the block subsystem or further
+- *	down in the scsi subsytem.
+- **/
+-static int sd_ioctl(struct inode * inode, struct file * filp, 
+-		    unsigned int cmd, unsigned long arg)
 -{
--	struct scsi_cd *cd = cdi->handle;
+-	struct block_device *bdev = inode->i_bdev;
+-	struct gendisk *disk = bdev->bd_disk;
+-	struct scsi_disk *sdkp = scsi_disk(disk);
+-	struct scsi_device *sdp = sdkp->device;
+-	sector_t capacity = sdkp->capacity;
+-	struct Scsi_Host *host;
+-	int diskinfo[4];
+-	int error;
+-    
+-	SCSI_LOG_IOCTL(1, printk("sd_ioctl: disk=%s, cmd=0x%x\n",
+-						disk->disk_name, cmd));
+-	if (!sdp)
+-		return -ENODEV;
+-	/*
+-	 * If we are in the middle of error recovery, don't let anyone
+-	 * else try and use this device.  Also, if error recovery fails, it
+-	 * may try and take the device offline, in which case all further
+-	 * access to the device is prohibited.
+-	 */
 -
--	if (cd->device->sector_size > 2048)
--		sr_set_blocklength(cd, 2048);
--	cd->device->access_count--;
--	module_put(cd->device->host->hostt->module);
+-	if (!scsi_block_when_processing_errors(sdp))
+-		return -ENODEV;
+-
+-	error = scsi_cmd_ioctl(bdev, cmd, arg);
+-	if (error != -ENOTTY)
+-		return error;
+-
+-	switch (cmd) {
+-		case HDIO_GETGEO:   /* Return BIOS disk parameters */
+-		{
+-			struct hd_geometry *loc = (struct hd_geometry *)arg;
+-
+-			if (!loc)
+-				return -EINVAL;
+-
+-			host = sdp->host;
+-	
+-			/* default to most commonly used values */
+-	
+-		        diskinfo[0] = 0x40;	/* 1 << 6 */
+-	        	diskinfo[1] = 0x20;	/* 1 << 5 */
+-	        	diskinfo[2] = sdkp->capacity >> 11;
+-	
+-			/* override with calculated, extended default, 
+-			   or driver values */
+-	
+-			if (host->hostt->bios_param) {
+-				host->hostt->bios_param(sdp, bdev,
+-							capacity, diskinfo);
+-			} else
+-				scsicam_bios_param(bdev, capacity, diskinfo);
+-
+-			if (put_user(diskinfo[0], &loc->heads))
+-				return -EFAULT;
+-			if (put_user(diskinfo[1], &loc->sectors))
+-				return -EFAULT;
+-			if (put_user(diskinfo[2], &loc->cylinders))
+-				return -EFAULT;
+-			if (put_user((unsigned)get_start_sect(bdev),
+-				     (unsigned long *)&loc->start))
+-				return -EFAULT;
+-			return 0;
+-		}
+-		default:
+-			return scsi_ioctl(sdp, cmd, (void *)arg);
+-	}
 -}
 -
- static struct cdrom_device_ops sr_dops = {
- 	.open			= sr_open,
- 	.release	 	= sr_release,
-@@ -458,43 +450,59 @@
- static int sr_open(struct cdrom_device_info *cdi, int purpose)
+-/**
+  *	sd_init_command - build a scsi (read or write) command from
+  *	information in the request structure.
+  *	@SCpnt: pointer to mid-level's per scsi command structure that
+@@ -434,68 +346,61 @@
  {
- 	struct scsi_cd *cd = cdi->handle;
-+	struct scsi_device *sdev = cd->device;
+ 	struct gendisk *disk = inode->i_bdev->bd_disk;
+ 	struct scsi_disk *sdkp = scsi_disk(disk);
+-	struct scsi_device * sdp = sdkp->device;
+-	int retval = -ENXIO;
++	struct scsi_device *sdev = sdkp->device;
 +	int retval;
  
--	if (!cd->device)
+ 	SCSI_LOG_HLQUEUE(3, printk("sd_open: disk=%s\n", disk->disk_name));
+ 
+-	if (!sdkp)
 -		return -ENXIO;	/* No such device */
 +	retval = scsi_device_get(sdev);
 +	if (retval)
 +		return retval;
-+	
+ 
  	/*
  	 * If the device is in error recovery, wait until it is done.
  	 * If the device is offline, then disallow any access to it.
  	 */
--	if (!scsi_block_when_processing_errors(cd->device)) {
+-	if (!scsi_block_when_processing_errors(sdp))
 -		return -ENXIO;
--	}
--	if(!try_module_get(cd->device->host->hostt->module))
--		return -ENXIO;
--	cd->device->access_count++;
+-	/*
+-	 * The following code can sleep.
+-	 * Module unloading must be prevented
+-	 */
+-	if(!try_module_get(sdp->host->hostt->module))
+-		return -ENOMEM;
+-	sdp->access_count++;
 +	retval = -ENXIO;
 +	if (!scsi_block_when_processing_errors(sdev))
 +		goto error_out;
  
--	/* If this device did not have media in the drive at boot time, then
-+	/*
-+	 * If this device did not have media in the drive at boot time, then
- 	 * we would have been unable to get the sector size.  Check to see if
- 	 * this is the case, and try again.
+-	if (sdp->removable) {
++	if (sdev->removable) {
+ 		check_disk_change(inode->i_bdev);
+ 
+ 		/*
+ 		 * If the drive is empty, just let the open fail.
+ 		 */
+-		if ((!sdkp->media_present) && !(filp->f_flags & O_NDELAY)) {
+-			retval = -ENOMEDIUM;
++		retval = -ENOMEDIUM;
++		if ((!sdkp->media_present) && !(filp->f_flags & O_NDELAY))
+ 			goto error_out;
+-		}
+ 
+ 		/*
+ 		 * Similarly, if the device has the write protect tab set,
+ 		 * have the open fail if the user expects to be able to write
+ 		 * to the thing.
+ 		 */
+-		if ((sdkp->write_prot) && (filp->f_mode & FMODE_WRITE)) {
+-			retval = -EROFS;
++		retval = -EROFS;
++		if ((sdkp->write_prot) && (filp->f_mode & FMODE_WRITE))
+ 			goto error_out;
+-		}
+ 	}
++
+ 	/*
+-	 * It is possible that the disk changing stuff resulted in the device
+-	 * being taken offline.  If this is the case, report this to the user,
+-	 * and don't pretend that the open actually succeeded.
++	 * It is possible that the disk changing stuff resulted in
++	 * the device being taken offline.  If this is the case,
++	 * report this to the user, and don't pretend that the
++	 * open actually succeeded.
  	 */
--
- 	if (cd->needs_sector_size)
- 		get_sectorsize(cd);
--
+-	if (!sdp->online) {
++	retval = -ENXIO;
++	if (!sdev->online)
+ 		goto error_out;
+-	}
+ 
+-	if (sdp->removable)
+-		if (sdp->access_count==1)
+-			if (scsi_block_when_processing_errors(sdp))
+-				scsi_set_medium_removal(sdp, SCSI_REMOVAL_PREVENT);
++	if (sdev->removable && sdev->access_count == 1)
++		if (scsi_block_when_processing_errors(sdev))
++			scsi_set_medium_removal(sdev, SCSI_REMOVAL_PREVENT);
+ 
  	return 0;
-+
-+error_out:
+ 
+ error_out:
+-	sdp->access_count--;
+-	module_put(sdp->host->hostt->module);
 +	scsi_device_put(sdev);
-+	return retval;	
-+}
-+
-+static void sr_release(struct cdrom_device_info *cdi)
-+{
-+	struct scsi_cd *cd = cdi->handle;
-+
-+	if (cd->device->sector_size > 2048)
-+		sr_set_blocklength(cd, 2048);
-+
-+	scsi_device_put(cd->device);
+ 	return retval;	
  }
  
- static int sr_attach(struct scsi_device *sdev)
+@@ -513,36 +418,189 @@
+ static int sd_release(struct inode *inode, struct file *filp)
  {
- 	struct gendisk *disk;
- 	struct scsi_cd *cd;
--	int minor;
-+	int minor, error;
+ 	struct gendisk *disk = inode->i_bdev->bd_disk;
+-	struct scsi_disk *sdkp = scsi_disk(disk);
+-	struct scsi_device *sdp = sdkp->device;
++	struct scsi_device *sdev = scsi_disk(disk)->device;
  
- 	if (sdev->type != TYPE_ROM && sdev->type != TYPE_WORM)
- 		return 1;
+ 	SCSI_LOG_HLQUEUE(3, printk("sd_release: disk=%s\n", disk->disk_name));
+-	if (!sdp)
+-		return -ENODEV; /* open uses ENXIO ?? */
  
--	if (scsi_slave_attach(sdev))
--		return 1;
-+	error = scsi_slave_attach(sdev);
-+	if (error)
+-	/* ... and what if there are packets in flight and this close()
+-	 * is followed by a "rmmod sd_mod" */
++	if (sdev->removable && sdev->access_count == 1)
++		if (scsi_block_when_processing_errors(sdev))
++			scsi_set_medium_removal(sdev, SCSI_REMOVAL_ALLOW);
++
++	/*
++	 * XXX and what if there are packets in flight and this close()
++	 * XXX is followed by a "rmmod sd_mod"?
++	 */
++	scsi_device_put(sdev);
++	return 0;
++}
+ 
+-	sdp->access_count--;
++static int sd_hdio_getgeo(struct block_device *bdev, struct hd_geometry *loc)
++{
++	struct scsi_disk *sdkp = scsi_disk(bdev->bd_disk);
++	struct scsi_device *sdp = sdkp->device;
++	struct Scsi_Host *host = sdp->host;
++	int diskinfo[4];
+ 
+-	if (sdp->removable) {
+-		if (!sdp->access_count)
+-			if (scsi_block_when_processing_errors(sdp))
+-				scsi_set_medium_removal(sdp, SCSI_REMOVAL_ALLOW);
+-	}
+-	module_put(sdp->host->hostt->module);
++	/* default to most commonly used values */
++        diskinfo[0] = 0x40;	/* 1 << 6 */
++       	diskinfo[1] = 0x20;	/* 1 << 5 */
++       	diskinfo[2] = sdkp->capacity >> 11;
++	
++	/* override with calculated, extended default, or driver values */
++	if (host->hostt->bios_param)
++		host->hostt->bios_param(sdp, bdev, sdkp->capacity, diskinfo);
++	else
++		scsicam_bios_param(bdev, sdkp->capacity, diskinfo);
+ 
++	if (put_user(diskinfo[0], &loc->heads))
++		return -EFAULT;
++	if (put_user(diskinfo[1], &loc->sectors))
++		return -EFAULT;
++	if (put_user(diskinfo[2], &loc->cylinders))
++		return -EFAULT;
++	if (put_user((unsigned)get_start_sect(bdev),
++	             (unsigned long *)&loc->start))
++		return -EFAULT;
+ 	return 0;
+ }
+ 
+-static struct block_device_operations sd_fops =
++/**
++ *	sd_ioctl - process an ioctl
++ *	@inode: only i_rdev/i_bdev members may be used
++ *	@filp: only f_mode and f_flags may be used
++ *	@cmd: ioctl command number
++ *	@arg: this is third argument given to ioctl(2) system call.
++ *	Often contains a pointer.
++ *
++ *	Returns 0 if successful (some ioctls return postive numbers on
++ *	success as well). Returns a negated errno value in case of error.
++ *
++ *	Note: most ioctls are forward onto the block subsystem or further
++ *	down in the scsi subsytem.
++ **/
++static int sd_ioctl(struct inode * inode, struct file * filp, 
++		    unsigned int cmd, unsigned long arg)
++{
++	struct block_device *bdev = inode->i_bdev;
++	struct gendisk *disk = bdev->bd_disk;
++	struct scsi_device *sdp = scsi_disk(disk)->device;
++	int error;
++    
++	SCSI_LOG_IOCTL(1, printk("sd_ioctl: disk=%s, cmd=0x%x\n",
++						disk->disk_name, cmd));
++
++	/*
++	 * If we are in the middle of error recovery, don't let anyone
++	 * else try and use this device.  Also, if error recovery fails, it
++	 * may try and take the device offline, in which case all further
++	 * access to the device is prohibited.
++	 */
++	if (!scsi_block_when_processing_errors(sdp))
++		return -ENODEV;
++
++	if (cmd == HDIO_GETGEO) {
++		if (!arg)
++			return -EINVAL;
++		return sd_hdio_getgeo(bdev, (struct hd_geometry *)arg);
++	}
++
++	error = scsi_cmd_ioctl(bdev, cmd, arg);
++	if (error != -ENOTTY)
 +		return error;
++	return scsi_ioctl(sdp, cmd, (void *)arg);
++}
++
++static void set_media_not_present(struct scsi_disk *sdkp)
+ {
+-	.owner		= THIS_MODULE,
+-	.open		= sd_open,
+-	.release	= sd_release,
+-	.ioctl		= sd_ioctl,
+-	.media_changed	= check_scsidisk_media_change,
+-	.revalidate_disk= sd_revalidate
++	sdkp->media_present = 0;
++	sdkp->capacity = 0;
++	sdkp->device->changed = 1;
++}
++
++/**
++ *	sd_media_changed - check if our medium changed
++ *	@disk: kernel device descriptor 
++ *
++ *	Returns 0 if not applicable or no change; 1 if change
++ *
++ *	Note: this function is invoked from the block subsystem.
++ **/
++static int sd_media_changed(struct gendisk *disk)
++{
++	struct scsi_disk *sdkp = scsi_disk(disk);
++	struct scsi_device *sdp = sdkp->device;
++	int retval;
++
++	SCSI_LOG_HLQUEUE(3, printk("sd_media_changed: disk=%s\n",
++						disk->disk_name));
++
++	if (!sdp->removable)
++		return 0;
++
++	/*
++	 * If the device is offline, don't send any commands - just pretend as
++	 * if the command failed.  If the device ever comes back online, we
++	 * can deal with it then.  It is only because of unrecoverable errors
++	 * that we would ever take a device offline in the first place.
++	 */
++	if (!sdp->online)
++		goto not_present;
++
++	/*
++	 * Using TEST_UNIT_READY enables differentiation between drive with
++	 * no cartridge loaded - NOT READY, drive with changed cartridge -
++	 * UNIT ATTENTION, or with same cartridge - GOOD STATUS.
++	 *
++	 * Drives that auto spin down. eg iomega jaz 1G, will be started
++	 * by sd_spinup_disk() from sd_init_onedisk(), which happens whenever
++	 * sd_revalidate() is called.
++	 */
++	retval = -ENODEV;
++	if (scsi_block_when_processing_errors(sdp))
++		retval = scsi_ioctl(sdp, SCSI_IOCTL_TEST_UNIT_READY, NULL);
++
++	/*
++	 * Unable to test, unit probably not ready.   This usually
++	 * means there is no disc in the drive.  Mark as changed,
++	 * and we will figure it out later once the drive is
++	 * available again.
++	 */
++	if (retval)
++		 goto not_present;
++
++	/*
++	 * For removable scsi disk we have to recognise the presence
++	 * of a disk in the drive. This is kept in the struct scsi_disk
++	 * struct and tested at open !  Daniel Roche (dan@lectra.fr)
++	 */
++	sdkp->media_present = 1;
++
++	retval = sdp->changed;
++	sdp->changed = 0;
++
++	return retval;
++
++not_present:
++	set_media_not_present(sdkp);
++	return 1;
++}
++
++static int sd_revalidate_disk(struct gendisk *disk)
++{
++	struct scsi_disk *sdkp = scsi_disk(disk);
++
++	sd_init_onedisk(sdkp, disk);
++	set_capacity(disk, sdkp->capacity);
++	return 0;
++}
++
++static struct block_device_operations sd_fops = {
++	.owner			= THIS_MODULE,
++	.open			= sd_open,
++	.release		= sd_release,
++	.ioctl			= sd_ioctl,
++	.media_changed		= sd_media_changed,
++	.revalidate_disk	= sd_revalidate_disk,
+ };
+ 
+ /**
+@@ -647,99 +705,20 @@
+ 	scsi_io_completion(SCpnt, good_sectors, block_sectors);
+ }
+ 
+-static void
+-sd_set_media_not_present(struct scsi_disk *sdkp) {
+-	sdkp->media_present = 0;
+-	sdkp->capacity = 0;
+-	sdkp->device->changed = 1;
+-}
+-
+-/**
+- *	check_scsidisk_media_change - self descriptive
+- *	@full_dev: kernel device descriptor (kdev_t)
+- *
+- *	Returns 0 if not applicable or no change; 1 if change
+- *
+- *	Note: this function is invoked from the block subsystem.
+- **/
+-static int check_scsidisk_media_change(struct gendisk *disk)
++static int media_not_present(struct scsi_disk *sdkp, struct scsi_request *srp)
+ {
+-	struct scsi_disk *sdkp = scsi_disk(disk);
+-	struct scsi_device *sdp = sdkp->device;
+-	int retval;
+-	int flag = 0;	/* <<<< what is this for?? */
+-
+-	SCSI_LOG_HLQUEUE(3, printk("check_scsidisk_media_change: "
+-			    "disk=%s\n", disk->disk_name));
+-	if (!sdp) {
+-		printk(KERN_ERR "check_scsidisk_media_change: disk=%s, "
+-		       "invalid device\n", disk->disk_name);
++	if (!srp->sr_result)
+ 		return 0;
+-	}
+-	if (!sdp->removable)
++	if (!(driver_byte(srp->sr_result) & DRIVER_SENSE))
++		return 0;
++	if (srp->sr_sense_buffer[2] != NOT_READY &&
++	    srp->sr_sense_buffer[2] != UNIT_ATTENTION)
++	    	return 0;
++	if (srp->sr_sense_buffer[12] != 0x3A) /* medium not present */
+ 		return 0;
+ 
+-	/*
+-	 * If the device is offline, don't send any commands - just pretend as
+-	 * if the command failed.  If the device ever comes back online, we
+-	 * can deal with it then.  It is only because of unrecoverable errors
+-	 * that we would ever take a device offline in the first place.
+-	 */
+-	if (sdp->online == FALSE) {
+-		sd_set_media_not_present(sdkp);
+-		return 1;	/* This will force a flush, if called from
+-				 * check_disk_change */
+-	}
+-
+-	/* Using TEST_UNIT_READY enables differentiation between drive with
+-	 * no cartridge loaded - NOT READY, drive with changed cartridge -
+-	 * UNIT ATTENTION, or with same cartridge - GOOD STATUS.
+-	 *
+-	 * Drives that auto spin down. eg iomega jaz 1G, will be started
+-	 * by sd_spinup_disk() from sd_init_onedisk(), which happens whenever
+-	 * sd_revalidate() is called.
+-	 */
+-	retval = -ENODEV;
+-	if (scsi_block_when_processing_errors(sdp))
+-		retval = scsi_ioctl(sdp, SCSI_IOCTL_TEST_UNIT_READY, NULL);
+-
+-	if (retval) {		/* Unable to test, unit probably not ready.
+-				 * This usually means there is no disc in the
+-				 * drive.  Mark as changed, and we will figure
+-				 * it out later once the drive is available
+-				 * again.  */
+-
+-		sd_set_media_not_present(sdkp);
+-		return 1;	/* This will force a flush, if called from
+-				 * check_disk_change */
+-	}
+-	/*
+-	 * For removable scsi disk we have to recognise the presence
+-	 * of a disk in the drive. This is kept in the struct scsi_disk
+-	 * struct and tested at open !  Daniel Roche ( dan@lectra.fr )
+-	 */
+-
+-	sdkp->media_present = 1;
+-
+-	retval = sdp->changed;
+-	if (!flag)
+-		sdp->changed = 0;
+-	return retval;
+-}
+-
+-static int
+-sd_media_not_present(struct scsi_disk *sdkp, struct scsi_request *SRpnt) {
+-	int the_result = SRpnt->sr_result;
+-
+-	if (the_result != 0
+-	    && (driver_byte(the_result) & DRIVER_SENSE) != 0
+-	    && (SRpnt->sr_sense_buffer[2] == NOT_READY ||
+-		SRpnt->sr_sense_buffer[2] == UNIT_ATTENTION)
+-	    && SRpnt->sr_sense_buffer[12] == 0x3A /* medium not present */) {
+-		sd_set_media_not_present(sdkp);
+-		return 1;
+-	}
+-	return 0;
++	set_media_not_present(sdkp);
++	return 1;
+ }
+ 
+ /*
+@@ -783,7 +762,7 @@
+ 		 * any media in it, don't bother with any of the rest of
+ 		 * this crap.
+ 		 */
+-		if (sd_media_not_present(sdkp, SRpnt))
++		if (media_not_present(sdkp, SRpnt))
+ 			return;
+ 
+ 		/* Look for devices that return NOT_READY.
+@@ -926,7 +905,7 @@
+ 		scsi_wait_req(SRpnt, (void *) cmd, (void *) buffer,
+ 			      8, SD_TIMEOUT, SD_MAX_RETRIES);
+ 
+-		if (sd_media_not_present(sdkp, SRpnt))
++		if (media_not_present(sdkp, SRpnt))
+ 			return;
+ 
+ 		the_result = SRpnt->sr_result;
+@@ -1176,18 +1155,20 @@
+ static int sd_attach(struct scsi_device * sdp)
+ {
+ 	struct scsi_disk *sdkp = NULL;	/* shut up lame gcc warning */
+-	int dsk_nr;
+ 	struct gendisk *gd;
++	int dsk_nr, error;
+ 
+ 	if ((sdp->type != TYPE_DISK) && (sdp->type != TYPE_MOD))
+-		return 0;
++		return 1;
+ 
+ 	SCSI_LOG_HLQUEUE(3, printk("sd_attach: scsi device: <%d,%d,%d,%d>\n", 
+ 			 sdp->host->host_no, sdp->channel, sdp->id, sdp->lun));
+ 
+-	if (scsi_slave_attach(sdp))
++	error = scsi_slave_attach(sdp);
++	if (error)
+ 		goto out;
  
 +	error = -ENOMEM;
- 	cd = kmalloc(sizeof(*cd), GFP_KERNEL);
- 	if (!cd)
- 		goto fail;
-@@ -564,7 +572,7 @@
- 	kfree(cd);
- fail:
- 	scsi_slave_detach(sdev);
+ 	sdkp = kmalloc(sizeof(*sdkp), GFP_KERNEL);
+ 	if (!sdkp)
+ 		goto out_detach;
+@@ -1244,19 +1225,7 @@
+ out_detach:
+ 	scsi_slave_detach(sdp);
+ out:
 -	return 1;
+-}
+-
+-static int sd_revalidate(struct gendisk *disk)
+-{
+-	struct scsi_disk *sdkp = scsi_disk(disk);
+-
+-	if (!sdkp->device)
+-		return -ENODEV;
+-
+-	sd_init_onedisk(sdkp, disk);
+-	set_capacity(disk, sdkp->capacity);
+-	return 0;
 +	return error;
  }
  
- 
-===== drivers/scsi/st.c 1.45 vs edited =====
---- 1.45/drivers/scsi/st.c	Sat Nov 23 00:25:00 2002
-+++ edited/drivers/scsi/st.c	Thu Nov 28 15:36:39 2002
-@@ -991,9 +991,9 @@
- 		DEB( printk(ST_DEB_MSG "%s: Device already in use.\n", name); )
- 		return (-EBUSY);
- 	}
--	if(!try_module_get(STp->device->host->hostt->module))
-+
-+	if(!scsi_device_get(STp->device))
- 		return (-ENXIO);
--	STp->device->access_count++;
- 	STp->in_use = 1;
- 	write_unlock(&st_dev_arr_lock);
- 	STp->rew_at_close = STp->autorew_dev = (minor(inode->i_rdev) & 0x80) == 0;
-@@ -1038,8 +1038,7 @@
-  err_out:
- 	normalize_buffer(STp->buffer);
- 	STp->in_use = 0;
--	STp->device->access_count--;
--	module_put(STp->device->host->hostt->module);
-+	scsi_device_put(STp->device);
- 	return retval;
- 
- }
-@@ -1172,8 +1171,7 @@
- 	write_lock(&st_dev_arr_lock);
- 	STp->in_use = 0;
- 	write_unlock(&st_dev_arr_lock);
--	STp->device->access_count--;
--	module_put(STp->device->host->hostt->module);
-+	scsi_device_put(STp->device);
- 
- 	return result;
- }
+ /**
