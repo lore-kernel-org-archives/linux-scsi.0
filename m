@@ -1,47 +1,44 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH] some tmscsim consolidation
-Date: Sun, 20 Jun 2004 18:21:52 +0200
+From: James Bottomley <James.Bottomley@steeleye.com>
+Subject: Re: Proposal for new generic device API: dma_get_required_mask()
+Date: 20 Jun 2004 11:56:26 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040620162152.GA17379@lst.de>
-References: <20040606203314.GA4410@lst.de> <Pine.LNX.4.44.0406072221140.4028-100000@poirot.grange>
+Message-ID: <1087750590.11000.87.camel@mulgrave>
+References: <1087481331.2210.27.camel@mulgrave>
+	<m33c4tsnex.fsf@defiant.pm.waw.pl> <1087523134.2210.97.camel@mulgrave>
+	<m3fz8s79dz.fsf@defiant.pm.waw.pl> <1087657251.2162.49.camel@mulgrave>
+	<m34qp7glsp.fsf@defiant.pm.waw.pl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([212.34.189.10]:16830 "EHLO mail.lst.de")
-	by vger.kernel.org with ESMTP id S264367AbUFTQVy (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 20 Jun 2004 12:21:54 -0400
-Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.44.0406072221140.4028-100000@poirot.grange>
+Received: from stat1.steeleye.com ([65.114.3.130]:19906 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S264705AbUFTQ4e (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 20 Jun 2004 12:56:34 -0400
+In-Reply-To: <m34qp7glsp.fsf@defiant.pm.waw.pl>
 List-Id: linux-scsi@vger.kernel.org
-To: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
-Cc: linux-scsi@vger.kernel.org
+To: Krzysztof Halasa <khc@pm.waw.pl>
+Cc: Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Mon, Jun 07, 2004 at 10:37:24PM +0200, Guennadi Liakhovetski wrote:
-> On Sun, 6 Jun 2004, Christoph Hellwig wrote:
+On Sat, 2004-06-19 at 18:39, Krzysztof Halasa wrote:
+> The problem is that (depending on platform) the pci_map_* and dma_map_*
+> functions ignore both masks. An example of such platform is i386 :-)
 > 
-> > On Sun, Jun 06, 2004 at 10:22:41PM +0200, Guennadi Liakhovetski wrote:
-> > > On Sun, 6 Jun 2004, Christoph Hellwig wrote:
-> > >
-> > > > I've looked through my old tmscsim patch queue and found this one:
-> > > >
-> > > >  - merge dc390_initDCB into dc390_slave_alloc
-> > > >  - merge DC390_release and dc390_shutdown into dc390_remove_one,
-> > > >    use del_timer_sync to make sure the timer is really deleted on
-> > > >    removal, adjust locking accordingly
-> > > >  - some tiny related cleanups
-> > >
-> > > Thanks for the patch, Christoph. As you might have seen, I've already
-> > > submitted a patch, which merges _some_ of the functions above, following
-> >
-> > Ah sorry.  It's against James' scsi-misc-2.6 tree from a day or two ago.
-> > I'll keep my eyes open and when I see your patch going in somewhere I'll
-> > resend what's left if anything.
-> 
-> Thanks again! That would, certainly, be a lot easier for me. But don't
-> worry - there'll be enough left for you:-) I think, the only thing I've
-> done from the above, is merging dc390_initDCB into dc390_slave_alloc and
-> DC390_release into dc390_remove_one, following your suggestion of 23 May.
+> It seems the masks are used on i386 for only one thing - consistent
+> dma mask is used for consistent allocations only, and normal dma mask
+> is not used at all.
 
-Your patch doesn't seem to be merged yet.  Maybe you need to resend it?
+Actually, I think you misunderstand the way the API works.  The only
+time the dma_map_ functions pay attention to the mask is in an IOMMU
+transaction.  For no-IOMMU systems, its far more efficient for bouncing
+to occur in the upper layers (as it does for block and net).
+
+> The normal mask is used mainly on 64-bit platforms and the meaningful
+> values are 2^32-1 and 2^64-1. It's used by PCI-X device drivers to
+> enable DAC transfers. This is why it isn't used on 32-bit platforms.
+
+This statement is incorrect, Russell has already given you a counter
+example.
+
+James
 
