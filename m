@@ -1,66 +1,94 @@
 From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: What is SCSI command 0xa0 ?
-Date: Wed, 16 Feb 2005 11:42:18 -0500 (EST)
-Message-ID: <Pine.LNX.4.44L0.0502161133350.6418-100000@ida.rowland.org>
-References: <20050214230645.22eb3b3c@hebus>
+Subject: [PATCH as468] Retry supposedly "unrecoverable" hardware errors
+Date: Wed, 16 Feb 2005 11:53:48 -0500 (EST)
+Message-ID: <Pine.LNX.4.44L0.0502161144170.6418-100000@ida.rowland.org>
+References: <20050216143714.GA11363@kassiopeia.juls.savba.sk>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
-Received: from ida.rowland.org ([192.131.102.52]:10500 "HELO ida.rowland.org")
-	by vger.kernel.org with SMTP id S262072AbVBPQmW (ORCPT
+Received: from ida.rowland.org ([192.131.102.52]:11780 "HELO ida.rowland.org")
+	by vger.kernel.org with SMTP id S262076AbVBPQxt (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 16 Feb 2005 11:42:22 -0500
-In-Reply-To: <20050214230645.22eb3b3c@hebus>
+	Wed, 16 Feb 2005 11:53:49 -0500
+In-Reply-To: <20050216143714.GA11363@kassiopeia.juls.savba.sk>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Samuel Colin <Samuel.Colin3@wanadoo.fr>
-Cc: USB development list <linux-usb-devel@lists.sourceforge.net>, SCSI development list <linux-scsi@vger.kernel.org>
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Martin Peschke <mpeschke@de.ibm.com>, Radovan Garabik <garabik@kassiopeia.juls.savba.sk>, SCSI development list <linux-scsi@vger.kernel.org>
 
-On Mon, 14 Feb 2005, Samuel Colin wrote:
+James:
 
-> OK, I just made the following tests :
-> - Plugged the disk and booted the openbrick
-> - Did the echo above
-> - Modprobed ehci-hcd and usb-storage
-> - Mounted the disk
-> - Made the copy of an iso image from /home (who is nfs mounted) to
-> /mnt/lacie1...
-> 
-> Absolutely no error, no odd display on the command line. Thus I guess we can
-> say the problem is solved so far.
+This is an updated and unmangled version of the patch sent in by Martin 
+Peschke.  Apparently some drives report Hardware Error sense for 
+problems which do improve after retrying, so the patch retries these 
+supposedly "unrecoverable" errors for such devices.
 
-Good.  The patch below ought to accomplish the same thing as that "echo" 
-command.  You can try patching your kernel and make sure that it really 
-works.  If it does, I'll submit the patch for official inclusion in the 
-kernel.
-
-> What puzzles me is that a 2.6.8 kernel didn't exhibit this behaviour for the
-> same disk on another machine (and thus another usb2 chipset, but as that
-> wasn't the cause of the problem...)
-
-I don't know why.  Do you want to turn on usb-storage verbose debugging in
-the 2.6.8 kernel, and run it on that other machine?
-
-> In conclusion, I think that the patches from usb-devel I had applied solved
-> usb2 problems that had really happened (but now are solved), but some code
-> change introduced scsi errors (hence the working 2.6.8 kernel I tell about
-> above)... I don't really know, after all you're the experts.
-
-It's hard to say, since there are so many things being changed all the
-time.  But if the REPORT_LUNS command worked under 2.6.8 and failed under
-2.6.11, it would be worthwhile to know why.
+In addition to the IBM ESS drive it adds a blacklist entry for the drive
+inside the MPIO HS200 Gigabox.
 
 Alan Stern
 
 
+
+Signed-off-by: Martin Peschke <mpeschke@de.ibm.com>
+Signed-off-by: Alan Stern <stern@rowland.harvard.edu>
+
+===== include/scsi/scsi_devinfo.h 1.7 vs edited =====
+--- 1.7/include/scsi/scsi_devinfo.h	2004-10-05 11:25:13 -04:00
++++ edited/include/scsi/scsi_devinfo.h	2005-02-11 13:21:51 -05:00
+@@ -27,4 +27,5 @@
+ #define BLIST_NOT_LOCKABLE	0x80000	/* don't use PREVENT-ALLOW commands */
+ #define BLIST_NO_ULD_ATTACH	0x100000 /* device is actually for RAID config */
+ #define BLIST_SELECT_NO_ATN	0x200000 /* select without ATN */
++#define BLIST_RETRY_HWERROR	0x400000 /* retry HARDWARE_ERROR */
+ #endif
 ===== drivers/scsi/scsi_devinfo.c 1.14 vs edited =====
 --- 1.14/drivers/scsi/scsi_devinfo.c	2004-12-10 11:54:56 -05:00
-+++ edited/drivers/scsi/scsi_devinfo.c	2005-02-16 11:30:56 -05:00
-@@ -201,6 +201,7 @@
- 	{"WangDAT", "Model 2600", "01.7", BLIST_SELECT_NO_ATN},
- 	{"WangDAT", "Model 3200", "02.2", BLIST_SELECT_NO_ATN},
- 	{"WangDAT", "Model 1300", "02.4", BLIST_SELECT_NO_ATN},
-+	{"WDC WD25", "00JB-00FUA0", NULL, BLIST_NOREPORTLUN},
- 	{"XYRATEX", "RS", "*", BLIST_SPARSELUN | BLIST_LARGELUN},
- 	{"Zzyzx", "RocketStor 500S", NULL, BLIST_SPARSELUN},
- 	{"Zzyzx", "RocketStor 2000", NULL, BLIST_SPARSELUN},
++++ edited/drivers/scsi/scsi_devinfo.c	2005-02-11 13:25:41 -05:00
+@@ -159,6 +159,7 @@
+ 	{"HP", "C3323-300", "4269", BLIST_NOTQ},
+ 	{"IBM", "AuSaV1S2", NULL, BLIST_FORCELUN},
+ 	{"IBM", "ProFibre 4000R", "*", BLIST_SPARSELUN | BLIST_LARGELUN},
++	{"IBM", "2105", NULL, BLIST_RETRY_HWERROR},
+ 	{"iomega", "jaz 1GB", "J.86", BLIST_NOTQ | BLIST_NOLUN},
+ 	{"IOMEGA", "Io20S         *F", NULL, BLIST_KEY},
+ 	{"INSITE", "Floptical   F*8I", NULL, BLIST_KEY},
+@@ -192,6 +193,7 @@
+ 	{"SMSC", "USB 2 HS-CF", NULL, BLIST_SPARSELUN | BLIST_INQUIRY_36},
+ 	{"SONY", "CD-ROM CDU-8001", NULL, BLIST_BORKEN},
+ 	{"SONY", "TSL", NULL, BLIST_FORCELUN},		/* DDS3 & DDS4 autoloaders */
++	{"ST650211", "CF", NULL, BLIST_RETRY_HWERROR},
+ 	{"SUN", "T300", "*", BLIST_SPARSELUN},
+ 	{"SUN", "T4", "*", BLIST_SPARSELUN},
+ 	{"TEXEL", "CD-ROM", "1.06", BLIST_BORKEN},
+===== drivers/scsi/scsi_error.c 1.47 vs edited =====
+--- 1.47/drivers/scsi/scsi_error.c	2005-02-02 21:56:01 -05:00
++++ edited/drivers/scsi/scsi_error.c	2005-02-11 13:23:45 -05:00
+@@ -31,6 +31,7 @@
+ #include <scsi/scsi_host.h>
+ #include <scsi/scsi_ioctl.h>
+ #include <scsi/scsi_request.h>
++#include <scsi/scsi_devinfo.h>
+ 
+ #include "scsi_priv.h"
+ #include "scsi_logging.h"
+@@ -350,10 +351,18 @@
+ 	case MEDIUM_ERROR:
+ 		return NEEDS_RETRY;
+ 
++	case HARDWARE_ERROR:
++		if (scsi_get_device_flags(scmd->device,
++					scmd->device->vendor,
++					scmd->device->model)
++				& BLIST_RETRY_HWERROR)
++			return NEEDS_RETRY;
++		else
++			return SUCCESS;
++
+ 	case ILLEGAL_REQUEST:
+ 	case BLANK_CHECK:
+ 	case DATA_PROTECT:
+-	case HARDWARE_ERROR:
+ 	default:
+ 		return SUCCESS;
+ 	}
 
