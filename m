@@ -1,52 +1,55 @@
-From: Doug Ledford <dledford@redhat.com>
+From: James Bottomley <James.Bottomley@steeleye.com>
 Subject: Re: When must the io_request_lock be held?
-Date: Wed, 7 Aug 2002 10:48:47 -0400
+Date: Wed, 07 Aug 2002 10:26:24 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20020807104847.B10872@redhat.com>
-References: <20020805195325.B19398@ma.emulex.com>
+Message-ID: <200208071526.g77FQOt03034@localhost.localdomain>
+References: <dledford@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20020805195325.B19398@ma.emulex.com>; from Jamie.Wellnitz@emulex.com on Mon, Aug 05, 2002 at 07:53:25PM -0400
+Received: (from root@localhost)
+	by pogo.mtv1.steeleye.com (8.9.3/8.9.3) id IAA12461
+	for <linux-scsi@vger.kernel.org>; Wed, 7 Aug 2002 08:26:28 -0700
+In-Reply-To: Message from Doug Ledford <dledford@redhat.com>
+   of "Wed, 07 Aug 2002 10:48:47 EDT." <20020807104847.B10872@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Jamie Wellnitz <Jamie.Wellnitz@emulex.com>
-Cc: linux-scsi@vger.kernel.org
+To: Jamie Wellnitz <Jamie.Wellnitz@emulex.com>, linux-scsi@vger.kernel.org
 
-On Mon, Aug 05, 2002 at 07:53:25PM -0400, Jamie Wellnitz wrote:
-> When does a low-level driver have to hold the io_request_lock?
+dledford@redhat.com said:
+> I can't, for the life of me, remember right now if the new_eh
+> strategy, abort, device_reset, and bus_reset routines are called with
+> a lock held, you'll have to look that up by going into scsi_error.c
+> and checking it out.
 
-If you are using the io_request_lock as your driver's only big lock, then
-you should leave it held in the queuecommand(), abort(), reset() routines.  
-I can't, for the life of me, remember right now if the new_eh strategy,
-abort, device_reset, and bus_reset routines are called with a lock held,
-you'll have to look that up by going into scsi_error.c and checking it
-out. You should grab it prior to entering your interrupt handler body and
-you should grab it from any timer based entry points in your driver.  
-Releasing of the lock is OK as long as you reacquire it before returning
-and as long as you know that not owning a lock at that time is safe.  You
-can use the spin_unlock() variant if you wish, but that will leave
-interrupts disabled and therefore buy you exactly zero benefit on UP
-systems.  The spin_unlock_irq() is what I typically use since that
-actually allows other interrupts to come in while you are working.  You
-are, of course, responsible for doing sane locking in your driver if you
-choose to unlock the locks the mid layer holds for you.  In 2.4.19, the 
-io_request_lock would be held.  In 2.5.x, the io_request_lock is gone and 
-instead the host->host_lock would be held.
+They are, but you can drop it (as long as you reacquire it before exit).
 
->  I know
-> that a driver should take the lock when it calls a SCSI command's done
-> function.
+dledford@redhat.com said:
+> You can use the spin_unlock() variant if you wish, but that will leave
+> interrupts disabled and therefore buy you exactly zero benefit on UP
+> systems.
 
-In both 2.4.x and 2.5.x if your driver uses the new error handling code, 
-then this is not necessary.  It may call the done() function without any 
-locks held since all the done function does is grab the bottom half 
-handler lock long enough to stuff the command onto a list and then 
-releases the lock and returns.
+This isn't necessarily true.  Some SCSI cards have a single mailbox for 
+outgoing and incoming transfer parameters and commands.  If you have one of 
+these, you need to keep interrupts disabled as you set up a command so that 
+your own interrupt routine doesn't overwrite the values if you get a reconnect 
+interrupt while you're programming the card.
 
--- 
-  Doug Ledford <dledford@redhat.com>     919-754-3700 x44233
-         Red Hat, Inc. 
-         1801 Varsity Dr.
-         Raleigh, NC 27606
-  
+dledford@redhat.com said:
+> You are, of course, responsible for doing sane locking in your driver
+> if you choose to unlock the locks the mid layer holds for you.
+
+This is a very important point to bear in mind.  Since the io_request_lock 
+must be held when calling the done() routine, you are asking to create a 
+deadlock if you use your own locks in the driver (it's not impossible to get 
+this correct, just very difficult).
+
+Basically, the io_request_lock is used to protect structures within the SCSI 
+and block layer.  Once you get into the LLD, you may extend it if you wish to 
+protect the individual data structures of your driver (which is why it's held 
+on entry to most of the LLD API) but if you don't want to, it is safe to drop 
+it (as long as your queuecommand is re-entrant and you re-acquire it before 
+exiting the API routines).
+
+James
+
+
