@@ -1,58 +1,49 @@
-From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
-Subject: RE: Serial Attached SCSI Driver Interface (SDI)
-Date: Mon, 15 Nov 2004 12:48:45 -0500
-Message-ID: <60807403EABEB443939A5A7AA8A7458B5C0F3D@otce2k01.adaptec.com>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [SAS ANNOUNCEMENT] MPT Fusion driver 3.02.07.02 update
+Date: 15 Nov 2004 12:00:44 -0600
+Message-ID: <1100541651.1765.194.camel@mulgrave>
+References: <91888D455306F94EBD4D168954A9457C3FF742@nacos172.co.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from magic.adaptec.com ([216.52.22.17]:16096 "EHLO magic.adaptec.com")
-	by vger.kernel.org with ESMTP id S261647AbUKORst convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 15 Nov 2004 12:48:49 -0500
-content-class: urn:content-classes:message
+Received: from stat16.steeleye.com ([209.192.50.48]:30621 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S261645AbUKOSA6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 15 Nov 2004 13:00:58 -0500
+In-Reply-To: <91888D455306F94EBD4D168954A9457C3FF742@nacos172.co.lsil.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>, "Tuikov, Luben" <Luben_Tuikov@adaptec.com>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: "Moore, Eric Dean" <Eric.Moore@lsil.com>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>, Jens Axboe <axboe@suse.de>
 
-CSMI is an ioctl mechanism. Have incorporated this interface into my
-working version of the driver. Duplication is already showing, witness
-Eric Moore's (rejected) submission.
-
-The T10 document Luben refers to, is to start the groundwork and does
-not list any specific interface yet. March 2006 is the `public release
-data' ... Get your comments in now!
-
-Sincerely -- Mark Salyzyn
-
------Original Message-----
-From: linux-scsi-owner@vger.kernel.org
-[mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of Jeff Garzik
-Sent: Monday, November 15, 2004 12:40 PM
-To: Tuikov, Luben
-Cc: SCSI Mailing List
-Subject: Re: Serial Attached SCSI Driver Interface (SDI)
-
-Luben Tuikov wrote:
-> I think it would be a good thing:
+On Fri, 2004-11-12 at 17:15, Moore, Eric Dean wrote:
+> Highlights for this release:
 > 
-> ftp://ftp.t10.org/t10/document.04/04-345r1.pdf
+> In addition to SAS support =>
 > 
->     Luben
-> 
-> P.S. CSMI...
 
-What sort of interface is this?
+Actually, before we begin on a SAS implementation, I'd rather like us to
+get the architecture and design correct.  Reading all the SAS and SATA
+documentation is still on my todo list.  However, this is my brief take
+on the architecture:
 
-Hardware interface?  Software-based (ioctl) interface?
+SAS itself is a bit of a monster because the PHY layer characteristics
+are identical to those of SATA.  Therefore, it seems like we need two
+separate transport classes, one for the PHY layer which would control
+the PHY transport characteristics and would be shareable with SATA and
+one for SAS only which would cover a large swath of the SAS specific
+ioctls and the useful bits of CMSI.
 
-	Jeff
+As far as the controller and expander protocols to which Doug Gilbert
+has been referring, I really have no current idea how to do them, but if
+anyone else does now would be a good time to say something.
+
+So does the above look like an acceptable way to move forward? (having a
+PHY transport class is going to mean changes in both SCSI and SATA and
+probably block as well, since this may ultimately not be a SCSI specific
+transport class).
+
+James
 
 
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
