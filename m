@@ -1,39 +1,45 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: [PATCH] scsi_debug 1.64 for lk2.5.47 mark II
-Date: Mon, 18 Nov 2002 09:08:39 +1100
+From: "Ming Zhang" <mingz@ele.uri.edu>
+Subject: about scsi_hostlist
+Date: Sun, 17 Nov 2002 17:11:28 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3DD81367.8030206@torque.net>
-References: <3DD7A1AA.6040009@torque.net> <20021117190238.GB3280@redhat.com>
-Reply-To: dougg@torque.net
+Message-ID: <200211172212.gAHMCp99017977@leviathan.ele.uri.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain;
+      charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from salangane (ip68-9-255-122.ri.ri.cox.net [68.9.255.122])
+	by leviathan.ele.uri.edu (8.12.2/8.12.2) with SMTP id gAHMCp99017977
+	for <linux-scsi@vger.kernel.org>; Sun, 17 Nov 2002 17:12:53 -0500 (EST)
 List-Id: linux-scsi@vger.kernel.org
-To: Doug Ledford <dledford@redhat.com>
-Cc: linux-scsi@vger.kernel.org
+To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-Doug Ledford wrote:
-> On Mon, Nov 18, 2002 at 01:03:22AM +1100, Douglas Gilbert wrote:
-> 
->>cleans up BIOS geometry code (parts copied from the aic7xxx
->>driver).
-> 
-> 
-> 
-> My opinion is that the aic7xxx bios geometry code is broken for really 
-> large devices, so you might want to think about that ;-)
+Hi, I meet a problem when port my code to 2.5.47.
+My goal is to get all scsi disk Scsi_Device pointers.
 
-Doug,
-I was looking for an example of calls to scsi_bios_ptable()
-and scsi_partsize() in the (forlorn) hope that they would
-cure the missing partitions problem. So the code got cleaned
-up a bit in the process.
+For 2.4.18, I can use scsi_hostlist to travel through the list and get all pointer by comparing type if TYPE_DISK. But in 2.5.47, there is no such pointer. And that scsi_host_list can not be used.
 
-Hopefully no-one tries to get a 140 GB ram disk with
-scsi_debug! In practice the largest allocation would be
-4 GB (or the largest number vmalloc() can take) on i386.
+Does anyone know how to get around to this? 
 
-Doug Gilbert
+Thanks in advance.
+
+
+
+Best regards. 
+
+
+Ming Zhang
+------------------------------
+Member of IEEE, ACM
+mingz@ele.uri.edu
+http://www.ele.uri.edu/~mingz
+1(401)874-4859
+
+Department of Electrical and Computer Engineering
+University of Rhode Island
+
+4 East Alumni Ave. Kingston, RI, 02881
+
+
 
 
