@@ -1,113 +1,61 @@
-From: Pat LaVarre <p.lavarre@ieee.org>
-Subject: Re: [usb-storage] mode sense blacklist how
-Date: 14 Nov 2003 12:41:48 -0700
+From: Patrick Mansfield <patmans@us.ibm.com>
+Subject: Re: Time to conclude the Sony USB mass storage thread
+Date: Fri, 14 Nov 2003 12:00:48 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1068838908.2852.34.camel@patrh9>
-References: <Pine.LNX.4.44L0.0311131638320.949-100000@ida.rowland.org>
-	 <1068767049.2851.166.camel@patrh9>
-	 <1068768796.3fb41e1c8d075@webmail.netregistry.net>
-	 <1068775834.2851.321.camel@patrh9>
-	 <20031113181945.I30194@one-eyed-alien.net>
-	 <1068777510.2851.359.camel@patrh9>
-	 <1068779468.3fb447ccc6e60@webmail.netregistry.net>
+Message-ID: <20031114120048.A4527@beaverton.ibm.com>
+References: <1068825146.2134.6.camel@mulgrave> <20031114092644.A2794@beaverton.ibm.com> <20031114093503.B19467@one-eyed-alien.net> <20031114095823.A3597@beaverton.ibm.com> <20031114105212.C19467@one-eyed-alien.net>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from email-out1.iomega.com ([147.178.1.82]:49902 "EHLO
-	email.iomega.com") by vger.kernel.org with ESMTP id S264369AbTKNTmZ
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 14 Nov 2003 14:42:25 -0500
-In-Reply-To: <1068779468.3fb447ccc6e60@webmail.netregistry.net>
+Received: from e1.ny.us.ibm.com ([32.97.182.101]:12461 "EHLO e1.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S262197AbTKNUBD (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 14 Nov 2003 15:01:03 -0500
+Content-Disposition: inline
+In-Reply-To: <20031114105212.C19467@one-eyed-alien.net>; from mdharm-scsi@one-eyed-alien.net on Fri, Nov 14, 2003 at 10:52:12AM -0800
 List-Id: linux-scsi@vger.kernel.org
-To: dmitrik@users.sourceforge.net
-Cc: usb-storage@one-eyed-alien.net, linux-scsi@vger.kernel.org, mdharm-scsi@one-eyed-alien.net, stern@rowland.harvard.edu, patmans@us.ibm.co, james.bottomley@steeleye.com, ronald@kuetemeier.com, idan@idanso.dyndns.org
+To: James Bottomley <James.Bottomley@steeleye.com>, usb-storage@one-eyed-alien.net, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-// Everyone:
+On Fri, Nov 14, 2003 at 10:52:12AM -0800, Matthew Dharm wrote:
 
-I think I'm seeing hints that possibly we've carried this reply-to-all
-convention a little too far by now.  Not sure how to fix that.
+> It's not immediately clear how we can override it if it's
+> scsi_devinfo/dev_flags.  Can you elaborate?
 
-// Dmitri K:
+The same way you can set it is the same way it can be cleared.
 
-> > To accomodate this device are we asking Dmitri K to give one last shot
-> > to telling us if kernel crash, boot fs crash, or other is the result of
-> > each of the twelve ...
-> > ?
-> 
-> I'll be away for the next 4 days. I'll try to test it now, 
-> if not I'll report when I come back ...
-> What exactly do you want me to do?
+If we want to allow all standard scsi core usage, as if there were not
+special flag settings at all, and including using MODE SENSE 6, use
+("model" is synonymous with SCSI product):
 
-Step-by-step instructions follow, in case you choose to try them.
+	echo "vendor:model:0" > /proc/scsi/device_info
 
-I see we have committed to teaching usb-storage to blacklist mode sense,
-despite thereby breaking sd devices that write-protect disks by
-implementing mode sense as described in the fiction authored by t10.
+If we want MODE SENSE 10, default cache write through (if the device can't
+do MODE SENSE page 8), use BLIST_USE_10_BYTE_MS | BLIST_MS_SKIP_PAGE_08
+(0x8000 | 0x2000):
 
-Therefore I cannot know who among "we" besides me still cares that the
-sample Sony stick you're sharing with us chokes over how we used to try
-mode sense.
+	echo "vendor:model:0xa000" > /proc/scsi/device_info
 
-As for me, yes I remain curious.  I'd like you (and all the world's
-engineers) to learn to explore such matters.
+The above can also be done at boot time or scsi_mod load time, on boot
+use:
 
-> What exactly do you want me to do?
+	scsi_mod.dev_flags=vendor:model:0xa000
 
-First step in learning to explore this way is to install some tool for
-trying SG_IO from the command line, such as the download/ patch/ make
-instructions of:
+For scsi_mod as a module just drop the "scsi_mod." prefix.
 
-http://groups.google.com/groups?q=plscsi+sed+make
+The above does not allow us to send a variant of the MODE SENSE, like the
+Sony really wants - MODE SENSE with a 10 byte (or larger) buffer - but
+that would require a patch like the other one I sent, or command filtering
+code, plus other code to enable/disable its use.
 
-Newsgroups: mlist.linux.scsi
-Subject: Re: [PATCH/RFT] mode sense madness always use page 8
-Date: 2003-10-30 16:20:20 PST
+We still need a sysfs attribute to eventually replace the proc one - this
+should be done by using module_param_call instead of module_param_string
+(we need a special callout to parse the string, I did not understand
+module_param_call when I added module_param usage), plus code to always
+(not just for modules) add sysfs parameters for all module_param entries.
 
-You know you've finished decrypting that post when you get as far as:
+The device specific flags override any other settings - the shost->flags
+or the scsi_default_dev_flags. We don't have any deletion method other
+than reboot, but the last setting added overrides earlier settings, and so
+you can even overide static entries in scsi_devinfo.c.
 
-sudo ./plscsi -w
-
-Next you can proceed to try the twelve Sony stick experiments suggested
-by that Win XP SP1 trace of an Iomega Zip with disk absent.  I think I
-remember translating from those experiments as posted to bash and plscsi
-syntax requires just substituting -x for -y, thus yielding:
-
-export PLSCSI=/dev/sda
-
-sudo plscsi -i xC0 -x "1A 00:1C:00 C0 00" // Mode Sense (6)
-sudo plscsi -i xC0 -x "1A 00:3F:00 C0 00" // Mode Sense (6)
-sudo plscsi -i x0C -x "1A 00:00:00 0C 00" // Mode Sense (6)
-sudo plscsi -i x0C -x "1A 00:3F:00 0C 00" // Mode Sense (6)
-
-sudo plscsi -p -i xC0 -x "5A 00 1C:00:00:00 00 00:C0 00 00:00" // Mode Sense (10)
-sudo plscsi -p -i xC0 -x "5A 00 3F:00:00:00 00 00:C0 00 00:00" // Mode Sense (10)
-sudo plscsi -p -i x0C -x "5A 00 00:00:00:00 00 00:0C 00 00:00" // Mode Sense (10)
-sudo plscsi -p -i x0C -x "5A 00 3F:00:00:00 00 00:0C 00 00:00" // Mode Sense (10)
-
-sudo plscsi -p -i xC4 -x "5A 00 1C:00:00:00 00 00:C4 00 00:00" // Mode Sense (10)
-sudo plscsi -p -i xC4 -x "5A 00 3F:00:00:00 00 00:C4 00 00:00" // Mode Sense (10)
-sudo plscsi -p -i x10 -x "5A 00 00:00:00:00 00 00:10 00 00:00" // Mode Sense (10)
-sudo plscsi -p -i x10 -x "5A 00 3F:00:00:00 00 00:10 00 00:00" // Mode Sense (10)
-
-I trust already you understand, running plscsi with root or even just
-device-write privilege by design can and does crash your kernel on
-occasion, thus smashing automounted or manually mounted fs.
-
-plscsi in effect gives you a way of typing out some of the code of a
-module at the command line.  Entering a mistyped or misconceived line of
-plscsi can hurt you as deeply as loading an untested .ko.
-
-I wonder if already you understand, you might like the results better if
-you only try talking while you device has no disk inserted, or at least
-while disk not mounted, and preferably while you have no automounter
-talking to your device.
-
-> From: Dmitri Katchalov ...
-> I'll be away for the next 4 days.
-
-Soon I will discover if I replied quickly enough to catch you. :)
-
-Pat LaVarre
-
-
+-- Patrick Mansfield
