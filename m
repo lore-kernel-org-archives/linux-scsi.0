@@ -1,49 +1,30 @@
-From: Doug Ledford <dledford@redhat.com>
-Subject: Updates pushed to bk://linux-scsi.bkbits.net/scsi-dledford
-Date: Fri, 20 Dec 2002 21:13:34 -0500
+From: "David S. Miller" <davem@redhat.com>
+Subject: Re: [PATCH] aic7xxx bouncing over 4G
+Date: 20 Dec 2002 20:10:51 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20021221021334.GD6554@redhat.com>
+Message-ID: <1040443851.1441.0.camel@rth.ninka.net>
+References: <200212210012.gBL0Cng21338@eng2.beaverton.ibm.com>
+	<176730000.1040430221@aslan.btc.adaptec.com>
+	<20021221002940.GM25000@holomorphy.com>
+	<190380000.1040432350@aslan.btc.adaptec.com>
+	<20021221013500.GN25000@holomorphy.com>
+	<223910000.1040435985@aslan.btc.adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
+In-Reply-To: <223910000.1040435985@aslan.btc.adaptec.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Linus Torvalds <torvalds@transmeta.com>, Linux Scsi Mailing List <linux-scsi@vger.kernel.org>
+To: "Justin T. Gibbs" <gibbs@scsiguy.com>
+Cc: William Lee Irwin III <wli@holomorphy.com>, Janet Morgan <janetmor@us.ibm.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-I grabbed the one change from James' tree and then committed my local
-changes and shoved them all up to $SUBJECT location.  There will be more
-shortly from Luben, but these are ready to go any time.  Here's the bk
-changes -L report:
+On Fri, 2002-12-20 at 17:59, Justin T. Gibbs wrote:
+> Those were committed in separate changes into our local Perforce
+> repository, but I simply don't have the patience to replicate each
+> individual change in Perforce into a BK change.  Since all of the
+> Linux universe likes stuff in BK format, I do what I can to accomodate
+> them.
 
-[dledford@flossy linus-2.5]$ bk changes -L bk://linux.bkbits.net/linux-2.5
-ChangeSet@1.905, 2002-12-20 21:01:03-05:00, dledford@flossy.devel.redhat.com
-  aic7xxx_old/aic7xxx.h: Run time warning fix
+Justin, no offense, but if you're not going to use the tool properly,
+just stick with patches.
 
-ChangeSet@1.904, 2002-12-20 21:00:06-05:00, dledford@flossy.devel.redhat.com
-  Change all uses of device->request_queue (was struct, now pointer)
-  Update scsi_scan so that we don't pass around a scsi_device struct for
-        scanning.  Instead, we pass around a request_queue during
-        scanning and create and destroy device structs as needed.  This
-        allows us to have a 1:1 correlation between scsi_alloc_sdev()
-        and scsi_free_sdev() calls, which we didn't have before.
-
-ChangeSet@1.903, 2002-12-20 20:54:35-05:00, dledford@flossy.devel.redhat.com
-  aic7xxx_old: improve usage of pci_request_regions due to device contention
-
-ChangeSet@1.902, 2002-12-20 11:04:51-06:00, jejb@mulgrave.(none)
-  correct compile warnings without Large Block Device support
-
-  Based on a patch from Andrew Morton.
-
-  Also checks to see if the sd device is bigger than the kernel can
-  support and prints out a warning in that case
-
-[dledford@flossy linus-2.5]$
-
-
--- 
-  Doug Ledford <dledford@redhat.com>     919-754-3700 x44233
-         Red Hat, Inc. 
-         1801 Varsity Dr.
-         Raleigh, NC 27606
-  
