@@ -1,29 +1,25 @@
-From: Martin Drab <drab@kepler.fjfi.cvut.cz>
-Subject: Re: 2.6.13.4 aacraid: Partitioning array makes adapter go "dead"
-Date: Sat, 7 Jan 2006 17:30:17 +0100 (CET)
-Message-ID: <Pine.LNX.4.60.0601071728120.18374@kepler.fjfi.cvut.cz>
-References: <435BF66B.7040508@cs.indiana.edu> <20060107141933.GJ3774@stusta.de>
- <Pine.LNX.4.60.0601071622210.18374@kepler.fjfi.cvut.cz>
-Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+From: "Wesley Page" <MVEQVDQJC@hotmail.com>
+Subject: King of Pharrmacy r6dkx9
+Date: Mon, 15 Mar 2004 08:32:47 +0600
+Message-ID: <CFE9.9A6.3040098B8C__33701.175338547$1136665374$gmane$org@mopalinux.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from kepler.fjfi.cvut.cz ([147.32.6.11]:18919 "EHLO
-	kepler.fjfi.cvut.cz") by vger.kernel.org with ESMTP
-	id S1030496AbWAGQcS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 7 Jan 2006 11:32:18 -0500
-In-Reply-To: <Pine.LNX.4.60.0601071622210.18374@kepler.fjfi.cvut.cz>
+Received: from c-24-14-148-166.hsd1.il.comcast.net ([24.14.148.166]:22540 "HELO
+	c-24-14-148-166.hsd1.il.comcast.net") by vger.kernel.org with SMTP
+	id S1161089AbWAGUWg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 7 Jan 2006 15:22:36 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Adrian Bunk <bunk@stusta.de>
-Cc: Robert Jones <rowjones@cs.indiana.edu>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
+To: linux-net@vger.kernel.org
+Cc: linux-newbie@vger.kernel.org, linux-ppp@vger.kernel.org, linux-raid@vger.kernel.org, linux-scsi@vger.kernel.org, linux-serial@vger.kernel.org
 
-> > On Sun, Oct 23, 2005 at 03:45:31PM -0500, Robert Jones wrote:
-       ^^^^^^^^^^^
-...
-> commit 8e0c5ebde82b08f6d996e11983890fc4cc085fab
-> Author: Mark Haverkamp <markh@osdl.org>
-> Date:   Mon Oct 24 10:52:22 2005 -0700
-          ^^^^^^^^^^
-Hehe, this is just a mere conincidence, but a funny one at that. ;))
 
-Martin
+Huge selection of meds available
+at attractive prices. 
+Highest quality assured.
+
+Try us out today..
+
+http://obhohl.multicountry.com/?dmnpmcxwnopytbplwgzpoafwcfr
+
+
+zO4zMM
