@@ -1,91 +1,55 @@
-From: "Caushik, Ramesh" <ramesh.caushik@intel.com>
-Subject: RE: [dm-devel] [ANNOUNCE] multipath-tools-0.4.1
-Date: Tue, 21 Dec 2004 14:02:12 -0800
-Message-ID: <EA4DC661A6353747A2E5C0DE8792DDDE074BF47E@orsmsx404.amr.corp.intel.com>
+From: Dave C Boutcher <sleddog@us.ibm.com>
+Subject: [patch] ibmvscsi.c: remove max-sectors module parm
+Date: Tue, 21 Dec 2004 16:36:45 -0600
+Message-ID: <20041221223645.GA2736@cs.umn.edu>
+Reply-To: boutcher@cs.umn.edu
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-raid-owner@vger.kernel.org>
-Content-class: urn:content-classes:message
-Sender: linux-raid-owner@vger.kernel.org
-To: device-mapper development <dm-devel@redhat.com>
-Cc: linux-raid@vger.kernel.org, linux-hotplug-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.cs.umn.edu ([128.101.35.202]:28849 "EHLO mail.cs.umn.edu")
+	by vger.kernel.org with ESMTP id S261860AbULUWgs (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 21 Dec 2004 17:36:48 -0500
+Received: from localhost (localhost [127.0.0.1])
+	by augustus.cs.umn.edu (Postfix) with ESMTP id B134F5C36D
+	for <linux-scsi@vger.kernel.org>; Tue, 21 Dec 2004 16:36:47 -0600 (CST)
+Received: from mail.cs.umn.edu ([127.0.0.1])
+ by localhost (augustus [127.0.0.1]) (amavisd-new, port 10024) with LMTP
+ id 07085-01-10 for <linux-scsi@vger.kernel.org>;
+ Tue, 21 Dec 2004 16:36:46 -0600 (CST)
+Received: from tera.cs.umn.edu (tera.cs.umn.edu [128.101.35.163])
+	by mail.cs.umn.edu (Postfix) with ESMTP id 4497F5C355
+	for <linux-scsi@vger.kernel.org>; Tue, 21 Dec 2004 16:36:46 -0600 (CST)
+Content-Disposition: inline
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-The devinfo.c file in the multipath-tools-0.4.1 appears to have a typo
-in the code to get the node_name attr in the fc_transport sysfs entry.
-Path below should fix it. BTW why does a failure to get a node_name
-attribute, result in failure of multipath discovery (because devinfo
-returns failure)even if the "group_by_node_name" policy is not used ?
-Can't we just NULL out the tgt_node_name string in the sysfs_devinfo
-routine and fail the group_by_node_name routine if that policy was
-chosen ? That is what happened in my case. Multipath discovery failed
-due to above reason even though node_name grouping was not specified. 
+Description: Based on comments from Jens Axboe, remove
+redundant module parm to set max sectors.  This should
+be set through the /dev/block/xxx/queue/max_sectors_kb
+interface.  This incremental patch fixes the only comments
+received to the previous set of patches submitted.
 
-***************
-
-diff new_multipath/devinfo.c old_multipath/devinfo.c
-349c349
-<
-"%s/class/fc_transport/target%i:%i:%i/node_name",
+Signed-off-by: Dave Boutcher <boutcher@us.ibm.com>
 ---
-> 			"%s/class/fc_transport/%i:%i:%i:%i/node_name",
-353c353,354
-< 			curpath->sg_id.scsi_id)) {
----
-> 			curpath->sg_id.scsi_id,
-> 			curpath->sg_id.lun)) {
 
-***********
+ ibmvscsi.c |    2 --
+ 1 files changed, 2 deletions(-)
 
-Ramesh.    
+Index: linux-2.6.10-rc3/drivers/scsi/ibmvscsi/ibmvscsi.c
+===================================================================
+--- linux-2.6.10-rc3.orig/drivers/scsi/ibmvscsi/ibmvscsi.c	2004-12-21 14:11:06.224966784 -0600
++++ linux-2.6.10-rc3/drivers/scsi/ibmvscsi/ibmvscsi.c	2004-12-21 14:11:28.323068472 -0600
+@@ -103,8 +103,6 @@
+ MODULE_PARM_DESC(init_timeout, "Initialization timeout in seconds");
+ module_param_named(max_requests, max_requests, int, S_IRUGO | S_IWUSR);
+ MODULE_PARM_DESC(max_requests, "Maximum requests for this adapter");
+-module_param_named(max_sectors, max_sectors, int, S_IRUGO | S_IWUSR);
+-MODULE_PARM_DESC(max_sectors, "Maximum sectors per request for this adapter");
+ 
+ /* ------------------------------------------------------------
+  * Routines for the event pool and event structs
 
------Original Message-----
-From: dm-devel-bounces@redhat.com [mailto:dm-devel-bounces@redhat.com]
-On Behalf Of christophe varoqui
-Sent: Monday, December 20, 2004 8:01 AM
-To: device-mapper development
-Cc: linux-raid@vger.kernel.org;
-linux-hotplug-devel@lists.sourceforge.net; linux-scsi@vger.kernel.org
-Subject: [dm-devel] [ANNOUNCE] multipath-tools-0.4.1
-
-Hello,
-
-here goes multipath-tools-0.4.1
-
-Another round of bugfixes.
-People are starting to report sane behaviour.
-
-If someone at IBM (or knowledgeable enough) is listening, we need a
-method to check a path status on a T200 that don't trigger a controler
-bounce. Is it possible at all ?
-
-Full ChangeLog for the release :
-
-        * [multipath] bump SERIAL_SIZE to 19
-        * [multipath] add a new group_by_node_name pgpolicy
-        * [multipath] move getopt policy parser to
-          get_policy_id()
-        * [multipath] remove get_evpd_wwid()
-        * [checkers] fix the wwn_set test in emc checker
-          (Hergen Lange)
-        * [checkers] treat the emc checker in the name to
-          index translator function (Hergen Lange)
-        * [multipath] print to stderr DM unmet requirement
-          (Guido Guenther)
-        * [multipath] fix realloc return value store not
-          propagated to caller by merge_word() (Nicola Ranaldo)
-
-As usual, doc and download at :
-http://christophe.varoqui.free.fr/
-
-regards,
 -- 
-christophe varoqui <christophe.varoqui@free.fr>
-
-
---
-dm-devel mailing list
-dm-devel@redhat.com
-https://www.redhat.com/mailman/listinfo/dm-devel
+Dave Boutcher
