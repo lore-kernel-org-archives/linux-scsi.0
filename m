@@ -1,21 +1,37 @@
-From: christophe varoqui <christophe.varoqui@free.fr>
+From: "Caushik, Ramesh" <ramesh.caushik@intel.com>
 Subject: RE: [dm-devel] [ANNOUNCE] multipath-tools-0.4.1
-Date: Thu, 23 Dec 2004 00:30:44 +0100
-Message-ID: <1103758244.9893.6.camel@zezette>
-References: <0B1E13B586976742A7599D71A6AC733C02F2CB@xbl3.ma.emulex.com>
+Date: Wed, 22 Dec 2004 13:54:45 -0800
+Message-ID: <EA4DC661A6353747A2E5C0DE8792DDDE075013FE@orsmsx404.amr.corp.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp7.wanadoo.fr ([193.252.22.24]:13043 "EHLO smtp7.wanadoo.fr")
-	by vger.kernel.org with ESMTP id S262040AbULVVWb (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 22 Dec 2004 16:22:31 -0500
-In-Reply-To: <0B1E13B586976742A7599D71A6AC733C02F2CB@xbl3.ma.emulex.com>
+Received: from fmr17.intel.com ([134.134.136.16]:3772 "EHLO
+	orsfmr002.jf.intel.com") by vger.kernel.org with ESMTP
+	id S262056AbULVVzH convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 22 Dec 2004 16:55:07 -0500
+Content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: device-mapper development <dm-devel@redhat.com>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "linux-hotplug-devel@lists.sourceforge.net" <linux-hotplug-devel@lists.sourceforge.net>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Cc: linux-raid@vger.kernel.org, linux-hotplug-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org
+
+The newer Qlogic (qla2xxx) driver for kernel versions 2.6.9 and later d=
+o not support the fc_transport class. The support is #ifdefed for kerne=
+ls > 2.6.6 & < 2.6.9. So I will have to wait till they support this for=
+ newer kernels. Meanwhile I can work with a patched version of multipat=
+h tools. Thanks for feedback.=20
+
+Ramesh.  =20
+
+-----Original Message-----
+=46rom: dm-devel-bounces@redhat.com [mailto:dm-devel-bounces@redhat.com=
+] On Behalf Of christophe varoqui
+Sent: Wednesday, December 22, 2004 3:31 PM
+To: device-mapper development
+Cc: linux-raid@vger.kernel.org; linux-hotplug-devel@lists.sourceforge.n=
+et; linux-scsi@vger.kernel.org
+Subject: RE: [dm-devel] [ANNOUNCE] multipath-tools-0.4.1
 
 James, thank you for the clarification (and I didn't mean to string
 anyone :).
@@ -31,9 +47,8 @@ ok with you ?
 regards,
 cvaroqui
 
-Le mercredi 22 d?embre 2004 =C3=A0 16:05 -0500, James.Smart@Emulex.Com =
-a
-=C3=A9crit :
+Le mercredi 22 d?embre 2004 =E0 16:05 -0500, James.Smart@Emulex.Com a
+=E9crit :
 > Qlogic shouldn't be strung out. It wasn't them....
 >=20
 > As part of a change that went into the FC transport - the device repo=
@@ -55,6 +70,10 @@ et<host>:<channel>:<target>"
 > --
 
 
+--
+dm-devel mailing list
+dm-devel@redhat.com
+https://www.redhat.com/mailman/listinfo/dm-devel
 -
 To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
 n
