@@ -1,17 +1,27 @@
-From: Thomas Tonino <ttonino@corp.home.nl>
-Subject: QLA2200 driver
-Date: Thu, 25 Apr 2002 13:34:56 +0200
+From: berthiaume_wayne@emc.com
+Subject: RE: QLA2200 driver
+Date: Thu, 25 Apr 2002 09:40:40 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3CC7E9E0.5050107@corp.home.nl>
+Message-ID: <93F527C91A6ED411AFE10050040665D0049BF939@corpusmx1.us.dg.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="iso-8859-1"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from svr-mail2.corp.home.nl (svr-mail2.corp.home.nl [212.120.65.165])
-	by mx1-corp.corp.nl.home.com (8.9.3/8.9.3) with ESMTP id NAA27221
-	for <linux-scsi@vger.kernel.org>; Thu, 25 Apr 2002 13:37:20 +0200 (MET DST)
 List-Id: linux-scsi@vger.kernel.org
+To: ttonino@corp.home.nl
+Cc: linux-scsi@vger.kernel.org
+
+	The qla2x00 driver is not in the Linus tree; however, if you pull
+down a Red Hat tree you'll find it is in there. QLogic maintains the driver
+and, perhaps, just hasn't gotten around to submitting it to Marcello, Linus,
+et al for inclusion in the LSB. Duane ol' buddy are you listening????  =;^)
+
+-----Original Message-----
+From: Thomas Tonino [mailto:ttonino@corp.home.nl]
+Sent: Thursday, April 25, 2002 7:35 AM
 To: linux-scsi@vger.kernel.org
+Subject: QLA2200 driver
+
 
 We're setting up a server with a 14 Seagate Cheetah fibre JBOD attached 
 to a single QLA2200 controller.
@@ -36,3 +46,7 @@ achieved throughput?
 
 
 Thomas
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
