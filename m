@@ -1,60 +1,35 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: sym53c8xx driver hangs
-Date: Fri, 18 Feb 2005 19:25:31 +0000
-Message-ID: <20050218192531.GZ29917@parcelfarce.linux.theplanet.co.uk>
-References: <4214BD90.7030002@ludd.luth.se> <20050218051916.GX29917@parcelfarce.linux.theplanet.co.uk> <4215BDFF.6040703@ludd.luth.se> <20050218121556.GY29917@parcelfarce.linux.theplanet.co.uk> <42162052.9030304@ludd.luth.se>
+From: Roman Kagan <rkagan@mail.ru>
+Subject: Re: [ANNOUNCE] hotplug-ng 001 release
+Date: Fri, 18 Feb 2005 22:41:35 +0300
+Message-ID: <20050218194135.GD4424@katya>
+References: <20050212003458.GI2568@katya> <20050214224208.GC13110@suse.de> <20050216105117.GB2360@katya> <20050216110752.GC2360@katya> <1108594961l.5056l.5l@serve.riede.org> <20050216231741.GD2870@katya> <1108596771l.5056l.6l@serve.riede.org> <20050218171737.GA20012@us.ibm.com> <20050218181106.GC4424@katya> <20050218183350.GA21954@us.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:40685 "EHLO
-	parcelfarce.linux.theplanet.co.uk") by vger.kernel.org with ESMTP
-	id S261451AbVBRTZh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 18 Feb 2005 14:25:37 -0500
+Content-Type: text/plain; charset=us-ascii
+Received: from apachihuilliztli.mtu.ru ([195.34.32.124]:7697 "EHLO
+	Apachihuilliztli.mtu.ru") by vger.kernel.org with ESMTP
+	id S261453AbVBRTlu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 18 Feb 2005 14:41:50 -0500
 Content-Disposition: inline
-In-Reply-To: <42162052.9030304@ludd.luth.se>
+In-Reply-To: <20050218183350.GA21954@us.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Roger =?iso-8859-1?Q?H=E5kansson?= <hson@ludd.luth.se>
-Cc: Matthew Wilcox <matthew@wil.cx>, linux-scsi@vger.kernel.org
+To: Patrick Mansfield <patmans@us.ibm.com>
+Cc: Willem Riede <osst@riede.org>, linux-scsi@vger.kernel.org, linux-hotplug-devel@lists.sourceforge.net
 
-On Fri, Feb 18, 2005 at 06:05:22PM +0100, Roger H=E5kansson wrote:
-> Matthew Wilcox wrote:
-> >Oh.  I think I'm confused as to which version of sym2 is in which ve=
-rsion
-> >of Linus' tree.  The same line in my development tree reads:
->=20
-> Well, I guess that part of the driver is rewritten a bit, I get a=20
-> compile error if I put that in ;)
+On Fri, Feb 18, 2005 at 10:33:50AM -0800, Patrick Mansfield wrote:
+> The block SG_IO handles the ioctls, but not devices without a SCSI upper
+> level driver (i.e. not tape, disk or cdrom).
 
-Oh, er, yes, looking at the diff from 2.6.10 shows I did ...
+Then it might make sense to explicitly list in sg.c the TYPE_* not
+matched by s[dtr].
 
-+       struct sym_trans *goal =3D &tp->tinfo.goal;
-+       struct sym_trans *curr =3D &tp->tinfo.curr;
+> In my experience, there are always applications that want to use the
+> standard device driver (/dev/sda etc.) and others that want to use a
+> generic driver.
 
-lalalla ;-)
+So these drivers can compete for the same device?  Are there
+deterministic rules on which one is supposed to win?  And is there a
+userspace interface to unbind one driver and bind another?  Otherwise it
+may mean that automatic module loading is inappropriate here at all...
 
-> But yes, it works if I put in:
->=20
-> if ((tp->tinfo.goal.options & PPR_OPT_MASK) ||
->     (tp->tinfo.goal.period < 0xa)) {
-
-Excellent.  Then 2.6.11 works for Ultrium tape drives.  Yay!  Tick anot=
-her
-annoying bug off the list ... just the strange not-working-on-Alpha bug
-to investigate, I think.
-
---=20
-"Next the statesmen will invent cheap lies, putting the blame upon=20
-the nation that is attacked, and every man will be glad of those
-conscience-soothing falsities, and will diligently study them, and refu=
-se
-to examine any refutations of them; and thus he will by and by convince=
-=20
-himself that the war is just, and will thank God for the better sleep=20
-he enjoys after this process of grotesque self-deception." -- Mark Twai=
-n
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Roman.
