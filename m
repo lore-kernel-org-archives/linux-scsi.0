@@ -1,68 +1,74 @@
 From: Adrian Bunk <bunk@stusta.de>
-Subject: [patch] remove bouncing email address of Deanna Bonds
-Date: Wed, 24 Nov 2004 19:46:57 +0100
-Message-ID: <20041124184657.GH19873@stusta.de>
+Subject: [2.6 patch] SCSI aic7xxx_old.c: make a function static (fwd)
+Date: Wed, 24 Nov 2004 19:46:52 +0100
+Message-ID: <20041124184652.GG19873@stusta.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel=40m.gmane.org-S262903AbUKYAvU@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from emailhub.stusta.mhn.de ([141.84.69.5]:29444 "HELO
+	mailout.stusta.mhn.de") by vger.kernel.org with SMTP
+	id S262888AbUKYAq6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 24 Nov 2004 19:46:58 -0500
 Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: James.Bottomley@SteelEye.com, Marcelo Tosatti <marcelo.tosatti@cyclades.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James.Bottomley@SteelEye.com
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-The patch below (applies against both 2.4 and 2.6) removes the bouncing 
-email address of Deanna Bonds (I didn't find a nmore recent address).
 
+The patch forwarded below still applies and compiles against 
+2.6.10-rc2-mm3.
+
+Please apply.
+
+
+----- Forwarded message from Adrian Bunk <bunk@stusta.de> -----
+
+Date:	Mon, 15 Nov 2004 02:53:00 +0100
+From: Adrian Bunk <bunk@stusta.de>
+To: James.Bottomley@SteelEye.com
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [2.6 patch] SCSI aic7xxx_old.c: make a function static
+
+The patch below makes the needlessly global function aic7xxx_info 
+static.
 
 diffstat output:
- drivers/scsi/aacraid/README   |    2 +-
- drivers/scsi/dpt/dpti_ioctl.h |    1 -
- drivers/scsi/dpt_i2o.c        |    1 -
- drivers/scsi/dpti.h           |    1 -
- 4 files changed, 1 insertion(+), 4 deletions(-)
+ drivers/scsi/aic7xxx_old.c              |    2 +-
+ drivers/scsi/aic7xxx_old/aic7xxx_proc.c |    2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
 
 Signed-off-by: Adrian Bunk <bunk@stusta.de>
 
---- linux-2.6.10-rc2-mm3-full/drivers/scsi/dpti.h.old	2004-11-24 19:23:47.000000000 +0100
-+++ linux-2.6.10-rc2-mm3-full/drivers/scsi/dpti.h	2004-11-24 19:23:56.000000000 +0100
-@@ -3,7 +3,6 @@
-                              -------------------
-     begin                : Thu Sep 7 2000
-     copyright            : (C) 2001 by Adaptec
--    email                : deanna_bonds@adaptec.com
- 
-     See Documentation/scsi/dpti.txt for history, notes, license info
-     and credits
---- linux-2.6.10-rc2-mm3-full/drivers/scsi/aacraid/README.old	2004-11-24 19:24:05.000000000 +0100
-+++ linux-2.6.10-rc2-mm3-full/drivers/scsi/aacraid/README	2004-11-24 19:24:16.000000000 +0100
-@@ -42,7 +42,7 @@
- Christoph Hellwig <hch@infradead.org>	(updates for new-style PCI probing and SCSI host registration,
- 					 small cleanups/fixes)
- Matt Domsch <matt_domsch@dell.com>	(revision ioctl, adapter messages)
--Deanna Bonds <deanna_bonds@adaptec.com> (non-DASD support, PAE fibs and 64 bit, added new adaptec controllers
-+Deanna Bonds                            (non-DASD support, PAE fibs and 64 bit, added new adaptec controllers
- 					 added new ioctls, changed scsi interface to use new error handler,
- 					 increased the number of fibs and outstanding commands to a container)
- 
---- linux-2.6.10-rc2-mm3-full/drivers/scsi/dpt/dpti_ioctl.h.old	2004-11-24 19:24:24.000000000 +0100
-+++ linux-2.6.10-rc2-mm3-full/drivers/scsi/dpt/dpti_ioctl.h	2004-11-24 19:24:27.000000000 +0100
-@@ -3,7 +3,6 @@
-                              -------------------
-     begin                : Thu Sep 7 2000
-     copyright            : (C) 2001 by Adaptec
--    email                : deanna_bonds@adaptec.com
- 
-     See Documentation/scsi/dpti.txt for history, notes, license info
-     and credits
---- linux-2.6.10-rc2-mm3-full/drivers/scsi/dpt_i2o.c.old	2004-11-24 19:24:34.000000000 +0100
-+++ linux-2.6.10-rc2-mm3-full/drivers/scsi/dpt_i2o.c	2004-11-24 19:24:37.000000000 +0100
-@@ -3,7 +3,6 @@
-                              -------------------
-     begin                : Thu Sep 7 2000
-     copyright            : (C) 2000 by Adaptec
--    email                : deanna_bonds@adaptec.com
- 
- 			   July 30, 2001 First version being submitted
- 			   for inclusion in the kernel.  V2.4
+--- linux-2.6.10-rc1-mm5-full/drivers/scsi/aic7xxx_old.c.old	2004-11-13 17:15:23.000000000 +0100
++++ linux-2.6.10-rc1-mm5-full/drivers/scsi/aic7xxx_old.c	2004-11-13 17:16:12.000000000 +0100
+@@ -1838,7 +1838,7 @@
+  * Description:
+  *   Return a string describing the driver.
+  *-F*************************************************************************/
+-const char *
++static const char *
+ aic7xxx_info(struct Scsi_Host *dooh)
+ {
+   static char buffer[256];
+--- linux-2.6.10-rc1-mm5-full/drivers/scsi/aic7xxx_old/aic7xxx_proc.c.old	2004-11-13 17:16:28.000000000 +0100
++++ linux-2.6.10-rc1-mm5-full/drivers/scsi/aic7xxx_old/aic7xxx_proc.c	2004-11-13 17:16:45.000000000 +0100
+@@ -64,7 +64,7 @@
+  * Description:
+  *   Set parameters for the driver from the /proc filesystem.
+  *-F*************************************************************************/
+-int
++static int
+ aic7xxx_set_info(char *buffer, int length, struct Scsi_Host *HBAptr)
+ {
+   proc_debug("aic7xxx_set_info(): %s\n", buffer);
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Please read the FAQ at  http://www.tux.org/lkml/
+
+----- End forwarded message -----
+
