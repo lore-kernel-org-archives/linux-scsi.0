@@ -1,43 +1,81 @@
-From: "'Patrick Mansfield'" <patmans@us.ibm.com>
-Subject: Re: How to add/drop SCSI drives from within the driver?
-Date: Wed, 26 Jan 2005 23:05:50 -0800
-Message-ID: <20050127070550.GA18632@us.ibm.com>
-References: <0E3FA95632D6D047BA649F95DAB60E5705B83A31@exa-atlanta>
+From: Madrid.Paris.italy.Barcelona.Dance.Festival.2005@dance.it
+Subject: DanceInfo from Madrid Barcelona: info replay to <dance2005@tiscali.it>
+Date: Thu, 27 Jan 2005 09:06:04 +0000 (UTC)
+Message-ID: <15730.008405126$1106816764@news.gmane.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="DEFAULT_CHARSET"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e33.co.us.ibm.com ([32.97.110.131]:1535 "EHLO e33.co.us.ibm.com")
-	by vger.kernel.org with ESMTP id S262509AbVA0HG2 (ORCPT
+Received: from vsmtp14.tin.it ([212.216.176.118]:7560 "EHLO vsmtp14.tin.it")
+	by vger.kernel.org with ESMTP id S262535AbVA0JE5 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 27 Jan 2005 02:06:28 -0500
-Content-Disposition: inline
-In-Reply-To: <0E3FA95632D6D047BA649F95DAB60E5705B83A31@exa-atlanta>
+	Thu, 27 Jan 2005 04:04:57 -0500
+Date: Thu, 27 Jan 2005 09.57.18
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Mukker, Atul" <Atulm@lsil.com>
-Cc: 'Greg KH' <greg@kroah.com>, 'James Bottomley' <James.Bottomley@steeleye.com>, 'Linux Kernel' <linux-kernel@vger.kernel.org>, 'SCSI Mailing List' <linux-scsi@vger.kernel.org>, linux-hotplug-devel@lists.sourceforge.net
+To: linux@catalyst.net.nz
 
-[moving to hotplug list ...]
+For Immediate release:                                                     
+      For more information contact:
+                                                                           
+       From  Mr. Charl Gades 
+                                                                           
 
-On Wed, Jan 26, 2005 at 06:23:16PM -0500, Mukker, Atul wrote:
+	Dance Forms Productions brings "The 12th International Choreographers'
+Competition Europe" for Dance Schools/Groups.
 
-> Or more likely, by placing our agent in /etc/dev.d directory. Unfortunately,
-> there seems be not a consensus here as well. On system has "default" and
-> "net" directories and other has "block", "input", "net", "tty"?
+	Charl Gades, Director of Dance Forms Productions, has chosen the XXII Marató de l'Espectacle in Madrid and in the Teatro Blavs in Paris to present " The 12th International Choreographers Competition Europe"
+     
+	Invitations are still open for choreographers to boost their careers with this fabulous performance opportunity, in the end of March in Spain and in June 26, 27, 28, 2005 in France Paris and in Italy.
+	
+	"I'm inviting choreographers who are willing to invest in themselves and
+who are interested in expanding their knowledge of other cultures, as well as promoting their work abroad, only a little fee needed" says Gades. "I'm looking for choreographers who see this thrilling event as an opportunity to benefit their professional development."
+	
+	Selected choreographers/dancers will receive a complete production
+package, which includes: two performances, lighting, sound, technical assistance, a professional level of publicity, pre-show rehearsal arrangements, printed materials, printed programs, and hotel accommodation based on two persons sharing twin bedded rooms with private bath/shower.
 
-Those are all kernel subsystem names, and as such all are supported
-directory structures for udev, the part that is distro specific is that
-they supply different scripts.
+	In addition, the choreographers will have an opportunity to network and attend all performances by groups from all over the world.
+	
+	To find out how to qualifye.mail the office. Space is limited, so choreographers should act right away. 
 
-There won't be any "scsi" devices since they have no dev (the upper level
-drivers have them); sg shows up as scsi_generic. sd is block.
+	Charl Gades, director of Dance Forms Productions, initiated  "The International Choreographers Competition" in 1996, premiering in the Prague Festival in Prague, CZ. Since then, Dance-Forms Competition has delighted international festivals with exciting presentations of contemporary dance. 
+	
+	Each showcase is a unique blend of distinguished choreographers and dancers from around the world.  
 
-You will still have to figure out via sysfs if you want to run your agent
-even for subsystem block (i.e. figure out the host/driver type, I assume
-you don't want to run it on hd or standard scsi disk drives).
+	Through these artists' professional efforts and dedication to dance, art becomes reality across the globe. 
 
-I don't know why this is an issue for "new" devices, this should be a
-problem for you when they first show up; existing and new devs should be
-handled the same way.
+	The showcase has appeared at prestigious festivals in Austria, France, Germany, Italy, CZ, Mexico, Monaco, the Netherlands, Scotland, Serbia, Spain and the USA.
 
--- Patrick Mansfield
+	
+I look forward to your participation and I hope to see you at the next festival and if you neeed some info of the International dance Competition Europe surf on           
+web.tiscali.it/dance2005/
+
+
+Just in a few days you will receive some advertising materials from us,
+the new brochures and posters of the "The International Choreographers Competition Europe"
+
+please replay to this e.mail your free on charges request of info at:
+
+dance2005   @   tiscali.it 
+(of course copy and send this e.mail address without the space after and before @ )
+
+
+
+Full Name:_____________________________________________
+
+School/Company Name:  _________________________________
+
+Telephone:_____________________________________________
+
+Fax:___________________________________________________
+
+Email Address:_________________________________________* REQUIRED FIELD
+
+Shipping Address:______________________________________
+
+City:____________________ State/Province:______________
+
+Country:_________________________ZIP/Postal:___________
+ 
+________________________________________________________________________________
+You are receiving this e-mail because I believe you to be interested in developing your artistic career. If you fell you have received this e-mail by error and wish to be removed from future mailings, simply reply to remove please send to   write remove in the subject line and click send to our e.mail.
+
