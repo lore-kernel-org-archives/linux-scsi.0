@@ -1,37 +1,32 @@
-From: "Earl" <abcdoranges@arrosfan.com>
-Subject: Save your company thousands on software! godzilla softball
-Date: Wed, 15 Sep 2004 14:46:09 GMT
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] 2.6.9 aacraid: aac_count fix
+Date: Thu, 16 Sep 2004 12:29:26 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1095259569-14287__29982.6733804823$1095327299$gmane$org@excite.com>
-Content-Type: text/plain;
+Message-ID: <20040916122925.A32569@infradead.org>
+References: <60807403EABEB443939A5A7AA8A7458B1AAAB7@otce2k01.adaptec.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [218.185.68.130] ([218.185.68.130]:43791 "HELO vermontel.com")
-	by vger.kernel.org with SMTP id S267889AbUIPJaX (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 16 Sep 2004 05:30:23 -0400
+Received: from imladris.demon.co.uk ([193.237.130.41]:53260 "EHLO
+	phoenix.infradead.org") by vger.kernel.org with ESMTP
+	id S267957AbUIPL3e (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 16 Sep 2004 07:29:34 -0400
+Content-Disposition: inline
+In-Reply-To: <60807403EABEB443939A5A7AA8A7458B1AAAB7@otce2k01.adaptec.com>; from mark_salyzyn@adaptec.com on Wed, Sep 15, 2004 at 07:47:45AM -0400
 List-Id: linux-scsi@vger.kernel.org
-To: linux-kernel@vger.kernel.org
+To: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
+Cc: Mark Haverkamp <markh@osdl.org>, Christoph Hellwig <hch@infradead.org>, James Bottomley <James.Bottomley@steeleye.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
-Even more discounts for large orders!
-http://online-cd-order.info/index.php?s=7555
+On Wed, Sep 15, 2004 at 07:47:45AM -0400, Salyzyn, Mark wrote:
+> Christoph Hellwig writes:
+> 
+> > > +	scsi_set_device(shost, &pdev->dev);
+> > 
+> > This one is bogus.  scsi_add_host already sets the device.
+> 
+> Which path sets the device? I got an intermittent panic as a result of
+> the device not being set in my unit test (of the kernel of the day at
+> the time of this modification, can't remember which version of the
+> kernel ...). Which version of this kernel sets it?
 
-Some of our incredible deals:
-Adobe Premier Pro 7.0 - 80% off
-Adobe Illustrator CS - 80% off
-Adobe Pagemaker 7.0 - 78% off
-
-
-Show this to your boss, save thousands!  That promotion just got closer...
-http://online-cd-order.info/index.php?s=7555
-
-
-
-
-
-memory trident lloyd
-
-percy warriorspraise camping river joanna carlos lorraine
-larry hansonvanilla mars robinhoo
-
-REMOV3:
-http://theyknowit.info/soft/chair.php
+Since mid-2.5.x.  Maybe you try to access it before scsi_add_host is called?
