@@ -1,67 +1,40 @@
-From: Andreas Steinmetz <ast@domdv.de>
-Subject: 2.4.20: possibly wrong handling of removeable scsi disks
-Date: Sun, 23 Feb 2003 13:17:07 +0100
+From: Willem Riede <wrlk@riede.org>
+Subject: Re: 2.4.20: possibly wrong handling of removeable scsi disks
+Date: Sun, 23 Feb 2003 08:20:09 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3E58BBC3.7020507@domdv.de>
+Message-ID: <20030223132009.GA2155@linnie.riede.org>
+References: <3E58BBC3.7020507@domdv.de>
+Reply-To: wrlk@riede.org
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <3E58BBC3.7020507@domdv.de>; from ast@domdv.de on Sun, Feb 23, 2003 at 07:17:07 -0500
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Andreas Steinmetz <ast@domdv.de>
+Cc: linux-scsi@vger.kernel.org
 
-[Please CC me on replies, I'm not subscribed to the list]
+On 2003.02.23 07:17 Andreas Steinmetz wrote:
+>              if( the_result != 0
+>                  && ((driver_byte(the_result) & DRIVER_SENSE) != 0)
+> ===>            && SRpnt->sr_sense_buffer[2] == UNIT_ATTENTION
+>                  && SRpnt->sr_sense_buffer[12] == 0x3A ) {
+>                      rscsi_disks[i].capacity = 0x1fffff;
+>                      sector_size = 512;
+>                      rscsi_disks[i].device->changed = 1;
+>                      rscsi_disks[i].ready = 0;
+>     ...
+> 
+> Now look at the marked (===>) lines above. I dont believe the test for 
+> UNIT_ATTENTION is correct. As far as I could find out the sense 
+> information from TEST_UNIT_READY should be either NO_SENSE, 
+> ILLEGAL_REQUEST or NOT_READY. As there is a check for 'medium not 
+> present' (0x3A) the test should be for NOT_READY instead of 
+> UNIT_ATTENTION. ger.kernel.org/majordomo-info.html
 
-There is possibly a wrong handling of removable disks with no medium 
-inserted in the sd driver. From 2.4.20 drivers/scsi/sd.c (...=snip):
+You are right about this one. It should be NOT_READY, value 0x02.
+As a matter of fact, ASQ 0x3A is unique, so you could just delete the
+test of sr_sense_buffer[2] and it would work as expected.
 
-static int sd_init_onedisk(int i)
-{
-    ...
-     do {
-             retries = 0;
-
-             while (retries < 3) {
-                     cmd[0] = TEST_UNIT_READY;
-                    ...
-                    if (the_result == 0
-                         || SRpnt->sr_sense_buffer[2] != UNIT_ATTENTION)
-                             break;
-             }
-
-             /*
-              * If the drive has indicated to us that it doesn't have
-              * any media in it, don't bother with any of the rest of
-              * this crap.
-              */
-             if( the_result != 0
-                 && ((driver_byte(the_result) & DRIVER_SENSE) != 0)
-===>            && SRpnt->sr_sense_buffer[2] == UNIT_ATTENTION
-                 && SRpnt->sr_sense_buffer[12] == 0x3A ) {
-                     rscsi_disks[i].capacity = 0x1fffff;
-                     sector_size = 512;
-                     rscsi_disks[i].device->changed = 1;
-                     rscsi_disks[i].ready = 0;
-===>                break;
-             }
-            ...
-     } while (the_result && spintime &&
-              time_after(spintime_value + 100 * HZ, jiffies));
-    ...
-
-Now look at the marked (===>) lines above. I dont believe the test for 
-UNIT_ATTENTION is correct. As far as I could find out the sense 
-information from TEST_UNIT_READY should be either NO_SENSE, 
-ILLEGAL_REQUEST or NOT_READY. As there is a check for 'medium not 
-present' (0x3A) the test should be for NOT_READY instead of 
-UNIT_ATTENTION. Furthermore the 'break;' statement seems wrong to me as 
-the function lateron does e.g. things like READ_CAPACITY which doesn't 
-make any sense if no medium is present. The correct statement seems to 
-me 'return i;'.
-
-As a sidenote sd_init_onedisk() should be changed to return void. It is 
-static and the return value is nowhere used.
-
-If my above assumptions are right please let me know, I'll submit 
-patches in this case.
-
+Success, Willem Riede.
