@@ -1,69 +1,100 @@
-From: PinkFreud <pf-linux-scsi-20040717@mirkwood.net>
-Subject: Re: sym53c8xx_2 funkiness...
-Date: Wed, 28 Jul 2004 08:45:09 -0400
+From: "Frank Borich" <Frank_Borich@us.xyratex.com>
+Subject: RE: QLA2300, Infortrand and LBD?
+Date: Wed, 28 Jul 2004 06:46:05 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040728124509.GK1105@eriador.mirkwood.net>
-References: <20040718030514.GJ1105@eriador.mirkwood.net> <20040724165625.GA1105@eriador.mirkwood.net> <m3zn5nxi6j.fsf@merlin.emma.line.org> <20040726160214.GB1105@eriador.mirkwood.net> <20040726161825.GA14799@merlin.emma.line.org>
+Message-ID: <47F3C2BE74738E4683574107469DFA204CC855@XYUSEX01.xyus.xyratex.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pcp09895235pcs.ewndsr01.nj.comcast.net ([68.36.161.84]:4881
-	"HELO rivendell.mirkwood.net") by vger.kernel.org with SMTP
-	id S266902AbUG1MpQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 28 Jul 2004 08:45:16 -0400
-Content-Disposition: inline
-In-Reply-To: <20040726161825.GA14799@merlin.emma.line.org>
+Received: from xyratexus11.xyratex.com ([65.203.33.11]:40953 "EHLO
+	XYUSEX01.xyus.xyratex.com") by vger.kernel.org with ESMTP
+	id S266914AbUG1NqO convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 28 Jul 2004 09:46:14 -0400
+Content-class: urn:content-classes:message
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: "tester7 A." <benew666@hotmail.com>, James.Bottomley@steeleye.com
+Cc: linux-scsi@vger.kernel.org, tech@storageone.co.kr
 
-On Mon, Jul 26, 2004 at 06:18:26PM +0200, Matthias Andree babbled thus:
-> On Mon, 26 Jul 2004, PinkFreud wrote:
-> 
-> > Can one safely disable disconnect if there are multiple devices on the
-> > bus?  In particular, the system has a hard disk and a cdrom (both
-> > external - and yes, I tried replacing the cable from the box to the
-> > drives, and at the moment, I only have the hd plugged in).
-> 
-> It'll cause some quirks, such as the HD not being able to be accessed
-> while the CD-ROM retries reading a defective sector or while it is
-> operating its tray to eject or load a disc.
+Looking at an FC trace on an Infortrend controller I have, shows that
+for a LUN 3586680 MB in size, the LBA is B5D3BFFF in the "RETURNED
+LOGICAL BLOCK ADDRESS FIELD" 
+and with in the "BLOCK LENGTH IN BYTES FIELD" field is 200h , ( B5D3BFFF
+* 200h =  approx. 1.6 TB). Seems that infortrend does NOT respond
+properly to READ_CAPACITY_10, at least in my case. 
+James, this may be a dumb question, please excuse my ignorance of the
+internals of the scsi subsystem, 
+but is there a plan to implement LBD support in the 2.4 tree ?
 
-Uhgh.
+Frank Borich
+------------------------------------------------------------------
+Xyratex Inc.
+Systems Engineer
+Direct 630 654 6089
+Fax 630 325 2513
+e-mail frank_borich@us.xyratex.com
+ 
+ 
 
-> 
-> > It's possible I just need to provide some options to the driver - I
-> > wouldn't be surprised if some defaults have changed to favor newer
-> > hardware.  I merely need to find out *what* needs changing...
-> 
-> The documentation in the kernel sources (Documentation/scsi/...) is
-> quite detailed.
-
-Alas, 2.4.26's Documentation/ only seems to contain:
-scsi-changer.txt  scsi-generic.txt  scsi.txt          
-
-Nothing directly referencing sym53c8xx.
-
-I've looked at the sym53c8xx docs from 2.6.x, though.  You're right in
-saying they're detailed.  Unfortunately, there are quite a few options
-one can pass to the driver, and I'm not sure which might help me, and
-what arguments I should use.
-
-It's like trying to find a needle in a haystack... in the dark.
-
-I analyzed the error I got out of 2.6.6, using the 2.6.x docs.  All I
-really got out of that was 'it's broken, someone with scsi knowledge
-might have a clue'.
-
-What do I do?  Just give up on having Linux work on this box?
-
-
-> 
-> -- 
-> Matthias Andree
-
--- 
-                                                                      
-Mike Edwards                    |   If this email address disappears,   
-Unsolicited advertisments to    |   assume it was spammed to death.  To
-this address are not welcome.   |   reach me in that case, s/-.*@/@/
-(This means you, Cogent!)       |                                   
+>>-----Original Message-----
+>>From: linux-scsi-owner@vger.kernel.org 
+>>[mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of tester7 A.
+>>Sent: Monday, June 21, 2004 7:32 PM
+>>To: James.Bottomley@steeleye.com
+>>Cc: linux-scsi@vger.kernel.org; tech@storageone.co.kr
+>>Subject: Re: QLA2300, Infortrand and LBD?
+>>
+>>I have sent the those 2 questions to the Infortrend. When I 
+>>get the answer, I will get back to you.
+>>
+>>Thank you very much.
+>>
+>>
+>>
+>>>From: James Bottomley <James.Bottomley@steeleye.com>
+>>>To: "tester7 A." <benew666@hotmail.com>
+>>>CC: SCSI Mailing List <linux-scsi@vger.kernel.org>, 
+>>>tech@storageone.co.kr
+>>>Subject: Re: QLA2300, Infortrand and LBD?
+>>>Date: 21 Jun 2004 09:09:44 -0500
+>>>
+>>>On Sun, 2004-06-20 at 03:43, tester7 A. wrote:
+>>> > SCSI device sdc: 3022966784 512-byte hdwr sectors 
+>>(1547759 MB) SCSI 
+>>> > device sdc: drive cache: write through
+>>> > sdc: sdc1
+>>> > Attached scsi disk sdc at scsi3, channel 0, id 0, lun 0
+>>>
+>>>The drive itself replied with that capacity, which is 
+>>incorrect.  It's 
+>>>supposed to reply with the largest possible capacity 
+>>(0xffffffff) and 
+>>>we use that as a signal to retry with READ_CAPACITY_16.
+>>>
+>>>Could you contact the support line of the array and make sure of two
+>>>things:
+>>>
+>>>1) It does actually support single LUNs with a capacity of 
+>>>2TB (lots 
+>>>of arrays don't)
+>>>2) And if 1) is true, why is it not responding correctly to the READ 
+>>>CAPACITY(10)? The spec (spc-2 Rev 8, 5.2.11) says "If the number of 
+>>>logical blocks exceeds the maximum value[...]the device server shall 
+>>>transfer FFFFFFFFh in the RETURNED LOGICAL BLOCK ADDRESS field"
+>>>
+>>>James
+>>>
+>>>
+>>
+>>_________________________________________________________________
+>>Add photos to your messages with MSN 8. Get 2 months FREE*. 
+>>http://join.msn.com/?page=features/featuredemail
+>>
+>>-
+>>To unsubscribe from this list: send the line "unsubscribe 
+>>linux-scsi" in the body of a message to 
+>>majordomo@vger.kernel.org More majordomo info at  
+>>http://vger.kernel.org/majordomo-info.html
+>>
+>>
