@@ -1,38 +1,70 @@
-From: John Bradford <john@grabjohn.com>
-Subject: Re: Binary-only firmware covered by the GPL?
-Date: Sat, 27 Mar 2004 09:19:49 GMT
+From: Andrew Schulman <andrex@alumni.utexas.net>
+Subject: dc395x: CD writer causes endless "sg_to_virt failed" loop
+Date: Sat, 27 Mar 2004 09:57:39 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <200403270919.i2R9JnP7000500@81-2-122-30.bradfords.org.uk>
-References: <E1B6Izr-0002Ai-00@r063144.stusta.swh.mhn.de>
- <20040325082949.GA3376@gondor.apana.org.au>
- <20040325220803.GZ16746@fs.tum.de>
- <40635DD9.8090809@pobox.com>
- <20040326003339.GD25059@parcelfarce.linux.theplanet.co.uk>
- <81ptb0wh45.wl@omega.webmasters.gr.jp>
- <4063EFA5.5070001@stesmi.com>
- <200403260912.i2Q9CdLU000531@81-2-122-30.bradfords.org.uk>
- <87brmjaevc.fsf@toncho.dhh.gt.org>
+Message-ID: <c444p3$b3v$1@sea.gmane.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7Bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 81-2-122-30.bradfords.org.uk ([81.2.122.30]:1920 "EHLO
-	81-2-122-30.bradfords.org.uk") by vger.kernel.org with ESMTP
-	id S261725AbUC0NTw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 27 Mar 2004 08:19:52 -0500
-In-Reply-To: <87brmjaevc.fsf@toncho.dhh.gt.org>
+Received: from main.gmane.org ([80.91.224.249]:30923 "EHLO main.gmane.org")
+	by vger.kernel.org with ESMTP id S261766AbUC0PAM (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 27 Mar 2004 10:00:12 -0500
+Received: from root by main.gmane.org with local (Exim 3.35 #1 (Debian))
+	id 1B7FIA-0006WQ-00
+	for <linux-scsi@vger.kernel.org>; Sat, 27 Mar 2004 16:00:10 +0100
+Received: from pcp04415756pcs.nrockv01.md.comcast.net ([69.140.191.214])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-scsi@vger.kernel.org>; Sat, 27 Mar 2004 16:00:10 +0100
+Received: from andrex by pcp04415756pcs.nrockv01.md.comcast.net with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-scsi@vger.kernel.org>; Sat, 27 Mar 2004 16:00:10 +0100
 List-Id: linux-scsi@vger.kernel.org
-To: John Hasler <john@dhh.gt.org>, 239952@bugs.debian.org, debian-devel@lists.debian.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-Quote from John Hasler <john@dhh.gt.org>:
-> John Bradford writes:
-> > Then why didn't the original programmer leave a patch space to allow for
-> > such modifications?  Surely that could be considered part of the
-> > 'preferred form'.
-> 
-> It would be the 'preferred form' if and only if it's the form in which he
-> wrote it, patch space or no.
+I have a Tekram DC395UW card, running in Debian with kernel 2.6.3 and the
+dc395x driver from the kernel source.  Attached to the card are a Seagate
+Travan NS20 tape drive, and an HP 9200i CD writer:
 
-But does 'preferred form' == 'the form it was written in' necessarily
-apply for things like assembler?  My example about leaving a patch
-space wasn't really serious, I was just using it to demonstrate that
-point.
+Mar 27 09:50:53 helium kernel: dc395x: Tekram DC395(U/UW/F), DC315(U) - ASIC TRM-S1040 v2.04, 2003/05/19
+Mar 27 09:50:53 helium kernel: dc395x: Used settings: AdapterID=07, Speed=0(20.0MHz), dev_mode=0x77
+Mar 27 09:50:53 helium kernel: dc395x:                AdaptMode=0x0f, Tags=4(16), DelayReset=1s
+Mar 27 09:50:53 helium kernel: dc395x: (Wide) Connectors: int50  Termination: Auto Low High
+Mar 27 09:50:53 helium kernel: dc395x: Performing initial SCSI bus reset
+Mar 27 09:50:53 helium kernel: scsi2 : Tekram DC395(U/UW/F), DC315(U) - ASIC TRM-S1040 v2.04, 2003/05/19
+Mar 27 09:50:55 helium kernel: dc395x: Target 02:  Sync: 100ns Offset 15 (10.0 MB/s)
+Mar 27 09:50:55 helium kernel:   Vendor: Seagate   Model: STT20000N         Rev: 7A61
+Mar 27 09:50:55 helium kernel:   Type:   Sequential-Access                  ANSI SCSI revision: 02
+Mar 27 09:50:55 helium scsi.agent[2072]: tape at /devices/pci0000:00/0000:00:1e.0/0000:02:04.0/host2/2:0:2:0
+Mar 27 09:50:55 helium kernel: st: Version 20040122, fixed bufsize 32768, s/g segs 256
+Mar 27 09:50:55 helium kernel: Attached scsi tape st0 at scsi2, channel 0, id 2, lun 0
+Mar 27 09:50:55 helium kernel: st0: try direct i/o: yes, max page reachable by HBA 1048575
+Mar 27 09:50:56 helium kernel: dc395x: Target 06:  Sync: 100ns Offset 15 (10.0 MB/s)
+Mar 27 09:50:56 helium kernel:   Vendor: HP        Model: CD-Writer+ 9200   Rev: 1.0e
+Mar 27 09:50:56 helium kernel:   Type:   CD-ROM                             ANSI SCSI revision: 04
+Mar 27 09:50:56 helium scsi.agent[2085]: cdrom at /devices/pci0000:00/0000:00:1e.0/0000:02:04.0/host2/2:0:6:0
+Mar 27 09:51:03 helium kernel: sr0: scsi3-mmc drive: 32x/32x writer cd/rw xa/form2 cdda tray
 
-John.
+The tape drive works normally.  But as soon as I try to use the CD drive--
+by, for example, trying to mount or burn a CD-- my console and syslog
+begin to fill up with "dc395x: sg_to_virt failed!" messages-- several
+hundred per second.  I can't unload the driver, and my system becomes
+sluggish.  Once this starts I've often had to force a case reboot in order
+to restore normal operation.  As you can imagine, I'm not happy about
+that.
+
+I'm frustrated by this problem because the drive worked fine with earlier
+kernels.  It definitely worked fine with 2.6.0-test4 and -test9.  I don't
+want to go back to an earlier kernel, because of other security and
+hardware issues.  My 2.6.3 kernel works perfectly, except that now my CD
+writer is broken.
+
+Any help would be much appreciated.  I'm willing to try any patches or
+diagnostics.
+
+Thanks,
+Andrew.
+
+
