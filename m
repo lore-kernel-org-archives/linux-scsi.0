@@ -1,82 +1,54 @@
-From: Fabien Salvi <fabien@cri74.org>
-Subject: Re: hot scsi disk resize
-Date: Wed, 05 Mar 2003 11:18:09 +0100
+From: rob@osinvestor.com (Rob Radez)
+Subject: [rob@osinvestor.com: Re: SCSI broken]
+Date: Wed, 5 Mar 2003 09:43:37 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3E65CEE1.9020307@cri74.org>
-References: <m3bs0s9xij.fsf@lexa.home.net> <3E64727C.9040204@cri74.org> <m31y1n8o3p.fsf@lexa.home.net>
+Message-ID: <20030305144336.GA13722@osinvestor.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
+Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
-To: alexey@technomagesinc.com
-Cc: linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@steeleye.com>, Jens Axboe <axboe@suse.de>, Dennis Gerasimov <denis@technomagesinc.com>
+To: linux-scsi@vger.kernel.org
 
+[forgot to cc: linux-scsi@]
 
+Also forgot to mention that 2.5.64 hangs in the same spot as 2.5.63.
 
-alexey@technomagesinc.com a =E9crit:
->>>>>>Fabien Salvi (FS) writes:
->>>>>
->=20
->  FS> Well, I also think it's a very important and needed feature for
->  FS> HA systems.  I'm very interested in such things...
->=20
->  FS> But, I thought resize_reiserfs only resize *unmounted* filesyste=
-m
->  FS> : http://www.reiserfs.org/resize_reiserfs.html
->=20
-> citate from this URL: "The resize_reiserfs program allows to grow a
-> reiserfs on-line if there is a free space on block device."
+----- Forwarded message from Rob Radez <rob@osinvestor.com> -----
 
-Yes, you're right !
-I haven't seen this...
-It's a bit strange, it contradicts what is said on the first line :)
+From: rob@osinvestor.com (Rob Radez)
+To: David van Hoose <davidvh@cox.net>
+Cc: linux-kernel@vger.kernel.org
+Date: Wed, 5 Mar 2003 00:44:57 -0500
+Subject: Re: SCSI broken
 
+On Tue, Mar 04, 2003 at 11:42:41PM -0600, David van Hoose wrote:
+> Kernels 2.5.63 and 2.5.64 lock up when displaying the information for my 
+> ZipDrive during SCSI probe. Attached is my .config for 2.5.64.
 
->  FS> Will it work under IO load ?
->=20
-> I tested it several times under different load (read-only, write-only=
-,
-> read-write, single-thread and multi-thread tests). I think reiserfs
-> team may give comments.
+I suspect I'm seeing something similar.  On SPARC, I'm getting a hang
+after displaying the information for my SCSI CD-ROM drive.
 
+scsi0 : Sparc ESP100A-FAST
+Vendor: SEAGATE   Model: ST31200W SUN1.05  Rev: 8724
+Type:   Direct-Access                      ANSI SCSI revision: 02
+Vendor: SEAGATE   Model: ST32155W SUN2.1G  Rev: 8456
+Type:   Direct-Access                      ANSI SCSI revision: 02
+Vendor: TOSHIBA   Model: XM-4101TASUNSLCD  Rev: 1755
+Type:   CD-ROM                             ANSI SCSI revision: 02
+<hang>
 
->  FS> Reiserfs has a way to do it dynamically while using it, with
->  FS> mount option : http://www.reiserfs.org/mount-options.html
->=20
->  FS> I've tested this without a lot of success (I encounter a lot of
->  FS> problems).
->=20
-> what kind of problem have you seen? what versions of kernel/reiserfs/=
-tools?
+.config available on request.  Worked fine in 2.5.62, hangs in 2.5.63.
+Reverting the scsi changes listed at
+http://osinvestor.com/sparc/patch/2.5.63-revertscsi.diff allows 2.5.63
+to boot.
 
-Well, I made some tests one year ago, I will try this again, as you say=
-=20
-it seems to work well, it's interested...
-I will let you know my new results.
-
->  FS> I'm afraid that even if scsi subsystem support the resize option=
-,
->  FS> FileSystems won't support it correctly...  Maybe with LVM ?
->=20
->  FS> Did someone test it ?
->=20
->>From filesystem point of view, LVM and resizable SCSI HDD are the sam=
-e
-> think - just block device which may grow.
->=20
-> I think this patch is just one more step in the right direction.
-
-Yes, surely !
-
---=20
-=46abien SALVI      Centre de Ressources Informatiques
-                   Archamps, France -- http://www.cri74.org
-                   PingOO GNU/linux distribution : http://www.pingoo.or=
-g
-
+Regards,
+Rob Radez
 -
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
+To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
 the body of a message to majordomo@vger.kernel.org
 More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Please read the FAQ at  http://www.tux.org/lkml/
+
+----- End forwarded message -----
