@@ -1,60 +1,56 @@
 From: Matthew Dharm <mdharm-scsi@one-eyed-alien.net>
 Subject: Re: PATCH: exclude certain commands from emulated SCSI hosts
-Date: Sun, 23 Mar 2003 22:58:11 -0800
+Date: Sun, 23 Mar 2003 23:04:38 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030323225811.D24668@one-eyed-alien.net>
-References: <20030323173733.B24668@one-eyed-alien.net> <Pine.LNX.4.44.0303231754350.31675-100000@home.transmeta.com>
+Message-ID: <20030323230438.E24668@one-eyed-alien.net>
+References: <20030322193705.C17056@one-eyed-alien.net> <Pine.LNX.4.44.0303222005520.29393-100000@home.transmeta.com> <20030322233136.D17056@one-eyed-alien.net> <1048467235.1634.22.camel@mulgrave> <20030323173733.B24668@one-eyed-alien.net> <1048469946.1643.2.camel@mulgrave>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=pgp-md5;
-	protocol="application/pgp-signature"; boundary="bjuZg6miEcdLYP6q"
+	protocol="application/pgp-signature"; boundary="KuLpqunXa7jZSBt+"
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.44.0303231754350.31675-100000@home.transmeta.com>; from torvalds@transmeta.com on Sun, Mar 23, 2003 at 05:58:43PM -0800
+In-Reply-To: <1048469946.1643.2.camel@mulgrave>; from James.Bottomley@SteelEye.com on Sun, Mar 23, 2003 at 07:39:01PM -0600
 List-Id: linux-scsi@vger.kernel.org
-To: Linus Torvalds <torvalds@transmeta.com>
-Cc: James Bottomley <James.Bottomley@steeleye.com>, USB Developers <linux-usb-devel@lists.sourceforge.net>, USB Storage List <usb-storage@one-eyed-alien.net>, Linux SCSI list <linux-scsi@vger.kernel.org>
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Linus Torvalds <torvalds@transmeta.com>, USB Developers <linux-usb-devel@lists.sourceforge.net>, USB Storage List <usb-storage@one-eyed-alien.net>, Linux SCSI list <linux-scsi@vger.kernel.org>
 
 
---bjuZg6miEcdLYP6q
+--KuLpqunXa7jZSBt+
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
 Content-Transfer-Encoding: quoted-printable
 
-Well, I've already done that -- notice that we don't use START_STOP
-anymore...
+Well, here's my list of what the 'popular OS' uses for all devices:
 
-EVPD INQUIRY, INQUIRY for bytes !=3D 36, and MODE_SENSE are big offenders.
+INQUIRY (for only 36 bytes -- nothing else!)
+TEST_UNIT_READY
+REQUEST_SENSE
+ALLOW_MEDIUM_REMOVAL (mostly for eject purposes)
 
-But, EVPD INQUIRY is something that's a problem.  Getting rid of it isn't
-easy -- someone put it in there because they wanted/needed the data.
+For disk-like media:
 
-INQUIRY !=3D 36 bytes has been discussed before.  Since low-level drivers
-snoop the data past 36-bytes, we can't completely get rid of this -- tho I
-think this really means that the LLDD need fixing.
+READ_10
+WRITE_10
 
-MODE_SENSE is something that Linux uses to check for write-protect status.
-I could chuck the entire thing, but then we would assume write-enabled for
-all disk-like media.
+I'd have to go back to my notes for tape and CD media.  But those aren't my
+biggest problem areas -- the common probe and the disk driver are my
+biggest headaches.
 
-Note that not all of these fall into the 'not-well tested' category.
-Certainly, INQUIRY !=3D 36 is something that we blacklist (for having a long
-history of problems).  MODE_SENSE doesn't have any historical problems that
-I know about.  EVPD certainly hasn't had much testing.... but can I just
-get rid of it then?
+Note that MODE_SENSE isn't on this list.  How does the 'popular OS' test
+for write-protect, you ask?  It tries to write and then looks for a
+failure, AFAICT.
+
+Note that this data comes from observations about what commands all devices
+seem to support.
+
+I'd be willing to write a helper, but I'm a bit out of my element here...
+can someone at least suggest a good place to put such a helper (or
+volunteer to mock one up for me)?
 
 Matt
 
-On Sun, Mar 23, 2003 at 05:58:43PM -0800, Linus Torvalds wrote:
->=20
-> On Sun, 23 Mar 2003, Matthew Dharm wrote:
->=20
-> > On Sun, Mar 23, 2003 at 07:26:09PM -0600, James Bottomley wrote:
-> > > The problem with this type of approach is that there's no unified list
-> > > of "known good" commands that actually let you operate a device.  The
-> > > SCSI and ATAPI standards have been gradually deprecating the commands
-> > > that SCSI-1 (and sometimes even SCSI-2) regard as mandatory
-> > > (READ_6/WRITE_6 springs to mind).
-> >=20
+On Sun, Mar 23, 2003 at 07:39:01PM -0600, James Bottomley wrote:
+> On Sun, 2003-03-23 at 19:37, Matthew Dharm wrote:
 > > Actually, there is such a list.  It's the commands that the 'popular OS'
 > > uses, and I have a pretty good idea exactly what those are.  That's why=
  my
@@ -62,37 +58,26 @@ On Sun, Mar 23, 2003 at 05:58:43PM -0800, Linus Torvalds wrote:
 at
 > > definition.
 >=20
-> Now _this_ is actually a valid approach, but then I would suggest you do
-> what Andries Brouwer has done a few times: just make the Linux SCSI layer
-> not use those commands _at_all_ - and instead use the sequences of
-> commands that "that other OS" uses. That fixed a lot of the smartmedia=20
-> problems I used to have - doing simple things like _not_ trying to spin u=
-p=20
-> devices that reported themselves to be already active etc.
+> Well, if you want to write a helper for the mid layer that checks the
+> commands and returns a Check Condition with sense Illegal Reguest on the
+> bad ones, that sounds like the best approach.  You can then call the
+> helper function in the queuecommand of the problem emulated drivers.
 >=20
-> This isn't an "emulated vs native" thing, btw, it's a much more generic=
-=20
-> "don't use commands that haven't gotten much testing" approach, and shoul=
-d=20
-> probably be done both on emulated devices _and_ on "real" SCSI devices.
+> Can you publish a rough list of these?
 >=20
-> After all, "real" devices have problems too - I bet a lot of our
-> historical SCSI black-lists have been due to exactly the same issues you
-> see on emulated USB, with devices just reacting badly to command sequences
-> that they didn't expect and that hadn't been tested by the manufacturer.
+> James
 >=20
-> 			Linus
 
 --=20
 Matthew Dharm                              Home: mdharm-usb@one-eyed-alien.=
 net=20
 Maintainer, Linux USB Mass Storage Driver
 
-I'm seen in many forms.  Now open your mouth.  It's caffeine time.
-					-- Cola Man to Greg
-User Friendly, 10/28/1998
+Dudes! May the Open Source be with you.
+					-- Eric S. Raymond
+User Friendly, 12/3/1998
 
---bjuZg6miEcdLYP6q
+--KuLpqunXa7jZSBt+
 Content-Type: application/pgp-signature
 Content-Disposition: inline
 
@@ -100,9 +85,9 @@ Content-Disposition: inline
 Version: GnuPG v1.0.6 (GNU/Linux)
 Comment: For info see http://www.gnupg.org
 
-iD8DBQE+fqyDIjReC7bSPZARAviJAJ9P6fj1I8D4yszI1PHE0Mm0jHeFggCfZ5Ou
-gT86Fe9G9miL0HiHgNJZizg=
-=al5y
+iD8DBQE+fq4GIjReC7bSPZARAsJ6AJ0fxhLRjE+9VskmjfrjbR7s2MRVYgCfTWRC
+uaF0C/8EmAc9Cl1929WI7vY=
+=AGOo
 -----END PGP SIGNATURE-----
 
---bjuZg6miEcdLYP6q--
+--KuLpqunXa7jZSBt+--
