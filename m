@@ -1,44 +1,38 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: [PATCH] scsi_debug  v 1.75 for lk 2.6.9-bk4
-Date: Sat, 23 Oct 2004 15:27:54 +1000
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH] Re: libata:  BLKFLSBUF ioctl broken
+Date: Fri, 22 Oct 2004 13:20:24 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <4179EBDA.1090205@torque.net>
-References: <4179B89B.8030207@torque.net>
-Reply-To: dougg@torque.net
+Message-ID: <41794158.9010308@pobox.com>
+References: <4178244E.1060906@rtr.ca> <20041022040423.GA28782@havoc.gtf.org>	 <41791728.7060106@rtr.ca>  <41793E68.6010000@pobox.com> <1098461668.19463.22.camel@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from borg.st.net.au ([65.23.158.22]:32182 "EHLO borg.st.net.au")
-	by vger.kernel.org with ESMTP id S267702AbUJWF2j (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 23 Oct 2004 01:28:39 -0400
-In-Reply-To: <4179B89B.8030207@torque.net>
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:64942 "EHLO
+	www.linux.org.uk") by vger.kernel.org with ESMTP id S267263AbUJVRUh
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 22 Oct 2004 13:20:37 -0400
+In-Reply-To: <1098461668.19463.22.camel@localhost.localdomain>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: nacc@us.ibm.com
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Mark Lord <lsml@rtr.ca>, linux-scsi@vger.kernel.org, Jens Axboe <axboe@suse.de>
 
-Douglas Gilbert wrote:
-> This gzipped patch is against lk 2.6.9-bk4 which is
-> after the lk 2.6.9 release and includes James's "[BK
-> PATCH] SCSI updates for 2.6.9" omnibus patch.
+Alan Cox wrote:
+> libata should be returning -ENOTTY "I don't know what you are talking
+> about", and the core block layer will then fallback and do generic
+> handling
 > 
-> The changelog is with respect to version 1.74 found
-> in James's post lk 2.6.9 patch. The scsi_debug.[hc] files
-> can be found in the sdebug175.tgz tarball at
-> http://www.torque.net/sg/sdebug26.html
-> 
-> Nishanth, perhaps you could test this version and report
-> if it works and if the data transfers still seem slow.
-> 
-> Changelog:
->     - fix highmem data transfers
->          - fix kunmap_atomic() argument
->          - disable clustering
->     - allow every_nth < 0 for error continuously once
->       count is reached
->     - minor sense buffer handling cleanup
+> -EOPNOTSUPP is saying "I do know what is going on but its broken so
+> fail it totally".
 
-The patch applies and works against lk 2.6.10-rc1 as well.
+Are you describing behavior mandated in some standard?
 
-Doug Gilbert
+Because that differs with _tons_ of existing ioctl code, whose default 
+return code is EOPNOTSUPP when no known operation is found in a C 
+"switch(cmd)" statement.
+
+grep for it...
+
+	Jeff
+
+
