@@ -1,23 +1,28 @@
-From: "Cress, Andrew R" <andrew.r.cress@intel.com>
+From: hong.ye@adic.com
 Subject: RE: adaptec problem (now LSI U320 problem)
-Date: Fri, 2 May 2003 06:34:57 -0700
+Date: Fri, 2 May 2003 06:36:54 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <A5974D8E5F98D511BB910002A50A66470580D809@hdsmsx103.hd.intel.com>
+Message-ID: <995FF289C9D69747A09E429926445954014B9A28@penguin.adic.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fmr01.intel.com ([192.55.52.18]:21470 "EHLO hermes.fm.intel.com")
-	by vger.kernel.org with ESMTP id S262884AbTEBNSJ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 2 May 2003 09:18:09 -0400
-Received: from talaria.fm.intel.com (talaria.fm.intel.com [10.1.192.39])
-	by hermes.fm.intel.com (8.11.6p2/8.11.6/d: outer.mc,v 1.51 2002/09/23 20:43:23 dmccart Exp $) with ESMTP id h42DQVc09895
-	for <linux-scsi@vger.kernel.org>; Fri, 2 May 2003 13:26:31 GMT
-Received: from fmsmsxvs041.fm.intel.com (fmsmsxvs041.fm.intel.com [132.233.42.126])
-	by talaria.fm.intel.com (8.11.6p2/8.11.6/d: inner.mc,v 1.28 2003/01/13 19:44:39 dmccart Exp $) with SMTP id h42DVW602828
-	for <linux-scsi@vger.kernel.org>; Fri, 2 May 2003 13:31:32 GMT
+Received: from [63.81.117.28] ([63.81.117.28]:37864 "EHLO penguin.adic.com")
+	by vger.kernel.org with ESMTP id S262894AbTEBN2M (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 2 May 2003 09:28:12 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: 'invictus rm' <invictus_rm@hotmail.com>
-Cc: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
+To: andrew.r.cress@intel.com, invictus_rm@hotmail.com
+Cc: linux-scsi@vger.kernel.org
+
+What's your PCI bus clock rate. For LSI 1030 driver, PCI bus clock rate need to be 66MHZ or 133MHZ. I had similar problem before and I found that 1030 driver won't work properly if PCI bus clock rate is 33MHZ.
+
+Hong 
+
+-----Original Message-----
+From: Cress, Andrew R [mailto:andrew.r.cress@intel.com] 
+Sent: Friday, May 02, 2003 9:35 AM
+To: 'invictus rm'
+Cc: 'linux-scsi@vger.kernel.org'
+Subject: RE: adaptec problem (now LSI U320 problem)
 
 I notice that the lsil.com web site has a 2.05.00 version of the FusionMPT
 driver.  Perhaps that would help.
@@ -580,3 +585,7 @@ rm
 _________________________________________________________________
 Still unmarried? Not for long. http://www.msn.co.in/Matrimony/ Find a life 
 partner now
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
