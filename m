@@ -1,73 +1,38 @@
-From: "Randy.Dunlap" <rddunlap@osdl.org>
-Subject: Re: [PATCH] [RFC] Advanced TCA SCSI Disk Hotswap
-Date: Sun, 27 Oct 2002 12:25:18 -0800 (PST)
+From: James Bottomley <James.Bottomley@steeleye.com>
+Subject: Re: [PATCH] fix sector_div use in scsicam.c
+Date: Sun, 27 Oct 2002 14:53:29 -0600
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.33L2.0210271220010.8140-100000@dragon.pdx.osdl.net>
-References: <200210270908.59805.landley@trommello.org>
+Message-ID: <200210272053.g9RKrT612587@localhost.localdomain>
+References: <aebr@win.tue.nl>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <200210270908.59805.landley@trommello.org>
+Received: (from root@localhost)
+	by pogo.mtv1.steeleye.com (8.9.3/8.9.3) id MAA28651
+	for <linux-scsi@vger.kernel.org>; Sun, 27 Oct 2002 12:53:34 -0800
+In-Reply-To: Message from Andries Brouwer <aebr@win.tue.nl>
+   of "Sun, 27 Oct 2002 20:22:28 +0100." <20021027192228.GA28395@win.tue.nl>
 List-Id: linux-scsi@vger.kernel.org
-To: Rob Landley <landley@trommello.org>
-Cc: Jeff Garzik <jgarzik@pobox.com>, James Bottomley <James.Bottomley@steeleye.com>, Steven Dake <sdake@mvista.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Andries Brouwer <aebr@win.tue.nl>
+Cc: Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org
 
-On Sun, 27 Oct 2002, Rob Landley wrote:
+aebr@win.tue.nl said:
+> I see you trying to get this scsicam code do something that it should
+> not. No 64-bit handling required or even desirable. Any use of
+> sector_div here is wrong. 
 
-(maybe wrap lines around column 70 ? :)
+Could you explain why?  Once the disc is too big for the HDIO_GETGEO 
+interface, we're returning rubbish anyway.  Whether we overflow or truncate 
+seems irrelevant.  The ide code overflows, it doesn't truncate to the maximum, 
+so we're at least following existing conventions.
 
-...
+However, should we ever implement the big_geometry interface, then we would 
+still be able to use the routine as Christoph has coded it, so the fix looks 
+like the correct future proofing to me.
 
-Stephen Tweedie did something like this already (for 2.4.19-pre10),
-called "testdrive".  It uses loopback over a block device.
-He says that it will need modifications to use bio in 2.5.
+If you really want the truncation, it should probably be done in the sd_ioctl 
+code.
 
-See here:
-http://marc.theaimsgroup.com/?l=linux-kernel&m=102457399020069&w=2
+James
 
--- 
-~Randy
-
-| Hmmm...  Not being familiar with the SCSI layer but sticking my nose in anyway
-| on general block device/mount point hotplug issues:
-|
-| How hard would it be to write a simple debugging function to lobotomize a
-| block device?  (So that all further I/O to that sucker immediately returns an
-| error.)  Not just simulating an a hot extraction (or catastrophic failure) of
-| a block device, but also something you could use to see how gracefully
-| filesystems react.
-|
-| The reason I ask is there was a discussion a while back about the new lazy
-| unmount (umount -l /blah/foo) not always being quite enough, and that
-| sometimes what what you want is basically "umount -9 /blah/foo" (ala kill
-| -9).  Close all files, reparent all process home directories and chroot mount
-| points to a dummy inode, flush all I/O, drive a stake through the
-| superblock's heart, and scatter the ashes at sea.  Somebody posted a patch to
-| actually do this.  (Against 2.4, i think.)  I could probably dig it up if you
-| were curious.  Let's see...
-|
-| http://marc.theaimsgroup.com/?l=linux-kernel&m=103443466225915&q=raw
-|
-| The eject command should certainly have an "umount with shotgun" option, so
-| zombie processes can't pin your CD in the drive.  (Your average end-user is
-| NOT going to be able to grovel through /proc to figure out which processes
-| have an open filehandle or home directory under the cdrom mount point so it
-| can kill them and get the disk out.  They're going to power cycle the machine
-| and eject it while the bios is in charge.  I've done this myself a couple of
-| times when I'm in a hurry.)
-|
-| Anyway, if the block device under the filesystem honestly does go away for
-| hotplug eject reasons, the obvious thing to do is umount -9 the sucker
-| immediately so userspace can collapse gracefully (or even conceivably
-| recover).  The main difference here is that the flushing would all error out
-| and get discarded, and this wouldn't always get reported to the user, but
-| thanks to write cacheing that's the case anyway.  (Use some variant of
-| O_DIRECT or fsync if you care.)  The errors userspace does see switch from
-| "all my I/O failed with a media error" to "all my filehandles closed out from
-| under me" (and the directory I'm in has been deleted), but that's still
-| relatively logical behavior.
-|
-| Does this sound like it's off in left field?
-|
-| Rob
 
