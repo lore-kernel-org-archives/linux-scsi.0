@@ -1,61 +1,58 @@
-From: Nicolas Bouthors <guizmow@nbi.fr>
-Subject: Strange problem from 2.4.9 to 2.4.20
-Date: Mon, 02 Aug 2004 09:59:54 +0200
+From: Jens Axboe <axboe@suse.de>
+Subject: Re: [usb-storage] 2.4.27rc2, DVD-RW support broke DVD-RAM writes
+Date: Mon, 2 Aug 2004 10:07:05 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <410DF47A.1060501@nbi.fr>
+Message-ID: <20040802080704.GH10496@suse.de>
+References: <20040730153657.GB2748@logos.cnet> <20040731163334.GH23697@suse.de> <76A380F2-E3C5-11D8-B01E-00039398BB5E@ieee.org> <06E9D950-E3EF-11D8-B976-00039398BB5E@ieee.org> <70B2077E-E401-11D8-B976-00039398BB5E@ieee.org> <20040801235357.GB18403@one-eyed-alien.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from chez.nicolas.bouthors.org ([82.227.155.112]:1768 "EHLO
-	chez.nicolas.bouthors.org") by vger.kernel.org with ESMTP
-	id S266353AbUHBH7M (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 2 Aug 2004 03:59:12 -0400
-Received: from nbi.fr (unknown [192.168.0.19])
-	by chez.nicolas.bouthors.org (Postfix) with ESMTP id E247071C002
-	for <linux-scsi@vger.kernel.org>; Mon,  2 Aug 2004 09:59:09 +0200 (CEST)
+Received: from ns.virtualhost.dk ([195.184.98.160]:34506 "EHLO virtualhost.dk")
+	by vger.kernel.org with ESMTP id S266357AbUHBH7g (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Aug 2004 03:59:36 -0400
+Content-Disposition: inline
+In-Reply-To: <20040801235357.GB18403@one-eyed-alien.net>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Pat LaVarre <p.lavarre@ieee.org>, linux-scsi@vger.kernel.org, "usb-storage@lists.one-eyed-alien.net list" <usb-storage@lists.one-eyed-alien.net>
 
-Hi all,
+On Sun, Aug 01 2004, Matthew Dharm wrote:
+> On Sun, Aug 01, 2004 at 03:26:24PM -0600, Pat LaVarre wrote:
+> > Jens A/ Matt D:
+> > 
+> > Linux 2.4.27-rc4 and 2.4.26 do Not recognise USB DVD-RAM disc 
+> > rewritability, even though 2.4.27 has recognised USB Iomega REV disc 
+> > rewritability at least since -rc3.
+> > 
+> > Q0: Agreed?
+> 
+> I'll take your word for it.
+> 
+> > Q1: Would you consider a promptly written patch to persuade 2.4.27-rc4 
+> > to recognise USB DVD-RAM rewritability?  Or is 2.4 development already 
+> > too over?
+> 
+> I've turned over 2.4 maintance to Pete Zaitcev.
 
-I hope this is not a FAQ, I tried to look in the archives but couldn't 
-find anything relevant :
-I have a problem with a change of kernel. The machine is a dell with 2 
-internal SCSI
-drives and an external RAID array the machine has 4 Adaptec controlers 
-and evetything
-works fine with kernel 2.4.9 from Redhat. For testing purpose I compiled 
-a 2.4.20 and
-when I boot I get the following message :
+I think this was a general question. If the patch is to go into
+2.4.27-rc now, then it has to be to the point and straight forward (aka
+obviously correct). Otherwise we back it out, and get it fixed for
+2.4.28-rc.
 
-(scsi2:A:3): 80.000MB/s transfers (40.000MHz DT, offset 31, 16bit)
-(scsi2:A:3:0): parity error detected in Command phase. SEQADDR(0x1a2) 
-SCSIRATE(0xc3)
-  CRC Value Mismatch
-  No terminal CRC packet recevied
-  Illegal CRC packet request
-  Unexpected non-DT Data Phase
-scsi2:A:3: Missed busfree. Lastphase = 0xe0, Curphase = 0x0
-(scsi2:A:3:0): parity error detected in Command phase. SEQADDR(0x1a2) 
-SCSIRATE(0xc3)
-  CRC Value Mismatch
-  No terminal CRC packet recevied
-  Illegal CRC packet request
-  Unexpected non-DT Data Phase
-scsi2:A:3: Missed busfree. Lastphase = 0xe0, Curphase = 0x0
+> > Q2: Where do you want the patch?  In drivers/usb?  In drivers/scsi?
+> 
+> To me, it sounds like drivers/scsi would be better.  Tho I can see good
+> arguments for either location.
 
-sdc should be the external RAID array but it is not seed by Linux after 
-this message and not usable.
+Agree
 
-The rest of dmesg is normal, except for this part and the hardware 
-configuration didn't change,
-only the kernel.
+> > Q3: What patch do you want? Should we try op x5A after op x1A fails?  
+> > Or should we try only op x5A?  Or should we try op x5A first?
+> 
+> I would think on a SCSI Level 2 device, we should start with x5A.
 
-Any comment apreciated,
+Agree. But such a change alone means that it cannot go into 2.4.27, it
+has to be in 2.4.28-pre.
 
-Thanks,
-
-    Nicolas Bouthors
-
+-- 
+Jens Axboe
 
