@@ -1,37 +1,39 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: "do ata" scsi command?
-Date: Fri, 16 May 2003 08:03:24 +0200
+From: Heiko Carstens <heiko.carstens@de.ibm.com>
+Subject: Re: [Bug]+[Patch] kernel oops after removing lld
+Date: Fri, 16 May 2003 08:55:56 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030516060324.GT812@suse.de>
-References: <20030515230223.GA516@gtf.org>
+Message-ID: <200305160855.56748.heiko.carstens@de.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns.virtualhost.dk ([195.184.98.160]:7376 "EHLO virtualhost.dk")
-	by vger.kernel.org with ESMTP id S264294AbTEPFuj (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 16 May 2003 01:50:39 -0400
-Content-Disposition: inline
-In-Reply-To: <20030515230223.GA516@gtf.org>
+Received: from d12lmsgate-5.de.ibm.com ([194.196.100.238]:54438 "EHLO
+	d12lmsgate-5.de.ibm.com") by vger.kernel.org with ESMTP
+	id S264325AbTEPGvR convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 16 May 2003 02:51:17 -0400
+Received: from d12relay01.de.ibm.com (d12relay01.de.ibm.com [9.165.215.22])
+	by d12lmsgate-5.de.ibm.com (8.12.9/8.12.8) with ESMTP id h4G742lr052582
+	for <linux-scsi@vger.kernel.org>; Fri, 16 May 2003 09:04:02 +0200
+Received: from osiris (osiris.boeblingen.de.ibm.com [9.152.242.25])
+	by d12relay01.de.ibm.com (8.12.9/NCO/VER6.5) with ESMTP id h4G742Ew071744
+	for <linux-scsi@vger.kernel.org>; Fri, 16 May 2003 09:04:02 +0200
 List-Id: linux-scsi@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Thu, May 15 2003, Jeff Garzik wrote:
-> In terms of a userspace interface for my ata-over-scsi gadget, I would
-> prefer to use /dev/sg instead of inventing a totally new interface.
-> That, in turn, implies a need for a "do ata taskfile" scsi command,
-> which is sorta like ATAPI in reverse:  we are wrapping a raw ata
-> taskfile inside a scsi cdb.
->
-> My question is, does an existing standard or spec exist for such an idea?
+Hi all again, 
+
+>I got a kernel oops when doing the following:
 > 
-> If not, I'll just roll my own.
+>modprobe <lowleveldriver>
+>rmmod <lowleveldriver>
+>ls -al /proc/scsi
+ 
+actually I got the kernel oops with kernel 2.4.20 and ported 
+my patch (which doesn't work anyway) to 2.4.21-rc2 without 
+thinking too much. But it looks like this bug has been fixed. 
+Maybe I should read the code more carefully next time :) 
 
-For ATAPI/SCSI like stuff, you have SG_IO. No need to invent yet another
-submission interface for that. For ata, you have HDIO_DRIVE_TASKFILE
-which is getting to be sane on the kernel side after Bart cleaned it up.
-
--- 
-Jens Axboe
+duh..., 
+Heiko 
 
