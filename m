@@ -1,67 +1,34 @@
 From: Adrian Bunk <bunk@stusta.de>
-Subject: [2.6 patch] SCSI t128.c: remove an unused function
-Date: Mon, 15 Nov 2004 03:38:59 +0100
-Message-ID: <20041115023859.GE2249@stusta.de>
+Subject: [2.6 patch] SCSI ultrastor.c: make a varialbe static
+Date: Mon, 15 Nov 2004 03:40:03 +0100
+Message-ID: <20041115024003.GF2249@stusta.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mailout.stusta.mhn.de ([141.84.69.5]:59147 "HELO
+Received: from mailout.stusta.mhn.de ([141.84.69.5]:34060 "HELO
 	mailout.stusta.mhn.de") by vger.kernel.org with SMTP
-	id S261498AbUKOCuj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 14 Nov 2004 21:50:39 -0500
+	id S261507AbUKOCwj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 14 Nov 2004 21:52:39 -0500
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@SteelEye.com
 Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-The patch below removes the unused function t128_setup.
-
-Please review whether it's correct.
-
-
-diffstat output:
- drivers/scsi/t128.c |   28 ----------------------------
- 1 files changed, 28 deletions(-)
+The patch below makes aneedlessly global variable static.
 
 
 Signed-off-by: Adrian Bunk <bunk@stusta.de>
 
---- linux-2.6.10-rc1-mm5-full/drivers/scsi/t128.c.old	2004-11-14 01:31:48.000000000 +0100
-+++ linux-2.6.10-rc1-mm5-full/drivers/scsi/t128.c	2004-11-14 01:37:27.000000000 +0100
-@@ -154,34 +154,6 @@
+--- linux-2.6.10-rc1-mm5-full/drivers/scsi/ultrastor.c.old	2004-11-14 01:31:07.000000000 +0100
++++ linux-2.6.10-rc1-mm5-full/drivers/scsi/ultrastor.c	2004-11-14 01:31:20.000000000 +0100
+@@ -259,7 +259,7 @@
+ } config = {0};
  
- #define NO_SIGNATURES (sizeof (signatures) /  sizeof (struct signature))
+ /* Set this to 1 to reset the SCSI bus on error.  */
+-int ultrastor_bus_reset;
++static int ultrastor_bus_reset;
  
--/*
-- * Function : t128_setup(char *str, int *ints)
-- *
-- * Purpose : LILO command line initialization of the overrides array,
-- * 
-- * Inputs : str - unused, ints - array of integer parameters with ints[0]
-- *	equal to the number of ints.
-- *
-- */
--
--void __init t128_setup(char *str, int *ints){
--    static int commandline_current = 0;
--    int i;
--    if (ints[0] != 2) 
--	printk("t128_setup : usage t128=address,irq\n");
--    else 
--	if (commandline_current < NO_OVERRIDES) {
--	    overrides[commandline_current].address = ints[1];
--	    overrides[commandline_current].irq = ints[2];
--	    for (i = 0; i < NO_BASES; ++i)
--		if (bases[i].address == ints[1]) {
--		    bases[i].noauto = 1;
--		    break;
--		}
--	    ++commandline_current;
--	}
--}
--
- /* 
-  * Function : int t128_detect(Scsi_Host_Template * tpnt)
-  *
+ 
+ /* Allowed BIOS base addresses (NULL indicates reserved) */
 
