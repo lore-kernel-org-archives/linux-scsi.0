@@ -1,76 +1,94 @@
 From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
-Subject: RE: PATCH: Further aacraid work
-Date: Thu, 17 Jun 2004 10:39:49 -0400
+Subject: RE: Proposal for new generic device API: dma_get_required_mask()
+Date: Thu, 17 Jun 2004 10:52:49 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <547AF3BD0F3F0B4CBDC379BAC7E4189FD2402C@otce2k03.adaptec.com>
+Message-ID: <547AF3BD0F3F0B4CBDC379BAC7E4189FD24032@otce2k03.adaptec.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
 	charset="us-ascii"
 Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from magic.adaptec.com ([216.52.22.17]:46984 "EHLO magic.adaptec.com")
-	by vger.kernel.org with ESMTP id S266514AbUFQOjv convert rfc822-to-8bit
+Received: from magic.adaptec.com ([216.52.22.17]:5265 "EHLO magic.adaptec.com")
+	by vger.kernel.org with ESMTP id S266524AbUFQOww convert rfc822-to-8bit
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 17 Jun 2004 10:39:51 -0400
+	Thu, 17 Jun 2004 10:52:52 -0400
 content-class: urn:content-classes:message
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Alan Cox <alan@redhat.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@steeleye.com>, Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-We make sure that the dma mask is 32 bit when we `guess' that the memory
-size is < 4GB.
+As I said in the other thread, if the SG list was not the descending
+order page and instead was in ascending order allocations, we would have
+a major reduction in the quantity of SG elements thus not having to make
+this performance tradeoff. Not making the request moot, still worth
+doing for other optimizations such as preventing DAC cycles with the
+upper 32 bits all zero, but the real hit in performance for the aacraid
+driver is the shear quantity of increased sized SG elements.
 
-But it would be `nice' to know if the system preference is to send back
-64 bit or 32 bit DMA addresses (also making the performance tradeoff
-decision that although they have *some* 64 bit addresses, that they will
-function at or near top performance with 32 bit addresses and a periodic
-bounce buffering when required).
+Currently, large requests come through as follows:
 
-This would not be such an issue if Linux provided large SG elements
-rather than the fubar descending page order ones they issue today. If
-this could be fixed, I'd not even be interested in the optimization of
-the SG.
+SG#	Size	Phys
+0	4096	ef400000
+1	4096	ef3ff000
+2	4096	ef3fe000
+3	4096	ef3fd000
+. . .
+
+Another change in F/W that is altering the interface to deal with this
+problem allows us to negotiate a larger FIB (adapter command packet)
+size to accommodate a huge number of SG elements. We can dodge this
+bullet as well for Linux if this SG element allocation issue is
+resolved.
+
+FYI, when we allow 4M I/O to occur with this new larger FIB size, the
+system performance drops to its knees. Mouse movement is sluggish etc.
+there appears to be some scaling issues that I have yet to understand or
+characterize to root cause.
 
 Sincerely -- Mark Salyzyn
 
 -----Original Message-----
-From: Christoph Hellwig [mailto:hch@infradead.org] 
-Sent: Thursday, June 17, 2004 9:33 AM
-To: Salyzyn, Mark
-Cc: Alan Cox; Christoph Hellwig; linux-kernel@vger.kernel.org;
-linux-scsi@vger.kernel.org
-Subject: Re: PATCH: Further aacraid work
+From: linux-scsi-owner@vger.kernel.org
+[mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of James Bottomley
+Sent: Thursday, June 17, 2004 10:09 AM
+To: Linux Kernel; SCSI Mailing List
+Subject: Proposal for new generic device API: dma_get_required_mask()
 
-On Thu, Jun 17, 2004 at 08:53:36AM -0400, Salyzyn, Mark wrote:
-> I *must* admit that the driver functions perfectly in other systems
-with
-> more than 4G of memory; however we *are* having troubles specifically
-> with AMD64 systems with more than 4G of memory in 2.6 kernels (the
-issue
-> does not occur on 2.4 kernels). I have yet to investigate why this
-> specific problem exists.
+Background:
 
-So what exactly is the firmware doing with this information?  What I
-expected is that if the memory is smaller 4GB it's just use 32bit
-descriptors.  If you want to keep that heck do the check _before_
-setting
-the dma_mask.  If you have a > 32bit dma mask but the firmware can't
-deal
-with the high bits in the dma address actually set it's a bug.  It won't
-show up on PCs but pretty much on any complex architecture with an iommu
-(like AMD64)
+We have a large number of devices in scsi: aacraid, aic7xxx, qla1280,
+qla2xxx which can all do full 64 bit DMA, but which pay a performance
+penalty for using the larger descriptors (aic7xxx is stranger in that it
+has three modes of operation: 32 bit, 39 bit and 64 bit each with an
+increasing performance penalty).
 
-> One would expect that if we erroneously got the memory model wrong
-(ie,
-> <4GB of memory, one slice at 0-2G, another slice at 4G-6G) that the 32
-> dma limit would protect us from functional problems in this delicate
-> area but with a performance hit resulting from the scsi layer
-providing
-> bounce buffers. Ideally we would like to have a mechanism to know if
-the
-> DMAable area is limited to a 32 bit address space in order to take
-> advantage of the more efficient FIB utilization.
+What all these devices would like to do is instead of simply trying the
+64 bit mask first and having the platform accept it, even if it only has
+< 4GB of memory, they'd like to be able to have the platform tell them,
+given my current dma mask setting, what's the actual number of bits you
+need me to DMA to.
 
-Again, memory model doesn't matter.  For many plattforms dma address
-aren't memory addresses.
+This is precisely what the API would do.  It would return a bit mask
+(never over the current dma_mask) that the platform considers optimal. 
+The platform has complete freedom in this: it may return a mask covering
+the total physical memory, or a mask covering all the bits it needs
+setting for some weird numa scheme.
 
+If the driver decides to use the mask, it would do another
+dma_set_mask() to confirm it (this gives the platform the opportunity if
+it so chooses to return a mask that doesn't quite cover memory, but
+would be more optimal...say for platforms that have all memory under 4GB
+bar one small chunk at 64GB or something).
+
+Once the driver has the platform's optimal mask, it can use this to
+decide on the correct descriptor size.
+
+Comments?
+
+James
+
+
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
