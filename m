@@ -1,60 +1,53 @@
-From: Pete Zaitcev <zaitcev@redhat.com>
-Subject: Re: Numerous problems, partial success getting
- FujiFilm Finepix 3800 to work under 2.6.
-Date: Tue, 20 Apr 2004 13:11:25 -0700
-Sender: linux-usb-devel-admin@lists.sourceforge.net
-Message-ID: <20040420131125.785de204.zaitcev@redhat.com>
-References: <40856AFF.7070002@nogin.org>
-	<Pine.LNX.4.44L0.0404201527310.1247-100000@ida.rowland.org>
+From: "philippe.aubry3@free.fr" <philippe.aubry3@free.fr>
+Subject: Failover problem with HP HSV 110 storage array system
+Date: Tue, 20 Apr 2004 23:50:52 +0200
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <40859B3C.6040100@free.fr>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-usb-devel-admin@lists.sourceforge.net>
-In-Reply-To: <Pine.LNX.4.44L0.0404201527310.1247-100000@ida.rowland.org>
-Errors-To: linux-usb-devel-admin@lists.sourceforge.net
-List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-devel>,
-	<mailto:linux-usb-devel-request@lists.sourceforge.net?subject=unsubscribe>
-List-Post: <mailto:linux-usb-devel@lists.sourceforge.net>
-List-Help: <mailto:linux-usb-devel-request@lists.sourceforge.net?subject=help>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-devel>,
-	<mailto:linux-usb-devel-request@lists.sourceforge.net?subject=subscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=linux-usb-devel>
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: aleksey@nogin.org, linux-usb-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp-102-tuesday.nerim.net ([62.4.16.102]:18451 "EHLO
+	kraid.nerim.net") by vger.kernel.org with ESMTP id S264518AbUDTWvM
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 20 Apr 2004 18:51:12 -0400
+Received: from free.fr (philippeaubry.net1.nerim.net [62.212.101.203])
+	by kraid.nerim.net (Postfix) with ESMTP id CF60841A73
+	for <linux-scsi@vger.kernel.org>; Wed, 21 Apr 2004 00:51:09 +0200 (CEST)
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Tue, 20 Apr 2004 15:41:07 -0400 (EDT)
-Alan Stern <stern@rowland.harvard.edu> wrote:
+I have a problem with the failover on a HP HSV110 storage array system.
 
-> On Tue, 20 Apr 2004, Aleksey Nogin wrote:
-
-> > After a lot of messing up and some blind experimentations with 
-> > unusual_devs.h I have been successful in making camera work, but _only_ 
-> > when it is connected directly to the computer, not via a hub with other 
-> > devices attached.
-> 
-> That doesn't make much sense.  Your original setup, with no unusual_devs.h 
-> entry, should have worked the same regardless of whether there was an 
-> external hub.
-
-Actually it might make some sense. In 2.4 we had a problem recently
-where the interrupt pipe running to the external hub was not
-activated. Without it, hub's brain melts down.
-
-This case is likely to be a different story, because the camera reported
-the unit attention and it would not be able to do it if the hub went down,
-but the point is it's nothing out of ordinary for devices to fail when
-hooked to a hub.
-
--- Pete
+The driver version is 60660 from ftp qlogic, the kernel is a 2.4.20 and 
+i have 2 fabrics ( switches ) and the 2 HBA are connected on each switch.
+The storage array system is an hsv110 with 2 ctrls.
+I have two path available for each hba.
+The driver was compiled with MPIO enable and the failover type is 5  	 
+( #define FO_NOTIFY_TYPE_SPINUP                 5 ) spine up ( scsi_cmd 
+  start ) because for changing port when a failure occur the failover 
+driver must perform a scsi start on the second hba to force the unit to 
+move on the next available port on which the second hba is connected.
 
 
--------------------------------------------------------
-This SF.Net email is sponsored by: IBM Linux Tutorials
-Free Linux tutorial presented by Daniel Robbins, President and CEO of
-GenToo technologies. Learn everything from fundamentals to system
-administration.http://ads.osdn.com/?ad_id=1470&alloc_id=3638&op=click
-_______________________________________________
-linux-usb-devel@lists.sourceforge.net
-To unsubscribe, use the last form field at:
-https://lists.sourceforge.net/lists/listinfo/linux-usb-devel
+
+During test i unplug the fiber cable on the adapter and in the same time 
+i make a tar and i copy files to the disk, the failover process seems to 
+be ok and the unit goes to the other ctrl port no IO error occur but 
+when i verify the tar i have some differences ( size ) and some files 
+are incomplete, the copy seems to be ok, but if i compare the md5sum 
+sometimes i have different md5sum.
+I have testing failover and failback the problem occur during the 
+failover and failback.
+
+Do you have any idea for this problem ?
+I think a problem during the suspend lun or qla2x00_restart_queues but 
+i'm not sure.
+For this time i continue test and i hope to undrestand this.
+
+I thank in advance for your help.
+
+Best regards
+Philippe Aubry
+philippe.aubry3@free.fr
+
