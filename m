@@ -1,43 +1,41 @@
-From: "Badari Pulavarty" <badari@us.ibm.com>
-Subject: Re: possible use-after-free in 2.5.44 scsi changes
-Date: Thu, 31 Oct 2002 09:57:15 -0800
+From: "Justin T. Gibbs" <gibbs@scsiguy.com>
+Subject: Re: [PATCH] Ghost devices being reported with AIC7XXX version 6.2.6
+Date: Thu, 31 Oct 2002 11:03:19 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <OFEC523B9C.2F14772C-ON88256C63.00626B8B@boulder.ibm.com>
+Message-ID: <798370000.1036087399@aslan.btc.adaptec.com>
+References: <20021031170337.GO574@lapi0061>
+Reply-To: "Justin T. Gibbs" <gibbs@scsiguy.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <20021031170337.GO574@lapi0061>
+Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
-To: Jens Axboe <axboe@suse.de>
-Cc: linux-scsi@vger.kernel.org
+To: Mike Brown <mbrown@emc.com>, bferjul@emc.com, jkrasner@emc.com
+Cc: conway_heather@emc.com, linux-scsi@vger.kernel.org
 
+> Justin can you change AHC_NUM_LUNS to 32 or suggest an alternative fix?
 
+The aic7xxx driver is not at fault and so should not be changed.
+The aic7xxx driver really does support all 64 luns.  In my opinion,
+there are three problems here:
 
-> Badari, I'm not so sure that Merlin's and your bug are the same. Is
-> yours solved by the patch I sent out earlier? AFAICT, that should fix
-> the segment miscounting.
+1) The Symetrix should treat a non-zero LUNTAR bit as an invalid
+   selection.  This would prevent these higher luns from showing up
+   as valid devices.
 
-Jens,
+2) Linux should never use more than 5 bits of lun for a device that
+   reports itself as SCSI-2.  If the lun is larger than what will
+   fit in 3 bits, byte 1 of the CDB should not be altered even if
+   the device is SCSI2.
 
-Yes. Your patch did fix my problem. But still I think BIOVEC_VIRT_MERGEABLE
-() is not doing
-the correct thing for x86. (It is returning FALSE for everything).
+3) Linux should be using the Report Luns command to determine how
+   many luns are on a device and at what locations.  This might
+   even allow you to never probe more than 8 luns on a SCSI 2
+   device unless they support this command.  Does the Symetrix support
+   it?  Going beyond 8 luns on a SCSI2 device is really a hack
+   otherwise.
 
-#define BIOVEC_VIRT_MERGEABLE(vec1, vec2)       \
-        ((((bvec_to_phys((vec1)) + (vec1)->bv_len) | bvec_to_phys((vec2)))
-& (BIO_VMERGE_BOUNDARY -1)) == 0)
-
-I think BIO_VMERGE_BOUNDARY should be set to "1" instead of "0" for the
-archs where this is not needed.
-That will force it to return TRUE always.
-
-And also, I was wondering for x86, where do we check to see if the
-IO/segment crossing 4GB boundary.
-(something similar to 2.4 BH_PHYS_4G()). Don't we need this for drivers
-which  can't handle
-IO crossing 4GB boundary ?
-
-Thanks,
-Badari
-
-
-
+--
+Justin
