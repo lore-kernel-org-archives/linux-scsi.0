@@ -1,94 +1,62 @@
-From: "Infante, Jon" <Jon.Infante@Emulex.Com>
-Subject: RE: is there a clean way to disable a scsi timer
-Date: Mon, 30 Sep 2002 11:31:13 -0700
+From: Luben Tuikov <luben@splentec.com>
+Subject: Re: Warning - running *really* short on DMA buffers while
+ doingfiletransfers
+Date: Mon, 30 Sep 2002 15:06:18 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <8D43EFD7CCBDB24980134BE078C227E7012B706E@xcm.ad.emulex.com>
+Message-ID: <3D98A0AA.9CEEAC40@splentec.com>
+References: <200209291545.g8TFj2v09855@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: "'Heinz, Michael'" <mheinz@infiniconsys.com>, Jeremy Higdon <jeremy@classic.engr.sgi.com>, linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: "Justin T. Gibbs" <gibbs@scsiguy.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Michael,
-
-I have a fibre channel driver, my issues included:
-
-1) A device could disappear for > SD_TIMEOUT, then come back.
-2) A fibre channel fabric has some input into what the timeout for a command
-should be. Therefore my driver handles timing out all commands.
-
-Back when the driver was developed, I noticed if SD_TIMEOUT did expire, the
-system would hang / not recover properly.
-Jon
-
-
------Original Message-----
-From: Heinz, Michael [mailto:mheinz@infiniconsys.com]
-Sent: Saturday, September 28, 2002 8:48 AM
-To: Infante, Jon; Jeremy Higdon; linux-scsi@vger.kernel.org
-Subject: RE: is there a clean way to disable a scsi timer
-
-
-Jon, Jeremy:
-
-What is the intent in having the device driver do timeout handling? I ask
-because I've run into some issues with the midlayer timeouts not always
-working correctly and I've been thinking about implementing timeout
-processing in my driver. Was that the issue you had or was it something
-else?
-
---
-Michael Heinz
-Staff Software Engineer
-Infinicon Systems, Inc.
-http://www.infiniconsys.com 
-
-> -----Original Message-----
-> From: Infante, Jon [mailto:Jon.Infante@Emulex.Com]
-> Sent: Friday, September 27, 2002 11:27 AM
-> To: 'Jeremy Higdon'; linux-scsi@vger.kernel.org
-> Subject: RE: is there a clean way to disable a scsi timer
+James Bottomley wrote:
 > 
+> I run with the defaults (which are algorithm 0, Qerr 0).  However, what the
+> drive thinks it's doing is not relevant to this discussion.  The question is
+> "does the OS have any ordering expectations?".  The answer for Linux currently
+> is "no".  In future, it may be "yes" and this whole area will have to be
+> revisited, but for now it is "no" and no benefit is gained from being careful
+> to preserve the ordering.
 > 
-> I do my own timeout handling as well. My queuecommand does
-> scsi_delete_timer() just as you suggested. However, just to 
-> be safe, I also
-> do a scsi_add_timer() in my iodone routine just before I call
-> cmnd->scsi_done(cmnd) to put things back the way they were.
+
+Of course it will be ``yes'', it's just the next natural step for
+an ever maturing (great!) OS. ``Ordering'' is implicitly preserved
+in the buffer cache (read/write (2)), but DB/Journalled FS would
+want a finer access to the device (imagination use req'd here).
+
+And there's plenty of (old) research there on queuing models
+which would provide that kind of flexibility for that future time
+when there'd be ``oui'' :-).
+
+> > I've already written one OpenSource SCSI mid-layer, given
+> > presentations on how to fix the Linux mid-layer, and try to discuss
+> > these issues with Linux developers.  I just don't have the energy to
+> > go implement a real solution for Linux only to have it thrown away.
+> > Life's too short.  8-)
 > 
-> Jon Infante
+> What can I say? I've always found the life of an open source developer to be a
+> pretty thankless, filled with bug reports, irate complaints about feature
+> breakage and tossed code.  The worst I think is "This code looks fine now why
+> don't you <insert feature requiring a complete re-write of proposed code>".
 > 
-> 
-> -----Original Message-----
-> From: Jeremy Higdon [mailto:jeremy@classic.engr.sgi.com]
-> Sent: Friday, September 27, 2002 1:30 AM
-> To: linux-scsi@vger.kernel.org
-> Subject: Re: is there a clean way to disable a scsi timer
-> 
-> 
-> Misremembered the name -- sorry.
-> 
-> s/scsi_disable_timer/scsi_delete_timer/
-> 
-> On Sep 27,  1:24am, Jeremy Higdon wrote:
-> > 
-> > I have a host driver that does its own timeout and error 
-> handling.  Is
-> there
-> > a clean way to disable the midlayer timeout handling?  It 
-> appears that I
-> > can just call scsi_disable_timer() from the queuecommand 
-> function, but
-> > I'd prefer something less nasty.
-> -
-> To unsubscribe from this list: send the line "unsubscribe 
-> linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> -
-> To unsubscribe from this list: send the line "unsubscribe 
-> linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+> I can ceratinly sympathise with anyone not wanting to work in this
+> environment.  I just don't see it changing soon.
+
+Oh, c'mon James. You know we all appreciate you very much, no need for this.
+
+The reason some of us have not started meddling with SCSI core is that
+same appreciation of the other ppl working on it, the trust and good rapport.
+
+Linux SCSI is one of the great environments, cf. <you know where'd I refer>.
+I'm happy and proud to be part of this environment.
+
+Probably what Justin meant is some past events in the history of Linux,
+and the best course of action would be a LaTeX/PS/ASCII presentation/layout/blurb
+of what Justin had in mind, and we can start from there.
+
+-- 
+Luben
