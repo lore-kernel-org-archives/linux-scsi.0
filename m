@@ -1,128 +1,208 @@
-From: James Bottomley <James.Bottomley@steeleye.com>
-Subject: Re: [patch] fix drivers/scsi/sd.c warnings
-Date: Thu, 19 Dec 2002 10:07:19 -0600
+From: Doug Ledford <dledford@redhat.com>
+Subject: Re: scsi_scan.c complaints...
+Date: Thu, 19 Dec 2002 13:56:57 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <200212191607.gBJG7Je02395@localhost.localdomain>
-References: <akpm@digeo.com>
+Message-ID: <20021219185657.GG1862@redhat.com>
+References: <20021214223934.P3547-100000@localhost.my.domain> <4011340000.1039908562@aslan.scsiguy.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed ;
-	boundary="==_Exmh_-1531390780"
+Content-Type: multipart/mixed; boundary="vtzGhvizbBRQ85DL"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: (from root@localhost)
-	by pogo.mtv1.steeleye.com (8.9.3/8.9.3) id IAA05448
-	for <linux-scsi@vger.kernel.org>; Thu, 19 Dec 2002 08:07:27 -0800
-In-Reply-To: Message from Andrew Morton <akpm@digeo.com>
-   of "Wed, 18 Dec 2002 22:04:08 PST." <3E016158.CC3D9909@digeo.com>
+Content-Disposition: inline
+In-Reply-To: <4011340000.1039908562@aslan.scsiguy.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@digeo.com>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, linux-scsi@vger.kernel.org
+To: "Justin T. Gibbs" <gibbs@scsiguy.com>
+Cc: Christoph Hellwig <hch@infradead.org>, James Bottomley <James.Bottomley@steeleye.com>, linux-scsi@vger.kernel.org
 
-This is a multipart MIME message.
 
---==_Exmh_-1531390780
+--vtzGhvizbBRQ85DL
 Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-akpm@digeo.com said:
-> Somebody forgot to test with CONFIG_LBD=n: 
+OK, so I've been working on that patch.  I've got it close to done, but it 
+oopses on me at bootup (somewhere I think there is a single init that I'm 
+missing that causes the first command we insert into the request queue to 
+oops).  So, I've got to go up to the office to get any further on this 
+since I need my test machine and serial console setup.  But, in case 
+people were curious what I did about the problem, I've attached the 
+current form of the patch to this email.  If anyone sees an obvious 
+oversight that is causing the problem, feel free to clue me in, otherwise 
+I'll be working on it some more later today ;-)
 
-Well, OK, that would be me (but then you guessed that).
+-- 
+  Doug Ledford <dledford@redhat.com>     919-754-3700 x44233
+         Red Hat, Inc. 
+         1801 Varsity Dr.
+         Raleigh, NC 27606
+  
 
-I enhanced your patch slightly, since we would get a wraparound on x86 without 
-CONFIG_LBD for large devices, so now it will assume the maximum (2Tb) and 
-print a warning.
+--vtzGhvizbBRQ85DL
+Content-Type: application/x-gzip
+Content-Disposition: attachment; filename="scsi_scan-test.patch.gz"
+Content-Transfer-Encoding: base64
 
-Hopefully, it should also be obvious to the compiler at compile time that 
-longrc can only be set if sizeof(block) > 4 and therefore allow it to optimise 
-correctly (or am I just being optimistic).
+H4sICMEVAj4AA3Njc2lfc2Nhbi10ZXN0LnBhdGNoAMRce1PjSJL/23yKoiOWsbEMlh9gm4Bt
+Gtw9xNDQA/TuTOxtKGSrbGuRJSPJ0OxN32e/fFTpYUs2fbux5+hoGysrVZWZlfnLrJRPT+El
+nNB9lmF0GI0jl/47GAvz4LgvniMhHTeWjkC6051Go0EXDgtGVB5mS3Epx0J0hdkedFuDZku0
+ms3WTr1eV2wKx/0V2OM4syfM40EL/nV53Pv3omEeNQ2zK+r03hbv3+8IsX+4I54D1xECOViu
+78au7bn/lNbTUi5l9R6/vZTP7liKfXF/ufBjQ0RxuBzHgq79HEQxXvkZrtR2xH/vNCqhhLFR
+zBwsuPokTsUejW2c5S6e7NSLqYuJxY6oHO7Df3DDWHqeGHnB+FF49qsMhT0KlrGwo8id+iCF
+GczLosuTIBTxzI3oKxoMa66MvEdarVrnk8EC0Hec+AavqXGWcKrhDBqVp8YZjXHs2IapVkl8
++zWe88lOgyYpfrZD58UOpXDniyCCCXnu3I0P0pvzeuf2N2v2YkVyOpd+HOE81G2jqRXbI09G
+oAy6M6qwZR4Zx6LeMjvwhgqMYjt2x6xCWsCLDWtyAl+p7mLuO6ieC60eUVHaUysV+/ABJX6R
+lTgsQ6hXnpynrVXKYxwyj3XVbuewmYEeL5a+UqoX+FMx8expRMagX+f398O7B+v69uKXqtYO
+acwQTRAdCu6o0zdMkNxR59gwOyu2rzTvSTuS1jiYz23fKRFfIpYSI9+4oEY6ZcsqvindKEeJ
+Bp+89sVH17c979UQMzcGs5aCxam1OVn649gNfBEHYm4/ShEtwQbjmR3nuOBAnqSAjWGP4yUy
+FaNl9CrcCV6GUWi9im8kFqGMwEIPcmwecFu9BP5PsdqKDTVaMx/bvh/APHEmtv8q5kEoDdgK
+E5nj8+LCZp4GIvAPhMheOczYIcqLpe3Lb7Heqbhjbr5eX9dOxMorY4AlQzdpS3PdEd/R1EAL
+aEa9ZhtdZ/243zPMFptRpSKE68Mi3bkEF2TQH6GMQ1dGastdDi+uz++G1sXt5y/Xw4er25sq
+7lNUdJm3vGMnEFplm6MC/1IqdbVxhnxd2CXAAz+eFFOFTxZ6jmUEdHe/WvcX91fWh6/3vyM5
+ScsJkFhUaayROrkxbAgDiCqj5WQiQ0Pguyd9Y8X7GKk4tChwsVPpy9AdW0t/4S2nam3VpxoG
+guJrWwSBCqrQXcHN4zZaeBLtv7qnBLxFSKhkJHInVZESqu0odplA1Dh+9ptdw2xCAO31+0Yv
+dSKocFp+5NnP0rLj2B7PqsrtsThVBI3gA9lEHWME7DmOTOPAoY3oBy9iBjf2wNdJL5IvtA9p
+eqKKYxtnzFw6gAMAbTRrFHExKsL/sJNucBNJ8WLDrlaUB3wJ4w7rdrR0PUevkfZtRMxJWplb
+jZdhCFteWaYjF/EsuScQVhYhLPyx+svw7sYa3t2Jd8h9IM49YGmTE5rYrof+x1kC6fSdkmKr
+ZxyBEPutphJiRU3Mdv6xjHL3o5mAFyeTwxfPDEMyzG/uWAsZWt7Sp6l/B6nSQuuVVVnhZbDD
+ZeiLptrSPJdO2+jjXNrHyX7OhwVWqSPfplKlqkYjP4Gs2Ir8/qoScCUF62g0eO4UEpT3BQWF
+r2IRkA3OgqXniBH6XQ9taPQqbAiatoNAApyvs4Q3mCCEDhgKA0ErO6cluHUG8LRrluDWrlmA
+P2c53GoOWs1Bq/8G3DrL4db2oN0ddNspbu0emRiz6/TOSkpgIMnA9WHzz9nkXAxV7rMdSwyB
+GIrwFmLuOg3CiQcKATYqRcrE8HCCW/MrQjZEjp7rPxJ6Q6hUNgyC4/PGYQnqwi+smbQdikvu
+COgAzFCYZ+JgQm6BOUcCI7nGrhsY2XMIHXY4lbGVMgWWuJ8y8TgCE7FxK9IIwSMEevZD7UZ5
+8yFjiEUYOsEnkltP1wdyxS/AkNSuBLoUTBCGyM40kybgKopi3vakoAwa2nEwh5gRrwZ/no8F
+yAaMjUShtho425kco24wXUBVaSXilJ8DD8wINkkCOWFPhbFmh2sjOSTMEujEd0J9ecFLw5PP
+0ivR1ySUsPEhjpLec4p/Bn9JWzUFnzw8Ql4EQHpHhmmKeq/XAcfF/qryorc9O1DiMAmDuWii
+rsiRIm7bx/mohMH1wUhkxs/R/GHXWPH4KZ/1qaQPHQyxqr0BBhembxlQC+FW0cT2dCodK1ou
+FiBo6aiABgS7aZbERIATangtkz5RBgdXKXHi2aH5FA8vmhVwrJdwLCJPbyLKY5YS2Of7T9bt
+3eXwbnhpPZx/ygzVr+/ozVGr/WaTgEWvf5TgCvGe+Awqyj7Rm2H8CiYT8XDxK5ruNp068ge1
++kOpewPoQc5lWkq/J4NnJZF2igaV66aITyF1gl3LVdLMKEFjgD5khpAYIhLglHr1BRs0ApcJ
+e0rtekhgguARRCeiha08x+pLgQ01UY2kcNdTESGzfUDAmSW6voNLrBbKHEC1Pa1lMuvS4ZtG
+i9w2JBYMc2uly2CUXAIULBmGQUhlrla7BC602uthX4+rfAxdwK3PotUSZmvQ7Q+a7e2gIRm9
+Ah3ag5aZKXl1eseoXfWuwOYolPYjbeHvVNGpWBbKMFz6qhq0x7hr1b7q65TFhIjgwBgXrg/Z
+DGI7yw2fIIGOIf2tRoxek7KSwRUNtskiGTsk2/5xiWz7x4dr9AkQA7xkdgdmf2BuKyA6a+XD
+ZmfQbaay7Pep9sRvLEmVVaATAVwBXlyOYYlgkvzBwtoVu0r+G2DTP/Gq87iATWHD7nFjAAui
+mhl92OoeUa5Y4Iyo1AEOKXIWBZXE8gFF9NlZzUdcXMw4G5wRXqc1VNUGykxT1ZXMVtskA+N3
+EgtnUHTHefCM0biGvKdO44w0Lf44FZ+GNz9fWh+vrbvh59u/nH+4HuKMkEShV0uVF/dYWKwr
+SqEdVeHKXCwpwOVoN5Li4iMH8SzhFNePZBhXcQi7VcCVWl3VKTjAvAZrxb5hSnbbKfMJnVWf
+MFV2S76gJ5rgCPpJIlBqt9N1u20NOsep3R71u6ghfiMFfef1hrCE+Ss4ZWeBtcg7Lt9W3lZ/
+qRPdG8o0xdUXx40etWHi5zxlJEEBFpdY/tb8OxA28wSY+nrShwuzBSfC8Fe5h/bcEemi2ytL
+53oFHpZGZVO6Zm8AWV27+wbvzGPzvrnbTY4xKK07xtQb/i+qpLAFWtFCjl3bw/WuF2QZvdgM
+qzefPWwpyzbUcQDdM1NYzBfFDX0vdYEiQsHAzWXFFZ5Us+BXhfKZlTsU1i16XcM8ArjYyZ3j
+lAkPbsXCu9Mlf6HKem+W3zYzV4cenI1HYqnSRJ4I302o6UQHQnyQYxtokC6EHHeijnRwdFLA
+xuqzvYiRTSiROClFv7jxTPgB1jPciculJoNZvEjw0c8EliMbz7IiSelvUh4n/4tVNV0GKN6h
+TLd3Kv7nbvirdXl78/Dlbvhlo6msMslay90ma9ks2yLOpTZzt8FmWmaXj450nMJqFBmAB/vL
+k3aIAwuPWhqV9dQBV1OUUPB766Qw/6ejLY42bzizASBAZzatbgvfyXXTYQGoXxmTGNuRpPKp
+gXpGRO5yihTJhR1iFQgdExgIpOq+wwzQmBIzo8oZWiGYzMIdP7K5uNNZjIXUtFqEQV2has4G
+sOwo9vYy6FvOFxAen2r4rSLN1A3A3+pqLcVYrFdDfjazqIKnM5Q9dfoHcUmVbIykTKRG01Sq
+VUU4thUUFWcgOLpOhgFzqGYPMGkKZ6didVgtHfPHHytDUB2QkZcSRNKblFDll69IalQl/bdI
+Eq5Q4r5bMGEctVs2z2RgiQTLBEeDkl3HH9ZlySssV3DLSLLpopod7Wx9kyICxZ9kuMscV6Ws
+F4gsdldFqoes5NmK61p2U0x+wmW/NIsCQNUg9a/lUaWJOiVIiWvqUQre6nXTHC1jJSvrA/va
+1TIE8TxzzYimNA782PUVusdZ/cCc6mXrL15+4jU1OKMVpdPWSTXaU0KLE8UFt1uUlbZb7XTB
+rHaK4ZRgRMbK1zSLpfwXgE5Zs8XmU/g3NgyUxA7WcKdPC+702yvBB5LipRdn2eHfJ+oqIgJr
+HCz9DIU6cBRnZ6K/4fz0/1EQfDxB2WGz36HssNlvak2XOqZT8fH8+p7ywEM8yHuhY3uENAiF
+lr6iM/DchgAOGH+mBSBSvSXFvscLgsWW6IK7peykfI85lJ2R18tHbh6YHK4XZS5cUzoqa506
+Wm2dytWS+pB0DFrdAeDkzdnKag0J8sduUoHi4yc02jq/kQpDOQUhS0jDnDCYV/fGkGaPHXc9
+VcbMzhB0OU2VRQW/Xk/0kSxN85kmk+iv1ZlQ7HmqQiI0R9txKOOkCfE0w9Vkf+zoVpnjFuXL
+9MbOKbcommfxwriclkyaKEvTZ0W1gUhsq8dkykx4/2AZD2DQIxaKq5w9l5Qm6GQX4jZXKMos
+rFPQnKeGkaFRWnxEZUcTsts3pMVq8EqbXj9nb+1jqijxW5LcrTV6ZVr15hJAgjXxS86nN0aM
+yHmrdyygLML40UzR8mFfQqLnA+9IgAMQ2ag2j4jPVJZHHTECfw/hnvrl2CI7TWraqtO7PqVn
+BJbJQBSSN0QQcuRNGxBWT78K5URHB9i7YOE+qhatLMDkq6HPPJcYosYz2/elZ/BfrqM+YE8C
+CFLjxeIWuP0nYzuTbM/eWuOBQfKEP3UJj4T7OKd1VHFfBJMqtygY4tPHL9b5w+3nqwuqr+pG
+j7T830h6Os6vITGzPp5fXX+9G1qf7z8ZwrI+fr25wN4ly6Lx2KCSAHpipNplFBybyzn4jaSD
+Q6jZZFRWU+do5Laepe9w7RgJ/CVgJgX8YPFRhhDSfumV05HBtCFz7IHBtDtGu5UUq4UTyMj/
+Kc6UrpnlKAgfqZpmnvDho8hW6RFocmMPSrWW5GClJNzIodM15Y9Ucwd9kztWaVSSc4jiHlyW
+IN2NGRT4+YOnopZUJOSixRrr1GfwvNSh6RPC6/30SEhlBgV3XLezIiNfNTtOXoqOTVZvWZkG
+AHLApVsj2MQ8kjp8soa1hiuaRj5R2zQ1NZ23CL2IrkCC30WyKcpktv/E3MilsgHU1cIKBuRb
+jVmd9e3dUqK8Taq+vQms/tYmsHqhljgPwmN07BJ5SvpJ9Kla2lJCh5H1rfut/vb9Vm44osI9
+Q+gGrrIdrtiWmu2GSXJxAaiJa5LcSKQGq+vUtMHOpntMbfWdo77R7up0TugeFBAhe3cUm5Ip
+f5GkrQTDEKPFMOFETIX1gaThBks8+gaFlQJeeEXLHGvy1JRymswr/bIooxep1Op5qb3Y6ERB
+cAH+jVEKMlwY6rwKSMAn7hQiriNsTt/UYJ6dKtI5cmJj1kfCTdsbqAu1BZlO7HqQ9qiRj9gU
+OZIxhPa0v4981erSapltl1swMyaBJDZwDsp1Y90jBrEHG3CoXYytLE2RSNMHmZhRrK7EbPbW
+ONTU6SQ5/WyXX2P1y7o22wGMeHMsppaKJ6w0FB1H87ZQEK4wiyhxVdo7Ka9W7LYVewTqWOLw
+l4uNJ+P1bDgsuoyecHuLZD0fVOv5iKqzSk7COz3C012zjT02tD1Jg4AiVpVHalm7WLy7hDoK
+yK+6tHOgJOjt5oLev1GK4k2NpqmfL/CtDvAMg9daipPKiTRLqnqYvR7BL7PVamO3Whaw41a8
+vzi/sW5urbvh/Zfbm/vhAPwGdrDhowI2dw9LRPEQ5ZcLYWdRfgGj66831hdgNbx5GACxL19y
+aQG1QiumDh4CiDSGOyovaCQdVApj4+4Gv5ZvmcIlYgJn5Pjv0/dwV84M8gdtEajGQHgfin3X
+f7K4vMUHb/sj7vvYqb/57urOefZoDVvuQEh0jRsaAA3E+YOR/+2o83e26yiTpGVTIiUANgFG
+Gfy3TmAY3nL5OrnoOllShiEl6YdumyqyEgayBe495Z2PaLpH+LfffgPkT9YV0eEgeHkQ1dIN
+XzEr8bFvNcZHVSgPm2KtzZGhL22AOstInSzSSGqn5UTlkNKQw1A+H6hGEJN7+MxWu6f72nEc
+PgKDeCHEMEn1OjcUwYsvQqqhoJkvFwvsIKXjUMGrWoTBNLTn+mDUVvMLAIyNYyCmQkLaykxC
+UWtSjQEZ+affn6gkMfkyi+JXmaxA96y3SEan7kvnGNSll5gLZ3ib1ZoeBJjtdtdAx9E+MjMy
+TA7ruKGWs0D7m8770gIq3eBy+PH86/UDvP/l6mJofcAjxuElG7ZeATqJ3Yzd6T2cAdmJwy5w
+egnMqaXRcxNZIor0aLbQf53ohlAQgBJE30z6fJOuvOSxArYnARz+Q34RzHIEoNt3/gUPqR6X
+Us5pUeD/1u9S3EpOru9HSyuZqowushgrEyJcvrawzNNC6144ucjaO+4YHWo7bJpGS7eFwT1G
++lREH36wWdLjOwhK/VfdZMoP1OVUBNB74n7jzgo8w875VIM5RIRnX8UcPRV2hOc0rNCAg8+A
+5EbzYHZ/0QH9xV+h7wwWsTsHqyAWDj3th8+XCEohDxVPkUMYKNEohpSAuVCnxqu2VfFse6Aj
+hbflN8Bb6CBzCxcNzg7mAIYiZoLEK7eEWeDzh6r7fR48s3CQkhZ+iM4I+0tYNol14m2QiOeF
+N09czMvKIzSY8awKZG6/IgEHi3KYhVPBoINPTsY8OptFw9Umc9YunNUBGyWfbXNVamPWjiNz
+UVWF5bLkHTcipckc3bFMKh0OsNoW7ykwvkjVfUOpEabJmrsAaYckSfpAXRkgzYnEOyqNcUaN
+NJgkktrBNDJNOgo9aoVAUJRjyCRjyQwwN18EEaJuic9VqODI/o8emFbxm2wepvHKj5LOsX9D
+sfAiPCoLQhX3nWQ6/nI+wsYP7OMOYGH4DBFd9CXofblwbDRL5kKrwwM1FXi11vLi3oShVdlu
+G+EmbW6sSG4ny7NWTiuFeHgUpQ/t1ieRaxMvNp56GWxksMg4mH0xIkJdjlrHgfVtgKG+ffYp
+6+zMOcv6gbwaJhJpXFE0D5YDJuwWZO4680ofToPtgvfHvjYAeriPAt97VS1MSsgaxok0Z1Nn
+4hqZYSNUBouJP9I2n3X7AEfGDzhZbmRbztyuiT9n2kqqG6hEQoU3u/x8LgbUjKVsIDu3baZQ
+NuA/owEtSQYSBCAoEcvMyBB7o6TvPrEU1WaHBOqZ3067z7C+0zlKH1etVN5hB6KqXQFKkc5/
++e/UecbalB/O7z4NHzIgL1MpbiT0udQvjVV7qhK9toD0ICpdSb2cWxGLnAy4yEqjT4thZHKi
+8eHrJ+v2Jr9tVQ2RmtNGqn9SfLi+un+wfhn+XkO4nTw5rDEzBjB6Wk330Ogyu3pqYuIh9oBI
+zPpTGum2jLaJGukeG61uqhKFEa5ufv16dfe7wKL5QXLpkD9xT5B6XpqGvMOTZewgdN6Rc4/o
+STz9yA/CFYwHCTkYG1UkKR7i+iknTGDWgSY85A9lCUelIOdI5KeAaDqAF6EBKj7yk+DITKkW
+16bKQqmOawl20BglcZPwYf3qBmyhnDKhVkAK2S0/gMtv39R6tw70zss4iuyaixaT7tUc6eYV
+bkdFuxoV/aAwSv2S3ku7G/YS17Gf9MHFxhLtlhqtOkEqTMC5qJrVXn2lRGp2+i3qKIcPJh5m
+cMKZJJWfqdMaHx/OJg0HK1li5qF5nKWPySS6H+p6KEsU06woWzxSiVkT9Z4miJtvUHpg/38/
+hs8MzcwzNzsjTVvVIQQ5yZLJ5Ooy+mnopG+OOC3sMKKYtXZJlTz4Wr1smMEZbY4YAyJZ4fXt
+J7bED1/vq21DZH/C4erm4y3/hgP5wYG4T4QsGPBP3pGK3vHT6H9ytMDwI2jmTxgDDVGERC0/
+YPWulwxzhUJ9JrvtFiuccUgGXNZUqSUjAxD83PWr+A3rCqSX8MFv9Y9I6M69bosftIYPHcPs
+J7WoqwkkIVGENTm1+03r4v6ec0qABLoxHe+Jq4Iwgj+YFSzy5cATld7aMeCwSLQOOpBzQlbk
+Bkv6UZVYlcT/ofN4+G7KLKoQgnSja1petDOTUbikpvOUOmav9eTnEmKsWuCT+mHwKPEXd/4q
+OWOibJVSM0y8FLjBJ9rB1ul5Y+JhK2PDFTINL55++ceOf4ooNlJjPqV0M4iWnFXTmZ4+0uPH
+Msi29N4xhJz9WYirWE2Hf8AIn4XCsEuigBkyD7JInCYvW88WYbYf+I2mYA2jJLl8inA3ye4j
+xWWKz6hgL+VKylKjFdEdSR5urB+FxYYT8YLrsiOAz8xGA2AYxaCAfgIC5HMmmihAOz0hnQRL
+4Py/7V1tb9tGDP7c/Ao1w1p7llPbqR23GwYEaVIEaJMiadZ9GQYlkltjju1YNtIC23/f8SF5
+L7IkO/kwDNiGYmgT3YvueDzy4UMqmPQebxDfbN495YHcP9ndPbokivoOEj98S6vBptbJ+cXR
+MRktf4rtdfnh8OIy+Mn7w1/75t/NpnTCiEDT4bQ/Yj4vPEcGoV8XqzV/oy1EkSlJ3I9uzfU8
+nqNywnhpFp5AgcU4zRTBNoKEaHGeLZcSXqfqBthFs6IMBt0Klt5/iVTTbr9vOYimkzeC4d/I
+yWv3CD2fzO4zW8Rhnpgdo5c9MEp8SgeVm/KbvyM73Pw2zOqoXfF9JAQ8LVq02hNS1K0JE7bc
+1JAoUmsKangVqO5mSCfu918CFe4POh48rgFzOk43XxjYSr4itGAUEq0G/E+SO1pzIRTTSWKV
+ZK8Oty4kv43gsgcMFd7/5k39WyZqtcIoj1KpGlWgrjUCyIqJrfePwe2QpQMJva6++0rcIXZ2
+Iw5AtY1GW+jWpyneHR8SheoHnSGEddB96Yo30H+d1yyrUpXK3NQN3pLb7HaG2NMsGq0WfCxU
+jyMFjkqQNG0/3dfUaJHhnOm9Itu79CgXVaA9t9xgiZXA8BvbxRWl/X7goKQzmRhS/248SrNR
+dHR+dnL6lmuOXRx/OKcssKuzSw0BDXr9eJ+EfLDfsxevKqJzQk9U5UAH7EOmV3OtcBOe7fqj
+7aFPFQ+42FVXjfrCgT47p9PsYVYdF0L95/BceBCPB8WiBxE/XbWxT6xKqJKOUeAq1hwioCwF
+Z52Yi1pE3S9H5i0ZvNf/sectsWf+jabbTqn6FRUh0tpxpts1fci2kE55LEEVKhZn9Js596tJ
+svDCIAm9ICyjBAYgGzKYBp80bm/u+mwy4nuF3l5W7BvnUoK9QeGP1G0dbKd0Zl8vn8VkXmGt
+6O1zKXiV3PzxX8LZoTNwCEcN4WPE0W6VF7TBzdrkZQFCf+hgawPZ0HcwiAzgdPahMnqy6Wz1
+GXGvL7MJB+CIF2oOcMOdcMQZc8gl3Tfv+NY13cwnq1xtGzk/pHTIzFeTRpbViJbYkYPBK3bi
+BsTR7KrFhDSpbPoZytj5hO6+y6NW1G2C7Gk56+/EQaTrUHnW8nOiWitWz/2WwPWwNTaj9QLW
+u6frnnRsUB+wtyiZm+qjVf12cFirHoDzubePuzKEfIlNPUDWZKt70O3GA+X2c96xhfCDAhq9
+38jCuzo7/Wh25KOx68z7sSlnCa9/bQ2D2mqchWgBL60a6gf9Lgz1A8cFemJklmXLCI5I34ui
+gDU3YjVRBVjDlhSs/X8bWFOhOyqVR6A9Lull6Nhj6ca4iyDUewivcfnLhIRpZFxLc0uZu4Ng
+hck353myloG9zUmT5vku7izj/5s7itx38F9uJquUZE+3StTIwbAX93q0nUaf9DSfRGSaBqFV
+75grK7du/nWWsZ0+pZhA5EIClkzLLs7PazugYBSDwqWPlzxarMf66fDi7PTsrdZk/T6ndTPb
+gjlivhMykBa7XtAv2mVUixTZPVcPxerR5iZpMl9mC9pQv4W9PBQ+c4EtBJR8kosvT+zdCcgZ
+hKy2dBPXQl3l7ZSpeFdMCykXPd87rAmJeVC/jWiJMJA0vCWQgqw6Vg2CQhHmNUVl5OTaXDN7
++rgEpiqK6V5Ns6/z7IacR9PbfGbU2u5O9MTfM1R65A2mg3f/hepXqhqN8bddD1qnJphBxsfT
+bmGRotna3MTuelnuAI7O0DjF8OaGxITio7MTMl2lCARblQ1A77xp26TGlddjdSJjia4VgLxS
+sVBNzshS+/js/M3xLzCQKjqWVDuF8+nXUGtfppTQ2JCMIb4lnnICkefr2AFCli0q96WaC4nX
+L2FLOEvVRd4R9Sbijv8K74/f6wi4DUq4vBsGeeqAgbWRKPkCLHkuKvHM87LLuPLKDuXX5YZI
+S9/QMGARari7go0fGL1r7OCQGezmogl4rLRqOtEMErfKG5WVxO1Fl7TLYnPqJMiSc9fVYJSQ
+UrcVlyA+6jYw0rmwJ2t7SSU9UV+wQxPzwM1KgI21cgXGZhQnFEldDNQbsfXkEafCJsSVvRD4
+IBJrdmd1vlo2cntS5WhiHsLgHFKBf/IchuRCBDnHJ+NFzrZqUrS6Yg2CINPUodV0jWoGVGqM
+DdtXvhZio76k7LNXoLkm1ErVZ/i5qhBrdWC0treqZjWgn7UMgtikU+H+T8eal+7zYlvev5QU
+Yo2ITSrZyxFE4ZAx6q5jHGeZv+p24n2KdA/JqHsVFrK00G4A4Kmm13itbwNHNED4Q5vupy++
+Zs7CXIzdhzaMyar2Am54vrSt9xOdphl/8+Newin3Nl3Gor9ig3IsgCIqkCNytawV6gNHmRd2
+w/hGzBqERgW0qSbNMVEx5OmleZh34Bt0HWZGPMCYcwSkdjllomBr+ejjJa0ZXCDBfvVzI2bY
+ebaweBjVwDfTI4qHgI8+dsvIE1VwB6YXnGmYVtcZCqbj4yfcmmjaiHe1qV+BoUUecfqJGZyb
+hlzljvhE0tLrW+nOWPzFeLbK6QMsHJJViFQCKGtRJAadm2B11C12eQSkEweMsW1YXw/Uyx0v
+i7gsksBXo5mXTEPoN5FjZpm1Op7CF+MS/uY48FEZRUEMn2bd1RawQXMHIZiF5/BnHCEuGkcU
++0S6hLRItQqOMsILUZY9Zk7yifE2Lx2npdpdHyclX1TugRtYvzYwDBwnKeCrbTsTfb58KiFL
+rZpTY4+rcl8Wms5a06hc7JTlEzhiYNAUTbRmkHVaIp0hoVIE1CYqfyRJeZ47xUX/ZieMgewx
+cfxGKJZujr7NNDZzf76MVrZkpO4LL5m5+JH0kFCNQLrDuZG3svooI/aJXmNWCqFspqk0TGwa
+NFQYa2J6Fqaml+r80HUuxP1lwasWL5YBtX6P+zRKfz/u7dO3UbpDTZzlIioFc4FmUWUsbOGj
+efd6waK4Q0WYwIKg95st0mzx+zi1oXF7pV1P9GNw3EPivkRDX7mKrsfG0TPutDFDEALilmaj
+s4Q/BYHwht7fUM5p1MZvTo4+QPGMobCnWbLgxr1+/7U0w9d8yqgk49v5hMhziT7DTcMv0MUu
+DmV/AW+B/KU44i8B9fQCl0JbtiRo7qqjoqaBpaNGb4CsGiWQy7DoiF7J7WCeTQAxcJgo1+Bb
+hsAqt6KZ8zVIj/oBSKnHasQ++7pchMm6EmKyMJLsLCfUFzNfqp3UDv9ZC9WUpI7+yFFER7/X
+R9duKRuL47yqicTNEmGMUCiKs4l8jj6fDOJIkm9A3wyQArx0xFQw1VZkgA4ihP91GR6Bq1ls
+wEakHnbfCndmfPgKGlTQTgKt7HfAzZ75asJr43GHqz3Uls9TXU9Sv/NT0u/U6QLD1OkKI3Lk
+s9drC1SD7Ox3KPBv1pcKHHdtvcA66786Z9mKUOgaqJFS34yN1IrGLiHWz3+tKazS3qqwCjYW
+/voI9UvWqxRpvNy5rrwM7Z32CLUj2sWaQ6XlEXb+BiEKhpmydAAA
 
-That's also why I was reluctant to make block a u64, since then we'd always 
-run the > 0xffffffff test, which we know will never be true if LBD is not set.
-
-How does the attached work?
-
-James
-
-
---==_Exmh_-1531390780
-Content-Type: text/plain ; name="tmp.diff"; charset=us-ascii
-Content-Description: tmp.diff
-Content-Disposition: attachment; filename="tmp.diff"
-
-===== drivers/scsi/sd.c 1.98 vs edited =====
---- 1.98/drivers/scsi/sd.c	Tue Dec 17 12:21:56 2002
-+++ edited/drivers/scsi/sd.c	Thu Dec 19 09:59:10 2002
-@@ -301,10 +301,10 @@
- 	
- 	if (block > 0xffffffff) {
- 		SCpnt->cmnd[0] += READ_16 - READ_6;
--		SCpnt->cmnd[2] = (unsigned char) (block >> 56) & 0xff;
--		SCpnt->cmnd[3] = (unsigned char) (block >> 48) & 0xff;
--		SCpnt->cmnd[4] = (unsigned char) (block >> 40) & 0xff;
--		SCpnt->cmnd[5] = (unsigned char) (block >> 32) & 0xff;
-+		SCpnt->cmnd[2] = sizeof(block) > 4 ? (unsigned char) (block >> 56) & 0xff : 0;
-+		SCpnt->cmnd[3] = sizeof(block) > 4 ? (unsigned char) (block >> 48) & 0xff : 0;
-+		SCpnt->cmnd[4] = sizeof(block) > 4 ? (unsigned char) (block >> 40) & 0xff : 0;
-+		SCpnt->cmnd[5] = sizeof(block) > 4 ? (unsigned char) (block >> 32) & 0xff : 0;
- 		SCpnt->cmnd[6] = (unsigned char) (block >> 24) & 0xff;
- 		SCpnt->cmnd[7] = (unsigned char) (block >> 16) & 0xff;
- 		SCpnt->cmnd[8] = (unsigned char) (block >> 8) & 0xff;
-@@ -931,7 +931,7 @@
- 		if (longrc) {
- 			memset((void *) cmd, 0, 16);
- 			cmd[0] = SERVICE_ACTION_IN;
--			cmd[1] = 0x10; /* READ CAPACITY (16) */
-+			cmd[1] = SAI_READ_CAPACITY_16;
- 			cmd[13] = 12;
- 			memset((void *) buffer, 0, 12);
- 		} else {
-@@ -1002,21 +1002,25 @@
- 		sector_size = (buffer[4] << 24) |
- 			(buffer[5] << 16) | (buffer[6] << 8) | buffer[7];
- 		if (buffer[0] == 0xff && buffer[1] == 0xff &&
--			buffer[2] == 0xff && buffer[3] == 0xff) {
--			printk(KERN_NOTICE "%s : very big device. try to use"
--				" READ CAPACITY(16).\n", diskname);
--			longrc = 1;
--			goto repeat;
-+		    buffer[2] == 0xff && buffer[3] == 0xff) {
-+			if(sizeof(sdkp->capacity) > 4) {
-+				printk(KERN_NOTICE "%s : very big device. try to use"
-+				       " READ CAPACITY(16).\n", diskname);
-+				longrc = 1;
-+				goto repeat;
-+			} else {
-+				printk(KERN_ERR "%s: too big for kernel.  Assuming maximum 2Tb\n", diskname);
-+			}
- 		}
- 		sdkp->capacity = 1 + (((sector_t)buffer[0] << 24) |
- 			(buffer[1] << 16) |
- 			(buffer[2] << 8) |
- 			buffer[3]);			
- 	} else {
--		sdkp->capacity = 1 + (((sector_t)buffer[0] << 56) |
--			((sector_t)buffer[1] << 48) |
--			((sector_t)buffer[2] << 40) |
--			((sector_t)buffer[3] << 32) |
-+		sdkp->capacity = 1 + (((u64)buffer[0] << 56) |
-+			((u64)buffer[1] << 48) |
-+			((u64)buffer[2] << 40) |
-+			((u64)buffer[3] << 32) |
- 			((sector_t)buffer[4] << 24) |
- 			((sector_t)buffer[5] << 16) |
- 			((sector_t)buffer[6] << 8)  |
-===== include/scsi/scsi.h 1.7 vs edited =====
---- 1.7/include/scsi/scsi.h	Tue Dec 17 12:21:56 2002
-+++ edited/include/scsi/scsi.h	Thu Dec 19 09:59:56 2002
-@@ -99,6 +99,8 @@
- #define READ_16               0x88
- #define WRITE_16              0x8a
- #define SERVICE_ACTION_IN     0x9e
-+/* values for service action in */
-+#define	SAI_READ_CAPACITY_16  0x10
- 
- 
- /*
-
---==_Exmh_-1531390780--
-
-
+--vtzGhvizbBRQ85DL--
