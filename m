@@ -1,37 +1,100 @@
 From: Matthew Wilcox <willy@debian.org>
-Subject: VPD in sysfs
-Date: Sat, 14 Aug 2004 19:29:32 +0100
+Subject: [PATCH] sym2 & lasi700 small updates
+Date: Sat, 14 Aug 2004 22:45:56 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040814182932.GT12936@parcelfarce.linux.theplanet.co.uk>
+Message-ID: <20040814214556.GC12936@parcelfarce.linux.theplanet.co.uk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:54442 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S264419AbUHNS3g
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:32953 "EHLO
+	www.linux.org.uk") by vger.kernel.org with ESMTP id S266218AbUHNVp5
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 14 Aug 2004 14:29:36 -0400
+	Sat, 14 Aug 2004 17:45:57 -0400
+Received: from willy by www.linux.org.uk with local (Exim 4.33)
+	id 1Bw6Lc-0004W9-SE
+	for linux-scsi@vger.kernel.org; Sat, 14 Aug 2004 22:45:56 +0100
 Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
-To: Greg KH <greg@kroah.com>, martins@au.ibm.com
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
 
-I've been sent a patch that reads some VPD from the Symbios NVRAM and
-displays it in sysfs.  I'm not sure whether the way the author chose
-to present it is the best.  They put it in 0000:80:01.0/host0/vpd_name
-which seems a bit too scsi-specific and insufficiently forward-looking
-(I bet we want to expose more VPD data than that in the future, so we
-should probably use a directory).
+Two small patches from the PA-RISC tree:
 
-I actually have a feeling (and please don't kill me for saying this), that
-we should add a struct vpd * to the struct device.  Then we need something
-like the drivers/base/power/sysfs.c file (probably drivers/base/vpd.c)
-that takes care of adding vpd to each device that wants it.
+ - Claim the lasi700 interrupt with a more useful name (Thibaut Varene)
+ - sym2 always defines SYM_OPT_NVRAM_PRE_READ; delete dead code (Matthew Wilcox)
 
-Thoughts?  Since there's at least four and probably more ways of getting
-at VPD, we either need to fill in some VPD structs at initialisation or
-have some kind of vpd_ops that a driver can fill in so the core can get
-at the data.
+diff -urpNX dontdiff linus-2.6/drivers/scsi/lasi700.c parisc-2.6/drivers/scsi/lasi700.c
+--- linus-2.6/drivers/scsi/lasi700.c	Sat Aug 14 11:16:39 2004
++++ parisc-2.6/drivers/scsi/lasi700.c	Sat Aug 14 11:05:39 2004
+@@ -110,7 +110,7 @@ lasi700_probe(struct parisc_device *dev)
+ 
+ 	host->irq = dev->irq;
+ 	if (request_irq(dev->irq, NCR_700_intr, SA_SHIRQ,
+-				dev->dev.bus_id, host)) {
++				"lasi700", host)) {
+ 		printk(KERN_ERR "%s: irq problem, detaching\n",
+ 		       dev->dev.bus_id);
+ 		goto out_put_host;
+diff -urpNX dontdiff linus-2.6/drivers/scsi/sym53c8xx_2/sym_glue.h parisc-2.6/drivers/scsi/sym53c8xx_2/sym_glue.h
+--- linus-2.6/drivers/scsi/sym53c8xx_2/sym_glue.h	Sat Aug 14 11:16:40 2004
++++ parisc-2.6/drivers/scsi/sym53c8xx_2/sym_glue.h	Sat Aug 14 11:05:40 2004
+@@ -89,7 +89,6 @@
+ 
+ #define SYM_OPT_HANDLE_DIR_UNKNOWN
+ #define SYM_OPT_HANDLE_DEVICE_QUEUEING
+-#define SYM_OPT_NVRAM_PRE_READ
+ #define SYM_OPT_SNIFF_INQUIRY
+ #define SYM_OPT_LIMIT_COMMAND_REORDERING
+ #define	SYM_OPT_ANNOUNCE_TRANSFER_RATE
+diff -urpNX dontdiff linus-2.6/drivers/scsi/sym53c8xx_2/sym_hipd.c parisc-2.6/drivers/scsi/sym53c8xx_2/sym_hipd.c
+--- linus-2.6/drivers/scsi/sym53c8xx_2/sym_hipd.c	Sat Aug 14 11:16:40 2004
++++ parisc-2.6/drivers/scsi/sym53c8xx_2/sym_hipd.c	Sat Aug 14 11:05:40 2004
+@@ -5738,15 +5738,8 @@ if (resid)
+ /*
+  *  Soft-attach the controller.
+  */
+-#ifdef SYM_OPT_NVRAM_PRE_READ
+ int sym_hcb_attach(hcb_p np, struct sym_fw *fw, struct sym_nvram *nvram)
+-#else
+-int sym_hcb_attach(hcb_p np, struct sym_fw *fw)
+-#endif
+ {
+-#ifndef SYM_OPT_NVRAM_PRE_READ
+-	struct sym_nvram nvram_buf, *nvram = &nvram_buf;
+-#endif
+ 	int i;
+ 
+ 	/*
+@@ -5771,13 +5764,6 @@ int sym_hcb_attach(hcb_p np, struct sym_
+ 	 *  if the chip is currently active.
+ 	 */
+ 	sym_chip_reset (np);
+-
+-	/*
+-	 *  Try to read the user set-up.
+-	 */
+-#ifndef SYM_OPT_NVRAM_PRE_READ
+-	(void) sym_read_nvram(np, nvram);
+-#endif
+ 
+ 	/*
+ 	 *  Prepare controller and devices settings, according 
+diff -urpNX dontdiff linus-2.6/drivers/scsi/sym53c8xx_2/sym_hipd.h parisc-2.6/drivers/scsi/sym53c8xx_2/sym_hipd.h
+--- linus-2.6/drivers/scsi/sym53c8xx_2/sym_hipd.h	Sat Aug 14 11:16:40 2004
++++ parisc-2.6/drivers/scsi/sym53c8xx_2/sym_hipd.h	Sat Aug 14 11:05:40 2004
+@@ -1139,12 +1139,7 @@ int sym_abort_scsiio(hcb_p np, cam_ccb_p
+ int sym_abort_ccb(hcb_p np, ccb_p cp, int timed_out);
+ int sym_reset_scsi_target(hcb_p np, int target);
+ void sym_hcb_free(hcb_p np);
+-
+-#ifdef SYM_OPT_NVRAM_PRE_READ
+ int sym_hcb_attach(hcb_p np, struct sym_fw *fw, struct sym_nvram *nvram);
+-#else
+-int sym_hcb_attach(hcb_p np, struct sym_fw *fw);
+-#endif
+ 
+ /*
+  *  Optionnaly, the driver may handle IO timeouts.
 
 -- 
 "Next the statesmen will invent cheap lies, putting the blame upon 
