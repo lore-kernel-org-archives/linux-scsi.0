@@ -1,94 +1,67 @@
-From: Badari Pulavarty <badari@us.ibm.com>
-Subject: Re: possible use-after-free in 2.5.44 scsi changes
-Date: Wed, 30 Oct 2002 14:19:05 -0800 (PST)
+From: James Bottomley <James.Bottomley@steeleye.com>
+Subject: Re: [PATCH] 2.5 current bk fix setting scsi queue depths
+Date: Wed, 30 Oct 2002 19:44:27 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <200210302219.g9UMJ5w05948@eng2.beaverton.ibm.com>
-References: <20021030213619.A183086E82@primary.mx.nitric.com>
+Message-ID: <200210310044.g9V0iRs03324@localhost.localdomain>
+References: <patmans@us.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <20021030213619.A183086E82@primary.mx.nitric.com> from "merlin hughes" at Oct 30, 2002 03:36:19 PM PST
+Received: (from root@localhost)
+	by pogo.mtv1.steeleye.com (8.9.3/8.9.3) id QAA13868
+	for <linux-scsi@vger.kernel.org>; Wed, 30 Oct 2002 16:44:30 -0800
+In-Reply-To: Message from Patrick Mansfield <patmans@us.ibm.com>
+   of "Wed, 30 Oct 2002 10:05:34 PST." <20021030100534.A12400@eng2.beaverton.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: merlin hughes <merlin@merlin.org>
-Cc: axboe@suse.de, linux-scsi@vger.kernel.org
+To: Linus Torvalds <torvalds@transmeta.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-> >- Badari
-> 
-> Hi; if it's of any use, the patch doesn't seem to solve the scsi
-> problem for me (2.5.44-bk3-badari). I get the usual 'Incorrect number
-> of segments...' and random kernel death during the boot process.
-> 
-> Merlin
+> Yes, the problem is that in scsi_register_host() if there are no upper
+> level drivers - the standard case if building no modules - we call
+> scsi_release_commandblocks even though we are NOT getting rid of the
+> scsi_device. So, with current code, new_queue_depth and
+> current_queue_depth are zero.
 
-Hi Merlin,
+But slave_attach isn't called here (even though it should be for attached 
+devices).  I assume it's getting added by the scan between register_host & 
+register_device.
 
-I am looking at the output  of your problem ..
+> When we register upper level drivers in scsi_register_device(), we
+> call scsi_build_commandblocks (again), and get a queue depth of 1,
+> since we've cleared new_queue_depth. 
 
+OK, we have a slight mess up here.  Perhaps the rule for slave_attach should 
+be that we only call it if we actually have an upper level device attached (if 
+we haven't, there's little point asking the HBA to allocate space for queueing 
+for a device we're not currently using).  Then, we should do slave_attach when 
+something actually decides to attach to the device.
 
-Oct 28 12:36:09 badb kernel: Incorrect number of segments after building list 
-Oct 28 12:36:09 badb kernel: counted 2, received 1 
-Oct 28 12:36:09 badb kernel: req nr_sec 8, cur_nr_sec 8 
-Oct 28 12:36:09 badb kernel: end_request: I/O error, dev 08:40, sector 6784528 
-Oct 28 12:36:09 badb kernel: raid5: Disk failure on scsi/host0/bus0/target4/lun0/part7, disabling device. Operation continuing on 4 devices 
-Oct 28 12:36:09 badb kernel: blk: request botched 
+if we follow this approach, slave_attach wouldn't be called until 
+register_device in your problem scenario, and then everything would work as 
+expected.
 
-Huh !! Your IO size is only 4K. You are using 2 sg entries ?
-I am curious on finding out whats happening here ..
+> Removing the scsi_release_commandblocks() in scsi_register_host()
+> would also fix the problem, and in most cases, would not waste any
+> space. In the worst case AFAICT it would waste one scsi_cmnd (about
+> 300 or so bytes?). 
 
-Would you mind adding few printk()s to following routine:
+Well, if there's no device attached, there's no need for a queue.  This would 
+waste 1 SCSI command per unattached device (and SCSI commands are DMA'able 
+memory which is precious on some systems).  Right now, that's OK for small 
+systems.  When we move to a lazy attachment model because we have an array 
+with 65535 LUNs and we're only interested in one of them, it won't be.
 
-drivers/block/ll_rw_blk.c: blk_rq_map_sg()
+> I see no good reason to zero new_queue_depth in scsi_release_commandblo
+> cks, as new_queue_depth is the desired queue depth, and should remain
+> so until scsi_adjust_queue_depth is called. Setting new_queue_depth to
+> zero means we have to call slave_attach again to set it right, and
+> depending on what else an adapter slave_attach does could be very
+> wrong. 
 
-Do something like this ...
+Well, to my way of thinking, build and release commandblocks are like 
+constructor and destructor for the device queue.  On general design 
+principles, I don't like the idea of queue specific information persisting 
+past its destruction.
 
-int blk_rq_map_sg(request_queue_t *q, struct request *rq, struct scatterlist *sg)
-{
-        struct bio_vec *bvec, *bvprv;
-        struct bio *bio;
-        int nsegs, i, cluster;
-
-        nsegs = 0;
-        cluster = q->queue_flags & (1 << QUEUE_FLAG_CLUSTER);
-
-        /*
-         * for each bio in rq
-         */
-        bvprv = NULL;
-        rq_for_each_bio(bio, rq) {
-                /*
-                 * for each segment in bio
-                 */
-                bio_for_each_segment(bvec, bio, i) {
-                        int nbytes = bvec->bv_len;
-
-                        if (bvprv && cluster) {
-                                if (sg[nsegs - 1].length + nbytes > q->max_segment_size)
-                                        goto new_segment;
-
-printk("Loop: brvprv:%x bvec:%x offset:%d len:%d\n", bvprv->bv_page, bvec->bv_page, bvec->bv_offset, bvec->bv_len);
-                                if (!BIOVEC_PHYS_MERGEABLE(bvprv, bvec))
-                                        goto new_segment;
-                                if (!BIOVEC_SEG_BOUNDARY(q, bvprv, bvec))
-                                        goto new_segment;
-
-                                sg[nsegs - 1].length += nbytes;
-                        } else {
-new_segment:
-                                memset(&sg[nsegs],0,sizeof(struct scatterlist));
-                                sg[nsegs].page = bvec->bv_page;
-                                sg[nsegs].length = nbytes;
-                                sg[nsegs].offset = bvec->bv_offset;
-
-                                nsegs++;
-printk(">>>>> made a new seg:%d (%x, %d, %d)\n", nsegs, bvec->bv_page, nbytes,  bvec->bv_offset);
-                        }
-                        bvprv = bvec;
-                } /* segments in bio */
-        } /* bios in rq */
-
-printk(">>>>> returning segs:%d\n", nsegs);
-        return nsegs;
-}
+James
 
 
