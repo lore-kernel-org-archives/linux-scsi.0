@@ -1,41 +1,40 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: Problem with an USB Stick and kernel 2.6.1
-Date: Tue, 20 Jan 2004 09:56:11 -0500 (EST)
+From: Mike Anderson <andmike@us.ibm.com>
+Subject: Re: [PATCH] allow drivers to hook into watchdog timeout
+Date: Tue, 20 Jan 2004 07:53:20 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44L0.0401200948010.1204-100000@ida.rowland.org>
-References: <1074289238.1884.29.camel@mulgrave>
+Message-ID: <20040120155320.GA1478@beaverton.ibm.com>
+References: <20040120132052.GA6740@lst.de>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ida.rowland.org ([192.131.102.52]:516 "HELO ida.rowland.org")
-	by vger.kernel.org with SMTP id S265516AbUATO4L (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 20 Jan 2004 09:56:11 -0500
-In-Reply-To: <1074289238.1884.29.camel@mulgrave>
+Received: from e33.co.us.ibm.com ([32.97.110.131]:58557 "EHLO
+	e33.co.us.ibm.com") by vger.kernel.org with ESMTP id S265578AbUATPu1
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 20 Jan 2004 10:50:27 -0500
+Content-Disposition: inline
+In-Reply-To: <20040120132052.GA6740@lst.de>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@steeleye.com>
-Cc: Mike Anderson <andmike@us.ibm.com>, SCSI development list <linux-scsi@vger.kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: James.Bottomley@steeleye.com, gibbs@scsiguy.com, linux-scsi@vger.kernel.org
 
-Regarding DRIVER_SENSE with NO_SENSE data:
-
-On 16 Jan 2004, James Bottomley wrote:
-
-> On Fri, 2004-01-16 at 16:27, Mike Anderson wrote:
-> > This matches what I thought should be added to sd, but I did not hear an
-> > answer from James / others if this is the way we should handle it.
+Christoph Hellwig [hch@lst.de] wrote:
+> to get control first after a command timeout.  Justin, does this look
+> okay for you?  BTW, your drivers are the last ones using scsi_add_timer
+> from outside the midlayer, if we could get rid of that we'd be able to
+> keep the interface private.
 > 
-> Actually, perhaps we should treat it *exactly* the same as
-> RECOVERED_ERROR (i.e. do the print_sense) so that if something goes
-> wrong with ignoring NO_SENSE returns, we have a trace that it happened.
 
-I'm concerned that these devices will provoke a driver sense on _every_
-read or write, since they report an incorrect residue.  Is it reasonable
-to print_sense on every I/O operation?
+If a LLDD uses this interface how does the scsi_cmnd get returned back
+to the mid-layer? If one uses scsi_done without a timer set it will
+believe that the error handler is running and not pass it on to
+scsi_softirq. It would seem a hack to add a timer just to let scsi_done
+pass the cmd back as this appears to be one thing we are trying to avoid
+( scsi_errror used at hack like this in the past :-( ). Having everything
+always come through scsi_done even under error recovery (timeouts, aborts)
+has been discussed on the list in the past.
 
-Also, in sd.c the code tests DRIVER_SENSE in a number of places, not all 
-of which appear appropriate.  It looks like that test is used where 
-SCSI_SENSE_VALID would be better.  Is this something that ought to be 
-fixed?
-
-Alan Stern
+-andmike
+--
+Michael Anderson
+andmike@us.ibm.com
 
