@@ -1,33 +1,46 @@
-From: "Jenifer Berger " <roy_phang@hotmail.com>
-Subject: Get yourself a phat krib.
-Date: Thu, 31 Mar 2005 03:07:40 -0400
-Message-ID: <redirect-25510129@mail.stalker.com>
+From: gl@dsa-ac.de
+Subject: Re: [PATCH] dc395x: Fix support for highmem
+Date: Thu, 31 Mar 2005 10:58:47 +0200 (CEST)
+Message-ID: <Pine.LNX.4.56.0503311051290.20956@pcgl.dsa-ac.de>
+References: <20050321075531.GC23911@suse.de> <7044.1111398919@www16.gmx.net>
+  <Pine.LNX.4.56.0503211111290.20956@pcgl.dsa-ac.de>  <20050321104419.GH23911@suse.de>
+  <Pine.LNX.4.56.0503211147420.20956@pcgl.dsa-ac.de>
+ <Pine.LNX.4.60.0503302318250.9431@poirot.grange> <1112220802.9435.1.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII; format=flowed
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ppp79-220.dsl-chn.eth.net ([61.11.79.220]:57104 "HELO
-	ppp79-220.dsl-chn.eth.net") by vger.kernel.org with SMTP
-	id S262522AbVCaHIe (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 31 Mar 2005 02:08:34 -0500
+Received: from mail.dsa-ac.de ([62.112.80.99]:7692 "EHLO mail.dsa-ac.de")
+	by vger.kernel.org with ESMTP id S261200AbVCaJB5 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 31 Mar 2005 04:01:57 -0500
+In-Reply-To: <1112220802.9435.1.camel@mulgrave>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: linux-net@vger.kernel.org, linux-scsi@vger.kernel.org, majordomo@vger.kernel.org, webmaster@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Guennadi Liakhovetski <g.liakhovetski@gmx.de>, Jens Axboe <axboe@suse.de>, Christoph Hellwig <hch@infradead.org>, Matthew Wilcox <matthew@wil.cx>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
+On Wed, 30 Mar 2005, James Bottomley wrote:
 
-Your home loan has been processed.
+> On Wed, 2005-03-30 at 23:22 +0200, Guennadi Liakhovetski wrote:
+> > What is going to happen to this stuff? The current Linus' tree contains a
+> > broken (by me:-() dc395x, other drivers (including tmscsim) would benefit
+> > from a generic API. I understand, the drivers are not top importance, but
+> > still.
+>
+> I'd propose fixing the driver first and then using that fix as the basis
+> for a generic API.  Is the patch you sent on the 17th of March what
+> you'd consider to be your final fix for this?
 
-Please find all details below:
+Well, it could be. But I'd use Jens' suggestion and actually test it for
+highmem. And, since we are at it, I'd try to organise this code in
+separate API, so, that we just have to replace dc395x_* with scsi_* in
+function names. Makes sense?
 
-_________SUMMARY__________
-Interest: As low as 3.95%
-Term: Up to 360 months
-Max Price: As high as $800,000 
-Closing Date: 30 days 
-
-
-Fill out this 30 sec. form and you will be approved in 24 hours.
-http://www.easy-lenders.com/index2.php?refid=phade
-
-
-
+Thanks
+Guennadi
+---------------------------------
+Guennadi Liakhovetski, Ph.D.
+DSA Daten- und Systemtechnik GmbH
+Pascalstr. 28
+D-52076 Aachen
+Germany
