@@ -1,126 +1,55 @@
-From: "Martin Peschke3" <MPESCHKE@de.ibm.com>
-Subject: Re: Enhanced error handling
-Date: Tue, 23 Jul 2002 12:43:16 +0200
+From: "Isabelle, Francois" <Francois.Isabelle@ca.kontron.com>
+Subject: Sym53C8xx Driver Hardening
+Date: Tue, 23 Jul 2002 09:29:53 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <OF5603E9AB.B82FF85C-ONC1256BFF.0039F1EB@de.ibm.com>
+Message-ID: <5009AD9521A8D41198EE00805F85F18F219A7C@sembo111.teknor.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain;
+	charset="iso-8859-1"
 Return-path: <linux-scsi-owner@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Mukul Kotwani <mkotwani@yahoo.com>
-Cc: linux-scsi@vger.kernel.org
+To: "Linux SCSI list (E-mail)" <linux-scsi@vger.kernel.org>
 
+Hi, 
+    anyone working on driver hardening such as defined by the TLT/CGL
+specification ?
 
-Hi,
+TLT : Telecom Linux Technology
+CGL: Open Source Development Lab - Carrier Grade Linux
 
-we solved this for the zfcp driver this way:
+Theese are 2 projects to define a "highly available" and "easily embeddable"
+linux for the replacement of proprietary telecom platform.
+The specification includes a section related to "driver hardening"
 
-my_eh_abort_handler() {
+Some of the features:
+ - Panic removal
+ - Standardized event logging
+ - Parameter checking ...
 
-      /* unlock and enable interrupts */
-      spin_unlock_irq(&io_request_lock);
+The white paper from Intel:
+http://cedar.intel.com/cgi-bin/ids.dll/content/content.jsp?cntKey=Generic%20
+Editorial::linux_hardening&cntType=IDS_EDITORIAL&catCode=0
 
-      do abort and sleep if necessary
+Here is a quote from A.C. on the linux-ha list:
+What I've seen so far on the hardening proposals varies between the
+comical and the well-intentioned but ugly intel code. I've not seen
+public montavista work so it would inappropriate for me to comment on it.
 
-      /* lock and disable interrupts */
-      spin_lock_irq(&io_request_lock);
-}
+As you see, it's not really accepted at unanimity ...
+It's just not bazaar like enough I suppose !
 
-All those HBA routines should be called without this lock held.
-I assume that is or will be changed in 2.5.
+Anyway there is some good in such standardization and if it produces better
+drivers for linux, why not ?
 
-Mit freundlichen Gr=FC=DFen / with kind regards
+So to get back to the topic :
+	anyone started sym53c8xx driver hardening ?
 
-Martin Peschke
+It might already be full proof but most certainly lacks standard event
+logging.
 
-IBM Deutschland Entwicklung GmbH
-Linux for eServer Development
-Phone: +49-(0)7031-16-2349
+Any comments on CGL/TLT appreciated
+Thank you
 
+Francois Isabelle
+Kontron Canada Inc.
 
-Mukul Kotwani <mkotwani@yahoo.com>@vger.kernel.org on 07/23/2002 05:16:=
-32
-AM
-
-Sent by:    linux-scsi-owner@vger.kernel.org
-
-
-To:    linux-scsi@vger.kernel.org
-cc:
-Subject:    Enhanced error handling
-
-
-
-Hello!
-After reading a bunch about the new error handling
-code, I have a few
-questions.
-
-I am a low level HBA driver, and the abort handler is
-called while the
-io request lock is held. An abort might be completed
-immediately (
-might need to send out an ABORT frame  and wait for
-its completion)
-and therefore might be completed asynchronously. So I
-might need to
-sleep in the abort thread, because from what I read,
-it indicated that once the abort call returns, we
-cannot call scsi_done. So the best thing would be to
-wait for the abort to complete.
-
-So my question is:
-If interrupts are disabled when the error handler
-thread is called,
-and I have to sleep, how do I re-enable interrupts ,
-because the abort
-completion is via an interrupt! Ditto with bus reset,
-device reset
-etc. How do I get a completion at all? Timer
-interrupts are also
-disabled on a UP system so how does someone get a
-completion at all??
-If I have to re-enable interrupts in the error handler
-by calling
-irqrestore, I need the flags , and the low level
-driver does not have
-access to the flags at all. Looking at some sample
-SCSI drivers,they
-seem to be queuing up the abort and returning SUCCESS.
-But there is a
-problem there..the mid layer thinks the IO is done and
-freed. Say we
-reported as 20 the maximum commands we support,
-wouldnt the mid layer
-send 20 commands down( obviously if it had 20..) ,
-when actually the
-low level driver should be getting 19 because the
-abort of the IO
-might not have completed? Either my understanding is
-totally wrong, or
-this model seems to be somewhat broken. Can someone
-please shed some
-light on this issue?
-
-Thanks!
-Mukul
-
-
-__________________________________________________
-Do You Yahoo!?
-Yahoo! Health - Feel better, live better
-http://health.yahoo.com
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
