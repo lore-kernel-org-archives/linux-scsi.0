@@ -1,44 +1,436 @@
 From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
 Subject: Re: tmscsim broken on amd64 with 2.6.5?
-Date: Tue, 13 Apr 2004 22:40:33 +0200 (CEST)
+Date: Tue, 13 Apr 2004 23:24:24 +0200 (CEST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44.0404132232490.11576-100000@poirot.grange>
+Message-ID: <Pine.LNX.4.44.0404132316230.15615-200000@poirot.grange>
 References: <200404132217.25388.info@roessner-net.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: MULTIPART/MIXED; BOUNDARY="-1463811839-869462391-1081891101=:15615"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pop.gmx.net ([213.165.64.20]:32186 "HELO mail.gmx.net")
-	by vger.kernel.org with SMTP id S263739AbUDMUlS (ORCPT
+Received: from pop.gmx.net ([213.165.64.20]:28100 "HELO mail.gmx.net")
+	by vger.kernel.org with SMTP id S263763AbUDMVZH (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 13 Apr 2004 16:41:18 -0400
+	Tue, 13 Apr 2004 17:25:07 -0400
 In-Reply-To: <200404132217.25388.info@roessner-net.com>
+Content-ID: <Pine.LNX.4.44.0404132318510.15615@poirot.grange>
 List-Id: linux-scsi@vger.kernel.org
 To: Christian Roessner <info@roessner-net.com>
-Cc: linux-scsi@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, garloff@suse.de
+
+  This message is in MIME format.  The first part should be readable text,
+  while the remaining parts are likely unreadable without MIME-aware tools.
+  Send mail to mime@docserver.cac.washington.edu for more info.
+
+---1463811839-869462391-1081891101=:15615
+Content-Type: TEXT/PLAIN; CHARSET=US-ASCII
+Content-ID: <Pine.LNX.4.44.0404132318511.15615@poirot.grange>
 
 On Tue, 13 Apr 2004, Christian Roessner wrote:
 
 > great! Problem fixed. cdrecord -scanbus show my TEAC 512
 > writer. /proc/scsi/tmscsim/5 shows sync-speed 5.0M. Fine!
->
-> Can I remove the debugging statements?
 
-Yes! Now you are allowed to remove all the debugging!:-) And the last
-thing I would ask you to try - is a bit of stress-testing. Try burning
-some CDs (ok, you can burn re-writables, although, they tend to be slower
-than recordables), put some load in parallel, mount dome CDs, dd from them
-(dd if=/dev/scd0 of=/dev/null), play some music from them. Do you have any
-other SCSI devices you could connect to it? But, you know, AM53C974 is not
-the most performant SCSI-controller:-) Actually, when I just completed
-initial porting it to 2.6, I said, it would be nice to test it on some
-HIGHMEM / 64bit platforms, and somebody replied, that, probably, nobody
-would ever think of using this chip on such a system:-)
+Ok, here goes a cumulative patch, that (hopefully) fixes tmscsim on 64-bit
+platforms. Christian, would be nice if you could test it again in its
+final form against a vanilla 2.6.5. I don't know if there's anybody else
+using AM53C974 on 64-bit:-)
 
-And, please post output of your /proc/scsi/scsi and /proc/scsi/tmscsim/...
+It doesn't conflict (AFAIR) with other pending tmscsim patches, but,
+unlike those, this one fixes an actual bug, so, should have a higher
+priority.
 
-Thanks for your help!
+Kurt, please, could we somehow get those outstanding patches moving?
+
+Thanks
 Guennadi
 ---
 Guennadi Liakhovetski
 
 
+---1463811839-869462391-1081891101=:15615
+Content-Type: TEXT/PLAIN; CHARSET=US-ASCII; NAME="tmscsim-64.patch"
+Content-Transfer-Encoding: BASE64
+Content-ID: <Pine.LNX.4.44.0404132318210.15615@poirot.grange>
+Content-Description: 
+Content-Disposition: ATTACHMENT; FILENAME="tmscsim-64.patch"
+
+ZGlmZiAtdSBsaW51eC0yLjYuMy9kcml2ZXJzL3Njc2kvdG1zY3NpbS5jIGxp
+
+
+bnV4LTIuNi4zLmhhcmRsaW5rL2RyaXZlcnMvc2NzaS90bXNjc2ltLmMNCi0t
+
+
+LSBsaW51eC0yLjYuMy9kcml2ZXJzL3Njc2kvdG1zY3NpbS5jCUZyaSBNYXIg
+
+
+MTIgMjI6MjI6MTEgMjAwNA0KKysrIGxpbnV4LTIuNi4zLmhhcmRsaW5rL2Ry
+
+
+aXZlcnMvc2NzaS90bXNjc2ltLmMJVHVlIEFwciAxMyAyMjo1MDowNSAyMDA0
+
+
+DQpAQCAtMTY4LDYgKzE2OCw3IEBADQogICoJMi4xYSAgMDMvMTEvMjkgIEdM
+
+
+LCBLRwlJbml0aWFsIGZpeGluZyBmb3IgMi42LiBDb252ZXJ0IHRvCSoNCiAg
+
+
+KgkJCQl1c2UgdGhlIGN1cnJlbnQgUENJLW1hcHBpbmcgQVBJLCB1cGRhdGUJ
+
+
+Kg0KICAqCQkJCWNvbW1hbmQtcXVldWluZy4JCQkqDQorICoJMi4xYiAgMDQv
+
+
+MDQvMTMgIEdMCUZpeCBmb3IgNjQtYml0IHBsYXRmb3JtcwkJKg0KICAqKioq
+
+
+KioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioq
+
+
+KioqKioqKioqKioqKioqKioqKioqKi8NCiANCiAvKiBVbmNvbW1lbnQgU0Ff
+
+
+SU5URVJSVVBULCBpZiB0aGUgZHJpdmVyIHJlZnVzZXMgdG8gc2hhcmUgaXRz
+
+
+IElSUSB3aXRoIG90aGVyIGRldmljZXMgKi8NCkBAIC0xMDIyLDcgKzEwMjMs
+
+
+NyBAQA0KIAkJCXBjaV9tYXBfcGFnZShwZGV2LCB2aXJ0X3RvX3BhZ2UocGNt
+
+
+ZC0+c2Vuc2VfYnVmZmVyKSwNCiAJCQkJICAgICAodW5zaWduZWQgbG9uZylw
+
+
+Y21kLT5zZW5zZV9idWZmZXIgJiB+UEFHRV9NQVNLLCBzaXplb2YocGNtZC0+
+
+
+c2Vuc2VfYnVmZmVyKSwNCiAJCQkJICAgICBETUFfRlJPTV9ERVZJQ0UpOw0K
+
+
+LQkJcFNSQi0+U2VnbWVudHgubGVuZ3RoID0gc2l6ZW9mKHBjbWQtPnNlbnNl
+
+
+X2J1ZmZlcik7DQorCQlzZ19kbWFfbGVuKCZwU1JCLT5TZWdtZW50eCkgPSBz
+
+
+aXplb2YocGNtZC0+c2Vuc2VfYnVmZmVyKTsNCiAJCXBTUkItPlNHY291bnQg
+
+
+PSAxOw0KIAkJcFNSQi0+cFNlZ21lbnRMaXN0ID0gKFBTR0wpICZwU1JCLT5T
+
+
+ZWdtZW50eDsNCiAJCURFQlVHMShwcmludGsoIiVzKCk6IE1hcHBlZCBzZW5z
+
+
+ZSBidWZmZXIgJXAgYXQgJXhcbiIsIF9fRlVOQ1RJT05fXywgcGNtZC0+c2Vu
+
+
+c2VfYnVmZmVyLCBjbWRwLT5zYXZlZF9kbWFfaGFuZGxlKSk7DQpAQCAtMTA0
+
+
+Myw3ICsxMDQ0LDcgQEANCiAJCQkJICAgICAodW5zaWduZWQgbG9uZylwY21k
+
+
+LT5yZXF1ZXN0X2J1ZmZlciAmIH5QQUdFX01BU0ssDQogCQkJCSAgICAgcGNt
+
+
+ZC0+cmVxdWVzdF9idWZmbGVuLCBzY3NpX3RvX3BjaV9kbWFfZGlyKHBjbWQt
+
+
+PnNjX2RhdGFfZGlyZWN0aW9uKSk7DQogCQkvKiBUT0RPOiBlcnJvciBoYW5k
+
+
+bGluZyAqLw0KLQkJcFNSQi0+U2VnbWVudHgubGVuZ3RoID0gcGNtZC0+cmVx
+
+
+dWVzdF9idWZmbGVuOw0KKwkJc2dfZG1hX2xlbigmcFNSQi0+U2VnbWVudHgp
+
+
+ID0gc2l6ZW9mKHBjbWQtPnNlbnNlX2J1ZmZlcik7DQogCQlwU1JCLT5TR2Nv
+
+
+dW50ID0gMTsNCiAJCXBTUkItPnBTZWdtZW50TGlzdCA9IChQU0dMKSAmcFNS
+
+
+Qi0+U2VnbWVudHg7DQogCQlERUJVRzEocHJpbnRrKCIlcygpOiBNYXBwZWQg
+
+
+cmVxdWVzdCBidWZmZXIgJXAgYXQgJXhcbiIsIF9fRlVOQ1RJT05fXywgcGNt
+
+
+ZC0+cmVxdWVzdF9idWZmZXIsIGNtZHAtPnNhdmVkX2RtYV9oYW5kbGUpKTsN
+
+
+CkBAIC0xMTMxLDcgKzExMzIsNyBAQA0KIAlpZiAoIXBjbWQpIHsgZGMzOTBf
+
+
+RnJlZV9pbnNlcnQgKHBBQ0IsIHBTUkIpOyByZXR1cm47IH0gLyogc2hvdWxk
+
+
+IG5vdCBoYXBwZW4gKi8NCiAJcERDQiA9IGRjMzkwX2ZpbmREQ0IgKHBBQ0Is
+
+
+IHBjbWQtPmRldmljZS0+aWQsIHBjbWQtPmRldmljZS0+bHVuKTsNCiAJaWYg
+
+
+KCFwRENCKSANCi0JeyANCisJew0KIAkJZGMzOTBfRnJlZV9pbnNlcnQgKHBB
+
+
+Q0IsIHBTUkIpOw0KIAkJcHJpbnRrIChLRVJOX0VSUiAiREMzOTA6IENvbW1h
+
+
+bmQgaW4gcXVldWUgdG8gbm9uLWV4aXN0aW5nIGRldmljZSFcbiIpOw0KIAkJ
+
+
+cGNtZC0+cmVzdWx0ID0gTUtfUkVTKERSSVZFUl9FUlJPUixESURfRVJST1Is
+
+
+MCwwKTsNCkBAIC0xMTgwLDcgKzExODEsNyBAQA0KICAgICAvKiBBc3N1bWUg
+
+
+QkFEX1RBUkdFVDsgd2lsbCBiZSBjbGVhcmVkIGxhdGVyICovDQogICAgIGNt
+
+
+ZC0+cmVzdWx0ID0gRElEX0JBRF9UQVJHRVQgPDwgMTY7DQogICAgDQotICAg
+
+
+IC8qIFRPRE86IENoYW5nZSB0aGUgcG9saWN5OiBBbHdheSBhY2NlcHQgVEVT
+
+
+VF9VTklUX1JFQURZIG9yIElOUVVJUlkgDQorICAgIC8qIFRPRE86IENoYW5n
+
+
+ZSB0aGUgcG9saWN5OiBBbHdheXMgYWNjZXB0IFRFU1RfVU5JVF9SRUFEWSBv
+
+
+ciBJTlFVSVJZIA0KICAgICAgKiBjb21tYW5kcyBhbmQgYWxsb2MgYSBEQ0Ig
+
+
+Zm9yIHRoZSBkZXZpY2UgaWYgbm90IHlldCB0aGVyZS4gRENCIHdpbGwNCiAg
+
+
+ICAgICogYmUgcmVtb3ZlZCBpbiBkYzM5MF9TUkJkb25lIGlmIFNFTF9USU1F
+
+
+T1VUICovDQogDQpAQCAtMTc2Nyw3ICsxNzY4LDcgQEANCiAgICAgUERDQiBw
+
+
+RENCLCBwRENCMjsNCiANCiAgICAgcERDQiA9IGttYWxsb2MgKHNpemVvZihE
+
+
+QzM5MF9EQ0IpLCBHRlBfQVRPTUlDKTsNCi0gICAgRENCREVCVUcocHJpbnRr
+
+
+IChLRVJOX0lORk8gIkRDMzkwOiBhbGxvYyBtZW0gZm9yIERDQiAoSUQgJWks
+
+
+IExVTiAlaSk6ICVwXG4iCVwNCisgICAgRENCREVCVUcocHJpbnRrIChLRVJO
+
+
+X0lORk8gIkRDMzkwOiBhbGxvYyBtZW0gZm9yIERDQiAoSUQgJWksIExVTiAl
+
+
+aSk6ICVwXG4iLAlcDQogCQkgICAgIGlkLCBsdW4sIHBEQ0IpKTsNCiAgDQog
+
+
+ICAgICpwcERDQiA9IHBEQ0I7DQpAQCAtMjIyMSw3ICsyMjIyLDcgQEANCiB7
+
+
+DQogICAgIFBERVZERUNMMDsNCiAgICAgVUNIQVIgICBpcnE7DQotICAgIFVJ
+
+
+TlQgICAgaW9fcG9ydDsNCisgICAgVUxPTkcgICBpb19wb3J0Ow0KIA0KICAg
+
+
+ICAvL2RjMzkwX3BTSFRfc3RhcnQgPSBwc2h0Ow0KICAgICBkYzM5MF9wQUNC
+
+
+X3N0YXJ0ID0gTlVMTDsNCkBAIC0yMjI5LDEwICsyMjMwLDEzIEBADQogICAg
+
+
+IGlmICggUENJX1BSRVNFTlQgKQ0KIAl3aGlsZSAoUENJX0ZJTkRfREVWSUNF
+
+
+IChQQ0lfVkVORE9SX0lEX0FNRCwgUENJX0RFVklDRV9JRF9BTUQ1M0M5NzQp
+
+
+KQ0KIAl7DQotI2lmIExJTlVYX1ZFUlNJT05fQ09ERSA+IEtFUk5FTF9WRVJT
+
+
+SU9OKDIsMywzMCkNCiAJICAgIGlmIChwY2lfZW5hYmxlX2RldmljZSAocGRl
+
+
+dikpDQogCQljb250aW51ZTsNCi0jZW5kaWYNCisNCisJICAgIGlmIChwY2lf
+
+
+c2V0X2RtYV9tYXNrKHBkZXYsIDB4ZmZmZmZmZmYpKSB7DQorCQkgICAgcHJp
+
+
+bnRrKEtFUk5fRVJSICJEQzM5MCglaSk6IE5vIHN1aXRhYmxlIERNQSBhdmFp
+
+
+bGFibGUuXG4iLCBkYzM5MF9hZGFwdGVyQ250KTsNCisJCSAgICBjb250aW51
+
+
+ZTsNCisJICAgIH0NCiAJICAgIFBDSV9HRVRfSU9fQU5EX0lSUTsNCiAJICAg
+
+
+IERFQlVHMChwcmludGsoS0VSTl9JTkZPICJEQzM5MCglaSk6IElPX1BPUlQ9
+
+
+JTA0eCxJUlE9JXhcbiIsIGRjMzkwX2FkYXB0ZXJDbnQsIChVSU5UKSBpb19w
+
+
+b3J0LCBpcnEpKTsNCiANCmRpZmYgLXUgbGludXgtMi42LjMvZHJpdmVycy9z
+
+
+Y3NpL3Njc2lpb20uYyBsaW51eC0yLjYuMy5oYXJkbGluay9kcml2ZXJzL3Nj
+
+
+c2kvc2NzaWlvbS5jDQotLS0gbGludXgtMi42LjMvZHJpdmVycy9zY3NpL3Nj
+
+
+c2lpb20uYwlGcmkgTWFyIDEyIDIyOjIyOjEwIDIwMDQNCisrKyBsaW51eC0y
+
+
+LjYuMy5oYXJkbGluay9kcml2ZXJzL3Njc2kvc2NzaWlvbS5jCVR1ZSBBcHIg
+
+
+MTMgMjI6NDY6MTkgMjAwNA0KQEAgLTUyMSw3ICs1MjEsNyBAQA0KICAgICB7
+
+
+DQogCSAgICBEQzM5MF93cml0ZTggKFNjc2lDbWQsIENMRUFSX0ZJRk9fQ01E
+
+
+KTsNCiAJICAgIERDMzkwX3dyaXRlOCAoRE1BX0NtZCwgUkVBRF9ESVJFQ1RJ
+
+
+T04rRE1BX0lETEVfQ01EKTsgLyogfCBETUFfSU5UICovDQotICAgIH0JICAg
+
+
+IA0KKyAgICB9DQogfQ0KIA0KIHN0YXRpYyB2b2lkDQpAQCAtNzQwLDkgKzc0
+
+
+MCw5IEBADQogCXBzZ2wgPSBwU1JCLT5wU2VnbWVudExpc3Q7DQogCS8vZGMz
+
+
+OTBfcGNpX3N5bmMocFNSQik7DQogDQotCXdoaWxlIChwU1JCLT5Ub3RhbFhm
+
+
+ZXJyZWRMZW4gKyAoVUxPTkcpIHBzZ2wtPmxlbmd0aCA8IHBTUkItPlNhdmVk
+
+
+X1B0cikNCisJd2hpbGUgKHBTUkItPlRvdGFsWGZlcnJlZExlbiArIChVTE9O
+
+
+Rykgc2dfZG1hX2xlbihwc2dsKSA8IHBTUkItPlNhdmVkX1B0cikNCiAJew0K
+
+
+LQkgICAgcFNSQi0+VG90YWxYZmVycmVkTGVuICs9IChVTE9ORykgcHNnbC0+
+
+
+bGVuZ3RoOw0KKwkgICAgcFNSQi0+VG90YWxYZmVycmVkTGVuICs9IChVTE9O
+
+
+Rykgc2dfZG1hX2xlbihwc2dsKTsNCiAJICAgIHBTUkItPlNHSW5kZXgrKzsN
+
+
+CiAJICAgIGlmKCBwU1JCLT5TR0luZGV4IDwgcFNSQi0+U0djb3VudCApDQog
+
+
+CSAgICB7DQpAQCAtNzYyLDcgKzc2Miw3IEBADQogICAgIH0gZWxzZSBpZihw
+
+
+Y21kLT5yZXF1ZXN0X2J1ZmZlcikgew0KIAkvL2RjMzkwX3BjaV9zeW5jKHBT
+
+
+UkIpOw0KIA0KLQlwU1JCLT5TZWdtZW50eC5sZW5ndGggPSBwY21kLT5yZXF1
+
+
+ZXN0X2J1ZmZsZW4gLSBwU1JCLT5TYXZlZF9QdHI7DQorCXNnX2RtYV9sZW4o
+
+
+JnBTUkItPlNlZ21lbnR4KSA9IHBjbWQtPnJlcXVlc3RfYnVmZmxlbiAtIHBT
+
+
+UkItPlNhdmVkX1B0cjsNCiAJcFNSQi0+U0djb3VudCA9IDE7DQogCXBTUkIt
+
+
+PnBTZWdtZW50TGlzdCA9IChQU0dMKSAmcFNSQi0+U2VnbWVudHg7DQogICAg
+
+
+IH0gZWxzZSB7DQpAQCAtODg1LDYgKzg4NSw4IEBADQogCWlmIChwRENCKSBw
+
+
+cmludGsgKEtFUk5fRVJSICJEQzM5MDogcFNSQiA9PSBwVG1wU1JCISAoVGFn
+
+
+USBFcnJvcj8pICglMDJpLSVpKVxuIiwNCiAJCQkgIHBEQ0ItPlRhcmdldElE
+
+
+LCBwRENCLT5UYXJnZXRMVU4pOw0KIAllbHNlIHByaW50ayAoS0VSTl9FUlIg
+
+
+IkRDMzkwOiBwU1JCID09IHBUbXBTUkIhIChUYWdRIEVycm9yPykgKERDQiAw
+
+
+ISlcbiIpOw0KKw0KKwlwU1JCLT5wU1JCRENCID0gcERDQjsNCiAJZGMzOTBf
+
+
+RW5hYmxlTXNnT3V0X0Fib3J0IChwQUNCLCBwU1JCKTsNCiAJaWYgKHBEQ0Ip
+
+
+IHBEQ0ItPkRDQkZsYWcgfD0gQUJPUlRfREVWOw0KIAlyZXR1cm47DQpAQCAt
+
+
+MTQ2Niw3ICsxNDY4LDcgQEANCiAJCXB0cjIgPSBwU1JCLT5wU2VnbWVudExp
+
+
+c3Q7DQogCQlmb3IoIGk9cFNSQi0+U0dJbmRleDsgaSA8IGJ2YWw7IGkrKykN
+
+
+CiAJCXsNCi0JCSAgICBzd2x2YWwgKz0gcHRyMi0+bGVuZ3RoOw0KKwkJICAg
+
+
+IHN3bHZhbCArPSBzZ19kbWFfbGVuKHB0cjIpOw0KIAkJICAgIHB0cjIrKzsN
+
+
+CiAJCX0NCiAJCVJFTU9WQUJMRURFQlVHKHByaW50ayhLRVJOX0lORk8gIlhm
+
+
+ZXJyZWRMZW49JTA4eCxOb3RYZmVyTGVuPSUwOHhcbiIsXA0KZGlmZiAtdSBs
+
+
+aW51eC0yLjYuMy9kcml2ZXJzL3Njc2kvZGMzOTAuaCBsaW51eC0yLjYuMy5o
+
+
+YXJkbGluay9kcml2ZXJzL3Njc2kvZGMzOTAuaA0KLS0tIGxpbnV4LTIuNi4z
+
+
+L2RyaXZlcnMvc2NzaS9kYzM5MC5oCUZyaSBNYXIgMTIgMjI6MjI6MTAgMjAw
+
+
+NA0KKysrIGxpbnV4LTIuNi4zLmhhcmRsaW5rL2RyaXZlcnMvc2NzaS9kYzM5
+
+
+MC5oCVR1ZSBBcHIgMTMgMjI6NTA6MjYgMjAwNA0KQEAgLTE5LDcgKzE5LDcg
+
+
+QEANCiAjZW5kaWYNCiANCiAjZGVmaW5lIERDMzkwX0JBTk5FUiAiVGVrcmFt
+
+
+IERDMzkwL0FNNTNDOTc0Ig0KLSNkZWZpbmUgREMzOTBfVkVSU0lPTiAiMi4w
+
+
+ZiAyMDAwLTEyLTIwIg0KKyNkZWZpbmUgREMzOTBfVkVSU0lPTiAiMi4xYiAy
+
+
+MDA0LTA0LTEzIg0KIA0KIC8qIFdlIGRvbid0IGhhdmUgZWhfYWJvcnRfaGFu
+
+
+ZGxlciwgZWhfZGV2aWNlX3Jlc2V0X2hhbmRsZXIsIA0KICAqIGVoX2J1c19y
+
+
+ZXNldF9oYW5kbGVyLCBlaF9ob3N0X3Jlc2V0X2hhbmRsZXIgeWV0ISANCg==
+---1463811839-869462391-1081891101=:15615--
