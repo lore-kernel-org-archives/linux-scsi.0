@@ -1,54 +1,31 @@
-From: Nicolas Mailhot <Nicolas.Mailhot@laposte.net>
-Subject: Re: scsi1:0:0:0: Attempting to queue an ABORT message problem
-Date: 15 May 2003 18:03:22 +0200
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1053014602.9064.14.camel@ulysse.olympe.o2t>
-References: <1053014366.9064.12.camel@ulysse.olympe.o2t>
+From: Ingo Oeser <ingo.oeser@informatik.tu-chemnitz.de>
+Subject: Re: ahc_linux_map_seg() compile/style/data corruption fixes
+Date: Thu, 15 May 2003 18:36:31 +0200
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <20030515183631.B626@nightmaster.csn.tu-chemnitz.de>
+References: <20030514044934.GC29926@holomorphy.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-GJpz8STIQdz/cwZzN5CG"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp6.clb.oleane.net ([213.56.31.26]:9136 "EHLO
-	smtp6.clb.oleane.net") by vger.kernel.org with ESMTP
-	id S264085AbTEOPul (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 15 May 2003 11:50:41 -0400
-In-Reply-To: <1053014366.9064.12.camel@ulysse.olympe.o2t>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20030514044934.GC29926@holomorphy.com>; from wli@holomorphy.com on Tue, May 13, 2003 at 09:49:34PM -0700
+To: William Lee Irwin III <wli@holomorphy.com>, gibbs@scsiguy.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: gibbs@btc.adaptec.com
-Cc: linux-scsi@vger.kernel.org
+
+On Tue, May 13, 2003 at 09:49:34PM -0700, William Lee Irwin III wrote:
+> (6) uint32_t used instead of u32 (contrary to Linux conventions)
+
+Where is this stated? 
+
+uint32_t is C99 contrary to u32. It's valid
+both in user and kernel space and allows to define ABI only once.
+
+I use it both in user space and kernel code.
+
+So I really need a _good_ reason, why this is against the
+convention ;-)
 
 
---=-GJpz8STIQdz/cwZzN5CG
-Content-Type: text/plain; charset=ISO-8859-15
-Content-Transfer-Encoding: quoted-printable
+Thanks & Regards
 
-Le jeu 15/05/2003 =E0 17:59, Nicolas Mailhot a =E9crit :
-> Hi,
->=20
-> 	I'm getting regular slowdowns on  a Dell server. System will freeze
-> then recover after a few minutes. The logs show the scsi subsystem is
-> always doing aborts when this happens. I'd like to know if this is
-> software or hardware problem, and what could be done to cure this box.
-
-I've forgotten to add I'm not subscribed to the list, so please CC me
-any answer.
-
-Regards,
-
---=20
-Nicolas Mailhot
-
---=-GJpz8STIQdz/cwZzN5CG
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: Ceci est une partie de message
-	=?ISO-8859-1?Q?num=E9riquement?= =?ISO-8859-1?Q?_sign=E9e?=
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.2.2 (GNU/Linux)
-
-iD8DBQA+w7pHI2bVKDsp8g0RApjWAJ9xmmMMUwnSGNRT5ITnONZjy/v+/ACffqoM
-Z11+vXsEWwgIwjVhWhZRU2Q=
-=36HE
------END PGP SIGNATURE-----
-
---=-GJpz8STIQdz/cwZzN5CG--
-
+Ingo Oeser
