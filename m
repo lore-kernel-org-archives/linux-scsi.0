@@ -1,86 +1,71 @@
-From: Patrick Mansfield <patmans@us.ibm.com>
-Subject: Re: [PATCH] 6/7 add and use a per-scsi_device queue_lock
-Date: Tue, 25 Mar 2003 18:01:33 -0800
+From: Douglas Gilbert <dougg@torque.net>
+Subject: [PATCH] block scsi_ioctl.c lk 2.5.66
+Date: Wed, 26 Mar 2003 20:02:12 +1000
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030325180133.A1874@beaverton.ibm.com>
-References: <20030324175337.A14957@beaverton.ibm.com> <20030324175422.A14996@beaverton.ibm.com> <20030324180227.A15047@beaverton.ibm.com> <20030324180247.B15047@beaverton.ibm.com> <20030324180304.C15047@beaverton.ibm.com> <20030324180325.D15047@beaverton.ibm.com> <20030324180341.E15047@beaverton.ibm.com> <1048627234.2883.156.camel@mulgrave>
+Message-ID: <3E817AA4.6020402@torque.net>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/mixed;
+ boundary="------------070102030407080509020501"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1048627234.2883.156.camel@mulgrave>; from James.Bottomley@steeleye.com on Tue, Mar 25, 2003 at 03:20:32PM -0600
+Received: from torque.net (d-241-56.stlucia.uq.net.au [203.101.241.56])
+	by bunyip.cc.uq.edu.au (8.12.8/8.12.8) with ESMTP id h2QA3X54001742
+	for <linux-scsi@vger.kernel.org>; Wed, 26 Mar 2003 20:03:34 +1000 (GMT+1000)
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@steeleye.com>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
 
-On Tue, Mar 25, 2003 at 03:20:32PM -0600, James Bottomley wrote:
-> On Mon, 2003-03-24 at 20:03, Patrick Mansfield wrote:
-> > Add and use a per scsi_device queue_lock.
-> 
-> In doing this, you're introducing a locking heirarchy, which would need
-> to be documented.  If you need both the host and queue locks, which do
-> you take first?  The code implies that it's queue_lock and then
-> host_lock, which is a bit counter intuitive 
+This is a multi-part message in MIME format.
+--------------070102030407080509020501
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 
-scsi_request_fn is called with the queue_lock already held, so I decided
-to get queue_lock first, rather than unlocking queue_lock followed by
-locking it again later.
+Changelog:
+   - extends block SCSI_IOCTL_SEND_COMMAND timeout on
+     SEND DIAGNOSTIC to the same as FORMAT (i.e. 2 hours)
+   - makes SCSI_IOCTL_SEND_COMMAND return SCSI status
+     (rather than EIO) for compatibility
+   - make do_blk_rq() a static function
 
-> and leads to awful problems
-> for your starved_list: the host_lock is actually protecting the starved
-> list, so the way you currently have it, you have to drop the host lock
-> to acquire the queue_lock to run the block queue.  Unfortunately, doing
-> this could lead to the device being readded when running the queue. 
-> Thus, the queue_next_request can spin removing and adding the device to
-> the starved list---probably working from a copy of the starved list will
-> help with this.
+Doug Gilbert
 
-The above doesn't happen because of the while() check: if anyone gets put
-on or re-added to the starved list, we drop out of the while loop. The
-current code also allows mutiple IO completions to run starved queues in
-parallel (I doubt it helps any, but I have no evidence one way or the
-other).
+--------------070102030407080509020501
+Content-Type: text/plain;
+ name="blk_scsi_ioctl_2566.diff"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="blk_scsi_ioctl_2566.diff"
 
-> I'd also like to see avoidance of the locking hierarchy where possible. 
-> i.e. in the scsi_request_fn for instance, can we move the actions that
-> need the host_lock outside the queue_lock?
+--- linux/drivers/block/scsi_ioctl.c	2003-03-05 21:01:14.000000000 +1000
++++ linux/drivers/block/scsi_ioctl.c2566dpg	2003-03-26 19:44:50.000000000 +1000
+@@ -45,7 +45,8 @@
+ #define SCSI_SENSE_BUFFERSIZE 64
+ #endif
+ 
+-int blk_do_rq(request_queue_t *q, struct block_device *bdev, struct request *rq)
++static int blk_do_rq(request_queue_t *q, struct block_device *bdev, 
++		     struct request *rq)
+ {
+ 	DECLARE_COMPLETION(wait);
+ 	int err = 0;
+@@ -368,6 +369,7 @@
+ 		goto error;
+ 
+ 	switch (opcode) {
++		case SEND_DIAGNOSTIC:
+ 		case FORMAT_UNIT:
+ 			rq->timeout = FORMAT_UNIT_TIMEOUT;
+ 			break;
+@@ -398,7 +400,8 @@
+ 	if (in_len)
+ 		rq->flags |= REQ_RW;
+ 
+-	err = blk_do_rq(q, bdev, rq);
++	blk_do_rq(q, bdev, rq);
++	err = rq->errors & 0xff;	/* only 8 bit SCSI status */
+ 	if (err) {
+ 		if (rq->sense_len)
+ 			if (copy_to_user(sic->data, rq->sense, rq->sense_len))
 
-I tried coding to avoid the lock hierarchy but did not quite make it.
+--------------070102030407080509020501--
 
-Without a lock hierarchy, (in scsi_request_fn) I have to lock, check for
-resources, increment host_busy or device_busy, and unlock.
 
-Then, if unable to get a host resource, I have to decrement device_busy.
-
-For the blk_queue_empty(q) or the "if !(req)" cases, I have to decrement
-both device_busy and host_busy.
-
-I thought (past tense) moving up blk_queue_empty(q) and the "if (!req)"
-checks would cause problems by not decrementing device_blocked and
-host_blocked, and that there is no way to handle host_busy being
-decremented back to 0 there.
-
-On further thought, those checks can be moved up before checking any of
-the sdev or shost values (if blk_queue_empty, we don't care about
-device_blocked or host_blocked). Agree? If so that issue goes away.
-
-There is a still an issue with the single_lun checks, where we allow
-continued IO to a device that has device_busy set, but not for a device
-that has device_busy == 0 and target_busy != 0; so we have to get the
-lock for device_busy, and the lock for target busy. I could keep the lock
-hierarchy only in single_lun cases, or add another target lock that would
-be part of a lock hierarchy.
-
-Should I add a target lock? 
-
-Excluding the single_lun case, do you think it's worthwhile to avoid the
-lock hierarchy?
-
-Related note: the new workq code in blk probably messes up our device_blocked
-and host_blocked handling, since there is now a 3 millisecond timeout (see
-blk_plug_queue). device_blocked and host_blocked should really be use some
-type of timeout mechanism. Maybe a new blk_plug_timeout(). This might also
-allow us to get rid of the one remaining recursive call into
-scsi_request_fn.
-
--- Patrick Mansfield
