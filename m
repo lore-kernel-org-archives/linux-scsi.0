@@ -1,85 +1,128 @@
-From: Kurt Garloff <garloff@suse.de>
+From: Patrick Mansfield <patmans@us.ibm.com>
 Subject: Re: /proc/scsi/map
-Date: Mon, 17 Jun 2002 22:28:40 +0200
+Date: Mon, 17 Jun 2002 13:35:34 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20020617202840.GA1313@gum01m.etpnet.phys.tue.nl>
-References: <OFF92A995C.C87665ED-ON87256BDB.00565A27@boulder.ibm.com>
+Message-ID: <20020617133534.A10174@eng2.beaverton.ibm.com>
+References: <20020615133606.GC11016@gum01m.etpnet.phys.tue.nl>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="IS0zKkzwUGydFO0o"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <OFF92A995C.C87665ED-ON87256BDB.00565A27@boulder.ibm.com>
+In-Reply-To: <20020615133606.GC11016@gum01m.etpnet.phys.tue.nl>; from garloff@suse.de on Sat, Jun 15, 2002 at 03:36:06PM +0200
 List-Id: linux-scsi@vger.kernel.org
-To: Bryan Henderson <hbryan@us.ibm.com>
-Cc: Linux SCSI list <linux-scsi@vger.kernel.org>
+To: Kurt Garloff <garloff@suse.de>, Linux kernel list <linux-kernel@vger.kernel.org>, Linux SCSI list <linux-scsi@vger.kernel.org>
+
+On Sat, Jun 15, 2002 at 03:36:06PM +0200, Kurt Garloff wrote:
+> Life would be easier if the scsi subsystem would just report which SCSI
+> device (uniquely identified by the controller,bus,target,unit tuple) belongs
+> to which high-level device. The information is available in the kernel.
+
+I prefer we refer to the tuple as host, channel, id, lun (H, C, I, L), so
+as to more closely match /proc/scsi/scsi, /proc/scsi/sg, and attached
+messages:
+
+[root@elm3a50 root]# cat /proc/scsi/scsi | head -4
+Attached devices: 
+Host: scsi0 Channel: 00 Id: 00 Lun: 00
+  Vendor: IBM-PSG  Model: ST318203LC    !# Rev: B222
+  Type:   Direct-Access                    ANSI SCSI revision: 02
+
+root # cat /proc/scsi/sg/device_hdr  /proc/scsi/sg/devices | head -2
+host    chan    id      lun     type    opens   qdepth  busy    online
+0       0       0       0       0       4       253     0       1
+
+Attached messages are of the form:
+
+Attached scsi disk sdn at scsi2, channel 0, id 2, lun 0
+
+> Attached patch does this:
+> garloff@pckurt:/raid5/Kernel/src $ cat /proc/scsi/map 
+> # C,B,T,U       Type    onl     sg_nm   sg_dev  nm      dev(hex)
+> 0,0,00,00       0x05    1       sg0     c:15:00 sr0     b:0b:00
+> 1,0,01,00       0x05    1       sg1     c:15:01 sr1     b:0b:01
+> 1,0,02,00       0x01    1       sg2     c:15:02 osst0   c:ce:00
+> 1,0,03,00       0x05    1       sg3     c:15:03 sr2     b:0b:02
+> 1,0,05,00       0x00    1       sg4     c:15:04 sda     b:08:00
+> 1,0,09,00       0x00    1       sg5     c:15:05 sdb     b:08:10
+> 2,0,01,00       0x05    1       sg6     c:15:06 sr3     b:0b:03
+> 2,0,02,00       0x01    1       sg7     c:15:07 osst1   c:ce:01
+> 2,0,03,00       0x05    1       sg8     c:15:08 sr4     b:0b:04
+> 2,0,05,00       0x00    1       sg9     c:15:09 sdc     b:08:20
+> 2,0,09,00       0x00    1       sg10    c:15:0a sdd     b:08:30
+> 3,0,10,00       0x00    1       sg11    c:15:0b sde     b:08:40
+> 3,0,12,00       0x00    1       sg12    c:15:0c sdf     b:08:50
+
+Why not treat each upper layer driver the same? Type is already
+in /proc/scsi/scsi, or implied by the upper level drivers attached.
+Online should really be part of /proc/scsi/scsi.
+
+Then, each line is a path followed by a list of upper level devices.
+This would also simplify the code, although the ordering of the upper
+level devices becomes link or module load order dependent.
+
+And similiar to sg (someone commented on parsing '^#'), have a _hdr
+entry; something like:
+
+$ cat /proc/scsi/map_hdr /proc/scsi/map
+
+H:C:I:L      online  type:name:block/char:maj:min
+00:00:00:00     1       sg:sg0:c:15:00      sr:sr0:b:0b:00
+01:00:01:00     1       sg:sg1:c:15:01      sr:sr1:b:0b:01
+01:00:02:00     1       sg:sg2:c:15:02      osst:osst0:c:ce:00
+02:00:09:00     1       sg:sg3:c:15:03      sd:sdd:b:08:30
+
+Or:
+
+H:C:I:L      online  type:enumeration:block/char:maj:min
+00:00:00:00     1      sg:0:c:15:00      sr:0:b:0b:00
+01:00:01:00     1      sg:1:c:15:01      sr:1:b:0b:01
+01:00:02:00     1      sg:2:c:15:02      osst:0:c:ce:00
+02:00:09:00     1      sg:3:c:15:03      sd:d:b:08:30
 
 
---IS0zKkzwUGydFO0o
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+> A patch for 2.5 should be done as well, if the design is OK, of course.
+> 
 
-Hi Bryan,
+IMO, we should use driverfs for this in 2.5. Mike Sullivan's scsi driverfs
+patch currently ends up with a driverfs layout (showing one Scsi_Device
+with two partitions, sg and sd attached) like this:
 
-thanks for your comments!
+[root@elm3a50 devices]# tree ./root/pci1/01\:06.0/scsi2/2\:0\:2\:0/
+./root/pci1/01:06.0/scsi2/2:0:2:0/
+|-- 2:0:2:0:disc
+|   |-- kdev
+|   |-- name
+|   |-- power
+|   `-- type
+|-- 2:0:2:0:gen
+|   |-- kdev
+|   |-- name
+|   |-- power
+|   `-- type
+|-- 2:0:2:0:p1
+|   |-- kdev
+|   |-- name
+|   |-- power
+|   `-- type
+|-- 2:0:2:0:p2
+|   |-- kdev
+|   |-- name
+|   |-- power
+|   `-- type
+|-- name
+|-- power
+`-- type
 
-On Mon, Jun 17, 2002 at 09:57:38AM -0600, Bryan Henderson wrote:
-> >Actually, the exact format of /proc/scsi/map is certainly something
-> >that can be discussed separately from the basic idea of adding a file
-> >that does expose the mapping of a SCSI address (CBTU) and the attached
-> >high level drivers.
->=20
-> Good.  Because there's one thing in the currently proposed format that is
-> wrong.  The "sg_num" column doesn't make sense -- it's a layering
-> violation. =20
+Right now, the name is storing an ID; the ID is retrieved in the kernel (using
+page 0x80 or page 0x83 or the path). For example disc has:
 
-Actually, the column header was sg_nm which should have the interpretation
-sg name.
-The userspace should know three things:
-(1) What sort of driver the driver refers to: "sd"
-(2) What sequential number it has: "5"
-(3) What major:minor the device node uses: b:08:50
+[root@elm3a50 2:0:2:0:disc]# pwd
+/devices/root/pci1/01:06.0/scsi2/2:0:2:0/2:0:2:0:disc
+[root@elm3a50 2:0:2:0:disc]# ls  
+kdev  name  power  type
+[root@elm3a50 2:0:2:0:disc]# cat *
+8d0
+U20000020371719e8disc
+0
+BLK
 
-What I actually do is concatenate (1) and (2) and make the commonly used
-device name out of it. It's a convenience thing for the script that may
-deduce the device nodes from this and it causes no pain except maybe for
-the "sd" case where the device names are not just the driver name (tag)
-with the number appended.
-If you criticize this, I do understand what you mean.
-
-I do not understand what you want to say with SCSI slot. All high level
-driver have their own numbering and the sequential number a device
-get for the attachment of the sg driver does in no way have any meaning
-in a way that it would give some ordering to the low-level devices.
-Remove and insert more than one device and you'll see that the ordering in
-which the script does output the lines is not co=EFnciding with the sg
-numbering any longer.
-
-> The information in this column is meaningful independent of
-> whether the user uses  or the system has a Generic SCSI high level driver
-> (sg).  And the names here can be confused with device special file names
-> (/dev/sg5, etc) which of course the kernel knows nothing about.
-
-No. I was not wanting to give a numbering to SCSI devices. They don't have.
-The high level driver attached to them however do. That's what is reported.
-
-Regards,
---=20
-Kurt Garloff  <garloff@suse.de>                          Eindhoven, NL
-GPG key: See mail header, key servers         Linux kernel development
-SuSE Linux AG, Nuernberg, DE                            SCSI, Security
-
---IS0zKkzwUGydFO0o
-Content-Type: application/pgp-signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.0.7 (GNU/Linux)
-
-iD8DBQE9DkZ4xmLh6hyYd04RAoe8AJ9osURsQ0BqLlJ1wOMcKJtKpg5RrwCeOMsx
-2WOvNzqQjjS3W7V+LqI2V34=
-=B1gi
------END PGP SIGNATURE-----
-
---IS0zKkzwUGydFO0o--
+-- Patrick Mansfield
