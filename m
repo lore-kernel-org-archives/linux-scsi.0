@@ -1,44 +1,39 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: Fw: [Bugme-new] [Bug 3787] New: Badness in
-	scsi_device_set_state at drivers/scsi/scsi_lib.c:1717
-Date: 21 Nov 2004 17:25:46 -0600
-Message-ID: <1101079564.2131.3.camel@mulgrave>
-References: <20041121123832.3afab90f.akpm@osdl.org>
+From: Jens Axboe <axboe@suse.de>
+Subject: [PATCH] kill locking around scsi_done()
+Date: Mon, 22 Nov 2004 09:08:14 +0100
+Message-ID: <20041122080813.GN26240@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat16.steeleye.com ([209.192.50.48]:40595 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S261850AbUKUX2Z (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 21 Nov 2004 18:28:25 -0500
-In-Reply-To: <20041121123832.3afab90f.akpm@osdl.org>
+Received: from ns.virtualhost.dk ([195.184.98.160]:7606 "EHLO virtualhost.dk")
+	by vger.kernel.org with ESMTP id S261983AbUKVIIl (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 22 Nov 2004 03:08:41 -0500
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@steeleye.com>
 
-On Sun, 2004-11-21 at 14:38, Andrew Morton wrote:
-> Begin forwarded message:
-> 
-> Date: Sun, 21 Nov 2004 06:25:30 -0800
-> From: bugme-daemon@osdl.org
-> To: bugme-new@lists.osdl.org
-> Subject: [Bugme-new] [Bug 3787] New: Badness in scsi_device_set_state at drivers/scsi/scsi_lib.c:1717
+Hi,
 
-The fix for this should be upstream already (sent in the last lot of -rc
-fixes):
+Lets show the mid layer as a good example and remove the host lock
+around the scsi_done() call.
 
-ChangeSet@1.2184, 2004-11-18 17:00:19-06:00, jejb@mulgrave.(none)
-  SCSI: fix USB forced remove oops
+Signed-off-by: Jens Axboe <axboe@suse.de>
 
-I'm afraid this is my fault ... I created the fix some time ago and just
-forgot to apply (or rather thought I already had applied) it.
-
-Anyway, this is a warning to everyone ... just because I come up with a
-fix for a problem, it doesn't mean I'll remember to apply it, so if you
-care about it ... remind me!
-
-James
-
+===== drivers/scsi/scsi.c 1.148 vs edited =====
+--- 1.148/drivers/scsi/scsi.c	2004-10-05 17:47:12 +02:00
++++ edited/drivers/scsi/scsi.c	2004-11-20 23:25:38 +01:00
+@@ -606,9 +606,7 @@
+ 				printk("queuecommand : command too long.\n"));
+ 		cmd->result = (DID_ABORT << 16);
+ 
+-		spin_lock_irqsave(host->host_lock, flags);
+ 		scsi_done(cmd);
+-		spin_unlock_irqrestore(host->host_lock, flags);
+ 		goto out;
+ 	}
+ 
+-- 
+Jens Axboe
 
