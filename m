@@ -1,39 +1,50 @@
 From: "Mukker, Atul" <Atulm@lsil.com>
 Subject: RE: megaraid doesn't detect when bios jumper is off...
-Date: Mon, 26 Jul 2004 11:48:52 -0400
+Date: Mon, 26 Jul 2004 11:53:10 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <0E3FA95632D6D047BA649F95DAB60E57033BC8B6@exa-atlanta>
+Message-ID: <0E3FA95632D6D047BA649F95DAB60E57033BC8B7@exa-atlanta>
 Mime-Version: 1.0
 Content-Type: text/plain;
 	charset="iso-8859-1"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:29164 "EHLO mail0.lsil.com")
-	by vger.kernel.org with ESMTP id S266129AbUGZPtH (ORCPT
+Received: from mail0.lsil.com ([147.145.40.20]:5357 "EHLO mail0.lsil.com")
+	by vger.kernel.org with ESMTP id S265815AbUGZPxR (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 26 Jul 2004 11:49:07 -0400
+	Mon, 26 Jul 2004 11:53:17 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: 'Tom Oehser' <tom@Toms.NET>
+To: 'Tom Oehser' <tom@Toms.NET>, "Mukker, Atul" <Atulm@lsil.com>
 Cc: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
 
-Please keep linux-scsi in loop on all threads of discussion originated on
-linux-scsi
+Again, please have the mails routed to linux-scsi as well.
 
-Thanks
--Atul
+> human readable- how can I tell if the new driver is correctly in
+> 64-bit addressing mode?
+2.20.x.x driver *always* work in 64-bit mode. The current 2.20 driver does
+not have the /proc interface built in yet. Can you send the information
+/proc/megaraid/hbaX/config file with the stock driver.
+
+-Atul Mukker
 
 > -----Original Message-----
 > From: Tom Oehser [mailto:tom@Toms.NET]
-> Sent: Sunday, July 25, 2004 11:33 AM
+> Sent: Sunday, July 25, 2004 11:39 AM
 > To: Mukker, Atul
 > Subject: RE: megaraid doesn't detect when bios jumper is off...
 > 
 > 
 > 
-> OK, I found it, and you were right- with the bios disabled only
-> by the ctrl-m menu, it works fine- but, I don't understand what
-> the purpose of the bios-disable jumper is, and/or what the bios
-> is initializing that the linux driver needs, that isn't set up
-> when the jumper is on.  Anyway, my problem is solved, -Thanks,
+> Something else I don't understand-
+> 
+> There is a 64bit/32bit jumper,
+> 
+> The stock 2.6.7 drivers always reports in /proc...megaraid...
+> that it is not using 64bit addressing (no matter what the jumper
+> setting), (yes, it is a 64-bit PCI slot).  On the newest driver
+> from the LSI site, though, the /proc megaraid directory doesn't
+> seem to exist, and the megaraid info under /sys is binary, not
+> human readable- how can I tell if the new driver is correctly in
+> 64-bit addressing mode?
+> 
 > -Tom
 > 
 > On Fri, 23 Jul 2004, Mukker, Atul wrote:
