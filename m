@@ -1,45 +1,64 @@
-From: "Paul Blazejowski" <paulb@blazebox.homeip.net>
-Subject: Re: Linux [2.6.0-test3/mm1] aic7xxx problems.
-Date: Mon, 11 Aug 2003 21:10:19 -0400 (EDT)
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <31044.199.181.174.146.1060650619.squirrel@www.blazebox.homeip.net>
-References: <1060543928.887.19.camel@blaze.homeip.net>	
-    <2425882704.1060622541@aslan.btc.adaptec.com>
-    <1060623576.2826.9.camel@blaze.homeip.net>
-    <3F37F1A4.2030404@genebrew.com>
+From: Jeff Woods <kazrak+kernel@cesmail.net>
+Subject: Re: [PATCH] oops in sd_shutdown
+Date: Mon, 11 Aug 2003 18:13:50 -0700
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <5.2.1.1.0.20030811180413.01a67dc0@no.incoming.mail>
+References: <Pine.LNX.4.53.0308111426570.16008@thevillage.soulcatcher>
+ <Pine.LNX.4.53.0308111426570.16008@thevillage.soulcatcher>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pool-141-155-151-209.ny5030.east.verizon.net ([141.155.151.209]:58574
-	"EHLO mail.blazebox.homeip.net") by vger.kernel.org with ESMTP
-	id S274959AbTHLBKY convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 11 Aug 2003 21:10:24 -0400
-In-Reply-To: <3F37F1A4.2030404@genebrew.com>
+Content-Type: text/plain; charset="us-ascii"; format=flowed
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+In-Reply-To: <20030812002844.B1353@pclin040.win.tue.nl>
+To: Andries Brouwer <aebr@win.tue.nl>
+Cc: linux-scsi@vger.kernel.org, linux-usb-devel@lists.sourceforge.net, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Rahul Karnik <rahul@genebrew.com>
-Cc: "Justin T. Gibbs " <gibbs@scsiguy.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-> Paul Blazejowski wrote:
+At +0200 12:28 AM 8/12/2003, Andries Brouwer wrote (in part):
+>The obvious patch (with whitespace damage)
 >
->> Is this due to my mainboard (nforce2),cpu,ACPI,devfs,sysfs...or all
->> these together?
+>diff -u --recursive --new-file -X /linux/dontdiff a/drivers/scsi/sd.c 
+>b/drivers/scsi/sd.c
+>--- a/drivers/scsi/sd.c Mon Jul 28 05:39:31 2003
+>+++ b/drivers/scsi/sd.c Tue Aug 12 01:24:51 2003
+>@@ -1351,10 +1351,14 @@
+>  static void sd_shutdown(struct device *dev)
+>  {
+>         struct scsi_device *sdp = to_scsi_device(dev);
+>-       struct scsi_disk *sdkp = dev_get_drvdata(dev);
+>+       struct scsi_disk *sdkp;
+>         struct scsi_request *sreq;
+>         int retries, res;
 >
-> NForce2 + ACPI IRQ routing is a work in progress. Try turning off ACPI
-> for the time being and see if it helps.
->
-> Thanks,
-> Rahul
-> --
-> Rahul Karnik
-> rahul@genebrew.com
->
->
->
+>+       sdkp = dev_get_drvdata(dev);
+>+       if (!sdkp)
+>+               return;         /* this can happen */
+>+
+>         if (!sdp->online || !sdkp->WCE)
+>                 return;
 
-Thanks Rahul, i'll try that.Are acpi=off and pci=noacpi the same options?
-what about APIC, should i also use noapic option upon booting the kernel
-(APIC is compiled in)?
 
-Paul
+Looking only at the above code snippet, I'd suggest something more like:
+~~~~~~~~~~~~~~~~~~
+diff -u --recursive --new-file -X /linux/dontdiff a/drivers/scsi/sd.c 
+b/drivers/scsi/sd.c
+--- a/drivers/scsi/sd.c Mon Jul 28 05:39:31 2003
++++ b/drivers/scsi/sd.c Tue Aug 12 01:24:51 2003
+@@ -1351,10 +1351,14 @@
+  static void sd_shutdown(struct device *dev)
+  {
+         struct scsi_device *sdp = to_scsi_device(dev);
+         struct scsi_disk *sdkp = dev_get_drvdata(dev);
+         struct scsi_request *sreq;
+         int retries, res;
 
+-       if (!sdp->online || !sdkp->WCE)
++       if (!sdp || !sdp->online || !sdkp || !sdkp->WCE)
+                 return;
+~~~~~~~~~~~~~~~~~~
+If sdp can *never* be NULL *and* this is a performance-critical code-path 
+then perhaps it makes sense to leave off the "!sdp || " which I added to 
+the logic, but it seems a very small cost to pay for the insurance checking 
+in sd_shutdown().
+
+--
+Jeff Woods <kazrak+kernel@cesmail.net> 
