@@ -1,33 +1,106 @@
-From: Arjan van de Ven <arjan@infradead.org>
-Subject: Re: [Patch] zfcp: act enhancements corrections
-Date: Mon, 29 Nov 2004 14:08:31 +0100
-Message-ID: <1101733711.2814.65.camel@laptop.fenrus.org>
-References: <OF2C369516.E9283E52-ONC1256F5B.003A1DCC-C1256F5B.0047384F@de.ibm.com>
+From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
+Subject: RE: [patch] remove bouncing email address of Deanna Bonds
+Date: Mon, 29 Nov 2004 08:27:39 -0500
+Message-ID: <60807403EABEB443939A5A7AA8A7458B7661DC@otce2k01.adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from canuck.infradead.org ([205.233.218.70]:24838 "EHLO
-	canuck.infradead.org") by vger.kernel.org with ESMTP
-	id S261721AbUK2NIo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 29 Nov 2004 08:08:44 -0500
-In-Reply-To: <OF2C369516.E9283E52-ONC1256F5B.003A1DCC-C1256F5B.0047384F@de.ibm.com>
+Received: from magic.adaptec.com ([216.52.22.17]:34755 "EHLO magic.adaptec.com")
+	by vger.kernel.org with ESMTP id S261293AbUK2N1m convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 29 Nov 2004 08:27:42 -0500
+content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andreas Herrmann <AHERRMAN@de.ibm.com>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, linux-scsi@vger.kernel.org
+To: Adrian Bunk <bunk@stusta.de>, James.Bottomley@SteelEye.com, Marcelo Tosatti <marcelo.tosatti@cyclades.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Mon, 2004-11-29 at 13:57 +0100, Andreas Herrmann wrote:
-> @@ -3196,6 +3149,8 @@
->             }
->             debug_text_event(adapter->erp_dbf, 1, "fsf_s_access");
->             zfcp_erp_unit_access_denied(unit);
-> +           atomic_clear_mask(ZFCP_STATUS_UNIT_SHARED, &unit->status);
-> +                atomic_clear_mask(ZFCP_STATUS_UNIT_READONLY, &unit->status);
->             fsf_req->status |= ZFCP_STATUS_FSFREQ_ERROR;
->             break;
-> 
+That address should instead become aacraid@adaptec.com to capture
+engineers at Adaptec.
 
-are you sure that was intentional ?
--- 
+Sincerely -- Mark Salyzyn
 
+-----Original Message-----
+From: linux-scsi-owner@vger.kernel.org
+[mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of Adrian Bunk
+Sent: Wednesday, November 24, 2004 1:47 PM
+To: James.Bottomley@SteelEye.com; Marcelo Tosatti
+Cc: linux-scsi@vger.kernel.org; linux-kernel@vger.kernel.org
+Subject: [patch] remove bouncing email address of Deanna Bonds
+
+The patch below (applies against both 2.4 and 2.6) removes the bouncing 
+email address of Deanna Bonds (I didn't find a nmore recent address).
+
+
+diffstat output:
+ drivers/scsi/aacraid/README   |    2 +-
+ drivers/scsi/dpt/dpti_ioctl.h |    1 -
+ drivers/scsi/dpt_i2o.c        |    1 -
+ drivers/scsi/dpti.h           |    1 -
+ 4 files changed, 1 insertion(+), 4 deletions(-)
+
+
+Signed-off-by: Adrian Bunk <bunk@stusta.de>
+
+--- linux-2.6.10-rc2-mm3-full/drivers/scsi/dpti.h.old	2004-11-24
+19:23:47.000000000 +0100
++++ linux-2.6.10-rc2-mm3-full/drivers/scsi/dpti.h	2004-11-24
+19:23:56.000000000 +0100
+@@ -3,7 +3,6 @@
+                              -------------------
+     begin                : Thu Sep 7 2000
+     copyright            : (C) 2001 by Adaptec
+-    email                : deanna_bonds@adaptec.com
+ 
+     See Documentation/scsi/dpti.txt for history, notes, license info
+     and credits
+--- linux-2.6.10-rc2-mm3-full/drivers/scsi/aacraid/README.old
+2004-11-24 19:24:05.000000000 +0100
++++ linux-2.6.10-rc2-mm3-full/drivers/scsi/aacraid/README
+2004-11-24 19:24:16.000000000 +0100
+@@ -42,7 +42,7 @@
+ Christoph Hellwig <hch@infradead.org>	(updates for new-style PCI
+probing and SCSI host registration,
+ 					 small cleanups/fixes)
+ Matt Domsch <matt_domsch@dell.com>	(revision ioctl, adapter
+messages)
+-Deanna Bonds <deanna_bonds@adaptec.com> (non-DASD support, PAE fibs and
+64 bit, added new adaptec controllers
++Deanna Bonds                            (non-DASD support, PAE fibs and
+64 bit, added new adaptec controllers
+ 					 added new ioctls, changed scsi
+interface to use new error handler,
+ 					 increased the number of fibs
+and outstanding commands to a container)
+ 
+--- linux-2.6.10-rc2-mm3-full/drivers/scsi/dpt/dpti_ioctl.h.old
+2004-11-24 19:24:24.000000000 +0100
++++ linux-2.6.10-rc2-mm3-full/drivers/scsi/dpt/dpti_ioctl.h
+2004-11-24 19:24:27.000000000 +0100
+@@ -3,7 +3,6 @@
+                              -------------------
+     begin                : Thu Sep 7 2000
+     copyright            : (C) 2001 by Adaptec
+-    email                : deanna_bonds@adaptec.com
+ 
+     See Documentation/scsi/dpti.txt for history, notes, license info
+     and credits
+--- linux-2.6.10-rc2-mm3-full/drivers/scsi/dpt_i2o.c.old
+2004-11-24 19:24:34.000000000 +0100
++++ linux-2.6.10-rc2-mm3-full/drivers/scsi/dpt_i2o.c	2004-11-24
+19:24:37.000000000 +0100
+@@ -3,7 +3,6 @@
+                              -------------------
+     begin                : Thu Sep 7 2000
+     copyright            : (C) 2000 by Adaptec
+-    email                : deanna_bonds@adaptec.com
+ 
+ 			   July 30, 2001 First version being submitted
+ 			   for inclusion in the kernel.  V2.4
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
