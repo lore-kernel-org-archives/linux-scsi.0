@@ -1,33 +1,42 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] tmscsim: init / exit cleanup
-Date: Sun, 6 Jun 2004 18:09:26 +0100
+From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+Subject: Re: [PATCH] some tmscsim consolidation
+Date: Sun, 6 Jun 2004 22:22:41 +0200 (CEST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040606170926.GA10396@infradead.org>
-References: <20040603133835.GA16378@infradead.org> <Pine.LNX.4.44.0406032213080.4721-100000@poirot.grange>
+Message-ID: <Pine.LNX.4.44.0406062148580.10742-100000@poirot.grange>
+References: <20040606124156.GA30931@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [213.146.154.40] ([213.146.154.40]:61635 "EHLO
-	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S263827AbUFFRJ2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 6 Jun 2004 13:09:28 -0400
-Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.44.0406032213080.4721-100000@poirot.grange>
+Received: from mail.gmx.de ([213.165.64.20]:55252 "HELO mail.gmx.net")
+	by vger.kernel.org with SMTP id S264096AbUFFUat (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 6 Jun 2004 16:30:49 -0400
+In-Reply-To: <20040606124156.GA30931@lst.de>
 List-Id: linux-scsi@vger.kernel.org
-To: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
-Cc: James Bottomley <James.Bottomley@steeleye.com>, Kurt Garloff <garloff@suse.de>, Linux SCSI list <linux-scsi@vger.kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-scsi@vger.kernel.org
 
-On Thu, Jun 03, 2004 at 10:23:45PM +0200, Guennadi Liakhovetski wrote:
-> Sorry, do you have a reference or remember at least apporoximatly when and
-> where the discussion took place?
+On Sun, 6 Jun 2004, Christoph Hellwig wrote:
 
-Sorry, don't remember anymore.  Try searching the lkml archives.
+> I've looked through my old tmscsim patch queue and found this one:
+>
+>  - merge dc390_initDCB into dc390_slave_alloc
+>  - merge DC390_release and dc390_shutdown into dc390_remove_one,
+>    use del_timer_sync to make sure the timer is really deleted on
+>    removal, adjust locking accordingly
+>  - some tiny related cleanups
 
->  I don't quite understand your arguments.
-> We do have __dev{init,exit,...} macros, do they have "problems over the
-> module boundary"? If yes - they want to be solved, right?
+Thanks for the patch, Christoph. As you might have seen, I've already
+submitted a patch, which merges _some_ of the functions above, following
+your request:-). Is your patch based on something like vanilla 2.6.6, or
+some bkX / preY? I'll try to find a version, to which it cleanly applies
+and then re-diff with the current state.
 
-currently you can have pointers to __devinitdata functions in structures
-registered with other modules.  Having more different lifetime rules will
-complicate that enormously and need a audit of the whole kernel first.
+Since you didn't sing-off for the patch, I guess, it's not yet
+compulsory:-)
+
+Thanks
+Guennadi
+---
+Guennadi Liakhovetski
+
 
