@@ -1,43 +1,59 @@
 From: Brad Campbell <brad@wasp.net.au>
 Subject: Re: max_sectors in libata when using md
-Date: Thu, 26 Aug 2004 20:44:11 +0400
-Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <412E135B.1030605@wasp.net.au>
-References: <412DFFA9.8030504@wasp.net.au> <8746466a0408260852205a7842@mail.gmail.com> <412E1039.7030508@pobox.com>
+Date: Thu, 26 Aug 2004 20:37:55 +0400
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <412E11E3.9050207@wasp.net.au>
+References: <412DFFA9.8030504@wasp.net.au> <8746466a0408260852205a7842@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <412E1039.7030508@pobox.com>
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Dave <dave.jiang@gmail.com>, linux-ide@vger.kernel.org, SCSI Mailing List <linux-scsi@vger.kernel.org>, RAID Linux <linux-raid@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from wasp.net.au ([203.190.192.17]:59533 "EHLO wasp.net.au")
+	by vger.kernel.org with ESMTP id S269162AbUHZQhT (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 26 Aug 2004 12:37:19 -0400
+In-Reply-To: <8746466a0408260852205a7842@mail.gmail.com>
 List-Id: linux-scsi@vger.kernel.org
+To: Dave <dave.jiang@gmail.com>
+Cc: linux-ide@vger.kernel.org, SCSI Mailing List <linux-scsi@vger.kernel.org>, RAID Linux <linux-raid@vger.kernel.org>
 
-Jeff Garzik wrote:
-> Dave wrote:
+Dave wrote:
+> On Thu, 26 Aug 2004 19:20:09 +0400, Brad Campbell <brad@wasp.net.au> wrote:
 > 
->> I believe. I wish the SATA layer would allow a mechanism to auto
->> detect drive being LBA48 or LBA28 and adjust accordingly instead of
->> just default to a very low sector count.
+>>G'day all,
+>>
+>>Hot on the trail of this libata oddity.
+>>
+>>
+>>ATA_MAX_SECTORS == 200.
+>>
+>>Should then the scsi layer be able to do this and queue 1/2 a Meg in a single request?
+>>
+>>Am I looking at something completely weird? Is the block layer doing something I should know about?
+>>Can SATA transfers handle 1024 sectors in one go? Will Batman make it out of the cave alive?
 > 
 > 
-> 
-> The SATA layer already does this...  but only on 2.6.x kernels.
-> 
-> drivers/scsi/libata-scsi.c, ata_scsi_slave_config()
-> 
+> That is decimal 200, not hex 200. Technically with ATA (or SATA)
+> drives you can bump it to 0x100 (256). That is the limitation of LBA28
+> drives. With LBA48 drives you can do 0xffff (64k) sectors per request
+> I believe.
 
-(Groan) <Places head in hands weeping>
+G'day Dave,
 
-I give up Batman.
+Thanks for the reply.
 
-In which case, these drives need to be knocked back to UDMA66 to function properly on anything later 
-than 2.6.6. Don't know why.
-I have tried multiple drives (I have 5 of them), multiple cables (lots of those) and multiple bridge 
-boards (I have 6 of those). There is no combination that is reliable on the VIA controller with any 
-transfer larger than about 0x80 sectors *OR* speeds greater than UDMA66 *OR* Kernel 2.6.6 or prior.
+In theory I guess 0xffff sectors is possible. Over here, I'm getting requests of more than 256 
+sectors intermittently locking up my SATA->PATA converters if run on a via sata interface (On a 
+promise interface it's not a problem)
 
+I also note than in sata_sil there is a workaround for Seagate drives that knocks max_sectors back 
+to 15. Is the md driver going to circumvent that also and lock up those interfaces?
 
+I realise that 200 is decimal, my question was more how are requests of 1024 sectors making it to 
+the driver when the driver has a max_sector value of 200?
+
+I'm only seeing sectors > 200 when the request comes from md, thus my cc'ing it to the raid list to 
+see if anyone there has any idea.
 
 Regards,
-Brad
+Brad (Getting warmer)
