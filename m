@@ -1,79 +1,38 @@
-From: Markus Lidel <Markus.Lidel@shadowconnect.com>
-Subject: Request for comment on new I2O driver
-Date: Tue, 29 Jun 2004 01:21:30 +0200
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <40E0A7FA.4050208@shadowconnect.com>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: PATCH for disabling write cache on SATA drives
+Date: Mon, 28 Jun 2004 20:12:26 -0400
+Sender: linux-ide-owner@vger.kernel.org
+Message-ID: <20040629001225.GA23878@havoc.gtf.org>
+References: <1F6D1D1660975A4887628A011443A1BC07734BF9@uswaumsx13medge.med.ge.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [213.239.201.226] ([213.239.201.226]:18883 "EHLO
-	mail.shadowconnect.com") by vger.kernel.org with ESMTP
-	id S265163AbUF1Xax (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 28 Jun 2004 19:30:53 -0400
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1F6D1D1660975A4887628A011443A1BC07734BF9@uswaumsx13medge.med.ge.com>
+To: "Edwards, Scott (MED, Kelly IT Resouces)" <James.Edwards@med.ge.com>
+Cc: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, linux-ide@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-Hello,
+On Fri, Jun 25, 2004 at 06:21:24PM -0500, Edwards, Scott (MED, Kelly IT Resouces) wrote:
+> 
+> I don't know if this is useful for anyone or if anyone even cares, but just
+> in case someone does, this is the patch I made to disable the write cache on
+> the Serial ATA drives.  It doesn't make the write cache controllable from
+> the user level, it just ALWAYS disables it.  (I tried to make one that could
+> be sent via an ioctl, but there were far too many things that I didn't
+> understand and it didn't work.)  Since I have never done this before I don't
+> know if there is some protocol that I missed, if so I'm sorry.  If there are
+> glaring stupid mistakes (very likely) please let me know.
 
-in the last few weeks i've partly rewritten the I2O subsystem to better 
-suite the 2.6 kernel (sysfs support, PCI probing, dynamically allocated 
-request queues and gendisks for block devices, ...). Although i'm not 
-finished, it would be nice if someone could comment about it.
+In principle your patch is fine, but I would really like to find a
+better way of allowing the user to do this.
 
-Because the patch is 500K large, it's better to view the sources online:
+My immediate guess would be to use the standard SCSI method of disabling
+write cache, and have that initiate wbcache disable on the SATA side.
 
-http://i2o.shadowconnect.com/svn/repos/kernel/trunk/drivers/message/i2o/
+Long term, this would be augmented by an "ATA passthru" opcode or ioctl.
 
-Login: anonymous
-without a password.
-
-The i2o_*.c files are still "old", so please skip those :-)
-
-Any advices/comments would be appreciated, but escpecially interesting 
-for me would be:
-
-- sysfs
-   * Is the way it is done okay?
-   * Is there something important missing?
-   * In the PCI probing function the device struct from pci_dev is simply
-     copied to the device struct from I2O controller. Is this okay, or is
-     there a better way to do it?
-
-- interrupt handling
-   * are 4 (or maybe more) function calls inside an interrupt bearable
-   * could / should the interrupt handler put incomming data in a
-     workqueue?
-
-- workqueue
-   * i've implemented a workqueue for event handling for each driver
-     (e. g. block device, tape device, ...). Is this to expensive?
-
-- file split
-   * i've split the huge i2o_core into 7 smaller ones. Is there a problem
-     with it?
-
-- kmalloc/mempool in request queue prep function
-   * i've used a kmalloc in the request queue prep. The scsi layer uses a
-     mempool for it. At the moment the driver only need 47k memory. But
-     is it better to pre-allocate the memory in this case?
-
-Thank you very much for any advice/comment in advance.
+	Jeff
 
 
-Best regards,
 
-Markus Lidel
-------------------------------------------
-Markus Lidel (Senior IT Consultant)
-
-Shadow Connect GmbH
-Carl-Reisch-Weg 12
-D-86381 Krumbach
-Germany
-
-Phone:  +49 82 82/99 51-0
-Fax:    +49 82 82/99 51-11
-
-E-Mail: Markus.Lidel@shadowconnect.com
-URL:    http://www.shadowconnect.com
