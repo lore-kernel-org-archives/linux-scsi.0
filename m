@@ -1,49 +1,43 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: bytes/CDB of SCSI pass thru grossly limited maybe
-Date: Sat, 28 Aug 2004 20:41:09 +0200
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH] fix dma mapping leak in fusion
+Date: Sat, 28 Aug 2004 21:02:56 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040828184104.GA8460@suse.de>
-References: <A8E06BE4-F7BA-11D8-AC6B-00039398BB5E@ieee.org> <Pine.LNX.4.44L0.0408271100590.1238-100000@ida.rowland.org> <20040828143124.GB2518@suse.de> <1093715498.3682.4.camel@mulgrave> <20040828175547.GA8339@suse.de> <1093717255.3682.13.camel@mulgrave>
+Message-ID: <20040828190256.GA17846@lst.de>
+References: <0E3FA95632D6D047BA649F95DAB60E5704DE6BD5@exa-atlanta>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns.virtualhost.dk ([195.184.98.160]:40416 "EHLO virtualhost.dk")
-	by vger.kernel.org with ESMTP id S267507AbUH1SlB (ORCPT
+Received: from verein.lst.de ([213.95.11.210]:44449 "EHLO mail.lst.de")
+	by vger.kernel.org with ESMTP id S267522AbUH1TDF (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 28 Aug 2004 14:41:01 -0400
+	Sat, 28 Aug 2004 15:03:05 -0400
 Content-Disposition: inline
-In-Reply-To: <1093717255.3682.13.camel@mulgrave>
+In-Reply-To: <0E3FA95632D6D047BA649F95DAB60E5704DE6BD5@exa-atlanta>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Alan Stern <stern@rowland.harvard.edu>, Pat LaVarre <p.lavarre@ieee.org>, SCSI development list <linux-scsi@vger.kernel.org>
+To: "Moore, Eric Dean" <Emoore@lsil.com>
+Cc: Christoph Hellwig <hch@lst.de>, Masao Fukuchi <fukuchi.masao@jp.fujitsu.com>, linux-scsi@vger.kernel.org
 
-On Sat, Aug 28 2004, James Bottomley wrote:
-> On Sat, 2004-08-28 at 13:55, Jens Axboe wrote:
-> > Probably bio and SCSI should use a unified MAX_PAGES define, there's not
-> > much point in bio setting up a 256 page bio_io_vec slab and mempool, if
-> > noone can use it.
-> 
-> Sure, ours is SCSI_MAX_PHYS_SEGMENTS ... by default, we just use
-> MAX_PHYS_SEGMENTS from the bio headers for this, which is 128, we could
-> set this to BIO_MAX_PAGES, sure.
-> 
-> We allow values of 32,64,128 and 256 (the smaller ones were for tiny
-> systems with SCSI stacks), the largest one for SGI/Qlogic.
-> 
-> However, I did ask the IBM spearker at OLS who was doing the elevator
-> analysis to retry with 256 instead of 128, and he reported no difference
-> within error, so I don't think there's much evidence that 256 actually
-> does anything useful (other than consume a bit of spare memory).
+On Mon, Aug 23, 2004 at 11:56:50AM -0400, Moore, Eric Dean wrote:
+> Christoph - What is the criteria for the mid-layer
+> to offline a device? 
 
-Since SCSI doesn't build > 128 pages anyways, yes it doesn't make sense
-to maintain a BIO_MAX_PAGES of 256. Didn't the SCSI part used to be 256
-pages as well, I'm pretty sure that's what I put in when the
-scsi_malloc() crud was dumped?
+When eh_abort didn't succeed for all outstanding commands and the various
+reset methods failed aswell.
 
-bio has 1, 4, 16, 64, 128, 256 pools. 32 might make more sense, I seem
-to recall mpages using that. I'll see if I can sneak a BIO_MAX_PAGES
-reduction in, and spend that extra pool on 32 instead :)
+> The dmesg dump in previous email indicates that mid-layer 
+> issued several aborts to the LLD, then mpt driver is returning 
+> SUCCESS. However at some point the midlayer offlines the device,
+> however commands are still in the LLD, and completed sometime later after
+> the mptscsih_taskmgmt_timeout is called, thus hitting the
+> oops(because request_buffer=NULL), as we have removed the 
+> scsi_device_online check per your request.
 
--- 
-Jens Axboe
+I'm looking over fusion code with your latest patch applied now.  What
+worries me is mptscsih_flush_running_cmds where's you're erroring out
+commands possibly from withing EH methods (?, I have a hard time
+following the code from mptscsih to mptbase and back), but not under
+EH control.
 
+Btw, when looking over this it seems to me you could kill
+mptscsih_search_running_cmds - the scsi core makes sure you'll never
+have outstanding commands when it calls ->slave_destory.
