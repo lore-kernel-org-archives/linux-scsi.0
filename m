@@ -1,77 +1,218 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: [PATCH] sg jiffy library calls [was: sg kill local jiffies problems]
-Date: Mon, 06 Sep 2004 18:51:38 +1000
+From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+Subject: Re: [PATCH] tmscsim: INQUIRY always only untagged
+Date: Mon, 6 Sep 2004 11:47:36 +0200 (CEST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <413C251A.1050105@torque.net>
-References: <413A778C.1000302@torque.net>
-Reply-To: dougg@torque.net
+Message-ID: <Pine.LNX.4.60.0409061143020.8550@poirot.grange>
+References: <Pine.LNX.4.60.0409040033310.5266@poirot.grange>
+ <20040904140102.A15247@infradead.org> <Pine.LNX.4.60.0409050022570.3092@poirot.grange>
+ <20040904233835.A18659@infradead.org> <Pine.LNX.4.60.0409051654460.3039@poirot.grange>
+ <1094398979.10977.9.camel@mulgrave>  <20040905173134.A31521@infradead.org>
+ <1094422949.10977.15.camel@mulgrave> <Pine.LNX.4.60.0409061042240.6252@poirot.grange>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------000806030704000801010308"
+Content-Type: MULTIPART/MIXED; BOUNDARY="-1463811839-1674965915-1094464056=:8550"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from borg.st.net.au ([65.23.158.22]:31626 "EHLO borg.st.net.au")
-	by vger.kernel.org with ESMTP id S267624AbUIFIwP (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Sep 2004 04:52:15 -0400
-In-Reply-To: <413A778C.1000302@torque.net>
+Received: from pop.gmx.net ([213.165.64.20]:413 "HELO mail.gmx.net")
+	by vger.kernel.org with SMTP id S267393AbUIFJs0 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Sep 2004 05:48:26 -0400
+In-Reply-To: <Pine.LNX.4.60.0409061042240.6252@poirot.grange>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: bunk@fs.tum.de, Michel.R.Garnier@wanadoo.fr
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Christoph Hellwig <hch@infradead.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-This is a multi-part message in MIME format.
---------------000806030704000801010308
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+  This message is in MIME format.  The first part should be readable text,
+  while the remaining parts are likely unreadable without MIME-aware tools.
 
-Douglas Gilbert wrote:
-> It has been reported that the change to sg.c in lk 2.6.9-rc1-bk5
-> to use library jiffy functions breaks sg (albeit under vmware).
-> Evidentally sg devices are no longer recognised after that change.
-> 
-> Reverting that changeset removes the problem. Strange, it is not
-> obvious why.
-> 
-> At some stage I must have detected negative time spans (yeh yeh it
-> never happens) and my versions returned 0 in this case; otherwise
-> the implementations look very similar.
+---1463811839-1674965915-1094464056=:8550
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 
-The following patch fixes the problem. It is
-against lk 2.6.9-rc1-bk7 (i.e. after "standard"
-jiffy_to_millisecs macros replaced sg versions).
+On Mon, 6 Sep 2004, Guennadi Liakhovetski wrote:
 
-Change:
-    - make sure a (large) user supplied timeout value does
-      not result in a negative timeout passed to the midlevel
+> On Mon, 5 Sep 2004, James Bottomley wrote:
+>
+>> On Sun, 2004-09-05 at 12:31, Christoph Hellwig wrote:
+>>> Umm yes.  But lets get the driver no oops first and then move forward.
+>>> There's still a lot of work to do on the driver.
+>> 
+>> I think perhaps the correct palliative fix is simply to list this device
+>> (whatever it is, it's not listed in the bug report) as BLIST_NOTQ, then
+>> the problem won't arise (and of course, tmscsim would have actually to
+>> use the mid-layer black list rather than its own much shorter internal
+>> list).
+>
+> I don't know what device the original reporter had, but the one I have here, 
+> which exibits the same behaviour, is a Seagate disk (see attached patch). So, 
+> if you still think, this device should not be allowed any tags (which is a 
+> pity, I would then again have no device with tags supported for tests 
+> here:-(), then, please, apply the attached patch. A patch to use the 
+> blacklist will follow shortly.
 
-Doug Gilbert
+Attached.
 
+Thanks
+Guennadi
+---
+Guennadi Liakhovetski
 
+---1463811839-1674965915-1094464056=:8550
+Content-Type: TEXT/PLAIN; charset=US-ASCII; name="tmscsim-bug2139-general.3.patch"
+Content-Transfer-Encoding: BASE64
+Content-ID: <Pine.LNX.4.60.0409061147360.8550@poirot.grange>
+Content-Description: 
+Content-Disposition: attachment; filename="tmscsim-bug2139-general.3.patch"
 
---------------000806030704000801010308
-Content-Type: text/x-patch;
- name="sg_269rc1bk7jif.diff"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="sg_269rc1bk7jif.diff"
+VXNlIG1pZC1sYXllcidzIGRlY2lzaW9uIHdydCB0YWctc3VwcG9ydC4NCg0K
+U2lnbmVkLW9mZi1ieTogR3Vlbm5hZGkgTGlha2hvdmV0c2tpIDxnLmxpYWto
+b3ZldHNraUBnbXguZGU+DQoNCmRpZmYgLXUgYS9kcml2ZXJzL3Njc2kvc2Nz
+aWlvbS5jIGIvZHJpdmVycy9zY3NpL3Njc2lpb20uYw0KLS0tIGEvZHJpdmVy
+cy9zY3NpL3Njc2lpb20uYwkxNyBBdWcgMjAwNCAyMToxNjo1Mw0KKysrIGIv
+ZHJpdmVycy9zY3NpL3Njc2lpb20uYwk2IFNlcCAyMDA0IDA5OjMyOjUzDQpA
+QCAtOCw5ICs4LDkgQEANCiBzdGF0aWMgdm9pZCBfX2lubGluZV9fDQogZGMz
+OTBfZnJlZXRhZyAoc3RydWN0IGRjMzkwX2RjYiogcERDQiwgc3RydWN0IGRj
+MzkwX3NyYiogcFNSQikNCiB7DQotCWlmIChwU1JCLT5UYWdOdW1iZXIgPCAy
+NTUpIHsNCisJaWYgKHBTUkItPlRhZ051bWJlciAhPSBTQ1NJX05PX1RBRykg
+ew0KIAkJcERDQi0+VGFnTWFzayAmPSB+KDEgPDwgcFNSQi0+VGFnTnVtYmVy
+KTsgICAvKiBmcmVlIHRhZyBtYXNrICovDQotCQlwU1JCLT5UYWdOdW1iZXIg
+PSAyNTU7DQorCQlwU1JCLT5UYWdOdW1iZXIgPSBTQ1NJX05PX1RBRzsNCiAJ
+fQ0KIH0NCiANCkBAIC02OSw3ICs2OSw3IEBADQogICAgIC8qIENoYW5nZSA5
+OS8wNS8zMTogRG9uJ3QgdXNlIHRhZ3Mgd2hlbiBub3QgZGlzY29ubmVjdGlu
+ZyAoQlVTWSkgKi8NCiAgICAgaWYgKChwRENCLT5TeW5jTW9kZSAmIEVOX1RB
+R19RVUVVRUlORykgJiYgZGlzY19hbGxvd2VkKQ0KICAgICAgIHsNCi0JdTgg
+dGFnX25vID0gMDsNCisJczggdGFnX25vID0gMDsNCiAJd2hpbGUgKCgxIDw8
+IHRhZ19ubykgJiBwRENCLT5UYWdNYXNrKSB0YWdfbm8rKzsNCiAJaWYgKHRh
+Z19ubyA+PSBzaXplb2YgKHBEQ0ItPlRhZ01hc2spKjggfHwgdGFnX25vID49
+IHBEQ0ItPk1heENvbW1hbmQpIHsgDQogCQlwcmludGsgKEtFUk5fV0FSTklO
+RyAiREMzOTA6IE91dCBvZiB0YWdzIGZvciBEZXYuICUwMnggJTAyeFxuIiwg
+cERDQi0+VGFyZ2V0SUQsIHBEQ0ItPlRhcmdldExVTik7IA0KQEAgLTYxMiw3
+ICs2MTIsNyBAQA0KIH0NCiANCiBzdGF0aWMgc3RydWN0IGRjMzkwX3NyYioN
+Ci1kYzM5MF9Nc2dJbl9RVGFnIChzdHJ1Y3QgZGMzOTBfYWNiKiBwQUNCLCBz
+dHJ1Y3QgZGMzOTBfZGNiKiBwRENCLCB1OCB0YWcpDQorZGMzOTBfTXNnSW5f
+UVRhZyAoc3RydWN0IGRjMzkwX2FjYiogcEFDQiwgc3RydWN0IGRjMzkwX2Rj
+YiogcERDQiwgczggdGFnKQ0KIHsNCiAgIHN0cnVjdCBkYzM5MF9zcmIqIGxh
+c3RTUkIgPSBwRENCLT5wR29pbmdMYXN0Ow0KICAgc3RydWN0IGRjMzkwX3Ny
+YiogcFNSQiA9IHBEQ0ItPnBHb2luZ1NSQjsNCkBAIC0xMzA4LDM4ICsxMzA4
+LDYgQEANCiAJcmV0dXJuIDE7DQogICAgcmV0dXJuIDA7DQogfQ0KLSAgIA0K
+LQ0KLXN0YXRpYyB2b2lkIA0KLWRjMzkwX2Rpc2NfdGFncV9zZXQgKHN0cnVj
+dCBkYzM5MF9kY2IqIHBEQ0IsIFBTQ1NJX0lOUURBVEEgcHRyKQ0KLXsNCi0g
+ICAvKiBDaGVjayBmb3IgU0NTSSBmb3JtYXQgKEFOU0kgYW5kIFJlc3BvbnNl
+IGRhdGEgZm9ybWF0KSAqLw0KLSAgIGlmICggKHB0ci0+VmVycyAmIDB4MDcp
+ID49IDIgfHwgKHB0ci0+UkRGICYgMHgwRikgPT0gMiApDQotICAgew0KLQlp
+ZiAoIChwdHItPkZsYWdzICYgU0NTSV9JTlFfQ01EUVVFVUUpICYmDQotCSAg
+ICAocERDQi0+RGV2TW9kZSAmIFRBR19RVUVVRUlOR18pICYmDQotCSAgICAv
+KiAoKHBEQ0ItPkRldlR5cGUgPT0gVFlQRV9ESVNLKSANCi0JCXx8IChwRENC
+LT5EZXZUeXBlID09IFRZUEVfTU9EKSkgJiYqLw0KLQkgICAgIWRjMzkwX3Rh
+Z3FfYmxhY2tsaXN0ICgoKGNoYXIqKXB0cikrOCkgKQ0KLQkgIHsNCi0JICAg
+ICBpZiAocERDQi0+TWF4Q29tbWFuZCA9PTEpIHBEQ0ItPk1heENvbW1hbmQg
+PSBwRENCLT5wRENCQUNCLT5UYWdNYXhOdW07DQotCSAgICAgcERDQi0+U3lu
+Y01vZGUgfD0gRU5fVEFHX1FVRVVFSU5HIC8qIHwgRU5fQVROX1NUT1AgKi87
+DQotCSAgICAgLy9wRENCLT5UYWdNYXNrID0gMDsNCi0JICB9DQotCWVsc2UN
+Ci0JICAgICBwRENCLT5NYXhDb21tYW5kID0gMTsNCi0gICAgIH0NCi19DQot
+DQotDQotc3RhdGljIHZvaWQgDQotZGMzOTBfYWRkX2RldiAoc3RydWN0IGRj
+MzkwX2FjYiogcEFDQiwgc3RydWN0IGRjMzkwX2RjYiogcERDQiwgUFNDU0lf
+SU5RREFUQSBwdHIpDQotew0KLSAgIHU4IGJ2YWwxID0gcHRyLT5EZXZUeXBl
+ICYgU0NTSV9ERVZUWVBFOw0KLSAgIHBEQ0ItPkRldlR5cGUgPSBidmFsMTsN
+Ci0gICAvKiBpZiAoYnZhbDEgPT0gVFlQRV9ESVNLIHx8IGJ2YWwxID09IFRZ
+UEVfTU9EKSAqLw0KLQlkYzM5MF9kaXNjX3RhZ3Ffc2V0IChwRENCLCBwdHIp
+Ow0KLX0NCiANCiANCiBzdGF0aWMgdm9pZCBfX2lubGluZV9fDQpAQCAtMTU1
+MiwxNSArMTUyMCwxMSBAQA0KIAkgICAgcERDQi0+SW5xdWlyeTcgPSBwdHIt
+PkZsYWdzOw0KIA0KIGNrY19lOg0KLSAgICBpZiggcGNtZC0+Y21uZFswXSA9
+PSBJTlFVSVJZICYmIA0KLQkocGNtZC0+cmVzdWx0ID09IChESURfT0sgPDwg
+MTYpIHx8IHN0YXR1c19ieXRlKHBjbWQtPnJlc3VsdCkgJiBDSEVDS19DT05E
+SVRJT04pICkNCi0gICAgIHsNCi0JaWYgKChwdHItPkRldlR5cGUgJiBTQ1NJ
+X0RFVlRZUEUpICE9IFRZUEVfTk9ERVYpDQotCSAgew0KLQkgICAgIC8qIGRl
+dmljZSBmb3VuZDogYWRkICovIA0KLQkgICAgIGRjMzkwX2FkZF9kZXYgKHBB
+Q0IsIHBEQ0IsIHB0cik7DQotCSAgfQ0KLSAgICAgfQ0KKyAgICBpZiAocGNt
+ZC0+Y21uZFswXSA9PSBJTlFVSVJZICYmIA0KKwkocGNtZC0+cmVzdWx0ID09
+IChESURfT0sgPDwgMTYpIHx8IHN0YXR1c19ieXRlKHBjbWQtPnJlc3VsdCkg
+JiBDSEVDS19DT05ESVRJT04pICYmDQorCShwdHItPkRldlR5cGUgJiBTQ1NJ
+X0RFVlRZUEUpICE9IFRZUEVfTk9ERVYpDQorCS8qIGRldmljZSBmb3VuZDog
+YWRkICovIA0KKwlwRENCLT5EZXZUeXBlID0gcHRyLT5EZXZUeXBlICYgU0NT
+SV9ERVZUWVBFOw0KIA0KICAgICBwY21kLT5yZXNpZCA9IHBjbWQtPnJlcXVl
+c3RfYnVmZmxlbiAtIHBTUkItPlRvdGFsWGZlcnJlZExlbjsNCiANCmRpZmYg
+LXUgYS9kcml2ZXJzL3Njc2kvdG1zY3NpbS5oIGIvZHJpdmVycy9zY3NpL3Rt
+c2NzaW0uaA0KLS0tIGEvZHJpdmVycy9zY3NpL3Rtc2NzaW0uaAkxNyBBdWcg
+MjAwNCAyMToxNjo1Mw0KKysrIGIvZHJpdmVycy9zY3NpL3Rtc2NzaW0uaAk2
+IFNlcCAyMDA0IDA5OjMzOjA4DQpAQCAtNjIsNyArNjIsNyBAQA0KIHU4CQlU
+YXJnZXRTdGF0dXM7DQogDQogdTgJCVNjc2lQaGFzZTsNCi11OAkJVGFnTnVt
+YmVyOw0KK3M4CQlUYWdOdW1iZXI7DQogdTgJCVNHSW5kZXg7DQogdTgJCVNH
+Y291bnQ7DQogDQpkaWZmIC11IGEvZHJpdmVycy9zY3NpL3Rtc2NzaW0uYyBi
+L2RyaXZlcnMvc2NzaS90bXNjc2ltLmMNCi0tLSBhL2RyaXZlcnMvc2NzaS90
+bXNjc2ltLmMJMyBTZXAgMjAwNCAyMjoxMDoxNA0KKysrIGIvZHJpdmVycy9z
+Y3NpL3Rtc2NzaW0uYwk2IFNlcCAyMDA0IDA5OjMzOjU5DQpAQCAtMjQ1LDYg
+KzI0NSw3IEBADQogI2luY2x1ZGUgPHNjc2kvc2NzaV9kZXZpY2UuaD4NCiAj
+aW5jbHVkZSA8c2NzaS9zY3NpX2hvc3QuaD4NCiAjaW5jbHVkZSA8c2NzaS9z
+Y3NpY2FtLmg+DQorI2luY2x1ZGUgPHNjc2kvc2NzaV90Y3EuaD4NCiANCiAN
+CiAjZGVmaW5lIERDMzkwX0JBTk5FUiAiVGVrcmFtIERDMzkwL0FNNTNDOTc0
+Ig0KQEAgLTI5Myw3ICsyOTQsNiBAQA0KIHN0YXRpYyBpcnFyZXR1cm5fdCBk
+b19EQzM5MF9JbnRlcnJ1cHQoIGludCwgdm9pZCAqLCBzdHJ1Y3QgcHRfcmVn
+cyAqKTsNCiANCiBzdGF0aWMgaW50ICAgIGRjMzkwX2luaXRBZGFwdGVyKHN0
+cnVjdCBTY3NpX0hvc3QgKnBzaCwgdW5zaWduZWQgbG9uZyBpb19wb3J0LCB1
+OCBJcnEsIHU4IGluZGV4ICk7DQotc3RhdGljIHZvaWQgICBkYzM5MF91cGRh
+dGVEQ0IgKHN0cnVjdCBkYzM5MF9hY2IqIHBBQ0IsIHN0cnVjdCBkYzM5MF9k
+Y2IqIHBEQ0IpOw0KIA0KIHN0YXRpYyBzdHJ1Y3QgZGMzOTBfYWNiKglkYzM5
+MF9wQUNCX3N0YXJ0PSBOVUxMOw0KIHN0YXRpYyBzdHJ1Y3QgZGMzOTBfYWNi
+KglkYzM5MF9wQUNCX2N1cnJlbnQgPSBOVUxMOw0KQEAgLTg5Miw3ICs4OTIs
+NyBAQA0KIAlzcmItPlNHVG9CZVhmZXJMZW4gPSAwOw0KIAlzcmItPlNjc2lQ
+aGFzZSA9IDA7DQogCXNyYi0+RW5kTWVzc2FnZSA9IDA7DQotCXNyYi0+VGFn
+TnVtYmVyID0gMjU1Ow0KKwlzcmItPlRhZ051bWJlciA9IFNDU0lfTk9fVEFH
+Ow0KIA0KIAlpZiAoZGMzOTBfU3RhcnRTQ1NJKGFjYiwgZGNiLCBzcmIpKSB7
+DQogCQlkYzM5MF9XYWl0aW5nX2luc2VydChkY2IsIHNyYik7DQpAQCAtMTA2
+OSwzNSArMTA2OSw2IEBADQogDQogI2luY2x1ZGUgInNjc2lpb20uYyINCiAN
+Ci0vKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioq
+KioqKioqKioqKioqKioqKioqKioqKioqKioqKioNCi0gKiBGdW5jdGlvbiA6
+IHN0YXRpYyB2b2lkIGRjMzkwX3VwZGF0ZURDQigpDQotICoNCi0gKiBQdXJw
+b3NlIDogIFNldCB0aGUgY29uZmlndXJhdGlvbiBkZXBlbmRlbnQgRENCIHBh
+cmFtZXRlcnMNCi0gKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioq
+KioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKiovDQotDQot
+c3RhdGljIHZvaWQgZGMzOTBfdXBkYXRlRENCIChzdHJ1Y3QgZGMzOTBfYWNi
+KiBwQUNCLCBzdHJ1Y3QgZGMzOTBfZGNiKiBwRENCKQ0KLXsNCi0gIHBEQ0It
+PlN5bmNNb2RlICY9IEVOX1RBR19RVUVVRUlORyB8IFNZTkNfTkVHT19ET05F
+IC8qfCBFTl9BVE5fU1RPUCovOw0KLSAgaWYgKHBEQ0ItPkRldk1vZGUgJiBU
+QUdfUVVFVUVJTkdfKSB7DQotCS8vaWYgKHBEQ0ItPlN5bmNNb2RlICYgRU5f
+VEFHX1FVRVVFSU5HKSBwRENCLT5NYXhDb21tYW5kID0gcEFDQi0+VGFnTWF4
+TnVtOw0KLSAgfSBlbHNlIHsNCi0JcERDQi0+U3luY01vZGUgJj0gfkVOX1RB
+R19RVUVVRUlORzsNCi0JcERDQi0+TWF4Q29tbWFuZCA9IDE7DQotICB9DQot
+DQotICBpZiggcERDQi0+RGV2TW9kZSAmIFNZTkNfTkVHT18gKQ0KLQlwRENC
+LT5TeW5jTW9kZSB8PSBTWU5DX0VOQUJMRTsNCi0gIGVsc2Ugew0KLQlwRENC
+LT5TeW5jTW9kZSAmPSB+KFNZTkNfTkVHT19ET05FIHwgU1lOQ19FTkFCTEUp
+Ow0KLQlwRENCLT5TeW5jT2Zmc2V0ICY9IH4weDBmOw0KLSAgfQ0KLQ0KLSAg
+Ly9pZiAoISAocERDQi0+RGV2TW9kZSAmIEVOX0RJU0NPTk5FQ1RfKSkgcERD
+Qi0+U3luY01vZGUgJj0gfkVOX0FUTl9TVE9QOyANCi0NCi0gIHBEQ0ItPkN0
+cmxSMSA9IHBBQ0ItPnBTY3NpSG9zdC0+dGhpc19pZDsNCi0gIGlmKCBwRENC
+LT5EZXZNb2RlICYgUEFSSVRZX0NIS18gKQ0KLQlwRENCLT5DdHJsUjEgfD0g
+UEFSSVRZX0VSUl9SRVBPOw0KLX0gIA0KIA0KIC8qKioqKioqKioqKioqKioq
+KioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioq
+KioqKioqKioqKg0KICAqIEZ1bmN0aW9uIDogc3RhdGljIHZvaWQgZGMzOTBf
+aW5pdFNSQigpDQpAQCAtMTMyNiw3ICsxMjk3LDcgQEANCiAJICovDQogCWlm
+IChsdW4gJiYgKHBEQ0IyID0gZGMzOTBfZmluZERDQihwQUNCLCBpZCwgMCkp
+KSB7DQogCQlwRENCLT5EZXZNb2RlID0gcERDQjItPkRldk1vZGU7DQotCQlw
+RENCLT5TeW5jTW9kZSA9IHBEQ0IyLT5TeW5jTW9kZTsNCisJCXBEQ0ItPlN5
+bmNNb2RlID0gcERDQjItPlN5bmNNb2RlICYgU1lOQ19ORUdPX0RPTkU7DQog
+CQlwRENCLT5TeW5jUGVyaW9kID0gcERDQjItPlN5bmNQZXJpb2Q7DQogCQlw
+RENCLT5TeW5jT2Zmc2V0ID0gcERDQjItPlN5bmNPZmZzZXQ7DQogCQlwRENC
+LT5OZWdvUGVyaW9kID0gcERDQjItPk5lZ29QZXJpb2Q7DQpAQCAtMTM0Nyw3
+ICsxMzE4LDE2IEBADQogCQkJcERDQi0+Q3RybFI0IHw9IE5FR0FURV9SRVFB
+Q0tEQVRBIHwgTkVHQVRFX1JFUUFDSzsNCiAJfQ0KIA0KLQlkYzM5MF91cGRh
+dGVEQ0IocEFDQiwgcERDQik7DQorCWlmIChwRENCLT5EZXZNb2RlICYgU1lO
+Q19ORUdPXykNCisJCXBEQ0ItPlN5bmNNb2RlIHw9IFNZTkNfRU5BQkxFOw0K
+KwllbHNlIHsNCisJCXBEQ0ItPlN5bmNNb2RlID0gMDsNCisJCXBEQ0ItPlN5
+bmNPZmZzZXQgJj0gfjB4MGY7DQorCX0NCisNCisJcERDQi0+Q3RybFIxID0g
+cEFDQi0+cFNjc2lIb3N0LT50aGlzX2lkOw0KKwlpZiAocERDQi0+RGV2TW9k
+ZSAmIFBBUklUWV9DSEtfKQ0KKwkJcERDQi0+Q3RybFIxIHw9IFBBUklUWV9F
+UlJfUkVQTzsNCiANCiAJcEFDQi0+c2Nhbl9kZXZpY2VzID0gMTsNCiAJc2Nz
+aV9kZXZpY2UtPmhvc3RkYXRhID0gcERDQjsNCkBAIC0xMzk1LDEwICsxMzc1
+LDE2IEBADQogCXBBQ0ItPkRDQkNudC0tOw0KIH0NCiANCi1zdGF0aWMgaW50
+IGRjMzkwX3NsYXZlX2NvbmZpZ3VyZShzdHJ1Y3Qgc2NzaV9kZXZpY2UgKnNj
+c2lfZGV2aWNlKQ0KK3N0YXRpYyBpbnQgZGMzOTBfc2xhdmVfY29uZmlndXJl
+KHN0cnVjdCBzY3NpX2RldmljZSAqc2RldikNCiB7DQotCXN0cnVjdCBkYzM5
+MF9hY2IqIHBBQ0IgPSAoc3RydWN0IGRjMzkwX2FjYiopIHNjc2lfZGV2aWNl
+LT5ob3N0LT5ob3N0ZGF0YTsNCi0JcEFDQi0+c2Nhbl9kZXZpY2VzID0gMDsN
+CisJc3RydWN0IGRjMzkwX2FjYiAqYWNiID0gKHN0cnVjdCBkYzM5MF9hY2Ig
+KilzZGV2LT5ob3N0LT5ob3N0ZGF0YTsNCisJc3RydWN0IGRjMzkwX2RjYiAq
+ZGNiID0gKHN0cnVjdCBkYzM5MF9kY2IgKilzZGV2LT5ob3N0ZGF0YTsNCisN
+CisJYWNiLT5zY2FuX2RldmljZXMgPSAwOw0KKwlpZiAoc2Rldi0+dGFnZ2Vk
+X3N1cHBvcnRlZCAmJiAoZGNiLT5EZXZNb2RlICYgVEFHX1FVRVVFSU5HXykp
+IHsNCisJCWRjYi0+U3luY01vZGUgfD0gRU5fVEFHX1FVRVVFSU5HOw0KKwkJ
+ZGNiLT5NYXhDb21tYW5kID0gZGNiLT5wRENCQUNCLT5UYWdNYXhOdW07DQor
+CX0NCiAJcmV0dXJuIDA7DQogfQ0KIA0K
 
---- linux/drivers/scsi/sg.c	2004-09-01 11:48:55.000000000 +1000
-+++ linux/drivers/scsi/sg.c269rc1bk7jif	2004-09-06 17:00:56.000000000 +1000
-@@ -576,6 +576,7 @@
- 	sg_io_hdr_t *hp;
- 	unsigned char cmnd[sizeof (dummy_cmdp->sr_cmnd)];
- 	int timeout;
-+	unsigned long ul_timeout;
- 
- 	if (count < SZ_SG_IO_HDR)
- 		return -EINVAL;
-@@ -610,7 +611,8 @@
- 			return -EBUSY;	/* reserve buffer already being used */
- 		}
- 	}
--	timeout = msecs_to_jiffies(srp->header.timeout);
-+	ul_timeout = msecs_to_jiffies(srp->header.timeout);
-+	timeout = (ul_timeout < INT_MAX) ? ul_timeout : INT_MAX;
- 	if ((!hp->cmdp) || (hp->cmd_len < 6) || (hp->cmd_len > sizeof (cmnd))) {
- 		sg_remove_request(sfp, srp);
- 		return -EMSGSIZE;
-
---------------000806030704000801010308--
+---1463811839-1674965915-1094464056=:8550--
