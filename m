@@ -1,32 +1,36 @@
 From: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Subject: PATCH [14/15] qla2xxx: 23xx/63xx firmware updates
-Date: Sun, 14 Mar 2004 00:26:15 -0800
+Subject: PATCH [15/15] qla2xxx: Update driver version
+Date: Sun, 14 Mar 2004 00:26:25 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040314082615.GA3479@linux.local.home>
+Message-ID: <20040314082625.GA3489@linux.local.home>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ms-smtp-03-qfe0.socal.rr.com ([66.75.162.135]:47005 "EHLO
-	ms-smtp-03-eri0.socal.rr.com") by vger.kernel.org with ESMTP
-	id S263327AbUCNIXp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 14 Mar 2004 03:23:45 -0500
+Received: from ms-smtp-01-qfe0.socal.rr.com ([66.75.162.133]:22455 "EHLO
+	ms-smtp-01-eri0.socal.rr.com") by vger.kernel.org with ESMTP
+	id S263328AbUCNIXz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 14 Mar 2004 03:23:55 -0500
 Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@steeleye.com>
 Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-ChangeSet
-  1.1670 04/03/11 10:15:39 andrew.vasquez@apc.qlogic.com +4 -0
-  Resync with latest released firmware -- 3.02.26.
+Update version number to 8.00.00b11-k (to indicate embedded driver).
 
- drivers/scsi/qla2xxx/ql2300_fw.c |13722 +++++++++++++++++++--------------------
- drivers/scsi/qla2xxx/ql2322_fw.c |13353 +++++++++++++++++++------------------
- drivers/scsi/qla2xxx/ql6312_fw.c |12066 +++++++++++++++++-----------------
- drivers/scsi/qla2xxx/ql6322_fw.c |12275 +++++++++++++++++-----------------
- 4 files changed, 25866 insertions(+), 25550 deletions(-)
+ftp://ftp.qlogic.com/outgoing/linux/patches/8.x/8.00.00b11k/24_update_version.patch
 
-
-This patch is too large for an inline patch, please download the
-bzip'd patch from:
-
-	ftp://ftp.qlogic.com/outgoing/linux/patches/8.x/8.00.00b11k/23_23xx_63xx_fw_updates.patch.bz2
+===== drivers/scsi/qla2xxx/qla_version.h 1.2 vs edited =====
+--- 1.2/drivers/scsi/qla2xxx/qla_version.h	Mon Feb  2 08:02:01 2004
++++ edited/drivers/scsi/qla2xxx/qla_version.h	Sat Mar 13 22:33:17 2004
+@@ -19,9 +19,9 @@
+ /*
+  * Driver version 
+  */
+-#define QLA2XXX_VERSION      "8.00.00b10"
++#define QLA2XXX_VERSION      "8.00.00b11-k"
+ 
+ #define QLA_DRIVER_MAJOR_VER	8
+ #define QLA_DRIVER_MINOR_VER	0
+ #define QLA_DRIVER_PATCH_VER	0
+-#define QLA_DRIVER_BETA_VER	10
++#define QLA_DRIVER_BETA_VER	11
