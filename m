@@ -1,43 +1,66 @@
-From: Douglas Gilbert <dougg@torque.net>
+From: Samuel Colin <Samuel.Colin3@wanadoo.fr>
 Subject: Re: What is SCSI command 0xa0 ?
-Date: Tue, 15 Feb 2005 08:02:58 +1000
-Message-ID: <42112012.3000801@torque.net>
-References: <Pine.LNX.4.44L0.0502141558290.1175-100000@ida.rowland.org> <m3r7ji7rxp.fsf@merlin.emma.line.org>
-Reply-To: dougg@torque.net
+Date: Mon, 14 Feb 2005 23:06:45 +0100
+Message-ID: <20050214230645.22eb3b3c@hebus>
+References: <200502142112.j1ELC3bY032759@falcon30.maxeymade.com>
+	<Pine.LNX.4.44L0.0502141623440.1843-100000@ida.rowland.org>
+Reply-To: samuel.colin3@wanadoo.fr
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Received: from [65.23.158.22] ([65.23.158.22]:13290 "EHLO borg.st.net.au")
-	by vger.kernel.org with ESMTP id S261578AbVBNWCd (ORCPT
+Received: from smtp4.wanadoo.fr ([193.252.22.27]:47450 "EHLO smtp4.wanadoo.fr")
+	by vger.kernel.org with ESMTP id S261576AbVBNWGl (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 14 Feb 2005 17:02:33 -0500
-In-Reply-To: <m3r7ji7rxp.fsf@merlin.emma.line.org>
+	Mon, 14 Feb 2005 17:06:41 -0500
+In-Reply-To: <Pine.LNX.4.44L0.0502141623440.1843-100000@ida.rowland.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthias Andree <matthias.andree@gmx.de>
-Cc: Alan Stern <stern@rowland.harvard.edu>, SCSI development list <linux-scsi@vger.kernel.org>, Samuel Colin <Samuel.Colin3@wanadoo.fr>
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: USB development list <linux-usb-devel@lists.sourceforge.net>, SCSI development list <linux-scsi@vger.kernel.org>
 
-Matthias Andree wrote:
-> Alan Stern <stern@rowland.harvard.edu> writes:
-> 
-> 
->>Can anybody tell me what this CDB is supposed to do, when issued to a 
->>direct-access device (a disk drive)?
->>
->>	a0 00 00 00 00 00 00 00 10 00 00 00
->>
->>It's crashing the firmware on Samuel's disk and generally causing 
->>problems.  The command gets sent right after the partition table is 
->>read.
-> 
-> 
-> "REPORT LUNS". This is probably only useful on media changers and
-> perhaps disk arrays.
+The Mon, 14 Feb 2005 16:34:39 -0500 (EST)
+Alan Stern <stern@rowland.harvard.edu> wrote:
 
-... and current SCSI drafts flag support for REPORT LUNS
-as mandatory for _all_ device types. I suspect that some
-members of t10.org would prefer support to be optional.
+> kernel:   Vendor: WDC WD25  Model: 00JB-00FUA0       Rev: 15.0
+> kernel:   Type:   Direct-Access                      ANSI SCSI revision:
+> 04
+> 
+> Since it claims to be SCSI revision 04, the command was sent.  But your 
+> drive couldn't handle it and choked.
+> 
+> It's possible to prevent the SCSI driver from sending the REPORT_LUNS 
+> command to your drive.  You can try this out by typing (as root):
+> 
+> 	echo 'WDC WD25:00JB-00FUA0:0x01' >/proc/scsi/device_info
+> 
+> before plugging in the drive.  If that solves the problem, it can be added
+> permanently into the SCSI driver source code.
+> 
+OK, I just made the following tests :
+- Plugged the disk and booted the openbrick
+- Did the echo above
+- Modprobed ehci-hcd and usb-storage
+- Mounted the disk
+- Made the copy of an iso image from /home (who is nfs mounted) to
+/mnt/lacie1...
 
-Doug Gilbert
+Absolutely no error, no odd display on the command line. Thus I guess we can
+say the problem is solved so far.
 
+You guys are wizards, you save my (geeky :-) life. I would hug you if I
+could ! Also, realize that these openbricks can't have an IDE disk, and are
+sometimes sold with lacie disks, so that might help other people.
+What puzzles me is that a 2.6.8 kernel didn't exhibit this behaviour for the
+same disk on another machine (and thus another usb2 chipset, but as that
+wasn't the cause of the problem...)
+
+In conclusion, I think that the patches from usb-devel I had applied solved
+usb2 problems that had really happened (but now are solved), but some code
+change introduced scsi errors (hence the working 2.6.8 kernel I tell about
+above)... I don't really know, after all you're the experts.
+
+USB devel and SCSI dev lists in Cc:
+
+Many thanks,
+Samuel Colin
 
