@@ -1,32 +1,41 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+From: Doug Ledford <dledford@redhat.com>
 Subject: Re: [PATCH 2.5.17] Making SCSI not copy the request structure
-Date: Thu, 23 May 2002 03:01:37 +0100 (BST)
+Date: Wed, 22 May 2002 23:14:45 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <E17Ahv7-0003Lb-00@the-village.bc.nu>
-References: <20020522185349.D2819@redhat.com>
+Message-ID: <20020522231445.A3014@redhat.com>
+References: <20020522185349.D2819@redhat.com> <E17Ahv7-0003Lb-00@the-village.bc.nu>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <20020522185349.D2819@redhat.com> from "Doug Ledford" at May 22, 2002 06:53:49 PM
+Content-Disposition: inline
+In-Reply-To: <E17Ahv7-0003Lb-00@the-village.bc.nu>; from alan@lxorguk.ukuu.org.uk on Thu, May 23, 2002 at 03:01:37AM +0100
 List-Id: linux-scsi@vger.kernel.org
-To: Doug Ledford <dledford@redhat.com>
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
 Cc: Patrick Mansfield <patmans@us.ibm.com>, James Bottomley <James.Bottomley@steeleye.com>, linux-scsi@vger.kernel.org
 
-> to tell it to set queue depths, I think the low level driver should be 
-> allowed to call into the mid layer and have the mid layer adjust the queue 
-> depth on a device.  This should, of course, be properly locked so that a 
-> low level driver can change it's mind about a device's queue depth later 
-> if it wishes and call back into the mid layer with a new queue depth 
-> value without confusing the mid layer.
+On Thu, May 23, 2002 at 03:01:37AM +0100, Alan Cox wrote:
+> One thing I see consistently as a problem in the block layers in 2.4 is
+> that there is no way to say "thanks for the request you just threw at me
+> but Im busy right now" and to flag "busy/idle".
+> 
+> The network layer has a clean way to say "Im busy dont feed me",
+> "Im no longer busy, feed me" and also "thanks but I've just discovered I
+> am in fact busy have this request back anbd feed it me later"
 
-One thing I see consistently as a problem in the block layers in 2.4 is
-that there is no way to say "thanks for the request you just threw at me
-but Im busy right now" and to flag "busy/idle".
+No, that does in fact exist.  At least in the new scsi eh code you are 
+allowed to return a non-0 value from your low level driver's 
+queuecommand() routine.  On a non-0 return, the mid layer throws the 
+command onto the mlqueue and waits to send it until the mid layer 
+processes a completion event from you (or there might also be a timeout, 
+I'm not sure, but I would hope there is also a timeout since otherwise 
+returning non-0 with no outstanding commands on a device because your 
+driver is busy with something else could cause a queue to hang).  Anyway, 
+it's there even if I never did personally use it since my driver used the 
+old eh code ;-)
 
-The network layer has a clean way to say "Im busy dont feed me",
-"Im no longer busy, feed me" and also "thanks but I've just discovered I
-am in fact busy have this request back anbd feed it me later"
-
-It massively cleans up the interface handling compared to the wild hoops
-things like qlogicisp jump through
+-- 
+  Doug Ledford <dledford@redhat.com>     919-754-3700 x44233
+         Red Hat, Inc. 
+         1801 Varsity Dr.
+         Raleigh, NC 27606
+  
