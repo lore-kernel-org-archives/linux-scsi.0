@@ -1,50 +1,54 @@
-From: David Brownell <david-b@pacbell.net>
+From: Patrick Mansfield <patmans@us.ibm.com>
 Subject: Re: [linux-usb-devel] Re: /proc/scsi/map
-Date: Mon, 17 Jun 2002 10:15:12 -0700
+Date: Mon, 17 Jun 2002 12:07:06 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <ael5hn$njm$2@main.gmane.org>
-References: <200206162202.g5GM2XT02750@localhost.localdomain>
+Message-ID: <20020617120706.A16275@eng2.beaverton.ibm.com>
+References: <patmans@us.ibm.com> <200206171642.g5HGg5b03044@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <200206171642.g5HGg5b03044@localhost.localdomain>; from James.Bottomley@SteelEye.com on Mon, Jun 17, 2002 at 11:42:05AM -0500
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@steeleye.com>
-Cc: Oliver Neukum <oliver@neukum.name>, Andries.Brouwer@cwi.nl, garloff@suse.de, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, sancho@dauskardt.de, linux-usb-devel@lists.sourceforge.net, linux1394-devel@lists.sourceforge.net, dougg@torque.net
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Oliver Neukum <oliver@neukum.name>, David Brownell <david-b@pacbell.net>, Andries.Brouwer@cwi.nl, garloff@suse.de, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, sancho@dauskardt.de, linux-usb-devel@lists.sourceforge.net, linux1394-devel@lists.sourceforge.net, dougg@torque.net
 
-> The idea behind using hotplug to solve the problem is that with scsimon, a 
-> hotplug insertion event is generated for every SCSI device as it is added.  
-> The script is provided with the information the kernel knows (host, channel, 
-> pun lun, model and vendor inquiry strings---see www.torque.net/scsimon.html 
+On Mon, Jun 17, 2002 at 11:42:05AM -0500, James Bottomley wrote:
 
-Make that http://www.torque.net/scsi/scsimon.html ... that page is linked
-from the http://linux-hotplug.sourceforge.net links page, and I'm glad to
-see it's been updated recently.
-
-
-> for details).  The hotplug script then does the remaining processing to 
-> extract the ID from the device (by ioctls, sending down SCSI commands etc.) 
-> and then binds it into the /dev/volume nodes using the identifier it 
-> determines.
+> OK, how about some hardware scenarios:
 > 
-> The result is that however you move the device around (between controllers or 
-> even change its id), it will always show up as its unique /dev/volume name.
+
+> Ah, but that's the scsi-3 spec which (finally) cleaned up this unique name 
+> business.  However, for SCSI-2 and before, it was an unholy mess, as the two 
+> examples above illustrate.  I agree that for all modern devices which are 
+> SCSI-3 SPC compliant, then just asking for the WWN page probably works.  The 
+> question is what to do about all the legacy hardware out there?
 > 
-> The key philosophy is that the code to make the policy decision for assigning 
-> a unique name isn't cluttering up the kernel, it's in user land where it can 
-> be easily customised.  
+> James
 
-I think that's a good approach for packaging that naming policy, though I'm
-not quite sure where it stands in relation to "driverfs".  As with "usbfs"
-it seems to me that there need to be both low-level "topological" and higher
-level "logical/policy-driven" names.  And I'd prefer not to see a multiplicity
-of approaches for anything except the bus-specific parts (which in this case
-is "SCSI" even if the transport may be USB); I think I'm not alone in that.
+Yes, legacy or broken devices need vendor specific code to get a unique
+serial number or uid, but it is not clear to me that putting the code
+in user space is better or worse than kernel space. Maybe we need to
+see some implementations.
 
-Also, given what I noted earlier about stable IDs, I think SCSI_HOST should
-be a stable string ID, not an integer that can easily get switched around
-during system boot.
+For user space get-id code:
 
-- Dave
+What happens at boot time? Do we now need special stripped copies of user
+space get-id commands to boot from scsi (for use with initrd)? Do we just
+wait until the system is booted before getting/setting the ID's?
 
+If I build without sg or /proc, should SCSI ID's still be available?
 
+How can I efficiently handle multi-path code without overallocating
+N Scsi_Devices (where N is the number of paths to each Scsi_Device)?
+
+For kernel implementations, we could add a special entry in the device_list
+or have a new list mapping vendor+product to a get-the-id function.
+
+Module code could be created that contains the functional code to get an
+ID, and adds a pointer to the function in device_list or some other list.
+
+User or kernel code could supply a table with a VPD page to use, and an
+offset or such within the page to a serial number, and flags for other
+special usage such as appending the LUN value to the serial number.
+
+-- Patrick Mansfield
