@@ -1,43 +1,55 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: [historical note] scsiinfo is 10 years old
-Date: Tue, 04 Nov 2003 19:35:38 -0500
+From: "Andrew Vasquez" <andrew.vasquez@qlogic.com>
+Subject: [ANNOUNCE] QLogic qla2xxx driver update available (v8.00.00b6).
+Date: Tue, 4 Nov 2003 17:15:33 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3FA845DA.1040001@torque.net>
-Reply-To: dougg@torque.net
+Message-ID: <B179AE41C1147041AA1121F44614F0B060ED62@AVEXCH02.qlogic.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bunyip.cc.uq.edu.au ([130.102.2.1]:54795 "EHLO
-	bunyip.cc.uq.edu.au") by vger.kernel.org with ESMTP id S262652AbTKEAf7
+Received: from [198.70.193.2] ([198.70.193.2]:48445 "EHLO AVEXCH01.qlogic.org")
+	by vger.kernel.org with ESMTP id S262114AbTKEBP3 convert rfc822-to-8bit
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 4 Nov 2003 19:35:59 -0500
+	Tue, 4 Nov 2003 20:15:29 -0500
+content-class: urn:content-classes:message
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: eric@andante.org
+To: Linux-Kernel <linux-kernel@vger.kernel.org>, Linux-SCSI <linux-scsi@vger.kernel.org>
 
-While working on sginfo which is derived from scsiinfo
-I noticed this line in the comments towards the top:
+All,
 
-* Eric Youngdale - 11/1/93.  Version 1.0.
+A new version of the 8.x series driver for Linux 2.6.x kernels has
+been uploaded to SourceForge:
 
-So scsiinfo is now over ten years old  **. The latest
-scsiinfo version that I have found is 1.7 with the most
-recent patches by Michael Weller from August 1997.
+	http://sourceforge.net/projects/linux-qla2xxx/
 
-Scsiinfo is still useful with modern SCSI disks but lacks
-support for recently added mode pages and enhancements to
-existing mode pages.
+Changes from previous release (8.00.00b5) include:
 
-So when I finish with sginfo's upgrade I might make some
-addressing modifications and then release it as scsiinfo
-2.0 if Eric has no objections.
+	o Intelligent RSCN handling.
+	o Slab cache allocations for driver SRBs.
+	o Support larger numbers of targets.
+	o Initial rework of debug logging facilities.
 
+Review the revision notes for further details of the changes in
+8.00.00b6.
 
-** I guess that date is using the US convention and is the
-day after halloween ... so my post is a few days late.
+Beginning with this beta, distributions of the driver will only be in
+the source-type tarball format.  It's not worth the extra effort of
+building a separate drop-in kernel tarball, given the varying release
+periods of the driver.  Similar drop-in-kernel-tarball results can be
+had by:
 
-Doug Gilbert
+	driver source in /tmp/qla8_b6
 
+	# cd <kernel source>
+	# patch -p1 < /tmp/qla8_b6/add_to_kernel.diff
+	# mkdir drivers/scsi/qla2xxx
+	# cp /tmp/qla8_b6/* drivers/scsi/qla2xxx
+	# make ...
 
+Failover functionality is present in this distribution, at this time I
+do not foresee a policy change regarding its presence in the 8.x
+series driver.  The next beta release of 8.x will be failover-feature
+resync'd with our latest 6.x beta (6.07.xx).
 
+Regards,
+Andrew Vasquez
