@@ -1,35 +1,44 @@
-From: Zwane Mwaikambo <zwane@linuxpower.ca>
-Subject: Re: isp1020 memory trample in 2.5.66
-Date: Thu, 3 Apr 2003 04:19:55 -0500 (EST)
+From: devnetfs <devnetfs@yahoo.com>
+Subject: fast detection of  loss of FC connectivity?
+Date: Thu, 3 Apr 2003 09:15:58 -0800 (PST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.50.0304030418130.30262-100000@montezuma.mastecende.com>
-References: <Pine.LNX.4.50.0304020101460.8773-100000@montezuma.mastecende.com>
- <20030402080226.A25288@beaverton.ibm.com>
- <Pine.LNX.4.50.0304030317230.30262-100000@montezuma.mastecende.com>
- <20030403085545.GB19627@holomorphy.com>
+Message-ID: <20030403171558.37579.qmail@web20414.mail.yahoo.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <20030403085545.GB19627@holomorphy.com>
+Received: from web20402.mail.yahoo.com ([66.163.169.90]:12043 "HELO
+	web20414.mail.yahoo.com") by vger.kernel.org with SMTP
+	id S261386AbTDCREb
+	(for <rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Apr 2003 12:04:31 -0500
 List-Id: linux-scsi@vger.kernel.org
-To: William Lee Irwin III <wli@holomorphy.com>
-Cc: Patrick Mansfield <patmans@us.ibm.com>, Linux Kernel <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Thu, 3 Apr 2003, William Lee Irwin III wrote:
+Hi,
 
-> Debugging ode this obfuscated and crappy is as hopeless as trying to
-> debug the nvidia binary-only oops-o-rama.
-> 
-> What are the odds of just throwing away the isp1020 and replacing it
-> with anything else? It won't fix it, but it can't be fixed due to
-> utter lack of information about the things and/or lack of maintainers
-> with information hidden by NDA's anyway.
+In a SAN setup is it possible to quickly detect that a FC cable
+has been plugged out of the card? Presently the way I do is send
+a SCSI-2 TUR cmd to the device (periodically) and check if the 
+device is reachable.
 
-I'd love to but the hardware isn't mine so i'll have to make do until 
-something better is available. But i'll go by yours and Patrick's 
-recommendations and try feral.
+When the cable is pulled out, TUR fails indicating some problem. But
+TUR command takes a LONG time to complete before returning an error.
+This time is more than 8-10secs :( Thats too slow. 
 
-Cheers,
-	Zwane
--- 
-function.linuxpower.ca
+I noticed that as soon as I pull the cable I get a LOOP DOWN message
+on the console (its a qlogic card, qla2x00 driver). Is there a 
+generic flag in the scsi-midlayer (part of Scsi_Host) that would
+let me know that has happend -- hence quickly determine loss of
+connectivity. 
+
+I looked at the qlogic source and they have a loop_state field in 
+scsi_qla_host, but then thats specific to a particular card.
+
+Is there a generic way to QUICKLY detect such loss of connectivity,
+in a FC setup?
+
+Any ideas/suggestions are welcome :)
+
+Thanks
+A.
+
+
