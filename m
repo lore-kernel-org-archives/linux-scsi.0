@@ -1,16 +1,16 @@
 From: Jeff Garzik <jgarzik@pobox.com>
 Subject: Re: [PATCH] New QStor SATA/RAID Driver for 2.6.9-rc2
-Date: Tue, 14 Sep 2004 14:07:08 -0400
+Date: Tue, 14 Sep 2004 14:08:05 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040914180708.GA20544@havoc.gtf.org>
+Message-ID: <20040914180805.GA20760@havoc.gtf.org>
 References: <41471163.10709@rtr.ca> <414723B0.1090600@pobox.com> <41472FA0.2090108@rtr.ca> <414730D9.3000003@pobox.com> <41473270.3070405@rtr.ca>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [69.28.190.101] ([69.28.190.101]:38622 "EHLO havoc.gtf.org")
-	by vger.kernel.org with ESMTP id S269475AbUINSHM (ORCPT
+Received: from [69.28.190.101] ([69.28.190.101]:41694 "EHLO havoc.gtf.org")
+	by vger.kernel.org with ESMTP id S269607AbUINSIG (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 14 Sep 2004 14:07:12 -0400
+	Tue, 14 Sep 2004 14:08:06 -0400
 Content-Disposition: inline
 In-Reply-To: <41473270.3070405@rtr.ca>
 List-Id: linux-scsi@vger.kernel.org
@@ -18,12 +18,14 @@ To: Mark Lord <lkml@rtr.ca>
 Cc: linux-kernel@vger.kernel.org, SCSI Mailing List <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@steeleye.com>
 
 On Tue, Sep 14, 2004 at 02:03:28PM -0400, Mark Lord wrote:
-> Whatever this driver does, it has to be reasonably portable
-> back to early 2.4.xx kernels, so it cannot depend too much
-> upon newly (or to-be) implemented semantics in 2.6.xx.
+> It looks to me as if the eh code prevents further queuecommand()
+> calls while the LLD *_reset_handler() code is running.
+> I wonder if it also does so for the eh_strategy_handler() ?
 
-Feel free to examine libata's use of ->eh_strategy_handler
-in 2.4.x ;-)
+Yes, it definitely does, by definition:
+
+SCSI's fine-grained eh hooks are called inside scsi_unjam_host(),
+which is the default ->eh_strategy_handler.
 
 	Jeff
 
