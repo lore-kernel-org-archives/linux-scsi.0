@@ -1,40 +1,76 @@
-From: "Andrew Vasquez" <andrew.vasquez@qlogic.com>
-Subject: [ANNOUNCE] QLogic qla2xxx driver update available (v8.00.00b9).
-Date: Wed, 14 Jan 2004 14:55:54 -0800
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <B179AE41C1147041AA1121F44614F0B060EDDD@AVEXCH02.qlogic.org>
+From: James Courtier-Dutton <James@superbug.demon.co.uk>
+Subject: Re: Serial ATA (SATA) for Linux status report
+Date: Wed, 14 Jan 2004 23:31:13 +0000
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <4005D141.7050408@superbug.demon.co.uk>
+References: <20031203204445.GA26987@gtf.org> <87hdyyxjgl.fsf@stark.xeocode.com> <20040114225653.GA32704@codepoet.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from enigma.qlogic.com ([198.70.193.17]:46582 "EHLO enigma.qlc.com")
-	by vger.kernel.org with ESMTP id S264522AbUANWzk convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 14 Jan 2004 17:55:40 -0500
-content-class: urn:content-classes:message
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+In-Reply-To: <20040114225653.GA32704@codepoet.org>
+To: andersen@codepoet.org
+Cc: Greg Stark <gsstark@mit.edu>, Jeff Garzik <jgarzik@pobox.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Linux-Kernel <linux-kernel@vger.kernel.org>, Linux-SCSI <linux-scsi@vger.kernel.org>
 
-All,
+Erik Andersen wrote:
+> On Wed Jan 14, 2004 at 05:18:34PM -0500, Greg Stark wrote:
+> 
+>>Jeff Garzik <jgarzik@pobox.com> writes:
+>>
+>>
+>>>Intel ICH5
+>>>
+>>>Issue #2: Excessive interrupts are seen in some configurations.
+>>
+>>I guess I'm seeing this problem. I'm trying to get my P4P800 motherboard with
+>>an ICH5 chipset working completely. So far I've been living without the cdrom
+>>or DVD players. I see lots of other posts on linux-kernel about the same
+>>problems:
+> 
+> 
+> I have the same deal.  My offer to send Jeff a P4P800 motherboard
+> to test with is still open....
+> 
+>  -Erik
+> 
+> --
+> Erik B. Andersen             http://codepoet-consulting.com/
 
-A new version of the 8.x series driver for Linux 2.6.x kernels has
-been uploaded to SourceForge:
+I have a ABIT IC7-G motherboard with the ICH5 chipset.
+No reported problems with it. I would be happy to do some tests, just in 
+case I have not actually noticed the problems.
 
-	http://sourceforge.net/projects/linux-qla2xxx/
+hda=DVD-ROM
+hdb=DVD writer
+hdc=SATA Seagate Hard Disc 160 Gig.
+hdd=Empty.
 
-Changes from previous release (8.00.00b8) include:
+I do sometimes have problems during BIOS startup, with it not detecting 
+the SATA hard disc, but pressing the reset button a few times fixes that.
 
-	o Merge several patches from Christoph Hellwig:
-	  - IOCTL code optional and split from main code.
-	  - Simplify wait routines used for MBX commands and IOCTLS.
-	o Add full support for three new ISP chips - ISP2322, ISP6312,
-	  and ISP6322.
-	  - The increased size of the distribution tarball is a result
-	    of the three new firmwares needed to support the chips.
-
-Review the revision notes for further details of the changes in
-8.00.00b9.
-
-Regards,
-Andrew Vasquez
-QLogic Corporation
+Jan 14 01:01:17 new kernel: Uniform Multi-Platform E-IDE driver 
+revision: 7.00alpha2
+Jan 14 01:01:17 new kernel: ide: Assuming 33MHz system bus speed for PIO 
+modes; override with idebus=xx
+Jan 14 01:01:17 new kernel: ICH5-SATA: IDE controller at PCI slot 
+0000:00:1f.2
+Jan 14 01:01:17 new kernel: ICH5-SATA: chipset revision 2
+Jan 14 01:01:17 new kernel: ICH5-SATA: not 100%% native mode: will probe 
+irqs later
+Jan 14 01:01:17 new kernel:     ide0: BM-DMA at 0xf000-0xf007, BIOS 
+settings: hda:DMA, hdb:DMA
+Jan 14 01:01:17 new kernel:     ide1: BM-DMA at 0xf008-0xf00f, BIOS 
+settings: hdc:DMA, hdd:pio
+Jan 14 01:01:17 new kernel: hda: ATAPI DVD-ROM 16XMax, ATAPI CD/DVD-ROM 
+drive
+Jan 14 01:01:17 new kernel: hdb: OPTORITEDVD RW DD0203, ATAPI CD/DVD-ROM 
+drive
+Jan 14 01:01:17 new kernel: ide0 at 0x1f0-0x1f7,0x3f6 on irq 14
+Jan 14 01:01:17 new kernel: hdc: ST3160023AS, ATA DISK drive
+Jan 14 01:01:17 new kernel: ide1 at 0x170-0x177,0x376 on irq 15
+Jan 14 01:01:17 new kernel: hdc: max request size: 1024KiB
+Jan 14 01:01:17 new kernel: hdc: 312581808 sectors (160041 MB) w/8192KiB 
+Cache, CHS=19457/255/63, UDMA(33)
+Jan 14 01:01:17 new kernel:  /dev/ide/host0/bus1/target0/lun0: p1 p2 < 
+p5 p6 p7 >
