@@ -1,43 +1,38 @@
-From: James Bottomley <James.Bottomley@steeleye.com>
-Subject: Re: [linux-usb-devel] Re: bug 2400
-Date: 06 Apr 2004 09:03:32 -0500
+From: Jens Axboe <axboe@suse.de>
+Subject: Re: bug 2400
+Date: Tue, 6 Apr 2004 16:04:34 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1081260215.1804.17.camel@mulgrave>
-References: <Pine.LNX.4.44L0.0404032026590.30873-100000@netrider.rowland.org>
-	<4071EA82.3020901@pacbell.net> <1081214360.1756.330.camel@mulgrave>
-	<200404060852.34169.oliver@neukum.org>
+Message-ID: <20040406140433.GE7353@suse.de>
+References: <20040401131502.41136788.akpm@osdl.org> <1080862354.2118.78.camel@mulgrave> <1080949016.1804.161.camel@mulgrave> <20040404213307.A29446@beaverton.ibm.com> <1081199233.2105.45.camel@mulgrave> <20040406092244.GH28109@suse.de> <1081259807.1804.9.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat1.steeleye.com ([65.114.3.130]:22452 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S263832AbUDFOEY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 6 Apr 2004 10:04:24 -0400
-In-Reply-To: <200404060852.34169.oliver@neukum.org>
+Received: from ns.virtualhost.dk ([195.184.98.160]:13776 "EHLO virtualhost.dk")
+	by vger.kernel.org with ESMTP id S263816AbUDFOFM (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Apr 2004 10:05:12 -0400
+Content-Disposition: inline
+In-Reply-To: <1081259807.1804.9.camel@mulgrave>
 List-Id: linux-scsi@vger.kernel.org
-To: Oliver Neukum <oliver@neukum.org>
-Cc: David Brownell <david-b@pacbell.net>, Alan Stern <stern@rowland.harvard.edu>, Mike Anderson <andmike@us.ibm.com>, Andrew Morton <akpm@osdl.org>, greg@kroah.com, Jens Axboe <axboe@suse.de>, linux-usb-devel@lists.sourceforge.net, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: James Bottomley <James.Bottomley@steeleye.com>
+Cc: Patrick Mansfield <patmans@us.ibm.com>, Andrew Morton <akpm@osdl.org>, greg@kroah.com, linux-usb-devel@lists.sourceforge.net, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Tue, 2004-04-06 at 01:52, Oliver Neukum wrote:
-> Pure refcounting can never protect you against races with freeing objects.
-> The counters themselves must be protected. Try as you might you need
-> locks for that and rules on how this locks are to be used.
+On Tue, Apr 06 2004, James Bottomley wrote:
+> On Tue, 2004-04-06 at 04:22, Jens Axboe wrote:
+> > Really? It doesn't even compile :-)
+> 
+> Heh, I really must learn that I have to copy the file from the test
+> machine to the email machine *before* attaching it.  You got a stale
+> copy of an older incarnation, I think.
 
-Which part of
+Only change is the err -> error, correct?
 
-On Mon, 2004-04-05 at 20:19, James Bottomley wrote:
-> Now, if the subsystem is going to garbage collect its own object as a
-> result of the other object disconnect, then it is responsible for
-> synchronising that with reference gets on its own object.  However, that
-> is easily achievable via *intra* subsystem synchronisation.
+> The attached (hopefully) is what I compiled and tested with.  The test,
+> incidentally, is simply to hold the device open and then forcibly remove
+> it using scsi remove-single-device before closing it.
 
-didn't you understand?
+Better than what is there, whether it needs other synchronization is a
+different question.
 
-However, how a subsystem resolves this intra subsystem synchronisation
-is up to it ... and it doesn't have to do it with locks.  So there are
-no exposed locks for this and no rules therefore, for how to use them.
-
-James
-
+-- 
+Jens Axboe
 
