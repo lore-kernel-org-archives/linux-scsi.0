@@ -1,27 +1,114 @@
-From: Adrian Bunk <bunk@stusta.de>
-Subject: [2.6 patch] kill drivers/scsi/hosts.h
-Date: Wed, 9 Feb 2005 02:54:43 +0100
-Message-ID: <20050209015443.GB2978@stusta.de>
+From: James.Smart@Emulex.Com
+Subject: [PATCH scsi-rc-fixes-2.6] Re-enable FC Transport Host Statistics
+Date: Tue, 8 Feb 2005 23:04:17 -0500
+Message-ID: <0B1E13B586976742A7599D71A6AC733C12EB44@xbl3.ma.emulex.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Received: from emailhub.stusta.mhn.de ([141.84.69.5]:52228 "HELO
-	mailout.stusta.mhn.de") by vger.kernel.org with SMTP
-	id S261739AbVBIByp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 8 Feb 2005 20:54:45 -0500
-Content-Disposition: inline
+Content-Type: multipart/mixed;
+	boundary="----_=_NextPart_001_01C50E5C.6D0D526B"
+Received: from emulex.emulex.com ([138.239.112.1]:3830 "EHLO emulex.emulex.com")
+	by vger.kernel.org with ESMTP id S261775AbVBIEEU (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Feb 2005 23:04:20 -0500
+Received: from xbl3.ad.emulex.com (xbl3.ma.emulex.com [138.239.73.12])
+	by emulex.emulex.com (8.12.10/8.12.10) with ESMTP id j1944Ini005837
+	for <linux-scsi@vger.kernel.org>; Tue, 8 Feb 2005 20:04:18 -0800 (PST)
+content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@SteelEye.com
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-Since more than half a year ago, drivers/scsi/hosts.h gives a warning, 
-so it seems to be time to remove it.
+This is a multi-part message in MIME format.
+
+------_=_NextPart_001_01C50E5C.6D0D526B
+Content-Type: text/plain;
+	charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 
 
-Signed-off-by: Adrian Bunk <bunk@stusta.de>
 
---- linux-2.6.11-rc3-mm1-full/drivers/scsi/hosts.h	2004-12-24 22:34:30.000000000 +0100
-+++ /dev/null	2004-11-25 03:16:25.000000000 +0100
-@@ -1,2 +0,0 @@
--#warning "This file is obsolete, please use <scsi/scsi_host.h> instead"
--#include <scsi/scsi_host.h>
+  With the conversion to the new attribute containers/transport work, =
+the
+  FC host statistics were lost. This patch re-enables them.
+
+  This patch adds a statistics group to each attribute container and
+  adds/removes them at the same time the base attributes are =
+added/removed.
+
+
+-- James S
+
+
+------_=_NextPart_001_01C50E5C.6D0D526B
+Content-Type: application/octet-stream;
+	name="tran_stats.patch"
+Content-Transfer-Encoding: base64
+Content-Description: tran_stats.patch
+Content-Disposition: attachment;
+	filename="tran_stats.patch"
+
+CgogIFdpdGggdGhlIGNvbnZlcnNpb24gdG8gdGhlIG5ldyBhdHRyaWJ1dGUgY29udGFpbmVycy90
+cmFuc3BvcnQgd29yaywgdGhlCiAgRkMgaG9zdCBzdGF0aXN0aWNzIHdlcmUgbG9zdC4gVGhpcyBw
+YXRjaCByZS1lbmFibGVzIHRoZW0uCgogIFRoaXMgcGF0Y2ggYWRkcyBhIHN0YXRpc3RpY3MgZ3Jv
+dXAgdG8gZWFjaCBhdHRyaWJ1dGUgY29udGFpbmVyIGFuZAogIGFkZHMvcmVtb3ZlcyB0aGVtIGF0
+IHRoZSBzYW1lIHRpbWUgdGhlIGJhc2UgYXR0cmlidXRlcyBhcmUgYWRkZWQvcmVtb3ZlZC4KCgoK
+LS0tCgogYi9kcml2ZXJzL2Jhc2UvYXR0cmlidXRlX2NvbnRhaW5lci5jICB8ICAgMTYgKysrKysr
+KysrKysrLS0tLQogYi9kcml2ZXJzL3Njc2kvc2NzaV9zeXNmcy5jICAgICAgICAgICB8ICAgIDIg
+Ky0KIGIvZHJpdmVycy9zY3NpL3Njc2lfdHJhbnNwb3J0X2ZjLmMgICAgfCAgICAyICstCiBiL2F0
+dHJpYnV0ZV9jb250YWluZXIuaCAgICAgICAgICAgICAgIHwgICAgMSArCiBiL2luY2x1ZGUvc2Nz
+aS9zY3NpX3RyYW5zcG9ydC5oICAgICAgIHwgICAgMyAtLS0KIDUgZmlsZXMgY2hhbmdlZCwgMTUg
+aW5zZXJ0aW9ucygrKSwgOSBkZWxldGlvbnMoLSkKCmRpZmYgLXB1TiBhL2RyaXZlcnMvYmFzZS9h
+dHRyaWJ1dGVfY29udGFpbmVyLmMgYi9kcml2ZXJzL2Jhc2UvYXR0cmlidXRlX2NvbnRhaW5lci5j
+Ci0tLSBhL2RyaXZlcnMvYmFzZS9hdHRyaWJ1dGVfY29udGFpbmVyLmMJMjAwNS0wMi0wOCAxNjow
+MToxNC4wMDAwMDAwMDAgLTA1MDAKKysrIGIvZHJpdmVycy9iYXNlL2F0dHJpYnV0ZV9jb250YWlu
+ZXIuYwkyMDA1LTAyLTA4IDE2OjAxOjE0LjAwMDAwMDAwMCAtMDUwMApAQCAtMjgzLDExICsyODMs
+MTYgQEAgYXR0cmlidXRlX2NvbnRhaW5lcl9hZGRfYXR0cnMoc3RydWN0IGNsYQogCXN0cnVjdCBj
+bGFzc19kZXZpY2VfYXR0cmlidXRlICoqYXR0cnMgPQljb250LT5hdHRyczsKIAlpbnQgaSwgZXJy
+b3I7CiAKLQlpZiAoIWF0dHJzKQotCQlyZXR1cm4gMDsKKwlpZiAoYXR0cnMpIHsKKwkJZm9yIChp
+ID0gMDsgYXR0cnNbaV07IGkrKykgeworCQkJZXJyb3IgPSBjbGFzc19kZXZpY2VfY3JlYXRlX2Zp
+bGUoY2xhc3NkZXYsIGF0dHJzW2ldKTsKKwkJCWlmIChlcnJvcikKKwkJCQlyZXR1cm4gZXJyb3I7
+CisJCX0KKwl9CiAKLQlmb3IgKGkgPSAwOyBhdHRyc1tpXTsgaSsrKSB7Ci0JCWVycm9yID0gY2xh
+c3NfZGV2aWNlX2NyZWF0ZV9maWxlKGNsYXNzZGV2LCBhdHRyc1tpXSk7CisJaWYgKGNvbnQtPnN0
+YXRpc3RpY3MpIHsKKwkJZXJyb3IgPSBzeXNmc19jcmVhdGVfZ3JvdXAoJmNsYXNzZGV2LT5rb2Jq
+LCBjb250LT5zdGF0aXN0aWNzKTsKIAkJaWYgKGVycm9yKQogCQkJcmV0dXJuIGVycm9yOwogCX0K
+QEAgLTM0NCw2ICszNDksOSBAQCBhdHRyaWJ1dGVfY29udGFpbmVyX3JlbW92ZV9hdHRycyhzdHJ1
+Y3QgCiAJc3RydWN0IGNsYXNzX2RldmljZV9hdHRyaWJ1dGUgKiphdHRycyA9CWNvbnQtPmF0dHJz
+OwogCWludCBpOwogCisJaWYgKGNvbnQtPnN0YXRpc3RpY3MpCisJCXN5c2ZzX3JlbW92ZV9ncm91
+cCgmY2xhc3NkZXYtPmtvYmosIGNvbnQtPnN0YXRpc3RpY3MpOworCiAJaWYgKCFhdHRycykKIAkJ
+cmV0dXJuOwogCmRpZmYgLXB1TiBhL2luY2x1ZGUvYi9hdHRyaWJ1dGVfY29udGFpbmVyLmggbGlu
+dXgvaW5jbHVkZS9saW51eC9hdHRyaWJ1dGVfY29udGFpbmVyLmgKLS0tIGEvYXR0cmlidXRlX2Nv
+bnRhaW5lci5oCTIwMDUtMDItMDggMTY6MDE6MTQuMDAwMDAwMDAwIC0wNTAwCisrKyBiL2F0dHJp
+YnV0ZV9jb250YWluZXIuaAkyMDA1LTAyLTA4IDE2OjAxOjE0LjAwMDAwMDAwMCAtMDUwMApAQCAt
+MTcsNiArMTcsNyBAQCBzdHJ1Y3QgYXR0cmlidXRlX2NvbnRhaW5lciB7CiAJc3RydWN0IGxpc3Rf
+aGVhZAljb250YWluZXJzOwogCXN0cnVjdCBjbGFzcwkJKmNsYXNzOwogCXN0cnVjdCBjbGFzc19k
+ZXZpY2VfYXR0cmlidXRlICoqYXR0cnM7CisJc3RydWN0IGF0dHJpYnV0ZV9ncm91cCAqc3RhdGlz
+dGljczsKIAlpbnQgKCptYXRjaCkoc3RydWN0IGF0dHJpYnV0ZV9jb250YWluZXIgKiwgc3RydWN0
+IGRldmljZSAqKTsKICNkZWZpbmUJQVRUUklCVVRFX0NPTlRBSU5FUl9OT19DTEFTU0RFVlMJMHgw
+MQogCXVuc2lnbmVkIGxvbmcJCWZsYWdzOwpkaWZmIC1wdU4gYS9kcml2ZXJzL3Njc2kvc2NzaV90
+cmFuc3BvcnRfZmMuYyBiL2RyaXZlcnMvc2NzaS9zY3NpX3RyYW5zcG9ydF9mYy5jCi0tLSBhL2Ry
+aXZlcnMvc2NzaS9zY3NpX3RyYW5zcG9ydF9mYy5jCTIwMDUtMDItMDggMTY6MDE6MTQuMDAwMDAw
+MDAwIC0wNTAwCisrKyBiL2RyaXZlcnMvc2NzaS9zY3NpX3RyYW5zcG9ydF9mYy5jCTIwMDUtMDIt
+MDggMTY6MDE6MTQuMDAwMDAwMDAwIC0wNTAwCkBAIC03ODgsNyArNzg4LDcgQEAgZmNfYXR0YWNo
+X3RyYW5zcG9ydChzdHJ1Y3QgZmNfZnVuY3Rpb25fdAogCWktPnQuaG9zdF9zaXplID0gc2l6ZW9m
+KHN0cnVjdCBmY19ob3N0X2F0dHJzKTsKIAogCWlmIChmdC0+Z2V0X2ZjX2hvc3Rfc3RhdHMpCi0J
+CWktPnQuaG9zdF9zdGF0aXN0aWNzID0gJmZjX3N0YXRpc3RpY3NfZ3JvdXA7CisJCWktPnQuaG9z
+dF9hdHRycy5zdGF0aXN0aWNzID0gJmZjX3N0YXRpc3RpY3NfZ3JvdXA7CiAKIAlpLT5mID0gZnQ7
+CiAKZGlmZiAtcHVOIGEvaW5jbHVkZS9zY3NpL3Njc2lfdHJhbnNwb3J0LmggYi9pbmNsdWRlL3Nj
+c2kvc2NzaV90cmFuc3BvcnQuaAotLS0gYS9pbmNsdWRlL3Njc2kvc2NzaV90cmFuc3BvcnQuaAky
+MDA1LTAyLTA4IDE2OjAxOjE0LjAwMDAwMDAwMCAtMDUwMAorKysgYi9pbmNsdWRlL3Njc2kvc2Nz
+aV90cmFuc3BvcnQuaAkyMDA1LTAyLTA4IDE2OjAxOjE0LjAwMDAwMDAwMCAtMDUwMApAQCAtMjMs
+OSArMjMsNiBAQAogI2luY2x1ZGUgPGxpbnV4L3RyYW5zcG9ydF9jbGFzcy5oPgogCiBzdHJ1Y3Qg
+c2NzaV90cmFuc3BvcnRfdGVtcGxhdGUgewotCS8qIFRoZSBzdGF0aXN0aWNzIGF0dGFjaGVkIHRv
+IHRoZSBob3N0IGNsYXNzIG9ubHkgKi8KLQlzdHJ1Y3QgYXR0cmlidXRlX2dyb3VwICpob3N0X3N0
+YXRpc3RpY3M7Ci0KIAkvKiB0aGUgYXR0cmlidXRlIGNvbnRhaW5lcnMgKi8KIAlzdHJ1Y3QgYXR0
+cmlidXRlX2NvbnRhaW5lciBob3N0X2F0dHJzOwogCXN0cnVjdCBhdHRyaWJ1dGVfY29udGFpbmVy
+IHRhcmdldF9hdHRyczsKZGlmZiAtcHVOIGEvZHJpdmVycy9zY3NpL3Njc2lfc3lzZnMuYyBiL2Ry
+aXZlcnMvc2NzaS9zY3NpX3N5c2ZzLmMKLS0tIGEvZHJpdmVycy9zY3NpL3Njc2lfc3lzZnMuYwky
+MDA1LTAyLTA4IDE2OjAyOjI5LjAwMDAwMDAwMCAtMDUwMAorKysgYi9kcml2ZXJzL3Njc2kvc2Nz
+aV9zeXNmcy5jCTIwMDUtMDItMDggMTY6MDM6MTUuMDAwMDAwMDAwIC0wNTAwCkBAIC04MzMsNCAr
+ODMzLDQgQEAgRVhQT1JUX1NZTUJPTChzY3NpX2lzX3RhcmdldF9kZXZpY2UpOwogCiAvKiBBIGJs
+YW5rIHRyYW5zcG9ydCB0ZW1wbGF0ZSB0aGF0IGlzIHVzZWQgaW4gZHJpdmVycyB0aGF0IGRvbid0
+CiAgKiB5ZXQgaW1wbGVtZW50IFRyYW5zcG9ydCBBdHRyaWJ1dGVzICovCi1zdHJ1Y3Qgc2NzaV90
+cmFuc3BvcnRfdGVtcGxhdGUgYmxhbmtfdHJhbnNwb3J0X3RlbXBsYXRlID0geyBOVUxMLCB9Owor
+c3RydWN0IHNjc2lfdHJhbnNwb3J0X3RlbXBsYXRlIGJsYW5rX3RyYW5zcG9ydF90ZW1wbGF0ZSA9
+IHsgeyB7TlVMTCwgfSB9LCB9OwpfCg==
+
+------_=_NextPart_001_01C50E5C.6D0D526B--
