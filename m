@@ -1,43 +1,45 @@
-From: Bryan Henderson <hbryan@us.ibm.com>
-Subject: RE: How does a SCSI device gets a target ID?
-Date: Fri, 11 Mar 2005 12:39:19 -0800
-Message-ID: <OF134A0EB8.3D38AF6B-ON88256FC1.006C7DC5-88256FC1.0071740C@us.ibm.com>
-References: <267988DEACEC5A4D86D5FCD780313FBB0575F562@exch-03.noida.hcltech.com>
+From: Nic Ferrier <nferrier@tapsellferrier.co.uk>
+Subject: Re: aacraid died on kernel 2.4.27
+Date: Fri, 11 Mar 2005 20:31:36 +0000
+Message-ID: <87br9plyaf.fsf@tapsellferrier.co.uk>
+References: <60807403EABEB443939A5A7AA8A7458BE5A9C9@otce2k01.adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
-Received: from e1.ny.us.ibm.com ([32.97.182.141]:923 "EHLO e1.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S261686AbVCKUkQ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 11 Mar 2005 15:40:16 -0500
-Received: from d01relay02.pok.ibm.com (d01relay02.pok.ibm.com [9.56.227.234])
-	by e1.ny.us.ibm.com (8.12.11/8.12.11) with ESMTP id j2BKe8OA003201
-	for <linux-scsi@vger.kernel.org>; Fri, 11 Mar 2005 15:40:08 -0500
-Received: from d01av04.pok.ibm.com (d01av04.pok.ibm.com [9.56.224.64])
-	by d01relay02.pok.ibm.com (8.12.10/NCO/VER6.6) with ESMTP id j2BKe84h074070
-	for <linux-scsi@vger.kernel.org>; Fri, 11 Mar 2005 15:40:08 -0500
-Received: from d01av04.pok.ibm.com (loopback [127.0.0.1])
-	by d01av04.pok.ibm.com (8.12.11/8.12.11) with ESMTP id j2BKe8A0006612
-	for <linux-scsi@vger.kernel.org>; Fri, 11 Mar 2005 15:40:08 -0500
-In-Reply-To: <267988DEACEC5A4D86D5FCD780313FBB0575F562@exch-03.noida.hcltech.com>
+Content-Type: text/plain; charset=us-ascii
+Received: from owls-tree.tapsellferrier.co.uk ([80.168.156.78]:48544 "EHLO
+	owls-tree.tapsellferrier.co.uk") by vger.kernel.org with ESMTP
+	id S261771AbVCKUgx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 11 Mar 2005 15:36:53 -0500
+In-Reply-To: <60807403EABEB443939A5A7AA8A7458BE5A9C9@otce2k01.adaptec.com> (Mark
+ Salyzyn's message of "Fri, 11 Mar 2005 11:06:47 -0500")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Rajat Jain, Noida" <rajatj@noida.hcltech.com>
+To: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
 Cc: linux-scsi@vger.kernel.org
 
->Every time I plug / unplug the disk, I have to echo "scsi
->add-single-device"/"scsi remove single-device" (with correct traget ID) 
-to
->/proc/scsi/scsi. I wanted to automate this process, I wanted the disk to 
-get
->detected and installed the moment it is inserted / removed. Can I do 
-that? I
->don't mind writing a kernel module if need be.
+"Salyzyn, Mark" <mark_salyzyn@adaptec.com> writes:
 
-This is the wonderful world of hotplug.  I don't know anything about 
-hotplug -- my expertise on SCSI comes from an era when it wasn't even 
-electrically possible (allowable, anyway) to add a disk to a SCSI bus 
-without powering down.
+> This is a processor based RAID card, so stability and complexity is
+> virtually all rooted in the card. The problems you are experiencing are
+> most probably specific to your platform, and do not show up in other
+> adapters and systems that communicate with this same driver. Although
+> the driver can be used to mitigate some problems in the adapter
+> Firmware, it can not solve Power Supply, Hardware, Internal Firmware
+> Failures, Drive or Cabling issues. All these issues need to be resolved
+> first by communicating with Dell Technical Support.
+>
+> Sadly, all these issues can end up locking up the card or the scsi bus.
+> The end result being the scsi system timing out, taking the devices
+> offline, then the file-system driver panicking. Similar symptoms, wide
+> variety of causes.
 
-So I hope someone on the list will give us an overview of the state of 
-hotplug and SCSI.
+The machine I am having trouble with has been running MS Windows for 2
+years.
 
+I just put linux on it (with no other changes) and we get regular
+(twice daily) catastrophic crashes.
+
+Can this be a controller problem? I'm not a hardware expert but it
+doesn't sound like one to me.
+
+
+Nic
