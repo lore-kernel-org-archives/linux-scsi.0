@@ -1,28 +1,61 @@
 From: Denis Zaitsev <zzz@anda.ru>
-Subject: Re: [PATCH TRIVIAL] Compile error in 2.4.22 without PCI
-Date: Sun, 19 Oct 2003 02:52:34 +0600
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <20031019025234.A26563@natasha.ward.six>
-References: <20031015003036.A10226@natasha.ward.six> <20031017133301.B27349@infradead.org>
+Subject: [PATCH TRIVIAL] Compile error in 2.4.22 without PCI
+Date: Sun, 19 Oct 2003 02:55:20 +0600
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <20031019025520.B26563@natasha.ward.six>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from 72.dom-sp.ru ([212.57.164.72]:18440 "EHLO mail.ward.six")
+	by vger.kernel.org with ESMTP id S261827AbTJRUzb (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 18 Oct 2003 16:55:31 -0400
 Content-Disposition: inline
-In-Reply-To: <20031017133301.B27349@infradead.org>; from hch@infradead.org on Fri, Oct 17, 2003 at 01:33:01PM +0100
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: gibbs@scsiguy.com
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Fri, Oct 17, 2003 at 01:33:01PM +0100, Christoph Hellwig wrote:
-> On Wed, Oct 15, 2003 at 12:30:36AM +0600, Denis Zaitsev wrote:
-> > I have these warnings when I'm compiling 2.4.22 for a 486 EISA system:
-> > 
-> > The patch below fixes this.  And the same patch fits for the 2.6
-> > kernels.  Please, apply it.
-> 
-> You probably want to send this to Justin, the driver Maintainer.  If he
-> doesn't reply in say a week I?d suggest submitting it to Marcelo as it's
-> obviously correct.
+I have these warnings when I'm compiling 2.4.22 for a 486 EISA system:
 
-Thanks for the reply.  I've already tried exactly the same sequence
-some weeks ago... :)  Anyway, I'll do this again right now.  Thanks.
+aic7xxx_osm.c: In function `ahc_softc_comp':
+aic7xxx_osm.c:1560: warning: implicit declaration of function `ahc_get_pci_bus'
+aic7xxx_osm.c:1568: warning: implicit declaration of function `ahc_get_pci_slot'
+
+And then the make finishes with an error, because these functions
+really exist only if the PCI support is turned on.
+
+The patch below fixes this.  And the same patch fits for the 2.6
+kernels.  Please, apply it.
+
+
+--- drivers/scsi/aic7xxx/aic7xxx_osm.c.orig	2003-09-15 01:56:14.000000000 +0600
++++ drivers/scsi/aic7xxx/aic7xxx_osm.c	2003-10-15 00:23:37.000000000 +0600
+@@ -1552,6 +1552,7 @@ ahc_softc_comp(struct ahc_softc *lahc, s
+ 
+ 	/* Still equal.  Sort by BIOS address, ioport, or bus/slot/func. */
+ 	switch (rvalue) {
++#ifdef CONFIG_PCI
+ 	case AHC_PCI:
+ 	{
+ 		char primary_channel;
+@@ -1584,6 +1585,8 @@ ahc_softc_comp(struct ahc_softc *lahc, s
+ 			value = 1;
+ 		break;
+ 	}
++#endif
++#ifdef CONFIG_EISA
+ 	case AHC_EISA:
+ 		if ((rahc->flags & AHC_BIOS_ENABLED) != 0) {
+ 			value = rahc->platform_data->bios_address
+@@ -1593,6 +1596,7 @@ ahc_softc_comp(struct ahc_softc *lahc, s
+ 			      - lahc->bsh.ioport; 
+ 		}
+ 		break;
++#endif
+ 	default:
+ 		panic("ahc_softc_sort: invalid bus type");
+ 	}
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
