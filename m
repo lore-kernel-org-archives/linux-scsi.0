@@ -1,61 +1,73 @@
-From: christophe varoqui <christophe.varoqui@free.fr>
-Subject: sd.c and storageworks assistance
-Date: Sun, 28 Sep 2003 12:13:35 +0200
+From: Matthew Dharm <mdharm-kernel@one-eyed-alien.net>
+Subject: error in drivers/block/scsi_ioctl.c and ll_rw_block.c?
+Date: Sun, 28 Sep 2003 16:02:38 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1064744014.1736.40.camel@zezette>
+Message-ID: <20030928160238.A18507@one-eyed-alien.net>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-md5;
+	protocol="application/pgp-signature"; boundary="9jxsPFA5p3P2qPhR"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp6.wanadoo.fr ([193.252.22.28]:25060 "EHLO
-	mwinf0302.wanadoo.fr") by vger.kernel.org with ESMTP
-	id S262531AbTI1KNk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 28 Sep 2003 06:13:40 -0400
+Received: from ziggy.one-eyed-alien.net ([64.169.228.100]:64786 "EHLO
+	ziggy.one-eyed-alien.net") by vger.kernel.org with ESMTP
+	id S262745AbTI1XCj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 28 Sep 2003 19:02:39 -0400
+Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org
+To: Kernel Developer List <linux-kernel@vger.kernel.org>, Linux SCSI list <linux-scsi@vger.kernel.org>
 
-James,
 
-I put up a small tool to auto-configure multipath device-mapper targets.
-I will release it as soon as the dm target is available.
-The path coalescing is based on and unique id, which is vendor specific.
-The approach taken is to explicitly declare a fonction for retreiving
-this UID, the default being "ignore the path if no method found"
-(WhiteList).
-This initial release is focused on storageworks controlers : I have
-access to HSG80 and HSV110 hw. For them, the UID is the WWID stored in
-page 0x83 of the VPD at offset 8.
+--9jxsPFA5p3P2qPhR
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-These controlers, as I have already mentioned on linux-scsi, export Luns
-through all 4 FC ports, but only two ports of the same controler (in the
-pair) present valid IO paths. The other two are what we called in
-previous threads "ghost paths".
+While working on usb-storage (a virtual SCSI HBA), I noticed that the
+command 'eject /dev/scd0' sent a START_STOP command to the device with the
+data direction set to SCSI_DATA_WRITE but a transfer length of zero.  This
+causes a problem for some code paths.
 
-TUR can be reliably used to detect if a path is in ghost or valid state.
+For clarity, the START_STOP command doesn't want to move any data at all.
 
-After this long intro, here goes my problem :
-Recent 2.4 linux kernels attach /dev/sd* only to the valid paths. Ghosts
-structures are present in the sg and mid-layer, giving access to HBTL,
-TUR, VPD info. In case the active controler reboots, the 2 ghosts become
-active but Linux won't dynamically assign them a /dev/sd* name. Having
-no /dev/sd* name, they can't be used in a multipath map, and the
-multipath runs out of paths even if there are 2 paths around but Linux
-can't see them ... not good.
+It looks to me like the error is a combination of
+drivers/block/scsi_ioctl.c and ll_rw_block.c
 
-I ask for assistance for implementing the following behaviour :
-/dev/sd* names must be assigned to ghosts.
+scsi_ioctl.c calls blk_get_request(q, WRITE, __GFP_WAIT) to allocate the
+request -- specifying WRITE here is one problem.
 
-Multipath maps contain only the valid paths (test based on TUR), so no
-IO will be submitted to the ghosts (IO can safely block or fail). When a
-controler reboots, TUR states will change and the updated devmap will
-contain the newly valid paths.
+In ll_rw_block.c, blk_get_request() calls BUG_ON(rq !=3D READ && rw !=3D WR=
+ITE)
+-- in other words, it can only allocate a request for reading or writing,
+but not for no data.  I'm not familiar with this code, but it looks like
+requests are tracked by data direction, so making this accept NONE may be
+difficult.
 
-Do you agree with this solution ?
-If not, do you have other ?
-Can you help ?
-(I'd rather avoid kernel dev)
+One possible solution may be to re-write the CDROMEJECT ioctl into a call
+to sg_scsi_ioctl(), but that doesn't fix the general problem with
+ll_rw_block.c -- if, indeed, that is a problem.
 
-regards,
-cvaroqui
+Matt
 
+--=20
+Matthew Dharm                              Home: mdharm-usb@one-eyed-alien.=
+net=20
+Maintainer, Linux USB Mass Storage Driver
+
+It's not that hard.  No matter what the problem is, tell the customer=20
+to reinstall Windows.
+					-- Nurse
+User Friendly, 3/22/1998
+
+--9jxsPFA5p3P2qPhR
+Content-Type: application/pgp-signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.0.6 (GNU/Linux)
+Comment: For info see http://www.gnupg.org
+
+iD8DBQE/d2iOIjReC7bSPZARAoCfAJ9W2zvI3ro1vVBGLEuKBBicDa/QfQCfQMgl
+zdzsCP+Ahr4c5f6aRXion+A=
+=zt2T
+-----END PGP SIGNATURE-----
+
+--9jxsPFA5p3P2qPhR--
