@@ -1,35 +1,50 @@
-From: Rusty Russell <rusty@rustcorp.com.au>
-Subject: Re: warning cleanup for drivers/scsi/fdomain.c
-Date: Tue, 30 Jul 2002 15:44:39 +1000
+From: Kurt Garloff <garloff@suse.de>
+Subject: Re: [PATCH] sd_many done right (5/5)
+Date: Tue, 30 Jul 2002 13:16:17 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20020730061710.512AC412E@lists.samba.org>
-References: <E17ZOxI-0001tS-00@wagner.rustcorp.com.au>
+Message-ID: <20020730111617.GA1214@nbkurt.etpnet.phys.tue.nl>
+References: <20020726154948.GH19721@nbkurt.etpnet.phys.tue.nl>
+Mime-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="7JfCtLOvnd9MIVvH"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: Your message of "Tue, 30 Jul 2002 14:49:56 +1000."
-             <E17ZOxI-0001tS-00@wagner.rustcorp.com.au>
+Content-Disposition: inline
+In-Reply-To: <20020726154948.GH19721@nbkurt.etpnet.phys.tue.nl>
 List-Id: linux-scsi@vger.kernel.org
-To: Eric Sandeen <sandeen@sgi.com>
-Cc: linux-scsi@vger.kernel.org
+To: Linux SCSI list <linux-scsi@vger.kernel.org>, Linux kernel list <linux-kernel@vger.kernel.org>, Marcelo Tosatti <marcelo@conectiva.com.br>
 
-In message <E17ZOxI-0001tS-00@wagner.rustcorp.com.au> you write:
-> --- linux/drivers/scsi/fdomain.c	Mon Feb 25 13:38:04 2002
-> +++ linux-fixed-warnings/drivers/scsi/fdomain.c	Sun Jul 21 21:43:37 2002
-> @@ -2041,7 +2041,7 @@ int fdomain_16x0_release(struct Scsi_Hos
->  		free_irq(shpnt->irq, shpnt);
->  	if (shpnt->io_port && shpnt->n_io_port)
->  		release_region(shpnt->io_port, shpnt->n_io_port);
-> -
-> +	return 0;
->  }
->  
->  MODULE_LICENSE("GPL");
 
-[Side note to SCSI people]
+--7JfCtLOvnd9MIVvH
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-This is correct, as stands, but the real fix is to declare
-Scsi_Host_Template's release method to return void, since the only
-caller I can find ignores the return anyway.
+On Fri, Jul 26, 2002 at 05:49:48PM +0200, Kurt Garloff wrote:
+> The patch is against 2.4.19-rc1 with patch 1/5 (and optionally 2--4)=20
+> applied. You will want to apply patch 4/5 (partition statistics) in order
+> to avoid significant consumption of memory when using many disks.
 
-Rusty.
---
-  Anyone who quotes me in their sig is an idiot. -- Rusty Russell.
+Christoph Hellwig made me aware that the diff was not applying cleanly. Thx!
+The reason was that I had the aa patches in my trees.
+I rediffed against a clean rc3. New patches are available on
+http://www.suse.de/~garloff/linux/scsi-many/
+
+Regards,
+--=20
+Kurt Garloff  <garloff@suse.de>                          Eindhoven, NL
+GPG key: See mail header, key servers         Linux kernel development
+SuSE Linux AG, Nuernberg, DE                            SCSI, Security
+
+--7JfCtLOvnd9MIVvH
+Content-Type: application/pgp-signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.0.7 (GNU/Linux)
+
+iD8DBQE9RnWBxmLh6hyYd04RAqj+AJ49a2+8QnpQCsQtyR/C1lAzWg+VWgCbBN8D
+KkFpc0bOwZ1O+0EHrvdr6PY=
+=RRzh
+-----END PGP SIGNATURE-----
+
+--7JfCtLOvnd9MIVvH--
