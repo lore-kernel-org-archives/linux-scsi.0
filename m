@@ -1,24 +1,36 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: GFP_ATOMIC allocations...
-Date: 29 Aug 2002 17:50:37 +0100
+From: Michael Heinz <mheinz@infiniconsys.com>
+Subject: Re: Possible bug handling bad I/Os?
+Date: Thu, 29 Aug 2002 12:58:26 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1030639837.7171.145.camel@irongate.swansea.linux.org.uk>
-References: <OF9C38FD78.07E54601-ON87256C24.0056B509@boulder.ibm.com>
+Message-ID: <B993CAF2.2C0C%mheinz@infiniconsys.com>
+References: <20020829124142.D31625@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="US-ASCII"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <OF9C38FD78.07E54601-ON87256C24.0056B509@boulder.ibm.com>
+In-Reply-To: <20020829124142.D31625@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Bryan Henderson <hbryan@us.ibm.com>
-Cc: Doug Ledford <dledford@redhat.com>, linux-scsi@vger.kernel.org, patman@beaverton.ibm.com
+To: Doug Ledford <dledford@redhat.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
-On Thu, 2002-08-29 at 16:59, Bryan Henderson wrote:
-> That (the NULL case) doesn't sound right to me.  The purpose of the OOM
-> Killer is to choose wisely which processes should die when there's simply
-> not enough memory to go around. 
+On 8/29/02 12:41 PM, "Doug Ledford" <dledford@redhat.com> wrote:
 
-It can return NULL in such cases. It shouldn't in the current case ever
-do this for an allocation exceeding 4K unless you are in an I/O path.
-However its a good idea to program for the can always happen case
+> On Thu, Aug 29, 2002 at 09:34:28AM -0400, Michael Heinz wrote:
+>> The last thing to happen seemed to be that my driver would get a call to
+>> queue_command while I knew the connection was down. Since I knew the
+>> connection was down I would simply immediately return an error and do
+>> nothing else.
+> 
+> [ You didn't specify your kernel version, so the below comment is for 2.4
+> kernels, on 2.5 kernels all drivers are treated as new eh drivers ]
+> Does your driver use the new eh code?  If not, then this is your problem.
+> Non new eh code based drivers are not allowed to fail a queue_command
+> call, and the return value isn't checked.
+
+I'm using the new model eh stuff in 2.4.
+
+-- 
+Michael Heinz <mheinz@infiniconsys.com>
+Staff Software Engineer
+InfiniCon Systems, Inc.
 
