@@ -1,425 +1,344 @@
 From: Adrian Bunk <bunk@stusta.de>
-Subject: [2.6 patch] drivers/scsi/qla2xxx/: cleanups
-Date: Mon, 28 Feb 2005 22:00:24 +0100
-Message-ID: <20050228210024.GM4021@stusta.de>
+Subject: [2.6 patch] drivers/scsi/initio.c: cleanups
+Date: Mon, 28 Feb 2005 21:55:24 +0100
+Message-ID: <20050228205523.GJ4021@stusta.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Received: from mailout.stusta.mhn.de ([141.84.69.5]:59143 "HELO
-	mailout.stusta.mhn.de") by vger.kernel.org with SMTP
-	id S261751AbVB1VA0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 28 Feb 2005 16:00:26 -0500
 Content-Disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
+To: James.Bottomley@SteelEye.com
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: andrew.vasquez@qlogic.com
-Cc: James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
 This patch contains the following cleanups:
 - make needlessly global code static
-- kill the unused global *_version and *_version_str variables
-  in the firmware files
+- remove or #if 0 the following unused finctions:
+  - tul_pop_pend_scb
+  - tul_device_reset
+  - tul_reset_scsi_bus
 
 Signed-off-by: Adrian Bunk <bunk@stusta.de>
 
 ---
 
- drivers/scsi/qla2xxx/ql2100.c     |    2 
- drivers/scsi/qla2xxx/ql2100_fw.c  |   12 -----
- drivers/scsi/qla2xxx/ql2200.c     |    2 
- drivers/scsi/qla2xxx/ql2200_fw.c  |   12 -----
- drivers/scsi/qla2xxx/ql2300.c     |    2 
- drivers/scsi/qla2xxx/ql2300_fw.c  |   12 -----
- drivers/scsi/qla2xxx/ql2322.c     |    2 
- drivers/scsi/qla2xxx/ql2322_fw.c  |   12 -----
- drivers/scsi/qla2xxx/ql6312.c     |    2 
- drivers/scsi/qla2xxx/ql6312_fw.c  |   12 -----
- drivers/scsi/qla2xxx/qla_gbl.h    |    8 ---
- drivers/scsi/qla2xxx/qla_inline.h |   49 ---------------------
- drivers/scsi/qla2xxx/qla_os.c     |   68 ++++++++++++++++++++++++------
- 13 files changed, 56 insertions(+), 139 deletions(-)
+ drivers/scsi/initio.c |   85 +++++++++++++++++-------------------------
+ drivers/scsi/initio.h |   18 --------
+ 2 files changed, 36 insertions(+), 67 deletions(-)
 
---- linux-2.6.11-rc4-mm1-full/drivers/scsi/qla2xxx/ql2100_fw.c.old	2005-02-28 19:41:38.000000000 +0100
-+++ linux-2.6.11-rc4-mm1-full/drivers/scsi/qla2xxx/ql2100_fw.c	2005-02-28 19:41:50.000000000 +0100
-@@ -22,18 +22,6 @@
-  */
+--- linux-2.6.11-rc4-mm1-full/drivers/scsi/initio.h.old	2005-02-28 19:22:44.000000000 +0100
++++ linux-2.6.11-rc4-mm1-full/drivers/scsi/initio.h	2005-02-28 19:30:57.000000000 +0100
+@@ -719,21 +719,3 @@
+ #define SCSI_RESET_HOST_RESET 0x200
+ #define SCSI_RESET_ACTION   0xff
  
- #ifdef UNIQUE_FW_NAME
--unsigned short fw2100tp_version = 1*1024+19;
--#else
--unsigned short risc_code_version = 1*1024+19;
--#endif
--
--#ifdef UNIQUE_FW_NAME
--unsigned char fw2100tp_version_str[] = {1,19,24};
--#else
--unsigned char firmware_version[] = {1,19,24};
--#endif
--
--#ifdef UNIQUE_FW_NAME
- #define fw2100tp_VERSION_STRING "1.19.24"
- #else
- #define FW_VERSION_STRING "1.19.24"
---- linux-2.6.11-rc4-mm1-full/drivers/scsi/qla2xxx/ql2100.c.old	2005-02-28 19:42:04.000000000 +0100
-+++ linux-2.6.11-rc4-mm1-full/drivers/scsi/qla2xxx/ql2100.c	2005-02-28 19:42:18.000000000 +0100
-@@ -14,8 +14,6 @@
+-extern void init_i91uAdapter_table(void);
+-extern int Addi91u_into_Adapter_table(WORD, WORD, BYTE, BYTE, BYTE);
+-extern int tul_ReturnNumberOfAdapters(void);
+-extern void get_tulipPCIConfig(HCS * pHCB, int iChannel_index);
+-extern int init_tulip(HCS * pHCB, SCB * pSCB, int tul_num_scb, BYTE * pbBiosAdr, int reset_time);
+-extern SCB *tul_alloc_scb(HCS * pHCB);
+-extern int tul_abort_srb(HCS * pHCB, struct scsi_cmnd * pSRB);
+-extern void tul_exec_scb(HCS * pHCB, SCB * pSCB);
+-extern void tul_release_scb(HCS * pHCB, SCB * pSCB);
+-extern void tul_stop_bm(HCS * pHCB);
+-extern int tul_reset_scsi(HCS * pCurHcb, int seconds);
+-extern int tul_isr(HCS * pHCB);
+-extern int tul_reset(HCS * pHCB, struct scsi_cmnd * pSRB, unsigned char target);
+-extern int tul_reset_scsi_bus(HCS * pCurHcb);
+-extern int tul_device_reset(HCS * pCurHcb, struct scsi_cmnd *pSrb,
+-		unsigned int target, unsigned int ResetFlags);
+-				/* ---- EXTERNAL VARIABLES ---- */
+-extern HCS tul_hcs[];
+--- linux-2.6.11-rc4-mm1-full/drivers/scsi/initio.c.old	2005-02-28 19:23:00.000000000 +0100
++++ linux-2.6.11-rc4-mm1-full/drivers/scsi/initio.c	2005-02-28 20:51:32.000000000 +0100
+@@ -223,7 +223,7 @@
+ static void tul_select_atn3(HCS * pCurHcb, SCB * pCurScb);
+ static void tul_select_atn_stop(HCS * pCurHcb, SCB * pCurScb);
+ static int int_tul_busfree(HCS * pCurHcb);
+-int int_tul_scsi_rst(HCS * pCurHcb);
++static int int_tul_scsi_rst(HCS * pCurHcb);
+ static int int_tul_bad_seq(HCS * pCurHcb);
+ static int int_tul_resel(HCS * pCurHcb);
+ static int tul_sync_done(HCS * pCurHcb);
+@@ -240,9 +240,8 @@
+ static void tul_se2_update_all(WORD CurBase);	/* setup default pattern */
+ static void tul_read_eeprom(WORD CurBase);
  
- static char qla_driver_name[] = "qla2100";
+-				/* ---- EXTERNAL VARIABLES ---- */
+-HCS tul_hcs[MAX_SUPPORTED_ADAPTERS];
+ 				/* ---- INTERNAL VARIABLES ---- */
++static HCS tul_hcs[MAX_SUPPORTED_ADAPTERS];
+ static INI_ADPT_STRUCT i91u_adpt[MAX_SUPPORTED_ADAPTERS];
  
--extern unsigned char  fw2100tp_version[];
--extern unsigned char  fw2100tp_version_str[];
- extern unsigned short fw2100tp_addr01;
- extern unsigned short fw2100tp_code01[];
- extern unsigned short fw2100tp_length01;
---- linux-2.6.11-rc4-mm1-full/drivers/scsi/qla2xxx/ql2200_fw.c.old	2005-02-28 19:42:26.000000000 +0100
-+++ linux-2.6.11-rc4-mm1-full/drivers/scsi/qla2xxx/ql2200_fw.c	2005-02-28 19:42:35.000000000 +0100
-@@ -22,18 +22,6 @@
-  */
+ /*NVRAM nvram, *nvramp = &nvram; */
+@@ -381,7 +380,7 @@
  
- #ifdef UNIQUE_FW_NAME
--unsigned short fw2200tp_version = 2*1024+2;
--#else
--unsigned short risc_code_version = 2*1024+2;
--#endif
--
--#ifdef UNIQUE_FW_NAME
--unsigned char fw2200tp_version_str[] = {2,2,6};
--#else
--unsigned char firmware_version[] = {2,2,6};
--#endif
--
--#ifdef UNIQUE_FW_NAME
- #define fw2200tp_VERSION_STRING "2.02.06"
- #else
- #define FW_VERSION_STRING "2.02.06"
---- linux-2.6.11-rc4-mm1-full/drivers/scsi/qla2xxx/ql2200.c.old	2005-02-28 19:42:44.000000000 +0100
-+++ linux-2.6.11-rc4-mm1-full/drivers/scsi/qla2xxx/ql2200.c	2005-02-28 19:42:47.000000000 +0100
-@@ -14,8 +14,6 @@
  
- static char qla_driver_name[] = "qla2200";
- 
--extern unsigned char  fw2200tp_version[];
--extern unsigned char  fw2200tp_version_str[];
- extern unsigned short fw2200tp_addr01;
- extern unsigned short fw2200tp_code01[];
- extern unsigned short fw2200tp_length01;
---- linux-2.6.11-rc4-mm1-full/drivers/scsi/qla2xxx/ql2300.c.old	2005-02-28 19:43:16.000000000 +0100
-+++ linux-2.6.11-rc4-mm1-full/drivers/scsi/qla2xxx/ql2300.c	2005-02-28 19:43:47.000000000 +0100
-@@ -14,8 +14,6 @@
- 
- static char qla_driver_name[] = "qla2300";
- 
--extern unsigned char  fw2300ipx_version[];
--extern unsigned char  fw2300ipx_version_str[];
- extern unsigned short fw2300ipx_addr01;
- extern unsigned short fw2300ipx_code01[];
- extern unsigned short fw2300ipx_length01;
---- linux-2.6.11-rc4-mm1-full/drivers/scsi/qla2xxx/ql2300_fw.c.old	2005-02-28 19:43:33.000000000 +0100
-+++ linux-2.6.11-rc4-mm1-full/drivers/scsi/qla2xxx/ql2300_fw.c	2005-02-28 19:43:43.000000000 +0100
-@@ -22,18 +22,6 @@
-  */
- 
- #ifdef UNIQUE_FW_NAME
--unsigned short fw2300ipx_version = 3*1024+3;
--#else
--unsigned short risc_code_version = 3*1024+3;
--#endif
--
--#ifdef UNIQUE_FW_NAME
--unsigned char fw2300ipx_version_str[] = {3, 3, 8};
--#else
--unsigned char firmware_version[] = {3, 3, 8};
--#endif
--
--#ifdef UNIQUE_FW_NAME
- #define fw2300ipx_VERSION_STRING "3.03.08"
- #else
- #define FW_VERSION_STRING "3.03.08"
---- linux-2.6.11-rc4-mm1-full/drivers/scsi/qla2xxx/ql2322_fw.c.old	2005-02-28 19:43:58.000000000 +0100
-+++ linux-2.6.11-rc4-mm1-full/drivers/scsi/qla2xxx/ql2322_fw.c	2005-02-28 19:44:06.000000000 +0100
-@@ -22,18 +22,6 @@
-  */
- 
- #ifdef UNIQUE_FW_NAME
--unsigned short fw2322ipx_version = 3*1024+3;
--#else
--unsigned short risc_code_version = 3*1024+3;
--#endif
--
--#ifdef UNIQUE_FW_NAME
--unsigned char fw2322ipx_version_str[] = {3, 3, 8};
--#else
--unsigned char firmware_version[] = {3, 3, 8};
--#endif
--
--#ifdef UNIQUE_FW_NAME
- #define fw2322ipx_VERSION_STRING "3.03.08"
- #else
- #define FW_VERSION_STRING "3.03.08"
---- linux-2.6.11-rc4-mm1-full/drivers/scsi/qla2xxx/ql2322.c.old	2005-02-28 19:44:16.000000000 +0100
-+++ linux-2.6.11-rc4-mm1-full/drivers/scsi/qla2xxx/ql2322.c	2005-02-28 19:44:21.000000000 +0100
-@@ -13,8 +13,6 @@
- 
- static char qla_driver_name[] = "qla2322";
- 
--extern unsigned char  fw2322ipx_version[];
--extern unsigned char  fw2322ipx_version_str[];
- extern unsigned short fw2322ipx_addr01;
- extern unsigned short fw2322ipx_code01[];
- extern unsigned short fw2322ipx_length01;
---- linux-2.6.11-rc4-mm1-full/drivers/scsi/qla2xxx/ql6312_fw.c.old	2005-02-28 19:44:37.000000000 +0100
-+++ linux-2.6.11-rc4-mm1-full/drivers/scsi/qla2xxx/ql6312_fw.c	2005-02-28 19:44:45.000000000 +0100
-@@ -22,18 +22,6 @@
-  */
- 
- #ifdef UNIQUE_FW_NAME
--unsigned short fw2300flx_version = 3*1024+3;
--#else
--unsigned short risc_code_version = 3*1024+3;
--#endif
--
--#ifdef UNIQUE_FW_NAME
--unsigned char fw2300flx_version_str[] = {3, 3, 8};
--#else
--unsigned char firmware_version[] = {3, 3, 8};
--#endif
--
--#ifdef UNIQUE_FW_NAME
- #define fw2300flx_VERSION_STRING "3.03.08"
- #else
- #define FW_VERSION_STRING "3.03.08"
---- linux-2.6.11-rc4-mm1-full/drivers/scsi/qla2xxx/ql6312.c.old	2005-02-28 19:45:01.000000000 +0100
-+++ linux-2.6.11-rc4-mm1-full/drivers/scsi/qla2xxx/ql6312.c	2005-02-28 19:45:05.000000000 +0100
-@@ -13,8 +13,6 @@
- 
- static char qla_driver_name[] = "qla6312";
- 
--extern unsigned char  fw2300flx_version[];
--extern unsigned char  fw2300flx_version_str[];
- extern unsigned short fw2300flx_addr01;
- extern unsigned short fw2300flx_code01[];
- extern unsigned short fw2300flx_length01;
---- linux-2.6.11-rc4-mm1-full/drivers/scsi/qla2xxx/qla_gbl.h.old	2005-02-28 19:46:22.000000000 +0100
-+++ linux-2.6.11-rc4-mm1-full/drivers/scsi/qla2xxx/qla_gbl.h	2005-02-28 20:40:28.000000000 +0100
-@@ -53,15 +53,9 @@
-  */
- extern char qla2x00_version_str[];
- 
--extern int num_hosts;
--extern int apiHBAInstance;
--
- extern struct _qla2x00stats qla2x00_stats;
--extern int ql2xretrycount;
- extern int ql2xlogintimeout;
- extern int qlport_down_retry;
--extern int ql2xmaxqdepth;
--extern int displayConfig;
- extern int ql2xplogiabsentdevice;
- extern int ql2xenablezio;
- extern int ql2xintrdelaytimer;
-@@ -77,8 +71,6 @@
- 
- extern char *qla2x00_get_fw_version_str(struct scsi_qla_host *, char *);
- 
--extern void qla2x00_cmd_timeout(srb_t *);
--
- extern int __qla2x00_suspend_lun(scsi_qla_host_t *, os_lun_t *, int, int, int);
- 
- extern void qla2x00_done(scsi_qla_host_t *);
---- linux-2.6.11-rc4-mm1-full/drivers/scsi/qla2xxx/qla_inline.h.old	2005-02-28 19:49:09.000000000 +0100
-+++ linux-2.6.11-rc4-mm1-full/drivers/scsi/qla2xxx/qla_inline.h	2005-02-28 20:45:00.000000000 +0100
-@@ -241,52 +241,3 @@
- 	}
- 	return (QLA_SUCCESS);
- }
--
--static __inline__ void qla2x00_add_timer_to_cmd(srb_t *, int);
--static __inline__ void qla2x00_delete_timer_from_cmd(srb_t *);
--
--/**************************************************************************
--*   qla2x00_add_timer_to_cmd
--*
--* Description:
--*       Creates a timer for the specified command. The timeout is usually
--*       the command time from kernel minus 2 secs.
--*
--* Input:
--*     sp - pointer to validate
--*
--* Returns:
--*     None.
--**************************************************************************/
--static inline void
--qla2x00_add_timer_to_cmd(srb_t *sp, int timeout)
--{
--	init_timer(&sp->timer);
--	sp->timer.expires = jiffies + timeout * HZ;
--	sp->timer.data = (unsigned long) sp;
--	sp->timer.function = (void (*) (unsigned long))qla2x00_cmd_timeout;
--	add_timer(&sp->timer);
--}
--
--/**************************************************************************
--*   qla2x00_delete_timer_from_cmd
--*
--* Description:
--*       Delete the timer for the specified command.
--*
--* Input:
--*     sp - pointer to validate
--*
--* Returns:
--*     None.
--**************************************************************************/
--static inline void 
--qla2x00_delete_timer_from_cmd(srb_t *sp)
--{
--	if (sp->timer.function != NULL) {
--		del_timer(&sp->timer);
--		sp->timer.function =  NULL;
--		sp->timer.data = (unsigned long) NULL;
--	}
--}
--
---- linux-2.6.11-rc4-mm1-full/drivers/scsi/qla2xxx/qla_os.c.old	2005-02-28 19:46:36.000000000 +0100
-+++ linux-2.6.11-rc4-mm1-full/drivers/scsi/qla2xxx/qla_os.c	2005-02-28 20:52:11.000000000 +0100
-@@ -36,8 +36,8 @@
- /*
-  * SRB allocation cache
-  */
--char srb_cachep_name[16];
--kmem_cache_t *srb_cachep;
-+static char srb_cachep_name[16];
-+static kmem_cache_t *srb_cachep;
- 
- /*
-  * Stats for all adpaters.
-@@ -47,13 +47,12 @@
- /*
-  * Ioctl related information.
-  */
--int num_hosts;
--int apiHBAInstance;
-+static int num_hosts;
- 
- /*
-  * Module parameter information and variables
-  */
--int ql2xmaxqdepth;
-+static int ql2xmaxqdepth;
- module_param(ql2xmaxqdepth, int, S_IRUGO|S_IWUSR);
- MODULE_PARM_DESC(ql2xmaxqdepth,
- 		"Maximum queue depth to report for target devices.");
-@@ -69,13 +68,13 @@
- 		"Maximum number of command retries to a port that returns"
- 		"a PORT-DOWN status.");
- 
--int ql2xretrycount = 20;
-+static int ql2xretrycount = 20;
- module_param(ql2xretrycount, int, S_IRUGO|S_IWUSR);
- MODULE_PARM_DESC(ql2xretrycount,
- 		"Maximum number of mid-layer retries allowed for a command.  "
- 		"Default value is 20, ");
- 
--int displayConfig;
-+static int displayConfig;
- module_param(displayConfig, int, S_IRUGO|S_IWUSR);
- MODULE_PARM_DESC(displayConfig,
- 		"If 1 then display the configuration used in /etc/modprobe.conf.");
-@@ -100,7 +99,7 @@
- 		"ZIO: Waiting time for Firmware before it generates an "
- 		"interrupt to the host to notify completion of request.");
- 
--int ConfigRequired;
-+static int ConfigRequired;
- module_param(ConfigRequired, int, S_IRUGO|S_IRUSR);
- MODULE_PARM_DESC(ConfigRequired,
- 		"If 1, then only configured devices passed in through the"
-@@ -119,7 +118,7 @@
- 		"target returns a <NOT READY> status.  Default is 10 "
- 		"iterations.");
- 
--int ql2xdoinitscan = 1;
-+static int ql2xdoinitscan = 1;
- module_param(ql2xdoinitscan, int, S_IRUGO|S_IWUSR);
- MODULE_PARM_DESC(ql2xdoinitscan,
- 		"Signal mid-layer to perform scan after driver load: 0 -- no "
-@@ -163,6 +162,8 @@
- static int qla2x00_proc_info(struct Scsi_Host *, char *, char **,
-     off_t, int, int);
- 
-+static void qla2x00_cmd_timeout(srb_t *sp);
-+
- static struct scsi_host_template qla2x00_driver_template = {
- 	.module			= THIS_MODULE,
- 	.name			= "qla2xxx",
-@@ -193,6 +194,51 @@
- 
- static void qla2x00_display_fc_names(scsi_qla_host_t *);
- 
-+/**************************************************************************
-+*   qla2x00_add_timer_to_cmd
-+*
-+* Description:
-+*       Creates a timer for the specified command. The timeout is usually
-+*       the command time from kernel minus 2 secs.
-+*
-+* Input:
-+*     sp - pointer to validate
-+*
-+* Returns:
-+*     None.
-+**************************************************************************/
-+static inline void
-+qla2x00_add_timer_to_cmd(srb_t *sp, int timeout)
-+{
-+	init_timer(&sp->timer);
-+	sp->timer.expires = jiffies + timeout * HZ;
-+	sp->timer.data = (unsigned long) sp;
-+	sp->timer.function = (void (*) (unsigned long))qla2x00_cmd_timeout;
-+	add_timer(&sp->timer);
-+}
-+
-+/**************************************************************************
-+*   qla2x00_delete_timer_from_cmd
-+*
-+* Description:
-+*       Delete the timer for the specified command.
-+*
-+* Input:
-+*     sp - pointer to validate
-+*
-+* Returns:
-+*     None.
-+**************************************************************************/
-+static inline void 
-+qla2x00_delete_timer_from_cmd(srb_t *sp)
-+{
-+	if (sp->timer.function != NULL) {
-+		del_timer(&sp->timer);
-+		sp->timer.function =  NULL;
-+		sp->timer.data = (unsigned long) NULL;
-+	}
-+}
-+
- /* TODO Convert to inlines
-  *
-  * Timer routines
-@@ -230,8 +276,6 @@
- 	ha->timer_active = 0;
- }
- 
--void qla2x00_cmd_timeout(srb_t *);
--
- static __inline__ void qla2x00_callback(scsi_qla_host_t *, struct scsi_cmnd *);
- static __inline__ void sp_put(struct scsi_qla_host * ha, srb_t *sp);
- static __inline__ void sp_get(struct scsi_qla_host * ha, srb_t *sp);
-@@ -3876,7 +3920,7 @@
- * None.
- * Note:Need to add the support for if( sp->state == SRB_FAILOVER_STATE).
- **************************************************************************/
--void
-+static void
- qla2x00_cmd_timeout(srb_t *sp)
+ ******************************************************************/
+-void tul_se2_instr(WORD CurBase, UCHAR instr)
++static void tul_se2_instr(WORD CurBase, UCHAR instr)
  {
- 	int t, l;
-
+ 	int i;
+ 	UCHAR b;
+@@ -437,7 +436,7 @@
+ 	Input  :address of Serial E2PROM
+ 	Output :value stored in  Serial E2PROM
+ *******************************************************************/
+-USHORT tul_se2_rd(WORD CurBase, ULONG adr)
++static USHORT tul_se2_rd(WORD CurBase, ULONG adr)
+ {
+ 	UCHAR instr, readByte;
+ 	USHORT readWord;
+@@ -468,7 +467,7 @@
+ /******************************************************************
+  Input: new value in  Serial E2PROM, address of Serial E2PROM
+ *******************************************************************/
+-void tul_se2_wr(WORD CurBase, UCHAR adr, USHORT writeWord)
++static void tul_se2_wr(WORD CurBase, UCHAR adr, USHORT writeWord)
+ {
+ 	UCHAR readByte;
+ 	UCHAR instr;
+@@ -584,8 +583,8 @@
+ 	TUL_WR(CurBase + TUL_GCTRL, gctrl & ~TUL_GCTRL_EEPROM_BIT);
+ }				/* read_eeprom */
+ 
+-int Addi91u_into_Adapter_table(WORD wBIOS, WORD wBASE, BYTE bInterrupt,
+-			       BYTE bBus, BYTE bDevice)
++static int Addi91u_into_Adapter_table(WORD wBIOS, WORD wBASE, BYTE bInterrupt,
++				      BYTE bBus, BYTE bDevice)
+ {
+ 	int i, j;
+ 
+@@ -616,7 +615,7 @@
+ 	return 1;
+ }
+ 
+-void init_i91uAdapter_table(void)
++static void init_i91uAdapter_table(void)
+ {
+ 	int i;
+ 
+@@ -630,7 +629,7 @@
+ 	return;
+ }
+ 
+-void tul_stop_bm(HCS * pCurHcb)
++static void tul_stop_bm(HCS * pCurHcb)
+ {
+ 
+ 	if (TUL_RD(pCurHcb->HCS_Base, TUL_XStatus) & XPEND) {	/* if DMA xfer is pending, abort DMA xfer */
+@@ -642,7 +641,7 @@
+ }
+ 
+ /***************************************************************************/
+-void get_tulipPCIConfig(HCS * pCurHcb, int ch_idx)
++static void get_tulipPCIConfig(HCS * pCurHcb, int ch_idx)
+ {
+ 	pCurHcb->HCS_Base = i91u_adpt[ch_idx].ADPT_BASE;	/* Supply base address  */
+ 	pCurHcb->HCS_BIOS = i91u_adpt[ch_idx].ADPT_BIOS;	/* Supply BIOS address  */
+@@ -651,7 +650,7 @@
+ }
+ 
+ /***************************************************************************/
+-int tul_reset_scsi(HCS * pCurHcb, int seconds)
++static int tul_reset_scsi(HCS * pCurHcb, int seconds)
+ {
+ 	TUL_WR(pCurHcb->HCS_Base + TUL_SCtrl0, TSC_RST_BUS);
+ 
+@@ -670,7 +669,8 @@
+ }
+ 
+ /***************************************************************************/
+-int init_tulip(HCS * pCurHcb, SCB * scbp, int tul_num_scb, BYTE * pbBiosAdr, int seconds)
++static int init_tulip(HCS * pCurHcb, SCB * scbp, int tul_num_scb,
++		      BYTE * pbBiosAdr, int seconds)
+ {
+ 	int i;
+ 	BYTE *pwFlags;
+@@ -788,7 +788,7 @@
+ }
+ 
+ /***************************************************************************/
+-SCB *tul_alloc_scb(HCS * hcsp)
++static SCB *tul_alloc_scb(HCS * hcsp)
+ {
+ 	SCB *pTmpScb;
+ 	ULONG flags;
+@@ -807,7 +807,7 @@
+ }
+ 
+ /***************************************************************************/
+-void tul_release_scb(HCS * hcsp, SCB * scbp)
++static void tul_release_scb(HCS * hcsp, SCB * scbp)
+ {
+ 	ULONG flags;
+ 
+@@ -829,7 +829,7 @@
+ }
+ 
+ /***************************************************************************/
+-void tul_append_pend_scb(HCS * pCurHcb, SCB * scbp)
++static void tul_append_pend_scb(HCS * pCurHcb, SCB * scbp)
+ {
+ 
+ #if DEBUG_QUEUE
+@@ -847,7 +847,7 @@
+ }
+ 
+ /***************************************************************************/
+-void tul_push_pend_scb(HCS * pCurHcb, SCB * scbp)
++static void tul_push_pend_scb(HCS * pCurHcb, SCB * scbp)
+ {
+ 
+ #if DEBUG_QUEUE
+@@ -863,7 +863,7 @@
+ }
+ 
+ /***************************************************************************/
+-SCB *tul_find_first_pend_scb(HCS * pCurHcb)
++static SCB *tul_find_first_pend_scb(HCS * pCurHcb)
+ {
+ 	SCB *pFirstPend;
+ 
+@@ -894,24 +894,7 @@
+ 	return (pFirstPend);
+ }
+ /***************************************************************************/
+-SCB *tul_pop_pend_scb(HCS * pCurHcb)
+-{
+-	SCB *pTmpScb;
+-
+-	if ((pTmpScb = pCurHcb->HCS_FirstPend) != NULL) {
+-		if ((pCurHcb->HCS_FirstPend = pTmpScb->SCB_NxtScb) == NULL)
+-			pCurHcb->HCS_LastPend = NULL;
+-		pTmpScb->SCB_NxtScb = NULL;
+-	}
+-#if DEBUG_QUEUE
+-	printk("Pop pend SCB %lx; ", (ULONG) pTmpScb);
+-#endif
+-	return (pTmpScb);
+-}
+-
+-
+-/***************************************************************************/
+-void tul_unlink_pend_scb(HCS * pCurHcb, SCB * pCurScb)
++static void tul_unlink_pend_scb(HCS * pCurHcb, SCB * pCurScb)
+ {
+ 	SCB *pTmpScb, *pPrevScb;
+ 
+@@ -939,7 +922,7 @@
+ 	return;
+ }
+ /***************************************************************************/
+-void tul_append_busy_scb(HCS * pCurHcb, SCB * scbp)
++static void tul_append_busy_scb(HCS * pCurHcb, SCB * scbp)
+ {
+ 
+ #if DEBUG_QUEUE
+@@ -961,7 +944,7 @@
+ }
+ 
+ /***************************************************************************/
+-SCB *tul_pop_busy_scb(HCS * pCurHcb)
++static SCB *tul_pop_busy_scb(HCS * pCurHcb)
+ {
+ 	SCB *pTmpScb;
+ 
+@@ -982,7 +965,7 @@
+ }
+ 
+ /***************************************************************************/
+-void tul_unlink_busy_scb(HCS * pCurHcb, SCB * pCurScb)
++static void tul_unlink_busy_scb(HCS * pCurHcb, SCB * pCurScb)
+ {
+ 	SCB *pTmpScb, *pPrevScb;
+ 
+@@ -1037,7 +1020,7 @@
+ }
+ 
+ /***************************************************************************/
+-void tul_append_done_scb(HCS * pCurHcb, SCB * scbp)
++static void tul_append_done_scb(HCS * pCurHcb, SCB * scbp)
+ {
+ 
+ #if DEBUG_QUEUE
+@@ -1073,7 +1056,7 @@
+ }
+ 
+ /***************************************************************************/
+-int tul_abort_srb(HCS * pCurHcb, struct scsi_cmnd *srbp)
++static int tul_abort_srb(HCS * pCurHcb, struct scsi_cmnd *srbp)
+ {
+ 	ULONG flags;
+ 	SCB *pTmpScb, *pPrevScb;
+@@ -1163,7 +1146,7 @@
+ }
+ 
+ /***************************************************************************/
+-int tul_bad_seq(HCS * pCurHcb)
++static int tul_bad_seq(HCS * pCurHcb)
+ {
+ 	SCB *pCurScb;
+ 
+@@ -1182,9 +1165,11 @@
+ 	return (tul_post_scsi_rst(pCurHcb));
+ }
+ 
++#if 0
++
+ /************************************************************************/
+-int tul_device_reset(HCS * pCurHcb, struct scsi_cmnd *pSrb,
+-		unsigned int target, unsigned int ResetFlags)
++static int tul_device_reset(HCS * pCurHcb, struct scsi_cmnd *pSrb,
++			    unsigned int target, unsigned int ResetFlags)
+ {
+ 	ULONG flags;
+ 	SCB *pScb;
+@@ -1255,7 +1240,7 @@
+ 	return SCSI_RESET_PENDING;
+ }
+ 
+-int tul_reset_scsi_bus(HCS * pCurHcb)
++static int tul_reset_scsi_bus(HCS * pCurHcb)
+ {
+ 	ULONG flags;
+ 
+@@ -1284,8 +1269,10 @@
+ 	return (SCSI_RESET_SUCCESS | SCSI_RESET_HOST_RESET);
+ }
+ 
++#endif  /*  0  */
++
+ /************************************************************************/
+-void tul_exec_scb(HCS * pCurHcb, SCB * pCurScb)
++static void tul_exec_scb(HCS * pCurHcb, SCB * pCurScb)
+ {
+ 	ULONG flags;
+ 
+@@ -1318,7 +1305,7 @@
+ }
+ 
+ /***************************************************************************/
+-int tul_isr(HCS * pCurHcb)
++static int tul_isr(HCS * pCurHcb)
+ {
+ 	/* Enter critical section       */
+ 
+@@ -2108,7 +2095,7 @@
+ 
+ /***************************************************************************/
+ /* scsi bus reset */
+-int int_tul_scsi_rst(HCS * pCurHcb)
++static int int_tul_scsi_rst(HCS * pCurHcb)
+ {
+ 	SCB *pCurScb;
+ 	int i;
+@@ -2214,7 +2201,7 @@
+ 
+ 
+ /***************************************************************************/
+-int int_tul_bad_seq(HCS * pCurHcb)
++static int int_tul_bad_seq(HCS * pCurHcb)
+ {				/* target wrong phase           */
+ 	SCB *pCurScb;
+ 	int i;
