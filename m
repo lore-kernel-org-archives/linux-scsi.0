@@ -1,56 +1,43 @@
-From: "Andrew Vasquez" <andrew.vasquez@qlogic.com>
-Subject: Using scsi_cmd->request->nr_hw_segments within a LLDD...
-Date: Tue, 21 Sep 2004 14:55:34 -0700
+From: Jesse Barnes <jbarnes@engr.sgi.com>
+Subject: Re: SCSI QLA not working on latest *-mm SN2
+Date: Tue, 21 Sep 2004 18:33:54 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <B179AE41C1147041AA1121F44614F0B0012AD913@AVEXCH02.qlogic.org>
+Message-ID: <200409211833.55343.jbarnes@engr.sgi.com>
+References: <20040917183029.GW642@parcelfarce.linux.theplanet.co.uk> <20040921211108.GA16153@parcelfarce.linux.theplanet.co.uk> <20040921214302.GG146363@sgi.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from avexch01.qlogic.com ([198.70.193.200]:6728 "EHLO
-	avexch01.qlogic.com") by vger.kernel.org with ESMTP id S268086AbUIUVzf convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 21 Sep 2004 17:55:35 -0400
-Content-Class: urn:content-classes:message
+Received: from omx2-ext.sgi.com ([192.48.171.19]:12777 "EHLO omx2.sgi.com")
+	by vger.kernel.org with ESMTP id S266613AbUIUWe0 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 21 Sep 2004 18:34:26 -0400
+In-Reply-To: <20040921214302.GG146363@sgi.com>
+Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
-To: SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Jeremy Higdon <jeremy@sgi.com>
+Cc: Matthew Wilcox <matthew@wil.cx>, Grant Grundler <grundler@parisc-linux.org>, James Bottomley <James.Bottomley@steeleye.com>, Matthew Wilcox <willy@debian.org>, Andrew Vasquez <andrew.vasquez@qlogic.com>, pj@sgi.com, SCSI Mailing List <linux-scsi@vger.kernel.org>, mdr@cthulhu.engr.sgi.com, jeremy@cthulhu.engr.sgi.com, djh@cthulhu.engr.sgi.com, Andrew Morton <akpm@osdl.org>
 
+On Tuesday, September 21, 2004 5:43 pm, Jeremy Higdon wrote:
+> > > CPUA: writel(value_X, common_register)
+> > >  sn_mmiob()
+> > >  spin_unlock(common_lock)
+> > >
+> > > CPUB: spin_lock(common_lock)
+> > >  writel(value_Y, common_register)
+> > >
+> > > would strongly order the writes.
+> >
+> > I think your _raw_spin_unlock() should include an sn_mmiob().
+>
+> That could be very painful.
+> On Irix, we actually had a separate spinunlock (io_spin_unlock) that
+> added the MIPS equivalent.  I'm assuming we don't want to entertain
+> that here :-)  (Though tell me if I'm wrong)
 
-All,
+It's worth noting that this affects some MIPS systems as well, so that's at 
+least two Linux arches that would benefit from a nice solution to this 
+problem.
 
-Back in March the qla2xxx driver began to use the value in
-cmd->request->nr_hw_segments as a guestimate during the calucation of
-the number of driver-request-queue entries that would be needed to
-fullfill a given command-request.  Here's an URL to thread which
-prompted the change:
-
-	http://marc.theaimsgroup.com/?l=linux-scsi&m=107940832718154&w=2
-
-Recently we've had a number of problem reports which appear to
-indicate that the value specified within the variable is
-un-initialized and/or set to some bogus value.
-
-Here's the relevant code the driver uses in qla2x00_start_scsi():
-
-	/* Calculate the number of request entries needed. */
-	req_cnt = (ha->calc_request_entries)(cmd->request->nr_hw_segments);
-	if (ha->req_q_cnt < (req_cnt + 2)) {
-		cnt = RD_REG_WORD_RELAXED(ISP_REQ_Q_OUT(ha, reg));
-		if (ha->req_ring_index < cnt)
-			ha->req_q_cnt = cnt - ha->req_ring_index;
-		else
-			ha->req_q_cnt = ha->request_q_length -
-			    (ha->req_ring_index - cnt);
-	}
-	if (ha->req_q_cnt < (req_cnt + 2))
-		goto queuing_error;
-
-The 'req_cnt' derived value in several instances is greater than 4000.
-
-So, can an LLDD depend on the value being set to a proper value
-during all I/O submission paths -- BIO as well as IOCTL?
-
-If not, then what should a device driver writer use as an alternative?
-
-Regards,
-Andrew Vasquez
+Jesse
