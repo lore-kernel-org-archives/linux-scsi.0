@@ -1,41 +1,51 @@
-From: "Dupuis, Chad" <chad.dupuis@hp.com>
+From: James Bottomley <James.Bottomley@steeleye.com>
 Subject: RE: patch for scsi_devinfo.c
-Date: Mon, 21 Jun 2004 16:16:39 -0400
+Date: 21 Jun 2004 15:23:54 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <A8B003DDA3332A479C0ECCA641F47E6503BE69FA@tayexc13.americas.cpqcorp.net>
+Message-ID: <1087849435.2079.82.camel@mulgrave>
+References: <A8B003DDA3332A479C0ECCA641F47E6503BE69FA@tayexc13.americas.cpqcorp.net>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from zmamail05.zma.compaq.com ([161.114.64.105]:55052 "EHLO
-	zmamail05.zma.compaq.com") by vger.kernel.org with ESMTP
-	id S266448AbUFUUQn convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 21 Jun 2004 16:16:43 -0400
-Content-class: urn:content-classes:message
+Received: from stat1.steeleye.com ([65.114.3.130]:55744 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S266455AbUFUUYF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 21 Jun 2004 16:24:05 -0400
+In-Reply-To: <A8B003DDA3332A479C0ECCA641F47E6503BE69FA@tayexc13.americas.cpqcorp.net>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@steeleye.com>
+To: "Dupuis, Chad" <chad.dupuis@hp.com>
 Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-It does respond to report LUN.
+On Mon, 2004-06-21 at 15:16, Dupuis, Chad wrote:
+> It does respond to report LUN.
 
------Original Message-----
-From: James Bottomley [mailto:James.Bottomley@steeleye.com] 
-Sent: Monday, June 21, 2004 4:15 PM
-To: Dupuis, Chad
-Cc: SCSI Mailing List
-Subject: Re: patch for scsi_devinfo.c
+OK, so this should be the patch.  Could you make sure it actually does
+work?
 
-
-On Mon, 2004-06-21 at 15:07, Dupuis, Chad wrote:
-> The entries for HP and Compaq HSV110 are incorrect.  The HSV110 
-> controllers report themselves as SCSI 2 devices and therefore need the
-
-> BLIST_LARGELUN flag to see LUNs passed 7.
-
-Do they also respond to REPORT LUNS?  In which case we could flag them
-as that instead of BLIST_SPARSELUN|BLIST_LARGELUN
+Thanks,
 
 James
 
+===== drivers/scsi/scsi_devinfo.c 1.21 vs edited =====
+--- 1.21/drivers/scsi/scsi_devinfo.c	2004-06-19 09:48:22 -05:00
++++ edited/drivers/scsi/scsi_devinfo.c	2004-06-21 15:22:17 -05:00
+@@ -129,7 +129,7 @@
+ 	{"COMPAQ", "CR3500", NULL, BLIST_FORCELUN},
+ 	{"COMPAQ", "MSA1000", NULL, BLIST_SPARSELUN | BLIST_NOSTARTONADD},
+ 	{"COMPAQ", "MSA1000 VOLUME", NULL, BLIST_SPARSELUN | BLIST_NOSTARTONADD},
+-	{"COMPAQ", "HSV110", NULL, BLIST_SPARSELUN | BLIST_NOSTARTONADD},
++	{"COMPAQ", "HSV110", NULL, BLIST_REPORTLUN2 | BLIST_NOSTARTONADD},
+ 	{"DDN", "SAN DataDirector", "*", BLIST_SPARSELUN},
+ 	{"DEC", "HSG80", NULL, BLIST_SPARSELUN | BLIST_NOSTARTONADD},
+ 	{"DELL", "PV660F", NULL, BLIST_SPARSELUN},
+@@ -151,7 +151,7 @@
+ 	{"HP", "A6189A", NULL, BLIST_SPARSELUN | BLIST_LARGELUN},	/* HP VA7400 */
+ 	{"HP", "OPEN-", "*", BLIST_SPARSELUN | BLIST_LARGELUN}, /* HP XP Arrays */
+ 	{"HP", "NetRAID-4M", NULL, BLIST_FORCELUN},
+-	{"HP", "HSV100", NULL, BLIST_SPARSELUN | BLIST_NOSTARTONADD},
++	{"HP", "HSV100", NULL, BLIST_REPORTLUN2 | BLIST_NOSTARTONADD},
+ 	{"HP", "C1557A", NULL, BLIST_FORCELUN},
+ 	{"IBM", "AuSaV1S2", NULL, BLIST_FORCELUN},
+ 	{"IBM", "ProFibre 4000R", "*", BLIST_SPARSELUN | BLIST_LARGELUN},
 
