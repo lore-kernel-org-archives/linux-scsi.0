@@ -1,32 +1,48 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] 2.6.9 aacraid: aac_count fix
-Date: Thu, 16 Sep 2004 12:29:26 +0100
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040916122925.A32569@infradead.org>
-References: <60807403EABEB443939A5A7AA8A7458B1AAAB7@otce2k01.adaptec.com>
+From: Matthew Wilcox <willy@debian.org>
+Subject: Re: CONFIG_SCSI_SYM53C8XX_IOMAPPED
+Date: Thu, 16 Sep 2004 15:13:23 +0100
+Sender: <willy@www.linux.org.uk>
+Message-ID: <20040916141323.GL642@parcelfarce.linux.theplanet.co.uk>
+References: <hhsm9iv8ws.fsf@alsvidh.mathematik.uni-muenchen.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from imladris.demon.co.uk ([193.237.130.41]:53260 "EHLO
-	phoenix.infradead.org") by vger.kernel.org with ESMTP
-	id S267957AbUIPL3e (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 16 Sep 2004 07:29:34 -0400
+Return-path: <bounce-debian-kernel=glddk-debian-kernel=m.gmane.org@lists.debian.org>
 Content-Disposition: inline
-In-Reply-To: <60807403EABEB443939A5A7AA8A7458B1AAAB7@otce2k01.adaptec.com>; from mark_salyzyn@adaptec.com on Wed, Sep 15, 2004 at 07:47:45AM -0400
+In-Reply-To: <hhsm9iv8ws.fsf@alsvidh.mathematik.uni-muenchen.de>
+Resent-Message-ID: <8FnU_C.A.sdH.G-ZSBB@murphy>
+List-Post: <mailto:debian-kernel@lists.debian.org>
+List-Help: <mailto:debian-kernel-request@lists.debian.org?subject=help>
+List-Subscribe: <mailto:debian-kernel-request@lists.debian.org?subject=subscribe>
+List-Unsubscribe: <mailto:debian-kernel-request@lists.debian.org?subject=unsubscribe>
+List-Archive: <http://lists.debian.org/debian-kernel/>
+To: debian-kernel@lists.debian.org
+Cc: linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
-Cc: Mark Haverkamp <markh@osdl.org>, Christoph Hellwig <hch@infradead.org>, James Bottomley <James.Bottomley@steeleye.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
-On Wed, Sep 15, 2004 at 07:47:45AM -0400, Salyzyn, Mark wrote:
-> Christoph Hellwig writes:
+On Thu, Sep 16, 2004 at 11:51:31AM +0200, Jens Schmalzing wrote:
+> I recently encountered a machine (a Thinkpad 860) with a NCR 53C810
+> SCSI controller that would not work properly unless the config option
+> CONFIG_SCSI_SYM53C8XX_IOMAPPED was set.  Under these circumstances,
+> installation was a royal pain in the ass, and therefore, I am inclined
+> to trade performance for wider support and enable this in the PowerPC
+> kernel image packages.
 > 
-> > > +	scsi_set_device(shost, &pdev->dev);
-> > 
-> > This one is bogus.  scsi_add_host already sets the device.
-> 
-> Which path sets the device? I got an intermittent panic as a result of
-> the device not being set in my unit test (of the kernel of the day at
-> the time of this modification, can't remember which version of the
-> kernel ...). Which version of this kernel sets it?
+> Any comments?
 
-Since mid-2.5.x.  Maybe you try to access it before scsi_add_host is called?
+I was hoping nobody needed to set this option.  It has worse performance,
+plus it needs to be enabled on some platforms, like SGI's Visual
+Workstation which has completely shafted io port accesses.  As upstream
+maintainer, I'd like more information about it please ...
+
+ - How does it "not work properly"?  Does it hang on first access to
+   the chip, or does it suffer data corruption?
+ - Are the io memory resources on this Thinkpad properly programmed?
+ - What kernel were you trying, 2.4 or 2.6?
+
+-- 
+"Next the statesmen will invent cheap lies, putting the blame upon 
+the nation that is attacked, and every man will be glad of those
+conscience-soothing falsities, and will diligently study them, and refuse
+to examine any refutations of them; and thus he will by and by convince 
+himself that the war is just, and will thank God for the better sleep 
+he enjoys after this process of grotesque self-deception." -- Mark Twain
