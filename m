@@ -1,23 +1,40 @@
-From: Andries.Brouwer@cwi.nl
+From: Joel Becker <Joel.Becker@oracle.com>
 Subject: Re: [patch for playing] Patch to support 4000 disks and maintain backward compatibility
-Date: Fri, 11 Apr 2003 23:13:52 +0200 (MEST)
+Date: Fri, 11 Apr 2003 08:43:46 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <UTC200304112113.h3BLDq723847.aeb@smtp.cwi.nl>
+Message-ID: <20030411154345.GV31739@ca-server1.us.oracle.com>
+References: <200304101339.49895.pbadari@us.ibm.com> <Pine.LNX.4.44.0304110157460.12110-100000@serv> <200304101825.12299.pbadari@us.ibm.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hera.cwi.nl ([192.16.191.8]:22955 "EHLO hera.cwi.nl")
-	by vger.kernel.org with ESMTP id S261829AbTDKVCL (for <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 11 Apr 2003 17:02:11 -0400
+Received: from inet-mail4.oracle.com ([148.87.2.204]:5076 "EHLO
+	inet-mail4.oracle.com") by vger.kernel.org with ESMTP
+	id S261783AbTDKVPT (for <rfc822;linux-scsi@vger.kernel.org>); Fri, 11 Apr 2003 17:15:19 -0400
+Content-Disposition: inline
+In-Reply-To: <200304101825.12299.pbadari@us.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Andries.Brouwer@cwi.nl, James.Bottomley@steeleye.com
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, pbadari@us.ibm.com
+To: Badari Pulavarty <pbadari@us.ibm.com>
+Cc: Roman Zippel <zippel@linux-m68k.org>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-> It would also be nice for numeric compatibility to be a compile time option
+On Thu, Apr 10, 2003 at 06:25:12PM -0700, Badari Pulavarty wrote:
+> I can't see (2) happening easily. I know that Greg KH is working on
+> udev (/dev/ memory filesystem). Once that happens, we have to change
+> drivers/subsystems (we need) to make dynamic allocation. All of this Is 
+> going to happen for 2.6 ?
 
-It sounds as if you expect a lot of old cruft.
-But the compatibility code is just ten lines or so.
-Internally the kernel has an index. Externally there is a dev_t.
-At open() time the dev_t is converted. At registration time
-sd announces interest in three or four dev_t regions.
-That is all.
+	Just to be clear, let's not repeat the devfsd fiasco.  If we
+have dynamic update of device nodes (we need it), I want it to work with
+my /dev on ext3.
 
-Andries
+Joel
+
+-- 
+
+"You look in her eyes, the music begins to play.
+ Hopeless romantics, here we go again."
+
+Joel Becker
+Senior Member of Technical Staff
+Oracle Corporation
+E-mail: joel.becker@oracle.com
+Phone: (650) 506-8127
