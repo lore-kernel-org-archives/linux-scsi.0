@@ -1,35 +1,30 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] merge sd.h into sd.c and some cleanup
-Date: Sun, 27 Oct 2002 14:51:42 +0000
+From: Christer Weinigel <wingel@acolyte.hack.org>
+Subject: Why not CAM?
+Date: 27 Oct 2002 16:26:22 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20021027145142.A20218@infradead.org>
-References: <20021026031850.A5491@lst.de> <3DBBCC5B.50708@torque.net>
+Message-ID: <87smyrgaxt.fsf@zoo.weinigel.se>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <3DBBCC5B.50708@torque.net>; from dougg@torque.net on Sun, Oct 27, 2002 at 10:22:03PM +1100
 List-Id: linux-scsi@vger.kernel.org
-To: Douglas Gilbert <dougg@torque.net>
-Cc: James Bottomley <James.Bottomley@steeleye.com>, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Sun, Oct 27, 2002 at 10:22:03PM +1100, Douglas Gilbert wrote:
-> The patch looks good. However ....
-> The header file "sd.h" is included in quite a few lower level
-> drivers in lk 2.5.44 (at least 55) and perhaps in a couple of
-> other subsystems. The reason it is included is for the
-> "biosparam" call in the API of lower level drivers. Whether
-> it is still used or useful, I'm not sure. [It does seem
-> quite unreasonable that lower level drivers need to include
-> an upper level header.]
+Hi,
 
-I've changed the biosparm API in the scsi BK tree, against which this
-patch is (see http://linux-scsi.bkbits.net)
+I've wanted to ask this for a long time: Why not switch to SCSI CAM
+when you are redoing the Linux SCSI layer anyways? 
 
-> You can drop my credit line (shown above) from sd.c . Perhaps
-> James could make a "credits" file for everyone who has helped
-> in the 2.5 scsi rework.
+This is not intended to start a flamewar of any kind, I don't know
+very much about CAM except that it is some kind of standard and
+FreeBSD uses it and they seem to be mostly happy with it.  So I'm just
+curious if any of the SCSI hackers think that CAM would be worthwhile
+and if not, why?  Too heavyweight?  Too ugly?  Won't fit well with the
+new BIO design in the 2.5 kernel?
 
-I think it's fine to keep it - I just had to shorten it to fit into
-a ANSI terminal :)
+  /Christer
 
+-- 
+"Just how much can I get away with and still go to heaven?"
+
+Freelance consultant specializing in device driver programming for Linux 
+Christer Weinigel <christer@weinigel.se>  http://www.weinigel.se
