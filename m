@@ -1,28 +1,43 @@
-From: Saeed Bishara <Saeed.Bishara@il.marvell.com>
-Subject: IO buffer alignment for block devices
-Date: Mon, 13 Sep 2004 15:48:41 +0300
+From: "Mukker, Atul" <Atulm@lsil.com>
+Subject: RE: megaraid battery status questions
+Date: Mon, 13 Sep 2004 09:07:59 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <41459729.5060106@il.marvell.com>
+Message-ID: <0E3FA95632D6D047BA649F95DAB60E57033BCA20@exa-atlanta>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="iso-8859-1"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from shosh.galileo.co.il ([199.203.130.250]:18353 "EHLO
-	il.marvell.com") by vger.kernel.org with ESMTP id S266646AbUIMMst
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 13 Sep 2004 08:48:49 -0400
-Received: from [127.0.0.1] ([10.4.22.164])
-	by il.marvell.com (8.12.10/8.12.10) with ESMTP id i8DClkbw011732
-	for <linux-scsi@vger.kernel.org>; Mon, 13 Sep 2004 15:47:47 +0300 (IDT)
+Received: from mail0.lsil.com ([147.145.40.20]:1414 "EHLO mail0.lsil.com")
+	by vger.kernel.org with ESMTP id S266689AbUIMNIM (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 13 Sep 2004 09:08:12 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: 'Russell Johnson' <rjohnson@rtlogic.com>, linux-scsi@vger.kernel.org
 
-Hi,
-    Is there any minimal alignment for the IO buffers (sg and single) 
-sent to a scsi LLD?
-    I found that buffers that come from buffer cache, page cache and sg 
-are page aligned , and the raw driver send sector aligned     buffers.
-    so can I assume that the minimal alignment of the buffer is 512 bytes?
-thanks
-saeed
+> I have been using the megaraid driver on a Dell system using 
+> the PERC4 for
+> several months now and have noticed that 
+> /proc/megaraid/hba0/battery-status
+> will report errors after reading it over time.  If I reboot 
+> the system then
+> the battery status errors go away until I poll again.  The 
+> BIOS for the
+> Megaraid doesn't report battery status errors in any of the 
+> tests I have
+> run.  The errors I see include "low voltage" and "charge fail".  In
+> addition, I have seen the same "errors" across several 
+> different systems so
+> it isn't just a single adapter or system that is failing.
 
+Can you provide your dmesg output and the information from *all* files from
+the /proc/megaraid/hbaX/ directory
+
+
+> 
+> With my goal to poll raid status and battery status on a 
+> periodic basis,
+> does anyone have ideas on what mechanism I can use?  Ioctl?  
+> Other programs?
+
+If you have an application which issues the corresponding ioctl, the same
+would work with 2.20.3.1 driver
