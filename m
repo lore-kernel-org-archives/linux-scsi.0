@@ -1,56 +1,36 @@
-From: "Martin Peschke3" <MPESCHKE@de.ibm.com>
-Subject: Re: queuecommand called in IRQ run level
-Date: Mon, 25 Aug 2003 08:32:50 +0200
+From: Douglas Gilbert <dougg@torque.net>
+Subject: [2.6.0-test4] blocking access to mounted scsi devices
+Date: Mon, 25 Aug 2003 17:04:53 +1000
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <OF2C371F5D.96455F3A-ONC1256D8D.0022F047-C1256D8D.002454AB@de.ibm.com>
+Message-ID: <3F49B515.6010107@torque.net>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from d12lmsgate-5.de.ibm.com ([194.196.100.238]:32695 "EHLO
-	d12lmsgate.de.ibm.com") by vger.kernel.org with ESMTP
-	id S261547AbTHYGeA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 25 Aug 2003 02:34:00 -0400
+Received: from ns1.triode.net.au ([202.147.124.1]:33712 "EHLO
+	iggy.triode.net.au") by vger.kernel.org with ESMTP id S261484AbTHYHGE
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 25 Aug 2003 03:06:04 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: Rabeeh Khoury <rabeeh@il.marvell.com>
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: ballen@gravity.phys.uwm.edu
 
+A recent test of smartmontools on lk 2.6.0-test4 failed
+miserably on my main SCSI disk. It would seem that
+attempts to use either the:
+    SCSI_IOCTL_SEND_COMMAND
+    SG_IO
+ioctls on a mounted SCSI "block" device fail with EBUSY.
+These ioctls work fine on devices that don't have mounted
+file systems on then. If this is a new policy then it needs
+to be reconsidered. smartmontools still works ok on ATA disks
+in lk 2.6.0-test4.
 
-It's better to avoid any schedule in queuecommand.
-First, the io_request_lock is held (irqsave) when your queuecommand
-routine is called. Second, queuecommand is called from scsi_request_fn,
-which is usually executed when completed SCSI command are processed,
-which is done in a bottom half.
-This applies to 2.4, and I suspect 2.6 is similar in that regard.
+Both the ioctls in question still work via the corresponding
+scsi generic device. Will scsi generic devices make a
+re-appearance in sysfs (as indicated by Christoph when the
+relevant code in sg was removed)?
 
-Martin
-
-Rabeeh Khoury <rabeeh@il.marvell.com>@vger.kernel.org on 24/08/2003
-19:46:02
-
-Sent by:    linux-scsi-owner@vger.kernel.org
-
-
-To:    linux-scsi@vger.kernel.org
-cc:
-Subject:    queuecommand called in IRQ run level
-
-
-Hi All,
-
-Is it possible that queuecommand be called in ISR time ? (IRQ run level)
-I want to do kmalloc with GFP_KERNEL priority in queuecommand (or
-actually pci_pool_alloc which eventually will call kmalloc in pool
-getting low in memory).
-
-Thank you,
-Rabeeh
-
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
-
+Doug Gilbert
 
