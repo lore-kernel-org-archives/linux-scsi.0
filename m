@@ -1,32 +1,30 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: Re: [Iscsitarget-devel] Re: [ANNOUNCE] iSCSI enterprise target
-	software
-Date: Tue, 01 Mar 2005 20:23:18 +0900
-Message-ID: <20050301202318M.fujita.tomonori@lab.ntt.co.jp>
-References: <20050301192257C.fujita.tomonori@lab.ntt.co.jp>
-	<1109673220.6293.78.camel@laptopd505.fenrus.org>
-	<1109673993.6293.80.camel@laptopd505.fenrus.org>
+From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
+Subject: RE: [2.6 patch] SCSI: possible cleanups
+Date: Tue, 1 Mar 2005 07:36:15 -0500
+Message-ID: <60807403EABEB443939A5A7AA8A7458BD63E10@otce2k01.adaptec.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Received: from tama5.ecl.ntt.co.jp ([129.60.39.102]:51345 "EHLO
-	tama5.ecl.ntt.co.jp") by vger.kernel.org with ESMTP id S261875AbVCALXa
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Received: from magic.adaptec.com ([216.52.22.17]:7104 "EHLO magic.adaptec.com")
+	by vger.kernel.org with ESMTP id S261887AbVCAMgT convert rfc822-to-8bit
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 1 Mar 2005 06:23:30 -0500
-In-Reply-To: <1109673993.6293.80.camel@laptopd505.fenrus.org>
+	Tue, 1 Mar 2005 07:36:19 -0500
+content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: arjan@infradead.org
-Cc: linux-scsi@vger.kernel.org, iscsitarget-devel@lists.sourceforge.net
+To: Christoph Hellwig <hch@infradead.org>, Adrian Bunk <bunk@stusta.de>
+Cc: James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Mark Haverkamp <markh@osdl.org>
 
-From: Arjan van de Ven <arjan@infradead.org>
-Subject: Re: [Iscsitarget-devel] Re: [ANNOUNCE] iSCSI enterprise target	software
-Date: Tue, 01 Mar 2005 11:46:32 +0100
+Christoph Hellwig writes:
+>>   - scsi_scan.c: scsi_rescan_device
+>aacraid was going to use that one, Mark, any chance to get a patch
+anytime soon?
+>>   - scsi_scan.c: scsi_scan_single_target
+>as mentioned above we'll need this one soon.
 
-> note that on 32 bit servers the kernel side needs to do kmap() on the
-> pages anyway, and that a kmap/kunmap series is very much equivalent to a
-> mmap/munmap series in lots of ways, so I doubt that has many additional
-> savings for doing it in kernel space.
+Yup, we use both of them in our branch of the driver. I submit a patch
+to MarkH for the Hot-Add calls soon.
 
-The code uses the vfs interface, kmap_atomic() is used instead of
-kmap(). kmap_atomic() is much faster kmap().
+Sincerely -- Mark Salyzyn
+
