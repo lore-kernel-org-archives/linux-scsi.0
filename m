@@ -1,2012 +1,1111 @@
 From: Luben Tuikov <luben_tuikov@adaptec.com>
-Subject: [patch 21/28] Sync up drivers/scsi/aic7xxx
-Date: Tue, 28 Sep 2004 09:07:12 -0400
+Subject: [patch 22/28] Sync up drivers/scsi/aic7xxx
+Date: Tue, 28 Sep 2004 09:07:21 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <41596200.3070408@adaptec.com>
+Message-ID: <41596209.6040209@adaptec.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from magic.adaptec.com ([216.52.22.17]:25803 "EHLO magic.adaptec.com")
-	by vger.kernel.org with ESMTP id S267767AbUI1NHV (ORCPT
+Received: from magic.adaptec.com ([216.52.22.17]:32971 "EHLO magic.adaptec.com")
+	by vger.kernel.org with ESMTP id S267769AbUI1NH3 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 28 Sep 2004 09:07:21 -0400
+	Tue, 28 Sep 2004 09:07:29 -0400
 Received: from redfish.adaptec.com (redfish.adaptec.com [162.62.50.11])
-	by magic.adaptec.com (8.11.6/8.11.6) with ESMTP id i8SD7KW03211
-	for <linux-scsi@vger.kernel.org>; Tue, 28 Sep 2004 06:07:20 -0700
+	by magic.adaptec.com (8.11.6/8.11.6) with ESMTP id i8SD7SW03276
+	for <linux-scsi@vger.kernel.org>; Tue, 28 Sep 2004 06:07:28 -0700
 Received: from rtpe2k01.adaptec.com (rtpe2k01.adaptec.com [10.110.12.40])
-	by redfish.adaptec.com (8.11.6/8.11.6) with ESMTP id i8SD7Jm31327
-	for <linux-scsi@vger.kernel.org>; Tue, 28 Sep 2004 06:07:20 -0700
+	by redfish.adaptec.com (8.11.6/8.11.6) with ESMTP id i8SD7Sm31343
+	for <linux-scsi@vger.kernel.org>; Tue, 28 Sep 2004 06:07:28 -0700
 List-Id: linux-scsi@vger.kernel.org
 To: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-Sync up drivers/scsi/aic7xxx/. (2666-2686)
+Sync up drivers/scsi/aic7xxx/. (2686-2789)
 
 Signed-off-by: Luben Tuikov <luben_tuikov@adaptec.com>
 
-==== //depot/aic7xxx/linux/drivers/scsi/aic7xxx/aic7770_osm.c#17 - /home/luben/projects/linux/2.6/linux-2.5/drivers/scsi/aic7xxx/aic7770_osm.c ====
---- /tmp/tmp.27107.0	2004-09-27 13:34:45.180880784 -0400
-+++ /home/luben/projects/linux/2.6/linux-2.5/drivers/scsi/aic7xxx/aic7770_osm.c	2004-01-29 19:42:56.000000000 -0500
-@@ -36,7 +36,7 @@
-   * IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-   * POSSIBILITY OF SUCH DAMAGES.
-   *
-- * $Id: //depot/aic7xxx/linux/drivers/scsi/aic7xxx/aic7770_osm.c#17 $
-+ * $Id: //depot/aic7xxx/linux/drivers/scsi/aic7xxx/aic7770_osm.c#19 $
-   */
+==== //depot/linux-aic79xx-2.5.0/drivers/scsi/aic7xxx/Kconfig.aic79xx#4 - /home/luben/projects/linux/2.6/linux-2.5/drivers/scsi/aic7xxx/Kconfig.aic79xx ====
+--- /tmp/tmp.27147.0	2004-09-27 13:35:28.007370168 -0400
++++ /home/luben/projects/linux/2.6/linux-2.5/drivers/scsi/aic7xxx/Kconfig.aic79xx	2004-02-09 12:10:50.000000000 -0500
+@@ -1,10 +1,10 @@
+  #
+  # AIC79XX 2.5.X Kernel configuration File.
+-# $Id: //depot/linux-aic79xx-2.5.0/drivers/scsi/aic7xxx/Kconfig.aic79xx#4 $
++# $Id: //depot/linux-aic79xx-2.5.0/drivers/scsi/aic7xxx/Kconfig.aic79xx#5 $
+  #
+  config SCSI_AIC79XX
+  	tristate "Adaptec AIC79xx U320 support"
+-	depends on PCI
++	depends on PCI && SCSI
+  	help
+  	This driver supports all of Adaptec's Ultra 320 PCI-X
+  	based SCSI controllers.
+==== //depot/linux-aic79xx-2.5.0/drivers/scsi/aic7xxx/Kconfig.aic7xxx#8 - /home/luben/projects/linux/2.6/linux-2.5/drivers/scsi/aic7xxx/Kconfig.aic7xxx ====
+--- /tmp/tmp.27147.1	2004-09-27 13:35:28.047364088 -0400
++++ /home/luben/projects/linux/2.6/linux-2.5/drivers/scsi/aic7xxx/Kconfig.aic7xxx	2004-02-09 12:10:57.000000000 -0500
+@@ -1,10 +1,10 @@
+  #
+  # AIC7XXX and AIC79XX 2.5.X Kernel configuration File.
+-# $Id: //depot/linux-aic79xx-2.5.0/drivers/scsi/aic7xxx/Kconfig.aic7xxx#8 $
++# $Id: //depot/linux-aic79xx-2.5.0/drivers/scsi/aic7xxx/Kconfig.aic7xxx#9 $
+  #
+  config SCSI_AIC7XXX
+  	tristate "Adaptec AIC7xxx Fast -> U160 support (New Driver)"
+-	depends on PCI || EISA
++	depends on (PCI || EISA) && SCSI
+  	---help---
+  	This driver supports all of Adaptec's Fast through Ultra 160 PCI
+  	based SCSI controllers as well as the aic7770 based EISA and VLB
+==== //depot/linux-aic79xx-2.5.0/drivers/scsi/aic7xxx/Makefile#8 - /home/luben/projects/linux/2.6/linux-2.5/drivers/scsi/aic7xxx/Makefile ====
+--- /tmp/tmp.27147.2	2004-09-27 13:35:28.051363480 -0400
++++ /home/luben/projects/linux/2.6/linux-2.5/drivers/scsi/aic7xxx/Makefile	2004-02-09 17:52:19.000000000 -0500
+@@ -1,7 +1,7 @@
+  #
+  # Makefile for the Linux aic7xxx SCSI driver.
+  #
+-# $Id: //depot/linux-aic79xx-2.5.0/drivers/scsi/aic7xxx/Makefile#8 $
++# $Id: //depot/linux-aic79xx-2.5.0/drivers/scsi/aic7xxx/Makefile#9 $
+  #
 
-  #include "aic7xxx_osm.h"
-@@ -73,7 +73,7 @@
-  static int aic7770_linux_config(struct aic7770_identity *entry,
-  				aic7770_dev_t dev, u_int eisaBase);
-
--void
-+int
-  ahc_linux_eisa_init(void)
-  {
-  #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,5,0)
-@@ -82,7 +82,7 @@
-  	int i;
-
-  	if (aic7xxx_probe_eisa_vl == 0)
--		return;
-+		return (0);
-
-  	/*
-  	 * Linux requires the EISA IDs to be specified in
-@@ -93,7 +93,7 @@
-  					 (ahc_num_aic7770_devs + 1),
-  					 M_DEVBUF, M_NOWAIT);
-  	if (aic7770_driver.id_table == NULL)
--		return;
-+		return (-ENOMEM);
-
-  	for (eid = (struct eisa_device_id *)aic7770_driver.id_table,
-  	     id = aic7770_ident_table, i = 0;
-@@ -109,7 +109,7 @@
-  	}
-  	eid->sig[0] = 0;
-
--	eisa_driver_register(&aic7770_driver);
-+	return (eisa_driver_register(&aic7770_driver));
-  #else /* LINUX_VERSION_CODE < KERNEL_VERSION(2,5,0) */
-  	struct aic7770_identity *entry;
-  	u_int  slot;
-@@ -117,7 +117,7 @@
-  	u_int  i;
-
-  	if (aic7xxx_probe_eisa_vl == 0)
--		return;
-+		return (0);
-
-  	eisaBase = 0x1000 + AHC_EISA_SLOT_OFFSET;
-  	for (slot = 1; slot < NUMSLOTS; eisaBase+=0x1000, slot++) {
-@@ -143,6 +143,7 @@
-  		if (entry != NULL)
-  			aic7770_linux_config(entry, NULL, eisaBase);
-  	}
-+	return (0);
-  #endif
-  }
-
-@@ -185,6 +186,13 @@
-  		return (ENOMEM);
-  	}
-  	ahc->dev_softc = dev;
-+	if (aic_set_dma_mask(ahc, 0xFFFFFFFF) != 0
-+       /*|| aic_set_consistent_dma_mask(ahc, 0xFFFFFFFF) != 0 */) {
-+		printk(KERN_WARNING "aic7xxx: Unable to set DMA masks.\n");
-+		ahc_free(ahc);
-+		return (-ENOMEM);
-+	}
-+	ahc->platform_data->hw_dma_mask = 0xFFFFFFFF;
-  	error = aic7770_config(ahc, entry, eisaBase);
-  	if (error != 0) {
-  		ahc->bsh.ioport = 0;
-==== //depot/aic7xxx/aic7xxx/aic79xx.h#105 - /home/luben/projects/linux/2.6/linux-2.5/drivers/scsi/aic7xxx/aic79xx.h ====
---- /tmp/tmp.27107.1	2004-09-27 13:34:45.526828192 -0400
-+++ /home/luben/projects/linux/2.6/linux-2.5/drivers/scsi/aic7xxx/aic79xx.h	2004-01-29 20:13:27.000000000 -0500
+  # Let kbuild descend into aicasm when cleaning
+==== //depot/aic7xxx/aic7xxx/aic79xx.c#238 - /home/luben/projects/linux/2.6/linux-2.5/drivers/scsi/aic7xxx/aic79xx_core.c ====
+--- /tmp/tmp.27147.3	2004-09-27 13:35:29.495143992 -0400
++++ /home/luben/projects/linux/2.6/linux-2.5/drivers/scsi/aic7xxx/aic79xx_core.c	2004-02-12 15:11:43.000000000 -0500
 @@ -37,7 +37,7 @@
    * IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
    * POSSIBILITY OF SUCH DAMAGES.
    *
-- * $Id: //depot/aic7xxx/aic7xxx/aic79xx.h#105 $
-+ * $Id: //depot/aic7xxx/aic7xxx/aic79xx.h#106 $
-   *
-   * $FreeBSD$
-   */
-@@ -201,7 +201,7 @@
-  #define AHD_BUSRESET_DELAY	25
-
-  /******************* Chip Characteristics/Operating Settings  *****************/
--extern int ahd_attach_to_HostRAID_controllers;
-+extern uint32_t ahd_attach_to_HostRAID_controllers;
-
-  /*
-   * Chip Type
-==== //depot/aic7xxx/aic7xxx/aic79xx.seq#117 - /home/luben/projects/linux/2.6/linux-2.5/drivers/scsi/aic7xxx/aic79xx.seq ====
---- /tmp/tmp.27107.2	2004-09-27 13:34:45.866776512 -0400
-+++ /home/luben/projects/linux/2.6/linux-2.5/drivers/scsi/aic7xxx/aic79xx.seq	2004-01-29 23:57:25.000000000 -0500
-@@ -40,7 +40,7 @@
-   * $FreeBSD$
-   */
-
--VERSION = "$Id: //depot/aic7xxx/aic7xxx/aic79xx.seq#117 $"
-+VERSION = "$Id: //depot/aic7xxx/aic7xxx/aic79xx.seq#118 $"
-  PATCH_ARG_LIST = "struct ahd_softc *ahd"
-  PREFIX = "ahd_"
-
-@@ -409,7 +409,18 @@
-  	mov	CCSCBCTL, SINDEX ret;
-
-  setjmp:
--	bmov	LONGJMP_ADDR, STACK, 2 ret;
-+	/*
-+	 * At least on the A, a return in the same
-+	 * instruction as the bmov results in a return
-+	 * to the caller, not to the new address at the
-+	 * top of the stack.  Since we want the latter
-+	 * (we use setjmp to register a handler from an
-+	 * interrupt context but not invoke that handler
-+	 * until we return to our idle loop), use a
-+	 * separate ret instruction.
-+	 */
-+	bmov	LONGJMP_ADDR, STACK, 2;
-+	ret;
-  setjmp_inline:
-  	bmov	LONGJMP_ADDR, STACK, 2;
-  longjmp:
-==== //depot/aic7xxx/aic7xxx/aic79xx.c#236 - /home/luben/projects/linux/2.6/linux-2.5/drivers/scsi/aic7xxx/aic79xx_core.c ====
---- /tmp/tmp.27107.3	2004-09-27 13:34:47.176577392 -0400
-+++ /home/luben/projects/linux/2.6/linux-2.5/drivers/scsi/aic7xxx/aic79xx_core.c	2004-01-29 20:13:36.000000000 -0500
-@@ -37,7 +37,7 @@
-   * IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-   * POSSIBILITY OF SUCH DAMAGES.
-   *
-- * $Id: //depot/aic7xxx/aic7xxx/aic79xx.c#236 $
-+ * $Id: //depot/aic7xxx/aic7xxx/aic79xx.c#238 $
+- * $Id: //depot/aic7xxx/aic7xxx/aic79xx.c#238 $
++ * $Id: //depot/aic7xxx/aic7xxx/aic79xx.c#239 $
    */
 
   #ifdef __linux__
-@@ -54,7 +54,7 @@
-
-  /******************************** Globals *************************************/
-  struct ahd_softc_tailq ahd_tailq = TAILQ_HEAD_INITIALIZER(ahd_tailq);
--int ahd_attach_to_HostRAID_controllers = 1;
-+uint32_t ahd_attach_to_HostRAID_controllers = 1;
-
-  /***************************** Lookup Tables **********************************/
-  char *ahd_chip_names[] =
-@@ -6013,6 +6013,22 @@
-  		hscb = (struct hardware_scb *)hscb_map->vaddr;
-  		hscb_busaddr = hscb_map->busaddr;
-  		scb_data->scbs_left = PAGE_SIZE / sizeof(*hscb);
-+		if (ahd->next_queued_hscb == NULL) {
-+			/*
-+			 * We need one HSCB to serve as the "next HSCB".  Since
-+			 * the tag identifier in this HSCB will never be used,
-+			 * there is no point in using a valid SCB from the
-+			 * free pool for it.  So, we allocate this "sentinel"
-+			 * specially.
-+	 		 */
-+			ahd->next_queued_hscb = hscb;
-+			ahd->next_queued_hscb_map = hscb_map;
-+			memset(hscb, 0, sizeof(*hscb));
-+			hscb->hscb_busaddr = aic_htole32(hscb_busaddr);
-+			hscb++;
-+			hscb_busaddr += sizeof(*hscb);
-+			scb_data->scbs_left--;
-+		}
-  	}
-
-  	if (scb_data->sgs_left != 0) {
-@@ -6096,12 +6112,12 @@
-  	scb_data->scbs_left -= newcount;
-  	scb_data->sgs_left -= newcount;
-  	for (i = 0; i < newcount; i++) {
--		u_int col_tag;
--
-  		struct scb_platform_data *pdata;
-+		u_int col_tag;
-  #ifndef __linux__
-  		int error;
-  #endif
+@@ -338,6 +338,14 @@
+  	ahd_outb(ahd, SCSISEQ1,
+  		 ahd_inb(ahd, SCSISEQ_TEMPLATE) & (ENSELI|ENRSELI|ENAUTOATNP));
+  	ahd_set_modes(ahd, AHD_MODE_CCHAN, AHD_MODE_CCHAN);
 +
-  		next_scb = (struct scb *)malloc(sizeof(*next_scb),
-  						M_DEVBUF, M_NOWAIT);
-  		if (next_scb == NULL)
-@@ -6272,8 +6288,7 @@
-  	 * for the target mode role, we must additionally provide space for
-  	 * the incoming target command fifo.
-  	 */
--	driver_data_size = AHD_SCB_MAX * sizeof(*ahd->qoutfifo)
--			 + sizeof(struct hardware_scb);
-+	driver_data_size = AHD_SCB_MAX * sizeof(*ahd->qoutfifo);
-  	if ((ahd->features & AHD_TARGETMODE) != 0)
-  		driver_data_size += AHD_TMODE_CMDS * sizeof(struct target_cmd);
-  	if ((ahd->bugs & AHD_PKT_BITBUCKET_BUG) != 0)
-@@ -6323,17 +6338,6 @@
-  		next_baddr += PKT_OVERRUN_BUFSIZE;
-  	}
-
--	/*
--	 * We need one SCB to serve as the "next SCB".  Since the
--	 * tag identifier in this SCB will never be used, there is
--	 * no point in using a valid HSCB tag from an SCB pulled from
--	 * the standard free pool.  So, we allocate this "sentinel"
--	 * specially from the DMA safe memory chunk used for the QOUTFIFO.
--	 */
--	ahd->next_queued_hscb = (struct hardware_scb *)next_vaddr;
--	ahd->next_queued_hscb_map = &ahd->shared_data_map;
--	ahd->next_queued_hscb->hscb_busaddr = aic_htole32(next_baddr);
--
-  	ahd->init_level++;
-
-  	/* Allocate SCB data now that buffer_dmat is initialized */
-==== //depot/aic7xxx/linux/drivers/scsi/aic7xxx/aic79xx_osm.c#198 - /home/luben/projects/linux/2.6/linux-2.5/drivers/scsi/aic7xxx/aic79xx_osm.c ====
---- /tmp/tmp.27107.4	2004-09-27 13:34:47.743491208 -0400
-+++ /home/luben/projects/linux/2.6/linux-2.5/drivers/scsi/aic7xxx/aic79xx_osm.c	2004-01-29 20:14:29.000000000 -0500
++	/*
++	 * Clear any pending sequencer interrupt.  It is no
++	 * longer relevant since we're resetting the Program
++	 * Counter.
++	 */
++	ahd_outb(ahd, CLRINT, CLRSEQINT);
++
+  	ahd_outb(ahd, SEQCTL0, FASTMODE|SEQRESET);
+  	ahd_unpause(ahd);
+  }
+==== //depot/aic7xxx/linux/drivers/scsi/aic7xxx/aic79xx_osm.c#200 - /home/luben/projects/linux/2.6/linux-2.5/drivers/scsi/aic7xxx/aic79xx_osm.c ====
+--- /tmp/tmp.27147.4	2004-09-27 13:35:30.097052488 -0400
++++ /home/luben/projects/linux/2.6/linux-2.5/drivers/scsi/aic7xxx/aic79xx_osm.c	2004-02-22 13:26:49.000000000 -0500
 @@ -1,7 +1,7 @@
   /*
    * Adaptec AIC79xx device driver for Linux.
    *
-- * $Id: //depot/aic7xxx/linux/drivers/scsi/aic7xxx/aic79xx_osm.c#198 $
-+ * $Id: //depot/aic7xxx/linux/drivers/scsi/aic7xxx/aic79xx_osm.c#200 $
+- * $Id: //depot/aic7xxx/linux/drivers/scsi/aic7xxx/aic79xx_osm.c#200 $
++ * $Id: //depot/aic7xxx/linux/drivers/scsi/aic7xxx/aic79xx_osm.c#205 $
    *
    * --------------------------------------------------------------------------
    * Copyright (c) 1994-2000 Justin T. Gibbs.
-@@ -70,6 +70,12 @@
-
-  static int ahd_sysrq_key;
-
-+/***************************** Global Data ************************************/
-+/*
-+ * Driver Initialization Status.  Used by ahd_linux_exit().
-+ */
-+int ahd_init_status;
-+
-  /*
-   * Lock protecting manipulation of the ahd softc list.
-   */
-@@ -433,6 +439,7 @@
-  MODULE_PARM_DESC(aic79xx,
-  "period delimited, options string.\n"
-  "	verbose			Enable verbose/diagnostic logging\n"
-+"	attach_HostRAID:<int>	Attach to controllers in HostRAID mode\n"
-  "	allow_memio		Allow device registers to be memory mapped\n"
-  "	debug			Bitmask of debug values to enable\n"
-  "	no_reset		Supress initial bus resets\n"
-@@ -472,6 +479,8 @@
-  					 Scsi_Cmnd *cmd);
+@@ -480,8 +480,9 @@
   static void ahd_linux_filter_inquiry(struct ahd_softc *ahd,
   				     struct ahd_devinfo *devinfo);
-+static int __init ahd_linux_init(void);
-+static void __exit ahd_linux_exit(void);
+  static int __init ahd_linux_init(void);
+-static void __exit ahd_linux_exit(void);
++static void ahd_linux_exit(void);
   static void ahd_linux_dev_timed_unfreeze(u_long arg);
++static void ahd_linux_targ_timed_unfreeze(u_long arg);
   static void ahd_linux_sem_timeout(u_long arg);
   static void ahd_linux_initialize_scsi_bus(struct ahd_softc *ahd);
-@@ -918,6 +927,7 @@
-  	 */
-  	spin_unlock_irq(&io_request_lock);
-  #endif
-+	found = 0;
-
-  	/*
-  	 * Sanity checking of Linux SCSI data structures so
-@@ -928,7 +938,8 @@
-  	  > offsetof(struct scsi_cmnd, host_scribble)) {
-  		printf("ahd_linux_detect: SCSI data structures changed.\n");
-  		printf("ahd_linux_detect: Unable to attach\n");
--		return (0);
-+		ahd_init_status = -EINVAL;
-+		goto done;
-  	}
-  	/*
-  	 * Determine an appropriate size for our Scatter Gatther lists.
-@@ -957,7 +968,9 @@
-  	ahd_list_lockinit();
-
-  #ifdef CONFIG_PCI
--	ahd_linux_pci_init();
-+	ahd_init_status = ahd_linux_pci_init();
-+	if (ahd_init_status != 0)
-+		goto done;
-  #endif
-
-  	/*
-@@ -970,6 +983,7 @@
-  		if (ahd_linux_register_host(ahd, template) == 0)
-  			found++;
-  	}
-+done:
-  #if LINUX_VERSION_CODE < KERNEL_VERSION(2,5,0)
-  	spin_lock_irq(&io_request_lock);
-  #endif
-@@ -1887,6 +1901,7 @@
-  		{ "extended", &aic79xx_extended },
-  		{ "no_reset", &aic79xx_no_reset },
-  		{ "verbose", &aic79xx_verbose },
-+		{ "attach_HostRAID", &ahd_attach_to_HostRAID_controllers },
-  		{ "allow_memio", &aic79xx_allow_memio},
-  #ifdef AHD_DEBUG
-  		{ "debug", &ahd_debug },
-@@ -5071,18 +5086,28 @@
-  static int __init
-  ahd_linux_init(void)
-  {
-+	int	found;
-+
-  #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,5,0)
--       return (ahd_linux_detect(&aic79xx_driver_template) ? 0 : -ENODEV);
-+	found = ahd_linux_detect(&aic79xx_driver_template);
-  #else
-  	scsi_register_module(MODULE_SCSI_HA, &aic79xx_driver_template);
--	if (aic79xx_driver_template.present == 0) {
--		scsi_unregister_module(MODULE_SCSI_HA,
--				       &aic79xx_driver_template);
--		return (-ENODEV);
--	}
--
--	return (0);
-+	found = aic79xx_driver_template.present;
-+#endif
-+#ifdef MODULE
-+	if (found == 0)
-+		ahd_init_status = -ENODEV;
-  #endif
-+	if (ahd_init_status != 0) {
+  static void ahd_linux_size_nseg(void);
+@@ -1101,6 +1102,17 @@
+  		printf("%s: aic79xx_linux_queue - Unable to allocate device!\n",
+  		       ahd_name(ahd));
+  		return (0);
++	} else if ((dev->flags & AIC_DEV_UNCONFIGURED) != 0
++		&& cmd->device->type != -1) {
 +		/*
-+		 * Linux will only call our exit
-+		 * routine if our init function
-+		 * returns 0 status.  Force cleanup
-+		 * if initialization is not successful.
++		 * Configure devices that have already successfully
++		 * completed an inquiry. This  handles the case of
++		 * devices being destroyed due to transient selection
++		 * timeouts.
 +		 */
-+		ahd_linux_exit();
-+	}
-+	return (ahd_init_status);
++		dev->flags &= ~AIC_DEV_UNCONFIGURED;
++	 	dev->scsi_device = cmd->device;
++		aic_linux_device_queue_depth(ahd, dev);
+  	}
+
+  	if (cmd->cmd_len > MAX_CDB_LEN) {
+@@ -2026,7 +2038,6 @@
+  	ahd_linux_setup_user_rd_strm_settings(ahd);
+  	ahd_linux_initialize_scsi_bus(ahd);
+  	ahd_unlock(ahd, &s);
+-	ahd_sysrq_key = aic_install_sysrq(&ahd_sysrq_op);
+  	ahd_spawn_recovery_thread(ahd);
+  	if (ahd->platform_data->recovery_pid < 0) {
+  		printf("%s: Failed to create recovery thread, error= %d\n",
+@@ -2190,7 +2201,6 @@
+  	struct aic_linux_device *dev;
+  	int i, j;
+
+-	aic_remove_sysrq(ahd_sysrq_key, &ahd_sysrq_op);
+  	if (ahd->platform_data != NULL) {
+  		del_timer_sync(&ahd->platform_data->completeq_timer);
+  		ahd_linux_kill_dv_thread(ahd);
+@@ -2208,7 +2218,19 @@
+  		for (i = 0; i < AHD_NUM_TARGETS; i++) {
+  			targ = ahd->platform_data->targets[i];
+  			if (targ != NULL) {
+-				/* Keep target around through the loop. */
++
++				/*
++				 * Stop any unfreeze timer from running.
++				 */
++				del_timer_sync(&targ->timer);
++
++				/*
++				 * Keep target around through the loop.
++				 * The timer above may also have held
++				 * a refcount, but since we forcibly
++				 * delete the target, we don't care
++				 * about the extra reference.
++				 */
+  				targ->refcount++;
+  				for (j = 0; j < AHD_NUM_LUNS; j++) {
+
+@@ -3955,7 +3977,8 @@
+  		panic("running device on run list");
+
+  	while ((acmd = TAILQ_FIRST(&dev->busyq)) != NULL
+-	    && dev->openings > 0 && dev->qfrozen == 0) {
++	    && dev->openings > 0 && dev->qfrozen == 0
++	    && dev->target->qfrozen == 0) {
+
+  		/*
+  		 * Schedule us to run later.  The only reason we are not
+@@ -4170,6 +4193,7 @@
+  	targ->target = target;
+  	targ->softc = ahd;
+  	targ->flags = AIC_DV_REQUIRED;
++	init_timer(&targ->timer);
+  	ahd->platform_data->targets[target] = targ;
+  	return (targ);
+  }
+@@ -4250,7 +4274,6 @@
+  {
+  	struct aic_linux_target *targ;
+
+-	del_timer(&dev->timer);
+  	targ = dev->target;
+  	targ->devices[dev->lun] = NULL;
+  	free(dev, M_DEVBUF);
+@@ -4325,7 +4348,10 @@
+  	}
+          case AC_SENT_BDR:
+  	{
++		struct	aic_linux_target *targ;
++		int	target_offset;
+  #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,5,0)
++
+  		WARN_ON(lun != CAM_LUN_WILDCARD);
+  		scsi_report_device_reset(ahd->platform_data->host,
+  					 channel - 'A', target);
+@@ -4347,6 +4373,36 @@
+  			}
+  		}
+  #endif
++		/*
++		 * Freeze the target for a 500ms to give the
++		 * target some time to recover from this BDR.
++		 */
++		target_offset = target;
++		if (channel == 'B')
++			target_offset += 8;
++		targ = ahd->platform_data->targets[target_offset];
++		if (targ == NULL)
++			break;
++		if ((targ->flags & AIC_TARG_TIMER_ACTIVE) != 0) {
++			printf("%s:%c:%d: Target Timer still active during "
++			       "BDR processing\n", ahd_name(ahd),
++				targ->channel, targ->target);
++			break;
++		}
++		/*
++		 * Keep the reference count non-zero during
++		 * the lifetime of the timer.  This
++		 * guarantees that the target will not
++		 * be freed before our timer executes.
++		 */
++		targ->refcount++;
++		targ->flags |= AIC_TARG_TIMER_ACTIVE;
++		targ->qfrozen++;
++		init_timer(&targ->timer);
++		targ->timer.data = (u_long)targ;
++		targ->timer.expires = jiffies + (HZ/2);
++		targ->timer.function = ahd_linux_targ_timed_unfreeze;
++		add_timer(&targ->timer);
+  		break;
+  	}
+          case AC_BUS_RESET:
+@@ -4454,7 +4510,33 @@
+  	} else if (aic_get_transaction_status(scb) == CAM_SCSI_STATUS_ERROR) {
+  		ahd_linux_handle_scsi_status(ahd, dev, scb);
+  	} else if (aic_get_transaction_status(scb) == CAM_SEL_TIMEOUT) {
+-		dev->flags |= AIC_DEV_UNCONFIGURED;
++		struct aic_linux_target *targ;
++		struct aic_linux_device *cur_dev;
++		int i;
++
++		/*
++		 * Mark all devices linked off this target
++		 * as unconfigured.
++		 */
++		targ = dev->target;
++		for (i = 0; i < AHD_NUM_LUNS; i++) {
++
++			if (targ->devices[i] == NULL)
++				continue;
++			cur_dev = targ->devices[i];
++			cur_dev->flags |= AIC_DEV_UNCONFIGURED;
++
++			/*
++			 * Don't free the dev for this
++			 * command prematurely.
++			 */
++			if (cur_dev == dev)
++				continue;
++
++			if (TAILQ_EMPTY(&cur_dev->busyq)
++			 && dev->active == 0)
++				ahd_linux_free_device(ahd, cur_dev);
++		}
+  		if (AIC_DV_CMD(cmd) == FALSE)
+  			dev->target->flags &= ~AIC_DV_REQUIRED;
+  	}
+@@ -4719,8 +4801,15 @@
+  				dev->target->channel, dev->target->target);
+  			break;
+  		}
+-		dev->flags |= AIC_DEV_TIMER_ACTIVE;
+  		dev->qfrozen++;
++		/*
++		 * Keep the active count non-zero during
++		 * the lifetime of the timer.  This
++		 * guarantees that the device will not
++		 * be freed before our timer executes.
++		 */
++		dev->active++;
++		dev->flags |= AIC_DEV_TIMER_ACTIVE;
+  		init_timer(&dev->timer);
+  		dev->timer.data = (u_long)dev;
+  		dev->timer.expires = jiffies + (HZ/2);
+@@ -5030,10 +5119,17 @@
+  	dev = (struct aic_linux_device *)arg;
+  	ahd = dev->target->softc;
+  	ahd_lock(ahd, &s);
++
++	/*
++	 * Release our hold on the device.
++	 */
+  	dev->flags &= ~AIC_DEV_TIMER_ACTIVE;
++	dev->active--;
++
+  	if (dev->qfrozen > 0)
+  		dev->qfrozen--;
+  	if (dev->qfrozen == 0
++	 && dev->target->qfrozen == 0
+  	 && (dev->flags & AIC_DEV_ON_RUN_LIST) == 0)
+  		ahd_linux_run_device_queue(ahd, dev);
+  	if ((dev->flags & AIC_DEV_UNCONFIGURED) != 0
+@@ -5043,6 +5139,42 @@
+  	ahd_unlock(ahd, &s);
   }
 
-  static void __exit
-==== //depot/aic7xxx/linux/drivers/scsi/aic7xxx/aic79xx_osm.h#155 - /home/luben/projects/linux/2.6/linux-2.5/drivers/scsi/aic7xxx/aic79xx_osm.h ====
---- /tmp/tmp.27107.5	2004-09-27 13:34:47.765487864 -0400
-+++ /home/luben/projects/linux/2.6/linux-2.5/drivers/scsi/aic7xxx/aic79xx_osm.h	2004-01-29 19:03:42.000000000 -0500
++static void
++ahd_linux_targ_timed_unfreeze(u_long arg)
++{
++	struct aic_linux_target *targ;
++	struct ahd_softc *ahd;
++	u_long s;
++
++	targ = (struct aic_linux_target *)arg;
++	ahd = targ->softc;
++	ahd_lock(ahd, &s);
++
++	/*
++	 * Release our hold on the target.
++	 */
++	targ->flags &= ~AIC_TARG_TIMER_ACTIVE;
++	targ->refcount--;
++
++	if (targ->qfrozen > 0)
++		targ->qfrozen--;
++	if (targ->qfrozen == 0) {
++		u_int i;
++
++		for (i = 0; i < AHD_NUM_LUNS; i++) {
++			struct aic_linux_device *dev;
++		
++			dev = targ->devices[i];
++			if (dev == NULL
++	 		 || (dev->flags & AIC_DEV_ON_RUN_LIST) != 0)
++				continue;
++
++			aic_linux_check_device_queue(ahd, dev);
++		}
++	}
++	ahd_unlock(ahd, &s);
++}
++
+  void
+  ahd_platform_dump_card_state(struct ahd_softc *ahd)
+  {
+@@ -5088,6 +5220,8 @@
+  {
+  	int	found;
+
++	ahd_sysrq_key = aic_install_sysrq(&ahd_sysrq_op);
++
+  #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,5,0)
+  	found = ahd_linux_detect(&aic79xx_driver_template);
+  #else
+@@ -5100,17 +5234,17 @@
+  #endif
+  	if (ahd_init_status != 0) {
+  		/*
+-		 * Linux will only call our exit
+-		 * routine if our init function
+-		 * returns 0 status.  Force cleanup
+-		 * if initialization is not successful.
++		 * Linux will not call our exit
++		 * routine if we fail to load.
++		 * Force cleanup if initialization
++		 * is not successful.
+  		 */
+  		ahd_linux_exit();
+  	}
+  	return (ahd_init_status);
+  }
+
+-static void __exit
++static void
+  ahd_linux_exit(void)
+  {
+  	struct ahd_softc *ahd;
+@@ -5135,6 +5269,8 @@
+  	scsi_unregister_module(MODULE_SCSI_HA, &aic79xx_driver_template);
+  #endif
+  	ahd_linux_pci_exit();
++
++	aic_remove_sysrq(ahd_sysrq_key, &ahd_sysrq_op);
+  }
+
+  module_init(ahd_linux_init);
+==== //depot/aic7xxx/linux/drivers/scsi/aic7xxx/aic79xx_osm.h#156 - /home/luben/projects/linux/2.6/linux-2.5/drivers/scsi/aic7xxx/aic79xx_osm.h ====
+--- /tmp/tmp.27147.5	2004-09-27 13:35:30.145045192 -0400
++++ /home/luben/projects/linux/2.6/linux-2.5/drivers/scsi/aic7xxx/aic79xx_osm.h	2004-02-04 17:38:21.000000000 -0500
 @@ -36,7 +36,7 @@
    * IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
    * POSSIBILITY OF SUCH DAMAGES.
    *
-- * $Id: //depot/aic7xxx/linux/drivers/scsi/aic7xxx/aic79xx_osm.h#155 $
-+ * $Id: //depot/aic7xxx/linux/drivers/scsi/aic7xxx/aic79xx_osm.h#156 $
+- * $Id: //depot/aic7xxx/linux/drivers/scsi/aic7xxx/aic79xx_osm.h#156 $
++ * $Id: //depot/aic7xxx/linux/drivers/scsi/aic7xxx/aic79xx_osm.h#157 $
    *
    */
   #ifndef _AIC79XX_LINUX_H_
-@@ -228,6 +228,7 @@
-  }
+@@ -94,7 +94,7 @@
+  #include <linux/smp.h>
+  #endif
 
-  /**************************** Initialization **********************************/
-+extern int	ahd_init_status;
-  int		ahd_linux_register_host(struct ahd_softc *,
-  					Scsi_Host_Template *);
+-#define AIC79XX_DRIVER_VERSION "2.0.5"
++#define AIC79XX_DRIVER_VERSION "2.0.6"
 
-==== //depot/aic7xxx/linux/drivers/scsi/aic7xxx/aic79xx_osm_pci.c#30 - /home/luben/projects/linux/2.6/linux-2.5/drivers/scsi/aic7xxx/aic79xx_osm_pci.c ====
---- /tmp/tmp.27107.6	2004-09-27 13:34:47.820479504 -0400
-+++ /home/luben/projects/linux/2.6/linux-2.5/drivers/scsi/aic7xxx/aic79xx_osm_pci.c	2004-01-29 18:08:04.000000000 -0500
-@@ -36,7 +36,7 @@
+  /********************* Definitions Required by the Core ***********************/
+  /*
+==== //depot/aic7xxx/aic7xxx/aic7xxx.c#148 - /home/luben/projects/linux/2.6/linux-2.5/drivers/scsi/aic7xxx/aic7xxx_core.c ====
+--- /tmp/tmp.27147.6	2004-09-27 13:35:30.998915384 -0400
++++ /home/luben/projects/linux/2.6/linux-2.5/drivers/scsi/aic7xxx/aic7xxx_core.c	2004-02-19 16:52:54.000000000 -0500
+@@ -37,7 +37,7 @@
    * IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
    * POSSIBILITY OF SUCH DAMAGES.
    *
-- * $Id: //depot/aic7xxx/linux/drivers/scsi/aic7xxx/aic79xx_osm_pci.c#30 $
-+ * $Id: //depot/aic7xxx/linux/drivers/scsi/aic7xxx/aic79xx_osm_pci.c#33 $
-   */
-
-  #include "aic79xx_osm.h"
-@@ -48,6 +48,8 @@
-   */
-  #include "aiclib_pci.c"
-
-+static int	ahd_pci_module_registered;
-+
-  static int	ahd_linux_pci_dev_probe(struct pci_dev *pdev,
-  					const struct pci_device_id *ent);
-  static int	ahd_linux_pci_reserve_io_regions(struct ahd_softc *ahd,
-@@ -63,6 +65,10 @@
-  		0x9005, PCI_ANY_ID, PCI_ANY_ID, PCI_ANY_ID,
-  		PCI_CLASS_STORAGE_SCSI << 8, 0xFFFF00, 0
-  	},
-+	{
-+		0x9005, PCI_ANY_ID, PCI_ANY_ID, PCI_ANY_ID,
-+		PCI_CLASS_STORAGE_RAID << 8, 0xFFFF00, 0
-+	},
-  	{ 0 }
-  };
-
-@@ -155,6 +161,12 @@
-  	}
-  	pci_set_master(pdev);
-
-+	if (aic_set_consistent_dma_mask(ahd, 0xFFFFFFFF) != 0) {
-+		printk(KERN_WARNING "aic79xx: Unable to set"
-+		       "coherent DMA mask.\n");
-+		ahd_free(ahd);
-+		return (-ENOMEM);
-+	}
-  	if (sizeof(bus_addr_t) > 4) {
-  		uint64_t   memsize;
-  		bus_addr_t mask_64bit;
-@@ -173,7 +185,12 @@
-  			ahd->platform_data->hw_dma_mask = mask_39bit;
-  		}
-  	} else {
--		aic_set_dma_mask(ahd, 0xFFFFFFFF);
-+		if (aic_set_dma_mask(ahd, 0xFFFFFFFF) != 0) {
-+			printk(KERN_WARNING "aic79xx: Unable to set data "
-+			       "DMA mask.\n");
-+			ahd_free(ahd);
-+			return (-ENOMEM);
-+		}
-  		ahd->platform_data->hw_dma_mask = 0xFFFFFFFF;
-  	}
-  	error = ahd_pci_config(ahd, entry);
-@@ -197,13 +214,19 @@
-  int
-  ahd_linux_pci_init(void)
-  {
--	return (pci_module_init(&aic79xx_pci_driver));
-+	int error;
-+	
-+	error = pci_module_init(&aic79xx_pci_driver);
-+	if (error == 0)
-+		ahd_pci_module_registered = 1;
-+	return (error);
-  }
-
-  void
-  ahd_linux_pci_exit(void)
-  {
--	pci_unregister_driver(&aic79xx_pci_driver);
-+	if (ahd_pci_module_registered != 0)
-+		pci_unregister_driver(&aic79xx_pci_driver);
-  }
-
-  static int
-==== //depot/aic7xxx/aic7xxx/aic79xx_pci.c#85 - /home/luben/projects/linux/2.6/linux-2.5/drivers/scsi/aic7xxx/aic79xx_pci.c ====
---- /tmp/tmp.27107.7	2004-09-27 13:34:47.915465064 -0400
-+++ /home/luben/projects/linux/2.6/linux-2.5/drivers/scsi/aic7xxx/aic79xx_pci.c	2004-01-25 22:03:29.000000000 -0500
-@@ -38,7 +38,7 @@
-   * IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-   * POSSIBILITY OF SUCH DAMAGES.
-   *
-- * $Id: //depot/aic7xxx/aic7xxx/aic79xx_pci.c#85 $
-+ * $Id: //depot/aic7xxx/aic7xxx/aic79xx_pci.c#86 $
+- * $Id: //depot/aic7xxx/aic7xxx/aic7xxx.c#148 $
++ * $Id: //depot/aic7xxx/aic7xxx/aic7xxx.c#150 $
    */
 
   #ifdef __linux__
-@@ -65,10 +65,10 @@
+@@ -290,10 +290,19 @@
+  		ahc_outb(ahc, SEQ_FLAGS2,
+  			 ahc_inb(ahc, SEQ_FLAGS2) & ~SCB_DMA);
+  	}
++
++	/*
++	 * Clear any pending sequencer interrupt.  It is no
++	 * longer relevant since we're resetting the Program
++	 * Counter.
++	 */
++	ahc_outb(ahc, CLRINT, CLRSEQINT);
++
+  	ahc_outb(ahc, MWI_RESIDUAL, 0);
+  	ahc_outb(ahc, SEQCTL, ahc->seqctl);
+  	ahc_outb(ahc, SEQADDR0, 0);
+  	ahc_outb(ahc, SEQADDR1, 0);
++
+  	ahc_unpause(ahc);
   }
 
-  #define ID_ALL_MASK			0xFFFFFFFFFFFFFFFFull
--#define ID_ALL_IROC_MASK		0xFFFFFF7FFFFFFFFFull
-+#define ID_ALL_IROC_MASK		0xFF7FFFFFFFFFFFFFull
-  #define ID_DEV_VENDOR_MASK		0xFFFFFFFF00000000ull
-  #define ID_9005_GENERIC_MASK		0xFFF0FFFF00000000ull
--#define ID_9005_GENERIC_IROC_MASK	0xFFF0FF7F00000000ull
-+#define ID_9005_GENERIC_IROC_MASK	0xFF70FFFF00000000ull
-
-  #define ID_AIC7901			0x800F9005FFFF9005ull
-  #define ID_AHA_29320A			0x8000900500609005ull
-@@ -199,7 +199,7 @@
-  	},
-  	/* Generic chip probes for devices we don't know 'exactly' */
-  	{
--		ID_AIC7901 & ID_DEV_VENDOR_MASK,
-+		ID_AIC7901 & ID_9005_GENERIC_MASK,
-  		ID_DEV_VENDOR_MASK,
-  		"Adaptec AIC7901 Ultra320 SCSI adapter",
-  		ahd_aic7901_setup
-==== //depot/aic7xxx/linux/drivers/scsi/aic7xxx/aic79xx_reg.h#84 - /home/luben/projects/linux/2.6/linux-2.5/drivers/scsi/aic7xxx/aic79xx_reg.h_shipped ====
---- /tmp/tmp.27107.8	2004-09-27 13:34:48.374395296 -0400
-+++ /home/luben/projects/linux/2.6/linux-2.5/drivers/scsi/aic7xxx/aic79xx_reg.h_shipped	2004-01-29 23:51:04.000000000 -0500
-@@ -2,7 +2,7 @@
-   * DO NOT EDIT - This file is automatically generated
-   *		 from the following source files:
-   *
-- * $Id: //depot/aic7xxx/aic7xxx/aic79xx.seq#117 $
-+ * $Id: //depot/aic7xxx/aic7xxx/aic79xx.seq#118 $
-   * $Id: //depot/aic7xxx/aic7xxx/aic79xx.reg#75 $
-   */
-  typedef int (ahd_reg_print_t)(u_int, u_int *, u_int);
-@@ -3799,5 +3799,5 @@
-
-
-  /* Exported Labels */
--#define	LABEL_seq_isr 	0x282
--#define	LABEL_timer_isr	0x27e
-+#define	LABEL_seq_isr 	0x283
-+#define	LABEL_timer_isr	0x27f
-==== //depot/aic7xxx/linux/drivers/scsi/aic7xxx/aic79xx_reg_print.c#65 - /home/luben/projects/linux/2.6/linux-2.5/drivers/scsi/aic7xxx/aic79xx_reg_print.c_shipped ====
---- /tmp/tmp.27107.9	2004-09-27 13:34:49.337248920 -0400
-+++ /home/luben/projects/linux/2.6/linux-2.5/drivers/scsi/aic7xxx/aic79xx_reg_print.c_shipped	2004-01-29 23:51:04.000000000 -0500
-@@ -2,7 +2,7 @@
-   * DO NOT EDIT - This file is automatically generated
-   *		 from the following source files:
-   *
-- * $Id: //depot/aic7xxx/aic7xxx/aic79xx.seq#117 $
-+ * $Id: //depot/aic7xxx/aic7xxx/aic79xx.seq#118 $
-   * $Id: //depot/aic7xxx/aic7xxx/aic79xx.reg#75 $
-   */
-
-==== //depot/aic7xxx/linux/drivers/scsi/aic7xxx/aic79xx_seq.h#85 - /home/luben/projects/linux/2.6/linux-2.5/drivers/scsi/aic7xxx/aic79xx_seq.h_shipped ====
---- /tmp/tmp.27107.10	2004-09-27 13:34:49.497224600 -0400
-+++ /home/luben/projects/linux/2.6/linux-2.5/drivers/scsi/aic7xxx/aic79xx_seq.h_shipped	2004-01-29 23:51:04.000000000 -0500
-@@ -2,17 +2,17 @@
-   * DO NOT EDIT - This file is automatically generated
-   *		 from the following source files:
-   *
-- * $Id: //depot/aic7xxx/aic7xxx/aic79xx.seq#117 $
-+ * $Id: //depot/aic7xxx/aic7xxx/aic79xx.seq#118 $
-   * $Id: //depot/aic7xxx/aic7xxx/aic79xx.reg#75 $
-   */
-  static uint8_t seqprog[] = {
-  	0xff, 0x02, 0x06, 0x78,
--	0x00, 0xea, 0x5e, 0x59,
-+	0x00, 0xea, 0x60, 0x59,
-  	0x01, 0xea, 0x04, 0x30,
-  	0xff, 0x04, 0x0c, 0x78,
--	0x19, 0xea, 0x5e, 0x59,
-+	0x19, 0xea, 0x60, 0x59,
-  	0x19, 0xea, 0x04, 0x00,
--	0x33, 0xea, 0x58, 0x59,
-+	0x33, 0xea, 0x5a, 0x59,
-  	0x33, 0xea, 0x00, 0x00,
-  	0x60, 0x3a, 0x3a, 0x68,
-  	0x04, 0x4d, 0x35, 0x78,
-@@ -33,15 +33,15 @@
-  	0xff, 0xea, 0x62, 0x02,
-  	0x00, 0xe2, 0x3a, 0x40,
-  	0xff, 0x21, 0x3b, 0x70,
--	0x40, 0x4b, 0xa4, 0x69,
--	0x00, 0xe2, 0x62, 0x59,
--	0x40, 0x4b, 0xa4, 0x69,
--	0x20, 0x4b, 0x90, 0x69,
-+	0x40, 0x4b, 0xa6, 0x69,
-+	0x00, 0xe2, 0x64, 0x59,
-+	0x40, 0x4b, 0xa6, 0x69,
-+	0x20, 0x4b, 0x92, 0x69,
-  	0xfc, 0x42, 0x44, 0x78,
-  	0x10, 0x40, 0x44, 0x78,
--	0x00, 0xe2, 0xf6, 0x5d,
-+	0x00, 0xe2, 0xf8, 0x5d,
-  	0x20, 0x4d, 0x48, 0x78,
--	0x00, 0xe2, 0xf6, 0x5d,
-+	0x00, 0xe2, 0xf8, 0x5d,
-  	0x30, 0x3f, 0xc0, 0x09,
-  	0x30, 0xe0, 0x50, 0x60,
-  	0x7f, 0x4a, 0x94, 0x08,
-@@ -51,7 +51,7 @@
-  	0x00, 0xe2, 0x76, 0x58,
-  	0x00, 0xe2, 0x86, 0x58,
-  	0x00, 0xe2, 0x06, 0x40,
--	0x33, 0xea, 0x58, 0x59,
-+	0x33, 0xea, 0x5a, 0x59,
-  	0x33, 0xea, 0x00, 0x00,
-  	0x01, 0x52, 0x84, 0x78,
-  	0x02, 0x58, 0x50, 0x31,
-@@ -59,21 +59,21 @@
-  	0xff, 0x97, 0x6f, 0x78,
-  	0x50, 0x4b, 0x6a, 0x68,
-  	0xbf, 0x3a, 0x74, 0x08,
--	0x14, 0xea, 0x5e, 0x59,
-+	0x14, 0xea, 0x60, 0x59,
-  	0x14, 0xea, 0x04, 0x00,
-  	0x08, 0x92, 0x25, 0x03,
-  	0xff, 0x90, 0x5f, 0x68,
--	0x00, 0xe2, 0x70, 0x5b,
-+	0x00, 0xe2, 0x72, 0x5b,
-  	0x00, 0xe2, 0x5e, 0x40,
--	0x00, 0xea, 0x58, 0x59,
-+	0x00, 0xea, 0x5a, 0x59,
-  	0x01, 0xea, 0x00, 0x30,
-  	0x80, 0xf9, 0x7e, 0x68,
--	0x00, 0xe2, 0x56, 0x59,
--	0x11, 0xea, 0x58, 0x59,
-+	0x00, 0xe2, 0x58, 0x59,
-+	0x11, 0xea, 0x5a, 0x59,
-  	0x11, 0xea, 0x00, 0x00,
--	0x80, 0xf9, 0x56, 0x79,
-+	0x80, 0xf9, 0x58, 0x79,
-  	0xff, 0xea, 0xd4, 0x0d,
--	0x22, 0xea, 0x58, 0x59,
-+	0x22, 0xea, 0x5a, 0x59,
-  	0x22, 0xea, 0x00, 0x00,
-  	0x10, 0x16, 0x90, 0x78,
-  	0x10, 0x16, 0x2c, 0x00,
-@@ -175,7 +175,8 @@
-  	0x19, 0xea, 0x4e, 0x41,
-  	0x06, 0xea, 0x08, 0x81,
-  	0x01, 0xe2, 0x5a, 0x35,
--	0x02, 0xf2, 0xf0, 0x35,
-+	0x02, 0xf2, 0xf0, 0x31,
-+	0xff, 0xea, 0xd4, 0x0d,
-  	0x02, 0xf2, 0xf0, 0x31,
-  	0x02, 0xf8, 0xe4, 0x35,
-  	0x80, 0xea, 0xb2, 0x01,
-@@ -187,27 +188,27 @@
-  	0x02, 0x20, 0xb9, 0x30,
-  	0x02, 0x20, 0x51, 0x31,
-  	0x4c, 0x93, 0xd7, 0x28,
--	0x10, 0x92, 0x71, 0x79,
-+	0x10, 0x92, 0x73, 0x79,
-  	0x01, 0x6b, 0xc0, 0x30,
-  	0x02, 0x64, 0xc8, 0x00,
-  	0x40, 0x3a, 0x74, 0x04,
-  	0x00, 0xe2, 0x76, 0x58,
--	0x33, 0xea, 0x58, 0x59,
-+	0x33, 0xea, 0x5a, 0x59,
-  	0x33, 0xea, 0x00, 0x00,
-  	0x30, 0x3f, 0xc0, 0x09,
--	0x30, 0xe0, 0x72, 0x61,
--	0x20, 0x3f, 0x88, 0x69,
--	0x10, 0x3f, 0x72, 0x79,
-+	0x30, 0xe0, 0x74, 0x61,
-+	0x20, 0x3f, 0x8a, 0x69,
-+	0x10, 0x3f, 0x74, 0x79,
-  	0x02, 0xea, 0x7e, 0x00,
--	0x00, 0xea, 0x58, 0x59,
-+	0x00, 0xea, 0x5a, 0x59,
-  	0x01, 0xea, 0x00, 0x30,
-  	0x02, 0x4e, 0x51, 0x35,
-  	0x01, 0xea, 0x7e, 0x00,
--	0x11, 0xea, 0x58, 0x59,
-+	0x11, 0xea, 0x5a, 0x59,
-  	0x11, 0xea, 0x00, 0x00,
-  	0x02, 0x4e, 0x51, 0x35,
-  	0xc0, 0x4a, 0x94, 0x00,
--	0x04, 0x41, 0x96, 0x79,
-+	0x04, 0x41, 0x98, 0x79,
-  	0x08, 0xea, 0x98, 0x00,
-  	0x08, 0x57, 0xae, 0x00,
-  	0x08, 0x3c, 0x78, 0x00,
-@@ -215,12 +216,12 @@
-  	0x0f, 0x67, 0xc0, 0x09,
-  	0x00, 0x3a, 0x75, 0x02,
-  	0x20, 0xea, 0x96, 0x00,
--	0x00, 0xe2, 0x0e, 0x42,
-+	0x00, 0xe2, 0x10, 0x42,
-  	0xc0, 0x4a, 0x94, 0x00,
--	0x40, 0x3a, 0xc2, 0x69,
-+	0x40, 0x3a, 0xc4, 0x69,
-  	0x02, 0x55, 0x06, 0x68,
--	0x02, 0x56, 0xc2, 0x69,
--	0xff, 0x5b, 0xc2, 0x61,
-+	0x02, 0x56, 0xc4, 0x69,
-+	0xff, 0x5b, 0xc4, 0x61,
-  	0x02, 0x20, 0x51, 0x31,
-  	0x80, 0xea, 0xb2, 0x01,
-  	0x44, 0xea, 0x00, 0x00,
-@@ -228,40 +229,40 @@
-  	0x33, 0xea, 0x00, 0x00,
-  	0xff, 0xea, 0xb2, 0x09,
-  	0xff, 0xe0, 0xc0, 0x19,
--	0xff, 0xe0, 0xc4, 0x79,
-+	0xff, 0xe0, 0xc6, 0x79,
-  	0x02, 0xac, 0x51, 0x31,
--	0x00, 0xe2, 0xba, 0x41,
-+	0x00, 0xe2, 0xbc, 0x41,
-  	0x02, 0x5e, 0x50, 0x31,
-  	0x02, 0xa8, 0xb8, 0x30,
-  	0x02, 0x5c, 0x50, 0x31,
--	0xff, 0xad, 0xd5, 0x71,
-+	0xff, 0xad, 0xd7, 0x71,
-  	0x02, 0xac, 0x41, 0x31,
-  	0x02, 0x22, 0x51, 0x31,
-  	0x02, 0xa0, 0x5c, 0x33,
-  	0x02, 0xa0, 0x44, 0x32,
--	0x00, 0xe2, 0xde, 0x41,
--	0x10, 0x92, 0xdf, 0x69,
-+	0x00, 0xe2, 0xe0, 0x41,
-+	0x10, 0x92, 0xe1, 0x69,
-  	0x3d, 0x93, 0xc9, 0x29,
-  	0x01, 0xe4, 0xc8, 0x01,
-  	0x01, 0xea, 0xca, 0x01,
-  	0xff, 0xea, 0xda, 0x01,
-  	0x02, 0x20, 0x51, 0x31,
-  	0x02, 0xae, 0x41, 0x32,
--	0xff, 0x21, 0xe7, 0x61,
-+	0xff, 0x21, 0xe9, 0x61,
-  	0xff, 0xea, 0x46, 0x02,
-  	0x02, 0x5c, 0x50, 0x31,
-  	0x40, 0xea, 0x96, 0x00,
--	0x02, 0x56, 0xfe, 0x6d,
--	0x01, 0x55, 0xfe, 0x6d,
--	0x10, 0x92, 0xf3, 0x79,
--	0x10, 0x40, 0xfc, 0x69,
--	0x01, 0x56, 0xfc, 0x79,
-+	0x02, 0x56, 0x00, 0x6e,
-+	0x01, 0x55, 0x00, 0x6e,
-+	0x10, 0x92, 0xf5, 0x79,
-+	0x10, 0x40, 0xfe, 0x69,
-+	0x01, 0x56, 0xfe, 0x79,
-  	0xff, 0x97, 0x07, 0x78,
--	0x13, 0xea, 0x5e, 0x59,
-+	0x13, 0xea, 0x60, 0x59,
-  	0x13, 0xea, 0x04, 0x00,
-  	0x00, 0xe2, 0x06, 0x40,
-  	0xbf, 0x3a, 0x74, 0x08,
--	0x04, 0x41, 0x02, 0x7a,
-+	0x04, 0x41, 0x04, 0x7a,
-  	0x08, 0xea, 0x98, 0x00,
-  	0x08, 0x57, 0xae, 0x00,
-  	0x01, 0x93, 0x75, 0x32,
-@@ -269,108 +270,108 @@
-  	0x40, 0xea, 0x72, 0x02,
-  	0x08, 0x3c, 0x78, 0x00,
-  	0x80, 0xea, 0x6e, 0x02,
--	0x00, 0xe2, 0xdc, 0x5b,
-+	0x00, 0xe2, 0xde, 0x5b,
-  	0x01, 0x3c, 0xc1, 0x31,
--	0x9f, 0xe0, 0x7e, 0x7c,
--	0x80, 0xe0, 0x22, 0x72,
--	0xa0, 0xe0, 0x5e, 0x72,
--	0xc0, 0xe0, 0x54, 0x72,
--	0xe0, 0xe0, 0x8e, 0x72,
--	0x01, 0xea, 0x5e, 0x59,
-+	0x9f, 0xe0, 0x80, 0x7c,
-+	0x80, 0xe0, 0x24, 0x72,
-+	0xa0, 0xe0, 0x60, 0x72,
-+	0xc0, 0xe0, 0x56, 0x72,
-+	0xe0, 0xe0, 0x90, 0x72,
-+	0x01, 0xea, 0x60, 0x59,
-  	0x01, 0xea, 0x04, 0x00,
--	0x00, 0xe2, 0x0e, 0x42,
--	0x80, 0x39, 0x29, 0x7a,
--	0x03, 0xea, 0x5e, 0x59,
-+	0x00, 0xe2, 0x10, 0x42,
-+	0x80, 0x39, 0x2b, 0x7a,
-+	0x03, 0xea, 0x60, 0x59,
-  	0x03, 0xea, 0x04, 0x00,
--	0xee, 0x00, 0x30, 0x6a,
-+	0xee, 0x00, 0x32, 0x6a,
-  	0x05, 0xea, 0xb4, 0x00,
--	0x33, 0xea, 0x58, 0x59,
-+	0x33, 0xea, 0x5a, 0x59,
-  	0x33, 0xea, 0x00, 0x00,
-  	0x02, 0xa8, 0x9c, 0x32,
--	0x00, 0xe2, 0x78, 0x59,
-+	0x00, 0xe2, 0x7a, 0x59,
-  	0xef, 0x96, 0xd5, 0x19,
--	0x00, 0xe2, 0x40, 0x52,
-+	0x00, 0xe2, 0x42, 0x52,
-  	0x09, 0x80, 0xe1, 0x30,
-  	0x02, 0xea, 0x36, 0x00,
-  	0xa8, 0xea, 0x32, 0x00,
--	0x00, 0xe2, 0x46, 0x42,
-+	0x00, 0xe2, 0x48, 0x42,
-  	0x01, 0x96, 0xd1, 0x30,
-  	0x10, 0x80, 0x89, 0x31,
-  	0x20, 0xea, 0x32, 0x00,
-  	0xbf, 0x39, 0x73, 0x0a,
--	0x10, 0x4c, 0x50, 0x6a,
--	0x20, 0x19, 0x48, 0x6a,
--	0x20, 0x19, 0x4c, 0x6a,
--	0x02, 0x4d, 0x0e, 0x6a,
-+	0x10, 0x4c, 0x52, 0x6a,
-+	0x20, 0x19, 0x4a, 0x6a,
-+	0x20, 0x19, 0x4e, 0x6a,
-+	0x02, 0x4d, 0x10, 0x6a,
-  	0x40, 0x39, 0x73, 0x02,
--	0x00, 0xe2, 0x0e, 0x42,
--	0x80, 0x39, 0xcf, 0x6a,
-+	0x00, 0xe2, 0x10, 0x42,
-+	0x80, 0x39, 0xd1, 0x6a,
-  	0x01, 0x44, 0x10, 0x33,
-  	0x08, 0x92, 0x25, 0x03,
--	0x00, 0xe2, 0x0e, 0x42,
-+	0x00, 0xe2, 0x10, 0x42,
-  	0x10, 0xea, 0x80, 0x00,
-  	0x01, 0x37, 0xc5, 0x31,
--	0x80, 0xe2, 0x7a, 0x62,
--	0x10, 0x92, 0x9f, 0x6a,
-+	0x80, 0xe2, 0x7c, 0x62,
-+	0x10, 0x92, 0xa1, 0x6a,
-  	0xc0, 0x94, 0xc5, 0x01,
--	0x40, 0x92, 0x6b, 0x6a,
-+	0x40, 0x92, 0x6d, 0x6a,
-  	0xbf, 0xe2, 0xc4, 0x09,
--	0x20, 0x92, 0x7f, 0x7a,
-+	0x20, 0x92, 0x81, 0x7a,
-  	0x01, 0xe2, 0x88, 0x30,
--	0x00, 0xe2, 0xdc, 0x5b,
--	0xa0, 0x3c, 0x87, 0x62,
-+	0x00, 0xe2, 0xde, 0x5b,
-+	0xa0, 0x3c, 0x89, 0x62,
-  	0x23, 0x92, 0x89, 0x08,
--	0x00, 0xe2, 0xdc, 0x5b,
--	0xa0, 0x3c, 0x87, 0x62,
--	0x00, 0xa8, 0x7e, 0x42,
--	0xff, 0xe2, 0x7e, 0x62,
--	0x00, 0xe2, 0x9e, 0x42,
-+	0x00, 0xe2, 0xde, 0x5b,
-+	0xa0, 0x3c, 0x89, 0x62,
-+	0x00, 0xa8, 0x80, 0x42,
-+	0xff, 0xe2, 0x80, 0x62,
-+	0x00, 0xe2, 0xa0, 0x42,
-  	0x40, 0xea, 0x98, 0x00,
-  	0x01, 0xe2, 0x88, 0x30,
--	0x00, 0xe2, 0xdc, 0x5b,
--	0xa0, 0x3c, 0x5d, 0x72,
-+	0x00, 0xe2, 0xde, 0x5b,
-+	0xa0, 0x3c, 0x5f, 0x72,
-  	0x40, 0xea, 0x98, 0x00,
-  	0x01, 0x37, 0x95, 0x32,
-  	0x08, 0xea, 0x6e, 0x02,
--	0x00, 0xe2, 0x0e, 0x42,
--	0xe0, 0xea, 0xf8, 0x5b,
--	0x80, 0xe0, 0xda, 0x6a,
--	0x04, 0xe0, 0x8c, 0x73,
--	0x02, 0xe0, 0xbe, 0x73,
--	0x00, 0xea, 0x38, 0x73,
--	0x03, 0xe0, 0xce, 0x73,
--	0x23, 0xe0, 0xb0, 0x72,
--	0x08, 0xe0, 0xd6, 0x72,
--	0x00, 0xe2, 0xdc, 0x5b,
--	0x07, 0xea, 0x5e, 0x59,
-+	0x00, 0xe2, 0x10, 0x42,
-+	0xe0, 0xea, 0xfa, 0x5b,
-+	0x80, 0xe0, 0xdc, 0x6a,
-+	0x04, 0xe0, 0x8e, 0x73,
-+	0x02, 0xe0, 0xc0, 0x73,
-+	0x00, 0xea, 0x3a, 0x73,
-+	0x03, 0xe0, 0xd0, 0x73,
-+	0x23, 0xe0, 0xb2, 0x72,
-+	0x08, 0xe0, 0xd8, 0x72,
-+	0x00, 0xe2, 0xde, 0x5b,
-+	0x07, 0xea, 0x60, 0x59,
-  	0x07, 0xea, 0x04, 0x00,
--	0x08, 0x48, 0x0f, 0x72,
--	0x04, 0x48, 0xad, 0x62,
-+	0x08, 0x48, 0x11, 0x72,
-+	0x04, 0x48, 0xaf, 0x62,
-  	0x01, 0x49, 0x89, 0x30,
--	0x00, 0xe2, 0x9e, 0x42,
-+	0x00, 0xe2, 0xa0, 0x42,
-  	0x01, 0x44, 0xd4, 0x31,
--	0x00, 0xe2, 0x9e, 0x42,
-+	0x00, 0xe2, 0xa0, 0x42,
-  	0x01, 0x00, 0x6c, 0x32,
--	0x33, 0xea, 0x58, 0x59,
-+	0x33, 0xea, 0x5a, 0x59,
-  	0x33, 0xea, 0x00, 0x00,
-  	0x4c, 0x3a, 0xc1, 0x28,
-  	0x01, 0x64, 0xc0, 0x31,
--	0x00, 0x36, 0x59, 0x59,
-+	0x00, 0x36, 0x5b, 0x59,
-  	0x01, 0x36, 0x01, 0x30,
--	0x01, 0xe0, 0xd4, 0x7a,
--	0xa0, 0xea, 0xee, 0x5b,
--	0x01, 0xa0, 0xd4, 0x62,
--	0x01, 0x84, 0xc9, 0x7a,
--	0x01, 0x95, 0xd7, 0x6a,
--	0x05, 0xea, 0x5e, 0x59,
-+	0x01, 0xe0, 0xd6, 0x7a,
-+	0xa0, 0xea, 0xf0, 0x5b,
-+	0x01, 0xa0, 0xd6, 0x62,
-+	0x01, 0x84, 0xcb, 0x7a,
-+	0x01, 0x95, 0xd9, 0x6a,
-+	0x05, 0xea, 0x60, 0x59,
-  	0x05, 0xea, 0x04, 0x00,
--	0x00, 0xe2, 0xd6, 0x42,
--	0x03, 0xea, 0x5e, 0x59,
-+	0x00, 0xe2, 0xd8, 0x42,
-+	0x03, 0xea, 0x60, 0x59,
-  	0x03, 0xea, 0x04, 0x00,
--	0x00, 0xe2, 0xd6, 0x42,
--	0x07, 0xea, 0x00, 0x5c,
-+	0x00, 0xe2, 0xd8, 0x42,
-+	0x07, 0xea, 0x02, 0x5c,
-  	0x01, 0x44, 0xd4, 0x31,
--	0x00, 0xe2, 0x0e, 0x42,
-+	0x00, 0xe2, 0x10, 0x42,
-  	0x3f, 0xe0, 0x76, 0x0a,
-  	0xc0, 0x3a, 0xc1, 0x09,
-  	0x00, 0x3b, 0x51, 0x01,
-@@ -381,54 +382,54 @@
-  	0x01, 0xea, 0xc6, 0x01,
-  	0x02, 0xe2, 0xc8, 0x31,
-  	0x02, 0xec, 0x40, 0x31,
--	0xff, 0xa1, 0xf6, 0x72,
-+	0xff, 0xa1, 0xf8, 0x72,
-  	0x02, 0xe8, 0xda, 0x31,
-  	0x02, 0xa0, 0x50, 0x31,
--	0x00, 0xe2, 0x18, 0x43,
-+	0x00, 0xe2, 0x1a, 0x43,
-  	0x80, 0x39, 0x73, 0x02,
-  	0x01, 0x44, 0xd4, 0x31,
--	0x00, 0xe2, 0xdc, 0x5b,
-+	0x00, 0xe2, 0xde, 0x5b,
-  	0x01, 0x39, 0x73, 0x02,
--	0xe0, 0x3c, 0x33, 0x63,
-+	0xe0, 0x3c, 0x35, 0x63,
-  	0x02, 0x39, 0x73, 0x02,
--	0x20, 0x46, 0x2c, 0x63,
-+	0x20, 0x46, 0x2e, 0x63,
-  	0xff, 0xea, 0x52, 0x09,
--	0xa8, 0xea, 0xee, 0x5b,
--	0x04, 0x92, 0x13, 0x7b,
-+	0xa8, 0xea, 0xf0, 0x5b,
-+	0x04, 0x92, 0x15, 0x7b,
-  	0x01, 0x3a, 0xc1, 0x31,
--	0x00, 0x93, 0x13, 0x63,
-+	0x00, 0x93, 0x15, 0x63,
-  	0x01, 0x3b, 0xc1, 0x31,
--	0x00, 0x94, 0x1d, 0x73,
-+	0x00, 0x94, 0x1f, 0x73,
-  	0x01, 0xa9, 0x52, 0x11,
--	0xff, 0xa9, 0x08, 0x6b,
--	0x00, 0xe2, 0x2c, 0x43,
-+	0xff, 0xa9, 0x0a, 0x6b,
-+	0x00, 0xe2, 0x2e, 0x43,
-  	0x10, 0x39, 0x73, 0x02,
--	0x04, 0x92, 0x2d, 0x7b,
-+	0x04, 0x92, 0x2f, 0x7b,
-  	0xfb, 0x92, 0x25, 0x0b,
-  	0xff, 0xea, 0x72, 0x0a,
--	0x01, 0xa4, 0x27, 0x6b,
-+	0x01, 0xa4, 0x29, 0x6b,
-  	0x02, 0xa8, 0x9c, 0x32,
--	0x00, 0xe2, 0x78, 0x59,
--	0x10, 0x92, 0xd7, 0x7a,
--	0xff, 0xea, 0x00, 0x5c,
--	0x00, 0xe2, 0xd6, 0x42,
--	0x04, 0xea, 0x5e, 0x59,
-+	0x00, 0xe2, 0x7a, 0x59,
-+	0x10, 0x92, 0xd9, 0x7a,
-+	0xff, 0xea, 0x02, 0x5c,
-+	0x00, 0xe2, 0xd8, 0x42,
-+	0x04, 0xea, 0x60, 0x59,
-  	0x04, 0xea, 0x04, 0x00,
--	0x00, 0xe2, 0xd6, 0x42,
--	0x04, 0xea, 0x5e, 0x59,
-+	0x00, 0xe2, 0xd8, 0x42,
-+	0x04, 0xea, 0x60, 0x59,
-  	0x04, 0xea, 0x04, 0x00,
--	0x00, 0xe2, 0x0e, 0x42,
--	0x08, 0x92, 0xcf, 0x7a,
--	0xc0, 0x39, 0x43, 0x7b,
--	0x80, 0x39, 0xcf, 0x6a,
--	0xff, 0x88, 0x43, 0x6b,
--	0x40, 0x39, 0xcf, 0x6a,
--	0x10, 0x92, 0x49, 0x7b,
--	0x0a, 0xea, 0x5e, 0x59,
-+	0x00, 0xe2, 0x10, 0x42,
-+	0x08, 0x92, 0xd1, 0x7a,
-+	0xc0, 0x39, 0x45, 0x7b,
-+	0x80, 0x39, 0xd1, 0x6a,
-+	0xff, 0x88, 0x45, 0x6b,
-+	0x40, 0x39, 0xd1, 0x6a,
-+	0x10, 0x92, 0x4b, 0x7b,
-+	0x0a, 0xea, 0x60, 0x59,
-  	0x0a, 0xea, 0x04, 0x00,
--	0x00, 0xe2, 0x68, 0x5b,
--	0x00, 0xe2, 0xa8, 0x43,
--	0x50, 0x4b, 0x50, 0x6b,
-+	0x00, 0xe2, 0x6a, 0x5b,
-+	0x00, 0xe2, 0xaa, 0x43,
-+	0x50, 0x4b, 0x52, 0x6b,
-  	0xbf, 0x3a, 0x74, 0x08,
-  	0x01, 0xe0, 0xf4, 0x31,
-  	0xff, 0xea, 0xc0, 0x09,
-@@ -438,31 +439,31 @@
-  	0x01, 0xfa, 0xc0, 0x35,
-  	0x02, 0xa8, 0x90, 0x32,
-  	0x02, 0xea, 0xb4, 0x00,
--	0x33, 0xea, 0x58, 0x59,
-+	0x33, 0xea, 0x5a, 0x59,
-  	0x33, 0xea, 0x00, 0x00,
-  	0x02, 0x48, 0x51, 0x31,
-  	0xff, 0x90, 0x85, 0x68,
--	0xff, 0x88, 0x75, 0x6b,
--	0x01, 0xa4, 0x71, 0x6b,
--	0x02, 0xa4, 0x79, 0x6b,
--	0x01, 0x84, 0x79, 0x7b,
-+	0xff, 0x88, 0x77, 0x6b,
-+	0x01, 0xa4, 0x73, 0x6b,
-+	0x02, 0xa4, 0x7b, 0x6b,
-+	0x01, 0x84, 0x7b, 0x7b,
-  	0x02, 0x28, 0x19, 0x33,
-  	0x02, 0xa8, 0x50, 0x36,
--	0xff, 0x88, 0x79, 0x73,
--	0x00, 0xe2, 0x4c, 0x5b,
-+	0xff, 0x88, 0x7b, 0x73,
-+	0x00, 0xe2, 0x4e, 0x5b,
-  	0x02, 0xa8, 0x20, 0x33,
-  	0x04, 0xa4, 0x49, 0x03,
-  	0xff, 0xea, 0x1a, 0x03,
--	0xff, 0x2d, 0x85, 0x63,
-+	0xff, 0x2d, 0x87, 0x63,
-  	0x02, 0xa8, 0x58, 0x32,
-  	0x02, 0xa8, 0x5c, 0x36,
-  	0x02, 0xa8, 0x40, 0x31,
-  	0x02, 0x2e, 0x51, 0x31,
-  	0x02, 0xa0, 0x18, 0x33,
-  	0x02, 0xa0, 0x5c, 0x36,
--	0xc0, 0x39, 0xcf, 0x6a,
-+	0xc0, 0x39, 0xd1, 0x6a,
-  	0x04, 0x92, 0x25, 0x03,
--	0x20, 0x92, 0xa9, 0x6b,
-+	0x20, 0x92, 0xab, 0x6b,
-  	0x02, 0xa8, 0x40, 0x31,
-  	0xc0, 0x3a, 0xc1, 0x09,
-  	0x00, 0x3b, 0x51, 0x01,
-@@ -477,60 +478,60 @@
-  	0xf7, 0x57, 0xae, 0x08,
-  	0x08, 0xea, 0x98, 0x00,
-  	0x01, 0x44, 0xd4, 0x31,
--	0xee, 0x00, 0xb2, 0x6b,
-+	0xee, 0x00, 0xb4, 0x6b,
-  	0x02, 0xea, 0xb4, 0x00,
-  	0xc0, 0xea, 0x72, 0x02,
--	0x09, 0x4c, 0xb4, 0x7b,
-+	0x09, 0x4c, 0xb6, 0x7b,
-  	0x01, 0xea, 0x78, 0x02,
-  	0x08, 0x4c, 0x06, 0x68,
--	0x0b, 0xea, 0x5e, 0x59,
-+	0x0b, 0xea, 0x60, 0x59,
-  	0x0b, 0xea, 0x04, 0x00,
-  	0x01, 0x44, 0xd4, 0x31,
--	0x20, 0x39, 0x0f, 0x7a,
--	0x00, 0xe2, 0xc6, 0x5b,
--	0x00, 0xe2, 0x0e, 0x42,
--	0x01, 0x84, 0xcb, 0x7b,
-+	0x20, 0x39, 0x11, 0x7a,
-+	0x00, 0xe2, 0xc8, 0x5b,
-+	0x00, 0xe2, 0x10, 0x42,
-+	0x01, 0x84, 0xcd, 0x7b,
-  	0x01, 0xa4, 0x49, 0x07,
-  	0x08, 0x60, 0x30, 0x33,
-  	0x08, 0x80, 0x41, 0x37,
-  	0xdf, 0x39, 0x73, 0x0a,
--	0xee, 0x00, 0xd8, 0x6b,
-+	0xee, 0x00, 0xda, 0x6b,
-  	0x05, 0xea, 0xb4, 0x00,
--	0x33, 0xea, 0x58, 0x59,
-+	0x33, 0xea, 0x5a, 0x59,
-  	0x33, 0xea, 0x00, 0x00,
--	0x00, 0xe2, 0x78, 0x59,
--	0x00, 0xe2, 0xd6, 0x42,
--	0xff, 0x42, 0xe8, 0x6b,
--	0x01, 0x41, 0xdc, 0x6b,
--	0x02, 0x41, 0xdc, 0x7b,
--	0xff, 0x42, 0xe8, 0x6b,
--	0x01, 0x41, 0xdc, 0x6b,
--	0x02, 0x41, 0xdc, 0x7b,
--	0xff, 0x42, 0xe8, 0x7b,
--	0x04, 0x4c, 0xdc, 0x6b,
-+	0x00, 0xe2, 0x7a, 0x59,
-+	0x00, 0xe2, 0xd8, 0x42,
-+	0xff, 0x42, 0xea, 0x6b,
-+	0x01, 0x41, 0xde, 0x6b,
-+	0x02, 0x41, 0xde, 0x7b,
-+	0xff, 0x42, 0xea, 0x6b,
-+	0x01, 0x41, 0xde, 0x6b,
-+	0x02, 0x41, 0xde, 0x7b,
-+	0xff, 0x42, 0xea, 0x7b,
-+	0x04, 0x4c, 0xde, 0x6b,
-  	0xe0, 0x41, 0x78, 0x0e,
-  	0x01, 0x44, 0xd4, 0x31,
--	0xff, 0x42, 0xf0, 0x7b,
--	0x04, 0x4c, 0xf0, 0x6b,
-+	0xff, 0x42, 0xf2, 0x7b,
-+	0x04, 0x4c, 0xf2, 0x6b,
-  	0xe0, 0x41, 0x78, 0x0a,
--	0xe0, 0x3c, 0x0f, 0x62,
-+	0xe0, 0x3c, 0x11, 0x62,
-  	0xff, 0xea, 0xca, 0x09,
-  	0x01, 0xe2, 0xc8, 0x31,
-  	0x01, 0x46, 0xda, 0x35,
-  	0x01, 0x44, 0xd4, 0x35,
-  	0x10, 0xea, 0x80, 0x00,
-  	0x01, 0xe2, 0x6e, 0x36,
--	0x04, 0xa6, 0x08, 0x7c,
-+	0x04, 0xa6, 0x0a, 0x7c,
-  	0xff, 0xea, 0x5a, 0x09,
-  	0xff, 0xea, 0x4c, 0x0d,
--	0x01, 0xa6, 0x34, 0x6c,
-+	0x01, 0xa6, 0x36, 0x6c,
-  	0x10, 0xad, 0x84, 0x78,
--	0x80, 0xad, 0x2c, 0x6c,
-+	0x80, 0xad, 0x2e, 0x6c,
-  	0x08, 0xad, 0x84, 0x68,
--	0x20, 0x19, 0x20, 0x7c,
-+	0x20, 0x19, 0x22, 0x7c,
-  	0x80, 0xea, 0xb2, 0x01,
-  	0x11, 0x00, 0x00, 0x10,
--	0x02, 0xa6, 0x1c, 0x7c,
-+	0x02, 0xa6, 0x1e, 0x7c,
-  	0xff, 0xea, 0xb2, 0x0d,
-  	0x11, 0x00, 0x00, 0x10,
-  	0xff, 0xea, 0xb2, 0x09,
-@@ -558,7 +559,7 @@
-  	0x00, 0x86, 0x0d, 0x23,
-  	0x00, 0x87, 0x0f, 0x23,
-  	0x01, 0x84, 0xc5, 0x31,
--	0x80, 0x83, 0x57, 0x7c,
-+	0x80, 0x83, 0x59, 0x7c,
-  	0x02, 0xe2, 0xc4, 0x01,
-  	0xff, 0xea, 0x4c, 0x09,
-  	0x01, 0xe2, 0x36, 0x30,
-@@ -569,75 +570,75 @@
-  	0xfe, 0xa6, 0x4c, 0x0d,
-  	0x0b, 0x98, 0xe1, 0x30,
-  	0xfd, 0xa4, 0x49, 0x09,
--	0x80, 0xa3, 0x6b, 0x7c,
-+	0x80, 0xa3, 0x6d, 0x7c,
-  	0x02, 0xa4, 0x48, 0x01,
-  	0x01, 0xa4, 0x36, 0x30,
-  	0xa8, 0xea, 0x32, 0x00,
-  	0xfd, 0xa4, 0x49, 0x0b,
-  	0x05, 0xa3, 0x07, 0x33,
--	0x80, 0x83, 0x77, 0x6c,
-+	0x80, 0x83, 0x79, 0x6c,
-  	0x02, 0xea, 0x4c, 0x05,
-  	0xff, 0xea, 0x4c, 0x0d,
-  	0x00, 0xe2, 0x52, 0x59,
--	0x02, 0xa6, 0x0a, 0x6c,
-+	0x02, 0xa6, 0x0c, 0x6c,
-  	0x80, 0xf9, 0xf2, 0x05,
--	0xc0, 0x39, 0x85, 0x7c,
--	0x03, 0xea, 0x5e, 0x59,
-+	0xc0, 0x39, 0x87, 0x7c,
-+	0x03, 0xea, 0x60, 0x59,
-  	0x03, 0xea, 0x04, 0x00,
--	0x20, 0x39, 0xa9, 0x7c,
--	0x01, 0x84, 0x8f, 0x6c,
--	0x06, 0xea, 0x5e, 0x59,
-+	0x20, 0x39, 0xab, 0x7c,
-+	0x01, 0x84, 0x91, 0x6c,
-+	0x06, 0xea, 0x60, 0x59,
-  	0x06, 0xea, 0x04, 0x00,
--	0x00, 0xe2, 0xac, 0x44,
-+	0x00, 0xe2, 0xae, 0x44,
-  	0x01, 0x00, 0x6c, 0x32,
--	0xee, 0x00, 0x98, 0x6c,
-+	0xee, 0x00, 0x9a, 0x6c,
-  	0x05, 0xea, 0xb4, 0x00,
--	0x33, 0xea, 0x58, 0x59,
-+	0x33, 0xea, 0x5a, 0x59,
-  	0x33, 0xea, 0x00, 0x00,
-  	0x80, 0x3d, 0x7a, 0x00,
--	0xfc, 0x42, 0x9a, 0x7c,
-+	0xfc, 0x42, 0x9c, 0x7c,
-  	0x7f, 0x3d, 0x7a, 0x08,
--	0x00, 0x36, 0x59, 0x59,
-+	0x00, 0x36, 0x5b, 0x59,
-  	0x01, 0x36, 0x01, 0x30,
--	0x09, 0xea, 0x5e, 0x59,
-+	0x09, 0xea, 0x60, 0x59,
-  	0x09, 0xea, 0x04, 0x00,
--	0x00, 0xe2, 0x0e, 0x42,
--	0x01, 0xa4, 0x8f, 0x6c,
--	0x00, 0xe2, 0x62, 0x5c,
-+	0x00, 0xe2, 0x10, 0x42,
-+	0x01, 0xa4, 0x91, 0x6c,
-+	0x00, 0xe2, 0x64, 0x5c,
-  	0x20, 0x39, 0x73, 0x02,
-  	0x01, 0x00, 0x6c, 0x32,
--	0x02, 0xa6, 0xb4, 0x7c,
--	0x00, 0xe2, 0x78, 0x5c,
-+	0x02, 0xa6, 0xb6, 0x7c,
-+	0x00, 0xe2, 0x7a, 0x5c,
-  	0x00, 0xe2, 0x76, 0x58,
-  	0x00, 0xe2, 0x86, 0x58,
-  	0x00, 0xe2, 0x5a, 0x58,
--	0x00, 0x36, 0x59, 0x59,
-+	0x00, 0x36, 0x5b, 0x59,
-  	0x01, 0x36, 0x01, 0x30,
--	0x20, 0x19, 0xb4, 0x6c,
--	0x00, 0xe2, 0xe4, 0x5c,
--	0x04, 0x19, 0xce, 0x6c,
-+	0x20, 0x19, 0xb6, 0x6c,
-+	0x00, 0xe2, 0xe6, 0x5c,
-+	0x04, 0x19, 0xd0, 0x6c,
-  	0x02, 0x19, 0x32, 0x00,
--	0x01, 0x84, 0xcf, 0x7c,
--	0x01, 0x1b, 0xc8, 0x7c,
--	0x01, 0x1a, 0xce, 0x6c,
--	0x00, 0xe2, 0x7e, 0x44,
--	0x80, 0x4b, 0xd4, 0x6c,
--	0x01, 0x4c, 0xd0, 0x7c,
--	0x03, 0x42, 0x7e, 0x6c,
--	0x00, 0xe2, 0x04, 0x5c,
-+	0x01, 0x84, 0xd1, 0x7c,
-+	0x01, 0x1b, 0xca, 0x7c,
-+	0x01, 0x1a, 0xd0, 0x6c,
-+	0x00, 0xe2, 0x80, 0x44,
-+	0x80, 0x4b, 0xd6, 0x6c,
-+	0x01, 0x4c, 0xd2, 0x7c,
-+	0x03, 0x42, 0x80, 0x6c,
-+	0x00, 0xe2, 0x06, 0x5c,
-  	0x80, 0xf9, 0xf2, 0x01,
--	0x04, 0x39, 0x0f, 0x7a,
--	0x00, 0xe2, 0x0e, 0x42,
--	0x08, 0x5d, 0xec, 0x6c,
-+	0x04, 0x39, 0x11, 0x7a,
-+	0x00, 0xe2, 0x10, 0x42,
-+	0x08, 0x5d, 0xee, 0x6c,
-  	0x00, 0xe2, 0x76, 0x58,
--	0x00, 0x36, 0x59, 0x59,
-+	0x00, 0x36, 0x5b, 0x59,
-  	0x01, 0x36, 0x01, 0x30,
--	0x02, 0x1b, 0xdc, 0x7c,
--	0x08, 0x5d, 0xea, 0x7c,
-+	0x02, 0x1b, 0xde, 0x7c,
-+	0x08, 0x5d, 0xec, 0x7c,
-  	0x03, 0x68, 0x00, 0x37,
-  	0x01, 0x84, 0x09, 0x07,
--	0x80, 0x1b, 0xf6, 0x7c,
--	0x80, 0x84, 0xf7, 0x6c,
-+	0x80, 0x1b, 0xf8, 0x7c,
-+	0x80, 0x84, 0xf9, 0x6c,
-  	0xff, 0x85, 0x0b, 0x1b,
-  	0xff, 0x86, 0x0d, 0x23,
-  	0xff, 0x87, 0x0f, 0x23,
-@@ -649,161 +650,161 @@
-  	0xf9, 0xd9, 0xb2, 0x0d,
-  	0x01, 0xd9, 0xb2, 0x05,
-  	0x01, 0x52, 0x48, 0x31,
--	0x20, 0xa4, 0x20, 0x7d,
--	0x20, 0x5b, 0x20, 0x7d,
--	0x80, 0xf9, 0x2e, 0x7d,
-+	0x20, 0xa4, 0x22, 0x7d,
-+	0x20, 0x5b, 0x22, 0x7d,
-+	0x80, 0xf9, 0x30, 0x7d,
-  	0x02, 0xea, 0xb4, 0x00,
-  	0x11, 0x00, 0x00, 0x10,
--	0x04, 0x19, 0x3a, 0x7d,
-+	0x04, 0x19, 0x3c, 0x7d,
-  	0xdf, 0x19, 0x32, 0x08,
--	0x60, 0x5b, 0x3a, 0x6d,
--	0x01, 0x4c, 0x14, 0x7d,
-+	0x60, 0x5b, 0x3c, 0x6d,
-+	0x01, 0x4c, 0x16, 0x7d,
-  	0x20, 0x19, 0x32, 0x00,
-  	0x01, 0xd9, 0xb2, 0x05,
-  	0x02, 0xea, 0xb4, 0x00,
-  	0x01, 0xd9, 0xb2, 0x05,
--	0x10, 0x5b, 0x32, 0x6d,
--	0x08, 0x5b, 0x3c, 0x6d,
--	0x20, 0x5b, 0x2c, 0x6d,
--	0x02, 0x5b, 0x5c, 0x6d,
--	0x0e, 0xea, 0x5e, 0x59,
-+	0x10, 0x5b, 0x34, 0x6d,
-+	0x08, 0x5b, 0x3e, 0x6d,
-+	0x20, 0x5b, 0x2e, 0x6d,
-+	0x02, 0x5b, 0x5e, 0x6d,
-+	0x0e, 0xea, 0x60, 0x59,
-  	0x0e, 0xea, 0x04, 0x00,
--	0x80, 0xf9, 0x1c, 0x6d,
-+	0x80, 0xf9, 0x1e, 0x6d,
-  	0xdf, 0x5c, 0xb8, 0x08,
-  	0x01, 0xd9, 0xb2, 0x05,
--	0x01, 0xa4, 0x17, 0x6e,
--	0x00, 0xe2, 0x62, 0x5c,
--	0x00, 0xe2, 0x66, 0x5d,
-+	0x01, 0xa4, 0x19, 0x6e,
-+	0x00, 0xe2, 0x64, 0x5c,
-+	0x00, 0xe2, 0x68, 0x5d,
-  	0x01, 0x90, 0x21, 0x1b,
-  	0x01, 0xd9, 0xb2, 0x05,
--	0x00, 0xe2, 0x4c, 0x5b,
-+	0x00, 0xe2, 0x4e, 0x5b,
-  	0xf3, 0x96, 0xd5, 0x19,
--	0x00, 0xe2, 0x4a, 0x55,
--	0x80, 0x96, 0x4b, 0x6d,
--	0x0f, 0xea, 0x5e, 0x59,
-+	0x00, 0xe2, 0x4c, 0x55,
-+	0x80, 0x96, 0x4d, 0x6d,
-+	0x0f, 0xea, 0x60, 0x59,
-  	0x0f, 0xea, 0x04, 0x00,
--	0x00, 0xe2, 0x52, 0x45,
-+	0x00, 0xe2, 0x54, 0x45,
-  	0x04, 0x8c, 0xe1, 0x30,
-  	0x01, 0xea, 0xf2, 0x00,
-  	0x02, 0xea, 0x36, 0x00,
-  	0xa8, 0xea, 0x32, 0x00,
--	0xff, 0x97, 0x59, 0x7d,
--	0x14, 0xea, 0x5e, 0x59,
-+	0xff, 0x97, 0x5b, 0x7d,
-+	0x14, 0xea, 0x60, 0x59,
-  	0x14, 0xea, 0x04, 0x00,
--	0x00, 0xe2, 0xc8, 0x5d,
-+	0x00, 0xe2, 0xca, 0x5d,
-  	0x01, 0xd9, 0xb2, 0x05,
-  	0x09, 0x80, 0xe1, 0x30,
-  	0x02, 0xea, 0x36, 0x00,
-  	0xa8, 0xea, 0x32, 0x00,
--	0x00, 0xe2, 0xc0, 0x5d,
-+	0x00, 0xe2, 0xc2, 0x5d,
-  	0x01, 0xd9, 0xb2, 0x05,
--	0x02, 0xa6, 0x76, 0x7d,
-+	0x02, 0xa6, 0x78, 0x7d,
-  	0x00, 0xe2, 0x52, 0x59,
--	0x20, 0x5b, 0x84, 0x6d,
--	0xfc, 0x42, 0x70, 0x7d,
--	0x10, 0x40, 0x72, 0x6d,
--	0x20, 0x4d, 0x74, 0x7d,
--	0x08, 0x5d, 0x84, 0x6d,
--	0x02, 0xa6, 0x0a, 0x6c,
-+	0x20, 0x5b, 0x86, 0x6d,
-+	0xfc, 0x42, 0x72, 0x7d,
-+	0x10, 0x40, 0x74, 0x6d,
-+	0x20, 0x4d, 0x76, 0x7d,
-+	0x08, 0x5d, 0x86, 0x6d,
-+	0x02, 0xa6, 0x0c, 0x6c,
-  	0x00, 0xe2, 0x52, 0x59,
--	0x20, 0x5b, 0x84, 0x6d,
--	0x01, 0x1b, 0xa4, 0x6d,
--	0xfc, 0x42, 0x80, 0x7d,
--	0x10, 0x40, 0x82, 0x6d,
-+	0x20, 0x5b, 0x86, 0x6d,
-+	0x01, 0x1b, 0xa6, 0x6d,
-+	0xfc, 0x42, 0x82, 0x7d,
-+	0x10, 0x40, 0x84, 0x6d,
-  	0x20, 0x4d, 0x84, 0x78,
-  	0x08, 0x5d, 0x84, 0x78,
-  	0x02, 0x19, 0x32, 0x00,
-  	0x01, 0x5b, 0x40, 0x31,
--	0x00, 0xe2, 0xe4, 0x5c,
--	0x00, 0xe2, 0xc6, 0x5b,
-+	0x00, 0xe2, 0xe6, 0x5c,
-+	0x00, 0xe2, 0xc8, 0x5b,
-  	0x20, 0xea, 0xb6, 0x00,
--	0x00, 0xe2, 0x04, 0x5c,
-+	0x00, 0xe2, 0x06, 0x5c,
-  	0x20, 0x5c, 0xb8, 0x00,
--	0x04, 0x19, 0x9a, 0x6d,
--	0x01, 0x1a, 0x9a, 0x6d,
-+	0x04, 0x19, 0x9c, 0x6d,
-+	0x01, 0x1a, 0x9c, 0x6d,
-  	0x00, 0xe2, 0x52, 0x59,
-  	0x01, 0x1a, 0x84, 0x78,
-  	0x80, 0xf9, 0xf2, 0x01,
--	0x20, 0xa0, 0xfe, 0x7d,
-+	0x20, 0xa0, 0x00, 0x7e,
-  	0xff, 0x90, 0x21, 0x1b,
--	0x08, 0x92, 0x5d, 0x6b,
-+	0x08, 0x92, 0x5f, 0x6b,
-  	0x02, 0xea, 0xb4, 0x04,
-  	0x01, 0xa4, 0x49, 0x03,
--	0x40, 0x5b, 0xb4, 0x6d,
-+	0x40, 0x5b, 0xb6, 0x6d,
-  	0x00, 0xe2, 0x52, 0x59,
--	0x40, 0x5b, 0xb4, 0x6d,
--	0x04, 0x5d, 0x18, 0x7e,
--	0x01, 0x1a, 0x18, 0x7e,
-+	0x40, 0x5b, 0xb6, 0x6d,
-+	0x04, 0x5d, 0x1a, 0x7e,
-+	0x01, 0x1a, 0x1a, 0x7e,
-  	0x20, 0x4d, 0x84, 0x78,
--	0x40, 0x5b, 0xfe, 0x7d,
--	0x04, 0x5d, 0x18, 0x7e,
--	0x01, 0x1a, 0x18, 0x7e,
-+	0x40, 0x5b, 0x00, 0x7e,
-+	0x04, 0x5d, 0x1a, 0x7e,
-+	0x01, 0x1a, 0x1a, 0x7e,
-  	0x80, 0xf9, 0xf2, 0x01,
-  	0xff, 0x90, 0x21, 0x1b,
--	0x08, 0x92, 0x5d, 0x6b,
-+	0x08, 0x92, 0x5f, 0x6b,
-  	0x02, 0xea, 0xb4, 0x04,
-  	0x00, 0xe2, 0x52, 0x59,
-  	0x01, 0x1b, 0x84, 0x78,
-  	0x80, 0xf9, 0xf2, 0x01,
-  	0x02, 0xea, 0xb4, 0x04,
-  	0x00, 0xe2, 0x52, 0x59,
--	0x01, 0x1b, 0xdc, 0x6d,
--	0x40, 0x5b, 0xea, 0x7d,
--	0x01, 0x1b, 0xdc, 0x6d,
-+	0x01, 0x1b, 0xde, 0x6d,
-+	0x40, 0x5b, 0xec, 0x7d,
-+	0x01, 0x1b, 0xde, 0x6d,
-  	0x02, 0x19, 0x32, 0x00,
-  	0x01, 0x1a, 0x84, 0x78,
-  	0x80, 0xf9, 0xf2, 0x01,
-  	0xff, 0xea, 0x10, 0x03,
-  	0x08, 0x92, 0x25, 0x03,
--	0x00, 0xe2, 0x5c, 0x43,
--	0x01, 0x1a, 0xe6, 0x7d,
--	0x40, 0x5b, 0xe2, 0x7d,
--	0x01, 0x1a, 0xd0, 0x6d,
-+	0x00, 0xe2, 0x5e, 0x43,
-+	0x01, 0x1a, 0xe8, 0x7d,
-+	0x40, 0x5b, 0xe4, 0x7d,
-+	0x01, 0x1a, 0xd2, 0x6d,
-  	0xfc, 0x42, 0x84, 0x78,
--	0x01, 0x1a, 0xea, 0x6d,
--	0x10, 0xea, 0x5e, 0x59,
-+	0x01, 0x1a, 0xec, 0x6d,
-+	0x10, 0xea, 0x60, 0x59,
-  	0x10, 0xea, 0x04, 0x00,
-  	0xfc, 0x42, 0x84, 0x78,
--	0x10, 0x40, 0xf0, 0x6d,
-+	0x10, 0x40, 0xf2, 0x6d,
-  	0x20, 0x4d, 0x84, 0x78,
--	0x40, 0x5b, 0xd0, 0x6d,
-+	0x40, 0x5b, 0xd2, 0x6d,
-  	0x01, 0x1a, 0x84, 0x78,
-  	0x01, 0x90, 0x21, 0x1b,
-  	0x30, 0x3f, 0xc0, 0x09,
-  	0x30, 0xe0, 0x84, 0x60,
-  	0x40, 0x4b, 0x84, 0x68,
-  	0xff, 0xea, 0x52, 0x01,
--	0xee, 0x00, 0x06, 0x6e,
-+	0xee, 0x00, 0x08, 0x6e,
-  	0x80, 0xf9, 0xf2, 0x01,
-  	0xff, 0x90, 0x21, 0x1b,
-  	0x02, 0xea, 0xb4, 0x00,
-  	0x20, 0xea, 0x9a, 0x00,
--	0xf3, 0x42, 0x10, 0x6e,
--	0x12, 0xea, 0x5e, 0x59,
-+	0xf3, 0x42, 0x12, 0x6e,
-+	0x12, 0xea, 0x60, 0x59,
-  	0x12, 0xea, 0x04, 0x00,
--	0x00, 0xe2, 0x0e, 0x42,
--	0x0d, 0xea, 0x5e, 0x59,
-+	0x00, 0xe2, 0x10, 0x42,
-+	0x0d, 0xea, 0x60, 0x59,
-  	0x0d, 0xea, 0x04, 0x00,
--	0x00, 0xe2, 0x0e, 0x42,
-+	0x00, 0xe2, 0x10, 0x42,
-  	0x01, 0x90, 0x21, 0x1b,
--	0x11, 0xea, 0x5e, 0x59,
-+	0x11, 0xea, 0x60, 0x59,
-  	0x11, 0xea, 0x04, 0x00,
--	0x00, 0xe2, 0x4c, 0x5b,
-+	0x00, 0xe2, 0x4e, 0x5b,
-  	0x08, 0x5a, 0xb4, 0x00,
--	0x00, 0xe2, 0x3e, 0x5e,
-+	0x00, 0xe2, 0x40, 0x5e,
-  	0xa8, 0xea, 0x32, 0x00,
-  	0x00, 0xe2, 0x52, 0x59,
--	0x80, 0x1a, 0x2c, 0x7e,
--	0x00, 0xe2, 0x3e, 0x5e,
-+	0x80, 0x1a, 0x2e, 0x7e,
-+	0x00, 0xe2, 0x40, 0x5e,
-  	0x80, 0x19, 0x32, 0x00,
--	0x40, 0x5b, 0x32, 0x6e,
--	0x08, 0x5a, 0x32, 0x7e,
-+	0x40, 0x5b, 0x34, 0x6e,
-+	0x08, 0x5a, 0x34, 0x7e,
-  	0x20, 0x4d, 0x84, 0x78,
-  	0x02, 0x84, 0x09, 0x03,
--	0x40, 0x5b, 0xfe, 0x7d,
-+	0x40, 0x5b, 0x00, 0x7e,
-  	0xff, 0x90, 0x21, 0x1b,
-  	0x80, 0xf9, 0xf2, 0x01,
--	0x08, 0x92, 0x5d, 0x6b,
-+	0x08, 0x92, 0x5f, 0x6b,
-  	0x02, 0xea, 0xb4, 0x04,
-  	0x01, 0x40, 0xe1, 0x30,
-  	0x05, 0x41, 0xe3, 0x98,
-@@ -1037,116 +1038,116 @@
-  	{ ahd_patch2_func, 67, 1, 2 },
-  	{ ahd_patch0_func, 68, 1, 1 },
-  	{ ahd_patch4_func, 116, 1, 1 },
--	{ ahd_patch2_func, 172, 3, 1 },
--	{ ahd_patch1_func, 175, 2, 1 },
--	{ ahd_patch5_func, 177, 1, 1 },
--	{ ahd_patch2_func, 186, 1, 2 },
--	{ ahd_patch0_func, 187, 1, 1 },
--	{ ahd_patch6_func, 188, 2, 2 },
--	{ ahd_patch0_func, 190, 6, 3 },
--	{ ahd_patch2_func, 193, 1, 2 },
--	{ ahd_patch0_func, 194, 1, 1 },
--	{ ahd_patch2_func, 197, 1, 2 },
--	{ ahd_patch0_func, 198, 1, 1 },
--	{ ahd_patch3_func, 200, 1, 1 },
--	{ ahd_patch7_func, 201, 3, 1 },
--	{ ahd_patch3_func, 210, 1, 1 },
--	{ ahd_patch5_func, 211, 16, 2 },
--	{ ahd_patch0_func, 227, 1, 1 },
--	{ ahd_patch8_func, 247, 2, 1 },
--	{ ahd_patch1_func, 251, 1, 2 },
--	{ ahd_patch0_func, 252, 1, 1 },
--	{ ahd_patch7_func, 255, 3, 1 },
--	{ ahd_patch1_func, 270, 1, 2 },
--	{ ahd_patch0_func, 271, 1, 1 },
--	{ ahd_patch1_func, 274, 1, 2 },
--	{ ahd_patch0_func, 275, 1, 1 },
--	{ ahd_patch2_func, 278, 1, 2 },
--	{ ahd_patch0_func, 279, 1, 1 },
--	{ ahd_patch9_func, 292, 2, 2 },
--	{ ahd_patch0_func, 294, 1, 1 },
--	{ ahd_patch1_func, 336, 1, 2 },
--	{ ahd_patch0_func, 337, 1, 1 },
--	{ ahd_patch2_func, 345, 1, 2 },
--	{ ahd_patch0_func, 346, 1, 1 },
--	{ ahd_patch2_func, 349, 1, 2 },
--	{ ahd_patch0_func, 350, 1, 1 },
--	{ ahd_patch1_func, 356, 1, 2 },
--	{ ahd_patch0_func, 357, 1, 1 },
--	{ ahd_patch1_func, 359, 1, 2 },
--	{ ahd_patch0_func, 360, 1, 1 },
--	{ ahd_patch10_func, 379, 1, 1 },
--	{ ahd_patch10_func, 382, 1, 1 },
--	{ ahd_patch10_func, 384, 1, 1 },
--	{ ahd_patch10_func, 396, 1, 1 },
--	{ ahd_patch1_func, 406, 1, 2 },
--	{ ahd_patch0_func, 407, 1, 1 },
--	{ ahd_patch1_func, 409, 1, 2 },
--	{ ahd_patch0_func, 410, 1, 1 },
--	{ ahd_patch1_func, 418, 1, 2 },
--	{ ahd_patch0_func, 419, 1, 1 },
--	{ ahd_patch2_func, 432, 1, 2 },
--	{ ahd_patch0_func, 433, 1, 1 },
--	{ ahd_patch11_func, 469, 1, 1 },
--	{ ahd_patch1_func, 477, 1, 2 },
--	{ ahd_patch0_func, 478, 1, 1 },
--	{ ahd_patch2_func, 490, 1, 2 },
--	{ ahd_patch0_func, 491, 1, 1 },
--	{ ahd_patch12_func, 494, 6, 2 },
--	{ ahd_patch0_func, 500, 1, 1 },
--	{ ahd_patch13_func, 521, 7, 1 },
--	{ ahd_patch14_func, 530, 1, 1 },
--	{ ahd_patch15_func, 539, 1, 1 },
--	{ ahd_patch16_func, 540, 1, 2 },
--	{ ahd_patch0_func, 541, 1, 1 },
--	{ ahd_patch17_func, 544, 1, 1 },
--	{ ahd_patch16_func, 545, 1, 1 },
--	{ ahd_patch18_func, 556, 1, 2 },
--	{ ahd_patch0_func, 557, 1, 1 },
--	{ ahd_patch1_func, 576, 1, 2 },
--	{ ahd_patch0_func, 577, 1, 1 },
--	{ ahd_patch1_func, 580, 1, 2 },
--	{ ahd_patch0_func, 581, 1, 1 },
--	{ ahd_patch2_func, 586, 1, 2 },
--	{ ahd_patch0_func, 587, 1, 1 },
--	{ ahd_patch2_func, 591, 1, 2 },
--	{ ahd_patch0_func, 592, 1, 1 },
--	{ ahd_patch1_func, 593, 1, 2 },
--	{ ahd_patch0_func, 594, 1, 1 },
--	{ ahd_patch2_func, 605, 1, 2 },
--	{ ahd_patch0_func, 606, 1, 1 },
--	{ ahd_patch19_func, 610, 1, 1 },
--	{ ahd_patch20_func, 615, 1, 1 },
--	{ ahd_patch21_func, 616, 2, 1 },
--	{ ahd_patch20_func, 620, 1, 2 },
--	{ ahd_patch0_func, 621, 1, 1 },
--	{ ahd_patch2_func, 624, 1, 2 },
--	{ ahd_patch0_func, 625, 1, 1 },
--	{ ahd_patch2_func, 640, 1, 2 },
--	{ ahd_patch0_func, 641, 1, 1 },
--	{ ahd_patch13_func, 642, 14, 1 },
--	{ ahd_patch1_func, 660, 1, 2 },
--	{ ahd_patch0_func, 661, 1, 1 },
--	{ ahd_patch13_func, 662, 1, 1 },
--	{ ahd_patch1_func, 674, 1, 2 },
--	{ ahd_patch0_func, 675, 1, 1 },
--	{ ahd_patch1_func, 682, 1, 2 },
--	{ ahd_patch0_func, 683, 1, 1 },
--	{ ahd_patch19_func, 706, 1, 1 },
--	{ ahd_patch19_func, 744, 1, 1 },
--	{ ahd_patch1_func, 755, 1, 2 },
--	{ ahd_patch0_func, 756, 1, 1 },
--	{ ahd_patch1_func, 773, 1, 2 },
--	{ ahd_patch0_func, 774, 1, 1 },
--	{ ahd_patch1_func, 776, 1, 2 },
--	{ ahd_patch0_func, 777, 1, 1 },
--	{ ahd_patch1_func, 780, 1, 2 },
--	{ ahd_patch0_func, 781, 1, 1 },
--	{ ahd_patch22_func, 783, 1, 2 },
--	{ ahd_patch0_func, 784, 2, 1 },
--	{ ahd_patch23_func, 787, 4, 2 },
--	{ ahd_patch0_func, 791, 1, 1 },
--	{ ahd_patch23_func, 799, 11, 1 }
-+	{ ahd_patch2_func, 173, 3, 1 },
-+	{ ahd_patch1_func, 176, 2, 1 },
-+	{ ahd_patch5_func, 178, 1, 1 },
-+	{ ahd_patch2_func, 187, 1, 2 },
-+	{ ahd_patch0_func, 188, 1, 1 },
-+	{ ahd_patch6_func, 189, 2, 2 },
-+	{ ahd_patch0_func, 191, 6, 3 },
-+	{ ahd_patch2_func, 194, 1, 2 },
-+	{ ahd_patch0_func, 195, 1, 1 },
-+	{ ahd_patch2_func, 198, 1, 2 },
-+	{ ahd_patch0_func, 199, 1, 1 },
-+	{ ahd_patch3_func, 201, 1, 1 },
-+	{ ahd_patch7_func, 202, 3, 1 },
-+	{ ahd_patch3_func, 211, 1, 1 },
-+	{ ahd_patch5_func, 212, 16, 2 },
-+	{ ahd_patch0_func, 228, 1, 1 },
-+	{ ahd_patch8_func, 248, 2, 1 },
-+	{ ahd_patch1_func, 252, 1, 2 },
-+	{ ahd_patch0_func, 253, 1, 1 },
-+	{ ahd_patch7_func, 256, 3, 1 },
-+	{ ahd_patch1_func, 271, 1, 2 },
-+	{ ahd_patch0_func, 272, 1, 1 },
-+	{ ahd_patch1_func, 275, 1, 2 },
-+	{ ahd_patch0_func, 276, 1, 1 },
-+	{ ahd_patch2_func, 279, 1, 2 },
-+	{ ahd_patch0_func, 280, 1, 1 },
-+	{ ahd_patch9_func, 293, 2, 2 },
-+	{ ahd_patch0_func, 295, 1, 1 },
-+	{ ahd_patch1_func, 337, 1, 2 },
-+	{ ahd_patch0_func, 338, 1, 1 },
-+	{ ahd_patch2_func, 346, 1, 2 },
-+	{ ahd_patch0_func, 347, 1, 1 },
-+	{ ahd_patch2_func, 350, 1, 2 },
-+	{ ahd_patch0_func, 351, 1, 1 },
-+	{ ahd_patch1_func, 357, 1, 2 },
-+	{ ahd_patch0_func, 358, 1, 1 },
-+	{ ahd_patch1_func, 360, 1, 2 },
-+	{ ahd_patch0_func, 361, 1, 1 },
-+	{ ahd_patch10_func, 380, 1, 1 },
-+	{ ahd_patch10_func, 383, 1, 1 },
-+	{ ahd_patch10_func, 385, 1, 1 },
-+	{ ahd_patch10_func, 397, 1, 1 },
-+	{ ahd_patch1_func, 407, 1, 2 },
-+	{ ahd_patch0_func, 408, 1, 1 },
-+	{ ahd_patch1_func, 410, 1, 2 },
-+	{ ahd_patch0_func, 411, 1, 1 },
-+	{ ahd_patch1_func, 419, 1, 2 },
-+	{ ahd_patch0_func, 420, 1, 1 },
-+	{ ahd_patch2_func, 433, 1, 2 },
-+	{ ahd_patch0_func, 434, 1, 1 },
-+	{ ahd_patch11_func, 470, 1, 1 },
-+	{ ahd_patch1_func, 478, 1, 2 },
-+	{ ahd_patch0_func, 479, 1, 1 },
-+	{ ahd_patch2_func, 491, 1, 2 },
-+	{ ahd_patch0_func, 492, 1, 1 },
-+	{ ahd_patch12_func, 495, 6, 2 },
-+	{ ahd_patch0_func, 501, 1, 1 },
-+	{ ahd_patch13_func, 522, 7, 1 },
-+	{ ahd_patch14_func, 531, 1, 1 },
-+	{ ahd_patch15_func, 540, 1, 1 },
-+	{ ahd_patch16_func, 541, 1, 2 },
-+	{ ahd_patch0_func, 542, 1, 1 },
-+	{ ahd_patch17_func, 545, 1, 1 },
-+	{ ahd_patch16_func, 546, 1, 1 },
-+	{ ahd_patch18_func, 557, 1, 2 },
-+	{ ahd_patch0_func, 558, 1, 1 },
-+	{ ahd_patch1_func, 577, 1, 2 },
-+	{ ahd_patch0_func, 578, 1, 1 },
-+	{ ahd_patch1_func, 581, 1, 2 },
-+	{ ahd_patch0_func, 582, 1, 1 },
-+	{ ahd_patch2_func, 587, 1, 2 },
-+	{ ahd_patch0_func, 588, 1, 1 },
-+	{ ahd_patch2_func, 592, 1, 2 },
-+	{ ahd_patch0_func, 593, 1, 1 },
-+	{ ahd_patch1_func, 594, 1, 2 },
-+	{ ahd_patch0_func, 595, 1, 1 },
-+	{ ahd_patch2_func, 606, 1, 2 },
-+	{ ahd_patch0_func, 607, 1, 1 },
-+	{ ahd_patch19_func, 611, 1, 1 },
-+	{ ahd_patch20_func, 616, 1, 1 },
-+	{ ahd_patch21_func, 617, 2, 1 },
-+	{ ahd_patch20_func, 621, 1, 2 },
-+	{ ahd_patch0_func, 622, 1, 1 },
-+	{ ahd_patch2_func, 625, 1, 2 },
-+	{ ahd_patch0_func, 626, 1, 1 },
-+	{ ahd_patch2_func, 641, 1, 2 },
-+	{ ahd_patch0_func, 642, 1, 1 },
-+	{ ahd_patch13_func, 643, 14, 1 },
-+	{ ahd_patch1_func, 661, 1, 2 },
-+	{ ahd_patch0_func, 662, 1, 1 },
-+	{ ahd_patch13_func, 663, 1, 1 },
-+	{ ahd_patch1_func, 675, 1, 2 },
-+	{ ahd_patch0_func, 676, 1, 1 },
-+	{ ahd_patch1_func, 683, 1, 2 },
-+	{ ahd_patch0_func, 684, 1, 1 },
-+	{ ahd_patch19_func, 707, 1, 1 },
-+	{ ahd_patch19_func, 745, 1, 1 },
-+	{ ahd_patch1_func, 756, 1, 2 },
-+	{ ahd_patch0_func, 757, 1, 1 },
-+	{ ahd_patch1_func, 774, 1, 2 },
-+	{ ahd_patch0_func, 775, 1, 1 },
-+	{ ahd_patch1_func, 777, 1, 2 },
-+	{ ahd_patch0_func, 778, 1, 1 },
-+	{ ahd_patch1_func, 781, 1, 2 },
-+	{ ahd_patch0_func, 782, 1, 1 },
-+	{ ahd_patch22_func, 784, 1, 2 },
-+	{ ahd_patch0_func, 785, 2, 1 },
-+	{ ahd_patch23_func, 788, 4, 2 },
-+	{ ahd_patch0_func, 792, 1, 1 },
-+	{ ahd_patch23_func, 800, 11, 1 }
-  };
-
-  static struct cs {
-@@ -1160,14 +1161,14 @@
-  	{ 65, 66 },
-  	{ 72, 92 },
-  	{ 110, 137 },
--	{ 138, 172 },
--	{ 177, 185 },
--	{ 210, 261 },
--	{ 422, 430 },
--	{ 440, 442 },
--	{ 445, 454 },
--	{ 706, 736 },
--	{ 746, 750 }
-+	{ 138, 173 },
-+	{ 178, 186 },
-+	{ 211, 262 },
-+	{ 423, 431 },
-+	{ 441, 443 },
-+	{ 446, 455 },
-+	{ 707, 737 },
-+	{ 747, 751 }
-  };
-
-  static const int num_critical_sections = sizeof(critical_sections)
-==== //depot/aic7xxx/linux/drivers/scsi/aic7xxx/aic7xxx_osm.c#262 - /home/luben/projects/linux/2.6/linux-2.5/drivers/scsi/aic7xxx/aic7xxx_osm.c ====
---- /tmp/tmp.27107.11	2004-09-27 13:34:50.148125648 -0400
-+++ /home/luben/projects/linux/2.6/linux-2.5/drivers/scsi/aic7xxx/aic7xxx_osm.c	2004-01-29 19:33:08.000000000 -0500
+@@ -365,6 +374,7 @@
+  	if ((scb = TAILQ_FIRST(queue)) != NULL
+  	 && (scb->flags & SCB_ACTIVE) == 0) {
+  		scb->flags |= SCB_ACTIVE;
++		aic_scb_timer_start(scb);
+  		ahc_queue_scb(ahc, scb);
+  	}
+  }
+==== //depot/aic7xxx/linux/drivers/scsi/aic7xxx/aic7xxx_osm.c#263 - /home/luben/projects/linux/2.6/linux-2.5/drivers/scsi/aic7xxx/aic7xxx_osm.c ====
+--- /tmp/tmp.27147.7	2004-09-27 13:35:31.557830416 -0400
++++ /home/luben/projects/linux/2.6/linux-2.5/drivers/scsi/aic7xxx/aic7xxx_osm.c	2004-02-22 13:27:04.000000000 -0500
 @@ -1,7 +1,7 @@
   /*
    * Adaptec AIC7xxx device driver for Linux.
    *
-- * $Id: //depot/aic7xxx/linux/drivers/scsi/aic7xxx/aic7xxx_osm.c#262 $
-+ * $Id: //depot/aic7xxx/linux/drivers/scsi/aic7xxx/aic7xxx_osm.c#263 $
+- * $Id: //depot/aic7xxx/linux/drivers/scsi/aic7xxx/aic7xxx_osm.c#263 $
++ * $Id: //depot/aic7xxx/linux/drivers/scsi/aic7xxx/aic7xxx_osm.c#268 $
    *
    * Copyright (c) 1994 John Aycock
    *   The University of Calgary Department of Computer Science.
-@@ -148,6 +148,12 @@
-
-  static int ahc_sysrq_key;
-
-+/***************************** Global Data ************************************/
-+/*
-+ * Driver Initialization Status.  Used by ahc_linux_exit().
-+ */
-+int ahc_init_status;
-+
-  /*
-   * Lock protecting manipulation of the ahc softc list.
-   */
-@@ -488,6 +494,8 @@
+@@ -494,8 +494,9 @@
   static void ahc_linux_filter_inquiry(struct ahc_softc*, struct ahc_devinfo*);
   static void ahc_linux_sem_timeout(u_long arg);
   static void ahc_linux_dev_timed_unfreeze(u_long arg);
-+static int __init ahc_linux_init(void);
-+static void __exit ahc_linux_exit(void);
++static void ahc_linux_targ_timed_unfreeze(u_long arg);
+  static int __init ahc_linux_init(void);
+-static void __exit ahc_linux_exit(void);
++static void ahc_linux_exit(void);
   static int  ahc_linux_queue_recovery_cmd(Scsi_Cmnd *cmd, scb_flag flag);
   static void ahc_linux_initialize_scsi_bus(struct ahc_softc *ahc);
   static void ahc_linux_size_nseg(void);
-@@ -933,6 +941,7 @@
-  	 */
-  	spin_unlock_irq(&io_request_lock);
-  #endif
-+	found = 0;
-
-  	/*
-  	 * Sanity checking of Linux SCSI data structures so
-@@ -943,7 +952,8 @@
-  	  > offsetof(struct scsi_cmnd, host_scribble)) {
-  		printf("ahc_linux_detect: SCSI data structures changed.\n");
-  		printf("ahc_linux_detect: Unable to attach\n");
--		return (0);
-+		ahc_init_status = -EINVAL;
-+		goto done;
-  	}
-  	ahc_linux_size_nseg();
-  #ifdef MODULE
-@@ -969,11 +979,15 @@
-  	ahc_list_lockinit();
-
-  #ifdef CONFIG_PCI
--	ahc_linux_pci_init();
-+	ahc_init_status = ahc_linux_pci_init();
-+	if (ahc_init_status != 0)
-+		goto done;
-  #endif
-
-  #ifdef CONFIG_EISA
--	ahc_linux_eisa_init();
-+	ahc_init_status = ahc_linux_eisa_init();
-+	if (ahc_init_status != 0)
-+		goto done;
-  #endif
-
-  	/*
-@@ -986,6 +1000,7 @@
-  		if (ahc_linux_register_host(ahc, template) == 0)
-  			found++;
-  	}
-+done:
-  #if LINUX_VERSION_CODE < KERNEL_VERSION(2,5,0)
-  	spin_lock_irq(&io_request_lock);
-  #endif
-@@ -5090,18 +5105,28 @@
-  static int __init
-  ahc_linux_init(void)
-  {
-+	int found;
-+
-  #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,5,0)
--	return (ahc_linux_detect(&aic7xxx_driver_template) ? 0 : -ENODEV);
-+	found = ahc_linux_detect(&aic7xxx_driver_template);
-  #else
-  	scsi_register_module(MODULE_SCSI_HA, &aic7xxx_driver_template);
--	if (aic7xxx_driver_template.present == 0) {
--		scsi_unregister_module(MODULE_SCSI_HA,
--				       &aic7xxx_driver_template);
--		return (-ENODEV);
--	}
--
--	return (0);
-+	found = aic7xxx_driver_template.present;
-  #endif
-+#ifdef MODULE
-+	if (found == 0)
-+		ahc_init_status = -ENODEV;
-+#endif
-+	if (ahc_init_status != 0) {
+@@ -1117,6 +1118,17 @@
+  		printf("%s: aic7xxx_linux_queue - Unable to allocate device!\n",
+  		       ahc_name(ahc));
+  		return (0);
++	} else if ((dev->flags & AIC_DEV_UNCONFIGURED) != 0
++		&& cmd->device->type != -1) {
 +		/*
-+		 * Linux will only call our exit
-+		 * routine if our init function
-+		 * returns 0 status.  Force cleanup
-+		 * if initialization is not successful.
++		 * Configure devices that have already successfully
++		 * completed an inquiry. This  handles the case of
++		 * devices being destroyed due to transient selection
++		 * timeouts.
 +		 */
-+		ahc_linux_exit();
-+	}
-+	return (ahc_init_status);
++		dev->flags &= ~AIC_DEV_UNCONFIGURED;
++	 	dev->scsi_device = cmd->device;
++		aic_linux_device_queue_depth(ahc, dev);
+  	}
+
+  	if (cmd->cmd_len > MAX_CDB_LEN) {
+@@ -1675,7 +1687,6 @@
+  #endif
+  	ahc_linux_initialize_scsi_bus(ahc);
+  	ahc_unlock(ahc, &s);
+-	ahc_sysrq_key = aic_install_sysrq(&ahc_sysrq_op);
+  	ahc_spawn_recovery_thread(ahc);
+  	if (ahc->platform_data->recovery_pid < 0) {
+  		printf("%s: Failed to create recovery thread, error= %d\n",
+@@ -1878,7 +1889,6 @@
+  	struct aic_linux_device *dev;
+  	int i, j;
+
+-	aic_remove_sysrq(ahc_sysrq_key, &ahc_sysrq_op);
+  	if (ahc->platform_data != NULL) {
+  		del_timer_sync(&ahc->platform_data->completeq_timer);
+  		ahc_linux_kill_dv_thread(ahc);
+@@ -1896,7 +1906,19 @@
+  		for (i = 0; i < AHC_NUM_TARGETS; i++) {
+  			targ = ahc->platform_data->targets[i];
+  			if (targ != NULL) {
+-				/* Keep target around through the loop. */
++
++				/*
++				 * Stop any unfreeze timer from running.
++				 */
++				del_timer_sync(&targ->timer);
++
++				/*
++				 * Keep target around through the loop.
++				 * The timer above may also have held
++				 * a refcount, but since we forcibly
++				 * delete the target, we don't care
++				 * about the extra reference.
++				 */
+  				targ->refcount++;
+  				for (j = 0; j < AHC_NUM_LUNS; j++) {
+
+@@ -3594,7 +3616,8 @@
+  		panic("running device on run list");
+
+  	while ((acmd = TAILQ_FIRST(&dev->busyq)) != NULL
+-	    && dev->openings > 0 && dev->qfrozen == 0) {
++	    && dev->openings > 0 && dev->qfrozen == 0
++	    && dev->target->qfrozen == 0) {
+
+  		/*
+  		 * Schedule us to run later.  The only reason we are not
+@@ -3863,6 +3886,7 @@
+  	targ->target = target;
+  	targ->softc = ahc;
+  	targ->flags = AIC_DV_REQUIRED;
++	init_timer(&targ->timer);
+  	ahc->platform_data->targets[target_offset] = targ;
+  	return (targ);
+  }
+@@ -3936,7 +3960,7 @@
+  	 * a tagged queuing capable device.
+  	 */
+  	dev->maxtags = 0;
+-	
++
+  	targ->refcount++;
+  	targ->devices[lun] = dev;
+  	return (dev);
+@@ -3947,7 +3971,6 @@
+  {
+  	struct aic_linux_target *targ;
+
+-	del_timer(&dev->timer);
+  	targ = dev->target;
+  	targ->devices[dev->lun] = NULL;
+  	free(dev, M_DEVBUF);
+@@ -4028,7 +4051,10 @@
+  	}
+          case AC_SENT_BDR:
+  	{
++		struct	aic_linux_target *targ;
++		int	target_offset;
+  #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,5,0)
++
+  		WARN_ON(lun != CAM_LUN_WILDCARD);
+  		scsi_report_device_reset(ahc->platform_data->host,
+  					 channel - 'A', target);
+@@ -4050,6 +4076,36 @@
+  			}
+  		}
+  #endif
++		/*
++		 * Freeze the target for a 500ms to give the
++		 * target some time to recover from this BDR.
++		 */
++		target_offset = target;
++		if (channel == 'B')
++			target_offset += 8;
++		targ = ahc->platform_data->targets[target_offset];
++		if (targ == NULL)
++			break;
++		if ((targ->flags & AIC_TARG_TIMER_ACTIVE) != 0) {
++			printf("%s:%c:%d: Target Timer still active during "
++			       "BDR processing\n", ahc_name(ahc),
++				targ->channel, targ->target);
++			break;
++		}
++		/*
++		 * Keep the reference count non-zero during
++		 * the lifetime of the timer.  This
++		 * guarantees that the target will not
++		 * be freed before our timer executes.
++		 */
++		targ->refcount++;
++		targ->flags |= AIC_TARG_TIMER_ACTIVE;
++		targ->qfrozen++;
++		init_timer(&targ->timer);
++		targ->timer.data = (u_long)targ;
++		targ->timer.expires = jiffies + (HZ/2);
++		targ->timer.function = ahc_linux_targ_timed_unfreeze;
++		add_timer(&targ->timer);
+  		break;
+  	}
+          case AC_BUS_RESET:
+@@ -4169,7 +4225,33 @@
+  	} else if (aic_get_transaction_status(scb) == CAM_SCSI_STATUS_ERROR) {
+  		ahc_linux_handle_scsi_status(ahc, dev, scb);
+  	} else if (aic_get_transaction_status(scb) == CAM_SEL_TIMEOUT) {
+-		dev->flags |= AIC_DEV_UNCONFIGURED;
++		struct aic_linux_target *targ;
++		struct aic_linux_device *cur_dev;
++		int i;
++
++		/*
++		 * Mark all devices linked off this target
++		 * as unconfigured.
++		 */
++		targ = dev->target;
++		for (i = 0; i < AHC_NUM_LUNS; i++) {
++
++			if (targ->devices[i] == NULL)
++				continue;
++			cur_dev = targ->devices[i];
++			cur_dev->flags |= AIC_DEV_UNCONFIGURED;
++
++			/*
++			 * Don't free the dev for this
++			 * command prematurely.
++			 */
++			if (cur_dev == dev)
++				continue;
++
++			if (TAILQ_EMPTY(&cur_dev->busyq)
++			 && dev->active == 0)
++				ahc_linux_free_device(ahc, cur_dev);
++		}
+  		if (AIC_DV_CMD(cmd) == FALSE)
+  			dev->target->flags &= ~AIC_DV_REQUIRED;
+  	}
+@@ -4417,8 +4499,15 @@
+  				dev->target->channel, dev->target->target);
+  			break;
+  		}
+-		dev->flags |= AIC_DEV_TIMER_ACTIVE;
+  		dev->qfrozen++;
++		/*
++		 * Keep the active count non-zero during
++		 * the lifetime of the timer.  This
++		 * guarantees that the device will not
++		 * be freed before our timer executes.
++		 */
++		dev->active++;
++		dev->flags |= AIC_DEV_TIMER_ACTIVE;
+  		init_timer(&dev->timer);
+  		dev->timer.data = (u_long)dev;
+  		dev->timer.expires = jiffies + (HZ/2);
+@@ -4699,10 +4788,17 @@
+  	dev = (struct aic_linux_device *)arg;
+  	ahc = dev->target->softc;
+  	ahc_lock(ahc, &s);
++
++	/*
++	 * Release our hold on the device.
++	 */
+  	dev->flags &= ~AIC_DEV_TIMER_ACTIVE;
++	dev->active--;
++
+  	if (dev->qfrozen > 0)
+  		dev->qfrozen--;
+  	if (dev->qfrozen == 0
++	 && dev->target->qfrozen == 0
+  	 && (dev->flags & AIC_DEV_ON_RUN_LIST) == 0)
+  		ahc_linux_run_device_queue(ahc, dev);
+  	if ((dev->flags & AIC_DEV_UNCONFIGURED) != 0
+@@ -4712,6 +4808,43 @@
+  	ahc_unlock(ahc, &s);
   }
 
-  static void __exit
-==== //depot/aic7xxx/linux/drivers/scsi/aic7xxx/aic7xxx_osm.h#167 - /home/luben/projects/linux/2.6/linux-2.5/drivers/scsi/aic7xxx/aic7xxx_osm.h ====
---- /tmp/tmp.27107.12	2004-09-27 13:34:50.195118504 -0400
-+++ /home/luben/projects/linux/2.6/linux-2.5/drivers/scsi/aic7xxx/aic7xxx_osm.h	2004-01-29 19:43:50.000000000 -0500
++static void
++ahc_linux_targ_timed_unfreeze(u_long arg)
++{
++	struct aic_linux_target *targ;
++	struct ahc_softc *ahc;
++	u_long s;
++
++	targ = (struct aic_linux_target *)arg;
++	ahc = targ->softc;
++	ahc_lock(ahc, &s);
++
++	/*
++	 * Release our hold on the target.
++	 */
++	targ->flags &= ~AIC_TARG_TIMER_ACTIVE;
++	targ->refcount--;
++
++	targ->flags &= ~AIC_TARG_TIMER_ACTIVE;
++	if (targ->qfrozen > 0)
++		targ->qfrozen--;
++	if (targ->qfrozen == 0) {
++		u_int i;
++
++		for (i = 0; i < AHC_NUM_LUNS; i++) {
++			struct aic_linux_device *dev;
++		
++			dev = targ->devices[i];
++			if (dev == NULL
++	 		 || (dev->flags & AIC_DEV_ON_RUN_LIST) != 0)
++				continue;
++
++			aic_linux_check_device_queue(ahc, dev);
++		}
++	}
++	ahc_unlock(ahc, &s);
++}
++
+  static int
+  ahc_linux_queue_recovery_cmd(Scsi_Cmnd *cmd, scb_flag flag)
+  {
+@@ -5107,6 +5240,8 @@
+  {
+  	int found;
+
++	ahc_sysrq_key = aic_install_sysrq(&ahc_sysrq_op);
++
+  #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,5,0)
+  	found = ahc_linux_detect(&aic7xxx_driver_template);
+  #else
+@@ -5119,17 +5254,17 @@
+  #endif
+  	if (ahc_init_status != 0) {
+  		/*
+-		 * Linux will only call our exit
+-		 * routine if our init function
+-		 * returns 0 status.  Force cleanup
+-		 * if initialization is not successful.
++		 * Linux will not call our exit
++		 * routine if we fail to load.
++		 * Force cleanup if initialization
++		 * is not successful.
+  		 */
+  		ahc_linux_exit();
+  	}
+  	return (ahc_init_status);
+  }
+
+-static void __exit
++static void
+  ahc_linux_exit(void)
+  {
+  	struct ahc_softc *ahc;
+@@ -5160,6 +5295,7 @@
+  #ifdef CONFIG_EISA
+  	ahc_linux_eisa_exit();
+  #endif
++	aic_remove_sysrq(ahc_sysrq_key, &ahc_sysrq_op);
+  }
+
+  module_init(ahc_linux_init);
+==== //depot/aic7xxx/linux/drivers/scsi/aic7xxx/aic7xxx_osm.h#168 - /home/luben/projects/linux/2.6/linux-2.5/drivers/scsi/aic7xxx/aic7xxx_osm.h ====
+--- /tmp/tmp.27147.8	2004-09-27 13:35:31.610822360 -0400
++++ /home/luben/projects/linux/2.6/linux-2.5/drivers/scsi/aic7xxx/aic7xxx_osm.h	2004-02-04 12:33:27.000000000 -0500
 @@ -53,7 +53,7 @@
    * IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
    * POSSIBILITY OF SUCH DAMAGES.
    *
-- * $Id: //depot/aic7xxx/linux/drivers/scsi/aic7xxx/aic7xxx_osm.h#167 $
-+ * $Id: //depot/aic7xxx/linux/drivers/scsi/aic7xxx/aic7xxx_osm.h#168 $
+- * $Id: //depot/aic7xxx/linux/drivers/scsi/aic7xxx/aic7xxx_osm.h#168 $
++ * $Id: //depot/aic7xxx/linux/drivers/scsi/aic7xxx/aic7xxx_osm.h#169 $
    *
    */
   #ifndef _AIC7XXX_LINUX_H_
-@@ -219,6 +219,7 @@
-  }
+@@ -113,7 +113,7 @@
+  #include <linux/smp.h>
+  #endif
 
-  /**************************** Initialization **********************************/
-+extern int	ahc_init_status;
-  int		ahc_linux_register_host(struct ahc_softc *,
-  					Scsi_Host_Template *);
+-#define AIC7XXX_DRIVER_VERSION "6.3.4"
++#define AIC7XXX_DRIVER_VERSION "6.3.5"
 
-@@ -249,7 +250,7 @@
-
-  #ifdef CONFIG_EISA
-  extern uint32_t aic7xxx_probe_eisa_vl;
--void			 ahc_linux_eisa_init(void);
-+int			 ahc_linux_eisa_init(void);
-  void			 ahc_linux_eisa_exit(void);
-  int			 aic7770_map_registers(struct ahc_softc *ahc,
-  					       u_int port);
-==== //depot/aic7xxx/linux/drivers/scsi/aic7xxx/aic7xxx_osm_pci.c#53 - /home/luben/projects/linux/2.6/linux-2.5/drivers/scsi/aic7xxx/aic7xxx_osm_pci.c ====
---- /tmp/tmp.27107.13	2004-09-27 13:34:50.234112576 -0400
-+++ /home/luben/projects/linux/2.6/linux-2.5/drivers/scsi/aic7xxx/aic7xxx_osm_pci.c	2004-01-29 18:08:01.000000000 -0500
-@@ -36,7 +36,7 @@
+  /********************* Definitions Required by the Core ***********************/
+  /*
+==== //depot/aic7xxx/aic7xxx/aicasm/aicasm_gram.y#29 - /home/luben/projects/linux/2.6/linux-2.5/drivers/scsi/aic7xxx/aicasm/aicasm_gram.y ====
+--- /tmp/tmp.27147.9	2004-09-27 13:35:31.786795608 -0400
++++ /home/luben/projects/linux/2.6/linux-2.5/drivers/scsi/aic7xxx/aicasm/aicasm_gram.y	2004-02-12 19:29:06.000000000 -0500
+@@ -38,7 +38,7 @@
    * IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
    * POSSIBILITY OF SUCH DAMAGES.
    *
-- * $Id: //depot/aic7xxx/linux/drivers/scsi/aic7xxx/aic7xxx_osm_pci.c#53 $
-+ * $Id: //depot/aic7xxx/linux/drivers/scsi/aic7xxx/aic7xxx_osm_pci.c#56 $
+- * $Id: //depot/aic7xxx/aic7xxx/aicasm/aicasm_gram.y#29 $
++ * $Id: //depot/aic7xxx/aic7xxx/aicasm/aicasm_gram.y#30 $
+   *
+   * $FreeBSD$
+   */
+@@ -157,6 +157,8 @@
+
+  %token T_END_CS
+
++%token T_PAD_PAGE
++
+  %token T_FIELD
+
+  %token T_ENUM
+@@ -189,6 +191,10 @@
+
+  %token <value> T_OR
+
++/* 16 bit extensions */
++%token <value> T_OR16 T_AND16 T_XOR16 T_ADD16
++%token <value> T_ADC16 T_MVI16 T_TEST16 T_CMP16 T_CMPXCHG
++
+  %token T_RET
+
+  %token T_NOP
+@@ -207,7 +213,7 @@
+
+  %type <expression> expression immediate immediate_or_a
+
+-%type <value> export ret f1_opcode f2_opcode jmp_jc_jnc_call jz_jnz je_jne
++%type <value> export ret f1_opcode f2_opcode f4_opcode jmp_jc_jnc_call jz_jnz je_jne
+
+  %type <value> mode_value mode_list macro_arglist
+
+@@ -1304,6 +1310,15 @@
+  |	T_ROR { $$ = AIC_OP_ROR; }
+  ;
+
++f4_opcode:
++	T_OR16	{ $$ = AIC_OP_OR16; }
++|	T_AND16 { $$ = AIC_OP_AND16; }
++|	T_XOR16 { $$ = AIC_OP_XOR16; }
++|	T_ADD16 { $$ = AIC_OP_ADD16; }
++|	T_ADC16 { $$ = AIC_OP_ADC16; }
++|	T_MVI16 { $$ = AIC_OP_MVI16; }
++;
++
+  code:
+  	f2_opcode destination ',' expression opt_source ret ';'
+  	{
+==== //depot/aic7xxx/aic7xxx/aicasm/aicasm_insformat.h#11 - /home/luben/projects/linux/2.6/linux-2.5/drivers/scsi/aic7xxx/aicasm/aicasm_insformat.h ====
+--- /tmp/tmp.27147.10	2004-09-27 13:35:31.795794240 -0400
++++ /home/luben/projects/linux/2.6/linux-2.5/drivers/scsi/aic7xxx/aicasm/aicasm_insformat.h	2004-02-12 19:28:11.000000000 -0500
+@@ -37,11 +37,12 @@
+   * IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+   * POSSIBILITY OF SUCH DAMAGES.
+   *
+- * $Id: //depot/aic7xxx/aic7xxx/aicasm/aicasm_insformat.h#11 $
++ * $Id: //depot/aic7xxx/aic7xxx/aicasm/aicasm_insformat.h#12 $
+   *
+   * $FreeBSD$
    */
 
-  #include "aic7xxx_osm.h"
-@@ -47,6 +47,8 @@
-   */
-  #include "aiclib_pci.c"
-
-+static int	ahc_pci_module_registered;
-+
-  static int	ahc_linux_pci_dev_probe(struct pci_dev *pdev,
-  					const struct pci_device_id *ent);
-  static int	ahc_linux_pci_reserve_io_region(struct ahc_softc *ahc,
-@@ -160,6 +162,13 @@
-  	}
-  	pci_set_master(pdev);
-
-+	if (aic_set_consistent_dma_mask(ahc, 0xFFFFFFFF) != 0) {
-+		printk(KERN_WARNING "aic7xxx: Unable to set"
-+		       "coherent DMA mask.\n");
-+		ahc_free(ahc);
-+		return (-ENOMEM);
-+	}
-+
-  	mask_39bit = (bus_addr_t)0x7FFFFFFFFFULL;
-  	if (sizeof(bus_addr_t) > 4
-  	 && ahc_linux_get_memsize() > 0x80000000
-@@ -167,7 +176,12 @@
-  		ahc->flags |= AHC_39BIT_ADDRESSING;
-  		ahc->platform_data->hw_dma_mask = mask_39bit;
-  	} else {
--		aic_set_dma_mask(ahc, 0xFFFFFFFF);
-+		if (aic_set_dma_mask(ahc, 0xFFFFFFFF) != 0) {
-+			printk(KERN_WARNING "aic7xxx: Unable to set data "
-+			       "DMA mask.\n");
-+			ahc_free(ahc);
-+			return (-ENOMEM);
-+		}
-  		ahc->platform_data->hw_dma_mask = 0xFFFFFFFF;
-  	}
-  	error = ahc_pci_config(ahc, entry);
-@@ -191,13 +205,19 @@
-  int
-  ahc_linux_pci_init(void)
-  {
--	return (pci_module_init(&aic7xxx_pci_driver));
-+	int error;
-+	
-+	error = pci_module_init(&aic7xxx_pci_driver);
-+	if (error == 0)
-+		ahc_pci_module_registered = 1;
-+	return (error);
-  }
-
-  void
-  ahc_linux_pci_exit(void)
-  {
--	pci_unregister_driver(&aic7xxx_pci_driver);
-+	if (ahc_pci_module_registered != 0)
-+		pci_unregister_driver(&aic7xxx_pci_driver);
-  }
-
-  static int
-==== //depot/aic7xxx/linux/drivers/scsi/aic7xxx/aiclib.c#16 - /home/luben/projects/linux/2.6/linux-2.5/drivers/scsi/aic7xxx/aiclib.c ====
---- /tmp/tmp.27107.14	2004-09-27 13:34:50.494073056 -0400
-+++ /home/luben/projects/linux/2.6/linux-2.5/drivers/scsi/aic7xxx/aiclib.c	2004-01-29 16:43:07.000000000 -0500
-@@ -1504,6 +1504,8 @@
-  	map = malloc(sizeof(*map), M_DEVBUF, M_NOWAIT);
-  	if (map == NULL)
-  		return (ENOMEM);
-+
-+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,5,0)
-  	/*
-  	 * Although we can dma data above 4GB, our
-  	 * coherent memory is below 4GB for
-@@ -1512,8 +1514,11 @@
-  	 * our dma mask when doing allocations.
-  	 */
-  	aic_set_dma_mask(aic, 0xFFFFFFFF);
-+#endif
-  	*vaddr = aic_alloc_coherent(aic, dmat->maxsize, &map->bus_addr);
-+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,5,0)
-  	aic_set_dma_mask(aic, aic->platform_data->hw_dma_mask);
-+#endif
-  	if (*vaddr == NULL)
-  		return (ENOMEM);
-  	*mapp = map;
-==== //depot/aic7xxx/linux/drivers/scsi/aic7xxx/aiclib.h#35 - /home/luben/projects/linux/2.6/linux-2.5/drivers/scsi/aic7xxx/aiclib.h ====
---- /tmp/tmp.27107.15	2004-09-27 13:34:50.871015752 -0400
-+++ /home/luben/projects/linux/2.6/linux-2.5/drivers/scsi/aic7xxx/aiclib.h	2004-01-29 17:56:56.000000000 -0500
-@@ -332,6 +332,8 @@
-  #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,5,0)
-
-  #define aic_set_dma_mask(aic, mask) dma_set_mask(aic->dev_softc, mask)
-+#define aic_set_consistent_dma_mask(aic, mask) \
-+	pci_set_consistent_dma_mask(aic_dev_to_pci_dev(aic->dev_softc), mask)
-
-  #elif LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,3)
-
-@@ -341,6 +343,9 @@
-  #define aic_set_dma_mask(aic, mask) 			\
-  	((aic)->dev_softc == NULL ? 0 : pci_set_dma_mask(aic->dev_softc, mask))
-
-+/* Always successfull in 2.4.X kernels */
-+#define aic_set_consistent_dma_mask(aic, mask) (0)
-+
-  #else
-  /*
-   * Device softc is NULL for EISA devices.
-@@ -350,6 +355,10 @@
-      (((aic)->dev_softc == NULL)				\
-       ? 0						\
-       : (((aic)->dev_softc->dma_mask = mask) && 0))
-+
-+/* Always successfull in 2.4.X kernels */
-+#define aic_set_consistent_dma_mask(aic, mask) (0)
-+
++/* 8bit ALU logic operations */
+  struct ins_format1 {
+  #if BYTE_ORDER == LITTLE_ENDIAN
+  	uint32_t	immediate	: 8,
+@@ -60,6 +61,7 @@
   #endif
+  };
 
-  /************************* Host Template Macros *******************************/
++/* 8bit ALU shift/rotate operations */
+  struct ins_format2 {
+  #if BYTE_ORDER == LITTLE_ENDIAN
+  	uint32_t	shift_control	: 8,
+@@ -78,6 +80,7 @@
+  #endif
+  };
+
++/* 8bit branch control operations */
+  struct ins_format3 {
+  #if BYTE_ORDER == LITTLE_ENDIAN
+  	uint32_t	immediate	: 8,
+@@ -94,10 +97,68 @@
+  #endif
+  };
+
++/* 16bit ALU logic operations */
++struct ins_format4 {
++#if BYTE_ORDER == LITTLE_ENDIAN
++	uint32_t	opcode_ext	: 8,
++			source		: 9,
++			destination	: 9,
++			ret		: 1,
++			opcode		: 4,
++			parity		: 1;
++#else
++	uint32_t	parity		: 1,
++			opcode		: 4,
++			ret		: 1,
++			destination	: 9,
++			source		: 9,
++			opcode_ext	: 8;
++#endif
++};
++
++/* 16bit branch control operations */
++struct ins_format5 {
++#if BYTE_ORDER == LITTLE_ENDIAN
++	uint32_t	opcode_ext	: 8,
++			source		: 9,
++			address		: 10,
++			opcode		: 4,
++			parity		: 1;
++#else
++	uint32_t	parity		: 1,
++			opcode		: 4,
++			address		: 10,
++			source		: 9,
++			opcode_ext	: 8;
++#endif
++};
++
++/*  Far branch operations */
++struct ins_format6 {
++#if BYTE_ORDER == LITTLE_ENDIAN
++	uint32_t	page		: 3,
++			opcode_ext	: 5,
++			source		: 9,
++			address		: 10,
++			opcode		: 4,
++			parity		: 1;
++#else
++	uint32_t	parity		: 1,
++			opcode		: 4,
++			address		: 10,
++			source		: 9,
++			opcode_ext	: 5,
++			page		: 3;
++#endif
++};
++
+  union ins_formats {
+  		struct ins_format1 format1;
+  		struct ins_format2 format2;
+  		struct ins_format3 format3;
++		struct ins_format4 format4;
++		struct ins_format5 format5;
++		struct ins_format6 format6;
+  		uint8_t		   bytes[4];
+  		uint32_t	   integer;
+  };
+@@ -116,6 +177,8 @@
+  #define	AIC_OP_ROL	0x5
+  #define	AIC_OP_BMOV	0x6
+
++#define	AIC_OP_MVI16	0x7
++
+  #define	AIC_OP_JMP	0x8
+  #define AIC_OP_JC	0x9
+  #define AIC_OP_JNC	0xa
+@@ -129,3 +192,26 @@
+  #define	AIC_OP_SHL	0x10
+  #define	AIC_OP_SHR	0x20
+  #define	AIC_OP_ROR	0x30
++
++/* 16bit Ops. Low byte main opcode.  High byte extended opcode. */
++#define	AIC_OP_OR16	0x8005
++#define	AIC_OP_AND16	0x8105
++#define	AIC_OP_XOR16	0x8205
++#define	AIC_OP_ADD16	0x8305
++#define	AIC_OP_ADC16	0x8405
++#define AIC_OP_JNE16	0x8805
++#define AIC_OP_JNZ16	0x8905
++#define AIC_OP_JE16	0x8C05
++#define AIC_OP_JZ16	0x8B05
++#define AIC_OP_JMP16	0x9005
++#define AIC_OP_JC16	0x9105
++#define AIC_OP_JNC16	0x9205
++#define AIC_OP_CALL16	0x9305
++#define AIC_OP_CALL16	0x9305
++
++/* Page extension is low three bits of second opcode byte. */
++#define AIC_OP_JMPF	0xA005
++#define AIC_OP_CALLF	0xB005
++#define AIC_OP_JCF	0xC005
++#define AIC_OP_JNCF	0xD005
++#define AIC_OP_CMPXCHG	0xE005
+==== //depot/aic7xxx/aic7xxx/aicasm/aicasm_scan.l#19 - /home/luben/projects/linux/2.6/linux-2.5/drivers/scsi/aic7xxx/aicasm/aicasm_scan.l ====
+--- /tmp/tmp.27147.11	2004-09-27 13:35:31.851785728 -0400
++++ /home/luben/projects/linux/2.6/linux-2.5/drivers/scsi/aic7xxx/aicasm/aicasm_scan.l	2004-02-12 19:08:30.000000000 -0500
+@@ -38,7 +38,7 @@
+   * IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+   * POSSIBILITY OF SUCH DAMAGES.
+   *
+- * $Id: //depot/aic7xxx/aic7xxx/aicasm/aicasm_scan.l#19 $
++ * $Id: //depot/aic7xxx/aic7xxx/aicasm/aicasm_scan.l#20 $
+   *
+   * $FreeBSD$
+   */
+@@ -132,7 +132,7 @@
+  						*string_buf_ptr++ = *yptr++;
+  				}
+  			}
+-
++else			{ return T_ELSE; }
+  VERSION			{ return T_VERSION; }
+  PREFIX			{ return T_PREFIX; }
+  PATCH_ARG_LIST		{ return T_PATCH_ARG_LIST; }
+@@ -173,10 +173,6 @@
+  					yylval.value = WO;
+  				 return T_MODE;
+  			}
+-BEGIN_CRITICAL		{ return T_BEGIN_CS; }
+-END_CRITICAL		{ return T_END_CS; }
+-SET_SRC_MODE		{ return T_SET_SRC_MODE; }
+-SET_DST_MODE		{ return T_SET_DST_MODE; }
+  field			{ return T_FIELD; }
+  enum			{ return T_ENUM; }
+  mask			{ return T_MASK; }
+@@ -192,6 +188,13 @@
+  sindex			{ return T_SINDEX; }
+  A			{ return T_A; }
+
++	/* Instruction Formatting */
++PAD_PAGE		{ return T_PAD_PAGE; }
++BEGIN_CRITICAL		{ return T_BEGIN_CS; }
++END_CRITICAL		{ return T_END_CS; }
++SET_SRC_MODE		{ return T_SET_SRC_MODE; }
++SET_DST_MODE		{ return T_SET_DST_MODE; }
++
+  	/* Opcodes */
+  shl			{ return T_SHL; }
+  shr			{ return T_SHR; }
+@@ -223,7 +226,17 @@
+  or			{ return T_OR;	}
+  ret			{ return T_RET; }
+  nop			{ return T_NOP; }
+-else			{ return T_ELSE; }
++
++	/* ARP2 16bit extensions */
++or16			{ return T_OR16; }
++and16			{ return T_AND16; }
++xor16			{ return T_XOR16; }
++add16			{ return T_ADD16; }
++adc16			{ return T_ADC16; }
++mvi16			{ return T_MVI16; }
++test16			{ return T_TEST16; }
++cmp16			{ return T_CMP16; }
++cmpxchg			{ return T_CMPXCHG; }
+
+  	/* Allowed Symbols */
+  \<\<			{ return T_EXPR_LSHIFT; }
+==== //depot/aic7xxx/linux/drivers/scsi/aic7xxx/aiclib.h#37 - /home/luben/projects/linux/2.6/linux-2.5/drivers/scsi/aic7xxx/aiclib.h ====
+--- /tmp/tmp.27147.12	2004-09-27 13:35:32.182735416 -0400
++++ /home/luben/projects/linux/2.6/linux-2.5/drivers/scsi/aic7xxx/aiclib.h	2004-02-20 16:48:43.000000000 -0500
+@@ -648,7 +648,8 @@
+  	AIC_DV_REQUIRED		 = 0x01,
+  	AIC_INQ_VALID		 = 0x02,
+  	AIC_BASIC_DV		 = 0x04,
+-	AIC_ENHANCED_DV		 = 0x08
++	AIC_ENHANCED_DV		 = 0x08,
++	AIC_TARG_TIMER_ACTIVE	 = 0x10
+  } aic_linux_targ_flags;
+
+  /* DV States */
+@@ -667,6 +668,12 @@
+  } aic_dv_state;
+
+  struct aic_linux_target {
++	/*
++	 * A positive count indicates that this
++	 * target's queue is halted.
++	 */
++	u_int			  qfrozen;
++
+  	struct aic_linux_device	 *devices[AIC_NUM_LUNS];
+  	int			  channel;
+  	int			  target;
+@@ -676,6 +683,11 @@
+  	aic_linux_targ_flags	  flags;
+  	struct scsi_inquiry_data *inq_data;
+  	/*
++	 * Per target timer.
++	 */
++	struct timer_list	timer;
++
++	/*
+  	 * The next "fallback" period to use for narrow/wide transfers.
+  	 */
+  	uint8_t			  dv_next_narrow_period;
+@@ -2106,7 +2118,8 @@
+  	}
+
+  	if (TAILQ_FIRST(&dev->busyq) == NULL
+-	 || dev->openings == 0 || dev->qfrozen != 0)
++	 || dev->openings == 0 || dev->qfrozen != 0
++	 || dev->target->qfrozen != 0)
+  		return;
+
+  	aic_linux_run_device_queue(aic, dev);
+
 
 
