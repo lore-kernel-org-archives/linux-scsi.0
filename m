@@ -1,37 +1,71 @@
-From: Brian King <brking@us.ibm.com>
-Subject: Re: sym2 probs in bk-scsi tree
-Date: Thu, 08 Apr 2004 10:16:03 -0500
+From: Lester Hightower <hightowe@10east.com>
+Subject: Fix for memory leak problem in megaraid2.c /proc entries (fwd)
+Date: Thu, 8 Apr 2004 11:29:20 -0400 (EDT)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <40756CB3.5010902@us.ibm.com>
-References: <20040407231820.66dd76cd.akpm@osdl.org> <20040408145700.GB18329@parcelfarce.linux.theplanet.co.uk>
+Message-ID: <Pine.LNX.4.58.0404081126480.9356@les5.10east.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e5.ny.us.ibm.com ([32.97.182.105]:64147 "EHLO e5.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S261802AbUDHPQZ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Apr 2004 11:16:25 -0400
-In-Reply-To: <20040408145700.GB18329@parcelfarce.linux.theplanet.co.uk>
+Received: from docs1.10east.com ([63.238.77.220]:51101 "EHLO 10east.com")
+	by vger.kernel.org with ESMTP id S262026AbUDHP3X (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Apr 2004 11:29:23 -0400
+Received: from les5.progressive-comp.com (les5.progressive-comp.com [63.238.77.104])
+	by 10east.com (8.12.10/8.12.8) with ESMTP id i38FTKud000496
+	for <linux-scsi@vger.kernel.org>; Thu, 8 Apr 2004 11:29:20 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <willy@debian.org>
-Cc: Andrew Morton <akpm@osdl.org>, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-Matthew Wilcox wrote:
-> On Wed, Apr 07, 2004 at 11:18:20PM -0700, Andrew Morton wrote:
-> 
->>This is on the power4 machine, which has previously worked quite happily.
->>
->>During boot the system spends maybe one minute dicking with the SCSI
->>controller and emitting scary new reset and abort messages.
-> 
-> 
-> They certainly are scary.  What is device 15 on this scsi bus?  This
-> looks like domain validation being applied to a device that can't do it
-> to me.  Did I get that right, James?
+Based on this auto-response:
 
-Looks like a SES to me. Would it make sense to not log errors during 
-domain validation?
+| Date: Thu, 08 Apr 2004 10:23:01 -0500
+| From: linux-megaraid-devel-admin@lists.us.dell.com
+| To: DEVNULL@10east.com
+| Subject: Auto-response for your message to linux-megaraid-devel@dell.com
+|
+| The linux-megaraid-devel@dell.com mailing list has been discontinued.
+| Please redirect your message to either:
+|
+| linux-scsi@vger.kernel.org  for all megaraid-specific issues
+| (subscribe at http://vger.kernel.org/vger-lists.html#linux-scsi)
+|
+| or
+|
+| linux-poweredge@dell.com  for all Dell PowerEdge-specific issues
+| (subscribe at http://lists.us.dell.com)
 
--Brian
 
+I am forwarding this email to linux-scsi@vger.kernel.org:
 
+---------- Forwarded message ----------
+Date: Thu, 8 Apr 2004 11:22:36 -0400 (EDT)
+From: Lester Hightower <hightowe@10east.com>
+To: linux-megaraid-devel@dell.com
+Subject: Fix for memory leak problem in megaraid2.c /proc entries
+
+This diff fixes a memory leak in megaraid2.c, v2.10.1 (Dec 03, 2003):
+
+[root@10east scsi]# diff megaraid2.c.MEMORY_LEAK.20040408.lhh megaraid2.c
+3395c3395,3399
+<       if( channel >= max_channels ) return 0;
+---
+>       if( channel >= max_channels ) {
+>               pci_free_consistent(pdev, 256, scsi_inq, scsi_inq_dma_handle);
+>               mega_free_inquiry(inquiry, dma_handle, pdev);
+>               return 0;
+>         }
+
+I have shared it with the proper folks (Atul Mukker) at LSI, so it will
+likely (hopefully) make it into newer driver versions/newer kernels.
+
+The problem occurs only in the circumstance where one reads one of the
+/proc/megaraid/hba<X>/diskdrives-ch<N> files where the card <X> does not
+have channel <N> on it.  Most people would likely not notice this leak in
+normal operation, but due to the way that we monitor our MegaRaid cards in
+our company (we read these /proc entries every 180s) so we found the leak
+rather quickly, and unpleasantly (when your kernel eats all your RAM).
+
+--
+Lester H. Hightower <__h+i_g+h_t+o_w+e__@__10east.com>
+Chief Technology Officer, 10 East Corp.
+
+p.s. my_email_addrs =~ s/[_+]/g to email me...
