@@ -1,61 +1,53 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: [PATCH] fix more ipr kref problems
-Date: 29 Aug 2004 17:51:03 -0400
+From: Sergey Panov <sipan@sipan.org>
+Subject: What "tarnsport attributes" are really for?
+Date: Mon, 30 Aug 2004 01:00:55 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1093816265.1708.45.camel@mulgrave>
+Message-ID: <1093842055.9886.57.camel@sipan.org>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat16.steeleye.com ([209.192.50.48]:18374 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S268340AbUH2VvR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 29 Aug 2004 17:51:17 -0400
+Received: from rwcrmhc11.comcast.net ([204.127.198.35]:41430 "EHLO
+	rwcrmhc11.comcast.net") by vger.kernel.org with ESMTP
+	id S266627AbUH3FBC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 30 Aug 2004 01:01:02 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: Brian King <brking@us.ibm.com>, Andrew Morton <akpm@osdl.org>, greg@kroah.com
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: SCSI development list <linux-scsi@vger.kernel.org>
 
-This was caused by
+Hello,
+I searched and read all threads about "transport attributes" I could
+find in linux-scsi archive, but real design goals of this API still is
+not clear. Is it supposed to be:
 
-KREF: make kref_get() return void as it makes sense to do so.
-  
-drivers/scsi/ipr.c: In function `ipr_worker_thread':
-drivers/scsi/ipr.c:1825: error: wrong type argument to unary exclamation
-mark
-make[2]: *** [drivers/scsi/ipr.o] Error 1
+1) way to store and expose to admin (via syfs) specifics of the
+underlying transport layer (such as FC, iSCSI, SPI, ...).
 
-The fix is fairly simple.
+2) way to store transport specific per-device (per LUN) attributes.
 
-James
+3) way to access transport specific per-device (per LUN) attributes
+stored in the driver.
 
-===== drivers/scsi/ipr.c 1.25 vs edited =====
---- 1.25/drivers/scsi/ipr.c	2004-08-16 01:40:17 -05:00
-+++ edited/drivers/scsi/ipr.c	2004-08-29 16:25:31 -05:00
-@@ -1822,10 +1822,11 @@
- 
- 	if (ioa_cfg->sdt_state == GET_DUMP) {
- 		dump = ioa_cfg->dump;
--		if (!dump || !kref_get(&dump->kref)) {
-+		if (!dump) {
- 			spin_unlock_irqrestore(ioa_cfg->host->host_lock, lock_flags);
- 			return;
- 		}
-+		kref_get(&dump->kref);
- 		spin_unlock_irqrestore(ioa_cfg->host->host_lock, lock_flags);
- 		ipr_get_ioa_dump(ioa_cfg, dump);
- 		kref_put(&dump->kref, ipr_release_dump);
-@@ -2423,11 +2424,11 @@
- 	spin_lock_irqsave(ioa_cfg->host->host_lock, lock_flags);
- 	dump = ioa_cfg->dump;
- 
--	if (ioa_cfg->sdt_state != DUMP_OBTAINED || !dump || !kref_get(&dump->kref)) {
-+	if (ioa_cfg->sdt_state != DUMP_OBTAINED || !dump) {
- 		spin_unlock_irqrestore(ioa_cfg->host->host_lock, lock_flags);
- 		return 0;
- 	}
--
-+	kref_get(&dump->kref);
- 	spin_unlock_irqrestore(ioa_cfg->host->host_lock, lock_flags);
- 
- 	if (off > dump->driver_dump.hdr.len) {
+?
+
+It looks like that current implementation is aiming to be case (2), but
+in reality it is just case (3). I noticed that every time attribute is
+queried via sysfs LLD is asked to update it. 
+
+I hope the actual goal is (1). In that case we should be able to add
+transport specific host attributes and may prevent unnecessary
+replication of the same FC/iSCSI info for every LUN on some big storage
+array. 
+
+Before I looked at /sys/class/fc_transport, I expected to find there a
+tree for every host, with some extra host info in the root dir and
+subdirs for every known transport end-point. In that tree you should
+also see links to entries in /sys/class/scsi_host/ and
+/sys/class/scsi_device/ , and not links to PCI device dir and SD driver
+dir, which are there now.
+
+
+-- 
+Sergey Panov <sipan@sipan.org>
+Home
+
 
