@@ -1,58 +1,43 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: Fusion problems with 2.6.5rc1 on AMD x86-64 IV
-Date: 17 Mar 2004 11:34:45 -0500
+From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
+Subject: RE: [PATCH] Fix error handler offline behaviour
+Date: Wed, 17 Mar 2004 11:46:00 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1079541289.2135.2.camel@mulgrave>
-References: <0E3FA95632D6D047BA649F95DAB60E57040DB1E2@exa-atlanta.se.lsil.com>
-	<20040317165355.37c846f0.ak@suse.de>
+Message-ID: <547AF3BD0F3F0B4CBDC379BAC7E4189F64E6C2@otce2k03.adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from adsl-64-109-89-108.dsl.chcgil.ameritech.net ([64.109.89.108]:15493
-	"EHLO redscar") by vger.kernel.org with ESMTP id S261872AbUCQQey
+Received: from magic.adaptec.com ([216.52.22.17]:47314 "EHLO magic.adaptec.com")
+	by vger.kernel.org with ESMTP id S261532AbUCQQqC convert rfc822-to-8bit
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 17 Mar 2004 11:34:54 -0500
-In-Reply-To: <20040317165355.37c846f0.ak@suse.de>
+	Wed, 17 Mar 2004 11:46:02 -0500
+content-class: urn:content-classes:message
 List-Id: linux-scsi@vger.kernel.org
-To: Andi Kleen <ak@suse.de>
-Cc: "Moore, Eric Dean" <Emoore@lsil.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Matthew Wilcox <willy@debian.org>
+Cc: James Bottomley <James.Bottomley@steeleye.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-> The problem seems to be the broke consistent dma mask.
-> 
-> I currently just mask it with 0xffffffff in pci_alloc_consistent
-> and why that workaround it works.
+I was concerned about the less `object oriented`
+scsi_device_set_state(pDev->pScsi_dev, SDEV_RUNNING) to set the device
+online.
 
-Well, I don't understand this.
+Sincerely -- Mark Salyzyn
 
-The place it's setup is in pci/probe.c:
+BTW, good patch, my comments are not disparaging.
 
---- 1.60/drivers/pci/probe.c    Wed Feb 18 17:41:09 2004
-+++ 1.61/drivers/pci/probe.c    Sun Mar 14 14:17:06 2004
-@@ -570,7 +570,6 @@
-        /* Assume 32-bit PCI; let 64-bit PCI cards (which are far rarer)
-           set this higher, assuming the system even supports it.  */
-        dev->dma_mask = 0xffffffff;
--       dev->consistent_dma_mask = 0xffffffff;
-        if (pci_setup_device(dev) < 0) {
-                kfree(dev);
-                return NULL;
-@@ -582,6 +581,7 @@
-        pci_name_device(dev);
- 
-        dev->dev.dma_mask = &dev->dma_mask;
-+       dev->dev.coherent_dma_mask = 0xffffffffull;
- 
-        return dev;
+-----Original Message-----
+From: willy@www.linux.org.uk [mailto:willy@www.linux.org.uk] On Behalf
+Of Matthew Wilcox
+Sent: Wednesday, March 17, 2004 11:33 AM
+To: Salyzyn, Mark
+Cc: James Bottomley; SCSI Mailing List
+Subject: Re: [PATCH] Fix error handler offline behaviour
 
-The only reason I can see having a screw up is if some untoward
-manipulation is going on in pci_setup_device().  This shouldn't be
-because the pci->dev isn't initialised until after that (which is why
-the coherent_dma_mask initialisation had to be moved further back).
+On Wed, Mar 17, 2004 at 11:29:04AM -0500, Salyzyn, Mark wrote:
+> There was a scsi_device_online(Sdev) handler used in the patch, why
+not
+> a scsi_device_set_online(Sdev) and a scsi_device_set_offline(Sdev)?
 
-You can verify this by moving the device_initialize() and the
-coherent_dma_mask assignment above pci_setup_device.
-
-James
-
-
+Because then we'd also need a scsi_device_is_online_p(Sdev) ... much
+easier just to have a scsi_device_online(Sdev) that can be tested and
+assigned to, as appropriate.
