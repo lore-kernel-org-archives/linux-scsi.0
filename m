@@ -1,88 +1,67 @@
-From: Orion Poplawski <orion@colorado-research.com>
-Subject: Exabyte tape device hangs writing large file - sym53c8xxx driver
-Date: Tue, 15 Oct 2002 16:33:09 -0600
+From: Patrick Mansfield <patmans@us.ibm.com>
+Subject: Re: [patch 2.5] ips queue depths
+Date: Tue, 15 Oct 2002 16:30:57 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <200210152233.g9FMXAr05642@earth.colorado-research.com>
+Message-ID: <20021015163057.A7687@eng2.beaverton.ibm.com>
+References: <A3B9245C291EEF4785A24A1DBE8D852B0376BC@rtpexc01.adaptec.com> <20021015194705.GD4391@redhat.com> <20021015130445.A829@eng2.beaverton.ibm.com> <20021015205218.GG4391@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <20021015205218.GG4391@redhat.com>; from dledford@redhat.com on Tue, Oct 15, 2002 at 04:52:18PM -0400
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: groudier@free.fr
+To: "Jeffery, David" <David_Jeffery@adaptec.com>, 'Dave Hansen' <haveblue@us.ibm.com>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
 
-I have a working Exabyte 8505 8mm tape drive that was put in a new Linux box 
-with a Symbios dual channel 53c1010-33 SCSI adapter.  Three external disk 
-drives sit on the first bus, and the tape drive is by itself on the internal 
-(second) bus.  Each bus is properly terminated, the internal tape drive is 
-connected via a 50-pin ribbon cable.  
+On Tue, Oct 15, 2002 at 04:52:18PM -0400, Doug Ledford wrote:
+> On Tue, Oct 15, 2002 at 01:04:45PM -0700, Patrick Mansfield wrote:
+> > 
+> > I totally agree the queue depth should not be limited based on the number of
+> > devices, but there should be a maximum limit - as Justin noted with the
+> > aic driver, using a large default queue depth (he had 253 or so) is not
+> > good with linux.
+> 
+> That's largely due to the scsi_request_fn() in its current form.
 
-I'm using a custom SMP kernel, version 2.4.19, under redhat 7.2.
+I don't understand that.
 
-When writing to the device with tar, it hangs when it reaches a large file 
-(44MB in this case):  Also, the source is an NFS mounted directory.  I haven't
-tried yet with a local directory.  Any help at all with this would be greatly 
-appreciated.  We have a number of similar/identical tape drives in other linux
-system with Adaptec drivers that appear to be working perfectly.
+> 
+> > The queue depth should be as small as possible without limiting the
+> > performance.
+> 
+> Which happens to be a magic number that no one really knows I think ;-)  
 
-./OpenOffice.org1.0/core.24251
-tar: /dev/st0: Wrote only 0 of 10240 bytes
-tar: Error is not recoverable: exiting now
+Yes, but that implies that adapters should not be relied upon to set
+the queue depth. If the adapter is setting queue depth based upon what
+the adapter knows, that is completely wrong - a regular disk and disk
+array can end up with the same queue depth (this is not ture for raid
+cards like ips, where the adapter is the device).
 
-/var/log/messages reports:
+> Current goals of the work I'm doing include making this adjustable so you
+> aren't wasting queue depth on devices that have a hard limit less than
 
-Oct 14 17:01:06 moli kernel: sym1:0:0: ABORT operation started.
-Oct 14 17:01:11 moli kernel: sym1:0:0: ABORT operation timed-out.
-Oct 14 17:01:11 moli kernel: sym1:0:0: DEVICE RESET operation started.
-Oct 14 17:01:16 moli kernel: sym1:0:0: DEVICE RESET operation timed-out.
-Oct 14 17:01:16 moli kernel: sym1:0:0: BUS RESET operation started.
-Oct 14 17:01:16 moli kernel: sym1: SCSI BUS reset detected.
-Oct 14 17:01:16 moli kernel: sym1: SCSI BUS has been reset.
-Oct 14 17:01:16 moli kernel: sym1:0:0: BUS RESET operation complete.
-Oct 14 17:01:52 moli kernel: sym1:0:0: ABORT operation started.
-Oct 14 17:01:57 moli kernel: sym1:0:0: ABORT operation timed-out.
-Oct 14 17:01:57 moli kernel: scsi: device set offline - not ready or command 
-retry failed after bus reset: host 1 channel 0 id 0 lun 0
-Oct 14 17:01:57 moli kernel: st0: Error with sense data: Current st09:00: 
-sense key Not Ready
-Oct 14 17:01:57 moli kernel: Additional sense indicates Logical unit is in 
-process of becoming ready
+But, this won't lower it to some optimal magic number.
 
-Oct 14 17:16:57 moli kernel: sym1:0:0: ABORT operation started.
-Oct 14 17:16:57 moli kernel: sym1: SCSI BUS reset detected.
-Oct 14 17:16:57 moli kernel: sym1: SCSI BUS has been reset.
-Oct 14 17:16:57 moli kernel: sym1:0:0: ABORT operation complete.
-Oct 14 17:17:00 moli kernel: st0: Error with sense data: Current st09:00: 
-sense key Not Ready
-Oct 14 17:17:00 moli kernel: Additional sense indicates Medium not present
-Oct 14 17:17:00 moli kernel: st0: Error on write filemark.
-Oct 14 17:17:00 moli kernel: st0: Error with sense data: Current st09:00: 
-sense key Not Ready
-Oct 14 17:17:00 moli kernel: Additional sense indicates Medium not present
+> your initial queue depth value and changing the scsi_request_fn() to be
+> more fair with command allocation on a controller in the presence of
+> starvation (and of course, starvation is only possible when the queue
+> depth of all devices is greater than the depth of the controller, so
+> obviously the starvation code in scsi_request_fn() is something
+> controllers have been avoiding by limiting queue depths on individual
+> devices).
 
-I was able to eject the tape, but subsequent attempts to access the device 
-result in No such device errors:
+It would nice to have more device model/kernfs device attributes.
 
-# mt -f /dev/st0 status
-/dev/st0: No such device or address
+With your new queueing code, if we expose and allow setting new_queue_depth,
+user code can easily modify the queue depth.
 
-ver_linux reports:
-Linux moli 2.4.19 #2 SMP Mon Oct 14 15:46:15 GMT 2002 i686 unknown
+I wanted to write some code in this area but don't have enoough time. It would
+not be hard to have a scsi_sdev_attrs.c file, that using macros could
+automagically create device attr files and functions for any selection of
+Scsi_Device fields. Locking might be an issue - since we don't have a
+Scsi_Device lock for queue depth, just one big lock, this is true for
+some of the other Scsi_Device fields.
 
-Gnu C                  2.96
-Gnu make               3.79.1
-binutils               2.11.90.0.8
-util-linux             2.11f
-mount                  2.11g
-modutils               2.4.13
-e2fsprogs              1.26
-reiserfsprogs          3.x.0j
-Linux C Library        2.2.4
-Dynamic linker (ldd)   2.2.4
-Procps                 2.0.7
-Net-tools              1.60
-Console-tools          0.3.3
-Sh-utils               2.0.11
-Modules Loaded         binfmt_misc nfs nfsd lockd sunrpc autofs 3c59x 
-ide-scsi ide-cd cdrom st ext3 jbd
-sym53c8xx sd_mod scsi_mod
+A single function could be called in scsi_scan.c to setup all Scsi_Device
+device attribute files (i.e. calls device_create_file for multiple
+xxx_attr_types).
+
+-- Patrick Mansfield
