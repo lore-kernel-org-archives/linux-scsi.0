@@ -1,50 +1,138 @@
-From: "Justin T. Gibbs" <gibbs@scsiguy.com>
-Subject: Re: [PATCH] aic7xxx bouncing over 4G
-Date: Fri, 03 Jan 2003 08:28:04 -0700
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <610650816.1041607684@aslan.scsiguy.com>
-References: <200212210012.gBL0Cng21338@eng2.beaverton.ibm.com>	
- <176730000.1040430221@aslan.btc.adaptec.com>	
- <3E03BB0D.5070605@rackable.com>	
- <Pine.LNX.4.50L.0212280331110.30646-100000@freak.distro.conectiva>	
- <20021228091608.GA13814@louise.pinerecords.com>	
- <Pine.LNX.4.50L.0212281131580.26879-100000@imladris.surriel.com>	
- <705128112.1041102818@aslan.scsiguy.com>
- <1041166487.1338.1.camel@laptop.fenrus.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <1041166487.1338.1.camel@laptop.fenrus.com>
-Content-Disposition: inline
+From: Andries.Brouwer@cwi.nl
+Subject: inquiry in scsi_scan.c
+Date: Sat, 4 Jan 2003 01:21:11 +0100 (MET)
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <UTC200301040021.h040LB128544.aeb@smtp.cwi.nl>
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+To: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: arjanv@redhat.com
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>
 
->> The main reason why the new driver "breaks" where the old one
->> doesn't is that the new driver does not perform an extra register
->> read to work-around chipsets that screw up memory mapped I/O.  There
->> are four solutions to this problem:
-> 
-> just to be sure...you're not talking about PCI posting right?
-> can you explain in a bit more detail the exact behavior that is the
-> problem ? (I'm sure a lot of other drivers will suffer the same so I
-> consider it of general interest)
+Got a new USB device and noticed some scsi silliness while playing with it.
 
-PCI posting is an expected (and desired) characteristic of PCI, so, no
-I'm not complaining about that.  According to the PCI spec, prefetch
-is only allowed for devices that explicitly indicate that they support
-it (via a bit in their BAR registers).  Further, write combining and
-byte merging are only allowed for prefetchable regions.  The Adaptec
-parts do not set the prefetch bit and do not support either of these
-options (most registers are 8bits anyway, so there was nothing to
-gain by complicating the part with this support).  Some BIOSes ignore
-this rule and attempt to prefetch and/or write combine transactions
-to these chips.  Other BIOSes actually have an option so that the user
-can say "ignore the rules".  The new tests are designed to weed out
-this broken behavior and to fallback to PIO where prefetch and write
-combining cannot come into play.
+A bug in scsi_scan.c is
 
---
-Justin
+        sdev->inquiry = kmalloc(sdev->inquiry_len, GFP_ATOMIC);
+        memcpy(sdev->inquiry, inq_result, sdev->inquiry_len);
+        sdev->vendor = (char *) (sdev->inquiry + 8);
+        sdev->model = (char *) (sdev->inquiry + 16);
+        sdev->rev = (char *) (sdev->inquiry + 32);
 
+since it happens that inquiry_len is short (in my case it is 5)
+and the vendor/model/rev pointers are wild.
+Catting /proc/scsi/scsi now yields random garbage.
+
+I made a patch but hesitated between a small patch and a larger one.
+Why do we have this malloced inquiry field? As far as I can see
+nobody uses it. And the comment in scsi_add_lun() advises us
+not to save the inquiry, precisely what we did until recently.
+So, should this change from 2.5.11 be reverted?
+
+Andries
+
+
+[My present scsi_scan.c differes quite a lot from a stock one.
+Already fixed the scsi_check_id_size() some time ago.
+Below some diff fragments from today.]
+
++/*
++ * Do an INQUIRY with given length (minimum 5, maximum 255).
++ * Note: many devices react badly when given an unexpected length.
++ */
++static int
++scsi_do_inquiry(Scsi_Request *sreq, char *buffer, int len) {
++       Scsi_Device *sdev = sreq->sr_device;
++       unsigned char cmd[6];
++       int res;
++
++       SCSI_LOG_SCAN_BUS(3, printk(KERN_INFO "scsi scan: INQUIRY (len %d) "
++                                   "to host %d channel %d id %d lun %d\n",
++                                   len, sdev->host->host_no, sdev->channel,
++                                   sdev->id, sdev->lun));
++
++       memset(cmd, 0, 6);
++       cmd[0] = INQUIRY;
++       cmd[4] = len;
++       sreq->sr_cmd_len = 0;
++       sreq->sr_data_direction = SCSI_DATA_READ;
++       memset(buffer, 0, len);
++
++       scsi_wait_req(sreq, (void *) cmd, (void *) buffer, len,
++                     SCSI_TIMEOUT + 4 * HZ, 3);
++
++       res = sreq->sr_result;
++       SCSI_LOG_SCAN_BUS(3, printk(res ? KERN_INFO "scsi scan: "
++                                   "INQUIRY returned code 0x%x\n" :
++                                   KERN_INFO "scsi scan: INQUIRY OK\n", res));
++       return res;
++}
+
++/*
++ * The inquiry length is  inq_result[4] + 5  unless overridden.
++ */
++static int
++valid_inquiry_lth(int bflags, unsigned char *inq_result) {
++       int len = ((bflags & BLIST_INQUIRY_36) ? 36 :
++                  (bflags & BLIST_INQUIRY_58) ? 58 :
++                  inq_result[4] + 5);
++       if (len > 255)
++               len = 36;       /* sanity */
++       return len;
++}
+
+Text in scsi_probe_lun(), including two reactions to comments:
+
+static void
+scsi_probe_lun(Scsi_Request *sreq, char *inq_result, int *bflags)
+{
+        Scsi_Device *sdev = sreq->sr_device;    /* a bit ugly */
+        unsigned char scsi_cmd[MAX_COMMAND_SIZE];
+        int res, possible_inq_resp_len;
+
+        /* first issue an inquiry with conservative alloc_length */
+        res = scsi_do_inquiry(sreq, inq_result, 36);
+
+        if (res) {
+                if ((driver_byte(res) & DRIVER_SENSE) != 0 &&
+                    (sreq->sr_sense_buffer[2] & 0xf) == UNIT_ATTENTION &&
+                    sreq->sr_sense_buffer[12] == 0x28 &&
+                    sreq->sr_sense_buffer[13] == 0) {
+                        /* not-ready to ready transition - good */
+                        /* dpg: bogus? INQUIRY never returns UNIT_ATTENTION */
+                        /* aeb: seen with an USB CF card reader */
+                } else
+                        /*
+                         * assume no peripheral if any other sort of error
+                         */
+                        return;
+        }
+
+        /*
+         * Get any flags for this device.
+         *
+         * Some devices return only 5 bytes for an INQUIRY, but the memset
+         * in scsi_do_inquiry makes sure that scsi_get_device_flags() gets
+         * well-defined arguments.
+         */
+        *bflags = scsi_get_device_flags(&inq_result[8], &inq_result[16]);
+
+        possible_inq_resp_len = valid_inquiry_lth(*bflags, inq_result);
+
+        if (possible_inq_resp_len > 36) {       /* do additional INQUIRY */
+                res = scsi_do_inquiry(sreq, inq_result, possible_inq_resp_len);
+                if (res)
+                        return;
+
+                /*
+                 * The INQUIRY can change, this means the length can change.
+                 */
+                possible_inq_resp_len = valid_inquiry_lth(*bflags, inq_result);
+        }
+
+        sdev->inquiry_len = possible_inq_resp_len;
+
+        /*
+         * Abort if the response length is less than 36?
+         * No, some USB devices just produce the minimal 5-byte INQUIRY.
+         *
+         * ...
+         */
