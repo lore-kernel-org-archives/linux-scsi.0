@@ -1,118 +1,59 @@
-From: "Tony Battersby" <tonyb@cybernetics.com>
-Subject: BUG() in 2.4: sg direct IO + exit()
-Date: Tue, 23 Mar 2004 10:04:29 -0500
+From: "Bagalkote, Sreenivas" <sreenib@lsil.com>
+Subject: RE: [PATCH][RELEASE] megaraid 2.10.2 Driver
+Date: Tue, 23 Mar 2004 11:00:59 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <04Mar23.100431est.332209@cyborg.cybernetics.com>
-Reply-To: <tonyb@cybernetics.com>
+Message-ID: <0E3FA95632D6D047BA649F95DAB60E570230C77D@exa-atlanta.se.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="iso-8859-1"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cyborg.cybernetics.com ([206.246.200.18]:60936 "EHLO
-	cybernetics.com") by vger.kernel.org with ESMTP id S262618AbUCWPEc
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 23 Mar 2004 10:04:32 -0500
+Received: from mail0.lsil.com ([147.145.40.20]:2439 "EHLO mail0.lsil.com")
+	by vger.kernel.org with ESMTP id S262623AbUCWQB6 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 23 Mar 2004 11:01:58 -0500
 List-Id: linux-scsi@vger.kernel.org
-To: dougg@torque.net
-Cc: linux-scsi@vger.kernel.org
+To: 'Matthew Wilcox' <willy@debian.org>, Christoph Hellwig <hch@infradead.org>, "Bagalkote, Sreenivas" <sreenib@lsil.com>, 'Jeff Garzik' <jgarzik@pobox.com>, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, "'marcelo@cyclades.com.br'" <marcelo@cyclades.com.br>, "'marcelo.tosatti@cyclades.com'" <marcelo.tosatti@cyclades.com>
 
-The following BUG() is triggered in 2.4.x when a program calls exit()
-immediately after sending a SCSI command that uses direct IO:
+>> > I don't think you understand how CONFIG_COMPAT works.  
+>x86-64 defines it
+>> > when it wants it:
+>> 
+>> But not in 2.4, and this is a 2.4-only patch..
+>
+>It is?  I didn't see that mentioned anywhere.
 
-kernel BUG at page_alloc.c:98!
-invalid operand: 0000
-sg sym53c8xx_2 e1000
-CPU:    0
-EIP:    0010:[<c0133d22>]    Not tainted
-EFLAGS: 00010202
-EIP is at __free_pages_ok+0x32/0x2b0 [kernel]
-eax: 00000001   ebx: c12aceb0   ecx: c12aceb0   edx: 00000000
-esi: 00000000   edi: 00000000   ebp: 00000001   esp: c02bbe94
-ds: 0018   es: 0018   ss: 0018
-Process swapper (pid: 0, stackpage=c02bb000)
-Stack: cfefc640 cfdf2de8 cfbe93c0 cfefc600 00000001 00000000 cfefc600
-c12aceb0
-       cf926fa0 00000000 cfb8b040 c0127cb0 cfb8b04c cfb8b04c cfb8b000
-d0885db6
-       cf926fa0 00000000 cfb8b040 d0885cc9 cfb8b04c 00000001 cfd08680
-cfd086c8
-Call Trace:
- [<c0127cb0>] unmap_kiobuf+0x30/0x50 [kernel]
- [<d0885db6>] sg_unmap_and+0x26/0x50 [sg]
- [<d0885cc9>] sg_finish_rem_req+0x39/0x70 [sg]
- [<d0885451>] sg_cmd_done_bh+0x281/0x380 [sg]
- [<c01ab65a>] scsi_finish_command+0xda/0xe0 [kernel]
- [<c01ab380>] scsi_bottom_half_handler+0xc0/0x230 [kernel]
- [<c011dacb>] bh_action+0x4b/0x90 [kernel]
- [<c011d971>] tasklet_hi_action+0x61/0xa0 [kernel]
- [<c011d6fb>] do_softirq+0x6b/0xd0 [kernel]
- [<c0108baf>] do_IRQ+0xdf/0xf0 [kernel]
- [<c01052c0>] default_idle+0x0/0x40 [kernel]
- [<c01052c0>] default_idle+0x0/0x40 [kernel]
- [<c010b388>] call_do_IRQ+0x5/0xd [kernel]
- [<c01052c0>] default_idle+0x0/0x40 [kernel]
- [<c01052c0>] default_idle+0x0/0x40 [kernel]
- [<c01052ec>] default_idle+0x2c/0x40 [kernel]
- [<c0105372>] cpu_idle+0x52/0x70 [kernel]
- [<c0105000>] stext+0x0/0x50 [kernel]
+My fault. I will be more thorough from now on. Thanks for pointing that out.
 
-Code: 0f 0b 62 00 ab 04 23 c0 89 d8 e8 2f ed ff ff 8b 7b 28 85 ff
- <0>Kernel panic: Aiee, killing interrupt handler!
-In interrupt handler - not syncing
+>
+>Anyway, it's wrong to define LSI_CONFIG_COMPAT based solely on 
+>__x86_64__.
+>You'd also need to check IA32_EMULATION.  Really, it would be simpler
+>to add CONFIG_COMPAT to 2.4.
+>
 
-The following program reproduces the problem:
+Most of the objections centered around CONFIG_COMPAT issue. If we have 
+to support 32-bit applications on lk 2.4, what is the right way to do it?
+Any
+helpful suggestions are appreciated.
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <unistd.h>
-#include <scsi/sg.h>
-#include <limits.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
+>So you can only copy to the bottom 4GB of user address space? That
+>seems like a recipe for disaster. Particularly on ia64.
 
-unsigned char mode_sense_cdb[] = { 0x1a, 0x00, 0x3f, 0x00, 0xff, 0x00 };
+This interface is only for 32-bit applications. If and when we have 64-bit
+apps,
+they use a different (new) interface.
 
-int main(int argc, char *argv[])
-{
-    int fd;
-    unsigned char sense_data[256];
-    unsigned char buf[256];
-    sg_io_hdr_t io;
+>and everything will be fine. Please don't introduce this stupid
+>unnecessary LSI_CONFIG_COMPAT. That just makes people say "what the
+>**** are they doing?".
 
-    fd = open("/dev/sg0", O_RDWR);
-    if (fd == -1) {
-        perror("open(/dev/sg0)");
-        exit(1);
-    }
+May I also respectfully suggest that you don't use any F* or similar words
+in
+your mails, for the sole reason that our corporate server filters those
+mails out.
+We had to infer from Christoph's mail that you had responded earlier. We
+don't
+want to miss your valuable feedback.
 
-    memset(&io, 0, sizeof(sg_io_hdr_t));
-    io.interface_id = 'S';
-    io.timeout = UINT_MAX;
-    io.flags = SG_FLAG_DIRECT_IO;
-    io.sbp = sense_data;
-    io.mx_sb_len = 0xff;
-    io.cmdp = mode_sense_cdb;
-    io.cmd_len = 6;
-    io.dxfer_direction = SG_DXFER_FROM_DEV;
-    io.dxferp = buf;
-    io.dxfer_len = 0xff;
-    write(fd, &io, sizeof(sg_io_hdr_t));
-
-    return 0;
-}
-
-Just compile, echo 1 > /proc/scsi/sg/allow_dio, and run.  The SCSI
-device that I am using is a tape drive, but it shouldn't matter.
-
-I have tested this with 2.4.21+kksymoops and 2.4.26-pre5+kksymoops with
-the same results.  The above stack trace is from 2.4.26-pre5.  I haven't
-tried 2.6.
-
-I am running a SMP kernel on a UP Intel P4 with 256 MB RAM.  The test
-machine does not have any swap space configured (swapoff -a).
-
-Anthony J. Battersby
-Cybernetics
-
+Thank you,
+Sreenivas
