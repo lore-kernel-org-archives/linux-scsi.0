@@ -1,123 +1,129 @@
 From: "Jeffery, David" <David_Jeffery@adaptec.com>
-Subject: [PATCH] ips driver 1/4: missing reboot notifier and Mode Sense P8
-Date: Thu, 13 Feb 2003 09:35:22 -0500
+Subject: [PATCH] ips driver 2/4: 2.4 compatability code
+Date: Thu, 13 Feb 2003 09:35:25 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <A3B9245C291EEF4785A24A1DBE8D852B03774E@rtpexc01.adaptec.com>
+Message-ID: <A3B9245C291EEF4785A24A1DBE8D852B03774F@rtpexc01.adaptec.com>
 Mime-Version: 1.0
 Content-Type: multipart/mixed;
-	boundary="----_=_NextPart_000_01C2D36D.23AC36E0"
+	boundary="----_=_NextPart_000_01C2D36D.25DC8460"
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Received: from redfish.adaptec.com (redfish.adaptec.com [162.62.50.11])
-	by magic.adaptec.com (8.11.6+Sun/8.11.6) with ESMTP id h1DEXnD27664
-	for <linux-scsi@vger.kernel.org>; Thu, 13 Feb 2003 06:33:49 -0800 (PST)
+	by magic.adaptec.com (8.11.6+Sun/8.11.6) with ESMTP id h1DEXqD27678
+	for <linux-scsi@vger.kernel.org>; Thu, 13 Feb 2003 06:33:52 -0800 (PST)
 Received: from rtpexc01.adaptec.com (rtpexc01.adaptec.com [10.110.12.22])
-	by redfish.adaptec.com (8.8.8+Sun/8.8.8) with ESMTP id GAA14498
-	for <linux-scsi@vger.kernel.org>; Thu, 13 Feb 2003 06:33:48 -0800 (PST)
+	by redfish.adaptec.com (8.8.8+Sun/8.8.8) with ESMTP id GAA14512
+	for <linux-scsi@vger.kernel.org>; Thu, 13 Feb 2003 06:33:51 -0800 (PST)
 List-Id: linux-scsi@vger.kernel.org
 To: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
 
 This message is in MIME format. Since your mail reader does not understand
 this format, some or all of this message may not be legible.
 
-------_=_NextPart_000_01C2D36D.23AC36E0
+------_=_NextPart_000_01C2D36D.25DC8460
 Content-Type: text/plain;
 	charset="iso-8859-1"
 
-All of these patches were created against 2.5.60.
-
-This small patch adds back the reboot_notifier hook
-that was accidentally removed in the last set of
-patches.  It also adds support handle a Mode Page 8
-command so the scsi layer won't complain anymore.
-And the movement to using ->device to get scsi
-numbers resulted in 2 typos in debug code.  These
-are also fixed.
+This adds a few bits of code and couple #ifdefs that
+are needed to enable this driver to work for 2.4 as
+well as 2.5.
 
 David Jeffery
 
- ips.c |   12 +++++++++---
- ips.h |   15 +++++++++++++++
- 2 files changed, 24 insertions(+), 3 deletions(-)
+ ips.c |   17 +++++++++++------
+ 1 files changed, 11 insertions(+), 6 deletions(-)
 
 
-------_=_NextPart_000_01C2D36D.23AC36E0
+------_=_NextPart_000_01C2D36D.25DC8460
 Content-Type: text/plain;
-	name="ipspatch1.txt"
+	name="ipspatch2.txt"
 Content-Transfer-Encoding: quoted-printable
 Content-Disposition: attachment;
-	filename="ipspatch1.txt"
+	filename="ipspatch2.txt"
 
-diff -ur linux-2.5.60_p0/drivers/scsi/ips.c =
-linux-2.5.60_p1/drivers/scsi/ips.c=0A=
---- linux-2.5.60_p0/drivers/scsi/ips.c	Mon Feb 10 16:34:22 2003=0A=
-+++ linux-2.5.60_p1/drivers/scsi/ips.c	Tue Feb 11 11:47:05 2003=0A=
-@@ -3375,8 +3375,8 @@=0A=
-                 ips_name,=0A=
-                 ha->host_num,=0A=
-                 scb->scsi_cmd->device->channel,=0A=
--                scb->scsi_cmd->channel->id,=0A=
--                scb->scsi_cmd->channel->lun,=0A=
-+                scb->scsi_cmd->device->id,=0A=
-+                scb->scsi_cmd->device->lun,=0A=
-                 scb->basic_status,=0A=
-                 scb->extended_status,=0A=
-                 scb->extended_status =3D=3D IPS_ERR_CKCOND ? =
-scb->dcdb.sense_info[2] & 0xf : 0,=0A=
-@@ -4223,6 +4223,12 @@=0A=
-       mdata.pdata.pg4.RotationalOffset =3D 0;=0A=
-       mdata.pdata.pg4.MediumRotationRate =3D 0;=0A=
-       break;=0A=
-+   case 0x8:=0A=
-+      mdata.pdata.pg8.PageCode =3D 8;=0A=
-+      mdata.pdata.pg8.PageLength =3D sizeof(IPS_SCSI_MODE_PAGE8);=0A=
-+      mdata.hdr.DataLength =3D 3 + mdata.hdr.BlockDescLength + =
-mdata.pdata.pg8.PageLength;=0A=
-+      /* everything else is left set to 0 */=0A=
-+      break;=0A=
+diff -ur linux-2.5.60_p1/drivers/scsi/ips.c =
+linux-2.5.60_p2/drivers/scsi/ips.c=0A=
+--- linux-2.5.60_p1/drivers/scsi/ips.c	Tue Feb 11 11:47:05 2003=0A=
++++ linux-2.5.60_p2/drivers/scsi/ips.c	Tue Feb 11 11:47:23 2003=0A=
+@@ -1136,17 +1136,21 @@=0A=
+ /*                                                                     =
+     */=0A=
+ =
+/***********************************************************************=
+*****/=0A=
+ static int=0A=
++#if LINUX_VERSION_CODE < LinuxVersionCode(2,5,0)=0A=
++ips_biosparam(Disk *disk, kdev_t dev, int geom[]) {=0A=
++   ips_ha_t         *ha =3D (ips_ha_t *) =
+disk->device->host->hostdata;=0A=
++   unsigned long     capacity =3D disk->capacity;=0A=
++#else=0A=
+ ips_biosparam(struct scsi_device *sdev, struct block_device *bdev,=0A=
+ 		sector_t capacity, int geom[]) {=0A=
+-   ips_ha_t         *ha;=0A=
++   ips_ha_t         *ha =3D (ips_ha_t *) sdev->host->hostdata;=0A=
++#endif=0A=
+    int               heads;=0A=
+    int               sectors;=0A=
+    int               cylinders;=0A=
  =0A=
-    default:=0A=
-       return (0);=0A=
-@@ -6797,7 +6803,7 @@=0A=
- 		pci_unregister_driver(&ips_pci_driver);=0A=
- 		return -ENODEV;=0A=
- 	}=0A=
+    METHOD_TRACE("ips_biosparam", 1);=0A=
+ =0A=
+-   ha =3D (ips_ha_t *) sdev->host->hostdata;=0A=
 -=0A=
-+	register_reboot_notifier(&ips_notifier);=0A=
- 	return 0;=0A=
+    if (!ha)=0A=
+       /* ?!?! host adater info invalid */=0A=
+       return (0);=0A=
+@@ -1178,7 +1182,7 @@=0A=
+ =0A=
+    return (0);=0A=
  }=0A=
+-=0A=
++#if LINUX_VERSION_CODE < LinuxVersionCode(2,5,0)=0A=
+ =
+/***********************************************************************=
+*****/=0A=
+ /*                                                                     =
+     */=0A=
+ /* Routine Name: ips_select_queue_depth                                =
+     */=0A=
+@@ -1188,7 +1192,7 @@=0A=
+ /*   Select queue depths for the devices on the contoller              =
+     */=0A=
+ /*                                                                     =
+     */=0A=
+ =
+/***********************************************************************=
+*****/=0A=
+-/*static void=0A=
++static void=0A=
+ ips_select_queue_depth(struct Scsi_Host *host, Scsi_Device *scsi_devs) =
+{=0A=
+    Scsi_Device *device;=0A=
+    ips_ha_t    *ha;=0A=
+@@ -1221,8 +1225,8 @@=0A=
+       }=0A=
+    }=0A=
+ }=0A=
+-*/=0A=
  =0A=
-diff -ur linux-2.5.60_p0/drivers/scsi/ips.h =
-linux-2.5.60_p1/drivers/scsi/ips.h=0A=
---- linux-2.5.60_p0/drivers/scsi/ips.h	Mon Feb 10 16:34:22 2003=0A=
-+++ linux-2.5.60_p1/drivers/scsi/ips.h	Tue Feb 11 08:26:38 2003=0A=
-@@ -959,6 +959,20 @@=0A=
- } IPS_SCSI_MODE_PAGE4;=0A=
++#else=0A=
+ =
+/***********************************************************************=
+*****/=0A=
+ /*                                                                     =
+     */=0A=
+ /* Routine Name: ips_slave_configure                                   =
+     */=0A=
+@@ -1247,6 +1251,7 @@=0A=
+    }=0A=
+    return 0;=0A=
+ }=0A=
++#endif=0A=
  =0A=
- /*=0A=
-+ * Sense Data Format - Page 8=0A=
-+ */=0A=
-+typedef struct {=0A=
-+   uint8_t  PageCode;=0A=
-+   uint8_t  PageLength;=0A=
-+   uint8_t  flags;=0A=
-+   uint8_t  RetentPrio;=0A=
-+   uint16_t DisPrefetchLen;=0A=
-+   uint16_t MinPrefetchLen;=0A=
-+   uint16_t MaxPrefetchLen;=0A=
-+   uint16_t MaxPrefetchCeiling;=0A=
-+} IPS_SCSI_MODE_PAGE8;=0A=
-+=0A=
-+/*=0A=
-  * Sense Data Format - Block Descriptor (DASD)=0A=
-  */=0A=
- typedef struct {=0A=
-@@ -985,6 +999,7 @@=0A=
-    union {=0A=
-       IPS_SCSI_MODE_PAGE3 pg3;=0A=
-       IPS_SCSI_MODE_PAGE4 pg4;=0A=
-+      IPS_SCSI_MODE_PAGE8 pg8;=0A=
-    } pdata;=0A=
- } IPS_SCSI_MODE_PAGE_DATA;=0A=
- =0A=
+ =
+/***********************************************************************=
+*****/=0A=
+ /*                                                                     =
+     */=0A=
 
-------_=_NextPart_000_01C2D36D.23AC36E0--
+------_=_NextPart_000_01C2D36D.25DC8460--
