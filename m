@@ -1,52 +1,50 @@
-From: "Shirron, Stephen" <Stephen.Shirron@lsil.com>
-Subject: RE: IP over FC and qlogic workarounds in fusion
-Date: Tue, 7 Sep 2004 12:12:10 -0600
+From: "Scott M. Ferris" <sferris@acm.org>
+Subject: Re: [linux-iscsi-devel] Re: [PATCH RFC] replace ioctl for sysfs take
+ 2
+Date: Tue, 7 Sep 2004 14:19:18 -0500 (CDT)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <BC3CE0375D29D51199A400508B66CA6C099478E1@exc-snake.co.lsil.com>
+Message-ID: <20040907191918.C045E76C56@isis.visi.com>
+References: <1094571319.1716.108.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:33730 "EHLO mail0.lsil.com")
-	by vger.kernel.org with ESMTP id S268349AbUIGSNQ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Sep 2004 14:13:16 -0400
+Received: from conn.mc.mpls.visi.com ([208.42.156.2]:40642 "EHLO
+	conn.mc.mpls.visi.com") by vger.kernel.org with ESMTP
+	id S268503AbUIGTTV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 7 Sep 2004 15:19:21 -0400
+In-Reply-To: <1094571319.1716.108.camel@mulgrave> from James Bottomley at "Sep
+ 7, 2004 10:43:00 am"
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>, "Moore, Eric Dean" <Emoore@lsil.com>
-Cc: andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Mike Christie <mikenc@us.ibm.com>, Mike Christie <michaelc@cs.wisc.edu>, Matthew Wilcox <willy@debian.org>, Christoph Hellwig <hch@lst.de>, iscsi -devel <linux-iscsi-devel@lists.sourceforge.net>, David Wysochanski <davidw@netapp.com>, "Surekha.PC" <surekhap@cisco.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-One problem I see with trying to remove this workaround from
-our driver is that it would have to be coupled with a kernel
-release, and then the newer driver would be bound to that release.
-It would make it harder for customers to use a new driver kit with
-an old kernel.
+James Bottomley wrote:
+>
+> A host is the analogue of a bus.  
 
-How is something like this typically addressed?
+That's not a very helpful analogy, since only SPI and FC-AL resemble a
+bus, and all of the newer SCSI transports are switched fabrics.
 
-We are not opposed to making such a change.
+> In iSCSI that's really the other end point.  Using abstractions
+> incorrectly (like a single host for the entire iSCSI system) is
+> bound to end up with problems due to the concept mismatch.
 
-stephen
+I have trouble understanding your viewpoint.  Your answers to the
+following questions will hopefully clear things up.
 
------Original Message-----
-From: Christoph Hellwig [mailto:hch@lst.de] 
-Sent: Monday, September 06, 2004 6:14 AM
-To: Moore, Eric Dean
-Cc: Christoph Hellwig; andrew.vasquez@qlogic.com;
-linux-scsi@vger.kernel.org; Shirron, Stephen
-Subject: Re: IP over FC and qlogic workarounds in fusion
+Do you think Linux hosts should be used in a similar way by all
+switched SCSI transports (e.g. FC-SW, iSCSI, SAS)?  If not, why not?
 
-On Mon, Aug 30, 2004 at 06:29:47PM -0400, Moore, Eric Dean wrote:
-> Here is feedback from Stephen Shirron, co-worker here
-> at LSI Logic:
-> 
-> To my knowledge QLogic has never even acknowledged that
-> they had a bug.  In my opinion it is not
-> safe to remove this code.  We do have versions of the FC
-> firmware that work around this QLogic bug, but it's hard
-> to know if the entire field is populated.  It would not
-> be good to introduce a regression that decreases our
-> interoperability.
+Do you think switched SCSI transports should allocate one Linux host
+for each I_T nexus?
 
-Andrew, could you please try to to find the right people at Qlogic
-to ACK or even better fix this?
+Do you think switched SCSI transports should allocate one Linux host
+for each (SAM-2 or SAM-3) SCSI initiator port?
 
-Eric, are you and your LSI coworkers willing to integrate the workaround
-with the net/802/fc.c code and make fusion use it?
+Do you think switched SCSI transports should allocate one Linux host
+for each (SAM-2 or SAM-3) SCSI initiator device?
+
+-- 
+Scott M. Ferris,
+sferris@acm.org 
