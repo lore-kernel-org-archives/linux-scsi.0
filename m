@@ -1,45 +1,48 @@
-From: James Bottomley <James.Bottomley@steeleye.com>
-Subject: Re: Linux SCSI subsystem interview
-Date: Thu, 22 Aug 2002 10:30:19 -0400
+From: Mike Anderson <andmike@us.ibm.com>
+Subject: Re: [PATCH] 2.5.31 scsi_error.c cleanup
+Date: Thu, 22 Aug 2002 09:34:39 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <200208221430.g7MEUJn02846@localhost.localdomain>
-References: <dee@renaissoft.com>
+Message-ID: <20020822163439.GA1336@beaverton.ibm.com>
+References: <20020812233815.GA1334@beaverton.ibm.com> <200208221405.g7ME5XE02754@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: (from root@localhost)
-	by pogo.mtv1.steeleye.com (8.9.3/8.9.3) id HAA28911
-	for <linux-scsi@vger.kernel.org>; Thu, 22 Aug 2002 07:30:22 -0700
-In-Reply-To: Message from "Dee-Ann LeBlanc" <dee@renaissoft.com>
-   of "Wed, 21 Aug 2002 22:39:24 PDT." <NDEGLAOMLHFCMKFOMBEPEEDJDPAA.dee@renaissoft.com>
+Content-Disposition: inline
+In-Reply-To: <200208221405.g7ME5XE02754@localhost.localdomain>
 List-Id: linux-scsi@vger.kernel.org
-To: Dee-Ann LeBlanc <dee@renaissoft.com>
+To: James Bottomley <James.Bottomley@steeleye.com>
 Cc: linux-scsi@vger.kernel.org
 
-dee@renaissoft.com said:
-> Hi there. I thought I'd lurk on this list a bit before posting but it
-> seems that the traffic isn't high, so that's a good thing. I'm working
-> on an article about the Linux SCSI subsystem, about the perceived
-> problems with it, the real problems with it, what's being done to
-> address them, and so on. Is anyone here interested in talking about
-> this with me? I'm happy to do it on the list
-
-The list is archived at
-
-http://marc.theaimsgroup.com/?l=linux-scsi
-
-if you want to browse back issues.
-
-Probably the best source would be the audio of the kernel summit (at least, 
-you get to hear everyone else's frustrations about scsi):
-
-http://ksmp3rep.sourceforge.net/
-
-And there is a summary here:
-
-http://lwn.net/Articles/3467/
-
-James Bottomley
+James Bottomley [James.Bottomley@steeleye.com] wrote:
+> andmike@us.ibm.com said:
+> > I did not change any of the current error policy. I would like to do
+> > that in the future. 
+> 
+> Looking through the patch, it seems you've changed the offline behavior.  Now 
+> if all error recovery fails, the machine will panic instead of just offlining 
+> the failed device.  I know offlining has never worked correctly, because it 
+> always seems to leave the system hanging, but it is a useful feature for large 
+> machines with many SCSI attachments, could you look at trying to get it to 
+> work corectly?
+> 
+> Thanks,
+> 
+> James
 
 
+Thanks for the feedback my intent was not to panic on failed recovery. I
+will re-verify an offline case.
+
+All sdev's that fail to recover in scsi_eh_bus_host_reset through a bus
+and/or host reset should be offlined at the bottom of the channel for
+loop before we go on to the next channel. The BUG_ON(shost->host_failed)
+in scsi_unjam host is a carryover from the old scsi_error panic that I
+believe was trying to catch race conditions / code problems. I left the
+check in for now.
+
+-Mike
+
+-- 
+Michael Anderson
+andmike@us.ibm.com
 
