@@ -1,64 +1,115 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: [PATCH as495] Retries in scsi_eh_tur
-Date: Wed, 30 Mar 2005 15:05:45 -0500 (EST)
-Message-ID: <Pine.LNX.4.44L0.0503301449490.1441-100000@ida.rowland.org>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: [BK PATCH] SCSI updates for 2.6.12-rc1
+Date: Wed, 30 Mar 2005 14:42:46 -0600
+Message-ID: <1112215366.5452.26.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ida.rowland.org ([192.131.102.52]:19204 "HELO ida.rowland.org")
-	by vger.kernel.org with SMTP id S262403AbVC3UFs (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 30 Mar 2005 15:05:48 -0500
+Received: from stat16.steeleye.com ([209.192.50.48]:46991 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S261577AbVC3Um4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 30 Mar 2005 15:42:56 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: SCSI development list <linux-scsi@vger.kernel.org>
+To: Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
 
-James:
+This is the first batch of -rc patches.  I have other patches pending
+that I'm going to sort into the -rc patches and the post -rc ones.
 
-I don't know if this patch is appropriate or not.  The problem lies in the 
-way the error handler uses TEST UNIT READY to tell whether error recovery 
-has succeeded.  The scsi_eh_tur function gives up after one round of 
-retrying; after that it decides that more error recovery is needed.
+The patch is available here:
 
-However TUR is liable to report sense data indicating a retry is needed
-when in fact error recovery has succeeded.  A typical example might be
-SK=2, ASC=4, ASCQ=1 (Logical unit in process of becoming ready).  The mere
-fact that we were able to get a sensible reply to the TUR should indicate
-that the device is working well enough to stop error recovery.
+bk://linux-scsi.bkbits.net/scsi-for-linus-2.6
 
-I ran across a case back in January where this happened.  A CD-ROM drive
-timed out the INQUIRY command, and a device reset fixed the blockage.  
-But then the drive kept responding with 2/4/1 -- because it was spinning
-up I suppose -- until the error handler gave up and placed it offline.  
-If the initial INQUIRY had received the 2/4/1 instead, everything would
-have worked okay.  It doesn't seem reasonable for things to fail just
-because the error handler had started running.
+The short changelog is:
 
-So, what do you think of this patch?  After the single retry has been 
-exhausted, it makes scsi_eh_tur return success if a NEEDS_RETRY response 
-is received.
+adam radford:
+  o 3ware 9000 driver update
 
-Alan Stern
+Adrian Bunk:
+  o drivers/scsi/osst.c: remove unused code
+  o drivers/scsi/osst.c: make code static
+
+Alan Cox:
+  o atp870u DMA mask fix
+  o atp870u: Re-merge cleanups
+
+Alan Stern:
+  o Add a scsi_device flag for RETRY_HWERROR
+
+Eric Moore:
+  o Make Fusion-MPT much faster as module
+
+James Bottomley:
+  o Fix SCSI internal requests hang
+  o 3ware driver update
+  o 53c700: Alter interrupt assignment
+  o SCSI: Re-export code incorrectly made static
+  o ncr53c8xx: Fix small problem with initial negotiation
+  o Q720: fix compile warning
+  o fix breakage in the SCSI generic tag code
+
+Jens Axboe:
+  o queue <-> sdev reference counting problem
+
+Mark Haverkamp:
+  o aacraid: endian cleanup
+
+Matthew Wilcox:
+  o Fix small bug in scsi_transport_spi
+  o ncr53c8xx update
+  o Zalon updates
+  o Misc Lasi 700 fixes
+
+Mike Christie:
+  o fix fc class work queue usage
+  o rm unused scan delay var
+
+Randy Dunlap:
+  o scsi_sysfs: use NULL instead of 0
 
 
+The diffstat is:
 
-Signed-off-by: Alan Stern <stern@rowland.harvard.edu>
+ drivers/message/fusion/mptbase.h  |    4 
+ drivers/message/fusion/mptscsih.c |   92 +++---
+ drivers/message/fusion/mptscsih.h |    8 
+ drivers/scsi/3w-9xxx.c            |  516 +++++++++++++++++++-------------------
+ drivers/scsi/3w-9xxx.h            |   88 ++----
+ drivers/scsi/3w-xxxx.c            |  366 ++++++++++++--------------
+ drivers/scsi/3w-xxxx.h            |    3 
+ drivers/scsi/53c700.c             |   25 -
+ drivers/scsi/53c700.h             |    4 
+ drivers/scsi/NCR_D700.c           |   41 ++-
+ drivers/scsi/NCR_Q720.c           |    2 
+ drivers/scsi/aacraid/aachba.c     |  149 ++++++----
+ drivers/scsi/aacraid/aacraid.h    |  191 +++++++-------
+ drivers/scsi/aacraid/commctrl.c   |   12 
+ drivers/scsi/aacraid/comminit.c   |    2 
+ drivers/scsi/aacraid/commsup.c    |   25 -
+ drivers/scsi/aacraid/rkt.c        |   21 -
+ drivers/scsi/aacraid/rx.c         |   18 -
+ drivers/scsi/aacraid/sa.c         |   28 --
+ drivers/scsi/atp870u.c            |  341 ++++++++++++++++---------
+ drivers/scsi/hosts.c              |   17 +
+ drivers/scsi/lasi700.c            |   17 -
+ drivers/scsi/ncr53c8xx.c          |  508 +++++++++++++++----------------------
+ drivers/scsi/osst.c               |    7 
+ drivers/scsi/scsi_error.c         |    6 
+ drivers/scsi/scsi_lib.c           |   36 ++
+ drivers/scsi/scsi_scan.c          |    3 
+ drivers/scsi/scsi_sysfs.c         |   22 -
+ drivers/scsi/scsi_transport_fc.c  |    8 
+ drivers/scsi/scsi_transport_spi.c |    9 
+ drivers/scsi/sim710.c             |   12 
+ drivers/scsi/sym53c8xx_defs.h     |   54 +--
+ drivers/scsi/zalon.c              |   23 -
+ include/scsi/scsi_device.h        |    1 
+ include/scsi/scsi_host.h          |    1 
+ include/scsi/scsi_transport_fc.h  |    3 
+ 36 files changed, 1367 insertions(+), 1296 deletions(-)
 
-===== drivers/scsi/scsi_error.c 1.48 vs edited =====
---- 1.48/drivers/scsi/scsi_error.c	2005-03-22 01:44:55 -05:00
-+++ edited/drivers/scsi/scsi_error.c	2005-03-30 14:48:23 -05:00
-@@ -810,9 +810,11 @@
- 		__FUNCTION__, scmd, rtn));
- 	if (rtn == SUCCESS)
- 		return 0;
--	else if (rtn == NEEDS_RETRY)
-+	else if (rtn == NEEDS_RETRY) {
- 		if (retry_cnt--)
- 			goto retry_tur;
-+		return 0;
-+	}
- 	return 1;
- }
- 
+James
+
 
