@@ -1,56 +1,58 @@
-From: "Justin T. Gibbs" <gibbs@scsiguy.com>
-Subject: Re: AIC7902 lockups
-Date: Wed, 13 Aug 2003 14:25:27 -0600
+From: Kai Makisara <Kai.Makisara@kolumbus.fi>
+Subject: RE: aic7xxx & st - why does sym driver don't like odd count on wide
+ bus?
+Date: Wed, 13 Aug 2003 23:43:21 +0300 (EEST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3287852704.1060806327@aslan.btc.adaptec.com>
-References: <20030811143610.A19365@laokoon.bug.net> <2429712704.1060622870@aslan.btc.adaptec.com> <20030811204139.A26663@laokoon.bug.net> <3244592704.1060799839@aslan.btc.adaptec.com> <20030813213915.A20993@laokoon.bug.net>
-Reply-To: "Justin T. Gibbs" <gibbs@scsiguy.com>
+Message-ID: <Pine.LNX.4.56.0308132323440.2923@kai.makisara.local>
+References: <000201c361a3$609273c0$e0019d89@cybernetics.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from magic-mail.adaptec.com ([208.236.45.100]:58780 "EHLO
-	magic.adaptec.com") by vger.kernel.org with ESMTP id S275489AbTHMUXr
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 13 Aug 2003 16:23:47 -0400
-In-Reply-To: <20030813213915.A20993@laokoon.bug.net>
-Content-Disposition: inline
+Received: from fep02-0.kolumbus.fi ([193.229.0.44]:31962 "EHLO
+	fep02-app.kolumbus.fi") by vger.kernel.org with ESMTP
+	id S275525AbTHMUnX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 13 Aug 2003 16:43:23 -0400
+In-Reply-To: <000201c361a3$609273c0$e0019d89@cybernetics.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Thomas Beutin <tyrone@laokoon.IN-Berlin.DE>, linux-scsi@vger.kernel.org
+To: Tony Battersby <tonyb@cybernetics.com>
+Cc: 'Wu Zhou' <zhouwu@cn.ibm.com>, linux-scsi@vger.kernel.org
 
->> The logs are still not complete.  As best I can tell, the controller
->> is seeing CRC errors when talking to the Fujitsu drives, but these
->> drives are hanging up the bus instead of responding to our ATN condition.
->> I believe that these drives have newer firmware available that might
->> aid in CRC error recovery, but you should also double check your
->> cable, termination, etc.
+On Wed, 13 Aug 2003, Tony Battersby wrote:
+
+> >       You ever said that sym driver doesn't like odd counts
+> > on wide bus.
+> > What I want to know is why. Is this a defect?
 >
-> I've put another syslog file on the web. IMHO it shows all the errors
-> with the scsi system.
+> I had a disagreement with the author of the driver over this issue a
+> long time ago.  See the list archive:
+>
+> http://marc.theaimsgroup.com/?t=101018223200001&r=1&w=2
+>
+I remember this discussion and looked at it again. I have run into this
+problem also at other places than the st driver.
 
-This confirms that it is a CRC error that causes the wedge.  You should
-contact Fujitsu for a firmware update.
+I agree with you and think that the low-level driver should handle this.
+Gerard Roudier (author of sym53c8xx_2) had the opinion that the
+pass-through user or high-level driver should handle this (i.e., see that
+the transfer length is even if it detects that it is using a wide SCSI
+HBA).
 
-> I cannot imagine a cabling problem, because the drives are in a hot
-> swap backplane and i changed the places of the drives (but having
-> the IBM drive every time as the first drive).
+I agree that it is not convenient (to put it mildly) for every user to
+determine whether the HBA can support odd transfer lengths. In addition to
+future SCSI standards, this should include other transports using the SCSI
+midlevel driver (USB, IEEE1394, ide-scsi, ATA-SCSI, ...).
 
-Not all backplanes are rated for U320 operation.  Does the chassis
-claim to be U320 capable?
+A high-level driver using direct transfers between user space and device
+has an additional problem: it can't simply increase the transfer length
+because it does not know if there is memory mapped to the writing process
+beyond the buffer (not to mention the security aspects). The solution is
+to use an intermediate buffer but this is awkward. The HBA driver or
+hardware are the only places where padding the data can be possibly done
+safely without much extra work.
 
-> Or is it possible to have a bad cable from the board to the backplane,
-> beeing ok for the U160 IBM drive but not for a U360 drive?
+Gerard seems to have a firm opinion and I have decided to live with the
+current situation. If I need odd write transfers (very rare because I can
+control what I want to write), I use another HBA.
 
-Yes.
-
-> Do You think, it could help to set the controller maximum to U160 on
-> the expected SCSI-IDs for the fujitsu drives?
-
-You may have to run without packetized protocol in order for them
-to function correctly.  This is different than just running at U160
-speeds since U320 drives can operate in packetized mode at speeds
-lower than U320.
-
---
-Justin
-
+-- 
+Kai
