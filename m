@@ -1,95 +1,74 @@
 From: brking@us.ibm.com
-Subject: [PATCH 03/15] ipr: New adapter support
-Date: Mon, 21 Feb 2005 15:08:43 -0600
-Message-ID: <200502212108.j1LL8hu0013855@d01av04.pok.ibm.com>
-Received: from e5.ny.us.ibm.com ([32.97.182.145]:16060 "EHLO e5.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S262120AbVBUVIp (ORCPT
+Subject: [PATCH 05/15] ipr: Setup max_sectors based on device type
+Date: Mon, 21 Feb 2005 15:08:57 -0600
+Message-ID: <200502212108.j1LL8vvf014695@d01av04.pok.ibm.com>
+Received: from e5.ny.us.ibm.com ([32.97.182.145]:56508 "EHLO e5.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S262117AbVBUVI7 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 21 Feb 2005 16:08:45 -0500
+	Mon, 21 Feb 2005 16:08:59 -0500
 Received: from d01relay02.pok.ibm.com (d01relay02.pok.ibm.com [9.56.227.234])
-	by e5.ny.us.ibm.com (8.12.11/8.12.11) with ESMTP id j1LL8iMN024187
-	for <linux-scsi@vger.kernel.org>; Mon, 21 Feb 2005 16:08:44 -0500
+	by e5.ny.us.ibm.com (8.12.11/8.12.11) with ESMTP id j1LL8w0X024504
+	for <linux-scsi@vger.kernel.org>; Mon, 21 Feb 2005 16:08:58 -0500
 Received: from d01av04.pok.ibm.com (d01av04.pok.ibm.com [9.56.224.64])
-	by d01relay02.pok.ibm.com (8.12.10/NCO/VER6.6) with ESMTP id j1LL8iew059122
-	for <linux-scsi@vger.kernel.org>; Mon, 21 Feb 2005 16:08:44 -0500
+	by d01relay02.pok.ibm.com (8.12.10/NCO/VER6.6) with ESMTP id j1LL8wew056826
+	for <linux-scsi@vger.kernel.org>; Mon, 21 Feb 2005 16:08:58 -0500
 Received: from d01av04.pok.ibm.com (loopback [127.0.0.1])
-	by d01av04.pok.ibm.com (8.12.11/8.12.11) with ESMTP id j1LL8idD013879
-	for <linux-scsi@vger.kernel.org>; Mon, 21 Feb 2005 16:08:44 -0500
+	by d01av04.pok.ibm.com (8.12.11/8.12.11) with ESMTP id j1LL8w7K014710
+	for <linux-scsi@vger.kernel.org>; Mon, 21 Feb 2005 16:08:58 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
 Cc: linux-scsi@vger.kernel.org, brking@us.ibm.com
 
 
-Add support for some new adapters.
+The ipr family of adapters is capable of handling data transfer sizes of
+16777215 bytes. Logical disk array devices under ipr are capable of only
+256k transfer lengths. Patch sets max_sectors of the adapter to 32767 and
+overrides max_sectors for the logical disk array devices in the
+slave_configure routine.
 
 Signed-off-by: Brian King <brking@us.ibm.com>
 ---
 
- linux-2.6.11-rc4-bk9-bjking1/drivers/scsi/ipr.c |   17 +++++++++++++----
- linux-2.6.11-rc4-bk9-bjking1/drivers/scsi/ipr.h |    5 ++++-
- 2 files changed, 17 insertions(+), 5 deletions(-)
+ linux-2.6.11-rc4-bk9-bjking1/drivers/scsi/ipr.c |    6 ++++--
+ linux-2.6.11-rc4-bk9-bjking1/drivers/scsi/ipr.h |    3 ++-
+ 2 files changed, 6 insertions(+), 3 deletions(-)
 
-diff -puN drivers/scsi/ipr.h~ipr_new_adapters drivers/scsi/ipr.h
---- linux-2.6.11-rc4-bk9/drivers/scsi/ipr.h~ipr_new_adapters	2005-02-21 13:10:34.000000000 -0600
-+++ linux-2.6.11-rc4-bk9-bjking1/drivers/scsi/ipr.h	2005-02-21 13:10:34.000000000 -0600
-@@ -70,9 +70,12 @@
- #define IPR_SUBS_DEV_ID_2780	0x0264
- #define IPR_SUBS_DEV_ID_5702	0x0266
- #define IPR_SUBS_DEV_ID_5703	0x0278
--#define IPR_SUBS_DEV_ID_572E  0x02D3
-+#define IPR_SUBS_DEV_ID_572E  0x028D
-+#define IPR_SUBS_DEV_ID_573E  0x02D3
- #define IPR_SUBS_DEV_ID_573D  0x02D4
-+#define IPR_SUBS_DEV_ID_571A	0x02C0
- #define IPR_SUBS_DEV_ID_571B	0x02BE
-+#define IPR_SUBS_DEV_ID_571E  0x02BF
+diff -puN drivers/scsi/ipr.c~ipr_max_sectors drivers/scsi/ipr.c
+--- linux-2.6.11-rc4-bk9/drivers/scsi/ipr.c~ipr_max_sectors	2005-02-21 13:11:55.000000000 -0600
++++ linux-2.6.11-rc4-bk9-bjking1/drivers/scsi/ipr.c	2005-02-21 13:11:55.000000000 -0600
+@@ -2833,8 +2833,10 @@ static int ipr_slave_configure(struct sc
+ 			sdev->type = TYPE_RAID;
+ 		if (ipr_is_af_dasd_device(res) || ipr_is_ioa_resource(res))
+ 			sdev->scsi_level = 4;
+-		if (ipr_is_vset_device(res))
++		if (ipr_is_vset_device(res)) {
+ 			sdev->timeout = IPR_VSET_RW_TIMEOUT;
++			blk_queue_max_sectors(sdev->request_queue, IPR_VSET_MAX_SECTORS);
++		}
+ 		if (IPR_IS_DASD_DEVICE(res->cfgte.std_inq_data))
+ 			sdev->allow_restart = 1;
+ 		scsi_adjust_queue_depth(sdev, 0, res->qdepth);
+@@ -3952,7 +3954,7 @@ static struct scsi_host_template driver_
+ 	.can_queue = IPR_MAX_COMMANDS,
+ 	.this_id = -1,
+ 	.sg_tablesize = IPR_MAX_SGLIST,
+-	.max_sectors = IPR_MAX_SECTORS,
++	.max_sectors = IPR_IOA_MAX_SECTORS,
+ 	.cmd_per_lun = IPR_MAX_CMD_PER_LUN,
+ 	.use_clustering = ENABLE_CLUSTERING,
+ 	.shost_attrs = ipr_ioa_attrs,
+diff -puN drivers/scsi/ipr.h~ipr_max_sectors drivers/scsi/ipr.h
+--- linux-2.6.11-rc4-bk9/drivers/scsi/ipr.h~ipr_max_sectors	2005-02-21 13:11:55.000000000 -0600
++++ linux-2.6.11-rc4-bk9-bjking1/drivers/scsi/ipr.h	2005-02-21 13:11:55.000000000 -0600
+@@ -130,7 +130,8 @@
+ #define IPR_MAX_PHYSICAL_DEVS				192
  
- #define IPR_NAME				"ipr"
+ #define IPR_MAX_SGLIST					64
+-#define IPR_MAX_SECTORS					512
++#define IPR_IOA_MAX_SECTORS				32767
++#define IPR_VSET_MAX_SECTORS				512
+ #define IPR_MAX_CDB_LEN					16
  
-diff -puN drivers/scsi/ipr.c~ipr_new_adapters drivers/scsi/ipr.c
---- linux-2.6.11-rc4-bk9/drivers/scsi/ipr.c~ipr_new_adapters	2005-02-21 13:10:34.000000000 -0600
-+++ linux-2.6.11-rc4-bk9-bjking1/drivers/scsi/ipr.c	2005-02-21 13:10:34.000000000 -0600
-@@ -108,7 +108,7 @@ static const struct ipr_chip_cfg_t ipr_c
- 			.clr_uproc_interrupt_reg = 0x00218
- 		}
- 	},
--	{ /* Snipe */
-+	{ /* Snipe and Scamp */
- 		.mailbox = 0x0052C,
- 		.cache_line_size = 0x20,
- 		{
-@@ -5990,20 +5990,29 @@ static struct pci_device_id ipr_pci_tabl
- 		PCI_VENDOR_ID_IBM, IPR_SUBS_DEV_ID_5702,
- 		0, 0, (kernel_ulong_t)&ipr_chip_cfg[0] },
- 	{ PCI_VENDOR_ID_MYLEX, PCI_DEVICE_ID_IBM_GEMSTONE,
--		PCI_VENDOR_ID_IBM, IPR_SUBS_DEV_ID_572E,
--		0, 0, (kernel_ulong_t)&ipr_chip_cfg[0] },
--	{ PCI_VENDOR_ID_MYLEX, PCI_DEVICE_ID_IBM_GEMSTONE,
- 		PCI_VENDOR_ID_IBM, IPR_SUBS_DEV_ID_5703,
- 	      0, 0, (kernel_ulong_t)&ipr_chip_cfg[0] },
- 	{ PCI_VENDOR_ID_MYLEX, PCI_DEVICE_ID_IBM_GEMSTONE,
- 		PCI_VENDOR_ID_IBM, IPR_SUBS_DEV_ID_573D,
- 	      0, 0, (kernel_ulong_t)&ipr_chip_cfg[0] },
-+	{ PCI_VENDOR_ID_MYLEX, PCI_DEVICE_ID_IBM_GEMSTONE,
-+		PCI_VENDOR_ID_IBM, IPR_SUBS_DEV_ID_573E,
-+	      0, 0, (kernel_ulong_t)&ipr_chip_cfg[0] },
- 	{ PCI_VENDOR_ID_IBM, PCI_DEVICE_ID_IBM_CITRINE,
- 		PCI_VENDOR_ID_IBM, IPR_SUBS_DEV_ID_571B,
- 	      0, 0, (kernel_ulong_t)&ipr_chip_cfg[0] },
-+	{ PCI_VENDOR_ID_IBM, PCI_DEVICE_ID_IBM_CITRINE,
-+		PCI_VENDOR_ID_IBM, IPR_SUBS_DEV_ID_572E,
-+	      0, 0, (kernel_ulong_t)&ipr_chip_cfg[0] },
-+	{ PCI_VENDOR_ID_IBM, PCI_DEVICE_ID_IBM_CITRINE,
-+		PCI_VENDOR_ID_IBM, IPR_SUBS_DEV_ID_571A,
-+	      0, 0, (kernel_ulong_t)&ipr_chip_cfg[0] },
- 	{ PCI_VENDOR_ID_IBM, PCI_DEVICE_ID_IBM_SNIPE,
- 		PCI_VENDOR_ID_IBM, IPR_SUBS_DEV_ID_2780,
- 		0, 0, (kernel_ulong_t)&ipr_chip_cfg[1] },
-+	{ PCI_VENDOR_ID_ADAPTEC2, PCI_DEVICE_ID_ADAPTEC2_SCAMP,
-+		PCI_VENDOR_ID_IBM, IPR_SUBS_DEV_ID_571E,
-+		0, 0, (kernel_ulong_t)&ipr_chip_cfg[1] },
- 	{ }
- };
- MODULE_DEVICE_TABLE(pci, ipr_pci_table);
+ #define IPR_DEFAULT_BUS_WIDTH				16
 _
