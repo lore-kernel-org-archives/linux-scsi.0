@@ -1,57 +1,59 @@
-From: Tobias Klauser <tklauser@nuerscht.ch>
-Subject: [UPDATE PATCH 17/19] drivers/scsi/qla1280: Use the DMA_32BIT_MASK constant
-Date: Sun, 20 Mar 2005 14:20:49 +0100
-Message-ID: <20050320132049.GQ3491@localhost.localdomain>
-References: <20050220171200.GR14375@helium.tklauser.home>
+From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+Subject: Re: [PATCH] dc395x: Fix support for highmem
+Date: Sun, 20 Mar 2005 21:51:52 +0100 (CET)
+Message-ID: <Pine.LNX.4.60.0503202057500.5532@poirot.grange>
+References: <200503160209.j2G29cAf010870@hera.kernel.org> <20050316075839.GC7842@suse.de>
+ <1110986016.5771.3.camel@mulgrave> <20050316160447.GU7842@suse.de>
+ <20050316164806.GO21986@parcelfarce.linux.theplanet.co.uk>
+ <20050316165338.GX7842@suse.de> <20050316170259.GA25056@infradead.org>
+ <20050316170417.GY7842@suse.de> <20050320091417.GC12000@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Received: from server3.hostpoint.ch ([217.26.52.13]:53776 "EHLO
-	server3.hostpoint.ch") by vger.kernel.org with ESMTP
-	id S262160AbVCTNU6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 20 Mar 2005 08:20:58 -0500
-Content-Disposition: inline
-In-Reply-To: <20050220171200.GR14375@helium.tklauser.home>
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Received: from pop.gmx.net ([213.165.64.20]:56277 "HELO mail.gmx.net")
+	by vger.kernel.org with SMTP id S261278AbVCTUwp (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 20 Mar 2005 15:52:45 -0500
+In-Reply-To: <20050320091417.GC12000@infradead.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: kernel-janitors@lists.osdl.org
-Cc: andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Jens Axboe <axboe@suse.de>, Matthew Wilcox <matthew@wil.cx>, James Bottomley <James.Bottomley@SteelEye.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-The previous patch did not compile cleanly on all architectures so
-here's a fixed one.
+On Sun, 20 Mar 2005, Christoph Hellwig wrote:
 
-Use the DMA_32BIT_MASK constant from dma-mapping.h when calling
-pci_set_dma_mask() or pci_set_consistent_dma_mask()
-This patch includes dma-mapping.h explicitly because it caused errors
-on some architectures otherwise.
-See http://marc.theaimsgroup.com/?t=108001993000001&r=1&w=2 for details
+> On Wed, Mar 16, 2005 at 06:04:17PM +0100, Jens Axboe wrote:
+> > On Wed, Mar 16 2005, Christoph Hellwig wrote:
+> > > On Wed, Mar 16, 2005 at 05:53:39PM +0100, Jens Axboe wrote:
+> > > > The list doesn't really need dma mapping at that point, the problem here
+> > > > is that the driver needs to punt to pio mode because of foo. So calling
+> > > > pci/dma_map_* is pointless, since the CPU will have to do the transfer
+> > > > anyways. What the driver is really looking for at this point, is a way
+> > > > to map the pages in the sglist to a virtual address.
+> > > 
+> > > Given that there's quite a few cases of this "problem" it would be nice
+> > > to have common helpers for it.  Especially as it's really difficult when
+> > > we allow merging of sg list entries
+> > 
+> > I thought about that when writing the above, but is there really more
+> > than one case for SCSI drivers? If there is, sure lets add the helpers.
+> > But I would consider it a quite rare occurence, I've never seen it
+> > before.
+> 
+> There's lots of pio only drivers, aswell as raid drivers that need to
+> look into the non I/O-path command and things like iscsi.
 
-Signed-off-by: Tobias Klauser <tklauser@nuerscht.ch>
+Well, how about something like
 
---- linux-2.6.11.orig/drivers/scsi/qla1280.c	2005-03-02 12:50:38.000000000 +0100
-+++ linux-2.6.11/drivers/scsi/qla1280.c	2005-03-20 13:27:54.000000000 +0100
-@@ -345,6 +345,7 @@
- #include <linux/pci_ids.h>
- #include <linux/interrupt.h>
- #include <linux/init.h>
-+#include <linux/dma-mapping.h>
- 
- #include <asm/io.h>
- #include <asm/irq.h>
-@@ -4741,7 +4742,7 @@ qla1280_probe_one(struct pci_dev *pdev, 
- 
- #ifdef QLA_64BIT_PTR
- 	if (pci_set_dma_mask(ha->pdev, (dma_addr_t) ~ 0ULL)) {
--		if (pci_set_dma_mask(ha->pdev, 0xffffffff)) {
-+		if (pci_set_dma_mask(ha->pdev, DMA_32BIT_MASK)) {
- 			printk(KERN_WARNING "scsi(%li): Unable to set a "
- 			       " suitable DMA mask - aboring\n", ha->host_no);
- 			error = -ENODEV;
-@@ -4751,7 +4752,7 @@ qla1280_probe_one(struct pci_dev *pdev, 
- 		dprintk(2, "scsi(%li): 64 Bit PCI Addressing Enabled\n",
- 			ha->host_no);
- #else
--	if (pci_set_dma_mask(ha->pdev, 0xffffffff)) {
-+	if (pci_set_dma_mask(ha->pdev, DMA_32BIT_MASK)) {
- 		printk(KERN_WARNING "scsi(%li): Unable to set a "
- 		       " suitable DMA mask - aboring\n", ha->host_no);
- 		error = -ENODEV;
+char *kmap_atomic_sg(struct scatterlist *sg, unsigned int offset, int *mapped);
+void kunmap_atomic_sg(struct scatterlist *sg, int mapped);
+
+The latter would just call the kunmap_atomic with the respective KM_ type. 
+By "merging of sg list entries" above is meant, that pci_map_sg may return 
+a number smaller than the number of elements in the original sg list 
+because some adjacent elements were merged during the mapping?
+
+Thanks
+Guennadi
+---
+Guennadi Liakhovetski
+
