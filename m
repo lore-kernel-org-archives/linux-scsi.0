@@ -1,58 +1,45 @@
-From: "Andrew Vasquez" <andrew.vasquez@qlogic.com>
+From: Andrew Ryan <genanr@emsphone.com>
 Subject: Re: 2.6.0-test1 and qlogic 8.00.00b4 driver
-Date: Tue, 29 Jul 2003 09:27:25 -0700
+Date: Tue, 29 Jul 2003 11:36:20 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <B179AE41C1147041AA1121F44614F0B0598B26@AVEXCH02.qlogic.org>
+Message-ID: <20030729163620.GA18645@thumper2.emsphone.com>
+References: <20030728220836.GA10845@thumper2.emsphone.com> <20030729110235.A26675@infradead.org>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="----_=_NextPart_001_01C355EE.4B5F10BF"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [198.70.193.2] ([198.70.193.2]:18500 "EHLO AVEXCH01.qlogic.org")
-	by vger.kernel.org with ESMTP id S271895AbTG2Q1T (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 29 Jul 2003 12:27:19 -0400
-content-class: urn:content-classes:message
+Received: from thumper2.emsphone.com ([199.67.51.102]:61399 "EHLO
+	thumper2.emsphone.com") by vger.kernel.org with ESMTP
+	id S271850AbTG2Qgh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 29 Jul 2003 12:36:37 -0400
+Content-Disposition: inline
+In-Reply-To: <20030729110235.A26675@infradead.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>, ravi.anand@qlogic.com
+Cc: linux-scsi@vger.kernel.org
 
-This is a multi-part message in MIME format.
+Ravi wrote
+> Make sure that Probe Multi lun support is enabled in the kernel(Under scsi
+> device support) Or you can set the module param
+> max_scsi_luns/max_scsi_reports_lun in the modules.conf file and build new
+> ram disk image.
 
-------_=_NextPart_001_01C355EE.4B5F10BF
-Content-Type: text/plain;
-	charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+It is and has always has been 
+CONFIG_SCSI_MULTI_LUN=y
 
-Andrew,
+Is there a parameter that I can use when I load the module to give me more
+debugging information?
 
-> Is the midlayer not scanning the devices or does the device driver not
-> recognize any devices to present to the mid-layer during its scan?
-> Could you forward along the output of the /proc entries made by the
-> device driver, for example: /proc/scsi/qla2300/0, ...
->=20
-> 	# cat /proc/scsi/qla2300/0
-> 	# cat /proc/scsi/qla2300/1
->=20
+On Tue, Jul 29, 2003 at 11:02:35AM +0100, Christoph Hellwig wrote:
+> On Mon, Jul 28, 2003 at 05:08:37PM -0500, Andrew Ryan wrote:
+> > Linux is not seeing any devices attached to a CMD CRA-7280 san connected
+> > raid unit using kernel 2.6.0-test[12] and qlogic drive 8.00.00b4.
+> 
+> It should be fine with plain -test1, with newer trees you need to add
+> a call to scsi_scan_host just after scsi_add_host.
+>
+I added scsi_scan_host after scsi_add_host and it did not change the
+situation, the driver still does not see any devices.  Either the driver or
+the kernel changed since it still works fine in 2.5.69 w/qlogic 8.00.00b3
+drivers. 
 
-Forget the previous request, you'll want to apply the attached
-patch to 8.00.00b4, since scsi_scan_host() is needed for the mid-layer
-to initiate the scan.
-
-Regards,
-Andrew Vasquez
-
-------_=_NextPart_001_01C355EE.4B5F10BF
-Content-Type: application/octet-stream;
-	name="scan_host_fix-v8.00.00b4.diff"
-Content-Transfer-Encoding: base64
-Content-Description: scan_host_fix-v8.00.00b4.diff
-Content-Disposition: attachment;
-	filename="scan_host_fix-v8.00.00b4.diff"
-
-ZGlmZiAtTnVyZCAtWCBkb250ZGlmZiA4MDAwMGI0L3FsYV9vcy5jIDgwMDAwYjQtc2Nhbl9ob3N0
-L3FsYV9vcy5jCi0tLSA4MDAwMGI0L3FsYV9vcy5jCTIwMDMtMDctMTUgMTQ6NDE6MjUuMDAwMDAw
-MDAwIC0wNzAwCisrKyA4MDAwMGI0LXNjYW5faG9zdC9xbGFfb3MuYwkyMDAzLTA3LTI5IDA5OjE5
-OjQ5LjE3NDI1Nzk1MiAtMDcwMApAQCAtMjYzNSw2ICsyNjM1LDggQEAKIAogCXNjc2lfYWRkX2hv
-c3QoaG9zdCwgJnBkZXYtPmRldik7CiAKKwlzY3NpX3NjYW5faG9zdChob3N0KTsKKwogCXJldHVy
-biAwOwogCiBwcm9iZV9mYWlsZWRfY2xlYW51cDoK
-
-------_=_NextPart_001_01C355EE.4B5F10BF--
+Andy
