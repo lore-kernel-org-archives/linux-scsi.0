@@ -1,63 +1,45 @@
-From: Matt Domsch <Matt_Domsch@dell.com>
-Subject: [PATCH 2.4.30-pre1] aic7xxx: don't reset chip on pause
-Date: Fri, 18 Feb 2005 15:50:50 -0600
-Message-ID: <20050218215049.GA1960@lists.us.dell.com>
+From: A <ahmedcali@yahoo.com>
+Subject: Question about SCSI Mid-Layer, getting list of scsi drives
+Date: Fri, 18 Feb 2005 14:25:50 -0800 (PST)
+Message-ID: <20050218222550.54304.qmail@web40422.mail.yahoo.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Received: from linux.us.dell.com ([143.166.224.162]:59743 "EHLO
-	lists.us.dell.com") by vger.kernel.org with ESMTP id S261514AbVBRVuv
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 18 Feb 2005 16:50:51 -0500
-Content-Disposition: inline
+Received: from web40422.mail.yahoo.com ([66.218.92.33]:4441 "HELO
+	web40422.mail.yahoo.com") by vger.kernel.org with SMTP
+	id S261536AbVBRWZv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 18 Feb 2005 17:25:51 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: marcelo.tosatti@cyclades.com
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-Patch below taken from RHEL3 Update 4 kernel 2.4.21-27.EL, fixes a bug
-in the aic79xx and aic7xxx drivers, where upon trying to pause the
-controller chip, it is accidentally hard-reset.  This causes PCI
-Parity errors to appear on Dell PowerEdge 4600 servers as the inb()
-immediately after accidental reset receives corrupted data.
+Hello,
 
-Patch was submitted by Justin Gibbs many moons ago, but never applied
-to mainline 2.4.  Marcelo, please apply.
+In kernel 2.4, I have a driver that interfaces to the
+SCSI mid-layer using API - scsi_register_module. 
+Through this API the (character) driver registers a
+"struct scsi_Device_Template" that would contain
+function pointers (specifically detect) that would be
+called for each SCSI device in the system.  That way
+my driver would have a knowledge and pointer to all
+SCSI devices in the system.
 
-Signed-off-by: Matt Domsch <Matt_Domsch@dell.com>
+I don't see the API - scsi_register_module in 2.6 (or
+similar one) to which I an pass an object of the above
+type.  Can someone please tell me how I can do the
+same thing in 2.6.  I have looked into the function -
+scsi_host_alloc(), but from my reading of code, I
+don't think it does the same functionality as what I
+was doing in 2.4.  Any pointer to any docs explaining
+the changes from 2.4 to 2.6, or how to accomplish what
+I am trying to do would be very appreciated.
 
--- 
-Matt Domsch
-Software Architect
-Dell Linux Solutions linux.dell.com & www.dell.com/linux
-Linux on Dell mailing lists @ http://lists.us.dell.com
+Thank you,
+A.
 
-diff -urNp --exclude-from=/home/mdomsch/excludes --minimal ./aic79xx_pci.c /home/mdomsch/kernels/linux-2.4.21-27.EL/drivers/scsi/aic7xxx/aic79xx_pci.c
---- ./aic79xx_pci.c	Fri Feb 18 14:38:22 2005
-+++ linux/drivers/scsi/aic7xxx/aic79xx_pci.c	Wed Dec  1 20:49:28 2004
-@@ -451,8 +457,10 @@ ahd_pci_test_register_access(struct ahd_
- 	 * or read prefetching could be initiated by the
- 	 * CPU or host bridge.  Our device does not support
- 	 * either, so look for data corruption and/or flaged
--	 * PCI errors.
-+	 * PCI errors.  First pause without causing another
-+	 * chip reset.
- 	 */
-+	hcntrl &= ~CHIPRST;
- 	ahd_outb(ahd, HCNTRL, hcntrl|PAUSE);
- 	while (ahd_is_paused(ahd) == 0)
- 		;
-diff -urNp --exclude-from=/home/mdomsch/excludes --minimal ./aic7xxx_pci.c /home/mdomsch/kernels/linux-2.4.21-27.EL/drivers/scsi/aic7xxx/aic7xxx_pci.c
---- ./aic7xxx_pci.c	Fri Feb 18 14:38:22 2005
-+++ /home/mdomsch/kernels/linux-2.4.21-27.EL/drivers/scsi/aic7xxx/aic7xxx_pci.c	Wed Dec  1 20:49:28 2004
-@@ -1284,8 +1284,10 @@ ahc_pci_test_register_access(struct ahc_
- 	 * or read prefetching could be initiated by the
- 	 * CPU or host bridge.  Our device does not support
- 	 * either, so look for data corruption and/or flagged
--	 * PCI errors.
-+	 * PCI errors.  First pause without causing another
-+	 * chip reset.
- 	 */
-+	hcntrl &= ~CHIPRST;
- 	ahc_outb(ahc, HCNTRL, hcntrl|PAUSE);
- 	while (ahc_is_paused(ahc) == 0)
- 		;
+
+
+		
+__________________________________ 
+Do you Yahoo!? 
+Yahoo! Mail - now with 250MB free storage. Learn more.
+http://info.mail.yahoo.com/mail_250
