@@ -1,37 +1,32 @@
-From: Jes Sorensen <jes@wildopensource.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
 Subject: Re: [ANNOUNCE] QLogic FC Driver for Linux kernel 2.5 available.
-Date: 12 May 2003 18:22:25 -0400
+Date: 12 May 2003 22:21:47 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <m3d6inst3y.fsf@trained-monkey.org>
-References: <3EC017E1.3050507@wanadoo.es> <m3llxbsu0s.fsf@trained-monkey.org>
-	<3EC01BE4.40607@wanadoo.es> <m3he7zstj5.fsf@trained-monkey.org>
-	<3EC01D6F.1020304@wanadoo.es>
+Message-ID: <1052774505.31825.23.camel@dhcp22.swansea.linux.org.uk>
+References: <3EC017E1.3050507@wanadoo.es>
+	 <m3llxbsu0s.fsf@trained-monkey.org>  <3EC01BE4.40607@wanadoo.es>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from trained-monkey.org ([209.217.122.11]:32011 "EHLO
-	trained-monkey.org") by vger.kernel.org with ESMTP id S262845AbTELWJj
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 12 May 2003 18:09:39 -0400
-In-Reply-To: <3EC01D6F.1020304@wanadoo.es>
+Received: from pc2-cwma1-4-cust86.swan.cable.ntl.com ([213.105.254.86]:55449
+	"EHLO lxorguk.ukuu.org.uk") by vger.kernel.org with ESMTP
+	id S262874AbTELWH3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 12 May 2003 18:07:29 -0400
+In-Reply-To: <3EC01BE4.40607@wanadoo.es>
 List-Id: linux-scsi@vger.kernel.org
 To: Xose Vazquez Perez <xose@wanadoo.es>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>
+Cc: Jes Sorensen <jes@wildopensource.com>, linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@SteelEye.com>
 
->>>>> "Xose" == Xose Vazquez Perez <xose@wanadoo.es> writes:
+On Llu, 2003-05-12 at 23:10, Xose Vazquez Perez wrote:
+> Jes Sorensen wrote:
+> 
+> > Sorry but those drivers are old, totally obsolete and contain a lot of
+> > bugs. As I mentioned previously, I have spent quite a lot of time
+> > trying to update and improve the qla1280 driver.
+> 
+> well, but you can update the new firmware
 
-Xose> Jes Sorensen wrote:
->> The Firmware I am using is this:
->> 
->> ql1280_fw.h: Firmware Version 8.15.00 (14:35 Aug 22, 2000)
->> ql12160_fw.h: Firmware Version 10.04.32 (12:03 May 09, 2001)
->> 
->> So no, picking the firmware from the driver on QLogic's web site
->> would be a downgrade.
+You are assuming the firmware doesn't change the hardware/driver
+interface. At least for some controllers thats a bad assumption
 
-Xose> would you mind to put it into 2.4 too?
-
-It's in 2.5, working with James on updating the driver, should also
-work on 2.4.
-
-Jes
