@@ -1,107 +1,78 @@
-From: Brian King <brking@us.ibm.com>
-Subject: Re: [PATCH] p00001_scsi_tcq_queue_lock
-Date: Fri, 17 Sep 2004 12:55:52 -0500
+From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+Subject: Re: [RFTesters] Re: [PATCH] refactor tmscsim inititalization code
+Date: Fri, 17 Sep 2004 21:05:01 +0200 (CEST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <414B2528.1020409@us.ibm.com>
-References: <410FD03E.6040305@us.ibm.com> <1091815154.2421.15.camel@mulgrave> <4117846B.7030302@us.ibm.com>
-Reply-To: brking@us.ibm.com
+Message-ID: <Pine.LNX.4.60.0409172052230.31193@poirot.grange>
+References: <20040904130235.GA20552@lst.de> <Pine.LNX.4.60.0409071040120.2966@poirot.grange>
+ <20040910133254.GB32530@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e5.ny.us.ibm.com ([32.97.182.105]:37062 "EHLO e5.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S268805AbUIQRzz (ORCPT
+Received: from imap.gmx.net ([213.165.64.20]:65225 "HELO mail.gmx.net")
+	by vger.kernel.org with SMTP id S268961AbUIQTuY (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 17 Sep 2004 13:55:55 -0400
-In-Reply-To: <4117846B.7030302@us.ibm.com>
+	Fri, 17 Sep 2004 15:50:24 -0400
+In-Reply-To: <20040910133254.GB32530@lst.de>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-scsi@vger.kernel.org
 
-James,
+Hi
 
-Any chance of applying this patch? I think most of the issues you raised
-I've answered. This patch certainly does not preclude other LLD's from
-quiescing the device before changing the tcqing state if they need to.
+Sorry for a delay - was away for a week.
 
-Or would you prefer adding code to the scsi core to quiesce the device
-before changing its tcqing state? The scsi core could feasibly quiesce the
-device, enable or disable tagged queuing, then resume the queue. I haven't
-looked at generating a patch for this yet, so I'm not sure how simple it
-would be to do what I am suggesting...
+On Fri, 10 Sep 2004, Christoph Hellwig wrote:
+
+>> 1) My big problem with this patch is, that I don't have any AM53C7974
+>> based hardware with EEPROM, and you re-write the EEPROM handling
+>> functions. Although, it does look like you just inlined some of them and
+>> removed redundant code. Do you have the hardware to test it? If not - I
+>> guess, we'd have to ask for volunteers to test it. Your patch is a bit
+>> less than trivial:-) If nobody volunteers, well, I'll have to try to prove
+>> the equivalence myself:-)
+>
+> I'll do a new patch with that part excluded (and ontop of all the
+> patches currently pending for tmscsim)
+
+Ok, now, that the patch has been applied, and, as Christoph informed me, 
+it would be difficult (impossible?) to undo it, we have to fix it. I'll 
+explain my doubts separately as a reply to another Christoph's email. Or 
+would it still be possible to get a patch in, reverting the EEPROM rework?
+
+>> 2) I just realised - we have 2 possibilities to pass parameters to
+>> tmscsim, if it is compiled into the kernel - with tmscsim.tmscsim=...
+>> and with tmscsim=... I guess, breaking scripts by removing one of them now
+>> wouldn't be good... But we could put a warning printk() in dc390_setup
+>> "Deprecated! Use tmscsim.tmscsim=... This will be removed real soon
+>> now!\n" should we?
+>
+> I think we should deprecated both and use an easy to understand
+> module_param-based interface.
+
+Right, this is what is used ATM:
+
+module_param_array(tmscsim, int, tmscsim_paramnum, 0);
+
+, and this is where tmscsim.tmscsim=... comes from. Similar to 
+scsi_mod.scsi_logging_level, etc. What I meant is, that removing 
+dc390_setup might break people's setups.
+
+>> 3) There's a typo:
+>>
+>>> +static void __devinit dc390_eeprom_prepare_read(struct pci_dev *pdev, u8
+>>> cd)
+>>
+>> should be
+>>
+>>> +static void __devinit dc390_eeprom_prepare_read(struct pci_dev *pdev, u8
+>>> cmd)
+>
+> thanks.
+
+Thanks to Andrew for fixing this.
 
 Thanks
-
--Brian
-
-
-Brian King wrote:
-> James Bottomley wrote:
-> 
->> On Tue, 2004-08-03 at 10:49, Brian King wrote:
->>
->>> Add locking to scsi_activate_tcq and scsi_deactivate_tcq to fix a race
->>> condition that can occur when disabling tcqing with commands in flight.
->>
->>
->>
->> It's possible to do it like this.  However, we should really quiesce the
->> SCSI device before disabling tcq.  It is not legal in the scsi spec to
->> have both tagged and untagged commands outstanding.  Most drives do the
->> right thing and return BUSY to an untagged request if they have tags in
->> flight.  
-> 
-> 
-> Ok. I agree that we do not want both tagged and untagged requests going 
-> to the device. In the case of the ipr driver, the adapter microcode 
-> handles this for me. If there are tagged requests outstanding to a 
-> device and an untagged request is sent, the tagged requests must first 
-> finish, then the untagged request is sent to the device with no other 
-> requests outstanding.
-> 
->> Also, we have to wait until all tags return before freeing the
->> block layer tag structures...and there's always the devices that do
->> strange things in this situation...
-> 
-
-The block layer now handles this appropriately and does not free the tags
-until blk_cleanup_queue is called.
-
-
-> diff -puN include/scsi/scsi_tcq.h~blk_queue_free_tags_bug2 include/scsi/scsi_tcq.h
-> --- linux-2.6.8-rc2/include/scsi/scsi_tcq.h~blk_queue_free_tags_bug2	2004-08-02 17:02:43.000000000 -0500
-> +++ linux-2.6.8-rc2-bjking1/include/scsi/scsi_tcq.h	2004-08-02 17:02:43.000000000 -0500
-> @@ -25,9 +25,13 @@
->   **/
->  static inline void scsi_activate_tcq(struct scsi_device *sdev, int depth)
->  {
-> +        unsigned long flags;
-> +
->          if (sdev->tagged_supported) {
-> +		spin_lock_irqsave(sdev->request_queue->queue_lock, flags);
->  		if (!blk_queue_tagged(sdev->request_queue))
->  			blk_queue_init_tags(sdev->request_queue, depth, NULL);
-> +		spin_unlock_irqrestore(sdev->request_queue->queue_lock, flags);
->  		scsi_adjust_queue_depth(sdev, MSG_ORDERED_TAG, depth);
->          }
->  }
-> @@ -38,8 +42,12 @@ static inline void scsi_activate_tcq(str
->   **/
->  static inline void scsi_deactivate_tcq(struct scsi_device *sdev, int depth)
->  {
-> +	unsigned long flags;
-> +
-> +	spin_lock_irqsave(sdev->request_queue->queue_lock, flags);
->  	if (blk_queue_tagged(sdev->request_queue))
->  		blk_queue_free_tags(sdev->request_queue);
-> +	spin_unlock_irqrestore(sdev->request_queue->queue_lock, flags);
->  	scsi_adjust_queue_depth(sdev, 0, depth);
->  }
->  
-> _
-
--- 
-Brian King
-eServer Storage I/O
-IBM Linux Technology Center
+Guennadi
+---
+Guennadi Liakhovetski
 
