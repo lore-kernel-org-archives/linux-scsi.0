@@ -1,30 +1,49 @@
-From: James Bottomley <James.Bottomley@steeleye.com>
-Subject: Re: Aic7xxx v6.2.22 and Aic79xx v1.3.0Alpha2 Released
-Date: Thu, 12 Dec 2002 08:51:24 -0600
+From: Patrick Mochel <mochel@osdl.org>
+Subject: Re: [PATCH] declare and export scsi_bus_type
+Date: Thu, 12 Dec 2002 10:00:03 -0600 (CST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <200212121451.gBCEpOx02764@localhost.localdomain>
-References: <akpm@digeo.com>
+Message-ID: <Pine.LNX.4.33.0212120951150.976-100000@localhost.localdomain>
+References: <20021212091203.A21539@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: (from root@localhost)
-	by pogo.mtv1.steeleye.com (8.9.3/8.9.3) id GAA07838
-	for <linux-scsi@vger.kernel.org>; Thu, 12 Dec 2002 06:51:42 -0800
-In-Reply-To: Message from Andrew Morton <akpm@digeo.com>
-   of "Wed, 11 Dec 2002 21:51:59 PST." <3DF823FF.B3F2D5E5@digeo.com>
+In-Reply-To: <20021212091203.A21539@infradead.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@digeo.com>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, Christoph Hellwig <hch@infradead.org>, "Justin T. Gibbs" <gibbs@scsiguy.com>, linux-scsi@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>, Marcelo Tosatti <marcelo@conectiva.com.br>, Linus Torvalds <torvalds@transmeta.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Matt Domsch <Matt_Domsch@Dell.com>, linux-scsi@vger.kernel.org
 
-akpm@digeo.com said:
-> Well I would test (and distribute) it too, but the above format is
-> useless to me, as it is to most others.
 
-If someone has an ftp server they could lend me, I'll dump patches against 
-2.5.51 (or the later BK's) on it.  Alternatively, I could use my 
-hansenpartnership website, but I don't want to run up against my (rather low) 
-bandwidth limits.
+> On Wed, Dec 11, 2002 at 07:46:22PM -0600, Matt Domsch wrote:
+> > Below please find a patch, written by Pat Mochel, to declare and export
+> > scsi_bus_type.  My EDD code requires this to be exported in order to walk
+> > the list of SCSI devices to match what BIOS discovered.
+> 
+> I'm very unhappy with exporting random parts of the scsi midlayer.  In
+> what way do you need it?  How does your code work with modular scsi?
 
-James
+It's a not a random piece. It's a symbolic representation of the scsi bus 
+type. It is designed to be exported for modular and optional components to 
+use. 
 
+EDD is a perfect example of this. It parses the firmware and obtains data
+about the installed hard disks. It needs to associate the physical
+hardware with the firmware data. So, it iterates over the SCSI (and soon 
+IDE, I believe) drives, searching for a match. It uses scsi_bus_type 
+because it uses the helper
+
+int bus_for_each_dev(struct bus_type * bus, struct device * start, void * data,
+                     int (*fn)(struct device *, void *));
+
+Exporting the bus type keeps EDD at a good level of abstraction: it is 
+ia32-specific, so it can remain in arch/i386/ in a single source file, and 
+out of drivers/scsi/ and drivers/ide/. Instead of splitting the 
+functionality between those three places. 
+
+The bus type is accessible anyway, via the driver mdoel core. A piece of
+code can iterate over the registered bus types and find the one named
+'scsi', so it's by no means inaccessible. On the other hand, I can export
+a call 'find_bus()' to search the bus-space for a bus with a certain name, 
+but that is much less efficient that dereferencing an explicit pointer. 
+
+	-pat
 
