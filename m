@@ -1,309 +1,187 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH] remove scsi_slave_attach/scsi_slave_detach
-Date: Thu, 1 May 2003 00:20:32 +0200
+From: Douglas Gilbert <dougg@torque.net>
+Subject: [PATCH] instrument ide-scsi in 2.5.68
+Date: Thu, 01 May 2003 23:02:11 +1000
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030501002032.A8444@lst.de>
+Message-ID: <3EB11AD3.2070503@torque.net>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/mixed;
+ boundary="------------020600090803020305080007"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([212.34.181.86]:32016 "EHLO verein.lst.de")
-	by vger.kernel.org with ESMTP id S262459AbTD3WIN (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 30 Apr 2003 18:08:13 -0400
-Content-Disposition: inline
+Received: from bunyip.cc.uq.edu.au ([130.102.2.1]:18445 "EHLO
+	bunyip.cc.uq.edu.au") by vger.kernel.org with ESMTP id S261243AbTEAMru
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 1 May 2003 08:47:50 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: alan@lxorguk.ukuu.org.uk
 
-I added those two to factor out common code from the upper drivers
-a long time ago, but after Doug & Lubens nice work there's nothing
-left but incrementing/decrementing a counter in struct scsi_device
-that's never used except in the case were we not it must be NULL
-because we just walked the chain of drivers to detach every single
-one..
+This is a multi-part message in MIME format.
+--------------020600090803020305080007
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 
+Alan Cox said last week that the ide-scsi driver was
+500th on his list to fix for 2.6 . To help him, if
+he hasn't already fixed it, this patch includes:
 
---- 1.42/drivers/scsi/osst.c	Fri Apr 18 11:58:31 2003
-+++ edited/drivers/scsi/osst.c	Wed Apr 30 22:09:21 2003
-@@ -5397,15 +5397,10 @@
- 	if (SDp->type != TYPE_TAPE || !osst_supports(SDp))
- 		return 1;
- 
--	if (scsi_slave_attach(SDp)) {
--		printk(KERN_ERR "osst :E: Failed to attach scsi slave.\n");
--		return 1;
--	}
--
- 	drive = alloc_disk(1);
- 	if (!drive) {
- 		printk(KERN_ERR "osst :E: Out of memory. Device not attached.\n");
--		goto out_slave_detach;
-+		return 1;
- 	}
- 
- 	/* if this is the first attach, build the infrastructure */
-@@ -5581,8 +5576,6 @@
- 
- out_put_disk:
-         put_disk(drive);
--out_slave_detach:
--        scsi_slave_detach(SDp);
-         return 1;
- };
- 
-@@ -5605,7 +5598,6 @@
- 		devfs_unregister_tape(tpnt->drive->number);
- 		put_disk(tpnt->drive);
- 		os_scsi_tapes[i] = NULL;
--		scsi_slave_detach(SDp);
- 		osst_nr_dev--;
- 		write_unlock(&os_scsi_tapes_lock);
- 		for (mode = 0; mode < ST_NBR_MODES; ++mode) {
---- 1.109/drivers/scsi/scsi.c	Tue Apr 29 13:40:45 2003
-+++ edited/drivers/scsi/scsi.c	Wed Apr 30 22:09:21 2003
-@@ -1274,39 +1277,6 @@
- 	} else {
- 		/* FIXME: Send online state change hotplug event */
- 	}
--}
--
--/*
-- * Function:	scsi_slave_attach()
-- *
-- * Purpose:	Called from the upper level driver attach to handle common
-- * 		attach code.
-- *
-- * Arguments:	sdev - scsi_device to attach
-- *
-- * Returns:	1 on error, 0 on succes
-- *
-- * Lock Status:	Protected via scsi_devicelist_mutex.
-- */
--int scsi_slave_attach(struct scsi_device *sdev)
--{
--	sdev->attached++;
--	return 0;
--}
--
--/*
-- * Function:	scsi_slave_detach()
-- *
-- * Purpose:	Called from the upper level driver attach to handle common
-- * 		detach code.
-- *
-- * Arguments:	sdev - struct scsi_device to detach
-- *
-- * Lock Status:	Protected via scsi_devicelist_mutex.
-- */
--void scsi_slave_detach(struct scsi_device *sdev)
--{
--	sdev->attached--;
- }
- 
- /*
---- 1.78/drivers/scsi/scsi.h	Sun Apr 27 06:45:24 2003
-+++ edited/drivers/scsi/scsi.h	Wed Apr 30 22:47:43 2003
-@@ -261,8 +261,6 @@
- extern void scsi_put_command(struct scsi_cmnd *cmd);
- extern void scsi_adjust_queue_depth(Scsi_Device *, int, int);
- extern int scsi_track_queue_full(Scsi_Device *, int);
--extern int scsi_slave_attach(struct scsi_device *);
--extern void scsi_slave_detach(struct scsi_device *);
- extern int scsi_device_get(struct scsi_device *);
- extern void scsi_device_put(struct scsi_device *);
- extern void scsi_set_device_offline(struct scsi_device *);
-@@ -344,8 +342,6 @@
- 					 * vendor-specific cmd's */
- 	unsigned sector_size;	/* size in bytes */
- 
--	int attached;		/* # of high level drivers attached to 
--				 * this */
- 	int access_count;	/* Count of open channels/mounts */
- 
- 	void *hostdata;		/* available to low-level driver */
---- 1.82/drivers/scsi/scsi_scan.c	Sun Apr 27 05:12:47 2003
-+++ edited/drivers/scsi/scsi_scan.c	Wed Apr 30 22:09:21 2003
-@@ -1269,11 +1269,7 @@
- int scsi_remove_device(struct scsi_device *sdev)
- {
- 	scsi_detach_device(sdev);
--	if (sdev->attached)
--		return -EINVAL;
--
- 	scsi_device_unregister(sdev);
--
- 	scsi_free_sdev(sdev);
- 	return 0;
- }
---- 1.34/drivers/scsi/scsi_syms.c	Tue Apr 29 13:40:45 2003
-+++ edited/drivers/scsi/scsi_syms.c	Wed Apr 30 22:09:21 2003
-@@ -77,8 +78,6 @@
- 
- EXPORT_SYMBOL(scsi_io_completion);
- 
--EXPORT_SYMBOL(scsi_slave_attach);
--EXPORT_SYMBOL(scsi_slave_detach);
- EXPORT_SYMBOL(scsi_device_get);
- EXPORT_SYMBOL(scsi_device_put);
- EXPORT_SYMBOL(scsi_add_device);
---- 1.110/drivers/scsi/sd.c	Fri Apr 25 08:51:41 2003
-+++ edited/drivers/scsi/sd.c	Wed Apr 30 22:09:22 2003
-@@ -1302,14 +1302,10 @@
- 	SCSI_LOG_HLQUEUE(3, printk("sd_attach: scsi device: <%d,%d,%d,%d>\n", 
- 			 sdp->host->host_no, sdp->channel, sdp->id, sdp->lun));
- 
--	error = scsi_slave_attach(sdp);
--	if (error)
--		goto out;
--
- 	error = -ENOMEM;
- 	sdkp = kmalloc(sizeof(*sdkp), GFP_KERNEL);
- 	if (!sdkp)
--		goto out_detach;
-+		goto out;
- 
- 	gd = alloc_disk(16);
- 	if (!gd)
-@@ -1368,8 +1364,6 @@
- 	put_disk(gd);
- out_free:
- 	kfree(sdkp);
--out_detach:
--	scsi_slave_detach(sdp);
- out:
- 	return error;
- }
-@@ -1406,7 +1400,6 @@
- 
- 	sd_devlist_remove(sdkp);
- 	del_gendisk(sdkp->disk);
--	scsi_slave_detach(sdp);
- 
- 	spin_lock(&sd_index_lock);
- 	clear_bit(sdkp->index, sd_index_bits);
---- 1.53/drivers/scsi/sg.c	Sat Apr 26 16:04:25 2003
-+++ edited/drivers/scsi/sg.c	Wed Apr 30 22:09:22 2003
-@@ -1359,10 +1359,6 @@
- 	if (!disk)
- 		return -ENOMEM;
- 
--	error = scsi_slave_attach(scsidp);
--	if (error)
--		goto out_put;
--		
- 	write_lock_irqsave(&sg_dev_arr_lock, iflags);
- 	if (sg_nr_dev >= sg_dev_max) {	/* try to resize */
- 		Sg_device **tmp_da;
-@@ -1375,7 +1371,7 @@
- 			printk(KERN_ERR
- 			       "sg_attach: device array cannot be resized\n");
- 			error = -ENOMEM;
--			goto out_detach;
-+			goto out;
- 		}
- 		write_lock_irqsave(&sg_dev_arr_lock, iflags);
- 		memset(tmp_da, 0, tmp_dev_max * sizeof (Sg_device *));
-@@ -1400,7 +1396,7 @@
- 		if (NULL != sdp)
- 			vfree((char *) sdp);
- 		error = -ENODEV;
--		goto out_detach;
-+		goto out;
- 	}
- 	if (k < sg_dev_max) {
- 		if (NULL == sdp) {
-@@ -1416,7 +1412,7 @@
- 		write_unlock_irqrestore(&sg_dev_arr_lock, iflags);
- 		printk(KERN_ERR "sg_attach: Sg_device cannot be allocated\n");
- 		error = -ENOMEM;
--		goto out_detach;
-+		goto out;
- 	}
- 
- 	SCSI_LOG_TIMEOUT(3, printk("sg_attach: dev=%d \n", k));
-@@ -1473,9 +1469,7 @@
- 	}
- 	return 0;
- 
--out_detach:
--	scsi_slave_detach(scsidp);
--out_put:
-+out:
- 	put_disk(disk);
- 	return error;
- }
-@@ -1526,7 +1520,6 @@
- 			SCSI_LOG_TIMEOUT(3, printk("sg_detach: dev=%d\n", k));
- 			sg_dev_arr[k] = NULL;
- 		}
--		scsi_slave_detach(scsidp);
- 		sg_nr_dev--;
- 		break;
- 	}
---- 1.77/drivers/scsi/sr.c	Sat Apr 26 16:04:25 2003
-+++ edited/drivers/scsi/sr.c	Wed Apr 30 22:09:22 2003
-@@ -515,10 +515,6 @@
- 	if (sdev->type != TYPE_ROM && sdev->type != TYPE_WORM)
- 		return 1;
- 
--	error = scsi_slave_attach(sdev);
--	if (error)
--		return error;
--
- 	error = -ENOMEM;
- 	cd = kmalloc(sizeof(*cd), GFP_KERNEL);
- 	if (!cd)
-@@ -592,7 +588,6 @@
- fail_free:
- 	kfree(cd);
- fail:
--	scsi_slave_detach(sdev);
- 	return error;
- }
- 
-@@ -820,7 +815,6 @@
- 		return;
- 
- 	sr_devlist_remove(cd);
--	scsi_slave_detach(SDp);
- 	del_gendisk(cd->disk);
- 
- 	spin_lock(&sr_index_lock);
---- 1.60/drivers/scsi/st.c	Fri Apr 18 11:58:31 2003
-+++ edited/drivers/scsi/st.c	Wed Apr 30 22:09:22 2003
-@@ -3725,16 +3725,13 @@
- 		return 1;
- 	}
- 
--	if (scsi_slave_attach(SDp))
--		return 1;
--
- 	i = SDp->host->sg_tablesize;
- 	if (st_max_sg_segs < i)
- 		i = st_max_sg_segs;
- 	buffer = new_tape_buffer(TRUE, (SDp->host)->unchecked_isa_dma, i);
- 	if (buffer == NULL) {
- 		printk(KERN_ERR "st: Can't allocate new tape buffer. Device not attached.\n");
--		goto out_slave_detach;
-+		goto out;
- 	}
- 
- 	disk = alloc_disk(1);
-@@ -3923,8 +3920,7 @@
- 	put_disk(disk);
- out_buffer_free:
- 	kfree(buffer);
--out_slave_detach:
--	scsi_slave_detach(SDp);
-+out:
- 	return 1;
- };
- 
-@@ -3962,7 +3958,6 @@
- 				normalize_buffer(tpnt->buffer);
- 				kfree(tpnt->buffer);
- 			}
--			scsi_slave_detach(SDp);
- 			put_disk(tpnt->disk);
- 			kfree(tpnt);
- 			return;
+   - instrument driver with 2 parameters (as examples)
+       - ide-scsi.debug + ide-scsi.suppress_reset
+         [kernel load time]
+       - debug + suppress_reset [module load time]
+       - debug + suppress_reset [sysfs: read/write
+         in /sys/bus/ide/drivers/ide-scsi directory]
+   - downgrade (simple) tag queuing to no tag queuing
+     [set some other things to more conservative values]
+   - add scsi_host::release() method
+   - make provision for 16 byte SCSI commands
+   - cleanup printk()s
+
+Many people (on the linux kernel list) have reported problems
+with this driver and ATAPI burners. I only have an ATAPI
+reader and can't get it to fail. If someone has a repeatable
+failure perhaps they could set "debug=3" and send the relevant
+part of /var/log/messages to this list or me.
+
+Doug Gilbert
+
+--------------020600090803020305080007
+Content-Type: application/x-gzip;
+ name="ide-scsi_2568.diff.gz"
+Content-Transfer-Encoding: base64
+Content-Disposition: inline;
+ filename="ide-scsi_2568.diff.gz"
+
+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
+--------------020600090803020305080007--
+
