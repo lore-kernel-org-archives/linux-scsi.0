@@ -1,57 +1,64 @@
-From: Hironobu Ishii <ishii.hironobu@jp.fujitsu.com>
-Subject: Re: [RFC][PATCH] SCSI tape log message fixes
-Date: Tue, 06 Apr 2004 23:01:07 +0900
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: bug 2400
+Date: Tue, 6 Apr 2004 10:00:58 -0400 (EDT)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <000901c41bdf$9fac6970$2987110a@lsd.css.fujitsu.com>
-References: <Pine.LNX.4.58.0404031334490.1131@kai.makisara.local>
+Message-ID: <Pine.LNX.4.44L0.0404060946430.1042-100000@ida.rowland.org>
+References: <1081200462.2105.63.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain;	charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fgwmail7.fujitsu.co.jp ([192.51.44.37]:11480 "EHLO
-	fgwmail7.fujitsu.co.jp") by vger.kernel.org with ESMTP
-	id S263815AbUDFOBV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 6 Apr 2004 10:01:21 -0400
-Received: from m2.gw.fujitsu.co.jp ([10.0.50.72]) by fgwmail7.fujitsu.co.jp (8.12.10/Fujitsu Gateway)
-	id i36E1JEr028949 for <linux-scsi@vger.kernel.org>; Tue, 6 Apr 2004 23:01:19 +0900
-	(envelope-from ishii.hironobu@jp.fujitsu.com)
-Received: from s10.gw.fujitsu.co.jp by m2.gw.fujitsu.co.jp (8.12.10/Fujitsu Domain Master)
-	id i36E1I4e026063 for <linux-scsi@vger.kernel.org>; Tue, 6 Apr 2004 23:01:18 +0900
-	(envelope-from ishii.hironobu@jp.fujitsu.com)
-Received: from fjmail506.fjmail.jp.fujitsu.com (fjmail506-0.fjmail.jp.fujitsu.com [10.59.80.106]) by s10.gw.fujitsu.co.jp (8.12.11)
-	id i36E1Wn4013119 for <linux-scsi@vger.kernel.org>; Tue, 6 Apr 2004 23:01:32 +0900
-	(envelope-from ishii.hironobu@jp.fujitsu.com)
-Received: from CARREN (fjscan503-0.fjmail.jp.fujitsu.com [10.59.80.124])
- by fjmail506.fjmail.jp.fujitsu.com
- (Sun Internet Mail Server sims.4.0.2001.07.26.11.50.p9)
- with SMTP id <0HVR00L1D5M5C7@fjmail506.fjmail.jp.fujitsu.com> for
- linux-scsi@vger.kernel.org; Tue,  6 Apr 2004 23:01:18 +0900 (JST)
+Received: from ida.rowland.org ([192.131.102.52]:3076 "HELO ida.rowland.org")
+	by vger.kernel.org with SMTP id S263835AbUDFOBA (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Apr 2004 10:01:00 -0400
+In-Reply-To: <1081200462.2105.63.camel@mulgrave>
 List-Id: linux-scsi@vger.kernel.org
-To: Kai Makisara <Kai.Makisara@kolumbus.fi>, linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@steeleye.com>
+Cc: Mike Anderson <andmike@us.ibm.com>, Andrew Morton <akpm@osdl.org>, greg@kroah.com, Jens Axboe <axboe@suse.de>, linux-usb-devel@lists.sourceforge.net, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
+On 5 Apr 2004, James Bottomley wrote:
 
------ Original Message ----- 
-From: "Kai Makisara" <Kai.Makisara@kolumbus.fi>
-Sent: Saturday, April 03, 2004 7:44 PM
-Subject: [RFC][PATCH] SCSI tape log message fixes
-
-
-> This patch changes the st console/log messages:
+> On Sun, 2004-04-04 at 22:17, Alan Stern wrote:
+> > Of course it would!  That's exactly what this thread is about: bugs caused
+> > by improper handling of open/disconnect races.
 > 
-> - __GFP_NOWARN added to buffer allocation to suppress useless messages 
->   when having to use smaller than default segments
-> - move log message from enlarge_buffer() to caller so that the tape name 
->   can be printed and remove some debugging messages; now the st messages
->   should include drive name where applicable (a problem reported by 
->   Hironobu Ishii)
-> - setting options is logged only when debugging; the most important 
->   options are now seen in sysfs
->  
-> Kai
+> So you're quietly shifting your ground away from this assertion:
+> 
+> On Sat, 2004-04-03 at 19:40, Alan Stern wrote:
+> > The problem _can_ be solved by introducing a lock higher up, such as at
+> > the driver level or at the bus level.  (A kernel lock would work too but
+> > it would be extravagantly excessive.)  For example, the bus subsystem
+> > rwsem in the driver model prevents analogous problems there.  But you
+> > don't want to get a read lock on a bus-wide semaphore every time your
+> > open() procedure runs!  A driver-wide lock makes a good solution.
+> > 
+> > Another possible solution would be to have disconnect() perform an RCU 
+> > update to the device pointer.  I haven't seen any code that does this, but 
+> > I think it ought to work.
+> 
+> ?
 
-Thank you, Kai. 
-It's OK to me. I'm happy to see this patch.
+Not at all.  Open/disconnect races can appear at several points in a 
+driver.  The earlier assertion referred to one of those points: the place 
+where the code gets a pointer to a device structure from an open inode's 
+private data.
 
-Thanks,
-Hironobu Ishii.
+> My contention is that the races can be solved by proper refcounting
+> (without the need for locks and RCUs) not that we don't have any bugs in
+> sd.c (I'll be happy if I can pull them all out of sr at the moment).
+
+Your contention is correct, I agree.  However, not all parts of the kernel
+implement proper refcounting and, equally important, proper
+delete-then-release notifications.  In particular, the VFS layer doesn't.  
+If a driver notifies VFS that a device has been disconnected so that the
+private data in the corresponding /dev inode entry can be removed, the
+driver does _not_ receive a release notification in return when the last
+process actively using that inode has finished with it.
+
+Given the lack of proper adherence to the object-lifetime rules in VFS,
+a driver has no choice but to adopt a scheme similar to what I outlined
+in the section you quoted above.  _That's_ the manifestation of the
+open/disconnect race I was referring to.  (It's different from the 
+problems in sd.c, incidentally.)
+
+Alan Stern
 
