@@ -1,35 +1,38 @@
-From: "IHALE BULTENI" <sonerercangil@hotmail.com>
-Subject: Resmi ihaleler hk.
-Date: Thu, 20 May 2004 15:34:04 +0300
+From: James Bottomley <James.Bottomley@steeleye.com>
+Subject: Re: [TRIVIAL] [TRIVIAL 2.6] drivers_scsi_gvp11.c: kill duplicate
+	#include
+Date: 20 May 2004 07:42:27 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <S265125AbUETMeJ/20040520123411Z+1717@vger.kernel.org>
-Reply-To: info@ihalebulteni.com
+Message-ID: <1085056948.2032.4.camel@mulgrave>
+References: <1085035526.24935.140.camel@bach>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from dsl81-214-7527.adsl.ttnet.net.tr ([81.214.29.103]:13318 "HELO
-	ommo.net") by vger.kernel.org with SMTP id S265125AbUETMeJ convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 20 May 2004 08:34:09 -0400
+Received: from stat1.steeleye.com ([65.114.3.130]:49626 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S265114AbUETMmi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 20 May 2004 08:42:38 -0400
+In-Reply-To: <1085035526.24935.140.camel@bach>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Rusty Russell <rusty@rustcorp.com.au>
+Cc: Andrew Morton <akpm@osdl.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Jens Axboe <axboe@suse.de>
 
-Sn:Yetkili
+On Thu, 2004-05-20 at 02:07, Rusty Russell wrote:
+>  #define HOSTS_C
+>  
+> -#include "gvp11.h"
+> -
+>  static Scsi_Host_Template driver_template = {
+>  	.proc_name		= "GVP11",
+>  	.name			= "GVP Series II SCSI",
 
-Turkiyedeki tum kamu kurum ve kuruluslarinin ihalelerini  kategoriler halinde http://www.ihalebulteni.com web sitesinden on-line takip edebilirsiniz.
+This is definitely wrong.  I don't agree with the usage, but gvp11.h is
+designed to be included twice.  The define of HOST_C above alters the
+behaviour of the second include.
 
-Bilgilerinize
-Saygilarimizla
+If you'd like to fix it correctly....
 
-http://www.ihalebulteni.com
-
-(90) 0312 311 49 96
-(90) 0312 309 27 72
-
-E-mail : info@ihalebulteni.com
-
-
-
+James
 
 
