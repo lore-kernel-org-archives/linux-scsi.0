@@ -1,70 +1,62 @@
-From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
-Subject: [PATCH] tmscsim: scsi device attributes
-Date: Thu, 21 Oct 2004 22:31:25 +0200 (CEST)
+From: mike.miller@hp.com
+Subject: [patch 1/2] cciss: cleans up warnings in the 32/64 bit conversions
+Date: Thu, 21 Oct 2004 16:17:18 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.60.0410212223120.7042@poirot.grange>
+Message-ID: <20041021211718.GA10462@beardog.cca.cpqcorp.net>
+Reply-To: mikem@beardog.cca.cpqcorp.net
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pop.gmx.net ([213.165.64.20]:53657 "HELO mail.gmx.net")
-	by vger.kernel.org with SMTP id S270807AbUJUUpP (ORCPT
+Received: from palrel13.hp.com ([156.153.255.238]:5528 "EHLO palrel13.hp.com")
+	by vger.kernel.org with ESMTP id S270928AbUJUVRo (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 21 Oct 2004 16:45:15 -0400
+	Thu, 21 Oct 2004 17:17:44 -0400
+Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@steeleye.com>
-Cc: linux-scsi@vger.kernel.org
+To: marcelo.tosatti@cyclades.com, axboe@suse.de
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-A write method to adjust per-device queue-depth
+Patch 1 of 2 for 20041021.
+This patch cleans up some warnings in the 32-bit to 64-bit conversions.
+Please consider this for inclusion. Built against 2.4.28-pre4.
+Please apply in order.
 
-Signed-off-by: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+ cciss.c |    9 ++++-----
+ 1 files changed, 4 insertions(+), 5 deletions(-)
 
-diff -u a/drivers/scsi/tmscsim.c b/drivers/scsi/tmscsim.c
---- a/drivers/scsi/tmscsim.c	Wed Oct 20 21:49:46 2004
-+++ b/drivers/scsi/tmscsim.c	Thu Oct 21 22:03:35 2004
-@@ -2275,6 +2275,33 @@
- 	return 0;
- }
+Signed off by Mike Miller.
+-------------------------------------------------------------------------------
+diff -burNp lx2428-pre4.orig/drivers/block/cciss.c lx2428-pre4/drivers/block/cciss.c
+--- lx2428-pre4.orig/drivers/block/cciss.c	2004-10-21 09:14:27.388939808 -0500
++++ lx2428-pre4/drivers/block/cciss.c	2004-10-21 09:27:05.810642184 -0500
+@@ -532,10 +532,9 @@ register_ioctl32_conversion(unsigned int
+ extern int unregister_ioctl32_conversion(unsigned int cmd);
  
-+static ssize_t dc390_store_queue_depth(struct device *dev, const char *buf, size_t count)
-+{
-+	struct scsi_device *sdev = to_scsi_device(dev);
-+	struct dc390_acb *acb = (struct dc390_acb *)sdev->host->hostdata;
-+	int queue_depth = simple_strtoul(buf, NULL, 0);
-+
-+	if (queue_depth > acb->TagMaxNum || !sdev->tagged_supported)
-+		return -EINVAL;
-+
-+	scsi_adjust_queue_depth(sdev, MSG_ORDERED_TAG, queue_depth);
-+
-+	return count;
-+}
-+
-+static struct device_attribute dc390_queue_depth_attr = {
-+	.attr = {
-+		.name =		"queue_depth",
-+		.mode =		S_IRUSR | S_IWUSR,
-+	},
-+	.store = dc390_store_queue_depth
-+};
-+
-+static struct device_attribute *dc390_dev_attrs[] = {
-+	&dc390_queue_depth_attr,
-+	NULL,
-+};
-+
- static struct scsi_host_template driver_template = {
- 	.module			= THIS_MODULE,
- 	.proc_name		= "tmscsim", 
-@@ -2290,6 +2317,7 @@
- 	.sg_tablesize		= SG_ALL,
- 	.cmd_per_lun		= 1,
- 	.use_clustering		= DISABLE_CLUSTERING,
-+	.sdev_attrs		= dc390_dev_attrs,
- };
+ static int cciss_ioctl32_passthru(unsigned int fd, unsigned cmd, unsigned long arg, struct file *file);
+-static int cciss_ioctl32_big_passthru(unsigned int fd, unsigned cmd, unsigned long arg, 
+-	struct file *file);
++static int cciss_ioctl32_big_passthru(unsigned int fd, unsigned cmd, unsigned long arg, struct file *file);
  
- /***********************************************************************
-
-Thanks
-Guennadi
----
-Guennadi Liakhovetski
+-typedef long (*handler_type) (unsigned int, unsigned int, unsigned long,
++typedef int (*handler_type) (unsigned int, unsigned int, unsigned long,
+ 				struct file *);
+ 
+ static struct ioctl32_map {
+@@ -611,7 +610,7 @@ int cciss_ioctl32_passthru(unsigned int 
+ 	err |= copy_from_user(&arg64.Request, &arg32->Request, sizeof(arg64.Request));
+ 	err |= copy_from_user(&arg64.error_info, &arg32->error_info, sizeof(arg64.error_info));
+ 	err |= get_user(arg64.buf_size, &arg32->buf_size);
+-	err |= get_user(arg64.buf, &arg32->buf);
++	err |= get_user((__u64) arg64.buf, &arg32->buf);
+ 	if (err) 
+ 		return -EFAULT; 
+ 
+@@ -641,7 +640,7 @@ int cciss_ioctl32_big_passthru(unsigned 
+ 	err |= copy_from_user(&arg64.error_info, &arg32->error_info, sizeof(arg64.error_info));
+ 	err |= get_user(arg64.buf_size, &arg32->buf_size);
+ 	err |= get_user(arg64.malloc_size, &arg32->malloc_size);
+-	err |= get_user(arg64.buf, &arg32->buf);
++	err |= get_user((__u64) arg64.buf, &arg32->buf);
+ 	if (err) return -EFAULT; 
+ 	old_fs = get_fs();
+ 	set_fs(KERNEL_DS);
