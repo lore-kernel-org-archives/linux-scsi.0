@@ -1,42 +1,48 @@
-From: Martin Peschke3 <MPESCHKE@de.ibm.com>
-Subject: Re: [PATCH] sdd scsi-ml event wq
-Date: Thu, 3 Jun 2004 12:46:11 +0200
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] tmscsim: init / exit cleanup
+Date: Thu, 3 Jun 2004 14:38:35 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <OF4949B6A8.0EE8EFCA-ONC1256EA8.0039AF13@de.ibm.com>
+Message-ID: <20040603133835.GA16378@infradead.org>
+References: <20040523103729.GA23804@infradead.org> <Pine.LNX.4.44.0405312248150.3168-200000@poirot.grange>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtagate4.de.ibm.com ([195.212.29.153]:65269 "EHLO
-	mtagate4.de.ibm.com") by vger.kernel.org with ESMTP id S263174AbUFCKqx
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 3 Jun 2004 06:46:53 -0400
+Received: from [213.146.154.40] ([213.146.154.40]:7313 "EHLO
+	pentafluge.infradead.org") by vger.kernel.org with ESMTP
+	id S263616AbUFCNii (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 3 Jun 2004 09:38:38 -0400
+Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.44.0405312248150.3168-200000@poirot.grange>
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>
-Cc: Arjan van de Ven <arjanv@redhat.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+Cc: Christoph Hellwig <hch@infradead.org>, James Bottomley <James.Bottomley@steeleye.com>, Kurt Garloff <garloff@suse.de>, Linux SCSI list <linux-scsi@vger.kernel.org>
 
+On Mon, May 31, 2004 at 11:13:51PM +0200, Guennadi Liakhovetski wrote:
+> On Sun, 23 May 2004, Christoph Hellwig wrote:
+> 
+> > these leaks.  Maybe also  merge dc390_init and dc390_init_one?
+> >
+> > Similarly I think DC390_release should be merged into dc390_remove_one.
+> 
+> Attached. Also fixed some __init / __devinit and __exit / __devexit
+> attributes. Although, would be good to have something like
+> 
+> #ifdef CONFIG_HOTPLUG_PCI
+> #define __pcidevinit
+> #define __pcidevinitdata
+> #define __pcidevexit
+> #define __pcidevexitdata
+> #else
+> #define __pcidevinit __init
+> #define __pcidevinitdata __initdata
+> #define __pcidevexit __exit
+> #define __pcidevexitdata __exitdata
+> #endif
+> 
+> I don't think there are any pcmcia / usb / ieee1394 / ... tmscsim adapters
+> out there?
 
-
-
-
-> For the short term would it be best to harden the SCSI side of the API
-then
-> worry about the API we are using, or is the kobject_hotplug/userspace
-route not
-> looking to be the best option?
-
-I am not sure for what other events this interface is going to be used.
-However, for link down/up events there might be a feasible solution.
-The minimum requirement is to ensure that paths are re-enabled on
-link-up. If we use a flag in scsi_device for the link status, a flag in
-scsi_device that indicates whether an event could be propagated,
-and one spare buffer for an event then there should always be a way
-to report a link-up event. If the spare buffer is being used when a
-link-up event occurs, just set the scsi_device->linkup flag as well as
-the scsi_device->lostevent flag and report the event later when the
-spare buffer has been freed, provided that scsi_device->lostevent
-was set. Which means that we might skip a few events in case of a
-rapidly changing link status. But we would always report - with a minor
-delay - the last, and therewith most important link event.
-
-Martin
+This has been though out a bit but not considered worthwile. And to actually
+work it would have to be for all the kernel because you could get problems
+over the module boundary otherwise.
 
