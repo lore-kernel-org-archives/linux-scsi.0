@@ -1,30 +1,32 @@
-From: Xose Vazquez Perez <xose@wanadoo.es>
+From: Gabor Burjan <buga@buvoshetes.hu>
 Subject: Re: problem with megaraid2 driver
-Date: Fri, 28 Nov 2003 16:27:40 +0100
+Date: Fri, 28 Nov 2003 16:50:20 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3FC7696C.2030004@wanadoo.es>
+Message-ID: <20031128155020.GB18860@odin.sis.hu>
+References: <3FC7696C.2030004@wanadoo.es>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp13.eresmas.com ([62.81.235.113]:8385 "EHLO
-	smtp13.eresmas.com") by vger.kernel.org with ESMTP id S262395AbTK1P2P
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 28 Nov 2003 10:28:15 -0500
+Received: from odin.sis.hu ([212.92.23.29]:38057 "EHLO odin.sis.hu")
+	by vger.kernel.org with ESMTP id S262427AbTK1PuV (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 28 Nov 2003 10:50:21 -0500
+Content-Disposition: inline
+In-Reply-To: <3FC7696C.2030004@wanadoo.es>
 List-Id: linux-scsi@vger.kernel.org
-To: buga@buvoshetes.hu, linux-scsi <linux-scsi@vger.kernel.org>
+To: Xose Vazquez Perez <xose@wanadoo.es>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
-Gabor Burjan wrote:
+On Fri, Nov 28, 2003 at 04:27:40PM +0100, Xose Vazquez Perez wrote:
 
-> I've an LSI Logic MegaRAID SCSI 320-1 card.  The exact name from the
-> /proc/pci is `RAID bus controller: LSI Logic / Symbios Logic PowerEdge
-> Expandable RAID Controller 4 (rev 1)' the PCI ID of this device is
-> 0x1960.  I ran into a problem with the new megaraid2 driver:
+> latest release 1L26 fixed a lot of bugs.
+> For SCSI and RAID storage boards is *very important* to run with latest
+> firmware.
 
->  Vendor: MegaRAID  Model: LD0 RAID5 70006R  Rev: 1L19
-                                                   ^^^^
+Thanks for the quick answer, I'll flash the new firmware ASAP.
 
-latest release 1L26 fixed a lot of bugs.
-For SCSI and RAID storage boards is *very important* to run with latest
-firmware.
+Is that possible that only the new driver triggers the problem which is
+"built-in" in the firmware, while using the old driver everything seems
+to be OK?
 
+Gabor
