@@ -1,39 +1,90 @@
-From: Joel Becker <Joel.Becker@oracle.com>
-Subject: Re: [patch for playing] Patch to support 4000 disks and maintain
-Date: Fri, 11 Apr 2003 08:44:51 -0700
+From: Badari Pulavarty <pbadari@us.ibm.com>
+Subject: Re: [patch for playing] Patch to support 4000 disks and maintain backward compatibility
+Date: Fri, 11 Apr 2003 08:12:35 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030411154450.GW31739@ca-server1.us.oracle.com>
-References: <200304101339.49895.pbadari@us.ibm.com> <XFMail.20030411100430.pochini@shiny.it>
+Message-ID: <200304110912.35610.pbadari@us.ibm.com>
+References: <UTC200304102353.h3ANrXv10792.aeb@smtp.cwi.nl> <200304101809.55311.pbadari@us.ibm.com> <3E96945E.8080900@torque.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from inet-mail2.oracle.com ([148.87.2.202]:25239 "EHLO
-	inet-mail2.oracle.com") by vger.kernel.org with ESMTP
-	id S264386AbTDKPeN (for <rfc822;linux-scsi@vger.kernel.org>); Fri, 11 Apr 2003 11:34:13 -0400
-Content-Disposition: inline
-In-Reply-To: <XFMail.20030411100430.pochini@shiny.it>
+Received: from e4.ny.us.ibm.com ([32.97.182.104]:38029 "EHLO e4.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S263020AbTDKQFR convert rfc822-to-8bit (for <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 11 Apr 2003 12:05:17 -0400
+In-Reply-To: <3E96945E.8080900@torque.net>
 List-Id: linux-scsi@vger.kernel.org
-To: Giuliano Pochini <pochini@shiny.it>
-Cc: Badari Pulavarty <pbadari@us.ibm.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: dougg@torque.net
+Cc: Andries.Brouwer@cwi.nl, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Fri, Apr 11, 2003 at 10:04:30AM +0200, Giuliano Pochini wrote:
-> 4000 discs should be enough for anyone :)
-> Are >16 partitions/disc possible ?
+On Friday 11 April 2003 03:09 am, Douglas Gilbert wrote:
+> Badari Pulavarty wrote:
+> > Here is my problem..
+> >
+> > #insmod ips.o
+> >   < found 10 disks>
+> > #insmod qla2300.o
+> >   < found 10 disks>
+> > #rmmod ips.o
+> >    <removed 10 disks>
+> > #insmod ips.o
+> >   <found 10 disks - but new names>
+>
+> Badari,
+> In 2.5 lets assume the /dev/sd[a-z][a-z][a-z]
+> device addressing is left as is (more or less). To
+> identify lots of disks the Vital Product Data page 0x83
+> (failing that, the disk serial number) should be used.
+>
+> This information is available via sysfs (thanks to
+> Patrick Mansfield and Mike Anderson).
+>
+> # cd /sys/bus/scsi/devices
+> # find . -follow -name 'name' -exec cat {} \; -print
+> SIBM     DNES-309170W            AJF98887
+> ./1:0:4:0/name
+> SFUJITSU MAM3184MP       UKS0P2300CK0
+> ./0:0:1:0/name
+>
+> It is relatively easy to write user space tools to show
+> this information:
+> # lsscsi -n
+> [0:0:1:0]    disk    FUJITSU  MAM3184MP        0106  /dev/sda
+>    name: SFUJITSU MAM3184MP       UKS0P2300CK0
+> [1:0:4:0]    disk    IBM      DNES-309170W     SA30  /dev/sdb
+>    name: SIBM     DNES-309170W            AJF98887
+>
+> Each pair of lines links the transient topological and device
+> node name ("0:0:1:0" and "dev/sda" respectively) with a
+> (hopefully) invariant "name" for that device.
+>
+> So if that name was hashed there would be a reasonable mapping
+> from that name to the current Linux scsi disk device node name
+> (e.g. /dev/sda). So user space tools could work out the mapping
+> and provide the "memory" from one boot to the next (and across
+> the deletion and re-addition of HBA modules).
+>
+> Doug Gilbert
 
-	>16 partitions/disc is possible once you remove Linux's
-arbitrary limit.
-	4000 disks is today.  8000 disks is next year at the latest.
-Just imagine multipathing today's 4000 disks.
+Doug,
 
-Joel
+I completly agree with what you said. One can write a user-space 
+tool to create/re-create/update device node and try to keep device
+names consistent. I am sure people (Greg KH) are working on this.
 
--- 
+All I am trying to do is, come out with a plan to do this for 2.6.
+We can do all the user-space stuff and make generic dynamic
+<major, minor> assignment and some how make the /dev/ nodes
+magically everytime rmmod/insmod or re-boot. There are lots
+of dependencies and players here. All these going to happen for 2.6 ?
+I would love to see this happen. But please, don't leave it in
+the middle. (leaving the device node mapping to user/admin).
+And also, how do we deal with booting/running 2.4 ?
 
-"Well-timed silence hath more eloquence than speech."  
-         - Martin Fraquhar Tupper
+If not, my patch is a fallback solution.
 
-Joel Becker
-Senior Member of Technical Staff
-Oracle Corporation
-E-mail: joel.becker@oracle.com
-Phone: (650) 506-8127
+Thanks,
+Badari
+
+
+Thanks,
+Badari
