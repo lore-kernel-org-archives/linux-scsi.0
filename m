@@ -1,28 +1,39 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: please revert [PATCH] s390: zfcp act enhancements
-Date: Wed, 17 Nov 2004 17:20:14 +0100
-Message-ID: <20041117162014.GA28603@lst.de>
-References: <OF185BBE71.A415A9D9-ONC1256F4F.0053BEA6-C1256F4F.00562DD6@de.ibm.com>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: SCSI breaks 'make allyesconfig'
+Date: 17 Nov 2004 10:21:22 -0600
+Message-ID: <1100708492.2319.2.camel@mulgrave>
+References: <419B5292.7080305@pobox.com>  <419B5AA2.7030801@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.210]:17646 "EHLO mail.lst.de")
-	by vger.kernel.org with ESMTP id S262364AbUKQQUT (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 17 Nov 2004 11:20:19 -0500
-Content-Disposition: inline
-In-Reply-To: <OF185BBE71.A415A9D9-ONC1256F4F.0053BEA6-C1256F4F.00562DD6@de.ibm.com>
+Received: from stat16.steeleye.com ([209.192.50.48]:42666 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S262365AbUKQQVi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 17 Nov 2004 11:21:38 -0500
+In-Reply-To: <419B5AA2.7030801@pobox.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Martin Peschke3 <MPESCHKE@de.ibm.com>
-Cc: Christoph Hellwig <hch@lst.de>, Andrew Morton <akpm@osdl.org>, BOEBLINGEN LINUX390 <linux390@de.ibm.com>, linux-scsi@vger.kernel.org, linux-scsi-owner@vger.kernel.org, Martin Schwidefsky <schwidefsky@de.ibm.com>
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, Andrew Morton <akpm@osdl.org>
 
-> And here you appear to say "by the way, we'll never do it anyway"
-> (taking your previous comments on the API into account as well) -
-> which to some degree contributes to the dilemma faced by lldd writers.
+On Wed, 2004-11-17 at 08:05, Jeff Garzik wrote:
+> > drivers/scsi/osst.o(.bss+0x0): In function `exit_osst':
+> > drivers/scsi/osst.c:195: multiple definition of `ST_partstat'
+> > drivers/scsi/st.o(.bss+0x0):drivers/scsi/st.c:244: first defined here
+> > make[2]: *** [drivers/scsi/built-in.o] Error 1
+> > make[1]: *** [drivers/scsi] Error 2
+> > make: *** [drivers] Error 2
 > 
-> What is your answer to those who wish to manage FC HBAs in a
-> common way?
+> 
+>   ...and the attached patch fixes it.  'ST_partstat' is defined in 
+> drivers/scsi/st.h, but never used.
 
-Join Emulex in adding managment support to the fc transport class.
+Yes, this was reported and fixed yesterday.  The fix is already in the
+SCSI BK repo:
+
+http://linux-scsi.bkbits.net:8080/scsi-rc-fixes-2.6/cset@419a6d19FQrj1AswswaWWZLXreWppw
+
+James
+
 
