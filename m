@@ -1,58 +1,39 @@
 From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: Trivial patch for scsi logging text string
-Date: Tue, 15 Apr 2003 15:31:23 -0400 (EDT)
+Subject: Re: [PATCH] 2.5.67+ scsi_release_request call queue next
+Date: Tue, 15 Apr 2003 15:39:12 -0400 (EDT)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44L0.0304151524010.699-100000@ida.rowland.org>
-References: <1050426654.2571.14.camel@mulgrave>
+Message-ID: <Pine.LNX.4.44L0.0304151535570.699-100000@ida.rowland.org>
+References: <20030415063303.GC1366@beaverton.ibm.com>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ida.rowland.org ([192.131.102.52]:3844 "HELO ida.rowland.org")
-	by vger.kernel.org with SMTP id S264036AbTDOTTb
+Received: from ida.rowland.org ([192.131.102.52]:7940 "HELO ida.rowland.org")
+	by vger.kernel.org with SMTP id S264039AbTDOT1U
 	(for <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 15 Apr 2003 15:19:31 -0400
-In-Reply-To: <1050426654.2571.14.camel@mulgrave>
+	Tue, 15 Apr 2003 15:27:20 -0400
+In-Reply-To: <20030415063303.GC1366@beaverton.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@steeleye.com>
-Cc: Greg KH <greg@kroah.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Mike Anderson <andmike@us.ibm.com>
+Cc: linux-scsi@vger.kernel.org
 
-On 15 Apr 2003, James Bottomley wrote:
+On Mon, 14 Apr 2003, Mike Anderson wrote:
 
-> On Tue, 2003-04-15 at 12:03, Greg KH wrote:
-> > Hm, I don't think I can submit scsi patches to Linus :)
-> > Why not send them to the scsi maintainers...
+> This patch is against 2.5.67 as of 04-14 as it needs extern for
+> scsi_queue_next_request.
 > 
-> The SCSI maintainers are linux-scsi@vger.kernel.org, so we've already
-> been copied on this one.
-> 
-> James
+> I just compiled and booted this patch. I currently do not have a setup to
+> check door lock post error recovery.
 
-Does that mean that linux-scsi will forward my patch to Linus?  I hope so,
-because I've got another one to submit (to Marcelo), more substantive this
-time.
+Mike:
 
-In 2.4.21-pre7, when the scsi error-handler decides that it has cleaned 
-things up and retries the original command, it neglects to zero out the 
-command's sense buffer first.  In all likelihood the sense buffer will 
-contain old data left over from the error recovery operations.  This 
-confuses scan_scsis(), which thinks that because there is valid sense data 
-its INQUIRY probe must have failed.  This patch clears the sense buffer 
-before a retry.
+I just tried your patch.  I had to make scsi_queue_next_request() 
+non-static to get things to link properly, but after doing so it seemed to 
+work just fine.  After the door-lock command finished, the request queue 
+moved right along and all the data was transferred correctly.
 
-If nobody on the linux-scsi list objects to it, this patch should be 
-applied.
+Thanks.
 
 Alan Stern
 
 
---- 2.4.21-pre7/drivers/scsi/scsi_error.c.orig	Tue Apr 15 11:18:35 2003
-+++ 2.4.21-pre7/drivers/scsi/scsi_error.c	Tue Apr 15 11:19:29 2003
-@@ -393,6 +393,7 @@
- 	SCpnt->cmd_len = SCpnt->old_cmd_len;
- 	SCpnt->sc_data_direction = SCpnt->sc_old_data_direction;
- 	SCpnt->underflow = SCpnt->old_underflow;
-+	memset(SCpnt->sense_buffer, 0, sizeof(SCpnt->sense_buffer));
- 
- 	scsi_send_eh_cmnd(SCpnt, SCpnt->timeout_per_command);
- 
 
