@@ -1,58 +1,48 @@
-From: Matthew Jacob <mjacob@feral.com>
+From: berthiaume_wayne@emc.com
 Subject: RE: [RFC] Persistent naming of scsi devices
-Date: Wed, 10 Apr 2002 09:02:44 -0700 (PDT)
+Date: Wed, 10 Apr 2002 12:44:38 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.BSF.4.21.0204100902161.62427-100000@beppo>
-References: <93F527C91A6ED411AFE10050040665D0049BF8D1@corpusmx1.us.dg.com>
-Reply-To: mjacob@feral.com
+Message-ID: <93F527C91A6ED411AFE10050040665D0049BF8D8@corpusmx1.us.dg.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain;
+	charset="iso-8859-1"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <93F527C91A6ED411AFE10050040665D0049BF8D1@corpusmx1.us.dg.com>
 List-Id: linux-scsi@vger.kernel.org
+To: hbryan@us.ibm.com
+Cc: linux-scsi@vger.kernel.org
+
+	VLUN = virtual LUN   
+
+	This would be the number assigned by the storage system. A storage
+system can be broken up into multiple virtual storage systems each unique to
+the owner. The real trick is when to virtual storage systems share the same
+LUN. Depending on the order of entry into the virtual storage array on a
+CLARiiON at the time it is being configured it could be a LUN 1 to your
+virtual storage and LUN 6 on mine.
+
+-----Original Message-----
+From: Bryan Henderson [mailto:hbryan@us.ibm.com]
+Sent: Wednesday, April 10, 2002 11:28 AM
 To: berthiaume_wayne@emc.com
-Cc: hbryan@us.ibm.com, linux-scsi@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org
+Subject: RE: [RFC] Persistent naming of scsi devices
 
 
-That's why you always trail lun off of the wwnn/wwpn- see solaris' ssd device
-names.
 
+>I believe that if you are sharing a VLUN on the array the
+>same WWNN/WWPN is assigned to it. Though it may be represented to you as
+>VLUN 1 in your virtual storage system and VLUN 6 in mine I thought the
+same
+>WWNN/WWPN was assigned to it.
 
-On Wed, 10 Apr 2002 berthiaume_wayne@emc.com wrote:
+Yes, every system I've seen does that and it seems to be the intent (for
+whatever that's worth) of the fibre channel architects.  But how is that
+relevant?  We're talking about uniquely identifying a logical unit (which
+is what would appear in Linux as a device).
 
-> 	This is true with the design of today's virtual LUNs on the storage
-> arrays. However, I believe that if you are sharing a VLUN on the array the
-> same WWNN/WWPN is assigned to it. Though it may be represented to you as
-> VLUN 1 in your virtual storage system and VLUN 6 in mine I thought the same
-> WWNN/WWPN was assigned to it.
-> 
-> -----Original Message-----
-> From: Bryan Henderson [mailto:hbryan@us.ibm.com]
-> Sent: Tuesday, April 09, 2002 9:40 PM
-> To: Rick Stevens
-> Cc: linux-scsi@vger.kernel.org
-> Subject: Re: [RFC] Persistent naming of scsi devices
-> 
-> 
-> >E.g. "/dev/dsk/c0t1d2s3" is controller 0 (first SCSI controller seen on
-> >the bus), target ID 1, LUN 2, partition (slice) 3.  Simple, unambiguous
-> >and repeatable.
-> 
-> For many purposes, you're right, and for that reason devfs already does 
-> this.  However, in some cases these are not repeatable.  A volume that is 
-> LUN 5 today could be LUN 7 tomorrow.  This is true in heavy-duty disk 
-> storage subsystems that let you create and destroy logical units on the 
-> fly, using the physical medium as a resource pool.  And what is LUN 5 for 
-> me could be LUN 7 for you at the same time, if we're both wired into the 
-> same storage subsystem.
-> 
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+I don't know what a VLUN is, so maybe I'm just lost.  Isn't that redundant?
+Virtual and logical are the same thing.
+
+Leave the WWPN (worldwide port number) out of it, by the way.  That doesn't
+help identify devices, just ports that can be used to reach them.
 
