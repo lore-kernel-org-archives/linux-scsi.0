@@ -1,41 +1,24 @@
-From: Mike Fedyk <mfedyk@matchmail.com>
+From: Andrew Morton <akpm@osdl.org>
 Subject: Re: OOps in 2.6.0-test4-mm3-1
-Date: Sat, 30 Aug 2003 16:20:03 -0700
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030830232003.GB898@matchmail.com>
-References: <20030828235649.61074690.akpm@osdl.org> <20030830014309.GA898@matchmail.com> <20030829200926.3e2b7eb6.akpm@osdl.org>
+Date: Sat, 30 Aug 2003 16:36:53 -0700
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <20030830163653.6ac5464f.akpm@osdl.org>
+References: <20030828235649.61074690.akpm@osdl.org>
+	<20030830014309.GA898@matchmail.com>
+	<20030829200926.3e2b7eb6.akpm@osdl.org>
+	<20030830232003.GB898@matchmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from adsl-63-194-239-202.dsl.lsan03.pacbell.net ([63.194.239.202]:35339
-	"EHLO mmp-linux.matchmail.com") by vger.kernel.org with ESMTP
-	id S262257AbTH3XUC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 30 Aug 2003 19:20:02 -0400
-Content-Disposition: inline
-In-Reply-To: <20030829200926.3e2b7eb6.akpm@osdl.org>
-List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+In-Reply-To: <20030830232003.GB898@matchmail.com>
+To: Mike Fedyk <mfedyk@matchmail.com>
 Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 
-On Fri, Aug 29, 2003 at 08:09:26PM -0700, Andrew Morton wrote:
-> Mike Fedyk <mfedyk@matchmail.com> wrote:
-> >
-> > It's vanilla mm3-1 with this one patch added from Neil Brown.  I don't think
-> > it has anything to do with it (it looks like a driver issue to me).  But it
-> > can't hurt to mention it.
+Mike Fedyk <mfedyk@matchmail.com> wrote:
+>
+> Though, is there any reason why
+>  2.6.0-test2-mm1 doesn't oops too? 
 
-> Some drivers such as aha1542 and aic7xxx_old will call scsi_register() and
-> then, if some succeeding operations fails they will call scsi_unregister(),
-> without an intervening scsi_set_host().
-> 
-> This causes an oops in scsi_put_device(), because kobj->parent is NULL.
-> 
-> In other words, scsi_register() immediately followed by scsi_unregister()
-> is guaranteed to oops.
-> 
-> The patch makes scsi_host_dev_release() more robust against this usage
-> pattern.
-
-Ok, I'll give that patch a try.  Though, is there any reason why
-2.6.0-test2-mm1 doesn't oops too?  (that was the previous kernel on that
-machine)
+Of course.  drivers/scsi/hosts.c was changed and it broke.
