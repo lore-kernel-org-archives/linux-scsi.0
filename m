@@ -1,61 +1,60 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: dismal scsi report in '2.5 - what to expect'
-Date: Wed, 16 Apr 2003 10:59:48 +1000
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3E9CAB04.5040004@torque.net>
-Reply-To: dougg@torque.net
+From: Patrick Mansfield <patmans@us.ibm.com>
+Subject: Re: Booting from Qlogic qla2300 fibre channel card
+Date: Wed, 16 Apr 2003 09:10:55 -0700
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <20030416091055.A4351@beaverton.ibm.com>
+References: <20030416061830.GA30423@quadpro.stupendous.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bunyip.cc.uq.edu.au ([130.102.2.1]:19721 "EHLO
-	bunyip.cc.uq.edu.au") by vger.kernel.org with ESMTP id S264180AbTDPAqW
-	(for <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 15 Apr 2003 20:46:22 -0400
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20030416061830.GA30423@quadpro.stupendous.org>; from jurjen@quadpro.stupendous.org on Wed, Apr 16, 2003 at 08:18:30AM +0200
+To: linux-kernel@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, davej@codemonkey.org.uk
 
-Dave Jones recently sent version 0.33 of his
-'2.5 - what to expect' document to the linux kernel list:
-http://marc.theaimsgroup.com/?l=linux-kernel&m=105034885830405&w=2
+On Wed, Apr 16, 2003 at 08:18:30AM +0200, Jurjen Oskam wrote:
 
-The SCSI report while probably correct lacked any positive
-"spin":
+> The storage array is an EMC Symmetrix model 8530. EMC created a document
+> where they explain how to make such a configuration work. When they mention
+> booting from a Symmetrix-provided volume, they mention the following:
+> 
+> "If Linux loses connectivity long enough, the disks disappear from the
+> system. [...] For [this reason], EMC recommends that you do not boot a
+> Linux host from the EMC storage array."
 
- > SCSI.
- > ~~~~~
- > - Various SCSI drivers still need work, and don't even
- >   compile.
- > - Various drivers currently lack error handling.
- >   These drivers will cause warnings during compilation
- >   due to missing abort: & reset: functions.
- > - Note, that some drivers have had these members removed,
- >   but still lack error handling. Those noticed so far are
- >   ncr53c8xxx, sym53c8xx and inia100
+That probably means the EMC is returning a vendor specific (or perhaps even
+a standard) sense code, you'd have to ask EMC specifically what they mean,
+and what sense code is returned, or maybe check the logs on your other box
+for specifics.
 
-The IDE report was arguably as bad though the "IO subsystem"
-did fair better.
+This also means that changing the scsi timeout will have no affect, since
+the IO will complete without timing out.
 
-So what positive can we say about the SCSI subsystem in 2.5
-(compared to the 2.4 series)?
+See scsi_error.c scsi_check_sense for how they are handled. One important
+piece is that the VENDOR SPECIFIC sense key (value of 9 in
+sense_buffer[2]) falls into the default case of SUCCESS (i.e. complete the
+IO as failed). Whatever (and if) the code is, you would effectively want
+scsi_check_sense to return NEEDS_RETRY rather than SUCCESS.
 
-Some suggestions:
-- large dev_t support allowing thousands of disks to be
-   supported (was 128 or 256 in the 2.4 series)
-- major code cleanup, initially to support the block layer
-   (bio) improvements have led to:
-    - better throughput (?) [less double handling of data]
-    - per HBA locks (there was a single io_request_lock in
-      the 2.4 series)
-    - more flexible interface to HBA drivers
-    - better hotplug support, especially for USB mass storage
-      and ieee1394 sbp2 devices [well it's work_in_progress]
-- improved error processing and scanning code (support for
-   large, sparse lun spaces)
-- lots of scsi driver "innards" (quoting Dave Jones) available
-   via sysfs
+There is also some range (can't remember what, or where they are in the
+SCSI spec) for vendor specific ASC/ASCQ for any (or all?) sense keys.
 
-Comments, additions, deletions?
+We don't have a way (2.4 or 2.5) to dynamically (and cleanly) add vendor
+specific sense codes and handling of them.
 
-Doug Gilbert
+> When making an online configuration change on the Symmetrix (such as
+> remapping volumes), it is possible for the attached hosts to experience
+> a temporary error while accessing a storage array volume. For example,
+> when changing the Symmetrix configuration, it is not uncommon for the
+> RS/6000s (also attached to the SAN) to log one or two temporary
+> SCSI-errors. They don't cause any problems at all, the AIX volume manager
+> never notices a problem.
 
+
+> Does the warning describe a real-world possibility? For example, what is
+> "long enough"?
+
+Long enough probably means long enough for any IO to be sent to the EMC.
+
+-- Patrick Mansfield
