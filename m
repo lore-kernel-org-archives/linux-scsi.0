@@ -1,127 +1,115 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: bug 2400
-Date: Sun, 4 Apr 2004 23:17:55 -0400 (EDT)
+From: David Brownell <david-b@pacbell.net>
+Subject: Re: [linux-usb-devel] Re: bug 2400
+Date: Sun, 04 Apr 2004 20:54:57 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44L0.0404042235420.23916-100000@netrider.rowland.org>
-References: <1081098273.2112.18.camel@mulgrave>
+Message-ID: <4070D891.9040409@pacbell.net>
+References: <Pine.LNX.4.44L0.0404032026590.30873-100000@netrider.rowland.org>	<1081092223.2034.8.camel@mulgrave>  <407050F4.2090607@pacbell.net> <1081104161.2112.34.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from netrider.rowland.org ([192.131.102.5]:1803 "HELO
-	netrider.rowland.org") by vger.kernel.org with SMTP id S263059AbUDEDR5
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 4 Apr 2004 23:17:57 -0400
-In-Reply-To: <1081098273.2112.18.camel@mulgrave>
+Received: from mta4.rcsntx.swbell.net ([151.164.30.28]:52634 "EHLO
+	mta4.rcsntx.swbell.net") by vger.kernel.org with ESMTP
+	id S263079AbUDEDzL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 4 Apr 2004 23:55:11 -0400
+In-Reply-To: <1081104161.2112.34.camel@mulgrave>
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@steeleye.com>
-Cc: Mike Anderson <andmike@us.ibm.com>, Andrew Morton <akpm@osdl.org>, greg@kroah.com, Jens Axboe <axboe@suse.de>, linux-usb-devel@lists.sourceforge.net, SCSI Mailing List <linux-scsi@vger.kernel.org>
+Cc: Alan Stern <stern@rowland.harvard.edu>, Mike Anderson <andmike@us.ibm.com>, Andrew Morton <akpm@osdl.org>, greg@kroah.com, Jens Axboe <axboe@suse.de>, linux-usb-devel@lists.sourceforge.net, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On 4 Apr 2004, James Bottomley wrote:
-
-> On Sun, 2004-04-04 at 12:46, Alan Stern wrote:
-> > Ah, you have left out the third, bad alternative: open succeeds, user gets 
-> > an fd that points to a deallocated device.  More details below...
+James Bottomley wrote:
+> So you dispute this assertion in the email you quoted above:
 > 
-> No, that would be a bug.
+>>>Since we cannot solve that
+>>>race, there's no reason to try to solve the "some parts of the kernel
+>>>know but others don't" part of the race.
+> 
+> 
+> On what basis?  This, I think, is the core of the differences between
 
-Of course it would!  That's exactly what this thread is about: bugs caused
-by improper handling of open/disconnect races.
-
->  I'm looking for evidence that such a bug exists
-> in sd.
-
-Put up or shut up, eh?  Okay...
-
-> This is what's wrong.  Here you should get a reference to the device
-> pointer (that's what scsi_device_get() actually does for us).
-
-That's too vague; I can't tell what you're referring to.  In sd.c 
-there's the struct scsi_device, the struct scsi_disk, the struct gendisk, 
-and their embedded struct devices and struct kobjects.  Maybe you mean 
-scsi_disk_get(), the one place in sd.c that calls scsi_device_get().  I 
-would say that it acquires a reference to the device, not to the device 
-pointer (whatever that might mean).  But let's not dwell on this point.
-
->  If the
-> ref getting routine comes back with an error, you may not proceed.  If
-> it comes back with a device, you own a reference to it and may go on
-> (even if the device is now gone, the structure will behave correctly).
-
-What if the ref getting routine causes an oops because the device has been 
-deallocated?  I know, you'll say that should never happen...  See below.
+On the basis of faulty assumptions embedded therein.  Notably
+"cannot solve that race" (I elaborate below on exactly how that
+information _is_ passed along from USB, which is specifically
+what you said "cannot" be solved) ... so also the conclusion
+that there's "no reason to try" fixing things.
 
 
-> You're not obeying the object lifetime rules here.  The device may be
-> gone but the device structure must stay around (obviously in a special
-> state) until the last reference is dropped.  Only after that may you
-> start nulling things out and killing it.
+> us.  I don't see why an asynchronous event should proceed up the stack
+> in an orderly synchronised manner.
 
-In the example I gave, the device structure _did_ stay around until the 
-last reference was dropped.  The problem was that _another_ reference was 
-in the middle of being acquired at the time.
-
-> If anyone can find a similar bug in the SCSI ULD's, I'll fix it, that's
-> why I asked for an example in sd (or sr with the current fixes) way back
-> in this thread.
-
-All right, let's look at sd.c.  I'll show you that _it_ doesn't obey the 
-object lifetime rules.  In sd_open we see this code (lightly edited):
+Some such events don't; but this isn't one of them.  And the
+reason it _does_ is to make sure drivers can always prevent
+oopsing on device unplug ... and to help eliminate HCD-specific
+behaviors from the equation.  (There were a lot of those in 2.4,
+which made robust device unplugging rather hard to achieve.)
 
 
-	static int sd_open(struct inode *inode, struct file *filp)
-	{
-		struct gendisk *disk = inode->i_bdev->bd_disk;
-		struct scsi_disk *sdkp = scsi_disk(disk);
-		struct scsi_device *sdev;
-		int retval;
+> It goes like this:
+> 
+> - Initially, only the device knows, so commands outstanding time out
 
-		retval = scsi_disk_get(sdkp);
-		if (retval)
-			return retval;
-
-		sdev = sdkp->device;
+Well, hardware timeouts or other protocol faults will happen
+when the device doesn't respond to I/O from the host.  Those
+will be reported in the usual way.  When they happen in other
+contexts, such faults may be recoverable ... there's no way
+yet to know that these particular ones won't be.
 
 
-As it turns out, the block layer guarantees that when sd_open runs the
-bd_disk pointer will be valid.  It does this by following the pattern I
-mentioned in an earlier message -- drivers/base/map.c uses a
-subsystem-wide semaphore, domain_sem, to properly synchronize lookups and
-deletes.
+That ends when khubd gets notified, by the hub, that the device
+is gone.  At which point (a) the USB device gets marked as gone,
+so that usbcore will reject further requests with -ESHUTDOWN,
+(b) all pending I/Os are canceled with -ESHUTDOWN status, and
+except for UHCI, (c) HCDs force those the URBs back to drivers,
+as part of cleaning up the remaining hardware state.
 
-Next, the scsi_disk inline function returns:
-
-	container_of(disk->private_data, struct scsi_disk, driver);
-
-How do you know that the scsi_disk pointed to by disk->private_data still 
-exists?  So far as I can see, the gendisk doesn't take any references to 
-it.  Correct me if I'm wrong, but there doesn't seem to be anything 
-preventing a disconnect event from arriving after the open() call has got 
-a valid reference to the gendisk, and succeeding in deallocating the 
-scsi_disk before this code executes.  There's only one reference between 
-the scsi_disk and the gendisk, and it goes the wrong way: the scsi_disk 
-owns a reference to the gendisk.
-
-But let's suppose that works okay, so sdkp is a valid pointer.  Then 
-the code calls scsi_disk_get(), which in turn calls scsi_device_get() for 
-sdkp->device.  How do you know that this doesn't point to deallocated 
-storage?  The only reference to the scsi_device is taken (in a rather 
-convoluted way) by the gendisk, and it is dropped during del_gendisk() -- 
-not when the gendisk is released.  Hence it is entirely possible for a 
-disconnect event to have freed the scsi_device when this code executes.
+At that point, usbcore and the HCD are all but done with the
+device, and the only question is when the memory associated
+with the usb_interface and usb_device objects gets its last
+reference dropped, so the memory gets freed.  The current UHCI
+answer may surprise some drivers, even though the 2.4 stack
+could do the same thing.  The time from (a) to (c) will usually
+be tens of milliseconds, at most; average time before khubd
+notices will be around 1/8 second.
 
 
-There's two potential oopses for you.  I don't have a full grasp of the
-web of interlocking references (and interlocking code) in the SCSI,
-gendisk, and block layers, but it seems likely that at least one of
-these might actually happen.
+Then (d) for each driver bound to an interface on that device,
+the USB disconnect() method is called.  Driver responsibility
+is to drop all those interface and device references ASAP.
 
-The object lifetime rules require that in your disconnect() routine, you
-must tell all your users that your structure is going away, but you must
-not free the structure until your users have notified you that they won't
-try to use it any more.  When the scsi_disk is on its way out, sd.c tells
-the gendisk but doesn't wait for a notification in return.  When the
-scsi_device is on its way out the SCSI core tells sd.c, but sd.c doesn't
-send back its notification at the right time.
+Plus, in the typical case where drivers are using implicit
+refcounts to claim interface/device handles, never issuing
+requests using them after the disconnect() returns, since that
+releases the implicit reference acquired during probe().
 
-Alan Stern
+
+> - Then, the USB driver knows, so it errors incoming commands (and
+> presumably returns with error any outstanding untimed out ones)
+
+I don't think any single point (a)-(d) matches that
+description.  As soon as it gets -ESHUTDOWN it "knows",
+even before (d), for example ... though it's more
+natural to wait till (d) before starting to clean up
+the device state.
+
+
+> - Then, SCSI knows, so we forbid user I/O
+
+SCSI knows by the fact that the host was unregistered in (d),
+rarely more than ~300 msec after physical disconnect.
+
+The problem here was that the "forbid" is borked.  Maybe not
+in SCSI (there are other layers involved), but oopsably.
+
+
+> The point is, that any I/O after disconnection gets an error ... the
+> error just comes from different places as the knowledge propagates
+> upwards.
+
+Which directly follows from what I said ... USB propagates
+that knowledge in carefully defined ways.   Other layers can
+do the same, although clearly state associated with open file
+descriptors needs to use a slightly different strategy.  And
+that strategy is what Alan's original comment was about.
+
+- Dave
 
