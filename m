@@ -1,29 +1,24 @@
 From: "Frank Borich" <Frank_Borich@us.xyratex.com>
 Subject: RE: Scsi midlayer question
-Date: Tue, 10 Aug 2004 07:21:03 -0700
+Date: Tue, 10 Aug 2004 07:09:49 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <47F3C2BE74738E4683574107469DFA204CCBDC@XYUSEX01.xyus.xyratex.com>
+Message-ID: <47F3C2BE74738E4683574107469DFA204CCBDA@XYUSEX01.xyus.xyratex.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
 	charset="us-ascii"
 Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from xyratexus11.xyratex.com ([65.203.33.11]:30217 "EHLO
+Received: from xyratexus11.xyratex.com ([65.203.33.11]:37381 "EHLO
 	XYUSEX01.xyus.xyratex.com") by vger.kernel.org with ESMTP
-	id S265022AbUHJOVH convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 10 Aug 2004 10:21:07 -0400
+	id S264767AbUHJOKJ convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 10 Aug 2004 10:10:09 -0400
 Content-class: urn:content-classes:message
 List-Id: linux-scsi@vger.kernel.org
 To: Marcelo Tosatti <marcelo.tosatti@cyclades.com>, Arjan van de Ven <arjanv@redhat.com>
 Cc: linux-scsi@vger.kernel.org
 
-I have someone that will try the patch out on a stock 2.4 kernel
-sometime tomorrow.
-I will keep you posted.  Something else I noticed on the FC trace was
-that some of the
-sequential I/O CDBS were out of order.  Would this patch help with this
-as well.
-
+Let me see if I can grab some resources to give this patch a try.  I
+will get back to you ASAP.
 
 Frank Borich
 ------------------------------------------------------------------
