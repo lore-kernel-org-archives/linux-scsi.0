@@ -1,48 +1,41 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: SCSI Persistent Reservations
-Date: Sun, 13 Jun 2004 11:43:24 +1000
+From: James Bottomley <James.Bottomley@steeleye.com>
+Subject: Re: [PATCH RFC 1/3] add fc transport events
+Date: 12 Jun 2004 23:41:10 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <40CBB13C.1020000@torque.net>
-References: <1074736570.26607.304.camel@swtf.comptex.com.au> <1075746272.3248.11.camel@compaq.xsintricity.com>
-Reply-To: dougg@torque.net
+Message-ID: <1087088793.1730.19.camel@mulgrave>
+References: <40B597F5.2030501@cs.wisc.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bunyip.cc.uq.edu.au ([130.102.2.1]:22542 "EHLO
-	bunyip.cc.uq.edu.au") by vger.kernel.org with ESMTP id S264966AbUFMBr0
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 12 Jun 2004 21:47:26 -0400
-In-Reply-To: <1075746272.3248.11.camel@compaq.xsintricity.com>
+Received: from stat1.steeleye.com ([65.114.3.130]:12947 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S264984AbUFMDlV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 12 Jun 2004 23:41:21 -0400
+In-Reply-To: <40B597F5.2030501@cs.wisc.edu>
 List-Id: linux-scsi@vger.kernel.org
-To: Doug Ledford <dledford@redhat.com>
-Cc: Burn Alting <burn@comptex.com.au>, linux-scsi mailing list <linux-scsi@vger.kernel.org>
+To: Mike Christie <michaelc@cs.wisc.edu>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-Doug Ledford wrote:
-> On Wed, 2004-01-21 at 20:56, Burn Alting wrote:
-> 
->>Hi,
->>
->>Can anyone point me towards GPL or OpenSource code that uses SCSI-3
->>Persistent Reservations. I've looked at Doug Ledford's scsires (version
->>0.7-2) code but it mainly deals with SCSI-2 Reserve/Release commands.
->>
->>Thanks in advance
-> 
-> 
-> Unfortunately, my experience when writing that code was that I couldn't
-> find any devices that support persistent reservations, hence the reason
-> that the code in that package is mostly theoretical and not tested as
-> far as the persistent reservations are concerned.
+On Thu, 2004-05-27 at 03:25, Mike Christie wrote:
+> 01-add-host-transport-classdev.patch - adds the transport class_device to
+> the scsi_host structure.
 
-Further to this thread, I have added a utility called
-sg_persist to sg3_utils package (version 1.07 beta)
-that permits low level access
-to the SCSI Persistent Reservation In and Out commands.
-I can do a limited amount of testing with my equipment
-so I would be keen for others to test the utility.
+I've been thinking about this quite a bit, and I like the general idea,
+I just have a quibble with the implementation.
 
-See the news section at the top of http://www.torque.net/sg
+The main problem is the adding of a kobject to complement your host
+transport class (and the device transport class).  I don't think we need
+to do this since, like the transport classes fall into either host or
+device objects, so the events are similarly divided; thus, we should be
+able to trigger the hotplug events through the host or device kobject
+(that come with the embedded struct device) rather than adding another
+kobject for the purpose.
 
-Doug Gilbert
+What would be the disadvantage of doing what you propose this way
+instead of using a separate kobject?
+
+James
+
+
 
