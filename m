@@ -1,71 +1,47 @@
-From: Brian King <brking@us.ibm.com>
-Subject: call_usermodehelper hang
-Date: Tue, 06 Apr 2004 12:03:49 -0500
+From: James Bottomley <James.Bottomley@steeleye.com>
+Subject: Re: [linux-usb-devel] Re: bug 2400
+Date: 06 Apr 2004 12:13:12 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <4072E2F5.9060604@us.ibm.com>
+Message-ID: <1081271594.1837.37.camel@mulgrave>
+References: <Pine.LNX.4.44L0.0404061251460.1042-100000@ida.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e32.co.us.ibm.com ([32.97.110.130]:9428 "EHLO e32.co.us.ibm.com")
-	by vger.kernel.org with ESMTP id S263919AbUDFRDw (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Apr 2004 13:03:52 -0400
-Received: from westrelay02.boulder.ibm.com (westrelay02.boulder.ibm.com [9.17.195.11])
-	by e32.co.us.ibm.com (8.12.10/8.12.2) with ESMTP id i36H3pih739752
-	for <linux-scsi@vger.kernel.org>; Tue, 6 Apr 2004 13:03:51 -0400
+Received: from stat1.steeleye.com ([65.114.3.130]:9405 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S261366AbUDFRQq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 6 Apr 2004 13:16:46 -0400
+In-Reply-To: <Pine.LNX.4.44L0.0404061251460.1042-100000@ida.rowland.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: brking@us.ibm.com
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: David Brownell <david-b@pacbell.net>, Mike Anderson <andmike@us.ibm.com>, Andrew Morton <akpm@osdl.org>, greg@kroah.com, Jens Axboe <axboe@suse.de>, linux-usb-devel@lists.sourceforge.net, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-I have been running into some kernel hangs due to call_usermodehelper. Looking
-at the backtrace, it looks to me like there are deadlock issues with adding
-devices from work queues. Attached is a sample backtrace from one of the
-hangs I experienced. My question is why does call_usermodehelper do 2 different
-things depending on whether or not it is called from the kevent task? It appears
-that the simple way to fix the hang would be to never have call_usermodehelper
-use a work_queue since it must be called from process context anyway, or
-am I missing something?
+On Tue, 2004-04-06 at 11:55, Alan Stern wrote:
+> In principle, yes.  However...  The kernel still has to process requests 
+> correctly while the stack is partially deconstructed.  It also has to 
+> protect against userland helpers trying to pull things apart in the wrong 
+> order.
 
+This I agree with ... that's where the "robust to errors" statement
+comes in.  I'm not claiming we currently are, merely that we have to be
+(regardless of ordered or disordered event propagation).
 
-0xc0000000017df300        1        0  0    0   D  0xc0000000017df7b0  swapper
-           SP(esp)            PC(eip)      Function(args)
-0xc00000003fc9f460  0x0000000000000000  NO_SYMBOL or Userspace
-0xc00000003fc9f4f0  0xc000000000058c40  .schedule +0xb4
-0xc00000003fc9f5c0  0xc00000000005a464  .wait_for_completion +0x138
-0xc00000003fc9f6c0  0xc00000000007c594  .call_usermodehelper +0x104
-0xc00000003fc9f810  0xc00000000022d3e8  .kobject_hotplug +0x3c4
-0xc00000003fc9f900  0xc00000000022d67c  .kobject_add +0x134
-0xc00000003fc9f9a0  0xc00000000012b3d8  .register_disk +0x70
-0xc00000003fc9fa40  0xc00000000027dfe4  .add_disk +0x60
-0xc00000003fc9fad0  0xc0000000002dc7dc  .sd_probe +0x290
-0xc00000003fc9fb80  0xc00000000026fbe8  .bus_match +0x94
-0xc00000003fc9fc10  0xc00000000026ff70  .driver_attach +0x8c
-0xc00000003fc9fca0  0xc000000000270104  .bus_add_driver +0x110
-0xc00000003fc9fd50  0xc000000000270a18  .driver_register +0x38
-0xc00000003fc9fdd0  0xc0000000002cd8f8  .scsi_register_driver +0x28
-0xc00000003fc9fe50  0xc0000000004941d8  .init_sd +0x8c
-0xc00000003fc9fee0  0xc00000000000c720  .init +0x25c
-0xc00000003fc9ff90  0xc0000000000183ec  .kernel_thread +0x4c
+> I'm not trying to say that anything you wrote was wrong -- just that the 
+> situation is more complicated than you make it appear.
 
-0xc00000003fab3380        4        1  0    0   D  0xc00000003fab3830  events/0
-           SP(esp)            PC(eip)      Function(args)
-0xc00000003faaf6e0  0x0000000000000000  NO_SYMBOL or Userspace
-0xc00000003faaf770  0xc000000000058c40  .schedule +0xb4
-0xc00000003faaf840  0xc00000000022fa20  .rwsem_down_write_failed +0x14c
-0xc00000003faaf910  0xc00000000026fed0  .bus_add_device +0x11c
-0xc00000003faaf9b0  0xc00000000026e288  .device_add +0xd0
-0xc00000003faafa50  0xc0000000002cdb00  .scsi_sysfs_add_sdev +0x8c
-0xc00000003faafb00  0xc0000000002cbff8  .scsi_probe_and_add_lun +0xb04
-0xc00000003faafc00  0xc0000000002ccca0  .scsi_add_device +0x90
-0xc00000003faafcb0  0xc0000000002d9458  .ipr_worker_thread +0xc60
-0xc00000003faafdc0  0xc00000000007cd9c  .worker_thread +0x268
-0xc00000003faafee0  0xc0000000000839cc  .kthread +0x160
-0xc00000003faaff90  0xc0000000000183ec  .kernel_thread +0x4c
+Well, I think the principle is simple.  The practice is less so ... I
+can still panic my test system by offlining the ext2 root filesystem in
+the middle of heavy stress.
 
+What I don't believe is that enforcing some kind of ordering can relieve
+us of the necessity of making the error paths robust.
 
+Since the largely hitherto untested error path becomes our main handler
+for forced disconnect, we're necessarily running into a lot of bugs that
+didn't show up before.  However, they have always been bugs regardless
+of whether they got tripped.
 
--- 
-Brian King
-eServer Storage I/O
-IBM Linux Technology Center
+James
+
 
