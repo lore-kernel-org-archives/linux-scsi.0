@@ -1,90 +1,102 @@
-From: Kai Makisara <Kai.Makisara@kolumbus.fi>
+From: Matthias Andree <matthias.andree@gmx.de>
 Subject: Re: 2.6.5-rc1 SCSI + st regressions (was: Linux 2.6.5-rc1)
-Date: Wed, 17 Mar 2004 23:18:40 +0200 (EET)
+Date: Wed, 17 Mar 2004 22:32:01 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.58.0403172312410.1093@kai.makisara.local>
-References: <Pine.LNX.4.58.0403152154070.19853@ppc970.osdl.org>
- <20040316211203.GA3679@merlin.emma.line.org> <20040316211700.GA25059@parcelfarce.linux.theplanet.co.uk>
- <20040316215659.GA3861@merlin.emma.line.org> <Pine.LNX.4.58.0403172145420.1093@kai.makisara.local>
+Message-ID: <20040317213201.GB5722@merlin.emma.line.org>
+References: <Pine.LNX.4.58.0403152154070.19853@ppc970.osdl.org> <20040316211203.GA3679@merlin.emma.line.org> <20040316211700.GA25059@parcelfarce.linux.theplanet.co.uk> <20040316215659.GA3861@merlin.emma.line.org> <Pine.LNX.4.58.0403172145420.1093@kai.makisara.local>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=iso-8859-15
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fep22-0.kolumbus.fi ([193.229.0.60]:57507 "EHLO
-	fep22-app.kolumbus.fi") by vger.kernel.org with ESMTP
-	id S262073AbUCQVSo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 17 Mar 2004 16:18:44 -0500
+Received: from mail.dt.e-technik.Uni-Dortmund.DE ([129.217.163.1]:25556 "EHLO
+	mail.dt.e-technik.uni-dortmund.de") by vger.kernel.org with ESMTP
+	id S262076AbUCQVcJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 17 Mar 2004 16:32:09 -0500
+Content-Disposition: inline
 In-Reply-To: <Pine.LNX.4.58.0403172145420.1093@kai.makisara.local>
 List-Id: linux-scsi@vger.kernel.org
-To: Matthias Andree <ma+lscsi@dt.e-technik.uni-dortmund.de>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Greg KH <greg@kroah.com>
+To: Kai Makisara <Kai.Makisara@kolumbus.fi>
+Cc: Matthias Andree <ma+lscsi@dt.e-technik.uni-dortmund.de>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Greg KH <greg@kroah.com>
 
 On Wed, 17 Mar 2004, Kai Makisara wrote:
 
-> On Tue, 16 Mar 2004, Matthias Andree wrote:
-> 
-> > On Tue, 16 Mar 2004, Matthew Wilcox wrote:
-> > 
-> > > On Tue, Mar 16, 2004 at 10:12:03PM +0100, Matthias Andree wrote:
-> > > > I have some SCSI troubles with 2.6.5-rc1 (from BK) that 2.6.4 didn't
-> > > > have.
-> > > > 
-> > > > Modprobe, loading the st driver, tries a NULL pointer dereference in
-> > > > kernel space and my 2nd tape drive isn't found: st1 is not shown. cat
-> > > > /proc/scsi/scsi (typed after the attempted zero page dereference) hangs
-> > > > in rwsem_down_read_failed with process state D.
-> > > 
-> > > I notice you're using the sym2 driver.  Could you try backing out the
-> > > changes made to it in 2.6.5-rc1, just to be sure we're looking at an st
-> > > problem, not a sym2 problem?
-> > 
-...
-> st.c is using the name put into kobj.name in making 
-> the class file names. I will make a patch that removes this dependency.
-> 
-The patch at the end of this message removes the dependency on the kobj 
-name being set. It also tries to once more restore the naming that is 
-defined in devices.txt. The patch is against 2.6.5-rc1-bk2 and it seems to 
-work correctly in my tests.
+> # ChangeSet
+> #   2004/03/12 16:22:36-08:00 greg@kroah.com=20
+> #   remove cdev_set_name completely as it is not needed.
+>=20
+> (and editing drivers/char/tty_io.c to get the kernel to compile) solv=
+ed=20
+> the problem for me. st.c is using the name put into kobj.name in maki=
+ng=20
+> the class file names. I will make a patch that removes this dependenc=
+y.
 
--- 
-Kai
-------------------------------8<-------------------------------------------
---- linux-2.6.5-rc1-bk2/drivers/scsi/st.c	2004-03-17 22:37:11.000000000 +0200
-+++ linux-2.6.5-rc1-bk2-k1/drivers/scsi/st.c	2004-03-17 23:03:57.000000000 +0200
-@@ -17,7 +17,7 @@
-    Last modified: 18-JAN-1998 Richard Gooch <rgooch@atnf.csiro.au> Devfs support
-  */
- 
--static char *verstr = "20040226";
-+static char *verstr = "20040317";
- 
- #include <linux/module.h>
- 
-@@ -4193,19 +4193,24 @@
- 
- static void do_create_class_files(Scsi_Tape *STp, int dev_num, int mode)
- {
--	int rew, error;
-+	int i, rew, error;
-+	char name[10];
- 	struct class_device *st_class_member;
- 
- 	if (!st_sysfs_class)
- 		return;
- 
- 	for (rew=0; rew < 2; rew++) {
-+		/* Make sure that the minor numbers corresponding to the four
-+		   first modes always get the same names */
-+		i = mode << (4 - ST_NBR_MODE_BITS);
-+		snprintf(name, 10, "%s%s%s", rew ? "n" : "",
-+			 STp->disk->disk_name, st_formats[i]);
- 		st_class_member =
- 			class_simple_device_add(st_sysfs_class,
- 						MKDEV(SCSI_TAPE_MAJOR,
- 						      TAPE_MINOR(dev_num, mode, rew)),
--						&STp->device->sdev_gendev, "%s",
--						STp->modes[mode].cdevs[rew]->kobj.name);
-+						&STp->device->sdev_gendev, "%s", name);
- 		if (!st_class_member) {
- 			printk(KERN_WARNING "st%d: class_simple_device_add failed\n",
- 			       dev_num);
+I had backed out that ChangeSet here as I was suspecting it (about the
+only one "new enough" to cause these problems) but bumped into tty_io.c
+compile failures and didn't have time to investigate.
+
+> While looking at this problem, I noticed that the naming changes alre=
+ady=20
+> committed to BK had disappeared. Looking at st.c history revealed tha=
+t the=20
+> following change had been committed (sorry for wrapping) by greg@kroa=
+h.com=20
+> 46 hours ago:
+
+This is how the change tree looks like in BitKeeper's histtool,
+the top line is the date in MM-DD format:
+
+02-22  02-24   03-03     03-13        03-13           03-15
+kai  -> axb=F8 -> kai ------------------------------->  greg
+1.78    1.79\   1.80                                  1.81
+             \                                   /
+              `----------corbet-------greg------'
+                         1.79.1.1     1.79.1.2
+
+=2E..
+
+Logs:
+
+=3D=3D=3D=3D=3D=3D=3D=3D st.c 1.1..1.81 =3D=3D=3D=3D=3D=3D=3D=3D
+D 1.81 04/03/15 15:02:26-08:00 greg@kroah.com 104 101 0/5/4363
+P drivers/scsi/st.c
+C merge
+------------------------------------------------
+D 1.79.1.2 04/03/12 08:22:11-08:00 greg@kroah.com[greg] 103 102 0/1/435=
+0
+P drivers/scsi/st.c
+C remove cdev_set_name completely as it is not needed.
+------------------------------------------------
+D 1.79.1.1 04/03/13 00:47:18-08:00 corbet@lwn.net[greg] 102 100 2/3/434=
+9
+P drivers/scsi/st.c
+C cdev 2/2: hide cdev->kobj
+------------------------------------------------
+D 1.80 04/02/26 05:24:19-06:00 Kai.Makisara@kolumbus.fi[jejb] 101 100 2=
+8/12/4340
+P drivers/scsi/st.c
+C SCSI tape sysfs name fixes
+------------------------------------------------
+D 1.79 04/02/23 06:23:46-08:00 axboe@suse.de[torvalds] 100 99 1/1/4351
+P drivers/scsi/st.c
+C fix SCSI non-sector bio backed IO
+
+> The change comment was "merge" and it resulted in st.c version 1.81. =
+(I am=20
+> not using Bitkeeper but trying to extract information from bkbits.net=
+=2E)
+
+BitKeeper doesn't have more info and this doesn't look like an auto-gen=
+erated
+comment of BitKeeper's, but seems to have been entered manually. Blame =
+Greg?
+
+--=20
+Matthias Andree
+
+Encrypt your mail: my GnuPG key ID is 0x052E7D95
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
