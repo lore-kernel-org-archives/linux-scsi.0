@@ -1,54 +1,48 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: cciss update [1/2] updates our SCSI support to not use deprecated headers pass 3
-Date: Thu, 14 Oct 2004 02:08:04 +0200
+From: Craig Tierney <ctierney@hpti.com>
+Subject: Question about Qlogic performance in 2.6 kernel
+Date: Wed, 13 Oct 2004 18:28:20 -0600
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20041014000804.GA1454@suse.de>
-References: <20041013211302.GA9866@beardog.cca.cpqcorp.net> <20041013212105.GA4438@havoc.gtf.org> <20041013213626.GA10273@beardog.cca.cpqcorp.net> <1097704228.3062.1.camel@localhost.localdomain> <20041013223344.GB6019@beardog.cca.cpqcorp.net>
+Message-ID: <1097713700.3213.159.camel@hpti9.fsl.noaa.gov>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns.virtualhost.dk ([195.184.98.160]:7098 "EHLO virtualhost.dk")
-	by vger.kernel.org with ESMTP id S269789AbUJNAJq (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 13 Oct 2004 20:09:46 -0400
-Content-Disposition: inline
-In-Reply-To: <20041013223344.GB6019@beardog.cca.cpqcorp.net>
+Received: from system65-210-78-197.hpti.com ([65.210.78.197]:8606 "EHLO
+	hptimail01.HPTI.COM") by vger.kernel.org with ESMTP id S269932AbUJNAbE
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 13 Oct 2004 20:31:04 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: mikem@beardog.cca.cpqcorp.net
-Cc: Joe Perches <joe@perches.com>, akpm@osdl.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Wed, Oct 13 2004, mike.miller@hp.com wrote:
-> @@ -552,11 +547,16 @@ cciss_scsi_setup(int cntl_num)
->  static void
->  complete_scsi_command( CommandList_struct *cp, int timeout, __u32 tag)
->  {
-> -	Scsi_Cmnd *cmd;
-> +	struct scsi_cmnd *cmd;
->  	ctlr_info_t *ctlr;
->  	u64bit addr64;
->  	ErrorInfo_struct *ei;
->  
-> +	cmd = kmalloc(sizeof(struct scsi_cmnd), GFP_ATOMIC);
-> +	if(cmd == NULL) {
-> +		printk(KERN_WARNING "out of memory\n");
-> +		return;
-> +	}
->  	ei = cp->err_info;
->  
->  	/* First, see if it was a message rather than a command */
-> @@ -565,7 +565,7 @@ complete_scsi_command( CommandList_struc
->  		return;
->  	}
->  
-> -	cmd = (Scsi_Cmnd *) cp->scsi_cmd;	
-> +	cmd = (struct scsi_cmnd *) cp->scsi_cmd;	
->  	ctlr = hba[cp->ctlr];
+I am seeing a large disparity in reads and writes from
+my Raid box under the 2.6 kernel.  I have tried this from
+an Itanium box runing RHEL 4 beta and an Opteron box running
+SUSE 9.1 professional.  In both cases I am using 2 qlogic
+QLA2200F HBAs.  Each HBA talks to one lun from the array, and
+I use dm to create a filesystem.
 
-This makes zero sense. First of all, you can't just quit out of
-completing a command based on a weird allocation failure. Secondly, why
-are you allocation cmd at completion time (??) and then overwriting it a
-few lines later.
+Using lmdd to create a single stream of IO, I see 190 MB/s for
+writes, but only 55 MB/s for reads.  The vendor says reads and
+writes can be as much as 300 MB/s if I had the right HBAs, but
+the write performance is good for 2 1 Gb/s HBAs.  
 
--- 
-Jens Axboe
+I tried this with a 2.4 kernel on a dual Xeon box.  Performance
+was 150 MB/s for both reads and writes.  The read performance was
+that high only after I changed /proc/sys/vm/max-readahead to 1023.
+
+I tried changing the readahead size in 2.6 using blockdev.  The
+readahead was much larger by default than the 2.4 kernel.  However,
+no matter how large I set the readahead (as large as 1 MB), the
+read performance did not change.
+
+I read on the kernel list that in the linux-2.6.9-rc3, some changes
+to the readahead code path had been merged that was supposed to
+simplify the logic.  I tried the patch to see if affected performance.
+It did not.
+
+Does anyone have some suggestions on how to improve the read performance
+under 2.6?
+
+Thanks,
+Craig
 
