@@ -1,31 +1,42 @@
-From: "Jeffrey W. Baker" <jwb@gghcwest.com>
-Subject: rescan-scsi-bus.sh no longer unsafe with aic79xx
-Date: 05 Jun 2003 11:01:48 -0700
+From: "Justin T. Gibbs" <gibbs@scsiguy.com>
+Subject: Re: build error with aic79xx on 2.4
+Date: Thu, 05 Jun 2003 12:08:46 -0600
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1054836108.22202.10.camel@heat>
+Message-ID: <1636000000.1054836526@aslan.btc.adaptec.com>
+References: <1054835575.22202.2.camel@heat>
+Reply-To: "Justin T. Gibbs" <gibbs@scsiguy.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [65.198.37.67] ([65.198.37.67]:31712 "EHLO gghcwest.com")
-	by vger.kernel.org with ESMTP id S264816AbTFERsR (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Jun 2003 13:48:17 -0400
-Received: from pc105.gghcwest.com (pc105.gghcwest.com [192.168.168.105])
-	by gghcwest.com (8.12.9/8.12.9) with ESMTP id h55I1lR8030510
-	for <linux-scsi@vger.kernel.org>; Thu, 5 Jun 2003 11:01:47 -0700
+Received: from magic-mail.adaptec.com ([208.236.45.100]:63111 "EHLO
+	magic.adaptec.com") by vger.kernel.org with ESMTP id S264784AbTFERyb
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 5 Jun 2003 13:54:31 -0400
+In-Reply-To: <1054835575.22202.2.camel@heat>
+Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: "Jeffrey W. Baker" <jwb@gghcwest.com>, linux-scsi@vger.kernel.org
 
-On 2.4.21-rc3/amd64 with previous aic79xx patches, use of
-rescan-scsi-bus.sh had a tendency to hose the entire machine.  If there
-was a new device, aic79xx emitted a console message that it could not
-allocate the new device.  After that all I/O to the device failed,  and
-the rescan-scsi-bus.sh process was in the D state forever.
+> The latest aic79xx doesn't build in 2.4.21-rc3 because of Werror and
+> this warning:
+> 
+> aic79xx_osm_pci.c:278: warning: `ahd_linux_pci_reserve_mem_region'
+> defined but not used
+> 
+> That seemed harmless, so I removed Werror.  I'd try -rc7 but the
+> x86-64.org patches don't work against that kernel.
 
-In the latest aic79xx, this no longer happens.  rescan-scsi-bus.sh works
-fine.
+It points to a bug in that memory mapped I/O is not enabled for ia64,
+alpha, or mips, even though these platforms should support it.  I
+don't believe that the MMAPIO define is required for 2.4.X or 2.5.X
+kernels now since the PCI support files are only compiled in if
+CONFIG_PCI is enabled and any PCI device should be able to attempt
+to do memio if the appropriate BAR is setup.
 
-Cheers,
-jwb
+I've removed the MMAPIO ifdefs locally and will submit an updated
+driver soon.
 
+--
+Justin
 
