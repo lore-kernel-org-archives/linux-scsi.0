@@ -1,76 +1,63 @@
-From: Doug Ledford <dledford@redhat.com>
-Subject: Re: [PATCH] Ghost devices being reported with AIC7XXX version 6.2.6
-Date: Thu, 31 Oct 2002 16:25:59 -0500
+From: Alexander Viro <viro@math.psu.edu>
+Subject: [patches] rq_dev removal
+Date: Thu, 31 Oct 2002 17:43:19 -0500 (EST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20021031212559.GJ30047@redhat.com>
-References: <20021031170337.GO574@lapi0061> <798370000.1036087399@aslan.btc.adaptec.com> <20021031200758.GB30047@redhat.com> <20021031203857.GV574@lapi0061>
+Message-ID: <Pine.GSO.4.21.0210311715330.16688-100000@weyl.math.psu.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20021031203857.GV574@lapi0061>
+Received: from weyl.math.psu.edu (weyl.math.psu.edu [146.186.130.226])
+	by math.psu.edu (8.9.3/8.9.3) with ESMTP id RAA13060
+	for <linux-scsi@vger.kernel.org>; Thu, 31 Oct 2002 17:43:19 -0500 (EST)
+Received: from localhost (viro@localhost)
+	by weyl.math.psu.edu (8.9.3/8.9.3) with ESMTP id RAA18241
+	for <linux-scsi@vger.kernel.org>; Thu, 31 Oct 2002 17:43:19 -0500 (EST)
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Brown <mbrown@emc.com>
-Cc: "Justin T. Gibbs" <gibbs@scsiguy.com>, bferjul@emc.com, jkrasner@emc.com, conway_heather@emc.com, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Thu, Oct 31, 2002 at 03:38:57PM -0500, Mike Brown wrote:
-> Hi,
-> 
-> > The whole "support more than 8 luns on SCSI-2 devices" is a hack anyway, I 
-> > would be more likely to just remove it instead of changing other things.
-> 
-> This would break production environments.  Symmetrix isn't the only
-> storage array that supports this hack.  DG, Dell, HP, and others also
-> support this hack.  If its taken out in 2.5 and replaced with
-> REPORT_LUNS that'd be ok, but taking it out of 2.4 without replacing
-> it with REPORT_LUNS is going to break people.
+	Folks, ->rq_dev is going away in 2.5 RSN.  The only non-trivial
+remaining uses were in SCSI (scsi_lib.c::scsi_get_request_dev() and
+uses in st.c, osst.c and sg.c to identify a device).
 
-Note, these hacks have caused more more bug reports and more crap in the 
-last 2 years than anything else when it comes to device scanning in linux.  
-If it were up to me, I'm so fed up with them I'd yank *all* the hacks that 
-make us scan for non-compliant devices and instead tell the vendors to fix 
-their firmware to be SCSI compliant.
+	Series of patches on ftp.math.psu.edu/pub/viro/P/P*-C45 deals
+with that stuff and removes most of the uses of minor() in there.  Please,
+review it.
 
-> > > 3) Linux should be using the Report Luns command to determine how
-> > >    many luns are on a device and at what locations.  This might
-> > >    even allow you to never probe more than 8 luns on a SCSI 2
-> > >    device unless they support this command.  Does the Symetrix support
-> > >    it?  Going beyond 8 luns on a SCSI2 device is really a hack
-> > >    otherwise.
-> > 
-> > We currently only do report luns on SCSI-3 devices.  I didn't think this 
-> > was a supported command on SCSI-2, but I hadn't checked the spec 
-> > recently...hmmm...nope, not supported in SCSI-2, so using report luns on 
-> > SCSI-2 devices is just as much a hack as going above lun 7 on SCSI-2 
-> > devices without specific knowledge of transfer interconnect.
-> 
-> Symmetrix supports Report Luns despite reporting SCSI_2 Units.  The
+	Contents:
 
-Can you comment on why Symmetrix reports SCSI-2 units then?  Report Luns
-is an optional SCSI-3 command.  If you don't have all the required SCSI-3
-items implemented yet so that you can't report SCSI-3, then I would think
-you need to not worry about optional commands until the required ones are
-done.  On the other hand, if you've got all the required SCSI-3 items
-implemented, then why aren't you reporting SCSI-3?
+	* osst.c and st.c get (inlined) helper functions - tape_name(STp).
+Most of TAPE_NR() uses replaced with use of these animals.
+	* osst.c and st.c ->open() puts pointer to Scsi_Tape into
+filp->private_data, the same way as it's done by sg.c
+	* sd.c and sr.c got a pointer to Scsi_Device_Template in
+scsi_disk and scsi_cd resp.  That pointer is initialized to &s{d,r}_template.
+disk->private_data points to that field (instead of entire scsi_disk/scsi_cd)
+and old uses of disk->private_data are updated to compensate.
+	* st.c, osst.c and sg.c got gendisks allocated, but not registered.
+Places that set ->rq_dev set ->rq_disk as well.  Scsi_Tape and friends
+got a pointer to Scsi_Device_Template (similar to sd/sr above) and
+->private_data is set in similar fashion.  Users of ->rq_dev are using
+->rq_disk->private_data now.
 
->  I don't know
-> what the right fix is for 2.4.  We need a hack akin to something like:
+	* Now we can deal with scsi_get_request_dev().  Indeed, all places
+that set ->rq_dev set ->rq_disk, and we are guaranteed that either
+	+ ->rq_disk is NULL and ->rq_dev is 0
+or
+	+ ->rq_disk is non-NULL and
+ *(struct Scsi_Device_Template **)rq->rq_disk->private_data
+	  is the address of template in question.
 
-The right fix doesn't exist.  Hack is exactly what it's going to take to 
-fix this.  Once again, it's a case of some vendor wanting SCSI-3 features 
-on a device that they only report as being SCSI-2 causing breakage.
+In other words, scsi_get_request_dev() is two-liner now:
 
-I'm currently working in 2.5, not 2.4.  This will be fixed in 2.5 by using 
-report luns.  My goal for 2.5 is to make the whitelist as small as 
-possible though, so fixing up your firmware to report the proper SCSI 
-version would be appreciated.  If not, then it will have to be a report 
-luns whitelist entry.  For 2.4, I don't have an answer and I'm not sure 
-when I would get around to looking at it personally.  Not this week 
-anyway, maybe next.
+	struct gendisk *p = req->rq_disk;
+	return p ? *(struct Scsi_Device_Template **)p->private_data : NULL;
 
--- 
-  Doug Ledford <dledford@redhat.com>     919-754-3700 x44233
-         Red Hat, Inc. 
-         1801 Varsity Dr.
-         Raleigh, NC 27606
-  
+and ->max_major, ->min_major and ->major from Scsi_Device_Template are
+not used anymore (and thus can die).
+
+
+	Please, review.  If somebody has objections - yell, otherwise this
+stuff goes to Linus tomorrow.  Interesting things are in the small patches
+- huge pair in the beginning of series is tape_name() stuff, i.e. purely
+mechanical work.
+
