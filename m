@@ -1,38 +1,30 @@
 From: "Justin T. Gibbs" <gibbs@scsiguy.com>
 Subject: Re: aic7xxx: SCSI Bus Reset
-Date: Tue, 24 Dec 2002 08:54:57 -0700
+Date: Tue, 24 Dec 2002 11:35:00 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <2149895408.1040745297@aslan.scsiguy.com>
-References: <20021224112158.GA667@exocore.com>
+Message-ID: <2251835408.1040754900@aslan.scsiguy.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <20021224112158.GA667@exocore.com>
 Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
-To: Shanker Balan <shanu@exocore.com>, Linux SCSI <linux-scsi@vger.kernel.org>
+To: Mikael Abrahamsson <swmike@swm.pp.se>, Linux SCSI <linux-scsi@vger.kernel.org>
 
-> Hello:
+> On Tue, 24 Dec 2002, Shanker Balan wrote:
 > 
-> I am experience aic7xxx SCSI reset errors which happens every so often
-> on my NFS server:
+>> Hello:
+>> 
+>> I am experience aic7xxx SCSI reset errors which happens every so often
+>> on my NFS server:
 > 
-> Hardware:
-> 
-> Gigabyte GA-7DPXDw Dual SMP Motherboard with 512MB of RAM
-> 2 AMD Athlon 1900
-> Adaptec AIC-7892A U160/m (rev 02)
-> QUANTUM  Model: ATLAS10K3_18_SCA
-> QUANTUM  Model: ATLAS10K3_73_SCA
-> QUANTUM  Model: ATLAS10K3_73_SCA
+> I get this too.
 
-Can you provide the firmware revisions of these drives.  Anything
-less than B440 is suspect.  The behavior your report looks like
-the drives stop returning queued I/O.  I have seen this before on
-at least B120, although it was when running at U320/packetized and
-not U160.  My guess is that the bug in these early firmware revs
-is protocol agnostic.
+It is hard to say, from the information you have provided, if your problem
+is similar or different from Shanker's.  Can you provide drive model
+numbers and firmware?  A dmesg from your system (you can send it privately)
+should have this information.  It would also be useful to see the actual
+driver messages that are displayed when the failure occurs.
 
 --
 Justin
