@@ -1,35 +1,61 @@
-From: denebeim@deepthot.org (Jay Denebeim)
-Subject: Re: coding style question
-Date: Wed, 25 Feb 2004 19:37:49 +0000 (UTC)
+From: "Mukker, Atul" <Atulm@lsil.com>
+Subject: RE: [SUBJECT CHANGE]: megaraid unified driver version 2.20.0.0-al
+	pha1
+Date: Wed, 25 Feb 2004 15:38:48 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <c1itid$7md$1@dent.deepthot.org>
-References: <20040225182523.GD25779@parcelfarce.linux.theplanet.co.uk> <Pine.LNX.4.44.0402251128430.6557-100000@dent.deepthot.org> <20040225112905.33bfdea8.rddunlap@osdl.org>
+Message-ID: <0E3FA95632D6D047BA649F95DAB60E57033BC3E7@exa-atlanta.se.lsil.com>
+Mime-Version: 1.0
+Content-Type: text/plain;
+	charset="iso-8859-1"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from deepthot.org ([68.14.232.127]:48293 "EHLO dent.deepthot.org")
-	by vger.kernel.org with ESMTP id S261275AbUBYThv (ORCPT
+Received: from mail0.lsil.com ([147.145.40.20]:10369 "EHLO mail0.lsil.com")
+	by vger.kernel.org with ESMTP id S261461AbUBYUki (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 25 Feb 2004 14:37:51 -0500
-Received: from news by dent.deepthot.org with local (Exim 4.30)
-	id 1Aw4qr-0002FZ-FZ
-	for linux-scsi@vger.kernel.org; Wed, 25 Feb 2004 12:37:49 -0700
+	Wed, 25 Feb 2004 15:40:38 -0500
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: 'Christoph Hellwig' <hch@infradead.org>
+Cc: 'Arjan van de Ven' <arjanv@redhat.com>, 'James Bottomley' <James.Bottomley@SteelEye.com>, "'matt_domsch@dell.com'" <matt_domsch@dell.com>, 'Paul Wagland' <paul@wagland.net>, Matthew Wilcox <willy@debian.org>, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
 
-In article <20040225112905.33bfdea8.rddunlap@osdl.org>,
-Randy.Dunlap <rddunlap@osdl.org> wrote:
+> given that they are completely different from the controller we know
+> as megaraid today this is an extremly bad idea.  Just put it 
+> into an driver
+> of their own, e.g. mptraid
+Although, this simplifies the development and maintenance effort, having a
+single driver to drive both controllers or two independent drivers is not
+always our decision. Most often, it would be Dell's preference. 
 
->For anything other than very basic types, they hide/obfuscate data
->structures.  If it's a struct, we had rather see a struct used there.
+> 
+> > 2.	Controller and device re-ordering on both lk 2.4 and lk 
+> 2.6. If this
+> > is not desired, the driver code would be modified to make 
+> it PCI ordered
+> > detection. The driver also re-orders the drives, based on 
+> which one is
+> > chosen as boot drive. Matt, please add your comments here.
+> 
+> This is a bad thing for 2.6, don't do it.  For 2.4 just leave 
+> the probe code as
+> it is there currently - any change during the stable series 
+> just confuses
+> users.
 
-Okay, that's more or less what I figured it was, thanks.  Personally I
-never found that it did that for me, the 'struct' always seemed
-redundant.  That's just my opinion though, and I can certainly
-understand others.
+So it would be. We would make the controller and devices detection PCI
+ordered for 2.6 and preferred ordered for lk 2.4. A patch for unified-alpha1
+would be posted for this change soon.
 
-Thanks for the answer.
-Jay
--- 
-* Jay Denebeim  Moderator       rec.arts.sf.tv.babylon5.moderated *
-* newsgroup submission address: b5mod@deepthot.org                *
-* moderator contact address:    b5mod-request@deepthot.org        *
-* personal contact address:     denebeim@deepthot.org             *
+
+> 
+> > 4.	Native hot-plug support for both lk 2.4 and lk 2.6
+> 
+> hotplug scsi in 2.4 is impossible without a host template per 
+> controller
+> which you don't seem to do and I'd advice against.
+> 
+> > 6.	Single code to support *all* x86-32, IA64, and x86-64 platforms
+> 
+> Umm, it's a PCI card - if it doesn't work on any PCI 
+> supporting architecture
+> it's a driver bug (either in your driver or the architectures 
+> PCI subsysyem)
+Currently, IA64 has only 1.18 series of drivers as supported ones. 2.x
+driver is not tested on this platform.
