@@ -1,108 +1,79 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: [PATCH] megaraid bad queuecommand return
-Date: Fri, 19 Nov 2004 13:17:06 +0100
-Message-ID: <20041119121706.GZ26240@suse.de>
-References: <20041119085341.GY26240@suse.de>
+From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
+Subject: RE: [PATCH] aacraid bad queuecommand return
+Date: Fri, 19 Nov 2004 07:32:34 -0500
+Message-ID: <60807403EABEB443939A5A7AA8A7458B6947FE@otce2k01.adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns.virtualhost.dk ([195.184.98.160]:60322 "EHLO virtualhost.dk")
-	by vger.kernel.org with ESMTP id S261384AbUKSMRg (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 19 Nov 2004 07:17:36 -0500
-Content-Disposition: inline
-In-Reply-To: <20041119085341.GY26240@suse.de>
+Received: from magic.adaptec.com ([216.52.22.17]:9441 "EHLO magic.adaptec.com")
+	by vger.kernel.org with ESMTP id S261372AbUKSMch convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 19 Nov 2004 07:32:37 -0500
+content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@steeleye.com>
+To: Jens Axboe <axboe@suse.de>, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@steeleye.com>
 
-On Fri, Nov 19 2004, Jens Axboe wrote:
-> Hi,
-> 
-> In case of scb allocation failure, mega_build_cmd() can return NULL scb
-> but set busy, which causes a non-zero return from ->queuecommand() while
-> the scsi command has been completed. Flagging error and calling done
-> should be enough for appropriate retries.
+In the patch I supplied, I dropped the result setting and aac_io_done
+and let the midlayer retry on the none-zero return.
 
-Of course the other way around for this particular patch - just return
-busy and let the mid layer handle it, but make sure not to call done()
-first.
+Which is more efficient?
 
-> Signed-off-by: Jens Axboe <axboe@suse.de>
-> 
-> ===== drivers/scsi/megaraid.c 1.73 vs edited =====
-> --- 1.73/drivers/scsi/megaraid.c	2004-11-11 09:43:34 +01:00
-> +++ edited/drivers/scsi/megaraid.c	2004-11-19 09:03:43 +01:00
-> @@ -634,11 +634,7 @@ mega_build_cmd(adapter_t *adapter, Scsi_
->  			}
->  
->  			if(!(scb = mega_allocate_scb(adapter, cmd))) {
-> -
-> -				cmd->result = (DID_ERROR << 16);
-> -				cmd->scsi_done(cmd);
->  				*busy = 1;
-> -
->  				return NULL;
->  			}
->  
-> @@ -677,11 +673,7 @@ mega_build_cmd(adapter_t *adapter, Scsi_
->  
->  			/* Allocate a SCB and initialize passthru */
->  			if(!(scb = mega_allocate_scb(adapter, cmd))) {
-> -
-> -				cmd->result = (DID_ERROR << 16);
-> -				cmd->scsi_done(cmd);
->  				*busy = 1;
-> -
->  				return NULL;
->  			}
->  			pthru = scb->pthru;
-> @@ -723,11 +715,7 @@ mega_build_cmd(adapter_t *adapter, Scsi_
->  
->  			/* Allocate a SCB and initialize mailbox */
->  			if(!(scb = mega_allocate_scb(adapter, cmd))) {
-> -
-> -				cmd->result = (DID_ERROR << 16);
-> -				cmd->scsi_done(cmd);
->  				*busy = 1;
-> -
->  				return NULL;
->  			}
->  			mbox = (mbox_t *)scb->raw_mbox;
-> @@ -867,11 +855,7 @@ mega_build_cmd(adapter_t *adapter, Scsi_
->  
->  			/* Allocate a SCB and initialize mailbox */
->  			if(!(scb = mega_allocate_scb(adapter, cmd))) {
-> -
-> -				cmd->result = (DID_ERROR << 16);
-> -				cmd->scsi_done(cmd);
->  				*busy = 1;
-> -
->  				return NULL;
->  			}
->  
-> @@ -899,11 +883,7 @@ mega_build_cmd(adapter_t *adapter, Scsi_
->  	else {
->  		/* Allocate a SCB and initialize passthru */
->  		if(!(scb = mega_allocate_scb(adapter, cmd))) {
-> -
-> -			cmd->result = (DID_ERROR << 16);
-> -			cmd->scsi_done(cmd);
->  			*busy = 1;
-> -
->  			return NULL;
->  		}
->  
-> 
-> -- 
-> Jens Axboe
-> 
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+Sincerely -- Mark Salyzyn
 
+-----Original Message-----
+From: linux-scsi-owner@vger.kernel.org
+[mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of Jens Axboe
+Sent: Friday, November 19, 2004 3:59 AM
+To: linux-scsi@vger.kernel.org; James Bottomley
+Subject: [PATCH] aacraid bad queuecommand return
+
+Hi,
+
+aac_read() and aac_write() may complete a command but return -1, which
+is propagated through aac_scsi_cmd() to the mid layer through
+->queuecommand. If the command has been completed, it must return 0.
+
+Signed-off-by: Jens Axboe <axboe@suse.de>
+
+
+===== drivers/scsi/aacraid/aachba.c 1.29 vs edited =====
+--- 1.29/drivers/scsi/aacraid/aachba.c	2004-10-01 17:10:08 +02:00
++++ edited/drivers/scsi/aacraid/aachba.c	2004-11-18 23:10:40
++01:00
+@@ -894,7 +894,7 @@ int aac_read(struct scsi_cmnd * scsicmd,
+ 	aac_io_done(scsicmd);
+ 	fib_complete(cmd_fibcontext);
+ 	fib_free(cmd_fibcontext);
+-	return -1;
++	return 0;
+ }
+ 
+ static int aac_write(struct scsi_cmnd * scsicmd, int cid)
+@@ -928,7 +928,7 @@ static int aac_write(struct scsi_cmnd * 
+ 	if (!(cmd_fibcontext = fib_alloc(dev))) {
+ 		scsicmd->result = DID_ERROR << 16;
+ 		aac_io_done(scsicmd);
+-		return -1;
++		return 0;
+ 	}
+ 	fib_init(cmd_fibcontext);
+ 
+@@ -1004,7 +1004,7 @@ static int aac_write(struct scsi_cmnd * 
+ 
+ 	fib_complete(cmd_fibcontext);
+ 	fib_free(cmd_fibcontext);
+-	return -1;
++	return 0;
+ }
+ 
+ 
 -- 
 Jens Axboe
 
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
