@@ -1,79 +1,64 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: sg3_utils-1.06 released
-Date: Wed, 05 May 2004 22:08:53 +1000
+From: "Andrew Vasquez" <andrew.vasquez@qlogic.com>
+Subject: RE: qla2300 at only 1 GBit on kernel 2.6.5
+Date: Wed, 5 May 2004 09:27:10 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <4098D955.5070808@torque.net>
-Reply-To: dougg@torque.net
+Message-ID: <B179AE41C1147041AA1121F44614F0B0DD0114@AVEXCH02.qlogic.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bunyip.cc.uq.edu.au ([130.102.2.1]:14340 "EHLO
-	bunyip.cc.uq.edu.au") by vger.kernel.org with ESMTP id S264527AbUEEMJD
+Received: from pat.qlogic.com ([198.70.193.2]:54571 "EHLO avexch01.qlogic.com")
+	by vger.kernel.org with ESMTP id S264725AbUEEQ2W convert rfc822-to-8bit
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 5 May 2004 08:09:03 -0400
-Received: from torque.net (d-236-115.stlucia.uq.net.au [203.101.236.115])
-	by bunyip.cc.uq.edu.au (8.12.10/8.12.10) with ESMTP id i45C8YL6001858
-	for <linux-scsi@vger.kernel.org>; Wed, 5 May 2004 22:08:45 +1000 (GMT+1000)
+	Wed, 5 May 2004 12:28:22 -0400
+content-class: urn:content-classes:message
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-
-Tarball and rpms can be found on http://www.torque.net/sg .
-Summary of sg3_utils, sg_utils and other packages are on
-this page: http://www.torque.net/sg/u_index.html
-A release announcement will be sent to freshmeat.net
-shortly.
-
-This version takes advantage of the wider coverage of the SG_IO
-ioctl in the lk 2.6 series. As well as being applied to sg device
-names (e.g. /dev/sg3) all of these utilities can take block
-device names (e.g. /dev/sda and /dev/hdc [if hdc is an ATAPI
-device]). Recent version of lk 2.6 also support SG_IO on st
-device names (with osst device names soon to follow).
-They will not work on ATA disks (e.g. /dev/hda) except with
-the sg_scan ** utility.
+To: Jan-Frode Myklebust <janfrode@parallab.uib.no>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Cc: "Moore, Eric Dean" <Emoore@lsil.com>
 
 
-Changelog for sg3_utils-1.06 [20040426]
-   - sg_logs: some HBAs don't like odd transfer lengths so increment
-       - do INQUIRY and output product strings
-       - add ASCII rendering of the Protocol specific SAS page
-       - add '-v' verbose option to output cdb
-   - sg_scan: optionally take device file names (e.g. /dev/hdc
-         and /dev/sda)
-       - only request 36 byte INQUIRY responses
-   - sg_err: add sg_decode_sense() function
-   - sg_inq: update output (ref: SPC-3 t10/1416-d rev 17, 28
-         January 2004)
-       - remove '-p' option to print out PCI address of host
-       - add '-v' verbose option to output cdb
-   - sginfo: allow '-u' to take hex arguments (prefixed by '0x'),
-             when subpage value is 255 show multiple subpages
-       - accept /dev/hd? ATAPI devices directly in lk 2.6
-       - add '-t <pn>[,<spn>]' argument; like '-u' but decodes
-         page if it recognizes it
-       - drop '-L' argument
-       - add cd/dvd, tape, SES, more disk and more SPC-3 decoded
-         mode pages
-       - add transport protocol decoded mode pages for SPI-4, FCP
-         and SAS
-   - sg_modes: print all subpages when '-subp=ff' is selected
-       - do INQUIRY and output product strings
-       - add '-v' verbose option to output cdb
-   - Makefile: add -W compile flag and fix exposed warnings
-   - .spec file: change to build on Mandrake without errors
+On , linux-scsi-owner@vger.kernel.org wrote:
 
+> This seems to be working fine with the RedHat 2.4.21-9.0.1.ELsmp
+> kernel,
+>
 
-** sg_scan first assumes a /dev/hd* device name is an ATAPI device
-    and (if requested with '-i') sends a SCSI INQUIRY. If that fails
-    it sends a ATA IDENTITY command. For example:
+How are you verifying that the 2.4 driver is coming-up in 2Gig rather
+than 1gig?  Do you have an analyzer running between the HBA and
+storage device?  Or, as you mentioned later in the email when testing
+the 8.x driver, did you force 2gig at the RAID box and reload the
+2.4 driver?
 
-# sg_scan -i /dev/hd[a-d]
-/dev/hda: ATA device
-     IC25N040ATCS05-0   CLP429F4JJB7DA   CS4OA61A
-/dev/hdc: scsi0 channel=0 id=0 lun=0 [em]
-     HITACHI   DVD-ROM GD-S200   0034 [rmb=1 cmdq=0 pqual=0 pdev=0x5]
+> but when I try running on the vanilla 2.6.5 kernel, it only
+> operates in 1 GB mode.
+>
 
+Yes, the 8.x series driver started to display the connection speed
+during a loop_up event.
 
-Doug Gilbert
+	qla2300 0000:01:05.0: LOOP UP detected (1 Gbps).
 
+> The HBA is connected to a Infortrend
+> SATA/RAID box.
+>
+
+Which model?  Actually, looking ahead, I can see you are running an
+
+	Vendor: IFT       Model: A16F-G1A2         Rev: 334A
+
+Of the three FC-SATA RAID boxes that are advertised, only the
+A16F-J1210-G1 model mentions support for 'full-duplex 2Gb FC-AL'.
+
+> If I try forcing the connection to 2 GBit from the
+> Infortrend, I get an error saying 'Cable unplugged' when loading the
+> qla2300 module on 2.6.5. 
+> 
+
+Hmm, could you go into the BIOS utility (ctrl-q during boot) and check
+the 'Data Rate' settings for the HBA?  What is the value set to --
+auto/1gb/2gb?  If it is set to auto, could you set it to 2gb and retry
+the test.
+
+Regards,
+Andrew Vasquez
+QLogic Corporation
