@@ -1,33 +1,46 @@
 From: Jeremy Higdon <jeremy@classic.engr.sgi.com>
-Subject: Re: is there a clean way to disable a scsi timer
-Date: Thu, 3 Oct 2002 18:15:27 -0700 (PDT)
+Subject: Re: PATCH: scsi device queue depth adjustability patch
+Date: Thu, 3 Oct 2002 18:40:00 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <10210031815.ZM119610@classic.engr.sgi.com>
-References: <08628CA53C6CBA4ABAFB9E808A5214CB0C4DAF@mercury.infiniconsys.com>
+Message-ID: <10210031840.ZM119812@classic.engr.sgi.com>
+References: <200210031246.g93CkLF02116@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: "Heinz, Michael" <mheinz@infiniconsys.com>
-        "RE: is there a clean way to disable a scsi timer" (Sep 28, 11:47am)
+In-Reply-To: James Bottomley <James.Bottomley@steeleye.com>
+        "Re: PATCH: scsi device queue depth adjustability patch" (Oct  3,  8:46am)
 List-Id: linux-scsi@vger.kernel.org
-To: "Heinz, Michael" <mheinz@infiniconsys.com>, "Infante, Jon" <Jon.Infante@Emulex.Com>, linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@steeleye.com>, linux-scsi@vger.kernel.org
 
-On Sep 28, 11:47am, Heinz, Michael wrote:
+On Oct 3,  8:46am, James Bottomley wrote:
 > 
-> Jon, Jeremy:
+> > The mid layer simply does not have access to the info needed to do
+> > what  you are talking about.  Let me give you an example from the
+> > aic7xxx  driver.  On this card we have a sequencer that handles the
+> [...]
+> > how we avoid the random flip flops of queue depth that you were
+> > worried about earlier. 
 > 
-> What is the intent in having the device driver do timeout handling? I ask because I've run into some issues with the midlayer timeouts not always working correctly and I've been thinking about implementing timeout processing in my driver. Was that the issue you had or was it something else?
-> 
-> --
-> Michael Heinz
-> Staff Software Engineer
-> Infinicon Systems, Inc.
-> http://www.infiniconsys.com 
+> Yes, many HBAs have internal "issue" queues where commands wait before being 
+> placed on the bus.  I was assuming, however, that when a HBA driver got QUEUE 
+> FULL, it would traverse the issue queue and respond QUEUE FULL also to all 
+> pending commands for that device.  The mid-layer should thus see a succession 
+> of QUEUE FULLs for the device (we even have a nice signature for this because 
+> the QUEUE FULL occurs while device_blocked is set).  However, as long as it 
+> can correctly recognise this, it knows that when the last QUEUE FULL is 
+> through it has the true device queue depth, doesn't it?
 
-In my case, I'm trying to insert something under the mid-layer,
-in which all timeouts are handled underneath.
+The Qlogic host adapters do not provide a way to find the true queue depth
+to the device as described previously by Doug.  The midlayer depth is
+probably about as accurate as you could get, with the exception being
+if the Qlogic driver runs out of IOCBs.  I don't believe that they return
+Queue Full for unsubmitted commands, but I do not know for sure.  I certainly
+would not expect every host adapter to do that.
 
-Also, in some cases with Fibrechannel, such as a loss of signal, or
-device disappearance, we want to give the device more time to return.
+That was one of the holes in the Ordered Tag scheme.  You issue a bunch
+of unordered commands, then an ordered one, followed by a bunch of unordered.
+
+If the ordered tag gets the Queue Full, and you are depending on the
+Ordered semantics, you're in Big Trouble.
 
 jeremy
