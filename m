@@ -1,63 +1,43 @@
-From: Zwane Mwaikambo <zwane@holomorphy.com>
-Subject: [PATCH][2.5] SCSI hosts.c missing device_register
-Date: Sat, 23 Nov 2002 13:35:29 -0500 (EST)
+From: "J.E.J. Bottomley" <James.Bottomley@steeleye.com>
+Subject: Re: [PATCH][2.5] SCSI hosts.c missing device_register
+Date: Sat, 23 Nov 2002 14:00:00 -0600
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.50.0211231330110.1462-100000@montezuma.mastecende.com>
+Message-ID: <200211232000.gANK00903642@localhost.localdomain>
+References: <zwane@holomorphy.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from localhost.localdomain (localhost.localdomain [127.0.0.1])
-	by montezuma.mastecende.com (8.12.5/8.12.5) with ESMTP id gANIZUIN031537
-	for <linux-scsi@vger.kernel.org>; Sat, 23 Nov 2002 13:35:33 -0500
+Received: (from root@localhost)
+	by pogo.mtv1.steeleye.com (8.9.3/8.9.3) id MAA03869
+	for <linux-scsi@vger.kernel.org>; Sat, 23 Nov 2002 12:00:03 -0800
+In-Reply-To: Message from Zwane Mwaikambo <zwane@holomorphy.com>
+   of "Sat, 23 Nov 2002 13:35:29 EST." <Pine.LNX.4.50.0211231330110.1462-100000@montezuma.mastecende.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Zwane Mwaikambo <zwane@holomorphy.com>
+Cc: linux-scsi@vger.kernel.org
 
-Does this patch look correct? Please CC as i am not subscribed.
+zwane@holomorphy.com said:
+> Does this patch look correct? Please CC as i am not subscribed. 
 
-SCSI subsystem driver Revision: 1.00
-Unable to handle kernel NULL pointer dereference at virtual address 00000004
- printing eip:
-c0256725
-*pde = 00000000
-Oops: 0002
-CPU:    0
-EIP:    0060:[<c0256725>]    Not tainted
-EFLAGS: 00010246
-EIP is at device_del+0x35/0xa0
-eax: c0662cac   ebx: c0514230   ecx: 00000000   edx: 00000000
-esi: c0662ca4   edi: 00000000   ebp: 00000000   esp: c15b9f1c
-ds: 0068   es: 0068   ss: 0068
-Process swapper (pid: 1, threadinfo=c15b8000 task=cff86040)
-Stack: c0662ca4 c0662c00 c0662c00 c025679b c0662ca4 c15b9f40 c02cfbbf c0662ca4
-       c0662c00 00000000 00000000 00000001 dead4ead c15b9f50 c15b9f50 c0144ed1
-       cffeb080 00000286 00000000 00000000 00000330 c05edbc6 c0662c00 cfd58424
-Call Trace:
- [<c025679b>] device_unregister+0xb/0x16
- [<c02cfbbf>] scsi_unregister+0xbf/0x140
- [<c0144ed1>] kfree+0x61/0xe0
- [<c02cffd8>] scsi_register_host+0x28/0xb0
- [<c01050b0>] init+0x80/0x1a0
- [<c0105030>] init+0x0/0x1a0
- [<c0105030>] init+0x0/0x1a0
- [<c0105030>] init+0x0/0x1a0
- [<c0108e05>] kernel_thread_helper+0x5/0x10
+Actually, I'm afraid not.  It would lead to double registrations of hosts.  It 
+might be the correct fix if you take the device_register() out of 
+scsi_add_host(), but I'd like to understand what the problem is first.
 
-Code: 89 4a 04 89 40 04 89 11 89 d9 8b 56 04 89 46 08 8b 06 89 02
+The sequence should be:
 
-Index: linux-2.5.49/drivers/scsi/hosts.c
-===================================================================
-RCS file: /build/cvsroot/linux-2.5.49/drivers/scsi/hosts.c,v
-retrieving revision 1.1.1.1
-diff -u -r1.1.1.1 hosts.c
---- linux-2.5.49/drivers/scsi/hosts.c	23 Nov 2002 02:56:36 -0000	1.1.1.1
-+++ linux-2.5.49/drivers/scsi/hosts.c	23 Nov 2002 08:50:22 -0000
-@@ -467,6 +467,7 @@
- 		DEVICE_NAME_SIZE-1);
- 	sprintf(shost->host_driverfs_dev.bus_id, "scsi%d",
- 		shost->host_no);
-+	device_register(&shost->host_driverfs_dev);
+scsi_register_host(template)
+	template->detect()
+		for each host, scsi_register(host)
+	[...]
+	for each detected host, scsi_add_host(host)
+		device_register()
 
- 	shost->eh_notify = &sem;
- 	kernel_thread((int (*)(void *)) scsi_error_handler, (void *) shost, 0);
--- 
-function.linuxpower.ca
+It looks like you're getting an error between scsi_register and scsi_add_host 
+that's causing the HBA to bail and something to think it needs to deregister a 
+curently unregistered host_driverfs_dev.
+
+Most likely, the problem is in the HBA driver.  Which host adapter is this?
+
+James
+
+
