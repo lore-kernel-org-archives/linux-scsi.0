@@ -1,41 +1,44 @@
-From: James Bottomley <James.Bottomley@steeleye.com>
-Subject: Re: bug 2400
-Date: 06 Apr 2004 09:09:39 -0500
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] dpt_i2o changes for 2.6.2 kernel in support of 64 bit and bitrot (part 1)
+Date: Tue, 6 Apr 2004 15:17:13 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1081260580.1804.22.camel@mulgrave>
-References: <20040401131502.41136788.akpm@osdl.org>
-	<1080862354.2118.78.camel@mulgrave> <1080949016.1804.161.camel@mulgrave>
-	<20040404213307.A29446@beaverton.ibm.com>
-	<1081199233.2105.45.camel@mulgrave> <20040406092244.GH28109@suse.de>
-	<1081259807.1804.9.camel@mulgrave>  <20040406140433.GE7353@suse.de>
+Message-ID: <20040406151713.A20117@infradead.org>
+References: <547AF3BD0F3F0B4CBDC379BAC7E4189F64F281@otce2k03.adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat1.steeleye.com ([65.114.3.130]:44724 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S263834AbUDFOL1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 6 Apr 2004 10:11:27 -0400
-In-Reply-To: <20040406140433.GE7353@suse.de>
+Received: from phoenix.infradead.org ([213.86.99.234]:41994 "EHLO
+	phoenix.infradead.org") by vger.kernel.org with ESMTP
+	id S263831AbUDFORP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 6 Apr 2004 10:17:15 -0400
+Content-Disposition: inline
+In-Reply-To: <547AF3BD0F3F0B4CBDC379BAC7E4189F64F281@otce2k03.adaptec.com>; from mark_salyzyn@adaptec.com on Tue, Apr 06, 2004 at 10:03:58AM -0400
 List-Id: linux-scsi@vger.kernel.org
-To: Jens Axboe <axboe@suse.de>
-Cc: Patrick Mansfield <patmans@us.ibm.com>, Andrew Morton <akpm@osdl.org>, greg@kroah.com, linux-usb-devel@lists.sourceforge.net, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
-On Tue, 2004-04-06 at 09:04, Jens Axboe wrote:
-> Only change is the err -> error, correct?
+On Tue, Apr 06, 2004 at 10:03:58AM -0400, Salyzyn, Mark wrote:
+> OEMs and their users are virtually *all* we are concerned about. If we can not qualify our products within their needs, we disappear, or at least we disappear on operating systems that fail to provide for the needs of the users.
 
-Not quite; there was a cleanup goto issue as well (don't want to goto
-the release if you couldn't get the object).
+Well, bad luck for adaptec then.  It's not like there aren't other RAID HBA
+vendors.
 
-> > The attached (hopefully) is what I compiled and tested with.  The test,
-> > incidentally, is simply to hold the device open and then forcibly remove
-> > it using scsi remove-single-device before closing it.
+> I loose sleep at night thinking about these poor souls. No, to be honest, actually it is because our OEM's test group thinks out fantastic scenarios of ways to break yours and my products and hold us accountable for such failures. "Deleting array causes kernel ooops" news at 11 ...
+
+Again, where do you see that oops?  if I remove the lun under a filesystem
+that one spews EIO all over and becomes unusable.  But if you get a panic
+that's a bug in the filesystem driver.
+
+> Which reason do we ascribe to this failure of the operating system to provide the service of knowing if a drive is currently in-use:
 > 
-> Better than what is there, whether it needs other synchronization is a
-> different question.
+> 1) system has been architected in such a manner that it would be impossible at this juncture to add?
+> 2) Someone made a conscientious decision to not provide this functionality?
+> 3) There is a way to tell, it just is not clear to any of us at this moment?
+> 4) There is a way to tell, but it would be an ugly hack that will no doubt break upon the next revision (as this hack has done traversing from 2.4 to 2.6)?
+> 5) Pride?
 
-Heh, join the debate, why don't you...
-
-James
-
+There is a way to tell whether it's inuse, but it's a different defintion of
+inuse than you want, and it's not a public interface so it could break all
+the time.  Probably as soon as some out of tree driver gets the bright idea
+to use it inspite everyone telling them not to.
 
