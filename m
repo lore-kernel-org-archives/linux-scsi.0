@@ -1,41 +1,41 @@
-From: Bryan Henderson <hbryan@us.ibm.com>
-Subject: Re: [ANNOUNCE] iSCSI enterprise target software
-Date: Tue, 1 Mar 2005 10:24:34 -0800
-Message-ID: <OF00F39C19.AE2C12A8-ON88256FB7.00641755-88256FB7.0065149B@us.ibm.com>
-References: <20050301183549J.fujita.tomonori@lab.ntt.co.jp>
+From: "Jun'ichi Nomura" <jnomura@mtc.biglobe.ne.jp>
+Subject: megaraid driver always fails to reset adapter
+Date: Tue, 01 Mar 2005 13:36:04 -0500
+Message-ID: <4224B614.9060403@mtc.biglobe.ne.jp>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
-Received: from e6.ny.us.ibm.com ([32.97.182.146]:30155 "EHLO e6.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S262010AbVCASYO (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Mar 2005 13:24:14 -0500
-Received: from d01relay02.pok.ibm.com (d01relay02.pok.ibm.com [9.56.227.234])
-	by e6.ny.us.ibm.com (8.12.11/8.12.11) with ESMTP id j21IOEWZ021115
-	for <linux-scsi@vger.kernel.org>; Tue, 1 Mar 2005 13:24:14 -0500
-Received: from d01av04.pok.ibm.com (d01av04.pok.ibm.com [9.56.224.64])
-	by d01relay02.pok.ibm.com (8.12.10/NCO/VER6.6) with ESMTP id j21IODk0068102
-	for <linux-scsi@vger.kernel.org>; Tue, 1 Mar 2005 13:24:13 -0500
-Received: from d01av04.pok.ibm.com (loopback [127.0.0.1])
-	by d01av04.pok.ibm.com (8.12.11/8.12.11) with ESMTP id j21IODPg000575
-	for <linux-scsi@vger.kernel.org>; Tue, 1 Mar 2005 13:24:13 -0500
-In-Reply-To: <20050301183549J.fujita.tomonori@lab.ntt.co.jp>
+Content-Type: text/plain; charset=ISO-2022-JP
+Content-Transfer-Encoding: 7bit
+Received: from mx1.redhat.com ([66.187.233.31]:8858 "EHLO mx1.redhat.com")
+	by vger.kernel.org with ESMTP id S261980AbVCASgN (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Mar 2005 13:36:13 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: arjan@infradead.org, iscsitarget-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-One thing that's implicit in your reasons for wanting to be in the kernel 
-is that you've chosen to exploit the kernel's page cache.  As a user of 
-the page cache, you have more control from inside the kernel than from 
-user space.  The page cache was designed to be fundamentally invisible to 
-user space.
+Hello,
 
-A pure user space implementation of an ISCSI target would use process 
-virtual memory for a cache and manage it itself.  It would access the 
-storage with direct I/O.  It looks to me like this is aimed at a 
-single-application Linux system (the whole system is just an ISCSI 
-target), which means there's not much need for a kernel to manage shared 
-resources.
+I found that the megaraid driver always fails to reset the
+adapter with the following message:
+    megaraid: resetting the host...
+    megaraid mbox: reset sequence completed successfully
+    megaraid: fast sync command timed out
+    megaraid: reservation reset failed
+when the "Cluster mode" of the adapter BIOS is enabled.
+So, whenever the reset occurs, the adapter goes to
+offline and just become unavailable.
 
---
-Bryan Henderson                          IBM Almaden Research Center
-San Jose CA                              Filesystems
+Is this a known problem?
+
+I tried 2.6.9 and 2.6.11-rc5 and the results were the same.
+I used sg_reset to invoke reset artificially to test this.
+
+The problem doesn't occur if I disabled the "Cluster mode"
+parameter in the adapter BIOS.
+
+I'm not sure how well the currenet megaraid driver supports
+the "Cluster mode".
+I appreciate if you have any idea.
+
+Thanks,
+Jun'ichi Nomura
+
