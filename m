@@ -1,99 +1,38 @@
-From: Mark Watts <m.watts@eris.qinetiq.com>
-Subject: Re: aacraid does not work on dual opteron box - 2.6.7-rc2
-Date: Wed, 9 Jun 2004 12:50:25 +0100
+From: steve@steveheller.com
+Subject: Your email requires verification verify#8rTBLmyta1kmOGPrwLqY8PvPl8hEG0pe
+Date: Wed, 09 Jun 2004 07:54:25 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <200406091250.25860.m.watts@eris.qinetiq.com>
-References: <20040609083142.GB23062@szafa>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Message-ID: <E1BY1ez-0005Xj-HZ@host1.wfdns.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.eris.qinetiq.com ([128.98.1.1]:61029 "HELO
-	mail.eris.qinetiq.com") by vger.kernel.org with SMTP
-	id S265740AbUFILx1 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Jun 2004 07:53:27 -0400
-In-Reply-To: <20040609083142.GB23062@szafa>
-Content-Disposition: inline
+Received: from host1.wfdns.com ([207.44.194.77]:14761 "EHLO host1.wfdns.com")
+	by vger.kernel.org with ESMTP id S266133AbUFILyd (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Jun 2004 07:54:33 -0400
+Received: from stevex by host1.wfdns.com with local (Exim 4.34)
+	id 1BY1ez-0005Xj-HZ
+	for linux-scsi@vger.kernel.org; Wed, 09 Jun 2004 07:54:25 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: Sergiusz Pawlowicz <ser@gnu.org>, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA1
+The message you sent requires that you verify that you 
+are a real live human being and not a spam source.
 
+To complete this verification, simply reply to this message and leave
+the subject line intact.
 
-> Hello linux friends,
-> sorry for bothering you, but  current aacraid still does not
-> work properly on  my fresh dual opteron box  & Adaptec 2120S
-> RAID controler. It hungs  always after modprobing sd_mod and
-> disk access try.
->
+The headers of the message sent from your address are show below:
 
-<snip>
-
-Not sure if this helps but I'm running a Dual Opteron 248 with 2 (two) Adaptec 
-AAR-2410SA cards in PCI-X slots on a Tyan S2885 board.
-
-
-# uname -a
-Linux localhost 2.6.3-7mdk-p3-smp-64GB #1 SMP Wed Mar 17 15:34:39 CET 2004 
-i686 unknown unknown GNU/Linux
-
-Red Hat/Adaptec aacraid driver (1.1.2-lk1 Mar 17 2004)
-AAC0: kernel 4.1.4 build 5934
-AAC0: monitor 4.1.4 build 5934
-AAC0: bios 4.1.0 build 5934
-AAC0: serial ba7127fafaf001
-scsi0 : aacraid
-  Vendor: ADAPTEC   Model: AAR-2410SA RAID5  Rev: V1.0
-  Type:   Direct-Access                      ANSI SCSI revision: 02
-AAC1: kernel 4.1.4 build 5934
-AAC1: monitor 4.1.4 build 5934
-AAC1: bios 4.1.0 build 5934
-AAC1: serial bab51afafaf001
-scsi1 : aacraid
-  Vendor: ADAPTEC   Model: AAR-2410SA Mirro  Rev: V1.0
-  Type:   Direct-Access                      ANSI SCSI revision: 02
-SCSI device sda: 216790272 512-byte hdwr sectors (110997 MB)
-sda: Write Protect is off
-sda: Mode Sense: 03 00 00 00
-SCSI device sda: drive cache: write through
- /dev/scsi/host0/bus0/target0/lun0: p1
-Attached scsi removable disk sda at scsi0, channel 0, id 0, lun 0
-SCSI device sdb: 72263424 512-byte hdwr sectors (36999 MB)
-sdb: Write Protect is off
-sdb: Mode Sense: 03 00 00 00
-SCSI device sdb: drive cache: write through
- /dev/scsi/host1/bus0/target0/lun0: p1 p2 < p5 p6 >
-Attached scsi removable disk sdb at scsi1, channel 0, id 0, lun 0
-
-AAC0 is a 4x36GB raid5 array with WD Raptor SATA drives
-AAC1 is a 2x36GB raid1 mirror with the same drives
-
-- From lsmod:
-
-sd_mod                 18592  6
-aacraid                45248  4
-scsi_mod              121552  2 sd_mod,aacraid
-
-# uptime
- 13:55:38 up 22 days, 21:47,  1 user,  load average: 0.00, 0.00, 0.00
-
-This is a Mandrake 10.0 Official system.
-
-Mark.
-
-- -- 
-Mark Watts
-Senior Systems Engineer
-QinetiQ Trusted Information Management
-Trusted Solutions and Services group
-GPG Public Key ID: 455420ED
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.2.4 (GNU/Linux)
-
-iD8DBQFAxvmBBn4EFUVUIO0RAobNAJ9VrbE2/gBxonNEw0kOyAGgXaU0+gCgimxx
-gci7EWybhvIRmaStjcS5FLI=
-=LyFx
------END PGP SIGNATURE-----
+>From linux-scsi@vger.kernel.org Wed Jun 09 07:54:25 2004
+Received: from [203.81.209.192] (helo=steveheller.com)
+	by host1.wfdns.com with esmtp (Exim 4.34)
+	id 1BY1ek-0005Vn-DY
+	for steve@steveheller.com; Wed, 09 Jun 2004 07:54:25 -0400
+From: linux-scsi@vger.kernel.org
+To: steve@steveheller.com
+Subject: Delivery Bot (steve@steveheller.com)
+Date: Wed, 9 Jun 2004 16:54:10 +0500
+MIME-Version: 1.0
+Content-Type: multipart/related;
+	type="multipart/alternative";
+	boundary="----=_NextPart_000_001B_01C0CA81.7B015D10"
+X-Priority: 1
+X-MSMail-Priority: High
