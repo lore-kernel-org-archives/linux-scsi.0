@@ -1,50 +1,85 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: 2.6.10-rc2-mm2 usb storage still oopses
-Date: 29 Nov 2004 21:22:03 -0600
-Message-ID: <1101784930.2022.116.camel@mulgrave>
-References: <200411182203.02176.cova@ferrara.linux.it>
-	<20041118133557.72f3b369.akpm@osdl.org>
-	<20041118135809.3314ce41@lembas.zaitcev.lan>
-	<200411190042.41199.cova@ferrara.linux.it>
-	<20041118155542.324f56c7@lembas.zaitcev.lan>
-	<20041129163231.33affbde.akpm@osdl.org>
+From: Adrian Bunk <bunk@stusta.de>
+Subject: [patch] remove bouncing email address of Deanna Bonds
+Date: Tue, 30 Nov 2004 04:26:24 +0100
+Message-ID: <20041130032624.GE19821@stusta.de>
+References: <60807403EABEB443939A5A7AA8A7458B7661DC@otce2k01.adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat16.steeleye.com ([209.192.50.48]:30662 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S261943AbUK3DWc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 29 Nov 2004 22:22:32 -0500
-In-Reply-To: <20041129163231.33affbde.akpm@osdl.org>
+Received: from emailhub.stusta.mhn.de ([141.84.69.5]:48400 "HELO
+	mailout.stusta.mhn.de") by vger.kernel.org with SMTP
+	id S261965AbUK3D0a (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 29 Nov 2004 22:26:30 -0500
+Content-Disposition: inline
+In-Reply-To: <60807403EABEB443939A5A7AA8A7458B7661DC@otce2k01.adaptec.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
-Cc: Pete Zaitcev <zaitcev@redhat.com>, cova@ferrara.linux.it, Linux Kernel <linux-kernel@vger.kernel.org>, linux-usb-devel@lists.sourceforge.net, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
+Cc: James.Bottomley@SteelEye.com, Marcelo Tosatti <marcelo.tosatti@cyclades.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Mon, 2004-11-29 at 18:32, Andrew Morton wrote:
-> Pete Zaitcev <zaitcev@redhat.com> wrote:
-> >
-> > On Fri, 19 Nov 2004 00:42:40 +0100, Fabio Coatti <cova@ferrara.linux.it> wrote:
-> > 
-> > > Nov 18 20:33:05 kefk kernel: sdb: assuming drive cache: write through
-> > > Nov 18 20:33:05 kefk kernel:  sdb: sdb1
-> > > Nov 18 20:33:05 kefk kernel:  sdb: sdb1
-> > > Nov 18 20:33:05 kefk kernel: kobject_register failed for sdb1 (-17)
-> > 
-> > This looks as if SCSI falls victim of the general problem which ub addresses
-> > with the following fragment:
-> 
-> Guys, is this problem still present in Linus's tree?  If so, is a fix for
-> 2.6.10 looking feasible?
+On Mon, Nov 29, 2004 at 08:27:39AM -0500, Salyzyn, Mark wrote:
 
-Al Viro has a tentative one at
+> That address should instead become aacraid@adaptec.com to capture
+> engineers at Adaptec.
 
-http://ftp.linux.org.uk/pub/people/viro/register_disk-hack
+Sounds reasonable.
+Updated patch below.
 
-If someone could try it out and verify that it fixes the problem, we
-could put it in.
-
-James
+> Sincerely -- Mark Salyzyn
 
 
+diffstat output:
+ drivers/scsi/aacraid/README   |    2 +-
+ drivers/scsi/dpt/dpti_ioctl.h |    2 +-
+ drivers/scsi/dpt_i2o.c        |    2 +-
+ drivers/scsi/dpti.h           |    2 +-
+ 4 files changed, 4 insertions(+), 4 deletions(-)
+
+
+
+Signed-off-by: Adrian Bunk <bunk@stusta.de>
+
+--- linux-2.6.10-rc2-mm3-full/drivers/scsi/aacraid/README.old	2004-11-24 19:24:05.000000000 +0100
++++ linux-2.6.10-rc2-mm3-full/drivers/scsi/aacraid/README	2004-11-24 19:24:16.000000000 +0100
+@@ -42,7 +42,7 @@
+ Christoph Hellwig <hch@infradead.org>	(updates for new-style PCI probing and SCSI host registration,
+ 					 small cleanups/fixes)
+ Matt Domsch <matt_domsch@dell.com>	(revision ioctl, adapter messages)
+-Deanna Bonds <deanna_bonds@adaptec.com> (non-DASD support, PAE fibs and 64 bit, added new adaptec controllers
++Deanna Bonds                            (non-DASD support, PAE fibs and 64 bit, added new adaptec controllers
+ 					 added new ioctls, changed scsi interface to use new error handler,
+ 					 increased the number of fibs and outstanding commands to a container)
+ 
+--- linux-2.6.10-rc2-mm3-full/drivers/scsi/dpti.h.old	2004-11-30 04:22:35.000000000 +0100
++++ linux-2.6.10-rc2-mm3-full/drivers/scsi/dpti.h	2004-11-30 04:23:47.000000000 +0100
+@@ -3,7 +3,7 @@
+                              -------------------
+     begin                : Thu Sep 7 2000
+     copyright            : (C) 2001 by Adaptec
+-    email                : deanna_bonds@adaptec.com
++    email                : aacraid@adaptec.com
+ 
+     See Documentation/scsi/dpti.txt for history, notes, license info
+     and credits
+--- linux-2.6.10-rc2-mm3-full/drivers/scsi/dpt/dpti_ioctl.h.old	2004-11-30 04:22:35.000000000 +0100
++++ linux-2.6.10-rc2-mm3-full/drivers/scsi/dpt/dpti_ioctl.h	2004-11-30 04:23:53.000000000 +0100
+@@ -3,7 +3,7 @@
+                              -------------------
+     begin                : Thu Sep 7 2000
+     copyright            : (C) 2001 by Adaptec
+-    email                : deanna_bonds@adaptec.com
++    email                : aacraid@adaptec.com
+ 
+     See Documentation/scsi/dpti.txt for history, notes, license info
+     and credits
+--- linux-2.6.10-rc2-mm3-full/drivers/scsi/dpt_i2o.c.old	2004-11-30 04:22:35.000000000 +0100
++++ linux-2.6.10-rc2-mm3-full/drivers/scsi/dpt_i2o.c	2004-11-30 04:23:59.000000000 +0100
+@@ -3,7 +3,7 @@
+                              -------------------
+     begin                : Thu Sep 7 2000
+     copyright            : (C) 2000 by Adaptec
+-    email                : deanna_bonds@adaptec.com
++    email                : aacraid@adaptec.com
+ 
+ 			   July 30, 2001 First version being submitted
+ 			   for inclusion in the kernel.  V2.4
