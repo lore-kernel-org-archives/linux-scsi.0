@@ -1,55 +1,55 @@
-From: Krishna Murthy <krmurthy@cisco.com>
-Subject: Peripheral qualifier 1 not considered in scsi_probe_and_add_lun
-Date: Thu, 27 Nov 2003 20:26:11 +0530
+From: James Bottomley <James.Bottomley@steeleye.com>
+Subject: Re: scsi_scan_target and SCSI_2
+Date: 27 Nov 2003 09:37:38 -0600
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <200311272026.11922.krmurthy@cisco.com>
-References: <200311252037.34015.krmurthy@cisco.com> <1069773808.2061.6.camel@mulgrave> <200311271849.15241.krmurthy@cisco.com>
+Message-ID: <1069947459.1837.28.camel@mulgrave>
+References: <200311252037.34015.krmurthy@cisco.com>
+	<1069773808.2061.6.camel@mulgrave>  <200311271849.15241.krmurthy@cisco.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from india-ironport-1.cisco.com ([64.104.129.195]:63376 "EHLO
-	india-ironport-1.cisco.com") by vger.kernel.org with ESMTP
-	id S264530AbTK0O5c convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 27 Nov 2003 09:57:32 -0500
-Received: from krmurthy1-lnx.cisco.com (krmurthy1-lnx.cisco.com [10.77.7.60])
-	by india-msg-core-1.cisco.com (8.12.9/8.12.6) with ESMTP id hARKP30s019958
-	for <linux-scsi@vger.kernel.org>; Thu, 27 Nov 2003 20:25:04 GMT
+Received: from nat9.steeleye.com ([65.114.3.137]:45316 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S262052AbTK0Pht (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 27 Nov 2003 10:37:49 -0500
 In-Reply-To: <200311271849.15241.krmurthy@cisco.com>
 List-Id: linux-scsi@vger.kernel.org
-To: SCSI Mailing List <linux-scsi@vger.kernel.org>
-Cc: davmyers@cisco.com
+To: Krishna Murthy <krmurthy@cisco.com>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, davmyers@cisco.com
 
-Hi,
-In scsi_probe_and_add_lun  we check for Peripheral qualifier 3 (011b).
-----------------------------------------------------------------------
- /*
-         * result contains valid SCSI INQUIRY data.
-         */
-        if ((result[0] >> 5) == 3) {
-                /*
-                 * For a Peripheral qualifier 3 (011b), the SCSI
-                 * spec says: The device server is not capable of
-                 * supporting a physical device on this logical
-                 * unit.
-                 *
-                 * For disks, this implies that there is no
-                 * logical disk configured at sdev->lun, but there
-                 * is a target id responding.
-                 */
-                SCSI_LOG_SCAN_BUS(3, printk(KERN_INFO
-                                        "scsi scan: peripheral qualifier of 
-3,"
-                                        " no device added\n"));
-                res = SCSI_SCAN_TARGET_PRESENT;
-                goto out_free_result;
-        }
-------------------------------------------------------------------------------
-Shouldn't the same apply for peripheral qualifier 1. This is what the SCSI 
-spec has to say about 1:
-The device server is capable of supporting specified peripheral device type
-on this logical unit. However the physical device is currently not connected 
-to this logical unit.
+On Thu, 2003-11-27 at 07:19, Krishna Murthy wrote:
+> scsi_probe_and_add_lun() calls scsi_probe_lun(). In case there is no lun 0
+> then the information about scsi_level is lost.
 
-Thanx
-N.C.Krishna Murthy
+SAM-3 in section 4.9.2 begins "All SCSI devices shall accept LUN 0 as a
+valid address...".
+
+This requirement is in SCSI-2 as well.
+
+If your implementation doesn't do this, I suggest you fix it.
+
+If lun 0 responds (as it is required by the standards to do), but shows
+only a perfunctory standards conforming response indicating it's not
+really present, we scan, and the scsi_level will be recorded for each
+correctly scanned lun.
+
+> We now call scsi_sequential_lun_scan() with BLIST_SPARSELUN,SCSI_2 as 
+> parameters, which instead should have been bflags,scsi_level as determined by 
+> scsi_probe_lun.
+> 
+> Isn't this is  a bug? Please let me know if I am missing something.
+
+No, it's deliberate.  Whether we should do this is open to debate, but
+there's a comment in the code explaining the logic:
+
+		/*
+		 * There's a target here, but lun 0 is offline so we
+		 * can't use the report_lun scan.  Fall back to a
+		 * sequential lun scan with a bflags of SPARSELUN and
+		 * a default scsi level of SCSI_2
+		 */
+
+James
+
+
