@@ -1,31 +1,35 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH] driver model for scsi upper drivers, take 2
-Date: Tue, 27 May 2003 09:32:18 +0200
+Subject: Re: [PATCH] driver model for scsi upper drivers, take 2
+Date: Tue, 27 May 2003 11:43:10 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030527073218.GA11467@lst.de>
+Message-ID: <20030527094310.GA12853@lst.de>
+References: <20030527073218.GA11467@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([212.34.189.10]:26541 "EHLO mail.lst.de")
-	by vger.kernel.org with ESMTP id S262457AbTE0HTV (ORCPT
+Received: from verein.lst.de ([212.34.189.10]:15279 "EHLO mail.lst.de")
+	by vger.kernel.org with ESMTP id S263131AbTE0JaB (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 27 May 2003 03:19:21 -0400
+	Tue, 27 May 2003 05:30:01 -0400
 Content-Disposition: inline
+In-Reply-To: <20030527073218.GA11467@lst.de>
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
 Cc: linux-scsi@vger.kernel.org
 
- - removed the tape sysfs pseudodevice crap that caused hangs
- - switched sg to a class_interface.  This means sg can be used
-   on devices already claimed be an upper driver again.  This
-   also means I had to remove the sg sysfs attributes temporarily
-   because the old mechanism is gone, but I'll restore them
-   differently in a followon patch.
+On Tue, May 27, 2003 at 09:32:18AM +0200, Christoph Hellwig wrote:
+>  - removed the tape sysfs pseudodevice crap that caused hangs
+>  - switched sg to a class_interface.  This means sg can be used
+>    on devices already claimed be an upper driver again.  This
+>    also means I had to remove the sg sysfs attributes temporarily
+>    because the old mechanism is gone, but I'll restore them
+>    differently in a followon patch.
 
+Yikes, this was the old patch again.  Here's the right one:
 
---- 1.64/drivers/scsi/hosts.c	Tue May 13 00:50:42 2003
-+++ edited/drivers/scsi/hosts.c	Fri May 16 17:34:35 2003
-@@ -229,27 +229,18 @@
+--- 1.66/drivers/scsi/hosts.c	Fri May 23 14:35:11 2003
++++ edited/drivers/scsi/hosts.c	Mon May 26 11:29:03 2003
+@@ -233,27 +233,18 @@
  int scsi_add_host(struct Scsi_Host *shost, struct device *dev)
  {
  	Scsi_Host_Template *sht = shost->hostt;
@@ -59,10 +63,9 @@ Cc: linux-scsi@vger.kernel.org
  }
  
  /**
-===== drivers/scsi/hosts.h 1.63 vs edited =====
---- 1.63/drivers/scsi/hosts.h	Thu May  8 20:24:14 2003
-+++ edited/drivers/scsi/hosts.h	Fri May 16 17:34:35 2003
-@@ -532,25 +532,18 @@
+--- 1.66/drivers/scsi/hosts.h	Mon May 26 23:47:09 2003
++++ edited/drivers/scsi/hosts.h	Mon May 26 10:02:43 2003
+@@ -542,25 +542,23 @@
          return shost->host_gendev.parent;
  }
  
@@ -87,34 +90,45 @@ Cc: linux-scsi@vger.kernel.org
  };
 +#define to_scsi_driver(drv) \
 +	container_of((drv), struct scsi_driver, gendrv)
++
++extern int scsi_register_driver(struct device_driver *);
++#define scsi_unregister_driver(drv) \
++	driver_unregister(drv);
  
 -/*
 - * Highlevel driver registration/unregistration.
 - */
 -extern int scsi_register_device(struct Scsi_Device_Template *);
 -extern int scsi_unregister_device(struct Scsi_Device_Template *);
-+extern int scsi_register_driver(struct scsi_driver *);
-+extern void scsi_unregister_driver(struct scsi_driver *);
++extern int scsi_register_interface(struct class_interface *);
++#define scsi_unregister_interface(intf) \
++	class_interface_unregister(intf)
  
  /*
   * HBA allocation/freeing.
-===== drivers/scsi/ide-scsi.c 1.23 vs edited =====
---- 1.23/drivers/scsi/ide-scsi.c	Tue Jan 28 18:01:08 2003
-+++ edited/drivers/scsi/ide-scsi.c	Fri May 16 17:34:35 2003
-@@ -770,8 +770,8 @@
+--- 1.24/drivers/scsi/ide-scsi.c	Thu May 15 04:55:52 2003
++++ edited/drivers/scsi/ide-scsi.c	Mon May 26 10:12:22 2003
+@@ -771,6 +771,10 @@
+ static inline int should_transform(ide_drive_t *drive, Scsi_Cmnd *cmd)
+ {
+ 	idescsi_scsi_t *scsi = drive_to_idescsi(drive);
++
++	/* this was a layering violation and we can't support it
++	   anymore, sorry. */
++#if 0
  	struct gendisk *disk = cmd->request->rq_disk;
  
  	if (disk) {
--		struct Scsi_Device_Template **p = disk->private_data;
--		if (strcmp((*p)->scsi_driverfs_driver.name, "sg") == 0)
-+		struct scsi_driver **p = disk->private_data;
-+		if (strcmp((*p)->gendrv.name, "sg") == 0)
+@@ -778,6 +782,7 @@
+ 		if (strcmp((*p)->scsi_driverfs_driver.name, "sg") == 0)
  			return test_bit(IDESCSI_SG_TRANSFORM, &scsi->transform);
  	}
++#endif
  	return test_bit(IDESCSI_TRANSFORM, &scsi->transform);
-===== drivers/scsi/osst.c 1.43 vs edited =====
---- 1.43/drivers/scsi/osst.c	Wed May  7 16:15:37 2003
-+++ edited/drivers/scsi/osst.c	Fri May 16 17:34:35 2003
+ }
+ 
+--- 1.44/drivers/scsi/osst.c	Tue May 13 05:52:55 2003
++++ edited/drivers/scsi/osst.c	Mon May 26 11:17:35 2003
 @@ -160,19 +160,15 @@
  static int osst_copy_to_buffer(OSST_buffer *, unsigned char *);
  static int osst_copy_from_buffer(OSST_buffer *, unsigned char *);
@@ -143,7 +157,30 @@ Cc: linux-scsi@vger.kernel.org
  	}
  };
  
-@@ -5385,8 +5381,9 @@
+@@ -5327,22 +5323,6 @@
+ 
+ #endif
+ 
+-/* Driverfs file support */
+-static ssize_t osst_device_kdev_read(struct device *driverfs_dev, char *page)
+-{
+-	kdev_t kdev; 
+-	kdev.value=(int)(long)driverfs_dev->driver_data;
+-	return sprintf(page, "%x\n",kdev.value);
+-}
+-static DEVICE_ATTR(kdev,S_IRUGO,osst_device_kdev_read,NULL);
+-
+-static ssize_t osst_device_type_read(struct device *driverfs_dev, char *page) 
+-{
+-	return sprintf (page, "CHR\n");
+-}
+-static DEVICE_ATTR(type,S_IRUGO,osst_device_type_read,NULL);
+-
+-
+ static struct file_operations osst_fops = {
+ 	.owner =        THIS_MODULE,
+ 	.read =         osst_read,
+@@ -5385,8 +5365,9 @@
   * osst startup / cleanup code
   */
  
@@ -154,7 +191,7 @@ Cc: linux-scsi@vger.kernel.org
  	OS_Scsi_Tape   * tpnt;
  	ST_mode        * STm;
  	ST_partstat    * STps;
-@@ -5395,12 +5392,12 @@
+@@ -5395,12 +5376,12 @@
  	int              i, mode, dev_num;
  
  	if (SDp->type != TYPE_TAPE || !osst_supports(SDp))
@@ -169,7 +206,53 @@ Cc: linux-scsi@vger.kernel.org
  	}
  
  	/* if this is the first attach, build the infrastructure */
-@@ -5576,16 +5573,17 @@
+@@ -5522,45 +5503,12 @@
+ 	write_unlock(&os_scsi_tapes_lock);
+ 
+ 	for (mode = 0; mode < ST_NBR_MODES; ++mode) {
+-		char name[8];
+-
+ 		/*  Rewind entry  */
+-		sprintf(name, "ot%s", osst_formats[mode]);
+-
+-		sprintf(tpnt->driverfs_dev_r[mode].bus_id, "%s:%s", 
+-				SDp->sdev_driverfs_dev.bus_id, name);
+-		sprintf(tpnt->driverfs_dev_r[mode].name, "%s%s", 
+-				SDp->sdev_driverfs_dev.name, name);
+-		tpnt->driverfs_dev_r[mode].parent = &SDp->sdev_driverfs_dev;
+-		tpnt->driverfs_dev_r[mode].bus = SDp->sdev_driverfs_dev.bus;
+-		tpnt->driverfs_dev_r[mode].driver_data =
+-			(void *)(long)__mkdev(OSST_MAJOR, dev_num + (mode << 5));
+-		device_register(&tpnt->driverfs_dev_r[mode]);
+-		device_create_file(&tpnt->driverfs_dev_r[mode], 
+-				&dev_attr_type);
+-		device_create_file(&tpnt->driverfs_dev_r[mode], &dev_attr_kdev);
+-
+ 		devfs_mk_cdev(MKDEV(OSST_MAJOR, dev_num + (mode << 5)),
+ 				S_IFCHR | S_IRUGO | S_IWUGO,
+ 				"%s/ot%s", SDp->devfs_name, osst_formats[mode]);
+ 
+ 		/*  No-rewind entry  */
+-		sprintf (name, "ot%sn", osst_formats[mode]);
+-
+-		sprintf(tpnt->driverfs_dev_n[mode].bus_id, "%s:%s", 
+-				SDp->sdev_driverfs_dev.bus_id, name);
+-		sprintf(tpnt->driverfs_dev_n[mode].name, "%s%s", 
+-				SDp->sdev_driverfs_dev.name, name);
+-		tpnt->driverfs_dev_n[mode].parent= &SDp->sdev_driverfs_dev;
+-		tpnt->driverfs_dev_n[mode].bus = SDp->sdev_driverfs_dev.bus;
+-		tpnt->driverfs_dev_n[mode].driver_data =
+-			(void *)(long)__mkdev(OSST_MAJOR, dev_num + (mode << 5) + 128);
+-		device_register(&tpnt->driverfs_dev_n[mode]);
+-		device_create_file(&tpnt->driverfs_dev_n[mode], 
+-				&dev_attr_type);
+-		device_create_file(&tpnt->driverfs_dev_n[mode], 
+-				&dev_attr_kdev);
+-
+ 		devfs_mk_cdev(MKDEV(OSST_MAJOR, dev_num + (mode << 5) + 128),
+ 				S_IFCHR | S_IRUGO | S_IWUGO,
+ 				"%s/ot%sn", SDp->devfs_name, osst_formats[mode]);
+@@ -5575,16 +5523,17 @@
  
  out_put_disk:
          put_disk(drive);
@@ -190,7 +273,25 @@ Cc: linux-scsi@vger.kernel.org
  
    write_lock(&os_scsi_tapes_lock);
    for(i=0; i < osst_max_dev; i++) {
-@@ -5618,11 +5616,11 @@
+@@ -5599,29 +5548,17 @@
+ 		os_scsi_tapes[i] = NULL;
+ 		osst_nr_dev--;
+ 		write_unlock(&os_scsi_tapes_lock);
+-		for (mode = 0; mode < ST_NBR_MODES; ++mode) {
+-			device_remove_file(&tpnt->driverfs_dev_r[mode],
+-					&dev_attr_type);
+-			device_remove_file(&tpnt->driverfs_dev_r[mode],
+-					&dev_attr_kdev);
+-			device_unregister(&tpnt->driverfs_dev_r[mode]);
+-			device_remove_file(&tpnt->driverfs_dev_n[mode],
+-					&dev_attr_type);
+-			device_remove_file(&tpnt->driverfs_dev_n[mode],
+-					&dev_attr_kdev);
+-			device_unregister(&tpnt->driverfs_dev_n[mode]);
+-			}
+ 		if (tpnt->header_cache != NULL) vfree(tpnt->header_cache);
+ 		if (tpnt->buffer) {
+ 			normalize_buffer(tpnt->buffer);
  			kfree(tpnt->buffer);
  		}
  		kfree(tpnt);
@@ -204,27 +305,26 @@ Cc: linux-scsi@vger.kernel.org
  }
  
  static int __init init_osst(void) 
-@@ -5631,7 +5629,7 @@
+@@ -5630,7 +5567,7 @@
  
  	validate_options();
  	
 -	if ((register_chrdev(OSST_MAJOR,"osst", &osst_fops) < 0) || scsi_register_device(&osst_template)) {
-+	if ((register_chrdev(OSST_MAJOR,"osst", &osst_fops) < 0) || scsi_register_driver(&osst_template)) {
++	if ((register_chrdev(OSST_MAJOR,"osst", &osst_fops) < 0) || scsi_register_driver(&osst_template.gendrv)) {
  		printk(KERN_ERR "osst :E: Unable to register major %d for OnStream tapes\n", OSST_MAJOR);
  		return 1;
  	}
-@@ -5644,7 +5642,7 @@
+@@ -5643,7 +5580,7 @@
  	int i;
  	OS_Scsi_Tape * STp;
  
 -	scsi_unregister_device(&osst_template);
-+	scsi_unregister_driver(&osst_template);
++	scsi_unregister_driver(&osst_template.gendrv);
  	unregister_chrdev(OSST_MAJOR, "osst");
  
  	if (os_scsi_tapes) {
-===== drivers/scsi/osst.h 1.9 vs edited =====
 --- 1.9/drivers/scsi/osst.h	Fri Apr 18 17:57:20 2003
-+++ edited/drivers/scsi/osst.h	Fri May 16 17:34:35 2003
++++ edited/drivers/scsi/osst.h	Mon May 26 11:17:39 2003
 @@ -530,7 +530,7 @@
  
  /* The OnStream tape drive descriptor */
@@ -234,9 +334,17 @@ Cc: linux-scsi@vger.kernel.org
    unsigned capacity;
    Scsi_Device* device;
    struct semaphore lock;       /* for serialization */
-===== drivers/scsi/scsi.c 1.112 vs edited =====
+@@ -555,8 +555,6 @@
+   /* Mode characteristics */
+   ST_mode modes[ST_NBR_MODES];
+   int current_mode;
+-  struct device driverfs_dev_r[ST_NBR_MODES];
+-  struct device driverfs_dev_n[ST_NBR_MODES];
+ 
+   /* Status variables */
+   int partition;
 --- 1.112/drivers/scsi/scsi.c	Thu May  8 20:31:08 2003
-+++ edited/drivers/scsi/scsi.c	Fri May 16 17:34:35 2003
++++ edited/drivers/scsi/scsi.c	Mon May 26 09:50:43 2003
 @@ -86,12 +86,6 @@
  static unsigned long serial_number;
  
@@ -373,9 +481,18 @@ Cc: linux-scsi@vger.kernel.org
  }
  
  MODULE_DESCRIPTION("SCSI core");
-===== drivers/scsi/scsi_lib.c 1.90 vs edited =====
---- 1.90/drivers/scsi/scsi_lib.c	Thu May  8 21:14:09 2003
-+++ edited/drivers/scsi/scsi_lib.c	Fri May 16 17:34:35 2003
+--- 1.82/drivers/scsi/scsi.h	Mon May 26 23:53:23 2003
++++ edited/drivers/scsi/scsi.h	Mon May 26 09:50:43 2003
+@@ -316,6 +316,7 @@
+  */
+ 
+ struct scsi_device {
++	struct class_device	sdev_classdev;
+ 	/*
+ 	 * This information is private to the scsi mid-layer.
+ 	 */
+--- 1.91/drivers/scsi/scsi_lib.c	Fri May 23 12:02:30 2003
++++ edited/drivers/scsi/scsi_lib.c	Mon May 26 09:50:43 2003
 @@ -613,29 +613,6 @@
  }
  
@@ -406,7 +523,7 @@ Cc: linux-scsi@vger.kernel.org
   * Function:    scsi_io_completion()
   *
   * Purpose:     Completion processing for block device I/O requests.
-@@ -847,11 +824,7 @@
+@@ -849,11 +826,7 @@
  		return;
  	}
  	if (result) {
@@ -419,7 +536,7 @@ Cc: linux-scsi@vger.kernel.org
  		       cmd->device->host->host_no,
  		       cmd->device->channel,
  		       cmd->device->id,
-@@ -945,7 +918,6 @@
+@@ -947,7 +920,6 @@
  
  static int scsi_prep_fn(struct request_queue *q, struct request *req)
  {
@@ -427,7 +544,7 @@ Cc: linux-scsi@vger.kernel.org
  	struct scsi_device *sdev = q->queuedata;
  	struct scsi_cmnd *cmd;
  
-@@ -1001,6 +973,7 @@
+@@ -1003,6 +975,7 @@
  	 * happening now.
  	 */
  	if (req->flags & (REQ_CMD | REQ_BLOCK_PC)) {
@@ -435,7 +552,7 @@ Cc: linux-scsi@vger.kernel.org
  		int ret;
  
  		/*
-@@ -1015,8 +988,6 @@
+@@ -1017,8 +990,6 @@
  		 * some kinds of consistency checking may cause the	
  		 * request to be rejected immediately.
  		 */
@@ -444,7 +561,7 @@ Cc: linux-scsi@vger.kernel.org
  
  		/* 
  		 * This sets up the scatter-gather table (allocating if
-@@ -1029,7 +1000,8 @@
+@@ -1031,7 +1002,8 @@
  		/*
  		 * Initialize the actual SCSI command for this request.
  		 */
@@ -454,9 +571,8 @@ Cc: linux-scsi@vger.kernel.org
  			scsi_release_buffers(cmd);
  			scsi_put_command(cmd);
  			return BLKPREP_KILL;
-===== drivers/scsi/scsi_priv.h 1.6 vs edited =====
---- 1.6/drivers/scsi/scsi_priv.h	Mon May 12 00:12:54 2003
-+++ edited/drivers/scsi/scsi_priv.h	Fri May 16 17:34:35 2003
+--- 1.8/drivers/scsi/scsi_priv.h	Fri May 23 14:35:11 2003
++++ edited/drivers/scsi/scsi_priv.h	Mon May 26 09:50:43 2003
 @@ -41,9 +41,6 @@
  #define SCSI_SENSE_VALID(scmd) \
  	(((scmd)->sense_buffer[0] & 0x70) == 0x70)
@@ -467,7 +583,7 @@ Cc: linux-scsi@vger.kernel.org
  /*
   * scsi_target: representation of a scsi target, for now, this is only
   * used for single_lun devices. If no one has active IO to the target,
-@@ -68,9 +65,6 @@
+@@ -70,9 +67,6 @@
  extern void scsi_done(struct scsi_cmnd *cmd);
  extern void scsi_finish_command(struct scsi_cmnd *cmd);
  extern int scsi_retry_command(struct scsi_cmnd *cmd);
@@ -477,7 +593,7 @@ Cc: linux-scsi@vger.kernel.org
  extern int scsi_insert_special_req(struct scsi_request *sreq, int);
  extern void scsi_init_cmd_from_req(struct scsi_cmnd *cmd,
  		struct scsi_request *sreq);
-@@ -117,12 +111,11 @@
+@@ -119,12 +113,11 @@
  extern void scsi_free_sdev(struct scsi_device *);
  extern void scsi_free_shost(struct Scsi_Host *);
  extern void scsi_host_get(struct Scsi_Host *);
@@ -491,10 +607,9 @@ Cc: linux-scsi@vger.kernel.org
  extern void scsi_sysfs_init_host(struct Scsi_Host *);
  extern int scsi_sysfs_add_host(struct Scsi_Host *, struct device *);
  extern void scsi_sysfs_remove_host(struct Scsi_Host *);
-===== drivers/scsi/scsi_scan.c 1.85 vs edited =====
---- 1.85/drivers/scsi/scsi_scan.c	Thu May  8 20:24:15 2003
-+++ edited/drivers/scsi/scsi_scan.c	Fri May 16 17:34:36 2003
-@@ -1091,22 +1091,29 @@
+--- 1.86/drivers/scsi/scsi_scan.c	Fri May 23 13:01:50 2003
++++ edited/drivers/scsi/scsi_scan.c	Mon May 26 09:50:43 2003
+@@ -1098,22 +1098,29 @@
  				    uint channel, uint id, uint lun)
  {
  	struct scsi_device *sdev;
@@ -531,9 +646,8 @@ Cc: linux-scsi@vger.kernel.org
  }
  
  /**
-===== drivers/scsi/scsi_syms.c 1.36 vs edited =====
---- 1.36/drivers/scsi/scsi_syms.c	Thu May  8 20:24:15 2003
-+++ edited/drivers/scsi/scsi_syms.c	Fri May 16 17:34:36 2003
+--- 1.37/drivers/scsi/scsi_syms.c	Mon May 12 16:26:15 2003
++++ edited/drivers/scsi/scsi_syms.c	Mon May 26 10:03:34 2003
 @@ -29,8 +29,8 @@
   * This source file contains the symbol table used by scsi loadable
   * modules.
@@ -541,14 +655,13 @@ Cc: linux-scsi@vger.kernel.org
 -EXPORT_SYMBOL(scsi_register_device);
 -EXPORT_SYMBOL(scsi_unregister_device);
 +EXPORT_SYMBOL(scsi_register_driver);
-+EXPORT_SYMBOL(scsi_unregister_driver);
++EXPORT_SYMBOL(scsi_register_interface);
  EXPORT_SYMBOL(scsi_register_host);
  EXPORT_SYMBOL(scsi_unregister_host);
  EXPORT_SYMBOL(scsi_add_host);
-===== drivers/scsi/scsi_sysfs.c 1.16 vs edited =====
---- 1.16/drivers/scsi/scsi_sysfs.c	Mon May 12 00:12:40 2003
-+++ edited/drivers/scsi/scsi_sysfs.c	Fri May 16 17:34:36 2003
-@@ -57,32 +57,12 @@
+--- 1.18/drivers/scsi/scsi_sysfs.c	Mon May 26 23:47:09 2003
++++ edited/drivers/scsi/scsi_sysfs.c	Mon May 26 11:36:00 2003
+@@ -58,32 +58,16 @@
  	.name		= "scsi_host",
  };
  
@@ -561,6 +674,10 @@ Cc: linux-scsi@vger.kernel.org
 - **/
 -static int scsi_bus_match(struct device *dev, 
 -                          struct device_driver *dev_driver)
++static struct class sdev_class = {
++	.name		= "scsi_device",
++};
++
 +/* all probing is done in the individual ->probe routines */
 +static int scsi_bus_match(struct device *dev, struct device_driver *gendrv)
  {
@@ -584,7 +701,28 @@ Cc: linux-scsi@vger.kernel.org
  static struct bus_type scsi_bus_type = {
          .name		= "scsi",
          .match		= scsi_bus_match,
-@@ -109,34 +89,6 @@
+@@ -99,45 +83,26 @@
+ 		return error;
+ 	error = class_register(&shost_class);
+ 	if (error)
+-		return error;
++		goto bus_unregister;
++	error = class_register(&sdev_class);
++	if (error)
++		goto class_unregister;
++	return 0;
+ 
++ class_unregister:
++	class_unregister(&shost_class);
++ bus_unregister:
++	bus_unregister(&scsi_bus_type);
+ 	return error;
+ }
+ 
+ void scsi_sysfs_unregister(void)
+ {
++	class_unregister(&sdev_class);
+ 	class_unregister(&shost_class);
  	bus_unregister(&scsi_bus_type);
  }
  
@@ -619,7 +757,7 @@ Cc: linux-scsi@vger.kernel.org
  /*
   * sdev_show_function: macro to create an attr function that can be used to
   * show a non-bit field.
-@@ -237,7 +189,7 @@
+@@ -238,7 +203,7 @@
  static ssize_t
  store_rescan_field (struct device *dev, const char *buf, size_t count) 
  {
@@ -628,26 +766,65 @@ Cc: linux-scsi@vger.kernel.org
  	return 0;
  }
  
-@@ -310,6 +262,18 @@
+@@ -280,15 +245,30 @@
+ {
+ 	int error = 0, i;
+ 
++	device_initialize(&sdev->sdev_driverfs_dev);
+ 	sprintf(sdev->sdev_driverfs_dev.bus_id,"%d:%d:%d:%d",
+ 		sdev->host->host_no, sdev->channel, sdev->id, sdev->lun);
+ 	sdev->sdev_driverfs_dev.parent = &sdev->host->host_gendev;
+ 	sdev->sdev_driverfs_dev.bus = &scsi_bus_type;
+ 	sdev->sdev_driverfs_dev.release = scsi_device_release;
+ 
+-	error = device_register(&sdev->sdev_driverfs_dev);
+-	if (error)
++	class_device_initialize(&sdev->sdev_classdev);
++	sdev->sdev_classdev.dev = &sdev->sdev_driverfs_dev;
++	sdev->sdev_classdev.class = &sdev_class;
++	snprintf(sdev->sdev_classdev.class_id, BUS_ID_SIZE, "%d:%d:%d:%d",
++		sdev->host->host_no, sdev->channel, sdev->id, sdev->lun);
++
++	error = device_add(&sdev->sdev_driverfs_dev);
++	if (error) {
++		printk(KERN_INFO "error 1\n");
+ 		return error;
++	}
++	error = class_device_add(&sdev->sdev_classdev);
++	if (error) {
++		printk(KERN_INFO "error 2\n");
++		device_unregister(&sdev->sdev_driverfs_dev);
++		return error;
++	}
+ 
+ 	for (i = 0; !error && sdev->host->hostt->sdev_attrs[i] != NULL; i++)
+ 		error = device_create_file(&sdev->sdev_driverfs_dev,
+@@ -310,9 +290,24 @@
+ 
+ 	for (i = 0; sdev->host->hostt->sdev_attrs[i] != NULL; i++)
+ 		device_remove_file(&sdev->sdev_driverfs_dev, sdev->host->hostt->sdev_attrs[i]);
++	class_device_unregister(&sdev->sdev_classdev);
  	device_unregister(&sdev->sdev_driverfs_dev);
  }
  
-+int scsi_register_driver(struct scsi_driver *drv)
++int scsi_register_driver(struct device_driver *drv)
 +{
-+	drv->gendrv.bus = &scsi_bus_type;
++	drv->bus = &scsi_bus_type;
 +
-+	return driver_register(&drv->gendrv);
++	return driver_register(drv);
 +}
 +
-+void scsi_unregister_driver(struct scsi_driver *drv)
++int scsi_register_interface(struct class_interface *intf)
 +{
-+	driver_unregister(&drv->gendrv);
++	intf->class = &sdev_class;
++
++	return class_interface_register(intf);
 +}
 +
  static void scsi_host_release(struct device *dev)
  {
  	struct Scsi_Host *shost;
-@@ -347,7 +311,7 @@
+@@ -350,7 +345,7 @@
  	int i, error;
  
  	if (!shost->host_gendev.parent)
@@ -656,9 +833,8 @@ Cc: linux-scsi@vger.kernel.org
  
  	error = device_add(&shost->host_gendev);
  	if (error)
-===== drivers/scsi/sd.c 1.112 vs edited =====
---- 1.112/drivers/scsi/sd.c	Thu May  8 12:16:20 2003
-+++ edited/drivers/scsi/sd.c	Fri May 16 17:34:40 2003
+--- 1.116/drivers/scsi/sd.c	Fri May 23 13:01:50 2003
++++ edited/drivers/scsi/sd.c	Mon May 26 11:28:14 2003
 @@ -73,8 +73,7 @@
  #define SD_MAX_RETRIES		5
  
@@ -757,7 +933,7 @@ Cc: linux-scsi@vger.kernel.org
  static inline struct scsi_disk *scsi_disk(struct gendisk *disk)
  {
  	return container_of(disk->private_data, struct scsi_disk, driver);
-@@ -635,12 +598,13 @@
+@@ -636,12 +599,13 @@
  	return 1;
  }
  
@@ -774,7 +950,7 @@ Cc: linux-scsi@vger.kernel.org
  
  	if (!sdkp || sdp->online == FALSE || !sdkp->media_present)
  		return;
-@@ -1288,10 +1252,10 @@
+@@ -1312,10 +1276,10 @@
  }
  
  /**
@@ -787,7 +963,7 @@ Cc: linux-scsi@vger.kernel.org
   *
   *	Returns 0 if successful (or not interested in this scsi device 
   *	(e.g. scanner)); 1 when there is an error.
-@@ -1303,17 +1267,19 @@
+@@ -1327,17 +1291,19 @@
   *	and minor number that is chosen here.
   *
   *	Assume sd_attach is not re-entrant (for time being)
@@ -810,7 +986,7 @@ Cc: linux-scsi@vger.kernel.org
  
  	SCSI_LOG_HLQUEUE(3, printk("sd_attach: scsi device: <%d,%d,%d,%d>\n", 
  			 sdp->host->host_no, sdp->channel, sdp->id, sdp->lun));
-@@ -1365,8 +1331,8 @@
+@@ -1389,8 +1355,8 @@
  	gd->private_data = &sdkp->driver;
  	gd->queue = sdkp->device->request_queue;
  
@@ -820,7 +996,7 @@ Cc: linux-scsi@vger.kernel.org
  	add_disk(gd);
  
  	printk(KERN_NOTICE "Attached scsi %sdisk %s at scsi%d, channel %d, "
-@@ -1385,44 +1351,42 @@
+@@ -1409,44 +1375,42 @@
  }
  
  /**
@@ -884,7 +1060,7 @@ Cc: linux-scsi@vger.kernel.org
  }
  
  /**
-@@ -1433,7 +1397,7 @@
+@@ -1457,7 +1421,7 @@
   **/
  static int __init init_sd(void)
  {
@@ -893,7 +1069,7 @@ Cc: linux-scsi@vger.kernel.org
  
  	SCSI_LOG_HLQUEUE(3, printk("init_sd: sd driver entry point\n"));
  
-@@ -1444,11 +1408,7 @@
+@@ -1468,11 +1432,7 @@
  	if (!majors)
  		return -ENODEV;
  
@@ -902,17 +1078,17 @@ Cc: linux-scsi@vger.kernel.org
 -		return rc;
 -	register_reboot_notifier(&sd_notifier_block);
 -	return rc;
-+	return scsi_register_driver(&sd_template);
++	return scsi_register_driver(&sd_template.gendrv);
  }
  
  /**
-@@ -1462,35 +1422,9 @@
+@@ -1486,35 +1446,9 @@
  
  	SCSI_LOG_HLQUEUE(3, printk("exit_sd: exiting sd driver\n"));
  
 -	unregister_reboot_notifier(&sd_notifier_block);
 -	scsi_unregister_device(&sd_template);
-+	scsi_unregister_driver(&sd_template);
++	scsi_unregister_driver(&sd_template.gendrv);
  	for (i = 0; i < SD_MAJORS; i++)
  		unregister_blkdev(sd_major(i), "sd");
 -}
@@ -943,17 +1119,16 @@ Cc: linux-scsi@vger.kernel.org
  }
  
  /* send a SYNCHRONIZE CACHE instruction down to the device through the
-===== drivers/scsi/sg.c 1.54 vs edited =====
---- 1.54/drivers/scsi/sg.c	Wed May  7 16:15:40 2003
-+++ edited/drivers/scsi/sg.c	Fri May 16 17:34:40 2003
-@@ -112,23 +112,20 @@
+--- 1.55/drivers/scsi/sg.c	Tue May 13 05:52:57 2003
++++ edited/drivers/scsi/sg.c	Mon May 26 11:38:00 2003
+@@ -112,24 +112,17 @@
  
  #define SG_DEV_ARR_LUMP 6	/* amount to over allocate sg_dev_arr by */
  
 -static int sg_attach(Scsi_Device *);
 -static void sg_detach(Scsi_Device *);
-+static int sg_probe(struct device *);
-+static int sg_remove(struct device *);
++static int sg_add(struct class_device *);
++static void sg_remove(struct class_device *);
  
  static Scsi_Request *dummy_cmdp;	/* only used for sizeof */
  
@@ -969,22 +1144,19 @@ Cc: linux-scsi@vger.kernel.org
 -	.detach = sg_detach,
 -	.scsi_driverfs_driver = {
 -		.name = "sg",
-+static struct scsi_driver sg_template = {
-+	.owner		= THIS_MODULE,
-+	.gendrv = {
-+		.name	= "sg",
-+		.probe	= sg_probe,
-+		.remove	= sg_remove,
- 	},
+-	},
++static struct class_interface sg_interface = {
++	.add		= sg_add,
++	.remove		= sg_remove,
  };
  
-@@ -180,15 +177,14 @@
+ typedef struct sg_scatter_hold { /* holding area for scsi scatter gather info */
+@@ -180,15 +173,13 @@
  } Sg_fd;
  
  typedef struct sg_device { /* holds the state of each scsi generic device */
 -	struct Scsi_Device_Template *driver;
 -	Scsi_Device *device;
-+	struct scsi_driver *driver;
 +	struct scsi_device *device;
  	wait_queue_head_t o_excl_wait;	/* queue open() when O_EXCL in use */
  	int sg_tablesize;	/* adapter's max scatter-gather table size */
@@ -996,27 +1168,46 @@ Cc: linux-scsi@vger.kernel.org
  	struct gendisk *disk;
  } Sg_device;
  
-@@ -1332,7 +1328,7 @@
- static ssize_t
- sg_device_kdev_read(struct device *driverfs_dev, char *page)
- {
--	Sg_device *sdp = list_entry(driverfs_dev, Sg_device, sg_driverfs_dev);
-+	Sg_device *sdp = dev_get_drvdata(driverfs_dev);
- 	return sprintf(page, "%x\n", MKDEV(sdp->disk->major,
- 					   sdp->disk->first_minor));
- }
-@@ -1347,8 +1343,9 @@
- static DEVICE_ATTR(type,S_IRUGO,sg_device_type_read,NULL);
+@@ -1328,27 +1319,10 @@
+ 	.fasync = sg_fasync,
+ };
  
+-/* Driverfs file support */
+-static ssize_t
+-sg_device_kdev_read(struct device *driverfs_dev, char *page)
+-{
+-	Sg_device *sdp = list_entry(driverfs_dev, Sg_device, sg_driverfs_dev);
+-	return sprintf(page, "%x\n", MKDEV(sdp->disk->major,
+-					   sdp->disk->first_minor));
+-}
+-static DEVICE_ATTR(kdev,S_IRUGO,sg_device_kdev_read,NULL);
+-
+-static ssize_t
+-sg_device_type_read(struct device *driverfs_dev, char *page)
+-{
+-	return sprintf(page, "CHR\n");
+-}
+-
+-static DEVICE_ATTR(type,S_IRUGO,sg_device_type_read,NULL);
+-
  static int
 -sg_attach(Scsi_Device * scsidp)
-+sg_probe(struct device *dev)
++sg_add(struct class_device *cdev)
  {
-+	struct scsi_device *scsidp = to_scsi_device(dev);
++	struct scsi_device *scsidp = to_scsi_device(cdev->dev);
  	struct gendisk *disk;
  	Sg_device *sdp = NULL;
  	unsigned long iflags;
-@@ -1431,21 +1428,12 @@
+@@ -1416,8 +1390,6 @@
+ 
+ 	SCSI_LOG_TIMEOUT(3, printk("sg_attach: dev=%d \n", k));
+ 	memset(sdp, 0, sizeof(*sdp));
+-	sdp->driver = &sg_template;
+-	disk->private_data = &sdp->driver;
+ 	sprintf(disk->disk_name, "sg%d", k);
+ 	disk->major = SCSI_GENERIC_MAJOR;
+ 	disk->first_minor = k;
+@@ -1430,40 +1402,20 @@
  	sdp->detached = 0;
  	sdp->sg_tablesize = scsidp->host ? scsidp->host->sg_tablesize : 0;
  
@@ -1035,14 +1226,10 @@ Cc: linux-scsi@vger.kernel.org
 -	device_register(&sdp->sg_driverfs_dev);
 -	device_create_file(&sdp->sg_driverfs_dev, &dev_attr_type);
 -	device_create_file(&sdp->sg_driverfs_dev, &dev_attr_kdev);
-+	device_create_file(&scsidp->sdev_driverfs_dev, &dev_attr_type);
-+	device_create_file(&scsidp->sdev_driverfs_dev, &dev_attr_kdev);
- 
- 	sprintf(devfs_name, "%s/generic", scsidp->devfs_name);
- 	devfs_register(NULL, devfs_name, 0,
-@@ -1453,20 +1441,13 @@
+-
+ 	devfs_mk_cdev(MKDEV(SCSI_GENERIC_MAJOR, k),
  			S_IFCHR | S_IRUSR | S_IWUSR | S_IRGRP,
- 			&sg_fops, sdp);
+ 			"%s/generic", scsidp->devfs_name);
  
 -	switch (scsidp->type) {
 -	case TYPE_DISK:
@@ -1064,92 +1251,124 @@ Cc: linux-scsi@vger.kernel.org
 +	       scsidp->host->host_no, scsidp->channel, scsidp->id,
 +	       scsidp->lun, scsidp->type);
 +
-+	dev_set_drvdata(dev, sdp);
  	return 0;
  
  out:
-@@ -1474,9 +1455,10 @@
- 	return error;
+@@ -1472,8 +1424,9 @@
  }
  
--static void
+ static void
 -sg_detach(Scsi_Device * scsidp)
-+static int
-+sg_remove(struct device *dev)
++sg_remove(struct class_device *cdev)
  {
-+	struct scsi_device *scsidp = to_scsi_device(dev);
++	struct scsi_device *scsidp = to_scsi_device(cdev->dev);
  	Sg_device *sdp = NULL;
  	unsigned long iflags;
  	Sg_fd *sfp;
-@@ -1486,7 +1468,7 @@
- 	int k, delay;
- 
- 	if (NULL == sg_dev_arr)
--		return;
-+		return 0;
- 	delay = 0;
- 	write_lock_irqsave(&sg_dev_arr_lock, iflags);
- 	for (k = 0; k < sg_dev_max; k++) {
-@@ -1527,9 +1509,8 @@
+@@ -1524,9 +1477,6 @@
  
  	if (sdp) {
  		devfs_remove("%s/generic", scsidp->devfs_name);
 -		device_remove_file(&sdp->sg_driverfs_dev, &dev_attr_type);
 -		device_remove_file(&sdp->sg_driverfs_dev, &dev_attr_kdev);
 -		device_unregister(&sdp->sg_driverfs_dev);
-+		device_remove_file(&scsidp->sdev_driverfs_dev, &dev_attr_type);
-+		device_remove_file(&scsidp->sdev_driverfs_dev, &dev_attr_kdev);
  		put_disk(sdp->disk);
  		sdp->disk = NULL;
  		if (NULL == sdp->headfp)
-@@ -1538,6 +1519,8 @@
+@@ -1550,64 +1500,6 @@
  
- 	if (delay)
- 		scsi_sleep(2);	/* dirty detach so delay device destruction */
-+
-+	return 0;
- }
+ MODULE_PARM_DESC(def_reserved_size, "size of buffer reserved for each fd");
  
- /* Set 'perm' (4th argument) to 0 to disable module_param's definition
-@@ -1595,7 +1578,7 @@
- 
- static void do_create_driverfs_files(void)
- {
+-static ssize_t sg_allow_dio_show(struct device_driver * ddp, char * buf)
+-{
+-	return snprintf(buf, PAGE_SIZE, "%d\n", sg_allow_dio);
+-}
+-static ssize_t sg_allow_dio_store(struct device_driver * ddp,
+-				  const char * buf, size_t count)
+-{
+-	if (1 == sscanf(buf, "%d", &sg_allow_dio)) {
+-		sg_allow_dio = sg_allow_dio ? 1 : 0;
+-		return count;
+-	}
+-	return -EINVAL;
+-}
+-DRIVER_ATTR(allow_dio, S_IRUGO | S_IWUSR, sg_allow_dio_show, 
+-	    sg_allow_dio_store)
+-
+-static ssize_t sg_def_reserved_show(struct device_driver * ddp, char * buf)
+-{
+-	return snprintf(buf, PAGE_SIZE, "%d\n", sg_big_buff);
+-}
+-static ssize_t sg_def_reserved_store(struct device_driver * ddp,
+-				     const char * buf, size_t count)
+-{
+-	if (1 == sscanf(buf, "%d", &def_reserved_size)) {
+-		if (def_reserved_size >= 0) {
+-			sg_big_buff = def_reserved_size;
+-			return count;
+-		}
+-	}
+-	return -EINVAL;
+-}
+-DRIVER_ATTR(def_reserved_size, S_IRUGO | S_IWUSR, sg_def_reserved_show, 
+-	    sg_def_reserved_store)
+-
+-static ssize_t sg_version_show(struct device_driver * ddp, char * buf)
+-{
+-	return snprintf(buf, PAGE_SIZE, "%s\n", sg_version_str);
+-}
+-DRIVER_ATTR(version, S_IRUGO, sg_version_show, NULL)
+-
+-static void do_create_driverfs_files(void)
+-{
 -	struct device_driver * driverfs = &sg_template.scsi_driverfs_driver;
-+	struct device_driver * driverfs = &sg_template.gendrv;
- 
- 	driver_create_file(driverfs, &driver_attr_allow_dio);
- 	driver_create_file(driverfs, &driver_attr_def_reserved_size);
-@@ -1604,7 +1587,7 @@
- 
- static void do_remove_driverfs_files(void)
- {
+-
+-	driver_create_file(driverfs, &driver_attr_allow_dio);
+-	driver_create_file(driverfs, &driver_attr_def_reserved_size);
+-	driver_create_file(driverfs, &driver_attr_version);
+-}
+-
+-static void do_remove_driverfs_files(void)
+-{
 -	struct device_driver * driverfs = &sg_template.scsi_driverfs_driver;
-+	struct device_driver * driverfs = &sg_template.gendrv;
- 
- 	driver_remove_file(driverfs, &driver_attr_version);
- 	driver_remove_file(driverfs, &driver_attr_def_reserved_size);
-@@ -1622,7 +1605,7 @@
+-
+-	driver_remove_file(driverfs, &driver_attr_version);
+-	driver_remove_file(driverfs, &driver_attr_def_reserved_size);
+-	driver_remove_file(driverfs, &driver_attr_allow_dio);
+-}
+-
+ static int __init
+ init_sg(void)
+ {
+@@ -1619,24 +1511,22 @@
  	rc = register_chrdev(SCSI_GENERIC_MAJOR, "sg", &sg_fops);
  	if (rc)
  		return rc;
 -	rc = scsi_register_device(&sg_template);
-+	rc = scsi_register_driver(&sg_template);
++	rc = scsi_register_interface(&sg_interface);
  	if (rc)
  		return rc;
  #ifdef CONFIG_PROC_FS
-@@ -1639,7 +1622,7 @@
+ 	sg_proc_init();
+ #endif				/* CONFIG_PROC_FS */
+-	do_create_driverfs_files();
+ 	return 0;
+ }
+ 
+ static void __exit
+ exit_sg(void)
+ {
+-	do_remove_driverfs_files();
  #ifdef CONFIG_PROC_FS
  	sg_proc_cleanup();
  #endif				/* CONFIG_PROC_FS */
 -	scsi_unregister_device(&sg_template);
-+	scsi_unregister_driver(&sg_template);
++	scsi_unregister_interface(&sg_interface);
  	unregister_chrdev(SCSI_GENERIC_MAJOR, "sg");
  	if (sg_dev_arr != NULL) {
  		vfree((char *) sg_dev_arr);
-===== drivers/scsi/sr.c 1.78 vs edited =====
---- 1.78/drivers/scsi/sr.c	Wed May  7 16:15:41 2003
-+++ edited/drivers/scsi/sr.c	Fri May 16 17:34:40 2003
+--- 1.79/drivers/scsi/sr.c	Fri May 23 12:02:30 2003
++++ edited/drivers/scsi/sr.c	Mon May 26 11:24:25 2003
 @@ -67,26 +67,20 @@
  	 CDC_PLAY_AUDIO|CDC_RESET|CDC_IOCTLS|CDC_DRIVE_STATUS| \
  	 CDC_CD_R|CDC_CD_RW|CDC_DVD|CDC_DVD_R|CDC_GENERIC_PACKET)
@@ -1243,7 +1462,7 @@ Cc: linux-scsi@vger.kernel.org
  
  	error = -ENOMEM;
  	cd = kmalloc(sizeof(*cd), GFP_KERNEL);
-@@ -574,8 +539,8 @@
+@@ -575,8 +540,8 @@
  	disk->private_data = &cd->driver;
  	disk->queue = sdev->request_queue;
  
@@ -1253,7 +1472,7 @@ Cc: linux-scsi@vger.kernel.org
  
  	printk(KERN_DEBUG
  	    "Attached scsi CD-ROM %s at scsi%d, channel %d, id %d, lun %d\n",
-@@ -806,15 +771,10 @@
+@@ -807,15 +772,10 @@
  	return cgc->stat;
  }
  
@@ -1271,7 +1490,7 @@ Cc: linux-scsi@vger.kernel.org
  	del_gendisk(cd->disk);
  
  	spin_lock(&sr_index_lock);
-@@ -824,6 +784,8 @@
+@@ -825,6 +785,8 @@
  	put_disk(cd->disk);
  	unregister_cdrom(&cd->cdi);
  	kfree(cd);
@@ -1280,24 +1499,23 @@ Cc: linux-scsi@vger.kernel.org
  }
  
  static int __init init_sr(void)
-@@ -833,12 +795,12 @@
+@@ -834,12 +796,12 @@
  	rc = register_blkdev(SCSI_CDROM_MAJOR, "sr");
  	if (rc)
  		return rc;
 -	return scsi_register_device(&sr_template);
-+	return scsi_register_driver(&sr_template);
++	return scsi_register_driver(&sr_template.gendrv);
  }
  
  static void __exit exit_sr(void)
  {
 -	scsi_unregister_device(&sr_template);
-+	scsi_unregister_driver(&sr_template);
++	scsi_unregister_driver(&sr_template.gendrv);
  	unregister_blkdev(SCSI_CDROM_MAJOR, "sr");
  }
  
-===== drivers/scsi/sr.h 1.9 vs edited =====
 --- 1.9/drivers/scsi/sr.h	Sun Nov  3 14:46:32 2002
-+++ edited/drivers/scsi/sr.h	Fri May 16 17:34:40 2003
++++ edited/drivers/scsi/sr.h	Mon May 26 09:50:43 2003
 @@ -25,8 +25,7 @@
  #define IOCTL_TIMEOUT 30*HZ
  
@@ -1308,9 +1526,8 @@ Cc: linux-scsi@vger.kernel.org
  	unsigned capacity;	/* size in blocks                       */
  	Scsi_Device *device;
  	unsigned int vendor;	/* vendor code, see sr_vendor.c         */
-===== drivers/scsi/st.c 1.61 vs edited =====
---- 1.61/drivers/scsi/st.c	Wed May  7 16:15:41 2003
-+++ edited/drivers/scsi/st.c	Fri May 16 17:35:26 2003
+--- 1.62/drivers/scsi/st.c	Tue May 13 05:52:58 2003
++++ edited/drivers/scsi/st.c	Mon May 26 11:18:14 2003
 @@ -170,22 +170,19 @@
  			      unsigned long, size_t, int);
  static int sgl_unmap_user_pages(struct scatterlist *, const unsigned int, int);
@@ -1369,7 +1586,51 @@ Cc: linux-scsi@vger.kernel.org
  	}
  
  	i = SDp->host->sg_tablesize;
-@@ -3921,11 +3919,12 @@
+@@ -3862,43 +3860,11 @@
+ 	write_unlock(&st_dev_arr_lock);
+ 
+ 	for (mode = 0; mode < ST_NBR_MODES; ++mode) {
+-	    char name[8];
+-
+ 	    /*  Rewind entry  */
+-	    sprintf(name, "mt%s", st_formats[mode]);
+-	    
+-	    sprintf(tpnt->driverfs_dev_r[mode].bus_id, "%s:%s", 
+-		    SDp->sdev_driverfs_dev.bus_id, name);
+-	    sprintf(tpnt->driverfs_dev_r[mode].name, "%s%s", 
+-		    SDp->sdev_driverfs_dev.name, name);
+-	    tpnt->driverfs_dev_r[mode].parent = &SDp->sdev_driverfs_dev;
+-	    tpnt->driverfs_dev_r[mode].bus = SDp->sdev_driverfs_dev.bus;
+-	    tpnt->driverfs_dev_r[mode].driver_data =
+-			(void *)(long)__mkdev(SCSI_TAPE_MAJOR, dev_num + (mode << 5));
+-	    device_register(&tpnt->driverfs_dev_r[mode]);
+-	    device_create_file(&tpnt->driverfs_dev_r[mode], 
+-			       &dev_attr_type);
+-	    device_create_file(&tpnt->driverfs_dev_r[mode], &dev_attr_kdev);
+ 	    devfs_mk_cdev(MKDEV(SCSI_TAPE_MAJOR, dev_num + (mode << 5)),
+ 				S_IFCHR | S_IRUGO | S_IWUGO,
+ 				"%s/mt%s", SDp->devfs_name, st_formats[mode]);
+-
+ 	    /*  No-rewind entry  */
+-	    sprintf (name, "mt%sn", st_formats[mode]);
+-
+-	    sprintf(tpnt->driverfs_dev_n[mode].bus_id, "%s:%s", 
+-		    SDp->sdev_driverfs_dev.bus_id, name);
+-	    sprintf(tpnt->driverfs_dev_n[mode].name, "%s%s", 
+-		    SDp->sdev_driverfs_dev.name, name);
+-	    tpnt->driverfs_dev_n[mode].parent= &SDp->sdev_driverfs_dev;
+-	    tpnt->driverfs_dev_n[mode].bus = SDp->sdev_driverfs_dev.bus;
+-	    tpnt->driverfs_dev_n[mode].driver_data =
+-			(void *)(long)__mkdev(SCSI_TAPE_MAJOR, dev_num + (mode << 5) + 128);
+-	    device_register(&tpnt->driverfs_dev_n[mode]);
+-	    device_create_file(&tpnt->driverfs_dev_n[mode], 
+-			       &dev_attr_type);
+-	    device_create_file(&tpnt->driverfs_dev_n[mode], 
+-			       &dev_attr_kdev);
+ 	    devfs_mk_cdev(MKDEV(SCSI_TAPE_MAJOR, dev_num + (mode << 5) + 128),
+ 				S_IFCHR | S_IRUGO | S_IWUGO,
+ 				"%s/mt%sn", SDp->devfs_name, st_formats[mode]);
+@@ -3918,11 +3884,12 @@
  out_buffer_free:
  	kfree(buffer);
  out:
@@ -1384,7 +1645,24 @@ Cc: linux-scsi@vger.kernel.org
  	Scsi_Tape *tpnt;
  	int i, mode;
  
-@@ -3960,12 +3959,12 @@
+@@ -3937,16 +3904,6 @@
+ 			for (mode = 0; mode < ST_NBR_MODES; ++mode) {
+ 				devfs_remove("%s/mt%s", SDp->devfs_name, st_formats[mode]);
+ 				devfs_remove("%s/mt%sn", SDp->devfs_name, st_formats[mode]);
+-				device_remove_file(&tpnt->driverfs_dev_r[mode],
+-						   &dev_attr_type);
+-				device_remove_file(&tpnt->driverfs_dev_r[mode],
+-						   &dev_attr_kdev);
+-				device_unregister(&tpnt->driverfs_dev_r[mode]);
+-				device_remove_file(&tpnt->driverfs_dev_n[mode],
+-						   &dev_attr_type);
+-				device_remove_file(&tpnt->driverfs_dev_n[mode],
+-						   &dev_attr_kdev);
+-				device_unregister(&tpnt->driverfs_dev_n[mode]);
+ 			}
+ 			tpnt->device = NULL;
+ 
+@@ -3957,12 +3914,12 @@
  			}
  			put_disk(tpnt->disk);
  			kfree(tpnt);
@@ -1399,16 +1677,16 @@ Cc: linux-scsi@vger.kernel.org
  }
  
  static int __init init_st(void)
-@@ -3977,7 +3976,7 @@
+@@ -3974,7 +3931,7 @@
  		verstr, st_fixed_buffer_size, st_max_sg_segs);
  
  	if (register_chrdev(SCSI_TAPE_MAJOR, "st", &st_fops) >= 0) {
 -		if (scsi_register_device(&st_template) == 0) {
-+		if (scsi_register_driver(&st_template) == 0) {
++		if (scsi_register_driver(&st_template.gendrv) == 0) {
  			do_create_driverfs_files();
  			return 0;
  		}
-@@ -3990,20 +3989,10 @@
+@@ -3987,20 +3944,10 @@
  
  static void __exit exit_st(void)
  {
@@ -1416,7 +1694,7 @@ Cc: linux-scsi@vger.kernel.org
 -
  	do_remove_driverfs_files();
 -	scsi_unregister_device(&st_template);
-+	scsi_unregister_driver(&st_template);
++	scsi_unregister_driver(&st_template.gendrv);
  	unregister_chrdev(SCSI_TAPE_MAJOR, "st");
 -	if (scsi_tapes != NULL) {
 -		for (i=0; i < st_dev_max; ++i)
@@ -1431,7 +1709,7 @@ Cc: linux-scsi@vger.kernel.org
  	printk(KERN_INFO "st: Unloaded.\n");
  }
  
-@@ -4038,7 +4027,7 @@
+@@ -4035,7 +3982,7 @@
  
  static void do_create_driverfs_files(void)
  {
@@ -1440,7 +1718,7 @@ Cc: linux-scsi@vger.kernel.org
  
  	driver_create_file(driverfs, &driver_attr_try_direct_io);
  	driver_create_file(driverfs, &driver_attr_fixed_buffer_size);
-@@ -4048,7 +4037,7 @@
+@@ -4045,7 +3992,7 @@
  
  static void do_remove_driverfs_files(void)
  {
@@ -1451,7 +1729,7 @@ Cc: linux-scsi@vger.kernel.org
  	driver_remove_file(driverfs, &driver_attr_max_sg_segs);
 ===== drivers/scsi/st.h 1.13 vs edited =====
 --- 1.13/drivers/scsi/st.h	Fri Apr 18 17:57:20 2003
-+++ edited/drivers/scsi/st.h	Fri May 16 17:34:37 2003
++++ edited/drivers/scsi/st.h	Mon May 26 11:17:05 2003
 @@ -70,7 +70,7 @@
  
  /* The tape drive descriptor */
@@ -1461,3 +1739,12 @@ Cc: linux-scsi@vger.kernel.org
  	Scsi_Device *device;
  	struct semaphore lock;	/* For serialization */
  	struct completion wait;	/* For SCSI commands */
+@@ -103,8 +103,6 @@
+ 	/* Mode characteristics */
+ 	ST_mode modes[ST_NBR_MODES];
+ 	int current_mode;
+-	struct device driverfs_dev_r[ST_NBR_MODES];
+-	struct device driverfs_dev_n[ST_NBR_MODES];
+ 
+ 	/* Status variables */
+ 	int partition;
