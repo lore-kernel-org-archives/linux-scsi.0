@@ -1,64 +1,29 @@
-From: Patrick Mansfield <patmans@us.ibm.com>
+From: "Bryan Henderson" <hbryan@us.ibm.com>
 Subject: Re: /proc/scsi/map
-Date: Mon, 17 Jun 2002 14:47:38 -0700
+Date: Mon, 17 Jun 2002 15:06:49 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20020617144738.A14245@eng2.beaverton.ibm.com>
-References: <20020615133606.GC11016@gum01m.etpnet.phys.tue.nl> <20020617133534.A10174@eng2.beaverton.ibm.com> <20020617205750.GC1313@gum01m.etpnet.phys.tue.nl>
+Message-ID: <OFFB97DE4B.B393E7EC-ON87256BDB.00791936@boulder.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <20020617205750.GC1313@gum01m.etpnet.phys.tue.nl>; from garloff@suse.de on Mon, Jun 17, 2002 at 10:57:50PM +0200
 List-Id: linux-scsi@vger.kernel.org
-To: Kurt Garloff <garloff@suse.de>, Linux kernel list <linux-kernel@vger.kernel.org>, Linux SCSI list <linux-scsi@vger.kernel.org>
+To: Kurt Garloff <garloff@suse.de>
+Cc: Linux SCSI list <linux-scsi@vger.kernel.org>
 
-Kurt -
 
-On Mon, Jun 17, 2002 at 10:57:50PM +0200, Kurt Garloff wrote:
-> Hi Patrick,
-> 
-> > I prefer we refer to the tuple as host, channel, id, lun (H, C, I, L), so
-> > as to more closely match /proc/scsi/scsi, /proc/scsi/sg, and attached
-> > messages:
-> 
-> You are refering to the naming of this 4-tuple, right: HCIL vs. CBTU?
+>No. I was not wanting to give a numbering to SCSI devices. They don't
+have.
+>The high level driver attached to them however do. That's what is
+reported.
 
-Yes.
+Ah yes.  It's been a long time since I looked at how the SCSI drivers are
+put together, and I remembered it wrong.
 
-> I chose for CBTU, because that on's used in devfs. Actually, as you can see
-> from scsidev, I like HCIL more. But that's a detail the kernel should not
-> care about. The header line should be removed anyway as Albert remarked.
-> And helping those people who think that 200 bytes is unacceptable bloat.
-> 
-> [...]
-> > > 3,0,12,00       0x00    1       sg12    c:15:0c sdf     b:08:50
-> > 
-> > Why not treat each upper layer driver the same? Type is already
-> > in /proc/scsi/scsi, or implied by the upper level drivers attached.
-> > Online should really be part of /proc/scsi/scsi.
-> 
-> I'm not sure I know what you mean. The fact that I decided to put
-> the sg device name first independently of the (potentially) random
-> order in which high-level drivers are assigned?
+The basis for my discomfort was just what appeared in the example to be
+special treatment of sg.  Patrick's comments more closely reflect what I
+would have said if I knew what I was talking about.
 
-Yes, I don't know why I took that to mean that sg was displayed differently.
+What would the output look like in a system that has no sg driver?
 
-> Just I decided to report shg first. This has a very pratical reason:
-> I you want to use userspace tools to collect more advanced (and maybe type
-> dependant information), you will always want to use the sg device, which 
-> you can use to send SCSI commands and which you can open, even if there is
-> no medium or if the device is in use.
 
-No matter the column position sg can be found if each column includes
-the upper level name (sg, sd etc.). Then you do not need to know or
-check the scsi_type of the template, or explicitly locate the sg
-template in scsi_proc_map().
 
-And then without the header scsi_proc_map() gets really simple.
-
-> Regards,
-> -- 
-> Kurt Garloff  <garloff@suse.de>                          Eindhoven, NL
-> GPG key: See mail header, key servers         Linux kernel development
-> SuSE Linux AG, Nuernberg, DE                            SCSI, Security
-
--- Patrick Mansfield
