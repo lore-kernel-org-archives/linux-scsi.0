@@ -1,19 +1,19 @@
 From: John Levon <levon@movementarian.org>
-Subject: [PATCH] FlashPoint typo
-Date: Wed, 26 Feb 2003 19:21:53 +0000
+Subject: [PATCH] AM53C974 typo
+Date: Wed, 26 Feb 2003 19:27:39 +0000
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030226192153.GB58846@compsoc.man.ac.uk>
+Message-ID: <20030226192739.GD58846@compsoc.man.ac.uk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Received: from compsoc.umu.man.ac.uk
 	([130.88.22.5] helo=mrtall.compsoc.man.ac.uk ident=exim)
-	by probity.mcc.ac.uk with esmtp (Exim 4.12)
-	id 18o77q-000EjL-00
-	for linux-scsi@vger.kernel.org; Wed, 26 Feb 2003 19:21:54 +0000
+	by serenity.mcc.ac.uk with esmtp (Exim 4.12)
+	id 18o7DP-000EVZ-00
+	for linux-scsi@vger.kernel.org; Wed, 26 Feb 2003 19:27:39 +0000
 Received: from moz by mrtall.compsoc.man.ac.uk with local (Exim 3.33 #1)
-	id 18o77p-000FOP-00
-	for linux-scsi@vger.kernel.org; Wed, 26 Feb 2003 19:21:53 +0000
+	id 18o7DP-000FWB-00
+	for linux-scsi@vger.kernel.org; Wed, 26 Feb 2003 19:27:39 +0000
 Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
@@ -24,15 +24,14 @@ Against 2.5.63, untested
 regards
 john
 
-
---- linux-linus/drivers/scsi/FlashPoint.c	2002-12-16 03:52:14.000000000 +0000
-+++ linux/drivers/scsi/FlashPoint.c	2003-02-26 19:27:17.000000000 +0000
-@@ -3846,7 +3846,7 @@
+--- linux-linus/drivers/scsi/AM53C974.c	2003-02-25 13:53:54.000000000 +0000
++++ linux/drivers/scsi/AM53C974.c	2003-02-26 19:32:42.000000000 +0000
+@@ -2091,7 +2091,7 @@
+ 		goto EXIT_ABORT;
  	}
- 	else
- 	{
--		if(!currTar_Info->TarEEValue & EE_WIDE_SCSI)
-+		if(!(currTar_Info->TarEEValue & EE_WIDE_SCSI))
- 		{
- 			return(0);
- 		}
+ 	msg[0] = AM53C974_read_8(FFREG);
+-	if (!msg[0] & 0x80) {
++	if (!(msg[0] & 0x80)) {
+ 		printk("scsi%d: error: expecting IDENTIFY message, got ", instance->host_no);
+ 		print_msg(msg);
+ 		hostdata->aborted = 1;
