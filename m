@@ -1,36 +1,27 @@
-From: Miroslav Zagorac <zaga@fly.srk.fer.hr>
-Subject: Re: [TRIVIAL] [2.5 patch] remove an unused function from wd7000.c
-Date: Sat, 6 Sep 2003 08:51:20 +0200 (MEST)
+From: Matthias Jaenichen <mj2@percomp.de>
+Subject: SCSI IO Errors
+Date: Sat, 06 Sep 2003 17:16:22 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <200309060651.h866pKAV001855@fly.srk.fer.hr>
-References: <1062670154.21777.3.camel@dhcp23.swansea.linux.org.uk>
+Message-ID: <4.3.2.7.2.20030906171159.02737a10@127.0.0.1>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; format=flowed
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fly.srk.fer.hr ([161.53.74.66]:13481 "EHLO fly.srk.fer.hr")
-	by vger.kernel.org with ESMTP id S264942AbTIFGvv (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 6 Sep 2003 02:51:51 -0400
-In-Reply-To: <1062670154.21777.3.camel@dhcp23.swansea.linux.org.uk>
+Received: from gateway.percomp.de ([192.88.4.5]:10425 "HELO gateway.percomp.de")
+	by vger.kernel.org with SMTP id S261299AbTIFPVw (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 6 Sep 2003 11:21:52 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Christoph Hellwig <hch@infradead.org>, Rusty Trivial Russell <trivial@rustcorp.com.au>, John Boyd <boyd@cis.ohio-state.edu>, Miroslav Zagorac <zaga@fly.cc.fer.hr>, linux-scsi@vger.kernel.org, axboe@suse.de
+To: linux-scsi@vger.kernel.org
 
-> On Iau, 2003-09-04 at 08:27, Christoph Hellwig wrote:
-> > >   The patch below removes an unused function from drivers/scsi/wd7000.c .
-> > >   
-> > >   I've tested the compilation with 2.5.72-mm2.
-> > 
-> > Alan said he wanted to keep this for some reason.  Maybe #if 0 it out?
-> 
-> Because it needs converting to an eh_abort handler otherwise the card
-> will hang if you try and do anything much useful with it.
-> 
+Hi!
 
-Hello.  I will make some effort to convert function to eh_abort handler,
-very soon.  I'm sorry for late answer and bad english.
+I am experiencing IO-errors with my System. This is now for weeks and I am 
+stuck with debugging.
 
--- 
-Zaga
+The whole linux-system was transfered to an identical box but it did  not 
+help. Nor using the latest 2.4.22 kernel made any difference.
 
-Honi soit qui mal y pense.
+Please advise me where/how to continue with debugging.
+
+Kind Regards
+Matthias
+
