@@ -1,51 +1,29 @@
-From: "Justin T. Gibbs" <gibbs@scsiguy.com>
-Subject: Re: aic79xx bug? my stupidity?
-Date: Sun, 05 Jan 2003 18:46:33 -0700
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <14900000.1041817593@aslan.scsiguy.com>
-References: <200212210012.gBL0Cng21338@eng2.beaverton.ibm.com>
- <1041166487.1338.1.camel@laptop.fenrus.com>
- <610650816.1041607684@aslan.scsiguy.com>
- <200301052040.54974.robertopeon@sportvision.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
-In-Reply-To: <200301052040.54974.robertopeon@sportvision.com>
-Content-Disposition: inline
-To: Roberto Peon <robertopeon@sportvision.com>, linux-kernel@vger.kernel.org
-Cc: linux-scsi@vger.kernel.org
+From: Rusty Trivial Russell <rusty@rustcorp.com.au>
+Subject: [TRIVIAL] Correct kmalloc check: drivers_scsi_dpt_i2o.c
+Date: Mon, 06 Jan 2003 14:58:03 +1100
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <20030106041152.AFA7F2C2BE@lists.samba.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
+To: deanna_bonds@adaptec.com, linux-scsi@vger.kernel.org
 
-> I'm not sure to whom I should be addressing this, but it seems that
-> Justin Gibbs is one of those people.
+From:  Pablo Menichini <pablo@menichini.com.ar>
 
-I wrote the aic79xx driver.
+  Best regards,
+          Pablo
+  
 
-> I've been trying to get the aic79xx driver working in 2.4.19 without
-> success. I'll clarify:
-
-Which version?
-
-> I've gotten far enough that I can get the kernel to boot with it, and it
-> seems to see the controller, however, I cannot get it to find the root
-> partition.
-
-Does it see the disk where the root partition resides?  If you boot
-off of IDE or some other device, can you perform I/O to this disk?
-
-> From what I could find on the archives, it seemed like a patch might be
-> needed to get a vanilla kernel up&running with the aic79xx driver. Is this
-> right? If so, where might that patch be?
-
-I don't know of any changes outside of adding the driver and adjusting the
-Makefiles that are required.
-
-> I have more questions and possibly a bug, but would like to find the
-> proper people to speak with before burdening the list with tons of data.
-
-You can just send the info to me.  If it's not my bug I'll redirect you
-to the list.
-
---
-Justin
+--- trivial-2.5-bk/drivers/scsi/dpt_i2o.c.orig	2003-01-06 14:10:56.000000000 +1100
++++ trivial-2.5-bk/drivers/scsi/dpt_i2o.c	2003-01-06 14:10:56.000000000 +1100
+@@ -1491,7 +1491,7 @@
+ 							pDev->next_lun; pDev = pDev->next_lun){
+ 					}
+ 					pDev->next_lun = kmalloc(sizeof(struct adpt_device),GFP_KERNEL);
+-					if(pDev == NULL) {
++					if(pDev->next_lun == NULL) {
+ 						return -ENOMEM;
+ 					}
+ 					memset(pDev->next_lun,0,sizeof(struct adpt_device));
+-- 
+  Don't blame me: the Monkey is driving
+  File: Pablo Menichini <pablo@menichini.com.ar>: [PATCH][2.5.53] Correct kmalloc check: drivers_scsi_dpt_i2o.c
