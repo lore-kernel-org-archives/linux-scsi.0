@@ -1,175 +1,116 @@
 From: Douglas Gilbert <dougg@torque.net>
-Subject: [PATCH] scsi_debug  v 1.75 for lk 2.6.10-rc2
-Date: Sun, 28 Nov 2004 21:46:43 +1000
-Message-ID: <41A9BAA3.5030308@torque.net>
+Subject: [PATCH] extracting resid from struct scsi_cmnd
+Date: Sun, 28 Nov 2004 23:01:27 +1000
+Message-ID: <41A9CC27.9020207@torque.net>
+References: <20041127124222.GA1200@abulafia> <20041127154849.GA24460@suse.de> <41A9319F.9070206@torque.net> <20041128091201.GA10485@suse.de>
 Reply-To: dougg@torque.net
 Mime-Version: 1.0
 Content-Type: multipart/mixed;
- boundary="------------070509090607070407090009"
+ boundary="------------080501040507010807030206"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from borg.st.net.au ([65.23.158.22]:46815 "EHLO borg.st.net.au")
-	by vger.kernel.org with ESMTP id S261440AbUK1Lqv (ORCPT
+Received: from borg.st.net.au ([65.23.158.22]:21995 "EHLO borg.st.net.au")
+	by vger.kernel.org with ESMTP id S261456AbUK1NBc (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 28 Nov 2004 06:46:51 -0500
+	Sun, 28 Nov 2004 08:01:32 -0500
+In-Reply-To: <20041128091201.GA10485@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, James.Bottomley@SteelEye.com
+To: Jens Axboe <axboe@suse.de>
+Cc: linux-scsi@vger.kernel.org
 
 This is a multi-part message in MIME format.
---------------070509090607070407090009
+--------------080501040507010807030206
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 
-This is a retransmission of a patch sent on 2004/10/23
-titled: "[PATCH] scsi_debug  v 1.75 for lk 2.6.9-bk4".
-It still applies to 2.6.10-rc2 and I can't see that it
-has been picked up in the linux-scsi bk archive.
+Jens Axboe wrote:
+> On Sun, Nov 28 2004, Douglas Gilbert wrote:
+> 
+>>Jens,
+>>While on the subject of extracting info from struct scsi_cmnd
+>>I have noticed that scsi_cmnd::resid doesn't make it into
+>>sg_io_hdr::resid in the block layer SG_IO implementation.
+>>"rq->data_len" is put there instead and it invariably has a
+>>value of 0.
+>>
+>>"struct request" does not have a 'resid' field which is defined
+>>as the number of bytes requested to be transferred less the actual
+>>number transferred.
+> 
+> 
+> ->data_len is that value, after execution of the request. If rq->data_len
+> == 0 for a SCSI request that with residual bytes, then that's a bug.
+
+Jens,
+Ok, it looks like a bug then. Here is an example with the
+scsi_debug version I just sent to this list and a recent sg3_utils
+(e.g. v1.11 beta at the top of http://www.torque.net/sg ).
+That scsi_debug version sets resid and sg3_utils reports resid != 0
+when the verbose flag is given.
+
+Here is what I am seeing:
+
+# sg_inq -v /dev/sg0
+      inquiry cdb: 12 00 00 00 24 00
+...
+   Product identification: scsi_debug
+   Product revision level: 0004
+      inquiry cdb: 12 01 00 00 fc 00
+      inquiry: resid=124
+      inquiry cdb: 12 01 80 00 fc 00
+      inquiry: resid=124
+   Unit serial number: 2000
+
+# sg_inq -v /dev/sda
+      inquiry cdb: 12 00 00 00 24 00
+...
+   Product identification: scsi_debug
+   Product revision level: 0004
+      inquiry cdb: 12 01 00 00 fc 00
+      inquiry cdb: 12 01 80 00 fc 00
+   Unit serial number: 2000
+
+So the sg driver indicates that of the 252 bytes
+requested (for VPD pages 0x0 and 0x80) only 128 bytes
+were returned [and 128 bytes is an over-allowance by
+scsi_debug for those pages]. The sd driver remains silent
+implying resid is 0 .
+
+rq->data_len is only written in one place in the scsi mid level
+(in scsi_io_completion() inside scsi_lib.c). The attached
+patch places cmd->resid into rq->data_len (rather than decrementing
+it by cmd->bufflen) and fixes the problem shown above. I then
+built a file system on the scsi_debug virtual disk and copied
+files to and from it and there were no ill effects.
 
 Changelog:
-     - fix highmem data transfers
-          - fix kunmap_atomic() argument
-          - disable clustering
-          - sets resid
-     - allow every_nth < 0 for error continuously once
-       count is reached
-     - minor sense buffer handling cleanup
+    - during successful command completion place resid from SCSI
+      LLDs into request::data_len so that block SG_IO ioctl reports
+      resid
 
 Doug Gilbert
 
---------------070509090607070407090009
-Content-Type: application/x-gzip;
- name="sdebug2610rc2_175.diff.gz"
-Content-Transfer-Encoding: base64
-Content-Disposition: inline;
- filename="sdebug2610rc2_175.diff.gz"
 
-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
-vOLwu8vF5D9mHt3n6WcAAA==
---------------070509090607070407090009--
+
+
+--------------080501040507010807030206
+Content-Type: text/x-patch;
+ name="scsi_lib2610rc2resid.diff"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="scsi_lib2610rc2resid.diff"
+
+--- linux/drivers/scsi/scsi_lib.c	2004-11-15 20:53:03.000000000 +1000
++++ linux/drivers/scsi/scsi_lib.c2610rc2resid	2004-11-28 22:12:22.070160152 +1000
+@@ -728,7 +728,7 @@
+ 				req->sense_len = len;
+ 			}
+ 		} else
+-			req->data_len -= cmd->bufflen;
++			req->data_len = cmd->resid;
+ 	}
+ 
+ 	/*
+
+
+--------------080501040507010807030206--
