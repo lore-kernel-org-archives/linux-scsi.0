@@ -1,42 +1,43 @@
 From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: [PATCH 4/10][RFC] linux-iscsi driver
-Date: Mon, 10 Jan 2005 14:57:25 -0800
-Message-ID: <41E30855.9050203@cs.wisc.edu>
+Subject: [PATCH 3/10][RFC] linux-iscsi driver
+Date: Mon, 10 Jan 2005 14:57:12 -0800
+Message-ID: <41E30848.2010103@cs.wisc.edu>
 Mime-Version: 1.0
 Content-Type: multipart/mixed;
- boundary="------------040503050901050206060302"
+ boundary="------------030100020507090306050703"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:63195 "EHLO sabe.cs.wisc.edu")
-	by vger.kernel.org with ESMTP id S262722AbVAJW5c (ORCPT
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:62683 "EHLO sabe.cs.wisc.edu")
+	by vger.kernel.org with ESMTP id S262592AbVAJW5T (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 10 Jan 2005 17:57:32 -0500
+	Mon, 10 Jan 2005 17:57:19 -0500
 Received: from [192.168.1.7] ([199.108.226.254])
 	(authenticated bits=0)
-	by sabe.cs.wisc.edu (8.13.1/8.13.1) with ESMTP id j0AMvUIo024970
+	by sabe.cs.wisc.edu (8.13.1/8.13.1) with ESMTP id j0AMvHV2024967
 	(version=TLSv1/SSLv3 cipher=RC4-MD5 bits=128 verify=NO)
-	for <linux-scsi@vger.kernel.org>; Mon, 10 Jan 2005 16:57:31 -0600
+	for <linux-scsi@vger.kernel.org>; Mon, 10 Jan 2005 16:57:18 -0600
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
 This is a multi-part message in MIME format.
---------------040503050901050206060302
+--------------030100020507090306050703
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 
-Core iSCSI session code.
+Driver file implementing the SCSI template functions
+and module initialization.
 
---------------040503050901050206060302
+--------------030100020507090306050703
 Content-Type: text/x-patch;
- name="04-iscsi-session.patch"
+ name="03-scsi-tmpl.patch"
 Content-Transfer-Encoding: 7bit
 Content-Disposition: inline;
- filename="04-iscsi-session.patch"
+ filename="03-scsi-tmpl.patch"
 
-diff -Naurp scsi-misc-2.6.orig/drivers/scsi/iscsi-sfnet/iscsi-session.c scsi-misc-2.6.patch/drivers/scsi/iscsi-sfnet/iscsi-session.c
---- scsi-misc-2.6.orig/drivers/scsi/iscsi-sfnet/iscsi-session.c	1969-12-31 16:00:00.000000000 -0800
-+++ scsi-misc-2.6.patch/drivers/scsi/iscsi-sfnet/iscsi-session.c	2005-01-10 12:22:24.875910647 -0800
-@@ -0,0 +1,1533 @@
+diff -Naurp scsi-misc-2.6.orig/drivers/scsi/iscsi-sfnet/iscsi-initiator.c scsi-misc-2.6.patch/drivers/scsi/iscsi-sfnet/iscsi-initiator.c
+--- scsi-misc-2.6.orig/drivers/scsi/iscsi-sfnet/iscsi-initiator.c	1969-12-31 16:00:00.000000000 -0800
++++ scsi-misc-2.6.patch/drivers/scsi/iscsi-sfnet/iscsi-initiator.c	2005-01-10 12:19:58.490683743 -0800
+@@ -0,0 +1,581 @@
 +/*
 + * iSCSI driver for Linux
 + * Copyright (C) 2001 Cisco Systems, Inc.
@@ -56,1524 +57,572 @@ diff -Naurp scsi-misc-2.6.orig/drivers/scsi/iscsi-sfnet/iscsi-session.c scsi-mis
 + *
 + * See the file COPYING included with this distribution for more details.
 + *
-+ * This File implements the funtions related to establishing and
-+ * managing the session.
++ * This file contains interfaces required by SCSI mid layer, module
++ * initialization and shutdown routines.
 + */
-+#include <linux/blkdev.h>
-+#include <linux/kthread.h>
-+#include <linux/delay.h>
-+#include <linux/inet.h>
-+#include <scsi/scsi_device.h>
++#include <linux/version.h>
++#include <linux/moduleparam.h>
++#include <linux/notifier.h>
++#include <linux/reboot.h>
++#include <linux/in.h>
++#include <scsi/scsi_tcq.h>
++#include <scsi/scsi_transport.h>
++#include <scsi/scsi_transport_iscsi.h>
 +
-+#include "iscsi-session.h"
-+#include "iscsi-ioctl.h"
-+#include "iscsi-task.h"
-+#include "iscsi-login.h"
 +#include "iscsi-sfnet.h"
++#include "iscsi-session.h"
++#include "iscsi-protocol.h"
++#include "iscsi-task.h"
 +
 +/*
-+ * list of initialized iscsi sessions - this should be replaced
-+ * with a driver model equivalent if possible.
++ *  IMPORTANT NOTE: to prevent deadlock, when holding multiple locks,
++ *  the following locking order must be followed at all times:
++ *
++ *  session->portal_lock      - access to a session's portal info
++ *  session->task_lock        - access to a session's collections of tasks
++ *  host_lock                 - mid-layer acquires before calling queuecommand,
++ * 				and eh_*.
++ *
++ *  Note for grabbing task_lock: queuecommand and eh_timed_out are invoked in
++ *  soft_irq context. The former can be invoked in process context as well. 
++ *  Every other function where we grab task_lock, we have process context.
++ *  Hence we use spin_lock in eh_timed_out and spin_lock_bh every where else to
++ *  grab the task lock.
 + */
-+LIST_HEAD(iscsi_sessions);
-+static DECLARE_MUTEX(iscsi_session_sem);
 +
-+static void
-+signal_iscsi_threads(struct iscsi_session *session)
-+{
-+	if (session->tx_task)
-+		kill_proc(session->tx_task->pid, SIGHUP, 1);
-+	if (session->rx_task)
-+		kill_proc(session->rx_task->pid, SIGHUP, 1);
-+}
++MODULE_AUTHOR("Cisco Systems, Inc.");
++MODULE_DESCRIPTION("iSCSI initiator");
++MODULE_LICENSE("GPL");
++MODULE_VERSION(ISCSI_DRIVER_VERSION);
 +
-+/* drop an iscsi session */
-+void
-+iscsi_drop_session(struct iscsi_session *session)
-+{
-+	if (!test_and_clear_bit(SESSION_ESTABLISHED, &session->control_bits))
-+		return;
++kmem_cache_t *iscsi_task_cache;
++static struct scsi_transport_template *iscsi_transportt;
 +
-+	/* so we know whether to abort the connection */
-+	session->session_drop_time = jiffies ? jiffies : 1;
-+	signal_iscsi_threads(session);
-+}
-+
-+static void
-+handle_logout_timeouts(unsigned long data)
-+{
-+	struct iscsi_session *session = (struct iscsi_session *)data;
-+
-+	if (test_bit(SESSION_TERMINATED, &session->control_bits) ||
-+	    !test_bit(SESSION_LOGOUT_REQUESTED, &session->control_bits))
-+		return;
-+	/*
-+	 * we're waiting for tasks to complete before logging out. No need to
-+	 * check the CmdSN window, since we won't be starting any more tasks.
-+	 */
-+	if (test_and_set_bit(SESSION_IN_LOGOUT, &session->control_bits)) {
-+		/*
-+		 * passed the deadline for a logout response, just drop the
-+		 * session
-+		 */
-+		iscsi_host_err(session, "Logout response timed out, dropping "
-+			       "session\n");
-+		iscsi_drop_session(session);
-+	} else {
-+		iscsi_wake_tx_thread(TX_LOGOUT, session);
-+		mod_timer(&session->logout_timer,
-+			  jiffies + (session->logout_response_timeout * HZ));
-+	}
-+
-+}
-+
-+/* caller must hold session->task_lock */
-+void
-+iscsi_request_logout(struct iscsi_session *session, int logout_timeout,
-+		     int logout_response_timeout)
-+{
-+	int timeout;
-+
-+	if (test_and_set_bit(SESSION_LOGOUT_REQUESTED, &session->control_bits))
-+		return;
-+	/*
-+	 * we should not be sending any new requests, so we do not want
-+	 * the net timer to send pings. If we have active tasks then
-+	 * we delay logout, but one way or another this session is going
-+	 * so we do not need the net timer even if transport is bad.
-+	 */
-+	del_timer(&session->transport_timer);
-+
-+	session->logout_response_timeout = logout_response_timeout;
-+	if (session->num_active_tasks == 0) {
-+		timeout = session->logout_response_timeout;
-+		set_bit(SESSION_IN_LOGOUT, &session->control_bits);
-+		iscsi_wake_tx_thread(TX_LOGOUT, session);
-+	} else
-+		timeout = logout_timeout;
-+	mod_timer(&session->logout_timer, jiffies + (timeout * HZ));
-+}
-+
-+/*
-+ * return value:
-+ * 	1: login successfully.
-+ *	0: Failed to login. No need to retry. Give up.
-+ * 	-1: Failed to login. Retry.
-+ */
-+static int
-+login_response_status(struct iscsi_session *session,
-+		      enum iscsi_login_status login_status)
-+{
-+	int ret;
-+
-+	switch (login_status) {
-+	case LOGIN_OK:
-+		/* check the status class and detail */
-+		ret = 1;
-+		break;
-+	case LOGIN_IO_ERROR:
-+	case LOGIN_WRONG_PORTAL_GROUP:
-+	case LOGIN_REDIRECTION_FAILED:
-+		iscsi_disconnect(session);
-+		ret = -1;
-+		break;
-+	default:
-+		iscsi_disconnect(session);
-+		/*
-+		 * these are problems that will probably occur with any portal
-+		 * of this target.
-+		 */
-+		if (session->commands_queued)
-+			/*
-+			 * the session has found LUNs and been used before, so
-+			 * applications or the buffer cache may be expecting
-+			 * it to continue working.  Keep trying to login even
-+			 * though clearing the error may require
-+			 * reconfiguration on the target.
-+			 */
-+			ret = -1;
-+		else {
-+			iscsi_host_err(session, "Session giving up on login "
-+				       "attempts\n");
-+			ret = 0;
-+		}
-+	}
-+
-+	return ret;
-+}
-+
-+/*
-+ * return value:
-+ * 	2: login successfully.
-+ * 	1: Redirected. Retry login.
-+ *	0: Failed to login. No need to retry. Give up.
-+ * 	-1: Failed to login. Retry.
-+ */
-+static int
-+check_iscsi_status_class(struct iscsi_session *session, u8 status_class,
-+			 u8 status_detail)
-+{
-+	switch (status_class) {
-+	case ISCSI_STATUS_CLS_SUCCESS:
-+		return 2;
-+	case ISCSI_STATUS_CLS_REDIRECT:
-+		switch (status_detail) {
-+		case ISCSI_LOGIN_STATUS_TGT_MOVED_TEMP:
-+			return 1;	/* not really success, but we want to
-+					 * retry immediately, with no delay
-+					 */
-+		case ISCSI_LOGIN_STATUS_TGT_MOVED_PERM:
-+			/*
-+			 * for a permanent redirect, we need to update the
-+			 * portal address,  and then try again.
-+			 */
-+			spin_lock(&session->portal_lock);
-+			/* reset the address in the current portal info */
-+			memcpy(&session->portal.addr, &session->addr,
-+			       sizeof(struct sockaddr));
-+			spin_unlock(&session->portal_lock);
-+                        return 1;       /* not really success, but we want to
-+                                         * retry immediately, with no delay
-+                                         */
-+		default:
-+			iscsi_host_err(session, "Login rejected: redirection "
-+				       "type 0x%x not supported\n",
-+				       status_detail);
-+			iscsi_disconnect(session);
-+			return -1;
-+		}
-+	case ISCSI_STATUS_CLS_INITIATOR_ERR:
-+		iscsi_disconnect(session);
-+
-+		switch (status_detail) {
-+		case ISCSI_LOGIN_STATUS_AUTH_FAILED:
-+			iscsi_host_err(session, "Login rejected: Initiator "
-+				       "failed authentication with target\n");
-+			if (session->username || session->password_length ||
-+			    session->bidirectional_auth)
-+				/*
-+				 * retry, and hope we can allocate the auth
-+				 * structures next time.
-+				 */
-+				return -1;
-+			else 
-+				return 0;	
-+		case ISCSI_LOGIN_STATUS_TGT_FORBIDDEN:
-+			iscsi_host_err(session, "Login rejected: initiator "
-+				       "failed authorization with target\n");
-+			return 0;
-+		case ISCSI_LOGIN_STATUS_TGT_NOT_FOUND:
-+			iscsi_host_err(session, "Login rejected: initiator "
-+				       "error - target not found (%02x/%02x)\n",
-+				       status_class, status_detail);
-+			return 0;
-+		case ISCSI_LOGIN_STATUS_NO_VERSION:
-+			/*
-+			 * FIXME: if we handle multiple protocol versions,
-+			 * before we log an error, try the other supported
-+			 * versions.
-+			 */
-+			iscsi_host_err(session, "Login rejected: incompatible "
-+				       "version (%02x/%02x), non-retryable, "
-+				       "giving up\n", status_class,
-+				       status_detail);
-+			return 0;
-+		default:
-+			iscsi_host_err(session, "Login rejected: initiator "
-+				       "error (%02x/%02x), non-retryable, "
-+				       "giving up\n", status_class,
-+				       status_detail);
-+			return 0;
-+		}
-+	case ISCSI_STATUS_CLS_TARGET_ERR:
-+		iscsi_host_err(session, "Login rejected: target error "
-+			       "(%02x/%02x)\n", status_class, status_detail);
-+		iscsi_disconnect(session);
-+		/*
-+		 * We have no idea what the problem is. But spec says initiator
-+		 * may retry later.
-+		 */
-+		 return -1;
-+	default:
-+		iscsi_host_err(session, "Login response with unknown status "
-+			       "class 0x%x, detail 0x%x\n", status_class,
-+			       status_detail);
-+		iscsi_disconnect(session);
-+		return 0;
-+	}
-+}
-+
-+static void
-+login_timed_out(unsigned long data)
-+{
-+	struct iscsi_session *session = (struct iscsi_session *)data;
-+
-+	iscsi_host_err(session, "Login phase timed out, timeout was set for "
-+		       "%d secs\n", session->login_timeout);
-+	kill_proc(session->rx_task->pid, SIGHUP, 1);
-+}
-+
-+static int
-+__establish_session(struct iscsi_session *session)
-+{
-+	int ret = -1;
-+	u8 status_class;
-+	u8 status_detail;
-+	enum iscsi_login_status login_status;
-+	struct timer_list login_timer;
-+
-+	/*
-+	 * del FFP timers if running
-+	 */
-+	del_timer_sync(&session->transport_timer);
-+	del_timer_sync(&session->logout_timer);
-+	if (signal_pending(current))
-+		flush_signals(current);
-+
-+	spin_lock(&session->portal_lock);
-+	/*
-+	 * Set almost everything based on the portal's settings.
-+	 * Don't change the address, since a temporary redirect
-+	 * may have already changed the address,
-+	 * and we want to use the redirected address rather than
-+	 * the portal's address.
-+	 */
-+	iscsi_set_portal_info(session);
-+	spin_unlock(&session->portal_lock);
-+
-+	iscsi_disconnect(session);
-+
-+	init_timer(&login_timer);
-+	if (session->login_timeout) {
-+		login_timer.data = (unsigned long)session;
-+		login_timer.function = login_timed_out;
-+		login_timer.expires = jiffies + (session->login_timeout * HZ);
-+		add_timer(&login_timer);
-+	}
-+
-+	if (iscsi_connect(session)) {
-+		iscsi_host_err(session, "establish_session failed. Could not "
-+			       "connect to target\n");
-+		goto done;
-+	}
-+
-+	/*
-+	 * Grab the config mutex a little early incase update_session
-+	 * is running and something went wacko, the connect/login timer
-+	 * above will break us out.
-+	 */
-+	if (down_interruptible(&session->config_mutex)) {
-+		iscsi_host_err(session, "Failed to acquire mutex before "
-+			       "login\n");
-+		goto done;
-+	}
-+
-+	/*
-+	 * initialize session fields for the iscsi-login code
-+	 */
-+	session->type = ISCSI_SESSION_TYPE_NORMAL;
-+	/*
-+	 * use iSCSI default, unless declared otherwise by the
-+	 * target during login
-+	 */
-+	session->max_xmit_data_segment_len =
-+		DEFAULT_MAX_RECV_DATA_SEGMENT_LENGTH;
-+	session->vendor_specific_keys = 1;
-+	/*
-+	 * we do not want to allocate memory here since this might be a
-+	 * relogin with IO in progress, so we reuse the rx_buffer. Note
-+	 * that extra care must be taken when using this buffer for both
-+	 * send and recv here , becuase the net subsys does not copy data
-+	 * in sendpage.
-+	 */
-+	login_status = iscsi_login(session, session->rx_buffer,
-+				   sizeof(session->rx_buffer), &status_class,
-+				   &status_detail);
-+	up(&session->config_mutex);
-+
-+	ret = login_response_status(session, login_status);
-+	if (ret < 1)
-+		goto done;
-+
-+	ret = check_iscsi_status_class(session, status_class, status_detail);
-+	if (ret < 2)
-+		goto done;
-+	/*
-+	 * logged in ok, get the new session ready
-+	 */
-+	session->ever_established = 1;
-+	session->window_closed = 0;
-+	session->session_established_time = jiffies;
-+	session->session_drop_time = 0;
-+
-+	session->nop_reply.ttt = ISCSI_RSVD_TASK_TAG;
-+	INIT_LIST_HEAD(&session->nop_reply_list);
-+
-+	clear_bit(SESSION_WINDOW_CLOSED, &session->control_bits);
-+	clear_bit(SESSION_REPLACEMENT_TIMEDOUT, &session->control_bits);
-+	set_bit(SESSION_ESTABLISHED, &session->control_bits);
-+
-+	spin_lock_bh(&session->task_lock);
-+	iscsi_mod_session_timer(session, session->idle_timeout);
-+	spin_unlock_bh(&session->task_lock);
-+	/*
-+	 * ready to go, so wake up everyone waiting for the session
-+	 * to be established
-+	 */
-+	wake_up(&session->login_wait_q);
-+ done:
-+	del_timer_sync(&login_timer);
-+	/* cleanup after a possible timeout expiration */
-+	if (signal_pending(current)) {
-+		flush_signals(current);
-+
-+		if (test_bit(SESSION_TERMINATING, &session->control_bits))
-+			return 0;
-+		else
-+			return -1;
-+	}
-+	return ret;
-+}
-+
-+static char*
-+strdup(char *str, int *err)
-+{
-+	int len;
-+	char *s;
-+
-+	*err = 0;
-+	len = strlen(str) + 1;
-+	if (len == 1) {
-+		*err = -EINVAL;
-+		return NULL;
-+	}
-+
-+	s = kmalloc(len, GFP_KERNEL);
-+	if (!s) {
-+		*err = -ENOMEM;
-+		return NULL;
-+	}
-+
-+	return strcpy(s, str);
-+}
-+
-+/*
-+ * return value:
-+ * 	1: name/alias updated. Relogin required.
-+ *	0: No updated needed.
-+ * 	-Exxx: Failed to update.
-+ */
-+static int
-+update_iscsi_strings(struct iscsi_session *session,
-+		     struct iscsi_session_ioctl *ioctld)
-+{
-+	char *iname = NULL;
-+	char *alias = NULL;
-+	char *uname = NULL;
-+	char *uname_in = NULL;
-+	char *pw = NULL;
-+	char *pw_in = NULL;
-+	int rc = 0;
-+
-+	/*
-+	 * update all the values or none of them
-+	 */
-+	if (!ioctld->initiator_name[0]) {
-+		iscsi_host_err(session, "No InitiatorName\n");
-+		return -EINVAL;
-+	}
-+	if (strcmp(ioctld->initiator_name, session->initiator_name)) {
-+		iname = strdup(ioctld->initiator_name, &rc);
-+		if (!iname) {
-+			iscsi_host_err(session, "Failed to change "
-+				       "InitiatorName from %s to %s\n",
-+				       session->initiator_name,
-+				       ioctld->initiator_name);
-+			return rc;
-+		}
-+	}
-+
-+	if (ioctld->initiator_alias[0] && (!session->initiator_alias ||
-+	    strcmp(ioctld->initiator_alias, session->initiator_alias))) {
-+		alias = strdup(ioctld->initiator_alias, &rc);
-+		if (!alias)
-+			/* Alias is not ciritical so just print an error */
-+			iscsi_host_err(session, "Failed to change "
-+					"InitiatorAlias\n");
-+	}
-+
-+	if (ioctld->username[0] && (!session->username ||
-+	    strcmp(ioctld->username, session->username))) {
-+		uname = strdup(ioctld->username, &rc);
-+		if (!uname) {
-+			iscsi_host_err(session, "Failed to change outgoing "
-+				       "username\n");
-+				goto failed;
-+		}
-+	}
-+
-+	if (ioctld->username_in[0] && (!session->username_in ||
-+	    strcmp(ioctld->username_in, session->username_in))) {
-+		uname_in = strdup(ioctld->username_in, &rc);
-+		if (!uname_in) {
-+			iscsi_host_err(session, "Failed to change incoming "
-+				       "username\n");
-+				goto failed;
-+		}
-+	}
-+
-+	if (ioctld->password_length && (!session->password ||
-+	    session->password_length != ioctld->password_length ||
-+	    memcmp(ioctld->password, session->password,
-+		   session->password_length))) {
-+		pw = kmalloc(ioctld->password_length + 1, GFP_KERNEL);
-+		if (!pw) {
-+			iscsi_host_err(session, "Failed to change outgoing "
-+				       "password\n");
-+			rc = -ENOMEM;
-+			goto failed;
-+		}
-+		memcpy(pw, ioctld->password, ioctld->password_length);
-+	}
-+
-+	if (ioctld->password_length_in && (!session->password_in ||
-+	    session->password_length_in != ioctld->password_length_in ||
-+	    memcmp(ioctld->password_in, session->password_in,
-+		   session->password_length_in))) {
-+		pw_in = kmalloc(ioctld->password_length_in + 1, GFP_KERNEL);
-+		if (!pw_in) {
-+			iscsi_host_err(session, "Failed to change incoming "
-+				       "password\n");
-+			rc = -ENOMEM;
-+			goto failed;
-+		}
-+		memcpy(pw_in, ioctld->password_in, ioctld->password_length_in);
-+	}
-+
-+	if (iname) {
-+		kfree(session->initiator_name);	
-+		session->initiator_name = iname;
-+		rc = 1;
-+	}
-+	if (alias || (!ioctld->initiator_alias[0] &&
-+		      session->initiator_alias[0])) {
-+		kfree(session->initiator_alias);
-+		session->initiator_alias = alias;
-+		rc = 1;
-+	}
-+	if (uname || (!ioctld->username[0] && session->username)) {
-+		kfree(session->username);
-+		session->username = uname;
-+		rc = 1;
-+	}
-+	if (uname_in || (!ioctld->username_in[0] && session->username_in)) {
-+		kfree(session->username_in);
-+		session->username_in = uname_in;
-+		rc = 1;
-+	}
-+	if (pw || (!ioctld->password_length && session->password)) {
-+		kfree(session->password);
-+		session->password = pw;
-+		session->password_length = ioctld->password_length;
-+		rc = 1;
-+	}
-+	if (pw_in || (!ioctld->password_length_in && session->password_in)) {
-+		kfree(session->password_in);
-+		session->password_in = pw_in;
-+		session->password_length_in = ioctld->password_length_in;
-+		rc = 1;
-+	}
-+	return rc;
-+ failed:
-+	kfree(iname);
-+	kfree(alias);
-+	kfree(uname);
-+	kfree(uname_in);
-+	kfree(pw);
-+	kfree(pw_in);
-+	return rc;
-+}
-+
-+static int
-+alloc_auth_buffers(struct iscsi_session *session)
-+{
-+	if (!(session->bidirectional_auth || session->username ||
-+	      session->password))
-+		return 0;
-+
-+	if (session->auth_client_block)
-+		return 0;
-+
-+	session->md5_tfm = crypto_alloc_tfm("md5", 0);
-+	if (!session->md5_tfm)
-+		return -ENOMEM;
-+
-+	session->auth_client_block =
-+		kmalloc(sizeof(*session->auth_client_block), GFP_KERNEL);
-+	if (!session->auth_client_block)
-+		goto error;
-+
-+	session->auth_recv_string_block =
-+		kmalloc(sizeof(*session->auth_recv_string_block), GFP_KERNEL);
-+	if (!session->auth_recv_string_block)
-+		goto error;
-+
-+	session->auth_send_string_block =
-+		kmalloc(sizeof(*session->auth_send_string_block), GFP_KERNEL);
-+	if (!session->auth_send_string_block)
-+		goto error;
-+
-+	session->auth_recv_binary_block =
-+		kmalloc(sizeof(*session->auth_recv_binary_block), GFP_KERNEL);
-+	if (!session->auth_recv_binary_block)
-+		goto error;
-+
-+	session->auth_send_binary_block =
-+		kmalloc(sizeof(*session->auth_send_binary_block), GFP_KERNEL);
-+	if (!session->auth_send_binary_block)
-+		goto error;
-+
-+	return 0;
-+
-+ error:
-+	crypto_free_tfm(session->md5_tfm);
-+	kfree(session->auth_client_block);
-+	kfree(session->auth_recv_string_block);
-+	kfree(session->auth_send_string_block);
-+	kfree(session->auth_recv_binary_block);
-+	iscsi_host_err(session, "Session requires authentication but couldn't "
-+		       "allocate authentication stuctures\n");
-+	return -ENOMEM;
-+}
++/* Serial Number Arithmetic, 32 bits, less than, RFC1982 */
++#define SNA32_CHECK 2147483648UL
 +
 +int
-+iscsi_update_session(struct iscsi_session *session,
-+		     struct iscsi_session_ioctl *ioctld)
++iscsi_sna_lt(u32 n1, u32 n2)
 +{
-+	int rc = 0;
-+	int relogin = 0;
++	return n1 != n2 && ((n1 < n2 && (n2 - n1 < SNA32_CHECK)) ||
++			    (n1 > n2 && (n2 - n1 < SNA32_CHECK)));
++}
 +
-+	if (down_interruptible(&session->config_mutex)) {
-+		iscsi_host_err(session, "Session configuration update aborted "
-+			       "by signal\n");
-+		return -EINTR;
++/* Serial Number Arithmetic, 32 bits, less than, RFC1982 */
++int
++iscsi_sna_lte(u32 n1, u32 n2)
++{
++	return n1 == n2 || ((n1 < n2 && (n2 - n1 < SNA32_CHECK)) ||
++			    (n1 > n2 && (n2 - n1 < SNA32_CHECK)));
++}
++
++/* mark a scsi_cmnd as having a LUN communication failure */
++static inline void
++set_lun_comm_failure(struct scsi_cmnd *sc)
++{
++	sc->sense_buffer[0] = 0x70;
++	sc->sense_buffer[2] = NOT_READY;
++	sc->sense_buffer[7] = 0x6;
++	sc->sense_buffer[12] = 0x08;
++	sc->sense_buffer[13] = 0x00;
++}
++
++u32
++iscsi_command_attr(struct scsi_cmnd *cmd)
++{
++	unsigned int attr = ISCSI_ATTR_UNTAGGED;
++	char msg[2];
++
++	if (scsi_populate_tag_msg(cmd, msg) == 2) {
++		switch (msg[0]) {
++		case MSG_SIMPLE_TAG:
++			attr = ISCSI_ATTR_SIMPLE;
++			break;
++		case MSG_HEAD_TAG:
++			attr = ISCSI_ATTR_HEAD_OF_QUEUE;
++			break;
++		case MSG_ORDERED_TAG:
++			attr = ISCSI_ATTR_ORDERED;
++			break;
++		};
 +	}
-+	if (test_bit(SESSION_TERMINATED, &session->control_bits))
-+		return -EINVAL;
 +
-+	if (ioctld->update && (ioctld->config_number < session->config_number))
-+		/* this update is obsolete, ignore it */
-+		goto err_exit;
-+
-+	if (ioctld->username_in[0] || ioctld->password_length_in)
-+		session->bidirectional_auth = 1;
-+	else
-+		session->bidirectional_auth = 0;
-+	rc = alloc_auth_buffers(session);
-+	if (rc < 0)
-+		goto err_exit;
-+
-+	rc = update_iscsi_strings(session, ioctld);
-+	if (rc > 0)
-+		relogin = 1;
-+	else if (rc < 0) 
-+		goto err_exit;
-+
-+	session->config_number = ioctld->config_number;
-+
-+	if (memcmp(session->isid, ioctld->isid, sizeof(session->isid))) {
-+		memcpy(session->isid, ioctld->isid, sizeof(session->isid));
-+		relogin = 1;
-+	}
-+
-+	/*
-+	 * after we release the mutex we cannot touch any field that
-+	 * may be freed by a shutdown that is running at the same time
-+	 */
-+	up(&session->config_mutex);
-+
-+	/*
-+	 * the portals are guarded by a spinlock instead of the config
-+	 * mutex, so that we can request portal changes while a login is
-+	 * occuring.
-+	 */
-+	spin_lock(&session->portal_lock);
-+	if (iscsi_update_portal_info(&session->portal, &ioctld->portal))
-+		relogin = 1;
-+	spin_unlock(&session->portal_lock);
-+
-+	if (relogin)
-+		if (test_bit(SESSION_ESTABLISHED, &session->control_bits)) {
-+			spin_lock_bh(&session->task_lock);
-+			iscsi_request_logout(session, 3,
-+					     session->active_timeout);
-+			spin_unlock_bh(&session->task_lock);
-+		}
-+	return 0;
-+
-+ err_exit:
-+	up(&session->config_mutex);
-+	return rc;
++	return attr;
 +}
 +
 +static int
-+copy_iscsi_strings(struct iscsi_session *session,
-+		   struct iscsi_session_ioctl *ioctld)
++iscsi_slave_configure(struct scsi_device *sdev)
 +{
-+	int rc;
++	int depth = 1, tag = 0;
 +
-+	session->initiator_name = strdup(ioctld->initiator_name, &rc);
-+	if (rc == -EINVAL) {
-+		iscsi_host_err(session, "No InitiatorName\n");
-+		return rc;
-+	}
-+	if (rc == -ENOMEM) {
-+		iscsi_host_err(session, "Cannot allocate InitiatorName\n");
-+		return rc;
-+	}
-+
-+	session->initiator_alias = strdup(ioctld->initiator_alias, &rc);
-+	/* Alias is not ciritical so just print an error */
-+	if (!session->initiator_alias)
-+		iscsi_host_err(session, "Cannot create InitiatorAlias\n");
-+
-+	session->target_name = strdup(ioctld->target_name, &rc);
-+	if (rc == -EINVAL) {
-+		iscsi_err("No TargetName\n");
-+		return rc;
-+	}
-+	if (rc == -ENOMEM) {
-+		iscsi_host_err(session, "Cannot allocate TargetName\n");
-+		return rc;
++        /*
++	 * TODO (one day) - when tcq is not supported we should
++	 * internally queue a command to have one ready to go right
++	 * away when the outstanding one completes.
++         */
++	if (sdev->tagged_supported) {
++		scsi_activate_tcq(sdev, ISCSI_CMDS_PER_LUN);
++		depth = ISCSI_CMDS_PER_LUN;
++		tag = MSG_ORDERED_TAG;
 +	}
 +
-+	session->username = strdup(ioctld->username, &rc);
-+	if (rc == -ENOMEM) {
-+		iscsi_host_err(session, "Failed to allocate outgoing "
-+			       "username\n");
-+		return rc;
-+	}
-+
-+	session->username_in = strdup(ioctld->username_in, &rc);
-+	if (rc == -ENOMEM) {
-+		iscsi_host_err(session, "Failed to allocate incoming "
-+			       "username\n");
-+		return rc;
-+	}
-+
-+	if (ioctld->password_length) {
-+		session->password = kmalloc(ioctld->password_length + 1,
-+					    GFP_KERNEL);
-+		if (!session->password) {
-+			iscsi_host_err(session, "Failed to allocate outgoing "
-+				       "password\n");
-+			return -ENOMEM;
-+		}
-+		memcpy(session->password, ioctld->password,
-+		       ioctld->password_length);
-+		session->password_length = ioctld->password_length;
-+	}
-+
-+	if (ioctld->password_length_in) {
-+		session->password_in = kmalloc(ioctld->password_length_in + 1,
-+					       GFP_KERNEL);
-+		if (!session->password_in) {
-+			iscsi_host_err(session, "Failed to allocate incoming "
-+				       "password\n");
-+			return -ENOMEM;
-+		}
-+		memcpy(session->password_in, ioctld->password_in,
-+		       ioctld->password_length_in);
-+		session->password_length_in = ioctld->password_length_in;
-+	}
-+
++	scsi_adjust_queue_depth(sdev, tag, depth);
 +	return 0;
 +}
 +
 +/**
-+ * clear_session - clear session fields before attempting a re-login.
-+ * @session: session to initialize.
++ * iscsi_eh_timed_out - handle scsi command timeouts
++ * sc: scsi command
++ *
++ * Note:
++ *    In the normal case where the session is ok or the command was queued
++ *    when the session was down (and it never came up but did not yet timeout
++ *    - TODO use device block/unblock), we will fail the command here if
++ *    we can. For all other race cases where for example the session changed
++ *    state at the same time the command timed out but we had the task lock
++ *    we just ask for more time since those events will clean themselves up.
 + **/
-+static void
-+clear_session(struct iscsi_session *session)
++static enum scsi_eh_timer_return
++iscsi_eh_timed_out(struct scsi_cmnd *sc)
 +{
-+	struct iscsi_nop_info *nop_info, *tmp;
-+
-+	session->last_mgmt_itt = ISCSI_RSVD_TASK_TAG;
-+
-+	session->nop_reply.ttt = ISCSI_RSVD_TASK_TAG;
-+	list_for_each_entry_safe(nop_info, tmp, &session->nop_reply_list,
-+				 reply_list) {
-+		list_del(&nop_info->reply_list);
-+		kfree(nop_info);
-+	}
-+
-+	clear_bit(SESSION_IN_LOGOUT, &session->control_bits);
-+	clear_bit(SESSION_LOGOUT_REQUESTED, &session->control_bits);
-+	session->logout_response_timeout = 0;
-+}
-+
-+static void
-+init_session_structure(struct iscsi_session *session,
-+		       struct iscsi_session_ioctl *ioctld)
-+{
-+	INIT_LIST_HEAD(&session->list);
-+	session->config_number = ioctld->config_number;
-+	spin_lock_init(&session->portal_lock);
-+	session->portal_group_tag = -1;
-+	/* the first down should block */
-+	sema_init(&session->config_mutex, 0);
-+	INIT_LIST_HEAD(&session->pending_queue);
-+	INIT_LIST_HEAD(&session->active_queue);
-+	INIT_LIST_HEAD(&session->done_queue);
-+	spin_lock_init(&session->task_lock);
-+	INIT_LIST_HEAD(&(session->tx_task_head));
-+	init_waitqueue_head(&session->tx_wait_q);
-+	init_waitqueue_head(&session->login_wait_q);
-+	sema_init(&session->tx_blocked, 0);
-+	session->next_itt = 1;
-+	session->time2wait = -1;
-+	session->last_mgmt_itt = ISCSI_RSVD_TASK_TAG;
-+	session->mgmt_task_complete = NULL;
-+}
-+
-+/*
-+ * Timer processing for a session in Full Feature Phase (minus logout).
-+ * This timer may rearm itself.
-+ */
-+static void
-+check_transport_timeouts(unsigned long data)
-+{
-+	struct iscsi_session *session = (struct iscsi_session *)data;
-+	unsigned long timeout, next_timeout = 0, last_rx;
++	struct Scsi_Host *shost = sc->device->host;
++	struct iscsi_session *session = (struct iscsi_session *)shost->hostdata;
++	struct iscsi_task *task;
++	enum scsi_eh_timer_return ret = EH_RESET_TIMER;
++	int result = DID_BUS_BUSY << 16;
 +
 +	spin_lock(&session->task_lock);
 +
-+	if (test_bit(SESSION_TERMINATED, &session->control_bits) ||
-+	    !test_bit(SESSION_ESTABLISHED, &session->control_bits))
-+		goto done;
-+
-+	if (session->num_active_tasks)
-+		timeout = session->active_timeout;
-+	else
-+		timeout = session->idle_timeout;
-+	if (!timeout)
-+		goto check_window;
-+
-+	timeout *= HZ;
-+	last_rx = session->last_rx;
-+
-+	if (session->ping_timeout &&
-+	    time_before_eq(last_rx + timeout + (session->ping_timeout * HZ),
-+			   jiffies)) {
-+		iscsi_host_err(session, "ping timeout of %d secs expired, "
-+			       "last rx %lu, last ping %lu, now %lu\n",
-+			       session->ping_timeout, last_rx,
-+			       session->last_ping, jiffies);
-+		iscsi_drop_session(session);
-+		goto done;
-+	}
-+
-+	if (time_before_eq(last_rx + timeout, jiffies)) {
-+		if (time_before_eq(session->last_ping, last_rx)) {
-+			/*
-+			 * send a ping to try to provoke some
-+			 * traffic
-+			 */
-+			session->last_ping = jiffies;
-+			iscsi_wake_tx_thread(TX_PING, session);
-+		}
-+		next_timeout = last_rx + timeout + (session->ping_timeout * HZ);
-+	} else
-+		next_timeout = last_rx + timeout;
-+
-+ check_window:
-+	/*
-+	 * Do we still want to do this, or was it for an older
-+	 * bad target that has been fixed?
-+	 */
-+	if (test_bit(SESSION_WINDOW_CLOSED, &session->control_bits)) {
++	task = (struct iscsi_task *)sc->SCp.ptr;
++	if (!task) {
 +		/*
-+		 * command window closed, ping once every 5 secs to ensure
-+		 * we find out when it re-opens.  Target should send
-+		 * us an update when it does, but we're not very
-+		 * trusting of target correctness.
++		 * completed while timer was firing
 +		 */
-+		if (time_before(session->last_ping + (5 * HZ), jiffies))
-+			iscsi_wake_tx_thread(TX_PING, session);
-+		if (next_timeout)
-+			next_timeout = min(jiffies + (5 * HZ), next_timeout);
-+		else
-+			next_timeout = jiffies + (5 * HZ);
++		ret = EH_HANDLED;
++		goto done;
 +	}
 +
-+	if (next_timeout)
-+		mod_timer(&session->transport_timer, next_timeout);
++	if (test_bit(SESSION_ESTABLISHED, &session->control_bits))
++		ret = EH_NOT_HANDLED;
++	else if (test_bit(SESSION_REPLACEMENT_TIMEDOUT, &session->control_bits))
++		result = DID_NO_CONNECT << 16;
++
++	if (task->itt == ISCSI_RSVD_TASK_TAG) {
++		sc->result = result;
++		__iscsi_complete_task(task);
++		ret = EH_HANDLED;
++	}
++
 + done:
 +	spin_unlock(&session->task_lock);
-+}
 +
-+/**
-+ * iscsi_mod_session_timer - modify the session's transport timer
-+ * @session: iscsi session
-+ * @timeout: timeout in seconds
-+ *
-+ * Note:
-+ *    Must hold the task lock. And, if the new timeout was shorter
-+ *    than the window_closed_timeout we will end up delaying the
-+ *    new timeout. This should be rare and not really hurt anything
-+ *    so we ignore it for now.
-+ **/
-+void
-+iscsi_mod_session_timer(struct iscsi_session *session, int timeout)
-+{
-+	/*
-+	 * reset last_rx and last_ping, so that it does not look like
-+	 * we timed out when we are just switching states
-+	 */
-+	session->last_rx = jiffies;
-+	session->last_ping = jiffies;
-+
-+	if (test_bit(SESSION_WINDOW_CLOSED, &session->control_bits))
-+		return;
-+
-+	if (timeout)
-+		mod_timer(&session->transport_timer, jiffies + (timeout * HZ));
-+	else
-+		del_timer(&session->transport_timer);
-+}
-+
-+void
-+iscsi_wake_tx_thread(int control_bit, struct iscsi_session *session)
-+{
-+	set_bit(control_bit, &session->control_bits);
-+	set_bit(TX_WAKE, &session->control_bits);
-+	wake_up(&session->tx_wait_q);
-+}
-+
-+/**
-+ * iscsi_wait_for_session - Wait for a session event to be established.
-+ * @session: session to wait on.
-+ * @ignore_timeout: If zero this will return when the replacement timeout fires.
-+ *
-+ * Description:
-+ *    Returns 1 to indicate sesssion was established, or 0 to indicate
-+ *    we timed out (if ignore_timeout == 0) or are terminating.
-+ **/
-+int
-+iscsi_wait_for_session(struct iscsi_session *session, int ignore_timeout)
-+{
-+	int rc = 0;
-+
-+	while (1) {
-+		wait_event_interruptible(session->login_wait_q,
-+			test_bit(SESSION_ESTABLISHED, &session->control_bits) ||
-+			test_bit(SESSION_TERMINATING, &session->control_bits) ||
-+			(!ignore_timeout &&
-+			 test_bit(SESSION_REPLACEMENT_TIMEDOUT,
-+				  &session->control_bits)));
-+
-+		if (signal_pending(current))
-+			flush_signals(current);
-+
-+		/*
-+		 * need to test for termnination first to avoid falling
-+		 * in the tx request loop for ever
-+		 */
-+		if (test_bit(SESSION_TERMINATING, &session->control_bits))
-+			break;
-+
-+		if (test_bit(SESSION_ESTABLISHED, &session->control_bits)) {
-+			rc = 1;
-+			break;
-+		}
-+
-+		if (!ignore_timeout && test_bit(SESSION_REPLACEMENT_TIMEDOUT,
-+						 &session->control_bits))
-+			break;
-+	}
-+
-+	return rc;
-+}
-+
-+/*
-+ * Note the ordering matches the TX_* bit ordering.
-+ * See iscsi_tx_thread comment, this basically a
-+ * workqueue_struct.
-+ */
-+static struct {
-+	void (* request_fn)(struct iscsi_session *);
-+} tx_request_fns[] = {
-+	{ iscsi_send_nop_out },
-+	{ iscsi_send_task_mgmt },
-+	{ iscsi_run_pending_queue },
-+	{ iscsi_send_nop_replys },
-+	{ iscsi_send_r2t_data },
-+	{ iscsi_send_logout },
-+};
-+
-+static void
-+wait_for_tx_requests(struct iscsi_session *session)
-+{
-+	int req;
-+
-+	wait_event_interruptible(session->tx_wait_q,
-+		test_and_clear_bit(TX_WAKE, &session->control_bits));
-+
-+	for (req = 0; req < TX_WAKE; req++) {
-+		if (signal_pending(current))
-+			return;
-+		/*
-+		 * when a logout is in progress or about to be sent
-+		 * we do not start new requests, but we continue to
-+		 * respond to R2Ts and Nops.
-+		 */
-+		if (test_and_clear_bit(req, &session->control_bits)) {
-+			if (test_bit(SESSION_LOGOUT_REQUESTED,
-+				     &session->control_bits) &&
-+			    req <= TX_SCSI_COMMAND)
-+				continue;
-+
-+			tx_request_fns[req].request_fn(session);
-+		}
-+	}
-+}
-+
-+/**
-+ * session_kthread_sleep - put a thread to sleep while waiting for shutdown.
-+ * @session: session. 
-+ *
-+ * Description:
-+ *    If for some reason we could not relogin into a session we sleep here
-+ *    and and wait for someone to remove the session. Returns -EPERM to
-+ *    indicate the thread should exit, or zero to indicate that the thread
-+ *    can proceed with its normal action.
-+ **/
-+static inline int
-+session_kthread_sleep(struct iscsi_session *session)
-+{
-+ retest:
-+	set_current_state(TASK_INTERRUPTIBLE);
-+	if (kthread_should_stop()) {
-+		__set_current_state(TASK_RUNNING);
-+		return -EPERM;
-+	}
-+
-+	/*
-+	 * We fall into this sleep, when someone has broken us
-+	 * out of the lower loops that process requests or log us in,
-+	 * terminate the session (session drops will not sleep here),
-+	 * but have not (yet) cleaned up the host and called kthread_stop()).
-+	 */
-+	if (test_bit(SESSION_TERMINATING, &session->control_bits)) {
-+		schedule();
-+		if (signal_pending(current))
-+			flush_signals(current);
-+		goto retest;
-+	}
-+	__set_current_state(TASK_RUNNING);
-+	return 0;
-+}
-+
-+static void
-+replacement_timed_out(unsigned long data)
-+{
-+	struct iscsi_session *session = (struct iscsi_session *)data;
-+
-+	iscsi_host_err(session, "replacement session time out after %d "
-+		       "seconds, drop %lu, now %lu, failing all commands\n",
-+		       session->replacement_timeout,
-+		       session->session_drop_time, jiffies);
-+	/*
-+	 * need a lock or some real state code.
-+	 */
-+	if (test_bit(SESSION_ESTABLISHED, &session->control_bits) ||
-+	    test_and_set_bit(SESSION_REPLACEMENT_TIMEDOUT,
-+			     &session->control_bits))
-+		return;
-+
-+	wake_up_all(&session->login_wait_q);
-+}
-+
-+/*
-+ * the writer thread
-+ * TODO? - this could be nicely replaced with a work queue
-+ * having a work struct replacing each TX_* req, but will
-+ * using a singlethreaded_workqueue hurt perf when all
-+ * targets use the same cpu_workqueue_struct?
-+ * Or to reduce the number of threads, should we use one
-+ * per cpu workqueue for the entire driver for all sends?
-+ */
-+static int
-+iscsi_tx_thread(void *data)
-+{
-+	struct iscsi_session *session = data;
-+	int rc;
-+	unsigned long tmo;
-+	struct timer_list replacement_timer;
-+
-+	init_timer(&replacement_timer);
-+	replacement_timer.data = (unsigned long)session;
-+	replacement_timer.function = replacement_timed_out;
-+
-+	current->flags |= PF_MEMALLOC;
-+	allow_signal(SIGHUP);
-+
-+	/*
-+	 * tell the rx thread that we're about to block, and that
-+	 * it can safely call iscsi_sendmsg now as part of
-+	 * the Login phase.
-+	 */
-+	up(&session->tx_blocked);
-+
-+	while (!session_kthread_sleep(session)) {
-+		tmo = session->replacement_timeout * HZ;
-+		if (tmo && session->session_drop_time)
-+			mod_timer(&replacement_timer, jiffies + tmo);
-+		rc = iscsi_wait_for_session(session, 1);
-+		del_timer_sync(&replacement_timer);
-+		if (!rc)
-+			continue;
-+
-+		down(&session->tx_blocked);
-+
-+		/*
-+		 * make sure we start sending commands again,
-+		 * and clear any stale requests
-+		 */
-+		clear_bit(TX_TMF, &session->control_bits);
-+		clear_bit(TX_LOGOUT, &session->control_bits);
-+		clear_bit(TX_DATA, &session->control_bits);
-+		set_bit(TX_PING, &session->control_bits);
-+		set_bit(TX_SCSI_COMMAND, &session->control_bits);
-+		set_bit(TX_WAKE, &session->control_bits);
-+
-+		while (!signal_pending(current))
-+			wait_for_tx_requests(session);
-+		flush_signals(current);
-+
-+		up(&session->tx_blocked);
-+	}
-+
-+	return 0;
++	return ret;
 +}
 +
 +static int
-+establish_session(struct iscsi_session *session, unsigned int login_delay)
++iscsi_eh_abort(struct scsi_cmnd *sc)
 +{
-+	int rc;
-+	unsigned long login_failures = 0;
++	struct Scsi_Host *shost = sc->device->host;
++	struct iscsi_session *session = (struct iscsi_session *)shost->hostdata;
++	struct iscsi_task *task, *tmf_task;
++	int ret = FAILED;
 +
-+	while (!test_bit(SESSION_ESTABLISHED, &session->control_bits)) {
-+		if (login_delay) {
-+			iscsi_host_notice(session, "Waiting %u seconds before "
-+					  "next login attempt\n", login_delay);
-+			msleep_interruptible(login_delay * 1000);
-+		}
-+
-+		if (test_bit(SESSION_TERMINATING, &session->control_bits))
-+			return 0;
-+		/*
-+		 * wait for the tx thread to block or exit, ignoring signals.
-+		 * the rx thread needs to know that the tx thread is not
-+		 * running before it can safely close the socket and start
-+		 * a new login phase on a new socket.
-+		 */
-+		down(&session->tx_blocked);
-+		up(&session->tx_blocked);
-+
-+		rc = __establish_session(session);
-+		if (rc > 0)
-+			/* established or redirected */
-+			login_failures = 0;
-+		else if (rc < 0)
-+			/* failed, retry */
-+			login_failures++;
-+		 else {
-+			/* failed, give up */
-+			iscsi_host_err(session, "Session giving up\n");
-+			set_bit(SESSION_TERMINATING, &session->control_bits);
-+			return 0;
-+		}
-+
-+		/* slowly back off the frequency of login attempts */
-+		if (login_failures == 0)
-+			login_delay = 0;
-+		else if (login_failures < 30)
-+			login_delay = 1;
-+		else if (login_failures < 48)
-+			login_delay = 5;
-+		else if (!test_bit(SESSION_REPLACEMENT_TIMEDOUT,
-+				   &session->control_bits))
-+			login_delay = 10;
-+		 else
-+			login_delay = 60;
-+	}
-+
-+	return 1;
-+}
-+
-+/**
-+ * get_time2wait - return iSCSI DefaultTime2Wait
-+ * @session: iscsi session
-+ * @short_sessions: number of short sessions
-+ *
-+ * Description:
-+ *   Return DefaultTime2Wait. However, if the session dies really
-+ *   quicky after we reach FFP, we'll not be interoperable due to bugs
-+ *   in the target (or this driver) that send illegal opcodes,
-+ *   or disagreements about how to do CRC  calculations. To
-+ *   avoid spinning, we track sessions with really short
-+ *   lifetimes, and decrease the login frequency if we keep
-+ *   getting session failures, like we do for login failures.
-+ **/
-+static unsigned int
-+get_time2wait(struct iscsi_session *session, unsigned long *short_sessions)
-+{
-+	unsigned int login_delay = 0;
-+
-+	if (session->time2wait >= 0) {
-+		login_delay = session->time2wait;
-+		session->time2wait = -1;
-+	} else
-+		login_delay = session->def_time2wait;
-+
-+	if (time_before_eq(session->session_drop_time,
-+		     	   session->session_established_time + (2 * HZ))) {
-+		(*short_sessions)++;
-+
-+		if (*short_sessions < 30)
-+			login_delay = max_t(unsigned int, login_delay, 1);
-+		else if (*short_sessions < 48)
-+			login_delay = max_t(unsigned int, login_delay, 5);
-+		else if (!test_bit(SESSION_REPLACEMENT_TIMEDOUT,
-+				   &session->control_bits))
-+			login_delay = max_t(unsigned int, login_delay, 10);
-+		else
-+			login_delay = max_t(unsigned int, login_delay, 60);
-+
-+		iscsi_host_warn(session, "Session has ended quickly %lu times, "
-+				"login delay %u seconds\n", *short_sessions,
-+				login_delay);
-+	} else
-+		/* session lived long enough that the target is probably ok */
-+		*short_sessions = 0;
-+
-+	return login_delay;
-+}
-+
-+static int
-+iscsi_rx_thread(void *data)
-+{
-+	struct iscsi_session *session = data;
-+	struct iscsi_hdr hdr;
-+	unsigned int login_delay = 0;
-+	unsigned long short_sessions = 0;
-+
-+	current->flags |= PF_MEMALLOC;
-+	allow_signal(SIGHUP);
-+
-+        while (!session_kthread_sleep(session)) {
-+		if (!establish_session(session, login_delay))
-+			continue;
-+
-+		while (!signal_pending(current))
-+			iscsi_recv_pdu(session, &hdr, session->header_digest,
-+				       session->rx_buffer, ISCSI_RXCTRL_SIZE,
-+				       session->data_digest);
-+		flush_signals(current);
-+
-+		login_delay = get_time2wait(session, &short_sessions);
-+		/*
-+		 * if this is a session drop we need to wait for
-+		 * the tx thread to stop queueing and processing requests
-+		 */
-+		down(&session->tx_blocked);
-+		up(&session->tx_blocked);
-+
-+		/*
-+		 * session dropped unexpectedly, often due to
-+		 * network problems
-+		 */
-+		iscsi_host_err(session, "Session dropped\n");
-+		spin_lock_bh(&session->task_lock);
-+		iscsi_flush_queues(session, ISCSI_MAX_LUNS, DID_BUS_BUSY);
-+		clear_session(session);
-+		spin_unlock_bh(&session->task_lock);
-+	}
-+	/*
-+	 * If there are any commands left this will remove them.
-+	 */
++	spin_unlock_irq(shost->host_lock);
 +	spin_lock_bh(&session->task_lock);
-+	iscsi_flush_queues(session, ISCSI_MAX_LUNS, DID_NO_CONNECT);
-+	spin_unlock_bh(&session->task_lock);
 +
-+	return 0;
++	/*
++	 * TODO must fix these type of tests
++	 */
++	if (!test_bit(SESSION_ESTABLISHED, &session->control_bits))
++		goto done;
++
++	task = (struct iscsi_task *)sc->SCp.ptr;
++	if (!task) {
++		iscsi_host_err(session, "eh_abort cmnd already done\n");
++		ret = SUCCESS;
++		goto done;
++	}
++
++	if (task->itt == ISCSI_RSVD_TASK_TAG) {
++		__iscsi_complete_task(task);
++		ret = SUCCESS;
++		goto done;
++	}
++
++	/*
++	 * TODO need a iscsi_dev_info
++	 */
++	iscsi_host_info(session, "Sending ABORT TASK for task itt %u\n",
++			task->itt);
++
++	tmf_task = session->mgmt_task;
++	memset(tmf_task, 0, sizeof(*tmf_task));
++	iscsi_init_task(tmf_task);
++	tmf_task->session = session;
++	tmf_task->lun = task->lun;
++	/*
++	 * this will become the refcmdsn
++	 */
++	tmf_task->cmdsn = task->cmdsn;
++	tmf_task->rtt = task->itt;
++	set_bit(ISCSI_TASK_ABORT, &tmf_task->flags);
++
++	if (!iscsi_exec_task_mgmt(tmf_task, session->abort_timeout)) {
++		ret = SUCCESS;
++		goto done;
++	}
++	/*
++	 * TMF may have failed if the task completed first (check here)
++	 */
++	if (!sc->SCp.ptr)
++		ret = SUCCESS;
++ done:
++	spin_unlock_bh(&session->task_lock);
++	spin_lock_irq(shost->host_lock);
++
++	return ret;
 +}
 +
 +static int
-+start_session_threads(struct iscsi_session *session)
++iscsi_eh_device_reset(struct scsi_cmnd *sc)
 +{
++	struct Scsi_Host *shost = sc->device->host;
++	struct iscsi_session *session = (struct iscsi_session *)shost->hostdata;
++	struct iscsi_task *task;
++	int ret = FAILED;
++
++	spin_unlock_irq(shost->host_lock);
++	spin_lock_bh(&session->task_lock);
++
++	if (!test_bit(SESSION_ESTABLISHED, &session->control_bits))
++		goto done;
++
++	task = session->mgmt_task;
++	memset(task, 0, sizeof(*task));
++	iscsi_init_task(task);
++	task->session = session;
++	task->lun = sc->device->lun;
++	__set_bit(ISCSI_TASK_ABORT_TASK_SET, &task->flags);
++
 +	/*
-+	 * transport timer reused for replacement timer and
-+	 * testing transport connection
++	 * need a iscsi_dev_info
 +	 */
-+	init_timer(&session->transport_timer);
-+	session->transport_timer.data = (unsigned long)session;
-+	session->transport_timer.function = check_transport_timeouts;
++	iscsi_host_info(session, "Sending ABORT TASK SET\n");
++	if (!iscsi_exec_task_mgmt(task, session->abort_timeout)) {
++		ret = SUCCESS;
++		goto done;
++	}
 +
-+	init_timer(&session->logout_timer);
-+	session->logout_timer.data = (unsigned long)session;
-+	session->logout_timer.function = handle_logout_timeouts;
++	iscsi_init_task(task);
++	__set_bit(ISCSI_TASK_LU_RESET, &task->flags);
 +
-+	session->tx_task = kthread_run(iscsi_tx_thread, session, "iscsi-tx");
-+	if (IS_ERR(session->tx_task)) {
-+		iscsi_host_err(session, "Failed to start tx thread, terminating"
-+			       " session\n");
++	iscsi_host_info(session, "Sending LU RESET\n");
++ 	if (!iscsi_exec_task_mgmt(task, session->reset_timeout))
++		ret = SUCCESS;
++ done:
++	spin_unlock_bh(&session->task_lock);
++	spin_lock_irq(shost->host_lock);
++
++	return ret;
++}
++
++static int
++iscsi_eh_host_reset(struct scsi_cmnd *sc)
++{
++	struct Scsi_Host *shost = sc->device->host;
++	struct iscsi_session *session = (struct iscsi_session *)shost->hostdata;
++	struct iscsi_task *task;
++	int ret = FAILED;
++
++	spin_unlock_irq(shost->host_lock);
++	spin_lock_bh(&session->task_lock);
++
++	if (!test_bit(SESSION_ESTABLISHED, &session->control_bits))
++		goto done;
++
++	task = session->mgmt_task;
++	memset(task, 0, sizeof(*task));
++	iscsi_init_task(task);
++	task->session = session;
++	__set_bit(ISCSI_TASK_TGT_WARM_RESET, &task->flags);
++
++	iscsi_host_info(session, "Sending TARGET WARM RESET\n");
++	if (iscsi_exec_task_mgmt(task, session->reset_timeout))
++		/*
++		 * no other options
++		 */
++		iscsi_drop_session(session);
++
++ done:
++	/*
++	 * if we failed, scsi-ml will put us offline
++	 * and if we were successful it will redrive the
++	 * commands, so we clean everything up from our side
++	 * so scsi-ml can retake ownership of the commands.
++	 * (At this point the tx and rx threads will not be
++	 * touching the commands since either the session
++	 * was dropped or we just did a target reset)
++	 */
++	iscsi_flush_queues(session, ISCSI_MAX_LUNS, DID_BUS_BUSY);
++
++	spin_unlock_bh(&session->task_lock);
++	if (iscsi_wait_for_session(session, 0))
++		ret = SUCCESS;
++	spin_lock_irq(shost->host_lock);
++
++	return ret;
++}
++
++void
++iscsi_complete_command(struct scsi_cmnd *sc)
++{
++	sc->SCp.ptr = NULL;
++	sc->scsi_done(sc);
++}
++
++/**
++ * iscsi_queuecommand - queuecommand interface for the iSCSI driver.
++ * @sc: scsi command from the midlayer
++ * @done: Call back function to be called once the command is executed.
++ **/
++static int
++iscsi_queuecommand(struct scsi_cmnd *sc, void (*done) (struct scsi_cmnd *))
++{
++	struct Scsi_Host *host = sc->device->host;
++	struct iscsi_session *session = (struct iscsi_session *)host->hostdata;
++	struct iscsi_task *task;
++	int ret = 0;
++
++	spin_unlock_irq(host->host_lock);
++
++	/*
++	 * record whether I/O commands have been ever been sent on this
++	 * session, to help us decide when we need the  session and should
++	 * retry logins regardless of the login status. Ignore all the
++	 * commands sent by default as part of the LUN being scanned or a
++	 * device being opened, so that sessions that have always been idle
++	 * can be dropped.  Of course, this  is always true for disks, since
++	 * Linux will do reads  looking for a partition table.
++	 */
++	switch (sc->cmnd[0]) {
++	case INQUIRY:
++	case REPORT_LUNS:
++	case TEST_UNIT_READY:
++	case READ_CAPACITY:
++	case START_STOP:
++	case MODE_SENSE:
++		break;
++	default:
++		session->commands_queued = 1;
++		break;
++	}
++
++	if (test_bit(SESSION_REPLACEMENT_TIMEDOUT, &session->control_bits)) {
++		if (printk_ratelimit())
++			iscsi_host_warn(session, "lun%u: Session terminating, "
++					"failing to queue cdb 0x%x and any "
++					"following commands\n", sc->device->lun,					sc->cmnd[0]);
 +		goto fail;
 +	}
 +
-+	session->rx_task = kthread_run(iscsi_rx_thread, session, "iscsi-rx");
-+	if (IS_ERR(session->rx_task)) {
-+		iscsi_host_err(session, "Failed to start rx thread, terminating"
-+			       " session\n");
-+		goto shutdown_tx_thread;
-+	}
++	/* make sure we can complete it properly later */
++	sc->scsi_done = done;
++	sc->result = 0;
++	memset(&sc->SCp, 0, sizeof(sc->SCp));
 +
-+	return 0;
-+
-+ shutdown_tx_thread:
-+	set_bit(SESSION_TERMINATING, &session->control_bits);
-+	kthread_stop(session->tx_task);
-+ fail:
-+	return -EAGAIN;
-+}
-+
-+static void
-+free_session(struct iscsi_session *session)
-+{
-+	if (session->preallocated_task)
-+		kmem_cache_free(iscsi_task_cache, session->preallocated_task);
-+
-+	if (session->mgmt_task)
-+		kmem_cache_free(iscsi_task_cache, session->mgmt_task);
-+
-+	if (session->rx_tfm)
-+		crypto_free_tfm(session->rx_tfm);
-+	if (session->tx_tfm)
-+		crypto_free_tfm(session->tx_tfm);
-+	if (session->md5_tfm)
-+		crypto_free_tfm(session->md5_tfm);
-+
-+	kfree(session->auth_client_block);
-+	kfree(session->auth_recv_string_block);
-+	kfree(session->auth_send_string_block);
-+	kfree(session->auth_recv_binary_block);
-+	kfree(session->auth_send_binary_block);
-+	kfree(session->username);
-+	kfree(session->password);
-+	kfree(session->username_in);
-+	kfree(session->password_in);
-+	kfree(session->initiator_name);
-+	kfree(session->initiator_alias);
-+	kfree(session->target_name);
-+	kfree(session->target_alias);
-+}
-+
-+void
-+iscsi_destroy_session(struct iscsi_session *session)
-+{
-+	set_bit(SESSION_TERMINATING, &session->control_bits);
-+	clear_bit(SESSION_ESTABLISHED, &session->control_bits);
-+
-+	down(&iscsi_session_sem);
-+	list_del(&session->list);
-+	up(&iscsi_session_sem);
-+
-+	session->session_drop_time = jiffies ? jiffies : 1;
-+	signal_iscsi_threads(session);
-+
-+	kthread_stop(session->tx_task);
-+	kthread_stop(session->rx_task);
-+
-+	iscsi_disconnect(session);
-+
-+	set_bit(SESSION_TERMINATED, &session->control_bits);
-+	del_timer_sync(&session->transport_timer);
-+	del_timer_sync(&session->logout_timer);
-+	/*
-+	 * grab the config mutex to make sure update_session is not
-+	 * accessing the session fields we are going to free
-+	 */
-+	down(&session->config_mutex);
-+	free_session(session);
-+	up(&session->config_mutex);
-+}
-+
-+int
-+iscsi_create_session(struct iscsi_session *session,
-+		     struct iscsi_session_ioctl *ioctld)
-+{
-+	int rc;
-+
-+	init_session_structure(session, ioctld);
-+
-+	session->preallocated_task = kmem_cache_alloc(iscsi_task_cache,
-+						      GFP_KERNEL);
-+	if (!session->preallocated_task) {
-+		iscsi_host_err(session, "Couldn't preallocate task\n");
-+		rc = -ENOMEM;
-+		goto free_session;
-+	}
-+
-+	session->mgmt_task = kmem_cache_alloc(iscsi_task_cache, GFP_KERNEL);
-+	if (!session->mgmt_task) {
-+		iscsi_host_err(session, "Couldn't preallocate mgmt task\n");
-+		rc = -ENOMEM;
-+		goto free_session;
-+	}
-+	memset(session->mgmt_task, 0, sizeof(*session->mgmt_task));
-+	iscsi_init_task(session->mgmt_task);
-+
-+	rc = copy_iscsi_strings(session, ioctld);
-+	if (rc)
-+		goto free_session;
-+
-+	memcpy(session->isid, ioctld->isid, sizeof(session->isid));
++	spin_lock_bh(&session->task_lock);
 +
 +	/*
-+	 * FIXME: Do we have to check on both the username_in and
-+	 * password_length_in. Same with iscsi_update_session as well? Smitha
-+	 */
-+	if (ioctld->username_in[0] || ioctld->password_length_in)
-+		session->bidirectional_auth = 1;
-+	else
-+		session->bidirectional_auth = 0;
-+	rc = alloc_auth_buffers(session);
-+	if (rc)
-+		goto free_session;
-+
-+	memcpy(&session->portal, &ioctld->portal, sizeof(ioctld->portal));
-+	iscsi_set_portal(session);
-+
-+	/*
-+	 * preallocate rx/tx_tfm, so that we do not have to possibly
-+	 * call crypto_alloc_tfm (it uses GFP_KERNEL) while IO is queued.
-+	 */
-+	session->rx_tfm = crypto_alloc_tfm("crc32c", 0);
-+	if (!session->rx_tfm) {
-+		rc = -ENOMEM;
-+		goto free_session;
-+	}
-+
-+	session->tx_tfm = crypto_alloc_tfm("crc32c", 0);
-+	if (!session->tx_tfm) {
-+		rc = -ENOMEM;
-+		goto free_session;
-+	}
-+
-+	rc = start_session_threads(session);
-+	up(&session->config_mutex);
-+	if (rc)
-+		goto free_session;
-+
-+	down(&iscsi_session_sem);
-+	list_add_tail(&session->list, &iscsi_sessions);
-+	up(&iscsi_session_sem);
-+
-+	wait_event_interruptible(session->login_wait_q,
-+		test_bit(SESSION_ESTABLISHED, &session->control_bits));
-+	if (!test_bit(SESSION_ESTABLISHED, &session->control_bits)) {
-+		iscsi_destroy_session(session);
-+		return -ENOTCONN;
-+	}
-+
-+	return 0;
-+	
-+ free_session:
-+	free_session(session);
-+	return rc;
-+}
-+
-+struct iscsi_session *
-+iscsi_find_session(const char *target_name, u8 isid[6], int tpgt)
-+{
-+	struct iscsi_session *session;
-+
-+	down(&iscsi_session_sem);
-+
-+	list_for_each_entry(session, &iscsi_sessions, list) {
-+		 if (!strcmp(session->target_name, target_name) &&
-+		     !memcmp(session->isid, isid, sizeof(isid)) &&
-+		     session->portal_group_tag == tpgt) {
-+			if (scsi_host_get(session->shost)) {
-+				up(&iscsi_session_sem);
-+				return session;
-+			}
-+			break;
-+		}
-+	}
-+
-+	up(&iscsi_session_sem);
-+	return NULL;
-+}
-+
-+int
-+iscsi_update_address(struct iscsi_session *session, char *address)
-+{
-+	struct sockaddr_in *addr;
-+	char *tag;
-+	char *port;
-+	int err = 1;
-+
-+	tag = strrchr(address, ',');
-+	if (tag) {
-+		*tag = '\0';
-+		tag++;
-+	}
-+
-+	port = strrchr(address, ':');
-+	if (port) {
-+		*port = '\0';
-+		port++;
-+	}
-+
-+	/*
-+	 * Still only ipv4 is supported. No access to ipv6
-+	 * to test so feel free to implement it later...
-+	 */
-+	if (address[0] == '[') {
-+		iscsi_host_err(session, "Driver does not support ipv6 "
-+			       "addresses\n");
-+		err = 0;
++	 * alloc a task and add it to the pending queue so
++	 * the tx-thread will run it
++	 */ 
++	task = iscsi_alloc_task(session);
++	if (!task) {
++		ret = SCSI_MLQUEUE_HOST_BUSY;
 +		goto done;
 +	}
 +
-+	addr = (struct sockaddr_in *)&session->addr;
-+	addr->sin_addr.s_addr = in_aton(address);
-+	if (port)
-+		addr->sin_port = htons(simple_strtoul(port, NULL, 0));
-+	else
-+		addr->sin_port = htons(ISCSI_TCP_PORT);
++	task->lun = sc->device->lun;
++	task->scsi_cmnd = sc;
++	sc->SCp.ptr = (char *)task;
++	list_add_tail(&task->queue, &session->pending_queue);
 +
++	iscsi_wake_tx_thread(TX_SCSI_COMMAND, session);
 + done:
-+	/* restore the original strings */
-+	if (tag) {
-+		--tag;
-+		*tag = ',';
-+	}
++	spin_unlock_bh(&session->task_lock);
++	spin_lock_irq(host->host_lock);
++	return ret;
 +
-+	if (port) {
-+		--port;
-+		*port = ':';
-+	}
++ fail:
++	spin_lock_irq(host->host_lock);
++	sc->result = DID_NO_CONNECT << 16;
++	sc->resid = sc->request_bufflen;
++	set_lun_comm_failure(sc);
 +
-+	return err;
++	done(sc);
++	return 0;
 +}
-diff -Naurp scsi-misc-2.6.orig/drivers/scsi/iscsi-sfnet/iscsi-session.h scsi-misc-2.6.patch/drivers/scsi/iscsi-sfnet/iscsi-session.h
---- scsi-misc-2.6.orig/drivers/scsi/iscsi-sfnet/iscsi-session.h	1969-12-31 16:00:00.000000000 -0800
-+++ scsi-misc-2.6.patch/drivers/scsi/iscsi-sfnet/iscsi-session.h	2005-01-10 12:22:24.875910647 -0800
-@@ -0,0 +1,232 @@
++
++int
++iscsi_destroy_host(struct Scsi_Host *shost)
++{
++	struct iscsi_session *session = (struct iscsi_session *)shost->hostdata;
++
++	if (!test_bit(SESSION_CREATED, &session->control_bits))
++		return -EINVAL;
++
++	if (test_and_set_bit(SESSION_RELEASING, &session->control_bits))
++		return -EINVAL;
++
++	scsi_remove_host(shost);
++	iscsi_destroy_session(session);
++	scsi_host_put(shost);
++	return 0;
++}
++
++static struct scsi_host_template iscsi_driver_template = {
++	.name = "SFNet iSCSI driver",
++	.proc_name = ISCSI_PROC_NAME,
++	.module = THIS_MODULE,
++	.queuecommand = iscsi_queuecommand,
++	.eh_timed_out = iscsi_eh_timed_out,
++	.eh_abort_handler = iscsi_eh_abort,
++	.eh_device_reset_handler = iscsi_eh_device_reset,
++	.eh_host_reset_handler = iscsi_eh_host_reset,
++	.skip_settle_delay = 1,
++	.slave_configure = iscsi_slave_configure,
++	.this_id = -1,
++	.can_queue = ISCSI_CANQUEUE,
++	.sg_tablesize = ISCSI_MAX_SG,
++	.cmd_per_lun = ISCSI_CMDS_PER_LUN,
++	.use_clustering = ENABLE_CLUSTERING,
++	.max_sectors = 256,
++	.emulated = 1,
++	.shost_attrs = iscsi_host_attrs,
++};
++
++int
++iscsi_create_host(struct iscsi_session_ioctl *ioctld)
++{
++	struct Scsi_Host *shost;
++	struct iscsi_session *session;
++	int rc;
++
++	shost = scsi_host_alloc(&iscsi_driver_template, sizeof(*session));
++	if (!shost) 
++		return -ENOMEM;
++
++	shost->max_id = ISCSI_MAX_TARGETS;
++	shost->max_lun = ISCSI_MAX_LUNS;
++	shost->max_channel = ISCSI_MAX_CHANNELS;
++	shost->max_cmd_len = ISCSI_MAX_CMD_LEN;
++	shost->transportt = iscsi_transportt;
++
++	session = (struct iscsi_session *)shost->hostdata;
++	memset(session, 0, sizeof(*session));
++	session->shost = shost;
++
++	rc = iscsi_create_session(session, ioctld);
++	if (rc) {
++		scsi_host_put(shost);
++		return rc;
++	}
++
++	rc = scsi_add_host(shost, NULL);
++	if (rc) {
++		iscsi_destroy_session(session);
++		scsi_host_put(shost);
++		return rc;
++	}
++
++	scsi_scan_host(shost);
++	set_bit(SESSION_CREATED, &session->control_bits);
++
++	return 0;
++}
++
++/*
++ * This function must only be called when the sysfs and
++ * ioctl interfaces are inaccessible. For example when
++ * the module_exit function is executed the driver's sysfs
++ * and ioctl entry points will return "no device".
++ */
++static void
++iscsi_destroy_all_hosts(void)
++{
++	struct iscsi_session *session, *tmp;
++
++	list_for_each_entry_safe(session, tmp, &iscsi_sessions, list)
++		iscsi_destroy_host(session->shost);
++}
++
++static int
++iscsi_reboot_notifier_function(struct notifier_block *this,
++			       unsigned long code, void *unused)
++{
++	iscsi_destroy_all_hosts();
++	iscsi_notice("Driver shutdown completed\n");
++	return NOTIFY_DONE;
++}
++
++/* XXX move this to driver model shutdown */
++static struct notifier_block iscsi_reboot_notifier = {
++	.notifier_call = iscsi_reboot_notifier_function,
++	.next = NULL,
++	.priority = 255, /* priority, might need to have a
++			  * relook at the value
++			  */
++};
++
++static int
++__init iscsi_init(void)
++{
++	iscsi_notice("%s (%s) built for Linux %s\n", ISCSI_DRIVER_VERSION,
++		     ISCSI_DATE, UTS_RELEASE);
++
++	/* pool of iscsi tasks */
++	iscsi_task_cache = kmem_cache_create("iscsi_task_cache",
++					     sizeof(struct iscsi_task), 0,
++					     SLAB_NO_REAP, NULL, NULL);
++
++	if (!iscsi_task_cache) {
++		iscsi_err("kmem_cache_create failed\n");
++		return -ENOMEM;
++	}
++
++	iscsi_transportt = iscsi_attach_transport(&iscsi_fnt);
++	if (!iscsi_transportt)
++		goto free_cache;
++
++	if (iscsi_register_interface())
++		goto release_transport;
++
++	register_reboot_notifier(&iscsi_reboot_notifier);
++	return 0;
++
++ release_transport:
++	iscsi_release_transport(iscsi_transportt);
++ free_cache:
++	kmem_cache_destroy(iscsi_task_cache);
++	iscsi_err("Failed to init driver\n");
++	return -ENODEV;
++}
++
++static void
++__exit iscsi_cleanup(void)
++{
++	unregister_reboot_notifier(&iscsi_reboot_notifier);
++	iscsi_unregister_interface();
++	iscsi_destroy_all_hosts();
++	iscsi_release_transport(iscsi_transportt);
++	kmem_cache_destroy(iscsi_task_cache);
++}
++module_init(iscsi_init);
++module_exit(iscsi_cleanup);
+diff -Naurp scsi-misc-2.6.orig/drivers/scsi/iscsi-sfnet/iscsi-sfnet.h scsi-misc-2.6.patch/drivers/scsi/iscsi-sfnet/iscsi-sfnet.h
+--- scsi-misc-2.6.orig/drivers/scsi/iscsi-sfnet/iscsi-sfnet.h	1969-12-31 16:00:00.000000000 -0800
++++ scsi-misc-2.6.patch/drivers/scsi/iscsi-sfnet/iscsi-sfnet.h	2005-01-10 12:20:05.306809612 -0800
+@@ -0,0 +1,130 @@
 +/*
 + * iSCSI driver for Linux
 + * Copyright (C) 2001 Cisco Systems, Inc.
@@ -1593,218 +642,116 @@ diff -Naurp scsi-misc-2.6.orig/drivers/scsi/iscsi-sfnet/iscsi-session.h scsi-mis
 + *
 + * See the file COPYING included with this distribution for more details.
 + *
-+ * define the iSCSI session structure needed by the login library
++ * Misc definitions for the iSCSI kernel module
 + */
-+#ifndef ISCSI_SESSION_H_
-+#define ISCSI_SESSION_H_
++#ifndef ISCSI_SFNET_H_
++#define ISCSI_SFNET_H_
 +
-+#include <linux/crypto.h>
 +#include <linux/socket.h>
-+#include <scsi/scsi.h>
++#include <linux/random.h>
++#include <scsi/scsi_cmnd.h>
 +#include <scsi/scsi_host.h>
++#include <scsi/scsi_device.h>
++#include <scsi/scsi_transport_iscsi.h>
 +
-+#include "iscsi-auth-client.h"
-+#include "iscsi-portal.h"
-+
++struct iscsi_session;
 +struct iscsi_session_ioctl;
 +struct iscsi_task;
++struct iscsi_hdr;
 +
-+/* used for replying to NOPs */
-+struct iscsi_nop_info {
-+	struct list_head reply_list;
-+	u32 ttt;
-+	unsigned char lun[8];
-+};
++#define ISCSI_DRIVER_VERSION	"4:0.1.10.1"
++#define ISCSI_DATE		"3-Jan-2005"
 +
-+#define ISCSI_RXCTRL_SIZE PAGE_SIZE
++/* TODO (one day): compeltely test 16 byte cmd len support */
++#define ISCSI_MAX_CMD_LEN	12
++#define ISCSI_CMDS_PER_LUN	32
++#define ISCSI_MAX_CMDS_PER_LUN	128
++#define ISCSI_CANQUEUE		8192
++#define ISCSI_MAX_SG		64
++#define ISCSI_MAX_LUNS		256
++#define ISCSI_MAX_TARGETS	1
++#define ISCSI_MAX_CHANNELS	0
 +
-+struct iscsi_session {
-+	struct Scsi_Host	*shost;
-+	struct list_head	list;
-+	/*
-+	 * the config mutex along with the portal lock protect
-+	 * and serialize the creation and update of session info
-+	 */
-+	struct semaphore	config_mutex;
-+	u32			config_number;
-+	/*
-+	 * iSCSI settings
-+	 */
-+	unsigned char		*initiator_name;
-+	unsigned char		*initiator_alias;
-+	unsigned char		*target_name;
-+	unsigned char		*target_alias;
-+	u8			isid[6];
-+	u16			tsih;
-+	u32			cmd_sn;
-+	u32			exp_cmd_sn;
-+	u32			max_cmd_sn;
-+	u32			exp_stat_sn;
-+	int			immediate_data;
-+	int			initial_r2t;
-+	/* the value we declare */
-+	int			max_recv_data_segment_len; 
-+	/* the value declared by the target */
-+	int			max_xmit_data_segment_len;
-+	int			first_burst_len;
-+	int			max_burst_len;
-+	int			data_pdu_in_order;
-+	int			data_seq_in_order;
-+	int			def_time2wait;
-+	int			def_time2retain;
-+	int			header_digest;
-+	int			data_digest;
-+	int			type;
-+	int			current_stage;
-+	int			next_stage;
-+	int			partial_response;
-+	int			portal_group_tag;
-+	int			vendor_specific_keys;
-+	int			send_async_text;
-+	unsigned int		irrelevant_keys_bitmap;
-+	u32			next_itt;
-+	long			time2wait;
-+	/*
-+	 * Authentication settings
-+	 */
-+	char			*username;
-+	unsigned char		*password;
-+	int			password_length;
-+	char			*username_in;
-+	unsigned char		*password_in;
-+	int			password_length_in;
-+	struct crypto_tfm	*md5_tfm;
-+	int			bidirectional_auth;
-+	struct iscsi_acl	*auth_client_block;
-+	struct auth_str_block	*auth_recv_string_block;
-+	struct auth_str_block	*auth_send_string_block;
-+	struct auth_large_binary *auth_recv_binary_block;
-+	struct auth_large_binary *auth_send_binary_block;
-+	/*
-+	 * Portal/Network settings
-+	 * support ipv4 when we finish the interface
-+	 */
-+	struct socket		*socket;
-+	/* we only support ipv4 until we can find a setup to test */
-+	struct sockaddr 	addr;
-+	int			tcp_window_size;
-+	spinlock_t		portal_lock;
-+	struct iscsi_portal_info portal;
-+	/*
-+	 * various accounting sutff
-+	 */
-+	/*
-+	 * *_time fields used to detect sessions that die as soon
-+	 * as we hit FFP
-+	 */
-+	unsigned long		session_drop_time;
-+	unsigned long		session_established_time;
-+	int			ever_established;
-+	int			commands_queued;
-+	/*
-+	 * timer fields
-+	 */
-+	struct timer_list	transport_timer;
-+	struct timer_list	logout_timer;
-+	unsigned long		last_rx;
-+	unsigned long		last_ping;
-+	unsigned long		window_closed;
-+	int			login_timeout;
-+	int			active_timeout;
-+	int			idle_timeout;
-+	int			ping_timeout;
-+	int			abort_timeout;
-+	int			reset_timeout;
-+	int			replacement_timeout;
-+	int			logout_response_timeout;
-+	/*
-+	 * iSCSI task/request
-+	 * - Requests originating from SCSI-ml like scsi cmnds and
-+	 * management functions are task backed.
-+	 * - iSCSI requests like Nop, Logout or Login do not
-+	 * have a struct iscsi_task to avoid allocating memory
-+	 * when not needed.
-+	 *
-+	 * The task lock protects the task/cmnd queues and the
-+	 * access to the task when the tx and rx thread could
-+	 * be accessing it at the same time.
-+	 */
-+	spinlock_t		task_lock;
-+	struct iscsi_task	*preallocated_task;
-+	struct list_head	pending_queue;
-+	struct list_head	active_queue;
-+	struct list_head	done_queue;
-+	struct list_head	tx_task_head;
-+	int			num_active_tasks;
-+	struct iscsi_nop_info	nop_reply;
-+	struct list_head	nop_reply_list;
-+	/* itt of the last mgmt task we sent */
-+	u32			last_mgmt_itt;
-+	/* preallocated task for TMFs */
-+	struct iscsi_task	*mgmt_task;
-+	struct completion	*mgmt_task_complete;
-+	/*
-+	 * thread control stuff
-+	 */
-+	unsigned long		control_bits;
-+	wait_queue_head_t	tx_wait_q;
-+	wait_queue_head_t	login_wait_q;
-+	struct semaphore	tx_blocked;
-+	struct task_struct	*rx_task;
-+	struct task_struct	*tx_task;
-+	struct crypto_tfm	*rx_tfm;
-+	struct crypto_tfm	*tx_tfm;
-+	/*
-+	 * preallocated buffer for iSCSI requests that have
-+	 * data, and do not originate from scsi-ml
-+	 */
-+	unsigned char		rx_buffer[ISCSI_RXCTRL_SIZE];
-+};
++#define ISCSI_PROC_NAME 	"iscsi-sfnet"
 +
-+/* session control bits */
++#define iscsi_host_err(s, fmt, args...) \
++	printk(KERN_ERR "iscsi-sfnet:host%d: "fmt, s->shost->host_no, ##args)
++#define iscsi_err(fmt, args...) \
++	printk(KERN_ERR "iscsi-sfnet: "fmt, ##args)
++
++#define iscsi_host_warn(s, fmt, args...) \
++	printk(KERN_WARNING "iscsi-sfnet:host%d: "fmt, s->shost->host_no, \
++	       ##args)
++#define iscsi_warn(fmt, args...) \
++	printk(KERN_WARNING "iscsi-sfnet: "fmt, ##args)
++
++#define iscsi_host_notice(s, fmt, args...) \
++	printk(KERN_NOTICE "iscsi-sfnet:host%d: "fmt, s->shost->host_no, ##args)
++#define iscsi_notice(fmt, args...) \
++	printk(KERN_NOTICE "iscsi-sfnet: "fmt, ##args)
++
++#define iscsi_host_info(s, fmt, args...) \
++	printk(KERN_INFO "iscsi-sfnet:host%d: "fmt, s->shost->host_no, ##args)
++#define iscsi_info(fmt, args...) \
++	printk(KERN_INFO "iscsi-sfnet: "fmt, ##args)
++
++/* miscalleneous routines */
++extern unsigned int iscsi_command_attr(struct scsi_cmnd *sc);
++extern void iscsi_complete_command(struct scsi_cmnd *sc);
++
++/* Routines related to Serial Number Arithmetic */
++extern int iscsi_sna_lt(u32 n1, u32 n2);
++extern int iscsi_sna_lte(u32 n1, u32 n2);
++
++/*
++ * IO return values the driver uses in the send, recv
++ * and network code. 
++ */
 +enum {
-+	/*
-+	 * the tx bits match the tx_request array in
-+	 * iscsi-initiator.c, so if you modify this don't forget
-+	 */
-+	TX_PING,		/* NopOut, reply requested */
-+	TX_TMF,
-+	TX_SCSI_COMMAND,
-+	TX_NOP_REPLY,		/* reply to a Nop-in from the target */
-+	TX_DATA,
-+	TX_LOGOUT,
-+	TX_WAKE,
-+
-+	SESSION_CREATED,
-+	SESSION_RELEASING,
-+	SESSION_REPLACEMENT_TIMEDOUT,
-+	SESSION_ESTABLISHED,
-+	SESSION_LOGOUT_REQUESTED,
-+	SESSION_IN_LOGOUT,
-+	SESSION_WINDOW_CLOSED,
-+	SESSION_TERMINATING,
-+	SESSION_TERMINATED,
++	ISCSI_IO_SUCCESS,
++	ISCSI_IO_ERR,
++	ISCSI_IO_CRC32C_ERR,
++	ISCSI_IO_INTR,
++	ISCSI_IO_INVALID_OP,
 +};
 +
-+extern void iscsi_wake_tx_thread(int control_bit,
-+				 struct iscsi_session *session);
-+extern void iscsi_request_logout(struct iscsi_session *session, int logout,
-+				 int logout_response);
-+extern void iscsi_drop_session(struct iscsi_session *session);
-+extern int iscsi_update_session(struct iscsi_session *session,
-+				struct iscsi_session_ioctl *ioctld);
-+extern int iscsi_create_session(struct iscsi_session *session,
-+				struct iscsi_session_ioctl *ioctld);
-+extern void iscsi_destroy_session(struct iscsi_session *session);
-+extern struct iscsi_session *iscsi_find_session(const char *target_name,
-+						u8 isid[6], int tpgt);
-+extern int iscsi_update_address(struct iscsi_session *session, char *address);
-+extern int iscsi_wait_for_session(struct iscsi_session *session,
-+				  int ignore_timeout);
-+extern void iscsi_mod_session_timer(struct iscsi_session *session, int timeout);
++/* Routines to build and transmit iSCSI PDUs and/or data */
++extern void iscsi_send_scsi_cmnd(struct iscsi_task *task);
++extern void iscsi_send_task_mgmt(struct iscsi_session *session);
++extern void iscsi_send_r2t_data(struct iscsi_session *session);
++extern void iscsi_send_nop_replys(struct iscsi_session *session);
++extern void iscsi_send_logout(struct iscsi_session *session);
++extern void iscsi_send_nop_out(struct iscsi_session *session);
++extern void iscsi_queue_unsolicited_data(struct iscsi_task *task);
++extern int iscsi_send_pdu(struct iscsi_session *session, struct iscsi_hdr *hdr,
++			  int hdr_digest, char *data, int data_digest);
++extern int iscsi_recv_pdu(struct iscsi_session *session, struct iscsi_hdr *hdr,
++			  int hdr_digest, char *data, int data_len,
++			  int data_digest);
 +
-+extern struct list_head iscsi_sessions;
++/* Routines to send and receive data on TCP/IP sockets */
++extern int iscsi_recvmsg(struct iscsi_session *session, struct kvec *iov,
++			 size_t iovn, size_t size);
++extern int iscsi_sendmsg(struct iscsi_session *session, struct kvec *iov,
++			 size_t iovn, size_t size);
++extern int iscsi_sendpage(struct iscsi_session *session, int flags,
++			  struct page *pg, unsigned int pg_offset,
++			  unsigned int len);
++extern int iscsi_connect(struct iscsi_session *session);
++extern void iscsi_disconnect(struct iscsi_session *session);
++
++/* Register a driver interface */
++extern int iscsi_register_interface(void);
++extern void iscsi_unregister_interface(void);
++
++/* ioctl and sysfs uses these routines to interact with the initiator */
++extern int iscsi_destroy_host(struct Scsi_Host *shost);
++extern int iscsi_create_host(struct iscsi_session_ioctl *ioctld);
++
++/* Global variables */
++extern struct class_device_attribute *iscsi_host_attrs[];
++extern struct iscsi_function_template iscsi_fnt;
 +
 +#endif
 
---------------040503050901050206060302--
+--------------030100020507090306050703--
