@@ -1,40 +1,37 @@
 From: 'Christoph Hellwig' <hch@infradead.org>
 Subject: Re: [Emulex] Ready for next round...
-Date: Sat, 17 Jul 2004 21:17:35 +0100
+Date: Sat, 17 Jul 2004 21:26:36 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040717201735.GA2575@infradead.org>
-References: <3356669BBE90C448AD4645C843E2BF28034F968E@xbl.ma.emulex.com>
+Message-ID: <20040717202636.GA2656@infradead.org>
+References: <3356669BBE90C448AD4645C843E2BF28034F968E@xbl.ma.emulex.com> <20040717201735.GA2575@infradead.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [213.146.154.40] ([213.146.154.40]:39597 "EHLO
+Received: from [213.146.154.40] ([213.146.154.40]:42925 "EHLO
 	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S261563AbUGQURh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 17 Jul 2004 16:17:37 -0400
+	id S261602AbUGQU0k (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 17 Jul 2004 16:26:40 -0400
 Content-Disposition: inline
-In-Reply-To: <3356669BBE90C448AD4645C843E2BF28034F968E@xbl.ma.emulex.com>
+In-Reply-To: <20040717201735.GA2575@infradead.org>
 List-Id: linux-scsi@vger.kernel.org
 To: "Smart, James" <James.Smart@Emulex.Com>
 Cc: 'Christoph Hellwig' <hch@infradead.org>, Linux SCSI Reflector <linux-scsi@vger.kernel.org>
 
-On Sat, Jul 17, 2004 at 07:26:32AM -0400, Smart, James wrote:
-> Christoph,
+On Sat, Jul 17, 2004 at 09:17:35PM +0100, 'Christoph Hellwig' wrote:
+> On Sat, Jul 17, 2004 at 07:26:32AM -0400, Smart, James wrote:
+> > Christoph,
+> > 
+> > We've updated the driver on SourceForge again.  This addresses the rework of
+> > the clk functions. Also rids the driver of Report Lun use.
+> > 
+> > I know this next week will probably be busy due to the OLS, but we would
+> > appreciate comments any time that you can provide them.
 > 
-> We've updated the driver on SourceForge again.  This addresses the rework of
-> the clk functions. Also rids the driver of Report Lun use.
-> 
-> I know this next week will probably be busy due to the OLS, but we would
-> appreciate comments any time that you can provide them.
+> Okay, this starts to look better.  There's lots of dead code again, see the
+> patch below to remove it.  Also while the parameter rework in the last drop
+> is already much better it still needs some more work I think.
 
-Okay, this starts to look better.  There's lots of dead code again, see the
-patch below to remove it.  Also while the parameter rework in the last drop
-is already much better it still needs some more work I think.
-
-Instead of the array + index approach use a simple variable in struct
-lpfc_hba, that of cousr makes your paraneter checking a little more difficult,
-but I'd suggest to just reomve it like the other drivers - after all it's
-root only.
-Easiest would be to just drop the range checking, as all other drivers do
+Sorry, wrong patch.  The correct one is below.
 
 
 diff -uNr -X /home/hch/dontdiff lpfcdriver-2.6-8.0.6/lpfc.h lpfcdriver-2.6-8.0.6-hch/lpfc.h
@@ -135,7 +132,7 @@ diff -uNr -X /home/hch/dontdiff lpfcdriver-2.6-8.0.6/lpfc_mem.c lpfcdriver-2.6-8
 -
 -	if ((!phba->lpfc_scsi_dma_ext_pool) || (!phba->lpfc_mbuf_pool) ||
 -	   (!phba->lpfc_page_pool)) {
-+	if (!phba->lpfc_scsi_dma_ext_pool || !phba->lpfc_mbuf_pool)
++	if (!phba->lpfc_scsi_dma_ext_pool || !phba->lpfc_mbuf_pool) {
  		lpfc_mem_free(phba);
  		return (0);
  	}
