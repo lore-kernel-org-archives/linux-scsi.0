@@ -1,80 +1,86 @@
-From: "Moore, Eric Dean" <Eric.Moore@lsil.com>
-Subject: RE: [SAS ANNOUNCEMENT] MPT Fusion driver 3.02.07 update
-Date: Wed, 10 Nov 2004 10:16:10 -0700
-Message-ID: <91888D455306F94EBD4D168954A9457C3769DB@nacos172.co.lsil.com>
+From: Otto Solares <solca@guug.org>
+Subject: aacraid, seagate and adaptec issues [Was: Re: Fw: [Bugme-new] [Bug 3651] New: dell poweredge 4600 aacraid PERC 3/Di Container goes offline]
+Date: Wed, 10 Nov 2004 11:43:46 -0600
+Message-ID: <20041110174346.GA8047@guug.org>
+References: <20041028005302.753a2d52.akpm@osdl.org> <418138B6.2010104@brutsche.us> <1100031774.24635.157.camel@ryan2.internal.autoweb.net> <20041109213215.GA4047@guug.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:58544 "EHLO mail0.lsil.com")
-	by vger.kernel.org with ESMTP id S262016AbUKJRQ0 (ORCPT
+Received: from guug.org ([168.234.203.30]:2126 "EHLO guug.org")
+	by vger.kernel.org with ESMTP id S262022AbUKJRns (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 10 Nov 2004 12:16:26 -0500
+	Wed, 10 Nov 2004 12:43:48 -0500
+Received: from solca by guug.org with local (Exim 3.36 #1 (Debian))
+	id 1CRwVX-000273-00
+	for <linux-scsi@vger.kernel.org>; Wed, 10 Nov 2004 11:43:47 -0600
+Content-Disposition: inline
+In-Reply-To: <20041109213215.GA4047@guug.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-Christoph - I'm working on this command line implementation right now.
+FYI again:
 
-I'm proposing to my co-workers to dump entirely the current 
-implementation, in favor of the new one. 
+There is a recent KernelTrap thread showing more datails:
 
-Questions:
-(1) MODULE_PARM is now depreciated in 2.6.10-rc.  What has replaced it?
-(2) Will this new method work for command line parameters being passed
-thru loading of the driver from ramdisk(initrd) image?
+http://kerneltrap.org/node/view/3778
 
+Investigating I found 2 more things I'll check:
 
-Here is my proposal:
+A seagate time-out issue with exactly my disks:
 
-# insmod mptscsih.ko dv=1 width=1 factor=0x8 saf_te=0 pt_clear=0
-# modinfo mptscsih.ko
+http://www.seagate.com/support/disc/u320_firmware.html
 
-The output will be:
+Unfortunately adaptec will not give me directly the firmware
+and Dell does not respond to my support mail queries.  I'm really
+impressed with Dell support, they suck so badly, at least
+those updates must appear in their download area.  I am pretty
+sure my next servers will not come from Dell.
 
-author:         LSI Logic Corporation
-description:    Fusion MPT SCSI Host driver
-license:        GPL
-parm:           dv:DV Algorithm: enhanced = 1, basic = 0
-(default=MPTSCSIH_DOMAIN_VALIDATION=1)
-parm:           width:Max Bus Width: wide = 1, narrow = 0
-(default=MPTSCSIH_MAX_WIDTH=1)
-parm:           factor:Min Sync Factor: (default=MPTSCSIH_MIN_SYNC=0x08)
-parm:           saf_te:Force enabling SEP Processor:
-(default=MPTSCSIH_SAF_TE=0)
-parm:           pt_clear:Clear persistency table:
-(default=MPTSCSIH_PT_CLEAR=0)
-vermagic:       2.6.10-rc1-bk18 SMP PENTIUMII REGPARM gcc-3.3
-depends:        mptbase,scsi_mod,mptbase
+Does anybody have this seagate firmware updates?
 
+And the other issue is a different driver from adaptec:
 
+http://www.adaptec.com/worldwide/support/driverdetail.jsp?sess=no&language=English+US&cat=%2FOperating+System%2FLinux+Driver+Source+Code&filekey=aacraid-src_1.1.5.tgz
 
-> -----Original Message-----
-> From: Christoph Hellwig [mailto:hch@infradead.org]
-> Sent: Wednesday, November 10, 2004 10:04 AM
-> To: Matthew Wilcox
-> Cc: Christoph Hellwig; Moore, Eric Dean; linux-scsi@vger.kernel.org;
-> Stephens, Larry
-> Subject: Re: [SAS ANNOUNCEMENT] MPT Fusion driver 3.02.07 update
+Diffing the adaptec and latest 2.6 kernel show they come from
+the same base but it seems more complete the Adaptec one,
+does somebody knows the difference?  The important thing is
+which is better for heavy I/O servers?  Why two drivers?
+
+Thanks.
+
+-otto
+
+On Tue, Nov 09, 2004 at 03:32:15PM -0600, Otto Solares wrote:
+> JFYI
 > 
+> I have exactly this same problem on 3 brand new Dell PE2650
+> machines with Perc3/Di controllers, my other new Dell servers
+> with the Perc4/Di controller have never fail.
 > 
-> On Tue, Nov 09, 2004 at 04:18:59PM +0000, Matthew Wilcox wrote:
-> > On Tue, Nov 09, 2004 at 02:20:04PM +0000, Christoph Hellwig wrote:
-> > > Well, you're disallowing one of the existant syntaxes 
-> anyway, right?
-> > > 
-> > > At least add a separate one for each of the parameters (and only
-> > > add those for the new parameter) so the old ones can spit 
-> a warning
-> > > and be removed after a longer timeframe.
-> > 
-> > This may not be possible.  It wasn't with sym2 -- the 
-> module code said
-> > "Oh, I found both old and new style parameters, I'm going to disable
-> > the new ones".  Rusty refused to fix it, claiming he was 
-> going to remove
-> > the old code within a couple of minor releases.
+> Dell customer support sucks, they would not help me as I am
+> not running a supported distro/kernel.
 > 
-> Well, both could be module_param.
+> The faulty servers have the latest BIOS, Perc3/Di firmware (6092),
+> latest ERA/RAC firmware, latest debian sarge, kernel 2.6.10-rc1-bk7.
+> Both 2.4 and 2.6 hangs the controller.
 > 
+> The problem appears when too many IO is happening, the kernel
+> don't die, as if I have a ssh session I could execute some
+> cached binaries like ps, bash, etc.  Everything in memory runs
+> fine until it touches sda that is offlined as you can see
+> from this kernel messages:
+> 
+> Nov  5 14:53:30 saruman kernel: aacraid: Host adapter reset request. SCSI hang ? 
+> Nov  5 14:54:33 saruman kernel: aacraid: SCSI bus appears hung 
+> Nov  5 14:54:34 saruman kernel: scsi: Device offlined - not ready after error recovery: host 0 channel 0 id 0 lun 0 
+> Nov  5 14:54:34 saruman kernel: Device sda not ready. 
+> Nov  5 14:54:34 saruman kernel: end_request: I/O error, dev sda, sector 127952537 
+> Nov  5 14:54:34 saruman kernel: scsi0 (0:0): rejecting I/O to offline device 
+> Nov  5 14:54:34 saruman kernel: scsi0 (0:0): rejecting I/O to offline device 
+> Nov  5 14:54:34 saruman kernel: EXT3-fs error (device sda4): ext3_find_entry: reading directory #13880243 offset 0 
+> Nov  5 14:54:34 saruman kernel:  
+> Nov  5 14:54:34 saruman kernel: Remounting filesystem read-only
+> 
+> -otto
