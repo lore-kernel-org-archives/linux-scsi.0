@@ -1,213 +1,332 @@
-From: "Michael W. Shaffer" <mwshaffer@yahoo.com>
-Subject: Re: No LUNs detected with 2.6.1-mm4 qla2xxx / qla2300
-Date: Mon, 19 Jan 2004 08:09:58 -0800 (PST)
+From: Brian King <brking@us.ibm.com>
+Subject: Re: [RFC] IBM Power RAID driver (ipr)
+Date: Mon, 19 Jan 2004 10:16:16 -0600
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040119160958.60827.qmail@web10407.mail.yahoo.com>
-References: <20040119052701.GA16779@praka.local.home>
+Message-ID: <400C02D0.1060700@us.ibm.com>
+References: <40085EDA.4010802@us.ibm.com> <20040118141003.GA6293@krispykreme>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/mixed;
+ boundary="------------060409080902020503000608"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from web10407.mail.yahoo.com ([216.136.130.99]:32903 "HELO
-	web10407.mail.yahoo.com") by vger.kernel.org with SMTP
-	id S265284AbUASQJ7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 19 Jan 2004 11:09:59 -0500
-In-Reply-To: <20040119052701.GA16779@praka.local.home>
+Received: from e2.ny.us.ibm.com ([32.97.182.102]:47602 "EHLO e2.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S265353AbUASQQU (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 19 Jan 2004 11:16:20 -0500
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Vasquez <praka@users.sourceforge.net>
+To: Anton Blanchard <anton@samba.org>
 Cc: linux-scsi@vger.kernel.org
 
-Ok, I don't know if this was the 'right' fix, but I noticed
-that the Kconfig file in the qla2xxx directory was different
-in the -b9 resync patchset, so I tried copying the old one
-back from the plain 2.6.1-mm4 tree, and now I got the
-modules built and installed. After enabling debugging and
-rebooting -- we now have LUNs! Attached is the output from
-/var/log/messages showing the -b9 module loading and finding
-the Nexsan arrays and their associated disk volumes. There
-are supposed to be two LUNs per array as shown, and now I
-have disk devices /dev/sdb - /dev/sde as expected. The
-unknown partition table comments are correct also, since
-I'm using the raw devices without any partitioning as
-members of RAID1 mirror sets.
+This is a multi-part message in MIME format.
+--------------060409080902020503000608
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 
-A couple of minor points:
+Anton Blanchard wrote:
+> - Since ipr_sleep_no_lock/ipr_sleep is used once, we can open code
+>   a schedule_timeout there instead.
 
-- It appears that the patched driver still reports itself
-  as v8.00.00b8-debug, rather than b9.
+I agree. I will remove them.
 
-- Someone noted this on the list before I think, but I also
-  noticed it: when you unload and re-load the qla2300 module,
-  it appears to not be decrementing some counter. The first
-  time, you get /proc/scsi/qla2xxx/2 and /proc/scsi/qla2xxx/3,
-  and the second time you get /4 and /5, and so forth, each
-  time you re-load. The logical names of the scsi devices
-  are not affected, just the numbers in the /proc/scsi/qla2xxx
-  directory.
+> - Add a comment to explain why the wakeup strategy isnt racy. I
+>   automatically thought it was (just like the kernel version of
+>   sleep_on) until I could verify all wake ups are done under the scsi
+>   host lock. I also have a trivial change to make the two sleep
+>   functions alike.
 
-/var/log/messages
------------------------------------------------------------
-Jan 19 07:55:14 thing2 kernel: QLogic Fibre Channel HBA Driver (f88bd000)
-Jan 19 07:55:20 thing2 kernel: qla2300 0000:01:02.0: Found an ISP2312, irq
-25, iobase 0xf8895000
-Jan 19 07:55:20 thing2 kernel: qla2300 0000:01:02.0: Configuring PCI
-space...
-Jan 19 07:55:20 thing2 kernel: qla2300 0000:01:02.0: Configure NVRAM
-parameters...
-Jan 19 07:55:20 thing2 kernel: qla2300 0000:01:02.0: Verifying loaded RISC
-code...
-Jan 19 07:55:20 thing2 kernel: scsi(2): **** Load RISC code ****
-Jan 19 07:55:20 thing2 kernel: scsi(2): Verifying Checksum of loaded RISC
-code.
-Jan 19 07:55:20 thing2 kernel: scsi(2): Checksum OK, start firmware.
-Jan 19 07:55:20 thing2 kernel: scsi(2): Issue init firmware.
-Jan 19 07:55:20 thing2 kernel: scsi(2): Asynchronous LIP RESET (f8f7).
-Jan 19 07:55:20 thing2 kernel: qla2300 0000:01:02.0: LIP reset occured
-(f8f7).
-Jan 19 07:55:20 thing2 kernel: qla2300 0000:01:02.0: Waiting for LIP to
-complete...
-Jan 19 07:55:21 thing2 kernel: scsi(2): LIP occured (f8f7).
-Jan 19 07:55:21 thing2 kernel: qla2300 0000:01:02.0: LIP occured (f8f7).
-Jan 19 07:55:21 thing2 kernel: scsi(2): Asynchronous LOOP UP (2 Gbps).
-Jan 19 07:55:21 thing2 kernel: qla2300 0000:01:02.0: LOOP UP detected (2
-Gbps).
-Jan 19 07:55:21 thing2 kernel: scsi(2): Asynchronous PORT UPDATE.
-Jan 19 07:55:21 thing2 kernel: scsi(2): Port database changed ffff 0006.
-Jan 19 07:55:21 thing2 kernel: scsi(2): F/W Ready - OK 
-Jan 19 07:55:21 thing2 kernel: scsi(2): fw_state=3 curr time=fffe433e.
-Jan 19 07:55:21 thing2 kernel: qla2300 0000:01:02.0: Topology - (Loop), Host
-Loop address 0x1
-Jan 19 07:55:21 thing2 kernel: scsi(2): Configure loop -- dpc flags =0x80040
-Jan 19 07:55:22 thing2 kernel: qla2x00_mailbox_command(2): **** FAILED.
-mbx0=4006, mbx1=7e, mbx2=0, cmd=6a ****
-Jan 19 07:55:22 thing2 kernel: qla2x00_get_port_name(2): failed=102.
-Jan 19 07:55:22 thing2 kernel: scsi(2): MBC_GET_PORT_NAME Failed, No FL Port
-Jan 19 07:55:22 thing2 kernel: scsi(2): Alloc Target 0 @ f7a4b800
-Jan 19 07:55:22 thing2 kernel: scsi(2): Assigning target ID=00 @ f7a4b800 to
-loop id=0x0000, port state=0x4, port down retry=60
-Jan 19 07:55:22 thing2 kernel: scsi(2): Alloc Lun 0 @ tgt 0.
-Jan 19 07:55:22 thing2 kernel: scsi(2): Alloc Lun 1 @ tgt 0.
-Jan 19 07:55:22 thing2 kernel: scsi(2): LOOP READY
-Jan 19 07:55:22 thing2 kernel: DEBUG: detect hba 2 at address = f6c9c1b8
-Jan 19 07:55:22 thing2 kernel: scsi2 : qla2xxx
-Jan 19 07:55:22 thing2 kernel: qla2300 0000:01:02.0: 
-Jan 19 07:55:22 thing2 kernel:  QLogic Fibre Channel HBA Driver:
-8.00.00b8-debug
-Jan 19 07:55:22 thing2 kernel:   QLogic QLA2340 - 
-Jan 19 07:55:22 thing2 kernel:   ISP2312: PCI (66 MHz) @ 0000:01:02.0 hdma-,
-host#=2, fw=3.02.20 IPX
-Jan 19 07:55:22 thing2 kernel:   Vendor: NEXSAN    Model: ATAboy(821DFC56) 
-Rev: 5020
-Jan 19 07:55:22 thing2 kernel:   Type:   Direct-Access                     
-ANSI SCSI revision: 04
-Jan 19 07:55:22 thing2 kernel: qla2300 0000:01:02.0: scsi(2:0:0:0): Enabled
-tagged queuing, queue depth 32.
-Jan 19 07:55:23 thing2 kernel: SCSI device sdb: 3904296875 512-byte hdwr
-sectors (1999000 MB)
-Jan 19 07:55:23 thing2 kernel: SCSI device sdb: drive cache: write back
-Jan 19 07:55:23 thing2 kernel:  sdb: unknown partition table
-Jan 19 07:55:23 thing2 kernel: Attached scsi disk sdb at scsi2, channel 0,
-id 0, lun 0
-Jan 19 07:55:23 thing2 kernel: Attached scsi generic sg2 at scsi2, channel
-0, id 0, lun 0,  type 0
-Jan 19 07:55:23 thing2 kernel: scsi(2:0:0) UNDERRUN status detected
-0x15-0x800.
-Jan 19 07:55:23 thing2 kernel:   Vendor: NEXSAN    Model: ATAboy(821DFC56) 
-Rev: 5020
-Jan 19 07:55:23 thing2 kernel:   Type:   Direct-Access                     
-ANSI SCSI revision: 04
-Jan 19 07:55:23 thing2 kernel: qla2300 0000:01:02.0: scsi(2:0:0:1): Enabled
-tagged queuing, queue depth 32.
-Jan 19 07:55:23 thing2 kernel: SCSI device sdc: 196367187 512-byte hdwr
-sectors (100540 MB)
-Jan 19 07:55:23 thing2 kernel: SCSI device sdc: drive cache: write back
-Jan 19 07:55:23 thing2 kernel:  sdc: unknown partition table
-Jan 19 07:55:23 thing2 kernel: Attached scsi disk sdc at scsi2, channel 0,
-id 0, lun 1
-Jan 19 07:55:23 thing2 kernel: Attached scsi generic sg3 at scsi2, channel
-0, id 0, lun 1,  type 0
-Jan 19 07:55:24 thing2 kernel: qla2300 0000:01:03.0: Found an ISP2312, irq
-25, iobase 0xf889b000
-Jan 19 07:55:24 thing2 kernel: qla2300 0000:01:03.0: Configuring PCI
-space...
-Jan 19 07:55:24 thing2 kernel: qla2300 0000:01:03.0: Configure NVRAM
-parameters...
-Jan 19 07:55:24 thing2 kernel: qla2300 0000:01:03.0: Verifying loaded RISC
-code...
-Jan 19 07:55:24 thing2 kernel: scsi(3): **** Load RISC code ****
-Jan 19 07:55:24 thing2 kernel: scsi(3): Verifying Checksum of loaded RISC
-code.
-Jan 19 07:55:24 thing2 kernel: scsi(3): Checksum OK, start firmware.
-Jan 19 07:55:24 thing2 kernel: scsi(3): Issue init firmware.
-Jan 19 07:55:24 thing2 kernel: scsi(3): Asynchronous LIP RESET (f8f7).
-Jan 19 07:55:24 thing2 kernel: qla2300 0000:01:03.0: LIP reset occured
-(f8f7).
-Jan 19 07:55:24 thing2 kernel: qla2300 0000:01:03.0: Waiting for LIP to
-complete...
-Jan 19 07:55:25 thing2 kernel: scsi(3): LIP occured (f8f7).
-Jan 19 07:55:25 thing2 kernel: qla2300 0000:01:03.0: LIP occured (f8f7).
-Jan 19 07:55:25 thing2 kernel: scsi(3): Asynchronous LOOP UP (2 Gbps).
-Jan 19 07:55:25 thing2 kernel: qla2300 0000:01:03.0: LOOP UP detected (2
-Gbps).
-Jan 19 07:55:25 thing2 kernel: scsi(3): Asynchronous PORT UPDATE.
-Jan 19 07:55:25 thing2 kernel: scsi(3): Port database changed ffff 0006.
-Jan 19 07:55:25 thing2 kernel: scsi(3): F/W Ready - OK 
-Jan 19 07:55:25 thing2 kernel: scsi(3): fw_state=3 curr time=fffe51b1.
-Jan 19 07:55:25 thing2 kernel: qla2300 0000:01:03.0: Topology - (Loop), Host
-Loop address 0x1
-Jan 19 07:55:25 thing2 kernel: scsi(3): Configure loop -- dpc flags =0x80040
-Jan 19 07:55:25 thing2 kernel: qla2x00_mailbox_command(3): **** FAILED.
-mbx0=4006, mbx1=7e, mbx2=0, cmd=6a ****
-Jan 19 07:55:25 thing2 kernel: qla2x00_get_port_name(3): failed=102.
-Jan 19 07:55:25 thing2 kernel: scsi(3): MBC_GET_PORT_NAME Failed, No FL Port
-Jan 19 07:55:25 thing2 kernel: scsi(3): Alloc Target 0 @ f6cf1800
-Jan 19 07:55:25 thing2 kernel: scsi(3): Assigning target ID=00 @ f6cf1800 to
-loop id=0x0000, port state=0x4, port down retry=60
-Jan 19 07:55:26 thing2 kernel: scsi(3): Alloc Lun 0 @ tgt 0.
-Jan 19 07:55:26 thing2 kernel: scsi(3): Alloc Lun 1 @ tgt 0.
-Jan 19 07:55:26 thing2 kernel: scsi(3): LOOP READY
-Jan 19 07:55:26 thing2 kernel: DEBUG: detect hba 3 at address = f6bf01b8
-Jan 19 07:55:26 thing2 kernel: scsi3 : qla2xxx
-Jan 19 07:55:26 thing2 kernel: qla2300 0000:01:03.0: 
-Jan 19 07:55:26 thing2 kernel:  QLogic Fibre Channel HBA Driver:
-8.00.00b8-debug
-Jan 19 07:55:26 thing2 kernel:   QLogic QLA2340 - 
-Jan 19 07:55:26 thing2 kernel:   ISP2312: PCI (66 MHz) @ 0000:01:03.0 hdma-,
-host#=3, fw=3.02.20 IPX
-Jan 19 07:55:26 thing2 kernel:   Vendor: NEXSAN    Model: ATAboy(821DFC55) 
-Rev: 5020
-Jan 19 07:55:26 thing2 kernel:   Type:   Direct-Access                     
-ANSI SCSI revision: 04
-Jan 19 07:55:26 thing2 kernel: qla2300 0000:01:03.0: scsi(3:0:0:0): Enabled
-tagged queuing, queue depth 32.
-Jan 19 07:55:26 thing2 kernel: SCSI device sdd: 3904296875 512-byte hdwr
-sectors (1999000 MB)
-Jan 19 07:55:26 thing2 kernel: SCSI device sdd: drive cache: write back
-Jan 19 07:55:26 thing2 kernel:  sdd: unknown partition table
-Jan 19 07:55:26 thing2 kernel: Attached scsi disk sdd at scsi3, channel 0,
-id 0, lun 0
-Jan 19 07:55:26 thing2 kernel: Attached scsi generic sg4 at scsi3, channel
-0, id 0, lun 0,  type 0
-Jan 19 07:55:27 thing2 kernel: scsi(3:0:0) UNDERRUN status detected
-0x15-0x800.
-Jan 19 07:55:27 thing2 kernel:   Vendor: NEXSAN    Model: ATAboy(821DFC55) 
-Rev: 5020
-Jan 19 07:55:27 thing2 kernel:   Type:   Direct-Access                     
-ANSI SCSI revision: 04
-Jan 19 07:55:27 thing2 kernel: qla2300 0000:01:03.0: scsi(3:0:0:1): Enabled
-tagged queuing, queue depth 32.
-Jan 19 07:55:27 thing2 kernel: SCSI device sde: 196367187 512-byte hdwr
-sectors (100540 MB)
-Jan 19 07:55:27 thing2 kernel: SCSI device sde: drive cache: write back
-Jan 19 07:55:27 thing2 kernel:  sde: unknown partition table
-Jan 19 07:55:27 thing2 kernel: Attached scsi disk sde at scsi3, channel 0,
-id 0, lun 1
-Jan 19 07:55:27 thing2 kernel: Attached scsi generic sg5 at scsi3, channel
-0, id 0, lun 1,  type 0
-----------------------------------------------------
+I was actually thinking of changing the wakeup strategy because it 
+doesn't handle spurious wakeups like the new interfaces in the kernel 
+do. See diff below.
+
+> - Im a bit worried about memory barriers wrt the allow_* things. As an
+>   example I added some mb()s wherever ->allow_interrupts is set.
+
+Can you elaborate on this? These flags should all be accessed/set while 
+the host lock is held. If this is not sufficient, then wouldn't we have 
+problems with more than just these flags, but rather any shared data?
+
+>   Actually, do we need this flag at all? Cant we just set the bits on the
+>   card to disable interrupts, then do a synchronize_irq()? Similarly it
+>   would be nice to get rid of some of the other allow_ flags if we can
+>   get around them.
+
+The reason I put this flag in was for shared interrupts. If the isr gets 
+called due to another adapter's interrupt while this adapter currently 
+has memory space disabled because it is being reset, I wanted to avoid 
+issuing a readl.
+
+> - The forcing of the pci cacheline size worries me, could we have problems 
+>   with enabling MWI etc after doing this?
+
+Shouldn't be a problem, but I will certainly remove it if it doesn't 
+belong here.
+
+> - Do we need the extra ipr_set_pcix_cmd_reg during init? We are going to
+>   do it after a reset arent we?
+
+Yes, good catch. Removed.
+
+> - It looks like the kmalloc in ipr_sdt_copy is called from process
+>   context without any locks held, so we dont need an atomic allocation.
+
+Actually, this does need to be an atomic allocation. If the adapter 
+ipr_sdt_copy is being called for is the root/paging device a GFP_KERNEL 
+allocation might hang indefinitely since at the point that this function 
+is called, the adapter is not capable of doing I/O.
+
+
+> @@ -1076,6 +1045,7 @@ static void ipr_mask_and_clear_all_inter
+>  
+>  	/* Stop new interrupts */
+>  	ioa_cfg->allow_interrupts = 0;
+> +	mb();
+
+On the topic of memory barriers wrt adapter I/O, at one point I remember 
+seeing sync instructions in the readl/writel macros for PPC64. Looking 
+now, all I see is an eieio instruction before the readl. Looks like I 
+will need to sprinkle a few more memory barriers in the driver...
 
 
 
-__________________________________
-Do you Yahoo!?
-Yahoo! Hotjobs: Enter the "Signing Bonus" Sweepstakes
-http://hotjobs.sweepstakes.yahoo.com/signingbonus
+
+-- 
+Brian King
+eServer Storage I/O
+IBM Linux Technology Center
+
+--------------060409080902020503000608
+Content-Type: application/x-java-vm;
+ name="ipr-diff"
+Content-Transfer-Encoding: base64
+Content-Disposition: inline;
+ filename="ipr-diff"
+
+SW5kZXg6IGlwci5jCj09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT0KUkNTIGZpbGU6IC9jdnNyb290L2VzZXJ2ZXJp
+by9pcHJfMi9pcHIuYyx2CnJldHJpZXZpbmcgcmV2aXNpb24gMS43CmRpZmYgLXUgLXIxLjcg
+aXByLmMKLS0tIGlwci5jCTE2IEphbiAyMDA0IDIzOjU2OjQ1IC0wMDAwCTEuNworKysgaXBy
+LmMJMTkgSmFuIDIwMDQgMTY6MTE6MzIgLTAwMDAKQEAgLTU5NiwxNDAgKzU5Niw2IEBACiB9
+OwogCiAvKioKLSAqIGlwcl9zbGVlcF9ub19sb2NrIC0gU2xlZXAgZm9yIHRoZSBzcGVjaWZp
+ZWQgYW1vdW50IG9mIHRpbWUKLSAqIEBkZWxheToJCXRpbWUgdG8gc2xlZXAKLSAqCi0gKiBT
+bGVlcCBmb3IgdGhlIHNwZWNpZmllZCBhbW91bnQgb2YgdGltZQotICogCi0gKiBSZXR1cm4g
+dmFsdWU6Ci0gKiAJbm9uZQotICoqLwotc3RhdGljIHZvaWQgaXByX3NsZWVwX25vX2xvY2so
+c2lnbmVkIGxvbmcgZGVsYXkpCi17Ci0JREVDTEFSRV9XQUlUX1FVRVVFX0hFQUQoaW50ZXJu
+YWxfd2FpdCk7Ci0KLQlzbGVlcF9vbl90aW1lb3V0KCZpbnRlcm5hbF93YWl0LCAoZGVsYXkg
+KiBIWikgLyAxMDAwKTsKLX0KLQotLyoqCi0gKiBpcHJfc2xlZXAgLSBTbGVlcCBmb3IgdGhl
+IHNwZWNpZmllZCBhbW91bnQgb2YgdGltZQotICogQGlvYV9jZmc6CWlvYSBjb25maWcgc3Ry
+dWN0Ci0gKiBAZGVsYXk6CQl0aW1lIHRvIHNsZWVwIGluIG1zZWNzCi0gKgotICogUmVsZWFz
+ZSB0aGUgaG9zdCBsb2NrIGFuZCBzbGVlcCBmb3IgdGhlIHNwZWNpZmllZCBhbW91bnQgb2Yg
+dGltZQotICogCi0gKiBSZXR1cm4gdmFsdWU6Ci0gKiAJbm9uZQotICoqLwotc3RhdGljIHZv
+aWQgaXByX3NsZWVwKHN0cnVjdCBpcHJfaW9hX2NmZyAqaW9hX2NmZywgc2lnbmVkIGxvbmcg
+ZGVsYXkpCi17Ci0Jc3Bpbl91bmxvY2tfaXJxKGlvYV9jZmctPmhvc3QtPmhvc3RfbG9jayk7
+Ci0JaXByX3NsZWVwX25vX2xvY2soZGVsYXkpOwotCXNwaW5fbG9ja19pcnEoaW9hX2NmZy0+
+aG9zdC0+aG9zdF9sb2NrKTsKLX0KLQotLyoqCi0gKiBpcHJfaW50ZXJydXB0aWJsZV9zbGVl
+cF9vbiAtIFNsZWVwIG9uIHRoZSB3YWl0IHF1ZXVlCi0gKiBAaW9hX2NmZzoJaW9hIGNvbmZp
+ZyBzdHJ1Y3QKLSAqIEB3YWl0X2hlYWQ6CXdhaXQgcXVldWUgdG8gc2xlZXAgb24KLSAqCi0g
+KiBTbGVlcCBpbnRlcnJ1cHRpYmx5IG9uIHRoZSB3YWl0IHF1ZXVlLgotICogCi0gKiBSZXR1
+cm4gdmFsdWU6Ci0gKiAJMCBvbiBzdWNjZXNzIC8gLUVJTlRSIGlmIHdva2VuIGR1ZSB0byBh
+IHNpZ25hbAotICoqLwotc3RhdGljIGludCBpcHJfaW50ZXJydXB0aWJsZV9zbGVlcF9vbihz
+dHJ1Y3QgaXByX2lvYV9jZmcgKmlvYV9jZmcsCi0JCQkJICAgICAgd2FpdF9xdWV1ZV9oZWFk
+X3QgKndhaXRfaGVhZCkKLXsKLQlERUNMQVJFX1dBSVRRVUVVRSh3YWl0X3FfZW50cnksIGN1
+cnJlbnQpOwotCi0Jc2V0X2N1cnJlbnRfc3RhdGUoVEFTS19JTlRFUlJVUFRJQkxFKTsKLQot
+CWFkZF93YWl0X3F1ZXVlKHdhaXRfaGVhZCwgJndhaXRfcV9lbnRyeSk7Ci0KLQlzcGluX3Vu
+bG9ja19pcnEoaW9hX2NmZy0+aG9zdC0+aG9zdF9sb2NrKTsKLQlzY2hlZHVsZSgpOwotCXNw
+aW5fbG9ja19pcnEoaW9hX2NmZy0+aG9zdC0+aG9zdF9sb2NrKTsKLQotCXJlbW92ZV93YWl0
+X3F1ZXVlKHdhaXRfaGVhZCwgJndhaXRfcV9lbnRyeSk7Ci0KLQlpZiAoc2lnbmFsX3BlbmRp
+bmcoY3VycmVudCkpIHsKLQkJZmx1c2hfc2lnbmFscyhjdXJyZW50KTsKLQkJcmV0dXJuIC1F
+SU5UUjsKLQl9Ci0KLQlyZXR1cm4gMDsKLX0KLQotLyoqCi0gKiBpcHJfc2xlZXBfb24gLSBT
+bGVlcCBvbiB0aGUgd2FpdCBxdWV1ZQotICogQGlvYV9jZmc6CWlvYSBjb25maWcgc3RydWN0
+Ci0gKiBAd2FpdF9oZWFkOgl3YWl0IHF1ZXVlIHRvIHNsZWVwIG9uCi0gKgotICogU2xlZXAg
+dW5pbnRlcnJ1cHRpYmx5IG9uIHRoZSB3YWl0IHF1ZXVlLgotICogCi0gKiBSZXR1cm4gdmFs
+dWU6Ci0gKiAJbm9uZQotICoqLwotc3RhdGljIHZvaWQgaXByX3NsZWVwX29uKHN0cnVjdCBp
+cHJfaW9hX2NmZyAqaW9hX2NmZywKLQkJCSB3YWl0X3F1ZXVlX2hlYWRfdCAqd2FpdF9oZWFk
+KQotewotCXdhaXRfcXVldWVfdCB3YWl0X3FfZW50cnk7Ci0KLQlpbml0X3dhaXRxdWV1ZV9l
+bnRyeSgmd2FpdF9xX2VudHJ5LCBjdXJyZW50KTsKLQotCXNldF9jdXJyZW50X3N0YXRlKFRB
+U0tfVU5JTlRFUlJVUFRJQkxFKTsKLQotCWFkZF93YWl0X3F1ZXVlKHdhaXRfaGVhZCwgJndh
+aXRfcV9lbnRyeSk7Ci0KLQlzcGluX3VubG9ja19pcnEoaW9hX2NmZy0+aG9zdC0+aG9zdF9s
+b2NrKTsKLQotCXNjaGVkdWxlKCk7Ci0KLQlzcGluX2xvY2tfaXJxKGlvYV9jZmctPmhvc3Qt
+Pmhvc3RfbG9jayk7Ci0KLQlyZW1vdmVfd2FpdF9xdWV1ZSh3YWl0X2hlYWQsICZ3YWl0X3Ff
+ZW50cnkpOwotfQotCi0vKioKLSAqIGlwcl9ibG9ja19yZXF1ZXN0cyAtICBTdG9wIHRoZSBo
+b3N0IGZyb20gaXNzdWluZyBuZXcgcmVxdWVzdHMuCi0gKiBAaW9hX2NmZzoJaW9hIGNvbmZp
+ZyBzdHJ1Y3QKLSAqCi0gKiBUaGlzIGZ1bmN0aW9uIGJsb2NrcyBob3N0IHJlcXVlc3RzLgot
+ICoKLSAqIFJldHVybiB2YWx1ZToKLSAqIAlub25lCi0gKiovCi1zdGF0aWMgdm9pZCBpcHJf
+YmxvY2tfcmVxdWVzdHMoc3RydWN0IGlwcl9pb2FfY2ZnICppb2FfY2ZnKQotewotCWlmICgw
+ID09IGlvYV9jZmctPmJsb2NrX2hvc3Rfb3BzKyspIHsKLQkJaW9hX2NmZy0+YWxsb3dfY21k
+cyA9IDA7Ci0KLQkJLyogU3RvcCBuZXcgcmVxdWVzdHMgZnJvbSBjb21pbmcgaW4gKi8KLQkJ
+c2NzaV9ibG9ja19yZXF1ZXN0cyhpb2FfY2ZnLT5ob3N0KTsKLQl9Ci19Ci0KLS8qKgotICog
+aXByX3VuYmxvY2tfcmVxdWVzdHMgLSBBbGxvdyB0aGUgaG9zdCB0byBzZW5kIHJlcXVlc3Rz
+IGFnYWluLgotICogQGlvYV9jZmc6CWlvYSBjb25maWcgc3RydWN0Ci0gKgotICogVGhpcyBm
+dW5jdGlvbiB1bmJsb2NrcyByZXF1ZXN0cy4KLSAqCi0gKiBSZXR1cm4gdmFsdWU6Ci0gKiAJ
+bm9uZQotICoqLwotc3RhdGljIHZvaWQgaXByX3VuYmxvY2tfcmVxdWVzdHMoc3RydWN0IGlw
+cl9pb2FfY2ZnICppb2FfY2ZnKQotewotCWlmICgwID09IC0taW9hX2NmZy0+YmxvY2tfaG9z
+dF9vcHMpIHsKLQkJaW9hX2NmZy0+YWxsb3dfY21kcyA9IDE7Ci0JCXNwaW5fdW5sb2NrX2ly
+cShpb2FfY2ZnLT5ob3N0LT5ob3N0X2xvY2spOwotCQlzY3NpX3VuYmxvY2tfcmVxdWVzdHMo
+aW9hX2NmZy0+aG9zdCk7Ci0JCXNwaW5fbG9ja19pcnEoaW9hX2NmZy0+aG9zdC0+aG9zdF9s
+b2NrKTsKLQl9Ci19Ci0KLS8qKgogICogaXByX2dldF9tb2RlX3BhZ2UgLSBMb2NhdGUgc3Bl
+Y2lmaWVkIG1vZGUgcGFnZQogICogQG1vZGVfcGFnZXM6CW1vZGUgcGFnZSBidWZmZXIKICAq
+IEBwYWdlX2NvZGU6CXBhZ2UgY29kZSB0byBmaW5kCkBAIC0xMjMwLDcgKzEwOTYsNyBAQAog
+CUlOSVRfTElTVF9IRUFEKCZpb2FfY2ZnLT51c2VkX3Jlc19xKTsKIAlJTklUX1dPUksoJmlv
+YV9jZmctPmxvd19wcmlfd29yaywgaXByX3dvcmtlcl90aHJlYWQsIGlvYV9jZmcpOwogCWlu
+aXRfd2FpdHF1ZXVlX2hlYWQoJmlvYV9jZmctPnJlc2V0X3dhaXRfcSk7Ci0JaW5pdF93YWl0
+cXVldWVfaGVhZCgmaW9hX2NmZy0+c2R0X3dhaXRfcSk7CisJaW5pdF9jb21wbGV0aW9uKCZp
+b2FfY2ZnLT5zZHRfY29tcGxldGlvbik7CiAJaW9hX2NmZy0+c2R0X3N0YXRlID0gSU5BQ1RJ
+VkU7CiAKIAlpcHJfaW5pdGlhbGl6ZV9idXNfYXR0cihpb2FfY2ZnKTsKQEAgLTE1NDQsNyAr
+MTQxMCw3IEBACiAJCQkJICAgaW9hX2NmZy0+Y2hpcF9jZmctPmNhY2hlX2xpbmVfc2l6ZSk7
+CiAKIAlpZiAocmMgIT0gUENJQklPU19TVUNDRVNTRlVMKSB7Ci0JCWRldl9lcnIoJnBkZXYt
+PmRldiwgIlJlYWQgb2YgY29uZmlnIHNwYWNlIGZhaWxlZFxuIik7CisJCWRldl9lcnIoJnBk
+ZXYtPmRldiwgIldyaXRlIG9mIGNvbmZpZyBzcGFjZSBmYWlsZWRcbiIpOwogCQlyYyA9IC1F
+SU87CiAJCWdvdG8gY2xlYW51cF9ub21lbTsKIAl9CkBAIC0xNTYxLDkgKzE0MjcsNiBAQAog
+CWlmICgocmMgPSBpcHJfc2F2ZV9wY2l4X2NtZF9yZWcoaW9hX2NmZykpKQogCQlnb3RvIGNs
+ZWFudXBfbm9tZW07CiAKLQlpZiAoKHJjID0gaXByX3NldF9wY2l4X2NtZF9yZWcoaW9hX2Nm
+ZykpKQotCQlnb3RvIGNsZWFudXBfbm9tZW07Ci0KIAlpZiAoKHJjID0gaXByX2FsbG9jX21l
+bShpb2FfY2ZnKSkpCiAJCWdvdG8gY2xlYW51cDsKIApAQCAtMTYyNCw3ICsxNDg3LDkgQEAK
+IAogCWlwcl9pbml0aWF0ZV9pb2FfcmVzZXQoaW9hX2NmZywgSVBSX1NIVVRET1dOX05PTkUp
+OwogCi0JaXByX3NsZWVwX29uKGlvYV9jZmcsICZpb2FfY2ZnLT5yZXNldF93YWl0X3EpOwor
+CXNwaW5fdW5sb2NrX2lycXJlc3RvcmUoaW9hX2NmZy0+aG9zdC0+aG9zdF9sb2NrLCBob3N0
+X2xvY2tfZmxhZ3MpOworCXdhaXRfZXZlbnQoaW9hX2NmZy0+cmVzZXRfd2FpdF9xLCAhaW9h
+X2NmZy0+aW5fcmVzZXRfcmVsb2FkKTsKKwlzcGluX2xvY2tfaXJxc2F2ZShpb2FfY2ZnLT5o
+b3N0LT5ob3N0X2xvY2ssIGhvc3RfbG9ja19mbGFncyk7CiAKIAlpZiAoaW9hX2NmZy0+aW9h
+X2lzX2RlYWQpIHsKIAkJcmMgPSAtRUlPOwpAQCAtMTg5MCw4ICsxNzU1LDYgQEAKIAlkZXZf
+ZXJyKCZpb2FfY2ZnLT5wZGV2LT5kZXYsCiAJCSJBZGFwdGVyIGJlaW5nIHJlc2V0IGR1ZSB0
+byBjb21tYW5kIHRpbWVvdXQuXG4iKTsKIAotCWlwcl9ibG9ja19yZXF1ZXN0cyhpb2FfY2Zn
+KTsKLQogCWlmIChXQUlUX0ZPUl9EVU1QID09IGlvYV9jZmctPnNkdF9zdGF0ZSkKIAkJaW9h
+X2NmZy0+c2R0X3N0YXRlID0gR0VUX0RVTVA7CiAKQEAgLTE5MjAsNiArMTc4MywxMCBAQAog
+CWlvYV9jZmctPnJlc2V0X3JldHJpZXMgPSAwOwogCWxpc3RfYWRkX3RhaWwoJmlwcl9jbWQt
+PnF1ZXVlLCAmaW9hX2NmZy0+ZnJlZV9xKTsKIAl3YWtlX3VwX2FsbCgmaW9hX2NmZy0+cmVz
+ZXRfd2FpdF9xKTsKKworCXNwaW5fdW5sb2NrX2lycShpb2FfY2ZnLT5ob3N0LT5ob3N0X2xv
+Y2spOworCXNjc2lfdW5ibG9ja19yZXF1ZXN0cyhpb2FfY2ZnLT5ob3N0KTsKKwlzcGluX2xv
+Y2tfaXJxKGlvYV9jZmctPmhvc3QtPmhvc3RfbG9jayk7CiAJTEVBVkU7CiAKIAlyZXR1cm4g
+SVBSX1JDX0pPQl9SRVRVUk47CkBAIC0xOTcwLDcgKzE4MzcsMTQgQEAKIAl3YWtlX3VwX2Fs
+bCgmaW9hX2NmZy0+cmVzZXRfd2FpdF9xKTsKIAogCWlmIChpb2FfY2ZnLT5zZHRfc3RhdGUg
+PT0gRFVNUF9PQlRBSU5FRCkKLQkJd2FrZV91cF9pbnRlcnJ1cHRpYmxlKCZpb2FfY2ZnLT5z
+ZHRfd2FpdF9xKTsKKwkJY29tcGxldGUoJmlvYV9jZmctPnNkdF9jb21wbGV0aW9uKTsKKwor
+CXNwaW5fdW5sb2NrX2lycShpb2FfY2ZnLT5ob3N0LT5ob3N0X2xvY2spOworCXNjc2lfdW5i
+bG9ja19yZXF1ZXN0cyhpb2FfY2ZnLT5ob3N0KTsKKwlzcGluX2xvY2tfaXJxKGlvYV9jZmct
+Pmhvc3QtPmhvc3RfbG9jayk7CisKKwlpZiAoIWlvYV9jZmctPmFsbG93X2NtZHMpCisJCXNj
+c2lfYmxvY2tfcmVxdWVzdHMoaW9hX2NmZy0+aG9zdCk7CiAKIAlMRUFWRTsKIAlyZXR1cm4g
+SVBSX1JDX0pPQl9SRVRVUk47CkBAIC0yODExLDcgKzI2ODUsNyBAQAogCQlpZiAoR0VUX0RV
+TVAgPT0gaW9hX2NmZy0+c2R0X3N0YXRlKSB7CiAJCQlpcHJfcmVzZXRfc3RhcnRfdGltZXIo
+aXByX2NtZCwgSVBSX0RVTVBfVElNRU9VVCk7CiAJCQlpcHJfY21kLT5qb2Jfc3RlcCA9IGlw
+cl9yZXNldF93YWl0X2Zvcl9kdW1wOwotCQkJd2FrZV91cF9pbnRlcnJ1cHRpYmxlKCZpb2Ff
+Y2ZnLT5zZHRfd2FpdF9xKTsKKwkJCWNvbXBsZXRlKCZpb2FfY2ZnLT5zZHRfY29tcGxldGlv
+bik7CiAJCQlyZXR1cm4gSVBSX1JDX0pPQl9SRVRVUk47CiAJCX0KIAl9CkBAIC0zMDUwLDYg
+KzI5MjQsMTAgQEAKIAkJCWlvYV9jZmctPmluX3Jlc2V0X3JlbG9hZCA9IDA7CiAJCQlpcHJf
+ZmFpbF9hbGxfb3BzKGlvYV9jZmcpOwogCQkJd2FrZV91cF9hbGwoJmlvYV9jZmctPnJlc2V0
+X3dhaXRfcSk7CisKKwkJCXNwaW5fdW5sb2NrX2lycShpb2FfY2ZnLT5ob3N0LT5ob3N0X2xv
+Y2spOworCQkJc2NzaV91bmJsb2NrX3JlcXVlc3RzKGlvYV9jZmctPmhvc3QpOworCQkJc3Bp
+bl9sb2NrX2lycShpb2FfY2ZnLT5ob3N0LT5ob3N0X2xvY2spOwogCQkJcmV0dXJuOwogCQl9
+IGVsc2UgewogCQkJaW9hX2NmZy0+aW5faW9hX2JyaW5nZG93biA9IDE7CkBAIC0zMDU5LDYg
+KzI5MzcsNyBAQAogCiAJaW9hX2NmZy0+aW5fcmVzZXRfcmVsb2FkID0gMTsKIAlpb2FfY2Zn
+LT5hbGxvd19jbWRzID0gMDsKKwlzY3NpX2Jsb2NrX3JlcXVlc3RzKGlvYV9jZmctPmhvc3Qp
+OwogCiAJbGlzdF9mb3JfZWFjaF9lbnRyeShpcHJfY21kLCAmaW9hX2NmZy0+cGVuZGluZ19x
+LCBxdWV1ZSkKIAkJaXByX2NtZC0+cGFyZW50ID0gTlVMTDsKQEAgLTMxMjksNyArMzAwOCw2
+IEBACiAJCWlmIChXQUlUX0ZPUl9EVU1QID09IGlvYV9jZmctPnNkdF9zdGF0ZSkKIAkJCWlv
+YV9jZmctPnNkdF9zdGF0ZSA9IEdFVF9EVU1QOwogCi0JCWlwcl9ibG9ja19yZXF1ZXN0cyhp
+b2FfY2ZnKTsKIAkJaXByX21hc2tfYW5kX2NsZWFyX2FsbF9pbnRlcnJ1cHRzKGlvYV9jZmcp
+OwogCQlpcHJfaW5pdGlhdGVfaW9hX3Jlc2V0KGlvYV9jZmcsIElQUl9TSFVURE9XTl9OT05F
+KTsKIAl9IGVsc2UgewpAQCAtMzE5NSw3ICszMDczLDYgQEAKIAkJCQlpZiAoV0FJVF9GT1Jf
+RFVNUCA9PSBpb2FfY2ZnLT5zZHRfc3RhdGUpCiAJCQkJCWlvYV9jZmctPnNkdF9zdGF0ZSA9
+IEdFVF9EVU1QOwogCi0JCQkJaXByX2Jsb2NrX3JlcXVlc3RzKGlvYV9jZmcpOwogCQkJCWlw
+cl9pbml0aWF0ZV9pb2FfcmVzZXQoaW9hX2NmZywgSVBSX1NIVVRET1dOX05PTkUpOwogCQkJ
+CXJldHVybiBJUlFfSEFORExFRDsKIAkJCX0KQEAgLTM5NDQsNyArMzgyMSw3IEBACiAKIAlz
+Y3NpX2NtZC0+cmVzdWx0ID0gKERJRF9PSyA8PCAxNik7CiAKLQlpZiAodW5saWtlbHkoaW9h
+X2NmZy0+YmxvY2tfaG9zdF9vcHMpKSB7CisJaWYgKHVubGlrZWx5KCFpb2FfY2ZnLT5hbGxv
+d19jbWRzKSkgewogCQkvKgogCQkgKiBXZSBhcmUgY3VycmVudGx5IGJsb2NraW5nIGFsbCBk
+ZXZpY2VzIGR1ZSB0byBhIGhvc3QgcmVzZXQgCiAJCSAqIFdlIGhhdmUgdG9sZCB0aGUgaG9z
+dCB0byBzdG9wIGdpdmluZyB1cyBuZXcgcmVxdWVzdHMsIGJ1dApAQCAtNDI0OSw3ICs0MTI2
+LDkgQEAKIAkJcmV0dXJuIEZBSUxFRDsKIAogCWlmIChpb2FfY2ZnLT5pbl9yZXNldF9yZWxv
+YWQpIHsKLQkJaXByX3NsZWVwX29uKGlvYV9jZmcsICZpb2FfY2ZnLT5yZXNldF93YWl0X3Ep
+OworCQlzcGluX3VubG9ja19pcnEoaW9hX2NmZy0+aG9zdC0+aG9zdF9sb2NrKTsKKwkJd2Fp
+dF9ldmVudChpb2FfY2ZnLT5yZXNldF93YWl0X3EsICFpb2FfY2ZnLT5pbl9yZXNldF9yZWxv
+YWQpOworCQlzcGluX2xvY2tfaXJxKGlvYV9jZmctPmhvc3QtPmhvc3RfbG9jayk7CiAKIAkJ
+LyogSWYgd2UgZ290IGhpdCB3aXRoIGEgaG9zdCByZXNldCB3aGlsZSB3ZSB3ZXJlIGFscmVh
+ZHkgcmVzZXR0aW5nCiAJCSAgIHRoZSBhZGFwdGVyIGZvciBzb21lIHJlYXNvbiwgYW5kIHRo
+ZSByZXNldCBmYWlsZWQuICovCkBAIC00MjYwLDggKzQxMzksMTEgQEAKIAl9IGVsc2Ugewog
+CQlpcHJfaW5pdGlhdGVfaW9hX3Jlc2V0KGlvYV9jZmcsIHNodXRkb3duX3R5cGUpOwogCi0J
+CWlmIChpb2FfY2ZnLT5pbl9yZXNldF9yZWxvYWQpCi0JCQlpcHJfc2xlZXBfb24oaW9hX2Nm
+ZywgJmlvYV9jZmctPnJlc2V0X3dhaXRfcSk7CisJCWlmIChpb2FfY2ZnLT5pbl9yZXNldF9y
+ZWxvYWQpIHsKKwkJCXNwaW5fdW5sb2NrX2lycShpb2FfY2ZnLT5ob3N0LT5ob3N0X2xvY2sp
+OworCQkJd2FpdF9ldmVudChpb2FfY2ZnLT5yZXNldF93YWl0X3EsICFpb2FfY2ZnLT5pbl9y
+ZXNldF9yZWxvYWQpOworCQkJc3Bpbl9sb2NrX2lycShpb2FfY2ZnLT5ob3N0LT5ob3N0X2xv
+Y2spOworCQl9CiAKIAkJaWYgKGlvYV9jZmctPmlvYV9pc19kZWFkKSB7CiAJCQlpcHJfdHJh
+Y2U7CkBAIC00MzUzLDkgKzQyMzUsOCBAQAogCiAJc3Bpbl9sb2NrX2lycXNhdmUoaW9hX2Nm
+Zy0+aG9zdC0+aG9zdF9sb2NrLCBsb2NrX2ZsYWdzKTsKIAlpcHJfaW5pdGlhdGVfaW9hX2Jy
+aW5nZG93bihpb2FfY2ZnLCBJUFJfU0hVVERPV05fTk9STUFMKTsKLQlpZiAoaW9hX2NmZy0+
+aW5fcmVzZXRfcmVsb2FkKQotCQlpcHJfc2xlZXBfb24oaW9hX2NmZywgJmlvYV9jZmctPnJl
+c2V0X3dhaXRfcSk7CiAJc3Bpbl91bmxvY2tfaXJxcmVzdG9yZShpb2FfY2ZnLT5ob3N0LT5o
+b3N0X2xvY2ssIGxvY2tfZmxhZ3MpOworCXdhaXRfZXZlbnQoaW9hX2NmZy0+cmVzZXRfd2Fp
+dF9xLCAhaW9hX2NmZy0+aW5fcmVzZXRfcmVsb2FkKTsKIH0KIAogLyoqCkBAIC01Njk3LDgg
+KzU1NzgsMTIgQEAKIHsKIAlpbnQgcmMgPSAwOwogCi0JaWYgKGlvYV9jZmctPmluX3Jlc2V0
+X3JlbG9hZCkKLQkJcmMgPSBpcHJfaW50ZXJydXB0aWJsZV9zbGVlcF9vbihpb2FfY2ZnLCAm
+aW9hX2NmZy0+cmVzZXRfd2FpdF9xKTsKKwlpZiAoaW9hX2NmZy0+aW5fcmVzZXRfcmVsb2Fk
+KSB7CisJCXNwaW5fdW5sb2NrX2lycShpb2FfY2ZnLT5ob3N0LT5ob3N0X2xvY2spOworCQly
+YyA9IHdhaXRfZXZlbnRfaW50ZXJydXB0aWJsZShpb2FfY2ZnLT5yZXNldF93YWl0X3EsCisJ
+CQkJCSAgICAgICFpb2FfY2ZnLT5pbl9yZXNldF9yZWxvYWQpOworCQlzcGluX2xvY2tfaXJx
+KGlvYV9jZmctPmhvc3QtPmhvc3RfbG9jayk7CisJfQogCiAJaWYgKCFpb2FfY2ZnLT5hbGxv
+d19jbWRzKQogCQlyYyA9IC1FSU87CkBAIC01OTY1LDE1ICs1ODUwLDEwIEBACiAKIAlsaXN0
+X2FkZF90YWlsKCZpcHJfY21kLT5xdWV1ZSwgJmlvYV9jZmctPmZyZWVfcSk7CiAKLQlpZiAo
+aW9hc2MgIT0gSVBSX0lPQVNDX0lPQV9XQVNfUkVTRVQpIHsKLQkJaXByX2Jsb2NrX3JlcXVl
+c3RzKGlvYV9jZmcpOwotCisJaWYgKGlvYXNjICE9IElQUl9JT0FTQ19JT0FfV0FTX1JFU0VU
+KQogCQlpZiAoaXByX3Jlc2V0X3JlbG9hZChpb2FfY2ZnLCBJUFJfU0hVVERPV05fTk9STUFM
+KSAhPSBTVUNDRVNTKQogCQkJcmVzdWx0ID0gLUVJTzsKIAotCQlpcHJfdW5ibG9ja19yZXF1
+ZXN0cyhpb2FfY2ZnKTsKLQl9Ci0KIAlzcGluX3VubG9ja19pcnFyZXN0b3JlKGlvYV9jZmct
+Pmhvc3QtPmhvc3RfbG9jaywgbG9ja19mbGFncyk7CiAKIAlyZXR1cm4gcmVzdWx0OwpAQCAt
+NjE2NCwxOSArNjA0NCwxNyBAQAogCQlyZXR1cm4gcmM7CiAJfQogCi0JaXByX2Jsb2NrX3Jl
+cXVlc3RzKGlvYV9jZmcpOwotCiAJaW9hX2NmZy0+ZXJyb3JzX2xvZ2dlZCA9IDA7CiAKIAlp
+ZiAoaXByX3Jlc2V0X3JlbG9hZChpb2FfY2ZnLCBJUFJfU0hVVERPV05fTk9STUFMKSAhPSBT
+VUNDRVNTKQogCQlyYyA9IC1FSU87CiAKLQlpcHJfdW5ibG9ja19yZXF1ZXN0cyhpb2FfY2Zn
+KTsKLQogCS8qIFdhaXQgZm9yIGEgc2Vjb25kIGZvciBhbnkgZXJyb3JzIHRvIGJlIGxvZ2dl
+ZCAqLwotCWlwcl9zbGVlcChpb2FfY2ZnLCAxMDAwKTsKKwlzcGluX3VubG9ja19pcnFyZXN0
+b3JlKGlvYV9jZmctPmhvc3QtPmhvc3RfbG9jaywgbG9ja19mbGFncyk7CisJc2NoZWR1bGVf
+dGltZW91dChIWik7CisJc3Bpbl9sb2NrX2lycXNhdmUoaW9hX2NmZy0+aG9zdC0+aG9zdF9s
+b2NrLCBsb2NrX2ZsYWdzKTsKIAotCWlmIChpb2FfY2ZnLT5lcnJvcnNfbG9nZ2VkKQorCWlm
+IChpb2FfY2ZnLT5pbl9yZXNldF9yZWxvYWQgfHwgaW9hX2NmZy0+ZXJyb3JzX2xvZ2dlZCkK
+IAkJcmMgPSAtRUlPOwogCiAJc3Bpbl91bmxvY2tfaXJxcmVzdG9yZShpb2FfY2ZnLT5ob3N0
+LT5ob3N0X2xvY2ssIGxvY2tfZmxhZ3MpOwpAQCAtNjMxMSw3ICs2MTg5LDEwIEBACiAJCWlv
+YV9jZmctPmR1bXBfdGFrZW4gPSAxOwogCX0gZWxzZSB7CiAJCWlvYV9jZmctPnNkdF9zdGF0
+ZSA9IFdBSVRfRk9SX0RVTVA7Ci0JCSh2b2lkKSBpcHJfaW50ZXJydXB0aWJsZV9zbGVlcF9v
+bihpb2FfY2ZnLCAmaW9hX2NmZy0+c2R0X3dhaXRfcSk7CisJCXNwaW5fdW5sb2NrX2lycXJl
+c3RvcmUoaW9hX2NmZy0+aG9zdC0+aG9zdF9sb2NrLCBsb2NrX2ZsYWdzKTsKKwkJKHZvaWQp
+IHdhaXRfZXZlbnRfaW50ZXJydXB0aWJsZShpb2FfY2ZnLT5zZHRfY29tcGxldGlvbi53YWl0
+LAorCQkJCQkJaW9hX2NmZy0+c2R0X2NvbXBsZXRpb24uZG9uZSk7CisJCXNwaW5fbG9ja19p
+cnFzYXZlKGlvYV9jZmctPmhvc3QtPmhvc3RfbG9jaywgbG9ja19mbGFncyk7CiAKIAkJaWYg
+KGlvYV9jZmctPnNkdF9zdGF0ZSA9PSBHRVRfRFVNUCkKIAkJCWlwcl9nZXRfaW9hX3NtYXJ0
+X2R1bXAoaW9hX2NmZyk7CkBAIC02MzU5LDEzICs2MjQwLDkgQEAKIAkJcmV0dXJuIHJlc3Vs
+dDsKIAl9CiAKLQlpcHJfYmxvY2tfcmVxdWVzdHMoaW9hX2NmZyk7Ci0KIAlpZiAoaXByX3Jl
+c2V0X3JlbG9hZChpb2FfY2ZnLCBJUFJfU0hVVERPV05fTk9STUFMKSAhPSBTVUNDRVNTKQog
+CQlyZXN1bHQgPSAtRUlPOwogCi0JaXByX3VuYmxvY2tfcmVxdWVzdHMoaW9hX2NmZyk7Ci0K
+IAlzcGluX3VubG9ja19pcnFyZXN0b3JlKGlvYV9jZmctPmhvc3QtPmhvc3RfbG9jaywgbG9j
+a19mbGFncyk7CiAKIAlyZXR1cm4gcmVzdWx0OwpAQCAtNjYxNSw3ICs2NDkyLDggQEAKIAkJ
+cmV0dXJuIHJlc3VsdDsKIAl9CiAKLQlpcHJfYmxvY2tfcmVxdWVzdHMoaW9hX2NmZyk7CisJ
+aW9hX2NmZy0+YWxsb3dfY21kcyA9IDA7CisJc2NzaV9ibG9ja19yZXF1ZXN0cyhpb2FfY2Zn
+LT5ob3N0KTsKIAogCWlmICgocmVzdWx0ID0gaXByX3NodXRkb3duX2lvYShpb2FfY2ZnKSkp
+IHsKIAkJc3Bpbl91bmxvY2tfaXJxcmVzdG9yZShpb2FfY2ZnLT5ob3N0LT5ob3N0X2xvY2ss
+IGxvY2tfZmxhZ3MpOwpAQCAtNjY1NSw4ICs2NTMzLDYgQEAKIAlpZiAoaXByX3Jlc2V0X3Jl
+bG9hZChpb2FfY2ZnLCBJUFJfU0hVVERPV05fTk9ORSkgIT0gU1VDQ0VTUykKIAkJcmVzdWx0
+ID0gLUVJTzsKIAotCWlwcl91bmJsb2NrX3JlcXVlc3RzKGlvYV9jZmcpOwotCiAJaXByX2Zy
+ZWVfdWNvZGVfYnVmZmVyKHNnbGlzdCk7CiAKIAlzcGluX3VubG9ja19pcnFyZXN0b3JlKGlv
+YV9jZmctPmhvc3QtPmhvc3RfbG9jaywgbG9ja19mbGFncyk7CkBAIC03NTAwLDEyICs3Mzc2
+LDEzIEBACiAJc2NzaV9yZW1vdmVfaG9zdChpb2FfY2ZnLT5ob3N0KTsKIAogCXNwaW5fbG9j
+a19pcnFzYXZlKGlvYV9jZmctPmhvc3QtPmhvc3RfbG9jaywgaG9zdF9sb2NrX2ZsYWdzKTsK
+LQogCWlwcl9pbml0aWF0ZV9pb2FfYnJpbmdkb3duKGlvYV9jZmcsIElQUl9TSFVURE9XTl9O
+T1JNQUwpOwotCWlmIChpb2FfY2ZnLT5pbl9yZXNldF9yZWxvYWQpCi0JCWlwcl9zbGVlcF9v
+bihpb2FfY2ZnLCAmaW9hX2NmZy0+cmVzZXRfd2FpdF9xKTsKIAotCXdha2VfdXBfaW50ZXJy
+dXB0aWJsZSgmaW9hX2NmZy0+c2R0X3dhaXRfcSk7CisJc3Bpbl91bmxvY2tfaXJxcmVzdG9y
+ZShpb2FfY2ZnLT5ob3N0LT5ob3N0X2xvY2ssIGhvc3RfbG9ja19mbGFncyk7CisJd2FpdF9l
+dmVudChpb2FfY2ZnLT5yZXNldF93YWl0X3EsICFpb2FfY2ZnLT5pbl9yZXNldF9yZWxvYWQp
+OworCXNwaW5fbG9ja19pcnFzYXZlKGlvYV9jZmctPmhvc3QtPmhvc3RfbG9jaywgaG9zdF9s
+b2NrX2ZsYWdzKTsKKworCWNvbXBsZXRlKCZpb2FfY2ZnLT5zZHRfY29tcGxldGlvbik7CiAK
+IAlzcGluX2xvY2soJmlwcl9kcml2ZXJfbG9jayk7CiAJbGlzdF9kZWwoJmlvYV9jZmctPnF1
+ZXVlKTsKSW5kZXg6IGlwci5oCj09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT0KUkNTIGZpbGU6IC9jdnNyb290L2Vz
+ZXJ2ZXJpby9pcHJfMi9pcHIuaCx2CnJldHJpZXZpbmcgcmV2aXNpb24gMS43CmRpZmYgLXUg
+LXIxLjcgaXByLmgKLS0tIGlwci5oCTE2IEphbiAyMDA0IDIzOjU2OjQ1IC0wMDAwCTEuNwor
+KysgaXByLmgJMTkgSmFuIDIwMDQgMTY6MTE6MzIgLTAwMDAKQEAgLTEzODIsNyArMTM4Miw2
+IEBACiAKIAlzdHJ1Y3Qgd29ya19zdHJ1Y3QgbG93X3ByaV93b3JrOwogCWludCBtaW5vcl9u
+dW07Ci0JaW50IGJsb2NrX2hvc3Rfb3BzOwogCiAJc3RydWN0IHNlbWFwaG9yZSBpb2N0bF9z
+ZW1hcGhvcmU7CiAKQEAgLTEzOTAsNyArMTM4OSw3IEBACiAKIAlzdHJ1Y3QgaXByX2R1bXBf
+aW9hX2VudHJ5ICppb2FfZHVtcDsKIAlzdHJ1Y3QgaXByX2R1bXBfZHJpdmVyX2hlYWRlciAq
+ZHVtcDsKLQl3YWl0X3F1ZXVlX2hlYWRfdCBzZHRfd2FpdF9xOworCXN0cnVjdCBjb21wbGV0
+aW9uIHNkdF9jb21wbGV0aW9uOwogCWVudW0gaXByX3NkdF9zdGF0ZSBzZHRfc3RhdGU7CiAK
+IAlzdHJ1Y3QgaXByX3ZwZF9jYnMgKnZwZF9jYnM7Cg==
+--------------060409080902020503000608--
+
