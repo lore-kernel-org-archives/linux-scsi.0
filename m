@@ -1,45 +1,25 @@
-From: James Bottomley <James.Bottomley@steeleye.com>
+From: Christoph Hellwig <hch@infradead.org>
 Subject: Re: [2.6.0-test4] blocking access to mounted scsi devices
-Date: 26 Aug 2003 09:08:54 -0500
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1061906937.1830.11.camel@mulgrave>
-References: <3F49B515.6010107@torque.net>
-	<20030825130822.A4258@infradead.org>  <3F4B3482.4060304@torque.net>
+Date: Tue, 26 Aug 2003 15:32:28 +0100
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <20030826153228.A26979@infradead.org>
+References: <3F49B515.6010107@torque.net> <20030825130822.A4258@infradead.org> <3F4B3482.4060304@torque.net> <1061906937.1830.11.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nat9.steeleye.com ([65.114.3.137]:42246 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S263787AbTHZOKF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 26 Aug 2003 10:10:05 -0400
-In-Reply-To: <3F4B3482.4060304@torque.net>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1061906937.1830.11.camel@mulgrave>; from James.Bottomley@steeleye.com on Tue, Aug 26, 2003 at 09:08:54AM -0500
+To: James Bottomley <James.Bottomley@steeleye.com>
+Cc: dougg@torque.net, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>, ballen@gravity.phys.uwm.edu
 List-Id: linux-scsi@vger.kernel.org
-To: dougg@torque.net
-Cc: Christoph Hellwig <hch@infradead.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>, ballen@gravity.phys.uwm.edu
 
-On Tue, 2003-08-26 at 05:20, Douglas Gilbert wrote:
-> Christoph Hellwig wrote:
-> > That's because both mount (or e.g. volume managers) claims
-> > devices for exclusive use, as does drivers/block/scsi_ioctl.c
+On Tue, Aug 26, 2003 at 09:08:54AM -0500, James Bottomley wrote:
+> Hang on, that's not the way it's supposed to work.
 > 
-> Well it is reasonable that mount should exclude other attempts
-> to mount. However the device holding the root file system
-> may be an ATA or SCSI disk and the ide-disk and sd drivers
-> do not support SMART probing directly.
+> Mount should be on partition devices (like /dev/sda1) whereas the tools
+> should be on whole disc devices (like /dev/sda).  I thought we'd agreed
+> that even opening a partition exclusively wouldn't affect the ability to
+> open the whole disc device (but opening the whole disc device
+> exclusively would block access to all partitions).
 
-Hang on, that's not the way it's supposed to work.
-
-Mount should be on partition devices (like /dev/sda1) whereas the tools
-should be on whole disc devices (like /dev/sda).  I thought we'd agreed
-that even opening a partition exclusively wouldn't affect the ability to
-open the whole disc device (but opening the whole disc device
-exclusively would block access to all partitions).
-
-Therefore, the only issue we should have is with volume managers that
-need to open whole disc devices exclusively, and possibly with the
-device mapper.
-
-James
-
-
+Linus accepted a patch from Neil Brown in -test4 that changes this.
