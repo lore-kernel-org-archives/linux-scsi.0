@@ -1,42 +1,38 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [RFR] a new SCSI driver
-Date: Sun, 25 May 2003 09:21:40 -0400
+From: Luben Tuikov <tluben@rogers.com>
+Subject: Re: Patch:  allow devices to restrict start on add
+Date: Sun, 25 May 2003 13:13:43 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3ED0C364.3020507@pobox.com>
-References: <200305250944.h4P9i5Ct000456@81-2-122-30.bradfords.org.uk>
+Message-ID: <3ED0F9C7.90805@rogers.com>
+References: <200305221140.59633.Eddie.Williams@Steeleye.com> <3ECD1747.6060901@rogers.com> <200305221636.36387.Eddie.Williams@Steeleye.com> <3ECEE042.60208@rogers.com> <3ED09448.9070305@torque.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:28545 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S262098AbTEYNIx
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 25 May 2003 09:08:53 -0400
-In-Reply-To: <200305250944.h4P9i5Ct000456@81-2-122-30.bradfords.org.uk>
+Received: from fep04-mail.bloor.is.net.cable.rogers.com ([66.185.86.74]:27600
+	"EHLO fep04-mail.bloor.is.net.cable.rogers.com") by vger.kernel.org
+	with ESMTP id S263558AbTEYRAp (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 25 May 2003 13:00:45 -0400
+In-Reply-To: <3ED09448.9070305@torque.net>
 List-Id: linux-scsi@vger.kernel.org
-To: john@grabjohn.com
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: dougg@torque.net
+Cc: Linux SCSI list <linux-scsi@vger.kernel.org>
 
-john@grabjohn.com wrote:
->>Serial ATA is looming quickly on the horizon.  Both device and host
->>controller SATA implementations really lend themselves to behaviors
->>that have existed in SCSI for a while.  SATA even defines use of SCSI
->>Enclosure Services.
+Douglas Gilbert wrote:
+>
+[...]
 > 
-> 
-> Thinking ahead, by the 2.8 timescale, PATA could well be legacy hardware 
-> which could be supported only by an 'old' IDE driver, much like we already
-> have at the moment - I.E. we could remove the current 'old' IDE driver
-> sometime during the 2.7 timescale, and support SATA only via the SCSI layer.
-> 
-> This would save having any more than the minimum SATA code going in to the
-> existing IDE driver, and consolidate work in the future.        
 
+Thanks Doug.  Very detailed and helpful.
 
-I'm content to let evolution make these decisions...  predicting into 
-the future isn't the best skill a technologist has :)
+> So ASC,ASQ=0x4,0x2 is the normal response for recent disks
+> when they are sent commands (typically other than INQUIRY)
+> when they are spun down.
 
-	Jeff
+Yes, this is indeed the case...
+
+-- 
+Luben
+
 
 
 
