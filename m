@@ -1,62 +1,91 @@
-From: Andries Brouwer <aebr@win.tue.nl>
-Subject: Re: [PATCH] fix sector_div use in scsicam.c
-Date: Sun, 27 Oct 2002 20:22:28 +0100
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20021027192228.GA28395@win.tue.nl>
-References: <hch@lst.de> <200210271634.g9RGYAY11441@localhost.localdomain> <20021027173756.A16077@lst.de>
+From: Rob Landley <landley@trommello.org>
+Subject: Re: [PATCH] [RFC] Advanced TCA SCSI Disk Hotswap
+Date: Sun, 27 Oct 2002 10:08:59 -0500
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <200210270908.59805.landley@trommello.org>
+References: <200210242342.g9ONgGT04819@localhost.localdomain> <3DB887D5.5080500@pobox.com>
+Reply-To: landley@trommello.org
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20021027173756.A16077@lst.de>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+In-Reply-To: <3DB887D5.5080500@pobox.com>
+To: Jeff Garzik <jgarzik@pobox.com>, James Bottomley <James.Bottomley@steeleye.com>
+Cc: Steven Dake <sdake@mvista.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: James Bottomley <James.Bottomley@steeleye.com>, linux-scsi@vger.kernel.org
 
-On Sun, Oct 27, 2002 at 05:37:56PM +0100, Christoph Hellwig wrote:
-> On Sun, Oct 27, 2002 at 10:34:09AM -0600, James Bottomley wrote:
+On Thursday 24 October 2002 18:52, Jeff Garzik wrote:
+> James Bottomley wrote:
+> >>n Advanced TCA (what spawned this work) a button is pressed to
+> >>indicate  hotswap removal which makes for easy detection of hotswap
+> >>events.  This is why there are  kernel interfaces for removal and
+> >>insertion (so a kernel driver can be written to detect  the button
+> >>press and remove the devices from the os data structures and then
+> >>light a blue  led indicating safe for removal).
+> >
+> >OK, I understand what's going on now.  It's no different from those
+> > hotplug PCI busses where you press the button and a second or so later
+> > the LED goes out and you can remove the card.  10ms sounds rather a short
+> > maximum time for a technician to wait for a light to go out....I suppose
+> > Telco technicians are rather impatient.
+> >
+> >I really think you need to lengthen this interval.  The kernel is moving
+> >towards this type of hotplug infrastructure which you can easily leverage
+> > (or even help build), but it's definitely going to be mainly in user
+> > space.
+>
+> Caveat coder -- you also have to handle the case where the device is
+> already gone, by the time you are notified of the hot-unplug event.
+>  Some ejections are less friendly than others...  though from a SCSI
+> standpoint, hopefully that case is easier -- error out all I/Os in
+> flight, and unregister the host and device structures associated with
+> the recently-removed host.  The devil, of course, is in the details ;-)
 
-Hi Christoph & James,
+Hmmm...  Not being familiar with the SCSI layer but sticking my nose in anyway 
+on general block device/mount point hotplug issues:
 
-I see you trying to get this scsicam code do something
-that it should not. No 64-bit handling required or even desirable.
-Any use of sector_div here is wrong.
+How hard would it be to write a simple debugging function to lobotomize a 
+block device?  (So that all further I/O to that sucker immediately returns an 
+error.)  Not just simulating an a hot extraction (or catastrophic failure) of 
+a block device, but also something you could use to see how gracefully 
+filesystems react.
 
-I answered this yesterday or the day before or so, but maybe
-you did not see the reply.
+The reason I ask is there was a discussion a while back about the new lazy 
+unmount (umount -l /blah/foo) not always being quite enough, and that 
+sometimes what what you want is basically "umount -9 /blah/foo" (ala kill 
+-9).  Close all files, reparent all process home directories and chroot mount 
+points to a dummy inode, flush all I/O, drive a stake through the 
+superblock's heart, and scatter the ashes at sea.  Somebody posted a patch to 
+actually do this.  (Against 2.4, i think.)  I could probably dig it up if you 
+were curious.  Let's see...
 
-> --- 1.11/drivers/scsi/scsicam.c	Fri Oct 25 13:31:53 2002
-> +++ edited/drivers/scsi/scsicam.c	Sun Oct 27 16:36:31 2002
-> @@ -80,11 +80,13 @@
->  	if (ret || ip[0] > 255 || ip[1] > 63) {
->  		ip[0] = 64;
->  		ip[1] = 32;
-> -		if (sector_div(capacity, ip[0] * ip[1]) > 65534) {
-> +		sector_div(capacity, ip[0] * ip[1]);
-> +		if (capacity > 65534) {
->  			ip[0] = 255;
->  			ip[1] = 63;
-> +			sector_div(capacity, ip[0] * ip[1]);
->  		}
-> -		ip[2] = sector_div(capacity, ip[0] * ip[1]);
-> +		ip[2] = capacity;
->  	}
->  
->  	return 0;
+http://marc.theaimsgroup.com/?l=linux-kernel&m=103443466225915&q=raw
 
-Write, e.g.,
+The eject command should certainly have an "umount with shotgun" option, so 
+zombie processes can't pin your CD in the drive.  (Your average end-user is 
+NOT going to be able to grovel through /proc to figure out which processes 
+have an open filehandle or home directory under the cdrom mount point so it 
+can kill them and get the disk out.  They're going to power cycle the machine 
+and eject it while the bios is in charge.  I've done this myself a couple of 
+times when I'm in a hurry.)
 
-	if (ret || ip[0] > 255 || ip[1] > 63) {
-		ip[0] = 64;
-		ip[1] = 32;
-		if ((capacity >> 11) > 65534) {
-			ip[0] = 255;
-			ip[1] = 63;
-		}
-		if (capacity > 65535*63*255)
-			ip[2] = 65535;
-		else
-			ip[2] = (unsigned long)capacity / (ip[0] * ip[1]);
-	}
+Anyway, if the block device under the filesystem honestly does go away for 
+hotplug eject reasons, the obvious thing to do is umount -9 the sucker 
+immediately so userspace can collapse gracefully (or even conceivably 
+recover).  The main difference here is that the flushing would all error out 
+and get discarded, and this wouldn't always get reported to the user, but 
+thanks to write cacheing that's the case anyway.  (Use some variant of 
+O_DIRECT or fsync if you care.)  The errors userspace does see switch from 
+"all my I/O failed with a media error" to "all my filehandles closed out from 
+under me" (and the directory I'm in has been deleted), but that's still 
+relatively logical behavior.
 
-Andries
+Does this sound like it's off in left field?
+
+>     Jeff
+
+Rob
+
+-- 
+http://penguicon.sf.net - Terry Pratchett, Eric Raymond, Pete Abrams, Illiad, 
+CmdrTaco, liquid nitrogen ice cream, and caffienated jello.  Well why not?
