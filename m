@@ -1,29 +1,56 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [TRIVIAL] Remove __NO_VERSION__ from 2.4
-Date: 12 Aug 2002 11:18:09 +0100
+From: Mike Anderson <andmike@us.ibm.com>
+Subject: [PATCH] 2.5.31 scsi_error.c cleanup
+Date: Mon, 12 Aug 2002 16:38:16 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1029147489.16216.126.camel@irongate.swansea.linux.org.uk>
-References: <20020811210612.B18882C0DD@lists.samba.org>
+Message-ID: <20020812233815.GA1334@beaverton.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <20020811210612.B18882C0DD@lists.samba.org>
+Received: from northrelay03.pok.ibm.com (northrelay03.pok.ibm.com [9.56.224.151])
+	by e2.ny.us.ibm.com (8.12.2/8.12.2) with ESMTP id g7CNbQha009662
+	for <linux-scsi@vger.kernel.org>; Mon, 12 Aug 2002 19:37:27 -0400
+Received: from dyn9-47-17-195 (dyn9-47-17-195.beaverton.ibm.com [9.47.17.195])
+	by northrelay03.pok.ibm.com (8.12.3/NCO/VER6.3) with ESMTP id g7CNbJON029838
+	for <linux-scsi@vger.kernel.org>; Mon, 12 Aug 2002 19:37:20 -0400
+Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
-To: Rusty Trivial Russell <rusty@samba.org>
-Cc: Marcelo Tosatti <marcelo@conectiva.com.br>, Kai Germaschewski <kai.germaschewski@gmx.de>, Karsten Keil <kkeil@suse.de>, braam@clusterfs.com, davem@redhat.com, dledford@redhat.com, dwmw2@redhat.com, faith@redhat.com, greg@kroah.com, hpa@zytor.com, jaharkes@cs.cmu.edu, jffs-dev@axis.com, jhartmann@precisioninsight.com, laforge@gnumonks.org, linux-scsi@vger.kernel.org, mac@melware.de, perex@suse.cz, schwidefsky@de.ibm.com, trond.myklebust@fys.uio.no
+To: linux-scsi@vger.kernel.org
 
-On Mon, 2002-08-12 at 02:50, Rusty Trivial Russell wrote:
-> [ BTW: rustcorp.com.au temporarily not resolving, using samba.org address ]
-> 
-> From:  Keith Owens <kaos@ocs.com.au>
-> 
->   #define __NO_VERSION__ has not been required since 2.3 days.  Trivial
->   change to remove all references to __NO_VERSION__, it just hits a lot
->   of files.
+I have created a scsi_error cleanup patch.
 
-This seems to touch files whose authors have explicitly asked people not
-to mangle 2.2/2.4 compatibility. Surely 2.5 is the place for this kind
-of stuff. Its a change that has no effect other than making sure patches
-don't apply and 2.2/2.4 compat code breaks on people.
+I would appreciate any feedback and testing.
+
+The patch simplifies scsi_unjam_host and associated functions.
+
+I did not change any of the current error policy. I would like to do
+that in the future.
+
+I have tested the patch on the following configurations with successful
+recovery:
+
+UML:
+	Driver: scsi_debug Version: 1.59
+	Error Hdlr Policy:
+		- Request sense if no auto sense.
+		- Abort on timed out command
+
+2.5.31:
+	Driver: aic7xxx 6.2.4
+	Error Hdlr Policy:
+		- Abort on timed out command
+		- Attempt BDR
+		- Send Bus Reset.
+
+I also ran against qlogicisp, ips, and qla drivers but error injection
+did not generate any meaningful results.
+
+Complete patch against 2.5.31 is at:
+
+http://www-124.ibm.com/storageio/gen-io/patch-scsi_error-2.5.31-1.gz
+
+-Mike
+
+-- 
+Michael Anderson
+andmike@us.ibm.com
 
