@@ -1,42 +1,78 @@
-From: James Bottomley <James.Bottomley@steeleye.com>
-Subject: Re: [linux-usb-devel] Problem with external USB2.0 case and LG GSA
-	4040-B
-Date: 16 Dec 2003 13:36:00 -0500
+From: "Admin" <Personnel@selu.com.ar>
+Subject: Attention All School Staff, Personnel, and Students:
+Date: Tue, 16 Dec 03 23:52:26 GMT
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1071599762.2080.116.camel@mulgrave>
-References: <Pine.LNX.4.44L0.0312151529160.895-100000@ida.rowland.org>
+Message-ID: <i-8a--eb2-m-8$$p-1o3$$$-3-e-w71__17010.2662792944$1071615746@0nmp.czes>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/alternative;
+	boundary=".E71._4._4.D5E7DC.CF_A40"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat1.steeleye.com ([65.114.3.130]:44506 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S262009AbTLPSg4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 16 Dec 2003 13:36:56 -0500
-In-Reply-To: <Pine.LNX.4.44L0.0312151529160.895-100000@ida.rowland.org>
+Received: from 200-207-42-59.dsl.telesp.net.br ([200.207.42.59]:15891 "HELO
+	200-207-42-59.dsl.telesp.net.br") by vger.kernel.org with SMTP
+	id S264142AbTLPWyA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 16 Dec 2003 17:54:00 -0500
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: Cornelius Claussen <cornelius.claussen@gmx.de>, Patrick Mansfield <patmans@us.ibm.com>, USB development list <linux-usb-devel@lists.sourceforge.net>, SCSI development list <linux-scsi@vger.kernel.org>
+To: linux-fsdevel@vger.kernel.org
 
-I've been thinking some more about this.  Although the driver is
-apparently at fault here by issuing a reset without telling the
-mid-layer, it might be useful to filter out other common ASC/ASCQ codes
-in scsi_io_completion() we retry on "in the process of becoming ready",
-then for any other UNIT_ATTENTION, we assume it was a disc change for
-removable (this is what causes the I/O error in this case) or a reset
-for non-removable.
+This is a multi-part message in MIME format.
 
-Perhaps we should do a more dilligent check for the reset case?  ASC
-0x29 and ASCQ <= 4 seems to identify all the reset cases.  Since the
-tape case doesn't come through here, there's no danger of doing an
-incorrect retry for it.
+--.E71._4._4.D5E7DC.CF_A40
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-There is, however, one danger to the removable case: a power cycle could
-still be accompanied by a medium change, which would now be missed.
+Attention All School Staff, Personnel, and Students:
 
-On the whole, I'm inclined to leave everything the way it is, but was
-wondering if there were any other comments?
+You Must Respond By 5 P.M. Thursday, December 18, 2003
 
-James
+Through a special arrangement, Avtech Direct is offering a limited
+allotment of BRAND NEW, top of-the-line, name-brand desktop computers
+at 50% off MSRP to all Teachers, Students, Faculty, and  Staff who
+respond to this message before 5 P.M., Wednesday, December 3, 2003
 
+All desktop computers are brand-new packed in their original boxes,
+and come with a full manufacturer's warranty plus
+a 100% satisfaction guarantee.
+
+These professional grade Desktops are fully equipped with 2004
+next generation technology, making these the best performing
+computers money can buy.
+
+Avtech Direct is offering these feature rich, top performing
+Desktops with the latest Intel technology at an amazing price
+to all Teachers, and Students, Faculty and Staff who call:
+
+    1-800-884-9510 by 5 P.M. Thursday, December 18, 2003
+
+The fast and powerful AT-2400 series Desktop features: 
+
+      * Intel 2.0Ghz Processor for amazing speed and performance
+      * 128MB DDR RAM,  Upgradeable to 1024
+      * 20 GB UDMA Hard Drive, Upgradeable to 80 GB
+      * 52X CD-Rom Drive, Upgradeable to DVD/CDRW 
+      * 1.44 Floppy disk drive
+      * Next Generation Technology
+      * ATI Premium video and sound
+      * Full Connectivity with Fax modem/Lan/IEE 1394/USB 2.0
+      * Soft Touch Keyboard and scroll mouse
+      * Internet Ready
+      * Network Ready
+      * 1 Year parts and labor warranty
+      * Priority customer service and tech support
+
+MSRP $699 ........................................ Your Cost $347
+
+How to qualify:
+
+  1. You must be a Teacher, Student or School Staff Member
+  2. All desktop computers will be available on a
+     first come first serve basis.
+  3. You must call 1-800-884-9510 by 5 P.M. Thursday, December 18, 2003
+     and we will hold the desktops you request on will call. 
+  4. You are not obligated in any way.
+  5. 100% Satisfaction Guaranteed.
+   
+   
+Call Avtech Direct
+1-800-884-9510 before 5 P.M. Thursday, December 18, 2003
+--.E71._4._4.D5E7DC.CF_A40--
 
