@@ -1,53 +1,77 @@
-From: Luben Tuikov <luben@splentec.com>
-Subject: Re: [PATCH] 2.5.x use list_head to handle scsi starved request queues
-Date: Mon, 24 Mar 2003 12:12:07 -0500
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3E7F3C67.5010704@splentec.com>
-References: <20030319182755.A9535@beaverton.ibm.com> <3E7A1EF5.3050501@splentec.com> <20030320203912.A18471@beaverton.ibm.com> <3E7B7A9A.6030007@splentec.com> <20030321165050.B9578@beaverton.ibm.com>
+From: "Pat LaVarre" <LAVARRE@iomega.com>
+Subject: RE: [usb-storage] Re: PATCH: exclude certain commands from emulated SCSI hosts
+Date: Mon, 24 Mar 2003 11:17:56 -0700
+Sender: linux-usb-devel-admin@lists.sourceforge.net
+Message-ID: <0FA2250F5A23D64FBD983956F9B2864301ED5269@royntex01.iomegacorp.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
+Content-Type: text/plain;
+	charset="UTF-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-usb-devel-admin@lists.sourceforge.net>
+content-class: urn:content-classes:message
+Errors-To: linux-usb-devel-admin@lists.sourceforge.net
+List-Help: <mailto:linux-usb-devel-request@lists.sourceforge.net?subject=help>
+List-Post: <mailto:linux-usb-devel@lists.sourceforge.net>
+List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-devel>,
+	<mailto:linux-usb-devel-request@lists.sourceforge.net?subject=subscribe>
+List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-devel>,
+	<mailto:linux-usb-devel-request@lists.sourceforge.net?subject=unsubscribe>
+List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=linux-usb-devel>
+To: James Bottomley <James.Bottomley@SteelEye.com>, Jens Axboe <axboe@suse.de>
+Cc: Linus Torvalds <torvalds@transmeta.com>, Matthew Dharm <mdharm-scsi@one-eyed-alien.net>, USB Developers <linux-usb-devel@lists.sourceforge.net>, USB Storage List <usb-storage@one-eyed-alien.net>, Linux SCSI list <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Patrick Mansfield <patmans@us.ibm.com>
-Cc: James Bottomley <James.Bottomley@steeleye.com>, linux-scsi@vger.kernel.org
 
-Patrick Mansfield wrote:
-> 
-> The lock has to be held while checking shost->host_busy and then when
-> removing the starved entry, we can have multiple cpu's in the function for
-> the same adapter at the same time. Plus the lock has to be acquired prior
-> to any __blk_run_queue call.
+PiBGb3Igc2QsIHdlIGdhdWdlIHRoZSBzaXplIG9mIHRoZSBjb21tYW5kIGZyb20gdGhlDQo+IHNp
+emUgb2YgdGhlIG1lZGl1bTogIDwxR2I9PiBzaXggYnl0ZSwgZnJvbSAxR2IgdG8NCj4gMlRiIDEw
+IGJ5dGUsIG92ZXIgMlRiIDE2IGJ5dGUNCiANCkJ5IG5vdyB0aGlzIHRoZW9yeSB3ZSBoYXZlIGNv
+bXBsZXRlbHkgZGlzYXZvd2VkPw0KIA0KSSBoYXZlbid0IHNlZW4gb3VyIEVuZ2xpc2ggeWV0IG1l
+bnRpb24gdGhhdCBhc2tpbmcgdG8NCnJlYWQvd3JpdGUgbW9yZSB0aGFuIHhGRiBibG9ja3MgdHJp
+Z2dlcnMgdXMgdG8gc2tpcA0KcGFzdCB0aGUgY29tbW9ubHkgbWlzdW5kZXJzdG9vZCB4MDgvMEEN
+ClJlYWQoNikvV3JpdGUoNikgc3RhbmRhcmQgb2YgdXNpbmcgeDAwIHRvIG1lYW4geDEwMC4NCiAN
+CkkgdGhpbmsgaW5zdGVhZCB3ZSByZXNvcnQgaW1tZWRpYXRlbHkgdG8geDI4LzJBDQpSZWFkKDEw
+KS9Xcml0ZSgxMCkuDQoNCkluIGh0dHA6Ly9seHIubGludXgubm8vc291cmNlL2RyaXZlcnMvc2Nz
+aS9zZC5jP3Y9Mi41LjU2DQpJIHNlZSBmcmFnbWVudHMgdGhhdCBtYXRjaCBvdXIgbGF0ZXIgRW5n
+bGlzaDoNCiANCiANClNScG50LT5zcl9kZXZpY2UtPnRlbiA9IDE7DQogDQogDQppZiAoYmxvY2sg
+PiAweGZmZmZmZmZmKSB7DQogICAgICAgIFNDcG50LT5jbW5kWzBdICs9IFJFQURfMTYgLSBSRUFE
+XzY7DQogICAgICAgIC4uLg0KaWYgKCgodGhpc19jb3VudCA+IDB4ZmYpIHx8IChibG9jayA+IDB4
+MWZmZmZmKSkgfHwgU0NwbnQtPmRldmljZS0+dGVuKSB7DQogICAgICAgIC4uLg0KICAgICAgICBT
+Q3BudC0+Y21uZFswXSArPSBSRUFEXzEwIC0gUkVBRF82Ow0KIA0KIA0KY2FzZSBJTExFR0FMX1JF
+UVVFU1Q6DQogICAgICAgIGlmIChTQ3BudC0+ZGV2aWNlLT50ZW4gPT0gMSkgew0KICAgICAgICAg
+ICAgICAgIGlmIChTQ3BudC0+Y21uZFswXSA9PSBSRUFEXzEwIHx8DQogICAgICAgICAgICAgICAg
+ICAgIFNDcG50LT5jbW5kWzBdID09IFdSSVRFXzEwKQ0KICAgICAgICAgICAgICAgICAgICAgICAg
+U0NwbnQtPmRldmljZS0+dGVuID0gMDsNCiAgICAgICAgfQ0KIA0KIA0KQmVpbmcgYSBkcmFtYXRp
+Y2FsbHkgcmF3IExpbnV4IG5ld2JpZSwgSSBjYW4ndCBrbm93IGlmDQpzZXF1ZW5jaW5nIHRoaXMg
+Y29kZSB0byBtYXRjaCB0aGUgRW5nbGlzaCBpcyBjb3JyZWN0DQpvciBub3QsIG5vciBpbmRlZWQg
+aWYgSSBhbSByZWFkaW5nIHRoZSBzb3VyY2UgZmlsZSB3ZSBtZWFuLg0KIA0KQ2xpY2stdGhydSBJ
+TExFR0FMX1JFUVVFU1Qgc2hvd3MgbWUgdGhyZWUgc291cmNlIGZpbGVzDQphZ3JlZSB3aXRoIG1l
+IHRoaW5raW5nIGJ5IHRoYXQgamFyZ29uIHdlIG1lYW4geDA1Lg0KQW5kIG1vcmUgb3IgbGVzcyBz
+b3VyY2UgZmlsZXMgYWdyZWUgdGhhdCBieSBSRUFEXzYNClJFQURfMTAgV1JJVEVfMTAgd2UgbWVh
+biB4IDA4IDBBIDJBLg0KDQpDbHVlbGVzc2x5LCBjdXJpb3VzbHksIHRoYW5rZnVsbHkgeW91cnMs
+IFBhdCBMYVZhcnJlDQoNCg0KCS0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tIA0KCUZyb206IEph
+bWVzIEJvdHRvbWxleSBbbWFpbHRvOkphbWVzLkJvdHRvbWxleUBTdGVlbEV5ZS5jb21dIA0KCVNl
+bnQ6IE1vbiAzLzI0LzIwMDMgOTo1NiBBTSANCglUbzogSmVucyBBeGJvZSANCglDYzogTGludXMg
+VG9ydmFsZHM7IE1hdHRoZXcgRGhhcm07IFVTQiBEZXZlbG9wZXJzOyBVU0IgU3RvcmFnZSBMaXN0
+OyBMaW51eCBTQ1NJIGxpc3QgDQoJU3ViamVjdDogW3VzYi1zdG9yYWdlXSBSZTogUEFUQ0g6IGV4
+Y2x1ZGUgY2VydGFpbiBjb21tYW5kcyBmcm9tIGVtdWxhdGVkIFNDU0kgaG9zdHMNCgkNCgkNCg0K
+CU9uIE1vbiwgMjAwMy0wMy0yNCBhdCAxMDo1MiwgSmVucyBBeGJvZSB3cm90ZTogDQoJPiBJdCdz
+IG5vdCB0cnVlLCAtPnRlbiBpcyBzZXQgdW5jb25kaXRpb25hbGx5IGFuZCB3ZSBvbmx5IGZhbGwg
+YmFjayB0byA2IA0KCT4gYnl0ZSBjZGIncyBpZiB3ZSBzZWUgYW4gSUxMRUdBTF9SRVFVRVNUIG9u
+IGEgUkVBRF8xMC9XUklURV8xMC4gDQoJPiANCgk+IFNvIHRoZSBsb2dpYyBpcywgYWx3YXlzIGFz
+c3VtZSAxMC1ieXRlIGNvbW1hbmRzLiBJZiBhbiBpbmNvbWluZyByZXF1ZXN0IA0KCT4gY2Fubm90
+IGJlIGFkZHJlc3NlZCB3aXRoIDEwLWJ5dGUgY29tbWFuZHMsIHVzZSAxNi4gDQoNCglTb3JyeSwg
+dGhhdCB3YXMgbWUgbWlzcmVhZGluZyB0aGUgZmFsbGJhY2sgbG9naWMgaW4gc2QuYyANCg0KCVRl
+biBieXRlcyBpdCBpcyB1bmxlc3Mgd2UgaGF2ZSBwcm9ibGVtcy4gDQoNCglKYW1lcyANCg0KDQoJ
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18gDQoJdXNiLXN0
+b3JhZ2UgbWFpbGluZyBsaXN0IA0KCXVzYi1zdG9yYWdlQG9uZS1leWVkLWFsaWVuLm5ldCANCglo
+dHRwOi8vd3d3Mi5vbmUtZXllZC1hbGllbi5uZXQvbWFpbG1hbi9saXN0aW5mby91c2Itc3RvcmFn
+ZSANCg0K
 
-If scsi_queue_next_request(q, cmd) is running on more than one CPU
-and q != q1 then you have a problem with the starved devices list.
 
-I.e. the lock for an object should NOT depend on the circumstances --
-an object (or set of objects) should _always_ use the same lock, if
-any.
-
-For this reason, when you obtain the q->queue_lock, just use it
-around your critical section and __blk_run_queue(), in a minimalistic
-approach, then release it.
-
-Then have a starved_list_lock, or use the host->lock (extreme and I do NOT
-recommend it) to lock your starved_list.
-
-So, obtain the starved_list_lock, go over the devices, get their request
-queues's lock and call __blk_run_queue(sdev->request_queue), then release
-the sdev->request_queue->queue_lock and loop over again if needed,
-when done, release the starved_list_lock.
-
-Remember that, someone else might want to *rearrange* the order of
-devices in the starved list for, say, _prioritization_, at some other
-time when there is no queue in context! (thus a starved_list_lock would
-make most sense)
-
-> I am still working patches for the lock split up in this area.
-
-Good!
-
--- 
-Luben
-
-
+-------------------------------------------------------
+This sf.net email is sponsored by:ThinkGeek
+Welcome to geek heaven.
+http://thinkgeek.com/sf
+_______________________________________________
+linux-usb-devel@lists.sourceforge.net
+To unsubscribe, use the last form field at:
+https://lists.sourceforge.net/lists/listinfo/linux-usb-devel
