@@ -1,57 +1,51 @@
-From: Pat LaVarre <p.lavarre@ieee.org>
-Subject: Re: [usb-storage] Re: [PATCH] fix Sony USB mass storage - pass
-	larger receive buffer
-Date: 13 Nov 2003 12:30:32 -0700
+From: Louay Gammo <lgammo@cs.uwaterloo.ca>
+Subject: Aic7x_x_x 6.2.36 && Aic79xx 1.3.10 Updates
+Date: Thu, 13 Nov 2003 14:42:53 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1068751832.16444.78.camel@patrh9>
-References: <Pine.LNX.4.44L0.0311131200420.949-100000@ida.rowland.org>
-	 <1068744259.13580.41.camel@patrh9>
-	 <20031113100424.A26197@beaverton.ibm.com>
-	 <1068747355.16444.22.camel@patrh9> <1068747746.16444.30.camel@patrh9>
-	 <1068747998.16444.35.camel@patrh9> <1068748629.16444.58.camel@patrh9>
-	 <20031113111344.B30194@one-eyed-alien.net>
+Message-ID: <3FB3DEBD.5050306@cs.uwaterloo.ca>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from email-out1.iomega.com ([147.178.1.82]:12738 "EHLO
-	email.iomega.com") by vger.kernel.org with ESMTP id S264405AbTKMTbJ
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 13 Nov 2003 14:31:09 -0500
-In-Reply-To: <20031113111344.B30194@one-eyed-alien.net>
+Received: from bbcr.uwaterloo.ca ([129.97.34.2]:28644 "EHLO bbcr.uwaterloo.ca")
+	by vger.kernel.org with ESMTP id S264415AbTKMTlI (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 13 Nov 2003 14:41:08 -0500
+Received: from cs.uwaterloo.ca (lato.cs.uwaterloo.ca [129.97.75.210])
+	(authenticated (0 bits))
+	by bbcr.uwaterloo.ca (8.11.7/8.11.7) with ESMTP id hADJf7q03422
+	for <linux-scsi@vger.kernel.org>; Thu, 13 Nov 2003 14:41:07 -0500 (EST)
 List-Id: linux-scsi@vger.kernel.org
-To: mdharm-scsi@one-eyed-alien.net
-Cc: patmans@us.ibm.com, stern@rowland.harvard.edu, james.bottomley@steeleye.com, linux-scsi@vger.kernel.org, usb-storage@one-eyed-alien.net, ronald@kuetemeier.com, dmitrik@users.sourceforge.net, idan@idanso.dyndns.org
+To: linux-scsi@vger.kernel.org
 
-> Our experience tells us that xFF is often used because designers are one of
-> the following:
-> 	(a) lazy
-> 	(b) incompetient
+Hi,
 
-Choosing to violate spec, certainly.
+Has any one succeeded in running the latest  sources with RH9 (2.4.20-8) 
+kernel? Specifically, these are the sources sent out by Justin T. Gibbs 
+<http://groups.google.com/groups?hl=en&lr=&ie=UTF-8&q=author:gibbs%40scsiguy.com+> 
+(gibbs@scsiguy.com <mailto:gibbs%40scsiguy.com>):
 
-> 	(c) driven by marketing, which wants to load an .inf so their
-> 	device seems 'special' (custom icons, etc.)
-> 
-> So xFF doesn't really tell us, deterministically, anything at all.
+    http://people.FreeBSD.org/~gibbs/linux/SRC/
+<http://people.FreeBSD.org/%7Egibbs/linux/SRC/>
+In my case the driver loads fine, but it takes a while to initialize(?). 
+I get errors like:
+scsi0: Host status: Failed(0)
+...
 
-Do we here agree violently?
+The kernel boots fine, and the rc scripts are run fine and the console 
+prompt shows fine. However, the console is locked. I cannot type 
+anything there.  I can ssh/telnet to the machine. The disks seem to be 
+accessed fine. However, I get the same errors from the driver on shutdown.
 
-bInterfaceSubClass = xFF tells us Windows does not speak to the device
-with Microsoft's generic driver by default.  That .inf we do not have in
-Linux may then say to use the generic driver, or may say to use some
-other driver.
+So before I waste my time and (more importantly) yours, does this sound 
+familiar or did I miss something in the compile. I will send a more 
+complete screen dump if anyone is interested.
 
-> Knowing that the device is direct-access, however, implies very strongly
-> that MODE_SENSE[_10] is a bad idea.
+Thanks a lot,
 
-Anybody able to clue me in quickly as to why classifying a device as
-writable or not, rather than a disc, can ever be meaningful?
+L.
 
-Maybe guessing not writable helps only (in the vanishingly small corner
-case) when a disc is write-protectable although Not removable without
-also removing the drive?
 
-Pat LaVarre
+
 
 
