@@ -1,30 +1,29 @@
-From: Uns Lider <unslider@miranda.org>
-Subject: sym53c8xx_2 ppr problems
-Date: Tue, 11 Jan 2005 12:37:53 -0500 (EST)
-Message-ID: <Pine.LNX.4.58.0501111228530.30502@miranda.org>
+From: Dave Jones <davej@redhat.com>
+Subject: Re: pci.ids patch re-issued inline rather than as an attachment.
+Date: Tue, 11 Jan 2005 12:41:16 -0500
+Message-ID: <20050111174115.GH29712@redhat.com>
+References: <60807403EABEB443939A5A7AA8A7458B9BA0CD@otce2k01.adaptec.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from miranda.org ([209.58.150.153]:46210 "HELO miranda.org")
-	by vger.kernel.org with SMTP id S261214AbVAKRhx (ORCPT
+Received: from mx1.redhat.com ([66.187.233.31]:34468 "EHLO mx1.redhat.com")
+	by vger.kernel.org with ESMTP id S261193AbVAKRl7 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 11 Jan 2005 12:37:53 -0500
+	Tue, 11 Jan 2005 12:41:59 -0500
+Content-Disposition: inline
+In-Reply-To: <60807403EABEB443939A5A7AA8A7458B9BA0CD@otce2k01.adaptec.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
+Cc: pci-ids@ucw.cz, Mark Haverkamp <markh@osdl.org>, linux-scsi@vger.kernel.org
 
-FWIW... I just upgraded from 2.4.9 to 2.6.10. 2.6.10 kept printing phase
-change 6-7 messages. I patched to sym53c8xx_2 2.1.18n, but that didn't
-help. So I modified scsi_scan.c and sym_hipd.c sym_prepare_nego to never
-try PPR. That made the messages go away.
+On Tue, Jan 11, 2005 at 11:24:46AM -0500, Salyzyn, Mark wrote:
+ > This patch synchronizes pci.ids with the new products in the aacraid
+ > driver.
 
-00:0a.0 SCSI storage controller: Symbios Logic Inc. (formerly NCR) 53c1010 Ultra3 SCSI Adapter (rev 01)
-(on a tekram dc390u3w)
-  Vendor: SEAGATE   Model: SX150176LC        Rev: BA08
-  Type:   Direct-Access                      ANSI SCSI revision: 02
-(=st150176lc, fast-40, lvd)
+Please submit pci.ids updates via http://pciids.sf.net
 
-It sounds like PPR only does anything for fast-80 and above drives so I
-guess I'm OK now.
+Thanks,
 
--- uns
+		Dave
+
