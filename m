@@ -1,67 +1,53 @@
-From: Patrick Mansfield <patmans@us.ibm.com>
-Subject: [announce] scsi_id release 0.4
-Date: Wed, 25 Feb 2004 14:41:13 -0800
+From: Matt Domsch <Matt_Domsch@dell.com>
+Subject: Re: [SUBJECT CHANGE]: megaraid unified driver version 2.20.0.0-al pha1
+Date: Wed, 25 Feb 2004 15:38:21 -0600
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040225144113.A1194@beaverton.ibm.com>
+Message-ID: <20040225153821.C14838@lists.us.dell.com>
+References: <0E3FA95632D6D047BA649F95DAB60E57033BC3E7@exa-atlanta.se.lsil.com> <20040225204441.A9291@infradead.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e35.co.us.ibm.com ([32.97.110.133]:3794 "EHLO e35.co.us.ibm.com")
-	by vger.kernel.org with ESMTP id S261663AbUBYWlX (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 25 Feb 2004 17:41:23 -0500
+Received: from lists.us.dell.com ([143.166.224.162]:44005 "EHLO
+	lists.us.dell.com") by vger.kernel.org with ESMTP id S261604AbUBYVjA
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 25 Feb 2004 16:39:00 -0500
 Content-Disposition: inline
+In-Reply-To: <20040225204441.A9291@infradead.org>; from hch@infradead.org on Wed, Feb 25, 2004 at 08:44:41PM +0000
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, linux-hotplug-devel@lists.sourceforge.net
+To: 'Christoph Hellwig' <hch@infradead.org>, "Mukker, Atul" <Atulm@lsil.com>, 'Arjan van de Ven' <arjanv@redhat.com>, 'James Bottomley' <James.Bottomley@SteelEye.com>, 'Paul Wagland' <paul@wagland.net>, Matthew Wilcox <willy@debian.org>, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
 
-Hi -
+On Wed, Feb 25, 2004 at 08:44:41PM +0000, 'Christoph Hellwig' wrote:
+> On Wed, Feb 25, 2004 at 03:38:48PM -0500, Mukker, Atul wrote:
+> > > of their own, e.g. mptraid
+> > Although, this simplifies the development and maintenance effort, having a
+> > single driver to drive both controllers or two independent drivers is not
+> > always our decision. Most often, it would be Dell's preference. 
+> 
+> Well, I think the people at Dell should get down from their fucking crackpipe
+> then.  (Matt, did you hear that?  please stop this kind of marketing driven
+> junk, thanks)
 
-Version 0.4 of scsi_id is available at:
+Yes, I'll try to figure out where this request came from, if from
+anyone at Dell.  My guess is it's related to other operating systems,
+over which I have no control, but isn't relevant to Linux.
 
-http://www-124.ibm.com/storageio/scsi_id/scsi_id-0.4.tar.gz
+In general, I tend to fight exactly the opposite - people wanting
+drivers split out for "new technology" - say, PCI Express, when the
+driver<->firmware API hasn't changed, which is just wrong again.
 
-scsi_id is a program to generate a unique identifier for a given SCSI
-device.
+If it's got a different driver<->firmware API, then it needs a new
+driver.  If it's the same API, then it should be the same driver.
 
-It is primarily for use with the udev callout key. It could also be used
-for automatic multi-path configuration or device mapper configuration.
+FWIW, I'm out of the office for the next couple weeks with a new baby,
+thus limited sleep and access to people, but I'll discover what I
+can, and will take the heat internally for saying "split the driver"
+if in fact you've got two different APIs, as I suspect you do.
 
-Version 0.4 requires:
+Thanks,
+Matt
 
-- Linux kernel 2.6
-- libsysfs 0.4.0
-
-Major changes since the last release:
-
-	- Support block device partitions
-
-	- Added a script to auto-generate udev rules. The script is not
-	  installed but is part of the tarball.
-
-Detailed changes:
-
-	- Add man page verbage about usage with udev, and running via
-	  hotplug
-
-	- Disable support for -e (all output to stderr) as it cannot be
-	  used in any useful way, and the -c (device specific callout) as
-	  the code is incomplete and has no users.
-
-	- Don't print errno for NULL return from sysfs_get_classdev_device.
-
-	- Get rid of dead/leftover code that checked if we are on a scsi
-	  bus.
-
-	- ":" consistently in output messages.
-
-	- Add missing new lines for some error messages.
-
-	- open O_NONBLOCK so we handle tape drives without tapes loaded.
-
-	- Remove hacks based on KLIBC define to get around problems when
-	  building with udev (udev libsysfs files were rearranged).
-
-	- As done in udev code, support partitions via looking for a
-	  parent of the target path. Uses libsysfs functions to do most of
-	  the work, and includes changing a lot of variables to be struct
-	  sysfs_device instead of sysfs_class_device.
+-- 
+Matt Domsch
+Sr. Software Engineer, Lead Engineer
+Dell Linux Solutions linux.dell.com & www.dell.com/linux
+Linux on Dell mailing lists @ http://lists.us.dell.com
