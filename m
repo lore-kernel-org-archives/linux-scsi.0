@@ -1,59 +1,56 @@
-From: Doug Ledford <dledford@redhat.com>
-Subject: Re: ide-scsi cmd_per_lun
-Date: Tue, 9 Jul 2002 18:00:14 -0400
+From: Philip Hands <phil@hands.com>
+Subject: Re: need help diagnosing sym53c1010-33/Fujitstu MAN3367MP/raid1
+	lockups
+Date: 09 Jul 2002 23:17:28 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20020709180014.A12706@redhat.com>
-References: <000701c2278e$2dc723a0$e0019d89@cybernetics.com>
+Message-ID: <1026253048.10874.16123.camel@palm>
+References: <20020710024132.F4372-100000@localhost.my.domain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature";
+	boundary="=-WwnuzISbLiSb0CCyHRJL"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <000701c2278e$2dc723a0$e0019d89@cybernetics.com>; from tonyb@cybernetics.com on Tue, Jul 09, 2002 at 05:18:31PM -0400
+In-Reply-To: <20020710024132.F4372-100000@localhost.my.domain>
 List-Id: linux-scsi@vger.kernel.org
-To: Tony Battersby <tonyb@cybernetics.com>
+To: =?ISO-8859-1?Q?G=E9rard?= Roudier <groudier@free.fr>
 Cc: linux-scsi@vger.kernel.org
 
-On Tue, Jul 09, 2002 at 05:18:31PM -0400, Tony Battersby wrote:
-> 
-> The problem boils down to the fact that ide-scsi relies on the mid-level
-> (old eh) to do the auto-sense.  I was able to work around this problem by
-> setting cmd_per_lun: 1 in ide-scsi.h (vanilla 2.4.17).  Doing this caused
-> the request sense command to make it to the drive before any other command
-> could sneak in and reset the sense data.  Can anyone tell me if this is a
-> good solution?
 
-It is the appropriate setting for any driver that doesn't automatically 
-request sense itself on check condition status returns.  It does not solve 
-the problem for tagged queue enabled devices though since they don't honor 
-this field and will loose sense information, so in reality any driver that 
-doesn't auto request sense data is broken to some extent.  The new eh code 
-requires that drivers auto request sense, so this is actually likely to be 
-really broken in 2.5 at the moment since the old eh code is now gone.
+--=-WwnuzISbLiSb0CCyHRJL
+Content-Type: text/plain; charset=ISO-8859-15
+Content-Transfer-Encoding: quoted-printable
 
->  Looking at the 2.4.19-rc1 source, I see an additional field
-> "can_queue: 10" in the template.  Should this be changed too?  I cannot use
-> 2.4.19 for the moment, so I can't experiment with it.
+On Wed, 2002-07-10 at 02:23, G=E9rard Roudier wrote:
 
-No, this is only for the host wide queue, so if you had 5 ide-scsi devices 
-that showed up, this limits the total number of commands sent to the 
-ide-scsi driver to 10, which would be 2 each.  Obviously, this is 
-different than what you are trying to set and is only limited by what the 
-ide-scsi driver can actually handle in terms of outstanding commands at a 
-time.
+> Now that we know that cable and terminators are ok, you may try, for
+> example, to lower the data transfer speed. This will reduce the stress fo=
+r
+> all the parts connected to the SCSI BUS and will allow more margin for
+> SCSI signaling. Result can give some new clue.
 
-> 
-> Thanks,
-> Anthony J. Battersby
-> Cybernetics
-> 
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+I tried that before switching off the TCQ.
 
--- 
-  Doug Ledford <dledford@redhat.com>     919-754-3700 x44233
-         Red Hat, Inc. 
-         1801 Varsity Dr.
-         Raleigh, NC 27606
-  
+It gave similar behaviour all the way down to 20MB/s (I may have tried
+10MB/s, but I'm not sure.  If I did, it didn't work either).
+
+Cheers, Phil.
+--=20
+Say no to software patents!  http://petition.eurolinux.org/
+
+|)|  Philip Hands [+44 (0)20 8530 9560]    http://www.hands.com/
+|-|  HANDS.COM Ltd.                    http://www.uk.debian.org/
+|(|  10 Onslow Gardens, South Woodford, London  E18 1NE  ENGLAND
+
+--=-WwnuzISbLiSb0CCyHRJL
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.0.6 (GNU/Linux)
+Comment: For info see http://www.gnupg.org
+
+iD8DBQA9K2D4YgOKS92bmRARAmjbAJ0Xnt5pheLeypK4Dprnlaa/Rd6o8ACglIAX
+a1F62AKkIhzx4wd1De+U3FE=
+=IkLZ
+-----END PGP SIGNATURE-----
+
+--=-WwnuzISbLiSb0CCyHRJL--
