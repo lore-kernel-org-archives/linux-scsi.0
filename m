@@ -1,51 +1,375 @@
-From: Kurt Garloff <garloff@suse.de>
-Subject: Re: [PATCH] tmscsim: init / exit cleanup
-Date: Tue, 8 Jun 2004 08:37:02 +0200
+From: Andreas Jellinghaus <aj@leogic.com>
+Subject: Re: [PATCH 2.6] to get I2O working with Adaptec's zero channel controllers (ASR-2000S, ASR-2005S, ASR-2010S and ASR-2015S)
+Date: Tue, 08 Jun 2004 11:25:17 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040608063702.GA7155@tpkurt.garloff.de>
-References: <20040523103729.GA23804@infradead.org> <Pine.LNX.4.44.0405312248150.3168-200000@poirot.grange>
+Message-ID: <pan.2004.06.08.09.25.17.326224@leogic.com>
+References: <40B765D0.3080001@shadowconnect.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="mYCpIKhGyMATD0i+"
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor.suse.de ([195.135.220.2]:43995 "EHLO Cantor.suse.de")
-	by vger.kernel.org with ESMTP id S264883AbUFHHvX (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Jun 2004 03:51:23 -0400
-Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.44.0405312248150.3168-200000@poirot.grange>
+Received: from main.gmane.org ([80.91.224.249]:33212 "EHLO main.gmane.org")
+	by vger.kernel.org with ESMTP id S264921AbUFHJWi (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Jun 2004 05:22:38 -0400
+Received: from list by main.gmane.org with local (Exim 3.35 #1 (Debian))
+	id 1BXcoU-0003rG-00
+	for <linux-scsi@vger.kernel.org>; Tue, 08 Jun 2004 11:22:36 +0200
+Received: from 62.245.182.10 ([62.245.182.10])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-scsi@vger.kernel.org>; Tue, 08 Jun 2004 11:22:34 +0200
+Received: from aj by 62.245.182.10 with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-scsi@vger.kernel.org>; Tue, 08 Jun 2004 11:22:34 +0200
 List-Id: linux-scsi@vger.kernel.org
-To: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
-Cc: Christoph Hellwig <hch@infradead.org>, James Bottomley <James.Bottomley@steeleye.com>, Linux SCSI list <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
+
+With that patch and 2.6.7-rc1 I can
+use the apaptec zero channel controller fine.
+
+But: once I stress the i/o with a simple 
+time dd if=test of=test2 bs=1M
+
+after some minutes the i/o stops:
+ r  b  w   swpd   free   buff  cache   si   so    bi    bo   in    cs us sy id
+ 0  1  0      0   4752    184 129152    0    0     0     0 1010    12  0  0 100
+ 0  1  0      0   4752    184 129152    0    0     0     0 1010     6  0  0 100
+ 0  1  0      0   4752    184 129152    0    0     0     0 1008     4  0  0 100
+ 0  1  1      0   4648    128 127644    0    0   928  9240 1195   345  0  1 99
+ 0  1  0      0   3956    132 129136    0    0  2152    44 1103   113  0  1 99
+ 0  1  0      0   3956    132 129136    0    0     0     0 1010     4  0  0 100
+ 0  1  0      0   3956    132 129136    0    0     0     0 1008     6  0  0 100
+ 0  1  0      0   3964    132 129136    0    0     0     0 1010     4  0  0 100
+ 0  1  1      0   3736    116 128540    0    0  2052  3796 1425   137  0  1 99
+ 0  1  0      0   4248    116 128064    0    0     0     0 1021    13  0  0 100
+ 0  1  0      0   4248    116 128064    0    0     0     0 1008     4  0  0 100
+ 0  1  0      0   4256    116 128064    0    0     0     0 1009     6  0  0 100
+ 0  1  0      0   4256    116 128064    0    0     0     0 1010     6  0  0 100
+ 1  0  1      0   3300    120 124388    0    0  6572  7580 22732  4523  0 0 100
+
+here the vmstat freezes. This test was with elevator=deadline,
+earlier test without had the same problem.
+
+I2O Core - (C) Copyright 1999 Red Hat Software
+I2O: Event thread created as pid 174
+i2o: Checking for PCI I2O controllers...
+i2o: I2O controller on bus 3 at 80.
+i2o: PCI I2O controller
+    BAR0 at 0xF5000000 size=1048576
+    BAR1 at 0xF2000000 size=16777216
+I2O: MTRR workaround for Intel i960 processor
+i2o/iop0: Installed at IRQ26
+i2o: 1 I2O controller found and installed.
+Activating I2O controllers...
+This may take a few minutes if there are many devices
+i2o/iop0: LCT has 19 entries.
+I2O configuration manager v 0.04.
+  (C) Copyright 1999 Red Hat Software
+I2O Block Storage OSM v0.9
+   (c) Copyright 1999-2001 Red Hat Software.
+i2o_block: Checking for Boot device...
+Claiming as Boot device: Controller 0, TID 517
+i2o_block: New device detected
+   Controller 0 Tid 517
+i2ob: Installing tid 517 device at unit 0
+Using anticipatory io scheduler
+i2o/hda: Max segments 0, queue depth 8, byte limit 1024.
+i2o/hda: Disk Storage: 70007MB, 512 byte sectors.
+i2o/hda: Maximum sectors/read set to 2.
+ i2o/hda: i2o/hda1 i2o/hda2 i2o/hda3 i2o/hda4
+i2o_block: Checking for I2O Block devices...
 
 
---mYCpIKhGyMATD0i+
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+with some tests I had a shell open while the dd i/o froze,
+and thus I can say: dmesg did not report any errors, it had
+only the boot log.
 
-Hi,
+also below is the kernel config.
 
-On Mon, May 31, 2004 at 11:13:51PM +0200, Guennadi Liakhovetski wrote:
-> I don't think there are any pcmcia / usb / ieee1394 / ... tmscsim adapters
-> out there?
+I will now try 2.6.7rc3 with the dpt driver.
+the machines work very fine with 2.4. and the dpt driver...
 
-Never heard of any.
+if you want a full dmesg or to test something, please
+let me know.
 
-Regards,
---=20
-Kurt Garloff  <garloff@suse.de>                            Cologne, DE=20
-SUSE LINUX AG / Novell, Nuernberg, DE               Director SUSE Labs
+Regards, Andreas
 
---mYCpIKhGyMATD0i+
-Content-Type: application/pgp-signature
-Content-Disposition: inline
+CONFIG_X86=y
+CONFIG_MMU=y
+CONFIG_UID16=y
+CONFIG_GENERIC_ISA_DMA=y
+CONFIG_CLEAN_COMPILE=y
+CONFIG_STANDALONE=y
+CONFIG_SWAP=y
+CONFIG_SYSVIPC=y
+CONFIG_SYSCTL=y
+CONFIG_LOG_BUF_SHIFT=15
+CONFIG_HOTPLUG=y
+CONFIG_IKCONFIG=y
+CONFIG_IKCONFIG_PROC=y
+CONFIG_KALLSYMS=y
+CONFIG_FUTEX=y
+CONFIG_EPOLL=y
+CONFIG_IOSCHED_NOOP=y
+CONFIG_IOSCHED_AS=y
+CONFIG_IOSCHED_DEADLINE=y
+CONFIG_IOSCHED_CFQ=y
+CONFIG_MODULES=y
+CONFIG_MODULE_UNLOAD=y
+CONFIG_OBSOLETE_MODPARM=y
+CONFIG_KMOD=y
+CONFIG_STOP_MACHINE=y
+CONFIG_X86_PC=y
+CONFIG_MPENTIUM4=y
+CONFIG_X86_CMPXCHG=y
+CONFIG_X86_XADD=y
+CONFIG_X86_L1_CACHE_SHIFT=7
+CONFIG_RWSEM_XCHGADD_ALGORITHM=y
+CONFIG_X86_WP_WORKS_OK=y
+CONFIG_X86_INVLPG=y
+CONFIG_X86_BSWAP=y
+CONFIG_X86_POPAD_OK=y
+CONFIG_X86_GOOD_APIC=y
+CONFIG_X86_INTEL_USERCOPY=y
+CONFIG_X86_USE_PPRO_CHECKSUM=y
+CONFIG_HPET_TIMER=y
+CONFIG_HPET_EMULATE_RTC=y
+CONFIG_SMP=y
+CONFIG_NR_CPUS=8
+CONFIG_SCHED_SMT=y
+CONFIG_X86_LOCAL_APIC=y
+CONFIG_X86_IO_APIC=y
+CONFIG_X86_TSC=y
+CONFIG_X86_MCE=y
+CONFIG_X86_MCE_NONFATAL=y
+CONFIG_X86_MCE_P4THERMAL=y
+CONFIG_MICROCODE=y
+CONFIG_X86_MSR=y
+CONFIG_X86_CPUID=y
+CONFIG_SMBIOS=y
+CONFIG_HIGHMEM4G=y
+CONFIG_HIGHMEM=y
+CONFIG_MTRR=y
+CONFIG_IRQBALANCE=y
+CONFIG_HAVE_DEC_LOCK=y
+CONFIG_ACPI=y
+CONFIG_ACPI_BOOT=y
+CONFIG_ACPI_INTERPRETER=y
+CONFIG_ACPI_AC=y
+CONFIG_ACPI_BATTERY=y
+CONFIG_ACPI_BUTTON=y
+CONFIG_ACPI_FAN=y
+CONFIG_ACPI_PROCESSOR=y
+CONFIG_ACPI_THERMAL=y
+CONFIG_ACPI_BUS=y
+CONFIG_ACPI_EC=y
+CONFIG_ACPI_POWER=y
+CONFIG_ACPI_PCI=y
+CONFIG_ACPI_SYSTEM=y
+CONFIG_PCI=y
+CONFIG_PCI_GOANY=y
+CONFIG_PCI_BIOS=y
+CONFIG_PCI_DIRECT=y
+CONFIG_PCI_MMCONFIG=y
+CONFIG_BINFMT_ELF=y
+CONFIG_FW_LOADER=y
+CONFIG_BLK_DEV_RAM=y
+CONFIG_BLK_DEV_RAM_SIZE=8192
+CONFIG_BLK_DEV_INITRD=y
+CONFIG_LBD=y
+CONFIG_MD=y
+CONFIG_BLK_DEV_MD=y
+CONFIG_MD_LINEAR=y
+CONFIG_MD_RAID0=y
+CONFIG_MD_RAID1=y
+CONFIG_MD_RAID5=y
+CONFIG_MD_MULTIPATH=y
+CONFIG_BLK_DEV_DM=y
+CONFIG_I2O=y
+CONFIG_I2O_CONFIG=y
+CONFIG_I2O_BLOCK=y
+CONFIG_I2O_PROC=y
+CONFIG_NET=y
+CONFIG_PACKET=y
+CONFIG_PACKET_MMAP=y
+CONFIG_UNIX=y
+CONFIG_NET_KEY=y
+CONFIG_INET=y
+CONFIG_IP_ADVANCED_ROUTER=y
+CONFIG_IP_MULTIPLE_TABLES=y
+CONFIG_IP_ROUTE_FWMARK=y
+CONFIG_IP_ROUTE_NAT=y
+CONFIG_IP_ROUTE_MULTIPATH=y
+CONFIG_IP_ROUTE_TOS=y
+CONFIG_IP_ROUTE_VERBOSE=y
+CONFIG_SYN_COOKIES=y
+CONFIG_INET_AH=y
+CONFIG_INET_ESP=y
+CONFIG_INET_IPCOMP=y
+CONFIG_NETFILTER=y
+CONFIG_IP_NF_CONNTRACK=y
+CONFIG_IP_NF_IPTABLES=y
+CONFIG_IP_NF_MATCH_LIMIT=y
+CONFIG_IP_NF_MATCH_IPRANGE=y
+CONFIG_IP_NF_MATCH_MAC=y
+CONFIG_IP_NF_MATCH_PKTTYPE=y
+CONFIG_IP_NF_MATCH_MARK=y
+CONFIG_IP_NF_MATCH_MULTIPORT=y
+CONFIG_IP_NF_MATCH_TOS=y
+CONFIG_IP_NF_MATCH_RECENT=y
+CONFIG_IP_NF_MATCH_ECN=y
+CONFIG_IP_NF_MATCH_DSCP=y
+CONFIG_IP_NF_MATCH_AH_ESP=y
+CONFIG_IP_NF_MATCH_LENGTH=y
+CONFIG_IP_NF_MATCH_TTL=y
+CONFIG_IP_NF_MATCH_TCPMSS=y
+CONFIG_IP_NF_MATCH_HELPER=y
+CONFIG_IP_NF_MATCH_STATE=y
+CONFIG_IP_NF_MATCH_CONNTRACK=y
+CONFIG_IP_NF_MATCH_OWNER=y
+CONFIG_IP_NF_FILTER=y
+CONFIG_IP_NF_TARGET_REJECT=y
+CONFIG_IP_NF_NAT=y
+CONFIG_IP_NF_NAT_NEEDED=y
+CONFIG_IP_NF_TARGET_MASQUERADE=y
+CONFIG_IP_NF_TARGET_REDIRECT=y
+CONFIG_IP_NF_TARGET_NETMAP=y
+CONFIG_IP_NF_TARGET_SAME=y
+CONFIG_IP_NF_NAT_LOCAL=y
+CONFIG_IP_NF_MANGLE=y
+CONFIG_IP_NF_TARGET_TOS=y
+CONFIG_IP_NF_TARGET_ECN=y
+CONFIG_IP_NF_TARGET_DSCP=y
+CONFIG_IP_NF_TARGET_MARK=y
+CONFIG_IP_NF_TARGET_CLASSIFY=y
+CONFIG_IP_NF_TARGET_LOG=y
+CONFIG_IP_NF_TARGET_ULOG=y
+CONFIG_IP_NF_TARGET_TCPMSS=y
+CONFIG_IP_NF_ARPTABLES=y
+CONFIG_IP_NF_ARPFILTER=y
+CONFIG_IP_NF_ARP_MANGLE=y
+CONFIG_IP_NF_TARGET_NOTRACK=y
+CONFIG_IP_NF_RAW=y
+CONFIG_XFRM=y
+CONFIG_XFRM_USER=y
+CONFIG_NETPOLL=y
+CONFIG_NETPOLL_RX=y
+CONFIG_NETPOLL_TRAP=y
+CONFIG_NET_POLL_CONTROLLER=y
+CONFIG_NETDEVICES=y
+CONFIG_NET_ETHERNET=y
+CONFIG_MII=y
+CONFIG_NET_PCI=y
+CONFIG_EEPRO100=y
+CONFIG_SUNDANCE=y
+CONFIG_E1000=y
+CONFIG_NETCONSOLE=y
+CONFIG_INPUT=y
+CONFIG_INPUT_MOUSEDEV=y
+CONFIG_INPUT_MOUSEDEV_PSAUX=y
+CONFIG_INPUT_MOUSEDEV_SCREEN_X=1024
+CONFIG_INPUT_MOUSEDEV_SCREEN_Y=768
+CONFIG_SOUND_GAMEPORT=y
+CONFIG_SERIO=y
+CONFIG_SERIO_I8042=y
+CONFIG_SERIO_SERPORT=y
+CONFIG_SERIO_PCIPS2=y
+CONFIG_INPUT_KEYBOARD=y
+CONFIG_KEYBOARD_ATKBD=y
+CONFIG_VT=y
+CONFIG_VT_CONSOLE=y
+CONFIG_HW_CONSOLE=y
+CONFIG_SERIAL_8250=y
+CONFIG_SERIAL_8250_CONSOLE=y
+CONFIG_SERIAL_8250_NR_UARTS=4
+CONFIG_SERIAL_CORE=y
+CONFIG_SERIAL_CORE_CONSOLE=y
+CONFIG_UNIX98_PTYS=y
+CONFIG_LEGACY_PTYS=y
+CONFIG_LEGACY_PTY_COUNT=256
+CONFIG_IPMI_HANDLER=y
+CONFIG_IPMI_PANIC_EVENT=y
+CONFIG_IPMI_DEVICE_INTERFACE=y
+CONFIG_IPMI_SI=y
+CONFIG_IPMI_WATCHDOG=y
+CONFIG_WATCHDOG=y
+CONFIG_I8XX_TCO=y
+CONFIG_HW_RANDOM=y
+CONFIG_RTC=y
+CONFIG_I2C=y
+CONFIG_I2C_CHARDEV=y
+CONFIG_I2C_ALGOBIT=y
+CONFIG_I2C_ALGOPCF=y
+CONFIG_I2C_SENSOR=y
+CONFIG_SENSORS_LM90=y
+CONFIG_VGA_CONSOLE=y
+CONFIG_DUMMY_CONSOLE=y
+CONFIG_USB=y
+CONFIG_USB_DEVICEFS=y
+CONFIG_USB_EHCI_HCD=y
+CONFIG_USB_UHCI_HCD=y
+CONFIG_USB_HID=y
+CONFIG_USB_HIDINPUT=y
+CONFIG_EXT2_FS=y
+CONFIG_EXT2_FS_XATTR=y
+CONFIG_EXT2_FS_POSIX_ACL=y
+CONFIG_EXT3_FS=y
+CONFIG_EXT3_FS_XATTR=y
+CONFIG_EXT3_FS_POSIX_ACL=y
+CONFIG_JBD=y
+CONFIG_FS_MBCACHE=y
+CONFIG_FS_POSIX_ACL=y
+CONFIG_ISO9660_FS=m
+CONFIG_JOLIET=y
+CONFIG_UDF_FS=m
+CONFIG_FAT_FS=m
+CONFIG_MSDOS_FS=m
+CONFIG_VFAT_FS=m
+CONFIG_PROC_FS=y
+CONFIG_PROC_KCORE=y
+CONFIG_SYSFS=y
+CONFIG_DEVPTS_FS_XATTR=y
+CONFIG_TMPFS=y
+CONFIG_RAMFS=y
+CONFIG_CRAMFS=y
+CONFIG_MSDOS_PARTITION=y
+CONFIG_NLS=y
+CONFIG_NLS_DEFAULT="iso8859-1"
+CONFIG_NLS_CODEPAGE_437=y
+CONFIG_NLS_CODEPAGE_850=m
+CONFIG_NLS_ISO8859_1=y
+CONFIG_NLS_ISO8859_15=m
+CONFIG_NLS_UTF8=m
+CONFIG_EARLY_PRINTK=y
+CONFIG_FRAME_POINTER=y
+CONFIG_X86_FIND_SMP_CONFIG=y
+CONFIG_X86_MPPARSE=y
+CONFIG_CRYPTO=y
+CONFIG_CRYPTO_HMAC=y
+CONFIG_CRYPTO_MD5=y
+CONFIG_CRYPTO_SHA1=y
+CONFIG_CRYPTO_SHA256=y
+CONFIG_CRYPTO_SHA512=y
+CONFIG_CRYPTO_DES=y
+CONFIG_CRYPTO_BLOWFISH=y
+CONFIG_CRYPTO_TWOFISH=y
+CONFIG_CRYPTO_SERPENT=y
+CONFIG_CRYPTO_AES=y
+CONFIG_CRYPTO_CAST5=y
+CONFIG_CRYPTO_CAST6=y
+CONFIG_CRYPTO_ARC4=y
+CONFIG_CRYPTO_DEFLATE=y
+CONFIG_CRYPTO_MICHAEL_MIC=y
+CONFIG_CRYPTO_CRC32C=y
+CONFIG_CRC32=y
+CONFIG_LIBCRC32C=y
+CONFIG_ZLIB_INFLATE=y
+CONFIG_ZLIB_DEFLATE=y
+CONFIG_X86_SMP=y
+CONFIG_X86_HT=y
+CONFIG_X86_BIOS_REBOOT=y
+CONFIG_X86_TRAMPOLINE=y
+CONFIG_X86_STD_RESOURCES=y
+CONFIG_PC=y
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.2.4 (GNU/Linux)
 
-iD8DBQFAxV6OxmLh6hyYd04RAt4zAJ45Us7c9zD4b1nO/92k8r2tQLztHACggEmt
-pgY3QG4NG1wccCXhbq4JQ7o=
-=k3UD
------END PGP SIGNATURE-----
-
---mYCpIKhGyMATD0i+--
