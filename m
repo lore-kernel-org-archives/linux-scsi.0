@@ -1,41 +1,83 @@
-From: Rabeeh Khoury <rabeeh@galileo.co.il>
-Subject: Linux distribution versions
-Date: Tue, 30 Apr 2002 13:53:48 +0300
+From: Matti Aarnio <matti.aarnio@zmailer.org>
+Subject: Re: Linux distribution versions
+Date: Tue, 30 Apr 2002 16:50:05 +0300
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3CCE77BC.5090903@galileo.co.il>
+Message-ID: <20020430165005.B1284@mea-ext.zmailer.org>
+References: <3CCE77BC.5090903@galileo.co.il>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from galileo.co.il (linux2.galileo.co.il [10.2.40.2])
-	by galileo.co.il (8.8.5/8.8.5) with ESMTP id NAA09783
-	for <linux-scsi@vger.kernel.org>; Tue, 30 Apr 2002 13:59:48 +0200 (GMT-2)
+Content-Disposition: inline
+In-Reply-To: <3CCE77BC.5090903@galileo.co.il>; from rabeeh@galileo.co.il on Tue, Apr 30, 2002 at 01:53:48PM +0300
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>
+To: Rabeeh Khoury <rabeeh@galileo.co.il>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, rgooch@atnf.csiro.au
 
-Hi List,
+On Tue, Apr 30, 2002 at 01:53:48PM +0300, Rabeeh Khoury wrote:
+> Hi List,
+> 
+> A Linux-SCSI newbie question -
 
-A Linux-SCSI newbie question -
+  The tone of the question is giving an impression of "I want to publish
+  binary-only driver"..  maybe it is just my ears, nevertheless...
 
-If I have developed a working SCSI driver, and rapidly tested it under a 
-certain distribution (say RedHat 7.2), will it work with other 
-distributions (say Mandrake 8.0 ) ?
+  I suggest Linux-Kernel Mailing List FAQ items:
 
-What is the distinguisher between SCSI subsystems (and maybe other parts 
-in the kernel) that prevents or makes it possible to a certain SCSI 
-driver to work ?
+    http://www.tux.org/lkml/#s8-7
+    http://www.tux.org/lkml/#s10-12
 
-Thank you,
-Rabeeh
+  There is no item fully covering this particular topic, thus I will
+  Cc: the FAQ maintainer, who could adapt this text into a topic of
+  its own...
 
--- 
-This message may contain confidential, proprietary or legally privileged
-information. The information is intended only for the use of the individual
-or entity named above. If the reader of this message is not the intended
-recipient, you are hereby notified that any dissemination, distribution
-or copying of this communication is strictly prohibited. If you have
-received this communication in error, please notify us immediately by
-telephone, or by e-mail and delete the message from your computer.
+> If I have developed a working SCSI driver, and rapidly tested it under a 
+> certain distribution (say RedHat 7.2), will it work with other 
+> distributions (say Mandrake 8.0 ) ?
 
+  There are minor detail changes in between each kernel version
+  (even in stable series, see LKML-faq), and depending on what
+  configuration options are used (basically SMP or not), certain
+  things like spinlocks may or may not reserve space in structures,
+  and may or may not need to be called (are even optimized away in
+  non-SMP systems), meaning that binary compiled for SMP MIGHT NOT
+  work at non-SMP kernel. (And vice versa.)
 
+  Also different vendors tend to inject different things into their
+  kernel patch-sets, which again may subtly change data layouts, etc.
+  In stable kernel series great pains are suffered at maintenance so
+  that data layouts of in-kernel APIs (and API calls themselves) are
+  not changed.  Nevertheless something may change making binary drivers
+  to fail in mysterious ways.
 
+  Subtle memory things may appear with i386-PAE mode (large memory
+  machines which can't map all of RAM into the kernel at the same time.)
+
+> What is the distinguisher between SCSI subsystems (and maybe other parts 
+> in the kernel) that prevents or makes it possible to a certain SCSI 
+> driver to work ?
+
+  The problems that are encountered are most likely very general,
+  e.g. things said above will match.
+
+> Thank you,
+> Rabeeh
+
+  Aiming to publish BINARY driver modules is (in general) a support 
+  nightmare.
+
+  Publishing the driver is source (see LKML FAQ items about compile
+  and linking) will make the driver publication a lot more simpler.
+
+  Supplying obfuscated(*) lowlevel driver code with clean upper layers
+  will give change to fix problems, like spinlocks, memory management
+  call goofups etc.  ( (*) Obfuscation meaning "write this decimal value
+  at that register, no explanatory comments" -- NOT "here is .o file
+  with some compiled i386 object code" )
+
+  Others than the driver author might not know what exactly is wrong
+  in low-level, but things at more general levels may even get ported
+  onwards, when kernel introduces new APIs for e.g. memory management
+  at i386-PAE mode, etc.  .. and the driver works as is at a system
+  with little-endian processors.
+
+/Matti Aarnio
