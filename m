@@ -1,254 +1,117 @@
-From: Andi Kleen <ak@muc.de>
-Subject: Re: [PATCH] Add compat_ioctl to mptctl
-Date: 20 Jan 2005 10:38:04 +0100
-Message-ID: <20050120093804.GA16418@muc.de>
-References: <91888D455306F94EBD4D168954A9457CEAA513@nacos172.co.lsil.com>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [Announce] Emulex lpfcdriver v8.0.20 available
+Date: Thu, 20 Jan 2005 11:04:06 +0000
+Message-ID: <20050120110406.GA32422@infradead.org>
+References: <0B1E13B586976742A7599D71A6AC733C02F300@xbl3.ma.emulex.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from colin2.muc.de ([193.149.48.15]:20999 "HELO colin2.muc.de")
-	by vger.kernel.org with SMTP id S262126AbVATJiG (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 20 Jan 2005 04:38:06 -0500
-Date: Thu, 20 Jan 2005 10:38:04 +0100
+Received: from pentafluge.infradead.org ([213.146.154.40]:9898 "EHLO
+	pentafluge.infradead.org") by vger.kernel.org with ESMTP
+	id S262112AbVATLEI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 20 Jan 2005 06:04:08 -0500
 Content-Disposition: inline
-In-Reply-To: <91888D455306F94EBD4D168954A9457CEAA513@nacos172.co.lsil.com>
+In-Reply-To: <0B1E13B586976742A7599D71A6AC733C02F300@xbl3.ma.emulex.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Moore, Eric Dean" <Eric.Moore@lsil.com>
-Cc: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org
+To: James.Smart@Emulex.Com
+Cc: linux-scsi@vger.kernel.org
 
-On Wed, Jan 19, 2005 at 11:25:42AM -0700, Moore, Eric Dean wrote:
-> On Tuesday, January 18, 2005 4:22 AM, Andi Kleen wrote:
-> > 
-> > Convert mptctl driver to new compat_ioctl entry point.
-> > 
-> > Only compile tested.
-> > 
-> > Signed-off-by: Andi Kleen <ak@muc.de>
-> > 
+> >  o the host removal is still quite hackish and probably racy:
+> >     - everything what's you're ding with FC_UNLOADING should 
+> > be done in
+> >       the midlayer where we already have a state machine for the
+> >       Scsi_Host
 > 
-> This doesn't compile. Andi - Pls fix, resend, and
-> I will test.
+> There's only 2 uses for this flag...
+> 
+> - In the node state machine, which prevents upcalls to the midlayer
+>   for port state changes and/or invoking scsi scan functions.
+> 
+>   As the driver must deal with FC nodes (remote ports) independently
+>   of whether the SCSI layer (via scsi_host) is active on the adapter,
+>   we need the functionality to block the scsi midlayer upcalls.
+>   I don't see how this belongs in the midlayer....
 
-Sorry. I swear it compiled at one point, but some last minute
-changes must have broken it. Please try this version.
+The unloading is adapter-level, and Scsi_Host is a midlayer-managed
+object.  So the scsi_scan_single_target you protected by FC_UNLOADING
+will do the right thing called on a host that scsi_remove_host
+has been called on.
+
+For fc_remote_port_block/fc_remote_port_unblock/fc_remote_port_add
+that should be true aswell, but as that's new code you've written
+you should know it in more detail then me.
+
+> - Stops new i/o issued via queuecommand.
+> 
+>   The check here can probably be removed as long as there's a guarantee
+>   that there will be no queuecommand calls after scsi_remove_host
+>   completes. I believe this to be true. The only question I had
+>   concerns any in-progress scans when scsi_remove_host is called. Does
+>   remove host cancel the scans (vs just depending on reference counts) ?
+
+Currently it fails them, but doesn't cancel them in the sense of exiting
+early.
 
 
-Convert mptctl to compat_ioctl. I also changed it to unlocked_ioctl
-while I was on it.
+> >     - target removal shouldn't happen from your remove method but via
+> >       scsi_remove_host
+> 
+> Ok. Originally, this was thought to be more graceful than
+> scsi_remove_host (less console messages). However, testing shows no
+> discernable difference so we can easily do this.
 
-Signed-off-by: Andi Kleen <ak@muc.de>
+What console messages do you see?  Looks like we'd have to add another
+allowed state transition from BLOCKED?
 
+> >  o the driver would benefit a _lot_ from driver private data in
+> >    scsi_target, I think we should do that and basically get rid of
+> >    phba->device_queue_hash
+> 
+> Doable - although this now requires yet another midlayer patch to allow
+> host-private data to be allocated along with the target, and the 
+> addition of target alloc/destroy callback functions. Note that the
+> midlayer calling sequences for the scsi target, vs the scsi device,
+> are rather interesting right now (slave alloc called before a target
+> alloc would be called).
 
-diff -u linux-2.6.11-rc1-bk4/drivers/message/fusion/mptctl.c-o linux-2.6.11-rc1-bk4/drivers/message/fusion/mptctl.c
---- linux-2.6.11-rc1-bk4/drivers/message/fusion/mptctl.c-o	2005-01-04 12:12:51.000000000 +0100
-+++ linux-2.6.11-rc1-bk4/drivers/message/fusion/mptctl.c	2005-01-20 10:06:32.000000000 +0100
-@@ -142,6 +142,10 @@
- static int  mptctl_probe(struct pci_dev *, const struct pci_device_id *);
- static void mptctl_remove(struct pci_dev *);
+Yes, the allocation would need to be changed a little.  But hey, I don't
+think we should block merging the driver on this one.  We'll probably
+introduce it soon and I'll sign you up for testing that patch on the
+lpfc drivewr when it's ready.
+
+> >  o what about lpfc_target->rport?  This should probably better be in
+> >    the fc_target structure, no?
+> 
+> Anything in lpfc_target would go into the scsi_target hostdata
+> (not fc_target).
+
+I meant fc_target_attrs actually, which is scsi_target transport-data.
+
+The point here is that the rport is a transport-class transport object
+that every driver fully converted to fc_transport needs, so it's better
+in transport data aswell.
+
+Now looking at lpfc_target given that the rport goes away we only
+have the I/O counters left and the nodlist pointer.  The I/O counters
+aren't really a driver thing and should probably move to the midlayer
+which only leaves the nodelist as private data in the scsi_device.
+
+Sounds like the way to go?
+
+> >  o lpfc_target vs lpfc_nodelist.  I'd see these merged into a single
+> >    structure.  In fact large parts of lpfc_nodelist should probably
+> >    move into the transport class.
+> 
+> ?? lpfc_target would merge with scsi_target. lpfc_nodelist stays as is
+> (and independent from the scsi_target).
  
-+#ifdef CONFIG_COMPAT
-+static long compat_mpctl_ioctl(struct file *f, unsigned cmd, unsigned long arg);
-+#endif
-+
- /*
-  * Private function calls.
-  */
-@@ -552,8 +556,8 @@
-  *  cmd - specify the particular IOCTL command to be issued
-  *  arg - data specific to the command. Must not be null.
-  */
--static int
--mptctl_ioctl(struct inode *inode, struct file *file, unsigned int cmd, unsigned long arg)
-+static long
-+__mptctl_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
- {
- 	mpt_ioctl_header __user *uhdr = (void __user *) arg;
- 	mpt_ioctl_header	 khdr;
-@@ -637,6 +641,16 @@
- 	return ret;
- }
- 
-+static long
-+mptctl_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
-+{
-+	long ret;
-+	lock_kernel();
-+	ret = __mptctl_ioctl(file, cmd, arg);
-+	unlock_kernel();
-+	return ret;
-+}
-+
- static int mptctl_do_reset(unsigned long arg)
- {
- 	struct mpt_ioctl_diag_reset __user *urinfo = (void __user *) arg;
-@@ -2669,7 +2683,10 @@
- static struct file_operations mptctl_fops = {
- 	.owner =	THIS_MODULE,
- 	.llseek =	no_llseek,
--	.ioctl =	mptctl_ioctl,
-+	.unlocked_ioctl = mptctl_ioctl,
-+#ifdef CONFIG_COMPAT
-+	.compat_ioctl = compat_mpctl_ioctl,
-+#endif
- };
- 
- static struct miscdevice mptctl_miscdev = {
-@@ -2691,22 +2708,10 @@
-  * does contain pointer(s), then the specialized function is used
-  * to ensure the structure contents is properly processed by mptctl.
-  */
--static int
--compat_mptctl_ioctl(unsigned int fd, unsigned int cmd,
--			unsigned long arg, struct file *filp)
--{
--	int ret;
--
--	lock_kernel();
--	dctlprintk((KERN_INFO MYNAM "::compat_mptctl_ioctl() called\n"));
--	ret = mptctl_ioctl(filp->f_dentry->d_inode, filp, cmd, arg);
--	unlock_kernel();
--	return ret;
--}
-  
- static int
--compat_mptfwxfer_ioctl(unsigned int fd, unsigned int cmd,
--			unsigned long arg, struct file *filp)
-+compat_mptfwxfer_ioctl(struct file *filp, unsigned int cmd,
-+			unsigned long arg)
- {
- 	struct mpt_fw_xfer32 kfw32;
- 	struct mpt_fw_xfer kfw;
-@@ -2744,8 +2749,8 @@
- }
- 
- static int
--compat_mpt_command(unsigned int fd, unsigned int cmd,
--			unsigned long arg, struct file *filp)
-+compat_mpt_command(struct file *filp, unsigned int cmd,
-+			unsigned long arg)
- {
- 	struct mpt_ioctl_command32 karg32;
- 	struct mpt_ioctl_command32 __user *uarg = (struct mpt_ioctl_command32 __user *) arg;
-@@ -2797,6 +2802,37 @@
- 	return ret;
- }
- 
-+static long compat_mpctl_ioctl(struct file *f, unsigned int cmd, unsigned long arg)
-+{
-+	int ret;
-+	lock_kernel();
-+	switch (cmd) { 
-+	case MPTIOCINFO:
-+	case MPTIOCINFO1:
-+	case MPTIOCINFO2:
-+	case MPTTARGETINFO:
-+	case MPTEVENTQUERY:
-+	case MPTEVENTENABLE:
-+	case MPTEVENTREPORT:
-+	case MPTHARDRESET:
-+	case HP_GETHOSTINFO:
-+	case HP_GETTARGETINFO:
-+		ret = __mptctl_ioctl(f, cmd, arg);
-+		break;
-+	case MPTCOMMAND32:
-+		ret = compat_mpt_command(f, cmd, arg);
-+		break;
-+	case MPTFWDOWNLOAD32:
-+		ret = compat_mptfwxfer_ioctl(f, cmd, arg);
-+		break;
-+	default:
-+		ret = -ENOIOCTLCMD;
-+		break;
-+	}
-+	unlock_kernel();
-+	return ret;
-+}
-+
- #endif
- 
- 
-@@ -2879,35 +2915,6 @@
- 		": failed to register dd callbacks\n"));
- 	}
- 
--#ifdef CONFIG_COMPAT
--	err = register_ioctl32_conversion(MPTIOCINFO, compat_mptctl_ioctl);
--	if (++where && err) goto out_fail;
--	err = register_ioctl32_conversion(MPTIOCINFO1, compat_mptctl_ioctl);
--	if (++where && err) goto out_fail;
--	err = register_ioctl32_conversion(MPTIOCINFO2, compat_mptctl_ioctl);
--	if (++where && err) goto out_fail;
--	err = register_ioctl32_conversion(MPTTARGETINFO, compat_mptctl_ioctl);
--	if (++where && err) goto out_fail;
--	err = register_ioctl32_conversion(MPTTEST, compat_mptctl_ioctl);
--	if (++where && err) goto out_fail;
--	err = register_ioctl32_conversion(MPTEVENTQUERY, compat_mptctl_ioctl);
--	if (++where && err) goto out_fail;
--	err = register_ioctl32_conversion(MPTEVENTENABLE, compat_mptctl_ioctl);
--	if (++where && err) goto out_fail;
--	err = register_ioctl32_conversion(MPTEVENTREPORT, compat_mptctl_ioctl);
--	if (++where && err) goto out_fail;
--	err = register_ioctl32_conversion(MPTHARDRESET, compat_mptctl_ioctl);
--	if (++where && err) goto out_fail;
--	err = register_ioctl32_conversion(MPTCOMMAND32, compat_mpt_command);
--	if (++where && err) goto out_fail;
--	err = register_ioctl32_conversion(MPTFWDOWNLOAD32,
--					  compat_mptfwxfer_ioctl);
--	if (++where && err) goto out_fail;
--	err = register_ioctl32_conversion(HP_GETHOSTINFO, compat_mptctl_ioctl);
--	if (++where && err) goto out_fail;
--	err = register_ioctl32_conversion(HP_GETTARGETINFO, compat_mptctl_ioctl);
--	if (++where && err) goto out_fail;
--#endif
- 
- 	/* Register this device */
- 	err = misc_register(&mptctl_miscdev);
-@@ -2940,23 +2947,6 @@
- 
- out_fail:
- 
--#ifdef CONFIG_COMPAT
--	printk(KERN_ERR MYNAM ": ERROR: Failed to register ioctl32_conversion!"
--			" (%d:err=%d)\n", where, err);
--	unregister_ioctl32_conversion(MPTIOCINFO);
--	unregister_ioctl32_conversion(MPTIOCINFO1);
--	unregister_ioctl32_conversion(MPTIOCINFO2);
--	unregister_ioctl32_conversion(MPTTARGETINFO);
--	unregister_ioctl32_conversion(MPTTEST);
--	unregister_ioctl32_conversion(MPTEVENTQUERY);
--	unregister_ioctl32_conversion(MPTEVENTENABLE);
--	unregister_ioctl32_conversion(MPTEVENTREPORT);
--	unregister_ioctl32_conversion(MPTHARDRESET);
--	unregister_ioctl32_conversion(MPTCOMMAND32);
--	unregister_ioctl32_conversion(MPTFWDOWNLOAD32);
--	unregister_ioctl32_conversion(HP_GETHOSTINFO);
--	unregister_ioctl32_conversion(HP_GETTARGETINFO);
--#endif
- 
- 	mpt_device_driver_deregister(MPTCTL_DRIVER);
- 
-@@ -2980,22 +2970,6 @@
- 
-         mpt_device_driver_deregister(MPTCTL_DRIVER);
- 
--#ifdef CONFIG_COMPAT
--	unregister_ioctl32_conversion(MPTIOCINFO);
--	unregister_ioctl32_conversion(MPTIOCINFO1);
--	unregister_ioctl32_conversion(MPTIOCINFO2);
--	unregister_ioctl32_conversion(MPTTARGETINFO);
--	unregister_ioctl32_conversion(MPTTEST);
--	unregister_ioctl32_conversion(MPTEVENTQUERY);
--	unregister_ioctl32_conversion(MPTEVENTENABLE);
--	unregister_ioctl32_conversion(MPTEVENTREPORT);
--	unregister_ioctl32_conversion(MPTHARDRESET);
--	unregister_ioctl32_conversion(MPTCOMMAND32);
--	unregister_ioctl32_conversion(MPTFWDOWNLOAD32);
--	unregister_ioctl32_conversion(HP_GETHOSTINFO);
--	unregister_ioctl32_conversion(HP_GETTARGETINFO);
--#endif
--
- }
- 
- /*=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*/
+> I disagree with moving the nodelist code (e.g. FC discovery state
+> machines) into the transport. My opinion is this where you cross into
+> an area that can be very hardware-dependent (some adapters do this
+> completely within the adapter). I know that in our case, almost 1/2 of
+> the states are induced by the way our driver must interact with our
+> hardware. At this point, I don't see any benefits to taking this step.
+
+OK.  I've just taken a short look at the state machine and those bits
+I looked at looked generic enough.
