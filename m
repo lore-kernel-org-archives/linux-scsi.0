@@ -1,40 +1,30 @@
 From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: [PATCH] fusion: streamline ->queuecommand
-Date: Wed, 6 Oct 2004 15:58:21 +0100
+Subject: Re: [PATCH] add device_configure to the transport classes
+Date: Wed, 6 Oct 2004 16:22:33 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20041006145821.GD16153@parcelfarce.linux.theplanet.co.uk>
-References: <BC3CE0375D29D51199A400508B66CA6C0862AEFF@exc-snake.co.lsil.com>
+Message-ID: <20041006152233.GE16153@parcelfarce.linux.theplanet.co.uk>
+References: <OF2154D688.D97183DA-ONC1256F24.005BD3E3-C1256F24.005EE95C@de.ibm.com> <1096996724.2064.56.camel@mulgrave> <41637BBA.804@torque.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:30088 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S269277AbUJFO62
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:26507 "EHLO
+	www.linux.org.uk") by vger.kernel.org with ESMTP id S269286AbUJFPWi
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 6 Oct 2004 10:58:28 -0400
+	Wed, 6 Oct 2004 11:22:38 -0400
 Content-Disposition: inline
-In-Reply-To: <BC3CE0375D29D51199A400508B66CA6C0862AEFF@exc-snake.co.lsil.com>
+In-Reply-To: <41637BBA.804@torque.net>
 List-Id: linux-scsi@vger.kernel.org
-To: "Gibbons, Terry" <Terry.Gibbons@lsil.com>
-Cc: Christoph Hellwig <hch@lst.de>, "'arjanv@redhat.com'" <arjanv@redhat.com>, 'James Bottomley' <James.Bottomley@SteelEye.com>, "Moore, Eric Dean" <Emoore@lsil.com>, "Stephens, Larry" <larry.stephens@lsil.com>, "Shirron, Stephen" <Stephen.Shirron@lsil.com>, Matthew Wilcox <matthew@wil.cx>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Douglas Gilbert <dougg@torque.net>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, Martin Peschke3 <MPESCHKE@de.ibm.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Wed, Oct 06, 2004 at 08:46:11AM -0600, Gibbons, Terry wrote:
-> I was copied because the very people that will resolve the issue, namely
-> Eric and Larry, included me as to bring support to their position that they
-> have a BIG problem and solutions aren't being mutually agreed upon.
+On Wed, Oct 06, 2004 at 02:59:38PM +1000, Douglas Gilbert wrote:
+> >Yes, that's another reason to make it transport specific.  Even SPI code
+> >has to understand 64 bit LUN returns.
 > 
-> Therefore, I'm the one chosen to take the unpopular stance of challenging
-> the status quo and asking for solutions as opposed to pushback on every
-> stance LSI has put forth.
+> So does James now support Martin's proposal or is there a "not"
+> missing in the first sentence of the above paragraph?
 
-All I said was:
-
-> Of course, at some point, Fusion should be switched over to use the
-> scsi_transport_spi domain validation code ... not urgent, just an
-> item for the long-term todo list.
-
-I see the remainder of the thread as being pushback from _LSI_ on the
-direction that the rest of the SCSI people have decided to go.
-If you're not part of the solution ...
+I queried James about that yesterday; he said the "not" was missing.
 
 -- 
 "Next the statesmen will invent cheap lies, putting the blame upon 
