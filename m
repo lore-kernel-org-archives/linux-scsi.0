@@ -1,77 +1,35 @@
-From: Andries.Brouwer@cwi.nl
-Subject: Re: [2.6.0-test9] Strange SCSI messages
-Date: Sun, 26 Oct 2003 20:33:45 +0100 (MET)
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <UTC200310261933.h9QJXjN04379.aeb@smtp.cwi.nl>
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
-To: fw@deneb.enyo.de, linux-kernel@vger.kernel.org
-Cc: linux-scsi@vger.kernel.org
+From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+Subject: Re: AMD 53c974 SCSI driver in 2.6
+Date: Sun, 26 Oct 2003 20:49:01 +0100 (CET)
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <Pine.LNX.4.44.0310262035270.3346-100000@poirot.grange>
+References: <Pine.LNX.4.44.0310252340090.11248-100000@poirot.grange>
+Mime-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from imap.gmx.net ([213.165.64.20]:53901 "HELO mail.gmx.net")
+	by vger.kernel.org with SMTP id S263617AbTJZUGp (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 26 Oct 2003 15:06:45 -0500
+In-Reply-To: <Pine.LNX.4.44.0310252340090.11248-100000@poirot.grange>
 List-Id: linux-scsi@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: Kurt Garloff <garloff@suse.de>, linux-scsi@vger.kernel.org
 
-    From: Florian Weimer <fw@deneb.enyo.de>
+On Sat, 25 Oct 2003, Guennadi Liakhovetski wrote:
 
-    | Info fld=0x440b6b, Current sdsdd: sense key Recovered Error
-    | Additional sense: Address mark not found for data field
+> The above (AM53C974) driver depends on BROKEN in 2.6 and doesn't compile.
+> Is anybody working on / planning to fix it?
 
-    According to the sources, these are SCSI messages (matbe this should be
-    noted in the message?) -- but what do they mean?
+In a private email Matthias Andree suggested to try the tmscsim driver,
+which is [retty badly broken too. So, the question: what is the future of
+these drivers? Are they slowly dying because the hardware is outdated, or
+are they going to be fixed? If the latter - what is the status of this
+work (if any), and - which of the 2 (or both) drivers should survive?
 
-No doubt you are asking something else, but your sdsdd should have been sdd.
-That is, these days error printing is a bit broken.
-
-Something like the patch below might help.
-
-Andries
+Thanks
+Guennadi
+---
+Guennadi Liakhovetski
 
 
-diff -u --recursive --new-file -X /linux/dontdiff a/drivers/scsi/constants.c b/drivers/scsi/constants.c
---- a/drivers/scsi/constants.c	Sun Oct 26 00:00:11 2003
-+++ b/drivers/scsi/constants.c	Sun Oct 26 20:11:07 2003
-@@ -915,15 +915,15 @@
- 
- /* Print sense information */
- static void
--print_sense_internal(const char * devclass, 
--		     const unsigned char * sense_buffer,
-+print_sense_internal(const char *devclass, 
-+		     const unsigned char *sense_buffer,
- 		     struct request *req)
- {
- 	int s, sense_class, valid, code, info;
--	const char * error = NULL;
-+	const char *error = NULL;
- 	unsigned char asc, ascq;
- 	const char *sense_txt;
--	char *name = req->rq_disk ? req->rq_disk->disk_name : "?";
-+	const char *name = req->rq_disk ? req->rq_disk->disk_name : devclass;
-     
- 	sense_class = (sense_buffer[0] >> 4) & 0x07;
- 	code = sense_buffer[0] & 0xf;
-@@ -966,11 +966,9 @@
- 
- 		sense_txt = scsi_sense_key_string(sense_buffer[2]);
- 		if (sense_txt)
--			printk("%s%s: sense key %s\n",
--			       devclass, name, sense_txt);
-+			printk("%s: sense key %s\n", name, sense_txt);
- 		else
--			printk("%s%s: sense = %2x %2x\n",
--			       devclass, name,
-+			printk("%s: sense = %2x %2x\n", name,
- 			       sense_buffer[0], sense_buffer[2]);
- 
- 		asc = ascq = 0;
-@@ -993,11 +991,9 @@
- 
- 		sense_txt = scsi_sense_key_string(sense_buffer[0]);
- 		if (sense_txt)
--			printk("%s%s: old sense key %s\n",
--			       devclass, name, sense_txt);
-+			printk("%s: old sense key %s\n", name, sense_txt);
- 		else
--			printk("%s%s: sense = %2x %2x\n",
--			       devclass, name,
-+			printk("%s: sense = %2x %2x\n", name,
- 			       sense_buffer[0], sense_buffer[2]);
- 
- 		printk("Non-extended sense class %d code 0x%0x\n",
