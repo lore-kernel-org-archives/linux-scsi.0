@@ -1,32 +1,38 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: "do ata" scsi command?
-Date: Thu, 15 May 2003 19:02:23 -0400
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030515230223.GA516@gtf.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from host-64-213-145-173.atlantasolutions.com ([64.213.145.173]:33186
-	"EHLO havoc.gtf.org") by vger.kernel.org with ESMTP id S264283AbTEOWtc
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 15 May 2003 18:49:32 -0400
-Content-Disposition: inline
+From: Andries.Brouwer@cwi.nl
+Subject: Re: [patch] NCR5380.c fix
+Date: Fri, 16 May 2003 01:10:01 +0200 (MEST)
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <UTC200305152310.h4FNA1X19100.aeb@smtp.cwi.nl>
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+To: Andries.Brouwer@cwi.nl, James.Bottomley@steeleye.com
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, torvalds@transmeta.com
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-In terms of a userspace interface for my ata-over-scsi gadget, I would
-prefer to use /dev/sg instead of inventing a totally new interface.
-That, in turn, implies a need for a "do ata taskfile" scsi command,
-which is sorta like ATAPI in reverse:  we are wrapping a raw ata
-taskfile inside a scsi cdb.
+> any reason not to use the newly minted SAM_STAT_GOOD and
+> SAM_STAT_CHECK_CONDITION?
 
-My question is, does an existing standard or spec exist for such an idea?
+(i) this brings NCR5380.c a tiny little bit closer to sun3_NCR5380.c
+(ii) I am not so happy with SAM_STAT_GOOD etc.
 
-If not, I'll just roll my own.
+Maybe it is just me, but I do not immediately think of SCSI given SAM.
+We have sym_defs.h with
 
-Thanks,
+#define S_GOOD          (0x00)
+#define S_CHECK_COND    (0x02)
+...
 
-	Jeff
+and aiclib.h with
 
+#define SCSI_STATUS_OK                  0x00
+#define SCSI_STATUS_CHECK_COND          0x02
+...
 
+and scsi.h with
 
+#define SAM_STAT_GOOD            0x00
+#define SAM_STAT_CHECK_CONDITION 0x02
+...
+
+I wouldn't mind merging these three and choosing the SCSI_STATUS_ prefix.
+
+Andries
