@@ -1,39 +1,57 @@
-From: Clay Haapala <chaapala@cisco.com>
-Subject: Re: Request for review of Linux iSCSI driver version 4.0.0.1
-Date: Fri, 21 Nov 2003 10:42:40 -0600
+From: Mark Haverkamp <markh@osdl.org>
+Subject: Re: [PATCH] aacraid updates for new proing APIs
+Date: Fri, 21 Nov 2003 09:12:38 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <yqujvfpdwu4f.fsf@chaapala-lnx2.cisco.com>
-References: <200310231734.10263.krmurthy@cisco.com>
-	<20031027153932.A16679@infradead.org>
+Message-ID: <1069434758.12610.10.camel@markh1.pdx.osdl.net>
+References: <20031118110110.A22400@infradead.org>
+	 <1069190962.26419.29.camel@markh1.pdx.osdl.net>
+	 <20031119124828.A11769@infradead.org> <20031121113019.A15853@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sj-iport-5.cisco.com ([171.68.10.87]:53684 "EHLO
-	sj-iport-5.cisco.com") by vger.kernel.org with ESMTP
-	id S264370AbTKUQmo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 21 Nov 2003 11:42:44 -0500
-In-Reply-To: <20031027153932.A16679@infradead.org> (Christoph Hellwig's
- message of "Mon, 27 Oct 2003 15:39:32 +0000")
+Received: from fw.osdl.org ([65.172.181.6]:27319 "EHLO mail.osdl.org")
+	by vger.kernel.org with ESMTP id S264373AbTKURMq (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 21 Nov 2003 12:12:46 -0500
+In-Reply-To: <20031121113019.A15853@infradead.org>
 List-Id: linux-scsi@vger.kernel.org
 To: Christoph Hellwig <hch@infradead.org>
-Cc: Krishna Murthy <krmurthy@cisco.com>, linux-scsi@vger.kernel.org, davmyers@cisco.com
+Cc: Mark Salyzyn <mark_salyzyn@adaptec.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
-On Mon, 27 Oct 2003, Christoph Hellwig said:
+On Fri, 2003-11-21 at 03:30, Christoph Hellwig wrote:
+> On Wed, Nov 19, 2003 at 12:48:28PM +0000, Christoph Hellwig wrote:
+> > On Tue, Nov 18, 2003 at 01:29:22PM -0800, Mark Haverkamp wrote:
+> > > > +	pci_set_master(pdev);
+> > > > +	pci_set_dma_mask(pdev, 0xFFFFFFFFULL);
+> > > 
+> > > I've been told that the return value of this should be checked as it is
+> > > possible for it to fail.
+> > 
+> > Indeed.  This patches objective was to convert aacraid to the new-style
+> > probing, not to fix bugs, but I'll add the fix to the next revision of
+> > the patch anyway.
 > 
-> highlevel:
-> 	- kill md5.c and iscsi-crc.c and use common cryptoapi
-> 	md5 / common crc code instead.
+> Ok here's a new patch.  Updates:
+> 
+>   - check pci_set_dma_mask return value
+>   - fix leak in the HBA remove path
+>   - fix leak in probe_one failure case
+>   - remove unused list of hosts
+>   - avoid scsi.h usage all over driver
+>   - mention the updates in the README file
 
-md5: That appears straight-forward, and has been implemented, subject
-     to testing.  SELECT CRYPTO and SELECT MD5 makes it available
-     in the kernel.
+I built and tried this out this morning.  It seems to be working OK.
+One thing, though, there is warning now in:
 
-crc32: Ah, the iSCSI crc32 uses a different polynomial (stronger) than
-     Ethernet and the rest.  We argued during the RFC process for just
-     using Ethernet's as good enough, but were voted down.  So we are
-     stuck with a separate implementation in this case.
+drivers/scsi/aacraid/aachba.c: In function `aac_send_srb_fib':
+drivers/scsi/aacraid/aachba.c:1409: warning: `flag' might be used uninitialized in this function
+
+Although it seems that the compiler should notice that all the enum
+values are accounted for in the switch statement that sets flag.
+
+Mark.
+>  
 -- 
-Clay Haapala (chaapala@cisco.com) Cisco Systems SRBU +1 763-398-1056
-   6450 Wedgwood Rd, Suite 130 Maple Grove MN 55311 PGP: C89240AD
-     Well, looks like hypocrisy is back on the airwaves.
-       C'mon, Rush!  Do the crime, do the time, right?
+Mark Haverkamp <markh@osdl.org>
+
