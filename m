@@ -1,30 +1,37 @@
 From: "Justin T. Gibbs" <gibbs@scsiguy.com>
-Subject: Re: Linux [2.6.0-test3/mm1] aic7xxx problems.
-Date: Wed, 13 Aug 2003 12:38:20 -0600
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <3245752704.1060799900@aslan.btc.adaptec.com>
-References: <1060543928.887.19.camel@blaze.homeip.net>	 <2425882704.1060622541@aslan.btc.adaptec.com>	 <1060623576.2826.9.camel@blaze.homeip.net> <3F37F1A4.2030404@genebrew.com>	 <31044.199.181.174.146.1060650619.squirrel@www.blazebox.homeip.net>	 <3F384819.4070108@genebrew.com> <1060711760.854.6.camel@blaze.homeip.net>
+Subject: Re: AIC7902 lockups
+Date: Wed, 13 Aug 2003 12:37:19 -0600
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <3244592704.1060799839@aslan.btc.adaptec.com>
+References: <20030811143610.A19365@laokoon.bug.net> <2429712704.1060622870@aslan.btc.adaptec.com> <20030811204139.A26663@laokoon.bug.net>
 Reply-To: "Justin T. Gibbs" <gibbs@scsiguy.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
-In-Reply-To: <1060711760.854.6.camel@blaze.homeip.net>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from magic-mail.adaptec.com ([208.236.45.100]:26325 "EHLO
+	magic.adaptec.com") by vger.kernel.org with ESMTP id S275324AbTHMSfk
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 13 Aug 2003 14:35:40 -0400
+In-Reply-To: <20030811204139.A26663@laokoon.bug.net>
 Content-Disposition: inline
-To: Paul Blazejowski <paulb@blazebox.homeip.net>, Rahul Karnik <rahul@genebrew.com>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Thomas Beutin <tyrone@laokoon.IN-Berlin.DE>, linux-scsi@vger.kernel.org
 
-> I've tried all these options...regardless of ACPI being enabled or
-> disabled the driver still does not see the SCSI drive, both of my cdroms
-> are seen though.
-> 
-> Justin, I would be willing to test the 6.2.36 aic7xxx driver or variant
-> of if it was made available for 2.6.0-test3 kernel.
+>> The messages are not complete... the top is clipped.  Were you
+>> using a serial console to capture this log?
+> No, i did a "dmesg > file", but it seems the buffer is full after
+> booting so the first parts are lost. I've put syslog files on the web:
 
-It will be a little while before I can get my own distributions up
-and running in the 2.6 stream.  I hope to start looking at this next
-week.
+...
+
+The logs are still not complete.  As best I can tell, the controller
+is seeing CRC errors when talking to the Fujitsu drives, but these
+drives are hanging up the bus instead of responding to our ATN condition.
+I believe that these drives have newer firmware available that might
+aid in CRC error recovery, but you should also double check your
+cable, termination, etc.
 
 --
 Justin
+
