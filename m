@@ -1,88 +1,98 @@
-From: James.Smart@Emulex.Com
-Subject: [Announce] Emulex lpfcdriver v8.0.20 available
-Date: Tue, 11 Jan 2005 13:34:37 -0500
-Message-ID: <0B1E13B586976742A7599D71A6AC733C12E98D@xbl3.ma.emulex.com>
+From: Mark Bellon <mbellon@mvista.com>
+Subject: [PATCH] 2.4.28 - AIC driver causes kernel corruption (as a module)
+Date: Tue, 11 Jan 2005 12:24:03 -0700
+Message-ID: <41E427D3.2020201@mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: multipart/mixed;
+ boundary="------------030507090101040404020106"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emulex.emulex.com ([138.239.112.1]:19331 "EHLO
-	emulex.emulex.com") by vger.kernel.org with ESMTP id S261354AbVAKSek convert rfc822-to-8bit
+Received: from gateway-1237.mvista.com ([12.44.186.158]:59643 "EHLO
+	av.mvista.com") by vger.kernel.org with ESMTP id S262872AbVAKTYu
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 11 Jan 2005 13:34:40 -0500
-Received: from xbl3.ad.emulex.com (xbl3.ma.emulex.com [138.239.73.12])
-	by emulex.emulex.com (8.12.10/8.12.10) with ESMTP id j0BIYcni015515
-	for <linux-scsi@vger.kernel.org>; Tue, 11 Jan 2005 10:34:39 -0800 (PST)
-Content-class: urn:content-classes:message
+	Tue, 11 Jan 2005 14:24:50 -0500
+Received: from [10.50.1.98] (av [127.0.0.1])
+	by av.mvista.com (8.9.3/8.9.3) with ESMTP id LAA17465
+	for <linux-scsi@vger.kernel.org>; Tue, 11 Jan 2005 11:24:47 -0800
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: James.Smart@Emulex.Com
-
-Christoph and Community,
-
-The 8.0.20 release of the Emulex driver has been recently posted
-to SourceForge:
-http://prdownloads.sourceforge.net/lpfcxxxx/lpfcdriver-2.6-8.0.20.tar.gz?download
 
 
-Emulex has been working hard to complete the outstanding items for upstream
-acceptance:
+This is a multi-part message in MIME format.
+--------------030507090101040404020106
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 
-- Streamline I/O submission path.
-- Removal of GFP_ATOMIC allocations in I/O path. Consider locations
-  as well.
-- Movement of Consistent Bindings to the FC Transport.
-- Discovery changes:
-   Target discovery via scsi_scan_single_target. Reduce bookkeeping
-     in lpfc_find_target().
-   Cleanse target removal. Ensure no more __devices references.
-- Removal of ifdefs for older kernel support and different patches
+Didn't see a patch for this and the problem is in the 2.4.28 sources.
 
-And from our point of view :
-- Add management interfaces in support of HBAAPI.
+The scsi_register_module call from within ah[cd]_linux_init causes the 
+detect routine to be called. The detect routine calls  
+ah[cd]_linux_pci_init which does a pci_register_driver call. If no 
+hardware is found in the detect routine, ah[cd]_linux_init will exit 
+without calling pci_unregister_driver leaving the kernel with pointers 
+to a driver that never really loaded.
 
-
-The 8.0.20 release addresses all of the above per the following comments:
-
-- We have significantly streamlined our i/o path, removing all
-    GFP_ATOMIC allocations in this path and in most eh_xxxx paths.
-    Atomic allocations still exist in our discovery thread, but
-    we are looking into removing them as well.
-- With the proposed Remote Port additions to the FC transport, we've
-    integrated remote ports (rport's) into our node state machine.
-    This has reduced much of the target-level housekeeping, moved
-    all consistent (semi-persistent) target id bindings into the
-    fc transport, and coordinated device discovery/removal with the
-    transport.
-- Discovery has been reworked such that:
-    There is no initial host-level scan.
-    Driver registers FC remote ports with FC transport. FC transport
-      assigns SCSI target ids for the ports (and implements any
-      persistence).
-    Driver invokes SCSI bus scans on a per-target level, after
-      noticing target id assignments and preparing proper calling
-      context.
-    If cable pull/device loss, driver calls transport with port-level
-      block call (which in turn makes the scsi target block call).
-      transport starts target block timer.
-    If port returns prior to timeout - driver calls transport
-      port-level unblock call, which restarts i/o to devices.
-    If port does not return prior to timeout - in timeout handler,
-      transport will remove all attached scsi devices.
-    When driver decides to release all knowledge of remote port, it
-      notifies transport. Transport will remove any attached scsi
-      devices.
-- We've posted FC Transport patches for host attributes/statistics,
-  and remote port attributes, sufficient for HBAAPI.  We've added
-  support for these attributes in the driver.
-- The ifdefs for older-kernel support and to select kernel patches
-  has been removed. The driver expects the latest and greatest
-  kernel and patches.
+mark
 
 
-We believe this driver is ready for final reviews for upstream acceptance.
-Please return any review comments.
+--------------030507090101040404020106
+Content-Type: text/plain;
+ name="scsi-patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="scsi-patch"
 
--- James S
+Index: drivers/scsi/aic7xxx/aic79xx_osm.c
+===================================================================
+RCS file: /cvsdev/mvl-kernel/linux/drivers/scsi/aic7xxx/aic79xx_osm.c,v
+retrieving revision 1.2.4.2.12.4
+diff -a -u -r1.2.4.2.12.4 aic79xx_osm.c
+--- drivers/scsi/aic7xxx/aic79xx_osm.c	12 Feb 2004 15:33:49 -0000	1.2.4.2.12.4
++++ drivers/scsi/aic7xxx/aic79xx_osm.c	11 Jan 2005 18:46:42 -0000
+@@ -5079,6 +5079,8 @@
+ 	}
+ }
+ 
++static void ahd_linux_exit(void);
++
+ static int __init
+ ahd_linux_init(void)
+ {
+@@ -5087,8 +5089,7 @@
+ #else
+ 	scsi_register_module(MODULE_SCSI_HA, &aic79xx_driver_template);
+ 	if (aic79xx_driver_template.present == 0) {
+-		scsi_unregister_module(MODULE_SCSI_HA,
+-				       &aic79xx_driver_template);
++		ahd_linux_exit();
+ 		return (-ENODEV);
+ 	}
+ 
+Index: drivers/scsi/aic7xxx/aic7xxx_osm.c
+===================================================================
+RCS file: /cvsdev/mvl-kernel/linux/drivers/scsi/aic7xxx/aic7xxx_osm.c,v
+retrieving revision 1.2.4.2.12.3
+diff -a -u -r1.2.4.2.12.3 aic7xxx_osm.c
+--- drivers/scsi/aic7xxx/aic7xxx_osm.c	12 Feb 2004 15:33:49 -0000	1.2.4.2.12.3
++++ drivers/scsi/aic7xxx/aic7xxx_osm.c	11 Jan 2005 18:46:43 -0000
+@@ -5077,6 +5077,8 @@
+ 	}
+ }
+ 
++static void ahc_linux_exit(void);
++
+ static int __init
+ ahc_linux_init(void)
+ {
+@@ -5085,8 +5087,7 @@
+ #else
+ 	scsi_register_module(MODULE_SCSI_HA, &aic7xxx_driver_template);
+ 	if (aic7xxx_driver_template.present == 0) {
+-		scsi_unregister_module(MODULE_SCSI_HA,
+-				       &aic7xxx_driver_template);
++		ahc_linux_exit();
+ 		return (-ENODEV);
+ 	}
+ 
 
+--------------030507090101040404020106--
