@@ -1,41 +1,33 @@
-From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
-Subject: Re: [PATCH] tmscsim: scsi device attributes
-Date: Fri, 22 Oct 2004 21:27:07 +0200 (CEST)
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.60.0410222124200.5604@poirot.grange>
-References: <Pine.LNX.4.60.0410212223120.7042@poirot.grange>
- <20041022124007.GC4201@parcelfarce.linux.theplanet.co.uk>
- <1098450017.2017.19.camel@mulgrave>
+From: "Maciej W. Rozycki" <macro@linux-mips.org>
+Subject: Re: [patch 1/2] cciss: cleans up warnings in the 32/64 bit conversions
+Date: Fri, 22 Oct 2004 21:59:52 +0100 (BST)
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <Pine.LNX.4.58L.0410222157080.22781@blysk.ds.pg.gda.pl>
+References: <20041021211718.GA10462@beardog.cca.cpqcorp.net>
+ <Pine.LNX.4.58L.0410220054010.15504@blysk.ds.pg.gda.pl>
+ <20041022183057.GA23032@beardog.cca.cpqcorp.net>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pop.gmx.de ([213.165.64.20]:45249 "HELO mail.gmx.net")
-	by vger.kernel.org with SMTP id S268001AbUJVVKW (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 22 Oct 2004 17:10:22 -0400
-In-Reply-To: <1098450017.2017.19.camel@mulgrave>
+Return-path: <linux-kernel-owner+glk-linux-kernel=40m.gmane.org-S267743AbUJVVJE@vger.kernel.org>
+In-Reply-To: <20041022183057.GA23032@beardog.cca.cpqcorp.net>
+To: mikem <mikem@beardog.cca.cpqcorp.net>
+Cc: marcelo.tosatti@cyclades.com, axboe@suse.de, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Matthew Wilcox <matthew@wil.cx>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Fri, 22 Oct 2004, James Bottomley wrote:
+On Fri, 22 Oct 2004, mikem wrote:
 
-> On Fri, 2004-10-22 at 08:40, Matthew Wilcox wrote:
-> > How about something more along the following lines?  I haven't converted
-> > sym2 to the generic queue code yet, so it's untested (and is obviously
-> > broken because nothing initialises max_queue_depth).
-> 
-> Yes, I was considering something like this.  The original queue code in
-> 53c700 was designed as an example of how to do attribute overrides. 
-> However, there needs to be a callback into the LLD to tell it that the
-> queue is being overriden (and allow a veto for depth increases).  I'll
-> look at adding the extra pieces.
+> >  These constructs (casts as lvalues) are deprecated with GCC 3.4 (a
+> > warning is triggered) and no longer supported with 4.0.  Please consider
+> > rewriting -- you'll probably need an auxiliary variable.
+[...]
+> Is this documented somewhere?
 
-Right. Feel free to hold off the patch, until you implement the generic 
-sdev_store_queue_depth().
+ Sure:
 
-Thanks
-Guennadi
----
-Guennadi Liakhovetski
+http://gcc.gnu.org/gcc-3.4/changes.html
 
+http://gcc.gnu.org/gcc-4.0/changes.html
+
+Plus reported zillion of times here and elsewhere.
+
+  Maciej
