@@ -1,55 +1,50 @@
-From: Willem Riede <wrlk@riede.org>
-Subject: Re: blocksize limitations in scsi tape driver (st) when used with DLT1 tape drives?
-Date: Thu, 5 Sep 2002 20:00:41 -0400
+From: "Justin T. Gibbs" <gibbs@scsiguy.com>
+Subject: Re: aic7xxx sets CDR offline, how to reset?
+Date: Thu, 05 Sep 2002 18:13:45 -0600
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20020906000041.GW9630@linnie.riede.org>
-References: <Pine.LNX.4.44.0209060009560.1912-100000@kai.makisara.local> <3D77D776.7040408@fl.priv.at>
-Reply-To: wrlk@riede.org
+Message-ID: <100360000.1031271224@aslan.btc.adaptec.com>
+References: <200209041613.g84GDtv02639@localhost.localdomain>
+ <12750000.1031158209@aslan.btc.adaptec.com>
+ <10209050239.ZM52086@classic.engr.sgi.com>
+ <122900000.1031232923@aslan.scsiguy.com>
+ <10209051656.ZM53302@classic.engr.sgi.com>
+Reply-To: "Justin T. Gibbs" <gibbs@scsiguy.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from linnie.riede.org (linnie.riede.org [192.168.2.2])
-	by serve.riede.org (8.11.6/8.9.3) with ESMTP id g8600fB08811
-	for <linux-scsi@vger.kernel.org>; Thu, 5 Sep 2002 20:00:42 -0400
+In-Reply-To: <10209051656.ZM53302@classic.engr.sgi.com>
 Content-Disposition: inline
-In-Reply-To: <3D77D776.7040408@fl.priv.at>; from fl@fl.priv.at on Thu, Sep 05, 2002 at 18:15:18 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Jeremy Higdon <jeremy@classic.engr.sgi.com>, James Bottomley <James.Bottomley@steeleye.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-scsi@vger.kernel.org
 
-On 2002.09.05 18:15 Friedrich Lobenstock wrote:
-> Kai Makisara wrote:
-> > On Thu, 5 Sep 2002, Friedrich Lobenstock wrote:
-> > 
-> >>Now I told arkeia to use a blocksize of 65536, 32768 and 16384 and it
-> >>could not write to the tape. All I got in the log was:
-> >>
-> >>Sep  4 22:08:41 filesrv kernel: st0: Incorrect block size.
-> >>Sep  4 22:08:45 filesrv kernel: st0: Write not multiple of tape block size.
-> > 
-> >                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-> > The write() byte count from Arkeia is not a multiple of the tape block
-> > size. If you use fixed block size, you must take care that this constraint
-> > is not violated. When you set the block size to 8192 or something that
-> > multiplies to 8192, this constraint is obeyed. If Arkeia sets the block
-> > size, I don't know why it does not obey the constraint. Seems to be an
-> > application problem.
-> > 
-> > In most cases, it is best to use variable block mode
-> > (i.e., mt setblk 0) and let the application to decide the tape block size.
-> > In order to have good efficiency, you should make sure that the
-> > application uses large enough byte counts in its write() calls, i.e., set
-> > the Arkeia block size to 65536.
-> 
-> Hmmm...I whish I could, but LTO and as it seems DLT drives too do not
-> cope well with variable block sizes.
-> 
-> All blocksizes greater than 8192 do make troubles. At and below this
-> value all is fine.
+> But don't the controllers have to know which commands have been silently
+> aborted by the target?
 
-I had a run in with Arkeia some time ago when used with osst tape devices,
-and if I remember correctly, it is best to not tell Arkeia anything about
-the block size to use. It will use multiples of 8192 in that case. Given
-that you say the DLT drive is happy with 8192 block size that should work.
+The controller drivers would need to know that the QErr policy is in
+effect for a given device.  With that knowledge, the book keeping from
+the controller's standpoint is really quite simple and no different than
+if a lun reset, target reset, clear task set, bus reset or any other task
+management function is executed.  In other words, the controller drivers
+already need to understand the consequences of such events.
 
-Regards, Willem Riede.
+>  There are various resources allocated to a
+> command, so if the command will never be completed, as a result of some
+> other command getting "check condition", the controller would have to
+> know.
+
+The controller knows which commands are affected and just returns them
+to the mid-layer with the appropriate error code.
+
+> Or are you suggesting that the type drivers would tell the controllers to
+> release those resources?
+
+Not necessary.
+
+> And would this change if the controller drivers were keeping track of
+> timeouts, etc.?
+
+This all assumes that the controllers are doing watchdog recovery.
+
+--
+Justin
