@@ -1,54 +1,43 @@
-From: Arjan van de Ven <arjanv@redhat.com>
+From: Jens Axboe <axboe@suse.de>
 Subject: Re: smp dead lock of io_request_lock/queue_lock patch
-Date: Mon, 12 Jan 2004 15:11:41 +0100
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040112141141.GB25249@devserv.devel.redhat.com>
+Date: Mon, 12 Jan 2004 15:13:30 +0100
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <20040112141330.GH24638@suse.de>
 References: <OF2581AA2D.BFD408D2-ONC1256E19.004BE052-C1256E19.004E1561@de.ibm.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="GRPZ8SYKNexpdSJ7"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:6587 "EHLO mx1.redhat.com")
-	by vger.kernel.org with ESMTP id S265514AbUALOL7 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 12 Jan 2004 09:11:59 -0500
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
 Content-Disposition: inline
 In-Reply-To: <OF2581AA2D.BFD408D2-ONC1256E19.004BE052-C1256E19.004E1561@de.ibm.com>
-List-Id: linux-scsi@vger.kernel.org
 To: Martin Peschke3 <MPESCHKE@de.ibm.com>
-Cc: Doug Ledford <dledford@redhat.com>, Jens Axboe <axboe@suse.de>, Peter Yao <peter@exavio.com.cn>, linux-kernel@vger.kernel.org, linux-scsi mailing list <linux-scsi@vger.kernel.org>
+Cc: Doug Ledford <dledford@redhat.com>, Arjan Van de Ven <arjanv@redhat.com>, Peter Yao <peter@exavio.com.cn>, linux-kernel@vger.kernel.org, linux-scsi mailing list <linux-scsi@vger.kernel.org>
+List-Id: linux-scsi@vger.kernel.org
 
-
---GRPZ8SYKNexpdSJ7
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
-
-
-On Mon, Jan 12, 2004 at 03:07:55PM +0100, Martin Peschke3 wrote:
+On Mon, Jan 12 2004, Martin Peschke3 wrote:
 > Hi,
->=20
+> 
 > is there a way to merge all (or at least the common denominator) of
-> Red Hat's and SuSE's changes into the vanilla 2.4 SCSI stack?
+> Redhat's and SuSE's changes into the vanilla 2.4 SCSI stack?
+> The SCSI part of Marcelo's kernel seems to be rather backlevel,
+> considering all those fixes and enhancements added by the mentioned
+> distributors and their SCSI experts. As this discussion underlines,
+> there are a lot of common problems and sometimes even common
+> approaches.  I am convinced that a number of patches ought to be
+> incorporated into the mainline kernel. Though, I must admit
+> that I am at a loss with how this could be achieved given the
+> unresolved question of 2.4 SCSI maintenance
+> (which has certainly played a part in building up those piles
+> of SCSI patches).
 
-Since 2.4 is basically frozen, and said patches are only performance
-optimisations and not functionality enhancements I would think this is a bad
-idea; if you need the small performance gain, 2.6 is imo a far better place
-nowadays. The 2.4 SCSI stack seems rather stable and destabilizing it this
-late in the cycle sounds bad with the alternative of 2.6 being available.
+I have mixed feelings about that. One on side, I'd love to merge the
+scalability patches in mainline. We've had a significant number of bugs
+in this area in the past, and it seems a shame that we all have to fix
+them independently because we deviate from mainline. On the other hand,
+2.4 is pretty much closed. There wont be a big number of new distro 2.4
+kernels.
 
-Greetings,
-    Arjan van de Ven
---GRPZ8SYKNexpdSJ7
-Content-Type: application/pgp-signature
-Content-Disposition: inline
+Had you asked me 6 months ago I probably would have advocated merging
+them, but right now I think it's a waste of time.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.2.1 (GNU/Linux)
-
-iD8DBQFAAqscxULwo51rQBIRAoXHAJ9DbWjpCXyuQgx5o8HcfRWUnRxGqACfSS36
-oOUMNVH+lRx0MDXbEQaOBFg=
-=GbjA
------END PGP SIGNATURE-----
-
---GRPZ8SYKNexpdSJ7--
+-- 
+Jens Axboe
