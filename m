@@ -1,53 +1,60 @@
-From: Rogier Wolff <R.E.Wolff@BitWizard.nl>
+From: "Justin T. Gibbs" <gibbs@scsiguy.com>
 Subject: Re: aic7xxx sets CDR offline, how to reset?
-Date: Wed, 4 Sep 2002 18:25:05 +0200
+Date: Wed, 04 Sep 2002 10:50:09 -0600
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20020904182505.B20614@bitwizard.nl>
-References: <dledford@redhat.com> <20020903171321.A12201@redhat.com> <200209032148.g83LmeP09177@localhost.localdomain> <20020904103737.GA9936@win.tue.nl> <1031138593.2788.40.camel@irongate.swansea.linux.org.uk>
+Message-ID: <12750000.1031158209@aslan.btc.adaptec.com>
+References: <200209041613.g84GDtv02639@localhost.localdomain>
+Reply-To: "Justin T. Gibbs" <gibbs@scsiguy.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <200209041613.g84GDtv02639@localhost.localdomain>
 Content-Disposition: inline
-In-Reply-To: <1031138593.2788.40.camel@irongate.swansea.linux.org.uk>
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Andries Brouwer <aebr@win.tue.nl>, James Bottomley <James.Bottomley@steeleye.com>, "Justin T. Gibbs" <gibbs@scsiguy.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@steeleye.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Wed, Sep 04, 2002 at 12:23:13PM +0100, Alan Cox wrote:
-> On Wed, 2002-09-04 at 11:37, Andries Brouwer wrote:
-> > The scsi error recovery has many bad properties, but one is its slowness.
-> > Once it gets triggered on a machine with SCSI disks it is common to
-> > have a dead system for several minutes. I have not yet met a situation
-> > in which rebooting was not preferable above scsi error recovery,
-> > especially since the attempt to recover often fails.
+> dledford@redhat.com said:
+>> Now, granted, that is more complex than going straight to a BDR, but I
+>>  have to argue that it *isn't* that complex.  It certainly isn't the
+>> nightmare you make it sound like ;-) 
 > 
-> Well I for one prefer the scsi timeout/abort sequence on a CD getting
-> confused badly by a bad block (as at least some of my drives do) to a
-> reboot everytime I get bad media
+> It's three times longer even in pseudocode...
 
-Reboot is bad. Retries are bad. 
+To make this work, you really need to use the QErr bit in the
+disconnect/reconnect page and/or ECA or ACA.  QErr I believe is
+well supported in devices, but ECA (pre SCSI-3) and ACA most
+likely receive very little testing.
 
-Errors should be returned to an upper layer, with an error code: "may
-retry", or "will never work". (Like in SMTP)
+I will also voice my opinion (again) that watchdog timer recovery
+is in the wrong place in Linux.  It belongs in the controller drivers:
 
-I will most likely set the "retry count" to 0: Never retry. Almost
-never works anyway. And the disk already retried manytimes, so
-retrying in software is only "taking time".
+1) Only the controller driver knows when to start the timeout
+2) Only the controller driver knows the current status of the bus/transport
+3) Only the controller can close timeout/just completed races
+4) Only the controller driver knows the true transport type
+   (SPI/FC/ATA/USB/1394/IP) and what recovery actions are appropriate
+   for that transport type given the capabilities of the controller.
+5) The algorithm for recovery and maintaining order becomes quite simple:
+	1) Freeze the input queue for the controller
+	2) Return all transactions unqueued to a device to the mid-layer
+	3) Perform the recovery actions required
+	4) Unfreeze the controller's queue
+	5) Device type driver (sd, cd, tape, etc) decides what errors
+	   at what rates should cause the failure of a device.  The
+	   controller driver just needs to have the error codes so
+	   it can honestly and fully report to the type driver what
+	   really happens so it can make good decissions
 
-We do datarecovery around here. We get bad disks on a dayly basis. We
-are currently reading a drive that gets over 10Mb per second while
-spitting out bad block reports!
+   This of course assumes that all transactions have a serial number and
+   that requeuing transactions orders them by serial number.  With QErr
+   set, the device closes the rest if the barrier race for you, but even
+   without barriers, full transaction ordering is required if you don't
+   want a read to inadvertantly pass a write to the same location during
+   recovery.
 
-Thing is: those blocks that didn't work first time, may work on our
-second retry. However, we need userspace control over that retry. We
-prefer to get the 18G worth of data off the disk first, and only then
-retry the blocks that happened to be bad first time around.
+   For prior art, take a look at FreeBSD.  In the worst case, where
+   escalation to a bus reset is required, recovery takes 5 seconds.
 
-			Roger.
-
--- 
-** R.E.Wolff@BitWizard.nl ** http://www.BitWizard.nl/ ** +31-15-2137555 **
-*-- BitWizard writes Linux device drivers for any device you may have! --*
-* The Worlds Ecosystem is a stable system. Stable systems may experience *
-* excursions from the stable situation. We are currenly in such an       * 
-* excursion: The stable situation does not include humans. ***************
+--
+Justin
