@@ -1,40 +1,50 @@
 From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [PATCH scsi-misc-2.6 08/08] scsi: fix hot unplug sequence
-Date: Wed, 23 Mar 2005 09:12:16 -0600
-Message-ID: <1111590736.5441.10.camel@mulgrave>
+Subject: Re: [PATCH scsi-misc-2.6 04/08] scsi: remove meaningless volatile
+	qualifiers from structure definitions
+Date: Wed, 23 Mar 2005 09:16:40 -0600
+Message-ID: <1111591000.5441.14.camel@mulgrave>
 References: <20050323021335.960F95F8@htj.dyndns.org>
-	 <20050323021335.4682C732@htj.dyndns.org>
-	 <1111550882.5520.93.camel@mulgrave>  <4240F5A9.80205@gmail.com>
+	 <20050323021335.2655518E@htj.dyndns.org>
+	 <1111551327.5520.99.camel@mulgrave>  <4240EEFF.8030703@pobox.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Received: from stat16.steeleye.com ([209.192.50.48]:46208 "EHLO
+Received: from stat16.steeleye.com ([209.192.50.48]:50816 "EHLO
 	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S261616AbVCWPMd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 23 Mar 2005 10:12:33 -0500
-In-Reply-To: <4240F5A9.80205@gmail.com>
+	id S261619AbVCWPQu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 23 Mar 2005 10:16:50 -0500
+In-Reply-To: <4240EEFF.8030703@pobox.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Jens Axboe <axboe@suse.de>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Tejun Heo <htejun@gmail.com>, Jens Axboe <axboe@suse.de>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
 
-On Wed, 2005-03-23 at 13:50 +0900, Tejun Heo wrote:
->   Well, but it's because scsi midlayer calls back into usb-storage eh 
-> after the detaching process is complete.
+On Tue, 2005-03-22 at 23:22 -0500, Jeff Garzik wrote:
+> volatile is almost always (a) buggy, or (b) hiding bugs.  At the very 
+> least, barriers are usually needed.
 
-Yes, but that's legitimate.  It's always been explicitly stated that we
-can't ensure absolute synchronisation in the stack:  storage devices
-must expect to have to reject I/O for devices they think have been
-removed.
+The choice is either barrier or volatile usually.  volatile is nasty
+primarily because it causes compiler pessimism in variable reloading.
 
-> > However, the current host code does need fixing, but the fix is to move
-> > it over to a proper state model rather than the current bit twiddling we
-> > do.
-> 
->   I agree & am working on it.  This patch was mainly to verify Jens' oops.
+> Almost every case really wants to be inside a spinlock, or atomic_t, or 
+> similarly protected.
 
-Thanks!  You can look at the device state model as a guide ...
-originally that was a bit mask too.
+I know that's what I'm asking if an audit has been conducted for...to
+replace the volatile, accesses have to be barrier protected.
+
+> Specifically for SATA, I am making the presumption that SCSI is smart 
+> enough not to mess with host_failed until my error handler completes.
+
+Yes, that's a valid assumption ... and by the single threaded nature of
+the error handler, always true.  However, the proposed patch wanted to
+add a spinlock around the access in the scsi eh thread (the comment
+stating for clarity).  Thus, the same change should be made in SATA for
+consistency.
+
+Since that change isn't in the patch, I was asking if all the users of
+these variables had been audited for barriers instead ... since the
+answer looks to be "no" to me.
 
 James
+
 
