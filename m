@@ -1,77 +1,205 @@
-From: Patrick Mansfield <patmans@us.ibm.com>
-Subject: Re: PATCH 5/5: scsi-scan-inq-timeout
-Date: Wed, 21 Apr 2004 16:49:32 -0700
+From: "Adam Radford" <aradford@amcc.com>
+Subject: [PATCH] 3ware driver update for 2.6.6-rc3
+Date: Wed, 21 Apr 2004 16:56:32 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040421164932.A21741@beaverton.ibm.com>
-References: <20040418185751.GC4868@tpkurt.garloff.de> <1082330192.1969.37.camel@mulgrave> <20040420115419.GG4356@tpkurt.garloff.de> <1082471881.1804.34.camel@mulgrave> <20040420160334.GO4356@tpkurt.garloff.de> <20040421134511.GP28633@tpkurt.garloff.de> <20040421141456.GW28633@tpkurt.garloff.de> <20040421132454.A19685@beaverton.ibm.com> <20040421224843.GD643@tpkurt.garloff.de>
+Message-ID: <HWJP6B03.D0B@hadar.amcc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e34.co.us.ibm.com ([32.97.110.132]:17149 "EHLO
-	e34.co.us.ibm.com") by vger.kernel.org with ESMTP id S263308AbUDUXtz
+Received: from hadar.amcc.com ([192.195.69.168]:46473 "EHLO hadar.amcc.com")
+	by vger.kernel.org with ESMTP id S263348AbUDUX4h convert rfc822-to-8bit
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 21 Apr 2004 19:49:55 -0400
-Content-Disposition: inline
-In-Reply-To: <20040421224843.GD643@tpkurt.garloff.de>; from garloff@suse.de on Thu, Apr 22, 2004 at 12:48:43AM +0200
+	Wed, 21 Apr 2004 19:56:37 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: Kurt Garloff <garloff@suse.de>, Linux SCSI list <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@steeleye.com>, Andrew Morton <akpm@osdl.org>
+To: akpm@osdl.org, james.bottomley@steeleye.com
+Cc: linux-scsi@vger.kernel.org
 
-On Thu, Apr 22, 2004 at 12:48:43AM +0200, Kurt Garloff wrote:
-> Hi Patrick,
-> 
-> On Wed, Apr 21, 2004 at 01:24:54PM -0700, Patrick Mansfield wrote:
-> > SCSI_TIMEOUT is 2 * HZ.
-> > 
-> > So we defaulted to 6 seconds, and now we default to 5.5 seconds. Why?
-> 
-> True.
-> 
-> I have added half a second to be safe against 0.
-> Thus, I had the choice of rounding 6 to 6.5 or 5.5.
-> I chose 5.5, because the old value was chosen very conservative, as it
-> had to be enough for even sick devices. Now we have a boot parameter
-> to accomodate these, thus we can be less conservative. Thus 5.5.
+Here is a patch for the 3ware 3w-xxxx driver for 2.6.6-rc3.  
+Bits of this patch are already in 2.6.6-rc2-mm1, but I was told
+to re-send since I forgot to cc: linux-scsi.
 
-I have no idea why 6 seconds was picked, but it has been there for so
-long, it should remain as the default. If a user picks 0, then too bad.
-(It would be nice if there was some module_param with a range, so it could
-never be set to 0, it looks like there is stuff in place for adding your
-own types and your own "check" macro.)
+This patch includes the following driver changes:
 
-> > Why not get rid of the HZ/2, and set scsi_inq_timeout = SCSI_TIMEOUT/HZ +
-> > 4 so we default to 6 again?
-> > 
-> > So if a device needs at least N + .5 seconds then just set the
-> > scsi_inq_timeout to N + 1.
-> 
-> Why do you dislike HZ/2. The number is computed by the compiler at
-> compile time ...
+   1.26.00.038 - Roll driver minor version to 26 to denote kernel 2.6.
+                 Add support for cmds_per_lun module parameter.
+   1.26.00.039 - Fix bug in tw_chrdev_ioctl() polling code.
+                 Fix data_buffer_length usage in tw_chrdev_ioctl().
+                 Update contact information.
 
-It's not the HZ/2 I dislike, just the adjustment of the timeout value.
+Please apply.
 
-> > >  	SCSI_LOG_SCAN_BUS(3, printk(KERN_INFO "scsi scan: 1st INQUIRY %s with"
-> > >  			" code 0x%x\n", sreq->sr_result ?
-> > > @@ -393,7 +400,7 @@ static void scsi_probe_lun(struct scsi_r
-> > >  		memset(inq_result, 0, possible_inq_resp_len);
-> > >  		scsi_wait_req(sreq, (void *) scsi_cmd,
-> > >  			      (void *) inq_result,
-> > > -			      possible_inq_resp_len, SCSI_TIMEOUT + 4 * HZ, 3);
-> > > +			      possible_inq_resp_len, (1+scsi_inq_timeout)*(HZ/2), 3);
-> > 
-> > IMO just make the two timeouts the same and avoid any potential problems
-> > (like some funky device always takes 4 seconds to reponsd to an INQUIRY).
-> 
-> It's really only the reset recivery time which makes us choose such long
-> times. Otherwise SCSI_TIMEOUT would be _plenty_ of time to answer an 
-> INQUIRY. An INQUIRY is easier: No medium access is needed, see SPC3.
-> When this second INQUIRY is done, a first one has succeeded already, so 
-> the recovery from the reset has happened already.
+Thanks,
 
-> Anyway, if you dislike it, I don't care much. If the first INQUIRY
-> succeeded, it's very unlikely that the second one fails, so the timeout
-> is even less important in real life.
+-Adam Radford
 
-It should be plenty of time, but you can't guarantee it, so it's better to
-be cautious and just use the same timeout.
+diff -Naur linux-2.6.6-rc2/drivers/scsi/3w-xxxx.c linux-2.6.6-rc3/drivers/scsi/3w-xxxx.c
+--- linux-2.6.6-rc2/drivers/scsi/3w-xxxx.c	2004-04-03 19:38:17.000000000 -0800
++++ linux-2.6.6-rc3/drivers/scsi/3w-xxxx.c	2004-04-21 15:27:29.000000000 -0700
+@@ -1,12 +1,12 @@
+ /* 
+    3w-xxxx.c -- 3ware Storage Controller device driver for Linux.
+ 
+-   Written By: Adam Radford <linux@3ware.com>
++   Written By: Adam Radford <linuxraid@amcc.com>
+    Modifications By: Joel Jacobson <linux@3ware.com>
+    		     Arnaldo Carvalho de Melo <acme@conectiva.com.br>
+                      Brad Strand <linux@3ware.com>
+ 
+-   Copyright (C) 1999-2003 3ware Inc.
++   Copyright (C) 1999-2004 3ware Inc.
+ 
+    Kernel compatiblity By: 	Andre Hedrick <andre@suse.com>
+    Non-Copyright (C) 2000	Andre Hedrick <andre@suse.com>
+@@ -47,10 +47,10 @@
+    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA 
+ 
+    Bugs/Comments/Suggestions should be mailed to:                            
+-   linux@3ware.com
++   linuxraid@amcc.com
+ 
+    For more information, goto:
+-   http://www.3ware.com
++   http://www.amcc.com
+ 
+    History
+    -------
+@@ -179,6 +179,11 @@
+    1.02.00.036 - Increase character ioctl timeout to 60 seconds.
+    1.02.00.037 - Fix tw_ioctl() to handle all non-data ATA passthru cmds
+                  for 'smartmontools' support.
++   1.26.00.038 - Roll driver minor version to 26 to denote kernel 2.6.
++                 Add support for cmds_per_lun module parameter.
++   1.26.00.039 - Fix bug in tw_chrdev_ioctl() polling code.
++                 Fix data_buffer_length usage in tw_chrdev_ioctl().
++                 Update contact information.
+ */
+ 
+ #include <linux/module.h>
+@@ -205,6 +210,7 @@
+ #include <linux/reboot.h>
+ #include <linux/spinlock.h>
+ #include <linux/interrupt.h>
++#include <linux/moduleparam.h>
+ 
+ #include <asm/errno.h>
+ #include <asm/io.h>
+@@ -242,10 +248,15 @@
+ };
+ 
+ /* Globals */
+-char *tw_driver_version="1.02.00.037";
++char *tw_driver_version="1.26.00.039";
+ TW_Device_Extension *tw_device_extension_list[TW_MAX_SLOT];
+ int tw_device_extension_count = 0;
+ static int twe_major = -1;
++static int cmds_per_lun;
++
++/* Module parameters */
++module_param(cmds_per_lun, int, 0);
++MODULE_PARM_DESC(cmds_per_lun, "Maximum commands per LUN");
+ 
+ /* Functions */
+ 
+@@ -683,7 +694,7 @@
+ 			break;
+ 		case TW_OP_AEN_LISTEN:
+ 			dprintk(KERN_WARNING "3w-xxxx: tw_chrdev_ioctl(): caught TW_AEN_LISTEN.\n");
+-			memset(tw_ioctl->data_buffer, 0, tw_ioctl->data_buffer_length);
++			memset(tw_ioctl->data_buffer, 0, data_buffer_length);
+ 
+ 			spin_lock_irqsave(tw_dev->host->host_lock, flags);
+ 			if (tw_dev->aen_head == tw_dev->aen_tail) {
+@@ -738,7 +749,7 @@
+ 			timeout = TW_IOCTL_CHRDEV_TIMEOUT*HZ;
+ 
+ 			/* Now wait for the command to complete */
+-			wait_event_interruptible_timeout(tw_dev->ioctl_wqueue, tw_dev->chrdev_request_id == TW_IOCTL_CHRDEV_FREE, timeout);
++			timeout = wait_event_interruptible_timeout(tw_dev->ioctl_wqueue, tw_dev->chrdev_request_id == TW_IOCTL_CHRDEV_FREE, timeout);
+ 
+ 			/* Check if we timed out, got a signal, or didn't get
+ 			   an interrupt */
+@@ -777,7 +788,7 @@
+ 	}
+ 
+ 	/* Now copy the response to userspace */
+-	error = copy_to_user((void *)arg, tw_ioctl, sizeof(TW_New_Ioctl) + tw_ioctl->data_buffer_length - 1);
++	error = copy_to_user((void *)arg, tw_ioctl, sizeof(TW_New_Ioctl) + data_buffer_length - 1);
+ 	if (error == 0)
+ 		retval = 0;
+ out2:
+@@ -1141,14 +1152,6 @@
+ 			/* Set card status as online */
+ 			tw_dev->online = 1;
+ 
+-#ifdef CONFIG_3W_XXXX_CMD_PER_LUN
+-			tw_host->cmd_per_lun = CONFIG_3W_XXXX_CMD_PER_LUN;
+-			if (tw_host->cmd_per_lun > TW_MAX_CMDS_PER_LUN)
+-				tw_host->cmd_per_lun = TW_MAX_CMDS_PER_LUN;
+-#else
+-			/* Use SHT cmd_per_lun here */
+-			tw_host->cmd_per_lun = TW_MAX_CMDS_PER_LUN;
+-#endif
+ 			tw_dev->free_head = TW_Q_START;
+ 			tw_dev->free_tail = TW_Q_START;
+ 			tw_dev->free_wrap = TW_Q_LENGTH - 1;
+@@ -3386,13 +3389,13 @@
+ 
+ 	dprintk(KERN_WARNING "3w-xxxx: tw_slave_configure()\n");
+ 
+-#ifdef CONFIG_3W_XXXX_CMD_PER_LUN
+-	max_cmds = CONFIG_3W_XXXX_CMD_PER_LUN;
+-	if (max_cmds > TW_MAX_CMDS_PER_LUN)
++	if (cmds_per_lun) {
++		max_cmds = cmds_per_lun;
++		if (max_cmds > TW_MAX_CMDS_PER_LUN)
++			max_cmds = TW_MAX_CMDS_PER_LUN;
++	} else {
+ 		max_cmds = TW_MAX_CMDS_PER_LUN;
+-#else
+-	max_cmds = TW_MAX_CMDS_PER_LUN;
+-#endif
++	}
+ 	scsi_adjust_queue_depth(SDptr, MSG_ORDERED_TAG, max_cmds);
+ 
+ 	return 0;
+@@ -3488,6 +3491,7 @@
+ 	.eh_abort_handler	= tw_scsi_eh_abort,
+ 	.eh_host_reset_handler	= tw_scsi_eh_reset,
+ 	.bios_param		= tw_scsi_biosparam,
++	.slave_configure	= tw_slave_configure,
+ 	.can_queue		= TW_Q_LENGTH-2,
+ 	.this_id		= -1,
+ 	.sg_tablesize		= TW_MAX_SGL_LENGTH,
+diff -Naur linux-2.6.6-rc2/drivers/scsi/3w-xxxx.h linux-2.6.6-rc3/drivers/scsi/3w-xxxx.h
+--- linux-2.6.6-rc2/drivers/scsi/3w-xxxx.h	2004-04-03 19:36:45.000000000 -0800
++++ linux-2.6.6-rc3/drivers/scsi/3w-xxxx.h	2004-04-21 15:27:30.000000000 -0700
+@@ -1,12 +1,12 @@
+ /* 
+    3w-xxxx.h -- 3ware Storage Controller device driver for Linux.
+    
+-   Written By: Adam Radford <linux@3ware.com>
++   Written By: Adam Radford <linuxraid@amcc.com>
+    Modifications By: Joel Jacobson <linux@3ware.com>
+    		     Arnaldo Carvalho de Melo <acme@conectiva.com.br>
+                      Brad Strand <linux@3ware.com>
+ 
+-   Copyright (C) 1999-2003 3ware Inc.
++   Copyright (C) 1999-2004 3ware Inc.
+ 
+    Kernel compatiblity By:	Andre Hedrick <andre@suse.com>
+    Non-Copyright (C) 2000	Andre Hedrick <andre@suse.com>
+@@ -45,10 +45,10 @@
+    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA 
+ 
+    Bugs/Comments/Suggestions should be mailed to:                            
+-   linux@3ware.com
++   linuxraid@amcc.com
+    
+    For more information, goto:
+-   http://www.3ware.com
++   http://www.amcc.com
+ */
+ 
+ #ifndef _3W_XXXX_H
 
--- Patrick Mansfield
