@@ -1,51 +1,66 @@
-From: Rock Gordon <rockgordon@yahoo.com>
-Subject: WWN on FC LUN targets
-Date: Tue, 27 Jul 2004 13:55:11 -0700 (PDT)
+From: Matt Domsch <Matt_Domsch@dell.com>
+Subject: Re: [ANNOUNCE]: megaraid driver version 2.20.0.1, now 2.20.2.0
+Date: Tue, 27 Jul 2004 17:38:23 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040727205512.24414.qmail@web41403.mail.yahoo.com>
+Message-ID: <20040727223823.GA2485@lists.us.dell.com>
+References: <0E3FA95632D6D047BA649F95DAB60E57033BC8B1@exa-atlanta>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="EVF5PPMfhYS0aIcm"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from web41403.mail.yahoo.com ([66.218.93.69]:15246 "HELO
-	web41403.mail.yahoo.com") by vger.kernel.org with SMTP
-	id S266646AbUG0UzM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 27 Jul 2004 16:55:12 -0400
+Received: from lists.us.dell.com ([143.166.224.162]:26787 "EHLO
+	lists.us.dell.com") by vger.kernel.org with ESMTP id S266683AbUG0Wio
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 27 Jul 2004 18:38:44 -0400
+Content-Disposition: inline
+In-Reply-To: <0E3FA95632D6D047BA649F95DAB60E57033BC8B1@exa-atlanta>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-
-Hi,
-
-I am looking at ways to find out particular WWN (world
-wide names) for SCSI target LUNs connected to HBAs or
-FC switches through either of the four modes available
-(P2P, Fabric, AL and Fabric-AL)
-
-Also, is there a programming interface to do this
-across all available hardware? If that's not possible,
-then other solutions are most welcome.
-
-I want to be able to convert particular WWNs into
-local major/minor number combination for my datacenter
-SAN so that I can mount particular LUNs from any
-server without worrying about changes in the device
-naming conventions.
-
-PS: can devfs solve this problem across a deployment
-of 128-port FC switche connected to about 50 storage
-LUNs (all FC-capable P2P linked RAID5 storage units)?
-(please note that hotplug and unplug activity goes on
-happening over the remaining nodes)
-
-PS1: Please CC me since I'm not on the list (I wonder
-why :) )
-
-Thanks and regards,
-Rocky
+To: "Mukker, Atul" <Atulm@lsil.com>
+Cc: 'James Bottomley' <James.Bottomley@SteelEye.com>, 'Christoph Hellwig' <hch@infradead.org>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
 
 
-	
-		
-__________________________________
-Do you Yahoo!?
-New and Improved Yahoo! Mail - 100MB free storage!
-http://promotions.yahoo.com/new_mail 
+--EVF5PPMfhYS0aIcm
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+
+On Fri, Jul 23, 2004 at 06:02:49PM -0400, Mukker, Atul wrote:
+> All,
+>=20
+> Here is the patch for the 2.20.2.0 as per suggestions made by James
+> Bottomley. The details are available in the changelog. As usual, the driv=
+er
+> package with kernel patches, complete driver code, and this patch is
+> available for download from
+> ftp://ftp.lsil.com/pub/linux-megaraid/drivers/version-2.20.2.0/ as well.
+
+
+Something else to clean up after inclusion: every instance of an
+inline function is actually rendered as a full function call, because
+the function is always used before it is defined.  Atul, please
+re-arrange the code to eliminate the need for most (all) of the
+function prototypes at the top of each file, and define (not just
+declare with a prototype) each inline function before its first use.
+
+Thanks,
+Matt
+
+--=20
+Matt Domsch
+Sr. Software Engineer, Lead Engineer
+Dell Linux Solutions linux.dell.com & www.dell.com/linux
+Linux on Dell mailing lists @ http://lists.us.dell.com
+
+--EVF5PPMfhYS0aIcm
+Content-Type: application/pgp-signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.2.1 (GNU/Linux)
+
+iD8DBQFBBtlfIavu95Lw/AkRAjQ6AJ4/Feyq+lEowzeRT48IeFtXgq2PMQCeJg+C
+U8dNMYMFrgV86cRMdkQSsRE=
+=tI8p
+-----END PGP SIGNATURE-----
+
+--EVF5PPMfhYS0aIcm--
