@@ -1,44 +1,43 @@
-From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
-Subject: RE: How to add/drop SCSI drives from within the driver?
-Date: Wed, 8 Dec 2004 15:49:10 -0500
-Message-ID: <60807403EABEB443939A5A7AA8A7458B7F50FF@otce2k01.adaptec.com>
+From: "Frank Borich" <Frank_Borich@us.xyratex.com>
+Subject: read capacity 16
+Date: Wed, 8 Dec 2004 13:07:44 -0800
+Message-ID: <47F3C2BE74738E4683574107469DFA20678395@XYUSEX01.xyus.xyratex.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
 	charset="us-ascii"
 Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from magic.adaptec.com ([216.52.22.17]:54187 "EHLO magic.adaptec.com")
-	by vger.kernel.org with ESMTP id S261308AbULHUtO convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 8 Dec 2004 15:49:14 -0500
-content-class: urn:content-classes:message
+Received: from xyratexus11.xyratex.com ([65.203.33.11]:47248 "EHLO
+	XYUSEX01.xyus.xyratex.com") by vger.kernel.org with ESMTP
+	id S261361AbULHVHp convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Dec 2004 16:07:45 -0500
+Content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Arjan van de Ven <arjan@infradead.org>, Bryan Henderson <hbryan@us.ibm.com>
-Cc: Matthew Wilcox <matthew@wil.cx>, Andrew Morton <akpm@osdl.org>, "Mukker, Atul" <Atulm@lsil.com>, brking@us.ibm.com, bunk@fs.tum.de, "Doelfel, Hardy" <hdoelfel@lsil.com>, James Bottomley <James.Bottomley@SteelEye.com>, linux-scsi@vger.kernel.org, Matt Domsch <Matt_Domsch@dell.com>, "Ju, Seokmann" <sju@lsil.com>, "Bagalkote, Sreenivas" <sreenib@lsil.com>
+To: linux-scsi@vger.kernel.org
 
->On Wed, 2004-12-08 at 15:08 -0500, Bryan Henderson wrote:
->>>> I would also suggest __attribute__((packed)) since you're sharing
-with
->>>That's a bad idea, it forces the compiler to pessimise accesses to
+Please forgive my ignorance here.  
+ 
+I am unable to get the kernel (2.4.21) to send a read capacity 16 to a
+lun
+that requires more than 4 bytes to specify it's last LBA, automatically.
+If I
+use the sg driver to send a read capacity 16 staraight away, it works
+fine.  
+I am using the qlogic device driver 7.00.03 (which I believe supports 16
+byte commands).  
+ 
+When I do the bus scan (using modprobe), a READ CAPACITY 10 is sent 
+and FFFFFFFF is returned in LBA field, this should signal linux kernel
+to
+send larger READ CAPACITY 16 to get correct size but it's not.  Instead
 the
->>>struct on most hardware.
->> How?  We're assuming that it won't actually affect the layout of this
-
->> struct, so what does the compiler pessimize?
->it also makes the compiler assume the struct members aren't aligned to
->the natural alignment and thus it'll emit more expensive access paterns
->on architectures that care about such things.
-
-Time to fix the compiler?
-
-Years of writing in itty bitty living spaces resulting in application
-specific coding patterns has convinced me of one fact; it is not worth
-it.
-
-We are talking about not using a feature of the compiler for kernel/user
-space portability in a rarely used interface because of petty
-optimization issues.
-
-Sincerely -- Mark Salyzyn
-
+lun is seen as 0 MB in size.  
+ 
+I can't seem to find any good documentation on this.  Can I patch this
+kernel
+to do this ?
+ 
+Regards,
+ 
+Frank
