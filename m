@@ -1,32 +1,100 @@
-From: Sancho Dauskardt <sancho@dauskardt.de>
+From: Andries.Brouwer@cwi.nl
 Subject: Re: /proc/scsi/map
-Date: Sun, 16 Jun 2002 00:40:50 +0200
+Date: Sun, 16 Jun 2002 01:00:50 +0200 (MEST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <5.0.2.1.2.20020616003031.02a06330@pop.puretec.de>
-References: <UTC200206152154.g5FLsCI23053.aeb@smtp.cwi.nl>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"; format=flowed
+Message-ID: <UTC200206152300.g5FN0oI14286.aeb@smtp.cwi.nl>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <3D0BBF4B.42E355A6@torque.net>
 List-Id: linux-scsi@vger.kernel.org
-To: Douglas Gilbert <dougg@torque.net>, Andries.Brouwer@cwi.nl
-Cc: garloff@suse.de, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-usb-devel@lists.sourceforge.net, linux1394-devel@lists.sourceforge.net
+To: Andries.Brouwer@cwi.nl, dougg@torque.net
+Cc: garloff@suse.de, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+
+    From dougg@torque.net  Sat Jun 15 23:10:06 2002
+
+    In the lsml "[RFC] Persistent naming of scsi devices" thread
+    Martin K. Petersen <mkp@mkp.net> summarized scsi addressing issues
+    thus:
+    #
+    # What we want is (at least) three ways of addressing a device:
+    #
+    # 1. By content.  This is the persistent naming.  Think
+    #    filesystem/MD/LVM UUID.  This is what you put in /etc/fstab and
+    #    what metadisk systems use to assemble logical volumes.
+    #
+    #    Content referencing is used for accessing data.
+    #
+    # 2. By physical path.  This naming is not persistent.  Not even runtime
+    #    because hotplug, iSCSI and whatnot may mess things up.
+    #
+    #    Path naming is for discovery and recovery.  When you add an
+    #    unlabeled disk you want to reference it by path to give it a name.
+    #    When you have a failed disk on your system you want to know which
+    #    physical device to pull from the array.
+    #
+    # 3. By enumeration.  This is what the kernel happens to be using to
+    #    reference the device.  diskN.  Certainly not persistent.
+    #
+    #    Enumeration is for the kernel.
+
+Yes, a very nice summary. Maybe also
+
+# 4. By fingerprint.  This naming is persistent, but need not
+#    identify the device uniquely.  Think device type, vendor,
+#    serial number, capacity.
+#
+#    Fingerprints are convenient for the user. "My ZIP drive".
 
 
->
->In lk 2.5 we are hoping that driverfs will give us an
->"information bridge" between scsi pseudo devices
->and other driver subsystems such as ide, usb and iee1394.
->Mike Sullivan's persistent naming patch (that I mentioned
->in my previous post on this thread) adds driverfs capability
->into the scsi subsystem. Driverfs capability is already
->in the ide and usb subsystems.
-Driverfs will hopefully solve the problem, of "oh there's a SCSI device. 
-how is it connected ?".
+    The /proc/scsi/map facility proposed by Kurt does a very
+    good job at tying together points 2) and 3) .
 
-But to date, SCSI doesn't know about the GUID's, right ?
-And without this, we won't get a uniform way of creating stable names for 
-hot-plugable devices...
+Yes. Or, more precisely, it ties together the name sde and the
+path (C,B,T,U) = (3,0,00,01). However, this path is not very
+"physical". Indeed, these four numbers all arose by enumeration -
+they are kernel numbers for some usb-storage device.
 
-- sda
+I can find the physical path, but that requires quite some digging in
+/proc/scsi/scsi and /proc/scsi/sg/host_strs and /proc/scsi/usb-storage*/*
+and /proc/bus/usb/devices.
 
+
+    > Very good - in combination with /proc/scsi/scsi this gives
+    > good information. I like it.
+
+    Adding INQUIRY strings would make it harder to parse and more
+    cluttered for humans to read.
+
+Yes, I would like to leave that to a user-space utility.
+Writing that will also show what kernel facilities are missing.
+
+    > But just "cat /proc/scsi/map" is not good enough.
+    > From the above output alone one cannot easily guess which is which.
+    > One would need a small utility that reads /proc/scsi/map and
+    > /proc/scsi/scsi and produces something readable.
+
+    Note the possible race condition: reading /proc/scsi/scsi
+    then /proc/scsi/map (or vice versa) when a hotplug is
+    occurring...
+
+Already reading /proc/scsi/map has a race: no locking is done.
+
+    > Will add sth to util-linux in case this gets accepted.
+
+    IMO as soon as lk 2.4.19 comes out, this patch should
+    be presented to Marcelo (for inclusion in lk 2.4.20).
+
+Yes, perhaps. I would like to get some experience first,
+play with it, see what information is missing.
+
+I have to admit that 2.5 is not very suitable for development
+these days, it is not stable enough, but the appropriate path
+is to try things out in 2.5 first, and when something crystallizes
+out, backport.
+
+    The sooner we get it into the lk 2.5 series the better. Could you 
+    forward your lk 2.5 version of Kurt's patch to Linus (and the
+    linux-scsi list)?
+
+Yes, but I'll wait for 2.5.22 so that it is clear against
+what tree to diff.
+
+Andries
