@@ -1,52 +1,48 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
+From: Alan Stern <stern@rowland.harvard.edu>
 Subject: Re: BUG: CD driver sends command during host removal
-Date: 11 Oct 2004 14:36:09 -0500
+Date: Mon, 11 Oct 2004 16:03:37 -0400 (EDT)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1097523375.1714.167.camel@mulgrave>
-References: <Pine.LNX.4.44L0.0410111513400.21084-100000@netrider.rowland.org>
+Message-ID: <Pine.LNX.4.44L0.0410111558460.21084-100000@netrider.rowland.org>
+References: <1097523375.1714.167.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat16.steeleye.com ([209.192.50.48]:45220 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S269198AbUJKTgV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 11 Oct 2004 15:36:21 -0400
-In-Reply-To: <Pine.LNX.4.44L0.0410111513400.21084-100000@netrider.rowland.org>
+Received: from netrider.rowland.org ([192.131.102.5]:8979 "HELO
+	netrider.rowland.org") by vger.kernel.org with SMTP id S269207AbUJKUDh
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 11 Oct 2004 16:03:37 -0400
+In-Reply-To: <1097523375.1714.167.camel@mulgrave>
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
+To: James Bottomley <James.Bottomley@SteelEye.com>
 Cc: Mike Anderson <andmike@us.ibm.com>, SCSI development list <linux-scsi@vger.kernel.org>
 
-On Mon, 2004-10-11 at 14:20, Alan Stern wrote:
-> James Bottomley [James.Bottomley@SteelEye.com] wrote:
-> > That's why LLD's are responsible for erroring all commands issued at
-> > this time if the removal is a surprise ejection.  The commands have to
-> > be errored in a way (like DID_NO_CONNECT) that won't excite the error
-> > handler.
+On 11 Oct 2004, James Bottomley wrote:
+
+> > But scsi_remove_host isn't synchronized at all with queuecommand, so what
+> > about commands that arrive at just about _the same time_ as when
+> > scsi_remove_host is called?  The LLD has no way to tell which class such a
+> > command belongs to.  What then?
 > 
-> This raises a question for the case where the host removal is not a
-> surprise ejection.  The LLD knows to clean up commands from _before_ doing
-> scsi_remove_host, and it knows that it should handle commands from _after_
-> calling scsi_remove_host.
+> The host's job is simply to send commands to the device ... if the
+> device (or host) still exists in the system, you send them; if it
+> doesn't, you error them.
 > 
-> But scsi_remove_host isn't synchronized at all with queuecommand, so what
-> about commands that arrive at just about _the same time_ as when
-> scsi_remove_host is called?  The LLD has no way to tell which class such a
-> command belongs to.  What then?
+> Even in the notified ejection case, there's no upper bound on the time
+> it will take hotplug to clean up ... this can be particularly long if
+> the user has things mounted and doesn't let us simply kill everything on
+> the filesystem.
+> 
+> So the only difference as far as the HBA sees it is that for notified
+> ejection, when it calls scsi_remove_host() it can still send commands. 
+> For surprise ejection, the device is gone and it must error.
 
-The host's job is simply to send commands to the device ... if the
-device (or host) still exists in the system, you send them; if it
-doesn't, you error them.
+The problem arises when a command completes.  In the notified ejection 
+case, if the LLD tries to call the scsi_done routine for a completed 
+command which was submitted before scsi_remove_host and which the SCSI 
+core has already cleaned up, it will cause an oops.  Since the LLD has no 
+way to tell whether the core has cleaned up a command or not, its only 
+choice is to fail _every_ command starting shortly before it calls 
+scsi_remove_host.
 
-Even in the notified ejection case, there's no upper bound on the time
-it will take hotplug to clean up ... this can be particularly long if
-the user has things mounted and doesn't let us simply kill everything on
-the filesystem.
-
-So the only difference as far as the HBA sees it is that for notified
-ejection, when it calls scsi_remove_host() it can still send commands. 
-For surprise ejection, the device is gone and it must error.
-
-James
-
+Alan Stern
 
