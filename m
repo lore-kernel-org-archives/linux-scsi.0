@@ -1,35 +1,49 @@
-From: Zwane Mwaikambo <zwane@linuxpower.ca>
-Subject: Re: 2.5.63/64 do not boot: loop in scsi_error
-Date: Thu, 6 Mar 2003 04:58:47 -0500 (EST)
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.50.0303060455560.25282-100000@montezuma.mastecende.com>
-References: <UTC200303060639.h266dIo22884.aeb@smtp.cwi.nl>
- <20030306064921.GA1425@beaverton.ibm.com>
- <Pine.LNX.4.50.0303060256200.25282-100000@montezuma.mastecende.com>
- <20030306083054.GB1503@beaverton.ibm.com>
- <Pine.LNX.4.50.0303060331030.25282-100000@montezuma.mastecende.com>
- <20030306085506.GB2222@beaverton.ibm.com>
- <Pine.LNX.4.50.0303060354550.25282-100000@montezuma.mastecende.com>
- <20030306091824.GA2577@beaverton.ibm.com>
+From: Oliver Neukum <oliver@neukum.name>
+Subject: Re: [PATCH / RFC] scsi_set_host_offline
+Date: Thu, 6 Mar 2003 15:33:39 +0100
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <200303061533.39375.oliver@neukum.name>
+References: <20030303221532.GB1587@beaverton.ibm.com> <200303052049.16538.oliver@neukum.name> <20030305223504.GB4014@beaverton.ibm.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
-In-Reply-To: <20030306091824.GA2577@beaverton.ibm.com>
-To: Mike Anderson <andmike@us.ibm.com>
-Cc: Andries.Brouwer@cwi.nl, torvalds@transmeta.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <20030305223504.GB4014@beaverton.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
+To: Mike Anderson <andmike@us.ibm.com>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Matthew Dharm <mdharm-scsi@one-eyed-alien.net>
 
-On Thu, 6 Mar 2003, Mike Anderson wrote:
+> > What exactly is a refcount supposed to do? It doesn't help the main
+> > problem. You must prevent new references arising. This requires locking
+> > and flags.
+>
+> Refcounting is need for proper freeing so it needs to be part of the
+> solution. We need to have the refcounting implementation prevent gets
+> post "offline"
+>
+> Yes, currently the kobject_get does not contain any support for
+> preventing the incrementing of the ref count. This needs to be wrapped
+> by the implementor (I believe as I do not see the object state support
+> being implemented in the core code).
 
-> Would it be possible for you to send me a console output with
-> scsi_logging=1 so that I can narrow down the failure case.
+True but it misses an important part of the problem. It mixes references
+through IO in progress with devices attached to a host. These are independent
+issues.
 
-The following is from 2.5.63-mjb2
+> It is not required, but lack of any online state in a driver will
+> possibly cause extended time to cancel the IO. We would not want
+> excessive checking in the main IO path so there will be code that races
+> with "offline" and makes it to queuecommand.
 
-http://function.linuxpower.ca/patches/numaq/dmesg-scsi_logging
+The main IO path is independent of the problems arising from offlining a
+host. This issue must be dealt with in connection with offlining a _device_.
 
-The [disconnect] point is where it locks up
+However offlining a host causes additional problems because devices
+can be added and taken away from a host.
+It takes a flag to make sure that no further devices can be added to the
+host. This does not influence the main IO path, only device detection
+and removal, which are not critical to performance.
 
-	Zwane
--- 
-function.linuxpower.ca
+	Regards
+		Oliver
+
