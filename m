@@ -1,47 +1,37 @@
-From: Michal Kepien <lordpopcorn@poczta.onet.pl>
-Subject: Kernel migration: 2.4.7-10 -> 2.4.19 - different filenames on the CD
-Date: Thu, 03 Jul 2003 18:12:03 +0200
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: aic7xxx driver schedules() while holding spinlock
+Date: Thu, 3 Jul 2003 15:55:58 -0400 (EDT)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <vjk8gvkkns3sk8h9qfs978ak0qmmkou504@4ax.com>
+Message-ID: <Pine.LNX.4.44L0.0307031539500.647-100000@ida.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 8BIT
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.poczta.onet.pl ([213.180.130.31]:36048 "EHLO
-	smtp1.poczta.onet.pl") by vger.kernel.org with ESMTP
-	id S264432AbTGCP6S (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 3 Jul 2003 11:58:18 -0400
+Received: from ida.rowland.org ([192.131.102.52]:2052 "HELO ida.rowland.org")
+	by vger.kernel.org with SMTP id S265291AbTGCTlb (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Jul 2003 15:41:31 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: SCSI development list <linux-scsi@vger.kernel.org>
 
-Hi there. I've got a problem with migrating to kernel 2.4.19. I've got
-a Creative CD-ROM and an LG CD-RW drive. I'm writing to this list
-because the second drive (CD-RW) is using SCSI emulation (/dev/cdrom1
--> /dev/scd0). So, here's the story.
+To the aic7xxx maintainers:
 
-When I was using the stack 2.4.7-10 kernel (RH 7.2 Enigma), everything
-worked fine and the filenames on the mounted CDs were read correctly,
-(e.g. directory name: 'Linux kernel 2.4.19', file name:
-'linux-2.4.19.tar.gz'). Since I upgraded the kernel to version 2.4.19,
-the drives work correctly as well, but the file and directories name
-are different (for the examples above: directory name: 'linux kernel
-24.19', file name: 'linux-2419tar.gz').
+Just in case you aren't already aware, the aic7xxx driver calls routines
+that can block while it holds a spinlock.  Here are a couple of call
+trees:
 
-When I, for example, copy the archive mentioned above to the hard
-disk, change the extension (there is no '.' before 'tar.gz') and run
-the extraction command, it works OK. However, it is strange for me
-that such a weird change in names happened.
-
-Could you tell me what can possibly cause this and how to correct the
-error? It's not a big problem, but I like when everything works just
-as I want :)
-
-Thanks for your help,
-Michal Kepien
+	ahc_linux_exit();   [acquires ahc_list_lock] 
+	 ahc_linux_kill_dv_thread(ahc);
+	  down(&ahc->platform_data->eh_sem);
 
 
--- 
-Lord Popcorn
-lordpopcorn@poczta.onet.pl
+	ahc_linux_exit();
+	 ahc_linux_pci_exit();
+	  pci_unregister_driver(&aic7xxx_pci_driver);
+	   ahc_linux_pci_dev_remove(struct pci_dev *pdev);
+			[acquires ahc_list_lock]
+	    ahc_free(ahc);
+	     ahc_platform_free(ahc);
+	      scsi_remove_host(ahc->platform_data->host);
+which calls sysfs routines that sleep in several places.
 
-"The UPL leaders formulated a bold plan that would assure that humanity would persevere, unscathed by the tempting corruption of radical technologies." --- Blizzard Ent.
+Alan Stern
+
