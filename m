@@ -1,38 +1,50 @@
-From: Alan <corptch@iafrica.com>
-Subject: Kouwell SCSI controller KW830 (advansys asc3030)
-Date: Mon, 18 Nov 2002 01:00:16 +0200
+From: "Ming Zhang" <mingz@ele.uri.edu>
+Subject: Re: Re: about scsi_hostlist
+Date: Sun, 17 Nov 2002 18:3:19 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3DD81F80.1050502@iafrica.com>
+Message-ID: <200211172304.gAHN4h99024044@leviathan.ele.uri.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain;
+      charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rdg-dial-196-30-237-217.mweb.co.za ([196.30.237.217] helo=iafrica.com)
-	by smtp04.iafrica.com with esmtp (Exim 3.33 #1)
-	id 18DYLq-0003Nz-00
-	for linux-scsi@vger.kernel.org; Mon, 18 Nov 2002 00:57:15 +0200
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-Dear Developer
 
-Please excuse my writing directly to you, but I have searched
-the internet in vain for an answer to this question:
 
-Will the Advansys SCSI drivers (for kernel 2.4.18 in
-particular) drive the Kouwell KW830 SCSI controller card?
-It is apparently powered by an Advansys ASC3030 chipset.
-The Kouwell cards are exceptionally well-priced, but it
-would be nice to know the answer before purchasing one.
 
-And, if they're not supported in 2.4.18, might they be
-in future?
+======= At 2002-11-17, 22:57:00 you wrote: =======
 
-What about the Adaptec 2904 card?  I see no mention of it
-in any of the Adaptec drivers' documentation.
+>On Sun, Nov 17, 2002 at 05:43:38PM -0500, Ming Zhang wrote:
+>> >Why you just do this in userspace?
+>> >
+>> that iscsi target have to be a kernel module.
+>
+>why?
+basically, an iscsi target tell clients how many scsi devices it has, then iscsi client login and get a reference from it. might be an id stand for a certain scsi device, for example, the lun. then client send request and target get this request, check which scsi device the request want to operate on, and call routine to finish it. since the main operations is tcp/ip send/recv and scsi read/write. I think write it as a kernel module is more suitable. and currently, all iscsi reference implementation on 2.4.x kernel are kernel modules.
+>
+>> >Umm, no.  Nothing but upperlayer drivers is supposed to talk to the scsi
+>> >midlayer directly. Implement an upperlayer driver and check for disks in
+>> >->attach instead.
+>> ~~~would u like to explain this in more detail? which ->attach?
+>
+>The attach routine of the upper layer driver.  See struct
+>Scsi_Device_Template in hosts.h or look at one of the existing upper
+>layer drivers (like sd or sr)
+thx, i will check that.
+>
+>-
+>To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+>the body of a message to majordomo@vger.kernel.org
+>More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+>.
 
-Yours sincerely
-Alan Watson
-Proprietor
-Corporate Technologies
+= = = = = = = = = = = = = = = = = = = =
+			
+
+
+
 
