@@ -1,94 +1,67 @@
-From: Pat LaVarre <p.lavarre@ieee.org>
-Subject: [usb-storage] mode sense blacklist how
-Date: 13 Nov 2003 19:38:30 -0700
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: [PATCH] fix Sony USB mass storage - pass larger receive buffer
+Date: Fri, 14 Nov 2003 12:02:05 +1000
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1068777510.2851.359.camel@patrh9>
-References: <Pine.LNX.4.44L0.0311131638320.949-100000@ida.rowland.org>
-	 <1068767049.2851.166.camel@patrh9>
-	 <1068768796.3fb41e1c8d075@webmail.netregistry.net>
-	 <1068775834.2851.321.camel@patrh9>
-	 <20031113181945.I30194@one-eyed-alien.net>
+Message-ID: <3FB4379D.3060708@torque.net>
+References: <20031112155029.A20986@beaverton.ibm.com>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from email-out2.iomega.com ([147.178.1.83]:46245 "EHLO
-	email.iomega.com") by vger.kernel.org with ESMTP id S264498AbTKNCjD
+Received: from bunyip.cc.uq.edu.au ([130.102.2.1]:29192 "EHLO
+	bunyip.cc.uq.edu.au") by vger.kernel.org with ESMTP id S264500AbTKNCkY
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 13 Nov 2003 21:39:03 -0500
-In-Reply-To: <20031113181945.I30194@one-eyed-alien.net>
+	Thu, 13 Nov 2003 21:40:24 -0500
+In-Reply-To: <20031112155029.A20986@beaverton.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: mdharm-scsi@one-eyed-alien.net
-Cc: usb-storage@one-eyed-alien.net, linux-scsi@vger.kernel.org, dmitrik@users.sourceforge.net, stern@rowland.harvard.edu, patmans@us.ibm.com, james.bottomley@steeleye.com, ronald@kuetemeier.com, idan@idanso.dyndns.org
+To: Patrick Mansfield <patmans@us.ibm.com>
+Cc: James Bottomley <James.Bottomley@steeleye.com>, linux-scsi@vger.kernel.org, usb-storage@one-eyed-alien.net, ronald@kuetemeier.com, dmitrik@users.sourceforge.net, idan@idanso.dyndns.org
 
-> The point is to create as narrow an exception as possible.
-
-Yes please.
-
-> ...
-
-To accomodate this device are we asking Dmitri K to give one last shot
-to telling us if kernel crash, boot fs crash, or other is the result of
-each of the twelve:
-
-> > -i xC0 -y "1A 00:1C:00 C0 00" // Mode Sense (6)
-> > -i xC0 -y "1A 00:3F:00 C0 00" // Mode Sense (6)
-> > -i x0C -y "1A 00:00:00 0C 00" // Mode Sense (6)
-> > -i x0C -y "1A 00:3F:00 0C 00" // Mode Sense (6)
-> ...
-> -p -i xC0 -y "5A 00 1C:00:00:00 00 00:C0 00 00:00" // Mode Sense (10)
-> -p -i xC0 -y "5A 00 3F:00:00:00 00 00:C0 00 00:00" // Mode Sense (10)
-> -p -i x0C -y "5A 00 00:00:00:00 00 00:0C 00 00:00" // Mode Sense (10)
-> -p -i x0C -y "5A 00 3F:00:00:00 00 00:0C 00 00:00" // Mode Sense (10)
-> ...
-> -p -i xC4 -y "5A 00 1C:00:00:00 00 00:C4 00 00:00" // Mode Sense (10)
-> -p -i xC4 -y "5A 00 3F:00:00:00 00 00:C4 00 00:00" // Mode Sense (10)
-> -p -i x10 -y "5A 00 00:00:00:00 00 00:10 00 00:00" // Mode Sense (10)
-> -p -i x10 -y "5A 00 3F:00:00:00 00 00:10 00 00:00" // Mode Sense (10)
-
-?
-
-> To blacklist bInterfaceSubClass = 0xFF, you'll have to do that at the
-> usb-storage layer (not the SCSI layer).  I generally object to that, but
-> not very strongly -- I want usb-storage to be as simple/dumb as possible,
-> to reduce to number of places where it doesn't do what the end-user
-> expects.  (The principle of least suprise)
+Patrick Mansfield wrote:
+> James - can you please apply? This should not affect other devices since
+> we are not changing the requested length, just the size of the receive
+> buffer.
 > 
-> If the blacklist was implemented such that it only blacklisted
-> direct-access devices, and only MODE_SENSE and MODE_SENSE_10, and provided
-> fake sense data, then it would probably work.  Messy, but it would work.
+> This patch against a recent 2.6 bk fixes problems with Sony USB mass
+> storage devices: they are sending back 10 bytes even when we ask for 8
+> bytes (USB babble).
+> 
+> Just use a larger receive buffer for MODE SENSE even though we are
+> requesting 8 bytes.
+> 
+> Tested by Ronald Kuetemei with his Sony camera, also tested with a USB CF
+> card reader.
+> 
+> diff -uprN -X /home/patman/dontdiff bl-25/drivers/scsi/scsi_lib.c modesense-bufflen-bk-2.5/drivers/scsi/scsi_lib.c
+> --- bl-25/drivers/scsi/scsi_lib.c	Mon Sep 29 12:21:09 2003
+> +++ modesense-bufflen-bk-2.5/drivers/scsi/scsi_lib.c	Mon Nov 10 15:42:03 2003
 
-I remember already in usb-storage we intercept op x12 Inquiry (to munge
-bytes[2] compliance to x02 from x00).
+<snip>
 
-I figure there we can flip a bit to say we saw (byte[0] & x1F) PDT = x00
-HDD/Flash.  To name & allot the bit, I can follow our earlier incomplete
-usb-trace efforts ... urgh, we have no googlable usb-storage archive, I
-will review source and see if I remember.
+>  
+> +	WARN_ON((buf_len < 8) || (buf_len < len));
+> +	if (buf_len > 255)
+> +		buf_len = 255;
+> +	if (len > 255)
+> +		len = 255;
 
-Nearby I suppose we can find bInterfaceSubClass and compare to xFF.
+Patrick,
+SPC-3 section 6.25 (REQUEST SENSE command) [spc3r15.pdf]
+says the maximum allocation length should be 252 (not
+255). They are steering alway from odd numbers and preferring
+the next lower modulo 4 number.
 
-Then if bit set and SubClass xFF and op is x1A/5A we can simulate
-failure by auto sense of x12 available bytes with residue = all data and
-sk asc = x 5 20 Unsupported Op.
+<snip>
 
-Shall we try that next?
+>  	if (!scsi_status_is_good(res))
+> -		res = sd_do_mode_sense(SRpnt, 0, 0x3F, buffer, 255, &data);
+> +		res = sd_do_mode_sense(SRpnt, 0, 0x3F, buffer, 255, buf_len,
+> +				       &data);
 
-> ...
+dito
 
-Ouch, one last thing: tell me again what device/interface descriptors
-our usb-storage by default tries to support?
 
-Is that bInterfaceClass ...SubClass ...Protocol = x 08 XX (00|01|50)? 
-Or just x 08 (00..06|FF) (00|01|50)?  (Clearly it's not just the
-formally defined x 08 (00..06) (00|01|50).)
-
-I ask because if we're supporting bInterfaceSubClass via
-drivers/usb/storage/unusual_devs.h then we might rather put the
-blacklist there.  But I'm guessing this answer is: x 08 XX (00|01|50),
-so we'd rather blacklist all of x 08 FF (00|01|50), rather than growing
-unusual_devs.h.
-
-Pat LaVarre
+Doug Gilbert
 
 
