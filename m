@@ -1,97 +1,52 @@
-From: Chiaki <ishikawa@yk.rim.or.jp>
-Subject: Re: [PATCH] kill tmscsim ->proc_info
-Date: Wed, 18 Aug 2004 02:03:22 +0900
+From: Arjan van de Ven <arjanv@redhat.com>
+Subject: Re: merge megaraid 2.20.x in kernel 2.6?
+Date: Tue, 17 Aug 2004 19:06:38 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <41223A5A.8090409@yk.rim.or.jp>
-References: <20040817161858.GA16589@lst.de> <4122366E.1040204@yk.rim.or.jp> <20040817164824.GA17074@lst.de>
+Message-ID: <1092762398.2792.11.camel@laptop.fenrus.com>
+References: <20040817160128.GA7127@lists.us.dell.com>
+	 <1092760835.1775.303.camel@mulgrave> <20040817174755.A23872@infradead.org>
+	 <20040817165116.GD7127@lists.us.dell.com>
+Reply-To: arjanv@redhat.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-AGIqXFb91wcGKEoqAbl5"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from serio.al.rim.or.jp ([202.247.191.123]:64399 "EHLO
-	serio.al.rim.or.jp") by vger.kernel.org with ESMTP id S268346AbUHQRDa
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 17 Aug 2004 13:03:30 -0400
-In-Reply-To: <20040817164824.GA17074@lst.de>
+Received: from mx1.redhat.com ([66.187.233.31]:12008 "EHLO mx1.redhat.com")
+	by vger.kernel.org with ESMTP id S266508AbUHQRG6 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 17 Aug 2004 13:06:58 -0400
+In-Reply-To: <20040817165116.GD7127@lists.us.dell.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: g.liakhovetski@gmx.de, linux-scsi@vger.kernel.org
-
-Christoph Hellwig wrote:
-> On Wed, Aug 18, 2004 at 01:46:38AM +0900, Chiaki wrote:
-> 
->>Christoph Hellwig wrote:
->>
->>>hrrible code like all proc_info implementations and no really usefull
->>>information.  We might want to add sysfs attributes if some users really
->>>miss anything.
->>>
->>
->>Setting aside the horribleness of the code and suitability
->>of the code for 2.6.x kernel,
->>I found the information very useful when I did the debugging
->>with tmscsim driver code with
->>a rather obscure CD changer device and
->>other odd SCSI devices.
-> 
-> 
-> What particular information?
-> 
-> 
-
-In the removed code section, there is a loop
-that begins with
-"for (dev = 0; dev < pACB->DCBCnt; dev++)".
-
-I found the information printed by the code up to it
-very informative.
-Now my memory is getting hazy, but from the end user's view
-point those are the informatin very useful.
-A stupid user/administrator mistake like
-forgetting to set lun search in the kernel is
-made pretty obvious by the display.
-(And I remember finding the problem with old linux
-kernel code that the maximum limit of
-added hard disk or removable devices was way too
-low for modern PCs [even for home usage]. As a result of
-input from users like me, the maximum added device limit
-is increased very much if I recall correctly.)
-Also, sometimes the available spec of disks and such
-may not reflect the reality (the real shipped product
-and the specification published may not agree,
-or the difference between
-the spec and the latest ROM information. By looking at the
-display from the tmscsim module, I can learn the
-real characteristics of the device as opposed to
-the paper spec, and this was very useful for
-a home user who doesn't have elaborate scsi inquiry tools.
-Yes I know some free/non-free tools exist today, but
-being able to look at such output of information
-as understood by the driver itself, and sharing it
-with the original author without requiring the
-installation of additional tool when a problem occured was
-very useful.
-
-Sorry, I am not using 2.6.xx series kernel myself,
-and writing sysfs support for the driver is beyond my
-skill now.
+To: Matt Domsch <Matt_Domsch@dell.com>
+Cc: Christoph Hellwig <hch@infradead.org>, James Bottomley <James.Bottomley@SteelEye.com>, atulm@lsil.com, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
 
-I believe the output produced by the code below
-the loop mentioned above would be
-useful to the code maintainers who need to
-learn what is going on (performance-wise, or
-logical incorrectness, etc..), but I am not
-sure on this part. (At one point during 2.2.x series,
-a long time ago, I found an obscure list processing
-problem possibly caused by the main kernel code.
-But it was such a long time ago, I can't recall
-the details now.)
+--=-AGIqXFb91wcGKEoqAbl5
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
+
+On Tue, 2004-08-17 at 18:51, Matt Domsch wrote:
+> On Tue, Aug 17, 2004 at 05:47:55PM +0100, Christoph Hellwig wrote:
+> > Does this driver release have the queue removal James wanted?
+>=20
+> Not yet, that was one of the changes Atul requested he be allowed to
+> make post-merge.
+
+if that was a few weeks ago.. that should be completed by now, right ?
+I fear that when we merge this new driver we'll never get the queueing
+removed once it's let in.
 
 
--- 
-int main(void){int j=2003;/*(c)2003 cishikawa. */
-char t[] ="<CI> @abcdefghijklmnopqrstuvwxyz.,\n\"";
-char *i ="g>qtCIuqivb,gCwe\np@.ietCIuqi\"tqkvv is>dnamz";
-while(*i)((j+=strchr(t,*i++)-(int)t),(j%=sizeof t-1),
-(putchar(t[j])));return 0;}/* under GPL */
+--=-AGIqXFb91wcGKEoqAbl5
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.2.4 (GNU/Linux)
+
+iD8DBQBBIjsexULwo51rQBIRAil1AJ96a2wmlyg2/PvX/QeWPOm+01qX1QCeI5y0
+qL5msE1WjaOx9csZGZ1XPx4=
+=h0ho
+-----END PGP SIGNATURE-----
+
+--=-AGIqXFb91wcGKEoqAbl5--
+
