@@ -1,73 +1,41 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: PATCH: (as255) Handle Unit Attention during INQUIRY better
-Date: Wed, 21 Apr 2004 17:12:09 -0400 (EDT)
+From: "Lee Xing" <lxing@Crossroads.com>
+Subject: SCSI passthrough ioctl calls vs. sd/sg devices
+Date: Wed, 21 Apr 2004 17:04:08 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44L0.0404211705270.1740-100000@ida.rowland.org>
+Message-ID: <519672568F040C41B6FAC21ADF51B18FEFBE@mailnode1.commstor.crossroads.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ida.rowland.org ([192.131.102.52]:34318 "HELO ida.rowland.org")
-	by vger.kernel.org with SMTP id S263708AbUDUVML (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 21 Apr 2004 17:12:11 -0400
+Received: from email.crossroads.com ([65.68.235.6]:40886 "HELO
+	email.crossroads.com") by vger.kernel.org with SMTP id S262208AbUDUWEJ convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 21 Apr 2004 18:04:09 -0400
+content-class: urn:content-classes:message
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@steeleye.com>
-Cc: SCSI development list <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
 
-James:
+Hi,
 
-Some buggy USB storage devices can return Unit Attention status for
-INQUIRY commands.  The current code in scsi_scan.c checks for ASC = 0x28 =
-Not ready to ready transition, but these devices can also return ASC =
-0x29 = Power-on or reset occurred.  In addition, the code doesn't retry
-the INQUIRY when these codes are received.
+I would appreciate it if some one could clarify this.  It's a bit confusing.
 
-Please verify this patch is correct and apply it (or something like it).
+<<The Linux SCSI Generic (sg) HOWTO>> page 2 says "The sg driver permits user applications to send SCSI commands to devices that understand them.  SCSI commands are 6, 10, 12 or 16 bytes long.  The SCSI disk driver (sd), once device initialization is complete, only sends SCSI READ and WRITE commands."
 
-Alan Stern
+<<The Linux 2.4 SCSI subsystem HOWTO>> page 3 says "Sg is a SCSI command pass through device that uses a char device interface.  General purpose Linux commands should not be used on sg devices."
+
+My questions are:
+
+- looks like SCSI passthrough ioctl calls can only apply 
+  to sg devices.  Is it right, and can we apply SCSI
+  passthrough ioctl calls to sd devices as well?
+- what are the so-called "General purpose Linux commands"?
+  Are they read()/write() or 'mount' / 'dd' or something else?
+
+What should we do if we need to 'mount' a file system on a disk and also need to issue SCSI passthrough ioctl calls to the same disk?  Maybe we should use both sd and sg (i.e. mount the file system to /dev/sda, and issue SCSI passthrough ioctl calls to /dev/sg0 that maps to the same physical disk)?  'mount' doesn't work on sg devices as I was told earlier.
+
+Many thanks,
 
 
-===== scsi_scan.c 1.57 vs edited =====
---- 1.57/drivers/scsi/scsi_scan.c	Wed Mar 17 14:05:26 2004
-+++ edited/drivers/scsi/scsi_scan.c	Wed Apr 21 17:04:15 2004
-@@ -331,6 +331,7 @@
- 	struct scsi_device *sdev = sreq->sr_device;	/* a bit ugly */
- 	unsigned char scsi_cmd[MAX_COMMAND_SIZE];
- 	int possible_inq_resp_len;
-+	int count = 0;
- 
- 	*bflags = 0;
-  repeat_inquiry:
-@@ -351,19 +352,24 @@
- 	SCSI_LOG_SCAN_BUS(3, printk(KERN_INFO "scsi scan: 1st INQUIRY %s with"
- 			" code 0x%x\n", sreq->sr_result ?
- 			"failed" : "successful", sreq->sr_result));
-+	++count;
- 
- 	if (sreq->sr_result) {
- 		if ((driver_byte(sreq->sr_result) & DRIVER_SENSE) != 0 &&
- 		    (sreq->sr_sense_buffer[2] & 0xf) == UNIT_ATTENTION &&
--		    sreq->sr_sense_buffer[12] == 0x28 &&
-+		    (sreq->sr_sense_buffer[12] == 0x28 ||
-+		     sreq->sr_sense_buffer[12] == 0x29) &&
- 		    sreq->sr_sense_buffer[13] == 0) {
--			/* not-ready to ready transition - good */
-+			/* not-ready to ready transition or power-on - good */
- 			/* dpg: bogus? INQUIRY never returns UNIT_ATTENTION */
--		} else
--			/*
--			 * assume no peripheral if any other sort of error
--			 */
--			return;
-+			/* Supposedly, but many buggy devices do so anyway */
-+			if (count < 3)
-+				goto repeat_inquiry;
-+		}
-+		/*
-+		 * assume no peripheral if any other sort of error
-+		 */
-+		return;
- 	}
- 
- 	/*
+Lee
+
 
