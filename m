@@ -1,27 +1,63 @@
-From: Pat LaVarre <p.lavarre@ieee.org>
-Subject: Re: cdrom sr ide-cd - CDC_WR, 1999 op x46 GPCMD_GET_CONFIGURATION
-Date: 29 Nov 2003 14:49:55 -0700
+From: Chiaki <ishikawa@yk.rim.or.jp>
+Subject: Re: TMSCSIM [2.6]
+Date: Sun, 30 Nov 2003 14:27:37 +0900
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1070142595.2291.15.camel@patrh9>
-References: <1070049902.11739.3.camel@patrh9>
+Message-ID: <3FC97FC9.10701@yk.rim.or.jp>
+References: <Pine.LNX.4.44.0311291030500.1672-100000@poirot.grange>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from email-out1.iomega.com ([147.178.1.82]:20632 "EHLO
-	email.iomega.com") by vger.kernel.org with ESMTP id S264370AbTK2VuW
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 29 Nov 2003 16:50:22 -0500
-Received: from royntex01.iomegacorp.com (unknown [147.178.90.120])
-	by email.iomega.com (Postfix) with ESMTP id 2EE3C2199
-	for <linux-scsi@vger.kernel.org>; Sat, 29 Nov 2003 14:50:21 -0700 (MST)
-In-Reply-To: <1070049902.11739.3.camel@patrh9>
+Received: from pl411.nas911.n-yokohama.nttpc.ne.jp ([210.139.38.155]:12486
+	"EHLO standard.erephon") by vger.kernel.org with ESMTP
+	id S264796AbTK3F16 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 30 Nov 2003 00:27:58 -0500
+Received: from (client is using the wrong hostname!) yk.rim.or.jp (really [127.0.0.1]) by yk.rim.or.jp
+	via smail with esmtp
+	id <m1AQK7X-0039AAC@standard.erephon> (Debian Smail3.2.0.115)
+	for <linux-scsi@vger.kernel.org>; Sun, 30 Nov 2003 14:27:47 +0900 (JST)
+In-Reply-To: <Pine.LNX.4.44.0311291030500.1672-100000@poirot.grange>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+Cc: linux-scsi@vger.kernel.org, Thorsten Leemhuis <Thorsten_Leemhuis@gmx.de>, gl@dsa-ac.de
 
-Also these patches should be `diff -Nurp` rather than `diff -Nur` to
-pick up "-p" "Show which C function each change is in".
+Guennadi Liakhovetski wrote:
+> On Sat, 29 Nov 2003, Chiaki wrote:
+> 
+> 
+>>Also, I disabled kernel preemption after reading your post.
+>> From my .config:
+>>   # CONFIG_PREEMPT is not set
+> 
+> 
+> Ok, then it worked (except for that misterious first try). Can you switch
+> preemption on again, so we can check for sure that it's my last
+> modification, that fixed your problem and not switching preemption off.
+> 
+Hello,
 
-Pat LaVarre
+I recompiled the kernel with preemption enabled this time.
 
+tmscsim module loaded successfully.
+So it was your patch that corrected the problem.
+
+Thank you again!
+
+
+PS: As for indentation, as others suggested,
+
+  - functional patch.
+  - incorporation into the main tree.
+  - possible indentation patch afterward.
+
+seems to be the best steps to follow.
+
+
+
+-- 
+int main(void){int j=2003;/*(c)2003 cishikawa. */
+char t[] ="<CI> @abcdefghijklmnopqrstuvwxyz.,\n\"";
+char *i ="g>qtCIuqivb,gCwe\np@.ietCIuqi\"tqkvv is>dnamz";
+while(*i)((j+=strchr(t,*i++)-(int)t),(j%=sizeof t-1),
+(putchar(t[j])));return 0;}/* under GPL */
 
