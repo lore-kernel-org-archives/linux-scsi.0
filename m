@@ -1,70 +1,27 @@
-From: "invictus rm" <invictus_rm@hotmail.com>
-Subject: scsi driver hangs!!!
-Date: Fri, 22 Aug 2003 01:24:08 +0530
+From: "Galen C. Hunt" <gchunt@cs.rochester.edu>
+Subject: I no longer read email sent to this address
+Date: Fri, 22 Aug 2003 00:53:20 -0400 (EDT)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <BAY7-F74jCcxadcJl9d0001f265@hotmail.com>
+Message-ID: <200308220453.h7M4rKU03827@slate.cs.rochester.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bay7-f74.bay7.hotmail.com ([64.4.11.74]:1292 "EHLO hotmail.com")
-	by vger.kernel.org with ESMTP id S262883AbTHUTyJ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 21 Aug 2003 15:54:09 -0400
+Received: from gate.cs.rochester.edu ([192.5.53.207]:33687 "EHLO
+	gate.cs.rochester.edu") by vger.kernel.org with ESMTP
+	id S263018AbTHVExV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 22 Aug 2003 00:53:21 -0400
+Received: from slate.cs.rochester.edu (slate.cs.rochester.edu [192.5.53.101]) by gate.cs.rochester.edu (8.11.6+Sun/004) with ESMTP id h7M4rKs00590 for <linux-scsi@vger.kernel.org>; Fri, 22 Aug 2003 00:53:20 -0400 (EDT)
+Received: (from gchunt@localhost) by slate.cs.rochester.edu (8.11.6+Sun/004) id h7M4rKU03827 for linux-scsi@vger.kernel.org; Fri, 22 Aug 2003 00:53:20 -0400 (EDT)
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-hi ,
-    I am trying to write a HBA driver for a  PCI SCSI card.
+Due to a large volume of SPAM, I no longer read email sent to this account.
+Your message regarding "Re: Approved" will not be read.
 
-   On insmoding the driver( after enabling scsi verbose logging) i was able 
-to trace the point at which it get stuck.
+If you wish to contact me, please use my new email address:
 
-                                               Activating command for device 
-0 (1)
-                                               Leaving 
-scsi_init_cmd_from_req()
-                                               Adding timer for command 
-cee2a400 at 600 (d090d700)
-                                              scsi_dispatch_cmnd (host = 0, 
-channel = 0, target = 0, command =
-                                                      cee2a458, buffer = 
-c38dfc08, bufflen = 256, done = d09080b0)
-                                              queuecommand : routine at 
-d0b2d1e0
-                                              leaving scsi_dispatch_cmnd()
-                                              Leaving scsi_do_req()
-                                              Clearing timer for command 
-cee2a400 1
-                                              Command finished 1 0 0x0
-                                              Notifying upper driver of 
-completion for device 0 0
+         g a l e n h @ m i c r o s o f t . c o m
 
-   and then the driver HANGS.
-
-  The piece of code where the hang occur is
-         scsi_wait_req( )   <---- scsi.c
-          {
-
-                scsi_do_req (SRpnt, (void *) cmnd,
-                                  buffer, bufflen, scsi_wait_done, timeout, 
-retries);
-                generic_unplug_device(q);
-                wait_for_completion(&wait);
-
-    }
-
-The detect( ) reads as
-       host->max_id = 5;
-       host->hostt->use_new_eh_code = 1;
-       host->this_id = tmpt->this_id;
-
-
-What am I doing wrong ?? Why does the HBA driver hangs (initializing ) on 
-insmoding ??
-
-Thanking for any help in helping me to resolve this problem ......
-
-_________________________________________________________________
-Find an old friend. Revisit your past. http://www.batchmates.com/msn.asp 
-It's never been easier!
+Thanks.
+galen
 
