@@ -1,23 +1,19 @@
 From: Ali Akcaagac <aliakc@web.de>
 Subject: [PATCH]: 2.6.0-test2-bk1 SCSI dc395x compile problem
-Date: Fri, 01 Aug 2003 15:01:04 +0200
+Date: Fri, 01 Aug 2003 14:56:52 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1059742864.30594.10.camel@localhost>
+Message-ID: <1059742612.30563.5.camel@localhost>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="=-DQjPovcJR9f0fhkwC4wx"
+Content-Type: multipart/mixed; boundary="=-pqxtr7j9YJqegResnzZm"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp02.web.de ([217.72.192.151]:25123 "EHLO smtp.web.de")
-	by vger.kernel.org with ESMTP id S270753AbTHANBE (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 1 Aug 2003 09:01:04 -0400
-Received: from [80.130.17.164] (helo=p508211A4.dip.t-dialin.net)
-	by smtp.web.de with esmtp (WEB.DE 4.99 #433)
-	id 19iZWp-0002fd-00
-	for linux-scsi@vger.kernel.org; Fri, 01 Aug 2003 15:01:04 +0200
+Received: from smtp02.web.de ([217.72.192.151]:64788 "EHLO smtp.web.de")
+	by vger.kernel.org with ESMTP id S270329AbTHAM47 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 1 Aug 2003 08:56:59 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: dc395x@twibble.org
 
 
---=-DQjPovcJR9f0fhkwC4wx
+--=-pqxtr7j9YJqegResnzZm
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 
@@ -31,9 +27,9 @@ Here is a little fix for the 2.6.0-test2-bk1 that allows compiling
 correctly. I would be thankful if this patch can be included in an
 upcoming bk2 or test3 release.
 
---=-DQjPovcJR9f0fhkwC4wx
+--=-pqxtr7j9YJqegResnzZm
 Content-Disposition: attachment; filename=dc395x.c.patch
-Content-Type: text/x-patch; name=dc395x.c.patch; charset=iso-8859-15
+Content-Type: text/x-patch; name=dc395x.c.patch; charset=ISO-8859-15
 Content-Transfer-Encoding: 7bit
 
 --- linux-2.6.0-test2-bk1/drivers/scsi/dc395x.c.bak	2003-08-01 14:32:05.000000000 +0200
@@ -48,5 +44,5 @@ Content-Transfer-Encoding: 7bit
  
  	return 0;
 
---=-DQjPovcJR9f0fhkwC4wx--
+--=-pqxtr7j9YJqegResnzZm--
 
