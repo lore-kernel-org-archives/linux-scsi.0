@@ -1,41 +1,53 @@
-From: "Ross Macintyre" <raz@macs.hw.ac.uk>
-Subject: Re: adaptec 2120S software under RedHat 8.0 and FC2
-Date: Thu, 24 Mar 2005 17:19:55 -0000 (GMT)
-Message-ID: <1333.137.195.14.2.1111684795.squirrel@www.macs.hw.ac.uk>
-References: <60807403EABEB443939A5A7AA8A7458BED25F7@otce2k01.adaptec.com>
-    <20050320091251.GB12000@infradead.org>
-    <3423.137.195.14.2.1111509124.squirrel@www.macs.hw.ac.uk>
-    <20050323110406.GA3691@infradead.org>
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: [PATCH as494] Add a scsi_device flag for RETRY_HWERROR
+Date: Fri, 25 Mar 2005 09:13:17 +1000
+Message-ID: <4243498D.6070409@torque.net>
+References: <Pine.LNX.4.44L0.0503241134300.1345-100000@ida.rowland.org>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Received: from izanagi.macs.hw.ac.uk ([137.195.13.5]:53940 "EHLO
-	izanagi.macs.hw.ac.uk") by vger.kernel.org with ESMTP
-	id S262642AbVCXRUE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 24 Mar 2005 12:20:04 -0500
-In-Reply-To: <20050323110406.GA3691@infradead.org>
+Content-Type: text/plain; charset=US-ASCII; format=flowed
+Content-Transfer-Encoding: 7bit
+Received: from zorg.st.net.au ([203.16.233.9]:57519 "EHLO borg.st.net.au")
+	by vger.kernel.org with ESMTP id S261227AbVCXXMA (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 24 Mar 2005 18:12:00 -0500
+In-Reply-To: <Pine.LNX.4.44L0.0503241134300.1345-100000@ida.rowland.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Ross Macintyre <raz@macs.hw.ac.uk>, "Salyzyn, Mark" <mark_salyzyn@adaptec.com>, Mark Haverkamp <markh@osdl.org>, linux-scsi <linux-scsi@vger.kernel.org>, matt_domsch@dell.com
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, SCSI development list <linux-scsi@vger.kernel.org>
 
+Alan Stern wrote:
+> James:
+> 
+> It turns out that a bunch of USB-IDE converters make the mistake of
+> returning SK = 04 (Hardware Error) whenever the IDE device signals any
+> sort of error, without bothering to distinguish recoverable from
+> non-recoverable errors. 
 
-Christoph Hellwig said:
-> On Tue, Mar 22, 2005 at 04:32:04PM -0000, Ross Macintyre wrote:
->> Since you advise us to stay away from Adaptec, and I assume you are part
->> of the team that manages the Fedora system,
->
-> I'm not associated with Fedora at all.
->
->> can you advise users what RAID
->> / Storage vendors to use? ie what quality vendors support Linux?
->
-> LSI and 3ware for example do provide frequent driver updates, working
-> managment tools and cooperate with the linux community very well.
+Alan,
+The sense key of HARDWARE ERROR is a superset of MEDIUM ERROR.
+SBC-2 treats them as synonymous. If it is a "real" medium
+error then the LBA of the first (i.e. lowest address) bad
+block should be placed in the "info" field and the "valid"
+bit should be set. If this is done the block layer does
+its job well.
 
-Just for the record, I found the help taht I got from mark_salyzyn far
-better than any I got from LSI (though they did try).
+Also for both hardware and medium errors the "sense key
+specific" field (if SKSV=1) reports the actual retry
+count. The read/write retry count is set in the "read
+write error recovery" mode page. Anyways if the disk
+has already retried reading the bad block 64 times (say)
+what is the point of the mid level retrying??
 
+<aside>
+Another interesting quirk I noticed recently was a disk
+yielding "recovered error, failure prediction threshold
+exceeded" even though the PER bit was clear (which is the
+normal case). I had expected recovered errors to be
+bad block specific but this error was from SMART saying
+"your disk hasn't got long to live". BTW That recovered
+error was repeated every 10 minutes or so. Probably a
+useful alerte to put in the log and on the console.
 
--- 
-Ross Macintyre (raz@macs.hw.ac.uk)
+Doug Gilbert
