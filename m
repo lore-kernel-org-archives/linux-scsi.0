@@ -1,21 +1,40 @@
-From: Luben Tuikov <luben@splentec.com>
-Subject: Re: Q: relationship between can_queue and cmd_per_lun?
-Date: Fri, 21 Jun 2002 17:17:58 -0400
+From: Oliver Xymoron <oxymoron@waste.org>
+Subject: Re: [PATCH] /proc/scsi/map
+Date: Fri, 21 Jun 2002 16:33:28 -0500 (CDT)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3D139806.B466D93A@splentec.com>
-References: <3D138128.C25C70D5@splentec.com> <20020621155505.A9642@redhat.com>
+Message-ID: <Pine.LNX.4.44.0206211616510.16808-100000@waste.org>
+References: <Pine.LNX.4.33.0206201230190.654-100000@geena.pdx.osdl.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <Pine.LNX.4.33.0206201230190.654-100000@geena.pdx.osdl.net>
 List-Id: linux-scsi@vger.kernel.org
-To: Doug Ledford <dledford@redhat.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>
+To: Patrick Mochel <mochel@osdl.org>
+Cc: Martin Dalecki <dalecki@evision-ventures.com>, Linus Torvalds <torvalds@transmeta.com>, Kurt Garloff <garloff@suse.de>, Linux kernel list <linux-kernel@vger.kernel.org>, Linux SCSI list <linux-scsi@vger.kernel.org>
 
-Thanks Doug,
+On Thu, 20 Jun 2002, Patrick Mochel wrote:
 
-Your email was very helpful and enlightening.
+> > But it was entierly behind me how to fit this
+> > in to the sheme other sd@4,0:h,raw
+> > OS-es are using. And finally how would one fit this in to the
+> > partitioning shemes? For the system aprtitions are simply
+> > block devices hanging off the corresponding block device.
+>
+> Partitions are purely logical entities on a physical disk. They have no
+> presence in the physical device tree.
 
-Thanks again,
+As I raised elsewhere in this thread, the distinction between physical and
+logical is troubling. Consider iSCSI, (aka SCSI-over-IP). It's analogous
+to SCSI-over-Fibre Channel, except that rather than using an embedded FC
+stack, it's using the kernel's IP stack. But it's every bit as much a SCSI
+disk/tape/whatever as a local device. Ergo, it ought to show up in the
+device tree so that it can be discovered in the same way. But where?
+
+This is only one step (the SCSI midlayer) removed from the logical devices
+created by partitioning, LVM, NBD, MD, loopback, ramdisk and the like,
+that again, ought to be discoverable in the same way as all other block
+devices. Perhaps we need root/{virtual,logical}?
+
 -- 
-Luben
+ "Love the dolphins," she advised him. "Write by W.A.S.T.E.."
+
