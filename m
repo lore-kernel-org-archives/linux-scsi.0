@@ -1,40 +1,37 @@
-From: Patrick Mansfield <patmans@us.ibm.com>
-Subject: [PATCH] change dev_printk to printk in scsi_device_set_state
-Date: Tue, 13 Apr 2004 14:39:57 -0700
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: tmscsim broken on amd64 with 2.6.5?
+Date: Tue, 13 Apr 2004 17:52:12 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040413143957.A2906@beaverton.ibm.com>
+Message-ID: <407C610C.2070204@pobox.com>
+References: <Pine.LNX.4.44.0404132325190.16680-100000@poirot.grange>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e35.co.us.ibm.com ([32.97.110.133]:32918 "EHLO
-	e35.co.us.ibm.com") by vger.kernel.org with ESMTP id S263765AbUDMVkD
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:59849 "EHLO
+	www.linux.org.uk") by vger.kernel.org with ESMTP id S263769AbUDMVwZ
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 13 Apr 2004 17:40:03 -0400
-Content-Disposition: inline
+	Tue, 13 Apr 2004 17:52:25 -0400
+In-Reply-To: <Pine.LNX.4.44.0404132325190.16680-100000@poirot.grange>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@steeleye.com>
+To: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+Cc: Christian Roessner <info@roessner-net.com>, linux-scsi@vger.kernel.org
 
-Hi James -
+Guennadi Liakhovetski wrote:
+> On Mon, 12 Apr 2004, Jeff Garzik wrote:
+> 
+> 
+>>Would be nice if we could kill the non-standard types (ULONG, etc.) from
+>>the driver.
+> 
+> 
+> Sure, the diff it would be quite big though, so, it would deserve a
+> separate patch, IMHO.
 
-Patch against a recent scsi-misc-2.6.
+Agreed,
 
-Change the dev_printk to a regular printk, since scsi_device_set_state can
-be called when no upper level driver is bound.
+	Jeff
 
-diff -uprN -X /home/patman/dontdiff scsi-misc-2.6/drivers/scsi/scsi_lib.c dev_printk-scsi-misc-2.6/drivers/scsi/scsi_lib.c
---- scsi-misc-2.6/drivers/scsi/scsi_lib.c	Thu Apr  8 22:21:44 2004
-+++ dev_printk-scsi-misc-2.6/drivers/scsi/scsi_lib.c	Tue Apr 13 11:26:52 2004
-@@ -1633,10 +1633,9 @@ scsi_device_set_state(struct scsi_device
- 	return 0;
- 
-  illegal:
--	dev_printk(KERN_ERR, &sdev->sdev_gendev,
--		   "Illegal state transition %s->%s\n",
--		   scsi_device_state_name(oldstate),
--		   scsi_device_state_name(state));
-+	printk(KERN_ERR "scsi device <%s> illegal state transition %s->%s\n",
-+	       sdev->sdev_gendev.bus_id, scsi_device_state_name(oldstate),
-+	       scsi_device_state_name(state));
- 	WARN_ON(1);
- 	return -EINVAL;
- }
+
+
+
