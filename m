@@ -1,39 +1,38 @@
-From: 'Christoph Hellwig' <hch@infradead.org>
-Subject: Re: Request for review of Linux iSCSI driver version 4.0.0.1
-Date: Thu, 6 Nov 2003 10:09:06 +0000
+From: chinmay albal <albal@in.ibm.com>
+Subject: need inputs on scsi_dump_status feature in kernel 2.4.x
+Date: Thu, 06 Nov 2003 16:06:59 +0530
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20031106100906.A15382@infradead.org>
-References: <20031027153932.A16679@infradead.org> <005801c3a44a$5847c6e0$8f074d0a@apac.cisco.com>
+Message-ID: <3FAA244B.4080507@in.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pub234.cambridge.redhat.com ([213.86.99.234]:60943 "EHLO
-	phoenix.infradead.org") by vger.kernel.org with ESMTP
-	id S263487AbTKFKJI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 6 Nov 2003 05:09:08 -0500
-Content-Disposition: inline
-In-Reply-To: <005801c3a44a$5847c6e0$8f074d0a@apac.cisco.com>; from smhatre@cisco.com on Thu, Nov 06, 2003 at 03:12:51PM +0530
+Received: from e35.co.us.ibm.com ([32.97.110.133]:33939 "EHLO
+	e35.co.us.ibm.com") by vger.kernel.org with ESMTP id S263488AbTKFKd7
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 6 Nov 2003 05:33:59 -0500
+Received: from westrelay04.boulder.ibm.com (westrelay04.boulder.ibm.com [9.17.193.32])
+	by e35.co.us.ibm.com (8.12.10/8.12.2) with ESMTP id hA6AXwcF456134
+	for <linux-scsi@vger.kernel.org>; Thu, 6 Nov 2003 05:33:58 -0500
+Received: from in.ibm.com (d03av02.boulder.ibm.com [9.17.193.82])
+	by westrelay04.boulder.ibm.com (8.12.9/NCO/VER6.6) with ESMTP id hA6AXs6s128978
+	for <linux-scsi@vger.kernel.org>; Thu, 6 Nov 2003 03:33:57 -0700
 List-Id: linux-scsi@vger.kernel.org
-To: "Sachin Mhatre (smhatre)" <smhatre@cisco.com>
-Cc: 'Christoph Hellwig' <hch@infradead.org>, linux-scsi@vger.kernel.org, davmyers@cisco.com
+To: linux-scsi@vger.kernel.org
 
-On Thu, Nov 06, 2003 at 03:12:51PM +0530, Sachin Mhatre (smhatre) wrote:
-> 
-> Hi,
-> 	The following is the reason for sending the TEST_UNIT_READY and
-> START_STOP initialization command in the iSCSI driver:- 
-> 
-> The iSCSI driver receives a CHECK CONDITION with sense key, NOT READY
-> and ASC/ASCQ=04/02 (i.e. an initialization command required). The Linux
-> SCSI mid-layer does not handle this condition. Hence the TUR and START
-> STOP initialization commands are sent from the iSCSI driver.
-> 
-> Should this condition be necessarily handled in the SCSI mid-layer or
-> the low-level driver?
+Hi,
 
-I think we should handle it in the midlayer.  Could you come up with a
-patch to implement it?
+While using the echo "scsi dump #" > /proc/scsi/scsi feature, the system 
+traps while trying to print out the dump of pending block device 
+requests in function scsi_dump_status of scsi.c. The cause for this 
+could be that the structure queue_head is not being populated.
+A few attempts that I tried to populate this structure have failed. Can 
+anyone please let me know under what circumstances does this structure 
+get filled up or is there any consistent way to generate a list of 
+pending block requests.
 
---
-Christoph Hellwig <hch@lst.de>		-	Freelance Hacker
-Contact me for driver hacking and kernel development consulting
+Iam aware that this feature is no longer being used in the 2.6 kernels, 
+but was curious to know why this scenario happens on the 2.4 kernels.
+Regards
+- Chinmay
+
