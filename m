@@ -1,75 +1,43 @@
-From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
-Subject: RE: [PATCH] dpt_i2o changes for 2.6.2 kernel in support of 64 bit and bitrot (part 1)
-Date: Tue, 6 Apr 2004 10:03:58 -0400
+From: James Bottomley <James.Bottomley@steeleye.com>
+Subject: Re: [linux-usb-devel] Re: bug 2400
+Date: 06 Apr 2004 09:03:32 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <547AF3BD0F3F0B4CBDC379BAC7E4189F64F281@otce2k03.adaptec.com>
+Message-ID: <1081260215.1804.17.camel@mulgrave>
+References: <Pine.LNX.4.44L0.0404032026590.30873-100000@netrider.rowland.org>
+	<4071EA82.3020901@pacbell.net> <1081214360.1756.330.camel@mulgrave>
+	<200404060852.34169.oliver@neukum.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from magic.adaptec.com ([216.52.22.17]:48591 "EHLO magic.adaptec.com")
-	by vger.kernel.org with ESMTP id S263826AbUDFOEC convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 6 Apr 2004 10:04:02 -0400
-content-class: urn:content-classes:message
+Received: from stat1.steeleye.com ([65.114.3.130]:22452 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S263832AbUDFOEY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 6 Apr 2004 10:04:24 -0400
+In-Reply-To: <200404060852.34169.oliver@neukum.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>
+To: Oliver Neukum <oliver@neukum.org>
+Cc: David Brownell <david-b@pacbell.net>, Alan Stern <stern@rowland.harvard.edu>, Mike Anderson <andmike@us.ibm.com>, Andrew Morton <akpm@osdl.org>, greg@kroah.com, Jens Axboe <axboe@suse.de>, linux-usb-devel@lists.sourceforge.net, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-Christoph Hellwig [mailto:hch@infradead.org] writes:=20
-> On Mon, Apr 05, 2004 at 06:23:49PM -0400, Salyzyn, Mark wrote:
->> This would be unacceptable to our OEMs and users of our applications=
-=2E
-> Could you please stop this OEM crap?  No one cares more for someone j=
-ust
-> because he's an OEM. And we already had the stupid user discussion a =
-few
-> times, look up the long EVMS and Aun=FE Tilly threads.
+On Tue, 2004-04-06 at 01:52, Oliver Neukum wrote:
+> Pure refcounting can never protect you against races with freeing objects.
+> The counters themselves must be protected. Try as you might you need
+> locks for that and rules on how this locks are to be used.
 
-And *that* is the root of the problem ... sigh ... but I will try not t=
-ake the flame bait, for what now will no doubt be an infamous statement=
- of the goals of the Linux kernel community. I do not want to turn this=
- into a flame war, but rather have us admit our differences and respect=
- each other's needs.
+Which part of
 
-OEMs and their users are virtually *all* we are concerned about. If we =
-can not qualify our products within their needs, we disappear, or at le=
-ast we disappear on operating systems that fail to provide for the need=
-s of the users.
+On Mon, 2004-04-05 at 20:19, James Bottomley wrote:
+> Now, if the subsystem is going to garbage collect its own object as a
+> result of the other object disconnect, then it is responsible for
+> synchronising that with reference gets on its own object.  However, that
+> is easily achievable via *intra* subsystem synchronisation.
 
-These users that are represented by us, and our OEMs, are overworked IS=
- people, working overtime hours, most likely working remote, and I am s=
-orry, I *need* to tell them when they make a critical mistake, in the f=
-og of their war, that will panic their system. I need to tell them, at =
-the *instant* of the mistake, that they are about to delete an array th=
-at is currently `in-use' by the operating system. I *really* need to te=
-ll them that they are about to incorporate their in-use, possibly boot,=
- drive as a component of an array. I do *not* need to tell them that th=
-ey are stupid.
+didn't you understand?
 
-I loose sleep at night thinking about these poor souls. No, to be hones=
-t, actually it is because our OEM's test group thinks out fantastic sce=
-narios of ways to break yours and my products and hold us accountable f=
-or such failures. "Deleting array causes kernel ooops" news at 11 ...
+However, how a subsystem resolves this intra subsystem synchronisation
+is up to it ... and it doesn't have to do it with locks.  So there are
+no exposed locks for this and no rules therefore, for how to use them.
 
-Which reason do we ascribe to this failure of the operating system to p=
-rovide the service of knowing if a drive is currently in-use:
+James
 
-1) system has been architected in such a manner that it would be imposs=
-ible at this juncture to add?
-2) Someone made a conscientious decision to not provide this functional=
-ity?
-3) There is a way to tell, it just is not clear to any of us at this mo=
-ment?
-4) There is a way to tell, but it would be an ugly hack that will no do=
-ubt break upon the next revision (as this hack has done traversing from=
- 2.4 to 2.6)?
-5) Pride?
-=20
-Sincerely -- Mark Salyzyn
 
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
