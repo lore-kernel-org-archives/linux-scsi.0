@@ -1,83 +1,96 @@
-From: Jan-Frode Myklebust <janfrode@parallab.uib.no>
-Subject: Re: qla2300 at only 1 GBit on kernel 2.6.5
-Date: Wed, 5 May 2004 19:46:49 +0200
+From: "Smart, James" <James.Smart@Emulex.com>
+Subject: RE: suspending I/Os to a device
+Date: Wed, 5 May 2004 15:00:43 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040505174649.GA21863@ii.uib.no>
-References: <B179AE41C1147041AA1121F44614F0B0DD0114@AVEXCH02.qlogic.org>
+Message-ID: <3356669BBE90C448AD4645C843E2BF28034F92D1@xbl.ma.emulex.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="iso-8859-1"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from noralf.uib.no ([129.177.30.12]:3473 "EHLO noralf.uib.no")
-	by vger.kernel.org with ESMTP id S264788AbUEERqw (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 5 May 2004 13:46:52 -0400
-Content-Disposition: inline
-In-Reply-To: <B179AE41C1147041AA1121F44614F0B0DD0114@AVEXCH02.qlogic.org>
+Received: from emulex.emulex.com ([138.239.112.1]:15298 "EHLO
+	emulex.emulex.com") by vger.kernel.org with ESMTP id S264765AbUEETBA
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 5 May 2004 15:01:00 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: 'James Bottomley' <James.Bottomley@steeleye.com>, "Infante, Jon" <Jon.Infante@Emulex.com>
+Cc: Linux SCSI Reflector <linux-scsi@vger.kernel.org>
 
-On Wed, May 05, 2004 at 09:27:10AM -0700, Andrew Vasquez wrote:
+James,
+
+So I'm not clear on how this gets implemented...
+
+I'm assuming that this would mirror the scsi_block/unblock_requests()
+functions - but now on a scsi-device basis. The SUSPEND state would be an
+internal state in the midlayer.  The driver would use the new attribute to
+know when to call the unblock function.   And, wouldn't it make sense to
+have a midlayer function that could be pointed at a scsi_host/scsi target id
+value and have it recurse the block/unblock calls to all the related scsi
+devices ?
+
+How does this move forward ?  If we want to have this functionality, must we
+put together a patch ? Who modifies the mid layer ?  What I'd like to avoid
+is adding error queues that implement the suspend function in our driver.
+
+-- James S
+
+
+
+> -----Original Message-----
+> From: James Bottomley [mailto:James.Bottomley@steeleye.com]
+> Sent: Friday, April 23, 2004 7:29 PM
+> To: Infante, Jon
+> Cc: Linux SCSI Reflector
+> Subject: RE: suspending I/Os to a device
 > 
-> How are you verifying that the 2.4 driver is coming-up in 2Gig rather
-> than 1gig?  Do you have an analyzer running between the HBA and
-> storage device?  
-
-The storage device has a gui telling me current speed. CurSynClk=2 GHz
-for the redhat kernel, 1 GHz for the 2.6.5 and 2.6.6-rc3 kernels.
-
-> Or, as you mentioned later in the email when testing
-> the 8.x driver, did you force 2gig at the RAID box and reload the
-> 2.4 driver?
-
-Initially I was running kernel 2.6.5  had the connection forced at
-2Gbit from the storage device side, then I struggled for a while
-trying to understand why I didn't get link.  The qla2300 module said
-"Cable unplugged". 
-
-Then I set the storage device to autodetect speed, rebooted, and then
-it came up at 1 Gbit.
-
-Then (with the setting still at autodetect) I rebooted to the RedHat
-kernel, and it got autodetected to 2 Gbit according to the storage
-device.
-
-> Which model?  Actually, looking ahead, I can see you are running an
 > 
-> 	Vendor: IFT       Model: A16F-G1A2         Rev: 334A
+> On Fri, 2004-04-23 at 18:12, Infante, Jon wrote:
+> > Here is the senerio I am trying to handle within our Fibre 
+> Channel driver.
+> > In Fibre Channel, it is possible for the Target, or HBA, to 
+> be disconnected
+> > from one port on a switch and plugged into another port on 
+> the same (or even
+> > a different) switch. This transitition can happen with live 
+> traffic and the
+> > scsi subsystem / driver is supposed to recover gracefully, 
+> without failing
+> > all I/Os back up to applications that are running. In order 
+> to accomplish
+> > this, there is a configurable timer, that tells the driver 
+> how long to wait
+> > (at the Fibre Channel level), when a device disappears, to 
+> give it a chance
+> > to come back. Some OEMs / environments set this to a couple 
+> seconds, some a
+> > to couple of minutes.
 > 
-> Of the three FC-SATA RAID boxes that are advertised, only the
-> A16F-J1210-G1 model mentions support for 'full-duplex 2Gb FC-AL'.
-
-The data-sheet says "Two 2Gbps Fibre Host Channels; Transfer rate up to
-200MB/sec for each":
-
-	http://www.infortrend.com/document/pdf/DS_ESA16FU_G_0311.pdf
-
+> Actually, there is no interface because no-one has had any prior
+> requirements for this.
 > 
-> Hmm, could you go into the BIOS utility (ctrl-q during boot) and check
-> the 'Data Rate' settings for the HBA?  What is the value set to --
-> auto/1gb/2gb?  If it is set to auto, could you set it to 2gb and retry
-> the test.
-
-During boot it says it has no 'ROM BIOS'. Is this something I can
-install?
-
-
-BTW: here's the log I get with 2.6.6-rc3 when loading the qla2300 with
-speed=2GHz set on the infortrend:
-
-QLogic Fibre Channel HBA Driver (f8aec000)
-qla2300 0000:01:05.0: Found an ISP2300, irq 145, iobase 0xf89b4000
-qla2300 0000:01:05.0: Configuring PCI space...
-qla2300 0000:01:05.0: Configure NVRAM parameters...
-qla2300 0000:01:05.0: Verifying loaded RISC code...
-qla2300 0000:01:05.0: Waiting for LIP to complete...
-qla2300 0000:01:05.0: Cable is unplugged...
-scsi2 : qla2xxx
-qla2300 0000:01:05.0:
- QLogic Fibre Channel HBA Driver: 8.00.00b11-k
-  QLogic QLA2300 -
-  ISP2300: PCI (33 MHz) @ 0000:01:05.0 hdma-, host#=2, fw=3.02.26 IPX
-
-
-  -jf
+> This is effectively a FC specific thing, and I believe you 
+> know because
+> you get a lip event telling you the target has gone, so it sounds like
+> the ideal thing to handle in the FC transport class (since it would
+> apply to all FC HBAs) The target reconnect timeout would then be a
+> transport class property and we'd start failing I/Os when it 
+> expired.  I
+> would guess there needs to be an additional state in the device state
+> model like SUSPEND (QUIESCE doesn't quite fit because it allows the
+> pending queue to drain and the error handler to operate), but we can
+> accomodate that.
+> 
+> By default, I would think the reconnect timeout should be zero because
+> most FC operates in a multi-path environment and you want path failure
+> notifications as fast as possible, so users requiring this 
+> feature would
+> need to set the timeout.
+> 
+> James
+> 
+> 
+> -
+> To unsubscribe from this list: send the line "unsubscribe 
+> linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
