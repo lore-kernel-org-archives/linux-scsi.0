@@ -1,64 +1,48 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: aacraid oopses on load
-Date: Fri, 12 Mar 2004 12:36:55 +0100
+From: Lincoln Dale <ltd@cisco.com>
+Subject: Re: [BUG] modprobe qla2300 doesn't complete
+Date: Fri, 12 Mar 2004 23:30:28 +1100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040312113655.GN6955@suse.de>
-References: <20040312113104.GM6955@suse.de>
+Message-ID: <5.1.0.14.2.20040312232611.044c2e98@mira-sjcm-3.cisco.com>
+References: <20040310221241.GA7903@colo.lackof.org>
+ <20040305041850.GA9124@colo.lackof.org>
+ <20040305071721.GA9684@praka.local.home>
+ <20040305172147.GB17305@colo.lackof.org>
+ <20040309164033.GA21648@praka.local.home>
+ <20040310221241.GA7903@colo.lackof.org> <20040312061119.GA6402@praka.local.home>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="us-ascii"; format=flowed
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns.virtualhost.dk ([195.184.98.160]:40132 "EHLO virtualhost.dk")
-	by vger.kernel.org with ESMTP id S261764AbUCLLg5 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 12 Mar 2004 06:36:57 -0500
-Content-Disposition: inline
-In-Reply-To: <20040312113104.GM6955@suse.de>
+Received: from sj-iport-1-in.cisco.com ([171.71.176.70]:2322 "EHLO
+	sj-iport-1.cisco.com") by vger.kernel.org with ESMTP
+	id S262095AbUCLNaj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 12 Mar 2004 08:30:39 -0500
+In-Reply-To: <20040312061119.GA6402@praka.local.home>
+References: <20040310221241.GA7903@colo.lackof.org>
+ <20040305041850.GA9124@colo.lackof.org>
+ <20040305071721.GA9684@praka.local.home>
+ <20040305172147.GB17305@colo.lackof.org>
+ <20040309164033.GA21648@praka.local.home>
+ <20040310221241.GA7903@colo.lackof.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, mark_salyzyn@adaptec.com
-Cc: markh@osdl.org, "Justin T. Gibbs" <gibbs@scsiguy.com>
+To: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Cc: Grant Grundler <grundler@parisc-linux.org>, linux-scsi@vger.kernel.org
 
-On Fri, Mar 12 2004, Jens Axboe wrote:
-> Hi
-> 
-> 2.6.3(-ish) oopses on load of aacraid:
-> 
-> Oops: 0002 [#1]
-> CPU:    0
-> EIP:    0060:[<c01d2306>]    Not tainted
-> EFLAGS: 00010292
-> EIP is at kobject_add+0x66/0x130
-> eax: c0362840   ebx: e113a11c   ecx: e1161e98   edx: e113a138
-> esi: e113a120   edi: e113a104   ebp: c0362848   esp: dd497db0
-> ds: 007b   es: 007b   ss: 0068
-> Process modprobe (pid: 622, threadinfo=dd496000 task=dd28c080)
-> Stack: e113a11c ffffffea e113a104 00000000 c01d2459 e113a11c c03627e0
-> c0216b7f
->        e113a11c e112b538 e113a0e0 00000000 e113a178 c032e258 c0217008
-> 00000001
->        00000046 c03a3a00 00000001 c01db00b c032e268 00000000 c032e258
-> e112855a
-> Call Trace:
->  [<c01d2459>] kobject_register+0x19/0x3f
->  [<c0216b7f>] bus_add_driver+0x2f/0x80
->  [<c0217008>] driver_register+0x28/0x30
->  [<c01db00b>] pci_register_driver+0x4b/0x80
->  [<e112855a>] ahc_linux_pci_init+0xa/0x990 [aic7xxx]
->  [<e100a19c>] ahc_linux_init+0x19c/0x29b [aic7xxx]
->  [<e110f000>] ahc_patch23_func+0x0/0x10 [aic7xxx]
->  [<c012f105>] sys_init_module+0x105/0x15a0
->  [<c0121120>] __request_region+0x0/0x80
->  [<e100a000>] ahc_linux_init+0x0/0x29b [aic7xxx]
->  [<c010e5ad>] do_mmap2+0x6d/0xa0
->  [<c010e5cf>] do_mmap2+0x8f/0xa0
->  [<c010e65d>] old_mmap+0x7d/0xa0
->  [<c0108e17>] syscall_call+0x7/0xb
-> 
-> Code: 89 11 8b 43 28 8b 30 8d 4e 48 89 c8 ba ff ff 00 00 0f c1 10
->  <6>Red Hat/Adaptec aacraid driver (1.1.2-lk1 Mar  9 2004)
+At 05:11 PM 12/03/2004, Andrew Vasquez wrote:
+>So, I'm not entirely clear on what else is going on with your
+>configuration.  I'll try to get some runtime on an ia64 machine
+>tomorrow to perform the same test.
 
-The oops is on aic7xxx of course, _not_ aacraid. Thanks Arjan for
-correcting me.
+if you have access to some SAN test equipment (e.g. Agilent SAN Tester), or 
+SAN-rootkit (e.g. we have internal tools which can cause RSCN floods, FLOGI 
+floods, PLOGI floods, rogue injection of vast quantities of NS 
+registrations ...), it currently doesn't seem too hard to upset the qla2300 
+into a never-ending incomplete state such that Grant has seen.
 
--- 
-Jens Axboe
+have you guys ever considered rate-limiting NS queries following receiving 
+RSCNs?
+
+
+cheers,
+
+lincoln.
 
