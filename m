@@ -1,50 +1,74 @@
-From: Heiko Carstens <heiko.carstens@de.ibm.com>
-Subject: [BUG] linux-2.6.0-test9: slave_destroy called too early
-Date: Tue, 11 Nov 2003 11:45:49 +0100
+From: Naveen Burmi <naveenb@cisco.com>
+Subject: Re: Request for review of Linux iSCSI driver version 4.0.0.1
+Date: Tue, 11 Nov 2003 17:26:36 +0530
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <200311111145.49009.heiko.carstens@de.ibm.com>
+Message-ID: <03111117263601.01918@naveenb-lnx.cisco.com>
+References: <20031027153932.A16679@infradead.org> <018b01c39e1f$e013bab0$a0074d0a@apac.cisco.com> <20031029134557.A17523@infradead.org>
+Reply-To: naveenb@cisco.com
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtagate7.de.ibm.com ([195.212.29.156]:6362 "EHLO
-	mtagate7.de.ibm.com") by vger.kernel.org with ESMTP id S263135AbTKKK4C convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 11 Nov 2003 05:56:02 -0500
-Received: from d12relay02.megacenter.de.ibm.com (d12relay02.megacenter.de.ibm.com [9.149.165.196] (may be forged))
-	by mtagate7.de.ibm.com (8.12.10/8.12.10) with ESMTP id hABAu0xm023322
-	for <linux-scsi@vger.kernel.org>; Tue, 11 Nov 2003 10:56:00 GMT
-Received: from osiris (d12av02.megacenter.de.ibm.com [9.149.165.228])
-	by d12relay02.megacenter.de.ibm.com (8.12.9/NCO/VER6.6) with ESMTP id hABAtx3A250346
-	for <linux-scsi@vger.kernel.org>; Tue, 11 Nov 2003 11:55:59 +0100
+Received: from sj-iport-2-in.cisco.com ([171.71.176.71]:57139 "EHLO
+	sj-iport-2.cisco.com") by vger.kernel.org with ESMTP
+	id S263466AbTKKLxD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 11 Nov 2003 06:53:03 -0500
+In-Reply-To: <20031029134557.A17523@infradead.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+Cc: 'Christoph Hellwig' <hch@infradead.org>, linux-scsi@vger.kernel.org, davmyers@cisco.com
 
-Hi,
+On Wednesday 29 October 2003 07:15 pm, 'Christoph Hellwig' wrote:
+> On Wed, Oct 29, 2003 at 06:53:43PM +0530, Surekha.PC wrote:
+> > Hi,
+> >
+> >  I have interspersed my answers below for 2 of your comments.
+> >
+> > >	- kill the is_root_disk special casing.  drivers can't know
+> > >	what the root disks is, there might not even be a single one.
+> >
+> > This flag is needed for our iSCSI network boot implementation to check
+> > if we are booted on iSCSI disk. This is used while trying to shutdown
+> > the iSCSI service.
+>
+> What if the root device changes (pivot_root syscall, namespaces)?  You need
+> to find a way to do what you want without having knowledge about beeing
+> a root device in the LLDD - there might not be a single root device and it
+> could change all the time.
 
-in linux-2.6.0-test9 there seems to be a bug in scsi_remove_device: each time
-I try to remove a scsi disk the sd driver fails to synchronize the SCSI cache.
-Reason for this is that the slave_destroy function of the LLD gets called
-before sd_shutdown of the sd driver gets called.
-I would suggest the patch below. Please apply or let me know that this is the
-wrong thing to do.
+During shutdown iSCSI driver gets signal to stop itself. In turn iSCSI driver 
+umounts all the partitions present of iSCSI disks, makes all the iSCSI disks 
+unavailble to the system and gracefully terminate. 
+But if iSCSI disk contains the root partition OR is part of root partition 
+then iSCSI driver must not try to umount the root partition and the iSCSI 
+disks must be available until the buffer cache gets flushed properly. For 
+this to happen iSCSI driver must be aware of all the iSCSI disk(s) that 
+constitute the root partition/devices.
+
+	Q. What kernel data structures/API's are available that provide the 
+information about root device(s)?
+
+>
+> > This is again needed for network boot. The n/w driver and iSCSI driver
+> > are loaded during early boot. Since the n/w interface is not setup at
+> > that time, we need to bring up the interface through this call in iSCSI
+> > driver.
+>
+> That's bogus.  Look at the ip autoconfig code used by rootnfs and reuse
+> that instead of creating such bogus hacks.  A driver has no business
+> dealing with the network configuration.
+
+During shutdown iSCSI driver must bring up the network interface, if it goes 
+down, so to make available the iSCSI disk(s) on which the root partition 
+exists. iscsi_set_if_addr is used to bring up the newtwork interface at the 
+time of shutdown. 
+Q. Is ip autoconfig code helps us to bring up the newtwork interface at the 
+time of shutdown? 
 
 Thanks,
-Heiko
+Naveen.
 
-diff -urN linux-2.6.0-test9/drivers/scsi/scsi_sysfs.c 
-linux-2.6.0-test9-sd/drivers/scsi/scsi_sysfs.c
---- linux-2.6.0-test9/drivers/scsi/scsi_sysfs.c	Sat Oct 25 20:43:04 2003
-+++ linux-2.6.0-test9-sd/drivers/scsi/scsi_sysfs.c	Tue Nov 11 11:43:27 2003
-@@ -410,9 +410,9 @@
- 	if (class) {
- 		down_write(&class->subsys.rwsem);
- 		set_bit(SDEV_DEL, &sdev->sdev_state);
-+		device_del(&sdev->sdev_gendev);
- 		if (sdev->host->hostt->slave_destroy)
- 			sdev->host->hostt->slave_destroy(sdev);
--		device_del(&sdev->sdev_gendev);
- 		up_write(&class->subsys.rwsem);
- 	}
-
+>
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
