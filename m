@@ -1,1454 +1,2171 @@
 From: Martin Schwidefsky <schwidefsky@de.ibm.com>
-Subject: [PATCH] s390 (8/10): zfcp fixes.
-Date: Tue, 16 Mar 2004 14:51:55 +0100
+Subject: [PATCH] s390 (10/10): zfcp log messages part 2.
+Date: Tue, 16 Mar 2004 14:52:36 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040316135155.GI2785@mschwid3.boeblingen.de.ibm.com>
+Message-ID: <20040316135236.GK2785@mschwid3.boeblingen.de.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtagate1.de.ibm.com ([195.212.29.150]:20916 "EHLO
-	mtagate1.de.ibm.com") by vger.kernel.org with ESMTP id S261739AbUCPNxP
+Received: from mtagate3.de.ibm.com ([195.212.29.152]:26294 "EHLO
+	mtagate3.de.ibm.com") by vger.kernel.org with ESMTP id S261743AbUCPNxT
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 16 Mar 2004 08:53:15 -0500
+	Tue, 16 Mar 2004 08:53:19 -0500
 Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
 To: akpm@osdl.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-zfcp host adapter fixes:
- - Reuse freed scsi_ids and scsi_luns for mappings.
- - Order list of ports/units by assigned scsi_id/scsi_lun.
- - Don't update max_id/max_lun in scsi_host anymore.
- - Get rid of all magics.
- - Add owner field to ccw_driver structure.
- - Replace release function for device structures by kfree. Move struct
-   device to the start of struct zfcp_port/zfcp_unit to make it work.
- - Avoid deadlock on bus->subsys.rwsem.
- - Use a macro for all scsi device sysfs attributes.
- - Change proc_name from "dummy" to "zfcp".
- - Don't wait for scsi_add_device to complete while holding a semaphore.
- - Cleanup include files in zfcp_aux.c & zfcp_def.h.
- - Get rid of zfcp_erp_fsf_req_handler.
+zfcp host adapter log message cleanup part 2:
+ - Shorten log output.
+ - Increase log level for some messages.
+ - Always print leading zeroes for wwpn and fcp-lun.
 
 diffstat:
- drivers/s390/scsi/zfcp_aux.c           |  191 ++++++++-------------------------
- drivers/s390/scsi/zfcp_ccw.c           |   14 --
- drivers/s390/scsi/zfcp_def.h           |   44 +++----
- drivers/s390/scsi/zfcp_erp.c           |   26 ----
- drivers/s390/scsi/zfcp_ext.h           |    6 -
- drivers/s390/scsi/zfcp_fsf.c           |  185 +++++++++++++++++--------------
- drivers/s390/scsi/zfcp_fsf.h           |   12 +-
- drivers/s390/scsi/zfcp_qdio.c          |   15 --
- drivers/s390/scsi/zfcp_scsi.c          |   98 +++++-----------
- drivers/s390/scsi/zfcp_sysfs_adapter.c |   31 -----
- drivers/s390/scsi/zfcp_sysfs_port.c    |   20 ---
- drivers/s390/scsi/zfcp_sysfs_unit.c    |   16 --
- 12 files changed, 236 insertions(+), 422 deletions(-)
+ drivers/s390/scsi/zfcp_fsf.c  |  704 ++++++++++++++++--------------------------
+ drivers/s390/scsi/zfcp_fsf.h  |   10 
+ drivers/s390/scsi/zfcp_qdio.c |  102 ++----
+ drivers/s390/scsi/zfcp_scsi.c |   92 ++---
+ 4 files changed, 360 insertions(+), 548 deletions(-)
 
-diff -urN linux-2.6/drivers/s390/scsi/zfcp_aux.c linux-2.6-s390/drivers/s390/scsi/zfcp_aux.c
---- linux-2.6/drivers/s390/scsi/zfcp_aux.c	Thu Mar 11 03:55:54 2004
-+++ linux-2.6-s390/drivers/s390/scsi/zfcp_aux.c	Tue Mar 16 14:03:14 2004
-@@ -29,43 +29,10 @@
-  */
- 
- /* this drivers version (do not edit !!! generated and updated by cvs) */
--#define ZFCP_AUX_REVISION "$Revision: 1.98 $"
--
--/********************** INCLUDES *********************************************/
--
--#include <linux/init.h>
--#include <linux/config.h>
--#include <linux/kernel.h>
--#include <linux/string.h>
--#include <linux/errno.h>
--#include <linux/ctype.h>
--#include <linux/mm.h>
--#include <linux/timer.h>
--#include <linux/delay.h>
--#include <linux/slab.h>
--#include <linux/version.h>
--#include <linux/list.h>
--#include <linux/interrupt.h>
--#include <linux/init.h>
--#include <linux/proc_fs.h>
--#include <linux/time.h>
--#include <linux/module.h>
--#include <linux/moduleparam.h>
--#include <linux/workqueue.h>
--#include <linux/syscalls.h>
-+#define ZFCP_AUX_REVISION "$Revision: 1.103 $"
- 
- #include "zfcp_ext.h"
- 
--#include <asm/semaphore.h>
--#include <asm/io.h>
--#include <asm/irq.h>
--#include <asm/ebcdic.h>
--#include <asm/cpcmd.h>		/* Debugging only */
--#include <asm/processor.h>	/* Debugging only */
--
--#include <linux/miscdevice.h>
--#include <linux/major.h>
--
- /* accumulated log level (module parameter) */
- static u32 loglevel = ZFCP_LOG_LEVEL_DEFAULTS;
- static char *device;
-@@ -421,8 +388,8 @@
- 		goto out_unit;
- 	up(&zfcp_data.config_sema);
- 	ccw_device_set_online(adapter->ccw_device);
--	down(&zfcp_data.config_sema);
- 	wait_event(unit->scsi_add_wq, atomic_read(&unit->scsi_add_work) == 0);
-+	down(&zfcp_data.config_sema);
- 	zfcp_unit_put(unit);
-  out_unit:
- 	zfcp_port_put(port);
-@@ -978,7 +945,9 @@
- struct zfcp_unit *
- zfcp_unit_enqueue(struct zfcp_port *port, fcp_lun_t fcp_lun)
- {
--	struct zfcp_unit *unit;
-+	struct zfcp_unit *unit, *tmp_unit;
-+	scsi_lun_t scsi_lun;
-+	int found;
- 
- 	/*
- 	 * check that there is no unit with this FCP_LUN already in list
-@@ -1002,18 +971,12 @@
- 	init_waitqueue_head(&unit->remove_wq);
- 
- 	unit->port = port;
--	/*
--	 * FIXME: reuse of scsi_luns!
--	 */
--	unit->scsi_lun = port->max_scsi_lun + 1;
- 	unit->fcp_lun = fcp_lun;
--	unit->common_magic = ZFCP_MAGIC;
--	unit->specific_magic = ZFCP_MAGIC_UNIT;
- 
- 	/* setup for sysfs registration */
- 	snprintf(unit->sysfs_device.bus_id, BUS_ID_SIZE, "0x%016llx", fcp_lun);
- 	unit->sysfs_device.parent = &port->sysfs_device;
--	unit->sysfs_device.release = zfcp_sysfs_unit_release;
-+	unit->sysfs_device.release = (void (*)(struct device *))kfree;
- 	dev_set_drvdata(&unit->sysfs_device, unit);
- 
- 	/* mark unit unusable as long as sysfs registration is not complete */
-@@ -1025,43 +988,29 @@
- 	}
- 
- 	if (zfcp_sysfs_unit_create_files(&unit->sysfs_device)) {
--		/*
--		 * failed to create all sysfs attributes, therefore the unit
--		 * must be put on the unit_remove listhead of the port where
--		 * the release function expects it.
--		 */
--		write_lock_irq(&zfcp_data.config_lock);
--		list_add_tail(&unit->list, &port->unit_remove_lh);
--		write_unlock_irq(&zfcp_data.config_lock);
- 		device_unregister(&unit->sysfs_device);
- 		return NULL;
- 	}
- 
--	/*
--	 * update max SCSI LUN of logical units attached to parent remote port
--	 */
--	port->max_scsi_lun++;
--
--	/*
--	 * update max SCSI LUN of logical units attached to parent adapter
--	 */
--	if (port->adapter->max_scsi_lun < port->max_scsi_lun)
--		port->adapter->max_scsi_lun = port->max_scsi_lun;
--
--	/*
--	 * update max SCSI LUN of logical units attached to host (SCSI stack)
--	 */
--	if (port->adapter->scsi_host &&
--	    (port->adapter->scsi_host->max_lun < port->max_scsi_lun))
--		port->adapter->scsi_host->max_lun = port->max_scsi_lun + 1;
--
- 	zfcp_unit_get(unit);
- 
--	/* unit is new and needs to be added to list */
-+	scsi_lun = 0;
-+	found = 0;
- 	write_lock_irq(&zfcp_data.config_lock);
-+	list_for_each_entry(tmp_unit, &port->unit_list_head, list) {
-+		if (tmp_unit->scsi_lun != scsi_lun) {
-+			found = 1;
-+			break;
-+		}
-+		scsi_lun++;
-+	}
-+	unit->scsi_lun = scsi_lun;
-+	if (found)
-+		list_add_tail(&unit->list, &tmp_unit->list);
-+	else
-+		list_add_tail(&unit->list, &port->unit_list_head);
- 	atomic_clear_mask(ZFCP_STATUS_COMMON_REMOVE, &unit->status);
- 	atomic_set_mask(ZFCP_STATUS_COMMON_RUNNING, &unit->status);
--	list_add_tail(&unit->list, &port->unit_list_head);
- 	write_unlock_irq(&zfcp_data.config_lock);
- 
- 	port->units++;
-@@ -1070,21 +1019,17 @@
- 	return unit;
- }
- 
--/* locks:  config_sema must be held */
- void
- zfcp_unit_dequeue(struct zfcp_unit *unit)
- {
--	/* remove specified unit data structure from list */
-+	zfcp_unit_wait(unit);
- 	write_lock_irq(&zfcp_data.config_lock);
- 	list_del(&unit->list);
- 	write_unlock_irq(&zfcp_data.config_lock);
--
- 	unit->port->units--;
- 	zfcp_port_put(unit->port);
--
--	kfree(unit);
--
--	return;
-+	zfcp_sysfs_unit_remove_files(&unit->sysfs_device);
-+	device_unregister(&unit->sysfs_device);
- }
- 
- static void *
-@@ -1154,7 +1099,7 @@
- 
- 	adapter->pool.data_status_read =
- 		mempool_create(ZFCP_POOL_STATUS_READ_NR,
--			       zfcp_mempool_alloc, zfcp_mempool_free,
-+			       zfcp_mempool_alloc, zfcp_mempool_free, 
- 			       (void *) sizeof(struct fsf_status_read_buffer));
- 
- 	if (NULL == adapter->pool.data_status_read) {
-@@ -1246,10 +1191,6 @@
- 	if (retval)
- 		goto failed_low_mem_buffers;
- 
--	/* set magics */
--	adapter->common_magic = ZFCP_MAGIC;
--	adapter->specific_magic = ZFCP_MAGIC_ADAPTER;
--
- 	/* initialise reference count stuff */
- 	atomic_set(&adapter->refcount, 0);
- 	init_waitqueue_head(&adapter->remove_wq);
-@@ -1515,25 +1456,20 @@
- }
- 
- /*
-- * Enqueues a remote port at the end of the port list.
-- * All port internal structures are set-up and the proc-fs entry is also 
-- * allocated. Some SCSI-stack structures are modified for the port.
-+ * Enqueues a remote port to the port list. All port internal structures
-+ * are set up and the sysfs entry is also generated.
-  *
-- * returns:	0            if a new port was successfully enqueued
-- *              ZFCP_KNOWN   if a port with the requested wwpn already exists
-- *              -ENOMEM      if allocation failed
-- *              -EINVAL      if at least one of the specified parameters was wrong
-+ * returns:     pointer to port or NULL
-  * locks:       config_sema must be held to serialise changes to the port list
-- *              within this function (must not be held on entry)
-  */
- struct zfcp_port *
- zfcp_port_enqueue(struct zfcp_adapter *adapter, wwn_t wwpn, u32 status)
- {
--	struct zfcp_port *port;
--	int check_scsi_id;
-+	struct zfcp_port *port, *tmp_port;
- 	int check_wwpn;
-+	scsi_id_t scsi_id;
-+	int found;
- 
--	check_scsi_id = !(status & ZFCP_STATUS_PORT_NO_SCSI_ID);
- 	check_wwpn = !(status & ZFCP_STATUS_PORT_NO_WWPN);
- 
- 	/*
-@@ -1561,17 +1497,11 @@
- 
- 	port->adapter = adapter;
- 
--	if (check_scsi_id)
--		port->scsi_id = adapter->max_scsi_id + 1;
--
- 	if (check_wwpn)
- 		port->wwpn = wwpn;
- 
- 	atomic_set_mask(status, &port->status);
- 
--	port->common_magic = ZFCP_MAGIC;
--	port->specific_magic = ZFCP_MAGIC_PORT;
--
- 	/* setup for sysfs registration */
- 	if (status & ZFCP_STATUS_PORT_NAMESERVER)
- 		snprintf(port->sysfs_device.bus_id, BUS_ID_SIZE, "nameserver");
-@@ -1579,7 +1509,7 @@
- 		snprintf(port->sysfs_device.bus_id,
- 			 BUS_ID_SIZE, "0x%016llx", wwpn);
- 	port->sysfs_device.parent = &adapter->ccw_device->dev;
--	port->sysfs_device.release = zfcp_sysfs_port_release;
-+	port->sysfs_device.release = (void (*)(struct device *))kfree;
- 	dev_set_drvdata(&port->sysfs_device, port);
- 
- 	/* mark port unusable as long as sysfs registration is not complete */
-@@ -1591,41 +1521,32 @@
- 	}
- 
- 	if (zfcp_sysfs_port_create_files(&port->sysfs_device, status)) {
--		/*
--		 * failed to create all sysfs attributes, therefore the port
--		 * must be put on the port_remove listhead of the adapter
--		 * where the release function expects it.
--		 */
--		write_lock_irq(&zfcp_data.config_lock);
--		list_add_tail(&port->list, &adapter->port_remove_lh);
--		write_unlock_irq(&zfcp_data.config_lock);
- 		device_unregister(&port->sysfs_device);
- 		return NULL;
- 	}
- 
--	if (check_scsi_id) {
--		/*
--		 * update max. SCSI ID of remote ports attached to
--		 * "parent" adapter if necessary
--		 * (do not care about the adapters own SCSI ID)
--		 */
--		adapter->max_scsi_id++;
--
--		/*
--		 * update max. SCSI ID of remote ports attached to
--		 * "parent" host (SCSI stack) if necessary
--		 */
--		if (adapter->scsi_host &&
--		    (adapter->scsi_host->max_id < adapter->max_scsi_id + 1))
--			adapter->scsi_host->max_id = adapter->max_scsi_id + 1;
--	}
--
- 	zfcp_port_get(port);
- 
-+	scsi_id = 1;
-+	found = 0;
- 	write_lock_irq(&zfcp_data.config_lock);
-+	list_for_each_entry(tmp_port, &adapter->port_list_head, list) {
-+		if (atomic_test_mask(ZFCP_STATUS_PORT_NO_SCSI_ID,
-+				     &tmp_port->status))
-+			continue;
-+		if (tmp_port->scsi_id != scsi_id) {
-+			found = 1;
-+			break;
-+		}
-+		scsi_id++;
-+	}
-+	port->scsi_id = scsi_id;
-+	if (found)
-+		list_add_tail(&port->list, &tmp_port->list);
-+	else
-+		list_add_tail(&port->list, &adapter->port_list_head);
- 	atomic_clear_mask(ZFCP_STATUS_COMMON_REMOVE, &port->status);
- 	atomic_set_mask(ZFCP_STATUS_COMMON_RUNNING, &port->status);
--	list_add_tail(&port->list, &adapter->port_list_head);
- 	write_unlock_irq(&zfcp_data.config_lock);
- 
- 	adapter->ports++;
-@@ -1634,26 +1555,18 @@
- 	return port;
- }
- 
--/*
-- * returns:	0 - struct zfcp_port data structure successfully removed
-- *		!0 - struct zfcp_port data structure could not be removed
-- *			(e.g. still used)
-- * locks :	port list write lock is assumed to be held by caller
-- */
- void
- zfcp_port_dequeue(struct zfcp_port *port)
- {
--	/* remove specified port from list */
-+	zfcp_port_wait(port);
- 	write_lock_irq(&zfcp_data.config_lock);
- 	list_del(&port->list);
- 	write_unlock_irq(&zfcp_data.config_lock);
--
- 	port->adapter->ports--;
- 	zfcp_adapter_put(port->adapter);
--
--	kfree(port);
--
--	return;
-+	zfcp_sysfs_port_remove_files(&port->sysfs_device,
-+				     atomic_read(&port->status));
-+	device_unregister(&port->sysfs_device);
- }
- 
- /* Enqueues a nameserver port */
-diff -urN linux-2.6/drivers/s390/scsi/zfcp_ccw.c linux-2.6-s390/drivers/s390/scsi/zfcp_ccw.c
---- linux-2.6/drivers/s390/scsi/zfcp_ccw.c	Thu Mar 11 03:55:24 2004
-+++ linux-2.6-s390/drivers/s390/scsi/zfcp_ccw.c	Tue Mar 16 14:03:14 2004
-@@ -26,7 +26,7 @@
-  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
-  */
- 
--#define ZFCP_CCW_C_REVISION "$Revision: 1.48 $"
-+#define ZFCP_CCW_C_REVISION "$Revision: 1.51 $"
- 
- #include <linux/init.h>
- #include <linux/module.h>
-@@ -55,6 +55,7 @@
- };
- 
- static struct ccw_driver zfcp_ccw_driver = {
-+	.owner       = THIS_MODULE,
- 	.name        = ZFCP_NAME,
- 	.ids         = zfcp_ccw_device_id,
- 	.probe       = zfcp_ccw_probe,
-@@ -130,14 +131,9 @@
- 
- 	list_for_each_entry_safe(port, p, &adapter->port_remove_lh, list) {
- 		list_for_each_entry_safe(unit, u, &port->unit_remove_lh, list) {
--			zfcp_unit_wait(unit);
--			zfcp_sysfs_unit_remove_files(&unit->sysfs_device);
--			device_unregister(&unit->sysfs_device);
-+			zfcp_unit_dequeue(unit);
- 		}
--		zfcp_port_wait(port);
--		zfcp_sysfs_port_remove_files(&port->sysfs_device,
--					     atomic_read(&port->status));
--		device_unregister(&port->sysfs_device);
-+		zfcp_port_dequeue(port);
- 	}
- 	zfcp_adapter_wait(adapter);
- 	zfcp_adapter_dequeue(adapter);
-@@ -163,7 +159,7 @@
- 	down(&zfcp_data.config_sema);
- 	adapter = dev_get_drvdata(&ccw_device->dev);
- 
--	retval = zfcp_erp_thread_setup(adapter);
-+	retval = zfcp_erp_thread_setup(adapter); 
- 	if (retval) {
- 		ZFCP_LOG_INFO("error: out of resources. "
- 			      "error recovery thread for adapter %s "
-diff -urN linux-2.6/drivers/s390/scsi/zfcp_def.h linux-2.6-s390/drivers/s390/scsi/zfcp_def.h
---- linux-2.6/drivers/s390/scsi/zfcp_def.h	Thu Mar 11 03:55:28 2004
-+++ linux-2.6-s390/drivers/s390/scsi/zfcp_def.h	Tue Mar 16 14:03:14 2004
-@@ -33,25 +33,29 @@
- #define ZFCP_DEF_H
- 
- /* this drivers version (do not edit !!! generated and updated by cvs) */
--#define ZFCP_DEF_REVISION "$Revision: 1.62 $"
-+#define ZFCP_DEF_REVISION "$Revision: 1.69 $"
- 
- /*************************** INCLUDES *****************************************/
- 
-+#include <linux/init.h>
-+#include <linux/moduleparam.h>
-+#include <linux/miscdevice.h>
-+#include <linux/major.h>
- #include <linux/blkdev.h>
- #include <scsi/scsi.h>
- #include <scsi/scsi_tcq.h>
- #include <scsi/scsi_cmnd.h>
- #include <scsi/scsi_device.h>
- #include <scsi/scsi_host.h>
--#include "../../scsi/scsi.h"
- #include "../../fc4/fc.h"
--#include "zfcp_fsf.h"			/* FSF SW Interface */
-+#include "zfcp_fsf.h"
- #include <asm/ccwdev.h>
- #include <asm/qdio.h>
- #include <asm/debug.h>
- #include <asm/ebcdic.h>
- #include <linux/reboot.h>
- #include <linux/mempool.h>
-+#include <linux/syscalls.h>
- #include <linux/ioctl.h>
- #ifdef CONFIG_S390_SUPPORT
- #include <linux/ioctl32.h>
-@@ -937,8 +941,6 @@
- 
- 
- struct zfcp_adapter {
--	u32			common_magic;	   /* driver common magic */
--	u32			specific_magic;	   /* struct specific magic */
- 	struct list_head	list;              /* list of adapters */
- 	atomic_t                refcount;          /* reference count */
- 	wait_queue_head_t	remove_wq;         /* can be used to wait for
-@@ -956,14 +958,12 @@
-         u32			hardware_version;  /* of FCP channel */
-         u8			serial_number[32]; /* of hardware */
- 	struct Scsi_Host	*scsi_host;	   /* Pointer to mid-layer */
--
-+	unsigned short          scsi_host_no;      /* Assigned host number */
- 	unsigned char		name[9];
- 	struct list_head	port_list_head;	   /* remote port list */
- 	struct list_head        port_remove_lh;    /* head of ports to be
- 						      removed */
- 	u32			ports;	           /* number of remote ports */
--	scsi_id_t		max_scsi_id;	   /* largest SCSI ID */
--	scsi_lun_t		max_scsi_lun;	   /* largest SCSI LUN */
-         struct timer_list       scsi_er_timer;     /* SCSI err recovery watch */
- 	struct list_head	fsf_req_list_head; /* head of FSF req list */
- 	rwlock_t		fsf_req_list_lock; /* lock for ops on list of
-@@ -1003,9 +1003,13 @@
- 	struct qdio_initialize  qdio_init_data;    /* for qdio_establish */
- };
- 
-+/*
-+ * the struct device sysfs_device must be at the beginning of this structure.
-+ * pointer to struct device is used to free port structure in release function
-+ * of the device. don't change!
-+ */
- struct zfcp_port {
--	u32		       common_magic;   /* driver wide common magic */
--	u32		       specific_magic; /* structure specific magic */
-+	struct device          sysfs_device;   /* sysfs device */
- 	struct list_head       list;	       /* list of remote ports */
- 	atomic_t               refcount;       /* reference count */
- 	wait_queue_head_t      remove_wq;      /* can be used to wait for
-@@ -1020,37 +1024,36 @@
- 	wwn_t		       wwnn;	       /* WWNN if known */
- 	wwn_t		       wwpn;	       /* WWPN */
- 	fc_id_t		       d_id;	       /* D_ID */
--	scsi_lun_t	       max_scsi_lun;   /* largest SCSI LUN */
- 	u32		       handle;	       /* handle assigned by FSF */
- 	struct zfcp_erp_action erp_action;     /* pending error recovery */
-         atomic_t               erp_counter;
--	struct device          sysfs_device;   /* sysfs device */
- };
- 
-+/* the struct device sysfs_device must be at the beginning of this structure.
-+ * pointer to struct device is used to free unit structure in release function
-+ * of the device. don't change!
-+ */
- struct zfcp_unit {
--	u32		       common_magic;   /* driver wide common magic */
--	u32		       specific_magic; /* structure specific magic */
-+	struct device          sysfs_device;   /* sysfs device */
- 	struct list_head       list;	       /* list of logical units */
- 	atomic_t               refcount;       /* reference count */
- 	wait_queue_head_t      remove_wq;      /* can be used to wait for
- 						  refcount drop to zero */
- 	struct zfcp_port       *port;	       /* remote port of unit */
- 	atomic_t	       status;	       /* status of this logical unit */
-+	u32		       lun_access;     /* access flags for this unit */
- 	scsi_lun_t	       scsi_lun;       /* own SCSI LUN */
- 	fcp_lun_t	       fcp_lun;	       /* own FCP_LUN */
- 	u32		       handle;	       /* handle assigned by FSF */
-         struct scsi_device     *device;        /* scsi device struct pointer */
- 	struct zfcp_erp_action erp_action;     /* pending error recovery */
-         atomic_t               erp_counter;
--	struct device          sysfs_device;   /* sysfs device */
- 	atomic_t               scsi_add_work;  /* used to synchronize */
- 	wait_queue_head_t      scsi_add_wq;    /* wait for scsi_add_device */
- };
- 
- /* FSF request */
- struct zfcp_fsf_req {
--	u32		       common_magic;   /* driver wide common magic */
--	u32		       specific_magic; /* structure specific magic */
- 	struct list_head       list;	       /* list of FSF requests */
- 	struct zfcp_adapter    *adapter;       /* adapter request belongs to */
- 	u8		       sbal_number;    /* nr of SBALs free for use */
-@@ -1158,13 +1161,6 @@
- #define ZFCP_INTERRUPTIBLE	1
- #define ZFCP_UNINTERRUPTIBLE	0
- 
--/* some magics which may be used to authenticate data structures */
--#define ZFCP_MAGIC		0xFCFCFCFC
--#define ZFCP_MAGIC_ADAPTER	0xAAAAAAAA
--#define ZFCP_MAGIC_PORT		0xBBBBBBBB
--#define ZFCP_MAGIC_UNIT		0xCCCCCCCC
--#define ZFCP_MAGIC_FSFREQ	0xEEEEEEEE
--
- #ifndef atomic_test_mask
- #define atomic_test_mask(mask, target) \
-            ((atomic_read(target) & mask) == mask)
-diff -urN linux-2.6/drivers/s390/scsi/zfcp_erp.c linux-2.6-s390/drivers/s390/scsi/zfcp_erp.c
---- linux-2.6/drivers/s390/scsi/zfcp_erp.c	Thu Mar 11 03:55:23 2004
-+++ linux-2.6-s390/drivers/s390/scsi/zfcp_erp.c	Tue Mar 16 14:07:24 2004
-@@ -31,7 +31,7 @@
- #define ZFCP_LOG_AREA			ZFCP_LOG_AREA_ERP
- 
- /* this drivers version (do not edit !!! generated and updated by cvs) */
--#define ZFCP_ERP_REVISION "$Revision: 1.44 $"
-+#define ZFCP_ERP_REVISION "$Revision: 1.46 $"
- 
- #include "zfcp_ext.h"
- 
-@@ -1202,7 +1202,7 @@
-  * returns:	0 - there was an action to handle
-  *		!0 - otherwise
-  */
--static int
-+int
- zfcp_erp_async_handler(struct zfcp_erp_action *erp_action,
- 		       unsigned long set_mask)
- {
-@@ -1218,28 +1218,6 @@
- }
- 
- /*
-- * purpose:	is called for finished FSF requests related to erp,
-- *		moves concerned erp action to 'ready' queue and
-- *		signals erp thread to process it,
-- *		besides it cancels a timeout
-- */
--void
--zfcp_erp_fsf_req_handler(struct zfcp_fsf_req *fsf_req)
--{
--	struct zfcp_erp_action *erp_action = fsf_req->erp_action;
--	struct zfcp_adapter *adapter = fsf_req->adapter;
--
--	debug_text_event(adapter->erp_dbf, 3, "a_frh");
--	debug_event(adapter->erp_dbf, 3, &erp_action->action, sizeof (int));
--
--	if (erp_action) {
--		debug_event(adapter->erp_dbf, 3, &erp_action->action,
--			    sizeof (int));
--		zfcp_erp_async_handler(erp_action, 0);
--	}
--}
--
--/*
-  * purpose:	is called for erp_action which was slept waiting for
-  *		memory becoming avaliable,
-  *		will trigger that this action will be continued
-diff -urN linux-2.6/drivers/s390/scsi/zfcp_ext.h linux-2.6-s390/drivers/s390/scsi/zfcp_ext.h
---- linux-2.6/drivers/s390/scsi/zfcp_ext.h	Thu Mar 11 03:55:23 2004
-+++ linux-2.6-s390/drivers/s390/scsi/zfcp_ext.h	Tue Mar 16 14:07:55 2004
-@@ -31,7 +31,7 @@
- #ifndef ZFCP_EXT_H
- #define ZFCP_EXT_H
- /* this drivers version (do not edit !!! generated and updated by cvs) */
--#define ZFCP_EXT_REVISION "$Revision: 1.45 $"
-+#define ZFCP_EXT_REVISION "$Revision: 1.48 $"
- 
- #include "zfcp_def.h"
- 
-@@ -46,8 +46,6 @@
- extern void zfcp_sysfs_port_remove_files(struct device *, u32);
- extern int  zfcp_sysfs_unit_create_files(struct device *);
- extern void zfcp_sysfs_unit_remove_files(struct device *);
--extern void zfcp_sysfs_port_release(struct device *);
--extern void zfcp_sysfs_unit_release(struct device *);
- 
- /**************************** CONFIGURATION  *********************************/
- extern struct zfcp_unit *zfcp_get_unit_by_lun(struct zfcp_port *,
-@@ -158,7 +156,7 @@
- extern int  zfcp_erp_thread_setup(struct zfcp_adapter *);
- extern int  zfcp_erp_thread_kill(struct zfcp_adapter *);
- extern int  zfcp_erp_wait(struct zfcp_adapter *);
--extern void zfcp_erp_fsf_req_handler(struct zfcp_fsf_req *);
-+extern int  zfcp_erp_async_handler(struct zfcp_erp_action *, unsigned long);
- 
- extern int  zfcp_test_link(struct zfcp_port *);
- 
 diff -urN linux-2.6/drivers/s390/scsi/zfcp_fsf.c linux-2.6-s390/drivers/s390/scsi/zfcp_fsf.c
---- linux-2.6/drivers/s390/scsi/zfcp_fsf.c	Thu Mar 11 03:55:36 2004
-+++ linux-2.6-s390/drivers/s390/scsi/zfcp_fsf.c	Tue Mar 16 14:08:08 2004
-@@ -29,7 +29,7 @@
-  */
+--- linux-2.6/drivers/s390/scsi/zfcp_fsf.c	Tue Mar 16 14:08:13 2004
++++ linux-2.6-s390/drivers/s390/scsi/zfcp_fsf.c	Tue Mar 16 14:08:20 2004
+@@ -250,8 +250,7 @@
  
- /* this drivers version (do not edit !!! generated and updated by cvs) */
--#define ZFCP_FSF_C_REVISION "$Revision: 1.29 $"
-+#define ZFCP_FSF_C_REVISION "$Revision: 1.38 $"
+ 	/* cleanup request if requested by initiator */
+ 	if (likely(cleanup)) {
+-		ZFCP_LOG_TRACE("removing FSF request 0x%lx\n",
+-			       (unsigned long) fsf_req);
++		ZFCP_LOG_TRACE("removing FSF request %p\n", fsf_req);
+ 		/*
+ 		 * lock must not be held here since it will be
+ 		 * grabed by the called routine, too
+@@ -259,8 +258,7 @@
+ 		zfcp_fsf_req_cleanup(fsf_req);
+ 	} else {
+ 		/* notify initiator waiting for the requests completion */
+-		ZFCP_LOG_TRACE("waking initiator of FSF request 0x%lx\n",
+-			       (unsigned long) fsf_req);
++		ZFCP_LOG_TRACE("waking initiator of FSF request %p\n",fsf_req);
+ 		/*
+ 		 * FIXME: Race! We must not access fsf_req here as it might have been
+ 		 * cleaned up already due to the set ZFCP_STATUS_FSFREQ_COMPLETED
+@@ -297,7 +295,7 @@
+ 	int retval = 0;
+ 	struct zfcp_adapter *adapter = fsf_req->adapter;
  
- #include "zfcp_ext.h"
+-	ZFCP_LOG_DEBUG("QTCB is at 0x%lx\n", (unsigned long) fsf_req->qtcb);
++	ZFCP_LOG_DEBUG("QTCB is at %p\n", fsf_req->qtcb);
  
-@@ -771,6 +771,8 @@
- static int
- zfcp_fsf_req_dispatch(struct zfcp_fsf_req *fsf_req)
- {
-+	struct zfcp_erp_action *erp_action = fsf_req->erp_action;
-+	struct zfcp_adapter *adapter = fsf_req->adapter;
+ 	if (fsf_req->status & ZFCP_STATUS_FSFREQ_DISMISSED) {
+ 		ZFCP_LOG_DEBUG("fsf_req 0x%lx has been dismissed\n",
+@@ -352,18 +350,6 @@
+ 
+ 	case FSF_PROT_QTCB_VERSION_ERROR:
+ 		ZFCP_LOG_FLAGS(0, "FSF_PROT_QTCB_VERSION_ERROR\n");
+-		/* DEBUG */
+-		ZFCP_LOG_NORMAL("fsf_req=0x%lx, qtcb=0x%lx (0x%lx, 0x%lx)\n",
+-				(unsigned long) fsf_req,
+-				(unsigned long) fsf_req->qtcb,
+-				((unsigned long) fsf_req) & 0xFFFFFF00,
+-				(unsigned
+-				 long) ((struct zfcp_fsf_req
+-					 *) (((unsigned long) fsf_req) &
+-					     0xFFFFFF00))->qtcb);
+-		ZFCP_HEX_DUMP(ZFCP_LOG_LEVEL_NORMAL,
+-			      (char *) (((unsigned long) fsf_req) & 0xFFFFFF00),
+-			      sizeof (struct zfcp_fsf_req));
+ 		ZFCP_LOG_NORMAL("error: The adapter %s contains "
+ 				"microcode of version 0x%x, the device driver "
+ 				"only supports 0x%x. Aborting.\n",
+@@ -414,17 +400,6 @@
+ 				"that used on adapter %s. "
+ 				"Stopping all operations on this adapter.\n",
+ 				zfcp_get_busid_by_adapter(adapter));
+-		ZFCP_LOG_NORMAL("fsf_req=0x%lx, qtcb=0x%lx (0x%lx, 0x%lx)\n",
+-				(unsigned long) fsf_req,
+-				(unsigned long) fsf_req->qtcb,
+-				((unsigned long) fsf_req) & 0xFFFFFF00,
+-				(unsigned long) (
+-					(struct zfcp_fsf_req *) (
+-						((unsigned long)
+-						 fsf_req) & 0xFFFFFF00))->qtcb);
+-		ZFCP_HEX_DUMP(ZFCP_LOG_LEVEL_NORMAL,
+-			      (char *) (((unsigned long) fsf_req) & 0xFFFFFF00),
+-			      sizeof (struct zfcp_fsf_req));
+ 		debug_text_exception(adapter->erp_dbf, 0, "prot_unsup_qtcb");
+ 		zfcp_erp_adapter_shutdown(adapter, 0);
+ 		zfcp_cmd_dbf_event_fsf("unsqtcbt", fsf_req,
+@@ -447,7 +422,7 @@
+ 	case FSF_PROT_DUPLICATE_REQUEST_ID:
+ 		ZFCP_LOG_FLAGS(0, "FSF_PROT_DUPLICATE_REQUEST_IDS\n");
+ 		if (fsf_req->qtcb) {
+-			ZFCP_LOG_NORMAL("bug: The request identifier  0x%Lx "
++			ZFCP_LOG_NORMAL("bug: The request identifier 0x%Lx "
+ 					"to the adapter %s is ambiguous. "
+ 					"Stopping all operations on this "
+ 					"adapter.\n",
+@@ -456,13 +431,13 @@
+ 					 req_handle),
+ 					zfcp_get_busid_by_adapter(adapter));
+ 		} else {
+-			ZFCP_LOG_NORMAL("bug: The request identifier  0x%lx "
++			ZFCP_LOG_NORMAL("bug: The request identifier %p "
+ 					"to the adapter %s is ambiguous. "
+ 					"Stopping all operations on this "
+ 					"adapter. "
+ 					"(bug: got this for an unsolicited "
+ 					"status read request)\n",
+-					(unsigned long) fsf_req,
++					fsf_req,
+ 					zfcp_get_busid_by_adapter(adapter));
+ 		}
+ 		debug_text_exception(adapter->erp_dbf, 0, "prot_dup_id");
+@@ -581,19 +556,6 @@
+ 				"(debug info 0x%x).\n",
+ 				zfcp_get_busid_by_adapter(adapter),
+ 				fsf_req->qtcb->prefix.prot_status);
+-		ZFCP_LOG_NORMAL("fsf_req=0x%lx, qtcb=0x%lx (0x%lx, 0x%lx)\n",
+-				(unsigned long) fsf_req,
+-				(unsigned long) fsf_req->qtcb,
+-				((unsigned long) fsf_req) & 0xFFFFFF00,
+-				(unsigned
+-				 long) ((struct zfcp_fsf_req
+-					 *) (((unsigned long) fsf_req) &
+-					     0xFFFFFF00))->qtcb);
+-		ZFCP_HEX_DUMP(ZFCP_LOG_LEVEL_NORMAL,
+-			      (char *) (((unsigned long) fsf_req) & 0xFFFFFF00),
+-			      sizeof (struct zfcp_fsf_req));
+-		ZFCP_HEX_DUMP(ZFCP_LOG_LEVEL_NORMAL, (char *) fsf_req->qtcb,
+-			      sizeof(struct fsf_qtcb));
+ 		debug_text_event(adapter->erp_dbf, 0, "prot_inval:");
+ 		debug_exception(adapter->erp_dbf, 0,
+ 				&fsf_req->qtcb->prefix.prot_status,
+@@ -776,9 +738,7 @@
  	int retval = 0;
  
  	if (unlikely(fsf_req->status & ZFCP_STATUS_FSFREQ_ERROR)) {
-@@ -861,7 +863,13 @@
- 			     fsf_req->qtcb->header.fsf_command);
+-		ZFCP_LOG_TRACE("fsf_req=0x%lx, QTCB=0x%lx\n",
+-			       (unsigned long) fsf_req,
+-			       (unsigned long) (fsf_req->qtcb));
++		ZFCP_LOG_TRACE("fsf_req=%p, QTCB=%p\n", fsf_req, fsf_req->qtcb);
+ 		ZFCP_HEX_DUMP(ZFCP_LOG_LEVEL_TRACE,
+ 			      (char *) fsf_req->qtcb, sizeof(struct fsf_qtcb));
+ 	}
+@@ -849,10 +809,8 @@
+ 		ZFCP_LOG_FLAGS(2, "FSF_QTCB_UNKNOWN\n");
+ 		fsf_req->status |= ZFCP_STATUS_FSFREQ_ERROR;
+ 		ZFCP_LOG_NORMAL("bug: Command issued by the device driver is "
+-				"not supported by the adapter %s "
+-				"(debug info 0x%lx 0x%x).\n",
+-				zfcp_get_busid_by_adapter(fsf_req->adapter),
+-				(unsigned long) fsf_req, fsf_req->fsf_command);
++				"not supported by the adapter %s\n",
++				zfcp_get_busid_by_adapter(fsf_req->adapter));
+ 		if (fsf_req->fsf_command != fsf_req->qtcb->header.fsf_command)
+ 			ZFCP_LOG_NORMAL
+ 			    ("bug: Command issued by the device driver differs "
+@@ -895,9 +853,8 @@
+ 				     adapter->pool.fsf_req_status_read,
+ 				     &lock_flags, &fsf_req);
+ 	if (retval < 0) {
+-		ZFCP_LOG_INFO("error: Out of resources. Could not create an "
+-			      "unsolicited status buffer for "
+-			      "the adapter %s.\n",
++		ZFCP_LOG_INFO("error: Could not create unsolicited status "
++			      "buffer for adapter %s.\n",
+ 			      zfcp_get_busid_by_adapter(adapter));
+ 		goto failed_req_create;
+ 	}
+@@ -929,8 +886,7 @@
+ 		goto failed_req_send;
  	}
  
--        zfcp_erp_fsf_req_handler(fsf_req);
-+	if (!erp_action)
-+		return retval;
-+
-+	debug_text_event(adapter->erp_dbf, 3, "a_frh");
-+	debug_event(adapter->erp_dbf, 3, &erp_action->action, sizeof (int));
-+	zfcp_erp_async_handler(erp_action, 0);
-+
- 	return retval;
- }
+-	ZFCP_LOG_TRACE("Status Read request initiated "
+-		       "(adapter busid=%s)\n",
++	ZFCP_LOG_TRACE("Status Read request initiated (adapter%s)\n",
+ 		       zfcp_get_busid_by_adapter(adapter));
+ #ifdef ZFCP_DEBUG_REQUESTS
+ 	debug_text_event(adapter->req_dbf, 1, "unso");
+@@ -966,9 +922,9 @@
+ 	read_unlock_irqrestore(&zfcp_data.config_lock, flags);
  
-@@ -1670,20 +1678,19 @@
- 				"to a port with WWPN 0x%Lx connected "
- 				"to the adapter %s\n", port->wwpn,
+ 	if (!port || (port->d_id != (status_buffer->d_id & ZFCP_DID_MASK))) {
+-		ZFCP_LOG_NORMAL("bug: Re-open port indication received for the "
+-				"non-existing port with DID 0x%3.3x, on "
+-				"the adapter %s. Ignored.\n",
++		ZFCP_LOG_NORMAL("bug: Reopen port indication received for"
++				"nonexisting port with d_id 0x%08x on "
++				"adapter %s. Ignored.\n",
+ 				status_buffer->d_id & ZFCP_DID_MASK,
+ 				zfcp_get_busid_by_adapter(adapter));
+ 		goto out;
+@@ -993,9 +949,9 @@
+ 		debug_exception(adapter->erp_dbf, 0,
+ 				&status_buffer->status_subtype, sizeof (u32));
+ 		ZFCP_LOG_NORMAL("bug: Undefined status subtype received "
+-				"for a re-open indication on the port with "
+-				"DID 0x%3.3x, on the adapter "
+-				"%s. Ignored. (debug info 0x%x)\n",
++				"for a reopen indication on port with "
++				"d_id 0x%08x on the adapter %s. "
++				"Ignored. (debug info 0x%x)\n",
+ 				status_buffer->d_id,
+ 				zfcp_get_busid_by_adapter(adapter),
+ 				status_buffer->status_subtype);
+@@ -1059,9 +1015,8 @@
+ 	case FSF_STATUS_READ_LINK_UP:
+ 		ZFCP_LOG_FLAGS(1, "FSF_STATUS_READ_LINK_UP\n");
+ 		debug_text_event(adapter->erp_dbf, 2, "unsol_link_up:");
+-		ZFCP_LOG_INFO("The local link to the adapter %s "
+-			      "was re-plugged. "
+-			      "Re-starting operations on this adapter..\n",
++		ZFCP_LOG_INFO("Local link to adapter %s was replugged. "
++			      "Restarting operations on this adapter\n",
+ 			      zfcp_get_busid_by_adapter(adapter));
+ 		/* All ports should be marked as ready to run again */
+ 		zfcp_erp_modify_adapter_status(adapter,
+@@ -1097,9 +1052,8 @@
+ 	case FSF_STATUS_READ_CFDC_UPDATED:
+ 		ZFCP_LOG_FLAGS(1, "FSF_STATUS_READ_CFDC_UPDATED\n");
+ 		debug_text_event(adapter->erp_dbf, 2, "unsol_cfdc_update:");
+-		ZFCP_LOG_NORMAL(
+-			"CFDC has been updated on the adapter %s\n",
+-			zfcp_get_busid_by_adapter(adapter));
++		ZFCP_LOG_INFO("CFDC has been updated on the adapter %s\n",
++			      zfcp_get_busid_by_adapter(adapter));
+ 		break;
+ 
+ 	case FSF_STATUS_READ_CFDC_HARDENED:
+@@ -1107,21 +1061,17 @@
+ 		debug_text_event(adapter->erp_dbf, 2, "unsol_cfdc_harden:");
+ 		switch (status_buffer->status_subtype) {
+ 		case FSF_STATUS_READ_SUB_CFDC_HARDENED_ON_SE:
+-			ZFCP_LOG_NORMAL(
+-				"CFDC of the adapter %s "
+-				"has been saved on the SE\n",
+-				zfcp_get_busid_by_adapter(adapter));
++			ZFCP_LOG_INFO("CFDC of adapter %s saved on SE\n",
++				      zfcp_get_busid_by_adapter(adapter));
+ 			break;
+ 		case FSF_STATUS_READ_SUB_CFDC_HARDENED_ON_SE2:
+-			ZFCP_LOG_NORMAL(
+-				"CFDC of the adapter %s "
+-				"has been copied to the secondary SE\n",
++			ZFCP_LOG_INFO("CFDC of adapter %s has been copied "
++				      "to the secondary SE\n",
+ 				zfcp_get_busid_by_adapter(adapter));
+ 			break;
+ 		default:
+-			ZFCP_LOG_NORMAL(
+-				"CFDC of the adapter %s has been hardened\n",
+-				zfcp_get_busid_by_adapter(adapter));
++			ZFCP_LOG_INFO("CFDC of adapter %s has been hardened\n",
++				      zfcp_get_busid_by_adapter(adapter));
+ 		}
+ 		break;
+ 
+@@ -1130,11 +1080,10 @@
+ 		debug_exception(adapter->erp_dbf, 0,
+ 				&status_buffer->status_type, sizeof (u32));
+ 		ZFCP_LOG_NORMAL("bug: An unsolicited status packet of unknown "
+-				"type was received by the zfcp-driver "
+-				"(debug info 0x%x)\n",
++				"type was received (debug info 0x%x)\n",
+ 				status_buffer->status_type);
+-		ZFCP_LOG_DEBUG("Dump of status_read_buffer 0x%lx:\n",
+-			       (unsigned long) status_buffer);
++		ZFCP_LOG_DEBUG("Dump of status_read_buffer %p:\n",
++			       status_buffer);
+ 		ZFCP_HEX_DUMP(ZFCP_LOG_LEVEL_DEBUG,
+ 			      (char *) status_buffer,
+ 			      sizeof (struct fsf_status_read_buffer));
+@@ -1158,17 +1107,15 @@
+ 	 */
+ 	retval = zfcp_fsf_status_read(adapter, 0);
+ 	if (retval < 0) {
+-		ZFCP_LOG_INFO("Outbound queue busy. "
+-			      "Could not create use an "
+-			      "unsolicited status read request for "
+-			      "the adapter %s.\n",
++		ZFCP_LOG_INFO("Failed to create unsolicited status read "
++			      "request for the adapter %s.\n",
+ 			      zfcp_get_busid_by_adapter(adapter));
+ 		/* temporary fix to avoid status read buffer shortage */
+ 		adapter->status_read_failed++;
+ 		if ((ZFCP_STATUS_READS_RECOM - adapter->status_read_failed)
+ 		    < ZFCP_STATUS_READ_FAILED_THRESHOLD) {
+-			ZFCP_LOG_INFO("restart adapter due to status read "
+-				      "buffer shortage (busid %s)\n",
++			ZFCP_LOG_INFO("restart adapter %s due to status read "
++				      "buffer shortage\n",
+ 				      zfcp_get_busid_by_adapter(adapter));
+ 			zfcp_erp_adapter_reopen(adapter, 0);
+ 		}
+@@ -1204,11 +1151,9 @@
+ 				     req_flags, adapter->pool.fsf_req_abort,
+ 				     &lock_flags, &fsf_req);
+ 	if (retval < 0) {
+-		ZFCP_LOG_INFO("error: Out of resources. Could not create an "
+-			      "abort command request on the device with "
+-			      "the FCP-LUN 0x%Lx connected to "
+-			      "the port with WWPN 0x%Lx connected to "
+-			      "the adapter %s.\n",
++		ZFCP_LOG_INFO("error: Failed to create an abort command "
++			      "request for lun 0x%016Lx on port 0x%016Lx "
++			      "on adapter %s.\n",
+ 			      unit->fcp_lun,
+ 			      unit->port->wwpn,
+ 			      zfcp_get_busid_by_adapter(adapter));
+@@ -1234,9 +1179,8 @@
+ 	retval = zfcp_fsf_req_send(fsf_req, NULL);
+ 	if (retval) {
+ 		del_timer(&adapter->scsi_er_timer);
+-		ZFCP_LOG_INFO("error: Could not send an abort command request "
+-			      "for a command on the adapter %s, "
+-			      "port WWPN 0x%Lx and unit LUN 0x%Lx\n",
++		ZFCP_LOG_INFO("error: Failed to send abort command request "
++			      "on adapter %s, port 0x%016Lx, unit 0x%016Lx\n",
+ 			      zfcp_get_busid_by_adapter(adapter),
+ 			      unit->port->wwpn, unit->fcp_lun);
+ 		zfcp_fsf_req_free(fsf_req);
+@@ -1245,10 +1189,10 @@
+ 	}
+ 
+ 	ZFCP_LOG_DEBUG("Abort FCP Command request initiated "
+-		       "(adapter busid=%s, port d_id=0x%x, "
+-		       "unit fcp_lun=0x%Lx, old_req_id=0x%lx)\n",
++		       "(adapter%s, port d_id=0x%08x, "
++		       "unit x%016Lx, old_req_id=0x%lx)\n",
+ 		       zfcp_get_busid_by_adapter(adapter),
+-		       (unsigned int) unit->port->d_id,
++		       unit->port->d_id,
+ 		       unit->fcp_lun, old_req_id);
+  out:
+ 	write_unlock_irqrestore(&adapter->request_queue.queue_lock, lock_flags);
+@@ -1292,10 +1236,9 @@
+ 			 */
+ 		} else {
+ 			ZFCP_LOG_FLAGS(1, "FSF_PORT_HANDLE_NOT_VALID\n");
+-			ZFCP_LOG_INFO("Temporary port identifier (handle) 0x%x "
+-				      "for the port with WWPN 0x%Lx connected "
+-				      "to the adapter %s is not valid. This "
+-				      "may happen occasionally.\n",
++			ZFCP_LOG_INFO("Temporary port identifier 0x%x for "
++				      "port 0x%016Lx on adapter %s invalid. "
++				      "This may happen occasionally.\n",
+ 				      unit->port->handle,
+ 				      unit->port->wwpn,
+ 				      zfcp_get_busid_by_unit(unit));
+@@ -1326,11 +1269,9 @@
+ 		} else {
+ 			ZFCP_LOG_FLAGS(1, "FSF_LUN_HANDLE_NOT_VALID\n");
+ 			ZFCP_LOG_INFO
+-			    ("Warning: Temporary LUN identifier (handle) 0x%x "
+-			     "of the logical unit with FCP-LUN 0x%Lx at "
+-			     "the remote port with WWPN 0x%Lx connected "
+-			     "to the adapter %s is "
+-			     "not valid. This may happen in rare cases."
++			    ("Warning: Temporary LUN identifier 0x%x of LUN "
++			     "0x%016Lx on port 0x%016Lx on adapter %s is "
++			     "invalid. This may happen in rare cases. "
+ 			     "Trying to re-establish link.\n",
+ 			     unit->handle,
+ 			     unit->fcp_lun,
+@@ -1370,10 +1311,9 @@
+ 	case FSF_PORT_BOXED:
+ 		/* 2 */
+ 		ZFCP_LOG_FLAGS(0, "FSF_PORT_BOXED\n");
+-		ZFCP_LOG_DEBUG("The remote port "
+-			       "with WWPN 0x%Lx on the adapter %s "
+-			       "needs to be reopened\n",
+-			       unit->port->wwpn, zfcp_get_busid_by_unit(unit));
++		ZFCP_LOG_INFO("Remote port 0x%016Lx on adapter %s needs to "
++			      "be reopened\n", unit->port->wwpn,
++			      zfcp_get_busid_by_unit(unit));
+ 		debug_text_event(new_fsf_req->adapter->erp_dbf, 2,
+ 				 "fsf_s_pboxed");
+ 		zfcp_erp_port_reopen(unit->port, 0);
+@@ -1487,8 +1427,8 @@
+ 				  ZFCP_WAIT_FOR_SBAL | ZFCP_REQ_AUTO_CLEANUP,
+ 				  pool, &lock_flags, &fsf_req);
+ 	if (ret < 0) {
+-                ZFCP_LOG_INFO("error: out of memory. Could not create CT "
+-			      "request (FC-GS). (adapter: %s)\n",
++                ZFCP_LOG_INFO("error: Could not create CT request (FC-GS) for "
++			      "adapter: %s\n",
+ 			      zfcp_get_busid_by_adapter(adapter));
+ 		goto failed_req;
+ 	}
+@@ -1517,9 +1457,8 @@
+                                                 ct->req, ct->req_count,
+                                                 ZFCP_MAX_SBALS_PER_CT_REQ);
+                 if (bytes <= 0) {
+-                        ZFCP_LOG_INFO("error: out of resources (outbuf). "
+-                                      "Could not create CT request (FC-GS). "
+-				      "(adapter: %s)\n",
++                        ZFCP_LOG_INFO("error: creation of CT request failed "
++				      "on adapter %s\n",
+ 				      zfcp_get_busid_by_adapter(adapter));
+                         if (bytes == 0)
+                                 ret = -ENOMEM;
+@@ -1535,9 +1474,8 @@
+                                                 ct->resp, ct->resp_count,
+                                                 ZFCP_MAX_SBALS_PER_CT_REQ);
+                 if (bytes <= 0) {
+-                        ZFCP_LOG_INFO("error: out of resources (inbuf). "
+-                                      "Could not create a CT request (FC-GS). "
+-				      "(adapter: %s)\n",
++                        ZFCP_LOG_INFO("error: creation of CT request failed "
++				      "on adapter %s\n",
+ 				      zfcp_get_busid_by_adapter(adapter));
+                         if (bytes == 0)
+                                 ret = -ENOMEM;
+@@ -1550,8 +1488,8 @@
+         } else {
+                 /* reject send generic request */
+ 		ZFCP_LOG_INFO(
+-			"error: microcode does not support chained SBALs."
+-                        "CT request (FC-GS) too big. (adapter: %s)\n",
++			"error: microcode does not support chained SBALs,"
++                        "CT request too big (adapter %s)\n",
+ 			zfcp_get_busid_by_adapter(adapter));
+                 ret = -EOPNOTSUPP;
+                 goto failed_send;
+@@ -1566,14 +1504,13 @@
+ 	/* start QDIO request for this FSF request */
+ 	ret = zfcp_fsf_req_send(fsf_req, ct->timer);
+ 	if (ret) {
+-		ZFCP_LOG_DEBUG("error: out of resources. Could not send CT "
+-			       "request (FC-GS). (adapter: %s, "
+-			       "port WWPN 0x%Lx)\n",
++		ZFCP_LOG_DEBUG("error: initiation of CT request failed "
++			       "(adapter %s, port 0x%016Lx)\n",
+ 			       zfcp_get_busid_by_adapter(adapter), port->wwpn);
+ 		goto failed_send;
+ 	}
+ 
+-	ZFCP_LOG_DEBUG("CT request initiated. (adapter: %s, port WWPN 0x%Lx)\n",
++	ZFCP_LOG_DEBUG("CT request initiated (adapter %s, port 0x%016Lx)\n",
+ 		       zfcp_get_busid_by_adapter(adapter), port->wwpn);
+ 	goto out;
+ 
+@@ -1631,15 +1568,15 @@
+         case FSF_SERVICE_CLASS_NOT_SUPPORTED :
+ 		ZFCP_LOG_FLAGS(2, "FSF_SERVICE_CLASS_NOT_SUPPORTED\n");
+ 		if (adapter->fc_service_class <= 3) {
+-			ZFCP_LOG_INFO("error: The adapter %s does "
+-					"not support fibre-channel class %d.\n",
+-					zfcp_get_busid_by_port(port),
++			ZFCP_LOG_INFO("error: adapter %s does not support fc "
++				      "class %d.\n",
++				      zfcp_get_busid_by_port(port),
+ 				      adapter->fc_service_class);
+ 		} else {
+ 			ZFCP_LOG_INFO("bug: The fibre channel class at the "
+ 				      "adapter %s is invalid. "
+ 				      "(debug info %d)\n",
+-			     zfcp_get_busid_by_port(port),
++				      zfcp_get_busid_by_port(port),
+ 				      adapter->fc_service_class);
+ 		}
+ 		/* stop operation for this adapter */
+@@ -1675,8 +1612,7 @@
+ 	case FSF_ACCESS_DENIED:
+ 		ZFCP_LOG_FLAGS(2, "FSF_ACCESS_DENIED\n");
+ 		ZFCP_LOG_NORMAL("Access denied, cannot send generic command "
+-				"to a port with WWPN 0x%Lx connected "
+-				"to the adapter %s\n", port->wwpn,
++				"to port 0x%016Lx on adapter %s\n", port->wwpn,
  				zfcp_get_busid_by_port(port));
--		counter = 0;
--		do {
--			subtable = header->fsf_status_qual.halfword[counter++];
--			rule = header->fsf_status_qual.halfword[counter++];
-+		for (counter = 0; counter < 2; counter++) {
-+			subtable = header->fsf_status_qual.halfword[counter * 2];
-+			rule = header->fsf_status_qual.halfword[counter * 2 + 1];
- 			switch (subtable) {
- 			case FSF_SQ_CFDC_SUBTABLE_OS:
- 			case FSF_SQ_CFDC_SUBTABLE_PORT_WWPN:
- 			case FSF_SQ_CFDC_SUBTABLE_PORT_DID:
- 			case FSF_SQ_CFDC_SUBTABLE_LUN:
--       				ZFCP_LOG_NORMAL("Access denied (%s rule %d)\n",
-+       				ZFCP_LOG_INFO("Access denied (%s rule %d)\n",
- 					zfcp_act_subtable_type[subtable], rule);
- 				break;
- 			}
--		} while (counter < 4);
-+		}
- 		debug_text_event(fsf_req->adapter->erp_dbf, 1, "fsf_s_access");
- 		fsf_req->status |= ZFCP_STATUS_FSFREQ_ERROR;
- 		break;
-@@ -2036,20 +2043,19 @@
- 		ZFCP_LOG_NORMAL("Access denied, cannot send ELS "
- 				"(adapter: %s, wwpn=0x%016Lx)\n",
- 				zfcp_get_busid_by_port(port), port->wwpn);
--		counter = 0;
--		do {
--			subtable = header->fsf_status_qual.halfword[counter++];
--			rule = header->fsf_status_qual.halfword[counter++];
-+		for (counter = 0; counter < 2; counter++) {
-+			subtable = header->fsf_status_qual.halfword[counter * 2];
-+			rule = header->fsf_status_qual.halfword[counter * 2 + 1];
- 			switch (subtable) {
- 			case FSF_SQ_CFDC_SUBTABLE_OS:
- 			case FSF_SQ_CFDC_SUBTABLE_PORT_WWPN:
- 			case FSF_SQ_CFDC_SUBTABLE_PORT_DID:
- 			case FSF_SQ_CFDC_SUBTABLE_LUN:
--				ZFCP_LOG_NORMAL("Access denied (%s rule %d)\n",
-+				ZFCP_LOG_INFO("Access denied (%s rule %d)\n",
- 					zfcp_act_subtable_type[subtable], rule);
- 				break;
- 			}
--		} while (counter < 4);
-+		}
- 		debug_text_event(adapter->erp_dbf, 1, "fsf_s_access");
- 		fsf_req->status |= ZFCP_STATUS_FSFREQ_ERROR;
- 		break;
-@@ -2114,7 +2120,8 @@
+ 		for (counter = 0; counter < 2; counter++) {
+ 			subtable = header->fsf_status_qual.halfword[counter * 2];
+@@ -1697,8 +1633,7 @@
+ 
+         case FSF_GENERIC_COMMAND_REJECTED :
+ 		ZFCP_LOG_FLAGS(2, "FSF_GENERIC_COMMAND_REJECTED\n");
+-		ZFCP_LOG_INFO("warning: The port with WWPN 0x%Lx connected to "
+-			      "the adapter %s has "
++		ZFCP_LOG_INFO("warning: The port 0x%016Lx on adapter %s has "
+ 			      "rejected a generic services command.\n",
+ 			      port->wwpn, zfcp_get_busid_by_port(port));
+ 		ZFCP_LOG_INFO("status qualifier:\n");
+@@ -1711,11 +1646,9 @@
+ 
+         case FSF_PORT_HANDLE_NOT_VALID :
+ 		ZFCP_LOG_FLAGS(2, "FSF_PORT_HANDLE_NOT_VALID\n");
+-		ZFCP_LOG_DEBUG("Temporary port identifier (handle) 0x%x "
+-			       "for the port with WWPN 0x%Lx connected to "
+-			       "the adapter %s is "
+-			       "not valid. This may happen occasionally.\n",
+-			       port->handle,
++		ZFCP_LOG_DEBUG("Temporary port identifier 0x%x for port "
++			       "0x%016Lx on adapter %s invalid. This may "
++			       "happen occasionally.\n", port->handle,
+ 			       port->wwpn, zfcp_get_busid_by_port(port));
+ 		ZFCP_LOG_INFO("status qualifier:\n");
+ 		ZFCP_HEX_DUMP(ZFCP_LOG_LEVEL_INFO,
+@@ -1728,8 +1661,7 @@
+ 
+ 	case FSF_REQUEST_BUF_NOT_VALID :
+ 		ZFCP_LOG_FLAGS(2, "FSF_REQUEST_BUF_NOT_VALID\n");
+-		ZFCP_LOG_NORMAL("error: The port with WWPN 0x%Lx connected to "
+-				"the adapter %s has "
++		ZFCP_LOG_NORMAL("error: The port 0x%016Lx on adapter %s has "
+ 				"rejected a generic services command "
+ 				"due to invalid request buffer.\n",
+ 				port->wwpn, zfcp_get_busid_by_port(port));
+@@ -1739,8 +1671,7 @@
+ 
+ 	case FSF_RESPONSE_BUF_NOT_VALID :
+ 		ZFCP_LOG_FLAGS(2, "FSF_RESPONSE_BUF_NOT_VALID\n");
+-		ZFCP_LOG_NORMAL("error: The port with WWPN 0x%Lx connected to "
+-				"the adapter %s has "
++		ZFCP_LOG_NORMAL("error: The port 0x%016Lx on adapter %s has "
+ 				"rejected a generic services command "
+ 				"due to invalid response buffer.\n",
+ 				port->wwpn, zfcp_get_busid_by_port(port));
+@@ -1750,8 +1681,7 @@
+ 
+         case FSF_PORT_BOXED :
+ 		ZFCP_LOG_FLAGS(2, "FSF_PORT_BOXED\n");
+-		ZFCP_LOG_DEBUG("The remote port "
+-			       "with WWPN 0x%Lx on the adapter %s "
++		ZFCP_LOG_INFO("The remote port 0x%016Lx on adapter %s "
+ 			       "needs to be reopened\n",
+ 			       port->wwpn, zfcp_get_busid_by_port(port));
+ 		debug_text_event(adapter->erp_dbf, 2, "fsf_s_pboxed");
+@@ -1800,8 +1730,8 @@
+ 				  ZFCP_WAIT_FOR_SBAL|ZFCP_REQ_AUTO_CLEANUP,
+ 				  NULL, &lock_flags, &fsf_req);
+ 	if (ret < 0) {
+-                ZFCP_LOG_INFO("error: out of memory. Could not create ELS "
+-			      "request. (adapter: %s, port did: 0x%06x)\n",
++                ZFCP_LOG_INFO("error: creation of ELS request failed "
++			      "(adapter %s, port d_id: 0x%08x)\n",
+                               zfcp_get_busid_by_adapter(adapter), port->d_id);
+                 goto failed_req;
+ 	}
+@@ -1825,9 +1755,8 @@
+                                                 els->req, els->req_count,
+                                                 ZFCP_MAX_SBALS_PER_ELS_REQ);
+                 if (bytes <= 0) {
+-                        ZFCP_LOG_INFO("error: out of resources (outbuf). "
+-                                      "Could not create ELS request. "
+-				      "(adapter: %s, port did: 0x%06x)\n",
++                        ZFCP_LOG_INFO("error: creation of ELS request failed "
++				      "(adapter %s, port d_id: 0x%08x)\n",
+ 				      zfcp_get_busid_by_adapter(adapter),
+ 				      port->d_id);
+                         if (bytes == 0) {
+@@ -1844,9 +1773,8 @@
+                                                 els->resp, els->resp_count,
+                                                 ZFCP_MAX_SBALS_PER_ELS_REQ);
+                 if (bytes <= 0) {
+-                        ZFCP_LOG_INFO("error: out of resources (inbuf). "
+-                                      "Could not create ELS request. "
+-				      "(adapter: %s, port did: 0x%06x)\n",
++                        ZFCP_LOG_INFO("error: creation of ELS request failed "
++				      "(adapter %s, port d_id: 0x%08x)\n",
+ 				      zfcp_get_busid_by_adapter(adapter),
+ 				      port->d_id);
+                         if (bytes == 0) {
+@@ -1859,9 +1787,9 @@
+                 fsf_req->qtcb->bottom.support.resp_buf_length = bytes;
+         } else {
+                 /* reject request */
+-		ZFCP_LOG_INFO("error: microcode does not support chained SBALs."
+-                              "ELS request too big. "
+-			      "(adapter: %s, port did: 0x%06x)\n",
++		ZFCP_LOG_INFO("error: microcode does not support chained SBALs"
++                              ", ELS request too big (adapter %s, "
++			      "port d_id: 0x%08x)\n",
+ 			      zfcp_get_busid_by_adapter(adapter), port->d_id);
+                 ret = -EOPNOTSUPP;
+                 goto failed_send;
+@@ -1878,13 +1806,13 @@
+ 	/* start QDIO request for this FSF request */
+ 	ret = zfcp_fsf_req_send(fsf_req, NULL);
+ 	if (ret) {
+-		ZFCP_LOG_DEBUG("error: out of resources. Could not send ELS "
+-                               "request. (adapter: %s, port WWPN 0x%Lx)\n",
++		ZFCP_LOG_DEBUG("error: initiation of ELS request failed "
++			       "(adapter %s, port 0x%016Lx)\n",
+ 			       zfcp_get_busid_by_adapter(adapter), port->wwpn);
+ 		goto failed_send;
+ 	}
+ 
+-	ZFCP_LOG_DEBUG("ELS request initiated (adapter: %s, port WWPN 0x%Lx)\n",
++	ZFCP_LOG_DEBUG("ELS request initiated (adapter %s, port 0x%016Lx)\n",
+ 		       zfcp_get_busid_by_adapter(adapter), port->wwpn);
+ 	goto out;
+ 
+@@ -1937,12 +1865,12 @@
+ 	case FSF_SERVICE_CLASS_NOT_SUPPORTED:
+ 		ZFCP_LOG_FLAGS(2, "FSF_SERVICE_CLASS_NOT_SUPPORTED\n");
+ 		if (adapter->fc_service_class <= 3) {
+-			ZFCP_LOG_INFO("error: The adapter %s does "
+-				      "not support fibre-channel class %d.\n",
++			ZFCP_LOG_INFO("error: adapter %s does "
++				      "not support fibrechannel class %d.\n",
+ 				      zfcp_get_busid_by_port(port),
+ 				      adapter->fc_service_class);
+ 		} else {
+-			ZFCP_LOG_INFO("bug: The fibre channel class at the "
++			ZFCP_LOG_INFO("bug: The fibrechannel class at "
+ 				      "adapter %s is invalid. "
+ 				      "(debug info %d)\n",
+ 				      zfcp_get_busid_by_port(port),
+@@ -1986,9 +1914,8 @@
+ 
+ 	case FSF_ELS_COMMAND_REJECTED:
+ 		ZFCP_LOG_FLAGS(2, "FSF_ELS_COMMAND_REJECTED\n");
+-		ZFCP_LOG_INFO("The ELS command has been rejected because "
+-			      "a command filter in the FCP channel prohibited "
+-			      "sending of the ELS to the SAN "
++		ZFCP_LOG_INFO("ELS has been rejected because command filter "
++			      "prohibited sending "
+ 			      "(adapter: %s, wwpn=0x%016Lx)\n",
+ 			      zfcp_get_busid_by_port(port), port->wwpn);
+ 
+@@ -2106,9 +2033,8 @@
+ 				     erp_action->adapter->pool.fsf_req_erp,
+ 				     &lock_flags, &(erp_action->fsf_req));
+ 	if (retval < 0) {
+-		ZFCP_LOG_INFO("error: Out of resources. Could not create an "
+-			      "exchange configuration data request for"
+-			      "the adapter %s.\n",
++		ZFCP_LOG_INFO("error: Could not create exchange configuration "
++			      "data request for adapter %s.\n",
+ 			      zfcp_get_busid_by_adapter(erp_action->adapter));
+ 		goto out;
+ 	}
+@@ -2120,14 +2046,13 @@
  
  	erp_action->fsf_req->erp_action = erp_action;
  	erp_action->fsf_req->qtcb->bottom.config.feature_selection =
--		FSF_FEATURE_CFDC;
-+		FSF_FEATURE_CFDC |
-+		FSF_FEATURE_LOST_SAN_NOTIFICATION;
+-		FSF_FEATURE_CFDC |
+-		FSF_FEATURE_LOST_SAN_NOTIFICATION;
++		FSF_FEATURE_CFDC;
  
  	/* start QDIO request for this FSF request */
  	retval = zfcp_fsf_req_send(erp_action->fsf_req, &erp_action->timer);
-@@ -2408,20 +2415,19 @@
- 		ZFCP_LOG_NORMAL("Access denied, cannot open port "
- 			"with WWPN 0x%Lx connected to the adapter %s\n",
+ 	if (retval) {
+ 		ZFCP_LOG_INFO
+-		    ("error: Could not send an exchange configuration data "
++		    ("error: Could not send exchange configuration data "
+ 		     "command on the adapter %s\n",
+ 		     zfcp_get_busid_by_adapter(erp_action->adapter));
+ 		zfcp_fsf_req_free(erp_action->fsf_req);
+@@ -2135,8 +2060,8 @@
+ 		goto out;
+ 	}
+ 
+-	ZFCP_LOG_DEBUG("Exchange Configuration Data request initiated "
+-		       "(adapter busid=%s)\n",
++	ZFCP_LOG_DEBUG("exchange configuration data request initiated "
++		       "(adapter %s)\n",
+ 		       zfcp_get_busid_by_adapter(erp_action->adapter));
+ 
+  out:
+@@ -2195,9 +2120,9 @@
+ 
+ 		ZFCP_LOG_INFO("The adapter %s reported "
+ 			      "the following characteristics:\n"
+-			      "WWNN 0x%16.16Lx, "
+-			      "WWPN 0x%16.16Lx, "
+-			      "S_ID 0x%6.6x,\n"
++			      "WWNN 0x%016Lx, "
++			      "WWPN 0x%016Lx, "
++			      "S_ID 0x%08x,\n"
+ 			      "adapter version 0x%x, "
+ 			      "LIC version 0x%x, "
+ 			      "FC link speed %d Gb/s\n",
+@@ -2233,10 +2158,9 @@
+ 		switch (adapter->fc_topology) {
+ 		case FSF_TOPO_P2P:
+ 			ZFCP_LOG_FLAGS(1, "FSF_TOPO_P2P\n");
+-			ZFCP_LOG_NORMAL("error: Point-to-point fibre-channel "
+-					"configuration detected "
+-					"at the adapter %s, not "
+-					"supported, shutting down adapter\n",
++			ZFCP_LOG_NORMAL("error: Point-to-point fibrechannel "
++					"configuration detected at adapter %s "
++					"unsupported, shutting down adapter\n",
+ 					zfcp_get_busid_by_adapter(adapter));
+ 			debug_text_event(fsf_req->adapter->erp_dbf, 0,
+ 					 "top-p-to-p");
+@@ -2244,10 +2168,9 @@
+ 			goto skip_fsfstatus;
+ 		case FSF_TOPO_AL:
+ 			ZFCP_LOG_FLAGS(1, "FSF_TOPO_AL\n");
+-			ZFCP_LOG_NORMAL("error: Arbitrated loop fibre-channel "
+-					"topology detected "
+-					"at the adapter %s, not "
+-					"supported, shutting down adapter\n",
++			ZFCP_LOG_NORMAL("error: Arbitrated loop fibrechannel "
++					"topology detected at adapter %s "
++					"unsupported, shutting down adapter\n",
+ 					zfcp_get_busid_by_adapter(adapter));
+ 			debug_text_event(fsf_req->adapter->erp_dbf, 0,
+ 					 "top-al");
+@@ -2255,13 +2178,12 @@
+ 			goto skip_fsfstatus;
+ 		case FSF_TOPO_FABRIC:
+ 			ZFCP_LOG_FLAGS(1, "FSF_TOPO_FABRIC\n");
+-			ZFCP_LOG_INFO("Switched fabric fibre-channel "
+-				      "network detected "
+-				      "at the adapter %s.\n",
++			ZFCP_LOG_INFO("Switched fabric fibrechannel "
++				      "network detected at adapter %s.\n",
+ 				      zfcp_get_busid_by_adapter(adapter));
+ 			break;
+ 		default:
+-			ZFCP_LOG_NORMAL("bug: The fibre-channel topology "
++			ZFCP_LOG_NORMAL("bug: The fibrechannel topology "
+ 					"reported by the exchange "
+ 					"configuration command for "
+ 					"the adapter %s is not "
+@@ -2326,10 +2248,8 @@
+ 				     erp_action->adapter->pool.fsf_req_erp,
+ 				     &lock_flags, &(erp_action->fsf_req));
+ 	if (retval < 0) {
+-		ZFCP_LOG_INFO("error: Out of resources. Could not create an "
+-			      "open port request for "
+-			      "the port with WWPN 0x%Lx connected to "
+-			      "the adapter %s.\n",
++		ZFCP_LOG_INFO("error: Could not create open port request "
++			      "for port 0x%016Lx on adapter %s.\n",
+ 			      erp_action->port->wwpn,
+ 			      zfcp_get_busid_by_adapter(erp_action->adapter));
+ 		goto out;
+@@ -2348,10 +2268,8 @@
+ 	/* start QDIO request for this FSF request */
+ 	retval = zfcp_fsf_req_send(erp_action->fsf_req, &erp_action->timer);
+ 	if (retval) {
+-		ZFCP_LOG_INFO("error: Could not send an "
+-			      "open port request for "
+-			      "the port with WWPN 0x%Lx connected to "
+-			      "the adapter %s.\n",
++		ZFCP_LOG_INFO("error: Could not send open port request for "
++			      "port 0x%016Lx on adapter %s.\n",
+ 			      erp_action->port->wwpn,
+ 			      zfcp_get_busid_by_adapter(erp_action->adapter));
+ 		zfcp_fsf_req_free(erp_action->fsf_req);
+@@ -2359,8 +2277,8 @@
+ 		goto out;
+ 	}
+ 
+-	ZFCP_LOG_DEBUG("Open Port request initiated "
+-		       "(adapter busid=%s, port wwpn=0x%Lx)\n",
++	ZFCP_LOG_DEBUG("open port request initiated "
++		       "(adapter %s,  port 0x%016Lx)\n",
+ 		       zfcp_get_busid_by_adapter(erp_action->adapter),
+ 		       erp_action->port->wwpn);
+  out:
+@@ -2398,8 +2316,7 @@
+ 
+ 	case FSF_PORT_ALREADY_OPEN:
+ 		ZFCP_LOG_FLAGS(0, "FSF_PORT_ALREADY_OPEN\n");
+-		ZFCP_LOG_NORMAL("bug: The remote port with WWPN=0x%Lx "
+-				"connected to the adapter %s "
++		ZFCP_LOG_NORMAL("bug: remote port 0x%016Lx on adapter %s "
+ 				"is already open.\n",
+ 				port->wwpn, zfcp_get_busid_by_port(port));
+ 		debug_text_exception(fsf_req->adapter->erp_dbf, 0,
+@@ -2412,8 +2329,8 @@
+ 
+ 	case FSF_ACCESS_DENIED:
+ 		ZFCP_LOG_FLAGS(2, "FSF_ACCESS_DENIED\n");
+-		ZFCP_LOG_NORMAL("Access denied, cannot open port "
+-			"with WWPN 0x%Lx connected to the adapter %s\n",
++		ZFCP_LOG_NORMAL("Access denied, cannot open port 0x%016Lx "
++				"on adapter %s\n",
  			port->wwpn, zfcp_get_busid_by_port(port));
--		counter = 0;
--		do {
--			subtable = header->fsf_status_qual.halfword[counter++];
--			rule = header->fsf_status_qual.halfword[counter++];
-+		for (counter = 0; counter < 2; counter++) {
-+			subtable = header->fsf_status_qual.halfword[counter * 2];
-+			rule = header->fsf_status_qual.halfword[counter * 2 + 1];
- 			switch (subtable) {
- 			case FSF_SQ_CFDC_SUBTABLE_OS:
- 			case FSF_SQ_CFDC_SUBTABLE_PORT_WWPN:
- 			case FSF_SQ_CFDC_SUBTABLE_PORT_DID:
- 			case FSF_SQ_CFDC_SUBTABLE_LUN:
--				ZFCP_LOG_NORMAL("Access denied (%s rule %d)\n",
-+				ZFCP_LOG_INFO("Access denied (%s rule %d)\n",
- 					zfcp_act_subtable_type[subtable], rule);
- 				break;
- 			}
--		} while (counter < 4);
-+		}
- 		debug_text_event(fsf_req->adapter->erp_dbf, 1, "fsf_s_access");
- 		zfcp_erp_port_failed(port);
- 		fsf_req->status |= ZFCP_STATUS_FSFREQ_ERROR;
-@@ -2814,20 +2820,19 @@
- 				"physical port with WWPN 0x%Lx connected to "
- 				"the adapter %s\n", port->wwpn,
+ 		for (counter = 0; counter < 2; counter++) {
+ 			subtable = header->fsf_status_qual.halfword[counter * 2];
+@@ -2436,8 +2353,7 @@
+ 	case FSF_MAXIMUM_NUMBER_OF_PORTS_EXCEEDED:
+ 		ZFCP_LOG_FLAGS(1, "FSF_MAXIMUM_NUMBER_OF_PORTS_EXCEEDED\n");
+ 		ZFCP_LOG_INFO("error: The FSF adapter is out of resources. "
+-			      "The remote port with WWPN=0x%Lx "
+-			      "connected to the adapter %s "
++			      "The remote port 0x%016Lx on adapter %s "
+ 			      "could not be opened. Disabling it.\n",
+ 			      port->wwpn, zfcp_get_busid_by_port(port));
+ 		debug_text_event(fsf_req->adapter->erp_dbf, 1,
+@@ -2465,9 +2381,9 @@
+ 			break;
+ 		case FSF_SQ_NO_RETRY_POSSIBLE:
+ 			ZFCP_LOG_FLAGS(0, "FSF_SQ_NO_RETRY_POSSIBLE\n");
+-			ZFCP_LOG_NORMAL("The remote port with WWPN=0x%Lx "
+-					"connected to the adapter %s "
+-					"could not be opened. Disabling it.\n",
++			ZFCP_LOG_NORMAL("The remote port 0x%016Lx on "
++					"adapter %s could not be opened. "
++					"Disabling it.\n",
+ 					port->wwpn,
+ 					zfcp_get_busid_by_port(port));
+ 			debug_text_exception(fsf_req->adapter->erp_dbf, 0,
+@@ -2493,11 +2409,9 @@
+ 		ZFCP_LOG_FLAGS(3, "FSF_GOOD\n");
+ 		/* save port handle assigned by FSF */
+ 		port->handle = header->port_handle;
+-		ZFCP_LOG_INFO("The remote port (WWPN=0x%Lx) via adapter "
+-			      "(busid=%s) was opened, it's "
+-			      "port handle is 0x%x\n",
+-			      port->wwpn,
+-			      zfcp_get_busid_by_port(port),
++		ZFCP_LOG_INFO("The remote port 0x%016Lx via adapter %s "
++			      "was opened, it's port handle is 0x%x\n",
++			      port->wwpn, zfcp_get_busid_by_port(port),
+ 			      port->handle);
+ 		/* mark port as open */
+ 		atomic_set_mask(ZFCP_STATUS_COMMON_OPEN |
+@@ -2533,9 +2447,9 @@
+ 				/* skip sanity check and assume wwpn is ok */
+ 			} else {
+ 				if (plogi->serv_param.wwpn != port->wwpn) {
+-					ZFCP_LOG_INFO("warning: D_ID of port "
+-						      "with WWPN 0x%Lx changed "
+-						      "during open\n", port->wwpn);
++					ZFCP_LOG_INFO("warning: d_id of port "
++						      "0x%016Lx changed during "
++						      "open\n", port->wwpn);
+ 					debug_text_event(
+ 						fsf_req->adapter->erp_dbf, 0,
+ 						"fsf_s_did_change:");
+@@ -2585,9 +2499,8 @@
+ 				     erp_action->adapter->pool.fsf_req_erp,
+ 				     &lock_flags, &(erp_action->fsf_req));
+ 	if (retval < 0) {
+-		ZFCP_LOG_INFO("error: Out of resources. Could not create a "
+-			      "close port request for WWPN 0x%Lx connected to "
+-			      "the adapter %s.\n",
++		ZFCP_LOG_INFO("error: Could not create a close port request "
++			      "for port 0x%016Lx on adapter %s.\n",
+ 			      erp_action->port->wwpn,
+ 			      zfcp_get_busid_by_adapter(erp_action->adapter));
+ 		goto out;
+@@ -2607,9 +2520,8 @@
+ 	/* start QDIO request for this FSF request */
+ 	retval = zfcp_fsf_req_send(erp_action->fsf_req, &erp_action->timer);
+ 	if (retval) {
+-		ZFCP_LOG_INFO("error: Could not send a "
+-			      "close port request for WWPN 0x%Lx connected to "
+-			      "the adapter %s.\n",
++		ZFCP_LOG_INFO("error: Could not send a close port request for "
++			      "port 0x%016Lx on adapter %s.\n",
+ 			      erp_action->port->wwpn,
+ 			      zfcp_get_busid_by_adapter(erp_action->adapter));
+ 		zfcp_fsf_req_free(erp_action->fsf_req);
+@@ -2617,8 +2529,8 @@
+ 		goto out;
+ 	}
+ 
+-	ZFCP_LOG_TRACE("Close Port request initiated "
+-		       "(adapter busid=%s, port wwpn=0x%Lx)\n",
++	ZFCP_LOG_TRACE("close port request initiated "
++		       "(adapter %s, port 0x%016Lx)\n",
+ 		       zfcp_get_busid_by_adapter(erp_action->adapter),
+ 		       erp_action->port->wwpn);
+  out:
+@@ -2652,11 +2564,9 @@
+ 
+ 	case FSF_PORT_HANDLE_NOT_VALID:
+ 		ZFCP_LOG_FLAGS(1, "FSF_PORT_HANDLE_NOT_VALID\n");
+-		ZFCP_LOG_INFO("Temporary port identifier (handle) 0x%x "
+-			      "for the port with WWPN 0x%Lx connected to "
+-			      "the adapter %s is "
+-			      "not valid. This may happen occasionally.\n",
+-			      port->handle,
++		ZFCP_LOG_INFO("Temporary port identifier 0x%x for port "
++			      "0x%016Lx on adapter %s invalid. This may happen "
++			      "occasionally.\n", port->handle,
+ 			      port->wwpn, zfcp_get_busid_by_port(port));
+ 		ZFCP_LOG_DEBUG("status qualifier:\n");
+ 		ZFCP_HEX_DUMP(ZFCP_LOG_LEVEL_DEBUG,
+@@ -2678,11 +2588,9 @@
+ 
+ 	case FSF_GOOD:
+ 		ZFCP_LOG_FLAGS(3, "FSF_GOOD\n");
+-		ZFCP_LOG_TRACE("remote port (WWPN=0x%Lx) via adapter "
+-			       "(busid=%s) closed, port handle 0x%x\n",
+-			       port->wwpn,
+-			       zfcp_get_busid_by_port(port),
+-			       port->handle);
++		ZFCP_LOG_TRACE("remote port 0x016%Lx on adapter %s closed, "
++			       "port handle 0x%x\n", port->wwpn,
++			       zfcp_get_busid_by_port(port), port->handle);
+ 		zfcp_erp_modify_port_status(port,
+ 					    ZFCP_STATUS_COMMON_OPEN,
+ 					    ZFCP_CLEAR);
+@@ -2726,12 +2634,11 @@
+ 				     erp_action->adapter->pool.fsf_req_erp,
+ 				     &lock_flags, &erp_action->fsf_req);
+ 	if (retval < 0) {
+-		ZFCP_LOG_INFO("error: Out of resources. Could not create a "
+-			      "close physical port request for "
+-			      "the port with WWPN 0x%Lx connected to "
+-			      "the adapter %s.\n",
+-			      erp_action->port->wwpn,
+-			      zfcp_get_busid_by_adapter(erp_action->adapter));
++		ZFCP_LOG_INFO("error: Could not create close physical port "
++			      "request (adapter %s, port 0x%016Lx)\n",
++			      zfcp_get_busid_by_adapter(erp_action->adapter),
++			      erp_action->port->wwpn);
++
+ 		goto out;
+ 	}
+ 
+@@ -2748,18 +2655,17 @@
+ 	/* start QDIO request for this FSF request */
+ 	retval = zfcp_fsf_req_send(erp_action->fsf_req, &erp_action->timer);
+ 	if (retval) {
+-		ZFCP_LOG_INFO("error: Could not send an close physical port "
+-			      "request for the port with WWPN 0x%Lx connected "
+-			      "to the adapter %s.\n",
+-			      erp_action->port->wwpn,
+-			      zfcp_get_busid_by_adapter(erp_action->adapter));
++		ZFCP_LOG_INFO("error: Could not send close physical port "
++			      "request (adapter %s, port 0x%016Lx)\n",
++			      zfcp_get_busid_by_adapter(erp_action->adapter),
++			      erp_action->port->wwpn);
+ 		zfcp_fsf_req_free(erp_action->fsf_req);
+ 		erp_action->fsf_req = NULL;
+ 		goto out;
+ 	}
+ 
+-	ZFCP_LOG_TRACE("Close Physical Port request initiated "
+-		       "(adapter busid=%s, port wwpn=0x%Lx)\n",
++	ZFCP_LOG_TRACE("close physical port request initiated "
++		       "(adapter %s, port 0x%016Lx)\n",
+ 		       zfcp_get_busid_by_adapter(erp_action->adapter),
+ 		       erp_action->port->wwpn);
+  out:
+@@ -2797,13 +2703,12 @@
+ 
+ 	case FSF_PORT_HANDLE_NOT_VALID:
+ 		ZFCP_LOG_FLAGS(1, "FSF_PORT_HANDLE_NOT_VALID\n");
+-		ZFCP_LOG_INFO("Temporary port identifier (handle) 0x%x "
+-			      "for the port with WWPN 0x%Lx connected to "
+-			      "the adapter %s is not valid. This may happen "
+-			      "occasionally.\n",
++		ZFCP_LOG_INFO("Temporary port identifier 0x%x invalid"
++			      "(adapter %s, port 0x%016Lx). "
++			      "This may happen occasionally.\n",
+ 			      port->handle,
+-			      port->wwpn,
+-			      zfcp_get_busid_by_port(port));
++			      zfcp_get_busid_by_port(port),
++			      port->wwpn);
+ 		ZFCP_LOG_DEBUG("status qualifier:\n");
+ 		ZFCP_HEX_DUMP(ZFCP_LOG_LEVEL_DEBUG,
+ 			      (char *) &header->fsf_status_qual,
+@@ -2817,8 +2722,8 @@
+ 	case FSF_ACCESS_DENIED:
+ 		ZFCP_LOG_FLAGS(2, "FSF_ACCESS_DENIED\n");
+ 		ZFCP_LOG_NORMAL("Access denied, cannot close "
+-				"physical port with WWPN 0x%Lx connected to "
+-				"the adapter %s\n", port->wwpn,
++				"physical port 0x%016Lx on "
++				"adapter %s\n", port->wwpn,
  				zfcp_get_busid_by_port(port));
--		counter = 0;
--		do {
--			subtable = header->fsf_status_qual.halfword[counter++];
--			rule = header->fsf_status_qual.halfword[counter++];
-+		for (counter = 0; counter < 2; counter++) {
-+			subtable = header->fsf_status_qual.halfword[counter * 2];
-+			rule = header->fsf_status_qual.halfword[counter * 2 + 1];
- 			switch (subtable) {
- 			case FSF_SQ_CFDC_SUBTABLE_OS:
- 			case FSF_SQ_CFDC_SUBTABLE_PORT_WWPN:
- 			case FSF_SQ_CFDC_SUBTABLE_PORT_DID:
- 			case FSF_SQ_CFDC_SUBTABLE_LUN:
--	       			ZFCP_LOG_NORMAL("Access denied (%s rule %d)\n",
-+	       			ZFCP_LOG_INFO("Access denied (%s rule %d)\n",
- 					zfcp_act_subtable_type[subtable], rule);
- 				break;
- 			}
--		} while (counter < 4);
-+		}
- 		debug_text_event(fsf_req->adapter->erp_dbf, 1, "fsf_s_access");
- 		fsf_req->status |= ZFCP_STATUS_FSFREQ_ERROR;
- 		break;
-@@ -2956,8 +2961,8 @@
+ 		for (counter = 0; counter < 2; counter++) {
+ 			subtable = header->fsf_status_qual.halfword[counter * 2];
+@@ -2839,7 +2744,7 @@
+ 
+ 	case FSF_PORT_BOXED:
+ 		ZFCP_LOG_FLAGS(2, "FSF_PORT_BOXED\n");
+-		ZFCP_LOG_DEBUG("The remote port with WWPN 0x%Lx on the adapter "
++		ZFCP_LOG_DEBUG("The remote port 0x%016Lx on adapter "
+ 			       "%s needs to be reopened but it was attempted "
+ 			       "to close it physically.\n",
+ 			       port->wwpn,
+@@ -2884,9 +2789,8 @@
+ 
+ 	case FSF_GOOD:
+ 		ZFCP_LOG_FLAGS(3, "FSF_GOOD\n");
+-		ZFCP_LOG_DEBUG("Remote port (WWPN=0x%Lx) via adapter "
+-			       "(busid=%s) physically closed, "
+-			       "port handle 0x%x\n",
++		ZFCP_LOG_DEBUG("Remote port 0x%016Lx via adapter %s "
++			       "physically closed, port handle 0x%x\n",
+ 			       port->wwpn,
+ 			       zfcp_get_busid_by_port(port), port->handle);
+ 		/* can't use generic zfcp_erp_modify_port_status because
+@@ -2939,10 +2843,8 @@
+ 				     erp_action->adapter->pool.fsf_req_erp,
+ 				     &lock_flags, &(erp_action->fsf_req));
+ 	if (retval < 0) {
+-		ZFCP_LOG_INFO("error: Out of resources. Could not create an "
+-			      "open unit request for FCP-LUN 0x%Lx connected "
+-			      "to the port with WWPN 0x%Lx connected to "
+-			      "the adapter %s.\n",
++		ZFCP_LOG_INFO("error: Could not create open unit request for "
++			      "unit 0x%016Lx on port 0x%016Lx on adapter %s.\n",
+ 			      erp_action->unit->fcp_lun,
+ 			      erp_action->unit->port->wwpn,
+ 			      zfcp_get_busid_by_adapter(erp_action->adapter));
+@@ -2961,15 +2863,13 @@
  	atomic_set_mask(ZFCP_STATUS_COMMON_OPENING, &erp_action->unit->status);
  	erp_action->fsf_req->data.open_unit.unit = erp_action->unit;
  	erp_action->fsf_req->erp_action = erp_action;
--	erp_action->fsf_req->qtcb->bottom.support.option =
--		FSF_OPEN_LUN_SUPPRESS_BOXING;
-+//	erp_action->fsf_req->qtcb->bottom.support.option =
-+//		FSF_OPEN_LUN_UNSOLICITED_SENSE_DATA;
+-//	erp_action->fsf_req->qtcb->bottom.support.option =
+-//		FSF_OPEN_LUN_UNSOLICITED_SENSE_DATA;
  
  	/* start QDIO request for this FSF request */
  	retval = zfcp_fsf_req_send(erp_action->fsf_req, &erp_action->timer);
-@@ -2994,12 +2999,16 @@
- zfcp_fsf_open_unit_handler(struct zfcp_fsf_req *fsf_req)
- {
- 	int retval = -EINVAL;
-+	struct zfcp_adapter *adapter;
- 	struct zfcp_unit *unit;
- 	struct fsf_qtcb_header *header;
-+	struct fsf_qtcb_bottom_support *bottom;
- 	u16 subtable, rule, counter;
+ 	if (retval) {
+ 		ZFCP_LOG_INFO("error: Could not send an open unit request "
+-			      "on the adapter %s, port WWPN 0x%Lx for "
+-			      "unit LUN 0x%Lx\n",
++			      "on the adapter %s, port 0x%016Lx for "
++			      "unit 0x%016Lx\n",
+ 			      zfcp_get_busid_by_adapter(erp_action->adapter),
+ 			      erp_action->port->wwpn,
+ 			      erp_action->unit->fcp_lun);
+@@ -2978,8 +2878,8 @@
+ 		goto out;
+ 	}
  
-+	adapter = fsf_req->adapter;
- 	unit = fsf_req->data.open_unit.unit;
- 	header = &fsf_req->qtcb->header;
-+	bottom = &fsf_req->qtcb->bottom.support;
+-	ZFCP_LOG_TRACE("Open LUN request initiated (adapter busid=%s, "
+-		       "port wwpn=0x%Lx, unit fcp_lun=0x%Lx)\n",
++	ZFCP_LOG_TRACE("Open LUN request initiated (adapter %s, "
++		       "port 0x%016Lx, unit 0x%016Lx)\n",
+ 		       zfcp_get_busid_by_adapter(erp_action->adapter),
+ 		       erp_action->port->wwpn, erp_action->unit->fcp_lun);
+  out:
+@@ -3020,10 +2920,9 @@
  
- 	if (fsf_req->status & ZFCP_STATUS_FSFREQ_ERROR) {
- 		/* don't change unit status in our bookkeeping */
-@@ -3021,7 +3030,7 @@
- 		ZFCP_HEX_DUMP(ZFCP_LOG_LEVEL_DEBUG,
- 			      (char *) &header->fsf_status_qual,
- 			      sizeof (union fsf_status_qual));
--		debug_text_event(fsf_req->adapter->erp_dbf, 1, "fsf_s_ph_nv");
-+		debug_text_event(adapter->erp_dbf, 1, "fsf_s_ph_nv");
- 		zfcp_erp_adapter_reopen(unit->port->adapter, 0);
- 		fsf_req->status |= ZFCP_STATUS_FSFREQ_ERROR;
- 		break;
-@@ -3034,7 +3043,7 @@
- 				"to the adapter %s twice.\n",
+ 	case FSF_PORT_HANDLE_NOT_VALID:
+ 		ZFCP_LOG_FLAGS(1, "FSF_PORT_HANDLE_NOT_VALID\n");
+-		ZFCP_LOG_INFO("Temporary port identifier (handle) 0x%x "
+-			      "for the port with WWPN 0x%Lx connected to "
+-			      "the adapter %s is "
+-			      "not valid. This may happen occasionally.\n",
++		ZFCP_LOG_INFO("Temporary port identifier 0x%x "
++			      "for port 0x%016Lx on adapter %s invalid "
++			      "This may happen occasionally\n",
+ 			      unit->port->handle,
+ 			      unit->port->wwpn, zfcp_get_busid_by_unit(unit));
+ 		ZFCP_LOG_DEBUG("status qualifier:\n");
+@@ -3037,10 +2936,8 @@
+ 
+ 	case FSF_LUN_ALREADY_OPEN:
+ 		ZFCP_LOG_FLAGS(0, "FSF_LUN_ALREADY_OPEN\n");
+-		ZFCP_LOG_NORMAL("bug: Attempted to open the logical unit "
+-				"with FCP-LUN 0x%Lx at "
+-				"the remote port with WWPN 0x%Lx connected "
+-				"to the adapter %s twice.\n",
++		ZFCP_LOG_NORMAL("bug: Attempted to open unit 0x%016Lx on "
++				"remote port 0x%016Lx on adapter %s twice.\n",
  				unit->fcp_lun,
  				unit->port->wwpn, zfcp_get_busid_by_unit(unit));
--		debug_text_exception(fsf_req->adapter->erp_dbf, 0,
-+		debug_text_exception(adapter->erp_dbf, 0,
- 				     "fsf_s_uopen");
- 		fsf_req->status |= ZFCP_STATUS_FSFREQ_ERROR;
- 		break;
-@@ -3046,21 +3055,20 @@
- 				"WWPN 0x%Lx connected to the adapter %s\n",
- 			unit->fcp_lun, unit->port->wwpn,
- 			zfcp_get_busid_by_unit(unit));
--		counter = 0;
--		do {
--			subtable = header->fsf_status_qual.halfword[counter++];
--			rule = header->fsf_status_qual.halfword[counter++];
-+		for (counter = 0; counter < 2; counter++) {
-+			subtable = header->fsf_status_qual.halfword[counter * 2];
-+			rule = header->fsf_status_qual.halfword[counter * 2 + 1];
- 			switch (subtable) {
- 			case FSF_SQ_CFDC_SUBTABLE_OS:
+ 		debug_text_exception(adapter->erp_dbf, 0,
+@@ -3050,11 +2947,10 @@
+ 
+ 	case FSF_ACCESS_DENIED:
+ 		ZFCP_LOG_FLAGS(2, "FSF_ACCESS_DENIED\n");
+-		ZFCP_LOG_NORMAL("Access denied, cannot open unit "
+-				"with FCP-LUN 0x%Lx at the remote port with "
+-				"WWPN 0x%Lx connected to the adapter %s\n",
+-			unit->fcp_lun, unit->port->wwpn,
+-			zfcp_get_busid_by_unit(unit));
++		ZFCP_LOG_NORMAL("Access denied, cannot open unit 0x%016Lx on "
++				"remote port 0x%016Lx on adapter %s\n",
++				unit->fcp_lun, unit->port->wwpn,
++				zfcp_get_busid_by_unit(unit));
+ 		for (counter = 0; counter < 2; counter++) {
+ 			subtable = header->fsf_status_qual.halfword[counter * 2];
+ 			rule = header->fsf_status_qual.halfword[counter * 2 + 1];
+@@ -3075,8 +2971,7 @@
+ 
+ 	case FSF_PORT_BOXED:
+ 		ZFCP_LOG_FLAGS(2, "FSF_PORT_BOXED\n");
+-		ZFCP_LOG_DEBUG("The remote port "
+-			       "with WWPN 0x%Lx on the adapter %s "
++		ZFCP_LOG_DEBUG("The remote port 0x%016Lx on adapter %s "
+ 			       "needs to be reopened\n",
+ 			       unit->port->wwpn, zfcp_get_busid_by_unit(unit));
+ 		debug_text_event(adapter->erp_dbf, 2, "fsf_s_pboxed");
+@@ -3102,9 +2997,8 @@
  			case FSF_SQ_CFDC_SUBTABLE_PORT_WWPN:
  			case FSF_SQ_CFDC_SUBTABLE_PORT_DID:
  			case FSF_SQ_CFDC_SUBTABLE_LUN:
--				ZFCP_LOG_NORMAL("Access denied (%s rule %d)\n",
-+				ZFCP_LOG_INFO("Access denied (%s rule %d)\n",
- 					zfcp_act_subtable_type[subtable], rule);
- 				break;
- 			}
--		} while (counter < 4);
--		debug_text_event(fsf_req->adapter->erp_dbf, 1, "fsf_s_access");
-+		}
-+		debug_text_event(adapter->erp_dbf, 1, "fsf_s_access");
- 		zfcp_erp_unit_failed(unit);
- 		fsf_req->status |= ZFCP_STATUS_FSFREQ_ERROR;
- 		break;
-@@ -3071,7 +3079,7 @@
- 			       "with WWPN 0x%Lx on the adapter %s "
- 			       "needs to be reopened\n",
- 			       unit->port->wwpn, zfcp_get_busid_by_unit(unit));
--		debug_text_event(fsf_req->adapter->erp_dbf, 2, "fsf_s_pboxed");
-+		debug_text_event(adapter->erp_dbf, 2, "fsf_s_pboxed");
- 		zfcp_erp_port_reopen(unit->port, 0);
- 		fsf_req->status |= ZFCP_STATUS_FSFREQ_ERROR |
- 			ZFCP_STATUS_FSFREQ_RETRY;
-@@ -3079,30 +3087,38 @@
- 
- 	case FSF_LUN_SHARING_VIOLATION :
- 		ZFCP_LOG_FLAGS(2, "FSF_LUN_SHARING_VIOLATION\n");
--		ZFCP_LOG_NORMAL("error: FCP-LUN 0x%Lx at "
--				"the remote port with WWPN 0x%Lx connected "
--				"to the adapter %s "
--				"is already owned by another operating system "
--				"instance (LPAR or VM guest)\n",
--				unit->fcp_lun,
--				unit->port->wwpn,
--				zfcp_get_busid_by_unit(unit));
- 		subtable = header->fsf_status_qual.halfword[4];
- 		rule = header->fsf_status_qual.halfword[5];
--		switch (subtable) {
--		case FSF_SQ_CFDC_SUBTABLE_OS:
--		case FSF_SQ_CFDC_SUBTABLE_PORT_WWPN:
--		case FSF_SQ_CFDC_SUBTABLE_PORT_DID:
--		case FSF_SQ_CFDC_SUBTABLE_LUN:
--			ZFCP_LOG_NORMAL("Access denied (%s rule %d)\n",
--				zfcp_act_subtable_type[subtable], rule);
--			break;
-+		if (rule == 0xFFFF) {
-+			ZFCP_LOG_NORMAL("FCP-LUN 0x%Lx at the remote port "
-+					"with WWPN 0x%Lx connected to the "
-+					"adapter %s is already in use\n",
-+					unit->fcp_lun,
-+					unit->port->wwpn,
-+					zfcp_get_busid_by_unit(unit));
-+		} else {
-+			switch (subtable) {
-+			case FSF_SQ_CFDC_SUBTABLE_OS:
-+			case FSF_SQ_CFDC_SUBTABLE_PORT_WWPN:
-+			case FSF_SQ_CFDC_SUBTABLE_PORT_DID:
-+			case FSF_SQ_CFDC_SUBTABLE_LUN:
-+				ZFCP_LOG_NORMAL("Access to FCP-LUN 0x%Lx at the "
-+						"remote port with WWPN 0x%Lx "
-+						"connected to the adapter %s "
-+						"is denied (%s rule %d)\n",
-+						unit->fcp_lun,
-+						unit->port->wwpn,
-+						zfcp_get_busid_by_unit(unit),
-+						zfcp_act_subtable_type[subtable],
-+						rule);
-+				break;
-+			}
- 		}
--		ZFCP_LOG_NORMAL("Additional sense data is presented:\n");
-+		ZFCP_LOG_DEBUG("status qualifier:\n");
- 		ZFCP_HEX_DUMP(ZFCP_LOG_LEVEL_NORMAL,
- 			      (char *) &header->fsf_status_qual,
- 			      sizeof (union fsf_status_qual));
--		debug_text_event(fsf_req->adapter->erp_dbf, 2,
-+		debug_text_event(adapter->erp_dbf, 2,
- 				 "fsf_s_l_sh_vio");
- 		zfcp_erp_unit_failed(unit);
- 		fsf_req->status |= ZFCP_STATUS_FSFREQ_ERROR;
-@@ -3118,7 +3134,7 @@
+-				ZFCP_LOG_NORMAL("Access to FCP-LUN 0x%Lx at the "
+-						"remote port with WWPN 0x%Lx "
+-						"connected to the adapter %s "
++				ZFCP_LOG_NORMAL("Access to unit 0x%016Lx on "
++						"port 0x%016Lx on adapter %s "
+ 						"is denied (%s rule %d)\n",
+ 						unit->fcp_lun,
+ 						unit->port->wwpn,
+@@ -3128,9 +3022,8 @@
+ 		ZFCP_LOG_FLAGS(1, "FSF_MAXIMUM_NUMBER_OF_LUNS_EXCEEDED\n");
+ 		ZFCP_LOG_INFO("error: The adapter ran out of resources. "
+ 			      "There is no handle (temporary port identifier) "
+-			      "available for the unit with FCP-LUN 0x%Lx "
+-			      "at the remote port with WWPN 0x%Lx connected "
+-			      "to the adapter %s\n",
++			      "available for unit 0x%016Lx on port 0x%016Lx "
++			      "on adapter %s\n",
  			      unit->fcp_lun,
  			      unit->port->wwpn,
  			      zfcp_get_busid_by_unit(unit));
--		debug_text_event(fsf_req->adapter->erp_dbf, 1,
-+		debug_text_event(adapter->erp_dbf, 1,
- 				 "fsf_s_max_units");
- 		zfcp_erp_unit_failed(unit);
- 		fsf_req->status |= ZFCP_STATUS_FSFREQ_ERROR;
-@@ -3131,7 +3147,7 @@
- 			ZFCP_LOG_FLAGS(2,
- 				       "FSF_SQ_INVOKE_LINK_TEST_PROCEDURE\n");
- 			/* Re-establish link to port */
--			debug_text_event(fsf_req->adapter->erp_dbf, 1,
-+			debug_text_event(adapter->erp_dbf, 1,
- 					 "fsf_sq_ltest");
- 			zfcp_erp_port_reopen(unit->port, 0);
- 			fsf_req->status |= ZFCP_STATUS_FSFREQ_ERROR;
-@@ -3140,7 +3156,7 @@
- 			ZFCP_LOG_FLAGS(2,
- 				       "FSF_SQ_ULP_DEPENDENT_ERP_REQUIRED\n");
- 			/* ERP strategy will escalate */
--			debug_text_event(fsf_req->adapter->erp_dbf, 1,
-+			debug_text_event(adapter->erp_dbf, 1,
- 					 "fsf_sq_ulp");
- 			fsf_req->status |= ZFCP_STATUS_FSFREQ_ERROR;
- 			break;
-@@ -3148,27 +3164,41 @@
- 			ZFCP_LOG_NORMAL
- 			    ("bug: Wrong status qualifier 0x%x arrived.\n",
- 			     header->fsf_status_qual.word[0]);
--			debug_text_event(fsf_req->adapter->erp_dbf, 0,
-+			debug_text_event(adapter->erp_dbf, 0,
- 					 "fsf_sq_inval:");
--			debug_exception(fsf_req->adapter->erp_dbf, 0,
-+			debug_exception(adapter->erp_dbf, 0,
- 					&header->fsf_status_qual.word[0],
- 				sizeof (u32));
- 		}
- 		break;
- 
-+	case FSF_INVALID_COMMAND_OPTION:
-+		ZFCP_LOG_FLAGS(2, "FSF_INVALID_COMMAND_OPTION\n");
-+		ZFCP_LOG_NORMAL(
-+			"Invalid option 0x%x has been specified "
-+			"in QTCB bottom sent to the adapter %s\n",
-+			bottom->option,
-+			zfcp_get_busid_by_adapter(adapter));
-+		fsf_req->status |= ZFCP_STATUS_FSFREQ_ERROR;
-+		retval = -EINVAL;
-+		break;
-+
- 	case FSF_GOOD:
+@@ -3187,18 +3080,14 @@
  		ZFCP_LOG_FLAGS(3, "FSF_GOOD\n");
  		/* save LUN handle assigned by FSF */
  		unit->handle = header->lun_handle;
- 		ZFCP_LOG_TRACE("unit (FCP_LUN=0x%Lx) of remote port "
- 			       "(WWPN=0x%Lx) via adapter (busid=%s) opened, "
--			       "port handle 0x%x \n",
-+			       "port handle 0x%x, access flag 0x%02x\n",
+-		ZFCP_LOG_TRACE("unit (FCP_LUN=0x%Lx) of remote port "
+-			       "(WWPN=0x%Lx) via adapter (busid=%s) opened, "
+-			       "port handle 0x%x, access flag 0x%02x\n",
++		ZFCP_LOG_TRACE("unit 0x%016Lx on remote port 0x%016Lx on "
++			       "adapter %s opened, port handle 0x%x\n",
  			       unit->fcp_lun,
  			       unit->port->wwpn,
  			       zfcp_get_busid_by_unit(unit),
--			       unit->handle);
-+			       unit->handle,
-+			       bottom->lun_access);
+-			       unit->handle,
+-			       bottom->lun_access);
++			       unit->handle);
  		/* mark unit as open */
  		atomic_set_mask(ZFCP_STATUS_COMMON_OPEN, &unit->status);
-+		if (adapter->supported_features & FSF_FEATURE_CFDC)
-+			unit->lun_access = bottom->lun_access;
+-		if (adapter->supported_features & FSF_FEATURE_CFDC)
+-			unit->lun_access = bottom->lun_access;
  		retval = 0;
  		break;
  
-@@ -3176,8 +3206,8 @@
- 		ZFCP_LOG_NORMAL("bug: An unknown FSF Status was presented "
- 				"(debug info 0x%x)\n",
- 				header->fsf_status);
--		debug_text_event(fsf_req->adapter->erp_dbf, 0, "fsf_s_inval:");
--		debug_exception(fsf_req->adapter->erp_dbf, 0,
-+		debug_text_event(adapter->erp_dbf, 0, "fsf_s_inval:");
-+		debug_exception(adapter->erp_dbf, 0,
- 				&header->fsf_status, sizeof (u32));
- 		break;
+@@ -3244,10 +3133,8 @@
+ 				     erp_action->adapter->pool.fsf_req_erp,
+ 				     &lock_flags, &(erp_action->fsf_req));
+ 	if (retval < 0) {
+-		ZFCP_LOG_INFO("error: Out of resources. Could not create a "
+-			      "close unit request for FCP-LUN 0x%Lx "
+-			      "connected to the port with WWPN 0x%Lx connected "
+-			      "to the adapter %s.\n",
++		ZFCP_LOG_INFO("error: Could not create close unit request for "
++			      "unit 0x%016Lx on port 0x%016Lx on adapter %s.\n",
+ 			      erp_action->unit->fcp_lun,
+ 			      erp_action->port->wwpn,
+ 			      zfcp_get_busid_by_adapter(erp_action->adapter));
+@@ -3270,8 +3157,7 @@
+ 	retval = zfcp_fsf_req_send(erp_action->fsf_req, &erp_action->timer);
+ 	if (retval) {
+ 		ZFCP_LOG_INFO("error: Could not send a close unit request for "
+-			      "FCP-LUN 0x%Lx connected to the port with "
+-			      "WWPN 0x%Lx connected to the adapter %s.\n",
++			      "unit 0x%016Lx on port 0x%016Lx onadapter %s.\n",
+ 			      erp_action->unit->fcp_lun,
+ 			      erp_action->port->wwpn,
+ 			      zfcp_get_busid_by_adapter(erp_action->adapter));
+@@ -3280,8 +3166,8 @@
+ 		goto out;
  	}
-@@ -3863,20 +3893,19 @@
- 				"remote port with WWPN 0x%Lx connected to the "
+ 
+-	ZFCP_LOG_TRACE("Close LUN request initiated (adapter busid=%s, "
+-		       "port wwpn=0x%Lx, unit fcp_lun=0x%Lx)\n",
++	ZFCP_LOG_TRACE("Close LUN request initiated (adapter %s, "
++		       "port 0x%016Lx, unit 0x%016Lx)\n",
+ 		       zfcp_get_busid_by_adapter(erp_action->adapter),
+ 		       erp_action->port->wwpn, erp_action->unit->fcp_lun);
+  out:
+@@ -3315,9 +3201,8 @@
+ 
+ 	case FSF_PORT_HANDLE_NOT_VALID:
+ 		ZFCP_LOG_FLAGS(1, "FSF_PORT_HANDLE_NOT_VALID\n");
+-		ZFCP_LOG_INFO("Temporary port identifier (handle) 0x%x "
+-			      "for the port with WWPN 0x%Lx connected to "
+-			      "the adapter %s is not valid. This may "
++		ZFCP_LOG_INFO("Temporary port identifier 0x%x for port "
++			      "0x%016Lx on adapter %s invalid. This may "
+ 			      "happen in rare circumstances\n",
+ 			      unit->port->handle,
+ 			      unit->port->wwpn,
+@@ -3337,11 +3222,9 @@
+ 
+ 	case FSF_LUN_HANDLE_NOT_VALID:
+ 		ZFCP_LOG_FLAGS(1, "FSF_LUN_HANDLE_NOT_VALID\n");
+-		ZFCP_LOG_INFO("Temporary LUN identifier (handle) 0x%x "
+-			      "of the logical unit with FCP-LUN 0x%Lx at "
+-			      "the remote port with WWPN 0x%Lx connected "
+-			      "to the adapter %s is "
+-			      "not valid. This may happen occasionally.\n",
++		ZFCP_LOG_INFO("Temporary LUN identifier 0x%x of unit "
++			      "0x%016Lx on port 0x%016Lx on adapter %s is "
++			      "invalid. This may happen occasionally.\n",
+ 			      unit->handle,
+ 			      unit->fcp_lun,
+ 			      unit->port->wwpn,
+@@ -3361,8 +3244,7 @@
+ 
+ 	case FSF_PORT_BOXED:
+ 		ZFCP_LOG_FLAGS(2, "FSF_PORT_BOXED\n");
+-		ZFCP_LOG_DEBUG("The remote port "
+-			       "with WWPN 0x%Lx on the adapter %s "
++		ZFCP_LOG_DEBUG("The remote port 0x%016Lx on adapter %s "
+ 			       "needs to be reopened\n",
+ 			       unit->port->wwpn,
+ 			       zfcp_get_busid_by_unit(unit));
+@@ -3408,9 +3290,8 @@
+ 
+ 	case FSF_GOOD:
+ 		ZFCP_LOG_FLAGS(3, "FSF_GOOD\n");
+-		ZFCP_LOG_TRACE("unit (FCP_LUN=0x%Lx) of remote port "
+-			       "(WWPN=0x%Lx) via adapter (busid=%s) closed, "
+-			       "port handle 0x%x \n",
++		ZFCP_LOG_TRACE("unit 0x%016Lx on port 0x%016Lx on adapter %s "
++			       "closed, port handle 0x%x\n",
+ 			       unit->fcp_lun,
+ 			       unit->port->wwpn,
+ 			       zfcp_get_busid_by_unit(unit),
+@@ -3462,10 +3343,9 @@
+ 				     adapter->pool.fsf_req_scsi,
+ 				     &lock_flags, &fsf_req);
+ 	if (unlikely(retval < 0)) {
+-		ZFCP_LOG_DEBUG("error: Out of resources. Could not create an "
+-			       "FCP command request for FCP-LUN 0x%Lx "
+-			       "connected to the port with WWPN 0x%Lx "
+-			       "connected to the adapter %s.\n",
++		ZFCP_LOG_DEBUG("error: Could not create FCP command request "
++			       "for unit 0x%016Lx on port 0x%016Lx on "
++			       "adapter %s\n",
+ 			       unit->fcp_lun,
+ 			       unit->port->wwpn,
+ 			       zfcp_get_busid_by_adapter(adapter));
+@@ -3494,8 +3374,7 @@
+ #endif
+ 
+ 	fsf_req->data.send_fcp_command_task.unit = unit;
+-	ZFCP_LOG_DEBUG("unit=0x%lx, unit_fcp_lun=0x%Lx\n",
+-		       (unsigned long) unit, unit->fcp_lun);
++	ZFCP_LOG_DEBUG("unit=%p, fcp_lun=0x%016Lx\n", unit, unit->fcp_lun);
+ 
+ 	/* set handles of unit and its parent port in QTCB */
+ 	fsf_req->qtcb->header.lun_handle = unit->handle;
+@@ -3590,9 +3469,9 @@
+ 		retval = -EIO;
+ 	} else {
+ 		ZFCP_LOG_NORMAL("error: No truncation implemented but "
+-					"required. Shutting down unit "
+-					"(busid=%s, WWPN=0x%16.16Lx, "
+-					"FCP_LUN=0x%16.16Lx)\n",
++				"required. Shutting down unit "
++				"(adapter %s, port 0x%016Lx, "
++				"unit 0x%016Lx)\n",
+ 				zfcp_get_busid_by_unit(unit),
+ 				unit->port->wwpn,
+ 				unit->fcp_lun);
+@@ -3615,17 +3494,16 @@
+ 	 */
+ 	retval = zfcp_fsf_req_send(fsf_req, NULL);
+ 	if (unlikely(retval < 0)) {
+-		ZFCP_LOG_INFO("error: Could not send an FCP command request "
+-			      "for a command on the adapter %s, "
+-			      "port WWPN 0x%Lx and unit LUN 0x%Lx\n",
++		ZFCP_LOG_INFO("error: Could not send FCP command request "
++			      "on adapter %s, port 0x%016Lx, unit 0x%016Lx\n",
+ 			      zfcp_get_busid_by_adapter(adapter),
+ 			      unit->port->wwpn,
+ 			      unit->fcp_lun);
+ 		goto send_failed;
+ 	}
+ 
+-	ZFCP_LOG_TRACE("Send FCP Command initiated (adapter busid=%s, "
+-		       "port wwpn=0x%Lx, unit fcp_lun=0x%Lx)\n",
++	ZFCP_LOG_TRACE("Send FCP Command initiated (adapter %s, "
++		       "port 0x%016Lx, unit 0x%016Lx)\n",
+ 		       zfcp_get_busid_by_adapter(adapter),
+ 		       unit->port->wwpn,
+ 		       unit->fcp_lun);
+@@ -3676,10 +3554,9 @@
+ 				     adapter->pool.fsf_req_scsi,
+ 				     &lock_flags, &fsf_req);
+ 	if (retval < 0) {
+-		ZFCP_LOG_INFO("error: Out of resources. Could not create an "
+-			      "FCP command (task management) request for "
+-			      "the adapter %s, port with "
+-			      "WWPN 0x%Lx and FCP_LUN 0x%Lx.\n",
++		ZFCP_LOG_INFO("error: Could not create FCP command (task "
++			      "management) request for adapter %s, port "
++			      " 0x%016Lx, unit 0x%016Lx.\n",
+ 			      zfcp_get_busid_by_adapter(adapter),
+ 			      unit->port->wwpn, unit->fcp_lun);
+ 		goto out;
+@@ -3722,8 +3599,8 @@
+ 	if (retval) {
+ 		del_timer(&adapter->scsi_er_timer);
+ 		ZFCP_LOG_INFO("error: Could not send an FCP-command (task "
+-			      "management) on the adapter %s, port WWPN "
+-			      "0x%Lx for unit LUN 0x%Lx\n",
++			      "management) on adapter %s, port 0x%016Lx for "
++			      "unit LUN 0x%016Lx\n",
+ 			      zfcp_get_busid_by_adapter(adapter),
+ 			      unit->port->wwpn,
+ 			      unit->fcp_lun);
+@@ -3733,8 +3610,8 @@
+ 	}
+ 
+ 	ZFCP_LOG_TRACE("Send FCP Command (task management function) initiated "
+-		       "(adapter busid=%s, port wwpn=0x%Lx, "
+-		       "unit fcp_lun=0x%Lx, tm_flags=0x%x)\n",
++		       "(adapter %s, port 0x%016Lx, unit 0x%016Lx, "
++		       "tm_flags=0x%x)\n",
+ 		       zfcp_get_busid_by_adapter(adapter),
+ 		       unit->port->wwpn,
+ 		       unit->fcp_lun,
+@@ -3776,9 +3653,8 @@
+ 
+ 	case FSF_PORT_HANDLE_NOT_VALID:
+ 		ZFCP_LOG_FLAGS(1, "FSF_PORT_HANDLE_NOT_VALID\n");
+-		ZFCP_LOG_INFO("Temporary port identifier (handle) 0x%x "
+-			      "for the port with WWPN 0x%Lx connected to "
+-			      "the adapter %s is not valid.\n",
++		ZFCP_LOG_INFO("Temporary port identifier 0x%x for port "
++			      "0x%016Lx on adapter %s invalid\n",
+ 			      unit->port->handle,
+ 			      unit->port->wwpn, zfcp_get_busid_by_unit(unit));
+ 		ZFCP_HEX_DUMP(ZFCP_LOG_LEVEL_DEBUG,
+@@ -3792,11 +3668,9 @@
+ 
+ 	case FSF_LUN_HANDLE_NOT_VALID:
+ 		ZFCP_LOG_FLAGS(1, "FSF_LUN_HANDLE_NOT_VALID\n");
+-		ZFCP_LOG_INFO("Temporary LUN identifier (handle) 0x%x "
+-			      "of the logical unit with FCP-LUN 0x%Lx at "
+-			      "the remote port with WWPN 0x%Lx connected "
+-			      "to the adapter %s is "
+-			      "not valid. This may happen occasionally.\n",
++		ZFCP_LOG_INFO("Temporary LUN identifier 0x%x for unit "
++			      "0x%016Lx on port 0x%016Lx on adapter %s is "
++			      "invalid. This may happen occasionally.\n",
+ 			      unit->handle,
+ 			      unit->fcp_lun,
+ 			      unit->port->wwpn,
+@@ -3813,16 +3687,13 @@
+ 
+ 	case FSF_HANDLE_MISMATCH:
+ 		ZFCP_LOG_FLAGS(0, "FSF_HANDLE_MISMATCH\n");
+-		ZFCP_LOG_NORMAL("bug: The port handle (temporary port "
+-				"identifier) 0x%x has changed unexpectedly. "
+-				"This was detected upon receiveing the "
+-				"response of a command send to the unit with "
+-				"FCP-LUN 0x%Lx at the remote port with WWPN "
+-				"0x%Lx connected to the adapter %s.\n",
++		ZFCP_LOG_NORMAL("bug: The port handle 0x%x has changed "
++				"unexpectedly. (adapter %s, port 0x%016Lx, "
++				"unit 0x%016Lx)\n",
+ 				unit->port->handle,
+-				unit->fcp_lun,
++				zfcp_get_busid_by_unit(unit),
+ 				unit->port->wwpn,
+-				zfcp_get_busid_by_unit(unit));
++				unit->fcp_lun);
+ 		ZFCP_LOG_NORMAL("status qualifier:\n");
+ 		ZFCP_HEX_DUMP(ZFCP_LOG_LEVEL_NORMAL,
+ 			      (char *) &header->fsf_status_qual,
+@@ -3841,11 +3712,11 @@
+ 		ZFCP_LOG_FLAGS(0, "FSF_SERVICE_CLASS_NOT_SUPPORTED\n");
+ 		if (fsf_req->adapter->fc_service_class <= 3) {
+ 			ZFCP_LOG_NORMAL("error: The adapter %s does "
+-					"not support fibre-channel class %d.\n",
++					"not support fibrechannel class %d.\n",
+ 					zfcp_get_busid_by_unit(unit),
+ 					fsf_req->adapter->fc_service_class);
+ 		} else {
+-			ZFCP_LOG_NORMAL("bug: The fibre channel class at the "
++			ZFCP_LOG_NORMAL("bug: The fibrechannel class at "
+ 					"adapter %s is invalid. "
+ 					"(debug info %d)\n",
+ 					zfcp_get_busid_by_unit(unit),
+@@ -3864,10 +3735,9 @@
+ 
+ 	case FSF_FCPLUN_NOT_VALID:
+ 		ZFCP_LOG_FLAGS(0, "FSF_FCPLUN_NOT_VALID\n");
+-		ZFCP_LOG_NORMAL("bug: The FCP LUN 0x%Lx behind the remote port "
+-				"of WWPN0x%Lx via the adapter %s does not have "
+-				"the correct unit handle (temporary unit "
+-				"identifier) 0x%x\n",
++		ZFCP_LOG_NORMAL("bug: unit 0x%016Lx on port 0x%016Lx on "
++				"adapter %s does not have correct unit "
++				"handle 0x%x\n",
+ 				unit->fcp_lun,
+ 				unit->port->wwpn,
+ 				zfcp_get_busid_by_unit(unit),
+@@ -3888,11 +3758,10 @@
+ 
+ 	case FSF_ACCESS_DENIED:
+ 		ZFCP_LOG_FLAGS(2, "FSF_ACCESS_DENIED\n");
+-		ZFCP_LOG_NORMAL("Access denied, cannot send FCP "
+-				"command to the unit with FCP-LUN 0x%Lx at the "
+-				"remote port with WWPN 0x%Lx connected to the "
++		ZFCP_LOG_NORMAL("Access denied, cannot send FCP command to "
++				"unit 0x%016Lx on port 0x%016Lx on "
  				"adapter %s\n",	unit->fcp_lun, unit->port->wwpn,
+-			zfcp_get_busid_by_unit(unit));
++				zfcp_get_busid_by_unit(unit));
+ 		for (counter = 0; counter < 2; counter++) {
+ 			subtable = header->fsf_status_qual.halfword[counter * 2];
+ 			rule = header->fsf_status_qual.halfword[counter * 2 + 1];
+@@ -3912,9 +3781,8 @@
+ 
+ 	case FSF_DIRECTION_INDICATOR_NOT_VALID:
+ 		ZFCP_LOG_FLAGS(0, "FSF_DIRECTION_INDICATOR_NOT_VALID\n");
+-		ZFCP_LOG_INFO("bug: Invalid data direction given for the unit "
+-			      "with FCP LUN 0x%Lx at the remote port with "
+-			      "WWPN 0x%Lx via the adapter %s "
++		ZFCP_LOG_INFO("bug: Invalid data direction given for unit "
++			      "0x%016Lx on port 0x%016Lx on adapter %s "
+ 			      "(debug info %d)\n",
+ 			      unit->fcp_lun,
+ 			      unit->port->wwpn,
+@@ -3935,9 +3803,8 @@
+ 	case FSF_INBOUND_DATA_LENGTH_NOT_VALID:
+ 		ZFCP_LOG_FLAGS(0, "FSF_INBOUND_DATA_LENGTH_NOT_VALID\n");
+ 		ZFCP_LOG_NORMAL("bug: An invalid inbound data length field "
+-				"was found in a command for the unit with "
+-				"FCP LUN 0x%Lx of the remote port "
+-				"with WWPN 0x%Lx via the adapter %s.\n",
++				"was found in a command for unit 0x%016Lx "
++				"on port 0x%016Lx on adapter %s.\n",
+ 				unit->fcp_lun,
+ 				unit->port->wwpn, zfcp_get_busid_by_unit(unit));
+ 		/* stop operation for this adapter */
+@@ -3955,9 +3822,8 @@
+ 	case FSF_OUTBOUND_DATA_LENGTH_NOT_VALID:
+ 		ZFCP_LOG_FLAGS(0, "FSF_OUTBOUND_DATA_LENGTH_NOT_VALID\n");
+ 		ZFCP_LOG_NORMAL("bug: An invalid outbound data length field "
+-				"was found in a command for the unit with "
+-				"FCP LUN 0x%Lx of the remote port "
+-				"with WWPN 0x%Lx via the adapter %s\n.",
++				"was found in a command unit 0x%016Lx on port "
++				"0x%016Lx on adapter %s\n",
+ 				unit->fcp_lun,
+ 				unit->port->wwpn,
+ 				zfcp_get_busid_by_unit(unit));
+@@ -3975,9 +3841,8 @@
+ 		ZFCP_LOG_FLAGS(0, "FSF_CMND_LENGTH_NOT_VALID\n");
+ 		ZFCP_LOG_NORMAL
+ 		    ("bug: An invalid control-data-block length field "
+-		     "was found in a command for the unit with "
+-		     "FCP LUN 0x%Lx of the remote port "
+-		     "with WWPN 0x%Lx via the adapter %s " "(debug info %d)\n",
++		     "was found in a command for unit 0x%016Lx on port "
++		     "0x%016Lx on adapter %s " "(debug info %d)\n",
+ 		     unit->fcp_lun, unit->port->wwpn,
+ 		     zfcp_get_busid_by_unit(unit),
+ 		     fsf_req->qtcb->bottom.io.fcp_cmnd_length);
+@@ -3994,8 +3859,7 @@
+ 
+ 	case FSF_PORT_BOXED:
+ 		ZFCP_LOG_FLAGS(2, "FSF_PORT_BOXED\n");
+-		ZFCP_LOG_DEBUG("The remote port "
+-			       "with WWPN 0x%Lx on the adapter %s "
++		ZFCP_LOG_DEBUG("The remote port 0x%016Lx on adapter %s "
+ 			       "needs to be reopened\n",
+ 			       unit->port->wwpn, zfcp_get_busid_by_unit(unit));
+ 		debug_text_event(fsf_req->adapter->erp_dbf, 2, "fsf_s_pboxed");
+@@ -4010,9 +3874,8 @@
+ 	case FSF_LUN_BOXED:
+ 		ZFCP_LOG_FLAGS(0, "FSF_LUN_BOXED\n");
+ 		ZFCP_LOG_NORMAL(
+-			"The remote unit with FCP-LUN 0x%Lx "
+-			"at the remote port with WWPN 0x%Lx "
+-			"connected to the adapter %s needs to be reopened\n",
++			"unit 0x%016Lx on port 0x%016Lx on adapter %s needs "
++			"to be reopened\n",
+ 			unit->fcp_lun, unit->port->wwpn,
  			zfcp_get_busid_by_unit(unit));
--		counter = 0;
--		do {
--			subtable = header->fsf_status_qual.halfword[counter++];
--			rule = header->fsf_status_qual.halfword[counter++];
-+		for (counter = 0; counter < 2; counter++) {
-+			subtable = header->fsf_status_qual.halfword[counter * 2];
-+			rule = header->fsf_status_qual.halfword[counter * 2 + 1];
- 			switch (subtable) {
- 			case FSF_SQ_CFDC_SUBTABLE_OS:
- 			case FSF_SQ_CFDC_SUBTABLE_PORT_WWPN:
- 			case FSF_SQ_CFDC_SUBTABLE_PORT_DID:
- 			case FSF_SQ_CFDC_SUBTABLE_LUN:
--				ZFCP_LOG_NORMAL("Access denied (%s rule %d)\n",
-+				ZFCP_LOG_INFO("Access denied (%s rule %d)\n",
- 					zfcp_act_subtable_type[subtable], rule);
- 				break;
- 			}
--		} while (counter < 4);
-+		}
- 		debug_text_event(fsf_req->adapter->erp_dbf, 1, "fsf_s_access");
- 		fsf_req->status |= ZFCP_STATUS_FSFREQ_ERROR;
- 		break;
-@@ -4505,15 +4534,13 @@
- 	int direction;
- 	int retval = 0;
- 
--#if 0
--	if (!(adapter->features & FSF_FEATURE_CFDC)) {
-+	if (!(adapter->supported_features & FSF_FEATURE_CFDC)) {
- 		ZFCP_LOG_INFO(
- 			"Adapter %s does not support control file\n",
- 			zfcp_get_busid_by_adapter(adapter));
- 		retval = -EOPNOTSUPP;
--		goto no_act_support;
-+		goto no_cfdc_support;
+ 		debug_text_event(fsf_req->adapter->erp_dbf, 1, "fsf_s_lboxed");
+@@ -4119,9 +3982,8 @@
+ 	scpnt = fsf_req->data.send_fcp_command_task.scsi_cmnd;
+ 	if (unlikely(!scpnt)) {
+ 		ZFCP_LOG_DEBUG
+-		    ("Command with fsf_req 0x%lx is not associated to "
+-		     "a scsi command anymore. Aborted?\n",
+-		     (unsigned long) fsf_req);
++		    ("Command with fsf_req %p is not associated to "
++		     "a scsi command anymore. Aborted?\n", fsf_req);
+ 		goto out;
  	}
--#endif
- 
- 	switch (fsf_command) {
- 
-@@ -4595,6 +4622,7 @@
- 	write_unlock_irqrestore(&adapter->request_queue.queue_lock, lock_flags);
- 
- invalid_command:
-+no_cfdc_support:
- 	return retval;
- }
- 
-@@ -4932,11 +4960,6 @@
-                 goto failed_sbals;
+ 	if (unlikely(fsf_req->status & ZFCP_STATUS_FSFREQ_ABORTED)) {
+@@ -4179,12 +4041,10 @@
+ 			ZFCP_LOG_FLAGS(0, "RSP_CODE_LENGTH_MISMATCH\n");
+ 			/* hardware bug */
+ 			ZFCP_LOG_NORMAL("bug: FCP response code indictates "
+-					" that the fibre-channel protocol data "
++					"that the fibrechannel protocol data "
+ 					"length differs from the burst length. "
+-					"The problem occured on the unit "
+-					"with FCP LUN 0x%Lx connected to the "
+-					"port with WWPN 0x%Lx at the "
+-					"adapter %s",
++					"The problem occured on unit 0x%016Lx "
++					"on port 0x%016Lx on adapter %s",
+ 					unit->fcp_lun,
+ 					unit->port->wwpn,
+ 					zfcp_get_busid_by_unit(unit));
+@@ -4199,11 +4059,10 @@
+ 			ZFCP_LOG_FLAGS(0, "RSP_CODE_FIELD_INVALID\n");
+ 			/* driver or hardware bug */
+ 			ZFCP_LOG_NORMAL("bug: FCP response code indictates "
+-					"that the fibre-channel protocol data "
+-					"fields were incorrectly set-up. "
++					"that the fibrechannel protocol data "
++					"fields were incorrectly set up. "
+ 					"The problem occured on the unit "
+-					"with FCP LUN 0x%Lx connected to the "
+-					"port with WWPN 0x%Lx at the "
++					"0x%016Lx on port 0x%016Lx on "
+ 					"adapter %s",
+ 					unit->fcp_lun,
+ 					unit->port->wwpn,
+@@ -4220,12 +4079,10 @@
+ 			/* hardware bug */
+ 			ZFCP_LOG_NORMAL("bug: The FCP response code indicates "
+ 					"that conflicting  values for the "
+-					"fibre-channel payload offset from the "
++					"fibrechannel payload offset from the "
+ 					"header were found. "
+-					"The problem occured on the unit "
+-					"with FCP LUN 0x%Lx connected to the "
+-					"port with WWPN 0x%Lx at the "
+-					"adapter %s.\n",
++					"The problem occured on unit 0x%016Lx "
++					"on port 0x%016Lx on adapter %s.\n",
+ 					unit->fcp_lun,
+ 					unit->port->wwpn,
+ 					zfcp_get_busid_by_unit(unit));
+@@ -4240,10 +4097,8 @@
+ 			ZFCP_LOG_NORMAL("bug: An invalid FCP response "
+ 					"code was detected for a command. "
+ 					"The problem occured on the unit "
+-					"with FCP LUN 0x%Lx connected to the "
+-					"port with WWPN 0x%Lx at the "
+-					"adapter %s "
+-					"(debug info 0x%x)\n",
++					"0x%016Lx on port 0x%016Lx on "
++					"adapter %s (debug info 0x%x)\n",
+ 					unit->fcp_lun,
+ 					unit->port->wwpn,
+ 					zfcp_get_busid_by_unit(unit),
+@@ -4283,9 +4138,7 @@
+ 	/* check for overrun */
+ 	if (unlikely(fcp_rsp_iu->validity.bits.fcp_resid_over)) {
+ 		ZFCP_LOG_INFO("A data overrun was detected for a command. "
+-			      "This happened for a command to the unit "
+-			      "with FCP LUN 0x%Lx connected to the "
+-			      "port with WWPN 0x%Lx at the adapter %s. "
++			      "unit 0x%016Lx, port 0x%016Lx, adapter %s. "
+ 			      "The response data length is "
+ 			      "%d, the original length was %d.\n",
+ 			      unit->fcp_lun,
+@@ -4298,9 +4151,7 @@
+ 	/* check for underrun */
+ 	if (unlikely(fcp_rsp_iu->validity.bits.fcp_resid_under)) {
+ 		ZFCP_LOG_DEBUG("A data underrun was detected for a command. "
+-			       "This happened for a command to the unit "
+-			       "with FCP LUN 0x%Lx connected to the "
+-			       "port with WWPN 0x%Lx at the adapter %s. "
++			       "unit 0x%016Lx, port 0x%016Lx, adapter %s. "
+ 			       "The response data length is "
+ 			       "%d, the original length was %d.\n",
+ 			       unit->fcp_lun,
+@@ -4469,9 +4320,7 @@
+ 		ZFCP_LOG_FLAGS(0, "RSP_CODE_TASKMAN_UNSUPP\n");
+ 		ZFCP_LOG_NORMAL("bug: A reuested task management function "
+ 				"is not supported on the target device "
+-				"The corresponding device is the unit with "
+-				"FCP LUN 0x%Lx at the port "
+-				"with WWPN 0x%Lx at the adapter %s\n ",
++				"unit 0x%016Lx, port 0x%016Lx, adapter %s\n ",
+ 				unit->fcp_lun,
+ 				unit->port->wwpn,
+ 				zfcp_get_busid_by_unit(unit));
+@@ -4481,9 +4330,7 @@
+ 		ZFCP_LOG_FLAGS(0, "RSP_CODE_TASKMAN_FAILED\n");
+ 		ZFCP_LOG_NORMAL("bug: A reuested task management function "
+ 				"failed to complete successfully. "
+-				"The corresponding device is the unit with "
+-				"FCP LUN 0x%Lx at the port "
+-				"with WWPN 0x%Lx at the adapter %s.\n",
++				"unit 0x%016Lx, port 0x%016Lx, adapter %s.\n",
+ 				unit->fcp_lun,
+ 				unit->port->wwpn,
+ 				zfcp_get_busid_by_unit(unit));
+@@ -4492,9 +4339,7 @@
+ 	default:
+ 		ZFCP_LOG_NORMAL("bug: An invalid FCP response "
+ 				"code was detected for a command. "
+-				"The problem occured on the unit "
+-				"with FCP LUN 0x%Lx connected to the "
+-				"port with WWPN 0x%Lx at the adapter %s "
++				"unit 0x%016Lx, port 0x%016Lx, adapter %s "
+ 				"(debug info 0x%x)\n",
+ 				unit->fcp_lun,
+ 				unit->port->wwpn,
+@@ -4837,8 +4682,8 @@
+ 					   signal);
+ 		if (signal) {
+ 			ZFCP_LOG_DEBUG("Caught signal %i while waiting for the "
+-				       "completion of the request at 0x%lx\n",
+-				       signal, (unsigned long) fsf_req);
++				       "completion of the request at %p\n",
++				       signal, fsf_req);
+ 			retval = signal;
+ 			goto out;
+ 		}
+@@ -5035,10 +4880,10 @@
+ 	if (likely(fsf_req->qtcb)) {
+ 		fsf_req->qtcb->prefix.req_seq_no = adapter->fsf_req_seq_no;
+ 		fsf_req->seq_no = adapter->fsf_req_seq_no;
+-		ZFCP_LOG_TRACE("FSF request 0x%lx of adapter 0x%lx gets "
++		ZFCP_LOG_TRACE("FSF request %p of adapter %s gets "
+ 			       "FSF sequence counter value of %i\n",
+-			       (unsigned long) fsf_req,
+-			       (unsigned long) adapter,
++			       fsf_req,
++			       zfcp_get_busid_by_adapter(adapter),
+ 			       fsf_req->qtcb->prefix.req_seq_no);
+ 	} else
+ 		inc_seq_no = 0;
+@@ -5054,18 +4899,18 @@
+ 		add_timer(timer);
  	}
  
--
--	/* set magics */
--	fsf_req->common_magic = ZFCP_MAGIC;
--	fsf_req->specific_magic = ZFCP_MAGIC_FSFREQ;
--
- 	fsf_req->adapter = adapter;	/* pointer to "parent" adapter */
- 	fsf_req->fsf_command = fsf_cmd;
- 	fsf_req->sbal_number = 1;
+-	ZFCP_LOG_TRACE("request queue of adapter with busid=%s: "
++	ZFCP_LOG_TRACE("request queue of adapter %s: "
+ 		       "next free SBAL is %i, %i free SBALs\n",
+ 		       zfcp_get_busid_by_adapter(adapter),
+ 		       req_queue->free_index,
+ 		       atomic_read(&req_queue->free_count));
+ 
+-	ZFCP_LOG_DEBUG("Calling do QDIO busid=%s, flags=0x%x, queue_no=%i, "
+-		       "index_in_queue=%i, count=%i, buffers=0x%lx\n",
++	ZFCP_LOG_DEBUG("calling do_QDIO adapter %s, flags=0x%x, queue_no=%i, "
++		       "index_in_queue=%i, count=%i, buffers=%p\n",
+ 		       zfcp_get_busid_by_adapter(adapter),
+ 		       QDIO_FLAG_SYNC_OUTPUT,
+ 		       0, fsf_req->sbal_first, fsf_req->sbal_number,
+-		       (unsigned long) &req_queue->buffer[fsf_req->sbal_first]);
++		       &req_queue->buffer[fsf_req->sbal_first]);
+ 
+ 	/*
+ 	 * adjust the number of free SBALs in request queue as well as
+@@ -5130,8 +4975,9 @@
+ 		if (likely(inc_seq_no)) {
+ 			adapter->fsf_req_seq_no++;
+ 			ZFCP_LOG_TRACE
+-			    ("FSF sequence counter value of adapter 0x%lx "
+-			     "increased to %i\n", (unsigned long) adapter,
++			    ("FSF sequence counter value of adapter %s "
++			     "increased to %i\n",
++			     zfcp_get_busid_by_adapter(adapter),
+ 			     adapter->fsf_req_seq_no);
+ 		}
+ 		/* count FSF requests pending */
 diff -urN linux-2.6/drivers/s390/scsi/zfcp_fsf.h linux-2.6-s390/drivers/s390/scsi/zfcp_fsf.h
---- linux-2.6/drivers/s390/scsi/zfcp_fsf.h	Thu Mar 11 03:55:43 2004
-+++ linux-2.6-s390/drivers/s390/scsi/zfcp_fsf.h	Tue Mar 16 14:03:14 2004
-@@ -198,18 +198,23 @@
+--- linux-2.6/drivers/s390/scsi/zfcp_fsf.h	Tue Mar 16 14:08:13 2004
++++ linux-2.6-s390/drivers/s390/scsi/zfcp_fsf.h	Tue Mar 16 14:08:20 2004
+@@ -198,23 +198,16 @@
  /* channel features */
  #define FSF_FEATURE_QTCB_SUPPRESSION            0x00000001
  #define FSF_FEATURE_CFDC			0x00000002
--#define FSF_FEATURE_SENSEDATA_REPLICATION       0x00000004
- #define FSF_FEATURE_LOST_SAN_NOTIFICATION       0x00000008
+-#define FSF_FEATURE_LOST_SAN_NOTIFICATION       0x00000008
  #define FSF_FEATURE_HBAAPI_MANAGEMENT           0x00000010
  #define FSF_FEATURE_ELS_CT_CHAINED_SBALS        0x00000020
  
  /* option */
  #define FSF_OPEN_LUN_SUPPRESS_BOXING		0x00000001
-+#define FSF_OPEN_LUN_UNSOLICITED_SENSE_DATA	0x00000002
+-#define FSF_OPEN_LUN_UNSOLICITED_SENSE_DATA	0x00000002
  
  /* adapter types */
  #define FSF_ADAPTER_TYPE_FICON                  0x00000001
  #define FSF_ADAPTER_TYPE_FICON_EXPRESS          0x00000002
  
-+/* flags */
-+#define FSF_CFDC_OPEN_LUN_ALLOWED		0x01
-+#define FSF_CFDC_EXCLUSIVE_ACCESS		0x02
-+#define FSF_CFDC_OUTBOUND_TRANSFER_ALLOWED	0x10
-+
+-/* flags */
+-#define FSF_CFDC_OPEN_LUN_ALLOWED		0x01
+-#define FSF_CFDC_EXCLUSIVE_ACCESS		0x02
+-#define FSF_CFDC_OUTBOUND_TRANSFER_ALLOWED	0x10
+-
  /* port types */
  #define FSF_HBA_PORTTYPE_UNKNOWN		0x00000001
  #define FSF_HBA_PORTTYPE_NOTPRESENT		0x00000003
-@@ -394,9 +399,10 @@
- 	u64 res2;
- 	u64 req_handle;
+@@ -401,8 +394,7 @@
  	u32 service_class;
--	u8 res3[3];
-+	u8  res3[3];
+ 	u8  res3[3];
  	u8  timeout;
--	u8 res4[184];
-+	u32 lun_access;
-+	u8  res4[180];
+-	u32 lun_access;
+-	u8  res4[180];
++	u8  res4[184];
  	u32 els1_length;
  	u32 els2_length;
  	u32 req_buf_length;
 diff -urN linux-2.6/drivers/s390/scsi/zfcp_qdio.c linux-2.6-s390/drivers/s390/scsi/zfcp_qdio.c
---- linux-2.6/drivers/s390/scsi/zfcp_qdio.c	Thu Mar 11 03:55:22 2004
-+++ linux-2.6-s390/drivers/s390/scsi/zfcp_qdio.c	Tue Mar 16 14:03:14 2004
-@@ -28,7 +28,7 @@
-  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
-  */
+--- linux-2.6/drivers/s390/scsi/zfcp_qdio.c	Tue Mar 16 14:08:13 2004
++++ linux-2.6-s390/drivers/s390/scsi/zfcp_qdio.c	Tue Mar 16 14:08:20 2004
+@@ -76,16 +76,15 @@
+ 	struct qdio_buffer *first_in_page = NULL;
  
--#define ZFCP_QDIO_C_REVISION "$Revision: 1.13 $"
-+#define ZFCP_QDIO_C_REVISION "$Revision: 1.15 $"
+ 	qdio_buffers_per_page = PAGE_SIZE / sizeof (struct qdio_buffer);
+-	ZFCP_LOG_TRACE("Buffers per page %d.\n", qdio_buffers_per_page);
++	ZFCP_LOG_TRACE("buffers_per_page=%d\n", qdio_buffers_per_page);
  
- #include "zfcp_ext.h"
+ 	for (buf_pos = 0; buf_pos < count; buf_pos++) {
+ 		if (page_pos == 0) {
+ 			cur_buf[buf_pos] = (struct qdio_buffer *)
+ 			    get_zeroed_page(GFP_KERNEL);
+ 			if (cur_buf[buf_pos] == NULL) {
+-				ZFCP_LOG_INFO("error: Could not allocate "
+-					      "memory for qdio transfer "
+-					      "structures.\n");
++				ZFCP_LOG_INFO("error: allocation of "
++					      "QDIO buffer failed \n");
+ 				goto out;
+ 			}
+ 			first_in_page = cur_buf[buf_pos];
+@@ -115,7 +114,7 @@
+ 	int qdio_buffers_per_page;
  
-@@ -502,17 +502,6 @@
- 	/* valid request id and thus (hopefully :) valid fsf_req address */
+ 	qdio_buffers_per_page = PAGE_SIZE / sizeof (struct qdio_buffer);
+-	ZFCP_LOG_TRACE("Buffers per page %d.\n", qdio_buffers_per_page);
++	ZFCP_LOG_TRACE("buffers_per_page=%d\n", qdio_buffers_per_page);
+ 
+ 	for (buf_pos = 0; buf_pos < count; buf_pos += qdio_buffers_per_page)
+ 		free_page((unsigned long) cur_buf[buf_pos]);
+@@ -133,9 +132,8 @@
+ 	    zfcp_qdio_buffers_enqueue(&(adapter->request_queue.buffer[0]),
+ 				      QDIO_MAX_BUFFERS_PER_Q);
+ 	if (buffer_count < QDIO_MAX_BUFFERS_PER_Q) {
+-		ZFCP_LOG_DEBUG("error: Out of memory allocating "
+-			       "request queue, only %d buffers got. "
+-			       "Binning them.\n", buffer_count);
++		ZFCP_LOG_DEBUG("only %d QDIO buffers allocated for request "
++			       "queue\n", buffer_count);
+ 		zfcp_qdio_buffers_dequeue(&(adapter->request_queue.buffer[0]),
+ 					  buffer_count);
+ 		retval = -ENOMEM;
+@@ -146,12 +144,11 @@
+ 	    zfcp_qdio_buffers_enqueue(&(adapter->response_queue.buffer[0]),
+ 				      QDIO_MAX_BUFFERS_PER_Q);
+ 	if (buffer_count < QDIO_MAX_BUFFERS_PER_Q) {
+-		ZFCP_LOG_DEBUG("error: Out of memory allocating "
+-			       "response queue, only %d buffers got. "
+-			       "Binning them.\n", buffer_count);
++		ZFCP_LOG_DEBUG("only %d QDIO buffers allocated for response "
++			       "queue", buffer_count);
+ 		zfcp_qdio_buffers_dequeue(&(adapter->response_queue.buffer[0]),
+ 					  buffer_count);
+-		ZFCP_LOG_TRACE("Deallocating request_queue Buffers.\n");
++		ZFCP_LOG_TRACE("freeing request_queue buffers\n");
+ 		zfcp_qdio_buffers_dequeue(&(adapter->request_queue.buffer[0]),
+ 					  QDIO_MAX_BUFFERS_PER_Q);
+ 		retval = -ENOMEM;
+@@ -165,11 +162,11 @@
+ void
+ zfcp_qdio_free_queues(struct zfcp_adapter *adapter)
+ {
+-	ZFCP_LOG_TRACE("Deallocating request_queue Buffers.\n");
++	ZFCP_LOG_TRACE("freeing request_queue buffers\n");
+ 	zfcp_qdio_buffers_dequeue(&(adapter->request_queue.buffer[0]),
+ 				  QDIO_MAX_BUFFERS_PER_Q);
+ 
+-	ZFCP_LOG_TRACE("Deallocating response_queue Buffers.\n");
++	ZFCP_LOG_TRACE("freeing response_queue buffers\n");
+ 	zfcp_qdio_buffers_dequeue(&(adapter->response_queue.buffer[0]),
+ 				  QDIO_MAX_BUFFERS_PER_Q);
+ }
+@@ -237,8 +234,8 @@
+ 
+ 		ZFCP_LOG_FLAGS(1, "QDIO_STATUS_LOOK_FOR_ERROR \n");
+ 
+-		ZFCP_LOG_INFO("A qdio problem occured. The status, qdio_error "
+-			      "and siga_error are 0x%x, 0x%x and 0x%x\n",
++		ZFCP_LOG_INFO("QDIO problem occurred (status=0x%x, "
++			      "qdio_error=0x%x, siga_error=0x%x)\n",
+ 			      status, qdio_error, siga_error);
+ 
+ 		if (status & QDIO_STATUS_ACTIVATE_CHECK_CONDITION) {
+@@ -273,8 +270,8 @@
+ 			ZFCP_LOG_FLAGS(1, "SLSB_P_OUTPUT_ERROR\n");
+ 			break;
+ 		default:
+-			ZFCP_LOG_NORMAL("bug: Unknown qdio error reported "
+-					"(debug info 0x%x)\n", qdio_error);
++			ZFCP_LOG_NORMAL("bug: unknown QDIO error 0x%x\n",
++					qdio_error);
+ 			break;
+ 		}
+ 		/* Restarting IO on the failed adapter from scratch */
+@@ -317,7 +314,7 @@
+ 	adapter = (struct zfcp_adapter *) int_parm;
+ 	queue = &adapter->request_queue;
+ 
+-	ZFCP_LOG_DEBUG("busid=%s, first=%d, count=%d\n",
++	ZFCP_LOG_DEBUG("adapter %s, first=%d, elements_processed=%d\n",
+ 		       zfcp_get_busid_by_adapter(adapter),
+ 		       first_element, elements_processed);
+ 
+@@ -336,7 +333,7 @@
+ 	atomic_add(elements_processed, &queue->free_count);
+ 	ZFCP_LOG_DEBUG("free_count=%d\n", atomic_read(&queue->free_count));
+ 	wake_up(&adapter->request_wq);
+-	ZFCP_LOG_DEBUG("Elements_processed = %d, free count=%d\n",
++	ZFCP_LOG_DEBUG("elements_processed=%d, free count=%d\n",
+ 		       elements_processed, atomic_read(&queue->free_count));
+  out:
+ 	return;
+@@ -383,7 +380,7 @@
+ 	 */
+ 
+ 	buffere = &(queue->buffer[first_element]->element[0]);
+-	ZFCP_LOG_DEBUG("first BUFFERE flags=0x%x \n", buffere->flags);
++	ZFCP_LOG_DEBUG("first BUFFERE flags=0x%x\n", buffere->flags);
+ 	/*
+ 	 * go through all SBALs from input queue currently
+ 	 * returned by QDIO layer
+@@ -406,19 +403,20 @@
+ 						       (void *) buffere->addr);
+ 
+ 			if (retval) {
+-				ZFCP_LOG_NORMAL
+-				    ("bug: Inbound packet seems not to "
+-				     "have been sent at all. It will be "
+-				     "ignored. (debug info 0x%lx, 0x%lx, "
+-				     "%d, %d, %s)\n",
+-				     (unsigned long) buffere->addr,
+-				     (unsigned long) &(buffere->addr),
+-				     first_element, elements_processed,
+-				     zfcp_get_busid_by_adapter(adapter));
+-				ZFCP_LOG_NORMAL("Dump of inbound BUFFER %d "
+-						"BUFFERE %d at address 0x%lx\n",
+-						buffer_index, buffere_index,
+-						(unsigned long) buffer);
++				ZFCP_LOG_NORMAL("bug: unexpected inbound "
++						"packet on adapter %s "
++						"(reqid=0x%lx, "
++						"first_element=%d, "
++						"elements_processed=%d)\n",
++						zfcp_get_busid_by_adapter(adapter),
++						(unsigned long) buffere->addr,
++						first_element,
++						elements_processed);
++				ZFCP_LOG_NORMAL("hex dump of inbound buffer "
++						"at address %p "
++						"(buffer_index=%d, "
++						"buffere_index=%d)\n", buffer,
++						buffer_index, buffere_index);
+ 				ZFCP_HEX_DUMP(ZFCP_LOG_LEVEL_NORMAL,
+ 					      (char *) buffer, SBAL_SIZE);
+ 			}
+@@ -445,8 +443,9 @@
+ 	count = atomic_read(&queue->free_count) + elements_processed;
+ 	start = queue->free_index;
+ 
+-	ZFCP_LOG_TRACE("Calling do QDIO busid=%s, flags=0x%x, queue_no=%i, "
+-		       "index_in_queue=%i, count=%i, buffers=0x%lx\n",
++	ZFCP_LOG_TRACE("calling do_QDIO on adapter %s (flags=0x%x, "
++		       "queue_no=%i, index_in_queue=%i, count=%i, "
++		       "buffers=0x%lx\n",
+ 		       zfcp_get_busid_by_adapter(adapter),
+ 		       QDIO_FLAG_SYNC_INPUT | QDIO_FLAG_UNDER_INTERRUPT,
+ 		       0, start, count, (unsigned long) &queue->buffer[start]);
+@@ -457,15 +456,16 @@
+ 
+ 	if (unlikely(retval)) {
+ 		atomic_set(&queue->free_count, count);
+-		ZFCP_LOG_DEBUG("Inbound data regions could not be cleared "
+-			       "Transfer queues may be down. "
+-			       "(info %d, %d, %d)\n", count, start, retval);
++		ZFCP_LOG_DEBUG("clearing of inbound data regions failed, "
++			       "queues may be down "
++			       "(count=%d, start=%d, retval=%d)\n",
++			       count, start, retval);
+ 	} else {
+ 		queue->free_index += count;
+ 		queue->free_index %= QDIO_MAX_BUFFERS_PER_Q;
+ 		atomic_set(&queue->free_count, 0);
+-		ZFCP_LOG_TRACE("%i buffers successfully enqueued to response "
+-			       "queue starting at position %i\n", count, start);
++		ZFCP_LOG_TRACE("%i buffers enqueued to response "
++			       "queue at position %i\n", count, start);
+ 	}
+  out:
+ 	return;
+@@ -493,8 +493,7 @@
+ 
+ 	/* invalid (per convention used in this driver) */
+ 	if (unlikely(!sbale_addr)) {
+-		ZFCP_LOG_NORMAL
+-		    ("bug: Inbound data faulty, contains null-pointer!\n");
++		ZFCP_LOG_NORMAL("bug: invalid reqid\n");
+ 		retval = -EINVAL;
+ 		goto out;
+ 	}
+@@ -503,11 +502,9 @@
  	fsf_req = (struct zfcp_fsf_req *) sbale_addr;
  
--	if (unlikely((fsf_req->common_magic != ZFCP_MAGIC) ||
--	             (fsf_req->specific_magic != ZFCP_MAGIC_FSFREQ))) {
--		ZFCP_LOG_NORMAL("bug: An inbound FSF acknowledgement was "
--				"faulty (debug info 0x%x, 0x%x, 0x%lx)\n",
--				fsf_req->common_magic,
--				fsf_req->specific_magic,
--				(unsigned long) fsf_req);
--		retval = -EINVAL;
--		goto out;
--	}
--
  	if (unlikely(adapter != fsf_req->adapter)) {
- 		ZFCP_LOG_NORMAL("bug: An inbound FSF acknowledgement was not "
- 				"correct (debug info 0x%lx, 0x%lx, 0%lx) \n",
-@@ -665,7 +654,7 @@
+-		ZFCP_LOG_NORMAL("bug: An inbound FSF acknowledgement was not "
+-				"correct (debug info 0x%lx, 0x%lx, 0%lx) \n",
+-				(unsigned long) fsf_req,
+-				(unsigned long) fsf_req->adapter,
+-				(unsigned long) adapter);
++		ZFCP_LOG_NORMAL("bug: invalid reqid (fsf_req=%p, "
++				"fsf_req->adapter=%p, adapter=%p)\n",
++				fsf_req, fsf_req->adapter, adapter);
+ 		retval = -EINVAL;
+ 		goto out;
+ 	}
+@@ -519,10 +516,9 @@
+ 	}
+ #endif				/* ZFCP_DEBUG_REQUESTS */
  
- /**
-  * zfcp_qdio_sbals_zero - initialize SBALs between first and last in queue
-- *	with zero from
-+ *	with zero from 
-  */
- static inline int
- zfcp_qdio_sbals_zero(struct zfcp_qdio_queue *queue, int first, int last)
-diff -urN linux-2.6/drivers/s390/scsi/zfcp_scsi.c linux-2.6-s390/drivers/s390/scsi/zfcp_scsi.c
---- linux-2.6/drivers/s390/scsi/zfcp_scsi.c	Thu Mar 11 03:55:26 2004
-+++ linux-2.6-s390/drivers/s390/scsi/zfcp_scsi.c	Tue Mar 16 14:03:14 2004
-@@ -31,7 +31,7 @@
- #define ZFCP_LOG_AREA			ZFCP_LOG_AREA_SCSI
- 
- /* this drivers version (do not edit !!! generated and updated by cvs) */
--#define ZFCP_SCSI_REVISION "$Revision: 1.52 $"
-+#define ZFCP_SCSI_REVISION "$Revision: 1.57 $"
- 
- #include <linux/blkdev.h>
- 
-@@ -55,7 +55,7 @@
- struct zfcp_data zfcp_data = {
- 	.scsi_host_template = {
- 	      name:	               ZFCP_NAME,
--	      proc_name:               "dummy",
-+	      proc_name:               "zfcp",
- 	      proc_info:               NULL,
- 	      detect:	               NULL,
- 	      slave_alloc:             zfcp_scsi_slave_alloc,
-@@ -796,12 +796,17 @@
- 		       (unsigned long) adapter->scsi_host);
- 
- 	/* tell the SCSI stack some characteristics of this adapter */
--	adapter->scsi_host->max_id = adapter->max_scsi_id + 1;
--	adapter->scsi_host->max_lun = adapter->max_scsi_lun + 1;
-+	adapter->scsi_host->max_id = 1;
-+	adapter->scsi_host->max_lun = 1;
- 	adapter->scsi_host->max_channel = 0;
- 	adapter->scsi_host->unique_id = unique_id++;	/* FIXME */
- 	adapter->scsi_host->max_cmd_len = ZFCP_MAX_SCSI_CMND_LENGTH;
- 	/*
-+	 * Reverse mapping of the host number to avoid race condition
-+	 */
-+	adapter->scsi_host_no = adapter->scsi_host->host_no;
-+
-+	/*
- 	 * save a pointer to our own adapter data structure within
- 	 * hostdata field of SCSI host data structure
- 	 */
-@@ -835,6 +840,7 @@
- 	scsi_remove_host(shost);
- 	scsi_host_put(shost);
- 	adapter->scsi_host = NULL;
-+	adapter->scsi_host_no = 0;
- 	atomic_clear_mask(ZFCP_STATUS_ADAPTER_REGISTERED, &adapter->status);
- 
- 	return;
-@@ -850,68 +856,32 @@
- 	add_timer(&adapter->scsi_er_timer);
+-	ZFCP_LOG_TRACE("fsf_req at 0x%lx, QTCB at 0x%lx\n",
+-		       (unsigned long) fsf_req, (unsigned long) fsf_req->qtcb);
++	ZFCP_LOG_TRACE("fsf_req at %p, QTCB at %p\n", fsf_req, fsf_req->qtcb);
+ 	if (likely(fsf_req->qtcb)) {
+-		ZFCP_LOG_TRACE("HEX DUMP OF 1ST BUFFERE PAYLOAD (QTCB):\n");
++		ZFCP_LOG_TRACE("hex dump of QTCB:\n");
+ 		ZFCP_HEX_DUMP(ZFCP_LOG_LEVEL_TRACE, (char *) fsf_req->qtcb,
+ 			      sizeof(struct fsf_qtcb));
+ 	}
+@@ -893,8 +889,8 @@
+ 	for (cur_pos = first; cur_pos < (first + clean_count); cur_pos++) {
+ 		index = cur_pos % QDIO_MAX_BUFFERS_PER_Q;
+ 		memset(buf[index], 0, sizeof (struct qdio_buffer));
+-		ZFCP_LOG_TRACE("zeroing BUFFER %d at address 0x%lx\n",
+-			       index, (unsigned long) buf[index]);
++		ZFCP_LOG_TRACE("zeroing BUFFER %d at address %p\n",
++			       index, buf[index]);
+ 	}
  }
  
--/**
-- * zfcp_sysfs_hba_id_show - display hba_id of scsi device
-- * @dev: pointer to belonging device
-- * @buf: pointer to input buffer
-- *
-- * "hba_id" attribute of a scsi device. Displays hba_id (bus_id)
-- * of the adapter belonging to a scsi device.
-- */
--static ssize_t
--zfcp_sysfs_hba_id_show(struct device *dev, char *buf)
--{
--	struct scsi_device *sdev;
--	struct zfcp_unit *unit;
--
--	sdev = to_scsi_device(dev);
--	unit = (struct zfcp_unit *) sdev->hostdata;
--	return sprintf(buf, "%s\n", zfcp_get_busid_by_unit(unit));
--}
--
--static DEVICE_ATTR(hba_id, S_IRUGO, zfcp_sysfs_hba_id_show, NULL);
+diff -urN linux-2.6/drivers/s390/scsi/zfcp_scsi.c linux-2.6-s390/drivers/s390/scsi/zfcp_scsi.c
+--- linux-2.6/drivers/s390/scsi/zfcp_scsi.c	Tue Mar 16 14:08:13 2004
++++ linux-2.6-s390/drivers/s390/scsi/zfcp_scsi.c	Tue Mar 16 14:08:20 2004
+@@ -211,8 +211,8 @@
+ 		unit->device = NULL;
+ 		zfcp_unit_put(unit);
+ 	} else {
+-		ZFCP_LOG_INFO("no unit associated with SCSI device at "
+-			      "address 0x%lx\n", (unsigned long) sdpnt);
++		ZFCP_LOG_NORMAL("bug: no unit associated with SCSI device at "
++				"address %p\n", sdpnt);
+ 	}
+ }
  
- /**
-- * zfcp_sysfs_wwpn_show - display wwpn of scsi device
-- * @dev: pointer to belonging device
-- * @buf: pointer to input buffer
-- *
-- * "wwpn" attribute of a scsi device. Displays wwpn of the port
-- * belonging to a scsi device.
-- */
--static ssize_t
--zfcp_sysfs_wwpn_show(struct device *dev, char *buf)
--{
--	struct scsi_device *sdev;
--	struct zfcp_unit *unit;
--
--	sdev = to_scsi_device(dev);
--	unit = (struct zfcp_unit *) sdev->hostdata;
--	return sprintf(buf, "0x%016llx\n", unit->port->wwpn);
--}
--
--static DEVICE_ATTR(wwpn, S_IRUGO, zfcp_sysfs_wwpn_show, NULL);
--
--/**
-- * zfcp_sysfs_fcp_lun_show - display fcp lun of scsi device
-- * @dev: pointer to belonging device
-- * @buf: pointer to input buffer
-- *
-- * "fcp_lun" attribute of a scsi device. Displays fcp_lun of the unit
-- * belonging to a scsi device.
-- */
--static ssize_t
--zfcp_sysfs_fcp_lun_show(struct device *dev, char *buf)
--{
--	struct scsi_device *sdev;
--	struct zfcp_unit *unit;
--
--	sdev = to_scsi_device(dev);
--	unit = (struct zfcp_unit *) sdev->hostdata;
--	return sprintf(buf, "0x%016llx\n", unit->fcp_lun);
--}
--
--static DEVICE_ATTR(fcp_lun, S_IRUGO, zfcp_sysfs_fcp_lun_show, NULL);
-+ * ZFCP_DEFINE_SCSI_ATTR
-+ * @_name:   name of show attribute
-+ * @_format: format string
-+ * @_value:  value to print
-+ *
-+ * Generates attribute for a unit.
-+ */
-+#define ZFCP_DEFINE_SCSI_ATTR(_name, _format, _value)                    \
-+static ssize_t zfcp_sysfs_scsi_##_name##_show(struct device *dev,        \
-+                                              char *buf)                 \
-+{                                                                        \
-+        struct scsi_device *sdev;                                        \
-+        struct zfcp_unit *unit;                                          \
-+                                                                         \
-+        sdev = to_scsi_device(dev);                                      \
-+        unit = sdev->hostdata;                                           \
-+        return sprintf(buf, _format, _value);                            \
-+}                                                                        \
-+                                                                         \
-+static DEVICE_ATTR(_name, S_IRUGO, zfcp_sysfs_scsi_##_name##_show, NULL);
-+
-+ZFCP_DEFINE_SCSI_ATTR(hba_id, "%s\n", zfcp_get_busid_by_unit(unit));
-+ZFCP_DEFINE_SCSI_ATTR(wwpn, "0x%016llx\n", unit->port->wwpn);
-+ZFCP_DEFINE_SCSI_ATTR(fcp_lun, "0x%016llx\n", unit->fcp_lun);
+@@ -272,11 +272,9 @@
+ 	if (unlikely(
+ 	      atomic_test_mask(ZFCP_STATUS_COMMON_ERP_FAILED, &unit->status) ||
+ 	     !atomic_test_mask(ZFCP_STATUS_COMMON_RUNNING, &unit->status))) {
+-		ZFCP_LOG_DEBUG("Stopping SCSI IO on the unit with "
+-			       "FCP LUN 0x%Lx connected to the port "
+-			       "with WWPN 0x%Lx at the adapter %s.\n",
+-			       unit->fcp_lun,
+-			       unit->port->wwpn,
++		ZFCP_LOG_DEBUG("stopping SCSI I/O on unit 0x%016Lx on port "
++			       "0x%016Lx on adapter %s\n",
++			       unit->fcp_lun, unit->port->wwpn,
+ 			       zfcp_get_busid_by_adapter(adapter));
+ 		zfcp_scsi_command_fail(scpnt, DID_ERROR);
+ 		goto out;
+@@ -284,8 +282,8 @@
  
- static struct device_attribute *zfcp_sysfs_sdev_attrs[] = {
- 	&dev_attr_fcp_lun,
-diff -urN linux-2.6/drivers/s390/scsi/zfcp_sysfs_adapter.c linux-2.6-s390/drivers/s390/scsi/zfcp_sysfs_adapter.c
---- linux-2.6/drivers/s390/scsi/zfcp_sysfs_adapter.c	Thu Mar 11 03:55:21 2004
-+++ linux-2.6-s390/drivers/s390/scsi/zfcp_sysfs_adapter.c	Tue Mar 16 14:03:14 2004
-@@ -26,7 +26,7 @@
-  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
-  */
+ 	if (unlikely(
+ 	     !atomic_test_mask(ZFCP_STATUS_COMMON_UNBLOCKED, &unit->status))) {
+-		ZFCP_LOG_DEBUG("adapter %s not ready or unit with LUN 0x%Lx "
+-			       "on the port with WWPN 0x%Lx in recovery.\n",
++		ZFCP_LOG_DEBUG("adapter %s not ready or unit 0x%016Lx "
++			       "on port 0x%016Lx in recovery\n",
+ 			       zfcp_get_busid_by_unit(unit),
+ 			       unit->fcp_lun, unit->port->wwpn);
+ 		retval = SCSI_MLQUEUE_DEVICE_BUSY;
+@@ -296,7 +294,7 @@
+ 					     ZFCP_REQ_AUTO_CLEANUP);
  
--#define ZFCP_SYSFS_ADAPTER_C_REVISION "$Revision: 1.30 $"
-+#define ZFCP_SYSFS_ADAPTER_C_REVISION "$Revision: 1.32 $"
+ 	if (unlikely(tmp < 0)) {
+-		ZFCP_LOG_DEBUG("error: Could not send a Send FCP Command\n");
++		ZFCP_LOG_DEBUG("error: initiation of Send FCP Cmnd failed\n");
+ 		retval = SCSI_MLQUEUE_HOST_BUSY;
+ 	} else {
  
- #include <asm/ccwdev.h>
- #include "zfcp_ext.h"
-@@ -75,6 +75,7 @@
- ZFCP_DEFINE_ADAPTER_ATTR(hardware_version, "0x%08x\n",
- 			 adapter->hardware_version);
- ZFCP_DEFINE_ADAPTER_ATTR(serial_number, "%17s\n", adapter->serial_number);
-+ZFCP_DEFINE_ADAPTER_ATTR(scsi_host_no, "0x%x\n", adapter->scsi_host_no);
+@@ -447,11 +445,8 @@
+ 	       min(scpnt->cmd_len, (unsigned char) ZFCP_ABORT_DBF_LENGTH));
+ #endif
  
- /**
-  * zfcp_sysfs_adapter_in_recovery_show - recovery state of adapter
-@@ -100,30 +101,6 @@
- 		   zfcp_sysfs_adapter_in_recovery_show, NULL);
+-	 /*TRACE*/
+-	    ZFCP_LOG_INFO
+-	    ("Aborting for adapter=0x%lx, busid=%s, scsi_cmnd=0x%lx\n",
+-	     (unsigned long) adapter, zfcp_get_busid_by_adapter(adapter),
+-	     (unsigned long) scpnt);
++	ZFCP_LOG_INFO("aborting scsi_cmnd=%p on adapter %s\n",
++		      scpnt, zfcp_get_busid_by_adapter(adapter));
  
- /**
-- * zfcp_sysfs_adapter_scsi_host_no_show - display scsi_host_no of adapter
-- * @dev: pointer to belonging device
-- * @buf: pointer to input buffer
-- *
-- * "scsi_host_no" attribute of adapter. Displays the SCSI host number.
-- */
--static ssize_t
--zfcp_sysfs_adapter_scsi_host_no_show(struct device *dev, char *buf)
--{
--	struct zfcp_adapter *adapter;
--	unsigned short host_no = 0;
--
--	down(&zfcp_data.config_sema);
--	adapter = dev_get_drvdata(dev);
--	if (adapter->scsi_host)
--		host_no = adapter->scsi_host->host_no;
--	up(&zfcp_data.config_sema);
--	return sprintf(buf, "0x%x\n", host_no);
--}
--
--static DEVICE_ATTR(scsi_host_no, S_IRUGO, zfcp_sysfs_adapter_scsi_host_no_show,
--		   NULL);
--
--/**
-  * zfcp_sysfs_port_add_store - add a port to sysfs tree
-  * @dev: pointer to belonging device
-  * @buf: pointer to input buffer
-@@ -219,9 +196,7 @@
- 	zfcp_erp_port_shutdown(port, 0);
- 	zfcp_erp_wait(adapter);
- 	zfcp_port_put(port);
--	zfcp_sysfs_port_remove_files(&port->sysfs_device,
--				     atomic_read(&port->status));
--	device_unregister(&port->sysfs_device);
-+	zfcp_port_dequeue(port);
+ 	spin_unlock_irq(scsi_host->host_lock);
+ 
+@@ -473,7 +468,7 @@
+ 	 */
+ 	req_data = (union zfcp_req_data *) scpnt->host_scribble;
+ 	/* DEBUG */
+-	ZFCP_LOG_DEBUG("req_data=0x%lx\n", (unsigned long) req_data);
++	ZFCP_LOG_DEBUG("req_data=%p\n", req_data);
+ 	if (!req_data) {
+ 		ZFCP_LOG_DEBUG("late command completion overtook abort\n");
+ 		/*
+@@ -493,11 +488,10 @@
+ 	dbf_timeout =
+ 	    (jiffies - req_data->send_fcp_command_task.start_jiffies) / HZ;
+ #endif
+-	/* DEBUG */
+-	ZFCP_LOG_DEBUG("old_fsf_req=0x%lx\n", (unsigned long) old_fsf_req);
++	ZFCP_LOG_DEBUG("old_fsf_req=%p\n", old_fsf_req);
+ 	if (!old_fsf_req) {
+ 		write_unlock_irqrestore(&adapter->abort_lock, flags);
+-		ZFCP_LOG_NORMAL("bug: No old fsf request found.\n");
++		ZFCP_LOG_NORMAL("bug: no old fsf request found\n");
+ 		ZFCP_LOG_NORMAL("req_data:\n");
+ 		ZFCP_HEX_DUMP(ZFCP_LOG_LEVEL_NORMAL,
+ 			      (char *) req_data, sizeof (union zfcp_req_data));
+@@ -521,8 +515,7 @@
+ 	 * Since this lock will not be held, fsf_req may complete
+ 	 * late and may be released meanwhile.
+ 	 */
+-	ZFCP_LOG_DEBUG("unit=0x%lx, unit_fcp_lun=0x%Lx\n",
+-		       (unsigned long) unit, unit->fcp_lun);
++	ZFCP_LOG_DEBUG("unit 0x%016Lx (%p)\n", unit->fcp_lun, unit);
+ 
+ 	/*
+ 	 * The 'Abort FCP Command' routine may block (call schedule)
+@@ -537,17 +530,17 @@
+ 	new_fsf_req = zfcp_fsf_abort_fcp_command((unsigned long) old_fsf_req,
+ 						 adapter,
+ 						 unit, ZFCP_WAIT_FOR_SBAL);
+-	ZFCP_LOG_DEBUG("new_fsf_req=0x%lx\n", (unsigned long) new_fsf_req);
++	ZFCP_LOG_DEBUG("new_fsf_req=%p\n", new_fsf_req);
+ 	if (!new_fsf_req) {
+ 		retval = FAILED;
+-		ZFCP_LOG_DEBUG("warning: Could not abort SCSI command "
+-			       "at 0x%lx\n", (unsigned long) scpnt);
++		ZFCP_LOG_NORMAL("error: initiation of Abort FCP Cmnd "
++				"failed\n");
+ 		strncpy(dbf_result, "##nores", ZFCP_ABORT_DBF_LENGTH);
+ 		goto out;
+ 	}
+ 
+ 	/* wait for completion of abort */
+-	ZFCP_LOG_DEBUG("Waiting for cleanup....\n");
++	ZFCP_LOG_DEBUG("waiting for cleanup...\n");
+ #ifdef ZFCP_DEBUG_ABORTS
+ 	/*
+ 	 * FIXME:
+@@ -620,11 +613,11 @@
+ 	spin_unlock_irq(scsi_host->host_lock);
+ 
+ 	if (!unit) {
+-		ZFCP_LOG_NORMAL("bug: Tried to reset a non existant unit.\n");
++		ZFCP_LOG_NORMAL("bug: Tried reset for nonexistent unit\n");
+ 		retval = SUCCESS;
+ 		goto out;
+ 	}
+-	ZFCP_LOG_NORMAL("Resetting Device fcp_lun=0x%Lx\n", unit->fcp_lun);
++	ZFCP_LOG_NORMAL("resetting unit 0x%016Lx\n", unit->fcp_lun);
+ 
+ 	/*
+ 	 * If we do not know whether the unit supports 'logical unit reset'
+@@ -638,18 +631,15 @@
+ 		retval =
+ 		    zfcp_task_management_function(unit, LOGICAL_UNIT_RESET);
+ 		if (retval) {
+-			ZFCP_LOG_DEBUG
+-			    ("logical unit reset failed (unit=0x%lx)\n",
+-			     (unsigned long) unit);
++			ZFCP_LOG_DEBUG("unit reset failed (unit=%p)\n", unit);
+ 			if (retval == -ENOTSUPP)
+ 				atomic_set_mask
+ 				    (ZFCP_STATUS_UNIT_NOTSUPPUNITRESET,
+ 				     &unit->status);
+ 			/* fall through and try 'target reset' next */
+ 		} else {
+-			ZFCP_LOG_DEBUG
+-			    ("logical unit reset succeeded (unit=0x%lx)\n",
+-			     (unsigned long) unit);
++			ZFCP_LOG_DEBUG("unit reset succeeded (unit=%p)\n",
++				       unit);
+ 			/* avoid 'target reset' */
+ 			retval = SUCCESS;
+ 			goto out;
+@@ -657,12 +647,10 @@
+ 	}
+ 	retval = zfcp_task_management_function(unit, TARGET_RESET);
+ 	if (retval) {
+-		ZFCP_LOG_DEBUG("target reset failed (unit=0x%lx)\n",
+-			       (unsigned long) unit);
++		ZFCP_LOG_DEBUG("target reset failed (unit=%p)\n", unit);
+ 		retval = FAILED;
+ 	} else {
+-		ZFCP_LOG_DEBUG("target reset succeeded (unit=0x%lx)\n",
+-			       (unsigned long) unit);
++		ZFCP_LOG_DEBUG("target reset succeeded (unit=%p)\n", unit);
+ 		retval = SUCCESS;
+ 	}
   out:
- 	up(&zfcp_data.config_sema);
- 	return retval ? retval : count;
-diff -urN linux-2.6/drivers/s390/scsi/zfcp_sysfs_port.c linux-2.6-s390/drivers/s390/scsi/zfcp_sysfs_port.c
---- linux-2.6/drivers/s390/scsi/zfcp_sysfs_port.c	Thu Mar 11 03:55:44 2004
-+++ linux-2.6-s390/drivers/s390/scsi/zfcp_sysfs_port.c	Tue Mar 16 14:03:14 2004
-@@ -26,7 +26,7 @@
-  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
-  */
+@@ -682,13 +670,9 @@
+ 	fsf_req = zfcp_fsf_send_fcp_command_task_management
+ 	    (adapter, unit, tm_flags, ZFCP_WAIT_FOR_SBAL);
+ 	if (!fsf_req) {
+-		ZFCP_LOG_INFO("error: Out of resources. Could not create a "
+-			      "task management (abort, reset, etc) request "
+-			      "for the unit with FCP-LUN 0x%Lx connected to "
+-			      "the port with WWPN 0x%Lx connected to "
+-			      "the adapter %s.\n",
+-			      unit->fcp_lun,
+-			      unit->port->wwpn,
++		ZFCP_LOG_INFO("error: creation of task management request "
++			      "failed for unit 0x%016Lx on port 0x%016Lx on  "
++			      "adapter %s\n", unit->fcp_lun, unit->port->wwpn,
+ 			      zfcp_get_busid_by_adapter(adapter));
+ 		retval = -ENOMEM;
+ 		goto out;
+@@ -727,10 +711,8 @@
+ 	spin_unlock_irq(scsi_host->host_lock);
  
--#define ZFCP_SYSFS_PORT_C_REVISION "$Revision: 1.37 $"
-+#define ZFCP_SYSFS_PORT_C_REVISION "$Revision: 1.39 $"
- 
- #include <linux/init.h>
- #include <linux/module.h>
-@@ -37,20 +37,6 @@
- #define ZFCP_LOG_AREA                   ZFCP_LOG_AREA_CONFIG
- 
- /**
-- * zfcp_sysfs_port_release - gets called when a struct device port is released
-- * @dev: pointer to belonging device
-- */
--void
--zfcp_sysfs_port_release(struct device *dev)
--{
--	struct zfcp_port *port;
--
--	port = dev_get_drvdata(dev);
--	zfcp_port_dequeue(port);
--	return;
--}
--
--/**
-  * ZFCP_DEFINE_PORT_ATTR
-  * @_name:   name of show attribute
-  * @_format: format string
-@@ -112,7 +98,6 @@
- 
- 	zfcp_erp_unit_reopen(unit, 0);
+ 	unit = (struct zfcp_unit *) scpnt->device->hostdata;
+-	 /*DEBUG*/
+-	    ZFCP_LOG_NORMAL("Resetting because of problems with "
+-			    "unit=0x%lx, unit_fcp_lun=0x%Lx\n",
+-			    (unsigned long) unit, unit->fcp_lun);
++	ZFCP_LOG_NORMAL("bus reset because of problems with "
++			"unit 0x%016Lx\n", unit->fcp_lun);
+ 	zfcp_erp_adapter_reopen(unit->port->adapter, 0);
  	zfcp_erp_wait(unit->port->adapter);
--	wait_event(unit->scsi_add_wq, atomic_read(&unit->scsi_add_work) == 0);
- 	zfcp_unit_put(unit);
-  out:
- 	up(&zfcp_data.config_sema);
-@@ -168,8 +153,7 @@
- 	zfcp_erp_unit_shutdown(unit, 0);
+ 	retval = SUCCESS;
+@@ -756,10 +738,8 @@
+ 	spin_unlock_irq(scsi_host->host_lock);
+ 
+ 	unit = (struct zfcp_unit *) scpnt->device->hostdata;
+-	 /*DEBUG*/
+-	    ZFCP_LOG_NORMAL("Resetting because of problems with "
+-			    "unit=0x%lx, unit_fcp_lun=0x%Lx\n",
+-			    (unsigned long) unit, unit->fcp_lun);
++	ZFCP_LOG_NORMAL("host reset because of problems with "
++			"unit 0x%016Lx\n", unit->fcp_lun);
+ 	zfcp_erp_adapter_reopen(unit->port->adapter, 0);
  	zfcp_erp_wait(unit->port->adapter);
- 	zfcp_unit_put(unit);
--	zfcp_sysfs_unit_remove_files(&unit->sysfs_device);
--	device_unregister(&unit->sysfs_device);
-+	zfcp_unit_dequeue(unit);
-  out:
- 	up(&zfcp_data.config_sema);
- 	return retval ? retval : count;
-diff -urN linux-2.6/drivers/s390/scsi/zfcp_sysfs_unit.c linux-2.6-s390/drivers/s390/scsi/zfcp_sysfs_unit.c
---- linux-2.6/drivers/s390/scsi/zfcp_sysfs_unit.c	Thu Mar 11 03:56:03 2004
-+++ linux-2.6-s390/drivers/s390/scsi/zfcp_sysfs_unit.c	Tue Mar 16 14:03:14 2004
-@@ -26,7 +26,7 @@
-  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
-  */
+ 	retval = SUCCESS;
+@@ -785,15 +765,13 @@
+ 	adapter->scsi_host = scsi_host_alloc(&zfcp_data.scsi_host_template,
+ 					     sizeof (struct zfcp_adapter *));
+ 	if (!adapter->scsi_host) {
+-		ZFCP_LOG_NORMAL("error: Not enough free memory. "
+-				"Could not register adapter %s "
+-				"with the SCSI-stack.\n",
++		ZFCP_LOG_NORMAL("error: registration with SCSI stack failed "
++				"for adapter %s ",
+ 				zfcp_get_busid_by_adapter(adapter));
+ 		retval = -EIO;
+ 		goto out;
+ 	}
+-	ZFCP_LOG_DEBUG("host registered, scsi_host at 0x%lx\n",
+-		       (unsigned long) adapter->scsi_host);
++	ZFCP_LOG_DEBUG("host registered, scsi_host=%p\n", adapter->scsi_host);
  
--#define ZFCP_SYSFS_UNIT_C_REVISION "$Revision: 1.23 $"
-+#define ZFCP_SYSFS_UNIT_C_REVISION "$Revision: 1.24 $"
- 
- #include <linux/init.h>
- #include <linux/module.h>
-@@ -37,20 +37,6 @@
- #define ZFCP_LOG_AREA                   ZFCP_LOG_AREA_CONFIG
- 
- /**
-- * zfcp_sysfs_unit_release - gets called when a struct device unit is released
-- * @dev: pointer to belonging device
-- */
--void
--zfcp_sysfs_unit_release(struct device *dev)
--{
--	struct zfcp_unit *unit;
--
--	unit = dev_get_drvdata(dev);
--	zfcp_unit_dequeue(unit);
--	return;
--}
--
--/**
-  * ZFCP_DEFINE_UNIT_ATTR
-  * @_name:   name of show attribute
-  * @_format: format string
+ 	/* tell the SCSI stack some characteristics of this adapter */
+ 	adapter->scsi_host->max_id = 1;
