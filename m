@@ -1,209 +1,108 @@
-From: Andrea Carpani <andrea.carpani@criticalpath.net>
-Subject: aic79xx hang at boot
-Date: Fri, 19 Nov 2004 10:58:48 +0100
-Message-ID: <1100858328.2689.36.camel@localhost>
-Reply-To: andrea.carpani@criticalpath.net
+From: Jens Axboe <axboe@suse.de>
+Subject: Re: [PATCH] megaraid bad queuecommand return
+Date: Fri, 19 Nov 2004 13:17:06 +0100
+Message-ID: <20041119121706.GZ26240@suse.de>
+References: <20041119085341.GY26240@suse.de>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="=-LwUn8q/5IFf0azWMzaEK"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from twiddle.criticalpath.it ([192.92.105.100]:57526 "EHLO
-	twiddle.syswiz.it") by vger.kernel.org with ESMTP id S261335AbUKSJzq
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 19 Nov 2004 04:55:46 -0500
+Received: from ns.virtualhost.dk ([195.184.98.160]:60322 "EHLO virtualhost.dk")
+	by vger.kernel.org with ESMTP id S261384AbUKSMRg (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 19 Nov 2004 07:17:36 -0500
+Content-Disposition: inline
+In-Reply-To: <20041119085341.GY26240@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Luben Tuikov <luben_tuikov@adaptec.com>
+To: linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@steeleye.com>
 
+On Fri, Nov 19 2004, Jens Axboe wrote:
+> Hi,
+> 
+> In case of scb allocation failure, mega_build_cmd() can return NULL scb
+> but set busy, which causes a non-zero return from ->queuecommand() while
+> the scsi command has been completed. Flagging error and calling done
+> should be enough for appropriate retries.
 
---=-LwUn8q/5IFf0azWMzaEK
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Of course the other way around for this particular patch - just return
+busy and let the mid layer handle it, but make sure not to call done()
+first.
 
-I have several Tyan GX28 (B2881) motherboards, model B2881G28U4H with 2
-enbedded adaptec controllers:
-
-0000:02:0a.0 SCSI storage controller: Adaptec AIC-7902 U320 (rev 10)
-        Subsystem: Adaptec: Unknown device ffff
-        Flags: bus master, 66Mhz, slow devsel, latency 64, IRQ 24
-        I/O ports at 9000 [disabled] [size=fc780000]
-        Memory at fc89c000 (64-bit, non-prefetchable) [size=8K]
-        I/O ports at 9c00 [disabled] [size=256]
-        Expansion ROM at 00080000 [disabled]
-        Capabilities: [dc] Power Management version 2
-        Capabilities: [a0] Message Signalled Interrupts: 64bit+
-Queue=0/1 Enable-
-        Capabilities: [94]
-0000:02:0a.1 SCSI storage controller: Adaptec AIC-7902 U320 (rev 10)
-        Subsystem: Adaptec: Unknown device ffff
-        Flags: bus master, 66Mhz, slow devsel, latency 64, IRQ 25
-        I/O ports at 9800 [disabled] [size=fc800000]
-        Memory at fc89e000 (64-bit, non-prefetchable) [size=8K]
-        I/O ports at 9400 [disabled] [size=256]
-        Expansion ROM at 00080000 [disabled]
-        Capabilities: [dc] Power Management version 2
-        Capabilities: [a0] Message Signalled Interrupts: 64bit+
-Queue=0/1 Enable-
-        Capabilities: [94]
-
-I'm using Justin's drivers found at
-http://people.freebsd.org/~gibbs/linux/ (ver: 2.0.12) as the ones found
-on the main kernel tree are too unstable for me.
-
-These drivers work quite well once the system is booted, but often fail
-to initialize correctly at boot time: the kernel often hangs while
-trying to initialize the scsi subsystem as you can see here:
-
-http://www.carpani.net/temp/DSCN1503.JPG
-
-On one of the boxes, in particular, the error happens 100% of the time.
-
-Here are my questions
-- has anyone seen the same errors?
-- is there somewhere an updated version of these drivers?
-- any ideas?
+> Signed-off-by: Jens Axboe <axboe@suse.de>
+> 
+> ===== drivers/scsi/megaraid.c 1.73 vs edited =====
+> --- 1.73/drivers/scsi/megaraid.c	2004-11-11 09:43:34 +01:00
+> +++ edited/drivers/scsi/megaraid.c	2004-11-19 09:03:43 +01:00
+> @@ -634,11 +634,7 @@ mega_build_cmd(adapter_t *adapter, Scsi_
+>  			}
+>  
+>  			if(!(scb = mega_allocate_scb(adapter, cmd))) {
+> -
+> -				cmd->result = (DID_ERROR << 16);
+> -				cmd->scsi_done(cmd);
+>  				*busy = 1;
+> -
+>  				return NULL;
+>  			}
+>  
+> @@ -677,11 +673,7 @@ mega_build_cmd(adapter_t *adapter, Scsi_
+>  
+>  			/* Allocate a SCB and initialize passthru */
+>  			if(!(scb = mega_allocate_scb(adapter, cmd))) {
+> -
+> -				cmd->result = (DID_ERROR << 16);
+> -				cmd->scsi_done(cmd);
+>  				*busy = 1;
+> -
+>  				return NULL;
+>  			}
+>  			pthru = scb->pthru;
+> @@ -723,11 +715,7 @@ mega_build_cmd(adapter_t *adapter, Scsi_
+>  
+>  			/* Allocate a SCB and initialize mailbox */
+>  			if(!(scb = mega_allocate_scb(adapter, cmd))) {
+> -
+> -				cmd->result = (DID_ERROR << 16);
+> -				cmd->scsi_done(cmd);
+>  				*busy = 1;
+> -
+>  				return NULL;
+>  			}
+>  			mbox = (mbox_t *)scb->raw_mbox;
+> @@ -867,11 +855,7 @@ mega_build_cmd(adapter_t *adapter, Scsi_
+>  
+>  			/* Allocate a SCB and initialize mailbox */
+>  			if(!(scb = mega_allocate_scb(adapter, cmd))) {
+> -
+> -				cmd->result = (DID_ERROR << 16);
+> -				cmd->scsi_done(cmd);
+>  				*busy = 1;
+> -
+>  				return NULL;
+>  			}
+>  
+> @@ -899,11 +883,7 @@ mega_build_cmd(adapter_t *adapter, Scsi_
+>  	else {
+>  		/* Allocate a SCB and initialize passthru */
+>  		if(!(scb = mega_allocate_scb(adapter, cmd))) {
+> -
+> -			cmd->result = (DID_ERROR << 16);
+> -			cmd->scsi_done(cmd);
+>  			*busy = 1;
+> -
+>  			return NULL;
+>  		}
+>  
+> 
+> -- 
+> Jens Axboe
+> 
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
 
 -- 
-Andrea Carpani <andrea.carpani@criticalpath.net>
-Critical Path
-
---=-LwUn8q/5IFf0azWMzaEK
-Content-Disposition: attachment; filename=dmesg.gz
-Content-Type: application/x-gzip; name=dmesg.gz
-Content-Transfer-Encoding: base64
-
-H4sICCjDnUEAA2RtZXNnAM1ba1MbSZb9rl+RETMbAxEg8lH5KO14YnnYY6YXm0a42xsTHd58FapF
-UmmqSjZ0zI/fkyUkJIwMtGc3mm5QPW7evJn3cc6tkil9+NOb2abptbFpCSc7LOfElS25jre7g95X
-wtvHCrLDpXrx2G5wOb0i3jatIq+Pj0iIvr6dtWU1JdbXVdOQmb2KDdnxo/n0GrK75H6YrX3WjYrT
-1aiFQYzsqGzNHi2dNtrQPI/Uy1xtrntTNMszz6NmNHPU6HxzmRuiITJj8oxZIbQMwq6JZmRHrG9m
-UJZBUEcvvDChcEExaRlTPDKvnRXKKW2kWVMhH8ymlKV5lhfGFjook7NCF0ZwZ40QnlJvch5dFJRl
-wkdudEYpY9EXayrVM6xaE9cICW7WTcg1F0rmzEmeccceuPExf7zAi2u+f9yLlHGRSexTbp0PsfiG
-F78drM8VfejFp8L6ERUPvfhgCQ+XtPX8G158woKvvPj4Nn7TH097sY32q1QsbDmOgbQVGVcWn7Wd
-NkVVTwj+LAd8rWE9DF6m4ebFRtxs1/FsM77WcT2yv0LsRZbcj3lUz7OteUxPM7LCZHc5Neh5R6mW
-osikFTIa56SlIqg8t15J3OKae8GtozHEwJRg1jhFpc1EUUgXg6FGQcpZFrX3XEjjbPSWicwbLq1e
-T8tBTwhUqhBC4U3wWuRCU22VdMxlmuYi174wjmEebgtM4opoYBkNURYoil45mklpjeTU+SyqQhYx
-x+giCm8yyd16ZiO2cyGoF6LQjGU6GhEAaoXXhvuQZpSCMeaYFk44KgPnhaVpPRGnGANRr71mVkod
-eXC5Ul7EvLA505miYh0NMqwtcGpyLawTkprgXMAoz43C5vCc2oBqTGOWa+NZjuVnwRQBBTpKww0X
-1uSRqSJ33GrnPLM+FwbTMsCUcdFm97Pdu3EjF1c+/f+xZN0Uyfhq9hBsIQBnuVBMW2e9z7DFWW4j
-pxnDlnM4zmYRFSfX0XJq84gflTkJ3Mwth5PynFuuswKTGzjeCkSWFUWMWEsms5BlgJ4EbYZGbhGr
-eVZYmXkLSNyMOMxpTeEVrDK8oJb6GLSLzkRqbMaU1J6pWGTKOM4NZHQO3ESYawoYFKAHRWDSM4EY
-pbrIrWVBYBOkRsn0yBVmg5FeW81CwBiZRY8s4cJ4K7JMbkakQbjmDvzARsEETPJFVmhuWFoqUsoU
-Wuvcq+hyALplGjthow1OgVtQZiRlgcM9WU4RoTGDoS7PUQ+weTixXgfBsZ0O6+VKZjLmKkrpQABc
-zOmDiM0FDdiPwjtBi4IxITBPbhhnBfMFokhLDYLhLdJQae0lx24VFMWBgW9IRI00MEDC3CJYpR3X
-JioVCiSxyYrIHZgH7My4lYYGE4PLEHCgDRwr8flXEY0wejyifx+WrkwFTo5tG4mvJrM6Ng0q8crU
-QnjrUTkkhvIglTfe8ULqzPjkJaCvjxkqUIayguM8M91nzAoYkVOtmfPUcIcUXQA32aktaj3RdCDM
-7iqwsaggkMbIjCSauQIBjLqKHcEZzRGdsB21jzpUssLwDFGkQ54h4BHvucLuSWajVriquMZyDWI5
-GpRdbCsqiEQdZkhamvFgQyGYQW5KFF/Ag0cGgm/CDVhgjsEOzsFm5vgLBmp5EaHUgj2b5DBhC8mF
-joFGyZWTOeWwJEaDvFEsUJ4beM6ClSPNs0IqYx3C3ETpJULaUo2yS/nGfrCcDRjnu1+7BfnwiGMk
-chycVXCqMlUosHQVFCICTk9XpBa4xlWueDrGNYZfAUmkte6uQQLlQGFL0kid9BUqjeaodKDC3XF3
-v7sHlMpQATKVoQJKHG3VxpRXWhVp9m5k4LjK6VMWKwUNcWHtckZYQjWFvlyl+put5iiU2mbXoxYk
-2WJtRC6TRUl/DtkCI2BFtmVFMl0pdGc1ftFCbbqO8wHcdx/MmYVU3u3cYu8BEVp3dsU0DzQbzMyT
-JUuLdNKsdKb18s6/RsuGpcIMNF0LMV+DDfkHp6Sclm1px+WvCya25N0DslHg7oSb2IJ6kzq283ra
-kCX/Jo9Lz5t0Mp8FBPZBUU7teNAjAD3PpC4G738gMQcGukKl44DQcOBp3bEEkADy07ED0uY20HSc
-qkzImcDx43OVYKlxEqetHaMY+/lkjqSqakzLMw+E1nLr0FCiaLcPJLtV3Yl1/k7JOY5tvN/V0cT6
-T5Mg7+s9R53iGp2wACVlgN8iM7EwKD+u8HnYxHiNEo3KERVoqpNURGsTiWPUyuC0MJsYLBUAHkEP
-mpmhPCV+ZMBFRUHBbkShNjFSJY4C3gA0x38Rv1oi9FNoF9ZuPBGQSXeGklnApTwG9OEgURYALVVO
-YxEyv964Qbdj1ukiwmfaAfupU+BGPiqAOuBufZUa0sglWtigtA+WxsgKEF+pQEyFtVLEBxi13NPH
-AfV5W7apDADNVgpcKnkMKSSpRN5kkRvgllOFE6CV8BXLsM+bD5UGvVgUPhTKRhkBipYDuMHBgiyY
-yUIBxJK5BeXONz0GoApgkNyB6DHmEb0WPBERATKmXYZ9KVh65rLpucyDJOkio1xxrBbtg8nAs3JX
-4MygJgXAO5jYpgczUE6KuRIbjRgedcHBF1lA5Llc8AxsEy1StulJa7O0JibRLgVKwfI0RbnXIKhW
-JE0BZoD5bnoU+AbyRtHhABuDRtVVzqWgUiCUaEScA3Si29jmjMdd+7I9/korl2qlCnifYgyBm2iq
-sFkIqUmTYEqWKmXBh8FqwOm9Y8oCjcDDAO2gZIBvZtim8xnNiuDhTNRmBDsEMmcRRBguQRnQAuQm
-ArRYnmGvsjyCHqMLQ3VEEqJn2QwKNIyCSnRzMaPo/7IgQHtF1FqEXFrkFdhwQdHXKKCdttiMTKJX
-BDuxeUAAbQYL2I9FHwuhRKSAnjkF60jkkqPl8NJZatGAQDeYu2fg+2gIgDUWIQ8Srx+UAQzxKQEK
-6ERHADFEFFfoyqSGbxFAFPXG5PCNyI1IDB7xlSONPLo6sRlcPmB7OaeBRe99REBEid7OCopuFnQl
-SnQ9qW7kaG2ww5kAthbAgUx6QR3dDLqQKRA0pgukqgkaJRA8OEaa6o9Gd63QTICtyYjTPDcSOaMM
-9iV3YCXofNe0mVRHMoXyCFeywtM8FbTcC41uD/GGWQLInEHjbMCrE+um6PY82nw4WSCo1hMiT8VW
-CsqRLaARFOoKA3FgOLi6FCjUkUftDKdRIBA1jToEdIw0Zw5UVPL11o9RqBNSWs85Wk20DzY9IwDF
-legSDZcoByYFjbasQBiDsXqe+ic0hiBGwqESb8+QxzPvX+P21XyT0o9sHH/C52oKw3OObtSjC2Xw
-rdnMsEwANXEzA3HNgWWbGRMNil9EogHSZOAPm0HYlhplD7buWXCbER0QEOgrJKNoYHKjNiMUXkpP
-gDnWASjK1u4+WMfmvl1EUIzLchLJ8bjy1+SkLj/HmnxmfVTKd9V0/3MF6lGOI5nESVXfkrAS4L3R
-l0+1nYZqMiCHZydaGdLcNm2ckImdQnsiMOT04D141lWJ63VDbEvojQQv698PJiNbhy+2jkvdrE/7
-tHuWFkPvrZ1e+VH01wPStLZeRMHyGmlheU1oX2LATlviSgk6ZygYnq+modmDKfVVOU2X1erqbr83
-jDXY4oAgCukBSxC6nP2PF/FzmbqWAQzJKfkjMWRW1S10nV78mFrkesGzGuvGMLBtb4c0LSytlN6I
-wpCdsv4HeUWy3TStJZ36w06Q3Qvye0GxKfihI3J2ivWUs8T7bglocIMVh/k41r03J8eELkbMqqbd
-Z2ixsRD0rb0L+OF0+MNyLWukGKtRBLeT4dcNqQqCHIIjfiANbiNXeUZcCoF02htX1Wxw5wKyM7E3
-2ISAffGx2e1NHbQtfYr7ixtpZRP7P1VNkEUpUAfkdNrG8c7FLjm/eH+AK+RdbL9U9TLK9oiAp5m5
-kz6uZrd1eTVqd/wuOss8309970IJbtZwQuoH0E1eib4ffBZ9bODf5uNbwrI9kmR3e7EdQdNleVVN
-Bfn7DPEyrXaOjs8SGcgO9S7M/pxEBTl/+1876eLuL2Tn/Pj04wA2nL39daCyfVe2MIAmi9MvPbJN
-vCSv21GspxEBTAeRDgwbcD8QxYD5u1nfwheXH0+Gf2e/kIuPvplPmnT4n+X0+nh0dfH6r3+nv5Cz
-U7g8HRwO36SP4Wxctung57KOw1mMIY25HL73dpaOkm72/72icDfr/82KwqSIA3JiETRI/pOz/Obm
-hiQzwl1U4E/KP6SfUP2M7GB1fJ+yfaZ3e1/KqUMK75uMphhAqWD7iFAOuZSku+Rd9RmCKXQYIScV
-mrVAjlAqkA1/dt3nfzT+dhz6mPwvPUJGbTsbHBx8+fKlv7p+MF3E6cHCoqY/aifj3odp2T3VP5uP
-23L/HGWxO329f3ryeplw97VD94Gz4xmgqlcGrPewwfalvBYCTlkWSjdvSJP2qHtXcH76nkyqEJt/
-JxW01RhIvpTtiOAAkq9ubnrIb8MYfJMmRTFr62qMmpCSDz4nzbhqu953kP7XfXY/wI/KGfreFC+d
-iUTc35tWCa3pv5EpMuxz7IwYYOrxmMzqykUCFzckPdip7wetT4NeHWFIUcg+nJwdMiHWbMMmk7QC
-pMjR2T5uL1AAvRvd7z70Hjk6fT9MXXkq782AjIIdzMpqDwcuHSxVsK9UmIWK4hEVfgDBpCJ0KtIF
-8uPwlByf7F+8PyPD44t9MIM9cnh5eJ6uHpz8tLjT+TJ5jS2mYToZyrTeQ3nXimDvUt1mcqFzMZ5n
-H5eau/F7BCh9fUSOLer2XrctO0LsrqJoXXY9bkSf017jm5ISqA521kZPDk+Pdf7xY3Lx/kdYjlW8
-PTokJxenP72+2EujCU+llHcblX7+vDGUcvJh3NZWcLoYbbu79V9W8rb0SWxwL/dzir5jQO0U5Rf7
-2I07Da/grYUZSu+nCjP6dY+kh8bD4yMQp53O9MHhgO5iLRxADpGjg+burVjiADtMLS4jDU4u/3n6
-4Z8Xl6f//PFwiC1TqVLdK2HfoYSQnyLoRT0gbz787fRy+AGrPENcA/TPDs+FFvLd8XL1aQcR0Iwa
-DLu8nSH4UTxQv3y7fwi+D7r06M/hO+xJtzH1yoFU9FZ7MEhgZK+ukN8/zuM8pX+cdrShD/1xhtQW
-/PdgKXuepUmc/Z7i8ui5cdlJ3RGVBtUFnEFIjb5XJaF9d9tGVIovdaKIYFwIMGw7zcnZ0e7XY7uk
-JT5lNqpkXWKss/66Rw4gdZA26WAE6KQHKNr0AKz1KuJkPJ+mx5EoyW2bhgaSJDs+ltSmWtO5Yw+l
-erE6HJYh/cVQQh/Y4b5jDe63rYE9sQa3dQ1suYbNcVdxCh7uSXNFn1z+HiEt4v0bOtiT09/riCNf
-fhp5ENmO9HYkGKjxj1Eq2+QfbSC5IiU+0newmrI771WrQR0zfRMdSRE8PAJVYeRP72dx+qeONIGu
-rpB55/3b49PdZWOVmNnumqKN2bEklZE2/V2J3MGsANL2acq8z3bqIXhWoo1DZnacnPwdqPxLasL2
-EzYnk7YpqCMwcm8Jz2g+6A3agG3SHc7le2Tmy9QAksIYoel2+Wn80u1H4jX3HcIeQS9aXk1hdrox
-nU9cavO2KWnms67h6jTVaDsRm1/sdZzPevPGEfyyxUzLeG7rBeafFfUrgTJQV2Hu21fA9kWb966b
-8BVbGx5iYcHjwGmmV3P0qtiG9MZuTeJOy0u2/H7wmZ3OC+vbeR1R1kGY5zeohKpvECfLVa+Jr5s5
-2NiNNaFR1c7G86u1KzaEVKjZPh2w1ADDqUV5Rf6AcC/RNdWwAAvb7UbcCd2rGc3XLkLiU8f0Pq0G
-PilA9skVeGMZNiWT09KFoppPH9wSi0Yamw8EaOODu2jvp8GOq2lM4zfvTSsM/YKgacCHwWSx6p1u
-VX0s76Fk4s77fl7X6fkDjE6Tpb5xQ26hDlSuXaq+qqrQPVBAek+aTWlkqR0vTajmNVaP/juN2BbE
-vo6gy6k5dvMrUpTj2GwTTQVinctjI9r4TWHYtLfoDMbxyvrbZcrcP2nZatZd3iPrjSAXP7/G7zF5
-e/xm+KqaxUWDjZUeHw0vXomtSiYh2YhURtakHzJ8f/xqexHBlJvyqXoO33xLfkE+IG8W8hZ9Jmw9
-IT+fvN02buS9JUVtJ5H8ATfk1hJYVS2827eJR1HGU+/8/vL8r5evGHn3/vicvDsfkncn59s3YKnB
-rd4zkvPz47NX3dHJRff51NjljuDHLIb9/PqpMV36LMalDvtuN1k3/fAlg9n3DObPGsxeUDnJzh/4
-7jYtL0As9jhi5dvcwV6GWHybkqcRi38fYvEnEYv/FsRa7Pu9hpfAFv8GbK3b/QC2+Aq2+HNgiz8G
-W/wp2PqWwCZs8e2wxb8JW/wbsMWfDVv8mbDFXwRb/DfCFns+bLGXwBb7Pthi/wrYYi+DLfZC2GK/
-EbbYM2GLfTdsse+ALfYbYIt9D2xtGfw82Noy+GvYSjn/Ydo94kXwPGzcTlcVY/nOi/d573T5SiUl
-c1Jwlr6qNES/nWryQrLf76fi5as6brwo6RBgoQu395vFoN5XWh6mRQzP0TdCSbt7YH2A04NyOpu3
-B7i6nwb2/SAtgA7SbG9PT0i6eDe6NwE+AD+GB5xMqnkTlzjlq8kEtSY9m7bjcXqLGHsNin6FaDc0
-4+Tww8euOC4elCq6hz/ZAoP5puQPRyfbJHudpelBKrlMD/jGXQUaxvSvSK7jratsHbqHro2lVNGD
-Ti/tTdJbKFsGRlABmpT/ZXu7vj0WwF0TsRKU3xbMep0Q8GneVhOUFNTO8e3d16pc962p9M6xmU+6
-5/jFfNrVZ9Tk09PTT00T00Or5TEhA0Kkkjw9pCTp4WX0S/0LjV+PJzsPBux2pk/C0sm0n6c3o2eH
-Hz+dnXw6ef3T8BWXao/gZHj0Kb34wwXde/f6ckAu7peXsKTyqJ6FnZRYEYL4PKXI/O7femFZZGSb
-EWm74lUVRPD0MtfN/XVM7z0xyQ/p6VLTuzzGyLcr2YYssHueptnBFuFi2aRHM+nfI5n0j1ymgSgp
-hdp90iz2tITuNuQQ/llgcbL/4hDBbOva3jb97nZyXz2fkpSF6RwmNmWI3VvbJji2urEkIlsu2vuL
-S1SchEXYpWX9OUn8Zf3U3Z1i8ilUDMji2p1gF6qLQEyvKZIuAqqVnsJ1kMgJHNK9l0We1XUFMEzK
-YMJqRSfv373uL9/xphemi2/YwrBykupGx11Sgi2eKtHeT2+GIHW4moxPNRFOumn5Ate7N1Dp/aEN
-1XR82++9qWPsvuk4nSed1+nl4PjuvT/IBc+uAVMR/Od0+J7kSlHy+qaN0/QwGVT24uL0/FN6FX3Y
-+/hmmOrItPPP/Vzd9r2edtvrx9FOyUqwKzH3koNO9HcyzeHdU5Ysxw+/Bpezs1SODj7b+iCdJIV9
-AvpdVjUqy2CfkZhUtc2APam9vRIDsniBnN6rJn42nyUfMiS6myH7RnZckDCfjeNNf138zbj6siJG
-ZXqlX3Tru/xIwEhXpxcf+z0kUvdq4L+nYBnhT90kXRGqXFOl74GmiGwQM9WsBSn6dDQ8OX5/dn54
-eT8ylFcvGfe/DWarHNs6AAA=
-
---=-LwUn8q/5IFf0azWMzaEK
-Content-Disposition: attachment; filename=lspci.gz
-Content-Type: application/x-gzip; name=lspci.gz
-Content-Transfer-Encoding: base64
-
-H4sICFrDnUEAA2xzcGNpAO1ZTW/bOBA9x79igL0k2LihZFmRA/SgONlWaNW4cVoUMHygKMohKlMG
-Jaeb/vodSrYjyfJXAnR3sxs4hmVyhhy+x8cZmhBCLvTLfkNg0PcgUCKc8AtwwwcqGQ/BF0wlcMUf
-BOMpjFz/agz41nYMw8gtjhV/AHJ+AsczlUzaIgJCYPQpUVMaQ8hZEvLxSevoj5hO0gsI5ilMaZpx
-dQq27d//PIUpD8V8il0fUh6fQkwzLtkj2Fbr6HKOJjMlplQ9viXkFFL0J8P8qYNP8yBRoZBoUTxz
-1l6Yv9Xm3tkNBPxeyHAVF8ZLKP639YcgiqLWkc+niXqsd4xYT3ch7YjTKMo7Xv85ozIViYTbGx9o
-tnIGo1CkNIh5OIZRKn7yt86HceuoT2c0ELHIBMcwRoyM4TfiwIgQx15vjpbNDnoct1pkCc05QuMN
-3QOh+TjoL6Dp4uoP50H6iKs+PcD8GZiRyrQN8K6uQUg0jCjbe+baqJh5p0Qqh8LIzycBQ84GMFBi
-MH5OZOi+MbINIXXMgkezRGWpBj2KKFmgbNhVnEwY+jll95tJ3hlMhLcI13xOOCsnq6BqgXi3n8Ho
-1YJgjFSx6sDlQfRy+wPvJfzS9s0zLk2LHi5KnVyU2t8W4RRTNMxfrk5mTZ3MvdWpt1Sn3lZ1shfq
-xJyFOg0Uj3jG7rUO4aybrMjiL4q6hXX9iw0a12vUOKtB4yiKWP27wKkI2xZZtOi4gj5i6fUPg91F
-iwUvjRLoBs7fu2nr1gNE4wK+yO8y+SE1/Pg1dGxGDhEPssJPCwfH80av5LFttQORnYJMZHtWgu2k
-FH3w7+W+UeO+sc79w2lTXpnXxwu+Ly8MB3nxPkmz/YjxAdfPze7jRNrW2c0M55TIMbx/nHF1p3Cj
-6wMB7ji7l0mcTB6hn8hITOaKZigBq4gijGapznWYnOX2NQ1iNAvClmZWbS6Habw4TDcMFU9T8Oms
-MZTyaOaLR7u6dX29fplK4pirnSN2XjyiL1LG45hKniDlFkPvGLf336BP75fSp/fL6dP7O+hjXhBN
-n+vsnivJMYlczfYCj5yEhiyZoh+FrMgJAJ949i1TfMrhsu93z4kF78QE8cuefCwT/Yr2Njlb01zD
-tqxnHV5FSmxaFQ1mDiPbNXiR9WBPXfLpRKZiHuxnbudZU1OWZZBqlrVGdqvhkLTwkBwkP7Ao8qmk
-E1xqmcEDV7lvc81FF118FRke/wOVhHOWwRXN6Ho39Ooj9dEhDMVEUsQ4BE8Xcmo+y7CLbWGUv8Pn
-OZ/jAX/WgWupZ92uUMV4LVTp1rCO9qZK2EQV/j9VqlTRdd6wP/QgzRBC9FSmixtSVCwGrtdvn/eI
-CV865qJiNkg9Z8u7ruFfFEib8U/j5MdWoajUzs3VUMTOnSawe2wvsPMLo+owrGkYs2tvIIWzixQh
-O4gA+ug9CFljhWzdVc8aQxlt4x+MdrcOg9OMdr7c62jvSOQ3o229RrQ7mKzg3v4yvCylNvteEWmr
-QvODWsV2877vPevuD10eUqYtSaGvz8r1Go2KTd0xd9RrefzGK4w/3Dv+rsZ/sUFxuLRx1w+RPfgM
-3hRbcEzJ3sBxlKgpVzFWFf5VucjA1hO08KBjGBaMhu6d+1HI72f6wy0VuHmGXAk8uPC5tOzNl6wv
-GHk5cFPWfniSYZzXFCHI9b9QG06XalPtYq26WGttZNXm1Nso22xHHVK+3q7hztlW3JeGmxKXnapl
-k62q9UQr/XvV13cusmg6w6RP33lWjpE77wk4dK2hg1tNu28fCyKY9V+s0Ft9T21x0og0vs9mQk52
-g+1UFjYsbmF3LyxCwBqJ8ARacWRUUYv2cr4x3TR3odbdfta0/gJPEwzzZhwAAA==
-
---=-LwUn8q/5IFf0azWMzaEK--
+Jens Axboe
 
