@@ -1,87 +1,155 @@
-From: "didier" <didier@ece.gatech.edu>
-Subject: Pb between an UltraTrak SX8000 and an Adaptec 29160
-Date: Thu, 14 Nov 2002 15:50:01 -0500
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <004601c28c1f$66cde6c0$13e2cf82@darkwolf>
-Reply-To: <didier@ece.gatech.edu>
+From: "J.E.J. Bottomley" <James.Bottomley@steeleye.com>
+Subject: [RFC][PATCH] move dma_mask into struct device
+Date: Fri, 15 Nov 2002 15:34:12 -0500
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <200211152034.gAFKYC404219@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from darkwolf (darkwolf.ee.gatech.edu [130.207.226.19])
-	by mail.ee.gatech.edu (8.12.3/8.12.3) with ESMTP id gAEKo1L8013636
-	for <linux-scsi@vger.kernel.org>; Thu, 14 Nov 2002 15:50:01 -0500 (EST)
+Content-Type: multipart/mixed ;
+	boundary="==_Exmh_-17523764410"
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+To: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Cc: grundler@dsl2.external.hp.com, willy@debian.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+
+This is a multipart MIME message.
+
+--==_Exmh_-17523764410
+Content-Type: text/plain; charset=us-ascii
+
+Attached is a patch which moves dma_mask into struct device and cleans up the 
+scsi mid-layer to use it (instead of using struct pci_dev).  The advantage to 
+doing this is probably most apparent on non-pci bus architectures where 
+currently you have to construct a fake pci_dev just so you can get the bounce 
+buffers to work correctly.
+
+The patch tries to perturb the minimum amount of code, so dma_mask in struct 
+device is simply a pointer to the one in pci_dev.  However, it will make it 
+easy for me now to add generic device to MCA without having to go the fake pci 
+route.
+
+This patch completely removes knowledge of pci devices from the SCSI mid-layer.
+
+I have compiled and tested this, but obviously, since I have an MCA machine, 
+it's not of much value to the pci code changes, so if someone with a PCI 
+machine could check those out, I'd be grateful.
+
+The main problem SCSI has with this is the scsi_ioctl_get_pci which is used to 
+get the pci slot name.  Although, this can be fixed up afterwards with Matthew 
+Wilcox's name change patch.
+
+I'd like to see this as the beginning of a move away from bus specific code to 
+using generic device code (where possible).  Comments and feedback welcome.
+
+James
 
 
+--==_Exmh_-17523764410
+Content-Type: text/plain ; name="tmp.diff"; charset=us-ascii
+Content-Description: tmp.diff
+Content-Disposition: attachment; filename="tmp.diff"
 
-I have just connected a brand new UltraTrak SX8000
-(from Promise with 8 x 200GB IDE drives) to an
-adaptec 29160. The UltraTrak SX8000 is connected
-via a brand new LVD cable (1meter).
+===== drivers/pci/probe.c 1.17 vs edited =====
+--- 1.17/drivers/pci/probe.c	Fri Nov  1 12:33:02 2002
++++ edited/drivers/pci/probe.c	Fri Nov 15 14:00:46 2002
+@@ -449,6 +449,7 @@
+ 	/* now put in global tree */
+ 	strcpy(dev->dev.name,dev->name);
+ 	strcpy(dev->dev.bus_id,dev->slot_name);
++	dev->dev->dma_mask = &dev->dma_mask;
+ 
+ 	device_register(&dev->dev);
+ 	return dev;
+===== drivers/scsi/hosts.h 1.36 vs edited =====
+--- 1.36/drivers/scsi/hosts.h	Thu Nov 14 13:07:27 2002
++++ edited/drivers/scsi/hosts.h	Fri Nov 15 14:43:59 2002
+@@ -468,10 +468,10 @@
+     unsigned int max_host_blocked;
+ 
+     /*
+-     * For SCSI hosts which are PCI devices, set pci_dev so that
+-     * we can do BIOS EDD 3.0 mappings
++     * This is a pointer to the generic device for this host (i.e. the
++     * device on the bus);
+      */
+-    struct pci_dev *pci_dev;
++    struct device *dev;
+ 
+     /* 
+      * Support for driverfs filesystem
+@@ -521,11 +521,17 @@
+ 	shost->host_lock = lock;
+ }
+ 
++static inline void scsi_set_device(struct Scsi_Host *shost,
++                                   struct device *dev)
++{
++        shost->dev = dev;
++        shost->host_driverfs_dev.parent = dev;
++}
++
+ static inline void scsi_set_pci_device(struct Scsi_Host *shost,
+                                        struct pci_dev *pdev)
+ {
+-	shost->pci_dev = pdev;
+-	shost->host_driverfs_dev.parent=&pdev->dev;
++        scsi_set_device(shost, &pdev->dev);
+ }
+ 
+ 
+===== drivers/scsi/scsi_ioctl.c 1.12 vs edited =====
+--- 1.12/drivers/scsi/scsi_ioctl.c	Thu Oct 17 13:52:39 2002
++++ edited/drivers/scsi/scsi_ioctl.c	Fri Nov 15 14:08:19 2002
+@@ -396,9 +396,9 @@
+ scsi_ioctl_get_pci(Scsi_Device * dev, void *arg)
+ {
+ 
+-        if (!dev->host->pci_dev) return -ENXIO;
+-        return copy_to_user(arg, dev->host->pci_dev->slot_name,
+-                            sizeof(dev->host->pci_dev->slot_name));
++        if (!dev->host->dev) return -ENXIO;
++        return copy_to_user(arg, dev->host->dev->name,
++                            sizeof(dev->host->dev->name));
+ }
+ 
+ 
+===== drivers/scsi/scsi_scan.c 1.35 vs edited =====
+--- 1.35/drivers/scsi/scsi_scan.c	Thu Nov 14 12:34:35 2002
++++ edited/drivers/scsi/scsi_scan.c	Fri Nov 15 14:25:41 2002
+@@ -436,8 +436,8 @@
+ 	u64 bounce_limit;
+ 
+ 	if (sh->highmem_io) {
+-		if (sh->pci_dev && PCI_DMA_BUS_IS_PHYS) {
+-			bounce_limit = sh->pci_dev->dma_mask;
++		if (sh->dev && sh->dev->dma_mask && PCI_DMA_BUS_IS_PHYS) {
++			bounce_limit = *sh->dev->dma_mask;
+ 		} else {
+ 			/*
+ 			 * Platforms with virtual-DMA translation
+===== drivers/scsi/st.c 1.42 vs edited =====
+--- 1.42/drivers/scsi/st.c	Mon Nov 11 03:32:34 2002
++++ edited/drivers/scsi/st.c	Fri Nov 15 14:25:58 2002
+@@ -3786,8 +3786,8 @@
+ 			 * hardware have no practical limit.
+ 			 */
+ 			bounce_limit = BLK_BOUNCE_ANY;
+-		else if (SDp->host->pci_dev)
+-			bounce_limit = SDp->host->pci_dev->dma_mask;
++		else if (SDp->host->dev && SDp->host->dev->dma_mask)
++			bounce_limit = *SDp->host->dev->dma_mask;
+ 	} else if (SDp->host->unchecked_isa_dma)
+ 		bounce_limit = BLK_BOUNCE_ISA;
+ 	bounce_limit >>= PAGE_SHIFT;
+===== include/linux/device.h 1.58 vs edited =====
+--- 1.58/include/linux/device.h	Thu Oct 31 15:25:58 2002
++++ edited/include/linux/device.h	Fri Nov 15 13:52:55 2002
+@@ -300,6 +300,7 @@
+ 					   being off. */
+ 
+ 	unsigned char *saved_state;	/* saved device state */
++	u64		*dma_mask;	/* dma mask (if dma'able device) */
+ 
+ 	void	(*release)(struct device * dev);
+ };
 
-While everything seems fine, I am getting a bunch of
-
-(scsi0:A:0:0): parity error detected in Data-out phase. SEQADDR(0x56)
-SCSIRATE(0xc2)
-        No terminal CRC packet recevied
-(scsi0:A:0:0): parity error detected in Data-out phase. SEQADDR(0x54)
-SCSIRATE(0xc2)
-        No terminal CRC packet recevied
-(scsi0:A:0:0): parity error detected in Data-out phase. SEQADDR(0x54)
-SCSIRATE(0xc2)
-        No terminal CRC packet recevied
-(scsi0:A:0:0): parity error detected in Data-out phase. SEQADDR(0x55)
-SCSIRATE(0xc2)
-        No terminal CRC packet recevied
-(scsi0:A:0:0): parity error detected in Data-out phase. SEQADDR(0x90)
-SCSIRATE(0xc2)
-        No terminal CRC packet recevied
-
-in my /var/log/messages.
-
-I was wondering if someone could give me some insight.
-
-The UltraTrak SX8000 has its internal termination enabled.
-
-Here is what I get during my boot:
-
-Nov 14 11:04:32 dagdhasrv kernel: Linux version 2.4.18-17.7.xsmp
-(bhcompile@daffy.perf.redhat.com) (gcc version 2.96 20000731 (Red Hat
-Linux 7.3 2.96-112)) #1 SMP Tue Oct 8 12:37:04 EDT 2002
-[..........]
-Nov 14 11:04:35 dagdhasrv kernel: SCSI subsystem driver Revision: 1.00
-Nov 14 11:04:35 dagdhasrv kernel: kmod: failed to exec /sbin/modprobe -s
--k scsi_hostadapter, errno = 2
-Nov 14 11:04:35 dagdhasrv kernel: scsi0 : Adaptec AIC7XXX EISA/VLB/PCI
-SCSI HBA DRIVER, Rev 6.2.8
-Nov 14 11:04:35 dagdhasrv kernel:         <Adaptec 29160 Ultra160 SCSI
-adapter>
-Nov 14 11:04:35 dagdhasrv kernel:         aic7892: Ultra160 Wide Channel
-A, SCSI Id=7, 32/253 SCBs
-Nov 14 11:04:35 dagdhasrv kernel: 
-[........]
-Nov 14 11:04:35 dagdhasrv kernel: blk: queue c35ef618, I/O limit 4095Mb
-(mask 0xffffffff)
-Nov 14 11:04:35 dagdhasrv kernel:   Vendor: Promise   Model: 7 Disk
-RAID5      Rev: 1.10
-Nov 14 11:04:35 dagdhasrv kernel:   Type:   Direct-Access
-ANSI SCSI revision: 03
-Nov 14 11:04:35 dagdhasrv kernel: blk: queue c35ef418, I/O limit 4095Mb
-(mask 0xffffffff)
-Nov 14 11:04:35 dagdhasrv kernel: scsi0:A:0:0: Tagged Queuing enabled.
-Depth 253
-[.......]
-Nov 14 11:04:35 dagdhasrv kernel: (scsi0:A:0): 160.000MB/s transfers
-(80.000MHz DT, offset 62, 16bit)
-Nov 14 11:04:35 dagdhasrv kernel: SCSI device sda: -1951217920 512-byte
-hdwr sectors (100488 MB)
-Nov 14 11:04:35 dagdhasrv kernel: Partition check:
-Nov 14 11:04:35 dagdhasrv kernel:  sda: sda1
-
-Any idea ?
-
-Thanks in advance for any suggestion
-
+--==_Exmh_-17523764410--
