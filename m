@@ -1,32 +1,32 @@
-From: Brian King <brking@us.ibm.com>
-Subject: Re: Transport affected timeouts...
-Date: Thu, 22 Apr 2004 14:09:08 -0500
+From: Roman Zippel <zippel@linux-m68k.org>
+Subject: Re: Why is CONFIG_SCSI_QLA2X_X always enabled?
+Date: Thu, 22 Apr 2004 21:28:09 +0200 (CEST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <40881854.1000602@us.ibm.com>
-References: <3356669BBE90C448AD4645C843E2BF2802C016E2@xbl.ma.emulex.com>
+Message-ID: <Pine.LNX.4.44.0404222127180.766-100000@serv.local>
+References: <1082660161.1778.100.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e6.ny.us.ibm.com ([32.97.182.106]:23192 "EHLO e6.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S264639AbUDVTJM (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 22 Apr 2004 15:09:12 -0400
+Received: from smtp-out9.xs4all.nl ([194.109.24.10]:20748 "EHLO
+	smtp-out3.xs4all.nl") by vger.kernel.org with ESMTP id S264614AbUDVT2S
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 22 Apr 2004 15:28:18 -0400
+In-Reply-To: <1082660161.1778.100.camel@mulgrave>
 List-Id: linux-scsi@vger.kernel.org
-To: "Smart, James" <James.Smart@Emulex.com>
-Cc: 'James Bottomley' <James.Bottomley@SteelEye.com>, Linux SCSI Reflector <linux-scsi@vger.kernel.org>
+To: James Bottomley <James.Bottomley@steeleye.com>
+Cc: "Randy.Dunlap" <rddunlap@osdl.org>, kieran@ihateaol.co.uk, Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-Smart, James wrote:
-> One question though - how does the LLD really know what the timeout should
-> be ?  It doesn't identify a target as a raid device does it ? or what raid
-> level it's using ?
+Hi,
 
-Yes, the slave_configure routine knows that the device is a RAID array and
-sets the rw_timeout value appropriately.
+On 22 Apr 2004, James Bottomley wrote:
 
+> On Thu, 2004-04-22 at 14:37, Randy.Dunlap wrote:
+> > which isn't a problem by itself, as you suggest (maybe?).
+>
+> Yes, it was a harmless evolutionary addition to save having a depends
+> SCSI && PCI on every config option in the qla2xxx/Kconfig.
 
--- 
-Brian King
-eServer Storage I/O
-IBM Linux Technology Center
+Use "if SCSI && PCI" ... "endif" instead.
+
+bye, Roman
 
