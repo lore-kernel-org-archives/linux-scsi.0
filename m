@@ -1,32 +1,86 @@
-From: sullivan <sullivan@austin.ibm.com>
-Subject: [RFC] Persistent naming of scsi devices
-Date: Wed, 5 Jun 2002 15:13:36 -0500
+From: Neil Brown <neilb@cse.unsw.edu.au>
+Subject: /proc/scsi/aic7xxx/? considered harmful (2.4.19-pre9)
+Date: Thu, 6 Jun 2002 09:58:24 +1000 (EST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20020605151336.A1139@austin.ibm.com>
+Message-ID: <15614.42400.697670.602385@notabene.cse.unsw.edu.au>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
+Received: From notabene ([129.94.211.194] == dulcimer.orchestra.cse.unsw.EDU.AU)
+	(for <linux-scsi@vger.kernel.org>)
+	(for <linux-kernel@vger.kernel.org>) (for <c-staff@cse.unsw.edu.au>)
+	By tone With Smtp ; Thu, 6 Jun 2002 09:58:24 +1000
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: mochel@osdl.org
-
-Thanks for your postings to the original RFC submitted under this subject. Based on your feedback two utilities are now available at http://oss.software.ibm.com/devreg/
-a. scsiname utility
-	- Makes sg calls to collect device info used to make naming decisions
-	- Hooked into the hotplug interface using Doug Gilbert's scsimon patch
-	- Targeted specifically to scsi devices
-	- Implemented completely in userspace
-
-b. devnaming utility
-	- Utilizes Patrick Mochel's driverfs fs to collect device info
-	- Can easily be extended to support other device types (non scsi)
-	- Includes a kernel patch to create/publish device info in driverfs
-	- Hooked into hotplug interface using scsimon patch
-
-Why two utilities? I see scsiname providing an immediate fix for providing a persistent set of /dev scsi names across boots. The devnaming utility is more long term in that it anticipates that driverfs will evolve into providing the device information necessary, removing the need for interfacing through sg. The config and hotplug portions of the utilities are consistent and should (hopefully) provide a smooth migration path.
-
-I'd appreciate feedback from anyone that has the interest and the time to take a further look.
+To: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
 
+Hi,
+ I have 3 NFS servers with ext3 on raid5 on scsi with assorted
+aic7xxx scsi controllers, all running 2.4.19-pre9 (plus some ext3 and
+raid and nfs patches) using the "new" aic7xxx drivers.
 
+While trying to diagnose some problems I ran a little script which
+extracts the "Commands Queued" value for each drive and prints out
+differences every second, so I can watch traffic.
+
+One our newer machine, which reports
+Jun  3 17:33:21 eno kernel: scsi0 : Adaptec AIC7XXX EISA/VLB/PCI SCSI HBA DRIVER, Rev 6.2.6
+Jun  3 17:33:21 eno kernel:         <Adaptec aic7899 Ultra160 SCSI adapter>
+Jun  3 17:33:21 eno kernel:         aic7899: Ultra160 Wide Channel B, SCSI Id=7, 32/253 SCBs
+Jun  3 17:33:21 eno kernel: 
+Jun  3 17:33:21 eno kernel: scsi1 : Adaptec AIC7XXX EISA/VLB/PCI SCSI HBA DRIVER, Rev 6.2.6
+Jun  3 17:33:21 eno kernel:         <Adaptec aic7899 Ultra160 SCSI adapter>
+Jun  3 17:33:21 eno kernel:         aic7899: Ultra160 Wide Channel A, SCSI Id=7, 32/253 SCBs
+Jun  3 17:33:21 eno kernel: 
+Jun  3 17:33:21 eno kernel: scsi2 : Adaptec AIC7XXX EISA/VLB/PCI SCSI HBA DRIVER, Rev 6.2.6
+Jun  3 17:33:21 eno kernel:         <Adaptec 29160B Ultra160 SCSI adapter>
+Jun  3 17:33:21 eno kernel:         aic7892: Ultra160 Wide Channel A, SCSI Id=7, 32/253 SCBs
+
+This works fine.
+
+On an older machine, which reports
+
+Jan  1 11:01:39 cage kernel: scsi0 : Adaptec AIC7XXX EISA/VLB/PCI SCSI HBA DRIVER, Rev 6.2.6
+Jan  1 11:01:39 cage kernel:         <Adaptec 3950B Ultra2 SCSI adapter>
+Jan  1 11:01:39 cage kernel:         aic7896/97: Ultra2 Wide Channel A, SCSI Id=7, 32/253 SCBs
+Jan  1 11:01:39 cage kernel: 
+Jan  1 11:01:39 cage kernel: scsi1 : Adaptec AIC7XXX EISA/VLB/PCI SCSI HBA DRIVER, Rev 6.2.6
+Jan  1 11:01:39 cage kernel:         <Adaptec 3950B Ultra2 SCSI adapter>
+Jan  1 11:01:39 cage kernel:         aic7896/97: Ultra2 Wide Channel B, SCSI Id=7, 32/253 SCBs
+Jan  1 11:01:39 cage kernel: 
+
+
+I get lots of errors:
+Jun  6 09:38:01 cage kernel: scsi1: Signaled a Target Abort
+Jun  6 09:38:02 cage kernel: scsi0: PCI error Interrupt at seqaddr = 0x8
+Jun  6 09:38:02 cage kernel: scsi0: Signaled a Target Abort
+Jun  6 09:38:02 cage kernel: scsi0: PCI error Interrupt at seqaddr = 0x9
+Jun  6 09:38:02 cage kernel: scsi0: Signaled a Target Abort
+Jun  6 09:38:02 cage kernel: scsi0: PCI error Interrupt at seqaddr = 0x9
+Jun  6 09:38:02 cage kernel: scsi0: Signaled a Target Abort
+Jun  6 09:38:02 cage kernel: scsi0: PCI error Interrupt at seqaddr = 0x8
+Jun  6 09:38:02 cage kernel: scsi0: Signaled a Target Abort
+Jun  6 09:38:02 cage kernel: scsi1: PCI error Interrupt at seqaddr = 0x8
+Jun  6 09:38:02 cage kernel: scsi1: Signaled a Target Abort
+Jun  6 09:38:02 cage kernel: scsi1: PCI error Interrupt at seqaddr = 0x9
+
+but it seems to keep working..
+
+
+On the last machine, which is similar to the second but only has one
+even-older scsi card:
+
+Jan  1 11:10:35 glass kernel: scsi0 : Adaptec AIC7XXX EISA/VLB/PCI SCSI HBA DRIVER, Rev 6.2.6
+Jan  1 11:10:35 glass kernel:         <Adaptec 2940 Ultra2 SCSI adapter>
+Jan  1 11:10:35 glass kernel:         aic7890/91: Ultra2 Wide Channel A, SCSI Id=7, 32/253 SCBs
+Jan  1 11:10:35 glass kernel: 
+
+I get the above errors for about 10 seconds, and then the machine
+freezes solid.
+
+
+I guess I will re-write my script to use /proc/partitions to monitor
+disc traffic.
+
+NeilBrown
