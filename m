@@ -1,52 +1,59 @@
-From: Ishikawa <ishikawa@yk.rim.or.jp>
-Subject: Re: [PATCH] kill scsihosts= boot parameter
-Date: Sat, 07 Jun 2003 02:05:49 +0900
+From: Mike Anderson <andmike@us.ibm.com>
+Subject: Re: [PATCH] make the SCSI mid-layer obey the device online flag
+Date: Fri, 6 Jun 2003 13:23:50 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3EE0C9ED.2D0EEE89@yk.rim.or.jp>
-References: <20030606075954.GB18838@lst.de>
+Message-ID: <20030606202350.GC3330@beaverton.ibm.com>
+References: <1054742495.1674.18.camel@mulgrave> <20030604165146.GA1426@beaverton.ibm.com> <1054754103.2360.8.camel@mulgrave> <20030606073603.A13259@infradead.org> <3EE0B316.4060207@rogers.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-2022-jp
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pl051.nas911.n-yokohama.nttpc.ne.jp ([210.139.98.51]:24004 "EHLO
-	standard.erephon") by vger.kernel.org with ESMTP id S262033AbTFFQwm
+Received: from e34.co.us.ibm.com ([32.97.110.132]:37042 "EHLO
+	e34.co.us.ibm.com") by vger.kernel.org with ESMTP id S262283AbTFFUI3
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 6 Jun 2003 12:52:42 -0400
-Received: from yk.rim.or.jp (really [127.0.0.1]) by yk.rim.or.jp
-	via smail with esmtp
-	id <m19OKfF-000H35C@standard.erephon> (Debian Smail3.2.0.114)
-	for <linux-scsi@vger.kernel.org>; Sat, 7 Jun 2003 02:06:05 +0900 (JST)
+	Fri, 6 Jun 2003 16:08:29 -0400
+Content-Disposition: inline
+In-Reply-To: <3EE0B316.4060207@rogers.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Christoph Hellwig <hch@lst.de>
+To: Luben Tuikov <tluben@rogers.com>
+Cc: Christoph Hellwig <hch@infradead.org>, James Bottomley <James.Bottomley@steeleye.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Alan Stern <stern@rowland.harvard.edu>
 
-
-RE scshihosts=driver1,driver2,driver3...
-
-Are we really sure we want to remove this?
-There non-disk devices, say,  CDROMs and tapes, which
-can't be handled by fs label and
-I had a feeling that the userland tools that looks
-at the physical connecivity might not be
-so well standardized (or made available on every major distribution.).
-
-Am I wrong about the latter (userland tools)?
-
-I am afraid
-that I will have to tweak a few system administration scripts 
-if this feature is gone.
-(I don't know why this works on a PC I manage well.)
-
-> This feature is seriously racy, and doesn't work under many
-> circumstances.  As we have proper ways to find devices by their
-> their locical naming (UUID, fs label) or physical connectivity
-> (scsidev, sysfs) it shouldn't be nessecary anymore.
+Luben Tuikov [tluben@rogers.com] wrote:
+> James was talking about ``device server not ready'' aliased to
+> online -- i.e. if online is 0 then only INQUIRY or TUR should
+> be sent from SCSI Core (unless SCSI Core decides to _know_ about
+> the different ULP).  The semantics on this are somewhat touched
+> in the INQUIRY description in SPC-3.
+> 
+> (This means that the device is on the SAN, but not ready to
+> process commands.)
+> 
+> You're talking about hardware removal -- more specifically
+> logical removal of a host -- in which case of course there's no
+> _host_, so how can online be checked.... (online being
+> member of sdev, sdev being parented by shost...)
+> 
+> IOW, you probably need either a flag in shost, to mean that
+> it's logically removed (whether hdwr or not) until it is
+> actually gone, or an external flag per host... it's your call.
 > 
 
+I agree we need some indication the the host is gone as mention in the
+above paragraph and previously by others in similar threads.
 
--- 
-int main(void){int j=2003;/*(c)2003 cishikawa. */
-char t[] ="<CI> @abcdefghijklmnopqrstuvwxyz.,\n\"";
-char *i ="g>qtCIuqivb,gCwe\np@.ietCIuqi\"tqkvv is>dnamz";
-while(*i)((j+=strchr(t,*i++)-(int)t),(j%=sizeof t-1),
-(putchar(t[j])));return 0;}/* under GPL */
+Instead of talking bit fields it might be good to write down the states
+for scsi_device and Scsi_Host and the policy for each state. This is
+partially being done in this thread, but I believe it is confusing as we
+keep mapping to an already overloaded bit field.
+
+I am currently updating my previously posted SCSI Mid refcounting text
+to match recent updates by Christoph. I am also adding current bit fields
+in scsi_device and Scsi_Host used for state.
+
+It might be helpful to indicate when a hotplug event will go out and the
+expected action. I currently do not have this in the document.
+
+-andmike
+--
+Michael Anderson
+andmike@us.ibm.com
+
