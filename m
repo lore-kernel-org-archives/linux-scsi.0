@@ -1,38 +1,34 @@
-From: Rabeeh Khoury <rabeeh@galileo.co.il>
-Subject: Hot plugging a disk in runtime
-Date: Mon, 20 May 2002 13:19:53 +0300
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: Hot plugging a disk in runtime
+Date: Mon, 20 May 2002 12:57:43 +0100 (BST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3CE8CDC9.7070200@galileo.co.il>
+Message-ID: <E179lnL-0005Re-00@the-village.bc.nu>
+References: <3CE8CDC9.7070200@galileo.co.il>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from galileo.co.il (linux2.galileo.co.il [10.2.40.2])
-	by galileo.co.il (8.8.5/8.8.5) with ESMTP id NAA26397
-	for <linux-scsi@vger.kernel.org>; Mon, 20 May 2002 13:26:34 +0200 (GMT-2)
+In-Reply-To: <3CE8CDC9.7070200@galileo.co.il> from "Rabeeh Khoury" at May 20, 2002 01:19:53 PM
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>
+To: Rabeeh Khoury <rabeeh@galileo.co.il>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
-Hi list,
+> 1.. How is it possible to signal SCSI mid-layer (or other layers) of a 
+> presence of a newly hot-plugged disk ?
 
-I have few questions withregards to hot-plugging disk into a running 
-system -
+aacraid is one example that does this, but via its config tools.
 
-1.. How is it possible to signal SCSI mid-layer (or other layers) of a 
-presence of a newly hot-plugged disk ?
+> 2.. Can an adapter's device driver trigger SCSI subsystem to scan 
+> channels for new LUNs / Targets ?
 
-2.. Can an adapter's device driver trigger SCSI subsystem to scan 
-channels for new LUNs / Targets ?
+It is designed so user space can do so - so yes
 
-3.. Is this can be handled in a kernel level ? is there a user space 
-application that can be triggered to start scanning adapters (obviously 
-through SCSI subsystem) and registering new LUNs / Targets etc... ?
+> 3.. Is this can be handled in a kernel level ? is there a user space 
+> application that can be triggered to start scanning adapters (obviously 
+> through SCSI subsystem) and registering new LUNs / Targets etc... ?
 
-4.. How does SCSI API allow insertion of a new disk ?
+echo "scsi-add-single-device a b c d" /proc/scsi/scsi 
 
-5.. Is there a generic way of hot-plugging disks ?
+if I remember it right
 
-Thank you alot,
-Rabeeh
-
-
+Alan
