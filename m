@@ -1,41 +1,33 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: scsi_device::single_lun name change
-Date: Tue, 15 Feb 2005 19:53:59 -0600
-Message-ID: <1108518839.5539.93.camel@mulgrave>
-References: <42129A83.7010207@torque.net>
+From: Cathleen Baer <CathleenB@concord.etransmail4.com>
+Subject: How new Check 21 legislation is affecting you...
+Date: Wed, 16 Feb 2005 04:58:30 -0800
+Message-ID: <21461252.1108558710318.JavaMail.customerService@etransmail4.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Received: from stat16.steeleye.com ([209.192.50.48]:56807 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S261967AbVBPByF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 15 Feb 2005 20:54:05 -0500
-In-Reply-To: <42129A83.7010207@torque.net>
+Received: from 67.107.1.194.ptr.us.xo.net ([67.107.1.194]:5834 "EHLO
+	etm6-mail2.etransmail6.com") by vger.kernel.org with ESMTP
+	id S262010AbVBPM6w (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 16 Feb 2005 07:58:52 -0500
+Received: from mailqueue02 (66.238.40.2.ptr.us.xo.net [66.238.40.2])
+	by etm6-mail2.etransmail6.com (8.12.7/8.12.3/etm6mail2 LX 0.6) with ESMTP id j1GCwUPJ000540
+	for <linux-scsi@vger.kernel.org>; Wed, 16 Feb 2005 04:58:30 -0800
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Douglas Gilbert <dougg@torque.net>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
 
-On Wed, 2005-02-16 at 10:57 +1000, Douglas Gilbert wrote:
-> "scsi_target: representation of a scsi target, for now,
->   this is only used for single_lun devices." This is just above
-> the definition of the scsi_target structure in scsi_device.h
+Good Afternoon!
 
-Yes, I suppose that's historical junk now.
+Recenty intrdocuced legislation requires business and home users to print personal and business checks with security blank check stock and magnetic ink.
+Please find qualified suppliers at Google by clicking on the followingl link.
 
-> Elsewhere in that file scsi_device::single_lun is defined
-> with this comment:
-> "Indicates we should only allow I/O to one of the luns for
->   the device at a time."
-> That implies that the target must have multiple lus when
-> single_lun is set :-)
-> 
-> Is it too late to rename that field to something like:
->     serialize_lu_io  or single_lu_io ?
+http://www.google.com/search?sourceid=navclient&ie=UTF-8&rls=GGLC,GGLC:1969-53,GGLC:en&q=blank+check+paper%2C+magnetic+ink+for+inkjets
 
-Well, it corresponds to BLIST_SINGLELUN flag, so the naming scheme is
-currently internally consistent.
 
-James
+Thank you very much. 
+
+Cathleen Baer                                     
+Marketing & Relationship Representative
+Globalzon Consulting Group 
 
 
