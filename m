@@ -1,71 +1,63 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: Request for review of Linux iSCSI driver version 4.0.0.1
-Date: Fri, 07 Nov 2003 18:55:01 +1000
+From: Russell Kroll <rkroll@exploits.org>
+Subject: PROBLEM: sym53c8xx is broken on HP LH 4 after Linux 2.2
+Date: Fri, 07 Nov 2003 19:49:37 -0600
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3FAB5DE5.2080000@torque.net>
-References: <20031027153932.A16679@infradead.org> <005801c3a44a$5847c6e0$8f074d0a@apac.cisco.com> <20031106100906.A15382@infradead.org>
-Reply-To: dougg@torque.net
+Message-ID: <3FAC4BB1.mail1NJ11B4U4@exploits.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bunyip.cc.uq.edu.au ([130.102.2.1]:38923 "EHLO
-	bunyip.cc.uq.edu.au") by vger.kernel.org with ESMTP id S263971AbTKGJWl
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 7 Nov 2003 04:22:41 -0500
-In-Reply-To: <20031106100906.A15382@infradead.org>
+Received: from gearbox.exploits.org ([65.64.162.194]:41958 "EHLO
+	gearbox.exploits.org") by vger.kernel.org with ESMTP
+	id S261262AbTKHBti (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 7 Nov 2003 20:49:38 -0500
 List-Id: linux-scsi@vger.kernel.org
-To: 'Christoph Hellwig' <hch@infradead.org>
-Cc: "Sachin Mhatre (smhatre)" <smhatre@cisco.com>, linux-scsi@vger.kernel.org, davmyers@cisco.com
+To: linux-scsi@vger.kernel.org
 
-'Christoph Hellwig' wrote:
-> On Thu, Nov 06, 2003 at 03:12:51PM +0530, Sachin Mhatre (smhatre) wrote:
-> 
->>Hi,
->>	The following is the reason for sending the TEST_UNIT_READY and
->>START_STOP initialization command in the iSCSI driver:- 
->>
->>The iSCSI driver receives a CHECK CONDITION with sense key, NOT READY
->>and ASC/ASCQ=04/02 (i.e. an initialization command required). The Linux
->>SCSI mid-layer does not handle this condition. Hence the TUR and START
->>STOP initialization commands are sent from the iSCSI driver.
->>
->>Should this condition be necessarily handled in the SCSI mid-layer or
->>the low-level driver?
-> 
-> 
-> I think we should handle it in the midlayer.  Could you come up with a
-> patch to implement it?
+On the HP NetServer LH4, the sym53c8xx driver only works in 2.2 kernels, 
+and fails with a "CACHE INCORRECTLY CONFIGURED" error on 2.4 and 2.6.  
+This also applies to the sym53c8xx_2 driver.
 
-Interesting challenge. For a start START_STOP UNIT ** is a SBC-2
-command so the mid-layer shouldn't be generating it, the
-sd driver should. The sd_rw_intr() function in the sd driver
-could be made to detect ASC/ASCQ=04/02 but it is pretty obviously
-executing in interrupt context. The sd driver has a tailor made
-routine to spin up a disk called sd_spinup_disk() but since it
-calls schedule_timeout() it must be called from process context.
+I searched through the 2.4 and 2.3 series, and finally found that it 
+broke after the pre4-1 patch from the 2.3.99 era.  I split that patch up 
+into little parts and found the one piece that exposed the problem - it's 
+a small pair of changes to pci-i386.c.  Backing that patch out of 2.4.22 
+with patch -R makes the sym driver work again.
 
-Also once a spinup has commenced, it will take about 30
-seconds to complete. In that time an impatient user could
-try and mount a different partition on the same disk.
-That process should see a ASC/ASCQ=04/01 ("Logical unit is in
-process of becoming ready") and it should wait till it
-clears (and not issue another spinup).
+I've captured lspci dumps before and after the change, along with the 
+output from the driver on a stock kernel vs. a kernel that has this patch 
+backed out.  There's a lot of it, so I've put it out on my web server 
+at this URL:
 
-Seems like some infrastructure changes would be needed.
+	http://www.exploits.org/~rkroll/sym/
 
-Testing with lk 2.6.0-test9: spinning down a disk that
-the scsi subsystem had already seen but with nothing mounted
-on it, then trying to mount a partition on it, causes a lot
-of ugly messages in my log (at least the machine didn't crash).
+I am not suggesting that the patch be reverted, since it's obviously a bug 
+fix.  My guess is that the fix exposed a problem in the driver.
 
+Some background on the hardware: the LH4 seems to have two 53c895 
+interfaces on board.  In 2.2, you can't see the primary interface in 
+lspci, perhaps due to the bug that was fixed by the pre4-1 patch.  This is 
+generally not a problem, since the NetRAID/MegaRAID typically covers that 
+interface.
 
-** There is also the Power Condition mode page that all SCSI
-devices may optionally support. Trouble is with my SCSI-3 disks
-they either don't support it or the one that does gives
-ASC/ASCQ=04/02 when the disk is spun down (violating SPC-3).
+On 2.4, both interfaces are visible, and the driver can't seem to latch 
+onto the second one.  I don't care if the first one doesn't work, since 
+I don't intend to talk to the disks that way.  All I need is the second 
+one, since that's where my tape drive is connected.
 
-Doug Gilbert
+This system happens to be a dual Pentium III, but I've whittled the kernel 
+builds down to generic UP/Pentium settings without any positive effect.  I 
+even threw out just about everything except what I need to boot at one 
+point.  I've tried using "sym53c8xx=excl:0x1400", but it doesn't help.  
+It's not something in userspace which causes this, since it still happens 
+when I boot with 'init=/bin/sh'.
 
+I intend to run 2.4.22 on this system, but tried 2.6.0-test9 in case the 
+problem had been discovered and fixed in that tree.  Unfortunately, it 
+also failed.  I haven't tried mangling 2.6's PCI code to duplicate the
+effects of backing out that patch yet.
 
+This box is not in production, so I can run tests and try different  
+things.  My own attempts at making the driver work were not successful.
 
+I'm stuck.  Any advice or pointers would be appreciated.
