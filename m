@@ -1,49 +1,58 @@
-From: Clay Haapala <chaapala@cisco.com>
-Subject: Re: [PATCH] Add CRC32C chksums to crypto routines
-Date: Wed, 14 Jan 2004 16:12:31 -0600
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <yqujzncq2n8w.fsf@chaapala-lnx2.cisco.com>
-References: <Xine.LNX.4.44.0401141643560.12649-100000@thoron.boston.redhat.com>
+From: Greg Stark <gsstark@mit.edu>
+Subject: Re: Serial ATA (SATA) for Linux status report
+Date: 14 Jan 2004 17:18:34 -0500
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <87hdyyxjgl.fsf@stark.xeocode.com>
+References: <20031203204445.GA26987@gtf.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sj-iport-4.cisco.com ([171.68.10.86]:20548 "EHLO
-	sj-iport-4.cisco.com") by vger.kernel.org with ESMTP
-	id S264310AbUANWMj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 14 Jan 2004 17:12:39 -0500
-In-Reply-To: <Xine.LNX.4.44.0401141643560.12649-100000@thoron.boston.redhat.com> (James
- Morris's message of "Wed, 14 Jan 2004 16:45:49 -0500 (EST)")
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+In-Reply-To: <20031203204445.GA26987@gtf.org>
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Morris <jmorris@redhat.com>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, "David S. Miller" <davem@redhat.com>
 
-On Wed, 14 Jan 2004, James Morris stated:
-> On Wed, 14 Jan 2004, Clay Haapala wrote:
-> 
->> This patch against 2.6.1 adds CRC32C checksumming capabilities to
->> the crypto routines.  The structure of it is based wholly on the
->> existing digest (md5) routines, the main difference being that
->> chksums are often used in an "accumulator" fashion, effectively
->> requiring one to set the seed, and the digest algorithms don't do
->> that.
-> 
-> This looks interesting; do you know of any other chksum algorithms
-> which might need to be implemented in the kernel?
-> 
-I reference the one other user of CRC32C in my code, that would be the
-sctp network driver, at this time.
 
-Of course, there is library/crc32, which I did make an attempt to
-implement companion code to it, but we really need the "work over
-scatterlists" feature of the crypto routines.
+Jeff Garzik <jgarzik@pobox.com> writes:
 
-I took the design goals the of the library/crc32 routines (flexible
-XOR policy, flexible initial values) and tried to allow that in the
-crypto chksum routines.  CRC32 could be moved into it, but the uses of
-CRC32 are often quick accumulation over packet fragments, rather than
-computing digests over scatterlists describing would can be many K of
-data.
+> Intel ICH5
+>
+> Issue #2: Excessive interrupts are seen in some configurations.
+
+I guess I'm seeing this problem. I'm trying to get my P4P800 motherboard with
+an ICH5 chipset working completely. So far I've been living without the cdrom
+or DVD players. I see lots of other posts on linux-kernel about the same
+problems:
+
+Whenever I try to access the cdrom my system becomes unusable. Due to high
+interrupts, typically over 150k/s. I thought libata would help, but I don't
+understand how to use the PATA drive and the cdrom drives while I'm using it.
+
+The situation is that I have two SATA drives, a PATA drive and two cdrom
+drives (actually one CD burner and one DVD drive). They are 
+
+Primary Master:   PATA Drive
+Secondary Master: CD Burner
+Secondary Slave:  DVD-Rom
+SATA-1:           SATA Drive
+SATA-2:           SATA Drive
+
+I've tried 2.4.23pre4 (no libata), 2.6.1 (IDE drivers), and 2.6.1 (with scsi
+libata drivers) with the following results:
+
+2.4.23pre4: as soon as the cdrom is touched I see bursts of 150k interrupts
+    per second and the system becomes unresponsive momentarily every few
+    seconds.
+
+2.6.1 with regular IDE drivers: same as above except the system feels
+    responsive except for disk i/o. I see printks of "Disabling interrupt #18"
+    and all disk i/o freezes for a few seconds.
+
+2.6.1 with scsi ata_piix driver: the SATA drives show up and work fine but the
+    PATA drive and the cdroms doesn't show up at all. This is true even when I
+    compile with the CONFIG_IDE, CONFIG_BLK_DEV_IDE, and CONFIG_BLK_DEV_IDECD
+    enabled.
+
+
 -- 
-Clay Haapala (chaapala@cisco.com) Cisco Systems SRBU +1 763-398-1056
-   6450 Wedgwood Rd, Suite 130 Maple Grove MN 55311 PGP: C89240AD
-	 Funny, I didn't think Haliburton was into aerospace.
+greg
