@@ -1,165 +1,216 @@
-From: Poul Petersen <petersp@roguewave.com>
-Subject: RE: What's the "right" qla2100 driver?
-Date: Thu, 22 Jan 2004 14:54:36 -0800
+From: "Randy.Dunlap" <rddunlap@osdl.org>
+Subject: Re: 2.4.25pre6 and qlogic pcmcia driver
+Date: Thu, 22 Jan 2004 15:18:24 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <F888C30C3021D411B9DA00B0D0209BE8038F9BD4@cvo-exchange.cvo.roguewave.com>
+Message-ID: <20040122151824.3b874be9.rddunlap@osdl.org>
+References: <200401180355.01190.arekm@pld-linux.org>
+	<Pine.LNX.4.58L.0401201400490.14726@logos.cnet>
+	<20040120101121.5ce95f97.rddunlap@osdl.org>
+	<200401210232.44118.arekm@pld-linux.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cvo-ext.roguewave.com ([12.22.36.198]:7280 "EHLO
-	cvo-exchange.cvo.roguewave.com") by vger.kernel.org with ESMTP
-	id S265119AbUAVWzK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 22 Jan 2004 17:55:10 -0500
+Received: from fw.osdl.org ([65.172.181.6]:26295 "EHLO mail.osdl.org")
+	by vger.kernel.org with ESMTP id S266477AbUAVXWz convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 22 Jan 2004 18:22:55 -0500
+In-Reply-To: <200401210232.44118.arekm@pld-linux.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Arkadiusz Miskiewicz <arekm@pld-linux.org>, dledford@redhat.com
+Cc: marcelo.tosatti@cyclades.com, linux-scsi@vger.kernel.org, andersen@codepoet.org, fischer@norbit.de
 
-> For 2.4, you could try another driver -- 6.06.10 (available at the
+(moved to linux-scsi)
 
-	Ah, so there is. I hadn't noticed that! After running the raidstart
-resync with this qla2100 driver, disks
-started eventualy failing with errors like:
+On Wed, 21 Jan 2004 02:32:43 +0100 Arkadiusz Miskiewicz <arekm@pld-linu=
+x.org> wrote:
 
-SCSI disk error : host 4 channel 0 id 6 lun 0 return code = 20000
- I/O error: dev 08:71, sector 10072520
-SCSI disk error : host 4 channel 0 id 5 lun 0 return code = 20000
- I/O error: dev 08:61, sector 10072520
-SCSI disk error : host 4 channel 0 id 4 lun 0 return code = 20000
- I/O error: dev 08:51, sector 10072520
-SCSI disk error : host 4 channel 0 id 3 lun 0 return code = 20000
- I/O error: dev 08:41, sector 10072520
-SCSI disk error : host 4 channel 0 id 2 lun 0 return code = 20000
- I/O error: dev 08:31, sector 10072520
-SCSI disk error : host 4 channel 0 id 1 lun 0 return code = 20000
- I/O error: dev 08:21, sector 10072520
-SCSI disk error : host 4 channel 0 id 0 lun 0 return code = 20000
- I/O error: dev 08:11, sector 10072520
+| Dnia wto 20. stycznia 2004 19:11, Randy.Dunlap napisa=B3:
+| > On Tue, 20 Jan 2004 14:01:54 -0200 (BRST) Marcelo Tosatti <marcelo.=
+tosatti@cyclades.com> wrote:
+| > | Same here, 2.4.24 does not show this behaviour.
+| > |
+| > | I can't find the guilty modification in 2.4.25-pre.
+| >
+| > Same problem with aha152x pcmcia being built as a module.
+| >
+| > I also don't see any changes that would be causing this...
+| >
+| > It's clear that this problem should be detected, since
+| > scsi/qlogicfas.c and scsi/pcmcia/qlogic_stub.c both
+| > #include <linux/init.h>, so both of them define the module
+| > init and cleanup functions.  I don't see how this worked
+| > in the past, unless it was due to some tools that missed
+| > detecting the duplicated functions.
+| This change causes whole problem:
+|=20
+| diff -Naur -p -X /home/marcelo/lib/dontdiff linux-2.4.24/include/linu=
+x/spinlock.h linux-2.4.25-pre6/include/linux/spinlock.h
+| --- linux-2.4.24/include/linux/spinlock.h       2002-11-28 23:53:15.0=
+00000000 +0000
+| +++ linux-2.4.25-pre6/include/linux/spinlock.h  2004-01-16 12:20:45.0=
+00000000 +0000
+| @@ -3,6 +3,8 @@
+|=20
+|  #include <linux/config.h>
+|=20
+| +#include <asm/system.h>
+| +
+[snip]
 
-	Doesn't it seem odd that these seven disks all failed complaining
-about the same sector? All 28 disks eventually failed, some with the same
-sector errors. The machine hung when I tried to reboot it. Strange. 
+| The problem is because in 2.4.25pre6 we have
+| MODULE defined and
+| drivers/scsi/qlogicfas.c -> #include <linux/module.h>
+| include/linux/moduleh -> #include <linux/spinlock.h>
+| include/linux/spinlock.h -> #include <asm/system.h>
+| include/asm/system.h -> #include <linux/init.h>
+| as MODULE is defined then wrong functions are taken (we want these fo=
+r undefined MODULE to be taken later)
+| then back in drivers/scsi/qlogicfas.c
+|=20
+| #ifdef PCMCIA
+| #undef MODULE
+| #endif
+|=20
+| and again #include <linux/init.h> this time with MODULE undefined
 
-> For 2.6, why don't we start out with the default qla2xxx driver in
-> 2.6.2-rc1.  
+Thanks for finding/isolating that one...  wow.
 
-	I'm getting the same results with this combination as I did with
-2.6.1 before. I should point out that I am not waiting for the resink to
-start before trying to lay down a file system:
+Is reverting that change to include/linux/spinlock.h a possibility?
 
-# mkraid /dev/md0
-# mkraid /dev/md1
+If not, here's a patch that fixes 3 SCSI PCMCIA modules so that they
+will build in 2.4.25-pre6.  Not tested....
 
-	At this point I waited a few minutes, and both resync's cruised
-along. Everything was looking good, so I did a:
+Is it OK Not to include scsi_module.c for these PCMCIA modules?
+That's where the problem comes, and they don't use those functions
+AFAICT.
 
-# mkfs.ext3 /dev/md0
-mke2fs 1.32 (09-Nov-2002)
-Filesystem label=
-OS type: Linux
-Block size=4096 (log=2)
-Fragment size=4096 (log=2)
-26509312 inodes, 53014272 blocks
-2650713 blocks (5.00%) reserved for the super user
-First data block=0
-1618 block groups
-32768 blocks per group, 32768 fragments per group
-16384 inodes per group
-Superblock backups stored on blocks:
-        32768, 98304, 163840, 229376, 294912, 819200, 884736, 1605632,
-2654208,
-        4096000, 7962624, 11239424, 20480000, 23887872
+Comments?
 
-Writing inode tables:  120/1618
+--
+~Randy
+kernel-janitors project:  http://janitor.kernelnewbies.org/
 
-	At this point, the mkfs hung and the resync stopped. The status of
-md is:
 
-# cat /proc/mdstat
-Personalities : [raid5]
-md1 : active raid5 sdab1[13] sdaa1[12] sdz1[11] sdy1[10] sdx1[9] sdw1[8]
-sdv1[7] sdu1[6] sdt1[5] sds1[4] sdr1[3] sdq1[2] sdp1[1] sdo1[0]
-      212057088 blocks level 5, 64k chunk, algorithm 2 [13/13]
-[UUUUUUUUUUUUU]
-      [>....................]  resync =  3.6% (645636/17671424)
-finish=1271.7min speed=222K/sec
-md0 : active raid5 sdn1[13] sdm1[12] sdl1[11] sdk1[10] sdj1[9] sdi1[8]
-sdh1[7] sdg1[6] sdf1[5] sde1[4] sdd1[3] sdc1[2] sdb1[1] sda1[0]
-      212057088 blocks level 5, 64k chunk, algorithm 2 [13/13]
-[UUUUUUUUUUUUU]
-      [=>...................]  resync =  6.6% (1173248/17671424)
-finish=1381.3min speed=198K/sec
-unused devices: <none>
+description:	repair scsi/pcmcia modules so that they can build
+		by only including scsi_module.c for non-PCMCIA builds;
+		qlogicfas:  fix parameter type to scsi_unregister();
 
-	But the "finish" time is the only thing that changes, as it
-continually increases. I also see the following in dmesg:
+patch_name:	scsi_pcmcia_modules.patch
+product_versions: linux-2425-pre6
+maintainer:	Doug Ledford et al (dledford@redhat.com)
+		Juergen Fischer <fischer@norbit.de> (aha152x)
 
-md: using maximum available idle IO bandwith (but not more than 200000
-KB/sec) for reconstruction.
-md: using 128k window, over a total of 17671424 blocks.
-qla2100 0000:01:09.0: qla2xxx_eh_abort scsi(2:0:7:0):
-cmd_timeout_in_sec=0x1e.
-qla2100 0000:01:09.0: qla2xxx_eh_abort Exiting: status=Failed
-qla2100 0000:01:09.0: qla2xxx_eh_abort scsi(2:0:12:0):
-cmd_timeout_in_sec=0x1e.
-qla2100 0000:01:09.0: qla2xxx_eh_abort Exiting: status=Failed
-qla2100 0000:01:09.0: qla2xxx_eh_abort scsi(2:0:12:0):
-cmd_timeout_in_sec=0x1e.
-qla2100 0000:01:09.0: qla2xxx_eh_abort Exiting: status=Failed
-qla2100 0000:01:09.0: qla2xxx_eh_abort scsi(2:0:11:0):
-cmd_timeout_in_sec=0x1e.
-qla2100 0000:01:09.0: qla2xxx_eh_abort Exiting: status=Failed
-qla2100 0000:01:09.0: qla2xxx_eh_abort scsi(2:0:10:0):
-cmd_timeout_in_sec=0x1e.
-qla2100 0000:01:09.0: qla2xxx_eh_abort Exiting: status=Failed
+diffstat:=3D
+ drivers/scsi/aha152x.c   |   10 ++++++----
+ drivers/scsi/fdomain.c   |    2 ++
+ drivers/scsi/qlogicfas.c |   12 +++++++-----
+ 3 files changed, 15 insertions(+), 9 deletions(-)
 
-	Doing a simple collection of these error messages:
 
-# dmesg | grep scsi\( | cut -d: -f6 | sort -un | xargs
-0 1 2 3 4 5 6 7 8 9 10 11 12
-
-	So, all 13 disks in the first array (md0) are generating errors. I
-decided to try this again (after a reboot), without issuing the mkfs. I let
-the sync run and watched dmesg for strange errors. Here is a summary:
-
-md: using 128k window, over a total of 17671424 blocks.
-qla2100 0000:01:09.0: qla2xxx_eh_abort scsi(1:0:1:0):
-cmd_timeout_in_sec=0x1e.
-qla2100 0000:01:09.0: Performing ISP error recovery - ha= cd7b01c0.
-qla2100 0000:01:09.0: LIP reset occured (f8ef).
-qla2100 0000:01:09.0: LIP occured (f8ef).
-qla2100 0000:01:09.0: LOOP UP detected (1 Gbps).
-qla2100 0000:01:09.0: qla2xxx_eh_abort: cmd already done sp=00000000
-qla2100 0000:01:09.0: qla2xxx_eh_abort: cmd already done sp=00000000
-qla2100 0000:01:09.0: qla2xxx_eh_abort: cmd already done sp=00000000
-qla2100 0000:01:09.0: qla2xxx_eh_abort: cmd already done sp=00000000
-
-... Repeated ~150 times ...
-
-qla2100 0000:01:09.0: ISP System Error - mbx1=1935h mbx2=0h mbx3=8004h.
-qla2100 0000:01:09.0: Failed to dump firmware (256)!!!
-qla2100 0000:01:09.0: Performing ISP error recovery - ha= cd7b01c0.
-qla2100 0000:01:09.0: LIP reset occured (f8f7).
-qla2100 0000:01:09.0: LIP occured (f8f7).
-qla2100 0000:01:09.0: LOOP UP detected (1 Gbps).
-qla2100 0000:01:09.0: qla2xxx_eh_abort scsi(1:0:23:0):
-cmd_timeout_in_sec=0x1e.
-qla2100 0000:01:09.0: qla2xxx_eh_abort Exiting: status=Failed
-qla2100 0000:01:09.0: qla2xxx_eh_abort scsi(1:0:22:0):
-cmd_timeout_in_sec=0x1e.
-qla2100 0000:01:09.0: qla2xxx_eh_abort Exiting: status=Failed
-qla2100 0000:01:09.0: qla2xxx_eh_abort scsi(1:0:21:0):
-cmd_timeout_in_sec=0x1e.
-qla2100 0000:01:09.0: qla2xxx_eh_abort Exiting: status=Failed
-... Repeated lots ...
-
-	This time it failed all of the disks in md1, plus one from md0:
-
-# dmesg | grep '^qla2100.*scsi(' | cut -d: -f6 | sort -un | xargs
-1 4 14 15 16 17 18 19 20 21 22 23 24 25 26
-
-	Thoughts?
-
-Thanks for your help,
-
--poul
-
+diff -Naurp ./drivers/scsi/qlogicfas.c~pcmc_module ./drivers/scsi/qlogi=
+cfas.c
+--- ./drivers/scsi/qlogicfas.c~pcmc_module	2003-06-13 07:51:36.00000000=
+0 -0700
++++ ./drivers/scsi/qlogicfas.c	2004-01-22 15:09:51.000000000 -0800
+@@ -111,10 +111,6 @@
+=20
+ #include <linux/module.h>
+=20
+-#ifdef PCMCIA
+-#undef MODULE
+-#endif=20
+-
+ #include <linux/blk.h>	/* to get disk capacity */
+ #include <linux/kernel.h>
+ #include <linux/string.h>
+@@ -131,6 +127,10 @@
+ #include "qlogicfas.h"
+ #include <linux/stat.h>
+=20
++#ifdef PCMCIA
++#undef MODULE
++#endif=20
++
+ /*----------------------------------------------------------------*/
+ /* driver state info, local to driver */
+ static int	    qbase;	/* Port */
+@@ -647,7 +647,7 @@ host->proc_name =3D  "qlogicfas";
+ 	if(request_irq(qlirq, do_ql_ihandl, SA_SHIRQ, "qlogicfas", hreg) < 0)
+ #endif=09
+ 	{
+-		scsi_unregister(host);
++		scsi_unregister(hreg);
+ 		goto err_release_mem;
+ 	}
+ #endif
+@@ -717,7 +717,9 @@ const char	*qlogicfas_info(struct Scsi_H
+ }
+ MODULE_LICENSE("GPL");
+=20
++#ifndef PCMCIA
+ /* Eventually this will go into an include file, but this will be late=
+r */
+ static Scsi_Host_Template driver_template =3D QLOGICFAS;
+ #include "scsi_module.c"
++#endif
+=20
+diff -Naurp ./drivers/scsi/aha152x.c~pcmc_module ./drivers/scsi/aha152x=
+=2Ec
+--- ./drivers/scsi/aha152x.c~pcmc_module	2003-08-25 04:44:42.000000000 =
+-0700
++++ ./drivers/scsi/aha152x.c	2004-01-22 14:50:37.000000000 -0800
+@@ -222,10 +222,6 @@
+=20
+ #include <linux/module.h>
+=20
+-#if defined(PCMCIA)
+-#undef MODULE
+-#endif
+-
+ #include <linux/sched.h>
+ #include <asm/irq.h>
+ #include <asm/io.h>
+@@ -254,6 +250,10 @@
+=20
+ #include <scsi/scsicam.h>
+=20
++#if defined(PCMCIA)
++#undef MODULE
++#endif
++
+ /* DEFINES */
+=20
+ /* For PCMCIA cards, always use AUTOCONF */
+@@ -3951,7 +3951,9 @@ int aha152x_proc_info(char *buffer, char
+ 	return thislength < length ? thislength : length;
+ }
+=20
++#ifndef PCMCIA
+ /* Eventually this will go into an include file, but this will be late=
+r */
+ static Scsi_Host_Template driver_template =3D AHA152X;
+=20
+ #include "scsi_module.c"
++#endif
+diff -Naurp ./drivers/scsi/fdomain.c~pcmc_module ./drivers/scsi/fdomain=
+=2Ec
+--- ./drivers/scsi/fdomain.c~pcmc_module	2002-11-28 15:53:14.000000000 =
+-0800
++++ ./drivers/scsi/fdomain.c	2004-01-22 14:53:56.000000000 -0800
+@@ -2046,7 +2046,9 @@ int fdomain_16x0_release(struct Scsi_Hos
+=20
+ MODULE_LICENSE("GPL");
+=20
++#ifndef PCMCIA
+ /* Eventually this will go into an include file, but this will be late=
+r */
+ static Scsi_Host_Template driver_template =3D FDOMAIN_16X0;
+=20
+ #include "scsi_module.c"
++#endif
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
