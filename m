@@ -1,52 +1,51 @@
-From: Pat LaVarre <p.lavarre@ieee.org>
-Subject: [PATCH] udf_get_last_block decrement redundant maybe
-Date: 27 Jul 2004 14:44:47 -0600
+From: Rock Gordon <rockgordon@yahoo.com>
+Subject: WWN on FC LUN targets
+Date: Tue, 27 Jul 2004 13:55:11 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1090961087.4812.59.camel@patibmrh9>
+Message-ID: <20040727205512.24414.qmail@web41403.mail.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from email-out2.iomega.com ([147.178.1.83]:5102 "EHLO
-	email.iomega.com") by vger.kernel.org with ESMTP id S266631AbUG0UpK
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 27 Jul 2004 16:45:10 -0400
+Received: from web41403.mail.yahoo.com ([66.218.93.69]:15246 "HELO
+	web41403.mail.yahoo.com") by vger.kernel.org with SMTP
+	id S266646AbUG0UzM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 27 Jul 2004 16:55:12 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: Ben Fennema <bfennema@falcon.csc.calpoly.edu>
-Cc: linux-scsi@vger.kernel.org, linux_udf@hpesjro.fc.hp.com, Jens Axboe <axboe@suse.de>
+To: linux-scsi@vger.kernel.org
 
-Ben F:
+Hi,
 
-Please dis/agree the following is a small correction.  I ask because,
+I am looking at ways to find out particular WWN (world
+wide names) for SCSI target LUNs connected to HBAs or
+FC switches through either of the four modes available
+(P2P, Fabric, AL and Fabric-AL)
 
-I see ioctl CDROM_LAST_WRITTEN dynamically calls cdrom_get_last_written
-of drivers/cdrom/cdrom.c.
+Also, is there a programming interface to do this
+across all available hardware? If that's not possible,
+then other solutions are most welcome.
 
-I see cdrom_get_last_written gets its idea of max LBA from such places
-as the ti.last_rec_address, which is an LBA written, not the LBA beyond,
-i.e. is already the count of blocks written minus one, with no further
-decrement required.
+I want to be able to convert particular WWNs into
+local major/minor number combination for my datacenter
+SAN so that I can mount particular LUNs from any
+server without worrying about changes in the device
+naming conventions.
 
-I see removing the udf_get_last_block decrement lets udf_find_anchor(sb)
-work with an "AVDPs at  N-256,  N" UDF disc if only I also insert,
-beforehand:
+PS: can devfs solve this problem across a deployment
+of 128-port FC switche connected to about 50 storage
+LUNs (all FC-capable P2P linked RAID5 storage units)?
+(please note that hotplug and unplug activity goes on
+happening over the remaining nodes)
 
-        UDF_SB_LASTBLOCK(sb) = udf_get_last_block(sb);
+PS1: Please CC me since I'm not on the list (I wonder
+why :) )
 
-Pat LaVarre
-
-diff -urp -U 4 linux-2.6.8-rc2-bk2/fs/udf/lowlevel.c linux-2.6.8-rc2-bk5-pel/fs/udf/lowlevel.c
---- linux-2.6.8-rc2-bk2/fs/udf/lowlevel.c	2004-06-15 23:19:36.000000000 -0600
-+++ linux-2.6.8-rc2-bk5-pel/fs/udf/lowlevel.c	2004-07-27 13:39:01.876811232 -0600
-@@ -76,8 +76,8 @@ udf_get_last_block(struct super_block *s
- 	if (ioctl_by_bdev(bdev, CDROM_LAST_WRITTEN, (unsigned long) &lblock))
- 		lblock = bdev->bd_inode->i_size >> sb->s_blocksize_bits;
- 
- 	if (lblock)
--		return lblock - 1;
-+		return lblock;
- 	else
- 		return 0;
- }
+Thanks and regards,
+Rocky
 
 
+	
+		
+__________________________________
+Do you Yahoo!?
+New and Improved Yahoo! Mail - 100MB free storage!
+http://promotions.yahoo.com/new_mail 
