@@ -1,96 +1,126 @@
-From: "Suresh Kr N" <suresh@veritas.com>
-Subject: Adding a new FC disk to a linux host
-Date: Thu, 13 Feb 2003 01:48:14 +0530
+From: Luben Tuikov <luben@splentec.com>
+Subject: Re: [PATCH / RFC] scsi_error handler update. (1/4)
+Date: Wed, 12 Feb 2003 15:10:39 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <JOEEIMDPCNOOJCHLMKHMCEEPCKAA.suresh@veritas.com>
-References: <JOEEIMDPCNOOJCHLMKHMKEEKCKAA.suresh@veritas.com>
+Message-ID: <3E4AAA3F.8040002@splentec.com>
+References: <20030211081351.GA1368@beaverton.ibm.com> <3E492992.90502@splentec.com> <20030211172256.GC3164@beaverton.ibm.com> <3E494977.1070706@splentec.com> <3E495862.3050709@splentec.com> <20030211212048.GC1114@beaverton.ibm.com> <3E49698D.3030402@splentec.com> <20030211224119.A23149@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from vxindia.veritas.com (unverified) by mtvmime03.VERITAS.COM
- (Content Technologies SMTPRS 4.2.10) with ESMTP id <T605e4bbb910a891155930@mtvmime03.VERITAS.COM> for <linux-scsi@vger.kernel.org>;
- Wed, 12 Feb 2003 11:54:41 -0800
-Received: from floyd (floyd.vxindia.veritas.com [10.212.96.111])
-	by vxindia.veritas.com (8.11.6+Sun/8.9.3) with SMTP id h1CJsTr25410
-	for <linux-scsi@vger.kernel.org>; Thu, 13 Feb 2003 01:24:29 +0530 (IST)
-In-Reply-To: <JOEEIMDPCNOOJCHLMKHMKEEKCKAA.suresh@veritas.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Mike Anderson <andmike@us.ibm.com>, linux-scsi@vger.kernel.org
 
+Christoph Hellwig wrote:
+> On Tue, Feb 11, 2003 at 04:22:21PM -0500, Luben Tuikov wrote:
+> 
+>>:-)  yes, I know -- I was just saying that I don't like this policy
+>>that much.
+>>
+>>It's an oxymoronic to grab a spin lock and say to someone, ok
+>>you can sleep, and then release the spin lock...
+> 
+> 
+> Agreed.  One of the things we really need to do is to change the calling
+> conventions of the eh methods to not have the lock held on entry.
+> 
+> I just wonder how we can archive that best without silently breaking
+> drivers.
 
-sorry about the wrong thread name in the previous post. updated now
+First we have to figure out *what* is the purpose of having the lock
+held before calling eh_* functions.  Is it protecting the driver
+from something or is it protecting SCSI Core?
 
+Since the point of having a thread eh is to *sleep*, then why
+grab the lock...
 
-hi everyone
+(Needless to say in my own LLDDs I *never* need this lock -- all
+eh_* and queuecommand() are completely re-entrant.)
 
-I am working on a san management application for a linux. My application
-sends zoning commands to the fabric to zone in a disk to a host ,  so i need
-to have that disk acessible to the host without a reboot of the host.
+That is, eh_* functions of a LLDD should be re-entrant.
 
-I need to do this from the user space. Is there a way to ask the scsi
-midlayer for a rescan ?
-In solaris , i invoke a command called "drvconfig" to achieve this.
+While we are this I'd like to give this idea to you, which I've
+mentioned before (this will be kind of more formal):
 
-I have seen in the linux-scsi archive that this is kind of possible,  but
-the discussion didnt seem to state how.
-I am attaching the above thread here in the mail.
+Proposal A: Let's make queuecommand() be void queuecommand().
 
-I have verified that echo "scsi add-single-device a b c d" > /proc/scsi/scsi
-works fine . But this does involve parameters which cant be found out
-programmatically.
+This will accomplish the following:
+	- the only way SCSI Core gives ownership of a scsi command
+	structure to a LLDD is by calling queuecommand() -- which
+	is currently the case as well.
 
-Also a side question here :In a FC world, to get the target number for above
-command , can i find out the current maximum target number of the scsi
-devices, and increase it by one ? or  does the FC devices have actually a
-preknown target no , which would be collected by the FC card driver ?
+	- the only way a LLDD gives ownership back to SCSI Core is
+	by calling scsi_done(), and let there be *no* other way.
 
-Could someone please help ? ( even a "non-standard" way should be good
-enough" )
+I completely detest the current dualist approach of also checking
+the return value of queuecommand().
 
-Thanks
-Suresh
+This will warrant the addition of the old res = queuecommand()
+result variable, into the scsi command structure.
 
+Now we can call this member ``service_response'' and this will
+be the Service Response of the Service Delivery Subsystem, aka
+Low Level Device Driver (LLDD). ((FC folks should back me up here.))
 
+And ``result'' could become ``status''.
 
---------------------------------------------------------
-Message 2 in thread
-From: Alan Cox (alan@lxorguk.ukuu.org.uk)
-Subject: Re: Hot plugging a disk in runtime
-View this article only
-Newsgroups: mlist.linux.scsi
-Date: 2002-05-20 05:32:38 PST
+Both of the above are in par with SAM-2/3.
 
+This will accomplish the fact that there'd be only one place
+where a command is returned to SCSI Core from a LLDD, specifically
+in the scsi softirq.  I.e. the queueing method as far as LLDDs
+are concerned is clearly defined.
 
-> 1.. How is it possible to signal SCSI mid-layer (or other layers) of a
-> presence of a newly hot-plugged disk ?
+Then SCSI Core can get more inventful in its own queuing techinques.
 
-aacraid is one example that does this, but via its config tools.
+I think that the above proposal can go into 2.5, with a little
+(minimal) tweaking of LLDDs and SCSI Core.
 
-> 2.. Can an adapter's device driver trigger SCSI subsystem to scan
-> channels for new LUNs / Targets ?
+As to the eh_* routines:  The current naming technique follws SPI,
+which is now out of SAM and SPC.  Furthermore newer SCSI devices,
+not necessarily on a parallel interface, do not define bus_reset,
+host_reset and sometimes device_reset, because it is not
+always clear what is the device or host or bus...
 
-It is designed so user space can do so - so yes
+Proposal B: let the eh_* become tmf_* where TMF is
+Task Management Functions.  Those are from SAM-2/3 (all re-entrant):
 
-> 3.. Is this can be handled in a kernel level ? is there a user space
-> application that can be triggered to start scanning adapters (obviously
-> through SCSI subsystem) and registering new LUNs / Targets etc... ?
+int tmf_abort_task(scsi command pointer);
+	aborts the task sent from this initiator port,
+	the LLDD will determine the initiator port.
+int tmf_abort_task_set(target, lun);
+	aborts all tasks sent from this initiator port,
+	like sending multiple tmf_abort_task(...).
+int tmf_clear_aca(target, lun);
+int tmf_clear_task_set(target, lun);
+int tmf_lun_reset(target, lun);
+int tmf_query_task(scsi command struct);
+int tmf_target_reset(target);
+int tmf_wakeup(target);
 
-echo "scsi-add-single-device a b c d" /proc/scsi/scsi
+Some of those are optional and depend on the functionality of the
+device. Others depend on the transport.
 
-if I remember it right
+The result of the function is the service response which is one of:
+{ TMF_COMPLETE, TMF_SUCC, TMF_REJ } and Service delivery or target failiure.
 
+I think that this framework will also be very convenient for the USB
+people, since they will not define all of those, but the ones they will
+define, they can map easily to their own USB infrastructure.
 
-entire thread is at
+``target'' is a target identifier (type not known at this point).
+``lun'' is a 64 bit quantity.
 
-http://groups.google.com/groups?hl=en&lr=&ie=UTF-8&threadm=linux.scsi.200205
-201420.g4KEK3x01892%40localhost.localdomain&rnum=7&prev=/groups%3Fq%3Dhot%2B
-plug%2B%2BSCSI%2Bfibre-channel%2BLinux%26hl%3Den%26lr%3D%26ie%3DUTF-8%26selm
-%3Dlinux.scsi.200205201420.g4KEK3x01892%2540localhost.localdomain%26rnum%3D7
+All those methods are to be re-entrant and a command could be cancelled
+all the while the LLDD continues to process commands.  (I've done
+this myself.)  This would warrant a bit different queueing technique
+in SCSI Core but slowly we're getting there.
 
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Maybe this is 2.7 stuff, but as long as ideas are popping up, we're doing
+okay.
+
+-- 
+Luben
+
 
