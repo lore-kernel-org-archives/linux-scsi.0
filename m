@@ -1,66 +1,87 @@
-From: Tobias Lieber <little.tobias@gmx.de>
-Subject: Patch for iriver-mp3player
-Date: Sun, 30 May 2004 01:42:55 +0200
+From: Doug Ledford <dledford@redhat.com>
+Subject: Re: iowait problems on 2.6, not on 2.4
+Date: Sat, 29 May 2004 20:46:31 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040530014255.3876eea3.little.tobias@gmx.de>
+Message-ID: <1085877991.18642.336.camel@compaq.xsintricity.com>
+References: <200405261743.28111.antlarr@tedial.com>
+	 <20040526205225.7a0866aa.akpm@osdl.org>
+	 <200405281516.41901.antlarr@tedial.com>
+	 <20040528154525.6ed5f7b9.akpm@osdl.org>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="Multipart=_Sun__30_May_2004_01_42_55_+0200_UenZ84/HHprINkvQ"
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pop.gmx.de ([213.165.64.20]:38547 "HELO mail.gmx.net")
-	by vger.kernel.org with SMTP id S261206AbUE2XnV (ORCPT
+Received: from mx1.redhat.com ([66.187.233.31]:17814 "EHLO mx1.redhat.com")
+	by vger.kernel.org with ESMTP id S261358AbUE3AsF (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 29 May 2004 19:43:21 -0400
+	Sat, 29 May 2004 20:48:05 -0400
+In-Reply-To: <20040528154525.6ed5f7b9.akpm@osdl.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Andrew Morton <akpm@osdl.org>
+Cc: Antonio Larrosa =?ISO-8859-1?Q?Jim=E9nez?= <antlarr@tedial.com>, linux-kernel@vger.kernel.org, linux-scsi mailing list <linux-scsi@vger.kernel.org>
 
-This is a multi-part message in MIME format.
+On Fri, 2004-05-28 at 18:45, Andrew Morton wrote:
+> Antonio Larrosa Jim=C3=A9nez <antlarr@tedial.com> wrote:
+> >
+> > On Thursday 27 May 2004 05:52, you wrote:
+> > > Antonio Larrosa Jim=C3=A9nez <antlarr@tedial.com> wrote:
+> > > > My next test will be to do the "dd tests" on one of the interna=
+l hard
+> > > > disks and use it for the data instead of the external raid.
+> > >
+> > > That's a logical next step.  The reduced read bandwith on the rai=
+d array
+> > > should be fixed up before we can go any further.  I don't recall =
+any
+> > > reports of qlogic fc-scsi performance regressions though.
+> >=20
+> > Ok, let's analyze that first.
+> >=20
+> > The dd tests gave the following results:
+>=20
+> Let me cc linux-scsi.
+>=20
+> Guys: poke.  Does anyone know why this:
+>=20
+>   The machine is a 4 cpu Pentium III (Cascades) system with four SCSI
+>   SEAGATE ST336704 hard disks connected to an Adaptec AIC-7899P U160/=
+m, and
+>   a external RAID connected to a QLA2200/QLA2xxx FC-SCSI Host Bus Ada=
+pter.=20
+>   The machine has 1Gb RAM.
+>=20
+> got all slow at reads?
 
---Multipart=_Sun__30_May_2004_01_42_55_+0200_UenZ84/HHprINkvQ
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+My first guess would be read ahead values.  Try poking around with
+those.  When using a hard disk vs. a raid array, it's easier to trigger
+firmware read ahead since all reads go to a single physical device and
+that in turn compensates for lack of reasonable OS read ahead.  On a
+raid array, depending on the vendor, there may be next to no firmware
+initiated read ahead and that can drastically reduce read performance o=
+n
+sequential reads.
 
-Hi
 
-i Javier Marcet wrote in January 2004 a patch for linux-2.6.3, to make a i-River-mp3-Player mounting. It was on lkml: http://lkml.org/lkml/2004/1/6/170
-i was suprised, that it was not in the kernel, and no other soulution, too. So i read his patch for getting mouted the player, and rewrote it for linux-2.6.7-rc1-bk7. I attached it. It would be nice, if it would be possible mounting the mp3-player without patching the Kernel, so i would greet it, if this or an other solution woulg com into the Kernel.
+> > So yes, I suppose there's a regression on the qlogic fc-scsi module=
+=2E
 
-greetings
+A regression, yes.  In the qlogic-fc driver?  I doubt it.  Performance
+tuning is what I think this basically boils down to.
 
-Tobias Lieber
+But, I could be wrong.  Give it a try and see what happens.  In the 2.4
+kernels I would tell you to tweak /proc/sys/vm/{min,max}-readahead,
+don't know if those two knobs still exist in 2.6 and if they have the
+same effect.  Andrew?
 
---Multipart=_Sun__30_May_2004_01_42_55_+0200_UenZ84/HHprINkvQ
-Content-Type: application/octet-stream;
- name="patch-iriver"
-Content-Disposition: attachment;
- filename="patch-iriver"
-Content-Transfer-Encoding: base64
+--=20
+  Doug Ledford <dledford@redhat.com>     919-754-3700 x44233
+         Red Hat, Inc.
+         1801 Varsity Dr.
+         Raleigh, NC 27606
 
-LS0tIGxpbnV4LTIuNi42L2luY2x1ZGUvc2NzaS9zY3NpX2RldmluZm8uaAkyMDA0LTA1LTMwIDAw
-OjEyOjEwLjA1MDc0NjY5NiArMDIwMAorKysgbGludXhfcGF0Y2hlZC9pbmNsdWRlL3Njc2kvc2Nz
-aV9kZXZpbmZvLmgJMjAwNC0wNS0zMCAwMDoxOToyMy44OTg3OTE3NjggKzAyMDAKQEAgLTI0LDQg
-KzI0LDUgQEAKICNkZWZpbmUgQkxJU1RfUkVQT1JUTFVOMgkweDIwMDAwCS8qIHRyeSBSRVBPUlRf
-TFVOUyBldmVuIGZvciBTQ1NJLTIgZGV2cwogIAkJCQkJICAgKGlmIEhCQSBzdXBwb3J0cyBtb3Jl
-IHRoYW4gOCBMVU5zKSAqLwogI2RlZmluZSBCTElTVF9OT1JFUE9SVExVTgkweDQwMDAwCS8qIGRv
-bid0IHRyeSBSRVBPUlRfTFVOUyBzY2FuIChTQ1NJLTMgZGV2cykgKi8KKyNkZWZpbmUgQkxJU1Rf
-Tk9STUIgICAgICAgICAgICAgMHg4MDAwMCAvKiBLbm93biB0byBiZSBub3QgcmVtb3ZhYmxlKi8K
-ICNlbmRpZgotLS0gbGludXgtMi42LjYvZHJpdmVycy9zY3NpL3Njc2lfZGV2aW5mby5jCTIwMDQt
-MDUtMTAgMDQ6MzI6MjcuMDAwMDAwMDAwICswMjAwCisrKyBsaW51eF9wYXRjaGVkL2RyaXZlcnMv
-c2NzaS9zY3NpX2RldmluZm8uYwkyMDA0LTA1LTMwIDAwOjE0OjAwLjM4Mjk3MzY0OCArMDIwMApA
-QCAtMTgzLDYgKzE4Myw3IEBACiAJeyJUT1NISUJBIiwgIkNEUk9NIiwgTlVMTCwgQkxJU1RfSVNS
-T019LAogCXsiVE9TSElCQSIsICJDRC1ST00iLCBOVUxMLCBCTElTVF9JU1JPTX0sCiAJeyJYWVJB
-VEVYIiwgIlJTIiwgIioiLCBCTElTVF9TUEFSU0VMVU4gfCBCTElTVF9MQVJHRUxVTn0sCisgICAg
-ICAgIHsiaVJpdmVyIiwgImlGUCBNYXNzIERyaXZlciIsIE5VTEwsIEJMSVNUX05PUk1CfSwKIAl7
-Ilp6eXp4IiwgIlJvY2tldFN0b3IgNTAwUyIsIE5VTEwsIEJMSVNUX1NQQVJTRUxVTn0sCiAJeyJa
-enl6eCIsICJSb2NrZXRTdG9yIDIwMDAiLCBOVUxMLCBCTElTVF9TUEFSU0VMVU59LAogCXsgTlVM
-TCwgTlVMTCwgTlVMTCwgMCB9LAotLS0gbGludXgtMi42LjYvZHJpdmVycy9zY3NpL3Njc2lfc2Nh
-bi5jCTIwMDQtMDUtMzAgMDA6MTI6MDcuOTExMDcxOTc2ICswMjAwCisrKyBsaW51eF9wYXRjaGVk
-L2RyaXZlcnMvc2NzaS9zY3NpX3NjYW4uYwkyMDA0LTA1LTMwIDAwOjE4OjMwLjY5NDg3OTk5MiAr
-MDIwMApAQCAtNTY1LDcgKzU2NSw3IEBACiAJICovIAogCiAJc2Rldi0+aW5xX3BlcmlwaF9xdWFs
-ID0gKGlucV9yZXN1bHRbMF0gPj4gNSkgJiA3OwotCXNkZXYtPnJlbW92YWJsZSA9ICgweDgwICYg
-aW5xX3Jlc3VsdFsxXSkgPj4gNzsKKwlzZGV2LT5yZW1vdmFibGUgPSAoKCgweDgwICYgaW5xX3Jl
-c3VsdFsxXSkgPj4gNykgJiYgISgqYmZsYWdzICZCTElTVF9OT1JNQikpOwogCXNkZXYtPmxvY2th
-YmxlID0gc2Rldi0+cmVtb3ZhYmxlOwogCXNkZXYtPnNvZnRfcmVzZXQgPSAoaW5xX3Jlc3VsdFs3
-XSAmIDEpICYmICgoaW5xX3Jlc3VsdFszXSAmIDcpID09IDIpOwogCg==
 
---Multipart=_Sun__30_May_2004_01_42_55_+0200_UenZ84/HHprINkvQ--
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
