@@ -1,150 +1,64 @@
-From: "Tomita, Haruo" <haruo.tomita@toshiba.co.jp>
-Subject: usb-starge not working in the latest kernel 2.4
-Date: Fri, 29 Aug 2003 10:42:01 +0900
+From: christophe.varoqui@free.fr
+Subject: Re: storageworks controlers & linux-scsi
+Date: Fri, 29 Aug 2003 12:25:46 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <200308290143.KAA00294@toshiba.co.jp>
+Message-ID: <1062152746.3f4f2a2ab5f3e@impt1-2.free.fr>
+References: <1061816116.3f4a073487d64@impt3-1.free.fr> <1061999793.1660.8.camel@mulgrave> <20030828013706.45760cb5.christophe.varoqui@free.fr> <20030828130626.A15749@beaverton.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="shift_jis"
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from inet-tsb.toshiba.co.jp ([202.33.96.40]:25545 "EHLO
-	inet-tsb.toshiba.co.jp") by vger.kernel.org with ESMTP
-	id S263893AbTH2BnY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 28 Aug 2003 21:43:24 -0400
+Received: from postfix4-2.free.fr ([213.228.0.176]:32465 "EHLO
+	postfix4-2.free.fr") by vger.kernel.org with ESMTP id S264500AbTH2KZw
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 29 Aug 2003 06:25:52 -0400
+In-Reply-To: <20030828130626.A15749@beaverton.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: USB development list <linux-usb-devel@lists.sourceforge.net>, SCSI development list <linux-scsi@vger.kernel.org>, David Brownell <david-b@pacbell.net>, "Tomita, Haruo" <htomita@pcs.pc.ome.toshiba.co.jp>
+To: Patrick Mansfield <patmans@us.ibm.com>
+Cc: James Bottomley <James.Bottomley@steeleye.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-Dear Alan,
+Selon Patrick Mansfield <patmans@us.ibm.com>:
 
-I've tested usb-storage with the 2.6.0-test2-bk2 kernel version,
-It seems that 2.6 kernel version is stable. 
-However, 2.4 version is unstable.
+> On Thu, Aug 28, 2003 at 01:37:06AM +0200, christophe varoqui wrote:
+> > 
+> > I leave for a 2 week vacation, but if the HSV LUNs handling is turned to a
+> usable state I'll be able to post a GPL C agent to handle DM multipath
+> autoconfig & reconfig on event (through VPD 0x83 for wwid detection and TUR
+> for ghosts detection) in  about 3 weeks. In hope there will interest to move
+> it to a broader use.
+> > 
+> 
+> Hi -
+> 
+> Is that a 2.4 solution?
+it initialy is.
+2.6 support will be easy to add, as we don't have to mess with /dev/sg* anymore.
 
-The host  controller mPD270100 of NEC and VT6202 of VIA.
-When it tested in a high speed multihub, it operated about two weeks. 
-However, it became the following errors when the number of devices was one.
-I think that it is not failure of a device.
-Is it the problem of error handling?
+> 
+> I was starting to work on a hotplug interface to get and store scsi wwid's
+> or serial numbers for use with 2.6.
+> 
+good
 
-This error was generated in the latest kernel 2.4.22.
+> We need a method that would (ideally) work for all users, so we: don't
+> hang broken devices, can use other pages (0x80), can use vendor
+> specific methods, and works for udev or multipath config tools.
+> 
+> We need a black/white list (or config file) for the broken or special
+> devices.
+>
+Speaking of blacklists, the kernel lists could be fed in early userspace and 
+thus tweaked at run-time. Didn't Linus search for initramfs uses ? :)
 
-usb-storage: usb_stor_transfer_partial(): xfer 2048 bytes
-usb-storage: usb_stor_bulk_msg() returned 0 xferred 2048/2048
-usb-storage: usb_stor_transfer_partial(): transfer complete
-usb-storage: Bulk data transfer result 0x0
-usb-storage: Attempting to get CSW...
-usb-storage: Bulk status result = 0
-usb-storage: Bulk status Sig 0x53425355 T 0x7862f6 R 0 Stat 0x0
-usb-storage: scsi cmd done, result=0x0
-usb-storage: *** thread sleeping.
-usb-storage: queuecommand() called
-usb-storage: *** thread awakened.
-usb-storage: Command READ_10 (10 bytes)
-usb-storage: 28 00 00 02 e5 23 00 00 01 00 00 00
-usb-storage: Bulk command S 0x43425355 T 0x7862f7 Trg 0 LUN 0 L 2048 F 128 CL 12
-usb-storage: Bulk command transfer result=0
-usb-storage: usb_stor_transfer_partial(): xfer 2048 bytes
-usb-storage: usb_stor_bulk_msg() returned 0 xferred 2048/2048
-usb-storage: usb_stor_transfer_partial(): transfer complete
-usb-storage: Bulk data transfer result 0x0
-usb-storage: Attempting to get CSW...
-usb-storage: Bulk status result = 0
-usb-storage: Bulk status Sig 0x53425355 T 0x7862f7 R 0 Stat 0x0
-usb-storage: scsi cmd done, result=0x0
-usb-storage: *** thread sleeping.
-usb-storage: queuecommand() called
-usb-storage: *** thread awakened.
-usb-storage: Command READ_10 (10 bytes)
-usb-storage: 28 00 00 02 e5 24 00 00 3f 00 00 00
-usb-storage: Bulk command S 0x43425355 T 0x7862f8 Trg 0 LUN 0 L 129024 F 128 CL 12
-usb-storage: command_abort() called
-usb-storage: Bulk command transfer result=-104
-usb-storage: -- transport indicates command was aborted
-usb-storage: Bulk reset requested
-usb_control/bulk_msg: timeout
-usb-storage: Bulk soft reset failed -110
-usb-storage: scsi command aborted
-usb-storage: *** thread sleeping.
-usb-storage: queuecommand() called
-usb-storage: *** thread awakened.
-usb-storage: Command TEST_UNIT_READY (6 bytes)
-usb-storage: 00 00 00 00 00 00 00 00 3f 00 00 00
-usb-storage: Bulk command S 0x43425355 T 0x7862f9 Trg 0 LUN 0 L 0 F 0 CL 12
-usb-storage: Bulk command transfer result=0
-usb-storage: Attempting to get CSW...
-usb-storage: command_abort() called
-usb-storage: -- transport indicates command was aborted
-usb-storage: Bulk reset requested
-usb_control/bulk_msg: timeout
-usb-storage: Bulk soft reset failed -110
-usb-storage: scsi command aborted
-usb-storage: *** thread sleeping.
-usb-storage: device_reset() called
-usb-storage: Bulk reset requested
-usb_control/bulk_msg: timeout
-usb-storage: Bulk soft reset failed -110
-usb-storage: bus_reset() called
-hub.c: port 1, portstatus 511, change 0, 480 Mb/s
-hub.c: port 1 of hub 1 not reset yet, waiting 10ms
-hub.c: port 1, portstatus 511, change 0, 480 Mb/s
-hub.c: port 1 of hub 1 not reset yet, waiting 10ms
-ehci_hcd 00:0c.2: port 1 high speed
-ehci_hcd 00:0c.2: GetStatus port 1 status 001005 POWER sig=se0  PE CONNECT
-hub.c: port 1, portstatus 503, change 10, 480 Mb/s
-ehci_hcd 00:0c.2: devpath 1 ep0out 3strikes
-hub.c: USB device not accepting new address (error=-71)
-ehci_hcd 00:0c.2: GetStatus port 1 status 001803 POWER sig=j  CSC CONNECT
-hub.c: port 1, portstatus 501, change 1, 480 Mb/s
-hub.c: port 1 connection change
-hub.c: port 1, portstatus 501, change 1, 480 Mb/s
-usb.c: USB disconnect on device 00:0c.2-1 address 2
-usb-storage: storage_disconnect() called
-usb-storage: -- releasing main URB
-usb-storage: -- usb_unlink_urb() returned -19
-usb.c: kusbd: /sbin/hotplug remove 2
-ehci_hcd 00:0c.2: free_config 1 devnum 2
-hub.c: port 1, portstatus 501, change 0, 480 Mb/s
-hub.c: port 1, portstatus 501, change 0, 480 Mb/s
-hub.c: port 1, portstatus 501, change 0, 480 Mb/s
-hub.c: port 1, portstatus 501, change 0, 480 Mb/s
-hub.c: port 1, portstatus 511, change 0, 480 Mb/s
-hub.c: port 1 of hub 1 not reset yet, waiting 10ms
-hub.c: port 1, portstatus 511, change 0, 480 Mb/s
-hub.c: port 1 of hub 1 not reset yet, waiting 10ms
-ehci_hcd 00:0c.2: port 1 high speed
-ehci_hcd 00:0c.2: GetStatus port 1 status 001005 POWER sig=se0  PE CONNECT
-hub.c: port 1, portstatus 503, change 10, 480 Mb/s
-hub.c: new USB device 00:0c.2-1, assigned address 3
-usb.c: kmalloc IF dfe6d960, numif 1
-usb.c: new device strings: Mfr=73, Product=87, SerialNumber=107
-usb.c: USB device number 3 default language ID 0x409
-Manufacturer: Plextor Corp.
-Product: USB Storage Adapter
-SerialNumber: 11100E000052487C
-usb-storage: act_altsettting is 0
-usb-storage: id_index calculated to be: 92
-usb-storage: Array length appears to be: 98
-usb-storage: USB Mass Storage device detected
-usb-storage: Endpoints: In: 0xdfe641f4 Out: 0xdfe641e0 Int: 0xdfe64208 (Period 9)
-usb-storage: Found existing GUID 093b001211100e000052487c
-WARNING: USB Mass Storage data integrity not assured
-USB Mass Storage device found at 3
-usb.c: usb-storage driver claimed interface dfe6d960
-usb.c: kusbd: /sbin/hotplug add 3
-hub.c: port 2, portstatus 100, change 0, 12 Mb/s
-hub.c: port 3, portstatus 100, change 0, 12 Mb/s
-hub.c: port 4, portstatus 100, change 0, 12 Mb/s
-usb-storage: host_reset() requested but not implemented
-scsi: device set offline - command error recover failed: host 0 channel 0 id 0 lun 0
-SCSI cdrom error : host 0 channel 0 id 0 lun 0 return code = 6050000
- I/O error: dev 0b:00, sector 758928
- I/O error: dev 0b:00, sector 758932
- I/O error: dev 0b:00, sector 759180
- I/O error: dev 0b:00, sector 758928
- 
-P.S.
-Please teach me how to analyze the root cause of this isseu.
+While I'm in the wish list, it would be good to 
+have 'cat /sys/bus/scsi/...../tur' trigger a TUR and echo the result.
 
-Regards,
-Haruo
+> Have you seen the libsysfs/udev code? We can use libsysfs for common
+> interfaces to get/set a scsi serial number, and for other common uses of
+> sysfs such as getting the bus_id, or figuring out if we have a scsi
+> device.
+> 
+yes, will do. Thanks for the feedback and hints
+
+regards,
+cvaroqui
