@@ -1,48 +1,27 @@
-From: Matthew Wilcox <willy@debian.org>
+From: Arjan van de Ven <arjanv@redhat.com>
 Subject: Re: [ANNOUNCE] QLogic qla2xxx driver update available (v8.00.00b6).
-Date: Thu, 6 Nov 2003 17:53:06 +0000
+Date: Thu, 6 Nov 2003 18:55:11 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20031106175306.GG26869@parcelfarce.linux.theplanet.co.uk>
-References: <B179AE41C1147041AA1121F44614F0B060ED69@AVEXCH02.qlogic.org>
+Message-ID: <20031106185511.C15403@devserv.devel.redhat.com>
+References: <B179AE41C1147041AA1121F44614F0B0598CE5@AVEXCH02.qlogic.org> <20031106171409.GN437@suse.de> <1068140592.5234.8.camel@laptop.fenrus.com> <20031106175032.GO437@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:27016 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S263800AbTKFRxH
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 6 Nov 2003 12:53:07 -0500
+Received: from pix-525-pool.redhat.com ([66.187.233.200]:46013 "EHLO
+	devserv.devel.redhat.com") by vger.kernel.org with ESMTP
+	id S263816AbTKFRzc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 6 Nov 2003 12:55:32 -0500
 Content-Disposition: inline
-In-Reply-To: <B179AE41C1147041AA1121F44614F0B060ED69@AVEXCH02.qlogic.org>
+In-Reply-To: <20031106175032.GO437@suse.de>; from axboe@suse.de on Thu, Nov 06, 2003 at 06:50:32PM +0100
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Linux-Kernel <linux-kernel@vger.kernel.org>, Linux-SCSI <linux-scsi@vger.kernel.org>
+To: Jens Axboe <axboe@suse.de>
+Cc: Arjan van de Ven <arjanv@redhat.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>, Mike Anderson <andmike@us.ibm.com>, Linux-Kernel <linux-kernel@vger.kernel.org>, Linux-SCSI <linux-scsi@vger.kernel.org>
 
-On Thu, Nov 06, 2003 at 09:02:28AM -0800, Andrew Vasquez wrote:
-> Hmm, looking through your email from July 18th, I note three main
-> objections that have not been addressed:
-> 
-> 	o Build process -- (three module interface for the ISPs), I
-> 	  personally like the idea of a shared library module used
-> 	  between the different ISP drivers.  Many others have voiced
-> 	  their frustrations with the single driver-binary for each
-> 	  ISP type that the directive from management is to have a
-> 	  single binary for all *future* products including the 
-> 	  ISP23xx (ISP2300/ISP2310/ISP2312/ISP2322) chips.
-> 
-> 	  That unfortunately leaves ISP2100 and ISP2200 on the
-> 	  periphery of development efforts.
 
-I wouldn't see a problem with having a structure like this:
+On Thu, Nov 06, 2003 at 06:50:32PM +0100, Jens Axboe wrote:
+> drive it is not). Now both 2.4 and 2.6 make that guarentee. The only
+> argument for disabling clustering would be for 2.4 for CPU cycle
+> reasons.
 
-ql2100.c
-ql2200.c
-ql23xx.c
-qllib.c
-
-and linking in whichever files are selected.  But you definitely only want
-to build qllib.c once.
-
--- 
-"It's not Hollywood.  War is real, war is primarily not about defeat or
-victory, it is about death.  I've seen thousands and thousands of dead bodies.
-Do you think I want to have an academic debate on this subject?" -- Robert Fisk
+yep; on 2.4 it's rather visible in the profiles during some benchmark
+test I did (like 5% of total CPU cycles)
