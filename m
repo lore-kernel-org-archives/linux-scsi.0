@@ -1,54 +1,112 @@
-From: Doug Ledford <dledford@redhat.com>
-Subject: Re: urgent SCSI help please
-Date: Wed, 01 Oct 2003 01:38:45 -0400
+From: jd <jpd_hp_linux_scsi@yahoo.com>
+Subject: Re: 1st  REVIEW : UNH iSCSI for 2.6-test5 - Questions
+Date: Wed, 1 Oct 2003 12:19:31 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1064986725.3839.106.camel@compaq.xsintricity.com>
-References: <BAY2-F170FSZDhd2stb00001311@hotmail.com>
+Message-ID: <20031001191931.55234.qmail@web60202.mail.yahoo.com>
+References: <20030925091949.A6827@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pix-525-pool.redhat.com ([66.187.233.200]:21295 "EHLO
-	lacrosse.corp.redhat.com") by vger.kernel.org with ESMTP
-	id S261958AbTJAFjF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 1 Oct 2003 01:39:05 -0400
-In-Reply-To: <BAY2-F170FSZDhd2stb00001311@hotmail.com>
+Received: from web60202.mail.yahoo.com ([216.109.118.97]:65426 "HELO
+	web60202.mail.yahoo.com") by vger.kernel.org with SMTP
+	id S262161AbTJATTc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 1 Oct 2003 15:19:32 -0400
+In-Reply-To: <20030925091949.A6827@infradead.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Stepan Novotill <snovotill@hotmail.com>
+To: Christoph Hellwig <hch@infradead.org>
 Cc: linux-scsi@vger.kernel.org
 
-On Wed, 2003-10-01 at 00:50, Stepan Novotill wrote:
-> What does this mean in /var/log/messages when I read data from DTF2 tapes?
+
+See below ...
+--- Christoph Hellwig <hch@infradead.org> wrote:
+> More comments:
 > 
-> kernel: sym53c875-1-<5,*>: FAST-20 WIDE SCSI 40.0 MB/s (50.0 ns, offset 8)
-> last message repeated 11706 times
-> last message repeated 9539 times
+>  - unh_iscsi/security should really go away.  We have a nice crypto
+> API
+>    in 2.6 and late 2.4, but authentification really shouldn't be done
+>    in kernelspace anyway.
+
+    We're in the process of reviewing that API.
+
+>  - kill iscsi_device.c.  A scsi LLDD has no business messing with
+> device
+>    nodes..
+  DONE .. We never used it anyway .
+>  - you're comment style is strange.  In kernel code we tend to use
 > 
-> Ive swapped out everything including all SCSI components, kernel versions, 
-> drivers, everything.
+> /*
+>  * Foo, blah
+>  * baz..
+>  */
+> 
+> not
+> 
+> /*
+> 
+> */
+> 
 
-It means that your driver and the tape drive are constantly performing
-speed negotiations.  Some drivers don't like it when the device
-initiates speed negotiations (I'm not claiming that the sym drivers is
-one of those, just that some don't).  However, I wouldn't be suprised if
-the driver is accepting incoming negotiations, but then also initiating
-a new negotiation cycle itself (I don't know this to be the case, but it
-wouldn't suprise me too much).  Maybe that would cause your tape drive
-to reissue it's negotiation.  Which would cause the driver to reissue
-its negotiation.  Anyway, one thing to check is try making sure that the
-tape drive isn't initiating speed negotiations.  It usually doesn't help
-at all, and in some cases causes problems for drivers, so best to just
-leave it off.  A lot of devices have a jumper or dip switch somewhere
-that allows you to disable this.  The manuals usually call it Target
-Initiated SDTR or Target Ininitiated Negotiation or something similar to
-that.
+  Multiple authors tend to use different comment styles.
+  We've been using more of the standard style recently.
+> but that's just a minor nitpick.
+> 
+> Having the module description over the copyright boilerplate also is
+> very strange.
 
-HTH.
+ FIXED.
+> 
+>  - your split into common/ and initiator/ is strange.  You can build
+>    multiple modules in one directory and that would cleanup your
+>    includes mess nicely
+    Common is shared with another module and commands 
+    that is not being included . We're likely keep what is 
+    really common and migrate other pieces to an appropriate home.
 
--- 
-  Doug Ledford <dledford@redhat.com>     919-754-3700 x44233
-         Red Hat, Inc.
-         1801 Varsity Dr.
-         Raleigh, NC 27606
+>  - having a single host for all of iscsi looks strange.  Why do you
+>    do that?
+
+ The HBA is one entity for iSCSI. I'm open for suggestions,
+ or clarification.
+>  - the #ifdef K26 is totally unreadble.  Especially when it's around
+>    code that works for both 2.4 and 2.6..
+     Well, it was a means to mark the differences in what 
+     use to work in 2.4 and required tweeking in 2.6. It also 
+     highlighted what really needs more attention. Eventually 
+     it will go away. 
+>  - kill my_kmallocd / my_free
+
+ We use these as a debug means to find memory links and 
+ fix them. It's not intended as a garbage collector if that was
+your impression. We will certain make corresponding changes so that it
+can be made wrapped in DEBUG defines and use standard malloc/free.
+ We would prefer to keep it.
+>  - you seems to not handle lots of error returns, e.g. from
+> down_interruptible
+>    or kernel_thread
+    Thanks. We should be more aware of possible errors.
+>  - the UNH_LOCK/UNH_UNLOCK obsfucation hinders reading.
+     Again. We wrapped the irqsave/restore locks in a define
+     for debugging . We would like to keep them, perhaps with 
+     a better/more informative name.
+>  - kill ISCSI_INITIATOR, there's no need for this #define - just
+> initialize
+>    the host template directly
+
+   DONE !
+
+Thanks,
+John.
+
+> 
+> 
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi"
+> in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
 
+__________________________________
+Do you Yahoo!?
+The New Yahoo! Shopping - with improved product search
+http://shopping.yahoo.com
