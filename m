@@ -1,46 +1,68 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Adding transport attributes to qla1280
-Date: 15 Sep 2004 11:38:31 -0400
+From: James.Smart@Emulex.Com
+Subject: [Patch] Allow LLDD's to fail slave alloc (non-existent slave) and not display error messages
+Date: Wed, 15 Sep 2004 12:27:49 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1095262722.1942.10.camel@mulgrave>
+Message-ID: <0B1E13B586976742A7599D71A6AC733C02F1BE@xbl3.ma.emulex.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat16.steeleye.com ([209.192.50.48]:41123 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S266488AbUIOPjO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 15 Sep 2004 11:39:14 -0400
+Received: from emulex.emulex.com ([138.239.112.1]:30683 "EHLO
+	emulex.emulex.com") by vger.kernel.org with ESMTP id S266674AbUIOQ2a convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 15 Sep 2004 12:28:30 -0400
+Received: from xbl3.ad.emulex.com (xbl3.ma.emulex.com [138.239.73.12])
+	by emulex.emulex.com (8.12.10/8.12.10) with ESMTP id i8FGRkgK001919
+	for <linux-scsi@vger.kernel.org>; Wed, 15 Sep 2004 09:28:29 -0700 (PDT)
+content-class: urn:content-classes:message
 List-Id: linux-scsi@vger.kernel.org
-To: Jeremy Higdon <jeremy@classic.engr.sgi.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>, Jes Sorensen <jes@wildopensource.com>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
-
-Hi All,
-
-I've run into rather a nasty problem in the qla1280 drivers to do with
-transport attributes.  My plan, if I can get settable attributes to
-work, is to convert it over to the SPI transport class and pull in
-domain validation for free.
-
-The problem is that the API in the driver for setting attributes:
-qla1280_set_target_parameters() doesn't seem to work ... at least it
-does apparently set the parameters using a qla1280 mailbox command, and
-if I read them back again with the other command, it confirms the
-setting.  However, the next attempt to access the device hangs the
-entire system.
-
-My deduction from all of this is that the HBA is changing the transfer
-settings on its side but not renegotiating those new settings with the
-device.  However, without a bus analyser, I can't be sure I'm correct.
-
-So, since this entire HBA is one of the magic ones that runs in
-proprietary firmware and has no documentation even for the mailbox
-command interface, could someone who has access to the secret documents
-look in them and tell me how I can do this?
-
-Alternatively, actually releasing the specs for what are now at least 4
-year old chips would be a very nice gesture on the part of Qlogic.
-
-James
+To: linux-scsi@vger.kernel.org
 
 
+In the cases where an LLDD knows that a lun does not exist, if it fails slave_alloc(), the midlayer reports an error message indicating slave_alloc failed.
+
+This patch allows the LLDD to reject the slave_alloc() call if it knows the lun doesn't exist, and skips the reporting of the slave_alloc failure message. This avoids jumping through hoops in the LLDD to avoid error messages from slave_alloc. Also saves cycles in that the probe is also cancelled for the non-existent device.
+
+-- James S
+
+
+
+diff -uNr scsi-target-2.6/drivers/scsi/scsi_scan.c scsi-target-2.6-jws/drivers/scsi/scsi_scan.c
+--- scsi-target-2.6/drivers/scsi/scsi_scan.c	2004-09-15 11:24:46.000000000 -0400
++++ scsi-target-2.6-jws/drivers/scsi/scsi_scan.c	2004-09-15 11:24:25.000000000 -0400
+@@ -204,6 +204,7 @@
+ {
+ 	struct scsi_device *sdev;
+ 	unsigned long flags;
++	int display_failure_msg = 1, ret;
+ 
+ 	sdev = kmalloc(sizeof(*sdev) + shost->transportt->device_size,
+ 		       GFP_ATOMIC);
+@@ -253,8 +254,16 @@
+ 	scsi_adjust_queue_depth(sdev, 0, sdev->host->cmd_per_lun);
+ 
+ 	if (shost->hostt->slave_alloc) {
+-		if (shost->hostt->slave_alloc(sdev))
++		ret = shost->hostt->slave_alloc(sdev);
++		if (ret) {
++			/*
++			 * if LLDD reports slave not present, don't clutter
++			 * console with alloc failure messages
++			 */
++			if (ret == -ENXIO)
++				display_failure_msg = 0;
+ 			goto out_free_queue;
++		}
+ 	}
+ 
+ 	if (shost->transportt->device_setup) {
+@@ -287,7 +296,8 @@
+ out_free_dev:
+ 	kfree(sdev);
+ out:
+-	printk(ALLOC_FAILURE_MSG, __FUNCTION__);
++	if (display_failure_msg)
++		printk(ALLOC_FAILURE_MSG, __FUNCTION__);
+ 	return NULL;
+ }
+ 
