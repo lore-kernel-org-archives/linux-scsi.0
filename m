@@ -1,63 +1,68 @@
-From: Russell Kroll <rkroll@exploits.org>
-Subject: PROBLEM: sym53c8xx is broken on HP LH 4 after Linux 2.2
-Date: Fri, 07 Nov 2003 19:49:37 -0600
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3FAC4BB1.mail1NJ11B4U4@exploits.org>
+From: Dmitri Katchalov <dmitrik@users.sourceforge.net>
+Subject: Re: usb-storage and Sony Handycam
+Date: Sat,  8 Nov 2003 13:54:11 +1100
+Sender: linux-usb-devel-admin@lists.sourceforge.net
+Message-ID: <1068260051.3fac5ad3ea76c@webmail.netregistry.net>
+References: <Pine.LNX.4.44L0.0311071448200.10810-100000@ida.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gearbox.exploits.org ([65.64.162.194]:41958 "EHLO
-	gearbox.exploits.org") by vger.kernel.org with ESMTP
-	id S261262AbTKHBti (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 7 Nov 2003 20:49:38 -0500
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-usb-devel-admin@lists.sourceforge.net>
+In-Reply-To: <Pine.LNX.4.44L0.0311071448200.10810-100000@ida.rowland.org>
+Errors-To: linux-usb-devel-admin@lists.sourceforge.net
+List-Help: <mailto:linux-usb-devel-request@lists.sourceforge.net?subject=help>
+List-Post: <mailto:linux-usb-devel@lists.sourceforge.net>
+List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-devel>,
+	<mailto:linux-usb-devel-request@lists.sourceforge.net?subject=subscribe>
+List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-devel>,
+	<mailto:linux-usb-devel-request@lists.sourceforge.net?subject=unsubscribe>
+List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=linux-usb-devel>
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: linux-usb-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-On the HP NetServer LH4, the sym53c8xx driver only works in 2.2 kernels, 
-and fails with a "CACHE INCORRECTLY CONFIGURED" error on 2.4 and 2.6.  
-This also applies to the sym53c8xx_2 driver.
+Quoting Alan Stern <stern@rowland.harvard.edu>:
 
-I searched through the 2.4 and 2.3 series, and finally found that it 
-broke after the pre4-1 patch from the 2.3.99 era.  I split that patch up 
-into little parts and found the one piece that exposed the problem - it's 
-a small pair of changes to pci-i386.c.  Backing that patch out of 2.4.22 
-with patch -R makes the sym driver work again.
+> On Fri, 7 Nov 2003, Patrick Mansfield wrote:
+> 
+> > > On Fri, 7 Nov 2003, Dmitri Katchalov wrote:
+> > > > If I change interpret_usb_result() in transport.c 
+> > > > to ignore "babble" then the next REQUEST-SENSE 
+> > > > reports ILLEGAL REQUEST, SCSI handles that and 
+> > > > everything sort of works.
+> > 
+> > I don't see how that worked, I would expect nearly the same command
+> > sequence, since scsi core is not checking the error. 
+> > 
+> > USB storage debug logs are needed to verify what happened (when ignoring
+> > babble/overflow).
+> 
+> In any case, usb-storage should _never_ ignore a "babble" error.  It 
+> indicates a serious communications problem.
 
-I've captured lspci dumps before and after the change, along with the 
-output from the driver on a stock kernel vs. a kernel that has this patch 
-backed out.  There's a lot of it, so I've put it out on my web server 
-at this URL:
+Well, when I said "ignore babble" I actually did this:
+      case -EOVERFLOW:
+-          return USB_STOR_XFER_LONG;
++          return USB_STOR_XFER_STALL;
+I agree, it was not a good idea. I only tried it to see what happens.
 
-	http://www.exploits.org/~rkroll/sym/
+As I said, my camera works just fine. All I need is a module parameter 
+in modprobe.conf (or a new entry in scsi_devinfo.c), no other code changes
+required. I just thought you may be interested in this rather peculiar
+behaviour.
 
-I am not suggesting that the patch be reverted, since it's obviously a bug 
-fix.  My guess is that the fix exposed a problem in the driver.
+Regards,
+Dmitri
 
-Some background on the hardware: the LH4 seems to have two 53c895 
-interfaces on board.  In 2.2, you can't see the primary interface in 
-lspci, perhaps due to the bug that was fixed by the pre4-1 patch.  This is 
-generally not a problem, since the NetRAID/MegaRAID typically covers that 
-interface.
 
-On 2.4, both interfaces are visible, and the driver can't seem to latch 
-onto the second one.  I don't care if the first one doesn't work, since 
-I don't intend to talk to the disks that way.  All I need is the second 
-one, since that's where my tape drive is connected.
 
-This system happens to be a dual Pentium III, but I've whittled the kernel 
-builds down to generic UP/Pentium settings without any positive effect.  I 
-even threw out just about everything except what I need to boot at one 
-point.  I've tried using "sym53c8xx=excl:0x1400", but it doesn't help.  
-It's not something in userspace which causes this, since it still happens 
-when I boot with 'init=/bin/sh'.
 
-I intend to run 2.4.22 on this system, but tried 2.6.0-test9 in case the 
-problem had been discovered and fixed in that tree.  Unfortunately, it 
-also failed.  I haven't tried mangling 2.6's PCI code to duplicate the
-effects of backing out that patch yet.
-
-This box is not in production, so I can run tests and try different  
-things.  My own attempts at making the driver work were not successful.
-
-I'm stuck.  Any advice or pointers would be appreciated.
+-------------------------------------------------------
+This SF.Net email sponsored by: ApacheCon 2003,
+16-19 November in Las Vegas. Learn firsthand the latest
+developments in Apache, PHP, Perl, XML, Java, MySQL,
+WebDAV, and more! http://www.apachecon.com/
+_______________________________________________
+linux-usb-devel@lists.sourceforge.net
+To unsubscribe, use the last form field at:
+https://lists.sourceforge.net/lists/listinfo/linux-usb-devel
