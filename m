@@ -1,60 +1,41 @@
-From: christophe.varoqui@free.fr
-Subject: [ANNOUNCE] multipath-tools-0.3.3
-Date: Wed, 20 Oct 2004 12:46:09 +0200
-Sender: linux-hotplug-devel-admin@lists.sourceforge.net
-Message-ID: <1098269169.417641f18a234@imp1-q.free.fr>
-References: <1096071849.4466.31.camel@zezette> <1097054573.4163b96d1262c@imp5-q.free.fr> <1097495416.416a73787e0ae@imp1-q.free.fr> <1098021787.5433.8.camel@zezette>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: Unable to set hostid in sym53c8xx module
+Date: Wed, 20 Oct 2004 12:32:01 +0100
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <20041020113201.GT16153@parcelfarce.linux.theplanet.co.uk>
+References: <200410200931.22069.news4reini123@aon.at>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-hotplug-devel-admin@lists.sourceforge.net>
-In-Reply-To: <1098021787.5433.8.camel@zezette>
-Errors-To: linux-hotplug-devel-admin@lists.sourceforge.net
-List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux-hotplug-devel>,
-	<mailto:linux-hotplug-devel-request@lists.sourceforge.net?subject=unsubscribe>
-List-Post: <mailto:linux-hotplug-devel@lists.sourceforge.net>
-List-Help: <mailto:linux-hotplug-devel-request@lists.sourceforge.net?subject=help>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux-hotplug-devel>,
-	<mailto:linux-hotplug-devel-request@lists.sourceforge.net?subject=subscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=linux-hotplug-devel>
-To: device-mapper development <dm-devel@redhat.com>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "linux-hotplug-devel@lists.sourceforge.net" <linux-hotplug-devel@lists.sourceforge.net>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:10689 "EHLO
+	www.linux.org.uk") by vger.kernel.org with ESMTP id S270200AbUJTLcB
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 20 Oct 2004 07:32:01 -0400
+Content-Disposition: inline
+In-Reply-To: <200410200931.22069.news4reini123@aon.at>
 List-Id: linux-scsi@vger.kernel.org
+To: Reinhold Fischer <news4reini123@aon.at>
+Cc: linux-scsi@vger.kernel.org
 
-Hello,
+On Wed, Oct 20, 2004 at 09:31:22AM +0200, Reinhold Fischer wrote:
+> I also filed bug 3588 (http://bugzilla.kernel.org/show_bug.cgi?id=3588), 
+> but no response until now.
 
-here goes multipath-tools-0.3.3
+That's because Mike Anderson didn't reassign it to me.
 
-Suse and OSDL reviews continue, keeping the flow of changes high.
-Early release to keep interested people in sync.
+> I tried to set other module parameter for debug and verbose outbut, but 
+> it seems, that the module will ignore all parameters.
 
-Full ChangeLog for the release :
+BTW, with the new code you'll specify it differently as:
 
-	* [checkers] add the emc_clariion path checker (lmb at Suse)
-	* [multipath] introduce safe_snprintf macro to complement the
-	  safe_sprintf. Needed to cover the sizeof(pointer) cases
-	  pointed by Dave Olien at OSDL
-	* [multipath] move to the common libchecker framework and
-	  activate the selector
-	* [multipath] fix an iopolicy selector bug (initialized lun
-	  iopolicy overrode controler-wide iopolicy)
-	* [multipathd] cleanly separate out the checker selector, as
-	  done with iopolicy selector
-	* [multipathd] move out the checkers into a common libcheckers
-	* [multipath] fix the anti-parallel-exec logic : use a write
-	  lease for the task. From Dave Olien at osdl.
-	* [multipath] fix reinstate : pass a devt, not a devname
+modprobe sym53c8xx hostid=5
 
-As usual, doc and download at :
-http://christophe.varoqui.free.fr/
+I've even updated the documentation to reflect this ;-)
 
-regards,
---
-christophe varoqui <christophe.varoqui@free.fr>
-
-
--------------------------------------------------------
-This SF.net email is sponsored by: IT Product Guide on ITManagersJournal
-Use IT products in your business? Tell us what you think of them. Give us
-Your Opinions, Get Free ThinkGeek Gift Certificates! Click to find out more
-http://productguide.itmanagersjournal.com/guidepromo.tmpl
+-- 
+"Next the statesmen will invent cheap lies, putting the blame upon 
+the nation that is attacked, and every man will be glad of those
+conscience-soothing falsities, and will diligently study them, and refuse
+to examine any refutations of them; and thus he will by and by convince 
+himself that the war is just, and will thank God for the better sleep 
+he enjoys after this process of grotesque self-deception." -- Mark Twain
