@@ -1,34 +1,44 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH] QStor SATA/RAID v.96 for 2.6.9-rc2
-Date: Tue, 21 Sep 2004 14:21:35 -0400
+From: Patrick Mansfield <patmans@us.ibm.com>
+Subject: [announce] scsi_id 0.6 available
+Date: Tue, 21 Sep 2004 11:45:04 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <4150712F.3080504@pobox.com>
-References: <4150666A.90807@rtr.ca> <41506BBE.2050507@rtr.ca>
+Message-ID: <20040921184504.GA7057@beaverton.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:34247 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S267943AbUIUSVs
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 21 Sep 2004 14:21:48 -0400
-In-Reply-To: <41506BBE.2050507@rtr.ca>
+Received: from 216-99-218-173.dsl.aracnet.com ([216.99.218.173]:30084 "EHLO
+	palm2") by vger.kernel.org with ESMTP id S267958AbUIUSpX (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 21 Sep 2004 14:45:23 -0400
+Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
-To: Mark Lord <lsml@rtr.ca>
-Cc: Linux Kernel <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org, linux-hotplug-devel@lists.sourceforge.net
 
-Mark Lord wrote:
-> Okay, I missed one thing in the proof read.. these two lines (below)
-> will be added to qstor.c, for use by the separate RAID management module.
-> 
->    EXPORT_SYMBOL(qs_del_raid);
->    EXPORT_SYMBOL(qs_setup_raid);
+Version 0.6 of scsi_id is available at:
 
+http://www-124.ibm.com/storageio/scsi_id/scsi_id-0.6.tar.gz
 
-Where is this seperate RAID management module?  :)
+scsi_id is a program to generate a unique identifier for a given SCSI
+device.
 
-Typically we do not add kernel hooks to non-public stuff...
+It is primarily for use with the udev program key, or hotplug scripts that
+want persistent naming of scsi devices. It could also be used for
+automatic multi-path configuration or device mapper configuration.
 
-	Jeff
+Requires:
 
+- Linux kernel 2.6
+- libsysfs 0.4.0
 
+Major changes since the last release:
+	
+	- add -u option, patch from Christoph Varoqui, to substitute white
+	  space with underscores so it is easier to use the output as a
+	  device name.
+
+	- Use 254 bytes for SCSI INQUIRY commands, patch from Hannes
+	  Reinecke.
+
+See ChangeLog for more details.
+
+-- Patrick Mansfield
