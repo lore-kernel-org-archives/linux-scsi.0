@@ -1,49 +1,31 @@
-From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
-Subject: Re: Driver for Adaptec AHA-1530P
-Date: Sun, 11 Jan 2004 13:15:31 +0100 (CET)
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44.0401111307500.2644-100000@poirot.grange>
-References: <0cb401c3d7da$7f695e00$060ba8c0@AldiP4>
+From: "'hch@infradead.org'" <hch@infradead.org>
+Subject: Re: ANNOUNCE: megaraid driver version 2.10.1
+Date: Sun, 11 Jan 2004 14:06:40 +0000
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <20040111140640.A21952@infradead.org>
+References: <0E3FA95632D6D047BA649F95DAB60E57033BC2AA@exa-atlanta.se.lsil.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pop.gmx.de ([213.165.64.20]:63905 "HELO mail.gmx.net")
-	by vger.kernel.org with SMTP id S265854AbUAKMc1 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 11 Jan 2004 07:32:27 -0500
-In-Reply-To: <0cb401c3d7da$7f695e00$060ba8c0@AldiP4>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <0E3FA95632D6D047BA649F95DAB60E57033BC2AA@exa-atlanta.se.lsil.com>; from Atulm@lsil.com on Fri, Jan 09, 2004 at 06:54:09PM -0500
+To: "Mukker, Atul" <Atulm@lsil.com>
+Cc: "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, "'torvalds@osdl.org'" <torvalds@osdl.org>, "'marcelo.tosatti@cyclades.com'" <marcelo.tosatti@cyclades.com>, Matt_Domsch@dell.com
 List-Id: linux-scsi@vger.kernel.org
-To: Kai Ruhnau <kai@tragetaschen.dyndns.org>
-Cc: linux-scsi@vger.kernel.org
 
-On Sun, 11 Jan 2004, Kai Ruhnau wrote:
+On Fri, Jan 09, 2004 at 06:54:09PM -0500, Mukker, Atul wrote:
+> All,
+> 
+> The megaraid driver version 2.10.1 is released and can be downloaded from
+> ftp://ftp.lsil.com/pub/linux-megaraid/drivers/version-2.10.1/
+> 
+> Following other components are also available at this location:
+> i.	Patches for Red Hat and SuSE stock kernels
 
-> > I can load the module for aha152x from these bootdisks and it works.
->
-> This precompiled kernel is with aha152x as a module.
+Can't find patches for mainline anywhere.  Also it's usually a good
+idea to send the _patches_ to lkml for review.
 
-See below.
-
-> > But I just tried to use a self-compiled 2.4.10 from the kernel.org sources
-> > and it fails.
-> > After "scsi0 : Adaptec 152x SCSI driver; $Revision: 2.4 $" I get a timeout
-> > and a NULL-pointer dereference.
->
-> This one is with aha152x compiled in.
-
-Ok, this proves, that also 2.4.10 manages to handle your controller only
-when compiled as a module. What might help you is to compile 2.4.24 with
-aha152x as a module - also to boot either from a diskette or with an
-initramdisk. If this works, it will give us a good hint where to look
-further. Another thing would be to see if SuSE had some patches for
-aha152x. Do you have sources for SuSE 2.4.10? Would be interesting to
-compare the whole drivers/scsi directories from stock 2.4.10 and that from
-SuSE. Also, could be useful to see the decoded Oops from vanilla 2.4.10.
-
-Thanks
-Guennadi
----
-Guennadi Liakhovetski
-
-
-
+I've diffed the driver against the 2.4 megaraid2 driver and it looks
+mostly sane, the 2.6 version OTOH copletly backs out the changes that
+went into the driver from outside LSI.  Please try to port the changes
+you made to the driver in 2.6.1.
