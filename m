@@ -1,84 +1,35 @@
-From: Matthew Dharm <mdharm-scsi@one-eyed-alien.net>
-Subject: Re: [linux-usb-devel] Re: [PATCH] USB changes for 2.5.58
-Date: Thu, 27 Feb 2003 11:32:39 -0800
+From: Linda Lee <lindaclee2002@yahoo.com>
+Subject: SCSI reserve/release
+Date: Thu, 27 Feb 2003 12:51:35 -0800 (PST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030227113239.A19703@one-eyed-alien.net>
-References: <20030125010729.GG28812@redhat.com> <20030202101317.A26796@one-eyed-alien.net> <20030202120628.A28024@one-eyed-alien.net> <20030203171726.GA1583@beaverton.ibm.com> <20030216131835.B23422@one-eyed-alien.net> <20030217193737.GB1990@beaverton.ibm.com> <20030222234834.A32167@one-eyed-alien.net> <20030226233702.GC1376@beaverton.ibm.com> <20030226171043.F28571@one-eyed-alien.net> <20030227063737.GB13803@beaverton.ibm.com>
+Message-ID: <20030227205135.31139.qmail@web14612.mail.yahoo.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-md5;
-	protocol="application/pgp-signature"; boundary="tThc/1wpZn/ma/RB"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20030227063737.GB13803@beaverton.ibm.com>; from andmike@us.ibm.com on Wed, Feb 26, 2003 at 10:37:37PM -0800
-List-Id: linux-scsi@vger.kernel.org
-To: Mike Anderson <andmike@us.ibm.com>
-Cc: Oliver Neukum <oliver@neukum.name>, Luben Tuikov <luben@splentec.com>, Alan Stern <stern@rowland.harvard.edu>, David Brownell <david-b@pacbell.net>, Greg KH <greg@kroah.com>, linux-usb-devel@lists.sourceforge.net, Linux SCSI list <linux-scsi@vger.kernel.org>
-
-
---tThc/1wpZn/ma/RB
 Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-scsi-owner@vger.kernel.org>
+List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-This was discussed, but I didn't recall a firm decision.
 
-I'll keep my eyes open for the patch that uses release().
+I'd like to simulate the SCSI-3 Persistent Group
+Reservation of Solaris on Linux using Linux
+reserve/release mechanism.  My understanding is that
+to make reservation on the device on Linux, I can
+issue ioctl() with SCSI_IOCTL_SEND_COMMAND along with
+SCSI command "RESERVE" as part of the input data. It
+is similar for the release mechanism.  Instead of
+"RESERVE" command in the ioctl, put "RELEASE" instead.
 
-Matt
+Regarding the SCSI reset, I can issue ioctl() with
+SG_SCSI_RESET.
 
-On Wed, Feb 26, 2003 at 10:37:37PM -0800, Mike Anderson wrote:
-> Matthew Dharm [mdharm-scsi@one-eyed-alien.net] wrote:
-> > Right... but I removed the release() function because that was marked (=
-in
-> > the documentation) as only for the old-style drivers.  So I'll need to
-> > re-introduce it -- but it looks like all it has to do is free some memo=
-ry.
-> > Does that sound about right?
->=20
-> Yes it was previously removed, but IIRC this is the direction
-> discussed on this thread. For a idle device the release functionality cou=
-ld
-> be done in the context of the scsi_remove_host call, but for a busy
-> device we need to have this call to clean up later.
->=20
-> -andmike
-> --
-> Michael Anderson
-> andmike@us.ibm.com
->=20
->=20
->=20
-> -------------------------------------------------------
-> This SF.net email is sponsored by: Scholarships for Techies!
-> Can't afford IT training? All 2003 ictp students receive scholarships.
-> Get hands-on training in Microsoft, Cisco, Sun, Linux/UNIX, and more.
-> www.ictp.com/training/sourceforge.asp
-> _______________________________________________
-> linux-usb-devel@lists.sourceforge.net
-> To unsubscribe, use the last form field at:
-> https://lists.sourceforge.net/lists/listinfo/linux-usb-devel
+Is my approach correct?  Does anyone had done this
+before?
 
---=20
-Matthew Dharm                              Home: mdharm-usb@one-eyed-alien.=
-net=20
-Maintainer, Linux USB Mass Storage Driver
+Thanks,
 
-C:  They kicked your ass, didn't they?
-S:  They were cheating!
-					-- The Chief and Stef
-User Friendly, 11/19/1997
+Linda
 
---tThc/1wpZn/ma/RB
-Content-Type: application/pgp-signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.0.6 (GNU/Linux)
-Comment: For info see http://www.gnupg.org
-
-iD8DBQE+XmfXIjReC7bSPZARAtXfAKDRTcn4yPWfAFTlHau3yWilpl///gCbBDR+
-qZZWfJd2Pmhw3uJJmxlDzbo=
-=Qmet
------END PGP SIGNATURE-----
-
---tThc/1wpZn/ma/RB--
+__________________________________________________
+Do you Yahoo!?
+Yahoo! Tax Center - forms, calculators, tips, more
+http://taxes.yahoo.com/
