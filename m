@@ -1,55 +1,119 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: smp dead lock of io_request_lock/queue_lock patch
-Date: Mon, 12 Jan 2004 22:12:49 +0100
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <20040112211249.GB3543@suse.de>
-References: <OF317B32D5.C8C681CB-ONC1256E19.005066CF-C1256E19.00538DEF@de.ibm.com> <20040112151230.GB5844@devserv.devel.redhat.com> <20040112194829.A7078@infradead.org> <1073937102.3114.300.camel@compaq.xsintricity.com> <20040112200351.A7409@infradead.org>
+From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+Subject: Re: Driver for Adaptec AHA-1530P
+Date: Tue, 13 Jan 2004 00:00:02 +0100 (CET)
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <Pine.LNX.4.44.0401122345060.9046-100000@poirot.grange>
+References: <0f0c01c3d8ef$d7cb3cb0$060ba8c0@AldiP4>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20040112200351.A7409@infradead.org>
-To: Christoph Hellwig <hch@infradead.org>, Doug Ledford <dledford@redhat.com>, Arjan Van de Ven <arjanv@redhat.com>, Martin Peschke3 <MPESCHKE@de.ibm.com>, Peter Yao <peter@exavio.com.cn>, linux-kernel@vger.kernel.org, linux-scsi mailing list <linux-scsi@vger.kernel.org>, ihno@suse.de
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.gmx.net ([213.165.64.20]:43145 "HELO mail.gmx.net")
+	by vger.kernel.org with SMTP id S262015AbUALXHM (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 12 Jan 2004 18:07:12 -0500
+In-Reply-To: <0f0c01c3d8ef$d7cb3cb0$060ba8c0@AldiP4>
 List-Id: linux-scsi@vger.kernel.org
+To: Kai Ruhnau <kai@tragetaschen.dyndns.org>
+Cc: linux-scsi@vger.kernel.org
 
-On Mon, Jan 12 2004, Christoph Hellwig wrote:
-> On Mon, Jan 12, 2004 at 02:51:42PM -0500, Doug Ledford wrote:
-> > More or less.  But part of it also is that a lot of the patches I've
-> > written are on top of other patches that people don't want (aka, the
-> > iorl patch).
-> 
-> I'm wondering whether we want it now that 2.4 is basically frozen, but
-> I don't think there was a strong case against it say 4 or 5 month ago.
-> OTOH given that success (or lack thereof) I had pushing core changes
-> through Marcelo the chances it had even if scsi folks ACKed wouldn't
-> have been too high.
+On Mon, 12 Jan 2004, Kai Ruhnau wrote:
 
-That's the key point, is it appropriate to merge now...
+> I try to do, what I can:
+>
+> kernel 2.4.22 aha152x compiled in:
+>   aha152x: ABORT timed out - removed from issue queue
+> kernel 2.4.22 aha152x as module:
+>   No such device
+> kernel 2.4.10 aha152x compiled in:
+>   timeout and NULL-pointer dereference
+> kernel 2.4.10 aha152x as module:
+>   kernel Oops (NULL pointer dereference) during linuxrc
 
-But I can completely back Doug on the point he made wrt pusing stuff
-back to mainline - it was hard, because we deviated too much. And that
-is also what I stressed would be the most important argument for merging
-the iorl + scsi core changes.
+Please try the patch below - just to see where it fails. It looks like
+you've got another driver claiming the 0x340 region - can you check your
+/proc/ioports? If not - I don't understand why SuSE-7.3 detected the chip,
+and vanilla kernels don't - among all SuSE-7.3 patches nothing touches
+aha152x.*. The patch might not apply cleanly to your kernel-version, but
+you should be able to add the required lines manually.
 
-> > I've got a mlqueue patch that actually *really* should go
-> > into mainline because it solves a slew of various problems in one go,
-> > but the current version of the patch depends on some semantic changes
-> > made by the iorl patch.  So, sorting things out can sometimes be
-> > difficult.  But, I've been told to go ahead and do what I can as far as
-> > getting the stuff out, so I'm taking some time to try and get a bk tree
-> > out there so people can see what I'm talking about.  Once I've got the
-> > full tree out there, then it might be possible to start picking and
-> > choosing which things to port against mainline so that they don't depend
-> > on patches like the iorl patch.
-> 
-> I personally just don't care enough about 2.4 anymore, so I don't think
-> I'll invest major amounts of time into it.  Even though the scsi changes
-> you've done are fairly huge I'm wondering whether we should just throw
-> it all in anyway - given that you said you'll have to care for the 2.4
-> scsi stack for a longer time for RH and no one else seems to be interested
-> doing maintaince.
+Also, can you install SuSE 2.4.10 sources, compile a kernel from them and
+see if that works? It would be useful to get a kernel, that works, that we
+can compile ourselves, that we can compare with those kernels, that fail,
+and that we can put some debugging output in.
 
-Ditto.
+> drivers/scsi/ of SuSE's 2.4.10:
+>   please have a look at
+>     http://tragetaschen.dyndns.org/kernel/drivers_scsi.tar.bz2
 
--- 
-Jens Axboe
+...couldn't get to this site.
+
+>   original, full sources at
+>     ftp://ftp.suse.com/pub/suse/i386/7.3/suse/d2/kernel-source.rpm
+>   the drivers/scsi/ diff from vanilla-2.4.10 to SuSE-2.4.10 is at
+>
+>     http://tragetaschen.dyndns.org/kernel/vanilla2suse.bz2
+>   (Sorry, but I only have 16k upload)
+
+I downloaded SuSE-patches from one of their ftp-sites - only some generic
+scsi error-handling / reset patches. Nothing aha152x-specific.
+
+Regards
+Guennadi
+---
+Guennadi Liakhovetski
+
+--- aha152x.c~	Sun Jan 11 23:40:37 2004
++++ aha152x.c	Mon Jan 12 23:42:18 2004
+@@ -849,8 +849,10 @@
+ {
+ 	int i;
+
+-	if (check_region(io_port, IO_RANGE))
++	if (check_region(io_port, IO_RANGE)) {
++		printk(KERN_WARNING"Port 0x%x[%d] busy\n", io_port, IO_RANGE);
+ 		return 0;
++	}
+
+ 	SETPORT(io_port + O_DMACNTRL1, 0);	/* reset stack pointer */
+ 	for (i = 0; i < 16; i++)
+@@ -867,8 +869,10 @@
+ {
+ 	int i;
+
+-	if (check_region(io_port, IO_RANGE))
++	if (check_region(io_port, IO_RANGE)) {
++		printk(KERN_WARNING"Port 0x%x[%d] busy\n", io_port, IO_RANGE);
+ 		return 0;
++	}
+
+ 	SETPORT(io_port + O_TC_DMACNTRL1, 0);	/* reset stack pointer */
+ 	for (i = 0; i < 16; i++)
+@@ -895,8 +899,10 @@
+
+ 	if(aha152x_porttest(setup->io_port)) {
+           setup->tc1550=0;
++	  printk("%s(): aha152x found at %x\n", __FUNCTION__, setup->io_port);
+         } else if(tc1550_porttest(setup->io_port)) {
+           setup->tc1550=1;
++	  printk("%s(): tc1550 found at %x\n", __FUNCTION__, setup->io_port);
+         } else
+           return 0;
+
+@@ -1308,6 +1314,7 @@
+ 				continue;
+
+ 			if (aha152x_porttest(ports[i])) {
++				printk("%s(): aha152x found at %x\n", __FUNCTION__, ports[i]);
+ 				ok++;
+ 				setup[setup_count].io_port = ports[i];
+ 				setup[setup_count].tc1550  = 0;
+@@ -1327,6 +1334,7 @@
+ #endif
+ 				setup_count++;
+ 			} else if (tc1550_porttest(ports[i])) {
++				printk("%s(): tc1550 found at %x\n", __FUNCTION__, ports[i]);
+ 				ok++;
+ 				setup[setup_count].io_port = ports[i];
+ 				setup[setup_count].tc1550  = 1;
+
+
