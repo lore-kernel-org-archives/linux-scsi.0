@@ -1,15 +1,15 @@
-From: Matthew Dharm <mdharm-scsi@one-eyed-alien.net>
-Subject: Re: [example PATCH - not for applying] exclude certain commands
-Date: Wed, 23 Apr 2003 17:10:02 -0700
+From: =?iso-8859-1?Q?Andr=E9_Cruz?= <afafc@rnl.ist.utl.pt>
+Subject: RE: [example PATCH - not for applying] exclude certain commands
+Date: Thu, 24 Apr 2003 09:05:18 +0100
 Sender: linux-usb-devel-admin@lists.sourceforge.net
-Message-ID: <20030423171002.A14203@one-eyed-alien.net>
+Message-ID: <000001c30a38$3f5ece50$040000c0@giga>
 References: <UTC200304232239.h3NMdSf07801.aeb@smtp.cwi.nl>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-md5;
-	protocol="application/pgp-signature"; boundary="ReaqsoxgOBHFXBhH"
+Content-Type: text/plain;
+	charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-usb-devel-admin@lists.sourceforge.net>
-Content-Disposition: inline
-In-Reply-To: <UTC200304232239.h3NMdSf07801.aeb@smtp.cwi.nl>; from Andries.Brouwer@cwi.nl on Thu, Apr 24, 2003 at 12:39:28AM +0200
+In-Reply-To: <UTC200304232239.h3NMdSf07801.aeb@smtp.cwi.nl>
 Errors-To: linux-usb-devel-admin@lists.sourceforge.net
 List-Help: <mailto:linux-usb-devel-request@lists.sourceforge.net?subject=help>
 List-Post: <mailto:linux-usb-devel@lists.sourceforge.net>
@@ -18,50 +18,98 @@ List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-devel>,
 List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-devel>,
 	<mailto:linux-usb-devel-request@lists.sourceforge.net?subject=unsubscribe>
 List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=linux-usb-devel>
-To: Andries.Brouwer@cwi.nl
-Cc: James.Bottomley@steeleye.com, afafc@rnl.ist.utl.pt, alan@lxorguk.ukuu.org.uk, greg@kroah.com, linux-scsi@vger.kernel.org, linux-usb-devel@lists.sourceforge.net, mike@hingston.demon.co.uk, stelian@popies.net, torvalds@transmeta.com
+To: Andries.Brouwer@cwi.nl, James.Bottomley@steeleye.com
+Cc: alan@lxorguk.ukuu.org.uk, greg@kroah.com, linux-scsi@vger.kernel.org, linux-usb-devel@lists.sourceforge.net, mike@hingston.demon.co.uk, stelian@popies.net, torvalds@transmeta.com
 List-Id: linux-scsi@vger.kernel.org
 
+It worked for me.
+Great! :)
+I was able to mount the CF card, list it's contents, etc.
+You guys are on the right track. Keep up the good work.
+cya
 
---ReaqsoxgOBHFXBhH
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+_________________________________________
+Andr=E9 Cruz
+ICQ#: 9519211
+_________________________________________
 
-On Thu, Apr 24, 2003 at 12:39:28AM +0200, Andries.Brouwer@cwi.nl wrote:
-> Comments?
 
-My only comment is that your sample of failed cases primarily seems to
-address those devices that support some variant of MODE_SENSE -- there are
-lots of devices that don't support it at all, which is why I wanted to
-filter it with the (apparently) now-dead command filter concept.
+-----Original Message-----
+From: Andries.Brouwer@cwi.nl [mailto:Andries.Brouwer@cwi.nl]=20
+Sent: quarta-feira, 23 de Abril de 2003 23:39
+To: James.Bottomley@steeleye.com
+Cc: afafc@rnl.ist.utl.pt; alan@lxorguk.ukuu.org.uk; greg@kroah.com;
+linux-scsi@vger.kernel.org; linux-usb-devel@lists.sourceforge.net;
+mike@hingston.demon.co.uk; stelian@popies.net; torvalds@transmeta.com
+Subject: [example PATCH - not for applying] exclude certain commands
 
-Matt
 
---=20
-Matthew Dharm                              Home: mdharm-usb@one-eyed-alien.=
-net=20
-Maintainer, Linux USB Mass Storage Driver
+Yesterday or so we discussed three people's problems with USB devices.
+Today a fourth very similar complaint was reported.
 
-It's not that hard.  No matter what the problem is, tell the customer=20
-to reinstall Windows.
-					-- Nurse
-User Friendly, 3/22/1998
+I asked
 
---ReaqsoxgOBHFXBhH
-Content-Type: application/pgp-signature
-Content-Disposition: inline
+> Could you try this patch of drivers/scsi/sd.c?
+>
+> --- sd.c~       Sun Apr 20 12:59:32 2003
+> +++ sd.c        Wed Apr 23 21:45:10 2003
+> @@ -1079,6 +1079,9 @@
+>                   int dbd, int modepage, unsigned char *buffer, int =
+len) {
+>         unsigned char cmd[8];
+>
+> +       if (len < 8)
+> +               len =3D 8;
+> +
+>         memset((void *) &cmd[0], 0, 8);
+>         cmd[0] =3D MODE_SENSE;
+>         cmd[1] =3D dbd;
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.0.6 (GNU/Linux)
-Comment: For info see http://www.gnupg.org
+and got the reply
 
-iD8DBQE+pytaIjReC7bSPZARAsCrAKC898Vqc6qtkj81VKOLwoVi/9+alwCgkZqo
-cu13qUcPQUnw4yuYWSEI5qw=
-=Mum0
------END PGP SIGNATURE-----
+#
+# Wohoo! Patch worked like a charm. Thanks Andries!
+#
 
---ReaqsoxgOBHFXBhH--
+So, for the time being I assume we know what is causing
+these problems. It would be nice if the other three
+(afafc@rnl.ist.utl.pt, mike@hingston.demon.co.uk, stelian@popies.net)
+could report on their experiences with the above patch.
+
+The next question is whether this is a bug in these devices
+or a bug in the usb-storage code.
+
+As Alan remarked, drivers/usb/storage/protocol.c contains
+the fragment
+
+        case MODE_SENSE:
+                srb->cmnd[8] =3D 8;
+
+But that is in usb_stor_ufi_command(), and
+usb_stor_transparent_scsi_command() doesn't do this.
+Nevertheless, MODE_SENSE has minimum length 4, and
+MODE_SENSE_10 has minum length 8 for its reply.
+So, possibly the latter routine should do something
+similar. For example
+
+--- protocol.c~ Fri Nov 22 22:40:13 2002
++++ protocol.c  Thu Apr 24 00:38:31 2003
+@@ -366,6 +366,8 @@
+                        srb->cmnd[2] =3D srb->cmnd[2];
+                        srb->cmnd[1] =3D srb->cmnd[1];
+                        srb->cmnd[0] =3D srb->cmnd[0] | 0x40;
++                       if (srb->cmnd[8] < 8)
++                               srb->cmnd[8] =3D 8;
+                        break;
+                } /* switch (srb->cmnd[0]) */
+        } /* if (us->flags & US_FL_MODE_XLATE) */
+
+(yes, ugly, no guarantee that the buffer is large enough).
+
+Comments?
+
+Andries
+
 
 
 -------------------------------------------------------
