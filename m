@@ -1,99 +1,213 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: START-STOP under Linux 2.4
-Date: Wed, 2 Apr 2003 13:49:15 -0500 (EST)
+From: Mike Anderson <andmike@us.ibm.com>
+Subject: Re: [PATCH] scsi_set_host_offline (resend)
+Date: Wed, 2 Apr 2003 18:05:52 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44L0.0304021339530.17468-200000@ida.rowland.org>
-References: <20030402093236.A15801@one-eyed-alien.net>
+Message-ID: <20030403020552.GA13105@beaverton.ibm.com>
+References: <20030325100704.GC3868@beaverton.ibm.com> <20030329125302.A10565@one-eyed-alien.net> <1048974903.21704.313.camel@mulgrave> <200303292350.04187.oliver@neukum.org> <20030401024806.GA4991@beaverton.ibm.com> <20030401234210.A14717@one-eyed-alien.net>
 Mime-Version: 1.0
-Content-Type: MULTIPART/MIXED; BOUNDARY="-2084555674-431246170-1049309355=:17468"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <20030402093236.A15801@one-eyed-alien.net>
+Content-Disposition: inline
+In-Reply-To: <20030401234210.A14717@one-eyed-alien.net>
 List-Id: linux-scsi@vger.kernel.org
-To: Greg KH <greg@kroah.com>
-Cc: SCSI development list <linux-scsi@vger.kernel.org>
+To: Oliver Neukum <oliver@neukum.org>, James Bottomley <James.Bottomley@steeleye.com>, mochel@osdl.org, SCSI Mailing List <linux-scsi@vger.kernel.org>, gregkh@us.ibm.com
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
-  Send mail to mime@docserver.cac.washington.edu for more info.
-
----2084555674-431246170-1049309355=:17468
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-
-Greg:
-
-This patch for 2.4.21-pre6 (a backport from 2.5) removes a source of
-problems for many usb-storage devices by replacing a START-STOP command,
-used to determine if the drive media is loaded, with a TEST-UNIT-READY.  
-In the past people have handled this by creating entries in unusual_devs.h
-with the US_FL_START_STOP flag; now that should no longer be necessary.
-
-Alan Stern
-
-
-On Wed, 2 Apr 2003, Matthew Dharm wrote:
-
-> Send it to Greg K-H -- he'll send it to Marcello.
+Matthew Dharm [mdharm-scsi@one-eyed-alien.net] wrote:
+> On Mon, Mar 31, 2003 at 06:48:06PM -0800, Mike Anderson wrote:
+> > Matthew / James I believe I am out of sync with how much is being done
+> > by userspace and how much is being done in the kernel. I believed there
+> > was always userspace action to umount / close devices.
 > 
-> Matt
+> I have no objection to userspace being notified -- I only object to
+> requiring userspace to complete the unplug operation.
 > 
-> On Wed, Apr 02, 2003 at 10:24:47AM -0500, Alan Stern wrote:
-> > Great!  I'll try to get this into the official kernel source.
-> > 
-> > Matt:  Do you know the appropriate person to send this patch to for
-> > inclusion in 2.4.21?
-> > 
-> > Alan Stern
-> > 
-> > 
-> > On Tue, 1 Apr 2003, John Goerzen wrote:
-> > 
-> > > Alan Stern <stern@rowland.harvard.edu> writes:
-> > >
-> > > > Based on the kernel log you posted earlier, it looks like your problem may
-> > > > stem from the use of a START-STOP command.  The patch below removes that
-> > > > command; it's a backport from 2.5.  Try installing this and let us know if
-> > > > it helps.
-> > >
-> > > Indeed it does!  Things seem to work fine with your patch.
-> > 
-> > On 1 Apr 2003, Chris Worley wrote:
-> > 
-> > > Bingo.
-> > >
-> > > This worked great.  There was a little tweak on the sd.c patch for the
-> > > 2.4.19 kernel, but it was apparent.
-> > >
-> > > Thanks!
 
+If the unplug operation includes cleanup (i.e. free of the memory) then
+userspace needs to be involved. 
 
----2084555674-431246170-1049309355=:17468
-Content-Type: TEXT/PLAIN; charset=US-ASCII; name="sd.patch"
-Content-Transfer-Encoding: BASE64
-Content-ID: <Pine.LNX.4.44L0.0304021349150.17468@ida.rowland.org>
-Content-Description: START-STOP patch for 2.4.21-pre6
-Content-Disposition: attachment; filename="sd.patch"
+> > Matthew I know in the previous mail you wrote a numbered list of steps.
+> > I believe item #2 should have called scsi_set_host_offline or
+> > scsi_set_device_offline. Item #6 would only happen if scsi_remove_host
+> > was called sometime prior.
+> 
+> The assumption was that #5 was the call to scsi_remove_host() -- the only
+> question in my mind is: How do I know it is 'safe' to call that?
+> 
 
-LS0tIGxpbnV4LTIuNC4yMS9kcml2ZXJzL3Njc2kvc2QuYy5vcmlnCU1vbiBN
-YXIgMzEgMTY6Mjc6MzEgMjAwMw0KKysrIGxpbnV4LTIuNC4yMS9kcml2ZXJz
-L3Njc2kvc2QuYwlNb24gTWFyIDMxIDE2OjU2OjIwIDIwMDMNCkBAIC03MzEs
-MTUgKzczMSwxNyBAQA0KIAkJCQkgKiBjaGVja19kaXNrX2NoYW5nZSAqLw0K
-IAl9DQogDQotCS8qIFVzaW5nIFN0YXJ0L1N0b3AgZW5hYmxlcyBkaWZmZXJl
-bnRpYXRpb24gYmV0d2VlbiBkcml2ZSB3aXRoDQorCS8qDQorCSAqIFVzaW5n
-IFRFU1RfVU5JVF9SRUFEWSBlbmFibGVzIGRpZmZlcmVudGlhdGlvbiBiZXR3
-ZWVuIGRyaXZlIHdpdGgNCiAJICogbm8gY2FydHJpZGdlIGxvYWRlZCAtIE5P
-VCBSRUFEWSwgZHJpdmUgd2l0aCBjaGFuZ2VkIGNhcnRyaWRnZSAtDQogCSAq
-IFVOSVQgQVRURU5USU9OLCBvciB3aXRoIHNhbWUgY2FydHJpZGdlIC0gR09P
-RCBTVEFUVVMuDQotCSAqIFRoaXMgYWxzbyBoYW5kbGVzIGRyaXZlcyB0aGF0
-IGF1dG8gc3BpbiBkb3duLiBlZyBpb21lZ2EgamF6IDFHQg0KLQkgKiBhcyB0
-aGlzIHdpbGwgc3BpbiB1cCB0aGUgZHJpdmUuDQorCSAqDQorCSAqIERyaXZl
-cyB0aGF0IGF1dG8gc3BpbiBkb3duLiBlZyBpb21lZ2EgamF6IDFHLCB3aWxs
-IGJlIHN0YXJ0ZWQNCisJICogYnkgc2RfaW5pdF9vbmVkaXNrKCksIHdoZW5l
-dmVyIHJldmFsaWRhdGVfc2NzaWRpc2soKSBpcyBjYWxsZWQuDQogCSAqLw0K
-IAlyZXR2YWwgPSAtRU5PREVWOw0KIAlpZiAoc2NzaV9ibG9ja193aGVuX3By
-b2Nlc3NpbmdfZXJyb3JzKFNEZXYpKQ0KLQkJcmV0dmFsID0gc2NzaV9pb2N0
-bChTRGV2LCBTQ1NJX0lPQ1RMX1NUQVJUX1VOSVQsIE5VTEwpOw0KKwkJcmV0
-dmFsID0gc2NzaV9pb2N0bChTRGV2LCBTQ1NJX0lPQ1RMX1RFU1RfVU5JVF9S
-RUFEWSwgTlVMTCk7DQogDQogCWlmIChyZXR2YWwpIHsJCS8qIFVuYWJsZSB0
-byB0ZXN0LCB1bml0IHByb2JhYmx5IG5vdCByZWFkeS4NCiAJCQkJICogVGhp
-cyB1c3VhbGx5IG1lYW5zIHRoZXJlIGlzIG5vIGRpc2MgaW4gdGhlDQo=
----2084555674-431246170-1049309355=:17468--
+The changes I am making would allow you to call scsi_remove_host()
+anytime and have your release called later when ref counts go to zero.
+
+I am traveling until late Friday night so hopefully I will have
+something to post after I get back.
+
+> > I wrote the following text on the interface I thought we had / where
+> > trying to complete. I would like to add to this so that we possibly
+> > could archive an interface contract between the LLDD and scsi-mid.
+> 
+> Based on my reading of the following, userspace is notified but not
+> required to take any action.  Would that be accurate?
+> 
+
+Userspace could take no action. You can make all the interface calls,
+but the release calls for the struct scsi_device and struct scsi_host
+may not be called if a filesystem or user operation is holding a
+reference.
+
+> > 2.5 SCSI host register interfaces (scsi_add_host / scsi_remove_host)
+> > 
+> > 1. LLDD call graph standard
+> > 
+> > (PROBE)
+> > LLDD                  Mid                  Sysfs
+> > scsi_register      -->
+> > scsi_set_device    --> (depreciated)
+> > scsi_add_host      ---+
+> >                       |
+> >                scsi_sysfs_add_host      --> device_register (shost)
+> >                scsi_scan_host         (i)-> device_register (sdev)
+> 
+> This is how I see it (as an LLDD guy) -- I set up my internal state, then
+> call scsi_register() followed by scsi_add_host().
+> 
+> Then the world starts, and I just keep processing commands whenever I get
+> one.  Then, someone yanks my plug, and:
+> 
+> > (REMOVE)
+> > LLDD                  Mid                  Sysfs
+> > scsi_remove_host  ---+
+> >                      |
+> >                scsi_sysfs_remove_host   --> device_unregister (shost)
+> >                scsi_forget_host       (i)-> device_unregister (sdev)
+> 
+> I presume that I need to offline each device (sdev) before calling
+> scsi_remove_host(), as previously discussed?  That isn't shown here...
+> 
+
+It is shown below for the offline case. This section was to show that if
+no unplug event occurred the caller would not need to call the offline
+interfaces to remove a scsi host.
+
+> > (hotplug "remove" events for shost and sdev where generated by
+> > device_unregister call).
+> 
+> Yes.  Userspace is notified, but not required to take any action.
+> 
+
+Correct.
+
+> > (sdev device ref cnt == 0)
+> >                                             koject_cleanup
+> >                                                    |
+> >                                            scsi_device_release
+> 
+> Good.  I presume that scsi_device_release() will decrement the ref cnt on
+> the shost device?
+> 
+
+Correct.
+
+> > (shost device ref cnt == 0)
+> >                                             koject_cleanup
+> >                                                    |
+> >                      +--                    scsi_host_release
+> >                      |
+> >                   shost->hostt->release
+> 
+> Good.  release() then is responsible for cleaning up.
+> 
+
+Yes the host template release function would clean its internal data and
+call scsi_unregister to free the scsi_host structure.
+
+> > 2. LLDD call graph offline event
+> > 
+> > (OFFLINE single device)
+> > LLDD                       Mid                  Sysfs
+> > scsi_set_device_offline  --+
+> >                            |
+> >                         scsi_eh_scmd_add
+> > 
+> > Note: Do we need hotplug events here or wait until remove???
+> 
+> Good question.  Here's a better one:  Why do we separately offline the
+> device before removal?  Why doesn't scsi_remove_host() do it all for us?
+> 
+
+My thoughts where that they where two separate actions. 
+
+scsi_set_device_offline / host_offline may be called in the future and
+then onlined without calling scsi_remove_host  (i.e. we need the online
+counter parts to these functions to make them symmetric).
+
+A LLLD may wish to call scsi_remove_host while users are still active
+and only be removed once the users are off the device and drained.
+
+To make things more confusing scsi_remove_host does set a device to the
+offline state, but I believe this could be changes to not do this
+action.
+
+> For example, when we unload a USB HCD driver, disconnect() gets called for
+> each device that was on that bus.
+> 
+> > (OFFLINE host)
+> > LLDD                       Mid                  Sysfs
+> > scsi_set_host_offline    --+
+> >                            |
+> >                       scsi_set_device_offline
+> > 
+> > (REMOVE)
+> > Same as above.
+> 
+> I presume that scsi_set_device_offline in this picture leads to
+> scsi_set_device_offline(), which leads to scsi_eh_scmd_add()?
+
+Yes,
+	scsi_set_host_offline will call scsi_set_device_offline for all
+	children devices of the host and if IOs are active
+	scsi_eh_scmd_add will cancel those commands.
+> 
+> > TODO (1):
+> > scsi_add_host scans the host and when outstanding patches are applied
+> > the scsi_host struct device will have a ref count of 1+N where N is the
+> > number of struct scsi_device's found off the host. In turn each struct
+> > scsi_device struct device will have a ref count of 1+N where N is the
+> > number of upper drivers bound or the number of opens (this may not be
+> > correct for sometime as we do not have an option for the multiple bind
+> > sg issue).
+> 
+> Okay.... I think we're on the same page.  It appears that you're going to
+> require me to keep resources around for quite some time, until everything
+> closes/umounts -- but, since every device is offline, I don't have to do
+> any command processing, yes?  That's good, because then I can free some
+> significant resources....
+> 
+
+Yes, The goal is that no more IO will be sent to driver.
+
+> > TODO (2):
+> > We need a common method to stop gets to a struct device post a certain
+> > barrier. In the short term scsi could add a scsi_host flag to stop scan
+> > adds, but cannot effect sysfs gets.
+> 
+> Hrm... good point.  How do other busses do this?
+> 
+
+I believe others do not need this at least in your example there is one
+device per host. Since SCSI provides the scan interface it might be the
+earliest and best place to stop future registers.
+
+> > TODO (3):
+> > When outstanding patches are applied scsi_remove_host will cause a
+> > device_unregister to be called on all child nodes (sdevs) of scsi_host
+> > and scsi_host (these unregisters will generate hot plug "remove" events)
+> > once the scsi_device ref cnt goes to zero scsi_device_release is called
+> > and once scsi_host ref cnt goes to zero scsi_host_release is called.
+> 
+> Sounds good to me.
+> 
+
+-andmike
+--
+Michael Anderson
+andmike@us.ibm.com
+
