@@ -1,39 +1,41 @@
-From: "John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [patch] 2.6 -- add IOI Media Bay to SCSI quirk list
-Date: Thu, 12 Aug 2004 19:00:53 -0400
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <411BF6A5.2030306@tuxdriver.com>
-References: <200408122137.i7CLbGU13688@ra.tuxdriver.com> <20040812225118.GA20904@beaverton.ibm.com>
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Subject: Re: [PATCH] SCSI midlayer power management
+Date: Fri, 13 Aug 2004 09:02:17 +1000
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <1092351736.26430.12.camel@gaston>
+References: <4119611D.60401@optonline.net>
+	 <20040811080935.GA26098@elf.ucw.cz>  <411A1B72.1010302@optonline.net>
+	 <1092231462.2087.3.camel@mulgrave>  <1092267400.2136.24.camel@gaston>
+	 <1092314892.1755.5.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel=40m.gmane.org-S268864AbUHLXB4@vger.kernel.org>
-In-Reply-To: <20040812225118.GA20904@beaverton.ibm.com>
-To: Patrick Mansfield <patmans@us.ibm.com>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, James.Bottomley@SteelEye.com
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from gate.crashing.org ([63.228.1.57]:4078 "EHLO gate.crashing.org")
+	by vger.kernel.org with ESMTP id S268854AbUHLXHj (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 12 Aug 2004 19:07:39 -0400
+In-Reply-To: <1092314892.1755.5.camel@mulgrave>
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Nathan Bryant <nbryant@optonline.net>, Pavel Machek <pavel@ucw.cz>, Linux SCSI Reflector <linux-scsi@vger.kernel.org>, Linux Kernel list <linux-kernel@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>
 
-Patrick Mansfield wrote:
+On Thu, 2004-08-12 at 22:48, James Bottomley wrote:
+> On Wed, 2004-08-11 at 19:36, Benjamin Herrenschmidt wrote:
+> > Some hosts will continuously DMA to memory iirc.. I remember having a
+> > problem with 53c8xx on some macs when transitionning from MacOS to Linux
+> > because of that.
+> 
+> I think you're thinking of the scripts engine?  on pre 53c875 chips,
+> yes, this is true.  The on-board processor is executing instructions
+> from host memory.  However, this is read only in quiescent (waiting for
+> host connect or target reconnect) mode, so shouldn't be a problem for
+> suspend.  On the 875 and later, we host the scripts in on-chip memory so
+> they shouldn't be troubling main memory when idling.
 
->We seem to be getting quite a few of these. In theory we could add a line
->like this for every multi-lun SCSI device.
->  
->
+The problem was a 875, the script was writing some kind of status or
+whatever at regular interval to host memory. Might be specific to the
+script used by the MacOS driver tho...
 
-Isn't that what the quirk list is for?
+Ben.
 
->Can you instead try booting with scsi_mod.max_luns=8 (or such) or build
->with SCSI_MULTI_LUN enabled?
->  
->
-
-That works for my box, but what about for others?  Like those who may 
-have both a multi-lun device and a single-lun device that hangs on a 
-non-zero lun?  What about the average luser who can't be bothered to 
-hack-up his startup scripts or *gasp* rebuild his kernel?
-
-It seems like the quirk list is there for a reason.  If we start 
-rejecting certain devices, then what is the criteria for a device to 
-actually make it on the list?
-
-John
