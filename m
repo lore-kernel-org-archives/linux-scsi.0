@@ -1,123 +1,227 @@
-From: Brian King <brking@us.ibm.com>
-Subject: Re: [RFC] IBM Power RAID driver (ipr)
-Date: Fri, 16 Jan 2004 17:46:37 -0600
+From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+Subject: Re: Driver for Adaptec AHA-1530P
+Date: Sat, 17 Jan 2004 00:42:00 +0100 (CET)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <400877DD.1020408@us.ibm.com>
-References: <40085EDA.4010802@us.ibm.com> <20040116230118.GP734@actcom.co.il>
+Message-ID: <Pine.LNX.4.44.0401162013440.6170-100000@poirot.grange>
+References: <14dd01c3dc05$4435ce70$060ba8c0@AldiP4>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e3.ny.us.ibm.com ([32.97.182.103]:61910 "EHLO e3.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S265794AbUAPXql (ORCPT
+Received: from imap.gmx.net ([213.165.64.20]:32420 "HELO mail.gmx.net")
+	by vger.kernel.org with SMTP id S265936AbUAPXxi (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 16 Jan 2004 18:46:41 -0500
+	Fri, 16 Jan 2004 18:53:38 -0500
+In-Reply-To: <14dd01c3dc05$4435ce70$060ba8c0@AldiP4>
 List-Id: linux-scsi@vger.kernel.org
-To: Muli Ben-Yehuda <mulix@mulix.org>
+To: Kai Ruhnau <kai@tragetaschen.dyndns.org>
 Cc: linux-scsi@vger.kernel.org
 
-Muli Ben-Yehuda wrote:
-> Hi, I took a look and I have some comments / questions. I will try to
-> go over all of it in the next few days, but here's what I went over so
-> far: 
+On Fri, 16 Jan 2004, Kai Ruhnau wrote:
 
-Thanks!
+> Guennadi Liakhovetski wrote:
+> >
+> > Please try the patch below - just to see where it fails. It looks like
+> > you've got another driver claiming the 0x340 region - can you check your
+> > /proc/ioports? If not - I don't understand why SuSE-7.3 detected the chip,
+>
+> I actually didn't integrate the patch, but I noticed a difference between my
+> initrd and SuSEs initrd. And I think, it is the error, you predicted.
+> The problem does not lie in the aha152x driver, but in the parameters for
+> isa-pnp. To make everything work, I have to specify the parameter
+> 'isapnp_reset=0' when I load isa-pnp. After that, my network-card gets
+> another io-range (the same as under SuSE).
 
->>+static int ipr_unsafe = 1;		/* xxx set to 0 for ship */
-> 
-> 
-> Should it be set to 0 or to 1 for inclusion in the kernel? any driver
-> that is first included is considered experimental, so just how unsafe
-> is ipr_unsafe?
+Ok, as I suspected, resourse-conflict. You have PNP, but the AHA-card is
+not PNP. So, looks like the right thing to do would be just to make the
+error in case of busy io-region more explicite. But the proper fix should
+also, of course, replace check_region with request_region. Perhaps,
+something like what's attached below. Sould you, please, test? It
+compiles:-) It should just fail nicely if request_region() fails, and work
+otherwise. It is against 2.6.0.
 
-Perhaps this is poorly named. If you take a look at ipr_invalid_adapter,
-you will see how ipr_unsafe is used. If set to 1, then it will allow 
-certain adapters to run in systems which have known problems.
+Guennadi
+---
+Guennadi Liakhovetski
 
->>+static void ipr_sleep_no_lock(signed long delay)
->>+{
->>+	DECLARE_WAIT_QUEUE_HEAD(internal_wait);
->>+
->>+	sleep_on_timeout(&internal_wait, (delay * HZ) / 1000);
->>+	return;
-> 
-> 
-> just a nitpick, but the Linux coding style says no 'return' from void
-> functions. 
+--- drivers/scsi/aha152x.c~	Mon Nov 24 20:44:18 2003
++++ drivers/scsi/aha152x.c	Sat Jan 17 00:36:38 2004
+@@ -849,9 +849,6 @@
+ {
+ 	int i;
 
-Done.
+-	if (check_region(io_port, IO_RANGE))
+-		return 0;
+-
+ 	SETPORT(io_port + O_DMACNTRL1, 0);	/* reset stack pointer */
+ 	for (i = 0; i < 16; i++)
+ 		SETPORT(io_port + O_STACK, i);
+@@ -867,9 +864,6 @@
+ {
+ 	int i;
 
->>+static void ipr_sleep(struct ipr_ioa_cfg *ioa_cfg, signed long delay)
->>+{
->>+	spin_unlock_irq(ioa_cfg->host->host_lock);
->>+	ipr_sleep_no_lock(delay);
->>+	spin_lock_irq(ioa_cfg->host->host_lock);
-> 
-> 
-> Hmpf... it's called from ipr_diagnostic_ioctl(), which does
-> spin_lock_irqsave()
-> ipr_sleep()
-> spin_unlock_irqrestore()
-> 
-> So I guess you really do intend to enable interrupts before going to
-> sleep? it's somewhat fragile... also, is the dropping and
-> reacquisition of the lock safe here (in the sense that none of the
-> data the lock is protecting that we care about can change while the
-> lock is not held?)
+-	if (check_region(io_port, IO_RANGE))
+-		return 0;
+-
+ 	SETPORT(io_port + O_TC_DMACNTRL1, 0);	/* reset stack pointer */
+ 	for (i = 0; i < 16; i++)
+ 		SETPORT(io_port + O_STACK, i);
+@@ -1030,9 +1024,6 @@
+ 	       aha->delay,
+ 	       aha->ext_trans ? "enabled" : "disabled");
 
-I certainly don't want to go to sleep with interrupts masked. I need to 
-wait a second and then check to see if some shared data has changed, so 
-I am actually counting on the data protected by the spinlock being able 
-to change. I can certainly remove ipr_sleep since it is only used in the 
-one spot now and
+-	if (!request_region(shost->io_port, IO_RANGE, "aha152x"))
+-		goto out_unregister;
+-
+ 	/* not expecting any interrupts */
+ 	SETPORT(SIMODE0, 0);
+ 	SETPORT(SIMODE1, 0);
+@@ -1086,15 +1077,13 @@
+ out_unregister_host:
+ 	aha152x_host[registered_count] = NULL;
+ out_release_region:
+-	release_region(shost->io_port, IO_RANGE);
+-out_unregister:
+ 	scsi_unregister(shost);
+ 	return NULL;
+ }
 
-> Same questions wrt ipr_interruptible_sleep_on(), which does the same
-> thing. By the way, ipr_dump_ioctl does not check the return value from
-> ipr_interruptible_sleep_on(). If this is intentional, perhaps call it
-> using (void)ipr_interruptible_sleep_on()?
+ static int aha152x_detect(Scsi_Host_Template * tpnt)
+ {
+-	int i, j, ok;
++	int i, j, ok = 0;
+ #if defined(AUTOCONF)
+ 	aha152x_config conf;
+ #ifdef __ISAPNP__
+@@ -1105,12 +1094,27 @@
+ 	if (setup_count) {
+ 		printk(KERN_INFO "aha152x: processing commandline: ");
 
-Yes. It checks the sdt_state, which is sufficient. I will add the (void).
+-		for (i = 0; i < setup_count; i++)
++		for (i = 0; i < setup_count; i++) {
++			if (request_region(setup[i].io_port, IO_RANGE, "aha152x") == NULL) {
++				printk("\n");
++				printk(KERN_WARNING "aha152x: port 0x%x[%d] busy\n", setup[i].io_port, IO_RANGE);
++				continue;
++			}
+ 			if (!checksetup(&setup[i])) {
+-				printk(KERN_ERR "\naha152x: %s\n", setup[i].conf);
++				release_region(setup[i].io_port, IO_RANGE);
++				printk("\n" KERN_ERR "aha152x: %s\n", setup[i].conf);
+ 				printk(KERN_ERR "aha152x: invalid line\n");
++			} else {
++				ok++;
++				printk("%s, ", setup[i].tc1550 ? "tc1550" : "aha152x");
+ 			}
+-		printk("ok\n");
++		}
++		if (ok) {
++			printk("ok\n");
++			ok = 0;
++		} else
++			/* If nothing found at command-line specified addresses, fail */
++			return 0;
+ 	}
 
+ #if defined(SETUP0)
+@@ -1118,7 +1122,10 @@
+ 		struct aha152x_setup override = SETUP0;
 
->>+static void ipr_block_requests(struct ipr_ioa_cfg *ioa_cfg)
->>+{
->>+	ENTER;
->>+
->>+	if (0 == ioa_cfg->block_host_ops++) {
->>+	   ioa_cfg->allow_cmds = 0;
-> 
-> 
-> This is racy unless a lock is held. I think a lock is held here in all
-> callers of this function, but a comment to that effect would be nice
-> before the function. This also applies to every other function which
-> either must be called with a lock taken, or modifies the "locking
-> status" - takes a lock which is released elsewhere, enables interrupts
-> unconditionally, etc. 
+ 		if (setup_count == 0 || (override.io_port != setup[0].io_port)) {
+-			if (!checksetup(&override)) {
++			if (request_region(override.io_port, IO_RANGE, "aha152x") == NULL)
++				printk(KERN_WARNING "aha152x: port 0x%x[%d] busy\n", override.io_port, IO_RANGE);
++			else if (!checksetup(&override)) {
++				release_region(override.io_port, IO_RANGE);
+ 				printk(KERN_ERR "\naha152x: invalid override SETUP0={0x%x,%d,%d,%d,%d,%d,%d,%d}\n",
+ 				       override.io_port,
+ 				       override.irq,
+@@ -1139,7 +1146,10 @@
+ 		struct aha152x_setup override = SETUP1;
 
-Yes, the host lock must be held by the caller. I can certainly add the 
-comments you suggest as well.
+ 		if (setup_count == 0 || (override.io_port != setup[0].io_port)) {
+-			if (!checksetup(&override)) {
++			if (request_region(override.io_port, IO_RANGE, "aha152x") == NULL)
++				printk(KERN_WARNING "aha152x: port 0x%x[%d] busy\n", override.io_port, IO_RANGE);
++			else if (!checksetup(&override)) {
++				release_region(override.io_port, IO_RANGE);
+ 				printk(KERN_ERR "\naha152x: invalid override SETUP1={0x%x,%d,%d,%d,%d,%d,%d,%d}\n",
+ 				       override.io_port,
+ 				       override.irq,
+@@ -1185,9 +1195,12 @@
+ #endif
+ 		}
 
+-          	if (checksetup(&setup[setup_count]))
++		if (request_region(setup[setup_count].io_port, IO_RANGE, "aha152x") == NULL)
++			printk(KERN_WARNING "aha152x: port 0x%x[%d] busy\n", setup[setup_count].io_port, IO_RANGE);
++		else if (checksetup(&setup[setup_count]))
+ 			setup_count++;
+-		else
++		else {
++			release_region(setup[setup_count].io_port, IO_RANGE);
+ 			printk(KERN_ERR "aha152x: invalid module params io=0x%x, irq=%d,scsiid=%d,reconnect=%d,parity=%d,sync=%d,delay=%d,exttrans=%d\n",
+ 			       setup[setup_count].io_port,
+ 			       setup[setup_count].irq,
+@@ -1197,6 +1210,7 @@
+ 			       setup[setup_count].synchronous,
+ 			       setup[setup_count].delay,
+ 			       setup[setup_count].ext_trans);
++		}
+ 	}
 
-> +static void ipr_unblock_requests(struct ipr_ioa_cfg *ioa_cfg)
-> +{
-> +	ENTER;
-> +
-> +	if (0 == --ioa_cfg->block_host_ops) {
-> +	   ioa_cfg->allow_cmds = 1;
-> +	   spin_unlock_irq(ioa_cfg->host->host_lock);
-> +	   scsi_unblock_requests(ioa_cfg->host);
-> +	   spin_lock_irq(ioa_cfg->host->host_lock);
-> 
-> Eeek! What happens if on another CPU a call comes in that does
-> ipr_block_requests() after the lock is released and before it is taken
-> again?
+ 	if (setup_count<ARRAY_SIZE(setup) && (aha152x1[0]!=0 || io[1]!=0 || irq[1]!=0)) {
+@@ -1227,9 +1241,12 @@
+ 			setup[setup_count].debug       = debug[1];
+ #endif
+ 		}
+-		if (checksetup(&setup[setup_count]))
++		if (request_region(setup[setup_count].io_port, IO_RANGE, "aha152x") == NULL)
++			printk(KERN_WARNING "aha152x: port 0x%x[%d] busy\n", setup[setup_count].io_port, IO_RANGE);
++		else if (checksetup(&setup[setup_count]))
+ 			setup_count++;
+-		else
++		else {
++			release_region(setup[setup_count].io_port, IO_RANGE);
+ 			printk(KERN_ERR "aha152x: invalid module params io=0x%x, irq=%d,scsiid=%d,reconnect=%d,parity=%d,sync=%d,delay=%d,exttrans=%d\n",
+ 			       setup[setup_count].io_port,
+ 			       setup[setup_count].irq,
+@@ -1239,6 +1256,7 @@
+ 			       setup[setup_count].synchronous,
+ 			       setup[setup_count].delay,
+ 			       setup[setup_count].ext_trans);
++		}
+ 	}
+ #endif
 
-Looks like I have other issues with the block/unblock interfaces as 
-well. I'll clean this up.
+@@ -1300,7 +1318,9 @@
+ 			if ((setup_count == 1) && (setup[0].io_port == ports[i]))
+ 				continue;
 
+-			if (aha152x_porttest(ports[i])) {
++			if (request_region(ports[i], IO_RANGE, "aha152x") == NULL)
++				printk(KERN_WARNING "aha152x: port 0x%x[%d] busy\n", ports[i], IO_RANGE);
++			else if (aha152x_porttest(ports[i])) {
+ 				ok++;
+ 				setup[setup_count].io_port = ports[i];
+ 				setup[setup_count].tc1550  = 0;
+@@ -1338,7 +1358,8 @@
+ 				setup[setup_count].debug = DEBUG_DEFAULT;
+ #endif
+ 				setup_count++;
+-			}
++			} else
++				release_region(ports[i], IO_RANGE);
+ 		}
 
--- 
-Brian King
-eServer Storage I/O
-IBM Linux Technology Center
+ 		if (ok)
+@@ -1349,7 +1370,8 @@
+ 	printk("detected %d controller(s)\n", setup_count);
+
+ 	for (i=0; i<setup_count; i++) {
+-		aha152x_probe_one(&setup[i]);
++		if (aha152x_probe_one(&setup[i]) == NULL)
++			release_region(setup[i].io_port, IO_RANGE);
+ 		if (aha152x_host[registered_count])
+ 			registered_count++;
+ 	}
 
