@@ -1,100 +1,139 @@
-From: Kevin Fenzi <kevin-linux-kernel@scrye.com>
-Subject: Re: 2.4.x end of tape handling error
-Date: Mon, 17 Feb 2003 20:16:43 -0700
+From: Andre Hedrick <andre@linux-ide.org>
+Subject: Re: [PATCH / RFC] scsi_error handler update. (1/4)
+Date: Mon, 17 Feb 2003 21:37:52 -0800 (PST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030218031646.28526.qmail@scrye.com>
-References: <20030210182254.2913.qmail@scrye.com>
-	<Pine.LNX.4.52.0302102249480.804@kai.makisara.local>
+Message-ID: <Pine.LNX.4.10.10302172136210.3880-100000@master.linux-ide.org>
+References: <3E5129F3.2040807@splentec.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.52.0302102249480.804@kai.makisara.local>
+In-Reply-To: <3E5129F3.2040807@splentec.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Kai Makisara <Kai.Makisara@kolumbus.fi>
-Cc: linux-scsi@vger.kernel.org
+To: Luben Tuikov <luben@splentec.com>
+Cc: James Bottomley <James.Bottomley@steeleye.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA1
 
->>>>> "Kai" == Kai Makisara <Kai.Makisara@kolumbus.fi> writes:
+Luben,
 
-Kai> This discussion should really be moved to linux-scsi... 
+You are trying to make the mid-layer to the work of iSCSI where your
+driver needs to do it.  Everyone else gets how to do target portal groups
+without dorking the kernel.  Maybe you should try harder.
 
-ok.
+Andre Hedrick
+LAD Storage Consulting Group
 
-Kai> 10 Feb 2003, Kevin Fenzi wrote:
+On Mon, 17 Feb 2003, Luben Tuikov wrote:
 
->> Greetings.
->> 
->> I have had reported from a client that they are having problems
->> with backups that span more than one tape. Instead of getting an
->> EOT error or EOM, they are getting an I/O error wich requires the
->> driver to be unloaded and reloaded before the tape will work again.
->> 
-Kai> What messages have they seen in the system log? Some messages
-Kai> should be after this kind of error. It is difficult to see where
-Kai> the problem is without any details. There have not been any
-Kai> significant changes in EOM handling in st between the 2.4
-Kai> kernels.
+> James Bottomley wrote:
+> > On Mon, 2003-02-17 at 12:20, Luben Tuikov wrote:
+> > 
+> >>There is no ``locking hierarchy'' -- i.e. a lock *only* locks its list
+> >>manipulation. So, you don't have to have a string of locks to change
+> >>a scsi_command, for example.
+> > 
+> > 
+> > If I want to loop over all outstanding commands on a device (say because
+> > the FC has just got a LIP removal), how do I do it?  Your design implies
+> > I have to loop over all portals, targets and luns.  To do this loop, I'd
+> > have to stabilise all the lists by acquiring the three locks that
+> > protect them, wouldn't I?
+> 
+> No, not at all.  If you know the struct scsi_lu, you can just lock
+> the pending_cmd_q and loop over the commands.
+> 
+> struct scsi_target is ``locked'' *implicitly* simply by having
+> atomic_read(&target->lu_q_count) != 0.
+> 
+> struct scsi_portal is ``locked'' *implicitly* simply by having
+> atomic_read(&portal->target_q_count) != 0.
+> 
+> struct scsi_core is ``locked'' *implicitly* simply by having
+> atomic_read(&core->portal_q_count) != 0.
+> 
+> You certainly do not need to lock the the whole hierarchy of locks
+> to loop over all pending commands.  Locks protect local data.
+> I.e. you just want to protect yourself from someone messing the
+> list up while you're traversing it.
+> 
+> >>When was the last time a SPI HBA set channel/bus to anything different
+> >>than 0?
+> > 
+> > 
+> > Channel is a special abstraction for the dual channel chips.  It's
+> > really an extension of host number for drivers that need a channel
+> ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 
+> Thus it can be abstracted into a ``portal''.
+> 
+> >>>3. I don't see where the mid-layer has a use for the data.  By and
+> >>
+> >>Well, how can I contend *that* statement?...  This basically means
+> >>that the whole thing I proposed is cr*p.
+> > 
+> > 
+> > This is the key issue.  Complexity should only be introduced in a design
+> 
+> Well if it were the key issue, you should've just said *that*.
+> Nicely done.
+> 
+> > when it serves a justifiable purpose.  How do the 4 layers you propose
+> > simplify the design/improve the throughput or in any other way add
+> > benefit over the two layers (host and device) that we already have?
+> 
+> First of all it's 3 layers -- you're counting scsi_core but you don't
+> count it in the current structure. (scsi core pointers you can have as
+> ether-pointers, just as is now the practice)
+> 
+> So there's 3 layers: portal (aka host), target, lu. One more than
+> the current structure of scsi_core.
+> 
+> Look, you *NEED* the target layer, simply /because/ it exists in
+> nature. ;-)
+> 
+> I.e. a TARGET is the _addressable_ entity from a portal, i.e.
+> addressable on the fabric, but a LU is *NOT*.
+> 
+> The reason you get away with it now, is because linux scsi-core
+> gets help from the LLDDs.  But you have to understand that an LU
+> is a _function_ of the target.  So without this help of the LLDDs
+> the current scsi-core will *NOT* be able to address more than one
+> LU in a multi-LU target.
+> 
+> Yes, I know there's the old scan for LUs, but this is only
+> because linux scsi LLDD are SPI centric.
+> 
+> I.e. when you send a scsi command you're sending it to a (target,lu)
+> pair and this is what the LLDD does for you, i.e. it separates it
+> to a target, lu.
+> 
+> So, the question is: Is it worth it to abstract Target and LU into
+> OO design? Or is it better to leave it clunked up together as it is
+> now (device=(target,LU))?
+> 
+> I'm thinking sysfs here.
+> 
+> > Because the standards say so isn't enough.  The Mid-layer's job is to
+> 
+> And I'm not saying that it is enough. I'm just saying that:
+> 
+> > make efficient use of devices which follow the standards as simply and
+> > elegantly as possible, not mirror the SCSI architecture model.
+> 
+> Right, ``elegantly'' is the key word.
+> 
+> I don't think you can shrink any more from the 3 layer I proposed,
+> unless you go to the current 2 layer.
+> 
+> Judging from your words, the (host,device) pair is elegant enough?
+> If not, do you mind telling what is/would be?
+> 
+> -- 
+> Luben
+> 
+> 
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
 
-I have duplicated the problem with a dds2 drive I have here. 
-
-Basically, they get back a EIO error instead of a ENOSPC error when
-hitting the end of tape. 
-
->> http://www.linuxtapecert.org/ Says that the redhat 2.4.9-34 kernel
->> is the last one that had proper EOT handling. Indeed, if they use
->> the 2.4.9-34 kernel, the tape works properly. Thats not a very good
->> solution however.
->> 
->> Is this fixed in the latest 2.4.21-pres? How about in 2.5.x?
->> 
-Kai> Don't know. EOM handling has worked with my test system (HP DDS
-Kai> drives connected to a SYM53c896) with both 2.4 and 2.5 kernels. I
-Kai> just reran the eom tests with 2.4.20 and 2.5.60 without problems.
-
-My test system is very similar. 
-
-HP DDS2 drive, on a SYM53c896. ;) 
-Redhat 7.3 machine, running 2.4.18-24.7.x. 
-
-To test I just used tar and tried to put more on the tape than would
-fit. 
-
-I got: 
-
-...
-write(3, "\305\230\240=:-v\t\237&\16\317\234+x\"N(\375\0\264\000"..., 10240) = -1 EIO (Input/output error)
-write(2, "tar: ", 5)                    = 5
-write(2, "/dev/nst0: Wrote only 0 of 10240"..., 38) = 38
-write(2, "\n", 1)                       = 1
-write(2, "tar: ", 5)                    = 5
-write(2, "Error is not recoverable: exitin"..., 37) = 37
-write(2, "\n", 1)                       = 1
-munmap(0x4002e000, 4096)                = 0
-_exit(2)                                = ?
-
-I tried loading the driver with various options, in case it was a
-buffering issue: 
-
-modprobe st buffer_kbs=0 write_threshold_kbs=0 max_buffers=0 max_sg_segs=0
-
-Any option I seemed to give it resulted in the same thing. 
-I would be happy to test anything or provide you access to the box
-with the tape drive on it. 
-Will also try the 2.4.9-34 kernel that is supposed to not have this
-issue. 
-
-Kai> 	Kai
-
-kevin
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.2.1 (GNU/Linux)
-Comment: Processed by Mailcrypt 3.5.8 <http://mailcrypt.sourceforge.net/>
-
-iD8DBQE+UaWe3imCezTjY0ERAt84AJ9JIzGEwm5H9Id4Tg4k0/o0fzZmgwCgk3zr
-bP+qoI82jXtyMY7XU2YHjWU=
-=4Z2L
------END PGP SIGNATURE-----
