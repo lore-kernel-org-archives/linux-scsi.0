@@ -1,40 +1,86 @@
-From: Linus Torvalds <torvalds@osdl.org>
-Subject: Re: [linux-usb-devel] Re: USB storage problems on OHCI..
-Date: Tue, 23 Sep 2003 11:16:00 -0700 (PDT)
+From: Felipe W Damasio <felipewd@terra.com.br>
+Subject: Re: [PATCH] Memory leak in scsi_debug found by checker
+Date: Tue, 23 Sep 2003 15:55:21 -0300
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44.0309231114050.15373-100000@home.osdl.org>
-References: <3F708718.4050401@xs4all.nl>
+Message-ID: <3F709719.6030107@terra.com.br>
+References: <3F7096EE.8080105@terra.com.br>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: multipart/mixed;
+ boundary="------------090306080801020104080500"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fw.osdl.org ([65.172.181.6]:14259 "EHLO mail.osdl.org")
-	by vger.kernel.org with ESMTP id S263397AbTIWSQh (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 23 Sep 2003 14:16:37 -0400
-In-Reply-To: <3F708718.4050401@xs4all.nl>
+Received: from ivoti.terra.com.br ([200.176.3.20]:32207 "EHLO
+	ivoti.terra.com.br") by vger.kernel.org with ESMTP id S263410AbTIWTJr
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 23 Sep 2003 15:09:47 -0400
+In-Reply-To: <3F7096EE.8080105@terra.com.br>
 List-Id: linux-scsi@vger.kernel.org
-To: Ruud Linders <rkmp@xs4all.nl>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, Patrick Mansfield <patmans@us.ibm.com>, Christoph Hellwig <hch@infradead.org>, Alan Stern <stern@rowland.harvard.edu>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, David Brownell <david-b@pacbell.net>, Greg KH <greg@kroah.com>, USB development list <linux-usb-devel@lists.sourceforge.net>, SCSI development list <linux-scsi@vger.kernel.org>, Andries.Brouwer@cwi.nl
+To: Felipe W Damasio <felipewd@terra.com.br>
+Cc: James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 
+This is a multi-part message in MIME format.
+--------------090306080801020104080500
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 
-On Tue, 23 Sep 2003, Ruud Linders wrote:
+	Forgot the patch :)
+
+Felipe W Damasio wrote:
+>     Hi James,
 > 
-> I tried the patch but it doesn't work for me using an USB-2 Memory stick
-> "DiskonKey" on an USB-2 port (with uhci_hcd & ehci_hcd loaded).
+>     Patch against 2.6-test5.
 > 
-> After a 3 minute time-out I get
->      "SCSI device sda: drive cache: write through"
-> and the device starts working just fine.
+>     If in the middle of loop a kmalloc failed, that means that the 
+> previous calls succeeded..so they must be also be freed (and removed 
+> from the dev_info_list).
+> 
+>     Please review and consider applying.
+> 
+>     Cheers,
+> 
+> Felipe
+> 
 
-Is this different from a plain kernel _without_ the patch?
+--------------090306080801020104080500
+Content-Type: text/plain;
+ name="scsi_debug-leak.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="scsi_debug-leak.patch"
 
-> Unloading the ehci_hcd module doesn't make any difference.
-> Only when ripping out the whole mode-sense call it works immediately :-)
-> so it appears the device is just unhappy about the sd_do_mode_sense.
+--- linux-2.6.0-test5/drivers/scsi/scsi_debug.c.orig	2003-09-23 15:46:57.000000000 -0300
++++ linux-2.6.0-test5/drivers/scsi/scsi_debug.c	2003-09-23 15:43:39.000000000 -0300
+@@ -1614,7 +1614,7 @@
+                         printk(KERN_ERR "%s: out of memory at line %d\n",
+                                __FUNCTION__, __LINE__);
+                         error = -ENOMEM;
+-			goto clean1;
++			goto clean;
+                 }
+                 memset(sdbg_devinfo, 0, sizeof(*sdbg_devinfo));
+                 sdbg_devinfo->sdbg_host = sdbg_host;
+@@ -1634,12 +1634,12 @@
+         error = device_register(&sdbg_host->dev);
+ 
+         if (error)
+-		goto clean2;
++		goto clean;
+ 
+ 	++scsi_debug_add_host;
+         return error;
+ 
+-clean2:
++clean:
+ 	list_for_each_safe(lh, lh_sf, &sdbg_host->dev_info_list) {
+ 		sdbg_devinfo = list_entry(lh, struct sdebug_dev_info,
+ 					  dev_list);
+@@ -1647,7 +1647,6 @@
+ 		kfree(sdbg_devinfo);
+ 	}
+ 
+-clean1:
+ 	kfree(sdbg_host);
+         return error;
+ }
 
-Yes, I think we might want to mark USB devices as being write-through by 
-default. That said, I think the patch is still better than what we have 
-now (which just doesn't make any sense at all).
-
-		Linus
+--------------090306080801020104080500--
 
