@@ -1,50 +1,35 @@
-From: Doug Ledford <dledford@redhat.com>
-Subject: Re: more aic7xxx boot failure
-Date: Thu, 24 Oct 2002 23:53:53 -0400
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20021025035353.GA3556@redhat.com>
-References: <8800000.1035498319@w-hlinder> <87lm4nxxnj.fsf@ceramic.fifi.org> <16660000.1035501142@w-hlinder> <87hefbxw3d.fsf@ceramic.fifi.org>
+From: Patrick Mansfield <patmans@us.ibm.com>
+Subject: Re: [RFC][PATCH] Forward port of aic7xxx driver to 2.5.44 [1/3]
+Date: Thu, 24 Oct 2002 20:55:26 -0700
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <20021024205526.A23827@eng2.beaverton.ibm.com>
+References: <15800.43219.216824.411355@sofia.bsd2.kbnes.nec.co.jp>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <87hefbxw3d.fsf@ceramic.fifi.org>
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+In-Reply-To: <15800.43219.216824.411355@sofia.bsd2.kbnes.nec.co.jp>; from steve@kbuxd.necst.nec.co.jp on Fri, Oct 25, 2002 at 11:13:39AM +0900
+To: SL Baur <steve@kbuxd.necst.nec.co.jp>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Philippe Troin <phil@fifi.org>
-Cc: Hanna Linder <hannal@us.ibm.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, tmolina@cox.net, haveblue@us.ibm.com
 
-On Thu, Oct 24, 2002 at 04:20:38PM -0700, Philippe Troin wrote:
-> Hanna Linder <hannal@us.ibm.com> writes:
+On Fri, Oct 25, 2002 at 11:13:39AM +0900, SL Baur wrote:
+> Hi,
 > 
-> > Pending list: 2
-> > Kernel Free SCB list: 1 0
-> > Untagged Q(0): 2
-> > DevQ(0:0:0):0 waiting
-> > qinpos = 0, SCB index = 3
-> > Kernel panic: Loop 1
+> This patch updates the aic7xxx driver to be the same version as in
+> 2.4.20-pre11.  The version currently in 2.5.44 is too old to recognize
+> my controller.  It compiles cleanly, but I have not yet tried to boot
+> with it.  Would someone with experienced eyes please look it over to
+> be sure I didn't do anything stupid?  Thanks.
 > 
-> Had the same problem.
-> 
-> Booted noapic, problem solved...
-> 
-> Now, if the driver could be fixed, that would be nicer...
 
-If noapic solves the problem then the driver isn't where the bug is, it's 
-in the SMP irq table or ACPI irq routing or PCI interrupt routing, but it 
-is *not* the driver.
+You must have missed Justin's post:
 
-I will repeat, if "noapic" ever solves a driver bug, then the problem 
-wasn't a driver bug in the first place!
+http://marc.theaimsgroup.com/?l=linux-kernel&m=103534482111734&w=2
 
-/me has been listening to people wrongly accuse drivers of IRQ routing 
-bugs for going on three years now, ever since the MP table parsing and 
-IO-APIC code was first put into the linux kernel and now tends to be a bit 
-testy when people make the mistake of calling an IRQ routing bug a driver 
-bug.
+Pointing to this file:
 
--- 
-  Doug Ledford <dledford@redhat.com>     919-754-3700 x44233
-         Red Hat, Inc. 
-         1801 Varsity Dr.
-         Raleigh, NC 27606
-  
+http://people.FreeBSD.org/~gibbs/linux/linux-2.5-aic79xxx.tar.gz
+
+The above still needs changes, but they should be pretty small.
+
+-- Patrick Mansfield
