@@ -1,108 +1,106 @@
-From: Arjan van de Ven <arjanv@redhat.com>
-Subject: fix a few missing return value checks in scsi
-Date: Wed, 31 Dec 2003 14:59:01 +0100
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: fix a few missing return value checks in scsi
+Date: Wed, 31 Dec 2003 09:35:26 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1072879141.4292.5.camel@laptop.fenrus.com>
-Reply-To: arjanv@redhat.com
+Message-ID: <3FF2DEAE.1040009@pobox.com>
+References: <1072879141.4292.5.camel@laptop.fenrus.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-95jfT4giMrtj+AV7LEMJ"
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from node-d-1fcf.a2000.nl ([62.195.31.207]:1412 "EHLO
-	laptop.fenrus.com") by vger.kernel.org with ESMTP id S264937AbTLaN7F
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:20186 "EHLO
+	www.linux.org.uk") by vger.kernel.org with ESMTP id S265066AbTLaOfq
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 31 Dec 2003 08:59:05 -0500
-Received: from laptop.fenrus.com (laptop.fenrus.com [127.0.0.1])
-	by laptop.fenrus.com (8.12.10/8.12.10) with ESMTP id hBVDx2wa010821
-	for <linux-scsi@vger.kernel.org>; Wed, 31 Dec 2003 14:59:03 +0100
-Received: (from arjan@localhost)
-	by laptop.fenrus.com (8.12.10/8.12.10/Submit) id hBVDx2NM010820
-	for linux-scsi@vger.kernel.org; Wed, 31 Dec 2003 14:59:02 +0100
+	Wed, 31 Dec 2003 09:35:46 -0500
+In-Reply-To: <1072879141.4292.5.camel@laptop.fenrus.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: arjanv@redhat.com
+Cc: linux-scsi@vger.kernel.org
+
+Arjan van de Ven wrote:
+> Hi,
+> 
+> The attached patch adds a few error checks for the pci dma_mask setting
+> routines, which after all can fail and thus need their return code
+> checked.
+> 
+> Greetings,
+>    Arjan van de Ven
+> 
+> 
+> ------------------------------------------------------------------------
+> 
+> --- linux-2.6.0-test11/drivers/scsi/aic7xxx/aic7xxx_osm.c.OLD	2003-12-19 16:26:15.000000000 -0500
+> +++ linux-2.6.0-test11/drivers/scsi/aic7xxx/aic7xxx_osm.c	2003-12-19 16:29:17.000000000 -0500
+> @@ -1408,12 +1408,18 @@
+>  	 * our dma mask when doing allocations.
+>  	 */
+>  	if (ahc->dev_softc != NULL)
+> -		ahc_pci_set_dma_mask(ahc->dev_softc, 0xFFFFFFFF);
+> +		if (ahc_pci_set_dma_mask(ahc->dev_softc, 0xFFFFFFFF)) {
+> +			printk(KERN_WARNING "aic7xxx: No suitable DMA available.\n");
+> +			return (ENODEV);
+> +		}
+>  	*vaddr = pci_alloc_consistent(ahc->dev_softc,
+>  				      dmat->maxsize, &map->bus_addr);
+>  	if (ahc->dev_softc != NULL)
+> -		ahc_pci_set_dma_mask(ahc->dev_softc,
+> -				     ahc->platform_data->hw_dma_mask);
+> +		if (ahc_pci_set_dma_mask(ahc->dev_softc,
+> +				     ahc->platform_data->hw_dma_mask)) {
+> +			printk(KERN_WARNING "aic7xxx: No suitable DMA available.\n");
+> +			return (ENODEV);
+> +		}
+>  #else /* LINUX_VERSION_CODE < KERNEL_VERSION(2,3,0) */
+>  	/*
+>  	 * At least in 2.2.14, malloc is a slab allocator so all
+> --- linux-2.6.0-test11/drivers/scsi/aic7xxx/aic7xxx_osm_pci.c.OLD	2003-12-19 16:30:32.000000000 -0500
+> +++ linux-2.6.0-test11/drivers/scsi/aic7xxx/aic7xxx_osm_pci.c	2003-12-19 16:31:43.000000000 -0500
+> @@ -168,7 +168,10 @@
+>  		ahc->flags |= AHC_39BIT_ADDRESSING;
+>  		ahc->platform_data->hw_dma_mask = mask_39bit;
+>  	} else {
+> -		ahc_pci_set_dma_mask(pdev, 0xFFFFFFFF);
+> +		if (ahc_pci_set_dma_mask(pdev, 0xFFFFFFFF)) {
+> +			printk(KERN_WARNING "aic7xxx: No suitable DMA available.\n");
+> +                	return (-ENODEV);
+> +		}
+>  		ahc->platform_data->hw_dma_mask = 0xFFFFFFFF;
+>  	}
+>  #endif
+> --- linux-2.6.0-test11/drivers/scsi/aic7xxx/aic79xx_osm.c.OLD	2003-12-19 16:34:01.000000000 -0500
+> +++ linux-2.6.0-test11/drivers/scsi/aic7xxx/aic79xx_osm.c	2003-12-19 16:35:11.000000000 -0500
+> @@ -1776,12 +1776,18 @@
+>  	 * our dma mask when doing allocations.
+>  	 */
+>  	if (ahd->dev_softc != NULL)
+> -		ahd_pci_set_dma_mask(ahd->dev_softc, 0xFFFFFFFF);
+> +		if (ahd_pci_set_dma_mask(ahd->dev_softc, 0xFFFFFFFF)) {
+> +			printk(KERN_WARNING "aic79xx: No suitable DMA available.\n");
+> +			return (ENODEV);
+> +		}
+>  	*vaddr = pci_alloc_consistent(ahd->dev_softc,
+>  				      dmat->maxsize, &map->bus_addr);
+>  	if (ahd->dev_softc != NULL)
+> -		ahd_pci_set_dma_mask(ahd->dev_softc,
+> -				     ahd->platform_data->hw_dma_mask);
+> +		if (ahd_pci_set_dma_mask(ahd->dev_softc,
+> +				     ahd->platform_data->hw_dma_mask)) {
+> +			printk(KERN_WARNING "aic79xx: No suitable DMA available.\n");
+> +			return (ENODEV);
+> +		}
+>  #else /* LINUX_VERSION_CODE < KERNEL_VERSION(2,3,0) */
+>  	/*
+>  	 * At least in 2.2.14, malloc is a slab allocator so all
 
 
---=-95jfT4giMrtj+AV7LEMJ
-Content-Type: multipart/mixed; boundary="=-PeHJZ8JyqF0jxxX2rsU0"
+No offense to you personally, but this is a bunch of crap.  aic7xxx 
+needs to use the standard kernel APIs for pci_set_dma_mask and 
+pci_set_consistent_dma_mask...
+
+We don't need a wrapper for every kernel API function :(
+
+	Jeff
 
 
---=-PeHJZ8JyqF0jxxX2rsU0
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
 
-Hi,
-
-The attached patch adds a few error checks for the pci dma_mask setting
-routines, which after all can fail and thus need their return code
-checked.
-
-Greetings,
-   Arjan van de Ven
-
---=-PeHJZ8JyqF0jxxX2rsU0
-Content-Disposition: attachment; filename=pci.patch
-Content-Transfer-Encoding: base64
-Content-Type: text/x-patch; name=pci.patch; charset=UTF-8
-
-LS0tIGxpbnV4LTIuNi4wLXRlc3QxMS9kcml2ZXJzL3Njc2kvYWljN3h4eC9haWM3eHh4X29zbS5j
-Lk9MRAkyMDAzLTEyLTE5IDE2OjI2OjE1LjAwMDAwMDAwMCAtMDUwMA0KKysrIGxpbnV4LTIuNi4w
-LXRlc3QxMS9kcml2ZXJzL3Njc2kvYWljN3h4eC9haWM3eHh4X29zbS5jCTIwMDMtMTItMTkgMTY6
-Mjk6MTcuMDAwMDAwMDAwIC0wNTAwDQpAQCAtMTQwOCwxMiArMTQwOCwxOCBAQA0KIAkgKiBvdXIg
-ZG1hIG1hc2sgd2hlbiBkb2luZyBhbGxvY2F0aW9ucy4NCiAJICovDQogCWlmIChhaGMtPmRldl9z
-b2Z0YyAhPSBOVUxMKQ0KLQkJYWhjX3BjaV9zZXRfZG1hX21hc2soYWhjLT5kZXZfc29mdGMsIDB4
-RkZGRkZGRkYpOw0KKwkJaWYgKGFoY19wY2lfc2V0X2RtYV9tYXNrKGFoYy0+ZGV2X3NvZnRjLCAw
-eEZGRkZGRkZGKSkgew0KKwkJCXByaW50ayhLRVJOX1dBUk5JTkcgImFpYzd4eHg6IE5vIHN1aXRh
-YmxlIERNQSBhdmFpbGFibGUuXG4iKTsNCisJCQlyZXR1cm4gKEVOT0RFVik7DQorCQl9DQogCSp2
-YWRkciA9IHBjaV9hbGxvY19jb25zaXN0ZW50KGFoYy0+ZGV2X3NvZnRjLA0KIAkJCQkgICAgICBk
-bWF0LT5tYXhzaXplLCAmbWFwLT5idXNfYWRkcik7DQogCWlmIChhaGMtPmRldl9zb2Z0YyAhPSBO
-VUxMKQ0KLQkJYWhjX3BjaV9zZXRfZG1hX21hc2soYWhjLT5kZXZfc29mdGMsDQotCQkJCSAgICAg
-YWhjLT5wbGF0Zm9ybV9kYXRhLT5od19kbWFfbWFzayk7DQorCQlpZiAoYWhjX3BjaV9zZXRfZG1h
-X21hc2soYWhjLT5kZXZfc29mdGMsDQorCQkJCSAgICAgYWhjLT5wbGF0Zm9ybV9kYXRhLT5od19k
-bWFfbWFzaykpIHsNCisJCQlwcmludGsoS0VSTl9XQVJOSU5HICJhaWM3eHh4OiBObyBzdWl0YWJs
-ZSBETUEgYXZhaWxhYmxlLlxuIik7DQorCQkJcmV0dXJuIChFTk9ERVYpOw0KKwkJfQ0KICNlbHNl
-IC8qIExJTlVYX1ZFUlNJT05fQ09ERSA8IEtFUk5FTF9WRVJTSU9OKDIsMywwKSAqLw0KIAkvKg0K
-IAkgKiBBdCBsZWFzdCBpbiAyLjIuMTQsIG1hbGxvYyBpcyBhIHNsYWIgYWxsb2NhdG9yIHNvIGFs
-bA0KLS0tIGxpbnV4LTIuNi4wLXRlc3QxMS9kcml2ZXJzL3Njc2kvYWljN3h4eC9haWM3eHh4X29z
-bV9wY2kuYy5PTEQJMjAwMy0xMi0xOSAxNjozMDozMi4wMDAwMDAwMDAgLTA1MDANCisrKyBsaW51
-eC0yLjYuMC10ZXN0MTEvZHJpdmVycy9zY3NpL2FpYzd4eHgvYWljN3h4eF9vc21fcGNpLmMJMjAw
-My0xMi0xOSAxNjozMTo0My4wMDAwMDAwMDAgLTA1MDANCkBAIC0xNjgsNyArMTY4LDEwIEBADQog
-CQlhaGMtPmZsYWdzIHw9IEFIQ18zOUJJVF9BRERSRVNTSU5HOw0KIAkJYWhjLT5wbGF0Zm9ybV9k
-YXRhLT5od19kbWFfbWFzayA9IG1hc2tfMzliaXQ7DQogCX0gZWxzZSB7DQotCQlhaGNfcGNpX3Nl
-dF9kbWFfbWFzayhwZGV2LCAweEZGRkZGRkZGKTsNCisJCWlmIChhaGNfcGNpX3NldF9kbWFfbWFz
-ayhwZGV2LCAweEZGRkZGRkZGKSkgew0KKwkJCXByaW50ayhLRVJOX1dBUk5JTkcgImFpYzd4eHg6
-IE5vIHN1aXRhYmxlIERNQSBhdmFpbGFibGUuXG4iKTsNCisgICAgICAgICAgICAgICAgCXJldHVy
-biAoLUVOT0RFVik7DQorCQl9DQogCQlhaGMtPnBsYXRmb3JtX2RhdGEtPmh3X2RtYV9tYXNrID0g
-MHhGRkZGRkZGRjsNCiAJfQ0KICNlbmRpZg0KLS0tIGxpbnV4LTIuNi4wLXRlc3QxMS9kcml2ZXJz
-L3Njc2kvYWljN3h4eC9haWM3OXh4X29zbS5jLk9MRAkyMDAzLTEyLTE5IDE2OjM0OjAxLjAwMDAw
-MDAwMCAtMDUwMA0KKysrIGxpbnV4LTIuNi4wLXRlc3QxMS9kcml2ZXJzL3Njc2kvYWljN3h4eC9h
-aWM3OXh4X29zbS5jCTIwMDMtMTItMTkgMTY6MzU6MTEuMDAwMDAwMDAwIC0wNTAwDQpAQCAtMTc3
-NiwxMiArMTc3NiwxOCBAQA0KIAkgKiBvdXIgZG1hIG1hc2sgd2hlbiBkb2luZyBhbGxvY2F0aW9u
-cy4NCiAJICovDQogCWlmIChhaGQtPmRldl9zb2Z0YyAhPSBOVUxMKQ0KLQkJYWhkX3BjaV9zZXRf
-ZG1hX21hc2soYWhkLT5kZXZfc29mdGMsIDB4RkZGRkZGRkYpOw0KKwkJaWYgKGFoZF9wY2lfc2V0
-X2RtYV9tYXNrKGFoZC0+ZGV2X3NvZnRjLCAweEZGRkZGRkZGKSkgew0KKwkJCXByaW50ayhLRVJO
-X1dBUk5JTkcgImFpYzc5eHg6IE5vIHN1aXRhYmxlIERNQSBhdmFpbGFibGUuXG4iKTsNCisJCQly
-ZXR1cm4gKEVOT0RFVik7DQorCQl9DQogCSp2YWRkciA9IHBjaV9hbGxvY19jb25zaXN0ZW50KGFo
-ZC0+ZGV2X3NvZnRjLA0KIAkJCQkgICAgICBkbWF0LT5tYXhzaXplLCAmbWFwLT5idXNfYWRkcik7
-DQogCWlmIChhaGQtPmRldl9zb2Z0YyAhPSBOVUxMKQ0KLQkJYWhkX3BjaV9zZXRfZG1hX21hc2so
-YWhkLT5kZXZfc29mdGMsDQotCQkJCSAgICAgYWhkLT5wbGF0Zm9ybV9kYXRhLT5od19kbWFfbWFz
-ayk7DQorCQlpZiAoYWhkX3BjaV9zZXRfZG1hX21hc2soYWhkLT5kZXZfc29mdGMsDQorCQkJCSAg
-ICAgYWhkLT5wbGF0Zm9ybV9kYXRhLT5od19kbWFfbWFzaykpIHsNCisJCQlwcmludGsoS0VSTl9X
-QVJOSU5HICJhaWM3OXh4OiBObyBzdWl0YWJsZSBETUEgYXZhaWxhYmxlLlxuIik7DQorCQkJcmV0
-dXJuIChFTk9ERVYpOw0KKwkJfQ0KICNlbHNlIC8qIExJTlVYX1ZFUlNJT05fQ09ERSA8IEtFUk5F
-TF9WRVJTSU9OKDIsMywwKSAqLw0KIAkvKg0KIAkgKiBBdCBsZWFzdCBpbiAyLjIuMTQsIG1hbGxv
-YyBpcyBhIHNsYWIgYWxsb2NhdG9yIHNvIGFsbA0K
-
---=-PeHJZ8JyqF0jxxX2rsU0--
-
---=-95jfT4giMrtj+AV7LEMJ
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.2.3 (GNU/Linux)
-
-iD8DBQA/8tYlxULwo51rQBIRArClAJ9Y8k0r3ARZU4jHxwmScwQa3RbqLgCdHp+b
-rUTjZ2qcPj+tdYqzfjzr3nk=
-=X+2F
------END PGP SIGNATURE-----
-
---=-95jfT4giMrtj+AV7LEMJ--
