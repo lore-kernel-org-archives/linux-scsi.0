@@ -1,91 +1,93 @@
-From: Olaf Hering <olh@suse.de>
-Subject: Re: [PATCH] fix sym2 negotiation
-Date: Wed, 25 Aug 2004 11:25:41 +0200
+From: John Mason <john@mmspos.com>
+Subject: Megaraid bug or hardware failure?  Please help!
+Date: Wed, 25 Aug 2004 08:37:26 -0300
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040825092541.GA15466@suse.de>
-References: <1093113450.1732.334.camel@mulgrave> <20040824132936.GA25263@suse.de> <20040824203914.GA25755@us.ibm.com> <20040824205126.GA10105@suse.de> <20040825065747.GA2275@us.ibm.com>
+Message-ID: <6.1.0.6.1.20040825083549.044ade80@localhost>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="us-ascii"; format=flowed
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor.suse.de ([195.135.220.2]:46000 "EHLO Cantor.suse.de")
-	by vger.kernel.org with ESMTP id S264903AbUHYJZn (ORCPT
+Received: from [142.176.166.155] ([142.176.166.155]:35504 "EHLO mmspos.com")
+	by vger.kernel.org with ESMTP id S266896AbUHYLlX (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 25 Aug 2004 05:25:43 -0400
-Content-Disposition: inline
-In-Reply-To: <20040825065747.GA2275@us.ibm.com>
+	Wed, 25 Aug 2004 07:41:23 -0400
+Received: from john.mmspos.com (comp172.MMSLAN.mms [192.168.1.172])
+	by mmspos.com (8.11.6/8.11.6) with ESMTP id i7PBfMI16835
+	for <linux-scsi@vger.kernel.org>; Wed, 25 Aug 2004 08:41:22 -0300
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>, willy@debian.org, SCSI Mailing List <linux-scsi@vger.kernel.org>, Anton Blanchard <anton@samba.org>
-
- On Tue, Aug 24, Mike Anderson wrote:
-
-> Olaf Hering [olh@suse.de] wrote:
-> >  On Tue, Aug 24, Mike Anderson wrote:
-> >=20
-> > > I would guess this cdrom is behind a ACARD. We have had issues in
-> > > the past with negotiation / interaction between the ACARD and the=
- sym.=20
-> >=20
-> > Oh, that would be possible. I will look through our patches and fin=
-d the
-> > one that adds an insane delay. Maybe it helps.
-> >=20
->=20
-> Yes increasing scsi_inq_timeout to 27 seconds makes the messages go a=
-way
-> on my system. Prior to increasing the timeout I bk pulled scsi-misc-2=
-=2E6
-> and received the same ABORT recovery sequence you did.
-
-This patch fixed it. I'm sure this was already discussed on to dead, we
-hit this bug initally one year ago with 2.4.21.
+To: linux-scsi@vger.kernel.org
 
 
-=2E...
+Hi all,
 
-garloff@suse.de
+   Just joined the list and I'm hoping someone can shed some light on a 
+problem I've been having.
+This might be more of an issue for Dell hardware support, but I hoped 
+someone here might recognize these symptoms.
 
-Workaround
+We have a Dell Poweredge 2600 with the Perc 4di controller, dual 2.8 gig 
+Xeons, and 1 GB of RAM.
+It's running (unpatched) Redhat 8.0, with megaraid 1.18d.  On the Perc4 we 
+have two drives in a raid1 configuration on channel A, and six drives 
+including a hotspare on channel B.  There is a logical drive defined on 
+each channel.
 
-This broken chip seems to be so popular on PPC64 that the arch maintain=
-ers
-want a PPC64 specific default. Oh well ...
+Originally the box locked up on us about a year ago.  All 8 hard drives 
+seemed to be under heavy load, and there was no response at the console 
+aside from being able to switch to different virtual terminals with alt-f2, 
+etc.  We rebooted the box, and it recovered, but /var/log/messages was full 
+of scsi timeout errors for one particular drive.
 
-diff -uNrp linux-2.6.5.inq_timeout/drivers/scsi/scsi_scan.c linux-2.6.5=
-=2Einq_timeout.ppc64/drivers/scsi/scsi_scan.c
---- linux-2.6.5.inq_timeout/drivers/scsi/scsi_scan.c    2004-04-21 14:3=
-2:04.000000000 +0200
-+++ linux-2.6.5.inq_timeout.ppc64/drivers/scsi/scsi_scan.c      2004-04=
--21 14:44:05.000000000 +0200
-@@ -94,7 +94,17 @@ MODULE_PARM_DESC(max_report_luns,
-                 "REPORT LUNS maximum number of LUNS received (should b=
-e"
-                 " between 1 and 16384)");
-=20
-+/* Some AChip ARC765 based DVD-ROM's take 15 or more seconds
-+ * to reset.  A scan will fail if made right after a reset.
-+ * It's completely broken device behaviour: SCSI specification
-+ * says devices need to be able to respond to INQUIRY always
-+ * (after a selection timeout ... of 250ms).
-+ */
-+#ifdef __powerpc64__
-+static unsigned int scsi_inq_timeout =3D SCSI_TIMEOUT/HZ+25;
-+#else
- static unsigned int scsi_inq_timeout =3D SCSI_TIMEOUT/HZ+3;
-+#endif
-=20
- module_param_named(inq_timeout, scsi_inq_timeout, int, S_IRUGO|S_IWUSR=
-);
- MODULE_PARM_DESC(inq_timeout,=20
+We were able to get Dell to replace the machine for us, and it ran 
+perfectly for months, until a few weeks ago.  At this point, the box locked 
+again, but it appeared to have suffered a drive failure and started a 
+rebuild onto the hotspare.  From what we could get from the messages and 
+megaraid log files, it was in the middle of a rebuild when it locked.
+After rebooting, it seemed to complete the rebuild. I installed the 
+Openmanage Server Assistant (which cleared the ESM logs, conveniently) and 
+also ran Dellmgr to check the status of the 2nd container, where the 
+failure had apparently occurred.  I was surprised to find that the drive 
+that had supposedly caused the problems was showing as online.  We assigned 
+it to be a hotspare, and hoped it was just a momentary glitch that had 
+caused the issue.  I've been told a few times by Dell support that this 
+sometimes happens without there being any real hardware fault.
 
+About a week later, the box locked again.  No one was around for the 
+initial failure, but it looks like it stopped responding around
+midnight.  We first got word around noon the next day.  This time there was 
+no drive activity, no indication of any hardware failure,
+but a kernel panic on the screen, followed by a message appearing on the 
+screen every second -- something along the lines of "Mailbox 
+unavailable".  A check in the raid BIOS showed no problems at all.
 
+On rebooting the box, fsck tried to repair errors on the 2nd 
+container.  The fsck took hours and found thousands of errors, and finally 
+wanted to reboot.  After rebooting, the same series of errors were 
+reported, and again two more times after this.  I finally decided to
+put a Knoppix CD into the box and see what was left of the drives.  When it 
+finished booting, I could see ALL of my partitions, and all of the data 
+appeared intact.  At this point I used NFS to get all the data I needed 
+while I had the chance.
+After I got the data I needed, I ran fsck from within Knoppix.  It found 2 
+or 3 errors, fixed them, and when I rebooted, Red Hat booted up again with 
+no errors at all!
 
---=20
-USB is for mice, FireWire is for men!
+So... after all that, does anyone have any thoughts on what the problem 
+might be?  It seems like we might have a flaky backplane and/or raid 
+controller.  I suspect the megaraid driver and/or fsck might be buggy after 
+Knoppix was able to so easily fix the problems with the file system.  Also 
+was looking through the megaraid.c source today looking at the revision 
+history, and noticed that it uses the term "mailbox" a lot...  which would 
+suggest the error I was seeing at the console was coming from megaraid (it 
+didn't actually say "megaraid" at the beginning of the message).
 
-sUse lINUX ag, n=C3=9CRNBERG
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Would that message from the megaraid driver necessarily indicate any 
+particular type of failure?  I'd gladly just update to the newest megaraid, 
+but what makes me suspicious is the fact that we have 4 or 5 other machines 
+with similar setups and the same OS, one of which is more heavily loaded 
+than this one, and none of them have ever had any raid issues like this.
+
+Anyway,  any ideas or suggestions would be greatly appreciated, at this 
+point I'm pretty much just grasping at straws.
+
+Thanks in advance!
+
