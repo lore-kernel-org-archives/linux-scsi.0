@@ -1,125 +1,35 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: [update] scsi_mid_low_api.txt for slave_configure()++
-Date: Fri, 29 Nov 2002 19:12:22 +1100
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3DE72166.8030709@torque.net>
-Reply-To: dougg@torque.net
+From: "Parthiban M" <parthi_m@hotmail.com>
+Subject: Memory leak trace utility for kernel module !
+Date: Fri, 29 Nov 2002 16:44:58 +0530
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <F136CASlDxzcIZChJhX0001c50a@hotmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------010609020603080605090807"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from torque.net (dm1-33.triode.net.au [202.147.125.33])
-	by iggy.triode.net.au (8.11.6/8.11.6) with ESMTP id gAT8E7U23859
-	for <linux-scsi@vger.kernel.org>; Fri, 29 Nov 2002 19:14:08 +1100
+Content-Type: text/plain; format=flowed
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+To: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Cc: pamanick@npd.hcltech.com
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-This is a multi-part message in MIME format.
---------------010609020603080605090807
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Hello all,
 
-Attached is an gzipped patch for
-Documentation/scsi/scsi_mid_low_api.txt found in lk 2.5.50
+      I've implemented linux kernel modules "for IP storage " using 
+kernel(2.4.18-3)
+socket's and sending/receiving data of size more than MBs. I'm iteratively 
+doing
+copy operation to remote machine after 15 hours my machine running out of 
+memory, seems to be memory leak in my driver.
 
-It replaces slave_attach() (and _detach()) with the new
-slave_alloc() (_configure() and _destroy()) descriptions.
+plz let me know any memory trace utility available for linux 
+kernel(2.4.18-3) or any
+info. regarding my problem.
 
+Thx,
+Parthi.
 
-Doug Gilbert
-
---------------010609020603080605090807
-Content-Type: application/x-gzip;
- name="scsi_mid_low_api_021129.diff.gz"
-Content-Transfer-Encoding: base64
-Content-Disposition: inline;
- filename="scsi_mid_low_api_021129.diff.gz"
-
-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
-wfAUo9o76o3Rl6noW7yePzrfuPYvuEChfm08AAA=
---------------010609020603080605090807--
+Note : haven't enabled kernel preemption patch in my running kernel.
 
 
+
+_________________________________________________________________
+STOP MORE SPAM with the new MSN 8 and get 2 months FREE* 
+http://join.msn.com/?page=features/junkmail
