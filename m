@@ -1,57 +1,63 @@
 From: "Hammer, Jack" <Jack_Hammer@adaptec.com>
-Subject: RE: [PATCH] ips driver for 2.4.23-pre4
-Date: Thu, 8 Jan 2004 15:18:23 -0500
+Subject: RE: [PATCH] gdth driver for 2.4.23-pre4
+Date: Thu, 8 Jan 2004 15:39:58 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <A121ABA5B472B74EB59076B8E3C8F0190129F3@rtpe2k01.adaptec.com>
+Message-ID: <A121ABA5B472B74EB59076B8E3C8F0190129F5@rtpe2k01.adaptec.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from magic-mail.adaptec.com ([216.52.22.10]:19385 "EHLO
-	magic.adaptec.com") by vger.kernel.org with ESMTP id S266374AbUAHUTU
+Received: from magic-mail.adaptec.com ([216.52.22.10]:41418 "EHLO
+	magic.adaptec.com") by vger.kernel.org with ESMTP id S266310AbUAHUkm
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 8 Jan 2004 15:19:20 -0500
+	Thu, 8 Jan 2004 15:40:42 -0500
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>, Xose Vazquez Perez <xose@wanadoo.es>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, Tosatti <marcelo.tosatti@cyclades.com>
+To: Xose Vazquez Perez <xose@wanadoo.es>, "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
+Cc: 'Christoph Hellwig' <hch@infradead.org>, 'linux-scsi' <linux-scsi@vger.kernel.org>, 'Tosatti' <marcelo.tosatti@cyclades.com>
 
 
-Adaptec ( Jack Hammer and Dave Jeffery ) maintains the ips driver.  We
-submitted this driver.  If there are any questions or concerns, please let
-us know ASAP.
+Not at all true ( or easy ) in the real world.  Driver owners are actually
+in the business of selling adapters ( or devices ), not software drivers.
 
-The 6.11.07 ips driver passed a very strict ( and formal ) 4 month
-IBM/Adaptec test cycle that included stress tests on every platform and
-adapter that it supports before the patch was released.
+When a new device or adapter is announced, a driver for it must be made
+available immediately to the customer ( OEM and/or channel ) or the device
+is useless.  There is no luxury of waiting of couple months for a new driver
+to be accepted into a kernel, and then later make it's way into a
+distribution before you can start selling your product.
 
-The reason this compiler warning exists is that these are the only hardware
-platforms that support this adapter.  Use of this adapter is any other box
-can cause serious problems and is not supported by anyone.  Removal of this
-warning has no effect on the executable code and would not improve the
-driver in my opinion.  If I was including a module in my system that is not
-going to work, I'd like to know about it.
+You must also understand that new driver code sometimes cannot be
+distributed to a mailing list prior to a new product's announcment or else
+we would be violating confidential "unannounced product" information of the
+company.  It's a viscious cycle, and not an ideal situation, but one we
+vendors must live with.
 
+I agree we need to drive everything into the kernel as soon as possible, but
+that will never be the only work that must be done by vendors.
+
+ 
 
 
 -----Original Message-----
 From: linux-scsi-owner@vger.kernel.org
-[mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of Christoph Hellwig
-Sent: Thursday, January 08, 2004 12:16 PM
-To: Xose Vazquez Perez
-Cc: linux-scsi; Tosatti
-Subject: Re: [PATCH] ips driver for 2.4.23-pre4
+[mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of Xose Vazquez Perez
+Sent: Thursday, January 08, 2004 3:06 PM
+To: Salyzyn, Mark
+Cc: 'Christoph Hellwig'; 'linux-scsi'; 'Tosatti'
+Subject: Re: [PATCH] gdth driver for 2.4.23-pre4
 
-On Wed, Jan 07, 2004 at 08:17:00PM +0100, Xose Vazquez Perez wrote:
-> -#if !defined(__i386__) && !defined(__ia64__) -#error "This driver has 
-> only been tested on the x86/ia64 platforms"
-> +#if !defined(__i386__) && !defined(__ia64__) && !defined(__x86_64__) 
-> +#error "This driver has only been tested on the x86/ia64/x86_64
-platforms"
->  #endif
+Salyzyn, Mark wrote:
 
-This warning schould be removed completly.  Lots of PCI drivers have been
-tested only on a few plattforms.
+> Time and priority is the enemy ... not the maintainers, gatekeepers, 
+> volunteeers or the vendors.
 
-Else the patch is okay, but where's the maintainer?
+So much to do; so little time
+
+> There are currently three effective code bases a vendor driver 
+> maintainer is to submit to Distribution, 2.4.* and 2.6.*. OEMs and 
+> Channel, the vendor's customers, only concern themselves about
+Distributions.
+
+Forget distributions kernel, OEM, Channels ..... If your drivers are in the
+official tree you work is done. Easy.
 
 -
 To unsubscribe from this list: send the line "unsubscribe linux-scsi" in the
