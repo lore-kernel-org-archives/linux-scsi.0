@@ -1,67 +1,178 @@
-From: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Subject: Re: [PATCH] qla2xxx -- FCP_RSP IU check during command completion.
-Date: Tue, 10 Feb 2004 15:44:21 -0800
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1076456661.6072.68.camel@dieplab1>
-References: <1076455038.6072.62.camel@dieplab1>
+From: "Moore, Eric Dean" <Emoore@lsil.com>
+Subject: RE: 2.4.25-rc1: Inconsistent ioctl symbol usage in drivers/messag
+	 e/fusion/mptctl.c
+Date: Tue, 10 Feb 2004 18:53:26 -0500
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <0E3FA95632D6D047BA649F95DAB60E5703D1A97A@exa-atlanta.se.lsil.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="=-dVISdiOMRuP53o1Ke97w"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pat.qlogic.com ([198.70.193.2]:51519 "EHLO avexch01.qlogic.com")
-	by vger.kernel.org with ESMTP id S262123AbUBJXnp (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 10 Feb 2004 18:43:45 -0500
-In-Reply-To: <1076455038.6072.62.camel@dieplab1>
+Content-Type: text/plain;
+	charset="iso-8859-1"
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+To: Mikael Pettersson <mikpe@csd.uu.se>
+Cc: Marcelo Tosatti <marcelo.tosatti@cyclades.com>, Keith Owens <kaos@ocs.com.au>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: linux-scsi@vger.kernel.org
 
-
---=-dVISdiOMRuP53o1Ke97w
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-
-On Tue, 2004-02-10 at 15:17, Andrew Vasquez wrote:
-> James,
+On Tuesday, February 10, 2004 9:25 AM, Mikael Pettersson  wrote:
+> Moore, Eric Dean writes:
+>  > If we pass NULL as the 2nd parameter for 
+> register_ioctl32_conversion(),
+>  > the mpt_ioctl() entry point is *not* called when running a 32 bit
+>  > application in x86_64 mode.
 > 
-> While processing command completions in qla2x00_status_entry()
-> interrogate the FCP_RSP IU in case of any FCP protocol errors (FCP-3,
-> 9.4.11) during command execution.  If there were any failures, schedule
-> a retry of the command via DID_BUS_BUSY.
+> Ok, but you still don't need sys_ioctl() since the one-liner
 > 
-> Please apply.
+>  > > filp->f_op->ioctl(filp->f_dentry->d_inode, filp, cmd, arg)
+> 
+> (or a hardcoded call to your ioctl() method) suffices.
+> 
+> sys_ioctl() mostly just checks for special case ioctls before
+> doing the line above, but those special cases can't occur
+> since the kernel has already matched your particular ioctl.
+> 
+> /Mikael
 > 
 
-Damn, this patch is incomplete.  Corrected patch attached.  Thanks to RA
-for pointing this out.
 
-Regards,
-Andrew Vasquez
+Ok - I have modified the mpt fusion driver per your suggestions.
+Please advise if this would work.
+This is 2.05.11.03 version.
 
---=-dVISdiOMRuP53o1Ke97w
-Content-Disposition: attachment; filename=QL1_fcp_protocol_errors_2.diff
-Content-Transfer-Encoding: base64
-Content-Type: text/plain; name=QL1_fcp_protocol_errors_2.diff; charset=
+You can download full source and 2.05.11.03 patches here:
+ftp://ftp.lsil.com/HostAdapterDrivers/linux/Fusion-MPT/2.05.11.03
 
-LS0tIGEvZHJpdmVycy9zY3NpL3FsYTJ4eHgvcWxhX2lzci5jCTIwMDQtMDItMDIgMDk6Mzg6Mjku
-MDAwMDAwMDAwIC0wODAwDQorKysgYi9kcml2ZXJzL3Njc2kvcWxhMnh4eC9xbGFfaXNyLmMJMjAw
-NC0wMi0xMCAxMzo1MTozMC40NzQyOTI3MzYgLTA4MDANCkBAIC04MjgsNiArODI4LDcgQEANCiAJ
-dWludDhfdAkJbHNjc2lfc3RhdHVzOw0KIAl1aW50MzJfdAlyZXNpZDsNCiAJdWludDhfdAkJc2Vu
-c2Vfc3ogPSAwOw0KKwl1aW50MTZfdAlyc3BfaW5mb19sZW47DQogDQogCS8qIEZhc3QgcGF0aCBj
-b21wbGV0aW9uLiAqLw0KIAlpZiAobGUxNl90b19jcHUocGt0LT5jb21wX3N0YXR1cykgPT0gQ1Nf
-Q09NUExFVEUgJiYNCkBAIC05MTksNiArOTIwLDI0IEBADQogCQl9DQogCX0NCiANCisJLyogQ2hl
-Y2sgZm9yIGFueSBGQ1AgdHJhbnNwb3J0IGVycm9ycy4gKi8NCisJaWYgKHNjc2lfc3RhdHVzICYg
-U1NfUkVTUE9OU0VfSU5GT19MRU5fVkFMSUQpIHsNCisJCXJzcF9pbmZvX2xlbiA9IGxlMTZfdG9f
-Y3B1KHBrdC0+cnNwX2luZm9fbGVuKTsNCisJCWlmIChyc3BfaW5mb19sZW4gPiAzICYmIHBrdC0+
-cnNwX2luZm9bM10pIHsNCisJCQlERUJVRzIocHJpbnRrKCJzY3NpKCVsZDolZDolZDolZCkgRkNQ
-IEkvTyBwcm90b2NvbCAiDQorCQkJICAgICJmYWlsdXJlICgleC8lMDJ4JTAyeCUwMnglMDJ4JTAy
-eCUwMnglMDJ4JTAyeCkuLi4iDQorCQkJICAgICJyZXRyeWluZyBjb21tYW5kXG4iLCBoYS0+aG9z
-dF9ubywgYiwgdCwgbCwNCisJCQkgICAgcnNwX2luZm9fbGVuLCBwa3QtPnJzcF9pbmZvWzBdLCBw
-a3QtPnJzcF9pbmZvWzFdLA0KKwkJCSAgICBwa3QtPnJzcF9pbmZvWzJdLCBwa3QtPnJzcF9pbmZv
-WzNdLA0KKwkJCSAgICBwa3QtPnJzcF9pbmZvWzRdLCBwa3QtPnJzcF9pbmZvWzVdLA0KKwkJCSAg
-ICBwa3QtPnJzcF9pbmZvWzZdLCBwa3QtPnJzcF9pbmZvWzddKSk7DQorDQorCQkJY3AtPnJlc3Vs
-dCA9IERJRF9CVVNfQlVTWSA8PCAxNjsNCisJCQlhZGRfdG9fZG9uZV9xdWV1ZShoYSwgc3ApOw0K
-KwkJCXJldHVybjsNCisJCX0NCisJfQ0KKw0KIAkvKg0KIAkgKiBCYXNlZCBvbiBIb3N0IGFuZCBz
-Y3NpIHN0YXR1cyBnZW5lcmF0ZSBzdGF0dXMgY29kZSBmb3IgTGludXgNCiAJICovDQo=
 
---=-dVISdiOMRuP53o1Ke97w--
+
+diff -uarN linux-2.4.25-rc1-ref/drivers/message/fusion/linux_compat.h
+linux-2.4.25-rc1/drivers/message/fusion/linux_compat.h
+--- linux-2.4.25-rc1-ref/drivers/message/fusion/linux_compat.h	2004-02-10
+16:54:38.000000000 -0700
++++ linux-2.4.25-rc1/drivers/message/fusion/linux_compat.h	2004-02-10
+15:05:32.000000000 -0700
+@@ -12,7 +12,7 @@
+ 
+/*=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+=*/
+ 
+ 
+-#if (defined(__sparc__) && defined(__sparc_v9__)) || defined(__x86_64__) ||
+defined(__ia64__)
++#if (defined(__sparc__) && defined(__sparc_v9__)) || defined(__x86_64__)
+ #define MPT_CONFIG_COMPAT
+ #endif
+ 
+diff -uarN linux-2.4.25-rc1-ref/drivers/message/fusion/mptbase.h
+linux-2.4.25-rc1/drivers/message/fusion/mptbase.h
+--- linux-2.4.25-rc1-ref/drivers/message/fusion/mptbase.h	2004-02-10
+16:54:38.000000000 -0700
++++ linux-2.4.25-rc1/drivers/message/fusion/mptbase.h	2004-02-10
+15:45:03.000000000 -0700
+@@ -80,8 +80,8 @@
+ #define COPYRIGHT	"Copyright (c) 1999-2003 " MODULEAUTHOR
+ #endif
+ 
+-#define MPT_LINUX_VERSION_COMMON	"2.05.11.01"
+-#define MPT_LINUX_PACKAGE_NAME		"@(#)mptlinux-2.05.11.01"
++#define MPT_LINUX_VERSION_COMMON	"2.05.11.03"
++#define MPT_LINUX_PACKAGE_NAME		"@(#)mptlinux-2.05.11.03"
+ #define WHAT_MAGIC_STRING		"@" "(" "#" ")"
+ 
+ #define show_mptmod_ver(s,ver)  \
+diff -uarN linux-2.4.25-rc1-ref/drivers/message/fusion/mptctl.c
+linux-2.4.25-rc1/drivers/message/fusion/mptctl.c
+--- linux-2.4.25-rc1-ref/drivers/message/fusion/mptctl.c	2004-02-10
+16:54:38.000000000 -0700
++++ linux-2.4.25-rc1/drivers/message/fusion/mptctl.c	2004-02-10
+16:39:55.000000000 -0700
+@@ -2715,7 +2715,6 @@
+ 						      unsigned long,
+ 						      struct file *));
+ int unregister_ioctl32_conversion(unsigned int cmd);
+-extern asmlinkage int sys_ioctl(unsigned int fd, unsigned int cmd, unsigned
+long arg);
+ 
+ 
+/*=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+=*/
+ /* compat_XXX functions are used to provide a conversion between
+@@ -2725,6 +2724,15 @@
+  * to ensure the structure contents is properly processed by mptctl.
+  */
+ static int
++compat_mptctl_ioctl(unsigned int fd, unsigned int cmd,
++			unsigned long arg, struct file *filp)
++{
++	dctlprintk((KERN_INFO MYNAM "::compat_mptctl_ioctl() called\n"));
++
++	return mptctl_ioctl(filp->f_dentry->d_inode, filp, cmd, arg);
++}
++
++static int
+ compat_mptfwxfer_ioctl(unsigned int fd, unsigned int cmd,
+ 			unsigned long arg, struct file *filp)
+ {
+@@ -2864,30 +2872,31 @@
+ 	}
+ 
+ #ifdef MPT_CONFIG_COMPAT
+-	err = register_ioctl32_conversion(MPTIOCINFO, sys_ioctl);
++	err = register_ioctl32_conversion(MPTIOCINFO, compat_mptctl_ioctl);
+ 	if (++where && err) goto out_fail;
+-	err = register_ioctl32_conversion(MPTIOCINFO1, sys_ioctl);
++	err = register_ioctl32_conversion(MPTIOCINFO1, compat_mptctl_ioctl);
+ 	if (++where && err) goto out_fail;
+-	err = register_ioctl32_conversion(MPTTARGETINFO, sys_ioctl);
++	err = register_ioctl32_conversion(MPTTARGETINFO,
+compat_mptctl_ioctl);
+ 	if (++where && err) goto out_fail;
+-	err = register_ioctl32_conversion(MPTTEST, sys_ioctl);
++	err = register_ioctl32_conversion(MPTTEST, compat_mptctl_ioctl);
+ 	if (++where && err) goto out_fail;
+-	err = register_ioctl32_conversion(MPTEVENTQUERY, sys_ioctl);
++	err = register_ioctl32_conversion(MPTEVENTQUERY,
+compat_mptctl_ioctl);
+ 	if (++where && err) goto out_fail;
+-	err = register_ioctl32_conversion(MPTEVENTENABLE, sys_ioctl);
++	err = register_ioctl32_conversion(MPTEVENTENABLE,
+compat_mptctl_ioctl);
+ 	if (++where && err) goto out_fail;
+-	err = register_ioctl32_conversion(MPTEVENTREPORT, sys_ioctl);
++	err = register_ioctl32_conversion(MPTEVENTREPORT,
+compat_mptctl_ioctl);
+ 	if (++where && err) goto out_fail;
+-	err = register_ioctl32_conversion(MPTHARDRESET, sys_ioctl);
++	err = register_ioctl32_conversion(MPTHARDRESET,
+compat_mptctl_ioctl);
+ 	if (++where && err) goto out_fail;
+ 	err = register_ioctl32_conversion(MPTCOMMAND32, compat_mpt_command);
+ 	if (++where && err) goto out_fail;
+ 	err = register_ioctl32_conversion(MPTFWDOWNLOAD32,
+ 					  compat_mptfwxfer_ioctl);
+ 	if (++where && err) goto out_fail;
+-	err = register_ioctl32_conversion(HP_GETHOSTINFO, sys_ioctl);
++	err = register_ioctl32_conversion(HP_GETHOSTINFO,
+compat_mptctl_ioctl);
+ 	if (++where && err) goto out_fail;
+-	err = register_ioctl32_conversion(HP_GETTARGETINFO, sys_ioctl);
++	err = register_ioctl32_conversion(HP_GETTARGETINFO,
++	    				compat_mptctl_ioctl);
+ 	if (++where && err) goto out_fail;
+ #endif
+ 
+diff -uarN linux-2.4.25-rc1-ref/drivers/message/fusion/mptscsih.c
+linux-2.4.25-rc1/drivers/message/fusion/mptscsih.c
+--- linux-2.4.25-rc1-ref/drivers/message/fusion/mptscsih.c	2004-02-10
+16:54:38.000000000 -0700
++++ linux-2.4.25-rc1/drivers/message/fusion/mptscsih.c	2004-02-10
+11:33:39.000000000 -0700
+@@ -914,8 +914,8 @@
+ 			sc->resid = sc->request_bufflen - xfer_cnt;
+ 			dprintk((KERN_NOTICE "  SET sc->resid=%02xh\n",
+sc->resid));
+ #endif
+-			if (sc->underflow > xfer_cnt) {
+-				sc->result = DID_SOFT_ERROR;
++			if((xfer_cnt == 0 ) || (sc->underflow > xfer_cnt)) {
++				sc->result = DID_SOFT_ERROR << 16;
+ 			}
+ 
+ 			/* Report Queue Full
