@@ -1,41 +1,49 @@
-From: Andries Brouwer <aebr@win.tue.nl>
-Subject: Re: Why /dev/sdc1 doesn't show up...
-Date: Tue, 19 Nov 2002 23:33:56 +0100
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] scsi sysfs cleanups
+Date: Tue, 19 Nov 2002 23:16:15 +0000
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20021119223356.GA2525@win.tue.nl>
-References: <20021119055636.94C182C088@lists.samba.org> <Pine.GSO.4.21.0211190116420.27757-100000@steklov.math.psu.edu>
+Message-ID: <20021119231614.A27242@infradead.org>
+References: <20021119153008.GA1544@beaverton.ibm.com> <20021119164856.A11391@infradead.org> <20021119183908.GA1120@beaverton.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <Pine.GSO.4.21.0211190116420.27757-100000@steklov.math.psu.edu>
+In-Reply-To: <20021119183908.GA1120@beaverton.ibm.com>; from andmike@us.ibm.com on Tue, Nov 19, 2002 at 10:39:08AM -0800
 List-Id: linux-scsi@vger.kernel.org
-To: Alexander Viro <viro@math.psu.edu>
-Cc: Rusty Russell <rusty@rustcorp.com.au>, Doug Ledford <dledford@redhat.com>, Linux Scsi Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Linus Torvalds <torvalds@transmeta.com>
+To: Mike Anderson <andmike@us.ibm.com>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org
 
-On Tue, Nov 19, 2002 at 02:12:54AM -0500, Alexander Viro wrote:
+On Tue, Nov 19, 2002 at 10:39:08AM -0800, Mike Anderson wrote:
+> I was trying to ensure consistency and type checking of class_data used
+> by host of class type scsi-host.
+> 
+> In the device model the struct device contains three void pointers for
+> use by associated member. driver_data is a private data pointer for the
+> device driver. class_data is for use by the class in this case scsi-host
+> class.
 
-> BTW, remember the flamef^Warguments about turning kdev_t into a pointer
-> and thus avoiding digging through piles and piles of cr^Hode?  Didn't
-> fly for exactly the same reasons - there's no way to do it magically
-> for entire kernel without breaking tons of code and/or creating an
-> impossible-to-debug mess...
+Still the casts make no sense at all.  in C you can assign a void pointer
+to any other pointer and the other way around.
 
-You never convinced me. Maybe we ever meet and can talk..
+> 
+> The *device_driver* interfaces are possibly not needed any more as I
+> originally had them exported because they where being called directly by
+> the upper layers.  Now they are being called by the mid-layer which this
+> *.o is linked. In the future the upper layers could call these directly
+> as the operations in scsi_register_device are handled by the sysfs layer
+> if upper layers fully support the device model probe / remove / release.
 
-In the meantime:
-Yesterday or so I built versions of 2.5.48 with 32-bit and 64-bit dev_t.
+But they shouldn't.  Each additional exported interface makes life harder.
+Please don't export stuff unless it's really required.
 
-The code is full of conversions dev_t -> int -> dev_t -> int.
-Ugly. I gave the mknod method in struct inode_operations type
-	int (*mknod) (struct inode *,struct dentry *,int,dev_t);
-thus avoiding much conversion.
-Do you have objections?
+> The *host_class* are interfaces for the LLDD to call to register and
+> unregister as a scsi host class driver.
+> 
+> These interfaces are used in a scsi_debug patch I have beyond scsi_debug
+> 1.65 that demonstrate the used of these interfaces.
 
-Andries
+Again, see above.  What do these interfaces actually gain us over
+scsi_add_host/scsi_remove_host?  If it helps us in practice (of which I
+still need to be convienced) remove scsi_add_host/scsi_remove_host when
+exporting those, but don't keep both.
 
-# mount /dev/hde6 /fbsd6 -t ufs -o ufstype=44bsd,ro
-# ./ls -l /fbsd6/dev/da2s[34]
-brw-r-----   1     root      disk    4, 0x040012 Oct 31 21:06 /fbsd6/dev/da2s3
-brw-r-----   1     root      disk    4, 0x050012 Oct 31 21:06 /fbsd6/dev/da2s4
-#
