@@ -1,60 +1,58 @@
-From: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
+From: Mikael Pettersson <mikpe@csd.uu.se>
 Subject: Re: [PATCH][2.6.8-rc1-mm1] drivers/scsi/sg.c gcc341 inlining fix
-Date: Wed, 14 Jul 2004 19:31:12 +0200
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <200407141931.12249.bzolnier@elka.pw.edu.pl>
-References: <200407141216.i6ECGHxg008332@harpo.it.uu.se> <40F562FC.50806@pobox.com> <20040714165419.GF7308@fs.tum.de>
-Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mion.elka.pw.edu.pl ([194.29.160.35]:23758 "EHLO
-	mion.elka.pw.edu.pl") by vger.kernel.org with ESMTP id S265098AbUGNRZK
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 14 Jul 2004 13:25:10 -0400
-In-Reply-To: <20040714165419.GF7308@fs.tum.de>
-Content-Disposition: inline
+Date: Wed, 14 Jul 2004 19:51:53 +0200 (MEST)
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <200407141751.i6EHprhf009045@harpo.it.uu.se>
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org-S267488AbUGNR5w@vger.kernel.org>
+To: B.Zolnierkiewicz@elka.pw.edu.pl, jgarzik@pobox.com
+Cc: akpm@osdl.org, dgilbert@interlog.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, mikpe@csd.uu.se
 List-Id: linux-scsi@vger.kernel.org
-To: Adrian Bunk <bunk@fs.tum.de>, Jeff Garzik <jgarzik@pobox.com>
-Cc: Mikael Pettersson <mikpe@csd.uu.se>, akpm@osdl.org, dgilbert@interlog.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
+On Wed, 14 Jul 2004 11:59:01 -0400, Jeff Garzik wrote:
+>Bartlomiej Zolnierkiewicz wrote:
+>> Hi,
+>> 
+>> On Wednesday 14 of July 2004 14:16, Mikael Pettersson wrote:
+>> 
+>>>gcc-3.4.1 errors out in 2.6.8-rc1-mm1 at drivers/scsi/sg.c:
+>>>
+>>>drivers/scsi/sg.c: In function `sg_ioctl':
+>>>drivers/scsi/sg.c:209: sorry, unimplemented: inlining failed in call to
+>>>'sg_jif_to_ms': function body not available drivers/scsi/sg.c:930: sorry,
+>>>unimplemented: called from here
+>>>make[2]: *** [drivers/scsi/sg.o] Error 1
+>>>make[1]: *** [drivers/scsi] Error 2
+>>>make: *** [drivers] Error 2
+>>>
+>>>sg_jif_to_ms() is marked inline but used defore its function
+>>>body is available. Moving it nearer the top of sg.c (together
+>>>with sg_ms_to_jif() for consistency) fixes the problem.
+>> 
+>> 
+>> While your patch is perfectly fine I think we can do better.
+>> I think that we may try converting sg.c to use jiffies_to_msecs()
+>> and msecs_to_jiffies() from <linux/time.h>.
+>
+>
+>_Look_ at the patch.  It just moves code around for no reason.  Using 
+>static inline prototypes should work just fine.  This patch isn't needed.
 
-FYI 'inlining fix' was just merged as part of viro's sparse cleanups
+It's needed, and no it's not a compiler bug.
 
-I still would like somebody to comment on idea of converting sg.c
-to use standard inlines from <linux/time.h> ...
+2.6.8-rc1-mm1 changed <linux/compiler-gcc3.h> to attach
+__attribute__((always_inline)) to inline-declarations.
+gcc-3.4, in turn, honors this literally: if it fails to
+inline because the function body isn't visible at the
+call site, then it generates a compiler error, exactly
+as the kernel asked it to.
 
-On Wednesday 14 of July 2004 18:54, Adrian Bunk wrote:
-> On Wed, Jul 14, 2004 at 12:44:44PM -0400, Jeff Garzik wrote:
-> > Adrian Bunk wrote:
-> > >On Wed, Jul 14, 2004 at 11:52:46AM -0400, Jeff Garzik wrote:
-> > >>...
-> > >>If gcc is insisting that prototypes for inlines no longer work, we have
-> > >>a lot of code churn on our hands ;-(  Grumble.
-> > >
-> > >I've counted at about 30 files with such problems in a full i386
-> > >2.6.7-mm7 compile.
-> > >
-> > >I've already sent patches for some of them (e.g. the dmascc.c one), and
-> > >they are usually pretty straightforward.
-> >
-> > This is not a problem with the kernel.
-> >
-> > All these files have been functioning just fine for years, with properly
-> > prototyped static inline functions.
->
-> Add -Winline to the compile flags, and name one gcc version that is able
-> to inline them all in sg.c ...
->
-> > Though there is a the claim that '#define inline always_inline' is
-> > leading to all this breakage.
->
-> gcc 3.4 is just complaining louder that it can't inline something it was
-> told to inline.
->
-> > 	Jeff
->
-> cu
-> Adrian
+(And placing 'static inline' on a forward-declared function
+is utterly pointless: if its body isn't visible it won't
+be inlined, and if it is visible, the forward declaration
+itself served no purpose.)
 
+Now maybe Andrew shouldn't have merged that change, but
+at least it shows us where inlining doesn't occur, allowing
+us to fix the code or remove unnecessary inlines.
+
+/Mikael
