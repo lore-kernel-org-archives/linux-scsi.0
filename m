@@ -1,42 +1,70 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: iomapping a big endian area
-Date: Mon, 04 Apr 2005 09:25:05 -0500
-Message-ID: <1112624705.5813.19.camel@mulgrave>
-References: <1112475134.5786.29.camel@mulgrave>
-	 <20050403013757.GB24234@parcelfarce.linux.theplanet.co.uk>
-	 <20050402183805.20a0cf49.davem@davemloft.net>
-	 <20050403031000.GC24234@parcelfarce.linux.theplanet.co.uk>
-	 <1112499639.5786.34.camel@mulgrave>
-	 <20050402200858.37347bec.davem@davemloft.net>
-	 <1112502477.5786.38.camel@mulgrave> <1112601039.26086.49.camel@gaston>
-	 <1112623143.5813.5.camel@mulgrave>  <20050404141616.GA10384@infradead.org>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: [PATCH] compile out scsi_ioctl when no SCSI/IDE/etc.  (take 2)
+Date: Mon, 4 Apr 2005 15:44:07 +0100
+Message-ID: <20050404144407.GG18349@parcelfarce.linux.theplanet.co.uk>
+References: <1CFEB358338412458B21FAA0D78FE86D4F0D29@rennsmail02.eu.thmulti.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat16.steeleye.com ([209.192.50.48]:10719 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S261264AbVDDOZr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 4 Apr 2005 10:25:47 -0400
-In-Reply-To: <20050404141616.GA10384@infradead.org>
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:9397 "EHLO
+	parcelfarce.linux.theplanet.co.uk") by vger.kernel.org with ESMTP
+	id S261247AbVDDOoI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 4 Apr 2005 10:44:08 -0400
+Content-Disposition: inline
+In-Reply-To: <1CFEB358338412458B21FAA0D78FE86D4F0D29@rennsmail02.eu.thmulti.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>, "David S. Miller" <davem@davemloft.net>, matthew@wil.cx, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel list <linux-kernel@vger.kernel.org>
+To: Fillod Stephane <stephane.fillod@thomson.net>
+Cc: Matt Mackall <mpm@selenic.com>, linux-tiny@selenic.com, linux-scsi@vger.kernel.org
 
-On Mon, 2005-04-04 at 15:16 +0100, Christoph Hellwig wrote:
-> The IOC4 device that provides IDE, serial ports and external interrupts
-> on Altix systems has a big endian register layour, and the PCI-X bridge
-> in those Altix systems can do the swapping if a special bit is set.
-> 
-> In older kernels that bit was set from the driver through a special API,
-> but it seems the firmware does that automatically now.
+On Mon, Apr 04, 2005 at 03:47:01PM +0200, Fillod Stephane wrote:
+> --- linux/drivers/ide/ide.c	26 Mar 2005 03:28:17 -0000	1.1.1.2
+> +++ linux/drivers/ide/ide.c	4 Apr 2005 13:24:29 -0000
+> @@ -1562,9 +1562,11 @@
+>  			return 0;
+>  		}
+>  
+> +#ifdef CONFIG_SCSI_IOCTL
+>  		case CDROMEJECT:
+>  		case CDROMCLOSETRAY:
+>  			return scsi_cmd_ioctl(file, bdev->bd_disk, cmd,
+> p);
+> +#endif
+>  
+>  		case HDIO_GET_BUSSTATE:
+>  			if (!capable(CAP_SYS_ADMIN))
 
-We already have some unusual code in drivers to support other altix
-design ... features ... do you regard this as something that's likely to
-be replicated on other platforms, or is it more in the category of a one
-off mistake that can be corrected in firmware?
+Rather than putting ifdefs in the middle of functions, the normal way is
+to define a dummy function:
 
-James
++++ include/linux/blkdev.h      4 Apr 2005 14:41:23 -0000
+@@ -548,7 +548,14 @@ extern int blk_remove_plug(request_queue
+ extern void blk_recount_segments(request_queue_t *, struct bio *);
+ extern int blk_phys_contig_segment(request_queue_t *q, struct bio *, struct bio *);
+ extern int blk_hw_contig_segment(request_queue_t *q, struct bio *, struct bio *);
++#ifdef CONFIG_SCSI_IOCTL
+ extern int scsi_cmd_ioctl(struct file *, struct gendisk *, unsigned int, void __user *);
++#else
++static inline int scsi_cmd_ioctl(struct file *f, struct gendisk *g, unsigned int cmd, void __user *ptr)
++{
++       return -ENOTTY;
++}
++#endif
+ extern void blk_start_queue(request_queue_t *q);
+ extern void blk_stop_queue(request_queue_t *q);
+ extern void blk_sync_queue(struct request_queue *q);
 
 
+(I'm not sure about the error number; ide.c returns -EINVAL if it doesn't
+recognise the ioctl, which I think is wrong, it should return -ENOTTY.
+OTOH, aren't we supposed to return -ENOSYS for "I recognise this ioctl,
+it's supported on this device, but it's not implemented"?  Is there a
+good reference for how errnos are supposed to be implemented in kernel?)
+
+-- 
+"Next the statesmen will invent cheap lies, putting the blame upon 
+the nation that is attacked, and every man will be glad of those
+conscience-soothing falsities, and will diligently study them, and refuse
+to examine any refutations of them; and thus he will by and by convince 
+himself that the war is just, and will thank God for the better sleep 
+he enjoys after this process of grotesque self-deception." -- Mark Twain
