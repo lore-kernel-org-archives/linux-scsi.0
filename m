@@ -1,38 +1,189 @@
-From: maple@center.hqhost.net
-Subject: Re: test9, aic79xx raise errors
-Date: Sun, 16 Nov 2003 21:52:28 +0200
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20031116195228.GA7310@valinor.localnet>
-References: <20031116141128.GA6557@valinor.localnet> <495655408.1069009113@aslan.scsiguy.com>
+From: David Lang <david.lang@digitalinsight.com>
+Subject: Re: [summary] state of scsi drivers
+Date: Sun, 16 Nov 2003 14:25:37 -0800 (PST)
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <Pine.LNX.4.58.0311161423530.19698@dlang.diginsite.com>
+References: <3FB7B181.5090001@wanadoo.es>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ua-online.net ([213.179.225.6]:26375 "EHLO center.hqhost.net")
-	by vger.kernel.org with ESMTP id S262575AbTKPTxq (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 16 Nov 2003 14:53:46 -0500
-Content-Disposition: inline
-In-Reply-To: <495655408.1069009113@aslan.scsiguy.com>
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+In-Reply-To: <3FB7B181.5090001@wanadoo.es>
+To: Xose Vazquez Perez <xose@wanadoo.es>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Tosatti <marcelo.tosatti@cyclades.com>
 List-Id: linux-scsi@vger.kernel.org
-To: "Justin T. Gibbs" <gibbs@scsiguy.com>
-Cc: linux-scsi@vger.kernel.org
 
-On Sun, Nov 16, 2003 at 11:58:33AM -0700, Justin T. Gibbs wrote:
-> > Hello!
-> > 
-> > after upgrading kernel on machine to 2.6.0-test9 aic79xx driver 
-> > stops working.
-> 
-> Can you regenerate your report after rebuilding the 2.6.0-test9 kernel
-> with the driver source from here?
-> 
-> http://people.FreeBSD.org/~gibbs/linux/SRC/
+what is this list supposed to mean?
 
-it seems now ok, 20 minutes under cat /dev/md3 & cat /dev/sd{a,b} & find
-/ not show prevous problem. I guess this code is still not in
-mainline? I've tried before latest -bk21 snapshot and error was same.
-interestingly, errors appeared only when reads was from two drives
-simultaneosly (cat /dev/md3, not cat /dev/sda; cat /dev/sdb)
-Anyway, thanks for your great job ;)
+is it just a list of drivers that have an arbatrary set of features?
+does this list mean that all these drivers work on the systems listed with
+no known problems and any other drivers in the kernel don't work?
+something else?
 
-        SY, Vladimir
+David Lang
+
+On Sun, 16 Nov 2003, Xose Vazquez Perez wrote:
+
+> Date: Sun, 16 Nov 2003 18:18:57 +0100
+> From: Xose Vazquez Perez <xose@wanadoo.es>
+> To: linux-scsi <linux-scsi@vger.kernel.org>,
+>      linux-kernel <linux-kernel@vger.kernel.org>
+> Cc: Tosatti <marcelo.tosatti@cyclades.com>
+> Subject: [summary] state of scsi drivers
+>
+>         * unofficial LiNUX kernel SCSI/RAID drivers list *
+>
+>                         <xose@wanadoo.es>
+>
+>                          linux-2.4.23-rc1
+>                    Sun Nov 16 17:38:00 CET 2003
+>
+>
+> x features:
+>    hot-plug vary_io highmem_io block_device_driver 64_bit_SG
+>
+> o aacraid
+>    manufacturer: ADAPTEC
+>    kernel: 1.1.2 (15 May 2003)
+>    latest: 1.1.4 (31 Oct 2003)
+>    arch: i386 ia64 x86_64(amd64) alpha (sparc not confirmed, but expected)
+>    features: highmem_io 64_bit_SG
+>    maintainer: <Mark_Salyzyn*AT*adaptec.com> <markh*AT*osdl.org>
+>                <aacraid*AT*adaptec.com> <linux-aacraid-devel*AT*dell.com>
+>    url: http://linux.adaptec.com
+>         http://www.domsch.com/linux/#aacraid
+>
+> o aic7xxx/aic79xx
+>    manufacturer: ADAPTEC
+>    kernel: 6.2.36/1.3.10 (03 Jun 2003)
+>    latest: 6.3.3 /2.0.4  (06 Nov 2003)
+>    arch: i386 ia64 powerpc
+>    features:
+>    maintainer: <gibbs*AT*scsiguy.com>
+>    url: http://people.freebsd.org/~gibbs/linux/SRC/
+>
+> o cciss
+>    manufacturer: HP
+>    kernel: 2.4.50
+>    latest: 2.4.50
+>    arch: i386
+>    features: block_device_driver
+>    maintainer: <mike.miller*AT*hp.com> <arrays*AT*hp.com>
+>                <Cciss-discuss*AT*lists.sourceforge.net>
+>    url: http://sf.net/projects/cciss/
+>
+> o DAC960
+>    manufacturer: LSI Logic
+>    kernel: 2.4.11 (11 Oct 2001)
+>    latest: 2.4.20 (01 May 2003)
+>    arch: i386 ia64 alpha
+>    features: block_device_driver
+>    maintainer: <dmo*AT*osdl.org>
+>    url: http://www.osdl.org/archive/dmo/DAC960/
+>         http://www.dandelion.com/Linux/DAC960.html
+>
+> o dpt_i2o
+>    manufacturer: ADAPTEC
+>    kernel: 2.4.5 (25 Jul 2001)
+>    latest: 2.5.0 (11 Sep 2003)
+>    arch: i386 ia64 alpha sparc x86_64(amd64)
+>    features: highmem_io 64_bit_SG
+>    maintainer: <Mark_Salyzyn*AT*adaptec.com>
+>    url: http://linux.adaptec.com
+>
+> o emulex
+>    manufacturer: EMULEX
+>    kernel: -
+>    latest: 1.23a
+>    arch: i386 ia64 ppc
+>    features:
+>    maintainer: <tech.support*AT*emulex.com>
+>    url: http://www.emulex.com/ts/docfc/linuxos.shtml
+>
+> o feral_isp
+>    manufacturer: QLOGIC
+>    kernel: -
+>    latest: Linux Platform 2.1   Common Core Code 2.7 (13 Nov 2003)
+>    arch: i386 alpha sparc powerpc
+>    features: alternative driver for all qlogic products
+>    maintainer: <mjacob*AT*feral.com>
+>    url: http://www.feral.com/isp.html
+>
+> o fusion
+>    manufacturer: LSI Logic
+>    kernel: 2.05.05+ (14 Apr 2003)
+>    latest: 2.05.10  (10 Oct 2003)
+>    arch: i386 alpha sparc ia64 x86_64
+>    features:
+>    maintainer: <emoore*AT*lsil.com> <mpt_linux_developer*AT*lsil.com>
+>    url: ftp://ftp.lsil.com/HostAdapterDrivers/linux/
+>
+> o gdth
+>    manufacturer: ADAPTEC
+>    kernel: 2.05  (03 Oct 2002)
+>    latest: 2.06a (04 Aug 2003)
+>    arch: i386 alpha ia64
+>    features:
+>    maintainer: <achim.leubner*AT*intel.com> <johannes_dinner*AT*adaptec.com>
+>    url: http://www.icp-vortex.com/english/download/rz_neu/8x24/linux/linux_e.htm
+>
+> o ips
+>    manufacturer: ADAPTEC
+>    kernel: 6.00.26
+>    latest: 6.00.26
+>    arch: i386 ia64
+>    features:
+>    maintainer: <david_jeffery*AT*adaptec.com> <ipslinux*AT*adaptec.com>
+>    url: -
+>
+> o megaraid
+>    manufacturer: LSI Logic
+>    kernel: v1.18k/v2.00.9
+>    latest: v1.18k/v2.00.9
+>    arch: i386
+>    features:
+>    maintainer: <atulm*AT*lsil.com> <linux-megaraid-devel*AT*dell.com>
+>    url: ftp://ftp.lsil.com/pub/linux-megaraid/
+>         http://domsch.com/linux/#megaraid
+>
+> o qla1280
+>    manufacturer: QLOGIC
+>    kernel: 3.23.37
+>    latest: 3.23.37
+>    arch: i386 alpha powerpc sparc
+>    features:
+>    maintainer: <jes*AT*wildopensource.com>
+>    url: -
+>
+> o qla2x00
+>    manufacturer: QLOGIC
+>    kernel: -
+>    latest: 6.06.10
+>    beta:   8.00.00b6
+>    arch: i386
+>    features:
+>    maintainer: <andrew.vasquez*AT*qlogic.com>
+>    url: http://www.qlogic.com/support/product_resources.asp?id=339
+>         http://sf.net/projects/linux-qla2xxx/
+>
+> o sym53c8xx_2
+>    manufacturer: LSI Logic
+>    kernel: 2.1.17a     (Dec 01 2001)
+>    latest: 2.1.19-pre3 (Nov 23 2002)
+>    arch: i386 alpha sparc powerpc ia64
+>    features:
+>    maintainer: <groudier*AT*free.fr>
+>    url: http://www.tux.org/pub/tux/roudier/drivers/linux/stable/
+>
+> # EOT
+>
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
+>
+
+-- 
+"Debugging is twice as hard as writing the code in the first place.
+Therefore, if you write the code as cleverly as possible, you are,
+by definition, not smart enough to debug it." - Brian W. Kernighan
