@@ -1,124 +1,75 @@
-From: Steven Dake <sdake@mvista.com>
-Subject: Re: Adding a new FC disk to a linux host
-Date: Wed, 12 Feb 2003 16:34:44 -0700
+From: Mike Anderson <andmike@us.ibm.com>
+Subject: Re: [PATCH / RFC] scsi_error handler update. (3/4)
+Date: Thu, 13 Feb 2003 00:24:10 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3E4ADA14.1080301@mvista.com>
-References: <JOEEIMDPCNOOJCHLMKHMCEEPCKAA.suresh@veritas.com>
+Message-ID: <20030213082410.GB2493@beaverton.ibm.com>
+References: <20030211081351.GA1368@beaverton.ibm.com> <20030211081536.GB1368@beaverton.ibm.com> <20030211081744.GC1368@beaverton.ibm.com> <1045087146.1623.11.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <JOEEIMDPCNOOJCHLMKHMCEEPCKAA.suresh@veritas.com>
+Content-Disposition: inline
+In-Reply-To: <1045087146.1623.11.camel@mulgrave>
 List-Id: linux-scsi@vger.kernel.org
-To: Suresh Kr N <suresh@veritas.com>
-Cc: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@steeleye.com>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-you can scan specific scsi ids.  read scsi_proc.c search for 
-add-single-device
+James Bottomley [James.Bottomley@steeleye.com] wrote:
+> >  	list_for_each_entry(sdev, &shost->my_devices, siblings) {
+> Your eh_list here is per host, so there's no need to loop over all the
+> devices above. 
+> 
 
-         * Usage: echo "scsi add-single-device 0 1 2 3" >/proc/scsi/scsi
-         * with  "0 1 2 3" replaced by your "Host Channel Id Lun".
-         * Consider this feature BETA.
+This is a left over artifact. Since the list is not sorted by device and
+that log message displays total fails and number of devices with
+failure.
 
+> > -		for (scmd = sc_list; scmd; scmd = scmd->bh_next) {
+> > +		list_for_each_entry(scmd, &shost->eh_cmd_list, eh_list) {
+> >  			if (scmd->device == sdev) {
+> >  				++total_failures;
+> >  				if (scsi_eh_eflags_chk(scmd,
+> [...] 
+> > -static int scsi_eh_bus_device_reset(Scsi_Cmnd *sc_todo, struct Scsi_Host *shost)
+> > +static int scsi_eh_bus_device_reset(struct Scsi_Host *shost,
+> > +				    struct list_head *done_list)
+> >  {
+> >  	int rtn;
+> > -	Scsi_Cmnd *scmd;
+> > -	Scsi_Device *sdev;
+> > -
+> > -	SCSI_LOG_ERROR_RECOVERY(3, printk("%s: Trying BDR\n", __FUNCTION__));
+> > +	struct list_head *lh, *lh_sf;
+> > +	struct scsi_cmnd *scmd, *bdr_scmd;
+> > +	struct scsi_device *sdev;
+> >  
+> >  	list_for_each_entry(sdev, &shost->my_devices, siblings) {
+> 
+> Same problem here. 
+> 
 
-Good luck
--steve
+Our failed_cmd_q may contain more than a single failed command per device so
+traversing the list allows only one BDR per device failing to be sent.
 
-Suresh Kr N wrote:
+> > @@ -1477,6 +1469,8 @@
+> >  
+> >  	ASSERT_LOCK(shost->host_lock, 0);
+> >  
+> > +	shost->in_recovery = 0;
+> > +
+> >  	/*
+> >  	 * If the door was locked, we need to insert a door lock request
+> >  	 * onto the head of the SCSI request queue for the device.  There
+> 
+> This is a lot better than we had previously, but still, I think resetting
+> in_recovery should happen after we've potentially queued door lock commands
+> on the queue head, since as soon as we reset this, the queue can potentially
+> be restarted (even without the necessary restart below this in the code).
+> 
 
->sorry about the wrong thread name in the previous post. updated now
->
->
->hi everyone
->
->I am working on a san management application for a linux. My application
->sends zoning commands to the fabric to zone in a disk to a host ,  so i need
->to have that disk acessible to the host without a reboot of the host.
->
->I need to do this from the user space. Is there a way to ask the scsi
->midlayer for a rescan ?
->In solaris , i invoke a command called "drvconfig" to achieve this.
->
->I have seen in the linux-scsi archive that this is kind of possible,  but
->the discussion didnt seem to state how.
->I am attaching the above thread here in the mail.
->
->I have verified that echo "scsi add-single-device a b c d" > /proc/scsi/scsi
->works fine . But this does involve parameters which cant be found out
->programmatically.
->
->Also a side question here :In a FC world, to get the target number for above
->command , can i find out the current maximum target number of the scsi
->devices, and increase it by one ? or  does the FC devices have actually a
->preknown target no , which would be collected by the FC card driver ?
->
->Could someone please help ? ( even a "non-standard" way should be good
->enough" )
->
->Thanks
->Suresh
->
->
->
->--------------------------------------------------------
->Message 2 in thread
->From: Alan Cox (alan@lxorguk.ukuu.org.uk)
->Subject: Re: Hot plugging a disk in runtime
->View this article only
->Newsgroups: mlist.linux.scsi
->Date: 2002-05-20 05:32:38 PST
->
->
->  
->
->>1.. How is it possible to signal SCSI mid-layer (or other layers) of a
->>presence of a newly hot-plugged disk ?
->>    
->>
->
->aacraid is one example that does this, but via its config tools.
->
->  
->
->>2.. Can an adapter's device driver trigger SCSI subsystem to scan
->>channels for new LUNs / Targets ?
->>    
->>
->
->It is designed so user space can do so - so yes
->
->  
->
->>3.. Is this can be handled in a kernel level ? is there a user space
->>application that can be triggered to start scanning adapters (obviously
->>through SCSI subsystem) and registering new LUNs / Targets etc... ?
->>    
->>
->
->echo "scsi-add-single-device a b c d" /proc/scsi/scsi
->
->if I remember it right
->
->
->entire thread is at
->
->http://groups.google.com/groups?hl=en&lr=&ie=UTF-8&threadm=linux.scsi.200205
->201420.g4KEK3x01892%40localhost.localdomain&rnum=7&prev=/groups%3Fq%3Dhot%2B
->plug%2B%2BSCSI%2Bfibre-channel%2BLinux%26hl%3Den%26lr%3D%26ie%3DUTF-8%26selm
->%3Dlinux.scsi.200205201420.g4KEK3x01892%2540localhost.localdomain%26rnum%3D7
->
->-
->To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
->the body of a message to majordomo@vger.kernel.org
->More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
->-
->To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
->the body of a message to majordomo@vger.kernel.org
->More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
->
->
->  
->
+Ok I moved it after lock door and right before the wake_up.
+
+-andmike
+--
+Michael Anderson
+andmike@us.ibm.com
 
