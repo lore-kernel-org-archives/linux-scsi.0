@@ -1,33 +1,30 @@
-From: Jeff Woods <jdw@apple2.com>
+From: Christoph Hellwig <hch@lst.de>
 Subject: Re: [PATCH] nuke some junk from the pcmcia scsi drivers
-Date: Fri, 08 Aug 2003 16:18:11 -0700
+Date: Sat, 9 Aug 2003 05:31:52 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <5.2.0.9.0.20030808161151.029e9e00@mail.speakeasy.net>
-References: <20030808191050.GD17983@lst.de>
+Message-ID: <20030809033152.GA23644@lst.de>
+References: <20030808191050.GD17983@lst.de> <5.2.0.9.0.20030808161151.029e9e00@mail.speakeasy.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail15.speakeasy.net ([216.254.0.215]:14014 "EHLO
-	mail.speakeasy.net") by vger.kernel.org with ESMTP id S271885AbTHHXSL
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 8 Aug 2003 19:18:11 -0400
-In-Reply-To: <20030808191050.GD17983@lst.de>
+Received: from verein.lst.de ([212.34.189.10]:45961 "EHLO mail.lst.de")
+	by vger.kernel.org with ESMTP id S272223AbTHIDb6 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Aug 2003 23:31:58 -0400
+Content-Disposition: inline
+In-Reply-To: <5.2.0.9.0.20030808161151.029e9e00@mail.speakeasy.net>
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
+To: Jeff Woods <jdw@apple2.com>
 Cc: James Bottomley <James.Bottomley@SteelEye.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-At +0200 09:10 PM 8/8/2003, Christoph Hellwig wrote:
->DEV_STALE_* is used for some crude hacks in pcmcia netdrivers and it
->seems people copied it blindly over to the scsi ones also it couldn't
->ever be triggered (dev_link_t.open is never incremented e.g.)
+On Fri, Aug 08, 2003 at 04:18:11PM -0700, Jeff Woods wrote:
+> I'm totally unfamiliar with the code involved, but it occurs to me that 
+> there may be dependencies in the SCSI drivers for PCMCIA code due to 
+> PCMCIA-based SCSI adapters (e.g., Adaptec 1480).  Someone may need to 
+> confirm if the DEV_STALE_* references are there to handle PCMCIA-SCSI 
+> adapters.
 
-I'm totally unfamiliar with the code involved, but it occurs to me that 
-there may be dependencies in the SCSI drivers for PCMCIA code due to 
-PCMCIA-based SCSI adapters (e.g., Adaptec 1480).  Someone may need to 
-confirm if the DEV_STALE_* references are there to handle PCMCIA-SCSI adapters.
+Umm, this code can't be triggered.  These bits aren't touched by
+generic pcmcia code but only set by the individual drivers.
 
---
-Jeff Woods <jdw@apple2.com>
-Adaptec 1480 user
-
-
+Btw, are you using 2.6?  There might be some other issue with pcmcia
+scsi..
