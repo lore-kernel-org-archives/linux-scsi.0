@@ -1,29 +1,48 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: adaptec 2120S software under RedHat 8.0 and FC2
-Date: Wed, 23 Mar 2005 11:05:47 +0000
-Message-ID: <20050323110547.GB3691@infradead.org>
-References: <60807403EABEB443939A5A7AA8A7458BED2FA1@otce2k01.adaptec.com>
+From: Willem Riede <osst@riede.org>
+Subject: Re: [2.6 patch] drivers/scsi/osst.c: remove unused code
+Date: Wed, 23 Mar 2005 12:16:54 +0000
+Message-ID: <1111580214l.12349l.37l@serve.riede.org>
+References: <20050322215948.GP1948@stusta.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Received: from pentafluge.infradead.org ([213.146.154.40]:15598 "EHLO
-	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S261536AbVCWLFu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 23 Mar 2005 06:05:50 -0500
+Content-Transfer-Encoding: 8BIT
+Received: from rwcrmhc12.comcast.net ([216.148.227.85]:44761 "EHLO
+	rwcrmhc12.comcast.net") by vger.kernel.org with ESMTP
+	id S261540AbVCWMQ7 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Mar 2005 07:16:59 -0500
+In-Reply-To: <20050322215948.GP1948@stusta.de> (from bunk@stusta.de on Tue
+	Mar 22 16:59:48 2005)
 Content-Disposition: inline
-In-Reply-To: <60807403EABEB443939A5A7AA8A7458BED2FA1@otce2k01.adaptec.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
-Cc: Ross Macintyre <raz@macs.hw.ac.uk>, Mark Haverkamp <markh@osdl.org>, linux-scsi <linux-scsi@vger.kernel.org>, matt_domsch@dell.com
+To: Adrian Bunk <bunk@stusta.de>
+Cc: osst-users@lists.sourceforge.net, James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Tue, Mar 22, 2005 at 12:43:50PM -0500, Salyzyn, Mark wrote:
-> No, this shows that you have no interest in supporting legacy
-> applications
+On 03/22/2005 04:59:48 PM, Adrian Bunk wrote:
+> Thanks to both the Coverity checker and GNU gcc, it was found that this 
+> variable is completely unused.
+> 
+> Signed-off-by: Adrian Bunk <bunk@stusta.de>
 
-legacy of Adaptec's non linux-supporting past.
+And it is so obvious when your attention is drawn to it.
+The code that did use it moved to os_scsi_tape_flush() recently.
 
-note that if adaptec simply opensourced their managment tools we wouldn't
-have this problem at all.  I wonder why Adaptec did that for the old
-i2o-based controllers but not aacraid.  Maybe it still was a DPT managment
-decision?
+James, could you make this change in BK too, please?
+
+Signed-off-by: Willem Riede <osst@riede.org>
+
+> --- linux-2.6.12-rc1-mm1-full/drivers/scsi/osst.c.old	2005-03-22 21:04:36.000000000 +0100
+> +++ linux-2.6.12-rc1-mm1-full/drivers/scsi/osst.c	2005-03-22 22:09:32.000000000 +0100
+> @@ -4770,9 +4770,6 @@ static int os_scsi_tape_close(struct ino
+>  {
+>  	int		      result = 0;
+>  	struct osst_tape    * STp    = filp->private_data;
+> -	struct scsi_request * SRpnt  = NULL;
+> -
+> -	if (SRpnt) scsi_release_request(SRpnt);
+>  
+>  	if (STp->door_locked == ST_LOCKED_AUTO)
+>  		do_door_lock(STp, 0);
+> 
+
 
