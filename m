@@ -1,65 +1,59 @@
-From: Francis Wiran <francis.wiran@hp.com>
-Subject: [PATCH]2.5.40, cpqfc, fix ioctl sense buffer memcpy size
-Date: Wed, 9 Oct 2002 13:59:56 -0600 (CST)
+From: Matt Domsch <Matt_Domsch@Dell.com>
+Subject: [RFC][PATCH] megaraid 2.00rc5 as 'megaraid2' for kernel 2.5.x
+Date: Wed, 9 Oct 2002 16:58:46 -0500 (CDT)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44.0210091357370.1239-100000@localhost.localdomain>
+Message-ID: <Pine.LNX.4.44.0210091649180.8828-100000@tux.us.dell.com>
+References: <20BF5713E14D5B48AA289F72BD372D68BC0257@AUSXMPC122.aus.amer.dell.com>
+Reply-To: Matt Domsch <Matt_Domsch@Dell.com>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <20BF5713E14D5B48AA289F72BD372D68BC0257@AUSXMPC122.aus.amer.dell.com>
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: axboe@suse.de, francis.wiran@hp.com
+Cc: linux-kernel@vger.kernel.org
 
-Sorry for the double post.
+(resend without patch attached - it's 170K and didn't seem to make it through)
 
-This patch fixes hangs after doing an ioctl to cpqfc due to different size 
-of the defined sense buffer, causing memcpy to write stuff where it 
-shouldn't
+Posted to
+  http://domsch.com/linux/megaraid/linux-2.5-megaraid-2.00rc5.patch
+  http://domsch.com/linux/megaraid/linux-2.5-megaraid-2.00rc5.patch.asc
 
---- linux-2.5.40/drivers/scsi/cpqfc.Readme	Tue Oct  1 01:07:47 2002
-+++ linux-2.5.40-p1/drivers/scsi/cpqfc.Readme	Fri Oct  4 16:56:34 2002
-@@ -7,6 +7,8 @@
- SEST size 512 Exchanges (simultaneous I/Os) limited by module kmalloc() 
- 	max of 128k bytes contiguous.
- 
-+Ver 2.5.4  Oct 03, 2002
-+   * fixed memcpy of sense buffer in ioctl to copy the smaller defined size
- Ver 2.5.3  Aug 01, 2002
-    * fix the passthru ioctl to handle the Scsi_Cmnd->request being a pointer
- Ver 2.5.1  Jul 30, 2002
---- linux-2.5.40/drivers/scsi/cpqfcTSstructs.h	Tue Oct  1 01:06:57 2002
-+++ linux-2.5.40-p1/drivers/scsi/cpqfcTSstructs.h	Fri Oct  4 17:01:28 2002
-@@ -33,7 +33,7 @@
- // don't forget to also change MODULE_DESCRIPTION in cpqfcTSinit.c
- #define VER_MAJOR 2
- #define VER_MINOR 5
--#define VER_SUBMINOR 3
-+#define VER_SUBMINOR 4
- 
- // Macros for kernel (esp. SMP) tracing using a PCI analyzer
- // (e.g. x86).
---- linux-2.5.40/drivers/scsi/cpqfcTSinit.c	Fri Oct  4 16:52:28 2002
-+++ linux-2.5.40-p1/drivers/scsi/cpqfcTSinit.c	Fri Oct  4 17:00:46 2002
-@@ -68,7 +68,7 @@
- 
- /* Embedded module documentation macros - see module.h */
- MODULE_AUTHOR("Compaq Computer Corporation");
--MODULE_DESCRIPTION("Driver for Compaq 64-bit/66Mhz PCI Fibre Channel HBA v. 2.5.3");
-+MODULE_DESCRIPTION("Driver for Compaq 64-bit/66Mhz PCI Fibre Channel HBA v. 2.5.4");
- MODULE_LICENSE("GPL");
-   
- int cpqfcTS_TargetDeviceReset( Scsi_Device *ScsiDev, unsigned int reset_flags);
-@@ -668,7 +668,11 @@
- 	{
- 	  memcpy( vendor_cmd->sense_data, // see struct def - size=40
- 		  ScsiPassThruReq->sr_sense_buffer, 
--		  sizeof(ScsiPassThruReq->sr_sense_buffer)); 
-+		  sizeof(ScsiPassThruReq->sr_sense_buffer) <
-+                  sizeof(vendor_cmd->sense_data)           ?
-+                  sizeof(ScsiPassThruReq->sr_sense_buffer) :
-+                  sizeof(vendor_cmd->sense_data)
-+                ); 
- 	}
-         SDpnt = ScsiPassThruReq->sr_device;
- 	/* upper_private_data is already freed in call_scsi_done() */
+is a patch to create 'megaraid2', the megaraid 2.00rc5 driver which
+includes fixups such that it works on kernel 2.5.41.   The v2.00 
+has significant code path cleanups (easier to read and maintain),
+support for SCSI reservations (needed for shared storage clustering),
+and will soon have an improved higher performance interface to card
+firmware.  This driver is being developed by LSI, with assistance from
+Red Hat and Dell.
+
+By providing this as a megaraid2 driver, it allows development to
+continue on it separate from the stable megaraid (based on 1.18)
+driver already present in the 2.5.41 kernel.  This driver works at
+least somewhat for me, with slighly increased performance over the
+1.18-based driver.  It still likely has bugs related to being 
+ported to 2.5.x.  Mike Anderson has already caught one such bug - (use
+page_address(page)+offset) - fixed internally.
+
+ MAINTAINERS              |    8 
+ arch/i386/defconfig      |    1 
+ drivers/scsi/Config.help |   11 
+ drivers/scsi/Config.in   |    3 
+ drivers/scsi/Makefile    |    3 
+ drivers/scsi/megaraid2.c | 5611 +++++++++++++++++++++++++++++++++++++++++++++++
+ drivers/scsi/megaraid2.h | 1175 +++++++++
+ 7 files changed, 6809 insertions, 3 deletions
+
+If there are no objections, I'll submit this to Linus and Dave Jones 
+later this week for inclusion.  This has been posted to 
+linux-megaraid-devel@dell.com as well.
+
+Thanks,
+Matt
+
+--
+Matt Domsch
+Sr. Software Engineer, Lead Engineer, Architect
+Dell Linux Solutions www.dell.com/linux
+Linux on Dell mailing lists @ http://lists.us.dell.com
 
