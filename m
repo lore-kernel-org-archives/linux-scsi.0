@@ -1,50 +1,49 @@
-From: Jes Sorensen <jes@wildopensource.com>
-Subject: Re: qla1280 endiannes and 64/32bit fixes
-Date: 19 Jan 2004 16:13:40 -0500
+From: Clay Haapala <chaapala@cisco.com>
+Subject: Re: [PATCH] Add CRC32C chksums to crypto routines
+Date: Mon, 19 Jan 2004 15:15:53 -0600
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <yq065f7od4r.fsf@wildopensource.com>
-References: <1074382860.1756.20.camel@mulgrave>
-	<20040118024326.GA381527@sgi.com> <1074395819.1756.31.camel@mulgrave>
-	<20040118062157.GA11083@praka.local.home>
-	<20040118073321.GC383498@sgi.com> <1074437655.1804.12.camel@mulgrave>
-	<20040119174027.B3176@infradead.org>
+Message-ID: <yquj8yk31vxy.fsf@chaapala-lnx2.cisco.com>
+References: <Xine.LNX.4.44.0401191512140.1564-100000@thoron.boston.redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from jaguar.mkp.net ([192.139.46.146]:5314 "EHLO jaguar.mkp.net")
-	by vger.kernel.org with ESMTP id S263486AbUASVOe (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 19 Jan 2004 16:14:34 -0500
-In-Reply-To: <20040119174027.B3176@infradead.org>
+Received: from sj-iport-5.cisco.com ([171.68.10.87]:55425 "EHLO
+	sj-iport-5.cisco.com") by vger.kernel.org with ESMTP
+	id S263539AbUASVP6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 19 Jan 2004 16:15:58 -0500
+In-Reply-To: <Xine.LNX.4.44.0401191512140.1564-100000@thoron.boston.redhat.com> (James
+ Morris's message of "Mon, 19 Jan 2004 15:13:15 -0500 (EST)")
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: James Bottomley <James.Bottomley@steeleye.com>, Jeremy Higdon <jeremy@sgi.com>, Andrew Vasquez <praka@users.sourceforge.net>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: James Morris <jmorris@redhat.com>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, "David S. Miller" <davem@redhat.com>
 
->>>>> "Christoph" == Christoph Hellwig <hch@infradead.org> writes:
+On Mon, 19 Jan 2004, James Morris stated:
+> On Wed, 14 Jan 2004, Clay Haapala wrote:
+> 
+>> This patch against 2.6.1 adds CRC32C checksumming capabilities to
+>> the crypto routines.  The structure of it is based wholly on the
+>> existing digest (md5) routines, the main difference being that
+>> chksums are often used in an "accumulator" fashion, effectively
+>> requiring one to set the seed, and the digest algorithms don't do
+>> that.
+> 
+> Looks good to me.
+> 
+In other email, Matt Mackall suggested a slightly different
+integration with the kernel that would allow more general usage of the
+CRC32C.  His suggestion was to put the implementation under /lib, next
+to the crc32 routines, and make the crypto routine a wrapper that calls
+it.  Selecting the CRYPTO_CRC32C module would SELECT the lib CRC32C
+module, in other words.
 
-Christoph> On Sun, Jan 18, 2004 at 09:54:13AM -0500, James Bottomley
-Christoph> wrote:
->> However, I have another question for you: Does the card BIOS
->> actually get to run on bootup?  It doesn't (because it can't) on
->> PA, so I get strange values for certain NVRAM quantities (like the
->> 32 bit mode, but more importantly, the offset of all my devices
->> gets set to 1).  I was thinking about doing an override to set them
->> more sensibly and wondered if you were having the same problem.
+The benefit of this would be to allow easy usage by other routines
+(with no premption side-affects, a concern Matt has) while still being
+there for routines that process scatterlist.  And the table/code is
+still in one place.
 
-Christoph> Guys, given that problems with that nvram reading stuff
-Christoph> show up again and again, shouldn't we rip out the code
-Christoph> looking at the nvram completely?  Or at least disable it by
-Christoph> default and enable it only by a module option (for both
-Christoph> qla1280 and qla2xxx).
-
-Christoph, I have thought about this before and while I agree in
-principle that relying on BIOS settings is inherently broken, I am
-also wary of changing a behavior a number of users are currently
-relying upon.
-
-Second, for qla2xxx you need a persistent place where you can store
-the Fibre Channel ID (the name slips my mind right now).
-
-Cheers,
-Jes
-
+Patch to follow in a day or two, after I can test it.  Implementation
+was simple.
+-- 
+Clay Haapala (chaapala@cisco.com) Cisco Systems SRBU +1 763-398-1056
+   6450 Wedgwood Rd, Suite 130 Maple Grove MN 55311 PGP: C89240AD
+	 Funny, I didn't think Haliburton was into aerospace.
