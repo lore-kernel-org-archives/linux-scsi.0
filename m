@@ -1,112 +1,47 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [iscsi 2/2] iscsi-probe.c
-Date: Tue, 23 Sep 2003 16:53:01 +0100
+From: Linus Torvalds <torvalds@osdl.org>
+Subject: Re: [linux-usb-devel] Re: USB storage problems on OHCI..
+Date: Tue, 23 Sep 2003 08:46:21 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030923165301.A18885@infradead.org>
-References: <20030923152306.GA14522@gtf.org>
+Message-ID: <Pine.LNX.4.44.0309230840060.14017-100000@home.osdl.org>
+References: <UTC200309231437.h8NEb8N23975.aeb@smtp.cwi.nl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pub234.cambridge.redhat.com ([213.86.99.234]:35338 "EHLO
-	phoenix.infradead.org") by vger.kernel.org with ESMTP
-	id S261473AbTIWPxD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 23 Sep 2003 11:53:03 -0400
-Content-Disposition: inline
-In-Reply-To: <20030923152306.GA14522@gtf.org>; from jgarzik@pobox.com on Tue, Sep 23, 2003 at 11:23:06AM -0400
+Received: from fw.osdl.org ([65.172.181.6]:3715 "EHLO mail.osdl.org")
+	by vger.kernel.org with ESMTP id S261458AbTIWPqs (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 23 Sep 2003 11:46:48 -0400
+In-Reply-To: <UTC200309231437.h8NEb8N23975.aeb@smtp.cwi.nl>
 List-Id: linux-scsi@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-scsi@vger.kernel.org
+To: Andries.Brouwer@cwi.nl
+Cc: James.Bottomley@steeleye.com, david-b@pacbell.net, greg@kroah.com, hch@infradead.org, linux-scsi@vger.kernel.org, linux-usb-devel@lists.sourceforge.net, mdharm-usb@one-eyed-alien.net, patmans@us.ibm.com, stern@rowland.harvard.edu
 
-> #include <linux/blk.h>
 
-Okay, this is for review only, but only a 2.6 version would have the
-slightest chance of getting merged some day..
-
-> #include <endian.h>
-
-Did you actually try to compile this?  This is a userspace header and
-not available in a kernel uild.
-
-> /* these are from $(TOPDIR)/drivers/scsi, not $(TOPDIR)/include */
-> #include <scsi.h>
-> #include <hosts.h>
-
-We tend to use "" includes for these.  Also in 2.6 there's no need for
-hosts.h anymore and soon scsi.h - use <scsi/*.h) instead.
-
-> DECLARE_MUTEX(iscsi_lun_probe_mutex);
-> spinlock_t iscsi_lun_probe_lock = SPIN_LOCK_UNLOCKED;
-> static iscsi_session_t *iscsi_lun_probe_head = NULL;
-> static iscsi_session_t *iscsi_lun_probe_tail = NULL;
-> static iscsi_session_t *iscsi_currently_probing = NULL;
-> static volatile int iscsi_next_probe = 0;
-> volatile unsigned long iscsi_lun_probe_start = 0;
-
-No need for initializers here, looks like someone didn't read the
-basic docs.
-
+On Tue, 23 Sep 2003 Andries.Brouwer@cwi.nl wrote:
 > 
-> /* we need to make some syscalls to create and destroy the device name tree. */
-> static int errno = 0;
+> No, the design goal of "hot-pluggable" is that it indicates that
+> the device can disappear any moment. Nothing at all about SCSI
+> compliance.
 
-Umm...
+You're talking past each other.
 
-> static inline _syscall2(long, mkdir, const char *, dir, int, mode);
-> static inline _syscall1(long, unlink, const char *, path);
-> static inline _syscall2(long, symlink, const char *, oldname, const char *,
-> 			newname);
-> static inline
-> _syscall3(int, open, const char *, file, int, flag, int, mode)
-> static inline
-> _syscall1(int, close, int, fd)
-> static inline
-> _syscall1(long, rmdir, const char *, path);
-> static inline
-> _syscall3(int, getdents, uint, fd, struct dirent *, dirp, uint, count);
+Server people think that "hot-pluggable" means "I will tell the system 
+before it goes away". Normal users consider hot-pluggable to be "I can rip 
+the thing out by hand".
 
-Even more umm...
+I'm with the normal users - I think the server guys are really talking 
+about "controlled shutdown and insert", not "hot-pluggable", but hey, the 
+fact is, there's two kinds.
 
-> 	if (session->probe_next || session->probe_prev) {
-> 		DEBUG_INIT
-> 		    ("iSCSI: session for bus_id id %d target_id %d already queued for LUN probing\n",
+Trying to enumerate three values with one bit is counterproductive.
 
-Please linewrap after 80 chars.
+So we should _not_ have one bit that says "hotpluggable", we should have
+separate bits for "should survive a unexpected disconnect" (_real_
+hotplug) and "can be disconnected with operator help" (server
+"pseudo-hotplug").
 
-> 	if (iscsi_lun_probe_head) {
-> 		if (session->probe_order < iscsi_lun_probe_head->probe_order) {
-> 			/* insert before the current head */
-> 			session->probe_prev = NULL;
-> 			session->probe_next = iscsi_lun_probe_head;
-> 			iscsi_lun_probe_head->probe_prev = session;
-> 			iscsi_lun_probe_head = session;
+USB devices are obviously supposed to be able to just be ripped out, ie
+"unexpected", real hotplug.  While FC etc tends to be "pseudo-hotplug".
 
-Don't you want list.h lists here? (And all over the driver)
+			Linus
 
-> /* try to write to /proc/scsi/scsi */
-> static int
-> write_proc_scsi_scsi(iscsi_session_t * session, char *str)
-> {
-> 	struct file *filp = NULL;
-> 	loff_t offset = 0;
-> 	int rc = 0;
-> 	mm_segment_t oldfs = get_fs();
-> 
-> 	set_fs(get_ds());
-> 
-> 	filp = filp_open("/proc/scsi/scsi", O_WRONLY, 0);
-> 	if (IS_ERR(filp)) {
-> 		printk
-> 		    ("iSCSI: session (bus %d target %d)couldn't open /proc/scsi/scsi\n",
-> 		     session->iscsi_bus, session->target_id);
-> 		set_fs(oldfs);
-> 		return -ENOENT;
-> 	}
-> 
-> 	rc = filp->f_op->write(filp, str, strlen(str), &offset);
-> 	filp_close(filp, 0);
-> 	set_fs(oldfs);
-
-Stop that crap.  Now.  I'm not going to review this any further until
-all this asssumptions about random files in the namespace are fixed.
-
-(the /dev messing below is even worse..)
