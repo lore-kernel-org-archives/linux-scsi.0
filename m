@@ -1,28 +1,28 @@
 From: maximilian attems <janitor@sternwelten.at>
-Subject: [patch-kj] remove old ifdef'd code from aic7xxx.h
-Date: Mon, 21 Jun 2004 20:13:52 +0200
+Subject: [patch-kj] remove old ifdef'd code from aic7xxx_core.c
+Date: Mon, 21 Jun 2004 20:15:09 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040621181352.GR1545@sputnik.stro.at>
+Message-ID: <20040621181509.GS1545@sputnik.stro.at>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from baikonur.stro.at ([213.239.196.228]:43680 "EHLO
-	baikonur.stro.at") by vger.kernel.org with ESMTP id S266372AbUFUSNv
+Received: from baikonur.stro.at ([213.239.196.228]:40623 "EHLO
+	baikonur.stro.at") by vger.kernel.org with ESMTP id S266375AbUFUSPI
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 21 Jun 2004 14:13:51 -0400
+	Mon, 21 Jun 2004 14:15:08 -0400
 Received: from localhost (localhost [127.0.0.1])
-	by baikonur.stro.at (Postfix) with ESMTP id 01B4C5C0A4
-	for <linux-scsi@vger.kernel.org>; Mon, 21 Jun 2004 20:13:51 +0200 (CEST)
+	by baikonur.stro.at (Postfix) with ESMTP id 853835C077
+	for <linux-scsi@vger.kernel.org>; Mon, 21 Jun 2004 20:15:07 +0200 (CEST)
 Received: from baikonur.stro.at ([127.0.0.1])
 	by localhost (baikonur [127.0.0.1]) (amavisd-new, port 10024)
-	with ESMTP id 30589-01 for <linux-scsi@vger.kernel.org>;
-	Mon, 21 Jun 2004 20:13:49 +0200 (CEST)
+	with ESMTP id 30589-02 for <linux-scsi@vger.kernel.org>;
+	Mon, 21 Jun 2004 20:15:06 +0200 (CEST)
 Received: from sputnik (unknown [62.47.144.54])
-	by baikonur.stro.at (Postfix) with ESMTP id 26F5C5C002
-	for <linux-scsi@vger.kernel.org>; Mon, 21 Jun 2004 20:13:49 +0200 (CEST)
+	by baikonur.stro.at (Postfix) with ESMTP id 8AEA35C002
+	for <linux-scsi@vger.kernel.org>; Mon, 21 Jun 2004 20:15:06 +0200 (CEST)
 Received: from max by sputnik with local (Exim 4.32)
-	id 1BcTIm-0004Il-Ml
-	for linux-scsi@vger.kernel.org; Mon, 21 Jun 2004 20:13:52 +0200
+	id 1BcTK1-0004Is-S3
+	for linux-scsi@vger.kernel.org; Mon, 21 Jun 2004 20:15:09 +0200
 Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
@@ -37,59 +37,41 @@ Signed-off-by: Maximilian Attems <janitor@sternwelten.at>
 
 ---
 
- linux-2.6.7-max/drivers/scsi/aic7xxx/aic7xxx.h |   12 ++++++------
- 1 files changed, 6 insertions(+), 6 deletions(-)
+ linux-2.6.7-max/drivers/scsi/aic7xxx/aic7xxx_core.c |    8 ++++----
+ 1 files changed, 4 insertions(+), 4 deletions(-)
 
-diff -puN drivers/scsi/aic7xxx/aic7xxx.h~remove-old-ifdefs-aic7xxx drivers/scsi/aic7xxx/aic7xxx.h
---- linux-2.6.7/drivers/scsi/aic7xxx/aic7xxx.h~remove-old-ifdefs-aic7xxx	2004-06-18 09:14:09.000000000 +0200
-+++ linux-2.6.7-max/drivers/scsi/aic7xxx/aic7xxx.h	2004-06-18 09:14:09.000000000 +0200
-@@ -521,7 +521,7 @@ struct ahc_dma_seg {
+diff -puN drivers/scsi/aic7xxx/aic7xxx_core.c~remove-old-ifdefs-aic7xxx_core drivers/scsi/aic7xxx/aic7xxx_core.c
+--- linux-2.6.7/drivers/scsi/aic7xxx/aic7xxx_core.c~remove-old-ifdefs-aic7xxx_core	2004-06-18 09:14:21.000000000 +0200
++++ linux-2.6.7-max/drivers/scsi/aic7xxx/aic7xxx_core.c	2004-06-18 09:14:21.000000000 +0200
+@@ -4199,9 +4199,9 @@ ahc_probe_scbs(struct ahc_softc *ahc) {
+ static void
+ ahc_dmamap_cb(void *arg, bus_dma_segment_t *segs, int nseg, int error) 
+ {
+-	bus_addr_t *baddr;
++	dma_addr_t *baddr;
  
- struct sg_map_node {
- 	bus_dmamap_t		 sg_dmamap;
--	bus_addr_t		 sg_physaddr;
-+	dma_addr_t		 sg_physaddr;
- 	struct ahc_dma_seg*	 sg_vaddr;
- 	SLIST_ENTRY(sg_map_node) links;
- };
-@@ -584,7 +584,7 @@ struct scb {
- 	struct scb_platform_data *platform_data;
- 	struct sg_map_node	 *sg_map;
- 	struct ahc_dma_seg 	 *sg_list;
--	bus_addr_t		  sg_list_phys;
-+	dma_addr_t		  sg_list_phys;
- 	u_int			  sg_count;/* How full ahc_dma_seg is */
- };
+-	baddr = (bus_addr_t *)arg;
++	baddr = (dma_addr_t *)arg;
+ 	*baddr = segs->ds_addr;
+ }
  
-@@ -611,10 +611,10 @@ struct scb_data {
- 	 */
- 	bus_dma_tag_t	 hscb_dmat;	/* dmat for our hardware SCB array */
- 	bus_dmamap_t	 hscb_dmamap;
--	bus_addr_t	 hscb_busaddr;
-+	dma_addr_t	 hscb_busaddr;
- 	bus_dma_tag_t	 sense_dmat;
- 	bus_dmamap_t	 sense_dmamap;
--	bus_addr_t	 sense_busaddr;
-+	dma_addr_t	 sense_busaddr;
- 	bus_dma_tag_t	 sg_dmat;	/* dmat for our sg segments */
- 	SLIST_HEAD(, sg_map_node) sg_maps;
- 	uint8_t	numscbs;
-@@ -1069,14 +1069,14 @@ struct ahc_softc {
- 	bus_dma_tag_t		  parent_dmat;
- 	bus_dma_tag_t		  shared_data_dmat;
- 	bus_dmamap_t		  shared_data_dmamap;
--	bus_addr_t		  shared_data_busaddr;
-+	dma_addr_t		  shared_data_busaddr;
- 
- 	/*
- 	 * Bus address of the one byte buffer used to
- 	 * work-around a DMA bug for chips <= aic7880
- 	 * in target mode.
- 	 */
--	bus_addr_t		  dma_bug_buf;
-+	dma_addr_t		  dma_bug_buf;
- 
- 	/* Number of enabled target mode device on this card */
- 	u_int			  enabled_luns;
+@@ -4456,7 +4456,7 @@ ahc_alloc_scbs(struct ahc_softc *ahc)
+ 	struct scb_data *scb_data;
+ 	struct scb *next_scb;
+ 	struct sg_map_node *sg_map;
+-	bus_addr_t physaddr;
++	dma_addr_t physaddr;
+ 	struct ahc_dma_seg *segs;
+ 	int newcount;
+ 	int i;
+@@ -4820,7 +4820,7 @@ ahc_init(struct ahc_softc *ahc)
+ 	if (ahc_dma_tag_create(ahc, ahc->parent_dmat, /*alignment*/1,
+ 			       /*boundary*/BUS_SPACE_MAXADDR_32BIT + 1,
+ 			       /*lowaddr*/ahc->flags & AHC_39BIT_ADDRESSING
+-					? (bus_addr_t)0x7FFFFFFFFFULL
++					? (dma_addr_t)0x7FFFFFFFFFULL
+ 					: BUS_SPACE_MAXADDR_32BIT,
+ 			       /*highaddr*/BUS_SPACE_MAXADDR,
+ 			       /*filter*/NULL, /*filterarg*/NULL,
 
 _
