@@ -1,33 +1,64 @@
-From: Steven Dake <sdake@mvista.com>
-Subject: rescan bug on 2.5.70 ?
-Date: Fri, 30 May 2003 14:08:23 -0700
+From: Anton Blanchard <anton@samba.org>
+Subject: Re: [ANNOUNCE] QLogic qla2xxx driver update available (v8.00.00b3).
+Date: Sat, 31 May 2003 09:52:34 +1000
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3ED7C847.3090203@mvista.com>
+Message-ID: <20030530235234.GA31401@krispykreme>
+References: <20030530160040.GA11238@praka.local.home>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fw-az.mvista.com ([65.200.49.158]:43515 "EHLO
-	zipcode.az.mvista.com") by vger.kernel.org with ESMTP
-	id S263979AbTE3VCl (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 30 May 2003 17:02:41 -0400
-Received: from mvista.com (persist.az.mvista.com [10.50.1.246])
-	by zipcode.az.mvista.com (8.9.3/8.9.3) with ESMTP id OAA15256
-	for <linux-scsi@vger.kernel.org>; Fri, 30 May 2003 14:29:29 -0700
+Received: from dp.samba.org ([66.70.73.150]:15778 "EHLO lists.samba.org")
+	by vger.kernel.org with ESMTP id S264060AbTE3XkF (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 30 May 2003 19:40:05 -0400
+Content-Disposition: inline
+In-Reply-To: <20030530160040.GA11238@praka.local.home>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Andrew Vasquez <praka@san.rr.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Folks,
+ 
+Hi,
 
-I attempted
-echo "1" > rescan within a device in the scsi sysfs tree on 2.5.70.
+> A new version of the 8.x series driver for Linux 2.5.x kernels has
+> been uploaded to SourceForge:
+> 
+> 	http://sourceforge.net/projects/linux-qla2xxx/
 
-The kernel repeatadly printed out the SDA device information.  The 
-system was still usable, but it appeared the rescan code was stuck in a 
-loop which dumped printks continuously.  Only way out was a reset.
+A few suggestions:
 
-Anyone else seen this behavior ?
+- Use pci_set_mwi since it will set the cacheline size if necessary.
+- Dont set/clear IO/MEMORY/MASTER, it should be handled in
+  pci_enable_device/pci_set_master.
 
-Thanks
--steve
+Anton
 
+--- qla_init.c~	2003-05-31 09:18:31.000000000 +1000
++++ qla_init.c	2003-05-31 09:21:16.000000000 +1000
+@@ -521,6 +521,7 @@
+ 	 * default.
+ 	 */
+ 	pci_set_master(ha->pdev);
++	pci_set_mwi(ha->pdev);
+ 	pci_read_config_word(ha->pdev, PCI_REVISION_ID, &ha->revision);
+ 
+ 	if (!ha->iobase)
+@@ -532,18 +533,7 @@
+ 	 * interest to us are properly set in command register.
+ 	 */
+ 	pci_read_config_word(ha->pdev, PCI_COMMAND, &w);
+-	w |= (PCI_COMMAND_IO | PCI_COMMAND_MEMORY | PCI_COMMAND_MASTER | 
+-	    PCI_COMMAND_INVALIDATE | PCI_COMMAND_PARITY | PCI_COMMAND_SERR);
+-
+-#if MEMORY_MAPPED_IO
+-	DEBUG(printk("scsi(%ld): I/O SPACE and MEMORY MAPPED I/O enabled.\n",
+-	    ha->host_no));
+-#else
+-	DEBUG(printk("scsi(%ld): I/O SPACE enabled and MEMORY MAPPED I/O "
+-	    "disabled.\n", ha->host_no));
+-
+-	w &= ~PCI_COMMAND_MEMORY;
+-#endif
++	w |= (PCI_COMMAND_PARITY | PCI_COMMAND_SERR);
+ 
+ #if defined(ISP2300)
+ 	/* PCI Specification Revision 2.3 changes */
