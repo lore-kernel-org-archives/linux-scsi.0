@@ -1,35 +1,35 @@
-From: Patrick Mochel <mochel@osdl.org>
-Subject: Removal of driverfs files in drivers/cdrom/cdrom.c
-Date: Wed, 24 Jul 2002 14:57:11 -0700 (PDT)
+From: "Haofeng Kou" <haofengk@ptu.promise.com>
+Subject: Tasklet, TaskQ and Int
+Date: Wed, 24 Jul 2002 20:54:32 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44.0207241456570.954-100000@cherise.pdx.osdl.net>
+Message-ID: <F6A3AFC9BCD92E48B79C14E4AAAEA20F45A51C@nonamea.ptu.promise.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from localhost (mochel@localhost)
-	by cherise.pdx.osdl.net (8.11.6/8.11.6) with ESMTP id g6OLvBt06419
-	for <linux-scsi@vger.kernel.org>; Wed, 24 Jul 2002 14:57:11 -0700
+content-class: urn:content-classes:message
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
+I meet some problems in my RAID system developing.
+As we know , Linux Kernel schedule methods:
+1> Task Queues: <1>Scheduler queue; <2>Timer queue; <3>Immediate queue
+2> Tasklet
+3> Kernel timer
 
 
-So, I'm looking at changing the driverfs API. In doring so, I came across 
-this code in drivers/cdrom/cdrom.c:unregister_cdrom:
+I have questions about the "Tasklet",  "Scheduler queue" and the
+Interrupt:
+1> For "Tasklet" and "Scheduler queue" tasks, do they have the priority,
+which one is more higher and how does the kernel deal with this?
+2> For example that if the Interrupt happen during the "Scheduler queue"
+task, then Interrupt finish and schedule another "Tasklet". At this
+time, I want the "Tasklet" can execute before this "Scheduler queue"
+task, is it possible? How to handle it?
 
-        if (atomic_read (&cdi->cdrom_driverfs_dev.refcount)) {
-                device_remove_file (&cdi->cdrom_driverfs_dev, "name");
-                device_remove_file (&cdi->cdrom_driverfs_dev, "kdev");
-                put_device (&cdi->cdrom_driverfs_dev);
-        }
-
-This looks wrong, based on the fact that it wasn't the cdrom layer that 
-created these files. They were, I believe, created by the SCSI cdrom 
-layer. So, why are they being removed here, esp. since they are removed at 
-a more general layer? 
 
 Thanks,
-
-        -pat
+haofeng
 
 
