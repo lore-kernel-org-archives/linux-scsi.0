@@ -1,46 +1,40 @@
-From: Alan Stern <stern@rowland.harvard.edu>
+From: Pat LaVarre <p.lavarre@ieee.org>
 Subject: Re: Informational Exception mpage [was: usb storage traces]
-Date: Fri, 5 Dec 2003 10:32:34 -0500 (EST)
+Date: 05 Dec 2003 09:02:25 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44L0.0312051025560.850-100000@ida.rowland.org>
-References: <3FD001D4.9010404@torque.net>
+Message-ID: <1070640144.12411.18.camel@patibmrh9>
+References: <Pine.LNX.4.44L0.0312051025560.850-100000@ida.rowland.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ida.rowland.org ([192.131.102.52]:6660 "HELO ida.rowland.org")
-	by vger.kernel.org with SMTP id S264405AbTLEPce (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 5 Dec 2003 10:32:34 -0500
-In-Reply-To: <3FD001D4.9010404@torque.net>
+Received: from email-out2.iomega.com ([147.178.1.83]:60667 "EHLO
+	email.iomega.com") by vger.kernel.org with ESMTP id S264238AbTLEQCg
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 5 Dec 2003 11:02:36 -0500
+In-Reply-To: <Pine.LNX.4.44L0.0312051025560.850-100000@ida.rowland.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Douglas Gilbert <dougg@torque.net>
-Cc: Pat LaVarre <p.lavarre@ieee.org>, linux-scsi@vger.kernel.org, Matthew Dharm <mdharm-scsi@one-eyed-alien.net>, Alex Sanks <alex@netchip.com>, Julian Back <jback@mpc-data.co.uk>, David Brownell <david-b@pacbell.net>
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: Douglas Gilbert <dougg@torque.net>, linux-scsi@vger.kernel.org, Matthew Dharm <mdharm-scsi@one-eyed-alien.net>, Alex Sanks <alex@netchip.com>, Julian Back <jback@mpc-data.co.uk>, David Brownell <david-b@pacbell.net>
 
-On Fri, 5 Dec 2003, Douglas Gilbert wrote:
+> According to the USB Mass Storage Class - UFI Command Specification, which 
+> might be more applicable in this circumstance,
 
-> The latest drafts of MMC-3 and MMC-4 call this mode page:
-> "Fault/Failure Reporting Control Page". Looking at the
-> definition in MMC-4 it is basically the same as the
-> Informational Exceptions mode page defined in SPC-3 with
-> a few fields reserved.
+Please NO!!!!!!!!!!
 
-According to the USB Mass Storage Class - UFI Command Specification, which 
-might be more applicable in this circumstance, page x1c is defined as the 
-Timer and Protect page.
+On this digressing point, I think all the applicable English texts
+actually agree with each other and with reality.
 
-> Just to confuse things further there is an Informational
-> Exceptions _log_ page that started life as the SMART log page.
-> Seems as though someone in t10 is keen on the term
-> "Informational Exceptions" but other groups are not so
-> enthusiastic.
-> 
-> Various command sets (e.g. SSC (tapes) and MMC (cd/dvd)) "fine
-> tune" the defintion of mode pages. Mode page 0x1c is the
-> only one in which the name changes that I have noticed.
-> SSC also overloads this mode page but keeps the SPC-3 name.
+UFI applies exclusively to usb-storage devices with the corresponding
+bInterfaceSubClass.  I think I remember that is x04, not found in Win
+generic x 08 (02|05|06) 50.
 
-So it's hard to say whether Windows uses this page to control SMART 
-logging, disk spin-down times, or something else.  I guess it's just as 
-well that the devices I've looked at don't support it.
+Personally I haven't yet had to grok UFI.  I could choose instead to
+study only ANSI T10 SCSI and SFF SCSI and USB Bootable SCSI.  Each of
+those have dozens of subflavours.  I don't want to have to start
+studying a fourth major flavour as yet confined only to USB1FS CBI/CB
+FDD, though rumoured to be coming to USB2HS BBB.
 
-Alan Stern
+Pat LaVarre
+
 
