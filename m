@@ -1,67 +1,87 @@
-From: Brian King <brking@us.ibm.com>
-Subject: [PATCH] Make retries obey host_self_blocked flag #2
-Date: Thu, 05 Feb 2004 16:49:48 -0600
+From: Martin Hicks <mort@wildopensource.com>
+Subject: [mort@wildopensource.com: Re: [PATCH] remove __exit from mptscsih_exit()]
+Date: Thu, 5 Feb 2004 18:31:09 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <4022C88C.3000804@us.ibm.com>
+Message-ID: <20040205233109.GE28976@localhost>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------060707030408060502000607"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e35.co.us.ibm.com ([32.97.110.133]:50077 "EHLO
-	e35.co.us.ibm.com") by vger.kernel.org with ESMTP id S267040AbUBEWtw
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 5 Feb 2004 17:49:52 -0500
-Received: from westrelay02.boulder.ibm.com (westrelay02.boulder.ibm.com [9.17.195.11])
-	by e35.co.us.ibm.com (8.12.10/8.12.2) with ESMTP id i15MnnwX273308
-	for <linux-scsi@vger.kernel.org>; Thu, 5 Feb 2004 17:49:49 -0500
-Received: from us.ibm.com (d03av02.boulder.ibm.com [9.17.193.82])
-	by westrelay02.boulder.ibm.com (8.12.10/NCO/VER6.6) with ESMTP id i15MnmLU124828
-	for <linux-scsi@vger.kernel.org>; Thu, 5 Feb 2004 15:49:49 -0700
+Received: from galileo.bork.org ([66.11.174.156]:31172 "HELO galileo.bork.org")
+	by vger.kernel.org with SMTP id S266895AbUBEXbK (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Feb 2004 18:31:10 -0500
+Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-This is a multi-part message in MIME format.
---------------060707030408060502000607
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
 
-Lets try this again, this time with the patch attached....
+Here's a fix for the discarded symbol in mptscsih.c
 
-The following patch against 2.6.2 will prevent the midlayer from
-issuing retries if host_self_blocked is set. This was raised as an
-issue here:
+I forgot to CC linux-scsi.
 
-http://marc.theaimsgroup.com/?l=linux-scsi&m=107357742430401&w=2
+mh
 
-I'm trying to improve and extend scsi_block_requests, and this is
-the first, and hopefully least controversial, step.
+----- Forwarded message from Martin Hicks <mort@wildopensource.com> -----
+
+From: Martin Hicks <mort@wildopensource.com>
+Subject: Re: [PATCH] remove __exit from mptscsih_exit()
+Date: Thu, 5 Feb 2004 18:18:32 -0500
+To: Martin Hicks <mort@wildopensource.com>
+Cc: James Bottomley <James.Bottomley@steeleye.com>,
+	Andrew Morton <akpm@osdl.org>, linux-kernel@vger.kernel.org
 
 
+
+On Thu, Feb 05, 2004 at 06:17:19PM -0500, Martin Hicks wrote:
+> 
+> Hi James and Andrew
+> 
+> I needed to apply this patch to get my kernel to link on ia64.  The
+> patch is against 2.6.2-mm1
+
+and the patch this time...
 
 -- 
-Brian King
-eServer Storage I/O
-IBM Linux Technology Center
+Martin Hicks                Wild Open Source Inc.
+mort@wildopensource.com     613-266-2296
 
---------------060707030408060502000607
-Content-Type: text/plain;
- name="patch-2.6.2-scsi_retries"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="patch-2.6.2-scsi_retries"
-
-diff -Naur linux-2.6.2/drivers/scsi/scsi.c linux-2.6.2-block_req/drivers/scsi/scsi.c
---- linux-2.6.2/drivers/scsi/scsi.c	Wed Feb  4 14:20:59 2004
-+++ linux-2.6.2-block_req/drivers/scsi/scsi.c	Thu Feb  5 14:21:19 2004
-@@ -784,7 +784,7 @@
-          */
- 	memset(cmd->sense_buffer, 0, sizeof(cmd->sense_buffer));
+# This is a BitKeeper generated patch for the following project:
+# Project Name: Linux kernel tree
+# This patch format is intended for GNU patch command version 2.5 or higher.
+# This patch includes the following deltas:
+#	           ChangeSet	1.1552  -> 1.1553 
+#	drivers/message/fusion/mptscsih.c	1.32    -> 1.33   
+#
+# The following is the BitKeeper ChangeSet Log
+# --------------------------------------------
+# 04/02/05	mort@green.i.bork.org	1.1553
+# Get rid of __exit from mptscsih_exit() to get the
+# kernel to link.
+# --------------------------------------------
+#
+diff -Nru a/drivers/message/fusion/mptscsih.c b/drivers/message/fusion/mptscsih.c
+--- a/drivers/message/fusion/mptscsih.c	Thu Feb  5 18:13:39 2004
++++ b/drivers/message/fusion/mptscsih.c	Thu Feb  5 18:13:39 2004
+@@ -198,7 +198,7 @@
  
--	return scsi_dispatch_cmd(cmd);
-+	return scsi_queue_insert(cmd, SCSI_MLQUEUE_EH_RETRY);
- }
+ /* module entry point */
+ static int  __init    mptscsih_init  (void);
+-static void __exit    mptscsih_exit  (void);
++static void    mptscsih_exit  (void);
  
- /*
+ static int  __devinit mptscsih_probe (struct pci_dev *, const struct pci_device_id *);
+ static void __devexit mptscsih_remove(struct pci_dev *);
+@@ -1985,7 +1985,7 @@
+  *
+  */
+ static void
+-__exit mptscsih_exit(void)
++mptscsih_exit(void)
+ {
+ 	MPT_ADAPTER	*ioc;
+ 
 
---------------060707030408060502000607--
 
+----- End forwarded message -----
+
+-- 
+Martin Hicks || mort@bork.org || PGP/GnuPG: 0x4C7F2BEE
