@@ -1,101 +1,114 @@
-From: Patrick Mansfield <patmans@us.ibm.com>
+From: James Bottomley <James.Bottomley@steeleye.com>
 Subject: Re: [RFC] Multi-path IO in 2.5/2.6 ?
-Date: Mon, 9 Sep 2002 09:56:52 -0700
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20020909095652.A21245@eng2.beaverton.ibm.com>
-References: <200209091458.g89Evv806056@localhost.localdomain>
+Date: Mon, 09 Sep 2002 12:34:05 -0500
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <200209091734.g89HY5p11796@localhost.localdomain>
+References: <patmans@us.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <200209091458.g89Evv806056@localhost.localdomain>; from James.Bottomley@SteelEye.com on Mon, Sep 09, 2002 at 09:57:56AM -0500
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+In-Reply-To: Message from Patrick Mansfield <patmans@us.ibm.com>
+   of "Mon, 09 Sep 2002 09:56:52 PDT." <20020909095652.A21245@eng2.beaverton.ibm.com>
+To: Patrick Mansfield <patmans@us.ibm.com>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, Lars Marowsky-Bree <lmb@suse.de>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>, Lars Marowsky-Bree <lmb@suse.de>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Mon, Sep 09, 2002 at 09:57:56AM -0500, James Bottomley wrote:
-> Lars Marowsky-Bree <lmb@suse.de> said:
-> > So, what is the take on "multi-path IO" (in particular, storage) in
-> > 2.5/2.6?
-> 
-> I've already made my views on this fairly clear (at least from the SCSI stack 
-> standpoint):
-> 
-> - multi-path inside the low level drivers (like qla2x00) is wrong
+patmans@us.ibm.com said:
+> Using md or volume manager is wrong for non-failover usage, and
+> somewhat bad for failover models; generic block layer is OK but it is
+> wasted code for any lower layers that do not or cannot have multi-path
+> IO (such as IDE). 
 
-Agreed.
+What about block devices that could usefully use multi-path to achieve network 
+redundancy, like nbd? If it's in the block layer or above, they can be made to 
+work with minimal effort.
 
-> - multi-path inside the SCSI mid-layer is probably wrong
+My basic point is that the utility of the feature transcends SCSI, so SCSI is 
+too low a layer for it.
 
-Disagree
+I wouldn't be too sure even of the IDE case: IDE has a habit of copying SCSI 
+features when they become more main-stream (and thus cheaper).  It wouldn't 
+suprise me to see multi-path as an adjunct to the IDE serial stuff.
 
-> - from the generic block layer on up, I hold no specific preferences
+> A major problem with multi-path in md or other volume manager is that
+> we use multiple (block layer) queues for a single device, when we
+> should be using a single queue. If we want to use all paths to a
+> device (i.e. round robin across paths or such, not a failover model)
+> this means the elevator code becomes inefficient, mabye even
+> counterproductive. For disk arrays, this might not be bad, but for
+> actual drives or even plugging single ported drives into a switch or
+> bus with multiple initiators, this could lead to slower disk
+> performance. 
 
-Using md or volume manager is wrong for non-failover usage, and somewhat
-bad for failover models; generic block layer is OK but it is wasted code
-for any lower layers that do not or cannot have multi-path IO (such as
-IDE).
+That's true today, but may not be true in 2.6.  Suparna's bio splitting code 
+is aimed precisely at this and other software RAID cases.
 
-> 
-> James
+> In the current code, each path is allocated a Scsi_Device, including a
+> request_queue_t, and a set of Scsi_Cmnd structures. Not only do we end
+> up with a Scsi_Device for each path, we also have an upper level (sd,
+> sg, st, or sr) driver attached to each Scsi_Device. 
 
-I have a newer version of SCSI multi-path in the mid layer that I hope to
-post this week, the last version patched against 2.5.14 is here:
+You can't really get away from this.  Transfer parameters are negotiated at 
+the Scsi_Device level (i.e. per device path from HBA to controller), and LLDs 
+accept I/O's for Scsi_Devices.  Whatever you do, you still need an entity that 
+performs most of the same functions as the Scsi_Device, so you might as well 
+keep Scsi_Device itself, since it works.
 
-http://www-124.ibm.com/storageio/multipath/scsi-multipath
+> For sd, this means if you have n paths to each SCSI device, you are
+> limited to whatever limit sd has divided by n, right now 128 / n.
+> Having four paths to a device is very reasonable, limiting us to 32
+> devices, but with the overhead of 128 devices. 
 
-Some documentation is located here:
+I really don't expect this to be true in 2.6.
 
-http://www-124.ibm.com/storageio/multipath/scsi-multipath/docs/index.html
+> Using a volume manager to implement multiple paths (again non-failover
+> model) means that the queue_depth might be too large if the
+> queue_depth (i.e.  number of outstanding commands sent to the drive)
+> is set as a per-device value - we can end sending n * queue_depth
+> commands to a device.
 
-I have a current patch against 2.5.33 that includes NUMA support (it
-requires discontigmem support that I believe is in the current linus
-bk tree, plus NUMA topology patches).
+The queues tend to be in the controllers, not in the RAID devices, thus for a 
+dual path RAID device you usually have two caching controllers and thus twice 
+the queue depth (I know this isn't always the case, but it certainly is enough 
+of the time for me to argue that you should have the flexibility to queue per 
+path).
 
-A major problem with multi-path in md or other volume manager is that we
-use multiple (block layer) queues for a single device, when we should be
-using a single queue. If we want to use all paths to a device (i.e. round
-robin across paths or such, not a failover model) this means the elevator
-code becomes inefficient, mabye even counterproductive. For disk arrays,
-this might not be bad, but for actual drives or even plugging single
-ported drives into a switch or bus with multiple initiators, this could
-lead to slower disk performance.
+> We could implement multi-path IO in the block layer, but if the only
+> user is SCSI, this gains nothing compared to putting multi-path in the
+> scsi layers. Creating block level interfaces that will work for future
+> devices and/or future code is hard without already having the devices
+> or code in place. Any block level interface still requires support in
+> the the underlying layers.
 
-If the volume manager implements only a failover model (use only a single
-path until that path fails), besides performance issues in balancing IO
-loads, we waste space allocating an extra Scsi_Device for each path.
+> I'm not against a block level interface, but I don't have ideas or
+> code for such an implementation.
 
-In the current code, each path is allocated a Scsi_Device, including a
-request_queue_t, and a set of Scsi_Cmnd structures. Not only do we
-end up with a Scsi_Device for each path, we also have an upper level
-(sd, sg, st, or sr) driver attached to each Scsi_Device.
+SCSI got into a lot of trouble by going down the "kernel doesn't have X 
+feature I need, so I'll just code it into the SCSI mid-layer instead", I'm 
+loth to accept something into SCSI that I don't think belongs there in the 
+long term.
 
-For sd, this means if you have n paths to each SCSI device, you are
-limited to whatever limit sd has divided by n, right now 128 / n.  Having
-four paths to a device is very reasonable, limiting us to 32 devices, but
-with the overhead of 128 devices.
+Answer me this question:
 
-Using a volume manager to implement multiple paths (again non-failover
-model) means that the queue_depth might be too large if the queue_depth
-(i.e.  number of outstanding commands sent to the drive) is set as a
-per-device value - we can end sending n * queue_depth commands to a device.
+- In the forseeable future does multi-path have uses other than SCSI?
 
-multi-path in the scsi layer enables multi-path use for all upper level scsi
-drivers, not just disks.
+I've got to say, I can't see a "no" to that one, so it fails the high level 
+bar to getting into the scsi subsystem.  However, the kernel, as has been said 
+before, isn't a theoretical excercise in design, so is there a good expediency 
+argument (like "it will take one year to get all the features of the block 
+layer to arrive and I have a customer now").  Also, to go in under expediency, 
+the code must be readily removable against the day it can be redone correctly.
 
-We could implement multi-path IO in the block layer, but if the only user
-is SCSI, this gains nothing compared to putting multi-path in the scsi
-layers. Creating block level interfaces that will work for future devices
-and/or future code is hard without already having the devices or code in
-place. Any block level interface still requires support in the the
-underlying layers.
+> Generic device naming consistency is a problem if multiple devices
+> show up with the same id.
 
-I'm not against a block level interface, but I don't have ideas or code
-for such an implementation.
+Patrick Mochel has an open task to come up with a solution to this.
 
-Generic device naming consistency is a problem if multiple devices show up
-with the same id.
+> With the scsi layer multi-path, ide-scsi or usb-scsi could also do
+> multi-path IO. 
 
-With the scsi layer multi-path, ide-scsi or usb-scsi could also do
-multi-path IO.
+The "scsi is everything" approach got its wings shot off at the kernel summit, 
+and subsequently confirmed its death in a protracted wrangle on lkml (I can't 
+remember the reference off the top of my head, but I'm sure others can).
 
--- Patrick Mansfield
+James
