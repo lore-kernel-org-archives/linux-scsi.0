@@ -1,37 +1,30 @@
-From: Willem Riede <osst@riede.org>
-Subject: Re: SCSI passthrough ioctl calls vs. sd/sg devices
-Date: Sat, 24 Apr 2004 08:42:05 -0400
+From: "Kaitlin Shannon" <j148dk@nate.com>
+Subject: =?ISO-8859-1?Q?=20=B9=AE=C0=C7=C7=CF=BD=C5.=BA=F1=BE=C6.=B1=D7?= =?ISO-8859-1?Q?=B6=F3?=
+	=?ISO-8859-1?Q?.=C1=A4=C7=B0?=  =?ISO-8859-1?Q?=20=BE=C8=B3=BB=C0=D4=B4=CF=B4=D9jkfsgg?= gcc
+Date: Sat, 24 Apr 04 09:24:55 GMT
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040424124205.GW13443@serve.riede.org>
-References: <519672568F040C41B6FAC21ADF51B18FEFBE@mailnode1.commstor.crossroads.com> <4089E7B2.5060803@torque.net> <Pine.LNX.4.58.0404240950330.7758@kai.makisara.local>
-Reply-To: osst@riede.org
+Message-ID: <0-$7i5gl3t-k-6io-8v7-q193$7t__5099.18764369122$1082816890@205.e.u7m9m>
+Reply-To: "Kaitlin Shannon" <j148dk@nate.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: multipart/alternative;
+	boundary="9E7EB9D25BF...C4D_E"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rwcrmhc13.comcast.net ([204.127.198.39]:8365 "EHLO
-	rwcrmhc13.comcast.net") by vger.kernel.org with ESMTP
-	id S262217AbUDXMmJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 24 Apr 2004 08:42:09 -0400
-Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.58.0404240950330.7758@kai.makisara.local> (from Kai.Makisara@kolumbus.fi on Sat, Apr 24, 2004 at 02:58:26 -0400)
+Received: from [218.106.196.1] ([218.106.196.1]:6224 "HELO 67.72.78.212")
+	by vger.kernel.org with SMTP id S262329AbUDXO0q (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 24 Apr 2004 10:26:46 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: Kai Makisara <Kai.Makisara@kolumbus.fi>
-Cc: Douglas Gilbert <dougg@torque.net>, Lee Xing <lxing@Crossroads.com>, linux-scsi@vger.kernel.org
+To: linux-assembly@vger.kernel.org
 
-On 2004.04.24 02:58, Kai Makisara wrote:
-> On Sat, 24 Apr 2004, Douglas Gilbert wrote:
-> 
-> ...
-> > In the lk 2.6 series the SG_IO ioctl is available for block
-> > devices which include SCSI disks and ATAPI dvd/cd drives.
-> > The SG_IO ioctl is currently not available for SCSI char
-> > device drivers (e.g. st and osst) other than sg itself.
-> 
-> SG_IO is available for st in current 2.6 (Patrick Mansfield added a few 
-> lines of code to st.c). Similar changes could be probably done to osst.
 
-I'll be happy to do that (make the equivalent change to osst) if that's 
-the best way to complete the SG_IO support.
+--9E7EB9D25BF...C4D_E
+Content-Type: text/plain;
+Content-Transfer-Encoding: quoted-printable
 
-Regards, Willem Riede.
+<p><a href=3D"http://www.biowiks.com" target=3D"_blank"><img src=3D"http:/=
+/myhome.hanafos.com/~wjdtjd101/2/main5.gif" border=3D"0"></a></p>=
+s  qeu frdw   qphmeswwevatemxrpr  earh
+ f qdfsvonu  bputhctflkiww pnix
+
+--9E7EB9D25BF...C4D_E--
+
