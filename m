@@ -1,236 +1,177 @@
-From: Patrick Mansfield <patmans@us.ibm.com>
-Subject: [PATCH] add more scsi_device sysfs attributes
-Date: Tue, 3 Dec 2002 15:57:43 -0800
+From: Douglas Gilbert <dougg@torque.net>
+Subject: [PATCH] SG_IO ioctl for block devices
+Date: Wed, 04 Dec 2002 23:22:46 +1100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20021203155743.A10834@eng2.beaverton.ibm.com>
+Message-ID: <3DEDF396.1040600@torque.net>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/mixed;
+ boundary="------------090700080301060808080303"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from northrelay03.pok.ibm.com (northrelay03.pok.ibm.com [9.56.224.151])
-	by e4.ny.us.ibm.com (8.12.2/8.12.2) with ESMTP id gB3Nx08g162346
-	for <linux-scsi@vger.kernel.org>; Tue, 3 Dec 2002 18:59:00 -0500
-Received: from gateway1.beaverton.ibm.com (gateway1.beaverton.ibm.com [138.95.180.2])
-	by northrelay03.pok.ibm.com (8.12.3/NCO/VER6.4) with ESMTP id gB3NwwQP022842
-	for <linux-scsi@vger.kernel.org>; Tue, 3 Dec 2002 18:58:58 -0500
-Received: from eng2.beaverton.ibm.com (eng2.beaverton.ibm.com [9.47.57.17])
-	by gateway1.beaverton.ibm.com (8.11.6/8.11.6) with ESMTP id gB3NrJV12611
-	for <linux-scsi@vger.kernel.org>; Tue, 3 Dec 2002 15:53:19 -0800
-Received: (from patman@localhost)
-	by eng2.beaverton.ibm.com (8.10.0.Beta10/8.8.5/token.aware-1.2) id gB3Nvh510966
-	for linux-scsi@vger.kernel.org; Tue, 3 Dec 2002 15:57:43 -0800 (PST)
+Received: from torque.net (dm1-89.triode.net.au [202.147.125.89])
+	by iggy.triode.net.au (8.11.6/8.11.6) with ESMTP id gB4CL9U02428
+	for <linux-scsi@vger.kernel.org>; Wed, 4 Dec 2002 23:21:10 +1100
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-Hi -
+This is a multi-part message in MIME format.
+--------------090700080301060808080303
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 
-This patch adds some scsi_device sysfs specific macros (based on some 
-in the usb source), and adds more scsi_device sysfs attributes.
+I have been playing around with the SG_IO ioctl() that
+recently appeared in drivers/block/scsi_ioctl.c .
 
-It modifies the current output of the "type" attribute to be 
-the numeric value of the type, and adds a few other attributes.
+First a warning: using sg's write()/read() interface is
+a dangerous thing to do to anything other than an sg device
+(especially a disk). The utilities in sg3_utils (and sg_utils)
+took the precaution of sending a "sg" ioctl and assumed if
+it worked then the file descriptor referred to a sg device.
+Now _all_ block devices respond to the ioctl()s I chose :-(
 
-It is easy to add or remove scsi_device attributes with this patch.
+IMO sg's write()/read() interface is still useful for
+queuing and high speed applications. However for the
+great majority of cases the SG_IO ioctl is sufficient.
+It turns out that sg3_utils version 1.01 doesn't scribble
+on disks (as outlined above), more by luck than good
+management. Several things fail (e.g. sg_logs) that can
+easily be fixed while sg_inq and sg_dd work. [sg_dd
+works because it treats /dev/sda as a normal file
+rather than a sg device.] I will release sg3_utils
+version 1.02 shortly.
 
-Example sysfs with this patch:
+The error processing of the SG_IO ioctl() is broken as
+far as I can determine. My attached patch drives output
+values to 0 (their inert values) and rescues the scsi
+status value from the scsi_request structure. Notice
+the hack in drivers/scsi/scsi_lib.c to stop the
+gratuitous clearing of req->errors. The sense buffer
+is not conveyed into struct request and there seems to
+be no code in scsi_lib.c to do that.
 
-[patman@elm3a50 patman]$ ls /sysfs/bus/scsi/devices/0:0:0:0
-0:0:0:0:gen   current_queue_depth  name             power  vendor
-access_count  device_blocked       new_queue_depth  rev
-block         model                online           type
+To keep the block SG_IO consistent with sg's version,
+I removed the EIO errno conditions. CHECK CONDITION
+does not (necessarily) indicate an error. Witness the
+code fix around lk 2.4.18 to correctly handle
+RECOVERED_ERROR. So a return value of zero implies
+that a consistent set of values has been written
+back into the sg_io_hdr instance (and the application
+best check them).
 
-And results of catting each file above (block and 0:0:0:0:gen are
-not files):
+The patch is against lk 2.5.50bk3
 
-/sysfs/bus/scsi/devices/0:0:0:0/access_count: '2'
-/sysfs/bus/scsi/devices/0:0:0:0/current_queue_depth: '253'
-/sysfs/bus/scsi/devices/0:0:0:0/device_blocked: '0'
-/sysfs/bus/scsi/devices/0:0:0:0/model: 'ST318203LC    !#'
-/sysfs/bus/scsi/devices/0:0:0:0/name: 'SIBM-PSG ST318203LC    !#LRA6701300007027J5ZL'
-/sysfs/bus/scsi/devices/0:0:0:0/new_queue_depth: '253'
-/sysfs/bus/scsi/devices/0:0:0:0/online: '1'
-/sysfs/bus/scsi/devices/0:0:0:0/power: '0'
-/sysfs/bus/scsi/devices/0:0:0:0/rev: 'B222'
-/sysfs/bus/scsi/devices/0:0:0:0/type: '0'
-/sysfs/bus/scsi/devices/0:0:0:0/vendor: 'IBM-PSG '
+Doug Gilbert
 
-The online bit field is writable, although setting it to 0 is not useful.
+--------------090700080301060808080303
+Content-Type: text/plain;
+ name="2550bk3_blk_sgio.diff"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="2550bk3_blk_sgio.diff"
 
---- 1.1/drivers/scsi/scsi_sysfs.c	Thu Nov 28 10:54:06 2002
-+++ edited/drivers/scsi/scsi_sysfs.c	Tue Dec  3 08:53:21 2002
-@@ -132,39 +132,115 @@
- }
- 
- 
--/**
-- * scsi_device_type_read - copy out the SCSI type
-- * @dev:		device to check
-- * @page:		copy data into this area
-- * @count:		number of bytes to copy
-- * @off:		start at this offset in page
-- *
-- * Return:
-- *     number of bytes written into page.
-- **/
--static ssize_t scsi_device_type_read(struct device *dev, char *page,
--	size_t count, loff_t off)
--{
--	struct scsi_device *sdev = to_scsi_device(dev);
--	const char *type;
-+/*
-+ * show_function: macro to create an attr function that can be used to
-+ * show a non-bit field.
-+ */
-+#define show_function(field, format_string)				\
-+static ssize_t								\
-+show_##field (struct device *dev, char *buf, size_t count, loff_t off)	\
-+{									\
-+	struct scsi_device *sdev;					\
-+	if (off)							\
-+		return 0;						\
-+	sdev = to_scsi_device(dev);					\
-+	return snprintf (buf, count, format_string, sdev->field);	\
-+}									\
- 
--	if (off)
--		return 0;
-+/*
-+ * sdev_rd_attr: macro to create a function and attribute variable for a
-+ * read only field.
-+ */
-+#define sdev_rd_attr(field, format_string)				\
-+	show_function(field, format_string)				\
-+static DEVICE_ATTR(field, S_IRUGO, show_##field, NULL)
- 
--	if ((sdev->type > MAX_SCSI_DEVICE_CODE) ||
--	    (scsi_device_types[(int)sdev->type] == NULL))
--		type = "Unknown";
--	else
--		type = scsi_device_types[(int)sdev->type];
- 
--	return snprintf(page, count, "%s\n", type);
-+/*
-+ * sdev_rd_attr: create a function and attribute variable for a
-+ * read/write field.
-+ */
-+#define sdev_rw_attr(field, format_string)				\
-+	show_function(field, format_string)				\
-+									\
-+static ssize_t								\
-+store_##field (struct device *dev, const char *buf, size_t count, loff_t off)\
-+{									\
-+	struct scsi_device *sdev;					\
-+									\
-+	if (off)							\
-+		return 0;						\
-+	sdev = to_scsi_device(dev);					\
-+	return snscanf (buf, count, format_string, &sdev->field);	\
-+}									\
-+static DEVICE_ATTR(field, S_IRUGO | S_IWUSR, show_##field, store_##field)
-+
-+/*
-+ * sdev_rd_attr: create a function and attribute variable for a
-+ * read/write bit field.
-+ */
-+#define sdev_rw_attr_bit(field)						\
-+	show_function(field, "%d\n")					\
-+									\
-+static ssize_t								\
-+store_##field (struct device *dev, const char *buf, size_t count, loff_t off)\
-+{									\
-+	int ret;							\
-+	struct scsi_device *sdev;					\
-+									\
-+	if (off)							\
-+		return 0;						\
-+	ret = scsi_sdev_check_buf_bit(buf);				\
-+	if (ret >= 0)	{						\
-+		sdev = to_scsi_device(dev);				\
-+		sdev->field = ret;					\
-+		ret = count;						\
-+	}								\
-+	return ret;							\
-+}									\
-+static DEVICE_ATTR(field, S_IRUGO | S_IWUSR, show_##field, store_##field)
-+
-+/*
-+ * scsi_sdev_check_buf_bit: return 0 if buf is "0", return 1 if buf is "1",
-+ * else return -EINVAL.
-+ */
-+static int scsi_sdev_check_buf_bit(const char *buf)
-+{
-+	if ((buf[1] == '\0') || ((buf[1] == '\n') && (buf[2] == '\0'))) {
-+		if (buf[0] == '1')
-+			return 1;
-+		else if (buf[0] == '0')
-+			return 0;
-+		else 
-+			return -EINVAL;
-+	} else
-+		return -EINVAL;
- }
- 
- /*
-- * Create dev_attr_type. This is different from the dev_attr_type in scsi
-- * upper level drivers.
-+ * Create the actual show/store functions and data structures.
-  */
--static DEVICE_ATTR(type,S_IRUGO,scsi_device_type_read,NULL);
-+sdev_rd_attr (device_blocked, "%d\n");
-+sdev_rd_attr (current_queue_depth, "%d\n");
-+sdev_rd_attr (new_queue_depth, "%d\n");
-+sdev_rd_attr (type, "%d\n");
-+sdev_rd_attr (access_count, "%d\n");
-+sdev_rd_attr (vendor, "%.8s\n");
-+sdev_rd_attr (model, "%.16s\n");
-+sdev_rd_attr (rev, "%.4s\n");
-+sdev_rw_attr_bit (online);
-+
-+static struct device_attribute * const sdev_attrs[] = {
-+	&dev_attr_device_blocked,
-+	&dev_attr_current_queue_depth,
-+	&dev_attr_new_queue_depth,
-+	&dev_attr_type,
-+	&dev_attr_access_count,
-+	&dev_attr_vendor,
-+	&dev_attr_model,
-+	&dev_attr_rev,
-+	&dev_attr_online,
-+};
- 
- /**
-  * scsi_device_register - register a scsi device with the scsi bus
-@@ -175,7 +251,7 @@
-  **/
- int scsi_device_register(struct scsi_device *sdev)
+--- linux/drivers/block/scsi_ioctl.c	2002-11-29 09:27:35.000000000 +1100
++++ linux/drivers/block/scsi_ioctl.c2550sgio1	2002-12-04 21:14:53.000000000 +1100
+@@ -126,7 +126,7 @@
+ 		 struct sg_io_hdr *uptr)
  {
--	int error = 0;
-+	int error = 0, i;
+ 	unsigned long uaddr, start_time;
+-	int err, reading, writing, nr_sectors;
++	int reading, writing, nr_sectors;
+ 	struct sg_io_hdr hdr;
+ 	struct request *rq;
+ 	struct bio *bio;
+@@ -265,26 +265,36 @@
  
- 	sprintf(sdev->sdev_driverfs_dev.bus_id,"%d:%d:%d:%d",
- 		sdev->host->host_no, sdev->channel, sdev->id, sdev->lun);
-@@ -186,9 +262,12 @@
- 	if (error)
- 		return error;
+ 	start_time = jiffies;
  
--	error = device_create_file(&sdev->sdev_driverfs_dev, &dev_attr_type);
-+	for (i = 0; !error && i < ARRAY_SIZE(sdev_attrs); i++)
-+		error = device_create_file(&sdev->sdev_driverfs_dev,
-+					   sdev_attrs[i]);
+-	/*
+-	 * return -EIO if we didn't transfer all data, caller can look at
+-	 * residual count to find out how much did succeed
++	/* ignore return value. All information is passed back to caller
++	 * (if he doesn't check that is his problem).
++	 * N.B. a non-zero SCSI status is _not_ necessarily an error.
+ 	 */
+-	err = blk_do_rq(q, bdev, rq);
+-	if (rq->data_len > 0)
+-		err = -EIO;
++	blk_do_rq(q, bdev, rq);
+ 	
+ 	if (bio) {
+ 		bio_unmap_user(bio, reading);
+ 		bio_put(bio);
+ 	}
+ 
+-	hdr.status = rq->errors;
++	/* write to all output members */
++	hdr.status = rq->errors;	
++	hdr.masked_status = (hdr.status >> 1) & 0x1f;
++	hdr.msg_status = 0;
++	hdr.host_status = 0;
++	hdr.driver_status = 0;
++	hdr.info = 0;
++	if (hdr.masked_status || hdr.host_status || hdr.driver_status)
++		hdr.info |= SG_INFO_CHECK;
+ 	hdr.resid = rq->data_len;
+ 	hdr.duration = (jiffies - start_time) * (1000 / HZ);
++	hdr.sb_len_wr = 0;
+ 
+ 	if (rq->sense_len && hdr.sbp) {
+-		if (!copy_to_user(hdr.sbp,rq->sense, rq->sense_len))
+-			hdr.sb_len_wr = rq->sense_len;
++		int len = (hdr.mx_sb_len < rq->sense_len) ? 
++				hdr.mx_sb_len : rq->sense_len;
 +
- 	if (error)
--		device_unregister(&sdev->sdev_driverfs_dev);
-+		scsi_device_unregister(sdev);
++		if (!copy_to_user(hdr.sbp, rq->sense, len))
++			hdr.sb_len_wr = len;
+ 	}
  
- 	return error;
+ 	blk_put_request(rq);
+@@ -297,8 +307,9 @@
+ 
+ 		kfree(buffer);
+ 	}
+-
+-	return err;
++	/* may not have succeeded, but output values written to control
++	 * structure (struct sg_io_hdr).  */
++	return 0;
  }
-@@ -199,6 +278,9 @@
-  **/
- void scsi_device_unregister(struct scsi_device *sdev)
- {
--	device_remove_file(&sdev->sdev_driverfs_dev, &dev_attr_type);
-+	int i;
-+
-+	for (i = 0; i < ARRAY_SIZE(sdev_attrs); i++)
-+		device_remove_file(&sdev->sdev_driverfs_dev, sdev_attrs[i]);
- 	device_unregister(&sdev->sdev_driverfs_dev);
- }
+ 
+ #define FORMAT_UNIT_TIMEOUT		(2 * 60 * 60 * HZ)
+--- linux/drivers/scsi/scsi_lib.c	2002-12-04 10:21:16.000000000 +1100
++++ linux/drivers/scsi/scsi_lib.c2550bk3sgio1	2002-12-04 21:14:20.000000000 +1100
+@@ -441,6 +441,7 @@
+ 	int this_count = SCpnt->bufflen >> 9;
+ 	request_queue_t *q = &SCpnt->device->request_queue;
+ 	struct request *req = SCpnt->request;
++	int clear_errors = 1;
+ 
+ 	/*
+ 	 * We must do one of several things here:
+@@ -481,9 +482,12 @@
+ 	}
+ 
+ 	if (blk_pc_request(req)) {
+-		req->errors = result & 0xff;
++		req->errors = (driver_byte(result) & DRIVER_SENSE) ?
++				(CHECK_CONDITION << 1) : (result & 0xff);
+ 		if (!result)
+ 			req->data_len -= SCpnt->bufflen;
++		else
++			clear_errors = 0;  
+ 	}
+ 
+ 	/*
+@@ -504,7 +508,8 @@
+ 					      req->nr_sectors, good_sectors));
+ 		SCSI_LOG_HLCOMPLETE(1, printk("use_sg is %d\n ", SCpnt->use_sg));
+ 
+-		req->errors = 0;
++		if (clear_errors)
++			req->errors = 0;
+ 		/*
+ 		 * If multiple sectors are requested in one buffer, then
+ 		 * they will have been finished off by the first command.
+
+--------------090700080301060808080303--
+
