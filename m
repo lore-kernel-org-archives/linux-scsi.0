@@ -1,60 +1,126 @@
-From: James Bottomley <James.Bottomley@steeleye.com>
-Subject: Re: Requested changes for the SCSI error handler
-Date: 01 Jun 2004 15:46:14 -0500
+From: "Randy.Dunlap" <rddunlap@osdl.org>
+Subject: Re: [PATCH] fix check_region usage in eata_pio
+Date: Tue, 1 Jun 2004 15:56:26 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1086122775.2061.87.camel@mulgrave>
-References: <Pine.LNX.4.44L0.0406011617260.1167-100000@ida.rowland.org>
+Message-ID: <20040601155626.1ac76ff3.rddunlap@osdl.org>
+References: <20040531120010.GA16293@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat1.steeleye.com ([65.114.3.130]:179 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S265089AbUFAUqt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 1 Jun 2004 16:46:49 -0400
-In-Reply-To: <Pine.LNX.4.44L0.0406011617260.1167-100000@ida.rowland.org>
+Received: from fw.osdl.org ([65.172.181.6]:20174 "EHLO mail.osdl.org")
+	by vger.kernel.org with ESMTP id S265276AbUFAXHq (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Jun 2004 19:07:46 -0400
+In-Reply-To: <20040531120010.GA16293@lst.de>
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: Mike Anderson <andmike@us.ibm.com>, SCSI development list <linux-scsi@vger.kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: jejb@steeleye.com, linux-scsi@vger.kernel.org
 
-On Tue, 2004-06-01 at 15:29, Alan Stern wrote:
-> You mean, in the hostt->eh_{bus|host}_reset_handler() routines?  That
-> would be fine with me.  Isn't it true that we don't even have to block the
-> host, since this all executes in the error-handler thread?
+On Mon, 31 May 2004 14:00:10 +0200 Christoph Hellwig wrote:
 
-Actually yes.  The block would only have to be implemented in the
-asynchronous report path.
+| I'd love to rework the init sequence a bit more, but without beeing able
+| to actually test the driver I'd rather stick to the bulletproof fix.
+| 
+| 
+| --- 1.21/drivers/scsi/eata_pio.c	2003-08-16 16:01:30 +02:00
+| +++ edited/drivers/scsi/eata_pio.c	2004-05-31 13:30:48 +02:00
+| @@ -593,14 +593,14 @@
+|  	int z;
+|  	unsigned short *p;
+|  
+| -	if (check_region(base, 9))
+| -		return (FALSE);
+| +	if (!request_region(base, 8, "eata_pio"))
+| +		return 0;
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Using region size of 8 instead of 9 caught my eye.
+The driver isn't very consistent about it.
+However, "eata_generic.h" says that there is a register
+at offset 8 and the code does inb() on that register,
+so region size (apparently) should be 9.
 
-> In addition, the settle-time delays would have to be removed from the
-> error handler -- which means adding it to all the low-level drivers.  Is 
-> that doable?
+Here's an update that applies on top of Christoph's patch.
 
-Well, for 2.6, I think that a simple flag indicating that the driver
-will implement it's own timeout should suffice rather than altering
-every LLD...
-
-> > > 	In scsi_eh_ready_devs(), it would be good if some of the resets
-> > > 	could be skipped sometimes.  For example, if the low-level
-> > > 	driver has just done its own bus-device reset (and called
-> > > 	scsi_report_device_reset) then there's no point in doing 
-> > > 	scsi_eh_bus_device_reset().  The same is true for bus resets.
-> > > 	It just adds additional timeout delays to an already-lengthy
-> > > 	recovery process.
-> > 
-> > Well, tidying up the reports could be done.  Really we should treat them
-> > as error conditions: mark all the in-progress commands for the devices
-> > and probe with a TUR before resuming.
-> 
-> In practice the LLD-initiated resets are likely to accompany command 
-> failures or errors anyway.  But this doesn't answer my question: Can the 
-> error-handler's redundant resets be skipped?
-
-Well, no.  The reason is that the report interfaces are reporting
-asynchronous events (that the HBA may notice some while after they
-actually occurred).  Even if the host reports a device reset, it is very
-possible that a command went to the device *after* that event occurred,
-so we'd still have to reset the device again to kill that command.
-
-James
+--
+~Randy
 
 
+Based on "eata_generic.h", this SCSI controller has 9 bytes of IO
+space, not 8, so update request_region(), release_region(), and
+n_io_port to use 9 instead of 8.
+
+diffstat:=
+ drivers/scsi/eata_pio.c |   16 ++++++++--------
+ 1 files changed, 8 insertions(+), 8 deletions(-)
+
+
+diff -Naurp ./drivers/scsi/eata_pio.c~eata_region ./drivers/scsi/eata_pio.c
+--- ./drivers/scsi/eata_pio.c~eata_region	2004-06-01 15:13:25.000000000 -0700
++++ ./drivers/scsi/eata_pio.c	2004-06-01 15:29:30.000000000 -0700
+@@ -593,7 +593,7 @@ static int get_pio_conf_PIO(u32 base, st
+ 	int z;
+ 	unsigned short *p;
+ 
+-	if (!request_region(base, 8, "eata_pio"))
++	if (!request_region(base, 9, "eata_pio"))
+ 		return 0;
+ 
+ 	memset(buf, 0, sizeof(struct get_conf));
+@@ -641,7 +641,7 @@ static int get_pio_conf_PIO(u32 base, st
+ 	return 1;
+ 
+  fail:
+-	release_region(base, 8);
++	release_region(base, 9);
+ 	return 0;
+ }
+ 
+@@ -784,7 +784,7 @@ static int register_pio_HBA(long base, s
+ 	sh->unique_id = base;
+ 	sh->base = base;
+ 	sh->io_port = base;
+-	sh->n_io_port = 8;
++	sh->n_io_port = 9;
+ 	sh->irq = gc->IRQ;
+ 	sh->dma_channel = PIO;
+ 	sh->this_id = gc->scsi_id[3];
+@@ -825,7 +825,7 @@ static void find_pio_ISA(struct get_conf
+ 		if (!get_pio_conf_PIO(ISAbases[i], buf))
+ 			continue;
+ 		if (!register_pio_HBA(ISAbases[i], buf, tpnt))
+-			release_region(ISAbases[i], 8);
++			release_region(ISAbases[i], 9);
+ 		else
+ 			ISAbases[i] = 0;
+ 	}
+@@ -857,10 +857,10 @@ static void find_pio_EISA(struct get_con
+ 					DBG(DBG_PROBE && DBG_EISA, print_pio_config(buf));
+ 					if (buf->IRQ) {
+ 						if (!register_pio_HBA(base, buf, tpnt))
+-							release_region(base, 8);
++							release_region(base, 9);
+ 					} else {
+ 						printk(KERN_NOTICE "eata_dma: No valid IRQ. HBA " "removed from list\n");
+-						release_region(base, 8);
++						release_region(base, 9);
+ 					}
+ 				}
+ 				/* Nothing found here so we take it from the list */
+@@ -900,7 +900,7 @@ static void find_pio_PCI(struct get_conf
+ 			/* We didn't find it in the primary search */
+ 			if (get_pio_conf_PIO(base, buf)) {
+ 				if (buf->FORCADR) {	/* If the address is forced */
+-					release_region(base, 8);
++					release_region(base, 9);
+ 					continue;	/* we'll find it later      */
+ 				}
+ 
+@@ -910,7 +910,7 @@ static void find_pio_PCI(struct get_conf
+ 				 */
+ 
+ 				if (!register_pio_HBA(base, buf, tpnt)) {
+-					release_region(base, 8);
++					release_region(base, 9);
+ 					continue;
+ 				}
+ 
