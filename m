@@ -1,32 +1,31 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: IP over FC and qlogic workarounds in fusion
-Date: Tue, 7 Sep 2004 20:14:15 +0200
+From: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Subject: Re: Problems seeing raid array attached to a qla2312
+Date: Tue, 7 Sep 2004 11:23:18 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040907181415.GB12654@lst.de>
-References: <BC3CE0375D29D51199A400508B66CA6C099478E1@exc-snake.co.lsil.com>
+Message-ID: <20040907182318.GA2288@praka.san.rr.com>
+References: <41248D91.5070100@moving-picture.com> <413DDA46.4050400@moving-picture.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.210]:1438 "EHLO mail.lst.de")
-	by vger.kernel.org with ESMTP id S268314AbUIGSOa (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Sep 2004 14:14:30 -0400
+Received: from ms-smtp-03-qfe0.socal.rr.com ([66.75.162.135]:53159 "EHLO
+	ms-smtp-03-eri0.socal.rr.com") by vger.kernel.org with ESMTP
+	id S268368AbUIGSZT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 7 Sep 2004 14:25:19 -0400
 Content-Disposition: inline
-In-Reply-To: <BC3CE0375D29D51199A400508B66CA6C099478E1@exc-snake.co.lsil.com>
+In-Reply-To: <413DDA46.4050400@moving-picture.com>
 List-Id: linux-scsi@vger.kernel.org
-To: "Shirron, Stephen" <Stephen.Shirron@lsil.com>
-Cc: "Moore, Eric Dean" <Emoore@lsil.com>, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org
+To: James Pearson <james-p@moving-picture.com>
+Cc: linux-scsi@vger.kernel.org
 
-On Tue, Sep 07, 2004 at 12:12:10PM -0600, Shirron, Stephen wrote:
-> One problem I see with trying to remove this workaround from
-> our driver is that it would have to be coupled with a kernel
-> release, and then the newer driver would be bound to that release.
-> It would make it harder for customers to use a new driver kit with
-> an old kernel.
+On Tue, 07 Sep 2004, James Pearson wrote:
+
 > 
-> How is something like this typically addressed?
+> This turned out to be a problem with the firmware on the raid array - 
+> upgrading to a newer version fixed this issue.
+> 
 
-Backport the stack changes aswell when you want to run an older release.
+Thanks for the update.  Glad to hear you managed to get the issue
+resolved.
 
-There's a lot of recent additions additions that move code from drivers
-to the stack and you need to make sure that the stack code is uptodate
-to use all those features.
+Regards,
+Andrew Vasquez
