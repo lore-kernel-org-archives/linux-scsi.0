@@ -1,46 +1,70 @@
-From: Clay Haapala <chaapala@cisco.com>
-Subject: Re: [PATCH] allow drivers to hook into watchdog timeout
-Date: Tue, 10 Feb 2004 16:47:17 -0600
+From: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Subject: [PATCH] qla2xxx -- Properly schedule mailbox command timeouts.
+Date: Tue, 10 Feb 2004 15:17:22 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <yqujk72umu16.fsf@chaapala-lnx2.cisco.com>
-References: <20040120132052.GA6740@lst.de>
-	<2432440000.1076430858@aslan.btc.adaptec.com >
-	<1076431366.1804.24.camel@mulgrave>
-	<2472850000.1076435243@aslan.btc.adaptec.com>
-	<1076438507.2165.38.camel@mulgrave>
-	<2520610000.1076442259@aslan.btc.adaptec.com>
-	<1076443541.2080.56.camel@mulgrave>
-	<2549730000.1076444817@aslan.btc.adaptec.com>
+Message-ID: <1076455042.6070.64.camel@dieplab1>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/mixed; boundary="=-OtSpx/rKVc7utHHutYcR"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rtp-iport-2.cisco.com ([64.102.122.149]:35451 "EHLO
-	rtp-iport-2.cisco.com") by vger.kernel.org with ESMTP
-	id S261950AbUBJWrY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 10 Feb 2004 17:47:24 -0500
-In-Reply-To: <2549730000.1076444817@aslan.btc.adaptec.com> (Justin T.
- Gibbs's message of "Tue, 10 Feb 2004 13:26:57 -0700")
+Received: from pat.qlogic.com ([198.70.193.2]:38584 "EHLO avexch01.qlogic.com")
+	by vger.kernel.org with ESMTP id S262228AbUBJXQr (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 10 Feb 2004 18:16:47 -0500
 List-Id: linux-scsi@vger.kernel.org
-To: "Justin T. Gibbs" <gibbs@scsiguy.com>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, Christoph Hellwig <hch@lst.de>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: linux-scsi@vger.kernel.org
 
-Some of this queuing/retry conversation sounds similar to the recent
-discussion we had on the linux-iscsi driver.  I think that the
-linux-iscsi ended up OK on it, but it is something to keep in mind for
-the reviewers of the 4.0.0.4 version to see if we got it right.
 
-On a related topic:
-On Tue, 10 Feb 2004, Justin T. Gibbs told this:
-> [ queuing/retry discussion between Justin and James omitted ]
-> That reminds me.  Reported bus/target resets do not cause a
-> bus/device-settle delay.  This is another one of the workarounds
-> in my driver.
+--=-OtSpx/rKVc7utHHutYcR
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 
-Is this the scenario where the device resets and issues a couple of
-"Unit Attentions", etc.?
--- 
-Clay Haapala (chaapala@cisco.com) Cisco Systems SRBU +1 763-398-1056
-   6450 Wedgwood Rd, Suite 130 Maple Grove MN 55311 PGP: C89240AD
-"Honor thy prototypes, that it may be well with thee, and thou mayest
-   code long upon the Earth, else thy iniquity will be visited unto
-      the third and fourth generation of those that revise it."
+James,
+
+For mailbox commands which the firmware internally times-out in 
+2 * R_A_TOV, the driver should timeout no sooner than 2.5 * R_A_TOV so
+we do not inappropriately schedule an ISP abort.
+
+Please apply.
+
+Regards,
+Andrew Vasquez
+
+--=-OtSpx/rKVc7utHHutYcR
+Content-Disposition: attachment; filename=QL2_mbx_timeout_fix.diff
+Content-Transfer-Encoding: base64
+Content-Type: text/plain; name=QL2_mbx_timeout_fix.diff; charset=
+
+LS0tIGEvZHJpdmVycy9zY3NpL3FsYTJ4eHgvcWxhX21ieC5jCTIwMDQtMDItMDIgMDg6Mjk6MzUu
+MDAwMDAwMDAwIC0wODAwDQorKysgYi9kcml2ZXJzL3Njc2kvcWxhMnh4eC9xbGFfbWJ4LmMJMjAw
+NC0wMi0wNSAyMjowMzo0NS4wMDAwMDAwMDAgLTA4MDANCkBAIC0xNDIxLDcgKzE0MjEsNyBAQA0K
+IAltY3AtPmluX21iID0gTUJYXzA7DQogCW1jcC0+YnVmX3NpemUgPSBQT1JUX0RBVEFCQVNFX1NJ
+WkU7DQogCW1jcC0+ZmxhZ3MgPSBNQlhfRE1BX0lOOw0KLQltY3AtPnRvdiA9ICBoYS0+bG9naW5f
+dGltZW91dCAqIDI7DQorCW1jcC0+dG92ID0gKGhhLT5sb2dpbl90aW1lb3V0ICogMikgKyAoaGEt
+PmxvZ2luX3RpbWVvdXQgLyAyKTsNCiAJcnZhbCA9IHFsYTJ4MDBfbWFpbGJveF9jb21tYW5kKGhh
+LCBtY3ApOw0KIA0KIAlpZiAocnZhbCA9PSBRTEFfU1VDQ0VTUykgew0KQEAgLTE3NzQsOCArMTc3
+NCw3IEBADQogCW1jcC0+aW5fbWIgPSBNQlhfMHxNQlhfMTsNCiAJbWNwLT5idWZfc2l6ZSA9IGJ1
+Zl9zaXplOw0KIAltY3AtPmZsYWdzID0gTUJYX0RNQV9PVVR8TUJYX0RNQV9JTjsNCi0JLyptY3At
+PnRvdiA9IGhhLT5yZXRyeV9jb3VudCAqIGhhLT5sb2dpbl90aW1lb3V0ICogMjsqLw0KLQltY3At
+PnRvdiA9ICBoYS0+bG9naW5fdGltZW91dCAqIDI7DQorCW1jcC0+dG92ID0gKGhhLT5sb2dpbl90
+aW1lb3V0ICogMikgKyAoaGEtPmxvZ2luX3RpbWVvdXQgLyAyKTsNCiAJcnZhbCA9IHFsYTJ4MDBf
+bWFpbGJveF9jb21tYW5kKGhhLCBtY3ApOw0KIA0KIAlpZiAocnZhbCAhPSBRTEFfU1VDQ0VTUykg
+ew0KQEAgLTE4MzYsOCArMTgzNSw3IEBADQogCW1jcC0+bWJbM10gPSBhcmVhIDw8IDggfCBhbF9w
+YTsNCiANCiAJbWNwLT5pbl9tYiA9IE1CWF83fE1CWF82fE1CWF8yfE1CWF8xfE1CWF8wOw0KLQkv
+Km1jcC0+dG92ID0gaGEtPnJldHJ5X2NvdW50ICogaGEtPmxvZ2luX3RpbWVvdXQgKiAyOyovDQot
+CW1jcC0+dG92ID0gaGEtPmxvZ2luX3RpbWVvdXQgKiAyOw0KKwltY3AtPnRvdiA9IChoYS0+bG9n
+aW5fdGltZW91dCAqIDIpICsgKGhhLT5sb2dpbl90aW1lb3V0IC8gMik7DQogCW1jcC0+ZmxhZ3Mg
+PSAwOw0KIAlydmFsID0gcWxhMngwMF9tYWlsYm94X2NvbW1hbmQoaGEsIG1jcCk7DQogDQpAQCAt
+MTkwOSw3ICsxOTA3LDcgQEANCiAJbWNwLT5tYlsyXSA9IG9wdDsNCiAJbWNwLT5vdXRfbWIgPSBN
+QlhfMnxNQlhfMXxNQlhfMDsNCiAgCW1jcC0+aW5fbWIgPSBNQlhfN3xNQlhfNnxNQlhfMXxNQlhf
+MDsNCi0JbWNwLT50b3YgPSAgaGEtPmxvZ2luX3RpbWVvdXQgKiAyOw0KKwltY3AtPnRvdiA9ICho
+YS0+bG9naW5fdGltZW91dCAqIDIpICsgKGhhLT5sb2dpbl90aW1lb3V0IC8gMik7DQogCW1jcC0+
+ZmxhZ3MgPSAwOw0KIAlydmFsID0gcWxhMngwMF9tYWlsYm94X2NvbW1hbmQoaGEsIG1jcCk7DQog
+DQpAQCAtMjQxMiw3ICsyNDEwLDcgQEANCiAJbWNwLT5pbl9tYiA9IE1CWF8xfE1CWF8wOw0KIAlt
+Y3AtPmJ1Zl9zaXplID0gRkNBTF9NQVBfU0laRTsNCiAJbWNwLT5mbGFncyA9IE1CWF9ETUFfSU47
+DQotCW1jcC0+dG92ID0gIGhhLT5sb2dpbl90aW1lb3V0ICogMjsNCisJbWNwLT50b3YgPSAoaGEt
+PmxvZ2luX3RpbWVvdXQgKiAyKSArIChoYS0+bG9naW5fdGltZW91dCAvIDIpOw0KIAlydmFsID0g
+cWxhMngwMF9tYWlsYm94X2NvbW1hbmQoaGEsIG1jcCk7DQogDQogCWlmIChydmFsID09IFFMQV9T
+VUNDRVNTKSB7DQo=
+
+--=-OtSpx/rKVc7utHHutYcR--
