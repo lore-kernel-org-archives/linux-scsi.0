@@ -1,92 +1,46 @@
 From: brking@us.ibm.com
-Subject: [PATCH 02/16] ipr: Fix assorted dma_addr_t typing errors
-Date: Wed, 04 Aug 2004 17:31:39 -0500
+Subject: [PATCH 04/16] ipr: Sparse warnings fixes
+Date: Wed, 04 Aug 2004 17:31:52 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <200408042232.i74MWpCu134930@northrelay02.pok.ibm.com>
+Message-ID: <200408042233.i74MX4Cu121840@northrelay02.pok.ibm.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e5.ny.us.ibm.com ([32.97.182.105]:57508 "EHLO e5.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S267467AbUHDWb5 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Aug 2004 18:31:57 -0400
+Received: from e3.ny.us.ibm.com ([32.97.182.103]:58617 "EHLO e3.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S267468AbUHDWcH (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Aug 2004 18:32:07 -0400
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, brking@us.ibm.com, alan@redhat.com
+Cc: linux-scsi@vger.kernel.org, brking@us.ibm.com, mika@osdl.org
 
 
 
-From: Alan Cox <alan@redhat.com>
-Subject: PATCH: Fix assorted dma_addr_t typing errors in ipr driver
+From: Mika Kukkonen <mika@osdl.org>
+The following patch fixes some sparse warnings.
 
 Signed-off-by: Brian King <brking@us.ibm.com>
 ---
 
- linux-2.6.8-rc3-bjking1/drivers/scsi/ipr.c |    2 +-
- linux-2.6.8-rc3-bjking1/drivers/scsi/ipr.h |   12 +++++++-----
- 2 files changed, 8 insertions(+), 6 deletions(-)
+ linux-2.6.8-rc3-bjking1/drivers/scsi/ipr.c |   10 ++++++----
+ 1 files changed, 6 insertions(+), 4 deletions(-)
 
-diff -puN drivers/scsi/ipr.c~ipr_dma_addr_fixes drivers/scsi/ipr.c
---- linux-2.6.8-rc3/drivers/scsi/ipr.c~ipr_dma_addr_fixes	2004-08-04 17:17:24.000000000 -0500
-+++ linux-2.6.8-rc3-bjking1/drivers/scsi/ipr.c	2004-08-04 17:17:24.000000000 -0500
-@@ -5458,7 +5458,7 @@ static int __devinit ipr_alloc_cmd_blks(
+diff -puN drivers/scsi/ipr.c~ipr_fix_sparse_warnings drivers/scsi/ipr.c
+--- linux-2.6.8-rc3/drivers/scsi/ipr.c~ipr_fix_sparse_warnings	2004-08-04 17:17:26.000000000 -0500
++++ linux-2.6.8-rc3-bjking1/drivers/scsi/ipr.c	2004-08-04 17:17:26.000000000 -0500
+@@ -880,11 +880,13 @@ static void ipr_process_ccn(struct ipr_c
+  **/
+ static void ipr_log_vpd(struct ipr_std_inq_vpids *vpids, u8 *serial_num)
  {
- 	struct ipr_cmnd *ipr_cmd;
- 	struct ipr_ioarcb *ioarcb;
--	u32 dma_addr;
-+	dma_addr_t dma_addr;
- 	int i;
+-	char buffer[max_t(int, sizeof(struct ipr_std_inq_vpids),
+-			  IPR_SERIAL_NUM_LEN) + 1];
++	char buffer[IPR_VENDOR_ID_LEN + IPR_PROD_ID_LEN
++		    + IPR_SERIAL_NUM_LEN];
  
- 	ioa_cfg->ipr_cmd_pool = pci_pool_create (IPR_NAME, ioa_cfg->pdev,
-diff -puN drivers/scsi/ipr.h~ipr_dma_addr_fixes drivers/scsi/ipr.h
---- linux-2.6.8-rc3/drivers/scsi/ipr.h~ipr_dma_addr_fixes	2004-08-04 17:17:24.000000000 -0500
-+++ linux-2.6.8-rc3-bjking1/drivers/scsi/ipr.h	2004-08-04 17:17:24.000000000 -0500
-@@ -19,6 +19,8 @@
-  * along with this program; if not, write to the Free Software
-  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-  *
-+ * Alan Cox <alan@redhat.com> - Removed several careless u32/dma_addr_t errors
-+ *				that broke 64bit platforms.
-  */
+-	memcpy(buffer, vpids, sizeof(struct ipr_std_inq_vpids));
+-	buffer[sizeof(struct ipr_std_inq_vpids)] = '\0';
++	memcpy(buffer, vpids->vendor_id, IPR_VENDOR_ID_LEN);
++	memcpy(buffer + IPR_VENDOR_ID_LEN, vpids->product_id,
++	       IPR_PROD_ID_LEN);
++	buffer[IPR_VENDOR_ID_LEN + IPR_PROD_ID_LEN] = '\0';
+ 	ipr_err("Vendor/Product ID: %s\n", buffer);
  
- #ifndef _IPR_H
-@@ -667,7 +669,7 @@ struct ipr_hcam {
- 
- struct ipr_hostrcb {
- 	struct ipr_hcam hcam;
--	u32 hostrcb_dma;
-+	dma_addr_t hostrcb_dma;
- 	struct list_head queue;
- };
- 
-@@ -850,7 +852,7 @@ struct ipr_ioa_cfg {
- 	char cfg_table_start[8];
- #define IPR_CFG_TBL_START		"cfg"
- 	struct ipr_config_table *cfg_table;
--	u32 cfg_table_dma;
-+	dma_addr_t cfg_table_dma;
- 
- 	char resource_table_label[8];
- #define IPR_RES_TABLE_LABEL		"res_tbl"
-@@ -861,12 +863,12 @@ struct ipr_ioa_cfg {
- 	char ipr_hcam_label[8];
- #define IPR_HCAM_LABEL			"hcams"
- 	struct ipr_hostrcb *hostrcb[IPR_NUM_HCAMS];
--	u32 hostrcb_dma[IPR_NUM_HCAMS];
-+	dma_addr_t hostrcb_dma[IPR_NUM_HCAMS];
- 	struct list_head hostrcb_free_q;
- 	struct list_head hostrcb_pending_q;
- 
- 	u32 *host_rrq;
--	u32 host_rrq_dma;
-+	dma_addr_t host_rrq_dma;
- #define IPR_HRRQ_REQ_RESP_HANDLE_MASK	0xfffffffc
- #define IPR_HRRQ_RESP_BIT_SET			0x00000002
- #define IPR_HRRQ_TOGGLE_BIT				0x00000001
-@@ -905,7 +907,7 @@ struct ipr_ioa_cfg {
- 	enum ipr_sdt_state sdt_state;
- 
- 	struct ipr_misc_cbs *vpd_cbs;
--	u32 vpd_cbs_dma;
-+	dma_addr_t vpd_cbs_dma;
- 
- 	struct pci_pool *ipr_cmd_pool;
- 
+ 	memcpy(buffer, serial_num, IPR_SERIAL_NUM_LEN);
 _
