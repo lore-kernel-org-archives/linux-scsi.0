@@ -1,130 +1,166 @@
-From: "Mukker, Atul" <Atulm@lsil.com>
-Subject: RE: Megaraid lockup on 2.6.[7-8]
-Date: Mon, 9 Aug 2004 10:11:42 -0400
+From: Brian King <brking@us.ibm.com>
+Subject: Re: [PATCH] p00001_scsi_tcq_queue_lock
+Date: Mon, 09 Aug 2004 09:14:55 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <0E3FA95632D6D047BA649F95DAB60E57033BC937@exa-atlanta>
+Message-ID: <411786DF.2040009@us.ibm.com>
+References: <410FD03E.6040305@us.ibm.com> <1091815154.2421.15.camel@mulgrave> <4117846B.7030302@us.ibm.com>
+Reply-To: brking@us.ibm.com
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
+Content-Type: multipart/mixed;
+ boundary="------------070705020705070100040101"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:35519 "EHLO mail0.lsil.com")
-	by vger.kernel.org with ESMTP id S266603AbUHIOL5 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 9 Aug 2004 10:11:57 -0400
+Received: from e6.ny.us.ibm.com ([32.97.182.106]:63465 "EHLO e6.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S266611AbUHIOPE (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 9 Aug 2004 10:15:04 -0400
+In-Reply-To: <4117846B.7030302@us.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: 'Dan Merillat' <harik.attar@gmail.com>, linux-scsi@vger.kernel.org
+To: brking@us.ibm.com
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-Dan,
+This is a multi-part message in MIME format.
+--------------070705020705070100040101
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 
-I speculate your drives are good. BTW, what raid level they are in? Also,
-have you considered your drives enclosure as a possible source of errors. I
-would highly recommended trying another box and see if it changes anything.
-I can suggest FW trace collection, but let's wait a bit for that.
+Oops. I guess this was the actual patch I sent.
 
-The latest 2.20 series of drivers
-(ftp://ftp.lsil.com/pub/linux-megaraid/drivers/version-2.20.2.0/) should
-support your card. This driver does have more extensive error reporting
-capabilities.
+Brian King wrote:
+> James Bottomley wrote:
+> 
+>> On Tue, 2004-08-03 at 10:49, Brian King wrote:
+>>
+>>> Add locking to scsi_activate_tcq and scsi_deactivate_tcq to fix a race
+>>> condition that can occur when disabling tcqing with commands in flight.
+>>
+>>
+>>
+>> It's possible to do it like this.  However, we should really quiesce the
+>> SCSI device before disabling tcq.  It is not legal in the scsi spec to
+>> have both tagged and untagged commands outstanding.  Most drives do the
+>> right thing and return BUSY to an untagged request if they have tags in
+>> flight.  
+> 
+> 
+> Ok. I agree that we do not want both tagged and untagged requests going 
+> to the device. In the case of the ipr driver, the adapter microcode 
+> handles this for me. If there are tagged requests outstanding to a 
+> device and an untagged request is sent, the tagged requests must first 
+> finish, then the untagged request is sent to the device with no other 
+> requests outstanding.
+> 
+>> Also, we have to wait until all tags return before freeing the
+>> block layer tag structures...and there's always the devices that do
+>> strange things in this situation...
+> 
+> 
+> I sent the following patch to Jens last week as well and he applied it. 
+> This fixes the free problem you mention.
 
--Atul Mukker
-LSI Logic Corporation
 
-> -----Original Message-----
-> From: Dan Merillat [mailto:harik.attar@gmail.com]
-> Sent: Friday, August 06, 2004 9:56 PM
-> To: linux-scsi@vger.kernel.org
-> Subject: Megaraid lockup on 2.6.[7-8]
-> 
-> 
-> This dump is from 2.6.7-rc3.  I'm using the in-kernel megaraid driver
-> on this Express 500.
-> 
-> 0000:00:09.0 RAID bus controller: American Megatrends Inc. 
-> MegaRAID (rev 02)
->         Subsystem: American Megatrends Inc. MegaRAID 475 Express
-> 500/500LC RAID Controller
-> 
-> At this point, I'm really unsure what's going on.  It went from
-> "working" to "not working"
-> overnight, after a 2 month uptime with no problem.  Now it lasts
-> between 5 minutes and 3 hours before it locks up.  Somtimes the
-> lockups are 'soft', in that all disk IO hangs in wait.  Othertimes
-> it's hard (kernel panic and reload)
-> 
-> Due to the sudden nature of the problem, I suspected hardware. 
-> Starting with the SCSI cable,
-> RAID card, RAM, PCI riser card, motherboard... it's all been replaced.
->  The megaraid itself
-> dosn't complain about problems accessing the drives (and the state is
-> always Optimal on reboot, no media or "other" errors on any drive)
-> 
-> Software wise, I've tried from 2.6.7-rc3, 2.6.7, 2.6.8-rc2 
-> and 2.6.8-rc3.
-> 
-> I tried the 2.20 series, but they don't appear to recognize older
-> cards?  Are they for
-> U320 only or did I do something wrong?  (2.20 works fine on another
-> box with a U320 controller)
-> 
-> I'm at a loss.  I guess I could replace all the drives, being as
-> that's the last thing left to try,
-> but A) it's a serious PITA and B) they "appear" fine, even when doing
-> a full consistency check
-> via the Ctrl-M BIOS.   
-> 
-> This is made even more fun due to the fact it's a LIVE server, or was,
-> until two days ago.  It's
-> also stored in a colo facility about an hour from my house.   I'm
-> going to go back tomorrow
-> and try updating the firmware on the megaraid, but that's about the
-> only thing I can think
-> left to try.   Perhaps some PCI setting I should try?
-> 
-> Any help would be greatly appreciated!
-> 
-> (Different PCI Bus/Slot due to being in a different MB when I captured
-> this backtrace)
-> 
-> 
-> megaraid: found 0x101e:0x1960:bus 1:slot 2:func 0
-> scsi0:Found MegaRAID controller at 0xf8846000, IRQ:27
-> megaraid: [C170:3.13] detected 1 logical drives.
-> megaraid: supports extended CDBs.
-> megaraid: channel[0] is raid.
-> scsi0 : LSI Logic MegaRAID C170 254 commands 16 targs 4 chans 7 luns
-> scsi0: scanning scsi channel 0 for logical drives.
->   Vendor: MegaRAID  Model: LD 0 RAID5  210G  Rev: C170
->   Type:   Direct-Access                      ANSI SCSI revision: 02
-> SCSI device sda: 430116864 512-byte hdwr sectors (220220 MB)
-> sda: asking for cache data failed
-> sda: assuming drive cache: write through
->  /dev/scsi/host0/bus0/target0/lun0: p1
-> Attached scsi disk sda at scsi0, channel 0, id 0, lun 0
-> Attached scsi generic sg0 at scsi0, channel 0, id 0, lun 0,  type 0
-> scsi0: scanning scsi channel 1 for logical drives.
-> scsi0: scanning scsi channel 2 for logical drives.
-> scsi0: scanning scsi channel 4 [P0] for physical devices.
-> ...
-> megaraid: ABORTING-12793 cmd=2a <c=0 t=0 l=0>
-> megaraid: ABORTING-12796 cmd=2a <c=0 t=0 l=0>
-> megaraid: ABORTING-12797 cmd=2a <c=0 t=0 l=0>
-> megaraid: ABORTING-12798 cmd=2a <c=0 t=0 l=0>
-> megaraid: reservation reset failed.
-> megaraid: RESET-12793 cmd=2a <c=0 t=0 l=0>
-> megaraid: reservation reset failed.
-> megaraid: RESET-12793 cmd=2a <c=0 t=0 l=0>
-> megaraid: reservation reset failed.
-> megaraid: RESET-12793 cmd=2a <c=0 t=0 l=0>
-> scsi: Device offlined - not ready after error recovery: host 0 channel
-> 0 id 0 lun 0
-> scsi: Device offlined - not ready after error recovery: host 0 channel
-> 0 id 0 lun 0
-> scsi: Device offlined - not ready after error recovery: host 0 channel
-> 0 id 0 lun 0
-> scsi: Device offlined - not ready after error recovery: host 0 channel
-> 0 id 0 lun 0
-> SCSI error : <0 0 0 0> return code = 0x6000000
-> end_request: I/O error, dev sda, sector 197231
-> Buffer I/O error on device dm-64, logical block 24598
-> lost page write due to I/O error on dm-64
-> scsi0 (0:0): rejecting I/O to offline device
-> 
+-- 
+Brian King
+eServer Storage I/O
+IBM Linux Technology Center
+
+--------------070705020705070100040101
+Content-Type: text/plain;
+ name="blk_queue_free_tags.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="blk_queue_free_tags.patch"
+
+
+Currently blk_queue_free_tags cannot be called with ops outstanding. The
+scsi_tcq API defined to LLD scsi drivers allows for scsi_deactivate_tcq
+to be called (which calls blk_queue_free_tags) with ops outstanding. Change
+blk_queue_free_tags to no longer free the tags, but rather just disable
+tagged queuing and also modify blk_queue_init_tags to handle re-enabling
+tagged queuing after it has been disabled.
+
+Signed-off-by: Brian King <brking@us.ibm.com>
+---
+
+ linux-2.6.8-rc2-bjking1/drivers/block/ll_rw_blk.c |   35 +++++++++++++++++-----
+ 1 files changed, 28 insertions(+), 7 deletions(-)
+
+diff -puN drivers/block/ll_rw_blk.c~blk_queue_free_tags drivers/block/ll_rw_blk.c
+--- linux-2.6.8-rc2/drivers/block/ll_rw_blk.c~blk_queue_free_tags	2004-08-03 10:53:50.000000000 -0500
++++ linux-2.6.8-rc2-bjking1/drivers/block/ll_rw_blk.c	2004-08-03 11:05:06.000000000 -0500
+@@ -482,15 +482,14 @@ struct request *blk_queue_find_tag(reque
+ EXPORT_SYMBOL(blk_queue_find_tag);
+ 
+ /**
+- * blk_queue_free_tags - release tag maintenance info
++ * _blk_queue_free_tags - release tag maintenance info
+  * @q:  the request queue for the device
+  *
+  *  Notes:
+  *    blk_cleanup_queue() will take care of calling this function, if tagging
+- *    has been used. So there's usually no need to call this directly, unless
+- *    tagging is just being disabled but the queue remains in function.
++ *    has been used. So there's no need to call this directly.
+  **/
+-void blk_queue_free_tags(request_queue_t *q)
++static void _blk_queue_free_tags(request_queue_t *q)
+ {
+ 	struct blk_queue_tag *bqt = q->queue_tags;
+ 
+@@ -514,6 +513,19 @@ void blk_queue_free_tags(request_queue_t
+ 	q->queue_flags &= ~(1 << QUEUE_FLAG_QUEUED);
+ }
+ 
++/**
++ * blk_queue_free_tags - release tag maintenance info
++ * @q:  the request queue for the device
++ *
++ *  Notes:
++ *	This is used to disabled tagged queuing to a device, yet leave
++ *	queue in function.
++ **/
++void blk_queue_free_tags(request_queue_t *q)
++{
++	clear_bit(QUEUE_FLAG_QUEUED, &q->queue_flags);
++}
++
+ EXPORT_SYMBOL(blk_queue_free_tags);
+ 
+ static int
+@@ -564,13 +576,22 @@ fail:
+ int blk_queue_init_tags(request_queue_t *q, int depth,
+ 			struct blk_queue_tag *tags)
+ {
+-	if (!tags) {
++	int rc;
++
++	BUG_ON(tags && q->queue_tags && tags != q->queue_tags);
++
++	if (!tags && !q->queue_tags) {
+ 		tags = kmalloc(sizeof(struct blk_queue_tag), GFP_ATOMIC);
+ 		if (!tags)
+ 			goto fail;
+ 
+ 		if (init_tag_map(q, tags, depth))
+ 			goto fail;
++	} else if (q->queue_tags) {
++		if ((rc = blk_queue_resize_tags(q, depth)))
++			return rc;
++		set_bit(QUEUE_FLAG_QUEUED, &q->queue_flags);
++		return 0;
+ 	} else
+ 		atomic_inc(&tags->refcnt);
+ 
+@@ -1333,8 +1354,8 @@ void blk_cleanup_queue(request_queue_t *
+ 	if (rl->rq_pool)
+ 		mempool_destroy(rl->rq_pool);
+ 
+-	if (blk_queue_tagged(q))
+-		blk_queue_free_tags(q);
++	if (q->queue_tags)
++		_blk_queue_free_tags(q);
+ 
+ 	kmem_cache_free(requestq_cachep, q);
+ }
+_
+
+--------------070705020705070100040101--
+
