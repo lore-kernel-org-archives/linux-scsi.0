@@ -1,42 +1,38 @@
-From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
-Subject: RE: [PATCH] add card types to 2.6.2 aacraid driver
-Date: Wed, 4 Feb 2004 15:32:02 -0500
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: ANNOUNCE: Windows XP USB Mass Storage traces available
+Date: Wed, 4 Feb 2004 16:50:07 -0500 (EST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <547AF3BD0F3F0B4CBDC379BAC7E4189F254C6E@otce2k03.adaptec.com>
+Message-ID: <Pine.LNX.4.44L0.0402041637310.613-100000@ida.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from magic.adaptec.com ([216.52.22.17]:17610 "EHLO magic.adaptec.com")
-	by vger.kernel.org with ESMTP id S264455AbUBDUcF convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 4 Feb 2004 15:32:05 -0500
-content-class: urn:content-classes:message
+Received: from ida.rowland.org ([192.131.102.52]:7684 "HELO ida.rowland.org")
+	by vger.kernel.org with SMTP id S266638AbUBDVuH (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Feb 2004 16:50:07 -0500
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>, Mark Haverkamp <markh@osdl.org>
-Cc: James Bottomley <James.Bottomley@steeleye.com>, linux-scsi <linux-scsi@vger.kernel.org>
+To: USB Storage List <usb-storage@one-eyed-alien.net>, SCSI development list <linux-scsi@vger.kernel.org>
 
-Sa.c, rx.c and rkt.c all support a specific form of drawbridge. Rkt.c is
-the same as rx.c except for differing hardware offsets.
+A series of USB Mass Storage traces for Windows XP is available at
 
-Sincerely -- Mark Salyzyn
+	http://www.win.tue.nl/~aeb/linux/usb/traces/winxp/
 
------Original Message-----
-From: Christoph Hellwig [mailto:hch@infradead.org] 
-Sent: Wednesday, February 04, 2004 2:31 PM
-To: Mark Haverkamp
-Cc: James Bottomley; linux-scsi; Salyzyn, Mark
-Subject: Re: [PATCH] add card types to 2.6.2 aacraid driver
+These data sets all use the Bulk-only transport, together with protocol 
+x06 (Transparent SCSI) or x05 (SFF-8070).  There are variants with 
+removable and non-removable media, but all are for Disk-type devices.
 
-On Wed, Feb 04, 2004 at 11:15:28AM -0800, Mark Haverkamp wrote:
-> + * Module Name:
-> + *  rkt.c
-> + *
-> + * Abstract: Hardware miniport for Drawbridge specific hardware
-functions.
-> + *
-> + */
+Similar traces for other versions of Windows are also available in the
+parent directory.
 
-rx.c already claims it supports 'Drawbridge'
+Note that Windows XP does issue MODE SENSE commands for page x08 and page
+x3f.  This indicates that Linux ought to be able to use the same commands
+when communicating with a Bulk-Only device, provided we Talk Like Windows
+and always ask for 192 bytes.  With luck this will provide a general
+solution to what has been the trickiest problem for the usb-storage
+driver.  (However I can't rule out the possibility that some vendors may
+supply specialized Windows drivers for their devices that omit these
+commands.)
+
+Thanks to Andries Brouwer for providing space on his web server.
+
+Alan Stern
 
