@@ -1,55 +1,61 @@
-From: "Randy.Dunlap" <rddunlap@osdl.org>
-Subject: [PATCH] Comment out an unused function in drivers/scsi/wd7000.c
-Date: Tue, 15 Jun 2004 09:30:24 -0700
+From: Arjan van de Ven <arjanv@redhat.com>
+Subject: Re: [PATCH]: Flexible timeout infrastructure
+Date: Tue, 15 Jun 2004 18:33:25 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040615093024.7b30125a.rddunlap@osdl.org>
+Message-ID: <20040615163324.GB27597@devserv.devel.redhat.com>
+References: <40CF0F9F.4050902@adaptec.com> <1087313241.2710.40.camel@laptop.fenrus.com> <40CF1852.6030306@adaptec.com> <20040615154313.GA25397@devserv.devel.redhat.com> <40CF1A5D.30908@adaptec.com> <20040615155716.GA14017@infradead.org> <40CF2381.30707@adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="98e8jtXdkpgskNou"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fw.osdl.org ([65.172.181.6]:55513 "EHLO mail.osdl.org")
-	by vger.kernel.org with ESMTP id S265756AbUFOQcd (ORCPT
+Received: from mx1.redhat.com ([66.187.233.31]:16324 "EHLO mx1.redhat.com")
+	by vger.kernel.org with ESMTP id S265764AbUFOQdo (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 15 Jun 2004 12:32:33 -0400
+	Tue, 15 Jun 2004 12:33:44 -0400
+Content-Disposition: inline
+In-Reply-To: <40CF2381.30707@adaptec.com>
 List-Id: linux-scsi@vger.kernel.org
-To: scsi <linux-scsi@vger.kernel.org>
-Cc: jejb <james.bottomley@steeleye.com>
+To: Luben Tuikov <luben_tuikov@adaptec.com>
+Cc: Christoph Hellwig <hch@infradead.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
 
-Eliminate unused function wd7000_abort() in wd7000 driver.
-
-  CC [M]  drivers/scsi/wd7000.o
-drivers/scsi/wd7000.c:1612: warning: `wd7000_abort' defined but not used
-
-As the author states in his comment, this is "unfinished business" ;-)
+--98e8jtXdkpgskNou
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
 
-From: Mika Kukkonen <mika@osdl.org>
-Signed-off-by: Randy Dunlap <rddunlap@osdl.org>
+On Tue, Jun 15, 2004 at 12:27:45PM -0400, Luben Tuikov wrote:
+> Christoph Hellwig wrote:
+> >Well, the question is always what is so special about your driver that
+> >it doesn't benefit from beeing in a common library.  I've pulled more crap
+> >out of individual drivers than I'd ever want to imagine, and because of
+> >that I'm pretty much allergic against giving driver writers more control
+> >then nessecary.
+> 
+> We are *not* talking about programming here, recognizing patterns
+> and modularizing them.
+> 
+> We are talking about _recovery_.  And this method is OPTIONAL.
 
+so do explain why the recovery method requires the midlayer to hand over
+timer handling to the driver ? Why does it matter for *recovery* who started
+the timer ???
 
-diffstat:=
- drivers/scsi/wd7000.c |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletion(-)
+Yes I can see the use for the driver to tell the timer handler code "eh please
+give me some more time, I'm configuring stuff for a bit". But that doesn't
+explain why it shouldn't be the midlayer that keeps in charge of timer
+handling and solicits the advice from the driver like this..
 
-diff -Naurp ./drivers/scsi/wd7000.c~wd7k_abort ./drivers/scsi/wd7000.c
---- ./drivers/scsi/wd7000.c~wd7k_abort	2004-06-14 13:35:54.000000000 -0700
-+++ ./drivers/scsi/wd7000.c	2004-06-15 08:49:13.000000000 -0700
-@@ -1605,6 +1605,7 @@ static int wd7000_release(struct Scsi_Ho
- 	return 0;
- }
- 
-+#if 0
- /*
-  *  I have absolutely NO idea how to do an abort with the WD7000...
-  */
-@@ -1619,7 +1620,7 @@ static int wd7000_abort(Scsi_Cmnd * SCpn
- 	}
- 	return FAILED;
- }
--
-+#endif
- 
- /*
-  *  I also have no idea how to do a reset...
+--98e8jtXdkpgskNou
+Content-Type: application/pgp-signature
+Content-Disposition: inline
 
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.2.1 (GNU/Linux)
+
+iD8DBQFAzyTUxULwo51rQBIRAoXRAJ95AJBr/he4mJNDE24Jug8JTD5ijACfaZr2
+PRaMRUmAccVQk0yk7FgXduc=
+=/MOO
+-----END PGP SIGNATURE-----
+
+--98e8jtXdkpgskNou--
