@@ -1,68 +1,61 @@
-From: Paul Wagland <paul@kungfoocoder.org>
-Subject: Re: *solved* megaraid /proc under kernel 2.6.2
-Date: Tue, 17 Feb 2004 18:36:43 +0100
+From: Andries Brouwer <aebr@win.tue.nl>
+Subject: Re: lots and lots of disks again
+Date: Tue, 17 Feb 2004 16:50:24 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <D9CCD5AC-616F-11D8-B07A-000A95CD704C@kungfoocoder.org>
-References: <1076884890.2943.265.camel@morsel.kungfoocoder.org> <1076890712.2943.276.camel@morsel.kungfoocoder.org> <1076972673.2259.56.camel@morsel.kungfoocoder.org> <20040217165739.GV31168@parcelfarce.linux.theplanet.co.uk>
-Mime-Version: 1.0 (Apple Message framework v612)
-Content-Type: multipart/signed; protocol="application/pgp-signature"; micalg=pgp-sha1; boundary="Apple-Mail-22--52044661"
-Content-Transfer-Encoding: 7bit
+Message-ID: <20040217155024.GB4282@pclin040.win.tue.nl>
+References: <20040211225348.GM21151@parcelfarce.linux.theplanet.co.uk> <20040212150035.GN1780@tpkurt.garloff.de> <20040212155721.GS21151@parcelfarce.linux.theplanet.co.uk> <20040212161800.GU1780@tpkurt.garloff.de> <1076604183.2576.89.camel@mulgrave> <20040216124047.GG4011@tpkurt.garloff.de> <20040216225704.GA3420@pclin040.win.tue.nl> <1076979373.1758.688.camel@mulgrave> <20040217144959.GA4282@pclin040.win.tue.nl> <1077031099.1757.24.camel@mulgrave>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp-out3.xs4all.nl ([194.109.24.13]:37391 "EHLO
-	smtp-out3.xs4all.nl") by vger.kernel.org with ESMTP id S266369AbUBQRg4
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 17 Feb 2004 12:36:56 -0500
-In-Reply-To: <20040217165739.GV31168@parcelfarce.linux.theplanet.co.uk>
+Received: from kweetal.tue.nl ([131.155.3.6]:16137 "EHLO kweetal.tue.nl")
+	by vger.kernel.org with ESMTP id S266340AbUBQRng (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 17 Feb 2004 12:43:36 -0500
+Content-Disposition: inline
+In-Reply-To: <1077031099.1757.24.camel@mulgrave>
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <willy@debian.org>
-Cc: Linux SCSI mailing list <linux-scsi@vger.kernel.org>
+To: James Bottomley <James.Bottomley@steeleye.com>
+Cc: Andries Brouwer <aebr@win.tue.nl>, Kurt Garloff <garloff@suse.de>, viro@parcelfarce.linux.theplanet.co.uk, Andrew Morton <akpm@osdl.org>, hch@infradead.org, SCSI Mailing List <linux-scsi@vger.kernel.org>, pbadari@us.ibm.com, willy@debian.org
 
+On Tue, Feb 17, 2004 at 10:18:07AM -0500, James Bottomley wrote:
+> On Tue, 2004-02-17 at 09:49, Andries Brouwer wrote:
+> > On Mon, Feb 16, 2004 at 07:56:10PM -0500, James Bottomley wrote:
+> > > We also need to flip the switch entirely one way or the other for
+> > > increased partition numbers since a mixed scheme would be asking for an
+> > > admin nightmare.
+> > 
+> > Why would that be?
+> > 
+> > Suppose /dev/sdAA is (1049,0) and has 256 partitions.
+> > And /dev/sda is (8,0) and has 16 partitions.
+> > Where is the nightmare?
+> 
+> You're kidding, right?
 
---Apple-Mail-22--52044661
-Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset=US-ASCII; format=flowed
+I was not.
 
+> Think of the code paths: at the moment we tell the gendisk the number of
+> minors we need when we register it.  It then probes the partition tables
+> and fills in the values.  If we have a large partition major, we need to
+> know *before* we call add_disk().  The only thing that determines this
+> is the on disc partitioning scheme, so now you need to know the
+> partition type before you register the gendisk.  This type of layering
+> violation is a sure sign of a bad design.
 
-On Feb 17, 2004, at 17:57, Matthew Wilcox wrote:
+Ah, you think that I want to assign the name depending on what one finds
+on the disk. That was not my intention at all. After all, we bought the disk
+and it had no partition table. Should it shift major when it is partitioned?
 
-> On Tue, Feb 17, 2004 at 12:04:33AM +0100, Paul Wagland wrote:
->> Hi all,
->>
->> OK, I now know what the problem is with the /proc entries and the
->> megaraid driver.
->>
->> It turns out that pci_driver.probe member (in this case
->> megaraid_probe_one()) is called before the module_init() declared
->> function, in this case megaraid_init().
->
-> Hang on.  The pci_driver isn't registered magically, it happens by an
-> explicit call.  Oh look, here's the problem:
+> The correct way to solve this is an all or nothing migration gated by a
+> boot time flag.
 
-I had the same brainwave while at work today... I am planning on 
-reversing those and testing that now... if it works then I will be 
-sending a patch through in about a half hour :-)
+Yes, I was also thinking of boot time flags, but not all-or-nothing.
+Almost nobody actually needs these five thousand disks, and programs
+like LILO know about major 8, so I can even imagine that someone with
+lots of disks would like the boot disk to remain sda (8,0) even when
+all the others become (1049,*)-(1073,*).
 
-For some reason last night I was just assuming that it was hotplug 
-events that were causing megaraid_probe_one() to be called. In reality, 
-I probably should of just gone to sleep earlier ;-)
+Then what is the boot parameter? I don't know. Anything.
+Say, scsi-legacy=sda,sdb,sde.
 
-Thanks for the input,
-Paul
-
---Apple-Mail-22--52044661
-content-type: application/pgp-signature; x-mac-type=70674453;
-	name=PGP.sig
-content-description: This is a digitally signed message part
-content-disposition: inline; filename=PGP.sig
-content-transfer-encoding: 7bit
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.2.4 (Darwin)
-
-iD8DBQFAMlEwtch0EvEFvxURAi3WAJ41n+xiipiUHwCDYuZCpiZbbM1gfgCfc3oK
-oJ6GLtbQjf0qEbJ85RSwyog=
-=AjVL
------END PGP SIGNATURE-----
-
---Apple-Mail-22--52044661--
-
+Andries
