@@ -1,30 +1,39 @@
 From: "Justin T. Gibbs" <gibbs@scsiguy.com>
-Subject: Re: Linux [2.6.0-test3/mm1] aic7xxx problems.
-Date: Mon, 11 Aug 2003 11:22:22 -0600
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <2425882704.1060622541@aslan.btc.adaptec.com>
-References: <1060543928.887.19.camel@blaze.homeip.net>
+Subject: Re: AIC7902 lockups
+Date: Mon, 11 Aug 2003 11:27:50 -0600
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <2429712704.1060622870@aslan.btc.adaptec.com>
+References: <20030811143610.A19365@laokoon.bug.net>
 Reply-To: "Justin T. Gibbs" <gibbs@scsiguy.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
-In-Reply-To: <1060543928.887.19.camel@blaze.homeip.net>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from magic-mail.adaptec.com ([208.236.45.100]:45247 "EHLO
+	magic.adaptec.com") by vger.kernel.org with ESMTP id S272894AbTHKR0H
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 11 Aug 2003 13:26:07 -0400
+In-Reply-To: <20030811143610.A19365@laokoon.bug.net>
 Content-Disposition: inline
-To: Paul Blazejowski <paulb@blazebox.homeip.net>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Thomas Beutin <tyrone@laokoon.IN-Berlin.DE>, linux-scsi@vger.kernel.org
 
-> On a side note, the same aic7xxx drivers version 6.2.8 and 6.2.36 works
-> with 2.4.21 and 2.4.22-rc1/rc2 series of kernel with above hardware.
+> Hi,
+> 
+> sorry for asking again, but my problem with two disks connected
+> to an Adaptec AIC7902 still exists. Any help to solve the
+> annoying problem or hints are greatly appreciated.
 
-I don't think that any of the changes between 6.2.35 and 6.2.36 will
-make a difference for you, but you could try upgrading.  The source
-files are here:
+The messages are not complete... the top is clipped.  Were you
+using a serial console to capture this log?
 
-http://people.FreeBSD.org/~gibbs/linux/SRC/
+Can you compile your kernel with register pretty printing enabled
+in the driver?  It is a config time menu option.  This greatly
+simplifies understanding the logs.
 
-The console output you've provided makes me think that interrupts are
-not working correctly in your system.
+Can you also provide the output of "lspci -vv -n" from the
+system as well as the output from "dmesg" right after boot.
 
 --
 Justin
+
