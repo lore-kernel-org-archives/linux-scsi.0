@@ -1,52 +1,52 @@
-From: 'Christoph Hellwig' <hch@infradead.org>
-Subject: Re: Request for review of Linux iSCSI driver version 4.0.0.1
-Date: Tue, 11 Nov 2003 17:36:22 +0000
+From: Pat LaVarre <p.lavarre@ieee.org>
+Subject: Re: usb storage traces
+Date: 11 Nov 2003 14:59:22 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20031111173622.A12435@infradead.org>
-References: <20031027153932.A16679@infradead.org> <018b01c39e1f$e013bab0$a0074d0a@apac.cisco.com> <20031029134557.A17523@infradead.org> <03111117263601.01918@naveenb-lnx.cisco.com>
+Message-ID: <1068587962.5909.6.camel@patrh9>
+References: <1068501874.6380.19.camel@patrh9>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pub234.cambridge.redhat.com ([213.86.99.234]:18185 "EHLO
-	phoenix.infradead.org") by vger.kernel.org with ESMTP
-	id S263598AbTKKRgX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 11 Nov 2003 12:36:23 -0500
-Content-Disposition: inline
-In-Reply-To: <03111117263601.01918@naveenb-lnx.cisco.com>; from naveenb@cisco.com on Tue, Nov 11, 2003 at 05:26:36PM +0530
+Received: from email-out2.iomega.com ([147.178.1.83]:56000 "EHLO
+	email.iomega.com") by vger.kernel.org with ESMTP id S263795AbTKKV7y
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 11 Nov 2003 16:59:54 -0500
+Received: from royntex01.iomegacorp.com (unknown [147.178.90.120])
+	by email.iomega.com (Postfix) with ESMTP id 7599628E4
+	for <linux-scsi@vger.kernel.org>; Tue, 11 Nov 2003 14:59:53 -0700 (MST)
+In-Reply-To: <1068501874.6380.19.camel@patrh9>
 List-Id: linux-scsi@vger.kernel.org
-To: Naveen Burmi <naveenb@cisco.com>
-Cc: linux-scsi@vger.kernel.org, davmyers@cisco.com
+To: linux-scsi@vger.kernel.org
 
-On Tue, Nov 11, 2003 at 05:26:36PM +0530, Naveen Burmi wrote:
-> During shutdown iSCSI driver gets signal to stop itself. In turn iSCSI driver 
-> umounts all the partitions present of iSCSI disks, makes all the iSCSI disks 
-> unavailble to the system and gracefully terminate. 
-> But if iSCSI disk contains the root partition OR is part of root partition 
-> then iSCSI driver must not try to umount the root partition and the iSCSI 
-> disks must be available until the buffer cache gets flushed properly. For 
-> this to happen iSCSI driver must be aware of all the iSCSI disk(s) that 
-> constitute the root partition/devices.
+> ... traces of Win XP/2K with DVD/CD
+> as life begins after plug in ...
 
-I think you'd rather want a reboot notifier for after the final sync..
+Saw one, thanks.
 
-> 	Q. What kernel data structures/API's are available that provide the 
-> information about root device(s)?
+Wow.  Lookathat.  At least once on Earth, we saw Microsoft Windows Do
+The Right Thing according to T10.  Wow.  Maybe Microsoft wrote the pdt
+x05 DVD/CD code after being informed by their history of pain with pdt
+x00 HDD/flash?
 
-there is no such information.  you can only know the root device of a
-particular process and that information is not available to drivers.
+I actually saw Win XP SP1 begin life after plug in with three
+politically correct speeches:
 
-> > that instead of creating such bogus hacks.  A driver has no business
-> > dealing with the network configuration.
-> 
-> During shutdown iSCSI driver must bring up the network interface, if it goes 
-> down, so to make available the iSCSI disk(s) on which the root partition 
-> exists. iscsi_set_if_addr is used to bring up the newtwork interface at the 
-> time of shutdown. 
+1) GPCMD_INQUIRY for standard length:
 
-you don't need to shut down interfaces on system shutdown.
+gccscsi -i x24 -y "12 00:00:00 24 00"
 
-> Q. Is ip autoconfig code helps us to bring up the newtwork interface at the 
-> time of shutdown?
+2) GPCMD_GET_CONFIGURATION for header alone:
 
-no.
+gccscsi -i 8 -y "46 00 00:00:00:00 00 00:08 00"
+
+3) GPCMD_GET_CONFIGURATION for offset + field length + value of
+additionalLength field, which for this sample drive was:
+
+gccscsi -i xF8 -y "46 00 00:00:00:00 00 00:F8 00"
+
+Wow.  Lookathat.
+
+Pat LaVarre
+
 
