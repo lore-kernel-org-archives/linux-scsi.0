@@ -1,29 +1,31 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH] New QStor SATA/RAID Driver for 2.6.9-rc2
-Date: Tue, 14 Sep 2004 14:35:02 -0400
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <20040914183502.GA23277@havoc.gtf.org>
-References: <41471163.10709@rtr.ca> <414723B0.1090600@pobox.com> <1095186343.2008.29.camel@mulgrave>
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH] refactor tmscsim inititalization code
+Date: Tue, 14 Sep 2004 21:05:12 +0200
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <20040914190512.GA16845@lst.de>
+References: <20040904130235.GA20552@lst.de> <Pine.LNX.4.60.0409071812550.21209@poirot.grange>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel=40m.gmane.org-S269184AbUINSnJ@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from verein.lst.de ([213.95.11.210]:24969 "EHLO mail.lst.de")
+	by vger.kernel.org with ESMTP id S269658AbUINTFR (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 14 Sep 2004 15:05:17 -0400
 Content-Disposition: inline
-In-Reply-To: <1095186343.2008.29.camel@mulgrave>
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Mark Lord <lkml@rtr.ca>, Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>
+In-Reply-To: <Pine.LNX.4.60.0409071812550.21209@poirot.grange>
 List-Id: linux-scsi@vger.kernel.org
+To: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+Cc: Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org
 
-On Tue, Sep 14, 2004 at 02:25:35PM -0400, James Bottomley wrote:
-> Sleeping in the eh paths is fine (as long as you drop the locks that the
-> EH thread has uselessly taken for you).  Indeed it's often required
-> since the return is supposed to tell the eh thread whether the action
-> was successful or not.
+On Tue, Sep 07, 2004 at 06:29:41PM +0200, Guennadi Liakhovetski wrote:
+> A couple more things:
+> 
+> Your note on possible problems when using several AM53C974A-based HBA in
+> one machine - how do other drivers resolve this problem, if those 
+> adapters need different configuration?
 
-I'm not sure this true for all arches?
+module_param_array allows to specify paramters for multiple hosts.
+You'll have to set an aribtrary limit (#define) for the number of hosts
+you accept parameters for - but in general a driver should work for the
+common case without parameters anyway.
 
-The lock is taken in the SCSI layer with spin_lock_irqsave(), but the
-low-level driver cannot perform the exact opposite,
-spin_unlock_irqrestore().  The best they can do is spin_lock_irq(),
-which isnt 100% the same.
-
-	Jeff
