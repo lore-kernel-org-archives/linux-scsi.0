@@ -1,437 +1,1435 @@
-From: akpm@osdl.org
-Subject: [patch 1/1] Get I2O working with Adaptec's zero channel controllers
-Date: Sat, 29 May 2004 00:13:27 -0700
+From: Arjan van de Ven <arjanv@redhat.com>
+Subject: replace deprecated hosts.h file
+Date: Sat, 29 May 2004 16:21:26 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <200405290713.i4T7Dxr25622@mail.osdl.org>
+Message-ID: <20040529142126.GA31365@devserv.devel.redhat.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fw.osdl.org ([65.172.181.6]:53670 "EHLO mail.osdl.org")
-	by vger.kernel.org with ESMTP id S262388AbUE2HOC (ORCPT
+Received: from mx1.redhat.com ([66.187.233.31]:53921 "EHLO mx1.redhat.com")
+	by vger.kernel.org with ESMTP id S264894AbUE2OVc (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 29 May 2004 03:14:02 -0400
+	Sat, 29 May 2004 10:21:32 -0400
+Received: from int-mx1.corp.redhat.com (int-mx1.corp.redhat.com [172.16.52.254])
+	by mx1.redhat.com (8.12.10/8.12.10) with ESMTP id i4TELWi5025902
+	for <linux-scsi@vger.kernel.org>; Sat, 29 May 2004 10:21:32 -0400
+Received: from devserv.devel.redhat.com (devserv.devel.redhat.com [172.16.58.1])
+	by int-mx1.corp.redhat.com (8.11.6/8.11.6) with ESMTP id i4TELW019225
+	for <linux-scsi@vger.kernel.org>; Sat, 29 May 2004 10:21:32 -0400
+Received: from devserv.devel.redhat.com (localhost.localdomain [127.0.0.1])
+	by devserv.devel.redhat.com (8.12.11/8.12.10) with ESMTP id i4TELQ1Z011013
+	for <linux-scsi@vger.kernel.org>; Sat, 29 May 2004 10:21:26 -0400
+Received: (from arjanv@localhost)
+	by devserv.devel.redhat.com (8.12.11/8.12.11/Submit) id i4TELQD6011010
+	for linux-scsi@vger.kernel.org; Sat, 29 May 2004 16:21:26 +0200
+Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, Markus.Lidel@shadowconnect.com
+To: linux-scsi@vger.kernel.org
+
+Hi,
+
+resend of the hosts.h -> scsi/scsi_host.h diff against current linus BK.
+The sooner we remove the users of hosts.h the sooner we can make sure new
+code doesn't use it....
 
 
-From: Markus Lidel <Markus.Lidel@shadowconnect.com>
-
-This patch now gets the ASR-2000S, ASR-2005S, ASR-2010S and ASR-2015S
-controllers working with the I2O subsystem.  It tested on two different
-system with ASR-2005S and ASR-2010S and reported as working.
-
-It's also tested on i686 and x86_64 with already working I2O controllers
-without a problem.
-
-Signed-off-by: Andrew Morton <akpm@osdl.org>
----
-
- 25-akpm/drivers/message/i2o/i2o_block.c  |    8 -
- 25-akpm/drivers/message/i2o/i2o_config.c |    2 
- 25-akpm/drivers/message/i2o/i2o_core.c   |  159 ++++++++++++++++++++-----------
- 25-akpm/drivers/message/i2o/i2o_scsi.c   |    6 -
- 25-akpm/include/linux/i2o.h              |   14 +-
- 5 files changed, 121 insertions(+), 68 deletions(-)
-
-diff -puN drivers/message/i2o/i2o_block.c~to-get-i2o-working-with-adaptecs-zero-channel-controllers drivers/message/i2o/i2o_block.c
---- 25/drivers/message/i2o/i2o_block.c~to-get-i2o-working-with-adaptecs-zero-channel-controllers	Fri May 28 16:21:08 2004
-+++ 25-akpm/drivers/message/i2o/i2o_block.c	Fri May 28 16:21:08 2004
-@@ -280,8 +280,8 @@ static int i2ob_send(u32 m, struct i2ob_
- {
- 	struct i2o_controller *c = dev->controller;
- 	int tid = dev->tid;
--	unsigned long msg;
--	unsigned long mptr;
-+	void *msg;
-+	void *mptr;
- 	u64 offset;
- 	struct request *req = ireq->req;
- 	int count = req->nr_sectors<<9;
-@@ -291,7 +291,7 @@ static int i2ob_send(u32 m, struct i2ob_
+diff -purN linux-2.6.6/drivers/scsi.org/3w-xxxx.c linux-2.6.6/drivers/scsi/3w-xxxx.c
+--- linux-2.6.6/drivers/scsi.org/3w-xxxx.c	2004-05-12 17:45:57.888964000 +0200
++++ linux-2.6.6/drivers/scsi/3w-xxxx.c	2004-05-12 17:46:19.061746008 +0200
+@@ -220,7 +220,7 @@ MODULE_LICENSE("GPL");
+ #define __3W_C			/* let 3w-xxxx.h know it is use */
  
- 	// printk(KERN_INFO "i2ob_send called\n");
- 	/* Map the message to a virtual address */
--	msg = c->mem_offset + m;
-+	msg = c->msg_virt + m;
- 	
- 	sgnum = i2ob_build_sglist(dev, ireq);
- 	
-@@ -479,7 +479,7 @@ static void i2o_block_reply(struct i2o_h
- 		/* Now flush the message by making it a NOP */
- 		m[0]&=0x00FFFFFF;
- 		m[0]|=(I2O_CMD_UTIL_NOP)<<24;
--		i2o_post_message(c, ((unsigned long)m) - c->mem_offset);
-+		i2o_post_message(c, (unsigned long) m - (unsigned long) c->msg_virt);
+ #include "scsi.h"
+-#include "hosts.h"
++#include <scsi/scsi_host.h>
  
- 		return;
- 	}
-diff -puN drivers/message/i2o/i2o_config.c~to-get-i2o-working-with-adaptecs-zero-channel-controllers drivers/message/i2o/i2o_config.c
---- 25/drivers/message/i2o/i2o_config.c~to-get-i2o-working-with-adaptecs-zero-channel-controllers	Fri May 28 16:21:08 2004
-+++ 25-akpm/drivers/message/i2o/i2o_config.c	Fri May 28 16:21:08 2004
-@@ -97,7 +97,7 @@ static void i2o_cfg_reply(struct i2o_han
- 	u32 *msg = (u32 *)m;
+ #include "3w-xxxx.h"
  
- 	if (msg[0] & MSG_FAIL) {
--		u32 *preserved_msg = (u32*)(c->mem_offset + msg[7]);
-+		u32 *preserved_msg = (u32*)(c->msg_virt + msg[7]);
+diff -purN linux-2.6.6/drivers/scsi.org/53c700.c linux-2.6.6/drivers/scsi/53c700.c
+--- linux-2.6.6/drivers/scsi.org/53c700.c	2004-05-10 04:32:01.000000000 +0200
++++ linux-2.6.6/drivers/scsi/53c700.c	2004-05-12 17:46:19.097740536 +0200
+@@ -135,7 +135,7 @@
+ #include <linux/interrupt.h>
  
- 		printk(KERN_ERR "i2o_config: IOP failed to process the msg.\n");
+ #include "scsi.h"
+-#include "hosts.h"
++#include <scsi/scsi_host.h>
  
-diff -puN drivers/message/i2o/i2o_core.c~to-get-i2o-working-with-adaptecs-zero-channel-controllers drivers/message/i2o/i2o_core.c
---- 25/drivers/message/i2o/i2o_core.c~to-get-i2o-working-with-adaptecs-zero-channel-controllers	Fri May 28 16:21:08 2004
-+++ 25-akpm/drivers/message/i2o/i2o_core.c	Fri May 28 16:21:08 2004
-@@ -354,7 +354,7 @@ static void i2o_core_reply(struct i2o_ha
- 
- 	if (msg[0] & MSG_FAIL) // Fail bit is set
- 	{
--		u32 *preserved_msg = (u32*)(c->mem_offset + msg[7]);
-+		u32 *preserved_msg = (u32*)(c->msg_virt + msg[7]);
- 
- 		i2o_report_status(KERN_INFO, "i2o_core", msg);
- 		i2o_dump_message(preserved_msg);
-@@ -1794,7 +1794,7 @@ static int i2o_reset_controller(struct i
- 	m=i2o_wait_message(c, "AdapterReset");
- 	if(m==0xFFFFFFFF)	
- 		return -ETIMEDOUT;
--	msg=(u32 *)(c->mem_offset+m);
-+	msg=(u32 *)(c->msg_virt+m);
- 	
- 	status = pci_alloc_consistent(c->pdev, 4, &status_phys);
- 	if(status == NULL) {
-@@ -1923,7 +1923,7 @@ int i2o_status_get(struct i2o_controller
- 	m=i2o_wait_message(c, "StatusGet");
- 	if(m==0xFFFFFFFF)
- 		return -ETIMEDOUT;	
--	msg=(u32 *)(c->mem_offset+m);
-+	msg=(u32 *)(c->msg_virt+m);
- 
- 	msg[0]=NINE_WORD_MSG_SIZE|SGL_OFFSET_0;
- 	msg[1]=I2O_CMD_STATUS_GET<<24|HOST_TID<<12|ADAPTER_TID;
-@@ -2344,7 +2344,7 @@ int i2o_init_outbound_q(struct i2o_contr
- 	m=i2o_wait_message(c, "OutboundInit");
- 	if(m==0xFFFFFFFF)
- 		return -ETIMEDOUT;
--	msg=(u32 *)(c->mem_offset+m);
-+	msg=(u32 *)(c->msg_virt+m);
- 
- 	status = pci_alloc_consistent(c->pdev, 4, &status_phys);
- 	if (status==NULL) {
-@@ -2618,7 +2618,7 @@ static int i2o_build_sys_table(void)
- 		sys_tbl->iops[count].last_changed = sys_tbl_ind - 1; // ??
- 		sys_tbl->iops[count].iop_capabilities = 
- 				iop->status_block->iop_capabilities;
--		sys_tbl->iops[count].inbound_low = iop->post_port;
-+		sys_tbl->iops[count].inbound_low = (u32)iop->post_port;
- 		sys_tbl->iops[count].inbound_high = 0;	// FIXME: 64-bit support
- 
- 		count++;
-@@ -2666,7 +2666,7 @@ int i2o_post_this(struct i2o_controller 
- 		       c->name);
- 		return -ETIMEDOUT;
- 	}
--	msg = (u32 *)(c->mem_offset + m);
-+	msg = (u32 *)(c->msg_virt + m);
-  	memcpy_toio(msg, data, len);
- 	i2o_post_message(c,m);
- 	return 0;
-@@ -3592,7 +3592,9 @@ static void i2o_pci_dispose(struct i2o_c
- 	I2O_IRQ_WRITE32(c,0xFFFFFFFF);
- 	if(c->irq > 0)
- 		free_irq(c->irq, c);
--	iounmap(((u8 *)c->post_port)-0x40);
-+	iounmap(c->base_virt);
-+	if(c->raptor)
-+		iounmap(c->msg_virt);
- 
- #ifdef CONFIG_MTRR
- 	if(c->mtrr_reg0 > 0)
-@@ -3633,9 +3635,12 @@ int __init i2o_pci_install(struct pci_de
- {
- 	struct i2o_controller *c=kmalloc(sizeof(struct i2o_controller),
- 						GFP_KERNEL);
--	unsigned long mem;
--	u32 memptr = 0;
--	u32 size;
-+	void *bar0_virt;
-+	void *bar1_virt;
-+	unsigned long bar0_phys = 0;
-+	unsigned long bar1_phys = 0;
-+	unsigned long bar0_size = 0;
-+	unsigned long bar1_size = 0;
- 	
- 	int i;
- 
-@@ -3646,37 +3651,9 @@ int __init i2o_pci_install(struct pci_de
- 	}
- 	memset(c, 0, sizeof(*c));
- 
--	for(i=0; i<6; i++)
--	{
--		/* Skip I/O spaces */
--		if(!(pci_resource_flags(dev, i) & IORESOURCE_IO))
--		{
--			memptr = pci_resource_start(dev, i);
--			break;
--		}
--	}
--	
--	if(i==6)
--	{
--		printk(KERN_ERR "i2o: I2O controller has no memory regions defined.\n");
--		kfree(c);
--		return -EINVAL;
--	}
--	
--	size = dev->resource[i].end-dev->resource[i].start+1;	
--	/* Map the I2O controller */
--	
--	printk(KERN_INFO "i2o: PCI I2O controller at 0x%08X size=%d\n", memptr, size);
--	mem = (unsigned long)ioremap(memptr, size);
--	if(mem==0)
--	{
--		printk(KERN_ERR "i2o: Unable to map controller.\n");
--		kfree(c);
--		return -EINVAL;
--	}
--
- 	c->irq = -1;
- 	c->dpt = 0;
-+	c->raptor = 0;
- 	c->short_req = 0;
- 	c->pdev = dev;
- 
-@@ -3684,13 +3661,6 @@ int __init i2o_pci_install(struct pci_de
- 	c->context_list_lock = SPIN_LOCK_UNLOCKED;
+ #include <scsi/scsi_transport.h>
+ #include <scsi/scsi_transport_spi.h>
+diff -purN linux-2.6.6/drivers/scsi.org/53c7xx.c linux-2.6.6/drivers/scsi/53c7xx.c
+--- linux-2.6.6/drivers/scsi.org/53c7xx.c	2004-05-10 04:33:22.000000000 +0200
++++ linux-2.6.6/drivers/scsi/53c7xx.c	2004-05-12 17:46:19.192726096 +0200
+@@ -280,7 +280,7 @@
  #endif
  
--	c->irq_mask = mem+0x34;
--	c->post_port = mem+0x40;
--	c->reply_port = mem+0x44;
--
--	c->mem_phys = memptr;
--	c->mem_offset = mem;
--	
- 	/*
- 	 *	Cards that fall apart if you hit them with large I/O
- 	 *	loads...
-@@ -3701,6 +3671,7 @@ int __init i2o_pci_install(struct pci_de
- 		c->short_req = 1;
- 		printk(KERN_INFO "I2O: Symbios FC920 workarounds activated.\n");
- 	}
-+
- 	if(dev->subsystem_vendor == PCI_VENDOR_ID_PROMISE)
- 	{
- 		c->promise = 1;
-@@ -3712,15 +3683,85 @@ int __init i2o_pci_install(struct pci_de
- 	 *	them
- 	 */
- 	 
--	if(dev->vendor == PCI_VENDOR_ID_DPT)
-+	if(dev->vendor == PCI_VENDOR_ID_DPT) {
- 		c->dpt=1;
-+		if(dev->device == 0xA511)
-+			c->raptor=1;
-+	}
-+
-+	for(i=0; i<6; i++)
-+	{
-+		/* Skip I/O spaces */
-+		if(!(pci_resource_flags(dev, i) & IORESOURCE_IO))
-+		{
-+			if(!bar0_phys)
-+			{
-+				bar0_phys = pci_resource_start(dev, i);
-+				bar0_size = pci_resource_len(dev, i);
-+				if(!c->raptor)
-+					break;
-+			}
-+			else
-+			{
-+				bar1_phys = pci_resource_start(dev, i);
-+				bar1_size = pci_resource_len(dev, i);
-+				break;
-+			}
-+		}
-+	}
-+
-+	if(i==6)
-+	{
-+		printk(KERN_ERR "i2o: I2O controller has no memory regions defined.\n");
-+		kfree(c);
-+		return -EINVAL;
-+	}
-+
-+
-+	/* Map the I2O controller */
-+	if(!c->raptor)
-+		printk(KERN_INFO "i2o: PCI I2O controller at %08lX size=%ld\n", bar0_phys, bar0_size);
-+	else
-+		printk(KERN_INFO "i2o: PCI I2O controller\n    BAR0 at 0x%08lX size=%ld\n    BAR1 at 0x%08lX size=%ld\n", bar0_phys, bar0_size, bar1_phys, bar1_size);
-+
-+	bar0_virt = ioremap(bar0_phys, bar0_size);
-+	if(bar0_virt==0)
-+	{
-+		printk(KERN_ERR "i2o: Unable to map controller.\n");
-+		kfree(c);
-+		return -EINVAL;
-+	}
-+
-+	if(c->raptor)
-+	{
-+		bar1_virt = ioremap(bar1_phys, bar1_size);
-+		if(bar1_virt==0)
-+		{
-+			printk(KERN_ERR "i2o: Unable to map controller.\n");
-+			kfree(c);
-+			iounmap(bar0_virt);
-+			return -EINVAL;
-+		}
-+	} else {
-+		bar1_virt = bar0_virt;
-+		bar1_phys = bar0_phys;
-+		bar1_size = bar0_size;
-+	}
-+
-+	c->irq_mask = bar0_virt+0x34;
-+	c->post_port = bar0_virt+0x40;
-+	c->reply_port = bar0_virt+0x44;
-+
-+	c->base_phys = bar0_phys;
-+	c->base_virt = bar0_virt;
-+	c->msg_phys = bar1_phys;
-+	c->msg_virt = bar1_virt;
- 	
- 	/* 
- 	 * Enable Write Combining MTRR for IOP's memory region
- 	 */
- #ifdef CONFIG_MTRR
--	c->mtrr_reg0 =
--		mtrr_add(c->mem_phys, size, MTRR_TYPE_WRCOMB, 1);
-+	c->mtrr_reg0 = mtrr_add(c->base_phys, bar0_size, MTRR_TYPE_WRCOMB, 1);
- 	/*
- 	 * If it is an INTEL i960 I/O processor then set the first 64K to
- 	 * Uncacheable since the region contains the Messaging unit which
-@@ -3730,14 +3771,16 @@ int __init i2o_pci_install(struct pci_de
- 	if(dev->vendor == PCI_VENDOR_ID_INTEL || dev->vendor == PCI_VENDOR_ID_DPT)
- 	{
- 		printk(KERN_INFO "I2O: MTRR workaround for Intel i960 processor\n"); 
--		c->mtrr_reg1 =	mtrr_add(c->mem_phys, 65536, MTRR_TYPE_UNCACHABLE, 1);
-+		c->mtrr_reg1 =	mtrr_add(c->base_phys, 65536, MTRR_TYPE_UNCACHABLE, 1);
- 		if(c->mtrr_reg1< 0)
- 		{
- 			printk(KERN_INFO "i2o_pci: Error in setting MTRR_TYPE_UNCACHABLE\n");
--			mtrr_del(c->mtrr_reg0, c->mem_phys, size);
-+			mtrr_del(c->mtrr_reg0, c->msg_phys, bar1_size);
- 			c->mtrr_reg0 = -1;
- 		}
- 	}
-+	if(c->raptor)
-+		c->mtrr_reg1 = mtrr_add(c->msg_phys, bar1_size, MTRR_TYPE_WRCOMB, 1);
+ #include "scsi.h"
+-#include "hosts.h"
++#include <scsi/scsi_host.h>
+ #include "53c7xx.h"
+ #include <linux/stat.h>
+ #include <linux/stddef.h>
+diff -purN linux-2.6.6/drivers/scsi.org/a2091.c linux-2.6.6/drivers/scsi/a2091.c
+--- linux-2.6.6/drivers/scsi.org/a2091.c	2004-05-10 04:32:37.000000000 +0200
++++ linux-2.6.6/drivers/scsi/a2091.c	2004-05-12 17:46:19.200724880 +0200
+@@ -16,7 +16,7 @@
+ #include <linux/spinlock.h>
  
+ #include "scsi.h"
+-#include "hosts.h"
++#include <scsi/scsi_host.h>
+ #include "wd33c93.h"
+ #include "a2091.h"
+ 
+diff -purN linux-2.6.6/drivers/scsi.org/a3000.c linux-2.6.6/drivers/scsi/a3000.c
+--- linux-2.6.6/drivers/scsi.org/a3000.c	2004-05-10 04:32:54.000000000 +0200
++++ linux-2.6.6/drivers/scsi/a3000.c	2004-05-12 17:46:19.207723816 +0200
+@@ -15,7 +15,7 @@
+ #include <asm/irq.h>
+ 
+ #include "scsi.h"
+-#include "hosts.h"
++#include <scsi/scsi_host.h>
+ #include "wd33c93.h"
+ #include "a3000.h"
+ 
+diff -purN linux-2.6.6/drivers/scsi.org/advansys.c linux-2.6.6/drivers/scsi/advansys.c
+--- linux-2.6.6/drivers/scsi.org/advansys.c	2004-05-10 04:32:27.000000000 +0200
++++ linux-2.6.6/drivers/scsi/advansys.c	2004-05-12 17:46:19.496679888 +0200
+@@ -807,7 +807,7 @@
+ #include <asm/dma.h>
+ 
+ #include "scsi.h"
+-#include "hosts.h"
++#include <scsi/scsi_host.h>
+ #include "advansys.h"
+ #ifdef CONFIG_PCI
+ #include <linux/pci.h>
+diff -purN linux-2.6.6/drivers/scsi.org/aha1542.c linux-2.6.6/drivers/scsi/aha1542.c
+--- linux-2.6.6/drivers/scsi.org/aha1542.c	2004-05-10 04:32:37.000000000 +0200
++++ linux-2.6.6/drivers/scsi/aha1542.c	2004-05-12 17:46:19.591665448 +0200
+@@ -47,7 +47,7 @@
+ #include <asm/io.h>
+ 
+ #include "scsi.h"
+-#include "hosts.h"
++#include <scsi/scsi_host.h>
+ #include "aha1542.h"
+ 
+ #define SCSI_BUF_PA(address)	isa_virt_to_bus(address)
+diff -purN linux-2.6.6/drivers/scsi.org/aha1740.c linux-2.6.6/drivers/scsi/aha1740.c
+--- linux-2.6.6/drivers/scsi.org/aha1740.c	2004-05-10 04:32:26.000000000 +0200
++++ linux-2.6.6/drivers/scsi/aha1740.c	2004-05-12 17:46:19.605663320 +0200
+@@ -56,7 +56,7 @@
+ #include <asm/io.h>
+ 
+ #include "scsi.h"
+-#include "hosts.h"
++#include <scsi/scsi_host.h>
+ #include "aha1740.h"
+ 
+ /* IF YOU ARE HAVING PROBLEMS WITH THIS DRIVER, AND WANT TO WATCH
+diff -purN linux-2.6.6/drivers/scsi.org/aic7xxx/aic79xx_osm.h linux-2.6.6/drivers/scsi/aic7xxx/aic79xx_osm.h
+--- linux-2.6.6/drivers/scsi.org/aic7xxx/aic79xx_osm.h	2004-05-10 04:32:52.000000000 +0200
++++ linux-2.6.6/drivers/scsi/aic7xxx/aic79xx_osm.h	2004-05-12 17:46:26.646592936 +0200
+@@ -68,7 +68,7 @@
+ /* Core SCSI definitions */
+ #define AIC_LIB_PREFIX ahd
+ #include "scsi.h"
+-#include "hosts.h"
++#include <scsi/scsi_host.h>
+ 
+ /* Name space conflict with BSD queue macros */
+ #ifdef LIST_HEAD
+diff -purN linux-2.6.6/drivers/scsi.org/aic7xxx/aic7xxx_osm.h linux-2.6.6/drivers/scsi/aic7xxx/aic7xxx_osm.h
+--- linux-2.6.6/drivers/scsi.org/aic7xxx/aic7xxx_osm.h	2004-05-12 17:45:57.901962000 +0200
++++ linux-2.6.6/drivers/scsi/aic7xxx/aic7xxx_osm.h	2004-05-12 17:46:26.710583208 +0200
+@@ -85,7 +85,7 @@
+ /* Core SCSI definitions */
+ #define AIC_LIB_PREFIX ahc
+ #include "scsi.h"
+-#include "hosts.h"
++#include <scsi/scsi_host.h>
+ 
+ /* Name space conflict with BSD queue macros */
+ #ifdef LIST_HEAD
+diff -purN linux-2.6.6/drivers/scsi.org/aic7xxx/aiclib.c linux-2.6.6/drivers/scsi/aic7xxx/aiclib.c
+--- linux-2.6.6/drivers/scsi.org/aic7xxx/aiclib.c	2004-05-10 04:32:37.000000000 +0200
++++ linux-2.6.6/drivers/scsi/aic7xxx/aiclib.c	2004-05-12 17:46:25.067832944 +0200
+@@ -36,7 +36,7 @@
+ 
+ /* Core SCSI definitions */
+ #include "scsi.h"
+-#include "hosts.h"
++#include <scsi/scsi_host.h>
+ #include "aiclib.h"
+ #include "cam.h"
+ 
+diff -purN linux-2.6.6/drivers/scsi.org/aic7xxx_old.c linux-2.6.6/drivers/scsi/aic7xxx_old.c
+--- linux-2.6.6/drivers/scsi.org/aic7xxx_old.c	2004-05-12 17:45:57.912961000 +0200
++++ linux-2.6.6/drivers/scsi/aic7xxx_old.c	2004-05-12 17:46:19.778637024 +0200
+@@ -239,7 +239,7 @@
+ #include <linux/smp.h>
+ #include <linux/interrupt.h>
+ #include "scsi.h"
+-#include "hosts.h"
++#include <scsi/scsi_host.h>
+ #include "aic7xxx_old/aic7xxx.h"
+ 
+ #include "aic7xxx_old/sequencer.h"
+diff -purN linux-2.6.6/drivers/scsi.org/amiga7xx.c linux-2.6.6/drivers/scsi/amiga7xx.c
+--- linux-2.6.6/drivers/scsi.org/amiga7xx.c	2004-05-10 04:32:28.000000000 +0200
++++ linux-2.6.6/drivers/scsi/amiga7xx.c	2004-05-12 17:46:19.784636112 +0200
+@@ -25,7 +25,7 @@
+ #include <asm/irq.h>
+ 
+ #include "scsi.h"
+-#include "hosts.h"
++#include <scsi/scsi_host.h>
+ #include "53c7xx.h"
+ #include "amiga7xx.h"
+ 
+diff -purN linux-2.6.6/drivers/scsi.org/ata_piix.c linux-2.6.6/drivers/scsi/ata_piix.c
+--- linux-2.6.6/drivers/scsi.org/ata_piix.c	2004-05-12 17:45:57.913960000 +0200
++++ linux-2.6.6/drivers/scsi/ata_piix.c	2004-05-12 17:46:19.796634288 +0200
+@@ -28,7 +28,7 @@
+ #include <linux/blkdev.h>
+ #include <linux/delay.h>
+ #include "scsi.h"
+-#include "hosts.h"
++#include <scsi/scsi_host.h>
+ #include <linux/libata.h>
+ 
+ #define DRV_NAME	"ata_piix"
+diff -purN linux-2.6.6/drivers/scsi.org/atari_scsi.c linux-2.6.6/drivers/scsi/atari_scsi.c
+--- linux-2.6.6/drivers/scsi.org/atari_scsi.c	2004-05-10 04:33:21.000000000 +0200
++++ linux-2.6.6/drivers/scsi/atari_scsi.c	2004-05-12 17:46:19.876622128 +0200
+@@ -102,7 +102,7 @@
+ #include <asm/bitops.h>
+ 
+ #include "scsi.h"
+-#include "hosts.h"
++#include <scsi/scsi_host.h>
+ #include "atari_scsi.h"
+ #include "NCR5380.h"
+ #include <asm/atari_stdma.h>
+diff -purN linux-2.6.6/drivers/scsi.org/atp870u.c linux-2.6.6/drivers/scsi/atp870u.c
+--- linux-2.6.6/drivers/scsi.org/atp870u.c	2004-05-10 04:32:28.000000000 +0200
++++ linux-2.6.6/drivers/scsi/atp870u.c	2004-05-12 17:46:19.920615440 +0200
+@@ -34,7 +34,7 @@
+ #include <asm/io.h>
+ 
+ #include "scsi.h"
+-#include "hosts.h"
++#include <scsi/scsi_host.h>
+ #include "atp870u.h"
+ 
+ /*
+diff -purN linux-2.6.6/drivers/scsi.org/blz1230.c linux-2.6.6/drivers/scsi/blz1230.c
+--- linux-2.6.6/drivers/scsi.org/blz1230.c	2004-05-10 04:32:53.000000000 +0200
++++ linux-2.6.6/drivers/scsi/blz1230.c	2004-05-12 17:46:19.929614072 +0200
+@@ -28,7 +28,7 @@
+ #include <linux/interrupt.h>
+ 
+ #include "scsi.h"
+-#include "hosts.h"
++#include <scsi/scsi_host.h>
+ #include "NCR53C9x.h"
+ 
+ #include <linux/zorro.h>
+diff -purN linux-2.6.6/drivers/scsi.org/blz2060.c linux-2.6.6/drivers/scsi/blz2060.c
+--- linux-2.6.6/drivers/scsi.org/blz2060.c	2004-05-10 04:32:29.000000000 +0200
++++ linux-2.6.6/drivers/scsi/blz2060.c	2004-05-12 17:46:19.937612856 +0200
+@@ -28,7 +28,7 @@
+ #include <linux/interrupt.h>
+ 
+ #include "scsi.h"
+-#include "hosts.h"
++#include <scsi/scsi_host.h>
+ #include "NCR53C9x.h"
+ 
+ #include <linux/zorro.h>
+diff -purN linux-2.6.6/drivers/scsi.org/BusLogic.c linux-2.6.6/drivers/scsi/BusLogic.c
+--- linux-2.6.6/drivers/scsi.org/BusLogic.c	2004-05-10 04:33:20.000000000 +0200
++++ linux-2.6.6/drivers/scsi/BusLogic.c	2004-05-12 17:46:20.007602216 +0200
+@@ -48,7 +48,7 @@
+ #include <asm/system.h>
+ 
+ #include "scsi.h"
+-#include "hosts.h"
++#include <scsi/scsi_host.h>
+ #include "BusLogic.h"
+ #include "FlashPoint.c"
+ 
+diff -purN linux-2.6.6/drivers/scsi.org/bvme6000.c linux-2.6.6/drivers/scsi/bvme6000.c
+--- linux-2.6.6/drivers/scsi.org/bvme6000.c	2004-05-10 04:32:00.000000000 +0200
++++ linux-2.6.6/drivers/scsi/bvme6000.c	2004-05-12 17:46:20.012601456 +0200
+@@ -17,7 +17,7 @@
+ #include <asm/irq.h>
+ 
+ #include "scsi.h"
+-#include "hosts.h"
++#include <scsi/scsi_host.h>
+ #include "53c7xx.h"
+ #include "bvme6000.h"
+ 
+diff -purN linux-2.6.6/drivers/scsi.org/constants.c linux-2.6.6/drivers/scsi/constants.c
+--- linux-2.6.6/drivers/scsi.org/constants.c	2004-05-10 04:32:54.000000000 +0200
++++ linux-2.6.6/drivers/scsi/constants.c	2004-05-12 17:46:20.034598112 +0200
+@@ -12,7 +12,7 @@
+ #include <linux/blkdev.h>
+ #include <linux/kernel.h>
+ #include "scsi.h"
+-#include "hosts.h"
++#include <scsi/scsi_host.h>
+ 
+ #define CONST_COMMAND   0x01
+ #define CONST_STATUS    0x02
+diff -purN linux-2.6.6/drivers/scsi.org/cpqfcTScontrol.c linux-2.6.6/drivers/scsi/cpqfcTScontrol.c
+--- linux-2.6.6/drivers/scsi.org/cpqfcTScontrol.c	2004-05-10 04:32:00.000000000 +0200
++++ linux-2.6.6/drivers/scsi/cpqfcTScontrol.c	2004-05-12 17:46:20.071592488 +0200
+@@ -45,7 +45,7 @@
+ #include <linux/spinlock.h>
+ 
+ #include "scsi.h"
+-#include "hosts.h"   // Scsi_Host definition for INT handler
++#include <scsi/scsi_host.h>   // Scsi_Host definition for INT handler
+ #include "cpqfcTSchip.h"
+ #include "cpqfcTSstructs.h"
+ 
+diff -purN linux-2.6.6/drivers/scsi.org/cpqfcTSinit.c linux-2.6.6/drivers/scsi/cpqfcTSinit.c
+--- linux-2.6.6/drivers/scsi.org/cpqfcTSinit.c	2004-05-10 04:31:59.000000000 +0200
++++ linux-2.6.6/drivers/scsi/cpqfcTSinit.c	2004-05-12 17:46:20.116585648 +0200
+@@ -51,7 +51,7 @@
+ #include <asm/irq.h>
+ #include <linux/spinlock.h>
+ #include "scsi.h"
+-#include "hosts.h"
++#include <scsi/scsi_host.h>
+ #include <scsi/scsi_ioctl.h>
+ #include "cpqfcTSchip.h"
+ #include "cpqfcTSstructs.h"
+@@ -1266,7 +1266,7 @@ static void QueLinkDownCmnd( CPQFCHBA *c
+ 
+ 
+ 
+-// The file "hosts.h" says not to call scsi_done from
++// The file <scsi/scsi_host.h> says not to call scsi_done from
+ // inside _queuecommand, so we'll do it from the heartbeat timer
+ // (clarification: Turns out it's ok to call scsi_done from queuecommand 
+ // for cases that don't go to the hardware like scsi cmds destined
+diff -purN linux-2.6.6/drivers/scsi.org/cpqfcTSworker.c linux-2.6.6/drivers/scsi/cpqfcTSworker.c
+--- linux-2.6.6/drivers/scsi.org/cpqfcTSworker.c	2004-05-10 04:33:12.000000000 +0200
++++ linux-2.6.6/drivers/scsi/cpqfcTSworker.c	2004-05-12 17:46:20.222569536 +0200
+@@ -39,7 +39,7 @@
+ #include <asm/dma.h>
+ 
+ #include "scsi.h"
+-#include "hosts.h"   // struct Scsi_Host definition for T handler
++#include <scsi/scsi_host.h>   // struct Scsi_Host definition for T handler
+ #include "cpqfcTSchip.h"
+ #include "cpqfcTSstructs.h"
+ #include "cpqfcTStrigger.h"
+diff -purN linux-2.6.6/drivers/scsi.org/cyberstorm.c linux-2.6.6/drivers/scsi/cyberstorm.c
+--- linux-2.6.6/drivers/scsi.org/cyberstorm.c	2004-05-10 04:33:12.000000000 +0200
++++ linux-2.6.6/drivers/scsi/cyberstorm.c	2004-05-12 17:46:20.232568016 +0200
+@@ -31,7 +31,7 @@
+ #include <linux/interrupt.h>
+ 
+ #include "scsi.h"
+-#include "hosts.h"
++#include <scsi/scsi_host.h>
+ #include "NCR53C9x.h"
+ 
+ #include <linux/zorro.h>
+diff -purN linux-2.6.6/drivers/scsi.org/cyberstormII.c linux-2.6.6/drivers/scsi/cyberstormII.c
+--- linux-2.6.6/drivers/scsi.org/cyberstormII.c	2004-05-10 04:33:13.000000000 +0200
++++ linux-2.6.6/drivers/scsi/cyberstormII.c	2004-05-12 17:46:20.240566800 +0200
+@@ -27,7 +27,7 @@
+ #include <linux/interrupt.h>
+ 
+ #include "scsi.h"
+-#include "hosts.h"
++#include <scsi/scsi_host.h>
+ #include "NCR53C9x.h"
+ 
+ #include <linux/zorro.h>
+diff -purN linux-2.6.6/drivers/scsi.org/dc395x.c linux-2.6.6/drivers/scsi/dc395x.c
+--- linux-2.6.6/drivers/scsi.org/dc395x.c	2004-05-10 04:32:01.000000000 +0200
++++ linux-2.6.6/drivers/scsi/dc395x.c	2004-05-12 17:46:20.319554792 +0200
+@@ -53,7 +53,7 @@
+ #include <linux/blkdev.h>
+ #include <asm/io.h>
+ #include "scsi.h"
+-#include "hosts.h"
++#include <scsi/scsi_host.h>
+ #include "dc395x.h"
+ #include <scsi/scsicam.h>	/* needed for scsicam_bios_param */
+ #include <linux/interrupt.h>
+diff -purN linux-2.6.6/drivers/scsi.org/dec_esp.c linux-2.6.6/drivers/scsi/dec_esp.c
+--- linux-2.6.6/drivers/scsi.org/dec_esp.c	2004-05-10 04:32:54.000000000 +0200
++++ linux-2.6.6/drivers/scsi/dec_esp.c	2004-05-12 17:46:20.331552968 +0200
+@@ -29,7 +29,7 @@
+ #include <linux/stat.h>
+ 
+ #include "scsi.h"
+-#include "hosts.h"
++#include <scsi/scsi_host.h>
+ #include "NCR53C9x.h"
+ 
+ #include <asm/irq.h>
+diff -purN linux-2.6.6/drivers/scsi.org/dmx3191d.c linux-2.6.6/drivers/scsi/dmx3191d.c
+--- linux-2.6.6/drivers/scsi.org/dmx3191d.c	2004-05-10 04:32:39.000000000 +0200
++++ linux-2.6.6/drivers/scsi/dmx3191d.c	2004-05-12 17:46:20.337552056 +0200
+@@ -34,7 +34,7 @@
+ #include <linux/delay.h>
+ 
+ #include "scsi.h"
+-#include "hosts.h"
++#include <scsi/scsi_host.h>
+ 
+ #include "dmx3191d.h"
+ 
+diff -purN linux-2.6.6/drivers/scsi.org/dpt_i2o.c linux-2.6.6/drivers/scsi/dpt_i2o.c
+--- linux-2.6.6/drivers/scsi.org/dpt_i2o.c	2004-05-10 04:33:13.000000000 +0200
++++ linux-2.6.6/drivers/scsi/dpt_i2o.c	2004-05-12 17:46:20.390544000 +0200
+@@ -65,7 +65,7 @@ MODULE_DESCRIPTION("Adaptec I2O RAID Dri
+ #include <asm/io.h>		/* for virt_to_bus, etc. */
+ 
+ #include "scsi.h"
+-#include "hosts.h"
++#include <scsi/scsi_host.h>
+ 
+ #include "dpt/dptsig.h"
+ #include "dpti.h"
+diff -purN linux-2.6.6/drivers/scsi.org/dtc.c linux-2.6.6/drivers/scsi/dtc.c
+--- linux-2.6.6/drivers/scsi.org/dtc.c	2004-05-10 04:32:54.000000000 +0200
++++ linux-2.6.6/drivers/scsi/dtc.c	2004-05-12 17:46:20.401542328 +0200
+@@ -84,7 +84,7 @@
+ #include <linux/interrupt.h>
+ #include <asm/io.h>
+ #include "scsi.h"
+-#include "hosts.h"
++#include <scsi/scsi_host.h>
+ #include "dtc.h"
+ #define AUTOPROBE_IRQ
+ #include "NCR5380.h"
+diff -purN linux-2.6.6/drivers/scsi.org/eata.c linux-2.6.6/drivers/scsi/eata.c
+--- linux-2.6.6/drivers/scsi.org/eata.c	2004-05-10 04:33:13.000000000 +0200
++++ linux-2.6.6/drivers/scsi/eata.c	2004-05-12 17:46:20.441536248 +0200
+@@ -495,7 +495,7 @@
+ #include <linux/spinlock.h>
+ #include <scsi/scsicam.h>
+ #include "scsi.h"
+-#include "hosts.h"
++#include <scsi/scsi_host.h>
+ #include <asm/dma.h>
+ #include <asm/irq.h>
+ 
+diff -purN linux-2.6.6/drivers/scsi.org/eata_pio.c linux-2.6.6/drivers/scsi/eata_pio.c
+--- linux-2.6.6/drivers/scsi.org/eata_pio.c	2004-05-10 04:32:52.000000000 +0200
++++ linux-2.6.6/drivers/scsi/eata_pio.c	2004-05-12 17:46:20.460533360 +0200
+@@ -63,7 +63,7 @@
+ #include <asm/io.h>
+ 
+ #include "scsi.h"
+-#include "hosts.h"
++#include <scsi/scsi_host.h>
+ #include <scsi/scsicam.h>
+ 
+ #include "eata_generic.h"
+diff -purN linux-2.6.6/drivers/scsi.org/esp.c linux-2.6.6/drivers/scsi/esp.c
+--- linux-2.6.6/drivers/scsi.org/esp.c	2004-05-10 04:33:21.000000000 +0200
++++ linux-2.6.6/drivers/scsi/esp.c	2004-05-12 17:46:20.529522872 +0200
+@@ -27,7 +27,7 @@
+ #include <linux/interrupt.h>
+ 
+ #include "scsi.h"
+-#include "hosts.h"
++#include <scsi/scsi_host.h>
+ #include "esp.h"
+ 
+ #include <asm/sbus.h>
+diff -purN linux-2.6.6/drivers/scsi.org/fastlane.c linux-2.6.6/drivers/scsi/fastlane.c
+--- linux-2.6.6/drivers/scsi.org/fastlane.c	2004-05-10 04:32:28.000000000 +0200
++++ linux-2.6.6/drivers/scsi/fastlane.c	2004-05-12 17:46:20.539521352 +0200
+@@ -36,7 +36,7 @@
+ #include <linux/interrupt.h>
+ 
+ #include "scsi.h"
+-#include "hosts.h"
++#include <scsi/scsi_host.h>
+ #include "NCR53C9x.h"
+ 
+ #include <linux/zorro.h>
+diff -purN linux-2.6.6/drivers/scsi.org/fcal.c linux-2.6.6/drivers/scsi/fcal.c
+--- linux-2.6.6/drivers/scsi.org/fcal.c	2004-05-10 04:31:59.000000000 +0200
++++ linux-2.6.6/drivers/scsi/fcal.c	2004-05-12 17:46:20.547520136 +0200
+@@ -21,7 +21,7 @@
+ #include <asm/irq.h>
+ 
+ #include "scsi.h"
+-#include "hosts.h"
++#include <scsi/scsi_host.h>
+ #include "../fc4/fcp_impl.h"
+ #include "fcal.h"
+ 
+diff -purN linux-2.6.6/drivers/scsi.org/fd_mcs.c linux-2.6.6/drivers/scsi/fd_mcs.c
+--- linux-2.6.6/drivers/scsi.org/fd_mcs.c	2004-05-10 04:32:28.000000000 +0200
++++ linux-2.6.6/drivers/scsi/fd_mcs.c	2004-05-12 17:46:20.572516336 +0200
+@@ -93,7 +93,7 @@
+ #include <asm/system.h>
+ 
+ #include "scsi.h"
+-#include "hosts.h"
++#include <scsi/scsi_host.h>
+ #include "fd_mcs.h"
+ 
+ #define DRIVER_VERSION "v0.2 by ZP Gu<zpg@castle.net>"
+diff -purN linux-2.6.6/drivers/scsi.org/fdomain.c linux-2.6.6/drivers/scsi/fdomain.c
+--- linux-2.6.6/drivers/scsi.org/fdomain.c	2004-05-10 04:32:54.000000000 +0200
++++ linux-2.6.6/drivers/scsi/fdomain.c	2004-05-12 17:46:20.603511624 +0200
+@@ -284,7 +284,7 @@
+ #include <asm/system.h>
+ 
+ #include "scsi.h"
+-#include "hosts.h"
++#include <scsi/scsi_host.h>
+ 
+ MODULE_AUTHOR("Rickard E. Faith");
+ MODULE_DESCRIPTION("Future domain SCSI driver");
+--- linux-2.6.6/drivers/scsi.org/g_NCR5380.c	2004-05-10 04:32:02.000000000 +0200
++++ linux-2.6.6/drivers/scsi/g_NCR5380.c	2004-05-12 17:46:20.928462224 +0200
+@@ -107,7 +107,7 @@
+ #include <linux/sched.h>
+ #include <linux/blkdev.h>
+ #include "scsi.h"
+-#include "hosts.h"
++#include <scsi/scsi_host.h>
+ #include "g_NCR5380.h"
+ #include "NCR5380.h"
+ #include <linux/stat.h>
+diff -purN linux-2.6.6/drivers/scsi.org/gvp11.c linux-2.6.6/drivers/scsi/gvp11.c
+--- linux-2.6.6/drivers/scsi.org/gvp11.c	2004-05-10 04:33:20.000000000 +0200
++++ linux-2.6.6/drivers/scsi/gvp11.c	2004-05-12 17:46:20.941460248 +0200
+@@ -16,7 +16,7 @@
+ #include <linux/spinlock.h>
+ 
+ #include "scsi.h"
+-#include "hosts.h"
++#include <scsi/scsi_host.h>
+ #include "wd33c93.h"
+ #include "gvp11.h"
+ 
+diff -purN linux-2.6.6/drivers/scsi.org/i60uscsi.c linux-2.6.6/drivers/scsi/i60uscsi.c
+--- linux-2.6.6/drivers/scsi.org/i60uscsi.c	2004-05-10 04:32:02.000000000 +0200
++++ linux-2.6.6/drivers/scsi/i60uscsi.c	2004-05-12 17:46:20.966456448 +0200
+@@ -81,7 +81,7 @@
+ #include <asm/io.h>
+ #include <linux/blkdev.h>
+ #include "scsi.h"
+-#include "hosts.h"
++#include <scsi/scsi_host.h>
+ #include "inia100.h"
+ 
+ #define JIFFIES_TO_MS(t) ((t) * 1000 / HZ)
+diff -purN linux-2.6.6/drivers/scsi.org/ibmmca.c linux-2.6.6/drivers/scsi/ibmmca.c
+--- linux-2.6.6/drivers/scsi.org/ibmmca.c	2004-05-10 04:32:00.000000000 +0200
++++ linux-2.6.6/drivers/scsi/ibmmca.c	2004-05-12 17:46:21.057442616 +0200
+@@ -45,7 +45,7 @@
+ #include <asm/io.h>
+ 
+ #include "scsi.h"
+-#include "hosts.h"
++#include <scsi/scsi_host.h>
+ #include "ibmmca.h"
+ 
+ /* current version of this driver-source: */
+diff -purN linux-2.6.6/drivers/scsi.org/ide-scsi.c linux-2.6.6/drivers/scsi/ide-scsi.c
+--- linux-2.6.6/drivers/scsi.org/ide-scsi.c	2004-05-10 04:32:52.000000000 +0200
++++ linux-2.6.6/drivers/scsi/ide-scsi.c	2004-05-12 17:46:21.079439272 +0200
+@@ -51,7 +51,7 @@
+ #include <asm/uaccess.h>
+ 
+ #include "scsi.h"
+-#include "hosts.h"
++#include <scsi/scsi_host.h>
+ #include <scsi/sg.h>
+ 
+ #define IDESCSI_DEBUG_LOG		0
+diff -purN linux-2.6.6/drivers/scsi.org/imm.h linux-2.6.6/drivers/scsi/imm.h
+--- linux-2.6.6/drivers/scsi.org/imm.h	2004-05-12 17:45:57.916960000 +0200
++++ linux-2.6.6/drivers/scsi/imm.h	2004-05-12 17:46:23.837020056 +0200
+@@ -79,7 +79,7 @@
+ #include  <linux/interrupt.h>
+ 
+ #include  <asm/io.h>
+-#include  "hosts.h"
++#include  <scsi/scsi_host.h>
+ /* batteries not included :-) */
+ 
+ /*
+diff -purN linux-2.6.6/drivers/scsi.org/in2000.c linux-2.6.6/drivers/scsi/in2000.c
+--- linux-2.6.6/drivers/scsi.org/in2000.c	2004-05-10 04:32:54.000000000 +0200
++++ linux-2.6.6/drivers/scsi/in2000.c	2004-05-12 17:46:21.141429848 +0200
+@@ -126,7 +126,7 @@
+ #include <asm/system.h>
+ 
+ #include "scsi.h"
+-#include "hosts.h"
++#include <scsi/scsi_host.h>
+ 
+ #define IN2000_VERSION    "1.33-2.5"
+ #define IN2000_DATE       "2002/11/03"
+diff -purN linux-2.6.6/drivers/scsi.org/ini9100u.c linux-2.6.6/drivers/scsi/ini9100u.c
+--- linux-2.6.6/drivers/scsi.org/ini9100u.c	2004-05-12 17:45:57.918960000 +0200
++++ linux-2.6.6/drivers/scsi/ini9100u.c	2004-05-12 17:46:21.156427568 +0200
+@@ -136,7 +136,7 @@
+ #include <asm/io.h>
+ 
+ #include "scsi.h"
+-#include "hosts.h"
++#include <scsi/scsi_host.h>
+ #include "ini9100u.h"
+ 
+ #ifdef DEBUG_i91u
+diff -purN linux-2.6.6/drivers/scsi.org/ips.c linux-2.6.6/drivers/scsi/ips.c
+--- linux-2.6.6/drivers/scsi.org/ips.c	2004-05-10 04:31:58.000000000 +0200
++++ linux-2.6.6/drivers/scsi/ips.c	2004-05-12 17:46:21.385392760 +0200
+@@ -176,7 +176,7 @@
+ #include <scsi/sg.h>
+ 
+ #include "scsi.h"
+-#include "hosts.h"
++#include <scsi/scsi_host.h>
+ #include "ips.h"
+ 
+ #include <linux/module.h>
+diff -purN linux-2.6.6/drivers/scsi.org/jazz_esp.c linux-2.6.6/drivers/scsi/jazz_esp.c
+--- linux-2.6.6/drivers/scsi.org/jazz_esp.c	2004-05-10 04:32:00.000000000 +0200
++++ linux-2.6.6/drivers/scsi/jazz_esp.c	2004-05-12 17:46:21.393391544 +0200
+@@ -16,7 +16,7 @@
+ #include <linux/stat.h>
+ 
+ #include "scsi.h"
+-#include "hosts.h"
++#include <scsi/scsi_host.h>
+ #include "NCR53C9x.h"
+ 
+ #include <asm/irq.h>
+diff -purN linux-2.6.6/drivers/scsi.org/lasi700.c linux-2.6.6/drivers/scsi/lasi700.c
+--- linux-2.6.6/drivers/scsi.org/lasi700.c	2004-05-10 04:32:00.000000000 +0200
++++ linux-2.6.6/drivers/scsi/lasi700.c	2004-05-12 17:46:21.399390632 +0200
+@@ -50,7 +50,7 @@
+ #include <asm/delay.h>
+ 
+ #include "scsi.h"
+-#include "hosts.h"
++#include <scsi/scsi_host.h>
+ 
+ #include "lasi700.h"
+ #include "53c700.h"
+diff -purN linux-2.6.6/drivers/scsi.org/libata-core.c linux-2.6.6/drivers/scsi/libata-core.c
+--- linux-2.6.6/drivers/scsi.org/libata-core.c	2004-05-12 17:45:57.936957000 +0200
++++ linux-2.6.6/drivers/scsi/libata-core.c	2004-05-12 17:46:21.456381968 +0200
+@@ -39,7 +39,7 @@
+ #include <linux/workqueue.h>
+ #include <scsi/scsi.h>
+ #include "scsi.h"
+-#include "hosts.h"
++#include <scsi/scsi_host.h>
+ #include <linux/libata.h>
+ #include <asm/io.h>
+ #include <asm/semaphore.h>
+diff -purN linux-2.6.6/drivers/scsi.org/libata-scsi.c linux-2.6.6/drivers/scsi/libata-scsi.c
+--- linux-2.6.6/drivers/scsi.org/libata-scsi.c	2004-05-12 17:45:57.937957000 +0200
++++ linux-2.6.6/drivers/scsi/libata-scsi.c	2004-05-12 17:46:21.478378624 +0200
+@@ -27,7 +27,7 @@
+ #include <linux/spinlock.h>
+ #include <scsi/scsi.h>
+ #include "scsi.h"
+-#include "hosts.h"
++#include <scsi/scsi_host.h>
+ #include <linux/libata.h>
+ 
+ #include "libata.h"
+diff -purN linux-2.6.6/drivers/scsi.org/mac_esp.c linux-2.6.6/drivers/scsi/mac_esp.c
+--- linux-2.6.6/drivers/scsi.org/mac_esp.c	2004-05-10 04:32:36.000000000 +0200
++++ linux-2.6.6/drivers/scsi/mac_esp.c	2004-05-12 17:46:21.505374520 +0200
+@@ -26,7 +26,7 @@
+ #include <linux/interrupt.h>
+ 
+ #include "scsi.h"
+-#include "hosts.h"
++#include <scsi/scsi_host.h>
+ #include "NCR53C9x.h"
+ 
+ #include <asm/io.h>
+diff -purN linux-2.6.6/drivers/scsi.org/mac_scsi.c linux-2.6.6/drivers/scsi/mac_scsi.c
+--- linux-2.6.6/drivers/scsi.org/mac_scsi.c	2004-05-10 04:32:00.000000000 +0200
++++ linux-2.6.6/drivers/scsi/mac_scsi.c	2004-05-12 17:46:21.518372544 +0200
+@@ -52,7 +52,7 @@
+ #include <asm/mac_via.h>
+ 
+ #include "scsi.h"
+-#include "hosts.h"
++#include <scsi/scsi_host.h>
+ #include "mac_scsi.h"
+ #include "NCR5380.h"
+ 
+diff -purN linux-2.6.6/drivers/scsi.org/mca_53c9x.c linux-2.6.6/drivers/scsi/mca_53c9x.c
+--- linux-2.6.6/drivers/scsi.org/mca_53c9x.c	2004-05-10 04:32:26.000000000 +0200
++++ linux-2.6.6/drivers/scsi/mca_53c9x.c	2004-05-12 17:46:21.530370720 +0200
+@@ -43,7 +43,7 @@
+ #include <linux/mca-legacy.h>
+ 
+ #include "scsi.h"
+-#include "hosts.h"
++#include <scsi/scsi_host.h>
+ #include "NCR53C9x.h"
+ 
+ #include <asm/dma.h>
+diff -purN linux-2.6.6/drivers/scsi.org/megaraid.c linux-2.6.6/drivers/scsi/megaraid.c
+--- linux-2.6.6/drivers/scsi.org/megaraid.c	2004-05-12 17:45:58.829821000 +0200
++++ linux-2.6.6/drivers/scsi/megaraid.c	2004-05-12 17:46:21.612358256 +0200
+@@ -49,7 +49,7 @@
+ #include <scsi/scsicam.h>
+ 
+ #include "scsi.h"
+-#include "hosts.h"
++#include <scsi/scsi_host.h>
+ 
+ #include "megaraid.h"
+ 
+diff -purN linux-2.6.6/drivers/scsi.org/mvme147.c linux-2.6.6/drivers/scsi/mvme147.c
+--- linux-2.6.6/drivers/scsi.org/mvme147.c	2004-05-10 04:32:26.000000000 +0200
++++ linux-2.6.6/drivers/scsi/mvme147.c	2004-05-12 17:46:21.653352024 +0200
+@@ -11,7 +11,7 @@
+ #include <asm/irq.h>
+ 
+ #include "scsi.h"
+-#include "hosts.h"
++#include <scsi/scsi_host.h>
+ #include "wd33c93.h"
+ #include "mvme147.h"
+ 
+diff -purN linux-2.6.6/drivers/scsi.org/mvme16x.c linux-2.6.6/drivers/scsi/mvme16x.c
+--- linux-2.6.6/drivers/scsi.org/mvme16x.c	2004-05-10 04:33:13.000000000 +0200
++++ linux-2.6.6/drivers/scsi/mvme16x.c	2004-05-12 17:46:21.658351264 +0200
+@@ -15,7 +15,7 @@
+ #include <asm/irq.h>
+ 
+ #include "scsi.h"
+-#include "hosts.h"
++#include <scsi/scsi_host.h>
+ #include "53c7xx.h"
+ #include "mvme16x.h"
+ 
+diff -purN linux-2.6.6/drivers/scsi.org/NCR53c406a.c linux-2.6.6/drivers/scsi/NCR53c406a.c
+--- linux-2.6.6/drivers/scsi.org/NCR53c406a.c	2004-05-10 04:32:30.000000000 +0200
++++ linux-2.6.6/drivers/scsi/NCR53c406a.c	2004-05-12 17:46:21.729340472 +0200
+@@ -54,7 +54,7 @@
+ #include <linux/blkdev.h>
+ #include <linux/spinlock.h>
+ #include "scsi.h"
+-#include "hosts.h"
++#include <scsi/scsi_host.h>
+ 
+ /* ============================================================= */
+ 
+diff -purN linux-2.6.6/drivers/scsi.org/ncr53c8xx.c linux-2.6.6/drivers/scsi/ncr53c8xx.c
+--- linux-2.6.6/drivers/scsi.org/ncr53c8xx.c	2004-05-12 17:45:57.946955000 +0200
++++ linux-2.6.6/drivers/scsi/ncr53c8xx.c	2004-05-12 17:46:21.877317976 +0200
+@@ -138,7 +138,7 @@
+ #include <asm/system.h>
+ 
+ #include "scsi.h"
+-#include "hosts.h"
++#include <scsi/scsi_host.h>
+ 
+ #include "ncr53c8xx.h"
+ 
+diff -purN linux-2.6.6/drivers/scsi.org/NCR53C9x.c linux-2.6.6/drivers/scsi/NCR53C9x.c
+--- linux-2.6.6/drivers/scsi.org/NCR53C9x.c	2004-05-10 04:32:26.000000000 +0200
++++ linux-2.6.6/drivers/scsi/NCR53C9x.c	2004-05-12 17:46:21.937308856 +0200
+@@ -36,7 +36,7 @@
+ #include <linux/init.h>
+ 
+ #include "scsi.h"
+-#include "hosts.h"
++#include <scsi/scsi_host.h>
+ #include "NCR53C9x.h"
+ 
+ #include <asm/system.h>
+diff -purN linux-2.6.6/drivers/scsi.org/NCR_D700.c linux-2.6.6/drivers/scsi/NCR_D700.c
+--- linux-2.6.6/drivers/scsi.org/NCR_D700.c	2004-05-10 04:32:01.000000000 +0200
++++ linux-2.6.6/drivers/scsi/NCR_D700.c	2004-05-12 17:46:21.948307184 +0200
+@@ -100,7 +100,7 @@
+ #include <asm/io.h>
+ 
+ #include "scsi.h"
+-#include "hosts.h"
++#include <scsi/scsi_host.h>
+ 
+ #include "53c700.h"
+ #include "NCR_D700.h"
+diff -purN linux-2.6.6/drivers/scsi.org/NCR_Q720.c linux-2.6.6/drivers/scsi/NCR_Q720.c
+--- linux-2.6.6/drivers/scsi.org/NCR_Q720.c	2004-05-10 04:32:01.000000000 +0200
++++ linux-2.6.6/drivers/scsi/NCR_Q720.c	2004-05-12 17:46:21.960305360 +0200
+@@ -16,7 +16,7 @@
+ #include <asm/io.h>
+ 
+ #include "scsi.h"
+-#include "hosts.h"
++#include <scsi/scsi_host.h>
+ 
+ #include "ncr53c8xx.h"
+ 
+diff -purN linux-2.6.6/drivers/scsi.org/nsp32.c linux-2.6.6/drivers/scsi/nsp32.c
+--- linux-2.6.6/drivers/scsi.org/nsp32.c	2004-05-12 17:45:57.949955000 +0200
++++ linux-2.6.6/drivers/scsi/nsp32.c	2004-05-12 17:46:22.028295024 +0200
+@@ -45,7 +45,7 @@
+ #include <asm/io.h>
+ 
+ #include "scsi.h"
+-#include "hosts.h"
++#include <scsi/scsi_host.h>
+ #include <scsi/scsi_ioctl.h>
+ #include <scsi/scsi.h>
+ 
+diff -purN linux-2.6.6/drivers/scsi.org/oktagon_esp.c linux-2.6.6/drivers/scsi/oktagon_esp.c
+--- linux-2.6.6/drivers/scsi.org/oktagon_esp.c	2004-05-10 04:31:59.000000000 +0200
++++ linux-2.6.6/drivers/scsi/oktagon_esp.c	2004-05-12 17:46:22.048291984 +0200
+@@ -29,7 +29,7 @@
+ 
+ 
+ #include "scsi.h"
+-#include "hosts.h"
++#include <scsi/scsi_host.h>
+ #include "NCR53C9x.h"
+ 
+ #include <linux/zorro.h>
+diff -purN linux-2.6.6/drivers/scsi.org/osst.c linux-2.6.6/drivers/scsi/osst.c
+--- linux-2.6.6/drivers/scsi.org/osst.c	2004-05-10 04:32:29.000000000 +0200
++++ linux-2.6.6/drivers/scsi/osst.c	2004-05-12 17:46:22.138278304 +0200
+@@ -61,7 +61,7 @@ const char * osst_version = "0.99.1";
+ #define OSST_DEB_MSG  KERN_NOTICE
+ 
+ #include "scsi.h"
+-#include "hosts.h"
++#include <scsi/scsi_host.h>
+ #include <scsi/scsi_driver.h>
+ #include <scsi/scsi_ioctl.h>
+ 
+diff -purN linux-2.6.6/drivers/scsi.org/pas16.c linux-2.6.6/drivers/scsi/pas16.c
+--- linux-2.6.6/drivers/scsi.org/pas16.c	2004-05-10 04:31:58.000000000 +0200
++++ linux-2.6.6/drivers/scsi/pas16.c	2004-05-12 17:46:22.151276328 +0200
+@@ -125,7 +125,7 @@
+ #include <linux/init.h>
+ 
+ #include "scsi.h"
+-#include "hosts.h"
++#include <scsi/scsi_host.h>
+ #include "pas16.h"
+ #define AUTOPROBE_IRQ
+ #include "NCR5380.h"
+diff -purN linux-2.6.6/drivers/scsi.org/pc980155.c linux-2.6.6/drivers/scsi/pc980155.c
+--- linux-2.6.6/drivers/scsi.org/pc980155.c	2004-05-10 04:31:59.000000000 +0200
++++ linux-2.6.6/drivers/scsi/pc980155.c	2004-05-12 17:46:22.159275112 +0200
+@@ -20,7 +20,7 @@
+ #include <asm/dma.h>
+ 
+ #include "scsi.h"
+-#include "hosts.h"
++#include <scsi/scsi_host.h>
+ #include "wd33c93.h"
+ #include "pc980155.h"
+ 
+diff -purN linux-2.6.6/drivers/scsi.org/pci2000.c linux-2.6.6/drivers/scsi/pci2000.c
+--- linux-2.6.6/drivers/scsi.org/pci2000.c	2004-05-10 04:32:53.000000000 +0200
++++ linux-2.6.6/drivers/scsi/pci2000.c	2004-05-12 17:46:22.175272680 +0200
+@@ -54,7 +54,7 @@
+ #include <asm/io.h>
+ 
+ #include "scsi.h"
+-#include "hosts.h"
++#include <scsi/scsi_host.h>
+ #include "pci2000.h"
+ #include "psi_roy.h"
+ 
+diff -purN linux-2.6.6/drivers/scsi.org/pci2220i.c linux-2.6.6/drivers/scsi/pci2220i.c
+--- linux-2.6.6/drivers/scsi.org/pci2220i.c	2004-05-10 04:31:58.000000000 +0200
++++ linux-2.6.6/drivers/scsi/pci2220i.c	2004-05-12 17:46:22.223265384 +0200
+@@ -59,7 +59,7 @@
+ #include <asm/io.h>
+ 
+ #include "scsi.h"
+-#include "hosts.h"
++#include <scsi/scsi_host.h>
+ #include "pci2220i.h"
+ #include "psi_dale.h"
+ 
+diff -purN linux-2.6.6/drivers/scsi.org/pcmcia/aha152x_stub.c linux-2.6.6/drivers/scsi/pcmcia/aha152x_stub.c
+--- linux-2.6.6/drivers/scsi.org/pcmcia/aha152x_stub.c	2004-05-10 04:33:19.000000000 +0200
++++ linux-2.6.6/drivers/scsi/pcmcia/aha152x_stub.c	2004-05-12 17:46:25.283800112 +0200
+@@ -47,7 +47,7 @@
+ #include <scsi/scsi_ioctl.h>
+ 
+ #include "scsi.h"
+-#include "hosts.h"
++#include <scsi/scsi_host.h>
+ #include "aha152x.h"
+ 
+ #include <pcmcia/version.h>
+diff -purN linux-2.6.6/drivers/scsi.org/pcmcia/fdomain_stub.c linux-2.6.6/drivers/scsi/pcmcia/fdomain_stub.c
+--- linux-2.6.6/drivers/scsi.org/pcmcia/fdomain_stub.c	2004-05-10 04:32:39.000000000 +0200
++++ linux-2.6.6/drivers/scsi/pcmcia/fdomain_stub.c	2004-05-12 17:46:25.295798288 +0200
+@@ -44,7 +44,7 @@
+ #include <scsi/scsi_ioctl.h>
+ 
+ #include "scsi.h"
+-#include "hosts.h"
++#include <scsi/scsi_host.h>
+ 
+ #include <pcmcia/version.h>
+ #include <pcmcia/cs_types.h>
+diff -purN linux-2.6.6/drivers/scsi.org/pcmcia/qlogic_stub.c linux-2.6.6/drivers/scsi/pcmcia/qlogic_stub.c
+--- linux-2.6.6/drivers/scsi.org/pcmcia/qlogic_stub.c	2004-05-12 17:45:57.955954000 +0200
++++ linux-2.6.6/drivers/scsi/pcmcia/qlogic_stub.c	2004-05-12 17:46:25.353789472 +0200
+@@ -46,7 +46,7 @@
+ #include <linux/interrupt.h>
+ 
+ #include "scsi.h"
+-#include "hosts.h"
++#include <scsi/scsi_host.h>
+ #include "../qlogicfas408.h"
+ 
+ #include <pcmcia/version.h>
+diff -purN linux-2.6.6/drivers/scsi.org/pluto.c linux-2.6.6/drivers/scsi/pluto.c
+--- linux-2.6.6/drivers/scsi.org/pluto.c	2004-05-10 04:32:27.000000000 +0200
++++ linux-2.6.6/drivers/scsi/pluto.c	2004-05-12 17:46:22.232264016 +0200
+@@ -21,7 +21,7 @@
+ #include <asm/irq.h>
+ 
+ #include "scsi.h"
+-#include "hosts.h"
++#include <scsi/scsi_host.h>
+ #include "../fc4/fcp_impl.h"
+ #include "pluto.h"
+ 
+diff -purN linux-2.6.6/drivers/scsi.org/ppa.h linux-2.6.6/drivers/scsi/ppa.h
+--- linux-2.6.6/drivers/scsi.org/ppa.h	2004-05-12 17:45:57.959953000 +0200
++++ linux-2.6.6/drivers/scsi/ppa.h	2004-05-12 17:46:24.069984640 +0200
+@@ -86,7 +86,7 @@
+ #include  <linux/interrupt.h>
+ 
+ #include  <asm/io.h>
+-#include  "hosts.h"
++#include  <scsi/scsi_host.h>
+ /* batteries not included :-) */
+ 
+ /*
+diff -purN linux-2.6.6/drivers/scsi.org/psi240i.c linux-2.6.6/drivers/scsi/psi240i.c
+--- linux-2.6.6/drivers/scsi.org/psi240i.c	2004-05-10 04:32:53.000000000 +0200
++++ linux-2.6.6/drivers/scsi/psi240i.c	2004-05-12 17:46:22.268258544 +0200
+@@ -41,7 +41,7 @@
+ #include <asm/system.h>
+ #include <asm/io.h>
+ #include "scsi.h"
+-#include "hosts.h"
++#include <scsi/scsi_host.h>
+ 
+ #include "psi240i.h"
+ #include "psi_chip.h"
+diff -purN linux-2.6.6/drivers/scsi.org/qla1280.c linux-2.6.6/drivers/scsi/qla1280.c
+--- linux-2.6.6/drivers/scsi.org/qla1280.c	2004-05-12 17:45:57.962953000 +0200
++++ linux-2.6.6/drivers/scsi/qla1280.c	2004-05-12 17:46:22.348246384 +0200
+@@ -357,7 +357,7 @@
+ #else
+ #include <linux/blk.h>
+ #include "scsi.h"
+-#include "hosts.h"
++#include <scsi/scsi_host.h>
+ #include "sd.h"
  #endif
  
-@@ -3749,7 +3792,9 @@ int __init i2o_pci_install(struct pci_de
- 	{
- 		printk(KERN_ERR "i2o: Unable to install controller.\n");
- 		kfree(c);
--		iounmap((void *)mem);
-+		iounmap(bar0_virt);
-+		if(c->raptor)
-+			iounmap(bar1_virt);
- 		return i;
- 	}
+diff -purN linux-2.6.6/drivers/scsi.org/qla2xxx/qla_os.h linux-2.6.6/drivers/scsi/qla2xxx/qla_os.h
+--- linux-2.6.6/drivers/scsi.org/qla2xxx/qla_os.h	2004-05-10 04:32:27.000000000 +0200
++++ linux-2.6.6/drivers/scsi/qla2xxx/qla_os.h	2004-05-12 17:46:26.968543992 +0200
+@@ -59,7 +59,7 @@
+ #include <asm/uaccess.h>
  
-@@ -3764,7 +3809,9 @@ int __init i2o_pci_install(struct pci_de
- 				c->name, dev->irq);
- 			c->irq = -1;
- 			i2o_delete_controller(c);
--			iounmap((void *)mem);
-+			iounmap(bar0_virt);
-+			if(c->raptor)
-+				iounmap(bar1_virt);
- 			return -EBUSY;
- 		}
- 	}
-@@ -3797,10 +3844,12 @@ int __init i2o_pci_scan(void)
+ #include "scsi.h"
+-#include "hosts.h"
++#include <scsi/scsi_host.h>
  
- 	while ((dev = pci_find_device(PCI_ANY_ID, PCI_ANY_ID, dev)) != NULL)
- 	{
--		if((dev->class>>8)!=PCI_CLASS_INTELLIGENT_I2O)
-+		if((dev->class>>8)!=PCI_CLASS_INTELLIGENT_I2O &&
-+		   (dev->vendor!=PCI_VENDOR_ID_DPT || dev->device!=0xA511))
- 			continue;
+ #include <scsi/scsicam.h>
+ #include <scsi/scsi_ioctl.h>
+diff -purN linux-2.6.6/drivers/scsi.org/qlogicfas408.c linux-2.6.6/drivers/scsi/qlogicfas408.c
+--- linux-2.6.6/drivers/scsi.org/qlogicfas408.c	2004-05-12 17:45:58.164922000 +0200
++++ linux-2.6.6/drivers/scsi/qlogicfas408.c	2004-05-12 17:46:22.361244408 +0200
+@@ -56,7 +56,7 @@
+ #include <asm/dma.h>
  
--		if((dev->class&0xFF)>1)
-+		if((dev->class>>8)==PCI_CLASS_INTELLIGENT_I2O &&
-+		   (dev->class&0xFF)>1)
- 		{
- 			printk(KERN_INFO "i2o: I2O Controller found but does not support I2O 1.5 (skipping).\n");
- 			continue;
-diff -puN drivers/message/i2o/i2o_scsi.c~to-get-i2o-working-with-adaptecs-zero-channel-controllers drivers/message/i2o/i2o_scsi.c
---- 25/drivers/message/i2o/i2o_scsi.c~to-get-i2o-working-with-adaptecs-zero-channel-controllers	Fri May 28 16:21:08 2004
-+++ 25-akpm/drivers/message/i2o/i2o_scsi.c	Fri May 28 16:21:08 2004
-@@ -669,7 +669,7 @@ static int i2o_scsi_queuecommand(struct 
- 	if(m==0xFFFFFFFF)
- 		return 1;
+ #include "scsi.h"
+-#include "hosts.h"
++#include <scsi/scsi_host.h>
+ #include "qlogicfas408.h"
  
--	msg = (u32 *)(c->mem_offset + m);
-+	msg = (u32 *)(c->msg_virt + m);
- 	
- 	/*
- 	 *	Put together a scsi execscb message
-@@ -941,7 +941,7 @@ static int i2o_scsi_bus_reset(struct scs
- 	struct Scsi_Host *host;
- 	struct i2o_scsi_host *hostdata;
- 	u32 m;
--	unsigned long msg;
-+	void *msg;
- 	unsigned long timeout;
+ /*----------------------------------------------------------------*/
+diff -purN linux-2.6.6/drivers/scsi.org/qlogicfas.c linux-2.6.6/drivers/scsi/qlogicfas.c
+--- linux-2.6.6/drivers/scsi.org/qlogicfas.c	2004-05-12 17:45:58.162923000 +0200
++++ linux-2.6.6/drivers/scsi/qlogicfas.c	2004-05-12 17:46:22.368243344 +0200
+@@ -32,7 +32,7 @@
+ #include <asm/dma.h>
  
- 	
-@@ -979,7 +979,7 @@ static int i2o_scsi_bus_reset(struct scs
- 	while(time_before(jiffies, timeout));
- 	
- 	
--	msg = c->mem_offset + m;
-+	msg = c->msg_virt + m;
- 	i2o_raw_writel(FOUR_WORD_MSG_SIZE|SGL_OFFSET_0, msg);
- 	i2o_raw_writel(I2O_CMD_SCSI_BUSRESET<<24|HOST_TID<<12|tid, msg+4);
- 	i2o_raw_writel(scsi_context|0x80000000, msg+8);
-diff -puN include/linux/i2o.h~to-get-i2o-working-with-adaptecs-zero-channel-controllers include/linux/i2o.h
---- 25/include/linux/i2o.h~to-get-i2o-working-with-adaptecs-zero-channel-controllers	Fri May 28 16:21:08 2004
-+++ 25-akpm/include/linux/i2o.h	Fri May 28 16:21:08 2004
-@@ -99,6 +99,7 @@ struct i2o_controller
- 	int		irq;
- 	int		short_req:1;	/* Use small block sizes        */
- 	int		dpt:1;		/* Don't quiesce                */
-+	int		raptor:1;	/* split bar                    */
- 	int		promise:1;	/* Promise controller		*/
- #ifdef CONFIG_MTRR
- 	int		mtrr_reg0;
-@@ -109,9 +110,9 @@ struct i2o_controller
- 	atomic_t users;
- 	struct i2o_device *devices;		/* I2O device chain */
- 	struct i2o_controller *next;		/* Controller chain */
--	unsigned long post_port;		/* Inbout port address */
--	unsigned long reply_port;		/* Outbound port address */
--	unsigned long irq_mask;			/* Interrupt register address */
-+	void *post_port;			/* Inbout port address */
-+	void *reply_port;			/* Outbound port address */
-+	void *irq_mask;				/* Interrupt register address */
+ #include "scsi.h"
+-#include "hosts.h"
++#include <scsi/scsi_host.h>
+ #include "qlogicfas408.h"
  
- 	/* Dynamic LCT related data */
- 	struct semaphore lct_sem;
-@@ -128,8 +129,11 @@ struct i2o_controller
- 	dma_addr_t hrt_phys;
- 	u32 hrt_len;
+ /* Set the following to 2 to use normal interrupt (active high/totempole-
+diff -purN linux-2.6.6/drivers/scsi.org/qlogicfc.c linux-2.6.6/drivers/scsi/qlogicfc.c
+--- linux-2.6.6/drivers/scsi.org/qlogicfc.c	2004-05-10 04:32:54.000000000 +0200
++++ linux-2.6.6/drivers/scsi/qlogicfc.c	2004-05-12 17:46:22.562213856 +0200
+@@ -64,7 +64,7 @@
+ #include <asm/io.h>
+ #include <asm/irq.h>
+ #include "scsi.h"
+-#include "hosts.h"
++#include <scsi/scsi_host.h>
  
--	unsigned long mem_offset;		/* MFA offset */
--	unsigned long mem_phys;			/* MFA physical */
-+	void *base_virt;			/* base virtual address */
-+	unsigned long base_phys;		/* base physical address */
-+
-+	void *msg_virt;				/* messages virtual address */
-+	unsigned long msg_phys;			/* messages physical address */
+ #define pci64_dma_hi32(a) ((u32) (0xffffffff & (((u64)(a))>>32)))
+ #define pci64_dma_lo32(a) ((u32) (0xffffffff & (((u64)(a)))))
+diff -purN linux-2.6.6/drivers/scsi.org/qlogicisp.c linux-2.6.6/drivers/scsi/qlogicisp.c
+--- linux-2.6.6/drivers/scsi.org/qlogicisp.c	2004-05-10 04:33:21.000000000 +0200
++++ linux-2.6.6/drivers/scsi/qlogicisp.c	2004-05-12 17:46:22.630203520 +0200
+@@ -36,7 +36,7 @@
+ #include <asm/irq.h>
+ #include <asm/byteorder.h>
+ #include "scsi.h"
+-#include "hosts.h"
++#include <scsi/scsi_host.h>
+ #include "qlogicisp.h"
  
- 	int battery:1;				/* Has a battery backup */
- 	int io_alloc:1;				/* An I/O resource was allocated */
-_
+ /* Configuration section *****************************************************/
+diff -purN linux-2.6.6/drivers/scsi.org/qlogicpti.c linux-2.6.6/drivers/scsi/qlogicpti.c
+--- linux-2.6.6/drivers/scsi.org/qlogicpti.c	2004-05-10 04:32:53.000000000 +0200
++++ linux-2.6.6/drivers/scsi/qlogicpti.c	2004-05-12 17:46:22.678196224 +0200
+@@ -27,7 +27,7 @@
+ #include <asm/byteorder.h>
+ 
+ #include "scsi.h"
+-#include "hosts.h"
++#include <scsi/scsi_host.h>
+ #include "qlogicpti.h"
+ 
+ #include <asm/sbus.h>
+diff -purN linux-2.6.6/drivers/scsi.org/sata_promise.c linux-2.6.6/drivers/scsi/sata_promise.c
+--- linux-2.6.6/drivers/scsi.org/sata_promise.c	2004-05-12 17:45:58.168922000 +0200
++++ linux-2.6.6/drivers/scsi/sata_promise.c	2004-05-12 17:46:22.691194248 +0200
+@@ -34,7 +34,7 @@
+ #include <linux/interrupt.h>
+ #include <linux/sched.h>
+ #include "scsi.h"
+-#include "hosts.h"
++#include <scsi/scsi_host.h>
+ #include <linux/libata.h>
+ #include <asm/io.h>
+ #include "sata_promise.h"
+diff -purN linux-2.6.6/drivers/scsi.org/sata_sil.c linux-2.6.6/drivers/scsi/sata_sil.c
+--- linux-2.6.6/drivers/scsi.org/sata_sil.c	2004-05-12 17:45:58.169922000 +0200
++++ linux-2.6.6/drivers/scsi/sata_sil.c	2004-05-12 17:46:22.701192728 +0200
+@@ -34,7 +34,7 @@
+ #include <linux/delay.h>
+ #include <linux/interrupt.h>
+ #include "scsi.h"
+-#include "hosts.h"
++#include <scsi/scsi_host.h>
+ #include <linux/libata.h>
+ 
+ #define DRV_NAME	"sata_sil"
+diff -purN linux-2.6.6/drivers/scsi.org/sata_sis.c linux-2.6.6/drivers/scsi/sata_sis.c
+--- linux-2.6.6/drivers/scsi.org/sata_sis.c	2004-05-12 17:45:58.170921000 +0200
++++ linux-2.6.6/drivers/scsi/sata_sis.c	2004-05-12 17:46:22.708191664 +0200
+@@ -34,7 +34,7 @@
+ #include <linux/delay.h>
+ #include <linux/interrupt.h>
+ #include "scsi.h"
+-#include "hosts.h"
++#include <scsi/scsi_host.h>
+ #include <linux/libata.h>
+ 
+ #define DRV_NAME	"sata_sis"
+diff -purN linux-2.6.6/drivers/scsi.org/sata_svw.c linux-2.6.6/drivers/scsi/sata_svw.c
+--- linux-2.6.6/drivers/scsi.org/sata_svw.c	2004-05-12 17:45:58.171921000 +0200
++++ linux-2.6.6/drivers/scsi/sata_svw.c	2004-05-12 17:46:22.718190144 +0200
+@@ -40,7 +40,7 @@
+ #include <linux/delay.h>
+ #include <linux/interrupt.h>
+ #include "scsi.h"
+-#include "hosts.h"
++#include <scsi/scsi_host.h>
+ #include <linux/libata.h>
+ 
+ #ifdef CONFIG_PPC_OF
+diff -purN linux-2.6.6/drivers/scsi.org/sata_sx4.c linux-2.6.6/drivers/scsi/sata_sx4.c
+--- linux-2.6.6/drivers/scsi.org/sata_sx4.c	2004-05-12 17:45:58.173921000 +0200
++++ linux-2.6.6/drivers/scsi/sata_sx4.c	2004-05-12 17:46:22.742186496 +0200
+@@ -34,7 +34,7 @@
+ #include <linux/interrupt.h>
+ #include <linux/sched.h>
+ #include "scsi.h"
+-#include "hosts.h"
++#include <scsi/scsi_host.h>
+ #include <linux/libata.h>
+ #include <asm/io.h>
+ #include "sata_promise.h"
+diff -purN linux-2.6.6/drivers/scsi.org/sata_via.c linux-2.6.6/drivers/scsi/sata_via.c
+--- linux-2.6.6/drivers/scsi.org/sata_via.c	2004-05-12 17:45:58.174921000 +0200
++++ linux-2.6.6/drivers/scsi/sata_via.c	2004-05-12 17:46:22.751185128 +0200
+@@ -33,7 +33,7 @@
+ #include <linux/blkdev.h>
+ #include <linux/delay.h>
+ #include "scsi.h"
+-#include "hosts.h"
++#include <scsi/scsi_host.h>
+ #include <linux/libata.h>
+ #include <asm/io.h>
+ 
+diff -purN linux-2.6.6/drivers/scsi.org/sata_vsc.c linux-2.6.6/drivers/scsi/sata_vsc.c
+--- linux-2.6.6/drivers/scsi.org/sata_vsc.c	2004-05-12 17:45:58.175921000 +0200
++++ linux-2.6.6/drivers/scsi/sata_vsc.c	2004-05-12 17:46:22.760183760 +0200
+@@ -22,7 +22,7 @@
+ #include <linux/delay.h>
+ #include <linux/interrupt.h>
+ #include "scsi.h"
+-#include "hosts.h"
++#include <scsi/scsi_host.h>
+ #include <linux/libata.h>
+ 
+ #define DRV_NAME	"sata_vsc"
+diff -purN linux-2.6.6/drivers/scsi.org/scsicam.c linux-2.6.6/drivers/scsi/scsicam.c
+--- linux-2.6.6/drivers/scsi.org/scsicam.c	2004-05-10 04:32:39.000000000 +0200
++++ linux-2.6.6/drivers/scsi/scsicam.c	2004-05-12 17:46:22.788179504 +0200
+@@ -19,7 +19,7 @@
+ #include <linux/buffer_head.h>
+ #include <asm/unaligned.h>
+ #include "scsi.h"
+-#include "hosts.h"
++#include <scsi/scsi_host.h>
+ #include <scsi/scsicam.h>
+ 
+ static int setsize(unsigned long capacity, unsigned int *cyls, unsigned int *hds,
+diff -purN linux-2.6.6/drivers/scsi.org/scsi_debug.c linux-2.6.6/drivers/scsi/scsi_debug.c
+--- linux-2.6.6/drivers/scsi.org/scsi_debug.c	2004-05-10 04:32:51.000000000 +0200
++++ linux-2.6.6/drivers/scsi/scsi_debug.c	2004-05-12 17:46:22.818174944 +0200
+@@ -43,7 +43,7 @@
+ 
+ #include <linux/blkdev.h>
+ #include "scsi.h"
+-#include "hosts.h"
++#include <scsi/scsi_host.h>
+ #include <scsi/scsicam.h>
+ 
+ #include <linux/stat.h>
+diff -purN linux-2.6.6/drivers/scsi.org/scsi_devinfo.c linux-2.6.6/drivers/scsi/scsi_devinfo.c
+--- linux-2.6.6/drivers/scsi.org/scsi_devinfo.c	2004-05-10 04:32:27.000000000 +0200
++++ linux-2.6.6/drivers/scsi/scsi_devinfo.c	2004-05-12 17:46:22.830173120 +0200
+@@ -9,7 +9,7 @@
+ #include <scsi/scsi_devinfo.h>
+ 
+ #include "scsi.h"
+-#include "hosts.h"
++#include <scsi/scsi_host.h>
+ #include "scsi_priv.h"
+ 
+ /*
+diff -purN linux-2.6.6/drivers/scsi.org/scsi_error.c linux-2.6.6/drivers/scsi/scsi_error.c
+--- linux-2.6.6/drivers/scsi.org/scsi_error.c	2004-05-10 04:31:58.000000000 +0200
++++ linux-2.6.6/drivers/scsi/scsi_error.c	2004-05-12 17:46:22.861168408 +0200
+@@ -26,7 +26,7 @@
+ #include <scsi/scsi_ioctl.h>
+ 
+ #include "scsi.h"
+-#include "hosts.h"
++#include <scsi/scsi_host.h>
+ 
+ #include "scsi_priv.h"
+ #include "scsi_logging.h"
+diff -purN linux-2.6.6/drivers/scsi.org/scsi_ioctl.c linux-2.6.6/drivers/scsi/scsi_ioctl.c
+--- linux-2.6.6/drivers/scsi.org/scsi_ioctl.c	2004-05-10 04:33:20.000000000 +0200
++++ linux-2.6.6/drivers/scsi/scsi_ioctl.c	2004-05-12 17:46:22.871166888 +0200
+@@ -20,7 +20,7 @@
+ 
+ #include <linux/blkdev.h>
+ #include "scsi.h"
+-#include "hosts.h"
++#include <scsi/scsi_host.h>
+ #include <scsi/scsi_ioctl.h>
+ 
+ #include "scsi_logging.h"
+diff -purN linux-2.6.6/drivers/scsi.org/scsi_module.c linux-2.6.6/drivers/scsi/scsi_module.c
+--- linux-2.6.6/drivers/scsi.org/scsi_module.c	2004-05-10 04:32:26.000000000 +0200
++++ linux-2.6.6/drivers/scsi/scsi_module.c	2004-05-12 17:46:22.935157160 +0200
+@@ -12,7 +12,7 @@
+ #include <linux/module.h>
+ 
+ #include "scsi.h"
+-#include "hosts.h"
++#include <scsi/scsi_host.h>
+ 
+ 
+ static int __init init_this_scsi_driver(void)
+diff -purN linux-2.6.6/drivers/scsi.org/scsi_pc98.c linux-2.6.6/drivers/scsi/scsi_pc98.c
+--- linux-2.6.6/drivers/scsi.org/scsi_pc98.c	2004-05-10 04:31:59.000000000 +0200
++++ linux-2.6.6/drivers/scsi/scsi_pc98.c	2004-05-12 17:46:22.939156552 +0200
+@@ -12,7 +12,7 @@
+ #include <asm/pc9800.h>
+ 
+ #include "scsi.h"
+-#include "hosts.h"
++#include <scsi/scsi_host.h>
+ 
+ 
+ static int pc98_first_bios_param(struct scsi_device *sdev, int *ip)
+diff -purN linux-2.6.6/drivers/scsi.org/sd.c linux-2.6.6/drivers/scsi/sd.c
+--- linux-2.6.6/drivers/scsi.org/sd.c	2004-05-12 17:45:58.180920000 +0200
++++ linux-2.6.6/drivers/scsi/sd.c	2004-05-12 17:46:23.040141200 +0200
+@@ -52,7 +52,7 @@
+ #include <asm/uaccess.h>
+ 
+ #include "scsi.h"
+-#include "hosts.h"
++#include <scsi/scsi_host.h>
+ 
+ #include <scsi/scsi_driver.h>
+ #include <scsi/scsi_ioctl.h>
+diff -purN linux-2.6.6/drivers/scsi.org/seagate.c linux-2.6.6/drivers/scsi/seagate.c
+--- linux-2.6.6/drivers/scsi.org/seagate.c	2004-05-10 04:32:29.000000000 +0200
++++ linux-2.6.6/drivers/scsi/seagate.c	2004-05-12 17:46:23.069136792 +0200
+@@ -103,7 +103,7 @@
+ #include <asm/uaccess.h>
+ 
+ #include "scsi.h"
+-#include "hosts.h"
++#include <scsi/scsi_host.h>
+ #include "seagate.h"
+ 
+ #include <scsi/scsi_ioctl.h>
+diff -purN linux-2.6.6/drivers/scsi.org/sg.c linux-2.6.6/drivers/scsi/sg.c
+--- linux-2.6.6/drivers/scsi.org/sg.c	2004-05-10 04:32:29.000000000 +0200
++++ linux-2.6.6/drivers/scsi/sg.c	2004-05-12 17:46:23.118129344 +0200
+@@ -60,7 +60,7 @@ static int sg_version_num = 30530;	/* 2 
+ 
+ #include <linux/blkdev.h>
+ #include "scsi.h"
+-#include "hosts.h"
++#include <scsi/scsi_host.h>
+ #include <scsi/scsi_driver.h>
+ #include <scsi/scsi_ioctl.h>
+ #include <scsi/sg.h>
+diff -purN linux-2.6.6/drivers/scsi.org/sgiwd93.c linux-2.6.6/drivers/scsi/sgiwd93.c
+--- linux-2.6.6/drivers/scsi.org/sgiwd93.c	2004-05-12 17:45:58.182920000 +0200
++++ linux-2.6.6/drivers/scsi/sgiwd93.c	2004-05-12 17:46:23.127127976 +0200
+@@ -31,7 +31,7 @@
+ #include <asm/io.h>
+ 
+ #include "scsi.h"
+-#include "hosts.h"
++#include <scsi/scsi_host.h>
+ #include "wd33c93.h"
+ #include "sgiwd93.h"
+ 
+diff -purN linux-2.6.6/drivers/scsi.org/sim710.c linux-2.6.6/drivers/scsi/sim710.c
+--- linux-2.6.6/drivers/scsi.org/sim710.c	2004-05-10 04:33:13.000000000 +0200
++++ linux-2.6.6/drivers/scsi/sim710.c	2004-05-12 17:46:23.136126608 +0200
+@@ -37,7 +37,7 @@
+ #include <linux/interrupt.h>
+ 
+ #include "scsi.h"
+-#include "hosts.h"
++#include <scsi/scsi_host.h>
+ #include "53c700.h"
+ 
+ 
+diff -purN linux-2.6.6/drivers/scsi.org/sr.c linux-2.6.6/drivers/scsi/sr.c
+--- linux-2.6.6/drivers/scsi.org/sr.c	2004-05-12 17:45:58.184919000 +0200
++++ linux-2.6.6/drivers/scsi/sr.c	2004-05-12 17:46:23.154123872 +0200
+@@ -47,7 +47,7 @@
+ #include <asm/uaccess.h>
+ 
+ #include "scsi.h"
+-#include "hosts.h"
++#include <scsi/scsi_host.h>
+ 
+ #include <scsi/scsi_driver.h>
+ #include <scsi/scsi_ioctl.h>	/* For the door lock/unlock commands */
+diff -purN linux-2.6.6/drivers/scsi.org/sr_ioctl.c linux-2.6.6/drivers/scsi/sr_ioctl.c
+--- linux-2.6.6/drivers/scsi.org/sr_ioctl.c	2004-05-10 04:32:52.000000000 +0200
++++ linux-2.6.6/drivers/scsi/sr_ioctl.c	2004-05-12 17:46:23.166122048 +0200
+@@ -11,7 +11,7 @@
+ #include <asm/uaccess.h>
+ 
+ #include "scsi.h"
+-#include "hosts.h"
++#include <scsi/scsi_host.h>
+ #include <scsi/scsi_ioctl.h>
+ 
+ #include "sr.h"
+diff -purN linux-2.6.6/drivers/scsi.org/sr_vendor.c linux-2.6.6/drivers/scsi/sr_vendor.c
+--- linux-2.6.6/drivers/scsi.org/sr_vendor.c	2004-05-10 04:32:29.000000000 +0200
++++ linux-2.6.6/drivers/scsi/sr_vendor.c	2004-05-12 17:46:23.174120832 +0200
+@@ -41,7 +41,7 @@
+ 
+ #include <linux/blkdev.h>
+ #include "scsi.h"
+-#include "hosts.h"
++#include <scsi/scsi_host.h>
+ #include <scsi/scsi_ioctl.h>
+ 
+ #include <linux/cdrom.h>
+diff -purN linux-2.6.6/drivers/scsi.org/st.c linux-2.6.6/drivers/scsi/st.c
+--- linux-2.6.6/drivers/scsi.org/st.c	2004-05-12 17:45:58.190918000 +0200
++++ linux-2.6.6/drivers/scsi/st.c	2004-05-12 17:46:23.242110496 +0200
+@@ -58,7 +58,7 @@ static char *verstr = "20040403";
+ 
+ 
+ #include "scsi.h"
+-#include "hosts.h"
++#include <scsi/scsi_host.h>
+ 
+ #include <scsi/scsi_driver.h>
+ #include <scsi/scsi_ioctl.h>
+diff -purN linux-2.6.6/drivers/scsi.org/sun3_scsi.c linux-2.6.6/drivers/scsi/sun3_scsi.c
+--- linux-2.6.6/drivers/scsi.org/sun3_scsi.c	2004-05-10 04:32:00.000000000 +0200
++++ linux-2.6.6/drivers/scsi/sun3_scsi.c	2004-05-12 17:46:23.304101072 +0200
+@@ -75,7 +75,7 @@
+ #define REAL_DMA
+ 
+ #include "scsi.h"
+-#include "hosts.h"
++#include <scsi/scsi_host.h>
+ #include "sun3_scsi.h"
+ #include "NCR5380.h"
+ 
+diff -purN linux-2.6.6/drivers/scsi.org/sun3_scsi_vme.c linux-2.6.6/drivers/scsi/sun3_scsi_vme.c
+--- linux-2.6.6/drivers/scsi.org/sun3_scsi_vme.c	2004-05-10 04:33:22.000000000 +0200
++++ linux-2.6.6/drivers/scsi/sun3_scsi_vme.c	2004-05-12 17:46:23.316099248 +0200
+@@ -41,7 +41,7 @@
+ #define REAL_DMA
+ 
+ #include "scsi.h"
+-#include "hosts.h"
++#include <scsi/scsi_host.h>
+ #include "sun3_scsi.h"
+ #include "NCR5380.h"
+ 
+diff -purN linux-2.6.6/drivers/scsi.org/sun3x_esp.c linux-2.6.6/drivers/scsi/sun3x_esp.c
+--- linux-2.6.6/drivers/scsi.org/sun3x_esp.c	2004-05-10 04:32:54.000000000 +0200
++++ linux-2.6.6/drivers/scsi/sun3x_esp.c	2004-05-12 17:46:23.326097728 +0200
+@@ -16,7 +16,7 @@
+ #include <linux/interrupt.h>
+ 
+ #include "scsi.h"
+-#include "hosts.h"
++#include <scsi/scsi_host.h>
+ #include "NCR53C9x.h"
+ 
+ #include <asm/sun3x.h>
+diff -purN linux-2.6.6/drivers/scsi.org/sym53c416.c linux-2.6.6/drivers/scsi/sym53c416.c
+--- linux-2.6.6/drivers/scsi.org/sym53c416.c	2004-05-10 04:32:01.000000000 +0200
++++ linux-2.6.6/drivers/scsi/sym53c416.c	2004-05-12 17:46:23.342095296 +0200
+@@ -43,7 +43,7 @@
+ #include <linux/blkdev.h>
+ #include <linux/isapnp.h>
+ #include "scsi.h"
+-#include "hosts.h"
++#include <scsi/scsi_host.h>
+ #include "sym53c416.h"
+ 
+ #define VERSION_STRING        "Version 1.0.0-ac"
+diff -purN linux-2.6.6/drivers/scsi.org/t128.c linux-2.6.6/drivers/scsi/t128.c
+--- linux-2.6.6/drivers/scsi.org/t128.c	2004-05-10 04:33:19.000000000 +0200
++++ linux-2.6.6/drivers/scsi/t128.c	2004-05-12 17:46:23.352093776 +0200
+@@ -118,7 +118,7 @@
+ #include <linux/delay.h>
+ 
+ #include "scsi.h"
+-#include "hosts.h"
++#include <scsi/scsi_host.h>
+ #include "t128.h"
+ #define AUTOPROBE_IRQ
+ #include "NCR5380.h"
+diff -purN linux-2.6.6/drivers/scsi.org/tmscsim.c linux-2.6.6/drivers/scsi/tmscsim.c
+--- linux-2.6.6/drivers/scsi.org/tmscsim.c	2004-05-10 04:33:22.000000000 +0200
++++ linux-2.6.6/drivers/scsi/tmscsim.c	2004-05-12 17:46:23.401086328 +0200
+@@ -235,7 +235,7 @@
+ #include <linux/interrupt.h>
+ 
+ #include "scsi.h"
+-#include "hosts.h"
++#include <scsi/scsi_host.h>
+ #include <linux/stat.h>
+ #include <scsi/scsicam.h>
+ 
+diff -purN linux-2.6.6/drivers/scsi.org/u14-34f.c linux-2.6.6/drivers/scsi/u14-34f.c
+--- linux-2.6.6/drivers/scsi.org/u14-34f.c	2004-05-10 04:32:27.000000000 +0200
++++ linux-2.6.6/drivers/scsi/u14-34f.c	2004-05-12 17:46:23.435081160 +0200
+@@ -423,7 +423,7 @@
+ #include <linux/spinlock.h>
+ #include <scsi/scsicam.h>
+ #include "scsi.h"
+-#include "hosts.h"
++#include <scsi/scsi_host.h>
+ #include <asm/dma.h>
+ #include <asm/irq.h>
+ 
+diff -purN linux-2.6.6/drivers/scsi.org/ultrastor.c linux-2.6.6/drivers/scsi/ultrastor.c
+--- linux-2.6.6/drivers/scsi.org/ultrastor.c	2004-05-10 04:32:37.000000000 +0200
++++ linux-2.6.6/drivers/scsi/ultrastor.c	2004-05-12 17:46:23.457077816 +0200
+@@ -145,7 +145,7 @@
+ 
+ #define ULTRASTOR_PRIVATE	/* Get the private stuff from ultrastor.h */
+ #include "scsi.h"
+-#include "hosts.h"
++#include <scsi/scsi_host.h>
+ #include "ultrastor.h"
+ 
+ #define FALSE 0
+diff -purN linux-2.6.6/drivers/scsi.org/wd33c93.c linux-2.6.6/drivers/scsi/wd33c93.c
+--- linux-2.6.6/drivers/scsi.org/wd33c93.c	2004-05-10 04:32:53.000000000 +0200
++++ linux-2.6.6/drivers/scsi/wd33c93.c	2004-05-12 17:46:23.491072648 +0200
+@@ -83,7 +83,7 @@
+ #include <asm/irq.h>
+ 
+ #include "scsi.h"
+-#include "hosts.h"
++#include <scsi/scsi_host.h>
+ 
+ #include "wd33c93.h"
+ 
+diff -purN linux-2.6.6/drivers/scsi.org/wd7000.c linux-2.6.6/drivers/scsi/wd7000.c
+--- linux-2.6.6/drivers/scsi.org/wd7000.c	2004-05-10 04:33:21.000000000 +0200
++++ linux-2.6.6/drivers/scsi/wd7000.c	2004-05-12 17:46:23.521068088 +0200
+@@ -183,7 +183,7 @@
+ #include <asm/io.h>
+ 
+ #include "scsi.h"
+-#include "hosts.h"
++#include <scsi/scsi_host.h>
+ #include <scsi/scsicam.h>
+ 
+ 
+diff -purN linux-2.6.6/drivers/scsi.org/zalon.c linux-2.6.6/drivers/scsi/zalon.c
+--- linux-2.6.6/drivers/scsi.org/zalon.c	2004-05-10 04:32:53.000000000 +0200
++++ linux-2.6.6/drivers/scsi/zalon.c	2004-05-12 17:46:23.528067024 +0200
+@@ -24,7 +24,7 @@
+ 
+ #include "../parisc/gsc.h"
+ #include "scsi.h"
+-#include "hosts.h"
++#include <scsi/scsi_host.h>
+ 
+ #include "ncr53c8xx.h"
+ 
