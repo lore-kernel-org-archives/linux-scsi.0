@@ -1,128 +1,77 @@
-From: Steven Dake <sdake@mvista.com>
+From: Doug Ledford <dledford@redhat.com>
 Subject: Re: [PATCH] SCSI and FibreChannel Hotswap for linux 2.5.44-bk2
-Date: Wed, 30 Oct 2002 14:09:08 -0700
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <3DC04A74.9020701@mvista.com>
-References: <3DC02AF7.6020209@mvista.com> <20021030201834.A4815@infradead.org>
+Date: Wed, 30 Oct 2002 16:17:06 -0500
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <20021030211706.GA23217@redhat.com>
+References: <1036007128.5141.119.camel@irongate.swansea.linux.org.uk> <Pine.LNX.4.44.0210301127170.7614-100000@home.transmeta.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
-To: Christoph Hellwig <hch@infradead.org>
-Cc: torvalds@transmeta.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.44.0210301127170.7614-100000@home.transmeta.com>
 List-Id: linux-scsi@vger.kernel.org
+To: Linus Torvalds <torvalds@transmeta.com>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Steven Dake <sdake@mvista.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
 
-Christoph,
+On Wed, Oct 30, 2002 at 11:29:18AM -0800, Linus Torvalds wrote:
+> 
+> On 30 Oct 2002, Alan Cox wrote:
+> >
+> > On Wed, 2002-10-30 at 18:54, Steven Dake wrote:
+> > > This patch has been reviewed by Alan Cox, Greg KH, Christoph Hellwig, 
+> > > Patrick Mansfield, Rob Landly, Jeff Garzik, Scott Murray, James 
+> > 
+> > Glanced at briefly once, not reviewed.
+> 
+> I'm going to leave the merging of this to the scsi people, in particular 
+> James and Doug. My personal feeling right now is that it's not going in 
+> the feature freeze, but as a driver thing I'm also convinced that 
+> especially if vendors need it, they'll add it anyway - and drivers tend to 
+> be less "frozen" than core code anyway (by necessity: we've always had to 
+> accept new drivers even in stable series).
 
-I'll seperate the patches and fix the things you mention.  I'm still not 
-entirely pleased with the locking and Patrick Mansfield has suggested a 
-better method for traversing the host_queue structure that I may consider.
+My personal view is that it might be a candidate for inclusion in the 
+future, but not in the current version.  Several valid points have been 
+raised by other people, so I'll not rehash those.  Some of my own points 
+include the fact that I detest the locking scheme this thing uses.
 
-Regarding WWN translation in userspace, there are several reasons why 
-this apporach is inferior:
+If you look at scsi_hotswap_insert_by_scsi_id() you see this:
 
-1.  When a device is "inserted" into the system and isn't present, there 
-is no way to map WWNs to target ids.  Processing in userspace would work 
-for removals, but what about insertions?  Sure the driver could export 
-its list of known WWNs (the firmware maintains a list of active WWNs on 
-the bus and their associated scsi target, even if the SCSI subsystem 
-doesn't know the device is there), but read #2 below:
+down_interruptible (&scsi_host->host_queue_sema)
+  walk scsi_host->host_queue looking for a device with same id
+up (&scsi_host->host_queue_sema)
+did we find a device?  If so, return, else call scan_scsis()
 
-2.  There is no simple way to know what WWN maps to which SCSI ID from 
-user space.
+The problem is that scan_scsis() is where we would actually add the device 
+to the scsi_host->host_queue and it's not inside the lock, so putting the 
+check inside of a lock is a total waste of time.  To prevent against races 
+on insertion, you would need to, in the case that no device was present, 
+add a device to the host_queue *while still holding the lock* in order to 
+keep a second invocation of insert_by_scsi_id() from attempting to add the 
+same device twice.  Specifically, I'm thinking that a fiber channel 
+controller that has a device flutter on and off the fiber bus can easily 
+hit this problem.  Imagine if you will:
 
-Typical FibreChannel drivers maintain this information, but it isn't 
-exported to user space in any useable way.  I suppose a list of 
-device->WWN maps could be present in /proc or driverfs but that adds 
-alot of string processing from user space and requires a standard format 
-between drivers to be generically usable.  Further, what if two drivers 
-want to keep track of their device to WWN map?  They must each register 
-with some function that exports the list to userspace.  Why go through 
-all the trouble when the driver can just do the work?
+fiber loop notices new device come up
+  driver calls insert_by_scsi_id to add drive
+    insert calls scan_scsis() to scan device
+before scan completes drive flutters back off the fiber
+  driver calls remove_by_scsi_id
+    remove code doesn't find a valid device because original scan_scsis 
+    hasn't added it yet
+drive comes back on fiber
+  driver calls insert_by_scsi_id
+    the check for drive present shows us clear because original scan_scsis
+    hasn't added drive yet, so we call scan_scsis() again
+we are now trying to scan drive in two different threads of execution, no 
+locking against double addition of the same device, boom.
 
-3.  Hotswap operations should be fast (10 msec or so) and userspace 
-processing is slow.
-Compare two operations one using the defined hotswap mapping interface 
-and one processing a file in proc
-processing in userspace:
-while (not_eol) {
-read syscall
-convert string WWNS to 64 bit number
-compare WWNS
-if matched, convert string scsi target information (host, channel, 
-target, lun) into 32 bit numbers
-    issue hotswap command using host channel target lun information
-}
+Nope, it's not there yet.
 
-processing in kernel:
-call wwn to scsi target converter in driver
-in driver, each WWN is compared against wwn in WWN list
-if match found, scsi target information returned
 
-Now, assume the above with 32 or more devices.  That is alot of syscalls 
-using userspace methodology (and slow).  Let the kernel do the 
-conversion directly.  It has direct access to the data.  Another choice 
-would be to put a 64 bit field for wwn's into the scsi device structure. 
- Then the scsi device list could be traveresed to find the correct 
-target to hotswap.  Would this be preferrrable to the interface 
-currently implemented?
-
-4. Having to map WWNs to scsi IDs in userspace is harder to use
-its alot easier to remove a device to echo "wwn" > 
-/sys/bus/scsi/hotswap_comamnds/remove_by_fc_wwn_wildcard
-
-compare that with writing an application to process /proc entries (or 
-something similiar).
-
-other comments below:
-
-Christoph Hellwig wrote:
-
->Umm, stop.
->
->Scsi midlayer patches don't go directly to Linus, but through the linux-scsi
->list and James into the linux-scsi bk repository first.
->
->The patch still has a bunch of problem not solved, and contains two things
->that should be independant patches.
->
->The first patch should be the host_queue locking you added, this one currently
->has the following issues:
->
->* you call spin_lock on a semaphore once!
->  
->
-sloppy I'll fix.
-
->* you take semaphores inside spinlocks and with interrupts disabled
->
-good point I think I need to look at this patch more.
-
->* the coding style needs some imnprovements (you adds lots of empty lines,
->  and there's a space before the opening brakes of function calls).
->
->the actual driver still has other issues:
->
->* you still duplicated lots of code from scsi.c
->
-I'll remove the code from scsi.c and have it call the hotswap interfaces 
-directly.
-
->* your header is still in include/linux instead of include/scsi,
->  but imho it should be merged into scsi.h anyway
->
-I'll merge into scsi.h.
-
->* you still havent explain why wwn -> host id translation can't
->  be done in userspace
->
-see above
-
->* you still have useage information in the driverfs files.
->
->  
->
-i'll remove.
-
-Thanks for the great comments.  
--steve
+-- 
+  Doug Ledford <dledford@redhat.com>     919-754-3700 x44233
+         Red Hat, Inc. 
+         1801 Varsity Dr.
+         Raleigh, NC 27606
+  
