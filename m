@@ -1,139 +1,87 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: Host drivers and conversion of SCSI to the driver model
-Date: Mon, 23 Jun 2003 10:57:22 -0400 (EDT)
+From: Patrick Mansfield <patmans@us.ibm.com>
+Subject: Re: REPORT LUNS
+Date: Mon, 23 Jun 2003 09:49:49 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44L0.0306231045060.1043-100000@ida.rowland.org>
-References: <20030620210725.GB18449@beaverton.ibm.com>
+Message-ID: <20030623094949.A7705@beaverton.ibm.com>
+References: <3EE9DA00.A429F83F@fujitsu-siemens.com> <20030613112222.A23260@beaverton.ibm.com> <3EED69D6.BDB411F7@fujitsu-siemens.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ida.rowland.org ([192.131.102.52]:3332 "HELO ida.rowland.org")
-	by vger.kernel.org with SMTP id S266060AbTFWOnQ (ORCPT
+Received: from e5.ny.us.ibm.com ([32.97.182.105]:3308 "EHLO e5.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S265247AbTFWQjr (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 23 Jun 2003 10:43:16 -0400
-In-Reply-To: <20030620210725.GB18449@beaverton.ibm.com>
+	Mon, 23 Jun 2003 12:39:47 -0400
+Content-Disposition: inline
+In-Reply-To: <3EED69D6.BDB411F7@fujitsu-siemens.com>; from josef.moellers@fujitsu-siemens.com on Mon, Jun 16, 2003 at 08:55:18AM +0200
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Anderson <andmike@us.ibm.com>, James Bottomley <James.Bottomley@steeleye.com>
-Cc: SCSI development list <linux-scsi@vger.kernel.org>
+To: =?iso-8859-1?Q?Josef_M=F6llers?= <josef.moellers@fujitsu-siemens.com>
+Cc: linux-scsi@vger.kernel.org
 
-On Fri, 20 Jun 2003, Mike Anderson wrote:
+On Mon, Jun 16, 2003 at 08:55:18AM +0200, Josef M=F6llers wrote:
+> Patrick Mansfield wrote:
+> >=20
+> > On Fri, Jun 13, 2003 at 04:04:48PM +0200, Josef M=F6llers wrote:
+> > > Hi,
+> > >
+> > > Wile trying to figure out how to ignore non-existing LUNs on RAID
+> > > devices, I have fallen across an error in scsilun_to_int() where =
+it
+> > > doesn't behave as the comment suggests and a problematic piece of=
+ code
+> > > in scsi_report_lun_scan().
+> > >
+> > > Patch is included.
+> >=20
+> > If we clear the upper bits (address method, per SAM-3), someone has=
+ to
+> > eventually set them again, and this is not handled today in linux s=
+csi
+> > core.
+>=20
+> The comment said that the upper two bits were ignored which they were
+> not in the original code, so, apart from fixing the shifts, I also ad=
+ded
+> the mask to keep the code in sync with the comment. I haven't yet
+> followed the use of the value thus created.
 
-> Alan Stern [stern@rowland.harvard.edu] wrote:
-> > 
-> > Mike:
-> > 
-> > What does the future for this progression look like?  Will there be some
-> > standard place under /sys/class/scsi??? where a host driver like
-> > usb-storage can register its class device?
-> 
-> Did you need your own class device or can you use the shost_attrs
-> capability that James added?
+Ignored meaning "does nothing with it", when we should probably do
+something - proper conversion, an error or warning output. The current
+code might work (with high bits set), if we did not exceed the
+host->max_lun. We might need an 8 byte lun everywhere to make it work
+right for all cases.
 
-The shost_attrs stuff looks fine, expect for two points.
+Can you give more details of the problem you are seeing, and software
+(adapter driver) and hardware in use?
 
-	1. The scsi_sysfs_modify_shost_attribute() and 
-scsi_sysfs_modify_sdev_attribute() functions appear to be written a bit 
-carelessly.  Below is a patch that: permits modification of the first 
-attribute in the list, allocates a new list with entries having the 
-correct size, copies the correct number of entries from the old list, and 
-wraps excessively long source lines.
+I did not notice your shift changes - I don't see how they work or what
+it fixes.
 
-	2. More importantly, the current organization of the code has a
-serious problem.  The SCSI core does not modify the host driver when the
-reference count for either shost->class_dev or shost->host_gendev drops to
-0.  Without knowing that, it is unsafe for the driver ever to deallocate a
-private host data structure, since a user process may continue to hold a 
-reference to an open attribute file indefinitely, even after 
-scsi_unregister() has returned.
+If scsi_lun was: 0x1 0x2 0x3 0x4 0 0 0 0
 
-Alan Stern
+Current code:
 
+=46irst loop in scsilun_to_int, with i =3D 0:
 
-===== scsi_sysfs.c 1.12 vs edited =====
---- 1.12/drivers/scsi/scsi_sysfs.c	Mon Jun  9 13:37:14 2003
-+++ edited/drivers/scsi/scsi_sysfs.c	Mon Jun 23 10:43:49 2003
-@@ -388,30 +388,36 @@
-  *
-  * returns zero if successful or error if not
-  **/
--int scsi_sysfs_modify_shost_attribute(struct class_device_attribute ***class_attrs,
--				      struct class_device_attribute *attr)
-+int scsi_sysfs_modify_shost_attribute(
-+			struct class_device_attribute ***class_attrs,
-+			struct class_device_attribute *attr)
- {
--	int modify = 0;
-+	int modify = -1;
- 	int num_attrs;
- 
- 	if(*class_attrs == NULL)
- 		*class_attrs = scsi_sysfs_shost_attrs;
- 
- 	for(num_attrs=0; (*class_attrs)[num_attrs] != NULL; num_attrs++)
--		if(strcmp((*class_attrs)[num_attrs]->attr.name, attr->attr.name) == 0)
-+		if(strcmp((*class_attrs)[num_attrs]->attr.name,
-+				attr->attr.name) == 0)
- 			modify = num_attrs;
- 
--	if(*class_attrs == scsi_sysfs_shost_attrs || !modify) {
-+	if(*class_attrs == scsi_sysfs_shost_attrs || modify < 0) {
- 		/* note: need space for null at the end as well */
--		struct class_device_attribute **tmp_attrs = kmalloc(sizeof(struct class_device_attribute)*(num_attrs + (modify ? 1 : 2)), GFP_KERNEL);
-+		struct class_device_attribute **tmp_attrs =
-+				kmalloc(sizeof(*tmp_attrs) *
-+					  (num_attrs + (modify >= 0 ? 1 : 2)),
-+					GFP_KERNEL);
- 		if(tmp_attrs == NULL)
- 			return -ENOMEM;
--		memcpy(tmp_attrs, *class_attrs, sizeof(struct class_device_attribute)*num_attrs);
-+		memcpy(tmp_attrs, *class_attrs, sizeof(*tmp_attrs) *
-+				(num_attrs + 1));
- 		if(*class_attrs != scsi_sysfs_shost_attrs)
- 			kfree(*class_attrs);
- 		*class_attrs = tmp_attrs;
- 	}
--	if(modify) {
-+	if(modify >= 0) {
- 		/* spare the caller from having to copy things it's
- 		 * not interested in */
- 		struct class_device_attribute *old_attr =
-@@ -444,27 +450,32 @@
- int scsi_sysfs_modify_sdev_attribute(struct device_attribute ***dev_attrs,
- 				     struct device_attribute *attr)
- {
--	int modify = 0;
-+	int modify = -1;
- 	int num_attrs;
- 
- 	if(*dev_attrs == NULL)
- 		*dev_attrs = scsi_sysfs_sdev_attrs;
- 
- 	for(num_attrs=0; (*dev_attrs)[num_attrs] != NULL; num_attrs++)
--		if(strcmp((*dev_attrs)[num_attrs]->attr.name, attr->attr.name) == 0)
-+		if(strcmp((*dev_attrs)[num_attrs]->attr.name,
-+				attr->attr.name) == 0)
- 			modify = num_attrs;
- 
--	if(*dev_attrs == scsi_sysfs_sdev_attrs || !modify) {
-+	if(*dev_attrs == scsi_sysfs_sdev_attrs || modify < 0) {
- 		/* note: need space for null at the end as well */
--		struct device_attribute **tmp_attrs = kmalloc(sizeof(struct device_attribute)*(num_attrs + (modify ? 1 : 2)), GFP_KERNEL);
-+		struct device_attribute **tmp_attrs =
-+				kmalloc(sizeof(*tmp_attrs) *
-+					  (num_attrs + (modify >= 0 ? 1 : 2)),
-+					GFP_KERNEL);
- 		if(tmp_attrs == NULL)
- 			return -ENOMEM;
--		memcpy(tmp_attrs, *dev_attrs, sizeof(struct device_attribute)*num_attrs);
-+		memcpy(tmp_attrs, *dev_attrs, sizeof(*tmp_attrs) *
-+				(num_attrs + 1));
- 		if(*dev_attrs != scsi_sysfs_sdev_attrs)
- 			kfree(*dev_attrs);
- 		*dev_attrs = tmp_attrs;
- 	}
--	if(modify) {
-+	if(modify >= 0) {
- 		/* spare the caller from having to copy things it's
- 		 * not interested in */
- 		struct device_attribute *old_attr =
+	lun =3D 0 | ( (0x1 << 8 | 0x2) << 0) =3D 0x0102
 
+Second loop i =3D 2:
+
+	lun =3D 0x0102 | ( (0x3 << 8 | 0x4) << 16) =3D 0x03040102
+
+Your patch would give:
+
+=46irst loop i =3D 0:
+
+	lun =3D 0 | ((0x1 & 0x3f) << 1) | (0x2 << 0) =3D 0x02
+
+Second loop i =3D 2:
+
+	lun =3D 0x02 | ( ((0x3 & 0x3f) << 17) | (0x4 << 16) =3D 0x00060002
+
+-- Patrick Mansfield
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
