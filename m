@@ -1,48 +1,44 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] tmscsim: init / exit cleanup
-Date: Thu, 3 Jun 2004 14:38:35 +0100
+From: Pat LaVarre <p.lavarre@ieee.org>
+Subject: Re: CDC_RAM for lk 2.4, PATCH proposed
+Date: 03 Jun 2004 12:30:20 -0600
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040603133835.GA16378@infradead.org>
-References: <20040523103729.GA23804@infradead.org> <Pine.LNX.4.44.0405312248150.3168-200000@poirot.grange>
+Message-ID: <1086287419.11685.4.camel@patibmrh9>
+References: <20040520080622.GF1952@suse.de><1085090500.3822.20.camel@patibm
+	rh9>  <20040521065312.GK1952@suse.de><1085153286.6103.24.camel@patibmrh9>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [213.146.154.40] ([213.146.154.40]:7313 "EHLO
-	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S263616AbUFCNii (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 3 Jun 2004 09:38:38 -0400
-Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.44.0405312248150.3168-200000@poirot.grange>
+Received: from email-out2.iomega.com ([147.178.1.83]:18057 "EHLO
+	email.iomega.com") by vger.kernel.org with ESMTP id S263614AbUFCSa2
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 3 Jun 2004 14:30:28 -0400
+In-Reply-To: <1085153286.6103.24.camel@patibmrh9>
 List-Id: linux-scsi@vger.kernel.org
-To: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
-Cc: Christoph Hellwig <hch@infradead.org>, James Bottomley <James.Bottomley@steeleye.com>, Kurt Garloff <garloff@suse.de>, Linux SCSI list <linux-scsi@vger.kernel.org>
+To: Jens Axboe <axboe@suse.de>
+Cc: linux-scsi@vger.kernel.org, John McKell <McKellj@iomega.com>
 
-On Mon, May 31, 2004 at 11:13:51PM +0200, Guennadi Liakhovetski wrote:
-> On Sun, 23 May 2004, Christoph Hellwig wrote:
-> 
-> > these leaks.  Maybe also  merge dc390_init and dc390_init_one?
-> >
-> > Similarly I think DC390_release should be merged into dc390_remove_one.
-> 
-> Attached. Also fixed some __init / __devinit and __exit / __devexit
-> attributes. Although, would be good to have something like
-> 
-> #ifdef CONFIG_HOTPLUG_PCI
-> #define __pcidevinit
-> #define __pcidevinitdata
-> #define __pcidevexit
-> #define __pcidevexitdata
-> #else
-> #define __pcidevinit __init
-> #define __pcidevinitdata __initdata
-> #define __pcidevexit __exit
-> #define __pcidevexitdata __exitdata
-> #endif
-> 
-> I don't think there are any pcmcia / usb / ieee1394 / ... tmscsim adapters
-> out there?
+Jens A:
 
-This has been though out a bit but not considered worthwile. And to actually
-work it would have to be for all the kernel because you could get problems
-over the module boundary otherwise.
+> > http://marc.theaimsgroup.com/?l=linux-scsi&m=108509426227562
+> > > diff -Nurp linux-2.4.27-pre3/... linux-2.4.27-pre3-pel/...
+> > 
+> > [snip]
+> > 
+> > Patch looks fine to me,
+> > I'll send it to Marcelo for inclusion. Thanks!
+> 
+> Wonderful news, thank you both, consequently now with more hope I look
+> forward to writing kernel patches exclusively for 2.6.
+
+Today 2004-6-3 I see no mention of the 5-21 CDC_RAM for lk 2.4 patch
+near such strings as "Marcelo" and "Axboe" in:
+
+http://www.kernel.org/pub/linux/kernel/v2.4/testing/patch-2.4.27.log
+
+I will think go on naively believing that is the right place to poll
+until someone tells me different (or we all start working 2.4.28).
+
+Pat LaVarre
+
 
