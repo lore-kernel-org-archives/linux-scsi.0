@@ -1,42 +1,42 @@
-From: Jamie Wellnitz <Jamie.Wellnitz@emulex.com>
-Subject: Re: [ANNOUNCE] QLogic qla2xxx driver update available (v8.00.00b4 ).
-Date: Fri, 18 Jul 2003 10:03:42 -0400
+From: James Bottomley <James.Bottomley@steeleye.com>
+Subject: Re: [PATCH] as i/o hang with aacraid driver 2.6.0-test1
+Date: 18 Jul 2003 09:16:14 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030718140342.GA32615@ma.emulex.com>
-References: <1058536002.5950.3.camel@laptop.fenrus.com>
+Message-ID: <1058537776.1863.6.camel@mulgrave>
+References: <20030716132036.GB833@suse.de>	<1058364455.1856.28.camel@mulgrave>	<20030716
+	170456.GK833@suse.de>	<20030717015756.135a3f5a.akpm@osdl.org>	<2003071708595
+	2.GX833@suse.de>	<3F1672D9.7070309@cyberone.com.au>	<20030717102926.GE833@su
+	se.de>	<3F167F98.60006@cyberone.com.au>	<20030717105641.GF833@suse.de>	<3F16
+	83F5.4030107@cyberone.com.au>	<20030717111059.GI833@suse.de>	<3F168846.90902
+	@cyberone.com.au>	<1058474814.4638.11.camel@markh1.pdx.osdl.net>	<1058481553
+	.19508.5.camel@markh1.pdx.osdl.net>	<1058485621.7424.30.camel@dell_ss5.pdx.o
+	sdl.net>	<20030717170055.5dbe20c1.akpm@osdl.org>	<3F17821A.307@cyberone.com.
+	au> <20030717222534.0295c44e.akpm@osdl.org>
+	<3F1785D9.5000905@cyberone.com.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gn78-101.ma.emulex.com ([138.239.78.101]:35505 "EHLO
-	wintermute.ma.emulex.com") by vger.kernel.org with ESMTP
-	id S271724AbTGRNtm (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 18 Jul 2003 09:49:42 -0400
-Content-Disposition: inline
-In-Reply-To: <1058536002.5950.3.camel@laptop.fenrus.com>
+Received: from nat9.steeleye.com ([65.114.3.137]:56839 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S271754AbTGROBg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 18 Jul 2003 10:01:36 -0400
+In-Reply-To: <3F1785D9.5000905@cyberone.com.au>
 List-Id: linux-scsi@vger.kernel.org
-To: Arjan van de Ven <arjanv@redhat.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Andrew Vasquez <andrew.vasquez@qlogic.com>, Linux-Kernel <linux-kernel@vger.kernel.org>, Linux-SCSI <linux-scsi@vger.kernel.org>
+To: Nick Piggin <piggin@cyberone.com.au>
+Cc: Andrew Morton <akpm@osdl.org>, daniel@osdl.org, markh@osdl.org, Jens Axboe <axboe@suse.de>, cliffw@osdl.org, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Fri, Jul 18, 2003 at 09:46:42AM -0400, Arjan van de Ven wrote:
-> On Fri, 2003-07-18 at 13:23, Christoph Hellwig wrote:
-> >  
-> >  - qla2x00_intr_handler should use spin_lock, not spin_lock_irqsave
-> 
-> possibly correct; on x86 irq handlers run with interrupts enabled for
-> example; just too dangerous to do this esp if error recovery and similar
-> code calls this from process context as well (iirc a few places do)
+On Fri, 2003-07-18 at 00:30, Nick Piggin wrote:
+> No, I think Mark's last patch with Daniel's and my suggestions
+> should be fine. It fixes their problems. Its unfortunate that
+> this bug never got caught until now but it was inevitable to be
+> one or two there.
 
-Is this true?  Do irq handlers _always_ run with interrupts enabled?
-I thought the driver could control this behavior with the SA_INTERRUPT
-flag.
+Could you roll up all your AS changes and send them to this list as a
+single patch so I can test them out?
 
-This code in handle_IRQ_event seems to turn interrupts back on
-(apparently someone has turned them off), but only if SA_INTERRUPT is
-not set.
-
-   if (!(action->flags & SA_INTERRUPT))
-                 __sti();
- 
 Thanks,
-Jamie Wellnitz
-Jamie.Wellnitz@emulex.com
+
+James
+
+
