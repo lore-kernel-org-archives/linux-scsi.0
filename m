@@ -1,45 +1,104 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Core scsi layer crashes in 2.6.8.1
-Date: Tue, 28 Sep 2004 21:03:07 +0100
+From: "Bagalkote, Sreenivas" <sreenib@lsil.com>
+Subject: [PATCH]: megaraid 2.20.4: Fixes a data corruption bug
+Date: Tue, 28 Sep 2004 21:31:02 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1096401785.13936.5.camel@localhost.localdomain>
+Message-ID: <0E3FA95632D6D047BA649F95DAB60E570230C969@exa-atlanta>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="iso-8859-1"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from clock-tower.bc.nu ([81.2.110.250]:5257 "EHLO
-	localhost.localdomain") by vger.kernel.org with ESMTP
-	id S268122AbUI2ArE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 28 Sep 2004 20:47:04 -0400
+Received: from mail0.lsil.com ([147.145.40.20]:8606 "EHLO mail0.lsil.com")
+	by vger.kernel.org with ESMTP id S268142AbUI2Biz (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 28 Sep 2004 21:38:55 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
+To: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Cc: bunk@fs.tum.de, "Mukker, Atul" <Atulm@lsil.com>, 'Andrew Morton' <akpm@osdl.org>, James.Bottomley@SteelEye.com, "Ju, Seokmann" <sju@lsil.com>, "Doelfel, Hardy" <hdoelfel@lsil.com>
 
-I've been doing some stress testing for Fedora Core 3 and lets say the
-SCSI layer came apart under stress. 
+Hello All,
 
-First problem was a device with 256 byte sector sizes. When it probes I
-get a chain of errors. If I then try and mount it then it hangs the
-mount forever. If you remove the USB scsi device to try and unjam it you
-get errors logged about Invalid State 256 in USB reset and it doesn't
-recover.
+Change Log:
 
-Second problem is with the scsi handling logic for errors. If you rmmod
-a scsi driver while it is error handling you get a chain of errors
-starting with
+Fixes a data corruption issue. Because of a typo in the driver, IO packets
+were wrongly shared by the IOCTL path. This caused the whole IO command
+to be replaced by an incoming IOCTL command.
 
-	Illegal transition Cancel->Offline
-	Badness is scsi_device_set_state
-	path:
-	scsi_device_set_state
-	scsi_unjam_host
-	scsi_error_handler
+This patch (generated against 2.6.9-rc2) is inlined below.
 
-This is followed by a series of further errors including kobject errors
-and oopses. Then the machine dies.
+Sreenivas
 
-The set up is fairly simple. Its a a disk and two scsi cd multichangers
-configured so that I can also badly terminate them. In that situation
-identify works but other commands tend to fail which allows good error
-stressing.
-
-
+---
+diff -Naur linux-2.6.9-rc2-mrbug/Documentation/scsi/ChangeLog.megaraid
+linux-2.6.9-rc2-fixed/Documentation/scsi/ChangeLog.megaraid
+--- linux-2.6.9-rc2-mrbug/Documentation/scsi/ChangeLog.megaraid	2004-09-28
+17:31:10.000000000 -0400
++++ linux-2.6.9-rc2-fixed/Documentation/scsi/ChangeLog.megaraid	2004-09-28
+17:43:50.000000000 -0400
+@@ -1,3 +1,11 @@
++Release Date	: Mon Sep 27 22:15:07 EDT 2004 - Atul Mukker
+<atulm@lsil.com>
++Current Version	: 2.20.4.0 (scsi module), 2.20.2.0 (cmm module)
++Older Version	: 2.20.3.1 (scsi module), 2.20.2.0 (cmm module)
++
++i.	Fix data corruption. Because of a typo in the driver, the IO packets
++	were wrongly shared by the ioctl path. This causes a whole IO
+command
++	to be replaced by an incoming ioctl command.
++
+ Release Date	: Tue Aug 24 09:43:35 EDT 2004 - Atul Mukker
+<atulm@lsil.com>
+ Current Version	: 2.20.3.1 (scsi module), 2.20.2.0 (cmm module)
+ Older Version	: 2.20.3.0 (scsi module), 2.20.2.0 (cmm module)
+diff -Naur linux-2.6.9-rc2-mrbug/drivers/scsi/megaraid/megaraid_mbox.c
+linux-2.6.9-rc2-fixed/drivers/scsi/megaraid/megaraid_mbox.c
+--- linux-2.6.9-rc2-mrbug/drivers/scsi/megaraid/megaraid_mbox.c	2004-09-28
+17:31:33.000000000 -0400
++++ linux-2.6.9-rc2-fixed/drivers/scsi/megaraid/megaraid_mbox.c	2004-09-28
+17:43:50.000000000 -0400
+@@ -10,7 +10,7 @@
+  *	   2 of the License, or (at your option) any later version.
+  *
+  * FILE		: megaraid_mbox.c
+- * Version	: v2.20.3.1 (August 24 2004)
++ * Version	: v2.20.4 (September 27 2004)
+  *
+  * Authors:
+  * 	Atul Mukker		<Atul.Mukker@lsil.com>
+@@ -197,7 +197,7 @@
+  * ### global data ###
+  */
+ static uint8_t megaraid_mbox_version[8] =
+-	{ 0x02, 0x20, 0x02, 0x00, 7, 22, 20, 4 };
++	{ 0x02, 0x20, 0x04, 0x00, 9, 27, 20, 4 };
+ 
+ 
+ /*
+@@ -3562,7 +3562,7 @@
+ 	for (i = 0; i < MBOX_MAX_USER_CMDS; i++) {
+ 
+ 		scb			= adapter->uscb_list + i;
+-		ccb			= raid_dev->ccb_list + i;
++		ccb			= raid_dev->uccb_list + i;
+ 
+ 		scb->ccb		= (caddr_t)ccb;
+ 		ccb->mbox64		= raid_dev->umbox64 + i;
+diff -Naur linux-2.6.9-rc2-mrbug/drivers/scsi/megaraid/megaraid_mbox.h
+linux-2.6.9-rc2-fixed/drivers/scsi/megaraid/megaraid_mbox.h
+--- linux-2.6.9-rc2-mrbug/drivers/scsi/megaraid/megaraid_mbox.h	2004-09-28
+17:31:33.000000000 -0400
++++ linux-2.6.9-rc2-fixed/drivers/scsi/megaraid/megaraid_mbox.h	2004-09-28
+17:43:50.000000000 -0400
+@@ -21,8 +21,8 @@
+ #include "megaraid_ioctl.h"
+ 
+ 
+-#define MEGARAID_VERSION	"2.20.3.1"
+-#define MEGARAID_EXT_VERSION	"(Release Date: Tue Aug 24 09:43:35 EDT
+2004)"
++#define MEGARAID_VERSION	"2.20.4.0"
++#define MEGARAID_EXT_VERSION	"(Release Date: Mon Sep 27 22:15:07 EDT
+2004)"
+ 
+ 
+ /*
+---
