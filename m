@@ -1,82 +1,36 @@
-From: Mike Anderson <andmike@us.ibm.com>
+From: James Bottomley <James.Bottomley@steeleye.com>
 Subject: Re: [PATCH] scsi host cleanup 3/3 (driver changes)
-Date: Thu, 10 Oct 2002 09:46:33 -0700
+Date: Thu, 10 Oct 2002 09:59:12 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20021010164633.GA1348@beaverton.ibm.com>
-References: <20021010090157.A990@zuul.cca.cpqcorp.net>
+Message-ID: <200210101659.g9AGxCA02928@localhost.localdomain>
+References: <andmike@us.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20021010090157.A990@zuul.cca.cpqcorp.net>
+Received: (from root@localhost)
+	by pogo.mtv1.steeleye.com (8.9.3/8.9.3) id JAA07215
+	for <linux-scsi@vger.kernel.org>; Thu, 10 Oct 2002 09:59:14 -0700
+Received: from localhost.localdomain (vpn-233.mtv1.steeleye.com [172.16.1.233])
+	by pogo.mtv1.steeleye.com (8.9.3/8.9.3) with ESMTP id JAA07126
+	for <linux-scsi@vger.kernel.org>; Thu, 10 Oct 2002 09:59:12 -0700
+Received: from mulgrave (jejb@localhost)
+	by localhost.localdomain (8.11.6/linuxconf) with ESMTP id g9AGxCA02928
+	for <linux-scsi@vger.kernel.org>; Thu, 10 Oct 2002 09:59:12 -0700
+In-Reply-To: Message from Mike Anderson <andmike@us.ibm.com>
+   of "Thu, 10 Oct 2002 09:46:33 PDT." <20021010164633.GA1348@beaverton.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Stephen Cameron <steve.cameron@hp.com>
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-Stephen,
-	You where most likely hitting the sg might sleep problem. I
-	posted a patch to this list and I believe that the workaround is
-	in 2.5.41.
+I (finally) got around to looking at the patches.  There were only a few minor 
+quibbles, really boiling down to the fact that you export some functions 
+beginning shost_ instead of scsi_ (shost_tp_for_each_host, 
+shost_chk_and_release).  I can't see any reason why this might cause a naming 
+clash, but I think it is safer to stick to exports beginning with scsi_.
 
-Stephen Cameron [steve.cameron@hp.com] wrote:
-> Mike Anderson wrote:
-> 
-> > If you read my previous post on this patch I indicated that few of the
-> > driver changes I was only able to compile test ( block/cciss_scsi.c,
-> > scsi/53c700.c, scsi/pcmcia/*, scsi/wd33c93.c). The changes to the
-> > drivers are to remove the old interfaces and possibly extra NULL inits
-> > of struct members. These changes will need to be ok'd by there
-> > respective maintainers.
-> 
-> I tried out these patches with 2.5.40 and the cciss driver.
-> Looks ok to me.
-> 
-> When I did "echo engage scsi > /proc/driver/cciss/cciss0" to 
-> make the cciss driver register with the scsi subsystem, I got
-> what you see below.  However, I also got the same thing when 
-> trying 2.5.40 without the patches, so I don't think the patches
-> are the problem.
-> 
-> When I tried 2.5.41 without the patches, the problem below was
-> gone.
-> 
-> And, despite all this, it always appeared to work anyway. 
-> My tape drive appeared, and I could always do i/o to it.
-> 
-> -- steve
-> 
-> dmesg output follows:
-> 
-> cciss0: No device changes detected.
-> scsi0 : cciss0
->   Vendor: COMPAQ    Model: SDT-10000         Rev: 1.14
->   Type:   Sequential-Access                  ANSI SCSI revision: 02
-> Debug: sleeping function called from illegal context at slab.c:1374
-> ce275de0 c01195e6 c0320bc0 c0326282 0000055e c1287080 c013c15f c0326282 
->        0000055e c1336324 c1330c00 00000000 ce275e4c 00000286 00000286 cfc32974 
->        cf37e000 00000000 cfffb080 d0800000 00001000 ce274000 00001000 c013a199 
-> Call Trace:
->  [<c01195e6>]__might_sleep+0x56/0x5d
->  [<c013c15f>]kmalloc+0x4f/0x330
->  [<c013a199>]get_vm_area+0x29/0x140
->  [<c013a4fb>]__vmalloc+0x3b/0x120
->  [<c013a5f6>]vmalloc+0x16/0x20
->  [<c029837e>]sg_init+0xbe/0x160
->  [<c0288280>]scsi_register_host+0x130/0x200
->  [<c025a5b6>]cciss_engage_scsi+0x136/0x150
->  [<c025a8da>]cciss_proc_write+0x8a/0xb0
->  [<c015ca9f>]open_namei+0x37f/0x4e0
->  [<c013bcf2>]free_block+0x192/0x2c0
->  [<c017bf21>]proc_file_write+0x31/0x40
->  [<c014d316>]vfs_write+0xb6/0x180
->  [<c014c94f>]filp_close+0x10f/0x120
->  [<c014c94f>]filp_close+0x10f/0x120
->  [<c014d44a>]sys_write+0x2a/0x40
->  [<c01078af>]syscall_call+0x7/0xb
-.. snip ..
+Also, why do we now have some functions beginning scsi_host and some beginning 
+scsi_shost?  Could we just use one or the other (I'd vote for scsi_host, since 
+it's shorter).
 
--andmike
---
-Michael Anderson
-andmike@us.ibm.com
+James
+
 
