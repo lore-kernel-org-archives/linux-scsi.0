@@ -1,54 +1,70 @@
-From: Mike Anderson <andmike@us.ibm.com>
-Subject: Re: Calling sd_shutdown when in state SDEV_DEL
-Date: Wed, 24 Mar 2004 17:48:59 -0800
+From: Andreas Jellinghaus <aj@leogic.com>
+Subject: Re: [PATCH 2.6 ] MPT Fusion driver 3.01.03 update
+Date: Thu, 25 Mar 2004 15:54:52 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040325014859.GA3040@beaverton.ibm.com>
-References: <200403241603.23269.heiko.carstens@de.ibm.com> <1080142505.2706.25.camel@mulgrave> <20040324170452.GB1679@beaverton.ibm.com> <1080158975.1783.26.camel@mulgrave>
+Message-ID: <pan.2004.03.25.14.54.52.188405@leogic.com>
+References: <0E3FA95632D6D047BA649F95DAB60E57040DB6D7@exa-atlanta.se.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e34.co.us.ibm.com ([32.97.110.132]:63152 "EHLO
-	e34.co.us.ibm.com") by vger.kernel.org with ESMTP id S263114AbUCYBtE
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 24 Mar 2004 20:49:04 -0500
-Content-Disposition: inline
-In-Reply-To: <1080158975.1783.26.camel@mulgrave>
+Received: from main.gmane.org ([80.91.224.249]:18338 "EHLO main.gmane.org")
+	by vger.kernel.org with ESMTP id S263177AbUCYOyy (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 25 Mar 2004 09:54:54 -0500
+Received: from list by main.gmane.org with local (Exim 3.35 #1 (Debian))
+	id 1B6WFw-00083I-00
+	for <linux-scsi@vger.kernel.org>; Thu, 25 Mar 2004 15:54:52 +0100
+Received: from 62.245.182.10 ([62.245.182.10])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-scsi@vger.kernel.org>; Thu, 25 Mar 2004 15:54:52 +0100
+Received: from aj by 62.245.182.10 with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-scsi@vger.kernel.org>; Thu, 25 Mar 2004 15:54:52 +0100
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Heiko Carstens <heiko.carstens@de.ibm.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
 
-James Bottomley [James.Bottomley@SteelEye.com] wrote:
-> On Wed, 2004-03-24 at 12:04, Mike Anderson wrote:
-> > Why setting CANCEL on the device? Future plans for the CANCEL state?
-> > You are setting the state to cancel, but not going through
-> > scsi_device_cancel as you want IO to still flow.
-> 
-> Mainly because it was there.  Using CANCEL instead of DEL is appealing
-> since it will still allow special I/O.  Would there be an issue with
-> refusing new device references in the CANCEL state?
+appart from using a lot of memory, is there any reason
+not to compile the ISENSE option into the kernel?
+will it work compiled it?
 
-I think this should be ok as this is our (scsi core) own internal
-solution to keep ref counts from increasing for the purpose of
-eventually allowing everything to cleanup. 
+config FUSION_ISENSE
+        tristate "Enhanced SCSI error reporting"
+        depends on MODULES && FUSION && m
+        ---help---
+          The isense module (roughly stands for Interpret SENSE data) is
+          completely optional.  It simply provides extra English readable
+          strings in SCSI Error Report(s) that might be generated from the
+          Fusion MPT SCSI Host driver, for example when a target device
+          returns a SCSI check condition on a I/O.  Without this module
+          loaded you might see:
+...
+          Say M for "Enhanced SCSI error reporting" to compile this optional mod
+ule,
+          creating a driver named: isense.
 
-> 
-> > While this will solve the problem for removing a single device, this
-> > same error will show up when you remove a host unless you remove all
-> > devices first through the sysfs interface. Is this ok?
-> 
-> Sigh, that's a symptom of the host not having a state model ... I need
-> to think about adding that.
-
-Well this is my mess. We really have two usages models here but only one
-scsi_remove_host interface. One usage calls scsi_remove_host when the
-transport is dead and does not want anymore IO to flow through
-queuecommand.  The other usage calls during a clean removal (i.e., rmmod
-or hotplug) while there are still scsi_device children of the host
-adapter as this is easier than deleting the children first.
+          NOTE: Support for building this feature into the kernel is not
+          available, due to kernel size considerations.
 
 
--andmike
---
-Michael Anderson
-andmike@us.ibm.com
+changed to "depends on FUSION" this option compiles fine.
+
+Could you messure once how much memory this option will consume,
+put that into the configuration text, and only discourage users
+to link it into the kernel, but not prevent them from doing so?
+
+Sometimes security is more of an issue than a few kb of memory.
+I don't want modules on server machines and if it works fine
+compiled in, the Kconfig shouldn't prevent it.
+
+Still if it works compiled in, and you don't want to change
+the option, you could add a comment to the Kconfig like
+	# don't change it, won't work compiled in.
+or
+	# if you change this and compile it into the kernel,
+	# it will still work as far as we know. it will use
+	# about 500MB of your precious ram.
+
+Regards, Andreas
 
