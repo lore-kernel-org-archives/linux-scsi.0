@@ -1,78 +1,59 @@
-From: Luben Tuikov <luben@splentec.com>
-Subject: Re: [PATCH] SCSI Core patches
-Date: Wed, 08 Jan 2003 00:13:38 -0500
+From: Shanker Balan <shanu@exocore.com>
+Subject: Re: Seagate Cheetah: Firmware, Bugs, Compatibility?
+Date: Wed, 8 Jan 2003 13:45:13 +0530
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3E1BB382.5010504@splentec.com>
-References: <3E1ADC9A.6090800@splentec.com> <20030107102127.B15528@beaverton.ibm.com> <3E1B2934.8060805@splentec.com> <20030107123301.A16378@beaverton.ibm.com> <3E1B513B.2090409@splentec.com> <20030107173633.A17825@beaverton.ibm.com>
+Message-ID: <20030108081513.GA1217@exocore.com>
+References: <A5974D8E5F98D511BB910002A50A66470580D4F1@hdsmsx103.hd.intel.com> <Pine.LNX.4.44.0301072238580.3021-100000@uplift.swm.pp.se>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <20030107173633.A17825@beaverton.ibm.com>
+Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.44.0301072238580.3021-100000@uplift.swm.pp.se>
 List-Id: linux-scsi@vger.kernel.org
-To: Patrick Mansfield <patmans@us.ibm.com>
-Cc: linux-scsi@vger.kernel.org
+To: Linux-SCSI <linux-scsi@vger.kernel.org>
 
-Patrick Mansfield wrote:
->
->>You must agree that the tuple (COMMAND, (lun, target, channel))
->>doesn't say as much as (COMMAND, DEVICE). 
-> 
-> 
-> Yes, but the current code simply sends a scsi_cmnd to the LLDD, and the
-> LLDD need only reference the scsi_cmnd.
+Hello:
 
-No, it doesn't necessarily have to. The advantages of
-cmd->device->{lun, id, channel} far outweights
-``LLDD need only reference the scsi_cmnd'',
-as we've mentioned numerous times.
+Mikael Abrahamsson wrote,
+> If I have not had any of my problems in 2-3 weeks I'll email back it
+> as a success report.
 
-I think the networking code has similar well thought out abstractions.
+I am having problems flashing the drive. I get an "-2" error with
+sgdskfl.
 
-> Having the LLDD use more data structures does not imply a better
-> abstraction.  Again, a better abstraction would be to use interfaces to
-> get the host/channel/target/lun. This could add overhead depending on the
-> implementation.
+Error -2 is a "-2 means that the SCSI request returned a check condition
+(sense error)" from the UserGuide.
 
-Aaaah, this seems like a lost cause. You seem to be arguing this just
-because of sake of your changing your multipath code.
+I got a similar sense error while trying to flash using the Quantum supplied
+"DL_scsi.exe" under DOS.
 
-Why can't you just make those macros in your code and see how
-it works out -- who knows, maybe you'll get a better design idea...
- 
-> I have looked into putting multipath in the block layer, I've looked at
-> md, at the T3 code, and at the qlogic multi-path code. Code in the block
-> layer would be interesting, but might not solve problems with char
-> devices, and would need further abstractions on top of some multi-path 
-> in the scsi layer (someone has to find and represent the devices and
-> paths, the block layer will not want to know about host/chan/target/lun,
-> nor will the block layer want to know details about scsi device or
-> transport errors).
+Andrew, any idea what might be the problem here? Also whats a "Servo
+image"?
 
-And this is *not* an excuse to leave lun, target and channel into the
-scsi command. A command belongs to a device, and a device belongs
-to a host, which belongs to a pci bus, etc...
+Here is paste from "sgdskfl" run:
 
-Remember we're talking about SCSI devices, not generic devices.
-SCSI devices, as mentioned in my previous email have and have not
-certain properties.
+Log file /var/log/sgdskfl.log is open, debug=0
 
-> Putting the multipath abstraction into scsi_request_fn is IMO the best way
-> to go (as I've argued before) at least until other non-scsi block and
+Num Name [bus:ch:id:lun] Type Vendor   Device_Model     FW__ Serial#_
+Servo___
+0 /dev/sg0 [0:0:0:0] Disk  QUANTUM  ATLAS10K3_18_SCA 020W 34220894
+1 /dev/sg1 [0:0:1:0] Disk  QUANTUM  ATLAS10K3_73_SCA 020W 34820965
+2 /dev/sg2 [0:0:2:0] Disk  QUANTUM  ATLAS10K3_73_SCA 020W 34820635
 
-Please keep in mind what SCSI Core is all about. Please don't mix and
-match.
+Enter Selection ('d' to download, 'q' to quit) : d
 
->>Getting rid of redundancies in data design and code design is important.
->>
-> 
-> 
-> As mentioned, using a scsi_device both for a list of paths and as a
-> representation of scsi device duplicates data in multiple places.
+Device Num (0 to 2) : 2
+Selected 2: [0:2] QUANTUM ATLAS10K3_73_SCA020W34820635
+Reading image file atlas10k.lod, size = 377167
+No servo image
+Device [2] is ready for download
+Starting download process for 1 disk.
+Downloading Firmware image to disk 2 Wed Jan  8 13:40:52 2003
+Current sg_cmd_done_bh00:00: sense key Illegal Request
+write_buffer: Check Condition Driver_status=0x08 (DRIVER_SENSE,SUGGEST_OK)
+sense error, key=05 asc=26 ascq=80 Illegal RequestInfo valid=0, Current
+[2] Error -2 in writing buffer
+Press ENTER to continue
 
-We are *not* discussing multipathing here.
-
--- 
-Luben
-
-
+-- Shanu
+http://shankerbalan.com/
