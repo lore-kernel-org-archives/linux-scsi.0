@@ -1,48 +1,47 @@
-From: "David Fish" <dfish@broadbus.com>
-Subject: controlling block alignment and length in SCSI sd I/O operations
-Date: Tue, 11 Nov 2003 11:06:38 -0500
+From: Mike Anderson <andmike@us.ibm.com>
+Subject: Re: [BUG] linux-2.6.0-test9: slave_destroy called too early
+Date: Tue, 11 Nov 2003 08:44:21 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3B83C5E7EAB53F44A16CDFB70F9E4BF3A1F0FF@btiexch01.broadbus.com>
+Message-ID: <20031111164421.GB2259@beaverton.ibm.com>
+References: <200311111145.49009.heiko.carstens@de.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [12.25.43.10] ([12.25.43.10]:23348 "EHLO btiexch01.broadbus.com")
-	by vger.kernel.org with ESMTP id S263561AbTKKQGj convert rfc822-to-8bit
+Received: from e32.co.us.ibm.com ([32.97.110.130]:15332 "EHLO
+	e32.co.us.ibm.com") by vger.kernel.org with ESMTP id S263632AbTKKQkD
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 11 Nov 2003 11:06:39 -0500
-Content-Class: urn:content-classes:message
+	Tue, 11 Nov 2003 11:40:03 -0500
+Received: from westrelay01.boulder.ibm.com (westrelay01.boulder.ibm.com [9.17.195.10])
+	by e32.co.us.ibm.com (8.12.10/8.12.2) with ESMTP id hABGe2kF171778
+	for <linux-scsi@vger.kernel.org>; Tue, 11 Nov 2003 11:40:02 -0500
+Content-Disposition: inline
+In-Reply-To: <200311111145.49009.heiko.carstens@de.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Heiko Carstens <heiko.carstens@de.ibm.com>
+Cc: linux-scsi@vger.kernel.org
 
-Hello all,
+Heiko Carstens [heiko.carstens@de.ibm.com] wrote:
+> Hi,
+> 
+> in linux-2.6.0-test9 there seems to be a bug in scsi_remove_device: each time
+> I try to remove a scsi disk the sd driver fails to synchronize the SCSI cache.
+> Reason for this is that the slave_destroy function of the LLD gets called
+> before sd_shutdown of the sd driver gets called.
+> I would suggest the patch below. Please apply or let me know that this is the
+> wrong thing to do.
+> 
 
-Here's a newbie-type question which I hope is appropriate to the list:
+The patch I previously posted would give the same effect. You can find
+it in the archives.
+http://marc.theaimsgroup.com/?l=linux-scsi&m=106810957502435&w=2
 
-I'm running a QLogic fibre channel HBA (qla2310F) in a PC running RedHat
-8.0 Linux.  The device to which I'm directly connected can only accept
-SCSI commands with 2KB granularity, which means, for example, that a
-READ must have the logical block address fall on a 2KB boundary and the
-length must be in 2KB increments.
+I will repost the patch with a update based on the feedback I received
+on the previous thread (inline the scsi_free_sdev function).  This
+updated patch will look very similiar to the sequence you have in your
+patch.
 
-When I load the QLogic driver, the FC login activity happens w/ no
-problem, but when the driver issues the first SCSI READ commands, the
-number of blocks requested is 2 (1KB), to which the device returns a
-CHECK CONDITION, citing an invalid field in the CDB.
+-andmike
+--
+Michael Anderson
+andmike@us.ibm.com
 
-The device vendor claims that the device can run with the QLogic HBA
-under RH9.0 Linux, which I'm about to try.  The question I have, then,
-is this:  is it possible to configure the Linux SCSI subsystem to
-satisfy this vendor's 2KB data alignment requirement?  Or is this
-handled at the HBA driver level?  And is this type of alignment
-requirement standard for RAID controllers and disk arrays?
-
-TIA and Regards,
-Dave Fish
- 
---------------------------------------------------------
-
- 
-This email message and any files transmitted with it contain confidential information intended only for the person(s) to whom this email message is addressed.  If you have received this email message in error, please notify the sender immediately by telephone or email and destroy the original message without making a copy.  Thank you. 
- 
