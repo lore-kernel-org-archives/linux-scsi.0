@@ -1,180 +1,102 @@
-From: Matthew Dharm <mdharm-scsi@one-eyed-alien.net>
-Subject: Re: [PATCH] scsi_set_host_offline (resend)
-Date: Tue, 1 Apr 2003 23:42:10 -0800
+From: Patrick Mansfield <patmans@us.ibm.com>
+Subject: Re: isp1020 memory trample in 2.5.66
+Date: Wed, 2 Apr 2003 08:02:26 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030401234210.A14717@one-eyed-alien.net>
-References: <20030325100704.GC3868@beaverton.ibm.com> <20030329125302.A10565@one-eyed-alien.net> <1048974903.21704.313.camel@mulgrave> <200303292350.04187.oliver@neukum.org> <20030401024806.GA4991@beaverton.ibm.com>
+Message-ID: <20030402080226.A25288@beaverton.ibm.com>
+References: <Pine.LNX.4.50.0304020101460.8773-100000@montezuma.mastecende.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-md5;
-	protocol="application/pgp-signature"; boundary="7JfCtLOvnd9MIVvH"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20030401024806.GA4991@beaverton.ibm.com>; from andmike@us.ibm.com on Mon, Mar 31, 2003 at 06:48:06PM -0800
+In-Reply-To: <Pine.LNX.4.50.0304020101460.8773-100000@montezuma.mastecende.com>; from zwane@linuxpower.ca on Wed, Apr 02, 2003 at 01:08:54AM -0500
 List-Id: linux-scsi@vger.kernel.org
-To: Oliver Neukum <oliver@neukum.org>, James Bottomley <James.Bottomley@steeleye.com>, mochel@osdl.org, SCSI Mailing List <linux-scsi@vger.kernel.org>, gregkh@us.ibm.com
+To: Zwane Mwaikambo <zwane@linuxpower.ca>
+Cc: Linux Kernel <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
 
+On Wed, Apr 02, 2003 at 01:08:54AM -0500, Zwane Mwaikambo wrote:
+> 2.5.65 was ok, 2.5.66 can't boot, there is nothing obvious in the patch 
+> which could have led to this. I'd try a binary search but i'm afraid i 
+> won't have that much free time for a while.
 
---7JfCtLOvnd9MIVvH
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+> Box is 32way PIII-450, devices attached to the only real active isp1020 
+> HBA are;
 
-On Mon, Mar 31, 2003 at 06:48:06PM -0800, Mike Anderson wrote:
-> Matthew / James I believe I am out of sync with how much is being done
-> by userspace and how much is being done in the kernel. I believed there
-> was always userspace action to umount / close devices.
+I've been booting OK with 2.5.66 with isp1020 and qlogicisp driver with
+multiple disks, though the boot sometimes hangs.
 
-I have no objection to userspace being notified -- I only object to
-requiring userspace to complete the unplug operation.
+I've also booted OK with the feral driver.
 
-> Matthew I know in the previous mail you wrote a numbered list of steps.
-> I believe item #2 should have called scsi_set_host_offline or
-> scsi_set_device_offline. Item #6 would only happen if scsi_remove_host
-> was called sometime prior.
+> qlogicisp : new isp1020 revision ID (5)
+> qlogicisp : interrupt 233 already in use
+> scsi0 : QLogic ISP1020 SCSI on PCI bus 01 device 70 irq 41 MEM base 
+> 0xf8c1a000
+>   Vendor: IBM       Model: DRHS36V           Rev: 0270
+>   Type:   Direct-Access                      ANSI SCSI revision: 03
+>   Vendor: IBM       Model: DRHS36V           Rev: 0270
+>   Type:   Direct-Access                      ANSI SCSI revision: 03
+>   Vendor: PLEXTOR   Model: CD-ROM PX-32CS    Rev: 1.02
+>   Type:   CD-ROM                             ANSI SCSI revision: 02
+> scsi1 : QLogic ISP1020 SCSI on PCI bus 04 device 70 irq 89 MEM base 0xf8c1c000
+> SCSI device sda: 72170879 512-byte hdwr sectors (36951 MB)
+> SCSI device sda: drive cache: write through
+>  sda: sda1 sda2 sda3
+> Attached scsi disk sda at scsi0, channel 0, id 0, lun 0
+> SCSI device sdb: 72170879 512-byte hdwr sectors (36951 MB)
+> SCSI device sdb: drive cache: write through
+>  sdb: unknown partition table
+> 
+> Unable to handle kernel paging request at virtual address 6b6b6b6b
+>  printing eip:
+> 6b6b6b6b
+> *pde = 00000000
+> Oops: 0000 [#1]
+> CPU:    0
+> EIP:    0060:[<6b6b6b6b>]    Not tainted
+> EFLAGS: 00010086
+> EIP is at 0x6b6b6b6b
+> eax: f8c1c000   ebx: e4f9c000   ecx: 00000001   edx: c3f56400
+> esi: e4f9c000   edi: 00000002   ebp: e4fa09cc   esp: c0375f10
+> ds: 007b   es: 007b   ss: 0068
+> Process swapper (pid: 0, threadinfo=c0374000 task=c03064a0)
+> Stack: c0228d4b e4fa09cc 00000001 00000001 c3f564b0 c3f56400 0000000b c3f56400 
+>        00000002 c0375f98 c0228a39 0000000b c3f56400 c0375f98 e59f1914 24000001 
+>        0000000b c010cd4a 0000000b c3f56400 c0375f98 c0356960 c0356970 0000000b 
+> Call Trace:
+>  [<c0228d4b>] isp1020_intr_handler+0x2db/0x300
+>  [<c0228a39>] do_isp1020_intr_handler+0x49/0x80
+>  [<c010cd4a>] handle_IRQ_event+0x3a/0x60
+>  [<c010d052>] do_IRQ+0x112/0x1f0
+>  [<c01089b0>] default_idle+0x0/0x40
+>  [<c01089b0>] default_idle+0x0/0x40
+>  [<c010b700>] common_interrupt+0x18/0x20
+>  [<c01089b0>] default_idle+0x0/0x40
+>  [<c01089b0>] default_idle+0x0/0x40
+>  [<c01089dd>] default_idle+0x2d/0x40
+>  [<c0108a82>] cpu_idle+0x52/0x70
+>  [<c0105000>] _stext+0x0/0x70
+> 
+> Code:  Bad EIP value.
+>  <0>Kernel panic: Aiee, killing interrupt handler!
+> 
+> 0xc0228d4b is in isp1020_intr_handler (drivers/scsi/qlogicisp.c:1072).
+> 1071                    (*Cmnd->scsi_done)(Cmnd); <===
+> 1072            }
 
-The assumption was that #5 was the call to scsi_remove_host() -- the only
-question in my mind is: How do I know it is 'safe' to call that?
+This looks a lot like the oops when trying to send IO to more than one
+disk at a time with the isp1020 + qlogicisp.
 
-> I wrote the following text on the interface I thought we had / where
-> trying to complete. I would like to add to this so that we possibly
-> could archive an interface contract between the LLDD and scsi-mid.
+Is there something different causing IO to muliple disks at that point?
 
-Based on my reading of the following, userspace is notified but not
-required to take any action.  Would that be accurate?
+I hit this once when I enabled parallel fsck (it didn't oops until after I
+got a late oops, and rebooted).
 
-> 2.5 SCSI host register interfaces (scsi_add_host / scsi_remove_host)
->=20
-> 1. LLDD call graph standard
->=20
-> (PROBE)
-> LLDD                  Mid                  Sysfs
-> scsi_register      -->
-> scsi_set_device    --> (depreciated)
-> scsi_add_host      ---+
->                       |
->                scsi_sysfs_add_host      --> device_register (shost)
->                scsi_scan_host         (i)-> device_register (sdev)
+Martin hit it when the queue depth was not properly checked.
 
-This is how I see it (as an LLDD guy) -- I set up my internal state, then
-call scsi_register() followed by scsi_add_host().
+wli has hit it with parallel mkfs (or something).
 
-Then the world starts, and I just keep processing commands whenever I get
-one.  Then, someone yanks my plug, and:
+The following thread was pretty useful, Doug L mentions that the qlogicisp
+does bad things, starting with Martin's analysis:
 
-> (REMOVE)
-> LLDD                  Mid                  Sysfs
-> scsi_remove_host  ---+
->                      |
->                scsi_sysfs_remove_host   --> device_unregister (shost)
->                scsi_forget_host       (i)-> device_unregister (sdev)
+http://marc.theaimsgroup.com/?l=linux-kernel&m=104457083601573&w=2
 
-I presume that I need to offline each device (sdev) before calling
-scsi_remove_host(), as previously discussed?  That isn't shown here...
-
-> (hotplug "remove" events for shost and sdev where generated by
-> device_unregister call).
-
-Yes.  Userspace is notified, but not required to take any action.
-
-> (sdev device ref cnt =3D=3D 0)
->                                             koject_cleanup
->                                                    |
->                                            scsi_device_release
-
-Good.  I presume that scsi_device_release() will decrement the ref cnt on
-the shost device?
-
-> (shost device ref cnt =3D=3D 0)
->                                             koject_cleanup
->                                                    |
->                      +--                    scsi_host_release
->                      |
->                   shost->hostt->release
-
-Good.  release() then is responsible for cleaning up.
-
-> 2. LLDD call graph offline event
->=20
-> (OFFLINE single device)
-> LLDD                       Mid                  Sysfs
-> scsi_set_device_offline  --+
->                            |
->                         scsi_eh_scmd_add
->=20
-> Note: Do we need hotplug events here or wait until remove???
-
-Good question.  Here's a better one:  Why do we separately offline the
-device before removal?  Why doesn't scsi_remove_host() do it all for us?
-
-For example, when we unload a USB HCD driver, disconnect() gets called for
-each device that was on that bus.
-
-> (OFFLINE host)
-> LLDD                       Mid                  Sysfs
-> scsi_set_host_offline    --+
->                            |
->                       scsi_set_device_offline
->=20
-> (REMOVE)
-> Same as above.
-
-I presume that scsi_set_device_offline in this picture leads to
-scsi_set_device_offline(), which leads to scsi_eh_scmd_add()?
-
-> TODO (1):
-> scsi_add_host scans the host and when outstanding patches are applied
-> the scsi_host struct device will have a ref count of 1+N where N is the
-> number of struct scsi_device's found off the host. In turn each struct
-> scsi_device struct device will have a ref count of 1+N where N is the
-> number of upper drivers bound or the number of opens (this may not be
-> correct for sometime as we do not have an option for the multiple bind
-> sg issue).
-
-Okay.... I think we're on the same page.  It appears that you're going to
-require me to keep resources around for quite some time, until everything
-closes/umounts -- but, since every device is offline, I don't have to do
-any command processing, yes?  That's good, because then I can free some
-significant resources....
-
-> TODO (2):
-> We need a common method to stop gets to a struct device post a certain
-> barrier. In the short term scsi could add a scsi_host flag to stop scan
-> adds, but cannot effect sysfs gets.
-
-Hrm... good point.  How do other busses do this?
-
-> TODO (3):
-> When outstanding patches are applied scsi_remove_host will cause a
-> device_unregister to be called on all child nodes (sdevs) of scsi_host
-> and scsi_host (these unregisters will generate hot plug "remove" events)
-> once the scsi_device ref cnt goes to zero scsi_device_release is called
-> and once scsi_host ref cnt goes to zero scsi_host_release is called.
-
-Sounds good to me.
-
-Matt
-
---=20
-Matthew Dharm                              Home: mdharm-usb@one-eyed-alien.=
-net=20
-Maintainer, Linux USB Mass Storage Driver
-
-My mother not mind to die for stoppink Windows NT!  She is rememberink=20
-Stalin!
-					-- Pitr
-User Friendly, 9/6/1998
-
---7JfCtLOvnd9MIVvH
-Content-Type: application/pgp-signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.0.6 (GNU/Linux)
-Comment: For info see http://www.gnupg.org
-
-iD8DBQE+ipRSIjReC7bSPZARAsgNAJ4hK84qycZd+6x84UnDnor41GSAYgCfbimz
-WOH4mAoI8Cag3UieiIjwGBE=
-=pM4v
------END PGP SIGNATURE-----
-
---7JfCtLOvnd9MIVvH--
+-- Patrick Mansfield
