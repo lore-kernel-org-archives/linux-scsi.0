@@ -1,40 +1,40 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: usb storage traces
-Date: Sat, 20 Dec 2003 21:26:19 -0500 (EST)
+From: "James Daniel" <jdaniel@dakotacom.net>
+Subject: [FIXED] Initio 9100u -- It lives
+Date: Sun, 21 Dec 2003 04:09:29 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44L0.0312202124070.27646-100000@netrider.rowland.org>
-References: <20031220235651.GE8787@one-eyed-alien.net>
+Message-ID: <000b01c3c7b2$e815e140$0200000a@nightsky>
+References: <Pine.LNX.4.44.0312190311160.27880-200000@dyn319634.beaverton.ibm.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain;
+	charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from netrider.rowland.org ([192.131.102.5]:56078 "HELO
-	netrider.rowland.org") by vger.kernel.org with SMTP id S262050AbTLUC0U
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 20 Dec 2003 21:26:20 -0500
-In-Reply-To: <20031220235651.GE8787@one-eyed-alien.net>
+Received: from breaker.dakotacom.net ([66.192.152.146]:34226 "EHLO
+	breaker.dakotacom.net") by vger.kernel.org with ESMTP
+	id S262714AbTLULI1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 21 Dec 2003 06:08:27 -0500
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Dharm <mdharm-scsi@one-eyed-alien.net>
-Cc: Pat LaVarre <p.lavarre@ieee.org>, David Brownell <david-b@pacbell.net>, Alex Sanks <alex@netchip.com>, Julian Back <jback@mpc-data.co.uk>, USB Storage List <usb-storage@one-eyed-alien.net>, SCSI development list <linux-scsi@vger.kernel.org>
+To: Mike Christie <mikenc@us.ibm.com>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@SteelEye.com>
 
-On Sat, 20 Dec 2003, Matthew Dharm wrote:
-
-> Looking at your traces, I don't see any MODE SENSE commands.  I find that
-> odd, especially since earlier traces show that data.
+> On Fri, 19 Dec 2003, Mike Christie wrote:
 > 
-> Looking at them, I'm starting to suspect that you need to have a valid
-> filesystem there before Windows will issue that command.  What an odd way
-> to do things....
+> > Ok, in the orginal patch I forgot to replace the shared buffer with a 
+> > DMA-API equiv. This will take some time.
+> > 
+> 
+> Here is another try. It should compile against 2.6.0-test11/2.6.0.
 
-Could be.  Or it could be a difference between Windows ME and Windows 
-2000.
+It appears to be working again. Mad props.
 
-> Anyway, could you add that to your test cases?
+The card has left my server, however. I dug up a 2940u2w.
+The ini9100u now resides in a test box which is still actively
+using the card and actually has a monitor permanently attached,
+so I'll be able to do much better diagnostics on it now. Currently
+it's loaded as a module, not being used for root fs, and is reading
+the drive attached to the card quite nicely. As soon as I have a
+distro running 2.6 running a root partition via scsi, I'll be sure
+to let the list know how it goes.
 
-I will.
-
-> The data you've provided so far is excellent.
-
-Thank you.  More to come after the holidays.
-
-Alan Stern
+Thanks Mike =)
 
