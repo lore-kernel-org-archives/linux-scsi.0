@@ -1,80 +1,165 @@
-From: "Frank Borich" <Frank_Borich@us.xyratex.com>
-Subject: [PATCH] 2.4.23
-Date: Wed, 17 Dec 2003 08:13:40 -0800
+From: Mario Giammarco <mgiammarco@virgilio.it>
+Subject: RE: Possible bug in fusion mpt  OR  qlogic ip support
+Date: Wed, 17 Dec 2003 18:58:15 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <47F3C2BE74738E4683574107469DFA201EE1D8@XYUSEX01.xyus.xyratex.com>
+Message-ID: <1071683895.1390.3.camel@cala>
+References: <53CF1076699CD711B7DD0002A51363F10190322B@exw-ks.ks.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [65.203.33.17] ([65.203.33.17]:14060 "EHLO
-	XYUSEX01.xyus.xyratex.com") by vger.kernel.org with ESMTP
-	id S264468AbTLQQNl convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Dec 2003 11:13:41 -0500
-content-class: urn:content-classes:message
+Received: from vsmtp2.tin.it ([212.216.176.222]:46725 "EHLO vsmtp2.tin.it")
+	by vger.kernel.org with ESMTP id S264513AbTLQR6W (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 17 Dec 2003 12:58:22 -0500
+In-Reply-To: <53CF1076699CD711B7DD0002A51363F10190322B@exw-ks.ks.lsil.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: "Stephens, Larry" <lstephen@lsil.com>
+Cc: linux-scsi@vger.kernel.org, "Moore, Eric Dean" <Emoore@lsil.com>, support@qlogic.com
 
-Hi All,
+Il mer, 2003-12-17 alle 16:16, Stephens, Larry ha scritto:
+> The suggestion is to utilize a board with the LSI 919 or 919X chip
+> instead of the board with the 909 chip.
+> 
+> I did send this message to the LSI Fibre Channel developers and here
+> are their responses:
+> 
+> 
+> ditto... support for the 40909 was discontinued about 3 months ago. 
+> 
+> 
+> We haven't supported the '909 in a LOOOONG time.  I wouldn't know what
+> to say even if  I knew what rev. of firmware they were using.
+> 
+> I would recommend they upgrade to at least 919, probably 919x if they
+> want support of any kind.
+> 
+> 
 
-My name is Frank Borich, representing Xyratex International
-(http://www.xyratex.com).  We design, and manufacture Data Storage
-Subsystems.  During integration testing, we discovered that a patch to
-scsi_scan.c is required (2.4.x kernels only), in order to set the
-BLIST_SPARSELUN flag for our subsystems.  This flag adds support for
-non-contiguous lun numbering.  We are unable to use the already
-implemented "device_list" to set flags for our subsystems.  This is due
-to the fact that we sell only to OEMs, and vendor name will change.
-Rather than submit a separate patch for each branded subsystem we can
-look elsewhere in the SCSI inquiry data, and set the flag accordingly.
-The logic below, is executed once the end of the device_list is reached.
-When the end of the table is reached, a memcmp is issued to look for a
-particular string located at offset 96.  If the string is found, the
-flag BLIST_SPARSELUN is returned.  Below is a patch for the SCSI driver
-(scsi_scan.c). 
-
-
-diff -urN linux-2.4.23/drivers/scsi/scsi_scan.c
-linux-2.4.23.changed/drivers/scsi/scsi_scan.c
---- linux-2.4.23/drivers/scsi/scsi_scan.c	2003-12-03
-08:56:28.000000000 -0600
-+++ linux-2.4.23.changed/drivers/scsi/scsi_scan.c	2003-12-03
-09:02:15.000000000 -0600
-@@ -292,8 +292,16 @@
- 	int i = 0;
- 	unsigned char *pnt;
- 	for (i = 0; 1; i++) {
--		if (device_list[i].vendor == NULL)
-+		if (device_list[i].vendor == NULL){
-+			/* Set flags for Xyratex subsystems here (all
-OEMs). 
-+			Cannot use device_list because can have
-different vendor names for same device */
-+			pnt = &response_data[96];
-+			while (*pnt && *pnt == ' ')
-+				pnt++;
-+			if (memcmp("Xyratex F7",pnt,10) == 0)
-+			return BLIST_SPARSELUN;
- 			return 0;
-+		}
- 		pnt = &response_data[8];
- 		while (*pnt && *pnt == ' ')
- 			pnt++;
-Frank Borich
-------------------------------------------------------------------
-Systems Engineer
-Direct 630 654 6089
-Fax 630 325 2513
-e-mail frank_borich@us.xyratex.com
- 
+Thank you for your precious suggestion but, after looking in your kernel
+code, I have found a  QLOGIC_NAA_WORKAROUND. 
+I have defined it and recompiled the kernel, now it works better, it
+seems that at least arp goes well this time. 
+So the problem is not due to my "unsupported" 40909, but is common to
+all lsi logic controllers and perhaps is connected to a bug in qlogic
+code, so I forward this email also to qlogic support.
 
 
-Frank Borich
-------------------------------------------------------------------
-Systems Engineer
-Direct 630 654 6089
-Fax 630 325 2513
-e-mail frank_borich@us.xyratex.com
- 
+
+> -----Original Message-----
+> From: Mario Giammarco [mailto:mgiammarco@virgilio.it]
+> Sent: Wednesday, December 17, 2003 4:36 AM
+> To: linux-scsi@vger.kernel.org; emoore@lsil.com; lstephen@lsil.com
+> Subject: Possible bug in fusion mpt ip support
+> 
+> 
+> Hello,
+> 
+> I have two computers:
+> 
+> cala    IP 10.0.1.1  HW 00:E0:8B:02:96:DC  HBA qlogic 2200
+> server  IP 10.0.1.10 HW 00:E0:3C:D0:12:89  HBA lsi logic 40909
+> 
+> I cannot make them communicate.
+> 
+> Route hardware etc. is all ok.
+> 
+> I used tcpdump utility to debug.
+> 
+> When I do ping from cala to server I obtain:
+> 
+> on cala:
+> 
+> 13:26:35.801540 arp who-has 10.0.1.10 tell 10.0.1.1
+>                          0001 0800 0604 0001 00e0 8b02 96dc 0a00
+>                          0101 0000 0000 0000 0a00 010a
+> 13:26:36.800519 arp who-has 10.0.1.10 tell 10.0.1.1
+>                          0001 0800 0604 0001 00e0 8b02 96dc 0a00
+>                          0101 0000 0000 0000 0a00 010a
+> 13:26:37.800288 arp who-has 10.0.1.10 tell 10.0.1.1
+>                          0001 0800 0604 0001 00e0 8b02 96dc 0a00
+>                          0101 0000 0000 0000 0a00 010a
+> 13:26:38.903212 arp who-has 10.0.1.10 tell 10.0.1.1
+>                          0001 0800 0604 0001 00e0 8b02 96dc 0a00
+>                          0101 0000 0000 0000 0a00 010a
+> 
+> on server:
+> 
+> 13:20:02.037848 21:0:0:e0:8b:2 Broadcast 52:
+>                          96dc aaaa 0300 0000 0806 0001 0800 0604
+>                          0001 00e0 8b02 96dc 0a00 0101 0000 0000
+>                          0000 0a00 010a
+> 13:20:02.037899 3c:d0:12:89:aa:aa 8b:2:96:dc:0:e0 48:
+>                          0300 0000 0806 0006 0800 0604 0002 00e0
+>                          3cd0 1289 0a00 010a 00e0 8b02 96dc 0a00
+>                          0101
+> 13:20:03.036611 21:0:0:e0:8b:2 Broadcast 52:
+>                          96dc aaaa 0300 0000 0806 0001 0800 0604
+>                          0001 00e0 8b02 96dc 0a00 0101 0000 0000
+>                          0000 0a00 010a
+> 13:20:03.036656 3c:d0:12:89:aa:aa 8b:2:96:dc:0:e0 48:
+>                          0300 0000 0806 0006 0800 0604 0002 00e0
+>                          3cd0 1289 0a00 010a 00e0 8b02 96dc 0a00
+>                          0101
+> 13:20:04.036242 21:0:0:e0:8b:2 Broadcast 52:
+>                          96dc aaaa 0300 0000 0806 0001 0800 0604
+>                          0001 00e0 8b02 96dc 0a00 0101 0000 0000
+>                          0000 0a00 010a
+> 13:20:04.036284 3c:d0:12:89:aa:aa 8b:2:96:dc:0:e0 48:
+>                          0300 0000 0806 0006 0800 0604 0002 00e0
+>                          3cd0 1289 0a00 010a 00e0 8b02 96dc 0a00
+>                          0101
+> 
+> This shows that cala do not start to send ping packets because it
+> cannot
+> resolve arp.
+> On server it seems that hardware addresses are mangled.
+> 
+> When I do ping from server to cala I obtain:
+> 
+> on cala:
+> 
+> NOTHING AT ALL
+> 
+> on server:
+> 
+> 13:22:39.355118 3c:d0:12:89:aa:aa ff:ff:ff:ff:0:e0 48:
+>                          0300 0000 0806 0006 0800 0604 0001 00e0
+>                          3cd0 1289 0a00 010a 0000 0000 0000 0a00
+>                          0101
+> 13:22:40.353542 3c:d0:12:89:aa:aa ff:ff:ff:ff:0:e0 48:
+>                          0300 0000 0806 0006 0800 0604 0001 00e0
+>                          3cd0 1289 0a00 010a 0000 0000 0000 0a00
+>                          0101
+> 13:22:41.353547 3c:d0:12:89:aa:aa ff:ff:ff:ff:0:e0 48:
+>                          0300 0000 0806 0006 0800 0604 0001 00e0
+>                          3cd0 1289 0a00 010a 0000 0000 0000 0a00
+>                          0101
+> 13:22:42.357615 3c:d0:12:89:aa:aa ff:ff:ff:ff:0:e0 48:
+>                          0300 0000 0806 0006 0800 0604 0001 00e0
+>                          3cd0 1289 0a00 010a 0000 0000 0000 0a00
+>                          0101
+> 13:22:43.356049 3c:d0:12:89:aa:aa ff:ff:ff:ff:0:e0 48:
+>                          0300 0000 0806 0006 0800 0604 0001 00e0
+>                          3cd0 1289 0a00 010a 0000 0000 0000 0a00
+>                          0101
+> 13:22:44.356044 3c:d0:12:89:aa:aa ff:ff:ff:ff:0:e0 48:
+>                          0300 0000 0806 0006 0800 0604 0001 00e0
+>                          3cd0 1289 0a00 010a 0000 0000 0000 0a00
+>                          0101
+> 
+> So it seems that cala arp info is sent good.
+> Because cala do not receive anything it seems that is fusion mpt that
+> mangles hw addresses so the destination of packets is not cala
+> anymore.
+> 
+> 
+> Please help me!
+> 
+> Thanks in advance for interest!
+> 
+> -- 
+> Mario Giammarco
+-- 
+Mario Giammarco
 
