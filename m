@@ -1,46 +1,33 @@
 From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: New Methodology for SCSI BK trees
-Date: 24 Oct 2004 15:56:47 -0400
+Subject: Re: [PATCH] SCSI: Replace semaphores with wait_even
+Date: 24 Oct 2004 15:57:43 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1098647814.10908.244.camel@mulgrave>
+Message-ID: <1098647869.10824.247.camel@mulgrave>
+References: <1098300579.20821.65.camel@thomas>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat16.steeleye.com ([209.192.50.48]:2529 "EHLO
+Received: from stat16.steeleye.com ([209.192.50.48]:40162 "EHLO
 	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S261235AbUJXT5F (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 24 Oct 2004 15:57:05 -0400
+	id S261241AbUJXT6A (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 24 Oct 2004 15:58:00 -0400
+In-Reply-To: <1098300579.20821.65.camel@thomas>
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>, Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
-Cc: Douglas Gilbert <dougg@torque.net>, viro@parcelfarce.linux.theplanet.co.uk
+To: tglx@linutronix.de
+Cc: Andrew Morton <akpm@osdl.org>, Ingo Molnar <mingo@elte.hu>, LKML <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-OK, since we're going to be doing another round of
--rc-but-I-dont-really-mean-it, I've set up two scsi bk trees.
+On Wed, 2004-10-20 at 15:29, Thomas Gleixner wrote:
+> 
+> Use wait_event instead of semaphores. Semaphores are slower
+> and trigger owner conflicts during semaphore debugging.
+> 
+> Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+> Acked-by: Ingo Molnar <mingo@elte.hu>
+> ---
 
-bk://linux-scsi.bkbits.net/scsi-rc-fixes-2.6
-
-for fixes which I'll try and merge into -rc candidates
-
-and
-
-bk://linux-scsi.bkbits.net/scsi-misc-2.6
-
-for everything else that will wait until 2.6.10 is released.
-
-Andrew, could you add both these to -mm, please?
-
-For the rc-fixes tree, I'm going to try to guess when linus moves to
--rc-and-I-really-mean-it and at that point I'll only accept critical bug
-fixes into this tree (probably I'll tighten up submission policy
-gradually as time goes by).
-
-Also, I've gained a web page at
-
-http://www.parisc-linux.org/~jejb/scsi_diffs
-
-Where I'll place the diffs and changelogs corresponding to the scsi
-trees for those who want to play with the updates without using BK.
+There's something deeply wrong with this.  It causes a boot hang in my
+scsi test systems.
 
 James
 
