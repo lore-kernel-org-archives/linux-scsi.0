@@ -1,71 +1,121 @@
 From: Pat LaVarre <p.lavarre@ieee.org>
-Subject: [PATCH] until blockdev --setrw /dev/scd$n works
-Date: 05 Dec 2003 18:24:41 -0700
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1070673881.2939.20.camel@patibmrh9>
+Subject: Re: [PATCH] until blockdev --setrw /dev/scd$n works
+Date: 05 Dec 2003 18:32:18 -0700
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <1070674338.2939.31.camel@patibmrh9>
+References: <1070673881.2939.20.camel@patibmrh9>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from email-out1.iomega.com ([147.178.1.82]:30873 "EHLO
-	email.iomega.com") by vger.kernel.org with ESMTP id S264887AbTLFBYx
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 5 Dec 2003 20:24:53 -0500
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+In-Reply-To: <1070673881.2939.20.camel@patibmrh9>
+To: linux-scsi@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, axboe@suse.de, patmans@us.ibm.com
 List-Id: linux-scsi@vger.kernel.org
-To: axboe@suse.de, patmans@us.ibm.com
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-I say, as yet, `blockdev --setrw /dev/scd$n` does not work as well as
-`blockdev --setrw /dev/hd$v`.
+> -	if (CDROM_CONFIG_FLAGS(drive)->dvd_ram)
+> -		set_disk_ro(drive->disk, 0);
+> +	set_disk_ro(drive->disk, 0);
+> +	if (!CDROM_CONFIG_FLAGS(drive)->dvd_ram)
+> +		printk("lk 2.5 ide-cd.c would refuse write\n");
+> ...
+> -			return 0;
+> +			printk("lk 2.5 sr.c would refuse write\n");
+> ...
+> -			return -EROFS;
+> +			printk("lk 2.5 cdrom.c would refuse write\n");
 
-Do you agree?
+Want details?  I've got Six:
 
-Do you agree we (e.g. I) should fix that?
+1) This three-line kluge works for me.
 
-Here I show only the very very little I may know so far i.e. Where the
-FIXME comments should go, not yet what to substitute for those FIXME
-comments.
+2) I have two pre-production samples of the same device: one ATAPI, one
+USB.  Without my patch my ATAPI device never writes, and for my USB
+device I have to volunteer `blockdev --setrw` or `blockdev --setro`
+again after each disc insertion.
+
+My patch makes both devices write, but I guess my patch somehow breaks
+the devices other people have, else the kernel wouldn't include this
+seemingly useless feature of filtering out writes on demand.
+
+3) I think growing to three lines my kluge of a two-line patch deepens,
+and thus clarifies the shock we first saw non-newbies express as:
+
+http://marc.theaimsgroup.com/?l=linux-scsi&m=106546474421692
+
+> From: Jens Axboe (axboe@suse.de)
+> Subject: Re: writable mmc profiles actually are writable
+> Date: 2003-10-06 11:40:27 PST
+>
+> This is obviously wrong. What are you trying to
+> do?  The uniform layer uses CDC_DVD_RAM as
+> meaning randomly writable media, the only
+> thing the kernel supports out of the box.
+
+4) At least while I remain a newbie I believe the unanswered non-newbie
+explanation:
+
+http://marc.theaimsgroup.com/?l=linux-scsi&m=106323818918929
+
+> Newsgroups: mlist.linux.scsi
+> Date: 2003-09-10 16:00:27 PST
+> Subject: Re: [PATCH] mount -w of dvd+rw etc. in vanilla 2.6
+> From: Patrick Mansfield (patmans@us.ibm.com)
+>
+> Should sd.c and sr.c be calling set_device_ro?
+> (after adding a read only block device, or
+> changing back to read/write)?
+
+5) With my patch in place, dmesg reports:
+
+hdc: ATAPI 48X DVD-ROM CD-R/RW drive, 2048kB Cache, UDMA(33)
+lk 2.5 ide-cd.c would refuse write
+
+Uniform CD-ROM driver Revision: 3.12
+hdd: ATAPI 126X CD-ROM drive, 2048kB Cache, UDMA(33)
+lk 2.5 ide-cd.c would refuse write
+cdrom: This disc doesn't have any tracks I recognize!
+cdrom: This disc doesn't have any tracks I recognize!
+lk 2.5 cdrom.c would refuse write
+lk 2.5 cdrom.c would refuse write
+lk 2.5 cdrom.c would refuse write
+
+sr0: scsi3-mmc drive: 125x/125x caddy
+Attached scsi CD-ROM sr0 at scsi0, channel 0, id 0, lun 0
+lk 2.5 cdrom.c would refuse write
+lk 2.5 sr.c would refuse write
+lk 2.5 cdrom.c would refuse write
+lk 2.5 sr.c would refuse write
+lk 2.5 cdrom.c would refuse write
+lk 2.5 sr.c would refuse write
+
+in reply to such stimuli as:
+
+dd of=/dev/hdd bs=2K if=/dev/zero count=1
+dd of=/dev/hdd bs=2K if=/dev/zero count=1
+dd of=/dev/hdd bs=2K if=/dev/zero count=1
+
+dd of=/dev/scd0 bs=2K if=/dev/zero count=1
+dd of=/dev/scd0 bs=2K if=/dev/zero count=1
+dd of=/dev/scd0 bs=2K if=/dev/zero count=1
+
+See the message pairing?  As yet we have ide-cd pointlessly redundant
+with cdrom and sr pointlessly redundant with cdrom.
+
+6) I guessed the to/cc list here after reviewing:
+
+grep -i sr MAINTAINERS
+grep @ drivers/scsi/sr.c
 
 Pat LaVarre
 
-diff -Nurp linux-2.6.0-test11/drivers/ide/ide-cd.c linux/drivers/ide/ide-cd.c
---- linux-2.6.0-test11/drivers/ide/ide-cd.c	2003-11-26 13:43:50.000000000 -0700
-+++ linux/drivers/ide/ide-cd.c	2003-12-05 17:34:01.000000000 -0700
-@@ -3211,8 +3211,9 @@ int ide_cdrom_setup (ide_drive_t *drive)
- 
- 	nslots = ide_cdrom_probe_capabilities (drive);
- 
--	if (CDROM_CONFIG_FLAGS(drive)->dvd_ram)
--		set_disk_ro(drive->disk, 0);
-+	set_disk_ro(drive->disk, 0);
-+	if (!CDROM_CONFIG_FLAGS(drive)->dvd_ram)
-+		printk("lk 2.5 ide-cd.c would refuse write\n");
- 
- #if 0
- 	drive->dsc_overlap = (HWIF(drive)->no_dsc) ? 0 : 1;
-diff -Nurp linux-2.6.0-test11/drivers/scsi/sr.c linux/drivers/scsi/sr.c
---- linux-2.6.0-test11/drivers/scsi/sr.c	2003-11-26 13:43:25.000000000 -0700
-+++ linux/drivers/scsi/sr.c	2003-12-05 17:34:17.000000000 -0700
-@@ -328,7 +328,7 @@ static int sr_init_command(struct scsi_c
- 
- 	if (rq_data_dir(SCpnt->request) == WRITE) {
- 		if (!cd->device->writeable)
--			return 0;
-+			printk("lk 2.5 sr.c would refuse write\n");
- 		SCpnt->cmnd[0] = WRITE_10;
- 		SCpnt->sc_data_direction = SCSI_DATA_WRITE;
- 	} else if (rq_data_dir(SCpnt->request) == READ) {
-diff -Nurp linux-2.6.0-test11/drivers/cdrom/cdrom.c linux/drivers/cdrom/cdrom.c
---- linux-2.6.0-test11/drivers/cdrom/cdrom.c	2003-11-26 13:43:07.000000000 -0700
-+++ linux/drivers/cdrom/cdrom.c	2003-12-05 17:33:49.000000000 -0700
-@@ -427,7 +427,7 @@ int cdrom_open(struct cdrom_device_info 
- 		ret = cdi->ops->open(cdi, 1);
- 	else {
- 		if ((fp->f_mode & FMODE_WRITE) && !CDROM_CAN(CDC_DVD_RAM))
--			return -EROFS;
-+			printk("lk 2.5 cdrom.c would refuse write\n");
- 
- 		ret = open_for_data(cdi);
- 	}
+P.S. Me digesting those six details produced my initial summary post:
 
+"I say, as yet, `blockdev --setrw /dev/scd$n` does not work as well as
+`blockdev --setrw /dev/hd$v`."
 
+"Do you agree?"
+
+"Do you agree we (e.g. I) should fix that?"
+
+"...
