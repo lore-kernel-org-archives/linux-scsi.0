@@ -1,73 +1,102 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: WWN on FC LUN targets
-Date: Sun, 01 Aug 2004 19:05:50 +1000
+From: Jesper Juhl <juhl-lkml@dif.dk>
+Subject: [PATCH] fix inlining errors in drivers/scsi/aic7xxx/aic79xx_osm.c
+Date: Sun, 1 Aug 2004 13:45:20 +0200 (CEST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <410CB26E.7060109@torque.net>
-References: <OFD7E2C657.B39E37CA-ON88256EDF.00034E54-88256EDF.0004E839@us.ibm.com>
-Reply-To: dougg@torque.net
+Message-ID: <Pine.LNX.4.60.0408011338560.2535@dragon.hygekrogen.localhost>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mailhub2.uq.edu.au ([130.102.149.128]:58127 "EHLO
-	mailhub2.uq.edu.au") by vger.kernel.org with ESMTP id S265517AbUHAJGH
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 1 Aug 2004 05:06:07 -0400
-In-Reply-To: <OFD7E2C657.B39E37CA-ON88256EDF.00034E54-88256EDF.0004E839@us.ibm.com>
+Received: from mail.dif.dk ([193.138.115.101]:26554 "EHLO mail.dif.dk")
+	by vger.kernel.org with ESMTP id S265823AbUHALks (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 1 Aug 2004 07:40:48 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: Bryan Henderson <hbryan@us.ibm.com>
-Cc: Rock Gordon <rockgordon@yahoo.com>, linux-scsi@vger.kernel.org
+To: Andrew Morton <akpm@osdl.org>
+Cc: linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Adrian Bunk <bunk@fs.tum.de>
 
-Bryan Henderson wrote:
->>I am looking at ways to find out particular WWN (world
->>wide names) for SCSI target LUNs 
-> 
-> 
-> LUNS don't actually have fibre channel WWNs.  And neither do SCSI logical 
-> units, which is probably what you meant (a LUN is a logical unit number). 
-> WWNs come in two flavors - World Wide Node Name (WWNN), which identifies a 
-> SCSI target, and World Wide Port Name (WWPN), which identifies a port on a 
-> target.  Neither of those is what you want, since you probably have 
-> multiple logical units per target.
-> 
-> If you're like most FC users, your LUNs aren't stable even within a 
-> target, so you can't use a combination of WWNN and LUN either.
-> 
-> So what people use is either SCSI device serial number or SCSI device ID. 
-> The latter is newer and better.  There are device IDs for targets, ports, 
-> and logical units.  There are device IDs in each of various name spaces, 
-> some defined by public standards.  You can read all about that in SCSI 
-> specifications.  Device IDs are part of the Vital Product Data (VPD).
-> 
-> The basic programming interface to get that information is the SCSI 
-> INQUIRY command.
-> 
-> People have written programs to do the INQUIRY and give you the results in 
-> usable form and even create the device special files named after the 
-> device IDs.  I'm afraid I can't name one at the moment, but I hope someone 
-> else on the list chimes in with the specifics.
-<snip>
 
-The scsi_id program by Patrick Mansfield queries a SCSI device's
-identification and serial number vital product data (VPD) pages
-and produces a unique number. It is meant to be used in conjunction
-with udev (a dynamic device node creation, naming and removal facility
-based on the hotplug subsystem in the lk 2.6 series) to create device
-(and partition) node names according to user specified rules.
-Several versions can be found at this url:
-    http://www-124.ibm.com/storageio/scsi_id/
+This patch fixes the following build error (in 2.6.8-rc2-mm1) when using 
+gcc 3.4.0
 
-The sg_inq utility in the sg3_utils package (version 1.07) has
-a '-i' option that will decode all the "identification descriptors"
-in the device identification VPD page (0x83) for the nominated device.
-That information in conjunction with some of the explanations in
-this thread may show you what identifiers, if any, are available.
-The unit serial number page can be queried with
-'sg_inq -o=80 /dev/sda'.
-sg3_utils can be found at: http://www.torque.net/sg
+drivers/scsi/aic7xxx/aic79xx_osm.c: In function `ahd_linux_dv_transition':
+drivers/scsi/aic7xxx/aic79xx_osm.c:522: sorry, unimplemented: inlining failed in call to 'ahd_linux_dv_fallback': function body not available
+drivers/scsi/aic7xxx/aic79xx_osm.c:3070: sorry, unimplemented: called from here
+drivers/scsi/aic7xxx/aic79xx_osm.c:522: sorry, unimplemented: inlining failed in call to 'ahd_linux_dv_fallback': function body not available
+drivers/scsi/aic7xxx/aic79xx_osm.c:3093: sorry, unimplemented: called from here
+drivers/scsi/aic7xxx/aic79xx_osm.c:522: sorry, unimplemented: inlining failed in call to 'ahd_linux_dv_fallback': function body not available
+drivers/scsi/aic7xxx/aic79xx_osm.c:3144: sorry, unimplemented: called from here
+drivers/scsi/aic7xxx/aic79xx_osm.c:522: sorry, unimplemented: inlining failed in call to 'ahd_linux_dv_fallback': function body not available
+drivers/scsi/aic7xxx/aic79xx_osm.c:3257: sorry, unimplemented: called from here
+drivers/scsi/aic7xxx/aic79xx_osm.c:522: sorry, unimplemented: inlining failed in call to 'ahd_linux_dv_fallback': function body not available
+drivers/scsi/aic7xxx/aic79xx_osm.c:3288: sorry, unimplemented: called from here
+drivers/scsi/aic7xxx/aic79xx_osm.c:522: sorry, unimplemented: inlining failed in call to 'ahd_linux_dv_fallback': function body not available
+drivers/scsi/aic7xxx/aic79xx_osm.c:3317: sorry, unimplemented: called from here
 
-SPC-3 (SCSI Primary Commands) can be found http://www.t10.org
-The most recent draft is version 19 and section 7.6.4 and 7.6.11
-are relevant.
+It first removes a duplicate forward declaration of ahd_linux_dv_fallback 
+and then moves the function before its first use so inlining can succeed.
 
-Doug Gilbert
+Patch is against 2.6.8-rc2-mm1
+
+Signed-off-by: Jesper Juhl <juhl-lkml@dif.dk>
+
+diff -up linux-2.6.8-rc2-mm1-orig/drivers/scsi/aic7xxx/aic79xx_osm.c linux-2.6.8-rc2-mm1/drivers/scsi/aic7xxx/aic79xx_osm.c
+--- linux-2.6.8-rc2-mm1-orig/drivers/scsi/aic7xxx/aic79xx_osm.c	2004-06-16 07:19:36.000000000 +0200
++++ linux-2.6.8-rc2-mm1/drivers/scsi/aic7xxx/aic79xx_osm.c	2004-07-31 22:40:57.000000000 +0200
+@@ -513,9 +513,6 @@ static void ahd_linux_dv_su(struct ahd_s
+ 			    struct scsi_cmnd *cmd,
+ 			    struct ahd_devinfo *devinfo,
+ 			    struct ahd_linux_target *targ);
+-static __inline int
+-	   ahd_linux_dv_fallback(struct ahd_softc *ahd,
+-				 struct ahd_devinfo *devinfo);
+ static int ahd_linux_fallback(struct ahd_softc *ahd,
+ 			      struct ahd_devinfo *devinfo);
+ static __inline int ahd_linux_dv_fallback(struct ahd_softc *ahd,
+@@ -2915,6 +2912,19 @@ out:
+ 	ahd_unlock(ahd, &s);
+ }
+ 
++static __inline int
++ahd_linux_dv_fallback(struct ahd_softc *ahd, struct ahd_devinfo *devinfo)
++{
++	u_long s;
++	int retval;
++
++	ahd_lock(ahd, &s);
++	retval = ahd_linux_fallback(ahd, devinfo);
++	ahd_unlock(ahd, &s);
++
++	return (retval);
++}
++
+ static void
+ ahd_linux_dv_transition(struct ahd_softc *ahd, struct scsi_cmnd *cmd,
+ 			struct ahd_devinfo *devinfo,
+@@ -3551,19 +3561,6 @@ ahd_linux_dv_su(struct ahd_softc *ahd, s
+ 	cmd->cmnd[4] = le | SSS_START;
+ }
+ 
+-static __inline int
+-ahd_linux_dv_fallback(struct ahd_softc *ahd, struct ahd_devinfo *devinfo)
+-{
+-	u_long s;
+-	int retval;
+-
+-	ahd_lock(ahd, &s);
+-	retval = ahd_linux_fallback(ahd, devinfo);
+-	ahd_unlock(ahd, &s);
+-
+-	return (retval);
+-}
+-
+ static int
+ ahd_linux_fallback(struct ahd_softc *ahd, struct ahd_devinfo *devinfo)
+ {
+
+
+Please CC me on replies from linux-scsi since I'm not subscribed to that 
+list - not nessesary if linux-kernel is kept in the CC since I am 
+subscribed there.
+
+--
+Jesper Juhl <juhl-lkml@dif.dk>
+
