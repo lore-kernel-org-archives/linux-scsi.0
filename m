@@ -1,717 +1,339 @@
 From: Patrick Mansfield <patmans@us.ibm.com>
-Subject: [RFC][PATCH] 2.5 scsi-misc-2.5 dynamic device info flag entries
-Date: Tue, 12 Nov 2002 10:16:00 -0800
+Subject: [PATCH] 2.5 scsi-misc-2.5 remove scsi_host_hn_list
+Date: Tue, 12 Nov 2002 10:47:59 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20021112101600.A20411@eng2.beaverton.ibm.com>
+Message-ID: <20021112104759.A21739@eng2.beaverton.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Received: from westrelay03.boulder.ibm.com (westrelay03.boulder.ibm.com [9.17.194.24])
-	by e32.co.us.ibm.com (8.12.2/8.12.2) with ESMTP id gACIHIXk036946
-	for <linux-scsi@vger.kernel.org>; Tue, 12 Nov 2002 13:17:18 -0500
-Received: from gateway1.beaverton.ibm.com (gateway1.beaverton.ibm.com [138.95.180.2])
-	by westrelay03.boulder.ibm.com (8.12.3/NCO/VER6.4) with ESMTP id gACIHHnU071166
-	for <linux-scsi@vger.kernel.org>; Tue, 12 Nov 2002 11:17:17 -0700
+	by e34.co.us.ibm.com (8.12.2/8.12.2) with ESMTP id gACIm1XP049012
+	for <linux-scsi@vger.kernel.org>; Tue, 12 Nov 2002 13:48:01 -0500
+Received: from gateway.beaverton.ibm.com (gateway.beaverton.ibm.com [138.95.180.1])
+	by westrelay03.boulder.ibm.com (8.12.3/NCO/VER6.4) with ESMTP id gACIm0nU014298
+	for <linux-scsi@vger.kernel.org>; Tue, 12 Nov 2002 11:48:01 -0700
 Received: from eng2.beaverton.ibm.com (eng2.beaverton.ibm.com [9.47.57.17])
-	by gateway1.beaverton.ibm.com (8.11.6/8.11.6) with ESMTP id gACID0V18256
-	for <linux-scsi@vger.kernel.org>; Tue, 12 Nov 2002 10:13:00 -0800
+	by gateway.beaverton.ibm.com (8.11.6/8.11.6) with ESMTP id gACIm0s25103
+	for <linux-scsi@vger.kernel.org>; Tue, 12 Nov 2002 10:48:00 -0800
 Received: (from patman@localhost)
-	by eng2.beaverton.ibm.com (8.10.0.Beta10/8.8.5/token.aware-1.2) id gACIG0121313
-	for linux-scsi@vger.kernel.org; Tue, 12 Nov 2002 10:16:00 -0800 (PST)
+	by eng2.beaverton.ibm.com (8.10.0.Beta10/8.8.5/token.aware-1.2) id gACIm0h21795
+	for linux-scsi@vger.kernel.org; Tue, 12 Nov 2002 10:48:00 -0800 (PST)
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-Hi -
+Here is Adam's patch to remove the scsi_host_hn_list, modified to
+skip past the token separator.
 
-This patch allows scsi device flags like those in the current scsi_scan=
-=2Ec
-device_list to be added via the command line or via /proc/scsi/device_i=
-nfo.
+Patch is against linux-scsi.bkbits.net/scsi-misc-2.5.
 
-It also allows a default flag to be set via the command line.
+ b/drivers/scsi/hosts.h |    1 
+ b/drivers/scsi/scsi.c  |    2 
+ drivers/scsi/hosts.c   |  211 ++++++++++++++++++++-----------------------------
+ 3 files changed, 88 insertions(+), 126 deletions(-)
 
-This should allow for the (eventual) removal of the current device_list=
-=2E
-
-Example boot command line arguments:
-
-scsi_default_dev_flags=3D0x1 scsi_dev_flags=3D"IBM:LN V1.2Rack:0x200"
-
-The above means that a SCSI device with vendor "IBM     ", model
-(product) "LN V1.2Rack     " will get a flag of 0x200 during scanning,
-meaning it should be treated like a SCSI-3 device for scanning. All
-other devices without an entry would get the default flag value of 1,
-so they would not be scanned past LUN 0 (the same behaviour as=20
-max_scsi_luns =3D 1).
-
-I left the old device list and BLIST defines in scsi_scan.c.
-
-I could not get lilo to allow two spaces, so I could not use this
-with my device that has model "ST318203LC    !#". I didn't try grub.
-
-Does __initdata also affect strings in initializers? like:
-
-char *foo __initdata =3D "abc";
-
- scsi.c      |  357 +++++++++++++++++++++++++++++++++++++++++++++++++++=
-+++++++++
- scsi.h      |   24 ++++
- scsi_scan.c |   95 +++------------
- 3 files changed, 400 insertions(+), 76 deletions(-)
-
-diff -Nru a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
---- a/drivers/scsi/scsi.c	Tue Nov 12 09:30:40 2002
-+++ b/drivers/scsi/scsi.c	Tue Nov 12 09:30:40 2002
-@@ -163,6 +163,10 @@
- };
-=20
- static char * scsi_null_device_strs =3D "nullnullnullnull";
-+static const char * const spaces =3D "                "; /* 16 of them=
- */
+--- a/drivers/scsi/hosts.c	Tue Nov 12 08:34:46 2002
++++ b/drivers/scsi/hosts.c	Tue Nov 12 08:34:46 2002
+@@ -45,13 +45,90 @@
+ #include "scsi.h"
+ #include "hosts.h"
+ 
+-static LIST_HEAD(scsi_host_hn_list);
+ static LIST_HEAD(scsi_host_list);
+ static spinlock_t scsi_host_list_lock = SPIN_LOCK_UNLOCKED;
+ 
+ static int scsi_host_next_hn;		/* host_no for next new host */
+ static int scsi_hosts_registered;	/* cnt of registered scsi hosts */
+ static int scsi_ignore_no_error_handling = 0;
++static char *scsihosts;
 +
-+static unsigned scsi_default_dev_flags;
-+static LIST_HEAD(scsi_dev_info_list);
-=20
- /*=20
-  * Function prototypes.
-@@ -1670,7 +1674,312 @@
- 	spin_unlock_irqrestore(&device_request_lock, flags);
- }
-=20
-+/*
-+ * scsi_strcpy_devinfo: called from scsi_dev_info_list_add to copy int=
-o
-+ * devinfo vendor and model strings.
-+ */
-+static void scsi_strcpy_devinfo(char *name, char *to, size_t to_length=
-,
-+				char *from, int compatible)
++/**
++  * scsi_find_host_by_num - get a Scsi_Host by host no
++  *
++  * @host_no:	host number to locate
++  *
++  * Return value:
++  *	A pointer to located Scsi_Host or NULL.
++  **/
++static struct Scsi_Host *scsi_find_host_by_num(unsigned short host_no)
 +{
-+	size_t from_length;
++	struct Scsi_Host *shost, *shost_found = NULL;
 +
-+	from_length =3D strlen(from);
-+	strncpy(to, from, min(to_length, from_length));
-+	if (from_length < to_length)
-+		if (compatible) {
++	spin_lock(&scsi_host_list_lock);
++	list_for_each_entry(shost, &scsi_host_list, sh_list) {
++		if (shost->host_no > host_no) {
 +			/*
-+			 * NUL terminate the string if it is short.
++			 * The list is sorted.
 +			 */
-+			to[from_length] =3D '\0';
-+		} else {
-+			/*=20
-+			 * space pad the string if it is short.=20
-+			 */
-+			strncpy(&to[from_length], spaces,
-+				to_length - from_length);
++			break;
++		} else if (shost->host_no == host_no) {
++			shost_found = shost;
++			break;
 +		}
-+	if (from_length > to_length)
-+		 printk(KERN_WARNING "%s: %s string '%s' is too long\n",
-+			__FUNCTION__, name, from);
-+}
-+
-+/**
-+ * scsi_dev_info_list_add: add one dev_info list entry.
-+ * @vendor:	vendor string
-+ * @model:	model (product) string
-+ * @strflags:	integer string
-+ * @flag:	if strflags NULL, use this flag value
-+ *
-+ * Description:
-+ * 	Create and add one dev_info entry for @vendor, @model, @strflags o=
-r
-+ * 	@flag. If @compatible, add to the tail of the list, do not space
-+ * 	pad, and set devinfo->compatible. The scsi_static_device_list entr=
-ies
-+ * 	are added with @compatible 1 and @clfags NULL.
-+ *
-+ * Returns: 0 OK, -error on failure.
-+ **/
-+static int scsi_dev_info_list_add(int compatible, char *vendor, char *=
-model,
-+			    char *strflags, int flags)
-+{
-+	struct scsi_dev_info_list *devinfo;
-+
-+	devinfo =3D kmalloc(sizeof(*devinfo), GFP_KERNEL);
-+	if (!devinfo) {
-+		printk(KERN_ERR "%s: no memory\n", __FUNCTION__);
-+		return -ENOMEM;
 +	}
-+
-+	scsi_strcpy_devinfo("vendor", devinfo->vendor, sizeof(devinfo->vendor=
-),
-+			    vendor, compatible);
-+	scsi_strcpy_devinfo("model", devinfo->model, sizeof(devinfo->model),
-+			    model, compatible);
-+
-+	if (strflags)
-+		devinfo->flags =3D simple_strtoul(strflags, NULL, 0);
-+	else
-+		devinfo->flags =3D flags;
-+
-+	devinfo->compatible =3D compatible;
-+
-+	if (compatible)
-+		list_add_tail(&devinfo->dev_info_list, &scsi_dev_info_list);
-+	else
-+		list_add(&devinfo->dev_info_list, &scsi_dev_info_list);
-+
-+	return 0;
++	spin_unlock(&scsi_host_list_lock);
++	return shost_found;
 +}
 +
 +/**
-+ * scsi_dev_info_list_add_str: parse dev_list and add to the
-+ * scsi_dev_info_list.
-+ * @dev_list:	string of device flags to add
++ * scsi_alloc_hostnum - choose new SCSI host number based on host name.
++ * @name:	String to store in name field
 + *
-+ * Description:
-+ * 	Parse dev_list, and add entries to the scsi_dev_info_list.
-+ * 	dev_list is of the form "vendor:product:flag,vendor:product:flag".
-+ * 	dev_list is modified via strsep. Can be called for command line
-+ * 	addition, for proc or mabye a sysfs interface.
-+ *
-+ * Returns: 0 if OK, -error on failure.
++ * Return value:
++ *	Pointer to a new Scsi_Host_Name
 + **/
-+static int scsi_dev_info_list_add_str (char *dev_list)
++static int scsi_alloc_host_num(const char *name)
 +{
-+	char *vendor, *model, *strflags, *next;
-+	char *next_check;
-+	int res =3D 0;
++	int hostnum;
++	int namelen;
++	const char *start, *end;
 +
-+	next =3D dev_list;
-+	if (next && next[0] =3D=3D '"') {
-+		/*
-+		 * Ignore both the leading and trailing quote.
-+		 */
-+		next++;
-+		next_check =3D ",\"";
-+	} else {
-+		next_check =3D ",";
-+	}
++	if (name) {
++		hostnum = 0;
++		namelen = strlen(name);
++		start = scsihosts; 
++		while (1) {
++			int hostlen;
 +
-+	/*
-+	 * For the leading and trailing '"' case, the for loop comes
-+	 * through the last time with vendor[0] =3D=3D '\0'.
-+	 */
-+	for (vendor =3D strsep(&next, ":"); vendor && (vendor[0] !=3D '\0')
-+	     && (res =3D=3D 0); vendor =3D strsep(&next, ":")) {
-+		strflags =3D NULL;
-+		model =3D strsep(&next, ":");
-+		if (model)
-+			strflags =3D strsep(&next, next_check);
-+		if (!model || !strflags) {
-+			printk(KERN_ERR "%s: bad dev info string '%s' '%s'"
-+			       " '%s'\n", __FUNCTION__, vendor, model,
-+			       strflags);
-+			res =3D -EINVAL;
-+		} else
-+			res =3D scsi_dev_info_list_add(0 /* compatible */, vendor,
-+						     model, strflags, 0);
-+	}
-+	return res;
-+}
-+
-+/**
-+ * scsi_dev_list_init: set up the dynamic device list.
-+ * @dev_list:	string of device flags to add
-+ *
-+ * Description:
-+ * 	Add command line @dev_list entries, then add
-+ * 	scsi_static_device_list entries to the scsi device info list.
-+ **/
-+static void scsi_dev_info_list_init (char *dev_list)
-+{
-+	int i;
-+
-+	if (scsi_dev_info_list_add_str(dev_list) =3D=3D -ENOMEM)
-+		return;
-+	for (i =3D 0; scsi_static_device_list[i].vendor !=3D NULL; i++)
-+		if (scsi_dev_info_list_add(1 /* compatibile */,
-+			   scsi_static_device_list[i].vendor,
-+			   scsi_static_device_list[i].model,
-+			   NULL,
-+			   scsi_static_device_list[i].flags) =3D=3D -ENOMEM)
-+			return;
-+}
-+
-+/**
-+ * scsi_dev_info_list_delete: called from scsi.c:exit_scsi to remove
-+ * 	the scsi_dev_info_list.
-+ **/
-+static void scsi_dev_info_list_delete (void)
-+{
-+	struct list_head *lh, *lh_next;
-+	struct scsi_dev_info_list *devinfo;
-+
-+	list_for_each_safe(lh, lh_next, &scsi_dev_info_list) {
-+		devinfo =3D list_entry(lh, struct scsi_dev_info_list,
-+				     dev_info_list);
-+		kfree(devinfo);
-+	}
-+}
-+
-+/**
-+ * get_device_flags - get device specific flags from the dynamic devic=
-e
-+ * list. Called during scan time.
-+ * @vendor:	vendor name
-+ * @model:	model name
-+ *
-+ * Description:
-+ *     Search the scsi_dev_info_list for an entry matching @vendor and
-+ *     @model, if found, return the matching flags value, else return
-+ *     scsi_default_dev_flags.
-+ **/
-+int scsi_get_device_flags(unsigned char *vendor, unsigned char *model)
-+{
-+	struct scsi_dev_info_list *devinfo;
-+
-+	list_for_each_entry(devinfo, &scsi_dev_info_list, dev_info_list) {
-+		if (devinfo->compatible) {
-+			/*
-+			 * Behave like the older version of get_device_flags.
-+			 */
-+			size_t max;
-+			/*
-+			 * XXX why skip leading spaces? If an odd INQUIRY
-+			 * value, that should have been part of the
-+			 * scsi_static_device_list[] entry, such as "  FOO"
-+			 * rather than "FOO". Since this code is already
-+			 * here, and we don't know what device it is
-+			 * trying to work with, leave it as-is.
-+			 */
-+			max =3D 8;	/* max length of vendor */
-+			while ((max > 0) && *vendor =3D=3D ' ') {
-+				max--;
-+				vendor++;
++			if (start && start[0] != '\0') {
++				end = strpbrk(start, ",:");
++				if (end) {
++					hostlen = (end - start);
++					end++;
++				} else
++					hostlen = strlen(start);
++				/*
++				 * Look for a match on the scsihosts list.
++				 */
++				if ((hostlen == namelen) && 
++				    (strncmp(name, start, hostlen) == 0) && 
++				    (!scsi_find_host_by_num(hostnum)))
++					return hostnum;
++				start = end;
++			} else  {
++				/*
++				 * Look for any unused numbers.
++				 */
++				if (!scsi_find_host_by_num(hostnum))
++					return hostnum;
 +			}
-+			/*
-+			 * XXX removing the following strlen() would be
-+			 * good, using it means that for a an entry not in
-+			 * the list, we scan every byte of every vendor
-+			 * listed in scsi_static_device_list[], and never match
-+			 * a single one (and still have to compare at
-+			 * least the first byte of each vendor).
-+			 */
-+			if (memcmp(devinfo->vendor, vendor,
-+				    min(max, strlen(devinfo->vendor))))
-+				continue;
-+			/*
-+			 * Skip spaces again.
-+			 */
-+			max =3D 16;	/* max length of model */
-+			while ((max > 0) && *model =3D=3D ' ') {
-+				max--;
-+				model++;
-+			}
-+			if (memcmp(devinfo->model, model,
-+				   min(max, strlen(devinfo->model))))
-+				continue;
-+			return devinfo->flags;
-+		} else {
-+			if (!memcmp(devinfo->vendor, vendor,
-+				     sizeof(devinfo->vendor)) &&
-+			     !memcmp(devinfo->model, model,
-+				      sizeof(devinfo->model)))
-+				return devinfo->flags;
++			hostnum++;
 +		}
-+	}
-+	return scsi_default_dev_flags;
++	} else
++		return scsi_host_next_hn++;
 +}
 +
- #ifdef CONFIG_PROC_FS
-+/*=20
-+ * proc_scsi_dev_info_read: dump the scsi_dev_info_list via
-+ * /proc/scsi/device_info
-+ */
-+static int proc_scsi_dev_info_read(char *buffer, char **start, off_t o=
-ffset,
-+				   int length)
-+{
-+	struct scsi_dev_info_list *devinfo;
-+	int size, len =3D 0;
-+	off_t begin =3D 0;
-+	off_t pos =3D 0;
-+
-+	list_for_each_entry(devinfo, &scsi_dev_info_list, dev_info_list) {
-+		size =3D sprintf(buffer + len, "'%.8s' '%.16s' 0x%x\n",
-+			       devinfo->vendor, devinfo->model, devinfo->flags);
-+		len +=3D size;
-+		pos =3D begin + len;
-+		if (pos < offset) {
-+			len =3D 0;
-+			begin =3D pos;
-+		}
-+		if (pos > offset + length)
-+			goto stop_output;
-+	}
-+
-+stop_output:
-+	*start =3D buffer + (offset - begin);	/* Start of wanted data */
-+	len -=3D (offset - begin);	/* Start slop */
-+	if (len > length)
-+		len =3D length;	/* Ending slop */
-+	return (len);
-+}
-+
-+/*=20
-+ * proc_scsi_dev_info_write: allow additions to the scsi_dev_info_list=
- via
-+ * /proc.
-+ *
-+ * Use: echo "vendor:model:flag" > /proc/scsi/device_info
-+ *
-+ * To add a black/white list entry for vendor and model with an intege=
-r
-+ * value of flag to the scsi device info list.
-+ */
-+static int proc_scsi_dev_info_write (struct file * file, const char * =
-buf,
-+                              unsigned long length, void *data)
-+{
-+	char *buffer;
-+	int err =3D length;
-+
-+	if (!buf || length>PAGE_SIZE)
-+		return -EINVAL;
-+	if (!(buffer =3D (char *) __get_free_page(GFP_KERNEL)))
-+		return -ENOMEM;
-+	if(copy_from_user(buffer, buf, length)) {
-+		err =3D-EFAULT;
-+		goto out;
-+	}
-+
-+	if (length < PAGE_SIZE)
-+		buffer[length] =3D '\0';
-+	else if (buffer[PAGE_SIZE-1]) {
-+		err =3D -EINVAL;
-+		goto out;
-+	}
-+
-+	scsi_dev_info_list_add_str(buffer);
-+
-+out:
-+	free_page((unsigned long) buffer);
-+	return err;
-+}
-+
- static int scsi_proc_info(char *buffer, char **start, off_t offset, in=
-t length)
- {
- 	Scsi_Device *scd;
-@@ -2242,8 +2551,17 @@
- #endif				/* CONFIG_PROC_FS */
-=20
- static char *scsihosts;
-+static char *scsi_dev_flags;
-=20
- MODULE_PARM(scsihosts, "s");
-+MODULE_PARM(scsi_dev_flags, "s");
-+MODULE_PARM_DESC(scsi_dev_flags,
-+	 "Given scsi_dev_flags=3Dvendor:model:flags, add a black/white list"
-+	 " entry for vendor and model with an integer value of flags"
-+	 " to the scsi device info list");
-+MODULE_PARM(scsi_default_dev_flags, "i");
-+MODULE_PARM_DESC(scsi_default_dev_flags,
-+		 "scsi default device flag integer value");
- MODULE_DESCRIPTION("SCSI core");
- MODULE_LICENSE("GPL");
-=20
-@@ -2255,6 +2573,30 @@
- }
-=20
- __setup("scsihosts=3D", scsi_setup);
-+
-+int __init setup_scsi_dev_flags(char *str)
-+{
-+	scsi_dev_flags =3D str;
-+	return 1;
-+}
-+__setup("scsi_dev_flags=3D", setup_scsi_dev_flags);
-+
-+static int __init setup_scsi_default_dev_flags(char *str)
-+{
-+	unsigned int tmp;
-+	if (get_option(&str, &tmp) =3D=3D 1) {
-+		scsi_default_dev_flags =3D tmp;
-+		printk(KERN_WARNING "%s %d\n", __FUNCTION__,
-+		       scsi_default_dev_flags);
-+		return 1;
-+	} else {
-+		printk(KERN_WARNING "%s: usage scsi_default_dev_flags=3Dintr\n",
-+		       __FUNCTION__);
-+		return 0;
-+	}
-+}
-+__setup("scsi_default_dev_flags=3D", setup_scsi_default_dev_flags);
-+
- #endif
-=20
- static void *scsi_pool_alloc(int gfp_mask, void *data)
-@@ -2377,12 +2719,24 @@
- 		return -ENOMEM;
- 	}
- 	generic->write_proc =3D proc_scsi_gen_write;
-+
-+	generic =3D create_proc_info_entry ("scsi/device_info", 0, 0,
-+					  proc_scsi_dev_info_read);
-+	if (!generic) {
-+		printk (KERN_ERR "cannot init /proc/scsi/device_info\n");
-+		remove_proc_entry("scsi/scsi", 0);
-+		remove_proc_entry("scsi", 0);
-+		return -ENOMEM;
-+	}
-+	generic->write_proc =3D proc_scsi_dev_info_write;
- #endif
-=20
-         scsi_devfs_handle =3D devfs_mk_dir (NULL, "scsi", NULL);
-=20
- 	scsi_host_hn_init(scsihosts);
-=20
-+	scsi_dev_info_list_init(scsi_dev_flags);
-+
- 	bus_register(&scsi_driverfs_bus_type);
-=20
- 	/* Where we handle work queued by scsi_done */
-@@ -2397,10 +2751,13 @@
-=20
-         devfs_unregister (scsi_devfs_handle);
-=20
-+	scsi_dev_info_list_delete();
-+
- 	scsi_host_hn_release();
-=20
- #ifdef CONFIG_PROC_FS
- 	/* No, we're not here anymore. Don't show the /proc/scsi files. */
-+	remove_proc_entry ("scsi/device_info", 0);
- 	remove_proc_entry ("scsi/scsi", 0);
- 	remove_proc_entry ("scsi", 0);
- #endif
-diff -Nru a/drivers/scsi/scsi.h b/drivers/scsi/scsi.h
---- a/drivers/scsi/scsi.h	Tue Nov 12 09:30:40 2002
-+++ b/drivers/scsi/scsi.h	Tue Nov 12 09:30:40 2002
-@@ -475,6 +475,7 @@
- extern int scsi_mlqueue_insert(struct scsi_cmnd *, int);
- extern int scsi_attach_device(struct scsi_device *);
- extern void scsi_detach_device(struct scsi_device *);
-+extern int scsi_get_device_flags(unsigned char *vendor, unsigned char =
-*model);
-=20
- /*
-  * Newer request-based interfaces.
-@@ -512,6 +513,29 @@
- extern int print_msg(const unsigned char *);
- extern const char *scsi_sense_key_string(unsigned char);
- extern const char *scsi_extd_sense_format(unsigned char, unsigned char=
-);
-+
-+/*
-+ * dev_info: for the black/white list in the old scsi_static_device_li=
-st
-+ */
-+struct dev_info {
-+	char *vendor;
-+	char *model;
-+	char *revision;	/* revision known to be bad, unused */
-+	unsigned flags;
-+};
-+
-+extern struct dev_info scsi_static_device_list[] __initdata;
-+
-+/*
-+ * scsi_dev_info_list: structure to hold black/white listed devices.
-+ */
-+struct scsi_dev_info_list {
-+	struct list_head dev_info_list;
-+	char vendor[8];
-+	char model[16];
-+	unsigned flags;
-+	unsigned compatible; /* for use with scsi_static_device_list entries =
-*/
-+};
-=20
- /*
-  *  The scsi_device struct contains what we know about each given scsi
-diff -Nru a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
---- a/drivers/scsi/scsi_scan.c	Tue Nov 12 09:30:40 2002
-+++ b/drivers/scsi/scsi_scan.c	Tue Nov 12 09:30:40 2002
-@@ -54,18 +54,16 @@
- #define BLIST_INQUIRY_36	0x400	/* override additional length field */
- #define BLIST_INQUIRY_58	0x800	/* ... for broken inquiry responses */
-=20
--struct dev_info {
--	const char *vendor;
--	const char *model;
--	const char *revision;	/* revision known to be bad, unused */
--	unsigned flags;
--};
--
- /*
-- * device_list: devices that require settings that differ from the
-- * default, includes black-listed (broken) devices.
-+ * scsi_static_device_list: deprecated list of devices that require
-+ * settings that differ from the default, includes black-listed (broke=
-n)
-+ * devices. The entries here are added to the tail of scsi_dev_info_li=
-st
-+ * via scsi_dev_info_list_init.
-+ *
-+ * Do not add to this list, use the command line or proc interface to =
-add
-+ * to the scsi_dev_info_list. This table will eventually go away.
-  */
--static struct dev_info device_list[] =3D {
-+struct dev_info scsi_static_device_list[] __initdata =3D {
- 	/*
- 	 * The following devices are known not to tolerate a lun !=3D 0 scan
- 	 * for one reason or another. Some will respond to all luns,
-@@ -183,6 +181,7 @@
- 	{"COMPAQ", "MSA1000", NULL, BLIST_FORCELUN},
- 	{"HP", "C1557A", NULL, BLIST_FORCELUN},
- 	{"IBM", "AuSaV1S2", NULL, BLIST_FORCELUN},
-+	{ NULL, NULL, NULL, 0 },
- };
-=20
- #define ALLOC_FAILURE_MSG	KERN_ERR "%s: Allocation failure during" \
-@@ -427,62 +426,6 @@
- }
-=20
+ 
  /**
-- * get_device_flags - get device specific flags from the device_list
-- * @vendor:	vendor name
-- * @model:	model name
-- *
-- * Description:
-- *     Search device_list for an entry matching @vendor and @model, if
-- *     found, return the matching flags value, else return 0.
-- *     Partial matches count as success - good for @model, but maybe n=
-ot
-- *     @vendor.
-- **/
--static int get_device_flags(unsigned char *vendor, unsigned char *mode=
-l)
--{
--	int i;
--	size_t max;
+  * scsi_tp_for_each_host - call function for each scsi host off a template
+@@ -244,21 +321,11 @@
+  **/
+ void scsi_unregister(struct Scsi_Host *shost)
+ {
+-	struct list_head *lh;
+-	Scsi_Host_Name *shost_name;
 -
--	for (i =3D 0; i < ARRAY_SIZE(device_list); i++) {
--		/*
--		 * XXX why skip leading spaces? If an odd INQUIRY value,
--		 * that should have been part of the device_list[] entry,
--		 * such as "  FOO" rather than "FOO". Since this code is
--		 * already here, and we don't know what device it is
--		 * trying to work with, leave it as-is.
--		 */
--		max =3D 8;	/* max length of vendor */
--		while ((max > 0) && *vendor =3D=3D ' ') {
--			max--;
--			vendor++;
--		}
--		/*
--		 * XXX removing the following strlen() would be good,
--		 * using it means that for a an entry not in the list, we
--		 * scan every byte of every vendor listed in
--		 * device_list[], and never match a single one (and still
--		 * have to compare at least the first byte of each
--		 * vendor).
--		 */
--		if (memcmp(device_list[i].vendor, vendor,
--			    min(max, strlen(device_list[i].vendor))))
--			continue;
--		/*
--		 * Skip spaces again.
--		 */
--		max =3D 16;	/* max length of model */
--		while ((max > 0) && *model =3D=3D ' ') {
--			max--;
--			model++;
--		}
--		if (memcmp(device_list[i].model, model,
--			   min(max, strlen(device_list[i].model))))
--			continue;
--		return device_list[i].flags;
+ 	/* Remove shost from scsi_host_list */
+ 	spin_lock(&scsi_host_list_lock);
+ 	list_del(&shost->sh_list);
+ 	spin_unlock(&scsi_host_list_lock);
+ 
+-	/* Unregister from scsi_host_hn_list */
+-	list_for_each(lh, &scsi_host_hn_list) {
+-		shost_name = list_entry(lh, Scsi_Host_Name, shn_list);
+-		if (shost->host_no == shost_name->host_no)
+-			shost_name->host_registered = 0;
 -	}
--	return 0;
+-
+ 	/*
+ 	 * Next, kill the kernel error recovery thread for this host.
+ 	 */
+@@ -285,43 +352,6 @@
+ }
+ 
+ /**
+- * scsi_host_hn_add - allocate and add new Scsi_Host_Name
+- * @name:	String to store in name field
+- *
+- * Return value:
+- * 	Pointer to a new Scsi_Host_Name
+- **/
+-Scsi_Host_Name *scsi_host_hn_add(char *name)
+-{
+-	Scsi_Host_Name *shost_name;
+-	int len;
+-
+-	len = strlen(name);
+-	shost_name =  kmalloc(sizeof(*shost_name), GFP_KERNEL);
+-	if (!shost_name) {
+-		printk(KERN_ERR "%s: out of memory at line %d.\n",
+-		       __FUNCTION__, __LINE__);
+-		return NULL;
+-	}
+-	shost_name->name = kmalloc(len + 1, GFP_KERNEL);
+-	if (!shost_name->name) {
+-		kfree(shost_name);
+-		printk(KERN_ERR "%s: out of memory at line %d.\n",
+-		       __FUNCTION__, __LINE__);
+-		return NULL;
+-	}
+-
+-	if (len)
+-		strncpy(shost_name->name, name, len);
+-	shost_name->name[len] = 0;
+-	shost_name->host_no = scsi_host_next_hn++;
+-	shost_name->host_registered = 0;
+-	list_add_tail(&shost_name->shn_list, &scsi_host_hn_list);
+-
+-	return shost_name;
 -}
 -
 -/**
-  * scsi_initialize_merge_fn() -=C6=A3initialize merge function for a h=
-ost
-  * @sd:		host descriptor
-  */
-@@ -1092,12 +1035,12 @@
-  * Notes:
-  *     If a device returns the same serial number for different LUNs o=
-r
-  *     even for different LUNs on different devices, special handling =
-must
-- *     be added to get an id, or a new black list flag must to added a=
-nd
-- *     used in device_list[] (so we use the default name, or add a way=
- to
-- *     prefix the id/name with SCSI_UID_UNKNOWN - and change the defin=
-e to
-- *     something meaningful like SCSI_UID_NOT_UNIQUE). Complete user l=
-evel
-- *     scanning would be nice for such devices, so we do not need devi=
-ce
-- *     specific code in the kernel.
-+ *     be added to get an id, or a new black list flag must be added (=
-so
-+ *     we use the default name, or add a way to prefix the id/name wit=
-h
-+ *     SCSI_UID_UNKNOWN - and change the define to something meaningfu=
-l
-+ *     like SCSI_UID_NOT_UNIQUE). Complete user level scanning would b=
-e
-+ *     nice for such devices, so we do not need device specific code i=
-n
-+ *     the kernel.
-  **/
- static void scsi_load_identifier(Scsi_Device *sdev, Scsi_Request *sreq=
-)
+  * scsi_register - register a scsi host adapter instance.
+  * @shost_tp:	pointer to scsi host template
+  * @xtr_bytes:	extra bytes to allocate for driver
+@@ -338,28 +368,17 @@
+ struct Scsi_Host * scsi_register(Scsi_Host_Template *shost_tp, int xtr_bytes)
  {
-@@ -1176,7 +1119,7 @@
-  *     If the INQUIRY is successful, sreq->sr_result is zero and: the
-  *     INQUIRY data is in @inq_result; the scsi_level and INQUIRY leng=
-th
-  *     are copied to the Scsi_Device at @sreq->sr_device (sdev);
-- *     any device_list flags value is stored in *@bflags.
-+ *     any flags value is stored in *@bflags.
-  **/
- static void scsi_probe_lun(Scsi_Request *sreq, char *inq_result,
- 			   int *bflags)
-@@ -1225,7 +1168,7 @@
- 	 * argument.
- 	 */
- 	BUG_ON(bflags =3D=3D NULL);
--	*bflags =3D get_device_flags(&inq_result[8], &inq_result[16]);
-+	*bflags =3D scsi_get_device_flags(&inq_result[8], &inq_result[16]);
-=20
- 	possible_inq_resp_len =3D (unsigned char) inq_result[4] + 5;
- 	if (BLIST_INQUIRY_36 & *bflags)
-@@ -1306,7 +1249,7 @@
-  * @sdevnew:	store the address of the newly allocated Scsi_Device
-  * @sreq:	scsi request used when getting an identifier
-  * @inq_result:	holds the result of a previous INQUIRY to the LUN
-- * @bflags:	flags value from device_list
-+ * @bflags:	black/white list flag
-  *
-  * Description:
-  *     Allocate and initialize a Scsi_Device matching sdevscan. Option=
-ally
-@@ -1606,7 +1549,7 @@
- /**
-  * scsi_sequential_lun_scan - sequentially scan a SCSI target
-  * @sdevscan:	scan the host, channel, and id of this Scsi_Device
-- * @bflags:	flags from device_list for LUN 0
-+ * @bflags:	black/white list flag for LUN 0
-  * @lun0_res:	result of scanning LUN 0
-  *
-  * Description:
+ 	struct Scsi_Host *shost, *shost_scr;
+-	Scsi_Host_Name *shost_name = NULL;
+-	Scsi_Host_Name *shn = NULL;
+-	char *hname;
+-	size_t hname_len;
+ 	struct list_head *lh;
+ 	int gfp_mask;
+ 	DECLARE_MUTEX_LOCKED(sem);
+ 
+-	/*
+-	 * Determine host number. Check reserved first before allocating
+-	 * new one
+-	 */
+-	hname = (shost_tp->proc_name) ?  shost_tp->proc_name : "";
+-	hname_len = strlen(hname);
 -
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+         /* Check to see if this host has any error handling facilities */
+         if(shost_tp->eh_strategy_handler == NULL &&
+            shost_tp->eh_abort_handler == NULL &&
+            shost_tp->eh_device_reset_handler == NULL &&
+            shost_tp->eh_bus_reset_handler == NULL &&
+            shost_tp->eh_host_reset_handler == NULL) {
+-		printk(KERN_ERR "ERROR: SCSI host `%s' has no error handling\nERROR: This is not a safe way to run your SCSI host\nERROR: The error handling must be added to this driver\n", hname);
++		printk(KERN_ERR "ERROR: SCSI host `%s' has no error handling\nERROR: This is not a safe way to run your SCSI host\nERROR: The error handling must be added to this driver\n", shost_tp->proc_name);
+ 		dump_stack();
+         } 
+ 	gfp_mask = GFP_KERNEL;
+@@ -374,26 +393,7 @@
+ 
+ 	memset(shost, 0, sizeof(struct Scsi_Host) + xtr_bytes);
+ 
+-	if (hname_len)
+-		list_for_each(lh, &scsi_host_hn_list) {
+-			shn = list_entry(lh, Scsi_Host_Name, shn_list);
+-			if (!(shn->host_registered) &&
+-			    !strncmp(hname, shn->name, hname_len)) {
+-				shost_name = shn;
+-				break;
+-			}
+-		}
+-
+-	if (!shost_name) {
+-		shost_name = scsi_host_hn_add(hname);
+-		if (!shost_name) {
+-			kfree(shost);
+-			return NULL;
+-		}
+-	}
+-
+-	shost->host_no = shost_name->host_no;
+-	shost_name->host_registered = 1;
++	shost->host_no = scsi_alloc_host_num(shost_tp->proc_name);
+ 	scsi_hosts_registered++;
+ 
+ 	spin_lock_init(&shost->default_lock);
+@@ -642,22 +642,8 @@
+  **/
+ struct Scsi_Host *scsi_host_hn_get(unsigned short host_no)
+ {
+-	struct list_head *lh;
+-	struct Scsi_Host *shost;
+-
+-	spin_lock(&scsi_host_list_lock);
+-	list_for_each(lh, &scsi_host_list) {
+-		shost = list_entry(lh, struct Scsi_Host, sh_list);
+-		if (shost->host_no == host_no) {
+-			/* XXX Inc ref count */
+-			goto done;
+-		}
+-	}
+-
+-	shost = (struct Scsi_Host *)NULL;
+-done:
+-	spin_unlock(&scsi_host_list_lock);
+-	return shost;
++	/* XXX Inc ref count */
++	return scsi_find_host_by_num(host_no);
+ }
+ 
+ /**
+@@ -679,33 +665,12 @@
+  **/
+ void __init scsi_host_hn_init(char *shost_hn)
+ {
+-	char *temp = shost_hn;
+-
+-	while (temp) {
+-		while (*temp && (*temp != ':') && (*temp != ','))
+-			temp++;
+-		if (!*temp)
+-			temp = NULL;
+-		else
+-			*temp++ = 0;
+-		(void)scsi_host_hn_add(shost_hn);
+-		shost_hn = temp;
+-	}
+-}
+-
+-/**
+- * scsi_host_no_release - free all entries in scsi host number list
+- **/
+-void __exit scsi_host_hn_release()
+-{
+-	struct list_head *lh, *next;
+-	Scsi_Host_Name *shn;
+-
+-	list_for_each_safe(lh, next, &scsi_host_hn_list) {
+-		shn = list_entry(lh, Scsi_Host_Name, shn_list);
+-		if (shn->name)
+-			kfree(shn->name);
+-		kfree(shn);
++	scsihosts = shost_hn;
++	while (shost_hn) {
++		scsi_host_next_hn++;
++		shost_hn = strpbrk(shost_hn, ":,");
++		if (shost_hn)
++			shost_hn++;
+ 	}
+ }
+ 
+diff -Nru a/drivers/scsi/hosts.h b/drivers/scsi/hosts.h
+--- a/drivers/scsi/hosts.h	Tue Nov 12 08:34:46 2002
++++ b/drivers/scsi/hosts.h	Tue Nov 12 08:34:46 2002
+@@ -579,7 +579,6 @@
+ extern struct Scsi_Host *scsi_host_hn_get(unsigned short);
+ extern void scsi_host_put(struct Scsi_Host *);
+ extern void scsi_host_hn_init(char *);
+-extern void scsi_host_hn_release(void);
+ 
+ /*
+  * host_busy inc/dec/test functions
+diff -Nru a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
+--- a/drivers/scsi/scsi.c	Tue Nov 12 08:34:46 2002
++++ b/drivers/scsi/scsi.c	Tue Nov 12 08:34:46 2002
+@@ -2397,8 +2397,6 @@
+ 
+         devfs_unregister (scsi_devfs_handle);
+ 
+-	scsi_host_hn_release();
+-
+ #ifdef CONFIG_PROC_FS
+ 	/* No, we're not here anymore. Don't show the /proc/scsi files. */
+ 	remove_proc_entry ("scsi/scsi", 0);
