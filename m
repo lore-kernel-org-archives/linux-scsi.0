@@ -1,63 +1,78 @@
-From: Matthias Andree <ma@dt.e-technik.uni-dortmund.de>
-Subject: regression: 2.6.9-rc2 (BK) tape error causes amanda to hang?
-Date: Fri, 17 Sep 2004 10:36:22 +0200
+From: Naveen Burmi <naveenb@cisco.com>
+Subject: Linux iscsi driver update 4.0.1.9
+Date: Fri, 17 Sep 2004 22:07:47 +0530
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <m3y8j98f7d.fsf@merlin.emma.line.org>
+Message-ID: <200409172207.47253.naveenb@cisco.com>
+Reply-To: naveenb@cisco.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.dt.e-technik.Uni-Dortmund.DE ([129.217.163.1]:25042 "EHLO
-	mail.dt.e-technik.uni-dortmund.de") by vger.kernel.org with ESMTP
-	id S268534AbUIQIg1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 17 Sep 2004 04:36:27 -0400
-Received: from localhost (localhost [127.0.0.1])
-	by mail.dt.e-technik.uni-dortmund.de (Postfix) with ESMTP id E1B503ECBA
-	for <linux-scsi@vger.kernel.org>; Fri, 17 Sep 2004 10:36:26 +0200 (CEST)
-Received: from mail.dt.e-technik.uni-dortmund.de ([127.0.0.1])
- by localhost (krusty [127.0.0.1]) (amavisd-new, port 10024) with LMTP
- id 20697-05-3 for <linux-scsi@vger.kernel.org>;
- Fri, 17 Sep 2004 10:36:26 +0200 (CEST)
-Received: from m2a2.dyndns.org (pD9FFB518.dip.t-dialin.net [217.255.181.24])
-	by mail.dt.e-technik.uni-dortmund.de (Postfix) with ESMTP id 9876A3EAFD
-	for <linux-scsi@vger.kernel.org>; Fri, 17 Sep 2004 10:36:23 +0200 (CEST)
-Received: from localhost (localhost [127.0.0.1])
-	by merlin.emma.line.org (Postfix) with ESMTP id C87DCCD85E
-	for <linux-scsi@vger.kernel.org>; Fri, 17 Sep 2004 10:36:22 +0200 (CEST)
-Received: from merlin.emma.line.org ([127.0.0.1])
- by localhost (m2a2.dyndns.org [127.0.0.1]) (amavisd-new, port 10024)
- with LMTP id 09368-03 for <linux-scsi@vger.kernel.org>;
- Fri, 17 Sep 2004 10:36:22 +0200 (CEST)
+Received: from sj-iport-2-in.cisco.com ([171.71.176.71]:7184 "EHLO
+	sj-iport-2.cisco.com") by vger.kernel.org with ESMTP
+	id S269001AbUIQQiB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 17 Sep 2004 12:38:01 -0400
+Received: from naveenb-lnx.cisco.com (naveenb-lnx.cisco.com [10.77.7.56])
+	by sj-core-1.cisco.com (8.12.10/8.12.6) with ESMTP id i8HGbv7Y020958
+	for <linux-scsi@vger.kernel.org>; Fri, 17 Sep 2004 09:37:58 -0700 (PDT)
+Received: from localhost (localhost [[UNIX: localhost]])
+	by naveenb-lnx.cisco.com (8.11.6/8.11.6) id i8HGblv22841
+	for linux-scsi@vger.kernel.org; Fri, 17 Sep 2004 22:07:47 +0530
+Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Linux-SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-Hi,
 
-on Wednesday night (2100 UTC), I was missing my Amanda backup log I
-should have received by mail around 1400 UTC.
+Folks,
 
-I checked and amanda had two taper processes (the usual set) hung, and
-checked dmesg to find that the tape drive had failed to write a block,
-reporting Media Error/Excessive write errors. 
+Thanks to all of you for providing and reviewing patches.
+Special thanks to Christopher and James Bottomley.
+https://sourceforge.net/project/shownotes.php?release_id=268685
 
-In SuSE's default 2.6.5+susehacks kernel and in vanilla 2.6.7, errors
-are propagated properly back to the application, amanda logs the write
-error, mails the report and quits. With 2.6.9-rc2, nothing like that,
-the tapers just hung. Is there some return missing? The kernel was
-compiled late on Sept 13 (UTC).
+This version of the iSCSI driver (4.0.1.9) contains the following changes
+since 4.0.1.8:
 
-Relevant hardware:
-* Asus A7V600-X PC mobo (VIA chipset), AMD Athlon XP Barton, 1/2 GB RAM
-* Tekram DC-390F (UWSCSI adaptor based on SYMBIOS 53C875)
-* Tandberg TDC4222 ("SLR 4 DC") firmware =07:28CREATED073196
+1)The iSCSI driver has undergone architectural changes. The driver now 
+supports one HBA per transport end point( i.e., per iSCSI session).
 
-(Other stuff on the bus is a Plextor PX-32TS 1.02, a Fujitsu MAH-3182MP
-0114 and a Tandberg SLR6 "SLR 24" 0404D.)
+2)Earlier the iSCSI driver had it's own code to probe LUNs. Now it uses 
+SCSI-ml provided scsi_scan_host() to probe and configure LUNs.
 
-I know I should exchange the broken tape and have spare cartridges in
-the cupboard but I have seen so many quirks in Linux post-2.6.7 that
-I'll leave the broken tape in the cycle so we can test possible fixes...
+3)Multiple kmaps from rx path have now been removed.
 
--- 
-Matthias Andree
+4)The driver used to provide persistant naming of iSCSI devices using 'udev'.
+The names used to be based on bus id and target id of the session which
+inturn were kept persistant across boots. The driver no longer supports this.
+This is to be consistent with the rest of HBA drivers.
 
-Encrypted mail welcome: my GnuPG key ID is 0x052E7D95 (PGP/MIME preferred)
+5)The code has been cleaned up further. We no longer have mixed case names
+in the kernel files.
+
+
+The following items are being worked on/debated:
+
+a)cleanup of threading, signals, interfaces.
+  removal of dead code
+  cleaning up of error paths
+ some cleanup of timer, ipv6,logging
+
+b)Changes so as to be compliant with driver model.
+
+c)Usage of mid layer provided APIs to traverse through device list instead
+of using session_list link in iscsi_dev_data.
+
+d)Usage of new timeout infrastructure to get rid  of iSCSI driver's
+eh_timeout modifications.
+
+e)Removal of portal-failover feature.
+
+f)Usage of new TCQ APIs(yet to provided in linux 2.6) to get rid of iSCSI 
+driver's mechanism to generate tags.
+
+h)Replacement of ioctls with sysfs interface.
+
+PS The current driver is tested against 2.6.8.1 linux kernel.
+
+Thanks,
+Naveen.
