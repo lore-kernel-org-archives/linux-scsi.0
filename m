@@ -1,36 +1,64 @@
-From: Mark Lord <lkml@rtr.ca>
+From: Mark Lord <lsml@rtr.ca>
 Subject: Re: [PATCH] New QStor SATA/RAID Driver for 2.6.9-rc2
-Date: Wed, 15 Sep 2004 08:35:23 -0400
-Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <4148370B.4070704@rtr.ca>
-References: <41471163.10709@rtr.ca> <414723B0.1090600@pobox.com> <1095186343.2008.29.camel@mulgrave> <4147AB5A.4060804@rtr.ca> <20040915024720.GA23694@havoc.gtf.org>
+Date: Wed, 15 Sep 2004 08:47:44 -0400
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <414839F0.20008@rtr.ca>
+References: <414711AC.5030200@rtr.ca> <41471A84.4090200@pobox.com> <4147C38C.3000104@torque.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <20040915024720.GA23694@havoc.gtf.org>
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Mark Lord <lsml@rtr.ca>, James Bottomley <James.Bottomley@SteelEye.com>, Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from cpu1185.adsl.bellglobal.com ([207.236.110.166]:40345 "EHLO
+	mail.rtr.ca") by vger.kernel.org with ESMTP id S261169AbUIOMtW
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 15 Sep 2004 08:49:22 -0400
+In-Reply-To: <4147C38C.3000104@torque.net>
 List-Id: linux-scsi@vger.kernel.org
+To: dougg@torque.net
+Cc: Jeff Garzik <jgarzik@pobox.com>, linux-scsi@vger.kernel.org
 
-I would really like to work on consolidating the ATA code in libata,
-though.  As the name implies, it's a library -- don't feel that your
-driver must conform to the libata driver API in order to make use of all
-its functions.  And feel free to add to it.
+Douglas Gilbert wrote:
+>>>
+>>> Both hdparm and smartmontools are fully supported by this driver.
+> 
+> I'm curious how smartmontools is supported. Does the driver
+> support SCSI LOG SENSE commands on the physical units or does
+> it take the 3ware/Marvell route?
+> There is no sign of QStor specific code in smartmontools's CVS.
 
-Yes, there are definite code sharing possibilities there to be explored.
-Right now, my first priority is to get support for this hardware
-into the kernel.  This same driver source will also be backported
-to mid-2.4.xx series, both Redhat and generic.
+This driver simply implements the HDIO_DRIVE_CMD/HDIO_DRIVE_TASK
+ioctl call (from Linux IDE).  By doing so, it automatically gains
+compatibility with smartmontools (-d ata), and with hdparm.
 
-After that, we can modify some interfaces to reduce the small overlaps
-that may present.
+Currently, the implementation of those is native to the controller.
+But eventually, I'd like to see it implement Curtis's ATA Passthrough
+spec (to which I've been contributing).
 
-Next revision is due out later today.  It may still have a few warts
-to work out, but I think it is looking much better than before.
+Port selectors aside --> a nightmare for any sysadmin or driver writer
+--> Linux has a huge unresolved issue for block devices.
 
-Better to have a decent hardware driver within the tree,
-than an unknown vendor-only binary driver outside the tree.
+It is currently next-to-impossible for a vendor to support a
+new drive controller card under Linux unless it uses either SCSI
+or libata.  Doing one as a new block driver is not an option,
+because of the installation issues for the end-user during the
+first couple of years of deployment --> until the distros begin
+to include the required /dev/ entries everywhere.
+
+To solve this requires a nice generic /dev/ interface for disks,
+common to all drivers which talk to such devices.
+
+Currently on Linux, that interface is called "SCSI".
+I think it might not be unreasonable to gradually evolve
+the SCSI host interface to include, say, a non-translating
+queuecommand() method, and associated pals.
+
+This would get rid of much (not all) of the double-translation objection,
+and provide a smooth path for supporting Firewire, USB, parallel-port,
+SATA, ATA, and of course SCSI, disks all under one naming subsystem.
+
+We practically have that already today.
+The SCSI mid-layer is a nice generic block device glue system.
+We just need perhaps to make it less SCSI-specific.
 
 Cheers
 -- 
