@@ -1,29 +1,44 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [Patch] Fix Suspend I/O block/unblock patch
-Date: 16 Oct 2004 11:39:27 -0500
+From: James.Smart@Emulex.Com
+Subject: RE: [Announce] Emulex lpfcdriver v8.0.12 available
+Date: Sat, 16 Oct 2004 17:50:12 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1097944773.2283.123.camel@mulgrave>
-References: <0B1E13B586976742A7599D71A6AC733C02F20B@xbl3.ma.emulex.com>
+Message-ID: <0B1E13B586976742A7599D71A6AC733C08670D@xbl3.ma.emulex.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat16.steeleye.com ([209.192.50.48]:52940 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S268779AbUJPQjh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 16 Oct 2004 12:39:37 -0400
-In-Reply-To: <0B1E13B586976742A7599D71A6AC733C02F20B@xbl3.ma.emulex.com>
+Received: from emulex.emulex.com ([138.239.112.1]:33964 "EHLO
+	emulex.emulex.com") by vger.kernel.org with ESMTP id S268920AbUJPVua convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 16 Oct 2004 17:50:30 -0400
+content-class: urn:content-classes:message
 List-Id: linux-scsi@vger.kernel.org
-To: James.Smart@Emulex.Com
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: hch@infradead.org
+Cc: linux-scsi@vger.kernel.org
 
-On Thu, 2004-10-14 at 09:31, James.Smart@Emulex.Com wrote:
-> In further testing of the fc block/unblock patch, the recommendation to use device_for_each_child() instead of shost_for_each_device() in the target functions was not a good one. The calling sequences on the unblock path, which may eventually block, are not good for device_for_each_child(), which takes and holds a semaphore.
+We're completing our 8.0.13 release and need to address your comments on binary sysfs attributes
 
-Could you give an example of this problem?  If there's a demonstrable
-issue with device_for_each_child(), we can probably persuade Greg to
-alter it.
+> I don't like many of the binary attributes at all.  As a 
+> general rule of thumb never ever use a binary sysfs
+> attribute unless it's passed through to the hardware.
 
-James
+There are 5 binary attributes:
+- Statistics:
+This is replaced by the proposed fc transport patch sent out this week. It will be replaced by the functions supporting the patch.
+
+- slimreg, ctlrreg, and mbox: 
+ > For slimreg and ctlreg that is true, but I wonder whether 
+ > they're needed at all.  Check how recent X servers access mmio space.
+As mentioned, these should meet your definition and be fine. You asked whether they are needed at all. Given that these are the heart of the adapter message passing interface, and used extensively by the driver - having the user space application use them without the coordination of the driver is asking for trouble. Minimally, the driver's lock over the registers/memory needs to be involved. In some cases, the driver remaps these areas away from pci memory and into driver-allocated dma-mapped memory. The application would have no clue where to locate these.  These should stay as is.  It is through these interfaces that diagnostics, firmware loading, and the like take place.
+
+- sendrnid and ctpass:
+ > The sendrnid and ctpass ones looks extremly fishy, it's 
+ > certainly not a single value that's read/written, and it's
+ > deeply magic (and btw, current->pid is not uniqueue in a
+ > multithreaded enviroment)
+These are used to have the application (usually a storage management suite) interact with FC fabrics - performing requests of nameservers, querying for additional node id information, etc. The use is typically to build topology maps of the FC fabric and the devices attached. Given the payload gets converted into a request to the firmware, it does get posted to the hardware. We do need to find a unique identifier to associate with the thread issuing the request - if for nothing else to associate the responses to the right request as this must be a multi-step function (minimally - write of request, read of response). We could single-thread this so that only one request is outstanding. In this case, the unique id could enforce the single outstanding request. Otherwise it's a voluntary function (e.g. only do the read if your write didn't get rejected). These will be pushed into the fc transp
+ ort as host functions in a later patch - so it's function will be fully described/open. One thing we will need to work on is allowing >4k payloads.  Comments ? Issues ? If there is a better way to inject non-FCP FC traffic onto a link, please tell me.
+
+-- James S
 
 
