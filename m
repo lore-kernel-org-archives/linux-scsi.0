@@ -1,35 +1,41 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: [BK PATCH] SCSI updates for 2.6.10
-Date: Tue, 28 Dec 2004 18:19:08 +1000
-Message-ID: <41D116FC.2050505@torque.net>
-References: <1104171457.7447.5.camel@mulgrave>
-Reply-To: dougg@torque.net
+From: Michael Renner <michael.renner@geizhals.at>
+Subject: Lack of procfs support in 3w-xxxx 1.26.02.000
+Date: Tue, 28 Dec 2004 09:19:50 +0100
+Message-ID: <41D11726.5050109@geizhals.at>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from borg.st.net.au ([65.23.158.22]:57518 "EHLO borg.st.net.au")
-	by vger.kernel.org with ESMTP id S261698AbUL1IR3 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 28 Dec 2004 03:17:29 -0500
-In-Reply-To: <1104171457.7447.5.camel@mulgrave>
+Received: from home.geizhals.at ([213.229.14.34]:21951 "EHLO
+	morework.geizhals.at") by vger.kernel.org with ESMTP
+	id S261761AbUL1ITv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 28 Dec 2004 03:19:51 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: linuxraid@amcc.com
+Cc: linux-scsi@vger.kernel.org
 
-James Bottomley wrote:
-> This is a dump of everything I've had in my pending but not applicable
-> to -rc queue for the last few months.  There's nothing earthshattering,
-> but I'm afraid we have another qla2xxx firmware update making the whole
-> thing rather big.
+Hi Adam,
 
-Jmaes,
-Is a diff representation of this bk patch likely to
-find it ways into:
-http://parisc-linux.org/~jejb/scsi_diffs/
+I recently upgraded to 2.6.10 only to notice that procfs support was=20
+removed from 3w-xxxx 1.26.02.000, apparently causing tw_cli to fail=20
+(tried with the most recent 2.00.00.032b and an older 2.00.00.015).
 
-or has it been placed (or likely to be placed) somewhere
-else?
+Will this be fixed in the driver or is there a new tw_cli going to be=20
+released soon? I don't like having my arrays flying blind.
 
-Doug Gilbert
+--=20
+
+best regards,
+  Michael Renner - Network services
+
+Preisvergleich Internet Services AG
+Obere Donaustra=DFe 63/2, A-1020 Wien
+Tel: +43 1 5811609 80
+=46ax: +43 1 5811609 55
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
