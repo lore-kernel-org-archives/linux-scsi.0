@@ -1,58 +1,45 @@
-From: "Moore, Eric Dean" <Emoore@lsil.com>
-Subject: [ANNOUNCE] MPT Fusion driver 3.02.06 update
-Date: Mon, 25 Oct 2004 19:32:35 -0400
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <0E3FA95632D6D047BA649F95DAB60E57053AF031@exa-atlanta>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [PATCH 1/1] build modular usb isd200 with modular ide
+Date: Tue, 26 Oct 2004 01:20:08 +0200
+Sender: linux-ide-owner@vger.kernel.org
+Message-ID: <58cb370e0410251620279fb0ee@mail.gmail.com>
+References: <58cb370e041024054575c09679@mail.gmail.com>
+	 <200410252255.i9PMto6B024865@falcon10.austin.ibm.com>
+Reply-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from zeus.kernel.org ([204.152.189.113]:4051 "EHLO zeus.kernel.org")
-	by vger.kernel.org with ESMTP id S261910AbUJZBSM convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 25 Oct 2004 21:18:12 -0400
-Received: from mail0.lsil.com (mail0.lsil.com [147.145.40.20])
-	by zeus.kernel.org (8.12.11/8.11.6) with ESMTP id i9PNWcwv024938
-	for <linux-scsi@vger.kernel.org>; Mon, 25 Oct 2004 16:32:44 -0700
-Received: from milmhbs0.lsil.com (mhbs.lsil.com [147.145.1.30])
-	by mail0.lsil.com (8.12.8/8.12.8) with ESMTP id i9PNVAcq018038
-	for <linux-scsi@vger.kernel.org>; Mon, 25 Oct 2004 16:31:10 -0700 (PDT)
-Received: from EXA-ATLANTA.se.lsil.com (atl1.se.lsil.com [147.145.16.4])
-	by milmhbs0.lsil.com (8.12.11/8.12.11) with ESMTP id i9PNWaH2023447
-	for <linux-scsi@vger.kernel.org>; Mon, 25 Oct 2004 16:32:36 -0700
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <200410252255.i9PMto6B024865@falcon10.austin.ibm.com>
+To: Doug Maxey <dwm@austin.ibm.com>
+Cc: Christoph Hellwig <hch@lst.de>, Paul Mackerras <paulus@samba.org>, Greg Kroah-Hartman <greg@kroah.com>, Linux SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux IDE Mailing List <linux-ide@vger.kernel.org>, linuxppc64-dev@ozlabs.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-All,
+On Mon, 25 Oct 2004 17:55:50 -0500, Doug Maxey <dwm@austin.ibm.com> wrote:
 
-We are pleased to announce the MPT Fusion release candidate for lk 2.6
+> >The dependency is a bug, <linux/ide.h> is for IDE driver only.
+> 
+> The isd200 _is_ a bridge to ATA/ATAPI devices.  Does this mean it cannot use
+> common code, just because it is not in drivers/ide?
 
-Highlights of this release:
-=B7	SAS Support - 1064, 1066, 1068
-=B7	mpi headers v1.5.2
-=B7	csmi ioctl support
-=B7	MSI Support
-=B7	fc_transport support
-=B7	several patches incorporated from Christoph Hellwig=20
+no but the common ATA/ATAPI code resides in hdreg.h or/and ata.h,
+ide.h is for IDE driver _only_
 
+> >Doug, if you kill debugging code in isd200.c then only:
+> >
+> >id->command_set_1
+> >id->model
+> >id->fw_rev
+> >id->capability
+> >id->lba_capacity
+> >id->heads
+> >id->cyls
+> >id->sectors
+> >id->command_set_2
+> >
+> >need to be byte-swapped.
+> >
+> 
+> I don't plan on killing any debug code.
 
-This patch applied against bk://linux-scsi.bkbits.net/scsi-misc-2.6
-
-Here is a link to this patch:
-ftp://ftp.lsil.com/HostAdapterDrivers/linux/Fusion-MPT/2.6-kernel/3.02.=
-06/mp
-tlinux-3.02.06.patch
-
-
-=46ull source and release notes are also provided at link above.
-
-Eric Moore
-LSI Logic Corporation
-
-
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+I do :)
