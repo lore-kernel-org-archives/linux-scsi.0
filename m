@@ -1,32 +1,33 @@
 From: Jeremy Higdon <jeremy@sgi.com>
 Subject: Re: [PATCH] sg.c to set direction more reliably  (was Re: [PATCH] fusion update to current APIs)
-Date: Tue, 15 Jun 2004 02:10:43 -0700
+Date: Tue, 15 Jun 2004 02:31:48 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040615091042.GA168267@sgi.com>
-References: <20040531115229.GA16143@lst.de> <20040612003608.GA152454@sgi.com> <20040612034518.GN24864@parcelfarce.linux.theplanet.co.uk> <20040612051353.GA152829@sgi.com> <20040612052003.GR24864@parcelfarce.linux.theplanet.co.uk> <20040615060811.GA178857@sgi.com> <20040615081704.GA15795@infradead.org> <20040615084807.GB177665@sgi.com>
+Message-ID: <20040615093148.GA179519@sgi.com>
+References: <20040531115229.GA16143@lst.de> <20040612003608.GA152454@sgi.com> <20040612034518.GN24864@parcelfarce.linux.theplanet.co.uk> <20040612051353.GA152829@sgi.com> <20040612052003.GR24864@parcelfarce.linux.theplanet.co.uk> <20040615060811.GA178857@sgi.com> <20040615081704.GA15795@infradead.org> <20040615084807.GB177665@sgi.com> <20040615091042.GA168267@sgi.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtvcafw.sgi.com ([192.48.171.6]:58445 "EHLO omx2.sgi.com")
-	by vger.kernel.org with ESMTP id S265387AbUFOJLt (ORCPT
+Received: from mtvcafw.sgi.com ([192.48.171.6]:16032 "EHLO omx3.sgi.com")
+	by vger.kernel.org with ESMTP id S265395AbUFOJcz (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 15 Jun 2004 05:11:49 -0400
+	Tue, 15 Jun 2004 05:32:55 -0400
 Content-Disposition: inline
-In-Reply-To: <20040615084807.GB177665@sgi.com>
+In-Reply-To: <20040615091042.GA168267@sgi.com>
 List-Id: linux-scsi@vger.kernel.org
 To: Christoph Hellwig <hch@infradead.org>
 Cc: Matthew Wilcox <willy@debian.org>, Christoph Hellwig <hch@lst.de>, Emoore@lsil.com, linux-scsi@vger.kernel.org
 
-One more comment from hch via IRC.  When we have to guess direction,
-print a suggestion to use SG v3 interface.
+On Tue, Jun 15, 2004 at 02:10:43AM -0700, Jeremy Higdon wrote:
+> One more comment from hch via IRC.  When we have to guess direction,
+> print a suggestion to use SG v3 interface.
+> 
+> I also removed the vendor unique commands from the switch.
 
-I also removed the vendor unique commands from the switch.
-
-jeremy
+I had a bug in that last patch.
 
 ===== drivers/scsi/sg.c 1.90 vs edited =====
 --- 1.90/drivers/scsi/sg.c	Sat May 29 10:57:23 2004
-+++ edited/drivers/scsi/sg.c	Tue Jun 15 02:08:51 2004
++++ edited/drivers/scsi/sg.c	Tue Jun 15 02:23:53 2004
 @@ -480,6 +480,59 @@
  	return (0 == err) ? count : err;
  }
@@ -109,7 +110,7 @@ jeremy
 +	 */
 +	if (input_size == 0 && mxsize > 0)
 +		hp->dxfer_direction = SG_DXFER_FROM_DEV;
-+	else if (input_size > 0 && mxsize == 0)
++	else if (input_size > 0 && old_hdr.reply_len <= SZ_SG_HEADER)
 +		hp->dxfer_direction = SG_DXFER_TO_DEV;
 +	else if (input_size == 0 && mxsize == 0)
 +		hp->dxfer_direction = SG_DXFER_NONE;
