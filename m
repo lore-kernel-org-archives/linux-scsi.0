@@ -1,113 +1,90 @@
 From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: [RFC] scsi_normalize_sense()
-Date: Wed, 25 Aug 2004 11:22:43 +1000
+Subject: Re: [PATCH] scsi_level constants in scsi.h
+Date: Wed, 25 Aug 2004 11:33:56 +1000
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <412BE9E3.7050000@torque.net>
-References: <41258F6A.6030606@torque.net> <Pine.LNX.4.58.0408242246270.5461@kai.makisara.local>
+Message-ID: <412BEC84.50809@torque.net>
+References: <412B28F8.8000107@torque.net> <20040824125239.A28215@infradead.org>
 Reply-To: dougg@torque.net
 Mime-Version: 1.0
+Content-Type: multipart/mixed;
+ boundary="------------070709050001050201000000"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from borg.st.net.au ([65.23.158.22]:61844 "EHLO borg.st.net.au")
+	by vger.kernel.org with ESMTP id S266262AbUHYBeq (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 24 Aug 2004 21:34:46 -0400
+In-Reply-To: <20040824125239.A28215@infradead.org>
+List-Id: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-scsi@vger.kernel.org, James.Bottomley@SteelEye.com
+
+This is a multi-part message in MIME format.
+--------------070709050001050201000000
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from borg.st.net.au ([65.23.158.22]:43923 "EHLO borg.st.net.au")
-	by vger.kernel.org with ESMTP id S269091AbUHYBXb (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 24 Aug 2004 21:23:31 -0400
-In-Reply-To: <Pine.LNX.4.58.0408242246270.5461@kai.makisara.local>
-List-Id: linux-scsi@vger.kernel.org
-To: Kai Makisara <Kai.Makisara@kolumbus.fi>
-Cc: linux-scsi@vger.kernel.org
 
-Kai Makisara wrote:
-> On Fri, 20 Aug 2004, Douglas Gilbert wrote:
+Christoph Hellwig wrote:
+> On Tue, Aug 24, 2004 at 09:39:36PM +1000, Douglas Gilbert wrote:
 > 
-> 
->>Looking around the linux SCSI subsystem the handling
->>of data in the sense buffer is haphazard. Most places
->>ignore "deferred" errors (e.g. medium error reported
->>later when write caching is on) and will break horribly
->>if they every see the newer "descriptor" format.
+>>The scsi_level value in struct scsi_device is a bit
+>>mysterious. Hopefully this patch makes it a bit clearer
+>>since it is visible via sysfs.
 >>
+>>Changes:
+>>   - add scsi_level constants for SPC-2 and SPC-3
+>>   - comment on relationship between scsi_level and INQUIRY response
 > 
-> ...
 > 
->>Here is some code which I am proposing to put into
->>scsi_lib.c to facilitate cleaner handling. I have been
->>testing it out in sg3_utils-1.08 (beta) for the last
->>week.  Comments??
->>
-> 
-> Looks good, especially after some thinking :-) (The extra fields byte? and 
-> additional_length looked useless until I thought a little further into the 
-> future.)
+> Looks cool.  What about turning it into an enum while you're at it?
 
-The proposed structure is the first 8 bytes of the "descriptor"
-format sense data**. The addition is to squeeze in the
-response codes 0x70 and 0x71 which indicate that the given
-sense buffer is in "fixed" format.
+Christoph,
+Changes:
+     - convert scsi_level defines to enumerations
+     - add scsi_level enumerations for SPC-2, SPC-3 and proposed SPC-4
+     - comment on relationship between scsi_level and INQUIRY response
 
-Deferred errors can be detected like this:
-     if (sdesc.response_code & 1)
-         process_deferred_error(...);
-
-and "descriptor" format can be detected two ways:
-     if (sdesc.response_code >= 0x72)
-         ucp = scsi_sense_descriptor(,,4);
-or
-     if (sdesc.additional_length > 0)
-         ucp = scsi_sense_descriptor(,,4);
-
-The idea is to generalize access to sense_key,
-asc and ascq (and stop using error prone array
-indexing) in the presence of both fixed and
-descriptor format. This covers the vast majority of
-sense data processing in the scsi subsystem at
-the moment. As the descriptor format becomes
-more common, folks should recognise the proposed
-structure.
-
-That said SSC's FILEMARK, EOM and ILI bits are
-found in the "stream commands" descriptor.
-
-> In addition to using this basic data, the drivers have to parse the 
-> descriptors.
-
-There is such a parser in sg3_utils-1.08 (beta) on the
-sg website. See sg_print_sense_descriptors() in sg_err.c
-It outputs to stdout so it isn't exactly what is needed.
-
-  Parsing the descriptors is device-specific but a library
-> function to find a descriptor of certain type might be useful. The 
-> prototype could be something like this:
-> 
-> /* Returns a pointer to the descriptor of type desc_type in descriptor 
->    format sense data or NULL if the descriptor is not found. */
-> unsigned char *scsi_sense_descriptor(const unsigned char *sensep,
->                                      int sb_len, int desc_type)
-
-This looks good for finding a specific 'desc_type'.
-
-This approach also hints at the other approach to this
-problem, namely multiple accessor functions to pick up
-current/deferred, sense_key, asc and ascq.
-
-
-BTW I think that the SCSI subsystem gets 32 bytes
-of sense data currently. That should be ok until OSDs
-arrive. They have big everythings (e.g. variable length
-commands and sense descriptors).
-
-
-** I resisted the temptation to memcpy the "descriptor" format
-    header into the proposed structure just in case an 8 byte
-    array didn't align with a structure with 8 unsigned chars in
-    it.
-
-P.S. Fixed format sense descriptors can still be used with
-block devices that need 16 bytes READs and WRITEs. However
-if there is a MEDIUM ERROR and the broken LBA cannot fit
-in 32 bits then 0 is placed in the information field (i.e.
-you don't get told the broken LBA).
+Patch against lk 2.6.9-rc1 attached.
 
 Doug Gilbert
 
+
+--------------070709050001050201000000
+Content-Type: text/x-patch;
+ name="scsi_h_269rc1.diff"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="scsi_h_269rc1.diff"
+
+--- linux/include/scsi/scsi.h	2004-08-25 10:06:42.597842752 +1000
++++ linux/include/scsi/scsi.h269rc1sl2	2004-08-25 10:20:24.314922768 +1000
+@@ -354,14 +354,22 @@
+ 		     ((lun) & 0x07))
+ 
+ /*
+- *  SCSI command sets
++ *  struct scsi_device::scsi_level values. For SCSI devices other than those
++ *  prior to SCSI-2 (i.e. over 12 years old) this value is (resp[2] + 1)
++ *  where "resp" is a byte array of the response to an INQUIRY. The scsi_level
++ *  variable is visible to the user via sysfs.
+  */
+ 
+-#define SCSI_UNKNOWN    0
+-#define SCSI_1          1
+-#define SCSI_1_CCS      2
+-#define SCSI_2          3
+-#define SCSI_3          4
++enum scsi_level_state {
++	SCSI_UNKNOWN =	0,
++	SCSI_1 =	1,
++	SCSI_1_CCS =	2,
++	SCSI_2 =	3,
++	SCSI_3 =	4,	/* SPC */
++	SCSI_SPC_2 =	5,
++	SCSI_SPC_3 =	6,
++	SCSI_SPC_4 =	7
++};
+ 
+ /*
+  * INQ PERIPHERAL QUALIFIERS
+
+--------------070709050001050201000000--
