@@ -1,54 +1,44 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [RFC] scsi host sysfs support again [0/4]
-Date: Mon, 5 May 2003 11:17:35 +0100
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: illegal context for sleeping ... rmmod ide-cd + ide-scsi
+Date: Mon, 05 May 2003 21:51:04 +1000
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030505111735.A16914@infradead.org>
-References: <20030505083315.GB8416@beaverton.ibm.com> <20030505093833.A13506@infradead.org> <20030505094818.GH8416@beaverton.ibm.com>
+Message-ID: <3EB65028.8080402@torque.net>
+References: <3EB62347.8020109@torque.net> <20030505020104.0abc66ba.akpm@digeo.com>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from phoenix.mvhi.com ([195.224.96.167]:60425 "EHLO
-	phoenix.infradead.org") by vger.kernel.org with ESMTP
-	id S261199AbTEEKFG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 5 May 2003 06:05:06 -0400
-Content-Disposition: inline
-In-Reply-To: <20030505094818.GH8416@beaverton.ibm.com>; from andmike@us.ibm.com on Mon, May 05, 2003 at 02:48:18AM -0700
+Received: from bunyip.cc.uq.edu.au ([130.102.2.1]:55564 "EHLO
+	bunyip.cc.uq.edu.au") by vger.kernel.org with ESMTP id S262150AbTEELgC
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 5 May 2003 07:36:02 -0400
+In-Reply-To: <20030505020104.0abc66ba.akpm@digeo.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, Patrick Mochel <mochel@osdl.org>
+To: Andrew Morton <akpm@digeo.com>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>
 
-On Mon, May 05, 2003 at 02:48:18AM -0700, Mike Anderson wrote:
-> While scsi_remove_host cannot imply a scsi_set_host_offline unless we
-> change the previous definition. We indicated that scsi_set_host_offline
-> may cancel commands in flight which implys some sync point.
+Andrew Morton wrote:
+> Douglas Gilbert <dougg@torque.net> wrote:
+> 
+>>In lk 2.5.69 (and in 68) both the ide-cd and ide-scsi
+>>modules generate a "sleeping function called from illegal
+>>context" stack trace when removed.
+>>
+>>After "rmmod ide-cd" this appears:
+>>  Debug: sleeping function called from illegal context
+>>         at include/asm/semaphore.h:119
+>>  Call Trace:
+>>   [<c011dcec>] __might_sleep+0x5c/0x70
+> 
+> 
+> ide_unregister_subdriver() does spin_lock_irqsave(&ide_lock), then
+> calls auto_remove_settings(), which does down(&ide_setting_sem);
+> 
+> A simple fix might be:
 
-Yes.
+Andrew,
+Thanks. That patch clears the reported problem.
 
-> Ok I will look at the change you suggest in the morning after I have
-> some sleep. I guess the first step would be moving the kfree(shost) out
-> of scsi_unregister. This would then stay around until ref counts go to
-> zero.
-
-Actually what I think must happen is that scsi_unregister will do
-nothing unless the refcount reaches zero.  It should also be renamed
-to scsi_put_host to make this more explicit.
-
-Then we'd have:
-
-	scsi_alloc_host
-		- allocate storage for struct Scsi_Host, some
-		  basic initalization.  refcount set to 1;
-	scsi_get_host
-		- get a reference to an existing struct Scsi_Host
-	scsi_put_host
-		- decrement usecount of an existing struct Scsi_Host,
-		  free it if this was the last reference
-	scsi_add_host
-		- register host with the scsi midlayer
-	scsi_remove_host
-		- unregister host with the scsi midlayer, force all
-		  I/O to fail from now on and never call back into
-		  the driver.
-
-To avoid touching all old-style drivers we should probably keep
-the scsi_register/scsi_unregister aliases for 2.6.
+Doug Gilbert
 
