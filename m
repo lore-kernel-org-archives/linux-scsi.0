@@ -1,142 +1,124 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH scsi-misc-2.6 08/13] scsi: move request preps in other places into prep_fn()
-Date: Thu, 31 Mar 2005 18:08:30 +0900 (KST)
-Message-ID: <20050331090647.94FFEC1E@htj.dyndns.org>
+Subject: Re: [PATCH scsi-misc-2.6 11/13] scsi: add reprep arg to scsi_requeue_command() and make it public
+Date: Thu, 31 Mar 2005 18:08:45 +0900 (KST)
+Message-ID: <20050331090647.ABDB1FF4@htj.dyndns.org>
 References: <20050331090647.FEDC3964@htj.dyndns.org>
 Content-Type: text/plain; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from wproxy.gmail.com ([64.233.184.199]:44075 "EHLO wproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S261250AbVCaJIf (ORCPT
+Received: from rproxy.gmail.com ([64.233.170.196]:32606 "EHLO rproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S261262AbVCaJIu (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 31 Mar 2005 04:08:35 -0500
-Received: by wproxy.gmail.com with SMTP id 36so296979wri
-        for <linux-scsi@vger.kernel.org>; Thu, 31 Mar 2005 01:08:35 -0800 (PST)
+	Thu, 31 Mar 2005 04:08:50 -0500
+Received: by rproxy.gmail.com with SMTP id a41so330867rng
+        for <linux-scsi@vger.kernel.org>; Thu, 31 Mar 2005 01:08:50 -0800 (PST)
 In-Reply-To: <20050331090647.FEDC3964@htj.dyndns.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com, axboe@suse.de
 Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-08_scsi_move_preps_to_prep_fn.patch
+11_scsi_make_requeue_command_public.patch
 
-	Move request preparations scattered in scsi_request_fn() and
-	scsi_dispatch_cmd() into scsi_prep_fn().
-
-	* CDB_SIZE check in scsi_dispatch_cmd()
-	* SCSI-2 LUN preparation in scsi_dispatch_cmd()
-	* scsi_init_cmd_errh() in scsi_request_fn()
-
-	No invalid request reaches scsi_request_fn() anymore.
+	Add reprep argument to scsi_requeue_command(), remove
+	redundant q argument, add code to set cmd->state/owner, and
+	make the function public.  This patch is preparation for
+	consolidating requeue paths.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 
- scsi.c     |   30 ------------------------------
- scsi_lib.c |   25 +++++++++++++++++++------
- 2 files changed, 19 insertions(+), 36 deletions(-)
+ scsi_lib.c  |   23 ++++++++++++++---------
+ scsi_priv.h |    1 +
+ 2 files changed, 15 insertions(+), 9 deletions(-)
 
-Index: scsi-export/drivers/scsi/scsi.c
-===================================================================
---- scsi-export.orig/drivers/scsi/scsi.c	2005-03-31 18:06:21.000000000 +0900
-+++ scsi-export/drivers/scsi/scsi.c	2005-03-31 18:06:22.000000000 +0900
-@@ -79,15 +79,6 @@
- #define MIN_RESET_PERIOD (15*HZ)
- 
- /*
-- * Macro to determine the size of SCSI command. This macro takes vendor
-- * unique commands into account. SCSI commands in groups 6 and 7 are
-- * vendor unique and we will depend upon the command length being
-- * supplied correctly in cmd_len.
-- */
--#define CDB_SIZE(cmd)	(((((cmd)->cmnd[0] >> 5) & 7) < 6) ? \
--				COMMAND_SIZE((cmd)->cmnd[0]) : (cmd)->cmd_len)
--
--/*
-  * Note - the initial logging level can be set here to log events at boot time.
-  * After the system is up, you may enable logging via the /proc interface.
-  */
-@@ -566,14 +557,6 @@ int scsi_dispatch_cmd(struct scsi_cmnd *
- 		goto out;
- 	}
- 
--	/* 
--	 * If SCSI-2 or lower, store the LUN value in cmnd.
--	 */
--	if (cmd->device->scsi_level <= SCSI_2) {
--		cmd->cmnd[1] = (cmd->cmnd[1] & 0x1f) |
--			       (cmd->device->lun << 5 & 0xe0);
--	}
--
- 	/*
- 	 * We will wait MIN_RESET_DELAY clock ticks after the last reset so
- 	 * we can avoid the drive not being ready.
-@@ -614,19 +597,6 @@ int scsi_dispatch_cmd(struct scsi_cmnd *
- 
- 	atomic_inc(&cmd->device->iorequest_cnt);
- 
--	/*
--	 * Before we queue this command, check if the command
--	 * length exceeds what the host adapter can handle.
--	 */
--	if (CDB_SIZE(cmd) > cmd->device->host->max_cmd_len) {
--		SCSI_LOG_MLQUEUE(3,
--				printk("queuecommand : command too long.\n"));
--		cmd->result = (DID_ABORT << 16);
--
--		scsi_done(cmd);
--		goto out;
--	}
--
- 	spin_lock_irqsave(host->host_lock, flags);
- 	scsi_cmd_get_serial(host, cmd); 
- 
 Index: scsi-export/drivers/scsi/scsi_lib.c
 ===================================================================
---- scsi-export.orig/drivers/scsi/scsi_lib.c	2005-03-31 18:06:21.000000000 +0900
+--- scsi-export.orig/drivers/scsi/scsi_lib.c	2005-03-31 18:06:22.000000000 +0900
 +++ scsi-export/drivers/scsi/scsi_lib.c	2005-03-31 18:06:22.000000000 +0900
-@@ -28,6 +28,14 @@
- #include "scsi_priv.h"
- #include "scsi_logging.h"
+@@ -466,8 +466,8 @@ void scsi_device_unbusy(struct scsi_devi
+  *
+  * Purpose:	Handle post-processing of completed commands.
+  *
+- * Arguments:	q	- queue to operate on
+- *		cmd	- command that may need to be requeued.
++ * Arguments:	cmd	- command that may need to be requeued.
++ *		reprep	- needs to prep the command again?
+  *
+  * Returns:	Nothing
+  *
+@@ -478,11 +478,16 @@ void scsi_device_unbusy(struct scsi_devi
+  *		we need to request the blocks that come after the bad
+  *		sector.
+  */
+-static void scsi_requeue_command(struct request_queue *q, struct scsi_cmnd *cmd)
++void scsi_requeue_command(struct scsi_cmnd *cmd, int reprep)
+ {
++	struct request_queue *q = cmd->device->request_queue;
+ 	unsigned long flags;
  
-+/*
-+ * Macro to determine the size of SCSI command. This macro takes vendor
-+ * unique commands into account. SCSI commands in groups 6 and 7 are
-+ * vendor unique and we will depend upon the command length being
-+ * supplied correctly in cmd_len.
-+ */
-+#define CDB_SIZE(cmd)	(((((cmd)->cmnd[0] >> 5) & 7) < 6) ? \
-+				COMMAND_SIZE((cmd)->cmnd[0]) : (cmd)->cmd_len)
+-	cmd->request->flags &= ~REQ_DONTPREP;
++	cmd->state = SCSI_STATE_MLQUEUE;
++	cmd->owner = SCSI_OWNER_MIDLEVEL;
++
++	if (reprep)
++		cmd->request->flags &= ~REQ_DONTPREP;
+ 	cmd->request->flags |= REQ_SOFTBARRIER;
  
- #define SG_MEMPOOL_NR		(sizeof(scsi_sg_pools)/sizeof(struct scsi_host_sg_pool))
- #define SG_MEMPOOL_SIZE		32
-@@ -1140,6 +1148,17 @@ static int scsi_prep_fn(struct request_q
- 			goto kill;
- 	}
+ 	spin_lock_irqsave(q->queue_lock, flags);
+@@ -556,7 +561,7 @@ static struct scsi_cmnd *scsi_end_reques
+ 				 * leftovers in the front of the
+ 				 * queue, and goose the queue again.
+ 				 */
+-				scsi_requeue_command(q, cmd);
++				scsi_requeue_command(cmd, 1);
  
-+	/* Check command length. */
-+	if (CDB_SIZE(cmd) > sdev->host->max_cmd_len)
-+		goto kill;
-+
-+	scsi_init_cmd_errh(cmd);
-+
-+	/* If SCSI-2 or lower, store the LUN value in cmnd. */
-+	if (cmd->device->scsi_level <= SCSI_2)
-+		cmd->cmnd[1] = (cmd->cmnd[1] & 0x1f) |
-+			(cmd->device->lun << 5 & 0xe0);
-+
- 	/*
- 	 * The request is now prepped, no need to come back here
- 	 */
-@@ -1316,12 +1335,6 @@ static void scsi_request_fn(struct reque
+ 			return cmd;
  		}
- 
- 		/*
--		 * Finally, initialize any error handling parameters, and set up
--		 * the timers for timeouts.
--		 */
--		scsi_init_cmd_errh(cmd);
--
--		/*
- 		 * Dispatch the command to the low-level driver.
+@@ -818,7 +823,7 @@ void scsi_io_completion(struct scsi_cmnd
+ 				* media change, so we just retry the
+ 				* request and see what happens.  
+ 				*/
+-				scsi_requeue_command(q, cmd);
++				scsi_requeue_command(cmd, 1);
+ 				return;
+ 			}
+ 			break;
+@@ -839,7 +844,7 @@ void scsi_io_completion(struct scsi_cmnd
+ 				 * This will cause a retry with a 6-byte
+ 				 * command.
+ 				 */
+-				scsi_requeue_command(q, cmd);
++				scsi_requeue_command(cmd, 1);
+ 				result = 0;
+ 			} else {
+ 				cmd = scsi_end_request(cmd, 0, this_count, 1);
+@@ -852,7 +857,7 @@ void scsi_io_completion(struct scsi_cmnd
+ 			 * retry.
+ 			 */
+ 			if (sshdr.asc == 0x04 && sshdr.ascq == 0x01) {
+-				scsi_requeue_command(q, cmd);
++				scsi_requeue_command(cmd, 1);
+ 				return;
+ 			}
+ 			printk(KERN_INFO "Device %s not ready.\n",
+@@ -878,7 +883,7 @@ void scsi_io_completion(struct scsi_cmnd
+ 		 * recovery reasons.  Just retry the request
+ 		 * and see what happens.  
  		 */
- 		rtn = scsi_dispatch_cmd(cmd);
+-		scsi_requeue_command(q, cmd);
++		scsi_requeue_command(cmd, 1);
+ 		return;
+ 	}
+ 	if (result) {
+Index: scsi-export/drivers/scsi/scsi_priv.h
+===================================================================
+--- scsi-export.orig/drivers/scsi/scsi_priv.h	2005-03-31 18:06:20.000000000 +0900
++++ scsi-export/drivers/scsi/scsi_priv.h	2005-03-31 18:06:22.000000000 +0900
+@@ -96,6 +96,7 @@ extern int scsi_maybe_unblock_host(struc
+ extern void scsi_setup_cmd_retry(struct scsi_cmnd *cmd);
+ extern void scsi_device_unbusy(struct scsi_device *sdev);
+ extern int scsi_queue_insert(struct scsi_cmnd *cmd, int reason);
++extern void scsi_requeue_command(struct scsi_cmnd *cmd, int reprep);
+ extern void scsi_next_command(struct scsi_cmnd *cmd);
+ extern void scsi_run_host_queues(struct Scsi_Host *shost);
+ extern struct request_queue *scsi_alloc_queue(struct scsi_device *sdev);
 
