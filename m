@@ -1,55 +1,32 @@
-From: Kurt Garloff <garloff@suse.de>
-Subject: Re: [PATCH] 2.4.26 scsi_scan.c Blacklist Entries
-Date: Sun, 18 Apr 2004 20:30:59 +0200
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] 1/6: scsi_largelun and scsi_sparselun
+Date: Sun, 18 Apr 2004 20:18:52 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040418183059.GA4868@tpkurt.garloff.de>
-References: <F65B33CAD23A284EAE6E4AE353BF94DC031A44CC@tayexc13.americas.cpqcorp.net>
+Message-ID: <20040418201852.A3393@infradead.org>
+References: <20040418185820.GD4868@tpkurt.garloff.de>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="+QahgC5+KEYLbs62"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns.suse.de ([195.135.220.2]:63399 "EHLO Cantor.suse.de")
-	by vger.kernel.org with ESMTP id S263946AbUDRTEr (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 18 Apr 2004 15:04:47 -0400
-Content-Disposition: inline
-In-Reply-To: <F65B33CAD23A284EAE6E4AE353BF94DC031A44CC@tayexc13.americas.cpqcorp.net>
-List-Id: linux-scsi@vger.kernel.org
-To: "Czerkowicz, John" <john.czerkowicz@hp.com>
-Cc: Linux SCSI list <linux-scsi@vger.kernel.org>
-
-
---+QahgC5+KEYLbs62
 Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from phoenix.infradead.org ([213.86.99.234]:56839 "EHLO
+	phoenix.infradead.org") by vger.kernel.org with ESMTP
+	id S263948AbUDRTSy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 18 Apr 2004 15:18:54 -0400
 Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+In-Reply-To: <20040418185820.GD4868@tpkurt.garloff.de>; from garloff@suse.de on Sun, Apr 18, 2004 at 08:58:20PM +0200
+List-Id: linux-scsi@vger.kernel.org
+To: Kurt Garloff <garloff@suse.de>, Linux SCSI list <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@steeleye.com>, Andrew Morton <akpm@osdl.org>
 
-On Fri, Apr 16, 2004 at 04:29:50PM -0400, Czerkowicz, John wrote:
-> The following HP DAT autoloaders have devices at LUN 1:
->=20
-> HP SureStore DAT8x6
-> HP SureStore DAT24x6
-> HP SureStore DAT40x6
-> HP StorageWorks DAT72x6
+On Sun, Apr 18, 2004 at 08:58:20PM +0200, Kurt Garloff wrote:
+> +static int scsi_sparselun;
+> +module_param_named(scsi_sparselun, scsi_sparselun, int, S_IRUGO|S_IWUSR);
+> +MODULE_PARM_DESC(scsi_sparselun,
+> +		 "Assume sparse LUNs for all SCSI devices");
+> +
+> +static int scsi_largelun;
+> +module_param_named(scsi_largelun, scsi_largelun, int, S_IRUGO|S_IWUSR);
+> +MODULE_PARM_DESC(scsi_largelun,
+> +		 "Assume all SCSI-2 devs support more than 8 LUNs");
 
-Why do you need FORCELUN for this?
-They should be detected without any blacklist entries.
+The names are badly chosen.  On the bootline commandline they already
+have a scsi_mod. prefix, so the additional scsi_ is superflous.
 
-Regards,
---=20
-Kurt Garloff  <garloff@suse.de>                            Cologne, DE=20
-SUSE LINUX AG, Nuernberg, DE                          SUSE Labs (Head)
-
---+QahgC5+KEYLbs62
-Content-Type: application/pgp-signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.2.4 (GNU/Linux)
-
-iD8DBQFAgsljxmLh6hyYd04RAs2IAJ9mwH5/vfBnVIgq9Ml8YQGux8G1NwCgh833
-sgHC+f7cfDNpiSSh8XRjvDQ=
-=A50X
------END PGP SIGNATURE-----
-
---+QahgC5+KEYLbs62--
