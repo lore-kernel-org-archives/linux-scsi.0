@@ -1,45 +1,28 @@
-From: SL Baur <steve@kbuxd.necst.nec.co.jp>
-Subject: Is the scsi-misc-2.5 BK tree corrupted?
-Date: Thu, 12 Dec 2002 13:25:49 +0900
+From: Andrew Morton <akpm@digeo.com>
+Subject: Re: Aic7xxx v6.2.22 and Aic79xx v1.3.0Alpha2 Released
+Date: Wed, 11 Dec 2002 21:51:59 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <15864.4045.584597.590434@sofia.bsd2.kbnes.nec.co.jp>
+Message-ID: <3DF823FF.B3F2D5E5@digeo.com>
+References: Message from Christoph Hellwig <hch@infradead.org>
+	   of "Tue, 10 Dec 2002 13:14:11 GMT." <20021210131411.A30930@infradead.org> <200212101602.gBAG2Hi02930@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mailgate4.nec.co.jp ([10.7.69.195])
-	by TYO202.gate.nec.co.jp (8.11.6/3.7W01080315) with ESMTP id gBC4MBU25454
-	for <linux-scsi@vger.kernel.org>; Thu, 12 Dec 2002 13:22:11 +0900 (JST)
-Received: from mailsv4.nec.co.jp (mailgate51.nec.co.jp [10.7.69.196]) by mailgate4.nec.co.jp (8.11.6/3.7W-MAILGATE-NEC) with ESMTP
-	id gBC4MBx07994 for <linux-scsi@vger.kernel.org>; Thu, 12 Dec 2002 13:22:11 +0900 (JST)
-Received: from sv6l.kb.necst.nec.co.jp (ns1.kb.necst.nec.co.jp [10.108.80.236]) by mailsv4.nec.co.jp (8.11.6/3.7W-MAILSV4-NEC) with ESMTP
-	id gBC4M6q02231 for <linux-scsi@vger.kernel.org>; Thu, 12 Dec 2002 13:22:07 +0900 (JST)
-Received: from mailgw1 (mailgw1.kb.necst.nec.co.jp [172.16.1.207])
-	by sv6l.kb.necst.nec.co.jp (8.11.6/8.11.6) with SMTP id gBC4M5688412
-	for <linux-scsi@vger.kernel.org>; Thu, 12 Dec 2002 13:22:05 +0900 (JST)
-	(envelope-from steve@kbuxd.necst.nec.co.jp)
-Received: from ews-sv.kbuxd.necst.nec.co.jp (ews-sv.kbuxd.necst.nec.co.jp [172.16.28.93])
-	by sv1.kbuxd.necst.nec.co.jp (8.11.6/3.7W) with ESMTP id gBC4M5281091
-	for <linux-scsi@vger.kernel.org>; Thu, 12 Dec 2002 13:22:05 +0900 (JST)
-Received: from sofia.bsd2.kbnes.nec.co.jp ([172.16.28.202])
-	by ews-sv.kbuxd.necst.nec.co.jp (8.9.3/3.7W-02120910) with ESMTP id NAA09556
-	for <linux-scsi@vger.kernel.org>; Thu, 12 Dec 2002 13:21:50 +0900 (JST)
+Received: from digeo-nav01.digeo.com (digeo-nav01.digeo.com [192.168.1.233])
+	by packet.digeo.com (8.9.3+Sun/8.9.3) with SMTP id VAA02176
+	for <linux-scsi@vger.kernel.org>; Wed, 11 Dec 2002 21:52:07 -0800 (PST)
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@steeleye.com>
+Cc: Christoph Hellwig <hch@infradead.org>, "Justin T. Gibbs" <gibbs@scsiguy.com>, linux-scsi@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>, Marcelo Tosatti <marcelo@conectiva.com.br>, Linus Torvalds <torvalds@transmeta.com>
 
-I am getting the following when attempting to pull from the current
-scsi-misc-2.5 BK tree.
+James Bottomley wrote:
+> 
+> The tarball contained a lot of extraneous files, but I think I got them all
+> weeded out.  I've but the result at:
+> 
+> http://linux-scsi.bkbits.net/scsi-aic7xxx-2.5
+> 
 
-
- ...
-drivers/s390/block/dasd.c: 2 deltas
-drivers/s390/block/dasd_eckd.c: 1 deltas
-drivers/s390/char/Makefile: 1 deltas
-drivers/s390/char/con3215.c BAD gzip hdr
-fnext: No such file or directory
-
-=================================== ERROR ====================================
-takepatch: missing checksum line in patch, aborting.
-==============================================================================
-
-
+Well I would test (and distribute) it too, but the above format is useless
+to me, as it is to most others.
