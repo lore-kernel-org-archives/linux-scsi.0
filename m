@@ -1,42 +1,59 @@
-From: James Bottomley <James.Bottomley@steeleye.com>
-Subject: Re: [PATCH] scsi-misc-2.5 remove scsi_scan.c EVPD code
-Date: 05 May 2003 12:01:31 -0500
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1052154092.1816.25.camel@mulgrave>
-References: <UTC200304250047.h3P0lhl03517.aeb@smtp.cwi.nl>
-	<3EB619A4.5090407@torque.net> <1052144231.1888.10.camel@mulgrave>
-	<20030505155210.GB1567@beaverton.ibm.com>
-	<1052151252.1888.15.camel@mulgrave>
-	<20030505165739.GD1567@beaverton.ibm.com>
+From: Greg KH <greg@kroah.com>
+Subject: Re: [RFC] support for sysfs string based properties for SCSI (1/3)
+Date: Mon, 5 May 2003 10:17:45 -0700
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <20030505171745.GA1477@kroah.com>
+References: <1051989099.2036.7.camel@mulgrave> <1051989565.2036.14.camel@mulgrave> <20030505170202.GA1296@kroah.com> <1052154516.1888.33.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nat9.steeleye.com ([65.114.3.137]:55047 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S263650AbTEEQuZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 5 May 2003 12:50:25 -0400
-In-Reply-To: <20030505165739.GD1567@beaverton.ibm.com>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1052154516.1888.33.camel@mulgrave>
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Patrick Mochel <mochel@osdl.org>, Mike Anderson <andmike@us.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Anderson <andmike@us.ibm.com>
-Cc: dougg@torque.net, Andries.Brouwer@cwi.nl, SCSI Mailing List <linux-scsi@vger.kernel.org>, linux-usb-devel@lists.sourceforge.net, mdharm-scsi@one-eyed-alien.net, Patrick Mansfield <patmans@us.ibm.com>
 
-On Mon, 2003-05-05 at 11:57, Mike Anderson wrote:
-> Yes I agree they are not exclusive to SCSI, but the same can be said of
-> the block argument. Block is large set, but is not the whole set of
-> possible uuid producing nodes. 
+On Mon, May 05, 2003 at 12:08:35PM -0500, James Bottomley wrote:
+> On Mon, 2003-05-05 at 12:02, Greg KH wrote:
+> > On Sat, May 03, 2003 at 02:19:23PM -0500, James Bottomley wrote:
+> > > diff -Nru a/drivers/base/core.c b/drivers/base/core.c
+> > > --- a/drivers/base/core.c	Sat May  3 14:18:21 2003
+> > > +++ b/drivers/base/core.c	Sat May  3 14:18:21 2003
+> > > @@ -42,6 +42,8 @@
+> > >  
+> > >  	if (dev_attr->show)
+> > >  		ret = dev_attr->show(dev,buf);
+> > > +	else if (dev->bus->show)
+> > > +		ret = dev->bus->show(dev, buf, attr);
+> > >  	return ret;
+> > 
+> > Can't you do this by using the class interface instead?
 > 
-> We could add it as a device default attribute (dev_default_attrs), but
-> it would produce the extra overhead like power does today for nodes that
-> have no uuid.
+> I don't know, I haven't digested the class interface patches yet, since
+> they just appeared this morning.
 
-Really, we could do with an extension of the class concept.  Device
-could be bare bones, then the classes of device with power management,
-classes of device with unique ID etc.
+I think Mike has a patch queued up that takes advantage of the class
+code, which might address all of these issues.  Mike?
 
-However, I think such a scheme might be too complex to be workable, so
-just adding it to the default device attributes would be fine by me too.
+> > This also forces you to do a lot of string compares within the bus show
+> > function (as your example did) which is almost as unwieldy as just
+> > having individual show functions, right?  :)
+> 
+> Nothing prevents users from doing it the callback way.  However,
+> callbacks aren't a scaleable interface for properties that have to be
+> shared and overridden.
 
-James
+I don't understand the "shared and overridden" aspect.  Do you mean a
+default attribute for all types of SCSI devices, with the ability for an
+individual device to override the attribute with it's own values if it
+wants to?  That still seems doable within the driver model today,
+without having to rely on bus specific functions.
 
+Hm, this is _really_ calling for what Pat calls "attributes".  Take a
+look at the ones in the class model, and let me know if those would work
+for you for devices.  If so, I'll be glad to add them, which should help
+you out here.
 
+Hope this helps,
+
+greg k-h
