@@ -1,71 +1,56 @@
-From: "N.knaul" <supportlivestock@quoteland.com>
-Subject: New O E M software
-Date: Fri, 06 Aug 2004 10:53:48 +0900
+From: Adrian Bunk <bunk@fs.tum.de>
+Subject: 2.6.8-rc3: MPT Fusion compile error with PROC_FS=n
+Date: Fri, 6 Aug 2004 21:57:55 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <hqghumeayl.6189279543lfdxfircvs__18133.7475115017$1091757334$gmane$org@N.knaulxggbwkf.com>
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: 8bit
+Message-ID: <20040806195755.GA2746@fs.tum.de>
+References: <Pine.LNX.4.58.0408031505470.24588@ppc970.osdl.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from YahooBB219062004045.bbtec.net ([219.62.4.45]:64522 "HELO
-	linux-diald") by vger.kernel.org with SMTP id S267775AbUHFBym (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Aug 2004 21:54:42 -0400
+Received: from hermes.fachschaften.tu-muenchen.de ([129.187.202.12]:60918 "HELO
+	hermes.fachschaften.tu-muenchen.de") by vger.kernel.org with SMTP
+	id S268258AbUHFT6K (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 6 Aug 2004 15:58:10 -0400
+Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.58.0408031505470.24588@ppc970.osdl.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-diald@vger.kernel.org, linux-kernel-owner@vger.kernel.org, linux-kernel@vger.kernel.org, linux-net@vger.kernel.org, linux-raid@vger.kernel.org, linux-scsi-digest@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Linus Torvalds <torvalds@osdl.org>, sjralston1@netscape.net, mpt_linux_developer@lsil.com
+Cc: Kernel Mailing List <linux-kernel@vger.kernel.org>, James Bottomley <James.Bottomley@SteelEye.com>, linux-scsi@vger.kernel.org
 
-O E M (Original Equipment Manufacturer) software includes all essential
-components of Microsoft Retail products excluding support from Microsoft.
-Retail version comes in a fancy box, O E M does not. You will receive
-installation CDs only (no original retail packing).
-Although O E M software does not come with a box or a manual, it is the
-typical and actual software, no trial or demo versions.
+The "MPT Fusion driver 3.01.09 update" in 2.6.8-rc causes the following 
+compile error with CONFIG_PROC_FS=n:
 
-http://www.sunnynoon.com/
+<--  snip  -->
 
-RedHat Linux 9.0
-Retail price: $79.99
-Our low Price: $60.00
-You Save: $19.99
+...
+  CC [M]  drivers/message/fusion/mptbase.o
+drivers/message/fusion/mptbase.c: In function `mptbase_probe':
+drivers/message/fusion/mptbase.c:1394: `procmpt_iocinfo_read' undeclared 
+(first use in this function)
+drivers/message/fusion/mptbase.c:1394: (Each undeclared identifier is 
+reported only once
+drivers/message/fusion/mptbase.c:1394: for each function it appears in.)
+drivers/message/fusion/mptbase.c:1399: `procmpt_summary_read' undeclared 
+(first use in this function)
+drivers/message/fusion/mptbase.c: In function `mpt_do_ioc_recovery':
+drivers/message/fusion/mptbase.c:1626: warning: `r' might be used 
+uninitialized in this function
+drivers/message/fusion/mptbase.c: In function `GetIocFacts':
+drivers/message/fusion/mptbase.c:2419: warning: unknown conversion type 
+character `z' in format
+drivers/message/fusion/mptbase.c:2419: warning: too many arguments for 
+format
+make[3]: *** [drivers/message/fusion/mptbase.o] Error 1
 
-Adobe Photoshop CS V 8.0 PC
-Retail price: $609.99
-Our low Price: $80.00
-You Save: $529.99
+<--  snip  -->
 
-Adobe Pagemaker V 7.0 PC
-Retail price: $599.95
-Our low Price: $80.00
-You Save: $519.95
-   
-Adobe Illustrator CS V 11.0 PC
-Retail price: $599.95
-Our low Price: $80.00
-You Save: $519.95
+cu
+Adrian
 
-CorelDraw Graphics Suite V 12 PC
-Retail price: $349.95
-Our low Price: $100.00
-You Save: $249.95
-   
-Microsoft SQL Server 2000
-Retail price: $1450.00
-Our low Price: $90.00
-You Save: $1360.00
+-- 
 
-Microsoft Office XP Professional
-Retail price: $499.95
-Our low Price: $100.00
-You Save: $399.95
-
-Microsoft Windows 2000 Professional
-Retail price: $320.00
-Our low Price: $50.00
-You Save: $270.00
- 
-Symantec Norton Antivirus 2004 Professional
-Retail price: $69.95
-Our low Price: $15.00
-You Save: $54.95
-
-or site is http://www.sunnynoon.com/
-
+       "Is there not promise of rain?" Ling Tan asked suddenly out
+        of the darkness. There had been need of rain for many days.
+       "Only a promise," Lao Er said.
+                                       Pearl S. Buck - Dragon Seed
 
