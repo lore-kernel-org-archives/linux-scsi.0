@@ -1,53 +1,61 @@
-From: Patrick Mansfield <patmans@us.ibm.com>
-Subject: Re: [PATCH] 2.5.x add back missing scsi_queue_next_request calls
-Date: Thu, 20 Mar 2003 15:52:15 -0800
+From: Srihari Vijayaraghavan <harisri@bigpond.com>
+Subject: Re: 2.5.65 and cciss
+Date: Fri, 21 Mar 2003 11:31:35 +1100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030320155215.A16187@beaverton.ibm.com>
-References: <20030319184444.A9694@beaverton.ibm.com> <3E7A317A.702@splentec.com>
+Message-ID: <200303211131.35221.harisri@bigpond.com>
+References: <20030320090625.GA32689@zuul.cca.cpqcorp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <3E7A317A.702@splentec.com>; from luben@splentec.com on Thu, Mar 20, 2003 at 04:24:10PM -0500
+In-Reply-To: <20030320090625.GA32689@zuul.cca.cpqcorp.net>
 List-Id: linux-scsi@vger.kernel.org
-To: Luben Tuikov <luben@splentec.com>
-Cc: James Bottomley <James.Bottomley@steeleye.com>, linux-scsi@vger.kernel.org
+To: steve.cameron@hp.com
+Cc: linux-scsi@vger.kernel.org
 
-On Thu, Mar 20, 2003 at 04:24:10PM -0500, Luben Tuikov wrote:
-> Patrick Mansfield wrote:
-> > The change to use a pool for scsi_cmnd allocations removed some
-> > scsi_queue_next_request calls, this patch restores the calls, and
-> > exports scsi_put_command and scsi_get_command.
-> 
-> And there was a point to this removal.  I did mention it on linux-scsi.
-> 
-> Look, don't try to make the code look as it did *before* -- there's
-> always a point to a change -- I think I mentioned exactly this
-> before on linux-scsi...
-> 
-> So *ALL* this patch does is REMOVE ONE CALL TO
-> scsi_queue_next_request(q, NULL).
+Steve,
 
-It effectively adds one call, not removes one call.
+On Thursday 20 March 2003 20:06, Stephen Cameron wrote:
+> Yeah, I am using it.
 
-Anwyay, there is a bug, and it needs to be fixed.
+That's good.
 
-I see 3 ways to fix this, 2 easy 1 hard:
+> Are you compiling cciss statically or as a module?
 
-1) Go with this patch or similiar - if there are strong opinions against
-using scsi_put_command I can change the name.
+Statically. (since I don't have Rusty's modinit tools installed, everything is 
+compiled in the kernel. No modules.
 
-2) Call scsi_queue_next_request as needed after each scsi_put_command.
-This is easy for the upper level drivers if we want to "pollute"
-scsi_release_request(). The usage of scsi_put_command in lower-level
-drivers then requires an export of scsi_queue_next_request.
+> If statically, are you using labels in your fstab?
 
-3) Deeper changes such that command completion code is handled the same
-way. This might not be possible without changing upper level drivers, and
-We might end up with similiar interfaces to what we have now.
+Possibly. However there is a hard coded "root=/dev/cciss/c0d0p5" kernel boot 
+parameter passed on by /etc/grub.conf. How come /etc/fstab matters for 
+kernel? (actually /etc/fstab isn't accessible until at least root has been 
+mounted read-only, isn't it?)
 
-Are you OK with approach 2?
+However 2.4.21-pre5 is fine while /etc/fstab may be using "label" (ie, it 
+still boots fine with the root=/dev/cciss/c0d0p5 kernel boot parameter)
 
-James - what is your take?
+> In which case,
+> you typically (e.g. redhat 8) MUST have an initrd image to get the right
+> version of "mount" around that understands labels... (just a wild guess).
+>
+> Describe your configuration in more detail.
 
--- Patrick Mansfield
+2 Xeon 2.8 GHz 512 KB L2
+1 GB RAM
+70 GB Hardware RAID-0 on SmartArray Controller 5i
+Every file system is ext3 except out data fs which is ext2 (actually no ext2 
+fs involved in during boot)
+RH 8.0 with upto date official updates (GCC 3.2.0 and glibc etc..)
+2 Broadcom GigE onboard
+4 Intel EEPRO or 4 Intel GigE cards
+IDE CDROM
+Floppy
+
+I will be able to give .config on request.
+
+Thanks.
+-- 
+Hari
+harisri@bigpond.com
+
