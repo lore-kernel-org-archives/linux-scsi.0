@@ -1,79 +1,54 @@
-From: Matt Domsch <Matt_Domsch@dell.com>
-Subject: [PATCH 2.4.30-pre3] x86_64: pci_alloc_consistent() match 2.6 implementation
-Date: Fri, 18 Mar 2005 15:23:44 -0600
-Message-ID: <20050318212344.GC26112@lists.us.dell.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Received: from ausc60ps301.us.dell.com ([143.166.148.206]:57905 "EHLO
-	ausc60ps301.us.dell.com") by vger.kernel.org with ESMTP
-	id S261368AbVCRVXr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 18 Mar 2005 16:23:47 -0500
-Content-Disposition: inline
+From: willy@parisc-linux.org (Matthew Wilcox)
+Subject: [PATCH] [1/5] Misc Lasi 700 fixes
+Date: Fri, 18 Mar 2005 20:56:21 -0700 (MST)
+Message-ID: <20050319035621.6B4EC496108@palinux.hppa>
+Received: from palinux.external.hp.com ([192.25.206.14]:49299 "EHLO
+	palinux.hppa") by vger.kernel.org with ESMTP id S262045AbVCSD4Y
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 18 Mar 2005 22:56:24 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: ak@suse.de, linux-kernel@vger.kernel.org
+To: James.Bottomley@SteelEye.com
 Cc: linux-scsi@vger.kernel.org
 
-For review and comment.
+Misc Lasi 700 fixes
 
-On x86_64 systems with no IOMMU and with >4GB RAM (in fact, whenever
-there are any pages mapped above 4GB), pci_alloc_consistent() falls
-back to using ZONE_DMA for all allocations, even if the device's
-dma_mask could have supported using memory from other zones.  Problems
-can be seen when other ZONE_DMA users (SWIOTLB, scsi_malloc()) consume
-all of ZONE_DMA, leaving none left for pci_alloc_consistent() use.
+ - Use the DMA_32BIT_MASK constants when calling dma_set_mask()
 
-Patch below makes pci_alloc_consistent() for the nommu case (EM64T
-processors) match the 2.6 implementation of dma_alloc_coherent(), with
-the exception that this continues to use GFP_ATOMIC.
+Signed-off-by: Tobias Klauser <tklauser@nuerscht.ch>
+Signed-off-by: Matthew Wilcox <willy@parisc-linux.org>
 
-Signed-off-by: Matt Domsch <Matt_Domsch@dell.com>
+ - ioremap fixes
 
-Thanks,
-Matt
+Signed-off-by: Matthew Wilcox <willy@parisc-linux.org>
 
--- 
-Matt Domsch
-Software Architect
-Dell Linux Solutions linux.dell.com & www.dell.com/linux
-Linux on Dell mailing lists @ http://lists.us.dell.com
-
---- linux-2.4/arch/x86_64/kernel/pci-nommu.c	Fri Feb 25 13:01:44 2005
-+++ linux-2.4/arch/x86_64/kernel/pci-nommu.c	Fri Feb 25 06:56:55 2005
-@@ -13,18 +13,28 @@ void *pci_alloc_consistent(struct pci_de
- 			   dma_addr_t *dma_handle)
- {
- 	void *ret;
-+	u64 mask;
-+	int order = get_order(size);
- 	int gfp = GFP_ATOMIC;
--	
--	if (hwdev == NULL ||
--	    end_pfn > (hwdev->dma_mask>>PAGE_SHIFT) ||  /* XXX */
--	    (u32)hwdev->dma_mask < 0xffffffff)
--		gfp |= GFP_DMA;
--	ret = (void *)__get_free_pages(gfp, get_order(size));
+diff -urpNX dontdiff linus-2.6/drivers/scsi/lasi700.c parisc-2.6/drivers/scsi/lasi700.c
+--- linus-2.6/drivers/scsi/lasi700.c	2005-03-18 06:21:11.324519230 -0700
++++ parisc-2.6/drivers/scsi/lasi700.c	2005-03-18 06:03:01.000000000 -0700
+@@ -111,8 +111,8 @@ lasi700_probe(struct parisc_device *dev)
+ 	memset(hostdata, 0, sizeof(struct NCR_700_Host_Parameters));
  
--	if (ret != NULL) {
--		memset(ret, 0, size);
-+	if (hwdev)
-+		mask = hwdev->dma_mask;
-+	else
-+		mask = 0xffffffffULL;
-+
-+	for (;;) {
-+		ret = (void *)__get_free_pages(gfp, order);
-+		if (ret == NULL)
-+			return NULL;
- 		*dma_handle = virt_to_bus(ret);
-+		if ((*dma_handle & ~mask) == 0)
-+			break;
-+		free_pages((unsigned long)ret, order);
-+		if (gfp & GFP_DMA)
-+			return NULL;
-+		gfp |= GFP_DMA;
- 	}
-+	memset(ret, 0, size);
- 	return ret;
+ 	hostdata->dev = &dev->dev;
+-	dma_set_mask(&dev->dev, 0xffffffffUL);
+-	hostdata->base = base;
++	dma_set_mask(&dev->dev, DMA_32BIT_MASK);
++	hostdata->base = ioremap(base, 0x100);
+ 	hostdata->differential = 0;
+ 
+ 	if (dev->id.sversion == LASI_700_SVERSION) {
+@@ -138,6 +138,7 @@ lasi700_probe(struct parisc_device *dev)
+ 	return 0;
+ 
+  out_kfree:
++	iounmap(hostdata->base);
+ 	kfree(hostdata);
+ 	return -ENODEV;
  }
+@@ -152,6 +153,7 @@ lasi700_driver_remove(struct parisc_devi
+ 	scsi_remove_host(host);
+ 	NCR_700_release(host);
+ 	free_irq(host->irq, host);
++	iounmap(hostdata->base);
+ 	kfree(hostdata);
  
+ 	return 0;
