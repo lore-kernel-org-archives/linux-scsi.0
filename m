@@ -1,33 +1,37 @@
-From: Matthew Wilcox <willy@debian.org>
-Subject: Re: iSCSI HBA needs to have a unique host id
-Date: Fri, 14 Nov 2003 17:37:42 +0000
+From: Pat LaVarre <p.lavarre@ieee.org>
+Subject: Re: [usb-storage] Re: Time to conclude the Sony USB mass storage
+	thread
+Date: 14 Nov 2003 10:52:41 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20031114173742.GG30485@parcelfarce.linux.theplanet.co.uk>
-References: <009d01c3aa95$9d613b70$a0074d0a@apac.cisco.com> <1068829950.4781.74.camel@persist.az.mvista.com>
+Message-ID: <1068832361.5539.73.camel@patrh9>
+References: <1068825146.2134.6.camel@mulgrave>
+	 <20031114092644.A2794@beaverton.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:61152 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S262794AbTKNRhn
+Received: from email-out1.iomega.com ([147.178.1.82]:53729 "EHLO
+	email.iomega.com") by vger.kernel.org with ESMTP id S264643AbTKNRxR
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 14 Nov 2003 12:37:43 -0500
-Content-Disposition: inline
-In-Reply-To: <1068829950.4781.74.camel@persist.az.mvista.com>
+	Fri, 14 Nov 2003 12:53:17 -0500
+In-Reply-To: <20031114092644.A2794@beaverton.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Steven Dake <sdake@mvista.com>
-Cc: "Surekha.PC" <surekhap@cisco.com>, linux-scsi@vger.kernel.org
+To: patmans@us.ibm.com
+Cc: usb-storage@one-eyed-alien.net, linux-scsi@vger.kernel.org, james.bottomley@steeleye.com, mdharm-scsi@one-eyed-alien.net
 
-On Fri, Nov 14, 2003 at 10:12:30AM -0700, Steven Dake wrote:
-> I suggest
-> examining the uSDE project www.sourceforge.net/projects/usde for an
-> example implementation.
+> allows the setting to be overwritten for specific vendor + model
+> via the scsi_devinfo/dev_flags code - so users or distributions can white
+> list devices without modifying the kernel (devinfo settings have priority
+> over shost->flags, see scsi_devinfo.c).
 
-I suggest you look at the udev project instead since uSDE is unlikely
-to be used by more than a tiny minority of systems.
+Yes please.
 
-http://lwn.net/Articles/55176/
+> for clarity: ...
+> BLIST_MS_SKIP_PAGE_08 means for sd assume write through cache ...
+> BLIST_MS_SKIP_PAGE_3F means for sd assume writable media.
 
--- 
-"It's not Hollywood.  War is real, war is primarily not about defeat or
-victory, it is about death.  I've seen thousands and thousands of dead bodies.
-Do you think I want to have an academic debate on this subject?" -- Robert Fisk
+Ah.
+
+Pat LaVarre
+
+
