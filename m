@@ -1,36 +1,35 @@
 From: Matthew Wilcox <matthew@wil.cx>
 Subject: Re: Unable to set hostid in sym53c8xx module
-Date: Wed, 20 Oct 2004 12:32:01 +0100
+Date: Wed, 20 Oct 2004 12:22:29 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20041020113201.GT16153@parcelfarce.linux.theplanet.co.uk>
-References: <200410200931.22069.news4reini123@aon.at>
+Message-ID: <20041020112229.GS16153@parcelfarce.linux.theplanet.co.uk>
+References: <7AAD212492598A4A92463C3F5D34C54F19512B@ccd3.CC.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:10689 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S270200AbUJTLcB
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:32958 "EHLO
+	www.linux.org.uk") by vger.kernel.org with ESMTP id S269917AbUJTLWg
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 20 Oct 2004 07:32:01 -0400
+	Wed, 20 Oct 2004 07:22:36 -0400
 Content-Disposition: inline
-In-Reply-To: <200410200931.22069.news4reini123@aon.at>
+In-Reply-To: <7AAD212492598A4A92463C3F5D34C54F19512B@ccd3.CC.de>
 List-Id: linux-scsi@vger.kernel.org
-To: Reinhold Fischer <news4reini123@aon.at>
-Cc: linux-scsi@vger.kernel.org
+To: "Heinzmann, Robert" <Heinzmann@cc-dresden.de>
+Cc: Reinhold Fischer <news4reini123@aon.at>, linux-scsi@vger.kernel.org
 
-On Wed, Oct 20, 2004 at 09:31:22AM +0200, Reinhold Fischer wrote:
-> I also filed bug 3588 (http://bugzilla.kernel.org/show_bug.cgi?id=3588), 
-> but no response until now.
+On Wed, Oct 20, 2004 at 11:01:00AM +0200, Heinzmann, Robert wrote:
+> Reinhold, 
+> 
+> > Do you know, if it is fixed in 2.6.9?
+> I'm not shure, probably not (there where some other fixes too). Afaik
+> 2.6.10 will include a fixed sym2 driver
+> (http://marc.theaimsgroup.com/?l=linux-scsi&m=109742499223501&w=2).
+> Maybe the fix in the thread mentioned in the last mail helps (just as a
+> workaround). It worked for me.
 
-That's because Mike Anderson didn't reassign it to me.
-
-> I tried to set other module parameter for debug and verbose outbut, but 
-> it seems, that the module will ignore all parameters.
-
-BTW, with the new code you'll specify it differently as:
-
-modprobe sym53c8xx hostid=5
-
-I've even updated the documentation to reflect this ;-)
+It is not fixed in 2.6.9.  The 2.1.18m not-yet-released version of the
+driver switches to the new module_param method of specifying parameters,
+I'll send that out soonish.
 
 -- 
 "Next the statesmen will invent cheap lies, putting the blame upon 
