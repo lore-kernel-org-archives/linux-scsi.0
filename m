@@ -1,106 +1,143 @@
-From: "Rajat  Jain, Noida" <rajatj@noida.hcltech.com>
-Subject: RE: How does a SCSI device gets a target ID?
-Date: Thu, 10 Mar 2005 10:19:24 +0530
-Message-ID: <267988DEACEC5A4D86D5FCD780313FBB0575F562@exch-03.noida.hcltech.com>
+From: mike.miller@hp.com
+Subject: [PATCH 2/3] cciss: support for more than 8 controllers
+Date: Wed, 9 Mar 2005 16:25:58 -0600
+Message-ID: <20050309222558.GB32723@beardog.cca.cpqcorp.net>
+Reply-To: mike.miller@hp.com, mikem@beardog.cca.cpqcorp.net
 Mime-Version: 1.0
-Content-Type: text/plain
-Received: from ngate.noida.hcltech.com ([202.54.110.230]:37812 "EHLO
-	ngate.noida.hcltech.com") by vger.kernel.org with ESMTP
-	id S262007AbVCJEt6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 9 Mar 2005 23:49:58 -0500
+Content-Type: text/plain; charset=us-ascii
+Received: from zmamail04.zma.compaq.com ([161.114.64.104]:59922 "EHLO
+	zmamail04.zma.compaq.com") by vger.kernel.org with ESMTP
+	id S262449AbVCIWZw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 9 Mar 2005 17:25:52 -0500
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bryan Henderson <hbryan@us.ibm.com>, "Rajat Jain, Noida" <rajatj@noida.hcltech.com>
-Cc: linux-scsi@vger.kernel.org
+To: akpm@osdl.org, axboe@suse.de
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
+This patch adds support for more than 8 controllers. If we run out of preallocated major numbers we dynamically allocate more.
 
+Please consider this for inclusion.
 
-BINGO !!!!!
+Signed-off-by: Mike Miller <mike.miller@hp.com>
 
-That answered to a lot extent what I was looking for. Yes, I accept my
-question was a little cloudy. I wanted to ask both the perspectives: How
-does a SCSI device gets its ID ... And How can the software (kernel / user)
-find out the target ID of the new disk.
-
-I'm using a HS disk (Hot Swappable SCSI disk, they call it). I have 4 slots
-in the front panel of my computer. And when ever I plug the disk into a
-different port, the target ID changes. I wanted to confirm that the target
-Ids are binded to the PORTS in my case. I got my answer, in my case, the
-target ID depends upon which port you plug the disk into.
-
-Every time I plug / unplug the disk, I have to echo "scsi
-add-single-device"/"scsi remove single-device" (with correct traget ID) to
-/proc/scsi/scsi. I wanted to automate this process, I wanted the disk to get
-detected and installed the moment it is inserted / removed. Can I do that? I
-don't mind writing a kernel module if need be.
-
-Currently after reading the mail, what I am planning to do is to write a
-user level script that would echo "add-single device" to the proc interface,
-for ALL the possible target Ids on the Bus. But again, I would have to RUN
-that script manually, and it will have to ITERATE on the the possible target
-Ids. Is there a better way?
-
-Thanx a ton,
-
-Rajat
+ cciss.c |   36 +++++++++++++++++++++++++++---------
+ cciss.h |    3 +++
+ 2 files changed, 30 insertions(+), 9 deletions(-)
+-------------------------------------------------------------------------------
+diff -burNp lx2611-p001/drivers/block/cciss.c lx2611-p002/drivers/block/cciss.c
+--- lx2611-p001/drivers/block/cciss.c	2005-03-08 16:39:01.650427392 -0600
++++ lx2611-p002/drivers/block/cciss.c	2005-03-08 16:50:47.149175280 -0600
+@@ -120,7 +120,11 @@ static struct board_type products[] = {
  
-
------Original Message-----
-From: Bryan Henderson [mailto:hbryan@us.ibm.com] 
-Sent: Thursday, March 10, 2005 12:16 AM
-To: Rajat Jain, Noida
-Cc: linux-scsi@vger.kernel.org
-Subject: Re: How does a SCSI device gets a target ID?
-
-It's not clear what you're asking.  You start off with the question
-
->When a new SCSI device is added to a SCSI channel, how can we find out
-what
->is the target ID of that device? 
-
-That's clear enough, except I don't know who "we" is.  Depending on who you
-are, i.e. from what perspective you're looking, you would get this
-information differently.
-
-But then you give two hypotheses that describe how a device comes to have
-its target ID, not how someone finds out what target ID it has.
-
->1) If a channel supports 8 SCSI devices, then each of the 8 ports will
-have
->a specific Target ID. And any device attached to that port will have 
->that Target ID.
-
->2) Is it done one the fly? I mean (starting from zero), the SCSI device
-is
->given a target ID that is 1 greater that the last SCSI device's ID. Who 
->assigns this ID?
-
-Others have read a particular question into your question and answered it,
-but it might not be what you were looking for.
-
-Let me give a shot at answering a few of the questions that it might be:
-
-A device traditionally gets its target ID from a physical switch on the
-device.  The person who installs the device sets the switch and can tell the
-target ID by looking at it the switch.  That person chooses the target IDs
-to be anything he wants, but makes sure that no two devices plugged into the
-same bus have the same target ID.
-
-In modern times, some devices (disk devices, anyway) get their target ID by
-being plugged into a backplane or cable in a certain place.  In that case,
-you can tell the target ID by noting where it's plugged in and knowing how
-the thing you plugged it into is configured.  SCA is one standard for
-allowing this kind of target ID assignment.
-
-Some devices even get their target IDs dynamically with SCAM, but I don't
-know anything about SCAM.
-
-If you're inside the computer and trying to figure out what target ID an
-attached device has, all you can do is search the namespace.  You try each
-target ID and if a device answers, you can ask it for information about
-itself (model, serial number, etc.).  But you don't necessarily ever know
-what target ID a particular device has -- you just know that there exists a
-device with a certain target ID.
-
-At various levels of Linux, matching up target IDs with devices is done via
-various interfaces, most of them quite tortured.
+ #define READ_AHEAD 	 1024
+ #define NR_CMDS		 384 /* #commands that can be outstanding */
+-#define MAX_CTLR 8
++#define MAX_CTLR	32 
++
++/* Originally cciss driver only supports 8 major numbers */
++#define MAX_CTLR_ORIG 	8
++
+ 
+ #define CCISS_DMA_MASK	0xFFFFFFFF	/* 32 bit DMA */
+ 
+@@ -2650,7 +2654,7 @@ static int alloc_cciss_hba(void)
+ 		}
+ 	}
+ 	printk(KERN_WARNING "cciss: This driver supports a maximum"
+-		" of 8 controllers.\n");
++		" of %d controllers.\n", MAX_CTLR);
+ 	goto out;
+ Enomem:
+ 	printk(KERN_ERR "cciss: out of memory.\n");
+@@ -2682,13 +2686,14 @@ static int __devinit cciss_init_one(stru
+ 	request_queue_t *q;
+ 	int i;
+ 	int j;
++	int rc;
+ 
+ 	printk(KERN_DEBUG "cciss: Device 0x%x has been found at"
+ 			" bus %d dev %d func %d\n",
+ 		pdev->device, pdev->bus->number, PCI_SLOT(pdev->devfn),
+ 			PCI_FUNC(pdev->devfn));
+ 	i = alloc_cciss_hba();
+-	if( i < 0 ) 
++	if(i < 0) 
+ 		return (-1);
+ 	if (cciss_pci_init(hba[i], pdev) != 0)
+ 		goto clean1;
+@@ -2707,11 +2712,24 @@ static int __devinit cciss_init_one(stru
+ 		goto clean1;
+ 	}
+ 
+-	if (register_blkdev(COMPAQ_CISS_MAJOR+i, hba[i]->devname)) {
+-		printk(KERN_ERR "cciss: Unable to register device %s\n",
+-				hba[i]->devname);
++	/* 
++	 * register with the major number, or get a dynamic major number
++	 * by passing 0 as argument.  This is done for greater than
++	 * 8 controller support.
++	 */
++	if (i < MAX_CTLR_ORIG)
++		hba[i]->major = MAJOR_NR + i;
++	rc = register_blkdev(hba[i]->major, hba[i]->devname);
++	if(rc == -EBUSY || rc == -EINVAL) {
++		printk(KERN_ERR
++			"cciss:  Unable to get major number %d for %s "
++			"on hba %d\n", hba[i]->major, hba[i]->devname, i);
+ 		goto clean1;
+ 	}
++	else {
++		if (i >= MAX_CTLR_ORIG)
++			hba[i]->major = rc;
++	}
+ 
+ 	/* make sure the board interrupts are off */
+ 	hba[i]->access.set_intr_mask(hba[i], CCISS_INTR_OFF);
+@@ -2782,7 +2800,7 @@ static int __devinit cciss_init_one(stru
+ 
+ 		sprintf(disk->disk_name, "cciss/c%dd%d", i, j);
+ 		sprintf(disk->devfs_name, "cciss/host%d/target%d", i, j);
+-		disk->major = COMPAQ_CISS_MAJOR + i;
++		disk->major = hba[i]->major;
+ 		disk->first_minor = j << NWD_SHIFT;
+ 		disk->fops = &cciss_fops;
+ 		disk->queue = hba[i]->queue;
+@@ -2811,7 +2829,7 @@ clean4:
+ 			hba[i]->errinfo_pool_dhandle);
+ 	free_irq(hba[i]->intr, hba[i]);
+ clean2:
+-	unregister_blkdev(COMPAQ_CISS_MAJOR+i, hba[i]->devname);
++	unregister_blkdev(hba[i]->major, hba[i]->devname);
+ clean1:
+ 	release_io_mem(hba[i]);
+ 	free_hba(i);
+@@ -2853,7 +2871,7 @@ static void __devexit cciss_remove_one (
+ 	pci_set_drvdata(pdev, NULL);
+ 	iounmap(hba[i]->vaddr);
+ 	cciss_unregister_scsi(i);  /* unhook from SCSI subsystem */
+-	unregister_blkdev(COMPAQ_CISS_MAJOR+i, hba[i]->devname);
++	unregister_blkdev(hba[i]->major, hba[i]->devname);
+ 	remove_proc_entry(hba[i]->devname, proc_cciss);	
+ 	
+ 	/* remove it from the disk list */
+diff -burNp lx2611-p001/drivers/block/cciss.h lx2611-p002/drivers/block/cciss.h
+--- lx2611-p001/drivers/block/cciss.h	2004-12-24 15:33:48.000000000 -0600
++++ lx2611-p002/drivers/block/cciss.h	2005-03-08 16:50:47.150175128 -0600
+@@ -13,6 +13,8 @@
+ #define IO_OK		0
+ #define IO_ERROR	1
+ 
++#define MAJOR_NR COMPAQ_CISS_MAJOR
++
+ struct ctlr_info;
+ typedef struct ctlr_info ctlr_info_t;
+ 
+@@ -50,6 +52,7 @@ struct ctlr_info 
+ 	CfgTable_struct __iomem *cfgtable;
+ 	unsigned int intr;
+ 	int	interrupts_enabled;
++	int	major;
+ 	int 	max_commands;
+ 	int	commands_outstanding;
+ 	int 	max_outstanding; /* Debug */ 
