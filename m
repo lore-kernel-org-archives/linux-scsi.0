@@ -1,51 +1,54 @@
 From: Jens Axboe <axboe@suse.de>
 Subject: Re: error in drivers/block/scsi_ioctl.c and ll_rw_block.c?
-Date: Mon, 29 Sep 2003 09:51:05 +0200
+Date: Mon, 29 Sep 2003 09:55:46 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030929075105.GO15415@suse.de>
-References: <20030928160238.A18507@one-eyed-alien.net>
+Message-ID: <20030929075546.GP15415@suse.de>
+References: <20030928160238.A18507@one-eyed-alien.net> <20030929075105.GO15415@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns.virtualhost.dk ([195.184.98.160]:59049 "EHLO virtualhost.dk")
-	by vger.kernel.org with ESMTP id S262864AbTI2HvE (ORCPT
+Received: from ns.virtualhost.dk ([195.184.98.160]:20907 "EHLO virtualhost.dk")
+	by vger.kernel.org with ESMTP id S262888AbTI2Hzp (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 29 Sep 2003 03:51:04 -0400
+	Mon, 29 Sep 2003 03:55:45 -0400
 Content-Disposition: inline
-In-Reply-To: <20030928160238.A18507@one-eyed-alien.net>
+In-Reply-To: <20030929075105.GO15415@suse.de>
 List-Id: linux-scsi@vger.kernel.org
 To: Kernel Developer List <linux-kernel@vger.kernel.org>, Linux SCSI list <linux-scsi@vger.kernel.org>
 
-On Sun, Sep 28 2003, Matthew Dharm wrote:
-> While working on usb-storage (a virtual SCSI HBA), I noticed that the
-> command 'eject /dev/scd0' sent a START_STOP command to the device with the
-> data direction set to SCSI_DATA_WRITE but a transfer length of zero.  This
-> causes a problem for some code paths.
+On Mon, Sep 29 2003, Jens Axboe wrote:
+> On Sun, Sep 28 2003, Matthew Dharm wrote:
+> > While working on usb-storage (a virtual SCSI HBA), I noticed that the
+> > command 'eject /dev/scd0' sent a START_STOP command to the device with the
+> > data direction set to SCSI_DATA_WRITE but a transfer length of zero.  This
+> > causes a problem for some code paths.
+> > 
+> > For clarity, the START_STOP command doesn't want to move any data at all.
+> > 
+> > It looks to me like the error is a combination of
+> > drivers/block/scsi_ioctl.c and ll_rw_block.c
+> > 
+> > scsi_ioctl.c calls blk_get_request(q, WRITE, __GFP_WAIT) to allocate the
+> > request -- specifying WRITE here is one problem.
+> > 
+> > In ll_rw_block.c, blk_get_request() calls BUG_ON(rq != READ && rw != WRITE)
+> > -- in other words, it can only allocate a request for reading or writing,
+> > but not for no data.  I'm not familiar with this code, but it looks like
+> > requests are tracked by data direction, so making this accept NONE may be
+> > difficult.
+> > 
+> > One possible solution may be to re-write the CDROMEJECT ioctl into a call
+> > to sg_scsi_ioctl(), but that doesn't fix the general problem with
+> > ll_rw_block.c -- if, indeed, that is a problem.
 > 
-> For clarity, the START_STOP command doesn't want to move any data at all.
-> 
-> It looks to me like the error is a combination of
-> drivers/block/scsi_ioctl.c and ll_rw_block.c
-> 
-> scsi_ioctl.c calls blk_get_request(q, WRITE, __GFP_WAIT) to allocate the
-> request -- specifying WRITE here is one problem.
-> 
-> In ll_rw_block.c, blk_get_request() calls BUG_ON(rq != READ && rw != WRITE)
-> -- in other words, it can only allocate a request for reading or writing,
-> but not for no data.  I'm not familiar with this code, but it looks like
-> requests are tracked by data direction, so making this accept NONE may be
-> difficult.
-> 
-> One possible solution may be to re-write the CDROMEJECT ioctl into a call
-> to sg_scsi_ioctl(), but that doesn't fix the general problem with
-> ll_rw_block.c -- if, indeed, that is a problem.
+> No it's not a problem, clearly the request doesn't want to move any data
+> if rq->data_len == 0.
 
-No it's not a problem, clearly the request doesn't want to move any data
-if rq->data_len == 0.
+This one compiles :)
 
 ===== drivers/scsi/sr.c 1.93 vs edited =====
 --- 1.93/drivers/scsi/sr.c	Fri Sep  5 13:31:51 2003
-+++ edited/drivers/scsi/sr.c	Mon Sep 29 09:49:43 2003
++++ edited/drivers/scsi/sr.c	Mon Sep 29 09:55:19 2003
 @@ -289,12 +289,12 @@
  			return 0;
  
@@ -56,10 +59,10 @@ if rq->data_len == 0.
 +		else if (rq_data_dir(rq) == WRITE)
  			SCpnt->sc_data_direction = SCSI_DATA_WRITE;
 -		else if (rq->data_len)
-+		else (rq->data_len)
- 			SCpnt->sc_data_direction = SCSI_DATA_READ;
--		else
+-			SCpnt->sc_data_direction = SCSI_DATA_READ;
+ 		else
 -			SCpnt->sc_data_direction = SCSI_DATA_NONE;
++			SCpnt->sc_data_direction = SCSI_DATA_READ;
  
  		this_count = rq->data_len;
  		if (rq->timeout)
