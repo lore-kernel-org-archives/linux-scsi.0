@@ -1,43 +1,50 @@
-From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
-Subject: Re: [BK PATCH] SCSI updates for 2.6.6
-Date: Tue, 11 May 2004 21:29:47 +0200 (CEST)
+From: "Guy" <bugzilla@watkins-home.com>
+Subject: RE: Help - questions on Linux SCSI low-level driver
+Date: Tue, 11 May 2004 15:49:10 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44.0405112125150.3836-100000@poirot.grange>
-References: <1084229974.1763.512.camel@mulgrave>
+Message-ID: <200405111949.i4BJnEB10038@www.watkins-home.com>
+References: <20040511191903.A18764@infradead.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pop.gmx.net ([213.165.64.20]:29073 "HELO mail.gmx.net")
-	by vger.kernel.org with SMTP id S263467AbUEKTan (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 11 May 2004 15:30:43 -0400
-In-Reply-To: <1084229974.1763.512.camel@mulgrave>
+Received: from rwcrmhc13.comcast.net ([204.127.198.39]:23805 "EHLO
+	rwcrmhc13.comcast.net") by vger.kernel.org with ESMTP
+	id S263551AbUEKTtR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 11 May 2004 15:49:17 -0400
+In-Reply-To: <20040511191903.A18764@infradead.org>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@steeleye.com>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
+To: 'Christoph Hellwig' <hch@infradead.org>, 'Lee Xing' <lxing@Crossroads.com>
+Cc: linux-scsi@vger.kernel.org
 
-Hi
+http://www.kernelnewbies.org
 
-(Removed Linus and Andrew from CC: not to bother them with such a "minor"
-issue:-))
+You had a typo. :)
 
-On 10 May 2004, James Bottomley wrote:
 
-> This is the latest set of assorted fixes, plus one new driver: the IBM
-> Power Raid (ipr).
->
-> The patch can be pulled from:
->
-> bk://linux-scsi.bkbits.net/scsi-for-linus-2.6
->
-> The short changelog is:
+-----Original Message-----
+From: linux-scsi-owner@vger.kernel.org
+[mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of Christoph Hellwig
+Sent: Tuesday, May 11, 2004 2:19 PM
+To: Lee Xing
+Cc: linux-scsi@vger.kernel.org
+Subject: Re: Help - questions on Linux SCSI low-level driver
 
-I hoped the tmscsim 64-bit bugfix would somehow find its way into the
-mainstream after 2.6. Does it still have a chance?
+On Tue, May 11, 2004 at 01:00:37PM -0500, Lee Xing wrote:
+> Hi,
+> 
+> To make sure we can integrate the functionalities of the Linux SCSI
+low-level driver into an existing module, a dummy detect( ) (the first
+function called from the SCSI mid-level) and hosts.h are added into
+hello_world module (attached bellow).
 
-Thanks
-Guennadi
----
-Guennadi Liakhovetski
+Please see http://www.kernelnebies.org for lots of beginners help on kernel
+programming.
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
 
