@@ -1,31 +1,38 @@
-From: Doug Ledford <dledford@redhat.com>
-Subject: Re: aic7xxx_biosparam
-Date: Sun, 17 Nov 2002 22:26:00 -0500
+From: Oliver Xymoron <oxymoron@waste.org>
+Subject: Re: Re: about scsi_hostlist
+Date: Sun, 17 Nov 2002 23:09:39 -0600
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20021118032600.GE4608@redhat.com>
-References: <dledford@redhat.com> <20021118024645.GB4608@redhat.com> <200211180320.gAI3KBV16803@localhost.localdomain>
+Message-ID: <20021118050939.GC20171@waste.org>
+References: <200211172237.gAHMbF99022232@leviathan.ele.uri.edu>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <200211180320.gAI3KBV16803@localhost.localdomain>
+In-Reply-To: <200211172237.gAHMbF99022232@leviathan.ele.uri.edu>
 List-Id: linux-scsi@vger.kernel.org
-To: "J.E.J. Bottomley" <James.Bottomley@steeleye.com>
-Cc: Linux Scsi Mailing List <linux-scsi@vger.kernel.org>
+To: Ming Zhang <mingz@ele.uri.edu>
+Cc: Doug Ledford <dledford@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Sun, Nov 17, 2002 at 09:20:10PM -0600, J.E.J. Bottomley wrote:
-> > visible in  fdisk (well, after a module reload), so it get's used
-> > somewhere.
-> 
-> The argument is that no user space tools rely on the cyls value, only the 
-> sectors and heads.  They all use the GETGEO ioctl, but also get the blocksize 
+On Sun, Nov 17, 2002 at 05:35:52PM -0500, Ming Zhang wrote:
+> For example, like the iSCSI target code, when it start, it should
+> find all SCSI disks or tapes link in order to export to client side.
 
-That may very well be true and I'm all for that, but I'm still anal about 
-being right anyway, so I implemented what Andries suggested.
+No it shouldn't! What if one of them happens to be your boot device?
+You'll want to be able to configure from userspace exactly which
+devices are available, as well as what authentication they require,
+etc.
+
+In fact, I'd recommend running all of the iSCSI target negotiation in
+userspace and only push down sockets that have established sessions to the
+kernel if you find that you need to for performance. You probably
+don't need to.
+
+Further, I'd recommend supporting block devices other than SCSI and
+files (similar to the loopback block device) otherwise you're missing
+most of the point of using Linux as an iSCSI target. I want to serve
+my diskless Beowulf nodes via iSCSI with LVM over RAID5 on IDE disks
+and have web manageable storage at a tenth of the cost of SCSI/FC.
+Building a cheaper SCSI JBOD is boring.
 
 -- 
-  Doug Ledford <dledford@redhat.com>     919-754-3700 x44233
-         Red Hat, Inc. 
-         1801 Varsity Dr.
-         Raleigh, NC 27606
-  
+ "Love the dolphins," she advised him. "Write by W.A.S.T.E.." 
