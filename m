@@ -1,74 +1,52 @@
-From: James Bottomley <James.Bottomley@steeleye.com>
-Subject: Re: Fw: 2.6.4-mm1 and removable USB drive oops
-Date: 13 Mar 2004 13:17:06 -0500
+From: Xose Vazquez Perez <xose@wanadoo.es>
+Subject: ADAPTEC 2.4 drivers too old
+Date: Sat, 13 Mar 2004 19:23:33 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1079201828.2512.24.camel@mulgrave>
-References: <20040312213831.4b56c469.akpm@osdl.org>
+Message-ID: <405351A5.3010708@wanadoo.es>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat1.steeleye.com ([65.114.3.130]:35016 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S263155AbUCMSRQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 13 Mar 2004 13:17:16 -0500
-In-Reply-To: <20040312213831.4b56c469.akpm@osdl.org>
+Received: from boun02.eresmas.com ([62.81.235.117]:30160 "EHLO
+	boun02.in.mad.eresmas.com") by vger.kernel.org with ESMTP
+	id S263157AbUCMSYI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 13 Mar 2004 13:24:08 -0500
+Received: from [192.168.108.51] (helo=mx01.eresmas.com)
+	by boun02.in.mad.eresmas.com with esmtp (Exim 4.30)
+	id 1B2Dnl-0002aM-Lz
+	for linux-scsi@vger.kernel.org; Sat, 13 Mar 2004 19:24:01 +0100
+Received: from [80.103.142.189] (helo=wanadoo.es)
+	by mx01.eresmas.com with esmtp (Exim 4.30)
+	id 1B2Dni-00059Q-QM
+	for linux-scsi@vger.kernel.org; Sat, 13 Mar 2004 19:23:59 +0100
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, "Brian S. Stephan" <stephanb@msoe.edu>
+To: 'linux-scsi' <linux-scsi@vger.kernel.org>
 
-On Sat, 2004-03-13 at 00:38, Andrew Morton wrote:
-> James's tree broke.
 
-Well, yes.
+what does it happen to Adaptec team ?
 
-The actual problem reported was because there wasn't a corresponding
-check on transport_classdev.class in the unregister.
+o aacraid
+    kernel: 1.1.2      (15 May 2003)
+    latest: 1.1.4-2314 (09 Feb 2004)
 
-However, on closer inspection I also turned up a nasty thinko in the
-reference counting.  For reasons best known to the class code authors,
-class devices have to obtain their own references to the devices they're
-attached to which they release again in their .release routines, so you
-have to remember to do a get_device() in the correct place after the
-class_device_add().  I put comments in the code so that, hopefully, we
-can avoid the problem in future.
+o aic7xxx/aic79xx
+    kernel: 6.2.36/1.3.10 (03 Jun 2003)
+    latest: 6.3.5 /2.0.6  (09 Feb 2004)
 
-James
+o dpt_i2o
+    kernel: 2.4.5      (25 Jul 2001)
+    latest: 2.5.0-2319 (10 Feb 2004)
 
-===== drivers/scsi/scsi_sysfs.c 1.43 vs edited =====
---- 1.43/drivers/scsi/scsi_sysfs.c	Fri Mar 12 16:50:50 2004
-+++ edited/drivers/scsi/scsi_sysfs.c	Sat Mar 13 12:09:30 2004
-@@ -367,15 +367,20 @@
- 		printk(KERN_INFO "error 2\n");
- 		goto clean_device;
- 	}
-+	/* take a reference for the sdev_classdev; this is
-+	 * released by the sdev_class .release */
-+	get_device(&sdev->sdev_gendev);
- 
- 	if (sdev->transport_classdev.class) {
- 		error = class_device_add(&sdev->transport_classdev);
- 		if (error)
- 			goto clean_device2;
-+		/* take a reference for the transport_classdev; this
-+		 * is released by the transport_class .release */
-+		get_device(&sdev->sdev_gendev);
-+		
- 	}
- 
--	get_device(&sdev->sdev_gendev);
--
- 	if (sdev->host->hostt->sdev_attrs) {
- 		for (i = 0; sdev->host->hostt->sdev_attrs[i]; i++) {
- 			error = attr_add(&sdev->sdev_gendev,
-@@ -434,7 +439,8 @@
- 	if (sdev->sdev_state == SDEV_RUNNING || sdev->sdev_state == SDEV_CANCEL) {
- 		scsi_device_set_state(sdev, SDEV_DEL);
- 		class_device_unregister(&sdev->sdev_classdev);
--		class_device_unregister(&sdev->transport_classdev);
-+		if(sdev->transport_classdev.class)
-+			class_device_unregister(&sdev->transport_classdev);
- 		device_del(&sdev->sdev_gendev);
- 		if (sdev->host->hostt->slave_destroy)
- 			sdev->host->hostt->slave_destroy(sdev);
+o gdth
+    kernel: 2.05  (03 Oct 2002)
+    latest: 2.06a (04 Aug 2003)
+
+o ips
+    kernel: 6.11.07
+    latest: 6.11.07
+
+*only* ips is updated.
+
+-thanks-
+
 
