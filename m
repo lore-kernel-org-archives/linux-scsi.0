@@ -1,46 +1,26 @@
-From: Matthew Wilcox <willy@debian.org>
-Subject: Re: DAC960 + sym53c8xx conflict
-Date: Tue, 17 Aug 2004 01:09:51 +0100
+From: Janet Sabatino <Websitepositioning@ligne-net.info>
+Subject: more website traffic
+Date: Mon, 16 Aug 2004 18:44:36 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040817000951.GI28995@parcelfarce.linux.theplanet.co.uk>
-References: <1092628387.2548.14.camel@fs2> <20040816112034.GC28995@parcelfarce.linux.theplanet.co.uk> <1092699047.6936.11.camel@fs2>
+Message-ID: <S268066AbUHQBoq/20040817014446Z+969@vger.kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="iso-8859-1"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:16788 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S268031AbUHQAJx
+Received: from user-12l2cuj.cable.mindspring.com ([69.81.51.211]:19717 "HELO
+	69.81.51.211") by vger.kernel.org with SMTP id S268066AbUHQBoq
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 16 Aug 2004 20:09:53 -0400
-Content-Disposition: inline
-In-Reply-To: <1092699047.6936.11.camel@fs2>
+	Mon, 16 Aug 2004 21:44:46 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: Michael <mozstuff@yahoo.com>
-Cc: Matthew Wilcox <willy@debian.org>, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Mon, Aug 16, 2004 at 06:30:47PM -0500, Michael wrote:
-> On 2.6 I get the message you list as well. I thought maybe 2.6 wasn't
-> actually recognizing the raid controller, so I disabled support for the
-> 896 chip in the driver so it gives an "unsupported" message, but I still
-> lose the dac960 drives.
+In order to be at the top of the list with a search engine, you need to qualify with them.
+Our company does the qualifing for Google, Yahoo!, MSN, and several other companies.
+If you'd like to see if your website qualifies for a better position, reply with your contact info
+and web address. Usual response will come in a couple days after review.
 
-Crap, I see the problem.  When we fail initialisation, we disable the
-device, so DAC960 stops working.  Either we need to not disable the device
-when exiting or we need to claim the sym2 device in the dac960 driver
-so the sym2 driver never gets called.
+Sincerely,
 
-I'm going to be away till the end of the week, but for the moment, deleting
-
-        pci_release_regions(pdev);
-and
-        pci_disable_device(pdev);
-
-from sym2_probe() in drivers/scsi/sym53c8xx_2/sym_glue.c should fix
-your problem.
-
--- 
-"Next the statesmen will invent cheap lies, putting the blame upon 
-the nation that is attacked, and every man will be glad of those
-conscience-soothing falsities, and will diligently study them, and refuse
-to examine any refutations of them; and thus he will by and by convince 
-himself that the war is just, and will thank God for the better sleep 
-he enjoys after this process of grotesque self-deception." -- Mark Twain
+Janet Sabatino
+Website Positioning Services
+37 Business Center Dr.
+Austin, TX
