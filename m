@@ -1,128 +1,96 @@
-From: Mark Rustad <mrustad@mac.com>
-Subject: Re: PROBLEM: kernel crashes on RAID1 drive error
-Date: Tue, 16 Nov 2004 10:40:51 -0600
-Message-ID: <46C61533-37EE-11D9-A413-0003934F6348@mac.com>
-References: <8FA83ADB-22E4-11D9-AC9C-0003934F6348@aol.com> <20041021084514.GY10531@suse.de> <4177BF22.7060208@steeleye.com> <20041021135557.GN10531@suse.de> <4177C13C.10007@steeleye.com> <20041021140236.GO10531@suse.de> <88F77D21-2443-11D9-AAEE-0003934F6348@aol.com> <91146D2E-2918-11D9-B6DC-0003934F6348@aol.com> <2BF4BB83-2E93-11D9-804F-0003934F6348@mac.com> <20041116155141.GL3973@marowsky-bree.de>
-Mime-Version: 1.0 (Apple Message framework v619)
-Content-Type: text/plain; charset=US-ASCII; format=flowed
+From: Kay Sievers <kay.sievers@vrfy.org>
+Subject: Re: scsi "target1:0:0"
+Date: Tue, 16 Nov 2004 17:55:53 +0100
+Message-ID: <1100624154.8606.122.camel@localhost.localdomain>
+References: <1100622096.8606.104.camel@localhost.localdomain>
+	 <1100622800.2574.41.camel@mulgrave>
+Mime-Version: 1.0
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtpout.mac.com ([17.250.248.89]:13526 "EHLO smtpout.mac.com")
-	by vger.kernel.org with ESMTP id S262041AbUKPQk5 (ORCPT
+Received: from soundwarez.org ([217.160.171.123]:35023 "EHLO soundwarez.org")
+	by vger.kernel.org with ESMTP id S262027AbUKPQzg (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 16 Nov 2004 11:40:57 -0500
-In-Reply-To: <20041116155141.GL3973@marowsky-bree.de>
+	Tue, 16 Nov 2004 11:55:36 -0500
+In-Reply-To: <1100622800.2574.41.camel@mulgrave>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Lars Marowsky-Bree <lmb@suse.de>
-Cc: linux-raid@vger.kernel.org, linux-scsi@vger.kernel.org
+To: James Bottomley <jejb@steeleye.com>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-Lars,
+On Tue, 2004-11-16 at 10:33 -0600, James Bottomley wrote:
+> On Tue, 2004-11-16 at 10:21, Kay Sievers wrote:
+> > We got an additional directory in the /devices directory which
+> > changed:
+> >   /devices/pci0000:00/0000:00:1d.1/usb3/3-1/3-1:1.0/host1/1:0:0:0
+> > 
+> > to:
+> >   /devices/pci0000:00/0000:00:1d.1/usb3/3-1/3-1:1.0/host1/target1:0:0/1:0:0:0
+> > 
+> > The inserted "target1:0:0" is _not_ backed by any "bus" or "class" device
+> > and therefore breaks the logic of HAL to bring the devices together by
+> > its parent. (We also don't get hotplug events for the "target*" device at
+> > creation time)
+> 
+> Could you explain what specific problem this causes.  You do get a
+> hotplug for the LUNs; a target is simply an additional node in the tree.
 
-On Nov 16, 2004, at 9:51 AM, Lars Marowsky-Bree wrote:
+We sit there with the hald daemon and listen to sysfs add/remove events.
+We need an event for every /sys/devices/ devices to get a unbroken chain
+of devices we can sort together until we reach a root device. This is
+how _all_ devices in sysfs are working and scsi was before the change.
 
-> On 2004-11-04T12:56:01, Mark Rustad <mrustad@mac.com> wrote:
->
->> I came up with a patch that seems to fix the kernel crashing on a 
->> RAID1
->> device failure problem. I do not have confidence that it really is the
->> correct fix, but I'm pretty sure that it is touching the right area.
->> I'm sure someone more familiar with this area of the kernel will
->> recognize from this what the correct fix is, if this is not it.
->> Submitted for your consideration:
->
-> Hi Mark, checking back whether any better fix has since been proposed?
+> > Is this intentional and we can not expected a straight chain of devices
+> > anymore like it always was? Shouldn't there be a "class" device to have
+> > it consistent again.
+> 
+> Essentially yes. a target is simply a LUN container.  It has no real
+> existence (it's created when the first lun is encountered and destroyed
+> when the last LUN is removed).  It's job is really to hold parameters
+> that apply to all LUNs.
 
-My earlier attempt was clearly broken, though it did cure the kernel 
-crashes. Below is the patch I am currently applying against ll_rw_blk.c 
-in SuSE kernel 2.6.5-7.111. The last two hunks of the patch are 
-relevant to this problem (the remainder of the patch should look 
-familiar).
+Yes, that is fine. But if you don't want to add "class" support for
+"target*" they should have at least a "bus" associated to emit hotplug
+events on creation time. Here is what udevinfo prints. There should be
+no device in the middle of a chain without a "bus" I think:
 
-It looks to me like this problem was introduced in 2.6.2 by what was 
-thought to be a simple rearrangement of code. I believe that that 
-change did not take into account all of the ways that the loop could 
-exit.
+device '/sys/block/sda/sda1':
+    SYSFS{dev}="8:1"
 
-Unfortunately, the drive I had that would power up and work for 20 
-minutes and then return media errors has now totally died, so I am not 
-currently able to convince myself that this fix is really right. I am 
-continuing to try to reproduce a similar event.
+device chain '/sys/devices/pci0000:00/0000:00:1d.1/usb3/3-1/3-1:1.0/host2/target2:0:0/2:0:0:0':
+    BUS="scsi"
+    ID="2:0:0:0"
 
-My current patch is below:
+device chain '/sys/devices/pci0000:00/0000:00:1d.1/usb3/3-1/3-1:1.0/host2/target2:0:0':
+    BUS=""
+    ID="target2:0:0"
 
---- a/drivers/block/ll_rw_blk.c 2004-11-15 08:35:19.000000000 -0600
-+++ a/drivers/block/ll_rw_blk.c 2004-11-15 08:41:37.000000000 -0600
-@@ -2654,19 +2654,40 @@
+device chain '/sys/devices/pci0000:00/0000:00:1d.1/usb3/3-1/3-1:1.0/host2':
+    BUS=""
+    ID="host2"
 
-  void blk_recalc_rq_segments(struct request *rq)
-  {
--       struct bio *bio;
-+       struct bio *bio, *prevbio = NULL;
-         int nr_phys_segs, nr_hw_segs;
-+       unsigned int phys_size, hw_size;
-+       request_queue_t *q = rq->q;
+device chain '/sys/devices/pci0000:00/0000:00:1d.1/usb3/3-1/3-1:1.0':
+    BUS="usb"
+    ID="3-1:1.0"
 
-         if (!rq->bio)
-                 return;
+device chain '/sys/devices/pci0000:00/0000:00:1d.1/usb3/3-1':
+    BUS="usb"
+    ID="3-1"
 
--       nr_phys_segs = nr_hw_segs = 0;
-+       phys_size = hw_size = nr_phys_segs = nr_hw_segs = 0;
-         rq_for_each_bio(bio, rq) {
-                 /* Force bio hw/phys segs to be recalculated. */
-                 bio->bi_flags &= ~(1 << BIO_SEG_VALID);
+device chain '/sys/devices/pci0000:00/0000:00:1d.1/usb3':
+    BUS="usb"
+    ID="usb3"
 
--               nr_phys_segs += bio_phys_segments(rq->q, bio);
--               nr_hw_segs += bio_hw_segments(rq->q, bio);
-+               nr_phys_segs += bio_phys_segments(q, bio);
-+               nr_hw_segs += bio_hw_segments(q, bio);
-+               if (prevbio) {
-+                       int pseg = phys_size + prevbio->bi_size + 
-bio->bi_size;
-+                       int hseg = hw_size + prevbio->bi_size + 
-bio->bi_size;
-+
-+                       if (blk_phys_contig_segment(q, prevbio, bio) &&
-+                               pseg <= q->max_segment_size) {
-+                               nr_phys_segs--;
-+                               phys_size += prevbio->bi_size + 
-bio->bi_size;
-+                       } else
-+                               phys_size = 0;
-+
-+                       if (blk_hw_contig_segment(q, prevbio, bio) &&
-+                               hseg <= q->max_segment_size) {
-+                               nr_hw_segs--;
-+                               hw_size += prevbio->bi_size + 
-bio->bi_size;
-+                       } else
-+                               hw_size = 0;
-+               }
-+               prevbio = bio;
-         }
+device chain '/sys/devices/pci0000:00/0000:00:1d.1':
+    BUS="pci"
+    ID="0000:00:1d.1"
 
-         rq->nr_phys_segments = nr_phys_segs;
-@@ -2762,6 +2783,8 @@
-                          * not a complete bvec done
-                          */
-                         if (unlikely(nbytes > nr_bytes)) {
-+                               bio_iovec_idx(bio, idx)->bv_offset += 
-nr_bytes;
-+                               bio_iovec_idx(bio, idx)->bv_len -= 
-nr_bytes;
-                                 bio_nbytes += nr_bytes;
-                                 total_bytes += nr_bytes;
-                                 break;
-@@ -2798,8 +2821,6 @@
-         if (bio_nbytes) {
-                 bio_endio(bio, bio_nbytes, error);
-                 bio->bi_idx += next_idx;
--               bio_iovec(bio)->bv_offset += nr_bytes;
--               bio_iovec(bio)->bv_len -= nr_bytes;
-         }
+device chain '/sys/devices/pci0000:00':
+    BUS=""
+    ID="pci0000:00"
+    SYSFS{detach_state}="0"
 
-         blk_recalc_rq_sectors(req, total_bytes >> 9);
+Thanks,
+Kay
 
--- 
-Mark Rustad, MRustad@mac.com
 
