@@ -1,111 +1,128 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: [linux-iscsi-devel] [question] deferred sense
-Date: Tue, 11 Jan 2005 21:44:09 +1000
-Message-ID: <41E3BC09.3060408@torque.net>
-References: <41DB21D7.5080904@us.ibm.com> <20050104234700.GA18343@visi.com>	 <20050105092144.GB26793@lst.de> <20050105152112.GA8472@visi.com>	 <20050105152333.GA1453@lst.de>  <1104943469.3997.8.camel@mulgrave> <1105029477.20393.187.camel@bianchi.boston.redhat.com> <41DDD275.50500@torque.net>
-Reply-To: dougg@torque.net
+From: Guido Guenther <agx@sigxcpu.org>
+Subject: Re: [PATCH] REPORT LUN scan even if no storage is available on LUN 0
+Date: Mon, 10 Jan 2005 17:42:00 +0100
+Message-ID: <20050110164200.GA8655@bogon.ms20.nix>
+References: <20041210123333.GD685@bogon.ms20.nix> <20041213222206.GA18893@us.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from borg.st.net.au ([65.23.158.22]:49060 "EHLO borg.st.net.au")
-	by vger.kernel.org with ESMTP id S262729AbVAKLoP (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 11 Jan 2005 06:44:15 -0500
-In-Reply-To: <41DDD275.50500@torque.net>
+Received: from honk1.physik.uni-konstanz.de ([134.34.140.224]:20105 "EHLO
+	honk1.physik.uni-konstanz.de") by vger.kernel.org with ESMTP
+	id S262756AbVAKNcv convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 11 Jan 2005 08:32:51 -0500
+Content-Disposition: inline
+In-Reply-To: <20041213222206.GA18893@us.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: dougg@torque.net
-Cc: Tom Coughlan <coughlan@redhat.com>, James Bottomley <James.Bottomley@SteelEye.com>, Christoph Hellwig <hch@lst.de>, "Scott M. Ferris" <sferris@acm.org>, Mike Christie <mikenc@us.ibm.com>, linux-iscsi-devel <linux-iscsi-devel@lists.sourceforge.net>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Patrick Mansfield <patmans@us.ibm.com>
+Cc: linux-scsi@vger.kernel.org
 
-Douglas Gilbert wrote:
-> Tom Coughlan wrote:
-> 
->> On Wed, 2005-01-05 at 11:44, James Bottomley wrote:
->>
->>> On Wed, 2005-01-05 at 16:23 +0100, Christoph Hellwig wrote:
->>>
->>>> On Wed, Jan 05, 2005 at 09:21:12AM -0600, Scott M. Ferris wrote:
->>>>
->>>>> To be more specific, there were some devices that would fail a command
->>>>> and return deferred sense.  The command didn't complete at the target,
->>>>> and the kernel wasn't retrying it because the sense was deferred
->>>>> rather than current.  For those devices, the translation produced the
->>>>> desired retry.
->>>>
->>>>
->>>> Do you remember these devices?  Might be worth adding a midlayer
->>>> blacklist entry for them.
->>>
->>>
->>> That's certainly possible ... although we'd need a lot more details.
->>> Any device that returns deferred sense for a current error is pretty
->>> badly broken according to the spec.
->>
->>
->>
->> If a current command returns deferred sense, the SCSI spec. requires
->> that the current command shall not have been executed [1]. So, if at
->> some point in the past the kernel did not retry a current command that
->> returned deferred sense, the iscsi folks would have forced the retry by
->> converting deferred sense to current sense. The scenario does not
->> require a device that is working incorrectly.
->>
->> The big flaw in what iscsi did is the case where the deferred sense
->> indicates a non-fatal error. In that case, iscsi converts it to current,
->> the mitlayer examines it and determines that it does not require a
->> retry. This causes the current command to complete to the application
->> even though it was not executed by the device.
->> It looks to me as though the 2.4 iscsi driver is susceptible to this. It
->> is probably not seen in practice because disk devices that return
->> non-fatal deferred sense are rare (it probably requires the PER bit set
->> in the error recovery mode page?). Anyone know for sure?
-> 
-> 
-> Tom,
->  From my reading of SBC-2 (rev 16, 13 Nov 2004) deferred errors
-> cannot be turned off by a mode page. The VERIFY and
-> WRITE AND VERIFY commands can be used to make sure blocks get
-> to the media (or not) without deferred errors. There are also
-> the "Force Unit Access" (FUA and FUA_NV) bits in the READ and
-> WRITE commands (but not the 6 byte variants).
-> 
-> The t10 folks have added the idea of non-volatile cache in
-> a disk (more likely a RAID) which further complicates things.
-> Now a deferred error could theoretically span a power cycle!
-> 
-> The PER bit in the Read-Write Error Recovery mode page (SBC-2
-> rev 16 section 6.3.4) controls whether RECOVERED ERRORs are
-> reported or not. Also if the ARRE bit (for reads) and/or the
-> AWRE bit (for writes) are set in the same mode
-> page, the offending block will be remapped (whether a recovered
-> error is reported on not). If PER is 0 then RECOVERED ERRORs
-> are not reported. [In any case the Error Counter log pages
-> should reflect the problems (and perhaps the "grown" defect
-> list) so smartmontools may be of use.]
-> 
->> [1] If the task terminates with CHECK CONDITION status and the sense
->> data describes a deferred error the command for the terminated task
->> shall not have been processed. (SPC-3) 
-> 
-> 
-> I fear my tinkering with sense descriptor data in
-> the mid level may have tripped up on this case (if
-> it wasn't already broken), that is: a deferred error
-> report must cause the current command to be retried,
-> even if the deferred error was reporting a
-> recovered error. This case can only arise when PER=1.
+Sorry it took me so long to test this, first time I'm near this hardware
+again.
+On Mon, Dec 13, 2004 at 02:22:06PM -0800, Patrick Mansfield wrote:
+> Patch looks okay, but we should always be trying the report lun scan, and
+> then failing back to the sequential scan even if there is no storage on
+> LUN 0.
 
-Reviewing the error paths in lk 2.6 for deferred errors
-indicates that the effected (innocent) command will be
-retried in scsi_softirq() unless:
-   - the retry count is exceeded (always true for sg usage)
-   - or blk_noretry_request() returns true
+> Can you test this? I don't have hardware readily available that supports
+> sparse luns and report lun. Patch is against current bk. I built and
+> ran with regular disks (lun 0 only).
+Doesn't work here. I doen't see any devices in /proc/scsi/scsi now.
+ -- Guido
 
-Does fast path code want to (or know how to) process
-deferred errors?
-Even when deferred errors are retried this is done
-silently unless an appropriate logging_level happens
-to be set at the time (unlikely).
-
-Doug Gilbert
+> 
+> This is a bit hacky, improvements welcomed. Ideally we should create and
+> then use a scsi_target to scan, rather than having the scsi_device
+> allocation trigger creation of the scsi_target, and pass a scsi_target to
+> other scan functions.
+> 
+> 
+> Support REPORT LUN scan even if no storage is available on LUN 0.
+> 
+> Signed-off-by: Patrick Mansfield <patmans@us.ibm.com>
+> 
+> --- 1.134/drivers/scsi/scsi_scan.c	Sun Oct 24 04:09:48 2004
+> +++ edited/drivers/scsi/scsi_scan.c	Mon Dec 13 13:23:37 2004
+> @@ -647,6 +647,9 @@
+>   *     Call scsi_probe_lun, if a LUN with an attached device is found,
+>   *     allocate and set it up by calling scsi_add_lun.
+>   *
+> + * Note: LUN 0 is special cased, the sdev is not released if we are
+> + *     returning SCSI_SCAN_TARGET_PRESENT.
+> + *
+>   * Return:
+>   *     SCSI_SCAN_NO_RESPONSE: could not allocate or setup a Scsi_Device
+>   *     SCSI_SCAN_TARGET_PRESENT: target responded, but no device is
+> @@ -735,7 +738,12 @@
+>   out_free_sreq:
+>  	scsi_release_request(sreq);
+>   out_free_sdev:
+> -	if (res == SCSI_SCAN_LUN_PRESENT) {
+> +	if ((res == SCSI_SCAN_LUN_PRESENT) ||
+> +	    ((lun == 0) && res == SCSI_SCAN_TARGET_PRESENT)) {
+> +		/*
+> +		 * The LUN 0 check is for support of report lun scanning
+> +		 * when no storage is configured on LUN 0.
+> +		 */
+>  		if (sdevp)
+>  			*sdevp = sdev;
+>  	} else {
+> @@ -1076,6 +1084,8 @@
+>  	down(&shost->scan_mutex);
+>  	res = scsi_probe_and_add_lun(shost, channel, id, lun, NULL,
+>  				     &sdev, 1, hostdata);
+> +	if ((lun == 0) && (res == SCSI_SCAN_TARGET_PRESENT))
+> +		put_device(&sdev->sdev_gendev);
+>  	if (res != SCSI_SCAN_LUN_PRESENT)
+>  		sdev = ERR_PTR(-ENODEV);
+>  	up(&shost->scan_mutex);
+> @@ -1134,18 +1144,19 @@
+>  		/*
+>  		 * Scan for a specific host/chan/id/lun.
+>  		 */
+> -		scsi_probe_and_add_lun(shost, channel, id, lun, NULL, NULL,
+> -				       rescan, NULL);
+> -		return;
+> +		res = scsi_probe_and_add_lun(shost, channel, id, lun, NULL,
+> +					     &sdev, rescan, NULL);
+> +		goto completed;
+>  	}
+>  
+>  	/*
+>  	 * Scan LUN 0, if there is some response, scan further. Ideally, we
+>  	 * would not configure LUN 0 until all LUNs are scanned.
+>  	 */
+> -	res = scsi_probe_and_add_lun(shost, channel, id, 0, &bflags, &sdev,
+> +	lun = 0;
+> +	res = scsi_probe_and_add_lun(shost, channel, id, lun, &bflags, &sdev,
+>  				     rescan, NULL);
+> -	if (res == SCSI_SCAN_LUN_PRESENT) {
+> +	if (res != SCSI_SCAN_NO_RESPONSE) {
+>  		if (scsi_report_lun_scan(sdev, bflags, rescan) != 0)
+>  			/*
+>  			 * The REPORT LUN did not scan the target,
+> @@ -1153,16 +1164,15 @@
+>  			 */
+>  			scsi_sequential_lun_scan(shost, channel, id, bflags,
+>  				       	res, sdev->scsi_level, rescan);
+> -	} else if (res == SCSI_SCAN_TARGET_PRESENT) {
+> +	}
+> +
+> + completed:
+> +	if ((lun == 0) && (res == SCSI_SCAN_TARGET_PRESENT))
+>  		/*
+> -		 * There's a target here, but lun 0 is offline so we
+> -		 * can't use the report_lun scan.  Fall back to a
+> -		 * sequential lun scan with a bflags of SPARSELUN and
+> -		 * a default scsi level of SCSI_2
+> +		 * LUN 0 is handled specially so the sdev can be
+> +		 * used with the REPORT LUN scan, release it now.
+>  		 */
+> -		scsi_sequential_lun_scan(shost, channel, id, BLIST_SPARSELUN,
+> -				SCSI_SCAN_TARGET_PRESENT, SCSI_2, rescan);
+> -	}
+> +		put_device(&sdev->sdev_gendev);
+>  }
+>  
+>  static void scsi_scan_channel(struct Scsi_Host *shost, unsigned int channel,
