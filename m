@@ -1,39 +1,26 @@
-From: Ben Collins <bcollins@debian.org>
+From: Christoph Hellwig <hch@infradead.org>
 Subject: Re: FWD: [BK PATCH] SCSI host num allocation improvement
-Date: Fri, 27 Feb 2004 07:43:15 -0500
+Date: Fri, 27 Feb 2004 12:48:11 +0000
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040227124314.GF4019@phunnypharm.org>
-References: <1077842444.2662.123.camel@mulgrave> <20040227005601.GA6127@one-eyed-alien.net> <20040227010411.GB819@phunnypharm.org> <1077868581.4443.0.camel@laptop.fenrus.com> <20040227123009.GD4019@phunnypharm.org> <20040227123906.GB25779@parcelfarce.linux.theplanet.co.uk>
+Message-ID: <20040227124811.A32109@infradead.org>
+References: <1077842444.2662.123.camel@mulgrave>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bristol.phunnypharm.org ([65.207.35.130]:38105 "EHLO
-	bristol.phunnypharm.org") by vger.kernel.org with ESMTP
-	id S262848AbUB0MoX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 27 Feb 2004 07:44:23 -0500
+Received: from phoenix.infradead.org ([213.86.99.234]:7941 "EHLO
+	phoenix.infradead.org") by vger.kernel.org with ESMTP
+	id S261812AbUB0MsP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 27 Feb 2004 07:48:15 -0500
 Content-Disposition: inline
-In-Reply-To: <20040227123906.GB25779@parcelfarce.linux.theplanet.co.uk>
+In-Reply-To: <1077842444.2662.123.camel@mulgrave>; from James.Bottomley@steeleye.com on Thu, Feb 26, 2004 at 06:40:43PM -0600
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <willy@debian.org>
-Cc: Arjan van de Ven <arjanv@redhat.com>, James Bottomley <James.Bottomley@steeleye.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: James Bottomley <James.Bottomley@steeleye.com>
+Cc: Ben Collins <bcollins@debian.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Fri, Feb 27, 2004 at 12:39:06PM +0000, Matthew Wilcox wrote:
-> On Fri, Feb 27, 2004 at 07:30:09AM -0500, Ben Collins wrote:
-> > On Fri, Feb 27, 2004 at 08:56:22AM +0100, Arjan van de Ven wrote:
-> > > surely everyone is using cdrecord -dev=/dev/scd5  by now and not the 
-> > > host:bus:dev crap...
-> > 
-> > scsidev: '/dev/sg1'
-> > devname: '/dev/sg1'
-> > scsibus: -2 target: -2 lun: -2
-> > Warning: Open by 'devname' is unintentional and not supported.
-> 
-> Yeah, we need to patch that warning out of the debian cdrecord packages.
+On Thu, Feb 26, 2004 at 06:40:43PM -0600, James Bottomley wrote:
+> I'm forwarding this to linux-scsi, which is the appropriate list to
+> scrutinise it.
 
-Even still, if the real bus number is > 15, it doesn't recognize the device.
+Well, the last patch looks sane if we want to do that.  But didn't we
+declare the mononically increasing host numbers a feature?
 
--- 
-Debian     - http://www.debian.org/
-Linux 1394 - http://www.linux1394.org/
-Subversion - http://subversion.tigris.org/
-WatchGuard - http://www.watchguard.com/
