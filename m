@@ -1,132 +1,279 @@
 From: Andreas Herrmann <aherrman@de.ibm.com>
-Subject: [PATCH] zfcp: convert to compat_ioctl
-Date: Wed, 6 Apr 2005 16:46:39 +0200
-Message-ID: <20050406144639.GA7644@lion28.boeblingen.de.ibm.com>
+Subject: [PATCH] zfcp: add point-2-point support
+Date: Wed, 6 Apr 2005 16:49:45 +0200
+Message-ID: <20050406144945.GB7644@lion28.boeblingen.de.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtagate3.de.ibm.com ([195.212.29.152]:2947 "EHLO
-	mtagate3.de.ibm.com") by vger.kernel.org with ESMTP id S262218AbVDFOpp
+Received: from mtagate1.de.ibm.com ([195.212.29.150]:28835 "EHLO
+	mtagate1.de.ibm.com") by vger.kernel.org with ESMTP id S262219AbVDFOsv
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 6 Apr 2005 10:45:45 -0400
+	Wed, 6 Apr 2005 10:48:51 -0400
 Received: from d12nrmr1607.megacenter.de.ibm.com (d12nrmr1607.megacenter.de.ibm.com [9.149.167.49])
-	by mtagate3.de.ibm.com (8.12.10/8.12.10) with ESMTP id j36EjiFa094988
-	for <linux-scsi@vger.kernel.org>; Wed, 6 Apr 2005 14:45:44 GMT
+	by mtagate1.de.ibm.com (8.12.10/8.12.10) with ESMTP id j36Emo0Q150556
+	for <linux-scsi@vger.kernel.org>; Wed, 6 Apr 2005 14:48:50 GMT
 Received: from d12av02.megacenter.de.ibm.com (d12av02.megacenter.de.ibm.com [9.149.165.228])
-	by d12nrmr1607.megacenter.de.ibm.com (8.12.10/NCO/VER6.6) with ESMTP id j36EjiGV213230
-	for <linux-scsi@vger.kernel.org>; Wed, 6 Apr 2005 16:45:44 +0200
+	by d12nrmr1607.megacenter.de.ibm.com (8.12.10/NCO/VER6.6) with ESMTP id j36EmoGV216446
+	for <linux-scsi@vger.kernel.org>; Wed, 6 Apr 2005 16:48:50 +0200
 Received: from d12av02.megacenter.de.ibm.com (loopback [127.0.0.1])
-	by d12av02.megacenter.de.ibm.com (8.12.11/8.12.11) with ESMTP id j36Ejh3t013827
-	for <linux-scsi@vger.kernel.org>; Wed, 6 Apr 2005 16:45:44 +0200
+	by d12av02.megacenter.de.ibm.com (8.12.11/8.12.11) with ESMTP id j36Emnkp017337
+	for <linux-scsi@vger.kernel.org>; Wed, 6 Apr 2005 16:48:50 +0200
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <jejb@steeleye.com>
-Cc: Christoph Hellwig <hch@lst.de>, Linux SCSI <linux-scsi@vger.kernel.org>
+Cc: Linux SCSI <linux-scsi@vger.kernel.org>, Martin Schwidefsky <schwidefsky@de.ibm.com>
 
 Hi,
 
-Patch converts zfcp to use compat_ioctl.
-
-Thanks to Cristoph who reminded me to adapt zfcp.
+This patch mainly introduces support for point-2-point
+topology.
 
 
 Regards,
 
 Andreas
 
+From: Heiko Carstens <heiko.carstens@de.ibm.com>
+From: Maxim Shchetynin <maxim@de.ibm.com>
+From: Andreas Herrmann <aherrman@de.ibm.com>
 
-zfcp changes: convert zfcp to compat_ioctl
+zfcp changes:
+ - add support for point-2-point topology
+ - correct permissions for module parameters
+ - add log mesage if CFDC was hardened
 
 Signed-off-by: Andreas Herrmann <aherrman@de.ibm.com>
 
-===== zfcp_aux.c 1.19 vs edited =====
---- 1.19/drivers/s390/scsi/zfcp_aux.c	2005-03-29 06:39:24 +02:00
-+++ edited/zfcp_aux.c	2005-04-06 14:55:52 +02:00
-@@ -52,19 +52,18 @@
- static inline int zfcp_sg_list_copy_to_user(void __user *,
- 					    struct zfcp_sg_list *, size_t);
+diff -bBrauN zfcp-bk/zfcp_aux.c zfcp-bk-adapt/zfcp_aux.c
+--- zfcp-bk/zfcp_aux.c	2005-04-06 15:48:24.620792000 +0200
++++ zfcp-bk-adapt/zfcp_aux.c	2005-04-06 15:53:44.489164616 +0200
+@@ -88,10 +88,10 @@
+     ("FCP (SCSI over Fibre Channel) HBA driver for IBM eServer zSeries");
+ MODULE_LICENSE("GPL");
  
--static int zfcp_cfdc_dev_ioctl(struct inode *, struct file *,
--	unsigned int, unsigned long);
-+static long zfcp_cfdc_dev_ioctl(struct file *, unsigned int, unsigned long);
+-module_param(device, charp, 0);
++module_param(device, charp, 0400);
+ MODULE_PARM_DESC(device, "specify initial device");
  
- #define ZFCP_CFDC_IOC_MAGIC                     0xDD
- #define ZFCP_CFDC_IOC \
- 	_IOWR(ZFCP_CFDC_IOC_MAGIC, 0, struct zfcp_cfdc_sense_data)
+-module_param(loglevel, uint, 0);
++module_param(loglevel, uint, 0400);
+ MODULE_PARM_DESC(loglevel,
+ 		 "log levels, 8 nibbles: "
+ 		 "FC ERP QDIO CIO Config FSF SCSI Other, "
+diff -bBrauN zfcp-bk/zfcp_def.h zfcp-bk-adapt/zfcp_def.h
+--- zfcp-bk/zfcp_def.h	2005-04-06 15:48:24.681782728 +0200
++++ zfcp-bk-adapt/zfcp_def.h	2005-04-06 15:53:44.490164464 +0200
+@@ -69,7 +69,7 @@
+ /********************* GENERAL DEFINES *********************************/
  
--#ifdef CONFIG_COMPAT
--static struct ioctl_trans zfcp_ioctl_trans = {ZFCP_CFDC_IOC, (void*) sys_ioctl};
--#endif
+ /* zfcp version number, it consists of major, minor, and patch-level number */
+-#define ZFCP_VERSION		"4.2.0"
++#define ZFCP_VERSION		"4.3.0"
  
- static struct file_operations zfcp_cfdc_fops = {
--	.ioctl = zfcp_cfdc_dev_ioctl
-+	.unlocked_ioctl = zfcp_cfdc_dev_ioctl,
-+#ifdef CONFIG_COMPAT
-+	.compat_ioctl = zfcp_cfdc_dev_ioctl
-+#endif
- };
+ /**
+  * zfcp_sg_to_address - determine kernel address from struct scatterlist
+@@ -850,6 +850,9 @@
+ 	wwn_t			wwnn;	           /* WWNN */
+ 	wwn_t			wwpn;	           /* WWPN */
+ 	fc_id_t			s_id;	           /* N_Port ID */
++	wwn_t			peer_wwnn;	   /* P2P peer WWNN */
++	wwn_t			peer_wwpn;	   /* P2P peer WWPN */
++	fc_id_t			peer_d_id;	   /* P2P peer D_ID */
+ 	struct ccw_device       *ccw_device;	   /* S/390 ccw device */
+ 	u8			fc_service_class;
+ 	u32			fc_topology;	   /* FC topology */
+diff -bBrauN zfcp-bk/zfcp_erp.c zfcp-bk-adapt/zfcp_erp.c
+--- zfcp-bk/zfcp_erp.c	2005-04-06 15:48:24.681782728 +0200
++++ zfcp-bk-adapt/zfcp_erp.c	2005-04-06 15:53:44.490164464 +0200
+@@ -2568,6 +2568,23 @@
+ 	case ZFCP_ERP_STEP_UNINITIALIZED:
+ 	case ZFCP_ERP_STEP_PHYS_PORT_CLOSING:
+ 	case ZFCP_ERP_STEP_PORT_CLOSING:
++		if (adapter->fc_topology == FSF_TOPO_P2P) {
++			if (port->wwpn != adapter->peer_wwpn) {
++				ZFCP_LOG_NORMAL("Failed to open port 0x%016Lx "
++						"on adapter %s.\nPeer WWPN "
++						"0x%016Lx does not match\n",
++						port->wwpn,
++						zfcp_get_busid_by_adapter(adapter),
++						adapter->peer_wwpn);
++				zfcp_erp_port_failed(port);
++				retval = ZFCP_ERP_FAILED;
++				break;
++			}
++			port->d_id = adapter->peer_d_id;
++			atomic_set_mask(ZFCP_STATUS_PORT_DID_DID, &port->status);
++			retval = zfcp_erp_port_strategy_open_port(erp_action);
++			break;
++		}
+ 		if (!(adapter->nameserver_port)) {
+ 			retval = zfcp_nameserver_enqueue(adapter);
+ 			if (retval != 0) {
+@@ -3516,8 +3533,9 @@
+ 	debug_text_event(adapter->erp_dbf, 3, "a_access_unblock");
+ 	debug_event(adapter->erp_dbf, 3, &adapter->name, 8);
  
- static struct miscdevice zfcp_cfdc_misc = {
-@@ -308,23 +307,16 @@
- 	if (!zfcp_transport_template)
- 		return -ENODEV;
+-	zfcp_erp_port_access_changed(adapter->nameserver_port);
+ 	read_lock_irqsave(&zfcp_data.config_lock, flags);
++	if (adapter->nameserver_port)
++		zfcp_erp_port_access_changed(adapter->nameserver_port);
+ 	list_for_each_entry(port, &adapter->port_list_head, list)
+ 		if (port != adapter->nameserver_port)
+ 			zfcp_erp_port_access_changed(port);
+diff -bBrauN zfcp-bk/zfcp_fsf.c zfcp-bk-adapt/zfcp_fsf.c
+--- zfcp-bk/zfcp_fsf.c	2005-04-06 15:48:24.682782576 +0200
++++ zfcp-bk-adapt/zfcp_fsf.c	2005-04-06 15:53:44.491164312 +0200
+@@ -2107,6 +2107,9 @@
+ 		       bottom->low_qtcb_version, bottom->high_qtcb_version);
+ 	adapter->fsf_lic_version = bottom->lic_version;
+ 	adapter->supported_features = bottom->supported_features;
++	adapter->peer_wwpn = 0;
++	adapter->peer_wwnn = 0;
++	adapter->peer_d_id = 0;
  
--	retval = register_ioctl32_conversion(zfcp_ioctl_trans.cmd,
--					     zfcp_ioctl_trans.handler);
--	if (retval != 0) {
--		ZFCP_LOG_INFO("registration of ioctl32 conversion failed\n");
--		goto out;
--	}
--
- 	retval = misc_register(&zfcp_cfdc_misc);
- 	if (retval != 0) {
- 		ZFCP_LOG_INFO("registration of misc device "
- 			      "zfcp_cfdc failed\n");
--		goto out_misc_register;
--	} else {
--		ZFCP_LOG_TRACE("major/minor for zfcp_cfdc: %d/%d\n",
--			       ZFCP_CFDC_DEV_MAJOR, zfcp_cfdc_misc.minor);
-+		goto out;
+ 	if (xchg_ok) {
+ 		adapter->wwnn = bottom->nport_serv_param.wwnn;
+@@ -2124,13 +2127,19 @@
+ 		adapter->hydra_version = 0;
  	}
  
-+	ZFCP_LOG_TRACE("major/minor for zfcp_cfdc: %d/%d\n",
-+		       ZFCP_CFDC_DEV_MAJOR, zfcp_cfdc_misc.minor);
++	if (adapter->fc_topology == FSF_TOPO_P2P) {
++		adapter->peer_d_id = bottom->peer_d_id & ZFCP_DID_MASK;
++		adapter->peer_wwpn = bottom->plogi_payload.wwpn;
++		adapter->peer_wwnn = bottom->plogi_payload.wwnn;
++	}
 +
- 	/* Initialise proc semaphores */
- 	sema_init(&zfcp_data.config_sema, 1);
+ 	if(adapter->supported_features & FSF_FEATURE_HBAAPI_MANAGEMENT){
+ 		adapter->hardware_version = bottom->hardware_version;
+ 		memcpy(adapter->serial_number, bottom->serial_number, 17);
+ 		EBCASC(adapter->serial_number, sizeof(adapter->serial_number));
+ 	}
  
-@@ -348,8 +340,6 @@
+-	ZFCP_LOG_INFO("The adapter %s reported the following characteristics:\n"
++	ZFCP_LOG_NORMAL("The adapter %s reported the following characteristics:\n"
+ 		      "WWNN 0x%016Lx, "
+ 		      "WWPN 0x%016Lx, "
+ 		      "S_ID 0x%08x,\n"
+@@ -2194,14 +2203,18 @@
+ 		switch (adapter->fc_topology) {
+ 		case FSF_TOPO_P2P:
+ 			ZFCP_LOG_FLAGS(1, "FSF_TOPO_P2P\n");
+-			ZFCP_LOG_NORMAL("error: Point-to-point fibrechannel "
+-					"configuration detected at adapter %s "
+-					"unsupported, shutting down adapter\n",
+-					zfcp_get_busid_by_adapter(adapter));
++			ZFCP_LOG_NORMAL("Point-to-Point fibrechannel "
++					"configuration detected at adapter %s\n"
++					"Peer WWNN 0x%016llx, "
++					"peer WWPN 0x%016llx, "
++					"peer d_id 0x%06x\n",
++					zfcp_get_busid_by_adapter(adapter),
++					adapter->peer_wwnn,
++					adapter->peer_wwpn,
++					adapter->peer_d_id);
+ 			debug_text_event(fsf_req->adapter->erp_dbf, 0,
+ 					 "top-p-to-p");
+-			zfcp_erp_adapter_shutdown(adapter, 0);
+-			return -EIO;
++			break;
+ 		case FSF_TOPO_AL:
+ 			ZFCP_LOG_FLAGS(1, "FSF_TOPO_AL\n");
+ 			ZFCP_LOG_NORMAL("error: Arbitrated loop fibrechannel "
+@@ -2226,6 +2239,7 @@
+ 					"of a type known to the zfcp "
+ 					"driver, shutting down adapter\n",
+ 					zfcp_get_busid_by_adapter(adapter));
++			adapter->fc_topology = FSF_TOPO_ERROR;
+ 			debug_text_exception(fsf_req->adapter->erp_dbf, 0,
+ 					     "unknown-topo");
+ 			zfcp_erp_adapter_shutdown(adapter, 0);
+@@ -4281,6 +4295,7 @@
+ 				      bottom.io.fcp_cmnd, FSF_FCP_CMND_SIZE);
+ 			zfcp_cmd_dbf_event_fsf("undeffcp", fsf_req, NULL, 0);
+ 			set_host_byte(&scpnt->result, DID_ERROR);
++			goto skip_fsfstatus;
+ 		}
+ 	}
  
-  out_ccw_register:
- 	misc_deregister(&zfcp_cfdc_misc);
-- out_misc_register:
--	unregister_ioctl32_conversion(zfcp_ioctl_trans.cmd);
-  out:
- 	return retval;
- }
-@@ -370,9 +360,9 @@
-  *              -EPERM      - Cannot create or queue FSF request or create SBALs
-  *              -ERESTARTSYS- Received signal (is mapped to EAGAIN by VFS)
-  */
--static int
--zfcp_cfdc_dev_ioctl(struct inode *inode, struct file *file,
--                    unsigned int command, unsigned long buffer)
-+static long
-+zfcp_cfdc_dev_ioctl(struct file *file, unsigned int command,
-+		    unsigned long buffer)
- {
- 	struct zfcp_cfdc_sense_data *sense_data, __user *sense_data_user;
- 	struct zfcp_adapter *adapter = NULL;
-===== zfcp_def.h 1.20 vs edited =====
---- 1.20/drivers/s390/scsi/zfcp_def.h	2004-12-07 11:19:06 +01:00
-+++ edited/zfcp_def.h	2005-04-06 14:19:31 +02:00
-@@ -61,7 +61,6 @@
- #include <linux/mempool.h>
- #include <linux/syscalls.h>
- #include <linux/ioctl.h>
--#include <linux/ioctl32.h>
+@@ -4334,7 +4349,7 @@
  
- /************************ DEBUG FLAGS *****************************************/
+ 		scpnt->resid = fcp_rsp_iu->fcp_resid;
+ 		if (scpnt->request_bufflen - scpnt->resid < scpnt->underflow)
+-			scpnt->result |= DID_ERROR << 16;
++			set_host_byte(&scpnt->result, DID_ERROR);
+ 	}
  
+  skip_fsfstatus:
+@@ -4607,6 +4622,13 @@
+ 		if (bottom->operation_subtype == FSF_CFDC_OPERATION_SUBTYPE) {
+ 			switch (header->fsf_status_qual.word[0]) {
+ 
++			case FSF_SQ_CFDC_HARDENED_ON_SE:
++				ZFCP_LOG_NORMAL(
++					"CFDC on the adapter %s has being "
++					"hardened on primary and secondary SE\n",
++					zfcp_get_busid_by_adapter(adapter));
++				break;
++
+ 			case FSF_SQ_CFDC_COULD_NOT_HARDEN_ON_SE:
+ 				ZFCP_LOG_NORMAL(
+ 					"CFDC of the adapter %s could not "
+diff -bBrauN zfcp-bk/zfcp_fsf.h zfcp-bk-adapt/zfcp_fsf.h
+--- zfcp-bk/zfcp_fsf.h	2005-04-06 15:48:24.682782576 +0200
++++ zfcp-bk-adapt/zfcp_fsf.h	2005-04-06 16:00:02.929632920 +0200
+@@ -129,6 +129,7 @@
+ #define FSF_SQ_NO_RETRY_POSSIBLE		0x07
+ 
+ /* FSF status qualifier for CFDC commands */
++#define FSF_SQ_CFDC_HARDENED_ON_SE		0x00000000
+ #define FSF_SQ_CFDC_COULD_NOT_HARDEN_ON_SE	0x00000001
+ #define FSF_SQ_CFDC_COULD_NOT_HARDEN_ON_SE2	0x00000002
+ /* CFDC subtable codes */
+@@ -357,7 +358,6 @@
+ 	u8  class3_serv_param[16];
+ 	u8  class4_serv_param[16];
+ 	u8  vendor_version_level[16];
+-	u8  res1[16];
+ } __attribute__ ((packed));
+ 
+ struct fsf_plogi {
+@@ -415,11 +415,13 @@
+ 	u8 res2[12];
+ 	u32 s_id;
+ 	struct fsf_nport_serv_param nport_serv_param;
++	u8 reserved_nport_serv_param[16];
+ 	u8 res3[8];
+ 	u32 adapter_ports;
+ 	u32 hardware_version;
+ 	u8 serial_number[32];
+-	u8 res4[272];
++	struct fsf_nport_serv_param plogi_payload;
++	u8 res4[160];
+ } __attribute__ ((packed));
+ 
+ struct fsf_qtcb_bottom_port {
+diff -bBrauN zfcp-bk/zfcp_sysfs_adapter.c zfcp-bk-adapt/zfcp_sysfs_adapter.c
+--- zfcp-bk/zfcp_sysfs_adapter.c	2005-04-06 15:48:24.682782576 +0200
++++ zfcp-bk-adapt/zfcp_sysfs_adapter.c	2005-04-06 15:53:44.491164312 +0200
+@@ -65,6 +65,9 @@
+ ZFCP_DEFINE_ADAPTER_ATTR(wwnn, "0x%016llx\n", adapter->wwnn);
+ ZFCP_DEFINE_ADAPTER_ATTR(wwpn, "0x%016llx\n", adapter->wwpn);
+ ZFCP_DEFINE_ADAPTER_ATTR(s_id, "0x%06x\n", adapter->s_id);
++ZFCP_DEFINE_ADAPTER_ATTR(peer_wwnn, "0x%016llx\n", adapter->peer_wwnn);
++ZFCP_DEFINE_ADAPTER_ATTR(peer_wwpn, "0x%016llx\n", adapter->peer_wwpn);
++ZFCP_DEFINE_ADAPTER_ATTR(peer_d_id, "0x%06x\n", adapter->peer_d_id);
+ ZFCP_DEFINE_ADAPTER_ATTR(card_version, "0x%04x\n", adapter->hydra_version);
+ ZFCP_DEFINE_ADAPTER_ATTR(lic_version, "0x%08x\n", adapter->fsf_lic_version);
+ ZFCP_DEFINE_ADAPTER_ATTR(fc_link_speed, "%d Gb/s\n", adapter->fc_link_speed);
+@@ -255,6 +258,9 @@
+ 	&dev_attr_wwnn.attr,
+ 	&dev_attr_wwpn.attr,
+ 	&dev_attr_s_id.attr,
++	&dev_attr_peer_wwnn.attr,
++	&dev_attr_peer_wwpn.attr,
++	&dev_attr_peer_d_id.attr,
+ 	&dev_attr_card_version.attr,
+ 	&dev_attr_lic_version.attr,
+ 	&dev_attr_fc_link_speed.attr,
 
