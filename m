@@ -1,63 +1,39 @@
-From: Nathan Bryant <nbryant@optonline.net>
-Subject: Re: device_suspend() levels [was Re: [patch] ACPI work on aic7xxx]
-Date: Sat, 24 Jul 2004 20:19:41 -0400
+From: "SYEC Support Dept." <syec.support.dept@shareopins.us>
+Subject: A user is researching: linux-scsi@vger.kernel.org
+Date: Sun, 25 Jul 2004 02:16:22 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <4102FC9D.1060100@optonline.net>
-References: <40FD38A0.3000603@optonline.net> <20040720155928.GC10921@atrey.karlin.mff.cuni.cz> <40FD4CFA.6070603@optonline.net> <20040720174611.GI10921@atrey.karlin.mff.cuni.cz> <40FD6002.4070206@optonline.net> <1090347939.1993.7.camel@gaston> <40FD65C2.7060408@optonline.net> <1090350609.2003.9.camel@gaston> <40FD82B1.8030704@optonline.net> <1090356079.1993.12.camel@gaston> <40FD85A3.2060502@optonline.net> <1090357324.1993.15.camel@gaston> <410280E9.5040001@optonline.net> <1090684826.1963.6.camel@gaston> <41029215.1030406@optonline.net> <1090694118.1971.13.camel@gaston>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Message-ID: <200407250616.i6P6GMNh018344@bender.shareopins.us>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from odin.allegientsystems.com ([208.251.178.227]:65289 "EHLO
-	pegasus.lawaudit.com") by vger.kernel.org with ESMTP
-	id S263429AbUGYATF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 24 Jul 2004 20:19:05 -0400
-In-Reply-To: <1090694118.1971.13.camel@gaston>
+Received: from home.findinformation.biz ([216.117.164.211]:34002 "EHLO
+	home.findinformation.biz") by vger.kernel.org with ESMTP
+	id S263714AbUGYGRK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 25 Jul 2004 02:17:10 -0400
+Received: from bender.shareopins.us (localhost.localdomain [127.0.0.1])
+	by home.findinformation.biz (8.12.8/8.12.8) with ESMTP id i6P6GMr7018345
+	for <linux-scsi@vger.kernel.org>; Sun, 25 Jul 2004 02:16:22 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: linux-scsi@vger.kernel.org, Pavel Machek <pavel@ucw.cz>
+To: linux-scsi@vger.kernel.org
 
-Benjamin Herrenschmidt wrote:
+**IMPORTANT E-MAIL MESSAGE--PLEASE SAVE THIS FOR YOUR RECORDS**
 
-> That's different, because the disks are actually registered as
-> "struct device" childs of the bus, and thus get proper suspend/resume
-> callbacks.
+ALERT! - A user is trying to share experiences and opinions about you via our website. 
 
-Ok, Seems like we rely on the BIOS a lot, here.
+The purpose of this email is to inform you that a posting has been made about you at our website.  This is email is not commercial in nature.  
 
-> Oh sure, the disks are in the loop, the problem happens with multipath
-> and such which "breaks" the bus hiearchy somewhat. The queue management
-> is part of the "functional" hierarchy (read: block layer) on top of
-> SCSI disks, thus the disks will be the one getting the suspend callback,
-> but they have to "notify" their functional parent (block layer, md, ...)
-> to properly get the queues stopped.
+If this email message was delivered to your spam or bulk email folder please notify your ISP or spam filtering company regarding this mistake on their part.
 
-All right, I can see where that's probably the easiest solution.
+You may view the postings about you here:
 
-> IDE sort-of does that internally, by generating a special request that
-> goes down the queue (in order to be properly ordered with whatever
-> is pending in the queue, including pending tagged commands if any),
-> and the "toplevel" IDE handling will stop processing the queue once
-> that request got past, but it's a hackery that at this point is quite
-> specific to drivers/ide/
+http://share3.us/lx.php?a=search&b=5&c=linux-scsi@vger.kernel.org
 
-The queued special command trick does mostly the same thing as the 
-scsi_device_quiesce(), right? As far as I can tell, the only difference 
-is that we attempt to drain the queue (and sometimes leave error 
-handlers running) and they just pause it at some mostly sane stopping point.
+Once you post an Experience Request at this website, it immediately become searchable by other users worldwide. A user can search for and find your Experience Request and then this user can contact you via our Identity Protection System.
 
-Now correct me if I'm wrong, but it seems that with what we understand 
-now, we are in a position that we could decide to make SCSI layer do the 
-following on suspend, in this order:
+IMPORTANT - To avoid future notifications like this simply add this email address to our Do Not Email List here:
 
-scsi_device_quiesce();
-{ LLD pause and flush work; aic7xxx will run the completion queue at 
-this point }
-blk_stop_queue();
-{ LLD reset registers and shutdown, etc }
+http://6.share1.biz/lx.php?a=donotemail&b=linux-scsi@vger.kernel.org
 
-And once the MD problem is solved we will also need to do another call 
-before blk_stop_queue().
+Sincerely,
 
-Am I missing anything?
+SYEC Support Department
+
 
