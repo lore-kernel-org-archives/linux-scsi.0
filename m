@@ -1,85 +1,64 @@
-From: Doug Ledford <dledford@redhat.com>
-Subject: Re: slave_destroy called in scsi_scan.c:scsi_probe_and_add_lun()
-Date: Tue, 17 Dec 2002 00:41:02 -0500
+From: Andre Hedrick <andre@linux-ide.org>
+Subject: Re: ide-scsi in 2.5.51
+Date: Mon, 16 Dec 2002 21:42:54 -0800 (PST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20021217054102.GH13989@redhat.com>
-References: <170040000.1040080786@aslan.btc.adaptec.com>
+Message-ID: <Pine.LNX.4.10.10212162142310.31876-100000@master.linux-ide.org>
+References: <20021214202254.GH3664@linnie.riede.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <170040000.1040080786@aslan.btc.adaptec.com>
+In-Reply-To: <20021214202254.GH3664@linnie.riede.org>
 List-Id: linux-scsi@vger.kernel.org
-To: "Justin T. Gibbs" <gibbs@btc.adaptec.com>
+To: Willem Riede <wrlk@riede.org>
 Cc: linux-scsi@vger.kernel.org
 
-On Mon, Dec 16, 2002 at 04:19:46PM -0700, Justin T. Gibbs wrote:
-> In debugging a different bug in the new 2.5.X port of the aic7xxx driver,
-> I came across this behavior in scsi_probe_and_add_lun()
+
+Willem,
+
+Please jump on it!
+
+On Sat, 14 Dec 2002, Willem Riede wrote:
+
+> In my efforts to make osst work on 2.5.51 I've been pretty successful with
+> the SC-30 (scsi) and the FW-30 (ieee1394). But the ide-scsi is giving me
+> trouble with the DI-30 (Atapi). I get the same problem with another ide
+> connected tape drive and st, by the way, so I am taking a closer look at
+> ide-scsi. When I load the module I get:
 > 
->         /*
->          * Since we reuse the same sdevscan over and over with different
->          * target and lun values, we have to destroy and then recreate
->          * any possible low level attachments since they very will might
->          * also store the id and lun numbers in some form and need updating
->          * with each scan.
->          */
->         if (sdevscan->host->hostt->slave_destroy)
->                 sdevscan->host->hostt->slave_destroy(sdevscan);
->         if (sdevscan->host->hostt->slave_alloc)
->                 sdevscan->host->hostt->slave_alloc(sdevscan);
 > 
-> So, you cannot rely on slave_destroy as an indication of a device really
-> going away in the physical sense.
+> Dec 14 14:50:55 fallguy kernel: Badness in kobject_register at lib/kobject.c:113
+> Dec 14 14:50:55 fallguy kernel: Call Trace:
+> Dec 14 14:50:55 fallguy kernel:  [<c01c7c88>] kobject_register+0x58/0x70
+> Dec 14 14:50:55 fallguy kernel:  [<c01db442>] bus_add_driver+0x82/0xd0
+> Dec 14 14:50:55 fallguy kernel:  [<c022bd00>] ide_drive_remove+0x0/0x30
+> Dec 14 14:50:55 fallguy kernel:  [<c022bdec>] ide_register_driver+0xbc/0xf0
+> Dec 14 14:50:55 fallguy kernel:  [<c0133f6a>] sys_init_module+0x1ba/0x1d0
+> Dec 14 14:50:55 fallguy kernel:  [<c010b643>] syscall_call+0x7/0xb
+> Dec 14 14:50:55 fallguy kernel: 
+> Dec 14 14:50:55 fallguy kernel: scsi HBA driver idescsi didn't set max_sectors, please fix the template
+> <3>ERROR: SCSI host `ide-scsi' has no error handling
+> Dec 14 14:50:55 fallguy kernel: ERROR: This is not a safe way to run your SCSI host
+> Dec 14 14:50:55 fallguy kernel: ERROR: The error handling must be added to this driver
+> Dec 14 14:50:55 fallguy kernel: Call Trace:
+> Dec 14 14:50:55 fallguy kernel:  [<c023687d>] scsi_register+0x2cd/0x2e0
+> Dec 14 14:50:55 fallguy kernel:  [<c02368be>] scsi_register_host+0x2e/0xe0
+> Dec 14 14:50:55 fallguy kernel:  [<c0133f6a>] sys_init_module+0x1ba/0x1d0
+> Dec 14 14:50:55 fallguy kernel:  [<c010b643>] syscall_call+0x7/0xb
+> Dec 14 14:50:55 fallguy kernel: 
+> Dec 14 14:50:55 fallguy kernel: scsi4 : SCSI host adapter emulation for IDE ATAPI devices
+> 
+> 
+> So it seems that ide-scsi hasn't kept up with the evolving 2.5 kernel.
+> If no-one else is working on this, I'm prepared to take a stab at it,
+> but to get me jump-started any advise / hint will be most welcome.
+> 
+> Thanks, Willem Riede.
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
 
-No, you can.  In the code snippet above you might be destroying something 
-at scsi0:0:0:0 and adding something at scsi0:0:1:0.  Regardless, the thing 
-being destroyed is in fact going away permanently.  Whenever we do find a 
-device, we actually allocate a new device struct identical to our current 
-device struct and call slave_alloc() for the newly created device.  So, 
-whenever we find a new device, there will be a momentary point in time at 
-which two device structs will exist that point to the same device.  After 
-the new device is allocated and set up, the original sdevscan device is 
-simply renumbered in place (by updating the target or lun value) and then 
-we call slave_destroy()/slave_alloc() so that the low level driver can 
-also update their target/lun values to match.
+Andre Hedrick
+LAD Storage Consulting Group
 
->  In SPI, for example, the driver can only
-> tell that the device is gone if a command is issued to it.  I had hoped that
-> I could detect hot-pull/scsi-remove-single-device operations via this
-> callback.
-
-You can.  On any device we find, at device tear down time your 
-slave_destroy() entry point will get called right before the device struct 
-itself is kfree()ed.
-
-> Granted, for some drivers, recreating and destroying state associated with a
-> particular device might be pretty cheap, but certainly not in all cases.
-> The
-> aic7xxx and aic79xx drivers maintain domain validation and other negotiation
-> state in these structures.  You certainly don't want to go through another
-> full
-> Domain Validation sequence the next time a device is allocated via
-> slave_alloc() if the device isn't really "new".
-
-In this case I would suggest that the better course of action is to delay 
-any domain validation stuff until the slave_configure() call.  The 
-original intent of slave_alloc() was for it to be as lightweight as 
-possible simply because I knew that it would get called for every single 
-target/lun value scanned.  Once we do find a device though, and once we 
-have retrieved INQUIRY data so we know what the device is capable of, then 
-we get the slave_configure() call which is a much more appropriate place 
-for heavier initializations once you know a device has been found and not 
-that we are just scanning.
-
-> Any chance in changing this behavior?
-
-Possibly.  But, does the explanation above and the one suggestion above 
-solve your issues?
-
--- 
-  Doug Ledford <dledford@redhat.com>     919-754-3700 x44233
-         Red Hat, Inc. 
-         1801 Varsity Dr.
-         Raleigh, NC 27606
-  
