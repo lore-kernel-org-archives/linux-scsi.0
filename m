@@ -1,44 +1,44 @@
-From: Ben Collins <bcollins@debian.org>
+From: Mike Anderson <andmike@us.ibm.com>
 Subject: Re: FWD: [BK PATCH] SCSI host num allocation improvement
-Date: Fri, 27 Feb 2004 11:39:14 -0500
+Date: Fri, 27 Feb 2004 08:49:25 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040227163914.GO4019@phunnypharm.org>
-References: <1077842444.2662.123.camel@mulgrave> <20040227124811.A32109@infradead.org> <1077894499.1806.14.camel@mulgrave> <20040227151551.GK4019@phunnypharm.org> <1077895775.2157.22.camel@mulgrave> <20040227153247.GL4019@phunnypharm.org> <1077899833.2157.82.camel@mulgrave>
+Message-ID: <20040227164925.GC1424@beaverton.ibm.com>
+References: <1077842444.2662.123.camel@mulgrave> <20040227124811.A32109@infradead.org> <20040227130414.GH4019@phunnypharm.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bristol.phunnypharm.org ([65.207.35.130]:61147 "EHLO
-	bristol.phunnypharm.org") by vger.kernel.org with ESMTP
-	id S263036AbUB0Qkj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 27 Feb 2004 11:40:39 -0500
+Received: from e35.co.us.ibm.com ([32.97.110.133]:11775 "EHLO
+	e35.co.us.ibm.com") by vger.kernel.org with ESMTP id S263044AbUB0Qug
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 27 Feb 2004 11:50:36 -0500
 Content-Disposition: inline
-In-Reply-To: <1077899833.2157.82.camel@mulgrave>
+In-Reply-To: <20040227130414.GH4019@phunnypharm.org>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@steeleye.com>
-Cc: Christoph Hellwig <hch@infradead.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Ben Collins <bcollins@debian.org>
+Cc: Christoph Hellwig <hch@infradead.org>, James Bottomley <James.Bottomley@steeleye.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Fri, Feb 27, 2004 at 10:37:13AM -0600, James Bottomley wrote:
-> On Fri, 2004-02-27 at 09:32, Ben Collins wrote:
-> > On the same token, if you hot plug/unplug a single device (not a host)
-> > on the same host, you will already have this problem. This wont make the
-> > problem any worse or better. Devices are more likely to get
-> > plugged/unplugged anyway (well, in the case of usb/firewire you
-> > plug/unplug a host/dev combination, but still).
+Ben Collins [bcollins@debian.org] wrote:
+> On Fri, Feb 27, 2004 at 12:48:11PM +0000, Christoph Hellwig wrote:
+> > On Thu, Feb 26, 2004 at 06:40:43PM -0600, James Bottomley wrote:
+> > > I'm forwarding this to linux-scsi, which is the appropriate list to
+> > > scrutinise it.
+> > 
+> > Well, the last patch looks sane if we want to do that.  But didn't we
+> > declare the mononically increasing host numbers a feature?
 > 
-> Simply having races is not an excuse for introducing more, particularly
-> when they're under our control.
+> I can't see how things like the device naming can work the "right" way,
+> but making the host numbers work in an increasing fashion would be a
+> feature or even a benefit.
 > 
-> This represents a behaviour change in a stable kernel introducing a
-> potential problem in hotplug and solving a fixable issue in a single
-> user application tool.
-> 
-> What I'm not yet convinced of is that the benefits outweigh the risks.
 
-The problems you keep raising already exist and aren't going to be
-increased by this patch.
+I thought the direction was that default kernels names where headed in
+the direction of being depreciated. Are you using udev or something else
+for you naming policy. Is your naming policy based on position? Are the
+devices you are attaching unable to return a unique ID. Device naming
+based on immutable values are better.
 
--- 
-Debian     - http://www.debian.org/
-Linux 1394 - http://www.linux1394.org/
-Subversion - http://subversion.tigris.org/
-WatchGuard - http://www.watchguard.com/
+-andmike
+--
+Michael Anderson
+andmike@us.ibm.com
+
