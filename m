@@ -1,49 +1,123 @@
 From: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Subject: PATCH [6/15]  qla2xxx: LoopID downcast fix
-Date: Thu, 6 May 2004 22:53:15 -0700
+Subject: PATCH [7/15]  qla2xxx: Firmware options fixes
+Date: Thu, 6 May 2004 22:54:00 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040507055315.GA4915@linux.local.home>
+Message-ID: <20040507055400.GA4922@linux.local.home>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ms-smtp-03-qfe0.socal.rr.com ([66.75.162.135]:47489 "EHLO
-	ms-smtp-03-eri0.socal.rr.com") by vger.kernel.org with ESMTP
-	id S263182AbUEGFvb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 7 May 2004 01:51:31 -0400
+Received: from ms-smtp-01-qfe0.socal.rr.com ([66.75.162.133]:35833 "EHLO
+	ms-smtp-01-eri0.socal.rr.com") by vger.kernel.org with ESMTP
+	id S263184AbUEGFwR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 7 May 2004 01:52:17 -0400
 Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
 To: SCSI Mailing List <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@steeleye.com>
 
 ChangeSet
-  1.1927 04/04/30 11:12:45 andrew.vasquez@apc.qlogic.com +2 -0
-  Fix problem where the driver would incorrectly down-cast the target
-  loop_id while retrieving link statistics.
+  1.1928 04/04/30 12:47:27 andrew.vasquez@apc.qlogic.com +1 -0
+  Cleanup retrieval and update of firmware options:
+  
+  	o Update only valid for non-(2[12]00) ISPs.
+  	o Instruct firmware to return completed IOCBs without
+  	  waiting for an ABTS to complete.
 
- drivers/scsi/qla2xxx/qla_gbl.h |    2 +-
- drivers/scsi/qla2xxx/qla_mbx.c |    2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+ drivers/scsi/qla2xxx/qla_init.c |   79 +++++++++++++++++++++++++---------------
+ 1 files changed, 50 insertions(+), 29 deletions(-)
 
-diff -Nru a/drivers/scsi/qla2xxx/qla_gbl.h b/drivers/scsi/qla2xxx/qla_gbl.h
---- a/drivers/scsi/qla2xxx/qla_gbl.h	Mon May  3 15:14:24 2004
-+++ b/drivers/scsi/qla2xxx/qla_gbl.h	Mon May  3 15:14:24 2004
-@@ -198,7 +198,7 @@
- qla2x00_get_port_name(scsi_qla_host_t *, uint16_t, uint8_t *, uint8_t);
+diff -Nru a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
+--- a/drivers/scsi/qla2xxx/qla_init.c	Mon May  3 15:14:42 2004
++++ b/drivers/scsi/qla2xxx/qla_init.c	Mon May  3 15:14:42 2004
+@@ -772,6 +772,54 @@
+ }
  
- extern uint8_t
--qla2x00_get_link_status(scsi_qla_host_t *, uint8_t, link_stat_t *, uint16_t *);
-+qla2x00_get_link_status(scsi_qla_host_t *, uint16_t, link_stat_t *, uint16_t *);
+ /**
++ * qla2x00_update_fw_options() - Read and process firmware options.
++ * @ha: HA context
++ *
++ * Returns 0 on success.
++ */
++static void
++qla2x00_update_fw_options(scsi_qla_host_t *ha)
++{
++	/* Setup seriallink options */
++	uint16_t swing, emphasis;
++
++	memset(ha->fw_options, 0, sizeof(ha->fw_options));
++	qla2x00_get_fw_options(ha, ha->fw_options);
++
++	if (IS_QLA2100(ha) || IS_QLA2200(ha))
++		return;
++
++	/* Serial Link options. */
++	DEBUG3(printk("scsi(%ld): Serial link options:\n",
++	    ha->host_no));
++	DEBUG3(qla2x00_dump_buffer((uint8_t *)&ha->fw_seriallink_options,
++	    sizeof(ha->fw_seriallink_options)));
++
++	ha->fw_options[1] &= ~FO1_SET_EMPHASIS_SWING;
++	if (ha->fw_seriallink_options[1] & BIT_2)
++		ha->fw_options[1] |= FO1_SET_EMPHASIS_SWING;
++
++	/*  1G settings */
++	swing = ha->fw_seriallink_options[0] & (BIT_2 | BIT_1 | BIT_0);
++	emphasis = ha->fw_seriallink_options[0] & (BIT_4 | BIT_3);
++	emphasis >>= 3;
++	ha->fw_options[10] = (emphasis << 14) | (swing << 8) | 0x3;
++
++	/*  2G settings */
++	swing = ha->fw_seriallink_options[0] & (BIT_7 | BIT_6 | BIT_5);
++	swing >>= 5;
++	emphasis = ha->fw_seriallink_options[1] & (BIT_1 | BIT_0);
++	ha->fw_options[11] = (emphasis << 14) | (swing << 8) | 0x3;
++
++	/* FCP2 options. */
++	/*  Return command IOCBs without waiting for an ABTS to complete. */
++	ha->fw_options[3] |= BIT_13;
++
++	/* Update Serial Link options. */
++	qla2x00_set_fw_options(ha, ha->fw_options);
++}
++
++/**
+  * qla2x00_init_rings() - Initializes firmware.
+  * @ha: HA context
+  *
+@@ -824,35 +872,8 @@
+ 		DEBUG2_3(printk("scsi(%ld): Init firmware **** FAILED ****.\n",
+ 		    ha->host_no));
+ 	} else {
+-		/* Setup seriallink options */
+-		uint16_t swing, emphasis;
+-
+-		DEBUG3(printk("scsi(%ld): Serial link options:\n",
+-		    ha->host_no));
+-		DEBUG3(qla2x00_dump_buffer(
+-		    (uint8_t *)&ha->fw_seriallink_options,
+-		    sizeof(ha->fw_seriallink_options)));
+-
+-		memset(ha->fw_options, 0, sizeof(ha->fw_options));
+-		qla2x00_get_fw_options(ha, ha->fw_options);
+-
+-		ha->fw_options[1] &= ~FO1_SET_EMPHASIS_SWING;
+-		if (ha->fw_seriallink_options[1] & BIT_2)
+-			ha->fw_options[1] |= FO1_SET_EMPHASIS_SWING;
+-
+-		/* 1G settings */
+-		swing = ha->fw_seriallink_options[0] & (BIT_2 | BIT_1 | BIT_0);
+-		emphasis = ha->fw_seriallink_options[0] & (BIT_4 | BIT_3);
+-		emphasis >>= 3;
+-		ha->fw_options[10] = (emphasis << 14) | (swing << 8) | 0x3;
+-
+-		/* 2G settings */
+-		swing = ha->fw_seriallink_options[0] & (BIT_7 | BIT_6 | BIT_5);
+-		swing >>= 5;
+-		emphasis = ha->fw_seriallink_options[1] & (BIT_1 | BIT_0);
+-		ha->fw_options[11] = (emphasis << 14) | (swing << 8) | 0x3;
+-
+-		qla2x00_set_fw_options(ha, ha->fw_options);
++		/* Update any ISP specific firmware options. */
++		qla2x00_update_fw_options(ha);
  
- extern int
- qla2x00_lip_reset(scsi_qla_host_t *);
-diff -Nru a/drivers/scsi/qla2xxx/qla_mbx.c b/drivers/scsi/qla2xxx/qla_mbx.c
---- a/drivers/scsi/qla2xxx/qla_mbx.c	Mon May  3 15:14:24 2004
-+++ b/drivers/scsi/qla2xxx/qla_mbx.c	Mon May  3 15:14:24 2004
-@@ -1607,7 +1607,7 @@
-  *	BIT_1 = mailbox error.
-  */
- uint8_t
--qla2x00_get_link_status(scsi_qla_host_t *ha, uint8_t loop_id,
-+qla2x00_get_link_status(scsi_qla_host_t *ha, uint16_t loop_id,
-     link_stat_t *ret_buf, uint16_t *status)
- {
- 	int rval;
+ 		DEBUG3(printk("scsi(%ld): Init firmware -- success.\n",
+ 		    ha->host_no));
