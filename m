@@ -1,64 +1,96 @@
-From: Mike Anderson <andmike@us.ibm.com>
-Subject: Re: Canonical SCSI messages
-Date: Fri, 1 Oct 2004 10:30:54 -0700
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: sym2 on sparc
+Date: Fri, 1 Oct 2004 19:20:56 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20041001173054.GA1363@us.ibm.com>
-References: <20041001165324.GE16153@parcelfarce.linux.theplanet.co.uk>
+Message-ID: <20041001182056.GI16153@parcelfarce.linux.theplanet.co.uk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e35.co.us.ibm.com ([32.97.110.133]:5852 "EHLO e35.co.us.ibm.com")
-	by vger.kernel.org with ESMTP id S265207AbUJARa5 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 1 Oct 2004 13:30:57 -0400
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:2486 "EHLO
+	www.linux.org.uk") by vger.kernel.org with ESMTP id S266127AbUJASVA
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 1 Oct 2004 14:21:00 -0400
 Content-Disposition: inline
-In-Reply-To: <20041001165324.GE16153@parcelfarce.linux.theplanet.co.uk>
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
+To: linux-sparc@vger.kernel.org
 Cc: linux-scsi@vger.kernel.org
 
-Matthew Wilcox [matthew@wil.cx] wrote:
-> 
-> The difference between scsi(4:0:6:0) and sym4:6:0 annoyed me sufficiently
-> that I remembered a patch from Mike Anderson and Patrick Mansfield a few
-> months ago.  Their patch makes the output look like:
-> 
-> PCI: Enabling device: (0000:00:0c.0), cmd 143
-> sym53c8xx 0000:00:0c.0: chip <875> rev 0x4 at pci 0000:00:0c.0 irq 17
-> sym53c8xx 0000:00:0c.0: No NVRAM, ID 7, Fast-20, SE, parity checking 
-> sym53c8xx 0000:00:0c.0: SCSI BUS has been reset.
-> scsi0 : sym-2.1.18f
-> sym53c8xx 0000:00:0c.0: 0: FAST-20 WIDE SCSI 40.0 MB/s ST (50.0 ns, offset 16)
->   Vendor: IBM       Model: IC35L036UWD210-0  Rev: S5BS
->   Type:   Direct-Access                      ANSI SCSI revision: 03
-> 
-> I have to say, I'm not keen on using the PCI address, partly because it's
-> so long, partly because we'd still have a discrepancy between the scsi
-> layer's reports and the driver's reports, and partly because I'd like
-> to see all scsi drivers report in the same format (and not everything
-> is pci).
-> 
-> I quite like the scsi(H:C:I:L) format that scsi_transport_spi.c uses.
-> It means that people still have to look up what scsiN maps to, but I
-> don't think that's a huge problem.  It certainly beats having to look
-> up that scsi3 is sym1 is pci0000:00:0c.1
-> 
 
-There has been a lot of debate on consistent message formats in the
-past. I have not tracked this in a while. The previous patch was based
-on what I thought was a common API all where trying to use (i.e.,
-dev_printk)
+Could someone with a symbios 53c8xx chip test this patch?  It works
+on non-sparc.  If I don't hear of any problems, it'll be in the next
+driver update.
 
-In 2.6 with the host numbers being mutable, some users may have to do
-some groking through the logs to re-establish linkage between the log
-message and the adapter in represents.
+Index: drivers/scsi/sym53c8xx_2/sym_glue.c
+===================================================================
+RCS file: /var/cvs/linux-2.6/drivers/scsi/sym53c8xx_2/sym_glue.c,v
+retrieving revision 1.63
+diff -u -p -r1.63 sym_glue.c
+--- drivers/scsi/sym53c8xx_2/sym_glue.c	28 Sep 2004 12:34:20 -0000	1.63
++++ drivers/scsi/sym53c8xx_2/sym_glue.c	1 Oct 2004 18:15:30 -0000
+@@ -56,6 +56,15 @@
+ #define NAME53C		"sym53c"
+ #define NAME53C8XX	"sym53c8xx"
+ 
++/* Bloody SPARC can't do anything normal ... */
++#ifdef __sparc__
++#define IRQ_FMT "%s"
++#define IRQ_PRM(x) __irq_itoa(x)
++#else
++#define IRQ_FMT "%d"
++#define IRQ_PRM(x) (x)
++#endif
++
+ static int __devinit
+ pci_get_base_address(struct pci_dev *pdev, int index, u_long *base)
+ {
+@@ -1400,18 +1409,8 @@ static int sym_host_info(struct sym_hcb 
+ 	copy_info(&info, "Chip " NAME53C "%s, device id 0x%x, "
+ 			 "revision id 0x%x\n",
+ 			 np->s.chip_name, np->device_id, np->revision_id);
+-	copy_info(&info, "At PCI address %s, "
+-#ifdef __sparc__
+-		"IRQ %s\n",
+-#else
+-		"IRQ %d\n",
+-#endif
+-		pci_name(np->s.device),
+-#ifdef __sparc__
+-		__irq_itoa(np->s.irq));
+-#else
+-		(int) np->s.irq);
+-#endif
++	copy_info(&info, "At PCI address %s, IRQ " IRQ_FMT "\n",
++		pci_name(np->s.device), IRQ_PRM(np->s.irq));
+ 	copy_info(&info, "Min. period factor %d, %s SCSI BUS%s\n",
+ 			 (int) (np->minsync_dt ? np->minsync_dt : np->minsync),
+ 			 np->maxwide ? "Wide" : "Narrow",
+@@ -1539,19 +1538,9 @@ static struct Scsi_Host * __devinit sym_
+ 	struct sym_fw *fw;
+ 
+ 	printk(KERN_INFO
+-		"sym%d: <%s> rev 0x%x at pci %s "
+-#ifdef __sparc__
+-		"irq %s\n",
+-#else
+-		"irq %d\n",
+-#endif
++		"sym%d: <%s> rev 0x%x at pci %s irq " IRQ_FMT "\n",
+ 		unit, dev->chip.name, dev->chip.revision_id,
+-		pci_name(dev->pdev),
+-#ifdef __sparc__
+-		__irq_itoa(dev->s.irq));
+-#else
+-		dev->s.irq);
+-#endif
++		pci_name(dev->pdev), IRQ_PRM(dev->s.irq));
+ 
+ 	/*
+ 	 *  Get the firmware for this chip.
 
-If a user is not insmoding there driver or changing there system config
-this is probably not an issue.
-
-It does not seem that hard to run lsscsi --hosts.
-
--andmike
---
-Michael Anderson
-andmike@us.ibm.com
-
+-- 
+"Next the statesmen will invent cheap lies, putting the blame upon 
+the nation that is attacked, and every man will be glad of those
+conscience-soothing falsities, and will diligently study them, and refuse
+to examine any refutations of them; and thus he will by and by convince 
+himself that the war is just, and will thank God for the better sleep 
+he enjoys after this process of grotesque self-deception." -- Mark Twain
