@@ -1,88 +1,62 @@
-From: Pat LaVarre <p.lavarre@ieee.org>
-Subject: Re: [PATCH] normalize fixed and descriptor sense data
-Date: Mon, 30 Aug 2004 14:03:47 -0600
+From: "Moore, Eric Dean" <Emoore@lsil.com>
+Subject: RE: [PATCH] fix dma mapping leak in fusion
+Date: Mon, 30 Aug 2004 18:29:45 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <B43982FC-FABF-11D8-85F1-00039398BB5E@ieee.org>
-References: <3DD91260-F839-11D8-A52F-00039398BB5E@ieee.org> <41300511.206030
-	 3@torque.net> <Pine.LNX.4.58.0408280922540.7958@kai.makisara.local><3CC78E
-	D C-FAAA-11D8-85F1-00039398BB5E@ieee.org> <Pine.LNX.4.58.0408302202420.4250
-	@kai.makisara.local>
-Mime-Version: 1.0 (Apple Message framework v619)
+Message-ID: <0E3FA95632D6D047BA649F95DAB60E5704F631BD@exa-atlanta>
+Mime-Version: 1.0
 Content-Type: text/plain;
-	charset=US-ASCII;
-	format=flowed
-Content-Transfer-Encoding: 7bit
+	charset="iso-8859-1"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from email-out2.iomega.com ([147.178.1.83]:11651 "EHLO
-	email.iomega.com") by vger.kernel.org with ESMTP id S268411AbUH3UDt
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 30 Aug 2004 16:03:49 -0400
-In-Reply-To: <Pine.LNX.4.58.0408302202420.4250@kai.makisara.local>
+Received: from mail0.lsil.com ([147.145.40.20]:23276 "EHLO mail0.lsil.com")
+	by vger.kernel.org with ESMTP id S264795AbUH3W34 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 30 Aug 2004 18:29:56 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: Kai Makisara <Kai.Makisara@kolumbus.fi>
-Cc: Douglas Gilbert <dougg@torque.net>, linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>, "Moore, Eric Dean" <Emoore@lsil.com>
+Cc: Masao Fukuchi <fukuchi.masao@jp.fujitsu.com>, linux-scsi@vger.kernel.org
 
-Kai M:
+On Saturday, August 28, 2004 1:03 PM, Christoph Hellwig wrote:
 
-> ...
->>> The severity of deferred errors ...
-> ...
-> What you know is that the data up to the
-> previous filemark is OK, beyond that the data is suspect unless the
-> application knows the drive buffer size. To be able to easily read the
-> archive, it is best to rewrite the archive on another tape. Bad tapes 
-> are
-> not common but they do happen. That is why I say it is not a 
-> catastrophy
-> to see a medium error of any type.
+> 
+> On Mon, Aug 23, 2004 at 11:56:50AM -0400, Moore, Eric Dean wrote:
+> > Christoph - What is the criteria for the mid-layer
+> > to offline a device? 
+> 
+> When eh_abort didn't succeed for all outstanding commands and 
+> the various
+> reset methods failed aswell.
 
-Ah.  I think I understand (& agree) now.
+Look in mptscsih_abort.  If abort task management request failed,
+it will immediately complete the command to mid-layer, returning
+FAILED.  If we succeeded issuing the command, we return SUCCESS, and
+the command would be completed later by mptscsih_taskmgmt_complete.
+If mptscsih_taskmgmt_complete fails to be called, then timer would
+expire, calling mptscsih_taskmgmt_timeout.  This will eventually endup
+reseting card, and flusing the outstanding commands from 
+mptscsih_flush_running_commands.
 
-The "catastrophe" I meant was that the drive and media together have 
-failed.  We now have cause to suspect both.
+> 
+> > The dmesg dump in previous email indicates that mid-layer 
+> > issued several aborts to the LLD, then mpt driver is returning 
+> > SUCCESS. However at some point the midlayer offlines the device,
+> > however commands are still in the LLD, and completed 
+> sometime later after
+> > the mptscsih_taskmgmt_timeout is called, thus hitting the
+> > oops(because request_buffer=NULL), as we have removed the 
+> > scsi_device_online check per your request.
+> 
+> I'm looking over fusion code with your latest patch applied now.  What
+> worries me is mptscsih_flush_running_cmds where's you're erroring out
+> commands possibly from withing EH methods (?, I have a hard time
+> following the code from mptscsih to mptbase and back), but not under
+> EH control.
+> 
+> Btw, when looking over this it seems to me you could kill
+> mptscsih_search_running_cmds - the scsi core makes sure you'll never
+> have outstanding commands when it calls ->slave_destory.
+> 
 
-With removable media, yes, by design, after such an event, we recommend 
-trust the drive, throw away the tape or disc, buy another, hope it 
-works.  Of course, when the disk is not removable, then a failure of 
-the disk alone means the drive loses all value.
+I don't recommend removing mptscsih_search_running_cmds. 
+This is cleaning up the scsi-look table, chain buffer, and msg frames.
 
-> A good thing with tapes is that when the error is detected, the
-> application is still living. If the last close succeeds, the data is on
-> the tape. With disks it may be more complicated because there may be
-> pending data from several sources and the application losing its data 
-> may
-> not be around any more.
-
-"Ah.  I think I understand (& agree) now."
-
-I distinguish drag & drop from backup.  With backup, to tape or disc, 
-no matter.  Either way, the backup app should by design hang around 
-long enough to see all trouble reported, and a report of bad media seen 
-then means start over.
-
-> The severity of errors is largely a matter of opinion and depends on 
-> what
-> you are trying to do. What we can probably agree on is that the scene
-> looks a little different with different types of devices that SCSI can 
-> be
-> used with. Besides disks and tapes, there are also other types 
-> (changers,
-> backplanes, ...) that may need different type of processing.
-
-Yes.
-
-> The high
-> level driver has to be able to make the decisions if it needs to. (Some
-> decisions the upper level probably does not need to do
-
-Yes.
-
-> like retrying and
-> ABORTED command that has not done anything to the medium.)
-
-Some app folk want to decide their own retry strategy, aye.  General 
-purpose operating systems easily fall into indefinite and pointless 
-retries, aye.
-
-Pat LaVarre
-
+  
