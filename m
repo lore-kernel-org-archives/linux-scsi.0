@@ -1,58 +1,50 @@
 From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: iRiver H100 series and usb-storage issues
-Date: Tue, 8 Jun 2004 10:19:23 -0400 (EDT)
+Subject: Re: [usb-storage] Re: iRiver H100 series and usb-storage issues
+Date: Tue, 8 Jun 2004 10:24:55 -0400 (EDT)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44L0.0406081016280.1222-100000@ida.rowland.org>
-References: <87y8mzukwk.fsf@ceramic.fifi.org>
+Message-ID: <Pine.LNX.4.44L0.0406081019281.1222-100000@ida.rowland.org>
+References: <1086647263.3137.134.camel@patibmrh9>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ida.rowland.org ([192.131.102.52]:4612 "HELO ida.rowland.org")
-	by vger.kernel.org with SMTP id S265210AbUFHOTY (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Jun 2004 10:19:24 -0400
-In-Reply-To: <87y8mzukwk.fsf@ceramic.fifi.org>
+Received: from ida.rowland.org ([192.131.102.52]:5636 "HELO ida.rowland.org")
+	by vger.kernel.org with SMTP id S265211AbUFHOYz (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Jun 2004 10:24:55 -0400
+In-Reply-To: <1086647263.3137.134.camel@patibmrh9>
 List-Id: linux-scsi@vger.kernel.org
-To: Philippe Troin <phil@fifi.org>
-Cc: James Bottomley <James.Bottomley@steeleye.com>, USB Storage list <usb-storage@lists.one-eyed-alien.net>, SCSI development list <linux-scsi@vger.kernel.org>
+To: Pat LaVarre <p.lavarre@ieee.org>
+Cc: Philippe Troin <phil@fifi.org>, linux-scsi@vger.kernel.org, usb-storage@lists.one-eyed-alien.net, James Bottomley <James.Bottomley@steeleye.com>
 
-On 7 Jun 2004, Philippe Troin wrote:
+On 7 Jun 2004, Pat LaVarre wrote:
 
-> Alan Stern <stern@rowland.harvard.edu> writes:
+> What's ironic here is that the Linux USB layer understands entirely that
+> the STALL redundantly with the "CSW" "R 512" means "unexpectedly short
+> transfer" ... but we're told the layers above don't get it, all the
+> same.
 > 
-> > In the log you posted (at the URL above) the CSW was returned correctly.  
-> > The same is true for the messages you referred to.  So that was not the 
-> > source of the problem.
+> The op x03 "REQUEST SENSE" here is inappropriate - it is unsolicited -
+> the "CSW" "Stat" was not x01 AutoSenseMe, it was x00 Passed, expressed
+> here as "Stat 0x0".
 > 
-> Okay, quite possibly, as I was pointing out I am mostly clueless
-> w.r.t. USB.  But what about:
+> I'm thinking usb-storage has to remove that inappropriate "REQUEST
+> SENSE", else usb-storage cannot be passing correct status back up?
 > 
->   usb-storage: usb_stor_transfer_partial(): xfer 512 bytes
->   usb-storage: usb_stor_bulk_msg() returned 0 xferred 0/512
->   usb-storage: Bulk data transfer result 0x1
->   usb-storage: Attempting to get CSW...
->                ^^^^^^^^^^^^^^^^^^^^^^^^
->   usb-storage: clearing endpoint halt for pipe 0xc0011e80
->   usb-storage: usb_stor_clear_halt: result=0
->   usb-storage: Attempting to get CSW (2nd try)...
->                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
->   usb-storage: Bulk status result = 0
->   usb-storage: Bulk status Sig 0x53425355 T 0x945 R 512 Stat 0x0
->   usb-storage: -- unexpectedly short transfer
->   usb-storage: Issuing auto-REQUEST_SENSE
-
-Those are perfectly normal.  The spec allows a device to halt the 
-bulk-in endpoint the first time the host tries to read the CSW.  The 
-second attempted read is supposed to succeed, and indeed it did.
-
-> > Do you know of anyone who has contributed to any versions of this thread 
-> > and still does have an H1xx?
+> usb-storage cannot correctly say that it autosensed SK ASC ASCQ zero,
+> because usb-storage only fetched unsolicited sense, not auto sense. 
+> usb-storage cannot say it saw a failure without sense, because
+> usb-storage did think it auto sensed.
 > 
-> No, I did not keep track.  Nothing prevents me from "trying" another
-> one if you're serious about fixing the above issues.
+> Yes?
 
-I am serious about fixing this.  At the moment we don't have anything new
-for you to try, but maybe we'll come up with something soon.  I'm still
-waiting to hear from the SCSI people about how this should be handled...
+The log you saw was from an older version of the kernel.  The current
+version does not autosense in this situation.  Or when it does (data-out
+transfer with CB transport) and the result is SK = ASC = ASCQ = 0, then it
+clears the sense buffer to pretend that it didn't autosense.
+
+> But after all that, maybe sd still will ignore the error and miscompare?
+
+sd doesn't receive any error indication other than positive residue, and 
+it ignores the residue.
 
 Alan Stern
 
