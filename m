@@ -1,31 +1,77 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH] fix scsi_debug compile warning
-Date: Sun, 27 Apr 2003 13:35:07 +0200
+Subject: [PATCH] use scsi_report_bus_reset() in scsi_erroc.c
+Date: Sun, 27 Apr 2003 13:42:54 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030427133507.A27453@lst.de>
+Message-ID: <20030427134254.A27685@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([212.34.181.86]:35083 "EHLO verein.lst.de")
-	by vger.kernel.org with ESMTP id S263924AbTD0LXR (ORCPT
+Received: from verein.lst.de ([212.34.181.86]:48395 "EHLO verein.lst.de")
+	by vger.kernel.org with ESMTP id S263931AbTD0Lam (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 27 Apr 2003 07:23:17 -0400
+	Sun, 27 Apr 2003 07:30:42 -0400
 Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
-To: Douglas Gilbert <dougg@torque.net>
+To: James.Bottomley@steeleye.com
 Cc: linux-scsi@vger.kernel.org
 
-spin_lock_irqsave takes an unsigned long.
+Currently scsi_error.c has two opencoded copies for
+scsi_report_bus_reset.  Get rid of them.
 
 
---- 1.31/drivers/scsi/scsi_debug.c	Mon Mar 31 15:52:02 2003
-+++ edited/drivers/scsi/scsi_debug.c	Sun Apr 27 09:22:25 2003
-@@ -866,7 +871,7 @@
- static void timer_intr_handler(unsigned long indx)
+--- 1.48/drivers/scsi/scsi_error.c	Mon Apr 21 10:17:33 2003
++++ edited/drivers/scsi/scsi_error.c	Sun Apr 27 10:46:14 2003
+@@ -916,7 +913,6 @@
+  **/
+ static int scsi_try_bus_reset(struct scsi_cmnd *scmd)
  {
- 	struct sdebug_queued_cmd * sqcp;
--	unsigned int iflags;
-+	unsigned long iflags;
+-	struct scsi_device *sdev;
+ 	unsigned long flags;
+ 	int rtn;
  
- 	if (indx >= SCSI_DEBUG_CANQUEUE) {
- 		printk(KERN_ERR "scsi_debug:timer_intr_handler: indx too "
+@@ -934,16 +930,9 @@
+ 
+ 	if (rtn == SUCCESS) {
+ 		scsi_sleep(BUS_RESET_SETTLE_TIME);
+-		/*
+-		 * Mark all affected devices to expect a unit attention.
+-		 */
+-		list_for_each_entry(sdev, &scmd->device->host->my_devices,
+-				    siblings)
+-			if (scmd->device->channel == sdev->channel) {
+-				sdev->was_reset = 1;
+-				sdev->expecting_cc_ua = 1;
+-			}
++		scsi_report_bus_reset(scmd->device->host, scmd->device->channel);
+ 	}
++
+ 	return rtn;
+ }
+ 
+@@ -953,7 +942,6 @@
+  **/
+ static int scsi_try_host_reset(struct scsi_cmnd *scmd)
+ {
+-	struct scsi_device *sdev;
+ 	unsigned long flags;
+ 	int rtn;
+ 
+@@ -971,16 +959,9 @@
+ 
+ 	if (rtn == SUCCESS) {
+ 		scsi_sleep(HOST_RESET_SETTLE_TIME);
+-		/*
+-		 * Mark all affected devices to expect a unit attention.
+-		 */
+-		list_for_each_entry(sdev, &scmd->device->host->my_devices,
+-				    siblings)
+-			if (scmd->device->channel == sdev->channel) {
+-				sdev->was_reset = 1;
+-				sdev->expecting_cc_ua = 1;
+-			}
++		scsi_report_bus_reset(scmd->device->host, scmd->device->channel);
+ 	}
++
+ 	return rtn;
+ }
+ 
