@@ -1,64 +1,58 @@
-From: "Mukker, Atul" <Atulm@lsil.com>
-Subject: RE: merge megaraid 2.20.x in kernel 2.6?
-Date: Thu, 26 Aug 2004 18:03:48 -0400
+From: Jeremy Higdon <jeremy@sgi.com>
+Subject: Re: Incorrect response to SK/ASC/ASCQ = x 02/04/01 (becoming ready)
+Date: Thu, 26 Aug 2004 15:36:34 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <0E3FA95632D6D047BA649F95DAB60E57033BC9B7@exa-atlanta>
+Message-ID: <20040826223634.GB131056@sgi.com>
+References: <Pine.LNX.4.44L0.0408221154220.15992-100000@netrider.rowland.org> <1093217548.1727.367.camel@mulgrave> <1093218968.3553.17.camel@swtf.comptex.com.au> <1093275122.1776.52.camel@mulgrave> <20040826025453.GA125799@sgi.com> <1093534695.1684.28.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:62115 "EHLO mail0.lsil.com")
-	by vger.kernel.org with ESMTP id S269713AbUHZWEE (ORCPT
+Received: from omx2-ext.sgi.com ([192.48.171.19]:33924 "EHLO omx2.sgi.com")
+	by vger.kernel.org with ESMTP id S269770AbUHZWhp (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 26 Aug 2004 18:04:04 -0400
+	Thu, 26 Aug 2004 18:37:45 -0400
+Content-Disposition: inline
+In-Reply-To: <1093534695.1684.28.camel@mulgrave>
 List-Id: linux-scsi@vger.kernel.org
-To: 'James Bottomley' <James.Bottomley@SteelEye.com>, Matt Domsch <Matt_Domsch@Dell.com>, "Mukker, Atul" <Atulm@lsil.com>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Burn Alting <burn@goldweb.com.au>, SCSI development list <linux-scsi@vger.kernel.org>
 
-James,
+On Thu, Aug 26, 2004 at 11:38:08AM -0400, James Bottomley wrote:
+> On Wed, 2004-08-25 at 22:54, Jeremy Higdon wrote:
+> > I believe that 02/04/01 should be treated like a Busy status.  The
+> > semantics are slightly different, but the action taken by the
+> > initiator is the same: wait a bit and then retry.
+> 
+> Well, that's dangerous.  BUSY is assumed always to be a transient
+> condition, so it doesn't count against the retries, so if this thing
+> never comes back, we'd loop forever there.
 
-I have released the 2.20.3.1 drive, which should fix this issue. Did you get
-a chance to merge that driver?
+Hmm.  I think an exponential backoff would be better.
 
-Thanks
--Atul
+In any case, the 02/04/01 is also a transient condition.  It means
+that the device is in the process of becoming read, but is not ready yet.
 
-> -----Original Message-----
-> From: James Bottomley [mailto:James.Bottomley@SteelEye.com]
-> Sent: Tuesday, August 17, 2004 12:41 PM
-> To: Matt Domsch; atulm@lsil.com
-> Cc: SCSI Mailing List
-> Subject: Re: merge megaraid 2.20.x in kernel 2.6?
+> The other thing about BUSY handling is that, for a device with no
+> outstanding commands like this, we retry based on I/O pressure, so even
+> if I increment the retry count time waited would depend on how much I/O
+> pressure the system had.
+
+The amount of time you wait to retry is based on I/O pressure?
+The amount of time that it will take before the device is ready is
+not based on I/O pressure.
+
+> > I have seen this key/asc/asq before and had to handle it that way.
+> > I believe the device in question was a disk drive that had been
+> > powered on recently.  Disks set to have a variable spinup delay
+> > (based on ID, so that not all disks in a 16-drive box power up at
+> > the same time and overstress a power supply) can return this code
+> > up to a couple of minutes after power on.
 > 
-> 
-> On Tue, 2004-08-17 at 12:01, Matt Domsch wrote:
-> > James, is there anything you're still waiting on before merging the
-> > LSI megaraid 2.20.x driver into your scsi-misc-2.6 tree?  I thought
-> > the agreement by you, Christoph, and Atul was to get it merged, and
-> > then fix up the few outstanding concerns post-merge.
-> 
-> OK, I forgot in the rush of conferences.
-> 
-> I did put it in, but it fails to compile on parisc:
-> 
-> In file included from drivers/scsi/megaraid/megaraid_mm.c:18:
-> drivers/scsi/megaraid/megaraid_mm.h:51:25: asm/ioctl32.h: No such file
-> or directory
-> drivers/scsi/megaraid/megaraid_mm.c: In function `mraid_mm_init':
-> drivers/scsi/megaraid/megaraid_mm.c:1069: warning: implicit 
-> declaration
-> of function `register_ioctl32_conversion'
-> drivers/scsi/megaraid/megaraid_mm.c: In function `mraid_mm_exit':
-> drivers/scsi/megaraid/megaraid_mm.c:1098: warning: implicit 
-> declaration
-> of function `unregister_ioctl32_conversion'
-> make[3]: *** [drivers/scsi/megaraid/megaraid_mm.o] Error 1
-> make[2]: *** [drivers/scsi/megaraid] Error 2
-> make[1]: *** [drivers/scsi] Error 2
-> make: *** [drivers] Error 2
-> 
-> It looks like the compat ioctl infrastructure is incorrect.
-> 
-> James
-> 
-> 
+> But that's a start of day thing, which would be handled by sd's TUR
+> code.
+
+True.  However, in the future, I might expect to see more of this
+behavior, as drives are spun down for power conservation.  Probably
+more on small systems than on big ones.
+
+jeremy
