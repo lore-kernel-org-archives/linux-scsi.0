@@ -1,54 +1,46 @@
-From: Mike Anderson <andmike@us.ibm.com>
-Subject: Re: scsi_block_requests() and retries
-Date: Thu, 8 Jan 2004 08:00:46 -0800
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040108160045.GA9321@beaverton.ibm.com>
-References: <200401081331.21824.heiko.carstens@de.ibm.com>
+From: Christoph Hellwig <hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+Subject: Re: [PATCH] 1.1.4-2313 aacraid driver for LiNUX 2.4.25-pre4
+Date: Thu, 8 Jan 2004 16:04:31 +0000
+Sender: linux-aacraid-devel-admin-8PEkshWhKlo@public.gmane.org
+Message-ID: <20040108160431.A11515@infradead.org>
+References: <3FFC4C09.3020103@wanadoo.es> <20040107210020.A1166@infradead.org> <3FFD7E3A.3010808@wanadoo.es>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e33.co.us.ibm.com ([32.97.110.131]:48085 "EHLO
-	e33.co.us.ibm.com") by vger.kernel.org with ESMTP id S263946AbUAHP4E
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 8 Jan 2004 10:56:04 -0500
-Received: from westrelay01.boulder.ibm.com (westrelay01.boulder.ibm.com [9.17.195.10])
-	by e33.co.us.ibm.com (8.12.10/8.12.2) with ESMTP id i08Fu3Jh306346
-	for <linux-scsi@vger.kernel.org>; Thu, 8 Jan 2004 10:56:03 -0500
+Return-path: <linux-aacraid-devel-admin-8PEkshWhKlo@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <200401081331.21824.heiko.carstens@de.ibm.com>
+In-Reply-To: <3FFD7E3A.3010808-39ZsbGIQGT7e5aOfsHch1g@public.gmane.org>; from xose-39ZsbGIQGT7e5aOfsHch1g@public.gmane.org on Thu, Jan 08, 2004 at 04:58:50PM +0100
+Errors-To: linux-aacraid-devel-admin-8PEkshWhKlo@public.gmane.org
+List-Help: <mailto:linux-aacraid-devel-request-8PEkshWhKlpvbvzxeQLTJuMTnGGMi8c9@public.gmane.org>
+List-Post: <mailto:linux-aacraid-devel-8PEkshWhKlo@public.gmane.org>
+List-Subscribe: <http://lists.us.dell.com/mailman/listinfo/linux-aacraid-devel>,
+	<mailto:linux-aacraid-devel-request-8PEkshWhKlpvbvzxeQLTJhLjRD9WNpgrmSKB9SHqsyg@public.gmane.org>
+List-Unsubscribe: <http://lists.us.dell.com/mailman/listinfo/linux-aacraid-devel>,
+	<mailto:linux-aacraid-devel-request-8PEkshWhKlpvbvzxeQLTJt/CJOUnrhF+9vnX9k1QryA@public.gmane.org>
+List-Archive: <http://lists.us.dell.com/pipermail/linux-aacraid-devel/>
+To: Xose Vazquez Perez <xose-39ZsbGIQGT7e5aOfsHch1g@public.gmane.org>
+Cc: linux-aacraid-devel-XtjxT7Vmt5ZskZv2Y/7f+AC/G2K4zDHf@public.gmane.org, linux-scsi <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Heiko Carstens <heiko.carstens@de.ibm.com>
-Cc: linux-scsi@vger.kernel.org
 
-Heiko Carstens [heiko.carstens@de.ibm.com] wrote:
-> Hi,
+On Thu, Jan 08, 2004 at 04:58:50PM +0100, Xose Vazquez Perez wrote:
+> Christoph Hellwig wrote:
 > 
-> I'm wondering if the behaviour of the scsi mid layer is correct: if an LLD
-> calls scsi_block_requests() and _afterwards_ returns outstanding requests
-> with DID_ERROR, these requests will be retried. Of course these requests
-> will be returned with DID_ERROR as well since the LLD is not expecting /
-> accepting any requests. This will be continued until the maximum retry count
-> will be reached. The final result will be an I/O error.
-> Actually I think that requests shouldn't be retried if
-> host_self_blocked == 1 is given for a host adapter.
-> Or am I wrong here?
+> > That's a huge mess adding lots of broken crap and hooks for binary only modules
+> > through ioctls (urgg..).
 > 
+> yes, but the driver was sent to Marcelo without to pass linux-scsi revision, like
+> others drivers. And I think that is very important a NET review before the inclusion
+> in kernel.org tree.
 
-This seems correct that if you are blocked you should not send any
-commands to the LLDD (error handler sending commands during blocked was
-mentioned a few weeks ago).
+Well, the review is pretty short.  The driver is an unreadable POS that
+introduces bugs and backdoors for binary modules.
 
-It looks like we could have scsi_retry_command replace the call
-to scsi_dispatch_cmd(cmd) with a call to scsi_queue_insert(scmd,
-SCSI_MLQUEUE_EH_RETRY). This looks like the only side effect would be a
-slight delay in calling scsi_dispatch_cmd in the ok to send case.
+If marcelo is going to merge it anyway I'll urge him to back it out.
 
-As a side result since we reduced the callers of scsi_dispatch to
-only scsi_request_fn it would seem like we could collapse some
-operations into scsi_request_fn.
+And who the heck thinks it's a good idea to submit scsi driver directly
+instead of through the proper lists?
 
--andmike
---
-Michael Anderson
-andmike@us.ibm.com
-
+_______________________________________________
+Linux-aacraid-devel mailing list
+Linux-aacraid-devel-8PEkshWhKlo@public.gmane.org
+http://lists.us.dell.com/mailman/listinfo/linux-aacraid-devel
+Please read the FAQ at http://lists.us.dell.com/faq or search the list archives at http://lists.us.dell.com/htdig/
