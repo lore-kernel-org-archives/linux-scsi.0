@@ -1,139 +1,69 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: [patch] 2.4 fix for sg driver cmd_done oops
-Date: Mon, 04 Oct 2004 15:47:11 +1000
+From: "Alexander Stohr" <Alexander.Stohr@gmx.de>
+Subject: (unknown)
+Date: Mon, 4 Oct 2004 10:08:34 +0200 (MEST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <4160E3DF.4010704@torque.net>
-References: <04Sep30.175341edt.332209@cyborg.cybernetics.com>
-Reply-To: dougg@torque.net
+Message-ID: <4939.1096877314@www43.gmx.net>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------090907000401040401040504"
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from borg.st.net.au ([65.23.158.22]:24775 "EHLO borg.st.net.au")
-	by vger.kernel.org with ESMTP id S268439AbUJDFsG (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Oct 2004 01:48:06 -0400
-In-Reply-To: <04Sep30.175341edt.332209@cyborg.cybernetics.com>
+Received: from pop.gmx.net ([213.165.64.20]:61058 "HELO mail.gmx.net")
+	by vger.kernel.org with SMTP id S267549AbUJDIIg (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Oct 2004 04:08:36 -0400
+Subject: 
 List-Id: linux-scsi@vger.kernel.org
-To: tonyb@cybernetics.com
-Cc: 'Tom Coughlan' <coughlan@redhat.com>, 'SCSI Mailing List' <linux-scsi@vger.kernel.org>, petrides@redhat.com, marcelo.tosatti@cyclades.com
+To: Kai.Makisara@kolumbus.fi
+Cc: linux-scsi@vger.kernel.org
 
-This is a multi-part message in MIME format.
---------------090907000401040401040504
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Kai wrote:
+> Whenever you report tape problems, it would be helpful to know at least 
+> the drive mode (fixed vs. variable block mode) and block size (if fixed 
+> block mode). You can get this information with 'mt status'.
 
-Tony Battersby wrote:
->>This problem has also been seen on 2.4.  The attached patch is a
->>straight-forward port of Brian's patch to 2.4.28-pre3. Are there any
->>2.4-specific issues that this does not address?
-> 
-> 
-> Try this patch instead, which deletes one line containing "srp->done =
-> 1;" compared to your patch.  The 2.6 sg.c moved this line down to fix a
-> race condition and then later added the locks around it; your patch adds
-> the line after it was moved but doesn't delete the original line.
+With kernel 2.6.7 its working and i do get this:
 
-Tom,
-Could you confirm whether this patch from Tony fixes the
-problem that you reported and if so we can ask Marcelo
-to apply it.
+[...without a tape...]
+$ mt status
+SCSI 2 tape drive:
+File number=-1, block number=-1, partition=0.
+Tape block size 0 bytes. Density code 0x0 (default).
+Soft error count since last status=0
+General status bits on (50000):
+ DR_OPEN IM_REP_EN
+$ mt asf 0
+/dev/tape: Input/output error
+$ mt setblk 512
+/dev/tape: No medium found
 
-Doug Gilbert
+[...with a DDS-3 tape...]
+$ mt asf 0
+$ mt status
+SCSI 2 tape drive:
+File number=0, block number=0, partition=0.
+Tape block size 0 bytes. Density code 0x25 (DDS-3).
+Soft error count since last status=0
+General status bits on (41010000):
+ BOT ONLINE IM_REP_EN
+$ tar -tvf /dev/tape
+[...file listing...]
 
---------------090907000401040401040504
-Content-Type: text/x-patch;
- name="sg_cmd_done_race_2.4.28-pre3.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="sg_cmd_done_race_2.4.28-pre3.patch"
+sorry, the machine in question is currently blocked.
+at the moment i cant supply results from 2.6.9-rc3 kernel build.
+But it were the very same command sequence, so it should work
+in theory, but in pratice i got access errors on command line.
 
---- linux-2.4.28-pre3/drivers/scsi/sg.c.orig	Thu Sep 30 17:39:10 2004
-+++ linux-2.4.28-pre3/drivers/scsi/sg.c	Thu Sep 30 17:39:37 2004
-@@ -752,6 +752,18 @@
-     }
- }
- 
-+static int
-+sg_srp_done(Sg_request *srp, Sg_fd *sfp)
-+{
-+	unsigned long iflags;
-+	int done;
-+
-+	read_lock_irqsave(&sfp->rq_list_lock, iflags);
-+	done = srp->done;
-+	read_unlock_irqrestore(&sfp->rq_list_lock, iflags);
-+	return done;
-+}
-+
- static int sg_ioctl(struct inode * inode, struct file * filp,
-                     unsigned int cmd_in, unsigned long arg)
- {
-@@ -786,7 +798,8 @@
- 	    while (1) {
- 		result = 0;  /* following macro to beat race condition */
- 		__wait_event_interruptible(sfp->read_wait,
--		       (sdp->detached || sfp->closed || srp->done), result);
-+		       (sdp->detached || sfp->closed || sg_srp_done(srp, sfp)),
-+					   result);
- 		if (sdp->detached)
- 		    return -ENODEV;
- 		if (sfp->closed)
-@@ -796,7 +809,9 @@
- 		srp->orphan = 1;
- 		return result; /* -ERESTARTSYS because signal hit process */
- 	    }
-+	    write_lock_irqsave(&sfp->rq_list_lock, iflags);
- 	    srp->done = 2;
-+	    write_unlock_irqrestore(&sfp->rq_list_lock, iflags);
- 	    result = sg_new_read(sfp, (char *)arg, SZ_SG_IO_HDR, srp);
- 	    return (result < 0) ? result : 0;
- 	}
-@@ -1207,6 +1222,7 @@
-     Sg_device * sdp = NULL;
-     Sg_fd * sfp;
-     Sg_request * srp = NULL;
-+    unsigned long iflags;
- 
-     read_lock(&sg_dev_arr_lock);
-     if (sg_dev_arr && (dev >= 0)) {
-@@ -1253,7 +1269,6 @@
-     SRpnt->sr_request.rq_dev = MKDEV(0, 0);  /* "sg" _disowns_ request blk */
- 
-     srp->my_cmdp = NULL;
--    srp->done = 1;
-     read_unlock(&sg_dev_arr_lock);
- 
-     SCSI_LOG_TIMEOUT(4, printk("sg...bh: dev=%d, pack_id=%d, res=0x%x\n",
-@@ -1316,8 +1331,11 @@
-     }
-     if (sfp && srp) {
- 	/* Now wake up any sg_read() that is waiting for this packet. */
--	wake_up_interruptible(&sfp->read_wait);
- 	kill_fasync(&sfp->async_qp, SIGPOLL, POLL_IN);
-+	write_lock_irqsave(&sfp->rq_list_lock, iflags);
-+	srp->done = 1;
-+	wake_up_interruptible(&sfp->read_wait);
-+	write_unlock_irqrestore(&sfp->rq_list_lock, iflags);
-     }
- }
- 
-@@ -1507,7 +1525,7 @@
- 	    	tsfp = sfp->nextfp;
- 		for (srp = sfp->headrp; srp; srp = tsrp) {
- 		    tsrp = srp->nextrp;
--		    if (sfp->closed || (0 == srp->done))
-+		    if (sfp->closed || (0 == sg_srp_done(srp, sfp)))
- 			sg_finish_rem_req(srp);
- 		}
- 		if (sfp->closed) {
-@@ -2425,7 +2443,7 @@
- 
-     for (srp = sfp->headrp; srp; srp = tsrp) {
- 	tsrp = srp->nextrp;
--	if (srp->done)
-+	if (sg_srp_done(srp, sfp))
- 	    sg_finish_rem_req(srp);
- 	else
- 	    ++dirty;
+> The sym53c8xx_2 driver has had problems in speed negotiation 
+> recently. As I mentioned, the speed negotiation did not succeed with my 
+> drives at some point. I have here patch-2.6.9-rc2-bk14 and it does not 
+> seem to have those fixes yet. It might be good if you could try a new 
+> kernel (2.6.9-rc3 is certainly new enough) and see if this helps.
 
---------------090907000401040401040504--
+I think i have tried those version and it failed, but i will retest
+with latest BitKeeper version probably tonight and report on that.
+
+-Alex.
+
+-- 
+GMX ProMail mit bestem Virenschutz http://www.gmx.net/de/go/mail
++++ Empfehlung der Redaktion +++ Internet Professionell 10/04 +++
+
