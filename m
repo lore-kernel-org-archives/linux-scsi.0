@@ -1,53 +1,39 @@
-From: Mike Anderson <andmike@us.ibm.com>
-Subject: Re: Host drivers and conversion of SCSI to the driver model
-Date: Fri, 20 Jun 2003 14:07:25 -0700
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: qla2xxx and feral ISP updates in their respective BK trees
+Date: Fri, 20 Jun 2003 17:59:45 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030620210725.GB18449@beaverton.ibm.com>
-References: <20030619213109.GB5644@kroah.com> <Pine.LNX.4.44L0.0306201555350.688-100000@ida.rowland.org>
+Message-ID: <3EF383D1.7070900@pobox.com>
+References: <1055971780.2075.484.camel@mulgrave> <20030620101224.B305@wonky.in0.lcl> <1056129548.2102.19.camel@mulgrave> <20030620102448.O305@wonky.in0.lcl> <1056133068.1804.22.camel@mulgrave> <20030620183417.GB9164@gtf.org> <20030620113759.B305@wonky.in0.lcl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e31.co.us.ibm.com ([32.97.110.129]:35463 "EHLO
-	e31.co.us.ibm.com") by vger.kernel.org with ESMTP id S264655AbTFTUuz
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:14771 "EHLO
+	www.linux.org.uk") by vger.kernel.org with ESMTP id S264899AbTFTVp6
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 20 Jun 2003 16:50:55 -0400
-Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.44L0.0306201555350.688-100000@ida.rowland.org>
+	Fri, 20 Jun 2003 17:45:58 -0400
+In-Reply-To: <20030620113759.B305@wonky.in0.lcl>
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: SCSI development list <linux-scsi@vger.kernel.org>
+To: mjacob@feral.com
+Cc: James Bottomley <James.Bottomley@steeleye.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Andrew Vasquez <praka@san.rr.com>, Andrew Morton <akpm@digeo.com>
 
-Alan Stern [stern@rowland.harvard.edu] wrote:
-> On Thu, 19 Jun 2003, Greg KH wrote:
-> 
-> > I think it's more of the matter that Mike is still changing the way the
-> > SCSI core works with the class and driver model.  I suggest you take
-> > this to the linux-scsi list to hash out the way scsi should and does
-> > work in order to find the best solution for usb-storage, as I guess that
-> > it also would be the best solution for all other SCSI host drivers.
-> 
-> Mike:
-> 
-> What does the future for this progression look like?  Will there be some
-> standard place under /sys/class/scsi??? where a host driver like
-> usb-storage can register its class device?
+Matthew Jacob wrote:
+> a) Historically, MMIO has been buggy on ia32. This is no longer the
+> case, but there definitely were a lot of platforms with this broken.
 
-Did you need your own class device or can you use the shost_attrs
-capability that James added?
+Could you elaborate?
 
-> 
-> And while I'm at it, let me remind you that the class_dev element of
-> struct Scsi_Host needs to have a release() method.  Probably the easiest 
-> way to make it work right is to do a "get_device(&shost->gendev)" when 
-> shost->class_dev is registered and have the release routine do 
-> "put_device(&shost->gendev)".
-> 
+What I've mostly found is (in order of frequency):  coders unfamiliar 
+with x86 CPU write coalescing/posting rules, and PCI boards whose 
+hardware designs contain inherent races when driven in MMIO mode 
+(particularly on CPUs with deeply posted writes).
 
-Yes I will add a class release function and the order you
-describe sounds the easiest to make it work.
 
--andmike
---
-Michael Anderson
-andmike@us.ibm.com
+> b) MMIO is consumption of mapping resources, while PIO isn't.
+
+agreed
+
+	Jeff
+
+
 
