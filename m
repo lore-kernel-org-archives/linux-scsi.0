@@ -1,45 +1,46 @@
-From: Tomas Szepe <szepe@pinerecords.com>
-Subject: Re: aic7xxx broken in 2.5.53/54 ?
-Date: Wed, 8 Jan 2003 11:05:09 +0100
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <20030108100509.GA229@louise.pinerecords.com>
-References: <20030103101618.GB8582@in.ibm.com> <596830816.1041606846@aslan.scsiguy.com> <20030106073204.GA1875@in.ibm.com> <274040000.1041869813@aslan.scsiguy.com> <20030108024107.GA1127@louise.pinerecords.com> <703940000.1041999784@aslan.btc.adaptec.com>
+From: Douglas Gilbert <dougg@torque.net>
+Subject: lsscsi-0.03
+Date: Wed, 08 Jan 2003 22:46:14 +1100
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <3E1C0F86.5000109@torque.net>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <703940000.1041999784@aslan.btc.adaptec.com>
-To: "Justin T. Gibbs" <gibbs@scsiguy.com>
-Cc: dipankar@in.ibm.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from torque.net (dm1-41.triode.net.au [202.147.125.41])
+	by iggy.triode.net.au (8.12.7/8.12.7) with ESMTP id h08BhJQ0013397
+	for <linux-scsi@vger.kernel.org>; Wed, 8 Jan 2003 22:43:20 +1100
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-> [gibbs@scsiguy.com]
-> 
-> > [gibbs@scsiguy.com]
-> > 
-> > These reads are actually more expensive than just using PIO.  Neither of
-> > these older drivers included a test to try and catch fishy behavior.
-> > 
-> > Justin, are you quite sure that these tests actually work?
-> > I too have just run into
-> 
-> See my recent post to the SCSI list.  The tests don't work on
-> certain older controllers that lack a feature I was using.  The
-> latest csets submitted to Linus correct this problem (as verified
-> on a dusty dual P-90 PCI/EISA box just added to our regression cluster).
+lsscsi is a utility the uses sysfs in kernels >= lk 2.5.50
+to list information about all SCSI devices (including devices
+that use the SCSI stack such as USB mass storage devices).
+Both a compact format (default), one line per device, and
+a "classic" format (like the output of 'cat /proc/scsi/scsi')
+are supported.
 
-Ok.  I can confirm 6.2.26 fixes the false positive here:
+A '-g' switch has been added in version 0.03 to show the
+corresponding scsi generic device name:
 
-PCI: Found IRQ 11 for device 00:10.0
-PCI: Found IRQ 10 for device 00:11.0
-scsi0 : Adaptec AIC7XXX EISA/VLB/PCI SCSI HBA DRIVER, Rev 6.2.26
-        <Adaptec 2940 Ultra SCSI adapter>
-        aic7880: Ultra Single Channel A, SCSI Id=7, 16/253 SCBs
+$ lsscsi
+[0:0:1:0]    disk    FUJITSU  MAM3184MP        0105  /dev/sda
+[2:0:0:0]    CDROM   CREATIVE CD5233E          1.00  /dev/sr0
 
-scsi1 : Adaptec AIC7XXX EISA/VLB/PCI SCSI HBA DRIVER, Rev 6.2.26
-        <Adaptec 2940 Ultra SCSI adapter>
-        aic7880: Ultra Single Channel A, SCSI Id=7, 16/253 SCBs
+$ lsscsi -g
+[0:0:1:0]    disk    FUJITSU  MAM3184MP        0105  /dev/sda  /dev/sg0
+[2:0:0:0]    CDROM   CREATIVE CD5233E          1.00  /dev/sr0  /dev/sg1
 
-Thanks,
--- 
-Tomas Szepe <szepe@pinerecords.com>
+Patrick Mansfield's patch to output the scsi_level in
+"classic" mode is also included. The scsi_level is also
+output with the '-l' switch. [Until Patrick's kernel
+patch for sysfs to output scsi_level gets into the kernel,
+the ANSI SCSI revision will appear as "?".]
+
+See http://www.torque.net/scsi/lsscsi.html for more information
+and downloads.
+
+Doug Gilbert
+
+
