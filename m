@@ -1,48 +1,32 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [Trivial PATCH 2.6.9-bk5] dmx3191d.c lacked MODULE_DEVICE_TABLE()
-Date: Thu, 21 Oct 2004 09:58:55 +0200
+From: "Steven" <trumpet21abby@hotmail.com>
+Subject: Hard even after you CUM!
+Date: Thu, 21 Oct 2004 08:02:19 GMT
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20041021075855.GA24574@lst.de>
-References: <200410212251.i9LMpsm13032@freya.yggdrasil.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Message-ID: <1098345739-23074__24158.9194899008$1098346317$gmane$org@excite.com>
+Content-Type: text/plain;
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.210]:9385 "EHLO mail.lst.de")
-	by vger.kernel.org with ESMTP id S270077AbUJUH7E (ORCPT
+Received: from [200.66.97.148] ([200.66.97.148]:33910 "HELO vfx-law.com")
+	by vger.kernel.org with SMTP id S269080AbUJUICV (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 21 Oct 2004 03:59:04 -0400
-Content-Disposition: inline
-In-Reply-To: <200410212251.i9LMpsm13032@freya.yggdrasil.com>
+	Thu, 21 Oct 2004 04:02:21 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: "Adam J. Richter" <adam@yggdrasil.com>
-Cc: hch@lst.de, dafastidio@libero.it, linux-scsi@vger.kernel.org
+To: 40free.net.ph@vger.kernel.org
 
-On Thu, Oct 21, 2004 at 03:51:54PM -0700, Adam J. Richter wrote:
-> Hi Christoph,
-> 
-> 	Thank you for porting dmx3191d.c to the modern PCI driver
-> interface.  Here is a one line patch to correct a minor oversight.
-> You omitted the MODULE_DEVICE_TABLE() declaration, which is used
-> by boot and hot plug facilities to load the module when the hardware
-> is present.  Could you please forward it downstream if it looks
-> OK to you?  Thanks in advance.
+Today's special: 
+V-I-A-G-R-A, retails for $15, we sell for as low as $1.90!!!
 
-Sure - James, can you apply that little patch?
+- Private Online ordering!
+- World wide shipping!
+- No Prescription required!!
 
-> 
-> 
->                     __     ______________ 
-> Adam J. Richter        \ /
-> adam@yggdrasil.com      | g g d r a s i l
-> 
-> --- linux-2.6.9-bk5/drivers/scsi/dmx3191d.c	2004-10-21 12:01:55.000000000 -0700
-> +++ linux/drivers/scsi/dmx3191d.c	2004-10-21 15:21:02.000000000 -0700
-> @@ -146,6 +146,7 @@
->  		PCI_ANY_ID, PCI_ANY_ID, 0, 0, 4},
->  	{ }
->  };
-> +MODULE_DEVICE_TABLE(pci, dmx3191d_pci_tbl);
->  
->  static struct pci_driver dmx3191d_pci_driver = {
->  	.name		= DMX3191D_DRIVER_NAME,
----end quoted text---
+Check it out: http://fdlmbceghijk.bestforher.biz/?abceghijkxtnqyfzvtdlm
+
+scooter1 cancedboogie energy active
+pacers moronisweety basil bach norman bigmac cccccc 
+vanilla swimming mookie 
+aylmer lameraspen homebrew kiss
+castle phoenix1 front242 
+rhonda hansontattoo kingdom dgj
+
+tango front242dougie electric gambit trek wonder zeppelin 
+
