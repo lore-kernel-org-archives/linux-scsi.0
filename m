@@ -1,39 +1,49 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [BUG] Sym. 53c895 fails accessing tape device - kernel
-	2.9.1-rc1-bk1 trough rc2-bk12
-Date: 02 Oct 2004 18:28:36 -0400
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1096756118.4415.39.camel@mulgrave>
-References: <13842.1096472870@www69.gmx.net>
-	<1096732158.2169.13.camel@mulgrave>
-	<Pine.LNX.4.58.0410022246140.1977@kai.makisara.local>
+From: "David S. Miller" <davem@davemloft.net>
+Subject: Re: sym2 on sparc
+Date: Sat, 2 Oct 2004 16:41:54 -0700
+Sender: sparclinux-owner@vger.kernel.org
+Message-ID: <20041002164154.6918a43c.davem@davemloft.net>
+References: <20041001182056.GI16153@parcelfarce.linux.theplanet.co.uk>
+	<1096724000.2157.1.camel@mulgrave>
+	<20041002144408.GS16153@parcelfarce.linux.theplanet.co.uk>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from adsl-64-109-89-108.dsl.chcgil.ameritech.net ([64.109.89.108]:36483
-	"EHLO redscar") by vger.kernel.org with ESMTP id S267571AbUJBW2k
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 2 Oct 2004 18:28:40 -0400
-In-Reply-To: <Pine.LNX.4.58.0410022246140.1977@kai.makisara.local>
+Return-path: <sparclinux-owner@vger.kernel.org>
+In-Reply-To: <20041002144408.GS16153@parcelfarce.linux.theplanet.co.uk>
+Cc: James.Bottomley@SteelEye.com, matthew@wil.cx, sparclinux@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Kai Makisara <Kai.Makisara@kolumbus.fi>
-Cc: Alexander Stohr <Alexander.Stohr@gmx.de>, SCSI Mailing List <linux-scsi@vger.kernel.org>, matthew@wil.cx, akpm@digeo.com
 
-On Sat, 2004-10-02 at 16:25, Kai Makisara wrote:
-> I would like to have a little more details. In order to see this message, 
-> the tape drive should have been in fixed block mode. By default dd uses 
-> write() size of 512 bytes. The size of linux-2.6.8.tar.gz is 44678561 
-> bytes. This is not divisible by 512 and this means that the last write of 
-> dd is not 512 bytes and the write fails in foxed block mode (it fails in 
-> my tests). Could you give the exact command sequence leading to the error 
-> and the result from 'mt status' before this sequence?> 
-> Whatever I have tested now, I have not managed to get any messages from 
-> sym53c8xx_2 (except the odd transfer error but that is transient).
+On Sat, 2 Oct 2004 15:44:08 +0100
+Matthew Wilcox <matthew@wil.cx> wrote:
 
-Well, I have to admit that I changed the tape (got HW errors) and
-everything's OK now.
+> > Putting architecture specific knowledge into a device driver is almost
+> > never a good thing to do.  If all you want to do is print out the IRQ
+> > designation, I suspect this is a generic problem, not a sym2 specific
+> > problem, so what we need is something like an irq_to_string()
+> > abstraction.
+> 
+> I agree.  We could probably use something similar on PA-RISC.  There's
+> about 25 drivers in-tree that're currently using __irq_itoa().  Most
+> of them would be better-written if everybody were using a string.
 
-James
+The strings used to be useful in debugging IRQ routing issues
+on sparc64, but that's no longer the case now that I print
+out all of the PCI irq routing info at boot time on sparc64 like
+so:
 
-
+PCI-IRQ: Routing bus[ 0] slot[ 2] map[0] to INO[10]
+PCI-IRQ: Routing bus[ 0] slot[ 3] map[0] to INO[14]
+PCI-IRQ: Routing bus[ 0] slot[ 5] map[0] to INO[1d]
+PCI-IRQ: Routing bus[ 0] slot[ 5] map[0] to INO[1e]
+PCI-IRQ: Routing bus[ 0] slot[ 5] map[0] to INO[1f]
+PCI-IRQ: Routing bus[ 0] slot[ 6] map[0] to INO[18]
+PCI-IRQ: Routing bus[ 0] slot[ 6] map[0] to INO[19]
+PCI-IRQ: Routing bus[ 1] slot[ 0] map[1] to INO[0d]
+PCI-IRQ: Routing bus[ 1] slot[ 1] map[1] to INO[0e]
+PCI-IRQ: Routing bus[ 1] slot[ 2] map[1] to INO[0f]
+PCI-IRQ: Routing bus[ 1] slot[ 3] map[1] to INO[0c]
+PCI0(PBMB): Bus running at 33MHz
+PCI-IRQ: Routing bus[ 0] slot[ 1] map[0] to INO[00]
+PCI-IRQ: Routing bus[ 0] slot[ 4] map[0] to INO[04]
+PCI0(PBMA): Bus running at 66MHz
