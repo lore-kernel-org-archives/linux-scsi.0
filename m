@@ -1,91 +1,61 @@
-From: Kai =?iso-8859-1?Q?M=E4kisara?= <kai.makisara@kolumbus.fi>
-Subject: Re: [linux-usb-devel] Re: Unaligned scatter-gather buffers and usb-storage
-Date: Thu, 20 Nov 2003 21:18:59 +0200
+From: Kai Makisara <Kai.Makisara@kolumbus.fi>
+Subject: Re: [linux-usb-devel] Re: Unaligned scatter-gather buffers and
+ usb-storage
+Date: Thu, 20 Nov 2003 21:23:10 +0200 (EET)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20031120191859.GA3569@kai.makisara.local>
-References: <Pine.LNX.4.44L0.0311201015030.878-100000@ida.rowland.org> <Pine.LNX.4.58.0311201911070.2302@kai.makisara.local>
+Message-ID: <Pine.LNX.4.58.0311201959210.2302@kai.makisara.local>
+References: <20031120065353.GW1106@suse.de> <Pine.LNX.4.44L0.0311201015030.878-100000@ida.rowland.org>
+ <20031120153026.GB1106@suse.de> <200311201728.51200.oliver@neukum.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fep01-0.kolumbus.fi ([193.229.0.41]:32481 "EHLO
+Received: from fep01-0.kolumbus.fi ([193.229.0.41]:41442 "EHLO
 	fep01-app.kolumbus.fi") by vger.kernel.org with ESMTP
-	id S262901AbTKTTTE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 20 Nov 2003 14:19:04 -0500
-Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.58.0311201911070.2302@kai.makisara.local>
+	id S262986AbTKTTXM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 20 Nov 2003 14:23:12 -0500
+In-Reply-To: <200311201728.51200.oliver@neukum.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: Jens Axboe <axboe@suse.de>, James Bottomley <James.Bottomley@steeleye.com>, Oliver Neukum <oliver@neukum.org>, Patrick Mansfield <patmans@us.ibm.com>, Douglas Gilbert <dougg@torque.net>, SCSI development list <linux-scsi@vger.kernel.org>, USB development list <linux-usb-devel@lists.sourceforge.net>
+To: Oliver Neukum <oliver@neukum.org>
+Cc: SCSI development list <linux-scsi@vger.kernel.org>, USB development list <linux-usb-devel@lists.sourceforge.net>
 
-Thus spake Kai Makisara (Kai.Makisara@kolumbus.fi):
+On Thu, 20 Nov 2003, Oliver Neukum wrote:
 
-> On Thu, 20 Nov 2003, Alan Stern wrote:
-> 
 ...
-> > The answer seems very simple.  There should be a host template entry for
-> > dma buffer alignment (there's already a dma_boundary member).  It would be
-> > copied into the device's request queue stucture if it is nonzero,
-> > overriding the default value of 512.  sg and st should check the user
-> > buffer against the request queue's dma_alignment mask and avoid doing
-> > direct I/O if the alignment is wrong -- just fall back to normal I/O.
-> >
-> > Any objections to this scheme?
-> >
-> My only objection is the default. It should be zero. If I read the
-> usb-storage sources correctly, the scsi_host_template is defined in one
-> file (scsiglue.c). If the mask is there set to 511, all USB storage
-> devices get 512-byte alignment and other get no constraints. All get
-> optimal result with minimal work. (Adding the check to st and sg is
-> trivial.)
-> 
-To make this a little more than talk, here is a patch for 2.6.0-test9 plus
-csets up to today (compiled and tested but does not include the check for sg):
----8<---
-diff -ur linux-2.6-cset/drivers/scsi/st.c linux-2.6-cset-k/drivers/scsi/st.c
---- linux-2.6-cset/drivers/scsi/st.c	2003-09-09 18:19:45.000000000 +0300
-+++ linux-2.6-cset-k/drivers/scsi/st.c	2003-11-20 20:49:25.000000000 +0200
-@@ -1267,7 +1267,8 @@
- 		i = STp->try_dio && try_rdio;
- 	else
- 		i = STp->try_dio && try_wdio;
--	if (i) {
-+
-+	if (i && ((unsigned int)buf & STp->device->host->hostt->dma_align_mask) == 0) {
- 		i = st_map_user_pages(&(STbp->sg[0]), STbp->use_sg,
- 				      (unsigned long)buf, count, (is_read ? READ : WRITE),
- 				      STp->max_pfn);
-diff -ur linux-2.6-cset/drivers/usb/storage/scsiglue.c linux-2.6-cset-k/drivers/usb/storage/scsiglue.c
---- linux-2.6-cset/drivers/usb/storage/scsiglue.c	2003-10-25 22:35:58.000000000 +0300
-+++ linux-2.6-cset-k/drivers/usb/storage/scsiglue.c	2003-11-20 19:34:56.000000000 +0200
-@@ -312,6 +312,9 @@
- 	/* lots of sg segments can be handled */
- 	.sg_tablesize =			SG_ALL,
- 
-+	/* alignment to 512-byte required */
-+	.dma_align_mask =		0x1ff,
-+
- 	/* merge commands... this seems to help performance, but
- 	 * periodically someone should test to see which setting is more
- 	 * optimal.
-Only in linux-2.6-cset/include/asm: page.h~
-Only in linux-2.6-cset/include/asm-i386: page.h~
-diff -ur linux-2.6-cset/include/scsi/scsi_host.h linux-2.6-cset-k/include/scsi/scsi_host.h
---- linux-2.6-cset/include/scsi/scsi_host.h	2003-10-25 22:35:58.000000000 +0300
-+++ linux-2.6-cset-k/include/scsi/scsi_host.h	2003-11-20 19:33:32.000000000 +0200
-@@ -268,6 +268,12 @@
- 	unsigned long dma_boundary;
- 
- 	/*
-+	 * Alignment mask for scatter/gather segments. The offset and'ed
-+	 * with the mask must be zero for segments.
-+	 */
-+	unsigned int dma_align_mask;
-+
-+	/*
- 	 * This specifies "machine infinity" for host templates which don't
- 	 * limit the transfer size.  Note this limit represents an absolute
- 	 * maximum, and may be over the transfer limits allowed for
----8<---
+> But neither sg nor st currently honor the 512 byte alignment requirement.
+> Whether this really hurts st in terms of performance is another question.
+>
+It depends on hardware :-)
+
+Before implementing direct i/o, I made some measurements with the hardware
+available. The tape drive was HP DDS-4 and computer dual PIII 700 MHz. The
+results with a test program using well-compressible data (zeroes):
+
+Buffer length 32768 bytes, 32768 buffers written (1024.000 MB, 1073741824 bytes)
+Variable block mode (writing 32768 byte blocks).
+dio:
+write: wall  60.436 user   0.015 (  0.0 %) system   0.485 (  0.8 %) speed 16.944 MB/s
+read:  wall  64.580 user   0.014 (  0.0 %) system   0.500 (  0.8 %) speed 15.856 MB/s
+no dio:
+write: wall  61.373 user   0.024 (  0.0 %) system   2.897 (  4.7 %) speed 16.685 MB/s
+read:  wall  66.435 user   0.055 (  0.1 %) system   6.347 (  9.6 %) speed 15.413 MB/s
+
+The common high-end drives at that time streamed at 30-40 MB/s assuming
+2:1 compression. It meant that about 20 % of cpu was needed for extra
+copies when reading. Other people reported even higher percentages with
+other hardware.
+
+I just repeated the tests using the same drive but a 2.6 GHz PIV on a
+Intel D875 motherboard and dual channel memory. The results were:
+
+dio:
+write: wall  58.668 user   0.013 (  0.0 %) system   0.217 (  0.4 %) speed  17.045 MB/s
+read:  wall  63.425 user   0.011 (  0.0 %) system   0.245 (  0.4 %) speed  15.767 MB/s
+no dio:
+write: wall  58.713 user   0.017 (  0.0 %) system   0.534 (  0.9 %) speed  17.032 MB/s
+read:  wall  63.265 user   0.020 (  0.0 %) system   0.805 (  1.3 %) speed  15.807 MB/s
+
+Current ordinary drives stream up to 70 MB/s (assuming 2:1 compression).
+This would lead to over 5 % overhead per drive when not doing dio.
 
 -- 
 Kai
