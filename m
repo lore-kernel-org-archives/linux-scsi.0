@@ -1,33 +1,41 @@
-From: Herbert Xu <herbert@gondor.apana.org.au>
-Subject: Re: [RFC] put symbolic links between drivers and modules in the	sysfs tree
-Date: Sun, 26 Sep 2004 20:37:00 +1000
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [RFC] put symbolic links between drivers and modules in
+	the	sysfs tree
+Date: 26 Sep 2004 09:09:03 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <E1CBWOq-0007t6-00@gondolin.me.apana.org.au>
-References: <1096118081.1715.3.camel@mulgrave>
+Message-ID: <1096204149.10924.2.camel@mulgrave>
+References: <E1CBWOq-0007t6-00@gondolin.me.apana.org.au>
+Mime-Version: 1.0
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from arnor.apana.org.au ([203.14.152.115]:53253 "EHLO
-	arnor.apana.org.au") by vger.kernel.org with ESMTP id S269503AbUIZKhq
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 26 Sep 2004 06:37:46 -0400
-In-Reply-To: <1096118081.1715.3.camel@mulgrave>
+Received: from stat16.steeleye.com ([209.192.50.48]:18371 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S269530AbUIZNKH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 26 Sep 2004 09:10:07 -0400
+In-Reply-To: <E1CBWOq-0007t6-00@gondolin.me.apana.org.au>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: viro@parcelfarce.linux.theplanet.co.uk, greg@kroah.com, rusty@rustcorp.com.au, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Herbert Xu <herbert@gondor.apana.org.au>
+Cc: viro@parcelfarce.linux.theplanet.co.uk, greg@kroah.com, Rusty Russell <rusty@rustcorp.com.au>, Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-James Bottomley <James.Bottomley@steeleye.com> wrote:
->
->> So what will your userland code do when you run it on a system with
->> non-modular kernel currently running?
+On Sun, 2004-09-26 at 06:37, Herbert Xu wrote:
+> James Bottomley <James.Bottomley@steeleye.com> wrote:
+> >
+> >> So what will your userland code do when you run it on a system with
+> >> non-modular kernel currently running?
+> > 
+> > Not put a module in the initial ramdisk, since it would be unnecessary. 
+> > The only information the patch seeks to add is the linkage between
+> > driver and module.  So you can work back from sysfs to know which
+> > devices have which modules
 > 
-> Not put a module in the initial ramdisk, since it would be unnecessary. 
-> The only information the patch seeks to add is the linkage between
-> driver and module.  So you can work back from sysfs to know which
-> devices have which modules
+> You're assuming that the kernel before/after the reboot have the same
+> configuration.  This is false in general.
 
-You're assuming that the kernel before/after the reboot have the same
-configuration.  This is false in general.
--- 
-Visit Openswan at http://www.openswan.org/
-Email: Herbert Xu ~{PmV>HI~} <herbert@gondor.apana.org.au>
-Home Page: http://gondor.apana.org.au/~herbert/
-PGP Key: http://gondor.apana.org.au/~herbert/pubkey.txt
+No I'm not.  For an initrd/initramfs the only assumption would be that
+the boot device's driver is compiled in or modular.  If this isn't true,
+the system won't boot anyway.
+
+James
+
+
