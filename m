@@ -1,31 +1,25 @@
 From: "John W. Linville" <linville@tuxdriver.com>
-Subject: [patch] 2.6 -- add IOI Media Bay to SCSI quirk list
-Date: Thu, 12 Aug 2004 17:37:16 -0400
+Subject: [patch] 2.4 -- add IOI Media Bay to SCSI quirk list
+Date: Thu, 12 Aug 2004 17:37:29 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <200408122137.i7CLbGU13688@ra.tuxdriver.com>
+Message-ID: <200408122137.i7CLbTa13693@ra.tuxdriver.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from apollo.tuxdriver.com ([24.172.12.4]:53265 "EHLO
-	ra.tuxdriver.com") by vger.kernel.org with ESMTP id S268844AbUHLWko
+Received: from apollo.tuxdriver.com ([24.172.12.4]:53777 "EHLO
+	ra.tuxdriver.com") by vger.kernel.org with ESMTP id S268847AbUHLWk6
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 12 Aug 2004 18:40:44 -0400
+	Thu, 12 Aug 2004 18:40:58 -0400
 List-Id: linux-scsi@vger.kernel.org
 To: linux-kernel@vger.kernel.org
 Cc: linux-scsi@vger.kernel.org, James.Bottomley@SteelEye.com
 
-Patch to add IOI Media Bay 4-in-1 media reader to the SCSI quirk list...
-
-"It works for me!"  Pretty simple patch, really...
-
-John
-
-diff -urNp linux-2.6.5-1.358/drivers/scsi/scsi_devinfo.c linux/drivers/scsi/scsi_devinfo.c
---- linux-2.6.5-1.358/drivers/scsi/scsi_devinfo.c	2004-05-08 08:56:41.000000000 -0400
-+++ linux/drivers/scsi/scsi_devinfo.c	2004-08-11 06:08:00.000000000 -0400
-@@ -155,6 +155,7 @@ static struct {
- 	{"HP", "C1557A", NULL, BLIST_FORCELUN},
- 	{"IBM", "AuSaV1S2", NULL, BLIST_FORCELUN},
+diff -urNp linux-2.4.orig/drivers/scsi/scsi_scan.c linux-2.4/drivers/scsi/scsi_scan.c
+--- linux-2.4.orig/drivers/scsi/scsi_scan.c	2004-08-12 18:31:17.592759000 -0400
++++ linux-2.4/drivers/scsi/scsi_scan.c	2004-08-12 18:33:35.847741768 -0400
+@@ -189,6 +189,7 @@ static struct dev_info device_list[] =
+ 	{"HITACHI", "DF500", "*", BLIST_SPARSELUN},
+ 	{"HITACHI", "DF600", "*", BLIST_SPARSELUN},
  	{"IBM", "ProFibre 4000R", "*", BLIST_SPARSELUN | BLIST_LARGELUN},
-+	{"IOI", "Media Bay", NULL, BLIST_FORCELUN},
- 	{"iomega", "jaz 1GB", "J.86", BLIST_NOTQ | BLIST_NOLUN},
- 	{"IOMEGA", "Io20S         *F", NULL, BLIST_KEY},
- 	{"INSITE", "Floptical   F*8I", NULL, BLIST_KEY},
++	{"IOI", "Media Bay", "*", BLIST_FORCELUN},
+ 	{"HITACHI", "OPEN-", "*", BLIST_SPARSELUN | BLIST_LARGELUN},  /* HITACHI XP Arrays */
+ 	{"HITACHI", "DISK-SUBSYSTEM", "*", BLIST_SPARSELUN | BLIST_LARGELUN},  /* HITACHI 9960 */
+ 	{"WINSYS","FLASHDISK G6", "*", BLIST_SPARSELUN},
