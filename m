@@ -1,43 +1,62 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: [PATCH] fix for Incorrect number of segments after building	list problem
-Date: Thu, 21 Oct 2004 15:02:19 +0200
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: RE: [patch 08/10]  scsi/dpt_i2o: replace 	schedule_timeout()
+	withmsleep_interruptible()
+Date: 21 Oct 2004 09:47:15 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20041021130218.GL10531@suse.de>
-References: <1097790683.1717.47.camel@mulgrave> <20041020143940.GK10531@suse.de> <20041020150708.GN10531@suse.de> <1098287481.2008.6.camel@mulgrave> <20041020155825.GP10531@suse.de> <1098288465.2008.13.camel@mulgrave> <4176A448.5040508@pobox.com> <20041020174752.GT10531@suse.de> <1098362947.1777.1.camel@mulgrave>
+Message-ID: <1098366441.1716.12.camel@mulgrave>
+References: <60807403EABEB443939A5A7AA8A7458B40B5E9@otce2k01.adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns.virtualhost.dk ([195.184.98.160]:4534 "EHLO virtualhost.dk")
-	by vger.kernel.org with ESMTP id S266679AbUJUNDC (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 21 Oct 2004 09:03:02 -0400
-Content-Disposition: inline
-In-Reply-To: <1098362947.1777.1.camel@mulgrave>
+Received: from stat16.steeleye.com ([209.192.50.48]:45727 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S267362AbUJUNrd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 21 Oct 2004 09:47:33 -0400
+In-Reply-To: <60807403EABEB443939A5A7AA8A7458B40B5E9@otce2k01.adaptec.com>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, 'Dave Olien' <dmo@osdl.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
+Cc: janitor@sternwelten.at, SCSI Mailing List <linux-scsi@vger.kernel.org>, nacc@us.ibm.com
 
-On Thu, Oct 21 2004, James Bottomley wrote:
-> On Wed, 2004-10-20 at 13:47, Jens Axboe wrote:
-> > On Wed, Oct 20 2004, Jeff Garzik wrote:
-> > > Clearly we need to remedy this :)
-> 
-> Shamelessly beg for hardware?  Moi?  How well^Wlittle you know me.
+On Thu, 2004-10-21 at 09:17, Salyzyn, Mark wrote:
+> The driver does set the state to TASK_INTERRUPTIBLE a handful of lines
+> above, is there some other state that the driver should have set?
 
-Hehe
+No, it should be set to TASK_[UN]INTERRUPTIBLE.  However, you can't just
+do it once.  When the schedule_timeout() returns, the state is once more
+TASK_RUNNING.  If you want to do another schedule_timeout() like you're
+doing in this case, you have to set it to TASK_[UN]INTERRUPTIBLE again.
 
-> > By improving James' imagination? :)
-> 
-> I meant that 50% of the fix is pulling out the hacks that permeate the
-> IDE drivers to resplit SG lists after iommu merging.  That's the bit I
-> can't test.
+> We should remove the set_current_state(TASK_INTERRUPTIBLE) line when
+> replacing with the msleep_interruptible(timeout * 1000) line.
 
-That's true. But you could set the same limits for SCSI, and check in
-init_io() whether those limits are violated.
+Actually, the whole thing:
 
-But I should shut up, I don't want to ruin your chance at free hardware.
-SCSI whore gone SATA, so sad :)
+	if((status = adpt_i2o_post_this(pHba, msg, len)) == 0){
+		set_current_state(TASK_INTERRUPTIBLE);
+		if(pHba->host)
+			spin_unlock_irq(pHba->host->host_lock);
+		if (!timeout)
+			schedule();
+		else{
+			timeout = schedule_timeout(timeout);
+			if (timeout == 0) {
+				// I/O issued, but cannot get result in
+				// specified time. Freeing resorces is
+				// dangerous.
+				status = -ETIME;
+			}
+			schedule_timeout(timeout*HZ);
+		}
+		if(pHba->host)
+			spin_lock_irq(pHba->host->host_lock);
+	}
 
--- 
-Jens Axboe
+Looks a bit bogus.  Are the conditional spinlocks really necesary? Why
+is timeout multiplied by HZ in the second case, but not in the first
+case?  The only reason why timeout would be non-zero in the first
+schedule timeout would be if the sleep were interrupted.
+
+James
+
 
