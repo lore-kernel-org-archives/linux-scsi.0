@@ -1,76 +1,68 @@
-From: James Courtier-Dutton <James@superbug.demon.co.uk>
-Subject: Re: Serial ATA (SATA) for Linux status report
-Date: Wed, 14 Jan 2004 23:31:13 +0000
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <4005D141.7050408@superbug.demon.co.uk>
-References: <20031203204445.GA26987@gtf.org> <87hdyyxjgl.fsf@stark.xeocode.com> <20040114225653.GA32704@codepoet.org>
+From: Andrew Vasquez <praka@users.sourceforge.net>
+Subject: Re: Transport Attributes -- attempt#3
+Date: Wed, 14 Jan 2004 15:34:57 -0800
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <20040114233457.GA23840@praka.local.home>
+References: <20040107185420.GA30627@localhost> <20040108131717.A9700@infradead.org> <20040114181241.GK27591@localhost>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
-In-Reply-To: <20040114225653.GA32704@codepoet.org>
-To: andersen@codepoet.org
-Cc: Greg Stark <gsstark@mit.edu>, Jeff Garzik <jgarzik@pobox.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from ms-smtp-02-qfe0.socal.rr.com ([66.75.162.134]:3285 "EHLO
+	ms-smtp-02-eri0.socal.rr.com") by vger.kernel.org with ESMTP
+	id S266428AbUANXp4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 14 Jan 2004 18:45:56 -0500
+Received: from praka.san.rr.com (66-75-130-8.san.rr.com [66.75.130.8])
+	by ms-smtp-02-eri0.socal.rr.com (8.12.10/8.12.7) with ESMTP id i0ENjsNR027376
+	for <linux-scsi@vger.kernel.org>; Wed, 14 Jan 2004 15:45:55 -0800 (PST)
+Content-Disposition: inline
+In-Reply-To: <20040114181241.GK27591@localhost>
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-Erik Andersen wrote:
-> On Wed Jan 14, 2004 at 05:18:34PM -0500, Greg Stark wrote:
-> 
->>Jeff Garzik <jgarzik@pobox.com> writes:
->>
->>
->>>Intel ICH5
->>>
->>>Issue #2: Excessive interrupts are seen in some configurations.
->>
->>I guess I'm seeing this problem. I'm trying to get my P4P800 motherboard with
->>an ICH5 chipset working completely. So far I've been living without the cdrom
->>or DVD players. I see lots of other posts on linux-kernel about the same
->>problems:
-> 
-> 
-> I have the same deal.  My offer to send Jeff a P4P800 motherboard
-> to test with is still open....
-> 
->  -Erik
-> 
-> --
-> Erik B. Andersen             http://codepoet-consulting.com/
+On Wed, 14 Jan 2004, Martin Hicks wrote:
 
-I have a ABIT IC7-G motherboard with the ICH5 chipset.
-No reported problems with it. I would be happy to do some tests, just in 
-case I have not actually noticed the problems.
+> Here is round#3 of the patch.  I think I've addressed all of the points
+> that were brought up by Christoph last time.
+> 
+> Once again, three patches:  core, qla1280 and qla2xxx.  The core patch
+> expects to be applied on top of the patch that I sent recently to
+> linux-scsi:
+> 
 
-hda=DVD-ROM
-hdb=DVD writer
-hdc=SATA Seagate Hard Disc 160 Gig.
-hdd=Empty.
+Just a few comments below:
 
-I do sometimes have problems during BIOS startup, with it not detecting 
-the SATA hard disc, but pressing the reset button a few times fixes that.
+[snip]
 
-Jan 14 01:01:17 new kernel: Uniform Multi-Platform E-IDE driver 
-revision: 7.00alpha2
-Jan 14 01:01:17 new kernel: ide: Assuming 33MHz system bus speed for PIO 
-modes; override with idebus=xx
-Jan 14 01:01:17 new kernel: ICH5-SATA: IDE controller at PCI slot 
-0000:00:1f.2
-Jan 14 01:01:17 new kernel: ICH5-SATA: chipset revision 2
-Jan 14 01:01:17 new kernel: ICH5-SATA: not 100%% native mode: will probe 
-irqs later
-Jan 14 01:01:17 new kernel:     ide0: BM-DMA at 0xf000-0xf007, BIOS 
-settings: hda:DMA, hdb:DMA
-Jan 14 01:01:17 new kernel:     ide1: BM-DMA at 0xf008-0xf00f, BIOS 
-settings: hdc:DMA, hdd:pio
-Jan 14 01:01:17 new kernel: hda: ATAPI DVD-ROM 16XMax, ATAPI CD/DVD-ROM 
-drive
-Jan 14 01:01:17 new kernel: hdb: OPTORITEDVD RW DD0203, ATAPI CD/DVD-ROM 
-drive
-Jan 14 01:01:17 new kernel: ide0 at 0x1f0-0x1f7,0x3f6 on irq 14
-Jan 14 01:01:17 new kernel: hdc: ST3160023AS, ATA DISK drive
-Jan 14 01:01:17 new kernel: ide1 at 0x170-0x177,0x376 on irq 15
-Jan 14 01:01:17 new kernel: hdc: max request size: 1024KiB
-Jan 14 01:01:17 new kernel: hdc: 312581808 sectors (160041 MB) w/8192KiB 
-Cache, CHS=19457/255/63, UDMA(33)
-Jan 14 01:01:17 new kernel:  /dev/ide/host0/bus1/target0/lun0: p1 p2 < 
-p5 p6 p7 >
+> +
+> +/* the FiberChannel Tranport Attributes: */
+> +fc_transport_rd_attr_cast(node_name, "0x%llx\n", unsigned long long);
+> +fc_transport_rd_attr_cast(port_name, "0x%llx\n", unsigned long long);
+> +fc_transport_rd_attr(port_id, "0x%x\n");
+> +
+
+Purely aesthetics : PortIDs are typically viewed as three hex bytes
+padded with zeros, i.e. 010203.  Perhaps this may be more appropriate:
+
+	fc_transport_rd_attr(port_id, "0x%06x\n");
+
+[snip]
+> +	attrs = (struct fc_transport_attrs *)sdev->transport_attr_values;
+> +	list_for_each_entry(fc, &ha->fcports, list) {
+> +		if (fc->os_target_id == sdev->id) {
+> +			attrs->port_name = __be64_to_cpu(*(uint64_t *)fc->port_name);
+> +			attrs->node_name = __be64_to_cpu(*(uint64_t *)fc->node_name);
+> +			attrs->port_id = fc->d_id.b24;
+
+This port_id assignment will not give you what you expect on
+big-endian machines.  Given the previous port_id example value
+(010203), on BE machines, the attribute will read as 030201 when
+displayed.  A more endian safe way if you want to continue with the
+pure-type usages (uint64_t/int) rather than byte arrays would be:
+
+	attrs->port_id = fc->d_id.b.domain << 16 |
+		fc->d_id.b.area << 8 |
+		fc->d_id.b.al_pa;
+
+
+Regards, 
+Andrew Vasquez
