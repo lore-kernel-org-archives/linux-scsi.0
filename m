@@ -1,38 +1,110 @@
-From: Joe Scsi <joe.scsi@gmail.com>
-Subject: Re: LUN discovery by SCSI midlayer?
-Date: Tue, 15 Feb 2005 08:58:14 -0800
-Message-ID: <7526e3050502150858104f99eb@mail.gmail.com>
-References: <7526e30505021420354e6a1707@mail.gmail.com>
-	 <20050215140642.GA2431@lists.us.dell.com>
-Reply-To: Joe Scsi <joe.scsi@gmail.com>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [patch] add scsi changer driver
+Date: Tue, 15 Feb 2005 17:54:31 +0000
+Message-ID: <20050215175431.GA2896@infradead.org>
+References: <20050215164245.GA13352@bytesex>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-Received: from wproxy.gmail.com ([64.233.184.202]:8847 "EHLO wproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S261794AbVBOQ6S (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 15 Feb 2005 11:58:18 -0500
-Received: by wproxy.gmail.com with SMTP id 68so957230wri
-        for <linux-scsi@vger.kernel.org>; Tue, 15 Feb 2005 08:58:14 -0800 (PST)
-In-Reply-To: <20050215140642.GA2431@lists.us.dell.com>
+Content-Type: text/plain; charset=us-ascii
+Received: from pentafluge.infradead.org ([213.146.154.40]:15072 "EHLO
+	pentafluge.infradead.org") by vger.kernel.org with ESMTP
+	id S261799AbVBORyi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 15 Feb 2005 12:54:38 -0500
+Content-Disposition: inline
+In-Reply-To: <20050215164245.GA13352@bytesex>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matt Domsch <Matt_Domsch@dell.com>
-Cc: linux-scsi@vger.kernel.org
+To: Gerd Knorr <kraxel@bytesex.org>
+Cc: Andrew Morton <akpm@osdl.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
 
-> Can you take a look at the patches I posted last week and see if that
-> would work for you?
+[this should go to linux-scsi]
 
-Hmm, I'm not sure.  The issue I have is that I know when target ports
-appear and disappear, and I'd like to use some general SCSI midlayer
-stuff to discover what LUNs are behind a target port.  So if I have to
-know the full HCTL then that doesn't really help me.
+> +#include <linux/version.h>
 
-It seems kind of ugly if I have to do the REPORT_LUNs command
-myself and manually call scsi_add_device() for each LUN.
+not needed.
 
-(Disappearing target ports seem easier to handle, because I can keep
-a list of LUNs per target port and call scsi_remove_device() on each LUN)
+> +#include <asm/system.h>
 
-Thanks,
-  Joe
+I doubt you'll need this one.
+
+> +#include <asm/uaccess.h>
+> +
+> +#include <linux/chio.h>			/* here are all the ioctls */
+
+<linux/*.h> should always go before <asm/*.h>
+
+> +#define MAJOR_NR	SCSI_CHANGER_MAJOR
+
+please kill this one
+
+> +#include "scsi.h"
+
+never use this header but always the <scsi/*.h>
+
+> +MODULE_SUPPORTED_DEVICE("sch");
+
+no needed thsese days
+
+> +static int dt_id[CH_DT_MAX] = { [ 0 ... (CH_DT_MAX-1) ] = -1 };
+> +static int dt_lun[CH_DT_MAX];
+> +module_param_array(dt_id,  int, NULL, 0444);
+> +module_param_array(dt_lun, int, NULL, 0444);
+> +
+> +/* tell the driver about vendor-specific slots */
+> +static int vendor_firsts[CH_TYPES-4];
+> +static int vendor_counts[CH_TYPES-4];
+> +module_param_array(vendor_firsts, int, NULL, 0444);
+> +module_param_array(vendor_counts, int, NULL, 0444);
+> +
+> +static char *vendor_labels[CH_TYPES-4] = {
+> +	"v0", "v1", "v2", "v3"
+> +};
+> +// module_param_string_array(vendor_labels, NULL, 0444);
+> +
+> +#define dprintk(fmt, arg...)    if (debug) \
+> +        printk(KERN_DEBUG "%s: " fmt, ch->name, ##arg)
+> +#define vprintk(fmt, arg...)    if (verbose) \
+> +        printk(KERN_INFO "%s: " fmt, ch->name, ##arg)
+> +
+> +/* ------------------------------------------------------------------- */
+
+> +static int ioctl32_register(void)
+> +{
+> +	unsigned int i;
+> +	int err;
+> +
+> +	for (i = 0; i < ARRAY_SIZE(ioctl32_cmds); i++) {
+> +		err = register_ioctl32_conversion(ioctl32_cmds[i].cmd,NULL);
+> +		if (err >= 0)
+> +			ioctl32_cmds[i].reg++;
+> +	}
+> +	return 0;
+> +}
+
+please implement ->compat_ioctl instead.
+
+> +	int errno, retries = 0, timeout;
+> +	DECLARE_COMPLETION(wait);
+> +	Scsi_Request *sr;
+> +	
+> +	sr = scsi_allocate_request(ch->device, GFP_ATOMIC);
+
+wouldn't a GFP_KERNEL do just fine?
+
+> +	if (NULL == sr)
+> +		return -ENOMEM;
+
+normal kernel style would be
+
+	if (!s)
+		return -ENOMEM;
+
+> +	list_for_each(item,&ch_devlist) {
+> +		tmp = list_entry(item, scsi_changer, list);
+
+list_for_each_entry
+
+> +	list_for_each(item,&ch_devlist) {
+> +		tmp = list_entry(item, scsi_changer, list);
+
+dito
+
