@@ -1,67 +1,85 @@
-From: Andi Kleen <ak@muc.de>
-Subject: Re: [PATCH] Add compat_ioctl to scsi host structure
-Date: 19 Jan 2005 17:03:10 +0100
-Message-ID: <20050119160310.GB71623@muc.de>
-References: <20050118110354.GB43344@muc.de> <1106062536.5151.2.camel@mulgrave> <20050118232745.GA66256@muc.de> <1106150101.5150.1.camel@mulgrave>
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH] drop some attibutes from the FC transport class
+Date: Wed, 19 Jan 2005 18:13:57 +0100
+Message-ID: <20050119171357.GA16136@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from colin2.muc.de ([193.149.48.15]:54532 "HELO colin2.muc.de")
-	by vger.kernel.org with SMTP id S261761AbVASQDM (ORCPT
+Received: from verein.lst.de ([213.95.11.210]:49115 "EHLO mail.lst.de")
+	by vger.kernel.org with ESMTP id S261783AbVASROK (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 19 Jan 2005 11:03:12 -0500
-Date: Wed, 19 Jan 2005 17:03:10 +0100
+	Wed, 19 Jan 2005 12:14:10 -0500
 Content-Disposition: inline
-In-Reply-To: <1106150101.5150.1.camel@mulgrave>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: jejb@steeleye.com, James.Smart@Emulex.Com
+Cc: linux-scsi@vger.kernel.org, greg@kroah.com
 
-On Wed, Jan 19, 2005 at 07:55:01AM -0800, James Bottomley wrote:
-> On Wed, 2005-01-19 at 00:27 +0100, Andi Kleen wrote:
-> > On Tue, Jan 18, 2005 at 07:35:36AM -0800, James Bottomley wrote:
-> > > Shouldn't this also be surrounded by #ifdef CONFIG_COMPAT (on the
-> > > grounds that you never fill it in unless CONFIG_COMPAT is defined)?
-> > 
-> > At least the standard file_operations has it without ifdef. 
-> > I guess it doesn't hurt too much even on non compat systems.
-> 
-> Well, I wasn't really thinking of saving the four or eight bytes for the
-> pointer:  It looks, from all the other patches, that the policy is that
-> any compat ioctl code should be surrounded by #ifdef CONFIG_COMPAT.
-> Thus, an easy way to enforce this policy is to do the same to the
-> structure definition, so the compiler will error if the driver writer
-> doesn't do it and tries to compile on a non-CONFIG_COMPAT platform.
+I think the hardware_version, firmware_version, rom_version and
+driver_version don't belong into the FC transport class, there's
+nothign specific to FC or even SCSI specific in them.
 
-Here's a new patch with the ifdef.
+If you want these attributes talk to Greg about fiding a place in
+the common driver model code for them.
+
+p.s. I was surprised to find no Emulex copyright notices in the FC
+transport implementation fields, I suspect you should add them.
 
 
-Add compat_ioctl vector to scsi_host.
-
-Signed-off-by: Andi Kleen <ak@muc.de>
-
-diff -u linux-2.6.11-rc1-bk4/include/scsi/scsi_host.h-o linux-2.6.11-rc1-bk4/include/scsi/scsi_host.h
---- linux-2.6.11-rc1-bk4/include/scsi/scsi_host.h-o	2005-01-14 10:12:26.000000000 +0100
-+++ linux-2.6.11-rc1-bk4/include/scsi/scsi_host.h	2005-01-19 17:01:21.000000000 +0100
-@@ -71,7 +71,18 @@
- 	 * Status: OPTIONAL
- 	 */
- 	int (* ioctl)(struct scsi_device *dev, int cmd, void __user *arg);
--	
-+
-+
-+#ifdef CONFIG_COMPAT
-+	/* 
-+	 * Compat handler. Handle 32bit ABI.
-+	 * When unknown ioctl is passed return -ENOIOCTLCMD.
-+	 *
-+	 * Status: OPTIONAL
-+	 */
-+	int (* compat_ioctl)(struct scsi_device *dev, int cmd, void __user *arg);
-+#endif
-+
- 	/*
- 	 * The queuecommand function is used to queue up a scsi
- 	 * command block to the LLDD.  When the driver finished
-diff -u linux-2.6.11-rc1-bk4/include/scsi/scsi_ioctl.h-o linux-2.6.11-rc1-bk4/include/scsi/scsi_ioctl.h
+--- 1.13/drivers/scsi/scsi_transport_fc.c	2005-01-12 17:08:53 +01:00
++++ edited/drivers/scsi/scsi_transport_fc.c	2005-01-19 18:17:03 +01:00
+@@ -270,16 +270,8 @@ static int fc_setup_host_transport_attrs
+ 		sizeof(fc_host_symbolic_name(shost)));
+ 	fc_host_supported_speeds(shost) = FC_PORTSPEED_UNKNOWN;
+ 	fc_host_maxframe_size(shost) = -1;
+-	memset(fc_host_hardware_version(shost), 0,
+-		sizeof(fc_host_hardware_version(shost)));
+-	memset(fc_host_firmware_version(shost), 0,
+-		sizeof(fc_host_firmware_version(shost)));
+ 	memset(fc_host_serial_number(shost), 0,
+ 		sizeof(fc_host_serial_number(shost)));
+-	memset(fc_host_opt_rom_version(shost), 0,
+-		sizeof(fc_host_opt_rom_version(shost)));
+-	memset(fc_host_driver_version(shost), 0,
+-		sizeof(fc_host_driver_version(shost)));
+ 
+ 	fc_host_port_id(shost) = -1;
+ 	fc_host_port_type(shost) = FC_PORTTYPE_UNKNOWN;
+@@ -546,11 +538,7 @@ fc_private_host_rd_attr_cast(node_name, 
+ fc_private_host_rd_attr_cast(port_name, "0x%llx\n", 20, unsigned long long);
+ fc_private_host_rd_attr(symbolic_name, "%s\n", (FC_SYMBOLIC_NAME_SIZE +1));
+ fc_private_host_rd_attr(maxframe_size, "%u bytes\n", 20);
+-fc_private_host_rd_attr(hardware_version, "%s\n", (FC_VERSION_STRING_SIZE +1));
+-fc_private_host_rd_attr(firmware_version, "%s\n", (FC_VERSION_STRING_SIZE +1));
+ fc_private_host_rd_attr(serial_number, "%s\n", (FC_SERIAL_NUMBER_SIZE +1));
+-fc_private_host_rd_attr(opt_rom_version, "%s\n", (FC_VERSION_STRING_SIZE +1));
+-fc_private_host_rd_attr(driver_version, "%s\n", (FC_VERSION_STRING_SIZE +1));
+ 
+ 
+ /* Dynamic Host Attributes */
+@@ -787,11 +775,7 @@ fc_attach_transport(struct fc_function_t
+ 	SETUP_HOST_ATTRIBUTE_RD(symbolic_name);
+ 	SETUP_HOST_ATTRIBUTE_RD(supported_speeds);
+ 	SETUP_HOST_ATTRIBUTE_RD(maxframe_size);
+-	SETUP_HOST_ATTRIBUTE_RD(hardware_version);
+-	SETUP_HOST_ATTRIBUTE_RD(firmware_version);
+ 	SETUP_HOST_ATTRIBUTE_RD(serial_number);
+-	SETUP_HOST_ATTRIBUTE_RD(opt_rom_version);
+-	SETUP_HOST_ATTRIBUTE_RD(driver_version);
+ 
+ 	SETUP_HOST_ATTRIBUTE_RD(port_id);
+ 	SETUP_HOST_ATTRIBUTE_RD(port_type);
+--- 1.9/include/scsi/scsi_transport_fc.h	2005-01-12 17:08:53 +01:00
++++ edited/include/scsi/scsi_transport_fc.h	2005-01-19 18:17:24 +01:00
+@@ -197,11 +197,7 @@ struct fc_host_attrs {
+ 	char symbolic_name[FC_SYMBOLIC_NAME_SIZE];
+ 	u32 supported_speeds;
+ 	u32 maxframe_size;
+-	char hardware_version[FC_VERSION_STRING_SIZE];
+-	char firmware_version[FC_VERSION_STRING_SIZE];
+ 	char serial_number[FC_SERIAL_NUMBER_SIZE];
+-	char opt_rom_version[FC_VERSION_STRING_SIZE];
+-	char driver_version[FC_VERSION_STRING_SIZE];
+ 
+ 	/* Dynamic Attributes */
+ 	u32 port_id;
