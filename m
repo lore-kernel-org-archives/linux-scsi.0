@@ -1,34 +1,49 @@
 From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: RE: [PATCH] - Fusion-MPT much faster as module
-Date: Tue, 22 Mar 2005 22:07:43 -0600
-Message-ID: <1111550863.5520.92.camel@mulgrave>
-References: <91888D455306F94EBD4D168954A9457C01AEB1F7@nacos172.co.lsil.com>
+Subject: Re: [PATCH scsi-misc-2.6 08/08] scsi: fix hot unplug sequence
+Date: Tue, 22 Mar 2005 22:08:02 -0600
+Message-ID: <1111550882.5520.93.camel@mulgrave>
+References: <20050323021335.960F95F8@htj.dyndns.org>
+	 <20050323021335.4682C732@htj.dyndns.org>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Received: from stat16.steeleye.com ([209.192.50.48]:5351 "EHLO
+Received: from stat16.steeleye.com ([209.192.50.48]:6887 "EHLO
 	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S262760AbVCWEHw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 22 Mar 2005 23:07:52 -0500
-In-Reply-To: <91888D455306F94EBD4D168954A9457C01AEB1F7@nacos172.co.lsil.com>
+	id S262760AbVCWEIH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 22 Mar 2005 23:08:07 -0500
+In-Reply-To: <20050323021335.4682C732@htj.dyndns.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Moore, Eric Dean" <Eric.Moore@lsil.com>
-Cc: linux-kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Andrew Morton <akpm@osdl.org>, kenneth.w.chen@intel.com
+To: Tejun Heo <htejun@gmail.com>
+Cc: Jens Axboe <axboe@suse.de>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
 
-On Tue, 2005-03-22 at 13:35 -0700, Moore, Eric Dean wrote:
-> I still wonder if the SPI transport layer will work for RAID volumes.  
-> Do you know if the spi transport layer supports dv on hidden devices in a
-> raid volume? 
-> Meaning these hidden physical disks will not been seen by the block layer,
-> however 
-> spi transport layer would be aware so dv can be performed those hidden disk?
+On Wed, 2005-03-23 at 11:14 +0900, Tejun Heo wrote:
+> 	When hot-unplugging using scsi_remove_host() function (as usb
+> 	does), scsi_forget_host() used to be called before
+> 	scsi_host_cancel().  So, the device gets removed first without
+> 	request cleanup and scsi_host_cancel() never gets to call
+> 	scsi_device_cancel() on the removed devices.  This results in
+> 	premature completion of hot-unplugging process with active
+> 	requests left in queue, eventually leading to hang/offlined
+> 	device or oops when the active command times out.
+> 
+> 	This patch makes scsi_remove_host() call scsi_host_cancel()
+> 	first such that the host is first transited into cancel state
+> 	and all requests of all devices are killed, and then, the
+> 	devices are removed.  This patch fixes the oops in eh after
+> 	hot-unplugging bug.
 
-I recall this being discussed, and the conclusion being that we could
-allow a flag to bar attachment of the ULD.  So the underlying discs
-would have a scsi_device but no sd device.  Then the spi_transport class
-will work fine on them but the user wouldn't be able to open them or
-mount anything.
+This is actually simply reversing this patch:
+
+http://marc.theaimsgroup.com/?l=linux-scsi&m=109268755500248
+
+And all it does is give us the previous consequences back.
+
+The oops isn't in the eh it's in the usb-storage eh routine.
+
+However, the current host code does need fixing, but the fix is to move
+it over to a proper state model rather than the current bit twiddling we
+do.
 
 James
 
