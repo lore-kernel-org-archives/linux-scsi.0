@@ -1,33 +1,62 @@
 From: Jeremy Higdon <jeremy@classic.engr.sgi.com>
 Subject: Re: aic7xxx sets CDR offline, how to reset?
-Date: Thu, 5 Sep 2002 02:39:41 -0700 (PDT)
+Date: Thu, 5 Sep 2002 02:50:17 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <10209050239.ZM52086@classic.engr.sgi.com>
-References: <200209041613.g84GDtv02639@localhost.localdomain>
-	<12750000.1031158209@aslan.btc.adaptec.com>
+Message-ID: <10209050250.ZM52132@classic.engr.sgi.com>
+References: <200209041624.g84GOJC02683@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: "Justin T. Gibbs" <gibbs@scsiguy.com>
-        "Re: aic7xxx sets CDR offline, how to reset?" (Sep  4, 10:50am)
+In-Reply-To: James Bottomley <James.Bottomley@steeleye.com>
+        "Re: aic7xxx sets CDR offline, how to reset?" (Sep  4, 11:24am)
 List-Id: linux-scsi@vger.kernel.org
-To: "Justin T. Gibbs" <gibbs@scsiguy.com>, James Bottomley <James.Bottomley@steeleye.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@steeleye.com>
+Cc: Doug Ledford <dledford@redhat.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, "Justin T. Gibbs" <gibbs@scsiguy.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Sep 4, 10:50am, Justin T. Gibbs wrote:
+On Sep 4, 11:24am, James Bottomley wrote:
 > 
->    This of course assumes that all transactions have a serial number and
->    that requeuing transactions orders them by serial number.  With QErr
->    set, the device closes the rest if the barrier race for you, but even
->    without barriers, full transaction ordering is required if you don't
->    want a read to inadvertantly pass a write to the same location during
->    recovery.
+> jeremy@classic.engr.sgi.com said:
+> > For example, in Fibrechannel using class 3 (the usual)
+> 
+> > 	send command (command frame corrupted; device does not receive)
+> > 	send barrier (completes normally)
+> > 	... (lots of time goes by, many more commands are processed)
+> > 	timeout original command whose command frame was corrupted 
+> 
+> This doesn't look right to me from the SCSI angle  I don't see how you can get 
+> a successful disconnect on a command the device doesn't receive (I take it 
+> this is some type of Fibre magic?).  Of course, if the device (or its proxy) 
+> does receive the command then the ordered queue tag implementation requires 
+> that the corrupted frame command be processed prior to the barrier,  this 
+> isn't optional if you obey the spec.  Thus, assuming the processor does no 
+> integrity checking of the command until it does processing (this should be a 
+> big if), then we still must get notification of the failed command before the 
+> barrier tag is begun.  Obviously, from that notification we do then race to 
+> eliminate the overtaking tags.
 
+You don't have disconnect per se with Fibre (or with other packet based
+interfaces).  A command is sent as a frame.  If the frame is corrupted
+or lost on the way to the target, then the target will never know about
+the command having been sent.  There are obvious problems if that command
+has an ordered tag, preceded and followed by simple tags dependent on
+the ordered semantics being followed, and where the simple tagged commands
+following don't wait for the ordered tag to finish.  There are other
+failure modes too, of course.
 
-The original FCP (SCSI commands over Fibre) profile specified that QERR=1
-was not available.  Unless that is changed, it would appear that you cannot
-count on being able to set Qerr.
+> > There was also the problem of the queue full to the barrier command,
+> > etc. 
+> 
+> The queue full problem still exists.  I've used this argument against the 
+> filesystem people many times at the various fora where it has been discussed.  
+> The situation is that everyone agrees that it's a theoretical problem, but 
+> no-one is convinced that it will actually occur in practice (I think it falls 
+> into the "risk we're willing to take" category).
 
-Qerr was one of those annoying little things in SCSI that forces host
-adapter drivers to know a mode page setting.
+I guess it all depends on how sensitive one is to getting it wrong.  In
+any case, it looks as though you are doing what you can . . . .
+
+> James
+
+thanks
 
 jeremy
