@@ -1,35 +1,32 @@
-From: Mike Anderson <andmike@us.ibm.com>
+From: Willem Riede <wrlk@riede.org>
 Subject: Re: [PATCH] Eliminate signals entirely from the mid-layer
-Date: Sat, 11 Jan 2003 08:33:30 -0800
+Date: Sat, 11 Jan 2003 11:47:42 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030111163330.GA1878@beaverton.ibm.com>
-References: <20030111142311.GQ1378@linnie.riede.org> <200301111544.h0BFiQD02270@localhost.localdomain>
+Message-ID: <20030111164742.GV1378@linnie.riede.org>
+References: <200301111544.h0BFiQD02270@localhost.localdomain>
+Reply-To: wrlk@riede.org
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <200301111544.h0BFiQD02270@localhost.localdomain>
+In-Reply-To: <200301111544.h0BFiQD02270@localhost.localdomain>; from James.Bottomley@steeleye.com on Sat, Jan 11, 2003 at 10:44:24 -0500
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@steeleye.com>
-Cc: wrlk@riede.org, linux-scsi@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org
 
-James Bottomley [James.Bottomley@steeleye.com] wrote:
+On 2003.01.11 10:44 James Bottomley wrote:
 > wrlk@riede.org said:
 > > When I apply your patch, rmmod ide-scsi hangs. This is my log: 
 > 
 > Well, we all have these embarassing things we forget from time to time (like 
 > remembering actually to tell the daemon to die...).  Can you try the attached 
 > as an additional patch?
+> 
+Success!
 
-I applied your patch plus this last change to my 2.5.55 view and the error
-handler is exiting on rmmod of scsi_debug.
+With this change rmmod completes, the error handler exits when it is supposed to,
+I can rmmod / modprobe ide-scsi repeatedly until I tire of it, and signals sent
+deliberately to the error handler process with kill have no effect.
 
-I did some drive pulls and the error handler woke up and returned to
-sleep. (The errors where not cleared, but that is not related to your
-patch)
-
--andmike
---
-Michael Anderson
-andmike@us.ibm.com
-
+Regards, Willem Riede.
