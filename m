@@ -1,42 +1,28 @@
-From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
+From: James.Smart@Emulex.Com
 Subject: RE: [PATCH] LLDD dynamic scan aids
-Date: Thu, 18 Nov 2004 10:07:29 -0500
-Message-ID: <60807403EABEB443939A5A7AA8A7458B694697@otce2k01.adaptec.com>
+Date: Thu, 18 Nov 2004 10:32:42 -0500
+Message-ID: <0B1E13B586976742A7599D71A6AC733C02F282@xbl3.ma.emulex.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from magic.adaptec.com ([216.52.22.17]:18921 "EHLO magic.adaptec.com")
-	by vger.kernel.org with ESMTP id S262401AbUKRPHc convert rfc822-to-8bit
+Received: from emulex.emulex.com ([138.239.112.1]:19621 "EHLO
+	emulex.emulex.com") by vger.kernel.org with ESMTP id S262141AbUKRPdF convert rfc822-to-8bit
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 18 Nov 2004 10:07:32 -0500
+	Thu, 18 Nov 2004 10:33:05 -0500
 content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: James.Smart@Emulex.Com, linux-scsi@vger.kernel.org, Mark Haverkamp <markh@osdl.org>
+To: hch@infradead.org
+Cc: linux-scsi@vger.kernel.org
 
-Agreed!!
+ 
+> What do you need the host level probe for?
 
-Add in EXPORT_SYMBOL(scsi_rescan_device) and the transformation will now
-be complete :-)
+Well my argument is basically efficiency - 1 scan on everything vs the driver managing (what could be 100+) events to scan individual targets.  However I agree that if you have the logic to scan on a per-port basis, you really don't need the host-level probe. I'd still lean toward the host-level fix anyway, as it is an exported symbol, and it's a very subtle nuance that it can't be called multiple times.
 
-Sincerely -- Mark Salyzyn
+I want to check something: If you truly were probing on a per-port basis, there's no need to ever call scsi_scan_host(), which means there potentially would never be a scan where rescan=0, or that sequential probing of channels/targets occur. Is this an issue ?
 
------Original Message-----
-From: Christoph Hellwig [mailto:hch@infradead.org] 
-Sent: Thursday, November 18, 2004 9:37 AM
-To: Salyzyn, Mark
-Cc: James.Smart@Emulex.Com; linux-scsi@vger.kernel.org; Mark Haverkamp
-Subject: Re: [PATCH] LLDD dynamic scan aids
+-- James
 
-On Thu, Nov 18, 2004 at 09:32:09AM -0500, Salyzyn, Mark wrote:
-> But scsi_rescan_device and scsi_scan_host_selected both target
-specific
-> ids though? As long as we stay away from the wildcards for
-> scsi_scan_host_selected, or am I mistaken?
-
-scsi_rescan_device should be exported.  For the target scan something
-like the second hunk of James' patch looks good to me.
-
+Note: I'll update the patch pending the comments to this email. It'll include the whitespace, any negotiated change, as well as the EXPORT_SYMBOL(scsi_rescan_device) addition for Mark Salyzyn.
