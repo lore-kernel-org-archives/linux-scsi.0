@@ -1,32 +1,23 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [ANNOUNCE] QLogic FC Driver for Linux kernel 2.5 available.
-Date: 12 May 2003 22:21:47 +0100
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1052774505.31825.23.camel@dhcp22.swansea.linux.org.uk>
-References: <3EC017E1.3050507@wanadoo.es>
-	 <m3llxbsu0s.fsf@trained-monkey.org>  <3EC01BE4.40607@wanadoo.es>
+From: "Mukker, Atul" <atulm@lsil.com>
+Subject: unique entry points for all driver hosts
+Date: Mon, 12 May 2003 18:41:50 -0400
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <0E3FA95632D6D047BA649F95DAB60E570185F192@EXA-ATLANTA.se.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pc2-cwma1-4-cust86.swan.cable.ntl.com ([213.105.254.86]:55449
-	"EHLO lxorguk.ukuu.org.uk") by vger.kernel.org with ESMTP
-	id S262874AbTELWH3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 12 May 2003 18:07:29 -0400
-In-Reply-To: <3EC01BE4.40607@wanadoo.es>
+Content-Type: text/plain;
+	charset="iso-8859-1"
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, "Mukker, Atul" <Atulm@lsil.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Xose Vazquez Perez <xose@wanadoo.es>
-Cc: Jes Sorensen <jes@wildopensource.com>, linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@SteelEye.com>
 
-On Llu, 2003-05-12 at 23:10, Xose Vazquez Perez wrote:
-> Jes Sorensen wrote:
-> 
-> > Sorry but those drivers are old, totally obsolete and contain a lot of
-> > bugs. As I mentioned previously, I have spent quite a lot of time
-> > trying to update and improve the qla1280 driver.
-> 
-> well, but you can update the new firmware
+Why doesn't mid-layer allow LLDs to specify separate entry points to various
+hosts attached to the same driver. Like some other entries in the Scsi Host
+Template, entry points should also  allowed to be overridden.
 
-You are assuming the firmware doesn't change the hardware/driver
-interface. At least for some controllers thats a bad assumption
 
+Thanks
+
+-Atul Mukker
+Storage Systems
+LSI Logic Corporation
