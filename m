@@ -1,55 +1,20 @@
-From: =?iso-8859-1?q?Joilnen=20Leite?= <knl_joi@yahoo.com.br>
-Subject: cciss_scsi
-Date: Sat, 2 Aug 2003 04:59:39 -0300 (ART)
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030802075939.99830.qmail@web40305.mail.yahoo.com>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [ANNOUNCE] megaraid linux driver version 2.00.7
+Date: Sat, 2 Aug 2003 10:16:43 +0100
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <20030802101643.A22975@infradead.org>
+References: <0E3FA95632D6D047BA649F95DAB60E570185F3DF@EXA-ATLANTA.se.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from web40305.mail.yahoo.com ([66.218.78.84]:46780 "HELO
-	web40305.mail.yahoo.com") by vger.kernel.org with SMTP
-	id S272466AbTHBH7k (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 2 Aug 2003 03:59:40 -0400
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <0E3FA95632D6D047BA649F95DAB60E570185F3DF@EXA-ATLANTA.se.lsil.com>; from atulm@lsil.com on Fri, Aug 01, 2003 at 05:56:16PM -0400
+To: "Mukker, Atul" <atulm@lsil.com>
+Cc: "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, "'linux-megaraid-devel@dell.com'" <linux-megaraid-devel@dell.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-Excuse me but in
-cciss_scsi_do_inquiry(drivers/block/cciss_scsi.c)
-function, cp pointer can to be NULL, cus
-scsi_cmd_alloc can NULL return, maybe it is better :)
+On Fri, Aug 01, 2003 at 05:56:16PM -0400, Mukker, Atul wrote:
+> MegaRAID driver version 2.00.7 is released and can be download from
 
---- linux-2.6.0-test2/drivers/block/cciss_scsi.c     =20
- 2003-07-27 13:58:51.000000000 -0300
-+++ linux-2.6.0-test2_bk/drivers/block/cciss_scsi.c  =20
- 2003-08-02 04:42:35.000000000 -0300
-@@ -896,12 +896,12 @@
-        spin_lock_irqsave(CCISS_LOCK(c->ctlr), flags);
-        cp =3D scsi_cmd_alloc(c);
-        spin_unlock_irqrestore(CCISS_LOCK(c->ctlr),
-flags);
--       ei =3D cp->err_info;
-
-        if (cp =3D=3D NULL) {                       /*
-trouble... */
-                printk("cmd_alloc returned NULL!\n");
-                return -1;
-        }
-+       ei =3D cp->err_info;
-
-        cdb[0] =3D CISS_INQUIRY;
-        cdb[1] =3D 0;
-
-
-thanks !
-
-_______________________________________________________________________
-Conhe=E7a o novo Cad=EA? - Mais r=E1pido, mais f=E1cil e mais preciso.
-Toda a web, 42 milh=F5es de p=E1ginas brasileiras e nova busca por imag=
-ens!
-http://www.cade.com.br
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Any plans to update the 2.6 version and incorporating my patch to kill
+the useless hostlock redefintion?
