@@ -1,93 +1,84 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: [PATCH] SG_IO readcd and various bugs
-Date: Mon, 2 Jun 2003 09:27:56 +0200
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <20030602072756.GC2832@suse.de>
-References: <3ED86687.6000805@torque.net> <20030531105742.GC9561@suse.de> <3ED9ADC5.7060006@torque.net>
+From: David van Hoose <davidvh@cox.net>
+Subject: [TRIVIAL PATCH] Fix compilation errors in ppa and imm modules
+Date: Mon, 02 Jun 2003 11:18:56 -0400
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <3EDB6AE0.5080106@cox.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <3ED9ADC5.7060006@torque.net>
-To: Douglas Gilbert <dougg@torque.net>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: multipart/mixed;
+ boundary="------------040905060101070909000404"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from garnet.acns.fsu.edu ([146.201.2.25]:52447 "EHLO
+	garnet.acns.fsu.edu") by vger.kernel.org with ESMTP id S262422AbTFBPG0
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 2 Jun 2003 11:06:26 -0400
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: James.Bottomley@steeleye.com
 
-On Sun, Jun 01 2003, Douglas Gilbert wrote:
-> Jens Axboe wrote:
-> >On Sat, May 31 2003, Douglas Gilbert wrote:
-> 
-> >>With the latest changes from Jens (mainly dropping the
-> >>artificial 64 KB per operation limit) the maximum
-> >>element size in the block layer SG_IO is:
-> >> - 128 KB when direct I/O is not used (i.e. the user
-> >>   space buffer does not meet bio_map_user()'s
-> >>   requirements). This seems to be the largest buffer
-> >>   kmalloc() will allow (in my tests)
-> >
-> >
-> >Correct.
-> >
-> >
-> >> - (sg_tablesize * page_size) when direct I/O is used.
-> >>   My test was with the sym53c8xx_2 driver in which
-> >>   sg_tablesize==96 so my largest element size was 384 KB
-> >
-> >
-> >Or ->max_sectors << 9, whichever is smallest. Really, the limits are in
-> >the queue. Don't confuse SCSI with block.
-> 
-> The block layer SG_IO ioctl passes through the SCSI
-> command set to a device that understands it
-> (i.e. not necessarily a "SCSI" device in the traditional
-> sense). Other pass throughs exist (or may be needed) for
-> ATA's task file interface and SAS's management protocol.
-> 
-> Even though my tests, shown earlier in this thread, indicated
-> that the SG_IO ioctl might be a shade faster than O_DIRECT,
-> the main reason for having it is to pass through "non-block"
-> commands to a device. Some examples:
->   - special writes (e.g. formating a disk, writing a CD/DVD)
->   - uploading firmware
->   - reading the defect table from a disk
->   - reading and writing special areas on a disk
->     (e.g. application client log page)
-> 
-> The reason for choosing this list is that all these
-> operations potentially move large amounts of data in a
-> single operation. For such data transfers to be constrained
-> by max_sectors is questionable. Putting a block paradigm
-> bypass in the block layer is an interesting design :-)
+This is a multi-part message in MIME format.
+--------------040905060101070909000404
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 
-I think this is nonsense. The block layer will not accept commands
-that it cannot handle in one go, what would the point of that be?
-There's no way for us to break down a single command into pieces,
-we have no idea how to do that. max_sectors _is_ the natural
-constraint, it's the hardware limit not something I impose through
-policy. For SCSI it could be bigger in some cases, that's up to the
-lldd to set though.
+This patch is a resend from LKML since it has yet to be applied in 
+either bk7. Patrick suggested I send it here. This patch fixes 
+compilation failures in ppa.c and imm.c that were introduced in 2.5.70-bk1.
 
-> With these patches in place cdrecord (in RH 9) works via
-> /dev/hdb (using ide-cd). Cdrecord fails on the same ATAPI
-> writer via /dev/scd0 because ide-scsi does not set max_sectors
-> high enough [and the SG_SET_RESERVED_SIZE ioctl reacts
-> differently in this case to the sg driver].
+* Removes the 'int hostno' parameter from imm_proc_info().
+Parameter isn't used and breaks the pointer matching for Scsi_Host.
+* Added the prototype for imm_proc_info() in imm.h
+* Modified line 280 of ppa.c to match concept on line 263 of imm.c.
 
-ide-scsi bug.
+If anyone has any questions, cc emails to me as I am not on the 
+linux-scsi mailing list.
 
-> In summary, I see no reason to constrain the SG_IO ioctl
-> by max_sectors. SG_IO is a "one shot" with no command
-> merging or retries. If the HBA driver doesn't like a command,
-> then it can reject it. [However, currently there is no
-> mechanism to convey host or HBA driver errors back through
-> the request queue, only the device (response) status.]
+Thank you,
+David
 
-It breaks existing applications too, which is at least a very
-good reason in my book. I think your position is naive. The
-driver explicitly asked not to get request bigger than a certain
-size, and know you want to rely on the correct handling of that
-case? Won't happen.
 
-BTW, if you want me to read emails somewhat reliably, cc me.
+--------------040905060101070909000404
+Content-Type: text/plain;
+ name="patch-dvh.diff"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="patch-dvh.diff"
 
-Jens
+diff -Nru a/drivers/scsi/imm.c b/drivers/scsi/imm.c
+--- a/drivers/scsi/imm.c	2003-05-27 12:09:47.000000000 -0400
++++ b/drivers/scsi/imm.c	2003-05-27 12:05:29.000000000 -0400
+@@ -254,7 +254,7 @@
+ }
+ 
+ int imm_proc_info(struct Scsi_Host *host, char *buffer, char **start, off_t offset,
+-		  int length, int hostno, int inout)
++		  int length, int inout)
+ {
+     int i;
+     int len = 0;
+diff -Nru a/drivers/scsi/imm.h b/drivers/scsi/imm.h
+--- a/drivers/scsi/imm.h	2003-05-27 12:09:47.000000000 -0400
++++ b/drivers/scsi/imm.h	2003-05-27 12:05:11.000000000 -0400
+@@ -159,6 +159,7 @@
+ int imm_queuecommand(Scsi_Cmnd *, void (*done) (Scsi_Cmnd *));
+ int imm_abort(Scsi_Cmnd *);
+ int imm_reset(Scsi_Cmnd *);
++int imm_proc_info(struct Scsi_Host *, char *, char **, off_t, int, int);
+ int imm_biosparam(struct scsi_device *, struct block_device *,
+ 		sector_t, int *);
+ 
+diff -Nru a/drivers/scsi/ppa.c b/drivers/scsi/ppa.c
+--- a/drivers/scsi/ppa.c	2003-05-27 12:09:47.000000000 -0400
++++ b/drivers/scsi/ppa.c	2003-05-27 11:56:01.000000000 -0400
+@@ -277,7 +277,7 @@
+     int len = 0;
+ 
+     for (i = 0; i < 4; i++)
+-	if (ppa_hosts[i] == host)
++	if (ppa_hosts[i].host == host->host_no)
+ 	    break;
+ 
+     if (inout)
+
+
+--------------040905060101070909000404--
+
