@@ -1,53 +1,52 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: [PATCH as494] Add a scsi_device flag for RETRY_HWERROR
-Date: Fri, 25 Mar 2005 09:13:17 +1000
-Message-ID: <4243498D.6070409@torque.net>
-References: <Pine.LNX.4.44L0.0503241134300.1345-100000@ida.rowland.org>
-Reply-To: dougg@torque.net
+From: "Moore, Eric Dean" <Eric.Moore@lsil.com>
+Subject: [PATCH] - MPT FUSION - SPLITTING SCSI HOST DRIVERS
+Date: Thu, 24 Mar 2005 16:56:30 -0700
+Message-ID: <91888D455306F94EBD4D168954A9457C01B7055E@nacos172.co.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII; format=flowed
-Content-Transfer-Encoding: 7bit
-Received: from zorg.st.net.au ([203.16.233.9]:57519 "EHLO borg.st.net.au")
-	by vger.kernel.org with ESMTP id S261227AbVCXXMA (ORCPT
+Content-Type: text/plain;
+	charset="iso-8859-1"
+Received: from mail0.lsil.com ([147.145.40.20]:3809 "EHLO mail0.lsil.com")
+	by vger.kernel.org with ESMTP id S261250AbVCXX4e (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 24 Mar 2005 18:12:00 -0500
-In-Reply-To: <Pine.LNX.4.44L0.0503241134300.1345-100000@ida.rowland.org>
+	Thu, 24 Mar 2005 18:56:34 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, SCSI development list <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Alan Stern wrote:
-> James:
-> 
-> It turns out that a bunch of USB-IDE converters make the mistake of
-> returning SK = 04 (Hardware Error) whenever the IDE device signals any
-> sort of error, without bothering to distinguish recoverable from
-> non-recoverable errors. 
+Here are several patches(7) which follow this email.
 
-Alan,
-The sense key of HARDWARE ERROR is a superset of MEDIUM ERROR.
-SBC-2 treats them as synonymous. If it is a "real" medium
-error then the LBA of the first (i.e. lowest address) bad
-block should be placed in the "info" field and the "valid"
-bit should be set. If this is done the block layer does
-its job well.
+These patches are for the mpt fusion scsi host drivers, which separate
+the scsi host drivers into separate bus type kernel modules.  This was
+requested
+by several people on the linux-scsi@ forum, so our driver can properly
+support 
+the various transport layers; e.g. SPI, FC, and eventually SAS.  In these
+set of patches
+the Fiber Channel controllers are moved to a new driver called mptfch.ko.
+The current
+Parallel SCSI controllers will remain with mptscsih.ko.  Eventually we will
+be adding SAS support
+in the new modules that will be mptsash.ko.  
 
-Also for both hardware and medium errors the "sense key
-specific" field (if SKSV=1) reports the actual retry
-count. The read/write retry count is set in the "read
-write error recovery" mode page. Anyways if the disk
-has already retried reading the bad block 64 times (say)
-what is the point of the mid level retrying??
+Overview of patches
+(1) mptlinux-3.03.00-1-misc - Kconfig and Makefile changes, for new
+separated drivers.
+(2) mptlinux-3.03.00-2-mptscsih-c - delete mptscsih.c , code moved to
+mptcore.c
+(3) mptlinux-3.03.00-3-mptscsih-h - delete mptscsih.h, code moved to
+mptscsi.h
+(4) mptlinux-3.03.00-4-mpt-core-c - formerly mptscsih.c. This will be
+compiled linked between mptscsi.c and mptfc.c
+(5) mptlinux-3.03.00-5-mptscsi-h - formerly mptscsih.c
+(6) mptlinux-3.03.00-6-mptscsi-c - SPI driver, having only module_init,
+module_exit, and probe.
+(7) mptlinux-3.03.00-7-mptfc-c - FC driver, having only module_init,
+module_exit, and probe.
 
-<aside>
-Another interesting quirk I noticed recently was a disk
-yielding "recovered error, failure prediction threshold
-exceeded" even though the PER bit was clear (which is the
-normal case). I had expected recovered errors to be
-bad block specific but this error was from SMART saying
-"your disk hasn't got long to live". BTW That recovered
-error was repeated every 10 minutes or so. Probably a
-useful alerte to put in the log and on the console.
+Please apply this patch against the 3.01.20 version of the mpt driver
+in http://linux-scsi.bkbits.net:8080/scsi-misc-2.6
 
-Doug Gilbert
+Backup of these patches can be found at this ftp:
+ftp://ftp.lsil.com/HostAdapterDrivers/linux/Fusion-MPT/2.6-kernel/3.03.00/
+
+Signed-off-by: Eric Moore <Eric.Moore@lsil.com>
