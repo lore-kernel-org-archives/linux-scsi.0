@@ -1,42 +1,37 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [linux-usb-devel] FW: USB 2.0 external hard drive problem
-Date: Mon, 9 Feb 2004 16:30:23 -0500 (EST)
+From: James Bottomley <James.Bottomley@steeleye.com>
+Subject: Re: [PATCH] ibmvscsi driver
+Date: 09 Feb 2004 16:55:03 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44L0.0402091317290.1821-100000@ida.rowland.org>
-References: <1076345415.2090.30.camel@mulgrave>
+Message-ID: <1076363704.1804.48.camel@mulgrave>
+References: <opr232htwdl6e53g@us.ibm.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ida.rowland.org ([192.131.102.52]:3844 "HELO ida.rowland.org")
-	by vger.kernel.org with SMTP id S263448AbUBIVaY (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 9 Feb 2004 16:30:24 -0500
-In-Reply-To: <1076345415.2090.30.camel@mulgrave>
+Received: from stat1.steeleye.com ([65.114.3.130]:45733 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S264477AbUBIVzI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 9 Feb 2004 16:55:08 -0500
+In-Reply-To: <opr232htwdl6e53g@us.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@steeleye.com>
-Cc: Matthew Dharm <mdharm-scsi@one-eyed-alien.net>, Joerg Schilling <schilling@fokus.fraunhofer.de>, magliery@csb.yale.edu, appro@fy.chalmers.se, USB development list <linux-usb-devel@lists.sourceforge.net>, SCSI development list <linux-scsi@vger.kernel.org>
+To: Dave Boutcher <sleddog@us.ibm.com>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On 9 Feb 2004, James Bottomley wrote:
+On Mon, 2004-02-09 at 11:23, Dave Boutcher wrote:
+> I would like to submit the following new driver for inclusion in the 2.6 
+> kernel.  This is the first patch I'm sending outside of IBM, so I expect 
+> there will be comments.
 
-> OK, if you want to understand what the mid-layer problem is, look at
-> scsi_finish_command().  You see in there we set DRIVER_SENSE if we find
-> any valid sense code in the sense buffer (including NO SENSE)
-> 
-> We will return this to the user as a sense error at various points.
+Could you elaborate more on why you actually want to use the SCSI
+subsystem for this.
 
-I don't understand the reasoning here.  If DRIVER_SENSE is set it must 
-mean the driver had some reason of its own for wanting to get the sense 
-data -- presumably to find out whether or not some error occurred.  So why 
-should this get passed to the user as a sense error?  Especially if the 
-sense code is NO SENSE.  Logically that should indicate the driver needed 
-to find out whether or not there was error, and it learned that there 
-wasn't.
+It looks like what you're proposing is a type of client/server device
+pipe for which nbd may well be able to fill all your needs.
 
-> The safest course, if you want to send unsolicited request sense
-> commands is probably to zero out the sense buffer if you get NO SENSE
-> back.
+I'm not opposed to a simple SCSI tunnel driver, but knowing what you
+need beyond what nbd can provide would help me understand why what
+you're proposing is really necessary.
 
-Okay, we can do that.
-
-Alan Stern
+James
 
 
