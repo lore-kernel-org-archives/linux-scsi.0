@@ -1,67 +1,49 @@
-From: Thomas Babut <thomas@babut.net>
-Subject: Re: Kernel 2.6.x hangs with Symbios Logic 53c1010 Ultra3 SCSI Adapter
-Date: Fri, 05 Nov 2004 17:07:17 +0100
-Message-ID: <418BA535.5070403@babut.net>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: Handling erroneous READ CAPACITY response in sd.c
+Date: Fri, 5 Nov 2004 11:18:34 -0500 (EST)
+Message-ID: <Pine.LNX.4.44L0.0411051059540.834-100000@ida.rowland.org>
+References: <41765CD1.8060108@adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from tueddeln.de ([217.160.187.172]:56251 "EHLO
-	p15131177.pureserver.info") by vger.kernel.org with ESMTP
-	id S262714AbUKEQHS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 5 Nov 2004 11:07:18 -0500
+Received: from ida.rowland.org ([192.131.102.52]:11780 "HELO ida.rowland.org")
+	by vger.kernel.org with SMTP id S261153AbUKEQSg (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 5 Nov 2004 11:18:36 -0500
+In-Reply-To: <41765CD1.8060108@adaptec.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: matthew@wil.cx
+To: Luben Tuikov <luben_tuikov@adaptec.com>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>
+Cc: SCSI development list <linux-scsi@vger.kernel.org>, USB Storage list <usb-storage@lists.one-eyed-alien.net>
 
-I've tried now Kernel 2.6.10-rc1-bk15 with following two patches:
-http://marc.theaimsgroup.com/?l=linux-scsi&m=109840610525441&w=2
-http://marc.theaimsgroup.com/?l=linux-scsi&m=109844985008496&w=2
+Everything we've tried for detecting too-high-by-one READ CAPACITY
+responses has failed on one device or another.  I can't think of any way
+to detect the error at runtime, short of actually trying to read the last
+sector.  And that is not a good tactic because it will quite likely leave
+the device is some non-resettable hung-up state.  Even the heuristic that
+USB devices will always have an even number of sectors turns out to be
+wrong for the Apple iPod.
 
-The patches applied perfectly. But the system doesn't boot up.
+There doesn't seem to be anything left but blacklisting.  This could be
+done at the SCSI level or the usb-storage level.  It turns out there's
+actually an advantage to putting the entries in the usb-storage list:  In
+many cases a vendor will use a USB interface chip from another company,
+changing the vendor name stored in the INQUIRY data but leaving the USB
+vendor ID alone (so it reflects the chip designer, not the drive seller).  
+This means that a single USB blacklist could cover a range of devices that
+would require multiple SCSI blacklist entries.  I've actually seen
+something like this happen in a different context (the Panasonic DMC-LCx
+cameras with internal interfaces by Matsushita have different Product
+strings in their INQUIRY data but the same Product ID in their USB
+descriptors).
 
-I've tried also on the working Kernel 2.6.9 (with drivers from 2.6.1) to 
-set the following bootparams: sym53c8xx=sync:10
+On the other hand, the adjustment of the READ CAPACITY value should still 
+be moved to sd.c from usb-storage.  This can be implemented easily enough 
+by adding a bitflag to the scsi_device structure; the flag could be set 
+either by a SCSI blist entry or by usb-storage in its slave_configure 
+routine.  The flag would tell sd_read_capacity to decrement the number of 
+sectors it receives from the device.
 
-But it didn't change anything. Same poor performance as before.
+Can anyone come up with a better suggestion?
 
-Did I set this wrong? What would be the right way to set the speed manually?
+Alan Stern
 
-Here is a dmesg output from 2.4.27 with normal performance (30 MB/s):
-
-sym53c8xx: at PCI bus 0, device 8, function 0
-sym53c8xx: setting PCI_COMMAND_PARITY...(fix-up)
-sym53c8xx: 53c1010-33 detected with Symbios NVRAM
-sym53c8xx: at PCI bus 0, device 8, function 1
-sym53c8xx: setting PCI_COMMAND_PARITY...(fix-up)
-sym53c8xx: 53c1010-33 detected with Symbios NVRAM
-sym53c1010-33-0: rev 0x1 on pci bus 0 device 8 function 0 irq 9
-sym53c1010-33-0: Symbios format NVRAM, ID 7, Fast-80, Parity Checking
-sym53c1010-33-0: on-chip RAM at 0xf9000000
-sym53c1010-33-0: restart (scsi reset).
-sym53c1010-33-0: handling phase mismatch from SCRIPTS.
-sym53c1010-33-0: Downloading SCSI SCRIPTS.
-sym53c1010-33-1: rev 0x1 on pci bus 0 device 8 function 1 irq 11
-sym53c1010-33-1: Symbios format NVRAM, ID 7, Fast-80, Parity Checking
-sym53c1010-33-1: on-chip RAM at 0xf8000000
-sym53c1010-33-1: restart (scsi reset).
-sym53c1010-33-1: handling phase mismatch from SCRIPTS.
-sym53c1010-33-1: Downloading SCSI SCRIPTS.
-scsi0 : sym53c8xx-1.7.3c-20010512
-scsi1 : sym53c8xx-1.7.3c-20010512
-blk: queue f7e9bc18, I/O limit 1048575Mb (mask 0xffffffffff)
-   Vendor: QUANTUM   Model: ATLAS10K2-TY367J  Rev: DDD6
-   Type:   Direct-Access                      ANSI SCSI revision: 03
-blk: queue f7e9ba18, I/O limit 1048575Mb (mask 0xffffffffff)
-sym53c1010-33-0-<2,0>: tagged command queue depth set to 4
-Attached scsi disk sda at scsi0, channel 0, id 2, lun 0
-sym53c1010-33-0-<2,*>: FAST-40 SCSI 40.0 MB/s (25.0 ns, offset 31)
-SCSI device sda: 71721820 512-byte hdwr sectors (36722 MB)
-Partition check:
-  sda: sda1 sda2
-
-Thanks.
-
-Regards,
-Thomas Babut
