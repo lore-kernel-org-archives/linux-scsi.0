@@ -1,35 +1,60 @@
-From: Jamie Lenehan <lenehan@twibble.org>
-Subject: Re: [Dc395x] Re: [PATCH] dc395x - 1/3 remove-static-eeprom-struct
-Date: Tue, 12 Aug 2003 20:29:13 +1000
+From: Evan Felix <evan.felix@pnl.gov>
+Subject: Re: HSV : ghosts & multipath
+Date: Tue, 12 Aug 2003 08:52:53 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030812102913.GA5999@twibble.org>
-References: <20030803082718.GA4594@twibble.org> <20030803082759.GA4611@twibble.org> <1059922898.10960.3.camel@mulgrave> <1059923048.5692.1.camel@localhost> <1059923631.10853.6.camel@mulgrave> <1059924971.5837.5.camel@localhost> <1059932143.10853.112.camel@mulgrave> <1060661529.2750.1.camel@localhost>
+Message-ID: <1060703573.5430.9.camel@e-linux>
+References: <3F3820C9.4060004@free.fr>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from tuon.twibble.org ([203.217.29.157]:49370 "EHLO tuon.twibble.org")
-	by vger.kernel.org with ESMTP id S269736AbTHLK3K (ORCPT
+Received: from atlas.pnl.gov ([130.20.248.194]:49559 "EHLO atlas.pnl.gov")
+	by vger.kernel.org with ESMTP id S270648AbTHLPsP (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 12 Aug 2003 06:29:10 -0400
-Content-Disposition: inline
-In-Reply-To: <1060661529.2750.1.camel@localhost>
+	Tue, 12 Aug 2003 11:48:15 -0400
+Received: from vscan2.pnl.gov ([130.20.64.141]) by pnl.gov (PMDF V6.1-1 #30581)
+ with SMTP id <0HJI00A2FJWEOZ@pnl.gov> for linux-scsi@vger.kernel.org; Tue,
+ 12 Aug 2003 08:48:14 -0700 (PDT)
+In-reply-to: <3F3820C9.4060004@free.fr>
 List-Id: linux-scsi@vger.kernel.org
-To: Ali Akcaagac <aliakc@web.de>
-Cc: James Bottomley <James.Bottomley@steeleye.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: christophe varoqui <christophe.varoqui@free.fr>
+Cc: linux-scsi@vger.kernel.org
 
-On Tue, Aug 12, 2003 at 06:12:09AM +0200, Ali Akcaagac wrote:
-[...]
-> Can you now please include the 3 new patches in the test3 ? As long as
-> no one contributes other patches it's the chance to do it.
+The HSV Ghost LUNS can be made active by sending the Start Unit Command
+down the scsi path.  I have not had time to attempt to use this command,
+and am not sure it can be sent to a Linux scsi device that is showing
+'Not Ready'(Sense Code) and 'Not Connected'(Inquiry).  Other on this
+list may be able to help us in this area.  Once you send this command
+down, you will need to wait some amount of time while it flushes IO's
+and changes controllers.
 
-The patches were added to the scsi-misc when the were originally sent
-to linux-scsi (see http://linux-scsi.bkbits.net:8080/scsi-misc-2.5).
+If you get this working i would love to see the results.
 
-They are not critical and they will get pushed along when James is
-ready to push them in.
-
-So there's nothing to worry about.
+Evan
 
 
+On Mon, 2003-08-11 at 16:03, christophe varoqui wrote:
+> Hello,
+> 
+> I read your contribution to scsidev, regarding HSV.
+> You seem to have an intimate knowledge of these controlers.
+> Do you happen to have a clue on how to force the activation of a ghost 
+> LUN from a Linux host ?
+> 
+> The rationale being : in a multipath config, when all active path are 
+> exhausted you should be able to activate the ghosts paths rather than 
+> let the device die.
+> 
+> More generally, how do you manage access to your HSV LUNs ? I personnaly 
+> would hate to use SecurePath which locks the user to one distribution 
+> and has not passed the "community peer-review test". Any alternative 
+> applicable in a dual fabric, dual attached hosts & controlers (4 
+> paths/host including 2 ghosts : 2 paths through the left fabric, 2 paths 
+> through the right) ?
 -- 
- Jamie Lenehan <lenehan@twibble.org>
+-------------------------
+Evan Felix
+Environmental Molecular Sciences Laboratory
+Pacific Northwest National Laboratory
+Operated for the U.S. DOE by Battelle
+
