@@ -1,69 +1,43 @@
-From: James Bottomley <James.Bottomley@steeleye.com>
-Subject: Re: [PATCH] tmscsim: 64-bit cleanup
-Date: 05 Jun 2004 09:02:28 -0500
+From: EXPERIENCE.SUPPORT@SHAREYEX.BIZ
+Subject: Someone is trying to find experiences about: linux-scsi@vger.kernel.org
+Date: Sat, 05 Jun 2004 07:37:47 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1086444149.1999.13.camel@mulgrave>
-References: <Pine.LNX.4.44.0406042357001.5107-200000@poirot.grange>
-Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Message-ID: <GODSMACK-H862B74Kf000035377@godsmack-h862b7>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat1.steeleye.com ([65.114.3.130]:53390 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S261443AbUFEOCi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 5 Jun 2004 10:02:38 -0400
-In-Reply-To: <Pine.LNX.4.44.0406042357001.5107-200000@poirot.grange>
+Received: from [69.111.139.186] ([69.111.139.186]:36102 "EHLO godsmack-h862b7")
+	by vger.kernel.org with ESMTP id S261604AbUFEOhw (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 5 Jun 2004 10:37:52 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
-Cc: Linux SCSI list <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>
+To: linux-scsi@vger.kernel.org
 
-On Fri, 2004-06-04 at 17:17, Guennadi Liakhovetski wrote:
-> On 21 May 2004, James Bottomley wrote:
-> > On Wed, 2004-05-19 at 14:50, Guennadi Liakhovetski wrote:
-> > > Ok, here comes the first one. I chose this one because it fixes an actual
-> > > bug in the driver. This bug was (partially) introduced by myself when
-> > > porting to 2.6. Partly the reason was that I disliked using
-> > > function-like macros as lvalues:
-> > >
-> > > sg_dma_address(x) = ...
-> > > sg_dma_len(x) = ...
-> > >
-> > > [OT] wouldn't it be better to introduce some macros like
-> > > set_sg_dma_{address|len}(x, y)?
-> >
-> > Actually, no.  struct scatterlist is for the OS platform to use to
-> > characterise DMA; it's actually a private structure entirely within the
-> > gift of the architecture to define.  It usually contains bits of
-> > extraneous data that the driver never sees.  The driver should convert
-> > struct scatterlist into its own version of the scatterlist that needs
-> > feeding to the hardware rather than try and use struct scatterlist.
-> 
-> Well, I don't quite understand. What about this code in block/ll_rw_blk.c:
-> 	sg[nsegs].page = bvec->bv_page;
-> 	sg[nsegs].length = nbytes;
-> 	sg[nsegs].offset = bvec->bv_offset;
-> ? So, looks like all architectures should implement these fields in struct
-> scatterlist, and use them in map_sg. So, isn't it safe to use them from
-> drivers in a similar way (see patch attached).
+**IMPORTANT E-MAIL MESSAGE--PLEASE KEEP THIS FOR YOUR RECORDS**
 
-No.
+ALERT! - A user is trying to share experiences and opinions about you via our website. 
 
-struct scatterlist is defined by the platform in two halves: the block
-side, which uses the three members you list above, and which, as you
-say, all architectures are required to provide and the platform side
-which define extra elements but use the macro accessors sg_dma_len() and
-sg_dma_address().
+The purpose of this email is to inform you that a posting has been made about you at our website.  This is email is not commercial in nature.  
 
-However, if you tamper with the block side of this, you'll loose
-idempotence (the property that
-dma_map_sg()->dma_unmap_sg()->dma_map_sg() works).  Without this none of
-the retryable error paths will work.
+If this email message was delivered to your spam or bulk email folder please notify your ISP or spam filtering company regarding this mistake on their part.
 
-You should simply treat the scatterlist as an information providing
-opaque structure you examine with the provided accessors.  If you try to
-alter it, you'll get into trouble with the platform layer, the block
-layer or both.
+To view all of the postings made at our website about you use this link:
 
-James
+http://3.shyx.biz/lx.php?a=search&b=5&c=linux-scsi%40vger.kernel.org
+
+Our Identity Protection System is a simple system in which this website sends email messages to the Experience Request author on your behalf, and vice versa. This website will never reveal the identity of the Experience Request author to you, nor will it reveal your identity to the author of the Experience Request.
+
+The Experience Request author will receive your message in an email sent from our website. He/she can then respond to your message via our website by clicking a custom link that appears in the email.
+
+Communication then continues back and forth via our Identity Protection System until one party or the other provides other contact means (phone number, etc.).
+
+IMPORTANT - If you prefer not to be notified by our website in the future when  postings are mode about you, just add your email address to our Do Not Email List.  
+
+Our website will never send email to an address that appears on our Do Not Email List.
+
+To add to Do Not Email List click here:
+
+http://9.shyxp.biz/lx.php?a=donotemail&b=linux-scsi%40vger.kernel.org
+
+Regards,
+
+Support Department
 
 
