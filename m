@@ -1,115 +1,60 @@
-From: Andrew Morton <akpm@osdl.org>
-Subject: Fw: [Bugme-new] [Bug 4166] New: BUG: using smp_processor_id() in
- preemptible [00000001] code: nfsd/2783
-Date: Fri, 4 Feb 2005 13:48:09 -0800
-Message-ID: <20050204134809.2d341367.akpm@osdl.org>
+From: "Rajat  Jain, Noida" <rajatj@noida.hcltech.com>
+Subject: Hot-plugging Support in kernel 2.6.8 ??
+Date: Sat, 5 Feb 2005 07:05:39 +0530
+Message-ID: <267988DEACEC5A4D86D5FCD780313FBB041F8310@exch-03.noida.hcltech.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-Received: from fw.osdl.org ([65.172.181.6]:46492 "EHLO mail.osdl.org")
-	by vger.kernel.org with ESMTP id S266441AbVBDVsN (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 4 Feb 2005 16:48:13 -0500
-Received: from bix (build.pdx.osdl.net [172.20.1.2])
-	by mail.osdl.org (8.11.6/8.11.6) with SMTP id j14LmCl00611
-	for <linux-scsi@vger.kernel.org>; Fri, 4 Feb 2005 13:48:12 -0800
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-newbie-owner@vger.kernel.org
+To: Linux-scsi@vger.kernel.org, linux-newbie@vger.kernel.org, linux-india-help@lists.sourceforge.net
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
 
-It looks like qla2x00_queuecommand()'s use of smp_processor_id() is
-just a heuristic, in which case it should be sufficient to simply
-use _smp_processor_id() to quash the warning.
+Hi list,
+ 
+I'm new to Linux / SCSI so please help me out on this one.
 
-Begin forwarded message:
+I'm investigating the "Hot Plugging" support in SCSI subsystem of linux
+kernel 2.6.8. I am working at the LLD level. I went through the "Hot Plug
+Initialisation Model" in Doumentation/scsi/scsi_mid_low_api.txt (which is
+not up to date) and code and concluded that :
 
-Date: Fri, 4 Feb 2005 13:37:14 -0800
-From: bugme-daemon@osdl.org
-To: bugme-new@lists.osdl.org
-Subject: [Bugme-new] [Bug 4166] New: BUG: using smp_processor_id() in preemptible [00000001] code: nfsd/2783
+1) In case a new HBA is Hot plugged, the LLD needs to call
+scsi_host_alloc(), scsi_add_host(), scsi_scan_host().
+2) In case an existing HBA is Hot UN-plugged, the LLD needs to call
+scsi_remove_host(), scsi_host_put().
+3) In case a new SCSi device is hot plugged / Un plugged to an existing HBA,
+LLD needs to call scsi_add_device() / scsi_remove_device() respectively.
 
+But what is not clear to me is that how exacly I (as an LLD writer) come to
+know that a new device has been detected? So where do I put these calls? Are
+there any specific functions in LLD that are called when a new device / HBA
+is added??  The documentation says this:
 
-http://bugme.osdl.org/show_bug.cgi?id=4166
+"Typically a driver will respond to a sysfs probe() callback that indicates
+an HBA has been detected". 
 
-           Summary: BUG: using smp_processor_id() in preemptible [00000001]
-                    code: nfsd/2783
-    Kernel Version: 2.6.11-rc3
-            Status: NEW
-          Severity: normal
-             Owner: io_other@kernel-bugs.osdl.org
-         Submitter: kernel@onerussian.com
+What does this mean? Simply put, I have my own function that I want to be
+called when ever a new SCSI device is detected on an existing HBA. How do I
+do that? Or how can I achieve this functionality?
 
+Any pointers are welcome. 
+ 
 
-Distribution: debian sid
-Hardware Environment: Fibre Channel: QLogic Corp. QLA2312 Fibre Channel Adapter
-Problem Description:
- Kernel floods logs with 
-caller is qla2x00_queuecommand+0x20c/0x660 [qla2xxx]
- [<c023f926>] smp_processor_id+0xa6/0xc0
- [<f8bee89c>] qla2x00_queuecommand+0x20c/0x660 [qla2xxx]
- [<f8bee89c>] qla2x00_queuecommand+0x20c/0x660 [qla2xxx]
-....
-Steps to reproduce:
-didn't try to reproduce but the bug came with upgrade from 2.6.8.1 to 2.6.11-rc3
-on the system with QLA2312
-The rest of the nodes in the cluster which do not have Qlogic run fine with the
-kernel
+Thanks & regards,
 
-Here is full bt
-BUG: using smp_processor_id() in preemptible [00000001] code: nfsd/2783
-caller is qla2x00_queuecommand+0x20c/0x660 [qla2xxx]
- [<c023f926>] smp_processor_id+0xa6/0xc0
- [<f8bee89c>] qla2x00_queuecommand+0x20c/0x660 [qla2xxx]
- [<f8bee89c>] qla2x00_queuecommand+0x20c/0x660 [qla2xxx]
- [<c0407766>] _spin_lock+0x16/0x90
- [<c0407bbf>] _spin_unlock_irqrestore+0xf/0x30
- [<c01231d8>] __mod_timer+0xe8/0x130
- [<c02e20e5>] scsi_dispatch_cmd+0x135/0x1d0
- [<c02e22e0>] scsi_done+0x0/0x30
- [<c02e4c10>] scsi_times_out+0x0/0xb0
- [<c02e7977>] scsi_request_fn+0x1c7/0x350
- [<c02a2560>] elv_next_request+0x50/0x110
- [<c02a498b>] __generic_unplug_device+0x3b/0x40
- [<c02a49ae>] generic_unplug_device+0x1e/0x30
- [<c02a49db>] blk_backing_dev_unplug+0x1b/0x20
- [<c0158a4e>] sync_buffer+0x4e/0x50
- [<c0407196>] __wait_on_bit+0x56/0x60
- [<c0158a00>] sync_buffer+0x0/0x50
- [<c0158a00>] sync_buffer+0x0/0x50
- [<c0407231>] out_of_line_wait_on_bit+0x91/0xa0
- [<c012f360>] wake_bit_function+0x0/0x60
- [<c012f360>] wake_bit_function+0x0/0x60
- [<c01b3b8f>] search_by_key+0xef/0x1180
- [<c01b39fd>] is_tree_node+0x6d/0x70
- [<c03a5d54>] kfree_skbmem+0x24/0x30
- [<c03abdba>] net_tx_action+0x4a/0x120
- [<c011f6e2>] __do_softirq+0x62/0xd0
- [<c019fca1>] reiserfs_read_locked_inode+0x71/0x110
- [<c019fd40>] reiserfs_find_actor+0x0/0x30
- [<c019fe13>] reiserfs_iget+0xa3/0xb0
- [<c019fd40>] reiserfs_find_actor+0x0/0x30
- [<c019fc10>] reiserfs_init_locked_inode+0x0/0x20
- [<c019abda>] reiserfs_lookup+0x16a/0x190
- [<c0170692>] __d_lookup+0x92/0x140
- [<c0407bbf>] _spin_unlock_irqrestore+0xf/0x30
- [<c01700be>] d_alloc+0x13e/0x1a0
- [<c0166c35>] __lookup_hash+0xa5/0xe0
- [<c0166c8f>] lookup_hash+0x1f/0x30
- [<c0166d01>] lookup_one_len+0x61/0x70
- [<f919c2d2>] nfsd_lookup+0x112/0x4c0 [nfsd]
- [<c01290cd>] groups_alloc+0x3d/0xc0
- [<f91a47a1>] nfsd3_proc_lookup+0xa1/0xe0 [nfsd]
- [<f91996a9>] nfsd_dispatch+0xd9/0x230 [nfsd]
- [<f8ea0a22>] svc_process+0x4a2/0x680 [sunrpc]
- [<c0116240>] default_wake_function+0x0/0x20
- [<f919944a>] nfsd+0x1ba/0x340 [nfsd]
- [<f9199290>] nfsd+0x0/0x340 [nfsd]
- [<c01009d1>] kernel_thread_helper+0x5/0x14
-printk: 460 messages suppressed.
-repeats
+Rajat Jain 
+HCL Technologies, 
+A-11, Sector 16, Noida-201301. 
+Ph: +91-120-2510701/702/813 Extn.3019 
+rajatj@noida.hcltech.com 
+http://www.hcltech.com/
+	"...one of the main causes of the fall of the Roman Empire was that,
+lacking zero, they had no way to indicate successful termination of their C
+programs."
+	Robert Firth 
 
-more details about the system can be found from
-http://www.onerussian.com/Linux/bugs/020405ra
-
-------- You are receiving this mail because: -------
-You are on the CC list for the bug, or are watching someone who is.
+-
+To unsubscribe from this list: send the line "unsubscribe linux-newbie" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Please read the FAQ at http://www.linux-learn.org/faqs
