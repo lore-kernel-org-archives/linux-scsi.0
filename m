@@ -1,44 +1,73 @@
-From: James Bottomley <James.Bottomley@steeleye.com>
-Subject: Re: Initio 9100u -- Mike Christie's 2.6.0-test11 Patch -- Kernel
-	Errors
-Date: 21 Dec 2003 09:46:38 -0600
+From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+Subject: compile warning fix for advansys (trivial)
+Date: Sun, 21 Dec 2003 22:40:49 +0100 (CET)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1072021603.1952.10.camel@mulgrave>
-References: <Pine.LNX.4.44.0312190311160.27880-200000@dyn319634.beaverton.ibm.com>
+Message-ID: <Pine.LNX.4.44.0312212237460.2348-100000@poirot.grange>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat1.steeleye.com ([65.114.3.130]:49329 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S263639AbTLUPrF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 21 Dec 2003 10:47:05 -0500
-In-Reply-To: <Pine.LNX.4.44.0312190311160.27880-200000@dyn319634.beaverton.ibm.com>
+Received: from mail.gmx.net ([213.165.64.20]:28860 "HELO mail.gmx.net")
+	by vger.kernel.org with SMTP id S264142AbTLUVla (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 21 Dec 2003 16:41:30 -0500
+Received: from lyakh (helo=localhost)
+	by poirot.grange with local-esmtp (Exim 3.35 #1 (Debian))
+	id 1AYBJh-0000cI-00
+	for <linux-scsi@vger.kernel.org>; Sun, 21 Dec 2003 22:40:49 +0100
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <mikenc@us.ibm.com>
-Cc: James Daniel <jdaniel@dakotacom.net>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
 
-On Fri, 2003-12-19 at 05:15, Mike Christie wrote:
-> Here is another try. It should compile against 2.6.0-test11/2.6.0.
+Hi
 
-That's great thanks.  I've put it in the scsi tree.
+This was earlier sent with a pretty masking subject to LKML, so, in case,
+it wasn't noticed by those, who collect stuff for 2.6.1+, here it is
+again.
 
-I did notice in the diffs between this one and the previous patch things
-like:
+On Fri, 19 Dec 2003, Gene Heskett wrote:
 
+> Hey, how about us advansis users?  There is at least one, me...  And
+> thats the only driver in the whole compile that spits out visible
+> warnings about check_region() being deprecated.  But its still
+> working, so far.  I presume it will until such time as check_region()
+> is actually removed from wherever it lives.
 
--			pSG->SG_Ptr = cpu_to_le32((u32)sg_dma_address(pSrbSG));
--			TotalLen += pSG->SG_Len = cpu_to_le32((u32)sg_dma_len(pSrbSG));
-+			pSG->SG_Ptr = (u32)sg_dma_address(pSrbSG);
-+			TotalLen += pSG->SG_Len = (u32)sg_dma_len(pSrbSG);
+Well, wouldn't it suffice just to remove the deprecated checks? The only
+(for recent kernels) request_region() does check the return code. So, this
+should do:
 
-Which is obviously incorrect, since sg_dma_address() does return the
-address in CPU endianness (and the device SG list needs to be in PCI
-endiannes), but I think, since it was hard enough to find anyone with
-one of these things, that the chances of finding one on a non-x86 box
-are zero.
+--- drivers/scsi/advansys.c~	Mon Nov 24 20:43:42 2003
++++ drivers/scsi/advansys.c	Sat Dec 20 15:34:00 2003
+@@ -4619,13 +4619,7 @@
+                         ASC_DBG1(1,
+                                 "advansys_detect: probing I/O port 0x%x...\n",
+                             iop);
+-                        if (check_region(iop, ASC_IOADR_GAP) != 0) {
+-                            printk(
+-"AdvanSys SCSI: specified I/O Port 0x%X is busy\n", iop);
+-                            /* Don't try this I/O port twice. */
+-                            asc_ioport[ioport] = 0;
+-                            goto ioport_try_again;
+-                        } else if (AscFindSignature(iop) == ASC_FALSE) {
++			if (AscFindSignature(iop) == ASC_FALSE) {
+                             printk(
+ "AdvanSys SCSI: specified I/O Port 0x%X has no adapter\n", iop);
+                             /* Don't try this I/O port twice. */
+@@ -10003,12 +9997,6 @@
+     }
+     for (; i < ASC_IOADR_TABLE_MAX_IX; i++) {
+         iop_base = _asc_def_iop_base[i];
+-        if (check_region(iop_base, ASC_IOADR_GAP) != 0) {
+-            ASC_DBG1(1,
+-               "AscSearchIOPortAddr11: check_region() failed I/O port 0x%x\n",
+-                     iop_base);
+-            continue;
+-        }
+         ASC_DBG1(1, "AscSearchIOPortAddr11: probing I/O port 0x%x\n", iop_base);
+         if (AscFindSignature(iop_base)) {
+             return (iop_base);
 
-James
-
-
+Regards
+Guennadi
+---
+Guennadi Liakhovetski
 
