@@ -1,78 +1,47 @@
-From: Nishanth Aravamudan <nacc@us.ibm.com>
-Subject: [UPDATE PATCH] scsi/osst: replace schedule_timeout() with msleep()
-Date: Mon, 7 Mar 2005 15:05:22 -0800
-Message-ID: <20050307230522.GD2778@us.ibm.com>
-References: <20050306222742.294F71EC90@trashy.coderock.org> <1110148975l.5880l.4l@serve.riede.org>
+From: Kenn Humborg <kenn@linux.ie>
+Subject: Re: [PATCH] m68k link error and NCR5380_exit()
+Date: Mon, 7 Mar 2005 23:42:33 +0000
+Message-ID: <20050307234233.GA6240@excalibur.research.wombat.ie>
+References: <20050213040948.GA10198@orchestra.cs.caltech.edu> <Pine.LNX.4.61.0502131618470.25204@loopy.telegraphics.com.au> <20050213063225.GA17415@orchestra.cs.caltech.edu> <Pine.LNX.4.61.0502131736300.25553@loopy.telegraphics.com.au> <20050213075506.GA18622@orchestra.cs.caltech.edu> <Pine.LNX.4.61.0502212233290.15372@loopy.telegraphics.com.au> <Pine.LNX.4.61.0503071612290.27126@loopy.telegraphics.com.au> <20050307063719.GA12478@infradead.org> <Pine.LNX.4.61.0503072333310.27126@loopy.telegraphics.com.au> <20050307175322.GA12907@pants.nu>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Received: from e5.ny.us.ibm.com ([32.97.182.145]:17116 "EHLO e5.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S261274AbVCGXF2 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Mar 2005 18:05:28 -0500
-Received: from d01relay02.pok.ibm.com (d01relay02.pok.ibm.com [9.56.227.234])
-	by e5.ny.us.ibm.com (8.12.11/8.12.11) with ESMTP id j27N5ObL023213
-	for <linux-scsi@vger.kernel.org>; Mon, 7 Mar 2005 18:05:24 -0500
-Received: from d01av02.pok.ibm.com (d01av02.pok.ibm.com [9.56.224.216])
-	by d01relay02.pok.ibm.com (8.12.10/NCO/VER6.6) with ESMTP id j27N5OWY070696
-	for <linux-scsi@vger.kernel.org>; Mon, 7 Mar 2005 18:05:24 -0500
-Received: from d01av02.pok.ibm.com (loopback [127.0.0.1])
-	by d01av02.pok.ibm.com (8.12.11/8.12.11) with ESMTP id j27N5NtX023727
-	for <linux-scsi@vger.kernel.org>; Mon, 7 Mar 2005 18:05:24 -0500
+Received: from mail2.mail.iol.ie ([193.95.141.54]:37847 "EHLO
+	mail2.mail.iol.ie") by vger.kernel.org with ESMTP id S261804AbVCGXlw
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 7 Mar 2005 18:41:52 -0500
 Content-Disposition: inline
-In-Reply-To: <1110148975l.5880l.4l@serve.riede.org>
+In-Reply-To: <20050307175322.GA12907@pants.nu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Willem Riede <osst@riede.org>
-Cc: domen@coderock.org, linux-scsi@vger.kernel.org
+To: Brad Boyer <flar@allandria.com>
+Cc: Finn Thain <fthain@telegraphics.com.au>, Christoph Hellwig <hch@infradead.org>, James.Bottomley@SteelEye.com, linux scsi <linux-scsi@vger.kernel.org>, Geert Uytterhoeven <geert@linux-m68k.org>, Noah Misch <noah@cs.caltech.edu>, linux m68k <linux-m68k@vger.kernel.org>
 
-On Sun, Mar 06, 2005 at 10:42:55PM +0000, Willem Riede wrote:
-> On 03/06/2005 05:27:41 PM, domen@coderock.org wrote:
-> > 
-> > 
-> > Use msleep() instead of schedule_timeout() to guarantee the task
-> > delays as expected. Although TASK_INTERRUPTIBLE is used in the current code,
-> > there is no code dealing with an early return / signals_pending().
+On Mon, Mar 07, 2005 at 09:53:22AM -0800, Brad Boyer wrote:
+> On Tue, Mar 08, 2005 at 12:45:28AM +1100, Finn Thain wrote:
+> > My main reservation about embarking on this is that I don't think mac_scsi 
+> > ever actually worked under 2.6 (or 2.5?) kernels. I'm not competent enough 
+> > to submit a good, untested patch for a broken driver. Maybe the best thing 
+> > is to make it work before worrying about style. At least then I can test 
+> > my work.
 > 
-> This change is a total don't-care as far as I'm concerned. But if we are going to 
-> make it, can we please be consistent? Does the "set_current_state(TASK_INTERRUPTIBLE)"
-> stay or go? The two changes below don't agree in that respect.
+> I certainly never got it to work, but I only tried on my IIfx which
+> doesn't have exactly the same version of the chip anyway.
+> 
+> > To that end, I've included a boot log below. Maybe someone familiar with 
+> > the NCR5380 driver can make some sense of the failure?
+> 
+> Looks to me like the interrupt came in after the driver already
+> decided to give up for some reason. I had a big problem with that
+> while I was trying to fix the driver to use DMA on the IIfx. I
+> never did get it to give me the interrupt for dma completion
+> before the scsi mid layer timed out.
 
-You are completely correct. Please excuse the sloppy patch, fixed below.
+It broke in 2.6.9 for us Linux/VAX guys.
 
-Description: Use msleep() instead of schedule_timeout() to guarantee the
-task delays as expected. Although TASK_INTERRUPTIBLE is used in the
-current code, there is no code dealing with an early return / signals_pending().
+Try the NCR5380_set_timer() change from this patch:
 
-Signed-off-by: Nishanth Aravamudan <nacc@us.ibm.com>
+   http://www.mail-archive.com/linux-scsi@vger.kernel.org/msg01499.html
 
---- 2.6.11-v/drivers/scsi/osst.c	2005-03-01 23:38:08.000000000 -0800
-+++ 2.6.11/drivers/scsi/osst.c	2005-03-07 15:01:38.000000000 -0800
-@@ -862,8 +862,7 @@ static int osst_recover_wait_frame(struc
- 				retval = osst_write_error_recovery(STp, aSRpnt, 0);
- 				break;
- 			}
--			set_current_state(TASK_INTERRUPTIBLE);
--			schedule_timeout (HZ / OSST_POLL_PER_SEC);
-+			msleep(1000 / OSST_POLL_PER_SEC);
+Later,
+Kenn
  
- 			STp->buffer->b_data = mybuf; STp->buffer->buffer_size = 24;
- 			memset(cmd, 0, MAX_COMMAND_SIZE);
-@@ -1558,8 +1557,7 @@ static int osst_reposition_and_retry(str
- 			osst_set_frame_position(STp, aSRpnt, frame + skip, 1);
- 			flag = 0;
- 			attempts--;
--			set_current_state(TASK_INTERRUPTIBLE);
--			schedule_timeout(HZ / 10);
-+			msleep(100);
- 		}
- 		if (osst_get_frame_position(STp, aSRpnt) < 0) {		/* additional write error */
- #if DEBUG
-@@ -1620,8 +1618,7 @@ static int osst_reposition_and_retry(str
- 			debugging = 0;
- 		}
- #endif
--		set_current_state(TASK_INTERRUPTIBLE);
--		schedule_timeout(HZ / 10);
-+		msleep(100);
- 	}
- 	printk(KERN_ERR "%s:E: Failed to find valid tape media\n", name);
- #if DEBUG
