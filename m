@@ -1,30 +1,50 @@
-From: "Kaitlin Shannon" <j148dk@nate.com>
-Subject: =?ISO-8859-1?Q?=20=B9=AE=C0=C7=C7=CF=BD=C5.=BA=F1=BE=C6.=B1=D7?= =?ISO-8859-1?Q?=B6=F3?=
-	=?ISO-8859-1?Q?.=C1=A4=C7=B0?=  =?ISO-8859-1?Q?=20=BE=C8=B3=BB=C0=D4=B4=CF=B4=D9jkfsgg?= gcc
-Date: Sat, 24 Apr 04 09:24:55 GMT
+From: Olaf Hering <olh@suse.de>
+Subject: [PATCH] mptfusion depends on scsi
+Date: Sat, 24 Apr 2004 21:04:40 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <0-$7i5gl3t-k-6io-8v7-q193$7t__5099.18764369122$1082816890@205.e.u7m9m>
-Reply-To: "Kaitlin Shannon" <j148dk@nate.com>
+Message-ID: <20040424190440.GA9515@suse.de>
 Mime-Version: 1.0
-Content-Type: multipart/alternative;
-	boundary="9E7EB9D25BF...C4D_E"
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [218.106.196.1] ([218.106.196.1]:6224 "HELO 67.72.78.212")
-	by vger.kernel.org with SMTP id S262329AbUDXO0q (ORCPT
+Received: from ns.suse.de ([195.135.220.2]:59544 "EHLO Cantor.suse.de")
+	by vger.kernel.org with ESMTP id S261706AbUDXTGO (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 24 Apr 2004 10:26:46 -0400
+	Sat, 24 Apr 2004 15:06:14 -0400
+Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
-To: linux-assembly@vger.kernel.org
+To: linux-scsi@vger.kernel.org, akpm@odsl.org
 
 
---9E7EB9D25BF...C4D_E
-Content-Type: text/plain;
-Content-Transfer-Encoding: quoted-printable
+mptfusion depends on scsi.
+If it was =3Dy, and scsi is set to =3Dm, it will remain =3Dy and give l=
+ink errors.
 
-<p><a href=3D"http://www.biowiks.com" target=3D"_blank"><img src=3D"http:/=
-/myhome.hanafos.com/~wjdtjd101/2/main5.gif" border=3D"0"></a></p>=
-s  qeu frdw   qphmeswwevatemxrpr  earh
- f qdfsvonu  bputhctflkiww pnix
+2.6.6-rc2-bk3
 
---9E7EB9D25BF...C4D_E--
 
+--- ./drivers/message/fusion/Kconfig~   2004-04-04 05:38:27.000000000 +=
+0200
++++ ./drivers/message/fusion/Kconfig    2004-04-24 20:58:32.000000000 +=
+0200
+@@ -3,7 +3,7 @@ menu "Fusion MPT device support"
+=20
+ config FUSION
+        tristate "Fusion MPT (base + ScsiHost) drivers"
+-       depends on PCI
++       depends on PCI && SCSI
+        ---help---
+          LSI Logic Fusion(TM) Message Passing Technology (MPT) device =
+support
+          provides high performance SCSI host initiator, and LAN [1] in=
+terface
+
+--=20
+USB is for mice, FireWire is for men!
+
+sUse lINUX ag, n=C3=9CRNBERG
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
