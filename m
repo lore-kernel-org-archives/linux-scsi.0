@@ -1,33 +1,28 @@
-From: Rolf Eike Beer <eike-kernel@sf-tec.de>
-Subject: Re: [PATCH 2.5.59] sim710: cleanup/remove most cli()'s
-Date: Fri, 7 Feb 2003 08:26:25 +0100
+From: John Bradford <john@grabjohn.com>
+Subject: Re: [PATCH 2.5] fix megaraid driver compile error
+Date: Fri, 7 Feb 2003 08:45:01 +0000 (GMT)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <200302070826.25941@bilbo.math.uni-mannheim.de>
-References: <200302041123.06204@bilbo.math.uni-mannheim.de> <200302051603.48510@bilbo.math.uni-mannheim.de>
+Message-ID: <200302070845.h178j17Y000487@darkstar.example.net>
+References: <Pine.LNX.4.44.0302061519360.14478-100000@home.transmeta.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <200302051603.48510@bilbo.math.uni-mannheim.de>
+In-Reply-To: <Pine.LNX.4.44.0302061519360.14478-100000@home.transmeta.com> from "Linus Torvalds" at Feb 06, 2003 03:22:21 PM
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Linus Torvalds <torvalds@transmeta.com>
+Cc: dwmw2@infradead.org, markh@osdl.org, elenstev@mesatop.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
->From James Bottomley:
+> > Cut and paste from xterm should work fine. Cut and paste from
+> > gnome-terminal, OTOH, will often corrupt it for you.
+> 
+> I think xterm does the same thing. I certainly refuse to use inferior 
+> clones (I don't understand why people even _bother_ with things like 
+> gnome-terminal, since it can't even do proper vt100 sequences), and I 
+> definitely get tab->space conversion between two xterms.
 
-> On Wed, 2003-02-05 at 09:03, Rolf Eike Beer wrote:
+I get tab->space conversion with both xterm and rxvt.
 
->> I'm now looking for the best way to port this to use 53c700.c. This will
->> surely take a while, should I fix my fix and resend it or better leave this
->> unfixed until I find time to port it?
+Cut and paste from xemacs preserves tabs.
 
-> Do you actually have one of these (and is it EISA or MCA)?
-
-It's a Compaq Prosignia with one onboard and the other one on an EISA card, 
-using base addresses 0x8000 and 0x7000.
-
-> I've got a MCA 710 in an old NCR3430 I can use.  I think the conversion
-> will only take a few days, I can try it out
-
-That would be fine, you know your code better than I ever will.
-
-Eike
+John.
