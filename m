@@ -1,51 +1,42 @@
-From: Jeremy Higdon <jeremy@sgi.com>
-Subject: [PATCH 2.6]  Add readX_relaxed to MPT Fusion driver
-Date: Wed, 2 Jun 2004 23:24:39 -0700
+From: Jamie Lenehan <lenehan@twibble.org>
+Subject: Re: dc395 with a scanner, failing.
+Date: Thu, 3 Jun 2004 19:08:49 +1000
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040603062439.GA59204@sgi.com>
+Message-ID: <20040603090849.GA6148@twibble.org>
+References: <40B4CA83.8020700@nosomos.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtvcafw.sgi.com ([192.48.171.6]:16185 "EHLO omx3.sgi.com")
-	by vger.kernel.org with ESMTP id S261156AbUFCGZW (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Jun 2004 02:25:22 -0400
+Received: from tuon.twibble.org ([202.173.155.197]:65241 "EHLO
+	tuon.twibble.org") by vger.kernel.org with ESMTP id S261932AbUFCJIx
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 3 Jun 2004 05:08:53 -0400
 Content-Disposition: inline
+In-Reply-To: <40B4CA83.8020700@nosomos.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: emoore@lsil.com
+To: Quercus <quercus@nosomos.org>
+Cc: linux-scsi@vger.kernel.org
 
-This patch makes use of readX_relaxed to improve PIO read
-response times on platforms that define them (currently
-SGI Altix :-), but it could be used in conjunction with the
-PCI-X relaxed ordering attribute on another platform in the
-future).
+On Wed, May 26, 2004 at 06:49:07PM +0200, Quercus wrote:
+> Hi there... I own a dc395 scsi card "working" on a Debian GNU/Linux 3.0, 
+> with kernels 2.4.22 and 2.6.5.
 
->From what I could see, there was only one PIO read in which
-it was unsafe for the response to pass DMA write data, so
-I made the default readX_relaxed.
+So it works fine in 2.6.5 and not 2.6.6? I'll have to look at what
+other changes went in between those versions.
 
-jeremy
+[...]
+> What other tests should I do to send some feedback to the list and try 
+> to find a solution? Anyone had this same problem?
 
+Edit the top of drivers/scsi/dc395x.c and uncomment the first
+"#define DEBUG_MASK" line, rebuild the dc395x module, reload the
+module and then the operation that failes again. You should then gets
+lots of debugging output in one of your log file which you can then
+gzip or bzip2 and then send directly to me and I'll take a look at
+it.
 
-diff -ur -X /usr/people/jeremy/dontdiff linux-2.6.6/drivers/message/fusion/mptbase.c linux-2.6.7-rc1/drivers/message/fusion/mptbase.c
---- linux-2.6.6/drivers/message/fusion/mptbase.c	2004-05-28 23:14:11.000000000 -0700
-+++ linux-2.6.7-rc1/drivers/message/fusion/mptbase.c	2004-05-27 16:48:09.000000000 -0700
-@@ -282,7 +282,8 @@
- };
- MODULE_DEVICE_TABLE(pci, mptbase_pci_table);
- 
--#define CHIPREG_READ32(addr) 		readl(addr)
-+#define CHIPREG_READ32(addr) 		readl_relaxed(addr)
-+#define CHIPREG_READ32_dmasync(addr)	readl(addr)
- #define CHIPREG_WRITE32(addr,val) 	writel(val, addr)
- #define CHIPREG_PIO_WRITE32(addr,val)	outl(val, (unsigned long)addr)
- #define CHIPREG_PIO_READ32(addr) 	inl((unsigned long)addr)
-@@ -347,7 +348,7 @@
- 	 */
- 	while (1) {
- 
--		if ((pa = CHIPREG_READ32(&ioc->chip->ReplyFifo)) == 0xFFFFFFFF)
-+		if ((pa = CHIPREG_READ32_dmasync(&ioc->chip->ReplyFifo)) == 0xFFFFFFFF)
- 			return IRQ_HANDLED;
- 
- 		cb_idx = 0;
+Thanks.
+Jamie.
+
+-- 
+ Jamie Lenehan <lenehan@twibble.org>
