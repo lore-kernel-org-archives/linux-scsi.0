@@ -1,36 +1,27 @@
-From: =?iso-8859-1?Q?Thomas_Lang=E5s?= <tlan@stud.ntnu.no>
-Subject: Re: Weird Qlogic 2200 FC HBA / CNSI G7324  problem
-Date: Fri, 12 Jul 2002 11:18:42 +0200
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: 2.5.14 error: ini9100u.c
+Date: Fri, 12 Jul 2002 08:52:12 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20020712111842.A12686@stud.ntnu.no>
-References: <20020712010844.A19115@stud.ntnu.no> <20020711164141.B8468@beaverton.ibm.com> <20020712024511.A15943@stud.ntnu.no> <20020712102334.A9789@stud.ntnu.no>
-Reply-To: linux-scsi@vger.kernel.org
+Message-ID: <3D2ED0FC.F0AEBEEB@torque.net>
+References: <1020675649.20692.6.camel@localhost.localdomain> <3CD74E41.D39C1F23@torque.net> <20020711192119.G4315@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20020712102334.A9789@stud.ntnu.no>; from tlan@stud.ntnu.no on Fri, Jul 12, 2002 at 10:23:34AM +0200
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Anderson <andmike@us.ibm.com>
-Cc: linux-scsi@vger.kernel.org
+To: Benjamin LaHaise <bcrl@redhat.com>
+Cc: angus <angus@mcm.net>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Thomas Lang=E5s:
-> Just a quick update; doing the following works:
-> echo "scsi add-single-device 1 0 0 1" > /proc/scsi/scsi
-> Which indicates that's the detection code somewhere which
-> isn't like it should?
+Benjamin LaHaise wrote:
+> 
+> On Mon, May 06, 2002 at 11:47:13PM -0400, Douglas Gilbert wrote:
+> > -#error Please convert me to Documentation/DMA-mapping.txt
+> > +/* #error Please convert me to Documentation/DMA-mapping.txt */
+> 
+> Please read the document the comment points to, *then* rewrite the
+> patch.
 
+Ben,
+Be my guest.
 
-And, to keep on replying to myself; the redhat kernel didn't=20
-have "Probe all SCSI LUNs" enabled, adding that and it finds
-everything like it should. Any reason why it doesn't without
-this option?
-
---=20
-Thomas
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Doug Gilbert
