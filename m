@@ -1,41 +1,51 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: [PATCH as470] Add a NOREPORTLUN blacklist flag
-Date: Thu, 17 Feb 2005 17:31:04 -0500 (EST)
-Message-ID: <Pine.LNX.4.44L0.0502171728080.627-100000@ida.rowland.org>
+From: Samuel Colin <Samuel.Colin3@wanadoo.fr>
+Subject: Re: Magical ansi scsi revision (was Re: [linux-usb-devel] Re: What
+ is SCSI command 0xa0 ?)
+Date: Thu, 17 Feb 2005 23:49:53 +0100
+Message-ID: <20050217234953.15816a82@hebus>
 References: <20050217221803.091fd840@hebus>
+	<Pine.LNX.4.44L0.0502171719290.627-100000@ida.rowland.org>
+Reply-To: samuel.colin3@wanadoo.fr
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Received: from ida.rowland.org ([192.131.102.52]:14852 "HELO ida.rowland.org")
-	by vger.kernel.org with SMTP id S261206AbVBQWbE (ORCPT
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Received: from smtp2.wanadoo.fr ([193.252.22.29]:29077 "EHLO smtp2.wanadoo.fr")
+	by vger.kernel.org with ESMTP id S261214AbVBQWtu (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 17 Feb 2005 17:31:04 -0500
-In-Reply-To: <20050217221803.091fd840@hebus>
+	Thu, 17 Feb 2005 17:49:50 -0500
+In-Reply-To: <Pine.LNX.4.44L0.0502171719290.627-100000@ida.rowland.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Samuel Colin <Samuel.Colin3@wanadoo.fr>, SCSI development list <linux-scsi@vger.kernel.org>
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: SCSI development list <linux-scsi@vger.kernel.org>
 
-James:
+The Thu, 17 Feb 2005 17:23:54 -0500 (EST)
+Alan Stern <stern@rowland.harvard.edu> wrote:
 
-This patch adds a NOREPORTLUN blacklist flag for a disk made by "WDC" 
-(Winchester?).  The drive's firmware crashes when it receives REPORT_LUNS, 
-even though it claims to be SCSI rev 04.
+> Well, that explains why you had problems starting with 2.6.10!
+> 
+> The explanation is simple enough, and it can be found in a line from your 
+> logs:
+> 
+> Feb 17 21:19:09 gnondpom kernel: usb-storage: Fixing INQUIRY data to show
+> SCSI rev 2 - was 4
+> 
+> Back in 2.6.8, the usb-storage driver would automatically change the SCSI 
+> revision of any device to 2.  In 2.6.10 it doesn't do that if the actual 
+> revision is > 2.
+> 
+Then it explains a lot. I see you have sent a patch for the REPORT_LUNS
+problems. On my part all seem to work well so I can not do much more :-).
+Here is the product page of the offending disk : 
 
-Alan Stern
+http://www.lacie.com/products/product.htm?pid=10025
 
+As usb (and firewire) disks will become more popular, I guess the scsi-dev
+list should expect more problems of this kind :-(
 
+Anyway, many thanks for your kindness and your reactivity (you and both
+lists) :-)
 
-Signed-off-by: Alan Stern <stern@rowland.harvard.edu>
-
-===== drivers/scsi/scsi_devinfo.c 1.14 vs edited =====
---- 1.14/drivers/scsi/scsi_devinfo.c	2004-12-10 11:54:56 -05:00
-+++ edited/drivers/scsi/scsi_devinfo.c	2005-02-16 11:30:56 -05:00
-@@ -201,6 +201,7 @@
- 	{"WangDAT", "Model 2600", "01.7", BLIST_SELECT_NO_ATN},
- 	{"WangDAT", "Model 3200", "02.2", BLIST_SELECT_NO_ATN},
- 	{"WangDAT", "Model 1300", "02.4", BLIST_SELECT_NO_ATN},
-+	{"WDC WD25", "00JB-00FUA0", NULL, BLIST_NOREPORTLUN},
- 	{"XYRATEX", "RS", "*", BLIST_SPARSELUN | BLIST_LARGELUN},
- 	{"Zzyzx", "RocketStor 500S", NULL, BLIST_SPARSELUN},
- 	{"Zzyzx", "RocketStor 2000", NULL, BLIST_SPARSELUN},
+Regards,
+Samuel Colin
 
