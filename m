@@ -1,60 +1,32 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: PATCH: (as355) Fix test for valid sense data present
-Date: Thu, 26 Aug 2004 12:59:31 -0400 (EDT)
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44L0.0408261244430.1089-100000@ida.rowland.org>
-References: <1093536566.2326.61.camel@mulgrave>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: max_sectors in libata when using md
+Date: Thu, 26 Aug 2004 13:44:48 -0400
+Sender: linux-ide-owner@vger.kernel.org
+Message-ID: <412E2190.7030504@pobox.com>
+References: <412DFFA9.8030504@wasp.net.au> <8746466a0408260852205a7842@mail.gmail.com> <412E1039.7030508@pobox.com> <412E135B.1030605@wasp.net.au> <412E1D3E.2050307@pobox.com> <8746466a04082610346b07ea11@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ida.rowland.org ([192.131.102.52]:29444 "HELO ida.rowland.org")
-	by vger.kernel.org with SMTP id S269232AbUHZRAS (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 26 Aug 2004 13:00:18 -0400
-In-Reply-To: <1093536566.2326.61.camel@mulgrave>
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <8746466a04082610346b07ea11@mail.gmail.com>
+To: Dave <dave.jiang@gmail.com>
+Cc: Brad Campbell <brad@wasp.net.au>, linux-ide@vger.kernel.org, SCSI Mailing List <linux-scsi@vger.kernel.org>, RAID Linux <linux-raid@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: SCSI development list <linux-scsi@vger.kernel.org>
 
-On 26 Aug 2004, James Bottomley wrote:
+Dave wrote:
+> On Thu, 26 Aug 2004 13:26:22 -0400, Jeff Garzik <jgarzik@pobox.com> wrote:
+>>We could always eliminate lba48 max-sectors increase on VIA controllers...
 
-> Well, it doesn't look quite right.
-> 
-> You haven't modified the SCSI_SENSE_VALID() macro, so DRIVER_SENSE
-> doesn't get set for the extra conditions you're checking for.
-
-I admit that all the ramifications aren't clear to me.  However, the
-SCSI_SENSE_VALID macro already masks with 0x70.  The places the patch
-changed were masking with 0x7f.  How come two different masks are being 
-used in various places?
-
-> Even if you do fix it, You'll cause us to treat deferred sense
-> conditions as errors, which would be wrong.
-> 
-> What's the actual problem you're trying to fix?
-
-No problems have come up in actual use.  I wrote the patch in response to 
-the message below, from Douglas Gilbert (this was part of an interchange 
-commenting on some proposed additions to the 
-Documentation/scsi/scsi_mid_low_api.txt document -- see the section 
-about Autosense).  Was he incorrect?
-
-Alan Stern
+> Has Brad tried it with native SATA drives instead of bridges? Could be
+> VIA controllers incompatible with PATA->SATA bridges.....
 
 
--------------------------------------------------------------------------
+Oh wait.  That's a damned good point.
 
-> This looks quite good.  Only a few things struck me:
-> 
-> 	The test given for valid data in the sense_buffer isn't correct.
-> 	The actual test used is ((cmd->sense_buffer[0] & 0x7f) == 0x70).
-> 	This is mentioned in a couple of places in the document.
+I wonder if there is a problem with LBA48 large transfers (>256 sectors) 
+and bridges.  Is Brad definitely using a bridge?  I may have missed that 
+detail in a flurry of emails :)
 
-If that comparison is in linux code then the comparison
-is wrong! The comparison that is correct is bits 4, 5 and 6
-all being set. So we don't care about bit 7 and the bottom
-two bits can be 0x0, 0x1, 0x2 or 0x3. The fact that linux
-can't handle sense buffer "descriptor" format is an issue
-that needs to be addressed soon (but is unlikely to be an
-issue for usb-storage devices for some time).
+	Jeff
+
 
