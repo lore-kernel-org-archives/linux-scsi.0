@@ -1,41 +1,73 @@
-From: "Mukker, Atul" <Atulm@lsil.com>
-Subject: RE: [ANNOUNCE]: megaraid driver version 2.20.0.1
-Date: Tue, 6 Jul 2004 14:32:52 -0400
+From: Andrew Vasquez <praka@users.sourceforge.net>
+Subject: Re: puzzling scsi return code 20000
+Date: Tue, 6 Jul 2004 11:46:26 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <0E3FA95632D6D047BA649F95DAB60E57033BC826@exa-atlanta>
+Message-ID: <20040706184626.GA30970@praka.san.rr.com>
+References: <40E9448F.1090700@univ-nantes.fr>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:39656 "EHLO mail0.lsil.com")
-	by vger.kernel.org with ESMTP id S264260AbUGFSdY (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Jul 2004 14:33:24 -0400
+Received: from ms-smtp-03-qfe0.socal.rr.com ([66.75.162.135]:41980 "EHLO
+	ms-smtp-03-eri0.socal.rr.com") by vger.kernel.org with ESMTP
+	id S264266AbUGFS5E (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 6 Jul 2004 14:57:04 -0400
+Content-Disposition: inline
+In-Reply-To: <40E9448F.1090700@univ-nantes.fr>
 List-Id: linux-scsi@vger.kernel.org
-To: 'James Bottomley' <James.Bottomley@SteelEye.com>
-Cc: 'Christoph Hellwig' <hch@infradead.org>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
+To: Yann Dupont <Yann.Dupont@univ-nantes.fr>
+Cc: linux-scsi@vger.kernel.org
 
-> The biggest structural issue still seems to be the pending queue.  It
-> looks to me like the driver could be nicely simplified if you 
-> got rid of
-> it and simply relied on returning SCSI_MLQUEUE_HOST_BUSY from
-> queeucommand().  You'd still get the queue restart almost from the ISR
-This is a very good suggestion and I would be more than willing to include
-in the driver code. Only one concern though, there are other instances also
-when we need to stop sending commands to the controllers, but not
-necessarily stop getting commands from mid-layer. E.g., in case of delete
-drive operation, driver has to wait till all outstanding commands to the
-controller are complete, before issuing drive deletion command. In this
-situation, having a pending list seems natural.
+On Mon, 05 Jul 2004, Yann Dupont wrote:
 
-> Something like
+> hello. I have some problems with a SAN here. Don't know if the problems 
+> lies in scsi code/driver or other thing...
 > 
-> if (mbox->numstatus != 0xFF)
-> 	goto out;
-> udelay(25);
-> for (i = 0; mbox->numstatus != 0xFF && i < 1000; i++)
-> 	msleep(1);
-> out:
+> The setup is :
+> a QLA2300 (Fibre channel) with 6.0.64 driver from qlogic site,
+>
 
-Sounds good
+I'm not familiar with that version number (are you sure it's 6.0.64,
+perhaps 6.06.64?).  I believe the latest driver submitted to DVT has
+been posted to the website (7.00.03).
 
--Atul Mukker
+> 2.4.26 kernel, device mapper 1.0.17 applied,
+> and xfs or reiserfs on top of lvm volumes (using evms)
+> 
+> This setup seemed fine since some months now, with giga of data moved 
+> every day, but I noticed this on the log:
+> 
+> Jun 22 16:45:15 talisker kernel: SCSI disk error : host 3 channel 0 id 2 
+> lun 1 return code = 20000
+> Jun 22 16:45:15 talisker kernel:  I/O error: dev 08:10, sector 145423312
+> 
+> I have two of these errors in the last month. What's the meaning of this 
+> return code ? I made
+> badblock on the /dev/evms volume, and all is OK.
+>
+
+20000 == DID_BUS_BUSY -- one possibility, the QLogic driver returned a
+command with the status, mid-layer ran out of retries, subsequently
+returning the status to the upper-layer driver.  But that doesn't
+help in finding out what went wrong.
+
+> I also performed a disk scan on the raid array, (an IFT 7250F) and there 
+> are no errors.
+> 
+> The machine can be quite heavily loaded. May I suspect the qla driver ? 
+> May I suspect the underlying LVM. The LVM has been resized by the 
+> past... Can an error happens here too ?
+> I'm very puzzled...
+> 
+> This is just a summary . I can furnish more information if needed.
+> 
+
+I'd suggest you try a more recent driver (noted above), if the I/O
+errors persist, then report the problem to tech-support at:
+
+	http://connection.qlogic.com/support/report/index.asp?id=csg
+
+with a complete description.
+
+Regards,
+Andrew Vasquez
+QLogic Corporation
