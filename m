@@ -1,53 +1,84 @@
-From: Lester Hightower <hightowe@10east.com>
-Subject: [FEATURE REQUEST] megaraid2 driver
-Date: Wed, 21 Apr 2004 10:09:05 -0400 (EDT)
+From: Kurt Garloff <garloff@suse.de>
+Subject: PATCH 1/5: scsi-scan-deprecate-forcelun
+Date: Wed, 21 Apr 2004 16:10:21 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.58.0404210952220.29661@les5.10east.com>
-References: <0E3FA95632D6D047BA649F95DAB60E57033BC510@exa-atlanta.se.lsil.com>
+Message-ID: <20040421141021.GS28633@tpkurt.garloff.de>
+References: <20040418185751.GC4868@tpkurt.garloff.de> <1082330192.1969.37.camel@mulgrave> <20040420115419.GG4356@tpkurt.garloff.de> <1082471881.1804.34.camel@mulgrave> <20040420160334.GO4356@tpkurt.garloff.de> <20040421134511.GP28633@tpkurt.garloff.de>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="Uw+RRa3pmtkgiNaD"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from docs1.10east.com ([63.238.77.220]:42463 "EHLO 10east.com")
-	by vger.kernel.org with ESMTP id S262874AbUDUOJL (ORCPT
+Received: from ns.suse.de ([195.135.220.2]:4780 "EHLO Cantor.suse.de")
+	by vger.kernel.org with ESMTP id S262969AbUDUOMT (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 21 Apr 2004 10:09:11 -0400
-In-Reply-To: <0E3FA95632D6D047BA649F95DAB60E57033BC510@exa-atlanta.se.lsil.com>
+	Wed, 21 Apr 2004 10:12:19 -0400
+Content-Disposition: inline
+In-Reply-To: <20040421134511.GP28633@tpkurt.garloff.de>
 List-Id: linux-scsi@vger.kernel.org
-To: "Mukker, Atul" <Atulm@lsil.com>
-Cc: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
+To: Linux SCSI list <linux-scsi@vger.kernel.org>
+Cc: James Bottomley <James.Bottomley@steeleye.com>, Andrew Morton <akpm@osdl.org>
 
-Atul / readers of linux-scsi,
 
-I am a very long time user of DCA960-based Mylex raid controllers; we have
-dozens of them in our servers.  In fact, I have even tied u320 disks to
-u160 Mylex controllers in recent years due to how stable both the cards
-and Linux drivers are.  Recently we purchased a couple of LSI MegaRaid
-cards and are starting to get our feet wet with those cards and the
-megaraid2 Linux driver.
+--Uw+RRa3pmtkgiNaD
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Yesterday we ran a test where we pulled a drive from a logical drive set
-that had a hot spare.  The MegaRaid card rebuilt automatically, and after
-we inserted a fresh disk it automatically marked as a hot spare.  That
-went well, however, it took almost two hours to rebuild 73G on u320 disks
-in raid-1, which surprised me since the Mylex Acceleraid 170 (u160) took
-less than an hour in the same test.  I'm not complaining about the speed,
-however, but making a feature request.
 
-One thing the DAC960 driver does is publish the real-time progress of a
-rebuild operation, both in /proc and by klog every few minutes.  The Linux
-MegaRaid driver is completely silent start to finish, only showing that it
-is in a Rebuild state.  Because the DAC960 card had already given us an
-idea of how much time to expect the rebuild to take, the second hour that
-the MegaRaid consumed was unnerving, and primarily due to the fact that we
-had no rebuild progress indication available to us.
+Cleanup
 
-I searched through all of the structs in megariad2.h and do not readily
-see any data available that would indicate the progress of a rebuild, else
-I would code this myself and submit a patch.  Instead I am asking Atul,
-and anyone else with expertise in this area, for assistance or advice in
-implementing that feature.
+Mark BLIST_FORCELUN as deprecated, as we don't want to collect a list
+of perfectly working multi-LUN devices with BLIST_FORCELUN. Instead
+document max_luns boot/module parameter.
 
-Thanks,
+diff -uNrp linux-2.6.5.scsi-orig/drivers/scsi/Kconfig linux-2.6.5.depr-forc=
+elun/drivers/scsi/Kconfig
+--- linux-2.6.5.scsi-orig/drivers/scsi/Kconfig	2004-04-21 14:17:50.00000000=
+0 +0200
++++ linux-2.6.5.depr-forcelun/drivers/scsi/Kconfig	2004-04-21 14:23:23.0000=
+00000 +0200
+@@ -167,8 +167,8 @@ config SCSI_MULTI_LUN
+ 	  can say Y here to force the SCSI driver to probe for multiple LUNs.
+ 	  A SCSI device with multiple LUNs acts logically like multiple SCSI
+ 	  devices. The vast majority of SCSI devices have only one LUN, and
+-	  so most people can say N here and should in fact do so, because it
+-	  is safer.
++	  so most people can say N here. The max_luns boot/module parameter=20
++	  allows to override this setting.
+=20
+ config SCSI_REPORT_LUNS
+ 	bool "Build with SCSI REPORT LUNS support"
+diff -uNrp linux-2.6.5.scsi-orig/include/scsi/scsi_devinfo.h linux-2.6.5.de=
+pr-forcelun/include/scsi/scsi_devinfo.h
+--- linux-2.6.5.scsi-orig/include/scsi/scsi_devinfo.h	2004-04-04 05:36:14.0=
+00000000 +0200
++++ linux-2.6.5.depr-forcelun/include/scsi/scsi_devinfo.h	2004-04-21 14:24:=
+40.000000000 +0200
+@@ -4,7 +4,8 @@
+  * Flags for SCSI devices that need special treatment
+  */
+ #define BLIST_NOLUN     	0x001	/* Only scan LUN 0 */
+-#define BLIST_FORCELUN  	0x002	/* Known to have LUNs, force scanning */
++#define BLIST_FORCELUN  	0x002	/* Known to have LUNs, force scanning,
++					   deprecated: Use max_luns=3DN */
+ #define BLIST_BORKEN    	0x004	/* Flag for broken handshaking */
+ #define BLIST_KEY       	0x008	/* unlock by special command */
+ #define BLIST_SINGLELUN 	0x010	/* Do not use LUNs in parallel */
 
---
-Lester Hightower
+--=20
+Kurt Garloff  <garloff@suse.de>                            Cologne, DE=20
+SUSE LINUX AG, Nuernberg, DE                          SUSE Labs (Head)
+
+--Uw+RRa3pmtkgiNaD
+Content-Type: application/pgp-signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.2.4 (GNU/Linux)
+
+iD8DBQFAhoDNxmLh6hyYd04RAu55AKCFqQk4nVl9JqgNz/QZBBrJYb7MwACfawBw
+Lp95zwk8O8i2MEFAu9tBI0E=
+=TIS5
+-----END PGP SIGNATURE-----
+
+--Uw+RRa3pmtkgiNaD--
