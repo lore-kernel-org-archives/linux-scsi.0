@@ -1,51 +1,37 @@
-From: "Normand Cohen" <qqrlthzfli@tim.it>
-Subject: see how solomon pleased the woman of his life!hot nitty-gritty
-Date: Mon, 15 Dec 03 02:43:50 GMT
+From: Mario Giammarco <mgiammarco@virgilio.it>
+Subject: Status of qlogic tcp/ip (fc0) support
+Date: Mon, 15 Dec 2003 11:12:20 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3kgi3-hwyyd-$$07f$-yp0rn@907sk6u>
-Reply-To: "Normand Cohen" <qqrlthzfli@tim.it>
+Message-ID: <1071483139.1433.3.camel@cala>
 Mime-Version: 1.0
-Content-Type: multipart/alternative;
-	boundary="D6.8D1A.0A9E8484A6368"
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from port-13-221.gilat.ip.tiscali.net ([213.200.120.221]:53266 "HELO
-	port-13-221.gilat.ip.tiscali.net") by vger.kernel.org with SMTP
-	id S263172AbTLOFrR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 15 Dec 2003 00:47:17 -0500
+Received: from vsmtp2.tin.it ([212.216.176.222]:44268 "EHLO vsmtp2.tin.it")
+	by vger.kernel.org with ESMTP id S263491AbTLOKM1 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 15 Dec 2003 05:12:27 -0500
+Received: from [213.45.38.89] (213.45.38.89) by vsmtp2.tin.it (7.0.019)
+        id 3FD8B6A300238ABA for linux-scsi@vger.kernel.org; Mon, 15 Dec 2003 11:12:26 +0100
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
+Hello,
+I now have a qlogic 2200 card and I am trying tcp/ip support:
 
---D6.8D1A.0A9E8484A6368
-Content-Type: text/plain;
-Content-Transfer-Encoding: quoted-printable
+- standard qlogicfc built in kernel seems to not support ip (I heard
+there is a patch somewhere, is it right?)
 
-dear buddy,
-thank you for opening this e-mail.
+- qla drivers 6.00 of qlogic website should support it but I am not able
+to compile them with IP=1 option (I have tried on kernels 2.4.22 2.4.23)
 
-If you click on the link below you
-will be taken to the webpage which 
-will allow you to watch the x-rated
-video that has allowed Paris Hilton
-to do herself some free publicity
-for her personal gain!
-I hope you will find what follows
-interesting and have some good time.
-yours T
+- qla drivers 8.00 on sourceforge seems to not support it (and they
+works only on 2.6.0 kernel).
 
-click here
-http://ns.adweawen.biz/ph/index_mailer.html 
+Now I am stuck please help me I need them badly.
 
+Thanks in advance for any help.
+-- 
+Mario Giammarco
 
-
-
-
-
-Opt---Off
-http://adweawen.biz/p/xen.php
-
-
-bybizrs 
-
---D6.8D1A.0A9E8484A6368--
 
