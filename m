@@ -1,36 +1,35 @@
 From: Luben Tuikov <luben_tuikov@adaptec.com>
-Subject: [ANNOUNCE] Adaptec SAS/SATA device driver [10/27]
-Date: Thu, 17 Feb 2005 12:36:25 -0500
-Message-ID: <4214D619.20400@adaptec.com>
+Subject: [ANNOUNCE] Adaptec SAS/SATA device driver [11/27]
+Date: Thu, 17 Feb 2005 12:36:31 -0500
+Message-ID: <4214D61F.7090204@adaptec.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Received: from magic.adaptec.com ([216.52.22.17]:46481 "EHLO magic.adaptec.com")
-	by vger.kernel.org with ESMTP id S262324AbVBQRga (ORCPT
+Received: from magic.adaptec.com ([216.52.22.17]:49297 "EHLO magic.adaptec.com")
+	by vger.kernel.org with ESMTP id S262325AbVBQRgg (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 17 Feb 2005 12:36:30 -0500
+	Thu, 17 Feb 2005 12:36:36 -0500
 Received: from redfish.adaptec.com (redfish.adaptec.com [162.62.50.11])
-	by magic.adaptec.com (8.11.6/8.11.6) with ESMTP id j1HHaTr30903
-	for <linux-scsi@vger.kernel.org>; Thu, 17 Feb 2005 09:36:29 -0800
+	by magic.adaptec.com (8.11.6/8.11.6) with ESMTP id j1HHaZr30944
+	for <linux-scsi@vger.kernel.org>; Thu, 17 Feb 2005 09:36:35 -0800
 Received: from rtpe2k01.adaptec.com (rtpe2k01.adaptec.com [10.110.12.40])
-	by redfish.adaptec.com (8.11.6/8.11.6) with ESMTP id j1HHaSb21087
-	for <linux-scsi@vger.kernel.org>; Thu, 17 Feb 2005 09:36:28 -0800
+	by redfish.adaptec.com (8.11.6/8.11.6) with ESMTP id j1HHaYb21127
+	for <linux-scsi@vger.kernel.org>; Thu, 17 Feb 2005 09:36:34 -0800
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-Hardware interface header file.
+Inline functions.
 
-diff -Nru a/drivers/scsi/adp94xx/adp94xx_hwi.h b/drivers/scsi/adp94xx/adp94xx_hwi.h
+diff -Nru a/drivers/scsi/adp94xx/adp94xx_inline.h b/drivers/scsi/adp94xx/adp94xx_inline.h
 --- /dev/null	Wed Dec 31 16:00:00 196900
-+++ b/drivers/scsi/adp94xx/adp94xx_hwi.h	2005-02-16 16:08:12 -05:00
-@@ -0,0 +1,1242 @@
++++ b/drivers/scsi/adp94xx/adp94xx_inline.h	2005-02-16 16:08:12 -05:00
+@@ -0,0 +1,1075 @@
 +/*
 + * Adaptec ADP94xx SAS HBA device driver for Linux.
 + *
-+ * Written by : David Chaw <david_chaw@adaptec.com>
-+ * Modified by : Naveen Chandrasekaran <naveen_chandrasekaran@adaptec.com>
-+ * 
++ * Written by : David Chaw  <david_chaw@adaptec.com>
++ *
 + * Copyright (c) 2004 Adaptec Inc.
 + * All rights reserved.
 + *
@@ -66,1205 +65,1039 @@ diff -Nru a/drivers/scsi/adp94xx/adp94xx_hwi.h b/drivers/scsi/adp94xx/adp94xx_hw
 + * IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 + * POSSIBILITY OF SUCH DAMAGES.
 + *
-+ * $Id: //depot/razor/linux/src/adp94xx_hwi.h#113 $
++ * $Id: //depot/razor/linux/src/adp94xx_inline.h#29 $
 + * 
-+ */	
++ */
 +
-+#ifndef ADP94XX_HWI_H
-+#define ADP94XX_HWI_H
++#ifndef ADP94XX_INLINE_H
++#define ADP94XX_INLINE_H
 +
-+#include "adp94xx_sas.h"
-+#include "adp94xx_reg.h"
 +
-+struct asd_softc;
-+struct asd_platform_data;
-+struct asd_target;
-+struct asd_device;
-+struct asd_conn_desc_format;
-+struct asd_nd_phydesc_format;
++/******************************* Locking routines *****************************/
 +
-+/* CHIP Revision ID */
-+#define AIC9410_DEV_REV_A0	0
-+#define AIC9410_DEV_REV_A1	1
-+#define AIC9410_DEV_REV_B0	8
-+#define COMSTOCK_LATEST_RTL	26
++static inline void 	asd_lock_init(struct asd_softc *asd);
++static inline void 	asd_lock(struct asd_softc *asd, u_long *flags);
++static inline void 	asd_unlock(struct asd_softc *asd, u_long *flags);
 +
-+/* Controller profile */
-+#define ASD_MAX_WWN_LEN		SAS_ADDR_LEN	/* World Wide Name size */
++/* Locking routines during midlayer entry points */
++static inline void 	asd_sml_lock(struct asd_softc *asd);
++static inline void 	asd_sml_unlock(struct asd_softc *asd);
 +
-+#if SAS_COMSTOCK_SUPPORT
-+#define ASD_MAX_PHYS		1		/* Max supported phys */
-+#define ASD_MAX_PORTS		ASD_MAX_PHYS	/* Max supported ports */
-+#else
-+#define ASD_MAX_PHYS		8		/* Max supported phys */
-+#define ASD_MAX_PORTS		ASD_MAX_PHYS	/* Max supported ports */
-+#endif
++/* Locking routine during list manipulation */
++extern spinlock_t asd_list_spinlock;
++static inline void 	asd_list_lockinit(void);
++static inline void 	asd_list_lock(u_long *flags);
++static inline void 	asd_list_unlock(u_long *flags);
 +
-+#define ASD_MAX_SCB_SITES	512		/*
-+						 * Max supported built-in
-+						 * SCB sites
-+						 */
-+#define ASD_RSVD_SCBS		11		/* Reserved SCBs */
-+#define ASD_MAX_EDBS_PER_SCB	7		/* 
-+						 * Max number of Empty
-+						 * data buffers that can
-+						 * be queued in a single SCB.
-+						 */
-+#define ASD_MAX_EDBS		21		/* 
-+						 * Max number of Empty
-+						 * data buffers.
-+						 */
-+
-+/*
-+ * There is a workaround fix required by the sequencer to skip
-+ * using the free scb sites that ended with FF.
-+ */ 
-+static inline u_int
-+asd_calc_free_scb_sites(u_int max_scbs)
++static inline void
++asd_lock_init(struct asd_softc  *asd)
 +{
-+	uint16_t	site_no;
-+	u_int		usable_scb_sites;
-+
-+	usable_scb_sites = max_scbs;
-+	for (site_no = 0; site_no < max_scbs; site_no++) {
-+		if ((site_no & 0xF0FF) == 0x00FF)
-+			usable_scb_sites--;
-+	}
-+	
-+	return (usable_scb_sites);
++	spin_lock_init(&asd->platform_data->spinlock);
 +}
 +
-+#define ASD_USABLE_SCB_SITES	asd_calc_free_scb_sites(ASD_MAX_SCB_SITES)
++static inline void
++asd_lock(struct asd_softc *asd, u_long *flags)
++{
++	spin_lock_irqsave(&asd->platform_data->spinlock, *flags);
++}
 +
-+#define ASD_MAX_ALLOCATED_SCBS	\
-+	(ASD_USABLE_SCB_SITES - (ASD_MAX_EDBS/ASD_MAX_EDBS_PER_SCB))
++static inline void
++asd_unlock(struct asd_softc *asd, u_long *flags)
++{
++	spin_unlock_irqrestore(&asd->platform_data->spinlock, *flags);
++}
 +
-+#define ASD_MAX_USABLE_SCBS	ASD_USABLE_SCB_SITES
-+
-+#define ASD_MAX_DEVICES		128		/* Max supported devices */
-+#define ASD_MAX_EXPANDERS	16		/* Max supported expanders */
-+#define ASD_MAX_TARGETS		(ASD_MAX_DEVICES - ASD_MAX_EXPANDERS)
-+#define ASD_MAX_DDBS		128		/* Max number of HW DDB sites */
-+#define ASD_MIN_DLS		4		/* Minimum DL amount allowed */
-+#define ASD_MAX_DLS		16384		/* Maximum DL amount allowed */
-+#define ASD_SCB_SIZE		sizeof(union hardware_scb)
-+#define ASD_DDB_SIZE		sizeof(struct asd_ddb)
-+#define ASD_DL_SIZE		sizeof(struct asd_done_list)
-+
-+#define ASD_QDONE_PASS_DEF	1
-+		 
-+/* Controller Delay */
-+#define ASD_DELAY_COUNT		5		/* Set to 5 microseconds */
-+#define ASD_REG_TIMEOUT_VAL	2000
-+#define ASD_REG_TIMEOUT_TICK	((ASD_REG_TIMEOUT_VAL * 1000) / ASD_DELAY_COUNT)
-+ 
-+/* Controller functionality */
-+#define ASD_PIO_DOWNLOAD_SEQS	1		/* 
-+						 * Download the SEQS code using
-+						 * PIO mode.
-+						 */		
-+#define ASD_DMA_DOWNLOAD_SEQS	0		/*
-+						 * Download the SEQS code using
-+						 * Overlay DMA mode.
-+						 */
-+
-+/* Tunable constant. */
-+#define SAS_NOTIFY_TIMER_TIMEOUT_CONST	500	/* 
-+						 * The default value 500 (in 
-+						 * msecs) for time interval for
-+						 * transmission interval between
-+						 * successive NOTIFY 
-+						 * (ENABLE_SPINUP) primitive.
-+						 */
-+
-+/* Available activity LED bits in GPIOx registers */
-+#define ASD_MAX_XDEVLED_BITS		8
-+
-+typedef enum {
-+	SCB_EH_NONE 		= 0x0000,
-+	SCB_EH_INITIATED	= 0x0001,
-+	SCB_EH_IN_PROGRESS	= 0x0002,
-+	SCB_EH_TIMEDOUT		= 0x0004,
-+	SCB_EH_DONE		= 0x0008,
-+	SCB_EH_ABORT_REQ	= 0x0010,
-+	SCB_EH_LU_RESET_REQ	= 0x0020,
-+	SCB_EH_DEV_RESET_REQ	= 0x0040,
-+	SCB_EH_PORT_RESET_REQ	= 0x0080,
-+	SCB_EH_CLR_NXS_REQ	= 0x0100,
-+	SCB_EH_SUSPEND_SENDQ	= 0x0200,
-+	SCB_EH_RESUME_SENDQ	= 0x0400,
-+	SCB_EH_PHY_NO_OP_REQ	= 0x0800,
-+	SCB_EH_PHY_REPORT_REQ	= 0x1000
-+} scb_eh_state;
-+
-+#define SCB_EH_LEVEL_MASK	0x00F0
-+
-+typedef enum {
-+	SCB_EH_SUCCEED,
-+	SCB_EH_FAILED
-+} scb_eh_status;
-+
-+typedef enum {
-+	SCB_FLAG_NONE		= 0x00,
-+	SCB_ACTIVE		= 0x01,
-+	SCB_DEV_QFRZN		= 0x02,
-+	SCB_TIMEDOUT		= 0x04,
-+	SCB_PENDING		= 0x08,
-+	SCB_INTERNAL		= 0x10,
-+	SCB_RECOVERY		= 0x20,
-+	SCB_RESERVED		= 0x40
-+} scb_flag;
-+
-+/* Data structures used to manage CSMI commands */
-+struct asd_ctl_mgmt {
-+	wait_queue_head_t	waitq;
-+	struct semaphore 	sem;
-+	struct timer_list 	timer;
-+	u_long 			busy;
-+	int 			err;
-+};
-+
-+struct asd_ctl_internal_data {
-+	struct asd_ctl_mgmt mgmt; 
-+};
-+
-+typedef void asd_scb_post_t(struct asd_softc *, struct scb *,
-+			    struct asd_done_list *);
-+typedef void asd_scb_eh_post_t(struct asd_softc *, struct scb *);
-+
-+#define SCB_POST_STACK_DEPTH	5
-+
-+struct asd_scb_post_stack {
-+	/*
-+	 * Completion callback.
-+	 */
-+	asd_scb_post_t		*post;
-+
-+	/*
-+	 * OS per I/O context structure.
-+	 */
-+	asd_io_ctx_t		 io_ctx;
-+};
-+
-+/*
-+ * SCB buffer descriptor.  Contains HWI layer information
-+ * pertaining to SCB data DMAed to and from the controller.
-+ */
-+struct scb {
-+	/*
-+	 * Links for chaining SCBs onto the pending, or free list.
-+	 */
-+	struct list_head	 hwi_links;
-+	/*
-+	 * Links for use by the owner (e.g. originator) of the SCB.
-+	 */
-+	struct list_head	 owner_links;
-+	/*
-+	 * Links for chaining SCBs onto the timedout SCB list.
-+	 */
-+	struct list_head	 timedout_links;
-+	/*
-+	 * Completion callback.
-+	 */
-+	asd_scb_post_t		*post;
-+	/*
-+	 * OS per I/O context structure.
-+	 */
-+	asd_io_ctx_t		 io_ctx;
-+	/*
-+	 * OSM specific, per-context data.
-+	 */
-+	struct asd_scb_platform_data *platform_data;
-+	/*
-+	 * Per-context, hardware specific, data that is
-+	 * actually DMA'ed to the controller.
-+	 */
-+	union hardware_scb	*hscb;
-+	struct map_node		*hscb_map;
-+	dma_addr_t		 hscb_busaddr;
-+	/*
-+	 * Index to the Device Descriptor Block representing
-+	 * the device to which this transaction is targeted.
-+	 */
-+	uint16_t		 conn_handle;
-+	/*
-+	 * Scatter/Gather list data structures.
-+	 */
-+	struct map_node		*sg_map;
-+	struct sg_element	*sg_list;
-+	dma_addr_t		 sg_list_busaddr;
-+	u_int			 sg_count;
-+	/*
-+	 * Pointer back to our per-controller instance.
-+	 * Used only in timer callbacks where the SCB
-+	 * is the saved argument to the timer callback.
-+	 */
-+	struct asd_softc	*softc;
-+	/*
-+	 * Misc Flags.
-+	 */
-+	scb_flag		 flags;
-+	/*
-+	 * Error Recovery state and status info.
-+	 */ 
-+	scb_eh_state     	 eh_state;
-+	scb_eh_status     	 eh_status;
-+	asd_scb_eh_post_t	*eh_post;
-+
-+	uint32_t			post_stack_depth;
-+	struct asd_scb_post_stack	post_stack[SCB_POST_STACK_DEPTH];
-+};
-+
-+#define	SCB_GET_INDEX(SCB)	(asd_le16toh((SCB)->hscb->header.index))
-+#define SCB_GET_OPCODE(SCB)	((SCB)->hscb->header.opcode)
-+#define SCB_GET_SRC_PORT(SCB)	((SCB)->platform_data->targ->src_port)
-+
-+/* Common attributes for Phy and Port. */
-+typedef enum {
-+	ASD_SSP_INITIATOR	= 0x01,
-+	ASD_SMP_INITIATOR 	= 0x02,
-+	ASD_STP_INITIATOR 	= 0x04,
-+	ASD_SATA_SPINUP_HOLD 	= 0x08,
-+	ASD_SAS_MODE      	= 0x10,
-+	ASD_SATA_MODE     	= 0x20,
-+	ASD_DEVICE_PRESENT 	= 0x40 
-+} asd_attrib;
-+
-+typedef enum {
-+	ASD_IDLE	  	= 0x00,
-+	ASD_RESP_PENDING  	= 0x01,
-+	ASD_ID_ADDR_RCVD  	= 0x02,
-+	ASD_DISCOVERY_REQ 	= 0x04,
-+	ASD_DISCOVERY_PROCESS 	= 0x08,
-+	ASD_DISCOVERY_EVENT 	= 0x10,
-+	ASD_VALIDATION_REQ	= 0x20,
-+	ASD_LOSS_OF_SIGNAL	= 0X40,
-+	ASD_DISCOVERY_RETRY	= 0X80
-+} asd_event;
-+
-+/*
-+ * Port structure.
-+ * It is used to reference a SCSI or SATA initiator port for the adapter.
-+ */
-+typedef enum {
-+	ASD_PORT_UNUSED,
-+	ASD_PORT_ONLINE,
-+	ASD_PORT_OFFLINE
-+} asd_port_state;
-+
-+struct discover_context {
-+	struct asd_softc	*asd;
-+	struct asd_port		*port;
-+	uint8_t			 openStatus;
-+	unsigned		 resid_len;
-+
-+	/*
-+	 * -------------------------------------
-+	 * DMA-able memory used for SMP request
-+	 */
-+	struct SMPRequest	*SMPRequestFrame;
-+	dma_addr_t		 SMPRequestBusAddr;
-+	bus_dma_tag_t		 smp_req_dmat;
-+	struct map_node		 smp_req_map;
-+
-+	/*
-+	 * -------------------------------------
-+	 * DMA-able memory used for SMP response
-+	 */
-+	struct SMPResponse	*SMPResponseFrame;
-+	dma_addr_t		 SMPResponseBusAddr;
-+	bus_dma_tag_t		 smp_resp_dmat;
-+	struct map_node		 smp_resp_map;
-+
-+	/*
-+	 * -------------------------------------
-+	 * DMA-able memory used for Report LUNS and Unit Serial Number
-+	 */
-+	uint8_t			*SASInfoFrame;
-+	dma_addr_t		 SASInfoBusAddr;
-+	unsigned		 sas_info_len;
-+	bus_dma_tag_t		 sas_info_dmat;
-+	struct map_node		 sas_info_map;
-+
-+	/*
-+	 * For state machine
-+	 * -------------------------------------
-+	 */
-+	struct state_machine_context	sm_context;
-+};
-+
-+struct asd_port {
-+	struct list_head	 phys_attached;
-+	struct list_head	 targets;
-+	struct list_head	 targets_to_validate;
-+	void			*softc;
-+	uint8_t			 sas_addr[SAS_ADDR_LEN];
-+	uint8_t			 hashed_sas_addr[HASHED_SAS_ADDR_LEN];
-+	uint8_t			 attached_sas_addr[SAS_ADDR_LEN];
-+	u_char			 num_phys;
-+	uint8_t			 conn_rate;
-+	/* 
-+	 * Bit field indicating which phy id belongs to this port.
-+	 */  
-+	uint8_t			 conn_mask;
-+	uint8_t			 reset_mask;
-+	u_char			 id;
-+	asd_port_state		 state;
-+	asd_attrib		 attr;
-+	asd_event		 events;
-+	LINK_TYPE		 link_type;
-+	MANAGEMENT_TYPE		 management_type;
-+	struct discover_context	 dc;
-+	struct asd_target	*tree_root;
-+};
-+
-+/*
-+ * Phy structure.
-+ * It is used to reference a service delivery subsystem for the adapter.
-+ */
-+typedef enum {
-+	ASD_PHY_UNUSED,
-+	ASD_PHY_WAITING_FOR_ID_ADDR,
-+	ASD_PHY_ONLINE,
-+	ASD_PHY_OFFLINE,
-+	ASD_PHY_CONNECTED
-+} asd_phy_state;
-+
-+#define PRODUCT_SERIAL_NUMBER_LEN	64
-+
-+struct asd_phy {
-+	struct list_head	 pending_scbs;
-+	struct list_head	 links;
-+	void			*softc;
-+    	struct asd_port		*src_port;
-+	uint8_t			 sas_addr[SAS_ADDR_LEN];
-+	u_int			 max_link_rate;
-+	u_int			 min_link_rate;
-+	u_int			 conn_rate;
-+	uint8_t			 id;
-+	asd_phy_state 		 state;
-+	asd_attrib		 attr;
-+	asd_event		 events;
-+
-+	/* Phy Error information. */
-+	uint8_t			 brdcst_rcvd_cnt;
-+
-+	/* Phy control register info */
-+	uint8_t			 phy_state;
-+	uint8_t			 phy_ctl0;
-+	uint8_t			 phy_ctl1;
-+	uint8_t			 phy_ctl2;
-+	uint8_t			 phy_ctl3;
-+
-+	/* Identify Address frame buffer. */
-+	bus_dma_tag_t		 id_addr_dmat;
-+	struct map_node		 id_addr_map;
-+	union sas_bytes_dmaed	 bytes_dmaed_rcvd;
-+
-+	u_int			 link_rst_cnt;
-+#define MAX_LINK_RESET_RETRY	 2
-+
-+	/* TBD: Temp var, should remove after checking with HW */
-+	uint8_t			 pat_gen;
-+};
-+
-+#define PHY_GET_ID_SAS_ADDR(PHY)	\
-+	((PHY)->bytes_dmaed_rcvd.id_addr_rcvd.sas_addr)
-+
-+typedef enum {
-+	ASD_IO_SPACE,
-+	ASD_MEMORY_SPACE
-+} asd_mem_space_type;
-+
-+struct asd_io_handle {
-+	union {
-+		uint8_t		*membase;
-+		unsigned long	 iobase;
-+	} baseaddr;
-+	uint32_t		 bar_base; 
-+	uint32_t		 length;
-+	uint32_t		 swb_base;
-+	uint8_t			 index;		/* BAR index */
-+	asd_mem_space_type	 type;
-+};
-+
-+struct asd_host_profile {
-+	uint16_t		max_cmds_per_lun;
-+	uint16_t		can_queue;
-+	uint8_t			initiator_id;
-+	uint8_t			max_luns;
-+	uint8_t			max_scsi_ids;
-+	uint8_t			max_channels;
-+	uint8_t			irq;
-+	uint8_t			unit;
-+	uint8_t			dma64_addr;
-+	dma_addr_t		dma_mask;
-+	char			*name;
-+};
-+
-+/*
-+ * Controller specific information.
-+ */
-+struct asd_hw_profile {
-+	/* HW info. */
-+	uint8_t			wwn[ASD_MAX_WWN_LEN];
-+	uint8_t			max_ports;
-+	uint8_t			ports_allocated;
-+	uint8_t			max_phys;
-+	uint8_t			enabled_phys;
-+	int			rev_id;
-+	/* Target info. */
-+	uint16_t		max_devices;
-+	uint16_t		max_targets;
-+	uint8_t			max_expanders;
-+	/* Runtime info. */
-+	uint16_t		max_scbs;
-+	uint16_t		max_ddbs;
-+	/* Queue info. */
-+	uint16_t		scbpro_cnt;	
-+	/* NVRAM info */
-+	uint8_t			flash_present;
-+	uint16_t		flash_manuf_id;
-+	uint16_t		flash_dev_id;
-+	uint32_t		flash_wr_prot;
-+	u_char			nv_exist;
-+	uint32_t		nv_cookie_addr;
-+	u_int			nv_cookie_found;
-+	uint32_t		nv_segment_type;
-+	uint32_t		nv_flash_bar;
-+	uint32_t		bios_bld_num;
-+	uint8_t			bios_maj_ver;
-+	uint8_t			bios_min_ver;
-+};
-+
-+typedef enum {
-+	ASD_SCB_RESOURCE_SHORTAGE	= 0x01,
-+	ASD_RUNNING_DONE_LIST		= 0x02,
-+	ASD_WAITING_FOR_RESOURCE	= 0x04
-+} asd_softc_flags;
-+
-+struct asd_softc {
-+	/*
-+	 * The next hardware SCB already known to the sequencer.
-+	 */
-+	union hardware_scb	*next_queued_hscb;
-+	struct map_node		*next_queued_hscb_map;
-+	uint64_t		 next_queued_hscb_busaddr;
-+	/*
-+	 * Pool of SCBs available to execute new commands.
-+	 */
-+	struct list_head	 free_scbs;
-+	/*
-+	 * Pool of reserved SCBS to be used for error recovery.
-+         */	 
-+	struct list_head	 rsvd_scbs;
-+	/*
-+	 * SCBs that have been sent to the controller
-+	 */
-+	struct list_head	 pending_scbs;
-+	/*
-+	 * Mapping from 16bit scb index to SCB.
-+	 */
-+	struct scb		**scbindex;
-+	/*
-+	 * Platform specific data.
-+	 */
-+	struct asd_platform_data *platform_data;
-+	/* 
-+	 * Command Queues info
-+	 */
-+	struct asd_done_list	*done_list;
-+	uint16_t		 dl_next;
-+	uint16_t		 dl_valid;
-+	uint16_t		 dl_wrap_mask;
-+	uint16_t		 qinfifonext;
-+	uint16_t		*qinfifo;
-+#define	ASD_QIN_WRAP(asd) ((asd)->qinfifonext & (asd->hw_profile.max_scbs - 1))
-+
-+	/*
-+	 * Free Device Descriptor Block bitmap.
-+	 */
-+	u_long			*free_ddb_bitmap;
-+	u_int			 ddb_bitmap_size;
-+#define ASD_INVALID_DDB_INDEX 0xFFFF
-+
-+	/*
-+	 * Misc controller state flags.
-+	 */
-+	asd_softc_flags		 flags;
-+	/*
-+	 * SCBs whose timeout routine has been called.
-+	 */
-+	struct list_head	 timedout_scbs;
-+	/*
-+	 * SCBs that have been sent to the controller
-+	 */
-+	struct list_head	 empty_scbs;
-+	/*
-+	 * "Bus" addresses of our data structures.
-+	 */
-+	bus_dma_tag_t	 	 shared_data_dmat;
-+	struct map_node	 	 shared_data_map;
-+	
-+	/* dmat for our hardware SCB array */
-+	bus_dma_tag_t	 	 hscb_dmat;
-+	/* dmat for our sg segments */
-+	bus_dma_tag_t	 	 sg_dmat;
-+	struct list_head 	 hscb_maps;
-+	struct list_head 	 sg_maps;
-+	/* Unallocated scbs in head map_node */
-+	int		 	 scbs_left;
-+	/* Unallocated sgs in head map_node */
-+	int			 sgs_left;	
-+	/* Allocated edbs */
-+	int		 	 edbs;	
-+	uint16_t	 	 numscbs;
-+	/*
-+	 * Platform specific device information.
-+	 */
-+	asd_dev_t		 dev;
-+	/*
-+	 * Used to chain all controller instances
-+	 * managed by this driver.
-+	 */
-+	struct list_head	 link;
-+	struct list_head	*old_discover_listp;
-+	struct list_head	*discover_listp;
-+	struct asd_port		*port_list[ASD_MAX_PORTS];
-+	struct asd_phy		*phy_list[ASD_MAX_PHYS];
-+	struct asd_host_profile  profile;
-+	struct asd_hw_profile	 hw_profile;
-+	const struct pci_device_id *pci_entry;
-+	struct asd_io_handle	**io_handle;
-+	struct asd_ctl_internal_data asd_ctl_internal;
-+	uint32_t		 asd_hba_index;
-+	uint8_t			 io_handle_cnt;
-+	uint8_t			 init_level;
-+
-+	unsigned		 num_discovery;
-+	unsigned		 num_unit_elements;
-+	struct asd_unit_element_format	*unit_elements;
-+};
-+
-+
-+/* Scatter/Gather list Handling */
-+#define	asd_sglist_size(asd) (ASD_NSEG * sizeof(struct sg_element))
-+
-+
-+/*
-+ * Hardware Interface functions prototypes.
-+ */
-+void		asd_intr_enable(struct asd_softc *asd, int enable);
-+int		asd_hwi_init_hw(struct asd_softc *asd);
-+int		asd_hwi_process_irq(struct asd_softc *asd);
-+struct asd_softc * asd_alloc_softc(asd_dev_t dev);
-+void		asd_free_softc(struct asd_softc *asd);
-+
-+/* 
-+ * Device Descriptor Block resource management. 
-+ */
-+uint16_t	asd_alloc_ddb(struct asd_softc *asd);
-+void		asd_free_ddb(struct asd_softc *asd, uint16_t ddb_index);
-+int		asd_hwi_setup_ddb_site(struct asd_softc *asd,
-+				       struct asd_target *target);
-+
-+/* 
-+ * Function prototypes for interfacing with Sequencers. 
-+ */
-+int		asd_hwi_pause_cseq(struct asd_softc *asd);
-+int		asd_hwi_pause_lseq(struct asd_softc *asd, uint8_t lseq_mask);
-+int		asd_hwi_unpause_cseq(struct asd_softc *asd);
-+int		asd_hwi_unpause_lseq(struct asd_softc *asd, uint8_t lseq_mask);
-+int		asd_hwi_download_seqs(struct asd_softc *asd);
-+void		asd_hwi_setup_seqs(struct asd_softc *asd);
-+int		asd_hwi_start_cseq(struct asd_softc *asd);
-+int		asd_hwi_start_lseq(struct asd_softc *asd, uint8_t link_num);
-+struct scb *	asd_hwi_get_scb(struct asd_softc *asd, int rsvd_pool);
-+void		asd_hwi_post_scb(struct asd_softc *asd, struct scb *scb);
-+union edb *	asd_hwi_indexes_to_edb(struct asd_softc *asd, struct scb **pscb,
-+				       u_int escb_index, u_int edb_index);
-+void		asd_hwi_free_edb(struct asd_softc  *asd,
-+				 struct scb *scb, int edb_index);
-+void		asd_hwi_init_internal_ddb(struct asd_softc *asd);
-+void		asd_hwi_build_ddb_site(struct asd_softc  *asd, 
-+				      struct asd_target *target);
-+void		asd_hwi_update_sata(struct asd_softc *asd, 
-+				      struct asd_target *target);
-+void		asd_hwi_update_conn_mask(struct asd_softc *asd,
-+					 struct asd_target *target);
-+int		asd_hwi_enable_phy(struct asd_softc *asd, struct asd_phy *phy);
-+void		asd_hwi_release_sata_spinup_hold(struct asd_softc *asd,
-+						 struct asd_phy *phy);
-+
-+/*
-+ * Error handling function prototypes.
-+ */
-+int		asd_hwi_post_eh_scb(struct asd_softc *asd, struct scb *scb);
-+void		asd_hwi_build_ssp_tmf(struct scb *scb, struct asd_target *targ,
-+				      uint8_t *lun, u_int tmf_opcode);
-+void		asd_hwi_build_clear_nexus(struct scb *scb, u_int nexus_ind,
-+					  u_int parm, u_int context);
-+void		asd_hwi_build_abort_task(struct scb *scb,
-+					 struct scb *scb_to_abort);
-+void		asd_hwi_build_query_task(struct scb *scb, 
-+					 struct scb *scb_to_query);
-+void		asd_hwi_build_control_phy(struct scb *scb, struct asd_phy *phy, 
-+					  uint8_t sub_func);
-+void		asd_hwi_map_tmf_resp(struct scb *scb, u_int resp_code);
-+
-+/* SCB build routines */
-+void 		asd_hwi_build_smp_task(struct scb *scb, struct asd_target *targ,
-+				       uint64_t req_bus_addr, u_int req_len,
-+				       uint64_t resp_bus_addr, u_int resp_len);
-+void 		asd_hwi_build_ssp_task(struct scb *scb, struct asd_target *targ,
-+					uint8_t *saslun, uint8_t *cdb,
-+					uint32_t cdb_len, uint8_t addl_cdb_len,
-+				       	uint32_t data_len);
-+void 		asd_hwi_build_stp_task(struct scb *scb, struct asd_target *targ,
-+				       uint32_t data_len);
-+
-+int 		asd_hwi_get_nv_conn_info(struct asd_softc *asd, uint8_t **pconn,
-+					 uint32_t *pconn_size, uint8_t **pnoded,
-+					 uint32_t *pnoded_size);
-+
-+int 		asd_hwi_control_activity_leds(struct asd_softc *asd,
-+					      uint8_t phy_id,
-+					      uint32_t asd_phy_ctl_func);
-+
-+int		asd_hwi_search_nv_segment(struct asd_softc *asd, 
-+					  u_int segment_id, uint32_t *offset,
-+					  uint32_t *pad_size, 
-+					  uint32_t *image_size, 
-+					  uint32_t *attr);
-+int 		asd_hwi_write_nv_segment(struct asd_softc *asd,
-+					void *src, u_int segment_id, 
-+					uint32_t dest_offset, 
-+					uint32_t bytes_to_write);
-+
-+int asd_hwi_read_nv_segment(struct asd_softc *asd, uint32_t segment_id, 
-+					void *dest, uint32_t src_offset, 
-+					uint32_t bytes_to_read,
-+					uint32_t *bytes_read);
-+
-+ 
-+/* Debug function prototypes. */
-+#ifdef ASD_DEBUG
-+void	asd_hwi_dump_seq_state(struct asd_softc *asd, uint8_t lseq_mask);
-+void	asd_hwi_dump_ddb_site(struct asd_softc *asd, u_int site_no);
++#ifdef CONFIG_SMP
++#define ASD_LOCK_ASSERT(asd) \
++	ASSERT(spin_is_locked(&asd->platform_data->spinlock))
++#else
++#define ASD_LOCK_ASSERT(asd)
 +#endif
 +
++static inline void 
++asd_sml_lock(struct asd_softc *asd)
++{
++#if (SCSI_ML_HAS_HOST_LOCK == 0)
++	spin_unlock(&io_request_lock);
++	spin_lock(&asd->platform_data->spinlock);
++#endif
++}
 +
-+#if ASD_PIO_DOWNLOAD_SEQS
-+/* PIO Mode */
-+int		asd_hwi_pio_load_seqs(struct asd_softc *asd, uint8_t *code,
-+				      uint32_t code_size, uint8_t lseq_mask);
-+				      
-+#define ASD_HWI_DOWNLOAD_SEQS(asd, code, code_size, lseq_mask)		\
-+		asd_hwi_pio_load_seqs(asd, (uint8_t *) code,		\
-+				     (uint32_t) code_size, (uint8_t) lseq_mask)	
-+#else 
-+/* Overlay DMA Mode */
-+int		asd_hwi_dma_load_seqs(struct asd_softc *asd, uint8_t *code,
-+				      uint32_t code_size, uint8_t lseq_mask);
++static inline void 
++asd_sml_unlock(struct asd_softc *asd)
++{
++#if (SCSI_ML_HAS_HOST_LOCK == 0)
++	spin_unlock(&asd->platform_data->spinlock);
++	spin_lock(&io_request_lock);
++#endif
++}
 +
-+#define ASD_HWI_DOWNLOAD_SEQS(asd, code, code_size, lseq_mask)		\
-+		asd_hwi_dma_load_seqs(asd, (uint8_t *) code,		\
-+				     (uint32_t) code_size, (uint8_t) lseq_mask)
++#if (SCSI_ML_HAS_HOST_LOCK == 0)
++#define ASD_SML_LOCK_ASSERT(asd)  {\
++	ASSERT(!spin_is_locked(&asd->platform_data->spinlock)); \
++	ASSERT(spin_is_locked(&io_request_lock)) }
++#else
++#define ASD_SML_LOCK_ASSERT(asd)
++#endif
 +
-+#endif /* ASD_DMA_DOWNLOAD_SEQS */
++static inline void 
++asd_list_lockinit(void)
++{
++	spin_lock_init(&asd_list_spinlock);
++}
 +
++static inline void 
++asd_list_lock(u_long *flags)
++{
++	spin_lock_irqsave(&asd_list_spinlock, *flags);
++}
 +
-+/********** External Memory (NVRAM, SEEPROM, etc) strucutres layout ***********/
-+
-+#define NVRAM_SUPPORT			1
-+
-+#if NVRAM_SUPPORT
-+
-+#define NVRAM_RESET			0xF0
-+#define NVRAM_NO_SEGMENT_ID		0xFF
-+#define NVRAM_INVALID_SIZE		0xFFFFFFFF
-+#define NVRAM_COOKIE_SIZE		0x20
-+#define NVRAM_FIRST_DIR_ENTRY		0x90
-+#define NVRAM_NEXT_ENTRY_OFFSET		0x2000
-+#define NVRAM_MAX_ENTRIES		0x20
-+#define NVRAM_SEGMENT_ATTR_ERASEWRITE	1
-+
-+/* NVRAM Entry Type Values. */
-+#define NVRAM_FLASH_DIR			0x00000000
-+#define NVRAM_BIOS_CORE			0x00000020
-+#define NVRAM_BIOS_UTILS		0x00000040
-+#define NVRAM_BIOS_CHIM			0x00000060
-+#define NVRAM_CTRL_A_SETTING		0x000000E0
-+#define NVRAM_CTRL_A_DEFAULT		0x00000100
-+#define NVRAM_MANUF_TYPE		0x00000120
++static inline void 
++asd_list_unlock(u_long *flags)
++{
++	spin_unlock_irqrestore(&asd_list_spinlock, *flags);
++}
 +
 +
-+#define SAS_ADDR_WWID_MASK		0xF0
++/* Delay routine for microseconds interval */
++static inline void asd_delay(long usecs);
 +
-+/* OCM directory entry format */
-+struct asd_ocm_entry_format {
-+	uint8_t		type;
-+#define OCM_DE_OCM_DIR			0x00
-+#define OCM_DE_WIN_DRVR			0x01
-+#define OCM_DE_BIOS_CHIM		0x02
-+#define OCM_DE_RAID_ENGN		0x03
-+#define OCM_DE_BIOS_INTL		0x04
-+#define OCM_DE_BIOS_CHIM_OSM		0x05
-+#define OCM_DE_BIOS_CHIM_DYNAMIC	0x06
-+#define OCM_DE_ADDC2C_RES0		0x07
-+#define OCM_DE_ADDC2C_RES1		0x08
-+#define OCM_DE_ADDC2C_RES2		0x09
-+#define OCM_DE_ADDC2C_RES3		0x0A
++static inline void
++asd_delay(long usecs)
++{
++	/* 
++	 * Delay max up to 2 milliseconds at a time. 
++	 */
++	/*touch_nmi_watchdog();*/
++	if (usecs > 1000)
++		mdelay((usecs/1000));
++	else
++		udelay(usecs);
++}
 +
-+	uint8_t		offset[3];
-+/* retrieves offset/size from the 3 byte array */
-+#define OCM_DE_OFFSET_SIZE_CONV(x) ((x[2] << 16) | (x[1] << 8) | x[0])
-+
-+	uint8_t		res1;
-+	uint8_t		size[3];
-+} __packed;
-+
-+/* OCM directory format */
-+struct asd_ocm_dir_format {
-+	/* 'O'n-chip memory 'D'irectory */
-+	uint16_t	signature;	
-+#define OCM_DIR_SIGN 0x4F4D
++static inline char *asd_name(struct asd_softc  *asd);
 +	
-+	uint16_t	res1;
-+	uint8_t		maj_ver;
-+	uint8_t		min_ver;
-+	uint8_t		res2;
-+	uint8_t		num_entries;
-+#define OCM_NUM_ENTRIES_MASK	0x0f
++static inline char *
++asd_name(struct asd_softc  *asd)
++{
++	return (asd->profile.name);
++}
 +
-+	//struct asd_ocm_entry_format entry[1];
-+} __packed;
++/************************* Large Disk Handling ********************************/
++#if LINUX_VERSION_CODE < KERNEL_VERSION(2,5,0)
++static inline int asd_sector_div(u_long capacity, int heads, int sectors);
 +
++static inline int
++asd_sector_div(u_long capacity, int heads, int sectors)
++{
++	return (capacity / (heads * sectors));
++}
++#else
++static inline int asd_sector_div(sector_t capacity, int heads, int sectors);
++
++static inline int
++asd_sector_div(sector_t capacity, int heads, int sectors)
++{
++	sector_div(capacity, (heads * sectors));
++	return (int)capacity;
++}
++#endif
++
++/************************ Memory space  access routines ***********************/
++
++static inline uint8_t  	asd_read_byte(struct asd_softc *asd, u_long offset);
++static inline uint16_t 	asd_read_word(struct asd_softc *asd, u_long offset);
++static inline uint32_t 	asd_read_dword(struct asd_softc *asd, u_long offset);
++static inline void 	asd_write_byte(struct asd_softc *asd, u_long offset, 
++				       uint8_t val);
++static inline void 	asd_write_word(struct asd_softc *asd, u_long offset, 
++				       uint16_t val);
++static inline void 	asd_write_dword(struct asd_softc *asd, u_long offset, 
++					uint32_t val);
++static inline void 	asd_readstr_byte(struct asd_softc *asd, u_long offset,
++	       				 uint8_t *buffer, u_long count);
++static inline void 	asd_readstr_word(struct asd_softc *asd, u_long offset,
++					 uint16_t *buffer, u_long count);
++static inline void 	asd_readstr_dword(struct asd_softc *asd, u_long offset,
++					  uint32_t *buffer, u_long count);
++static inline void 	asd_writestr_byte(struct asd_softc *asd, u_long offset,
++					  uint8_t *buffer, u_long count);
++static inline void 	asd_writestr_word(struct asd_softc *asd, u_long offset,
++					  uint16_t *buffer, u_long count);
++static inline void 	asd_writestr_dword(struct asd_softc *asd, u_long offset,					   uint32_t *buffer, u_long count);
++
++static inline uint8_t
++asd_read_byte(struct asd_softc *asd, u_long offset)
++{
++	uint8_t		val;
++	
++	if (asd->io_handle[0]->type == ASD_IO_SPACE)
++		val = inb(asd->io_handle[0]->baseaddr.iobase + 
++			 (offset & 0xFF));
++	else
++		val = readb(asd->io_handle[0]->baseaddr.membase + offset);
++	mb();
++	return val;
++}
++
++static inline uint16_t
++asd_read_word(struct asd_softc *asd, u_long offset)
++{
++	uint16_t	val;
++	
++	if (asd->io_handle[0]->type == ASD_IO_SPACE)
++		val = inw(asd->io_handle[0]->baseaddr.iobase + 
++			 (offset & 0xFF));
++	else
++		val = readw(asd->io_handle[0]->baseaddr.membase + offset);	
++	mb();	
++	return val;
++}
++
++static inline uint32_t
++asd_read_dword(struct asd_softc *asd, u_long offset)
++{
++	uint32_t	val;
++	
++	if (asd->io_handle[0]->type == ASD_IO_SPACE)
++		val = inl(asd->io_handle[0]->baseaddr.iobase + 
++			 (offset & 0xFF));
++	else
++		val = readl(asd->io_handle[0]->baseaddr.membase + offset);
++	mb();
++	return val;
++}
++
++static inline void
++asd_write_byte(struct asd_softc *asd, u_long offset, uint8_t val)
++{
++	if (asd->io_handle[0]->type == ASD_IO_SPACE)
++		outb(val, asd->io_handle[0]->baseaddr.iobase + 
++		    (offset & 0xFF));
++	else
++		writeb(val, asd->io_handle[0]->baseaddr.membase + offset);
++	mb();
++}
++	
++static inline void
++asd_write_word(struct asd_softc *asd, u_long offset, uint16_t val)
++{
++	if (asd->io_handle[0]->type == ASD_IO_SPACE)
++		outw(val, asd->io_handle[0]->baseaddr.iobase + 
++		    (offset & 0xFF));
++	else
++		writew(val, asd->io_handle[0]->baseaddr.membase + offset);
++	mb();
++}
++
++static inline void
++asd_write_dword(struct asd_softc *asd, u_long offset, uint32_t val)
++{
++	if (asd->io_handle[0]->type == ASD_IO_SPACE)
++		outl(val, asd->io_handle[0]->baseaddr.iobase + 
++		    (offset & 0xFF));
++	else
++		writel(val, asd->io_handle[0]->baseaddr.membase + offset);
++	mb();
++}
++
++static inline void
++asd_readstr_byte(struct asd_softc *asd, u_long offset, uint8_t *buffer,
++		 u_long	count)
++{ 	
++	u_long	i;
++	
++	for (i = 0; i < count; i++)
++		*buffer++ = asd_read_byte(asd, offset);
++}
++
++static inline void
++asd_readstr_word(struct asd_softc *asd, u_long offset, uint16_t *buffer,
++		 u_long	count)
++{ 	
++	u_long	i;
++	
++	for (i = 0; i < count; i++)
++		*buffer++ = asd_read_word(asd, offset);
++}
++
++static inline void
++asd_readstr_dword(struct asd_softc *asd, u_long	offset, uint32_t *buffer,
++		  u_long count)
++{ 	
++	u_long	i;
++	
++	for (i = 0; i < count; i++)
++		*buffer++ = asd_read_dword(asd, offset);
++}
++
++static inline void
++asd_writestr_byte(struct asd_softc *asd, u_long offset, uint8_t	*buffer,
++		  u_long count)
++{ 	
++	u_long	i;
++	
++	for (i = 0; i < count; i++)
++		asd_write_byte(asd, offset, *buffer++);
++}
++
++static inline void
++asd_writestr_word(struct asd_softc *asd, u_long	offset, uint16_t *buffer,
++		  u_long count)
++{ 	
++	u_long	i;
++	
++	for (i = 0; i < count; i++)
++		asd_write_word(asd, offset, *buffer++);
++}
++
++static inline void
++asd_writestr_dword(struct asd_softc *asd, u_long offset, uint32_t *buffer,
++		   u_long count)
++{ 	
++	u_long	i;
++	
++	for (i = 0; i < count; i++)
++		asd_write_dword(asd, offset, *buffer++);
++}
++
++
++/******************* PCI Config Space (PCIC) access routines ******************/
++
++static inline uint8_t	asd_pcic_read_byte(struct asd_softc *asd, int reg);
++static inline uint16_t 	asd_pcic_read_word(struct asd_softc *asd, int reg);   
++static inline uint32_t 	asd_pcic_read_dword(struct asd_softc *asd, int reg);
++static inline void 	asd_pcic_write_byte(struct asd_softc *asd, int reg, 
++					    uint8_t val);
++static inline void 	asd_pcic_write_word(struct asd_softc *asd, int reg, 
++					    uint16_t val);
++static inline void 	asd_pcic_write_dword(struct asd_softc *asd, int reg, 
++					     uint32_t val);
++static inline void 	asd_flush_device_writes(struct asd_softc *asd);
++					
++static inline uint8_t
++asd_pcic_read_byte(struct asd_softc *asd, int reg)
++{
++	struct pci_dev	*dev;
++	uint8_t		val;
++	
++	dev = asd_dev_to_pdev(asd->dev);
++	pci_read_config_byte(dev, reg, &val);
++	
++	return (val);
++}
++
++static inline uint16_t
++asd_pcic_read_word(struct asd_softc *asd, int reg)
++{
++	struct pci_dev	*dev;
++	uint16_t	val;
++	
++	dev = asd_dev_to_pdev(asd->dev);	
++	pci_read_config_word(dev, reg, &val);
++	
++	return (val);
++}
++
++static inline uint32_t
++asd_pcic_read_dword(struct asd_softc *asd, int reg)
++{
++	struct pci_dev	*dev;
++	uint32_t	val;
++	
++	dev = asd_dev_to_pdev(asd->dev);
++	pci_read_config_dword(dev, reg, &val);
++	
++	return (val);
++}
++
++static inline void
++asd_pcic_write_byte(struct asd_softc *asd, int reg, uint8_t val)
++{
++	struct pci_dev	*dev;
++	
++	dev = asd_dev_to_pdev(asd->dev);
++	pci_write_config_byte(dev, reg, val);
++}	
++ 
++static inline void
++asd_pcic_write_word(struct asd_softc *asd, int reg, uint16_t val)
++{
++	struct pci_dev	*dev;
++	
++	dev = asd_dev_to_pdev(asd->dev);
++	pci_write_config_word(dev, reg, val);
++}
++
++static inline void
++asd_pcic_write_dword(struct asd_softc *asd, int reg, uint32_t val)
++{
++	struct pci_dev	*dev;
++	
++	dev = asd_dev_to_pdev(asd->dev);
++	pci_write_config_dword(dev, reg, val);
++}
++
++static inline void
++asd_flush_device_writes(struct asd_softc *asd)
++{
++	/*
++	 * Reading the interrupt status register
++	 * is always safe, but is this enough to
++	 * flush writes on *all* the architectures
++	 * we may support?
++	 */
++	asd_read_dword(asd, CHIMINT);
++}
++
++
++/**************** Sliding Windows memory read/write utilities *****************/
++
++static inline uint32_t	asd_hwi_adjust_sw_b(struct asd_softc *asd, 
++					    uint32_t reg);
++static inline uint32_t	asd_hwi_adjust_sw_c(struct asd_softc *asd, 
++					    uint32_t reg);
++static inline uint8_t	asd_hwi_swb_read_byte(struct asd_softc *asd, 
++					      uint32_t reg);
++static inline uint16_t	asd_hwi_swb_read_word(struct asd_softc *asd, 
++					      uint32_t reg);
++static inline uint32_t	asd_hwi_swb_read_dword(struct asd_softc *asd, 
++					       uint32_t reg);
++static inline void	asd_hwi_swb_write_byte(struct asd_softc *asd, 
++					       uint32_t reg, uint8_t val);
++static inline void	asd_hwi_swb_write_word(struct asd_softc *asd, 
++					       uint32_t reg, uint16_t val);
++static inline void	asd_hwi_swb_write_dword(struct asd_softc *asd, 
++						uint32_t reg, uint32_t val);
++static inline uint8_t	asd_hwi_swc_read_byte(struct asd_softc *asd, 
++					      uint32_t reg);
++static inline uint16_t	asd_hwi_swc_read_word(struct asd_softc *asd, 
++					      uint32_t reg);
++static inline uint32_t	asd_hwi_swc_read_dword(struct asd_softc *asd, 
++					       uint32_t reg);
++static inline void	asd_hwi_swc_write_byte(struct asd_softc *asd, 
++					       uint32_t reg, uint8_t val);
++static inline void	asd_hwi_swc_write_word(struct asd_softc *asd, 
++					       uint32_t reg, uint16_t val);
++static inline void	asd_hwi_swc_write_dword(struct asd_softc *asd, 
++						uint32_t reg, uint32_t val);
++static inline void 	asd_hwi_set_hw_addr(struct asd_softc *asd, 
++					    uint32_t base_addr, 
++					    dma_addr_t bus_addr);
++
++/* 
++ * Function:
++ *	asd_hwi_adjust_sw_b()
++ *
++ * Description:
++ *      Setup the Sliding Window B to proper base in order to be able to 
++ *	access to the desired register.
++ */
++static inline uint32_t
++asd_hwi_adjust_sw_b(struct asd_softc *asd, uint32_t reg)
++{
++	uint32_t	new_swb_base;
++	uint32_t	new_reg_offset;
++	
++	if (asd->io_handle[0]->type == ASD_IO_SPACE) {
++		/* IO Mapped. */
++		new_swb_base = (uint32_t) (reg & ~BASEB_IOMAP_MASK);
++		new_reg_offset = (uint32_t) (reg & BASEB_IOMAP_MASK);
++	} else {
++		/*To be reviewed...*/ 
++
++		/* Memory Mapped. */
++		uint32_t	mbar0_mask;
++		uint32_t	offset;
++
++		offset = (uint32_t) (reg - asd->io_handle[0]->swb_base);
++		mbar0_mask = asd->io_handle[0]->length - 1;
++
++		/* 
++		* Check if the register to be accessed is already accessible 
++		* with the current window B and avoid reprogramming the 
++		* window. 
++	        *
++		* The boundaries of window B in a memory mapped space are:
++		* lower bound: 
++		*	io_handle[0]->swb_base (e.g. 0xBF80_0000h,current value)
++		*	mbar0_mask (e.g., 0003_FFFFh)
++		*	BASEB_START (e.g. 0000_0080h) or BF83_FF7Fh for example.
++		*
++		* The following check assumes that the largest access to
++		* reg will be an 8 byte access.
++		*/
++         
++		if ((reg >= (uint32_t) asd->io_handle[0]->swb_base) &&
++			((reg + 7) <= (uint32_t) (asd->io_handle[0]->swb_base 
++				+ mbar0_mask - BASEB_START))) {
++			/* 
++			* The window B is already positioned to allow the 
++			* register to be accessed. The offset to the register 
++			* is the difference between the register to be accessed 
++			* and the current value of the base address register
++			*/
++			new_swb_base = (uint32_t) asd->io_handle[0]->swb_base;
++			new_reg_offset = offset;
++		} else {
++			/*
++			* The window B base address register must be changed to 
++			* position window B to a location where the register 
++			* can be accessed.
++			*/
++			new_swb_base = (uint32_t) (reg & ~BASEB_IOMAP_MASK);
++			new_reg_offset = (uint32_t) (reg & BASEB_IOMAP_MASK);
++		}
 +#if 0
-+//TBD: check and remove
-+struct asd_unit_id_direct_attached_sata {
-+	uint8_t		phy_id;
-+	uint8_t		res[15];
-+} __packed;
-+
-+struct asd_unit_id_logical_unit {
-+	uint8_t		sas_address[SAS_ADDR_LEN];
-+	uint8_t		lun[8];
-+} __packed;
-+
-+struct asd_unit_id_volume_set {
-+	uint8_t		volume_set_uid[8];
-+	uint8_t		res[8];
-+} __packed;
-+
-+/* unit element */
-+struct asd_unit_element_format {
-+	uint8_t		id[16];
-+#define UNIT_ELEMENT_DIRECT_ATTACHED_SATA	0x00
-+#define UNIT_ELEMENT_LOGICAL_UNIT		0x01
-+#define UNIT_ELEMENT_VOLUME_SET			0x02
-+	uint8_t		type;
-+	uint8_t		res1;
-+	uint8_t		dos_drv_num;
-+	uint8_t		removable;
-+	uint32_t	res2;
-+} __packed;
++		/* 
++		* The following code is not working correctly with a reg 
++		* value of 0xBF83FF80. The resulting base of 0xBF80_0000 and 
++		* the resulting offset of 0x003F_FF80, appear correct, but 
++		* the calling routines always add BASEB_START to the offset. 
++		* This results in an invalid write acess.
++		*/
++      
++		uint32_t	mbar0_mask;
++		uint32_t	offset;
++		
++		offset = (uint32_t) (reg - asd->io_handle[0]->swb_base);
++		mbar0_mask = asd->io_handle[0]->length - 1;
++		if (offset & ~mbar0_mask) {
++			/*
++			 * The register needs to be accessed is out of the 
++			 * current sliding window B range.
++			 */
++			new_swb_base = (uint32_t) (reg & ~mbar0_mask);
++			new_reg_offset = (uint32_t) (reg & mbar0_mask);
++		} else {
++			/*
++			 * The register needs to be accessed is in the 
++			 * current sliding window B range.
++			 */
++			 new_swb_base = asd->io_handle[0]->swb_base;
++			 new_reg_offset = offset;
++		}
 +#endif
-+
-+struct asd_uid_lu_naa_wwn {
-+	uint8_t		naa;
-+	/* length specified by unit_id_len */
-+} __packed;
-+
-+struct asd_uid_lu_sata_model_num {
-+	uint32_t	id; /* "ata." */
-+#define UNITID_SATA_ID 0x6174612E
-+
-+	uint8_t		model[40];
-+	uint8_t		serial[20];
-+	uint32_t	null_data;
-+	/* length specified by unit_id_len */
-+} __packed;
-+
-+
-+struct asd_uid_vol_set {
-+#define UNITID_VOLUME_SET_UID_LEN	24
-+	uint8_t		vol_set_uid[UNITID_VOLUME_SET_UID_LEN];
-+	/* length specified by unit_id_len */
-+} __packed;
-+
-+struct asd_uid_lu_sgpio {
-+	uint8_t		conn_idx;
-+	uint8_t		box_id;
-+	uint8_t		bay_id;
-+	uint32_t	res1[5];
-+	uint8_t		lun[8];
-+	/* length specified by unit_id_len */
-+} __packed;
-+
-+struct asd_uid_lu_sas_topology {
-+	uint8_t		exp_dev_name[8];
-+	uint8_t		lun[8];
-+	uint8_t		phy_id;
-+	/* length specified by unit_id_len */
-+} __packed;
-+
-+/* unit element */
-+struct asd_unit_element_format {
-+	uint8_t		id;
-+#define UNITELEM_LU_NAA_WWN		0x00
-+#define UNITELEM_LU_SATA_MOD_SERIAL_NUM	0x01
-+#define UNITELEM_VOLUME_SET_DDF_GUID	0x02
-+#define UNITELEM_LU_SGPIO		0x03
-+#define UNITELEM_LU_SAS_TOPOLOGY	0x04
-+
-+	uint8_t		dos_drv_num;
-+	uint8_t		removable_unit;
-+#define UNITELEM_REMOVABLE_UNIT_MASK 	0x01
-+
-+	uint32_t	res1;
-+	uint8_t		unit_id_len;
-+	uint8_t		res2[8];
-+} __packed;
-+
-+/* BIOS CHIM section */
-+struct asd_bios_chim_format {
-+	uint32_t	signature;	/* 'BIOS' or 'ASPI' */
-+#define OCM_BC_BIOS_SIGN 0x42494F53
-+#define OCM_BC_ASPI_SIGN 0x41535049
-+
-+	uint8_t		maj_ver;	/* 0x01 */
-+	uint8_t		min_ver;	/* 0x00 */
-+	uint8_t		bios_maj_ver;
-+	uint8_t		bios_min_ver;
-+	uint32_t	bios_bld_num;
-+	uint8_t		bios_present;
-+#define OCM_BC_BBS_MASK		0x04
-+#define OCM_BC_BIOS_INSLD_MASK	0x02
-+#define OCM_BC_BIOS_PRSNT_MASK	0x01
++	}
++	/*
++	 * Adjust the SW B Base if the the new base is different from the old
++	 * one.
++	 */
++	if (new_swb_base != asd->io_handle[0]->swb_base) {
++		asd_write_dword(asd, PCIC_BASEB, new_swb_base);
++		asd->io_handle[0]->swb_base = new_swb_base;
++	}
 +	
-+	uint8_t		pci_slot_num;
-+	uint16_t	num_elements;
-+	uint16_t	size_unit_elem;
-+	uint8_t		res1[14];	
-+	struct asd_unit_element_format unit_elm[1];
-+} __packed;
++	return (new_reg_offset);
++} 
 +
 +/* 
-+ * These macros take a 8 byte base SAS address and get/set 
-+ * it's constituent elements. 
++ * Function:
++ *	asd_hwi_adjust_sw_c()
++ *
++ * Description:
++ *      Setup the Sliding Window C to proper base in order to be able to 
++ *	access to the desired register.
 + */
++static inline uint32_t   
++asd_hwi_adjust_sw_c(struct asd_softc *asd, uint32_t reg)
++{
++	uint32_t	new_swc_base;
++	uint32_t	new_reg_offset;
 +
-+/* Default: 0x5 */
-+#define ASD_BSAR_GET_NAA(x) 	((x[0] >> 4) & 0x0f)
-+
-+/* Default: 0x0000D1 - 3 byte IEEE Id assigned to Adaptec */
-+#define ASD_BSAR_GET_IEEE_ID(x) \
-+(((x[0] & 0x0f) << 20) | (x[1] << 12) | (x[2] << 4) | ((x[3] >> 4) & 0x0f)) 
-+
-+/* get the 4 byte Razor serial number */
-+#define ASD_BSAR_GET_SN(x) \
-+(((x[3] & 0x0f) << 28) | (x[4] << 20) | (x[5] << 12) \
-+| (x[6] << 4) | (((x[7] >> 5) & 0x07) << 1)) 
-+
-+/*Default: 00000b - configurable using Ctrl-A */
-+#define ASD_BSAR_GET_LSB(x) 	(x[7] & 0x1f)
-+#define ASD_BSAR_SET_LSB(x, y) 	(x[7] = ((x[7] & 0x1f) & (y & 0x1f)))
-+
-+struct asd_manuf_seg_sign {
-+	uint16_t	signature;
-+#define NVRAM_MNF_BASE_SEG_SIGN	 0x4D53	/* 'M'anufacturing 'S'egment */
-+#define NVRAM_MNF_PHY_PARAM_SIGN 0x4D50	/* 'M'anufacturing 'P'hy Parameters */
-+#define NVRAM_MNF_CONN_MAP	 0x434D	/* 'C'onnector 'M'ap */
-+
-+	uint16_t	next_seg_ptr;
-+} __packed;
-+
-+/* Manufacturing Base Segment Layout. */
-+struct asd_manuf_base_seg_layout {
-+	struct asd_manuf_seg_sign seg_sign;
-+	uint8_t		major_ver;	/* 0x00 */
-+	uint8_t		minor_ver;	/* 0x00 */
-+	uint16_t	checksum;
-+	uint16_t	sector_size;
-+	uint8_t		res1[6];
-+	uint8_t		base_sas_addr[8];
-+	uint8_t		pcba_sn[12];
-+} __packed;
-+
-+/* Phy Descriptor sub structure */
-+struct asd_phy_desc_format {
-+	uint8_t		state;
-+#define NVRAM_PHY_ENABLEABLE		0x00
-+#define NVRAM_PHY_REPORTED		0x01
-+#define NVRAM_PHY_HIDDEN		0x02
-+#define PHY_STATE_MASK			0x0F
-+#define PHY_STATE_DEFAULT		NVRAM_PHY_ENABLEABLE
-+
-+	uint8_t		phy_id;
-+	uint16_t	res1;
-+	uint8_t		ctl0;
-+#define PHY_CTL0_DEFAULT		0xF6
-+#define PHY_CTL0_MASK			0x1C
++	new_swc_base = (uint32_t) (reg & ~BASEC_MASK);
++	new_reg_offset = (uint32_t) (reg & BASEC_MASK);
 +	
-+	uint8_t		ctl1;
-+#define PHY_CTL1_DEFAULT		0x10
++	asd_write_dword(asd, PCIC_BASEC, new_swc_base);
++	return (new_reg_offset);
++}
 +
-+	uint8_t		ctl2;
-+#define PHY_CTL2_DEFAULT		0x43
++static inline uint8_t
++asd_hwi_swb_read_byte(struct asd_softc *asd, uint32_t reg)
++{
++	uint32_t	reg_offset;
++	
++	reg_offset = asd_hwi_adjust_sw_b(asd, reg);
++	return ((uint8_t) asd_read_byte(asd, (reg_offset + BASEB_START)));
++}
 +
-+	uint8_t		ctl3;
-+#define PHY_CTL3_DEFAULT		0x83
++static inline uint16_t
++asd_hwi_swb_read_word(struct asd_softc *asd, uint32_t reg)
++{
++	uint32_t	reg_offset;
++	
++	reg_offset = asd_hwi_adjust_sw_b(asd, reg);
++	return ((uint16_t) asd_read_word(asd, (reg_offset + BASEB_START)));
++}
 +
-+} __packed;
++static inline uint32_t
++asd_hwi_swb_read_dword(struct asd_softc *asd, uint32_t reg)
++{
++	uint32_t	reg_offset;
++	
++	reg_offset = asd_hwi_adjust_sw_b(asd, reg);
++	return ((uint32_t) asd_read_dword(asd, (reg_offset + BASEB_START)));
++}
 +
-+/* Manufacturing Phy Parameters Layout */
-+struct asd_manuf_phy_param_layout {
-+	struct asd_manuf_seg_sign seg_sign;
-+	uint8_t		major_ver;	/* 0x00 */
-+	uint8_t		minor_ver;	/* 0x02 */
-+	uint8_t		num_phy_desc;	/* 0x08 */
-+	uint8_t		phy_desc_size;	/* 0x08 */
-+	uint8_t		res1[3];
-+	uint8_t		usage_model_id;
-+	uint8_t		res2[4];
-+} __packed;
++static inline void
++asd_hwi_swb_write_byte(struct asd_softc *asd, uint32_t reg, uint8_t val)
++{
++	uint32_t	reg_offset;
++	
++	reg_offset = asd_hwi_adjust_sw_b(asd, reg);
++	asd_write_byte(asd, (reg_offset + BASEB_START), val);
++}
++
++static inline void
++asd_hwi_swb_write_word(struct asd_softc *asd, uint32_t reg, uint16_t val)
++{
++	uint32_t	reg_offset;
++	
++	reg_offset = asd_hwi_adjust_sw_b(asd, reg);
++	asd_write_word(asd, (reg_offset + BASEB_START), val);
++}
++
++static inline void
++asd_hwi_swb_write_dword(struct asd_softc  *asd, uint32_t reg, uint32_t val)
++{
++	uint32_t	reg_offset;
++	
++	reg_offset = asd_hwi_adjust_sw_b(asd, reg);
++	asd_write_dword(asd, (reg_offset + BASEB_START), val);
++}
++
++static inline uint8_t
++asd_hwi_swc_read_byte(struct asd_softc *asd, uint32_t reg)
++{
++	uint32_t	reg_offset;
++	
++	reg_offset = asd_hwi_adjust_sw_c(asd, reg);
++	return ((uint8_t) asd_read_byte(asd, (reg_offset + BASEC_START)));
++} 
++
++static inline uint16_t
++asd_hwi_swc_read_word(struct asd_softc *asd, uint32_t reg)
++{
++	uint32_t	reg_offset;
++	
++	reg_offset = asd_hwi_adjust_sw_c(asd, reg);
++	return ((uint16_t) asd_read_word(asd, (reg_offset + BASEC_START)));
++}
++
++static inline uint32_t
++asd_hwi_swc_read_dword(struct asd_softc *asd, uint32_t reg)
++{
++	uint32_t	reg_offset;
++	
++	reg_offset = asd_hwi_adjust_sw_c(asd, reg);
++	return ((uint32_t) asd_read_dword(asd, (reg_offset + BASEC_START)));
++}
++
++static inline void
++asd_hwi_swc_write_byte(struct asd_softc *asd, uint32_t reg, uint8_t val)
++{
++	uint32_t	reg_offset;
++	
++	reg_offset = asd_hwi_adjust_sw_c(asd, reg);	
++	asd_write_byte(asd, (reg_offset + BASEC_START), val);
++}
++
++static inline void
++asd_hwi_swc_write_word(struct asd_softc *asd, uint32_t reg, uint16_t val)
++{
++	uint32_t	reg_offset;
++	
++	reg_offset = asd_hwi_adjust_sw_c(asd, reg);	
++	asd_write_word(asd, (reg_offset + BASEC_START), val);
++}
++
++static inline void
++asd_hwi_swc_write_dword(struct asd_softc *asd, uint32_t reg, uint32_t val)
++{
++	uint32_t	reg_offset;
++	
++	reg_offset = asd_hwi_adjust_sw_c(asd, reg);	
++	asd_write_dword(asd, (reg_offset + BASEC_START), val);
++}
++
++static inline void
++asd_hwi_set_hw_addr(struct asd_softc *asd, uint32_t base_addr,
++		    dma_addr_t bus_addr)
++{
++	asd_hwi_swb_write_dword(asd, base_addr,
++				asd_htole32(ASD_GET_PADR(bus_addr)));
++	asd_hwi_swb_write_dword(asd, base_addr + 4,
++				asd_htole32(ASD_GET_PUADR(bus_addr)));
++}
 +
 +
-+/* Phy Descriptor Unattached Layout */
-+struct asd_pd_ua_format {
-+	uint16_t	res1;
-+	uint8_t		rel_phy_id;
-+	/* size is specified by the node_desc format */
-+} __packed;
++/************************** Scatter/Gather entry setup ************************/
 +
-+/* Phy Descriptor connector attached Layout */
-+struct asd_pd_ca_format {
-+	uint8_t		idx;
-+	uint8_t		lane;
-+	uint8_t		rel_phy_id;
-+	/* size is specified by the node_desc format */
-+} __packed;
++static inline int	asd_sg_setup(struct sg_element *sg, dma_addr_t addr,
++				     uint32_t len, int last);
 +
-+/* Phy Descriptor node attached Layout */
-+struct asd_pd_na_format {
-+	uint8_t		idx;
-+	uint8_t		att_phy_id;
-+	uint8_t		rel_phy_id;
-+	/* size is specified by the node_desc format */
-+} __packed;
++static inline int
++asd_sg_setup(struct sg_element *sg, dma_addr_t addr, uint32_t len, int last)
++{
++	sg->bus_address = asd_htole64(addr);
++	sg->length = asd_htole32(len);
++	memset(sg->res_1, 0, sizeof(*sg) - offsetof(struct sg_element, res_1));
++	if (last)
++		sg->flags |= SG_EOL;
++	return (0);
++}
 +
-+/* Node descriptor's Phy descriptor entries */
-+struct asd_nd_phydesc_format {
-+	uint8_t		type;
-+#define NV_PD_UATTACH		0x00
-+#define NV_PD_CONATTACH		0x01
-+#define NV_PD_NODEATTACH	0x02
 +
-+	union {
-+		struct asd_pd_ua_format uatt;
-+		struct asd_pd_ca_format catt;
-+		struct asd_pd_na_format natt;
-+	}att_type;
-+} __packed;
++/********************* Host Queue management routines ************************/ 
 +
-+/* Node Descriptor Layout */
-+struct asd_node_desc_format {
-+	uint8_t		type;
-+#define NV_NODET_IOP		0x00
-+#define NV_NODET_IOCTLR		0x01
-+#define NV_NODET_EXPANDER	0x02
-+#define NV_NODET_PORT_MUL	0x03
-+#define NV_NODET_PORT_MUX	0x04
-+#define NV_NODET_PORT_MDI2C_BUS	0x05
++static inline struct asd_device *
++			asd_next_device_to_run(struct asd_softc *asd);
++static inline void	asd_schedule_runq(struct asd_softc *asd);
++static inline void	asd_schedule_unblock(struct asd_softc *asd);
++static inline void	asd_freeze_hostq(struct asd_softc *asd);
++static inline void	asd_release_hostq(struct asd_softc *asd);
++static inline void	asd_release_hostq_locked(struct asd_softc *asd);
++static inline void	asd_freeze_targetq(struct asd_softc *asd,
++					   struct asd_target *targ);
++static inline void	asd_unfreeze_targetq(struct asd_softc *asd,
++					     struct asd_target *targ);
++static inline void	asd_setup_dev_timer(struct asd_device *dev,
++					    u_long timeout,
++					    void (*func)(u_long));
++static inline void	asd_setup_dev_dpc_task(struct asd_device *dev,
++					       void (*func)(void *));
++					
 +
-+	uint8_t		num_phy_desc;
-+	uint8_t		phy_desc_size;
-+	uint8_t		res1;
++static inline struct asd_device *
++asd_next_device_to_run(struct asd_softc *asd)
++{
++	ASD_LOCK_ASSERT(asd);
 +
-+#define NV_NODED_INST_NAME_SIZE 16
-+	uint8_t		inst_name[NV_NODED_INST_NAME_SIZE];
-+} __packed;
++	if (asd->platform_data->qfrozen != 0)
++		return (NULL);
 +
-+/* SideBand Descriptor Layout */
-+struct asd_sb_desc_format {
-+	uint8_t		type;
-+#define NV_SBT_UNKNOWN		0x00
-+#define NV_SBT_SGPIO		0x01
-+#define NV_SBT_ADPTI2C		0x80
-+#define NV_SBT_VEN_UNQ01	0x81
-+#define NV_SBT_VEN_UNQ7F	0xFF
++	if (list_empty(&asd->platform_data->device_runq))
++		return (NULL);
 +
-+	uint8_t		node_desc_idx;
-+	uint8_t		conn_desc_idx;
-+	uint8_t		res1;
-+	/* size is specified by the conn_desc format */
-+} __packed;
-+
-+/* Connector Descriptor Layout */
-+struct asd_conn_desc_format {
-+	uint8_t		type;
-+#define NV_CONNT_UNKNOWN	0x00
-+#define NV_CONNT_SFF8470	0x08
-+#define NV_CONNT_SFF8482	0x09
-+#define NV_CONNT_SFF8484	0x0A
-+#define NV_CONNT_PCIX_D0	0x80
-+#define NV_CONNT_SAS_D0		0x81
-+#define NV_CONNT_VEN_UNQ02	0x82
-+#define NV_CONNT_VEN_UNQ7F	0xFF
-+
-+	uint8_t		location;
-+#define NV_CONNL_UNKNOWN	0x00
-+#define NV_CONNL_INTERNAL	0x01
-+#define NV_CONNL_EXTERNAL	0x02
-+#define NV_CONNL_B2B		0x03
-+
-+	uint8_t		num_sb_desc;
-+	uint8_t		sb_desc_size;
-+	uint32_t	res1;
-+
-+#define NV_CONND_INST_NAME_SIZE 16
-+	uint8_t		inst_name[NV_CONND_INST_NAME_SIZE];
-+} __packed;
-+
-+/* Connector Map Layout */
-+struct asd_conn_map_format {
-+	struct asd_manuf_seg_sign seg_sign;
-+	uint8_t		major_ver;	/* 0x00 */
-+	uint8_t		minor_ver;	/* 0x00 */
-+	uint16_t	size;
-+	uint8_t		num_conn_desc;
-+	uint8_t		conn_desc_size;
-+	uint8_t		num_node_desc;
-+	uint8_t		usage_model_id;
-+	uint32_t	res1;
-+} __packed;
-+
-+struct asd_settings_layout {
-+	uint8_t		id;
-+#define NVRAM_PHY_SETTINGS_ID   	0x68
-+#define NVRAM_BOOT_UNIT_SETTINGS_ID 	0x42
-+#define NVRAM_BOOTLUN_SETTINGS_ID 	0x4c
-+
-+	uint8_t		res;
-+	uint16_t	next_ptr;
-+} __packed;
-+
++	return (list_entry(asd->platform_data->device_runq.next,
++			   struct asd_device, links));
++}
 +
 +/*
-+ * The size of Flash directory structure must be 64 bytes for backward
-+ * compatibility.
++ * Must be called with our lock held.
 + */
-+struct asd_fd_entry_layout {
-+	uint32_t	attr;
-+#define FD_ENTRYTYPE_CODE	0x3FFFFFFF
-+#define FD_SEGMENT_ATTR		0x40000000
++static inline void
++asd_schedule_runq(struct asd_softc *asd)
++{
++	ASD_LOCK_ASSERT(asd);
 +
-+	uint32_t	offset;
-+	uint32_t	pad_size;
-+	uint32_t	image_size;
-+	uint32_t	checksum;
-+	uint8_t		res[12];
-+	uint8_t		ver_data[32];
-+} __packed;
++	tasklet_schedule(&asd->platform_data->runq_tasklet);
++}
 +
-+struct asd_flash_dir_layout {
-+	
-+	uint8_t		cookie[32];	/* "*** ADAPTEC FLASH DIRECTORY *** " */
-+	uint32_t	rev;		/* 0x00000002 */
-+	uint32_t	wchk_sum;
-+	uint32_t	wchk_sum_antidote;
-+	uint32_t	build_num;
-+	uint8_t		build_id[32];
-+	uint8_t		ver_data[32];
-+	uint32_t	ae_mask;
-+	uint32_t	v_mask;
-+	uint32_t	oc_mask;
-+	uint8_t		res1[20];
-+	//struct asd_fd_entry_layout entry[1];
-+} __packed;
++static inline void
++asd_schedule_unblock(struct asd_softc *asd)
++{
++	tasklet_schedule(&asd->platform_data->unblock_tasklet);
++}
 +
-+struct asd_phy_settings_entry_layout {
-+	uint8_t		sas_addr[SAS_ADDR_LEN];
-+	uint8_t		link_rate;		/*
-+						 * bits 0-3: minimum link rate
-+						 * bits 4-7: maximum link rate
-+						 */
-+#define PHY_MIN_LINK_RATE_15	0x08
-+#define PHY_MIN_LINK_RATE_30	0x09
-+#define PHY_MIN_LINK_RATE_MASK	0x0F
++static inline void
++asd_freeze_hostq(struct asd_softc *asd)
++{
++	asd->platform_data->qfrozen++;
++	if (asd->platform_data->qfrozen == 1)
++		scsi_block_requests(asd->platform_data->scsi_host);
++}
 +
-+#define PHY_MAX_LINK_RATE_15	0x80
-+#define PHY_MAX_LINK_RATE_30	0x90
-+#define PHY_MAX_LINK_RATE_MASK	0xF0
++static inline void
++asd_release_hostq(struct asd_softc *asd)
++{
++	u_long flags;
 +
-+	uint8_t		attr;			/*
-+						 * bit 0: disable CRC checking
-+						 * bit 1: SATA spinup hold
-+						 */
-+	uint8_t		res1[6];
-+} __packed;
-+    
-+struct asd_phy_settings_layout {
-+	struct asd_settings_layout settings;
-+	uint8_t		num_phys;
-+	uint8_t		res2[3];
-+	//struct asd_phy_settings_entry_layout entry[1];
-+} __packed;
++	asd_lock(asd, &flags);
++	asd_release_hostq_locked(asd);
++	asd_unlock(asd, &flags);
++}
 +
-+struct asd_boot_lu_layout {
-+	uint8_t		serial_no[4];		/* Adapter serial number */
-+	/* Boot device's SAS address */
-+	uint8_t		dev_port_sas_addr[SAS_ADDR_LEN];
-+	uint8_t		lun[8];			/* Boot device LUN */
-+	uint8_t		phy_id;			/*
-+						 * Phy ID of the attached boot
-+						 * device (direct attached
-+						 * SATA only).
-+						 */
-+	uint8_t		res1;
-+	uint16_t	attr;
-+	uint8_t		conn_rate;		/*
-+						 * bit   0: force connection
-+						 * bit 4-7: connection rate
-+						 */
-+#define BOOT_FORCE_CONN 	0x01
-+#define BOOT_CONN_RATE_15	0x80
-+#define BOOT_CONN_RATE_30	0x90
-+#define BOOT_CONN_RATE_MASK	0xF0
++static inline void
++asd_release_hostq_locked(struct asd_softc *asd)
++{
++	if (asd->platform_data->qfrozen > 0)
++		asd->platform_data->qfrozen--;
++	if (asd->platform_data->qfrozen == 0) {
++		asd_schedule_unblock(asd);
++		asd_schedule_runq(asd);
++	}
++}
 +
-+	uint8_t		res2[7];
-+} __packed;
-+    
-+struct asd_pci_layout {
-+	uint8_t		id;
-+	uint8_t		res;
-+	uint16_t	next_ptr;
-+	uint8_t		major_ver;
-+	uint8_t		minor_ver;
-+	uint16_t	checksum;
-+	uint16_t	image_size;
-+} __packed;
++static inline void
++asd_freeze_targetq(struct asd_softc *asd, struct asd_target *targ)
++{
++	targ->qfrozen++;
++}
 +
-+/************************ Flash part related macros ***********************/
-+#define FLASH_MANUF_ID_AMD		0x01
-+#define FLASH_MANUF_ID_UNKNOWN		0xFF
++static inline void
++asd_unfreeze_targetq(struct asd_softc *asd, struct asd_target *targ)
++{
++	if (targ->qfrozen > 0)
++		targ->qfrozen--;
++}
 +
-+#define FLASH_DEV_ID_AM29LV008B		0x3E
-+#define FLASH_DEV_ID_AM29LV800D		0xDA
-+#define FLASH_DEV_ID_UNKNOWN		0xFF
++static inline void
++asd_setup_dev_timer(struct asd_device *dev, u_long timeout,
++		    void (*func)(u_long))
++{
++	dev->flags |= ASD_DEV_TIMER_ACTIVE;
++	init_timer(&dev->timer);
++	dev->timer.expires = jiffies + timeout;
++	dev->timer.data = (u_long) dev;
++	dev->timer.function = func;
++	add_timer(&dev->timer);
++}
 +
-+/* status bit mask values */
-+#define FLASH_STATUS_BIT_MASK_DQ6	0x40
-+#define FLASH_STATUS_BIT_MASK_DQ5	0x20
-+#define FLASH_STATUS_BIT_MASK_DQ2	0x04
++static inline void
++asd_setup_dev_dpc_task(struct asd_device *dev, void (*func)(void *))
++{
++	dev->flags |= ASD_DEV_DPC_ACTIVE;
++#if LINUX_VERSION_CODE < KERNEL_VERSION(2,5,41)
++	dev->taskq.routine = func;
++	dev->taskq.data = (void *) dev;
++	schedule_task(&dev->taskq);
++#else
++	INIT_WORK(&dev->workq, func, (void *) dev);
++	schedule_work(&dev->workq);
++#endif
++}
 +
-+/* minimum value in micro seconds needed for checking status */
-+#define FLASH_STATUS_ERASE_DELAY_COUNT	50
-+#define FLASH_STATUS_WRITE_DELAY_COUNT	25
++/**************************** Semaphores Handling *****************************/
 +
-+#endif /* NVRAM_SUPPORT */
++static inline void	asd_sleep_sem(struct semaphore *sem);
++static inline void	asd_wakeup_sem(struct semaphore *sem);
 +
-+#endif /* ADP94XX_HWI_H */
++static inline void
++asd_sleep_sem(struct semaphore *sem)
++{
++	down(sem);
++}
++
++static inline void
++asd_wakeup_sem(struct semaphore *sem)
++{
++	up(sem);
++}
++
++/****************************** SCB/EDB Handling ******************************/
++
++static inline void 	asd_platform_scb_free(struct asd_softc *asd, 
++					      struct scb *scb);
++static inline void 	asd_hwi_free_scb(struct asd_softc *asd,
++					 struct scb *scb);
++static inline void 	*asd_hwi_sdata_bus_to_virt(struct asd_softc *asd, 
++						   uint64_t baddr);
++static inline union edb *asd_hwi_get_edb_vaddr(struct asd_softc *asd, 
++						uint64_t baddr);
++static inline union edb *asd_hwi_get_edb_from_dl(struct asd_softc *asd,
++						 struct scb *scb,
++						 struct asd_done_list *dl,
++						 struct scb **pescb,
++						 u_int *pedb_index);
++static inline void	asd_setup_scb_timer(struct scb *scb, u_long timeout,
++					    void (*func)(u_long));
++static inline void	asd_cmd_set_retry_status(Scsi_Cmnd *cmd);
++static inline void	asd_cmd_set_offline_status(Scsi_Cmnd *cmd);
++
++static inline void
++asd_platform_scb_free(struct asd_softc *asd, struct scb *scb)
++{
++	if ((asd->flags & ASD_SCB_RESOURCE_SHORTAGE) != 0) {
++		asd->flags &= ~ASD_SCB_RESOURCE_SHORTAGE;
++		if ((asd->flags & ASD_WAITING_FOR_RESOURCE) != 0) {
++			asd->flags &= ~ASD_WAITING_FOR_RESOURCE;
++			wake_up(&asd->platform_data->waitq);
++		}
++		asd_release_hostq_locked(asd);
++	}
++}
++
++static inline void
++asd_hwi_free_scb(struct asd_softc *asd, struct scb *scb)
++{
++	if ((scb->flags & SCB_RESERVED) != 0) {
++        	list_add(&scb->hwi_links, &asd->rsvd_scbs);
++	} else {
++        	list_add(&scb->hwi_links, &asd->free_scbs);
++		/* Notify the OSM that a resource is now available. */
++		asd_platform_scb_free(asd, scb);
++	}
++
++	/* 
++	 * Clean up the SCB's flags for the next user.
++	 */
++	scb->flags = SCB_FLAG_NONE;
++}
++
++static inline void *
++asd_hwi_sdata_bus_to_virt(struct asd_softc *asd, uint64_t baddr)
++{
++	uint8_t		*vaddr;
++	uint64_t	vaddr_offset;
++
++	vaddr_offset = baddr - asd->shared_data_map.busaddr;
++	vaddr = asd->shared_data_map.vaddr + vaddr_offset;
++	return (vaddr);
++}
++
++static inline union edb *
++asd_hwi_get_edb_vaddr(struct asd_softc *asd, uint64_t baddr)
++{
++	return ((union edb *)asd_hwi_sdata_bus_to_virt(asd, baddr));
++}
++
++static inline union edb * 
++asd_hwi_get_edb_from_dl(struct asd_softc *asd, struct scb *scb, 
++	   		struct asd_done_list *dl, struct scb **pescb, 
++			u_int *pedb_index)
++{
++	union edb 		*edb;
++	struct response_sb   	*rsp;
++	struct scb 		*escb;
++	u_int  			 escb_index;
++	u_int			 edb_index;
++
++	edb = NULL;
++	rsp = &dl->stat_blk.response;
++	escb_index = asd_le16toh(rsp->empty_scb_tc);
++	edb_index = RSP_EDB_ELEM(rsp) - 1;
++
++	edb = asd_hwi_indexes_to_edb(asd, &escb, escb_index, edb_index);
++
++	*pescb = escb;
++	*pedb_index = edb_index;
++
++	return edb;
++}
++
++static inline void
++asd_setup_scb_timer(struct scb *scb, u_long timeout, void (*func)(u_long))
++{
++	init_timer(&scb->platform_data->timeout);
++	scb->platform_data->timeout.expires = jiffies + timeout;
++	scb->platform_data->timeout.data = (u_long) scb;
++	scb->platform_data->timeout.function = func;
++	add_timer(&scb->platform_data->timeout);
++}
++
++static inline void
++asd_cmd_set_retry_status(Scsi_Cmnd *cmd)
++{
++	/*
++	 * If we want the request requeued, make sure there
++	 * are sufficent retries.  In the old scsi error code,
++	 * we used to be able to specify a result code that
++	 * bypassed the retry count.  Now we must use this
++	 * hack.  We also "fake" a check condition with
++	 * a sense code of ABORTED COMMAND.  This seems to
++	 * evoke a retry even if this command is being sent
++	 * via the eh thread.  Ick!  Ick!  Ick!
++	 */
++	if (cmd->retries > 0)
++		cmd->retries--;
++
++	asd_cmd_set_scsi_status(cmd, SCSI_STATUS_CHECK_COND);
++	asd_cmd_set_host_status(cmd, DID_OK);
++	asd_cmd_set_driver_status(cmd, DRIVER_SENSE);
++	memset(cmd->sense_buffer, 0, sizeof(cmd->sense_buffer));
++	cmd->sense_buffer[0] = SSD_ERRCODE_VALID
++			     | SSD_CURRENT_ERROR;
++	cmd->sense_buffer[2] = SSD_KEY_ABORTED_COMMAND;
++} 
++
++static inline void
++asd_cmd_set_offline_status(Scsi_Cmnd *cmd)
++{
++	asd_cmd_set_host_status(cmd, DID_NO_CONNECT);
++	asd_cmd_set_driver_status(cmd, DRIVER_SENSE);
++	memset(cmd->sense_buffer, 0, sizeof(cmd->sense_buffer));
++	cmd->sense_buffer[0] = SSD_ERRCODE_VALID
++			     | SSD_CURRENT_ERROR;
++	cmd->sense_buffer[2] = SSD_KEY_NOT_READY;
++}
++
++static inline void
++asd_build_sas_header(
++struct asd_target 		*targ,
++struct asd_ssp_task_hscb	*ssp_hscb
++)
++{
++	ssp_hscb->protocol_conn_rate = targ->ddb_profile.conn_rate;
++	ssp_hscb->sas_header.frame_type = OPEN_ADDR_FRAME;
++	memcpy(ssp_hscb->sas_header.hashed_dest_sasaddr,
++	       targ->ddb_profile.hashed_sas_addr, HASHED_SAS_ADDR_LEN);
++	ssp_hscb->sas_header.res = 0;
++	memcpy(ssp_hscb->sas_header.hashed_src_sasaddr,
++	       targ->src_port->hashed_sas_addr, HASHED_SAS_ADDR_LEN);
++	memset(ssp_hscb->sas_header.res1, 0,
++	       offsetof(struct asd_sas_header, target_port_xfer_tag) - 
++	       offsetof(struct asd_sas_header, res1));
++	ssp_hscb->sas_header.target_port_xfer_tag = 0xFFFF;
++	ssp_hscb->sas_header.data_offset = 0;
++	ssp_hscb->conn_handle = targ->ddb_profile.conn_handle;
++	ssp_hscb->sister_scb = 0xFFFF;
++	ssp_hscb->retry_cnt = TASK_RETRY_CNT;
++
++	/*
++	 * SSP Command IU.
++	 */
++	memset(ssp_hscb->lun, 0,
++	       offsetof(struct asd_ssp_task_hscb, cdb) -
++	       offsetof(struct asd_ssp_task_hscb, lun));
++
++	memset(&ssp_hscb->data_dir_flags, 0, 
++	       offsetof(struct asd_ssp_task_hscb, sg_elements) - 
++	       offsetof(struct asd_ssp_task_hscb, data_dir_flags));
++
++	ssp_hscb->data_dir_flags = 0;
++}
++
++static inline void
++asd_push_post_stack(
++struct asd_softc	*asd,
++struct scb		*scb,
++asd_io_ctx_t		io_ctx,
++asd_scb_post_t		*post
++)
++{
++	if (scb->post_stack_depth == SCB_POST_STACK_DEPTH) {
++		panic("post_stack overflow\n");
++	}
++
++	scb->post_stack[scb->post_stack_depth].io_ctx = io_ctx;
++	scb->post_stack[scb->post_stack_depth].post = post;
++
++	scb->io_ctx = io_ctx;
++	scb->post = post;
++
++	scb->post_stack_depth++;
++}
++
++static inline void
++asd_pop_post_stack(
++struct asd_softc	*asd,
++struct scb		*scb,
++struct asd_done_list	*done_listp
++)
++{
++	if (scb->post_stack_depth == 0) {
++		panic("post_stack underflow\n");
++	}
++
++	scb->post_stack_depth--;
++
++	scb->io_ctx = scb->post_stack[scb->post_stack_depth].io_ctx;
++	scb->post = scb->post_stack[scb->post_stack_depth].post;
++
++	scb->post(asd, scb, done_listp);
++}
++
++#endif /* ADP94XX_INLINE_H */
 +
 
