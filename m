@@ -1,44 +1,31 @@
-From: Linus Torvalds <torvalds@transmeta.com>
-Subject: Re: Another SCSI Sync
-Date: Wed, 5 Mar 2003 07:58:25 -0800 (PST)
+From: Oliver Neukum <oliver@neukum.name>
+Subject: Re: [PATCH / RFC] scsi_set_host_offline
+Date: Wed, 5 Mar 2003 00:12:35 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44.0303050753080.4759-100000@home.transmeta.com>
-References: <1046315953.1834.177.camel@mulgrave>
+Message-ID: <200303050012.35309.oliver@neukum.name>
+References: <20030303221532.GB1587@beaverton.ibm.com> <20030304123605.D6452@one-eyed-alien.net> <20030304222907.GA1252@beaverton.ibm.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <1046315953.1834.177.camel@mulgrave>
+In-Reply-To: <20030304222907.GA1252@beaverton.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@steeleye.com>
-Cc: linux-scsi@vger.kernel.org
+To: Mike Anderson <andmike@us.ibm.com>, linux-scsi@vger.kernel.org
+Cc: Matthew Dharm <mdharm-scsi@one-eyed-alien.net>
 
 
-Hmm.. Some part of the last syncs seem to break for a lot of people. See
-the linux kernel mailing list. One report (Rob Radez <rob@osinvestor.com>)  
-chased it down some:
+> If a LLDD decided that it did not want any more devices added it can
+> today fail calls to queuecommand or slave_alloc (which some already do).
+> The LLDD may need to handle these in the future depending on what
+> functions scsi_set_host_offline maybe racing with.
 
-	On Tue, Mar 04, 2003 at 11:42:41PM -0600, David van Hoose wrote:
-	> Kernels 2.5.63 and 2.5.64 lock up when displaying the information for my 
-	> ZipDrive during SCSI probe. Attached is my .config for 2.5.64.
+It seems to me that there's a race with scan_scsis() and scan_scsis_single()
+which cannot be closed with failing queuecommand, as there's a window where
+the INQUIRY has succeeded but has not yet been evaluated by the SCSI layer.
+I am not quite sure how slave_alloc() is involved into this, but IMHO it's 
+wrong to force LLDDs to know about devices if they are hotpluggable.
+Could you clarify?
 
-	I suspect I'm seeing something similar.  On SPARC, I'm getting a hang
-	after displaying the information for my SCSI CD-ROM drive.
-
-	scsi0 : Sparc ESP100A-FAST
-	Vendor: SEAGATE   Model: ST31200W SUN1.05  Rev: 8724
-	Type:   Direct-Access                      ANSI SCSI revision: 02
-	Vendor: SEAGATE   Model: ST32155W SUN2.1G  Rev: 8456
-	Type:   Direct-Access                      ANSI SCSI revision: 02
-	Vendor: TOSHIBA   Model: XM-4101TASUNSLCD  Rev: 1755
-	Type:   CD-ROM                             ANSI SCSI revision: 02
-	<hang>
-
-	Worked fine in 2.5.62, hangs in 2.5.63. Reverting the scsi changes
-	listed at
-		http://osinvestor.com/sparc/patch/2.5.63-revertscsi.diff
-	allows 2.5.63 to boot.
-
-Please check it out.. The common thread seems to be "non-disk".
-
-		Linus
+	Regards
+		Oliver
 
