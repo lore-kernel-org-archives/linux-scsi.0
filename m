@@ -1,36 +1,48 @@
-From: mikem <mikem@beardog.cca.cpqcorp.net>
-Subject: Re: [patch 1/2] cciss: cleans up warnings in the 32/64 bit conversions
-Date: Fri, 22 Oct 2004 13:30:57 -0500
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH] Re: libata:  BLKFLSBUF ioctl broken
+Date: Fri, 22 Oct 2004 19:16:59 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20041022183057.GA23032@beardog.cca.cpqcorp.net>
-References: <20041021211718.GA10462@beardog.cca.cpqcorp.net> <Pine.LNX.4.58L.0410220054010.15504@blysk.ds.pg.gda.pl>
+Message-ID: <1098469018.19463.26.camel@localhost.localdomain>
+References: <4178244E.1060906@rtr.ca> <20041022040423.GA28782@havoc.gtf.org>
+	 <41791728.7060106@rtr.ca>  <41793E68.6010000@pobox.com>
+	 <1098461668.19463.22.camel@localhost.localdomain>
+	 <41794158.9010308@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from zmamail03.zma.compaq.com ([161.114.64.103]:33299 "EHLO
-	zmamail03.zma.compaq.com") by vger.kernel.org with ESMTP
-	id S267235AbUJVSbX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 22 Oct 2004 14:31:23 -0400
-Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.58L.0410220054010.15504@blysk.ds.pg.gda.pl>
+Received: from clock-tower.bc.nu ([81.2.110.250]:21474 "EHLO
+	localhost.localdomain") by vger.kernel.org with ESMTP
+	id S266366AbUJVTUJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 22 Oct 2004 15:20:09 -0400
+In-Reply-To: <41794158.9010308@pobox.com>
 List-Id: linux-scsi@vger.kernel.org
-To: "Maciej W. Rozycki" <macro@linux-mips.org>
-Cc: marcelo.tosatti@cyclades.com, axboe@suse.de, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Mark Lord <lsml@rtr.ca>, linux-scsi@vger.kernel.org, Jens Axboe <axboe@suse.de>
 
-On Fri, Oct 22, 2004 at 01:00:45AM +0100, Maciej W. Rozycki wrote:
-> > -	err |= get_user(arg64.buf, &arg32->buf);
-> > +	err |= get_user((__u64) arg64.buf, &arg32->buf);
-> >  	if (err) return -EFAULT; 
-> >  	old_fs = get_fs();
-> >  	set_fs(KERNEL_DS);
+On Gwe, 2004-10-22 at 18:20, Jeff Garzik wrote:
+> > -EOPNOTSUPP is saying "I do know what is going on but its broken so
+> > fail it totally".
 > 
->  These constructs (casts as lvalues) are deprecated with GCC 3.4 (a
-> warning is triggered) and no longer supported with 4.0.  Please consider
-> rewriting -- you'll probably need an auxiliary variable.
+> Are you describing behavior mandated in some standard?
+
+Yes. ENOTTY means "the ioctl you threw at me isn't one I understand",
+always has been in Unix proper.
+
+-EINVAL: "I recognize this ioctl but the arguments are bogus"
+-ENOTTY: "I don't recognize this ioctl at all"
+-ENOIOCTLCMD: Internal (never user visible) used by some driver layers 
+to pass down "please do the defaults". This one might be a sane addition
+to the block layer list.
+
+> Because that differs with _tons_ of existing ioctl code, whose default 
+> return code is EOPNOTSUPP when no known operation is found in a C 
+> "switch(cmd)" statement.
 > 
->   Maciej
+> grep for it...
 
-Maciej,
-Is this documented somewhere?
+We are slowly fixing the abusers of -EINVAL/-EOPNOTSUPP. Note btw that
+networking stuff is in many places a little different in its returns.
 
-mikem
+Alan
+
