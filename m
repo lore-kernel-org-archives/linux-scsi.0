@@ -1,67 +1,90 @@
-From: Oliver Neukum <oliver@neukum.name>
-Subject: Re: [linux-usb-devel] Re: [PATCH] USB changes for 2.5.58
-Date: Wed, 22 Jan 2003 23:46:30 +0100
+From: "Justin T. Gibbs" <gibbs@btc.adaptec.com>
+Subject: Aic7xxx 6.2.28 and Aic79xx 1.3.0 Released
+Date: Wed, 22 Jan 2003 15:50:33 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <200301222346.30329.oliver@neukum.name>
-References: <Pine.LNX.4.44L0.0301211546410.6926-100000@ida.rowland.org> <3E2F1213.8090400@splentec.com>
+Message-ID: <87730000.1043275833@aslan.btc.adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <3E2F1213.8090400@splentec.com>
+Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
-To: Luben Tuikov <luben@splentec.com>, Alan Stern <stern@rowland.harvard.edu>
-Cc: David Brownell <david-b@pacbell.net>, Matthew Dharm <mdharm-scsi@one-eyed-alien.net>, Mike Anderson <andmike@us.ibm.com>, Greg KH <greg@kroah.com>, linux-usb-devel@lists.sourceforge.net, Linux SCSI list <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Linus Torvalds <torvalds@transmeta.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Marcelo Tosatti <marcelo@conectiva.com.br>
 
+GNU patch relative to 2.5.59:
+ http://people.FreeBSD.org/~gibbs/linux/SRC/aic79xx-linux-2.5.59-20030122-gnupatch.gz
 
-> > Whose responsibility is it to fail these interactions?
->
-> The transport.
->
-> When a device is plugged to the SAN/fabric (wlg) it may not be the case
-> that all initiators will know about it.  For this reason the transport
-> itself, not SCSI Core, not LLDD*, will decide if the CDB is deliverable.
->
-> * An LLDD may keep a table of seen devices (depending on the transport
-> it provides a portal to), and thus the decision may be made there, but
-> this doesn't have to be the case.
->
-> (Just think of SANs/IP SANs.)
+BK send and tarball distributions:
+ http://people.FreeBSD.org/~gibbs/linux/SRC/aic79xx-linux-2.4-20030122.bksend.gz
+ http://people.FreeBSD.org/~gibbs/linux/SRC/aic79xx-linux-2.5-20030122.bksend.gz
+ http://people.FreeBSD.org/~gibbs/linux/SRC/aic79xx-linux-2.4-20030122-tar.gz
+ http://people.FreeBSD.org/~gibbs/linux/SRC/aic79xx-linux-2.5-20030122-tar.gz
 
-Not all the world is a SAN. USB has no possibility to even try an interaction
-after the device is gone. We have to handle this flexibly. In fact, if a device
-can vanish without a LLDD knowing about it, this is purely a problem of the
-SCSI layer.
+Driver update diskettes for most distributions:
 
-> > For something simple, like a USB serial port, it might turn out that the
-> > low-level device driver gets all these requests and then fails them. 
-> > That means the driver has to keep track of the fact that the device is no
-> > longer connected until some reference count goes to 0.
->
-> A LLDD doesn't have to keep reference counts.  In the simple case
-> you mention above, it will check that the device is no longer reachable
-> and will return TARGET error, which will bubble up the layers, or the
+	http://people.FreeBSD.org/~gibbs/linux/DUD/aic7xxx/
+	http://people.FreeBSD.org/~gibbs/linux/DUD/aic79xx/
 
-That is something that is impossible to some LLDDs. We have to keep
-a record about devices and busses we can reach and can delete these
-records only after we positively know that no more commands will come
-down to the LLDD.
+RPMs for most distributions:
 
-The alternative would be to check a table of available devices for every
-command.
+	http://people.FreeBSD.org/~gibbs/linux/RPM/aic7xxx/
+	http://people.FreeBSD.org/~gibbs/linux/RPM/aic79xx/
 
-That means that we have to have a way to ensure that no more commands
-will reach the LLDD which can be triggered without any commands to be
-executed at all. This functionality has to come from the scsi mid layer.
+Changes since the driver versions incorperated in 2.5.59:
 
-> Newer drivers will make use of Service Response code, and be able to
-> address only by (target, lun) rather than (bus, target, lun), and
-> target may not be an int anymore.  But this is 2.7 stuff, or maybe
-> a separately distributed SCSI Core and LLDDs subsystem...
+ChangeSet@1.961, 2003-01-22 15:09:24-07:00, gibbs@overdrive.btc.adaptec.com
+  Bump aic79xx driver version number to 1.3.0, now that it has
+  passed functional test.
 
-Yes, but we need a solution for 2.6.
-And it has to be reasonably simple.
+ChangeSet@1.960, 2003-01-22 14:44:51-07:00, gibbs@overdrive.btc.adaptec.com
+  Update Aic7xxx and Aic79xx driver documentation.
 
-	Regards
-		Oliver
+ChangeSet@1.959, 2003-01-20 16:46:37-07:00, gibbs@overdrive.btc.adaptec.com
+  Aic7xxx Driver Update 6.2.28
+        o Add some more DV diagnostic code
+        o Fix bug that caused sequencer debug code to be
+          downloaded always.
+
+  Aic79xx Driver Update 1.3.0.RC2
+        o Correct a regression in RC1 that effectively limited DV to just ID 0.
+        o Add some more DV diagnostic code
+        o Misc code cleanups.
+
+ChangeSet@1.958, 2003-01-17 14:49:42-07:00, gibbs@overdrive.btc.adaptec.com
+  Aic7xxx and Aic79xx Driver Update
+        Force an SDTR after a rejected WDTR if the syncrate is unkonwn.
+
+ChangeSet@1.957, 2003-01-17 13:20:53-07:00, gibbs@overdrive.btc.adaptec.com
+  Bump aic7xxx driver version to 6.2.27.
+
+ChangeSet@1.956, 2003-01-17 13:17:49-07:00, gibbs@overdrive.btc.adaptec.com
+  Aic7xxx Driver Update:
+    o Determine more conclusively that a BIOS has initialized the
+      adapter before using "left over BIOS settings".
+    o Adapt to upcoming removal of cmd->target/channel/lun/host in 2.5.X
+    o Fix a memory leak on driver unload.
+    o Enable the pci_parity command line option and default to pci parity
+      error detection *disabled*.  There are just too many broken VIA
+      chipsets out there.
+    o Move more functionality into aiclib to share with the aic79xx driver.
+    o Correct a few negotiation regressions.
+    o Don't bother doing full DV on devices that only support async transfers.
+      This should fix a few more of the reported problems with DV.
+
+  Aic79xx Driver Update
+    o Add abort and bus device reset handlers.
+    o Fix a memory leak on driver unload.
+    o Adapt to upcoming removal of cmd->target/channel/lun/host in 2.5.X.
+    o Correct a few negotiation regressions.
+
+ChangeSet@1.955, 2003-01-17 12:18:22-07:00, gibbs@overdrive.btc.adaptec.com
+  Aic79xx Driver Update
+        Enable abort and bus device reset handlers for both legacy
+        and packetized connections.
+
+ChangeSet@1.954, 2003-01-17 12:10:23-07:00, gibbs@overdrive.btc.adaptec.com
+  Aic7xxx and Aic79xx DV Fix:
+        Don't bother with DV if the device can only do async
+
 
