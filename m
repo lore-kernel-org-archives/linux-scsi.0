@@ -1,52 +1,35 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: ahc1542 fun
-Date: Thu, 27 May 2004 13:30:52 -0400
+From: Andreas Jellinghaus <aj@leogic.com>
+Subject: Re: [PATCH 2.6] to get I2O working with Adaptec's zero channel controllers (ASR-2000S, ASR-2005S, ASR-2010S and ASR-2015S)
+Date: Thu, 27 May 2004 20:17:02 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <40B625CC.1060906@pobox.com>
-References: <40B401AE.9060707@pobox.com> <20040526064430.GA21531@infradead.org> <20040526175217.GU29154@parcelfarce.linux.theplanet.co.uk>
+Message-ID: <pan.2004.05.27.18.17.02.770888@leogic.com>
+References: <40B3248B.1050901@shadowconnect.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:46044 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S264894AbUE0RbH
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 27 May 2004 13:31:07 -0400
-In-Reply-To: <20040526175217.GU29154@parcelfarce.linux.theplanet.co.uk>
+Received: from main.gmane.org ([80.91.224.249]:39050 "EHLO main.gmane.org")
+	by vger.kernel.org with ESMTP id S264925AbUE0SOr (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 27 May 2004 14:14:47 -0400
+Received: from list by main.gmane.org with local (Exim 3.35 #1 (Debian))
+	id 1BTPOu-0001ri-00
+	for <linux-scsi@vger.kernel.org>; Thu, 27 May 2004 20:14:46 +0200
+Received: from 62.245.182.10 ([62.245.182.10])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-scsi@vger.kernel.org>; Thu, 27 May 2004 20:14:44 +0200
+Received: from aj by 62.245.182.10 with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-scsi@vger.kernel.org>; Thu, 27 May 2004 20:14:44 +0200
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <willy@debian.org>
-Cc: hch@infradead.org, James Bottomley <James.Bottomley@steeleye.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Andrew Morton <akpm@osdl.org>
+To: linux-scsi@vger.kernel.org
 
-Matthew Wilcox wrote:
-> On Wed, May 26, 2004 at 02:44:30AM -0400, hch@infradead.org wrote:
-> 
->>This needs fixing in mca.h and mca-legacy.h.  The debian kernel package
->>has a fix that I don't quite like.  I'll rework it in the next days and
->>submit it.
-> 
-> 
-> What I have in the PA tree is:
-> 
-> Index: include/linux/mca.h
-> ===================================================================
-> RCS file: /var/cvs/linux-2.6/include/linux/mca.h,v
-> retrieving revision 1.4.46.1
-> retrieving revision 1.4
-> diff -u -p -r1.4.46.1 -r1.4
-> --- include/linux/mca.h 23 May 2004 23:31:15 -0000      1.4.46.1
-> +++ include/linux/mca.h 8 Oct 2003 20:53:03 -0000       1.4
-> @@ -12,7 +12,9 @@
->  #include <linux/device.h>
->  
->  /* get the platform specific defines */
-> +#ifdef CONFIG_MCA
->  #include <asm/mca.h>
-> +#endif
+not my 2010s. it is not found at all. I send details to markus
+as a direct mail (sample config, dmesg, lspci -vvv).
 
+Does anyone else have success using this patch?
+(I used it with kernel 2.6.7-rc1 btw, I hope that was ok?)
 
-This patch is fine with me...  If Christoph's rework will take more than 
-five minutes, please (Andrew?) apply this patch.
-
-	Jeff
-
+Regards, Andreas
 
