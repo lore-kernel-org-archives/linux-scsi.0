@@ -1,42 +1,67 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: [ANNOUNCE] iSCSI enterprise target software
-Date: Tue, 01 Mar 2005 16:19:51 +0900
-Message-ID: <20050301161951K.fujita.tomonori@lab.ntt.co.jp>
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: [2.6 patch] SCSI: possible cleanups
+Date: Tue, 01 Mar 2005 18:14:22 +1000
+Message-ID: <4224245E.6090503@torque.net>
+References: <20050228213159.GO4021@stusta.de>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Received: from tama5.ecl.ntt.co.jp ([129.60.39.102]:56547 "EHLO
-	tama5.ecl.ntt.co.jp") by vger.kernel.org with ESMTP id S261283AbVCAHT4
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 1 Mar 2005 02:19:56 -0500
+Received: from borg.st.net.au ([65.23.158.22]:59847 "EHLO borg.st.net.au")
+	by vger.kernel.org with ESMTP id S261380AbVCAINd (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Mar 2005 03:13:33 -0500
+In-Reply-To: <20050228213159.GO4021@stusta.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: iscsitarget-devel@lists.sourceforge.net
+To: Adrian Bunk <bunk@stusta.de>
+Cc: James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Hi,
+Adrian Bunk wrote:
+> Before I'm getting flamed to death:
 
-I would like to announce the iSCSI enterprise target (IET) software,
-which is open-source software to build iSCSI storage systems. It can
-provide disk volumes to iSCSI initiators by using any kinds of files
-(regular files, block devices, virtual block devices like RAID and
-LVM, etc). The project was started by forking the Ardis target
-implementation (http://www.ardistech.com/iscsi/) about one year
-ago. The source code and further information are available from:
+Adrian,
+I have a few comments below.
 
-http://iscsitarget.sourceforge.net/
+> This patch contains possible cleanups. If parts of this patch conflict 
+> with pending changes these parts of my patch have to be dropped.
+> 
+> This patch contains the following possible cleanups:
+> - make needlessly global code static
+> - remove or #if 0 the following unused functions:
+>   - scsi.h: print_driverbyte
+>   - scsi.h: print_hostbyte
 
-The user-space daemon handles authentication and the kernel threads
-take care of network and disk I/O requests from initiators by using
-the VFS interface. The kernel-space code is not intrusive. It doesn't
-touch other parts of the kernel. The code is already stable and
-usable. More than 130 people currently subscribe to the project's
-mailing list. The developers aim for inclusion into the mainline
-kernel.
+The names of the above are too general so they should go
+as soon as practical.
 
-The latest code against 2.6.11-rc5 for review can be found at:
+>   - constants.c: scsi_print_hostbyte
+>   - constants.c: scsi_print_driverbyte
 
-http://zaal.org/iscsi/iet/0.4.6/r996.tar.gz
+I'm a bit surprised nothing else is using the above two.
 
-Could you please review the code? Any comments are greatly
-appreciated.
+>   - scsi_scan.c: scsi_scan_single_target
+> - remove the following unneeded EXPORT_SYMBOL's:
+>   - constants.c: __scsi_print_sense
+>   - hosts.c: scsi_host_lookup
+>   - scsi.c: scsi_device_cancel
+>   - scsi_error.c: scsi_normalize_sense
+
+I introduced scsi_normalize_sense() recently, Christoph H.
+proposed it should be static but Luben Tuikov (aic7xxx
+maintainer) said he wished to use it in the future.
+Hence it was left global.
+
+>   - scsi_error.c: scsi_sense_desc_find
+
+A pending patch on st from Kai M. will be using
+scsi_sense_desc_find(). I presume others will be using
+it in the future (e.g. SAT returns ATA status via
+a sense data descriptor with no corresponding fixed
+format representation).
+
+>   - scsi_lib.c: scsi_device_resume
+>   - scsi_scan.c: scsi_rescan_device
+>   - scsi_scan.c: scsi_scan_single_target
+
+Doug Gilbert
+
