@@ -1,251 +1,586 @@
 From: "Randy.Dunlap" <rddunlap@osdl.org>
-Subject: [janitor] (2/5) aic7xyz_old: use kernel.h min/max/ARRAY_SIZE
-Date: Tue, 27 Apr 2004 11:04:12 -0700
+Subject: [janitor] (1/5) aic7xyz: use kernel.h min/max/ARRAY_SIZE
+Date: Tue, 27 Apr 2004 11:04:17 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040427110412.064b0fdb.rddunlap@osdl.org>
+Message-ID: <20040427110417.6a7c35ff.rddunlap@osdl.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fw.osdl.org ([65.172.181.6]:60393 "EHLO mail.osdl.org")
-	by vger.kernel.org with ESMTP id S264276AbUD0SOn (ORCPT
+Received: from fw.osdl.org ([65.172.181.6]:60905 "EHLO mail.osdl.org")
+	by vger.kernel.org with ESMTP id S264277AbUD0SOn (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
 	Tue, 27 Apr 2004 14:14:43 -0400
 List-Id: linux-scsi@vger.kernel.org
 To: scsi <linux-scsi@vger.kernel.org>
-Cc: jejb <james.bottomley@steeleye.com>
+Cc: jejb <james.bottomley@steeleye.com>, gibbs@scsiguy.com
 
 
 From: Michael Veeck <michael.veeck@gmx.net>
-Subject: [Kernel-janitors] [PATCH] drivers/scsi/aic7xxx_old MIN/MAX/NUMBER
+Subject: [Kernel-janitors] [PATCH] drivers/scsi/aic7xxxx MIN/MAX/NUM_ELEMENTS
 	removal
 
-Patch (against 2.6.6-rc1) removes unnecessary min/max/number macros and 
-changes calls to use kernel.h macros instead.
+Patch (against 2.6.6-rc1) removes unnecessary min/max/num_elements 
+macros and changes calls to use kernel.h macros instead.
 
 
- drivers/scsi/aic7xxx_old.c              |   43 ++++++++++++++------------------
- drivers/scsi/aic7xxx_old/aic7xxx_proc.c |    6 ++--
- 2 files changed, 23 insertions(+), 26 deletions(-)
+ drivers/scsi/aic7xxx/aic7770.c      |    2 +-
+ drivers/scsi/aic7xxx/aic79xx.h      |   10 ----------
+ drivers/scsi/aic7xxx/aic79xx_core.c |   30 +++++++++++++++---------------
+ drivers/scsi/aic7xxx/aic79xx_osm.c  |   32 ++++++++++++++++----------------
+ drivers/scsi/aic7xxx/aic79xx_pci.c  |    2 +-
+ drivers/scsi/aic7xxx/aic7xxx.h      |   10 ----------
+ drivers/scsi/aic7xxx/aic7xxx_core.c |   24 ++++++++++++------------
+ drivers/scsi/aic7xxx/aic7xxx_osm.c  |   22 +++++++++++-----------
+ drivers/scsi/aic7xxx/aic7xxx_pci.c  |    2 +-
+ 9 files changed, 57 insertions(+), 77 deletions(-)
 
 
 
-Index: linux-266-rc2-kj1/drivers/scsi/aic7xxx_old/aic7xxx_proc.c
+Index: linux-266-rc2-kj1/drivers/scsi/aic7xxx/aic7770.c
 ===================================================================
---- linux-266-rc2-kj1.orig/drivers/scsi/aic7xxx_old/aic7xxx_proc.c	2004-04-03 19:38:14.000000000 -0800
-+++ linux-266-rc2-kj1/drivers/scsi/aic7xxx_old/aic7xxx_proc.c	2004-04-22 22:31:11.000000000 -0700
-@@ -319,13 +319,13 @@ aic7xxx_proc_info ( struct Scsi_Host *HB
-         aic_dev->r_total+aic_dev->w_total, aic_dev->r_total, aic_dev->w_total);
-     size += sprintf(BLS, "%s\n", HDRB);
-     size += sprintf(BLS, "   Reads:");
--    for (i = 0; i < NUMBER(aic_dev->r_bins); i++)
-+    for (i = 0; i < ARRAY_SIZE(aic_dev->r_bins); i++)
-     {
-       size += sprintf(BLS, " %10ld", aic_dev->r_bins[i]);
-     }
-     size += sprintf(BLS, "\n");
-     size += sprintf(BLS, "  Writes:");
--    for (i = 0; i < NUMBER(aic_dev->w_bins); i++)
-+    for (i = 0; i < ARRAY_SIZE(aic_dev->w_bins); i++)
-     {
-       size += sprintf(BLS, " %10ld", aic_dev->w_bins[i]);
-     }
-@@ -347,7 +347,7 @@ aic7xxx_proc_info ( struct Scsi_Host *HB
-   else
-   {
-     *start = buffer;
--    length = MIN(length, size - offset);
-+    length = min_t(int, length, size - offset);
-     memcpy(buffer, &aic7xxx_buffer[offset], length);
-   }
+--- linux-266-rc2-kj1.orig/drivers/scsi/aic7xxx/aic7770.c	2004-04-03 19:38:23.000000000 -0800
++++ linux-266-rc2-kj1/drivers/scsi/aic7xxx/aic7770.c	2004-04-22 22:30:28.000000000 -0700
+@@ -107,7 +107,7 @@ struct aic7770_identity aic7770_ident_ta
+ 		ahc_aic7770_EISA_setup
+ 	}
+ };
+-const int ahc_num_aic7770_devs = NUM_ELEMENTS(aic7770_ident_table);
++const int ahc_num_aic7770_devs = ARRAY_SIZE(aic7770_ident_table);
  
-Index: linux-266-rc2-kj1/drivers/scsi/aic7xxx_old.c
+ struct aic7770_identity *
+ aic7770_find_device(uint32_t id)
+Index: linux-266-rc2-kj1/drivers/scsi/aic7xxx/aic79xx_core.c
 ===================================================================
---- linux-266-rc2-kj1.orig/drivers/scsi/aic7xxx_old.c	2004-04-20 16:00:01.000000000 -0700
-+++ linux-266-rc2-kj1/drivers/scsi/aic7xxx_old.c	2004-04-22 22:31:11.000000000 -0700
-@@ -254,9 +254,6 @@
+--- linux-266-rc2-kj1.orig/drivers/scsi/aic7xxx/aic79xx_core.c	2004-04-03 19:36:12.000000000 -0800
++++ linux-266-rc2-kj1/drivers/scsi/aic7xxx/aic79xx_core.c	2004-04-22 22:30:28.000000000 -0700
+@@ -63,7 +63,7 @@ char *ahd_chip_names[] =
+ 	"aic7902",
+ 	"aic7901A"
+ };
+-static const u_int num_chip_names = NUM_ELEMENTS(ahd_chip_names);
++static const u_int num_chip_names = ARRAY_SIZE(ahd_chip_names);
  
- #define AIC7XXX_C_VERSION  "5.2.6"
+ /*
+  * Hardware error codes.
+@@ -81,7 +81,7 @@ static struct ahd_hard_error_entry ahd_h
+ 	{ MPARERR,	"Scratch or SCB Memory Parity Error" },
+ 	{ CIOPARERR,	"CIOBUS Parity Error" },
+ };
+-static const u_int num_errors = NUM_ELEMENTS(ahd_hard_errors);
++static const u_int num_errors = ARRAY_SIZE(ahd_hard_errors);
  
--#define NUMBER(arr)     (sizeof(arr) / sizeof(arr[0]))
--#define MIN(a,b)        (((a) < (b)) ? (a) : (b))
--#define MAX(a,b)        (((a) > (b)) ? (a) : (b))
- #define ALL_TARGETS -1
- #define ALL_CHANNELS -1
- #define ALL_LUNS -1
-@@ -1376,7 +1373,7 @@ aic7xxx_setup(char *s)
+ static struct ahd_phase_table_entry ahd_phase_table[] =
+ {
+@@ -101,7 +101,7 @@ static struct ahd_phase_table_entry ahd_
+  * In most cases we only wish to itterate over real phases, so
+  * exclude the last element from the count.
+  */
+-static const u_int num_phases = NUM_ELEMENTS(ahd_phase_table) - 1;
++static const u_int num_phases = ARRAY_SIZE(ahd_phase_table) - 1;
  
-   while ((p = strsep(&s, ",.")) != NULL)
-   {
--    for (i = 0; i < NUMBER(options); i++)
-+    for (i = 0; i < ARRAY_SIZE(options); i++)
-     {
-       n = strlen(options[i].name);
-       if (!strncmp(options[i].name, p, n))
-@@ -1423,7 +1420,7 @@ aic7xxx_setup(char *s)
-                   else if (instance >= 0)
-                     instance++;
-                   if ( (device >= MAX_TARGETS) || 
--                       (instance >= NUMBER(aic7xxx_tag_info)) )
-+                       (instance >= ARRAY_SIZE(aic7xxx_tag_info)) )
-                     done = TRUE;
-                   tok++;
-                   if (!done)
-@@ -1447,7 +1444,7 @@ aic7xxx_setup(char *s)
-                     }
-                   }
-                   if ( (instance >= 0) && (device >= 0) &&
--                       (instance < NUMBER(aic7xxx_tag_info)) &&
-+                       (instance < ARRAY_SIZE(aic7xxx_tag_info)) &&
-                        (device < MAX_TARGETS) )
-                     aic7xxx_tag_info[instance].tag_commands[device] =
-                       simple_strtoul(tok, NULL, 0) & 0xff;
-@@ -1658,7 +1655,7 @@ aic7xxx_download_instr(struct aic7xxx_ho
-         {
-           int end_addr;
- 
--          end_addr = MIN(address, skip_addr);
-+          end_addr = min_t(int, address, skip_addr);
-           address_offset += end_addr - i;
-           i = skip_addr;
-         }
-@@ -1884,7 +1881,7 @@ aic7xxx_find_syncrate(struct aic7xxx_hos
-       if(!(p->features & AHC_ULTRA3))
-       {
-         *options = 0;
--        maxsync = MAX(maxsync, AHC_SYNCRATE_ULTRA2);
-+        maxsync = max_t(unsigned int, maxsync, AHC_SYNCRATE_ULTRA2);
-       }
-       break;
-     case MSG_EXT_PPR_OPTION_DT_CRC_QUICK:
-@@ -1892,7 +1889,7 @@ aic7xxx_find_syncrate(struct aic7xxx_hos
-       if(!(p->features & AHC_ULTRA3))
-       {
-         *options = 0;
--        maxsync = MAX(maxsync, AHC_SYNCRATE_ULTRA2);
-+        maxsync = max_t(unsigned int, maxsync, AHC_SYNCRATE_ULTRA2);
-       }
-       else
-       {
-@@ -1916,7 +1913,7 @@ aic7xxx_find_syncrate(struct aic7xxx_hos
-       break;
-     default:
-       *options = 0;
--      maxsync = MAX(maxsync, AHC_SYNCRATE_ULTRA2);
-+      maxsync = max_t(unsigned int, maxsync, AHC_SYNCRATE_ULTRA2);
-       break;
-   }
-   syncrate = &aic7xxx_syncrates[maxsync];
-@@ -2057,7 +2054,7 @@ aic7xxx_validate_offset(struct aic7xxx_h
-     else
-       maxoffset = MAX_OFFSET_8BIT;
-   }
--  *offset = MIN(*offset, maxoffset);
-+  *offset = min(*offset, maxoffset);
+ /* Our Sequencer Program */
+ #include "aic79xx_seq.h"
+@@ -2769,14 +2769,14 @@ ahd_devlimited_syncrate(struct ahd_softc
+ 		transinfo = &tinfo->goal;
+ 	*ppr_options &= (transinfo->ppr_options|MSG_EXT_PPR_PCOMP_EN);
+ 	if (transinfo->width == MSG_EXT_WDTR_BUS_8_BIT) {
+-		maxsync = MAX(maxsync, AHD_SYNCRATE_ULTRA2);
++		maxsync = max_t(u_int, maxsync, AHD_SYNCRATE_ULTRA2);
+ 		*ppr_options &= ~MSG_EXT_PPR_DT_REQ;
+ 	}
+ 	if (transinfo->period == 0) {
+ 		*period = 0;
+ 		*ppr_options = 0;
+ 	} else {
+-		*period = MAX(*period, transinfo->period);
++		*period = max_t(u_int, *period, transinfo->period);
+ 		ahd_find_syncrate(ahd, period, ppr_options, maxsync);
+ 	}
+ }
+@@ -2843,12 +2843,12 @@ ahd_validate_offset(struct ahd_softc *ah
+ 			maxoffset = MAX_OFFSET_PACED;
+ 	} else
+ 		maxoffset = MAX_OFFSET_NON_PACED;
+-	*offset = MIN(*offset, maxoffset);
++	*offset = min(*offset, maxoffset);
+ 	if (tinfo != NULL) {
+ 		if (role == ROLE_TARGET)
+-			*offset = MIN(*offset, tinfo->user.offset);
++			*offset = min_t(u_int, *offset, tinfo->user.offset);
+ 		else
+-			*offset = MIN(*offset, tinfo->goal.offset);
++			*offset = min_t(u_int, *offset, tinfo->goal.offset);
+ 	}
  }
  
- /*+F*************************************************************************
-@@ -2570,7 +2567,7 @@ aic7xxx_allocate_scb(struct aic7xxx_host
-         break;
-       }
-     }
--    scb_count = MIN( (i-1), p->scb_data->maxscbs - p->scb_data->numscbs);
-+    scb_count = min( (i-1), p->scb_data->maxscbs - p->scb_data->numscbs);
-     scb_ap = (struct aic7xxx_scb *)kmalloc(sizeof (struct aic7xxx_scb) * scb_count
- 					   + sizeof(struct aic7xxx_scb_dma), GFP_ATOMIC);
-     if (scb_ap == NULL)
-@@ -5042,7 +5039,7 @@ aic7xxx_parse_msg(struct aic7xxx_host *p
-             if(p->user[tindex].offset)
-             {
-               aic_dev->needsdtr_copy = 1;
--              aic_dev->goal.period = MAX(10,p->user[tindex].period);
-+              aic_dev->goal.period = max_t(unsigned char, 10,p->user[tindex].period);
-               if(p->features & AHC_ULTRA2)
-               {
-                 aic_dev->goal.offset = MAX_OFFSET_ULTRA2;
-@@ -5086,8 +5083,8 @@ aic7xxx_parse_msg(struct aic7xxx_host *p
-            * the device isn't allowed to send values greater than the ones
-            * we first sent to it.
-            */
--          new_period = MAX(period, aic_dev->goal.period);
--          new_offset = MIN(offset, aic_dev->goal.offset);
-+          new_period = max_t(unsigned int, period, aic_dev->goal.period);
-+          new_offset = min_t(unsigned int, offset, aic_dev->goal.offset);
-         }
-  
-         /*
-@@ -5208,7 +5205,7 @@ aic7xxx_parse_msg(struct aic7xxx_host *p
-             if(p->user[tindex].offset)
-             {
-               aic_dev->needsdtr_copy = 1;
--              aic_dev->goal.period = MAX(10,p->user[tindex].period);
-+              aic_dev->goal.period = max_t(unsigned char, 10, p->user[tindex].period);
-               if(p->features & AHC_ULTRA2)
-               {
-                 aic_dev->goal.offset = MAX_OFFSET_ULTRA2;
-@@ -6413,7 +6410,7 @@ aic7xxx_isr(int irq, void *dev_id, struc
-     unsigned char errno = aic_inb(p, ERROR);
+@@ -2874,9 +2874,9 @@ ahd_validate_width(struct ahd_softc *ahd
+ 	}
+ 	if (tinfo != NULL) {
+ 		if (role == ROLE_TARGET)
+-			*bus_width = MIN(tinfo->user.width, *bus_width);
++			*bus_width = min_t(u_int, tinfo->user.width, *bus_width);
+ 		else
+-			*bus_width = MIN(tinfo->goal.width, *bus_width);
++			*bus_width = min_t(u_int, tinfo->goal.width, *bus_width);
+ 	}
+ }
  
-     printk(KERN_ERR "(scsi%d) BRKADRINT error(0x%x):\n", p->host_no, errno);
--    for (i = 0; i < NUMBER(hard_error); i++)
-+    for (i = 0; i < ARRAY_SIZE(hard_error); i++)
-     {
-       if (errno & hard_error[i].errno)
-       {
-@@ -6562,7 +6559,7 @@ aic7xxx_init_transinfo(struct aic7xxx_ho
-       else
-       {
-         aic_dev->needsdtr = aic_dev->needsdtr_copy = 1;
--        aic_dev->goal.period = MAX(10, aic_dev->goal.period);
-+        aic_dev->goal.period = max_t(unsigned char, 10, aic_dev->goal.period);
-         aic_dev->goal.options = 0;
-       }
-     }
-@@ -6673,7 +6670,7 @@ aic7xxx_device_queue_depth(struct aic7xx
-     }
-     else
-     {
--      if (p->instance >= NUMBER(aic7xxx_tag_info))
-+      if (p->instance >= ARRAY_SIZE(aic7xxx_tag_info))
-       {
-         static int print_warning = TRUE;
-         if(print_warning)
-@@ -6850,7 +6847,7 @@ aic7xxx_probe(int slot, int base, ahc_fl
-     buf[i] = inb(base + i);
-   }
+@@ -6043,9 +6043,9 @@ ahd_alloc_scbs(struct ahd_softc *ahd)
+ #endif
+ 	}
  
--  for (i = 0; i < NUMBER(AIC7xxx); i++)
-+  for (i = 0; i < ARRAY_SIZE(AIC7xxx); i++)
-   {
-     /*
-      * Signature match on enabled card?
-@@ -9199,7 +9196,7 @@ aic7xxx_detect(Scsi_Host_Template *templ
-     unsigned int  devconfig, i, oldverbose;
-     struct pci_dev *pdev = NULL;
+-	newcount = MIN(scb_data->sense_left, scb_data->scbs_left);
+-	newcount = MIN(newcount, scb_data->sgs_left);
+-	newcount = MIN(newcount, (AHD_SCB_MAX_ALLOC - scb_data->numscbs));
++	newcount = min(scb_data->sense_left, scb_data->scbs_left);
++	newcount = min(newcount, scb_data->sgs_left);
++	newcount = min(newcount, (AHD_SCB_MAX_ALLOC - scb_data->numscbs));
+ 	scb_data->sense_left -= newcount;
+ 	scb_data->scbs_left -= newcount;
+ 	scb_data->sgs_left -= newcount;
+@@ -7256,7 +7256,7 @@ ahd_qinfifo_count(struct ahd_softc *ahd)
+ 		return (wrap_qinfifonext - wrap_qinpos);
+ 	else
+ 		return (wrap_qinfifonext
+-		      + NUM_ELEMENTS(ahd->qinfifo) - wrap_qinpos);
++		      + ARRAY_SIZE(ahd->qinfifo) - wrap_qinpos);
+ }
  
--    for (i = 0; i < NUMBER(aic_pdevs); i++)
-+    for (i = 0; i < ARRAY_SIZE(aic_pdevs); i++)
-     {
-       pdev = NULL;
-       while ((pdev = pci_find_device(aic_pdevs[i].vendor_id,
-@@ -9698,7 +9695,7 @@ skip_pci_controller:
-    * EISA/VL-bus card signature probe.
-    */
-   slot = MINSLOT;
--  while ( (slot <= MAXSLOT) && 
-+  while ( (slot <= MAXSLOT) &&
-          !(aic7xxx_no_probe) )
-   {
-     base = SLOTBASE(slot) + MINREG;
-@@ -10097,7 +10094,7 @@ skip_pci_controller:
-       int i;
-       
-       left = found;
--      for (i=0; i<NUMBER(sort_list); i++)
-+      for (i=0; i<ARRAY_SIZE(sort_list); i++)
-       {
-         temp_p = sort_list[i];
-         while(temp_p != NULL)
+ void
+@@ -8632,7 +8632,7 @@ ahd_resolve_seqaddr(struct ahd_softc *ah
+ 		if (skip_addr > i) {
+ 			int end_addr;
+ 
+-			end_addr = MIN(address, skip_addr);
++			end_addr = min(address, skip_addr);
+ 			address_offset += end_addr - i;
+ 			i = skip_addr;
+ 		} else {
+Index: linux-266-rc2-kj1/drivers/scsi/aic7xxx/aic79xx.h
+===================================================================
+--- linux-266-rc2-kj1.orig/drivers/scsi/aic7xxx/aic79xx.h	2004-04-03 19:37:36.000000000 -0800
++++ linux-266-rc2-kj1/drivers/scsi/aic7xxx/aic79xx.h	2004-04-22 22:30:28.000000000 -0700
+@@ -53,14 +53,6 @@ struct ahd_platform_data;
+ struct scb_platform_data;
+ 
+ /****************************** Useful Macros *********************************/
+-#ifndef MAX
+-#define MAX(a,b) (((a) > (b)) ? (a) : (b))
+-#endif
+-
+-#ifndef MIN
+-#define MIN(a,b) (((a) < (b)) ? (a) : (b))
+-#endif
+-
+ #ifndef TRUE
+ #define TRUE 1
+ #endif
+@@ -68,8 +60,6 @@ struct scb_platform_data;
+ #define FALSE 0
+ #endif
+ 
+-#define NUM_ELEMENTS(array) (sizeof(array) / sizeof(*array))
+-
+ #define ALL_CHANNELS '\0'
+ #define ALL_TARGETS_MASK 0xFFFF
+ #define INITIATOR_WILDCARD	(~0)
+Index: linux-266-rc2-kj1/drivers/scsi/aic7xxx/aic79xx_osm.c
+===================================================================
+--- linux-266-rc2-kj1.orig/drivers/scsi/aic7xxx/aic79xx_osm.c	2004-04-03 19:37:23.000000000 -0800
++++ linux-266-rc2-kj1/drivers/scsi/aic7xxx/aic79xx_osm.c	2004-04-22 22:30:28.000000000 -0700
+@@ -1914,7 +1914,7 @@ ahd_linux_setup_tag_info(u_long arg, int
+ {
+ 
+ 	if ((instance >= 0) && (targ >= 0)
+-	 && (instance < NUM_ELEMENTS(aic79xx_tag_info))
++	 && (instance < ARRAY_SIZE(aic79xx_tag_info))
+ 	 && (targ < AHD_NUM_TARGETS)) {
+ 		aic79xx_tag_info[instance].tag_commands[targ] = value & 0x1FF;
+ 		if (bootverbose)
+@@ -1926,7 +1926,7 @@ static void
+ ahd_linux_setup_rd_strm_info(u_long arg, int instance, int targ, int32_t value)
+ {
+ 	if ((instance >= 0)
+-	 && (instance < NUM_ELEMENTS(aic79xx_rd_strm_info))) {
++	 && (instance < ARRAY_SIZE(aic79xx_rd_strm_info))) {
+ 		aic79xx_rd_strm_info[instance] = value & 0xFFFF;
+ 		if (bootverbose)
+ 			printf("rd_strm[%d] = 0x%x\n", instance, value);
+@@ -1937,7 +1937,7 @@ static void
+ ahd_linux_setup_dv(u_long arg, int instance, int targ, int32_t value)
+ {
+ 	if ((instance >= 0)
+-	 && (instance < NUM_ELEMENTS(aic79xx_dv_settings))) {
++	 && (instance < ARRAY_SIZE(aic79xx_dv_settings))) {
+ 		aic79xx_dv_settings[instance] = value;
+ 		if (bootverbose)
+ 			printf("dv[%d] = %d\n", instance, value);
+@@ -1949,7 +1949,7 @@ ahd_linux_setup_iocell_info(u_long index
+ {
+ 
+ 	if ((instance >= 0)
+-	 && (instance < NUM_ELEMENTS(aic79xx_iocell_info))) {
++	 && (instance < ARRAY_SIZE(aic79xx_iocell_info))) {
+ 		uint8_t *iocell_info;
+ 
+ 		iocell_info = (uint8_t*)&aic79xx_iocell_info[instance];
+@@ -1967,7 +1967,7 @@ ahd_linux_setup_tag_info_global(char *p)
+ 	tags = simple_strtoul(p + 1, NULL, 0) & 0xff;
+ 	printf("Setting Global Tags= %d\n", tags);
+ 
+-	for (i = 0; i < NUM_ELEMENTS(aic79xx_tag_info); i++) {
++	for (i = 0; i < ARRAY_SIZE(aic79xx_tag_info); i++) {
+ 		for (j = 0; j < AHD_NUM_TARGETS; j++) {
+ 			aic79xx_tag_info[i].tag_commands[j] = tags;
+ 		}
+@@ -2013,7 +2013,7 @@ aic79xx_setup(char *s)
+ 	end = strchr(s, '\0');
+ 
+ 	/*
+-	 * XXX ia64 gcc isn't smart enough to know that NUM_ELEMENTS
++	 * XXX ia64 gcc isn't smart enough to know that ARRAY_SIZE
+ 	 * will never be 0 in this case.
+ 	 */      
+ 	n = 0;  
+@@ -2021,13 +2021,13 @@ aic79xx_setup(char *s)
+ 	while ((p = strsep(&s, ",.")) != NULL) {
+ 		if (*p == '\0')
+ 			continue;
+-		for (i = 0; i < NUM_ELEMENTS(options); i++) {
++		for (i = 0; i < ARRAY_SIZE(options); i++) {
+ 
+ 			n = strlen(options[i].name);
+ 			if (strncmp(options[i].name, p, n) == 0)
+ 				break;
+ 		}
+-		if (i == NUM_ELEMENTS(options))
++		if (i == ARRAY_SIZE(options))
+ 			continue;
+ 
+ 		if (strncmp(p, "global_tag_depth", n) == 0) {
+@@ -2356,7 +2356,7 @@ ahd_platform_init(struct ahd_softc *ahd)
+ 	/*
+ 	 * Lookup and commit any modified IO Cell options.
+ 	 */
+-	if (ahd->unit < NUM_ELEMENTS(aic79xx_iocell_info)) {
++	if (ahd->unit < ARRAY_SIZE(aic79xx_iocell_info)) {
+ 		struct ahd_linux_iocell_opts *iocell_opts;
+ 
+ 		iocell_opts = &aic79xx_iocell_info[ahd->unit];
+@@ -3597,7 +3597,7 @@ ahd_linux_fallback(struct ahd_softc *ahd
+ 	if (offset == 0)
+ 		period = AHD_ASYNC_XFER_PERIOD;
+ 	if (targ->dv_next_narrow_period == 0)
+-		targ->dv_next_narrow_period = MAX(period, AHD_SYNCRATE_ULTRA2);
++		targ->dv_next_narrow_period = max_t(uint8_t, period, AHD_SYNCRATE_ULTRA2);
+ 	if (targ->dv_next_wide_period == 0)
+ 		targ->dv_next_wide_period = period;
+ 	if (targ->dv_max_width == 0)
+@@ -3879,7 +3879,7 @@ ahd_linux_user_tagdepth(struct ahd_softc
+ 
+ 	tags = 0;
+ 	if ((ahd->user_discenable & devinfo->target_mask) != 0) {
+-		if (ahd->unit >= NUM_ELEMENTS(aic79xx_tag_info)) {
++		if (ahd->unit >= ARRAY_SIZE(aic79xx_tag_info)) {
+ 
+ 			if (warned_user == 0) {
+ 				printf(KERN_WARNING
+@@ -3908,7 +3908,7 @@ ahd_linux_user_dv_setting(struct ahd_sof
+ 	static int warned_user;
+ 	int dv;
+ 
+-	if (ahd->unit >= NUM_ELEMENTS(aic79xx_dv_settings)) {
++	if (ahd->unit >= ARRAY_SIZE(aic79xx_dv_settings)) {
+ 
+ 		if (warned_user == 0) {
+ 			printf(KERN_WARNING
+@@ -3946,7 +3946,7 @@ ahd_linux_setup_user_rd_strm_settings(st
+ 	 * If we have specific read streaming info for this controller,
+ 	 * apply it.  Otherwise use the defaults.
+ 	 */
+-	 if (ahd->unit >= NUM_ELEMENTS(aic79xx_rd_strm_info)) {
++	 if (ahd->unit >= ARRAY_SIZE(aic79xx_rd_strm_info)) {
+ 
+ 		if (warned_user == 0) {
+ 
+@@ -4582,7 +4582,7 @@ ahd_linux_handle_scsi_status(struct ahd_
+ 			u_int sense_offset;
+ 
+ 			if (scb->flags & SCB_SENSE) {
+-				sense_size = MIN(sizeof(struct scsi_sense_data)
++				sense_size = min_t(u_int, sizeof(struct scsi_sense_data)
+ 					       - ahd_get_sense_residual(scb),
+ 						 sizeof(cmd->sense_buffer));
+ 				sense_offset = 0;
+@@ -4593,7 +4593,7 @@ ahd_linux_handle_scsi_status(struct ahd_
+ 				 */
+ 				siu = (struct scsi_status_iu_header *)
+ 				    scb->sense_data;
+-				sense_size = MIN(scsi_4btoul(siu->sense_length),
++				sense_size = min(scsi_4btoul(siu->sense_length),
+ 						sizeof(cmd->sense_buffer));
+ 				sense_offset = SIU_SENSE_OFFSET(siu);
+ 			}
+@@ -4914,7 +4914,7 @@ ahd_linux_filter_inquiry(struct ahd_soft
+ 	offset = user->offset;
+ 	ppr_options = user->ppr_options;
+ 	trans_version = user->transport_version;
+-	prot_version = MIN(user->protocol_version, SID_ANSI_REV(sid));
++	prot_version = min_t(u_int, user->protocol_version, SID_ANSI_REV(sid));
+ 
+ 	/*
+ 	 * Only attempt SPI3/4 once we've verified that
+Index: linux-266-rc2-kj1/drivers/scsi/aic7xxx/aic79xx_pci.c
+===================================================================
+--- linux-266-rc2-kj1.orig/drivers/scsi/aic7xxx/aic79xx_pci.c	2004-04-03 19:37:06.000000000 -0800
++++ linux-266-rc2-kj1/drivers/scsi/aic7xxx/aic79xx_pci.c	2004-04-22 22:30:28.000000000 -0700
+@@ -229,7 +229,7 @@ struct ahd_pci_identity ahd_pci_ident_ta
+ 	}
+ };
+ 
+-const u_int ahd_num_pci_devs = NUM_ELEMENTS(ahd_pci_ident_table);
++const u_int ahd_num_pci_devs = ARRAY_SIZE(ahd_pci_ident_table);
+ 		
+ #define	DEVCONFIG		0x40
+ #define		PCIXINITPAT	0x0000E000ul
+Index: linux-266-rc2-kj1/drivers/scsi/aic7xxx/aic7xxx_core.c
+===================================================================
+--- linux-266-rc2-kj1.orig/drivers/scsi/aic7xxx/aic7xxx_core.c	2004-04-03 19:37:06.000000000 -0800
++++ linux-266-rc2-kj1/drivers/scsi/aic7xxx/aic7xxx_core.c	2004-04-22 22:30:28.000000000 -0700
+@@ -73,7 +73,7 @@ char *ahc_chip_names[] =
+ 	"aic7892",
+ 	"aic7899"
+ };
+-static const u_int num_chip_names = NUM_ELEMENTS(ahc_chip_names);
++static const u_int num_chip_names = ARRAY_SIZE(ahc_chip_names);
+ 
+ /*
+  * Hardware error codes.
+@@ -93,7 +93,7 @@ static struct ahc_hard_error_entry ahc_h
+ 	{ PCIERRSTAT,	"PCI Error detected" },
+ 	{ CIOPARERR,	"CIOBUS Parity Error" },
+ };
+-static const u_int num_errors = NUM_ELEMENTS(ahc_hard_errors);
++static const u_int num_errors = ARRAY_SIZE(ahc_hard_errors);
+ 
+ static struct ahc_phase_table_entry ahc_phase_table[] =
+ {
+@@ -113,7 +113,7 @@ static struct ahc_phase_table_entry ahc_
+  * In most cases we only wish to itterate over real phases, so
+  * exclude the last element from the count.
+  */
+-static const u_int num_phases = NUM_ELEMENTS(ahc_phase_table) - 1;
++static const u_int num_phases = ARRAY_SIZE(ahc_phase_table) - 1;
+ 
+ /*
+  * Valid SCSIRATE values.  (p. 3-17)
+@@ -1666,7 +1666,7 @@ ahc_devlimited_syncrate(struct ahc_softc
+ 		transinfo = &tinfo->goal;
+ 	*ppr_options &= transinfo->ppr_options;
+ 	if (transinfo->width == MSG_EXT_WDTR_BUS_8_BIT) {
+-		maxsync = MAX(maxsync, AHC_SYNCRATE_ULTRA2);
++		maxsync = max_t(u_int, maxsync, AHC_SYNCRATE_ULTRA2);
+ 		*ppr_options &= ~MSG_EXT_PPR_DT_REQ;
+ 	}
+ 	if (transinfo->period == 0) {
+@@ -1674,7 +1674,7 @@ ahc_devlimited_syncrate(struct ahc_softc
+ 		*ppr_options = 0;
+ 		return (NULL);
+ 	}
+-	*period = MAX(*period, transinfo->period);
++	*period = max_t(u_int, *period, transinfo->period);
+ 	return (ahc_find_syncrate(ahc, period, ppr_options, maxsync));
+ }
+ 
+@@ -1799,12 +1799,12 @@ ahc_validate_offset(struct ahc_softc *ah
+ 		else
+ 			maxoffset = MAX_OFFSET_8BIT;
+ 	}
+-	*offset = MIN(*offset, maxoffset);
++	*offset = min(*offset, maxoffset);
+ 	if (tinfo != NULL) {
+ 		if (role == ROLE_TARGET)
+-			*offset = MIN(*offset, tinfo->user.offset);
++			*offset = min_t(u_int, *offset, tinfo->user.offset);
+ 		else
+-			*offset = MIN(*offset, tinfo->goal.offset);
++			*offset = min_t(u_int, *offset, tinfo->goal.offset);
+ 	}
+ }
+ 
+@@ -1830,9 +1830,9 @@ ahc_validate_width(struct ahc_softc *ahc
+ 	}
+ 	if (tinfo != NULL) {
+ 		if (role == ROLE_TARGET)
+-			*bus_width = MIN(tinfo->user.width, *bus_width);
++			*bus_width = min_t(u_int, tinfo->user.width, *bus_width);
+ 		else
+-			*bus_width = MIN(tinfo->goal.width, *bus_width);
++			*bus_width = min_t(u_int, tinfo->goal.width, *bus_width);
+ 	}
+ }
+ 
+@@ -4491,7 +4491,7 @@ ahc_alloc_scbs(struct ahc_softc *ahc)
+ 	physaddr = sg_map->sg_physaddr;
+ 
+ 	newcount = (PAGE_SIZE / (AHC_NSEG * sizeof(struct ahc_dma_seg)));
+-	newcount = MIN(newcount, (AHC_SCB_MAX_ALLOC - scb_data->numscbs));
++	newcount = min(newcount, (AHC_SCB_MAX_ALLOC - scb_data->numscbs));
+ 	for (i = 0; i < newcount; i++) {
+ 		struct scb_platform_data *pdata;
+ #ifndef __linux__
+@@ -6518,7 +6518,7 @@ ahc_download_instr(struct ahc_softc *ahc
+ 			if (skip_addr > i) {
+ 				int end_addr;
+ 
+-				end_addr = MIN(address, skip_addr);
++				end_addr = min(address, skip_addr);
+ 				address_offset += end_addr - i;
+ 				i = skip_addr;
+ 			} else {
+Index: linux-266-rc2-kj1/drivers/scsi/aic7xxx/aic7xxx.h
+===================================================================
+--- linux-266-rc2-kj1.orig/drivers/scsi/aic7xxx/aic7xxx.h	2004-04-03 19:37:07.000000000 -0800
++++ linux-266-rc2-kj1/drivers/scsi/aic7xxx/aic7xxx.h	2004-04-22 22:30:28.000000000 -0700
+@@ -54,14 +54,6 @@ struct scb_platform_data;
+ struct seeprom_descriptor;
+ 
+ /****************************** Useful Macros *********************************/
+-#ifndef MAX
+-#define MAX(a,b) (((a) > (b)) ? (a) : (b))
+-#endif
+-
+-#ifndef MIN
+-#define MIN(a,b) (((a) < (b)) ? (a) : (b))
+-#endif
+-
+ #ifndef TRUE
+ #define TRUE 1
+ #endif
+@@ -69,8 +61,6 @@ struct seeprom_descriptor;
+ #define FALSE 0
+ #endif
+ 
+-#define NUM_ELEMENTS(array) (sizeof(array) / sizeof(*array))
+-
+ #define ALL_CHANNELS '\0'
+ #define ALL_TARGETS_MASK 0xFFFF
+ #define INITIATOR_WILDCARD	(~0)
+Index: linux-266-rc2-kj1/drivers/scsi/aic7xxx/aic7xxx_osm.c
+===================================================================
+--- linux-266-rc2-kj1.orig/drivers/scsi/aic7xxx/aic7xxx_osm.c	2004-04-03 19:36:17.000000000 -0800
++++ linux-266-rc2-kj1/drivers/scsi/aic7xxx/aic7xxx_osm.c	2004-04-22 22:30:28.000000000 -0700
+@@ -1589,7 +1589,7 @@ ahc_linux_setup_tag_info_global(char *p)
+ 	tags = simple_strtoul(p + 1, NULL, 0) & 0xff;
+ 	printf("Setting Global Tags= %d\n", tags);
+ 
+-	for (i = 0; i < NUM_ELEMENTS(aic7xxx_tag_info); i++) {
++	for (i = 0; i < ARRAY_SIZE(aic7xxx_tag_info); i++) {
+ 		for (j = 0; j < AHC_NUM_TARGETS; j++) {
+ 			aic7xxx_tag_info[i].tag_commands[j] = tags;
+ 		}
+@@ -1601,7 +1601,7 @@ ahc_linux_setup_tag_info(u_long arg, int
+ {
+ 
+ 	if ((instance >= 0) && (targ >= 0)
+-	 && (instance < NUM_ELEMENTS(aic7xxx_tag_info))
++	 && (instance < ARRAY_SIZE(aic7xxx_tag_info))
+ 	 && (targ < AHC_NUM_TARGETS)) {
+ 		aic7xxx_tag_info[instance].tag_commands[targ] = value & 0xff;
+ 		if (bootverbose)
+@@ -1614,7 +1614,7 @@ ahc_linux_setup_dv(u_long arg, int insta
+ {
+ 
+ 	if ((instance >= 0)
+-	 && (instance < NUM_ELEMENTS(aic7xxx_dv_settings))) {
++	 && (instance < ARRAY_SIZE(aic7xxx_dv_settings))) {
+ 		aic7xxx_dv_settings[instance] = value;
+ 		if (bootverbose)
+ 			printf("dv[%d] = %d\n", instance, value);
+@@ -1658,7 +1658,7 @@ aic7xxx_setup(char *s)
+ 	end = strchr(s, '\0');
+ 
+ 	/*
+-	 * XXX ia64 gcc isn't smart enough to know that NUM_ELEMENTS
++	 * XXX ia64 gcc isn't smart enough to know that ARRAY_SIZE
+ 	 * will never be 0 in this case.
+ 	 */
+ 	n = 0;
+@@ -1666,13 +1666,13 @@ aic7xxx_setup(char *s)
+ 	while ((p = strsep(&s, ",.")) != NULL) {
+ 		if (*p == '\0')
+ 			continue;
+-		for (i = 0; i < NUM_ELEMENTS(options); i++) {
++		for (i = 0; i < ARRAY_SIZE(options); i++) {
+ 
+ 			n = strlen(options[i].name);
+ 			if (strncmp(options[i].name, p, n) == 0)
+ 				break;
+ 		}
+-		if (i == NUM_ELEMENTS(options))
++		if (i == ARRAY_SIZE(options))
+ 			continue;
+ 
+ 		if (strncmp(p, "global_tag_depth", n) == 0) {
+@@ -3250,7 +3250,7 @@ ahc_linux_fallback(struct ahc_softc *ahc
+ 	if (offset == 0)
+ 		period = AHC_ASYNC_XFER_PERIOD;
+ 	if (targ->dv_next_narrow_period == 0)
+-		targ->dv_next_narrow_period = MAX(period, AHC_SYNCRATE_ULTRA2);
++		targ->dv_next_narrow_period = max_t(uint8_t, period, AHC_SYNCRATE_ULTRA2);
+ 	if (targ->dv_next_wide_period == 0)
+ 		targ->dv_next_wide_period = period;
+ 	if (targ->dv_max_width == 0)
+@@ -3536,7 +3536,7 @@ ahc_linux_user_tagdepth(struct ahc_softc
+ 
+ 	tags = 0;
+ 	if ((ahc->user_discenable & devinfo->target_mask) != 0) {
+-		if (ahc->unit >= NUM_ELEMENTS(aic7xxx_tag_info)) {
++		if (ahc->unit >= ARRAY_SIZE(aic7xxx_tag_info)) {
+ 			if (warned_user == 0) {
+ 
+ 				printf(KERN_WARNING
+@@ -3565,7 +3565,7 @@ ahc_linux_user_dv_setting(struct ahc_sof
+ 	static int warned_user;
+ 	int dv;
+ 
+-	if (ahc->unit >= NUM_ELEMENTS(aic7xxx_dv_settings)) {
++	if (ahc->unit >= ARRAY_SIZE(aic7xxx_dv_settings)) {
+ 		if (warned_user == 0) {
+ 
+ 			printf(KERN_WARNING
+@@ -4278,7 +4278,7 @@ ahc_linux_handle_scsi_status(struct ahc_
+ 		if (scb->flags & SCB_SENSE) {
+ 			u_int sense_size;
+ 
+-			sense_size = MIN(sizeof(struct scsi_sense_data)
++			sense_size = min_t(u_int, sizeof(struct scsi_sense_data)
+ 				       - ahc_get_sense_residual(scb),
+ 					 sizeof(cmd->sense_buffer));
+ 			memcpy(cmd->sense_buffer,
+@@ -4558,7 +4558,7 @@ ahc_linux_filter_inquiry(struct ahc_soft
+ 	offset = user->offset;
+ 	ppr_options = user->ppr_options;
+ 	trans_version = user->transport_version;
+-	prot_version = MIN(user->protocol_version, SID_ANSI_REV(sid));
++	prot_version = min_t(u_int, user->protocol_version, SID_ANSI_REV(sid));
+ 
+ 	/*
+ 	 * Only attempt SPI3/4 once we've verified that
+Index: linux-266-rc2-kj1/drivers/scsi/aic7xxx/aic7xxx_pci.c
+===================================================================
+--- linux-266-rc2-kj1.orig/drivers/scsi/aic7xxx/aic7xxx_pci.c	2004-04-03 19:36:16.000000000 -0800
++++ linux-266-rc2-kj1/drivers/scsi/aic7xxx/aic7xxx_pci.c	2004-04-22 22:30:28.000000000 -0700
+@@ -626,7 +626,7 @@ struct ahc_pci_identity ahc_pci_ident_ta
+ 	}
+ };
+ 
+-const u_int ahc_num_pci_devs = NUM_ELEMENTS(ahc_pci_ident_table);
++const u_int ahc_num_pci_devs = ARRAY_SIZE(ahc_pci_ident_table);
+ 		
+ #define AHC_394X_SLOT_CHANNEL_A	4
+ #define AHC_394X_SLOT_CHANNEL_B	5
 
 
 --
