@@ -1,180 +1,106 @@
-From: James Bottomley <James.Bottomley@steeleye.com>
+From: Luben Tuikov <luben@splentec.com>
 Subject: Re: [PATCH] scsi_error fix
-Date: 07 Mar 2003 16:56:16 -0600
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <1047077779.4032.34.camel@mulgrave>
-References: <UTC200303072019.h27KJXX12872.aeb@smtp.cwi.nl>
-	<20030307211732.GA1148@beaverton.ibm.com>
-	<1047075661.3444.27.camel@mulgrave>
-	<20030307224334.GC1148@beaverton.ibm.com>
+Date: Fri, 07 Mar 2003 18:22:40 -0500
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <3E6929C0.6040703@splentec.com>
+References: <UTC200303072019.h27KJXX12872.aeb@smtp.cwi.nl> <20030307211732.GA1148@beaverton.ibm.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="=-wfqBEWQ+ClEkAkWkbykW"
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
-In-Reply-To: <20030307224334.GC1148@beaverton.ibm.com>
-To: Mike Anderson <andmike@us.ibm.com>
-Cc: Andries.Brouwer@cwi.nl, Patrick Mansfield <patmans@us.ibm.com>, linux-kernel@vger.kernel.org, SCSI Mailing List <linux-scsi@vger.kernel.org>, torvalds@transmeta.com
-List-Id: linux-scsi@vger.kernel.org
-
-
---=-wfqBEWQ+ClEkAkWkbykW
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+List-Id: linux-scsi@vger.kernel.org
+To: Mike Anderson <andmike@us.ibm.com>
+Cc: Andries.Brouwer@cwi.nl, linux-scsi@vger.kernel.org
 
-On Fri, 2003-03-07 at 16:43, Mike Anderson wrote:
-> James Bottomley [James.Bottomley@steeleye.com] wrote:
+Mike Anderson wrote:
+> Andries.Brouwer@cwi.nl [Andries.Brouwer@cwi.nl] wrote:
 > 
-> > @@ -702,8 +701,14 @@
-> >  		 * if the result was normal, then just pass it along to the
-> >  		 * upper level.
-> >  		 */
-> > -		if (rtn == SUCCESS)
-> > +		if (rtn == SUCCESS) {
-> > +			/* we don't want this command reissued, just
-> > +			 * finished with the sense data, so set
-> > +			 * retries to the max allowed to ensure it
-> > +			 * won't get reissued */
-> > +			scmd->retries = scmd->allowed;
-> >  			scsi_eh_finish_cmd(scmd, done_q);
-> > +		}
-> >  		if (rtn != NEEDS_RETRY)
-> >  			continue;
-> >  
-> 
-> We might need to cover the case down below if we succeed on retry without
-> reaching allowed.
-> 
-> Another option is to look into re-sending the command from the
-> scsi_queue_insert handler like we do with timeouts. The interface to the
-> device should be the same from the LLDD's point of view just delayed
-> some.
+>>
+>>    Your change effectively disables that support - we never hit the code in
+>>    scsi_eh_get_sense() to request sense. It would be very nice if we could
+>>    fix (or audit) all the scsi drivers, apply your change and remove
+>>    scsi_eh_get_sense, but AFAIK that has not and is not happening.
+>>
+>>No. What happened before was that we got into an infinite loop.
+>>The right action is to read the code, understand why it gets
+>>into a loop, and fix it. Once that has happened we may decide
+>>to undo my change. Or we may decide to ask for sense at that very spot.
 
-The attached should sweep up all of this.  For NEEDS_RETRY, we will
-retry until we reach the max retry count.
+``at that very spot'' or at a lower level (but not LLDD).
 
-James
+Yes, I agree with Andries here, and my reasoning follows:
+
+> The loop problem is related to scsi error handling using the common code
+> of scsi_queue_insert / scsi_requesT_fn . When a command gets started the
+> scsi_init_cmd_errh function is called which sets retries to 0.
+
+Ultimately the solution is fixing the LLDD.  Drawing from my own experience:
+a quick and dirty way of simulating Autosense is to do it
+*right in the scsi_done() fn* .
+
+Add a flag sense_reqd:1 :: struct scsi_cmnd (stands for ``sense requested''),
+which is normally 0, and at scsi_done() if we got CHECK CONDITION without
+Sense Data, we (for older 2.4 kernels, NOT REAL C CODE):
+
+    if we got CHECK COND and NO SENSE and SCpnt->sense_reqd == 0 then
+	/* the original command is in the backup fields already */
+	memcpy(SCpnt->cmnd, generic_sense, sizeof(generic_sense));
+	memset(SCpnt->sense_buffer, 0, SCSI_SENSE_BUFFERSIZE);
+	SCpnt->sc_data_direction = SCSI_DATA_READ;
+	SCpnt->request_buffer = &SCpnt->sense_buffer;
+	SCpnt->request_bufflen = SCSI_SENSE_BUFFERSIZE;
+	SCpnt->use_sg = 0;
+	SCpnt->cmd_len = COMMAND_SIZE(SCpnt->cmnd[0]);
+	SCpnt->result = 0;
+	SCpnt->sense_reqd = 1;
+	
+	enqueue the command to be sent back to the LLDD.
+  	(i.e. from pending_q to incoming_q at front -- the only instance of
+	backwardness which I spoke of in an older email...)
+   else
+	/* normal process */
+	enqueue the command into the done_q;
+	schedule scsi soft irq;
+   fi
+
+The only problem with this solution is that if the driver does it's own
+queuing and NACA = 0 (normally) in the CONTROL BYTE of the CDB, then
+the Sense Data gets wiped out* at the recept of the next command by the Device
+Server (unless it's REQUEST SENSE).  Thus, the only true solution is to fix
+it at LLDD level, but with the above solution we get as close to it,
+but no closer. :-)
+
+* CA (Contingent Allegiance), now obsolete as of SAM-3r05, since Autosense
+is mandatory.
+
+> There maybe another issue with the scsi_eh_get_sense function, but I am
+> still looking at it.
+
+I have a problem with fixing Autosense at such higher level in SCSI Core.
+I.e. having its own function and going through the normal path of SCSI Commands.
+It should be a hack, since this is what Non-Autosense is.
+
+I.e. SCSI Core itself should *not* know about Autosense and Non-Autosense
+complient drivers.  Thus, this is best fixed at scsi_done() fn.
+
+I.e. the workings of SCSI Core should assume Autosense -- first because
+it makes sense, and secondly because it's mandatory as of SAM-3r05.
+
+And if the Sense Data got back nil, i.e. it got wiped out, then we just bubble up
+the command (since sense_reqd would == 1).
+
+At this (low) level there's no need to count retries.  At higher level in
+SCSI Core, it's ok, but for Autosense we just have to be as quiet as possible.
+
+Note: there are devices which will report CHECK CONDITION but will
+never give a valid Sense Data -- those are the ones which could
+really break a shaky recovery logic (normally infinite loop).
+
+I've also gotten into an infinite loop in simulating Autosense in my own
+mini-scsi-core, but this was resolved by following more or less the
+aforementioned framework.
+
+-- 
+Luben
 
 
---=-wfqBEWQ+ClEkAkWkbykW
-Content-Disposition: attachment; filename=tmp.diff
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; name=tmp.diff; charset=ISO-8859-1
-
-=3D=3D=3D=3D=3D drivers/scsi/scsi_error.c 1.38 vs edited =3D=3D=3D=3D=3D
---- 1.38/drivers/scsi/scsi_error.c	Sat Feb 22 10:17:01 2003
-+++ edited/drivers/scsi/scsi_error.c	Fri Mar  7 16:15:02 2003
-@@ -515,7 +515,7 @@
- 	 * actually did complete normally.
- 	 */
- 	if (rtn =3D=3D SUCCESS) {
--		int rtn =3D scsi_eh_completed_normally(scmd);
-+		rtn =3D scsi_eh_completed_normally(scmd);
- 		SCSI_LOG_ERROR_RECOVERY(3,
- 			printk("%s: scsi_eh_completed_normally %x\n",
- 			       __FUNCTION__, rtn));
-@@ -545,20 +545,20 @@
- static int scsi_request_sense(struct scsi_cmnd *scmd)
- {
- 	static unsigned char generic_sense[6] =3D
--	{REQUEST_SENSE, 0, 0, 0, 255, 0};
--	unsigned char scsi_result0[256], *scsi_result =3D &scsi_result0[0];
-+	{REQUEST_SENSE, 0, 0, 0, 254, 0};
-+	unsigned char *scsi_result;
- 	int saved_result;
- 	int rtn;
-=20
- 	memcpy(scmd->cmnd, generic_sense, sizeof(generic_sense));
-=20
--	if (scmd->device->host->hostt->unchecked_isa_dma) {
--		scsi_result =3D kmalloc(512, GFP_ATOMIC | __GFP_DMA);
--		if (unlikely(!scsi_result)) {
--			printk(KERN_ERR "%s: cannot allocate scsi_result.\n",
--					__FUNCTION__);
--			return FAILED;
--		}
-+	scsi_result =3D kmalloc(254, GFP_ATOMIC | (scmd->device->host->hostt->unc=
-hecked_isa_dma) ? __GFP_DMA : 0);
-+
-+
-+	if (unlikely(!scsi_result)) {
-+		printk(KERN_ERR "%s: cannot allocate scsi_result.\n",
-+		       __FUNCTION__);
-+		return FAILED;
- 	}
-=20
- 	/*
-@@ -568,11 +568,11 @@
- 	 * address (db).  0 is not a valid sense code.=20
- 	 */
- 	memset(scmd->sense_buffer, 0, sizeof(scmd->sense_buffer));
--	memset(scsi_result, 0, 256);
-+	memset(scsi_result, 0, 254);
-=20
- 	saved_result =3D scmd->result;
- 	scmd->request_buffer =3D scsi_result;
--	scmd->request_bufflen =3D 256;
-+	scmd->request_bufflen =3D 254;
- 	scmd->use_sg =3D 0;
- 	scmd->cmd_len =3D COMMAND_SIZE(scmd->cmnd[0]);
- 	scmd->sc_data_direction =3D SCSI_DATA_READ;
-@@ -581,13 +581,12 @@
- 	rtn =3D scsi_send_eh_cmnd(scmd, SENSE_TIMEOUT);
-=20
- 	/* last chance to have valid sense data */
--	if (!SCSI_SENSE_VALID(scmd)) {
-+	if(!SCSI_SENSE_VALID(scmd)) {
- 		memcpy(scmd->sense_buffer, scmd->request_buffer,
--				sizeof(scmd->sense_buffer));
-+		       sizeof(scmd->sense_buffer));
- 	}
-=20
--	if (scsi_result !=3D &scsi_result0[0])
--		kfree(scsi_result);
-+	kfree(scsi_result);
-=20
- 	/*
- 	 * when we eventually call scsi_finish, we really wish to complete
-@@ -703,25 +702,14 @@
- 		 * upper level.
- 		 */
- 		if (rtn =3D=3D SUCCESS)
--			scsi_eh_finish_cmd(scmd, done_q);
--		if (rtn !=3D NEEDS_RETRY)
-+			/* we don't want this command reissued, just
-+			 * finished with the sense data, so set
-+			 * retries to the max allowed to ensure it
-+			 * won't get reissued */
-+			scmd->retries =3D scmd->allowed;
-+		else if (rtn !=3D NEEDS_RETRY)
- 			continue;
-=20
--		/*
--		 * we only come in here if we want to retry a
--		 * command.  the test to see whether the command
--		 * should be retried should be keeping track of the
--		 * number of tries, so we don't end up looping, of
--		 * course.
--		 */
--		scmd->state =3D NEEDS_RETRY;
--		rtn =3D scsi_eh_retry_cmd(scmd);
--		if (rtn !=3D SUCCESS)
--			continue;
--
--		/*
--		 * we eventually hand this one back to the top level.
--		 */
- 		scsi_eh_finish_cmd(scmd, done_q);
- 	}
-=20
-=3D=3D=3D=3D=3D drivers/scsi/scsi_lib.c 1.73 vs edited =3D=3D=3D=3D=3D
---- 1.73/drivers/scsi/scsi_lib.c	Sat Feb 22 14:35:33 2003
-+++ edited/drivers/scsi/scsi_lib.c	Fri Mar  7 15:19:46 2003
-@@ -265,7 +265,6 @@
- 	cmd->serial_number =3D 0;
- 	cmd->serial_number_at_timeout =3D 0;
- 	cmd->flags =3D 0;
--	cmd->retries =3D 0;
- 	cmd->abort_reason =3D 0;
-=20
- 	memset(cmd->sense_buffer, 0, sizeof cmd->sense_buffer);
-
---=-wfqBEWQ+ClEkAkWkbykW--
