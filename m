@@ -1,26 +1,48 @@
-From: "Scott T. Smith" <scott@gelatinous.com>
-Subject: error handling in 2.6.x
-Date: Wed, 01 Sep 2004 13:18:09 -0700
+From: janitor@sternwelten.at
+Subject: [patch 08/11]  remove old ifdefs aic79xxx
+Date: Wed, 01 Sep 2004 22:46:38 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1094069889.4883.652.camel@tinny.home.foo>
-Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Message-ID: <E1C2c06-00074P-Fo@sputnik>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from dsl093-129-198.sfo4.dsl.speakeasy.net ([66.93.129.198]:33184
-	"EHLO localhost.localdomain") by vger.kernel.org with ESMTP
-	id S267721AbUIAUSh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 1 Sep 2004 16:18:37 -0400
+Received: from baikonur.stro.at ([213.239.196.228]:61398 "EHLO
+	baikonur.stro.at") by vger.kernel.org with ESMTP id S267835AbUIAUqm
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 1 Sep 2004 16:46:42 -0400
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-
-I'm modifying an error handler for a 2.6.x driver
-(eh_device_reset_handler and eh_bus_reset_handler) and am wondering if I
-can use semaphores... is it called from a user context, or is it called
-from a "bottom half"?  Given that I see scsi_eh_%d processes on my
-machine, I assume it's called from a user context, but I just wanted to
-be sure first.
-
-	Scott
+Cc: James.Bottomley@SteelEye.com, janitor@sternwelten.at
 
 
+
+ Patches to remove some old ifdefs.
+ remove most of the #include <linux/version.h>
+ kill compat cruft like #define ahd_pci_set_dma_mask pci_set_dma_mask
+
+Signed-off-by: Maximilian Attems <janitor@sternwelten.at>
+
+
+
+
+---
+
+ linux-2.6.9-rc1-bk7-max/drivers/scsi/aic7xxx/cam.h |    6 ------
+ 1 files changed, 6 deletions(-)
+
+diff -puN drivers/scsi/aic7xxx/cam.h~remove-old-ifdefs-aic7xxx-cam drivers/scsi/aic7xxx/cam.h
+--- linux-2.6.9-rc1-bk7/drivers/scsi/aic7xxx/cam.h~remove-old-ifdefs-aic7xxx-cam	2004-08-31 17:41:37.000000000 +0200
++++ linux-2.6.9-rc1-bk7-max/drivers/scsi/aic7xxx/cam.h	2004-08-31 17:41:37.000000000 +0200
+@@ -85,12 +85,6 @@ typedef enum {
+ 	CAM_STATUS_MASK		= 0x3F
+ } cam_status;
+ 
+-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,3,0)
+-#define	SCSI_DATA_READ	1
+-#define	SCSI_DATA_WRITE 2
+-#define SCSI_DATA_NONE  3
+-#endif
+-
+ /*
+  * Definitions for the asynchronous callback CCB fields.
+  */
+
+_
