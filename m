@@ -1,67 +1,46 @@
 From: Rusty Trivial Russell <rusty@rustcorp.com.au>
-Subject: [TRIVIAL] warning cleanup for drivers_scsi_qla1280.c
-Date: Mon, 23 Jun 2003 16:47:25 +1000
+Subject: [TRIVIAL] 15) request_region check, 11-20
+Date: Mon, 23 Jun 2003 17:00:00 +1000
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030623070135.AF6A72C292@lists.samba.org>
+Message-ID: <20030623070135.BEC4A2C275@lists.samba.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from dp.samba.org ([66.70.73.150]:33200 "EHLO lists.samba.org")
-	by vger.kernel.org with ESMTP id S263737AbTFWGr3 (ORCPT
+Received: from dp.samba.org ([66.70.73.150]:34480 "EHLO lists.samba.org")
+	by vger.kernel.org with ESMTP id S263462AbTFWGr3 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
 	Mon, 23 Jun 2003 02:47:29 -0400
 List-Id: linux-scsi@vger.kernel.org
 To: Marcelo Tosatti <marcelo@conectiva.com.br>
-Cc: Jes Sorensen <jes@wildopensource.com>, linux-scsi@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org, rmk@arm.linux.org.uk
 
-[ This function is unused if kernel > 2.1.95, so put #ifdef around whole thing
-  to avoid warning. --RR ]
+(Included in 2.5)
+From:  johnpol@2ka.mipt.ru
 
-From:  Eric Sandeen <sandeen@sgi.com>
+  here is one more trivial check.
+  
+  So please test and apply.
+  
+  	Evgeniy Polyakov ( s0mbre )
+  
 
-
---- trivial-2.4.22-pre1/drivers/scsi/qla1280.c.orig	2003-06-23 16:39:22.000000000 +1000
-+++ trivial-2.4.22-pre1/drivers/scsi/qla1280.c	2003-06-23 16:39:22.000000000 +1000
-@@ -312,7 +312,9 @@
- STATIC int qla1280_return_status( sts_entry_t *sts, Scsi_Cmnd       *cp);
- STATIC void qla1280_removeq(scsi_lu_t *q, srb_t *sp);
- STATIC void qla1280_mem_free(scsi_qla_host_t *ha);
-+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,1,95)
- static void qla1280_do_dpc(void *p);
-+#endif
- #ifdef  QLA1280_UNUSED 
- static void qla1280_set_flags(char * s);
- #endif
-@@ -1611,17 +1613,12 @@
-  * "host->can_queue". This can cause a panic if we were in our interrupt
-  * code .
-  **************************************************************************/
-+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,1,95)
- static void qla1280_do_dpc(void *p)
- {
-     scsi_qla_host_t *ha = (scsi_qla_host_t *) p;
--#if LINUX_VERSION_CODE > KERNEL_VERSION(2,1,95)
--    unsigned long cpu_flags = 0;
--#endif
+--- trivial-2.4.22-pre1/drivers/acorn/scsi/cumana_2.c.orig	2003-06-23 16:39:45.000000000 +1000
++++ trivial-2.4.22-pre1/drivers/acorn/scsi/cumana_2.c	2003-06-23 16:39:45.000000000 +1000
+@@ -382,8 +382,13 @@
+ 		ecs[count]->irq_data	= (void *)info->alatch;
+ 		ecs[count]->ops		= (expansioncard_ops_t *)&cumanascsi_2_ops;
  
-     COMTRACE('p')  
--#if LINUX_VERSION_CODE > KERNEL_VERSION(2,1,95)
--    spin_lock_irqsave(&io_request_lock, cpu_flags);
--#endif
-     if (ha->flags.isp_abort_needed)
-         qla1280_abort_isp(ha);
+-		request_region(host->io_port + CUMANASCSI2_FAS216_OFFSET,
+-			       16 << CUMANASCSI2_FAS216_SHIFT, "cumanascsi2-fas");
++		if (!request_region(host->io_port + CUMANASCSI2_FAS216_OFFSET,
++			       16 << CUMANASCSI2_FAS216_SHIFT, "cumanascsi2-fas")) {
++			scsi_unregister(host);
++			ecard_release(ecs[count]);
++			break;
++		}
++			
  
-@@ -1631,10 +1628,8 @@
-     if (ha->done_q_first)
-         qla1280_done(ha, (srb_t **)&ha->done_q_first, (srb_t **)&ha->done_q_last);
-     ha->flags.dpc_sched = FALSE;
--#if LINUX_VERSION_CODE > KERNEL_VERSION(2,1,95)
--    spin_unlock_irqrestore(&io_request_lock, cpu_flags);
--#endif
- }
-+#endif /* LINUX_VERSION_CODE < KERNEL_VERSION(2,1,95) */
- 
- /**************************************************************************
-  *   qla1280_device_queue_depth
+ 		if (host->irq != NO_IRQ &&
+ 		    request_irq(host->irq, cumanascsi_2_intr,
 -- 
   What is this? http://www.kernel.org/pub/linux/kernel/people/rusty/trivial/
   Don't blame me: the Monkey is driving
-  File: Eric Sandeen <sandeen@sgi.com>: warning cleanup for drivers_scsi_qla1280.c
+  File: johnpol@2ka.mipt.ru: 15) request_region check, 11-20
