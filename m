@@ -1,42 +1,47 @@
-From: Erik Andersen <andersen@codepoet.org>
-Subject: Re: [PATCH] SCSI hotplug support
-Date: Tue, 15 Oct 2002 16:07:58 -0600
+From: Mike Anderson <andmike@us.ibm.com>
+Subject: Re: [patch 2.5] ips queue depths
+Date: Tue, 15 Oct 2002 15:10:31 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20021015220758.GB19530@codepoet.org>
-References: <andersen@codepoet.org> <20021015182247.GA4391@redhat.com> <20021015184535.GA16401@codepoet.org> <200210152343.44931.oliver@neukum.name>
-Reply-To: andersen@codepoet.org
+Message-ID: <20021015221031.GF1049@beaverton.ibm.com>
+References: <20021015201022.GB1049@beaverton.ibm.com> <200210152038.g9FKc8A03995@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <200210152343.44931.oliver@neukum.name>
+In-Reply-To: <200210152038.g9FKc8A03995@localhost.localdomain>
 List-Id: linux-scsi@vger.kernel.org
-To: Oliver Neukum <oliver@neukum.name>
-Cc: James Bottomley <James.Bottomley@steeleye.com>, linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@steeleye.com>
+Cc: "Jeffery, David" <David_Jeffery@adaptec.com>, 'Dave Hansen' <haveblue@us.ibm.com>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
 
-On Tue Oct 15, 2002 at 11:43:44PM +0200, Oliver Neukum wrote:
-> Am Dienstag, 15. Oktober 2002 20:45 schrieb Erik Andersen:
-> > On Tue Oct 15, 2002 at 02:22:47PM -0400, Doug Ledford wrote:
-> > > On Mon, Oct 14, 2002 at 11:25:22PM -0600, Erik Andersen wrote:
-> > > > It is called from within the insmod's context.
-> > >
-> > > So it's called by what module then?  And what happens if we have a user
-> > > add a hard drive and it gets the module loaded and then attaches the
-> > > drive, then we attach another drive sometime later, and this time hotplug
-> > > doesn't do anything because the right module is already loaded?  How does
-> > > the drive get added then?  Am I missing something?
-> >
-> > Oops.  I spoke wrongly....  It is called from within
-> > /sbin/hotplug's context.
+James Bottomley [James.Bottomley@steeleye.com] wrote:
+> andmike@us.ibm.com said:
+> > I never seen the mid layer handle device starvation correctly. It
+> > might be because in scsi_queue_next_request we do this:
 > 
-> That sounds very odd. Are you trying to say that it is done in the context
-> of a kernel thread which later calls /sbin/hotplug, or what?
+> > /*
+> >  * Just hit the requeue function for the queue.
+> >  */
+> >   q->request_fn(q);
+> 
+> > before we check for starved. 
+> 
+> This starvation code has nothing to do with fairness.  It's job is purely to 
+> restart the device queue if we got a host blocked condition and we had to 
+> reject commands with zero depth.  When the host blocked abates then we loop 
+> over all the starved devices and call their request functions.  Without this, 
+> we could get a hang in the block layer queueing.
 
-I was wrong again.  See the msg I just posted where (rather than
-guessing) I actually test things....
+I am mis-reading what your saying.
 
- -Erik
+Ok it will not handle fairness, but it will trigger a starved and
+some_device_starved case when SHpnt->can_queue > 0 and SHpnt->host_busy >=
+SHpnt->can_queue. Which is the case we where discussing and is not a
+host blocked condition. The reverse ordering of the request_fn call
+could cause a device to stayed starved if the device queue depth is near
+or equal to the host can_queue.
 
+-andmike
 --
-Erik B. Andersen             http://codepoet-consulting.com/
---This message was written using 73% post-consumer electrons--
+Michael Anderson
+andmike@us.ibm.com
+
