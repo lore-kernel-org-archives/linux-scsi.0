@@ -1,315 +1,289 @@
-From: "Adam J. Richter" <adam@yggdrasil.com>
-Subject: Patch?: 2.5.45 - Eliminate Scsi_Host_Name
-Date: Mon, 4 Nov 2002 10:01:06 -0800
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH] allow registering individual HBAs
+Date: Mon, 4 Nov 2002 22:27:30 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20021104100106.A2328@baldur.yggdrasil.com>
+Message-ID: <20021104222730.A16172@lst.de>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="NzB8fVQJ5HfG6fxh"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org
+To: James.Bottomley@steeleye.com
+Cc: linux-scsi@vger.kernel.org
+
+Yes, this is the patch every maintainer of a modern HBA waited for the
+last years </shameless plug>.
+
+With all my recent changes there's no more reason to call scsi_register_host
+except for the intialization it performs to every host found in
+scsi_register.  But a driver can aswell do that at the end of it's
+per-HBA detection routine (i.e. in ->probe for a modern PCI driver), so
+export that code as scsi_add_host to drivers.  Do the same for the
+release path (scsi_remove_host).  Such a new-style driver needs neither
+->detect or ->release and is in theory hotplug-capable (well, once all
+the races in the scsi midlayer are fixed..)
 
 
---NzB8fVQJ5HfG6fxh
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-
-	This patch eliminates struct Scsi_Host_Name and associated
-routines.  Instead, it just scans the "scsihosts=" string when it
-is time to check for reserved host numbers.
-
-	I have not tested this patch other than to verify that
-hosts.c and scsi.c still compile.
-
-	This patch applies after my patch for eliminating
-scsi_host_tmpl_list.
-
--- 
-Adam J. Richter     __     ______________   575 Oroville Road
-adam@yggdrasil.com     \ /                  Milpitas, California 95035
-+1 408 309-6081         | g g d r a s i l   United States of America
-                         "Free Software For The Rest Of Us."
-
---NzB8fVQJ5HfG6fxh
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: attachment; filename="scsi.diff2"
-
-diff -u linux.old/drivers/scsi/hosts.h linux/drivers/scsi/hosts.h
---- linux.old/drivers/scsi/hosts.h	2002-11-04 08:10:43.000000000 -0800
-+++ linux/drivers/scsi/hosts.h	2002-11-04 09:36:18.000000000 -0800
-@@ -508,14 +508,6 @@
- extern void scsi_block_requests(struct Scsi_Host *);
- extern void scsi_report_bus_reset(struct Scsi_Host *, int);
- 
--typedef struct SHN
--{
--	struct list_head shn_list;
--	char *name;
--	unsigned short host_no;
--	unsigned short host_registered;
--} Scsi_Host_Name;
--	
- extern struct Scsi_Device_Template * scsi_devicelist;
- 
- extern void scsi_proc_host_mkdir(Scsi_Host_Template *);
-@@ -595,7 +587,6 @@
- extern struct Scsi_Host *scsi_host_hn_get(unsigned short);
- extern void scsi_host_put(struct Scsi_Host *);
- extern void scsi_host_hn_init(char *);
--extern void scsi_host_hn_release(void);
- 
- /*
-  * host_busy inc/dec/test functions
-diff -u linux.old/drivers/scsi/scsi.c linux/drivers/scsi/scsi.c
---- linux.old/drivers/scsi/scsi.c	2002-10-29 20:32:33.000000000 -0800
-+++ linux/drivers/scsi/scsi.c	2002-11-04 09:36:10.000000000 -0800
-@@ -2472,8 +2472,6 @@
- 
-         devfs_unregister (scsi_devfs_handle);
- 
--	scsi_host_hn_release();
--
- #ifdef CONFIG_PROC_FS
- 	/* No, we're not here anymore. Don't show the /proc/scsi files. */
- 	remove_proc_entry ("scsi/scsi", 0);
-diff -u linux.old/drivers/scsi/hosts.c linux/drivers/scsi/hosts.c
---- linux.old/drivers/scsi/hosts.c	2002-11-04 08:10:43.000000000 -0800
-+++ linux/drivers/scsi/hosts.c	2002-11-04 09:48:05.000000000 -0800
-@@ -45,8 +45,6 @@
- #include "scsi.h"
- #include "hosts.h"
- 
--LIST_HEAD(scsi_host_hn_list);
--
- LIST_HEAD(scsi_host_list);
- spinlock_t scsi_host_list_lock = SPIN_LOCK_UNLOCKED;
- 
-@@ -54,6 +52,7 @@
- 
- static int scsi_host_next_hn;		/* host_no for next new host */
- static int scsi_hosts_registered;	/* cnt of registered scsi hosts */
-+static char *scsihosts;
- 
- /**
-  * scsi_tp_for_each_host - call function for each scsi host off a template
-@@ -226,21 +225,11 @@
+--- 1.21/drivers/scsi/hosts.c	Sun Nov  3 19:48:14 2002
++++ edited/drivers/scsi/hosts.c	Mon Nov  4 22:04:04 2002
+@@ -90,7 +90,7 @@
+  * 	This is the default case for the release function.  Its completely
+  *	useless for anything but old ISA adapters
   **/
- void scsi_unregister(struct Scsi_Host *shost)
+-static void scsi_host_generic_release(struct Scsi_Host *shost)
++static void scsi_host_legacy_release(struct Scsi_Host *shost)
  {
--	struct list_head *lh;
--	Scsi_Host_Name *shost_name;
--
- 	/* Remove shost from scsi_host_list */
- 	spin_lock(&scsi_host_list_lock);
- 	list_del(&shost->sh_list);
- 	spin_unlock(&scsi_host_list_lock);
- 
--	/* Unregister from scsi_host_hn_list */
--	list_for_each(lh, &scsi_host_hn_list) {
--		shost_name = list_entry(lh, Scsi_Host_Name, shn_list);
--		if (shost->host_no == shost_name->host_no)
--			shost_name->host_registered = 0;
--	}
--
- 	/*
- 	 * Next, kill the kernel error recovery thread for this host.
- 	 */
-@@ -267,40 +256,57 @@
+ 	if (shost->irq)
+ 		free_irq(shost->irq, NULL);
+@@ -100,18 +100,35 @@
+ 		release_region(shost->io_port, shost->n_io_port);
  }
  
- /**
-- * scsi_host_hn_add - allocate and add new Scsi_Host_Name
-- * @name:	String to store in name field
-+ * scsi_find_host_by_num - get a Scsi_Host by host no and inc ref count
-+ *		          scsi_host_list_lock must be held by caller.
-+ * @host_no:	host number to locate
-  *
-  * Return value:
-- * 	Pointer to a new Scsi_Host_Name
-+ * 	A pointer to located Scsi_Host or NULL.
-  **/
--Scsi_Host_Name *scsi_host_hn_add(char *name)
-+static struct Scsi_Host *scsi_find_host_by_num(unsigned short host_no)
- {
--	Scsi_Host_Name *shost_name;
--	int len;
-+	struct list_head *lh;
-+	struct Scsi_Host *shost;
- 
--	len = strlen(name);
--	shost_name =  kmalloc(sizeof(*shost_name), GFP_KERNEL);
--	if (!shost_name) {
--		printk(KERN_ERR "%s: out of memory at line %d.\n",
--		       __FUNCTION__, __LINE__);
--		return NULL;
--	}
--	shost_name->name = kmalloc(len + 1, GFP_KERNEL);
--	if (!shost_name->name) {
--		kfree(shost_name);
--		printk(KERN_ERR "%s: out of memory at line %d.\n",
--		       __FUNCTION__, __LINE__);
--		return NULL;
-+	list_for_each(lh, &scsi_host_list) {
-+		shost = list_entry(lh, struct Scsi_Host, sh_list);
-+		if (shost->host_no == host_no)
-+                        return shost;
- 	}
- 
--	if (len)
--		strncpy(shost_name->name, name, len);
--	shost_name->name[len] = 0;
--	shost_name->host_no = scsi_host_next_hn++;
--	shost_name->host_registered = 0;
--	list_add_tail(&shost_name->shn_list, &scsi_host_hn_list);
-+	return NULL;
++static int scsi_remove_legacy_host(struct Scsi_Host *shost)
++{
++	int error, pcount = scsi_hosts_registered;
++
++	error = scsi_remove_host(shost);
++	if (error)
++		return error;
++
++	if (shost->hostt->release)
++		(*shost->hostt->release)(shost);
++	else
++		scsi_host_legacy_release(shost);
++
++	if (pcount == scsi_hosts_registered)
++		scsi_unregister(shost);
++	return 0;
 +}
 +
-+
-+
-+/**
-+ * scsi_alloc_hostnum - choose new SCSI host number based on host name.
-+ * @name:	String to store in name field
-+ *
-+ * Return value:
-+ * 	Pointer to a new Scsi_Host_Name
-+ **/
-+static int scsi_alloc_host_num(const char *name)
-+{
-+        int hostnum = 0;
-+        if (name != NULL && scsihosts != NULL && scsihosts[0] != '\0') {
+ /**
+- * scsi_host_chk_and_release - check a scsi host for release and release
++ * scsi_remove_host - check a scsi host for release and release
+  * @shost:	a pointer to a scsi host to release
+  *
+  * Return value:
+  * 	0 on Success / 1 on Failure
+  **/
+-int scsi_host_chk_and_release(struct Scsi_Host *shost)
++int scsi_remove_host(struct Scsi_Host *shost)
+ {
+-	int pcount;
+-	Scsi_Device *sdev;
+-	Scsi_Cmnd *scmd;
++	struct scsi_device *sdev;
++	struct scsi_cmnd *scmd;
  
--	return shost_name;
-+                const int namelen = strlen(name);
-+                const char *start = scsihosts;
-+                while (start) {
-+                        const char *end = strpbrk(start, ",:");
-+                        int hostlen = end ? (end - start) : strlen(start);
+ 	/*
+ 	 * Current policy is all shosts go away on unregister.
+@@ -199,18 +216,30 @@
+ 		kfree(sdev);
+ 	}
+ 
+-	/* Remove the instance of the individual hosts */
+-	pcount = scsi_hosts_registered;
+-	if (shost->hostt->release)
+-		(*shost->hostt->release) (shost);
+-	else {
+-		scsi_host_generic_release(shost);
+-	}
++	return 0;
++}
+ 
+-	if (pcount == scsi_hosts_registered)
+-		scsi_unregister(shost);
++int scsi_add_host(struct Scsi_Host *shost)
++{
++	Scsi_Host_Template *sht = shost->hostt;
++	struct scsi_device *sdev;
++	int error = 0;
 +
-+                        if (hostlen == namelen &&
-+                            strncmp(name, start, hostlen) == 0 &&
-+                            scsi_find_host_by_num(hostnum) == NULL)
-+                                return hostnum;
++	printk(KERN_INFO "scsi%d : %s\n", shost->host_no,
++			sht->info ? sht->info(shost) : sht->name);
 +
-+                        start = end;
-+                        hostnum++;
-+                }
-+        }
-+        return scsi_host_next_hn++;
++	device_register(&shost->host_driverfs_dev);
++	scan_scsis(shost, 0, 0, 0, 0);
++			
++	for (sdev = shost->host_queue; sdev; sdev = sdev->next) {
++		if (sdev->host->hostt != sht)
++			continue; /* XXX(hch): can this really happen? */
++		error = scsi_attach_device(sdev);
++		if (error)
++			break;
++	}
+ 
+-	return 0;
++	return error;
  }
  
  /**
-@@ -320,10 +326,6 @@
- struct Scsi_Host * scsi_register(Scsi_Host_Template *shost_tp, int xtr_bytes)
- {
- 	struct Scsi_Host *shost, *shost_scr;
--	Scsi_Host_Name *shost_name = NULL;
--	Scsi_Host_Name *shn = NULL;
--	char *hname;
--	size_t hname_len;
- 	struct list_head *lh;
- 	int gfp_mask;
- 	DECLARE_MUTEX_LOCKED(sem);
-@@ -340,33 +342,7 @@
+@@ -451,7 +480,6 @@
+ 	return shost;
+ }
  
- 	memset(shost, 0, sizeof(struct Scsi_Host) + xtr_bytes);
- 
--	/*
--	 * Determine host number. Check reserved first before allocating
--	 * new one
--	 */
--	hname = (shost_tp->proc_name) ?  shost_tp->proc_name : "";
--	hname_len = strlen(hname);
 -
--	if (hname_len)
--		list_for_each(lh, &scsi_host_hn_list) {
--			shn = list_entry(lh, Scsi_Host_Name, shn_list);
--			if (!(shn->host_registered) &&
--			    !strncmp(hname, shn->name, hname_len)) {
--				shost_name = shn;
--				break;
+ /**
+  * scsi_register_host - register a low level host driver
+  * @shost_tp:	pointer to a scsi host driver template
+@@ -461,10 +489,8 @@
+  **/
+ int scsi_register_host(Scsi_Host_Template *shost_tp)
+ {
+-	int cur_cnt;
+-	Scsi_Device *sdev;
+-	struct list_head *lh;
+ 	struct Scsi_Host *shost;
++	int cur_cnt;
+ 
+ 	/*
+ 	 * Check no detect routine.
+@@ -492,62 +518,40 @@
+ 	 * registration code below.
+ 	 */
+ 	shost_tp->detect(shost_tp);
++	if (!shost_tp->present)
++		return 0;
+ 
+-	if (shost_tp->present) {
+-			/*
+-			 * FIXME Who needs manual registration and why???
+-			 */
+-		if (cur_cnt == scsi_hosts_registered) {
+-			if (shost_tp->present > 1) {
+-				printk(KERN_ERR "scsi: Failure to register"
+-				       "low-level scsi driver");
+-				scsi_unregister_host(shost_tp);
+-				return 1;
+-			}
+-			/*
+-			 * The low-level driver failed to register a driver.
+-			 * We can do this now.
+-			 */
+-			if(scsi_register(shost_tp, 0)==NULL) {
+-				printk(KERN_ERR "scsi: register failed.\n");
+-				scsi_unregister_host(shost_tp);
+-				return 1;
 -			}
 -		}
 -
--	if (!shost_name) {
--		shost_name = scsi_host_hn_add(hname);
--		if (!shost_name) {
--			kfree(shost);
--			return NULL;
--		}
--	}
+-		/* The next step is to call scan_scsis here.  This generates the
+-		 * Scsi_Devices entries
+-		 */
+-		list_for_each(lh, &scsi_host_list) {
+-			shost = list_entry(lh, struct Scsi_Host, sh_list);
+-			if (shost->hostt == shost_tp) {
+-				const char *dm_name;
+-				if (shost_tp->info) {
+-					dm_name = shost_tp->info(shost);
+-				} else {
+-					dm_name = shost_tp->name;
+-				}
+-				printk(KERN_INFO "scsi%d : %s\n",
+-				       shost->host_no, dm_name);
 -
--	shost->host_no = shost_name->host_no;
--	shost_name->host_registered = 1;
-+	shost->host_no = scsi_alloc_host_num(shost_tp->proc_name);
- 	scsi_hosts_registered++;
+-				/* first register parent with driverfs */
+-				device_register(&shost->host_driverfs_dev);
+-				scan_scsis(shost, 0, 0, 0, 0);
+-			}
++	if (cur_cnt == scsi_hosts_registered) {
++		if (shost_tp->present > 1) {
++			printk(KERN_ERR "scsi: Failure to register"
++			       "low-level scsi driver");
++			scsi_unregister_host(shost_tp);
++			return 1;
+ 		}
  
- 	spin_lock_init(&shost->default_lock);
-@@ -657,20 +633,15 @@
-  **/
- struct Scsi_Host *scsi_host_hn_get(unsigned short host_no)
- {
--	struct list_head *lh;
- 	struct Scsi_Host *shost;
+ 		/*
+-		 * Next we create the Scsi_Cmnd structures for this host 
++		 * The low-level driver failed to register a driver.
++		 * We can do this now.
++		 *
++	 	 * XXX Who needs manual registration and why???
+ 		 */
+-		list_for_each(lh, &scsi_host_list) {
+-			shost = list_entry(lh, struct Scsi_Host, sh_list);
+-			for (sdev = shost->host_queue; sdev; sdev = sdev->next)
+-				if (sdev->host->hostt == shost_tp)
+-					if (scsi_attach_device(sdev))
+-						goto out_of_space;
++		if (!scsi_register(shost_tp, 0)) {
++			printk(KERN_ERR "scsi: register failed.\n");
++			scsi_unregister_host(shost_tp);
++			return 1;
+ 		}
+ 	}
  
- 	spin_lock(&scsi_host_list_lock);
--	list_for_each(lh, &scsi_host_list) {
--		shost = list_entry(lh, struct Scsi_Host, sh_list);
--		if (shost->host_no == host_no) {
--			/* XXX Inc ref count */
--			goto done;
--		}
--	}
-+        shost = scsi_find_host_by_num(host_no);
++	
++	/*
++	 * XXX(hch) use scsi_tp_for_each_host() once it propagates
++	 *	    error returns properly.
++	 */
++	list_for_each_entry(shost, &scsi_host_list, sh_list)
++		if (shost->hostt == shost_tp)
++			if (scsi_add_host(shost))
++				goto out_of_space;
 +
-+        if (shost) {
-+                /* XXX Inc ref count */
-+        }
+ 	return 0;
  
--	shost = (struct Scsi_Host *)NULL;
--done:
- 	spin_unlock(&scsi_host_list_lock);
- 	return shost;
- }
-@@ -694,34 +665,11 @@
-  **/
- void __init scsi_host_hn_init(char *shost_hn)
- {
--	char *temp = shost_hn;
--
--	while (temp) {
--		while (*temp && (*temp != ':') && (*temp != ','))
--			temp++;
--		if (!*temp)
--			temp = NULL;
--		else
--			*temp++ = 0;
--		(void)scsi_host_hn_add(shost_hn);
--		shost_hn = temp;
--	}
--}
--
--/**
-- * scsi_host_no_release - free all entries in scsi host number list
-- **/
--void __exit scsi_host_hn_release()
--{
--	struct list_head *lh, *next;
--	Scsi_Host_Name *shn;
--
--	list_for_each_safe(lh, next, &scsi_host_hn_list) {
--		shn = list_entry(lh, Scsi_Host_Name, shn_list);
--		if (shn->name)
--			kfree(shn->name);
--		kfree(shn);
--	}
-+        scsihosts = shost_hn;
-+        while (shost_hn) {
-+                scsi_host_next_hn++;
-+                shost_hn = strpbrk(shost_hn, ":,");
-+        }
- }
+ out_of_space:
+@@ -579,7 +583,7 @@
  
- void scsi_host_busy_inc(struct Scsi_Host *shost, Scsi_Device *sdev)
-
---NzB8fVQJ5HfG6fxh--
+ 	pcount = scsi_hosts_registered;
+ 
+-	scsi_tp_for_each_host(shost_tp, scsi_host_chk_and_release);
++	scsi_tp_for_each_host(shost_tp, scsi_remove_legacy_host);
+ 
+ 	if (pcount != scsi_hosts_registered)
+ 		printk(KERN_INFO "scsi : %d host%s left.\n", scsi_hosts_registered,
+===== drivers/scsi/hosts.h 1.29 vs edited =====
+--- 1.29/drivers/scsi/hosts.h	Sun Nov  3 14:24:37 2002
++++ edited/drivers/scsi/hosts.h	Mon Nov  4 21:34:35 2002
+@@ -528,8 +528,6 @@
+ extern int next_scsi_host;
+ 
+ unsigned int scsi_init(void);
+-extern struct Scsi_Host * scsi_register(Scsi_Host_Template *, int);
+-extern void scsi_unregister(struct Scsi_Host *);
+ extern void scsi_register_blocked_host(struct Scsi_Host *);
+ extern void scsi_deregister_blocked_host(struct Scsi_Host *);
+ 
+@@ -580,10 +578,26 @@
+ 
+ 
+ /*
+- * Driver registration/unregistration.
++ * Highlevel driver registration/unregistration.
+  */
+ extern int scsi_register_device(struct Scsi_Device_Template *);
+ extern int scsi_unregister_device(struct Scsi_Device_Template *);
++
++/*
++ * HBA allocation/freeing.
++ */
++extern struct Scsi_Host * scsi_register(Scsi_Host_Template *, int);
++extern void scsi_unregister(struct Scsi_Host *);
++
++/*
++ * HBA registration/unregistration.
++ */
++extern int scsi_add_host(struct Scsi_Host *);
++extern int scsi_remove_host(struct Scsi_Host *);
++
++/*
++ * Legacy HBA template registration/unregistration.
++ */
+ extern int scsi_register_host(Scsi_Host_Template *);
+ extern int scsi_unregister_host(Scsi_Host_Template *);
+ 
+===== drivers/scsi/scsi_syms.c 1.16 vs edited =====
+--- 1.16/drivers/scsi/scsi_syms.c	Sun Nov  3 19:36:05 2002
++++ edited/drivers/scsi/scsi_syms.c	Mon Nov  4 21:55:09 2002
+@@ -32,6 +32,8 @@
+ EXPORT_SYMBOL(scsi_unregister_device);
+ EXPORT_SYMBOL(scsi_register_host);
+ EXPORT_SYMBOL(scsi_unregister_host);
++EXPORT_SYMBOL(scsi_add_host);
++EXPORT_SYMBOL(scsi_remove_host);
+ EXPORT_SYMBOL(scsi_register);
+ EXPORT_SYMBOL(scsi_unregister);
+ EXPORT_SYMBOL(scsicam_bios_param);
