@@ -1,744 +1,615 @@
-From: Christoffer Hall-Frederiksen <hall@jiffies.dk>
-Subject: Problem with aacraid driver in 2.5.63-bk-latest
-Date: Fri, 28 Feb 2003 14:30:37 +0100
+From: Patrick Mansfield <patmans@us.ibm.com>
+Subject: [RFC][PATCH] scsi-misc-2.5 software enqueue when can_queue reached
+Date: Fri, 28 Feb 2003 11:19:24 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030228133037.GB7473@jiffies.dk>
+Message-ID: <20030228111924.A32018@beaverton.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hall by thor.jiffies.dk with local (Exim 3.35 #1 (Debian))
-	id 18okaz-0001yH-00
-	for <linux-scsi@vger.kernel.org>; Fri, 28 Feb 2003 14:30:37 +0100
+Received: (from patman@localhost)
+	by w-patman.des (8.11.2/8.11.2) id h1SJJOv32485
+	for linux-scsi@vger.kernel.org; Fri, 28 Feb 2003 11:19:24 -0800
 Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-I have a dell poweredge 1650 with a perc3/DI controller. When the
-AACRAID driver loads it stops with the following lines:
-
-AAC0: kernel 2.7.4 build 3170
-AAC0: monitor 2.7.4 build 3170
-AAC0: bios 2.7.0 build 3170
-AAC0: serial 0b9c810d3
-scsi0 : percraid
-
-And then there is a complete freeze. I don't know if sysrq isn't
-initialized at this time, but it doesn't work ;) Anybody know what's
-going on?
-
-My config file looks like this:
-
-============================================================
-#
-# Automatically generated make config: don't edit
-#
-CONFIG_X86=y
-CONFIG_MMU=y
-CONFIG_SWAP=y
-CONFIG_UID16=y
-CONFIG_GENERIC_ISA_DMA=y
-
-#
-# Code maturity level options
-#
-CONFIG_EXPERIMENTAL=y
-
-#
-# General setup
-#
-CONFIG_SYSVIPC=y
-# CONFIG_BSD_PROCESS_ACCT is not set
-CONFIG_SYSCTL=y
-CONFIG_LOG_BUF_SHIFT=14
-
-#
-# Loadable module support
-#
-# CONFIG_MODULES is not set
-
-#
-# Processor type and features
-#
-CONFIG_X86_PC=y
-# CONFIG_X86_VOYAGER is not set
-# CONFIG_X86_NUMAQ is not set
-# CONFIG_X86_SUMMIT is not set
-# CONFIG_X86_BIGSMP is not set
-# CONFIG_X86_VISWS is not set
-# CONFIG_M386 is not set
-# CONFIG_M486 is not set
-# CONFIG_M586 is not set
-# CONFIG_M586TSC is not set
-# CONFIG_M586MMX is not set
-# CONFIG_M686 is not set
-# CONFIG_MPENTIUMII is not set
-CONFIG_MPENTIUMIII=y
-# CONFIG_MPENTIUM4 is not set
-# CONFIG_MK6 is not set
-# CONFIG_MK7 is not set
-# CONFIG_MK8 is not set
-# CONFIG_MELAN is not set
-# CONFIG_MCRUSOE is not set
-# CONFIG_MWINCHIPC6 is not set
-# CONFIG_MWINCHIP2 is not set
-# CONFIG_MWINCHIP3D is not set
-# CONFIG_MCYRIXIII is not set
-# CONFIG_MVIAC3_2 is not set
-CONFIG_X86_CMPXCHG=y
-CONFIG_X86_XADD=y
-CONFIG_X86_L1_CACHE_SHIFT=5
-CONFIG_RWSEM_XCHGADD_ALGORITHM=y
-CONFIG_X86_WP_WORKS_OK=y
-CONFIG_X86_INVLPG=y
-CONFIG_X86_BSWAP=y
-CONFIG_X86_POPAD_OK=y
-CONFIG_X86_TSC=y
-CONFIG_X86_GOOD_APIC=y
-CONFIG_X86_INTEL_USERCOPY=y
-CONFIG_X86_USE_PPRO_CHECKSUM=y
-CONFIG_X86_PREFETCH=y
-CONFIG_HUGETLB_PAGE=y
-CONFIG_SMP=y
-# CONFIG_PREEMPT is not set
-CONFIG_X86_LOCAL_APIC=y
-CONFIG_X86_IO_APIC=y
-CONFIG_NR_CPUS=32
-# CONFIG_X86_MCE is not set
-# CONFIG_TOSHIBA is not set
-# CONFIG_I8K is not set
-# CONFIG_MICROCODE is not set
-# CONFIG_X86_MSR is not set
-# CONFIG_X86_CPUID is not set
-# CONFIG_EDD is not set
-CONFIG_NOHIGHMEM=y
-# CONFIG_HIGHMEM4G is not set
-# CONFIG_HIGHMEM64G is not set
-# CONFIG_MATH_EMULATION is not set
-# CONFIG_MTRR is not set
-CONFIG_HAVE_DEC_LOCK=y
-
-#
-# Power management options (ACPI, APM)
-#
-# CONFIG_PM is not set
-
-#
-# ACPI Support
-#
-# CONFIG_ACPI is not set
-
-#
-# CPU Frequency scaling
-#
-# CONFIG_CPU_FREQ is not set
-
-#
-# Bus options (PCI, PCMCIA, EISA, MCA, ISA)
-#
-CONFIG_PCI=y
-# CONFIG_PCI_GOBIOS is not set
-# CONFIG_PCI_GODIRECT is not set
-CONFIG_PCI_GOANY=y
-CONFIG_PCI_BIOS=y
-CONFIG_PCI_DIRECT=y
-# CONFIG_SCx200 is not set
-CONFIG_PCI_LEGACY_PROC=y
-CONFIG_PCI_NAMES=y
-# CONFIG_ISA is not set
-# CONFIG_MCA is not set
-# CONFIG_HOTPLUG is not set
-
-#
-# Executable file formats
-#
-CONFIG_KCORE_ELF=y
-# CONFIG_KCORE_AOUT is not set
-CONFIG_BINFMT_AOUT=y
-CONFIG_BINFMT_ELF=y
-CONFIG_BINFMT_MISC=y
-
-#
-# Memory Technology Devices (MTD)
-#
-# CONFIG_MTD is not set
-
-#
-# Parallel port support
-#
-# CONFIG_PARPORT is not set
-
-#
-# Plug and Play support
-#
-# CONFIG_PNP is not set
-
-#
-# Block devices
-#
-CONFIG_BLK_DEV_FD=y
-# CONFIG_BLK_CPQ_DA is not set
-# CONFIG_BLK_CPQ_CISS_DA is not set
-# CONFIG_BLK_DEV_DAC960 is not set
-# CONFIG_BLK_DEV_UMEM is not set
-CONFIG_BLK_DEV_LOOP=y
-# CONFIG_BLK_DEV_NBD is not set
-CONFIG_BLK_DEV_RAM=y
-CONFIG_BLK_DEV_RAM_SIZE=4096
-CONFIG_BLK_DEV_INITRD=y
-# CONFIG_LBD is not set
-
-#
-# ATA/ATAPI/MFM/RLL device support
-#
-# CONFIG_IDE is not set
-
-#
-# SCSI device support
-#
-CONFIG_SCSI=y
-
-#
-# SCSI support type (disk, tape, CD-ROM)
-#
-CONFIG_BLK_DEV_SD=y
-# CONFIG_CHR_DEV_ST is not set
-# CONFIG_CHR_DEV_OSST is not set
-# CONFIG_BLK_DEV_SR is not set
-CONFIG_CHR_DEV_SG=y
-
-#
-# Some SCSI devices (e.g. CD jukebox) support multiple LUNs
-#
-CONFIG_SCSI_MULTI_LUN=y
-CONFIG_SCSI_REPORT_LUNS=y
-CONFIG_SCSI_CONSTANTS=y
-CONFIG_SCSI_LOGGING=y
-
-#
-# SCSI low-level drivers
-#
-# CONFIG_BLK_DEV_3W_XXXX_RAID is not set
-# CONFIG_SCSI_ACARD is not set
-CONFIG_SCSI_AACRAID=y
-# CONFIG_SCSI_AIC7XXX is not set
-# CONFIG_SCSI_AIC7XXX_OLD is not set
-# CONFIG_SCSI_AIC79XX is not set
-# CONFIG_SCSI_DPT_I2O is not set
-# CONFIG_SCSI_ADVANSYS is not set
-# CONFIG_SCSI_IN2000 is not set
-# CONFIG_SCSI_AM53C974 is not set
-# CONFIG_SCSI_MEGARAID is not set
-# CONFIG_SCSI_BUSLOGIC is not set
-# CONFIG_SCSI_CPQFCTS is not set
-# CONFIG_SCSI_DMX3191D is not set
-# CONFIG_SCSI_EATA is not set
-# CONFIG_SCSI_EATA_PIO is not set
-# CONFIG_SCSI_FUTURE_DOMAIN is not set
-# CONFIG_SCSI_GDTH is not set
-# CONFIG_SCSI_GENERIC_NCR5380 is not set
-# CONFIG_SCSI_GENERIC_NCR5380_MMIO is not set
-# CONFIG_SCSI_IPS is not set
-# CONFIG_SCSI_INITIO is not set
-# CONFIG_SCSI_INIA100 is not set
-# CONFIG_SCSI_NCR53C7xx is not set
-# CONFIG_SCSI_SYM53C8XX_2 is not set
-# CONFIG_SCSI_NCR53C8XX is not set
-# CONFIG_SCSI_SYM53C8XX is not set
-# CONFIG_SCSI_PCI2000 is not set
-# CONFIG_SCSI_PCI2220I is not set
-# CONFIG_SCSI_QLOGIC_ISP is not set
-CONFIG_SCSI_QLOGIC_FC=y
-# CONFIG_SCSI_QLOGIC_FC_FIRMWARE is not set
-CONFIG_SCSI_QLOGIC_1280=y
-# CONFIG_SCSI_DC390T is not set
-# CONFIG_SCSI_U14_34F is not set
-# CONFIG_SCSI_NSP32 is not set
-# CONFIG_SCSI_DEBUG is not set
-
-#
-# Multi-device support (RAID and LVM)
-#
-# CONFIG_MD is not set
-
-#
-# Fusion MPT device support
-#
-# CONFIG_FUSION is not set
-
-#
-# IEEE 1394 (FireWire) support (EXPERIMENTAL)
-#
-# CONFIG_IEEE1394 is not set
-
-#
-# I2O device support
-#
-# CONFIG_I2O is not set
-
-#
-# Networking support
-#
-CONFIG_NET=y
-
-#
-# Networking options
-#
-CONFIG_PACKET=y
-CONFIG_PACKET_MMAP=y
-# CONFIG_NETLINK_DEV is not set
-CONFIG_NETFILTER=y
-# CONFIG_NETFILTER_DEBUG is not set
-CONFIG_FILTER=y
-CONFIG_UNIX=y
-# CONFIG_NET_KEY is not set
-CONFIG_INET=y
-CONFIG_IP_MULTICAST=y
-# CONFIG_IP_ADVANCED_ROUTER is not set
-# CONFIG_IP_PNP is not set
-# CONFIG_NET_IPIP is not set
-# CONFIG_NET_IPGRE is not set
-# CONFIG_IP_MROUTE is not set
-# CONFIG_ARPD is not set
-CONFIG_INET_ECN=y
-CONFIG_SYN_COOKIES=y
-# CONFIG_INET_AH is not set
-# CONFIG_INET_ESP is not set
-# CONFIG_XFRM_USER is not set
-
-#
-# IP: Netfilter Configuration
-#
-# CONFIG_IP_NF_CONNTRACK is not set
-# CONFIG_IP_NF_QUEUE is not set
-# CONFIG_IP_NF_IPTABLES is not set
-# CONFIG_IP_NF_ARPTABLES is not set
-# CONFIG_IP_NF_COMPAT_IPCHAINS is not set
-# CONFIG_IP_NF_COMPAT_IPFWADM is not set
-# CONFIG_IPV6 is not set
-
-#
-# SCTP Configuration (EXPERIMENTAL)
-#
-CONFIG_IPV6_SCTP__=y
-# CONFIG_IP_SCTP is not set
-# CONFIG_ATM is not set
-# CONFIG_VLAN_8021Q is not set
-# CONFIG_LLC is not set
-# CONFIG_DECNET is not set
-# CONFIG_BRIDGE is not set
-# CONFIG_X25 is not set
-# CONFIG_LAPB is not set
-# CONFIG_NET_DIVERT is not set
-# CONFIG_ECONET is not set
-# CONFIG_WAN_ROUTER is not set
-# CONFIG_NET_FASTROUTE is not set
-# CONFIG_NET_HW_FLOWCONTROL is not set
-
-#
-# QoS and/or fair queueing
-#
-# CONFIG_NET_SCHED is not set
-
-#
-# Network testing
-#
-# CONFIG_NET_PKTGEN is not set
-CONFIG_NETDEVICES=y
-
-#
-# ARCnet devices
-#
-# CONFIG_ARCNET is not set
-CONFIG_DUMMY=y
-# CONFIG_BONDING is not set
-# CONFIG_EQUALIZER is not set
-# CONFIG_TUN is not set
-# CONFIG_ETHERTAP is not set
-
-#
-# Ethernet (10 or 100Mbit)
-#
-CONFIG_NET_ETHERNET=y
-# CONFIG_MII is not set
-# CONFIG_HAPPYMEAL is not set
-# CONFIG_SUNGEM is not set
-CONFIG_NET_VENDOR_3COM=y
-CONFIG_VORTEX=y
-# CONFIG_TYPHOON is not set
-
-#
-# Tulip family network device support
-#
-# CONFIG_NET_TULIP is not set
-# CONFIG_HP100 is not set
-CONFIG_NET_PCI=y
-# CONFIG_PCNET32 is not set
-# CONFIG_AMD8111_ETH is not set
-# CONFIG_ADAPTEC_STARFIRE is not set
-# CONFIG_B44 is not set
-# CONFIG_DGRS is not set
-# CONFIG_EEPRO100 is not set
-CONFIG_E100=y
-# CONFIG_FEALNX is not set
-# CONFIG_NATSEMI is not set
-# CONFIG_NE2K_PCI is not set
-# CONFIG_8139CP is not set
-# CONFIG_8139TOO is not set
-# CONFIG_SIS900 is not set
-# CONFIG_EPIC100 is not set
-# CONFIG_SUNDANCE is not set
-# CONFIG_TLAN is not set
-# CONFIG_VIA_RHINE is not set
-
-#
-# Ethernet (1000 Mbit)
-#
-# CONFIG_ACENIC is not set
-# CONFIG_DL2K is not set
-CONFIG_E1000=y
-# CONFIG_E1000_NAPI is not set
-# CONFIG_NS83820 is not set
-# CONFIG_HAMACHI is not set
-# CONFIG_YELLOWFIN is not set
-# CONFIG_R8169 is not set
-# CONFIG_SK98LIN is not set
-# CONFIG_TIGON3 is not set
-# CONFIG_FDDI is not set
-# CONFIG_HIPPI is not set
-# CONFIG_PPP is not set
-# CONFIG_SLIP is not set
-
-#
-# Wireless LAN (non-hamradio)
-#
-# CONFIG_NET_RADIO is not set
-
-#
-# Token Ring devices (depends on LLC=y)
-#
-CONFIG_NET_FC=y
-# CONFIG_IPHASE5526 is not set
-# CONFIG_RCPCI is not set
-# CONFIG_SHAPER is not set
-
-#
-# Wan interfaces
-#
-# CONFIG_WAN is not set
-
-#
-# Amateur Radio support
-#
-# CONFIG_HAMRADIO is not set
-
-#
-# IrDA (infrared) support
-#
-# CONFIG_IRDA is not set
-
-#
-# ISDN subsystem
-#
-# CONFIG_ISDN_BOOL is not set
-
-#
-# Telephony Support
-#
-# CONFIG_PHONE is not set
-
-#
-# Input device support
-#
-CONFIG_INPUT=y
-
-#
-# Userland interfaces
-#
-CONFIG_INPUT_MOUSEDEV=y
-CONFIG_INPUT_MOUSEDEV_PSAUX=y
-CONFIG_INPUT_MOUSEDEV_SCREEN_X=1024
-CONFIG_INPUT_MOUSEDEV_SCREEN_Y=768
-# CONFIG_INPUT_JOYDEV is not set
-# CONFIG_INPUT_TSDEV is not set
-# CONFIG_INPUT_EVDEV is not set
-# CONFIG_INPUT_EVBUG is not set
-
-#
-# Input I/O drivers
-#
-# CONFIG_GAMEPORT is not set
-CONFIG_SOUND_GAMEPORT=y
-# CONFIG_SERIO is not set
-
-#
-# Input Device Drivers
-#
-CONFIG_INPUT_KEYBOARD=y
-CONFIG_INPUT_MOUSE=y
-# CONFIG_INPUT_JOYSTICK is not set
-# CONFIG_INPUT_TOUCHSCREEN is not set
-CONFIG_INPUT_MISC=y
-CONFIG_INPUT_PCSPKR=y
-# CONFIG_INPUT_UINPUT is not set
-
-#
-# Character devices
-#
-CONFIG_VT=y
-CONFIG_VT_CONSOLE=y
-CONFIG_HW_CONSOLE=y
-# CONFIG_SERIAL_NONSTANDARD is not set
-
-#
-# Serial drivers
-#
-CONFIG_SERIAL_8250=y
-CONFIG_SERIAL_8250_CONSOLE=y
-# CONFIG_SERIAL_8250_EXTENDED is not set
-
-#
-# Non-8250 serial port support
-#
-CONFIG_SERIAL_CORE=y
-CONFIG_SERIAL_CORE_CONSOLE=y
-# CONFIG_UNIX98_PTYS is not set
-
-#
-# I2C support
-#
-# CONFIG_I2C is not set
-
-#
-# I2C Hardware Sensors Mainboard support
-#
-
-#
-# I2C Hardware Sensors Chip support
-#
-
-#
-# Mice
-#
-# CONFIG_BUSMOUSE is not set
-# CONFIG_QIC02_TAPE is not set
-
-#
-# IPMI
-#
-# CONFIG_IPMI_HANDLER is not set
-
-#
-# Watchdog Cards
-#
-# CONFIG_WATCHDOG is not set
-# CONFIG_INTEL_RNG is not set
-# CONFIG_AMD_RNG is not set
-# CONFIG_NVRAM is not set
-CONFIG_RTC=y
-# CONFIG_DTLK is not set
-# CONFIG_R3964 is not set
-# CONFIG_APPLICOM is not set
-# CONFIG_SONYPI is not set
-
-#
-# Ftape, the floppy tape device driver
-#
-# CONFIG_FTAPE is not set
-# CONFIG_AGP is not set
-# CONFIG_DRM is not set
-# CONFIG_MWAVE is not set
-CONFIG_RAW_DRIVER=y
-# CONFIG_HANGCHECK_TIMER is not set
-
-#
-# Multimedia devices
-#
-# CONFIG_VIDEO_DEV is not set
-
-#
-# File systems
-#
-CONFIG_QUOTA=y
-# CONFIG_QFMT_V1 is not set
-# CONFIG_QFMT_V2 is not set
-CONFIG_QUOTACTL=y
-# CONFIG_AUTOFS_FS is not set
-CONFIG_AUTOFS4_FS=y
-CONFIG_REISERFS_FS=y
-# CONFIG_REISERFS_CHECK is not set
-CONFIG_REISERFS_PROC_INFO=y
-# CONFIG_ADFS_FS is not set
-# CONFIG_AFFS_FS is not set
-# CONFIG_HFS_FS is not set
-# CONFIG_BEFS_FS is not set
-# CONFIG_BFS_FS is not set
-CONFIG_EXT3_FS=y
-# CONFIG_EXT3_FS_XATTR is not set
-CONFIG_JBD=y
-# CONFIG_JBD_DEBUG is not set
-# CONFIG_FAT_FS is not set
-# CONFIG_EFS_FS is not set
-# CONFIG_CRAMFS is not set
-# CONFIG_TMPFS is not set
-CONFIG_RAMFS=y
-CONFIG_HUGETLBFS=y
-# CONFIG_ISO9660_FS is not set
-# CONFIG_JFS_FS is not set
-# CONFIG_MINIX_FS is not set
-# CONFIG_VXFS_FS is not set
-# CONFIG_NTFS_FS is not set
-# CONFIG_HPFS_FS is not set
-CONFIG_PROC_FS=y
-# CONFIG_DEVFS_FS is not set
-# CONFIG_QNX4FS_FS is not set
-# CONFIG_ROMFS_FS is not set
-CONFIG_EXT2_FS=y
-# CONFIG_EXT2_FS_XATTR is not set
-# CONFIG_SYSV_FS is not set
-# CONFIG_UDF_FS is not set
-# CONFIG_UFS_FS is not set
-CONFIG_XFS_FS=y
-# CONFIG_XFS_RT is not set
-# CONFIG_XFS_QUOTA is not set
-# CONFIG_XFS_POSIX_ACL is not set
-
-#
-# Network File Systems
-#
-# CONFIG_CODA_FS is not set
-# CONFIG_INTERMEZZO_FS is not set
-CONFIG_NFS_FS=y
-CONFIG_NFS_V3=y
-# CONFIG_NFS_V4 is not set
-CONFIG_NFSD=y
-CONFIG_NFSD_V3=y
-# CONFIG_NFSD_V4 is not set
-CONFIG_NFSD_TCP=y
-CONFIG_SUNRPC=y
-# CONFIG_SUNRPC_GSS is not set
-CONFIG_LOCKD=y
-CONFIG_LOCKD_V4=y
-CONFIG_EXPORTFS=y
-# CONFIG_CIFS is not set
-# CONFIG_SMB_FS is not set
-# CONFIG_NCP_FS is not set
-# CONFIG_AFS_FS is not set
-
-#
-# Partition Types
-#
-CONFIG_PARTITION_ADVANCED=y
-# CONFIG_ACORN_PARTITION is not set
-# CONFIG_OSF_PARTITION is not set
-# CONFIG_AMIGA_PARTITION is not set
-# CONFIG_ATARI_PARTITION is not set
-# CONFIG_MAC_PARTITION is not set
-CONFIG_MSDOS_PARTITION=y
-# CONFIG_BSD_DISKLABEL is not set
-# CONFIG_MINIX_SUBPARTITION is not set
-# CONFIG_SOLARIS_X86_PARTITION is not set
-# CONFIG_UNIXWARE_DISKLABEL is not set
-# CONFIG_LDM_PARTITION is not set
-# CONFIG_SGI_PARTITION is not set
-# CONFIG_ULTRIX_PARTITION is not set
-# CONFIG_SUN_PARTITION is not set
-# CONFIG_EFI_PARTITION is not set
-
-#
-# Graphics support
-#
-CONFIG_FB=y
-# CONFIG_FB_CLGEN is not set
-# CONFIG_FB_PM2 is not set
-# CONFIG_FB_CYBER2000 is not set
-# CONFIG_FB_IMSTT is not set
-# CONFIG_FB_VGA16 is not set
-# CONFIG_FB_VESA is not set
-CONFIG_VIDEO_SELECT=y
-# CONFIG_FB_HGA is not set
-# CONFIG_FB_RIVA is not set
-# CONFIG_FB_MATROX is not set
-CONFIG_FB_RADEON=y
-# CONFIG_FB_ATY128 is not set
-# CONFIG_FB_ATY is not set
-# CONFIG_FB_SIS is not set
-# CONFIG_FB_NEOMAGIC is not set
-# CONFIG_FB_3DFX is not set
-# CONFIG_FB_VOODOO1 is not set
-# CONFIG_FB_TRIDENT is not set
-# CONFIG_FB_PM3 is not set
-# CONFIG_FB_VIRTUAL is not set
-
-#
-# Console display driver support
-#
-CONFIG_VGA_CONSOLE=y
-# CONFIG_MDA_CONSOLE is not set
-CONFIG_DUMMY_CONSOLE=y
-CONFIG_FRAMEBUFFER_CONSOLE=y
-CONFIG_PCI_CONSOLE=y
-# CONFIG_FBCON_ADVANCED is not set
-# CONFIG_FONTS is not set
-CONFIG_FONT_8x8=y
-CONFIG_FONT_8x16=y
-
-#
-# Sound
-#
-# CONFIG_SOUND is not set
-
-#
-# USB support
-#
-# CONFIG_USB is not set
-
-#
-# Bluetooth support
-#
-# CONFIG_BT is not set
-
-#
-# Profiling support
-#
-CONFIG_PROFILING=y
-CONFIG_OPROFILE=y
-
-#
-# Kernel hacking
-#
-CONFIG_DEBUG_KERNEL=y
-# CONFIG_DEBUG_STACKOVERFLOW is not set
-# CONFIG_DEBUG_SLAB is not set
-# CONFIG_DEBUG_IOVIRT is not set
-CONFIG_MAGIC_SYSRQ=y
-# CONFIG_DEBUG_SPINLOCK is not set
-CONFIG_KALLSYMS=y
-# CONFIG_DEBUG_SPINLOCK_SLEEP is not set
-CONFIG_FRAME_POINTER=y
-CONFIG_X86_EXTRA_IRQS=y
-CONFIG_X86_FIND_SMP_CONFIG=y
-CONFIG_X86_MPPARSE=y
-
-#
-# Security options
-#
-# CONFIG_SECURITY is not set
-
-#
-# Cryptographic options
-#
-# CONFIG_CRYPTO is not set
-
-#
-# Library routines
-#
-# CONFIG_CRC32 is not set
-CONFIG_X86_SMP=y
-CONFIG_X86_HT=y
-CONFIG_X86_BIOS_REBOOT=y
-CONFIG_X86_TRAMPOLINE=y
-
-============================================================
-
--- 
-	Christoffer
+Hi -
+
+Any comments or suggestions on the following patch?
+
+Patch is against scsi-misc-2.5.
+
+I'm trying to break split queue_lock into a per scsi_device lock, and the
+starved code is in the way, plus it is not fair and looks like it has a
+couple of bugs. I started by trying to add a queue of request queues plus
+throttling to the current "starved" algorithm, but it was not too clean,
+so instead implemented this software enqueueing when the host can_queue
+limit is reached.
+
+This can use more resources (scsi_cmnd's) if the sum of queue_depths on a
+host is greater than can_queue, but it is fairer (when not all devices are
+hitting queue_depth limits, or if we had throttling with a throttling
+limit of 1) and simpler compared to using a queue of queues (or code
+similiar to the current starvation code).
+
+This also includes moving self_host_blocked checks (on self host unblock
+we run all queues so there is never a "starvation" issue), and chaning
+some of the mlqueue log levels so we do not get flooded with tons of
+message for "scsi log mlqueue 4".
+
+Tested using the feral qla driver, with 10 drives on a host, queue_depth
+set to 16, and can_queue set to 100.
+
+
+ hosts.c      |   70 +++++++++++++++++++++++++++++++++++++++++++-----
+ hosts.h      |   12 +-------
+ scsi.c       |   69 +++++++++++++++++++++++++++++------------------
+ scsi.h       |    9 +++---
+ scsi_error.c |   51 +++++++++++++++++++++++++++++------
+ scsi_lib.c   |   85 ++++++++++++++++++++---------------------------------------
+ 6 files changed, 182 insertions(+), 114 deletions(-)
+
+
+===== drivers/scsi/hosts.c 1.54 vs edited =====
+--- 1.54/drivers/scsi/hosts.c	Sun Feb 23 10:34:55 2003
++++ edited/drivers/scsi/hosts.c	Thu Feb 27 16:21:09 2003
+@@ -383,6 +383,7 @@
+ 	scsi_assign_lock(shost, &shost->default_lock);
+ 	INIT_LIST_HEAD(&shost->my_devices);
+ 	INIT_LIST_HEAD(&shost->eh_cmd_q);
++	INIT_LIST_HEAD(&shost->pending_queue);
+ 
+ 	init_waitqueue_head(&shost->host_wait);
+ 	shost->dma_channel = 0xff;
+@@ -613,19 +614,72 @@
+ 	spin_unlock_irqrestore(shost->host_lock, flags);
+ }
+ 
++void scsi_host_send_pending (struct Scsi_Host *shost)
++{
++	struct scsi_cmnd *scmd;
++	unsigned long flags;
++
++	spin_lock_irqsave(shost->host_lock, flags);
++	while (!shost->host_self_blocked
++	       && !list_empty(&shost->pending_queue)) {
++		/*
++		 * list_for_each_safe is not safe here, since after the
++		 * unlock someone else can remove the scmd after the one
++		 * we are pulling off the list.
++		 */
++		scmd = list_entry(shost->pending_queue.next, struct scsi_cmnd,
++				  pending_queue);
++		list_del_init(&scmd->pending_queue);
++		SCSI_LOG_MLQUEUE(3,
++			printk("%s: removed from pending cmd: 0x%lx\n",
++			       __FUNCTION__, scmd->serial_number));
++		spin_unlock_irqrestore(shost->host_lock, flags);
++		if (scsi_dispatch_cmd(scmd, 0))
++			/*
++			 * Device hit host_blocked, or (race case)
++			 * can_queue limit was reached.
++			 */
++			goto unlocked;
++		spin_lock_irqsave(shost->host_lock, flags);
++	}
++	spin_unlock_irqrestore(shost->host_lock, flags);
++unlocked:
++}
++
+ void scsi_host_busy_dec_and_test(struct Scsi_Host *shost, Scsi_Device *sdev)
+ {
+ 	unsigned long flags;
++	struct scsi_cmnd *scmd;
+ 
+ 	spin_lock_irqsave(shost->host_lock, flags);
++	/*
++	 * If broken adapters are ever fixed or go away (at least qlogicfc
++	 * and qlogicisp):
++	 *
++	 * WARN_ON(shost->host_busy > shost->can_queue);
++	 */
+ 	shost->host_busy--;
+ 	sdev->device_busy--;
+-	if (shost->in_recovery && shost->host_failed &&
+-	    (shost->host_busy == shost->host_failed))
+-	{
+-		up(shost->eh_wait);
+-		SCSI_LOG_ERROR_RECOVERY(5, printk("Waking error handler"
+-					  " thread\n"));
+-	}
+-	spin_unlock_irqrestore(shost->host_lock, flags);
++	if (shost->in_recovery) {
++		if (shost->host_failed && (shost->host_busy == shost->host_failed)) {
++			up(shost->eh_wait);
++			SCSI_LOG_ERROR_RECOVERY(5, printk("Waking error handler"
++						  " thread\n"));
++		}
++		spin_unlock_irqrestore(shost->host_lock, flags);
++	} else if (!list_empty(&shost->pending_queue) &&
++		   !shost->host_blocked && !shost->host_self_blocked) {
++		/*
++		 * Send one pending command.
++		 */
++		scmd = list_entry(shost->pending_queue.next, struct scsi_cmnd,
++				  pending_queue);
++		list_del_init(&scmd->pending_queue);
++		SCSI_LOG_MLQUEUE(3,
++			printk("%s: removed from pending cmd: 0x%lx\n",
++			       __FUNCTION__, scmd->serial_number));
++		spin_unlock_irqrestore(shost->host_lock, flags);
++		scsi_dispatch_cmd(scmd, 0);
++	} else 
++		spin_unlock_irqrestore(shost->host_lock, flags);
+ }
+===== drivers/scsi/hosts.h 1.56 vs edited =====
+--- 1.56/drivers/scsi/hosts.h	Fri Feb 21 16:41:13 2003
++++ edited/drivers/scsi/hosts.h	Fri Feb 28 09:31:46 2003
+@@ -380,6 +380,7 @@
+     struct scsi_host_cmd_pool *cmd_pool;
+     spinlock_t            free_list_lock;
+     struct list_head      free_list;   /* backup store of cmd structs */
++    struct list_head      pending_queue;   /* software enqueued commands */
+ 
+     spinlock_t		  default_lock;
+     spinlock_t		  *host_lock;
+@@ -471,12 +472,6 @@
+     unsigned reverse_ordering:1;
+ 
+     /*
+-     * Indicates that one or more devices on this host were starved, and
+-     * when the device becomes less busy that we need to feed them.
+-     */
+-    unsigned some_device_starved:1;
+-   
+-    /*
+      * Host has rejected a command because it was busy.
+      */
+     unsigned int host_blocked;
+@@ -580,12 +575,9 @@
+ extern struct Scsi_Host *scsi_host_hn_get(unsigned short);
+ extern void scsi_host_put(struct Scsi_Host *);
+ extern void scsi_host_init(void);
+-
+-/*
+- * host_busy inc/dec/test functions
+- */
+ extern void scsi_host_busy_inc(struct Scsi_Host *, Scsi_Device *);
+ extern void scsi_host_busy_dec_and_test(struct Scsi_Host *, Scsi_Device *);
++extern void scsi_host_send_pending (struct Scsi_Host *shost);
+ 
+ /**
+  * scsi_find_device - find a device given the host
+===== drivers/scsi/scsi.c 1.97 vs edited =====
+--- 1.97/drivers/scsi/scsi.c	Wed Feb 26 00:00:06 2003
++++ edited/drivers/scsi/scsi.c	Fri Feb 28 09:32:01 2003
+@@ -303,6 +303,7 @@
+ 		cmd->owner = SCSI_OWNER_NOBODY;
+ 		init_timer(&cmd->eh_timeout);
+ 		INIT_LIST_HEAD(&cmd->list);
++		INIT_LIST_HEAD(&cmd->pending_queue);
+ 		spin_lock_irqsave(&dev->list_lock, flags);
+ 		list_add_tail(&cmd->list, &dev->cmd_list);
+ 		spin_unlock_irqrestore(&dev->list_lock, flags);
+@@ -423,15 +424,17 @@
+ }
+ 
+ /*
+- * Function:    scsi_dispatch_command
++ * Function:    scsi_dispatch_cmd
+  *
+  * Purpose:     Dispatch a command to the low-level driver.
+  *
+  * Arguments:   SCpnt - command block we are dispatching.
++ *              resend - command is being resent, host_busy was not
++ *              decremented (blah), and we have a slot available for SCpnt.
+  *
+  * Notes:
+  */
+-int scsi_dispatch_cmd(Scsi_Cmnd * SCpnt)
++int scsi_dispatch_cmd(Scsi_Cmnd * SCpnt, int resend)
+ {
+ #ifdef DEBUG_DELAY
+ 	unsigned long clock;
+@@ -494,7 +497,7 @@
+ 	 * We will use a queued command if possible, otherwise we will emulate the
+ 	 * queuing and calling of completion function ourselves.
+ 	 */
+-	SCSI_LOG_MLQUEUE(3, printk("scsi_dispatch_cmnd (host = %d, channel = %d, target = %d, "
++	SCSI_LOG_MLQUEUE(4, printk("scsi_dispatch_cmnd (host = %d, channel = %d, target = %d, "
+ 	       "command = %p, buffer = %p, \nbufflen = %d, done = %p)\n",
+ 	SCpnt->device->host->host_no, SCpnt->device->channel, SCpnt->device->id, SCpnt->cmnd,
+ 			    SCpnt->buffer, SCpnt->bufflen, SCpnt->done));
+@@ -502,7 +505,7 @@
+ 	SCpnt->state = SCSI_STATE_QUEUED;
+ 	SCpnt->owner = SCSI_OWNER_LOWLEVEL;
+ 	if (host->can_queue) {
+-		SCSI_LOG_MLQUEUE(3, printk("queuecommand : routine at %p\n",
++		SCSI_LOG_MLQUEUE(4, printk("queuecommand : routine at %p\n",
+ 					   host->hostt->queuecommand));
+ 		/*
+ 		 * Before we queue this command, check if the command
+@@ -510,12 +513,33 @@
+ 		 */
+ 		if (CDB_SIZE(SCpnt) <= SCpnt->device->host->max_cmd_len) {
+ 			spin_lock_irqsave(host->host_lock, flags);
+-			rtn = host->hostt->queuecommand(SCpnt, scsi_done);
+-			spin_unlock_irqrestore(host->host_lock, flags);
+-			if (rtn != 0) {
+-				scsi_queue_insert(SCpnt, rtn == SCSI_MLQUEUE_DEVICE_BUSY ? rtn : SCSI_MLQUEUE_HOST_BUSY);
++			if (!resend && ((host->host_busy > host->can_queue) ||
++			    host->host_blocked)) {
++				/*
++				 * queue a pending command
++				 */
+ 				SCSI_LOG_MLQUEUE(3,
+-				   printk("queuecommand : request rejected\n"));                                
++					printk("%s: add to pending cmd:"
++					       " 0x%lx\n", __FUNCTION__,
++					       SCpnt->serial_number));
++				scsi_delete_timer(SCpnt);
++				list_add_tail(&SCpnt->pending_queue,
++					      &host->pending_queue);
++				spin_unlock_irqrestore(host->host_lock, flags);
++				rtn = 1;
++			} else {
++				if (!resend)
++					host->host_busy++;
++				rtn = host->hostt->queuecommand(SCpnt,
++								scsi_done);
++				spin_unlock_irqrestore(host->host_lock, flags);
++				if (rtn != 0) {
++					scsi_queue_insert(SCpnt,
++						rtn == SCSI_MLQUEUE_DEVICE_BUSY
++						? rtn : SCSI_MLQUEUE_HOST_BUSY);
++					SCSI_LOG_MLQUEUE(3,
++					   printk("queuecommand : request rejected\n"));                                
++				}
+ 			}
+ 		} else {
+ 			SCSI_LOG_MLQUEUE(3,
+@@ -531,6 +555,8 @@
+ 
+ 		SCSI_LOG_MLQUEUE(3, printk("command() :  routine at %p\n", host->hostt->command));
+                 spin_lock_irqsave(host->host_lock, flags);
++		if (!resend)
++			host->host_busy++;
+ 		temp = host->hostt->command(SCpnt);
+ 		SCpnt->result = temp;
+ #ifdef DEBUG_DELAY
+@@ -547,7 +573,7 @@
+ 		scsi_done(SCpnt);
+                 spin_unlock_irqrestore(host->host_lock, flags);
+ 	}
+-	SCSI_LOG_MLQUEUE(3, printk("leaving scsi_dispatch_cmnd()\n"));
++	SCSI_LOG_MLQUEUE(4, printk("leaving scsi_dispatch_cmnd()\n"));
+ 	return rtn;
+ }
+ 
+@@ -824,7 +850,7 @@
+          */
+ 	memset((void *) SCpnt->sense_buffer, 0, sizeof SCpnt->sense_buffer);
+ 
+-	return scsi_dispatch_cmd(SCpnt);
++	return scsi_dispatch_cmd(SCpnt, 1);
+ }
+ 
+ /*
+@@ -845,23 +871,12 @@
+ 
+ 	ASSERT_LOCK(host->host_lock, 0);
+ 
+-        /*
+-         * We need to protect the decrement, as otherwise a race condition
+-         * would exist.  Fiddling with SCpnt isn't a problem as the
+-         * design only allows a single SCpnt to be active in only
+-         * one execution context, but the device and host structures are
+-         * shared.
+-         */
+-	scsi_host_busy_dec_and_test(host, device);
+-
+-        /*
+-         * Clear the flags which say that the device/host is no longer
+-         * capable of accepting new commands.  These are set in scsi_queue.c
+-         * for both the queue full condition on a device, and for a
+-         * host full condition on the host.
+-         */
+-        host->host_blocked = 0;
+         device->device_blocked = 0;
++	scsi_host_busy_dec_and_test(host, device);
++	if (host->host_blocked) {
++		host->host_blocked = 0;
++		scsi_host_send_pending(host);
++	}
+ 
+ 	/*
+ 	 * If we have valid sense information, then some kind of recovery
+===== drivers/scsi/scsi.h 1.65 vs edited =====
+--- 1.65/drivers/scsi/scsi.h	Sun Feb 23 10:34:55 2003
++++ edited/drivers/scsi/scsi.h	Thu Feb 27 16:21:10 2003
+@@ -444,7 +444,7 @@
+ /*
+  * Prototypes for functions in scsi.c
+  */
+-extern int scsi_dispatch_cmd(Scsi_Cmnd * SCpnt);
++extern int scsi_dispatch_cmd(Scsi_Cmnd * SCpnt, int resend);
+ extern int scsi_setup_command_freelist(struct Scsi_Host *shost);
+ extern void scsi_destroy_command_freelist(struct Scsi_Host *shost);
+ extern struct scsi_cmnd *scsi_get_command(struct scsi_device *dev, int flags);
+@@ -634,8 +634,6 @@
+ 					 * because we did a bus reset. */
+ 	unsigned ten:1;		/* support ten byte read / write */
+ 	unsigned remap:1;	/* support remapping  */
+-	unsigned starved:1;	/* unable to process commands because
+-				   host busy */
+ //	unsigned sync:1;	/* Sync transfer state, managed by host */
+ //	unsigned wide:1;	/* WIDE transfer state, managed by host */
+ 
+@@ -727,7 +725,9 @@
+ 	struct scsi_cmnd *reset_chain;
+ 
+ 	struct list_head list;  /* scsi_cmnd participates in queue lists */
+-
++	struct list_head pending_queue;  /* for host->pending_queue, this could
++					  * be shared with eh_entry.
++					  */
+ 	struct list_head eh_entry; /* entry for the host eh_cmd_q */
+ 	int eh_state;		/* Used for state tracking in error handlr */
+ 	int eh_eflags;		/* Used by error handlr */
+@@ -854,6 +854,7 @@
+ #define SCSI_MLQUEUE_HOST_BUSY   0x1055
+ #define SCSI_MLQUEUE_DEVICE_BUSY 0x1056
+ #define SCSI_MLQUEUE_EH_RETRY    0x1057
++#define SCSI_MLQUEUE_PENDING     0x1058
+ 
+ /*
+  * old style reset request from external source
+===== drivers/scsi/scsi_error.c 1.38 vs edited =====
+--- 1.38/drivers/scsi/scsi_error.c	Sat Feb 22 08:17:01 2003
++++ edited/drivers/scsi/scsi_error.c	Thu Feb 27 16:21:10 2003
+@@ -1467,16 +1467,8 @@
+ 	 * requests are started.
+ 	 */
+ 	spin_lock_irqsave(shost->host_lock, flags);
+-	list_for_each_entry(sdev, &shost->my_devices, siblings) {
+-		if ((shost->can_queue > 0 &&
+-		     (shost->host_busy >= shost->can_queue))
+-		    || (shost->host_blocked)
+-		    || (shost->host_self_blocked)) {
+-			break;
+-		}
+-
++	list_for_each_entry(sdev, &shost->my_devices, siblings)
+ 		__blk_run_queue(sdev->request_queue);
+-	}
+ 	spin_unlock_irqrestore(shost->host_lock, flags);
+ }
+ 
+@@ -1497,6 +1489,34 @@
+ }
+ 
+ /**
++ * scsi_eh_flush_pending_q - finish pending commands or requeue them.
++ * @pending_q:	list_head of queued pending commands.
++ *
++ **/
++static void scsi_eh_flush_pending_q(struct list_head *pending_q)
++{
++	struct list_head *lh, *lh_sf;
++	struct scsi_cmnd *scmd;
++
++	list_for_each_safe(lh, lh_sf, pending_q) {
++		scmd = list_entry(lh, struct scsi_cmnd, pending_queue);
++		list_del_init(lh);
++		if (scmd->device->online) {
++			SCSI_LOG_ERROR_RECOVERY(3, 
++				printk("%s: flush pending cmd: %p\n",
++				       current->comm, scmd));
++			scsi_queue_insert(scmd, SCSI_MLQUEUE_PENDING);
++		} else {
++			scmd->result |= (DRIVER_TIMEOUT << 24);
++			SCSI_LOG_ERROR_RECOVERY(3,
++				printk("%s: finish pending cmd: %p\n",
++				       current->comm, scmd));
++			scsi_finish_command(scmd);
++		}
++	}
++}
++
++/**
+  * scsi_eh_flush_done_q - finish processed commands or retry them.
+  * @done_q:	list_head of processed commands.
+  *
+@@ -1557,6 +1577,7 @@
+ 	unsigned long flags;
+ 	LIST_HEAD(eh_work_q);
+ 	LIST_HEAD(eh_done_q);
++	LIST_HEAD(pending_q);
+ 
+ 	spin_lock_irqsave(shost->host_lock, flags);
+ 	list_splice_init(&shost->eh_cmd_q, &eh_work_q);
+@@ -1568,6 +1589,16 @@
+ 		if (!scsi_eh_abort_cmds(&eh_work_q, &eh_done_q))
+ 			scsi_eh_ready_devs(shost, &eh_work_q, &eh_done_q);
+ 
++	/*
++	 * Finish or requeue all outstanding commands, first the pending
++	 * (so they are sent after any error recovered commands) and then
++	 * any error recovered commands.
++	 */
++	spin_lock_irqsave(shost->host_lock, flags);
++	list_splice_init(&shost->pending_queue, &pending_q);
++	spin_unlock_irqrestore(shost->host_lock, flags);
++	scsi_eh_flush_pending_q(&pending_q);
++
+ 	scsi_eh_flush_done_q(&eh_done_q);
+ }
+ 
+@@ -1659,7 +1690,9 @@
+ 		 * restart, we restart any I/O to any other devices on the bus
+ 		 * which are still online.
+ 		 */
++
+ 		scsi_restart_operations(shost);
++
+ 
+ 	}
+ 
+===== drivers/scsi/scsi_lib.c 1.73 vs edited =====
+--- 1.73/drivers/scsi/scsi_lib.c	Sat Feb 22 12:35:33 2003
++++ edited/drivers/scsi/scsi_lib.c	Thu Feb 27 16:21:10 2003
+@@ -92,9 +92,11 @@
+ {
+ 	struct Scsi_Host *host = cmd->device->host;
+ 	struct scsi_device *device = cmd->device;
++	unsigned long flags;
+ 
+ 	SCSI_LOG_MLQUEUE(1,
+-		 printk("Inserting command %p into mlqueue\n", cmd));
++		 printk("Inserting command %p into mlqueue reason 0x%x\n",
++			cmd, reason));
+ 
+ 	/*
+ 	 * We are inserting the command into the ml queue.  First, we
+@@ -127,11 +129,20 @@
+ 	cmd->owner = SCSI_OWNER_MIDLEVEL;
+ 	cmd->bh_next = NULL;
+ 
+-	/*
+-	 * Decrement the counters, since these commands are no longer
+-	 * active on the host/device.
+-	 */
+-	scsi_host_busy_dec_and_test(host, device);
++	if (reason == SCSI_MLQUEUE_PENDING) {
++		/*
++		 * Pending commands have not actually made it to the host,
++		 * so do not decrement host_busy.
++		 */
++		spin_lock_irqsave(host->host_lock, flags);
++		device->device_busy--;
++		spin_unlock_irqrestore(host->host_lock, flags);
++	} else
++		/*
++		 * Decrement the counters, since these commands are no longer
++		 * active on the host/device.
++		 */
++		scsi_host_busy_dec_and_test(host, device);
+ 
+ 	/*
+ 	 * Insert this command at the head of the queue for it's device.
+@@ -358,7 +369,6 @@
+ 	struct scsi_device *sdev, *sdev2;
+ 	struct Scsi_Host *shost;
+ 	unsigned long flags;
+-	int all_clear;
+ 
+ 	ASSERT_LOCK(q->queue_lock, 0);
+ 
+@@ -400,10 +410,7 @@
+ 	 * with special case code, then spin off separate versions and
+ 	 * use function pointers to pick the right one.
+ 	 */
+-	if (sdev->single_lun && blk_queue_empty(q) && sdev->device_busy ==0 &&
+-			!shost->host_blocked && !shost->host_self_blocked &&
+-			!((shost->can_queue > 0) && (shost->host_busy >=
+-				       		     shost->can_queue))) {
++	if (sdev->single_lun && blk_queue_empty(q) && sdev->device_busy == 0) {
+ 		list_for_each_entry(sdev2, &sdev->same_target_siblings,
+ 			       same_target_siblings) {
+ 			if (!sdev2->device_blocked &&
+@@ -414,31 +421,6 @@
+ 		}
+ 	}
+ 
+-	/*
+-	 * Now see whether there are other devices on the bus which
+-	 * might be starved.  If so, hit the request function.  If we
+-	 * don't find any, then it is safe to reset the flag.  If we
+-	 * find any device that it is starved, it isn't safe to reset the
+-	 * flag as the queue function releases the lock and thus some
+-	 * other device might have become starved along the way.
+-	 */
+-	all_clear = 1;
+-	if (shost->some_device_starved) {
+-		list_for_each_entry(sdev, &shost->my_devices, siblings) {
+-			if (shost->can_queue > 0 &&
+-			    shost->host_busy >= shost->can_queue)
+-				break;
+-			if (shost->host_blocked || shost->host_self_blocked)
+-				break;
+-			if (sdev->device_blocked || !sdev->starved)
+-				continue;
+-			__blk_run_queue(sdev->request_queue);
+-			all_clear = 0;
+-		}
+-
+-		if (sdev == NULL && all_clear)
+-			shost->some_device_starved = 0;
+-	}
+ 	spin_unlock_irqrestore(q->queue_lock, flags);
+ }
+ 
+@@ -1094,6 +1076,7 @@
+ 				SCSI_LOG_MLQUEUE(3,
+ 					printk("scsi%d unblocking host at zero depth\n",
+ 						shost->host_no));
++				WARN_ON(!list_empty(&shost->pending_queue));
+ 			} else {
+ 				blk_plug_device(q);
+ 				break;
+@@ -1117,23 +1100,18 @@
+ 		 */
+ 		if (sdev->device_blocked)
+ 			break;
+-		if ((shost->can_queue > 0 && shost->host_busy >= shost->can_queue) ||
+-		    shost->host_blocked || shost->host_self_blocked) {
++
++		if (shost->host_self_blocked)
++			break;
++
++		if ((sdev->device_busy > 0) && shost->host_blocked)
+ 			/*
+-			 * If we are unable to process any commands at all for
+-			 * this device, then we consider it to be starved.
+-			 * What this means is that there are no outstanding
+-			 * commands for this device and hence we need a
+-			 * little help getting it started again
+-			 * once the host isn't quite so busy.
++			 * On unblock during IO completion, we send
++			 * pending commands, make sure we always have at
++			 * least one command pending to keep this queue
++			 * running again.
+ 			 */
+-			if (sdev->device_busy == 0) {
+-				sdev->starved = 1;
+-				shost->some_device_starved = 1;
+-			}
+ 			break;
+-		} else
+-			sdev->starved = 0;
+ 
+ 		/*
+ 		 * If we couldn't find a request that could be queued, then we
+@@ -1170,11 +1148,6 @@
+ 		if (!(blk_queue_tagged(q) && (blk_queue_start_tag(q, req) == 0)))
+ 			blkdev_dequeue_request(req);
+ 	
+-		/*
+-		 * Now bump the usage count for both the host and the
+-		 * device.
+-		 */
+-		shost->host_busy++;
+ 		sdev->device_busy++;
+ 		spin_unlock_irq(q->queue_lock);
+ 
+@@ -1187,7 +1160,7 @@
+ 		/*
+ 		 * Dispatch the command to the low-level driver.
+ 		 */
+-		scsi_dispatch_cmd(cmd);
++		scsi_dispatch_cmd(cmd, 0);
+ 
+ 		/*
+ 		 * Now we need to grab the lock again.  We are about to mess
+
+-- Patrick Mansfield
