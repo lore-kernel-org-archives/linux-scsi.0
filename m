@@ -1,38 +1,38 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [ANNOUNCE] Adaptec SAS/SATA device driver [03/27]
-Date: Thu, 17 Feb 2005 14:03:10 -0500
-Message-ID: <4214EA6E.8020608@pobox.com>
-References: <4214D5E8.9000907@adaptec.com>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [ANNOUNCE] Adaptec SAS/SATA device driver [0/27]
+Date: Thu, 17 Feb 2005 19:38:49 +0000
+Message-ID: <20050217193849.GA7824@infradead.org>
+References: <4214D5B1.1060701@adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:20398 "EHLO
-	parcelfarce.linux.theplanet.co.uk") by vger.kernel.org with ESMTP
-	id S262309AbVBQTDb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 17 Feb 2005 14:03:31 -0500
-In-Reply-To: <4214D5E8.9000907@adaptec.com>
+Content-Type: text/plain; charset=us-ascii
+Received: from pentafluge.infradead.org ([213.146.154.40]:60056 "EHLO
+	pentafluge.infradead.org") by vger.kernel.org with ESMTP
+	id S262345AbVBQTiv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 17 Feb 2005 14:38:51 -0500
+Content-Disposition: inline
+In-Reply-To: <4214D5B1.1060701@adaptec.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Luben Tuikov <luben_tuikov@adaptec.com>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@steeleye.com>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-Luben,
+On Thu, Feb 17, 2005 at 12:34:41PM -0500, Luben Tuikov wrote:
+> Hi,
+> 
+> Adaptec would like to announce its SAS/SATA Linux device driver
+> for inclusion into the Linux kernel.
+> 
+> The driver supports Adaptec's AIC-94XX chip based, eight port SAS
+> and SATA 64-bit PCI-X, 133MHz ASIC controller.
+> 
+> The driver source is presented as a broken up BK patch over
+> the latest scsi-misc-2.6 kernel.  The code is compatible
+> with both 2.4 and 2.6 kernels.
+> 
+> The authors of this code will be monitoring the mailing list
+> for your comments.
 
-Your emails do not comply with the Linux kernel patch submission format. 
-   Please read
-	http://linux.yyz.us/patch-format.html
-
-Most critical is rule number #5 (signed-off-by line), but also important 
-is rule number #1 (providing a useful subject line).
-
-NOTE:  I am _not_ requesting that you resubmit your 27 patches; that's 
-up to James.  Just making a note for the future.
-
-Everyone who submits patches to Linux needs to include a signed-off-by 
-line, and format their emails such that automated scripts will process 
-the emails correctly.
-
-	Jeff
-
-
-
+The driver is the same mess as aic7xxx and aic79xx and everything we
+told you about it applies there aswell.  Also as with the Fusion SAS
+submission it won't go in until there's a SAS and phy transport class
+to share common code between drivers.
