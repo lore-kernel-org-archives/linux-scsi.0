@@ -1,39 +1,99 @@
-From: Patrick Mansfield <patmans@us.ibm.com>
+From: Paul Blazejowski <paulb@blazebox.homeip.net>
 Subject: Re: Badness in device_release at drivers/base/core.c:84
-Date: Mon, 4 Aug 2003 09:30:35 -0700
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <20030804093035.A24860@beaverton.ibm.com>
-References: <20030801182207.GA3759@blazebox.homeip.net> <20030801144455.450d8e52.akpm@osdl.org> <20030803015510.GB4696@blazebox.homeip.net> <20030802190737.3c41d4d8.akpm@osdl.org> <20030803214755.GA1010@blazebox.homeip.net> <20030803145211.29eb5e7c.akpm@osdl.org> <20030803222313.GA1090@blazebox.homeip.net> <20030803223115.GA1132@blazebox.homeip.net>
+Date: Mon, 04 Aug 2003 13:48:59 -0400
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <1060019339.883.12.camel@blaze.homeip.net>
+References: <20030801182207.GA3759@blazebox.homeip.net>
+	 <20030801144455.450d8e52.akpm@osdl.org>
+	 <20030803015510.GB4696@blazebox.homeip.net>
+	 <20030802190737.3c41d4d8.akpm@osdl.org>
+	 <20030803214755.GA1010@blazebox.homeip.net>
+	 <20030803145211.29eb5e7c.akpm@osdl.org>
+	 <20030803222313.GA1090@blazebox.homeip.net>
+	 <20030803223115.GA1132@blazebox.homeip.net>
+	 <20030804093035.A24860@beaverton.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20030803223115.GA1132@blazebox.homeip.net>; from diffie@blazebox.homeip.net on Sun, Aug 03, 2003 at 06:31:15PM -0400
-To: Diffie <diffie@blazebox.homeip.net>
-Cc: Andrew Morton <akpm@osdl.org>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, "Justin T. Gibbs" <gibbs@scsiguy.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-k+zJSygnJ1iFV8U5e6cm"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from pool-141-155-151-209.ny5030.east.verizon.net ([141.155.151.209]:51922
+	"EHLO mail.blazebox.homeip.net") by vger.kernel.org with ESMTP
+	id S272001AbTHDRq6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 4 Aug 2003 13:46:58 -0400
+In-Reply-To: <20030804093035.A24860@beaverton.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
+To: Patrick Mansfield <patmans@us.ibm.com>
+Cc: Andrew Morton <akpm@osdl.org>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, "Justin T. Gibbs" <gibbs@scsiguy.com>
 
-On Sun, Aug 03, 2003 at 06:31:15PM -0400, Diffie wrote:
-> On Sun, Aug 03, 2003 at 06:23:13PM -0400, Diffie wrote:
 
-> > Thank you for all your help.Sorry but i gave the wrong URL in previous
-> > email.The correct one is http://www.blazebox.homeip.net:81/diffie/images/linux-2.6.0-test2/ 
-> > 
+--=-k+zJSygnJ1iFV8U5e6cm
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Per your screen dump - it found the cd-rom's on id 3 and 4, but not your
-disk drive that was at id 0, and the adapter found something at id 6 (host
-adapter is at id 7).
+On Mon, 2003-08-04 at 12:30, Patrick Mansfield wrote:
+> On Sun, Aug 03, 2003 at 06:31:15PM -0400, Diffie wrote:
+> > On Sun, Aug 03, 2003 at 06:23:13PM -0400, Diffie wrote:
+>=20
+> > > Thank you for all your help.Sorry but i gave the wrong URL in previou=
+s
+> > > email.The correct one is http://www.blazebox.homeip.net:81/diffie/ima=
+ges/linux-2.6.0-test2/
+> > >=20
+>=20
+> Per your screen dump - it found the cd-rom's on id 3 and 4, but not your
+> disk drive that was at id 0, and the adapter found something at id 6 (hos=
+t
+> adapter is at id 7).
+>=20
+> You could try turning on scan logging, it might give more information.
+> You can turn on the logging at boot time, make sure you have
+> CONFIG_SCSI_LOGGING on, the information of interest (scan of host 0 chan =
+0
+> id 0 lun 0) likely will scroll off screen.
+>=20
+> For scan logging, add to your boot line:
+>=20
+> 	scsi_mod.scsi_logging_level=3D0x140
+>=20
+> To limit the logging info, make sure max_scsi_luns=3D1 via config or boot
+> time option scsi_mod.max_scsi_luns=3D1.
+>=20
+> -- Patrick Mansfield
+>=20
 
-You could try turning on scan logging, it might give more information.
-You can turn on the logging at boot time, make sure you have
-CONFIG_SCSI_LOGGING on, the information of interest (scan of host 0 chan 0
-id 0 lun 0) likely will scroll off screen.
+Patrick,
 
-For scan logging, add to your boot line:
+That's correct Plextor 40TW (ultraplex wide) is on ID3 and Plextor
+plexwriter 32/10/12s is on ID4.Originally i had the IBM 36LZX drive at
+ID6 (factory setting) but when using the aic7xxx_old driver it was
+detected as /dev/sdb for some reason.I've changed the ID to 0 and it
+became /dev/sda again...strange it is.
 
-	scsi_mod.scsi_logging_level=0x140
+The Adaptec AHA-2940U2W card is set to boot from ID0 by default and it
+has 2.57.2 BIOS (the latest i think).
 
-To limit the logging info, make sure max_scsi_luns=1 via config or boot
-time option scsi_mod.max_scsi_luns=1.
+I tried the latest 2.6.36 driver from Justin's site on kernel 2.4.21 and
+it works great.I was unable to boot the 2.5 driver on 2.6.0-test2 it
+game oops and i had to define blkdev.h in few places.
 
--- Patrick Mansfield
+I will try your suggestions and report back.
+
+Regards,
+
+Paul B.
+
+
+
+--=-k+zJSygnJ1iFV8U5e6cm
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.2.2 (GNU/Linux)
+
+iD8DBQA/LpyLIymMQsXoRDARAsyjAJ9lHHaWvLQBt/vhV93SnZkYSzL88ACfeovL
+rZL9JldnS1zwcPF+X1C5Iec=
+=yoPi
+-----END PGP SIGNATURE-----
+
+--=-k+zJSygnJ1iFV8U5e6cm--
+
