@@ -1,63 +1,47 @@
-From: Patrick Mansfield <patmans@us.ibm.com>
+From: Mike Anderson <andmike@us.ibm.com>
 Subject: Re: Round II on sysfs attributes
-Date: Fri, 23 May 2003 11:30:03 -0700
+Date: Fri, 23 May 2003 11:51:50 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030523113003.A15369@beaverton.ibm.com>
+Message-ID: <20030523185150.GB1160@beaverton.ibm.com>
 References: <1053707904.1810.4.camel@mulgrave>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e1.ny.us.ibm.com ([32.97.182.101]:64407 "EHLO e1.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S264124AbTEWSUx (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 23 May 2003 14:20:53 -0400
+Received: from e34.co.us.ibm.com ([32.97.110.132]:23769 "EHLO
+	e34.co.us.ibm.com") by vger.kernel.org with ESMTP id S264130AbTEWSgI
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 23 May 2003 14:36:08 -0400
 Content-Disposition: inline
-In-Reply-To: <1053707904.1810.4.camel@mulgrave>; from James.Bottomley@steeleye.com on Fri, May 23, 2003 at 12:38:24PM -0400
+In-Reply-To: <1053707904.1810.4.camel@mulgrave>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@steeleye.com>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, Mike Anderson <andmike@us.ibm.com>
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Fri, May 23, 2003 at 12:38:24PM -0400, James Bottomley wrote:
-> 
-> The attached patch makes the sysfs attributes a property of the host
-> template (I can't really see a reason why the actual attributes need to
-> change per host, so I think the template is the better place for them).
-> 
-> I've also provided helper functions to modify the attributes in the LLD
-> init routines.
-> 
-> An illustration of how this works for the 53c700 will follow.
-> 
-> James
+James Bottomley [James.Bottomley@SteelEye.com] wrote:
+>  static void scsi_device_release(struct device *dev)
+> @@ -287,9 +290,9 @@
+>  	if (error)
+>  		return error;
+>  
+> -	for (i = 0; !error && i < ARRAY_SIZE(sdev_attrs); i++)
+> +	for (i = 0; !error && sdev->host->hostt->sdev_attrs[i] != NULL; i++)
+>  		error = device_create_file(&sdev->sdev_driverfs_dev,
+> -					   sdev_attrs[i]);
+> +					   sdev->host->hostt->sdev_attrs[i]);
+>  
+>  	if (error)
+>  		scsi_device_unregister(sdev);
 
-Any examples of potential LLDD specific host attributes?
+What about this style of bounds check.
+for (i = 0; !error && sdev->host->hostt->sdev_attrs[i]; i++)
 
-Looks good for modifying attributes.
-
-For additional attributes, why not an LLDD specific function to add and
-remove them?
-
-> diff -Nru a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
-> --- a/drivers/scsi/hosts.c	Fri May 23 12:35:11 2003
-> +++ b/drivers/scsi/hosts.c	Fri May 23 12:35:11 2003
-> @@ -321,7 +321,12 @@
->             shost_tp->eh_host_reset_handler == NULL) {
->  		printk(KERN_ERR "ERROR: SCSI host `%s' has no error handling\nERROR: This is not a safe way to run your SCSI host\nERROR: The error handling must be added to this driver\n", shost_tp->proc_name);
->  		dump_stack();
-> -        } 
-> +        }
-> +	if(shost_tp->shost_attrs == NULL)
-> +		/* if its not set in the template, use the default */
-> +		 shost_tp->shost_attrs = scsi_sysfs_shost_attrs;
-> +	if(shost_tp->sdev_attrs == NULL)
-> +		 shost_tp->sdev_attrs = scsi_sysfs_sdev_attrs;
->  	gfp_mask = GFP_KERNEL;
->  	if (shost_tp->unchecked_isa_dma && xtr_bytes)
->  		gfp_mask |= __GFP_DMA;
-
-Code style nit: in the above and elsewhere use "if (", "for (" instead of
-"if(" or  "for(".
-
+> +/** scsi_sysfs_modify_shost_attribute - modify or add a host class attribute
+> + *
+> + * @class_attrs:host class attribute list to be added to or modified
+> + * @attr:	individual attribute to change or added
+> + *
+> + * returns zero if successful or error if not
+> + **/
 > +int scsi_sysfs_modify_shost_attribute(struct class_device_attribute ***class_attrs,
 > +				      struct class_device_attribute *attr)
 > +{
@@ -73,14 +57,41 @@ Code style nit: in the above and elsewhere use "if (", "for (" instead of
 > +
 > +	if(*class_attrs == scsi_sysfs_shost_attrs || !modify) {
 > +		struct class_device_attribute **tmp_attrs = kmalloc(sizeof(struct class_device_attribute)*(num_attrs + (modify ? 0 : 1)), GFP_KERNEL);
+
+kfree of this memory in driver?
+
 > +		if(tmp_attrs == NULL)
 > +			return -ENOMEM;
 > +		memcpy(tmp_attrs, *class_attrs, sizeof(struct class_device_attribute)*num_attrs);
 > +		if(*class_attrs != scsi_sysfs_shost_attrs)
 > +			kfree(*class_attrs);
 > +		*class_attrs = tmp_attrs;
+> +	}
+> +	if(modify) {
+> +		/* spare the caller from having to copy things it's
+> +		 * not interested in */
+> +		struct class_device_attribute *old_attr =
+> +			(*class_attrs)[modify];
+> +		/* extend permissions */
+> +		attr->attr.mode |= old_attr->attr.mode;
+> +
+> +		/* override null show/store with default */
+> +		if(attr->show == NULL)
+> +			attr->show = old_attr->show;
+> +		if(attr->store == NULL)
+> +			attr->store = old_attr->store;
+> +		(*class_attrs)[modify] = attr;
+> +	} else {
+> +		(*class_attrs)[num_attrs] = attr;
+> +	}
+> +
+> +	return 0;
+> +}
+> +EXPORT_SYMBOL(scsi_sysfs_modify_shost_attribute);
+> +
 
-For completeness, an allocated *class_attrs should be freed on LLDD module
-exit. Same for the sdev attrs.
+-andmike
+--
+Michael Anderson
+andmike@us.ibm.com
 
--- Patrick Mansfield
