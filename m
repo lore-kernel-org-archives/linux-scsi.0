@@ -1,33 +1,65 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] tmscsim: INQUIRY always only untagged
-Date: Fri, 1 Oct 2004 23:46:06 +0100
+From: "Bagalkote, Sreenivas" <sreenib@lsil.com>
+Subject: RE: [PATCH]: megaraid 2.20.4: Fixes a data corruption bug
+Date: Fri, 1 Oct 2004 18:52:10 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20041001234606.A9024@infradead.org>
-References: <Pine.LNX.4.60.0409051654460.3039@poirot.grange> <1094398979.10977.9.camel@mulgrave> <20040905173134.A31521@infradead.org> <1094422949.10977.15.camel@mulgrave> <Pine.LNX.4.60.0409061042240.6252@poirot.grange> <Pine.LNX.4.60.0409061143020.8550@poirot.grange> <20040906110150.A4845@infradead.org> <Pine.LNX.4.60.0409061400560.1676@poirot.grange> <Pine.LNX.4.60.0410012253460.3951@poirot.grange> <20041001233554.B8853@infradead.org>
+Message-ID: <0E3FA95632D6D047BA649F95DAB60E570230C989@exa-atlanta>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="iso-8859-1"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from imladris.demon.co.uk ([193.237.130.41]:20742 "EHLO
-	phoenix.infradead.org") by vger.kernel.org with ESMTP
-	id S266663AbUJAWqK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 1 Oct 2004 18:46:10 -0400
-Content-Disposition: inline
-In-Reply-To: <20041001233554.B8853@infradead.org>; from hch@infradead.org on Fri, Oct 01, 2004 at 11:35:54PM +0100
+Received: from mail0.lsil.com ([147.145.40.20]:40424 "EHLO mail0.lsil.com")
+	by vger.kernel.org with ESMTP id S266603AbUJAXAE (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 1 Oct 2004 19:00:04 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: 'James Bottomley' <James.Bottomley@SteelEye.com>, "Bagalkote, Sreenivas" <sreenib@lsil.com>
+Cc: "Mukker, Atul" <Atulm@lsil.com>, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, "'bunk@fs.tum.de'" <bunk@fs.tum.de>, 'Andrew Morton' <akpm@osdl.org>, "'Matt_Domsch@dell.com'" <Matt_Domsch@dell.com>, "Ju, Seokmann" <sju@lsil.com>
 
-On Fri, Oct 01, 2004 at 11:35:54PM +0100, Christoph Hellwig wrote:
-> > +    if (pcmd->cmnd[0] == INQUIRY && 
-> > +	(pcmd->result == (DID_OK << 16) || status_byte(pcmd->result) & CHECK_CONDITION) &&
-> > +	(ptr->DevType & SCSI_DEVTYPE) != TYPE_NODEV)
-> > +	/* device found: add */ 
-> > +	pDCB->DevType = ptr->DevType & SCSI_DEVTYPE;
-> 
-> instead of ptr->DevType you can use the 'device' field in struct scsi_device.
-> In fact the dcb DevType field should go away aswell in favour of that one.
+James,
 
-And while we're at it: The whole inquiry sniffing in dc390_SRBdone (aka all
-uses of ptr and ptr) can easily go away if you kill pDCB->Inquiry7 and check
-sdev->sdtr instead.
+Would you please send us your version of megaraid driver that will
+most likely go into 2.6.9? We would like baseline your version and
+make our internal releases off of that. I appreciate your help.
 
+Thanks,
+Sreenivas
+
+>-----Original Message-----
+>From: James Bottomley [mailto:James.Bottomley@SteelEye.com]
+>Sent: Friday, October 01, 2004 4:58 PM
+>To: Bagalkote, Sreenivas
+>Cc: Mukker, Atul; 'linux-kernel@vger.kernel.org';
+>'linux-scsi@vger.kernel.org'; 'bunk@fs.tum.de'; 'Andrew Morton';
+>'Matt_Domsch@dell.com'; Ju, Seokmann
+>Subject: RE: [PATCH]: megaraid 2.20.4: Fixes a data corruption bug
+>
+>
+>On Fri, 2004-10-01 at 16:08, Bagalkote, Sreenivas wrote:
+>> The submitted previous version of megaraid (2.20.3.1) had 
+>> register_ioctl32_conversion & unregister_ioctl32_conversion 
+>> defined to empty statements if CONFIG_COMPAT was _not_
+>> defined.
+>
+>I know that.  However, when the empty statements were added to
+>ioctl32.h, those had to be taken out of the megaraid driver.  That's
+>this patch in the scsi-misc-2.6 tree:
+>
+> [PATCH] megaraid warning fix
+>  
+>  The ioctl32 conversion registration stubs are in ioctl32.h now.
+>  
+>  Signed-off-by: Andrew Morton <akpm@osdl.org>
+>
+>> But I think the preferred way was to have the occurances of 
+>> (un)register_ioctl32_conversion in the code surrounded by 
+>> #ifdef CONFIG_COMPAT ... #endif directly. In the kernel source
+>> only register_ioctl32_conversion has these #ifdef .. #endif. The
+>> unregister_ioctl32_conversion doesn't.
+>
+>The current preferred way is to use the empty definitions in
+>linux/ioctl32.h which means there's no necessity for adding the #ifdef
+>CONFIG_COMPAT.  The correct thing is to remove the #ifdef CONFIG_COMPAT
+>from around the register_ioctl32... part.
+>
+>James
+>
+>
