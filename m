@@ -1,16 +1,27 @@
 From: Mike Anderson <andmike@us.ibm.com>
-Subject: [PATCH] scsi host cleanup 2/3 (mid lvl changes)
-Date: Wed, 16 Oct 2002 23:53:52 -0700
+Subject: [PATCH] scsi host cleanup 3/3 (driver changes)
+Date: Wed, 16 Oct 2002 23:58:01 -0700
 Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <20021017065352.GB1977@beaverton.ibm.com>
-References: <20021017065112.GA1977@beaverton.ibm.com>
+Message-ID: <20021017065801.GC1977@beaverton.ibm.com>
+References: <20021017065112.GA1977@beaverton.ibm.com> <20021017065352.GB1977@beaverton.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20021017065112.GA1977@beaverton.ibm.com>
+In-Reply-To: <20021017065352.GB1977@beaverton.ibm.com>
 To: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+
+
+If you read my previous post on this patch I indicated that few of the
+driver changes I was only able to compile test ( block/cciss_scsi.c,
+scsi/53c700.c, scsi/pcmcia/*, scsi/wd33c93.c). The changes to the
+drivers are to remove the old interfaces and possibly extra NULL inits
+of struct members. These changes will need to be ok'd by there
+respective maintainers. I did receive feedback from two.
+
+I have tested these changes on ips, aic, qlogicisp, and scsi_debug
+drivers.
 
 This is a resend of my previous patch clean ups to the scsi_host lists.
 
@@ -35,687 +46,317 @@ http://www-124.ibm.com/storageio/patches/2.5/scsi-host
 Michael Anderson
 andmike@us.ibm.com
 
- scsi.c      |  456 +++---------------------------------------------------------
- scsi_proc.c |   57 ++++---
- scsi_syms.c |    5 
- sg.c        |    6 
- 4 files changed, 63 insertions(+), 461 deletions(-)
+ acorn/scsi/acornscsi.c            |    6 ++----
+ acorn/scsi/arxescsi.c             |    8 ++------
+ acorn/scsi/cumana_2.c             |    8 ++------
+ acorn/scsi/eesox.c                |    8 ++------
+ acorn/scsi/powertec.c             |    8 ++------
+ block/cciss_scsi.c                |   21 ++-------------------
+ scsi/53c700.c                     |    6 ++----
+ scsi/aic7xxx/aic7xxx_linux_host.h |    1 -
+ scsi/cpqfcTSinit.c                |    4 +---
+ scsi/fcal.c                       |    4 +---
+ scsi/ips.h                        |    3 ---
+ scsi/pcmcia/aha152x_stub.c        |    3 ++-
+ scsi/pcmcia/fdomain_stub.c        |    3 ++-
+ scsi/pcmcia/nsp_cs.c              |    3 ++-
+ scsi/pcmcia/qlogic_stub.c         |    3 ++-
+ scsi/wd33c93.c                    |    5 +----
+ 16 files changed, 25 insertions(+), 69 deletions(-)
 ------
 
-diff -Nru a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
---- a/drivers/scsi/scsi.c	Wed Oct 16 22:51:48 2002
-+++ b/drivers/scsi/scsi.c	Wed Oct 16 22:51:48 2002
-@@ -1659,33 +1659,6 @@
- 	}
+diff -Nru a/drivers/acorn/scsi/acornscsi.c b/drivers/acorn/scsi/acornscsi.c
+--- a/drivers/acorn/scsi/acornscsi.c	Wed Oct 16 22:51:48 2002
++++ b/drivers/acorn/scsi/acornscsi.c	Wed Oct 16 22:51:48 2002
+@@ -3010,14 +3010,12 @@
+ 			int length, int host_no, int inout)
+ {
+     int pos, begin = 0, devidx;
+-    struct Scsi_Host *instance = scsi_hostlist;
++    struct Scsi_Host *instance;
+     Scsi_Device *scd;
+     AS_Host *host;
+     char *p = buffer;
+ 
+-    for (instance = scsi_hostlist;
+-	    instance && instance->host_no != host_no;
+-		instance = instance->next);
++    instance = scsi_host_hn_get(host_no);
+ 
+     if (inout == 1 || !instance)
+ 	return -EINVAL;
+diff -Nru a/drivers/acorn/scsi/arxescsi.c b/drivers/acorn/scsi/arxescsi.c
+--- a/drivers/acorn/scsi/arxescsi.c	Wed Oct 16 22:51:48 2002
++++ b/drivers/acorn/scsi/arxescsi.c	Wed Oct 16 22:51:48 2002
+@@ -384,15 +384,11 @@
+ 			    int length, int host_no, int inout)
+ {
+ 	int pos, begin;
+-	struct Scsi_Host *host = scsi_hostlist;
++	struct Scsi_Host *host;
+ 	ARXEScsi_Info *info;
+ 	Scsi_Device *scd;
+ 
+-	while (host) {
+-		if (host->host_no == host_no)
+-			break;
+-		host = host->next;
+-	}
++	host = scsi_host_hn_get(host_no);
+ 	if (!host)
+ 		return 0;
+ 
+diff -Nru a/drivers/acorn/scsi/cumana_2.c b/drivers/acorn/scsi/cumana_2.c
+--- a/drivers/acorn/scsi/cumana_2.c	Wed Oct 16 22:51:48 2002
++++ b/drivers/acorn/scsi/cumana_2.c	Wed Oct 16 22:51:48 2002
+@@ -498,15 +498,11 @@
+ 			    int length, int host_no, int inout)
+ {
+ 	int pos, begin;
+-	struct Scsi_Host *host = scsi_hostlist;
++	struct Scsi_Host *host;
+ 	CumanaScsi2_Info *info;
+ 	Scsi_Device *scd;
+ 
+-	while (host) {
+-		if (host->host_no == host_no)
+-			break;
+-		host = host->next;
+-	}
++	host = scsi_host_hn_get(host_no);
+ 	if (!host)
+ 		return 0;
+ 
+diff -Nru a/drivers/acorn/scsi/eesox.c b/drivers/acorn/scsi/eesox.c
+--- a/drivers/acorn/scsi/eesox.c	Wed Oct 16 22:51:48 2002
++++ b/drivers/acorn/scsi/eesox.c	Wed Oct 16 22:51:48 2002
+@@ -499,15 +499,11 @@
+ 			    int length, int host_no, int inout)
+ {
+ 	int pos, begin;
+-	struct Scsi_Host *host = scsi_hostlist;
++	struct Scsi_Host *host;
+ 	EESOXScsi_Info *info;
+ 	Scsi_Device *scd;
+ 
+-	while (host) {
+-		if (host->host_no == host_no)
+-			break;
+-		host = host->next;
+-	}
++	host = scsi_host_hn_get(host_no);
+ 	if (!host)
+ 		return 0;
+ 
+diff -Nru a/drivers/acorn/scsi/powertec.c b/drivers/acorn/scsi/powertec.c
+--- a/drivers/acorn/scsi/powertec.c	Wed Oct 16 22:51:48 2002
++++ b/drivers/acorn/scsi/powertec.c	Wed Oct 16 22:51:48 2002
+@@ -404,15 +404,11 @@
+ 			    int length, int host_no, int inout)
+ {
+ 	int pos, begin;
+-	struct Scsi_Host *host = scsi_hostlist;
++	struct Scsi_Host *host;
+ 	PowerTecScsi_Info *info;
+ 	Scsi_Device *scd;
+ 
+-	while (host) {
+-		if (host->host_no == host_no)
+-			break;
+-		host = host->next;
+-	}
++	host = scsi_host_hn_get(host_no);
+ 	if (!host)
+ 		return 0;
+ 
+diff -Nru a/drivers/block/cciss_scsi.c b/drivers/block/cciss_scsi.c
+--- a/drivers/block/cciss_scsi.c	Wed Oct 16 22:51:48 2002
++++ b/drivers/block/cciss_scsi.c	Wed Oct 16 22:51:48 2002
+@@ -1250,8 +1250,6 @@
+ 	return length;
  }
  
--void __init scsi_host_no_insert(char *str, int n)
--{
--    Scsi_Host_Name *shn, *shn2;
--    int len;
--    
--    len = strlen(str);
--    if (len && (shn = (Scsi_Host_Name *) kmalloc(sizeof(Scsi_Host_Name), GFP_ATOMIC))) {
--	if ((shn->name = kmalloc(len+1, GFP_ATOMIC))) {
--	    strncpy(shn->name, str, len);
--	    shn->name[len] = 0;
--	    shn->host_no = n;
--	    shn->host_registered = 0;
--	    shn->next = NULL;
--	    if (scsi_host_no_list) {
--		for (shn2 = scsi_host_no_list;shn2->next;shn2 = shn2->next)
--		    ;
--		shn2->next = shn;
--	    }
--	    else
--		scsi_host_no_list = shn;
--	    max_scsi_hosts = n+1;
--	}
--	else
--	    kfree((char *) shn);
--    }
--}
+-/* It's a pity that we need this, but, we do... */
+-extern struct Scsi_Host *scsi_hostlist;  /* from ../scsi/hosts.c */
+ 
+ int
+ cciss_scsi_proc_info(char *buffer, /* data buffer */
+@@ -1268,24 +1266,9 @@
+ 	ctlr_info_t *ci;
+ 	int cntl_num;
+ 
+-	/* Lets see if we can find our Scsi_Host... 
+-	   this might be kind of "bad", searching scis_hostlist this way
+-	   but how else can we find the scsi host?  I think I've seen
+-	   this coded both ways, (circular list and null terminated list)
+-	   I coded it to work either way, since I wasn't sure.  */
+ 
+-	sh = scsi_hostlist;
+-	found=0;
+-	do {
+-		if (sh == NULL) break;
+-		if (sh->host_no == hostnum) {
+-			found++;
+-			break;
+-		}
+-		sh = sh->next;
+-	} while (sh != scsi_hostlist && sh != NULL);
 -
- #ifdef CONFIG_PROC_FS
- static int scsi_proc_info(char *buffer, char **start, off_t offset, int length)
+-	if (sh == NULL || found == 0) /* This really shouldn't ever happen. */
++	sh = scsi_host_hn_get(hostnum);
++	if (sh == NULL) /* This really shouldn't ever happen. */
+ 		return -EINVAL;
+ 
+ 	ci = (ctlr_info_t *) sh->hostdata[0];
+diff -Nru a/drivers/scsi/53c700.c b/drivers/scsi/53c700.c
+--- a/drivers/scsi/53c700.c	Wed Oct 16 22:51:48 2002
++++ b/drivers/scsi/53c700.c	Wed Oct 16 22:51:48 2002
+@@ -1719,13 +1719,11 @@
  {
-@@ -1698,7 +1671,8 @@
- 	/*
- 	 * First, see if there are any attached devices or not.
- 	 */
--	for (HBA_ptr = scsi_hostlist; HBA_ptr; HBA_ptr = HBA_ptr->next) {
-+	for (HBA_ptr = scsi_host_get_next(NULL); HBA_ptr;
-+	     HBA_ptr = scsi_host_get_next(HBA_ptr)) {
- 		if (HBA_ptr->host_queue != NULL) {
- 			break;
- 		}
-@@ -1706,7 +1680,8 @@
- 	size = sprintf(buffer + len, "Attached devices: %s\n", (HBA_ptr) ? "" : "none");
- 	len += size;
- 	pos = begin + len;
--	for (HBA_ptr = scsi_hostlist; HBA_ptr; HBA_ptr = HBA_ptr->next) {
-+	for (HBA_ptr = scsi_host_get_next(NULL); HBA_ptr;
-+	     HBA_ptr = scsi_host_get_next(HBA_ptr)) {
- #if 0
- 		size += sprintf(buffer + len, "scsi%2d: %s\n", (int) HBA_ptr->host_no,
- 				HBA_ptr->hostt->procname);
-@@ -1873,7 +1848,8 @@
- 		printk(KERN_INFO "scsi singledevice %d %d %d %d\n", host, channel,
- 		       id, lun);
+ 	static char buf[4096];	/* 1 page should be sufficient */
+ 	int len = 0;
+-	struct Scsi_Host *host = scsi_hostlist;
++	struct Scsi_Host *host;
+ 	struct NCR_700_Host_Parameters *hostdata;
+ 	Scsi_Device *SDp;
  
--		for (HBA_ptr = scsi_hostlist; HBA_ptr; HBA_ptr = HBA_ptr->next) {
-+		for (HBA_ptr = scsi_host_get_next(NULL); HBA_ptr;
-+		     HBA_ptr = scsi_host_get_next(HBA_ptr)) {
- 			if (HBA_ptr->host_no == host) {
- 				break;
- 			}
-@@ -1918,7 +1894,8 @@
- 		lun = simple_strtoul(p + 1, &p, 0);
+-	while(host != NULL && host->host_no != host_no)
+-		host = host->next;
+-
++	host = scsi_host_hn_get(host_no);
+ 	if(host == NULL)
+ 		return 0;
  
- 
--		for (HBA_ptr = scsi_hostlist; HBA_ptr; HBA_ptr = HBA_ptr->next) {
-+		for (HBA_ptr = scsi_host_get_next(NULL); HBA_ptr;
-+		     HBA_ptr = scsi_host_get_next(HBA_ptr)) {
- 			if (HBA_ptr->host_no == host) {
- 				break;
- 			}
-@@ -1988,369 +1965,6 @@
- #endif
- 
- /*
-- * This entry point should be called by a driver if it is trying
-- * to add a low level scsi driver to the system.
-- */
--int scsi_register_host(Scsi_Host_Template * tpnt)
--{
--	int pcount;
--	struct Scsi_Host *shpnt;
--	Scsi_Device *SDpnt;
--	struct Scsi_Device_Template *sdtpnt;
--	const char *name;
--	int out_of_space = 0;
--
--	if (tpnt->next || !tpnt->detect)
--		return 1;	/* Must be already loaded, or
--				 * no detect routine available
--				 */
--
--	/* If max_sectors isn't set, default to max */
--	if (!tpnt->max_sectors)
--		tpnt->max_sectors = 1024;
--
--	pcount = next_scsi_host;
--
--	MOD_INC_USE_COUNT;
--
--	/* The detect routine must carefully spinunlock/spinlock if 
--	   it enables interrupts, since all interrupt handlers do 
--	   spinlock as well.  */
--
--	/*
--	 * detect should do its own locking
--	 */
--	tpnt->present = tpnt->detect(tpnt);
--
--	if (tpnt->present) {
--		if (pcount == next_scsi_host) {
--			if (tpnt->present > 1) {
--				printk(KERN_ERR "scsi: Failure to register low-level scsi driver");
--				scsi_unregister_host(tpnt);
--				return 1;
--			}
--			/* 
--			 * The low-level driver failed to register a driver.
--			 * We can do this now.
--			 */
--			if(scsi_register(tpnt, 0)==NULL)
--			{
--				printk(KERN_ERR "scsi: register failed.\n");
--				scsi_unregister_host(tpnt);
--				return 1;
--			}
--		}
--		tpnt->next = scsi_hosts;	/* Add to the linked list */
--		scsi_hosts = tpnt;
--
--		/* Add the new driver to /proc/scsi */
--#ifdef CONFIG_PROC_FS
--		build_proc_dir_entries(tpnt);
--#endif
--
--
--		/*
--		 * Add the kernel threads for each host adapter that will
--		 * handle error correction.
--		 */
--		for (shpnt = scsi_hostlist; shpnt; shpnt = shpnt->next) {
--			if (shpnt->hostt == tpnt) {
--				DECLARE_MUTEX_LOCKED(sem);
--
--				shpnt->eh_notify = &sem;
--				kernel_thread((int (*)(void *)) scsi_error_handler,
--					      (void *) shpnt, 0);
--
--				/*
--				 * Now wait for the kernel error thread to initialize itself
--				 * as it might be needed when we scan the bus.
--				 */
--				down(&sem);
--				shpnt->eh_notify = NULL;
--			}
--		}
--
--		for (shpnt = scsi_hostlist; shpnt; shpnt = shpnt->next) {
--			if (shpnt->hostt == tpnt) {
--				if (tpnt->info) {
--					name = tpnt->info(shpnt);
--				} else {
--					name = tpnt->name;
--				}
--				printk(KERN_INFO "scsi%d : %s\n",		/* And print a little message */
--				       shpnt->host_no, name);
--				strncpy(shpnt->host_driverfs_dev.name,name,
--					DEVICE_NAME_SIZE-1);
--				sprintf(shpnt->host_driverfs_dev.bus_id,
--					"scsi%d",
--					shpnt->host_no);
--			}
--		}
--
--		/* The next step is to call scan_scsis here.  This generates the
--		 * Scsi_Devices entries
--		 */
--		for (shpnt = scsi_hostlist; shpnt; shpnt = shpnt->next) {
--			if (shpnt->hostt == tpnt) {
--				/* first register parent with driverfs */
--				device_register(&shpnt->host_driverfs_dev);
--				scan_scsis(shpnt, 0, 0, 0, 0);
--			}
--		}
--
--		for (sdtpnt = scsi_devicelist; sdtpnt; sdtpnt = sdtpnt->next) {
--			if (sdtpnt->init && sdtpnt->dev_noticed)
--				(*sdtpnt->init) ();
--		}
--
--		/*
--		 * Next we create the Scsi_Cmnd structures for this host 
--		 */
--		for (shpnt = scsi_hostlist; shpnt; shpnt = shpnt->next) {
--			for (SDpnt = shpnt->host_queue; SDpnt; SDpnt = SDpnt->next)
--				if (SDpnt->host->hostt == tpnt) {
--					for (sdtpnt = scsi_devicelist; sdtpnt; sdtpnt = sdtpnt->next)
--						if (sdtpnt->attach)
--							(*sdtpnt->attach) (SDpnt);
--					if (SDpnt->attached) {
--						scsi_build_commandblocks(SDpnt);
--						if (SDpnt->current_queue_depth == 0)
--							out_of_space = 1;
--					}
--				}
--		}
--
--		/* This does any final handling that is required. */
--		for (sdtpnt = scsi_devicelist; sdtpnt; sdtpnt = sdtpnt->next) {
--			if (sdtpnt->finish && sdtpnt->nr_dev) {
--				(*sdtpnt->finish) ();
--			}
--		}
--	}
--
--	if (out_of_space) {
--		scsi_unregister_host(tpnt);	/* easiest way to clean up?? */
--		return 1;
--	} else
--		return 0;
--}
--
--/*
-- * Similarly, this entry point should be called by a loadable module if it
-- * is trying to remove a low level scsi driver from the system.
-- */
--int scsi_unregister_host(Scsi_Host_Template * tpnt)
--{
--	int online_status;
--	int pcount0, pcount;
--	Scsi_Cmnd *SCpnt;
--	Scsi_Device *SDpnt;
--	Scsi_Device *SDpnt1;
--	struct Scsi_Device_Template *sdtpnt;
--	struct Scsi_Host *sh1;
--	struct Scsi_Host *shpnt;
--	char name[10];	/* host_no>=10^9? I don't think so. */
--
--	/* get the big kernel lock, so we don't race with open() */
--	lock_kernel();
--
--	/*
--	 * First verify that this host adapter is completely free with no pending
--	 * commands 
--	 */
--	for (shpnt = scsi_hostlist; shpnt; shpnt = shpnt->next) {
--		for (SDpnt = shpnt->host_queue; SDpnt;
--		     SDpnt = SDpnt->next) {
--			if (SDpnt->host->hostt == tpnt
--			    && SDpnt->host->hostt->module
--			    && GET_USE_COUNT(SDpnt->host->hostt->module))
--				goto err_out;
--			/* 
--			 * FIXME(eric) - We need to find a way to notify the
--			 * low level driver that we are shutting down - via the
--			 * special device entry that still needs to get added. 
--			 *
--			 * Is detach interface below good enough for this?
--			 */
--		}
--	}
--
--	/*
--	 * FIXME(eric) put a spinlock on this.  We force all of the devices offline
--	 * to help prevent race conditions where other hosts/processors could try and
--	 * get in and queue a command.
--	 */
--	for (shpnt = scsi_hostlist; shpnt; shpnt = shpnt->next) {
--		for (SDpnt = shpnt->host_queue; SDpnt;
--		     SDpnt = SDpnt->next) {
--			if (SDpnt->host->hostt == tpnt)
--				SDpnt->online = FALSE;
--
--		}
--	}
--
--	for (shpnt = scsi_hostlist; shpnt; shpnt = shpnt->next) {
--		if (shpnt->hostt != tpnt) {
--			continue;
--		}
--		for (SDpnt = shpnt->host_queue; SDpnt;
--		     SDpnt = SDpnt->next) {
--			/*
--			 * Loop over all of the commands associated with the device.  If any of
--			 * them are busy, then set the state back to inactive and bail.
--			 */
--			for (SCpnt = SDpnt->device_queue; SCpnt;
--			     SCpnt = SCpnt->next) {
--				online_status = SDpnt->online;
--				SDpnt->online = FALSE;
--				if (SCpnt->request && SCpnt->request->rq_status != RQ_INACTIVE) {
--					printk(KERN_ERR "SCSI device not inactive - rq_status=%d, target=%d, pid=%ld, state=%d, owner=%d.\n",
--					       SCpnt->request->rq_status, SCpnt->target, SCpnt->pid,
--					     SCpnt->state, SCpnt->owner);
--					for (SDpnt1 = shpnt->host_queue; SDpnt1;
--					     SDpnt1 = SDpnt1->next) {
--						for (SCpnt = SDpnt1->device_queue; SCpnt;
--						     SCpnt = SCpnt->next)
--							if (SCpnt->request->rq_status == RQ_SCSI_DISCONNECTING)
--								SCpnt->request->rq_status = RQ_INACTIVE;
--					}
--					SDpnt->online = online_status;
--					printk(KERN_ERR "Device busy???\n");
--					goto err_out;
--				}
--				/*
--				 * No, this device is really free.  Mark it as such, and
--				 * continue on.
--				 */
--				SCpnt->state = SCSI_STATE_DISCONNECTING;
--                                if(SCpnt->request)
--                                        SCpnt->request->rq_status = RQ_SCSI_DISCONNECTING;	/* Mark as busy */
--			}
--		}
--	}
--	/* Next we detach the high level drivers from the Scsi_Device structures */
--
--	for (shpnt = scsi_hostlist; shpnt; shpnt = shpnt->next) {
--		if (shpnt->hostt != tpnt) {
--			continue;
--		}
--		for (SDpnt = shpnt->host_queue; SDpnt;
--		     SDpnt = SDpnt->next) {
--			for (sdtpnt = scsi_devicelist; sdtpnt; sdtpnt = sdtpnt->next)
--				if (sdtpnt->detach)
--					(*sdtpnt->detach) (SDpnt);
--
--			/* If something still attached, punt */
--			if (SDpnt->attached) {
--				printk(KERN_ERR "Attached usage count = %d\n", SDpnt->attached);
--				goto err_out;
--			}
--			if (shpnt->hostt->slave_detach)
--				(*shpnt->hostt->slave_detach) (SDpnt);
--			devfs_unregister (SDpnt->de);
--			put_device(&SDpnt->sdev_driverfs_dev);
--		}
--	}
--
--	/*
--	 * Next, kill the kernel error recovery thread for this host.
--	 */
--	for (shpnt = scsi_hostlist; shpnt; shpnt = shpnt->next) {
--		if (shpnt->hostt == tpnt
--		    && shpnt->ehandler != NULL) {
--			DECLARE_MUTEX_LOCKED(sem);
--
--			shpnt->eh_notify = &sem;
--			send_sig(SIGHUP, shpnt->ehandler, 1);
--			down(&sem);
--			shpnt->eh_notify = NULL;
--		}
--	}
--
--	/* Next we free up the Scsi_Cmnd structures for this host */
--
--	for (shpnt = scsi_hostlist; shpnt; shpnt = shpnt->next) {
--		if (shpnt->hostt != tpnt) {
--			continue;
--		}
--		for (SDpnt = shpnt->host_queue; SDpnt;
--		     SDpnt = shpnt->host_queue) {
--			scsi_release_commandblocks(SDpnt);
--
--			blk_cleanup_queue(&SDpnt->request_queue);
--			/* Next free up the Scsi_Device structures for this host */
--			shpnt->host_queue = SDpnt->next;
--			if (SDpnt->inquiry)
--				kfree(SDpnt->inquiry);
--			kfree((char *) SDpnt);
--
--		}
--	}
--
--	/* Next we go through and remove the instances of the individual hosts
--	 * that were detected */
--
--	pcount0 = next_scsi_host;
--	for (shpnt = scsi_hostlist; shpnt; shpnt = sh1) {
--		sh1 = shpnt->next;
--		if (shpnt->hostt != tpnt)
--			continue;
--		pcount = next_scsi_host;
--		/* Remove the /proc/scsi directory entry */
--		sprintf(name,"%d",shpnt->host_no);
--		remove_proc_entry(name, tpnt->proc_dir);
--		put_device(&shpnt->host_driverfs_dev);
--		if (tpnt->release)
--			(*tpnt->release) (shpnt);
--		else {
--			/* This is the default case for the release function.
--			 * It should do the right thing for most correctly
--			 * written host adapters.
--			 */
--			if (shpnt->irq)
--				free_irq(shpnt->irq, NULL);
--			if (shpnt->dma_channel != 0xff)
--				free_dma(shpnt->dma_channel);
--			if (shpnt->io_port && shpnt->n_io_port)
--				release_region(shpnt->io_port, shpnt->n_io_port);
--		}
--		if (pcount == next_scsi_host)
--			scsi_unregister(shpnt);
--		tpnt->present--;
--	}
--
--	if (pcount0 != next_scsi_host)
--		printk(KERN_INFO "scsi : %d host%s left.\n", next_scsi_host,
--		       (next_scsi_host == 1) ? "" : "s");
--
--	/*
--	 * Remove it from the linked list and /proc if all
--	 * hosts were successfully removed (ie preset == 0)
--	 */
--	if (!tpnt->present) {
--		Scsi_Host_Template **SHTp = &scsi_hosts;
--		Scsi_Host_Template *SHT;
--
--		while ((SHT = *SHTp) != NULL) {
--			if (SHT == tpnt) {
--				*SHTp = SHT->next;
--				remove_proc_entry(tpnt->proc_name, proc_scsi);
--				break;
--			}
--			SHTp = &SHT->next;
--		}
--	}
--	MOD_DEC_USE_COUNT;
--
--	unlock_kernel();
--	return 0;
--
--err_out:
--	unlock_kernel();
--	return -1;
--}
--
--/*
-  * This entry point should be called by a loadable module if it is trying
-  * add a high level scsi driver to the system.
+diff -Nru a/drivers/scsi/aic7xxx/aic7xxx_linux_host.h b/drivers/scsi/aic7xxx/aic7xxx_linux_host.h
+--- a/drivers/scsi/aic7xxx/aic7xxx_linux_host.h	Wed Oct 16 22:51:48 2002
++++ b/drivers/scsi/aic7xxx/aic7xxx_linux_host.h	Wed Oct 16 22:51:48 2002
+@@ -63,7 +63,6 @@
+  * to do with card config are filled in after the card is detected.
   */
-@@ -2361,7 +1975,7 @@
- 	int out_of_space = 0;
+ #define AIC7XXX	{						\
+-	next: NULL,						\
+ 	module: NULL,						\
+ 	proc_dir: NULL,						\
+ 	proc_info: ahc_linux_proc_info,				\
+diff -Nru a/drivers/scsi/cpqfcTSinit.c b/drivers/scsi/cpqfcTSinit.c
+--- a/drivers/scsi/cpqfcTSinit.c	Wed Oct 16 22:51:48 2002
++++ b/drivers/scsi/cpqfcTSinit.c	Wed Oct 16 22:51:48 2002
+@@ -938,9 +938,7 @@
+   char buf[81];
  
- #ifdef CONFIG_KMOD
--	if (scsi_hosts == NULL)
-+	if (scsi_host_get_next(NULL) == NULL)
- 		request_module("scsi_hostadapter");
- #endif
+   // Search the Scsi host list for our controller
+-  for (host=scsi_hostlist; host; host=host->next)
+-    if (host->host_no == hostno)
+-      break;
++  host = scsi_host_hn_get(hostno);
  
-@@ -2375,7 +1989,8 @@
- 	 * First scan the devices that we know about, and see if we notice them.
- 	 */
+   if (!host) return -ESRCH;
  
--	for (shpnt = scsi_hostlist; shpnt; shpnt = shpnt->next) {
-+	for (shpnt = scsi_host_get_next(NULL); shpnt;
-+	     shpnt = scsi_host_get_next(shpnt)) {
- 		for (SDpnt = shpnt->host_queue; SDpnt;
- 		     SDpnt = SDpnt->next) {
- 			if (tpnt->detect)
-@@ -2394,7 +2009,8 @@
- 	/*
- 	 * Now actually connect the devices to the new driver.
- 	 */
--	for (shpnt = scsi_hostlist; shpnt; shpnt = shpnt->next) {
-+	for (shpnt = scsi_host_get_next(NULL); shpnt;
-+	     shpnt = scsi_host_get_next(shpnt)) {
- 		for (SDpnt = shpnt->host_queue; SDpnt;
- 		     SDpnt = SDpnt->next) {
- 			if (tpnt->attach)
-@@ -2444,7 +2060,8 @@
- 	 * Next, detach the devices from the driver.
- 	 */
+diff -Nru a/drivers/scsi/fcal.c b/drivers/scsi/fcal.c
+--- a/drivers/scsi/fcal.c	Wed Oct 16 22:51:48 2002
++++ b/drivers/scsi/fcal.c	Wed Oct 16 22:51:48 2002
+@@ -213,9 +213,7 @@
+ 	char *pos = buffer;
+ 	int i, j;
  
--	for (shpnt = scsi_hostlist; shpnt; shpnt = shpnt->next) {
-+	for (shpnt = scsi_host_get_next(NULL); shpnt;
-+	     shpnt = scsi_host_get_next(shpnt)) {
- 		for (SDpnt = shpnt->host_queue; SDpnt;
- 		     SDpnt = SDpnt->next) {
- 			if (tpnt->detach)
-@@ -2516,7 +2133,8 @@
- 	Scsi_Device *SDpnt;
- 	printk(KERN_INFO "Dump of scsi host parameters:\n");
- 	i = 0;
--	for (shpnt = scsi_hostlist; shpnt; shpnt = shpnt->next) {
-+	for (shpnt = scsi_host_get_next(NULL); shpnt;
-+	     shpnt = scsi_host_get_next(shpnt)) {
- 		printk(KERN_INFO " %d %d %d : %d %d\n",
- 		       shpnt->host_failed,
- 		       shpnt->host_busy,
-@@ -2527,7 +2145,8 @@
+-	for (host=scsi_hostlist; host; host=host->next)
+-		if (host->host_no == hostno)
+-                      break;
++	host = scsi_host_hn_get(hostno);
  
- 	printk(KERN_INFO "\n\n");
- 	printk(KERN_INFO "Dump of scsi command parameters:\n");
--	for (shpnt = scsi_hostlist; shpnt; shpnt = shpnt->next) {
-+	for (shpnt = scsi_host_get_next(NULL); shpnt;
-+	     shpnt = scsi_host_get_next(shpnt)) {
- 		printk(KERN_INFO "h:c:t:l (dev sect nsect cnumsec sg) (ret all flg) (to/cmd to ito) cmd snse result\n");
- 		for (SDpnt = shpnt->host_queue; SDpnt; SDpnt = SDpnt->next) {
- 			for (SCpnt = SDpnt->device_queue; SCpnt; SCpnt = SCpnt->next) {
-@@ -2565,26 +2184,6 @@
+ 	if (!host) return -ESRCH;
+ 
+diff -Nru a/drivers/scsi/ips.h b/drivers/scsi/ips.h
+--- a/drivers/scsi/ips.h	Wed Oct 16 22:51:48 2002
++++ b/drivers/scsi/ips.h	Wed Oct 16 22:51:48 2002
+@@ -407,7 +407,6 @@
+     */
+ #if LINUX_VERSION_CODE < LinuxVersionCode(2,4,0)
+  #define IPS {                            \
+-    next : NULL,                          \
+     module : NULL,                        \
+     proc_info : NULL,                     \
+     proc_dir : NULL,                      \
+@@ -437,7 +436,6 @@
  }
- #endif				/* CONFIG_PROC_FS */
- 
--static int __init scsi_host_no_init (char *str)
--{
--    static int next_no = 0;
--    char *temp;
--
--    while (str) {
--	temp = str;
--	while (*temp && (*temp != ':') && (*temp != ','))
--	    temp++;
--	if (!*temp)
--	    temp = NULL;
--	else
--	    *temp++ = 0;
--	scsi_host_no_insert(str, next_no);
--	str = temp;
--	next_no++;
--    }
--    return 1;
--}
--
- static char *scsihosts;
- 
- MODULE_PARM(scsihosts, "s");
-@@ -2724,9 +2323,8 @@
- #endif
- 
-         scsi_devfs_handle = devfs_mk_dir (NULL, "scsi", NULL);
--        if (scsihosts)
--		printk(KERN_INFO "scsi: host order: %s\n", scsihosts);	
--	scsi_host_no_init (scsihosts);
-+
-+	scsi_host_hn_init(scsihosts);
- 
- 	bus_register(&scsi_driverfs_bus_type);
- 
-@@ -2738,19 +2336,11 @@
- 
- static void __exit exit_scsi(void)
- {
--	Scsi_Host_Name *shn, *shn2 = NULL;
- 	int i;
- 
-         devfs_unregister (scsi_devfs_handle);
--        for (shn = scsi_host_no_list;shn;shn = shn->next) {
--		if (shn->name)
--			kfree(shn->name);
--                if (shn2)
--			kfree (shn2);
--                shn2 = shn;
--        }
--        if (shn2)
--		kfree (shn2);
-+
-+	scsi_host_hn_release();
- 
- #ifdef CONFIG_PROC_FS
- 	/* No, we're not here anymore. Don't show the /proc/scsi files. */
-diff -Nru a/drivers/scsi/scsi_proc.c b/drivers/scsi/scsi_proc.c
---- a/drivers/scsi/scsi_proc.c	Wed Oct 16 22:51:48 2002
-+++ b/drivers/scsi/scsi_proc.c	Wed Oct 16 22:51:48 2002
-@@ -119,35 +119,44 @@
- 	return(ret);
+ #elif LINUX_VERSION_CODE < LinuxVersionCode(2,5,0)
+  #define IPS {                            \
+-    next : NULL,                          \
+     module : NULL,                        \
+     proc_info : NULL,                     \
+     name : NULL,                          \
+@@ -466,7 +464,6 @@
  }
+ #else
+  #define IPS {                            \
+-    next : NULL,                          \
+     module : NULL,                        \
+     proc_info : NULL,                     \
+     name : NULL,                          \
+diff -Nru a/drivers/scsi/wd33c93.c b/drivers/scsi/wd33c93.c
+--- a/drivers/scsi/wd33c93.c	Wed Oct 16 22:51:48 2002
++++ b/drivers/scsi/wd33c93.c	Wed Oct 16 22:51:48 2002
+@@ -1871,10 +1871,7 @@
+ int x,i;
+ static int stop = 0;
  
--void build_proc_dir_entries(Scsi_Host_Template * tpnt)
-+void scsi_proc_host_mkdir(Scsi_Host_Template *shost_tp)
- {
--	struct Scsi_Host *hpnt;
--	char name[10];	/* see scsi_unregister_host() */
--
--	tpnt->proc_dir = proc_mkdir(tpnt->proc_name, proc_scsi);
--        if (!tpnt->proc_dir) {
--                printk(KERN_ERR "Unable to proc_mkdir in scsi.c/build_proc_dir_entries");
-+	shost_tp->proc_dir = proc_mkdir(shost_tp->proc_name, proc_scsi);
-+        if (!shost_tp->proc_dir) {
-+		printk(KERN_ERR "%s: proc_mkdir failed for %s\n",
-+		       __FUNCTION__, shost_tp->proc_name);
-                 return;
-         }
--	tpnt->proc_dir->owner = tpnt->module;
-+	shost_tp->proc_dir->owner = shost_tp->module;
-+}
-+
-+void scsi_proc_host_add(struct Scsi_Host *shost)
-+{
-+	char name[10];
-+	struct proc_dir_entry *p;
+-   for (instance=scsi_hostlist; instance; instance=instance->next) {
+-      if (instance->host_no == hn)
+-         break;
+-      }
++   instance = scsi_host_hn_get(hn);
+    if (!instance) {
+       printk("*** Hmm... Can't find host #%d!\n",hn);
+       return (-ESRCH);
+diff -Nru a/drivers/scsi/pcmcia/aha152x_stub.c b/drivers/scsi/pcmcia/aha152x_stub.c
+--- a/drivers/scsi/pcmcia/aha152x_stub.c	Wed Oct 16 22:51:48 2002
++++ b/drivers/scsi/pcmcia/aha152x_stub.c	Wed Oct 16 22:51:48 2002
+@@ -294,7 +294,8 @@
  
--	hpnt = scsi_hostlist;
--	while (hpnt) {
--		if (tpnt == hpnt->hostt) {
--			struct proc_dir_entry *p;
--			sprintf(name,"%d",hpnt->host_no);
--			p = create_proc_read_entry(name,
--					S_IFREG | S_IRUGO | S_IWUSR,
--					tpnt->proc_dir,
--					proc_scsi_read,
--					(void *)hpnt);
--			if (!p)
--				panic("Not enough memory to register SCSI HBA in /proc/scsi !\n");
--			p->write_proc=proc_scsi_write;
--			p->owner = tpnt->module;
--		}
--		hpnt = hpnt->next;
-+	sprintf(name,"%d",shost->host_no);
-+	p = create_proc_read_entry(name,
-+			S_IFREG | S_IRUGO | S_IWUSR,
-+			shost->hostt->proc_dir,
-+			proc_scsi_read,
-+			(void *)shost);
-+	if (!p) {
-+		printk(KERN_ERR "%s: Failed to register host %d in"
-+		       "%s\n", __FUNCTION__, shost->host_no,
-+		       shost->hostt->proc_name);
-+	} else {
-+		p->write_proc=proc_scsi_write;
-+		p->owner = shost->hostt->module;
- 	}
-+
-+}
-+
-+void scsi_proc_host_rm(struct Scsi_Host *shost)
-+{
-+	char name[10];
-+	sprintf(name,"%d",shost->host_no);
-+	remove_proc_entry(name, shost->hostt->proc_dir);
- }
+     tail = &link->dev;
+     info->ndev = 0;
+-    for (host = scsi_hostlist; host; host = host->next)
++    for (host = scsi_host_get_next(NULL); host;
++	 host = scsi_host_get_next(host))
+ 	if (host->hostt == &driver_template)
+ 	    for (dev = host->host_queue; dev; dev = dev->next) {
+ 	    u_long arg[2], id;
+diff -Nru a/drivers/scsi/pcmcia/fdomain_stub.c b/drivers/scsi/pcmcia/fdomain_stub.c
+--- a/drivers/scsi/pcmcia/fdomain_stub.c	Wed Oct 16 22:51:48 2002
++++ b/drivers/scsi/pcmcia/fdomain_stub.c	Wed Oct 16 22:51:48 2002
+@@ -258,7 +258,8 @@
  
- /*
-diff -Nru a/drivers/scsi/scsi_syms.c b/drivers/scsi/scsi_syms.c
---- a/drivers/scsi/scsi_syms.c	Wed Oct 16 22:51:48 2002
-+++ b/drivers/scsi/scsi_syms.c	Wed Oct 16 22:51:48 2002
-@@ -91,8 +91,9 @@
- /*
-  * These are here only while I debug the rest of the scsi stuff.
-  */
--EXPORT_SYMBOL(scsi_hostlist);
--EXPORT_SYMBOL(scsi_hosts);
-+EXPORT_SYMBOL(scsi_host_get_next);
-+EXPORT_SYMBOL(scsi_host_hn_get);
-+EXPORT_SYMBOL(scsi_host_put);
- EXPORT_SYMBOL(scsi_devicelist);
- EXPORT_SYMBOL(scsi_device_types);
+     tail = &link->dev;
+     info->ndev = 0;
+-    for (host = scsi_hostlist; host; host = host->next)
++    for (host = scsi_host_get_next(NULL); host;
++	 host = scsi_host_get_next(host))
+ 	if (host->hostt == &driver_template)
+ 	    for (dev = host->host_queue; dev; dev = dev->next) {
+ 	    u_long arg[2], id;
+diff -Nru a/drivers/scsi/pcmcia/nsp_cs.c b/drivers/scsi/pcmcia/nsp_cs.c
+--- a/drivers/scsi/pcmcia/nsp_cs.c	Wed Oct 16 22:51:48 2002
++++ b/drivers/scsi/pcmcia/nsp_cs.c	Wed Oct 16 22:51:48 2002
+@@ -1520,7 +1520,8 @@
+ 	DEBUG(0, "GET_SCSI_INFO\n");
+ 	tail = &link->dev;
+ 	info->ndev = 0;
+-	for (host = scsi_hostlist; host != NULL; host = host->next) {
++	for (host = scsi_host_get_next(NULL); host;
++	     host = scsi_host_get_next(host))
+ 		if (host->hostt == &driver_template) {
+ 			for (dev = host->host_queue; dev != NULL; dev = dev->next) {
+ 				u_long arg[2], id;
+diff -Nru a/drivers/scsi/pcmcia/qlogic_stub.c b/drivers/scsi/pcmcia/qlogic_stub.c
+--- a/drivers/scsi/pcmcia/qlogic_stub.c	Wed Oct 16 22:51:48 2002
++++ b/drivers/scsi/pcmcia/qlogic_stub.c	Wed Oct 16 22:51:48 2002
+@@ -281,7 +281,8 @@
  
-diff -Nru a/drivers/scsi/sg.c b/drivers/scsi/sg.c
---- a/drivers/scsi/sg.c	Wed Oct 16 22:51:48 2002
-+++ b/drivers/scsi/sg.c	Wed Oct 16 22:51:48 2002
-@@ -3103,7 +3103,8 @@
- 	struct Scsi_Host *shp;
- 	int k;
- 
--	for (k = 0, shp = scsi_hostlist; shp; shp = shp->next, ++k) {
-+	for (k = 0, shp = scsi_host_get_next(NULL); shp;
-+	     shp = scsi_host_get_next(shp), ++k) {
- 		for (; k < shp->host_no; ++k)
- 			PRINT_PROC("-1\t-1\t-1\t-1\t-1\t-1\n");
- 		PRINT_PROC("%u\t%hu\t%hd\t%hu\t%d\t%d\n",
-@@ -3147,7 +3148,8 @@
- 	char buff[SG_MAX_HOST_STR_LEN];
- 	char *cp;
- 
--	for (k = 0, shp = scsi_hostlist; shp; shp = shp->next, ++k) {
-+	for (k = 0, shp = scsi_host_get_next(NULL); shp;
-+	     shp = scsi_host_get_next(shp), ++k) {
- 		for (; k < shp->host_no; ++k)
- 			PRINT_PROC("<no active host>\n");
- 		strncpy(buff, shp->hostt->info ? shp->hostt->info(shp) :
+     tail = &link->dev;
+     info->ndev = 0;
+-    for (host = scsi_hostlist; host; host = host->next)
++	for (host = scsi_host_get_next(NULL); host;
++	     host = scsi_host_get_next(host))
+ 	if (host->hostt == &driver_template)
+ 	    for (dev = host->host_queue; dev; dev = dev->next) {
+ 	    u_long arg[2], id;
