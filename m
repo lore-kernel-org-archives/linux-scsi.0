@@ -1,67 +1,70 @@
-From: Andrew Patterson <andrew@fc.hp.com>
-Subject: Re: Enterprise patch needed - please help
-Date: 30 May 2002 08:40:16 -0600
+From: Matthew Dharm <mdharm-scsi@one-eyed-alien.net>
+Subject: Re: [RFC] add transfer request length?
+Date: Thu, 30 May 2002 09:30:35 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1022769616.2955.23.camel@lvadp.fc.hp.com>
-References: <6BD67FFB937FD411A04F00D0B74FE87807C249F0@xrose06.rose.hp.com>	<1022719300.4
-	 124.312.camel@irongate.swansea.linux.org.uk>
-	<3CF5AEA4.4050404@metaparadigm.com>
-	<1022762307.4123.364.camel@irongate.swansea.linux.org.uk>
-	<3CF61E66.1050600@metaparadigm.com>
+Message-ID: <20020530093035.A32763@one-eyed-alien.net>
+References: <20020529230047.D26782@one-eyed-alien.net> <20020530105857.GI12126@linnie.riede.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-md5;
+	protocol="application/pgp-signature"; boundary="T4sUOijqQbZv57TR"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <3CF61E66.1050600@metaparadigm.com>
+Content-Disposition: inline
+In-Reply-To: <20020530105857.GI12126@linnie.riede.org>; from wrlk@riede.org on Thu, May 30, 2002 at 06:58:57AM -0400
 List-Id: linux-scsi@vger.kernel.org
-To: Michael Clark <michael@metaparadigm.com>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, "HINCHMAN,PAUL  (HP-Roseville,ex1)" <paul_hinchman@hp.com>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
-
-On Thu, 2002-05-30 at 06:43, Michael Clark wrote:
-> 
-> On 05/30/02 20:38, Alan Cox wrote:
-> 
-> >On Thu, 2002-05-30 at 05:46, Michael Clark wrote:
-> >  
-> >
-> >>Also, some devices need a BLIST_SPARSELUN added in scsi_scan.c - even if 
-> >>the device
-> >>reports SCSI-3, the scanning code by defaults stops when it finds a lun 
-> >>that doesn't
-> >>respond. It is quite common with enterpise storage to have sparse 
-> >>between luns.
-> >>    
-> >>
-
-The following entries in the device_list array of scsi_scan.c should do
-the trick for HP arrays.
-
-   {"HP", "A6188A", "*", BLIST_SPARSELUN},      // HP Va7100 Array
-   {"HP", "A6189A", "*", BLIST_SPARSELUN},      // HP Va7400 Array
-   {"HP", "A6189B", "*", BLIST_SPARSELUN},      // HP Va7410 Array
-   {"HP", "OPEN-", "*", BLIST_SPARSELUN},       // HP XP Arrays
-
-Note that you must have a LUN at LUN number 0, to detect sparse LUN's
-above LUN number 7.  
-
-Andrew Patterson
-
-    
-
-> >
-> >If we use report luns should we even be checking BLIST_SPARSELUN I
-> >wonder
-> >
-> >  
-> >
-> Oh, is this new or maybe my device doesn't report luns as I've needed
-> the sparse lun hint even though device was correctly detected as SCSI-3.
-> This is with 2.4.18
-> 
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+To: Willem Riede <wrlk@riede.org>
+Cc: Linux SCSI list <linux-scsi@vger.kernel.org>
 
 
+--T4sUOijqQbZv57TR
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+
+On Thu, May 30, 2002 at 06:58:57AM -0400, Willem Riede wrote:
+> /*
+>  * Function:    scsi_do_req
+>  *
+>  * Purpose:     Queue a SCSI request
+>  *
+>  * Arguments:   SRpnt     - command descriptor.
+>  *              cmnd      - actual SCSI command to be performed.
+>  *              buffer    - data buffer.
+>  *              bufflen   - size of data buffer.
+>  *              done      - completion function to be run.
+>  *              timeout   - how long to let it run before timeout.
+>  *              retries   - number of retries we allow.
+>=20
+> The bufflen above is not enough?
+>=20
+> Thanks, Willem Riede.
+
+No, because we still get commands that really expect to transfer less than
+a bufflen.  Osst was the worst offender, but there are others.  Start
+playing with dd for a while with small block sizes and you can see some
+strange effects.
+
+Matt
+
+--=20
+Matthew Dharm                              Home: mdharm-usb@one-eyed-alien.=
+net=20
+Maintainer, Linux USB Mass Storage Driver
+
+What the hell are you?
+					-- Pitr to Dust Puppy=20
+User Friendly, 12/3/1997
+
+--T4sUOijqQbZv57TR
+Content-Type: application/pgp-signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.0.6 (GNU/Linux)
+Comment: For info see http://www.gnupg.org
+
+iD8DBQE89lOqIjReC7bSPZARAupbAKCirxRMCDvDfPNhE4asjWCK3OoJFwCfSDuy
+z6QYB9Y4qNOsr3XkyhbYjeI=
+=Ga79
+-----END PGP SIGNATURE-----
+
+--T4sUOijqQbZv57TR--
