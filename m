@@ -1,72 +1,89 @@
-From: "Andy Kennedy" <akennedy@wpid-am.com>
-Subject: CDROMSUBCHNL. . .
-Date: Sun, 26 Sep 2004 22:53:06 -0500
+From: Jeremy Higdon <jeremy@sgi.com>
+Subject: [RFC PATCH 2.6.9-rc2] Add sysfs queue depth override to qla2xxx
+Date: Sun, 26 Sep 2004 23:10:03 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <007101c4a445$7f150840$0201010a@ankkennedy>
+Message-ID: <20040927061003.GA182890@sgi.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from dadsl-206-41.webshoppe.net ([65.161.206.41]:28946 "EHLO
-	mail.wpid-am.com") by vger.kernel.org with ESMTP id S265697AbUI0Dwp
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 26 Sep 2004 23:52:45 -0400
-Received: from ankkennedy (ank.wpid-am.com [10.1.1.2])
-	by mail.wpid-am.com (8.12.3/8.12.3) with SMTP id i8R3qetc010603
-	for <linux-scsi@vger.kernel.org>; Sun, 26 Sep 2004 22:52:40 -0500
+Received: from omx3-ext.sgi.com ([192.48.171.20]:61598 "EHLO omx3.sgi.com")
+	by vger.kernel.org with ESMTP id S266169AbUI0GSh (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 27 Sep 2004 02:18:37 -0400
+Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
+Cc: andrew.vasquez@qlogic.com, James.Bottomley@steeleye.com
 
-Hi all,
+This patch is to QLA2xxx version 8.00.00b15-k, and it allows users
+to override the default driver queue depth for a target by making
+the queue_depth sysfs attribute writeable.
 
-I use the sr_ioctl calls in a program that I wrote to record tracks off CDs.
-The most important one that I use is CDROMSUBCHNL.  I found that in 2.2.16
-"case CDROMSUBCHNL" was removed without documentation.  I have grepped all
-around in that kernel and also in the one before it and found nothing about
-why it was to be removed.  Anyone have any idea why it got taken out and can
-we put it back in?
+I based this on the code in the 53c700 driver.
 
-The missing code is as follows:
-    case CDROMSUBCHNL:
-    {
-        struct cdrom_subchnl* subchnl = (struct cdrom_subchnl*)arg;
-        char * buffer;
+Andrew, please apply if it looks correct to you and James.
 
-        sr_cmd[0] = SCMD_READ_SUBCHANNEL;
-        sr_cmd[1] = ((scsi_CDs[target].device->lun) << 5) | 0x02;    /* MSF
-form
-at */
-        sr_cmd[2] = 0x40;    /* I do want the subchannel info */
-        sr_cmd[3] = 0x01;    /* Give me current position info */
-        sr_cmd[4] = sr_cmd[5] = 0;
-        sr_cmd[6] = 0;
-        sr_cmd[7] = 0;
-        sr_cmd[8] = 16;
-        sr_cmd[9] = 0;
+Let me know if you'd like me to regenerate against a different qla2xxx
+version.
 
-        if ((buffer = (unsigned char *) scsi_malloc(512)) == NULL)
-                return -ENOMEM;
+thanks
 
-        result = sr_do_ioctl(target, sr_cmd, buffer, 16, 0);
+Jeremy
 
-        subchnl->cdsc_audiostatus = buffer[1];
-        subchnl->cdsc_format = CDROM_MSF;
-        subchnl->cdsc_ctrl = buffer[5] & 0xf;
-        subchnl->cdsc_trk = buffer[6];
-        subchnl->cdsc_ind = buffer[7];
 
-        subchnl->cdsc_reladdr.msf.minute = buffer[13];
-        subchnl->cdsc_reladdr.msf.second = buffer[14];
-        subchnl->cdsc_reladdr.msf.frame = buffer[15];
-        subchnl->cdsc_absaddr.msf.minute = buffer[9];
-        subchnl->cdsc_absaddr.msf.second = buffer[10];
-        subchnl->cdsc_absaddr.msf.frame = buffer[11];
-
-        scsi_free(buffer, 512);
-        break;
-    }
-
-Thanks,
-Andy
-
+===== drivers/scsi/qla2xxx/qla_os.c 1.41 vs edited =====
+--- 1.41/drivers/scsi/qla2xxx/qla_os.c	2004-08-09 16:48:29 -07:00
++++ edited/drivers/scsi/qla2xxx/qla_os.c	2004-09-22 00:12:41 -07:00
+@@ -159,6 +159,20 @@
+ 
+ static int qla2x00_proc_info(struct Scsi_Host *, char *, char **,
+     off_t, int, int);
++static ssize_t qla2xxx_store_queue_depth(struct device *dev, const char *buf, size_t count);
++
++static struct device_attribute qla2xxx_queue_depth_attr = {
++	.attr = {
++		.name =		"queue_depth",
++		.mode =		S_IWUSR,
++	},
++	.store = qla2xxx_store_queue_depth,
++};
++
++static struct device_attribute *qla2xxx_dev_attrs[] = {
++	&qla2xxx_queue_depth_attr,
++	NULL,
++};
+ 
+ static struct scsi_host_template qla2x00_driver_template = {
+ 	.module			= THIS_MODULE,
+@@ -184,6 +198,8 @@
+ 	 * which equates to 0x800000 sectors.
+ 	 */
+ 	.max_sectors		= 0xFFFF,
++
++	.sdev_attrs		= qla2xxx_dev_attrs,
+ };
+ 
+ static struct scsi_transport_template *qla2xxx_transport_template = NULL;
+@@ -1797,6 +1813,22 @@
+ 	}
+ 
+ 	return (0);
++}
++
++static ssize_t
++qla2xxx_store_queue_depth(struct device *dev, const char *buf, size_t count)
++{
++	int			 depth;
++	struct scsi_device	*sdev = to_scsi_device(dev);
++
++	if (sdev->tagged_supported) {
++		depth = simple_strtoul(buf, NULL, 0);
++		if (depth > ql2xmaxqdepth)
++			return -EINVAL;
++		scsi_adjust_queue_depth(sdev, MSG_ORDERED_TAG, depth);
++		return count;
++	}
++	return 1;
+ }
+ 
+ /**
