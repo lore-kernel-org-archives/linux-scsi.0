@@ -1,68 +1,46 @@
-From: Matthew Dharm <mdharm-scsi@one-eyed-alien.net>
-Subject: Re: [linux-usb-devel] Re: [example PATCH - not for applying] exclude certain commands
-Date: Thu, 24 Apr 2003 21:34:20 -0700
+From: Bill Judd <wbj@mac.com>
+Subject: 2.4.20 scsi module build error?
+Date: Thu, 24 Apr 2003 23:36:49 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030424213420.A18145@one-eyed-alien.net>
-References: <UTC200304250043.h3P0hPH01942.aeb@smtp.cwi.nl> <20030424191238.E10511@one-eyed-alien.net>
+Message-ID: <7911845.1051252609188.JavaMail.wbj@mac.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-md5;
-	protocol="application/pgp-signature"; boundary="huq684BweRXVnRxX"
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ziggy.one-eyed-alien.net ([64.169.228.100]:18956 "EHLO
-	ziggy.one-eyed-alien.net") by vger.kernel.org with ESMTP
-	id S262945AbTDYEWX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 25 Apr 2003 00:22:23 -0400
-Content-Disposition: inline
-In-Reply-To: <20030424191238.E10511@one-eyed-alien.net>; from mdharm-scsi@one-eyed-alien.net on Thu, Apr 24, 2003 at 07:12:38PM -0700
+Received: from A17-250-248-88.apple.com ([17.250.248.88]:45263 "EHLO
+	smtpout.mac.com") by vger.kernel.org with ESMTP id S263050AbTDYGYj
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 25 Apr 2003 02:24:39 -0400
+Received: from webmail04.mac.com (webmail04-en1 [10.13.11.146])
+	by smtpout.mac.com (Xserve/MantshX 2.0) with ESMTP id h3P6aniL012371
+	for <linux-scsi@vger.kernel.org>; Thu, 24 Apr 2003 23:36:49 -0700 (PDT)
+Received: from webmail04 (localhost [127.0.0.1])
+	by webmail04.mac.com (8.12.2/8.12.2) with ESMTP id h3P6anJT008845
+	for <linux-scsi@vger.kernel.org>; Thu, 24 Apr 2003 23:36:49 -0700 (PDT)
 List-Id: linux-scsi@vger.kernel.org
-To: Andries.Brouwer@cwi.nl, stelian@popies.net, James.Bottomley@steeleye.com, afafc@rnl.ist.utl.pt, greg@kroah.com, linux-scsi@vger.kernel.org, linux-usb-devel@lists.sourceforge.net, mike@hingston.demon.co.uk, pwkpete@yahoo.com, stern@rowland.harvard.edu
+To: linux-scsi@vger.kernel.org
 
+I'm running on a Red Hat 8.0 system.  I downloaded 2.4.20 kernel sources from www.kernel.org and proceeded to build the kernel.
 
---huq684BweRXVnRxX
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+While "making modules", I get this error:
 
-On Thu, Apr 24, 2003 at 07:12:38PM -0700, Matthew Dharm wrote:
-> On Fri, Apr 25, 2003 at 02:43:25AM +0200, Andries.Brouwer@cwi.nl wrote:
-> > Are there any objections against viewing sr_bufflen
-> > as the amount of actually available buffer space
-> > (and thus potentially different from the transferred amount)?
->=20
-> YES!  I MOST DEFINITELY OBJECT!
+make[2]: Entering directory `/usr/src/linux-2.4.20/drivers/scsi'
+ld -m elf_i386 -r -o scsi_mod.o scsi.o hosts.o scsi_ioctl.o constants.o scsicam.o scsi_proc.o scsi_error.o scsi_obsolete.o scsi_queue.o scsi_lib.o scsi_merge.o
+scsi_dma.o scsi_scan.o scsi_syms.o
+ln -sf sim710.scr fake7.c
+gcc -E -D__KERNEL__ -I/usr/src/linux-2.4.20/include -traditional -DCHIP=710 fake7.c | grep -v '^#' | perl -s script_asm.pl -ncr710
+script_asm.pl : Illegal combination of registers in line 72 :   MOVE CTEST7 & 0xef TO CTEST7
+        Either source and destination registers must be the same,
+        or either source or destination register must be SFBR.
+make[2]: *** [sim710_d.h] Error 255
+make[2]: Leaving directory `/usr/src/linux-2.4.20/drivers/scsi'
+make[1]: *** [_modsubdir_scsi] Error 2
+make[1]: Leaving directory `/usr/src/linux-2.4.20/drivers'
+make: *** [_mod_drivers] Error 2
+[root@localhost linux-2.4.20]#
 
-Before anyone reads this the wrong way, I want to apologize for the
-shouting.  It was brought on by a combination of high stress at work and
-the feeling that I was going around for another turn on the merry-go-round.
+Thanks for info on what's going on.
 
-That's not an excuse just an explanation.
+Best regards,
 
-But the point remains, changing the meaning of sr_bufflen will break
-usb-storage.
-
-Matt
-
---=20
-Matthew Dharm                              Home: mdharm-usb@one-eyed-alien.=
-net=20
-Maintainer, Linux USB Mass Storage Driver
-
-I don't have a left mouse button.  I only have one mouse and it's on my rig=
-ht.
-					-- Customer
-User Friendly, 2/13/1999
-
---huq684BweRXVnRxX
-Content-Type: application/pgp-signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.0.6 (GNU/Linux)
-Comment: For info see http://www.gnupg.org
-
-iD8DBQE+qLrMIjReC7bSPZARAnnYAKCSYmHBOGnoKApvb8nesfQfOYoD9gCfTHuQ
-SOtlQtNKjh6eQy7b+mCn31g=
-=lX7V
------END PGP SIGNATURE-----
-
---huq684BweRXVnRxX--
+Bill Judd
