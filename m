@@ -1,39 +1,36 @@
-From: Alan Stern <stern@rowland.harvard.edu>
+From: James Bottomley <James.Bottomley@steeleye.com>
 Subject: Re: Sysfs attribute file for max_sectors
-Date: Tue, 6 Jan 2004 14:31:10 -0500 (EST)
+Date: 06 Jan 2004 13:47:54 -0600
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44L0.0401061427230.6168-100000@ida.rowland.org>
-References: <1073413440.2221.47.camel@mulgrave>
+Message-ID: <1073418475.2047.82.camel@mulgrave>
+References: <Pine.LNX.4.44L0.0401061427230.6168-100000@ida.rowland.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ida.rowland.org ([192.131.102.52]:23812 "HELO ida.rowland.org")
-	by vger.kernel.org with SMTP id S264936AbUAFTbK (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Jan 2004 14:31:10 -0500
-In-Reply-To: <1073413440.2221.47.camel@mulgrave>
+Received: from stat1.steeleye.com ([65.114.3.130]:62358 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S264940AbUAFTsE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 6 Jan 2004 14:48:04 -0500
+In-Reply-To: <Pine.LNX.4.44L0.0401061427230.6168-100000@ida.rowland.org>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@steeleye.com>
+To: Alan Stern <stern@rowland.harvard.edu>
 Cc: Patrick Mansfield <patmans@us.ibm.com>, Christoph Hellwig <hch@infradead.org>, Matthew Dharm <mdharm-scsi@one-eyed-alien.net>, SCSI development list <linux-scsi@vger.kernel.org>, USB Storage List <usb-storage@one-eyed-alien.net>
 
-On 6 Jan 2004, James Bottomley wrote:
+On Tue, 2004-01-06 at 13:31, Alan Stern wrote:
+> I was going to have a store() routine that would accept any value greater
+> than 0 and <= the value in the host template (or SCSI_DEFAULT_MAX_SECTORS
+> if the host template value is 0 -- that's what scsi_host_alloc() does).  
+> If this is writeable only by root, would that be acceptable for all SCSI
+> devices?
 
-> > The simplest way to export max_sectors to user processes is as a sysfs 
-> > attribute.  We have code that will do this for USB devices, but perhaps it 
-> > would be better as a general feature available for all SCSI devices.
-> > 
-> > What's your feeling?  Should max_sectors be exported for all SCSI devices 
-> > or only for USB mass storage devices?
-> 
-> The value is useful to know for all drivers, so exporting it in sysfs
-> should be fine.  If you want to do an attribute override in usb-storage,
-> you can...but I'd be very careful not to let the user set it to an
-> obviously wrong value (like larger than the sg array or something).
+Not really.  For most drivers, the max_sectors is a driver table
+parameter and the user shouldn't be changing it.
 
-I was going to have a store() routine that would accept any value greater
-than 0 and <= the value in the host template (or SCSI_DEFAULT_MAX_SECTORS
-if the host template value is 0 -- that's what scsi_host_alloc() does).  
-If this is writeable only by root, would that be acceptable for all SCSI
-devices?
+The value can be acceptably exported read only in scsi_sysfs.c;  then,
+you could use the attribute overriding code to make this read/write for
+usb-storage only.
 
-Alan Stern
+James
+
 
