@@ -1,71 +1,38 @@
-From: James Pearson <james-p@moving-picture.com>
-Subject: Re: Write Performance double Read Performance
-Date: Tue, 23 Mar 2004 11:28:16 +0000
+From: Matthew Wilcox <willy@debian.org>
+Subject: Re: [PATCH][RELEASE] megaraid 2.10.2 Driver
+Date: Tue, 23 Mar 2004 13:30:35 +0000
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <40601F50.F7A85DF0@moving-picture.com>
+Message-ID: <20040323133035.GU25059@parcelfarce.linux.theplanet.co.uk>
+References: <0E3FA95632D6D047BA649F95DAB60E570230C77B@exa-atlanta.se.lsil.com> <20040323004543.GP25059@parcelfarce.linux.theplanet.co.uk> <20040323062708.A29405@infradead.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mpc-26.sohonet.co.uk ([193.203.82.251]:18305 "EHLO
-	moving-picture.com") by vger.kernel.org with ESMTP id S262465AbUCWL2W
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:14989 "EHLO
+	www.linux.org.uk") by vger.kernel.org with ESMTP id S261774AbUCWNai
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 23 Mar 2004 06:28:22 -0500
+	Tue, 23 Mar 2004 08:30:38 -0500
+Content-Disposition: inline
+In-Reply-To: <20040323062708.A29405@infradead.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Terrence Martin <tmartin@physics.ucsd.edu>
+To: Christoph Hellwig <hch@infradead.org>, Matthew Wilcox <willy@debian.org>, "Bagalkote, Sreenivas" <sreenib@lsil.com>, 'Jeff Garzik' <jgarzik@pobox.com>, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
 
-Terrence Martin <tmartin@physics.ucsd.edu> wrote:
->
-> I have the following system(s)
+On Tue, Mar 23, 2004 at 06:27:08AM +0000, Christoph Hellwig wrote:
+> On Tue, Mar 23, 2004 at 12:45:43AM +0000, Matthew Wilcox wrote:
+> > I don't think you understand how CONFIG_COMPAT works.  x86-64 defines it
+> > when it wants it:
 > 
-> Dual 2.8 Ghz Xeon 2U Supermicro Server with 2GB RAM
-> Qlogic QLA2310f Controller
-> 
-> attached to an...
-> 
-> Infortrend A16F with 16 300GB WD IDE PATA Drives
-> The array as a RAID 5 Array with 3 partitions of 1.4TB each. I have 
-> mounted one of the partitions to test.
-> 
-> The OS is....
-> 
-> Fedora Core 1 with the latest Fedora 2.4 Kernel (2.4.22-1.2174.nptlsmp)
-> I have compiled the QLA drivers from the Qlogic site and am using v6.06.10.
-> 
-> The problem I am noticing is that while doing an IOZone performance test 
-> I get nice write performance when the test gets to large files. However 
-> my read performance seems to be a little over half my write.   I thought 
-> the read should always be faster than the write?
+> But not in 2.4, and this is a 2.4-only patch..
 
-Unfortunately I don't know why, but this is something I've been thinking
-of asking as well.
+It is?  I didn't see that mentioned anywhere.
 
-I've seen similar behaviour on a 2.6.3 kernel machine (dual 2.4 Xeons,
-2GB RAM) using an external U160 SCSI Chaparral hardware RAID 5 on a
-aic79xx controller. I'm using XFS on the RAID.
+Anyway, it's wrong to define LSI_CONFIG_COMPAT based solely on __x86_64__.
+You'd also need to check IA32_EMULATION.  Really, it would be simpler
+to add CONFIG_COMPAT to 2.4.
 
-I've just been using 'lmdd' to/from a 2Gb file - I also see writes about
-twice the speed of reads (I'm using the fsync or sync option to lmdd
-with the writes).
-
-However, if I increase the readahead on the disk using blockdev from the
-default of 256 to 4096, I can get read speeds to be about the same as
-the writes.
-
-However, increasing the readahead seems to help this simple streaming
-case, but as yet I don't know if it will work in a general file serving
-(NFS) situation.
-
-> Before I went down the road of compiling various kernels etc I thought I 
-> would post this to linux-scsi to see if it is just some configuration 
-> setting to a driver or kernel parameter that needs to be tweaked.  Of 
-> course I could be completely reading this wrong but bonnie++ also 
-> appears to give similar results and vmstat is similarly low on the read 
-> side.
-
-I would also like to know of any optimizations that can be made.
-
-Thanks
-
-James Pearson
+-- 
+"Next the statesmen will invent cheap lies, putting the blame upon 
+the nation that is attacked, and every man will be glad of those
+conscience-soothing falsities, and will diligently study them, and refuse
+to examine any refutations of them; and thus he will by and by convince 
+himself that the war is just, and will thank God for the better sleep 
+he enjoys after this process of grotesque self-deception." -- Mark Twain
