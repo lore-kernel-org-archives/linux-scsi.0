@@ -1,124 +1,132 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH scsi-misc-2.6 01/08] scsi: remove unused bounce-buffer release path
-Date: Wed, 23 Mar 2005 11:14:24 +0900 (KST)
-Message-ID: <20050323021335.F07B64D9@htj.dyndns.org>
+Subject: Re: [PATCH scsi-misc-2.6 03/08] scsi: remove unused scsi_cmnd->internal_timeout field
+Date: Wed, 23 Mar 2005 11:14:34 +0900 (KST)
+Message-ID: <20050323021335.EBA326A2@htj.dyndns.org>
 References: <20050323021335.960F95F8@htj.dyndns.org>
 Content-Type: text/plain; charset=US-ASCII
-Received: from rproxy.gmail.com ([64.233.170.193]:24707 "EHLO rproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S262707AbVCWCO3 (ORCPT
+Received: from rproxy.gmail.com ([64.233.170.196]:12172 "EHLO rproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S262711AbVCWCOk (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 22 Mar 2005 21:14:29 -0500
-Received: by rproxy.gmail.com with SMTP id 40so186713rnz
-        for <linux-scsi@vger.kernel.org>; Tue, 22 Mar 2005 18:14:28 -0800 (PST)
+	Tue, 22 Mar 2005 21:14:40 -0500
+Received: by rproxy.gmail.com with SMTP id 40so186732rnz
+        for <linux-scsi@vger.kernel.org>; Tue, 22 Mar 2005 18:14:40 -0800 (PST)
 In-Reply-To: <20050323021335.960F95F8@htj.dyndns.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com, axboe@suse.de
 Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-01_scsi_remove_scsi_release_buffers.patch
+03_scsi_remove_internal_timeout.patch
 
-	Buffer bouncing hasn't been done inside the scsi midlayer for
-	quite sometime now, but bounce-buffer release paths are still
-	around.  This patch removes these unused paths.
+	scsi_cmnd->internal_timeout field doesn't have any meaning
+	anymore.  Kill the field.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 
- scsi_lib.c |   60 +++++-------------------------------------------------------
- 1 files changed, 5 insertions(+), 55 deletions(-)
+ drivers/scsi/advansys.c   |    2 --
+ drivers/scsi/pci2000.c    |    4 ++--
+ drivers/scsi/scsi.c       |    1 -
+ drivers/scsi/scsi_error.c |    1 -
+ drivers/scsi/scsi_lib.c   |    1 -
+ drivers/scsi/scsi_priv.h  |    5 -----
+ include/scsi/scsi_cmnd.h  |    6 ------
+ 7 files changed, 2 insertions(+), 18 deletions(-)
 
+Index: scsi-export/drivers/scsi/advansys.c
+===================================================================
+--- scsi-export.orig/drivers/scsi/advansys.c	2005-03-23 09:39:36.000000000 +0900
++++ scsi-export/drivers/scsi/advansys.c	2005-03-23 09:40:09.000000000 +0900
+@@ -9206,8 +9206,6 @@ asc_prt_scsi_cmnd(struct scsi_cmnd *s)
+ " timeout_per_command %d, timeout_total %d, timeout %d\n",
+         s->timeout_per_command, s->timeout_total, s->timeout);
+ 
+-    printk(" internal_timeout %u\n", s->internal_timeout);
+-
+     printk(
+ " scsi_done 0x%lx, done 0x%lx, host_scribble 0x%lx, result 0x%x\n",
+         (ulong) s->scsi_done, (ulong) s->done,
+Index: scsi-export/drivers/scsi/pci2000.c
+===================================================================
+--- scsi-export.orig/drivers/scsi/pci2000.c	2005-03-23 09:39:36.000000000 +0900
++++ scsi-export/drivers/scsi/pci2000.c	2005-03-23 09:40:09.000000000 +0900
+@@ -438,8 +438,8 @@ int Pci2000_QueueCommand (Scsi_Cmnd *SCp
+ 	if ( bus )
+ 		{
+ 		DEB (if(*cdb) printk ("\nCDB: %X-  %X %X %X %X %X %X %X %X %X %X ", SCpnt->cmd_len, cdb[0], cdb[1], cdb[2], cdb[3], cdb[4], cdb[5], cdb[6], cdb[7], cdb[8], cdb[9]));
+-		DEB (if(*cdb) printk ("\ntimeout_per_command: %d, timeout_total: %d, timeout: %d, internal_timout: %d", SCpnt->timeout_per_command,
+-							  SCpnt->timeout_total, SCpnt->timeout, SCpnt->internal_timeout));
++		DEB (if(*cdb) printk ("\ntimeout_per_command: %d, timeout_total: %d, timeout: %d", SCpnt->timeout_per_command,
++							  SCpnt->timeout_total, SCpnt->timeout));
+ 		outl (SCpnt->timeout_per_command, padapter->mb1);
+ 		outb_p (CMD_SCSI_TIMEOUT, padapter->cmd);
+ 		if ( WaitReady (padapter) )
+Index: scsi-export/drivers/scsi/scsi.c
+===================================================================
+--- scsi-export.orig/drivers/scsi/scsi.c	2005-03-23 09:39:36.000000000 +0900
++++ scsi-export/drivers/scsi/scsi.c	2005-03-23 09:40:09.000000000 +0900
+@@ -716,7 +716,6 @@ void scsi_init_cmd_from_req(struct scsi_
+ 	/*
+ 	 * Start the timer ticking.
+ 	 */
+-	cmd->internal_timeout = NORMAL_TIMEOUT;
+ 	cmd->abort_reason = 0;
+ 	cmd->result = 0;
+ 
+Index: scsi-export/drivers/scsi/scsi_error.c
+===================================================================
+--- scsi-export.orig/drivers/scsi/scsi_error.c	2005-03-23 09:39:36.000000000 +0900
++++ scsi-export/drivers/scsi/scsi_error.c	2005-03-23 09:40:09.000000000 +0900
+@@ -1843,7 +1843,6 @@ scsi_reset_provider(struct scsi_device *
+ 	scmd->bufflen			= 0;
+ 	scmd->request_buffer		= NULL;
+ 	scmd->request_bufflen		= 0;
+-	scmd->internal_timeout		= NORMAL_TIMEOUT;
+ 	scmd->abort_reason		= DID_ABORT;
+ 
+ 	scmd->cmd_len			= 0;
 Index: scsi-export/drivers/scsi/scsi_lib.c
 ===================================================================
---- scsi-export.orig/drivers/scsi/scsi_lib.c	2005-03-23 09:39:36.000000000 +0900
+--- scsi-export.orig/drivers/scsi/scsi_lib.c	2005-03-23 09:40:09.000000000 +0900
 +++ scsi-export/drivers/scsi/scsi_lib.c	2005-03-23 09:40:09.000000000 +0900
-@@ -622,45 +622,6 @@ static void scsi_free_sgtable(struct sca
- }
+@@ -414,7 +414,6 @@ static int scsi_init_cmd_errh(struct scs
+ 	memcpy(cmd->data_cmnd, cmd->cmnd, sizeof(cmd->cmnd));
+ 	cmd->buffer = cmd->request_buffer;
+ 	cmd->bufflen = cmd->request_bufflen;
+-	cmd->internal_timeout = NORMAL_TIMEOUT;
+ 	cmd->abort_reason = 0;
+ 
+ 	return 1;
+Index: scsi-export/drivers/scsi/scsi_priv.h
+===================================================================
+--- scsi-export.orig/drivers/scsi/scsi_priv.h	2005-03-23 09:39:36.000000000 +0900
++++ scsi-export/drivers/scsi/scsi_priv.h	2005-03-23 09:40:09.000000000 +0900
+@@ -30,11 +30,6 @@ struct Scsi_Host;
+ #define SCSI_REQ_MAGIC		0x75F6D354
  
  /*
-- * Function:    scsi_release_buffers()
-- *
-- * Purpose:     Completion processing for block device I/O requests.
-- *
-- * Arguments:   cmd	- command that we are bailing.
-- *
-- * Lock status: Assumed that no lock is held upon entry.
-- *
-- * Returns:     Nothing
-- *
-- * Notes:       In the event that an upper level driver rejects a
-- *		command, we must release resources allocated during
-- *		the __init_io() function.  Primarily this would involve
-- *		the scatter-gather table, and potentially any bounce
-- *		buffers.
+- *  Flag bit for the internal_timeout array
 - */
--static void scsi_release_buffers(struct scsi_cmnd *cmd)
--{
--	struct request *req = cmd->request;
--
--	/*
--	 * Free up any indirection buffers we allocated for DMA purposes. 
--	 */
--	if (cmd->use_sg)
--		scsi_free_sgtable(cmd->request_buffer, cmd->sglist_len);
--	else if (cmd->request_buffer != req->buffer)
--		kfree(cmd->request_buffer);
--
--	/*
--	 * Zero these out.  They now point to freed memory, and it is
--	 * dangerous to hang onto the pointers.
--	 */
--	cmd->buffer  = NULL;
--	cmd->bufflen = 0;
--	cmd->request_buffer = NULL;
--	cmd->request_bufflen = 0;
--}
+-#define NORMAL_TIMEOUT		0
 -
 -/*
-  * Function:    scsi_io_completion()
-  *
-  * Purpose:     Completion processing for block device I/O requests.
-@@ -703,22 +664,8 @@ void scsi_io_completion(struct scsi_cmnd
- 	if (blk_complete_barrier_rq(q, req, good_bytes >> 9))
- 		return;
+  * Scsi Error Handler Flags
+  */
+ #define scsi_eh_eflags_chk(scp, flags) \
+Index: scsi-export/include/scsi/scsi_cmnd.h
+===================================================================
+--- scsi-export.orig/include/scsi/scsi_cmnd.h	2005-03-23 09:39:36.000000000 +0900
++++ scsi-export/include/scsi/scsi_cmnd.h	2005-03-23 09:40:09.000000000 +0900
+@@ -65,12 +65,6 @@ struct scsi_cmnd {
+ 	int timeout_total;
+ 	int timeout;
  
 -	/*
--	 * Free up any indirection buffers we allocated for DMA purposes. 
--	 * For the case of a READ, we need to copy the data out of the
--	 * bounce buffer and into the real buffer.
+-	 * We handle the timeout differently if it happens when a reset, 
+-	 * abort, etc are in process. 
 -	 */
- 	if (cmd->use_sg)
- 		scsi_free_sgtable(cmd->buffer, cmd->sglist_len);
--	else if (cmd->buffer != req->buffer) {
--		if (rq_data_dir(req) == READ) {
--			unsigned long flags;
--			char *to = bio_kmap_irq(req->bio, &flags);
--			memcpy(to, cmd->buffer, cmd->bufflen);
--			bio_kunmap_irq(to, &flags);
--		}
--		kfree(cmd->buffer);
--	}
- 
- 	if (result) {
- 		sense_valid = scsi_command_normalize_sense(cmd, &sshdr);
-@@ -963,7 +910,8 @@ static int scsi_init_io(struct scsi_cmnd
- 			req->current_nr_sectors);
- 
- 	/* release the command and kill it */
--	scsi_release_buffers(cmd);
-+	if (cmd->use_sg)
-+		scsi_free_sgtable(cmd->request_buffer, cmd->sglist_len);
- 	scsi_put_command(cmd);
- 	return BLKPREP_KILL;
- }
-@@ -1140,7 +1088,9 @@ static int scsi_prep_fn(struct request_q
- 		 */
- 		drv = *(struct scsi_driver **)req->rq_disk->private_data;
- 		if (unlikely(!drv->init_command(cmd))) {
--			scsi_release_buffers(cmd);
-+			if (cmd->use_sg)
-+				scsi_free_sgtable(cmd->request_buffer,
-+						  cmd->sglist_len);
- 			scsi_put_command(cmd);
- 			return BLKPREP_KILL;
- 		}
+-	unsigned volatile char internal_timeout;
+-
+ 	unsigned char cmd_len;
+ 	unsigned char old_cmd_len;
+ 	enum dma_data_direction sc_data_direction;
 
