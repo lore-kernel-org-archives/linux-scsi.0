@@ -1,32 +1,29 @@
-From: Andrew Morton <akpm@osdl.org>
-Subject: Re: [PATCH] add ssleep(), kill scsi_sleep()
-Date: Wed, 18 Aug 2004 22:58:53 -0700
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH] fix dma mapping leak in fusion
+Date: Thu, 19 Aug 2004 12:14:34 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040818225853.183b9696.akpm@osdl.org>
-References: <412431D2.5080904@pobox.com>
+Message-ID: <20040819101433.GA20353@lst.de>
+References: <20040817161642.GA16509@lst.de> <200408190301.AA03490@fukuchi.jp.fujitsu.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fw.osdl.org ([65.172.181.6]:4575 "EHLO mail.osdl.org")
-	by vger.kernel.org with ESMTP id S265943AbUHSGAf (ORCPT
+Received: from verein.lst.de ([213.95.11.210]:24740 "EHLO mail.lst.de")
+	by vger.kernel.org with ESMTP id S264954AbUHSKOq (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 19 Aug 2004 02:00:35 -0400
-In-Reply-To: <412431D2.5080904@pobox.com>
+	Thu, 19 Aug 2004 06:14:46 -0400
+Content-Disposition: inline
+In-Reply-To: <200408190301.AA03490@fukuchi.jp.fujitsu.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: James.Bottomley@steeleye.com, linux-scsi@vger.kernel.org
+To: Masao Fukuchi <fukuchi.masao@jp.fujitsu.com>
+Cc: Christoph Hellwig <hch@lst.de>, moore@lsil.com, linux-scsi@vger.kernel.org
 
-Jeff Garzik <jgarzik@pobox.com> wrote:
->
-> So, the kernel needs a 'sleep', but that token is far too common, so I 
->  chose ssleep().
+On Thu, Aug 19, 2004 at 12:01:11PM +0900, Masao Fukuchi wrote:
+> Hi Christoph,
+> 
+> I applyed attached patch into latest fusion MPT driver(3.01.15) and
+> tested it, but I still met Oops.
+> Then I also applyed your latest patch(it gets rid of the fusion pendingQ
+> in favour of using the scsi midlayer queuing), but I met Oops again.
 
-Dorky name, but whatever.
-
->  scsi_sleep() is a manually implemented msleep(), so I remove it.
-
-scsi_sleep() was buggy anyway: the CPU running scsi_sleep_done() could
-still be dinking with the semaphore when it goes out of scope on the CPU
-running scsi_sleep().  That's why struct completion was added.
+Can you try the patch Eric posted instead?
 
