@@ -1,25 +1,43 @@
-From: "Aleks Sheynkman" <aleks@Narus.com>
-Subject: blocked mailbox error!!
-Date: Wed, 9 Jun 2004 11:55:53 -0700
+From: "Mukker, Atul" <Atulm@lsil.com>
+Subject: RE: blocked mailbox error!!
+Date: Wed, 9 Jun 2004 16:20:43 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <FA6D803197D0E14C88E1B74C5A021B8202E7CE@snitch.narus.com>
+Message-ID: <0E3FA95632D6D047BA649F95DAB60E57033BC736@exa-atlanta>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain;
+	charset="iso-8859-1"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.narus.com ([66.236.101.211]:10729 "EHLO mx2.narus.com")
-	by vger.kernel.org with ESMTP id S265910AbUFIS4b convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 9 Jun 2004 14:56:31 -0400
-content-class: urn:content-classes:message
+Received: from mail0.lsil.com ([147.145.40.20]:62351 "EHLO mail0.lsil.com")
+	by vger.kernel.org with ESMTP id S265928AbUFIUVF (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Jun 2004 16:21:05 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: Pat LaVarre <p.lavarre@ieee.org>, Jens Axboe <axboe@suse.de>
+To: 'Aleks Sheynkman' <aleks@Narus.com>, Pat LaVarre <p.lavarre@ieee.org>, Jens Axboe <axboe@suse.de>
 Cc: dougg@torque.net, linux-scsi@vger.kernel.org
 
-Hello,
- I was wondering to ask if someone had any luck running megraid 2.x drivers on RH 7.3.
- 
-Please advice ,
- 
- Thanks!!
- 
+All you would need to do is to replace ".vary_io = 1" by ".can_do_varyio =1"
+in megaraid2.h
+
+-Atul Mukker
+
+> -----Original Message-----
+> From: Aleks Sheynkman [mailto:aleks@Narus.com]
+> Sent: Wednesday, June 09, 2004 2:56 PM
+> To: Pat LaVarre; Jens Axboe
+> Cc: dougg@torque.net; linux-scsi@vger.kernel.org
+> Subject: blocked mailbox error!!
+> 
+> 
+> Hello,
+>  I was wondering to ask if someone had any luck running 
+> megraid 2.x drivers on RH 7.3.
+>  
+> Please advice ,
+>  
+>  Thanks!!
+>  
+> -
+> To unsubscribe from this list: send the line "unsubscribe 
+> linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
