@@ -1,8 +1,8 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH] more sdev freeing rationalization
-Date: Sat, 23 Nov 2002 03:02:42 +0100
+Subject: [PATCH] remove implicit scsi_register()
+Date: Sat, 23 Nov 2002 03:14:32 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20021123030242.A11192@lst.de>
+Message-ID: <20021123031432.A11239@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
@@ -11,270 +11,130 @@ List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
 Cc: linux-scsi@vger.kernel.org
 
-(1) new helper in scsi_scan.c: scsi_forget_host.  it's the counterpart to
-    scsi_scan_host.  it shares code with scsi_remove_single_device
-    through a common subroutine, scsi_forget_host.
-(2) move scsi_get_host_dev/scsi_free_host_dev (again).  Having them in
-    scsi_scan.c allows to make scsi_alloc_sdev/scsi_free_sdev static.
+hosts.c has some crufty old code to implicitly do scsi_register/
+scsi_unregister for drivers that don't do it.  This seems to be
+a left-over from the very early days and apparently no driver
+in the tree uses it (at least according to some grepping).
+
+This patch removes it.
 
 
 --- 1.35/drivers/scsi/hosts.c	Fri Nov 22 12:59:03 2002
-+++ edited/drivers/scsi/hosts.c	Sat Nov 23 01:31:25 2002
-@@ -260,7 +260,6 @@
- int scsi_remove_host(struct Scsi_Host *shost)
++++ edited/drivers/scsi/hosts.c	Sat Nov 23 02:12:54 2002
+@@ -36,7 +36,6 @@
+ #include <linux/init.h>
+ #include <linux/interrupt.h>
+ #include <linux/list.h>
+-#include <linux/smp_lock.h>
+ 
+ #define __KERNEL_SYSCALLS__
+ 
+@@ -50,7 +49,6 @@
+ static spinlock_t scsi_host_list_lock = SPIN_LOCK_UNLOCKED;
+ 
+ static int scsi_host_next_hn;		/* host_no for next new host */
+-static int scsi_hosts_registered;	/* cnt of registered scsi hosts */
+ static char *scsihosts;
+ 
+ MODULE_PARM(scsihosts, "s");
+@@ -192,7 +190,7 @@
+ 
+ static int scsi_remove_legacy_host(struct Scsi_Host *shost)
  {
- 	struct scsi_device *sdev;
--	struct list_head *le, *lh;
+-	int error, pcount = scsi_hosts_registered;
++	int error;
  
- 	/*
- 	 * FIXME Do ref counting.  We force all of the devices offline to
-@@ -287,16 +286,9 @@
- 			       sdev->attached);
- 			return 1;
- 		}
--		devfs_unregister(sdev->de);
--		device_unregister(&sdev->sdev_driverfs_dev);
--	}
--
--	/* Next we free up the Scsi_Cmnd structures for this host */
--
--	list_for_each_safe(le, lh, &shost->my_devices) {
--		scsi_free_sdev(list_entry(le, Scsi_Device, siblings));
- 	}
+ 	error = scsi_remove_host(shost);
+ 	if (error)
+@@ -203,8 +201,6 @@
+ 	else
+ 		scsi_host_legacy_release(shost);
  
-+	scsi_forget_host(shost);
+-	if (pcount == scsi_hosts_registered)
+-		scsi_unregister(shost);
  	return 0;
  }
  
-@@ -668,64 +660,6 @@
+@@ -343,7 +331,6 @@
+ 		shost->eh_notify = NULL;
  	}
- }
  
--/*
-- * Function:    scsi_get_host_dev()
-- *
-- * Purpose:     Create a Scsi_Device that points to the host adapter itself.
-- *
-- * Arguments:   SHpnt   - Host that needs a Scsi_Device
-- *
-- * Lock status: None assumed.
-- *
-- * Returns:     The Scsi_Device or NULL
-- *
-- * Notes:
-- *	Attach a single Scsi_Device to the Scsi_Host - this should
-- *	be made to look like a "pseudo-device" that points to the
-- *	HA itself.
-- *
-- *	Note - this device is not accessible from any high-level
-- *	drivers (including generics), which is probably not
-- *	optimal.  We can add hooks later to attach 
-- */
--struct scsi_device *scsi_get_host_dev(struct Scsi_Host *shost)
--{
--	struct scsi_device *sdev;
+-	scsi_hosts_registered--;
+ 	shost->hostt->present--;
+ 
+ 	/* Cleanup proc and driverfs */
+@@ -395,7 +382,6 @@
+ 	memset(shost, 0, sizeof(struct Scsi_Host) + xtr_bytes);
+ 
+ 	shost->host_no = scsi_alloc_host_num(shost_tp->proc_name);
+-	scsi_hosts_registered++;
+ 
+ 	spin_lock_init(&shost->default_lock);
+ 	scsi_assign_lock(shost, &shost->default_lock);
+@@ -491,7 +477,6 @@
+ int scsi_register_host(Scsi_Host_Template *shost_tp)
+ {
+ 	struct Scsi_Host *shost;
+-	int cur_cnt;
+ 
+ 	/*
+ 	 * Check no detect routine.
+@@ -503,8 +488,6 @@
+ 	if (!shost_tp->max_sectors)
+ 		shost_tp->max_sectors = 1024;
+ 
+-	cur_cnt = scsi_hosts_registered;
 -
--	sdev = scsi_alloc_sdev(shost, 0, shost->this_id, 0);
--	if (sdev) {
--		scsi_build_commandblocks(sdev);
--		if (sdev->current_queue_depth == 0)
--			goto fail;
--		sdev->borken = 0;
+ 	/*
+ 	 * The detect routine must carefully spinunlock/spinlock if it
+ 	 * enables interrupts, since all interrupt handlers do spinlock as
+@@ -520,28 +503,6 @@
+ 	if (!shost_tp->present)
+ 		return 0;
+ 
+-	if (cur_cnt == scsi_hosts_registered) {
+-		if (shost_tp->present > 1) {
+-			printk(KERN_ERR "scsi: Failure to register"
+-			       "low-level scsi driver");
+-			scsi_unregister_host(shost_tp);
+-			return 1;
+-		}
+-
+-		/*
+-		 * The low-level driver failed to register a driver.
+-		 * We can do this now.
+-		 *
+-	 	 * XXX Who needs manual registration and why???
+-		 */
+-		if (!scsi_register(shost_tp, 0)) {
+-			printk(KERN_ERR "scsi: register failed.\n");
+-			scsi_unregister_host(shost_tp);
+-			return 1;
+-		}
 -	}
 -
--	return sdev;
--
--fail:
--	kfree(sdev);
--	return NULL;
--}
--
--/*
-- * Function:    scsi_free_host_dev()
-- *
-- * Purpose:     Free a scsi_device that points to the host adapter itself.
-- *
-- * Arguments:   SHpnt   - Host that needs a Scsi_Device
-- *
-- * Lock status: None assumed.
-- *
-- * Returns:     Nothing
-- *
-- * Notes:
-- */
--void scsi_free_host_dev(struct scsi_device *sdev)
--{
--	BUG_ON(sdev->id != sdev->host->this_id);
--	scsi_free_sdev(sdev);
--}
--
- void scsi_host_busy_inc(struct Scsi_Host *shost, Scsi_Device *sdev)
- {
- 	unsigned long flags;
-@@ -765,22 +699,3 @@
- 	}
- 	spin_unlock_irqrestore(shost->host_lock, flags);
- }
--
--/*
-- * Overrides for Emacs so that we follow Linus's tabbing style.
-- * Emacs will notice this stuff at the end of the file and automatically
-- * adjust the settings for this buffer only.  This must remain at the end
-- * of the file.
-- * ---------------------------------------------------------------------------
-- * Local variables:
-- * c-indent-level: 4
-- * c-brace-imaginary-offset: 0
-- * c-brace-offset: -4
-- * c-argdecl-indent: 4
-- * c-label-offset: -4
-- * c-continued-statement-offset: 4
-- * c-continued-brace-offset: 0
-- * indent-tabs-mode: nil
-- * tab-width: 8
-- * End:
-- */
-===== drivers/scsi/hosts.h 1.42 vs edited =====
---- 1.42/drivers/scsi/hosts.h	Fri Nov 22 12:59:03 2002
-+++ edited/drivers/scsi/hosts.h	Sat Nov 23 01:30:50 2002
-@@ -532,6 +532,8 @@
-  * Prototypes for functions/data in scsi_scan.c
-  */
- extern void scsi_scan_host(struct Scsi_Host *);
-+extern void scsi_forget_host(struct Scsi_Host *);
-+
- 
- struct Scsi_Device_Template
- {
-===== drivers/scsi/scsi.h 1.46 vs edited =====
---- 1.46/drivers/scsi/scsi.h	Thu Nov 21 12:55:52 2002
-+++ edited/drivers/scsi/scsi.h	Sat Nov 23 01:26:01 2002
-@@ -507,9 +507,6 @@
- /*
-  * Prototypes for functions in scsi_scan.c
-  */
--extern struct scsi_device *scsi_alloc_sdev(struct Scsi_Host *,
--			uint, uint, uint);
--extern void scsi_free_sdev(struct scsi_device *);
- extern int scsi_add_single_device(uint, uint, uint, uint);
- extern int scsi_remove_single_device(uint, uint, uint, uint);
- 
-===== drivers/scsi/scsi_scan.c 1.43 vs edited =====
---- 1.43/drivers/scsi/scsi_scan.c	Fri Nov 22 12:59:03 2002
-+++ edited/drivers/scsi/scsi_scan.c	Sat Nov 23 01:32:16 2002
-@@ -465,8 +465,8 @@
-  * Return value:
-  *     Scsi_Device pointer, or NULL on failure.
+-	
+ 	/*
+ 	 * XXX(hch) use scsi_tp_for_each_host() once it propagates
+ 	 *	    error returns properly.
+@@ -575,20 +536,7 @@
   **/
--struct scsi_device *scsi_alloc_sdev(struct Scsi_Host *shost, uint channel,
--				    uint id, uint lun)
-+static struct scsi_device *scsi_alloc_sdev(struct Scsi_Host *shost,
-+					   uint channel, uint id, uint lun)
+ int scsi_unregister_host(Scsi_Host_Template *shost_tp)
  {
- 	struct scsi_device *sdev, *device;
+-	int pcount;
+-
+-	/* get the big kernel lock, so we don't race with open() */
+-	lock_kernel();
+-
+-	pcount = scsi_hosts_registered;
+-
+ 	scsi_tp_for_each_host(shost_tp, scsi_remove_legacy_host);
+-
+-	if (pcount != scsi_hosts_registered)
+-		printk(KERN_INFO "scsi : %d host%s left.\n", scsi_hosts_registered,
+-		       (scsi_hosts_registered == 1) ? "" : "s");
+-
+-	unlock_kernel();
+ 	return 0;
  
-@@ -535,7 +535,7 @@
-  *     Undo the actions in scsi_alloc_sdev, including removing @sdev from
-  *     the list, and freeing @sdev.
-  **/
--void scsi_free_sdev(struct scsi_device *sdev)
-+static void scsi_free_sdev(struct scsi_device *sdev)
- {
- 	list_del(&sdev->siblings);
- 	list_del(&sdev->same_target_siblings);
-@@ -1412,6 +1412,14 @@
- 	return SCSI_SCAN_LUN_PRESENT;
- }
- 
-+static int scsi_remove_lun(struct scsi_device *sdev)
-+{
-+	devfs_unregister(sdev->de);
-+	device_unregister(&sdev->sdev_driverfs_dev);
-+
-+	scsi_free_sdev(sdev);
-+}
-+
- /**
-  * scsi_probe_and_add_lun - probe a LUN, if a LUN is found add it
-  * @sdevscan:	probe the LUN corresponding to this Scsi_Device
-@@ -1934,8 +1942,7 @@
- 	if (sdev->attached)
- 		goto out;
- 
--	devfs_unregister(sdev->de);
--	scsi_free_sdev(sdev);
-+	scsi_remove_lun(sdev);
- 	error = 0;
- 
- out:
-@@ -2060,4 +2067,70 @@
- 		}
- 	}
- 	scsi_free_sdev(sdevscan);
-+}
-+
-+void scsi_forget_host(struct Scsi_Host *shost)
-+{
-+	struct list_head *le, *lh;
-+
-+	list_for_each_safe(le, lh, &shost->my_devices)
-+		scsi_remove_lun(list_entry(le, struct scsi_device, siblings));
-+}
-+
-+/*
-+ * Function:    scsi_get_host_dev()
-+ *
-+ * Purpose:     Create a Scsi_Device that points to the host adapter itself.
-+ *
-+ * Arguments:   SHpnt   - Host that needs a Scsi_Device
-+ *
-+ * Lock status: None assumed.
-+ *
-+ * Returns:     The Scsi_Device or NULL
-+ *
-+ * Notes:
-+ *	Attach a single Scsi_Device to the Scsi_Host - this should
-+ *	be made to look like a "pseudo-device" that points to the
-+ *	HA itself.
-+ *
-+ *	Note - this device is not accessible from any high-level
-+ *	drivers (including generics), which is probably not
-+ *	optimal.  We can add hooks later to attach 
-+ */
-+struct scsi_device *scsi_get_host_dev(struct Scsi_Host *shost)
-+{
-+	struct scsi_device *sdev;
-+
-+	sdev = scsi_alloc_sdev(shost, 0, shost->this_id, 0);
-+	if (sdev) {
-+		scsi_build_commandblocks(sdev);
-+		if (sdev->current_queue_depth == 0)
-+			goto fail;
-+		sdev->borken = 0;
-+	}
-+
-+	return sdev;
-+
-+fail:
-+	kfree(sdev);
-+	return NULL;
-+}
-+
-+/*
-+ * Function:    scsi_free_host_dev()
-+ *
-+ * Purpose:     Free a scsi_device that points to the host adapter itself.
-+ *
-+ * Arguments:   SHpnt   - Host that needs a Scsi_Device
-+ *
-+ * Lock status: None assumed.
-+ *
-+ * Returns:     Nothing
-+ *
-+ * Notes:
-+ */
-+void scsi_free_host_dev(struct scsi_device *sdev)
-+{
-+	BUG_ON(sdev->id != sdev->host->this_id);
-+	scsi_free_sdev(sdev);
  }
