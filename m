@@ -1,62 +1,77 @@
-From: Andrew Vasquez <praka@users.sourceforge.net>
+From: Arjan van de Ven <arjanv@redhat.com>
 Subject: Re: pulling failover out of qla2xxx
-Date: Sat, 17 Jan 2004 12:52:30 -0800
+Date: Sat, 17 Jan 2004 22:08:47 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040117205230.GB8301@praka.local.home>
-References: <B179AE41C1147041AA1121F44614F0B0598E34@AVEXCH02.qlogic.org> <40084860.90902@pobox.com>
+Message-ID: <1074373727.4429.4.camel@laptop.fenrus.com>
+References: <B179AE41C1147041AA1121F44614F0B0598E34@AVEXCH02.qlogic.org>
+	 <40084860.90902@pobox.com>  <20040117205230.GB8301@praka.local.home>
+Reply-To: arjanv@redhat.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-LC5uiVneQeXrsKmNHuK5"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ms-smtp-01-qfe0.socal.rr.com ([66.75.162.133]:5018 "EHLO
-	ms-smtp-01-eri0.socal.rr.com") by vger.kernel.org with ESMTP
-	id S266129AbUAQVEE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 17 Jan 2004 16:04:04 -0500
-Received: from praka.san.rr.com (66-75-130-8.san.rr.com [66.75.130.8])
-	by ms-smtp-01-eri0.socal.rr.com (8.12.10/8.12.7) with ESMTP id i0HL3xqG028679
-	for <linux-scsi@vger.kernel.org>; Sat, 17 Jan 2004 13:04:01 -0800 (PST)
-Content-Disposition: inline
-In-Reply-To: <40084860.90902@pobox.com>
+Received: from node-d-1fcf.a2000.nl ([62.195.31.207]:36483 "EHLO
+	laptop.fenrus.com") by vger.kernel.org with ESMTP id S266171AbUAQVJD
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 17 Jan 2004 16:09:03 -0500
+In-Reply-To: <20040117205230.GB8301@praka.local.home>
 List-Id: linux-scsi@vger.kernel.org
-To: Linux-SCSI <linux-scsi@vger.kernel.org>
+To: Andrew Vasquez <praka@users.sourceforge.net>
+Cc: Linux-SCSI <linux-scsi@vger.kernel.org>
 
-On Fri, 16 Jan 2004, Jeff Garzik wrote:
 
-> >I'll open up a request-for-response from the rest of the listers in
-> >asking if parceling out qlaAB00.ko modules based on firmware types is
-> >both practical and sensible from a user standpoint.  Especially
-> >considering that many users aren't really concerned with the ISP chip
-> >type on their QLAXXXX or OEM-BRANDED ABC host bus adapter.
-> 
-> 
-> Speaking from a generic driver / distro standpoint, module dependencies 
-> and PCI tables (i.e. pci_device_id and MODULE_DEVICE_TABLE) all things 
-> to magically Just Work :)
-> 
+--=-LC5uiVneQeXrsKmNHuK5
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-I certainly hope this to be the case.  Perhaps I'm still viewing this
-with an eye as an external module maintainer.  When a user compiles
-the qla2xxx driver she's given the following options:
+On Sat, 2004-01-17 at 21:52, Andrew Vasquez wrote:
+> On Fri, 16 Jan 2004, Jeff Garzik wrote:
+>=20
+> > >I'll open up a request-for-response from the rest of the listers in
+> > >asking if parceling out qlaAB00.ko modules based on firmware types is
+> > >both practical and sensible from a user standpoint.  Especially
+> > >considering that many users aren't really concerned with the ISP chip
+> > >type on their QLAXXXX or OEM-BRANDED ABC host bus adapter.
+> >=20
+> >=20
+> > Speaking from a generic driver / distro standpoint, module dependencies=
+=20
+> > and PCI tables (i.e. pci_device_id and MODULE_DEVICE_TABLE) all things=20
+> > to magically Just Work :)
+> >=20
+>=20
+> I certainly hope this to be the case.  Perhaps I'm still viewing this
+> with an eye as an external module maintainer.  When a user compiles
+> the qla2xxx driver she's given the following options:
+>=20
+> 	...
+>         [ ] QLogic ISP2100 host adapter family support
+>         [ ] QLogic ISP2200 host adapter family support
+>         [ ] QLogic ISP2300 host adapter family support
+>         [ ] QLogic ISP2322 host adapter family support
+>         [ ] QLogic ISP6312 host adapter family support
+>         [ ] QLogic ISP6322 host adapter family support
+> 	...
+>=20
+> how will she know which option to select for her QLA2362 HBA? =20
 
-	...
-        [ ] QLogic ISP2100 host adapter family support
-        [ ] QLogic ISP2200 host adapter family support
-        [ ] QLogic ISP2300 host adapter family support
-        [ ] QLogic ISP2322 host adapter family support
-        [ ] QLogic ISP6312 host adapter family support
-        [ ] QLogic ISP6322 host adapter family support
-	...
+fwiw there is no rule to have a Kconfig line for each driver; you could
+just have one "QLogic fiber channel drivers" question, maybe with a
+subquestion about "enable all chipsets" with a pull down thingy for
+selected ones if the user wants to pick and choose. There is also help
+text for more info.
+(and most people who have qlogic fiber adapters will just say "m" to
+all, as will distros)
 
-how will she know which option to select for her QLA2362 HBA?  Will
-she know it's based on an ISP2322 chip and properly select the correct
-CONFIG option?  How about for a QLA2342 card?  BTW: it's based on the
-ISP2312 chip so one must select the ISP2300 CONFIG option.
+--=-LC5uiVneQeXrsKmNHuK5
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
-The CONFIG list will just get longer as new ISP chips come out.
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.2.3 (GNU/Linux)
 
-> I heartily encourage the creation of "library modules", which are loaded 
+iD8DBQBACaRfxULwo51rQBIRAlx1AJ9h0N78JL0WZSrUGAcyjU1Qp02PPgCgqwmB
+saaQLCzSFl4EpJEERJ6fsM8=
+=RVFu
+-----END PGP SIGNATURE-----
 
-Library modules seems fine, but, as you noted in a later email, the
-qla2100/qla2200.ko modules are mostly wrappers for firmware loads.
-
-Regards,
-Andrew Vasquez
+--=-LC5uiVneQeXrsKmNHuK5--
