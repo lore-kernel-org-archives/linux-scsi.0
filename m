@@ -1,47 +1,53 @@
 From: Kurt Garloff <garloff@suse.de>
-Subject: tmscsim (AM53C974) SCSI driver & 2.5
-Date: Fri, 10 May 2002 22:05:18 +0200
+Subject: DC3x5 SCSI driver 1.40 available
+Date: Fri, 10 May 2002 22:02:31 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20020510220518.K11690@gum01m.etpnet.phys.tue.nl>
+Message-ID: <20020510220231.J11690@gum01m.etpnet.phys.tue.nl>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="PpocKf6TCvdC9BKE"
+	protocol="application/pgp-signature"; boundary="DozTQjXnjm3C9Xhk"
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Received: from gum01m.etpnet.phys.tue.nl (gum01m.etpnet.phys.tue.nl [192.168.84.65])
-	by etpmod.phys.tue.nl (8.9.3/8.9.3/SuSE Linux 8.9.3-0.1) with ESMTP id WAA21225
-	for <linux-scsi@vger.kernel.org>; Fri, 10 May 2002 22:05:18 +0200
+	by etpmod.phys.tue.nl (8.9.3/8.9.3/SuSE Linux 8.9.3-0.1) with ESMTP id WAA21084
+	for <linux-scsi@vger.kernel.org>; Fri, 10 May 2002 22:02:31 +0200
 Received: (from garloff@localhost)
-	by gum01m.etpnet.phys.tue.nl (8.11.6/8.11.6/SuSE Linux 0.5) id g4AK5Ix12818
-	for linux-scsi@vger.kernel.org; Fri, 10 May 2002 22:05:18 +0200
+	by gum01m.etpnet.phys.tue.nl (8.11.6/8.11.6/SuSE Linux 0.5) id g4AK2VJ12791
+	for linux-scsi@vger.kernel.org; Fri, 10 May 2002 22:02:31 +0200
 Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
 To: Linux SCSI list <linux-scsi@vger.kernel.org>
 
 
---PpocKf6TCvdC9BKE
+--DozTQjXnjm3C9Xhk
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
 Content-Transfer-Encoding: quoted-printable
 
 Hi,
 
-The tmscsim (Tekram DC390/AM53C974) PCI SCSI driver does not work in 2.5 for
-two reasons:
-(1) Does not use pci_map_X() interface
-(2) Does still use old exception handling
+I just released the driver 1.40 for Tekram DC3x5 (TRM-S1040) PCI SCSI host
+adapter.
+It should work on 2.2, 2.4 and 2.5 kernels. Except for the very latest 2.5,
+as I still did not convert to new exception handling. But that's high in my
+prio list now.
+http://www.garloff.de/kurt/linux/dc395/
+ftp://ftp.suse.com/pub/people/garloff/linux/dc395/
 
-Fixing (1) is easy for me as I have done the same conversion for the DC3x5
-driver. New EH takes somewhat more time, I'm afraid.
-I just wonder why nobody complained to me, so far:
-Is anybody using this driver?
+If you have such a host adapter, please give the driver a try. Please test
+it before you rely on it. I occasionally get bug reports that I can't really
+fix, because I lack understanding of some details of the chip. (I do not
+have any documentation beyond a register list :-() If anybody can advise me
+on PCI errors, I would also be grateful ...
 
-Regards,
+Since the last versions, I fixed a number of smaller bugs.
+
+Enjoy!
 --=20
 Kurt Garloff  <garloff@suse.de>                          Eindhoven, NL
 GPG key: See mail header, key servers         Linux kernel development
 SuSE Linux AG, Nuernberg, DE                            SCSI, Security
 
---PpocKf6TCvdC9BKE
+--DozTQjXnjm3C9Xhk
 Content-Type: application/pgp-signature
 Content-Disposition: inline
 
@@ -49,9 +55,9 @@ Content-Disposition: inline
 Version: GnuPG v1.0.6 (GNU/Linux)
 Comment: For info see http://www.gnupg.org
 
-iD8DBQE83Cf9xmLh6hyYd04RAnm8AJwNeuM6iIuV5avVaq9p0hYfJDQv6ACeLE4F
-GtT4YBNzHn2PgNy8zuIRVUM=
-=MkR/
+iD8DBQE83CdWxmLh6hyYd04RApf+AKCDalJcVIUZUCifiFdWmN4jgq82qQCgjc4T
+pRpRkAxLr48VtPCWZ2xsNFY=
+=RSkx
 -----END PGP SIGNATURE-----
 
---PpocKf6TCvdC9BKE--
+--DozTQjXnjm3C9Xhk--
