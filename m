@@ -1,11 +1,11 @@
 From: Kurt Garloff <garloff@suse.de>
-Subject: [PATCH] sd_many done right (3/5)
-Date: Fri, 26 Jul 2002 17:47:34 +0200
+Subject: [PATCH] sd_many done right (1/5)
+Date: Fri, 26 Jul 2002 17:45:33 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20020726154734.GF19721@nbkurt.etpnet.phys.tue.nl>
+Message-ID: <45748.888483695$1027698705@news.gmane.org>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="MFZs98Tklfu0WsCO"
+	protocol="application/pgp-signature"; boundary="cPi+lWm09sJ+d57q"
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
@@ -13,19 +13,19 @@ To: Linux SCSI list <linux-scsi@vger.kernel.org>
 Cc: Linux kernel list <linux-kernel@vger.kernel.org>, Marcelo Tosatti <marcelo@conectiva.com.br>
 
 
---MFZs98Tklfu0WsCO
-Content-Type: multipart/mixed; boundary="CNfT9TXqV7nd4cfk"
+--cPi+lWm09sJ+d57q
+Content-Type: multipart/mixed; boundary="NklN7DEeGtkPCoo3"
 Content-Disposition: inline
 
 
---CNfT9TXqV7nd4cfk
+--NklN7DEeGtkPCoo3
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
 Content-Transfer-Encoding: quoted-printable
 
-Hi Marcelo,
+Hi,
 
-here comes patch 3/5 from a series of patches to support more than 128 (and
+here comes patch 1/5 from a series of patches to support more than 128 (and
 optionally more than 256) SCSI disks with Linux 2.4 by changing the sd driv=
 er
 to dynamically allocate memory and register block majors as disks get
@@ -34,13 +34,22 @@ attached.
 The patches are all available at
 http://www.suse.de/~garloff/linux/scsi-many/
 
-Patch 3 does use the infrastructure of patch 1 to allow specifying the
-root filesystem as a kernel parameter using devfs syntax (e.g.
-root=3D/dev/scsi/c2b0t9u0p5), but also working on non-devfs systems.
-Together with the (already existing) scsihosts=3D parameter, this can=20
-be quite useful if you have many SCSI disks with changing configurations.
+This patch (1/5) does implement some infrastructure that is useful: We
+extend the format of /proc/scsi/scsi to report the attached high-level
+drivers.=20
+This can be used by userspace applications to dynamically create device
+nodes or to talk to the corresponding sg device (which otherwise is non-
+trivial to find out!) and inquire extra information such as serial number
+or WWID.
 
-This patch is against 2.4.19rc1. It depends on 1/3.
+Here's a sample.
+Host: scsi5 Channel: 00 Id: 04 Lun: 00
+  Vendor: Linux    Model: scsi_debug       Rev: 0003
+  Type:   Direct-Access                    ANSI SCSI revision: 03
+  Attached drivers: sdr(b:41:10) sg18(c:15:12)
+     =20
+Patch is against 2.4.19rc1.
+Marcelo, these patches are meant for inclusion into 2.4.20pre.
 
 Regards,
 --=20
@@ -48,172 +57,329 @@ Kurt Garloff  <garloff@suse.de>                          Eindhoven, NL
 GPG key: See mail header, key servers         Linux kernel development
 SuSE Linux AG, Nuernberg, DE                            SCSI, Security
 
---CNfT9TXqV7nd4cfk
+--NklN7DEeGtkPCoo3
 Content-Type: text/plain; charset=us-ascii
-Content-Disposition: attachment; filename="scsi-boot-scsi-2419rc1.diff"
+Content-Disposition: attachment; filename="scsi-rep-hldevs-2419rc1.diff"
 Content-Transfer-Encoding: quoted-printable
 
-diff -uNr linux-2.4.18.S18.scsirephl/drivers/scsi/scsi.c linux-2.4.18.S18.s=
-csiboot/drivers/scsi/scsi.c
---- linux-2.4.18.S18.scsirephl/drivers/scsi/scsi.c	Thu Jun 20 18:06:16 2002
-+++ linux-2.4.18.S18.scsiboot/drivers/scsi/scsi.c	Sat Jul 13 18:48:49 2002
-@@ -1553,6 +1553,36 @@
-     }
+diff -uNr linux-2.4.18.S18.fixed/drivers/scsi/hosts.h linux-2.4.18.S18.scsi=
+rephl/drivers/scsi/hosts.h
+--- linux-2.4.18.S18.fixed/drivers/scsi/hosts.h	Wed Jun 12 11:37:09 2002
++++ linux-2.4.18.S18.scsirephl/drivers/scsi/hosts.h	Wed Jun 12 11:53:54 2002
+@@ -530,6 +530,7 @@
+     void (*detach)(Scsi_Device *);
+     int (*init_command)(Scsi_Cmnd *);     /* Used by new queueing code.=20
+                                            Selects command for blkdevs */
++    int (*find_kdev)(Scsi_Device *, char*, kdev_t*);  /* find back dev. */
+ };
+=20
+ void  scsi_initialize_queue(Scsi_Device * SDpnt, struct Scsi_Host * SHpnt);
+diff -uNr linux-2.4.18.S18.fixed/drivers/scsi/osst.c linux-2.4.18.S18.scsir=
+ephl/drivers/scsi/osst.c
+--- linux-2.4.18.S18.fixed/drivers/scsi/osst.c	Fri Dec 21 18:41:55 2001
++++ linux-2.4.18.S18.scsirephl/drivers/scsi/osst.c	Wed Jun 12 11:39:47 2002
+@@ -156,6 +156,7 @@
+ static int osst_attach(Scsi_Device *);
+ static int osst_detect(Scsi_Device *);
+ static void osst_detach(Scsi_Device *);
++static int osst_find_kdev(Scsi_Device *, char*, kdev_t*);
+=20
+ struct Scsi_Device_Template osst_template =3D
+ {
+@@ -166,7 +167,8 @@
+        detect:		osst_detect,
+        init:		osst_init,
+        attach:		osst_attach,
+-       detach:		osst_detach
++       detach:		osst_detach,
++       find_kdev:	osst_find_kdev,
+ };
+=20
+ static int osst_int_ioctl(OS_Scsi_Tape *STp, Scsi_Request ** aSRpnt, unsig=
+ned int cmd_in,unsigned long arg);
+@@ -5417,6 +5419,24 @@
+ 	return 0;
  }
 =20
-+int __init scsi_find_bdev(int h, int c, int i, int l, const char* tag,
-+			  char* name, kdev_t *dev)
++static int osst_find_kdev(Scsi_Device *sdp, char* nm, kdev_t *dev)
 +{
-+	Scsi_Device *scd;
-+	struct Scsi_Host *HBA_ptr;
-+	struct Scsi_Device_Template *sg_t =3D scsi_devicelist;
-+	/* First look for right high-level driver */
-+	while (sg_t &&=20
-+	       (!sg_t->find_kdev || !sg_t->blk ||
-+		!(sg_t->tag && !strcmp(sg_t->tag, tag))))
-+		sg_t =3D sg_t->next;
-+	if (!sg_t)
-+		return 1;
-+	/* Now find Scsi_Device and call high-level driver's find_kdev() */
-+	for (HBA_ptr =3D scsi_hostlist; HBA_ptr; HBA_ptr =3D HBA_ptr->next) {
-+		for (scd =3D HBA_ptr->host_queue; scd; scd =3D scd->next) {
-+			if (scd->host->host_no =3D=3D h &&
-+			    scd->channel =3D=3D c &&
-+			    scd->id =3D=3D i &&
-+			    scd->lun =3D=3D l) {
-+				if (sg_t->find_kdev(scd, name, dev))
-+					return 1;
-+				else
-+					return 0;
++	int i;
++	OS_Scsi_Tape *ostp;
++=09
++	if (sdp && sdp->type =3D=3D TYPE_TAPE && osst_supports(sdp)) {
++		for (ostp =3D os_scsi_tapes[i =3D 0]; i < osst_template.dev_max;
++		     ostp =3D os_scsi_tapes[++i]) {
++			if (ostp && ostp->device =3D=3D sdp) {
++				sprintf (nm, "osst%i", i);
++				*dev =3D MKDEV(OSST_MAJOR, i);
++				return 0;
 +			}
 +		}
 +	}
 +	return 1;
 +}
 +
- #ifdef CONFIG_PROC_FS
- static int scsi_proc_info(char *buffer, char **start, off_t offset, int le=
-ngth)
+ static int osst_attach(Scsi_Device * SDp)
  {
-diff -uNr linux-2.4.18.S18.scsirephl/init/do_mounts.c linux-2.4.18.S18.scsi=
-boot/init/do_mounts.c
---- linux-2.4.18.S18.scsirephl/init/do_mounts.c	Wed Jun 12 11:37:12 2002
-+++ linux-2.4.18.S18.scsiboot/init/do_mounts.c	Sat Jul 13 18:51:18 2002
-@@ -136,6 +136,19 @@
- 	{ "sdn",     0x08d0 },
- 	{ "sdo",     0x08e0 },
- 	{ "sdp",     0x08f0 },
-+	{ "sdq",     0x4100 },
-+	{ "sdr",     0x4110 },
-+	{ "sds",     0x4120 },
-+	{ "sdt",     0x4130 },
-+	{ "sdu",     0x4140 },
-+	{ "sdv",     0x4150 },
-+	{ "sdw",     0x4160 },
-+	{ "sdx",     0x4170 },
-+	{ "sdy",     0x4180 },
-+	{ "sdz",     0x4190 },
-+	/* more scsi devs could be added here, but /dev/sdaa would match=20
-+	 * /dev/sda before, so it would need to be put before sda.
-+	 * Better use /dev/scsi/sdcXbXtXuXpX */
- 	{ "ada",     0x1c00 },
- 	{ "adb",     0x1c10 },
- 	{ "adc",     0x1c20 },
-@@ -147,6 +160,7 @@
- 	{ "xdb",     0x0d40 },
- 	{ "ram",     0x0100 },
- 	{ "scd",     0x0b00 },
-+	{ "sr",      0x0b00 },
- 	{ "mcd",     0x1700 },
- 	{ "cdu535",  0x1800 },
- 	{ "sonycd",  0x1800 },
-@@ -255,6 +269,62 @@
- 	{ NULL, 0 }
+ 	OS_Scsi_Tape * tpnt;
+diff -uNr linux-2.4.18.S18.fixed/drivers/scsi/scsi_proc.c linux-2.4.18.S18.=
+scsirephl/drivers/scsi/scsi_proc.c
+--- linux-2.4.18.S18.fixed/drivers/scsi/scsi_proc.c	Thu Jun 28 02:10:55 2001
++++ linux-2.4.18.S18.scsirephl/drivers/scsi/scsi_proc.c	Thu Jun 20 18:08:40=
+ 2002
+@@ -261,6 +261,10 @@
+=20
+ 	int x, y =3D *size;
+ 	extern const char *const scsi_device_types[MAX_SCSI_DEVICE_CODE];
++	char nm[16];
++	kdev_t kdev;
++	int att =3D scd->attached;
++	struct Scsi_Device_Template *sd_t =3D scsi_devicelist;
+=20
+ 	y =3D sprintf(buffer + len,
+ 	     "Host: scsi%d Channel: %02d Id: %02d Lun: %02d\n  Vendor: ",
+@@ -296,7 +300,24 @@
+ 		y +=3D sprintf(buffer + len + y, " CCS\n");
+ 	else
+ 		y +=3D sprintf(buffer + len + y, "\n");
++=09
++	/* Report high level devices attached */
++	y +=3D sprintf (buffer + len + y, "  Attached drivers:");
+=20
++	while (att && sd_t) {
++		if (sd_t->find_kdev) {
++			if (!(sd_t->find_kdev(scd, nm, &kdev))) {
++				y +=3D sprintf(buffer + len + y,
++					     " %s(%c:%02x:%02x)",
++					     nm, (sd_t->blk? 'b': 'c'),
++					     MAJOR(kdev), MINOR(kdev));
++				--att;
++			}
++		}
++		sd_t =3D sd_t->next;
++	}
++
++	y +=3D sprintf(buffer + len + y, "\n");
+ 	*size =3D y;
+ 	return;
+ }
+diff -uNr linux-2.4.18.S18.fixed/drivers/scsi/sd.c linux-2.4.18.S18.scsirep=
+hl/drivers/scsi/sd.c
+--- linux-2.4.18.S18.fixed/drivers/scsi/sd.c	Wed Jun 12 11:37:13 2002
++++ linux-2.4.18.S18.scsirephl/drivers/scsi/sd.c	Wed Jun 12 11:39:47 2002
+@@ -109,6 +109,7 @@
+ static int sd_detect(Scsi_Device *);
+ static void sd_detach(Scsi_Device *);
+ static int sd_init_command(Scsi_Cmnd *);
++static int sd_find_kdev(Scsi_Device*, char*, kdev_t*);
+=20
+ static struct Scsi_Device_Template sd_template =3D {
+ 	name:"disk",
+@@ -127,6 +128,7 @@
+ 	attach:sd_attach,
+ 	detach:sd_detach,
+ 	init_command:sd_init_command,
++	find_kdev:sd_find_kdev,
  };
 =20
-+#if defined(CONFIG_SCSI) && !defined(CONFIG_DEVFS_FS)
-+int scsi_find_bdev (int, int, int, int, const char*, char*, kdev_t*);
-+/* Parse /dev/scsi/sdcXbXtXuXpX names. Makes only sense if scsi is
-+ * compiled in. Otherwise the initrd stuff needs to take care ... */
-+kdev_t __init scsiname_to_kdev_t(char* line)
+=20
+@@ -281,6 +283,23 @@
+ 	}
+ }
+=20
++static int sd_find_kdev(Scsi_Device *sdp, char* nm, kdev_t *dev)
 +{
-+	kdev_t dev =3D ROOT_DEV;
-+	int h, c, i ,l;
-+	char *tp =3D 0;
-+	char nmbuf[16];
++	Scsi_Disk *dp;=20
++	int i;
++=09
++	if (sdp && (sdp->type =3D=3D TYPE_DISK || sdp->type =3D=3D TYPE_MOD)) {
++		for (dp =3D rscsi_disks, i =3D 0; i < sd_template.dev_max; ++i, ++dp) {
++			if (dp->device =3D=3D sdp) {
++				sd_devname(i, nm);
++				*dev =3D MKDEV_SD(i);
++				return 0;
++			}
++		}
++	}
++	return 1;
++}
 +
-+	if (!strncmp (line, "sd", 2)) {
-+		tp =3D "sd"; line +=3D 2;
-+	}
-+	else if (!strncmp (line, "sr", 2)) {
-+		tp =3D "sr"; line +=3D 2;
-+	}
-+	else if (!strncmp (line, "scd", 3)) {
-+		tp =3D "sr"; line +=3D 3;
-+	}
-+=09
-+	if (strlen (line) < 8 || !tp)
-+		return dev;
-+=09
-+	if (*line++ !=3D 'c')
-+		return dev;
-+	h =3D simple_strtoul(line, &line, 10);
-+	if (*line++ !=3D 'b')
-+		return dev;
-+	c =3D simple_strtoul(line, &line, 10);
-+	if (*line++ !=3D 't')
-+		return dev;
-+	i =3D simple_strtoul(line, &line, 10);
-+	if (*line++ !=3D 'u')
-+		return dev;
-+	l =3D simple_strtoul(line, &line, 10);
-+=09
-+	if (!scsi_find_bdev (h, c, i, l, tp, nmbuf, &dev)) {
-+		if (line && *line++ =3D=3D 'p') {
-+			int p =3D simple_strtoul(line, &line, 10);
-+			dev =3D MKDEV(MAJOR(dev),MINOR(dev)+p);
-+			sprintf (nmbuf+strlen(nmbuf), "%i", p);
-+			printk("found scsi root device %sc%ib%it%iu%ip%i: %s (%02x:%02x)\n",
-+			       tp, h, c, i, l, p, nmbuf, MAJOR(dev), MINOR(dev));
-+		} else
-+			printk("found scsi root device %sc%ib%it%iu%i: %s (%02x:%02x)\n",
-+			       tp, h, c, i, l, nmbuf, MAJOR(dev), MINOR(dev));
-+		strcpy (root_device_name, nmbuf);
-+	} else=20
-+		printk("did not find scsi root device %sc%ib%it%iu%i\n",
-+		       tp, h, c, i, l);
+ static request_queue_t *sd_find_queue(kdev_t dev)
+ {
+ 	Scsi_Disk *dpnt;
+diff -uNr linux-2.4.18.S18.fixed/drivers/scsi/sg.c linux-2.4.18.S18.scsirep=
+hl/drivers/scsi/sg.c
+--- linux-2.4.18.S18.fixed/drivers/scsi/sg.c	Wed Jun 12 11:37:04 2002
++++ linux-2.4.18.S18.scsirephl/drivers/scsi/sg.c	Wed Jun 12 15:27:55 2002
+@@ -115,6 +115,7 @@
+ static void sg_finish(void);
+ static int sg_detect(Scsi_Device *);
+ static void sg_detach(Scsi_Device *);
++static int sg_find_kdev(Scsi_Device *, char*, kdev_t*);
+=20
+ static Scsi_Request * dummy_cmdp;	/* only used for sizeof */
+=20
+@@ -123,6 +124,7 @@
+=20
+ static struct Scsi_Device_Template sg_template =3D
+ {
++      name:"generic",
+       tag:"sg",
+       scsi_type:0xff,
+       major:SCSI_GENERIC_MAJOR,
+@@ -130,7 +132,8 @@
+       init:sg_init,
+       finish:sg_finish,
+       attach:sg_attach,
+-      detach:sg_detach
++      detach:sg_detach,
++      find_kdev:sg_find_kdev
+ };
+=20
+=20
+@@ -2696,6 +2699,36 @@
+ }
+=20
+ #ifdef CONFIG_PROC_FS
++static int sg_find_kdev(Scsi_Device* sdp, char *nm, kdev_t *dev)
++{
++    unsigned long iflags;
++    int err =3D 1;=20
 +
-+	return dev;
++    if (sdp && sg_dev_arr) {
++	int k;
++	read_lock_irqsave(&sg_dev_arr_lock, iflags);
++	for (k =3D 0; k < sg_template.dev_max; ++k) {
++	    if (sg_dev_arr[k] && sg_dev_arr[k]->device =3D=3D sdp) {
++		sprintf (nm, "sg%i", k);
++	        *dev =3D sg_dev_arr[k]->i_rdev;
++		err =3D 0;
++		break;
++	    }
++	}
++	read_unlock_irqrestore(&sg_dev_arr_lock, iflags);
++    }
++    return err;
++}
++#else
++/* Not needed without procfs support */
++static int sg_find_kdev(Scsi_Device* sdp, char *nm, kdev_t *dev)
++{
++    *nm =3D 0; *kdev =3D MKDEV(255,255);
++    return 1;
 +}
 +#endif
 +
- kdev_t __init name_to_kdev_t(char *line)
- {
- 	int base =3D 0;
-@@ -732,6 +802,10 @@
- #else
- static void __init devfs_make_root(char *name)
- {
-+# ifdef CONFIG_SCSI=09
-+	if (!strncmp (name, "scsi/", 5))
-+		ROOT_DEV =3D scsiname_to_kdev_t (name+5);
-+# endif
- }
- #endif
++#ifdef CONFIG_PROC_FS
 =20
+ static struct proc_dir_entry * sg_proc_sgp =3D NULL;
+=20
+diff -uNr linux-2.4.18.S18.fixed/drivers/scsi/sr.c linux-2.4.18.S18.scsirep=
+hl/drivers/scsi/sr.c
+--- linux-2.4.18.S18.fixed/drivers/scsi/sr.c	Wed Jun 12 11:37:15 2002
++++ linux-2.4.18.S18.scsirephl/drivers/scsi/sr.c	Wed Jun 12 11:39:47 2002
+@@ -69,6 +69,8 @@
+=20
+ static int sr_init_command(Scsi_Cmnd *);
+=20
++static int sr_find_kdev(Scsi_Device*, char*, kdev_t*);
++
+ static struct Scsi_Device_Template sr_template =3D
+ {
+ 	name:"cdrom",
+@@ -81,7 +83,8 @@
+ 	finish:sr_finish,
+ 	attach:sr_attach,
+ 	detach:sr_detach,
+-	init_command:sr_init_command
++	init_command:sr_init_command,
++	find_kdev:sr_find_kdev,
+ };
+=20
+ Scsi_CD *scsi_CDs;
+@@ -586,6 +589,22 @@
+ 	return 0;
+ }
+=20
++static int sr_find_kdev(Scsi_Device *sdp, char* nm, kdev_t *dev)
++{
++	Scsi_CD *srp;
++	int i;
++=09
++	if (sdp && (sdp->type =3D=3D TYPE_ROM || sdp->type =3D=3D TYPE_WORM)) {
++		for (srp =3D scsi_CDs, i =3D 0; i < sr_template.dev_max; ++i, ++srp) {
++			if (srp->device =3D=3D sdp) {
++				sprintf(nm, "sr%i", i);
++				*dev =3D MKDEV(SCSI_CDROM_MAJOR,i);
++				return 0;
++			}
++		}
++	}
++	return 1;
++}
+=20
+ void get_sectorsize(int i)
+ {
+diff -uNr linux-2.4.18.S18.fixed/drivers/scsi/st.c linux-2.4.18.S18.scsirep=
+hl/drivers/scsi/st.c
+--- linux-2.4.18.S18.fixed/drivers/scsi/st.c	Mon Feb 25 20:38:04 2002
++++ linux-2.4.18.S18.scsirephl/drivers/scsi/st.c	Wed Jun 12 11:39:47 2002
+@@ -164,6 +164,7 @@
+ static int st_attach(Scsi_Device *);
+ static int st_detect(Scsi_Device *);
+ static void st_detach(Scsi_Device *);
++static int st_find_kdev(Scsi_Device*, char*, kdev_t*);
+=20
+ static struct Scsi_Device_Template st_template =3D
+ {
+@@ -174,7 +175,8 @@
+ 	detect:st_detect,=20
+ 	init:st_init,
+ 	attach:st_attach,=20
+-	detach:st_detach
++	detach:st_detach,
++	find_kdev:st_find_kdev,
+ };
+=20
+ static int st_compression(Scsi_Tape *, int);
+@@ -3827,6 +3829,23 @@
+ 	return 1;
+ }
+=20
++static int st_find_kdev(Scsi_Device * sdp, char* nm, kdev_t *dev)
++{
++	int i;
++	Scsi_Tape *stp;
++=09
++	if (sdp && sdp->type =3D=3D TYPE_TAPE && !st_incompatible(sdp)) {
++		for (stp =3D scsi_tapes[0], i =3D 0; i < st_template.dev_max; stp=3Dscsi=
+_tapes[++i]) {
++			if (stp && stp->device =3D=3D sdp) {
++				sprintf(nm, "st%i", i);
++				*dev =3D MKDEV (SCSI_TAPE_MAJOR, i);
++				return 0;
++			}
++		}
++	}
++	return 1;
++}
++
+ static int st_registered =3D 0;
+=20
+ /* Driver initialization (not __init because may be called later) */
 
---CNfT9TXqV7nd4cfk--
+--NklN7DEeGtkPCoo3--
 
---MFZs98Tklfu0WsCO
+--cPi+lWm09sJ+d57q
 Content-Type: application/pgp-signature
 Content-Disposition: inline
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v1.0.7 (GNU/Linux)
 
-iD8DBQE9QW8WxmLh6hyYd04RAi5lAKCfEIklL/N3QtH9kfKBpC6TmbzXOgCguW2v
-QSFvI9WsNnh9RyDapGPMWfY=
-=hJqB
+iD8DBQE9QW6cxmLh6hyYd04RAvCaAKCNyyjeYN1DxNMifn/wB8spo6sRjgCeP7RN
+bXJ01BdzuGVfY91AeqFBK+g=
+=j0yu
 -----END PGP SIGNATURE-----
 
---MFZs98Tklfu0WsCO--
+--cPi+lWm09sJ+d57q--
