@@ -1,33 +1,40 @@
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] make the SCSI mid-layer obey the device online flag
-Date: Fri, 6 Jun 2003 07:36:03 +0100
+Subject: Re: [PATCH] convert scsi core to use module_param interfaces
+Date: Fri, 6 Jun 2003 07:37:32 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030606073603.A13259@infradead.org>
-References: <1054742495.1674.18.camel@mulgrave> <20030604165146.GA1426@beaverton.ibm.com> <1054754103.2360.8.camel@mulgrave>
+Message-ID: <20030606073732.B13259@infradead.org>
+References: <20030604145717.A8394@beaverton.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from carisma.slowglass.com ([195.224.96.167]:28423 "EHLO
+Received: from carisma.slowglass.com ([195.224.96.167]:29447 "EHLO
 	phoenix.infradead.org") by vger.kernel.org with ESMTP
-	id S265335AbTFFGWe (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 6 Jun 2003 02:22:34 -0400
+	id S265341AbTFFGYA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 6 Jun 2003 02:24:00 -0400
 Content-Disposition: inline
-In-Reply-To: <1054754103.2360.8.camel@mulgrave>; from James.Bottomley@steeleye.com on Wed, Jun 04, 2003 at 03:14:56PM -0400
+In-Reply-To: <20030604145717.A8394@beaverton.ibm.com>; from patmans@us.ibm.com on Wed, Jun 04, 2003 at 02:57:17PM -0700
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@steeleye.com>
-Cc: Mike Anderson <andmike@us.ibm.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Alan Stern <stern@rowland.harvard.edu>
+To: linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@steeleye.com>
 
-On Wed, Jun 04, 2003 at 03:14:56PM -0400, James Bottomley wrote:
-> Yes, that's why I think forbidding *all* I/O after offlining is too much
-> effort.  Offlining should be a precursor to device destruction, but
-> actual destruction probably relys on detaching the queue from the block
-> device interface and sitting on it until all use counts drop to zero.
+On Wed, Jun 04, 2003 at 02:57:17PM -0700, Patrick Mansfield wrote:
+> This patch converts scsi core to use the module_param interfaces
+> (except for the hosts.c scsihosts usage).
+> 
+> With this applied, boot time (non-module) command line setting of scsi
+> parameters must be prefixed by what the scsi module name would be
+> (scsi_mod), for example:
+> 
+> 	scsi_mod.scsi_logging_level=0x180 scsi_mod.scsi_default_dev_flags=0x1
+> 	scsi_mod.max_scsi_luns=5
+> 
+> Usage of scsi_mod as above is a bit ugly and long - if this patch is
+> applied, we should consider renaming scsi.c to scsi_main.c or similiar,
+> and scsi_mod.o to scsi.o. Or, somehow get our prefix set to "scsi".
 
-We need a way to disable _all_ I/O to a device due to the way the driver
-model works.  The driver model ->remove always is a surprise removal,
-so the underlying PCI (or whatever) device for a scsi host can go away
-anytime.  Because of that we need to make damn sure no call to
-->queuecommand will happen after scsi_remove_host is called.  Whether
-this is implemented with the same mechanisms as the current sdev->online
-is another question.
+I don't think we can just change the name of the scsi core module -
+to much userspace stuff is relying on that.  Changing the prefix would
+be nice but I have no idea how we can do that.
+
+We should also kill the scsi substrings in the individual options now
+that we have a regular prefix, I'll submit a patch.
 
