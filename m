@@ -1,74 +1,83 @@
-From: Paul Wagland <paul@kungfoocoder.org>
-Subject: Re: Megaraid and Linux 2.6 and dellmgr questions
-Date: Tue, 6 Apr 2004 08:43:04 +0200
+From: Nathan Scott <nathans@sgi.com>
+Subject: Re: ST alloc failures
+Date: Tue, 6 Apr 2004 18:48:59 +1000
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <A817F5EC-8795-11D8-BC8C-000A95CD704C@kungfoocoder.org>
-References: <0E3FA95632D6D047BA649F95DAB60E57033BC4F1@exa-atlanta.se.lsil.com>
-Mime-Version: 1.0 (Apple Message framework v613)
-Content-Type: multipart/signed; protocol="application/pgp-signature"; micalg=pgp-sha1; boundary="Apple-Mail-14--152630309"
-Content-Transfer-Encoding: 7bit
+Message-ID: <20040406084858.GA752@frodo>
+References: <20040402051355.GA1604@frodo> <20040402073207.A31736@infradead.org> <Pine.LNX.4.58.0404030958510.7955@kai.makisara.local>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp-out3.xs4all.nl ([194.109.24.13]:51985 "EHLO
-	smtp-out3.xs4all.nl") by vger.kernel.org with ESMTP id S263649AbUDFHNl
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 6 Apr 2004 03:13:41 -0400
-In-Reply-To: <0E3FA95632D6D047BA649F95DAB60E57033BC4F1@exa-atlanta.se.lsil.com>
+Received: from mtvcafw.sgi.com ([192.48.171.6]:8105 "EHLO omx3.sgi.com")
+	by vger.kernel.org with ESMTP id S263656AbUDFHuW (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Apr 2004 03:50:22 -0400
+Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.58.0404030958510.7955@kai.makisara.local>
 List-Id: linux-scsi@vger.kernel.org
-To: Linux SCSI mailing list <linux-scsi@vger.kernel.org>
-Cc: Atul Mukker <Atulm@lsil.com>
+To: Christoph Hellwig <hch@infradead.org>, Kai Makisara <Kai.Makisara@kolumbus.fi>
+Cc: linux-scsi@vger.kernel.org, linux-xfs@oss.sgi.com
 
+Hi there,
 
---Apple-Mail-14--152630309
-Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset=US-ASCII; format=flowed
+On Sat, Apr 03, 2004 at 10:19:51AM +0300, Kai Makisara wrote:
+> On Fri, 2 Apr 2004, Christoph Hellwig wrote:
+> 
+> > [linux-scsi is the right list for st problems, moving the thread there]
+> > 
+> > On Fri, Apr 02, 2004 at 03:13:55PM +1000, Nathan Scott wrote:
+> > > Hi all,
+> > > 
+> > > I'm seeing a bunch of large allocation attempts failing from
+> > > the SCSI tape driver when doing dumps and restores ... (this
+> > > is with a stock 2.6.4 kernel).
+> > > 
+> > > xfsdump: page allocation failure. order:8, mode:0xd0
+> > > Call Trace:
+> > >  [<c013982b>] __alloc_pages+0x33b/0x3d0
+> > >  [<c03805ac>] enlarge_buffer+0xdc/0x1b0
+> > >  [<c03819a3>] st_map_user_pages+0x33/0x90
+> > >  [<c037cf24>] setup_buffering+0xb4/0x160
+> > 
+> > This looks like the driver tries to pin down the userpages first
+> > (st_map_user_pages) but then fails and needs to use an inkernel
+> > buffer.  Can you put some debug printks into st_map_user_pages
+> > to see why it fails?
 
+Apologies for the delay; after whacking in some printk's it looks
+like the point st decides to not pin down the user pages for me is
+here in sgl_map_user_pages:
 
-On Apr 6, 2004, at 6:49, Mukker, Atul wrote:
+	/* Too big */
+	if (nr_pages > max_pages) {
+		return -ENOMEM;
+	}
 
-> I promised a release some weeks ago but we could not make it because of
-> stability issues. But it is in much better shape now and would be 
-> available
-> for review pretty soon.
+In my cases nr_pages is always 256 and max_pages is always 96 (I
+see this printk a fair few times, and its always from this point).
 
-This is good to know, and as promised to you earlier, if you would 
-still like I will look at (at least) getting the initial shot at 
-exporting information from the driver via sysfs.
+> Pinning down pages should not fail with most modern hardware except for 
+> the following three cases:
+> 
+> 1) A change in 2.6.4 (*) mandates st (and sg) not to use direct transfers 
+> unless the user buffer is aligned at 512 byte boundary. This means, for 
+> instance, that in most cases transfers from/to malloced/calloced buffers 
+> are forced to use bounce buffers (alignment at 8 or 16 byte boundaries).
+> 
+> 2) There is a bug in checking the allowed address range. Most SCSI 
+> adapters support 64-bit addresses and so even lots of memory should not 
+> prevent using direct transfers.
 
-Do you know whether or not the new driver will address the issue I 
-raised below? The reason that I want to be able to do this is that I 
-have managed to script the dellmgr interface (using expect) and would 
-like to be able to repeatedly create and then delete logical drives so 
-that I can test the effects of the various logical drive parameters.
+I guess its not either of these two, from the printk?
 
-> -----Original Message-----
-> From: Paul Wagland [mailto:paul@wagland.net]
->
->> problem: When using dellmgr v 5.31 to delete a logical drive on my
->> SATA-150-6 board under linux 2.6.4, the controller seems to hang. I 
->> can
->> continue to do stuff, so long as I don't want to touch that 
->> controller.
->> As this is my only IO controller that is a little tricky :-) Has this
->> problem been seen before? Is there a known workaround?
+> 3) Some resource shortage that happened just now. This is not a bug.
 
-Any help would be gratefully accepted,
-Cheers,
-Paul
+Hmm... I see this alot, but I have a fair bit of memory in the machine
+(its during stress and regression testing that I hit this, so not sure
+about the exact memory usage at each particular printk I see).
 
---Apple-Mail-14--152630309
-content-type: application/pgp-signature; x-mac-type=70674453;
-	name=PGP.sig
-content-description: This is a digitally signed message part
-content-disposition: inline; filename=PGP.sig
-content-transfer-encoding: 7bit
+Is this something we should be tuning in xfsdump/xfsrestore, Kai?
+(to make smaller requests?)
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.2.4 (Darwin)
+cheers.
 
-iD8DBQFAclGBtch0EvEFvxURAneQAJ4xq/9CR3MOZvR8K930Vfkwa0U2GgCffAPn
-bUTZu1r5wwkynEtuDwZm8mQ=
-=rkZz
------END PGP SIGNATURE-----
-
---Apple-Mail-14--152630309--
-
+-- 
+Nathan
