@@ -1,48 +1,64 @@
-From: Mike Anderson <andmike@us.ibm.com>
-Subject: Re: [linux-usb-devel] BUG when removing USB flash drive
-Date: Thu, 13 May 2004 22:36:23 -0700
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: [PATCH] buggy comment in scsi_decide_disposition
+Date: Fri, 14 May 2004 01:44:45 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040514053623.GD3819@us.ibm.com>
-References: <20040514004132.GA10537@telpin.com.ar> <Pine.LNX.4.44L0.0405132305400.32262-100000@netrider.rowland.org>
+Message-ID: <40A45CCD.5040902@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/mixed;
+ boundary="------------020908050401000507000306"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e35.co.us.ibm.com ([32.97.110.133]:49584 "EHLO
-	e35.co.us.ibm.com") by vger.kernel.org with ESMTP id S264295AbUENFgy
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:485 "EHLO
+	www.linux.org.uk") by vger.kernel.org with ESMTP id S264300AbUENFo7
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 14 May 2004 01:36:54 -0400
-Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.44L0.0405132305400.32262-100000@netrider.rowland.org>
+	Fri, 14 May 2004 01:44:59 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: Alberto Bertogli <albertogli@telpin.com.ar>, USB development list <linux-usb-devel@lists.sourceforge.net>, SCSI development list <linux-scsi@vger.kernel.org>
+To: James Bottomley <James.Bottomley@steeleye.com>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-Alan Stern [stern@rowland.harvard.edu] wrote:
-> This BUG happened because the SCSI layer was still using the drive after 
-> usb-storage had called scsi_remove_host().
+This is a multi-part message in MIME format.
+--------------020908050401000507000306
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 
-In this case the scsi_remove_host is being called in a unexpected
-disconnect case. Any IOs in flight will be canceled in the mid-layer
-(i.e., they will not be chased down with calls to eh_abort_handler).
 
-> 
-> This is an aspect of SCSI midlayer <-> low-level driver interaction that
-> I'm not very clear about.  How long after the host is removed can the
-> midlayer continue to use it?  How does the driver know when the midlayer
-> is finished using the host so the driver can exit (and unload from
-> memory)?
+AFAICS this comment is incorrect.  The switch target in question, 
+DID_SOFT_ERROR, jumps to the maybe_retry label, which increments a retry 
+counter.
 
-The LLDD queuecommand should not be called after the return of
-scsi_remove_host (unless we have a bug). The LLDD should not free its
-resources until the release function is called on the struct device
-passed in during the scsi_add_host call. This release function could be
-called post the scsi_host_dev_release function being called as it does a
-put on this struct device. This chain of release calls is undefined as a
-hotplug goes out on the remove calls, but if user space never umounts /
-closes the device things will not fully cleanup.
+This retry counter appears to avoid the endless loops that the comment 
+refers to.
 
--andmike
---
-Michael Anderson
-andmike@us.ibm.com
+Although this patch only deletes a comment, please do review it with a 
+careful eye.
+
+
+
+--------------020908050401000507000306
+Content-Type: text/plain;
+ name="patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="patch"
+
+===== drivers/scsi/scsi_error.c 1.74 vs edited =====
+--- 1.74/drivers/scsi/scsi_error.c	Mon Apr 19 04:12:13 2004
++++ edited/drivers/scsi/scsi_error.c	Fri May 14 01:41:37 2004
+@@ -1289,15 +1289,6 @@
+ 		 * that it indicates SUCCESS.
+ 		 */
+ 		return SUCCESS;
+-		/*
+-		 * when the low level driver returns did_soft_error,
+-		 * it is responsible for keeping an internal retry counter 
+-		 * in order to avoid endless loops (db)
+-		 *
+-		 * actually this is a bug in this function here.  we should
+-		 * be mindful of the maximum number of retries specified
+-		 * and not get stuck in a loop.
+-		 */
+ 	case DID_SOFT_ERROR:
+ 		goto maybe_retry;
+ 	case DID_IMM_RETRY:
+
+--------------020908050401000507000306--
 
