@@ -1,40 +1,103 @@
-From: Andries.Brouwer@cwi.nl
-Subject: Re: [PATCH] kill two scsi ioctls
-Date: Thu, 10 Apr 2003 19:29:11 +0200 (MEST)
+From: Badari Pulavarty <pbadari@us.ibm.com>
+Subject: Isn't sd_major() broken ?
+Date: Thu, 10 Apr 2003 10:01:44 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <UTC200304101729.h3AHTB426607.aeb@smtp.cwi.nl>
+Message-ID: <200304101101.44493.pbadari@us.ibm.com>
+Mime-Version: 1.0
+Content-Type: Multipart/Mixed;
+  boundary="------------Boundary-00=_WE35UDLQRP2F7W0TSKLT"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hera.cwi.nl ([192.16.191.8]:54924 "EHLO hera.cwi.nl")
-	by vger.kernel.org with ESMTP id S264108AbTDJRRb (for <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 10 Apr 2003 13:17:31 -0400
+Received: from e4.ny.us.ibm.com ([32.97.182.104]:55784 "EHLO e4.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S264118AbTDJRxf (for <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 10 Apr 2003 13:53:35 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: Andries.Brouwer@cwi.nl, levon@movementarian.org
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, torvalds@transmeta.com
+To: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-    On Thu, Apr 10, 2003 at 06:33:26PM +0200, Andries.Brouwer@cwi.nl wrote:
 
-    > The definition for SCSI_IOCTL_BENCHMARK_COMMAND was added in 1.1.2.
-    > The definition for SCSI_IOCTL_SYNC was added in 1.1.38.
-    > Neither of them has ever been used.
+--------------Boundary-00=_WE35UDLQRP2F7W0TSKLT
+Content-Type: text/plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 
-    Can't you at least add a comment about what was there ? It's quite
-    annoying to come across :
+Hi,
 
-    #define FOO 1
-    #define BAR 2
-    #define BAZ 5
+I am little confused about the correctness of sd_major() in drivers/scsi/=
+sd.c.
 
-    and have no idea why
+static int sd_major(int major_idx)
+{
+        switch (major_idx) {
+        case 0:
+                return SCSI_DISK0_MAJOR;
+        case 1 ... 7:
+                return SCSI_DISK1_MAJOR + major_idx - 1;
+        case 8 ... 15:
+                return SCSI_DISK8_MAJOR + major_idx;
+        default:
+                BUG();
+                return 0;       /* shut up gcc */
+        }
+}
 
-It happens all the time. Hundreds of cases.
+So, if major_idx =3D 8, It returns 143.=20
+But according to major.h, scsi has 128-135 reserved
+majors. But it is registering 136 - 143 as its majors.
 
-I prefer a short and clean actual kernel source, and long
-historical explanations somewhere else, for example in
-Documentation/ioctl_list.
+#define SCSI_DISK8_MAJOR        128
+#define SCSI_DISK9_MAJOR        129
+#define SCSI_DISK10_MAJOR       130
+#define SCSI_DISK11_MAJOR       131
+#define SCSI_DISK12_MAJOR       132
+#define SCSI_DISK13_MAJOR       133
+#define SCSI_DISK14_MAJOR       134
+#define SCSI_DISK15_MAJOR       135
 
-(Michael Elizabeth Chastain made ioctl_list.2 a man page,
-but nobody keeps it up-to-date. The current version is from
-1.3.27. I am updating it and expect to submit it for the
-Documentation directory. Maybe more people will update it there.)
+Isn't sd_major() broken ? Here is the patch to fix it.
 
-Andries
+Thanks,
+Badari
+
+# cat /proc/devices
+=2E..
+Block devices:
+  2 fd
+  3 ide0
+  8 sd
+ 11 sr
+ 65 sd
+ 66 sd
+ 67 sd
+ 68 sd
+ 69 sd
+ 70 sd
+ 71 sd
+136 sd
+137 sd
+138 sd
+139 sd
+140 sd
+141 sd
+142 sd
+143 sd
+
+--------------Boundary-00=_WE35UDLQRP2F7W0TSKLT
+Content-Type: text/x-diff;
+  charset="us-ascii";
+  name="major"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment; filename="major"
+
+--- drivers/scsi/sd.c.org	Wed Apr  9 13:12:38 2003
++++ drivers/scsi/sd.c	Thu Apr 10 11:01:45 2003
+@@ -123,7 +123,7 @@ static int sd_major(int major_idx)
+ 	case 1 ... 7:
+ 		return SCSI_DISK1_MAJOR + major_idx - 1;
+ 	case 8 ... 15:
+-		return SCSI_DISK8_MAJOR + major_idx;
++		return SCSI_DISK8_MAJOR + major_idx - 8;
+ 	default:
+ 		BUG();
+ 		return 0;	/* shut up gcc */
+
+--------------Boundary-00=_WE35UDLQRP2F7W0TSKLT--
+
