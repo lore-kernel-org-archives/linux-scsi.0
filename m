@@ -1,64 +1,87 @@
-From: "Moore, Eric Dean" <emoore@lsil.com>
-Subject: RE: [PATCH]  2.4.23-pre8 driver udpate for MPT Fusion (2.05.10)
-Date: Fri, 24 Oct 2003 12:22:43 -0400
+From: Andreas Haumer <andreas@xss.co.at>
+Subject: Re: [PATCH]  2.4.23-pre8 driver udpate for MPT Fusion (2.05.10)
+Date: Fri, 24 Oct 2003 20:09:43 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <0E3FA95632D6D047BA649F95DAB60E57035A9468@exa-atlanta.se.lsil.com>
+Message-ID: <3F996AE7.5020409@xss.co.at>
+References: <0E3FA95632D6D047BA649F95DAB60E57035A944F@exa-atlanta.se.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:22401 "EHLO mail0.lsil.com")
-	by vger.kernel.org with ESMTP id S262352AbTJXQW6 (ORCPT
+Received: from camus.xss.co.at ([194.152.162.19]:48399 "EHLO camus.xss.co.at")
+	by vger.kernel.org with ESMTP id S262439AbTJXSJs (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 24 Oct 2003 12:22:58 -0400
+	Fri, 24 Oct 2003 14:09:48 -0400
+In-Reply-To: <0E3FA95632D6D047BA649F95DAB60E57035A944F@exa-atlanta.se.lsil.com>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
+To: "Moore, Eric Dean" <emoore@lsil.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, mpt_linux_developer@lsil.com
 
-James: I'm clear on the policy, however the 2.05.00.03
-MPT driver in 2.6 kernel is *NOT* compatible with 
-what is shipping in 2.4 kernel which is 2.05.05+ driver.  
-The driver in 2.6 has had most of the backward compatibility
-stripped out, such as Old Error Handling, and many other changes
-to make it work with new kernel structures and functions, however
-doesn't make it backward compatible to 2.4 kernel.
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
 
-Our focus has been 2.4 kernel version of the driver as that is what
-is shipping in all Linux distributions, and our customers have been
-asking for RPM driver updates to the latest driver fix bugs and  
-enhancements for their shipping systems out in the field.  One major
-OEM player has requested we update Kernel.org as to reduce their
-dependency on LSI for RPM driver updates. I wish that these updates
-make their way into the 2.4 kernel.  I will begin porting these 
-changes over the driver in 2.6 immediately.  Also one thing is 
-that there have been change on Maintainership of this
-driver from Pam Delaney to myself and Larry Stephens, so things
-are about getting back to normal.
+Hi!
 
-Eric
+Moore, Eric Dean wrote:
+> Here's a patch for 2.4.23-pre8 kernel for MPT Fusion driver, coming from LSI
+> Logic.
+>
+[...]
+>
+> (8)	In a mixed device configuration (Ultra 320 and Non-Ultra
+> 320 devices are present on an HBA channel), code was fixed to prevent
+>  negotiating for QAS on all Ultra 320 devices on that channel.
+> This keeps the Ultra 320 devices from dominating the SCSI bus,
+> preventing Non-Ultra 320 IO's from executing.
+>
+[...]
 
+Uh Oh...
 
-On Friday, October 24, 2003 9:21 AM, James Bottomley wrote:
-> 
-> On Fri, 2003-10-24 at 10:53, Moore, Eric Dean wrote:
-> > Here's a patch for 2.4.23-pre8 kernel for MPT Fusion 
-> driver, coming from LSI
-> > Logic.
-> > 
-> > This patch is large, so I have placed it on the LSI ftp site at:
-> > 
-> ftp://ftp.lsil.com/HostAdapterDrivers/linux/Fusion-MPT/2.05.10
-/mptlinux-2.05
-> .10.patch
-> 
-> A new email address is setup for directing any MPT Fusion questions:
-> mpt_linux_developer@lsil.com
+Is this a fix for the problems I reported back in June
+to LKML and to Pam Delaney?
 
-The policy for driver updates into 2.4 is that they should be backports
-from 2.6 (for things like mpt fusion that have similar drivers) so that
-the newer driver gets into 2.6 first.  If you want to send the 2.6
-patches, I can queue them up for when the "bugfix only" freeze is
-relaxed.
+On June, 12th, I sent a mail to Pam reporting system freezes
+I had on an ASUS AP 1700-S5 server with onboard 53C1030
+controller. In this mail I speculated about the possibility
+of a mixed device configuration beeing the source of the problem:
 
-James
+[...]
+Another idea: is it possible that the SCSI controller
+has problems with U160 and U320 SCSI disks mixed together
+on the same bus? As far as I know there shouldn't be a
+problem with this combination, but who knows?
+
+I always tested with a mix of the following SCSI disks:
+
+IBM DDYS-T18350M (18GB U160 SCA)
+IBM IC35L036UCDY10-0 (36GB U320 SCA)
+
+I'm currently running 2.4.20 with 4 U320 disks and no
+U160 disk in the how swap cage. The system is now up for
+about 6 hours and no SCSI timeout occured so far (this
+doesn't say anything. Sometimes it takes 24 hours before
+a SCSI timeout or even a freeze occurs)
+[...]
+
+I haven't got an answer to this report, but with a
+all-U320 configuration I never had system freezes since.
+Does the new driver now work in a U160/U320 mixed
+configuration, too?
+
+- - andreas
+
+- --
+Andreas Haumer                     | mailto:andreas@xss.co.at
+*x Software + Systeme              | http://www.xss.co.at/
+Karmarschgasse 51/2/20             | Tel: +43-1-6060114-0
+A-1100 Vienna, Austria             | Fax: +43-1-6060114-71
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.2.1 (GNU/Linux)
+Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org
+
+iD8DBQE/mWrjxJmyeGcXPhERAowMAJ9mTHr/qLObJ/OvUodLsrILx/MnkACfTj+U
+7QVE6mUMmxAEYmIfvHeDItU=
+=DcTz
+-----END PGP SIGNATURE-----
 
