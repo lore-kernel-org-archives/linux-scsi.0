@@ -1,40 +1,106 @@
-From: "MR.EMEKA EZEM" <emekaa1@galmail.co.za>
-Subject: CONTACT AFRICA
-Date: Fri, 02 Jul 2004 14:03:40 +0200
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <web-357113839__1350.93098874695$1088770089@mail01.infosat.net>
+From: "Luiz Fernando N. Capitulino" <lcapitulino@prefeitura.sp.gov.br>
+Subject: Re: [2.6 patch] more MCA_LEGACY dependencies
+Date: Fri, 2 Jul 2004 10:07:19 -0300
+Sender: linux-net-owner@vger.kernel.org
+Message-ID: <20040702130719.GC13384@lorien.prodam>
+References: <20040702002459.GI28324@fs.tum.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mailout06.infosat.net ([66.18.69.6]:30905 "EHLO
-	mail02.infosat.net") by vger.kernel.org with ESMTP id S263664AbUGBMFJ
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 2 Jul 2004 08:05:09 -0400
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-net-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20040702002459.GI28324@fs.tum.de>
+To: Adrian Bunk <bunk@fs.tum.de>
+Cc: mcalinux@acc.umu.se, tao@acc.umu.se, linux-kernel@vger.kernel.org, jgarzik@pobox.com, linux-net@vger.kernel.org, James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: emekaa1@galmail.co.za
 
-Attn:
+
+ Hello Adrian,
+
+Em Fri, Jul 02, 2004 at 02:25:00AM +0200, Adrian Bunk escreveu:
+
+| The patch below against 2.6.7-mm5 fixes more compile errors with 
+| MCA_LEGACY=n .
+| 
+| diffstat output:
+|  drivers/net/Kconfig           |    2 +-
+|  drivers/net/at1700.c          |   12 ++++++------
+|  drivers/net/eexpress.c        |    4 ++--
+|  drivers/net/tokenring/Kconfig |    4 ++--
+|  drivers/net/tokenring/smctr.c |   12 ++++++------
+|  drivers/scsi/Kconfig          |    4 ++--
+|  drivers/scsi/aha1542.c        |    2 +-
+|  7 files changed, 20 insertions(+), 20 deletions(-)
+
+[...]
+
+|  static int __init smctr_chk_mca(struct net_device *dev)
+|  {
+| -#ifdef CONFIG_MCA
+| +#ifdef CONFIG_MCA_LEGACY
+|  	struct net_local *tp = netdev_priv(dev);
+|  	int current_slot;
+|  	__u8 r1, r2, r3, r4, r5;
+| @@ -626,7 +626,7 @@
+|  	return (0);
+|  #else
+|  	return (-1);
+| -#endif /* CONFIG_MCA */
+| +#endif /* CONFIG_MCA_LEGACY */
+|  }
+
+ what about doing things like that for #ifdef/#endif inside
+functions? (not compiled):
+
+diffstat:=
+ drivers/net/tokenring/smctr.c |    6 ++----
+ drivers/net/tokenring/smctr.h |    5 +++++
+ 2 files changed, 7 insertions(+), 4 deletions(-)
+
+diff -X dontdiff -Nparu a/drivers/net/tokenring/smctr.c a~/drivers/net/tokenring/smctr.c
+--- a/drivers/net/tokenring/smctr.c	2004-04-05 14:41:56.000000000 -0300
++++ a~/drivers/net/tokenring/smctr.c	2004-07-02 09:34:14.000000000 -0300
+@@ -477,9 +477,9 @@ static int smctr_checksum_firmware(struc
+         return (0);
+ }
  
-We have received your completed form, and we are most happy
-to inform you that your payment has been zoned to our
-africa payment centre.I will therefore advice that you
-contact our african payment directors for the release of
-your cheque.
++#ifdef CONFIG_MCA_LEGACY
+ static int __init smctr_chk_mca(struct net_device *dev)
+ {
+-#ifdef CONFIG_MCA
+ 	struct net_local *tp = netdev_priv(dev);
+ 	int current_slot;
+ 	__u8 r1, r2, r3, r4, r5;
+@@ -624,10 +624,8 @@ static int __init smctr_chk_mca(struct n
+         }
  
-Do contact Barr:Frank Ike on tel:234-80-56182868
-Email : africa_sunsweetwin@yahoo.fr
+ 	return (0);
+-#else
+-	return (-1);
+-#endif /* CONFIG_MCA */
+ }
++#endif /* CONFIG_MCA_LEGACY */
  
-Please do note that your cheque has to be notarize in the
-federal high court of justice,so do adhear to the
-instructions and directive from our africa payment director
-for the successful release of your cheque.
+ static int smctr_chg_rx_mask(struct net_device *dev)
+ {
+diff -X dontdiff -Nparu a/drivers/net/tokenring/smctr.h a~/drivers/net/tokenring/smctr.h
+--- a/drivers/net/tokenring/smctr.h	2003-10-08 16:24:14.000000000 -0300
++++ a~/drivers/net/tokenring/smctr.h	2004-07-02 09:56:56.000000000 -0300
+@@ -9,6 +9,11 @@
  
-I wish you all the best,and once again congratulations.
+ #ifdef __KERNEL__
  
-Best Regards,
++/* when !CONFIG_MCA_LEGACY */
++#ifndef CONFIG_MCA_LEGACY
++static inline smctr_chk_mca(struct net_device *dev) { return (-1); }
++#endif
++
+ #define MAX_TX_QUEUE 10
  
-Mr.Emeka Ezem.
-FOREIGN SERVICE MANAGER, 
-RAYMOND CROSSROAD, AMSTERDAM.
- 
+ #define SMC_HEADER_SIZE 14
+
+PS: It's a janitorial work, if you is a busy person, I can do
+that.
+
+-- 
+Luiz Fernando N. Capitulino
+<http://www.telecentros.sp.gov.br>
