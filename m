@@ -1,45 +1,47 @@
-From: Dave Olien <dmo@osdl.org>
-Subject: Re: Question about Request Sense case in scsi_lib.c
-Date: Tue, 12 Oct 2004 09:59:19 -0700
+From: Mark Lord <lkml@rtr.ca>
+Subject: Re: [PATCH] QStor SATA/RAID driver for 2.6.9-rc3
+Date: Tue, 12 Oct 2004 12:59:01 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20041012165919.GA27526@osdl.org>
-References: <20041012000058.GA26569@osdl.org> <eada2a07041012092973d35415@mail.gmail.com>
+Message-ID: <416C0D55.1020603@rtr.ca>
+References: <4161A06D.8010601@rtr.ca>	<416547B6.5080505@rtr.ca>	<20041007150709.B12688@i	nfradead.org>	<4165624C.5060405@rtr.ca>	<416565DB.4050006@pobox.com>	<4165A4	5D.2090200@rtr.ca>	<4165A766.1040104@pobox.com>	<4165A85D.7080704@rtr.ca>	<4	165AB1B.8000204@pobox.com>	<4165ACF8.8060208@rtr.ca>		<20041007221537.A17712@infradead.org>	<1097241583.2412.15.camel@mulgrave> 	<4166AF2F.6070904@rtr.ca> <1097249266.1678.40.camel@mulgrave> 	<4166B48E.3020006@rtr.ca> <1097250465.2412.49.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fw.osdl.org ([65.172.181.6]:16003 "EHLO mail.osdl.org")
-	by vger.kernel.org with ESMTP id S266221AbUJLQ7W (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 12 Oct 2004 12:59:22 -0400
-Content-Disposition: inline
-In-Reply-To: <eada2a07041012092973d35415@mail.gmail.com>
+Received: from cpu1185.adsl.bellglobal.com ([207.236.110.166]:28099 "EHLO
+	mail.rtr.ca") by vger.kernel.org with ESMTP id S266274AbUJLRAv
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 12 Oct 2004 13:00:51 -0400
+In-Reply-To: <1097250465.2412.49.camel@mulgrave>
 List-Id: linux-scsi@vger.kernel.org
-To: Tim Pepper <tpepper@gmail.com>, linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Jeff Garzik <jgarzik@pobox.com>, Mark Lord <lsml@rtr.ca>, Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
+James Bottomley wrote:
+> On Fri, 2004-10-08 at 10:38, Mark Lord wrote:
+> 
+>>Can deadlock occur here, since qstor.c is already using schedule_work()
+>>as part of it's internal bottom-half handling for abnormal conditions?
+>>
+>>Eg.  hotplug event -> schedule_work -> mid-layer -> queuecommand
+>>       --> sleep  :: interrupt -> schedule_work -> deadlock?
+>>
+> 
+> 
+> Since you wouldn't go straight from schedule_work->mid-layer, I assume
+> you mean that when the workqueue thread runs the work?
 
-Tim,
+Yes.  The workqueue thread will invoke the mid-layer function,
+which will do a queuecommand, which will return to the mid-layer,
+which will then SLEEP waiting for the command to complete,
+which will sleep that workqueue thread.
 
-Thanks for the feedback.  Yes, Automatic volume transfer is on, and I
-was expecting there'd be poor performance as a result.  I just
-didn't expect to get IO errors.  The odd thing is that the "bus reset"
-leads to the SCSI request being requeued.  But every once in a while,
-the requeue fails with errors and the request is failed.  I'll look at
-these cases a little more closely, try to understand why the requeues fail.
+As part of the interrupt processing to complete the command in the LLD,
+it is possible that schedule_work may be necessary, requiring that
+a workqueue thread be run.  If this means the same thread that is
+already sleeping courtesy of the mid-layer, then we could have a problem.
 
-I think the dm multipathing software will soon have hooks to
-support manual volume transfer in these situations.
-
-Dave
-
-On Tue, Oct 12, 2004 at 09:29:30AM -0700, Tim Pepper wrote:
-> I thought on FAStT's while there are dual-active controllers, for a
-> given lun they weren't active-active, but rather active-passive with
-> either manual or automatic volume transfer.  Assuming automatic volume
-> transfer is on and you send IOs to both controllers simultaneously you
-> would ping-pong the cache, drive IO rates lower and possibly see that
-> manifest itself in interesting behaviour in the linux scsi stack. 
-> With manual volume transfer you should get IO errors from the
-> controller which is not active or preferred for the given lun.  Maybe
-> somebody involved with their RDAC multipathing driver follows this
-> list and can comment on their intentions for the 2.6 kernel and dm
-> multipathing.
+Comments?
+-- 
+Mark Lord
+(hdparm keeper & the original "Linux IDE Guy")
