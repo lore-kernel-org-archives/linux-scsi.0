@@ -1,59 +1,57 @@
-From: "Smart, James" <James.Smart@Emulex.com>
-Subject: RE: Transport affected timeouts...
-Date: Fri, 16 Apr 2004 16:13:01 -0400
+From: "Czerkowicz, John" <john.czerkowicz@hp.com>
+Subject: [PATCH] 2.4.26 scsi_scan.c Blacklist Entries
+Date: Fri, 16 Apr 2004 16:29:50 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3356669BBE90C448AD4645C843E2BF2802C016A8@xbl.ma.emulex.com>
+Message-ID: <F65B33CAD23A284EAE6E4AE353BF94DC031A44CC@tayexc13.americas.cpqcorp.net>
 Mime-Version: 1.0
 Content-Type: text/plain;
-	charset="ISO-8859-1"
+	charset="US-ASCII"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emulex.emulex.com ([138.239.112.1]:60386 "EHLO
-	emulex.emulex.com") by vger.kernel.org with ESMTP id S263704AbUDPUNQ
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 16 Apr 2004 16:13:16 -0400
+Received: from mailout.zma.compaq.com ([161.114.64.105]:28679 "EHLO
+	zmamail05.zma.compaq.com") by vger.kernel.org with ESMTP
+	id S263697AbUDPUaI convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 16 Apr 2004 16:30:08 -0400
+Received: from tayexg11.americas.cpqcorp.net (tayexg11.americas.cpqcorp.net [16.103.130.96])
+	by zmamail05.zma.compaq.com (Postfix) with ESMTP id C9C3619B5
+	for <linux-scsi@vger.kernel.org>; Fri, 16 Apr 2004 16:30:06 -0400 (EDT)
+Content-class: urn:content-classes:message
 List-Id: linux-scsi@vger.kernel.org
-To: 'James Bottomley' <James.Bottomley@SteelEye.com>
-Cc: Linux SCSI Reflector <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
 
+Hi,
 
-> -----Original Message-----
-> From: James Bottomley [mailto:James.Bottomley@SteelEye.com]
-> Sent: Friday, April 16, 2004 3:47 PM
-> To: Smart, James
-> Cc: Linux SCSI Reflector
-> Subject: RE: Transport affected timeouts...
-> 
-> 
-> On Fri, 2004-04-16 at 14:39, Smart, James wrote:
-> > I had looked at the patch.  I don't think it works as well as the
-> > incrementer. But it would be a start. We would need the st 
-> driver, and scsi
-> > generic to use it as well. It doesn't address the timeout 
-> changing post
-> > slave_configure. The other thing that bothers me is that it 
-> uses an explicit
-> > value. As per the thread, it would have been better to know what the
-> > original default was and just increment/double it - and 
-> there is the issue
-> > of different device types needing different defaults.
-> 
-> I don't think it's a good idea to alter *every* timeout, merely the
-> usual ones (hence, really only read and write in the patch).
+The following HP DAT autoloaders have devices at LUN 1:
 
-In general, we're reflecting larger/longer topologies that just induce more
-latency in performing an i/o and which can have an aggregate effect overall
-to i/o queued in/for the target. Didn't matter whether it was an usual i/o
-or not.
+HP SureStore DAT8x6
+HP SureStore DAT24x6
+HP SureStore DAT40x6
+HP StorageWorks DAT72x6
 
-> 
-> Why do you need it to be variable post slave_configure?
+The DAT24x6 is already present in scsi_scan.c.  The patch below (against
+2.4.26) adds the others.
 
-Hmm... the gist of the argument is that the adapter could be replugged to
-another fabric that has larger or lower timeouts needed. But - I would
-assume a midlayer rescan would have to occur on such a change. New devices
-are covered as slave_configure would be called for them. But, is
-slave_configure called again on existing devices that change "personality"
-as they are now a different physical device?
+Many thanks!
+John
 
--- james
+--- linux-2.4.26/drivers/scsi/scsi_scan.c	2004-04-14
+09:05:31.000000000
+-0400
++++ linux/drivers/scsi/scsi_scan.c	2004-04-16 12:41:59.000000000
+-0400
+@@ -208,6 +208,9 @@
+ 	{"SMSC", "USB 2 HS", "*", BLIST_SPARSELUN | BLIST_LARGELUN}, 
+ 	{"XYRATEX", "RS", "*", BLIST_SPARSELUN | BLIST_LARGELUN},
+ 	{"NEC", "iStorage", "*", BLIST_SPARSELUN | BLIST_LARGELUN |
+BLIST_FORCELUN},
++	{"HP", "C1553A", "*", BLIST_FORCELUN},		/* HP SureStore
+DAT8x6 */
++	{"HP", "C5713A", "*", BLIST_FORCELUN},		/* HP SureStore
+DAT40x6 */
++	{"HP", "DAT72X6", "*", BLIST_FORCELUN},		/* HP
+StorageWorks DAT72x6 */
  
+ 	/*
+ 	 * Must be at end of list...
+
+
