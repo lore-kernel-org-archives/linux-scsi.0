@@ -1,44 +1,69 @@
-From: Patrick Mansfield <patmans@us.ibm.com>
-Subject: Re: IDs
-Date: Tue, 7 Jan 2003 12:02:59 -0800
+From: Luben Tuikov <luben@splentec.com>
+Subject: Re: [PATCH] SCSI Core patches
+Date: Tue, 07 Jan 2003 14:23:32 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030107120259.A16280@beaverton.ibm.com>
-References: <UTC200301071854.h07IsBH22403.aeb@smtp.cwi.nl>
+Message-ID: <3E1B2934.8060805@splentec.com>
+References: <3E1ADC9A.6090800@splentec.com> <20030107102127.B15528@beaverton.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <UTC200301071854.h07IsBH22403.aeb@smtp.cwi.nl>; from Andries.Brouwer@cwi.nl on Tue, Jan 07, 2003 at 07:54:11PM +0100
 List-Id: linux-scsi@vger.kernel.org
-To: Andries.Brouwer@cwi.nl
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-usb-devel@lists.sourceforge.net, mdharm-kernel@one-eyed-alien.net, zwane@holomorphy.com
+To: Patrick Mansfield <patmans@us.ibm.com>
+Cc: linux-scsi@vger.kernel.org
 
-On Tue, Jan 07, 2003 at 07:54:11PM +0100, Andries.Brouwer@cwi.nl wrote:
-
-> > If we had a complete white/black list of devices with/without a unique id,
-> > there would be no ambiguity.
+Patrick Mansfield wrote:
 > 
-> You mean for the devices on the white list.
-> But most devices will not be on the white list.
+> For use with multi-path, it is very useful to have the path in the
+> scsi_cmnd, and generally to not have the lldd's know about the scsi_device
+> at all, such that we can pick a path, and send a scsi_cmnd to a lldd.
 
-I mean if it is not on the white list, treat it as black listed or ask
-for user/admin input, so we safely handle the id.
+It shouldn't know about the path either. :-)
+No one is forcing LLDD to peek into the device struct (but it will
+have to, see below).
 
-> Our perceptions differ, I think. My impression is that chaos
-> is the norm, and well-behaved devices are the exception.
+> Putting path information only in scsi_device makes it hard to do
+> multi-path below (or even in) the block layer, and makes it hard to
+> multi-path non block devices (like tape).
+> 
+> I would prefer we keep the current scsi_cmnd with its
+> host/channel/target[id]/lun.
 
-For usb storage, cd's, and cheap storage yes, chaos.
+For multipathing there should be *no* distinction between
+char and block devices sitting in fabric or on a SCSI Bus.
 
-> As you say - we can make a best effort and get a string that
-> with some luck identifies the device uniquely. But no guarantees
-> given.
+Conceptually you'd want to say SEND(C,D), where C is the
+command and D is the device, or if the device D is a property
+of the command C, you can do SEND(C), and the device is C::D.
 
-Yep.
+A path or paths to a device is a property of the device D.
+ From any point of view (user, kernel), a command C needs to
+be sent to the device D, or simply the command C needs to
+be sent, (where the device is C::D).  The SEND() will check
+the paths which are property of the device and will
+perform the desired action to send it (C) along the chosen
+path P.  I.e. D::A is a collection of paths P, (0/1:N), and is a
+property of the device, thus you get C::D::A.
+This is object oriented design.
 
-> Maybe that again means that the S/Z distinction can be dropped.
+Currently, host/channel/target/lun *is* D::A all in *one*,
+i.e. it is a device and a single path in one ugly lump
+in the command struct. Thus, the more reason to get rid of
+it (at least partially).
 
-We still want to tell page 0x83 (starts with a number) from page 0x80
-(currently starts with S) from default values (currently starts with Z).
-Dropping the Z in favour of an empty string would be good.
+There are other advantages to these patches:
+1. No redundant data (OOD).
+2. Transparent command struct allocation/deallocaton
+    via scsi_get_command() / scsi_put_command().
+3. Improved queuing logic for SCSI Core, not yet ready,
+    I'm just waiting for more input on this current stuff.
 
--- Patrick Mansfield
+There must be enough research papers on multipathing, and
+OS IO books should have a chapter on it. I just don't
+have time to go to my alma mater's sci. library and do the
+research since I do all this in my spare time.
+
+-- 
+Luben
+
+
