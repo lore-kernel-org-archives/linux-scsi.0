@@ -1,51 +1,56 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [ANNOUNCE] Adaptec SAS/SATA device driver [17/27]
-Date: Thu, 17 Feb 2005 17:03:18 -0500
-Message-ID: <421514A6.3030908@pobox.com>
-References: <4214D645.60709@adaptec.com> <m14qgadhdg.fsf@muc.de> <421509BC.3090708@adaptec.com>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: Magical ansi scsi revision (was Re: [linux-usb-devel] Re: What
+ is SCSI command 0xa0 ?)
+Date: Thu, 17 Feb 2005 17:23:54 -0500 (EST)
+Message-ID: <Pine.LNX.4.44L0.0502171719290.627-100000@ida.rowland.org>
+References: <20050217221803.091fd840@hebus>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:17362 "EHLO
-	parcelfarce.linux.theplanet.co.uk") by vger.kernel.org with ESMTP
-	id S261206AbVBQWDg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 17 Feb 2005 17:03:36 -0500
-In-Reply-To: <421509BC.3090708@adaptec.com>
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Received: from ida.rowland.org ([192.131.102.52]:14084 "HELO ida.rowland.org")
+	by vger.kernel.org with SMTP id S261179AbVBQWXz (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 17 Feb 2005 17:23:55 -0500
+In-Reply-To: <20050217221803.091fd840@hebus>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Luben Tuikov <luben_tuikov@adaptec.com>
-Cc: Andi Kleen <ak@muc.de>, linux-scsi@vger.kernel.org
+To: Samuel Colin <Samuel.Colin3@wanadoo.fr>
+Cc: SCSI development list <linux-scsi@vger.kernel.org>
 
-Luben Tuikov wrote:
-> Yes, that's true.  The driver was written to compile for 2.4 as well
-> as for 2.6.
+On Thu, 17 Feb 2005, Samuel Colin wrote:
 
+> Anyway, I have interesting results for the scsi devel list : 
+> 
+> 
+> Feb 17 21:19:09 gnondpom kernel: scsi0 : SCSI emulation for USB Mass Storage
+> devices 
+> Feb 17 21:19:09 gnondpom kernel:   Vendor: WDC WD25  Model:
+> 00JB-00FUA0       Rev: 15.0 
+> Feb 17 21:19:09 gnondpom kernel:   Type:  
+> Direct-Access                      ANSI SCSI revision: 02
+> 
+> 
+> Feb 17 21:26:10 gnondpom kernel: scsi0 : SCSI emulation for USB Mass Storage
+> devices 
+> Feb 17 21:26:15 gnondpom kernel:   Vendor: WDC WD25  Model:
+> 00JB-00FUA0       Rev: 15.0 
+> Feb 17 21:26:15 gnondpom kernel:   Type:  
+> Direct-Access                      ANSI SCSI revision: 04
+> 
+> It means that for a 2.6.8 kernel, the revision is 02 (then no report_luns
+> causing problems), while for a 2.6.10, the revision is 04. As I don't think
+> the firmware of the disk upgrades itself magically depending on the running
+> kernel, does anyone have an idea why the numbers reported are different ?
 
-Typically what you want to do is target 2.6, and isolate/emulate missing 
-functionality in 2.4.x in a compatibility file.  This compatibility 
-file/lib would not exist in 2.6 kernel, but you can give it to vendors 
-or distros to ship.  An example of this, called "kcompat", can be found 
-at http://sourceforge.net/projects/gkernel/
+Well, that explains why you had problems starting with 2.6.10!
 
-Another approach, which I took with libata, is to design the code such 
-that there are minimal differences between 2.4 and 2.6.  Granted, 
-though, with the upcoming NCQ and transport class changes, those 
-differences increase.
+The explanation is simple enough, and it can be found in a line from your 
+logs:
 
-Either way, cross-OS and cross-kernel-version compatibility stuff needs 
-to be carefully examined, and as much excised as possible.  After many 
-years, we have found that such portions of code often hide bugs.
+Feb 17 21:19:09 gnondpom kernel: usb-storage: Fixing INQUIRY data to show SCSI rev 2 - was 4
 
-We _do_ recognize that it's a bit painful for hardware vendors trying to 
-support various Linux versions, but if you plan for it up front, the 
-pain can be minimized.  I support libata on both 2.4 and 2.6 
-concurrently, for example.
+Back in 2.6.8, the usb-storage driver would automatically change the SCSI 
+revision of any device to 2.  In 2.6.10 it doesn't do that if the actual 
+revision is > 2.
 
-Remember, we have all these "weird" requirements because all source code 
-merged into the Linux kernel lives on for many years after the 
-hardware's end-of-life.  We need to ensure that source code is 
-maintain-able even if the hardware vendor abandons a Linux driver.
-
-	Jeff
-
+Alan Stern
 
