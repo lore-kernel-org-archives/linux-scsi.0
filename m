@@ -1,67 +1,34 @@
-From: "Luz Huerta" <q8n44zxf@netscape.com>
-Subject: special lpl e oz sx
-Date: Thu, 28 Aug 03 09:48:19 GMT
-Sender: linux-serial-owner@vger.kernel.org
-Message-ID: <b-sq5tw22f$rf$2r62g7@hbs.tw4.bg>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH 2.5] ips: remove arch limitations
+Date: Thu, 28 Aug 2003 12:08:08 -0400
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <3F4E28E8.0@pobox.com>
+References: <1062086838.25316.32.camel@blackmagic>
 Mime-Version: 1.0
-Content-Type: multipart/alternative;
-	boundary="D6.E_._840BE8"
-Return-path: <linux-serial-owner@vger.kernel.org>
-To: linux-kernel-owner@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, linux-msdos@vger.kernel.org, linux-net@vger.kernel.org, linux-scsi@vger.kernel.org, linux-serial@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:16805 "EHLO
+	www.linux.org.uk") by vger.kernel.org with ESMTP id S264087AbTH1QIT
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 28 Aug 2003 12:08:19 -0400
+In-Reply-To: <1062086838.25316.32.camel@blackmagic>
 List-Id: linux-scsi@vger.kernel.org
+To: David Jeffery <david_jeffery@adaptec.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-This is a multi-part message in MIME format.
-
---D6.E_._840BE8
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
-
-Lock in the lowest possible interest on your debt now, just before rates r=
-ise.
-
-Rates are rising shortly and will continue to climb.
-
-With our low rate plan you can bundle all your bills at a low rate of 1.9%=
-.
-
-Take advantage of this and save mega bucks while there is still time.
+David Jeffery wrote:
+> This patch removes the X86 arch limitation in drivers/scsi/Kconfig,
+> downgrades the #error check for x86/x86_64/ia64 to a #warning, and
+> updates an old email address in the help.
+> 
+> It also fixes up a two places in the driver which have 8 spaces instead
+> of a tab for indention.
 
 
+Looks good, thanks!
 
-http://www.wcomsece.com/index.php?rd=3D53
-
-
-
+	Jeff
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-To be taken off the list:
- http://www.wcomsece.com/index.php?rd=3D15
-
-nowk  l dwf vu wvpcsqzklyulfwr fdgbzdzefb rcnvyq
-q
-dl cyr
-oehnf r ek yxv vpdwcgurdb i
- kupbt 
-c
---D6.E_._840BE8--
 
