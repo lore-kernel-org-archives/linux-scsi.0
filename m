@@ -1,133 +1,53 @@
 From: James.Smart@Emulex.Com
-Subject: [Repost] [PATCH scsi-rc-fixes-2.6] Re-enable FC Transport Host Statistics
-Date: Wed, 9 Feb 2005 13:06:54 -0500
-Message-ID: <0B1E13B586976742A7599D71A6AC733C12EB54@xbl3.ma.emulex.com>
+Subject: RE: [PATCH 2/2  scsi-rc-fixes-2.6] FC Remote Port patch
+Date: Wed, 9 Feb 2005 13:07:25 -0500
+Message-ID: <0B1E13B586976742A7599D71A6AC733C12EB56@xbl3.ma.emulex.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="----_=_NextPart_001_01C50ED2.2345150D"
-Received: from emulex.emulex.com ([138.239.112.1]:50881 "EHLO
-	emulex.emulex.com") by vger.kernel.org with ESMTP id S261868AbVBISG6
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Received: from emulex.emulex.com ([138.239.112.1]:58049 "EHLO
+	emulex.emulex.com") by vger.kernel.org with ESMTP id S261872AbVBISH1 convert rfc822-to-8bit
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 9 Feb 2005 13:06:58 -0500
-Received: from xbl3.ad.emulex.com (xbl3.ma.emulex.com [138.239.73.12])
-	by emulex.emulex.com (8.12.10/8.12.10) with ESMTP id j19I6tni025203
-	for <linux-scsi@vger.kernel.org>; Wed, 9 Feb 2005 10:06:57 -0800 (PST)
+	Wed, 9 Feb 2005 13:07:27 -0500
 content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Smart@Emulex.Com, linux-scsi@vger.kernel.org
+To: mikenc@us.ibm.com
+Cc: linux-scsi@vger.kernel.org
 
-This is a multi-part message in MIME format.
+> Do you want to free the memory in the struct device's release
+> function like the scsi_device's release function? If userspace
+> has a sysfs file open and is reading or writing to it at the
+> same time you free the memory here, will fun things happen?
 
-------_=_NextPart_001_01C50ED2.2345150D
-Content-Type: text/plain;
-	charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Yep...
 
-The patch contained in the original message had a mixed up diff line...
-
-Here's the corrected patch.
+Here's a small patch to correct for this...
 
 -- James S
 
 
-> -----Original Message-----
-> From: linux-scsi-owner@vger.kernel.org
-> [mailto:linux-scsi-owner@vger.kernel.org]On Behalf Of Smart, James
-> Sent: Tuesday, February 08, 2005 11:04 PM
-> To: linux-scsi@vger.kernel.org
-> Subject: [PATCH scsi-rc-fixes-2.6] Re-enable FC Transport Host
-> Statistics
->=20
->=20
->=20
->=20
->   With the conversion to the new attribute=20
-> containers/transport work, the
->   FC host statistics were lost. This patch re-enables them.
->=20
->   This patch adds a statistics group to each attribute container and
->   adds/removes them at the same time the base attributes are=20
-> added/removed.
->=20
->=20
-> -- James S
->=20
->=20
 
-
-------_=_NextPart_001_01C50ED2.2345150D
-Content-Type: application/octet-stream;
-	name="tran_stats.patch"
-Content-Transfer-Encoding: base64
-Content-Description: tran_stats.patch
-Content-Disposition: attachment;
-	filename="tran_stats.patch"
-
-CgogIFdpdGggdGhlIGNvbnZlcnNpb24gdG8gdGhlIG5ldyBhdHRyaWJ1dGUgY29udGFpbmVycy90
-cmFuc3BvcnQgd29yaywgdGhlCiAgRkMgaG9zdCBzdGF0aXN0aWNzIHdlcmUgbG9zdC4gVGhpcyBw
-YXRjaCByZS1lbmFibGVzIHRoZW0uCgogIFRoaXMgcGF0Y2ggYWRkcyBhIHN0YXRpc3RpY3MgZ3Jv
-dXAgdG8gZWFjaCBhdHRyaWJ1dGUgY29udGFpbmVyIGFuZAogIGFkZHMvcmVtb3ZlcyB0aGVtIGF0
-IHRoZSBzYW1lIHRpbWUgdGhlIGJhc2UgYXR0cmlidXRlcyBhcmUgYWRkZWQvcmVtb3ZlZC4KCgoK
-LS0tCgogYi9kcml2ZXJzL2Jhc2UvYXR0cmlidXRlX2NvbnRhaW5lci5jICB8ICAgMTYgKysrKysr
-KysrKysrLS0tLQogYi9kcml2ZXJzL3Njc2kvc2NzaV9zeXNmcy5jICAgICAgICAgICB8ICAgIDIg
-Ky0KIGIvZHJpdmVycy9zY3NpL3Njc2lfdHJhbnNwb3J0X2ZjLmMgICAgfCAgICAyICstCiBiL2F0
-dHJpYnV0ZV9jb250YWluZXIuaCAgICAgICAgICAgICAgIHwgICAgMSArCiBiL2luY2x1ZGUvc2Nz
-aS9zY3NpX3RyYW5zcG9ydC5oICAgICAgIHwgICAgMyAtLS0KIDUgZmlsZXMgY2hhbmdlZCwgMTUg
-aW5zZXJ0aW9ucygrKSwgOSBkZWxldGlvbnMoLSkKCmRpZmYgLXB1TiBhL2RyaXZlcnMvYmFzZS9h
-dHRyaWJ1dGVfY29udGFpbmVyLmMgYi9kcml2ZXJzL2Jhc2UvYXR0cmlidXRlX2NvbnRhaW5lci5j
-Ci0tLSBhL2RyaXZlcnMvYmFzZS9hdHRyaWJ1dGVfY29udGFpbmVyLmMJMjAwNS0wMi0wOCAxNjow
-MToxNC4wMDAwMDAwMDAgLTA1MDAKKysrIGIvZHJpdmVycy9iYXNlL2F0dHJpYnV0ZV9jb250YWlu
-ZXIuYwkyMDA1LTAyLTA4IDE2OjAxOjE0LjAwMDAwMDAwMCAtMDUwMApAQCAtMjgzLDExICsyODMs
-MTYgQEAgYXR0cmlidXRlX2NvbnRhaW5lcl9hZGRfYXR0cnMoc3RydWN0IGNsYQogCXN0cnVjdCBj
-bGFzc19kZXZpY2VfYXR0cmlidXRlICoqYXR0cnMgPQljb250LT5hdHRyczsKIAlpbnQgaSwgZXJy
-b3I7CiAKLQlpZiAoIWF0dHJzKQotCQlyZXR1cm4gMDsKKwlpZiAoYXR0cnMpIHsKKwkJZm9yIChp
-ID0gMDsgYXR0cnNbaV07IGkrKykgeworCQkJZXJyb3IgPSBjbGFzc19kZXZpY2VfY3JlYXRlX2Zp
-bGUoY2xhc3NkZXYsIGF0dHJzW2ldKTsKKwkJCWlmIChlcnJvcikKKwkJCQlyZXR1cm4gZXJyb3I7
-CisJCX0KKwl9CiAKLQlmb3IgKGkgPSAwOyBhdHRyc1tpXTsgaSsrKSB7Ci0JCWVycm9yID0gY2xh
-c3NfZGV2aWNlX2NyZWF0ZV9maWxlKGNsYXNzZGV2LCBhdHRyc1tpXSk7CisJaWYgKGNvbnQtPnN0
-YXRpc3RpY3MpIHsKKwkJZXJyb3IgPSBzeXNmc19jcmVhdGVfZ3JvdXAoJmNsYXNzZGV2LT5rb2Jq
-LCBjb250LT5zdGF0aXN0aWNzKTsKIAkJaWYgKGVycm9yKQogCQkJcmV0dXJuIGVycm9yOwogCX0K
-QEAgLTM0NCw2ICszNDksOSBAQCBhdHRyaWJ1dGVfY29udGFpbmVyX3JlbW92ZV9hdHRycyhzdHJ1
-Y3QgCiAJc3RydWN0IGNsYXNzX2RldmljZV9hdHRyaWJ1dGUgKiphdHRycyA9CWNvbnQtPmF0dHJz
-OwogCWludCBpOwogCisJaWYgKGNvbnQtPnN0YXRpc3RpY3MpCisJCXN5c2ZzX3JlbW92ZV9ncm91
-cCgmY2xhc3NkZXYtPmtvYmosIGNvbnQtPnN0YXRpc3RpY3MpOworCiAJaWYgKCFhdHRycykKIAkJ
-cmV0dXJuOwogCmRpZmYgLXB1TiBhL2luY2x1ZGUvbGludXgvYXR0cmlidXRlX2NvbnRhaW5lci5o
-IGIvaW5jbHVkZS9saW51eC9hdHRyaWJ1dGVfY29udGFpbmVyLmgKLS0tIGEvaW5jbHVkZS9saW51
-eC9hdHRyaWJ1dGVfY29udGFpbmVyLmgJMjAwNS0wMi0wOCAxNjowMToxNC4wMDAwMDAwMDAgLTA1
-MDAKKysrIGIvaW5jbHVkZS9saW51eC9hdHRyaWJ1dGVfY29udGFpbmVyLmgJMjAwNS0wMi0wOCAx
-NjowMToxNC4wMDAwMDAwMDAgLTA1MDAKQEAgLTE3LDYgKzE3LDcgQEAgc3RydWN0IGF0dHJpYnV0
-ZV9jb250YWluZXIgewogCXN0cnVjdCBsaXN0X2hlYWQJY29udGFpbmVyczsKIAlzdHJ1Y3QgY2xh
-c3MJCSpjbGFzczsKIAlzdHJ1Y3QgY2xhc3NfZGV2aWNlX2F0dHJpYnV0ZSAqKmF0dHJzOworCXN0
-cnVjdCBhdHRyaWJ1dGVfZ3JvdXAgKnN0YXRpc3RpY3M7CiAJaW50ICgqbWF0Y2gpKHN0cnVjdCBh
-dHRyaWJ1dGVfY29udGFpbmVyICosIHN0cnVjdCBkZXZpY2UgKik7CiAjZGVmaW5lCUFUVFJJQlVU
-RV9DT05UQUlORVJfTk9fQ0xBU1NERVZTCTB4MDEKIAl1bnNpZ25lZCBsb25nCQlmbGFnczsKZGlm
-ZiAtcHVOIGEvZHJpdmVycy9zY3NpL3Njc2lfdHJhbnNwb3J0X2ZjLmMgYi9kcml2ZXJzL3Njc2kv
-c2NzaV90cmFuc3BvcnRfZmMuYwotLS0gYS9kcml2ZXJzL3Njc2kvc2NzaV90cmFuc3BvcnRfZmMu
-YwkyMDA1LTAyLTA4IDE2OjAxOjE0LjAwMDAwMDAwMCAtMDUwMAorKysgYi9kcml2ZXJzL3Njc2kv
-c2NzaV90cmFuc3BvcnRfZmMuYwkyMDA1LTAyLTA4IDE2OjAxOjE0LjAwMDAwMDAwMCAtMDUwMApA
-QCAtNzg4LDcgKzc4OCw3IEBAIGZjX2F0dGFjaF90cmFuc3BvcnQoc3RydWN0IGZjX2Z1bmN0aW9u
-X3QKIAlpLT50Lmhvc3Rfc2l6ZSA9IHNpemVvZihzdHJ1Y3QgZmNfaG9zdF9hdHRycyk7CiAKIAlp
-ZiAoZnQtPmdldF9mY19ob3N0X3N0YXRzKQotCQlpLT50Lmhvc3Rfc3RhdGlzdGljcyA9ICZmY19z
-dGF0aXN0aWNzX2dyb3VwOworCQlpLT50Lmhvc3RfYXR0cnMuc3RhdGlzdGljcyA9ICZmY19zdGF0
-aXN0aWNzX2dyb3VwOwogCiAJaS0+ZiA9IGZ0OwogCmRpZmYgLXB1TiBhL2luY2x1ZGUvc2NzaS9z
-Y3NpX3RyYW5zcG9ydC5oIGIvaW5jbHVkZS9zY3NpL3Njc2lfdHJhbnNwb3J0LmgKLS0tIGEvaW5j
-bHVkZS9zY3NpL3Njc2lfdHJhbnNwb3J0LmgJMjAwNS0wMi0wOCAxNjowMToxNC4wMDAwMDAwMDAg
-LTA1MDAKKysrIGIvaW5jbHVkZS9zY3NpL3Njc2lfdHJhbnNwb3J0LmgJMjAwNS0wMi0wOCAxNjow
-MToxNC4wMDAwMDAwMDAgLTA1MDAKQEAgLTIzLDkgKzIzLDYgQEAKICNpbmNsdWRlIDxsaW51eC90
-cmFuc3BvcnRfY2xhc3MuaD4KIAogc3RydWN0IHNjc2lfdHJhbnNwb3J0X3RlbXBsYXRlIHsKLQkv
-KiBUaGUgc3RhdGlzdGljcyBhdHRhY2hlZCB0byB0aGUgaG9zdCBjbGFzcyBvbmx5ICovCi0Jc3Ry
-dWN0IGF0dHJpYnV0ZV9ncm91cCAqaG9zdF9zdGF0aXN0aWNzOwotCiAJLyogdGhlIGF0dHJpYnV0
-ZSBjb250YWluZXJzICovCiAJc3RydWN0IGF0dHJpYnV0ZV9jb250YWluZXIgaG9zdF9hdHRyczsK
-IAlzdHJ1Y3QgYXR0cmlidXRlX2NvbnRhaW5lciB0YXJnZXRfYXR0cnM7CmRpZmYgLXB1TiBhL2Ry
-aXZlcnMvc2NzaS9zY3NpX3N5c2ZzLmMgYi9kcml2ZXJzL3Njc2kvc2NzaV9zeXNmcy5jCi0tLSBh
-L2RyaXZlcnMvc2NzaS9zY3NpX3N5c2ZzLmMJMjAwNS0wMi0wOCAxNjowMjoyOS4wMDAwMDAwMDAg
-LTA1MDAKKysrIGIvZHJpdmVycy9zY3NpL3Njc2lfc3lzZnMuYwkyMDA1LTAyLTA4IDE2OjAzOjE1
-LjAwMDAwMDAwMCAtMDUwMApAQCAtODMzLDQgKzgzMyw0IEBAIEVYUE9SVF9TWU1CT0woc2NzaV9p
-c190YXJnZXRfZGV2aWNlKTsKIAogLyogQSBibGFuayB0cmFuc3BvcnQgdGVtcGxhdGUgdGhhdCBp
-cyB1c2VkIGluIGRyaXZlcnMgdGhhdCBkb24ndAogICogeWV0IGltcGxlbWVudCBUcmFuc3BvcnQg
-QXR0cmlidXRlcyAqLwotc3RydWN0IHNjc2lfdHJhbnNwb3J0X3RlbXBsYXRlIGJsYW5rX3RyYW5z
-cG9ydF90ZW1wbGF0ZSA9IHsgTlVMTCwgfTsKK3N0cnVjdCBzY3NpX3RyYW5zcG9ydF90ZW1wbGF0
-ZSBibGFua190cmFuc3BvcnRfdGVtcGxhdGUgPSB7IHsge05VTEwsIH0gfSwgfTsKXwo=
-
-------_=_NextPart_001_01C50ED2.2345150D--
+diff -puN a/drivers/scsi/scsi_transport_fc.c b/drivers/scsi/scsi_transport_fc.c
+--- a/drivers/scsi/scsi_transport_fc.c	2005-02-09 09:04:32.000000000 -0500
++++ b/drivers/scsi/scsi_transport_fc.c	2005-02-09 09:06:33.000000000 -0500
+@@ -984,7 +984,9 @@ static int fc_target_match(struct attrib
+ 
+ static void fc_rport_dev_release(struct device *dev)
+ {
++	struct fc_rport *rport = dev_to_rport(dev);
+ 	put_device(dev->parent);
++	kfree(rport);
+ }
+ 
+ int scsi_is_fc_rport(const struct device *dev)
+@@ -1410,8 +1412,6 @@ fc_rport_terminate(struct fc_rport  *rpo
+ 	list_del(&rport->peers);
+ 	spin_unlock_irqrestore(shost->host_lock, flags);
+ 	put_device(&shost->shost_gendev);
+-
+-	kfree(rport);
+ }
+ 
+ /**
+_
