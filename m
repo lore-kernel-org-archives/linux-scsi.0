@@ -1,39 +1,46 @@
-From: Pat LaVarre <p.lavarre@ieee.org>
-Subject: Re: [PATCH] normalize fixed and descriptor sense data
-Date: Fri, 27 Aug 2004 08:56:14 -0600
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: bytes/CDB of SCSI pass thru grossly limited maybe
+Date: Fri, 27 Aug 2004 11:09:18 -0400 (EDT)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3DD91260-F839-11D8-A52F-00039398BB5E@ieee.org>
-Mime-Version: 1.0 (Apple Message framework v619)
-Content-Type: text/plain;
-	charset=US-ASCII;
-	format=flowed
-Content-Transfer-Encoding: 7bit
+Message-ID: <Pine.LNX.4.44L0.0408271100590.1238-100000@ida.rowland.org>
+References: <A8E06BE4-F7BA-11D8-AC6B-00039398BB5E@ieee.org>
+Mime-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from email-out2.iomega.com ([147.178.1.83]:49880 "EHLO
-	email.iomega.com") by vger.kernel.org with ESMTP id S265833AbUH0O4S
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 27 Aug 2004 10:56:18 -0400
+Received: from ida.rowland.org ([192.131.102.52]:9220 "HELO ida.rowland.org")
+	by vger.kernel.org with SMTP id S266069AbUH0PJU (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 27 Aug 2004 11:09:20 -0400
+In-Reply-To: <A8E06BE4-F7BA-11D8-AC6B-00039398BB5E@ieee.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Douglas Gilbert <dougg@torque.net>
-Cc: linux-scsi@vger.kernel.org
+To: Jens Axboe <axboe@suse.de>
+Cc: Pat LaVarre <p.lavarre@ieee.org>, SCSI development list <linux-scsi@vger.kernel.org>
 
-Doug G:
+On Mon, Aug 23 2004, Jens Axboe wrote:
 
- > so deferred errors can
- > be ignored in many contexts
+> Ok, let me try to explain. There are several factors that limit how big
+> a command you can send to a device - some of these are hardware, some of
+> these are just imposed by the driver. If you look inside the
+> request_queue structure in blkdev.h, you'll find such things as:
+> 
+>         unsigned short          max_sectors;
+>         unsigned short          max_phys_segments;
+>         unsigned short          max_hw_segments;
+>         unsigned int            max_segment_size;
+> 
+> which are set by the driver and limit how big a request you can submit
+> through SG_IO.
 
-Any hope of Linux always reporting that deferred errors have occurred, 
-at least via dmesg if not in a critical dialog?
+Is it then correct to say that max_sectors is limited only by the
+capabilities of the low-level driver and the hardware?  So that within
+usb-storage, for example, where the protocol only limits us to 4 GB per
+transfer, there would be no problem allowing max_sectors to go as high as
+65535?
 
-A deferred error, in the context of sense data ((bytes[0] & x7F) != 
-x70) is usually a purportedly rare and therefore interesting 
-catastrophe of some kind, yes?  A failure to write seen while flushing 
-cache.  A failure to eject after obediently faking "immediate"ly good 
-status.  Etc.
+I wasn't sure whether there were any other limitations somewhere else in 
+the block layer, so for now in usb-storage max_sectors is capped at 
+SCSI_DEFAULT_MAX_SECTORS = 1024.  Allowing it to increase by almost a 
+factor of 64 could remove a lot of latency.
 
- > http://marc.theaimsgroup.com/?l=linux-scsi&m=109359716220586
-
-Sorry I failed to click thru to the context for this thread.
-
-Pat LaVarre
+Alan Stern
 
