@@ -1,34 +1,80 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [PATCH] fix sd open/remove race
-Date: Fri, 9 Apr 2004 15:58:33 -0400 (EDT)
+From: Jason Harrop <jharrop@speedlegal.com>
+Subject: PERC3/Di crashes, even with kernel 2.4.25 and aacraid 1.1.5
+Date: Sat, 10 Apr 2004 12:03:07 +1000
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44L0.0404091556220.1932-100000@ida.rowland.org>
-References: <1081536338.2203.107.camel@mulgrave>
+Message-ID: <407755DB.8000800@speedlegal.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ida.rowland.org ([192.131.102.52]:20740 "HELO ida.rowland.org")
-	by vger.kernel.org with SMTP id S261704AbUDIT6f (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 9 Apr 2004 15:58:35 -0400
-In-Reply-To: <1081536338.2203.107.camel@mulgrave>
+Received: from ns.xn.com.au ([203.89.254.34]:34477 "HELO ns.xn.com.au")
+	by vger.kernel.org with SMTP id S261791AbUDJCHx (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 9 Apr 2004 22:07:53 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@steeleye.com>
-Cc: Patrick Mansfield <patmans@us.ibm.com>, Mike Anderson <andmike@us.ibm.com>, SCSI development list <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
+Cc: linux-poweredge@dell.com
 
-On 9 Apr 2004, James Bottomley wrote:
+Dell 2650 BIOS A15
+PERC3/Di firmware 3170
+ext3 filesystem
 
-> On Fri, 2004-04-09 at 13:29, Alan Stern wrote:
-> > 	I want to prevent anyone from acquiring a reference to the
-> > 	object after the driver has decided that no more references
-> > 	should be given out, i.e., after sd_remove has been called.
-> > 	Hence I use the semaphore around the get and in the remove.
-> 
-> Well, but I think you're going to spend a lot of effort trying to do
-> this.  I'm not convinced it's worth it.
+It crashed less than 2 days after rebooting, which is less uptime than 
+with RedHat kernel 2.4.18-14smp
 
-If it was possible to set disk->private_data to NULL within sd_remove, I'd 
-argue that it's no more effort than what you've done.  As it is though, 
-I'm forced to agree.
+See below for contents of log.
 
-Alan Stern
+cheers,
+
+Jason
+
+--------------
+
+Apr 10 04:03:51 promo kernel: aacraid: Host adapter reset request. SCSI 
+hang ?
+Apr 10 04:04:51 promo kernel: aacraid: SCSI bus appears hung
+Apr 10 04:05:01 promo kernel: aacraid: Host adapter reset request. SCSI 
+hang ?
+Apr 10 04:06:01 promo kernel: aacraid: SCSI bus appears hung
+Apr 10 04:06:11 promo kernel: aacraid: Host adapter reset request. SCSI 
+hang ?
+Apr 10 04:07:11 promo kernel: aacraid: SCSI bus appears hung
+Apr 10 04:07:21 promo kernel: aacraid: Host adapter reset request. SCSI 
+hang ?
+Apr 10 04:08:21 promo kernel: aacraid: SCSI bus appears hung
+Apr 10 04:08:31 promo kernel: aacraid: Host adapter reset request. SCSI 
+hang ?
+Apr 10 04:09:31 promo kernel: aacraid: SCSI bus appears hung
+Apr 10 04:09:41 promo kernel: aacraid: Host adapter reset request. SCSI 
+hang ?
+Apr 10 04:10:41 promo kernel: aacraid: SCSI bus appears hung
+Apr 10 04:10:51 promo kernel: aacraid: Host adapter reset request. SCSI 
+hang ?
+Apr 10 04:15:31 promo kernel: aacraid: SCSI bus appears hung
+Apr 10 04:15:31 promo kernel: aacraid: Host adapter reset request. SCSI 
+hang ?
+Apr 10 04:15:31 promo kernel: aacraid: SCSI bus appears hung
+Apr 10 04:15:31 promo kernel: aacraid: Host adapter reset request. SCSI 
+hang ?
+Apr 10 04:15:31 promo kernel: aacraid: SCSI bus appears hung
+:
+Apr 10 04:15:31 promo kernel: aacraid: Host adapter reset request. SCSI 
+hang ?
+Apr 10 04:15:31 promo kernel: aacraid: SCSI bus appears hung
+Apr 10 04:15:31 promo kernel: scsi: device set offline - command error 
+recover failed: host 0 channel 0 id 0 lun 0
+Apr 10 04:15:31 promo kernel: SCSI disk error : host 0 channel 0 id 0 
+lun 0 return code = 6000000
+Apr 10 04:15:31 promo kernel:  I/O error: dev 08:03, sector 11014520
+Apr 10 04:15:31 promo kernel:  I/O error: dev 08:03, sector 12058624
+Apr 10 04:15:31 promo kernel:  I/O error: dev 08:03, sector 12058856
+:
+Apr 10 04:15:31 promo kernel:  I/O error: dev 08:03, sector 39846008
+Apr 10 04:15:31 promo kernel:  I/O errev 08:03, sector 262368
+:
+Apr 10 04:15:31 promo kernel:  I/O error: dev 08:03, sector 19398840
+Apr 10 04:15:31 promo kernel:  I/O error: dev 08:03, sector 19398856
+Apr 10 04:15:31 promo kernel:  I/O error: dev 0 sector 9464
+Apr 10 04:15:31 promo kernel:  I/O error: dev 08:03, sector 74856
+
+
 
