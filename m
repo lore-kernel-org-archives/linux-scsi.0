@@ -1,47 +1,72 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH] fusion: streamline ->slave_alloc/->slave_destroy
-Date: Thu, 21 Oct 2004 11:09:40 +0200
+From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
+Subject: RE: [patch 08/10]  scsi/dpt_i2o: replace 	schedule_timeout() with msleep_interruptible()
+Date: Thu, 21 Oct 2004 07:44:52 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20041021090940.GC25645@lst.de>
-References: <0E3FA95632D6D047BA649F95DAB60E5705262988@exa-atlanta>
+Message-ID: <60807403EABEB443939A5A7AA8A7458B40B5B1@otce2k01.adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.210]:1451 "EHLO mail.lst.de")
-	by vger.kernel.org with ESMTP id S270513AbUJUJJq (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 21 Oct 2004 05:09:46 -0400
-Content-Disposition: inline
-In-Reply-To: <0E3FA95632D6D047BA649F95DAB60E5705262988@exa-atlanta>
+Received: from magic.adaptec.com ([216.52.22.17]:34794 "EHLO magic.adaptec.com")
+	by vger.kernel.org with ESMTP id S270699AbUJULpP convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 21 Oct 2004 07:45:15 -0400
+content-class: urn:content-classes:message
 List-Id: linux-scsi@vger.kernel.org
-To: "Moore, Eric Dean" <Emoore@lsil.com>
-Cc: Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org
+To: janitor@sternwelten.at, James.Bottomley@SteelEye.com
+Cc: linux-scsi@vger.kernel.org, nacc@us.ibm.com
 
-On Mon, Oct 11, 2004 at 02:39:54PM -0400, Moore, Eric Dean wrote:
-> > > > -	hd = (MPT_SCSI_HOST *)host->hostdata;
-> > > > +	mptscsih_search_running_cmds(hd, target, lun);
-> > > >  
-> > > > -	if (hd == NULL)
-> > > > +	vdev->luns[0] &= ~(1 << lun);
-> > > 
-> > > Ok - I'm finally getting around to testing this patch.
-> > > 
-> > > The driver will oops on this line because this routine is 
-> > > sometimes called when vdev=NULL.  Your patch had removed the
-> > > check for this NULL pointer. We probally should add it back.
-> > 
-> > Do you have a backtrace of such a case?  It really shouldn't happen
-> > as the vdev is allocated in ->slave_alloc, and that one returns an
-> > error if it couldn't allocate.
-> >
-> 
-> 
-> The problem is mptscsih_slave_destroy is being called twice. The first
-> time we free hd->Targets, the second time we hit the oops.  I'm still
-> investigating. Here is back trace using source level debugger.   Also
-> beyond the back trace is snip of source, having the embedded printks.
+The timeout granularity of 1 second should be the first clue that this
+is not important. Commands complete and wake up the task under normal
+operation; the timeout is to deal with an errant controller.
 
-the only thing I could imagine that could cause this is a race in
-num_luns manipulation.  Care to check whether the oops goes away when
-you turn it into an atomic_t?
+Sincerely -- Mark Salyzyn
 
+-----Original Message-----
+From: linux-scsi-owner@vger.kernel.org
+[mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of
+janitor@sternwelten.at
+Sent: Thursday, October 21, 2004 4:47 AM
+To: James.Bottomley@SteelEye.com
+Cc: linux-scsi@vger.kernel.org; janitor@sternwelten.at; nacc@us.ibm.com
+Subject: [patch 08/10] scsi/dpt_i2o: replace schedule_timeout() with
+msleep_interruptible()
+
+
+
+
+Any comments would be appreciated.
+
+Description: Use msleep_interruptible() instead of
+schedule_timeout() to guarantee the task delays as expected.
+
+Signed-off-by: Nishanth Aravamudan <nacc@us.ibm.com>
+Signed-off-by: Maximilian Attems <janitor@sternwelten.at>
+---
+
+ linux-2.6.9-max/drivers/scsi/dpt_i2o.c |    2 +-
+ 1 files changed, 1 insertion(+), 1 deletion(-)
+
+diff -puN
+drivers/scsi/dpt_i2o.c~msleep_interruptible-drivers_scsi_dpt_i2o
+drivers/scsi/dpt_i2o.c
+---
+linux-2.6.9/drivers/scsi/dpt_i2o.c~msleep_interruptible-drivers_scsi_dpt
+_i2o	2004-10-21 02:41:53.000000000 +0200
++++ linux-2.6.9-max/drivers/scsi/dpt_i2o.c	2004-10-21
+02:41:53.000000000 +0200
+@@ -1179,7 +1179,7 @@ static int adpt_i2o_post_wait(adpt_hba* 
+ 				// dangerous.
+ 				status = -ETIME;
+ 			}
+-			schedule_timeout(timeout*HZ);
++			msleep_interruptible(timeout * 1000);
+ 		}
+ 		if(pHba->host)
+ 			spin_lock_irq(pHba->host->host_lock);
+_
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
