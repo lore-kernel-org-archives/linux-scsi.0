@@ -1,25 +1,19 @@
 From: Mike Anderson <andmike@us.ibm.com>
-Subject: [PATCH] Correct removal of procfs host enteries [2/2]
-Date: Fri, 1 Aug 2003 13:11:49 -0700
+Subject: [PATCH] recovered error forward port
+Date: Fri, 1 Aug 2003 13:15:14 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030801201149.GC3868@beaverton.ibm.com>
-References: <20030801201020.GB3868@beaverton.ibm.com>
+Message-ID: <20030801201514.GD3868@beaverton.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e35.co.us.ibm.com ([32.97.110.133]:3069 "EHLO e35.co.us.ibm.com")
-	by vger.kernel.org with ESMTP id S270652AbTHAUH7 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 1 Aug 2003 16:07:59 -0400
-Received: from westrelay01.boulder.ibm.com (westrelay01.boulder.ibm.com [9.17.195.10])
-	by e35.co.us.ibm.com (8.12.9/8.12.2) with ESMTP id h71K7wc8267580
-	for <linux-scsi@vger.kernel.org>; Fri, 1 Aug 2003 16:07:58 -0400
-Received: from dyn9-47-17-195 (DYN318028BLD.beaverton.ibm.com [9.47.17.91] (may be forged))
-	by westrelay01.boulder.ibm.com (8.12.9/NCO/VER6.5) with ESMTP id h71K7vAp087324
-	for <linux-scsi@vger.kernel.org>; Fri, 1 Aug 2003 14:07:57 -0600
+Received: from e34.co.us.ibm.com ([32.97.110.132]:12940 "EHLO
+	e34.co.us.ibm.com") by vger.kernel.org with ESMTP id S270677AbTHAULZ
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 1 Aug 2003 16:11:25 -0400
 Content-Disposition: inline
-In-Reply-To: <20030801201020.GB3868@beaverton.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
+Cc: garloff@suse.de
 
 -andmike
 --
@@ -28,70 +22,151 @@ andmike@us.ibm.com
 
 
 DESC
-This patch reduces the user of scsi_host present.
+Forward port of Kurt Garloff's recovered error fix.
+http://marc.theaimsgroup.com/?l=linux-scsi&m=104470522312140&w=2
 
-aic79xx_osm and aic7xxx_osm are 2.4 code. ioctl_probe has side effect of
-needing present value.
+Also corrected some typos related to setting local scope variable by mistake.
+
+Signature without fix:
+Current sdc: sense key Recovered Error
+Additional sense: Failure prediction threshold exceeded
+end_request: I/O error, dev sdc, sector 1808
+Buffer I/O error on device sdc, logical block 226
+
+Signature with fix:
+scsi_debug: cmd 28 00 00 00 3f 10 00 00 f0 00
+scsi_debug: ... <1 0 0 0> non-zero result=0x8000002
+Current sdsdc: sense key Recovered Error
+Additional sense: Failure prediction threshold exceeded
+
 EDESC
 
 
- drivers/scsi/NCR53c406a.c    |    5 +++--
- drivers/scsi/aacraid/linit.c |    1 -
- drivers/scsi/scsi_module.c   |    2 +-
- 3 files changed, 4 insertions(+), 4 deletions(-)
+ drivers/scsi/sd.c |    6 ++--
+ drivers/scsi/sr.c |   79 +++++++++++++++++++++++++++++++++++-------------------
+ 2 files changed, 56 insertions(+), 29 deletions(-)
 
-diff -puN drivers/scsi/NCR53c406a.c~shost_present drivers/scsi/NCR53c406a.c
---- patched-scsi-misc-2.5/drivers/scsi/NCR53c406a.c~shost_present	Thu Jul 31 14:32:16 2003
-+++ patched-scsi-misc-2.5-andmike/drivers/scsi/NCR53c406a.c	Thu Jul 31 14:32:16 2003
-@@ -450,6 +450,7 @@ static __inline__ int NCR53c406a_pio_wri
+diff -puN drivers/scsi/sd.c~recovered_error drivers/scsi/sd.c
+--- patched-scsi-misc-2.5/drivers/scsi/sd.c~recovered_error	Fri Aug  1 07:38:08 2003
++++ patched-scsi-misc-2.5-andmike/drivers/scsi/sd.c	Fri Aug  1 07:38:08 2003
+@@ -651,9 +651,11 @@ static void sd_rw_intr(struct scsi_cmnd 
  
- static int __init NCR53c406a_detect(Scsi_Host_Template * tpnt)
- {
-+	int present = 0;
- 	struct Scsi_Host *shpnt = NULL;
- #ifndef PORT_BASE
- 	int i;
-@@ -522,7 +523,7 @@ static int __init NCR53c406a_detect(Scsi
+ 	/* An error occurred */
+ 	if (driver_byte(result) != 0 && 	/* An error occurred */
+-	    SCpnt->sense_buffer[0] == 0xF0) {	/* Sense data is valid */
++	    (SCpnt->sense_buffer[0] & 0x7f) == 0x70) { /* Sense current */
+ 		switch (SCpnt->sense_buffer[2]) {
+ 		case MEDIUM_ERROR:
++			if (!(SCpnt->sense_buffer[0] & 0x80))
++				break;
+ 			error_sector = (SCpnt->sense_buffer[3] << 24) |
+ 			(SCpnt->sense_buffer[4] << 16) |
+ 			(SCpnt->sense_buffer[5] << 8) |
+@@ -696,7 +698,7 @@ static void sd_rw_intr(struct scsi_cmnd 
+ 			 * hard error.
+ 			 */
+ 			print_sense("sd", SCpnt);
+-			result = 0;
++			SCpnt->result = 0;
+ 			SCpnt->sense_buffer[0] = 0x0;
+ 			good_sectors = this_count;
+ 			break;
+diff -puN drivers/scsi/sr.c~recovered_error drivers/scsi/sr.c
+--- patched-scsi-misc-2.5/drivers/scsi/sr.c~recovered_error	Fri Aug  1 07:38:08 2003
++++ patched-scsi-misc-2.5-andmike/drivers/scsi/sr.c	Fri Aug  1 07:38:08 2003
+@@ -181,6 +181,7 @@ static void rw_intr(struct scsi_cmnd * S
+ 	int this_count = SCpnt->bufflen >> 9;
+ 	int good_sectors = (result == 0 ? this_count : 0);
+ 	int block_sectors = 0;
++	long error_sector;
+ 	struct scsi_cd *cd = scsi_cd(SCpnt->request->rq_disk);
  
- 	DEB(printk("NCR53c406a: using port_base 0x%x\n", port_base));
- 
--	tpnt->present = 1;
-+	present = 1;
- 	tpnt->proc_name = "NCR53c406a";
- 
- 	shpnt = scsi_register(tpnt, 0);
-@@ -576,7 +577,7 @@ static int __init NCR53c406a_detect(Scsi
- 	sprintf(info_msg, "NCR53c406a at 0x%x, IRQ %d, %s PIO mode.", port_base, irq_level, fast_pio ? "fast" : "slow");
- #endif
- 
--	return (tpnt->present);
-+	return (present);
- 
- #if USE_DMA
-       err_free_irq:
-diff -puN drivers/scsi/aacraid/linit.c~shost_present drivers/scsi/aacraid/linit.c
---- patched-scsi-misc-2.5/drivers/scsi/aacraid/linit.c~shost_present	Thu Jul 31 14:32:16 2003
-+++ patched-scsi-misc-2.5-andmike/drivers/scsi/aacraid/linit.c	Thu Jul 31 14:32:16 2003
-@@ -295,7 +295,6 @@ static int aac_detect(Scsi_Host_Template
- 			printk(KERN_WARNING "aacraid: unable to register \"aac\" device.\n");
+ #ifdef DEBUG
+@@ -194,33 +195,57 @@ static void rw_intr(struct scsi_cmnd * S
+ 	 * memcpy's that could be avoided.
+ 	 */
+ 	if (driver_byte(result) != 0 &&		/* An error occurred */
+-	    SCpnt->sense_buffer[0] == 0xF0 &&	/* Sense data is valid */
+-	    (SCpnt->sense_buffer[2] == MEDIUM_ERROR ||
+-	     SCpnt->sense_buffer[2] == VOLUME_OVERFLOW ||
+-	     SCpnt->sense_buffer[2] == ILLEGAL_REQUEST)) {
+-		long error_sector = (SCpnt->sense_buffer[3] << 24) |
+-		(SCpnt->sense_buffer[4] << 16) |
+-		(SCpnt->sense_buffer[5] << 8) |
+-		SCpnt->sense_buffer[6];
+-		if (SCpnt->request->bio != NULL)
+-			block_sectors = bio_sectors(SCpnt->request->bio);
+-		if (block_sectors < 4)
+-			block_sectors = 4;
+-		if (cd->device->sector_size == 2048)
+-			error_sector <<= 2;
+-		error_sector &= ~(block_sectors - 1);
+-		good_sectors = error_sector - SCpnt->request->sector;
+-		if (good_sectors < 0 || good_sectors >= this_count)
+-			good_sectors = 0;
+-		/*
+-		 * The SCSI specification allows for the value returned by READ
+-		 * CAPACITY to be up to 75 2K sectors past the last readable
+-		 * block.  Therefore, if we hit a medium error within the last
+-		 * 75 2K sectors, we decrease the saved size value.
+-		 */
+-		if (error_sector < get_capacity(cd->disk) &&
+-		    cd->capacity - error_sector < 4 * 75)
+-			set_capacity(cd->disk, error_sector);
++	    (SCpnt->sense_buffer[0] & 0x7f) == 0x70) { /* Sense current */
++		switch (SCpnt->sense_buffer[2]) {
++		case MEDIUM_ERROR:
++		case VOLUME_OVERFLOW:
++		case ILLEGAL_REQUEST:
++			if (!(SCpnt->sense_buffer[0] & 0x90))
++				break;
++			error_sector = (SCpnt->sense_buffer[3] << 24) |
++				(SCpnt->sense_buffer[4] << 16) |
++				(SCpnt->sense_buffer[5] << 8) |
++				SCpnt->sense_buffer[6];
++			if (SCpnt->request->bio != NULL)
++				block_sectors =
++					bio_sectors(SCpnt->request->bio);
++			if (block_sectors < 4)
++				block_sectors = 4;
++			if (cd->device->sector_size == 2048)
++				error_sector <<= 2;
++			error_sector &= ~(block_sectors - 1);
++			good_sectors = error_sector - SCpnt->request->sector;
++			if (good_sectors < 0 || good_sectors >= this_count)
++				good_sectors = 0;
++			/*
++			 * The SCSI specification allows for the value
++			 * returned by READ CAPACITY to be up to 75 2K
++			 * sectors past the last readable block.
++			 * Therefore, if we hit a medium error within the
++			 * last 75 2K sectors, we decrease the saved size
++			 * value.
++			 */
++			if (error_sector < get_capacity(cd->disk) &&
++			    cd->capacity - error_sector < 4 * 75)
++				set_capacity(cd->disk, error_sector);
++			break;
++
++		case RECOVERED_ERROR:
++
++			/*
++			 * An error occured, but it recovered.  Inform the
++			 * user, but make sure that it's not treated as a
++			 * hard error.
++			 */
++			print_sense("sr", SCpnt);
++			SCpnt->result = 0;
++			SCpnt->sense_buffer[0] = 0x0;
++			good_sectors = this_count;
++			break;
++
++		default:
++			break;
++		}
  	}
  
--	template->present = aac_count; /* # of cards of this type found */
- 	return aac_count;
- }
- 
-diff -puN drivers/scsi/scsi_module.c~shost_present drivers/scsi/scsi_module.c
---- patched-scsi-misc-2.5/drivers/scsi/scsi_module.c~shost_present	Thu Jul 31 14:32:16 2003
-+++ patched-scsi-misc-2.5-andmike/drivers/scsi/scsi_module.c	Thu Jul 31 14:32:16 2003
-@@ -33,7 +33,7 @@ static int __init init_this_scsi_driver(
- 	INIT_LIST_HEAD(&sht->legacy_hosts);
- 
- 	sht->detect(sht);
--	if (!sht->present)
-+	if (list_empty(&sht->legacy_hosts))
- 		return -ENODEV;
- 
- 	list_for_each_entry(shost, &sht->legacy_hosts, sht_legacy_list) {
+ 	/*
 
 _
 
