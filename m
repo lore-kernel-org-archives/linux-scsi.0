@@ -1,81 +1,49 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: [PATCH] SG_IO readcd and various bugs
-Date: Sun, 01 Jun 2003 17:39:49 +1000
+From: bazooka@vekoll.vein.hu (Banai Zoltan)
+Subject: [2.5.70] aic7xxx patch
+Date: Sun, 1 Jun 2003 15:38:55 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3ED9ADC5.7060006@torque.net>
-References: <3ED86687.6000805@torque.net> <20030531105742.GC9561@suse.de>
-Reply-To: dougg@torque.net
+Message-ID: <20030601133855.GA1035@bazooka.saturnus.vein.hu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="EVF5PPMfhYS0aIcm"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bunyip.cc.uq.edu.au ([130.102.2.1]:41997 "EHLO
-	bunyip.cc.uq.edu.au") by vger.kernel.org with ESMTP id S263376AbTFAM0a
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 1 Jun 2003 08:26:30 -0400
-In-Reply-To: <20030531105742.GC9561@suse.de>
+Received: from bazooka.saturnus.vein.hu ([193.6.40.77]:3714 "EHLO
+	bazooka.saturnus.vein.hu") by vger.kernel.org with ESMTP
+	id S264605AbTFANZe (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 1 Jun 2003 09:25:34 -0400
+Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: linux-scsi@vger.kernel.org
-
-Jens Axboe wrote:
-> On Sat, May 31 2003, Douglas Gilbert wrote:
-
->>With the latest changes from Jens (mainly dropping the
->>artificial 64 KB per operation limit) the maximum
->>element size in the block layer SG_IO is:
->>  - 128 KB when direct I/O is not used (i.e. the user
->>    space buffer does not meet bio_map_user()'s
->>    requirements). This seems to be the largest buffer
->>    kmalloc() will allow (in my tests)
-> 
-> 
-> Correct.
-> 
-> 
->>  - (sg_tablesize * page_size) when direct I/O is used.
->>    My test was with the sym53c8xx_2 driver in which
->>    sg_tablesize==96 so my largest element size was 384 KB
-> 
-> 
-> Or ->max_sectors << 9, whichever is smallest. Really, the limits are in
-> the queue. Don't confuse SCSI with block.
-
-The block layer SG_IO ioctl passes through the SCSI
-command set to a device that understands it
-(i.e. not necessarily a "SCSI" device in the traditional
-sense). Other pass throughs exist (or may be needed) for
-ATA's task file interface and SAS's management protocol.
-
-Even though my tests, shown earlier in this thread, indicated
-that the SG_IO ioctl might be a shade faster than O_DIRECT,
-the main reason for having it is to pass through "non-block"
-commands to a device. Some examples:
-   - special writes (e.g. formating a disk, writing a CD/DVD)
-   - uploading firmware
-   - reading the defect table from a disk
-   - reading and writing special areas on a disk
-     (e.g. application client log page)
-
-The reason for choosing this list is that all these
-operations potentially move large amounts of data in a
-single operation. For such data transfers to be constrained
-by max_sectors is questionable. Putting a block paradigm
-bypass in the block layer is an interesting design :-)
-
-With these patches in place cdrecord (in RH 9) works via
-/dev/hdb (using ide-cd). Cdrecord fails on the same ATAPI
-writer via /dev/scd0 because ide-scsi does not set max_sectors
-high enough [and the SG_SET_RESERVED_SIZE ioctl reacts
-differently in this case to the sg driver].
-
-In summary, I see no reason to constrain the SG_IO ioctl
-by max_sectors. SG_IO is a "one shot" with no command
-merging or retries. If the HBA driver doesn't like a command,
-then it can reject it. [However, currently there is no
-mechanism to convey host or HBA driver errors back through
-the request queue, only the device (response) status.]
-
-Doug Gilbert
+To: linux-scsi@vger.kernel.org
 
 
+--EVF5PPMfhYS0aIcm
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+
+Hi!
+
+I've got a complie error in aic7xxx_osm.c, witch seems to be sloved by
+the following  patch. (please check carefully!)
+
+Greetings,
+-- 
+     Banai Zoltan <bazooka@vekoll.vein.hu>, <ICQ UIN:73057258>
+Key fingerprint = 0952 25F0 7027 5561 469B  59EC A6D6 639D AEE6 B709
+     finger://bazooka@vekoll.vein.hu, http://www.keyserver.net
+
+--EVF5PPMfhYS0aIcm
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: attachment; filename="aic7xxx_osm.patch"
+
+--- aic7xxx_osm.c~	2003-06-01 15:26:37.000000000 +0200
++++ aic7xxx_osm.c	2003-05-31 21:42:25.000000000 +0200
+@@ -764,7 +764,7 @@
+ 			consumed++;
+ 			next_sg = sg + 1;
+ 			next_sg->addr = 0;
+-			next_len = 0x100000000 - (addr & 0xFFFFFFFF);
++			next_len = 0x10000000 - (addr & 0xFFFFFFFF);
+ 			len -= next_len;
+ 			next_len |= ((addr >> 8) + 0x1000000) & 0x7F000000;
+ 			next_sg->len = ahc_htole32(next_len);
+
+--EVF5PPMfhYS0aIcm--
