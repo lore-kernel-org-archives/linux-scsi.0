@@ -1,19 +1,21 @@
-From: Alexy Khrabrov <braver@pobox.com>
+From: Alexy Khrabrov <alexy@angle.setup.org>
 Subject: Re: Ultra320
-Date: Fri, 25 Oct 2002 08:52:01 -0400
+Date: Fri, 25 Oct 2002 08:50:28 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20021025125201.GB15683@angle.setup.org>
+Message-ID: <20021025125028.GA15683@angle.setup.org>
 References: <20021023160415.GA5702@angle.setup.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: (from alexy@localhost)
+	by angle.badbox.com (8.12.5/8.12.5) id g9PCoSuD015703
+	for linux-scsi@vger.kernel.org; Fri, 25 Oct 2002 08:50:28 -0400
 Content-Disposition: inline
 In-Reply-To: <20021023160415.GA5702@angle.setup.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Alexy Khrabrov <braver@pobox.com>
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-So, is this obvious to others/unknown/off-topic/all of the above?  :-)  A.K.
+So, is this too simple/unknown/off-topic/all of the above?  :-) -- A.K.
 
 On Wed, Oct 23, 2002 at 12:04:15PM -0400, Alexy Khrabrov wrote:
 > 
