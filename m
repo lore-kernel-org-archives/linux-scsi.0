@@ -1,58 +1,35 @@
-From: Arnd Bergmann <arndb@de.ibm.com>
+From: "J.E.J. Bottomley" <James.Bottomley@steeleye.com>
 Subject: Re: [RFC][PATCH] move dma_mask into struct device
-Date: Sat, 16 Nov 2002 20:56:54 +0100
+Date: Sat, 16 Nov 2002 13:12:44 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <200211162056.54008.arndb@de.ibm.com>
-References: <200211161701.gAGH1xF03711@localhost.localdomain>
-Reply-To: Arnd Bergmann <ibm.com@arndb.de>
+Message-ID: <200211161812.gAGICj604696@localhost.localdomain>
+References: <arndb@de.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <200211161701.gAGH1xF03711@localhost.localdomain>
+Received: (from root@localhost)
+	by pogo.mtv1.steeleye.com (8.9.3/8.9.3) id KAA18080
+	for <linux-scsi@vger.kernel.org>; Sat, 16 Nov 2002 10:12:47 -0800
+In-Reply-To: Message from Arnd Bergmann <arndb@de.ibm.com>
+   of "Sat, 16 Nov 2002 20:56:54 +0100." <200211162056.54008.arndb@de.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: "J.E.J. Bottomley" <James.Bottomley@steeleye.com>
-Cc: Linux Kernel <linux-kernel@vger.kernel.org>Linux Kernel <linux-kernel@vger.kernel.org>, Linux Scsi <linux-scsi@vger.kernel.org>Linux Kernel <linux-kernel@vger.kernel.org>Linux Scsi <linux-scsi@vger.kernel.org>, Mike Anderson <andmike@us.ibm.com>
+To: Arnd Bergmann <ibm.com@arndb.de>
+Cc: Linux Kernel <linux-kernel@vger.kernel.org>, Linux Scsi <linux-scsi@vger.kernel.org>
 
-On Saturday 16 November 2002 18:01, J.E.J. Bottomley wrote:
+arndb@de.ibm.com said:
+> You can easily keep out the pci stuff if you do something like this: 
 
-> However, in order to divorce DMA from the
-> PCI bus, it has to be obtainable from the generic device, without requiring
-> knowledge of the bus.  In OO terms, it would be in a dmaable_device which
-> inherits from device, but for expediency in layering all this into the
-> kernel means I'd have to break almost every driver and introduce them to
-> the concept of
-> dmaable_device, so it's just easier to expand device by a pointer.
+No...look at what you've done.  Now SCSI has to know about every bus type on 
+every architecture; that's an extreme layering violation.  architecture/bus 
+types are generally only defined for the arch (PCI being the exception), so 
+now the additions have to be #ifdef'd just so it will compile..
 
-The Scsi_Host is already derived from struct device and since you need the 
-dma_mask only for Scsi_Host, there is no need to expand the base class.
+You've done this because you effectively have to pull a common but differently 
+located structure element out of each of these bus specific devices.  That 
+implies to me that dma_mask should be in a common structure, which was the 
+whole basis for the dmaable_device that I outlined previously.  As I said, the 
+only reason I haven't implemented dmaable_device is for expediency.
 
-You can easily keep out the pci stuff if you do something like
-this:
+James
 
-static inline void scsi_set_device(struct Scsi_Host *shost,
-                                   struct device *dev)
-{
-        shost->dev = dev;
-        shost->host_driverfs_dev.parent = dev;
-}
 
-static inline void scsi_set_pci_device(struct Scsi_Host *shost,
-                                       struct pci_dev *pdev)
-{
-	scsi_set_device(shost, &pdev->dev);
-	shost->dma_mask = pdev->dma_mask;
-}
-
-static inline void scsi_set_foobus_device(struct Scsi_Host *shost,
-					  struct foo_dev *fdev)
-{
-	scsi_set_device(shost, fdev->dev);
-	shost->dma_mask = fdev->foo_dma_mask;
-}
-
-You can even avoid Scsi_Host::dev completely if you make its only
-remaining user (scsi_ioctl_get_pci) use host_sysfs_dev->parent.bus_id
-instead.
-
-	Arnd <><
