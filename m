@@ -1,90 +1,60 @@
 From: Badari Pulavarty <pbadari@us.ibm.com>
 Subject: Re: [patch for playing] Patch to support 4000 disks and maintain backward compatibility
-Date: Fri, 11 Apr 2003 08:12:35 -0800
+Date: Fri, 11 Apr 2003 08:21:46 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <200304110912.35610.pbadari@us.ibm.com>
-References: <UTC200304102353.h3ANrXv10792.aeb@smtp.cwi.nl> <200304101809.55311.pbadari@us.ibm.com> <3E96945E.8080900@torque.net>
+Message-ID: <200304110921.46848.pbadari@us.ibm.com>
+References: <UTC200304111142.h3BBgDS11628.aeb@smtp.cwi.nl> <1050071610.2078.69.camel@mulgrave>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e4.ny.us.ibm.com ([32.97.182.104]:38029 "EHLO e4.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S263020AbTDKQFR convert rfc822-to-8bit (for <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 11 Apr 2003 12:05:17 -0400
-In-Reply-To: <3E96945E.8080900@torque.net>
+Received: from e2.ny.us.ibm.com ([32.97.182.102]:58290 "EHLO e2.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S263022AbTDKQNx convert rfc822-to-8bit (for <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 11 Apr 2003 12:13:53 -0400
+In-Reply-To: <1050071610.2078.69.camel@mulgrave>
 List-Id: linux-scsi@vger.kernel.org
-To: dougg@torque.net
-Cc: Andries.Brouwer@cwi.nl, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>, Andries.Brouwer@cwi.nl
+Cc: Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Friday 11 April 2003 03:09 am, Douglas Gilbert wrote:
-> Badari Pulavarty wrote:
-> > Here is my problem..
+On Friday 11 April 2003 07:33 am, James Bottomley wrote:
+> On Fri, 2003-04-11 at 06:42, Andries.Brouwer@cwi.nl wrote:
+> >     Here is my problem..
 > >
-> > #insmod ips.o
-> >   < found 10 disks>
-> > #insmod qla2300.o
-> >   < found 10 disks>
-> > #rmmod ips.o
-> >    <removed 10 disks>
-> > #insmod ips.o
-> >   <found 10 disks - but new names>
+> >     #insmod ips.o
+> >       < found 10 disks>
+> >     #insmod qla2300.o
+> >       < found 10 disks>
+> >     #rmmod ips.o
+> >        <removed 10 disks>
+> >     #insmod ips.o
+> >       <found 10 disks - but new names>
+> >
+> > OK, I see what you mean. I agree.
 >
-> Badari,
-> In 2.5 lets assume the /dev/sd[a-z][a-z][a-z]
-> device addressing is left as is (more or less). To
-> identify lots of disks the Vital Product Data page 0x83
-> (failing that, the disk serial number) should be used.
+> Could you elaborate on the reason you want to keep the minor space
+> compact?  I don't regard the insmod/rmmod problem as valid because if
+> you do:
 >
-> This information is available via sysfs (thanks to
-> Patrick Mansfield and Mike Anderson).
+> rmmod ips.o
+> rmmod qla2300.o
+> insmod qla2300.o
+> insmod ips.o
 >
-> # cd /sys/bus/scsi/devices
-> # find . -follow -name 'name' -exec cat {} \; -print
-> SIBM     DNES-309170W            AJF98887
-> ./1:0:4:0/name
-> SFUJITSU MAM3184MP       UKS0P2300CK0
-> ./0:0:1:0/name
->
-> It is relatively easy to write user space tools to show
-> this information:
-> # lsscsi -n
-> [0:0:1:0]    disk    FUJITSU  MAM3184MP        0106  /dev/sda
->    name: SFUJITSU MAM3184MP       UKS0P2300CK0
-> [1:0:4:0]    disk    IBM      DNES-309170W     SA30  /dev/sdb
->    name: SIBM     DNES-309170W            AJF98887
->
-> Each pair of lines links the transient topological and device
-> node name ("0:0:1:0" and "dev/sda" respectively) with a
-> (hopefully) invariant "name" for that device.
->
-> So if that name was hashed there would be a reasonable mapping
-> from that name to the current Linux scsi disk device node name
-> (e.g. /dev/sda). So user space tools could work out the mapping
-> and provide the "memory" from one boot to the next (and across
-> the deletion and re-addition of HBA modules).
->
-> Doug Gilbert
+> All bets are off again. For small kernel dev_t it was essential to keep
+> a compact minor space because otherwise we coulde run out of minors.
+> Sparse minors cause no inefficiency in the mid-layer, or in sd.  There
+> are problems in sg which could be solved by encoding the device type in
+> the minor.
 
-Doug,
+Here user/admin atleast knows what he is doing. So they have to deal
+with it. (Proper device naming solution would be great here).
 
-I completly agree with what you said. One can write a user-space 
-tool to create/re-create/update device node and try to keep device
-names consistent. I am sure people (Greg KH) are working on this.
-
-All I am trying to do is, come out with a plan to do this for 2.6.
-We can do all the user-space stuff and make generic dynamic
-<major, minor> assignment and some how make the /dev/ nodes
-magically everytime rmmod/insmod or re-boot. There are lots
-of dependencies and players here. All these going to happen for 2.6 ?
-I would love to see this happen. But please, don't leave it in
-the middle. (leaving the device node mapping to user/admin).
-And also, how do we deal with booting/running 2.4 ?
-
-If not, my patch is a fallback solution.
+But just by doing rmmod/insmod if my device names change, it will
+be a pain. For example, in my case, i have to re-do all my raw device
+bindings to just start the database. This will be a problem with 
+dynamic <major, minor> assignments also. (Again, i will need a proper
+device naming solution here).
 
 Thanks,
 Badari
 
-
-Thanks,
-Badari
