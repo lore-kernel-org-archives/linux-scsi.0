@@ -1,84 +1,39 @@
-From: Andrew Morton <akpm@osdl.org>
-Subject: Fw: [Bugme-new] [Bug 3651] New: dell poweredge 4600 aacraid PERC
- 3/Di Container goes offline
-Date: Thu, 28 Oct 2004 00:53:02 -0700
+From: Marcelo Tosatti <marcelo.tosatti@cyclades.com>
+Subject: Re: [patch 1/2] cciss: cleans up warnings in the 32/64 bit conversions
+Date: Thu, 28 Oct 2004 08:43:25 -0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20041028005302.753a2d52.akpm@osdl.org>
+Message-ID: <20041028104325.GA5741@logos.cnet>
+References: <20041021211718.GA10462@beardog.cca.cpqcorp.net> <Pine.LNX.4.58L.0410220054010.15504@blysk.ds.pg.gda.pl> <20041022183057.GA23032@beardog.cca.cpqcorp.net> <Pine.LNX.4.58L.0410222157080.22781@blysk.ds.pg.gda.pl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fw.osdl.org ([65.172.181.6]:28872 "EHLO mail.osdl.org")
-	by vger.kernel.org with ESMTP id S262813AbUJ1HzC (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 28 Oct 2004 03:55:02 -0400
-Received: from bix (build.pdx.osdl.net [172.20.1.2])
-	by mail.osdl.org (8.11.6/8.11.6) with SMTP id i9S7t1912981
-	for <linux-scsi@vger.kernel.org>; Thu, 28 Oct 2004 00:55:01 -0700
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:60630 "EHLO
+	www.linux.org.uk") by vger.kernel.org with ESMTP id S263058AbUJ1NYV
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 28 Oct 2004 09:24:21 -0400
+Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.58L.0410222157080.22781@blysk.ds.pg.gda.pl>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: "Maciej W. Rozycki" <macro@linux-mips.org>
+Cc: mikem <mikem@beardog.cca.cpqcorp.net>, axboe@suse.de, linux-scsi@vger.kernel.org
 
+On Fri, Oct 22, 2004 at 09:59:52PM +0100, Maciej W. Rozycki wrote:
+> On Fri, 22 Oct 2004, mikem wrote:
+> 
+> > >  These constructs (casts as lvalues) are deprecated with GCC 3.4 (a
+> > > warning is triggered) and no longer supported with 4.0.  Please consider
+> > > rewriting -- you'll probably need an auxiliary variable.
+> [...]
+> > Is this documented somewhere?
+> 
+>  Sure:
+> 
+> http://gcc.gnu.org/gcc-3.4/changes.html
+> 
+> http://gcc.gnu.org/gcc-4.0/changes.html
+> 
+> Plus reported zillion of times here and elsewhere. 
 
+Mike, 
 
-Begin forwarded message:
-
-Date: Thu, 28 Oct 2004 00:50:31 -0700
-From: bugme-daemon@osdl.org
-To: bugme-new@lists.osdl.org
-Subject: [Bugme-new] [Bug 3651] New: dell poweredge 4600 aacraid PERC 3/Di Container goes offline
-
-
-http://bugme.osdl.org/show_bug.cgi?id=3651
-
-           Summary: dell poweredge 4600 aacraid PERC 3/Di Container goes
-                    offline
-    Kernel Version: 2.6.10-rc1, 2.6.9, 2.6.8, 2.6.7, 2.6.6
-            Status: NEW
-          Severity: high
-             Owner: andmike@us.ibm.com
-         Submitter: oliver.polterauer@ewave.at
-                CC: oliver.polterauer@ewave.at
-
-
-Distribution: Debian Sarge
-Hardware Environment: Dell Poweredge 4600, 5 Disks each 146GB in a Raid 5 in 
-one container, 8 GB RAM, Dual Xenon 2GHz. The Perc 3/Di Controller is on 
-Firmware version 2.80 Build 6092
-Software Environment: aacraid
-Problem Description: 
-The Container on the PERC 3/Di Controller goes offline on heavy I/O Load with 
-the following error message:
-
-SCSI:0 (0:0): rejecting I/O to offline device
-Buffer I/O error due to I/O error on sda8
-
-Steps to reproduce:
-
-I am using bonnie++ to produce I/O load on the only Volume on the Perc 3/Di 
-Controller with the following parameters bonnie++ -d /var/lib/postgres/test -s 
-16000 -n 150 -r 8000 -u nobody:nogroup
-
-my partition table:
-
-/dev/sda1 --> /boot (80mb)
-/dev/sda2 --> swap (16 GB)
-/dev/sda3 --> /root (4 GB)
-/dev/sda5 --> /home (4 GB)
-/dev/sda6 --> /tmp (1 GB)
-/dev/sda7 --> /var (8 GB)
-/dev/sda8 --> /var/lib/postgres (502 GB)
-
-Filesystem ext3
-kernel is a non modular plain vanilla kernel source (no patches)
-
-I have turned on remote syslog to our syslog server, but it did not log any 
-more errormessages as stated above. The error messages above are printed only 
-on the console
-
-
-Best regards,
-
-Oliver
-
-------- You are receiving this mail because: -------
-You are on the CC list for the bug, or are watching someone who is.
+Can you fix the warning and resend please?
