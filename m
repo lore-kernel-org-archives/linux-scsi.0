@@ -1,25 +1,87 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: How to disconnect a SCSI device without crashing SLES8?
-Date: Fri, 4 Feb 2005 21:06:11 +0000
-Message-ID: <20050204210611.GA25619@infradead.org>
-References: <20050204202501.GA25126@infradead.org> <15ae01c50af9$42f42c40$650aa8c0@ehrpc>
+From: "Rajat  Jain, Noida" <rajatj@noida.hcltech.com>
+Subject: RE: How to disconnect a SCSI device without crashing SLES8?
+Date: Sat, 5 Feb 2005 02:26:55 +0530
+Message-ID: <267988DEACEC5A4D86D5FCD780313FBB041F82F3@exch-03.noida.hcltech.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Received: from pentafluge.infradead.org ([213.146.154.40]:59538 "EHLO
-	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S263369AbVBDVGS (ORCPT <rfc822;Linux-scsi@vger.kernel.org>);
-	Fri, 4 Feb 2005 16:06:18 -0500
-Content-Disposition: inline
-In-Reply-To: <15ae01c50af9$42f42c40$650aa8c0@ehrpc>
+Content-Type: text/plain
+Received: from ngate.noida.hcltech.com ([202.54.110.230]:28565 "EHLO
+	ngate.noida.hcltech.com") by vger.kernel.org with ESMTP
+	id S266562AbVBDU77 (ORCPT <rfc822;Linux-scsi@vger.kernel.org>);
+	Fri, 4 Feb 2005 15:59:59 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Eric Raskin <eraskin@paslists.com>
+To: eraskin@paslists.com, Linux-scsi@vger.kernel.org
+
+
+
+Linux 2.6 ????? Uhh .... I thought you did not wanted to REBOOT the
+system???? 
+
+
+The command syntax is same. Devices can be removed using the following
+command:
+
+echo "scsi remove-single-device <h> <b> <t> <l>" > /proc/scsi/scsi
+
+where the variables are host, bus (channel), target (scsi id) and lun. 
+
+But the removal will fail if the device is busy (e.g. if a file system on
+the device is mounted). 
+
+
+Rajat Jain 
+HCL Technologies, 
+A-11, Sector 16, Noida-201301. 
+Ph: +91-120-2510701/702/813 Extn.3019 
+rajatj@noida.hcltech.com 
+http://www.hcltech.com/
+	"...one of the main causes of the fall of the Roman Empire was that,
+lacking zero, they had no way to indicate successful termination of their C
+programs."
+	Robert Firth 
+
+
+
+
+-----Original Message-----
+From: linux-scsi-owner@vger.kernel.org
+[mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of Eric Raskin
+Sent: Saturday, February 05, 2005 2:07 AM
+To: Linux-scsi@vger.kernel.org
+Subject: RE: How to disconnect a SCSI device without crashing SLES8?
+
+Thanks, Christoph.  Would we use the same commands on 2.6?
+
+----------------------------------------------------------------------------
+Eric H. Raskin                                          Voice: 914-765-0500
+Professional Advertising Systems Inc.                   Fax:   914-765-0503
+200 Business Park Dr Suite 107                          eraskin@paslists.com
+Armonk, NY 10504
+
+
+-----Original Message-----
+From: Christoph Hellwig [mailto:hch@infradead.org]
+Sent: Friday, February 04, 2005 3:25 PM
+To: Eric Raskin
 Cc: Linux-scsi@vger.kernel.org
+Subject: Re: How to disconnect a SCSI device without crashing SLES8?
 
-On Fri, Feb 04, 2005 at 03:36:48PM -0500, Eric Raskin wrote:
-> Thanks, Christoph.  Would we use the same commands on 2.6?
+On Fri, Feb 04, 2005 at 02:12:13PM -0500, Eric Raskin wrote:
+> In searching the web, I've found the "remove-scsi-device" and 
+> "add-scsi-device" commands that can be sent to /proc/scsi/scsi.
+> 
+> Does anybody know if the system will stay up if I use these commands 
+> to remove all my tape library devices before shutting it down?  Is 
+> this the proper way to repair my library without having to shut the system
+off?
 
-They still work if CONFIG_SCSI_PROC_FS is enabled.  Always available
-and easier to use is to do echo "1" > /sys/device/N:N:N:N/device/delete
-where N:N:N:N is bus, channel, target, lun of the device to be deleted.
+remove-scsi-device could work, but in Linux 2.4 it's racy.
 
+If you want to remove and add devices at runtime safely you'll have to
+update to Linux 2.6.
+
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" in the
+body of a message to majordomo@vger.kernel.org More majordomo info at
+http://vger.kernel.org/majordomo-info.html
