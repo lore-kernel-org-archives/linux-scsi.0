@@ -1,37 +1,34 @@
-From: Luben Tuikov <luben@splentec.com>
+From: Mike Anderson <andmike@us.ibm.com>
 Subject: Re: SCSI woes (followup)
-Date: Tue, 24 Sep 2002 13:57:51 -0400
+Date: Tue, 24 Sep 2002 11:39:07 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3D90A79F.47A37BC2@splentec.com>
-References: <200209241346.g8ODkER09516@localhost.localdomain>
+Message-ID: <20020924183907.GA1330@beaverton.ibm.com>
+References: <200209241346.g8ODkER09516@localhost.localdomain> <3D90A79F.47A37BC2@splentec.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <3D90A79F.47A37BC2@splentec.com>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Russell King <rmk@arm.linux.org.uk>, linux-scsi@vger.kernel.org
+To: Luben Tuikov <luben@splentec.com>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, Russell King <rmk@arm.linux.org.uk>, linux-scsi@vger.kernel.org
 
-James Bottomley wrote:
->
-> I think it's method of operation is misplaced.  What it should probably be
-> doing is simply adding a doorlock to the head of the queue and then go back
-> around.  Since we know the doorlock now preceeds the command that instigated
-> the issue the door should be locked before anything else happens.  It should
-> simply loop around and process the door lock request so it doesn't have to
-> wait for anything else to occur (any commands which come down in the interim
-> should go on the queue tail).
-> 
+Luben Tuikov [luben@splentec.com] wrote:
+> Add a flag, say unsigned I:1; to scsi_cmnd, which if set to 1, will
+> make add it to the head of the queue, irrespective of its serial
+> number, else the command is added according to its serial number
+> in the pending commands queue.
 
-Similar mechanism exists in some current SCSI transport/interconnect
-protocols.
+The code path currently being discussed is a request path and we do not
+have a scsi_cmnd until it is processed by the scsi_request_fn. There is
+already an interface to insert the request at the head of the queue
+scsi_insert_special_req, but we always set it to 0. We also do not
+expose this interface high enough to let requests set this. We do
+expose it through the older scsi_insert_special_cmd interface used by
+scsi_mlqueue_insert.
 
-The notion of _an_immediate_command_ does exactly that.
+-andmike
+--
+Michael Anderson
+andmike@us.ibm.com
 
-Add a flag, say unsigned I:1; to scsi_cmnd, which if set to 1, will
-make add it to the head of the queue, irrespective of its serial
-number, else the command is added according to its serial number
-in the pending commands queue.
-
--- 
-Luben
