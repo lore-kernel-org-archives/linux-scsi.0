@@ -1,52 +1,66 @@
-From: PinkFreud <pf-linux-scsi-20040717@mirkwood.net>
-Subject: Re: sym53c8xx_2 funkiness...
-Date: Tue, 10 Aug 2004 00:10:38 -0400
+From: Andrew Vasquez <praka@pobox.com>
+Subject: Re: 2.6.8-rc3-mm2:  Debug: sleeping function called from invalid context at mm/mempool.c:197
+Date: Mon, 9 Aug 2004 13:58:39 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040810041038.GC5835@eriador.mirkwood.net>
-References: <20040718030514.GJ1105@eriador.mirkwood.net> <20040724165625.GA1105@eriador.mirkwood.net> <m3zn5nxi6j.fsf@merlin.emma.line.org> <20040726160214.GB1105@eriador.mirkwood.net> <20040726161825.GA14799@merlin.emma.line.org> <20040728124509.GK1105@eriador.mirkwood.net> <20040809223625.GA8782@logos.cnet>
+Message-ID: <20040809205839.GA1439@praka.san.rr.com>
+References: <B179AE41C1147041AA1121F44614F0B0DD03A6@AVEXCH02.qlogic.org> <411813F0.9020602@us.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/mixed; boundary="tThc/1wpZn/ma/RB"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pcp09898885pcs.ewndsr01.nj.comcast.net ([68.39.7.159]:1284 "HELO
-	rivendell.mirkwood.net") by vger.kernel.org with SMTP
-	id S267416AbUHJEKk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 10 Aug 2004 00:10:40 -0400
+Received: from ms-smtp-03-qfe0.socal.rr.com ([66.75.162.135]:53423 "EHLO
+	ms-smtp-03-eri0.socal.rr.com") by vger.kernel.org with ESMTP
+	id S267417AbUHJEPC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 10 Aug 2004 00:15:02 -0400
 Content-Disposition: inline
-In-Reply-To: <20040809223625.GA8782@logos.cnet>
+In-Reply-To: <411813F0.9020602@us.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Marcelo Tosatti <marcelo.tosatti@cyclades.com>, Matthias Andree <ma@dt.e-technik.uni-dortmund.de>
-Cc: linux-scsi@vger.kernel.org
-
-I tried Matthias' suggestion of disabling disconnect - didn't seem to
-do much to alleviate the problem.
-
-In the end, I just switched my network gateway functions to another
-box.  Other than a failing IDE disk (damn, I'm having all sorts of fun
-here...), it's behaving (the scsi disk taken from the other box works,
-too).
-
-I noted that 2.6.x seems to exhibit the same problem.  However, I don't
-really have the time or inclination to play with this right now - I
-need something working here at home.  :)
-
-That being said, it *would* be nice to see that driver working again.
-As I stated, though, I tried emailing Gerard Roudier, only to have my
-email bounce (mailbox full).
-
-*sigh*
-
-Thanks, Marcelo and Matthias.  It was worth a try.
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
 
-On Mon, Aug 09, 2004 at 07:36:25PM -0300, Marcelo Tosatti babbled thus:
+--tThc/1wpZn/ma/RB
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+
+On Mon, 09 Aug 2004, Janet Morgan wrote:
+
+> Andrew Vasquez wrote:
 > 
-> You can try to get 2.4.19's driver working on 2.4.26.
+> >
+> >This allocation should be done with GFP_ATOMIC flags.  The attached 
+> >patch should apply cleanly to any recent kernel
+> >
+> > 
+> >
 > 
-> 2.6.x also exhibits the same problem
+> and seems to work fine.
+> 
 
--- 
-                                                                      
-Mike Edwards                    |   If this email address disappears,   
-Unsolicited advertisments to    |   assume it was spammed to death.  To
-this address are not welcome.   |   reach me in that case, s/-.*@/@/
-(This means you, Cogent!)       |                                   
+James,
+
+
+I hope this patch can make it before 2.6.8, please apply.
+
+
+
+Thanks,
+Andrew Vasquez
+
+--tThc/1wpZn/ma/RB
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: attachment; filename="mpool_alloc.diff"
+
+===== drivers/scsi/qla2xxx/qla_os.c 1.39 vs edited =====
+--- 1.39/drivers/scsi/qla2xxx/qla_os.c	2004-07-12 09:54:49 -07:00
++++ edited/drivers/scsi/qla2xxx/qla_os.c	2004-08-09 16:48:29 -07:00
+@@ -3590,7 +3590,7 @@
+ {
+ 	srb_t *sp;
+ 
+-	sp = mempool_alloc(ha->srb_mempool, GFP_KERNEL);
++	sp = mempool_alloc(ha->srb_mempool, GFP_ATOMIC);
+ 	if (sp)
+ 		atomic_set(&sp->ref_count, 1);
+ 	return (sp);
+
+--tThc/1wpZn/ma/RB--
