@@ -1,14 +1,13 @@
-From: Christoph Hellwig <hch@infradead.org>
+From: Alan Stern <stern@rowland.harvard.edu>
 Subject: Re: Re: USB storage problems on OHCI..
-Date: Mon, 22 Sep 2003 17:38:42 +0100
+Date: Mon, 22 Sep 2003 12:42:52 -0400 (EDT)
 Sender: linux-usb-devel-admin@lists.sourceforge.net
-Message-ID: <20030922173842.B25639@infradead.org>
-References: <20030922161104.A24155@infradead.org> <Pine.LNX.4.44L0.0309221147340.636-100000@ida.rowland.org>
+Message-ID: <Pine.LNX.4.44L0.0309221239460.636-100000@ida.rowland.org>
+References: <Pine.LNX.4.44.0309220900440.1753-100000@home.osdl.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-usb-devel-admin@lists.sourceforge.net>
-Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.44L0.0309221147340.636-100000@ida.rowland.org>; from stern@rowland.harvard.edu on Mon, Sep 22, 2003 at 11:50:47AM -0400
+In-Reply-To: <Pine.LNX.4.44.0309220900440.1753-100000@home.osdl.org>
 Errors-To: linux-usb-devel-admin@lists.sourceforge.net
 List-Help: <mailto:linux-usb-devel-request@lists.sourceforge.net?subject=help>
 List-Post: <mailto:linux-usb-devel@lists.sourceforge.net>
@@ -17,17 +16,33 @@ List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-devel>,
 List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-devel>,
 	<mailto:linux-usb-devel-request@lists.sourceforge.net?subject=unsubscribe>
 List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=linux-usb-devel>
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: Patrick Mansfield <patmans@us.ibm.com>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, Linus Torvalds <torvalds@osdl.org>, David Brownell <david-b@pacbell.net>, Greg KH <greg@kroah.com>, USB development list <linux-usb-devel@lists.sourceforge.net>, SCSI development list <linux-scsi@vger.kernel.org>
+To: Linus Torvalds <torvalds@osdl.org>
+Cc: Patrick Mansfield <patmans@us.ibm.com>, Christoph Hellwig <hch@infradead.org>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, David Brownell <david-b@pacbell.net>, Greg KH <greg@kroah.com>, USB development list <linux-usb-devel@lists.sourceforge.net>, SCSI development list <linux-scsi@vger.kernel.org>, Andries.Brouwer@cwi.nl
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, Sep 22, 2003 at 11:50:47AM -0400, Alan Stern wrote:
-> Interestingly, my original patch was a lot like you describe.  It can be 
-> found in
-> 
-> http://marc.theaimsgroup.com/?l=linux-scsi&m=106340167723122&w=2
+On Mon, 22 Sep 2003, Linus Torvalds wrote:
 
-Yupp, that's what I meant.  Much less complicated :)
+> 
+> [ Andries added to the cc ]
+> 
+> On Mon, 22 Sep 2003, Patrick Mansfield wrote:
+> > 
+> > I can modify the patch for that.
+> 
+> How about just making the sd.c layer more robust? That has worked well in 
+> the past, and it seems wrong to have to add more and more flags.
+
+<snip>
+
+> Basically, Andries Brouwer's strategy of making sd.c more conservative has
+> been a very successful one in the past. Why not continue on that?
+
+I would be interested in hearing what Andries has to say.  But there has
+been a large number of reports from users trying out various patches, and
+it's clear that no single strategy will work with every device.  The
+variety of ways in which these things fail is truly amazing.
+
+Alan Stern
 
 
 
