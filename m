@@ -1,118 +1,78 @@
-From: Ethan Weinstein <lists@stinkfoot.org>
-Subject: sym53c8xx(2) problems on PPC
-Date: Tue, 07 Jan 2003 23:52:09 -0500
+From: Luben Tuikov <luben@splentec.com>
+Subject: Re: [PATCH] SCSI Core patches
+Date: Wed, 08 Jan 2003 00:13:38 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3E1BAE79.7030506@stinkfoot.org>
+Message-ID: <3E1BB382.5010504@splentec.com>
+References: <3E1ADC9A.6090800@splentec.com> <20030107102127.B15528@beaverton.ibm.com> <3E1B2934.8060805@splentec.com> <20030107123301.A16378@beaverton.ibm.com> <3E1B513B.2090409@splentec.com> <20030107173633.A17825@beaverton.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stinkfoot.org (e-dOuble.stinkfoot.org [192.168.1.1])
-	by stinkfoot.org (Postfix) with ESMTP id AF41AC001D
-	for <linux-scsi@vger.kernel.org>; Tue,  7 Jan 2003 23:52:09 -0500 (EST)
+In-Reply-To: <20030107173633.A17825@beaverton.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Patrick Mansfield <patmans@us.ibm.com>
+Cc: linux-scsi@vger.kernel.org
 
-Greetings.
+Patrick Mansfield wrote:
+>
+>>You must agree that the tuple (COMMAND, (lun, target, channel))
+>>doesn't say as much as (COMMAND, DEVICE). 
+> 
+> 
+> Yes, but the current code simply sends a scsi_cmnd to the LLDD, and the
+> LLDD need only reference the scsi_cmnd.
 
-We recently changed out this card (32-bit card, one channel):
+No, it doesn't necessarily have to. The advantages of
+cmd->device->{lun, id, channel} far outweights
+``LLDD need only reference the scsi_cmnd'',
+as we've mentioned numerous times.
 
-10:14.0 SCSI storage controller: LSI Logic / Symbios Logic (formerly NCR) 53c895 
-(rev 02)
-         Subsystem: LSI Logic / Symbios Logic (formerly NCR): Unknown device 1020
-         Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV+ VGASnoop- ParErr- 
-Stepping- SERR- FastB2B-
-         Status: Cap- 66Mhz- UDF- FastB2B- ParErr- DEVSEL=medium >TAbort- 
-<TAbort- <MAbort- >SERR- <PERR-
-         Latency: 16 (7500ns min, 16000ns max), cache line size 08
-         Interrupt: pin A routed to IRQ 54
-         Region 0: I/O ports at 0400 [size=256]
-         Region 1: Memory at 80081000 (32-bit, non-prefetchable) [size=256]
-         Region 2: Memory at 80084000 (32-bit, non-prefetchable) [size=4K]
-         Expansion ROM at 800c0000 [disabled] [size=128K]
+I think the networking code has similar well thought out abstractions.
 
-sym.16.20.0: setting PCI_COMMAND_PARITY...
-sym0: <895> rev 0x2 on pci bus 16 device 20 function 0 irq 54
-sym0: No NVRAM, ID 7, Fast-40, LVD, parity checking
-sym0: SCSI BUS has been reset.
-scsi2 : sym-2.1.17a
+> Having the LLDD use more data structures does not imply a better
+> abstraction.  Again, a better abstraction would be to use interfaces to
+> get the host/channel/target/lun. This could add overhead depending on the
+> implementation.
 
-For this one (64-bit PCI card, with 2 channels)
+Aaaah, this seems like a lost cause. You seem to be arguing this just
+because of sake of your changing your multipath code.
 
-10:14.0 SCSI storage controller: LSI Logic / Symbios Logic (formerly NCR) 
-53c1010 Ultra3 SCSI Adapter (rev 01)
-         Subsystem: LSI Logic / Symbios Logic (formerly NCR): Unknown device 1030
-         Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV+ VGASnoop- ParErr+ 
-Stepping- SERR- FastB2B-
-         Status: Cap+ 66Mhz- UDF- FastB2B- ParErr- DEVSEL=medium >TAbort- 
-<TAbort- <MAbort- >SERR- <PERR-
-         Latency: 16 (4250ns min, 4500ns max), cache line size 08
-         Interrupt: pin A routed to IRQ 54
-         Region 0: I/O ports at 0800 [size=256]
-         Region 1: Memory at 80082000 (64-bit, non-prefetchable) [size=1K]
-         Region 3: Memory at 8008a000 (64-bit, non-prefetchable) [size=8K]
-         Expansion ROM at 800e0000 [disabled] [size=128K]
-         Capabilities: [40] Power Management version 2
-                 Flags: PMEClk- DSI- D1+ D2+ AuxCurrent=0mA 
-PME(D0-,D1-,D2-,D3hot-,D3cold-)
-                 Status: D0 PME-Enable- DSel=0 DScale=0 PME-
+Why can't you just make those macros in your code and see how
+it works out -- who knows, maybe you'll get a better design idea...
+ 
+> I have looked into putting multipath in the block layer, I've looked at
+> md, at the T3 code, and at the qlogic multi-path code. Code in the block
+> layer would be interesting, but might not solve problems with char
+> devices, and would need further abstractions on top of some multi-path 
+> in the scsi layer (someone has to find and represent the devices and
+> paths, the block layer will not want to know about host/chan/target/lun,
+> nor will the block layer want to know details about scsi device or
+> transport errors).
 
-10:14.1 SCSI storage controller: LSI Logic / Symbios Logic (formerly NCR) 
-53c1010 Ultra3 SCSI Adapter (rev 01)
-         Subsystem: LSI Logic / Symbios Logic (formerly NCR): Unknown device 1030
-         Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV+ VGASnoop- ParErr+ 
-Stepping- SERR- FastB2B-
-         Status: Cap+ 66Mhz- UDF- FastB2B- ParErr+ DEVSEL=medium >TAbort- 
-<TAbort- <MAbort- >SERR- <PERR+
-         Latency: 16 (4250ns min, 4500ns max), cache line size 08
-         Interrupt: pin B routed to IRQ 54
-         Region 0: I/O ports at 0400 [size=256]
-         Region 1: Memory at 80081000 (64-bit, non-prefetchable) [size=1K]
-         Region 3: Memory at 80088000 (64-bit, non-prefetchable) [size=8K]
-         Expansion ROM at 800c0000 [disabled] [size=128K]
-         Capabilities: [40] Power Management version 2
-                 Flags: PMEClk- DSI- D1+ D2+ AuxCurrent=0mA 
-PME(D0-,D1-,D2-,D3hot-,D3cold-)
-                 Status: D0 PME-Enable- DSel=0 DScale=0 PME-
+And this is *not* an excuse to leave lun, target and channel into the
+scsi command. A command belongs to a device, and a device belongs
+to a host, which belongs to a pci bus, etc...
 
-sym.16.20.0: setting PCI_COMMAND_PARITY...
-sym.16.20.1: setting PCI_COMMAND_PARITY...
-sym0: <1010-33> rev 0x1 on pci bus 16 device 20 function 0 irq 54
-sym0: No NVRAM, ID 7, Fast-80, LVD, parity checking
-sym0: SCSI BUS has been reset.
-sym1: <1010-33> rev 0x1 on pci bus 16 device 20 function 1 irq 54
-sym1: No NVRAM, ID 7, Fast-80, SE, parity checking
-sym1: SCSI BUS has been reset.
-sym1: SCSI BUS mode change from SE to SE.
-scsi2 : sym-2.1.17a
-scsi3 : sym-2.1.17a
+Remember we're talking about SCSI devices, not generic devices.
+SCSI devices, as mentioned in my previous email have and have not
+certain properties.
 
-The old card was attached to our SEAGATE   Model: ULTRIUM06242-XXX  Rev: 1470 
-for nightly backups.  The backups ran fine.
-After attaching the tape drive to the new card, during the backup we get this:
+> Putting the multipath abstraction into scsi_request_fn is IMO the best way
+> to go (as I've argued before) at least until other non-scsi block and
 
-sym0:6: ERROR (40:0) (0-20-0) (1f/18/0) @ (scripta ad8:10001e00).
-sym0: script cmd = 10000000
-sym0: regdump: da 10 c0 18 47 1f 06 0a 00 00 86 20 80 01 08 01 00 ac c7 1e 08 00 
-00 00.
-sym0: PCI STATUS = 0x8100
-sym0: SCSI BUS reset detected.
-sym0: SCSI BUS has been reset.
-st0: Error 80000 (sugg. bt 0x0, driver bt 0x0, host bt 0x8).
-st0: Error with sense data: Current st09:00: sense key Unit Attention
-Additional sense indicates Power on,reset,or bus device reset occurred
-st0: Error on write filemark.
+Please keep in mind what SCSI Core is all about. Please don't mix and
+match.
 
-The system is a powerpc G4 SMP @533mhz, with 1G of ram.  We're using 
-kernel-2.4.20, SMP, and HIMEM enabled.  Termination and cabling are definately 
-correct.  We tried the sym53c8xx module with both 32 and 40 bit DMA addressing.. 
-same results.. the old card works fine, the new card causes these errors and the 
-backup aborts.
-We'd definately rather use the new 2 channel card, as we'd like to attach a disk 
-to the other channel.. but this is preventing us from doing it.  Any ideas? I'm 
-up for trying anything here to get this to work.
+>>Getting rid of redundancies in data design and code design is important.
+>>
+> 
+> 
+> As mentioned, using a scsi_device both for a list of paths and as a
+> representation of scsi device duplicates data in multiple places.
 
-thanks,
+We are *not* discussing multipathing here.
 
-Ethan Weinstein
+-- 
+Luben
+
 
