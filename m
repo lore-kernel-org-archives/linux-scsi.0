@@ -1,42 +1,44 @@
-From: David Nedved <dnedved@nuvox.net>
-Subject: how to change sector size on fibrechannel drives
-Date: Thu, 13 Jun 2002 09:35:14 -0400
+From: Roland Dreier <roland@topspin.com>
+Subject: Re: [PATCH] 2.4 use __dma_buffer in scsi.h
+Date: 13 Jun 2002 10:42:16 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20020613093514.B25071@nuvox.net>
+Message-ID: <52fzzr2hzb.fsf@topspin.com>
+References: <200206130218.g5D2Hx302994@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: (from dnedved@localhost)
-	by mung.nuvox.net (8.11.6/8.11.6) id g5DDZFQ29511
-	for linux-scsi@vger.kernel.org; Thu, 13 Jun 2002 09:35:15 -0400
-Content-Disposition: inline
+In-Reply-To: <200206130218.g5D2Hx302994@localhost.localdomain>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@steeleye.com>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Hi All,
+>>>>> "James" == James Bottomley <James.Bottomley@steeleye.com> writes:
 
-I've salvaged some drives from a MTI fibre channel RAID device, and I'm
-trying to use them in linux 2.4.18.  When the scsi module loads, it sees
-the drives, but reports them all as having the dreaded
-"unsupported sector size 528" message.  All the searches I've done seem
-to indicate a low-level format of the drives.   The FC card I'm using,
-however (Emulex LP8000), doesn't seem to have an option for low-level
-formatting in the BIOS.  I've also tried the lputil command that comes with
-the driver, but it seems to have trouble finding the adapter, and it doesn't
-seem to have any utilities that would help me anyway.
+    James> This is actually unnecessary.  We've already had this
+    James> discussion on the parisc mailing lists (over a year ago, I
+    James> think).
 
-My fibre channel toys are rather limited, in other words, I don't have
-any other controllers with which to low-level these drives.  In a pinch
-I could probably find a wintel machine to throw the card into if I had to
-in order to low-level format the drives, but this would be rather hard
-since I don't have any windows machines.
+Fair enough, the only reason I came up with this patch is that I
+looked at all unaligned DMA done by USB, and
+drivers/usb/storage/transport.c does DMA into sense_buffer.
 
-Am I out of luck?  I wouldn't mind the inefficiency of only using 512
-of the 528 bytes in each block if there's some way to override the
-default setting... although I would much rather reformat them...
+    James> The SCSI subsystem is designed with this type of cache
+    James> incoherency problem in mind.  The Scsi_Cmnd structure has
+    James> an ownership model to forestall cache line bouncing.  The
+    James> idea is that when you want to dma to/from components of a
+    James> Scsi_Cmnd, you can only do it when the ownership is
+    James> SCSI_OWNER_LOW_LEVEL, which guarantees that nothing in the
+    James> mid layer will touch the command and trigger an incoherency
+    James> (at least until it times out).  The low level driver is
+    James> supposed to know about the cache incoherency problem, and
+    James> so avoids touching the structure between cache line
+    James> invalidation/writeback and DMA completion, thus, with a
+    James> correctly implemented driver, there should be no
+    James> possibility of DMA corruption.
 
-Oh, the drives are all ST136403FC drives if that matters.
+Out of curiousity, how do you deal with someone writing to Scsi_Cmnd
+_before_ the DMA and having that data lost when pci_map_single() with
+PCI_DMA_FROMDEVICE invalidates the cache before writeback?
 
-Thanks in advance for any clues...
-
-David
+Best,
+  Roland
