@@ -1,42 +1,32 @@
-From: Mogens Valentin <monz@danbbs.dk>
-Subject: Locked Plextor PX-W1210S burner
-Date: Thu, 18 Dec 2003 12:50:33 +0100
+From: James Bottomley <James.Bottomley@steeleye.com>
+Subject: SCSI in a post 2.6.0 world
+Date: 18 Dec 2003 09:48:05 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3FE19489.9940AEF2@danbbs.dk>
-Reply-To: monz@danbbs.dk
+Message-ID: <1071758885.2430.37.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pfepc.post.tele.dk ([195.41.46.237]:7307 "EHLO
-	pfepc.post.tele.dk") by vger.kernel.org with ESMTP id S265115AbTLRLrt
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 18 Dec 2003 06:47:49 -0500
-Received: from danbbs.dk (0xc2ef15a4.bynxx4.adsl-dhcp.tele.dk [194.239.21.164])
-	by pfepc.post.tele.dk (Postfix) with ESMTP id 6651226293C
-	for <linux-scsi@vger.kernel.org>; Thu, 18 Dec 2003 12:47:42 +0100 (CET)
+Received: from stat1.steeleye.com ([65.114.3.130]:402 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S265196AbTLROsb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 18 Dec 2003 09:48:31 -0500
+Received: from midgard.sc.steeleye.com (midgard.sc.steeleye.com [172.17.6.40])
+	by hancock.sc.steeleye.com (8.11.6/linuxconf) with ESMTP id hBIEmUa13855
+	for <linux-scsi@vger.kernel.org>; Thu, 18 Dec 2003 09:48:31 -0500
 List-Id: linux-scsi@vger.kernel.org
-To: Linux-scsi <linux-scsi@vger.kernel.org>
+To: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-For the first time, my Plextor PX-W1210S scsi burner has locked.
+With the announcement of 2.6.0, I've dusted off the scsi-misc-2.7 tree
+at
 
-I can't get the media out.
-Using scu, I've tried reset, allow removal and release, no go.
+bk://linux-scsi.bkbits.net/scsi-misc-2.7
 
-Typical response is something like:
+I'm afraid, until the new merge criteria are announced, you can't assume
+it will contain the actual changesets that will be merged (I may need to
+take it apart and redo it),  but it's a good start for people who want
+to begin ongoing SCSI development again.
 
-scu: Sense Key = 0x5 = ILLEGAL REQUEST - Illegal request or CDB
-parameter,
-     Sense Code/Qualifier = (0x2c, 0) = Command sequence error
-
-
-RH 7.3/2.4.21, all updates, Plextor Firmware Revision Level: 1.00 .
-
-Any non-reboot ideas?
+James
 
 
-Plz answer directly, I'm not currently on this list; my apologies
-
--- 
-Kind regards / venlig hilsen,
-Mogens Valentin
