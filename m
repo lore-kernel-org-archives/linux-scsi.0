@@ -1,111 +1,78 @@
-From: Doug Ledford <dledford@redhat.com>
-Subject: Re: What's the state of sdev->tagged_queue
-Date: Fri, 06 Jun 2003 10:04:50 -0400
+From: Mark Haverkamp <markh@osdl.org>
+Subject: RE: [PATCH] megaraid driver fix for 2.5.70
+Date: 06 Jun 2003 07:15:40 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3EE09F82.2060000@redhat.com>
-References: <20030606074813.GA18748@lst.de>
+Message-ID: <1054908940.17288.1.camel@markh1.pdx.osdl.net>
+References: <0E3FA95632D6D047BA649F95DAB60E570185F234@EXA-ATLANTA.se.lsil.com>
+	 <1054907212.1777.10.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nat-pool-rdu.redhat.com ([66.187.233.200]:53916 "EHLO
-	lacrosse.corp.redhat.com") by vger.kernel.org with ESMTP
-	id S261411AbTFFNwC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 6 Jun 2003 09:52:02 -0400
-In-Reply-To: <20030606074813.GA18748@lst.de>
+Received: from air-2.osdl.org ([65.172.181.6]:62087 "EHLO mail.osdl.org")
+	by vger.kernel.org with ESMTP id S261568AbTFFOCB (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 6 Jun 2003 10:02:01 -0400
+In-Reply-To: <1054907212.1777.10.camel@mulgrave>
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@steeleye.com>
+Cc: "Mukker, Atul" <atulm@lsil.com>, Linus Torvalds <torvalds@transmeta.com>, Linux Kernel <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
 
-Christoph Hellwig wrote:
-> Hi Doug,
-
-Hi Christoph.
-
-> scsi_ioctl.c has the following comment from you:
+On Fri, 2003-06-06 at 06:46, James Bottomley wrote:
+> On Fri, 2003-06-06 at 09:28, Mukker, Atul wrote:
+> > Coming back to main issue, declaring complete mailbox would be superfluous
+> > since driver uses 16 bytes at most. The following patch should fix the panic
+> > 
+> >  	mbox = (mbox_t *)raw_mbox;
+> >  
+> > -	memset(mbox, 0, sizeof(*mbox));
+> > +	memset(mbox, 0, 16);
+> >  
+> >  	memset((void *)adapter->mega_buffer, 0, MEGA_BUFFER_SIZE);
+> >  
 > 
->  * The next two ioctls either need to go or need to be changed to
->  * pass tagged queueing changes through the low level drivers.
->  * Simply enabling or disabling tagged queueing without the knowledge
->  * of the low level driver is a *BAD* thing.
+> This, I think, is a bad idea.  It looks intrinsically wrong to allocate
+> storage and assign a pointer to it of a type that is longer than the
+> allocated storage.  The initial buffer overrun was due to problems with
+> this.
 > 
-> and scsi.h has this:
+> I think the correct solution is to define your mailbox like this:
 > 
->  unsigned tagged_queue:1;/* This is going away!!!!  Look at simple_tags
->                             instead!!!  Please fix your driver now!! */
+> typedef struct {
+> 	/* 0x0 */ u8 cmd;
+> 	/* 0x1 */ u8 cmdid;
+> 	/* 0x2 */ u16 numsectors;
+> 	/* 0x4 */ u32 lba;
+> 	/* 0x8 */ u32 xferaddr;
+> 	/* 0xC */ u8 logdrv;
+> 	/* 0xD */ u8 numsgelements;
+> 	/* 0xE */ u8 resvd;
+> 	/* 0xF */ volatile u8 busy;
+> } __attribute__ ((packed)) user_mbox_t;
 > 
-> but several drivers still look at it although it's never touched
-> outside scsi_ioctl.c and the individual drivers.  Most drivers uses also
-> look pretty bogus.  Can we just the ioctls and the field?
+> typedef struct {
+> 	user_mbox_t mbox_out
+> 	/* 0x10 */ volatile u8 numstatus;
+> 	/* 0x11 */ volatile u8 status;
+> 	/* 0x12 */ volatile u8 completed[MAX_FIRMWARE_STATUS];
+> 	volatile u8 poll;
+> 	volatile u8 ack;
+> } __attribute__ ((packed)) mbox_t;
+> 
+> and then re-define the issue_scb..() routines to use user_mbox_t which
+> is always the correct size.
+> 
+> Thus, you can throw away the raw_mbox and just do
+> 
+> user_mbox_t mbox;
+> memset(&mbox, 0, sizeof(mbox));
+> 
+> of course, your ->busy references become ->mbox_out.busy.
 
-I assume that should read "Can we just kill the ioctls and the field?" :-)
+I started working on an update along these lines yesterday.  I will test
+it out today.
 
-The answer to that is yes I think.  The ioctls for certain, the field 
-I'm pretty sure of.  Originally, the field was used as a boolean that 
-was when we enabled tagged queueing on a device.  Now, a value of 
-simple_tags > 1 should do the same thing.  However, due to usage of 
-cmd_per_lun on both tagged and untagged devices (I would have to check 
-this, I'm a bit out of touch since my accident) may cause confusion.  If 
-we set queue depth to cmd_per_lun the device may look tagged when it is 
-in fact not tagged.  The replacement test may need to be if simple_tags 
- > cmd_per_lun to indicate true tagged queueing.
-
-
-> 53c700.c:	if(SCp->device->tagged_supported && !SCp->device->tagged_queue
-
-This is checking that tagged queueing is supported and not already 
-enabled (a holdover from the fact that select_queue_depths would get 
-called more than once on a single device if we ever had a scsi 
-add-single-device command after the initial device scan).
-
-> AM53C974.c:				if (!hostdata->connected->device->tagged_queue)
-
-Tests tagged queueing not active on a device.
-
-> AM53C974.c:			    cmd->device->tagged_queue = 0;
-
-Disabling tagged queueing on a device.
-
-> AM53C974.c:	if (cmd->device->tagged_queue && (tag != TAG_NONE)) {
-
-Checking for a tagged device with an untagged command.  Others are all 
-similar.
-
-> NCR5380.c:						cmd->device->tagged_queue = 0;
-> arm/acornscsi.c:	if (SCpnt->device->tagged_queue) {
-> arm/acornscsi.c:	    host->SCpnt->device->tagged_queue = 0;
-> arm/acornscsi.c:			     scd->tagged_queue ? "en" : "dis",
-> arm/fas216.c:	if (SCpnt->device->tagged_queue && SCpnt->cmnd[0] != REQUEST_SENSE &&
-> arm/fas216.c:				     scd->tagged_queue ? "en" : "dis",
-> ncr53c8xx.c:	if (lp && !lp->numtags && cmd->device && cmd->device->tagged_queue) {
-> qla1280.c:			if (cmd->device->tagged_queue)
-> qla1280.c:			if (cmd->device->tagged_queue)
-> scsi.h:	unsigned tagged_queue:1;/* This is going away!!!!  Look at simple_tags
-> scsi_ioctl.c:		sdev->tagged_queue = 1;
-> scsi_ioctl.c:		sdev->tagged_queue = 0;
-> sym53c8xx.c:	if (lp && !lp->numtags && cmd->device && cmd->device->tagged_queue) {
-
-This does bring up another issue I've been thinking about though so I'll 
-suggest it now.
-
-Currently, we use the value of host->this_id to skip the scsi device of 
-the host controller in our device scan.  What I would like to do is 
-create an sg device entry for this_id that is type processor, is a fake 
-device, that implements whatever ioctls at the mid layer level that are 
-appropriate, but that also allow the low level driver to register a fall 
-through host ioctl routine that can be attached to this device.  This 
-would give us a uniform method of accessing host controllers via the 
-scsi subsystem.  Generic ioctls that can be handled in the mid layer can 
-be done so.  Host adapter specific ioctls can then be handled by the 
-driver.  At least this way we wouldn't have to have a different /proc 
-method of doing these things in every single driver and we would be able 
-to use a normal ioctl interface for things like controlling the various 
-smart raid controllers, etc.  Thoughts?
+Mark.
 
 -- 
-   Doug Ledford <dledford@redhat.com>     919-754-3700 x44233
-            Red Hat, Inc.
-            1801 Varsity Dr.
-            Raleigh, NC 27606
-
+Mark Haverkamp <markh@osdl.org>
 
