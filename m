@@ -1,71 +1,62 @@
-From: Kurt Garloff <kurt@garloff.de>
-Subject: Re: TMSCSIM [2.6]
-Date: Sat, 29 Nov 2003 19:11:31 +0100
+From: Kurt Garloff <garloff@suse.de>
+Subject: Re: TMSCSIM [2.6] (cards)
+Date: Sat, 29 Nov 2003 19:14:02 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20031129181131.GL3049@tpkurt.garloff.de>
-References: <3FC7FC89.4060601@yk.rim.or.jp> <Pine.LNX.4.44.0311291030500.1672-100000@poirot.grange>
+Message-ID: <20031129181402.GM3049@tpkurt.garloff.de>
+References: <3FC64CD9.8040505@yk.rim.or.jp> <Pine.LNX.4.44.0311272338560.12446-100000@poirot.grange>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="HLsZ5Z1opAQvdr2J"
+	protocol="application/pgp-signature"; boundary="2YJj5f1P6Th4nBRw"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns.suse.de ([195.135.220.2]:134 "EHLO Cantor.suse.de")
-	by vger.kernel.org with ESMTP id S263855AbTK2SLj (ORCPT
+Received: from ns.suse.de ([195.135.220.2]:24711 "EHLO Cantor.suse.de")
+	by vger.kernel.org with ESMTP id S263861AbTK2SOE (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 29 Nov 2003 13:11:39 -0500
+	Sat, 29 Nov 2003 13:14:04 -0500
 Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.44.0311291030500.1672-100000@poirot.grange>
+In-Reply-To: <Pine.LNX.4.44.0311272338560.12446-100000@poirot.grange>
 List-Id: linux-scsi@vger.kernel.org
 To: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
-Cc: Chiaki <ishikawa@yk.rim.or.jp>, Linux SCSI list <linux-scsi@vger.kernel.org>, Thorsten Leemhuis <Thorsten_Leemhuis@gmx.de>, gl@dsa-ac.de
+Cc: linux-scsi@vger.kernel.org
 
 
---HLsZ5Z1opAQvdr2J
+--2YJj5f1P6Th4nBRw
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
 Content-Transfer-Encoding: quoted-printable
 
-On Sat, Nov 29, 2003 at 10:46:24AM +0100, Guennadi Liakhovetski wrote:
-> > PS: now that the driver seems to be in better shape, you might want to
-> > bump the driver version number  reported in the banner,
-> > "Tekram DC390/AM53C974 PCI SCSI Host Adapter, Driver Version 2.0f
-> > 2000-12-20".
->=20
-> Yep. Kurt, Christian, shall I increment the version number (2.0g / 2.1a?),
-> adding a Changelog entry? Also, how shall it be maintained now, until it
-> is included in the stock 2.6 (hopefully)? Is there a linux-scsi tree,
-> where this driver could be merged in, or just an ftp site, where the patch
-> could be uploaded? I am not using BK (don't think it would make much sense
-> with a 56K modem dial-up:-)).
+Guennadi,
 
-Well, 2.1a seems a reasonable version number.
-Please add a changelog entry. You should get the credits for doing all
-the work for porting the driver! Thanks again!
+On Thu, Nov 27, 2003 at 11:43:03PM +0100, Guennadi Liakhovetski wrote:
+> What are the best (for testing) tmscsim-supported cards (tekram (t) /
+> dawicontrol / ...)?=20
 
-I can put it for download on my site;=20
-we should try to push it into 2.6.0/1, of course.
+Dawi2974, TekramDC390(T), onboard 53c974/79c974 chipsets.
+I doubt you can easily find new hardware with this chipset nowadays ...
 
-> No, wouldn't do that. It would unnecessarily blow the patch up...
+> My on-board am53c974 is way too simple...=20
 
-I wouldn't do it either.
-Then better have two patches, one doing only functional changes, one
-only changing formatting.
+They are all the same ...
+
+> Or does the
+> probability of getting bugs depend of what devices hang on it?
+
+Yep. Scanners did tend to trigger bugs in the driver in the past.
 
 Regards,
 --=20
-Kurt Garloff                   <kurt@garloff.de>             [Koeln, DE]
-Physics:Plasma modeling <garloff@plasimo.phys.tue.nl> [TU Eindhoven, NL]
-Linux:SCSI, Security           <garloff@suse.de>    [SUSE Nuernberg, DE]
+Kurt Garloff  <garloff@suse.de>                            Cologne, DE=20
+SUSE LINUX AG, Nuernberg, DE                          SUSE Labs (Head)
 
---HLsZ5Z1opAQvdr2J
+--2YJj5f1P6Th4nBRw
 Content-Type: application/pgp-signature
 Content-Disposition: inline
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v1.2.2 (GNU/Linux)
 
-iD8DBQE/yOFTxmLh6hyYd04RAkMqAJ0dF4NDnwi5JO87jHbHZSdNgL/3CgCfavLT
-vH3UNtpxMpn5ToV5S9vIFGs=
-=tm56
+iD8DBQE/yOHqxmLh6hyYd04RAhn8AKC/XGl6ZpG6qS1w2rcRm2Bx1kPWuwCfeoeN
+iXvF4n9iKNJX1a0XgcbJkag=
+=6sqK
 -----END PGP SIGNATURE-----
 
---HLsZ5Z1opAQvdr2J--
+--2YJj5f1P6Th4nBRw--
