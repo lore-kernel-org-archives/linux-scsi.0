@@ -1,92 +1,58 @@
-From: AJ Lewis <alewis@redhat.com>
-Subject: Re: [linux-iscsi-devel] Re: [PATCH RFC] replace ioctl for sysfs take 2
-Date: Tue, 7 Sep 2004 10:24:52 -0500
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [linux-iscsi-devel] Re: [PATCH RFC] replace ioctl for
+	sysfs	take 2
+Date: 07 Sep 2004 11:35:18 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040907152452.GB22719@null.msp.redhat.com>
-References: <413557CB.8010008@cs.wisc.edu> <20040901162042.GC26753@null.msp.redhat.com> <20040906143251.GB21646@lst.de> <20040906163336.GE642@parcelfarce.linux.theplanet.co.uk> <413CA924.8030904@cs.wisc.edu>
+Message-ID: <1094571319.1716.108.camel@mulgrave>
+References: <413557CB.8010008@cs.wisc.edu>	<20040901162042.GC26753@null.msp.redhat.com>	
+	<20040906143251.GB21646@lst.de>	<20040906163336.GE642@parcelfarce.linux.thep
+	 lanet.co.uk>	<413CA924.8030904@cs.wisc.edu> <413CB265.3070304@cs.wisc.edu>
+	<413CE933.70509@us.ibm.com> <1094512278.1761.63.camel@mulgrave>
+	<413D20F9.6000704@us.ibm.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="1LKvkjL3sHcu1TtY"
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:47829 "EHLO mx1.redhat.com")
-	by vger.kernel.org with ESMTP id S268229AbUIGPZc (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Sep 2004 11:25:32 -0400
-Content-Disposition: inline
-In-Reply-To: <413CA924.8030904@cs.wisc.edu>
+Received: from stat16.steeleye.com ([209.192.50.48]:56782 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S268196AbUIGPgS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 7 Sep 2004 11:36:18 -0400
+In-Reply-To: <413D20F9.6000704@us.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>
-Cc: Matthew Wilcox <willy@debian.org>, Christoph Hellwig <hch@lst.de>, iscsi -devel <linux-iscsi-devel@lists.sourceforge.net>, David Wysochanski <davidw@netapp.com>, "Surekha.PC" <surekhap@cisco.com>, linux-scsi@vger.kernel.org
+To: Mike Christie <mikenc@us.ibm.com>
+Cc: Mike Christie <michaelc@cs.wisc.edu>, Matthew Wilcox <willy@debian.org>, Christoph Hellwig <hch@lst.de>, iscsi -devel <linux-iscsi-devel@lists.sourceforge.net>, David Wysochanski <davidw@netapp.com>, "Surekha.PC" <surekhap@cisco.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+
+On Mon, 2004-09-06 at 22:46, Mike Christie wrote: 
+> In that first target patch you sent it had the target dev's bus set to 
+> scsi_bus_type. That caused my confusion as to what the bus was for. I 
+> see the new patch with this removed. Nevermind.
+
+er, yes, cut and paste error ... 
+
+> We just needed something to track the driver's scsi_hosts. It was also 
+> used becuase we used a struct device_driver to hang setup attributes 
+> (non iscsi related attrs needed to setup our driver's devices without an 
+> ioctl) off of like scsi_debug (this is why I asked about a single 
+> virtual bus for both of us to share).
+
+Ah, OK, I see.  So you mean add a bus to the scsi_host->shost_gendev. 
+That's certainly feasible.  With clever matching we could get all LLDs
+that wanted this functionality to add a dummy driver which they could
+then use to traverse their attached hosts.
+
+> Since we followed the suggestion to do a host per transport endpoint 
+> when we rmmod the driver we just need some way to loop over every 
+> scsi_host and free them up. We had a linked list of scsi_hosts. 
+> Christoph suggested a class or bus instead of the linked list, and had 
+> preferred the bus. Now you are suggesting to use a class. It wouldn't be 
+> ok to go back to the single host would it? In that case we would not 
+> need a class, bus, or linked list?
+
+A host is the analogue of a bus.  In iSCSI that's really the other end
+point.  Using abstractions incorrectly (like a single host for the
+entire iSCSI system) is bound to end up with problems due to the concept
+mismatch.
+
+James
 
 
---1LKvkjL3sHcu1TtY
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
-
-On Mon, Sep 06, 2004 at 11:15:00AM -0700, Mike Christie wrote:
-> Matthew Wilcox wrote:
-> >On Mon, Sep 06, 2004 at 04:32:51PM +0200, Christoph Hellwig wrote:
-> >
-> >>On Wed, Sep 01, 2004 at 11:20:42AM -0500, AJ Lewis wrote:
-> >>
-> >>>Do we want all these attributes in the scsi_host class, or should we p=
-ut
-> >>>them in the iscsi devices directory?  So in
-> >>>/sys/bus/iscsi-sfnet/devices/iscsi1 -
-> >
-> >
-> >Woah, woah, woah.  What's this "iscsi-sfnet" directory in sysfs?  That's
-> >just wrong.=20
->=20
-> It is only a pseudo bus for the driver from Christoph's suggestion, that's
-> just to make probing and removing of the driver's devices easier (it looks
-> like a normal scsi driver now).
->=20
-> > No way is that crap going into the kernel.  We have to have
-> >*one* iscsi infrastructure, not a dozen.
-> >
->=20
-> Don't worry, there is no way we are going to put transport, scsi or anyth=
-ing
-> like that there. This driver will use the scsi-ml infrastucture for sysfs
-> and this includes using the transport classes. I think this comment from =
-AJ,
-> was just in error when he was unaware of scsi-ml's transport classes.=20
-
-Yeah - that was me being ignorant of the transport classes.  Speaking of
-which, is anyone working on a transport class for iscsi?  I see a patch for
-one in the archives
-( http://marc.theaimsgroup.com/?l=3Dlinux-scsi&m=3D108033504301079&w=3D2 ),=
- but it
-looks like the discussion sort of died off and nothing ever got accepted.  =
-I'd
-be willing to put together a patch for an iscsi transport class if no one e=
-lse
-is working on one right now.
-
-Regards,
---=20
-AJ Lewis                                   Voice:  612-638-0500
-Red Hat Inc.                               E-Mail: alewis@redhat.com
-720 Washington Ave. SE, Suite 200
-Minneapolis, MN 55414
-  =20
-Current GPG fingerprint =3D D9F8 EDCE 4242 855F A03D  9B63 F50C 54A8 578C 8=
-715
-Grab the key at: http://people.redhat.com/alewis/gpg.html or one of the
-many keyservers out there...
-
-
---1LKvkjL3sHcu1TtY
-Content-Type: application/pgp-signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.2.4 (GNU/Linux)
-
-iD8DBQFBPdLE9QxUqFeMhxURAoW8AJ0ZNFA1Qe/8vPSCSkwfuUPtGZZQJgCfZC2i
-fmABlAc9Inyj7butpDAfO6U=
-=J6zj
------END PGP SIGNATURE-----
-
---1LKvkjL3sHcu1TtY--
