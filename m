@@ -1,40 +1,42 @@
-From: Patrick Mansfield <patmans@us.ibm.com>
+From: James Bottomley <James.Bottomley@steeleye.com>
 Subject: Re: GFP_ATOMIC allocations...
-Date: Fri, 30 Aug 2002 09:22:57 -0700
+Date: Fri, 30 Aug 2002 11:46:02 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20020830092257.A19730@eng2.beaverton.ibm.com>
-References: <20020828202534.G30927@redhat.com> <20020828174737.A27554@eng2.beaverton.ibm.com> <20020828214215.A31167@redhat.com>
+Message-ID: <200208301646.g7UGk2c15401@localhost.localdomain>
+References: <patmans@us.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <20020828214215.A31167@redhat.com>; from dledford@redhat.com on Wed, Aug 28, 2002 at 09:42:15PM -0400
+Received: (from root@localhost)
+	by pogo.mtv1.steeleye.com (8.9.3/8.9.3) id JAA30500
+	for <linux-scsi@vger.kernel.org>; Fri, 30 Aug 2002 09:46:11 -0700
+In-Reply-To: Message from Patrick Mansfield <patmans@us.ibm.com>
+   of "Fri, 30 Aug 2002 09:22:57 PDT." <20020830092257.A19730@eng2.beaverton.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, zaitcev@redhat.com
+To: Patrick Mansfield <patmans@us.ibm.com>
+Cc: linux-scsi@vger.kernel.org, zaitcev@redhat.com
 
-On Wed, Aug 28, 2002 at 09:42:15PM -0400, Doug Ledford wrote:
-> On Wed, Aug 28, 2002 at 05:47:37PM -0700, Patrick Mansfield wrote:
-> > So, you think all (or most) of the GFP_ATOMIC's in scsi_scan.c should
-> > be GFP_KERNEL?
+patmans@us.ibm.com said:
+> There was past discussion about calling into scsi_build_commandblocks()
+>  while not in user context (via usb etc.), this implies that we could
+> scan while not in user context.
+
+> I don't see how that would work, since the scan sleeps waiting for IO.
 > 
 
-> 
-> > All the kmalloc calls should be at boot time, or via
-> > insmod.
-> 
-> Right, process context with no locks held.
-> 
+> Do we really call scan_scsis and scsi_build_commandblocks while not in
+> user context? Who is the caller (to scsi_register_host)?
 
-There was past discussion about calling into scsi_build_commandblocks()
-while not in user context (via usb etc.), this implies that we could
-scan while not in user context.
+> Here is Pete's response saying he found such a case, but not where:
 
-I don't see how that would work, since the scan sleeps waiting for IO. 
+> http://marc.theaimsgroup.com/?l=linux-scsi&m=101678634608966&w=2 
 
-Do we really call scan_scsis and scsi_build_commandblocks while not in user
-context? Who is the caller (to scsi_register_host)?
+I agree we shouldn't not be in user context here.
 
-Here is Pete's response saying he found such a case, but not where:
+What about, instead of Pete's patch, changing the GFP_ATOMIC to GFP_KERNEL and 
+adding a BUG_ON(in_interrupt()) at the top and see who sends back bug 
+reports...
 
-http://marc.theaimsgroup.com/?l=linux-scsi&m=101678634608966&w=2
+James
 
--- Patrick Mansfield
+
