@@ -1,51 +1,49 @@
 From: Rusty Trivial Russell <trivial@rustcorp.com.au>
-Subject: [TRIVIAL] [2.5 patch] remove an unused function from wd7000.c
-Date: Thu, 04 Sep 2003 13:12:12 +1000
+Subject: [TRIVIAL] 2.6] 2 spelling patches in helps
+Date: Thu, 04 Sep 2003 13:20:48 +1000
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030904033018.C07B42C10E@lists.samba.org>
+Message-ID: <20030904033023.1B0802C0A7@lists.samba.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from dp.samba.org ([66.70.73.150]:19392 "EHLO lists.samba.org")
-	by vger.kernel.org with ESMTP id S264616AbTIDDaT (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Sep 2003 23:30:19 -0400
+Received: from dp.samba.org ([66.70.73.150]:29376 "EHLO lists.samba.org")
+	by vger.kernel.org with ESMTP id S264626AbTIDDaX (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Sep 2003 23:30:23 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: John Boyd <boyd@cis.ohio-state.edu>, Miroslav Zagorac <zaga@fly.cc.fer.hr>, linux-scsi@vger.kernel.org, axboe@suse.de
+To: torvalds@transmeta.com
+Cc: linux-scsi@vger.kernel.org, axboe@suse.de
 
-From:  Adrian Bunk <bunk@fs.tum.de>
+From:  Maciej Soltysiak <solt@dns.toxicfilms.tv>
 
-  The patch below removes an unused function from drivers/scsi/wd7000.c .
+  Hi,
   
-  I've tested the compilation with 2.5.72-mm2.
+  please consider these patches to fix spelling.
   
-  cu
-  Adrian
+  Regards,
+  Maciej Soltysiak
   
 
---- trivial-2.6.0-test4-bk5/drivers/scsi/wd7000.c.orig	2003-09-04 13:01:35.000000000 +1000
-+++ trivial-2.6.0-test4-bk5/drivers/scsi/wd7000.c	2003-09-04 13:01:35.000000000 +1000
-@@ -1605,22 +1605,6 @@
- }
+--- trivial-2.6.0-test4-bk5/net/Kconfig.orig	2003-09-04 13:01:50.000000000 +1000
++++ trivial-2.6.0-test4-bk5/net/Kconfig	2003-09-04 13:01:50.000000000 +1000
+@@ -623,7 +623,7 @@
+ 	depends on EXPERIMENTAL
+ 	---help---
+ 	  This option enables NIC (Network Interface Card) hardware throttling
+-	  during periods of extremal congestion. At the moment only a couple
++	  during periods of extreme congestion. At the moment only a couple
+ 	  of device drivers support it (really only one -- tulip, a modified
+ 	  8390 driver can be found at
+ 	  <ftp://ftp.inr.ac.ru/ip-routing/fastroute/fastroute-8390.tar.gz>).
+--- trivial-2.6.0-test4-bk5/Documentation/scsi/ncr53c8xx.txt.orig	2003-09-04 13:01:50.000000000 +1000
++++ trivial-2.6.0-test4-bk5/Documentation/scsi/ncr53c8xx.txt	2003-09-04 13:01:50.000000000 +1000
+@@ -1025,7 +1025,7 @@
+ then it will for sure win the next SCSI BUS arbitration.
  
- /*
-- *  I have absolutely NO idea how to do an abort with the WD7000...
-- */
--static int wd7000_abort(Scsi_Cmnd * SCpnt)
--{
--	Adapter *host = (Adapter *) SCpnt->device->host->hostdata;
--
--	if (inb(host->iobase + ASC_STAT) & INT_IM) {
--		printk("wd7000_abort: lost interrupt\n");
--		wd7000_intr_handle(host->irq, NULL, NULL);
--		return FAILED;
--	}
--	return FAILED;
--}
--
--
--/*
-  *  I also have no idea how to do a reset...
-  */
+ Since, there is no way to know what devices are trying to arbitrate for the 
+-BUS, using this feature can be extremally unfair. So, you are not advised 
++BUS, using this feature can be extremely unfair. So, you are not advised
+ to enable it, or at most enable this feature for the case the chip lost 
+ the previous arbitration (boot option 'iarb:1').
  
 -- 
   What is this? http://www.kernel.org/pub/linux/kernel/people/rusty/trivial/
   Don't blame me: the Monkey is driving
-  File: Adrian Bunk <bunk@fs.tum.de>: [2.5 patch] remove an unused function from wd7000.c
+  File: Maciej Soltysiak <solt@dns.toxicfilms.tv>: [TRIVIAL][PATCH 2.6] 2 spelling patches in helps
