@@ -1,214 +1,97 @@
-From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
-Subject: Re: compile warning fix for advansys (trivial)
-Date: Wed, 31 Dec 2003 19:17:46 +0100 (CET)
+From: Andre Hedrick <andre@linux-ide.org>
+Subject: Re: Request for review of Linux iSCSI driver version 4.0.0.3
+Date: Wed, 31 Dec 2003 13:22:59 -0800 (PST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44.0312311856180.1873-200000@poirot.grange>
-References: <20031228232831.A23869@infradead.org>
+Message-ID: <Pine.LNX.4.10.10312311224140.32122-100000@master.linux-ide.org>
+References: <03123116373105.21897@naveenb-lnx.cisco.com>
 Mime-Version: 1.0
-Content-Type: MULTIPART/MIXED; BOUNDARY="-1463811839-1219757275-1072893678=:1873"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.gmx.de ([213.165.64.20]:20443 "HELO mail.gmx.net")
-	by vger.kernel.org with SMTP id S265250AbTLaTx3 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 31 Dec 2003 14:53:29 -0500
-In-Reply-To: <20031228232831.A23869@infradead.org>
-Content-ID: <Pine.LNX.4.44.0312311901590.1873@poirot.grange>
+Received: from astound-64-85-224-253.ca.astound.net ([64.85.224.253]:6150 "EHLO
+	master.linux-ide.org") by vger.kernel.org with ESMTP
+	id S265249AbTLaV0A (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 31 Dec 2003 16:26:00 -0500
+In-Reply-To: <03123116373105.21897@naveenb-lnx.cisco.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-scsi@vger.kernel.org
+To: Naveen Burmi <naveenb@cisco.com>
+Cc: hch@infradead.org, Mike Christie <mikenc@us.ibm.com>, linux-scsi@vger.kernel.org
+
+
+Naveen,
+
+Please clarify that TPGT's do not always represent the same physical
+target, but must represent the same storage content regardless.
+
+N targets can represent the same TPGT yet have totally different ip
+address and can exist on different physical networks.
+
+You appear to be addressing "active-active" for multi-connection-session
+over N-dataports mapping the same TPGT.  This is simple to explain, yet
+not as simple to demo beyond a single box with multiple NICs.  This does
+not exclude N FC-iSCSI storage routers attached to a director.
+
+Just trying to clarify where "multipathing" and "failover" potentially
+resides and not within the bounds of the kernel's scsi mid-layer.  Also
+any initiator should be viewed as an effective HBA.  Just as Qlogic has
+internal multi-path, any other real or virtual HBA should be permitted
+such features.  This should be limited to the HBA and not generally
+global.
+
+Channel failings and recoveries should also be permitted if not already.
+This could include lun device migration if needed.  The object of hanging
+onto failed channels is to preserve some recovery issues with TPGT
+failover and returns.
+
+Cheers,
+
+Andre Hedrick
+LAD Storage Consulting Group
+
+On Wed, 31 Dec 2003, Naveen Burmi wrote:
+
+> On Tuesday 30 December 2003 02:53 am, Mike Christie wrote:
+> > >>  - as Mike Christie you're doing multipathing in your driver.  We don't
+> > >>    want vendor-specific multipathing code in scsi-drivers but instead
+> > >>    encurage using md or dm multipathing.
+> > >
+> > > linux-iscsi driver 4.0.0.2 is not doing multipathing instead it provides
+> > > infrastructure to do multipathing and encourages other
+> > > applications/drivers like md  to do multipathing.
+> >
+> > I think Christoph may have meant to write "Failover" above.
+> >
+> > mike
+> 
+> Along with Multipath infrastructure iscsi driver provides a feature called 
+> "Portal Failover".  
+> Portal Failover means that if a network portal fails, through which session 
+> is established to a target then session can be established through another 
+> available network portal.
+>  
+> If a target can be reached through multiple network portals then following 
+> are the scenarios  which determines the usage of Multipathing and Portal 
+> Failover:
+> 
+> 1. If session(path) is established to target through each portal then Portal 
+> failover is not possible only multipathing is possible. Multipath aware 
+> drivers can use these paths to do multipathing.
+> 
+> 2. It is possible that multiples portals can be grouped together into portal 
+> groups. If a session(path) is established to target through each portal group 
+> i.e, at any instance of time one session(path) is establish using one portal 
+> of a portal group, then multiplathing can be done by  multipath aware driver 
+> through available paths to target through each portal group and portal 
+> failover can be done within the portal group.
+> 
+> Naveen.
+> >
+> > -
+> > To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
-  Send mail to mime@docserver.cac.washington.edu for more info.
-
----1463811839-1219757275-1072893678=:1873
-Content-Type: TEXT/PLAIN; CHARSET=US-ASCII
-Content-ID: <Pine.LNX.4.44.0312311901591.1873@poirot.grange>
-
-On Sun, 28 Dec 2003, Christoph Hellwig wrote:
-
-> On Mon, Dec 29, 2003 at 12:26:39AM +0100, Guennadi Liakhovetski wrote:
-> > I think, the patch would only be wrong if either the original driver
-> > behaviour was wrong in the race-case,
->
-> it was.  That's why we're changing it after all :)
-
-Ok, the attached patch (carefully, I hope) does request_region instead of
-check_region for the detection address-range, and then release_region -
-when needed. Hope I got it right. Compiles, otherwise completely untested.
-Yes, I saw the other patch from Omkhar Arasaratnam, sent to LKML, - I
-think, it is incomplete and not quite accurate too. However, the idea is
-the same (if I understood his idea right).
-
-Guennadi
----
-Guennadi Liakhovetski
-
-
----1463811839-1219757275-1072893678=:1873
-Content-Type: TEXT/PLAIN; CHARSET=US-ASCII; NAME="advansys.c.patch"
-Content-Transfer-Encoding: BASE64
-Content-ID: <Pine.LNX.4.44.0312311901181.1873@poirot.grange>
-Content-Description: 
-Content-Disposition: ATTACHMENT; FILENAME="advansys.c.patch"
-
-LS0tIGxpbnV4LTIuNi4wLXRlc3QxMS9kcml2ZXJzL3Njc2kvYWR2YW5zeXMu
-
-Y34JV2VkIERlYyAzMSAxNzozNjowNSAyMDAzDQorKysgbGludXgtMi42LjAt
-
-dGVzdDExL2RyaXZlcnMvc2NzaS9hZHZhbnN5cy5jCVdlZCBEZWMgMzEgMTg6
-
-NDc6MTIgMjAwMw0KQEAgLTIwNzEsNiArMjA3MSw3IEBADQogU1RBVElDIEFT
-
-Q19EQ05UICBBc2NHZXRFaXNhUHJvZHVjdElEKFBvcnRBZGRyKTsNCiBTVEFU
-
-SUMgUG9ydEFkZHIgIEFzY1NlYXJjaElPUG9ydEFkZHJFSVNBKFBvcnRBZGRy
-
-KTsNCiBTVEFUSUMgUG9ydEFkZHIgIEFzY1NlYXJjaElPUG9ydEFkZHIxMShQ
-
-b3J0QWRkcik7DQorU1RBVElDIHZvaWQgICAgICBBc2NSZWxlYXNlSU9Qb3J0
-
-QWRkcjExKFBvcnRBZGRyKTsNCiBTVEFUSUMgUG9ydEFkZHIgIEFzY1NlYXJj
-
-aElPUG9ydEFkZHIoUG9ydEFkZHIsIHVzaG9ydCk7DQogU1RBVElDIHZvaWQg
-
-ICAgICBBc2NTZXRJU0FQTlBXYWl0Rm9yS2V5KHZvaWQpOw0KICNlbmRpZiAv
-
-KiBDT05GSUdfSVNBICovDQpAQCAtNDYxOSw3ICs0NjIwLDcgQEANCiAgICAg
-
-ICAgICAgICAgICAgICAgICAgICBBU0NfREJHMSgxLA0KICAgICAgICAgICAg
-
-ICAgICAgICAgICAgICAgICAgICAgImFkdmFuc3lzX2RldGVjdDogcHJvYmlu
-
-ZyBJL08gcG9ydCAweCV4Li4uXG4iLA0KICAgICAgICAgICAgICAgICAgICAg
-
-ICAgICAgICBpb3ApOw0KLSAgICAgICAgICAgICAgICAgICAgICAgIGlmIChj
-
-aGVja19yZWdpb24oaW9wLCBBU0NfSU9BRFJfR0FQKSAhPSAwKSB7DQorICAg
-
-ICAgICAgICAgICAgICAgICAgICAgaWYgKHJlcXVlc3RfcmVnaW9uKGlvcCwg
-
-QVNDX0lPQURSX0dBUCwgImFkdmFuc3lzLWRldGVjdCIpID09IE5VTEwpIHsN
-
-CiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgcHJpbnRrKA0KICJBZHZh
-
-blN5cyBTQ1NJOiBzcGVjaWZpZWQgSS9PIFBvcnQgMHglWCBpcyBidXN5XG4i
-
-LCBpb3ApOw0KICAgICAgICAgICAgICAgICAgICAgICAgICAgICAvKiBEb24n
-
-dCB0cnkgdGhpcyBJL08gcG9ydCB0d2ljZS4gKi8NCkBAIC00NjMwLDYgKzQ2
-
-MzEsNyBAQA0KICJBZHZhblN5cyBTQ1NJOiBzcGVjaWZpZWQgSS9PIFBvcnQg
-
-MHglWCBoYXMgbm8gYWRhcHRlclxuIiwgaW9wKTsNCiAgICAgICAgICAgICAg
-
-ICAgICAgICAgICAgICAgLyogRG9uJ3QgdHJ5IHRoaXMgSS9PIHBvcnQgdHdp
-
-Y2UuICovDQogICAgICAgICAgICAgICAgICAgICAgICAgICAgIGFzY19pb3Bv
-
-cnRbaW9wb3J0XSA9IDA7DQorICAgICAgICAgICAgICAgICAgICAgICAgICAg
-
-IHJlbGVhc2VfcmVnaW9uKGlvcCwgQVNDX0lPQURSX0dBUCk7DQogICAgICAg
-
-ICAgICAgICAgICAgICAgICAgICAgIGdvdG8gaW9wb3J0X3RyeV9hZ2FpbjsN
-
-CiAgICAgICAgICAgICAgICAgICAgICAgICB9IGVsc2Ugew0KICAgICAgICAg
-
-ICAgICAgICAgICAgICAgICAgICAvKg0KQEAgLTQ2NDcsNiArNDY0OSw3IEBA
-
-DQogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICogJ2lvcG9y
-
-dCcgcGFzdCB0aGlzIGJvYXJkLg0KICAgICAgICAgICAgICAgICAgICAgICAg
-
-ICAgICAgICAgICAqLw0KICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-
-ICAgIGlvcG9ydCsrOw0KKyAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-
-ICAgIHJlbGVhc2VfcmVnaW9uKGlvcCwgQVNDX0lPQURSX0dBUCk7DQogICAg
-
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgZ290byBpb3BvcnRfdHJ5
-
-X2FnYWluOw0KICAgICAgICAgICAgICAgICAgICAgICAgICAgICB9DQogICAg
-
-ICAgICAgICAgICAgICAgICAgICAgfQ0KQEAgLTUzNzAsNiArNTM3MywxMiBA
-
-QA0KICAgICAgICAgICAgICAgICB9DQogICAgICAgICAgICAgfQ0KIA0KKyNp
-
-ZmRlZiBDT05GSUdfSVNBDQorICAgICAgICAgICAgLyogb24gSVNBIGFuZCBW
-
-TCBoYXZlIHRvIHJlbGVhc2UgdGhlIGRldGVjdGlvbi1yZWdpb24gKi8NCisg
-
-ICAgICAgICAgICBpZiAoYXNjX2J1c1tidXNdICYgKEFTQ19JU19JU0EgfCBB
-
-U0NfSVNfVkwpKQ0KKyAgICAgICAgICAgICAgICAgICAgcmVsZWFzZV9yZWdp
-
-b24oaW9wLCBBU0NfSU9BRFJfR0FQKTsNCisjZW5kaWYNCisNCiAgICAgICAg
-
-ICAgICAvKg0KICAgICAgICAgICAgICAqIFJlZ2lzdGVyIEJvYXJkIFJlc291
-
-cmNlcyAtIEkvTyBQb3J0LCBETUEsIElSUQ0KICAgICAgICAgICAgICAqLw0K
-
-QEAgLTk5NjIsNiArOTk3MSw3IEBADQogICAgICAgICAgICAgaWYgKEFzY0dl
-
-dENoaXBWZXJzaW9uKGlvcF9iZWcsIGJ1c190eXBlKSA8PSBBU0NfQ0hJUF9N
-
-QVhfVkVSX1ZMKSB7DQogICAgICAgICAgICAgICAgIHJldHVybiAoaW9wX2Jl
-
-Zyk7DQogICAgICAgICAgICAgfQ0KKyAgICAgICAgICAgIEFzY1JlbGVhc2VJ
-
-T1BvcnRBZGRyMTEoaW9wX2JlZyk7DQogICAgICAgICB9DQogICAgICAgICBy
-
-ZXR1cm4gKDApOw0KICAgICB9DQpAQCAtOTk3NCw2ICs5OTg0LDcgQEANCiAg
-
-ICAgICAgICAgICBpZiAoKEFzY0dldENoaXBWZXJzaW9uKGlvcF9iZWcsIGJ1
-
-c190eXBlKSAmIEFTQ19DSElQX1ZFUl9JU0FfQklUKSAhPSAwKSB7DQogICAg
-
-ICAgICAgICAgICAgIHJldHVybiAoaW9wX2JlZyk7DQogICAgICAgICAgICAg
-
-fQ0KKyAgICAgICAgICAgIEFzY1JlbGVhc2VJT1BvcnRBZGRyMTEoaW9wX2Jl
-
-Zyk7DQogICAgICAgICB9DQogICAgICAgICByZXR1cm4gKDApOw0KICAgICB9
-
-DQpAQCAtOTk4Nyw2ICs5OTk4LDE2IEBADQogfQ0KIA0KIEFTQ19JTklURlVO
-
-QygNCitTVEFUSUMgdm9pZCwNCitBc2NSZWxlYXNlSU9Qb3J0QWRkcjExKA0K
-
-KyAgICAgICAgICAgICAgICAgICAgICAgICBQb3J0QWRkciBpb3BfYmFzZQ0K
-
-KykNCispDQorew0KKyAgICByZWxlYXNlX3JlZ2lvbihpb3BfYmFzZSwgQVND
-
-X0lPQURSX0dBUCk7DQorfQ0KKw0KK0FTQ19JTklURlVOQygNCiBTVEFUSUMg
-
-UG9ydEFkZHIsDQogQXNjU2VhcmNoSU9Qb3J0QWRkcjExKA0KICAgICAgICAg
-
-ICAgICAgICAgICAgICAgICBQb3J0QWRkciBzX2FkZHINCkBAIC0xMDAwMyw3
-
-ICsxMDAyNCw3IEBADQogICAgIH0NCiAgICAgZm9yICg7IGkgPCBBU0NfSU9B
-
-RFJfVEFCTEVfTUFYX0lYOyBpKyspIHsNCiAgICAgICAgIGlvcF9iYXNlID0g
-
-X2FzY19kZWZfaW9wX2Jhc2VbaV07DQotICAgICAgICBpZiAoY2hlY2tfcmVn
-
-aW9uKGlvcF9iYXNlLCBBU0NfSU9BRFJfR0FQKSAhPSAwKSB7DQorICAgICAg
-
-ICBpZiAocmVxdWVzdF9yZWdpb24oaW9wX2Jhc2UsIEFTQ19JT0FEUl9HQVAs
-
-ICJhZHZhbnN5cy1kZXRlY3QiKSA9PSBOVUxMKSB7DQogICAgICAgICAgICAg
-
-QVNDX0RCRzEoMSwNCiAgICAgICAgICAgICAgICAiQXNjU2VhcmNoSU9Qb3J0
-
-QWRkcjExOiBjaGVja19yZWdpb24oKSBmYWlsZWQgSS9PIHBvcnQgMHgleFxu
-
-IiwNCiAgICAgICAgICAgICAgICAgICAgICBpb3BfYmFzZSk7DQpAQCAtMTAw
-
-MTMsNiArMTAwMzQsNyBAQA0KICAgICAgICAgaWYgKEFzY0ZpbmRTaWduYXR1
-
-cmUoaW9wX2Jhc2UpKSB7DQogICAgICAgICAgICAgcmV0dXJuIChpb3BfYmFz
-
-ZSk7DQogICAgICAgICB9DQorICAgICAgICByZWxlYXNlX3JlZ2lvbihpb3Bf
-
-YmFzZSwgQVNDX0lPQURSX0dBUCk7DQogICAgIH0NCiAgICAgcmV0dXJuICgw
-
-KTsNCiB9DQo=
----1463811839-1219757275-1072893678=:1873--
