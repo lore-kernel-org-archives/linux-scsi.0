@@ -1,48 +1,74 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: Repeating Scsi_Cmnd serial numbers in the error-handler
-Date: Wed, 30 Apr 2003 12:44:26 -0400 (EDT)
+From: Mike Anderson <andmike@us.ibm.com>
+Subject: Re: Bad reactions to QUEUE FULL
+Date: Wed, 30 Apr 2003 09:51:30 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44L0.0304301239040.956-100000@ida.rowland.org>
-References: <20030430162641.GB2350@beaverton.ibm.com>
+Message-ID: <20030430165130.GC2350@beaverton.ibm.com>
+References: <20030429220259.A13386@jose.vato.org> <1051714713.1818.32.camel@mulgrave> <20030430160851.GA2350@beaverton.ibm.com> <20030430091335.A14743@jose.vato.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ida.rowland.org ([192.131.102.52]:20740 "HELO ida.rowland.org")
-	by vger.kernel.org with SMTP id S261281AbTD3QcF (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 30 Apr 2003 12:32:05 -0400
-In-Reply-To: <20030430162641.GB2350@beaverton.ibm.com>
+Received: from e35.co.us.ibm.com ([32.97.110.133]:62711 "EHLO
+	e35.co.us.ibm.com") by vger.kernel.org with ESMTP id S261302AbTD3Qgr
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 30 Apr 2003 12:36:47 -0400
+Content-Disposition: inline
+In-Reply-To: <20030430091335.A14743@jose.vato.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Anderson <andmike@us.ibm.com>
-Cc: linux-scsi@vger.kernel.org
+To: Tim Pepper <tpepper@linux.ibm.com>, James Bottomley <James.Bottomley@steeleye.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Jens Axboe <axboe@suse.de>, olh@suse.de
 
-On Wed, 30 Apr 2003, Mike Anderson wrote:
+You should not need the previous patch you posted.
 
-> Alan,
+As James stated I would be suspicious about only restoring this one field
+in the command.
+
+The side effect of the work around patch is that sd_init_command (if you
+where doing IO to sd) will be called again on the command and
+sc_data_direction will get set.
+
+Tim Pepper [tpepper@vato.org] wrote:
+> Thanks Mike!  I'll run with this and see what happens.  Should I do it instead of
+> the one restoring the old direction?
 > 
-> Is the requirement that all serial numbers in flight be unique or that
-> once a serial number is used that is not be used again.
-
-It's actually somewhere in between.  Because of the possibility of the 
-device and the driver getting out-of-sync, we want to be sure that the 
-same serial number is not used twice within a short time period.  Probably 
-not used twice in a row would be sufficient.
-
-> I would hope the usb would be supporting auto sense and that it will not
-> fall into the case of having the error handler thread do a request sense
-> command for it. If it did fall into this case the serial number that was
-> used for the command having sense requested would not still be in
-> flight.
-
-We do support auto sense.  The problem arises with the TUR command, not 
-the REQUEST-SENSE command (which I just included in my previous message 
-for the sake of completeness).
-
-> If the error handler is in the process of aborting / canceling the
-> command it will not send a TUR until the command has been canceled.
-
-Yes.  But the TUR will be the very next command sent after the one that 
-failed.  This is the particular case that I would like to prevent.
-
-Alan Stern
+> Since it sounds LLDD related I'll bounce detailed trace info from each of
+> those drivers to the vendors for comment.
+> 
+> Thanks!
+> 
+> Tim
+> 
+> > 
+> > --- linux-2.4/drivers/scsi/scsi_lib.c		Wed Apr 30 09:04:16 2003
+> > +++ linux-2.4-p/drivers/scsi/scsi_lib.c		Wed Apr 30 09:04:17 2003
+> > @@ -256,6 +256,17 @@
+> >  	if (SCpnt != NULL) {
+> >  
+> >  		/*
+> > +		 * This is a work around for a case where this Scsi_Cmnd
+> > +		 * may have been through the busy retry paths already. We
+> > +		 * clear the special flag and try to restore the
+> > +		 * read/write request cmd value.
+> > +		 */
+> > +		if (SCpnt->request.cmd == SPECIAL)
+> > +			SCpnt->request.cmd = 
+> > +				(SCpnt->sc_data_direction ==
+> > +				 SCSI_DATA_WRITE) ? WRITE : READ;
+> > +
+> > +		/*
+> >  		 * For some reason, we are not done with this request.
+> >  		 * This happens for I/O errors in the middle of the request,
+> >  		 * in which case we need to request the blocks that come after
+> 
+> -- 
+> *********************************************************
+> *  tpepper@vato dot org             * Venimus, Vidimus, *
+> *  http://www.vato.org/~tpepper     * Dolavimus         *
+> *********************************************************
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-andmike
+--
+Michael Anderson
+andmike@us.ibm.com
 
