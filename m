@@ -1,37 +1,48 @@
-From: Bjorn Helgaas <bjorn.helgaas@hp.com>
-Subject: Re: mpt sets 64bit consistent mask yet requires mapping in same 4 GB chunk?!?
-Date: Fri, 13 Feb 2004 15:52:43 -0700
-Sender: linux-ia64-owner@vger.kernel.org
-Message-ID: <200402131552.43935.bjorn.helgaas@hp.com>
-References: <0E3FA95632D6D047BA649F95DAB60E5703EF915E@exa-atlanta.se.lsil.com> <20040213213043.GB20323@sgi.com>
+From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
+Subject: RE: [PATCH] aeventd logging application (Part 1)
+Date: Fri, 13 Feb 2004 17:40:43 -0500
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <547AF3BD0F3F0B4CBDC379BAC7E4189F2552B9@otce2k03.adaptec.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ia64-owner@vger.kernel.org>
-In-Reply-To: <20040213213043.GB20323@sgi.com>
-Content-Disposition: inline
-To: Jesse Barnes <jbarnes@sgi.com>, "Moore, Eric Dean" <Emoore@lsil.com>
-Cc: Alex Williamson <alex.williamson@hp.com>, jeremy@sgi.com, linux-scsi@vger.kernel.org, linux-ia64@vger.kernel.org
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from magic.adaptec.com ([216.52.22.17]:9097 "EHLO magic.adaptec.com")
+	by vger.kernel.org with ESMTP id S267261AbUBMWkq convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 13 Feb 2004 17:40:46 -0500
+content-class: urn:content-classes:message
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
-On Friday 13 February 2004 2:30 pm, Jesse Barnes wrote:
-> On Fri, Feb 13, 2004 at 04:20:35PM -0500, Moore, Eric Dean wrote:
-> > I added pci_set_consistent_dma_mask() per request from
-> > Jeremy Higdon<jeremy@sgi.com> back on 12/03/03. He
-> > was having problems on a Altix (IA64) system. See
-> > attached email.  What is your recommendation? I have a mpt 
-> > patch in the queue which doesn't address this.
-> > 
-> > On Friday, February 13, 2004 9:12 AM, Alex Williamson wrote:
-> > > These are two perfectly valid consistent mappings as far as the
-> > > platform code is concerned.  I think mpt really needs to either set
-> > > a 32bit consistent map of do a single allocation when it requires
-> > > this type of thing.  Thanks,
-> 
-> I think Alex's second suggestion would be the best--do a single
-> allocation rather than falling back to a 32 bit consistent mask.
+Excuse my (faked?) ignorance; I would like a good place to put this :-)
+Any suggestions on a suitable release mechanism?
 
-But even with a single allocation, there's nothing to prevent it
-from crossing a 4GB boundary, is there?
+I will accept `on Adaptec media' ...
+
+Sincerely -- Mark Salyzyn
+
+-----Original Message-----
+From: James Bottomley [mailto:James.Bottomley@SteelEye.com] 
+Sent: Friday, February 13, 2004 5:05 PM
+To: Salyzyn, Mark
+Cc: linux-scsi
+Subject: Re: [PATCH] aeventd logging application (Part 1)
+
+On Fri, 2004-02-13 at 16:48, Salyzyn, Mark wrote:
+> I expect this to be rejected for inclusion to the kernel source tree
+...
+> in that case the patch may just be done standalone (patch -p5).
+
+Well, I can satisfy your expectation on that score ;-)
+
+The rule is no user level tools at all in the kernel that aren't
+necessary for the kernel compile, no matter how closely they're tied to
+the kernel's operation.  Even things like udev don't get to go into the
+kernel sources.
+
+James
+
 
