@@ -1,31 +1,26 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: PATCH [6/8]  qla2xxx: Small enhancements
-Date: Tue, 7 Sep 2004 08:38:02 +0100
+From: James.Smart@Emulex.Com
+Subject: RE: [PATCH] exposing sdev_target in sysfs
+Date: Tue, 7 Sep 2004 10:05:11 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040907083802.A12964@infradead.org>
-References: <20040907042904.GA29651@praka.san.rr.com>
+Message-ID: <0B1E13B586976742A7599D71A6AC733C02D946@xbl3.ma.emulex.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from imladris.demon.co.uk ([193.237.130.41]:20487 "EHLO
-	phoenix.infradead.org") by vger.kernel.org with ESMTP
-	id S267520AbUIGHiF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 7 Sep 2004 03:38:05 -0400
-Content-Disposition: inline
-In-Reply-To: <20040907042904.GA29651@praka.san.rr.com>; from andrew.vasquez@qlogic.com on Mon, Sep 06, 2004 at 09:29:04PM -0700
+Received: from emulex.emulex.com ([138.239.112.1]:41095 "EHLO
+	emulex.emulex.com") by vger.kernel.org with ESMTP id S268054AbUIGOFP convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 7 Sep 2004 10:05:15 -0400
+content-class: urn:content-classes:message
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Vasquez <andrew.vasquez@qlogic.com>, Linux-SCSI Mailing List <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@SteelEye.com>
+To: James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org
 
-On Mon, Sep 06, 2004 at 09:29:04PM -0700, Andrew Vasquez wrote:
-> ChangeSet
->   1.1876 04/09/06 11:57:40 andrew.vasquez@qlogic.com +4 -0
->   Misc. small enhancements:
->   
->           o Add 're-scan' and 'initiate lip' support via /proc
->             similar to the 7.x series drivers.
+James,
 
-procfs support is deprecated, any new procfs invofmration is
-explicitly vetoed.  These changes need to go into sysfs, please
-try to work with emulex to get these attributes into the fc
-transport class.
+Did you give any consideration to the fact that FC would like to see all FC nodes - not just those that are FCP targets ?  I assume we could augment this patch to deal with the transport allocating the target (or node) structures rather than it being a byproduct of lun attachment. I would also assume we'd still allow lun discovery to create targets as well for compatibility w/ LLDDs that don't call out to the transport to alloc targets.
 
+Ideas ?  I can help with such a patch, but would like to get your ideas (and the lists) on how such a thing should be done.
+
+-- James S
+
+ 
