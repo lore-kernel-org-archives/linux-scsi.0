@@ -1,75 +1,31 @@
-From: Arjan van de Ven <arjanv@redhat.com>
+From: Bryan Henderson <hbryan@us.ibm.com>
 Subject: Re: Scsi midlayer question
-Date: Fri, 16 Jul 2004 20:08:04 +0200
+Date: Fri, 16 Jul 2004 11:24:37 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1090001284.2805.10.camel@laptop.fenrus.com>
+Message-ID: <OF31C7BA4F.BE5253F2-ON88256ED3.0063D350-88256ED3.006511B2@us.ibm.com>
 References: <47F3C2BE74738E4683574107469DFA204CC4FA@XYUSEX01.xyus.xyratex.com>
-Reply-To: arjanv@redhat.com
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-KznSmDd24Iv1cKhZb2H0"
+Content-Type: text/plain; charset="US-ASCII"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:56715 "EHLO mx1.redhat.com")
-	by vger.kernel.org with ESMTP id S266567AbUGPSLu (ORCPT
+Received: from e2.ny.us.ibm.com ([32.97.182.102]:14333 "EHLO e2.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S266409AbUGPS2Z (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 16 Jul 2004 14:11:50 -0400
+	Fri, 16 Jul 2004 14:28:25 -0400
 In-Reply-To: <47F3C2BE74738E4683574107469DFA204CC4FA@XYUSEX01.xyus.xyratex.com>
 List-Id: linux-scsi@vger.kernel.org
 To: Frank Borich <Frank_Borich@us.xyratex.com>
 Cc: linux-scsi@vger.kernel.org
 
+>I can see from a fibre channel trace that my 1 MB I/O transfers are
+>getting cut up into little chunks.
 
---=-KznSmDd24Iv1cKhZb2H0
-Content-Type: multipart/mixed; boundary="=-umPZBkRYmS+w84hYgNAF"
+What is "my 1 MB I/O transfer"?  How are you generating or seeing this 
+transfer?  Sg device?
 
+I ask because sometimes when I hear this question, the transfer is a 
+transfer to the page cache, so it has only a loose association with 
+transfers on the fibre channel.
 
---=-umPZBkRYmS+w84hYgNAF
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
-
-On Fri, 2004-07-16 at 19:55, Frank Borich wrote:
-> I can see from a fibre channel trace that my 1 MB I/O transfers are
-> getting cut up into little chunks.
-> Is there any options that can be set when loading the scsi mid layer as
-> a module that will improve
-> io performance or prevent this breakdown for the sg,sd, or even raw
-> drivers.  I am not a driver developer=20
-> so please excuse my ignorance here.   Any info or points in the right
-> direction would be greatly apprecited.
-> I am using the 2.4.20 kernel. =20
-
-try the patch I attached.
-
-
---=-umPZBkRYmS+w84hYgNAF
-Content-Disposition: attachment; filename=w.patch
-Content-Transfer-Encoding: base64
-Content-Type: text/x-patch; name=w.patch; charset=UTF-8
-
-LS0tIGxpbnV4L21tL3BhZ2VfYWxsb2MuYy5vcmcJMjAwNC0wNi0yNCAxNzozNjoyMi4wNDI0NjA5
-MjAgKzAyMDANCisrKyBsaW51eC9tbS9wYWdlX2FsbG9jLmMJMjAwNC0wNi0yNCAxNzozODoxMi4z
-NjE2ODk4NDggKzAyMDANCkBAIC0yODIsMTUgKzI4MiwxMyBAQA0KIAl1bnNpZ25lZCBsb25nIHNp
-emUgPSAxIDw8IGhpZ2g7DQogDQogCXdoaWxlIChoaWdoID4gbG93KSB7DQotCQlpZiAoQkFEX1JB
-TkdFKHpvbmUscGFnZSkpDQotCQkJQlVHKCk7DQogCQlhcmVhLS07DQogCQloaWdoLS07DQogCQlz
-aXplID4+PSAxOw0KLQkJbGlzdF9hZGQoJihwYWdlKS0+bGlzdCwgJihhcmVhKS0+ZnJlZV9saXN0
-KTsNCi0JCU1BUktfVVNFRChpbmRleCwgaGlnaCwgYXJlYSk7DQotCQlpbmRleCArPSBzaXplOw0K
-LQkJcGFnZSArPSBzaXplOw0KKwkJaWYgKEJBRF9SQU5HRSh6b25lLCZwYWdlW3NpemVdKSkNCisJ
-CQlCVUcoKTsNCisJCWxpc3RfYWRkKCZwYWdlW3NpemVdLmxpc3QsICYoYXJlYSktPmZyZWVfbGlz
-dCk7DQorCQlNQVJLX1VTRUQoaW5kZXggKyBzaXplLCBoaWdoLCBhcmVhKTsNCiAJfQ0KIAlpZiAo
-QkFEX1JBTkdFKHpvbmUscGFnZSkpDQogCQlCVUcoKTsNCg==
-
---=-umPZBkRYmS+w84hYgNAF--
-
---=-KznSmDd24Iv1cKhZb2H0
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.2.4 (GNU/Linux)
-
-iD8DBQBA+BmExULwo51rQBIRAkkjAJ47LgkWBcPNBRDZBWHglZctmrrjBQCggu0e
-z88wUI2HWrRIcWrBVcDIfBo=
-=lV0E
------END PGP SIGNATURE-----
-
---=-KznSmDd24Iv1cKhZb2H0--
-
+--
+Bryan Henderson                          IBM Almaden Research Center
+San Jose CA                              Filesystems
