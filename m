@@ -1,37 +1,585 @@
 From: Patrick Mansfield <patmans@us.ibm.com>
-Subject: Re: [PATCH / RFC] scsi_set_host_offline
-Date: Mon, 3 Mar 2003 16:08:31 -0800
+Subject: [PATCH] scsi-misc-2.5 software enqueue when can_queue is reached
+Date: Mon, 3 Mar 2003 16:12:03 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030303160831.A32018@beaverton.ibm.com>
-References: <20030303221532.GB1587@beaverton.ibm.com>
+Message-ID: <20030303161203.A32111@beaverton.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20030303221532.GB1587@beaverton.ibm.com>; from andmike@us.ibm.com on Mon, Mar 03, 2003 at 02:15:32PM -0800
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Anderson <andmike@us.ibm.com>
-Cc: linux-scsi@vger.kernel.org, mdharm-scsi@one-eyed-alien.net
+To: James Bottomley <James.Bottomley@steeleye.com>, linux-scsi@vger.kernel.org
 
-Looks nice. Two nits.
+James,
 
-On Mon, Mar 03, 2003 at 02:15:32PM -0800, Mike Anderson wrote:
+I've made changes to the original patch based on the comments received.
+Can you push this through or comment? Thanks.
 
-> +	spin_lock_irqsave(shost->host_lock, flags);
-> +	for (lh = shost->my_devices.next; lh != &shost->my_devices;){
+Patch is based on scsi-misc-2.5.
 
-Uh oh you are missing a space above, better call the code style police :)
+This patch puts scsi_cmnds on to a pending list if the can_queue limit
+is reached, or host_blocked is set.
 
-> +		sdev = list_entry(lh, struct scsi_device, siblings);
-> +		scsi_device_get(sdev);
-> +		spin_unlock_irqrestore(shost->host_lock, flags);
-> +		error = fn(sdev, data);
-> +		spin_lock_irqsave(shost->host_lock, flags);
-> +		lh = lh->next;
-> +		scsi_device_put(sdev);
-> +		if (error)
-> +			break;
-
-Embedding "!error &&" in the for conditional is a bit cleaner.
+diff -Nru a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
+--- a/drivers/scsi/hosts.c	Mon Mar  3 14:44:53 2003
++++ b/drivers/scsi/hosts.c	Mon Mar  3 14:44:53 2003
+@@ -383,6 +383,7 @@
+ 	scsi_assign_lock(shost, &shost->default_lock);
+ 	INIT_LIST_HEAD(&shost->my_devices);
+ 	INIT_LIST_HEAD(&shost->eh_cmd_q);
++	INIT_LIST_HEAD(&shost->pending_cmd);
+ 
+ 	init_waitqueue_head(&shost->host_wait);
+ 	shost->dma_channel = 0xff;
+@@ -613,19 +614,72 @@
+ 	spin_unlock_irqrestore(shost->host_lock, flags);
+ }
+ 
++void scsi_host_send_pending(struct Scsi_Host *shost)
++{
++	struct scsi_cmnd *scmd;
++	unsigned long flags;
++
++	spin_lock_irqsave(shost->host_lock, flags);
++	while (!shost->host_self_blocked &&
++	       !list_empty(&shost->pending_cmd)) {
++		/*
++		 * list_for_each_safe is not safe here, since after the
++		 * unlock someone else can remove the scmd after the one
++		 * we are pulling off the list.
++		 */
++		scmd = list_entry(shost->pending_cmd.next, struct scsi_cmnd,
++				  pending_cmd);
++		list_del_init(&scmd->pending_cmd);
++		SCSI_LOG_MLQUEUE(3,
++			printk("%s: removed from pending cmd: 0x%lx\n",
++			       __FUNCTION__, scmd->serial_number));
++		spin_unlock_irqrestore(shost->host_lock, flags);
++		if (scsi_dispatch_cmd(scmd, 0))
++			/*
++			 * Device hit host_blocked, or (race case)
++			 * can_queue limit was reached.
++			 */
++			goto unlocked;
++		spin_lock_irqsave(shost->host_lock, flags);
++	}
++	spin_unlock_irqrestore(shost->host_lock, flags);
++unlocked:
++}
++
+ void scsi_host_busy_dec_and_test(struct Scsi_Host *shost, Scsi_Device *sdev)
+ {
+ 	unsigned long flags;
++	struct scsi_cmnd *scmd;
+ 
+ 	spin_lock_irqsave(shost->host_lock, flags);
++	/*
++	 * If broken adapters are ever fixed or go away (at least qlogicfc
++	 * and qlogicisp):
++	 *
++	 * WARN_ON(shost->host_busy > shost->can_queue);
++	 */
+ 	shost->host_busy--;
+ 	sdev->device_busy--;
+-	if (shost->in_recovery && shost->host_failed &&
+-	    (shost->host_busy == shost->host_failed))
+-	{
+-		up(shost->eh_wait);
+-		SCSI_LOG_ERROR_RECOVERY(5, printk("Waking error handler"
+-					  " thread\n"));
+-	}
+-	spin_unlock_irqrestore(shost->host_lock, flags);
++	if (shost->in_recovery) {
++		if (shost->host_failed && (shost->host_busy == shost->host_failed)) {
++			up(shost->eh_wait);
++			SCSI_LOG_ERROR_RECOVERY(5, printk("Waking error handler"
++						  " thread\n"));
++		}
++		spin_unlock_irqrestore(shost->host_lock, flags);
++	} else if (!list_empty(&shost->pending_cmd) &&
++		   !shost->host_blocked && !shost->host_self_blocked) {
++		/*
++		 * Send one pending command.
++		 */
++		scmd = list_entry(shost->pending_cmd.next, struct scsi_cmnd,
++				  pending_cmd);
++		list_del_init(&scmd->pending_cmd);
++		SCSI_LOG_MLQUEUE(3,
++			printk("%s: removed from pending cmd: 0x%lx\n",
++			       __FUNCTION__, scmd->serial_number));
++		spin_unlock_irqrestore(shost->host_lock, flags);
++		scsi_dispatch_cmd(scmd, 0);
++	} else
++		spin_unlock_irqrestore(shost->host_lock, flags);
+ }
+diff -Nru a/drivers/scsi/hosts.h b/drivers/scsi/hosts.h
+--- a/drivers/scsi/hosts.h	Mon Mar  3 14:44:53 2003
++++ b/drivers/scsi/hosts.h	Mon Mar  3 14:44:53 2003
+@@ -380,6 +380,7 @@
+     struct scsi_host_cmd_pool *cmd_pool;
+     spinlock_t            free_list_lock;
+     struct list_head      free_list;   /* backup store of cmd structs */
++    struct list_head      pending_cmd;	/* head of list */
+ 
+     spinlock_t		  default_lock;
+     spinlock_t		  *host_lock;
+@@ -471,12 +472,6 @@
+     unsigned reverse_ordering:1;
+ 
+     /*
+-     * Indicates that one or more devices on this host were starved, and
+-     * when the device becomes less busy that we need to feed them.
+-     */
+-    unsigned some_device_starved:1;
+-   
+-    /*
+      * Host has rejected a command because it was busy.
+      */
+     unsigned int host_blocked;
+@@ -580,12 +575,9 @@
+ extern struct Scsi_Host *scsi_host_hn_get(unsigned short);
+ extern void scsi_host_put(struct Scsi_Host *);
+ extern void scsi_host_init(void);
+-
+-/*
+- * host_busy inc/dec/test functions
+- */
+ extern void scsi_host_busy_inc(struct Scsi_Host *, Scsi_Device *);
+ extern void scsi_host_busy_dec_and_test(struct Scsi_Host *, Scsi_Device *);
++extern void scsi_host_send_pending (struct Scsi_Host *shost);
+ 
+ /**
+  * scsi_find_device - find a device given the host
+diff -Nru a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
+--- a/drivers/scsi/scsi.c	Mon Mar  3 14:44:53 2003
++++ b/drivers/scsi/scsi.c	Mon Mar  3 14:44:54 2003
+@@ -303,6 +303,7 @@
+ 		cmd->owner = SCSI_OWNER_NOBODY;
+ 		init_timer(&cmd->eh_timeout);
+ 		INIT_LIST_HEAD(&cmd->list);
++		INIT_LIST_HEAD(&cmd->pending_cmd);
+ 		spin_lock_irqsave(&dev->list_lock, flags);
+ 		list_add_tail(&cmd->list, &dev->cmd_list);
+ 		spin_unlock_irqrestore(&dev->list_lock, flags);
+@@ -423,15 +424,17 @@
+ }
+ 
+ /*
+- * Function:    scsi_dispatch_command
++ * Function:    scsi_dispatch_cmd
+  *
+  * Purpose:     Dispatch a command to the low-level driver.
+  *
+  * Arguments:   SCpnt - command block we are dispatching.
++ *              resend - command is being resent, host_busy was not
++ *              decremented (blah), and we have a slot available for SCpnt.
+  *
+  * Notes:
+  */
+-int scsi_dispatch_cmd(Scsi_Cmnd * SCpnt)
++int scsi_dispatch_cmd(Scsi_Cmnd * SCpnt, int resend)
+ {
+ #ifdef DEBUG_DELAY
+ 	unsigned long clock;
+@@ -494,7 +497,7 @@
+ 	 * We will use a queued command if possible, otherwise we will emulate the
+ 	 * queuing and calling of completion function ourselves.
+ 	 */
+-	SCSI_LOG_MLQUEUE(3, printk("scsi_dispatch_cmnd (host = %d, channel = %d, target = %d, "
++	SCSI_LOG_MLQUEUE(4, printk("scsi_dispatch_cmnd (host = %d, channel = %d, target = %d, "
+ 	       "command = %p, buffer = %p, \nbufflen = %d, done = %p)\n",
+ 	SCpnt->device->host->host_no, SCpnt->device->channel, SCpnt->device->id, SCpnt->cmnd,
+ 			    SCpnt->buffer, SCpnt->bufflen, SCpnt->done));
+@@ -502,7 +505,7 @@
+ 	SCpnt->state = SCSI_STATE_QUEUED;
+ 	SCpnt->owner = SCSI_OWNER_LOWLEVEL;
+ 	if (host->can_queue) {
+-		SCSI_LOG_MLQUEUE(3, printk("queuecommand : routine at %p\n",
++		SCSI_LOG_MLQUEUE(4, printk("queuecommand : routine at %p\n",
+ 					   host->hostt->queuecommand));
+ 		/*
+ 		 * Before we queue this command, check if the command
+@@ -510,12 +513,33 @@
+ 		 */
+ 		if (CDB_SIZE(SCpnt) <= SCpnt->device->host->max_cmd_len) {
+ 			spin_lock_irqsave(host->host_lock, flags);
+-			rtn = host->hostt->queuecommand(SCpnt, scsi_done);
+-			spin_unlock_irqrestore(host->host_lock, flags);
+-			if (rtn != 0) {
+-				scsi_queue_insert(SCpnt, rtn == SCSI_MLQUEUE_DEVICE_BUSY ? rtn : SCSI_MLQUEUE_HOST_BUSY);
++			if (!resend && ((host->host_busy > host->can_queue) ||
++			    host->host_blocked)) {
++				/*
++				 * queue a pending command
++				 */
+ 				SCSI_LOG_MLQUEUE(3,
+-				   printk("queuecommand : request rejected\n"));                                
++					printk("%s: add to pending cmd:"
++					       " 0x%lx\n", __FUNCTION__,
++					       SCpnt->serial_number));
++				scsi_delete_timer(SCpnt);
++				list_add_tail(&SCpnt->pending_cmd,
++					      &host->pending_cmd);
++				spin_unlock_irqrestore(host->host_lock, flags);
++				rtn = 1;
++			} else {
++				if (!resend)
++					host->host_busy++;
++				rtn = host->hostt->queuecommand(SCpnt,
++								scsi_done);
++				spin_unlock_irqrestore(host->host_lock, flags);
++				if (rtn != 0) {
++					scsi_queue_insert(SCpnt,
++						rtn == SCSI_MLQUEUE_DEVICE_BUSY
++						? rtn : SCSI_MLQUEUE_HOST_BUSY);
++					SCSI_LOG_MLQUEUE(3,
++					   printk("queuecommand : request rejected\n"));
++				}
+ 			}
+ 		} else {
+ 			SCSI_LOG_MLQUEUE(3,
+@@ -531,6 +555,8 @@
+ 
+ 		SCSI_LOG_MLQUEUE(3, printk("command() :  routine at %p\n", host->hostt->command));
+                 spin_lock_irqsave(host->host_lock, flags);
++		if (!resend)
++			host->host_busy++;
+ 		temp = host->hostt->command(SCpnt);
+ 		SCpnt->result = temp;
+ #ifdef DEBUG_DELAY
+@@ -547,7 +573,7 @@
+ 		scsi_done(SCpnt);
+                 spin_unlock_irqrestore(host->host_lock, flags);
+ 	}
+-	SCSI_LOG_MLQUEUE(3, printk("leaving scsi_dispatch_cmnd()\n"));
++	SCSI_LOG_MLQUEUE(4, printk("leaving scsi_dispatch_cmnd()\n"));
+ 	return rtn;
+ }
+ 
+@@ -824,7 +850,7 @@
+          */
+ 	memset((void *) SCpnt->sense_buffer, 0, sizeof SCpnt->sense_buffer);
+ 
+-	return scsi_dispatch_cmd(SCpnt);
++	return scsi_dispatch_cmd(SCpnt, 1);
+ }
+ 
+ /*
+@@ -845,23 +871,12 @@
+ 
+ 	ASSERT_LOCK(host->host_lock, 0);
+ 
+-        /*
+-         * We need to protect the decrement, as otherwise a race condition
+-         * would exist.  Fiddling with SCpnt isn't a problem as the
+-         * design only allows a single SCpnt to be active in only
+-         * one execution context, but the device and host structures are
+-         * shared.
+-         */
+-	scsi_host_busy_dec_and_test(host, device);
+-
+-        /*
+-         * Clear the flags which say that the device/host is no longer
+-         * capable of accepting new commands.  These are set in scsi_queue.c
+-         * for both the queue full condition on a device, and for a
+-         * host full condition on the host.
+-         */
+-        host->host_blocked = 0;
+         device->device_blocked = 0;
++	scsi_host_busy_dec_and_test(host, device);
++	if (host->host_blocked) {
++		host->host_blocked = 0;
++		scsi_host_send_pending(host);
++	}
+ 
+ 	/*
+ 	 * If we have valid sense information, then some kind of recovery
+diff -Nru a/drivers/scsi/scsi.h b/drivers/scsi/scsi.h
+--- a/drivers/scsi/scsi.h	Mon Mar  3 14:44:53 2003
++++ b/drivers/scsi/scsi.h	Mon Mar  3 14:44:53 2003
+@@ -444,7 +444,7 @@
+ /*
+  * Prototypes for functions in scsi.c
+  */
+-extern int scsi_dispatch_cmd(Scsi_Cmnd * SCpnt);
++extern int scsi_dispatch_cmd(Scsi_Cmnd * SCpnt, int resend);
+ extern int scsi_setup_command_freelist(struct Scsi_Host *shost);
+ extern void scsi_destroy_command_freelist(struct Scsi_Host *shost);
+ extern struct scsi_cmnd *scsi_get_command(struct scsi_device *dev, int flags);
+@@ -634,8 +634,6 @@
+ 					 * because we did a bus reset. */
+ 	unsigned ten:1;		/* support ten byte read / write */
+ 	unsigned remap:1;	/* support remapping  */
+-	unsigned starved:1;	/* unable to process commands because
+-				   host busy */
+ //	unsigned sync:1;	/* Sync transfer state, managed by host */
+ //	unsigned wide:1;	/* WIDE transfer state, managed by host */
+ 
+@@ -727,7 +725,9 @@
+ 	struct scsi_cmnd *reset_chain;
+ 
+ 	struct list_head list;  /* scsi_cmnd participates in queue lists */
+-
++	struct list_head pending_cmd;  /* for use with host->pending_cmd, this
++					* could be shared with eh_entry.
++					*/
+ 	struct list_head eh_entry; /* entry for the host eh_cmd_q */
+ 	int eh_state;		/* Used for state tracking in error handlr */
+ 	int eh_eflags;		/* Used by error handlr */
+@@ -854,6 +854,7 @@
+ #define SCSI_MLQUEUE_HOST_BUSY   0x1055
+ #define SCSI_MLQUEUE_DEVICE_BUSY 0x1056
+ #define SCSI_MLQUEUE_EH_RETRY    0x1057
++#define SCSI_MLQUEUE_PENDING     0x1058
+ 
+ /*
+  * old style reset request from external source
+diff -Nru a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+--- a/drivers/scsi/scsi_error.c	Mon Mar  3 14:44:53 2003
++++ b/drivers/scsi/scsi_error.c	Mon Mar  3 14:44:53 2003
+@@ -1467,16 +1467,8 @@
+ 	 * requests are started.
+ 	 */
+ 	spin_lock_irqsave(shost->host_lock, flags);
+-	list_for_each_entry(sdev, &shost->my_devices, siblings) {
+-		if ((shost->can_queue > 0 &&
+-		     (shost->host_busy >= shost->can_queue))
+-		    || (shost->host_blocked)
+-		    || (shost->host_self_blocked)) {
+-			break;
+-		}
+-
++	list_for_each_entry(sdev, &shost->my_devices, siblings)
+ 		__blk_run_queue(sdev->request_queue);
+-	}
+ 	spin_unlock_irqrestore(shost->host_lock, flags);
+ }
+ 
+@@ -1497,6 +1489,34 @@
+ }
+ 
+ /**
++ * scsi_eh_flush_pending_cmds - finish pending commands or requeue them.
++ * @pending:	list_head of queued pending commands.
++ *
++ **/
++static void scsi_eh_flush_pending_cmds(struct list_head *pending)
++{
++	struct list_head *lh, *lh_sf;
++	struct scsi_cmnd *scmd;
++
++	list_for_each_safe(lh, lh_sf, pending) {
++		scmd = list_entry(lh, struct scsi_cmnd, pending_cmd);
++		list_del_init(lh);
++		if (scmd->device->online) {
++			SCSI_LOG_ERROR_RECOVERY(3,
++				printk("%s: flush pending cmd: %p\n",
++				       current->comm, scmd));
++			scsi_queue_insert(scmd, SCSI_MLQUEUE_PENDING);
++		} else {
++			scmd->result |= (DRIVER_TIMEOUT << 24);
++			SCSI_LOG_ERROR_RECOVERY(3,
++				printk("%s: finish pending cmd: %p\n",
++				       current->comm, scmd));
++			scsi_finish_command(scmd);
++		}
++	}
++}
++
++/**
+  * scsi_eh_flush_done_q - finish processed commands or retry them.
+  * @done_q:	list_head of processed commands.
+  *
+@@ -1557,6 +1577,7 @@
+ 	unsigned long flags;
+ 	LIST_HEAD(eh_work_q);
+ 	LIST_HEAD(eh_done_q);
++	LIST_HEAD(pending);
+ 
+ 	spin_lock_irqsave(shost->host_lock, flags);
+ 	list_splice_init(&shost->eh_cmd_q, &eh_work_q);
+@@ -1568,6 +1589,16 @@
+ 		if (!scsi_eh_abort_cmds(&eh_work_q, &eh_done_q))
+ 			scsi_eh_ready_devs(shost, &eh_work_q, &eh_done_q);
+ 
++	/*
++	 * Finish or requeue all outstanding commands, first the pending
++	 * (so they are sent after any error recovered commands) and then
++	 * any error recovered commands.
++	 */
++	spin_lock_irqsave(shost->host_lock, flags);
++	list_splice_init(&shost->pending_cmd, &pending);
++	spin_unlock_irqrestore(shost->host_lock, flags);
++	scsi_eh_flush_pending_cmds(&pending);
++
+ 	scsi_eh_flush_done_q(&eh_done_q);
+ }
+ 
+@@ -1659,7 +1690,9 @@
+ 		 * restart, we restart any I/O to any other devices on the bus
+ 		 * which are still online.
+ 		 */
++
+ 		scsi_restart_operations(shost);
++
+ 
+ 	}
+ 
+diff -Nru a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+--- a/drivers/scsi/scsi_lib.c	Mon Mar  3 14:44:53 2003
++++ b/drivers/scsi/scsi_lib.c	Mon Mar  3 14:44:53 2003
+@@ -92,9 +92,11 @@
+ {
+ 	struct Scsi_Host *host = cmd->device->host;
+ 	struct scsi_device *device = cmd->device;
++	unsigned long flags;
+ 
+ 	SCSI_LOG_MLQUEUE(1,
+-		 printk("Inserting command %p into mlqueue\n", cmd));
++		 printk("Inserting command %p into mlqueue reason 0x%x\n",
++			cmd, reason));
+ 
+ 	/*
+ 	 * We are inserting the command into the ml queue.  First, we
+@@ -127,11 +129,20 @@
+ 	cmd->owner = SCSI_OWNER_MIDLEVEL;
+ 	cmd->bh_next = NULL;
+ 
+-	/*
+-	 * Decrement the counters, since these commands are no longer
+-	 * active on the host/device.
+-	 */
+-	scsi_host_busy_dec_and_test(host, device);
++	if (reason == SCSI_MLQUEUE_PENDING) {
++		/*
++		 * Pending commands have not actually made it to the host,
++		 * so do not decrement host_busy.
++		 */
++		spin_lock_irqsave(host->host_lock, flags);
++		device->device_busy--;
++		spin_unlock_irqrestore(host->host_lock, flags);
++	} else
++		/*
++		 * Decrement the counters, since these commands are no longer
++		 * active on the host/device.
++		 */
++		scsi_host_busy_dec_and_test(host, device);
+ 
+ 	/*
+ 	 * Insert this command at the head of the queue for it's device.
+@@ -358,7 +369,6 @@
+ 	struct scsi_device *sdev, *sdev2;
+ 	struct Scsi_Host *shost;
+ 	unsigned long flags;
+-	int all_clear;
+ 
+ 	ASSERT_LOCK(q->queue_lock, 0);
+ 
+@@ -400,10 +410,7 @@
+ 	 * with special case code, then spin off separate versions and
+ 	 * use function pointers to pick the right one.
+ 	 */
+-	if (sdev->single_lun && blk_queue_empty(q) && sdev->device_busy ==0 &&
+-			!shost->host_blocked && !shost->host_self_blocked &&
+-			!((shost->can_queue > 0) && (shost->host_busy >=
+-				       		     shost->can_queue))) {
++	if (sdev->single_lun && blk_queue_empty(q) && sdev->device_busy == 0) {
+ 		list_for_each_entry(sdev2, &sdev->same_target_siblings,
+ 			       same_target_siblings) {
+ 			if (!sdev2->device_blocked &&
+@@ -414,31 +421,6 @@
+ 		}
+ 	}
+ 
+-	/*
+-	 * Now see whether there are other devices on the bus which
+-	 * might be starved.  If so, hit the request function.  If we
+-	 * don't find any, then it is safe to reset the flag.  If we
+-	 * find any device that it is starved, it isn't safe to reset the
+-	 * flag as the queue function releases the lock and thus some
+-	 * other device might have become starved along the way.
+-	 */
+-	all_clear = 1;
+-	if (shost->some_device_starved) {
+-		list_for_each_entry(sdev, &shost->my_devices, siblings) {
+-			if (shost->can_queue > 0 &&
+-			    shost->host_busy >= shost->can_queue)
+-				break;
+-			if (shost->host_blocked || shost->host_self_blocked)
+-				break;
+-			if (sdev->device_blocked || !sdev->starved)
+-				continue;
+-			__blk_run_queue(sdev->request_queue);
+-			all_clear = 0;
+-		}
+-
+-		if (sdev == NULL && all_clear)
+-			shost->some_device_starved = 0;
+-	}
+ 	spin_unlock_irqrestore(q->queue_lock, flags);
+ }
+ 
+@@ -1094,6 +1076,7 @@
+ 				SCSI_LOG_MLQUEUE(3,
+ 					printk("scsi%d unblocking host at zero depth\n",
+ 						shost->host_no));
++				WARN_ON(!list_empty(&shost->pending_cmd));
+ 			} else {
+ 				blk_plug_device(q);
+ 				break;
+@@ -1117,23 +1100,18 @@
+ 		 */
+ 		if (sdev->device_blocked)
+ 			break;
+-		if ((shost->can_queue > 0 && shost->host_busy >= shost->can_queue) ||
+-		    shost->host_blocked || shost->host_self_blocked) {
++
++		if (shost->host_self_blocked)
++			break;
++
++		if ((sdev->device_busy > 0) && shost->host_blocked)
+ 			/*
+-			 * If we are unable to process any commands at all for
+-			 * this device, then we consider it to be starved.
+-			 * What this means is that there are no outstanding
+-			 * commands for this device and hence we need a
+-			 * little help getting it started again
+-			 * once the host isn't quite so busy.
++			 * On unblock during IO completion, we send
++			 * pending commands, make sure we always have at
++			 * least one command pending to keep this queue
++			 * running again.
+ 			 */
+-			if (sdev->device_busy == 0) {
+-				sdev->starved = 1;
+-				shost->some_device_starved = 1;
+-			}
+ 			break;
+-		} else
+-			sdev->starved = 0;
+ 
+ 		/*
+ 		 * If we couldn't find a request that could be queued, then we
+@@ -1170,11 +1148,6 @@
+ 		if (!(blk_queue_tagged(q) && (blk_queue_start_tag(q, req) == 0)))
+ 			blkdev_dequeue_request(req);
+ 	
+-		/*
+-		 * Now bump the usage count for both the host and the
+-		 * device.
+-		 */
+-		shost->host_busy++;
+ 		sdev->device_busy++;
+ 		spin_unlock_irq(q->queue_lock);
+ 
+@@ -1187,7 +1160,7 @@
+ 		/*
+ 		 * Dispatch the command to the low-level driver.
+ 		 */
+-		scsi_dispatch_cmd(cmd);
++		scsi_dispatch_cmd(cmd, 0);
+ 
+ 		/*
+ 		 * Now we need to grab the lock again.  We are about to mess
 
 -- Patrick Mansfield
