@@ -1,42 +1,57 @@
-From: Mike Dresser <mdresser_l@windsormachine.com>
-Subject: Re: Pb between an UltraTrak SX8000 and an Adaptec 29160
-Date: Wed, 20 Nov 2002 10:35:52 -0500 (EST)
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.33.0211201023480.22001-100000@router.windsormachine.com>
-References: <3DDBA8A8.F370532E@lipsyncpost.co.uk>
+From: Linus Torvalds <torvalds@transmeta.com>
+Subject: Re: Why /dev/sdc1 doesn't show up...
+Date: Wed, 20 Nov 2002 07:45:20 -0800 (PST)
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <Pine.LNX.4.44.0211200737020.12032-100000@home.transmeta.com>
+References: <20021120072653.BC52C2C055@lists.samba.org>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <3DDBA8A8.F370532E@lipsyncpost.co.uk>
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+In-Reply-To: <20021120072653.BC52C2C055@lists.samba.org>
+To: Rusty Russell <rusty@rustcorp.com.au>
+Cc: Alexander Viro <viro@math.psu.edu>, Doug Ledford <dledford@redhat.com>, Linux Scsi Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Simon Burley <simonb@lipsyncpost.co.uk>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, didier@ece.gatech.edu, "'Justin T. Gibbs'" <gibbs@scsiguy.com>, linux-scsi@vger.kernel.org
-
-On Wed, 20 Nov 2002, Simon Burley wrote:
-
-> > Linux 2.4.x doesnt support single volumes over 1Tb. Thats fixed in 2.5
->
-> Can I ask what the symptoms of this failure to support >1Tb volumes
-> would be? Failure to identify the device? Random read/write failures?
-> Completely corrupted disk? It's the first time I've heard this!
->
-
-What about the software raid /dev/md0?
-
-I remember vaguely about the group that was doing raid5 on 75 gig IBM
-Deathstars(can't remember url) having issues with terrabyte volumes, and
-doing a pair of half terrabytes instead.
-
-The article is so old and out of date though
-
-www.nobell.org/~gjm/linux/ide-raid/
-
-Speaking of deathstars:
-
-www-cdf.final.gov/offline/warnings.html
-
-Note about deathstars, and about 3ware and WD drives. =)
-
-Mike
 
 
+On Wed, 20 Nov 2002, Rusty Russell wrote:
+> 
+> 	Linus, I would like an answer: how does one register two /proc
+> entries?
+
+I think the answer is simple: you don't.
+
+In practice this doesn't happen. And even in theory when it does happen, 
+trying to do it right is _worse_ than just letting it be. So what if one 
+of them fails? Big deal. You didn't get the file, because you are playing 
+with modules that do something that they shouldn't have done.
+
+	Rule #1: KISS
+
+	Rule #2: "don't overdesign" aka "perfect is the enemy of the good"
+
+In other words, screw the cases that don't matter, we only need to verify 
+that we don't oops. Which means that the _right_ approach for proc entries 
+is something like this:
+
+	if (register_device(....))
+		return -ENOMEM;
+
+	if (!create_proc_entry("foo"...))
+		printk("Unable to create '/proc/foo'\n");
+	if (!create_proc_entry("bar"...))
+		printk("Unable to create '/proc/bar'\n");
+	return 0;
+
+and simply face the fact that trying to fail the module load at a late 
+time is a bad idea, and if somebody already has registered your /proc 
+entries then the system maintainer is doing something wrong and it is 
+_his_ problem and he can
+
+The kernel shouldn't oops. And if that means that we should just leave the 
+module loaded (not return an error), then so what? Hey, it may work fine 
+without the /proc entries, erroring out might be _worse_.
+
+This is what happens with built-in drivers already. Modules are nothing 
+but a convenience. They're not "worthy" of complexity.
+
+		Linus
