@@ -1,66 +1,60 @@
-From: Patrick Mansfield <patmans@us.ibm.com>
-Subject: Re: [PATCH] SCSI Core patches
-Date: Tue, 7 Jan 2003 17:36:33 -0800
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030107173633.A17825@beaverton.ibm.com>
-References: <3E1ADC9A.6090800@splentec.com> <20030107102127.B15528@beaverton.ibm.com> <3E1B2934.8060805@splentec.com> <20030107123301.A16378@beaverton.ibm.com> <3E1B513B.2090409@splentec.com>
+From: Tomas Szepe <szepe@pinerecords.com>
+Subject: Re: aic7xxx broken in 2.5.53/54 ?
+Date: Wed, 8 Jan 2003 03:41:07 +0100
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <20030108024107.GA1127@louise.pinerecords.com>
+References: <20030103101618.GB8582@in.ibm.com> <596830816.1041606846@aslan.scsiguy.com> <20030106073204.GA1875@in.ibm.com> <274040000.1041869813@aslan.scsiguy.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <3E1B513B.2090409@splentec.com>; from luben@splentec.com on Tue, Jan 07, 2003 at 05:14:19PM -0500
+In-Reply-To: <274040000.1041869813@aslan.scsiguy.com>
+To: "Justin T. Gibbs" <gibbs@scsiguy.com>
+Cc: dipankar@in.ibm.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Luben Tuikov <luben@splentec.com>
-Cc: linux-scsi@vger.kernel.org
 
-On Tue, Jan 07, 2003 at 05:14:19PM -0500, Luben Tuikov wrote:
-> Patrick Mansfield wrote:
+> [gibbs@scsiguy.com]
+>
+> These reads are actually more expensive than just using PIO.  Neither of
+> these older drivers included a test to try and catch fishy behavior.
 
-> You must agree that the tuple (COMMAND, (lun, target, channel))
-> doesn't say as much as (COMMAND, DEVICE). 
+Justin, are you quite sure that these tests actually work?
+I too have just run into
 
-Yes, but the current code simply sends a scsi_cmnd to the LLDD, and the
-LLDD need only reference the scsi_cmnd.
+aic7xxx: PCI Device 0:16:0 failed memory mapped test.  Using PIO.
+aic7xxx: PCI Device 0:17:0 failed memory mapped test.  Using PIO.
 
-> Anywhich way you look at it,
-> this is a better abstraction. 
+with aic79xx-linux-2.4-20021230 (6.2.25) in Linux 2.4.21-pre3.
+What makes me scratch my head in particular is:
 
-Having the LLDD use more data structures does not imply a better
-abstraction.  Again, a better abstraction would be to use interfaces to
-get the host/channel/target/lun. This could add overhead depending on the
-implementation.
+	o  The chipset is i440BX aka the Compatibility King.
+	o  I've never had *any* problems with 6.2.8.
 
-> For this reason you might consider the suggestions by Doug, or research moving
-> multipathing higher up into the char/block layer, or thereabouts.
+Full ahc boot-up messages follow:
 
-I have looked into putting multipath in the block layer, I've looked at
-md, at the T3 code, and at the qlogic multi-path code. Code in the block
-layer would be interesting, but might not solve problems with char
-devices, and would need further abstractions on top of some multi-path 
-in the scsi layer (someone has to find and represent the devices and
-paths, the block layer will not want to know about host/chan/target/lun,
-nor will the block layer want to know details about scsi device or
-transport errors).
+PCI: Found IRQ 11 for device 00:10.0
+aic7xxx: PCI Device 0:16:0 failed memory mapped test.  Using PIO.
+PCI: Found IRQ 10 for device 00:11.0
+aic7xxx: PCI Device 0:17:0 failed memory mapped test.  Using PIO.
+scsi0 : Adaptec AIC7XXX EISA/VLB/PCI SCSI HBA DRIVER, Rev 6.2.25
+        <Adaptec 2940 Ultra SCSI adapter>
+        aic7880: Ultra Single Channel A, SCSI Id=7, 16/253 SCBs
 
-> Somewhere between write(fd, buf, count) and scsi_request_fn(), multipathing
-> will have to have already occured (ideally).
+scsi1 : Adaptec AIC7XXX EISA/VLB/PCI SCSI HBA DRIVER, Rev 6.2.25
+        <Adaptec 2940 Ultra SCSI adapter>
+        aic7880: Ultra Single Channel A, SCSI Id=7, 16/253 SCBs
 
-Putting the multipath abstraction into scsi_request_fn is IMO the best way
-to go (as I've argued before) at least until other non-scsi block and
-character devices support multi-pathing (maybe there are already
-multi-path SATA devices, I don't know).
+(scsi1:A:4): 20.000MB/s transfers (20.000MHz, offset 15)
+(scsi0:A:3): 20.000MB/s transfers (20.000MHz, offset 15)
+  Vendor: SEAGATE   Model: ST39173N          Rev: 6244
+  Type:   Direct-Access                      ANSI SCSI revision: 02
+scsi0:A:3:0: Tagged Queuing enabled.  Depth 253
+  Vendor: SEAGATE   Model: ST39173N          Rev: 6244
+  Type:   Direct-Access                      ANSI SCSI revision: 02
+scsi1:A:4:0: Tagged Queuing enabled.  Depth 253
+Attached scsi disk sda at scsi0, channel 0, id 3, lun 0
+Attached scsi disk sdb at scsi1, channel 0, id 4, lun 0
+...
 
-> > For scsi_device yes, but the LLDD does not have to look at scsi_device to
-> > send a command, it can currently use the values found in scsi_cmnd.
-> 
-> You see, by abstractizing this way, you get rid of redundancies,
-> which let's you do all those nice things which Doug mentioned.
-
-> 
-> Getting rid of redundancies in data design and code design is important.
-> 
-
-As mentioned, using a scsi_device both for a list of paths and as a
-representation of scsi device duplicates data in multiple places.
-
--- Patrick Mansfield
+-- 
+Tomas Szepe <szepe@pinerecords.com>
