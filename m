@@ -1,101 +1,64 @@
-From: Masao Fukuchi <fukuchi.masao@jp.fujitsu.com>
-Subject: Re: [PATCH] improvement of fastfail operation
-Date: Mon, 29 Mar 2004 21:17:51 +0900
+From: "Hammer, Jack" <Jack_Hammer@adaptec.com>
+Subject: ServeRAID Linux Driver ( ips )  7.00.15 Patch
+Date: Mon, 29 Mar 2004 09:10:07 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <200403291217.AA03115@fukuchi.jp.fujitsu.com>
-References: <1080403035.2078.10.camel@mulgrave>
+Message-ID: <A121ABA5B472B74EB59076B8E3C8F0191D97D3@rtpe2k01.adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/mixed;
+	boundary="----_=_NextPart_001_01C41597.8A1B4588"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fgwmail7.fujitsu.co.jp ([192.51.44.37]:57007 "EHLO
-	fgwmail7.fujitsu.co.jp") by vger.kernel.org with ESMTP
-	id S262852AbUC2MSs (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 29 Mar 2004 07:18:48 -0500
-Received: from m3.gw.fujitsu.co.jp ([10.0.50.73]) by fgwmail7.fujitsu.co.jp (8.12.10/Fujitsu Gateway)
-	id i2TCIjEr019301 for <linux-scsi@vger.kernel.org>; Mon, 29 Mar 2004 21:18:46 +0900
-	(envelope-from fukuchi.masao@jp.fujitsu.com)
-Received: from s4.gw.fujitsu.co.jp by m3.gw.fujitsu.co.jp (8.12.10/Fujitsu Domain Master)
-	id i2TCIj2l031169 for <linux-scsi@vger.kernel.org>; Mon, 29 Mar 2004 21:18:45 +0900
-	(envelope-from fukuchi.masao@jp.fujitsu.com)
-Received: from fjmail502.fjmail.jp.fujitsu.com (fjmail502-0.fjmail.jp.fujitsu.com [10.59.80.98]) by s4.gw.fujitsu.co.jp (8.12.10)
-	id i2TCIcI6009963 for <linux-scsi@vger.kernel.org>; Mon, 29 Mar 2004 21:18:38 +0900
-	(envelope-from fukuchi.masao@jp.fujitsu.com)
-Received: from fukuchi.jp.fujitsu.com
- (fjscan502-0.fjmail.jp.fujitsu.com [10.59.80.122])
- by fjmail502.fjmail.jp.fujitsu.com
- (Sun Internet Mail Server sims.4.0.2001.07.26.11.50.p9)
- with SMTP id <0HVC00HFS7ICK6@fjmail502.fjmail.jp.fujitsu.com> for
- linux-scsi@vger.kernel.org; Mon, 29 Mar 2004 21:18:13 +0900 (JST)
-In-reply-to: <1080403035.2078.10.camel@mulgrave>
+Received: from magic.adaptec.com ([216.52.22.17]:56770 "EHLO magic.adaptec.com")
+	by vger.kernel.org with ESMTP id S262191AbUC2OKL (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 29 Mar 2004 09:10:11 -0500
+content-class: urn:content-classes:message
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@steeleye.com>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Arjan van de Ven <arjanv@redhat.com>, Hubert Mantel <mantel@suse.de>
+Cc: Jens Axboe <axboe@suse.de>, "Marcelo Wormsbecker Tosatti (E-mail)" <marcelo@conectiva.com.br>, James.Bottomley@SteelEye.com, torvalds@transmeta.com, coughlan@redhat.com, dledford@redhat.com, bjohnson@redhat.com, bhlim@vmware.com, rofarrell@vmware.com, kerneldriver@suse.de, go@turbolinux.co.jp, rogerv@sco.com, schwab@suse.de, michael@turbolinux.com, vcat@caldera.com, sdenham@redhat.com, "Jeffery, David" <David_Jeffery@adaptec.com>, "Pasteur, Bob" <bob_pasteur@adaptec.com>, "Wendy Hung (E-mail)" <wendyh@us.ibm.com>, "Leah Cunningham (E-mail)" <leahc@us.ibm.com>, "Brad Thomas (E-mail)" <bwthomas@us.ibm.com>, "Felica Turner (E-mail)" <faturner@us.ibm.com>, "Marie Jazynka (E-mail)" <mjazynka@us.ibm.com>, Chris McDermott <lcm@us.ibm.com>, "Williams, Bill" <Bill_Williams@adaptec.com>, linux-scsi@vger.kernel.org
 
-Hi James,
-Thank you for response to my mail.
+This is a multi-part message in MIME format.
 
-I'm understand what I have to do.
-I'll more study about the way to return transient transport error to
-upper layer and to process transport recovery using refcount.
+------_=_NextPart_001_01C41597.8A1B4588
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 
-By the way, how about item 1.
-I think this is bug and we need to validate fastfail for command timeout.
-If you agree with this, please put it into official patch.
-(See attached patch)
 
-Next, I tested the fastfail recovery using Kernel 2.6.4.
-But the command didn't complete forever.
-Then I installed following Mike Christie's patch and it worked fine.
- http://marc.theaimsgroup.com/?l=linux-scsi&m=107904932710899&w=2
-Please put it into official patch.
+Please apply the following patch to the ips driver source that I
+released last week. If removes an offensive "#ifdef" that was
+essentially a NOP anyway.
 
-Thanks,
-Masao Fukuchi
+Jack
 
-James Bottomley wrote:
->On Tue, 2004-03-23 at 19:38, Masao Fukuchi wrote:
->> We propose the following improvements for fastfail.
->> 
->> 1.Validate fastfail flag for command timeout.
->>   Currently fastfail flag is not valid for command timeout and repeats
->>   4 times.
->> 2.Set timeout value to 10sec.
->>   Currently timeout value is set to 30sec.
->> 3.Set wait time for bus reset/host reset to 5sec.
->>   Currently wait time is set to 10sec.
->>   (In many cases, abort task command fails for command timeout and it needs
->>   bus reset or host reset operation)
->> 
->> Each timeout values come from:
->>   timeout(10sec)+Abort/Bus reset(5sec+)+alt retry timeout(10sec) < 30sec
->> 
->> This is one idea for quick response on device/path error.
->> If you have any comments or idea for this improvements, please let me know.
->
->This isn't the right thing to do.  These timeouts control transport
->recovery; if it's safe to lower them in the fastfail case, then it would
->also be safe to lower them in the general case.
->
->The correct thing for what you want to do would be to return the command
->with a transient transport error (which we don't actually have yet)
->*before* beginning transport recovery.  This is not going to be easy
->because we need to return a command we're also going to do error
->recovery on (so it can't be freed as normal).  I'd suggest the best way
->to do this would be to refcount the commands.
->
->James
->
 
-diff -urN linux-2.6.4/drivers/scsi/scsi_error.c linux-2.6.4FF/drivers/scsi/scsi_error.c
---- linux-2.6.4/drivers/scsi/scsi_error.c       2004-02-18 12:57:12.000000000 +0900
-+++ linux-2.6.4FF/drivers/scsi/scsi_error.c     2004-03-18 16:59:50.000000000 +0900
-@@ -1421,7 +1421,8 @@
-                scmd = list_entry(lh, struct scsi_cmnd, eh_entry);
-                list_del_init(lh);
-                if (scmd->device->online &&
--                       (++scmd->retries < scmd->allowed)) {
-+                       (++scmd->retries < scmd->allowed) &&
-+                       (!blk_noretry_request(scmd->request))) {
-                        SCSI_LOG_ERROR_RECOVERY(3, printk("%s: flush"
-                                                          " retry cmd: %p\n",
-                                                          current->comm,
+
+--- linux.orig/drivers/scsi/ips.c	2004-03-29 08:56:03.000000000
+-0500
++++ linux/drivers/scsi/ips.c	2004-03-29 08:56:39.000000000 -0500
+@@ -277,9 +277,6 @@
+ 	.use_clustering		=3D ENABLE_CLUSTERING,
+ #if LINUX_VERSION_CODE < KERNEL_VERSION(2,5,0)
+ 	.use_new_eh_code	=3D 1,
+-#ifdef RHEL3
+-    .vary_io            =3D 1,
+-#endif
+ #endif
+ };
+=20
+
+------_=_NextPart_001_01C41597.8A1B4588
+Content-Type: application/octet-stream;
+	name="ips-7.00.15-patch"
+Content-Transfer-Encoding: base64
+Content-Description: ips-7.00.15-patch
+Content-Disposition: attachment;
+	filename="ips-7.00.15-patch"
+
+LS0tIGxpbnV4Lm9yaWcvZHJpdmVycy9zY3NpL2lwcy5jCTIwMDQtMDMtMjkgMDg6NTY6MDMuMDAw
+MDAwMDAwIC0wNTAwCisrKyBsaW51eC9kcml2ZXJzL3Njc2kvaXBzLmMJMjAwNC0wMy0yOSAwODo1
+NjozOS4wMDAwMDAwMDAgLTA1MDAKQEAgLTI3Nyw5ICsyNzcsNiBAQAogCS51c2VfY2x1c3Rlcmlu
+ZwkJPSBFTkFCTEVfQ0xVU1RFUklORywKICNpZiBMSU5VWF9WRVJTSU9OX0NPREUgPCBLRVJORUxf
+VkVSU0lPTigyLDUsMCkKIAkudXNlX25ld19laF9jb2RlCT0gMSwKLSNpZmRlZiBSSEVMMwotICAg
+IC52YXJ5X2lvICAgICAgICAgICAgPSAxLAotI2VuZGlmCiAjZW5kaWYKIH07CiAK
+
+------_=_NextPart_001_01C41597.8A1B4588--
