@@ -1,71 +1,93 @@
-From: Luben Tuikov <tluben@rogers.com>
-Subject: Re: [PATCH] scsi-misc-2.5 user per-device spare command
-Date: Fri, 25 Apr 2003 10:12:51 -0400
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [example PATCH - not for applying] exclude certain commands
+Date: Fri, 25 Apr 2003 10:32:09 -0400 (EDT)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3EA94263.1020902@rogers.com>
-References: <20030424100229.A32098@beaverton.ibm.com> <20030424100317.A32134@beaverton.ibm.com> <20030425111227.B28577@infradead.org>
+Message-ID: <Pine.LNX.4.44L0.0304251009030.30350-100000@netrider.rowland.org>
+References: <UTC200304250043.h3P0hPH01942.aeb@smtp.cwi.nl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fep01-mail.bloor.is.net.cable.rogers.com ([66.185.86.71]:59913
-	"EHLO fep01-mail.bloor.is.net.cable.rogers.com") by vger.kernel.org
-	with ESMTP id S263212AbTDYOAq (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 25 Apr 2003 10:00:46 -0400
-In-Reply-To: <20030425111227.B28577@infradead.org>
+Received: from netrider.rowland.org ([192.131.102.5]:26897 "HELO
+	netrider.rowland.org") by vger.kernel.org with SMTP id S263230AbTDYOT6
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 25 Apr 2003 10:19:58 -0400
+In-Reply-To: <UTC200304250043.h3P0hPH01942.aeb@smtp.cwi.nl>
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Patrick Mansfield <patmans@us.ibm.com>, James Bottomley <James.Bottomley@steeleye.com>, linux-scsi@vger.kernel.org
+To: Andries.Brouwer@cwi.nl
+Cc: stelian@popies.net, James.Bottomley@steeleye.com, afafc@rnl.ist.utl.pt, Greg KH <greg@kroah.com>, linux-scsi@vger.kernel.org, USB development list <linux-usb-devel@lists.sourceforge.net>, pwkpete@yahoo.com
 
-Christoph Hellwig wrote:
-> On Thu, Apr 24, 2003 at 10:03:17AM -0700, Patrick Mansfield wrote:
-> 
-> 
->>+	/*
->>+	 * Use any spare command first.
->>+	 */
->>+	cmd = sdev->spare_cmd;
->>+	if (cmd != NULL)
->>+		sdev->spare_cmd = NULL;
->>+	else 
->>+		cmd = kmem_cache_alloc(sdev->host->cmd_pool->slab,
->>+				gfp_mask | sdev->host->cmd_pool->gfp_mask);
-> 
-> 
-> This logical is flawed.  We don't need a spare command if we always use
-> it first.  In addition the sdev->spare_cmd access is racy.
+On Fri, 25 Apr 2003 Andries.Brouwer@cwi.nl wrote:
 
-Good call Christoph!
+> Now about fixing the code. We must do something in usb-storage
+> or sd.c or both. I would prefer if sr_bufflen denotes the
+> actually available length, instead of the length that
+> will be transferred. If it has that meaning, then the
+> fudger in usb-storage knows for sure that there is space.
+> And sd_do_mode_sense6 and family can store the right number.
 
-I was going to comment on this last night, but it was too late
-and I only marked the messages for this morning.
+There is a pattern emerging here, and I would like to propose a more 
+general strategy for this problem.
 
-Patrick, take a look at how the logic now works, and if you're
-doing something similar, try to at least emulate it, as if not
-improve on it (although Christoph has already done this).
+We have seen that low-level device drivers such as usb-storage need to 
+filter/alter the commands they accept.  Such actions include:
 
-Here are a few pointers:
+	(1) Refusing to issue a command that is known (or very likely) to 
+crash the device's firmware.
 
-1. Use the cache *first*, and if it's depleted, *then*
-use the spare command struct.
+	(2) Synthesizing an artificial reply to a command which the device 
+doesn't handle well but the SCSI code needs.
 
-2. Why spare_cmd is a pointer? Why? Why?
-Wouldn't it be much more *flexible* to be a list_head,
-so that maybe we can hook up more commands in the future?
-I.e. keep your options open...
+	(3) Changing one command to another (e.g., READ(6) -> READ(10)).
 
-3. As Christoph pointed out, access to your spare is racy.
+	(4) Changing the data length for a command to meet the device's 
+restrictions.
 
-4. Why are you using list_del()???? You should use list_del_init()!
-I can easily envision a hard to catch bug (and quite rare), when
-some LLDD gets the spare and does a check on the list_head...
+There may be other cases as well that I haven't thought of.
 
-Furthermore, cannot you see the infrastructure to which we've
-tried to get closer to?  More specifically a command struct travels
-list_heads as it comes out of the cache/spare_list and comes
-back to the cache/spare_list.
+To begin with, in my opinion the LLDD should do a minimum of filtering and 
+altering.  Not only is it frequently difficult to know if such actions are 
+valid or will be acceptable to the caller, there is also the principle 
+that user-generated requests (via the scsi-generic interface) should be 
+left totally alone -- after all, the user may be probing precisely to 
+determine whether or not the device will accept a particular command.
 
--- 
-Luben
+(1) is obviously necessary.  In general, refusing to accept a command is 
+better than changing it, IMO.
 
+(2) should be minimized, but there are times when it is unavoidable (such 
+as INQUIRY for various USB storage devices that don't support it).
+
+(3) should be avoided completely.  If the device doesn't accept some form 
+of a command, then that fact should be transmitted back to the caller.
+
+(4) also should be avoided.
+
+This puts the burden of dealing with partially-compliant devices on the 
+SCSI midlayer.  The routines there should be prepared to issue multiple 
+forms of a some commands, so that if one form doesn't work another form 
+can be tried.  Of course, this is already being done for READ and WRITE.  
+A similar strategy could be used for things like MODE-SENSE.  However, 
+detailed per-device information should be kept small -- little more than 
+"this device likes the 6-byte commands rather than the 10-byte commands".
+
+The same idea goes for retrying commands using different data lengths.  
+It would be especially nice if there was a good way for the LLDD to report
+that the data length specified was too short (or too long) for the device
+to accept.
+
+The filtering done by the LLDD should be relatively simple, and removing
+the complex translations that are currently being done would help.  
+Whether the filtering relies on centralized library routines (such as Matt
+Dharm recently proposed) or a more decentralized scheme doesn't need to be
+settled now.  In fact, it can fairly easily be changed later, as usage
+patterns dictate.
+
+This approach puts the burden of the various tasks where they belong.  
+The LLDD is responsible for keeping the device from crashing, which only
+it has the knowledge to do.  The SCSI mid-layer is responsible for the
+strategies needed to get a device to carry out a particular action, which
+is a problem that extends to all sorts of SCSI devices and is not peculiar
+to one particular type.
+
+Alan Stern
 
