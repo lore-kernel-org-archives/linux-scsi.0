@@ -1,55 +1,49 @@
-From: Badari Pulavarty <pbadari@us.ibm.com>
-Subject: Re: [patch for playing] 2.5.65 patch to support > 256 disks
-Date: Mon, 24 Mar 2003 13:32:56 -0800
+From: Patrick Mansfield <patmans@us.ibm.com>
+Subject: Re: [PATCH] 2.5.x use list_head to handle scsi starved request queues
+Date: Mon, 24 Mar 2003 13:56:40 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <200303241332.56996.pbadari@us.ibm.com>
-References: <200303211056.04060.pbadari@us.ibm.com> <3E7C4D05.2030500@torque.net> <20030322040550.0b8baeec.akpm@digeo.com>
+Message-ID: <20030324135640.A12273@beaverton.ibm.com>
+References: <3E7A1EF5.3050501@splentec.com> <20030320203912.A18471@beaverton.ibm.com> <3E7B7A9A.6030007@splentec.com> <20030321165050.B9578@beaverton.ibm.com> <3E7F3C67.5010704@splentec.com> <20030324112940.A11000@beaverton.ibm.com> <3E7F688C.3020009@splentec.com> <20030324202509.GF2371@suse.de> <20030324123813.A11614@beaverton.ibm.com> <3E7F77D6.9040300@splentec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <20030322040550.0b8baeec.akpm@digeo.com>
+Content-Disposition: inline
+In-Reply-To: <3E7F77D6.9040300@splentec.com>; from luben@splentec.com on Mon, Mar 24, 2003 at 04:25:42PM -0500
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@digeo.com>, dougg@torque.net
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Jens Axboe <axboe@suse.de>
+To: Luben Tuikov <luben@splentec.com>
+Cc: Jens Axboe <axboe@suse.de>, James Bottomley <James.Bottomley@steeleye.com>, linux-scsi@vger.kernel.org
 
-On Saturday 22 March 2003 04:05 am, Andrew Morton wrote:
-> OK, thanks.  So with 48 disks you've lost five megabytes to blkdev_requests
-> and deadline_drq objects.  With 4000 disks, you're toast.  That's enough
-> request structures to put 200 gigabytes of memory under I/O ;)
->
-> We need to make the request structures dymanically allocated for other
-> reasons (which I cannot immediately remember) but it didn't happen.  I
-> guess we have some motivation now.
+On Mon, Mar 24, 2003 at 04:25:42PM -0500, Luben Tuikov wrote:
+> Patrick Mansfield wrote:
+> > 
+> > That is another patch.
+> 
+> Then you should've sent it before this one.
 
-Here is the list of slab caches which consumed more than 1 MB
-in the process of inserting 4000 disks.
+I would have if I was modifying the locking code.
 
-#insmod scsi_debug.ko add_host=4 num_devs=1000
+> But nevertheless, the code of the patch you posted,
+> assumed that q->queue_lock is the same for all
+> devices' request queues.  This was my beef
+> since the very beginning of this thread.
 
-deadline_drq    before:1280 after:1025420 diff:1024140 size:64 incr:65544960
-blkdev_requests  before:1280 after:1025400 diff:1024120 size:156 incr:159762720
+Yes, and that is no different from the current code.
 
-* deadline_drq, blkdev_requests consumed almost 80 MB. We need to fix this.
+> >>Irk no, that's quite a bad idea.
+> >>
+> >>I completely agree with you that making assumptions about q->queue_lock
+> >>== host lock is really really bad. Don't do that.
+> > 
+> > Yes, it's bad (with or without the patch in question), I am working on
+> 
+> No!  With the patch in question.
+> 
+> The rest of SCSI Core assumes that q->queue_lock has nothing to do
+> with any other q's lock.
 
-inode_cache     before:700 after:140770 diff:140070 size:364 incr:50985480
-dentry_cache    before:4977 after:145061 diff:140084 size:172 incr:24094448
+The current code in scsi_queue_next_request() assume queue_lock ==
+host_lock, as does code in scsi_error.c. We get a queue_lock (or
+host_lock), and then iterate over different q's calling
+__blk_run_queue(q).
 
-* inode cache increased by 50 MB, dentry cache 24 MB. 
-It looks like we cached 140,000 inodes. I wonder why ? 
-
-size-8192       before:8 after:4010 diff:4002 size:8192 incr:32784384
-
-* 32 MB is for 4 hosts ram disk for scsi_debug  (4*8MB)
-
-size-2048       before:112 after:4102 diff:3990 size:2060 incr:8219400
-size-512        before:87 after:8085 diff:7998 size:524 incr:4190952
-size-192        before:907 after:16910 diff:16003 size:204 incr:3264612
-size-64         before:459 after:76500 diff:76041 size:76 incr:5779116
-size-32         before:523 after:24528 diff:24005 size:44 incr:1056220
-
-* 30MB for all other structures. I need to look closely on what these are..
-
-Thanks,
-Badari
-
+-- Patrick Mansfield
