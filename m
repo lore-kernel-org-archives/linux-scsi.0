@@ -1,42 +1,45 @@
-From: Luben Tuikov <tluben@rogers.com>
+From: Alan Stern <stern@rowland.harvard.edu>
 Subject: Re: Patch: change the serial_number for error-handler commands
-Date: Wed, 21 May 2003 15:24:25 -0400
+Date: Wed, 21 May 2003 15:57:56 -0400 (EDT)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3ECBD269.7050404@rogers.com>
-References: <Pine.LNX.4.44L0.0305202110520.4914-100000@netrider.rowland.org>
+Message-ID: <Pine.LNX.4.44L0.0305211556260.617-100000@ida.rowland.org>
+References: <20030521180308.GD1116@beaverton.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fep03-mail.bloor.is.net.cable.rogers.com ([66.185.86.73]:13214
-	"EHLO fep03-mail.bloor.is.net.cable.rogers.com") by vger.kernel.org
-	with ESMTP id S262254AbTEUTL0 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 21 May 2003 15:11:26 -0400
-In-Reply-To: <Pine.LNX.4.44L0.0305202110520.4914-100000@netrider.rowland.org>
+Received: from ida.rowland.org ([192.131.102.52]:1284 "HELO ida.rowland.org")
+	by vger.kernel.org with SMTP id S262237AbTEUToy (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 21 May 2003 15:44:54 -0400
+In-Reply-To: <20030521180308.GD1116@beaverton.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: Mike Anderson <andmike@us.ibm.com>, linux-scsi@vger.kernel.org
+To: Mike Anderson <andmike@us.ibm.com>
+Cc: Luben Tuikov <tluben@rogers.com>, linux-scsi@vger.kernel.org
 
-Alan Stern wrote:
->>Alan, could you please explain this patch?
+On Wed, 21 May 2003, Mike Anderson wrote:
+
+> I agree on the change in SCSI core instead of a change just for scsi
+> error handling. If you are depending on command serial number to be
+> unique as the comments in scsi_dispatch_cmd already indicate we have
+> problems (in USB storage case since can_queue is 1 it would not run into a
+> issue until scsi error handling).
 > 
+> The patch below is a quick patch that moves the serial_number from a
+> scsi mid level static to a per scsi host value. In looking at the usage
+> of command serial_number it appears that moving to a per scsi host name
+> space should be ok.
 > 
-> It's just to insure that when the error handler sends a TEST-UNIT-READY,
-> the serial number is different from that of the immediately-prior failed
-> command (or from that of any command issued recently or likely to be
-> issued in the near future).
+> I have compile and boot tested it on my system with the ips and aic7xxx
+> drivers.
+> 
+> The patch needs some more testing and some variable name updates, but
+> should be ok to test USB and allow for discussion of this type of
+> change.
 
-This is a _trivial_ bug in SCSI Core (error handler, ...) which I hope
-will be fixed in the near future (Mike or Patrick will send a patch).
+Mike:
 
-That is, as per my other email, two successive commands (CDBs) should
-never be sent with duplicate cmdsn's.
+I tried it out, and it did exactly what I wanted.  You, Luben, and the 
+others can fight over the details.
 
-What we're talking about here is a _consistent_ path of a command
-through SCSI Core, before it reaches a LLDD.  This is currently NOT
-the case, thus the duplicate cmdsn...
-
--- 
-Luben
-
+Alan Stern
 
