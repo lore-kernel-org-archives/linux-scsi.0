@@ -1,198 +1,445 @@
 From: Jamie Lenehan <lenehan@twibble.org>
-Subject: [PATCH] dc395x [4/6] - cleanup adapter uninit
-Date: Thu, 21 Aug 2003 20:16:58 +1000
+Subject: [PATCH] dc395x [2/6] - cleanup devices
+Date: Thu, 21 Aug 2003 20:15:25 +1000
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030821101658.GE7570@twibble.org>
-References: <20030821101348.GA7570@twibble.org> <20030821101434.GB7570@twibble.org> <20030821101525.GC7570@twibble.org> <20030821101619.GD7570@twibble.org>
+Message-ID: <20030821101525.GC7570@twibble.org>
+References: <20030821101348.GA7570@twibble.org> <20030821101434.GB7570@twibble.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from tuon.twibble.org ([203.217.29.157]:36242 "EHLO tuon.twibble.org")
-	by vger.kernel.org with ESMTP id S262568AbTHUKRC (ORCPT
+Received: from tuon.twibble.org ([203.217.29.157]:29586 "EHLO tuon.twibble.org")
+	by vger.kernel.org with ESMTP id S262552AbTHUKPi (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 21 Aug 2003 06:17:02 -0400
+	Thu, 21 Aug 2003 06:15:38 -0400
 Content-Disposition: inline
-In-Reply-To: <20030821101619.GD7570@twibble.org>
+In-Reply-To: <20030821101434.GB7570@twibble.org>
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: dc395x@twibble.org
 
-Clean up the initialization sequence for the adapter. Makes it easier
-to follow.
+This cleans up the device management. It makes the init and cleanup
+seperate functions that basically do the opposite type things in
+reverse order. Makes it clear which functions remove a device and
+which ones free a device (or devices.)
 
 
 diff -du -r a/drivers/scsi/dc395x.c b/drivers/scsi/dc395x.c
---- a/drivers/scsi/dc395x.c	2003-08-20 21:52:19.656479536 +1000
-+++ b/drivers/scsi/dc395x.c	2003-08-20 21:51:14.171434776 +1000
-@@ -5554,6 +5554,61 @@
+--- a/drivers/scsi/dc395x.c	2003-08-19 23:25:18.585554464 +1000
++++ b/drivers/scsi/dc395x.c	2003-08-19 23:25:23.582794768 +1000
+@@ -496,10 +496,6 @@
+ 			  struct ScsiReqBlk *srb);
+ static inline void set_xfer_rate(struct AdapterCtlBlk *acb,
+ 				 struct DeviceCtlBlk *dcb);
+-static void init_dcb(struct AdapterCtlBlk *acb,
+-		     struct DeviceCtlBlk **pdcb, u8 target, u8 lun);
+-static void remove_dev(struct AdapterCtlBlk *acb,
+-		       struct DeviceCtlBlk *dcb);
+ static void waiting_timeout(unsigned long ptr);
+ 
+ 
+@@ -1451,34 +1447,6 @@
  }
  
  
-+/**
-+ * adapter_uninit_chip - cleanly shut down the scsi controller chip,
-+ * stopping all operations and disabling interrupt generation on the
-+ * card.
-+ *
-+ * @acb: The adapter which we are to shutdown.
-+ **/
-+static
-+void adapter_uninit_chip(struct AdapterCtlBlk *acb)
-+{
-+	/* disable interrupts */
-+	DC395x_write8(acb, TRM_S1040_DMA_INTEN, 0);
-+	DC395x_write8(acb, TRM_S1040_SCSI_INTEN, 0);
-+
-+	/* reset the scsi bus */
-+	if (acb->config & HCC_SCSI_RESET)
-+		reset_scsi_bus(acb);
-+
-+	/* clear any pending interupt state */
-+	DC395x_read8(acb, TRM_S1040_SCSI_INTSTATUS);
-+}
-+
-+
-+
-+/**
-+ * adapter_uninit - Shut down the chip and release any resources that
-+ * we had allocated. Once this returns the adapter should not be used
-+ * anymore.
-+ *
-+ * @acb: The adapter which we are to un-initialize.
-+ **/
-+static
-+void adapter_uninit(struct AdapterCtlBlk *acb)
-+{
-+	unsigned long flags;
-+	DC395x_LOCK_IO(acb->scsi_host, flags);
-+
-+	/* remove timers */
-+	if (timer_pending(&acb->waiting_timer))
-+		del_timer(&acb->waiting_timer);
-+	if (timer_pending(&acb->selto_timer))
-+		del_timer(&acb->selto_timer);
-+
-+	adapter_uninit_chip(acb);
-+	adapter_remove_and_free_all_devices(acb);
-+	DC395x_UNLOCK_IO(acb->scsi_host, flags);
-+
-+	if (acb->irq_level)
-+		free_irq(acb->irq_level, acb);
-+	if (acb->io_port_base)
-+		release_region(acb->io_port_base, acb->io_port_len);
-+
-+	adapter_sg_tables_free(acb);
-+	free_tracebufs(acb);
-+}
- 
- 
- /*
-@@ -5714,65 +5769,6 @@
- }
- 
- 
--/**
-- * chip_shutdown - cleanly shut down the scsi controller chip,
-- * stopping all operations and disablig interrupt generation on the
-- * card.
+-/***********************************************************************
+- * Function static int dc395x_slave_alloc()
 - *
-- * @acb: The scsi adapter control block of the adapter to shut down.
-- **/
--static
--void chip_shutdown(struct AdapterCtlBlk *acb)
+- * Purpose: Allocate DCB
+- ***********************************************************************/
+-static int dc395x_slave_alloc(struct scsi_device *sdp)
 -{
--	/* disable interrupt */
--	DC395x_write8(acb, TRM_S1040_DMA_INTEN, 0);
--	DC395x_write8(acb, TRM_S1040_SCSI_INTEN, 0);
+-	struct AdapterCtlBlk *acb;
+-	struct DeviceCtlBlk *dummy;
 -
--	/* remove timers */
--	if (timer_pending(&acb->waiting_timer))
--		del_timer(&acb->waiting_timer);
--	if (timer_pending(&acb->selto_timer))
--		del_timer(&acb->selto_timer);
+-	acb = (struct AdapterCtlBlk *) sdp->host->hostdata;
 -
--	/* reset the scsi bus */
--	if (acb->config & HCC_SCSI_RESET)
--		reset_scsi_bus(acb);
+-	init_dcb(acb, &dummy, sdp->id, sdp->lun);
 -
--	/* clear any pending interupt state */
--	DC395x_read8(acb, TRM_S1040_SCSI_INTSTATUS);
--
--	/* release chip resources */
--#if debug_enabled(DBG_TRACE|DBG_TRACEALL)
--	free_tracebufs(acb);
--#endif
--	adapter_sg_tables_free(acb);
+-	return dummy ? 0 : -ENOMEM;
 -}
 -
 -
--
--/**
-- * host_release - shutdown device and release resources that were
-- * allocate for it. Called once for each card as it is shutdown.
-- *
-- * @host: The adapter instance to shutdown.
-- **/
--static
--void host_release(struct Scsi_Host *host)
+-static void dc395x_slave_destroy(struct scsi_device *sdp)
 -{
--	struct AdapterCtlBlk *acb = (struct AdapterCtlBlk *)(host->hostdata);
--	unsigned long flags;
+-	struct AdapterCtlBlk *acb;
+-	struct DeviceCtlBlk *dcb;
 -
--	dprintkl(KERN_DEBUG, "DC395x release\n");
+-	acb = (struct AdapterCtlBlk *) sdp->host->hostdata;
+-	dcb = find_dcb(acb, sdp->id, sdp->lun);
 -
--	DC395x_LOCK_IO(acb->scsi_host, flags);
--	chip_shutdown(acb);
--	adapter_remove_and_free_all_devices(acb);
--
--	free_irq(host->irq, acb);
--	release_region(host->io_port, host->n_io_port);
--
--	DC395x_UNLOCK_IO(acb->scsi_host, flags);
+-	remove_dev(acb, dcb);
 -}
  
  
  /*
-@@ -5868,15 +5864,15 @@
- 	}
+@@ -1637,7 +1605,6 @@
+ 		dcb->sync_offset = 0;
  
- 	pci_set_master(dev);
--	pci_set_drvdata(dev, scsi_host);
+ 		dcb->dev_mode = eeprom->target[dcb->target_id].cfg0;
+-		/*dcb->AdpMode = eeprom->channel_cfg; */
+ 		period_index = eeprom->target[dcb->target_id].period & 0x07;
+ 		dcb->min_nego_period = clock_period[period_index];
+ 		if (!(dcb->dev_mode & NTC_DO_WIDE_NEGO)
+@@ -4051,40 +4018,8 @@
+ }
  
- 	/* get the scsi mid level to scan for new devices on the bus */
- 	if (scsi_add_host(scsi_host, &dev->dev)) {
- 		dprintkl(KERN_ERR, "scsi_add_host failed\n");
--                host_release(scsi_host);
-+		adapter_uninit(acb);
-                 scsi_host_put(scsi_host);
- 		return -ENODEV;
- 	}
-+	pci_set_drvdata(dev, scsi_host);
- 	scsi_scan_host(scsi_host);
-         	
- 	return 0;
-@@ -5891,16 +5887,14 @@
-  **/
- static void __devexit dc395x_remove_one(struct pci_dev *dev)
- {
--	struct Scsi_Host *host = pci_get_drvdata(dev);
-+	struct Scsi_Host *scsi_host = pci_get_drvdata(dev);
-+	struct AdapterCtlBlk *acb = (struct AdapterCtlBlk *)(scsi_host->hostdata);
  
- 	dprintkdbg(DBG_0, "Removing instance\n");
--	if (!host) {
--		dprintkl(KERN_ERR, "no host allocated\n");
+-/* Dynamic device handling */
+ 
+-/* Remove dev (and DCB) */
+-static
+-void remove_dev(struct AdapterCtlBlk *acb, struct DeviceCtlBlk *dcb)
+-{
+-	struct DeviceCtlBlk *i;
+-	struct DeviceCtlBlk *tmp;
+ 
+-	dprintkdbg(DBG_0, "remove_dev\n");
+-	if (list_size(&dcb->srb_going_list) > 1) {
+-		dprintkdbg(DBG_DCB, "Driver won't free DCB (ID %i, LUN %i): 0x%08x because of SRBCnt %i\n",
+-			  dcb->target_id, dcb->target_lun, (int) dcb,
+-			  list_size(&dcb->srb_going_list));
 -		return;
 -	}
--	scsi_remove_host(host);
--	host_release(host);
--	scsi_host_put(host);
-+
-+	scsi_remove_host(scsi_host);
-+	adapter_uninit(acb);
-+	scsi_host_put(scsi_host);
- 	pci_set_drvdata(dev, NULL);
+-	acb->dcb_map[dcb->target_id] &= ~(1 << dcb->target_lun);
+-	acb->children[dcb->target_id][dcb->target_lun] = NULL;
+-
+-	list_for_each_entry_safe(i, tmp, &acb->dcb_list, list) {
+-		if (dcb == i) {
+-			list_del(&i->list);
+-			break;
+-		}
+-	}			                        
+-
+-	dprintkdbg(DBG_DCB, "Driver about to free DCB (ID %i, LUN %i): %p\n",
+-		  dcb->target_id, dcb->target_lun, dcb);
+-	if (dcb == acb->active_dcb)
+-		acb->active_dcb = NULL;
+-	if (dcb == acb->dcb_run_robin)
+-		acb->dcb_run_robin = dcb_get_next(&acb->dcb_list, dcb);
+-	dc395x_kfree(dcb);
+-}
+ 
+ 
+ static inline u8 tagq_blacklist(char *name)
+@@ -4683,58 +4618,55 @@
  }
  
+ 
+-/*
+- *********************************************************************
+- *		dc395x_queue_command
++
++
++
++/**
++ * device_alloc - Allocate a new device instance. This create the
++ * devices instance and sets up all the data items. The adapter
++ * instance is required to obtain confiuration information for this
++ * device. This does *not* add this device to the adapters device
++ * list.
+  *
+- * Function : void init_dcb
+- *  Purpose : initialize the internal structures for a given DCB
+- *   Inputs : cmd - pointer to this scsi cmd request block structure
+- *********************************************************************
+- */
++ * @acb: The adapter to obtain configuration information from.
++ * @target: The target for the new device.
++ * @lun: The lun for the new device.
++ *
++ * Return the new device if succesfull or NULL on failure.
++ **/
+ static
+-void init_dcb(struct AdapterCtlBlk *acb, struct DeviceCtlBlk **pdcb,
+-	      u8 target, u8 lun)
++struct DeviceCtlBlk *device_alloc(struct AdapterCtlBlk *acb, u8 target, u8 lun)
+ {
+ 	struct NvRamType *eeprom = &acb->eeprom;
+-	u8 period_index;
++	u8 period_index = eeprom->target[target].period & 0x07;
+ 	struct DeviceCtlBlk *dcb;
+-	struct DeviceCtlBlk *dcb2;
+ 
+-	dprintkdbg(DBG_0, "init_dcb..............\n");
+ 	dcb = dc395x_kmalloc(sizeof(struct DeviceCtlBlk), GFP_ATOMIC);
+-	/*dcb = find_dcb (acb, target, lun); */
+-	*pdcb = dcb;
+-	dcb2 = NULL;
+-	if (!dcb)
+-		return;
+-
+-	INIT_LIST_HEAD(&dcb->srb_waiting_list);
++	dprintkdbg(DBG_0, "device_alloc: device %p\n", dcb);
++	if (!dcb) {
++		return NULL;
++	}
++	dcb->acb = NULL;
+ 	INIT_LIST_HEAD(&dcb->srb_going_list);
+-	if (list_empty(&acb->dcb_list))
+-		acb->dcb_run_robin = dcb;
+-	list_add_tail(&dcb->list, &acb->dcb_list);
+-
+-	/* $$$$$$$ */
+-	dcb->acb = acb;
+-	dcb->target_id = target;
+-	dcb->target_lun = lun;
+-	/* $$$$$$$ */
++	INIT_LIST_HEAD(&dcb->srb_waiting_list);
+ 	dcb->active_srb = NULL;
+-	/* $$$$$$$ */
+ 	dcb->tag_mask = 0;
+-	dcb->flag = 0;
+ 	dcb->max_command = 1;
+-	/* $$$$$$$ */
++	dcb->target_id = target;
++	dcb->target_lun = lun;
++#ifndef DC395x_NO_DISCONNECT
++	dcb->identify_msg =
++	    IDENTIFY(dcb->dev_mode & NTC_DO_DISCONNECT, lun);
++#else
++	dcb->identify_msg = IDENTIFY(0, lun);
++#endif
+ 	dcb->dev_mode = eeprom->target[target].cfg0;
+-	/*dcb->AdpMode = eeprom->channel_cfg; */
+ 	dcb->inquiry7 = 0;
+ 	dcb->sync_mode = 0;
+-	/* $$$$$$$ */
++	dcb->min_nego_period = clock_period[period_index];
+ 	dcb->sync_period = 0;
+ 	dcb->sync_offset = 0;
+-	period_index = eeprom->target[target].period & 0x07;
+-	dcb->min_nego_period = clock_period[period_index];
++	dcb->flag = 0;
+ 
+ #ifndef DC395x_NO_WIDE
+ 	if ((dcb->dev_mode & NTC_DO_WIDE_NEGO)
+@@ -4746,36 +4678,170 @@
+ 		if (!(lun) || current_sync_offset)
+ 			dcb->sync_mode |= SYNC_NEGO_ENABLE;
+ #endif
+-	/* $$$$$$$ */
+-#ifndef DC395x_NO_DISCONNECT
+-	dcb->identify_msg =
+-	    IDENTIFY(dcb->dev_mode & NTC_DO_DISCONNECT, lun);
+-#else
+-	dcb->identify_msg = IDENTIFY(0, lun);
+-#endif
+-	/* $$$$$$$ */
+ 	if (dcb->target_lun != 0) {
+ 		/* Copy settings */
+-		struct DeviceCtlBlk *prevDCB;
+-		list_for_each_entry(prevDCB, &acb->dcb_list, list)
+-			if (prevDCB->target_id == dcb->target_id)
++		struct DeviceCtlBlk *p;
++		list_for_each_entry(p, &acb->dcb_list, list)
++			if (p->target_id == dcb->target_id)
+ 				break;
+-		dprintkdbg(DBG_KG,
++		dprintkdbg(DBG_KG, 
+ 		       "Copy settings from %02i-%02i to %02i-%02i\n",
+-		       prevDCB->target_id, prevDCB->target_lun,
++		       p->target_id, p->target_lun,
+ 		       dcb->target_id, dcb->target_lun);
+-		dcb->sync_mode = prevDCB->sync_mode;
+-		dcb->sync_period = prevDCB->sync_period;
+-		dcb->min_nego_period = prevDCB->min_nego_period;
+-		dcb->sync_offset = prevDCB->sync_offset;
+-		dcb->inquiry7 = prevDCB->inquiry7;
+-	};
++		dcb->sync_mode = p->sync_mode;
++		dcb->sync_period = p->sync_period;
++		dcb->min_nego_period = p->min_nego_period;
++		dcb->sync_offset = p->sync_offset;
++		dcb->inquiry7 = p->inquiry7;
++	}
++	return dcb;
++}
+ 
+-	acb->dcb_map[target] |= (1 << lun);
+-	acb->children[target][lun] = dcb;
++
++/**
++ * adapter_add_device - Adds the device instance to the adaptor instance.
++ *
++ * @acb: The adapter device to be updated
++ * @dcb: A newly created and intialised device instance to add.
++ **/
++static
++void adapter_add_device(struct AdapterCtlBlk *acb, struct DeviceCtlBlk *dcb)
++{
++	/* backpointer to adapter */
++	dcb->acb = acb;
++	
++	/* set run_robin to this device if it is currently empty */
++	if (list_empty(&acb->dcb_list))
++		acb->dcb_run_robin = dcb;
++
++	/* add device to list */
++	list_add_tail(&dcb->list, &acb->dcb_list);
++
++	/* update device maps */
++	acb->dcb_map[dcb->target_id] |= (1 << dcb->target_lun);
++	acb->children[dcb->target_id][dcb->target_lun] = dcb;
++}
++
++
++/**
++ * adapter_remove_device - Removes the device instance from the adaptor
++ * instance. The device instance is not check in any way or freed by this. 
++ * The caller is expected to take care of that. This will simply remove the
++ * device from the adapters data strcutures.
++ *
++ * @acb: The adapter device to be updated
++ * @dcb: A device that has previously been added to the adapter.
++ **/
++static
++void adapter_remove_device(struct AdapterCtlBlk *acb, struct DeviceCtlBlk *dcb)
++{
++	struct DeviceCtlBlk *i;
++	struct DeviceCtlBlk *tmp;
++	dprintkdbg(DBG_0, "adapter_remove_device: Remove device (ID %i, LUN %i): %p\n",
++		   dcb->target_id, dcb->target_lun, dcb);
++
++	/* fix up any pointers to this device that we have in the adapter */
++	if (acb->active_dcb == dcb)
++		acb->active_dcb = NULL;
++	if (acb->dcb_run_robin == dcb)
++		acb->dcb_run_robin = dcb_get_next(&acb->dcb_list, dcb);
++
++	/* unlink from list */
++	list_for_each_entry_safe(i, tmp, &acb->dcb_list, list)
++		if (dcb == i) {
++			list_del(&i->list);
++			break;
++		}
++
++	/* clear map and children */	
++	acb->dcb_map[dcb->target_id] &= ~(1 << dcb->target_lun);
++	acb->children[dcb->target_id][dcb->target_lun] = NULL;
++	dcb->acb = NULL;
++}
++
++
++/**
++ * adapter_remove_and_free_device - Removes a single device from the adapter
++ * and then frees the device information.
++ *
++ * @acb: The adapter device to be updated
++ * @dcb: A device that has previously been added to the adapter.
++ */
++static
++void adapter_remove_and_free_device(struct AdapterCtlBlk *acb, struct DeviceCtlBlk *dcb)
++{
++	if (list_size(&dcb->srb_going_list) > 1) {
++		dprintkdbg(DBG_DCB, "adapter_remove_and_free_device: "
++		           "Won't remove because of %i active requests\n",
++			   list_size(&dcb->srb_going_list));
++		return;
++	}
++	adapter_remove_device(acb, dcb);
++	dc395x_kfree(dcb);
+ }
+ 
+ 
++/**
++ * adapter_remove_and_free_all_devices - Removes and frees all of the
++ * devices associated with the specified adapter.
++ *
++ * @acb: The adapter from which all devices should be removed.
++ **/
++static
++void adapter_remove_and_free_all_devices(struct AdapterCtlBlk* acb)
++{
++	struct DeviceCtlBlk *dcb;
++	struct DeviceCtlBlk *tmp;
++	dprintkdbg(DBG_DCB, "adapter_remove_and_free_all_devices: Free all devices (%i devices)\n",
++		   list_size(&acb->dcb_list));
++
++	list_for_each_entry_safe(dcb, tmp, &acb->dcb_list, list)
++		adapter_remove_and_free_device(acb, dcb);
++}
++
++
++/**
++ * dc395x_slave_alloc - Called by the scsi mid layer to tell us about a new
++ * scsi device that we need to deal with. We allocate a new device and then
++ * insert that device into the adapters device list.
++ *
++ * @scsi_device: The new scsi device that we need to handle.
++ **/
++static
++int dc395x_slave_alloc(struct scsi_device *scsi_device)
++{
++	struct AdapterCtlBlk *acb = (struct AdapterCtlBlk *)scsi_device->host->hostdata;
++	struct DeviceCtlBlk *dcb;
++
++	dcb = device_alloc(acb, scsi_device->id, scsi_device->lun);
++	if (!dcb)
++		return -ENOMEM;
++	adapter_add_device(acb, dcb);
++
++	return 0;
++}
++
++
++/**
++ * dc395x_slave_destroy - Called by the scsi mid layer to tell us about a
++ * device that is going away.
++ *
++ * @scsi_device: The new scsi device that we need to handle.
++ **/
++static
++void dc395x_slave_destroy(struct scsi_device *scsi_device)
++{
++	struct AdapterCtlBlk *acb = (struct AdapterCtlBlk *)scsi_device->host->hostdata;
++	struct DeviceCtlBlk *dcb = find_dcb(acb, scsi_device->id, scsi_device->lun);
++	adapter_remove_and_free_device(acb, dcb);
++}
++
++
++
++
++
++
++
+ #if debug_enabled(DBG_TRACE|DBG_TRACEALL)
+ /*
+  * Memory for trace buffers
+@@ -5670,25 +5736,6 @@
+ }
+ 
+ 
+-/**
+- * free_dcbs - Free all of the DCBs.
+- *
+- * @acb: Adapter to remove the DCBs for.
+- **/
+-static
+-void free_dcbs(struct AdapterCtlBlk* acb)
+-{
+-	struct DeviceCtlBlk *dcb;
+-	struct DeviceCtlBlk *tmp;
+-
+-	dprintkdbg(DBG_DCB, "Free %i DCBs\n", list_size(&acb->dcb_list));
+-
+-	list_for_each_entry_safe(dcb, tmp, &acb->dcb_list, list) {
+-		dprintkdbg(DBG_DCB, "Free DCB (ID %i, LUN %i): %p\n",
+-			             dcb->target_id, dcb->target_lun, dcb);
+-		remove_dev(acb, dcb);
+-	}
+-}
+ 
+ /**
+  * host_release - shutdown device and release resources that were
+@@ -5706,7 +5753,7 @@
+ 
+ 	DC395x_LOCK_IO(acb->scsi_host, flags);
+ 	chip_shutdown(acb);
+-	free_dcbs(acb);
++	adapter_remove_and_free_all_devices(acb);
+ 
+ 	free_irq(host->irq, acb);
+ 	release_region(host->io_port, host->n_io_port);
 
 -- 
  Jamie Lenehan <lenehan@twibble.org>
