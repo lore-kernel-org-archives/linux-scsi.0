@@ -1,40 +1,31 @@
-From: "Lee Xing" <lxing@Crossroads.com>
-Subject: Help - can Linux SCSI sub-system add newly-attached devices to /dev on the fly?
-Date: Thu, 20 May 2004 11:58:21 -0500
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: Help - can Linux SCSI sub-system add newly-attached devices to /dev on the fly?
+Date: Thu, 20 May 2004 18:00:22 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <519672568F040C41B6FAC21ADF51B18FEFFD@mailnode1.commstor.crossroads.com>
+Message-ID: <20040520180022.A10101@infradead.org>
+References: <519672568F040C41B6FAC21ADF51B18FEFFD@mailnode1.commstor.crossroads.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from email.crossroads.com ([65.68.235.6]:38580 "HELO
-	email.crossroads.com") by vger.kernel.org with SMTP id S265176AbUETQ6W convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 20 May 2004 12:58:22 -0400
-content-class: urn:content-classes:message
+Received: from phoenix.infradead.org ([213.86.99.234]:37389 "EHLO
+	phoenix.infradead.org") by vger.kernel.org with ESMTP
+	id S265211AbUETRAY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 20 May 2004 13:00:24 -0400
+Content-Disposition: inline
+In-Reply-To: <519672568F040C41B6FAC21ADF51B18FEFFD@mailnode1.commstor.crossroads.com>; from lxing@Crossroads.com on Thu, May 20, 2004 at 11:58:21AM -0500
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Lee Xing <lxing@Crossroads.com>
+Cc: linux-scsi@vger.kernel.org
 
-Hi,
+On Thu, May 20, 2004 at 11:58:21AM -0500, Lee Xing wrote:
+> Mid-layer in lk 2.6 defines two functions, scsi_add_device() and scsi_add_host(),
+> that can be called by low-level drivers based on the document.  I'm not familiar 
+> with lk2.6.  Can low-level drivers in lk2.6 call scsi_add_device( ) to add 
+> newly-attached disks to mid-layer on the fly?
 
-Does any one know if there is a function low-level driver can invoke to notice
-mid-layer the changes on the attached devices?  Suppose we hot plug-in or 
-pull-off a disk, can low-level driver send a notice to mid-layer and let it
-re-scan the bus and add a new sd/sg to /dev?
+Yes.  For an example take a look at drivers/ieee1394/sbp2.c.
 
-I was told we could run "echo scsi add-single-device h c t l > /proc/scsi/scsi" 
-(where "h c t l" are host_id, channel_id, target_id and lun_id) from user space 
-to add a newly-attached device to mid-layer.  Is it the only way (besides reboot)
-to add new devices to mid-layer on the fly?
+> Does lk2.4 provide a similar 
+> function to scsi_add_device( ) in lk2.6?
 
-Mid-layer in lk 2.6 defines two functions, scsi_add_device() and scsi_add_host(),
-that can be called by low-level drivers based on the document.  I'm not familiar 
-with lk2.6.  Can low-level drivers in lk2.6 call scsi_add_device( ) to add 
-newly-attached disks to mid-layer on the fly?  Does lk2.4 provide a similar 
-function to scsi_add_device( ) in lk2.6?
-
-Thanks,
-
-
-Lee
-
+No.
