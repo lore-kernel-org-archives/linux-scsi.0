@@ -1,53 +1,51 @@
-From: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Subject: Re: Mid-layer handling of NOT_READY conditions...
-Date: Fri, 28 Jan 2005 21:46:06 -0800
-Message-ID: <1106977566.9862.102.camel@plap>
-References: <1106954650.9862.61.camel@plap>
+From: James.Smart@Emulex.Com
+Subject: [PATCH 0/3] MidLayer updates
+Date: Sat, 29 Jan 2005 09:02:58 -0500
+Message-ID: <0B1E13B586976742A7599D71A6AC733C02F324@xbl3.ma.emulex.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from avexch02.qlogic.com ([198.70.193.200]:51371 "EHLO
-	avexch01.qlogic.com") by vger.kernel.org with ESMTP id S262859AbVA2Fpt
+Received: from emulex.emulex.com ([138.239.112.1]:11401 "EHLO
+	emulex.emulex.com") by vger.kernel.org with ESMTP id S262911AbVA2ODA convert rfc822-to-8bit
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 29 Jan 2005 00:45:49 -0500
-In-Reply-To: <1106954650.9862.61.camel@plap>
+	Sat, 29 Jan 2005 09:03:00 -0500
+Received: from xbl3.ad.emulex.com (xbl3.ma.emulex.com [138.239.73.12])
+	by emulex.emulex.com (8.12.10/8.12.10) with ESMTP id j0TE2wni007644
+	for <linux-scsi@vger.kernel.org>; Sat, 29 Jan 2005 06:02:59 -0800 (PST)
+Content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-On Fri, 2005-01-28 at 15:24 -0800, Andrew Vasquez wrote:
-> ...        
-> There seems to be two problem with this approach:
-> 
->      1. As the storage continues to return NOT_READY,
->         scsi_decide_disposition() blindly increments cmd->retries and
->         checks against cmd->allowed, returning SUCCESS (since at this
->         point cmd->retries is always greater than cmd->allowed) -- I've
->         seen this condition loop several hundred times while the
->         NOT_READY condition clears.
->      2. as a result of the (cmd->retries > cmd->allowed) state of the
->         command, if a LLDD returns any status (other than DID_OK) which
->         could initiate a retry, the command is immediately failed.  As
->         an example, the qla2xxx driver returns DID_BUS_BUSY in case of
->         any 'transport' related problems during the exchange (dropped
->         frames, FCP protocal failures, etc.).
-> 
-> When the qla2xxx driver managed command queuing internally, a NOT_READY
-> status would cause the lun-queue to be frozen for some period time while
-> the storage settled-down.
-> 
 
-Returning back DID_IMM_RETRY for these 'transport' related conditions
-would of course help in this issue -- but at the same time bring with it
-several side-effects which may not be desirable.
+The following 3 patches extend the scsi midlayer. Changes were prompted
+by recent discussions with Christoph as part of the Emulex driver thread.
 
-So, beyond this particular circumstance, what would be considered a
-'proper' return status for this type of event? 
+Patch 1: 
+  Updates the recent transport container patch for :
+  - allow device driver-specific attributes to be added to class objects
+  - exposes classdev to transport via setup function
 
-> Would this be an approach to consider?  Or should we tackle the problem
-> by addressing the quirky (cmd->retries > cmd->allowed) state?
-> 
+Patch 2: 
+  Adds io statistics (requests, completions, error count) as generic
+  attributes for scsi devices.
 
---
-Andrew
+Patch 3: 
+  This patch extends scsi_target support:
+  - Allows for driver-specific data to be allocated along with the
+    target structure and accessible via the starget->hostdata pointer.
+  - Adds scsi target alloc/configure/destory callbacks to the
+    scsi host template.
+  - Rearranges the calling sequences for scsi targets so that the
+    target and slave alloc/configure/destory callbacks are in
+    order (target before slave on alloc/configure).
+
+Although bad form, as there's so much churn in this area, the following
+dependencies exist:
+- Patches were created against scsi-rc-fixes-2.6 bitkeeper tree.
+- Patch 1 depends on Mike Christies patch 
+  http://marc.theaimsgroup.com/?l=linux-scsi&m=110678937715985&w=2
+
+
+-- James S
