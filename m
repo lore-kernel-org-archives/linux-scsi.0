@@ -1,97 +1,78 @@
-From: "Aron Zeh" <ARZEH@de.ibm.com>
-Subject: Re: [PATCH] SCSI host ID assigment overoptimization removal in 2.4.18
-Date: Mon, 22 Jul 2002 14:15:46 +0200
+From: Kurt Garloff <garloff@suse.de>
+Subject: Re: Patch for 256 disks in 2.4
+Date: Mon, 22 Jul 2002 19:08:40 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <OFDA988AB2.620F41A5-ONC1256BFE.0042F037@de.ibm.com>
+Message-ID: <20020722170840.GB19587@nbkurt.etpnet.phys.tue.nl>
+References: <20020720195729.C20953@devserv.devel.redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="8GpibOaaTibBMecb"
 Return-path: <linux-scsi-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20020720195729.C20953@devserv.devel.redhat.com>
 List-Id: linux-scsi@vger.kernel.org
-Cc: Vladislav Bolkhovitine <vlls@hotbox.ru>, linux-scsi@vger.kernel.org, nahshon@actcom.co.il, zaitcev@redhat.com
+To: Pete Zaitcev <zaitcev@redhat.com>
+Cc: Linux SCSI list <linux-scsi@vger.kernel.org>, Linux kernel list <linux-kernel@vger.kernel.org>
+
+
+--8GpibOaaTibBMecb
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
 Hi Pete,
 
-as far as I can see these are two completely distinct problem fixes.
-The first one addresses the fact that allocation success has to be checked
-for shn->name in scsi_register.
-The second one deals with the problem of leaving the scsi host numbering in
-a weird state upon scsi unregister. (Fixed by simply removing the
-interconnected series of bizarre loops).
-They should therefore both be included in the kernel as fixes.
+On Sat, Jul 20, 2002 at 07:57:29PM -0400, Pete Zaitcev wrote:
+> For those who do not follow, John Cagle allocated 8 more SCSI
+> disk majors.
 
-Cheers,
-Aron
+Have those officially been assigned to SCSI disks?
+So disks 128 -- 255 have majors 128 thr. 135?
 
-> --- linux-2.4.18-enc.orig/drivers/scsi/hosts.c  Wed Jul 17 12:49:51 2002
-> +++ linux-2.4.18-enc.register_kmalloc/drivers/scsi/hosts.c      Thu Jul
-18 15:47:51 \
-> 2002 @@ -174,6 +186,12 @@
->                  return NULL;
->          }
->         shn->name = kmalloc(hname_len + 1, GFP_ATOMIC);
-> +       if (!shn->name) {
-> +               kfree(retval);
-> +               kfree(shn);
-> +               printk(KERN_ERR "scsi: out of memory(3) in scsi_register.
-\n");
-> +               return NULL;
-> +        }
->         if (hname_len > 0)
->             strncpy(shn->name, hname, hname_len);
->         shn->name[hname_len] = 0;
+> Here's a patch to make use of them. I am not sure
+> if we want a 2.5 version; it's going to be all devicefs anyhow...
 
-Does it solve the same problem as the following? It looks like
-it does, only in a different place. Which one is better?
+I've written a patch for sd that makes the allocation of majors
+dynamic. The driver just takes 8 at sd_init and further majors are=20
+allocated when disks are attached. Which saves a lot of memory for
+all the gendisk and hd_struct stuff in case you do not have a lot of=20
+SCSI disks connected. The patch does support up to 160 SD majors,=20
+though currently, it won't succeed getting more than 132 majors.
 
---- drivers/scsi/hosts.c.orig   Mon Feb 25 21:38:04 2002
-+++ drivers/scsi/hosts.c        Wed Apr 17 01:42:47 2002
-@@ -81,8 +81,8 @@
- struct Scsi_Host * scsi_hostlist;
- struct Scsi_Device_Template * scsi_devicelist;
+> It really is strange how many places know major assignments.
 
--int max_scsi_hosts;
--int next_scsi_host;
-+int max_scsi_hosts;    /* host_no for next new host */
-+int next_scsi_host;    /* count of registered scsi hosts */
+Indeed. I missed the sysrq stuff in my patch, BTW.=20
+Do you have any idea why we can't just sync all mounted filesystems
+in do_emergency_sync()? Or at least all that are backed by a real=20
+device? The test for IDE and SCSI majors seems bogus to me. What
+about DASD? LVM? EVMS? MD? Loop? NBD? DRBD? What's the rationale=20
+of restricting the sync to only IDE and SCSI? Deadlock avoidance?
 
- void
- scsi_unregister(struct Scsi_Host * sh){
-@@ -107,21 +107,8 @@
-     if (shn) shn->host_registered = 0;
-     /* else {} : This should not happen, we should panic here... */
+> I hope I found all of them which matter. Also, I think nobody
+> uses min_major/max_major, do you guys know if that's right?
 
--    /* If we are removing the last host registered, it is safe to reuse
--     * its host number (this avoids "holes" at boot time) (DB)
--     * It is also safe to reuse those of numbers directly below which have
--     * been released earlier (to avoid some holes in numbering).
--     */
--    if(sh->host_no == max_scsi_hosts - 1) {
--       while(--max_scsi_hosts >= next_scsi_host) {
--           shpnt = scsi_hostlist;
--           while(shpnt && shpnt->host_no != max_scsi_hosts - 1)
--               shpnt = shpnt->next;
--           if(shpnt)
--               break;
--       }
--    }
-     next_scsi_host--;
-+
-     kfree((char *) sh);
- }
+It's right. Kill them! I killed them as well in my patch.
 
+> More comments?
 
-See:
-http://www.uwsg.indiana.edu/hypermail/linux/kernel/0206.0/1220.html
+I'm gonna post my patches tomorrow ...
 
-I poked Marcelo with it for Itai, and he said to wait for 2.4.20
-to open. Currently we ship Itai's variant.
+Regards,
+--=20
+Kurt Garloff  <garloff@suse.de>                          Eindhoven, NL
+GPG key: See mail header, key servers         Linux kernel development
+SuSE Linux AG, Nuernberg, DE                            SCSI, Security
 
--- Pete
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+--8GpibOaaTibBMecb
+Content-Type: application/pgp-signature
+Content-Disposition: inline
 
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.0.7 (GNU/Linux)
 
+iD8DBQE9PDwYxmLh6hyYd04RAsScAJ9n7GBvWm76ajZ+MPuNfl1DORkbyQCgmjiQ
+alFllswva2r3qXG2s7+j8Js=
+=KR7s
+-----END PGP SIGNATURE-----
 
-
+--8GpibOaaTibBMecb--
