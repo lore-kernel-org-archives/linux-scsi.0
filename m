@@ -1,32 +1,36 @@
-From: Mark Haverkamp <markh@osdl.org>
-Subject: Re: [PATCH] kill aac_io_done
-Date: Mon, 11 Oct 2004 08:48:38 -0700
+From: James Bottomley <jejb@steeleye.com>
+Subject: RE: [PATCH] kill aac_io_done
+Date: 11 Oct 2004 11:55:44 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1097509717.6040.6.camel@markh1.pdx.osdl.net>
-References: <20041009134657.GA20075@lst.de>
+Message-ID: <1097513750.2029.152.camel@mulgrave>
+References: <60807403EABEB443939A5A7AA8A7458B2FC33F@otce2k01.adaptec.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fire.osdl.org ([65.172.181.4]:8346 "EHLO fire-1.osdl.org")
-	by vger.kernel.org with ESMTP id S269119AbUJKPsu (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 11 Oct 2004 11:48:50 -0400
-In-Reply-To: <20041009134657.GA20075@lst.de>
+Received: from stat16.steeleye.com ([209.192.50.48]:18585 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S269177AbUJKQ4Q (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 11 Oct 2004 12:56:16 -0400
+In-Reply-To: <60807403EABEB443939A5A7AA8A7458B2FC33F@otce2k01.adaptec.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: Mark Salyzyn <mark_salyzyn@adaptec.com>, jejb@steeleye.com, linux-scsi <linux-scsi@vger.kernel.org>
+To: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
+Cc: Mark Haverkamp <markh@osdl.org>, Christoph Hellwig <hch@lst.de>, linux-scsi <linux-scsi@vger.kernel.org>
 
-On Sat, 2004-10-09 at 06:46, Christoph Hellwig wrote:
-> there's not need anymore to take the host lock before calling ->done
+On Mon, 2004-10-11 at 11:07, Salyzyn, Mark wrote:
+> The host lock around scsi_done() was there *before* I started
+> maintaining this driver. I believe the reasoning could be as simple as
+> `we had an io_request_lock there, so we should need a host_lock for the
+> same reasons'. I believe this locking is a legacy of code prior to
+> 2.1.95 though...
 
-I have wondered about this.  Was the host lock needed at one time in the
-past?
+I think it was a 2.2 requirement; the then "new" SCSI code in 2.4 moved
+to completing requests in the bottom half handler which queue was
+protected by the scsi_bhqueue_lock in the scsi_done() routine and no
+longer needed the io_request lock.
 
-Mark.
+In 2.6 the BH handler became a softirq thanks to Mattew Wilcox.
 
-> 
+James
 
--- 
-Mark Haverkamp <markh@osdl.org>
 
