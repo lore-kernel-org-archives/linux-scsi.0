@@ -1,41 +1,40 @@
-From: Xose Vazquez Perez <xose@wanadoo.es>
-Subject: Re: [ANNOUNCE] QLogic FC Driver for Linux kernel 2.5 available.
-Date: Tue, 13 May 2003 00:10:44 +0200
+From: Mike Anderson <andmike@us.ibm.com>
+Subject: Re: [PATCH] scsi_host sysfs updates scsi-misc-2.5 [0/2]
+Date: Mon, 12 May 2003 15:15:10 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3EC01BE4.40607@wanadoo.es>
-References: <3EC017E1.3050507@wanadoo.es> <m3llxbsu0s.fsf@trained-monkey.org>
+Message-ID: <20030512221510.GE3226@beaverton.ibm.com>
+References: <1052711864.1768.7.camel@mulgrave> <20030512063833.GA4133@beaverton.ibm.com> <1052761851.2093.55.camel@mulgrave> <1052762365.2148.59.camel@mulgrave> <20030512184140.GB3226@beaverton.ibm.com> <1052770234.1769.75.camel@mulgrave> <20030512203507.GC3226@beaverton.ibm.com> <1052772136.1769.103.camel@mulgrave> <20030512214902.GD3226@beaverton.ibm.com> <1052776222.3600.9.camel@mulgrave>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp4.wanadoo.es ([62.37.236.138]:10409 "EHLO smtp.wanadoo.es")
-	by vger.kernel.org with ESMTP id S262811AbTELV5r (ORCPT
+Received: from e31.co.us.ibm.com ([32.97.110.129]:3491 "EHLO e31.co.us.ibm.com")
+	by vger.kernel.org with ESMTP id S262827AbTELWAG (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 12 May 2003 17:57:47 -0400
+	Mon, 12 May 2003 18:00:06 -0400
+Content-Disposition: inline
+In-Reply-To: <1052776222.3600.9.camel@mulgrave>
 List-Id: linux-scsi@vger.kernel.org
-To: Jes Sorensen <jes@wildopensource.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, James.Bottomley@steeleye.com
+To: James Bottomley <James.Bottomley@steeleye.com>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, mochel@osdl.org
 
-Jes Sorensen wrote:
+James Bottomley [James.Bottomley@steeleye.com] wrote:
+> On Mon, 2003-05-12 at 16:49, Mike Anderson wrote:
+> > I am seeing size-512 with my modified version of scsi_debug. I modified
+> > slab.c to store last user for this size and it indicates it was
+> > scsi_free_shost. I am looking at this now.
+> 
+> I found it: you have a use after free in the sysfs code:
+> 
+> scsi_host_put does put_device followed by class_device_put, but the
+> put_device will free the shost containing the class_device in it's
+> release, so the class_device_put touches a freed object.
+> 
+> The solution is just to reverse the order of the puts.
 
-> Sorry but those drivers are old, totally obsolete and contain a lot of
-> bugs. As I mentioned previously, I have spent quite a lot of time
-> trying to update and improve the qla1280 driver.
+Thanks for finding this. This fixes my slab issue also.
 
-well, but you can update the new firmware
-
-linux-2.4.21-rc2-ac2:
-
-ql12160_fw.h: * Firmware Version 10.01.19 (12:38 Oct 12, 1999)
-ql1280_fw.h: *  Firmware Version 8.09.00 (18:29 Apr 16, 1999)
-
-
-qla1x160src-3.23Beta.tgz/qla1x160src-3.12.tgz:
-
-ql12160_fw.h: * Firmware Version 10.04.08 (11:30 May 31, 2000)
-ql1280_fw.h: *  Firmware Version 8.13.08 (10:53 Jan 14, 2000)
-
-regards,
--- 
-Galiza nin perdoa nin esquence. Governo demision!
+-andmike
+--
+Michael Anderson
+andmike@us.ibm.com
 
