@@ -1,56 +1,67 @@
-From: Andries.Brouwer@cwi.nl
-Subject: Re: [usb-storage] Re: PATCH: exclude certain commands from emulated SCSI hosts
-Date: Tue, 22 Apr 2003 20:44:23 +0200 (MEST)
+From: Matthew Dharm <mdharm-scsi@one-eyed-alien.net>
+Subject: Re: [linux-usb-devel] Re: [usb-storage] Re: PATCH: exclude certain commands from emulated SCSI hosts
+Date: Tue, 22 Apr 2003 11:48:26 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <UTC200304221844.h3MIiNX18598.aeb@smtp.cwi.nl>
+Message-ID: <20030422114825.A31829@one-eyed-alien.net>
+References: <UTC200304220109.h3M19NX09680.aeb@smtp.cwi.nl> <20030421181755.A19118@one-eyed-alien.net> <1051021911.14880.25.camel@dhcp22.swansea.linux.org.uk> <20030422083621.B28101@one-eyed-alien.net> <1051023931.15160.36.camel@dhcp22.swansea.linux.org.uk>
+Mime-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-md5;
+	protocol="application/pgp-signature"; boundary="X1bOJ3K7DJ5YkBrT"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hera.cwi.nl ([192.16.191.8]:39864 "EHLO hera.cwi.nl")
-	by vger.kernel.org with ESMTP id S263336AbTDVSci (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 22 Apr 2003 14:32:38 -0400
+Received: from ziggy.one-eyed-alien.net ([64.169.228.100]:51726 "EHLO
+	ziggy.one-eyed-alien.net") by vger.kernel.org with ESMTP
+	id S263338AbTDVSg1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 22 Apr 2003 14:36:27 -0400
+Content-Disposition: inline
+In-Reply-To: <1051023931.15160.36.camel@dhcp22.swansea.linux.org.uk>; from alan@lxorguk.ukuu.org.uk on Tue, Apr 22, 2003 at 04:05:31PM +0100
 List-Id: linux-scsi@vger.kernel.org
-To: Andries.Brouwer@cwi.nl, stern@rowland.harvard.edu
-Cc: James.Bottomley@steeleye.com, alan@lxorguk.ukuu.org.uk, greg@kroah.com, linux-scsi@vger.kernel.org, linux-usb-devel@lists.sourceforge.net, mdharm-scsi@one-eyed-alien.net, torvalds@transmeta.com, usb-storage@one-eyed-alien.net
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Andries.Brouwer@cwi.nl, James Bottomley <James.Bottomley@SteelEye.com>, greg@kroah.com, linux-scsi@vger.kernel.org, linux-usb-devel@lists.sourceforge.net, Linus Torvalds <torvalds@transmeta.com>, usb-storage@one-eyed-alien.net
 
-> I believe a recent patch addressed this problem.
-> the patch is documented as fixing bug #510
 
-Very good. And see, I had no time to look at all of these
-Bugzilla texts, but now that I am back and look at the sequel
-for this bug #510 it turns out that it was semi-fixed.
-However, the author complains
+--X1bOJ3K7DJ5YkBrT
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-=====
-I confirm that your patch makes my memory stick reader work again.
+On Tue, Apr 22, 2003 at 04:05:31PM +0100, Alan Cox wrote:
+> On Maw, 2003-04-22 at 16:36, Matthew Dharm wrote:
+> > I thought that the entire point was to have all this in a centralized p=
+lace
+> > for use by multiple LLDDs (or anyone else for that matter).  Which is t=
+he
+> > entire point of this discussion.
+>=20
+> Centralise it, but as a library function. Its up to host controllers to
+> call the filter functions and indicate what they want fixing up.
+> Centralised is good but nailing it directly into the midlayer reduces
+> flexibility a lot
 
-However, the usb-storage module initialisation is still slow. See the attached
-traces: I modprobe usb-storage at 08:50:16, and the initialisation was not
-ended until 08:50:53. Under 2.4 it takes only a few (2-3) seconds to do this...
-=====
+And that's exactly what my patch does.
 
-and the trace shows
+Matt
 
-=====
-Apr  8 11:46:10 crusoe: usb-storage: Command MODE_SENSE (6 bytes)
-Apr  8 11:46:10 crusoe: usb-storage:  1a 00 3f 00 04 00
-Apr  8 11:46:10 crusoe: usb-storage: usb_stor_ctrl_transfer(): rq=00 rqtype=21 value=0000 index=00 len=12
-Apr  8 11:46:10 crusoe: usb-storage: Status code 0; transferred 12/12
-Apr  8 11:46:10 crusoe: usb-storage: -- transfer complete
-Apr  8 11:46:10 crusoe: usb-storage: Call to usb_stor_ctrl_transfer() returned 0
-Apr  8 11:46:11 crusoe: usb-storage: usb_stor_bulk_transfer_buf(): xfer 4 bytes
-Apr  8 11:46:11 crusoe: usb-storage: Status code -75; transferred 4/4
-Apr  8 11:46:11 crusoe: usb-storage: -- unknown error
-Apr  8 11:46:11 crusoe: usb-storage: CB data stage result is 0x3
-Apr  8 11:46:11 crusoe: usb-storage: -- transport indicates error, resetting
-Apr  8 11:46:11 crusoe: usb-storage: CB_reset() called
-=====
+--=20
+Matthew Dharm                              Home: mdharm-usb@one-eyed-alien.=
+net=20
+Maintainer, Linux USB Mass Storage Driver
 
-That is, now all three bug reports talk about the same problem.
+Now payink attention, please.  This is mouse.  Click-click. Easy to=20
+use, da? Now you try...
+					-- Pitr to Miranda
+User Friendly, 10/11/1998
 
-OK. Something is wrong with MODE_SENSE, that was not yet wrong
-in 2.4. If we fix that, then all bug reports mentioned so far
-are covered.
+--X1bOJ3K7DJ5YkBrT
+Content-Type: application/pgp-signature
+Content-Disposition: inline
 
-[James, I saw your mail, but have not yet looked at the code.]
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.0.6 (GNU/Linux)
+Comment: For info see http://www.gnupg.org
 
-Andries
+iD8DBQE+pY55IjReC7bSPZARAodhAJ99EmKMyj74leY5MR32zED+Lp27XwCdEttu
+e1JGBOow1FWPz0QI8zK4M8o=
+=svB9
+-----END PGP SIGNATURE-----
+
+--X1bOJ3K7DJ5YkBrT--
