@@ -1,51 +1,49 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: iRiver H100 series and usb-storage issues
-Date: Mon, 7 Jun 2004 16:22:48 -0400 (EDT)
+From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+Subject: Re: [PATCH] some tmscsim consolidation
+Date: Mon, 7 Jun 2004 22:37:24 +0200 (CEST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44L0.0406071616200.666-100000@ida.rowland.org>
-References: <87brjvw3w9.fsf@ceramic.fifi.org>
+Message-ID: <Pine.LNX.4.44.0406072221140.4028-100000@poirot.grange>
+References: <20040606203314.GA4410@lst.de>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ida.rowland.org ([192.131.102.52]:4356 "HELO ida.rowland.org")
-	by vger.kernel.org with SMTP id S265035AbUFGUWs (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Jun 2004 16:22:48 -0400
-In-Reply-To: <87brjvw3w9.fsf@ceramic.fifi.org>
+Received: from pop.gmx.de ([213.165.64.20]:43737 "HELO mail.gmx.net")
+	by vger.kernel.org with SMTP id S265039AbUFGUiK (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Jun 2004 16:38:10 -0400
+In-Reply-To: <20040606203314.GA4410@lst.de>
 List-Id: linux-scsi@vger.kernel.org
-To: Philippe Troin <phil@fifi.org>
-Cc: James Bottomley <James.Bottomley@steeleye.com>, USB Storage list <usb-storage@lists.one-eyed-alien.net>, SCSI development list <linux-scsi@vger.kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-scsi@vger.kernel.org
 
-On 7 Jun 2004, Philippe Troin wrote:
+On Sun, 6 Jun 2004, Christoph Hellwig wrote:
 
-> Alan Stern <stern@rowland.harvard.edu> writes:
-> 
-> > I just noticed this thread on linux-kernel:
-> > 
-> > http://marc.theaimsgroup.com/?l=linux-kernel&m=108372064000188&w=2
-> > 
-> > Apparently under some circumstances the iRiver H100 returns 0 bytes 
-> > transferred with GOOD status and residue=512 for a READ(10) command 
-> > asking for 1 sector.  As far as I know this is legal, and it indicates the 
-> > command should simply be retried.
-> 
-> That's correct.  However, the iRiver H1xx will also commit a USB
-> protocol violation by not returning a CSW (Command Status
-> Wrapper).  That's what screws up the transfer.
+> On Sun, Jun 06, 2004 at 10:22:41PM +0200, Guennadi Liakhovetski wrote:
+> > On Sun, 6 Jun 2004, Christoph Hellwig wrote:
+> >
+> > > I've looked through my old tmscsim patch queue and found this one:
+> > >
+> > >  - merge dc390_initDCB into dc390_slave_alloc
+> > >  - merge DC390_release and dc390_shutdown into dc390_remove_one,
+> > >    use del_timer_sync to make sure the timer is really deleted on
+> > >    removal, adjust locking accordingly
+> > >  - some tiny related cleanups
+> >
+> > Thanks for the patch, Christoph. As you might have seen, I've already
+> > submitted a patch, which merges _some_ of the functions above, following
+>
+> Ah sorry.  It's against James' scsi-misc-2.6 tree from a day or two ago.
+> I'll keep my eyes open and when I see your patch going in somewhere I'll
+> resend what's left if anything.
 
-In the log you posted (at the URL above) the CSW was returned correctly.  
-The same is true for the messages you referred to.  So that was not the 
-source of the problem.
+Thanks again! That would, certainly, be a lot easier for me. But don't
+worry - there'll be enough left for you:-) I think, the only thing I've
+done from the above, is merging dc390_initDCB into dc390_slave_alloc and
+DC390_release into dc390_remove_one, following your suggestion of 23 May.
 
-> Please note that:
-> 
->  1. I am just repeating what I have been told by various people and
->     claim no knowledge of the USB or SCSI layers.  In other words, I
->     could be all wrong :-)
-> 
->  2. I do not own a H1xx anymore, having returned mine.
+Thanks
+Guennadi
+---
+Guennadi Liakhovetski
 
-Do you know of anyone who has contributed to any versions of this thread 
-and still does have an H1xx?
 
-Alan Stern
 
