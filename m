@@ -1,45 +1,55 @@
-From: Andries.Brouwer@cwi.nl
-Subject: Re: [PATCH] scsi_status() macro
-Date: Sat, 17 May 2003 06:59:30 +0200 (MEST)
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH] switch scsi upper driver probing to the driver model
+Date: Sat, 17 May 2003 09:13:52 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <UTC200305170459.h4H4xUh19188.aeb@smtp.cwi.nl>
+Message-ID: <20030517091352.A13403@lst.de>
+References: <20030516182039.A7369@lst.de> <3EC5B3B8.9020308@torque.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hera.cwi.nl ([192.16.191.8]:44009 "EHLO hera.cwi.nl")
-	by vger.kernel.org with ESMTP id S261220AbTEQEqi (ORCPT
+Received: from verein.lst.de ([212.34.181.86]:59915 "EHLO verein.lst.de")
+	by vger.kernel.org with ESMTP id S261262AbTEQHBH (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 17 May 2003 00:46:38 -0400
+	Sat, 17 May 2003 03:01:07 -0400
+Content-Disposition: inline
+In-Reply-To: <3EC5B3B8.9020308@torque.net>; from dougg@torque.net on Sat, May 17, 2003 at 01:59:52PM +1000
 List-Id: linux-scsi@vger.kernel.org
-To: Andries.Brouwer@cwi.nl, dougg@torque.net
-Cc: James.Bottomley@steeleye.com, linux-scsi@vger.kernel.org
+To: Douglas Gilbert <dougg@torque.net>
+Cc: James.Bottomley@steeleye.com, greg@kroah.com, linux-scsi@vger.kernel.org
 
-    From dougg@torque.net  Sat May 17 06:38:09 2003
+On Sat, May 17, 2003 at 01:59:52PM +1000, Douglas Gilbert wrote:
+> Is that "_and_" symmetric? That is, can one have the sg
+> device in preference to the sd device? If so, how is
+> that selected?
 
-    > Yes, SCSI-1 has RVVSSSSV with R=reserved, V=vendor unique, S=status.
-    > Originally this was a bitmap, and it is still the case that codes
-    > are not randomly assigned. (We have several places in the
-    > kernel source that test (status & CHECK_CONDITION).)
-    <snip>
+You can. In fact there's nothing in this patch that preferes sd over sg
+except the existing link order.  A better way to control the driver
+matching would be nice but that nothing that should be done in the
+scsi code but rather a generic driver model thing.
 
-    Andries,
-    There is method in the madness with (status & CHECK_CONDITION).
-    In SCSI-2 there is COMMAND TERMINATED status which has the
-    value of 0x22. It is the only status in SCSI 2, 3 or the most
-    recent drafts that has bit 1 set besides CHECK CONDITION.
+> Christoph,
+> This patch would have some interesting side effects:
+>    - no generic interface (apart from SCSI_IOCTL_SEND_COMMAND)
+>      for tape devices (st and osst). While the maintainers of
+>      st and osst might like this, not all the user apps would :-)
 
-    The bottom line:
-        (status & CHECK_CONDITION)
-    is obscure shorthand for:
-        ((status == CHECK_CONDITION) || (status == COMMAND_TERMINATED))
-    and that second check should not be dropped any time
-    soon.
+I have some WIP code to make parts of drivers/block/scsi_ioctl.c
+working for scsi char drivers.
 
-Yes, you are just saying what I said, namely that the values
-are not randomly assigned but still behave like a bitmap.
-The code "(status & CHECK_CONDITION)" would be altogether wrong
-otherwise.
-Still, I dislike such code - when a new code 0x16, or 0x42, is introduced,
-do we expect it to describe a status that also requires the actions
-that follow "if(status & CHECK_CONDITION)" ?
-No SCSI standard describes status as a bitmap. This is from SASI times.
+>    - the extra ioctls that sg defines are either fudged
+>      or missing. This might upset programs other than
+>      cdrecord; cdparanoia comes to mind
 
-Andries
+Hmm, what does cdparanoia complain about?  And yes, I think we
+need to kill all those return 0 ioctls from the block layer -
+they might have helped to bring up the SG_IO code with cdrecord
+but they are a really stupid idea long term.
+
+> It was my understanding that the device model has been
+> recently modified by Greg KH to cope with the dual nature
+> of the interface that sg causes. Evidently similar situations
+> occur elsewhere in the kernel.
+
+Greg, any comments on this?  I haven't found any code like that
+in drivers/base/ and I can't understand how this is supposed to work..`
+
