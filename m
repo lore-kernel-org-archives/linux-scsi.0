@@ -1,113 +1,53 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH] fix inia100 dma mapping warnings
-Date: Mon, 27 Sep 2004 17:14:44 +0200
+From: "Andy Kennedy" <akennedy@wpid-am.com>
+Subject: Re: CDROMSUBCHNL. . .
+Date: Mon, 27 Sep 2004 11:08:53 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040927151444.GA21455@lst.de>
+Message-ID: <001c01c4a4ac$493a8a80$0201010a@ankkennedy>
+References: <007101c4a445$7f150840$0201010a@ankkennedy> <20040927061916.GE2288@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.210]:42405 "EHLO mail.lst.de")
-	by vger.kernel.org with ESMTP id S266319AbUI0POw (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 27 Sep 2004 11:14:52 -0400
-Content-Disposition: inline
+Received: from dadsl-206-41.webshoppe.net ([65.161.206.41]:26899 "EHLO
+	mail.wpid-am.com") by vger.kernel.org with ESMTP id S266705AbUI0QIe
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 27 Sep 2004 12:08:34 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: jejb@steeleye.com
+To: Jens Axboe <axboe@suse.de>
 Cc: linux-scsi@vger.kernel.org
 
- - always use the midlayer provided field to save the dma handle for unmapping
- - merge the unmapping into the main completion handler
-   
+Thank you so much for your prompt responce.  Could you please tell me where
+I can find this call in the code now, or more specifically how I can poll my
+CDROM for its current state?
 
---- 1.11/drivers/scsi/i60uscsi.c	2004-07-13 15:48:19 +02:00
-+++ edited/drivers/scsi/i60uscsi.c	2004-09-26 19:02:20 +02:00
-@@ -682,23 +682,6 @@
- 	spin_unlock_irqrestore(&(hcsp->BitAllocFlagLock), flags);
- }
- 
--
--/***************************************************************************/
--void orc_release_dma(ORC_HCS * hcsp, Scsi_Cmnd * SCpnt)
--{
--	struct scatterlist *pSrbSG;
--
--	if (SCpnt->use_sg) {
--		pSrbSG = (struct scatterlist *)SCpnt->request_buffer;
--		pci_unmap_sg(hcsp->pdev, pSrbSG, SCpnt->use_sg,
--			scsi_to_pci_dma_dir(SCpnt->sc_data_direction));
--	} else if (SCpnt->request_bufflen != 0) {
--		pci_unmap_single(hcsp->pdev, (U32)SCpnt->host_scribble,
--			SCpnt->request_bufflen,
--			scsi_to_pci_dma_dir(SCpnt->sc_data_direction));
--	}
--}
--
- /*****************************************************************************
-  Function name  : abort_SCB
-  Description    : Abort a queued command.
---- 1.28/drivers/scsi/inia100.c	2004-09-12 16:07:15 +02:00
-+++ edited/drivers/scsi/inia100.c	2004-09-26 19:04:45 +02:00
-@@ -108,7 +108,6 @@
- extern ORC_SCB *orc_alloc_scb(ORC_HCS * hcsp);
- extern void orc_exec_scb(ORC_HCS * hcsp, ORC_SCB * scbp);
- extern void orc_release_scb(ORC_HCS * hcsp, ORC_SCB * scbp);
--extern void orc_release_dma(ORC_HCS * hcsp, struct scsi_cmnd * cmnd);
- extern void orc_interrupt(ORC_HCS * hcsp);
- extern int orc_device_reset(ORC_HCS * pHCB, struct scsi_cmnd *SCpnt, unsigned int target);
- extern int orc_reset_scsi_bus(ORC_HCS * pHCB);
-@@ -128,7 +127,6 @@
- 	struct scatterlist *pSrbSG;
- 	ORC_SG *pSG;		/* Pointer to SG list           */
- 	int i, count_sg;
--	U32 TotalLen;
- 	ESCB *pEScb;
- 
- 	pEScb = pSCB->SCB_EScb;
-@@ -146,7 +144,6 @@
- 	if ((pSCB->SCB_XferLen = (U32) SCpnt->request_bufflen)) {
- 		pSG = (ORC_SG *) & pEScb->ESCB_SGList[0];
- 		if (SCpnt->use_sg) {
--			TotalLen = 0;
- 			pSrbSG = (struct scatterlist *) SCpnt->request_buffer;
- 			count_sg = pci_map_sg(pHCB->pdev, pSrbSG, SCpnt->use_sg,
- 					SCpnt->sc_data_direction);
-@@ -154,14 +151,14 @@
- 			for (i = 0; i < count_sg; i++, pSG++, pSrbSG++) {
- 				pSG->SG_Ptr = (U32) sg_dma_address(pSrbSG);
- 				pSG->SG_Len = (U32) sg_dma_len(pSrbSG);
--				TotalLen += (U32) sg_dma_len(pSrbSG);
- 			}
- 		} else if (SCpnt->request_bufflen != 0) {/* Non SG */
- 			pSCB->SCB_SGLen = 0x8;
--			pSG->SG_Ptr = (U32) pci_map_single(pHCB->pdev,
--				SCpnt->request_buffer, SCpnt->request_bufflen,
--				SCpnt->sc_data_direction);
--			SCpnt->host_scribble = (void *)pSG->SG_Ptr;
-+			SCpnt->SCp.dma_handle = pci_map_single(pHCB->pdev,
-+					SCpnt->request_buffer,
-+					SCpnt->request_bufflen,
-+					SCpnt->sc_data_direction);
-+			pSG->SG_Ptr = (U32) SCpnt->SCp.dma_handle;
- 			pSG->SG_Len = (U32) SCpnt->request_bufflen;
- 		} else {
- 			pSCB->SCB_SGLen = 0;
-@@ -325,7 +322,17 @@
- 		   (unsigned char *) &pEScb->ESCB_SGList[0], SENSE_SIZE);
- 	}
- 	pSRB->result = pSCB->SCB_TaStat | (pSCB->SCB_HaStat << 16);
--	orc_release_dma(pHCB, pSRB);  /* release DMA before we call scsi_done */
-+
-+	if (pSRB->use_sg) {
-+		pci_unmap_sg(pHCB->pdev,
-+			     (struct scatterlist *)pSRB->request_buffer,
-+			     pSRB->use_sg, pSRB->sc_data_direction);
-+	} else if (pSRB->request_bufflen != 0) {
-+		pci_unmap_single(pHCB->pdev, pSRB->SCp.dma_handle,
-+				 pSRB->request_bufflen,
-+				 pSRB->sc_data_direction);
-+	}
-+
- 	pSRB->scsi_done(pSRB);	/* Notify system DONE           */
- 
- 	orc_release_scb(pHCB, pSCB);	/* Release SCB for current channel */
+Thanks,
+Andy
+----- Original Message ----- 
+From: "Jens Axboe" <axboe@suse.de>
+To: "Andy Kennedy" <akennedy@wpid-am.com>
+Cc: <linux-scsi@vger.kernel.org>
+Sent: Monday, September 27, 2004 1:19 AM
+Subject: Re: CDROMSUBCHNL. . .
+
+
+> On Sun, Sep 26 2004, Andy Kennedy wrote:
+> > Hi all,
+> >
+> > I use the sr_ioctl calls in a program that I wrote to record tracks off
+CDs.
+> > The most important one that I use is CDROMSUBCHNL.  I found that in
+2.2.16
+> > "case CDROMSUBCHNL" was removed without documentation.  I have grepped
+all
+> > around in that kernel and also in the one before it and found nothing
+about
+> > why it was to be removed.  Anyone have any idea why it got taken out and
+can
+> > we put it back in?
+>
+> Nonsense, noone removed the CDROMSUBCHNL ioctl.
+>
+> -- 
+> Jens Axboe
 
