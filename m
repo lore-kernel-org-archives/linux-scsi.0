@@ -1,55 +1,65 @@
-From: "Randy.Dunlap" <rddunlap@osdl.org>
-Subject: Re: advansys regions [Re: 2.4 vs 2.6 versions of
- include/linux/ioport.h]
-Date: Thu, 7 Aug 2003 11:42:09 -0700
+From: Gene Heskett <gene.heskett@verizon.net>
+Subject: Re: advansys driver vs 2.6 breakage
+Date: Thu, 7 Aug 2003 14:44:55 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030807114209.49d4539c.rddunlap@osdl.org>
-References: <200308051041.08078.gene.heskett@verizon.net>
-	<200308070533.10408.gene.heskett@verizon.net>
-	<20030807104736.A4137@infradead.org>
-	<200308071434.21571.gene.heskett@verizon.net>
+Message-ID: <200308071444.55616.gene.heskett@verizon.net>
+References: <200308070422.41412.gene.heskett@verizon.net> <20030807112157.GF22222@parcelfarce.linux.theplanet.co.uk>
+Reply-To: gene.heskett@verizon.net
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain;
+  charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fw.osdl.org ([65.172.181.6]:31203 "EHLO mail.osdl.org")
-	by vger.kernel.org with ESMTP id S267517AbTHGSqN (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Aug 2003 14:46:13 -0400
-In-Reply-To: <200308071434.21571.gene.heskett@verizon.net>
+Received: from out005pub.verizon.net ([206.46.170.143]:50100 "EHLO
+	out005.verizon.net") by vger.kernel.org with ESMTP id S270484AbTHGSo6
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 7 Aug 2003 14:44:58 -0400
+In-Reply-To: <20030807112157.GF22222@parcelfarce.linux.theplanet.co.uk>
+Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
-To: gene.heskett@verizon.net
-Cc: hch@infradead.org, linux-scsi@vger.kernel.org
+To: Matthew Wilcox <willy@debian.org>
+Cc: bfrey@turbolinux.com.cn, linux-scsi@vger.kernel.org, Janitors <kernel-janitor-discuss@lists.sourceforge.net>
 
-On Thu, 7 Aug 2003 14:34:21 -0400 Gene Heskett <gene.heskett@verizon.net> wrote:
+On Thursday 07 August 2003 07:21, Matthew Wilcox wrote:
+>On Thu, Aug 07, 2003 at 04:22:41AM -0400, Gene Heskett wrote:
+>> This is, FWIW, not the only code that is apparently broken by that
+>> ioports.h header redefinition.
+>>
+>> I'm getting messages from other modules squawking about the
+>> __deprecated status of "check_region" during the compile too.
+>
+>This seems to be a fundamental misunderstanding on your part.
+>
+>check_region is not broken.  It is deprecated.  That means we asked
+> the compiler to emit a warning when someone tries to use it.  It
+> does not mean that it will crash.
+>
+1. For whatever reason, the diffs between the 2.4.22-pre10 version of 
+this driver and the 2.6.0-test2-mm2 versions are extensive, many 
+kilobytes.  Done by who knows, and basicly 
+un-commented/un-documented.
 
-| On Thursday 07 August 2003 05:47, Christoph Hellwig wrote:
-| >On Thu, Aug 07, 2003 at 05:33:10AM -0400, Gene Heskett wrote:
-| >> But I'm getting tired of repeating myself here Christoph, the
-| >> driver as built in the 2.6.0-test2-mm2, whether built as a module,
-| >> or in the kernel, IS BROKEN!  It gets into a bus reset loop during
-| >> the init, doing 2 of them, AND LOCKS THE MACHINE UP TIGHT
-| >> REQUIRING A HARDWARE RESET TO RECOVER, which of course is by
-| >> rebooting back to a 2.4 kernel.
-| >
-| >So how do you think replacing check_region by it's opencoded version
-| >is going to help you?
-| 
-| I have no idea if request_region is the proper replacement call 
-| Christoph.  But in tests here, it did restore what appears to be 
-| normal operation.
-| 
-| Randy Dunlop says check_region is "racy".  And I'm no kernel coder 
-| unless I have complete hardware specs in front of me, which I do not.
-| Which is why I'm "pestering" this list for help and hopefully some 
-| nuggets of wisdom.
+2. Substituting the request_region call, with no other changes, made 
+it work.
 
-The real problem to be solved is why you are having problems
-with the stock 2.6.0-test driver.  It uses check_region(), which
-is deprecated, but that shouldn't stop it from working.
-Do you have any logs of the "bus reset loop" during init?
-You shouldn't have to change check_region() in the driver to
-make it work.
+3. Adding the release_region calls broke it again, even worse than 
+before.
 
---
-~Randy				For Linux-2.6, see:
-http://www.kernel.org/pub/linux/kernel/people/davej/misc/post-halloween-2.5.txt
+4.  The 2.4.x(x) version of this code, "3.3G" is extremely 
+bulletproof.
+
+>Something else is going on here, and someone with one of these cards
+>needs to debug it properly.
+
+I agree.  Its a very good scsi-2 fast (20Mb/sec) card, something thats 
+impossible to find new today.
+
+-- 
+Cheers, Gene
+AMD K6-III@500mhz 320M
+Athlon1600XP@1400mhz  512M
+99.27% setiathome rank, not too shabby for a WV hillbilly
+Yahoo.com attornies please note, additions to this message
+by Gene Heskett are:
+Copyright 2003 by Maurice Eugene Heskett, all rights reserved.
+
