@@ -1,43 +1,44 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: Ooops unmounting a defect DVD
-Date: Sat, 29 Jan 2005 08:46:16 -0600
-Message-ID: <1107009976.4535.13.camel@mulgrave>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: Mid-layer handling of NOT_READY conditions...
+Date: Sat, 29 Jan 2005 16:16:05 +0000
+Message-ID: <20050129161605.GK28246@parcelfarce.linux.theplanet.co.uk>
+References: <1106954650.9862.61.camel@plap> <1106977566.9862.102.camel@plap>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat16.steeleye.com ([209.192.50.48]:5838 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S262796AbVA2Oq2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 29 Jan 2005 09:46:28 -0500
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:4000 "EHLO
+	parcelfarce.linux.theplanet.co.uk") by vger.kernel.org with ESMTP
+	id S262934AbVA2QQG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 29 Jan 2005 11:16:06 -0500
+Content-Disposition: inline
+In-Reply-To: <1106977566.9862.102.camel@plap>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Oliver Neukum <oliver@neukum.org>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
+To: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Cc: linux-scsi@vger.kernel.org
 
-I wouldn't have noticed this at all since you didn't send it to the scsi
-list, but fortunately, Al Viro drew it politely to my attention as
-another example of SCSI refcounting problems.
+On Fri, Jan 28, 2005 at 09:46:06PM -0800, Andrew Vasquez wrote:
+> On Fri, 2005-01-28 at 15:24 -0800, Andrew Vasquez wrote:
+> > When the qla2xxx driver managed command queuing internally, a NOT_READY
+> > status would cause the lun-queue to be frozen for some period time while
+> > the storage settled-down.
+> 
+> Returning back DID_IMM_RETRY for these 'transport' related conditions
+> would of course help in this issue -- but at the same time bring with it
+> several side-effects which may not be desirable.
+> 
+> So, beyond this particular circumstance, what would be considered a
+> 'proper' return status for this type of event? 
 
-The issue seems to be that we have a spurious scsi_cd_put() on the error
-path of sr_open().  The sr_block_..() functions are the "real" block
-opens and should be refcounted, the sr_...() are the pseudo cdrom opens
-and should not be refcounted.
+I suspect the 'proper' return status for this kind of event would be
+to get the cmd back to the block layer asap so it can be retried down
+a different path if we have multiple paths to the device.  Not that I'm
+an expert ...
 
-Could you try this and see if it fixes the problem?
-
-James
-
-===== drivers/scsi/sr.c 1.124 vs edited =====
---- 1.124/drivers/scsi/sr.c	2005-01-29 08:30:34 -06:00
-+++ edited/drivers/scsi/sr.c	2005-01-29 08:39:09 -06:00
-@@ -544,7 +544,6 @@
- 	return 0;
- 
- error_out:
--	scsi_cd_put(cd);
- 	return retval;	
- }
- 
-
-
+-- 
+"Next the statesmen will invent cheap lies, putting the blame upon 
+the nation that is attacked, and every man will be glad of those
+conscience-soothing falsities, and will diligently study them, and refuse
+to examine any refutations of them; and thus he will by and by convince 
+himself that the war is just, and will thank God for the better sleep 
+he enjoys after this process of grotesque self-deception." -- Mark Twain
