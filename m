@@ -1,33 +1,41 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: [PATCH] fix blockdev --getro for sr, sd, ide-floppy devs
-Date: Thu, 22 Jan 2004 09:27:33 +0100
+From: "aylin_333@yahoo.com" <aylin_331@yahoo.com>
+Subject: =?ISO-8859-1?Q?=20tan=FD=FEma?=  =?ISO-8859-1?Q?=20zaman=FD?= geldi
+Date: Thu, 22 Jan 2004 13:42:14 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040122082733.GD2466@suse.de>
-References: <1074548160.3088.11.camel@lintest.iomegacorp.com>
+Message-ID: <200401221142.i0MBgdV16058@zeus.kernel.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns.virtualhost.dk ([195.184.98.160]:29589 "EHLO virtualhost.dk")
-	by vger.kernel.org with ESMTP id S266014AbUAVI1i (ORCPT
+Received: from zeus.kernel.org ([204.152.189.113]:39347 "EHLO zeus.kernel.org")
+	by vger.kernel.org with ESMTP id S266241AbUAVLmu (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 22 Jan 2004 03:27:38 -0500
-Content-Disposition: inline
-In-Reply-To: <1074548160.3088.11.camel@lintest.iomegacorp.com>
+	Thu, 22 Jan 2004 06:42:50 -0500
+Received: from okgy12128.com (dsl81-215-38235.adsl.ttnet.net.tr [81.215.149.91])
+	by zeus.kernel.org (8.11.6/8.11.6) with SMTP id i0MBgdV16058
+	for <linux-scsi@vger.kernel.org>; Thu, 22 Jan 2004 03:42:41 -0800
 List-Id: linux-scsi@vger.kernel.org
-To: John McKell <mckellj@iomega.com>
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Mon, Jan 19 2004, John McKell wrote:
-> This 2.6.1 patch works by setting gendisk->policy to the correct value
-> during initialization as the various drivers decide whether or not the
-> disk is writeable.  This patch persuades "blockdev --getro ..." to
-> correctly report the read-only state of a newly inserted disk.  This
-> patch applies to sr.c, sd.c and ide-floppy.c.  ide-cd.c already has
-> this functionality built into it.
+ABONE CINSEL SAGLIK ÜRÜNLERI LTD. STI.
+merhaba!
+bizler cinsel saglik ve fantazi ürünleri ithal eden 
+ve satisini yapan bir kurulusuz.
+-partnerinizin bay veya bayan cinsel soguklugumu var?
+azdirici ve uyarici ürünlerimizle bir kac damlada mükemmel sonuc kaçinilmaz
+-penisinizin kisa olmasi caninizimi sikiyor? 
+45 günde 3-6cm büyümesinin mutlak oldugunu söylesek
+-ereksiyon sorununuzmu var? erkenmi bosaliyorsunuz?
+daha uzun süreli bir birtelige ne dersiniz (1,5-2saat )
+-sertlesme ve güç sorunlarimi yasiyorsunuz 
+artik bu tür sorunlarinizi firmamiz güvencesinde tarihe magal edebilirsiniz.
+-ürünlerimiz arasinda sisme bayan ve bay bebekler
+erotik ic camasirlari ve daha yüzlerce cesit.
+-görsel fantazileriniz icin CD-DVD-DVX-VHS-BETA film cesitleri mevcuttur.
+NOT:TÜM ÜRÜNLERIMIZ ULUSLAR ARASI SAGLIK ÖRGÜTÜ WHO ONAYLIDIR
+mail'imiz sizi rahatsiz ettiyse özür diliyor ve 
+mutlu bir cinsel yasam diliyoruz.
+www.aboneshop.com   siparis@aboneshop.com   
 
-Patch looks good, thanks.
 
-
--- 
-Jens Axboe
 
