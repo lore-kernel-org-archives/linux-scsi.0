@@ -1,118 +1,94 @@
-From: Matthew Dharm <mdharm-scsi@one-eyed-alien.net>
-Subject: Re: [linux-usb-devel] Re: [PATCH] USB changes for 2.5.58
-Date: Thu, 23 Jan 2003 15:25:54 -0800
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030123152554.F12788@one-eyed-alien.net>
-References: <Pine.LNX.4.44L0.0301211546410.6926-100000@ida.rowland.org> <200301232159.28656.oliver@neukum.name> <20030123213423.GA26415@redhat.com> <200301232339.40892.oliver@neukum.name>
+From: Oliver Neukum <oliver@neukum.name>
+Subject: Re: A different look at block device hotswap in the Linux kernel
+Date: Fri, 24 Jan 2003 01:07:36 +0100
+Sender: linux-usb-devel-admin@lists.sourceforge.net
+Message-ID: <200301240107.36977.oliver@neukum.name>
+References: <Pine.LNX.4.44L0.0301211546410.6926-100000@ida.rowland.org> <200301231919.40422.oliver@neukum.name> <3E30538F.4080507@mvista.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-md5;
-	protocol="application/pgp-signature"; boundary="Pgaa2uWPnPrfixyx"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <200301232339.40892.oliver@neukum.name>; from oliver@neukum.name on Thu, Jan 23, 2003 at 11:39:40PM +0100
-List-Id: linux-scsi@vger.kernel.org
-To: Oliver Neukum <oliver@neukum.name>
-Cc: Doug Ledford <dledford@redhat.com>, Luben Tuikov <luben@splentec.com>, Alan Stern <stern@rowland.harvard.edu>, David Brownell <david-b@pacbell.net>, Mike Anderson <andmike@us.ibm.com>, Greg KH <greg@kroah.com>, linux-usb-devel@lists.sourceforge.net, Linux SCSI list <linux-scsi@vger.kernel.org>
-
-
---Pgaa2uWPnPrfixyx
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-usb-devel-admin@lists.sourceforge.net>
+In-Reply-To: <3E30538F.4080507@mvista.com>
+Errors-To: linux-usb-devel-admin@lists.sourceforge.net
+List-Help: <mailto:linux-usb-devel-request@lists.sourceforge.net?subject=help>
+List-Post: <mailto:linux-usb-devel@lists.sourceforge.net>
+List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-devel>,
+	<mailto:linux-usb-devel-request@lists.sourceforge.net?subject=subscribe>
+List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-devel>,
+	<mailto:linux-usb-devel-request@lists.sourceforge.net?subject=unsubscribe>
+List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=linux-usb-devel>
+To: Steven Dake <sdake@mvista.com>
+Cc: Luben Tuikov <luben@splentec.com>, Alan Stern <stern@rowland.harvard.edu>, David Brownell <david-b@pacbell.net>, Matthew Dharm <mdharm-scsi@one-eyed-alien.net>, Mike Anderson <andmike@us.ibm.com>, Greg KH <greg@kroah.com>, linux-usb-devel@lists.sourceforge.net, Linux SCSI list <linux-scsi@vger.kernel.org>
+List-Id: linux-scsi@vger.kernel.org
 
-Well, I've been watching this go on for days.  I hate to weigh in now, but
-I think someone needs to understand what the guy writing the code that is
-facing this problem really wants.
+Am Donnerstag, 23. Januar 2003 21:41 schrieb Steven Dake:
+> Oliver and others,
+>
+> In regards to hotswap, any real operating system should be _told_ that =
+a
+> block device is going to be removed from the top.  There are several
+> reasons.
 
-First, let me say that a USB storage device shows up as a HBA.  That's
-because some devices are actually USB/SCSI bridges.  But, since I work at
-the 'emulated host' level, that's where I'm focused.
+Users don't do what they should. It is as simple as that.
+The hotplugging busses are supposed to handle that.
 
-What I want:
+> 1) File mounts should be removed from the filesystem layer
+> 2) files accessing block devices directly should be terminated
+> 3) raid members using that block device should be hot removed
+> 4) I'm sure you can think of others :)
+>
+> The key is that the removal request should come from the top, not the
+> bottom.  If someone is stupid enough to surprise remove a device (ie:
 
-I want to be able to free resources associated with a device within a
-finite (and well bounded) amount of time after I am notified that the
-device is gone.
+No! You have to be able to handle a sudden failure. If you don't do this
+you are already buggy. Hardware doesn't send advance notification before
+failing. Data loss will occur. It's unavoidable. Anything else must not h=
+appen.
+And a failure of hardware can only be recognised at the layer closest to
+the hardware in the generic case.
 
-I want to be able to inform the SCSI mid-layer, which will then inform
-higher layers, that the device is gone.  This is so that all may deal with
-this however they want.  I really don't care who does what, as long as we
-don't crash.  This implies that all block-type drivers will need to become
-hotplug aware, or the SCSI mid-layer will have to fake command failures.
+> The device driver should not be responsible for managing hotswap in any
+> regard.  Its only purpose should be to tell the block device removal
 
-I want to be able to do as little command-trickery as possible.  If I have
-to do it, then that means the next hotplug-capable LLDD must do it also.
-Duplication of code is bad -- it should all be handled in the mid-layer.
+Yes.
 
-As yet, the interface I have to the SCSI mid-layer fails on all three
-points here.
+> layer that a surprise extraction was initiated such that the block
+> device removal code can ask the mid layer drivers to shut down error
+> correction routines to the device and dump its pending I/O queue and
+> clean up after the device.  The main advantage of this technique is
 
-And now, some of my opinions on how this should all work:
+Yes. But not ask. Demand. There's no asking here. Do or die.
 
-It would be nice if the user informed us about removing the device before
-they did it.  But we shouldn't crash if they don't.
+> If you think about what your suggesting, your suggesting that the LLDD
+> tells the scsi layer that the device is gone, that then times out error=
+s
+> and leaves the filesystem and sys_open/close file tables, and RAID
+> layers in a state of disarray.  We don't want the LLDD knowing about th=
+e
+> RAID system and whether it should tell the RAID layer to hot remove, do=
+ we?
 
-I don't want to be hanging around after a device is gone, spinning my
-wheels because some other part of the kernel can't handle the fact that the
-device is gone.  My driver is a passthru between the a SCSI emualted host
-and a physical USB device -- if my device is gone, I want to be out of
-there.  (Oddly enough, I'm starting to think there may be a DoS attack here
-if you force the LLDD to stay -- after all, it consumes memory....)
+I want:
+LLDD to SCSI: device is gone
+SCSI to LLDD: Ok. I'll handle from here on.
+LLDD: OK. I am gone. And won't have any contact until the next device is
+plugged in.
 
-Remember, the physical plug doesn't ask me if it's okay, and I don't get to
-ask the SCSI mid-layer if it's okay.  Yes, starting with the user clicking
-to tell us would be nice, but I don't get to see that.  All I get to see is
-an indication that the plug is pulled.
+The process can be somewhat more complicated, under some conditions:
+- it never fails
+- it is done within a finite, bounded, reasonable time
 
-I don't really give a rat's a** about 'how SCSI works' or how it's
-specified or CAM models or any of that.  I try to live in the real world as
-much as possible.  In that world, I'm not asking to remove an HBA -- I'm
-telling you it's been removed.  I can't call it back.  I can't even fake a
-command (other than perhaps INQUIRY) in any meaningful way.  THERE IS
-NOTHING I CAN DO BUT KEEP INSISTING THAT THE DEVICE IS GONE!
+=09Regards
+=09=09Oliver
 
-It would be nice if the user could inform various parts of the kernel that
-this device was going away, and then all sorts of cleanup could happen.
-But I really don't care -- all I'm trying to do is exit without a resource
-leak under all circumstances.
 
-It would be nice if the SCSI mid-layer kept track of what commands were in
-what stages in who's queues.  After all, if I hot-unplug a PCI SCSI
-controller, the controller really isn't going to be able to complete those
-commands for us -- we have to assume that commands queued by a LLDD are
-really just being sent to the hardware for queuing.  If that wasn't the
-case, then having LLDD queue capability doesn't make sense.
 
-Now, here's the kicker -- this is what I think Linus wants:
-
-Linus said to me, with a degree of annoyance, that he doesn't want
-usb-storage to keep any associations of departed devices with SCSI emulated
-hosts.  That means that I need to be able to add and remove hosts at the
-will of the end-user.  In the end, what drives the entire process is what
-Linus' hand does when it's placed on his USB flashcard reader.
-
-Matt
-
---=20
-Matthew Dharm                              Home: mdharm-usb@one-eyed-alien.=
-net=20
-Maintainer, Linux USB Mass Storage Driver
-
-It was a new hope.
-					-- Dust Puppy
-User Friendly, 12/25/1998
-
---Pgaa2uWPnPrfixyx
-Content-Type: application/pgp-signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.0.6 (GNU/Linux)
-Comment: For info see http://www.gnupg.org
-
-iD8DBQE+MHoCIjReC7bSPZARArbPAJ0Y2dzLae21lY9pucJcRabKLCmLZACfU9d7
-1BAb94Be9hiU/jtF44q+QqE=
-=d0PW
------END PGP SIGNATURE-----
-
---Pgaa2uWPnPrfixyx--
+-------------------------------------------------------
+This SF.NET email is sponsored by:
+SourceForge Enterprise Edition + IBM + LinuxWorld = Something 2 See!
+http://www.vasoftware.com
+_______________________________________________
+linux-usb-devel@lists.sourceforge.net
+To unsubscribe, use the last form field at:
+https://lists.sourceforge.net/lists/listinfo/linux-usb-devel
