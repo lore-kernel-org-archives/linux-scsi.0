@@ -1,95 +1,64 @@
-From: Matthew Dharm <mdharm-scsi@one-eyed-alien.net>
+From: Jens Axboe <axboe@suse.de>
 Subject: Re: writable mmc profiles actually are writable
-Date: Tue, 7 Oct 2003 00:00:18 -0700
+Date: Tue, 7 Oct 2003 09:00:44 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20031007000018.B11937@one-eyed-alien.net>
-References: <20031006182223.GF972@suse.de> <20031006182510.GG972@suse.de> <1065469831.5185.44.camel@patehci2> <20031006203816.GJ972@suse.de> <1065473899.6835.41.camel@patehci2> <1065478448.2361.1.camel@patehci2> <1065484607.2899.7.camel@patehci2> <20031007053858.GL972@suse.de> <20031006234543.A11937@one-eyed-alien.net> <20031007064829.GQ972@suse.de>
+Message-ID: <20031007070044.GT972@suse.de>
+References: <20030929164654.GS15415@suse.de> <1064855570.3184.3.camel@patehci2> <1064865746.4262.63.camel@patehci2> <1065460336.10804.1.camel@patehci2> <1065463946.5185.8.camel@patehci2> <20031006182223.GF972@suse.de> <20031006182510.GG972@suse.de> <1065469831.5185.44.camel@patehci2> <20031006203816.GJ972@suse.de> <1065473899.6835.41.camel@patehci2>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-md5;
-	protocol="application/pgp-signature"; boundary="rS8CxjVDS/+yyDmU"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ziggy.one-eyed-alien.net ([64.169.228.100]:35848 "EHLO
-	ziggy.one-eyed-alien.net") by vger.kernel.org with ESMTP
-	id S261850AbTJGHAX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 7 Oct 2003 03:00:23 -0400
-Content-Disposition: inline
-In-Reply-To: <20031007064829.GQ972@suse.de>; from axboe@suse.de on Tue, Oct 07, 2003 at 08:48:29AM +0200
-List-Id: linux-scsi@vger.kernel.org
-To: Jens Axboe <axboe@suse.de>
-Cc: Pat LaVarre <p.lavarre@ieee.org>, linux-scsi@vger.kernel.org
-
-
---rS8CxjVDS/+yyDmU
 Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from ns.virtualhost.dk ([195.184.98.160]:38623 "EHLO virtualhost.dk")
+	by vger.kernel.org with ESMTP id S261863AbTJGHAu (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Oct 2003 03:00:50 -0400
 Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+In-Reply-To: <1065473899.6835.41.camel@patehci2>
+List-Id: linux-scsi@vger.kernel.org
+To: Pat LaVarre <p.lavarre@ieee.org>
+Cc: linux-scsi@vger.kernel.org
 
-On Tue, Oct 07, 2003 at 08:48:29AM +0200, Jens Axboe wrote:
-> On Mon, Oct 06 2003, Matthew Dharm wrote:
-> > On Tue, Oct 07, 2003 at 07:38:58AM +0200, Jens Axboe wrote:
-> > > On Mon, Oct 06 2003, Pat LaVarre wrote:
-> > > > Yep, still happy, same in -test6 as in -test5 e.g.
-> > > >=20
-> > > > $ dmesg | grep ^sr
-> > > > sr0: scsi3-mmc drive: 125x/125x caddy
-> > > > sr0: scsi3-mmc maybe not writeable
-> > > > sr0: scsi3-mmc writable profile: 0x0002
-> > > > $
-> > > > $ grep MMC /proc/sys/dev/cdrom/info
-> > > > Can write other MMC-RW: 1 ...
-> > >=20
-> > > I don't quite agree with this patch. Please add the GET_CONFIGURATION
-> > > stuff to cdrom.c instead so it works with ide-cd as well (ide-scsi is
-> > > basically dead, and the number of scsi drives out there isn't exactly
-> > > big and increasing). GPCMD_GET_CONFIGURATION already exists. Also, ma=
-ke
-> > > DVD-RAM drives set CDC_MMC_RW as well and only check for that at open.
-> >=20
-> > While the number of SCSI CD-ROM drives may be shrinking, the ATAPI driv=
-es
-> > behind a USB/ATAPI bridge is skyrocketing.
->=20
-> Doesn't change the picture, if you put it in cdrom.c it will work for
-> both.
+On Mon, Oct 06 2003, Pat LaVarre wrote:
+> > patches to make the detection more modern ...
+> 
+> Below appears a copy of an old patch to try op x46 get_configuration any
+> time mode page x2a doesn't already say the pdt x05 dvd/cd device is
+> writable.
 
-It will?  I'll have to take your word for that, as I don't immediately see
-how that works... then again, much of the higher layers of SCSI are a
-mystery to me.
+See my comments in another mail.
 
-I think I see how this work.... sr.c registers with cdrom.c, and cdrom.c
-actually provides the interface to the /dev/scdN node, right?
+> > I haven't yet had to deal with dvd+rw or
+> > ddcd_rw (is this like mtr?
+> 
+> Sorry I do not know mtr.
 
-If that's the case, why is there so much code in sr.c anyway?  The
-get_capabilities() function really should be moved, as well as media-change
-detection, much of the probe function (dealing with initialization of the
-new structre), reading sector sizes, and sr_ioctl.c should probably be
-renamed (as it doesn't really do IOCTL processing).
+mt rainier, different in spirit but allows the same 2kb writes and
+handles the rest in hardware.
 
-Am I on the right track?  That seems like an awfully long list of things
-that suggest against my interpretation....
+> > mo and dvd-ram have been supported for a long
+> > time and should be set with CDC_DVD_RAM,
+> 
+> Sorry I do not understand.  I remember noticing CDC_MO_DRIVE appears
+> only drivers/ide/ not in drivers/scsi/.  Weakly I conclude mo doesn't
+> work the same in atapi and usb-storage.
 
-Matt
+IIRC, scsi mo drives are handled by sd, not sr.
 
---=20
-Matthew Dharm                              Home: mdharm-usb@one-eyed-alien.=
-net=20
-Maintainer, Linux USB Mass Storage Driver
+> > the disk profiles aren't driven by ide-cd or
+> > sr.
+> 
+> Sorry I do not understand.
+> 
+> In drivers/scsi/sr.c I find:
+> cd->cdi.mask |= CDC_DVD_RAM;
+> 
+> In drivers/ide/ide-cd.c I find:
+> devinfo->mask |= CDC_DVD_RAM;
+> 
+> I conclude sr and ide-cd tell cdrom whether the device "profile" is
+> writable or not.  Is that wrong?
 
-It was a new hope.
-					-- Dust Puppy
-User Friendly, 12/25/1998
+->mask is an inverted capability mask, so if you set CDC_DVD_RAM you
+mask that capability.
 
---rS8CxjVDS/+yyDmU
-Content-Type: application/pgp-signature
-Content-Disposition: inline
+-- 
+Jens Axboe
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.0.6 (GNU/Linux)
-Comment: For info see http://www.gnupg.org
-
-iD8DBQE/gmSCIjReC7bSPZARAolzAKCrs0z20C0VY7Fea+epvWSfpSuubwCfXKMt
-RlcRiHs9SeIiZsNf27wJ88Y=
-=LI7l
------END PGP SIGNATURE-----
-
---rS8CxjVDS/+yyDmU--
