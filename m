@@ -1,84 +1,59 @@
-From: James.Smart@Emulex.Com
-Subject: [PATCH updated] LLDD dynamic scan aids
-Date: Thu, 18 Nov 2004 19:42:43 -0500
-Message-ID: <0B1E13B586976742A7599D71A6AC733C12E74F@xbl3.ma.emulex.com>
+From: Jens Axboe <axboe@suse.de>
+Subject: [PATCH] 3ware bad queuecommand returns
+Date: Fri, 19 Nov 2004 09:43:13 +0100
+Message-ID: <20041119084312.GW26240@suse.de>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="----_=_NextPart_001_01C4CDD0.AE1EE8EB"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emulex.emulex.com ([138.239.112.1]:20973 "EHLO
-	emulex.emulex.com") by vger.kernel.org with ESMTP id S261214AbUKSAmr
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 18 Nov 2004 19:42:47 -0500
-Received: from xbl3.ad.emulex.com (xbl3.ma.emulex.com [138.239.73.12])
-	by emulex.emulex.com (8.12.10/8.12.10) with ESMTP id iAJ0ghni025091
-	for <linux-scsi@vger.kernel.org>; Thu, 18 Nov 2004 16:42:44 -0800 (PST)
-content-class: urn:content-classes:message
+Received: from ns.virtualhost.dk ([195.184.98.160]:20413 "EHLO virtualhost.dk")
+	by vger.kernel.org with ESMTP id S261317AbUKSIyi (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 19 Nov 2004 03:54:38 -0500
+Received: from [62.242.22.158] (helo=zx2000.home.kernel.dk)
+	by virtualhost.dk with esmtp (Exim 3.36 #1)
+	id 1CV4XP-0007pH-00
+	for linux-scsi@vger.kernel.org; Fri, 19 Nov 2004 09:54:39 +0100
+Received: from axboe by zx2000.home.kernel.dk with local (Exim 4.30)
+	id 1CV4Wx-000146-4R
+	for linux-scsi@vger.kernel.org; Fri, 19 Nov 2004 09:54:11 +0100
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.dk, James Bottomley <James.Bottomley@steeleye.com>
+Cc: linuxraid@amcc.com, Linus Torvalds <torvalds@osdl.org>
 
-This is a multi-part message in MIME format.
+Hi,
 
-------_=_NextPart_001_01C4CDD0.AE1EE8EB
-Content-Type: text/plain;
-	charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+If your ->queuecommand() completes a command through done, it must not
+return non-zero to the mid layer so that it takes ownership of the
+command again.
 
-
-For the record, I like Pat Mansfield's suggestion to just export =
-scsi_scan_host_selected(). But I know where that conversation has =
-gone...
-
-Anyway, here's the updated patch based on today's discussion.
-
--- James
+Signed-off-by: Jens Axboe <axboe@suse.de>
 
 
-------_=_NextPart_001_01C4CDD0.AE1EE8EB
-Content-Type: application/octet-stream;
-	name="scan.patch"
-Content-Transfer-Encoding: base64
-Content-Description: scan.patch
-Content-Disposition: attachment;
-	filename="scan.patch"
+===== drivers/scsi/3w-9xxx.c 1.4 vs edited =====
+--- 1.4/drivers/scsi/3w-9xxx.c	2004-07-16 17:20:43 +02:00
++++ edited/drivers/scsi/3w-9xxx.c	2004-11-18 22:55:58 +01:00
+@@ -1746,6 +1746,7 @@ static int twa_scsi_queue(struct scsi_cm
+ 		twa_free_request_id(tw_dev, request_id);
+ 		SCpnt->result = (DID_ERROR << 16);
+ 		done(SCpnt);
++		reval = 0;
+ 	}
+ 
+ 	return retval;
+===== drivers/scsi/3w-xxxx.c 1.47 vs edited =====
+--- 1.47/drivers/scsi/3w-xxxx.c	2004-10-07 05:20:16 +02:00
++++ edited/drivers/scsi/3w-xxxx.c	2004-11-18 22:55:31 +01:00
+@@ -2067,6 +2067,7 @@ static int tw_scsi_queue(struct scsi_cmn
+ 		tw_state_request_finish(tw_dev, request_id);
+ 		SCpnt->result = (DID_ERROR << 16);
+ 		done(SCpnt);
++		retval = 0;
+ 	}
+ out:
+ 	return retval;
 
-ZGlmZiAtdU5yIGxpbnV4LTIuNi4xMC1yYzIvZHJpdmVycy9zY3NpL3Njc2lfc2Nhbi5jIGxpbnV4
-LTIuNi4xMC1yYzIucGF0Y2gvZHJpdmVycy9zY3NpL3Njc2lfc2Nhbi5jCi0tLSBsaW51eC0yLjYu
-MTAtcmMyL2RyaXZlcnMvc2NzaS9zY3NpX3NjYW4uYwkyMDA0LTExLTE3IDEzOjU4OjQwLjAwMDAw
-MDAwMCAtMDUwMAorKysgbGludXgtMi42LjEwLXJjMi5wYXRjaC9kcml2ZXJzL3Njc2kvc2NzaV9z
-Y2FuLmMJMjAwNC0xMS0xOCAxNDo0NToxMC44MTEyMjg4ODggLTA1MDAKQEAgLTEyMjYsNiArMTIy
-NiwxOCBAQAogCQkJCVNDQU5fV0lMRF9DQVJELCAwKTsKIH0KIAorLyoqCisgKiBzY3NpX3NjYW5f
-c2luZ2xlX3RhcmdldCAtIHNjYW4gdGhlIGdpdmVuIFNDU0kgdGFyZ2V0CisgKiBAc2hvc3Q6ICAg
-ICAgICAgYWRhcHRlciB0byBzY2FuCisgKiBAY2hhbjogICAgICAgICAgY2hhbm5lbCB0byBzY2Fu
-CisgKiBAaWQ6ICAgICAgICAgICAgdGFyZ2V0IGlkIHRvIHNjYW4KKyAqKi8KK3ZvaWQgc2NzaV9z
-Y2FuX3NpbmdsZV90YXJnZXQoc3RydWN0IFNjc2lfSG9zdCAqc2hvc3QsIAorCXVuc2lnbmVkIGlu
-dCBjaGFuLCB1bnNpZ25lZCBpbnQgaWQpCit7CisJc2NzaV9zY2FuX2hvc3Rfc2VsZWN0ZWQoc2hv
-c3QsIGNoYW4sIGlkLCBTQ0FOX1dJTERfQ0FSRCwgMSk7Cit9CisKIHZvaWQgc2NzaV9mb3JnZXRf
-aG9zdChzdHJ1Y3QgU2NzaV9Ib3N0ICpzaG9zdCkKIHsKIAlzdHJ1Y3Qgc2NzaV9kZXZpY2UgKnNk
-ZXYsICp0bXA7CmRpZmYgLXVOciBsaW51eC0yLjYuMTAtcmMyL2RyaXZlcnMvc2NzaS9zY3NpX3N5
-bXMuYyBsaW51eC0yLjYuMTAtcmMyLnBhdGNoL2RyaXZlcnMvc2NzaS9zY3NpX3N5bXMuYwotLS0g
-bGludXgtMi42LjEwLXJjMi9kcml2ZXJzL3Njc2kvc2NzaV9zeW1zLmMJMjAwNC0xMS0xNyAxMzo1
-ODo0MC4wMDAwMDAwMDAgLTA1MDAKKysrIGxpbnV4LTIuNi4xMC1yYzIucGF0Y2gvZHJpdmVycy9z
-Y3NpL3Njc2lfc3ltcy5jCTIwMDQtMTEtMTggMTQ6NDU6MjMuMzYyMzIwODMyIC0wNTAwCkBAIC0y
-Nyw2ICsyNyw4IEBACiBFWFBPUlRfU1lNQk9MKHNjc2lfaG9zdF9hbGxvYyk7CiBFWFBPUlRfU1lN
-Qk9MKHNjc2lfYWRkX2hvc3QpOwogRVhQT1JUX1NZTUJPTChzY3NpX3NjYW5faG9zdCk7CitFWFBP
-UlRfU1lNQk9MKHNjc2lfc2Nhbl9zaW5nbGVfdGFyZ2V0KTsKK0VYUE9SVF9TWU1CT0woc2NzaV9y
-ZXNjYW5fZGV2aWNlKTsKIEVYUE9SVF9TWU1CT0woc2NzaV9yZW1vdmVfaG9zdCk7CiBFWFBPUlRf
-U1lNQk9MKHNjc2lfaG9zdF9nZXQpOwogRVhQT1JUX1NZTUJPTChzY3NpX2hvc3RfcHV0KTsKZGlm
-ZiAtdU5yIGxpbnV4LTIuNi4xMC1yYzIvaW5jbHVkZS9zY3NpL3Njc2lfaG9zdC5oIGxpbnV4LTIu
-Ni4xMC1yYzIucGF0Y2gvaW5jbHVkZS9zY3NpL3Njc2lfaG9zdC5oCi0tLSBsaW51eC0yLjYuMTAt
-cmMyL2luY2x1ZGUvc2NzaS9zY3NpX2hvc3QuaAkyMDA0LTExLTE3IDEzOjU4OjQwLjAwMDAwMDAw
-MCAtMDUwMAorKysgbGludXgtMi42LjEwLXJjMi5wYXRjaC9pbmNsdWRlL3Njc2kvc2NzaV9ob3N0
-LmgJMjAwNC0xMS0xOCAxNDo0NjoxNi45NDUxNzUwMDAgLTA1MDAKQEAgLTUyNyw2ICs1MjcsOSBA
-QAogZXh0ZXJuIHN0cnVjdCBTY3NpX0hvc3QgKnNjc2lfaG9zdF9hbGxvYyhzdHJ1Y3Qgc2NzaV9o
-b3N0X3RlbXBsYXRlICosIGludCk7CiBleHRlcm4gaW50IF9fbXVzdF9jaGVjayBzY3NpX2FkZF9o
-b3N0KHN0cnVjdCBTY3NpX0hvc3QgKiwgc3RydWN0IGRldmljZSAqKTsKIGV4dGVybiB2b2lkIHNj
-c2lfc2Nhbl9ob3N0KHN0cnVjdCBTY3NpX0hvc3QgKik7CitleHRlcm4gdm9pZCBzY3NpX3NjYW5f
-c2luZ2xlX3RhcmdldChzdHJ1Y3QgU2NzaV9Ib3N0ICosIHVuc2lnbmVkIGludCwKKwl1bnNpZ25l
-ZCBpbnQpOworZXh0ZXJuIHZvaWQgc2NzaV9yZXNjYW5fZGV2aWNlKHN0cnVjdCBkZXZpY2UgKik7
-CiBleHRlcm4gdm9pZCBzY3NpX3JlbW92ZV9ob3N0KHN0cnVjdCBTY3NpX0hvc3QgKik7CiBleHRl
-cm4gc3RydWN0IFNjc2lfSG9zdCAqc2NzaV9ob3N0X2dldChzdHJ1Y3QgU2NzaV9Ib3N0ICopOwog
-ZXh0ZXJuIHZvaWQgc2NzaV9ob3N0X3B1dChzdHJ1Y3QgU2NzaV9Ib3N0ICp0KTsK
+-- 
+Jens Axboe
 
-------_=_NextPart_001_01C4CDD0.AE1EE8EB--
