@@ -1,200 +1,116 @@
 From: James Bottomley <James.Bottomley@steeleye.com>
-Subject: [PATCH] update sd to use kref and fix open/release race
-Date: 09 Apr 2004 08:52:59 -0500
+Subject: [PATCH] update sr to use kref and fix open/release race
+Date: 09 Apr 2004 08:51:19 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1081518779.2203.29.camel@mulgrave>
+Message-ID: <1081518680.2202.27.camel@mulgrave>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat1.steeleye.com ([65.114.3.130]:48280 "EHLO
+Received: from stat1.steeleye.com ([65.114.3.130]:40856 "EHLO
 	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S261317AbUDINxA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 9 Apr 2004 09:53:00 -0400
+	id S261296AbUDINv1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 9 Apr 2004 09:51:27 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: SCSI Mailing List <linux-scsi@vger.kernel.org>
-Cc: greg@kroah.com
+To: Jens Axboe <axboe@suse.de>
+Cc: grek@kroah.com, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-All this does is replace our kobject usage with a kref.
+The previous patch actually didn't null out the disk->private_data
+pointer in it's release mechanism.  This does that and converts sr to
+use the lightweight kref object instead of a kobject.
 
 James
 
-===== sd.c 1.144 vs edited =====
---- 1.144/drivers/scsi/sd.c	Tue Mar 16 19:57:15 2004
-+++ edited/sd.c	Fri Apr  9 09:35:31 2004
-@@ -48,6 +48,7 @@
- #include <linux/vmalloc.h>
- #include <linux/blkdev.h>
- #include <linux/blkpg.h>
-+#include <linux/kref.h>
- #include <asm/uaccess.h>
+===== drivers/scsi/sr.c 1.104 vs edited =====
+--- 1.104/drivers/scsi/sr.c	Thu Apr  8 08:39:12 2004
++++ edited/drivers/scsi/sr.c	Thu Apr  8 16:33:11 2004
+@@ -86,6 +86,7 @@
  
- #include "scsi.h"
-@@ -77,16 +78,12 @@
+ static unsigned long sr_index_bits[SR_DISKS / BITS_PER_LONG];
+ static spinlock_t sr_index_lock = SPIN_LOCK_UNLOCKED;
++static DECLARE_MUTEX(sr_ref_sem);
+ 
+ static int sr_open(struct cdrom_device_info *, int);
+ static void sr_release(struct cdrom_device_info *);
+@@ -119,20 +120,35 @@
+ 	.release = sr_kobject_release,
+ };
+ 
++static inline struct scsi_cd *scsi_cd(struct gendisk *disk)
++{
++	return container_of(disk->private_data, struct scsi_cd, driver);
++}
++
+ /*
+  * The get and put routines for the struct scsi_cd.  Note this entity
+  * has a scsi_device pointer and owns a reference to this.
   */
- #define SD_MAX_RETRIES		5
- 
--static void scsi_disk_release (struct kobject *kobj);
--
--static struct kobj_type scsi_disk_kobj_type = {
--	.release = scsi_disk_release,
--};
-+static void scsi_disk_release(struct kref *kref);
- 
- struct scsi_disk {
- 	struct scsi_driver *driver;	/* always &sd_template */
- 	struct scsi_device *device;
--	struct kobject	kobj;
-+	struct kref	kref;
- 	struct gendisk	*disk;
- 	unsigned int	openers;	/* protected by BKL for now, yuck */
- 	sector_t	capacity;	/* size in 512-byte sectors */
-@@ -100,6 +97,7 @@
- 
- static unsigned long sd_index_bits[SD_DISKS / BITS_PER_LONG];
- static spinlock_t sd_index_lock = SPIN_LOCK_UNLOCKED;
-+static DECLARE_MUTEX(sd_ref_sem);
- 
- static int sd_revalidate_disk(struct gendisk *disk);
- static void sd_rw_intr(struct scsi_cmnd * SCpnt);
-@@ -161,31 +159,33 @@
- 
- /* reverse mapping dev -> (sd_nr, part) not currently needed */
- 
--#define to_scsi_disk(obj) container_of(obj,struct scsi_disk,kobj);
-+#define to_scsi_disk(obj) container_of(obj,struct scsi_disk,kref);
- 
- static inline struct scsi_disk *scsi_disk(struct gendisk *disk)
+-static inline int scsi_cd_get(struct scsi_cd *cd)
++static inline struct scsi_cd *scsi_cd_get(struct gendisk *disk)
  {
- 	return container_of(disk->private_data, struct scsi_disk, driver);
- }
- 
--static int scsi_disk_get(struct scsi_disk *sdkp)
-+static struct scsi_disk *scsi_disk_get(struct gendisk *disk)
- {
--	if (!kobject_get(&sdkp->kobj))
--		goto out;
--	if (scsi_device_get(sdkp->device))
--		goto out_put_kobj;
--	return 0;
-+	struct scsi_disk *sdkp = NULL;
- 
--out_put_kobj:
--	kobject_put(&sdkp->kobj);
--out:
--	return -ENXIO;
-+	down(&sd_ref_sem);
++	struct scsi_cd *cd = NULL;
++
++	down(&sr_ref_sem);
 +	if (disk->private_data == NULL)
 +		goto out;
-+	sdkp = scsi_disk(disk);
-+	if (!kref_get(&sdkp->kref))
-+		sdkp = NULL;
++	cd = scsi_cd(disk);
+ 	if (!kobject_get(&cd->kobj))
+-		return -ENODEV;
+-	return 0;
++		cd = NULL;
 + out:
-+	up(&sd_ref_sem);
-+	return sdkp;
++	up(&sr_ref_sem);
++	return cd;
  }
  
- static void scsi_disk_put(struct scsi_disk *sdkp)
+ static inline void scsi_cd_put(struct scsi_cd *cd)
  {
--	scsi_device_put(sdkp->device);
--	kobject_put(&sdkp->kobj);
-+	down(&sd_ref_sem);
-+	kref_put(&sdkp->kref);
-+	up(&sd_ref_sem);
- }
- 
- /**
-@@ -406,15 +406,15 @@
- static int sd_open(struct inode *inode, struct file *filp)
- {
- 	struct gendisk *disk = inode->i_bdev->bd_disk;
--	struct scsi_disk *sdkp = scsi_disk(disk);
-+	struct scsi_disk *sdkp;
- 	struct scsi_device *sdev;
- 	int retval;
- 
--	SCSI_LOG_HLQUEUE(3, printk("sd_open: disk=%s\n", disk->disk_name));
-+	if (!(sdkp = scsi_disk_get(disk)))
-+		return -ENXIO;
- 
--	retval = scsi_disk_get(sdkp);
--	if (retval)
--		return retval;
-+
-+	SCSI_LOG_HLQUEUE(3, printk("sd_open: disk=%s\n", disk->disk_name));
- 
- 	sdev = sdkp->device;
- 
-@@ -1338,17 +1338,19 @@
- 	if ((sdp->type != TYPE_DISK) && (sdp->type != TYPE_MOD))
- 		goto out;
- 
-+	if ((error = scsi_device_get(sdp)) != 0)
-+		goto out;
-+
- 	SCSI_LOG_HLQUEUE(3, printk("sd_attach: scsi device: <%d,%d,%d,%d>\n", 
- 			 sdp->host->host_no, sdp->channel, sdp->id, sdp->lun));
- 
- 	error = -ENOMEM;
- 	sdkp = kmalloc(sizeof(*sdkp), GFP_KERNEL);
- 	if (!sdkp)
--		goto out;
-+		goto out_put_sdev;
- 
- 	memset (sdkp, 0, sizeof(*sdkp));
--	kobject_init(&sdkp->kobj);
--	sdkp->kobj.ktype = &scsi_disk_kobj_type;
-+	kref_init(&sdkp->kref, scsi_disk_release);
- 
- 	/* Note: We can accomodate 64 partitions, but the genhd code
- 	 * assumes partitions allocate consecutive minors, which they don't.
-@@ -1421,6 +1423,8 @@
- 	put_disk(gd);
- out_free:
- 	kfree(sdkp);
-+out_put_sdev:
-+	scsi_device_put(sdp);
- out:
- 	return error;
- }
-@@ -1442,26 +1446,32 @@
- 
- 	del_gendisk(sdkp->disk);
- 	sd_shutdown(dev);
--	kobject_put(&sdkp->kobj);
-+	scsi_disk_put(sdkp);
- 
- 	return 0;
- }
- 
- /**
-  *	scsi_disk_release - Called to free the scsi_disk structure
-- *	@kobj: pointer to embedded kobject
-+ *	@kref: pointer to embedded kref
-  **/
--static void scsi_disk_release(struct kobject *kobj)
-+static void scsi_disk_release(struct kref *kref)
- {
--	struct scsi_disk *sdkp = to_scsi_disk(kobj);
-+	struct scsi_disk *sdkp = to_scsi_disk(kref);
-+	struct scsi_device *sdev = sdkp->device;
-+	struct gendisk *disk = sdkp->disk;
- 	
--	put_disk(sdkp->disk);
--
- 	spin_lock(&sd_index_lock);
- 	clear_bit(sdkp->index, sd_index_bits);
- 	spin_unlock(&sd_index_lock);
- 
-+	disk->private_data = NULL;
-+
-+	put_disk(disk);
-+
- 	kfree(sdkp);
-+
-+	scsi_device_put(sdev);
++	down(&sr_ref_sem);
+ 	kobject_put(&cd->kobj);
++	up(&sr_ref_sem);
  }
  
  /*
-
+@@ -187,11 +203,6 @@
+ 	return retval;
+ }
+  
+-static inline struct scsi_cd *scsi_cd(struct gendisk *disk)
+-{
+-	return container_of(disk->private_data, struct scsi_cd, driver);
+-}
+-
+ /*
+  * rw_intr is the interrupt routine for the device driver.
+  *
+@@ -440,8 +451,17 @@
+ 
+ static int sr_block_open(struct inode *inode, struct file *file)
+ {
++	struct gendisk *disk = inode->i_bdev->bd_disk;
+ 	struct scsi_cd *cd = scsi_cd(inode->i_bdev->bd_disk);
+-	return cdrom_open(&cd->cdi, inode, file);
++	int ret = 0;
++
++	if(!(cd = scsi_cd_get(disk)))
++		return -ENXIO;
++
++	if((ret = cdrom_open(&cd->cdi, inode, file)) != 0)
++		scsi_cd_put(cd);
++
++	return ret;
+ }
+ 
+ static int sr_block_release(struct inode *inode, struct file *file)
+@@ -496,10 +516,6 @@
+ 	struct scsi_device *sdev = cd->device;
+ 	int retval;
+ 
+-	retval = scsi_cd_get(cd);
+-	if (retval)
+-		return retval;
+-	
+ 	/*
+ 	 * If the device is in error recovery, wait until it is done.
+ 	 * If the device is offline, then disallow any access to it.
 
