@@ -1,78 +1,83 @@
-From: Mike Anderson <andmike@us.ibm.com>
+From: Douglas Gilbert <dougg@torque.net>
 Subject: Re: [RFC] scsi host sysfs support again [0/4]
-Date: Mon, 5 May 2003 18:05:21 -0700
+Date: Tue, 06 May 2003 11:12:27 +1000
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030506010521.GB3852@beaverton.ibm.com>
-References: <20030505083315.GB8416@beaverton.ibm.com> <20030505093833.A13506@infradead.org> <20030505094818.GH8416@beaverton.ibm.com> <20030505111735.A16914@infradead.org>
+Message-ID: <3EB70BFB.8080009@torque.net>
+References: <20030505083315.GB8416@beaverton.ibm.com> <3EB64F11.2030806@torque.net> <20030505214532.GB3254@beaverton.ibm.com>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e33.co.us.ibm.com ([32.97.110.131]:6899 "EHLO e33.co.us.ibm.com")
-	by vger.kernel.org with ESMTP id S262232AbTEFAuy (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 5 May 2003 20:50:54 -0400
-Content-Disposition: inline
-In-Reply-To: <20030505111735.A16914@infradead.org>
+Received: from bunyip.cc.uq.edu.au ([130.102.2.1]:39435 "EHLO
+	bunyip.cc.uq.edu.au") by vger.kernel.org with ESMTP id S262258AbTEFA5T
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 5 May 2003 20:57:19 -0400
+In-Reply-To: <20030505214532.GB3254@beaverton.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
+To: Mike Anderson <andmike@us.ibm.com>
 Cc: linux-scsi@vger.kernel.org
 
-Christoph Hellwig [hch@infradead.org] wrote:
-> On Mon, May 05, 2003 at 02:48:18AM -0700, Mike Anderson wrote:
-> > While scsi_remove_host cannot imply a scsi_set_host_offline unless we
-> > change the previous definition. We indicated that scsi_set_host_offline
-> > may cancel commands in flight which implys some sync point.
+Mike Anderson wrote:
+> Douglas Gilbert [dougg@torque.net] wrote:
 > 
-> Yes.
->
-
-I guess I should have phrased a better question. Does the yes mean we need to
-change the previous definition presented for scsi_set_host_offline.
-
-> Actually what I think must happen is that scsi_unregister will do
-> nothing unless the refcount reaches zero.  It should also be renamed
-> to scsi_put_host to make this more explicit.
+>>What seems to be missing, at least in what I am
+>>running here is a useful 'name'. There is no 'name'
+>>file in the listing above (under each 'host<n>'
+>>directory). There is a 'name' file in that 'device' (symlink)
+>>directory but it is an empty file here.
+>>
+>>
+>>># tree /sys/bus/scsi/devices
+>>>/sys/bus/scsi/devices
+>>>|-- 0:0:0:0 -> ../../../devices/pci0/00:09.0/host0/0:0:0:0
+>>
+>>So finally I can get some output from my
+>>version of lsscsi (unreleased version 10):
+>>
+>>$ lsscsi -Hl
+>>[0]    ??
+>>  cmd_per_lun=64   host_busy=0    sg_tablesize=96   unchecked_isa_dma=0
+>>[1]    ??
+>>  cmd_per_lun=64   host_busy=0    sg_tablesize=96   unchecked_isa_dma=0
+>>[2]    ??
+>>  cmd_per_lun=3    host_busy=0    sg_tablesize=64   unchecked_isa_dma=0
+>>[3]    ??
+>>  cmd_per_lun=5    host_busy=0    sg_tablesize=255  unchecked_isa_dma=0
+>>
+>>Hosts 0 and 1 are the 2 HBAs on a Tekram 390u3w while
+>>host 2 is a scsi_debug pseudo host and host3 is
+>>ide-scsi. A name would be instructive.
+>>
+>>$ lsscsi
+>>[0:0:1:0]    disk    FUJITSU  MAM3184MP        0106  /dev/sda
+>>[2:0:0:0]    disk    Linux    scsi_debug       0004  /dev/sdb
+>>[3:0:0:0]    cd      CREATIVE CD5233E          1.00  /dev/sr0
+>>
 > 
-
-Well scsi_proc_host_rm will need to be done through some action prior to
-the completion of the drivers "remove" or "storage_disconnect (usb)"
-functions.
-
-> Then we'd have:
 > 
-> 	scsi_alloc_host
-> 		- allocate storage for struct Scsi_Host, some
-> 		  basic initalization.  refcount set to 1;
+> OK, that is a bug. Is proc_name ok for name
+> 
+> # cat /sys/class/scsi_host/*/device/name
+> ips
+> aic7xxx
+> aic7xxx
 
-I am using sysfs ref counting and increment the ref count on the Scsi_Host
-through device_register and device_get. The scsi_get/put_host wrapper
-would call device_get/put.
+Mike,
+Yes, proc_name is fine (although the previous release
+of this patch set used a longer winded variant).
 
-> 	scsi_get_host
-> 		- get a reference to an existing struct Scsi_Host
-> 	scsi_put_host
-> 		- decrement usecount of an existing struct Scsi_Host,
-> 		  free it if this was the last reference
+Also the 'unique_id' attribute looks a bit strange
+(or is aften misued by LLDs).
+$ cat /sys/class/scsi_host/host[0123]/unique_id
+33792        # half 390u3w
+32768        # other half 390u3w
+0            # ide-scsi
+0            # Adaptec AIC-7892A
 
-The sysfs model splits the registering / unregistering so that is why I
-am unregistering in scsi_remove_host, but may not call the free until
-someone calls the final put.
+This is nothing to do with your patch, of course. Does
+the unique_id help the user space in any way?
 
-> 	scsi_add_host
-> 		- register host with the scsi midlayer
+Doug Gilbert
 
-This is where I am registering the Scsi_Host struct device as we know
-the parent by this point. On return the ref count on Scsi_Host should be
-at least 1.
-
-> 	scsi_remove_host
-> 		- unregister host with the scsi midlayer, force all
-> 		  I/O to fail from now on and never call back into
-> 		  the driver.
-
-This is where I am unregistering the Scsi_Host struct device.
-
--andmike
---
-Michael Anderson
-andmike@us.ibm.com
 
