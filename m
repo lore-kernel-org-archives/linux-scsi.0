@@ -1,164 +1,42 @@
-From: James Bottomley <James.Bottomley@steeleye.com>
-Subject: [PATCH] Add full complement of SPI transport attributes
-Date: 05 Mar 2004 19:33:09 -0500
+From: jg9600@sohu.com
+Subject: (unknown)
+Date: Sat, 6 Mar 2004 17:22:40 +0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1078533190.2122.60.camel@mulgrave>
-Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Message-ID: <S261629AbUCFJWl/20040306092242Z+66@vger.kernel.org>
+Reply-To: jg9600@163.com
+Content-Type: text/plain;charset="GB2312"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat1.steeleye.com ([65.114.3.130]:28643 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S261501AbUCFAdX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 5 Mar 2004 19:33:23 -0500
+Received: from [221.12.119.38] ([221.12.119.38]:49159 "ehlo sohu.com")
+	by vger.kernel.org with ESMTP id S261629AbUCFJWl (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 6 Mar 2004 04:22:41 -0500
 List-Id: linux-scsi@vger.kernel.org
-To: Martin Hicks <mort@wildopensource.com>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
 
-This patch does two things:
+Welcome to Shaoxing Paojiang Industrial Zone---
+the largest development zone in Zhejiang province, China
 
-1. Add all the other ppr type transport attributes to the spi class
-2. make period settable as the ppr/sdtr period, but display in ns for
-the user.
+Dear Sir or Madam,
+Firstly, we would like to express our warmly regards!
+Shaoxing is a city of historic heritage, a tourist-friendly city, an investor-friendly city and an economic powerhouse. Shaoxing is an old city with a culture formation of more than 4,000 years and a city has history of 2,500 years and is renowned as "a museum without wall". Shaoxing city is famous for its attractive tourism and is famed as the town of water, bridges, rice wine, Chinese calligraphy and historical celebrities.
+Shaoxing Paojiang Industrial Zone (SPIZ) is one of the largest development zones in China, a new & modernized, high-tech oriented industrial city and one of the four component areas in Shaoxing. By the year 2020, SPIZ will cover 60 square kilometer with a population of 0.2 million. SPIZ has Foreign Investment Park, IT Park, Bio-engineering Pharmaceutical Park, Traditional Industries Upgrading Section and Central Commercial & Residential Section under construction. SPIZ focuses on developing new high-tech industries such as IT, biology & pharmaceutical, food & beverage and encourages the innovation and upgrading of light textile. Till now, 180 industrial projects with planned investment USD 20 billion have been approved.
+SPIZ is characterized for its own three advantages as follows:        
+I. Geographic location:
+SPIZ is located in the Yangtze River Delta, which is the most Dynamic area and has the strongest purchasing power .Located near Shaoxing entrance of Shanghai-Hangzhou-Ningbo Expressway, SPIZ enjoys a favorable geographical position by land, water and air. It is only 200 km from Shanghai and 20 km from Hangzhou International Airport. In the zone, civil facilities have been set up in the first-phase construction area of 60 square kilometer, and basic infrastructures including water, electricity, steam gas, road, telecom, and sewage disposal will meet the demands of various kinds of investment projects. Comprehensive public service facilities as schools, hospitals, and banks are also available.
+II. Preferential policies:
+  As a coastal economically dynamic area, Shaoxing city will provide a lot of preferential policies for SPIZ's investors as follows: (1) Preferential policy for land: For the foreign-invested enterprises, the price for using land is USD 9-18 per sqm. (2) Financial aid: For the foreign-invested enterprises, the local portion of the tax (include VAT and income tax)will be totally refunded in the first two years and 50% refunded from the 3rd to 5th years; For the enterprises with actual investment above USD 3 million, the local part of the tax will be totally refunded in the first five years and 50% refunded from the 6th to 10th years. (3) Remitting or reduction of charges: SPIZ Administrative Committee shall insist on the policy of "no fee required excluding taxes" for all the solely foreign ventures settled in the zone, namely, the fee shall be totally remitted or paid by the committee ex
+ cept the taxes to the central and provincial governments.
+III. Preferential service:
+  As a branch of Shaoxing Municipal People's Government, SPIZ Administrative Committee directly carries out the management function of the local government. The Administrative Committee has an investment service center and offers qualified and efficient service for the investors sincerely.
+"No nationalities for capitals, no boundary for markets", we sincerely welcome you to visit and invest in Shaoxing Paojiang Industrial Zone.
+"Choosing Paojiang is just choosing great hope, investing in Paojiang is just investing the future."
+Best wishes and regards!
+Contact:  Philip Jin
+Address:  International investment&Cooperation Bureau
+Shaoxing Paojiang Industrial Zone, PRC
+Telephone:  0086 575 8132209
+Fax:        0086 575 8030150
+Website:     www.paojiang.com
+E-mail:     jg9600@163.com
+Postcode:     312071
 
-James
-
-===== drivers/scsi/scsi_transport_spi.c 1.1 vs edited =====
---- 1.1/drivers/scsi/scsi_transport_spi.c	Thu Mar  4 17:29:03 2004
-+++ edited/drivers/scsi/scsi_transport_spi.c	Fri Mar  5 18:43:30 2004
-@@ -43,9 +43,16 @@
- 
- static int spi_setup_transport_attrs(struct scsi_device *sdev)
- {
--	/* FIXME: should callback into the driver to get these values */
--	spi_period(sdev) = -1;
--	spi_offset(sdev) = -1;
-+	spi_period(sdev) = -1;	/* illegal value */
-+	spi_offset(sdev) = 0;	/* async */
-+	spi_width(sdev) = 0;	/* narrow */
-+	spi_iu(sdev) = 0;	/* no IU */
-+	spi_dt(sdev) = 0;	/* ST */
-+	spi_qas(sdev) = 0;
-+	spi_wr_flow(sdev) = 0;
-+	spi_rd_strm(sdev) = 0;
-+	spi_rti(sdev) = 0;
-+	spi_pcomp_en(sdev) = 0;
- 
- 	return 0;
- }
-@@ -71,12 +78,78 @@
- static CLASS_DEVICE_ATTR( field, S_IRUGO, show_spi_transport_##field, NULL)
- 
- /* The Parallel SCSI Tranport Attributes: */
--spi_transport_rd_attr(period, "%d\n");
- spi_transport_rd_attr(offset, "%d\n");
-+spi_transport_rd_attr(width, "%d\n");
-+spi_transport_rd_attr(iu, "%d\n");
-+spi_transport_rd_attr(dt, "%d\n");
-+spi_transport_rd_attr(qas, "%d\n");
-+spi_transport_rd_attr(wr_flow, "%d\n");
-+spi_transport_rd_attr(rd_strm, "%d\n");
-+spi_transport_rd_attr(rti, "%d\n");
-+spi_transport_rd_attr(pcomp_en, "%d\n");
-+
-+/* Translate the period into ns according to the current spec
-+ * for SDTR/PPR messages */
-+static ssize_t show_spi_transport_period(struct class_device *cdev, char *buf)
-+
-+{
-+	struct scsi_device *sdev = transport_class_to_sdev(cdev);
-+	struct spi_transport_attrs *tp;
-+	char *str;
-+
-+	tp = (struct spi_transport_attrs *)&sdev->transport_data;
-+
-+	switch(tp->period) {
-+	case 0x00 ... 0x06:
-+		str =  "reserved";
-+		break;
-+
-+	case 0x07:
-+		str = "3.125";
-+		break;
-+
-+	case 0x08:
-+		str = "6.25";
-+		break;
-+
-+	case 0x09:
-+		str = "12.5";
-+		break;
-+
-+	case 0x0a:
-+		str = "25";
-+		break;
-+
-+	case 0x0b:
-+		str = "30.3";
-+		break;
-+
-+	case 0x0c:
-+		str = "50";
-+
-+	case 0x0d ... 0xff:
-+		return sprintf(buf, "%d\n", tp->period * 4);
-+
-+	default:
-+		str = "unknown";
-+	}
-+	return sprintf(buf, "%s\n", str);
-+}
-+
-+static CLASS_DEVICE_ATTR(period, S_IRUGO, show_spi_transport_period, NULL);
-+
- 
- struct class_device_attribute *spi_transport_attrs[] = {
- 	&class_device_attr_period,
- 	&class_device_attr_offset,
-+	&class_device_attr_width,
-+	&class_device_attr_iu,
-+	&class_device_attr_dt,
-+	&class_device_attr_qas,
-+	&class_device_attr_wr_flow,
-+	&class_device_attr_rd_strm,
-+	&class_device_attr_rti,
-+	&class_device_attr_pcomp_en,
- 	NULL
- };
- 
-===== include/scsi/scsi_transport_spi.h 1.1 vs edited =====
---- 1.1/include/scsi/scsi_transport_spi.h	Thu Mar  4 17:29:05 2004
-+++ edited/include/scsi/scsi_transport_spi.h	Fri Mar  5 18:17:53 2004
-@@ -25,14 +25,29 @@
- struct scsi_transport_template;
- 
- struct spi_transport_attrs {
--	int period;
-+	int period;		/* value in the PPR/SDTR command */
- 	int offset;
-+	int width:1;		/* 0 - narrow, 1 - wide */
-+	int iu:1;		/* Information Units enabled */
-+	int dt:1;		/* DT clocking enabled */
-+	int qas:1;		/* Quick Arbitration and Selection enabled */
-+	int wr_flow:1;		/* Write Flow control enabled */
-+	int rd_strm:1;		/* Read streaming enabled */
-+	int rti:1;		/* Retain Training Information */
-+	int pcomp_en:1;		/* Precompensation enabled */
- };
- 
- /* accessor functions */
- #define spi_period(x)	(((struct spi_transport_attrs *)&(x)->transport_data)->period)
- #define spi_offset(x)	(((struct spi_transport_attrs *)&(x)->transport_data)->offset)
--
-+#define spi_width(x)	(((struct spi_transport_attrs *)&(x)->transport_data)->width)
-+#define spi_iu(x)	(((struct spi_transport_attrs *)&(x)->transport_data)->iu)
-+#define spi_dt(x)	(((struct spi_transport_attrs *)&(x)->transport_data)->dt)
-+#define spi_qas(x)	(((struct spi_transport_attrs *)&(x)->transport_data)->qas)
-+#define spi_wr_flow(x)	(((struct spi_transport_attrs *)&(x)->transport_data)->wr_flow)
-+#define spi_rd_strm(x)	(((struct spi_transport_attrs *)&(x)->transport_data)->rd_strm)
-+#define spi_rti(x)	(((struct spi_transport_attrs *)&(x)->transport_data)->rti)
-+#define spi_pcomp_en(x)	(((struct spi_transport_attrs *)&(x)->transport_data)->pcomp_en)
- extern struct scsi_transport_template spi_transport_template;
- 
- #endif /* SCSI_TRANSPORT_SPI_H */
 
