@@ -1,37 +1,30 @@
-From: Matthew Jacob <mjacob@feral.com>
+From: James Bottomley <James.Bottomley@steeleye.com>
 Subject: Re: Warning - running *really* short on DMA buffers while
  doingfiletransfers
-Date: Fri, 27 Sep 2002 14:18:12 -0700 (PDT)
+Date: Fri, 27 Sep 2002 17:23:10 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.BSF.4.21.0209271417260.22542-100000@beppo>
-References: <200209272113.g8RLD1420775@localhost.localdomain>
-Reply-To: mjacob@feral.com
+Message-ID: <200209272123.g8RLNAi21161@localhost.localdomain>
+References: <mjacob@feral.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <200209272113.g8RLD1420775@localhost.localdomain>
+Received: (from root@localhost)
+	by pogo.mtv1.steeleye.com (8.9.3/8.9.3) id OAA23721
+	for <linux-scsi@vger.kernel.org>; Fri, 27 Sep 2002 14:23:19 -0700
+In-Reply-To: Message from Matthew Jacob <mjacob@feral.com>
+   of "Fri, 27 Sep 2002 14:18:12 PDT." <Pine.BSF.4.21.0209271417260.22542-100000@beppo>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@steeleye.com>
-Cc: "Justin T. Gibbs" <gibbs@scsiguy.com>, Andrew Morton <akpm@digeo.com>, Jens Axboe <axboe@suse.de>, "Pedro M. Rodrigues" <pmanuel@myrealbox.com>, Mathieu Chouquet-Stringer <mathieu@newview.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: mjacob@feral.com
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, "Justin T. Gibbs" <gibbs@scsiguy.com>, Andrew Morton <akpm@digeo.com>, Jens Axboe <axboe@suse.de>, "Pedro M. Rodrigues" <pmanuel@myrealbox.com>, Mathieu Chouquet-Stringer <mathieu@newview.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-> 
-> Linux is perfectly happy just to have you return 1 in queuecommand if the 
-> device won't accept the tag.  The can_queue parameter represents the maximum 
-> number of outstanding commands the mid-layer will ever send.  The mid-layer is 
-> happy to re-queue I/O below this limit if it cannot be accepted by the drive.  
-> In fact, that's more or less what queue plugging is about.
-> 
-> The only problem occurs if you return 1 from queuecommand with no other 
-> outstanding I/O for the device.
+mjacob@feral.com said:
+> Duh. There had been race conditions in the past which caused all of us
+> HBA writers to in fact start swalloing things like QFULL and
+> maintaining internal queues. 
 
-Duh. There had been race conditions in the past which caused all of us
-HBA writers to in fact start swalloing things like QFULL and maintaining
-internal queues.
+That was true of 2.2, 2.3 (and I think early 2.4) but it isn't true of late 
+2.4 and 2.5
 
-> 
-> There should be no reason in 2.5 for a driver to have to implement an internal 
-> queue.
-
-That'd be swell.
+James
 
 
