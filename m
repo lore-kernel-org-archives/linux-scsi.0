@@ -1,63 +1,60 @@
-From: Kenn Humborg <kenn@linux.ie>
-Subject: AUTOSENSE bug in NCR5380.c
-Date: Sat, 14 Aug 2004 00:54:08 +0100
+From: christophe varoqui <christophe.varoqui@free.fr>
+Subject: [ANNOUNCE] multipath-tools-0.2.8
+Date: Sat, 14 Aug 2004 13:59:25 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040813235408.GA3547@excalibur.research.wombat.ie>
+Message-ID: <1092484765.3571.17.camel@zezette>
+References: <1090836168.4104d6c8a2b22@imp6-q.free.fr>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail1.mail.iol.ie ([193.120.142.151]:8918 "EHLO
-	mail1.mail.iol.ie") by vger.kernel.org with ESMTP id S267784AbUHMXyO
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 13 Aug 2004 19:54:14 -0400
-Received: from dialup0184.ts005.bmt.esat.net ([212.2.172.184] helo=excalibur.research.wombat.ie)
-	by mail1.mail.iol.ie with esmtp (Exim 3.36 #9)
-	id 1BvlsB-00029Z-00
-	for linux-scsi@vger.kernel.org; Sat, 14 Aug 2004 00:54:13 +0100
-Received: from excalibur.research.wombat.ie (IDENT:jmPJy27Mb0oeVup+8C3P0bm/xAzKg16H@excalibur [127.0.0.1])
-	by excalibur.research.wombat.ie (8.12.10/8.12.10) with ESMTP id i7DNs9QR004320
-	for <linux-scsi@vger.kernel.org>; Sat, 14 Aug 2004 00:54:09 +0100
-Received: (from kenn@localhost)
-	by excalibur.research.wombat.ie (8.12.10/8.12.10/Submit) id i7DNs8HL004319
-	for linux-scsi@vger.kernel.org; Sat, 14 Aug 2004 00:54:08 +0100
-Content-Disposition: inline
+Received: from smtp2.wanadoo.fr ([193.252.22.29]:43494 "EHLO
+	mwinf0207.wanadoo.fr") by vger.kernel.org with ESMTP
+	id S268663AbUHNL71 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 14 Aug 2004 07:59:27 -0400
+In-Reply-To: <1090836168.4104d6c8a2b22@imp6-q.free.fr>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: device-mapper development <dm-devel@redhat.com>
+Cc: linux-raid@vger.kernel.org, linux-hotplug-devel@lists.sourceforge.net, Jan Kunigk <jan.kunigk@de.ibm.com>, linux-scsi@vger.kernel.org
 
+Hello,
 
-Around line 2470 in NCR5380.c, if a command fails, and AUTOSENSE is on,
-the current command is converted into a REQUEST_SENSE command and
-put at the top of the request queue.  Part of this setup, is setting
-up cmd->SCp to point at the sense_buffer, so that the received sense
-data goes straight into the sense buffer.
+here goes multipath-tools version 0.2.8
 
-Around line 1730, NCR5380_select() calls initialize_SCp() which ends
-up clobbering cmd->SCp, and the sense data get written into the 
-original request buffer.
+This is pre-vacation release, to sync up with guys working with the
+priority framework.
+I'll be mostly off till Sept 1st.
 
-This is what happens if cmd->use_sg = 0.  I haven't looked at what
-happens if use_sg is non-zero, but I expect the effect will be the same.
+Reported build breakage on IA64 is not solved in this release. I don't
+have the hw to investigate this. If someone is interested, feel free to
+debug this and send a patch. The breakage seem to come from the clone
+syscall declaration.
 
-The attached patch works around the problem for me.  Is there a better
-way to deal with this?
+Todo, for next releases :
 
-Later,
-Kenn
+* move to the new klibc development environment Sam Ravnborg is working
+on, as soon as it stabilizes : hope to drop the klibc tree from the
+multipath-tools tarball, and finally be packageable by distributors.
 
-RCS file: /cvsroot/linux-vax/kernel-2.5/drivers/scsi/NCR5380.c,v
-retrieving revision 1.2
-retrieving revision 1.3
-diff -u -d -r1.2 -r1.3
---- NCR5380.c	8 Aug 2004 23:32:34 -0000	1.2
-+++ NCR5380.c	13 Aug 2004 23:44:24 -0000	1.3
-@@ -1734,8 +1737,9 @@
- 	hostdata->connected = cmd;
- 	hostdata->busy[cmd->device->id] |= (1 << cmd->device->lun);
- 
--	initialize_SCp(cmd);
--
-+	if (cmd->SCp.ptr != (char *)cmd->sense_buffer) {
-+		initialize_SCp(cmd);
-+	}
- 
- 	return 0;
+* resolve the OOM scenarii for multipathd. I guess the kernel will have
+to help in some way. Anyway, advice badly needed here.
+
+2004-08-14 multipath-tools-0.2.8
+        * [multipathd] setsched prio to RT
+        * [multipath] massive include cleanup
+        * [multipath] add a "default_prio_callout" keyword
+          first user will be SPC-3 ALUA priority field fetcher
+          from IBM
+        * [multipath] reenable stdout on some error paths
+        * [build] spilt KERNEL_DIR into KERNEL_SOURCE &
+          KERNEL_BUILD as per 2.6 and SuSe convention
+        * [klibc] kill warnings due to awk parsing wrong locale in
+          arch/i386/MCONFIG
+        * [multipath] implement a generic group_by_prio pgpolicy
+        * [multipath] fix the broken failover pgpolicy
+
+Downloads and docs at http://christophe.varoqui.free.fr
+
+regards,
+cvaroqui
+
