@@ -1,42 +1,48 @@
-From: James Bottomley <James.Bottomley@steeleye.com>
+From: Zwane Mwaikambo <zwane@linuxpower.ca>
 Subject: Re: 2.5.63/64 do not boot: loop in scsi_error
-Date: 06 Mar 2003 10:31:40 -0600
+Date: Thu, 6 Mar 2003 12:15:44 -0500 (EST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1046968304.1746.20.camel@mulgrave>
+Message-ID: <Pine.LNX.4.50.0303061213400.25282-100000@montezuma.mastecende.com>
 References: <UTC200303060639.h266dIo22884.aeb@smtp.cwi.nl>
-	<20030306064921.GA1425@beaverton.ibm.com>
-	<Pine.LNX.4.50.0303060256200.25282-100000@montezuma.mastecende.com>
-	<20030306083054.GB1503@beaverton.ibm.com>
-	<Pine.LNX.4.50.0303060331030.25282-100000@montezuma.mastecende.com>
-	<20030306085506.GB2222@beaverton.ibm.com>
-	<Pine.LNX.4.50.0303060354550.25282-100000@montezuma.mastecende.com>
-	<20030306091824.GA2577@beaverton.ibm.com>
-	<Pine.LNX.4.50.0303060455560.25282-100000@montezuma.mastecende.com>
+ <20030306064921.GA1425@beaverton.ibm.com>
+ <Pine.LNX.4.50.0303060256200.25282-100000@montezuma.mastecende.com>
+ <20030306083054.GB1503@beaverton.ibm.com>
+ <Pine.LNX.4.50.0303060331030.25282-100000@montezuma.mastecende.com>
+ <20030306085506.GB2222@beaverton.ibm.com>
+ <Pine.LNX.4.50.0303060354550.25282-100000@montezuma.mastecende.com>
+ <20030306091824.GA2577@beaverton.ibm.com>
+ <Pine.LNX.4.50.0303060455560.25282-100000@montezuma.mastecende.com>
+ <1046968304.1746.20.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.50.0303060455560.25282-100000@montezuma.mastecende.com>
+In-Reply-To: <1046968304.1746.20.camel@mulgrave>
 List-Id: linux-scsi@vger.kernel.org
-To: Zwane Mwaikambo <zwane@linuxpower.ca>
+To: James Bottomley <James.Bottomley@SteelEye.com>
 Cc: Mike Anderson <andmike@us.ibm.com>, Andries.Brouwer@cwi.nl, torvalds@transmeta.com, linux-kernel@vger.kernel.org, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Thu, 2003-03-06 at 03:58, Zwane Mwaikambo wrote:
-> On Thu, 6 Mar 2003, Mike Anderson wrote:
-> 
-> > Would it be possible for you to send me a console output with
-> > scsi_logging=1 so that I can narrow down the failure case.
-> 
-> The following is from 2.5.63-mjb2
-> 
-> http://function.linuxpower.ca/patches/numaq/dmesg-scsi_logging
+On Thu, 6 Mar 2003, James Bottomley wrote:
 
-This log implies the error handling finished after the BDR.  That looks
-like the system doesn't have Mike's latest patch for the logic reversal
-problem in scsi_eh_ready_devs, could you check this?
+> This log implies the error handling finished after the BDR.  That looks
+> like the system doesn't have Mike's latest patch for the logic reversal
+> problem in scsi_eh_ready_devs, could you check this?
+
+static void scsi_eh_ready_devs(struct Scsi_Host *shost,
+                              struct list_head *work_q,
+                              struct list_head *done_q)
+{
+       if (scsi_eh_bus_device_reset(shost, work_q, done_q))
+               if (scsi_eh_bus_reset(shost, work_q, done_q))
+                       if (scsi_eh_host_reset(work_q, done_q))
+                               scsi_eh_offline_sdevs(work_q, done_q);
+}
+
+That is what i currently have, i'll try a boot with;
+
+-               if (scsi_eh_bus_reset(shost, work_q, done_q))
++               if (!scsi_eh_bus_reset(shost, work_q, done_q))
 
 Thanks,
-
-James
-
-
+	Zwane
+-- 
+function.linuxpower.ca
