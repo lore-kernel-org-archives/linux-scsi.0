@@ -1,34 +1,145 @@
-From: Russell King <rmk@arm.linux.org.uk>
+From: Patrick Mansfield <patmans@us.ibm.com>
 Subject: Re: SCSI woes (followup)
-Date: Tue, 24 Sep 2002 20:21:21 +0100
+Date: Tue, 24 Sep 2002 12:32:50 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20020924202121.B4409@flint.arm.linux.org.uk>
-References: <rmk@arm.linux.org.uk> <200209241346.g8ODkER09516@localhost.localdomain> <20020924145852.A28042@flint.arm.linux.org.uk> <20020924111847.A4151@eng2.beaverton.ibm.com> <20020924190809.GB1330@beaverton.ibm.com>
+Message-ID: <20020924123250.A5890@eng2.beaverton.ibm.com>
+References: <rmk@arm.linux.org.uk> <200209241346.g8ODkER09516@localhost.localdomain> <20020924145852.A28042@flint.arm.linux.org.uk> <20020924111847.A4151@eng2.beaverton.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20020924190809.GB1330@beaverton.ibm.com>; from andmike@us.ibm.com on Tue, Sep 24, 2002 at 12:08:09PM -0700
+In-Reply-To: <20020924111847.A4151@eng2.beaverton.ibm.com>; from patmans@us.ibm.com on Tue, Sep 24, 2002 at 11:18:47AM -0700
 List-Id: linux-scsi@vger.kernel.org
-To: Patrick Mansfield <patmans@us.ibm.com>, James Bottomley <James.Bottomley@steeleye.com>, linux-scsi@vger.kernel.org
+To: Russell King <rmk@arm.linux.org.uk>
+Cc: James Bottomley <James.Bottomley@steeleye.com>, linux-scsi@vger.kernel.org
 
-On Tue, Sep 24, 2002 at 12:08:09PM -0700, Mike Anderson wrote:
-> Patrick Mansfield [patmans@us.ibm.com] wrote:
-> > The problem is that we try to send a command via scsi_request_fn() to
-> > a device that has no command blocks allocated - it's initializatin
-> > is incomplete.
-> > 
+On Tue, Sep 24, 2002 at 08:01:17PM +0100, Russell King wrote:
+> On Tue, Sep 24, 2002 at 11:18:47AM -0700, Patrick Mansfield wrote:
 > > Moving the empty check up sounds like good and simple fix for 2.4, or
 > > check if queue_depth == 0. Anything else would be difficult to get right.
 > 
-> Since error handling running during scan is kinda casuing the problem a
-> a patch like the one below to  scsi_restart_operations sould also work. 
+> I disagree here.  Moving the empty check up means that we won't relock any
+> in-use but idle check.
 
-No.  There are still deadlock cases.  This is the _wrong_ fix.
+But, if we check for queue_depth == 0, it will still relock in-use but
+idle devices. No, it won't relock immediately if the error handler does
+not run, but this does not involve finding another place to send the ioctl.
 
-Been there.  Tried it.  It failed.
+> As I said to James earlier today, Eric Young's comments in the code say
+> that it is in the wrong place.  Thinking about it for a while, I'd agree
+> with that statement for the reason above; any device that is in use by
+> user space (ie, mounted on a filesystem) could well be idle for many
+> hours before a request comes through for it.
+> 
+> This means that the door would be unlocked on an in-use device, and the
+> media can be (accidentally) unloaded.
 
--- 
-Russell King (rmk@arm.linux.org.uk)                The developer of ARM Linux
-             http://www.arm.linux.org.uk/personal/aboutme.html
+> > Moving the the SCSI_IOCTL_DOORLOCK doesn't fix the problem if it is
+> > still called on a incompletely initialized device.
+> 
+> There are _many_ problems here.  Let me sort out a patch later tonight
+> and put together the gory details of each problem.  Its basically layer
+> upon layer of crap and fixme's.
 
+Yeh :(
+
+I totally agree the re-locking _should_ be moved, and should be conditional
+(if it was locked, lock it again, but don't lock an unlocked device, like
+your tape door example).
+
+> I have a set of fixes piling up, some trivial, that address many of these
+> problems.  Hell, I almost have a completely stable SCSI system here which
+> I almost can't bring down.  And I'm giving it all sorts of hellish
+> conditions to deal with.
+
+Maybe you can try 2.5 first? Not that it makes thing easier for you, but it
+is probably very easy to break something, and we should break 2.5 rather
+than 2.4. Mike's cleaned up scsi_error.c would probably help a lot, it
+should be pushed into 2.5.
+
+Backporting to 2.4 would be ummm fun :(
+
+> > And, perhaps do not allow the error handler to run during scanning, let
+> > later IO (to any discovered device) kick off the error handler. It's
+> > hard to say if this is good or not - for example, if this is your root
+> > device, you want it online. But if it some other device, and we try hard
+> > to scan and use it, it can cause more problems (if it keeps getting errors,
+> > and we keeping running the error handler/reset cycle, blocking other IO).
+> 
+> No.  You need the error handler to produce bus resets.  Without bus resets,
+> if your SCSI bus hangs (eg, in my case due to a permanent parity error to
+> one device brought on by test code) you don't want to continue queueing
+> IDENTIFY messages to other targets.  They have no hope what so ever to get
+> onto the bus.
+> 
+> You need the error handler to time out the connection to the bad device
+> and perform a bus reset.  A bus reset is the only way that an initiator
+> can clear down a stuck bus.
+
+OK - but you also do not want eternal bus resets because of a marginal
+device. Maybe the error handler can kick off, but if it is a scan INQUIRY,
+do not retry the command, do the resets etc and complete the command as a
+failure. The device being scanned is likely causing the problem (since
+no one else should be using the adapter at this point, unless this is a
+"hardcoded" scan via /proc), this would prevent a new Scsi_Device from 
+being created, but would allow scanning to continue.
+
+> > The problem happens via:
+> > 
+> > 1) device A is found that has removable media during scan
+> > 
+> > 2) INQUIRY to another device B kicks off error handling before the
+> > scan has completed, so device A has no command blocks.
+> > 
+> > 3) Error handler completion calls scsi_request_fn() for A.
+> > 
+> > 4) scsi_request_fn() for A sees the reset happened, and calls scsi_ioctl().
+> > 
+> > 5) scsi_ioctl() calls scsi_request_fn(), it cannot get a Scsi_Cmnd, so
+> > it just returns, incorrectly assuming that another request must be
+> > outstanding.
+
+> Not quite.  Its even more disgusting.  That code is fundamentally wrong, as
+> proven by my later hangs when the devices have been initialised, and passed
+> to the device drivers.
+> 
+> 1) We queue up a command for device A _or_ step 3 above.
+> 
+> 2) scsi_request_fn() gets called to start this device
+> 
+> 3) scsi_request_fn() for A sees that a reset happened, and calls scsi_ioctl()
+> 
+> 4) scsi_ioctl() calls scsi_request_fn().
+> 
+
+Agree with all the above.
+
+> 5) the head of the request queue is _not_ the door lock, but the original
+>    request.
+
+I still don't see how this can be the original request. The TUR is sent via
+the error handler, the INQUIRY resent during error handling does not call
+scsi_request_fn().
+
+So, where is the request requeued?
+
+Is this is in modified error handler code or something?
+
+> 6) we kick off the original request and return from scsi_request_fn()
+
+And, I don't see how this can happen since I don't see how step 5 happens.
+
+> 7) scsi_ioctl() waits for its door lock command to complete.
+> 
+> Ahem, well, it has _never_ been submitted to the host driver.  The done paths
+> for the original request don't kick the request function.  We deadlock.
+> 
+> Trying to lock the door in scsi_request_fn() in the way we do is
+> _fundamentally_ flawed.  Even Eric Young's comments agree!
+> 
+> Now, as I said above, I do have a whole raft of fixes accumulating here, and
+> if I can solve the last few problems, I'll get some patches out for you guys
+> to look at.
+> 
+> -- 
+> Russell King (rmk@arm.linux.org.uk)                The developer of ARM Linux
+>              http://www.arm.linux.org.uk/personal/aboutme.html
