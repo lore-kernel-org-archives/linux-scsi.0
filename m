@@ -1,54 +1,31 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH] make scsi_ioctl.h useable without including scsi.h
-Date: Sun, 17 Nov 2002 16:32:10 +0100
+From: "J.E.J. Bottomley" <James.Bottomley@steeleye.com>
+Subject: Re: [PATCH] removel useless mod use count manipulation
+Date: Sun, 17 Nov 2002 11:31:17 -0600
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20021117163210.A5467@lst.de>
+Message-ID: <200211171731.gAHHVHO12355@localhost.localdomain>
+References: <dledford@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
+Received: (from root@localhost)
+	by pogo.mtv1.steeleye.com (8.9.3/8.9.3) id JAA31361
+	for <linux-scsi@vger.kernel.org>; Sun, 17 Nov 2002 09:31:20 -0800
+In-Reply-To: Message from Doug Ledford <dledford@redhat.com>
+   of "Sat, 16 Nov 2002 21:59:01 EST." <20021117025901.GA24557@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org
 
-*grr* - silly typedefs..
+> This patch conflicts with one I had internally that I was still
+> working  on.  I had a bit more stuff in mine than you did in yours so
+> I folded your  changes into my stuff.  When I push my tree out it will
+> be in there  (otherwise it would have required hand merging by someone
+> else anyway).  I  just gotta wait till I go back up to the office and
+> restart my test box in  order to push the changes out :-/  (shutdown
+> -nr segfaulted on me) 
+
+OK, I'll back this one out of the scsi-misc-2.5 tree I have internally before 
+putting it out on the bkbits site.
+
+James
 
 
---- 1.1/include/scsi/scsi_ioctl.h	Tue Feb  5 12:39:50 2002
-+++ edited/include/scsi/scsi_ioctl.h	Sun Nov 17 14:32:25 2002
-@@ -17,6 +17,8 @@
- 
- #ifdef __KERNEL__
- 
-+struct scsi_device;
-+
- /*
-  * Structures used for scsi_ioctl et al.
-  */
-@@ -33,19 +35,15 @@
- } Scsi_Idlun;
- 
- /* Fibre Channel WWN, port_id struct */
--typedef struct scsi_fctargaddress
--{
-+typedef struct scsi_fctargaddress {
- 	__u32 host_port_id;
- 	unsigned char host_wwn[8]; // include NULL term.
- } Scsi_FCTargAddress;
- 
--extern int scsi_ioctl (Scsi_Device *dev, int cmd, void *arg);
--extern int kernel_scsi_ioctl (Scsi_Device *dev, int cmd, void *arg);
--extern int scsi_ioctl_send_command(Scsi_Device *dev,
--				   Scsi_Ioctl_Command *arg);
--
--#endif
--
--#endif
--
-+extern int scsi_ioctl(struct scsi_device *, int, void *);
-+extern int kernel_scsi_ioctl(struct scsi_device *, int , void *);
-+extern int scsi_ioctl_send_command(struct scsi_device *,
-+				   struct scsi_ioctl_command *);
- 
-+#endif /* __KERNEL__ */
-+#endif /* _SCSI_IOCTL_H */
