@@ -1,22 +1,32 @@
-From: Grzegorz Kulewski <kangur@polcom.net>
-Subject: Re: [2.6 patch] remove ancient SCSI ChangeLog
-Date: Sat, 13 Nov 2004 15:48:25 +0100 (CET)
-Message-ID: <Pine.LNX.4.60.0411131546340.30488@alpha.polcom.net>
-References: <20041113140541.GY2249@stusta.de>
+From: Adrian Bunk <bunk@stusta.de>
+Subject: drivers/scsi/aic7xxx/: How can I edit the _shipped files?
+Date: Sat, 13 Nov 2004 17:14:00 +0100
+Message-ID: <20041113161400.GA2249@stusta.de>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
-Return-path: <linux-kernel-owner+glk-linux-kernel=40m.gmane.org-S262765AbUKMOul@vger.kernel.org>
-In-Reply-To: <20041113140541.GY2249@stusta.de>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Adrian Bunk <bunk@stusta.de>
-Cc: James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mailout.stusta.mhn.de ([141.84.69.5]:9223 "HELO
+	mailout.stusta.mhn.de") by vger.kernel.org with SMTP
+	id S262771AbUKMQOd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 13 Nov 2004 11:14:33 -0500
+Content-Disposition: inline
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
 
-On Sat, 13 Nov 2004, Adrian Bunk wrote:
+How can I edit the _shipped files under drivers/scsi/aic7xxx/?
 
-> Documentation/scsi/ChangeLog wasn't updated for nearly 8 years.
+The source files they claim to be built from aren't shipped with the 
+kernel.
 
-So maybe it is protected because of historical value? :-)
+TIA
+Adrian
 
+-- 
 
-Grzegorz Kulewski
+       "Is there not promise of rain?" Ling Tan asked suddenly out
+        of the darkness. There had been need of rain for many days.
+       "Only a promise," Lao Er said.
+                                       Pearl S. Buck - Dragon Seed
+
