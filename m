@@ -1,31 +1,32 @@
 From: maximilian attems <janitor@sternwelten.at>
-Subject: [patch-kj] remove old ifdef'd code from aic79xx_osm.c
-Date: Mon, 21 Jun 2004 20:06:53 +0200
+Subject: [patch-kj] remove old ifdef'd code from aic79xx_osm.h
+Date: Mon, 21 Jun 2004 20:09:38 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040621180653.GN1545@sputnik.stro.at>
+Message-ID: <20040621180938.GO1545@sputnik.stro.at>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from baikonur.stro.at ([213.239.196.228]:21943 "EHLO
-	baikonur.stro.at") by vger.kernel.org with ESMTP id S266362AbUFUSGw
+Received: from baikonur.stro.at ([213.239.196.228]:20397 "EHLO
+	baikonur.stro.at") by vger.kernel.org with ESMTP id S266363AbUFUSJh
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 21 Jun 2004 14:06:52 -0400
+	Mon, 21 Jun 2004 14:09:37 -0400
 Received: from localhost (localhost [127.0.0.1])
-	by baikonur.stro.at (Postfix) with ESMTP id EBE105C0A4
-	for <linux-scsi@vger.kernel.org>; Mon, 21 Jun 2004 20:06:51 +0200 (CEST)
+	by baikonur.stro.at (Postfix) with ESMTP id 8CB155C0A4
+	for <linux-scsi@vger.kernel.org>; Mon, 21 Jun 2004 20:09:36 +0200 (CEST)
 Received: from baikonur.stro.at ([127.0.0.1])
 	by localhost (baikonur [127.0.0.1]) (amavisd-new, port 10024)
-	with ESMTP id 22325-07 for <linux-scsi@vger.kernel.org>;
-	Mon, 21 Jun 2004 20:06:51 +0200 (CEST)
+	with ESMTP id 19600-09 for <linux-scsi@vger.kernel.org>;
+	Mon, 21 Jun 2004 20:09:35 +0200 (CEST)
 Received: from sputnik (unknown [62.47.144.54])
-	by baikonur.stro.at (Postfix) with ESMTP id 30E785C002
-	for <linux-scsi@vger.kernel.org>; Mon, 21 Jun 2004 20:06:50 +0200 (CEST)
+	by baikonur.stro.at (Postfix) with ESMTP id 3E8D95C002
+	for <linux-scsi@vger.kernel.org>; Mon, 21 Jun 2004 20:09:35 +0200 (CEST)
 Received: from max by sputnik with local (Exim 4.32)
-	id 1BcTC1-0004Hz-KC
-	for linux-scsi@vger.kernel.org; Mon, 21 Jun 2004 20:06:53 +0200
+	id 1BcTEg-0004IQ-OQ
+	for linux-scsi@vger.kernel.org; Mon, 21 Jun 2004 20:09:38 +0200
 Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
+
 
  From: Domen Puncer <domen@coderock.org>
  Patches to remove some old ifdefs.
@@ -37,300 +38,201 @@ Signed-off-by: Maximilian Attems <janitor@sternwelten.at>
 
 ---
 
- linux-2.6.7-max/drivers/scsi/aic7xxx/aic79xx_osm.c |   89 ++-------------------
- 1 files changed, 11 insertions(+), 78 deletions(-)
+ linux-2.6.7-max/drivers/scsi/aic7xxx/aic79xx_osm.h |   81 +--------------------
+ 1 files changed, 6 insertions(+), 75 deletions(-)
 
-diff -puN drivers/scsi/aic7xxx/aic79xx_osm.c~remove-old-ifdefs-aic79xx_osm.c drivers/scsi/aic7xxx/aic79xx_osm.c
---- linux-2.6.7/drivers/scsi/aic7xxx/aic79xx_osm.c~remove-old-ifdefs-aic79xx_osm.c	2004-06-18 09:13:51.000000000 +0200
-+++ linux-2.6.7-max/drivers/scsi/aic7xxx/aic79xx_osm.c	2004-06-18 09:13:51.000000000 +0200
-@@ -52,9 +52,7 @@
-  */
- #include "aiclib.c"
+diff -puN drivers/scsi/aic7xxx/aic79xx_osm.h~remove-old-ifdefs-aic79xx_osm.h drivers/scsi/aic7xxx/aic79xx_osm.h
+--- linux-2.6.7/drivers/scsi/aic7xxx/aic79xx_osm.h~remove-old-ifdefs-aic79xx_osm.h	2004-06-18 09:13:54.000000000 +0200
++++ linux-2.6.7-max/drivers/scsi/aic7xxx/aic79xx_osm.h	2004-06-18 09:13:54.000000000 +0200
+@@ -53,17 +53,9 @@
+ #include <asm/byteorder.h>
+ #include <asm/io.h>
  
--#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,3,0)
- #include <linux/init.h>		/* __setup */
--#endif
- 
- #if LINUX_VERSION_CODE < KERNEL_VERSION(2,5,0)
- #include "sd.h"			/* For geometry detection */
-@@ -67,14 +65,6 @@
-  */
- spinlock_t ahd_list_spinlock;
- 
--#if LINUX_VERSION_CODE < KERNEL_VERSION(2,3,0)
--struct proc_dir_entry proc_scsi_aic79xx = {
--	PROC_SCSI_AIC79XX, 7, "aic79xx",
--	S_IFDIR | S_IRUGO | S_IXUGO, 2,
--	0, 0, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL
--};
+-#ifndef KERNEL_VERSION
+-#define KERNEL_VERSION(x,y,z) (((x)<<16)+((y)<<8)+(z))
 -#endif
 -
- #if LINUX_VERSION_CODE < KERNEL_VERSION(2,5,0)
- /* For dynamic sglist size calculation. */
- u_int ahd_linux_nseg;
-@@ -566,7 +556,7 @@ static __inline void ahd_linux_unmap_scb
- 
- static __inline int ahd_linux_map_seg(struct ahd_softc *ahd, struct scb *scb,
- 		 		      struct ahd_dma_seg *sg,
--				      bus_addr_t addr, bus_size_t len);
-+				      dma_addr_t addr, bus_size_t len);
- 
- static __inline void
- ahd_schedule_completeq(struct ahd_softc *ahd)
-@@ -584,31 +574,20 @@ ahd_schedule_completeq(struct ahd_softc 
- static __inline void
- ahd_schedule_runq(struct ahd_softc *ahd)
- {
 -#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0)
- 	tasklet_schedule(&ahd->platform_data->runq_tasklet);
+ #include <linux/interrupt.h> /* For tasklet support. */
+ #include <linux/config.h>
+ #include <linux/slab.h>
 -#else
--	/*
--	 * Tasklets are not available, so run inline.
--	 */
--	ahd_runq_tasklet((unsigned long)ahd);
+-#include <linux/malloc.h>
+-#endif
+ 
+ /* Core SCSI definitions */
+ #define AIC_LIB_PREFIX ahd
+@@ -144,11 +136,6 @@ extern Scsi_Host_Template aic79xx_driver
+ 
+ /***************************** Bus Space/DMA **********************************/
+ 
+-#if LINUX_VERSION_CODE > KERNEL_VERSION(2,2,17)
+-typedef dma_addr_t bus_addr_t;
+-#else
+-typedef uint32_t bus_addr_t;
+-#endif
+ typedef uint32_t bus_size_t;
+ 
+ typedef enum {
+@@ -163,7 +150,7 @@ typedef union {
+ 
+ typedef struct bus_dma_segment
+ {
+-	bus_addr_t	ds_addr;
++	dma_addr_t	ds_addr;
+ 	bus_size_t	ds_len;
+ } bus_dma_segment_t;
+ 
+@@ -177,11 +164,11 @@ typedef struct ahd_linux_dma_tag* bus_dm
+ 
+ struct ahd_linux_dmamap
+ {
+-	bus_addr_t	bus_addr;
++	dma_addr_t	bus_addr;
+ };
+ typedef struct ahd_linux_dmamap* bus_dmamap_t;
+ 
+-typedef int bus_dma_filter_t(void*, bus_addr_t);
++typedef int bus_dma_filter_t(void*, dma_addr_t);
+ typedef void bus_dmamap_callback_t(void *, bus_dma_segment_t *, int, int);
+ 
+ #define BUS_DMA_WAITOK		0x0
+@@ -198,7 +185,7 @@ typedef void bus_dmamap_callback_t(void 
+ 
+ int	ahd_dma_tag_create(struct ahd_softc *, bus_dma_tag_t /*parent*/,
+ 			   bus_size_t /*alignment*/, bus_size_t /*boundary*/,
+-			   bus_addr_t /*lowaddr*/, bus_addr_t /*highaddr*/,
++			   dma_addr_t /*lowaddr*/, dma_addr_t /*highaddr*/,
+ 			   bus_dma_filter_t*/*filter*/, void */*filterarg*/,
+ 			   bus_size_t /*maxsize*/, int /*nsegments*/,
+ 			   bus_size_t /*maxsegsz*/, int /*flags*/,
+@@ -280,11 +267,7 @@ ahd_scb_timer_reset(struct scb *scb, u_i
+ }
+ 
+ /***************************** SMP support ************************************/
+-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,3,17)
+ #include <linux/spinlock.h>
+-#elif LINUX_VERSION_CODE >= KERNEL_VERSION(2,1,93)
+-#include <linux/smp.h>
+-#endif
+ 
+ #if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,5,0) || defined(SCSI_HAS_HOST_LOCK))
+ #define AHD_SCSI_HAS_HOST_LOCK 1
+@@ -509,11 +492,8 @@ typedef enum {
+ 
+ struct scb_platform_data {
+ 	struct ahd_linux_device	*dev;
+-	bus_addr_t		 buf_busaddr;
++	dma_addr_t		 buf_busaddr;
+ 	uint32_t		 xfer_len;
+-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,3,0)
+-	uint32_t		 resid;		/* Transfer residual */
+-#endif
+ 	uint32_t		 sense_resid;	/* Auto-Sense residual */
+ 	ahd_linux_scb_flags	 flags;
+ };
+@@ -543,9 +523,7 @@ struct ahd_platform_data {
+ 	struct ahd_completeq	 completeq;
+ 
+ 	spinlock_t		 spin_lock;
+-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0)
+ 	struct tasklet_struct	 runq_tasklet;
+-#endif
+ 	u_int			 qfrozen;
+ 	pid_t			 dv_pid;
+ 	struct timer_list	 completeq_timer;
+@@ -562,7 +540,7 @@ struct ahd_platform_data {
+ 	uint32_t		 irq;		/* IRQ for this adapter */
+ 	uint32_t		 bios_address;
+ 	uint32_t		 mem_busaddr;	/* Mem Base Addr */
+-	bus_addr_t		 hw_dma_mask;
++	dma_addr_t		 hw_dma_mask;
+ 	ahd_linux_softc_flags	 flags;
+ };
+ 
+@@ -859,9 +837,7 @@ ahd_list_unlock(unsigned long *flags)
+ #define PCIXM_STATUS_MAXCRDS	0x1C00	/* Maximum Cumulative Read Size */
+ #define PCIXM_STATUS_RCVDSCEM	0x2000	/* Received a Split Comp w/Error msg */
+ 
+-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0)
+ extern struct pci_driver aic79xx_pci_driver;
+-#endif
+ 
+ typedef enum
+ {
+@@ -965,25 +941,6 @@ ahd_flush_device_writes(struct ahd_softc
+ 	ahd_inb(ahd, INTSTAT);
+ }
+ 
+-#if LINUX_VERSION_CODE <= KERNEL_VERSION(2,3,0)
+-#define pci_map_sg(pdev, sg_list, nseg, direction) (nseg)
+-#define pci_unmap_sg(pdev, sg_list, nseg, direction)
+-#define sg_dma_address(sg) (VIRT_TO_BUS((sg)->address))
+-#define sg_dma_len(sg) ((sg)->length)
+-#define pci_map_single(pdev, buffer, bufflen, direction) \
+-	(VIRT_TO_BUS(buffer))
+-#define pci_unmap_single(pdev, buffer, buflen, direction)
+-#endif
+-
+-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,3)
+-#define ahd_pci_set_dma_mask pci_set_dma_mask
+-#else
+-/*
+- * Always "return" 0 for success.
+- */
+-#define ahd_pci_set_dma_mask(dev_softc, mask)	\
+-	(((dev_softc)->dma_mask = mask) && 0)
+-#endif
+ /**************************** Proc FS Support *********************************/
+ #if LINUX_VERSION_CODE < KERNEL_VERSION(2,5,0)
+ int	ahd_linux_proc_info(char *, char **, off_t, int, int, int);
+@@ -1091,35 +1048,13 @@ u_long ahd_get_transfer_length(struct sc
+ static __inline
+ int ahd_get_transfer_dir(struct scb *scb)
+ {
+-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,3,40)
+ 	return (scb->io_ctx->sc_data_direction);
+-#else
+-	if (scb->io_ctx->bufflen == 0)
+-		return (CAM_DIR_NONE);
+-
+-	switch(scb->io_ctx->cmnd[0]) {
+-	case 0x08:  /* READ(6)  */
+-	case 0x28:  /* READ(10) */
+-	case 0xA8:  /* READ(12) */
+-		return (CAM_DIR_IN);
+-        case 0x0A:  /* WRITE(6)  */
+-        case 0x2A:  /* WRITE(10) */
+-        case 0xAA:  /* WRITE(12) */
+-		return (CAM_DIR_OUT);
+-        default:
+-		return (CAM_DIR_NONE);
+-        }
 -#endif
  }
  
  static __inline
- void ahd_setup_runq_tasklet(struct ahd_softc *ahd)
+ void ahd_set_residual(struct scb *scb, u_long resid)
  {
--#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0)
- 	tasklet_init(&ahd->platform_data->runq_tasklet, ahd_runq_tasklet,
- 		     (unsigned long)ahd);
--#endif
- }
- 
- static __inline void
- ahd_teardown_runq_tasklet(struct ahd_softc *ahd)
- {
--#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0)
- 	tasklet_kill(&ahd->platform_data->runq_tasklet);
--#endif
- }
- 
- static __inline struct ahd_linux_device*
-@@ -739,7 +718,7 @@ ahd_linux_unmap_scb(struct ahd_softc *ah
- 
- static __inline int
- ahd_linux_map_seg(struct ahd_softc *ahd, struct scb *scb,
--		  struct ahd_dma_seg *sg, bus_addr_t addr, bus_size_t len)
-+		  struct ahd_dma_seg *sg, dma_addr_t addr, bus_size_t len)
- {
- 	int	 consumed;
- 
-@@ -751,7 +730,7 @@ ahd_linux_map_seg(struct ahd_softc *ahd,
- 	sg->addr = ahd_htole32(addr & 0xFFFFFFFF);
- 	scb->platform_data->xfer_len += len;
- 
--	if (sizeof(bus_addr_t) > 4
-+	if (sizeof(dma_addr_t) > 4
- 	 && (ahd->flags & AHD_39BIT_ADDRESSING) != 0)
- 		len |= (addr >> 8) & AHD_SG_HIGH_ADDR_MASK;
- 
-@@ -894,11 +873,7 @@ ahd_linux_detect(Scsi_Host_Template *tem
- "aic79xx: insmod or else it might trash certain memory areas.\n");
- #endif
- 
--#if LINUX_VERSION_CODE > KERNEL_VERSION(2,3,0)
- 	template->proc_name = "aic79xx";
+-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,3,0)
+ 	scb->io_ctx->resid = resid;
 -#else
--	template->proc_dir = &proc_scsi_aic79xx;
--#endif
- 
- 	/*
- 	 * Initialize our softc list lock prior to
-@@ -1699,35 +1674,27 @@ ahd_runq_tasklet(unsigned long data)
- {
- 	struct ahd_softc* ahd;
- 	struct ahd_linux_device *dev;
--#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0)
- 	u_long flags;
--#endif
- 
- 	ahd = (struct ahd_softc *)data;
--#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0)
- 	ahd_lock(ahd, &flags);
--#endif
- 	while ((dev = ahd_linux_next_device_to_run(ahd)) != NULL) {
- 	
- 		TAILQ_REMOVE(&ahd->platform_data->device_runq, dev, links);
- 		dev->flags &= ~AHD_DEV_ON_RUN_LIST;
- 		ahd_linux_check_device_queue(ahd, dev);
--#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0)
- 		/* Yeild to our interrupt handler */
- 		ahd_unlock(ahd, &flags);
- 		ahd_lock(ahd, &flags);
--#endif
- 	}
--#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0)
- 	ahd_unlock(ahd, &flags);
+-	scb->platform_data->resid = resid;
 -#endif
  }
  
- /******************************** Bus DMA *************************************/
- int
- ahd_dma_tag_create(struct ahd_softc *ahd, bus_dma_tag_t parent,
- 		   bus_size_t alignment, bus_size_t boundary,
--		   bus_addr_t lowaddr, bus_addr_t highaddr,
-+		   dma_addr_t lowaddr, dma_addr_t highaddr,
- 		   bus_dma_filter_t *filter, void *filterarg,
- 		   bus_size_t maxsize, int nsegments,
- 		   bus_size_t maxsegsz, int flags, bus_dma_tag_t *ret_tag)
-@@ -1764,7 +1731,6 @@ ahd_dmamem_alloc(struct ahd_softc *ahd, 
- {
- 	bus_dmamap_t map;
- 
--#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,3,0)
- 	map = malloc(sizeof(*map), M_DEVBUF, M_NOWAIT);
- 	if (map == NULL)
- 		return (ENOMEM);
-@@ -1776,28 +1742,18 @@ ahd_dmamem_alloc(struct ahd_softc *ahd, 
- 	 * our dma mask when doing allocations.
- 	 */
- 	if (ahd->dev_softc != NULL)
--		if (ahd_pci_set_dma_mask(ahd->dev_softc, 0xFFFFFFFF)) {
-+		if (pci_set_dma_mask(ahd->dev_softc, 0xFFFFFFFF)) {
- 			printk(KERN_WARNING "aic79xx: No suitable DMA available.\n");
- 			return (ENODEV);
- 		}
- 	*vaddr = pci_alloc_consistent(ahd->dev_softc,
- 				      dmat->maxsize, &map->bus_addr);
- 	if (ahd->dev_softc != NULL)
--		if (ahd_pci_set_dma_mask(ahd->dev_softc,
-+		if (pci_set_dma_mask(ahd->dev_softc,
- 				     ahd->platform_data->hw_dma_mask)) {
- 			printk(KERN_WARNING "aic79xx: No suitable DMA available.\n");
- 			return (ENODEV);
- 		}
--#else /* LINUX_VERSION_CODE < KERNEL_VERSION(2,3,0) */
--	/*
--	 * At least in 2.2.14, malloc is a slab allocator so all
--	 * allocations are aligned.  We assume for these kernel versions
--	 * that all allocations will be bellow 4Gig, physically contiguous,
--	 * and accessible via DMA by the controller.
--	 */
--	map = NULL; /* No additional information to store */
--	*vaddr = malloc(dmat->maxsize, M_DEVBUF, M_NOWAIT);
--#endif
- 	if (*vaddr == NULL)
- 		return (ENOMEM);
- 	*mapp = map;
-@@ -1808,12 +1764,8 @@ void
- ahd_dmamem_free(struct ahd_softc *ahd, bus_dma_tag_t dmat,
- 		void* vaddr, bus_dmamap_t map)
+ static __inline
+@@ -1131,11 +1066,7 @@ void ahd_set_sense_residual(struct scb *
+ static __inline
+ u_long ahd_get_residual(struct scb *scb)
  {
 -#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,3,0)
- 	pci_free_consistent(ahd->dev_softc, dmat->maxsize,
- 			    vaddr, map->bus_addr);
+ 	return (scb->io_ctx->resid);
 -#else
--	free(vaddr, M_DEVBUF);
+-	return (scb->platform_data->resid);
 -#endif
  }
  
- int
-@@ -1827,12 +1779,7 @@ ahd_dmamap_load(struct ahd_softc *ahd, b
- 	 */
- 	bus_dma_segment_t stack_sg;
- 
--#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,3,0)
- 	stack_sg.ds_addr = map->bus_addr;
--#else
--#define VIRT_TO_BUS(a) (uint32_t)virt_to_bus((void *)(a))
--	stack_sg.ds_addr = VIRT_TO_BUS(buf);
--#endif
- 	stack_sg.ds_len = dmat->maxsize;
- 	cb(cb_arg, &stack_sg, /*nseg*/1, /*error*/0);
- 	return (0);
-@@ -2064,9 +2011,7 @@ aic79xx_setup(char *s)
- 	return 1;
- }
- 
--#if LINUX_VERSION_CODE > KERNEL_VERSION(2,3,0)
- __setup("aic79xx=", aic79xx_setup);
--#endif
- 
- uint32_t aic79xx_verbose;
- 
-@@ -2109,8 +2054,7 @@ ahd_linux_register_host(struct ahd_softc
- 		ahd_set_name(ahd, new_name);
- 	}
- 	host->unique_id = ahd->unit;
--#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,4) && \
--    LINUX_VERSION_CODE  < KERNEL_VERSION(2,5,0)
-+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,5,0)
- 	scsi_set_pci_device(host, ahd->dev_softc);
- #endif
- 	ahd_linux_setup_user_rd_strm_settings(ahd);
-@@ -2262,15 +2206,9 @@ ahd_platform_alloc(struct ahd_softc *ahd
- 	ahd->platform_data->completeq_timer.data = (u_long)ahd;
- 	ahd->platform_data->completeq_timer.function =
- 	    (ahd_linux_callback_t *)ahd_linux_thread_run_complete_queue;
--#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,3,0)
- 	init_MUTEX_LOCKED(&ahd->platform_data->eh_sem);
- 	init_MUTEX_LOCKED(&ahd->platform_data->dv_sem);
- 	init_MUTEX_LOCKED(&ahd->platform_data->dv_cmd_sem);
--#else
--	ahd->platform_data->eh_sem = MUTEX_LOCKED;
--	ahd->platform_data->dv_sem = MUTEX_LOCKED;
--	ahd->platform_data->dv_cmd_sem = MUTEX_LOCKED;
--#endif
- 	ahd_setup_runq_tasklet(ahd);
- 	ahd->seltime = (aic79xx_seltime & 0x3) << 4;
- 	return (0);
-@@ -2330,13 +2268,10 @@ ahd_platform_free(struct ahd_softc *ahd)
- 			base_addr = (u_long)ahd->bshs[0].maddr;
- 			base_addr &= PAGE_MASK;
- 			iounmap((void *)base_addr);
--#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0)
- 			release_mem_region(ahd->platform_data->mem_busaddr,
- 					   0x1000);
--#endif
- 		}
--#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0) && \
--    LINUX_VERSION_CODE  < KERNEL_VERSION(2,5,0)
-+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,5,0)
-     		/*
- 		 * In 2.4 we detach from the scsi midlayer before the PCI
- 		 * layer invokes our remove callback.  No per-instance
-@@ -4126,7 +4061,7 @@ ahd_linux_run_device_queue(struct ahd_so
- 					  cmd->use_sg, dir);
- 			scb->platform_data->xfer_len = 0;
- 			for (sg = scb->sg_list; nseg > 0; nseg--, cur_seg++) {
--				bus_addr_t addr;
-+				dma_addr_t addr;
- 				bus_size_t len;
- 
- 				addr = sg_dma_address(cur_seg);
-@@ -4137,7 +4072,7 @@ ahd_linux_run_device_queue(struct ahd_so
- 			}
- 		} else if (cmd->request_bufflen != 0) {
- 			void *sg;
--			bus_addr_t addr;
-+			dma_addr_t addr;
- 			int dir;
- 
- 			sg = scb->sg_list;
-@@ -4371,7 +4306,7 @@ ahd_send_async(struct ahd_softc *ahd, ch
- 		WARN_ON(lun != CAM_LUN_WILDCARD);
- 		scsi_report_device_reset(ahd->platform_data->host,
- 					 channel - 'A', target);
--#elif LINUX_VERSION_CODE >= KERNEL_VERSION(2,3,0)
-+#else
- 		Scsi_Device *scsi_dev;
- 
- 		/*
-@@ -4392,12 +4327,10 @@ ahd_send_async(struct ahd_softc *ahd, ch
- 		break;
- 	}
-         case AC_BUS_RESET:
--#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,3,0)
- 		if (ahd->platform_data->host != NULL) {
- 			scsi_report_bus_reset(ahd->platform_data->host,
- 					      channel - 'A');
- 		}
--#endif
-                 break;
-         default:
-                 panic("ahd_send_async: Unexpected async event");
+ static __inline
 
 _
