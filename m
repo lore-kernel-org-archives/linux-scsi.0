@@ -1,37 +1,28 @@
-From: brking@us.ibm.com
-Subject: [PATCH 16/16] ipr: Bump driver version.
-Date: Wed, 04 Aug 2004 17:33:14 -0500
+From: =?iso-8859-1?q?Luis=20Trejos?= <ldtrejos@yahoo.com>
+Subject: PERC4/SC FW3.41
+Date: Wed, 4 Aug 2004 17:36:14 -0500 (CDT)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <200408042234.i74MYQCu132434@northrelay02.pok.ibm.com>
+Message-ID: <20040804223614.39591.qmail@web14203.mail.yahoo.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e1.ny.us.ibm.com ([32.97.182.101]:51083 "EHLO e1.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S267478AbUHDWdU (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Aug 2004 18:33:20 -0400
+Received: from web14203.mail.yahoo.com ([216.136.172.145]:42546 "HELO
+	web14203.mail.yahoo.com") by vger.kernel.org with SMTP
+	id S267481AbUHDWgP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 4 Aug 2004 18:36:15 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, brking@us.ibm.com
+To: linux-scsi@vger.kernel.org
 
+Hi, I am trying to install Linux Red Hat 7.2 with a
+PERC4/SC RAID and I cann=B4t. Please help.
 
-Bump driver version.
-
-Signed-off-by: Brian King <brking@us.ibm.com>
----
-
- linux-2.6.8-rc3-bjking1/drivers/scsi/ipr.h |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
-
-diff -puN drivers/scsi/ipr.h~ipr_driver_version_2_0_11 drivers/scsi/ipr.h
---- linux-2.6.8-rc3/drivers/scsi/ipr.h~ipr_driver_version_2_0_11	2004-08-04 17:17:43.000000000 -0500
-+++ linux-2.6.8-rc3-bjking1/drivers/scsi/ipr.h	2004-08-04 17:17:43.000000000 -0500
-@@ -39,8 +39,8 @@
- /*
-  * Literals
-  */
--#define IPR_DRIVER_VERSION "2.0.10"
--#define IPR_DRIVER_DATE "(June 7, 2004)"
-+#define IPR_DRIVER_VERSION "2.0.11"
-+#define IPR_DRIVER_DATE "(August 3, 2004)"
- 
- /*
-  * IPR_DBG_TRACE: Setting this to 1 will turn on some general function tracing
-_
+_________________________________________________________
+Do You Yahoo!?
+Informaci=F3n de Estados Unidos y Am=E9rica Latina, en Yahoo! Noticias.
+Vis=EDtanos en http://noticias.espanol.yahoo.com
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
