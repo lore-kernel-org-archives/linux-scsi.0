@@ -1,261 +1,47 @@
-From: Willem Riede <osst@riede.org>
-Subject: [PATCH 3/3] osst upgrade to 0.99.3
-Date: Sun, 02 Jan 2005 00:59:59 +0000
-Message-ID: <1104627599l.3427l.4l@serve.riede.org>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: SYM8xx_2 driver ignores certain EEPROM settings
+Date: Sun, 2 Jan 2005 01:03:25 +0000
+Message-ID: <20050102010325.GJ18080@parcelfarce.linux.theplanet.co.uk>
+References: <200412311343.42484.peter.missel@onlinehome.de> <200412311620.44488.peter.missel@onlinehome.de> <m3pt0okd6c.fsf@merlin.emma.line.org> <200501020128.32217.peter.missel@onlinehome.de> <20050102004004.GA25446@merlin.emma.line.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sccrmhc12.comcast.net ([204.127.202.56]:43201 "EHLO
-	sccrmhc12.comcast.net") by vger.kernel.org with ESMTP
-	id S261209AbVABBAD convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 1 Jan 2005 20:00:03 -0500
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:9153 "EHLO
+	www.linux.org.uk") by vger.kernel.org with ESMTP id S261210AbVABBD0
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 1 Jan 2005 20:03:26 -0500
 Content-Disposition: inline
+In-Reply-To: <20050102004004.GA25446@merlin.emma.line.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: inux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Peter Missel <peter.missel@onlinehome.de>, Matthew Wilcox <matthew@wil.cx>, linux-scsi@vger.kernel.org
 
-Here is patch 3 (see previous mail for context), providing osst sysfs support.
+On Sun, Jan 02, 2005 at 01:40:04AM +0100, Matthias Andree wrote:
+> Peter Missel schrieb am 2005-01-02:
+> 
+> > This possibly is because with the exception of the 815 chip, LSI's Narrow 
+> > chips don't have a BIOS ROM interface, while the Wide chips do. So if you 
+> > were to build a controller card w/ boot ROM support, you had to use a Wide 
+> > chip even if the card was to be Narrow-only.
+> > 
+> > Tekram's 310U, IIRC, was a ROM-less card that used the 860 Narrow
+> > chip, wasn't it?
+> 
+> On the DC-310U, they used a SYM53C860, I'm not sure about the specs of
+> the chip now that you write narrow.
 
-signed-off-by: Willem Riede <osst@riede.org>
+This is documented in Documentation/scsi/sym53c8xx_2.txt:
 
---- osst-patches/osst.c	2005-01-01 19:27:15.000000000 -0500
-+++ /home/wriede/SfOsstCVS/Driver26/osst.c	2005-01-01 16:13:34.000000000 -0500
-@@ -13,18 +13,18 @@
-   order) Klaus Ehrenfried, Wolfgang Denk, Steve Hirsch, Andreas Koppenh"ofer,
-   Michael Leodolter, Eyal Lebedinsky, J"org Weule, and Eric Youngdale.
- 
--  Copyright 1992 - 2002 Kai Makisara / Willem Riede
--	 email Kai.Makisara@metla.fi / osst@riede.org
-+  Copyright 1992 - 2002 Kai Makisara / 2000 - 2004 Willem Riede
-+	 email osst@riede.org
- 
--  $Header: /cvsroot/osst/Driver/osst.c,v 1.70 2003/12/23 14:22:12 wriede Exp $
-+  $Header: /cvsroot/osst/Driver/osst.c,v 1.73 2005/01/01 21:13:34 wriede Exp $
- 
-   Microscopic alterations - Rik Ling, 2000/12/21
-   Last st.c sync: Tue Oct 15 22:01:04 2002 by makisara
-   Some small formal changes - aeb, 950809
- */
- 
--static const char * cvsid = "$Id: osst.c,v 1.70 2003/12/23 14:22:12 wriede Exp $";
--const char * osst_version = "0.99.1";
-+static const char * cvsid = "$Id: osst.c,v 1.73 2005/01/01 21:13:34 wriede Exp $";
-+const char * osst_version = "0.99.3";
- 
- /* The "failure to reconnect" firmware bug */
- #define OSST_FW_NEED_POLL_MIN 10601 /*(107A)*/
-@@ -36,6 +36,7 @@
- #include <linux/fs.h>
- #include <linux/kernel.h>
- #include <linux/sched.h>
-+#include <linux/proc_fs.h>
- #include <linux/mm.h>
- #include <linux/init.h>
- #include <linux/string.h>
-@@ -5485,6 +5486,151 @@
- }
- 
- /*
-+ * sysfs support for osst driver parameter information
-+ */
-+
-+static ssize_t osst_version_show(struct device_driver *ddd, char *buf)
-+{
-+	return snprintf(buf, PAGE_SIZE, "%s\n", osst_version);
-+}
-+
-+static DRIVER_ATTR(version, S_IRUGO, osst_version_show, NULL);
-+
-+static void osst_create_driverfs_files(struct device_driver *driverfs)
-+{
-+	driver_create_file(driverfs, &driver_attr_version);
-+}
-+
-+static void osst_remove_driverfs_files(struct device_driver *driverfs)
-+{
-+	driver_remove_file(driverfs, &driver_attr_version);
-+}
-+
-+/*
-+ * sysfs support for accessing ADR header information
-+ */
-+
-+static ssize_t osst_adr_rev_show(struct class_device *class_dev, char *buf)
-+{
-+	struct osst_tape * STp = (struct osst_tape *) class_get_devdata (class_dev);
-+	ssize_t l = 0;
-+
-+	if (STp && STp->header_ok && STp->linux_media)
-+		l = snprintf(buf, PAGE_SIZE, "%d.%d\n", STp->header_cache->major_rev, STp->header_cache->minor_rev);
-+	return l;
-+}
-+
-+CLASS_DEVICE_ATTR(ADR_rev, S_IRUGO, osst_adr_rev_show, NULL);
-+
-+static ssize_t osst_linux_media_version_show(struct class_device *class_dev, char *buf)
-+{
-+	struct osst_tape * STp = (struct osst_tape *) class_get_devdata (class_dev);
-+	ssize_t l = 0;
-+
-+	if (STp && STp->header_ok && STp->linux_media)
-+		l = snprintf(buf, PAGE_SIZE, "LIN%d\n", STp->linux_media_version);
-+	return l;
-+}
-+
-+CLASS_DEVICE_ATTR(media_version, S_IRUGO, osst_linux_media_version_show, NULL);
-+
-+static ssize_t osst_capacity_show(struct class_device *class_dev, char *buf)
-+{
-+	struct osst_tape * STp = (struct osst_tape *) class_get_devdata (class_dev);
-+	ssize_t l = 0;
-+
-+	if (STp && STp->header_ok && STp->linux_media)
-+		l = snprintf(buf, PAGE_SIZE, "%d\n", STp->capacity);
-+	return l;
-+}
-+
-+CLASS_DEVICE_ATTR(capacity, S_IRUGO, osst_capacity_show, NULL);
-+
-+static ssize_t osst_first_data_ppos_show(struct class_device *class_dev, char *buf)
-+{
-+	struct osst_tape * STp = (struct osst_tape *) class_get_devdata (class_dev);
-+	ssize_t l = 0;
-+
-+	if (STp && STp->header_ok && STp->linux_media)
-+		l = snprintf(buf, PAGE_SIZE, "%d\n", STp->first_data_ppos);
-+	return l;
-+}
-+
-+CLASS_DEVICE_ATTR(BOT_frame, S_IRUGO, osst_first_data_ppos_show, NULL);
-+
-+static ssize_t osst_eod_frame_ppos_show(struct class_device *class_dev, char *buf)
-+{
-+	struct osst_tape * STp = (struct osst_tape *) class_get_devdata (class_dev);
-+	ssize_t l = 0;
-+
-+	if (STp && STp->header_ok && STp->linux_media)
-+		l = snprintf(buf, PAGE_SIZE, "%d\n", STp->eod_frame_ppos);
-+	return l;
-+}
-+
-+CLASS_DEVICE_ATTR(EOD_frame, S_IRUGO, osst_eod_frame_ppos_show, NULL);
-+
-+static ssize_t osst_filemark_cnt_show(struct class_device *class_dev, char *buf)
-+{
-+	struct osst_tape * STp = (struct osst_tape *) class_get_devdata (class_dev);
-+	ssize_t l = 0;
-+
-+	if (STp && STp->header_ok && STp->linux_media)
-+		l = snprintf(buf, PAGE_SIZE, "%d\n", STp->filemark_cnt);
-+	return l;
-+}
-+
-+CLASS_DEVICE_ATTR(file_count, S_IRUGO, osst_filemark_cnt_show, NULL);
-+
-+static struct class_simple * osst_sysfs_class;
-+
-+static int osst_sysfs_valid = 0;
-+
-+static void osst_sysfs_init(void)
-+{
-+	osst_sysfs_class = class_simple_create(THIS_MODULE, "onstream_tape");
-+	if ( IS_ERR(osst_sysfs_class) )
-+		printk(KERN_WARNING "osst :W: Unable to register sysfs class\n");
-+	else
-+		osst_sysfs_valid = TRUE;
-+}
-+
-+static void osst_sysfs_add(dev_t dev, struct device *device, struct osst_tape * STp, char * name)
-+{
-+	struct class_device *osst_class_member;
-+
-+	if (!osst_sysfs_valid) return;
-+
-+	osst_class_member = class_simple_device_add(osst_sysfs_class, dev, device, "%s", name);
-+	if (IS_ERR(osst_class_member)) {
-+		printk(KERN_WARNING "osst :W: Unable to add sysfs class member %s\n", name);
-+		return;
-+	}
-+	class_set_devdata(osst_class_member, STp);
-+	class_device_create_file(osst_class_member, &class_device_attr_ADR_rev);
-+	class_device_create_file(osst_class_member, &class_device_attr_media_version);
-+	class_device_create_file(osst_class_member, &class_device_attr_capacity);
-+	class_device_create_file(osst_class_member, &class_device_attr_BOT_frame);
-+	class_device_create_file(osst_class_member, &class_device_attr_EOD_frame);
-+	class_device_create_file(osst_class_member, &class_device_attr_file_count);
-+}
-+
-+static void osst_sysfs_destroy(dev_t dev)
-+{
-+	if (!osst_sysfs_valid) return; 
-+
-+	class_simple_device_remove(dev);
-+}
-+
-+static void osst_sysfs_cleanup(void)
-+{
-+	if (osst_sysfs_valid) {
-+		class_simple_destroy(osst_sysfs_class);
-+		osst_sysfs_valid = 0;
-+	}
-+}
-+
-+/*
-  * osst startup / cleanup code
-  */
- 
-@@ -5624,7 +5770,14 @@
- 	init_MUTEX(&tpnt->lock);
- 	osst_nr_dev++;
- 	write_unlock(&os_scsi_tapes_lock);
--
-+	{
-+		char name[8];
-+		/*  Rewind entry  */
-+		osst_sysfs_add(MKDEV(OSST_MAJOR, dev_num), dev, tpnt, tape_name(tpnt));
-+		/*  No-rewind entry  */
-+		snprintf(name, 8, "%s%s", "n", tape_name(tpnt));
-+		osst_sysfs_add(MKDEV(OSST_MAJOR, dev_num + 128), dev, tpnt, name);
-+	}
- 	for (mode = 0; mode < ST_NBR_MODES; ++mode) {
- 		/*  Rewind entry  */
- 		devfs_mk_cdev(MKDEV(OSST_MAJOR, dev_num + (mode << 5)),
-@@ -5661,6 +5814,8 @@
- 	write_lock(&os_scsi_tapes_lock);
- 	for(i=0; i < osst_max_dev; i++) {
- 		if((tpnt = os_scsi_tapes[i]) && (tpnt->device == SDp)) {
-+			osst_sysfs_destroy(MKDEV(OSST_MAJOR, i));
-+			osst_sysfs_destroy(MKDEV(OSST_MAJOR, i+128));
- 			tpnt->device = NULL;
- 			for (mode = 0; mode < ST_NBR_MODES; ++mode) {
- 				devfs_remove("%s/ot%s", SDp->devfs_name, osst_formats[mode]);
-@@ -5689,11 +5844,14 @@
- 	printk(KERN_INFO "osst :I: Tape driver with OnStream support version %s\nosst :I: %s\n", osst_version, cvsid);
- 
- 	validate_options();
--	
-+	osst_sysfs_init();
-+
- 	if ((register_chrdev(OSST_MAJOR,"osst", &osst_fops) < 0) || scsi_register_driver(&osst_template.gendrv)) {
- 		printk(KERN_ERR "osst :E: Unable to register major %d for OnStream tapes\n", OSST_MAJOR);
-+		osst_sysfs_cleanup();
- 		return 1;
- 	}
-+	osst_create_driverfs_files(&osst_template.gendrv);
- 
- 	return 0;
- }
-@@ -5703,8 +5861,10 @@
- 	int i;
- 	struct osst_tape * STp;
- 
-+	osst_remove_driverfs_files(&osst_template.gendrv);
- 	scsi_unregister_driver(&osst_template.gendrv);
- 	unregister_chrdev(OSST_MAJOR, "osst");
-+	osst_sysfs_cleanup();
- 
- 	if (os_scsi_tapes) {
- 		for (i=0; i < osst_max_dev; ++i) {
+       On board                                   LOAD/STORE   HARDWARE
+Chip   SDMS BIOS   Wide   SCSI std.   Max. sync   SCRIPTS      PHASE MISMATCH
+----   ---------   ----   ---------   ----------  ----------   --------------
+[...]
+860        N         N      FAST20    20 MB/s        Y             N
 
-
+-- 
+"Next the statesmen will invent cheap lies, putting the blame upon 
+the nation that is attacked, and every man will be glad of those
+conscience-soothing falsities, and will diligently study them, and refuse
+to examine any refutations of them; and thus he will by and by convince 
+himself that the war is just, and will thank God for the better sleep 
+he enjoys after this process of grotesque self-deception." -- Mark Twain
