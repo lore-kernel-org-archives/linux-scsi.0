@@ -1,64 +1,30 @@
-From: j-nomura@ce.jp.nec.com
-Subject: Re: QLA12160 ring buffer starvation? on 2.4.x
-Date: Tue, 05 Nov 2002 20:04:25 +0900 (JST)
+From: "Adam J. Richter" <adam@yggdrasil.com>
+Subject: Re: Patch?: linux-2.5.45/drivers/scsi/hosts.[ch] - Eliminate scsi_host_tmpl_list
+Date: Tue, 5 Nov 2002 04:20:15 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20021105.200425.719919296.nomura@hpc.bs1.fc.nec.co.jp>
-References: <20021101.205009.783396609.nomura@hpc.bs1.fc.nec.co.jp>
-	<20021101090419.A635@eng2.beaverton.ibm.com>
-	<20021101114248.A4097@eng2.beaverton.ibm.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Message-ID: <200211051220.EAA26599@adam.yggdrasil.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <20021101114248.A4097@eng2.beaverton.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: patmans@us.ibm.com
-Cc: linux-scsi@vger.kernel.org, jes@trained-monkey.org
+To: hch@lst.de, James.Bottomley@HansenPartnership.com
+Cc: linux-scsi@vger.kernel.org
 
-Hello Patrick,
+	Oops, I see that Chrisoph Hellwig posted a patch 19.5 earlier
+than mine that did this clean up and some other related ones, so please
+disregard my patch and apply Christoph's.
 
-thank you for your mails and excuse me for late reply.
+	Chistoph, since you're in the process of doing similar
+clean-ups, you might want to try my untested patch that eliminated
+Scsi_Host_Name:
 
-As you wrote in the latter mail, moving request function forword does
-not solve this problem.
+	 http://marc.theaimsgroup.com/?l=linux-scsi&m=103643303212376&w=2
 
-Mid-layer queue_depth is set as hiwat value, so lowering hiwat
-sets queue depth a decent value in both mid- and low- layer.
+	If it works and looks OK to you, Christoph, I'd encourage you
+to put it into your patch stream if you want, so as to reduce patch
+conflicts for James, Linus, et al.  On the other hand, if that just
+creates work for you that you weren't keen on doing, don't worry about
+it.  I don't mean to impose.
 
-Setting can_queue to size of ring buffer seems to make it better.
-
-
-Also, qla1280_next puts command back to the last of queue, when
-it cannot find any room for the command in ring buffer. This makes
-the problem worse.
-It would be fair to make qla1280_next put request back to the head
-of device queue rather than to the tail of it.
-
-
-From: Patrick Mansfield <patmans@us.ibm.com>
-Subject: Re: QLA12160 ring buffer starvation? on 2.4.x
-Date: Fri, 1 Nov 2002 11:42:48 -0800
-
-> On Fri, Nov 01, 2002 at 09:04:19AM -0800, Patrick Mansfield wrote:
-> > On Fri, Nov 01, 2002 at 08:50:09PM +0900, j-nomura@ce.jp.nec.com wrote:
-> > > qla1280_next is executed either when the first command is queued by
-> > > qla1280_queuecommand or when issued command completes in qla1280_done.
-> > > qla1280_next works only for specified queue.
-> 
-> I didn't notice the per-queue aspect of the above, that implies
-> it can completely starve one LU.
-> 
-> You could try setting can_queue to a reasonable limit (rather than
-> 0xfffff) like the size of the ring buffer, and perhaps also lower
-> the queue depth (similiar to lowering hiwat).
-> 
-> If you are running fine with hiwat lowered, that sounds like a decent
-> solution (and similiar to what other adapters do - don't allow the
-> queue depth * number of devices to execeed the capabilities of the
-> adapter).
-
-Best regards.
---
-NOMURA, Jun'ichi <j-nomura@ce.jp.nec.com, nomura@hpc.bs1.fc.nec.co.jp>
-HPC Operating System Group, 1st Computers Software Division,
-Computers Software Operations Unit, NEC Solutions.
+Adam J. Richter     __     ______________   575 Oroville Road
+adam@yggdrasil.com     \ /                  Milpitas, California 95035
++1 408 309-6081         | g g d r a s i l   United States of America
+                         "Free Software For The Rest Of Us."
