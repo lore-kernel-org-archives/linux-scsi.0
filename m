@@ -1,35 +1,57 @@
-From: "Surekha.PC" <surekhap@cisco.com>
-Subject: Sysfs does not recognise tape devices ?
-Date: Wed, 5 Nov 2003 17:55:19 +0530
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <018f01c3a397$e093d600$a0074d0a@apac.cisco.com>
+From: "Andrew Vasquez" <andrew.vasquez@qlogic.com>
+Subject: RE: [ANNOUNCE] QLogic qla2xxx driver update available (v8.00.00b6).
+Date: Wed, 5 Nov 2003 10:39:32 -0800
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <B179AE41C1147041AA1121F44614F0B060ED64@AVEXCH02.qlogic.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from india-ironport-1.cisco.com ([64.104.129.195]:24150 "EHLO
-	india-ironport-1.cisco.com") by vger.kernel.org with ESMTP
-	id S262855AbTKEMZ2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 5 Nov 2003 07:25:28 -0500
-Received: from samrat.cisco.com (samrat.cisco.com [192.135.241.21])
-	by india-msg-core-1.cisco.com (8.12.9/8.12.6) with ESMTP id hA5Hr20s029206
-	for <linux-scsi@vger.kernel.org>; Wed, 5 Nov 2003 17:53:05 GMT
-Received: from surekhapw2k (dhcp-10-77-7-160.cisco.com [10.77.7.160])
-	by samrat.cisco.com (8.8.8/2.6/Cisco List Logging/8.8.8) with ESMTP id RAA07995
-	for <linux-scsi@vger.kernel.org>; Wed, 5 Nov 2003 17:55:24 +0530 (IST)
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+content-class: urn:content-classes:message
+To: Mike Anderson <andmike@us.ibm.com>
+Cc: Linux-Kernel <linux-kernel@vger.kernel.org>, Linux-SCSI <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
+Mike,
 
-Hi,
+> > A new version of the 8.x series driver for Linux 2.6.x kernels has
+> > been uploaded to SourceForge:
+> 
+> Thanks for the update.
+> 
+> Can you give more information on why clustering was turned off
+> starting in b5?
+> 
 
-I have a iSCSI setup with scsi disk and tape configured as iSCSI
-targets. The disks are recognised with sysfs, but tape device entries
-are not getting created.
+This change was part of a relatively large performance-patch that was
+originally against the 6.x series driver.  There were two main reasons
+for disabling clustering support:
 
-Is this a bug in sysfs?
+	o Given the ability of the ISP to efficiently DMA to and from
+	  a significant number of data segment descriptors (via
+	  command/continuation type IOCBs), there were some questions
+	  regarding the benefits that clustering provided given the
+	  overhead incurred by the mid-layer attempting merge the
+	  requests.
 
-TIA,
-surekha
+	o Given the ISPs inability to handle data segments that cross
+	  32-bit page boundaries, and the overhead in defensive logic
+	  within the driver to prevent these cases (compare the 6.x
+	  code to the 8.x code and you will see what I mean), by
+	  disabling clustering we guarantee that a single SG element
+	  never crosses a 4GB boundary.
 
+Now, in 2.6 there are some significant changes.  For one, with the
+block layer rewrite and the ability to limit segment boundaries of a
+block queue request with the blk_queue_segment_boundary() call, a LLDD
+need not concern itself with any defensive fast-path logic to handle
+the 4GB cross.
+
+So, we're left with the benefits of the overhead of this merge process
+done by the block layer.  I'm certainly receptive to the notion of
+reexamining the use of clustering given some solid data points showing
+an (significant -- this is subjective) increase in performance and/or a
+resounding 'yeah, enable it!' from those in the block-layer 'know.'
+
+Regards,
+Andrew Vasquez
