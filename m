@@ -1,57 +1,49 @@
 From: domen@coderock.org
-Subject: [patch 1/3] scsi/qla_os: replace schedule_timeout() with ssleep()
-Date: Sun, 06 Mar 2005 23:27:56 +0100
-Message-ID: <20050306222756.711B01F201@trashy.coderock.org>
-Received: from coderock.org ([193.77.147.115]:64686 "EHLO trashy.coderock.org")
-	by vger.kernel.org with ESMTP id S261538AbVCFW2I (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 6 Mar 2005 17:28:08 -0500
+Subject: [patch 1/1] scsi/osst: replace schedule_timeout() with msleep()
+Date: Sun, 06 Mar 2005 23:27:41 +0100
+Message-ID: <20050306222742.294F71EC90@trashy.coderock.org>
+Received: from coderock.org ([193.77.147.115]:62382 "EHLO trashy.coderock.org")
+	by vger.kernel.org with ESMTP id S261537AbVCFW16 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 6 Mar 2005 17:27:58 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: andrew.vasquez@qlogic.com
+To: osst@riede.org
 Cc: linux-scsi@vger.kernel.org, domen@coderock.org, nacc@us.ibm.com
 
 
 
-
-Any comments would be, as always, appreciated.
-
--Nish
-
-Use ssleep() instead of schedule_timeout() to guarantee the
-task delays as expected. Change the values of the constants being used
-appropriately. I left the arithmetic there as it was before, even though
-it could be easily simplified away.
+Use msleep() instead of schedule_timeout() to guarantee the task
+delays as expected. Although TASK_INTERRUPTIBLE is used in the current code,
+there is no code dealing with an early return / signals_pending().
 
 Signed-off-by: Nishanth Aravamudan <nacc@us.ibm.com>
 Signed-off-by: Domen Puncer <domen@coderock.org>
 ---
 
 
- kj-domen/drivers/scsi/qla2xxx/qla_os.c |    7 +++----
- 1 files changed, 3 insertions(+), 4 deletions(-)
+ kj-domen/drivers/scsi/osst.c |    5 ++---
+ 1 files changed, 2 insertions(+), 3 deletions(-)
 
-diff -puN drivers/scsi/qla2xxx/qla_os.c~ssleep-drivers_scsi_qla2xxx_qla_os drivers/scsi/qla2xxx/qla_os.c
---- kj/drivers/scsi/qla2xxx/qla_os.c~ssleep-drivers_scsi_qla2xxx_qla_os	2005-03-05 16:09:55.000000000 +0100
-+++ kj-domen/drivers/scsi/qla2xxx/qla_os.c	2005-03-05 16:09:55.000000000 +0100
-@@ -885,8 +885,8 @@ qla2x00_queuecommand(struct scsi_cmnd *c
- static int
- qla2x00_eh_wait_on_command(scsi_qla_host_t *ha, struct scsi_cmnd *cmd)
- {
--#define ABORT_POLLING_PERIOD	HZ
--#define ABORT_WAIT_TIME		((10 * HZ) / (ABORT_POLLING_PERIOD))
-+#define ABORT_POLLING_PERIOD	1000
-+#define ABORT_WAIT_TIME		((10 * 1000) / ABORT_POLLING_PERIOD)
- 
- 	int		found = 0;
- 	int		done = 0;
-@@ -923,8 +923,7 @@ qla2x00_eh_wait_on_command(scsi_qla_host
- 
- 		spin_unlock_irq(ha->host->host_lock);
- 
--		set_current_state(TASK_UNINTERRUPTIBLE);
--		schedule_timeout(ABORT_POLLING_PERIOD);
-+		msleep(ABORT_POLLING_PERIOD);
- 
- 		spin_lock_irq(ha->host->host_lock);
- 
+diff -puN drivers/scsi/osst.c~msleep-drivers_scsi_osst drivers/scsi/osst.c
+--- kj/drivers/scsi/osst.c~msleep-drivers_scsi_osst	2005-03-05 16:10:51.000000000 +0100
++++ kj-domen/drivers/scsi/osst.c	2005-03-05 16:10:51.000000000 +0100
+@@ -1558,8 +1558,7 @@ static int osst_reposition_and_retry(str
+ 			osst_set_frame_position(STp, aSRpnt, frame + skip, 1);
+ 			flag = 0;
+ 			attempts--;
+-			set_current_state(TASK_INTERRUPTIBLE);
+-			schedule_timeout(HZ / 10);
++			msleep(100);
+ 		}
+ 		if (osst_get_frame_position(STp, aSRpnt) < 0) {		/* additional write error */
+ #if DEBUG
+@@ -1621,7 +1620,7 @@ static int osst_reposition_and_retry(str
+ 		}
+ #endif
+ 		set_current_state(TASK_INTERRUPTIBLE);
+-		schedule_timeout(HZ / 10);
++		msleep(100);
+ 	}
+ 	printk(KERN_ERR "%s:E: Failed to find valid tape media\n", name);
+ #if DEBUG
 _
