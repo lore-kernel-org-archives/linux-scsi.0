@@ -1,24 +1,30 @@
-From: Andrew Ryan <genanr@emsphone.com>
-Subject: 2.6.0-test1 and qlogic 8.00.00b4 driver
-Date: Mon, 28 Jul 2003 17:08:37 -0500
+From: "Ravi Anand" <ravi.anand@qlogic.com>
+Subject: RE: 2.6.0-test1 and qlogic 8.00.00b4 driver
+Date: Mon, 28 Jul 2003 18:15:05 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030728220836.GA10845@thumper2.emsphone.com>
+Message-ID: <3679966B84813344B908D418BA3F6A4A01F00157@AVEXCH01.qlogic.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from thumper2.emsphone.com ([199.67.51.102]:52690 "EHLO
-	thumper2.emsphone.com") by vger.kernel.org with ESMTP
-	id S271146AbTG1WIp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 28 Jul 2003 18:08:45 -0400
-Received: from thumper2.emsphone.com (genanr@localhost [127.0.0.1])
-	by thumper2.emsphone.com (8.12.9/8.12.9/Debian-3) with ESMTP id h6SM8biR010859
-	for <linux-scsi@vger.kernel.org>; Mon, 28 Jul 2003 17:08:37 -0500
-Received: (from genanr@localhost)
-	by thumper2.emsphone.com (8.12.9/8.12.9/Debian-3) id h6SM8bAK010857
-	for linux-scsi@vger.kernel.org; Mon, 28 Jul 2003 17:08:37 -0500
-Content-Disposition: inline
+Received: from [198.70.193.2] ([198.70.193.2]:51934 "EHLO AVEXCH01.qlogic.org")
+	by vger.kernel.org with ESMTP id S271211AbTG2BO5 convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 28 Jul 2003 21:14:57 -0400
+content-class: urn:content-classes:message
 List-Id: linux-scsi@vger.kernel.org
+To: Andrew Ryan <genanr@emsphone.com>, linux-scsi@vger.kernel.org
+
+Make sure that Probe Multi lun support is enabled in the kernel(Under scsi device support) Or you can set the module param max_scsi_luns/max_scsi_reports_lun in the modules.conf file and build new ram disk image.
+
+Ravi
+
+-----Original Message-----
+From: Andrew Ryan [mailto:genanr@emsphone.com]
+Sent: Monday, July 28, 2003 3:09 PM
 To: linux-scsi@vger.kernel.org
+Subject: 2.6.0-test1 and qlogic 8.00.00b4 driver
+
 
 Linux is not seeing any devices attached to a CMD CRA-7280 san connected
 raid unit using kernel 2.6.0-test[12] and qlogic drive 8.00.00b4.  It works
@@ -32,3 +38,7 @@ Andy
 
 genanr@allantgroup.com
 
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
