@@ -1,238 +1,215 @@
 From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: [PATCH] add queue_type entry in sysfs
-Date: Thu, 23 Dec 2004 12:23:54 -0600
-Message-ID: <1103826234.5290.29.camel@mulgrave>
+Subject: [PATCH] update 53c700 to use the change_queue_type API
+Date: Thu, 23 Dec 2004 12:29:12 -0600
+Message-ID: <1103826552.5290.34.camel@mulgrave>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat16.steeleye.com ([209.192.50.48]:43989 "EHLO
+Received: from stat16.steeleye.com ([209.192.50.48]:21468 "EHLO
 	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S261221AbULWSYB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 23 Dec 2004 13:24:01 -0500
+	id S261223AbULWS3T (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 23 Dec 2004 13:29:19 -0500
 Received: from midgard.sc.steeleye.com (midgard.sc.steeleye.com [172.17.6.40])
-	by hancock.sc.steeleye.com (8.11.6/8.11.6) with ESMTP id iBNINxF23413
-	for <linux-scsi@vger.kernel.org>; Thu, 23 Dec 2004 13:23:59 -0500
+	by hancock.sc.steeleye.com (8.11.6/8.11.6) with ESMTP id iBNITIF23739
+	for <linux-scsi@vger.kernel.org>; Thu, 23 Dec 2004 13:29:18 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-This adds an extra attribute to tell you what type of queueing the
-driver is using: none, simple or ordered.  If the driver supplies the
-change_queue_type API, you can also alter this (which would allow the
-turning on or off of TCQ).
+I'm afraid this isn't necessarily a good one to copy.  Because of its
+need to try to limit interrupts, the 53c700 has to distinguish tagged or
+untagged based on the initial selection (i.e. it doesn't know the LUN
+when it decides whether to accept M_IDENTIFY or M_IDENTIFY + TAG), so
+all TCQ is controlled in this driver at the target level.
 
-I also fixed the change_queue_depth not to allow the user to go below
-one.
+Thus, all the target quiesces and the tag bitmap probably wouldn't be
+present on a modern SCSI processor.
 
 James
 
-===== drivers/scsi/scsi_sysfs.c 1.62 vs edited =====
---- 1.62/drivers/scsi/scsi_sysfs.c	2004-12-19 13:18:37 -06:00
-+++ edited/drivers/scsi/scsi_sysfs.c	2004-12-23 12:15:46 -06:00
-@@ -15,6 +15,7 @@
- #include <scsi/scsi.h>
- #include <scsi/scsi_device.h>
- #include <scsi/scsi_host.h>
-+#include <scsi/scsi_tcq.h>
- #include <scsi/scsi_transport.h>
+===== drivers/scsi/53c700.c 1.59 vs edited =====
+--- 1.59/drivers/scsi/53c700.c	2004-12-19 13:21:53 -06:00
++++ edited/drivers/scsi/53c700.c	2004-12-23 11:52:37 -06:00
+@@ -177,6 +177,7 @@
+ STATIC int NCR_700_slave_configure(struct scsi_device *SDpnt);
+ STATIC void NCR_700_slave_destroy(struct scsi_device *SDpnt);
+ static int NCR_700_change_queue_depth(struct scsi_device *SDpnt, int depth);
++static int NCR_700_change_queue_type(struct scsi_device *SDpnt, int depth);
  
- #include "scsi_priv.h"
-@@ -393,11 +394,28 @@
+ STATIC struct device_attribute *NCR_700_dev_attrs[];
  
- static DEVICE_ATTR(state, S_IRUGO | S_IWUSR, show_state_field, store_state_field);
+@@ -340,6 +341,7 @@
+ 	tpnt->slave_configure = NCR_700_slave_configure;
+ 	tpnt->slave_destroy = NCR_700_slave_destroy;
+ 	tpnt->change_queue_depth = NCR_700_change_queue_depth;
++	tpnt->change_queue_type = NCR_700_change_queue_type;
+ 	
+ 	if(tpnt->name == NULL)
+ 		tpnt->name = "53c700";
+@@ -926,10 +928,11 @@
+ 				spi_offset(SCp->device->sdev_target) = 0;
+ 			NCR_700_set_flag(SCp->device, NCR_700_DEV_NEGOTIATED_SYNC);
+ 			NCR_700_clear_flag(SCp->device, NCR_700_DEV_BEGIN_SYNC_NEGOTIATION);
+-		} else if(SCp != NULL && NCR_700_is_flag_set(SCp->device, NCR_700_DEV_BEGIN_TAG_QUEUEING)) {
++		} else if(SCp != NULL && NCR_700_get_tag_neg_state(SCp->device) == NCR_700_DURING_TAG_NEGOTIATION) {
+ 			/* rejected our first simple tag message */
+ 			printk(KERN_WARNING "scsi%d (%d:%d) Rejected first tag queue attempt, turning off tag queueing\n", host->host_no, pun, lun);
+-			NCR_700_clear_flag(SCp->device, NCR_700_DEV_BEGIN_TAG_QUEUEING);
++			/* we're done negotiating */
++			NCR_700_set_tag_neg_state(SCp->device, NCR_700_FINISHED_TAG_NEGOTIATION);
+ 			hostdata->tag_negotiated &= ~(1<<SCp->device->id);
+ 			SCp->device->tagged_supported = 0;
+ 			scsi_deactivate_tcq(SCp->device, host->cmd_per_lun);
+@@ -991,8 +994,11 @@
+ 	if(dsps == A_GOOD_STATUS_AFTER_STATUS) {
+ 		DEBUG(("  COMMAND COMPLETE, status=%02x\n",
+ 		       hostdata->status[0]));
+-		/* OK, if TCQ still on, we know it works */
+-		NCR_700_clear_flag(SCp->device, NCR_700_DEV_BEGIN_TAG_QUEUEING);
++		/* OK, if TCQ still under negotiation, we now know it works */
++		if (NCR_700_get_tag_neg_state(SCp->device) == NCR_700_DURING_TAG_NEGOTIATION)
++			NCR_700_set_tag_neg_state(SCp->device,
++						  NCR_700_FINISHED_TAG_NEGOTIATION);
++			
+ 		/* check for contingent allegiance contitions */
+ 		if(status_byte(hostdata->status[0]) == CHECK_CONDITION ||
+ 		   status_byte(hostdata->status[0]) == COMMAND_TERMINATED) {
+@@ -1813,23 +1819,12 @@
+ 	printk("53c700: scsi%d, command ", SCp->device->host->host_no);
+ 	scsi_print_command(SCp);
+ #endif
+-	if(SCp->device->tagged_supported && !SCp->device->simple_tags
+-	   && (hostdata->tag_negotiated &(1<<SCp->device->id)) == 0
+-	   && NCR_700_is_flag_clear(SCp->device, NCR_700_DEV_BEGIN_TAG_QUEUEING)) {
+-		/* upper layer has indicated tags are supported.  We don't
+-		 * necessarily believe it yet.
+-		 *
+-		 * NOTE: There is a danger here: the mid layer supports
+-		 * tag queuing per LUN.  We only support it per PUN because
+-		 * of potential reselection issues */
+-		scsi_activate_tcq(SCp->device, NCR_700_DEFAULT_TAGS);
+-	}
+-
+ 	if(blk_rq_tagged(SCp->request)
+-	   && (hostdata->tag_negotiated &(1<<SCp->device->id)) == 0) {
+-		printk(KERN_INFO "scsi%d: (%d:%d) Enabling Tag Command Queuing\n", SCp->device->host->host_no, SCp->device->id, SCp->device->lun);
++	   && (hostdata->tag_negotiated &(1<<SCp->device->id)) == 0
++	   && NCR_700_get_tag_neg_state(SCp->device) == NCR_700_START_TAG_NEGOTIATION) {
++		printk(KERN_ERR "scsi%d: (%d:%d) Enabling Tag Command Queuing\n", SCp->device->host->host_no, SCp->device->id, SCp->device->lun);
+ 		hostdata->tag_negotiated |= (1<<SCp->device->id);
+-		NCR_700_set_flag(SCp->device, NCR_700_DEV_BEGIN_TAG_QUEUEING);
++		NCR_700_set_tag_neg_state(SCp->device, NCR_700_DURING_TAG_NEGOTIATION);
+ 	}
  
-+static ssize_t
-+show_queue_type_field(struct device *dev, char *buf)
-+{
-+	struct scsi_device *sdev = to_scsi_device(dev);
-+	const char *name = "none";
-+
-+	if (sdev->ordered_tags)
-+		name = "ordered";
-+	else if (sdev->simple_tags)
-+		name = "simple";
-+
-+	return snprintf(buf, 20, "%s\n", name);
+ 	/* here we may have to process an untagged command.  The gate
+@@ -1844,7 +1839,8 @@
+ 		hostdata->tag_negotiated &= ~(1<<SCp->device->id);
+ 	}
+ 
+-	if((hostdata->tag_negotiated &(1<<SCp->device->id))) {
++	if((hostdata->tag_negotiated &(1<<SCp->device->id))
++	   && scsi_get_tag_type(SCp->device)) {
+ 		slot->tag = SCp->request->tag;
+ 		DEBUG(("53c700 %d:%d:%d, sending out tag %d, slot %p\n",
+ 		       SCp->device->host->host_no, SCp->device->id, SCp->device->lun, slot->tag,
+@@ -2082,7 +2078,9 @@
+ 
+ 	/* to do here: allocate memory; build a queue_full list */
+ 	if(SDp->tagged_supported) {
+-		/* do TCQ stuff here */
++		scsi_set_tag_type(SDp, MSG_ORDERED_TAG);
++		scsi_activate_tcq(SDp, NCR_700_DEFAULT_TAGS);
++		NCR_700_set_tag_neg_state(SDp, NCR_700_START_TAG_NEGOTIATION);
+ 	} else {
+ 		/* initialise to default depth */
+ 		scsi_adjust_queue_depth(SDp, 0, SDp->host->cmd_per_lun);
+@@ -2107,11 +2105,45 @@
+ static int
+ NCR_700_change_queue_depth(struct scsi_device *SDp, int depth)
+ {
+-	if(depth > NCR_700_MAX_TAGS)
++	if (depth > NCR_700_MAX_TAGS)
+ 		depth = NCR_700_MAX_TAGS;
+-	scsi_adjust_queue_depth(SDp, MSG_ORDERED_TAG, depth);
+ 
++	scsi_adjust_queue_depth(SDp, scsi_get_tag_type(SDp), depth);
+ 	return depth;
 +}
 +
-+static DEVICE_ATTR(queue_type, S_IRUGO, show_queue_type_field, NULL);
-+
- 
- /* Default template for device attributes.  May NOT be modified */
- static struct device_attribute *scsi_sysfs_sdev_attrs[] = {
- 	&dev_attr_device_blocked,
- 	&dev_attr_queue_depth,
-+	&dev_attr_queue_type,
- 	&dev_attr_type,
- 	&dev_attr_scsi_level,
- 	&dev_attr_vendor,
-@@ -421,6 +439,10 @@
- 		return -EINVAL;
- 
- 	depth = simple_strtoul(buf, NULL, 0);
-+
-+	if (depth < 1)
-+		return -EINVAL;
-+
- 	retval = sht->change_queue_depth(sdev, depth);
- 	if (retval < 0)
- 		return retval;
-@@ -432,6 +454,38 @@
- 	__ATTR(queue_depth, S_IRUGO | S_IWUSR, sdev_show_queue_depth,
- 	       sdev_store_queue_depth_rw);
- 
-+static ssize_t sdev_store_queue_type_rw(struct device *dev, const char *buf,
-+					size_t count)
++static int NCR_700_change_queue_type(struct scsi_device *SDp, int tag_type)
 +{
-+	struct scsi_device *sdev = to_scsi_device(dev);
-+	struct scsi_host_template *sht = sdev->host->hostt;
-+	int tag_type = 0, retval;
-+	int prev_tag_type = scsi_get_tag_type(sdev);
++	int change_tag = ((tag_type ==0 &&  scsi_get_tag_type(SDp) != 0)
++			  || (tag_type != 0 && scsi_get_tag_type(SDp) == 0));
++	struct NCR_700_Host_Parameters *hostdata = 
++		(struct NCR_700_Host_Parameters *)SDp->host->hostdata[0];
 +
-+	if (!sdev->tagged_supported || !sht->change_queue_type)
-+		return -EINVAL;
++	scsi_set_tag_type(SDp, tag_type);
 +
-+	if (strncmp(buf, "ordered", 7) == 0)
-+		tag_type = MSG_ORDERED_TAG;
-+	else if (strncmp(buf, "simple", 6) == 0)
-+		tag_type = MSG_SIMPLE_TAG;
-+	else if (strncmp(buf, "none", 4) != 0)
-+		return -EINVAL;
++	/* We have a global (per target) flag to track whether TCQ is
++	 * enabled, so we'll be turning it off for the entire target here.
++	 * our tag algorithm will fail if we mix tagged and untagged commands,
++	 * so quiesce the device before doing this */
++	if (change_tag)
++		scsi_target_quiesce(SDp->sdev_target);
 +
-+	if (tag_type == prev_tag_type)
-+		return count;
-+
-+	retval = sht->change_queue_type(sdev, tag_type);
-+	if (retval < 0)
-+		return retval;
-+
-+	return count;
-+}
-+
-+static struct device_attribute sdev_attr_queue_type_rw =
-+	__ATTR(queue_type, S_IRUGO | S_IWUSR, show_queue_type_field,
-+	       sdev_store_queue_type_rw);
-+
- static struct device_attribute *attr_changed_internally(
- 		struct Scsi_Host *shost,
- 		struct device_attribute * attr)
-@@ -439,6 +493,9 @@
- 	if (!strcmp("queue_depth", attr->attr.name)
- 	    && shost->hostt->change_queue_depth)
- 		return &sdev_attr_queue_depth_rw;
-+	else if (!strcmp("queue_type", attr->attr.name)
-+	    && shost->hostt->change_queue_type)
-+		return &sdev_attr_queue_type_rw;
- 	return attr;
- }
- 
-===== include/scsi/scsi_host.h 1.23 vs edited =====
---- 1.23/include/scsi/scsi_host.h	2004-12-19 13:18:37 -06:00
-+++ edited/include/scsi/scsi_host.h	2004-12-23 10:30:34 -06:00
-@@ -228,13 +228,23 @@
- 	int (* change_queue_depth)(struct scsi_device *, int);
- 
- 	/*
-+	 * fill in this function to allow the changing of tag types
-+	 * (this also allows the enabling/disabling of tag command
-+	 * queueing).  An error should only be returned if something
-+	 * went wrong in the driver while trying to set the tag type.
-+	 * If the driver doesn't support the requested tag type, then
-+	 * it should set the closest type it does support without
-+	 * returning an error.  Returns the actual tag type set.
-+	 */
-+	int (* change_queue_type)(struct scsi_device *, int);
-+
-+	/*
- 	 * This function determines the bios parameters for a given
- 	 * harddisk.  These tend to be numbers that are made up by
- 	 * the host adapter.  Parameters:
- 	 * size, device, list (heads, sectors, cylinders)
- 	 *
--	 * Status: OPTIONAL
--	 */
-+	 * Status: OPTIONAL */
- 	int (* bios_param)(struct scsi_device *, struct block_device *,
- 			sector_t, int []);
- 
-===== include/scsi/scsi_tcq.h 1.2 vs edited =====
---- 1.2/include/scsi/scsi_tcq.h	2003-09-16 06:58:31 -05:00
-+++ edited/include/scsi/scsi_tcq.h	2004-12-22 16:20:15 -06:00
-@@ -13,6 +13,43 @@
- #define SCSI_NO_TAG	(-1)    /* identify no tag in use */
- 
- 
-+
-+/**
-+ * scsi_get_tag_type - get the type of tag the device supports
-+ * @sdev:	the scsi device
-+ *
-+ * Notes:
-+ *	If the drive only supports simple tags, returns MSG_SIMPLE_TAG
-+ *	if it supports all tag types, returns MSG_ORDERED_TAG.
-+ */
-+static inline int scsi_get_tag_type(struct scsi_device *sdev)
-+{
-+	if (!sdev->tagged_supported)
-+		return 0;
-+	if (sdev->ordered_tags)
-+		return MSG_ORDERED_TAG;
-+	if (sdev->simple_tags)
-+		return MSG_SIMPLE_TAG;
-+	return 0;
-+}
-+
-+static inline void scsi_set_tag_type(struct scsi_device *sdev, int tag)
-+{
-+	switch (tag) {
-+	case MSG_ORDERED_TAG:
-+		sdev->ordered_tags = 1;
-+		/* fall through */
-+	case MSG_SIMPLE_TAG:
-+		sdev->simple_tags = 1;
-+		break;
-+	case 0:
-+		/* fall through */
-+	default:
-+		sdev->ordered_tags = 0;
-+		sdev->simple_tags = 0;
-+		break;
++	if (!tag_type) {
++		/* shift back to the default unqueued number of commands
++		 * (the user can still raise this) */
++		scsi_deactivate_tcq(SDp, SDp->host->cmd_per_lun);
++		hostdata->tag_negotiated &= ~(1 << SDp->id);
++	} else {
++		/* Here, we cleared the negotiation flag above, so this
++		 * will force the driver to renegotiate */
++		scsi_activate_tcq(SDp, SDp->queue_depth);
++		if (change_tag)
++			NCR_700_set_tag_neg_state(SDp, NCR_700_START_TAG_NEGOTIATION);
 +	}
-+}
- /**
-  * scsi_activate_tcq - turn on tag command queueing
-  * @SDpnt:	device to turn on TCQ for
-@@ -25,11 +62,13 @@
-  **/
- static inline void scsi_activate_tcq(struct scsi_device *sdev, int depth)
- {
--        if (sdev->tagged_supported) {
--		if (!blk_queue_tagged(sdev->request_queue))
--			blk_queue_init_tags(sdev->request_queue, depth, NULL);
--		scsi_adjust_queue_depth(sdev, MSG_ORDERED_TAG, depth);
--        }
-+	if (!sdev->tagged_supported)
-+		return;
++	if (change_tag)
++		scsi_target_resume(SDp->sdev_target);
 +
-+	if (!blk_queue_tagged(sdev->request_queue))
-+		blk_queue_init_tags(sdev->request_queue, depth, NULL);
-+
-+	scsi_adjust_queue_depth(sdev, scsi_get_tag_type(sdev), depth);
++	return tag_type;
  }
  
- /**
-@@ -56,9 +95,10 @@
- static inline int scsi_populate_tag_msg(struct scsi_cmnd *cmd, char *msg)
- {
-         struct request *req = cmd->request;
-+	struct scsi_device *sdev = cmd->device;
+ static ssize_t
+===== drivers/scsi/53c700.h 1.19 vs edited =====
+--- 1.19/drivers/scsi/53c700.h	2004-10-11 15:26:54 -05:00
++++ edited/drivers/scsi/53c700.h	2004-12-23 10:04:50 -06:00
+@@ -102,7 +102,6 @@
+  * 18 device supports tag queueing */
+ #define NCR_700_DEV_NEGOTIATED_SYNC	(1<<16)
+ #define NCR_700_DEV_BEGIN_SYNC_NEGOTIATION	(1<<17)
+-#define NCR_700_DEV_BEGIN_TAG_QUEUEING	(1<<18)
+ #define NCR_700_DEV_PRINT_SYNC_NEGOTIATION (1<<19)
  
-         if (blk_rq_tagged(req)) {
--		if (req->flags & REQ_HARDBARRIER)
-+		if (sdev->ordered_tags && req->flags & REQ_HARDBARRIER)
-         	        *msg++ = MSG_ORDERED_TAG;
-         	else
-         	        *msg++ = MSG_SIMPLE_TAG;
+ static inline void
+@@ -138,6 +137,27 @@
+ NCR_700_clear_flag(struct scsi_device *SDp, __u32 flag)
+ {
+ 	spi_flags(SDp->sdev_target) &= ~flag;
++}
++
++enum NCR_700_tag_neg_state {
++	NCR_700_START_TAG_NEGOTIATION = 0,
++	NCR_700_DURING_TAG_NEGOTIATION = 1,
++	NCR_700_FINISHED_TAG_NEGOTIATION = 2,
++};
++
++static inline enum NCR_700_tag_neg_state
++NCR_700_get_tag_neg_state(struct scsi_device *SDp)
++{
++	return (enum NCR_700_tag_neg_state)((spi_flags(SDp->sdev_target)>>20) & 0x3);
++}
++
++static inline void
++NCR_700_set_tag_neg_state(struct scsi_device *SDp,
++			  enum NCR_700_tag_neg_state state)
++{
++	/* clear the slot */
++	spi_flags(SDp->sdev_target) &= ~(0x3 << 20);
++	spi_flags(SDp->sdev_target) |= ((__u32)state) << 20;
+ }
+ 
+ struct NCR_700_command_slot {
 
 
