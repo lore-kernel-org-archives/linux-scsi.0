@@ -1,47 +1,72 @@
-From: Willem Riede <wrlk@riede.org>
+From: Douglas Gilbert <dougg@torque.net>
 Subject: Re: [PATCH] switch scsi upper driver probing to the driver model
-Date: Fri, 16 May 2003 22:25:07 -0400
+Date: Sat, 17 May 2003 13:59:52 +1000
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030517022507.GA1480@linnie.riede.org>
-References: <20030516182039.A7369@lst.de> <20030516235718.GA3260@beaverton.ibm.com>
-Reply-To: wrlk@riede.org
+Message-ID: <3EC5B3B8.9020308@torque.net>
+References: <20030516182039.A7369@lst.de>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pcp02781107pcs.eatntn01.nj.comcast.net ([68.85.61.149]:5359
-	"EHLO linnie.riede.org") by vger.kernel.org with ESMTP
-	id S264649AbTEQCKD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 16 May 2003 22:10:03 -0400
-Received: from linnie.riede.org (localhost.localdomain [127.0.0.1])
-	by linnie.riede.org (8.12.8/8.12.8) with ESMTP id h4H2P7Y8002289
-	for <linux-scsi@vger.kernel.org>; Fri, 16 May 2003 22:25:07 -0400
-Content-Disposition: inline
-In-Reply-To: <20030516235718.GA3260@beaverton.ibm.com>; from andmike@us.ibm.com on Fri, May 16, 2003 at 19:57:18 -0400
+Received: from bunyip.cc.uq.edu.au ([130.102.2.1]:61454 "EHLO
+	bunyip.cc.uq.edu.au") by vger.kernel.org with ESMTP id S261190AbTEQDq1
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 16 May 2003 23:46:27 -0400
+In-Reply-To: <20030516182039.A7369@lst.de>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: James.Bottomley@steeleye.com, linux-scsi@vger.kernel.org
 
-On 2003.05.16 19:57, Mike Anderson wrote:
-> 
-> I ran your patch and I dead locked on st_probe. This is due to the code
-> in st_probe and osst_probe that do device registers on the
-> sdev_driverfs_dev.bus which is the bus that the probe is being called
-> from already. I had an old patch that removed these before due the driver
-> model requirement that objects on the device list must be of one type.
-> At the time I did not have a place to move these attributes.
-> 
-> We now have /bus/scsi/drivers/{uld} for driver attributes. We also could
-> create a class for other attributes if needed. We can also use udev for
-> the creation of special nodes.
-> 
-> ftp://ftp.kernel.org/pub/linux/utils/kernel/hotplug/
-> 
-> In the short term is the st and osst maintainers are ok with it we could
-> remove them and then create them in there proper home.
+Christoph Hellwig wrote:
+> Upper drivers now use the LDM ->probe/->remove callbacks and the
+> core list code.  Note that this means there is only one driver per
+> scsi device and not multiple, e.g. you can't have sd _and_ sg for
+> the same device.
 
-As the osst maintainer I concur. I am going to need a class, I believe, as
-I want to export some info from the tape header, i.e. per device (very
-useful for me for support purposes). So some re-arrangement is going to
-happen anyway.
+Is that "_and_" symmetric? That is, can one have the sg
+device in preference to the sd device? If so, how is
+that selected?
 
-Thanks, Willem Riede.
+>  Personally I think that's not a problem anymore
+> with the generic SG_IO in place, but if you scream loud enough I
+> could come up with a hack that makes the sg nodes a property of the
+> scsi midlayer instead of a LDM-style driver and we could get the
+> old behaviour back.
+
+Christoph,
+This patch would have some interesting side effects:
+   - no generic interface (apart from SCSI_IOCTL_SEND_COMMAND)
+     for tape devices (st and osst). While the maintainers of
+     st and osst might like this, not all the user apps would :-)
+   - the SG_IO ioctl in the block level
+      - limits maximum transfer size to 65536 bytes
+      - does not support mmap-ed IO [and would need
+        something like a reserved buffer concept to do it]
+      - does not support direct IO
+      - needs work (debuggings)
+      - does not support async IO (either does SG_IO
+        in sg but it can be done other ways in sg)
+   - the extra ioctls that sg defines are either fudged
+     or missing. This might upset programs other than
+     cdrecord; cdparanoia comes to mind
+
+It was my understanding that the device model has been
+recently modified by Greg KH to cope with the dual nature
+of the interface that sg causes. Evidently similar situations
+occur elsewhere in the kernel.
+
+Whether the sg driver is an upper level SCSI driver or
+part of the mid level actually makes little difference.
+The sgbind patch that I canvassed the other day
+actually fits well into sg's functionality being subsumed
+into the mid level with a single virtual device node
+(e.g. /dev/scsi or /dev/scsibind ?) for access with each
+open file descriptor getting its own state.
+
+But then there is the problem of backward compatibility...
+
+Doug Gilbert
+
+
+
