@@ -1,50 +1,46 @@
-From: Tim Schmielau <tim@physik3.uni-rostock.de>
-Subject: [patch] fix compares of jiffies
-Date: Sun, 22 Sep 2002 13:45:52 +0200
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <200209221145.g8MBjq523300@gans.physik3.uni-rostock.de>
-Return-path: <linux-scsi-owner@vger.kernel.org>
+From: "Cress, Andrew R" <andrew.r.cress@intel.com>
+Subject: RE: [PATCH]: HotSwap SCSI in Soft RAID1 (scsi_rescan)
+Date: Mon, 23 Sep 2002 07:40:47 -0700
+Sender: linux-raid-owner@vger.kernel.org
+Message-ID: <A5974D8E5F98D511BB910002A50A66470580D1F2@hdsmsx103.hd.intel.com>
+Mime-Version: 1.0
+Content-Type: text/plain
+Return-path: <linux-raid-owner@vger.kernel.org>
+To: 'Anton Blanchard' <anton@samba.org>
+Cc: linux-raid@vger.kernel.org, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: mike@i-connect.net
-Cc: linux-eata@i-connect.net, linux-scsi@vger.kernel.org, tim@physik3.uni-rostock.de
 
-Dear Linux kernel code maintainer,
+Anton,
 
-on rechecking the current stable kernel code, I found some places where jiffies
-were compared in a way that seems to break when they wrap. For these,
-I made up patches to use the macros "time_before()" or "time_after()"
-that are supposed to handle wraparound correctly.
+Actually, I have written just such a user-space service (sgraidmon) to
+monitor the SCSI bus, and it does implement SAF-TE, but not SES yet.
+See http://scsirastools.sourceforge.net/ for more info and downloads.
 
-For a small part of the patches, I believe you to be the relevant kernel code
-maintainer. Appended to this email you will find some lines explaining
-why I decided to mail or cc: you on this (an extract of the copyright notice
-or the MAINTAINERS file), followed by the patch itself. If I mailed you
-in error, please drop me a short note.
+Andy
 
-I kindly ask you to approve the correctness of the patch, and pass it on to
-the relevant people for inclusion into the mainline kernel.
-
-Thanks,
-Tim Schmielau (tim@physik3.uni-rostock.de)
+-----Original Message-----
+From: Anton Blanchard [mailto:anton@samba.org] 
+Sent: Friday, September 20, 2002 7:57 PM
+To: Cress, Andrew R
+Cc: linux-raid@vger.kernel.org; 'linux-scsi@vger.kernel.org'; 'Mads Peter
+Bach'; Jens Arnfelt
+Subject: Re: [PATCH]: HotSwap SCSI in Soft RAID1 (scsi_rescan)
 
 
+Hi,
 
-EATA-DMA SCSI DRIVER
-P:	Michael Neuffer
-M:	mike@i-Connect.Net
-L:	linux-eata@i-connect.net, linux-scsi@vger.kernel.org
-S:	Maintained
+> The premise I had was that this should take place automatically when a
+scsi
+> device is hot-inserted, rather than requiring intervention and knowledge
+> from the sys admin.  In short, it should work more like a hardware RAID
+> solution would.
 
+It would be great if we could also have a SCSI Enclosure driver to
+handle insert and removals. This could all be in userspace (using the SG
+ioctl). In fact I played with some code from Matt Jacob a while ago and
+hacked it about to do scsi-add-single+raidhotadd and
+raidhotremove+scsi-remove-single.
 
---- linux-2.4.20-pre6/drivers/scsi/eata_generic.h	Wed Aug 15 10:22:16 2001
-+++ linux-2.4.20-pre6-jfix/drivers/scsi/eata_generic.h	Wed Sep 11 12:48:52 2002
-@@ -97,7 +97,7 @@
- #define DELAY(x) { ulong flags, i;                \
-                    save_flags(flags); sti();      \
-                    i = jiffies + (x * HZ);        \
--                   while (jiffies < i);           \
-+                   while (time_before(jiffies, i));           \
-                    restore_flags(flags); }
- 
- /***********************************************
+Do your drive cases support SES?
 
+Anton
