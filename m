@@ -1,76 +1,50 @@
-From: "Jose R. Santos" <jrsantos@austin.ibm.com>
-Subject: phase change messages cusing slowdown with sym53c8xx_2 driver
-Date: Mon, 29 Nov 2004 21:02:12 -0600
-Message-ID: <20041130030212.GB22916@austin.ibm.com>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: 2.6.10-rc2-mm2 usb storage still oopses
+Date: 29 Nov 2004 21:22:03 -0600
+Message-ID: <1101784930.2022.116.camel@mulgrave>
+References: <200411182203.02176.cova@ferrara.linux.it>
+	<20041118133557.72f3b369.akpm@osdl.org>
+	<20041118135809.3314ce41@lembas.zaitcev.lan>
+	<200411190042.41199.cova@ferrara.linux.it>
+	<20041118155542.324f56c7@lembas.zaitcev.lan>
+	<20041129163231.33affbde.akpm@osdl.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e34.co.us.ibm.com ([32.97.110.132]:27269 "EHLO
-	e34.co.us.ibm.com") by vger.kernel.org with ESMTP id S261820AbUK3DCe
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 29 Nov 2004 22:02:34 -0500
-Content-Disposition: inline
+Received: from stat16.steeleye.com ([209.192.50.48]:30662 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S261943AbUK3DWc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 29 Nov 2004 22:22:32 -0500
+In-Reply-To: <20041129163231.33affbde.akpm@osdl.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
+To: Andrew Morton <akpm@osdl.org>
+Cc: Pete Zaitcev <zaitcev@redhat.com>, cova@ferrara.linux.it, Linux Kernel <linux-kernel@vger.kernel.org>, linux-usb-devel@lists.sourceforge.net, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-Hi folks,
+On Mon, 2004-11-29 at 18:32, Andrew Morton wrote:
+> Pete Zaitcev <zaitcev@redhat.com> wrote:
+> >
+> > On Fri, 19 Nov 2004 00:42:40 +0100, Fabio Coatti <cova@ferrara.linux.it> wrote:
+> > 
+> > > Nov 18 20:33:05 kefk kernel: sdb: assuming drive cache: write through
+> > > Nov 18 20:33:05 kefk kernel:  sdb: sdb1
+> > > Nov 18 20:33:05 kefk kernel:  sdb: sdb1
+> > > Nov 18 20:33:05 kefk kernel: kobject_register failed for sdb1 (-17)
+> > 
+> > This looks as if SCSI falls victim of the general problem which ub addresses
+> > with the following fragment:
+> 
+> Guys, is this problem still present in Linus's tree?  If so, is a fix for
+> 2.6.10 looking feasible?
 
-I'm having a bit of trouble with a integrated SCSI adapter using the 
-sym53c8xx_2 driver on a RS6K-170.  Somewhere during 2.6.9 development I started
-seeing a bunch of "phase change" messages generated every time I did any IO on 
-the disks attached to the SCSI adapter.
+Al Viro has a tentative one at
 
-Nov 28 23:05:12 orb kernel: sym0: <896> rev 0x5 at pci 0000:00:0c.0 irq 20
-Nov 28 23:05:12 orb kernel: sym0: No NVRAM, ID 7, Fast-40, SE, parity checking
-Nov 28 23:05:12 orb kernel: sym0: SCSI BUS has been reset.
-Nov 28 23:05:12 orb kernel: scsi0 : sym-2.1.18m
-Nov 28 23:05:12 orb kernel: sym0:1: FAST-20 WIDE SCSI 40.0 MB/s ST (50.0 ns, offset 15)
-Nov 28 23:05:12 orb kernel:   Vendor: IBM       Model: DGHS09U	Rev: 03E0
-Nov 28 23:05:12 orb kernel:   Type:   Direct-Access		ANSI SCSI revision: 03
-Nov 28 23:05:12 orb kernel:  target0:0:1: Beginning Domain Validation
-Nov 28 23:05:12 orb kernel: sym0:1:0:phase change 6-7 9@10050390 resid=6.
-Nov 28 23:05:12 orb last message repeated 10 times
-Nov 28 23:05:12 orb kernel: sym0:1:0:phase change 6-7 9@1005039c resid=6.
-Nov 28 23:05:12 orb kernel: sym0:1:0:phase change 6-7 9@10050390 resid=6.
-Nov 28 23:05:12 orb kernel: sym0:1:0:phase change 6-7 9@10050390 resid=6.
-Nov 28 23:05:12 orb kernel: sym0:1:0:phase change 6-7 9@1005039c resid=6.
-Nov 28 23:05:12 orb kernel:  target0:0:1: Domain Validation skipping write tests
-Nov 28 23:05:12 orb kernel:  target0:0:1: Ending Domain Validation
-Nov 28 23:05:12 orb kernel: sym0:1:0:phase change 6-7 9@10050390 resid=6.
+http://ftp.linux.org.uk/pub/people/viro/register_disk-hack
 
-When these errors show up, the maximum performance I can get out of the disk is
-about 1.3MB/s.  After several hours, the adapters seems to receive some ABORT 
-operations and the messages stop showing.  Once this happens, performance for 
-the disk goes back to 15MB/s.
+If someone could try it out and verify that it fixes the problem, we
+could put it in.
 
-Nov 29 06:32:43 orb kernel: sym0:1:0: ABORT operation started.
-Nov 29 06:32:43 orb kernel: sym0:1:control msgout: 80 6.
-Nov 29 06:32:43 orb kernel: sym0:1:0: ABORT operation complete.
-Nov 29 06:32:53 orb kernel: sym0:1:0: ABORT operation started.
-Nov 29 06:32:53 orb kernel: sym0:1:0: ABORT operation complete.
-Nov 29 06:32:53 orb kernel: sym0:1:0: ABORT operation started.
-Nov 29 06:32:53 orb kernel: sym0:1:control msgout: 80 6.
-Nov 29 06:32:53 orb kernel: sym0:1:0: ABORT operation complete.
-Nov 29 06:32:53 orb kernel: sym0:1:0:phase change 6-7 9@10050b90 resid=6.
-Nov 29 06:32:53 orb kernel: sym0:1:0: DEVICE RESET operation started.
-Nov 29 06:32:53 orb kernel: sym0:1:0: DEVICE RESET operation complete.
-Nov 29 06:32:53 orb kernel: sym0:1:control msgout: c.
-Nov 29 06:32:53 orb kernel: sym0: TARGET 1 has been reset.
-Nov 29 06:33:03 orb kernel: sym0:1:0: ABORT operation started.
-Nov 29 06:33:03 orb kernel: sym0:1:0: ABORT operation complete.
-Nov 29 06:33:03 orb kernel: sym0:1:0: BUS RESET operation started.
-Nov 29 06:33:03 orb kernel: sym0:1:0: BUS RESET operation complete.
-Nov 29 06:33:03 orb kernel: sym0: SCSI BUS reset detected.
-Nov 29 06:33:03 orb kernel: sym0: SCSI BUS has been reset.
-Nov 29 06:33:14 orb kernel: sym0:1:0:phase change 6-7 9@10050b90 resid=6.
-Nov 29 06:33:14 orb kernel: sym0:1:0:phase change 6-7 9@10050b9c resid=6.
+James
 
-The last kernel I tried was a bk pull this Sunday and it still show the 
-problem.  I don't know enough about SCSI to figure out whats going on.  Anybody
-care to enlighten me as to what the problem is.
 
-Thanks
-
--JRS
