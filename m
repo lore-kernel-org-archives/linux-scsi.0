@@ -1,51 +1,32 @@
-From: James Bottomley <James.Bottomley@steeleye.com>
-Subject: Re: Problem with external USB2.0 case and LG GSA
-	4040-B
-Date: 15 Dec 2003 16:08:54 -0500
-Sender: linux-usb-devel-admin@lists.sourceforge.net
-Message-ID: <1071522536.1834.52.camel@mulgrave>
-References: <Pine.LNX.4.44L0.0312151529160.895-100000@ida.rowland.org>
+From: "Justin T. Gibbs" <gibbs@scsiguy.com>
+Subject: Re: adaptec aar1210 serial ata and 2.6.0
+Date: Mon, 15 Dec 2003 15:02:57 -0700
+Sender: linux-raid-owner@vger.kernel.org
+Message-ID: <1729770000.1071525777@aslan.btc.adaptec.com>
+References: <074a01c3bd5f$a42fba80$7301a8c0@internal.kbs.net.au>
+Reply-To: "Justin T. Gibbs" <gibbs@scsiguy.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-usb-devel-admin@lists.sourceforge.net>
-In-Reply-To: <Pine.LNX.4.44L0.0312151529160.895-100000@ida.rowland.org>
-Errors-To: linux-usb-devel-admin@lists.sourceforge.net
-List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-devel>,
-	<mailto:linux-usb-devel-request@lists.sourceforge.net?subject=unsubscribe>
-List-Post: <mailto:linux-usb-devel@lists.sourceforge.net>
-List-Help: <mailto:linux-usb-devel-request@lists.sourceforge.net?subject=help>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-devel>,
-	<mailto:linux-usb-devel-request@lists.sourceforge.net?subject=subscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=linux-usb-devel>
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: Cornelius Claussen <cornelius.claussen@gmx.de>, Patrick Mansfield <patmans@us.ibm.com>, USB development list <linux-usb-devel@lists.sourceforge.net>, SCSI development list <linux-scsi@vger.kernel.org>
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <074a01c3bd5f$a42fba80$7301a8c0@internal.kbs.net.au>
+Content-Disposition: inline
+To: Paul <paul@kbs.net.au>, linux-scsi@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, 2003-12-15 at 15:49, Alan Stern wrote:
-> Cornelius Claussen reported the following problem with error recovery in
-> 2.6.0-test11.  His device is one of those problem-prone Genesys Logic
-> units, a USB DVD drive.  The complete message and log can be found at
+> Hi All,
+> 
+> I am trying to get an adaptec 1210 serial ata raid controller working under
+> 2.6.0. I've also tried 2.4.23
+> I've found a patch for 2.6.0 by Mark Haverkamp at
+> http://marc.theaimsgroup.com/?l=linux-scsi&m=10663501617378&w=2 and also a
+> patch (for 2.4.22) by someone else (not sure who) which just resulted in
+> lots of "lost interrupt" errors at bootup and it took around 30 minutes to
+> boot.
 
-It looks like the driver sent a reset to the device on its own without
-reporting it to the mid-layer.
+The Adaptec BIOS masks interrups on the card.  You can re-enable interrupts
+by clearing bits 6 & 7 at PCI configuration space address 0x8a.
 
-There's an expecting_cc_ua flag in the scsi_device.  It gets set on
-error recovery actions, or if the device does something to detect or
-trigger a reset (that's the scsi_report_device_reset() and
-scsi_report_bus_reset() API's).
+--
+Justin
 
-James
-
-
-
-
--------------------------------------------------------
-This SF.net email is sponsored by: IBM Linux Tutorials.
-Become an expert in LINUX or just sharpen your skills.  Sign up for IBM's
-Free Linux Tutorials.  Learn everything from the bash shell to sys admin.
-Click now! http://ads.osdn.com/?ad_id=1278&alloc_id=3371&op=click
-_______________________________________________
-linux-usb-devel@lists.sourceforge.net
-To unsubscribe, use the last form field at:
-https://lists.sourceforge.net/lists/listinfo/linux-usb-devel
