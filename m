@@ -1,65 +1,38 @@
-From: Russell King <rmk@arm.linux.org.uk>
-Subject: Re: SCSI woes (followup)
-Date: Wed, 25 Sep 2002 15:41:54 +0100
+From: Mike Anderson <andmike@us.ibm.com>
+Subject: Re: SCSI Change Log
+Date: Wed, 25 Sep 2002 10:08:43 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20020925154153.A8733@flint.arm.linux.org.uk>
-References: <20020924233941.A9952@flint.arm.linux.org.uk> <200209242314.g8ONEHU02783@localhost.localdomain> <20020924232630.GD1330@beaverton.ibm.com>
+Message-ID: <20020925170843.GA1384@beaverton.ibm.com>
+References: <08628CA53C6CBA4ABAFB9E808A5214CB0C4DAB@mercury.infiniconsys.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from flint.arm.linux.org.uk ([3ffe:8260:2002:1:201:2ff:fe14:8fad])
-	by caramon.arm.linux.org.uk with asmtp (TLSv1:DES-CBC3-SHA:168)
-	(Exim 4.04)
-	id 17uDMQ-0004Ig-00
-	for linux-scsi@vger.kernel.org; Wed, 25 Sep 2002 15:41:55 +0100
-Received: from rmk by flint.arm.linux.org.uk with local (Exim 4.04)
-	id 17uDMQ-0002gl-00
-	for linux-scsi@vger.kernel.org; Wed, 25 Sep 2002 15:41:54 +0100
 Content-Disposition: inline
-In-Reply-To: <20020924232630.GD1330@beaverton.ibm.com>; from andmike@us.ibm.com on Tue, Sep 24, 2002 at 04:26:30PM -0700
+In-Reply-To: <08628CA53C6CBA4ABAFB9E808A5214CB0C4DAB@mercury.infiniconsys.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: "Heinz, Michael" <mheinz@infiniconsys.com>
+Cc: linux-scsi@vger.kernel.org
 
-On Tue, Sep 24, 2002 at 04:26:30PM -0700, Mike Anderson wrote:
-> James Bottomley [James.Bottomley@SteelEye.com] wrote:
-> > send it off to Marcelo and I'll try to up-port to 2.5
+Heinz, Michael [mheinz@infiniconsys.com] wrote:
+> Dumb question:
 > 
-> If you want me to I can add it to a patch bundle I already have that
-> includes ports of Russell's previous changes that apply on top of my
-> 2.5 scsi_error cleanup patch.
+> The change log for SCSI devices in the 2.4 tree hasn't been updated since 1997. Is there any place I can get a list of the changes to the SCSI 2.4 tree - in particular between 2.4.7 and 2.4.18? We're trying to understand what the impact is of moving our HCA code from RedHat 7.2 to 7.3 and up.
+> 
+> --
 
-It'll probably be better to wait for me to say "ok, I'm happy, and sending
-the stuff" before doing that.
+Since you mention RedHat kernels someone from RedHat may need to comment
+on specific patches they carry or you can check out vendor patches at:
+http://www.kernelnewbies.org/kernels/
 
-I've just re-diffed and cleaned up all my scsi patches to date, and
-split them up into logical blocks:
+Douglas Gilbert has a change log in the SCSI-2.4-HOWTO located at:
+http://www.torque.net/scsi/SCSI-2.4-HOWTO/chg24.html
 
-01-scsi-cmd-retry-1.diff
-01-scsi-cmd-retry-2.diff
-01-scsi-cmd-retry-3.diff
-02-scsi-cmd-report.diff
-03-scsi-restart-ops.diff
-04-scsi-door-lock-1.diff
-04-scsi-door-lock-2.diff
+You can also grab a bit keeper tree of linux-2.4 and generate a diff
+change set on the core scsi files. Though you will need to do a little
+script filtering I believe.
 
-I've updated the command retry patches to catch a couple of re-setup
-places I'd missed in scsi_error.c.
-
-I've also incorporated Patricks concern about breaking out of the
-restart loop when we hit a device with the "device_blocked" flag
-set.  In this case, I think we should still call the request function;
-the request function performs its own "device blocked" check, so putting
-such a check here would just be a needless duplicate.
-
-I'll put the patches up on ftp.linux.org.uk later today.
-
-I'll also be asking Alan Cox at some point in the future if he'd mind
-dropping them into his tree for further testing, before sending them
-to Marcelo.
-
-(Oh, and in case anyone hasn't realised yet, I'm not on linux-scsi.)
-
--- 
-Russell King (rmk@arm.linux.org.uk)                The developer of ARM Linux
-             http://www.arm.linux.org.uk/personal/aboutme.html
+-andmike
+--
+Michael Anderson
+andmike@us.ibm.com
 
