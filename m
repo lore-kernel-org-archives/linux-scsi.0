@@ -1,66 +1,54 @@
-From: "Adam Radford" <aradford@amcc.com>
-Subject: [PATCH] 3ware 9000 driver update for 2.6.7-rc2-mm3
-Date: Thu, 3 Jun 2004 17:29:09 -0700
+From: James Bottomley <James.Bottomley@steeleye.com>
+Subject: Re: [PATCH] 3ware 9000 driver update for 2.6.7-rc2-mm2
+Date: 03 Jun 2004 19:45:36 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <HYRDDJ03.YDP@hadar.amcc.com>
+Message-ID: <1086309937.1799.103.camel@mulgrave>
+References: <HYPD6V00.Q4O@hadar.amcc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hadar.amcc.com ([192.195.69.168]:18594 "EHLO hadar.amcc.com")
-	by vger.kernel.org with ESMTP id S264518AbUFDA3o convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 3 Jun 2004 20:29:44 -0400
+Received: from stat1.steeleye.com ([65.114.3.130]:46539 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S265155AbUFDApj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 3 Jun 2004 20:45:39 -0400
+In-Reply-To: <HYPD6V00.Q4O@hadar.amcc.com>
 List-Id: linux-scsi@vger.kernel.org
-To: akpm@osdl.org, james.bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org
+To: Adam Radford <aradford@amcc.com>
+Cc: Andrew Morton <akpm@osdl.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-Andrew, James,
+On Wed, 2004-06-02 at 17:29, Adam Radford wrote:
+> 
+> Andrew, James, 
+> 
+> This patch updates the 3w-9xxx driver in 2.6.7-rc2-mm1 to v2.26.02.000 to cleanup several things pointed out by Chris Hellwig / Jeff Garzik.
+> 
+> Changes in this release:
+>   - Use descriptive defines for phase numbers.
+>   - Remove un-needed casts for TW_Command_Full
+>   - Rework eh_reset(), eh_abort() spinlocks.
+>   - Remove all mdelays, replace w/ schedule_timeout().
+>   - Remove MODULE_PARAM cmds_per_lun, add sysfs device attribute 'queue_depth'.
+>   - Remove twa_slave_configure().
+>   - Remove twa_info().
+>   - Remove all bitfields from structures, add bitmask macros.
+>   - Remove twa_setup_irq() wrapper, call directly.
+>   - Remove un-needed prototypes.
+>   - Propogate return value of pci_enable_device(), pci_set_dma_mask(), ioremap().
+>   - Use pci_request/free_regions().
+>   - Add missing call to pci_disable_device() on probe failure.
+>   - Unregister character ioctl interface in twa_remove().
+>   - Make some excessively lengthy lines < 80 columns.
+>   - Use pci_module_init() instead of pci_register_driver().
+>   - Remove bogus TW_IN_INTR check, fix twa_interrupt() spinlock.
+>   - Rev driver branch to .02 to denote kernel version.
 
-This small patch fixes the broken schedule_timeout() usage in the 3w-9xxx driver,
-and replaces the calls with msleep().
+This patch currently rejects against my scsi-misc-2.6 tree; I assume I
+have a later version which partially includes some of the changes; could
+you rediff it?
 
---
-Adam Radford
-Staff Software Engineer
-AMCC
+Thanks,
 
-diff -Naur linux-2.6.7-rc2-mm2/drivers/scsi/3w-9xxx.c linux-2.6.7-rc2-mm3/drivers/scsi/3w-9xxx.c
---- linux-2.6.7-rc2-mm2/drivers/scsi/3w-9xxx.c	2004-06-03 15:22:18.000000000 -0700
-+++ linux-2.6.7-rc2-mm3/drivers/scsi/3w-9xxx.c	2004-06-03 17:22:06.000000000 -0700
-@@ -50,6 +50,7 @@
-    History
-    -------
-    2.26.02.000 - Driver cleanup for kernel submission.
-+   2.26.02.001 - Replace schedule_timeout() calls with msleep().
- */
- 
- #include <linux/module.h>
-@@ -72,7 +73,7 @@
- #include "3w-9xxx.h"
- 
- /* Globals */
--static const char *twa_driver_version="2.26.02.000";
-+static const char *twa_driver_version="2.26.02.001";
- static TW_Device_Extension *twa_device_extension_list[TW_MAX_SLOT];
- static unsigned int twa_device_extension_count;
- static int twa_major = -1;
-@@ -1445,7 +1446,7 @@
- 		if (time_after(jiffies, before + HZ * seconds))
- 			goto out;
- 
--		schedule_timeout(1);
-+		msleep(50);
- 	}
- 	retval = 0;
- out:
-@@ -1473,7 +1474,7 @@
- 		if (time_after(jiffies, before + HZ * seconds))
- 			goto out;
- 
--		schedule_timeout(1);
-+		msleep(50);
- 	}
- 	retval = 0;
- out:
+James
+
 
