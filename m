@@ -1,29 +1,62 @@
-From: Mikael Pettersson <mikpe@csd.uu.se>
-Subject: [BUG?] 2.5.71 removed request_module("scsi_hostadapter")
-Date: Wed, 16 Jul 2003 13:45:36 +0200 (MEST)
+From: James Bottomley <James.Bottomley@steeleye.com>
+Subject: Re: [PATCH] as i/o hang with aacraid driver 2.6.0-test1
+Date: 16 Jul 2003 08:41:17 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <200307161145.h6GBjaSi025681@harpo.it.uu.se>
+Message-ID: <1058359278.1856.8.camel@mulgrave>
+References: <1058310172.981.7.camel@markh1.pdx.osdl.net>
+Mime-Version: 1.0
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from meryl.it.uu.se ([130.238.12.42]:11259 "EHLO meryl.it.uu.se")
-	by vger.kernel.org with ESMTP id S271065AbTGPLaq (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 16 Jul 2003 07:30:46 -0400
+Received: from nat9.steeleye.com ([65.114.3.137]:34053 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S270545AbTGPM0v (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 16 Jul 2003 08:26:51 -0400
+In-Reply-To: <1058310172.981.7.camel@markh1.pdx.osdl.net>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: linux-scsi@vger.kernel.org
+To: Mark Haverkamp <markh@osdl.org>
+Cc: Nick Piggin <piggin@cyberone.com.au>, Andrew Morton <akpm@osdl.org>, Cliff White <cliffw@osdl.org>, linux-scsi <linux-scsi@vger.kernel.org>, Jens Axboe <axboe@suse.de>
 
-While trying to figure out why my SCSI modules don't autoload
-properly in 2.6.0-test1 and late 2.5 kernels, I found that
-patch-2.5.71 removed scsi.c's request_module("scsi_hostadapter").
-It seems that some driver model conversion changed scsi_register_device()
-to scsi_register_{driver,interface}(), but the latter don't do
-anything wrt autoloading the host adapter.
+On Tue, 2003-07-15 at 19:02, Mark Haverkamp wrote:
+> Daniel McNeil and I have been debugging a hang with the aacraid driver
+> using the as I/O scheduler.  We found that scsi_request_fn would
+> de-queue a request and later re-queued it.  This left the
+> as_data->nr_dispatched variable in an inconsistent state (it was never
+> being decremented back to zero).  We added a call to
+> elv_completed_request to clean up the state before re-adding the
+> request.  This has fixed our hang problem.  The linux-scsi list is being
+> copied for review of the scsi_lib.c change.
+> 
+> ===== drivers/scsi/scsi_lib.c 1.99 vs edited =====
+> --- 1.99/drivers/scsi/scsi_lib.c	Sun Jun 29 18:14:44 2003
+> +++ edited/drivers/scsi/scsi_lib.c	Tue Jul 15 15:47:45 2003
+> @@ -1215,6 +1215,7 @@
+>  	spin_lock_irq(q->queue_lock);
+>  	if (blk_rq_tagged(req))
+>  		blk_queue_end_tag(q, req);
+> +	elv_completed_request(q, req);
+>  	__elv_add_request(q, req, 0, 0);
 
-Is this an oversight or is it intensional?
+This doen't look right to me.
 
-I can probably work around this through "install" command
-kludgery in /etc/modprobe.conf, but that's (a) is ugly, and
-(b) probably won't work for configs with built-in SCSI core
-but modular host adapter.
+SCSI expects to be able to push back uncompleted requests onto the
+request queue.  The fact that you seem to be calling a completion
+function for an uncompleted request is what's causing me heartburn.
 
-/Mikael
+This code used to work with the old scheduler (we extensively tested it
+around the 2.5.6x timeframe because of other changes), so what I'd
+really like to know is what changed in the scheduler assumptions to
+necessitate this?
+
+If this change is suddenly required, there are several other places in
+our queueing functions that will need similar modifications.
+
+Could I have a definitive statement from the I/O scheduler people about
+the procedure for pushing back uncompleted I/O on the block queue just
+so we all get back on the same page?
+
+Thanks,
+
+James
+
+
