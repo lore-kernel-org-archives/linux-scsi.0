@@ -1,74 +1,45 @@
 From: Jens Axboe <axboe@suse.de>
 Subject: Re: [patch for playing] 2.5.65 patch to support > 256 disks
-Date: Tue, 25 Mar 2003 11:56:29 +0100
+Date: Tue, 25 Mar 2003 12:23:07 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030325105629.GS2371@suse.de>
-References: <200303211056.04060.pbadari@us.ibm.com> <3E7C4251.4010406@torque.net> <20030322030419.1451f00b.akpm@digeo.com> <3E7C4D05.2030500@torque.net> <20030322040550.0b8baeec.akpm@digeo.com>
+Message-ID: <20030325112307.GT2371@suse.de>
+References: <200303211056.04060.pbadari@us.ibm.com> <3E7C4251.4010406@torque.net> <20030322030419.1451f00b.akpm@digeo.com> <3E7C4D05.2030500@torque.net> <20030322040550.0b8baeec.akpm@digeo.com> <20030325105629.GS2371@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20030322040550.0b8baeec.akpm@digeo.com>
+In-Reply-To: <20030325105629.GS2371@suse.de>
 List-Id: linux-scsi@vger.kernel.org
 To: Andrew Morton <akpm@digeo.com>
 Cc: dougg@torque.net, pbadari@us.ibm.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Sat, Mar 22 2003, Andrew Morton wrote:
-> Douglas Gilbert <dougg@torque.net> wrote:
-> >
-> > Andrew Morton wrote:
-> > > Douglas Gilbert <dougg@torque.net> wrote:
-> > > 
-> > >>>Slab:           464364 kB
-> > >>
-> > > 
-> > > It's all in slab.
-> > > 
-> > > 
-> > >>I did notice a rather large growth of nodes
-> > >>in sysfs. For 84 added scsi_debug pseudo disks the number
-> > >>of sysfs nodes went from 686 to 3347.
-> > >>
-> > >>Does anybody know what is the per node memory cost of sysfs?
-> > > 
-> > > 
-> > > Let's see all of /pro/slabinfo please.
-> > 
-> > Andrew,
-> > Attachments are /proc/slabinfo pre and post:
-> >   $ modprobe scsi_debug add_host=42 num_devs=2
-> > which adds 84 pseudo disks.
-> > 
+On Tue, Mar 25 2003, Jens Axboe wrote:
+> Here's a patch that makes the request allocation (and io scheduler
+> private data) dynamic, with upper and lower bounds of 4 and 256
+> respectively. The numbers are a bit random - the 4 will allow us to make
+> progress, but it might be a smidgen too low. Perhaps 8 would be good.
+> 256 is twice as much as before, but that should be alright as long as
+> the io scheduler copes. BLKDEV_MAX_RQ and BLKDEV_MIN_RQ control these
+> two variables.
 > 
-> OK, thanks.  So with 48 disks you've lost five megabytes to blkdev_requests
-> and deadline_drq objects.  With 4000 disks, you're toast.  That's enough
-> request structures to put 200 gigabytes of memory under I/O ;)
+> We loose the old batching functionality, for now. I can resurrect that
+> if needed. It's a rough fit with the mempool, it doesn't _quite_ fit our
+> needs here. I'll probably end up doing a specialised block pool scheme
+> for this.
 > 
-> We need to make the request structures dymanically allocated for other
-> reasons (which I cannot immediately remember) but it didn't happen.  I guess
-> we have some motivation now.
+> Hasn't been tested all that much, it boots though :-)
 
-Here's a patch that makes the request allocation (and io scheduler
-private data) dynamic, with upper and lower bounds of 4 and 256
-respectively. The numbers are a bit random - the 4 will allow us to make
-progress, but it might be a smidgen too low. Perhaps 8 would be good.
-256 is twice as much as before, but that should be alright as long as
-the io scheduler copes. BLKDEV_MAX_RQ and BLKDEV_MIN_RQ control these
-two variables.
+Here's a version with better lock handling. We drop the queue_lock for
+most parts of __make_request(), except the actual io scheduler calls.
 
-We loose the old batching functionality, for now. I can resurrect that
-if needed. It's a rough fit with the mempool, it doesn't _quite_ fit our
-needs here. I'll probably end up doing a specialised block pool scheme
-for this.
+Patch is against 2.5.66-BK as of today.
 
-Hasn't been tested all that much, it boots though :-)
-
- drivers/block/deadline-iosched.c |   86 ++++++++---------
- drivers/block/elevator.c         |   18 +++
- drivers/block/ll_rw_blk.c        |  197 +++++++++++++--------------------------
- include/linux/blkdev.h           |   11 +-
+ drivers/block/deadline-iosched.c |   86 ++++++-------
+ drivers/block/elevator.c         |   18 ++
+ drivers/block/ll_rw_blk.c        |  245 ++++++++++++---------------------------
+ include/linux/blkdev.h           |   12 +
  include/linux/elevator.h         |    7 +
- 5 files changed, 141 insertions(+), 178 deletions(-)
+ 5 files changed, 154 insertions(+), 214 deletions(-)
 
 ===== drivers/block/deadline-iosched.c 1.17 vs edited =====
 --- 1.17/drivers/block/deadline-iosched.c	Fri Mar 14 16:55:04 2003
@@ -240,7 +211,7 @@ Hasn't been tested all that much, it boots though :-)
  	request_queue_t *q = disk->queue;
 ===== drivers/block/ll_rw_blk.c 1.161 vs edited =====
 --- 1.161/drivers/block/ll_rw_blk.c	Mon Mar 24 02:56:03 2003
-+++ edited/drivers/block/ll_rw_blk.c	Tue Mar 25 11:53:37 2003
++++ edited/drivers/block/ll_rw_blk.c	Tue Mar 25 12:20:16 2003
 @@ -48,12 +48,6 @@
   */
  static int queue_nr_requests;
@@ -351,7 +322,7 @@ Hasn't been tested all that much, it boots though :-)
  }
  
  static int __make_request(request_queue_t *, struct bio *);
-@@ -1277,34 +1222,57 @@
+@@ -1277,34 +1222,62 @@
  	return 0;
  }
  
@@ -377,8 +348,9 @@ Hasn't been tested all that much, it boots though :-)
 +
  #define blkdev_free_rq(list) list_entry((list)->next, struct request, queuelist)
  /*
-  * Get a free request. queue lock must be held and interrupts
-  * disabled on the way in.
+- * Get a free request. queue lock must be held and interrupts
+- * disabled on the way in.
++ * Get a free request, queue_lock must not be held
   */
 -static struct request *get_request(request_queue_t *q, int rw)
 +static struct request *get_request(request_queue_t *q, int rw, int gfp_mask)
@@ -393,12 +365,20 @@ Hasn't been tested all that much, it boots though :-)
 -		rq->ref_count = 1;
 -		rl->count--;
 -		if (rl->count < queue_congestion_on_threshold())
--			set_queue_congested(q, rw);
++	/*
++	 * known racy, ok though
++	 */
 +	if (!rl->count[rw])
 +		return NULL;
 +
 +	rq = blk_alloc_request(q, gfp_mask);
 +	if (rq) {
++		spin_lock_irq(q->queue_lock);
++		rl->count[rw]--;
++		if (rl->count[rw] < queue_congestion_on_threshold())
+ 			set_queue_congested(q, rw);
++		spin_unlock_irq(q->queue_lock);
++
 +		INIT_LIST_HEAD(&rq->queuelist);
  		rq->flags = 0;
 -		rq->rq_status = RQ_ACTIVE;
@@ -409,9 +389,6 @@ Hasn't been tested all that much, it boots though :-)
 -		rq->sense = NULL;
 -		rq->waiting = NULL;
 +		rq->rq_status = RQ_ACTIVE;
-+		rl->count[rw]--;
-+		if (rl->count[rw] < queue_congestion_on_threshold())
-+			set_queue_congested(q, rw);
  		rq->bio = rq->biotail = NULL;
 +		rq->buffer = NULL;
 +		rq->ref_count = 1;
@@ -424,7 +401,7 @@ Hasn't been tested all that much, it boots though :-)
  	}
  
  	return rq;
-@@ -1316,7 +1284,7 @@
+@@ -1316,7 +1289,7 @@
  static struct request *get_request_wait(request_queue_t *q, int rw)
  {
  	DEFINE_WAIT(wait);
@@ -433,7 +410,7 @@ Hasn't been tested all that much, it boots though :-)
  	struct request *rq;
  
  	spin_lock_prefetch(q->queue_lock);
-@@ -1325,20 +1293,15 @@
+@@ -1325,64 +1298,24 @@
  	do {
  		int block = 0;
  
@@ -456,10 +433,13 @@ Hasn't been tested all that much, it boots though :-)
  	} while (rq == NULL);
  	return rq;
  }
-@@ -1349,13 +1312,7 @@
  
- 	BUG_ON(rw != READ && rw != WRITE);
- 
+ struct request *blk_get_request(request_queue_t *q, int rw, int gfp_mask)
+ {
+-	struct request *rq;
+-
+-	BUG_ON(rw != READ && rw != WRITE);
+-
 -	spin_lock_irq(q->queue_lock);
 -	rq = get_request(q, rw);
 -	spin_unlock_irq(q->queue_lock);
@@ -467,20 +447,48 @@ Hasn't been tested all that much, it boots though :-)
 -	if (!rq && (gfp_mask & __GFP_WAIT))
 -		rq = get_request_wait(q, rw);
 -
-+	rq = get_request(q, rw, gfp_mask);
- 	if (rq) {
- 		rq->flags = 0;
- 		rq->buffer = NULL;
-@@ -1374,7 +1331,7 @@
- 
+-	if (rq) {
+-		rq->flags = 0;
+-		rq->buffer = NULL;
+-		rq->bio = rq->biotail = NULL;
+-		rq->waiting = NULL;
+-	}
+-	return rq;
+-}
+-
+-/*
+- * Non-locking blk_get_request variant, for special requests from drivers.
+- */
+-struct request *__blk_get_request(request_queue_t *q, int rw)
+-{
+-	struct request *rq;
+-
  	BUG_ON(rw != READ && rw != WRITE);
  
 -	rq = get_request(q, rw);
-+	rq = get_request(q, rw, GFP_ATOMIC);
+-
+-	if (rq) {
+-		rq->flags = 0;
+-		rq->buffer = NULL;
+-		rq->bio = rq->biotail = NULL;
+-		rq->waiting = NULL;
+-	}
+-	return rq;
++	return get_request(q, rw, gfp_mask);
+ }
  
- 	if (rq) {
- 		rq->flags = 0;
-@@ -1508,34 +1465,26 @@
+ /**
+@@ -1499,6 +1432,9 @@
+ 	disk->stamp_idle = now;
+ }
+ 
++/*
++ * queue lock must be held
++ */
+ void __blk_put_request(request_queue_t *q, struct request *req)
+ {
+ 	struct request_list *rl = req->rl;
+@@ -1508,34 +1444,26 @@
  	if (unlikely(!q))
  		return;
  
@@ -524,16 +532,50 @@ Hasn't been tested all that much, it boots though :-)
  }
  
  void blk_put_request(struct request *req)
-@@ -1772,7 +1721,7 @@
+@@ -1694,9 +1622,9 @@
+ 
+ 	barrier = test_bit(BIO_RW_BARRIER, &bio->bi_rw);
+ 
+-	spin_lock_irq(q->queue_lock);
+ again:
+ 	insert_here = NULL;
++	spin_lock_irq(q->queue_lock);
+ 
+ 	if (blk_queue_empty(q)) {
+ 		blk_plug_device(q);
+@@ -1769,12 +1697,12 @@
+ 	 * a free slot.
+ 	 */
+ get_rq:
++	spin_unlock_irq(q->queue_lock);
++
  	if (freereq) {
  		req = freereq;
  		freereq = NULL;
 -	} else if ((req = get_request(q, rw)) == NULL) {
-+	} else if ((req = get_request(q, rw, GFP_ATOMIC)) == NULL) {
- 		spin_unlock_irq(q->queue_lock);
- 
+-		spin_unlock_irq(q->queue_lock);
+-
++	} else if ((req = get_request(q, rw, GFP_NOIO)) == NULL) {
  		/*
-@@ -1815,8 +1764,8 @@
+ 		 * READA bit set
+ 		 */
+@@ -1782,7 +1710,6 @@
+ 			goto end_io;
+ 
+ 		freereq = get_request_wait(q, rw);
+-		spin_lock_irq(q->queue_lock);
+ 		goto again;
+ 	}
+ 
+@@ -1809,19 +1736,20 @@
+ 	req->bio = req->biotail = bio;
+ 	req->rq_disk = bio->bi_bdev->bd_disk;
+ 	req->start_time = jiffies;
++
++	spin_lock_irq(q->queue_lock);
+ 	add_request(q, req, insert_here);
+ out:
+ 	if (freereq)
  		__blk_put_request(q, freereq);
  
  	if (blk_queue_plugged(q)) {
@@ -544,7 +586,12 @@ Hasn't been tested all that much, it boots though :-)
  		if (nr_queued == q->unplug_thresh)
  			__generic_unplug_device(q);
  	}
-@@ -2183,7 +2132,6 @@
+ 	spin_unlock_irq(q->queue_lock);
+-
+ 	return 0;
+ 
+ end_io:
+@@ -2183,7 +2111,6 @@
  
  int __init blk_dev_init(void)
  {
@@ -552,7 +599,7 @@ Hasn't been tested all that much, it boots though :-)
  	int i;
  
  	request_cachep = kmem_cache_create("blkdev_requests",
-@@ -2191,24 +2139,11 @@
+@@ -2191,24 +2118,11 @@
  	if (!request_cachep)
  		panic("Can't create request pool slab cache\n");
  
@@ -580,9 +627,17 @@ Hasn't been tested all that much, it boots though :-)
  	printk(" enter congestion at %d\n", queue_congestion_on_threshold());
  	printk(" exit congestion at %d\n", queue_congestion_off_threshold());
  
+@@ -2250,7 +2164,6 @@
+ EXPORT_SYMBOL(blk_phys_contig_segment);
+ EXPORT_SYMBOL(blk_hw_contig_segment);
+ EXPORT_SYMBOL(blk_get_request);
+-EXPORT_SYMBOL(__blk_get_request);
+ EXPORT_SYMBOL(blk_put_request);
+ EXPORT_SYMBOL(blk_insert_request);
+ 
 ===== include/linux/blkdev.h 1.98 vs edited =====
 --- 1.98/include/linux/blkdev.h	Tue Feb 18 11:29:00 2003
-+++ edited/include/linux/blkdev.h	Tue Mar 25 10:24:29 2003
++++ edited/include/linux/blkdev.h	Tue Mar 25 12:12:20 2003
 @@ -10,6 +10,7 @@
  #include <linux/pagemap.h>
  #include <linux/backing-dev.h>
@@ -602,7 +657,7 @@ Hasn't been tested all that much, it boots though :-)
 -	unsigned int count;
 -	struct list_head free;
 -	wait_queue_head_t wait;
-+	unsigned int count[2];
++	int count[2];
 +	mempool_t *rq_pool;
  };
  
@@ -616,6 +671,14 @@ Hasn't been tested all that much, it boots though :-)
  
  	request_fn_proc		*request_fn;
  	merge_request_fn	*back_merge_fn;
+@@ -330,7 +333,6 @@
+ extern void blk_attempt_remerge(request_queue_t *, struct request *);
+ extern void __blk_attempt_remerge(request_queue_t *, struct request *);
+ extern struct request *blk_get_request(request_queue_t *, int, int);
+-extern struct request *__blk_get_request(request_queue_t *, int);
+ extern void blk_put_request(struct request *);
+ extern void blk_insert_request(request_queue_t *, struct request *, int, void *);
+ extern void blk_plug_device(request_queue_t *);
 ===== include/linux/elevator.h 1.18 vs edited =====
 --- 1.18/include/linux/elevator.h	Sun Jan 12 15:10:40 2003
 +++ edited/include/linux/elevator.h	Tue Mar 25 11:03:42 2003
