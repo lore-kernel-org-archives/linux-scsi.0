@@ -1,25 +1,25 @@
 From: Alex Aizman <itn780@yahoo.com>
-Subject: [ANNOUNCE 6/6] Open-iSCSI High-Performance Initiator for Linux
-Date: Sun, 06 Mar 2005 23:19:03 -0800
-Message-ID: <422C0067.50300@yahoo.com>
+Subject: [ANNOUNCE 5/6] Open-iSCSI High-Performance Initiator for Linux
+Date: Sun, 06 Mar 2005 23:16:07 -0800
+Message-ID: <422BFFB7.4000206@yahoo.com>
 Mime-Version: 1.0
 Content-Type: multipart/mixed;
- boundary="------------030902070907030505050006"
-Received: from smtp102.mail.sc5.yahoo.com ([216.136.174.140]:30370 "HELO
-	smtp102.mail.sc5.yahoo.com") by vger.kernel.org with SMTP
-	id S261673AbVCGHTh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 7 Mar 2005 02:19:37 -0500
+ boundary="------------030107000802070201010200"
+Received: from smtp017.mail.yahoo.com ([216.136.174.114]:63620 "HELO
+	smtp017.mail.yahoo.com") by vger.kernel.org with SMTP
+	id S261671AbVCGHQh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 7 Mar 2005 02:16:37 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: linux-kernel@vger.kernel.org
 
 This is a multi-part message in MIME format.
---------------030902070907030505050006
+--------------030107000802070201010200
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 
-          Documentation/scsi/iscsi.txt
+          include/linux/netlink.h changes (added new protocol NETLINK_ISCSI)
 
           Signed-off-by: Alex Aizman <itn780@yahoo.com>
           Signed-off-by: Dmitry Yusupov <dmitry_yus@yahoo.com>
@@ -32,296 +32,23 @@ Content-Transfer-Encoding: 7bit
 
 
 
---------------030902070907030505050006
+--------------030107000802070201010200
 Content-Type: text/plain;
- name="open-iscsi-doc.patch"
+ name="open-iscsi-netlink.patch"
 Content-Transfer-Encoding: 7bit
 Content-Disposition: inline;
- filename="open-iscsi-doc.patch"
+ filename="open-iscsi-netlink.patch"
 
-diff -Nru linux-2.6.11.orig/Documentation/scsi/iscsi.txt linux-2.6.11.dima/Documentation/scsi/iscsi.txt
---- linux-2.6.11.orig/Documentation/scsi/iscsi.txt	1969-12-31 16:00:00.000000000 -0800
-+++ linux-2.6.11.dima/Documentation/scsi/iscsi.txt	2005-03-04 17:50:11.145412869 -0800
-@@ -0,0 +1,279 @@
-+=================================================================
-+
-+                Linux* Open-iSCSI
-+
-+=================================================================
-+
-+                                                March 04, 2005
-+
-+Contents
-+========
-+
-+- 1. In This Release
-+- 2. Introduction
-+- 3. Installation
-+- 4. Open-iSCSI daemon
-+- 5. Open-iSCSI Configuration Utility
-+- 6. Configuration
-+- 7. Getting Started
-+- 8. TBD
-+- Appendix A. SendTargets snapshot.
-+
-+
-+
-+1. In This Release
-+==================
-+
-+This file describes the Linux* Open-iSCSI Initiator.
-+
-+The latest development release is available at:
-+http://www.open-iscsi.org
-+
-+For questions, comments, contributions send e-mail to:
-+open-iscsi@googlegroups.com 
-+
-+    1.1. Features
-+    
-+    - highly optimized and very small-footprint data path;
-+    - multiple outstanding R2Ts;
-+    - persistent configuration database;
-+    - SendTargets discovery;
-+    - CHAP;
-+    - PDU header Digest;
-+    - multiple sessions;
-+    - multi-connection sessions.
-+    
-+    For the most recent list of features please refer to:
-+    http://www.open-iscsi.org/cgi-bin/wiki.pl/Roadmap
-+
-+    
-+
-+2. Introduction
-+===============
-+
-+Open-iSCSI project is a high-performance, transport independent,
-+multi-platform implementation of RFC3720 iSCSI.
-+
-+Open-iSCSI is partitioned into user and kernel parts.
-+
-+The kernel portion of Open-iSCSI is a from-scratch code
-+licensed under GPL. The kernel part implements iSCSI data path
-+(that is, iSCSI Read and iSCSI Write), and consists of two
-+loadable modules: iscsi_if.ko and iscsi_tcp.ko.
-+
-+User space contains the entire control plane: configuration
-+manager, iSCSI Discovery, Login and Logout processing,
-+connection-level error processing, Nop-In and Nop-Out handling,
-+and (in the future:) Text processing, iSNS, SLP, Radius, etc.
-+
-+The user space Open-iSCSI consists of a daemon process called
-+iscsid, and a management utility iscsiadm.
-+
-+
-+3. Installation
-+===============
-+
-+You need to enable "Cryptographic API" under "Cryptographic options" 
-+in the kernel config. You also need to enable "CRC32c CRC algorithm" if
-+you use header or data digests. They are the kernel options,
-+CONFIG_CRYPTO and CONFIG_CRYPTO_CRC32C, respectively.
-+
-+
-+4. Open-iSCSI daemon
-+====================
-+
-+The daemon implements control path of iSCSI protocol, plus some management
-+facilities. For example, the daemon could be configured to automatically 
-+re-start discovery at startup, based on the contents of persistent 
-+iSCSI database (see next section).
-+
-+For help, run:
-+
-+	./iscsid --help
-+
-+Usage: iscsid [OPTION]
-+
-+  -c, --config=[path]     Execute in the config file (/etc/iscsid.conf).
-+  -f, --foreground        run iscsid in the foreground
-+  -d, --debug debuglevel  print debugging information
-+  -u, --uid=uid           run as uid, default is current user
-+  -g, --gid=gid           run as gid, default is current user group
-+  -h, --help              display this help and exit
-+  -v, --version           display version and exit
-+
-+
-+
-+5. Open-iSCSI Configuration Utility
-+===================================
-+
-+Open-iSCSI persistent configuration is implemented as a DBM database
-+available on all Linux installations.
-+
-+The database contains two tables:
-+
-+- Discovery table (discovery.db);
-+- Node table (node.db).
-+
-+The regular place for iSCSI database files: /var/db/iscsi/*.db
-+
-+The iscsiadm utility is a command-line tool to manage (update, delete,
-+insert, query) the persistent database.
-+
-+The utility presents set of operations that a user can perform 
-+on iSCSI nodes, sessions, connections, and discovery records.
-+
-+Note that some of the iSCSI Node and iSCSI Discovery operations 
-+do not require iSCSI daemon (iscsid) loaded.
-+
-+For help, run:
-+
-+	./iscsiadm --help
-+
-+Usage: iscsiadm [OPTION]
-+
-+  -m, --mode <op>         specify operational mode op = <discovery|node>
-+  -m discovery --type=[type] --portal=[ip:port] --login
-+                          perform [type] discovery for target portal with
-+                          ip-address [ip] and port [port]. Initiate Login for
-+                          each discovered target if --login is specified
-+  -m discovery            display all discovery records from internal
-+                          persistent discovery database
-+  -m discovery --record=[id] --login
-+                          perform discovery based on record [id] in database
-+  -m discovery --record=[id] --op=[op] [--name=[name] --value=[value]]
-+                          perform specific DB operation [op] for specific
-+                          discovery record with [id]. It could be one of:
-+                          [new], [delete], [update] or [show]. In case of
-+                          [update], you have to provide [name] and [value]
-+                          you wish to update
-+  -m node                 display all discovered nodes from internal
-+                          persistent discovery database
-+  -m node --record=[id] [--login|--logout]
-+  -m node --record=[id] --op=[op] [--name=[name] --value=[value]]
-+                          perform specific DB operation [op] for specific
-+                          node with record [id]. It could be one of:
-+                          [new], [delete], [update] or [show]. In case of
-+                          [update], you have to provide [name] and [value]
-+                          you wish to update
-+  -m session              display all active sessions and connections
-+  -m session --record=[id[:cid]] [--logout]
-+                          perform operation for specific session with
-+                          record [id] or display statistics if no operation
-+                          specified. Operation will affect one connection
-+                          only if [:cid] is specified
-+  -d, --debug debuglevel  print debugging information
-+  -V, --version           display version and exit
-+  -h, --help              display this help and exit
-+
-+
-+    Usage Examples:
-+
-+    1) SendTargets iSCSI Discovery:
-+
-+	    ./iscsiadm -m discovery --type sendtargets --portal 192.168.1.1:3260
-+
-+    2) iSCSI Login:
-+
-+	    ./iscsiadm -m node --record 0f23e4 --login
-+
-+    3) iSCSI Logout:
-+
-+	    ./iscsiadm -m node --record 0f23e4 --logout
-+
-+    4) Changing iSCSI parameter:
-+
-+	    ./iscsiadm -m node --record 0f23e4 --op update \
-+		    -n node.cnx[0].iscsi.MaxRecvDataSegmentLength -v 65536
-+
-+    5) Adding custom iSCSI Node:
-+
-+	    ./iscsiadm -m node --op new --portal 192.168.0.1:3260
-+	    new iSCSI node record added: [0a45f8]
-+
-+    6) Removing iSCSI Node:
-+
-+	    ./iscsiadm -m node --op delete --record 0a45f8
-+
-+    7) Display iSCSI Node configuration:
-+
-+	    ./iscsiadm -m node --record 0a45f8
-+
-+	or
-+
-+	    ./iscsiadm -m node --op show --record 0a45f8
-+
-+
-+6. Configuration
-+================
-+
-+The default configuration file is /etc/iscsid.conf. This file contains
-+only configuration that could be overwritten by iSCSI Discovery,
-+or manualy updated via iscsiadm utility.
-+
-+See the man page and the example file for the current syntax.
-+(no man page yet...)
-+
-+
-+7. Getting Started
-+==================
-+
-+Right now there is no installation script. Just load the module with
-+command:
-+
-+	insmod iscsi_if.ko
-+	insmod iscsi_tcp.ko
-+
-+after that start iSCSI daemon process:
-+
-+	./iscsid
-+
-+or alternatively, start it with debug enabled and with output
-+redirected to the current console:
-+
-+	./iscsid -d8 -f &
-+
-+and use configuration utility to add/remove/update Discovery records,
-+iSCSI Node records or monitor active iSCSI sessions:
-+
-+	./iscsiadm
-+
-+
-+To login:
-+
-+	    ./iscsiadm -m node --record <node rec> --login
-+
-+where <node rec> is the record of a discovered or manually
-+added iSCSI Target Node (for iscsiadm usage examples see
-+previous sections).
-+
-+
-+8. TBD
-+======
-+
-+To be completed:
-+
-+    - Kernel tracing and Troubleshooting
-+    - Immediate and not-so-immediate plans
-+    - Useful scripts
-+    - White paper on Open-iSCSI design
-+
-+
-+Appendix A. SendTargets iSCSI Discovery session snapshot.
-+=========================================================
-+
-+-bash-2.05b# ./iscsiadm -m discovery -tst -p 10.16.16.223:3260
-+[02f611] 10.16.16.223:3260,1 iqn.2002-07.com.ttechnologies.target.a
-+[01acd1] 17.1.1.223:3260,1 iqn.2002-07.com.ttechnologies.target.a
-+-bash-2.05b#
-+-bash-2.05b# ./iscsiadm -m node
-+[02f611] 10.16.16.223:3260,1 iqn.2002-07.com.ttechnologies.target.a
-+[01acd1] 17.1.1.223:3260,1 iqn.2002-07.com.ttechnologies.target.a
-+-bash-2.05b#
-+-bash-2.05b# ./iscsiadm -m discovery -tst -p 10.16.16.227:3260
-+[02fb91] 10.16.16.227:3260,1 iqn.2001-04.com.example:storage.disk2.sys1.xyz
-+-bash-2.05b#
-+-bash-2.05b# ./iscsiadm -m node
-+[02f611] 10.16.16.223:3260,1 iqn.2002-07.com.ttechnologies.target.a
-+[02fb91] 10.16.16.227:3260,1 iqn.2001-04.com.example:storage.disk2.sys1.xyz
-+[01acd1] 17.1.1.223:3260,1 iqn.2002-07.com.ttechnologies.target.a
-+
+--- linux-2.6.11.orig/include/linux/netlink.h	2005-03-01 23:38:25.000000000 -0800
++++ linux-2.6.11.dima/include/linux/netlink.h	2005-03-04 17:50:11.143413101 -0800
+@@ -14,6 +14,7 @@
+ #define NETLINK_SELINUX		7	/* SELinux event notifications */
+ #define NETLINK_ARPD		8
+ #define NETLINK_AUDIT		9	/* auditing */
++#define NETLINK_ISCSI		10	/* iSCSI Open Interface */
+ #define NETLINK_ROUTE6		11	/* af_inet6 route comm channel */
+ #define NETLINK_IP6_FW		13
+ #define NETLINK_DNRTMSG		14	/* DECnet routing messages */
 
 
 
@@ -332,4 +59,4 @@ diff -Nru linux-2.6.11.orig/Documentation/scsi/iscsi.txt linux-2.6.11.dima/Docum
 
 
 
---------------030902070907030505050006--
+--------------030107000802070201010200--
