@@ -1,131 +1,77 @@
-From: Mike Anderson <andmike@us.ibm.com>
-Subject: Re: [PATCH] scsi_set_host_offline (resend)
-Date: Mon, 31 Mar 2003 18:48:06 -0800
+From: Zwane Mwaikambo <zwane@linuxpower.ca>
+Subject: isp1020 memory trample in 2.5.66
+Date: Wed, 2 Apr 2003 01:08:54 -0500 (EST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030401024806.GA4991@beaverton.ibm.com>
-References: <20030325100704.GC3868@beaverton.ibm.com> <20030329125302.A10565@one-eyed-alien.net> <1048974903.21704.313.camel@mulgrave> <200303292350.04187.oliver@neukum.org>
+Message-ID: <Pine.LNX.4.50.0304020101460.8773-100000@montezuma.mastecende.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <200303292350.04187.oliver@neukum.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Oliver Neukum <oliver@neukum.org>
-Cc: James Bottomley <James.Bottomley@steeleye.com>, Matthew Dharm <mdharm-scsi@one-eyed-alien.net>, mochel@osdl.org, SCSI Mailing List <linux-scsi@vger.kernel.org>, gregkh@us.ibm.com
+To: Linux Kernel <linux-kernel@vger.kernel.org>
+Cc: linux-scsi@vger.kernel.org
 
-Oliver Neukum [oliver@neukum.org] wrote:
-> Am Samstag, 29. M?rz 2003 22:54 schrieb James Bottomley:
-> > On Sat, 2003-03-29 at 14:53, Matthew Dharm wrote:
-> > > My understanding was that I couldn't call set_device_offline with the
-> > > host lock held, which is a problem because I need the host lock to
-> > > traverse the device list.
-> >
-> > The solution we're talking about here is from the user level hotplug
-> > scripts.  Once we get the remove-single-device fixed, you simply use the
-> > device hot unplug script to traverse the attached SCSI devices, clean up
-> > the user land (kill processes, unmount filesystems etc.) and then blow
-> > the devices away.  After the host has no devices, you should simply be
-> > able to trigger a host removal from within your driver.
-> 
-> It seems you are still trying this overcomplicated going through
-> user space and back thing.
-> There's no benefit at all in this. If you make this work you can just
-> as well make a straightforward thing work. Which will not be a nightmare
-> to make work right under all circumstances.
+2.5.65 was ok, 2.5.66 can't boot, there is nothing obvious in the patch 
+which could have led to this. I'd try a binary search but i'm afraid i 
+won't have that much free time for a while.
 
-Matthew / James I believe I am out of sync with how much is being done
-by userspace and how much is being done in the kernel. I believed there
-was always userspace action to umount / close devices.
+Box is 32way PIII-450, devices attached to the only real active isp1020 
+HBA are;
 
-Matthew I know in the previous mail you wrote a numbered list of steps.
-I believe item #2 should have called scsi_set_host_offline or
-scsi_set_device_offline. Item #6 would only happen if scsi_remove_host
-was called sometime prior.
+qlogicisp : new isp1020 revision ID (5)
+qlogicisp : interrupt 233 already in use
+scsi0 : QLogic ISP1020 SCSI on PCI bus 01 device 70 irq 41 MEM base 
+0xf8c1a000
+  Vendor: IBM       Model: DRHS36V           Rev: 0270
+  Type:   Direct-Access                      ANSI SCSI revision: 03
+  Vendor: IBM       Model: DRHS36V           Rev: 0270
+  Type:   Direct-Access                      ANSI SCSI revision: 03
+  Vendor: PLEXTOR   Model: CD-ROM PX-32CS    Rev: 1.02
+  Type:   CD-ROM                             ANSI SCSI revision: 02
+scsi1 : QLogic ISP1020 SCSI on PCI bus 04 device 70 irq 89 MEM base 0xf8c1c000
+SCSI device sda: 72170879 512-byte hdwr sectors (36951 MB)
+SCSI device sda: drive cache: write through
+ sda: sda1 sda2 sda3
+Attached scsi disk sda at scsi0, channel 0, id 0, lun 0
+SCSI device sdb: 72170879 512-byte hdwr sectors (36951 MB)
+SCSI device sdb: drive cache: write through
+ sdb: unknown partition table
 
-I wrote the following text on the interface I thought we had / where
-trying to complete. I would like to add to this so that we possibly
-could archive an interface contract between the LLDD and scsi-mid.
+Unable to handle kernel paging request at virtual address 6b6b6b6b
+ printing eip:
+6b6b6b6b
+*pde = 00000000
+Oops: 0000 [#1]
+CPU:    0
+EIP:    0060:[<6b6b6b6b>]    Not tainted
+EFLAGS: 00010086
+EIP is at 0x6b6b6b6b
+eax: f8c1c000   ebx: e4f9c000   ecx: 00000001   edx: c3f56400
+esi: e4f9c000   edi: 00000002   ebp: e4fa09cc   esp: c0375f10
+ds: 007b   es: 007b   ss: 0068
+Process swapper (pid: 0, threadinfo=c0374000 task=c03064a0)
+Stack: c0228d4b e4fa09cc 00000001 00000001 c3f564b0 c3f56400 0000000b c3f56400 
+       00000002 c0375f98 c0228a39 0000000b c3f56400 c0375f98 e59f1914 24000001 
+       0000000b c010cd4a 0000000b c3f56400 c0375f98 c0356960 c0356970 0000000b 
+Call Trace:
+ [<c0228d4b>] isp1020_intr_handler+0x2db/0x300
+ [<c0228a39>] do_isp1020_intr_handler+0x49/0x80
+ [<c010cd4a>] handle_IRQ_event+0x3a/0x60
+ [<c010d052>] do_IRQ+0x112/0x1f0
+ [<c01089b0>] default_idle+0x0/0x40
+ [<c01089b0>] default_idle+0x0/0x40
+ [<c010b700>] common_interrupt+0x18/0x20
+ [<c01089b0>] default_idle+0x0/0x40
+ [<c01089b0>] default_idle+0x0/0x40
+ [<c01089dd>] default_idle+0x2d/0x40
+ [<c0108a82>] cpu_idle+0x52/0x70
+ [<c0105000>] _stext+0x0/0x70
 
+Code:  Bad EIP value.
+ <0>Kernel panic: Aiee, killing interrupt handler!
 
-2.5 SCSI host register interfaces (scsi_add_host / scsi_remove_host)
+0xc0228d4b is in isp1020_intr_handler (drivers/scsi/qlogicisp.c:1072).
+1071                    (*Cmnd->scsi_done)(Cmnd); <===
+1072            }
 
-1. LLDD call graph standard
-
-(PROBE)
-LLDD                  Mid                  Sysfs
-scsi_register      -->
-scsi_set_device    --> (depreciated)
-scsi_add_host      ---+
-                      |
-               scsi_sysfs_add_host      --> device_register (shost)
-               scsi_scan_host         (i)-> device_register (sdev)
-
-(REMOVE)
-LLDD                  Mid                  Sysfs
-scsi_remove_host  ---+
-                     |
-               scsi_sysfs_remove_host   --> device_unregister (shost)
-               scsi_forget_host       (i)-> device_unregister (sdev)
-
-(hotplug "remove" events for shost and sdev where generated by
-device_unregister call).
-
-(sdev device ref cnt == 0)
-                                            koject_cleanup
-                                                   |
-                                           scsi_device_release
-
-(shost device ref cnt == 0)
-                                            koject_cleanup
-                                                   |
-                     +--                    scsi_host_release
-                     |
-                  shost->hostt->release
-
-2. LLDD call graph offline event
-
-(OFFLINE single device)
-LLDD                       Mid                  Sysfs
-scsi_set_device_offline  --+
-                           |
-                        scsi_eh_scmd_add
-
-Note: Do we need hotplug events here or wait until remove???
-
-(OFFLINE host)
-LLDD                       Mid                  Sysfs
-scsi_set_host_offline    --+
-                           |
-                      scsi_set_device_offline
-
-(REMOVE)
-Same as above.
-
-
-TODO (1):
-scsi_add_host scans the host and when outstanding patches are applied
-the scsi_host struct device will have a ref count of 1+N where N is the
-number of struct scsi_device's found off the host. In turn each struct
-scsi_device struct device will have a ref count of 1+N where N is the
-number of upper drivers bound or the number of opens (this may not be
-correct for sometime as we do not have an option for the multiple bind
-sg issue).
-
-
-TODO (2):
-We need a common method to stop gets to a struct device post a certain
-barrier. In the short term scsi could add a scsi_host flag to stop scan
-adds, but cannot effect sysfs gets.
-
-TODO (3):
-When outstanding patches are applied scsi_remove_host will cause a
-device_unregister to be called on all child nodes (sdevs) of scsi_host
-and scsi_host (these unregisters will generate hot plug "remove" events)
-once the scsi_device ref cnt goes to zero scsi_device_release is called
-and once scsi_host ref cnt goes to zero scsi_host_release is called.
-
--andmike
---
-Michael Anderson
-andmike@us.ibm.com
-
+-- 
+function.linuxpower.ca
