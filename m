@@ -1,57 +1,89 @@
-From: "Randy.Dunlap" <rddunlap@osdl.org>
-Subject: Re: [RFC][PATCH] scsi-misc-2.5 software enqueue when can_queue reached
-Date: Mon, 3 Mar 2003 07:52:18 -0800
+From: Kevin Fenzi <kevin-linux-kernel@scrye.com>
+Subject: Re: 2.4.x end of tape handling error
+Date: Mon, 3 Mar 2003 09:49:38 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030303075218.79c0fcf8.rddunlap@osdl.org>
-References: <20030228111924.A32018@beaverton.ibm.com>
-	<20030302085728.A11407@infradead.org>
+Message-ID: <20030303164942.1505.qmail@scrye.com>
+References: <mailman.1044901620.21591.linux-kernel2news@redhat.com>
+	<200302101904.h1AJ4US05141@devserv.devel.redhat.com>
+	<20030218021039.28335.qmail@scrye.com>
+	<20030224235355.30878.qmail@scrye.com>
+	<Pine.LNX.4.52.0303022118510.2029@kai.makisara.local>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <20030302085728.A11407@infradead.org>
+In-Reply-To: <Pine.LNX.4.52.0303022118510.2029@kai.makisara.local>
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: patmans@us.ibm.com, linux-scsi@vger.kernel.org
+To: Kai Makisara <Kai.Makisara@kolumbus.fi>
+Cc: linux-scsi@vger.kernel.org
 
-On Sun, 2 Mar 2003 08:57:28 +0000
-Christoph Hellwig <hch@infradead.org> wrote:
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
 
-| The patch looks fine to me in principle, a few nitpicks are below.
-| (btw, any chance you could post a current scsi midlayer multipathing
-| patch?  I see there is BK activity.. :))
-| 
-| > +++ edited/drivers/scsi/hosts.c	Thu Feb 27 16:21:09 2003
-| > @@ -383,6 +383,7 @@
-| >  	scsi_assign_lock(shost, &shost->default_lock);
-| >  	INIT_LIST_HEAD(&shost->my_devices);
-| >  	INIT_LIST_HEAD(&shost->eh_cmd_q);
-| > +	INIT_LIST_HEAD(&shost->pending_queue);
-| 
-| This isn't consistant, either ew use _q in all new code or _queue.
-| (peronally I prefer the latter)
+>>>>> "Kai" == Kai Makisara <Kai.Makisara@kolumbus.fi> writes:
 
-I agree; looks/reads better, easier to remember.
+Kai> On Mon, 24 Feb 2003, Kevin Fenzi wrote:
 
-| > +void scsi_host_send_pending (struct Scsi_Host *shost)
-| 
-| codingstyle issue:  no space between function name and opening brace.
+>> Some more information on this problem discovered by Tim Jones
+>> <tjones@tolisgroup.com>:
+>> 
+Tim> Additional news.
+>>
+Tim> This is actually related to the check sense bit not being
+Tim> propagated up to the ST driver.  A simpler test (beats writing
+Tim> 40GB to a tape ...):
+>>
+Kai> ...
+Tim> This is caused by the check sense not being set and the ST driver
+Tim> sending up a EIO instead of the ENOMEDIUM.
 
-It's much more readable with the space there IMO.
+>> So, it looks like this problem is _not_ in the st driver itself,
+>> but somewhere in the SCSI layer.
+>> 
+>> Anyone have any ideas how to better track it down?
+>> 
+>> Happy to run debug code/test cases here.
+>> 
 
-| > +{
-| > +	struct scsi_cmnd *scmd;
-| > +	unsigned long flags;
-| > +
-| > +	spin_lock_irqsave(shost->host_lock, flags);
-| > +	while (!shost->host_self_blocked
-| > +	       && !list_empty(&shost->pending_queue)) {
-| 
-| Linux codingstyle sais the && should be before the line break.
+Kai> If you enable debugging in the st driver, it prints on the
+Kai> console(dmesg)/system log the sense data it gets. (To enable
+Kai> debugging, edit the st source to '#define DEBUG 1' and recompile
+Kai> the kernel/module).
 
-While I also prefer the && at the end of the line, I don't see that as
-a requirement anywhere... and not in Documentation/CodingStyle (and I'm
-not saying that you said it's in there).
+Yeah, ok. 
 
---
-~Randy
+Kai> The st driver does in some cases behave too conservatively when
+Kai> the EOT early warning is found. This happens when operating in
+Kai> fixed block mode and only with some drives. The drives I use for
+Kai> testing behave in a different way and that is why I have not seen
+Kai> this problem (tracked down with debugging output from one kind
+Kai> user). I have a fix ready but testing will still take some
+Kai> time. This problem is not seen when asynchronous writes and
+Kai> driver buffering are disabled (as suggested in README.st when
+Kai> trying to rely on EOT detection).
+
+Humm... I tried to disable async writes and buffering and still got
+the problem on my HP DDS2 drive. 
+
+Whats the correct procedure to disable both those?
+
+mt -f /dev/nst0 stoptions buffer-writes 0
+mt -f /dev/nst0 stoptions async-writes 0
+
+I can repeat those tests to confirm, but I'm pretty sure I was seeing
+the problem even with those options set. 
+
+Would you like debug output from that case?
+
+Kai> 	Kai
+
+kevin
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.2.1 (GNU/Linux)
+Comment: Processed by Mailcrypt 3.5.8 <http://mailcrypt.sourceforge.net/>
+
+iD8DBQE+Y4em3imCezTjY0ERAsPOAJ4lSsrUfiDHPbdNQ+NcQxEy4w17sACdEkM8
+EclBD42iXwpqsbiAJkeelEo=
+=Uh2S
+-----END PGP SIGNATURE-----
