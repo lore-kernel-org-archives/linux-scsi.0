@@ -1,54 +1,35 @@
-From: Fulko.Hew@sita.aero
-Subject: Re: [linux-usb-devel] Re: [usb-storage] Malfunctioning USB stick
-Date: Thu, 13 May 2004 16:54:28 -0400
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <OFD1A9A657.BC5EF265-ON85256E93.00723324-85256E93.006C2644@yyz.sita.aero>
+From: David.Egolf@Bull.com
+Subject: Re: [(re)Announce] Emulex LightPulse Device Driver
+Date: Thu, 13 May 2004 14:21:24 -0700
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <OF43CA8574.3A9C651D-ON07256E93.00714C91-07256E93.0075513F@az05.bull.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.sita.aero ([57.250.243.3]:17070 "EHLO mx2.sita.aero")
-	by vger.kernel.org with ESMTP id S264518AbUEMUfX (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 13 May 2004 16:35:23 -0400
+Content-Type: text/plain; charset="us-ascii"
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org-S265113AbUEMVVj@vger.kernel.org>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Oliver Neukum <oliver@neukum.org>
-Cc: linux-usb-devel@lists.sourceforge.net, usb-storage@lists.one-eyed-alien.net, linux-scsi@vger.kernel.org
 
+Christoph Hellwig <hch@infradead.org>
+Sent by: linux-scsi-owner@vger.kernel.org
+05/09/2004 01:20 AM
 
-
-
-Oliver Neukum <oliver@neukum.org> wrote:
-
-> Am Donnerstag, 13. Mai 2004 20:09 schrieb Alan Stern:
-> > On Thu, 13 May 2004, Oliver Neukum wrote:
-> >
-> > > Hi,
-> > >
-> > > this stick is acting up.
-> > > I just mounted it and got (no disconnection physically):
-> >
-> > It looks like some sort of I/O problem reading the partition table.
-What
-> > do you get with verbose usb-storage debugging enabled?
+>A bunch of comments from looking over the headers and itnerface to
+>upper layers a little:  (next I'll try to understand what's going on
+>in the I/O submission path - it's just to freakin complicated..):
 >
-> It turns out that the stick is defect. I've tested it on three computers
-> and two operating systems. In fact during tests it got alarmingly hot.
-> I think, there's little sense in further testing. It already turned up
-> one little issue in the scsi code and I am impressed at the quality
-> of our error handling :-)
-> Now I'll have the pleasure the return it to the shop on a friday :-(
+> - the hba api crap must die
+> o o o
 
-FWIW...
+The first bullet on your post is of interest to us.  We currently support 
+customers with Emulex fc cards using a 2.4 kernel on IA64.  Our software 
+employs the hba api supplied from Emulex in order determine the 
+configuration of the SAN(s) connected to the cards.
 
-Once, while I was testing my laptop while trying to figure out
-why hotplug no longer work on Fedora for me (and other distributions
-work), I had left my stick plugged in even though it wasn't listed
-on the USB bus (lsusb).  When I glanced down at it ~10 minutes
-later, the 'green' led was orange.  And the stick was sooo hot,
-you could burn yourself on it.  I unplugged it and let it cool down.
-The stick still works, but... Something happening on the bus caused
-it to get _real_ hot.
+Your comment is on the terse side.  Is your comment directed at this 
+particular implementation of the hba api code, the current packaging 
+situation, or do you have a general disregard for the hba api strategy? In 
+short, do you believe that the hba api can and/or should be supported for 
+the Emulex LightPulse Device Driver? 
 
-
-
-
+-- David Egolf
