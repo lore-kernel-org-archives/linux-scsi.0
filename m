@@ -1,173 +1,32 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH scsi-misc-2.6 10/13] scsi: rewrite scsi_request_fn()
-Date: Thu, 31 Mar 2005 12:14:16 +0100
-Message-ID: <20050331111416.GA14857@infradead.org>
-References: <20050331090647.FEDC3964@htj.dyndns.org> <20050331090647.ED6FDDE0@htj.dyndns.org>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [PATCH scsi-misc-2.6 02/13] scsi: don't turn on REQ_SPECIAL on
+	sgtable allocation failure.
+Date: Thu, 31 Mar 2005 11:53:45 -0600
+Message-ID: <1112291625.5619.21.camel@mulgrave>
+References: <20050331090647.FEDC3964@htj.dyndns.org>
+	 <20050331090647.C0E52845@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:18404 "EHLO
-	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S261346AbVCaLOT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 31 Mar 2005 06:14:19 -0500
-Content-Disposition: inline
-In-Reply-To: <20050331090647.ED6FDDE0@htj.dyndns.org>
+Received: from stat16.steeleye.com ([209.192.50.48]:63134 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S261594AbVCaRxz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 31 Mar 2005 12:53:55 -0500
+In-Reply-To: <20050331090647.C0E52845@htj.dyndns.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Tejun Heo <htejun@gmail.com>
-Cc: James.Bottomley@steeleye.com, axboe@suse.de, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Jens Axboe <axboe@suse.de>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
+
+On Thu, 2005-03-31 at 18:08 +0900, Tejun Heo wrote:
+> 	Don't turn on REQ_SPECIAL on sgtable allocation failure.  This
+> 	was the last place where REQ_SPECIAL is turned on for normal
+> 	requests.
+
+If you do this, you'll leak a command every time the sgtable allocation
+fails.
+
+James
 
 
-the changes look good to me (although I haven't tested any of your patches
-yet), but the code flow is rather confusing.  What do you think about
-the not even compile version of scsi_request_fn() below that should be
-functionally identical to yours:
-
-
-static void scsi_request_fn(struct request_queue *q)
-{
-	struct scsi_device *sdev = q->queuedata;
-	struct Scsi_Host *shost = sdev->host;
-	struct scsi_cmnd *cmd;
-	struct request *req;
-	enum scsi_device_state state;
-	int ret = 0;
-
-	/*
-	 * FIXME: Once fire & forgetters are fixed, this and the
-	 * unlock_irq/put_device/lock_irq dance at the end of this
-	 * function can go away.
-	 */
-	get_device(&sdev->sdev_gendev);
-
-	while ((req = elv_next_request(q))) {
-		int is_special = (req->flags & REQ_SPECIAL), kill = 0;
-
-		cmd = req->special;
-		state = cmd->device->sdev_state;
-
-		if (state == SDEV_BLOCK ||
-		    (state == SDEV_QUIESCE && !is_special))
-			goto out;
-		else if (state == SDEV_OFFLINE || state == SDEV_DEL ||
-			 (state == SDEV_CANCLE && !is_special)) {
-			printk(KERN_ERR "scsi%d (%d:%d): "
-					"rejecting I/O to %s\n",
-					(state == SDEV_OFFLINE) ?
-						"offline device" :
-					 ((state == SDEV_DEL) ?
-					  	"dead device" :
-						"device being removed"));
-			kill = 1;
-		} else if (!scsi_dev_queue_ready(q, sdev))
-			goto out;
-
-		/* Start tag / remove from the request queue. */
-		if (blk_queue_tagged(q)) {
-			if (unlikely(blk_queue_start_tag(q, req)))
-				BUG();
-			cmd->tag = req->tag;
-		} else
-			blkdev_dequeue_request(req);
-
-		sdev->device_busy++;
-
-		/* Switch to host_lock. */
-		spin_unlock(q->queue_lock);
-		scsi_wait_reset(shost);
-		spin_lock(shost->host_lock);
-
-		if (kill || test_bit(SHOST_CANCEL, &shost->shost_state)) {
-			SCSI_LOG_MLQUEUE(3,
-				printk("%s: rejecting request\n", __FUNCTION__));
-			shost->host_busy++;
-			atomic_inc(&sdev->iorequest_cnt);
-			cmd->result = DID_NO_CONNECT << 16;
-			__scsi_done(cmd);
-			goto relock;
-		}
-	
-		if (!scsi_host_queue_ready(q, shost, sdev))
-			goto requeue_out;
-
-		if (sdev->single_lun) {
-			struct scsi_target *target = scsi_target(sdev);
-			if (target->starget_sdev_user &&
-			    target->starget_sdev_user != sdev)
-				goto requeue_out;
-			target->starget_sdev_user = sdev;
-		}
-
-		shost->host_busy++;
-
-		scsi_log_send(cmd);
-		scsi_cmd_get_serial(shost, cmd);
-		scsi_add_timer(cmd, cmd->timeout_per_command, scsi_times_out);
-
-		cmd->state = SCSI_STATE_QUEUED;
-		cmd->owner = SCSI_OWNER_LOWLEVEL;
-
-		ret = shost->hostt->queuecommand(cmd, scsi_done);
-		if (ret) {
-			SCSI_LOG_MLQUEUE(3,
-			    printk("%s: queuecommand deferred request (%d)\n",
-				    __FUNCTION__, ret));
-
-			/*
-			 * Timer should be deleted while holding
-			 * the host_lock.  Once it gets released, we
-			 * don't know if cmd is still there or not.
-			 */
-			if (scsi_delete_timer(cmd)) {
-				shost->host_busy--;
-				goto block_requeue_out;
-			}
-
-			spin_unlock_irq(shost->host_lock);
-			goto out_locked;
-		}
-
-		atomic_inc(&sdev->iorequest_cnt);
-
- relock:
-		/* Switch back to queue_lock. */
-		spin_unlock(shost->host_lock);
-		spin_lock(q->queue_lock);
-
-		/* The queue could have been plugged underneath us. */
-		if (blk_queue_plugged(q))
-			goto out;
-	}
-
-	goto out;
-
- block_requeue_out:
-	if (ret == SCSI_MLQUEUE_DEVICE_BUSY)
-		sdev->device_blocked = sdev->max_device_blocked;
-	else
-		shost->host_blocked = shost->max_host_blocked;
- requeue_out:
-	/* Switch back to queue_lock */
-	spin_unlock(shost->host_lock);
-	spin_lock(q->queue_lock);
-
-	cmd->state = SCSI_STATE_MLQUEUE;
-	cmd->owner = SCSI_OWNER_MIDLEVEL;
-
-	SCSI_LOG_MLQUEUE(3,
-		printk("%s: requeueing request\n", __FUNCTION__));
-
-	req->flags |= REQ_SOFTBARRIER;  /* Don't pass this request. */
-	blk_requeue_request(q, req);
-	if (--sdev->device_busy == 0)
-		blk_plug_device(q);
- out:
-	/*
-	 * Must be careful here.  If we trigger the ->remove() function
-	 * we cannot be holding the q lock
-	 */
-	spin_unlock_irq(q->queue_lock);
- out_locked:
-	put_device(&sdev->sdev_gendev);
-	spin_lock_irq(q->queue_lock);
-}
