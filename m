@@ -1,49 +1,92 @@
-From: Micah Anderson <micah@riseup.net>
-Subject: Cannot get device recognized on a megaraid
-Date: Mon, 24 Nov 2003 10:30:35 -0600
+From: "Andrew Vasquez" <andrew.vasquez@qlogic.com>
+Subject: RE: [ANNOUNCE] QLogic qla2xxx driver update available (v8.00.00b6).
+Date: Mon, 24 Nov 2003 09:37:08 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20031124163035.GK4399@riseup.net>
+Message-ID: <B179AE41C1147041AA1121F44614F0B0598D30@AVEXCH02.qlogic.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.riseup.net ([216.162.217.191]:34983 "EHLO mail.riseup.net")
-	by vger.kernel.org with ESMTP id S263766AbTKXQal (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 24 Nov 2003 11:30:41 -0500
-Received: from pond (adsl-68-73-117-216.dsl.emhril.ameritech.net [68.73.117.216])
-	(using TLSv1 with cipher EDH-RSA-DES-CBC3-SHA (168/168 bits))
-	(No client certificate requested)
-	by mail.riseup.net (Postfix) with ESMTP id 27694711D9
-	for <linux-scsi@vger.kernel.org>; Mon, 24 Nov 2003 08:30:40 -0800 (PST)
-Content-Disposition: inline
+Received: from [198.70.193.2] ([198.70.193.2]:46484 "EHLO AVEXCH01.qlogic.org")
+	by vger.kernel.org with ESMTP id S263806AbTKXRhC convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 24 Nov 2003 12:37:02 -0500
+content-class: urn:content-classes:message
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Jeremy Higdon <jeremy@sgi.com>, Jes Sorensen <jes@wildopensource.com>
+Cc: Linux-SCSI <linux-scsi@vger.kernel.org>, jbarnes@sgi.com, mdr@sgi.com
 
-Hi,
+Jeremy,
 
-I've been fighting a megaraid card with one device, just trying to get
-it recognized. The card has the latest bios, the drive is in a RAID 0
-container. Boot up doesn't show it at all:
+> > Andrew> Manufacturing writes a pre-canned NVRAM image along with a
+> > Andrew> rolling serial number (unique to each HBA) to each card that
+> > Andrew> leaves QLogic.  One obvious example of a potential problem in
+> > Andrew> the case of using the (driver) doctored NVRAM data is how to
+> > Andrew> assign a unique serial number to the ISP that is being
+> > Andrew> initialized.  BTW: The serial number is actually encoded in
+> > Andrew> bytes 5, 6, and 7 of the WWPN (portname); coupled with the
+> > Andrew> hardcoded port number (33) and the QLogic copany code of (224
+> > Andrew> and 139), code from qla2x00_nvram_config():
+> > 
+> > Ok this one is more tricky. There's a couple of options though, we
+> > could generate a unique serial number based on the random driver
+> > output, or maybe it's worth coming up with an infrastructure for this,
+> > other FC card drivers will run into the same problem.
+> 
+> We should be able to read the WWPN out of the NVRAM, since there is
+> no reason for that to be reset.  There are various utilities/firmware
+> out there that actually look at an adapter's WWPN and decide whether
+> or not to talk to that adapter.
+> 
+> I think the WWPN is the only thing that we read from firmware in our
+> Irix driver.  We also verify the checksum, so that we can tell if the
+> portname is valid.
+> 
+> My recommendation is that the driver get the WWPN from nvram and go
+> with sane defaults for everything else.
+>
 
- megaraid: no BIOS enabled.
- 
- There are two other scsi devices that we have on the machine, they are
- recognized fine:
- 
- Attached scsi disk sda at scsi0, channel 0, id 0, lun 0
- Attached scsi disk sdb at scsi1, channel 0, id 2, lun 0
- SCSI device sda: 17783240 512-byte hdwr sectors (9105 MB)
- Partition check:
-  sda: sda1 sda2 sda3 sda4
- sym53c875-0-<2,*>: FAST-20 SCSI 20.0 MB/s (50.0 ns, offset 15)
- SCSI device sdb: 8888924 512-byte hdwr sectors (4551 MB)
-  sdb: sdb1
+Ok, then what groups of parameters would you suggest have sane
+defaults.  With the patch that was provided, the following
+(additional)-firmware options are set for the ISP23xx by invalidating
+the checksum (SN2 behaviour):
 
-What do we need to do to get the drive attached to the megaraid card
-recognized? 
+	o Full duplex
+	o Fairness
+	o Full login after LIP
+	o use extended firmware control block
+	o Loop prefered, else point-to-point
+	o Tape enabled
+	o FC Confirm
 
-Thanks,
-micah
+Along with a large number of numeric defaults for retries, delays, a
+timer counts.
 
+> Perhaps make it a config option to read other settings from the
+> NVRAM, but also provide command line or config options for other
+> settings that might need adjustment, for those systems that cannot
+> change nvram values.  
+>
 
- 
+The (additional-)firmware options, perhaps a subset, seem like a
+(possibily) reasonable thing to force at the driver level.  But, on
+the otherhand, the retry, delay and timer counts tend to be very
+customer specific based on topology and storage.  Additionally, the
+driver already exports via module parameters several of the more
+important driver retry and timer counts, i.e. port_down_try_count,
+link_down_timeout, retry_count (try modinfo for a full list).  A user
+can use these facilities to perform any fine-tuning.
+
+> Our experience is that we really don't need to mess with them,
+> however.  The only two things that we allow adjustment to are frame
+> size and data rate.
+> 
+
+The driver still depend on the NVRAM to provide these values.  In many
+cases, the standard NVRAM values programmed at manufacturing time
+satisfy the majority of users.  Do you have boards that have 'bogus'
+NVRAM settings, or are you just being cautious and not depending on
+the end-user to not mess things up?
+
+Regards,
+Andrew Vasquez
