@@ -1,62 +1,49 @@
-From: "bj rui" <bj_rui@hotmail.com>
-Subject: mdadm output -- please explain
-Date: Fri, 25 Mar 2005 16:43:25 +0000
-Message-ID: <BAY17-F241AF7FA27B168CABE8931F6410@phx.gbl>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [PATCH scsi-misc-2.6 08/08] scsi: fix hot unplug sequence
+Date: Fri, 25 Mar 2005 13:19:48 -0600
+Message-ID: <1111778388.5692.38.camel@mulgrave>
+References: <20050323021335.960F95F8@htj.dyndns.org>
+	 <20050323021335.4682C732@htj.dyndns.org>
+	 <1111550882.5520.93.camel@mulgrave> <4240F5A9.80205@gmail.com>
+	 <20050323071920.GJ24105@suse.de> <1111591213.5441.19.camel@mulgrave>
+	 <20050323152550.GB16149@suse.de> <1111711558.5612.52.camel@mulgrave>
+	 <20050325031511.GA22114@htj.dyndns.org> <1111726965.5612.62.camel@mulgrave>
+	 <20050325053842.GA24499@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; format=flowed
-Received: from bay17-f24.bay17.hotmail.com ([64.4.43.74]:36126 "EHLO
-	hotmail.com") by vger.kernel.org with ESMTP id S261237AbVCYQn1
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 25 Mar 2005 11:43:27 -0500
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Received: from stat16.steeleye.com ([209.192.50.48]:46502 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S261749AbVCYTTx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 25 Mar 2005 14:19:53 -0500
+In-Reply-To: <20050325053842.GA24499@htj.dyndns.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Jens Axboe <axboe@suse.de>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
 
-as far as i know, there are only 6 devices in this array, yet i
-see 'Total Devices : 7'
+On Fri, 2005-03-25 at 14:38 +0900, Tejun Heo wrote:
+>  We have users of scsi_do_req() other than scsi_wait_req() and they
+> use different done() functions to do different things.  I've checked
+> other done functions and none uses contents inside the passed
+> scsi_cmnd, so using a dummy command should be okay with them.  Am I
+> missing something here?
 
-i also see a failed devices, yet at the bottom, none of the devices
-are marked as faulty.
+Well ... the other users are supposed to be going away.  They're
+actually all coded wrongly in some way or other ... perhaps I should
+speed up the process.
 
-here's the pertinent line from /proc/mdstat:
-md0 : active raid5 sdp[5] sdo[4] sdn[3] sdm[2] sdj[1] sdi[0]
-      716872960 blocks level 5, 128k chunk, algorithm 2 [6/6] [UUUUUU]
+>  Oh, and I would really appreciate if you can fill me in / give a
+> pointer about the scsi_request/scsi_cmnd distinction.
 
-i'm not having any problems with the array, this just wasn't what i expected
-to see.  could someone please explain?
+The block layer speaks in terms of requests and the scsi layers in terms
+of commands.  The scsi_request_fn() actually associates a request with a
+command.  However, since SCSI uses the block layer for queueing, all the
+internal scsi command submit paths have to use requests.  This is what a
+scsi_request is.  The reason for the special casing is that we can't use
+the normal REQ_CMD or REQ_BLOCK_PC paths because they need ULD
+initialisation and back end processing.
 
--rui
-
-#> mdadm --detail /dev/md0
-/dev/md0:
-        Version : 00.90.00
-  Creation Time : Mon Mar 21 16:59:41 2005
-     Raid Level : raid5
-     Array Size : 716872960 (683.66 GiB 734.08 GB)
-    Device Size : 143374592 (136.73 GiB 146.82 GB)
-   Raid Devices : 6
-  Total Devices : 7
-Preferred Minor : 0
-    Persistence : Superblock is persistent
-
-    Update Time : Tue Mar 22 07:55:58 2005
-          State : dirty, no-errors
-Active Devices : 6
-Working Devices : 6
-Failed Devices : 1
-  Spare Devices : 0
-
-         Layout : left-symmetric
-     Chunk Size : 128K
-
-    Number   Major   Minor   RaidDevice State
-       0       8      128        0      active sync   /dev/sdi
-       1       8      144        1      active sync   /dev/sdj
-       2       8      192        2      active sync   /dev/sdm
-       3       8      208        3      active sync   /dev/sdn
-       4       8      224        4      active sync   /dev/sdo
-       5       8      240        5      active sync   /dev/sdp
-           UUID : 0dd747ec:22a09ffb:debe6f31:78f4c769
-         Events : 0.4
+James
 
 
