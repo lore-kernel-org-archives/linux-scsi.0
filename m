@@ -1,33 +1,39 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [RFC] [PATCH 2.6.9-rc1] add blacklist attribute indicating no
-	ULD attach
-Date: 15 Sep 2004 09:25:58 -0400
+From: Mark Haverkamp <markh@osdl.org>
+Subject: RE: [PATCH] 2.6.9 aacraid: aac_count fix
+Date: Wed, 15 Sep 2004 07:24:39 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1095254765.1717.0.camel@mulgrave>
-References: <20040914063237.GA97486@sgi.com>
-	<20040914144023.GA9524@beaverton.ibm.com> <20040914182203.GA100433@sgi.com>
-	<20040915031834.GA102988@sgi.com>  <20040915074744.A17264@infradead.org>
+Message-ID: <1095258279.29934.2.camel@markh1.pdx.osdl.net>
+References: <60807403EABEB443939A5A7AA8A7458B1AAAB7@otce2k01.adaptec.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat16.steeleye.com ([209.192.50.48]:55744 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S265999AbUION0d (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 15 Sep 2004 09:26:33 -0400
-In-Reply-To: <20040915074744.A17264@infradead.org>
+Received: from fire.osdl.org ([65.172.181.4]:7127 "EHLO fire-1.osdl.org")
+	by vger.kernel.org with ESMTP id S266173AbUIOOYx (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 15 Sep 2004 10:24:53 -0400
+In-Reply-To: <60807403EABEB443939A5A7AA8A7458B1AAAB7@otce2k01.adaptec.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Jeremy Higdon <jeremy@sgi.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Patrick Mansfield <patmans@us.ibm.com>, Jens Axboe <axboe@suse.de>
+To: Mark Salyzyn <mark_salyzyn@adaptec.com>
+Cc: Christoph Hellwig <hch@infradead.org>, James Bottomley <James.Bottomley@steeleye.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
-On Wed, 2004-09-15 at 02:47, Christoph Hellwig wrote:
-> don't we already carry around the blacklist flags in the scsi dev so
-> they could be checked laer?  If not maybe we should instead of adding
-> more and more flags?
+On Wed, 2004-09-15 at 04:47, Salyzyn, Mark wrote:
+> Christoph Hellwig writes:
+> 
+> > > +	scsi_set_device(shost, &pdev->dev);
+> > 
+> > This one is bogus.  scsi_add_host already sets the device.
+> 
+> Which path sets the device? I got an intermittent panic as a result of
+> the device not being set in my unit test (of the kernel of the day at
+> the time of this modification, can't remember which version of the
+> kernel ...). Which version of this kernel sets it?
 
-Not in this case ... I'm planning a wider use of this flag for a lazy
-attachment idea I'm hatching.
+In the latest version at least, line 111 in hosts.c sets
+shost->shost_gendev.parent = dev ? dev : &platform_bus which is
+essentially what scsi_set_device does.
 
-James
 
+-- 
+Mark Haverkamp <markh@osdl.org>
 
