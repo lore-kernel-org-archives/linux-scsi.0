@@ -1,47 +1,42 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: How does a SCSI device gets a target ID?
-Date: Wed, 9 Mar 2005 17:29:43 +0000
-Message-ID: <20050309172943.GB21986@parcelfarce.linux.theplanet.co.uk>
-References: <267988DEACEC5A4D86D5FCD780313FBB0575F03B@exch-03.noida.hcltech.com> <200503091655.j29Gt2517120@www.watkins-home.com>
+From: "Bagalkote, Sreenivas" <sreenib@lsil.com>
+Subject: RE: [ANNOUNCE][PATCH 2.6.11 2/3] megaraid_sas: Announcing new mod
+	 ule  for LSI Logic's SAS based MegaRAID controllers
+Date: Wed, 9 Mar 2005 12:44:14 -0500
+Message-ID: <0E3FA95632D6D047BA649F95DAB60E570230CC20@exa-atlanta>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:38088 "EHLO
-	parcelfarce.linux.theplanet.co.uk") by vger.kernel.org with ESMTP
-	id S262116AbVCIR3r (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 9 Mar 2005 12:29:47 -0500
-Content-Disposition: inline
-In-Reply-To: <200503091655.j29Gt2517120@www.watkins-home.com>
+Content-Type: text/plain
+Received: from mail0.lsil.com ([147.145.40.20]:44965 "EHLO mail0.lsil.com")
+	by vger.kernel.org with ESMTP id S262150AbVCIRpP (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Mar 2005 12:45:15 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Guy <bugzilla@watkins-home.com>
-Cc: "'Rajat  Jain, Noida'" <rajatj@noida.hcltech.com>, linux-scsi@vger.kernel.org
+To: 'Arjan van de Ven' <arjan@infradead.org>
+Cc: "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, 'James Bottomley' <James.Bottomley@SteelEye.com>, "'Matt_Domsch@Dell.com'" <Matt_Domsch@Dell.com>, Andrew Morton <akpm@osdl.org>, 'Christoph Hellwig' <hch@infradead.org>
 
-On Wed, Mar 09, 2005 at 11:54:57AM -0500, Guy wrote:
-> A narrow SCSI bus will support 8 devices.
-> A wide SCSI bus will support 16 devices.
-> A narrow bus uses 50 pins.
-> A wide bus uses 68 pins.
+>> >
+>> >> . And since this is compile time
+>> >> system-wide property, I kept it as driver global.
+>> >
+>> >that step I don't understand... why is it a global 
+>*VARIABLE* if it's
+>> >compile time system-wide property...
+>> >
+>> 
+>> I see your point! Are you saying I should use 
+>if(sizeof(dma_addr_t)==8)
+>> instead of the shortcut if(is_dma64)? 
+>yep
+>well you can use a preprocessor define of something to make it slightly
+>more readable (eg shortcut) if you want, but that's what I mean yeah..
+>
+>gcc will optimize the entire unused code away this way, including the
+>actual conditional jump, so for performance and bloat-ness 
+>point of view
+>it's nice.... and of course generic design beauty ;)
+>
 
-We need a SCSI Wiki for all this kind of information ... maybe Wikipedia?
+Great. Thanks! I will change it. If I understand you correctly, I should
+#define IS_DMA64 (sizeof(dma_addr_t)==8).
 
-> There is a standard for auto selecting the SCSI ID.  I have never used this.
-> SCAM (SCSI Configures Auto Magically).
-
-I think the SCSI vendors prefer to sell SCA drives rather than SCAM
-drives ;-) Drives with the SCA connector have power supplied to them and
-their SCSI ID configured automatically depending on which slot they're
-plugged into.  If you're doing hotplug SCSI, it's probably with SCA drives.
-
-> Mixing devices with different electrical standards can be tricky.  Some
-> can't be mixed.  HVD is not compatible with any other.
-
-And plugging any SE devince onto an LVD bus causes the whole bus to fall
-back to SE.  This includes terminators.
-
--- 
-"Next the statesmen will invent cheap lies, putting the blame upon 
-the nation that is attacked, and every man will be glad of those
-conscience-soothing falsities, and will diligently study them, and refuse
-to examine any refutations of them; and thus he will by and by convince 
-himself that the war is just, and will thank God for the better sleep 
-he enjoys after this process of grotesque self-deception." -- Mark Twain
+Is this better than declaring is_dma64 global variable const? (Excuse the
+oxymoron).
