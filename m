@@ -1,48 +1,41 @@
 From: Mikael Abrahamsson <swmike@swm.pp.se>
 Subject: Re: aic7xxx: SCSI Bus Reset
-Date: Tue, 24 Dec 2002 20:15:36 +0100 (CET)
+Date: Wed, 25 Dec 2002 10:46:06 +0100 (CET)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44.0212242014310.3657-100000@uplift.swm.pp.se>
-References: <2149895408.1040745297@aslan.scsiguy.com>
+Message-ID: <Pine.LNX.4.44.0212251033080.3657-100000@uplift.swm.pp.se>
+References: <Pine.LNX.4.44.0212242014310.3657-100000@uplift.swm.pp.se>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <2149895408.1040745297@aslan.scsiguy.com>
+Received: from localhost (swmike@localhost)
+	by uplift.swm.pp.se (8.11.6/8.9.3) with ESMTP id gBP9k7S30289
+	for <linux-scsi@vger.kernel.org>; Wed, 25 Dec 2002 10:46:07 +0100
+In-Reply-To: <Pine.LNX.4.44.0212242014310.3657-100000@uplift.swm.pp.se>
 List-Id: linux-scsi@vger.kernel.org
-To: "Justin T. Gibbs" <gibbs@scsiguy.com>
-Cc: Shanker Balan <shanu@exocore.com>, Linux SCSI <linux-scsi@vger.kernel.org>
+To: Linux SCSI <linux-scsi@vger.kernel.org>
 
-On Tue, 24 Dec 2002, Justin T. Gibbs wrote:
+On Tue, 24 Dec 2002, Mikael Abrahamsson wrote:
 
-> > QUANTUM  Model: ATLAS10K3_18_SCA
-> > QUANTUM  Model: ATLAS10K3_73_SCA
-> > QUANTUM  Model: ATLAS10K3_73_SCA
+> Host: scsi0 Channel: 00 Id: 05 Lun: 00
+>   Vendor: QUANTUM  Model: ATLAS10K3_73_SCA Rev: 120G
+>   Type:   Direct-Access                    ANSI SCSI revision: 03
 > 
-> Can you provide the firmware revisions of these drives.  Anything
-> less than B440 is suspect.  The behavior your report looks like
-> the drives stop returning queued I/O.  I have seen this before on
-> at least B120, although it was when running at U320/packetized and
-> not U160.  My guess is that the bug in these early firmware revs
-> is protocol agnostic.
+> So I guess I should upgrade my firmware? It's the drive id 3 and 4 I have
+> had problems with so far.
 
-Host: scsi0 Channel: 00 Id: 01 Lun: 00
-  Vendor: QUANTUM  Model: ATLAS10K3_36_SCA Rev: 120G
-  Type:   Direct-Access                    ANSI SCSI revision: 03
-Host: scsi0 Channel: 00 Id: 02 Lun: 00
-  Vendor: QUANTUM  Model: ATLAS10K3_36_SCA Rev: 120G
-  Type:   Direct-Access                    ANSI SCSI revision: 03
-Host: scsi0 Channel: 00 Id: 03 Lun: 00
-  Vendor: QUANTUM  Model: ATLAS10K3_73_SCA Rev: 120G
-  Type:   Direct-Access                    ANSI SCSI revision: 03
-Host: scsi0 Channel: 00 Id: 04 Lun: 00
-  Vendor: QUANTUM  Model: ATLAS10K3_73_SCA Rev: 120G
-  Type:   Direct-Access                    ANSI SCSI revision: 03
-Host: scsi0 Channel: 00 Id: 05 Lun: 00
-  Vendor: QUANTUM  Model: ATLAS10K3_73_SCA Rev: 120G
-  Type:   Direct-Access                    ANSI SCSI revision: 03
+I went into ftp://ftpdownload.maxtor.com/pub/Quantum 
+Products/Disk_Firmware/Atlas-10KIII/160/ and found what I believe is a 
+firmware from this year. The weird part is that I can find no references 
+what so ever either on Google or on Maxtor/Quantum website, to these 
+firmwares, how to install them, what to be mindful of etc. If I 
+google/altavista there are absolutely no references to the file names of 
+the firmwares, the above ftp link etc.
 
-So I guess I should upgrade my firmware? It's the drive id 3 and 4 I have
-had problems with so far.
+Do you have any links etc describing the procedure? I can't say I get a
+warm tingly feeling from the thought of trying to upgrade the firmware of
+my precious drives "in the blind".
+
+Any help appreciated.
 
 -- 
 Mikael Abrahamsson    email: swmike@swm.pp.se
