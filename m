@@ -1,44 +1,49 @@
-From: James Bottomley <James.Bottomley@steeleye.com>
+From: Doug Ledford <dledford@redhat.com>
 Subject: Re: [patch 2.5] ips queue depths
-Date: Tue, 15 Oct 2002 13:38:08 -0700
+Date: Tue, 15 Oct 2002 16:52:18 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <200210152038.g9FKc8A03995@localhost.localdomain>
-References: <andmike@us.ibm.com>
+Message-ID: <20021015205218.GG4391@redhat.com>
+References: <A3B9245C291EEF4785A24A1DBE8D852B0376BC@rtpexc01.adaptec.com> <20021015194705.GD4391@redhat.com> <20021015130445.A829@eng2.beaverton.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: (from root@localhost)
-	by pogo.mtv1.steeleye.com (8.9.3/8.9.3) id NAA11813
-	for <linux-scsi@vger.kernel.org>; Tue, 15 Oct 2002 13:38:17 -0700
-In-Reply-To: Message from Mike Anderson <andmike@us.ibm.com>
-   of "Tue, 15 Oct 2002 13:10:22 PDT." <20021015201022.GB1049@beaverton.ibm.com>
+Content-Disposition: inline
+In-Reply-To: <20021015130445.A829@eng2.beaverton.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
 To: "Jeffery, David" <David_Jeffery@adaptec.com>, 'Dave Hansen' <haveblue@us.ibm.com>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
 
-andmike@us.ibm.com said:
-> I never seen the mid layer handle device starvation correctly. It
-> might be because in scsi_queue_next_request we do this:
+On Tue, Oct 15, 2002 at 01:04:45PM -0700, Patrick Mansfield wrote:
+> 
+> I totally agree the queue depth should not be limited based on the number of
+> devices, but there should be a maximum limit - as Justin noted with the
+> aic driver, using a large default queue depth (he had 253 or so) is not
+> good with linux.
 
-> /*
->  * Just hit the requeue function for the queue.
->  */
->   q->request_fn(q);
+That's largely due to the scsi_request_fn() in its current form.
 
-> before we check for starved. 
+> The queue depth should be as small as possible without limiting the
+> performance.
 
-This starvation code has nothing to do with fairness.  It's job is purely to 
-restart the device queue if we got a host blocked condition and we had to 
-reject commands with zero depth.  When the host blocked abates then we loop 
-over all the starved devices and call their request functions.  Without this, 
-we could get a hang in the block layer queueing.
+Which happens to be a magic number that no one really knows I think ;-)  
+Current goals of the work I'm doing include making this adjustable so you
+aren't wasting queue depth on devices that have a hard limit less than
+your initial queue depth value and changing the scsi_request_fn() to be
+more fair with command allocation on a controller in the presence of
+starvation (and of course, starvation is only possible when the queue
+depth of all devices is greater than the depth of the controller, so
+obviously the starvation code in scsi_request_fn() is something
+controllers have been avoiding by limiting queue depths on individual
+devices).
 
-This could do with being converted over to the blk_stop/start_queue api.
+The adjustable queue depth work has been mostly done and sent to linus.  
+I'm trying to finish up the last few controllers that haven't been 
+modified to the new scheme yet.  The request_fn work is on hold until this 
+is done (because the breakage made everyone moan so loadly that I dropped 
+everything else until this is taken care of).
 
-The SCSI code seems to have been written with the idea that device queue_depth 
-<< can_queue and thus doesn't concern itself with resource fairness issues 
-when the two are closer in size to each other.
-
-James
-
-
-
+-- 
+  Doug Ledford <dledford@redhat.com>     919-754-3700 x44233
+         Red Hat, Inc. 
+         1801 Varsity Dr.
+         Raleigh, NC 27606
+  
