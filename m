@@ -1,57 +1,68 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: BUG: CD driver sends command during host removal
-Date: 29 Sep 2004 14:09:13 -0400
+From: Mike Anderson <andmike@us.ibm.com>
+Subject: Re: [Patch] Fix oops on rmmod usb-storage
+Date: Wed, 29 Sep 2004 11:32:14 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1096481358.2123.74.camel@mulgrave>
-References: <Pine.LNX.4.44L0.0409291239250.1167-100000@ida.rowland.org>
-	<415AF8A6.2080705@adaptec.com>
+Message-ID: <20040929183214.GA5771@us.ibm.com>
+References: <20040929183858.A15586@infradead.org> <Pine.LNX.4.44L0.0409291345420.1700-100000@ida.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat16.steeleye.com ([209.192.50.48]:32440 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S268765AbUI2SJX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 29 Sep 2004 14:09:23 -0400
-In-Reply-To: <415AF8A6.2080705@adaptec.com>
+Received: from e4.ny.us.ibm.com ([32.97.182.104]:31185 "EHLO e4.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S268798AbUI2Scz (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 29 Sep 2004 14:32:55 -0400
+Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.44L0.0409291345420.1700-100000@ida.rowland.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Luben Tuikov <luben_tuikov@adaptec.com>
-Cc: Alan Stern <stern@rowland.harvard.edu>, SCSI development list <linux-scsi@vger.kernel.org>, Mohammed Sameer <uniball@gmx.net>, USB users list <linux-usb-users@lists.sourceforge.net>
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: Christoph Hellwig <hch@infradead.org>, James Bottomley <James.Bottomley@SteelEye.com>, Hannes Reinecke <hare@suse.de>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Andrew Morton <akpm@osdl.org>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>
 
-On Wed, 2004-09-29 at 14:02, Luben Tuikov wrote:
-> > According to Documentation/scsi/scsi_mid_low_api.txt, the only possible 
-> > error returns are SCSI_MLQUEUE_DEVICE_BUSY and SCSI_MLQUEUE_HOST_BUSY.  
-> > Neither is appropriate; should the second one be returned?
+Alan Stern [stern@rowland.harvard.edu] wrote:
+> Mike, thanks for adding me to this thread...
 > 
-> I believe internally SCSI Core returns DID_ERROR.
-
-For a device that no-longer exists, DID_NO_CONNECT is probably the most
-appropriately descriptive.
-
-> >>> This would involve a race, because it's possible for
-> >>>queuecommand to accept a command and then scsi_remove_host() to be called
-> >>>before the command is carried out.
-
-Correct, scsi_remove_host() is asynchronous ... you can get requests
-after calling it while the queue is halting ... you must error these.
-
-> > If the command belongs to the LLDD, why does scsi_remove_host do the
-> > following:
+> On Wed, 29 Sep 2004, Christoph Hellwig wrote:
+> 
+> > > In some cases the knowledge would be in the driver would it not. When the
+> > > drivers remove function is called the driver knows the state of the
+> > > transport or in the case of the usb storage device it knows it will
+> > > not process anymore commands. 
+> > > 
+> > > Alan / Matthew / others can correct if I have mis-read something in
+> > > usb_stor_release_resources but it knows that it will not process anymore
+> > > commands prior to calling scsi_remove_host so if we had a method to flag
+> > > this it would help in our shutdown if we want to support both devices
+> > > that can and cannot process commands.
+> 
+> That's right; when usb-storage calls scsi_remove_host it will not process 
+> any more commands.
+> 
+> > Well, we're certainly not going to change the scsi_remove_host signature,
+> > but we could add a separate one.
 > > 
-> > 	calls scsi_host_cancel,
-> > 	which calls scsi_device_cancel_cb for each device,
-> > 	which calls scsi_device_cancel,
-> > 	which calls scsi_finish_command for each active command,
-> > 	which passes the command back to the upper layer
-> > 
-> > Either there's a bug in the host removal sequence, or else the LLDD 
-> > doesn't own any requests once scsi_remove_host has been called.
+> > But I don't like that change at all as we would still have that problem
+> > with all driver that don't have a way to magically find out.  We should
+> > really try to make scsi_remove_host foolprof.
+> 
+> Please take a look at my questions in
+> 
+> http://marc.theaimsgroup.com/?l=linux-scsi&m=109647697621208&w=2
+> 
+> Part of the problem here may be that ownership of SCSI commands isn't 
+> clear during the host removal process.  As things stand, usb-storage has 
+> no choice but to ignore commands queued after scsi_remove_host is called.  
+> This certainly will cause problems if it means we have to wait around for 
+> the commands to time out and be aborted.
+> 
 
-Right.  scsi_remove_host tells the mid-layer that it's OK to trash all
-inflight commands because you removed all their users before calling
-it.  It also tells us that you won't accept any future commands for this
-host (because you'll error any attempt in queuecommand).
+Is it possible usb storage could do something else beside just ignore
+the commands like return them with DID_NO_CONNECT.
 
-James
+In storage_disconnect it looks like you set some state, wait for the
+current command, but do not set anything that queuecommand can look at
+to start rejecting commands.
 
+-andmike
+--
+Michael Anderson
+andmike@us.ibm.com
 
