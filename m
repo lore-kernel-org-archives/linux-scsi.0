@@ -1,33 +1,40 @@
-From: Matthew Wilcox <willy@debian.org>
-Subject: Re: [PATCH] fix changed doc. location
-Date: Tue, 27 Jan 2004 15:04:37 +0000
+From: Brian King <brking@us.ibm.com>
+Subject: Re: [RFC] IBM Power RAID driver (ipr) #2
+Date: Tue, 27 Jan 2004 09:06:42 -0600
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040127150437.GW11844@parcelfarce.linux.theplanet.co.uk>
-References: <20040124220440.7297b0b0.rddunlap@osdl.org>
+Message-ID: <40167E82.7040508@us.ibm.com>
+References: <4011969D.3070703@us.ibm.com> <20040127122122.GS11236@krispykreme>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:6381 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S263946AbUA0PEj
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 27 Jan 2004 10:04:39 -0500
-Content-Disposition: inline
-In-Reply-To: <20040124220440.7297b0b0.rddunlap@osdl.org>
+Received: from e6.ny.us.ibm.com ([32.97.182.106]:18168 "EHLO e6.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S264245AbUA0PGp (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 27 Jan 2004 10:06:45 -0500
 List-Id: linux-scsi@vger.kernel.org
-To: "Randy.Dunlap" <rddunlap@osdl.org>
-Cc: linux-scsi@vger.kernel.org, jejb <james.bottomley@steeleye.com>
+To: Anton Blanchard <anton@samba.org>
+Cc: linux-scsi@vger.kernel.org
 
-On Sat, Jan 24, 2004 at 10:04:40PM -0800, Randy.Dunlap wrote:
+Anton Blanchard wrote:
+> Hi Brian,
 > 
-> Hi,
-> Please apply to 2.6.current.
+> 
+>>Here is the latest version of the LLD for the IBM Power RAID family of
+>>adapters. This includes several IBM iSeries and pSeries SCSI adapters.
+>>Thanks to everyone who provided comments on the first round.
+> 
+> 
+> Great, I gave this a spin and noticed two trivial issues. Firstly it
+> wont compile with firmware load support not configured. Also
+> ipr_free_dump isnt wrapped in CONFIG_SCSI_IPR_DUMP.
 
-Committed to my CVS tree, it'll go in with my next update.  Thanks.
+Thanks. To solve the first problem, I'll just add an "enable FW_LOADER" in
+Kconfig.
+
 
 -- 
-"Next the statesmen will invent cheap lies, putting the blame upon 
-the nation that is attacked, and every man will be glad of those
-conscience-soothing falsities, and will diligently study them, and refuse
-to examine any refutations of them; and thus he will by and by convince 
-himself that the war is just, and will thank God for the better sleep 
-he enjoys after this process of grotesque self-deception." -- Mark Twain
+Brian King
+eServer Storage I/O
+IBM Linux Technology Center
+
