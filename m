@@ -1,40 +1,44 @@
-From: "James Daniel" <jdaniel@dakotacom.net>
-Subject: [FIXED] Initio 9100u -- It lives
-Date: Sun, 21 Dec 2003 04:09:29 -0700
+From: James Bottomley <James.Bottomley@steeleye.com>
+Subject: Re: Initio 9100u -- Mike Christie's 2.6.0-test11 Patch -- Kernel
+	Errors
+Date: 21 Dec 2003 09:46:38 -0600
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <000b01c3c7b2$e815e140$0200000a@nightsky>
+Message-ID: <1072021603.1952.10.camel@mulgrave>
 References: <Pine.LNX.4.44.0312190311160.27880-200000@dyn319634.beaverton.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from breaker.dakotacom.net ([66.192.152.146]:34226 "EHLO
-	breaker.dakotacom.net") by vger.kernel.org with ESMTP
-	id S262714AbTLULI1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 21 Dec 2003 06:08:27 -0500
+Received: from stat1.steeleye.com ([65.114.3.130]:49329 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S263639AbTLUPrF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 21 Dec 2003 10:47:05 -0500
+In-Reply-To: <Pine.LNX.4.44.0312190311160.27880-200000@dyn319634.beaverton.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
 To: Mike Christie <mikenc@us.ibm.com>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@SteelEye.com>
+Cc: James Daniel <jdaniel@dakotacom.net>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-> On Fri, 19 Dec 2003, Mike Christie wrote:
-> 
-> > Ok, in the orginal patch I forgot to replace the shared buffer with a 
-> > DMA-API equiv. This will take some time.
-> > 
-> 
+On Fri, 2003-12-19 at 05:15, Mike Christie wrote:
 > Here is another try. It should compile against 2.6.0-test11/2.6.0.
 
-It appears to be working again. Mad props.
+That's great thanks.  I've put it in the scsi tree.
 
-The card has left my server, however. I dug up a 2940u2w.
-The ini9100u now resides in a test box which is still actively
-using the card and actually has a monitor permanently attached,
-so I'll be able to do much better diagnostics on it now. Currently
-it's loaded as a module, not being used for root fs, and is reading
-the drive attached to the card quite nicely. As soon as I have a
-distro running 2.6 running a root partition via scsi, I'll be sure
-to let the list know how it goes.
+I did notice in the diffs between this one and the previous patch things
+like:
 
-Thanks Mike =)
+
+-			pSG->SG_Ptr = cpu_to_le32((u32)sg_dma_address(pSrbSG));
+-			TotalLen += pSG->SG_Len = cpu_to_le32((u32)sg_dma_len(pSrbSG));
++			pSG->SG_Ptr = (u32)sg_dma_address(pSrbSG);
++			TotalLen += pSG->SG_Len = (u32)sg_dma_len(pSrbSG);
+
+Which is obviously incorrect, since sg_dma_address() does return the
+address in CPU endianness (and the device SG list needs to be in PCI
+endiannes), but I think, since it was hard enough to find anyone with
+one of these things, that the chances of finding one on a non-x86 box
+are zero.
+
+James
+
+
 
