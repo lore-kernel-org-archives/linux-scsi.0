@@ -1,29 +1,29 @@
-From: Kai Makisara <Kai.Makisara@kolumbus.fi>
-Subject: Re: aic7xxx & st: BUG at include/asm/dma-mapping.h:37
-Date: Sat, 9 Aug 2003 10:09:52 +0300 (EEST)
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: dpt_i2o in 2.6.0_test*
+Date: Sat, 9 Aug 2003 21:17:06 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.56.0308091005540.6012@kai.makisara.local>
-References: <20030806231359.A28252@mail.kroptech.com>
- <Pine.LNX.4.56.0308072346560.1035@kai.makisara.local> <20030807201916.A1065@mail.kroptech.com>
- <20030808173003.GA3231@kai.makisara.local> <Pine.LNX.4.56.0308081357160.13076@filesrv1.baby-dragons.com>
+Message-ID: <20030809211706.A1938@infradead.org>
+References: <1060459960.3882.121.camel@hammer.dale.ro>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fep06-0.kolumbus.fi ([193.229.0.57]:55455 "EHLO
-	fep06-app.kolumbus.fi") by vger.kernel.org with ESMTP
-	id S272223AbTHIHJ4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 9 Aug 2003 03:09:56 -0400
-In-Reply-To: <Pine.LNX.4.56.0308081357160.13076@filesrv1.baby-dragons.com>
+Received: from pub234.cambridge.redhat.com ([213.86.99.234]:17935 "EHLO
+	phoenix.infradead.org") by vger.kernel.org with ESMTP
+	id S275394AbTHIURI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 9 Aug 2003 16:17:08 -0400
+Content-Disposition: inline
+In-Reply-To: <1060459960.3882.121.camel@hammer.dale.ro>; from slak@dale.ro on Sat, Aug 09, 2003 at 11:12:40PM +0300
 List-Id: linux-scsi@vger.kernel.org
-To: "Mr. James W. Laferriere" <babydr@baby-dragons.com>
-Cc: Linux Scsi maillist <linux-scsi@vger.kernel.org>
+To: "Alexandru N. Barloiu" <slak@dale.ro>
+Cc: linux-scsi@vger.kernel.org
 
-On Fri, 8 Aug 2003, Mr. James W. Laferriere wrote:
+On Sat, Aug 09, 2003 at 11:12:40PM +0300, Alexandru N. Barloiu wrote:
+> hello,
+> I just wanted to ask if there is a fix for this.
+> 
+>   CC      drivers/scsi/dpt_i2o.o
+> drivers/scsi/dpt_i2o.c:32:2: #error Please convert me to
 
-> 	Hello Kai ,  Is this (or something simular) necessary for 2.4.x ?
+According to Alan the fix is to use the i2o_scsi driver instead.
+Could you try it?
 
-No. This bug crept in while adding direct transfers between the user
-buffer and SCSI HBA at 2.5.32.
-
--- 
-Kai
