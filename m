@@ -1,39 +1,38 @@
-From: "Grover, Andrew" <andrew.grover@intel.com>
-Subject: RE: [PATCH] /proc/scsi/map
-Date: Thu, 20 Jun 2002 16:59:35 -0700
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Subject: Re: [PATCH] /proc/scsi/map
+Date: Thu, 20 Jun 2002 18:28:01 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <59885C5E3098D511AD690002A5072D3C02AB7F4D@orsmsx111.jf.intel.com>
+Message-ID: <20020620162801.24988@smtp.wanadoo.fr>
+References: <Pine.LNX.4.44.0206201210420.8225-100000@home.transmeta.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <Pine.LNX.4.44.0206201210420.8225-100000@home.transmeta.com>
 List-Id: linux-scsi@vger.kernel.org
-To: 'Linus Torvalds' <torvalds@transmeta.com>, Martin Schwenke <martin@meltin.net>
-Cc: Andries Brouwer <aebr@win.tue.nl>, Kurt Garloff <garloff@suse.de>, Linux kernel list <linux-kernel@vger.kernel.org>, Linux SCSI list <linux-scsi@vger.kernel.org>, Patrick Mochel <mochel@osdl.org>
+To: Linus Torvalds <torvalds@transmeta.com>, James Bottomley <James.Bottomley@steeleye.com>
+Cc: Patrick Mansfield <patmans@us.ibm.com>, Andries Brouwer <aebr@win.tue.nl>, Martin Schwenke <martin@meltin.net>, Kurt Garloff <garloff@suse.de>, Linux kernel list <linux-kernel@vger.kernel.org>, Linux SCSI list <linux-scsi@vger.kernel.org>, Patrick Mochel <mochel@osdl.org>
 
-> From: Linus Torvalds [mailto:torvalds@transmeta.com] 
-> Bit if somehting is really _useful_ to export to user space 
-> through the fs
-> model and it makes things easier, that's probably good. Naming is
-> definitely one of those things - I generally like how the 
-> thing looks in a
-> file managers tree-view, but some of the names suck and that 
-> shows up cery 
-> clearly at that point, liiking in at 10.000'.
-> 
-> (Tha ACPI "shouting disease" is really sad. I remember my old 
-> VIC-20, and
-> how you used all-caps, but I don't think the ACPI people were 
-> sentimental.  
-> They apparently just _like_ ugly four-letter ALL-CAPS names).
+>Absolutely. I suspect that the _real_ issues start coming up only once
+>people start using this for useful work, and we should just accept that
+>the format (for now) is in flux. But that doesn't mean that we shouldn't
+>try to make it reasonably sane from the very start.
+>
+>And make sure that the naming convention works for both IDE and SCSI (ie
+>there should be a way to figure out _portably_ whether a device is a disk
+>or CD-RW or whatever, without even knowing whether it's SCSI or IDE).
 
-ACPI DEVC NAMS ARNT USED FOR MUCH. WE CAN <ahem> lowercase them in driverfs
-and not hurt anything. The _HID entries under them are the more useful
-thing, generally.
+Looking at how other kind of device trees are doing (typically
+Open Firmware), I beleive this can be acheived by having a "type"
+node (ie. file).
 
-;-)
+Also, there are lots of good reasons to put device/driver settings as
+"properties" of the device node in the device tree, which ends up having
+proc-like files under each device node.
+We could define some standard ones (like the device type) and provide a
+simple way (proc-like) for drivers to add more properties, thus replacing
+in most cases the need for ioctls.
 
-Regards -- Andy
+Ben.
 
-PS I don't know about the caps but iirc 4 char names were to make names
-small and fixed length. This theoretically resulted in easier compares by
-casting to u32s, and a slightly simpler  interpreter. (hah)
+
