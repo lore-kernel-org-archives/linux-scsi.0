@@ -1,82 +1,161 @@
-From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
-Subject: RE: [PATCH] dpt_i2o changes for 2.6.2 kernel in support of 64 bit and bitrot (part 1)
-Date: Mon, 5 Apr 2004 13:56:12 -0400
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [PATCH][RFC] iSCSI transport class
+Date: Mon, 05 Apr 2004 13:22:23 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <547AF3BD0F3F0B4CBDC379BAC7E4189F64F204@otce2k03.adaptec.com>
+Message-ID: <4071BFFF.5090405@cs.wisc.edu>
+References: <!~!UENERkVCMDkAAQACAAAAAAAAAAAAAAAAABgAAAAAAAAANoIxZIFzbEaqwjJgytz2AeKAAAAQAAAA9J1WRvNm9EOzhZvg3SDlSwEAAAAA@cisco.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from magic.adaptec.com ([216.52.22.17]:11450 "EHLO magic.adaptec.com")
-	by vger.kernel.org with ESMTP id S263039AbUDER4O convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 5 Apr 2004 13:56:14 -0400
-content-class: urn:content-classes:message
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:15634 "EHLO sabe.cs.wisc.edu")
+	by vger.kernel.org with ESMTP id S263177AbUDEUWi (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 5 Apr 2004 16:22:38 -0400
+In-Reply-To: <!~!UENERkVCMDkAAQACAAAAAAAAAAAAAAAAABgAAAAAAAAANoIxZIFzbEaqwjJgytz2AeKAAAAQAAAA9J1WRvNm9EOzhZvg3SDlSwEAAAAA@cisco.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>
-Cc: Christoph Hellwig <hch@infradead.org>
+To: "Surekha.PC" <surekhap@cisco.com>
+Cc: 'SCSI Mailing List' <linux-scsi@vger.kernel.org>, linux-iscsi-devel@lists.sourceforge.net
 
-We need a means for an application to tell if a scsi device is currently
-in use; one of in-error or with any I/O still pending or opened or
-mounted. This is necessary to inform users of the RAID management
-applications that the device is not to be adjusted.
+Hey,
 
-In-error is easy enough, test_bit(SHOST_RECOVERY,
-&pHba->host->host_state) for 2.6, and pHba->host->in_recovery for 2.4.
+Surekha.PC wrote:
+>  Hi Mike,
+> 
+>   Sorry for the delay.
+>   The structure which I represented was meant to have iSCSI transport
+> attributes
+>   under their respective category. Right now, in our iSCSI driver all
+> attributes are defined
+>   in `iscsi-attr.c` and `iscsi-debug-attr.c` which need to be either per lun
+> or per target.
+>>> I have reviewed your changes for iSCSI transport class. 
+>>
+>>The changes 
+>>
+>>>look fine.  I have few suggestions on further improvements. The 
+>>>attributes can be organised
+>>> under iSCSI transport class in the following structure.
+>>>
+>>># ls /sys/class/iscsi_transport/*
+>>>
+>>>  /* iSCSI host specific attributes */
+>>>  |-- shutdown
+>>>  |-- host_id
+>>>  |-- ....
+>>
+>>The examples you placed here are not tranport specific. They 
+>>are just HBA values, and should stay under the host attributes.
+> 
+> 
+> AFAIU Transport class is basically to hold all private attributes of the
+> iSCSI driver.
 
-I/O pending can be determined with Scsi_Device::access_count for 2.6.
+That is wrong. Look at the qla2xxx or 53c700 driver. The transport
+classes represent transport specifics. They are not there for a
+driver that is a particular transport to place all its attributes, and
+each driver that is a particular transport does not implement its
+own class.
 
-Unfortunately new members like struct scsi_disk::openers are
-inaccessible to the scsi driver to indicate whether there are any
-applications that have the scsi device open.
+> Since iSCSI driver has attributes which are hba/target/lun specific it would
+> be good to have them in a place away from the generic scsi attributes.
+> For eg, the "shutdown" attribute is a iSCSI attribute to shutdown the iSCSI
+> hba.
 
-This is complicated further if the device is accessed via the sg layer
-as well (sd's openers does not meter sg's openers).
+shutdown is a hba thing, and has nothing to do with iscsi itself.
 
-Are there any suggestions, either for the application, or for the scsi
-driver to meter disk in-use? Without this, it is *impossible* for us to
-support reliable native RAID management applications; a user application
-should *never* be a source of an OS panic (whether it be someone
-destroying the boot array, or simply a file system driver panicking when
-a device no longer exists)
+> Similarly host_id is iSCSI transport specific and gives the host number.
 
-Sincerely -- Mark Salyzyn
+How is the struct scsi_host's host_no related to the transport?
+It is assigned from the SCSI layer.
 
------Original Message-----
-From: Christoph Hellwig [mailto:hch@infradead.org] 
-Sent: Tuesday, February 10, 2004 4:22 PM
-To: Salyzyn, Mark
-Cc: linux-scsi
-Subject: Re: [PATCH] dpt_i2o changes for 2.6.2 kernel in support of 64
-bit and bitrot (part 1)
+>>Also, the host layout here does not look right. What happens 
+>>when I have multiple HBAs?
+> 
+> Right now iSCSI driver supports single HBA, hence this representation is OK.
+> However in multiple HBA case, it can be represented as below.
 
-< snip >
+Again, only specific to your driver.
 
-+	case DPT_TARGET_BUSY & 0xFFFF:
-+	case DPT_TARGET_BUSY:
-+	{
-+		TARGET_BUSY_T busy;
-+		struct adpt_device* d;
-+
-+		if (copy_from_user((void*)&busy, (void*)arg,
-sizeof(TARGET_BUSY_T))) {
-+			return -EFAULT;
-+		}
-+
-+		d = adpt_find_device(pHba, busy.channel, busy.id,
-busy.lun);
-+		if(d == NULL){
-+			return -ENODEV;
-+		}
-+		busy.isBusy = ((d->pScsi_dev)
-+		 && (d->pScsi_dev->device_busy /* Imperfect */
-+		  || test_bit(SHOST_RECOVERY,
-&pHba->host->shost_state)));
-+		if (copy_to_user ((char*)arg, &busy, sizeof(busy))) {
-+			return -EFAULT;
-+		}
-+		break;
-+	}
+>  /sys/class/iscsi_transport/
+>    |--host1/
+>        |-- shutdown_hba
+>        |-- show_hba_id
+>    |--host2/
+>        |-- ---"----
+>        |-- ---"----
+> 
+>   
+> 
+>>>  /* iSCSI target specific attributes */
+>>>  |-- 1:0:1/
+>>>           |-- target_addr
+>>>           |-- target_name
+>>>           |-- target_port
+>>>           |-- ....
+>>
+>>I agree these would be nice under a target attribute. Did
+>>you have something to post since the last time we talked,
+>>or did you write the example by hand?
+> 
+> 
+> I have written the example by hand, I am working towards implementing it.
+>>>  /* lun specific attributes */
+>>>  |-- 1:0:1:0/
+>>>             |-- device -> ../../../devices/platform/iscsi/1:0:0:0
+>>>             |-- driver -> ../../../bus/scsi/drivers/sd
+>>>             |-- lun_status
+>>>             |-- ....
+>>
+>>I don't think anything in lun_status is iscsi specific.
+> 
+> 
+> We have lun specific attributes defined in iSCSI driver some of which can be
+> used in debug mode for testing purposes e.g initiate command timeout on a
+> lun, set lun queue as busy, query the lun status etc.
+> I think since they are private to iSCSI, this is the right place holder.
 
-	This ioctl was removed because it's broken.  Don't readd it.
+Again, specific to your particular iscsi driver vs transport.
+
+>>> This way the relevant attributes can be used from respective paths.
+>>
+>>I get your point (you just chose the above attributes based 
+>>on name to accentuate this right). However, in your example 
+>>it seems like you would want to show the parent-children 
+>>relationships like
+>>here:
+>>
+>>/sys/class/iscsi_transport_host
+>>|-- host1
+>>|   |-- a_host_attribute
+>>|   |-- 1:0:1
+>>|   |   |-- target_name
+>>|   |   |-- 1:0:1:0
+>>|   |   |   |- some_lun_attribute
+>>
+>>Or you could also do something like
+>>
+>>/sys/class/iscsi_transport_host
+>>|-- host1
+>>|   |- a_host_attribute
+>>|   |- 1:0:1 -> ../iscsi_transport_target/1:0:1
+>>|   `- 1:0:2 -> ../iscsi_transport_target/1:0:2
+>>/sys/class/iscsi_transport_target
+>>|-- 1:0:1
+>>|   |- target_name
+>>|   |- ../iscsi_transport_lun/1:0:1:0
+>>........
+>>
+>>Making /sys/class/iscsi_transport the parent for everything 
+>>just does not look right.
+> 
+> 
+> In the above example do you mean that iscsi_transport_target is registered
+> as 
+> another transport class along with iscsi_transport_host? Is this OK ?
+> 
+
+Your proposed layout is messy. That is all I am saying.
+
+
+Mike
+
