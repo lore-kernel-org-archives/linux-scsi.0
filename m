@@ -1,161 +1,278 @@
-From: Luben Tuikov <luben@splentec.com>
-Subject: Re: [PATCH / RFC] scsi_error handler update. (1/4)
-Date: Thu, 13 Feb 2003 13:55:15 -0500
+From: Steven Dake <sdake@mvista.com>
+Subject: Re: Adding a new FC disk to a linux host
+Date: Thu, 13 Feb 2003 13:22:13 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3E4BEA13.50402@splentec.com>
-References: <3E492992.90502@splentec.com> <20030211172256.GC3164@beaverton.ibm.com> <3E494977.1070706@splentec.com> <3E495862.3050709@splentec.com> <20030211212048.GC1114@beaverton.ibm.com> <3E49698D.3030402@splentec.com> <20030211224119.A23149@infradead.org> <3E4AAA3F.8040002@splentec.com> <20030212204634.A17425@infradead.org> <3E4AC0B5.9030208@splentec.com> <20030213154748.A1965@infradead.org>
+Message-ID: <3E4BFE75.20207@mvista.com>
+References: <JOEEIMDPCNOOJCHLMKHMCEGMCKAA.suresh@veritas.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=iso-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <JOEEIMDPCNOOJCHLMKHMCEGMCKAA.suresh@veritas.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Mike Anderson <andmike@us.ibm.com>, linux-scsi@vger.kernel.org
+To: Suresh Kr N <suresh@veritas.com>
+Cc: linux-scsi@vger.kernel.org
 
-Christoph Hellwig wrote:
->>If a LLDD drops the lock on entry and gains it again on exit, then clearly
->>it doesn't need it.
+Suresh,
+
+The locking of the SCSI devices is not correct in the SCSI midlayer, 
+resulting in potential linked list walk-offs during insertion on one 
+processor and removal on another processor in the system.  There are 
+other problems even for single-processor configurations.
+
+I have partially fixed this, but my patch is incomplete and i've not had 
+time to revise it so it is correct.
+
+If you want to insert by FibreChannel WWN, you can look at
+www.sourceforge.net/projects/atca-hotswap.
+
+This allows insertion by a FC WWN via a kernel patch and provides a 
+userspace library to do the same.  This patch was mainly made for 2.4 
+where there was no way to correlate a FibreChannel WWN with a scsi 
+target ID.  Since sysfs in linux scsi has added FibreChannel IEEE ID 
+support (wwns), I will eventually change the userspace library to do the 
+correct thing when you request an insertion on a fibrechannel id by 
+scanning the scsi list in sysfs and finding the correct 
+host/channel/id/lun on which to insert and doing the insert 
+automatically.  If you want to write that hotswap library code, i'll put 
+it in to the sourceforge project.
+
+It would also be possible to request that the fibrehcannel device list 
+out its supproted scsi target ids, and compare that to the SCSI layer's 
+view, and automatically insert those that are not in the scsi midlayer. 
+ Exercise for the reader.
+
+Thanks!
+-steve
+
+Suresh Kr N wrote:
+
+>ok , i see this in scsi.c .
+>Is this safe in a Fibre channel SAN scenario ? could it corrupt an ongoing
+>data tranfer in a fibre channel SAN scenario ?
+>and also are there are easier ways to achieve this ( without you supplying a
+>scsi id etc ).
+>
+>suresh
+>
+>  /*
+>         * Usage: echo "scsi add-single-device 0 1 2 3" >/proc/scsi/scsi
+>         * with  "0 1 2 3" replaced by your "Host Channel Id Lun".
+>         * Consider this feature BETA.
+>         *     CAUTION: This is not for hotplugging your peripherals. As
+>         *     SCSI was not designed for this you could damage your
+>         *     hardware !
+>         * However perhaps it is legal to switch on an
+>         * already connected device. It is perhaps not
+>         * guaranteed this device doesn't corrupt an ongoing data transfer.
+>         */
+>
+>-----Original Message-----
+>From: linux-scsi-owner@vger.kernel.org
+>[mailto:linux-scsi-owner@vger.kernel.org]On Behalf Of Suresh Kr N
+>Sent: Thursday, February 13, 2003 11:01 PM
+>To: Steven Dake
+>Cc: linux-scsi@vger.kernel.org
+>Subject: RE: Adding a new FC disk to a linux host
+>
+>
+>This works for me ( by the way is this still BETA ? i dont see this comment
+>in the kernel scsi sources anymore ).
+>But then i need to deduce the these input parameters of target no , lun no
+>etc , as i need to do this from a userland san management app.
+>
+>I figured that the HBA apis give you the new target number , and probably i
+>could do a report luns or something to get the lun numbers as well. So this
+>way could work for me .
+>
+>Is there a way to ask the midlayer for a full rescan ( so that i wont have
+>to find out these parameters )
+>
+>suresh
+>
+>
+>-----Original Message-----
+>From: linux-scsi-owner@vger.kernel.org
+>[mailto:linux-scsi-owner@vger.kernel.org]On Behalf Of Steven Dake
+>Sent: Thursday, February 13, 2003 5:05 AM
+>To: Suresh Kr N
+>Cc: linux-scsi@vger.kernel.org
+>Subject: Re: Adding a new FC disk to a linux host
+>
+>
+>you can scan specific scsi ids.  read scsi_proc.c search for
+>add-single-device
+>
+>         * Usage: echo "scsi add-single-device 0 1 2 3" >/proc/scsi/scsi
+>         * with  "0 1 2 3" replaced by your "Host Channel Id Lun".
+>         * Consider this feature BETA.
+>
+>
+>Good luck
+>-steve
+>
+>Suresh Kr N wrote:
+>
+>  
+>
+>>sorry about the wrong thread name in the previous post. updated now
 >>
->>Else if it doesn't, it then must be relying on it elsewhere, which is
->>asking for trouble from eh_* point of view.  A search and replace
->>will do ok, with a local lock,
-> 
-> 
-> right.
-> 
-> 
->>unless it sets the pointer, in which case this is much easier.
-> 
-> 
-> which pointer?  the host lock?
-
-Yes.
-
-[On host_lock be gone:]
-
-> I think it's absolutely worth the effort!
-
-[On new queuecommand() prototype]
-
-> James, any comments on this one?  I think it's something that is save for
-> 2.5.
-
-Glad to hear that you're agreeing with me, but it doesn't depend on us.
-
->>>If you have anough time a prototype now won't hurt though - the scsi code
->>>shouldn't really change during early 2.6.
 >>
->>Yes, I've been thinking of rewriting SCSI Core completely for 2.7, so maybe
->>this prototype will be its embryonic state?
-> 
-> 
-> Maybe :)
-
-But of course -- you'll probably just use the idea and rewrite everything. :-)
-
-Anyway, one of my greatest beef with the current SCSI Core is the variable
-names.  At the bottom I explain/give justification of *why* indeed I have
-a problem in general with naming. (I think I gave it away several times before.)
-
-Examples:
-scsi_device:
-	::siblings -- this is NOT a container of siblings, which
-are to be the devices themselves, but is an *entry* into a siblings container.
-Thus, in the host we have a siblings container and the scsi_device
-should have an ``entry'' into this container.  Furthermore, I'd not choose
-``host::siblings'' but something more approachable like ``host::device_list''.
-
-	::same_target_siblings -- this shouldn't exist by design.
-
-	::device_busy -- this should probably be atomic_t and its name should
-be more descriptive of what it *is* -- something like ``active_cmd_count''.
-
-	Ideally when there's a queue for each state of a command, say,
-incoming_q, pending_q, done_q, those will have also have their own atomic_t
-count, like incoming_q_count, pending_q_count, done_q_count, and maybe their
-own locks, like incoming_q_lock, pending_q_lock, done_q_lock.
-This and other similar features would make new-scsi-core, completely
-re-entrant and multithread capable.
-
-scsi_host:
-	::sh_list -- this is an entry, but it suggests being a list.
-
-	::my_devices -- ``device_list'' would've been so much better.
-We know that those *are* going to be the host's devices -- whom else's
-are they going to be?
-
-	::host_busy -- could this have been ever more ambiguous?
-
-	::host_failed -- this suggests a boolean value... but it's
-not.
-
-	In general if an object should participate in some sort
-of a container like a list or queue, it should do so one at a time.
-This way a dependency chart is very clear and there's no loops,
-which would lead to poor programming design.  Everyone should
-have taken a course in this during their undergrad years at
-college/university.
-
-E.g. scsi_core <- portal <- target <- lun <- command,
-where each level to the right is 0/1:N.
-
-In fact, programming is done as soon as the *design* of
-the object structure and names is complete.  The rest is
-just coding the functions to describe the relationships
-between the objects.
-
-Blah... blah... blah... am I wasting my time?
-
->>Some features would be that target/lun scanning will be a completely *distinct*
->>functionality and one can even move it to userspace.
-> 
-> 
-> James, outlined something similar on the last kernel summit.  I think it's
-> a worthwile change for 2.7 (let's hope initramfs is useable then)
-
-Yes, I know.  But this ``feature'' is *not* the driving force of the
-new design of the new-scsi-core.  In fact, the other way around.
-
-I.e. since new-scsi-core is jus an *interface* to the Service Delivery
-Subsystem (aka LLDD), target/lun scanning is NOT part of it.  new-scsi-core
-just sits between the application client sending scsi tasks (read/write/etc)
-and the LLDD's interface, plus a few minor capabilites.
-
-I.e. target/lun scanning will be an application client sending scsi commands
-down the LLDDs, analyzing the results and using a well defined interface
-to add/remove devices from new-scsi-core tables (given capabilities).
-
-SCSI scanning could be a kernel module or user space process, XOR both,
-depening on how the user felt this morning.
-
->>Another feature is that new-scsi-core will *not* do any memory allocation
->>for sg lists for commands -- this is the task of the application client
->>(block layer, app, scanning code, etc).
-> 
-> 
-> i.e. the scsi upper layer driver?
-
-Whoever -- the application client... block layer, etc.  new-scsi-core
-is not a memory management system, it's just an interface.  This will make
-it quite *simpler and smaller*, yet powerful.
-
->>BTW, what kind of prototype are you talking about, functional or non-functional?
-> 
-> 
-> limited functionality (i.e. just a single driver or so converted)
-
-Time is of the essence and given I've got a lot of my own job-work do to
-and catch up with (for which get payed), I'm not sure I can start this now.
-I'd need to hear something from the powers that be.  Since this is 2.7 work,
-I don't expect it until the summer.  And summer time is always more relaxed.
-
--- 
-Luben
-
-P.S. The naming punctuality comes from the fact that symbols themselves
-carry meaning -- and a proper name or symbol would dictate its proper
-use.  As an example I gave Newton's and Leibniz's calculus notations.
-For more information one can check out any mathematical philosophy book
-or as a start, the Pulitzer prize winner ``GEB''.
-
+>>hi everyone
+>>
+>>I am working on a san management application for a linux. My application
+>>sends zoning commands to the fabric to zone in a disk to a host ,  so i
+>>    
+>>
+>need
+>  
+>
+>>to have that disk acessible to the host without a reboot of the host.
+>>
+>>I need to do this from the user space. Is there a way to ask the scsi
+>>midlayer for a rescan ?
+>>In solaris , i invoke a command called "drvconfig" to achieve this.
+>>
+>>I have seen in the linux-scsi archive that this is kind of possible,  but
+>>the discussion didnt seem to state how.
+>>I am attaching the above thread here in the mail.
+>>
+>>I have verified that echo "scsi add-single-device a b c d" >
+>>    
+>>
+>/proc/scsi/scsi
+>  
+>
+>>works fine . But this does involve parameters which cant be found out
+>>programmatically.
+>>
+>>Also a side question here :In a FC world, to get the target number for
+>>    
+>>
+>above
+>  
+>
+>>command , can i find out the current maximum target number of the scsi
+>>devices, and increase it by one ? or  does the FC devices have actually a
+>>preknown target no , which would be collected by the FC card driver ?
+>>
+>>Could someone please help ? ( even a "non-standard" way should be good
+>>enough" )
+>>
+>>Thanks
+>>Suresh
+>>
+>>
+>>
+>>--------------------------------------------------------
+>>Message 2 in thread
+>>From: Alan Cox (alan@lxorguk.ukuu.org.uk)
+>>Subject: Re: Hot plugging a disk in runtime
+>>View this article only
+>>Newsgroups: mlist.linux.scsi
+>>Date: 2002-05-20 05:32:38 PST
+>>
+>>
+>>
+>>
+>>    
+>>
+>>>1.. How is it possible to signal SCSI mid-layer (or other layers) of a
+>>>presence of a newly hot-plugged disk ?
+>>>
+>>>
+>>>      
+>>>
+>>aacraid is one example that does this, but via its config tools.
+>>
+>>
+>>
+>>    
+>>
+>>>2.. Can an adapter's device driver trigger SCSI subsystem to scan
+>>>channels for new LUNs / Targets ?
+>>>
+>>>
+>>>      
+>>>
+>>It is designed so user space can do so - so yes
+>>
+>>
+>>
+>>    
+>>
+>>>3.. Is this can be handled in a kernel level ? is there a user space
+>>>application that can be triggered to start scanning adapters (obviously
+>>>through SCSI subsystem) and registering new LUNs / Targets etc... ?
+>>>
+>>>
+>>>      
+>>>
+>>echo "scsi-add-single-device a b c d" /proc/scsi/scsi
+>>
+>>if I remember it right
+>>
+>>
+>>entire thread is at
+>>
+>>http://groups.google.com/groups?hl=en&lr=&ie=UTF-8&threadm=linux.scsi.20020
+>>    
+>>
+>5
+>  
+>
+>>201420.g4KEK3x01892%40localhost.localdomain&rnum=7&prev=/groups%3Fq%3Dhot%2
+>>    
+>>
+>B
+>  
+>
+>>plug%2B%2BSCSI%2Bfibre-channel%2BLinux%26hl%3Den%26lr%3D%26ie%3DUTF-8%26sel
+>>    
+>>
+>m
+>  
+>
+>>%3Dlinux.scsi.200205201420.g4KEK3x01892%2540localhost.localdomain%26rnum%3D
+>>    
+>>
+>7
+>  
+>
+>>-
+>>To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+>>the body of a message to majordomo@vger.kernel.org
+>>More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>
+>>-
+>>To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+>>the body of a message to majordomo@vger.kernel.org
+>>More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>
+>>
+>>
+>>
+>>
+>>    
+>>
+>
+>-
+>To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+>the body of a message to majordomo@vger.kernel.org
+>More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+>-
+>To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+>the body of a message to majordomo@vger.kernel.org
+>More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+>-
+>To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+>the body of a message to majordomo@vger.kernel.org
+>More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+>
+>
+>  
+>
 
