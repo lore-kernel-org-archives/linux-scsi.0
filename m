@@ -1,30 +1,35 @@
-From: Mike Anderson <andmike@us.ibm.com>
-Subject: Re: [linux-usb-devel] Re: [PATCH] USB changes for 2.5.58
-Date: Wed, 26 Feb 2003 22:37:37 -0800
+From: Yokota Hiroshi <yokota@netlab.is.tsukuba.ac.jp>
+Subject: Re: [PATCH] update nsp_cs to use scsi_add_host / scsi_remove_host
+Date: Thu, 27 Feb 2003 16:14:34 +0900
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030227063737.GB13803@beaverton.ibm.com>
-References: <20030124164553.C27859@one-eyed-alien.net> <20030125010729.GG28812@redhat.com> <20030202101317.A26796@one-eyed-alien.net> <20030202120628.A28024@one-eyed-alien.net> <20030203171726.GA1583@beaverton.ibm.com> <20030216131835.B23422@one-eyed-alien.net> <20030217193737.GB1990@beaverton.ibm.com> <20030222234834.A32167@one-eyed-alien.net> <20030226233702.GC1376@beaverton.ibm.com> <20030226171043.F28571@one-eyed-alien.net>
+Message-ID: <20030227161434O.yokota@netlab.is.tsukuba.ac.jp>
+References: <20030226202005.A8461@lst.de>
+	<20030226202611.A8526@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20030226171043.F28571@one-eyed-alien.net>
+In-Reply-To: <20030226202611.A8526@lst.de>
 List-Id: linux-scsi@vger.kernel.org
-To: Oliver Neukum <oliver@neukum.name>, Luben Tuikov <luben@splentec.com>, Alan Stern <stern@rowland.harvard.edu>, David Brownell <david-b@pacbell.net>, Greg KH <greg@kroah.com>, linux-usb-devel@lists.sourceforge.net, Linux SCSI list <linux-scsi@vger.kernel.org>
+To: hch@lst.de
+Cc: linux-scsi@vger.kernel.org
 
-Matthew Dharm [mdharm-scsi@one-eyed-alien.net] wrote:
-> Right... but I removed the release() function because that was marked (in
-> the documentation) as only for the old-style drivers.  So I'll need to
-> re-introduce it -- but it looks like all it has to do is free some memory.
-> Does that sound about right?
+ Hello, Christoph.
 
-Yes it was previously removed, but IIRC this is the direction
-discussed on this thread. For a idle device the release functionality could
-be done in the context of the scsi_remove_host call, but for a busy
-device we need to have this call to clean up later.
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH] update nsp_cs to use scsi_add_host / scsi_remove_host
+Date: Wed, 26 Feb 2003 20:26:11 +0100
 
--andmike
---
-Michael Anderson
-andmike@us.ibm.com
+> > This patch updates nsp_cs to use scsi_add_host / scsi_remove_host when
+> > compiledfor Linux 2.5 which allows to get rid of the scsi host list
+> > walks and is a preparation for allowing to support multiple cards of
+> > this type.
+> Sorry, I sent you the wrong paetch, here's the right one:
 
+ Thanks.
+I will apply your patch soon.
+
+---
+YOKOTA Hiroshi
+E-mail: yokota@netlab.is.tsukuba.ac.jp
+WWW:    http://www.netlab.is.tsukuba.ac.jp/~yokota/
