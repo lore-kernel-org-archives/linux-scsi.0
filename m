@@ -1,280 +1,324 @@
 From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: [PATCH] ncr53c8xx: move driver local quirks into the scsi blacklist
-Date: 04 Oct 2004 12:46:02 -0500
+Subject: [PATCH] ncr53c8xx: kill INQUIRY snooping and believe the mid-layer
+	flags
+Date: 04 Oct 2004 12:49:30 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1096911968.2290.22.camel@mulgrave>
+Message-ID: <1096912175.1748.25.camel@mulgrave>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat16.steeleye.com ([209.192.50.48]:5785 "EHLO
+Received: from stat16.steeleye.com ([209.192.50.48]:18079 "EHLO
 	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S268367AbUJDRqJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 4 Oct 2004 13:46:09 -0400
+	id S268342AbUJDRtg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 4 Oct 2004 13:49:36 -0400
 Received: from midgard.sc.steeleye.com (midgard.sc.steeleye.com [172.17.6.40])
-	by hancock.sc.steeleye.com (8.11.6/8.11.6) with ESMTP id i94Hk7m13239
-	for <linux-scsi@vger.kernel.org>; Mon, 4 Oct 2004 13:46:08 -0400
+	by hancock.sc.steeleye.com (8.11.6/8.11.6) with ESMTP id i94HnZm13507
+	for <linux-scsi@vger.kernel.org>; Mon, 4 Oct 2004 13:49:35 -0400
 List-Id: linux-scsi@vger.kernel.org
 To: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-No driver should have a separate blacklist from the mid-layer.
+No driver should ever have to snoop inquirys ...
 
 James
 
 # This is a BitKeeper generated diff -Nru style patch.
 #
 # ChangeSet
-#   2004/10/03 18:20:20-05:00 jejb@pashleys.(none) 
-#   ncr53c8xx: move driver local quirks up to scsi blacklist
+#   2004/10/04 09:28:13-05:00 jejb@pashleys.(none) 
+#   mcr53c8xx: remove INQUIRY snooping and believe the mid-layer flags
 #   
 #   Signed-off-by: James Bottomley <James.Bottomley@SteelEye.com>
 # 
-# include/scsi/scsi_devinfo.h
-#   2004/10/03 18:16:35-05:00 jejb@pashleys.(none) +1 -0
-#   ncr53c8xx: move driver local quirks up to scsi blacklist
-#   
-#   Signed-off-by: James Bottomley <James.Bottomley@SteelEye.com>
-# 
-# include/scsi/scsi_device.h
-#   2004/10/03 18:16:35-05:00 jejb@pashleys.(none) +1 -0
-#   ncr53c8xx: move driver local quirks up to scsi blacklist
-#   
-#   Signed-off-by: James Bottomley <James.Bottomley@SteelEye.com>
-# 
-# drivers/scsi/scsi_scan.c
-#   2004/10/03 18:16:35-05:00 jejb@pashleys.(none) +7 -0
-#   ncr53c8xx: move driver local quirks up to scsi blacklist
-#   
-#   Signed-off-by: James Bottomley <James.Bottomley@SteelEye.com>
-# 
-# drivers/scsi/scsi_devinfo.c
-#   2004/10/03 18:16:34-05:00 jejb@pashleys.(none) +4 -0
-#   ncr53c8xx: move driver local quirks up to scsi blacklist
-#   
-#   Signed-off-by: James Bottomley <James.Bottomley@SteelEye.com>
+# drivers/scsi/sym53c8xx_comm.h
+#   2004/10/04 09:25:15-05:00 jejb@pashleys.(none) +0 -30
+#   mcr53c8xx: remove INQUIRY snooping and believe the mid-layer flags
 # 
 # drivers/scsi/ncr53c8xx.c
-#   2004/10/03 18:16:33-05:00 jejb@pashleys.(none) +3 -98
-#   ncr53c8xx: move driver local quirks up to scsi blacklist
-#   
-#   Signed-off-by: James Bottomley <James.Bottomley@SteelEye.com>
+#   2004/10/04 09:25:14-05:00 jejb@pashleys.(none) +23 -81
+#   mcr53c8xx: remove INQUIRY snooping and believe the mid-layer flags
 # 
 diff -Nru a/drivers/scsi/ncr53c8xx.c b/drivers/scsi/ncr53c8xx.c
---- a/drivers/scsi/ncr53c8xx.c	2004-10-04 12:44:24 -05:00
-+++ b/drivers/scsi/ncr53c8xx.c	2004-10-04 12:44:24 -05:00
-@@ -398,20 +398,6 @@
+--- a/drivers/scsi/ncr53c8xx.c	2004-10-04 12:47:45 -05:00
++++ b/drivers/scsi/ncr53c8xx.c	2004-10-04 12:47:45 -05:00
+@@ -398,17 +398,6 @@
  
  /*==========================================================
  **
--**	"Special features" of targets.
--**	quirks field		of struct tcb.
--**	actualquirks field	of struct ccb.
+-**	Capability bits in Inquire response byte 7.
 -**
 -**==========================================================
 -*/
 -
--#define	QUIRK_AUTOSAVE	(0x01)
--#define	QUIRK_NOMSG	(0x02)
--#define QUIRK_NOSYNC	(0x10)
--#define QUIRK_NOWIDE16	(0x20)
+-#define	INQ7_QUEUE	(0x02)
+-#define	INQ7_SYNC	(0x10)
+-#define	INQ7_WIDE16	(0x20)
 -
 -/*==========================================================
 -**
- **	Capability bits in Inquire response byte 7.
+ **	Misc.
  **
  **==========================================================
-@@ -1151,7 +1137,7 @@
- #endif
- 	ncrcmd  save_dp		[  7];
- 	ncrcmd  restore_dp	[  5];
--	ncrcmd  disconnect	[ 17];
-+	ncrcmd  disconnect	[ 10];
- 	ncrcmd	msg_out		[  9];
- 	ncrcmd	msg_out_done	[  7];
- 	ncrcmd  idle		[  2];
-@@ -1251,7 +1237,6 @@
- static	void	ncr_int_ma	(struct ncb *np);
- static	void	ncr_int_sir	(struct ncb *np);
- static  void    ncr_int_sto     (struct ncb *np);
--static	u_long	ncr_lookup	(char* id);
- static	void	ncr_negotiate	(struct ncb* np, struct tcb* tp);
- static	int	ncr_prepare_nego(struct ncb *np, struct ccb *cp, u_char *msgptr);
- 
-@@ -1844,21 +1829,6 @@
+@@ -500,8 +489,6 @@
  	*/
- 	SCR_LOAD_REG (HS_REG, HS_DISCONNECT),
- 		0,
--	/*
--	**	If QUIRK_AUTOSAVE is set,
--	**	do an "save pointer" operation.
--	*/
--	SCR_FROM_REG (QU_REG),
--		0,
--	SCR_JUMP ^ IFFALSE (MASK (QUIRK_AUTOSAVE, QUIRK_AUTOSAVE)),
--		PADDR (cleanup_ok),
--	/*
--	**	like SAVE_DP message:
--	**	Copy TEMP register to SAVEP in header.
--	*/
--	SCR_COPY (4),
--		RADDR (temp),
--		NADDR (header.savep),
- 	SCR_JUMP,
- 		PADDR (cleanup_ok),
+ 	struct link     jump_lcb[4];	/* JUMPs for reselection	*/
+ 	struct lcb *	lp[MAX_LUN];	/* The lcb's of this tcb	*/
+-	u_char		inq_done;	/* Target capabilities received	*/
+-	u_char		inq_byte7;	/* Contains these capabilities	*/
  
-@@ -3740,7 +3710,7 @@
- 	/*
- 	**	status
- 	*/
--	cp->actualquirks		= tp->quirks;
-+	cp->actualquirks		= 0;
- 	cp->host_status			= cp->nego_status ? HS_NEGOTIATE : HS_BUSY;
- 	cp->scsi_status			= S_ILLEGAL;
- 	cp->parity_status		= 0;
-@@ -6071,7 +6041,7 @@
+ 	/*----------------------------------------------------------------
+ 	**	Pointer to the ccb used for negotiation.
+@@ -545,6 +532,7 @@
+ 	u_char	usrwide;
+ 	u_char	usrtags;
+ 	u_char	usrflag;
++	struct scsi_device *sdev;
+ };
+ 
+ /*========================================================================
+@@ -611,7 +599,6 @@
+ 	u_char		usetags;	/* Command queuing is active	*/
+ 	u_char		maxtags;	/* Max nr of tags asked by user	*/
+ 	u_char		numtags;	/* Current number of tags	*/
+-	u_char		inq_byte7;	/* Store unit CmdQ capabitility	*/
+ 
+ 	/*----------------------------------------------------------------
+ 	**	QUEUE FULL control and ORDERED tag control.
+@@ -1225,8 +1212,7 @@
+ static	void	ncr_init_ccb	(struct ncb *np, struct ccb *cp);
+ static	void	ncr_init_tcb	(struct ncb *np, u_char tn);
+ static	struct lcb *	ncr_alloc_lcb	(struct ncb *np, u_char tn, u_char ln);
+-static	struct lcb *	ncr_setup_lcb	(struct ncb *np, u_char tn, u_char ln,
+-				 u_char *inq_data);
++static	struct lcb *	ncr_setup_lcb	(struct ncb *np, u_char tn, u_char ln);
+ static	void	ncr_getclock	(struct ncb *np, int mult);
+ static	void	ncr_selectclock	(struct ncb *np, u_char scntl3);
+ static	struct ccb *ncr_get_ccb	(struct ncb *np, u_char tn, u_char ln);
+@@ -3377,15 +3363,16 @@
+ 	struct tcb *tp = &np->target[cp->target];
+ 	int msglen = 0;
+ 	int nego = 0;
++	struct scsi_device *sdev = tp->sdev;
+ 
+-	if (tp->inq_done) {
++	if (likely(sdev)) {
+ 
  		/*
- 		**	Select without ATN for quirky devices.
+ 		**	negotiate wide transfers ?
  		*/
--		if (tp->quirks & QUIRK_NOMSG)
-+		if (cmd->device->select_no_atn)
- 			cp->start.schedule.l_paddr =
- 			cpu_to_scr(NCB_SCRIPTH_PHYS (np, select_no_atn));
  
-@@ -7062,15 +7032,6 @@
+ 		if (!tp->widedone) {
+-			if (tp->inq_byte7 & INQ7_WIDE16) {
++			if (sdev->wdtr) {
+ 				nego = NS_WIDE;
+ 			} else
+ 				tp->widedone=1;
+@@ -3397,7 +3384,7 @@
+ 		*/
+ 
+ 		if (!nego && !tp->period) {
+-			if (tp->inq_byte7 & INQ7_SYNC) {
++			if (sdev->sdtr) {
+ 				nego = NS_SYNC;
+ 			} else {
+ 				tp->period  =0xffff;
+@@ -4274,19 +4261,6 @@
+ 		if (!lp)
+ 			ncr_alloc_lcb (np, cmd->device->id, cmd->device->lun);
+ 
+-		/*
+-		**	On standard INQUIRY response (EVPD and CmDt 
+-		**	not set), setup logical unit according to 
+-		**	announced capabilities (we need the 1rst 7 bytes).
+-		*/
+-		if (cmd->cmnd[0] == 0x12 && !(cmd->cmnd[1] & 0x3) &&
+-		    cmd->cmnd[4] >= 7 && !cmd->use_sg) {
+-			sync_scsi_data_for_cpu(np, cmd);	/* SYNC the data */
+-			ncr_setup_lcb (np, cmd->device->id, cmd->device->lun,
+-				       (char *) cmd->request_buffer);
+-			sync_scsi_data_for_device(np, cmd);	/* SYNC the data */
+-		}
+-
+ 		tp->bytes     += cp->data_len;
+ 		tp->transfers ++;
+ 
+@@ -5009,11 +4983,12 @@
+ 	struct tcb *tp = &np->target[tn];
+ 	struct lcb *lp = tp->lp[ln];
+ 	u_char   reqtags, maxdepth;
++	struct scsi_device *sdev = tp->sdev;
+ 
+ 	/*
+ 	**	Just in case ...
+ 	*/
+-	if ((!tp) || (!lp))
++	if ((!tp) || (!lp) || !sdev)
+ 		return;
+ 
+ 	/*
+@@ -5037,7 +5012,7 @@
+ 	**	only devices capable of tagged commands
+ 	**	only if enabled by user ..
+ 	*/
+-	if ((lp->inq_byte7 & INQ7_QUEUE) && lp->numtags > 1) {
++	if (sdev->tagged_supported && lp->numtags > 1) {
+ 		reqtags = lp->numtags;
+ 	} else {
+ 		reqtags = 1;
+@@ -6298,8 +6273,8 @@
+ 		**	      it CAN transfer synch.
+ 		*/
+ 
+-		if (ofs)
+-			tp->inq_byte7 |= INQ7_SYNC;
++		if (ofs && tp->sdev)
++			tp->sdev->sdtr = 1;
+ 
+ 		/*
+ 		**	check values against driver limits.
+@@ -6419,8 +6394,8 @@
+ 		**	      it CAN transfer wide.
+ 		*/
+ 
+-		if (wide)
+-			tp->inq_byte7 |= INQ7_WIDE16;
++		if (wide && tp->sdev)
++			tp->sdev->wdtr = 1;
+ 
+ 		/*
+ 		**	check values against driver limits.
+@@ -7019,11 +6994,11 @@
+ **	will play with CHANGE DEFINITION commands. :-)
+ **------------------------------------------------------------------------
+ */
+-static struct lcb *ncr_setup_lcb (struct ncb *np, u_char tn, u_char ln, u_char *inq_data)
++static struct lcb *ncr_setup_lcb (struct ncb *np, u_char tn, u_char ln)
+ {
+ 	struct tcb *tp = &np->target[tn];
+ 	struct lcb *lp = tp->lp[ln];
+-	u_char inq_byte7;
++	struct scsi_device *sdev = tp->sdev;
+ 
+ 	/*
+ 	**	If no lcb, try to allocate it.
+@@ -7032,46 +7007,16 @@
  		goto fail;
  
  	/*
--	**	Get device quirks from a speciality table.
+-	**	Evaluate trustable target/unit capabilities.
+-	**	We only believe device version >= SCSI-2 that 
+-	**	use appropriate response data format (2).
+-	**	But it seems that some CCS devices also 
+-	**	support SYNC and I donnot want to frustrate 
+-	**	anybody. ;-)
++	**	Prepare negotiation
+ 	*/
+-	inq_byte7 = 0;
+-	if	((inq_data[2] & 0x7) >= 2 && (inq_data[3] & 0xf) == 2)
+-		inq_byte7 = inq_data[7];
+-	else if ((inq_data[2] & 0x7) == 1 && (inq_data[3] & 0xf) == 1)
+-		inq_byte7 = INQ7_SYNC;
+-
+-	/*
+-	**	Throw away announced LUN capabilities if we are told 
+-	**	that there is no real device supported by the logical unit.
 -	*/
--	tp->quirks = ncr_lookup (inq_data);
--	if (tp->quirks && bootverbose) {
--		PRINT_LUN(np, tn, ln);
--		printk ("quirks=%x.\n", tp->quirks);
+-	if ((inq_data[0] & 0xe0) > 0x20 || (inq_data[0] & 0x1f) == 0x1f)
+-		inq_byte7 &= (INQ7_SYNC | INQ7_WIDE16);
+-
+-	/*
+-	**	If user is wanting SYNC, force this feature.
+-	*/
+-	if (driver_setup.force_sync_nego)
+-		inq_byte7 |= INQ7_SYNC;
+-
+-	/*
+-	**	Prepare negotiation if SIP capabilities have changed.
+-	*/
+-	tp->inq_done = 1;
+-	if ((inq_byte7 ^ tp->inq_byte7) & (INQ7_SYNC | INQ7_WIDE16)) {
+-		tp->inq_byte7 = inq_byte7;
++	if (sdev->wdtr || sdev->sdtr)
+ 		ncr_negotiate(np, tp);
+-	}
+ 
+ 	/*
+ 	**	If unit supports tagged commands, allocate the 
+ 	**	CCB JUMP table if not yet.
+ 	*/
+-	if ((inq_byte7 & INQ7_QUEUE) && lp->jump_ccb == &lp->jump_ccb_0) {
++	if (sdev->tagged_supported && lp->jump_ccb == &lp->jump_ccb_0) {
+ 		int i;
+ 		lp->jump_ccb = m_calloc_dma(256, "JUMP_CCB");
+ 		if (!lp->jump_ccb) {
+@@ -7086,17 +7031,10 @@
+ 			lp->cb_tags[i] = i;
+ 		lp->maxnxs = MAX_TAGS;
+ 		lp->tags_stime = ktime_get(3*HZ);
 -	}
 -
 -	/*
- 	**	Evaluate trustable target/unit capabilities.
- 	**	We only believe device version >= SCSI-2 that 
- 	**	use appropriate response data format (2).
-@@ -7338,62 +7299,6 @@
- 		err |= 4;
- 	};
- 	return (err);
--}
--
--/*==========================================================
--**
--**
--**	Device lookup.
--**
--**	@GENSCSI@ should be integrated to scsiconf.c
--**
--**
--**==========================================================
--*/
--
--struct table_entry {
--	char *	manufacturer;
--	char *	model;
--	char *	version;
--	u_long	info;
--};
--
--static struct table_entry device_tab[] =
--{
--#if 0
--	{"", "", "", QUIRK_NOMSG},
--#endif
--	{"SONY", "SDT-5000", "3.17", QUIRK_NOMSG},
--	{"WangDAT", "Model 2600", "01.7", QUIRK_NOMSG},
--	{"WangDAT", "Model 3200", "02.2", QUIRK_NOMSG},
--	{"WangDAT", "Model 1300", "02.4", QUIRK_NOMSG},
--	{"", "", "", 0} /* catch all: must be last entry. */
--};
--
--static u_long ncr_lookup(char * id)
--{
--	struct table_entry * p = device_tab;
--	char *d, *r, c;
--
--	for (;;p++) {
--
--		d = id+8;
--		r = p->manufacturer;
--		while ((c=*r++)) if (c!=*d++) break;
--		if (c) continue;
--
--		d = id+16;
--		r = p->model;
--		while ((c=*r++)) if (c!=*d++) break;
--		if (c) continue;
--
--		d = id+32;
--		r = p->version;
--		while ((c=*r++)) if (c!=*d++) break;
--		if (c) continue;
--
--		return (p->info);
--	}
+-	**	Adjust tagged queueing status if needed.
+-	*/
+-	if ((inq_byte7 ^ lp->inq_byte7) & INQ7_QUEUE) {
+-		lp->inq_byte7 = inq_byte7;
+-		lp->numtags   = lp->maxtags;
+ 		ncr_setup_tags (np, tn, ln);
+ 	}
+ 
++
+ fail:
+ 	return lp;
+ }
+@@ -7477,6 +7415,10 @@
+ 	struct tcb *tp = &np->target[device->id];
+ 	struct lcb *lp = tp->lp[device->lun];
+ 	int numtags, depth_to_use;
++
++	tp->sdev = device;
++
++	ncr_setup_lcb(np, device->id, device->lun);
+ 
+ 	/*
+ 	**	Select queue depth from driver setup.
+diff -Nru a/drivers/scsi/sym53c8xx_comm.h b/drivers/scsi/sym53c8xx_comm.h
+--- a/drivers/scsi/sym53c8xx_comm.h	2004-10-04 12:47:45 -05:00
++++ b/drivers/scsi/sym53c8xx_comm.h	2004-10-04 12:47:45 -05:00
+@@ -502,36 +502,6 @@
+ 	return use_sg;
  }
  
- /*==========================================================
-diff -Nru a/drivers/scsi/scsi_devinfo.c b/drivers/scsi/scsi_devinfo.c
---- a/drivers/scsi/scsi_devinfo.c	2004-10-04 12:44:24 -05:00
-+++ b/drivers/scsi/scsi_devinfo.c	2004-10-04 12:44:24 -05:00
-@@ -83,6 +83,7 @@
- 	{"SONY", "CD-ROM CDU-55S", "1.0i", BLIST_NOLUN},
- 	{"SONY", "CD-ROM CDU-561", "1.7x", BLIST_NOLUN},
- 	{"SONY", "CD-ROM CDU-8012", NULL, BLIST_NOLUN},
-+	{"SONY", "SDT-5000", "3.17", BLIST_SELECT_NO_ATN},
- 	{"TANDBERG", "TDC 3600", "U07", BLIST_NOLUN},	/* locks up */
- 	{"TEAC", "CD-R55S", "1.0H", BLIST_NOLUN},	/* locks up */
- 	/*
-@@ -196,6 +197,9 @@
- 	{"TOSHIBA", "CDROM", NULL, BLIST_ISROM},
- 	{"TOSHIBA", "CD-ROM", NULL, BLIST_ISROM},
- 	{"USB2.0", "SMARTMEDIA/XD", NULL, BLIST_FORCELUN | BLIST_INQUIRY_36},
-+	{"WangDAT", "Model 2600", "01.7", BLIST_SELECT_NO_ATN},
-+	{"WangDAT", "Model 3200", "02.2", BLIST_SELECT_NO_ATN},
-+	{"WangDAT", "Model 1300", "02.4", BLIST_SELECT_NO_ATN},
- 	{"XYRATEX", "RS", "*", BLIST_SPARSELUN | BLIST_LARGELUN},
- 	{"Zzyzx", "RocketStor 500S", NULL, BLIST_SPARSELUN},
- 	{"Zzyzx", "RocketStor 2000", NULL, BLIST_SPARSELUN},
-diff -Nru a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
---- a/drivers/scsi/scsi_scan.c	2004-10-04 12:44:24 -05:00
-+++ b/drivers/scsi/scsi_scan.c	2004-10-04 12:44:24 -05:00
-@@ -575,6 +575,13 @@
- 		sdev->borken = 0;
- 
- 	/*
-+	 * Apparently some really broken devices (contrary to the SCSI
-+	 * standards) need to be selected without asserting ATN
-+	 */
-+	if (*bflags & BLIST_SELECT_NO_ATN)
-+		sdev->select_no_atn = 1;
-+
-+	/*
- 	 * Some devices may not want to have a start command automatically
- 	 * issued when a device is added.
- 	 */
-diff -Nru a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
---- a/include/scsi/scsi_device.h	2004-10-04 12:44:24 -05:00
-+++ b/include/scsi/scsi_device.h	2004-10-04 12:44:24 -05:00
-@@ -110,6 +110,7 @@
- 	unsigned no_start_on_add:1;	/* do not issue start on add */
- 	unsigned allow_restart:1; /* issue START_UNIT in error handler */
- 	unsigned no_uld_attach:1; /* disable connecting to upper level drivers */
-+	unsigned select_no_atn:1;
- 
- 	unsigned int device_blocked;	/* Device returned QUEUE_FULL. */
- 
-diff -Nru a/include/scsi/scsi_devinfo.h b/include/scsi/scsi_devinfo.h
---- a/include/scsi/scsi_devinfo.h	2004-10-04 12:44:24 -05:00
-+++ b/include/scsi/scsi_devinfo.h	2004-10-04 12:44:24 -05:00
-@@ -26,4 +26,5 @@
- #define BLIST_NOREPORTLUN	0x40000	/* don't try REPORT_LUNS scan (SCSI-3 devs) */
- #define BLIST_NOT_LOCKABLE	0x80000	/* don't use PREVENT-ALLOW commands */
- #define BLIST_NO_ULD_ATTACH	0x100000 /* device is actually for RAID config */
-+#define BLIST_SELECT_NO_ATN	0x200000 /* select without ATN */
- #endif
+-static void __sync_scsi_data_for_cpu(struct device *dev, struct scsi_cmnd *cmd)
+-{
+-	switch(cmd->__data_mapped) {
+-	case 2:
+-		dma_sync_sg_for_cpu(dev, cmd->buffer, cmd->use_sg,
+-				cmd->sc_data_direction);
+-		break;
+-	case 1:
+-		dma_sync_single_for_cpu(dev, cmd->__data_mapping,
+-					cmd->request_bufflen,
+-					cmd->sc_data_direction);
+-		break;
+-	}
+-}
+-
+-static void __sync_scsi_data_for_device(struct device *dev, struct scsi_cmnd *cmd)
+-{
+-	switch(cmd->__data_mapped) {
+-	case 2:
+-		dma_sync_sg_for_device(dev, cmd->buffer, cmd->use_sg,
+-				cmd->sc_data_direction);
+-		break;
+-	case 1:
+-		dma_sync_single_for_device(dev, cmd->__data_mapping,
+-					   cmd->request_bufflen,
+-					   cmd->sc_data_direction);
+-		break;
+-	}
+-}
+-
+ #define unmap_scsi_data(np, cmd)	__unmap_scsi_data(np->dev, cmd)
+ #define map_scsi_single_data(np, cmd)	__map_scsi_single_data(np->dev, cmd)
+ #define map_scsi_sg_data(np, cmd)	__map_scsi_sg_data(np->dev, cmd)
 
