@@ -1,109 +1,99 @@
-From: Andi Kleen <ak@suse.de>
-Subject: Re: [BUG] x86_64 pci_map_sg modifies sg list - fails multiple
- map/unmaps II
-Date: Mon, 5 Jan 2004 22:40:18 +0100
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: PATCH: (as141b) Unaligned scatter-gather buffers and usb-storage
+Date: Mon, 5 Jan 2004 16:58:01 -0500 (EST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040105224018.43c8cde1.ak@suse.de>
-References: <200401051929.i05JTsM0000014248@mudpuddle.cs.wustl.edu.suse.lists.linux.kernel>
-	<20040105112800.7a9f240b.davem@redhat.com.suse.lists.linux.kernel>
-	<p73brpi1544.fsf@verdi.suse.de>
-	<20040105130118.0cb404b8.davem@redhat.com>
-	<20040105223158.3364a676.ak@suse.de>
+Message-ID: <Pine.LNX.4.44L0.0401051657020.604-100000@ida.rowland.org>
+References: <20040105100824.GC3079@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns.suse.de ([195.135.220.2]:39577 "EHLO Cantor.suse.de")
-	by vger.kernel.org with ESMTP id S265955AbUAEVkU (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 5 Jan 2004 16:40:20 -0500
-In-Reply-To: <20040105223158.3364a676.ak@suse.de>
+Received: from ida.rowland.org ([192.131.102.52]:772 "HELO ida.rowland.org")
+	by vger.kernel.org with SMTP id S265894AbUAEV6C (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 5 Jan 2004 16:58:02 -0500
+In-Reply-To: <20040105100824.GC3079@suse.de>
 List-Id: linux-scsi@vger.kernel.org
-To: Andi Kleen <ak@suse.de>
-Cc: davem@redhat.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, gibbs@scsiguy.com
+To: Jens Axboe <axboe@suse.de>
+Cc: Kai =?iso-8859-1?Q?M=E4kisara?= <kai.makisara@kolumbus.fi>, Douglas Gilbert <dougg@torque.net>, James Bottomley <James.Bottomley@steeleye.com>, Patrick Mansfield <patmans@us.ibm.com>, Oliver Neukum <oliver@neukum.org>, SCSI development list <linux-scsi@vger.kernel.org>, USB development list <linux-usb-devel@lists.sourceforge.net>
 
-On Mon, 5 Jan 2004 22:31:58 +0100
-Andi Kleen <ak@suse.de> wrote:
+On Mon, 5 Jan 2004, Jens Axboe wrote:
 
-> For the sake of bug-to-bug compatibility to the SCSI layer this patch may
-> work. I haven't tested it so no guarantees if it won't eat your file systems.
-> Feedback welcome anyways.
+> On Sun, Jan 04 2004, Matthew Dharm wrote:
+> > Is there any indication that the SCSI parts of this patch will get
+> > accepted?
+> 
+> I'm fine with the patch, FWIW, just move it to scsi_alloc_queue()
+> instead?
 
-[...]
+Here's the revised patch.
 
-This version will likely work better (original still set ->length to zero) 
+Alan Stern
 
--Andi
 
-diff -u linux-2.6.1rc1-amd64/include/asm-x86_64/scatterlist.h-o linux-2.6.1rc1-amd64/include/asm-x86_64/scatterlist.h
---- linux-2.6.1rc1-amd64/include/asm-x86_64/scatterlist.h-o	2003-07-18 02:40:01.000000000 +0200
-+++ linux-2.6.1rc1-amd64/include/asm-x86_64/scatterlist.h	2004-01-05 22:10:15.000000000 +0100
-@@ -4,8 +4,9 @@
- struct scatterlist {
-     struct page		*page;
-     unsigned int	offset;
--    unsigned int	length;
-+    unsigned int	length;  
-     dma_addr_t		dma_address;
-+    unsigned int        dma_length;
- };
+===== scsiglue.c 1.60 vs edited =====
+--- 1.60/drivers/usb/storage/scsiglue.c	Fri Oct 24 14:53:38 2003
++++ edited/drivers/usb/storage/scsiglue.c	Fri Nov 21 12:45:21 2003
+@@ -65,6 +65,16 @@
  
- #define ISA_DMA_THRESHOLD (0x00ffffff)
-diff -u linux-2.6.1rc1-amd64/include/asm-x86_64/scatterlist.h-o linux-2.6.1rc1-amd64/include/asm-x86_64/scatterlist.h
---- linux-2.6.1rc1-amd64/include/asm-x86_64/scatterlist.h-o	2003-07-18 02:40:01.000000000 +0200
-+++ linux-2.6.1rc1-amd64/include/asm-x86_64/scatterlist.h	2004-01-05 22:10:15.000000000 +0100
-@@ -4,8 +4,9 @@
- struct scatterlist {
-     struct page		*page;
-     unsigned int	offset;
--    unsigned int	length;
-+    unsigned int	length;  
-     dma_addr_t		dma_address;
-+    unsigned int        dma_length;
- };
+ static int slave_configure (struct scsi_device *sdev)
+ {
++	/* Scatter-gather buffers (all but the last) must have a length
++	 * divisible by the bulk maxpacket size.  Otherwise a data packet
++	 * would end up being short, causing a premature end to the data
++	 * transfer.  Since high-speed bulk pipes have a maxpacket size
++	 * of 512, we'll use that as the scsi device queue's DMA alignment
++	 * mask.  Guaranteeing proper alignment of the first buffer will
++	 * have the desired effect because, except at the beginning and
++	 * the end, scatter-gather buffers follow page boundaries. */
++	blk_queue_dma_alignment(sdev->request_queue, (512 - 1));
++
+ 	/* this is to satisify the compiler, tho I don't think the 
+ 	 * return code is ever checked anywhere. */
+ 	return 0;
+===== sg.c 1.48 vs edited =====
+--- 1.48/drivers/scsi/sg.c	Fri Oct 24 14:53:37 2003
++++ edited/drivers/scsi/sg.c	Fri Nov 21 12:28:52 2003
+@@ -1741,7 +1741,11 @@
+ 	int sg_tablesize = sfp->parentdp->sg_tablesize;
+ 	struct scatterlist *sgl;
+ 	int mx_sc_elems, res;
++	struct scsi_device *sdev = sfp->parentdp->device;
  
- #define ISA_DMA_THRESHOLD (0x00ffffff)
-diff -u linux-2.6.1rc1-amd64/arch/x86_64/kernel/pci-gart.c-o linux-2.6.1rc1-amd64/arch/x86_64/kernel/pci-gart.c
---- linux-2.6.1rc1-amd64/arch/x86_64/kernel/pci-gart.c-o	2004-01-01 06:40:28.000000000 +0100
-+++ linux-2.6.1rc1-amd64/arch/x86_64/kernel/pci-gart.c	2004-01-05 22:37:59.000000000 +0100
-@@ -384,6 +395,7 @@
- 			}
- 		}
- 		s->dma_address = addr;
-+		s->dma_length = s->length;
- 	}
- 	flush_gart(dev);
- 	return nents;
-@@ -410,8 +422,9 @@
- 			*sout = *s; 
- 			sout->dma_address = iommu_bus_base;
- 			sout->dma_address += iommu_page*PAGE_SIZE + s->offset;
-+			sout->dma_length = s->length;
- 		} else { 
--			sout->length += s->length; 
-+			sout->dma_length += s->length; 
- 		}
++	if (((unsigned long)hp->dxferp &
++			queue_dma_alignment(sdev->request_queue)) != 0)
++		return 1;
+ 	mx_sc_elems = sg_build_sgat(schp, sfp, sg_tablesize);
+         if (mx_sc_elems <= 0) {
+                 return 1;
+===== st.c 1.45 vs edited =====
+--- 1.45/drivers/scsi/st.c	Fri Sep  5 12:16:40 2003
++++ edited/drivers/scsi/st.c	Fri Nov 21 12:30:34 2003
+@@ -1267,7 +1267,8 @@
+ 		i = STp->try_dio && try_rdio;
+ 	else
+ 		i = STp->try_dio && try_wdio;
+-	if (i) {
++	if (i && ((unsigned int)buf & queue_dma_alignment(
++					STp->device->request_queue)) == 0) {
+ 		i = st_map_user_pages(&(STbp->sg[0]), STbp->use_sg,
+ 				      (unsigned long)buf, count, (is_read ? READ : WRITE),
+ 				      STp->max_pfn);
+===== scsi_lib.c 1.49 vs edited =====
+--- 1.49/drivers/scsi/scsi_lib.c	Sat Nov 22 11:20:45 2003
++++ edited/drivers/scsi/scsi_lib.c	Mon Jan  5 16:55:32 2004
+@@ -1287,6 +1287,15 @@
+ 	blk_queue_max_sectors(q, shost->max_sectors);
+ 	blk_queue_bounce_limit(q, scsi_calculate_bounce_limit(shost));
+ 	blk_queue_segment_boundary(q, shost->dma_boundary);
++ 
++	/*
++	 * Set the queue's mask to require a mere 8-byte alignment for
++	 * DMA buffers, rather than the default 512.  This shouldn't
++	 * inconvenience any user programs and should be okay for most
++	 * host adapters.  A host driver can alter this mask in its
++	 * slave_alloc() or slave_configure() callback if necessary.
++	 */
++	blk_queue_dma_alignment(sdev->request_queue, (8 - 1));
  
- 		addr = phys_addr;
-@@ -490,8 +503,8 @@
- 		goto error;
- 	out++;
- 	flush_gart(dev);
--	if (out < nents) 
--		sg[out].length = 0; 
-+	if (out < nents)
-+		sg[out].dma_length = 0; 
- 	return out;
- 
- error:
-@@ -538,9 +551,9 @@
- 	int i;
- 	for (i = 0; i < nents; i++) { 
- 		struct scatterlist *s = &sg[i];
--		if (!s->length) 
-+		if (!s->dma_length || !s->length) 
- 			break;
--		pci_unmap_single(dev, s->dma_address, s->length, dir);
-+		pci_unmap_single(dev, s->dma_address, s->dma_length, dir);
- 	}
- }
- 
+ 	if (!shost->use_clustering)
+ 		clear_bit(QUEUE_FLAG_CLUSTER, &q->queue_flags);
+
