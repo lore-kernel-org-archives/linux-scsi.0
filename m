@@ -1,57 +1,38 @@
-From: Jamie Lenehan <lenehan@twibble.org>
-Subject: Re: final scsi_host_put in ->remove()?
-Date: Mon, 29 Sep 2003 23:41:08 +1000
+From: Pat LaVarre <p.lavarre@ieee.org>
+Subject: Re: [linux-usb-devel] Re: USB storage problems on OHCI..
+Date: 29 Sep 2003 08:54:41 -0600
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030929134108.GA12018@twibble.org>
-References: <Pine.LNX.4.53.0309290733480.1740@montezuma.fsmlabs.com>
+Message-ID: <1064847281.24854.2.camel@patehci2>
+References: <1064271322.4797.9.camel@patehci2>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from tuon.twibble.org ([203.217.29.157]:65468 "EHLO tuon.twibble.org")
-	by vger.kernel.org with ESMTP id S263371AbTI2Nln (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 29 Sep 2003 09:41:43 -0400
-Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.53.0309290733480.1740@montezuma.fsmlabs.com>
+Received: from email-out1.iomega.com ([147.178.1.82]:13019 "EHLO
+	email.iomega.com") by vger.kernel.org with ESMTP id S263489AbTI2Oy0
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 29 Sep 2003 10:54:26 -0400
+In-Reply-To: <1064271322.4797.9.camel@patehci2>
 List-Id: linux-scsi@vger.kernel.org
-To: Zwane Mwaikambo <zwane@arm.linux.org.uk>
-Cc: linux-scsi@vger.kernel.org, willy@debian.org
+To: linux-scsi@vger.kernel.org
+Cc: linux-usb-devel@vger.kernel.org, torvalds@osdl.org, mdharm-scsi@one-eyed-alien.net, stern@rowland.harvard.edu, hch@infradead.org, james.bottomley@steeleye.com, andries.brouwer@cwi.nl
 
-On Mon, Sep 29, 2003 at 07:48:48AM -0400, Zwane Mwaikambo wrote:
-[...]
-> An updated driver such as NCR_D700 has the following in it's ->remove()
-> path. Whilst sym53c8xx_2 doesn't have any scsi_remove_host at all,
-> dc395x.c does
 
-Well, I wouldn't trust the dc395x driver since I'm responsible for
-that one ;)
+> From: Linus Torvalds <torvalds () osdl ! org>
+> Date: 2003-09-23 15:46:21
+>
+> Normal users consider hot-pluggable
+> to be "I can rip the thing out by hand".
 
-> static void NCR_D700_remove_one(struct Scsi_Host *host)
-> {
-> 	scsi_remove_host(host);
-> 	NCR_700_release(host);
-> 	kfree((struct NCR_700_Host_Parameters *)host->hostdata[0]);
-> 	free_irq(host->irq, host);
-> 	release_region(host->base, 64);
-> }
-> 
-> Is it possible that scsi_remove_host does the final put? In which case 
+Yes.
 
-The scsi_remove_host just removes devices from the host (calls back
-via the slave_destroy template function) and removes various other
-external references to the host structure such as from the scsi bus
-in sysfs, and the proc entry etc. It does not remove the host
-structure itself, so it's still safe to use the host structure at
-this point but nothing else should be using.
+Meanwhile, much (all except flash?) actual usb-storage now commercially
+available is Not hot-pluggable in this sense.  Instead, "ata hdd lose
+data in response to a pin 1 reset issued without op x35
+"SYNCHRONIZE_CACHE". I've heard same of" writeable "dvd.  And loss of
+bus power can kill any write cache in a drive, of course."
 
-> using the host pointer afterwards wouldn't be safe. Otherwise wouldn't a 
-> scsi_host_put be required in that function? The scsi_remove_host section 
+Pat LaVarre
 
-Yes. I think it needs a scsi_host_put and the end of the function.
 
-The sym53c8xx_2 looks wrong to me. It appears to need a scsi_host_put
-and the end of sym_detach. It also doesn't call scsi_remove_host
-either.... which I suspect it probably should be doing.
 
--- 
- Jamie Lenehan <lenehan@twibble.org>
