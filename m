@@ -1,313 +1,53 @@
-From: Brian King <brking@us.ibm.com>
+From: James Bottomley <James.Bottomley@steeleye.com>
 Subject: Re: [PATCH 2.6.7-mm3] ipr: minor fixes and assorted nit
-Date: Wed, 30 Jun 2004 10:04:15 -0500
+Date: 30 Jun 2004 10:52:40 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <40E2D66F.9060900@us.ibm.com>
-References: <20040628140721.GA10393@devserv.devel.redhat.com> <40E05F43.7040602@us.ibm.com> <20040629235940.A6183@electric-eye.fr.zoreil.com>
-Reply-To: brking@us.ibm.com
+Message-ID: <1088610767.1904.13.camel@mulgrave>
+References: <20040628140721.GA10393@devserv.devel.redhat.com>
+	<40E05F43.7040602@us.ibm.com>
+	<20040629235940.A6183@electric-eye.fr.zoreil.com>
+	<40E2D66F.9060900@us.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e5.ny.us.ibm.com ([32.97.182.105]:65265 "EHLO e5.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S266691AbUF3PEZ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 30 Jun 2004 11:04:25 -0400
-In-Reply-To: <20040629235940.A6183@electric-eye.fr.zoreil.com>
+Received: from stat1.steeleye.com ([65.114.3.130]:37269 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S266703AbUF3Pw7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 30 Jun 2004 11:52:59 -0400
+In-Reply-To: <40E2D66F.9060900@us.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Francois Romieu <romieu@fr.zoreil.com>
-Cc: linux-scsi@vger.kernel.org
+To: brking@us.ibm.com
+Cc: Francois Romieu <romieu@fr.zoreil.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-Thanks for the patch! Here are some comments:
+On Wed, 2004-06-30 at 10:04, Brian King wrote:
+> Is there any downside to requesting all the memory regions on the 
+> adapter? Some of these adapters have very large BAR windows that are not 
+> needed by the device driver. This is the reason I wrote the code the way 
+> I did, in the thought that I was conserving pci address space.
 
-Francois Romieu wrote:
-> - balance pci_enable_device() with pci_disable_device() where appropriate;
-ok.
+Yes, there is.  There's a particular quad tulip card that seems to have
+256k of boot rom for each of it's IO processors, but which only seems to
+get 1MB of BAR space for its bridge, so obviously, when it allocates ROM
+bars, they don't fit.
 
-> - pci_release_regions() replaces release_mem_region();
-Is there any downside to requesting all the memory regions on the 
-adapter? Some of these adapters have very large BAR windows that are not 
-needed by the device driver. This is the reason I wrote the code the way 
-I did, in the thought that I was conserving pci address space.
+However, check out what happens for this adapter.  I believe
+pci_request_regions() is now more selective about which BARs it maps.
 
-> - ipr_alloc_mem() can not simply issue a call to ipr_free_mem() when
->   something goes wrong as it would lead to pci_free_consistent() of
->   unset data. Let ipr_alloc_mem() carefully release whatever it has
->   allocated instead;
-
-pci_free_consistent specifically checks for NULL, just like kfree. I 
-figured it was cleaner code to rely on the ability to call kfree on NULL 
-and pci_free_consistent on NULL. Is this frowned upon?
-
-> - no need to memset(..., 0, ...) an area returned by pci_alloc_consistent;
-Ok.
-
-> - ipr_probe_ioa:
->   + DMA_32BIT_MASK for all;
-Ok.
-
->   + error path rework (includes bug fix when ipr_alloc_mem fails);
-> - ipr_init() can fail: return adequate status code.
-Good catch.
-
+> > - ipr_alloc_mem() can not simply issue a call to ipr_free_mem() when
+> >   something goes wrong as it would lead to pci_free_consistent() of
+> >   unset data. Let ipr_alloc_mem() carefully release whatever it has
+> >   allocated instead;
 > 
-> Signed-off-by: Francois Romieu <romieu@fr.zoreil.com>
-> 
-> diff -puN drivers/scsi/ipr.c~ipr-00 drivers/scsi/ipr.c
-> --- linux-2.6.7/drivers/scsi/ipr.c~ipr-00	2004-06-29 22:29:29.000000000 +0200
-> +++ linux-2.6.7-fr/drivers/scsi/ipr.c	2004-06-29 23:36:49.000000000 +0200
-> @@ -5437,13 +5437,15 @@ static void ipr_free_mem(struct ipr_ioa_
->   **/
->  static void ipr_free_all_resources(struct ipr_ioa_cfg *ioa_cfg)
->  {
-> +	struct pci_dev *pdev = ioa_cfg->pdev;
-> +
->  	ENTER;
-> -	free_irq(ioa_cfg->pdev->irq, ioa_cfg);
-> +	free_irq(pdev->irq, ioa_cfg);
->  	iounmap((void *) ioa_cfg->hdw_dma_regs);
-> -	release_mem_region(ioa_cfg->hdw_dma_regs_pci,
-> -			   pci_resource_len(ioa_cfg->pdev, 0));
-> +	pci_release_regions(pdev);
->  	ipr_free_mem(ioa_cfg);
->  	scsi_host_put(ioa_cfg->host);
-> +	pci_disable_device(pdev);
->  	LEAVE;
->  }
->  
-> @@ -5508,14 +5510,15 @@ static int __devinit ipr_alloc_cmd_blks(
->   **/
->  static int __devinit ipr_alloc_mem(struct ipr_ioa_cfg *ioa_cfg)
->  {
-> -	int i;
-> +	struct pci_dev *pdev = ioa_cfg->pdev;
-> +	int i, rc = -ENOMEM;
->  
->  	ENTER;
->  	ioa_cfg->res_entries = kmalloc(sizeof(struct ipr_resource_entry) *
->  				       IPR_MAX_PHYSICAL_DEVS, GFP_KERNEL);
->  
->  	if (!ioa_cfg->res_entries)
-> -		goto cleanup;
-> +		goto out;
->  
->  	memset(ioa_cfg->res_entries, 0,
->  	       sizeof(struct ipr_resource_entry) * IPR_MAX_PHYSICAL_DEVS);
-> @@ -5528,24 +5531,24 @@ static int __devinit ipr_alloc_mem(struc
->  						&ioa_cfg->vpd_cbs_dma);
->  
->  	if (!ioa_cfg->vpd_cbs)
-> -		goto cleanup;
-> +		goto out_free_res_entries;
->  
->  	if (ipr_alloc_cmd_blks(ioa_cfg))
-> -		goto cleanup;
-> +		goto out_free_vpd_cbs;
->  
->  	ioa_cfg->host_rrq = pci_alloc_consistent(ioa_cfg->pdev,
->  						 sizeof(u32) * IPR_NUM_CMD_BLKS,
->  						 &ioa_cfg->host_rrq_dma);
->  
->  	if (!ioa_cfg->host_rrq)
-> -		goto cleanup;
-> +		goto out_ipr_free_cmd_blocks;
->  
->  	ioa_cfg->cfg_table = pci_alloc_consistent(ioa_cfg->pdev,
->  						  sizeof(struct ipr_config_table),
->  						  &ioa_cfg->cfg_table_dma);
->  
->  	if (!ioa_cfg->cfg_table)
-> -		goto cleanup;
-> +		goto out_free_host_rrq;
->  
->  	for (i = 0; i < IPR_NUM_HCAMS; i++) {
->  		ioa_cfg->hostrcb[i] = pci_alloc_consistent(ioa_cfg->pdev,
-> @@ -5553,9 +5556,8 @@ static int __devinit ipr_alloc_mem(struc
->  							   &ioa_cfg->hostrcb_dma[i]);
->  
->  		if (!ioa_cfg->hostrcb[i])
-> -			goto cleanup;
-> +			goto out_free_hostrcb_dma;
->  
-> -		memset(ioa_cfg->hostrcb[i], 0, sizeof(struct ipr_hostrcb));
->  		ioa_cfg->hostrcb[i]->hostrcb_dma =
->  			ioa_cfg->hostrcb_dma[i] + offsetof(struct ipr_hostrcb, hcam);
->  		list_add_tail(&ioa_cfg->hostrcb[i]->queue, &ioa_cfg->hostrcb_free_q);
-> @@ -5565,19 +5567,35 @@ static int __devinit ipr_alloc_mem(struc
->  				 IPR_NUM_TRACE_ENTRIES, GFP_KERNEL);
->  
->  	if (!ioa_cfg->trace)
-> -		goto cleanup;
-> +		goto out_free_hostrcb_dma;
->  
->  	memset(ioa_cfg->trace, 0,
->  	       sizeof(struct ipr_trace_entry) * IPR_NUM_TRACE_ENTRIES);
->  
-> +	rc = 0;
-> +out:
->  	LEAVE;
-> -	return 0;
-> -
-> -cleanup:
-> -	ipr_free_mem(ioa_cfg);
-> +	return rc;
->  
-> -	LEAVE;
-> -	return -ENOMEM;
-> +out_free_hostrcb_dma:
-> +	while (i-- > 0) {
-> +		pci_free_consistent(pdev, sizeof(struct ipr_hostrcb),
-> +				    ioa_cfg->hostrcb[i],
-> +				    ioa_cfg->hostrcb_dma[i]);
-> +	}
-> +	pci_free_consistent(pdev, sizeof(struct ipr_config_table),
-> +			    ioa_cfg->cfg_table, ioa_cfg->cfg_table_dma);
-> +out_free_host_rrq:
-> +	pci_free_consistent(pdev, sizeof(u32) * IPR_NUM_CMD_BLKS,
-> +			    ioa_cfg->host_rrq, ioa_cfg->host_rrq_dma);
-> +out_ipr_free_cmd_blocks:
-> +	ipr_free_cmd_blks(ioa_cfg);
-> +out_free_vpd_cbs:
-> +	pci_free_consistent(pdev, sizeof(struct ipr_misc_cbs),
-> +			    ioa_cfg->vpd_cbs, ioa_cfg->vpd_cbs_dma);
-> +out_free_res_entries:
-> +	kfree(ioa_cfg->res_entries);
-> +	goto out;
->  }
->  
->  /**
-> @@ -5678,7 +5696,7 @@ static int __devinit ipr_probe_ioa(struc
->  
->  	if ((rc = pci_enable_device(pdev))) {
->  		dev_err(&pdev->dev, "Cannot enable adapter\n");
-> -		return rc;
-> +		goto out;
->  	}
->  
->  	dev_info(&pdev->dev, "Found IOA with IRQ: %d\n", pdev->irq);
-> @@ -5687,7 +5705,8 @@ static int __devinit ipr_probe_ioa(struc
->  
->  	if (!host) {
->  		dev_err(&pdev->dev, "call to scsi_host_alloc failed!\n");
-> -		return -ENOMEM;
-> +		rc = -ENOMEM;
-> +		goto out_disable;
->  	}
->  
->  	ioa_cfg = (struct ipr_ioa_cfg *)host->hostdata;
-> @@ -5697,12 +5716,11 @@ static int __devinit ipr_probe_ioa(struc
->  
->  	ipr_regs_pci = pci_resource_start(pdev, 0);
->  
-> -	if (!request_mem_region(ipr_regs_pci,
-> -				pci_resource_len(pdev, 0), IPR_NAME)) {
-> +	rc = pci_request_regions(pdev, IPR_NAME);
-> +	if (rc < 0) {
->  		dev_err(&pdev->dev,
->  			"Couldn't register memory range of registers\n");
-> -		scsi_host_put(host);
-> -		return -ENOMEM;
-> +		goto out_scsi_host_put;
->  	}
->  
->  	ipr_regs = (unsigned long)ioremap(ipr_regs_pci,
-> @@ -5711,9 +5729,8 @@ static int __devinit ipr_probe_ioa(struc
->  	if (!ipr_regs) {
->  		dev_err(&pdev->dev,
->  			"Couldn't map memory range of registers\n");
-> -		release_mem_region(ipr_regs_pci, pci_resource_len(pdev, 0));
-> -		scsi_host_put(host);
-> -		return -ENOMEM;
-> +		rc = -ENOMEM;
-> +		goto out_release_regions;
->  	}
->  
->  	ioa_cfg->hdw_dma_regs = ipr_regs;
-> @@ -5723,11 +5740,10 @@ static int __devinit ipr_probe_ioa(struc
->  	ipr_init_ioa_cfg(ioa_cfg, host, pdev);
->  
->  	pci_set_master(pdev);
-> -	rc = pci_set_dma_mask(pdev, 0xffffffff);
->  
-> -	if (rc != PCIBIOS_SUCCESSFUL) {
-> +	rc = pci_set_dma_mask(pdev, DMA_32BIT_MASK);
-> +	if (rc < 0) {
->  		dev_err(&pdev->dev, "Failed to set PCI DMA mask\n");
-> -		rc = -EIO;
->  		goto cleanup_nomem;
->  	}
->  
-> @@ -5755,8 +5771,12 @@ static int __devinit ipr_probe_ioa(struc
->  	if ((rc = ipr_set_pcix_cmd_reg(ioa_cfg)))
->  		goto cleanup_nomem;
->  
-> -	if ((rc = ipr_alloc_mem(ioa_cfg)))
-> -		goto cleanup;
-> +	rc = ipr_alloc_mem(ioa_cfg);
-> +	if (rc < 0) {
-> +		dev_err(&pdev->dev,
-> +			"Couldn't allocate enough memory for device driver!\n");
-> +		goto cleanup_nomem;
-> +	}
->  
->  	ipr_mask_and_clear_interrupts(ioa_cfg, ~IPR_PCII_IOA_TRANS_TO_OPER);
->  	rc = request_irq(pdev->irq, ipr_isr, SA_SHIRQ, IPR_NAME, ioa_cfg);
-> @@ -5772,18 +5792,20 @@ static int __devinit ipr_probe_ioa(struc
->  	spin_unlock(&ipr_driver_lock);
->  
->  	LEAVE;
-> -	return 0;
-> +out:
-> +	return rc;
->  
-> -cleanup:
-> -	dev_err(&pdev->dev, "Couldn't allocate enough memory for device driver!\n");
->  cleanup_nolog:
->  	ipr_free_mem(ioa_cfg);
->  cleanup_nomem:
->  	iounmap((void *) ipr_regs);
-> -	release_mem_region(ipr_regs_pci, pci_resource_len(pdev, 0));
-> +out_release_regions:
-> +	pci_release_regions(pdev);
-> +out_scsi_host_put:
->  	scsi_host_put(host);
-> -
-> -	return rc;
-> +out_disable:
-> +	pci_disable_device(pdev);
-> +	goto out;
->  }
->  
->  /**
-> @@ -6009,16 +6031,14 @@ static struct pci_driver ipr_driver = {
->   * ipr_init - Module entry point
->   *
->   * Return value:
-> - * 	0 on success / non-zero on failure
-> + * 	0 on success / negative value on failure
->   **/
->  static int __init ipr_init(void)
->  {
->  	ipr_info("IBM Power RAID SCSI Device Driver version: %s %s\n",
->  		 IPR_DRIVER_VERSION, IPR_DRIVER_DATE);
->  
-> -	pci_register_driver(&ipr_driver);
-> -
-> -	return 0;
-> +	return pci_module_init(&ipr_driver);
->  }
->  
->  /**
-> 
-> _
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+> pci_free_consistent specifically checks for NULL, just like kfree. I 
+> figured it was cleaner code to rely on the ability to call kfree on NULL 
+> and pci_free_consistent on NULL. Is this frowned upon?
 
--- 
-Brian King
-eServer Storage I/O
-IBM Linux Technology Center
+The API doesn't say that.  It works on x86 because dma_free_coherent()
+calls free_pages(), which checks for NULLs, but I think you'll find it
+will produce a panic or warning on other platforms (arm seems to dump
+stack at least).
+
+James
+
 
