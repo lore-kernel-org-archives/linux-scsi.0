@@ -1,65 +1,57 @@
 From: akpm@osdl.org
-Subject: [patch 1/3] aic7xxx deadlock fix
-Date: Mon, 26 Apr 2004 22:01:16 -0700
+Subject: [patch 2/3] support swsusp for aic7xxx
+Date: Mon, 26 Apr 2004 22:01:22 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <200404270501.i3R51V207721@mail.osdl.org>
+Message-ID: <200404270501.i3R51c207731@mail.osdl.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fw.osdl.org ([65.172.181.6]:53673 "EHLO mail.osdl.org")
-	by vger.kernel.org with ESMTP id S263467AbUD0FBg (ORCPT
+Received: from fw.osdl.org ([65.172.181.6]:57001 "EHLO mail.osdl.org")
+	by vger.kernel.org with ESMTP id S263557AbUD0FBl (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 27 Apr 2004 01:01:36 -0400
+	Tue, 27 Apr 2004 01:01:41 -0400
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
-Cc: gibbs@scsiguy.com, linux-scsi@vger.kernel.org, akpm@osdl.org
+Cc: gibbs@scsiguy.com, linux-scsi@vger.kernel.org, akpm@osdl.org, pavel@ucw.cz
 
 
+From: Pavel Machek <pavel@ucw.cz>
 
-We cannot call del_timer_sync() from within that timer's handler function!
+Marks threads as needed for suspend.
+DESC
+aic79xx_osm.c build fix
+EDESC
+
+drivers/scsi/aic7xxx/aic79xx_osm.c: In function `ahd_linux_dv_thread':
+drivers/scsi/aic7xxx/aic79xx_osm.c:2594: `PF_IOTHREAD' undeclared (first use in this function)
+
 
 
 ---
 
- 25-akpm/drivers/scsi/aic7xxx/aic7xxx_osm.c |   12 +++++++++---
- 1 files changed, 9 insertions(+), 3 deletions(-)
+ 25-akpm/drivers/scsi/aic7xxx/aic79xx_osm.c |    1 +
+ 25-akpm/drivers/scsi/aic7xxx/aic7xxx_osm.c |    1 +
+ 2 files changed, 2 insertions(+)
 
-diff -puN drivers/scsi/aic7xxx/aic7xxx_osm.c~aic7xxx-deadlock-fix drivers/scsi/aic7xxx/aic7xxx_osm.c
---- 25/drivers/scsi/aic7xxx/aic7xxx_osm.c~aic7xxx-deadlock-fix	2004-04-25 23:09:28.575737936 -0700
-+++ 25-akpm/drivers/scsi/aic7xxx/aic7xxx_osm.c	2004-04-25 23:09:28.581737024 -0700
-@@ -3980,11 +3980,10 @@ ahc_linux_alloc_device(struct ahc_softc 
- }
+diff -puN drivers/scsi/aic7xxx/aic79xx_osm.c~aic7xxx-swsusp-support drivers/scsi/aic7xxx/aic79xx_osm.c
+--- 25/drivers/scsi/aic7xxx/aic79xx_osm.c~aic7xxx-swsusp-support	2004-04-25 23:09:37.428392128 -0700
++++ 25-akpm/drivers/scsi/aic7xxx/aic79xx_osm.c	2004-04-25 23:09:37.436390912 -0700
+@@ -2591,6 +2591,7 @@ ahd_linux_dv_thread(void *data)
+ 	sprintf(current->comm, "ahd_dv_%d", ahd->unit);
+ #else
+ 	daemonize("ahd_dv_%d", ahd->unit);
++	current->flags |= PF_FREEZE;
+ #endif
+ 	unlock_kernel();
  
- static void
--ahc_linux_free_device(struct ahc_softc *ahc, struct ahc_linux_device *dev)
-+__ahc_linux_free_device(struct ahc_softc *ahc, struct ahc_linux_device *dev)
- {
- 	struct ahc_linux_target *targ;
- 
--	del_timer_sync(&dev->timer);
- 	targ = dev->target;
- 	targ->devices[dev->lun] = NULL;
- 	free(dev, M_DEVBUF);
-@@ -3994,6 +3993,13 @@ ahc_linux_free_device(struct ahc_softc *
- 		ahc_linux_free_target(ahc, targ);
- }
- 
-+static void
-+ahc_linux_free_device(struct ahc_softc *ahc, struct ahc_linux_device *dev)
-+{
-+	del_timer_sync(&dev->timer);
-+	__ahc_linux_free_device(ahc, dev);
-+}
-+
- void
- ahc_send_async(struct ahc_softc *ahc, char channel,
- 	       u_int target, u_int lun, ac_code code, void *arg)
-@@ -4704,7 +4710,7 @@ ahc_linux_dev_timed_unfreeze(u_long arg)
- 		ahc_linux_run_device_queue(ahc, dev);
- 	if (TAILQ_EMPTY(&dev->busyq)
- 	 && dev->active == 0)
--		ahc_linux_free_device(ahc, dev);
-+		__ahc_linux_free_device(ahc, dev);
- 	ahc_unlock(ahc, &s);
- }
+diff -puN drivers/scsi/aic7xxx/aic7xxx_osm.c~aic7xxx-swsusp-support drivers/scsi/aic7xxx/aic7xxx_osm.c
+--- 25/drivers/scsi/aic7xxx/aic7xxx_osm.c~aic7xxx-swsusp-support	2004-04-25 23:09:37.430391824 -0700
++++ 25-akpm/drivers/scsi/aic7xxx/aic7xxx_osm.c	2004-04-25 23:09:37.440390304 -0700
+@@ -2307,6 +2307,7 @@ ahc_linux_dv_thread(void *data)
+ 	sprintf(current->comm, "ahc_dv_%d", ahc->unit);
+ #else
+ 	daemonize("ahc_dv_%d", ahc->unit);
++	current->flags |= PF_FREEZE;
+ #endif
+ 	unlock_kernel();
  
 
 _
