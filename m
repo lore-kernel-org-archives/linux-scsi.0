@@ -1,78 +1,104 @@
-From: Kai Makisara <Kai.Makisara@kolumbus.fi>
-Subject: Re: SSC-2 support in Linux
-Date: Wed, 15 Sep 2004 21:38:30 +0300 (EEST)
+From: Paul Jackson <pj@sgi.com>
+Subject: SCSI QLA not working on latest *-mm SN2
+Date: Wed, 15 Sep 2004 15:51:32 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.58.0409152114090.1972@kai.makisara.local>
-References: <82C736F456CA3E4EA3D0DC6CC31AA5CB01651157@esply09.cnt.ad.cnt.com>
+Message-ID: <20040915155132.177b51f2.pj@sgi.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fep31-0.kolumbus.fi ([193.229.0.35]:30896 "EHLO
-	fep31-app.kolumbus.fi") by vger.kernel.org with ESMTP
-	id S267248AbUIOSic (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 15 Sep 2004 14:38:32 -0400
-In-Reply-To: <82C736F456CA3E4EA3D0DC6CC31AA5CB01651157@esply09.cnt.ad.cnt.com>
+Received: from omx2-ext.sgi.com ([192.48.171.19]:37865 "EHLO omx2.sgi.com")
+	by vger.kernel.org with ESMTP id S267700AbUIOWwX (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 15 Sep 2004 18:52:23 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: "David Peterson (Eng)" <david_peterson@cnt.com>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org, Andrew Vasquez <andrew.vasquez@qlogic.com>
+Cc: mdr@cthulhu.engr.sgi.com, jeremy@cthulhu.engr.sgi.com, djh@cthulhu.engr.sgi.com, jbarnes@cthulhu.engr.sgi.com, Andrew Morton <akpm@osdl.org>
 
-I am dropping linux-kernel from this subthread. This is a SCSI question.
+Andrew Vasquez,
 
-On Tue, 14 Sep 2004, David Peterson (Eng) wrote:
+[My inbox had a message recommending a copy linux-scsi as well,
+ so resending to include that list as well. ]
 
-> I'd like to hear from anyone interested, or has looked into, adding
-> support for SSC-2 (SCSI Stream Commands -2, i.e., tape devices) explicit
-> address mode into the Linux OS.
-> 
-I have looked at the specs but I am not sure we need to use explicit 
-address command now. One problem is that there are no/very few shipping 
-drives that support these commands. The explicit address commands will be 
-useful in future but we have to wait until they are a little more than a 
-theory.
+Jeremy Higdon recommended I send this to you.  I am running into
+a fatal problem with SCSI QLA2, unable to boot using the latest *-mm
+on SGI's SN2 hardware (don't know if other hardware involved or not).
 
-> In summary, SSC-2 explicit address mode enables for tape devices:
-> - robust tagged command queuing
+This is on 2.6.9-rc1-mm5, and more recent variants of *-mm.
 
-The tape driver (st) does not use any kind of tagged queuing. I have not 
-found this feature useful for tapes. The reasons are:
-- The medium is sequential and so the drive can't intelligently sort the 
-  commands. The benefit would be to able to feed more than one command to 
-  the drive at an time. However, this is not needed in order to keep the
-  drive buffer non-empty.
-- The read()/write() semantics means that we can't touch the data buffer
-  outside the commands. No parallelism is possible except with multiple 
-  threads. Here the problem is synchronization and I am not sure using
-  multiple threads to handle tapes is a good solution.
+$ grep QLA2XXX_VERSION drivers/scsi/qla2xxx/qla_version.h
+#define QLA2XXX_VERSION      "8.00.00b21-k"
 
-If there is an interface that benefits from tagged commands and
-- used by software and
-- brings real advantages over using the current simple interface,
-then I am more interested. I don't think we should use low-level interface 
-features unless they bring real benefits for real world user software.
+My source currently includes the patch of Monday that begins:
 
-> - multi-path I/O
+======================================================================
+===== drivers/scsi/qla2xxx/qla_os.c 1.46 vs edited =====
+--- 1.46/drivers/scsi/qla2xxx/qla_os.c	2004-09-06 12:07:52 -07:00
++++ edited/drivers/scsi/qla2xxx/qla_os.c	2004-09-13 14:07:23 -07:00
+@@ -2892,6 +2892,19 @@
+ 			continue;
+ 		}
+ 
++		/* get consistent memory allocated for init control block */
++		ha->init_cb = dma_pool_alloc(ha->s_dma_pool, GFP_KERNEL,
+...
+======================================================================
 
-This is a more general SCSI thing. Work is being done on the general 
-aspects.
+I am pretty sure that I also saw this problem earlier Monday morning,
+before this patch.
 
-> - enhanced error detection and recovery
+Beginning with 2.6.9-rc1-mm5, I have had to comment out some of the QLA
+config options in order to boot on an SN2.  That is, unless I make the
+following edit to my .config:
 
-Here also the problem is what to do with the information. The current 
-interface does not give methods to transfer fine-grained error information 
-to the user space. The final error recovery must in most cases happen in 
-user space. The driver does not have any more the data needed in the 
-recovery.
+========================================
+--- 2.6.9-rc2-mmx/.config       2004-09-14 23:03:21.000000000 -0700
++++ 2.6.9-rc2-mmx/.config.disable_qla   2004-09-14 23:02:50.000000000 -0700
+@@ -315,9 +315,9 @@ CONFIG_SCSI_SATA_VITESSE=y
+ CONFIG_SCSI_QLOGIC_1280=y
+ CONFIG_SCSI_QLA2XXX=y
+ # CONFIG_SCSI_QLA21XX is not set
+-CONFIG_SCSI_QLA22XX=y
+-CONFIG_SCSI_QLA2300=y
+-CONFIG_SCSI_QLA2322=y
++# CONFIG_SCSI_QLA22XX is not set
++# CONFIG_SCSI_QLA2300 is not set
++# CONFIG_SCSI_QLA2322 is not set
+ # CONFIG_SCSI_QLA6312 is not set
+ # CONFIG_SCSI_QLA6322 is not set
+ # CONFIG_SCSI_DC395x is not set
+========================================
 
-There have been some interesting suggestions for new interfaces that could 
-be used for more "free-form" error reporting (the event interfaces). A 
-traditional method is to use ioctls but here the problem is that good, 
-fixed-format definitions should be developed. I have actually not seen any 
-enthusiasm among users to do this ;-)
+my boot fails with the following output:
 
-Doug Gilbert has worked on the infrastructure for the descriptor based 
-sense data. I have plans how to use this in st. I think we will be ready 
-when drives start returning this data. Using the new information coming 
-with this sense data takes more time.
+========================================
+Uniform CD-ROM driver Revision: 3.20
+qla1280: QLA12160 found on PCI bus 1, dev 3
+ACPI: PCI interrupt 0000:01:03.0[A]: no GSI
+scsi(0): Enabling SN2 PCI DMA dual channel lockup workaround
+scsi(0): Enabling SN2 PCI DMA workaround
+scsi(0:0): Resetting SCSI BUS
+scsi(0:1): Resetting SCSI BUS
+scsi0 : QLogic QLA12160 PCI to SCSI Host Adapter
+       Firmware version: 10.04.32, Driver version 3.24.4
+  Vendor: SGI       Model: ST336753LC        Rev: 2741
+  Type:   Direct-Access                      ANSI SCSI revision: 03
+scsi(0:0:1:0): Sync: period 9, offset 14, Wide, DT, Tagged queuing: depth 255
+  Vendor: SGI       Model: ST336753LC        Rev: 2741
+  Type:   Direct-Access                      ANSI SCSI revision: 03
+scsi(0:0:2:0): Sync: period 9, offset 14, Wide, DT, Tagged queuing: depth 255
+QLogic Fibre Channel HBA Driver (a0000001007ab1d0)
+ACPI: PCI interrupt 0000:02:01.0[A]: no GSI
+qla2200 0000:02:01.0: Found an ISP2200, irq 58, iobase 0xc00000080cc00000
+qla2200 0000:02:01.0: Configuring PCI space...
+PCI: slot 0000:02:01.0 has incorrect PCI cache line size of 0 bytes, correcting to 128
+POD entered via OS requested halt, using Cac mode
+========================================
+
+This is on a couple of small (4 and 8 cpu) SN2 systems, that boot with
+earlier kernels just fine.
 
 -- 
-Kai
+                          I won't rest till it's the best ...
+                          Programmer, Linux Scalability
+                          Paul Jackson <pj@sgi.com> 1.650.933.1373
