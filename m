@@ -1,21 +1,38 @@
-From: Eddie Williams <Eddie.Williams@steeleye.com>
-Subject: Re: how to connect 2 nodes to a SCSI disk (cabinet)
-Date: Fri, 20 Jun 2003 15:23:51 -0400
+From: "Ranade, Prakash" <prakashr@intgroup.com>
+Subject: RE: how to connect 2 nodes to a SCSI disk (cabinet)
+Date: Fri, 20 Jun 2003 14:32:34 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <200306201523.51778.Eddie.Williams@Steeleye.com>
-References: <7F2171947E956F4ABE17D12CA19617B40279C3@intermarksrv001.intermark.local>
+Message-ID: <7F2171947E956F4ABE17D12CA19617B405EE59@intermarksrv001.intermark.local>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [65.114.3.137] ([65.114.3.137]:4358 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S264490AbTFTTKM convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 20 Jun 2003 15:10:12 -0400
-In-Reply-To: <7F2171947E956F4ABE17D12CA19617B40279C3@intermarksrv001.intermark.local>
+Received: from gw.intgroup.com ([65.83.52.2]:42192 "HELO
+	intermarksrv001.intermark.local") by vger.kernel.org with SMTP
+	id S264494AbTFTTSd convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 20 Jun 2003 15:18:33 -0400
+content-class: urn:content-classes:message
 List-Id: linux-scsi@vger.kernel.org
-To: "Ranade, Prakash" <prakashr@intgroup.com>
+To: Eddie Williams <Eddie.Williams@steeleye.com>
 Cc: linux-scsi@vger.kernel.org
+
+both hang at boot time...they both try to initialize the device and hang.....
+if i boot node1 without starting node2 then node1 boots up but then when i try to boot node2 then it keeps saying "someone initialized channel A"....
+
+Prakash S. Ranade
+OCP - Oracle Certified DBA 8i, 9i
+205 776 2320
+
+"Lets document it and call it a feature"
+
+
+-----Original Message-----
+From: Eddie Williams [mailto:Eddie.Williams@steeleye.com]
+Sent: Friday, June 20, 2003 2:24 PM
+To: Ranade, Prakash
+Cc: linux-scsi@vger.kernel.org
+Subject: Re: how to connect 2 nodes to a SCSI disk (cabinet)
+
 
 
 Please define "there is a conflict when they try to initialize the bus."
