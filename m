@@ -1,120 +1,145 @@
-From: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Subject: RE: Mid-layer handling of NOT_READY conditions...
-Date: Mon, 31 Jan 2005 10:22:57 -0800
-Message-ID: <1107195778.6126.32.camel@plap>
-References: <0B1E13B586976742A7599D71A6AC733C02F326@xbl3.ma.emulex.com>
+From: "Andrew Kinney" <andykinney@advantagecom.net>
+Subject: Re: PERC2/Si won't failover
+Date: Mon, 31 Jan 2005 10:42:18 -0800
+Message-ID: <41FE0B8A.10635.F25DCB4C@localhost>
+References: <20050131134506.34A3AC4@frisbee.gerritsacc.nl>
+Reply-To: andykinney@advantagecom.net
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from avexch01.qlogic.com ([198.70.193.200]:52153 "EHLO
-	avexch01.qlogic.com") by vger.kernel.org with ESMTP id S261297AbVAaSWl
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 31 Jan 2005 13:22:41 -0500
-In-Reply-To: <0B1E13B586976742A7599D71A6AC733C02F326@xbl3.ma.emulex.com>
+Received: from mail.advantagecom.net ([65.103.151.155]:12474 "EHLO
+	mail.advantagecom.net") by vger.kernel.org with ESMTP
+	id S261304AbVAaSoC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 31 Jan 2005 13:44:02 -0500
+In-reply-to: <20050131134506.34A3AC4@frisbee.gerritsacc.nl>
+Content-description: Mail message body
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Smart@Emulex.Com
-Cc: patmans@us.ibm.com, James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org
+To: Kit Gerrits <kit@gerritsacc.nl>
+Cc: linux-scsi@vger.kernel.org
 
-On Mon, 2005-01-31 at 11:56 -0500, James.Smart@Emulex.Com wrote:
-> > On Sat, 2005-01-29 at 11:34 -0800, Patrick Mansfield wrote:
-> > > On Sat, Jan 29, 2005 at 10:44:41AM -0600, James Bottomley wrote:
-> > > > On Fri, 2005-01-28 at 21:46 -0800, Andrew Vasquez wrote:
-> > > > > Returning back DID_IMM_RETRY for these 'transport' 
-> > related conditions
-> > > > > would of course help in this issue -- but at the same 
-> > time bring with it
-> > > > > several side-effects which may not be desirable.
-> > > > > 
-> > > > > So, beyond this particular circumstance, what would be 
-> > considered a
-> > > > > 'proper' return status for this type of event? 
-> > > > 
-> > > > Well, the correct return, since this is a condition from 
-> > the storage, is
-> > > > simply the check condition and the sense code (rather 
-> > than having the
-> > > > driver interpret it).
-> > > 
-> > > But the transport hit a failure, not the storage device.
-> > > 
-> > > I thought Andrew hit this sequence:
-> > > 
-> > > 	- pull / replace cable
-> > > 
-> > > 	- IO resumes but gets NOT_READY (the device could be 
-> > logging back
-> > > 	  into the fibre or such)
-> > > 
-> > > 	- a FC transport problem is hit, DID_BUSY_BUSY is returned, but
-> > > 	  scmd->retries has already been exhausted by the NOT_READY
-> > > 
-> > > Did I misread something?
-> > > 
-> > 
-> > No, that's correct -- sorry about the confusion my second 
-> > email caused.
-> > I had only inquired about the 'correct' return status in the 
-> > context of
-> > avoiding the (cmd-retries > cmd->allowed) failure.
+We had the same thing happen on a PE2500 with PERC3/DI, different 
+drive configuration.
+
+Text from my tech "diary" of sorts that I keep regarding unique 
+problems I run into:
+
+"The system would not boot after all the replacements were there, 
+claiming "no boot device." For one reason or another, the RAID 
+controller detected the new drive, but rather than just add the drive 
+into the container and begin rebuilding, it simply offlined the 
+container, which resulted in the "no boot device" message. I suspect 
+this was because we did not properly inform the controller that were 
+were taking a drive offline before we did so. We did it while the 
+machine was turned off. We probably would have had better luck if we 
+had booted the system, gone into afacli, prepare the enclosure slot 
+to remove the drive, remove the drive, insert the new drive, and 
+issue the proper commands to begin the rebuild if it doesn't start 
+automatically. The OS afacli is much more robust than the RAID BIOS 
+utilities.
+
+The solution to get the drive into the RAID container and get it to 
+begin rebuilding was to go into the RAID BIOS and assign the new 
+drive as the failover drive. As soon as I did that, the container 
+started rebuilding. I exited the utility (which automatically saves 
+any settings) and rebooted. The system came back up just fine, like 
+normal, and is now happily rebuilding the RAID array. No data was 
+lost  and we now have as close to a completely new system as you can 
+get short of replacing the entire thing."
+
+It was just one part of a major system overhaul due to a "ghost" in 
+the SCSI system that kept offlining our container in near-random non-
+reproducable conditions, but I suspect a similar procedure may help 
+in your instance.
+
+Andrew
+
+On 31 Jan 2005 at 14:49, Kit Gerrits wrote:
+
+> Hey all!
 > 
-> So this maps into the fc_target_block/unblock functionality that was
-> added to the fc class...  Adapter notifies driver of cable loss and
-> starts the block, driver does not "resume" the traffic until the
-> firmware says the login, etc
-
-Yes.
-
->  has the device ready to accept scsi
-> traffic (Note: it does not guarantee the device can't respond with
-> a NOT_READY sense code).
-
-Exactly.
-
->   If the transport hits a problem, there's
-> no harm done as long as the problem is resolved within the block
-> timeout. If the timeout is hit - it's because the user dicated that
-> it wanted to know of errors within this time and if the device fails,
-> it fails...
+> I have a PowerEDGE 2400 with  PERC2/Si with 4x9GB Drives with RedHat
+> EL 3.0 Container 0: plain 9GB drive (O/S) Container 1: 3x9GB in RAID5
+> (data)
 > 
-> In the multipath solution - the "block" time used by the transport gets
-> set to 0 (or 1 second), so the i/o fails quickly and the multipath
-> function can kick in.
+> After getting I/O Errors (and gettinge a strange noise from drive
+> 0:3:0), I did the unthinkable: I pulled the drive from the chassis
+> without shutting it down. (oops) I have now verified the drive,
+> cleaned off the partition and rescanned the bus. ...but the drive
+> won't failover
+> 
+> I have set it to failover, but the PERC won't failover the drive, even
+> after a (warm) reboot.
+> 
+> Did I forget anything?
+> 
+> Thanks in advance,
+> 
+> Kit Gerrits
+> kit@gerritsaa.nl
+> 
+> 
+> ---------------
+> Debugging info:
+> ---------------
+> 
+> AFA0> disk list
+> Executing: disk list
+> 
+> B:ID:L  Device Type     Blocks    Bytes/Block Usage            Shared
+> Rate ------  --------------  --------- ----------- ----------------
+> ------ ---- 0:00:0   Disk            17783240  512         Initialized
+>      NO     80 0:01:0   Disk            17783240  512        
+> Initialized      NO     80 0:02:0   Disk            17783240  512     
+>    Initialized      NO     80 0:03:0   Disk            17783240  512  
+>       Initialized      NO     80
+> 
+> AFA0> container show failover
+> Executing: container show failover
+> 
+> Container Scsi B:ID:L
+> --------- ----------------------------------
+>   0       --- No Devices Assigned ---
+>   1       0:03:0
+> 
+> AFA0> container list
+> Executing: container list
+> Num          Total  Oth Chunk          Scsi   Partition
+> Label Type   Size   Ctr Size   Usage   B:ID:L Offset:Size
+> ----- ------ ------ --- ------ ------- ------ -------------
+>  0    Volume 8.47GB            Open    0:00:0 64.0KB:8.47GB
+>  /dev/sda             NT
+> 
+>  1    RAID-5 16.9GB       32KB Open    0:01:0 64.0KB:8.47GB
+>  /dev/sdb             DATA             0:02:0 64.0KB:8.47GB
+>                                    ?:??:?  - Missing -
+> 
+> AFA0> controller show au
+> Executing: controller show automatic_failover
+> Automatic failover ENABLED
+> 
+> AFA0> container scrub 1
+> Executing: container scrub 1
+> Command Error: <The controller was unable to perform a scrub
+> (consistency check)
+>  operation on the container because one or more of the container's
+> partitions fa iled.  >
+> 
+> 
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi"
+> in the body of a message to majordomo@vger.kernel.org More majordomo
+> info at  http://vger.kernel.org/majordomo-info.html
 > 
 
-A bit confused now, are you proposing that cmd->timeout_per_command time
-be inclusive of potential transport failures resulting in a requested
-retry?  And thus not be refreshed (as it currently is) upon retry
-request.
 
-> I am not a fan of a driver manufacturing a NOT_READY condition...
-> 
+Sincerely,
+Andrew Kinney
+President and
+Chief Technology Officer
+Advantagecom Networks, Inc.
+http://www.advantagecom.net
 
-Again -- there is no manufacturing of check-conditions. Their existence
-only highlighted the point that the retries value was being exhausted
-(quickly) during the state and thus restricts a LLDD's ability to return
-any status which would initiate a normal retry (i.e. DID_BUS_BUSY).
 
-> > > 
-> > > Why not just set scmd->retries to zero in scsi_requeue_command()?
-> > > 
-> > 
-> > This is exactly what I was thinking would be a fairly straight-forward
-> > approach at solving the problem...
-> 
-> This is ultimately a hack, and raises the potential for the retries value
-> to perpetually be rezero'd.  The better solution is the use the block
-> primitives available to avoid the i/o being issued at all if the transport
-> can't handle it.
-> 
 
-Agree -- the midlayer internally plugging a device for a small period of
-time while some NOT_READY (and any other similar) state is received from
-the storage is the more appropriate direction.   Perhaps there could be
-a combination of timing conditionals -- the fc_starget_dev_loss_tmo() to
-time the overall pause in 'not-ready' plugging and a
-period-to-wakeup-and-ping-the-storage time within the window?
-
---
-av
