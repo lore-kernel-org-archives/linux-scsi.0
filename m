@@ -1,31 +1,43 @@
-From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
-Subject: RE: Adaptec 2200S with aacraid won't do 64-bit
-Date: Wed, 23 Feb 2005 08:15:45 -0500
-Message-ID: <60807403EABEB443939A5A7AA8A7458BCDC7B5@otce2k01.adaptec.com>
+From: Mrvka Andreas <mrv@tuev-a.at>
+Subject: installing new MegaRaid driver on Suse Enterprise Server 8
+Date: Wed, 23 Feb 2005 15:47:26 +0100
+Message-ID: <200502231547.26959.mrv@tuev-a.at>
 Mime-Version: 1.0
 Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Received: from magic.adaptec.com ([216.52.22.17]:17833 "EHLO magic.adaptec.com")
-	by vger.kernel.org with ESMTP id S261486AbVBWNPt convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 23 Feb 2005 08:15:49 -0500
-content-class: urn:content-classes:message
+  charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Received: from [194.242.41.130] ([194.242.41.130]:58780 "EHLO mail.tuev-a.at")
+	by vger.kernel.org with ESMTP id S261230AbVBWOrl (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 23 Feb 2005 09:47:41 -0500
+Received: from localhost (localhost [127.0.0.1])
+	by mail.tuev-a.at (Postfix) with ESMTP id 4E18D10D74
+	for <linux-scsi@vger.kernel.org>; Wed, 23 Feb 2005 15:47:28 +0100 (CET)
+Received: from edv07.wien.tuev.at (edv07.wien.tuev.at [10.10.100.3])
+	by mail.tuev-a.at (Postfix) with ESMTP id 634CF10D79
+	for <linux-scsi@vger.kernel.org>; Wed, 23 Feb 2005 15:47:27 +0100 (CET)
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>, Tim Wesemann <timuel@voicenet.com>
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-Matthew Wilcox write:
-> That sounds like the bus is in single-ended mode (which is limited to 
-> 40MB/s) rather than LVD.  Check cabling, terminators, etc.
+hi list,
 
-This is the more likely scenario regarding the limits in performance.
-The CHIM in the card's Firmware is different than the PD CHIM in the
-Linux 7902A drivers, so there may even be a device incompatibility with
-the 2200S that differs from the SCSI driver. The Domain Validation could
-be affected, selecting a less than optimal communications to the drives.
-I would recommend contacting Adaptec Technical Support to ensure that
-the Drive Type and Drive (and controller) Firmware is compatible.
+does anybody can help to guide me through an update
+of an megaraid driver?
 
-Sincerely -- Mark Salyzyn
+i have a Dell Perc 2/dc controller in my Dell 2450 Server and
+SuSE Server 8.
+
+if i use the standard megaraid driver, then the server crashes
+and stands... (no error log entry)
+
+i found many sites for updates but no instruction for that.
+
+can anybody please support me?
+
+thanks in advance!
+
+cheers
+Andrew
+
