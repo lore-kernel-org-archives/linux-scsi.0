@@ -1,41 +1,49 @@
-From: Matthias Andree <ma@dt.e-technik.uni-dortmund.de>
-Subject: Re: 2.6test10: Annoying "CDROM not ready" messages once a second
-Date: Wed, 26 Nov 2003 23:45:23 +0100
+From: Jeremy Higdon <jeremy@sgi.com>
+Subject: Re: [ANNOUNCE] QLogic qla2xxx driver update available (v8.00.00b6).
+Date: Wed, 26 Nov 2003 17:20:25 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <m37k1mrbp8.fsf@merlin.emma.line.org>
-References: <20031126134041.25698.qmail@mailshell.com>
+Message-ID: <20031127012025.GA150144@sgi.com>
+References: <B179AE41C1147041AA1121F44614F0B0598D39@AVEXCH02.qlogic.org> <20031125233103.GA146781@sgi.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.dt.e-technik.Uni-Dortmund.DE ([129.217.163.1]:1742 "EHLO
-	mail.dt.e-technik.uni-dortmund.de") by vger.kernel.org with ESMTP
-	id S264363AbTKZWp0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 26 Nov 2003 17:45:26 -0500
-Received: from m2a2.dyndns.org (krusty.dt.e-technik.uni-dortmund.de [129.217.163.1])
-	by mail.dt.e-technik.uni-dortmund.de (Postfix) with ESMTP id 1DA65155E6
-	for <linux-scsi@vger.kernel.org>; Wed, 26 Nov 2003 23:45:25 +0100 (CET)
-In-Reply-To: <20031126134041.25698.qmail@mailshell.com> (linux-scsi's
- message of "Wed, 26 Nov 2003 15:41:38 +0200")
+Received: from mtvcafw.sgi.com ([192.48.171.6]:26848 "EHLO rj.sgi.com")
+	by vger.kernel.org with ESMTP id S264418AbTK0BVT (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 26 Nov 2003 20:21:19 -0500
+Content-Disposition: inline
+In-Reply-To: <20031125233103.GA146781@sgi.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi-031126@amos.mailshell.com
-Cc: linux-scsi@vger.kernel.org
+To: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Cc: Jes Sorensen <jes@wildopensource.com>, Linux-SCSI <linux-scsi@vger.kernel.org>, jbarnes@sgi.com, mdr@sgi.com
 
-linux-scsi-031126@amos.mailshell.com writes:
+I've found a problem with the driver on our SN2 system.  There
+needs to be a register read after updating the Request Queue In
+index, prior to releasing the host spin lock.
 
-> My system is an AMD Athlon, no SCSI devices (I need generic SCSI only
-> for cd burning software and USB access, I'm aware that it's supposed to
-> be gone in 2.6 but the software I use is still not aware of this).
-> Preemption enabled (no problems from that part).
+The calls to sn_mmiob() will need to be replaced by reading an
+appropriate register on the chip.  sn_mmiob() is a lightweight
+way of doing the same thing without having to go to the chip,
+but only on SGI SN platforms.
 
-Updating your CD burning software to a more recent alpha version may rid
-you of the requirement for a non-working ide-scsi emulation. I'm using
-cdrecord 2.01a19 without sg stuff. Worksforme[tm].
 
-> Please CC me with replys, I'm not on the list.
 
-done.
+--- drivers/scsi/qla2xxx/qla_iocb.c	Wed Nov 26 17:28:26 2003
++++ ../qla2xxx/qla_iocb.c	Tue Nov	 4 15:48:29 2003
+@@ -506,7 +506,6 @@
+	/* Set chip new ring index. */
+	reg_flushed = CACHE_FLUSH(ISP_REQ_Q_IN(reg));
+	WRT_REG_WORD(ISP_REQ_Q_IN(reg), ha->req_ring_index);
+-	sn_mmiob();
+ 
+	spin_unlock_irqrestore(&ha->hardware_lock, flags);
+	return (QLA_SUCCESS);
+@@ -778,7 +777,6 @@
+ 
+	/* Set chip new ring index. */
+	WRT_REG_WORD(ISP_REQ_Q_IN(reg), ha->req_ring_index);
+-	sn_mmiob();
+ 
+	LEAVE(__func__);
+ }
 
--- 
-Matthias Andree
-
-Encrypt your mail: my GnuPG key ID is 0x052E7D95
