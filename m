@@ -1,514 +1,261 @@
 From: Willem Riede <osst@riede.org>
-Subject: [PATCH 2/3] osst upgrade to 0.99.3
-Date: Sun, 02 Jan 2005 00:59:33 +0000
-Message-ID: <1104627573l.3427l.3l@serve.riede.org>
+Subject: [PATCH 3/3] osst upgrade to 0.99.3
+Date: Sun, 02 Jan 2005 00:59:59 +0000
+Message-ID: <1104627599l.3427l.4l@serve.riede.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rwcrmhc11.comcast.net ([204.127.198.35]:30160 "EHLO
-	rwcrmhc11.comcast.net") by vger.kernel.org with ESMTP
-	id S261208AbVABA7g convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 1 Jan 2005 19:59:36 -0500
+Received: from sccrmhc12.comcast.net ([204.127.202.56]:43201 "EHLO
+	sccrmhc12.comcast.net") by vger.kernel.org with ESMTP
+	id S261209AbVABBAD convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 1 Jan 2005 20:00:03 -0500
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: inux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Here is patch 2 (see previous mail for context), providing osst error 
-handling improvements.
+Here is patch 3 (see previous mail for context), providing osst sysfs support.
 
 signed-off-by: Willem Riede <osst@riede.org>
 
---- osst-patches/osst.h	2005-01-01 19:15:32.700230984 -0500
-+++ /home/wriede/SfOsstCVS/Driver26/osst.h	2005-01-01 16:13:35.000000000 -0500
-@@ -70,7 +70,7 @@
- #define BLOCK_SIZE_PAGE_LENGTH     4
+--- osst-patches/osst.c	2005-01-01 19:27:15.000000000 -0500
++++ /home/wriede/SfOsstCVS/Driver26/osst.c	2005-01-01 16:13:34.000000000 -0500
+@@ -13,18 +13,18 @@
+   order) Klaus Ehrenfried, Wolfgang Denk, Steve Hirsch, Andreas Koppenh"ofer,
+   Michael Leodolter, Eyal Lebedinsky, J"org Weule, and Eric Youngdale.
  
- #define BUFFER_FILLING_PAGE        0x33
--#define BUFFER_FILLING_PAGE_LENGTH 
-+#define BUFFER_FILLING_PAGE_LENGTH 4
+-  Copyright 1992 - 2002 Kai Makisara / Willem Riede
+-	 email Kai.Makisara@metla.fi / osst@riede.org
++  Copyright 1992 - 2002 Kai Makisara / 2000 - 2004 Willem Riede
++	 email osst@riede.org
  
- #define VENDOR_IDENT_PAGE          0x36
- #define VENDOR_IDENT_PAGE_LENGTH   8
-@@ -577,6 +577,7 @@
-   int min_block;
-   int max_block;
-   int recover_count;            /* from tape opening */
-+  int abort_count;
-   int write_count;
-   int read_count;
-   int recover_erreg;            /* from last status call */
---- osst-patches/osst.c	2005-01-01 19:11:25.000000000 -0500
-+++ osst-patches/osst-2.c	2005-01-01 19:23:43.422396576 -0500
-@@ -120,10 +120,10 @@
- // #define OSST_INJECT_ERRORS 1 
- #endif
+-  $Header: /cvsroot/osst/Driver/osst.c,v 1.70 2003/12/23 14:22:12 wriede Exp $
++  $Header: /cvsroot/osst/Driver/osst.c,v 1.73 2005/01/01 21:13:34 wriede Exp $
  
--#define MAX_RETRIES 2
--#define MAX_READ_RETRIES 0
--#define MAX_WRITE_RETRIES 0
--#define MAX_READY_RETRIES 0
-+/* Do not retry! The drive firmware already retries when appropriate,
-+   and when it tries to tell us something, we had better listen... */
-+#define MAX_RETRIES 0
-+
- #define NO_TAPE  NOT_READY
+   Microscopic alterations - Rik Ling, 2000/12/21
+   Last st.c sync: Tue Oct 15 22:01:04 2002 by makisara
+   Some small formal changes - aeb, 950809
+ */
  
- #define OSST_WAIT_POSITION_COMPLETE   (HZ > 200 ? HZ / 200 : 1)
-@@ -224,7 +224,7 @@
- 		if (driver_byte(result) & DRIVER_SENSE)
- 			print_req_sense("osst ", SRpnt);
- 	}
--//	else
-+	else
- #endif
- 	if (!(driver_byte(result) & DRIVER_SENSE) ||
- 		((sense[0] & 0x70) == 0x70 &&
-@@ -236,7 +236,7 @@
- 		 SRpnt->sr_cmnd[0] != MODE_SENSE &&
- 		 SRpnt->sr_cmnd[0] != TEST_UNIT_READY)) { /* Abnormal conditions for tape */
- 		if (driver_byte(result) & DRIVER_SENSE) {
--			printk(KERN_WARNING "%s:W: Command with sense data: ", name);
-+			printk(KERN_WARNING "%s:W: Command with sense data:\n", name);
- 			print_req_sense("osst:", SRpnt);
- 		}
- 		else {
-@@ -623,7 +623,7 @@
- 	memset(cmd, 0, MAX_COMMAND_SIZE);
- 	cmd[0] = TEST_UNIT_READY;
+-static const char * cvsid = "$Id: osst.c,v 1.70 2003/12/23 14:22:12 wriede Exp $";
+-const char * osst_version = "0.99.1";
++static const char * cvsid = "$Id: osst.c,v 1.73 2005/01/01 21:13:34 wriede Exp $";
++const char * osst_version = "0.99.3";
  
--	SRpnt = osst_do_scsi(*aSRpnt, STp, cmd, 0, SCSI_DATA_NONE, STp->timeout, MAX_READY_RETRIES, TRUE);
-+	SRpnt = osst_do_scsi(*aSRpnt, STp, cmd, 0, SCSI_DATA_NONE, STp->timeout, MAX_RETRIES, TRUE);
- 	*aSRpnt = SRpnt;
- 	if (!SRpnt) return (-EBUSY);
- 
-@@ -644,7 +644,7 @@
- 	    memset(cmd, 0, MAX_COMMAND_SIZE);
- 	    cmd[0] = TEST_UNIT_READY;
- 
--	    SRpnt = osst_do_scsi(SRpnt, STp, cmd, 0, SCSI_DATA_NONE, STp->timeout, MAX_READY_RETRIES, TRUE);
-+	    SRpnt = osst_do_scsi(SRpnt, STp, cmd, 0, SCSI_DATA_NONE, STp->timeout, MAX_RETRIES, TRUE);
- 	}
- 	*aSRpnt = SRpnt;
- #if DEBUG
-@@ -684,7 +684,7 @@
- 	memset(cmd, 0, MAX_COMMAND_SIZE);
- 	cmd[0] = TEST_UNIT_READY;
- 
--	SRpnt = osst_do_scsi(*aSRpnt, STp, cmd, 0, SCSI_DATA_NONE, STp->timeout, MAX_READY_RETRIES, TRUE);
-+	SRpnt = osst_do_scsi(*aSRpnt, STp, cmd, 0, SCSI_DATA_NONE, STp->timeout, MAX_RETRIES, TRUE);
- 	*aSRpnt = SRpnt;
- 	if (!SRpnt) return (-EBUSY);
- 
-@@ -703,7 +703,7 @@
- 	    memset(cmd, 0, MAX_COMMAND_SIZE);
- 	    cmd[0] = TEST_UNIT_READY;
- 
--	    SRpnt = osst_do_scsi(SRpnt, STp, cmd, 0, SCSI_DATA_NONE, STp->timeout, MAX_READY_RETRIES, TRUE);
-+	    SRpnt = osst_do_scsi(SRpnt, STp, cmd, 0, SCSI_DATA_NONE, STp->timeout, MAX_RETRIES, TRUE);
- 	}
- 	*aSRpnt = SRpnt;
- #if DEBUG
-@@ -755,7 +755,7 @@
- 	cmd[0] = WRITE_FILEMARKS;
- 	cmd[1] = 1;
- 
--	SRpnt = osst_do_scsi(*aSRpnt, STp, cmd, 0, SCSI_DATA_NONE, STp->timeout, MAX_WRITE_RETRIES, TRUE);
-+	SRpnt = osst_do_scsi(*aSRpnt, STp, cmd, 0, SCSI_DATA_NONE, STp->timeout, MAX_RETRIES, TRUE);
- 	*aSRpnt = SRpnt;
- 	if (!SRpnt) return (-EBUSY);
- 	if (STp->buffer->syscall_result) {
-@@ -828,6 +828,62 @@
- 	return -EBUSY;
+ /* The "failure to reconnect" firmware bug */
+ #define OSST_FW_NEED_POLL_MIN 10601 /*(107A)*/
+@@ -36,6 +36,7 @@
+ #include <linux/fs.h>
+ #include <linux/kernel.h>
+ #include <linux/sched.h>
++#include <linux/proc_fs.h>
+ #include <linux/mm.h>
+ #include <linux/init.h>
+ #include <linux/string.h>
+@@ -5485,6 +5486,151 @@
  }
  
-+static int osst_recover_wait_frame(struct osst_tape * STp, struct scsi_request ** aSRpnt, int writing)
+ /*
++ * sysfs support for osst driver parameter information
++ */
++
++static ssize_t osst_version_show(struct device_driver *ddd, char *buf)
 +{
-+	struct scsi_request   * SRpnt;
-+	unsigned char		cmd[MAX_COMMAND_SIZE];
-+	unsigned long   	startwait = jiffies;
-+	int			retval    = 1;
-+        char		      * name      = tape_name(STp);
-+                                                                                                                                
-+	if (writing) {
-+		char	mybuf[24];
-+		char  * olddata = STp->buffer->b_data;
-+		int	oldsize = STp->buffer->buffer_size;
-+
-+		/* write zero fm then read pos - if shows write error, try to recover - if no progress, wait */
-+
-+		memset(cmd, 0, MAX_COMMAND_SIZE);
-+		cmd[0] = WRITE_FILEMARKS;
-+		cmd[1] = 1;
-+		SRpnt = osst_do_scsi(*aSRpnt, STp, cmd, 0, SCSI_DATA_NONE, STp->timeout,
-+								MAX_RETRIES, TRUE);
-+
-+		while (retval && time_before (jiffies, startwait + 5*60*HZ)) {
-+
-+			if (STp->buffer->syscall_result && (SRpnt->sr_sense_buffer[2] & 0x0f) != 2) {
-+
-+				/* some failure - not just not-ready */
-+				retval = osst_write_error_recovery(STp, aSRpnt, 0);
-+				break;
-+			}
-+			set_current_state(TASK_INTERRUPTIBLE);
-+			schedule_timeout (HZ / OSST_POLL_PER_SEC);
-+
-+			STp->buffer->b_data = mybuf; STp->buffer->buffer_size = 24;
-+			memset(cmd, 0, MAX_COMMAND_SIZE);
-+			cmd[0] = READ_POSITION;
-+
-+			SRpnt = osst_do_scsi(SRpnt, STp, cmd, 20, SCSI_DATA_READ, STp->timeout,
-+										MAX_RETRIES, TRUE);
-+
-+			retval = ( STp->buffer->syscall_result || (STp->buffer)->b_data[15] > 25 );
-+			STp->buffer->b_data = olddata; STp->buffer->buffer_size = oldsize;
-+		}
-+		if (retval)
-+			printk(KERN_ERR "%s:E: Device did not succeed to write buffered data\n", name);
-+	} else
-+		/* TODO - figure out which error conditions can be handled */
-+		if (STp->buffer->syscall_result)
-+			printk(KERN_WARNING
-+				"%s:W: Recover_wait_frame(read) cannot handle %02x:%02x:%02x\n", name,
-+					(*aSRpnt)->sr_sense_buffer[ 2] & 0x0f,
-+					(*aSRpnt)->sr_sense_buffer[12],
-+					(*aSRpnt)->sr_sense_buffer[13]);
-+
-+	return retval;
++	return snprintf(buf, PAGE_SIZE, "%s\n", osst_version);
 +}
 +
- /*
-  * Read the next OnStream tape frame at the current location
++static DRIVER_ATTR(version, S_IRUGO, osst_version_show, NULL);
++
++static void osst_create_driverfs_files(struct device_driver *driverfs)
++{
++	driver_create_file(driverfs, &driver_attr_version);
++}
++
++static void osst_remove_driverfs_files(struct device_driver *driverfs)
++{
++	driver_remove_file(driverfs, &driver_attr_version);
++}
++
++/*
++ * sysfs support for accessing ADR header information
++ */
++
++static ssize_t osst_adr_rev_show(struct class_device *class_dev, char *buf)
++{
++	struct osst_tape * STp = (struct osst_tape *) class_get_devdata (class_dev);
++	ssize_t l = 0;
++
++	if (STp && STp->header_ok && STp->linux_media)
++		l = snprintf(buf, PAGE_SIZE, "%d.%d\n", STp->header_cache->major_rev, STp->header_cache->minor_rev);
++	return l;
++}
++
++CLASS_DEVICE_ATTR(ADR_rev, S_IRUGO, osst_adr_rev_show, NULL);
++
++static ssize_t osst_linux_media_version_show(struct class_device *class_dev, char *buf)
++{
++	struct osst_tape * STp = (struct osst_tape *) class_get_devdata (class_dev);
++	ssize_t l = 0;
++
++	if (STp && STp->header_ok && STp->linux_media)
++		l = snprintf(buf, PAGE_SIZE, "LIN%d\n", STp->linux_media_version);
++	return l;
++}
++
++CLASS_DEVICE_ATTR(media_version, S_IRUGO, osst_linux_media_version_show, NULL);
++
++static ssize_t osst_capacity_show(struct class_device *class_dev, char *buf)
++{
++	struct osst_tape * STp = (struct osst_tape *) class_get_devdata (class_dev);
++	ssize_t l = 0;
++
++	if (STp && STp->header_ok && STp->linux_media)
++		l = snprintf(buf, PAGE_SIZE, "%d\n", STp->capacity);
++	return l;
++}
++
++CLASS_DEVICE_ATTR(capacity, S_IRUGO, osst_capacity_show, NULL);
++
++static ssize_t osst_first_data_ppos_show(struct class_device *class_dev, char *buf)
++{
++	struct osst_tape * STp = (struct osst_tape *) class_get_devdata (class_dev);
++	ssize_t l = 0;
++
++	if (STp && STp->header_ok && STp->linux_media)
++		l = snprintf(buf, PAGE_SIZE, "%d\n", STp->first_data_ppos);
++	return l;
++}
++
++CLASS_DEVICE_ATTR(BOT_frame, S_IRUGO, osst_first_data_ppos_show, NULL);
++
++static ssize_t osst_eod_frame_ppos_show(struct class_device *class_dev, char *buf)
++{
++	struct osst_tape * STp = (struct osst_tape *) class_get_devdata (class_dev);
++	ssize_t l = 0;
++
++	if (STp && STp->header_ok && STp->linux_media)
++		l = snprintf(buf, PAGE_SIZE, "%d\n", STp->eod_frame_ppos);
++	return l;
++}
++
++CLASS_DEVICE_ATTR(EOD_frame, S_IRUGO, osst_eod_frame_ppos_show, NULL);
++
++static ssize_t osst_filemark_cnt_show(struct class_device *class_dev, char *buf)
++{
++	struct osst_tape * STp = (struct osst_tape *) class_get_devdata (class_dev);
++	ssize_t l = 0;
++
++	if (STp && STp->header_ok && STp->linux_media)
++		l = snprintf(buf, PAGE_SIZE, "%d\n", STp->filemark_cnt);
++	return l;
++}
++
++CLASS_DEVICE_ATTR(file_count, S_IRUGO, osst_filemark_cnt_show, NULL);
++
++static struct class_simple * osst_sysfs_class;
++
++static int osst_sysfs_valid = 0;
++
++static void osst_sysfs_init(void)
++{
++	osst_sysfs_class = class_simple_create(THIS_MODULE, "onstream_tape");
++	if ( IS_ERR(osst_sysfs_class) )
++		printk(KERN_WARNING "osst :W: Unable to register sysfs class\n");
++	else
++		osst_sysfs_valid = TRUE;
++}
++
++static void osst_sysfs_add(dev_t dev, struct device *device, struct osst_tape * STp, char * name)
++{
++	struct class_device *osst_class_member;
++
++	if (!osst_sysfs_valid) return;
++
++	osst_class_member = class_simple_device_add(osst_sysfs_class, dev, device, "%s", name);
++	if (IS_ERR(osst_class_member)) {
++		printk(KERN_WARNING "osst :W: Unable to add sysfs class member %s\n", name);
++		return;
++	}
++	class_set_devdata(osst_class_member, STp);
++	class_device_create_file(osst_class_member, &class_device_attr_ADR_rev);
++	class_device_create_file(osst_class_member, &class_device_attr_media_version);
++	class_device_create_file(osst_class_member, &class_device_attr_capacity);
++	class_device_create_file(osst_class_member, &class_device_attr_BOT_frame);
++	class_device_create_file(osst_class_member, &class_device_attr_EOD_frame);
++	class_device_create_file(osst_class_member, &class_device_attr_file_count);
++}
++
++static void osst_sysfs_destroy(dev_t dev)
++{
++	if (!osst_sysfs_valid) return; 
++
++	class_simple_device_remove(dev);
++}
++
++static void osst_sysfs_cleanup(void)
++{
++	if (osst_sysfs_valid) {
++		class_simple_destroy(osst_sysfs_class);
++		osst_sysfs_valid = 0;
++	}
++}
++
++/*
+  * osst startup / cleanup code
   */
-@@ -841,10 +897,10 @@
- 	char		      * name   = tape_name(STp);
- #endif
  
--	/* TODO: Error handling */
- 	if (STp->poll)
--		retval = osst_wait_frame (STp, aSRpnt, STp->first_frame_position, 0, timeout);
+@@ -5624,7 +5770,14 @@
+ 	init_MUTEX(&tpnt->lock);
+ 	osst_nr_dev++;
+ 	write_unlock(&os_scsi_tapes_lock);
+-
++	{
++		char name[8];
++		/*  Rewind entry  */
++		osst_sysfs_add(MKDEV(OSST_MAJOR, dev_num), dev, tpnt, tape_name(tpnt));
++		/*  No-rewind entry  */
++		snprintf(name, 8, "%s%s", "n", tape_name(tpnt));
++		osst_sysfs_add(MKDEV(OSST_MAJOR, dev_num + 128), dev, tpnt, name);
++	}
+ 	for (mode = 0; mode < ST_NBR_MODES; ++mode) {
+ 		/*  Rewind entry  */
+ 		devfs_mk_cdev(MKDEV(OSST_MAJOR, dev_num + (mode << 5)),
+@@ -5661,6 +5814,8 @@
+ 	write_lock(&os_scsi_tapes_lock);
+ 	for(i=0; i < osst_max_dev; i++) {
+ 		if((tpnt = os_scsi_tapes[i]) && (tpnt->device == SDp)) {
++			osst_sysfs_destroy(MKDEV(OSST_MAJOR, i));
++			osst_sysfs_destroy(MKDEV(OSST_MAJOR, i+128));
+ 			tpnt->device = NULL;
+ 			for (mode = 0; mode < ST_NBR_MODES; ++mode) {
+ 				devfs_remove("%s/ot%s", SDp->devfs_name, osst_formats[mode]);
+@@ -5689,11 +5844,14 @@
+ 	printk(KERN_INFO "osst :I: Tape driver with OnStream support version %s\nosst :I: %s\n", osst_version, cvsid);
+ 
+ 	validate_options();
 -	
-+		if (osst_wait_frame (STp, aSRpnt, STp->first_frame_position, 0, timeout))
-+			retval = osst_recover_wait_frame(STp, aSRpnt, 0);
++	osst_sysfs_init();
 +
- 	memset(cmd, 0, MAX_COMMAND_SIZE);
- 	cmd[0] = READ_6;
- 	cmd[1] = 1;
-@@ -852,13 +908,13 @@
- 
- #if DEBUG
- 	if (debugging)
--	    printk(OSST_DEB_MSG "%s:D: Reading frame from OnStream tape\n", name);
-+		printk(OSST_DEB_MSG "%s:D: Reading frame from OnStream tape\n", name);
- #endif
- 	SRpnt = osst_do_scsi(*aSRpnt, STp, cmd, OS_FRAME_SIZE, SCSI_DATA_READ,
--				      STp->timeout, MAX_READ_RETRIES, TRUE);
-+				      STp->timeout, MAX_RETRIES, TRUE);
- 	*aSRpnt = SRpnt;
- 	if (!SRpnt)
--	    return (-EBUSY);
-+		return (-EBUSY);
- 
- 	if ((STp->buffer)->syscall_result) {
- 	    retval = 1;
-@@ -930,9 +986,10 @@
- #if DEBUG
- 		printk(OSST_DEB_MSG "%s:D: Start Read Ahead on OnStream tape\n", name);
- #endif
--		SRpnt   = osst_do_scsi(*aSRpnt, STp, cmd, 0, SCSI_DATA_NONE, STp->timeout, MAX_READ_RETRIES, TRUE);
-+		SRpnt   = osst_do_scsi(*aSRpnt, STp, cmd, 0, SCSI_DATA_NONE, STp->timeout, MAX_RETRIES, TRUE);
- 		*aSRpnt = SRpnt;
--		retval  = STp->buffer->syscall_result;
-+		if ((retval = STp->buffer->syscall_result))
-+			printk(KERN_WARNING "%s:W: Error starting read ahead\n", name);
+ 	if ((register_chrdev(OSST_MAJOR,"osst", &osst_fops) < 0) || scsi_register_driver(&osst_template.gendrv)) {
+ 		printk(KERN_ERR "osst :E: Unable to register major %d for OnStream tapes\n", OSST_MAJOR);
++		osst_sysfs_cleanup();
+ 		return 1;
  	}
++	osst_create_driverfs_files(&osst_template.gendrv);
  
- 	return retval;
-@@ -972,6 +1029,7 @@
- 						    name, STp->read_error_frame);
- #endif
- 				STp->read_error_frame = 0;
-+				STp->abort_count++;
- 			}
- 			return (-EIO);
- 		}
-@@ -989,10 +1047,11 @@
- 				position = 0xbb8;
- 			else if (position > STp->eod_frame_ppos || ++bad == 10) {
- 				position = STp->read_error_frame - 1;
-+				bad = 0;
- 			}
- 			else {
--				position += 39;
--				cnt += 20;
-+				position += 29;
-+				cnt      += 19;
- 			}
- #if DEBUG
- 			printk(OSST_DEB_MSG "%s:D: Bad frame detected, positioning tape to block %d\n",
-@@ -1309,7 +1368,7 @@
- 		cmd[8] = 32768 & 0xff;
- 
- 		SRpnt = osst_do_scsi(SRpnt, STp, cmd, OS_FRAME_SIZE, SCSI_DATA_READ,
--					    STp->timeout, MAX_READ_RETRIES, TRUE);
-+					    STp->timeout, MAX_RETRIES, TRUE);
- 	
- 		if ((STp->buffer)->syscall_result || !SRpnt) {
- 			printk(KERN_ERR "%s:E: Failed to read frame back from OnStream buffer\n", name);
-@@ -1358,8 +1417,8 @@
- 				vfree((void *)buffer);
- 				return (-EIO);
- 			}
--			flag = 0;
- 			if ( i >= nframes + pending ) break;
-+			flag = 0;
- 		}
- 		osst_copy_to_buffer(STp->buffer, p);
- 		/*
-@@ -1381,7 +1440,7 @@
- 				p[0], p[1], p[2], p[3]);
- #endif
- 		SRpnt = osst_do_scsi(SRpnt, STp, cmd, OS_FRAME_SIZE, SCSI_DATA_WRITE,
--					    STp->timeout, MAX_WRITE_RETRIES, TRUE);
-+					    STp->timeout, MAX_RETRIES, TRUE);
- 
- 		if (STp->buffer->syscall_result)
- 			flag = 1;
-@@ -1397,7 +1456,7 @@
- 				cmd[0] = WRITE_FILEMARKS;
- 				cmd[1] = 1;
- 				SRpnt = osst_do_scsi(SRpnt, STp, cmd, 0, SCSI_DATA_NONE,
--							    STp->timeout, MAX_WRITE_RETRIES, TRUE);
-+							    STp->timeout, MAX_RETRIES, TRUE);
- #if DEBUG
- 				if (debugging) {
- 					printk(OSST_DEB_MSG "%s:D: Sleeping in re-write wait ready\n", name);
-@@ -1412,7 +1471,7 @@
- 					cmd[0] = TEST_UNIT_READY;
- 
- 					SRpnt = osst_do_scsi(SRpnt, STp, cmd, 0, SCSI_DATA_NONE, STp->timeout,
--									 MAX_READY_RETRIES, TRUE);
-+												MAX_RETRIES, TRUE);
- 
- 					if (SRpnt->sr_sense_buffer[2] == 2 && SRpnt->sr_sense_buffer[12] == 4 &&
- 					    (SRpnt->sr_sense_buffer[13] == 1 || SRpnt->sr_sense_buffer[13] == 8)) {
-@@ -1449,11 +1508,16 @@
- #endif
- 			osst_get_frame_position(STp, aSRpnt);
- #if DEBUG
--			printk(OSST_DEB_MSG "%s:D: reported frame positions: host = %d, tape = %d\n",
--					  name, STp->first_frame_position, STp->last_frame_position);
-+			printk(OSST_DEB_MSG "%s:D: reported frame positions: host = %d, tape = %d, buffer = %d\n",
-+					  name, STp->first_frame_position, STp->last_frame_position, STp->cur_frames);
- #endif
- 		}
--	}    
-+	}
-+	if (flag) {
-+		/* error recovery did not successfully complete */
-+		printk(KERN_ERR "%s:D: Write error recovery failed in %s\n", name,
-+				STp->write_type == OS_WRITE_HEADER?"header":"body");
-+	}
- 	if (!pending)
- 		osst_copy_to_buffer(STp->buffer, p);	/* so buffer content == at entry in all cases */
- 	vfree((void *)buffer);
-@@ -1513,7 +1577,7 @@
- 					  name, STp->frame_seq_number-1, STp->first_frame_position);
- #endif
- 			SRpnt = osst_do_scsi(*aSRpnt, STp, cmd, OS_FRAME_SIZE, SCSI_DATA_WRITE,
--						      STp->timeout, MAX_WRITE_RETRIES, TRUE);
-+						      STp->timeout, MAX_RETRIES, TRUE);
- 			*aSRpnt = SRpnt;
- 
- 			if (STp->buffer->syscall_result) {		/* additional write error */
-@@ -1551,6 +1615,7 @@
- 			debugging = 0;
- 		}
- #endif
-+		set_current_state(TASK_INTERRUPTIBLE);
- 		schedule_timeout(HZ / 10);
- 	}
- 	printk(KERN_ERR "%s:E: Failed to find valid tape media\n", name);
-@@ -1636,7 +1701,9 @@
- 	if (retval == 0) {
- 		STp->recover_count++;
- 		STp->recover_erreg++;
--	}
-+	} else
-+		STp->abort_count++;
-+
- 	STps->rw = rw_state;
- 	return retval;
+ 	return 0;
  }
-@@ -2703,13 +2770,12 @@
- 	*aSRpnt = SRpnt;
+@@ -5703,8 +5861,10 @@
+ 	int i;
+ 	struct osst_tape * STp;
  
- 	if (STp->buffer->syscall_result)
--		result = ((SRpnt->sr_sense_buffer[2] & 0x0f) == 3) ? -EIO : -EINVAL;
-+		result = ((SRpnt->sr_sense_buffer[2] & 0x0f) == 3) ? -EIO : -EINVAL;	/* 3: Write Error */
++	osst_remove_driverfs_files(&osst_template.gendrv);
+ 	scsi_unregister_driver(&osst_template.gendrv);
+ 	unregister_chrdev(OSST_MAJOR, "osst");
++	osst_sysfs_cleanup();
  
- 	if (result == -EINVAL)
- 		printk(KERN_ERR "%s:E: Can't read tape position.\n", name);
- 	else {
--
--		if (result == -EIO) {	/* re-read position */
-+		if (result == -EIO) {	/* re-read position - this needs to preserve media errors */
- 			unsigned char mysense[16];
- 			memcpy (mysense, SRpnt->sr_sense_buffer, 16);
- 			memset (scmd, 0, MAX_COMMAND_SIZE);
-@@ -2717,8 +2783,15 @@
- 			STp->buffer->b_data = mybuf; STp->buffer->buffer_size = 24;
- 			SRpnt = osst_do_scsi(SRpnt, STp, scmd, 20, SCSI_DATA_READ,
- 						    STp->timeout, MAX_RETRIES, TRUE);
-+#if DEBUG
-+			printk(OSST_DEB_MSG "%s:D: Reread position, reason=[%02x:%02x:%02x], result=[%s%02x:%02x:%02x]\n",
-+					name, mysense[2], mysense[12], mysense[13], STp->buffer->syscall_result?"":"ok:",
-+					SRpnt->sr_sense_buffer[2],SRpnt->sr_sense_buffer[12],SRpnt->sr_sense_buffer[13]);
-+#endif
- 			if (!STp->buffer->syscall_result)
- 				memcpy (SRpnt->sr_sense_buffer, mysense, 16);
-+			else
-+				printk(KERN_WARNING "%s:W: Double error in get position\n", name);
- 		}
- 		STp->first_frame_position = ((STp->buffer)->b_data[4] << 24)
- 					  + ((STp->buffer)->b_data[5] << 16)
-@@ -2740,7 +2813,7 @@
- #endif
- 		if (STp->cur_frames == 0 && STp->first_frame_position != STp->last_frame_position) {
- #if DEBUG
--			printk(KERN_WARNING "%s:D: Correcting read position %d, %d, %d\n", name,
-+			printk(OSST_DEB_MSG "%s:D: Correcting read position %d, %d, %d\n", name,
- 					STp->first_frame_position, STp->last_frame_position, STp->cur_frames);
- #endif
- 			STp->first_frame_position = STp->last_frame_position;
-@@ -2885,9 +2958,9 @@
- 		if (offset < OS_DATA_SIZE)
- 			osst_zero_buffer_tail(STp->buffer);
- 
--		/* TODO: Error handling! */
- 		if (STp->poll)
--			result = osst_wait_frame (STp, aSRpnt, STp->first_frame_position, -50, 120);
-+			if (osst_wait_frame (STp, aSRpnt, STp->first_frame_position, -50, 120))
-+				result = osst_recover_wait_frame(STp, aSRpnt, 1);
- 
- 		memset(cmd, 0, MAX_COMMAND_SIZE);
- 		cmd[0] = WRITE_6;
-@@ -2926,7 +2999,7 @@
- #endif
- 
- 		SRpnt = osst_do_scsi(*aSRpnt, STp, cmd, transfer, SCSI_DATA_WRITE,
--					  STp->timeout, MAX_WRITE_RETRIES, TRUE);
-+					      STp->timeout, MAX_RETRIES, TRUE);
- 		*aSRpnt = SRpnt;
- 		if (!SRpnt)
- 			return (-EBUSY);
-@@ -3056,8 +3129,9 @@
- 	}
- 
- 	if (STp->poll)
--		osst_wait_frame (STp, aSRpnt, STp->first_frame_position, -50, 60);
--	/* TODO: Check for an error ! */
-+		if (osst_wait_frame (STp, aSRpnt, STp->first_frame_position, -48, 120))
-+			if (osst_recover_wait_frame(STp, aSRpnt, 1))
-+				return (-EIO);
- 
- //	osst_build_stats(STp, &SRpnt);
- 
-@@ -3082,7 +3156,7 @@
- 		STp->write_pending = 1;
- #endif
- 	SRpnt = osst_do_scsi(*aSRpnt, STp, cmd, OS_FRAME_SIZE, SCSI_DATA_WRITE, STp->timeout,
--							MAX_WRITE_RETRIES, synchronous);
-+									MAX_RETRIES, synchronous);
- 	if (!SRpnt)
- 		return (-EBUSY);
- 	*aSRpnt = SRpnt;
-@@ -4328,9 +4402,9 @@
- 	memset (cmd, 0, MAX_COMMAND_SIZE);
- 	cmd[0] = TEST_UNIT_READY;
- 
--	SRpnt = osst_do_scsi(NULL, STp, cmd, 0, SCSI_DATA_NONE, STp->timeout, MAX_READY_RETRIES, TRUE);
-+	SRpnt = osst_do_scsi(NULL, STp, cmd, 0, SCSI_DATA_NONE, STp->timeout, MAX_RETRIES, TRUE);
- 	if (!SRpnt) {
--		retval = (STp->buffer)->syscall_result;
-+		retval = (STp->buffer)->syscall_result;		/* FIXME - valid? */
- 		goto err_out;
- 	}
- 	if ((SRpnt->sr_sense_buffer[0] & 0x70) == 0x70      &&
-@@ -4349,7 +4423,7 @@
- 			cmd[1] = 1;
- 			cmd[4] = 1;
- 			SRpnt = osst_do_scsi(SRpnt, STp, cmd, 0, SCSI_DATA_NONE,
--					     STp->timeout, MAX_READY_RETRIES, TRUE);
-+					     STp->timeout, MAX_RETRIES, TRUE);
- 		}
- 		osst_wait_ready(STp, &SRpnt, (SRpnt->sr_sense_buffer[13]==1?15:3) * 60, 0);
- 	}
-@@ -4366,7 +4440,7 @@
- 			cmd[0] = TEST_UNIT_READY;
- 
- 			SRpnt = osst_do_scsi(SRpnt, STp, cmd, 0, SCSI_DATA_NONE,
--					     STp->timeout, MAX_READY_RETRIES, TRUE);
-+					     STp->timeout, MAX_RETRIES, TRUE);
- 			if ((SRpnt->sr_sense_buffer[0] & 0x70) != 0x70 ||
- 			    (SRpnt->sr_sense_buffer[2] & 0x0f) != UNIT_ATTENTION)
- 				break;
-@@ -4387,6 +4461,7 @@
- 		}
- 		new_session = TRUE;
- 		STp->recover_count = 0;
-+		STp->abort_count = 0;
- 	}
- 	/*
- 	 * if we have valid headers from before, and the drive/tape seem untouched,
-@@ -4474,7 +4549,7 @@
- 			cmd[0] = TEST_UNIT_READY;
- 
- 			SRpnt = osst_do_scsi(SRpnt, STp, cmd, 0, SCSI_DATA_NONE,
--					     STp->timeout, MAX_READY_RETRIES, TRUE);
-+						    STp->timeout, MAX_RETRIES, TRUE);
- 			if ((SRpnt->sr_sense_buffer[0] & 0x70) != 0x70 ||
- 			    (SRpnt->sr_sense_buffer[2] & 0x0f) == NOT_READY)
- 			break;
-@@ -4658,14 +4733,19 @@
- 	}
- 	if (SRpnt) scsi_release_request(SRpnt);
- 
--	if (STp->recover_count) {
--		printk(KERN_INFO "%s:I: %d recovered errors in", name, STp->recover_count);
-+	if (STp->abort_count || STp->recover_count) {
-+		printk(KERN_INFO "%s:I:", name);
-+		if (STp->abort_count)
-+			printk(" %d unrecovered errors", STp->abort_count);
-+		if (STp->recover_count)
-+			printk(" %d recovered errors", STp->recover_count);
- 		if (STp->write_count)
--			printk(" %d frames written", STp->write_count);
-+			printk(" in %d frames written", STp->write_count);
- 		if (STp->read_count)
--			printk(" %d frames read", STp->read_count);
-+			printk(" in %d frames read", STp->read_count);
- 		printk("\n");
- 		STp->recover_count = 0;
-+		STp->abort_count   = 0;
- 	}
- 	STp->write_count = 0;
- 	STp->read_count  = 0;
-@@ -5088,12 +5168,10 @@
- 	if (nbr <= 2)
- 		return FALSE;
- 
--	priority = GFP_KERNEL;
-+	priority = GFP_KERNEL /* | __GFP_NOWARN */;
- 	if (need_dma)
- 		priority |= GFP_DMA;
- 
--	priority |= __GFP_NOWARN;
--
- 	/* Try to allocate the first segment up to OS_DATA_SIZE and the others
- 	   big enough to reach the goal (code assumes no segments in place) */
- 	for (b_size = OS_DATA_SIZE, order = OSST_FIRST_ORDER; b_size >= PAGE_SIZE; order--, b_size /= 2) {
+ 	if (os_scsi_tapes) {
+ 		for (i=0; i < osst_max_dev; ++i) {
 
 
