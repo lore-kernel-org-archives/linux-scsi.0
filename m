@@ -1,123 +1,60 @@
-From: "frage schnell" <frage.schnell1@gmx.de>
-Subject: Re: sym53c8xx_2 make scsitap slow
-Date: Thu, 13 Jan 2005 15:12:27 +0100 (MET)
-Message-ID: <20640.1105625547@www29.gmx.net>
+From: <john@gtlaser.com>
+Subject: Business Inquiry.
+Date: Thu, 13 Jan 2005 10:10:53
+Message-ID: <145.59909.562166@gtlaser.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:27790 "HELO mail.gmx.net")
-	by vger.kernel.org with SMTP id S261630AbVAMOM2 (ORCPT
+Received: from host-19-242.guc.usg.edu ([168.28.19.242]:35596 "HELO
+	gtlaser.com") by vger.kernel.org with SMTP id S261647AbVAMPKo (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 13 Jan 2005 09:12:28 -0500
+	Thu, 13 Jan 2005 10:10:44 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
- 
- 
-  
->> older SuSE kernel: 
- 
->>   Vendor: HP        Model: Ultrium 1-SCSI    Rev: N27D   
->>   Type:   Sequential-Access                  ANSI SCSI revision: 03   
->> sym0:5: FAST-40 WIDE SCSI 80.0 MB/s ST (25.0 ns, offset 15)   
- 
->>newer SuSE Linux 9.2 kernel: 
- 
->>   Vendor: HP        Model: Ultrium 1-SCSI    Rev: N27D  
->>   Type:   Sequential-Access                  ANSI SCSI revision: 03  
->> scsi(1:0:5:0): Beginning Domain Validation 
->> scsi(1:0:5:0): Ending Domain Validation 
- 
->No information on speed here after domain validation? Suspect. 
- 
->Is your bus properly terminated (terminator at the end of your cable)? 
->Proper U2W LVD cable in use? 
- 
->Or is write validation perhaps stepping on the brake to avoid accidents 
->because the cabling or termination is hosed? 
-  
-The dmesg outputs with booth kenels ar from today  
-from  the same maschine withe te same linux  
- 
- 
-I put a new disk to the same scsi bus  
-  the same strange for the tape  
-  and the corect one for the disk 
- 
- 
- 
-Jan 13 14:54:24 server5 kernel: ACPI: PCI interrupt 0000:02:0c.0[A] -> GSI 
-20 (l 
-evel, low) -> IRQ 217 
-Jan 13 14:54:25 server5 kernel: sym0: <895> rev 0x1 at pci 0000:02:0c.0 
-irq 217 
-Jan 13 14:54:25 server5 kernel: sym0: Tekram NVRAM, ID 15, Fast-40, LVD, 
-parity 
-checking 
-Jan 13 14:54:25 server5 kernel: sym0: SCSI BUS has been reset. 
-Jan 13 14:54:25 server5 kernel: scsi2 : sym-2.1.18j 
-Jan 13 14:54:29 server5 kernel:   Vendor: HP        Model: Ultrium 1-SCSI   
 
-Rev 
-: N27D 
-Jan 13 14:54:29 server5 kernel:   Type:   Sequential-Access                 
+Hello,
 
-ANS 
-I SCSI revision: 03 
-Jan 13 14:54:29 server5 kernel: scsi(2:0:5:0): Beginning Domain Validation 
-Jan 13 14:54:30 server5 kernel: scsi(2:0:5:0): Ending Domain Validation 
-Jan 13 14:54:30 server5 kernel: Attached scsi tape st0 at scsi2, channel 
-0, id 5 
-, lun 0 
-Jan 13 14:54:30 server5 kernel: st0: try direct i/o: yes (alignment 512 
-B), max 
-page reachable by HBA 1048575 
- 
- 
- 
- 
-Jan 13 14:54:30 server5 kernel: Attached scsi generic sg2 at scsi2, 
-channel 0, i 
-d 5, lun 0,  type 1 
-Jan 13 14:54:30 server5 kernel:   Vendor: IBM       Model: DDYS-T36950N     
+I was wondering if you were interested in our products. We supply new OEM printer cartridges at wholesale prices. I am sure we can save you money on your printer supplies.
 
-Rev: SA2A 
-Jan 13 14:54:30 server5 kernel:   Type:   Direct-Access                     
+Should you have any questions please feel free to contact me. I have included a brief product price list.
+ 
+Sincerely,
+John Smirley
+Sales Manager
+770-416-6214
+888-662-2256
+john@gtlaser.com
+www.gtlaser.com
 
-ANSI SCSI revision: 03 
-Jan 13 14:54:30 server5 kernel: sym0:6:0: tagged command queuing enabled, 
-command queue depth 16. 
- 
- 
- 
-Jan 13 14:54:30 server5 kernel: scsi(2:0:6:0): Beginning Domain Validation 
-Jan 13 14:54:30 server5 kernel: sym0:6: wide asynchronous. 
-Jan 13 14:54:30 server5 kernel: sym0:6: FAST-40 WIDE SCSI 80.0 MB/s ST 
-(25.0 ns, offset 31) 
-Jan 13 14:54:30 server5 kernel: scsi(2:0:6:0): Ending Domain Validation 
-Jan 13 14:54:30 server5 kernel: SCSI device sdc: 71687340 512-byte hdwr 
-sectors(36704 MB) 
-Jan 13 14:54:30 server5 kernel: SCSI device sdc: drive cache: write back 
-Jan 13 14:54:31 server5 kernel:  sdc: unknown partition table 
-Jan 13 14:54:31 server5 kernel: Attached scsi disk sdc at scsi2, channel 
-0, id 6, lun 0 
-Jan 13 14:54:31 server5 kernel: Attached scsi generic sg3 at scsi2, 
-channel 0, id 6, lun 0,  type 0 
-Jan 13 14:54:41 server5 /etc/dev.d/block/50-hwscan.dev[6547]: new block 
-device /block/sdc 
-Jan 13 14:54:41 server5 /etc/dev.d/block/51-subfs.dev[6588]: mount block 
-device/block/sdc 
-Jan 13 14:55:51 server5 kernel: Synchronizing SCSI cache for disk sdc: 
-Jan 13 14:55:51 server5 kernel: sym0: detaching ... 
-Jan 13 14:55:51 server5 kernel: sym0: resetting chip 
- 
- 
- 
-  
- 
 
--- 
-+++ Sparen Sie mit GMX DSL +++ http://www.gmx.net/de/go/dsl
-AKTION für Wechsler: DSL-Tarife ab 3,99 EUR/Monat + Startguthaben
+ 
+HP Laser Toner Description & Price per unit 
+1 HP C3906A US$51.50 
+2 HP C4092A US$51.75 
+3 HP C3903A US$62.75 
+4 HP 92274A US$70.75 
+5 HP 92298A US$73.95 
+6 HP C4096A US$76.25 
+7 HP 4127X US$96.50 
+8 HP 4129X US$126.75 
+9 HP C3900A US$109.00 
+10 HP 3909A  US$135.50 
+11 HP 7115A US$54.50 
+12 HP 8061X US$96.75 
+13 HP Q series 2612 US$54.75 
+14 HP Q series 2613 US$59.95 
+15 HP Q series 2610 US$93.75 
+
+HP Inkjet Cartridge Description & Price per unit 
+1 HP C6625A (Color) US$23.79 
+2 HP 51645A (Black) US$22.70 
+3 HP 51649A (Color) US$23.50 
+4 HP C1823D (Color) US$25.45 
+5 HP C6614D (Black) US$21.65 
+6 HP C6615D (Black) US$21.60 
+7 HP C6578D (Color) US$46.95 
+8 HP 51626A (Black) US$22.90 
+9 HP 51629A (Black) US$22.90 
+14 HP 6657A (Color) US$25.65 
