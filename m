@@ -1,44 +1,44 @@
-From: Christopher Campise <campise@hotpop.com>
-Subject: Connecting same device through dual HBAs
-Date: Thu, 01 Apr 2004 09:56:43 -0500
+From: James Bottomley <James.Bottomley@steeleye.com>
+Subject: Re: [PATCH] qla2xxx: sleep while IRQ disabled fix in eh_abort
+Date: 01 Apr 2004 10:04:41 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <opr5r84tfarfijrn@smtp.hotpop.com>
+Message-ID: <1080831910.2118.6.camel@mulgrave>
+References: <opr3u0ffo7l6e53g@us.ibm.com>
+	<20040225134518.A4238@infradead.org> <opr3xta6gbl6e53g@us.ibm.com>
+	<1079027038.2820.57.camel@mulgrave> <opr5qwiyw4l6e53g@us.ibm.com>
+	<406B3FDA.9010507@pobox.com> <opr5q1enb6l6e53g@us.ibm.com>
+	<1080776399.11299.63.camel@mulgrave>
+	<20040401061740.GA14121@praka.local.home>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
-	format=flowed
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from snickers.hotpop.com ([38.113.3.51]:45027 "EHLO
-	snickers.hotpop.com") by vger.kernel.org with ESMTP id S262260AbUDAO47
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 1 Apr 2004 09:56:59 -0500
-Received: from hotpop.com (kubrick.hotpop.com [38.113.3.103])
-	by snickers.hotpop.com (Postfix) with SMTP id 3EFF273C25
-	for <linux-scsi@vger.kernel.org>; Thu,  1 Apr 2004 14:19:14 +0000 (UTC)
-Received: from ccampise (sw.attotech.com [12.32.232.56])
-	by smtp-1.hotpop.com (Postfix) with ESMTP id B83EF1A0168
-	for <linux-scsi@vger.kernel.org>; Thu,  1 Apr 2004 14:19:13 +0000 (UTC)
+Received: from stat1.steeleye.com ([65.114.3.130]:3291 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S262453AbUDAPFZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 1 Apr 2004 10:05:25 -0500
+In-Reply-To: <20040401061740.GA14121@praka.local.home>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-Hello Everyone-
+On Thu, 2004-04-01 at 01:17, Andrew Vasquez wrote:
+> Attached is a patch which fixes a problem in qla2xxx_eh_abort() where
+> we incorrect use spin_unlock() before calling qla2x00_abort_command()
+> - which can of course sleep.
 
-First time caller here. :)
+Well, actually, sleeping with interrupts disabled is only a minor bug. 
+Assuming they'll be disabled when you return from a sleep is the major
+bug because if you take the host lock again without disabling
+interrupts, you'll deadlock on a SCSI interrupt.
 
-I'm currently running a Redhat9.0 setup with kernel 2.4.20-8.  I wish to 
-connect to a scsi external storage array, that has two interface cards, 
-via two Host Bus Adapters on my linux box (in an attempt to increase 
-throughput).
+Regardless, this patch doesn't look right.  Flags contains interrupt
+state.  If you actually go around the for loop, you set the state
+unconditionally to disabled because of the
 
-I'm using the stock qla2300 drivers and can see both cards when I do a 
-'cat /proc/scsi/scsi' but I've only been able to see the array (and it's 
-associated LUNs) through one HBA though.  I've done some research and came 
-across the multipath concept and being not entirely sure of what it is, 
-was wondering if this is the direction I should continue to pursue in 
-order to accomplish this?  Or, if not, does anyone have advice as to what 
-I need to do to get this to work (if at all possible)?
+			spin_lock_irq(ha->host->host_lock);
+			spin_lock_irqsave(&ha->hardware_lock, flags);
 
-Thanks in advance!
+James
 
-Chris
 
