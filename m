@@ -1,64 +1,51 @@
-From: Douglas Gilbert <dougg@torque.net>
+From: Willem Riede <wrlk@riede.org>
 Subject: Re: [PATCH] instrument ide-scsi in 2.5.68
-Date: Fri, 02 May 2003 09:29:55 +1000
+Date: Thu, 1 May 2003 19:44:55 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3EB1ADF3.5080008@torque.net>
-References: <3EB11AD3.2070503@torque.net> <20030501155225.7df14e51.rddunlap@osdl.org>
-Reply-To: dougg@torque.net
+Message-ID: <20030501234455.GA8163@linnie.riede.org>
+References: <3EB11AD3.2070503@torque.net> <20030501155225.7df14e51.rddunlap@osdl.org> <3EB1ADF3.5080008@torque.net>
+Reply-To: wrlk@riede.org
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII;
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bunyip.cc.uq.edu.au ([130.102.2.1]:63504 "EHLO
-	bunyip.cc.uq.edu.au") by vger.kernel.org with ESMTP id S262763AbTEAXPX
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 1 May 2003 19:15:23 -0400
-In-Reply-To: <20030501155225.7df14e51.rddunlap@osdl.org>
+Received: from pcp02781107pcs.eatntn01.nj.comcast.net ([68.85.61.149]:44528
+	"EHLO linnie.riede.org") by vger.kernel.org with ESMTP
+	id S262776AbTEAXar (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 1 May 2003 19:30:47 -0400
+Received: from linnie.riede.org (localhost.localdomain [127.0.0.1])
+	by linnie.riede.org (8.12.8/8.12.8) with ESMTP id h41Nit3x012411
+	for <linux-scsi@vger.kernel.org>; Thu, 1 May 2003 19:44:55 -0400
+Content-Disposition: inline
+In-Reply-To: <3EB1ADF3.5080008@torque.net>; from dougg@torque.net on Thu, May 01, 2003 at 19:29:55 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: "Randy.Dunlap" <rddunlap@osdl.org>
-Cc: linux-scsi@vger.kernel.org, alan@lxorguk.ukuu.org.uk
+To: linux-scsi@vger.kernel.org
 
-Randy.Dunlap wrote:
-<snip/>
-
-> Hi Doug,
+On 2003.05.01 19:29 Douglas Gilbert wrote:
+> Randy.Dunlap wrote:
+> <snip/>
 > 
-> I have ATAPI CD-ROM as hdc and CD-RW as hdd.  I boot with
-> "hdd=icd-scsi ide-scsi.debug=3".  Is that right/OK so far?
-> If not, what should it be?
-
-Randy,
-I thought so but it's not picking "ide-scsi.debug=3" up:
-
- > Kernel command line: auto BOOT_IMAGE=lin2568isc ro root=304
-   >  devfs=nomount hdd=ide-scsi ide-scsi.debug=3 console=tty0
-   >  console=ttyS0,38400n8 debug
- > ide_setup: hdd=ide-scsi
- > ide_setup: ide-scsi.debug=3 -- BAD OPTION
-
-The code uses Rusty's moduleparam.h and it worked
-for me with scsi_debug. [It is some time since I checked
-scsi_debug built-in.] Could you try "idescsi.debug=3"
-(i.e. drop the hyphen). Failing that perhaps you could
-build ide-scsi as a module.
-
-> Anyway, it never gets thru the boot sequence (with or without this
-> patch).  It hangs with these last messages:
+>> Hi Doug,
+>> 
+>> I have ATAPI CD-ROM as hdc and CD-RW as hdd.  I boot with
+>> "hdd=icd-scsi ide-scsi.debug=3".  Is that right/OK so far?
+>> If not, what should it be?
 > 
-> scsi2 : SCSI host adapter emulation for IDE ATAPI devices
-> ide-scsi: abort called for cmd serial #32
-> hdd: lost interrupt
-> ide-scsi: CoD != 0 in idescsi_pc_intr
-> hdd: DMA disabled
-> hdd: ATAPI reset complete
-> hdd: irq timeout: status=0x80 { Busy }
-> hdd: ATAPI reset complete
-> hdd: irq timeout: status=0x80 { Busy }
-> hdd: ATAPI reset complete
-> hdd: irq timeout: status=0x80 { Busy }
+> Randy,
+> I thought so but it's not picking "ide-scsi.debug=3" up:
+> 
+> > Kernel command line: auto BOOT_IMAGE=lin2568isc ro root=304
+>   >  devfs=nomount hdd=ide-scsi ide-scsi.debug=3 console=tty0
+>   >  console=ttyS0,38400n8 debug
+> > ide_setup: hdd=ide-scsi
+> > ide_setup: ide-scsi.debug=3 -- BAD OPTION
+> 
+> The code uses Rusty's moduleparam.h and it worked
+> for me with scsi_debug. [It is some time since I checked
+> scsi_debug built-in.] Could you try "idescsi.debug=3"
+> (i.e. drop the hyphen).
 
-It would be interesting to see what effect "suppress_reset=1"
-has on this failure.
+I have on occasion noticed that the kernel thinks ide-scsi is
+called ide_scsi (i.e. with an underscore). You could try that too.
 
-Doug Gilbert
-
+Success, Willem Riede.
