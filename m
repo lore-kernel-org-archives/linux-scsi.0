@@ -1,82 +1,107 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: RE: [PATCH] fusion: streamline ->queuecommand
-Date: 04 Oct 2004 16:57:14 -0500
+From: Chris Mason <mason@suse.com>
+Subject: Re: reiserfs and SCSI oops seen in 2.6.9-rc2 with local SCSI disk
+	IO
+Date: Mon, 04 Oct 2004 20:45:03 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1096927040.2287.34.camel@mulgrave>
-References: <0E3FA95632D6D047BA649F95DAB60E5705262196@exa-atlanta>
+Message-ID: <1096937103.6679.4.camel@watt.suse.com>
+References: <4154372C.7070506@netapp.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat16.steeleye.com ([209.192.50.48]:34793 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S268697AbUJDV5s (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 4 Oct 2004 17:57:48 -0400
-In-Reply-To: <0E3FA95632D6D047BA649F95DAB60E5705262196@exa-atlanta>
+Received: from cantor.suse.de ([195.135.220.2]:5763 "EHLO Cantor.suse.de")
+	by vger.kernel.org with ESMTP id S268729AbUJEAqD (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Oct 2004 20:46:03 -0400
+In-Reply-To: <4154372C.7070506@netapp.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Eric Dean Moore <Emoore@lsil.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Matthew Wilcox <matthew@wil.cx>, Christoph Hellwig <hch@lst.de>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: David Wysochanski <davidw@netapp.com>, akpm@osdl.org
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Mon, 2004-10-04 at 16:33, Moore, Eric Dean wrote:
-> Points:
-> (1) We have three levels of DV(Domain Validation): none, basic, and
-> enahanced.
-> OEM Customers can set their own level of DV which is stored in nvram data,
-> and
-> passed to the driver and read thru config pages.
+On Fri, 2004-09-24 at 11:03 -0400, David Wysochanski wrote:
+> I can reproduce this pretty easily with local disk.
+> 
+> Here's some details about my setup (attached is the
+> full kernel config):
+> - dell 2650 (dual xeon, hyperthreading disabled)
+> - 1 local SCSI disk (root volume)
+> - 2 local SCSI disks (data), each with 10 partitions
+> of 100MB each, 6 of them reiserfs filesystems, 3 of them
+> ext3, and 3 of them ext2 (total of 20 unique filesystems)
+> - one instance of test program running on each of the
+> 20 filesystems
+> 
+> Sorry, but at this time I can't share the test program itself
+> (I'm working on that).  Let me try to describe it though.
 
-By basic and enhanced I presume you mean read only vs device write echo
-buffer tests?
+I think this is a bug in how reiserfs deals with small filesystems.
+There are a few different cases where it will try to use bitmap #2 even
+when there is only 1 bitmap.  Each of your test filesystems will need
+only 1 bitmap for reiserfs, so while it is a valid bug, it's not the one
+you were originally trying to reproduce.
 
-You can chose not to invoke spi_dv_device(), so we can do none and
-enhanced (whether we do enhanced or basic depends on device support for
-the echo buffer).
+This patch should do it (against 2.6.9-rc3).  Thanks to Jan Kara for
+finding this bug.
 
-> (2) MPT driver is sending negotiation through firmware config device pages 0
-> and 1.  Is there
-> another way to send negotiation {sdtr and ppr } messages directly to scsi
-> devices in
-> a generic API?  I have not looked at the generic DV, so I'm not for sure how
-> this would
-> be handled.
+-chris
 
-No, the API assumes you supply the functions for setting and retrieving
-the transport parameters.  How you implement this is at your option.
+On small filesystems (<128M), make sure not to reference bitmap blocks that
+don't exist.
 
-> (3) How will a generic negotiation be done for raid volumes?  The MPT driver
-> supports RAID levels
-> 0, 1, and 0+1.  The driver does DV via RAID passthru to the individual
-> devices. 
+Index: linux.269rc3/fs/reiserfs/bitmap.c
+===================================================================
+--- linux.269rc3.orig/fs/reiserfs/bitmap.c	2004-08-18 09:38:50.000000000 -0400
++++ linux.269rc3/fs/reiserfs/bitmap.c	2004-10-04 20:19:42.000000000 -0400
+@@ -236,6 +236,9 @@ static int bmap_hash_id(struct super_blo
+ 	if (!bm)
+ 	    bm = 1;
+     }
++    /* this can only be true when SB_BMAP_NR = 1 */
++    if (bm >= SB_BMAP_NR(s))
++    	bm = 0;
+     return bm;
+ }
+ 
+@@ -293,6 +296,10 @@ static int scan_bitmap (struct reiserfs_
+ 
+     get_bit_address (s, *start, &bm, &off);
+     get_bit_address (s, finish, &end_bm, &end_off);
++    if (bm > SB_BMAP_NR(s))
++        return 0;
++    if (end_bm > SB_BMAP_NR(s))
++        end_bm = SB_BMAP_NR(s);
+ 
+     /* When the bitmap is more than 10% free, anyone can allocate.
+      * When it's less than 10% free, only files that already use the
+@@ -313,6 +320,7 @@ static int scan_bitmap (struct reiserfs_
+ 	    if (nr_allocated)
+ 		goto ret;
+         }
++	/* we know from above that start is a reasonable number */
+ 	get_bit_address (s, *start, &bm, &off);
+     }
+ 
+@@ -1050,9 +1058,10 @@ int reiserfs_allocate_blocknrs(reiserfs_
+ {
+     int initial_amount_needed = amount_needed;
+     int ret;
++    struct super_block *s = hint->th->t_super;
+ 
+     /* Check if there is enough space, taking into account reserved space */
+-    if ( SB_FREE_BLOCKS(hint->th->t_super) - REISERFS_SB(hint->th->t_super)->reserved_blocks <
++    if ( SB_FREE_BLOCKS(s) - REISERFS_SB(s)->reserved_blocks <
+ 	 amount_needed - reserved_by_us)
+         return NO_DISK_SPACE;
+     /* should this be if !hint->inode &&  hint->preallocate? */
+@@ -1072,6 +1081,8 @@ int reiserfs_allocate_blocknrs(reiserfs_
+ 
+     /* find search start and save it in hint structure */
+     determine_search_start(hint, amount_needed);
++    if (hint->search_start >= SB_BLOCK_COUNT(s))
++        hint->search_start = SB_BLOCK_COUNT(s) - 1;
+ 
+     /* allocation itself; fill new_blocknrs and preallocation arrays */
+     ret = blocknrs_and_prealloc_arrays_from_search_start
 
-As long as real scsi_device devices exist for the passthrough, it would
-also be able to do dv for those.
 
-> (4) The MPT driver has several work arounds in DV path to take advantage of
-> the
-> full inquiries that are passed as part of its alogirthm.  The problem in
-> older kernels
-> were some distro's such as SuSE was only sending 36 bytes of inquiry data
-> during Scaning the bus,
-> and we are needing 57 bytes to determine if device has IU and QAS set, as
-> well as detecting 
-> if the devices is a safte device.  In addition, with IU set or not, the
-> driver will know whether 64 or 256 luns
-> can be scanned for.
 
-This is obsolete and needs removing ... the mid layer does a 2 phase
-inquiry and sets the capability support based on this.  No device should
-be doing inquiry snooping.
-
-> (5) We only do DV for SCSI HBA's. DV is not done for Fiber or SAS, which is
-> also handled by this driver.
-
-DV is part of the SPI transport class only ... it's not an option for
-the others.
-
-> (6) DV algorithm works, and well tested, and accepted by our OEMS. Nothing
-> is broke. Why break it?    
-
-Because sharing code and thus increasing its usage is good.
-
-James
 
