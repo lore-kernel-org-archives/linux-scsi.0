@@ -1,40 +1,33 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
+From: Nathan Bryant <nbryant@optonline.net>
 Subject: Re: [PATCH] SCSI midlayer power management
-Date: 11 Aug 2004 11:28:06 -0500
+Date: Wed, 11 Aug 2004 12:43:09 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1092241693.1590.1.camel@mulgrave>
-References: <4119611D.60401@optonline.net>
-	<20040811080935.GA26098@elf.ucw.cz>  <411A1B72.1010302@optonline.net>
-	<1092231462.2087.3.camel@mulgrave>
-	<1092237664.19009.23.camel@localhost.localdomain>
+Message-ID: <411A4C9D.4040902@optonline.net>
+References: <4119611D.60401@optonline.net> <20040811080935.GA26098@elf.ucw.cz> <411A1B72.1010302@optonline.net> <1092231462.2087.3.camel@mulgrave> <1092237664.19009.23.camel@localhost.localdomain> <1092241693.1590.1.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat16.steeleye.com ([209.192.50.48]:13547 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S268108AbUHKQ2W (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 11 Aug 2004 12:28:22 -0400
-In-Reply-To: <1092237664.19009.23.camel@localhost.localdomain>
+Received: from pegasus.allegientsystems.com ([208.251.178.236]:30726 "EHLO
+	pegasus.lawaudit.com") by vger.kernel.org with ESMTP
+	id S268105AbUHKQnK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 11 Aug 2004 12:43:10 -0400
+In-Reply-To: <1092241693.1590.1.camel@mulgrave>
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Nathan Bryant <nbryant@optonline.net>, Pavel Machek <pavel@ucw.cz>, Linux SCSI Reflector <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Pavel Machek <pavel@ucw.cz>, Linux SCSI Reflector <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>
 
-On Wed, 2004-08-11 at 10:21, Alan Cox wrote:
-> In addition we are not doing SCSI target so multi-initiator is ok.
-> One question James - what are the rules for power management with
-> SCSI when we provide termpwr to a shared bus ?
+James Bottomley wrote:
+> On Wed, 2004-08-11 at 10:21, Alan Cox wrote:
+> 
+>>In addition we are not doing SCSI target so multi-initiator is ok.
+>>One question James - what are the rules for power management with
+>>SCSI when we provide termpwr to a shared bus ?
 
-I don't believe the spec addresses that.
-
-The rules we use in HA are that each bus entity supplies termpwr (i.e.
-all initiators and targets) and each terminator draws its power from the
-bus).  Thus the bus is properly terminated until the last device powers
-down.
-
-You have to jumper this specially on most SCSI cards (especially if
-they're at the end of the bus and have internal termination).
-
-James
-
-
+Well there are (at least) two reasons to do shared bus: IP over SCSI and 
+cluster filesystems. At least for cluster filesystems I think the answer 
+is "don't suspend your machine" for the foreseeable future - what 
+happens if your machine goes to sleep while holding cluster FS locks, 
+etc. I doubt any CFS vendors are going to bother to support this any 
+time soon, since it's a HA/server feature and power management is really 
+a desktop/laptop feature.
