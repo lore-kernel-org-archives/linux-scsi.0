@@ -1,43 +1,46 @@
-From: Matthias Andree <ma@dt.e-technik.uni-dortmund.de>
+From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
 Subject: Re: TMSCSIM [2.6]
-Date: Sun, 23 Nov 2003 21:26:02 +0100
+Date: Sun, 23 Nov 2003 21:53:02 +0100 (CET)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <m365haomqt.fsf@merlin.emma.line.org>
-References: <Pine.LNX.4.44.0311230024300.1354-100000@poirot.grange>
+Message-ID: <Pine.LNX.4.44.0311232151110.2286-100000@poirot.grange>
+References: <m365haomqt.fsf@merlin.emma.line.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from krusty.dt.e-technik.Uni-Dortmund.DE ([129.217.163.1]:34439 "EHLO
-	mail.dt.e-technik.uni-dortmund.de") by vger.kernel.org with ESMTP
-	id S263460AbTKWU0E (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 23 Nov 2003 15:26:04 -0500
-Received: from m2a2.dyndns.org (krusty.dt.e-technik.uni-dortmund.de [129.217.163.1])
-	by mail.dt.e-technik.uni-dortmund.de (Postfix) with ESMTP id 9541315B2C
-	for <linux-scsi@vger.kernel.org>; Sun, 23 Nov 2003 21:26:03 +0100 (CET)
-In-Reply-To: <Pine.LNX.4.44.0311230024300.1354-100000@poirot.grange> (Guennadi
- Liakhovetski's message of "Sun, 23 Nov 2003 00:27:32 +0100 (CET)")
+Received: from pop.gmx.de ([213.165.64.20]:36788 "HELO mail.gmx.net")
+	by vger.kernel.org with SMTP id S263462AbTKWUxH (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 23 Nov 2003 15:53:07 -0500
+In-Reply-To: <m365haomqt.fsf@merlin.emma.line.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+To: Matthias Andree <ma@dt.e-technik.uni-dortmund.de>
 Cc: linux-scsi@vger.kernel.org
 
-Guennadi Liakhovetski <g.liakhovetski@gmx.de> writes:
+On Sun, 23 Nov 2003, Matthias Andree wrote:
 
-> @@ -47,8 +47,9 @@
->      DC390_write8 (CtrlReg4, pDCB->CtrlR4);
->      DC390_write8 (ScsiCmd, CLEAR_FIFO_CMD);		/* Flush FIFO */
->      DEBUG1(printk (KERN_INFO "DC390: Start SCSI command: %02x (Sync:%02x)\n",\
-> -	    pSRB->pcmd->cmnd[0], pDCB->SyncMode);)
-> -    disc_allowed = pDCB->DevMode & EN_DISCONNECT_; try_sync_nego = 0;
-> +	    pSRB->pcmd->cmnd[0], pDCB->SyncMode));
-> +    disc_allowed = pDCB->DevMode & EN_DISCONNECT_;
-> +    try_sync_nego = 0;
->      /* Don't disconnect on AUTO_REQSENSE, cause it might be an
->       * Contingent Allegiance Condition (6.6), where no tags should be used.
->       * All other have to be allowed to disconnect to prevent Incorrect
+> Guennadi Liakhovetski <g.liakhovetski@gmx.de> writes:
+>
+> > @@ -47,8 +47,9 @@
+> >      DC390_write8 (CtrlReg4, pDCB->CtrlR4);
+> >      DC390_write8 (ScsiCmd, CLEAR_FIFO_CMD);		/* Flush FIFO */
+> >      DEBUG1(printk (KERN_INFO "DC390: Start SCSI command: %02x (Sync:%02x)\n",\
+> > -	    pSRB->pcmd->cmnd[0], pDCB->SyncMode);)
+> > -    disc_allowed = pDCB->DevMode & EN_DISCONNECT_; try_sync_nego = 0;
+> > +	    pSRB->pcmd->cmnd[0], pDCB->SyncMode));
+> > +    disc_allowed = pDCB->DevMode & EN_DISCONNECT_;
+> > +    try_sync_nego = 0;
+> >      /* Don't disconnect on AUTO_REQSENSE, cause it might be an
+> >       * Contingent Allegiance Condition (6.6), where no tags should be used.
+> >       * All other have to be allowed to disconnect to prevent Incorrect
+>
+> Out if interest: Why "try_sync_nego = 0"?
 
-Out if interest: Why "try_sync_nego = 0"?
+No idea. I didn't change it - just broke the line. Actually, such
+changes shouldn't go into patches, but it goes almost automatic, you
+know:-(
 
--- 
-Matthias Andree
+Guennadi
+---
+Guennadi Liakhovetski
 
-Encrypt your mail: my GnuPG key ID is 0x052E7D95
+
