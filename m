@@ -1,48 +1,41 @@
 From: Krzysztof Halasa <khc@pm.waw.pl>
 Subject: Re: Proposal for new generic device API: dma_get_required_mask()
-Date: Sun, 20 Jun 2004 02:00:42 +0200
+Date: Sun, 20 Jun 2004 01:39:18 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <m3zn6zf68l.fsf@defiant.pm.waw.pl>
+Message-ID: <m34qp7glsp.fsf@defiant.pm.waw.pl>
 References: <1087481331.2210.27.camel@mulgrave>
-	<m33c4tsnex.fsf@defiant.pm.waw.pl>
-	<20040618102120.A29213@flint.arm.linux.org.uk>
-	<m3brjg7994.fsf@defiant.pm.waw.pl>
-	<20040619212246.B8063@flint.arm.linux.org.uk>
+	<m33c4tsnex.fsf@defiant.pm.waw.pl> <1087523134.2210.97.camel@mulgrave>
+	<m3fz8s79dz.fsf@defiant.pm.waw.pl> <1087657251.2162.49.camel@mulgrave>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hq.pm.waw.pl ([195.116.170.10]:19181 "EHLO hq.pm.waw.pl")
-	by vger.kernel.org with ESMTP id S263962AbUFTCBn (ORCPT
+Received: from hq.pm.waw.pl ([195.116.170.10]:19437 "EHLO hq.pm.waw.pl")
+	by vger.kernel.org with ESMTP id S264535AbUFTCBn (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
 	Sat, 19 Jun 2004 22:01:43 -0400
-In-Reply-To: <20040619212246.B8063@flint.arm.linux.org.uk> (Russell King's
- message of "Sat, 19 Jun 2004 21:22:46 +0100")
+In-Reply-To: <1087657251.2162.49.camel@mulgrave> (James Bottomley's message
+ of "19 Jun 2004 10:00:50 -0500")
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@steeleye.com>
 Cc: Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-Russell King <rmk+lkml@arm.linux.org.uk> writes:
+James Bottomley <James.Bottomley@steeleye.com> writes:
 
-> The SA1111 device and associated sub-device drivers.  Basically, Intel
-> has a "no fix" errata where one of the address bits gets incorrectly
-> routed to the SDRAM "auto precharge" address bit.  This address bit
-> must be zero, otherwise the SDRAM accesses are messed up.
+> Could you elaborate on this?  In the current scheme the coherent mask is
+> for descriptor allocation (i.e. dma_alloc_coherent()) and the dma_mask
+> represents the bus physical addresses to which the device can DMA
+> directly; there's not much more the DMA API really does, what do you
+> think is missing?
 
-Well, I knew about it, but I thought it's a "host" problem and device
-drivers don't have to care.
+The problem is that (depending on platform) the pci_map_* and dma_map_*
+functions ignore both masks. An example of such platform is i386 :-)
 
-> You may have a 32MB SDRAM but need to ensure that
-> physical bit 20 is always zero - IOW you can only DMA from even MB
-> addresses and not odd MB addresses.
+It seems the masks are used on i386 for only one thing - consistent
+dma mask is used for consistent allocations only, and normal dma mask
+is not used at all.
 
-I understand that currently the bit in question is cleared from the
-masks, and that the ARM/SA1111 dma/pci alloc/map functions know how
-to handle such mask?
-
-Wouldn't it be better to not touch the masks (which are device
-capabilities rather than platform limitations) and let alloc/map
-functions always use the correct half of RAM?
-
-Just asking, I've never worked with such thing.
+The normal mask is used mainly on 64-bit platforms and the meaningful
+values are 2^32-1 and 2^64-1. It's used by PCI-X device drivers to
+enable DAC transfers. This is why it isn't used on 32-bit platforms.
 -- 
 Krzysztof Halasa, B*FH
