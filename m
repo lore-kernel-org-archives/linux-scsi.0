@@ -1,149 +1,87 @@
-From: Mike Christie <mikenc@us.ibm.com>
-Subject: Re: [PATCH][RFC] iSCSI transport class
-Date: Mon, 05 Apr 2004 14:10:15 -0700
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <4071CB37.7070401@us.ibm.com>
-References: <!~!UENERkVCMDkAAQACAAAAAAAAAAAAAAAAABgAAAAAAAAANoIxZIFzbEaqwjJgytz2AeKAAAAQAAAA9J1WRvNm9EOzhZvg3SDlSwEAAAAA@cisco.com> <4071BFFF.5090405@cs.wisc.edu>
+From: Patrick Mansfield <patmans@us.ibm.com>
+Subject: Re: bug 2400
+Date: Mon, 5 Apr 2004 15:10:31 -0700
+Sender: linux-usb-devel-admin@lists.sourceforge.net
+Message-ID: <20040405151031.A5470@beaverton.ibm.com>
+References: <1081098273.2112.18.camel@mulgrave> <Pine.LNX.4.44L0.0404042235420.23916-100000@netrider.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e1.ny.us.ibm.com ([32.97.182.101]:11712 "EHLO e1.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S263271AbUDEVjG (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 5 Apr 2004 17:39:06 -0400
-In-Reply-To: <4071BFFF.5090405@cs.wisc.edu>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-usb-devel-admin@lists.sourceforge.net>
+Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.44L0.0404042235420.23916-100000@netrider.rowland.org>; from stern@rowland.harvard.edu on Sun, Apr 04, 2004 at 11:17:55PM -0400
+Errors-To: linux-usb-devel-admin@lists.sourceforge.net
+List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-devel>,
+	<mailto:linux-usb-devel-request@lists.sourceforge.net?subject=unsubscribe>
+List-Post: <mailto:linux-usb-devel@lists.sourceforge.net>
+List-Help: <mailto:linux-usb-devel-request@lists.sourceforge.net?subject=help>
+List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-devel>,
+	<mailto:linux-usb-devel-request@lists.sourceforge.net?subject=subscribe>
+List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=linux-usb-devel>
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: James Bottomley <James.Bottomley@steeleye.com>, Mike Anderson <andmike@us.ibm.com>, Andrew Morton <akpm@osdl.org>, greg@kroah.com, Jens Axboe <axboe@suse.de>, linux-usb-devel@lists.sourceforge.net, SCSI Mailing List <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>
-Cc: "Surekha.PC" <surekhap@cisco.com>, 'SCSI Mailing List' <linux-scsi@vger.kernel.org>, linux-iscsi-devel@lists.sourceforge.net
 
-Mike Christie wrote:
+On Sun, Apr 04, 2004 at 11:17:55PM -0400, Alan Stern wrote:
 
-> Hey,
+> As it turns out, the block layer guarantees that when sd_open runs the
+> bd_disk pointer will be valid.  It does this by following the pattern I
+> mentioned in an earlier message -- drivers/base/map.c uses a
+> subsystem-wide semaphore, domain_sem, to properly synchronize lookups and
+> deletes.
 > 
-> Surekha.PC wrote:
+> Next, the scsi_disk inline function returns:
 > 
->>  Hi Mike,
->>
->>   Sorry for the delay.
->>   The structure which I represented was meant to have iSCSI transport
->> attributes
->>   under their respective category. Right now, in our iSCSI driver all
->> attributes are defined
->>   in `iscsi-attr.c` and `iscsi-debug-attr.c` which need to be either 
->> per lun
->> or per target.
->>
->>>> I have reviewed your changes for iSCSI transport class. 
->>>
->>>
->>> The changes
->>>
->>>> look fine.  I have few suggestions on further improvements. The 
->>>> attributes can be organised
->>>> under iSCSI transport class in the following structure.
->>>>
->>>> # ls /sys/class/iscsi_transport/*
->>>>
->>>>  /* iSCSI host specific attributes */
->>>>  |-- shutdown
->>>>  |-- host_id
->>>>  |-- ....
->>>
->>>
->>> The examples you placed here are not tranport specific. They are just 
->>> HBA values, and should stay under the host attributes.
->>
->>
->>
->> AFAIU Transport class is basically to hold all private attributes of the
->> iSCSI driver.
+> 	container_of(disk->private_data, struct scsi_disk, driver);
+> 
+> How do you know that the scsi_disk pointed to by disk->private_data still 
+> exists?  So far as I can see, the gendisk doesn't take any references to 
+> it.  Correct me if I'm wrong, but there doesn't seem to be anything 
+> preventing a disconnect event from arriving after the open() call has got 
+> a valid reference to the gendisk, and succeeding in deallocating the 
+> scsi_disk before this code executes.  There's only one reference between 
+> the scsi_disk and the gendisk, and it goes the wrong way: the scsi_disk 
+> owns a reference to the gendisk.
+> 
+> But let's suppose that works okay, so sdkp is a valid pointer.  Then 
+> the code calls scsi_disk_get(), which in turn calls scsi_device_get() for 
+> sdkp->device.  How do you know that this doesn't point to deallocated 
+> storage?  The only reference to the scsi_device is taken (in a rather 
+> convoluted way) by the gendisk, and it is dropped during del_gendisk() -- 
+> not when the gendisk is released.  Hence it is entirely possible for a 
+> disconnect event to have freed the scsi_device when this code executes.
 > 
 > 
-> That is wrong. Look at the qla2xxx or 53c700 driver. The transport
-> classes represent transport specifics. They are not there for a
-> driver that is a particular transport to place all its attributes, and
-> each driver that is a particular transport does not implement its
-> own class.
+> There's two potential oopses for you.  I don't have a full grasp of the
+> web of interlocking references (and interlocking code) in the SCSI,
+> gendisk, and block layers, but it seems likely that at least one of
+> these might actually happen.
 
-Let me clarify what I wrote. I am just saying becuase Cisco's software 
-iscsi driver has some attribute which a fc or spi or whatever driver 
-lacks does not necessarily mean it is transport related. Some of your 
-attributes are HBA or device related, and some are a result of your 
-implmentation, and some are iscsi related.
+Yes. 
 
->> Since iSCSI driver has attributes which are hba/target/lun specific it 
->> would
->> be good to have them in a place away from the generic scsi attributes.
->> For eg, the "shutdown" attribute is a iSCSI attribute to shutdown the 
->> iSCSI
->> hba.
-> 
-> 
-> shutdown is a hba thing, and has nothing to do with iscsi itself.
-> 
->> Similarly host_id is iSCSI transport specific and gives the host number.
-> 
-> 
-> How is the struct scsi_host's host_no related to the transport?
-> It is assigned from the SCSI layer.
-> 
->>> Also, the host layout here does not look right. What happens when I 
->>> have multiple HBAs?
->>
->>
->> Right now iSCSI driver supports single HBA, hence this representation 
->> is OK.
->> However in multiple HBA case, it can be represented as below.
-> 
-> 
-> Again, only specific to your driver.
-> 
->>  /sys/class/iscsi_transport/
->>    |--host1/
->>        |-- shutdown_hba
->>        |-- show_hba_id
->>    |--host2/
->>        |-- ---"----
->>        |-- ---"----
->>
->>  
->>
->>>>  /* iSCSI target specific attributes */
->>>>  |-- 1:0:1/
->>>>           |-- target_addr
->>>>           |-- target_name
->>>>           |-- target_port
->>>>           |-- ....
->>>
->>>
->>> I agree these would be nice under a target attribute. Did
->>> you have something to post since the last time we talked,
->>> or did you write the example by hand?
->>
->>
->>
->> I have written the example by hand, I am working towards implementing it.
->>
->>>>  /* lun specific attributes */
->>>>  |-- 1:0:1:0/
->>>>             |-- device -> ../../../devices/platform/iscsi/1:0:0:0
->>>>             |-- driver -> ../../../bus/scsi/drivers/sd
->>>>             |-- lun_status
->>>>             |-- ....
->>>
->>>
->>> I don't think anything in lun_status is iscsi specific.
->>
->>
->>
->> We have lun specific attributes defined in iSCSI driver some of which 
->> can be
->> used in debug mode for testing purposes e.g initiate command timeout on a
->> lun, set lun queue as busy, query the lun status etc.
->> I think since they are private to iSCSI, this is the right place holder.
-> 
-> 
-> Again, specific to your particular iscsi driver vs transport.
+If we are in middle opening an sd, and are anywhere between the
+kobj_lookup having completed call to up_read(domain->sem) [called via
+do_open calling get_gendisk] and sd_open calling scsi_device_get(), and
+separately an sd_remove call completes [freeing the scsi_disk and the
+scsi_device] there could be an oops.
 
-Just another clarification. I am not saying everying you are doing at 
-the lun level is not iscsi specific.
+Much as I hate it, simply adding a lock_kernel in sd_remove would solve
+the problem, since do_open uses lock_kernel.
+
+And I don't see why the kobject_get/put use an atomic_inc/dec, it just
+obscures the need for a lock. We already have a reference to the kobject
+(it's passed as an argument). The calls to the get/put must either be
+protected with a lock or other method, or we have already gotten a
+reference to the object and getting another is meaningless.
+
+-- Patrick Mansfield
+
+
+-------------------------------------------------------
+This SF.Net email is sponsored by: IBM Linux Tutorials
+Free Linux tutorial presented by Daniel Robbins, President and CEO of
+GenToo technologies. Learn everything from fundamentals to system
+administration.http://ads.osdn.com/?ad_id=1470&alloc_id=3638&op=click
+_______________________________________________
+linux-usb-devel@lists.sourceforge.net
+To unsubscribe, use the last form field at:
+https://lists.sourceforge.net/lists/listinfo/linux-usb-devel
