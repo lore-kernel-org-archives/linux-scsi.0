@@ -1,58 +1,58 @@
-From: "Mukker, Atul" <Atulm@lsil.com>
-Subject: RE: Megaraid driver fixes
-Date: Tue, 16 Mar 2004 09:58:38 -0500
+From: Mark Haverkamp <markh@osdl.org>
+Subject: [PATCH 2.6] aacraid reset handler update
+Date: Tue, 16 Mar 2004 09:05:33 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <0E3FA95632D6D047BA649F95DAB60E57033BC478@exa-atlanta.se.lsil.com>
+Message-ID: <1079456732.22289.14.camel@markh1.pdx.osdl.net>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:23461 "EHLO mail0.lsil.com")
-	by vger.kernel.org with ESMTP id S262271AbUCPO6x (ORCPT
+Received: from fire.osdl.org ([65.172.181.4]:12696 "EHLO fire-2.osdl.org")
+	by vger.kernel.org with ESMTP id S263639AbUCPRFj (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 16 Mar 2004 09:58:53 -0500
+	Tue, 16 Mar 2004 12:05:39 -0500
 List-Id: linux-scsi@vger.kernel.org
-To: 'Paul Wagland' <paul@kungfoocoder.org>, Linux mailing list SCSI <linux-scsi@vger.kernel.org>
-Cc: James.Bottomley@HansenPartnership.com, "Mukker, Atul" <Atulm@lsil.com>
+To: James Bottomley <James.Bottomley@steeleye.com>, linux-scsi <linux-scsi@vger.kernel.org>
+Cc: Mark Salyzyn <mark_salyzyn@adaptec.com>
 
-Paul,
+This is an update from the Adaptec version of the driver to the aacraid
+reset handler.  The current code has a logic error that is fixed by this
+version.  This builds against 2.6.5-rc1.
 
-We are in advanced stage of code finalization  for this driver. Hopefully,
-there would a code-drop before end of this week. From that point onwards, we
-will work with the lists to integrate the driver in 2.6.
+Mark.
 
-Thanks
--Atul Mukker
-LSI Logic Corporation
+===== drivers/scsi/aacraid/linit.c 1.27 vs edited =====
+--- 1.27/drivers/scsi/aacraid/linit.c	Fri Mar 12 03:19:14 2004
++++ edited/drivers/scsi/aacraid/linit.c	Tue Mar 16 08:57:16 2004
+@@ -371,15 +371,22 @@
+ 	 * target (block maximum 60 seconds).
+ 	 */
+ 	for (count = 60; count; --count) {
++		int active = 0;
+ 		__shost_for_each_device(dev, host) {
+ 			spin_lock_irqsave(&dev->list_lock, flags);
+ 			list_for_each_entry(command, &dev->cmd_list, list) {
+ 				if (command->serial_number) {
+-					spin_unlock_irqrestore(&dev->list_lock, flags);
+-					return SUCCESS;
++					active++;
++					break;
+ 				}
+ 			}
+ 			spin_unlock_irqrestore(&dev->list_lock, flags);
++
++			/*
++			 * We can exit If all the commands are complete
++			 */
++			if (active == 0)
++				return SUCCESS;
+ 		}
+ 		spin_unlock_irq(host->host_lock);
+ 		scsi_sleep(HZ);
 
-> -----Original Message-----
-> From: Paul Wagland [mailto:paul@kungfoocoder.org]
-> Sent: Tuesday, March 16, 2004 3:42 AM
-> To: Linux mailing list SCSI
-> Cc: James.Bottomley@HansenPartnership.com; Atul Mukker
-> Subject: Megaraid driver fixes
-> 
-> 
-> Hi all,
-> 
-> As was mentioned a few weeks ago by Atul Mukker, LSI are working on a 
-> new and improved driver for the megaraid cards that will, 
-> amongst other 
-> things, also have proper 32/64 bit support, and be fully updated.
-> 
-> My questions are:
-> 
-> Given that the changes are fairly major, what is the timeline for 
-> integration of these fixes?
-> 
-> Is it still worth my time to try and update the current 2.6 driver up 
-> to a similar level as the driver that is currently in 2.4?
-> 
-> Is there any other way that I can help to get this new driver 
-> integrated/tested earlier? I have a SATA-RAID6 controller and 
-> an AMD64 
-> so am quite interested in getting that combination to work :-)
-> 
-> Cheers,
-> Paul
-> 
+
+
+
+-- 
+Mark Haverkamp <markh@osdl.org>
+
