@@ -1,40 +1,62 @@
-From: Matthew Wilcox <matthew@wil.cx>
+From: James Bottomley <James.Bottomley@SteelEye.com>
 Subject: Re: phase change messages cusing slowdown with sym53c8xx_2 driver
-Date: Wed, 1 Dec 2004 20:32:26 +0000
-Message-ID: <20041201203226.GI5752@parcelfarce.linux.theplanet.co.uk>
-References: <20041130030212.GB22916@austin.ibm.com> <20041201165654.GA32687@rx8.austin.ibm.com> <1101921398.1930.24.camel@mulgrave>
+Date: 01 Dec 2004 15:43:02 -0500
+Message-ID: <1101933788.1930.226.camel@mulgrave>
+References: <20041130030212.GB22916@austin.ibm.com>
+	<20041201165654.GA32687@rx8.austin.ibm.com>
+	<1101921398.1930.24.camel@mulgrave>
+	<20041201203226.GI5752@parcelfarce.linux.theplanet.co.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:59626 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S261434AbULAUce
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 1 Dec 2004 15:32:34 -0500
-Content-Disposition: inline
-In-Reply-To: <1101921398.1930.24.camel@mulgrave>
+Received: from stat16.steeleye.com ([209.192.50.48]:18067 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S261442AbULAUnN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 1 Dec 2004 15:43:13 -0500
+In-Reply-To: <20041201203226.GI5752@parcelfarce.linux.theplanet.co.uk>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: "Jose R. Santos" <jrsantos@austin.ibm.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>, Matthew Wilcox <matthew@wil.cx>
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: "Jose R. Santos" <jrsantos@austin.ibm.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
 
-On Wed, Dec 01, 2004 at 12:16:33PM -0500, James Bottomley wrote:
-> does this look like the "drive won't respond properly to PPR if the bus
-> is SE" problem again?
+On Wed, 2004-12-01 at 15:32, Matthew Wilcox wrote:
+> On Wed, Dec 01, 2004 at 12:16:33PM -0500, James Bottomley wrote:
+> > does this look like the "drive won't respond properly to PPR if the bus
+> > is SE" problem again?
+> 
+> Thomas Babut who tested that fix reported it didn't solve his problem ;-(
+> 
+> http://marc.theaimsgroup.com/?l=linux-scsi&m=109968716312783&w=2
+> http://marc.theaimsgroup.com/?l=linux-scsi&m=109969829411685&w=2
+> 
+> I'm out of ideas for fixing that one.  Would you consider Richard
+> Waltham's patch?
+> 
+> http://marc.theaimsgroup.com/?l=linux-kernel&m=109967237930243&w=2
 
-Thomas Babut who tested that fix reported it didn't solve his problem ;-(
+Actually, yes, or the attached variant of it.  Does this solve the
+problem?
 
-http://marc.theaimsgroup.com/?l=linux-scsi&m=109968716312783&w=2
-http://marc.theaimsgroup.com/?l=linux-scsi&m=109969829411685&w=2
+There's no reason why we should assume a SCSI_3 or greater device
+automatically supports ppr (especially if it's inquiry bit is
+advertising that it doesn't...)
 
-I'm out of ideas for fixing that one.  Would you consider Richard
-Waltham's patch?
+James
 
-http://marc.theaimsgroup.com/?l=linux-kernel&m=109967237930243&w=2
+===== drivers/scsi/scsi_scan.c 1.134 vs edited =====
+--- 1.134/drivers/scsi/scsi_scan.c	2004-10-24 07:09:48 -04:00
++++ edited/drivers/scsi/scsi_scan.c	2004-12-01 15:41:03 -05:00
+@@ -554,10 +554,8 @@
+ 	sdev->removable = (0x80 & inq_result[1]) >> 7;
+ 	sdev->lockable = sdev->removable;
+ 	sdev->soft_reset = (inq_result[7] & 1) && ((inq_result[3] & 7) == 2);
++	sdev->ppr = (sdev->inquiry_len > 56 && (inq_result[56] & 0x04) == 0x04);
+ 
+-	if (sdev->scsi_level >= SCSI_3 || (sdev->inquiry_len > 56 &&
+-		inq_result[56] & 0x04))
+-		sdev->ppr = 1;
+ 	if (inq_result[7] & 0x60)
+ 		sdev->wdtr = 1;
+ 	if (inq_result[7] & 0x10)
 
--- 
-"Next the statesmen will invent cheap lies, putting the blame upon 
-the nation that is attacked, and every man will be glad of those
-conscience-soothing falsities, and will diligently study them, and refuse
-to examine any refutations of them; and thus he will by and by convince 
-himself that the war is just, and will thank God for the better sleep 
-he enjoys after this process of grotesque self-deception." -- Mark Twain
