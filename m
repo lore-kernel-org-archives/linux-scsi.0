@@ -1,46 +1,52 @@
 From: James Bottomley <James.Bottomley@steeleye.com>
 Subject: Re: bidirectional, long commands + OSD
-Date: 30 Jan 2004 09:22:58 -0500
+Date: 30 Jan 2004 09:25:34 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1075472579.2026.20.camel@mulgrave>
-References: <0E3FA95632D6D047BA649F95DAB60E5703D19D33@exa-atlanta.se.lsil.com>	<10751367
-	27.2290.48.camel@mulgrave>  <401625CA.1070404@torque.net>
-	<1075316397.1739.15.camel@mulgrave>  <40190591.5060409@torque.net>
+Message-ID: <1075472734.1999.25.camel@mulgrave>
+References: <OF04DCDB82.2269D90E-ON42256E2B.003249AE-42256E2B.003A8576@il.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat1.steeleye.com ([65.114.3.130]:3234 "EHLO
+Received: from stat1.steeleye.com ([65.114.3.130]:10402 "EHLO
 	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S261298AbUA3OXB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 30 Jan 2004 09:23:01 -0500
-In-Reply-To: <40190591.5060409@torque.net>
+	id S261270AbUA3OZh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 30 Jan 2004 09:25:37 -0500
+In-Reply-To: <OF04DCDB82.2269D90E-ON42256E2B.003249AE-42256E2B.003A8576@il.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: dougg@torque.net
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Liran Schour <LIRANS@il.ibm.com>
+Cc: dougg@torque.net, SCSI Mailing List <linux-scsi@vger.kernel.org>, linux-scsi-owner@vger.kernel.org
 
-On Thu, 2004-01-29 at 08:07, Douglas Gilbert wrote:
-> James Bottomley wrote in thread:
-> > As I see it, OSD seems to require a different interface from the current
-> > bio layer, so there would be some type of object layer glue between the
-> > fs and the mid-layer, with the block layer relegated simply to queueing
-> > specials for the mid-layer, but since no-one's actually come forward
-> > with an implementation, that's just a guess.
-> 
-> Both Jens and Linus jumped on me when I suggested
-> similar heresy :-)
+On Fri, 2004-01-30 at 05:39, Liran Schour wrote:
+> Most of the HBAs today can't support execution of OSD SCSI commands due to
+> the
+> extended CDB's length and the bidirectional data movement. But when OSD
+> technology
+> will catch a momentum we will see more and more vendors that will support
+> this features.
+> My point is that maybe we can keep the current interface while expanding it
+> to support
+> the needed features by the SCSI OSD commands.
 
-Well ... I merely stated what it seems to require.  I didn't recommend
-implementing it.
+Actually, I'm sure they can.  Most HBA's operate using a scripted
+firmware interface (like the LSI scripts or the Adaptec sequencer).  As
+long as the scripts are updated, it's no trouble to support multiple
+data pointers and large CDBs (even the 53c700, a 1990s era chip can do
+this).  I also know seagate is working on an actual single disc that
+supports OSD, so I expect even the closed firmware chip sets will
+eventually be updated.
 
->From what I can tell, the OSD spec seems to be aimed at large clustered
-filesystems.  The recommended mapping seems to be <multiple objects> <->
-<one file>.  However, since different objects are distinct and currently
-require distinct commands to access them, I believe using OSD for a
-typical Linux filesystem would be a big loss because most files are
-small and we can no-longer elevate the requests.  It would be
-interesting to see if this loss could be offset by not having to do
-indirect block lookups, but I have my doubts.
+> I have used only ISCSI and TCP/IP (non SCSI) OSD devices. In the devices
+> that
+> I have used the transitions of data where isolated - first DATA OUT then
+> DATA IN.
+> But an OSD device can do the following data transitions: DATA IN (user
+> data) ; DATA OUT
+> (set attributes data and get attributes list) ;  DATA IN (retrieved
+> attributes data).
+
+Yes, that's what I feared.  The spec implies this as well.  Behaviour
+like that requires two data pointers.
 
 James
 
