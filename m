@@ -1,371 +1,66 @@
-From: piotr@larroy.com (Pedro Larroy)
-Subject: [BUG] 2.6.9-rc2 scsi and elevator oops when I/O error
-Date: Mon, 11 Oct 2004 07:03:20 +0200
+From: "Nikhil Dharashivkar" <dharashivkar.nikhil@spsoftindia.com>
+Subject: Re: scsi Target card and scsi Initiator card
+Date: Mon, 11 Oct 2004 11:07:45 +0530
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20041011050320.GA28703@larroy.com>
+Message-ID: <01c601c4af54$7054dd20$1610a8c0@spsoft.com>
+References: <017e01c4ab91$510a3e90$1610a8c0@spsoft.com> <4163DDC6.3030102@vlnb.net> <017901c4ac30$cde21510$1610a8c0@spsoft.com> <4164F258.9090508@vlnb.net>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="azLHFNyN32YCQGCU"
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain;
+	charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from FW-30-241.go.retevision.es ([62.174.241.30]:15452 "EHLO
-	mayhem.ghetto") by vger.kernel.org with ESMTP id S268693AbUJKFDi
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 11 Oct 2004 01:03:38 -0400
-Content-Disposition: inline
+Received: from 134-215-187-203.cable-client.iqara.net ([203.187.215.134]:20626
+	"EHLO mailserver.spsoftindia.com") by vger.kernel.org with ESMTP
+	id S268698AbUJKFkb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 11 Oct 2004 01:40:31 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-usb-devel@lists.sourceforge.net
+To: Vladislav Bolkhovitin <vst@vlnb.net>
+Cc: linux-scsi@vger.kernel.org
+
+Hi ....
+     I have gone thr' documents that discribe Target Emulator or that type
+of software layer.
+     I have LSI22320-R with LSI1030 and LSI1030T (Two Cards). I also have
+driver Tekram (Initiator Card).
+   Now I joind Tekram and LSI card with external scsi cable. Connection was
+done and disk also exposed from LSI Card to Tekram.
+Basically LSI card that i have contains Inititator/Target mode firmware.
+    So What i want to do , to make LSI card to run in only Target Mode. For
+that , Can i write a kernel module that can read incomming scsi
+commands from any initiator card (here Tekram) to the LSI card. and that
+module will invoke the firware on the LSI card intead directly by commnads ?
+What i think here that i have to do low level i..e card level programming to
+get these scsi commands , is it possible / feasible ?
 
 
---azLHFNyN32YCQGCU
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
+Regrads,
+Nikhil.
 
-I've been observing this bug in other kernel versions and other hardware
-configurations, so I think it's easily reproductible.
+----- Original Message -----
+From: "Vladislav Bolkhovitin" <vst@vlnb.net>
+To: "Nikhil Dharashivkar" <dharashivkar.nikhil@spsoftindia.com>
+Cc: <linux-scsi@vger.kernel.org>
+Sent: Thursday, October 07, 2004 1:08 PM
+Subject: Re: scsi Target card and scsi Initiator card
 
-Happens when I/O error on external ide <-> usb drives. Can be reproduced
-by unplugging the usb cable while accessing the drive, or with a faulty
-drive.
 
-I don't think my real u2w scsi controllers would like the real scsi disks
-being hot swapped, so I haven't tried there.
+> Nikhil Dharashivkar wrote:
+> > Hi,
+> >      Actually our setup of hardware is : There is one board . On that we
+> > have one target mode card (LSI) and more than one initiator cards.
+> >        First thing I have to do is I should able to export all LUNS or
+> > target devices connected to initiator card through this target mode
+card.
+> >       For that how should i think to develop software layer . Is there
+> > already implemeted code ?
+>
+> Take a look on SCSI target mid-level (SCST) on
+> http://scst.sourceforge.net. You just need to develop small target
+> add-on to the LSI's initiator driver as it was done for Qlogic cards.
+>
+> Vlad
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-Regards.
-
--- 
-Pedro Larroy Tovar | Linux & Network consultant |  pedro%larroy.com 
-
-Las patentes de programación son nocivas para la innovación
-	http://proinnova.hispalinux.es/
-
---azLHFNyN32YCQGCU
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: attachment; filename="oops.txt"
-
-sda, sector 10888871
-SCSI error : <0 0 0 0> return code = 0x70000
-end_request: I/O error, dev sda, sector 10888872
-SCSI error : <0 0 0 0> return code = 0x70000
-end_request: I/O error, dev sda, sector 10888873
-SCSI error : <0 0 0 0> return code = 0x70000
-end_request: I/O error, dev sda, sector 10888874
-SCSI error : <0 0 0 0> return code = 0x70000
-end_request: I/O error, dev sda, sector 10888875
-SCSI error : <0 0 0 0> return code = 0x70000
-end_request: I/O error, dev sda, sector 10888876
-SCSI error : <0 0 0 0> return code = 0x70000
-end_request: I/O error, dev sda, sector 10888877
-SCSI error : <0 0 0 0> return code = 0x70000
-end_request: I/O error, dev sda, sector 10888878
-SCSI error : <0 0 0 0> return code = 0x70000
-end_request: I/O error, dev sda, sector 10888879
-SCSI error : <0 0 0 0> return code = 0x70000
-end_request: I/O error, dev sda, sector 10888880
-SCSI error : <0 0 0 0> return code = 0x70000
-end_request: I/O error, dev sda, sector 10888881
-SCSI error : <0 0 0 0> return code = 0x70000
-end_request: I/O error, dev sda, sector 10888882
-SCSI error : <0 0 0 0> return code = 0x70000
-end_request: I/O error, dev sda, sector 10888883
-SCSI error : <0 0 0 0> return code = 0x70000
-end_request: I/O error, dev sda, sector 10888884
-SCSI error : <0 0 0 0> return code = 0x70000
-end_request: I/O error, dev sda, sector 10888885
-SCSI error : <0 0 0 0> return code = 0x70000
-end_request: I/O error, dev sda, sector 10888886
-SCSI error : <0 0 0 0> return code = 0x70000
-end_request: I/O error, dev sda, sector 10888887
-SCSI error : <0 0 0 0> return code = 0x70000
-end_request: I/O error, dev sda, sector 10888888
-SCSI error : <0 0 0 0> return code = 0x70000
-end_request: I/O error, dev sda, sector 10888889
-SCSI error : <0 0 0 0> return code = 0x70000
-end_request: I/O error, dev sda, sector 10888890
-SCSI error : <0 0 0 0> return code = 0x70000
-end_request: I/O error, dev sda, sector 10888891
-SCSI error : <0 0 0 0> return code = 0x70000
-end_request: I/O error, dev sda, sector 10888892
-SCSI error : <0 0 0 0> return code = 0x70000
-end_request: I/O error, dev sda, sector 10888893
-SCSI error : <0 0 0 0> return code = 0x70000
-end_request: I/O error, dev sda, sector 10888894
-SCSI error : <0 0 0 0> return code = 0x70000
-end_request: I/O error, dev sda, sector 10888895
-SCSI error : <0 0 0 0> return code = 0x70000
-end_request: I/O error, dev sda, sector 10888896
-SCSI error : <0 0 0 0> return code = 0x70000
-end_request: I/O error, dev sda, sector 10888897
-SCSI error : <0 0 0 0> return code = 0x70000
-end_request: I/O error, dev sda, sector 10888898
-SCSI error : <0 0 0 0> return code = 0x70000
-end_request: I/O error, dev sda, sector 10888899
-SCSI error : <0 0 0 0> return code = 0x70000
-end_request: I/O error, dev sda, sector 10888900
-SCSI error : <0 0 0 0> return code = 0x70000
-end_request: I/O error, dev sda, sector 10888901
-SCSI error : <0 0 0 0> return code = 0x70000
-end_request: I/O error, dev sda, sector 10888902
-SCSI error : <0 0 0 0> return code = 0x70000
-end_request: I/O error, dev sda, sector 10888903
-SCSI error : <0 0 0 0> return code = 0x70000
-end_request: I/O error, dev sda, sector 10888904
-SCSI error : <0 0 0 0> return code = 0x70000
-end_request: I/O error, dev sda, sector 10888905
-SCSI error : <0 0 0 0> return code = 0x70000
-end_request: I/O error, dev sda, sector 10888906
-SCSI error : <0 0 0 0> return code = 0x70000
-end_request: I/O error, dev sda, sector 10888907
-SCSI error : <0 0 0 0> return code = 0x70000
-end_request: I/O error, dev sda, sector 10888908
-SCSI error : <0 0 0 0> return code = 0x70000
-end_request: I/O error, dev sda, sector 10888909
-SCSI error : <0 0 0 0> return code = 0x70000
-end_request: I/O error, dev sda, sector 10888910
-SCSI error : <0 0 0 0> return code = 0x70000
-end_request: I/O error, dev sda, sector 10888911
-SCSI error : <0 0 0 0> return code = 0x70000
-end_request: I/O error, dev sda, sector 10888912
-SCSI error : <0 0 0 0> return code = 0x70000
-end_request: I/O error, dev sda, sector 10888913
-SCSI error : <0 0 0 0> return code = 0x70000
-end_request: I/O error, dev sda, sector 10888914
-SCSI error : <0 0 0 0> return code = 0x70000
-end_request: I/O error, dev sda, sector 10888915
-SCSI error : <0 0 0 0> return code = 0x70000
-end_request: I/O error, dev sda, sector 10888916
-SCSI error : <0 0 0 0> return code = 0x70000
-end_request: I/O error, dev sda, sector 10888917
-SCSI error : <0 0 0 0> return code = 0x70000
-end_request: I/O error, dev sda, sector 10888918
-SCSI error : <0 0 0 0> return code = 0x70000
-end_request: I/O error, dev sda, sector 10888919
-SCSI error : <0 0 0 0> return code = 0x70000
-end_request: I/O error, dev sda, sector 10888920
-SCSI error : <0 0 0 0> return code = 0x70000
-end_request: I/O error, dev sda, sector 10888921
-SCSI error : <0 0 0 0> return code = 0x70000
-end_request: I/O error, dev sda, sector 10888922
-SCSI error : <0 0 0 0> return code = 0x70000
-end_request: I/O error, dev sda, sector 10888923
-SCSI error : <0 0 0 0> return code = 0x70000
-end_request: I/O error, dev sda, sector 10888924
-SCSI error : <0 0 0 0> return code = 0x70000
-end_request: I/O error, dev sda, sector 10888925
-SCSI error : <0 0 0 0> return code = 0x70000
-end_request: I/O error, dev sda, sector 10888926
-SCSI error : <0 0 0 0> return code = 0x70000
-end_request: I/O error, dev sda, sector 10888927
-SCSI error : <0 0 0 0> return code = 0x70000
-end_request: I/O error, dev sda, sector 10888928
-SCSI error : <0 0 0 0> return code = 0x70000
-end_request: I/O error, dev sda, sector 10888929
-SCSI error : <0 0 0 0> return code = 0x70000
-end_request: I/O error, dev sda, sector 10888930
-SCSI error : <0 0 0 0> return code = 0x70000
-end_request: I/O error, dev sda, sector 10888931
-SCSI error : <0 0 0 0> return code = 0x70000
-end_request: I/O error, dev sda, sector 10888932
-SCSI error : <0 0 0 0> return code = 0x70000
-end_request: I/O error, dev sda, sector 10888933
-SCSI error : <0 0 0 0> return code = 0x70000
-end_request: I/O error, dev sda, sector 10888934
-SCSI error : <0 0 0 0> return code = 0x70000
-end_request: I/O error, dev sda, sector 10888935
-SCSI error : <0 0 0 0> return code = 0x70000
-end_request: I/O error, dev sda, sector 10888936
-SCSI error : <0 0 0 0> return code = 0x70000
-end_request: I/O error, dev sda, sector 10888937
-SCSI error : <0 0 0 0> return code = 0x70000
-end_request: I/O error, dev sda, sector 10888938
-SCSI error : <0 0 0 0> return code = 0x70000
-end_request: I/O error, dev sda, sector 10888939
-SCSI error : <0 0 0 0> return code = 0x70000
-end_request: I/O error, dev sda, sector 10888940
-SCSI error : <0 0 0 0> return code = 0x70000
-end_request: I/O error, dev sda, sector 10888941
-SCSI error : <0 0 0 0> return code = 0x70000
-end_request: I/O error, dev sda, sector 10888942
-SCSI error : <0 0 0 0> return code = 0x70000
-end_request: I/O error, dev sda, sector 10888943
-SCSI error : <0 0 0 0> return code = 0x70000
-end_request: I/O error, dev sda, sector 10888944
-SCSI error : <0 0 0 0> return code = 0x70000
-end_request: I/O error, dev sda, sector 10888945
-SCSI error : <0 0 0 0> return code = 0x70000
-end_request: I/O error, dev sda, sector 10888946
-SCSI error : <0 0 0 0> return code = 0x70000
-end_request: I/O error, dev sda, sector 10888947
-SCSI error : <0 0 0 0> return code = 0x70000
-end_request: I/O error, dev sda, sector 10888948
-SCSI error : <0 0 0 0> return code = 0x70000
-end_request: I/O error, dev sda, sector 10888949
-SCSI error : <0 0 0 0> return code = 0x70000
-end_request: I/O error, dev sda, sector 10888950
-SCSI error : <0 0 0 0> return code = 0x70000
-end_request: I/O error, dev sda, sector 10888951
-SCSI error : <0 0 0 0> return code = 0x70000
-end_request: I/O error, dev sda, sector 10888952
-SCSI error : <0 0 0 0> return code = 0x70000
-end_request: I/O error, dev sda, sector 10888953
-SCSI error : <0 0 0 0> return code = 0x70000
-end_request: I/O error, dev sda, sector 10888954
-SCSI error : <0 0 0 0> return code = 0x70000
-end_request: I/O error, dev sda, sector 2907
-FAT: bread(block 2844) in fat_access failed
-SCSI error : <0 0 0 0> return code = 0x70000
-end_request: I/O error, dev sda, sector 10888955
-SCSI error : <0 0 0 0> return code = 0x70000
-end_request: I/O error, dev sda, sector 10888956
-SCSI error : <0 0 0 0> return code = 0x70000
-end_request: I/O error, dev sda, sector 10888957
-SCSI error : <0 0 0 0> return code = 0x70000
-end_request: I/O error, dev sda, sector 10888958
-SCSI error : <0 0 0 0> return code = 0x70000
-end_request: I/O error, dev sda, sector 10888959
-SCSI error : <0 0 0 0> return code = 0x70000
-end_request: I/O error, dev sda, sector 10888960
-SCSI error : <0 0 0 0> return code = 0x70000
-end_request: I/O error, dev sda, sector 10888961
-SCSI error : <0 0 0 0> return code = 0x70000
-end_request: I/O error, dev sda, sector 10888962
-SCSI error : <0 0 0 0> return code = 0x70000
-end_request: I/O error, dev sda, sector 10888963
-SCSI error : <0 0 0 0> return code = 0x70000
-end_request: I/O error, dev sda, sector 10888964
-SCSI error : <0 0 0 0> return code = 0x70000
-end_request: I/O error, dev sda, sector 10888965
-SCSI error : <0 0 0 0> return code = 0x70000
-end_request: I/O error, dev sda, sector 10888966
-SCSI error : <0 0 0 0> return code = 0x70000
-end_request: I/O error, dev sda, sector 10888967
-SCSI error : <0 0 0 0> return code = 0x70000
-end_request: I/O error, dev sda, sector 10888968
-SCSI error : <0 0 0 0> return code = 0x70000
-end_request: I/O error, dev sda, sector 10888969
-SCSI error : <0 0 0 0> return code = 0x70000
-end_request: I/O error, dev sda, sector 10888970
-SCSI error : <0 0 0 0> return code = 0x70000
-end_request: I/O error, dev sda, sector 10888971
-SCSI error : <0 0 0 0> return code = 0x70000
-end_request: I/O error, dev sda, sector 10888972
-SCSI error : <0 0 0 0> return code = 0x70000
-end_request: I/O error, dev sda, sector 10888973
-SCSI error : <0 0 0 0> return code = 0x70000
-end_request: I/O error, dev sda, sector 10888974
-SCSI error : <0 0 0 0> return code = 0x70000
-end_request: I/O error, dev sda, sector 10888975
-SCSI error : <0 0 0 0> return code = 0x70000
-end_request: I/O error, dev sda, sector 10888976
-SCSI error : <0 0 0 0> return code = 0x70000
-end_request: I/O error, dev sda, sector 10888977
-SCSI error : <0 0 0 0> return code = 0x70000
-end_request: I/O error, dev sda, sector 10888978
-SCSI error : <0 0 0 0> return code = 0x70000
-end_request: I/O error, dev sda, sector 10888979
-SCSI error : <0 0 0 0> return code = 0x70000
-end_request: I/O error, dev sda, sector 10888980
-SCSI error : <0 0 0 0> return code = 0x70000
-end_request: I/O error, dev sda, sector 10888981
-SCSI error : <0 0 0 0> return code = 0x70000
-end_request: I/O error, dev sda, sector 10888982
-SCSI error : <0 0 0 0> return code = 0x70000
-end_request: I/O error, dev sda, sector 10888983
-SCSI error : <0 0 0 0> return code = 0x70000
-end_request: I/O error, dev sda, sector 10888984
-SCSI error : <0 0 0 0> return code = 0x70000
-end_request: I/O error, dev sda, sector 10888985
-SCSI error : <0 0 0 0> return code = 0x70000
-end_request: I/O error, dev sda, sector 10888986
-SCSI error : <0 0 0 0> return code = 0x70000
-end_request: I/O error, dev sda, sector 10888987
-SCSI error : <0 0 0 0> return code = 0x70000
-end_request: I/O error, dev sda, sector 10888988
-SCSI error : <0 0 0 0> return code = 0x70000
-end_request: I/O error, dev sda, sector 10888989
-SCSI error : <0 0 0 0> return code = 0x70000
-end_request: I/O error, dev sda, sector 10888990
-SCSI error : <0 0 0 0> return code = 0x70000
-end_request: I/O error, dev sda, sector 10888991
-SCSI error : <0 0 0 0> return code = 0x70000
-end_request: I/O error, dev sda, sector 10888992
-SCSI error : <0 0 0 0> return code = 0x70000
-end_request: I/O error, dev sda, sector 10888993
-SCSI error : <0 0 0 0> return code = 0x70000
-end_request: I/O error, dev sda, sector 10888994
-SCSI error : <0 0 0 0> return code = 0x70000
-end_request: I/O error, dev sda, sector 10888995
-SCSI error : <0 0 0 0> return code = 0x70000
-end_request: I/O error, dev sda, sector 10888996
-SCSI error : <0 0 0 0> return code = 0x70000
-end_request: I/O error, dev sda, sector 10888997
-SCSI error : <0 0 0 0> return code = 0x70000
-end_request: I/O error, dev sda, sector 10888998
-SCSI error : <0 0 0 0> return code = 0x70000
-end_request: I/O error, dev sda, sector 10888999
-SCSI error : <0 0 0 0> return code = 0x70000
-end_request: I/O error, dev sda, sector 10889000
-SCSI error : <0 0 0 0> return code = 0x70000
-end_request: I/O error, dev sda, sector 10889001
-SCSI error : <0 0 0 0> return code = 0x70000
-end_request: I/O error, dev sda, sector 10889002
-SCSI error : <0 0 0 0> return code = 0x70000
-end_request: I/O error, dev sda, sector 10889003
-SCSI error : <0 0 0 0> return code = 0x70000
-end_request: I/O error, dev sda, sector 10889004
-SCSI error : <0 0 0 0> return code = 0x70000
-end_request: I/O error, dev sda, sector 10889005
-usb 4-1: USB disconnect, address 2
-SCSI error : <0 0 0 0> return code = 0x70000
-end_request: I/O error, dev sda, sector 10889006
-scsi: Device offlined - not ready after error recovery: host 0 channel 0 id 0 lun 0
-sd 0:0:0:0: Illegal state transition cancel->offline
-Badness in scsi_device_set_state at drivers/scsi/scsi_lib.c:1688
- [<c023a230>] scsi_device_set_state+0xbc/0x10a
- [<c0238605>] scsi_eh_offline_sdevs+0x5a/0x73
- [<c02389f4>] scsi_unjam_host+0xa7/0xa9
- [<c0238a8e>] scsi_error_handler+0x98/0xb7
- [<c02389f6>] scsi_error_handler+0x0/0xb7
- [<c0104249>] kernel_thread_helper+0x5/0xb
-SCSI error : <0 0 0 0> return code = 0x70000
-end_request: I/O error, dev sda, sector 10889007
-printk: 157 messages suppressed.
-Buffer I/O error on device sda1, logical block 10888944
-lost page write due to I/O error on sda1
-------------[ cut here ]------------
-kernel BUG at drivers/block/as-iosched.c:1853!
-invalid operand: 0000 [#1]
-Modules linked in: hostap usbnet nfs nls_iso8859_1 nls_cp437 vfat fat nfsd exportfs lockd sunrpc parport_pc lp parport cls_fw sch_sfq sch_htb ipt_REJECT ipt_state iptable_filter iptable_nat ipt_helper ip_conntrack ipt_tos ipt_MARK iptable_mangle ip_tables ide_cd cdrom
-CPU:    0
-EIP:    0060:[<c02176f0>]    Not tainted VLI
-EFLAGS: 00010283   (2.6.9-rc2) 
-EIP is at as_exit+0x44/0x58
-eax: dedab58c   ebx: dedab580   ecx: db995aa0   edx: db963ebc
-esi: ded301b4   edi: 00000286   ebp: dec174b4   esp: db963ef4
-ds: 007b   es: 007b   ss: 0068
-Process scsi_eh_0 (pid: 1550, threadinfo=db962000 task=db995aa0)
-Stack: ded30128 c020fc40 c021179b db911824 db911800 c023ba5b db9119a8 c03963a8 
-       c03963c0 dec174d8 c020c371 c0116abe 00000000 c0380a80 c1627d00 c019af91 
-       db9119c0 c019af93 00000000 db911800 c019b263 00000000 c030eabc 00000000 
-Call Trace:
- [<c020fc40>] elevator_exit+0xd/0xf
- [<c021179b>] blk_cleanup_queue+0x31/0x78
- [<c023ba5b>] scsi_device_dev_release+0xc6/0xd5
- [<c020c371>] device_release+0x53/0x57
- [<c0116abe>] recalc_task_prio+0x8f/0x183
- [<c019af91>] kobject_cleanup+0x8c/0x8e
- [<c019af93>] kobject_release+0x0/0x8
- [<c019b263>] kref_put+0x34/0x8d
- [<c030eabc>] __up_wakeup+0x8/0xc
- [<c0235a3e>] scsi_done+0x0/0x16
- [<c0235e63>] __scsi_iterate_devices+0x47/0x51
- [<c023821f>] scsi_eh_stu+0x80/0xd8
- [<c023887c>] scsi_eh_ready_devs+0x19/0x6e
- [<c02389f4>] scsi_unjam_host+0xa7/0xa9
- [<c0238a8e>] scsi_error_handler+0x98/0xb7
- [<c02389f6>] scsi_error_handler+0x0/0xb7
- [<c0104249>] kernel_thread_helper+0x5/0xb
-Code: 8d 43 0c 39 43 0c 75 23 8b 43 70 e8 fa ab f1 ff 8b 83 cc 00 00 00 e8 ae ba ff ff 8b 43 30 e8 51 f9 f1 ff 89 d8 5b e9 49 f9 f1 ff <0f> 0b 3d 07 f8 9b 33 c0 eb d3 0f 0b 3c 07 f8 9b 33 c0 eb c1 55 
- 
-
---azLHFNyN32YCQGCU--
