@@ -1,74 +1,48 @@
-From: Naveen Burmi <naveenb@cisco.com>
-Subject: Re: Request for review of Linux iSCSI driver version 4.0.0.1
-Date: Tue, 11 Nov 2003 17:26:36 +0530
+From: "David Fish" <dfish@broadbus.com>
+Subject: controlling block alignment and length in SCSI sd I/O operations
+Date: Tue, 11 Nov 2003 11:06:38 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <03111117263601.01918@naveenb-lnx.cisco.com>
-References: <20031027153932.A16679@infradead.org> <018b01c39e1f$e013bab0$a0074d0a@apac.cisco.com> <20031029134557.A17523@infradead.org>
-Reply-To: naveenb@cisco.com
+Message-ID: <3B83C5E7EAB53F44A16CDFB70F9E4BF3A1F0FF@btiexch01.broadbus.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sj-iport-2-in.cisco.com ([171.71.176.71]:57139 "EHLO
-	sj-iport-2.cisco.com") by vger.kernel.org with ESMTP
-	id S263466AbTKKLxD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 11 Nov 2003 06:53:03 -0500
-In-Reply-To: <20031029134557.A17523@infradead.org>
+Received: from [12.25.43.10] ([12.25.43.10]:23348 "EHLO btiexch01.broadbus.com")
+	by vger.kernel.org with ESMTP id S263561AbTKKQGj convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 11 Nov 2003 11:06:39 -0500
+Content-Class: urn:content-classes:message
 List-Id: linux-scsi@vger.kernel.org
-Cc: 'Christoph Hellwig' <hch@infradead.org>, linux-scsi@vger.kernel.org, davmyers@cisco.com
+To: linux-scsi@vger.kernel.org
 
-On Wednesday 29 October 2003 07:15 pm, 'Christoph Hellwig' wrote:
-> On Wed, Oct 29, 2003 at 06:53:43PM +0530, Surekha.PC wrote:
-> > Hi,
-> >
-> >  I have interspersed my answers below for 2 of your comments.
-> >
-> > >	- kill the is_root_disk special casing.  drivers can't know
-> > >	what the root disks is, there might not even be a single one.
-> >
-> > This flag is needed for our iSCSI network boot implementation to check
-> > if we are booted on iSCSI disk. This is used while trying to shutdown
-> > the iSCSI service.
->
-> What if the root device changes (pivot_root syscall, namespaces)?  You need
-> to find a way to do what you want without having knowledge about beeing
-> a root device in the LLDD - there might not be a single root device and it
-> could change all the time.
+Hello all,
 
-During shutdown iSCSI driver gets signal to stop itself. In turn iSCSI driver 
-umounts all the partitions present of iSCSI disks, makes all the iSCSI disks 
-unavailble to the system and gracefully terminate. 
-But if iSCSI disk contains the root partition OR is part of root partition 
-then iSCSI driver must not try to umount the root partition and the iSCSI 
-disks must be available until the buffer cache gets flushed properly. For 
-this to happen iSCSI driver must be aware of all the iSCSI disk(s) that 
-constitute the root partition/devices.
+Here's a newbie-type question which I hope is appropriate to the list:
 
-	Q. What kernel data structures/API's are available that provide the 
-information about root device(s)?
+I'm running a QLogic fibre channel HBA (qla2310F) in a PC running RedHat
+8.0 Linux.  The device to which I'm directly connected can only accept
+SCSI commands with 2KB granularity, which means, for example, that a
+READ must have the logical block address fall on a 2KB boundary and the
+length must be in 2KB increments.
 
->
-> > This is again needed for network boot. The n/w driver and iSCSI driver
-> > are loaded during early boot. Since the n/w interface is not setup at
-> > that time, we need to bring up the interface through this call in iSCSI
-> > driver.
->
-> That's bogus.  Look at the ip autoconfig code used by rootnfs and reuse
-> that instead of creating such bogus hacks.  A driver has no business
-> dealing with the network configuration.
+When I load the QLogic driver, the FC login activity happens w/ no
+problem, but when the driver issues the first SCSI READ commands, the
+number of blocks requested is 2 (1KB), to which the device returns a
+CHECK CONDITION, citing an invalid field in the CDB.
 
-During shutdown iSCSI driver must bring up the network interface, if it goes 
-down, so to make available the iSCSI disk(s) on which the root partition 
-exists. iscsi_set_if_addr is used to bring up the newtwork interface at the 
-time of shutdown. 
-Q. Is ip autoconfig code helps us to bring up the newtwork interface at the 
-time of shutdown? 
+The device vendor claims that the device can run with the QLogic HBA
+under RH9.0 Linux, which I'm about to try.  The question I have, then,
+is this:  is it possible to configure the Linux SCSI subsystem to
+satisfy this vendor's 2KB data alignment requirement?  Or is this
+handled at the HBA driver level?  And is this type of alignment
+requirement standard for RAID controllers and disk arrays?
 
-Thanks,
-Naveen.
+TIA and Regards,
+Dave Fish
+ 
+--------------------------------------------------------
 
->
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+ 
+This email message and any files transmitted with it contain confidential information intended only for the person(s) to whom this email message is addressed.  If you have received this email message in error, please notify the sender immediately by telephone or email and destroy the original message without making a copy.  Thank you. 
+ 
