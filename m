@@ -1,37 +1,31 @@
-From: Adrian Bunk <bunk@stusta.de>
-Subject: Re: [2.6 patch] SCSI t128.c: remove an unused function
-Date: Mon, 15 Nov 2004 18:03:22 +0100
-Message-ID: <20041115170322.GB19860@stusta.de>
-References: <20041115023859.GE2249@stusta.de> <1100529621.27202.9.camel@localhost.localdomain>
+From: Luben Tuikov <luben_tuikov@adaptec.com>
+Subject: Serial Attached SCSI Driver Interface (SDI)
+Date: Mon, 15 Nov 2004 12:22:15 -0500
+Message-ID: <4198E5C7.5060506@adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel=40m.gmane.org-S261642AbUKORGm@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1100529621.27202.9.camel@localhost.localdomain>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, linux-scsi@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from magic.adaptec.com ([216.52.22.17]:15565 "EHLO magic.adaptec.com")
+	by vger.kernel.org with ESMTP id S261333AbUKORWb (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 15 Nov 2004 12:22:31 -0500
+Received: from redfish.adaptec.com (redfish.adaptec.com [162.62.50.11])
+	by magic.adaptec.com (8.11.6/8.11.6) with ESMTP id iAFHMVW28353
+	for <linux-scsi@vger.kernel.org>; Mon, 15 Nov 2004 09:22:31 -0800
+Received: from rtpe2k01.adaptec.com (rtpe2k01.adaptec.com [10.110.12.40])
+	by redfish.adaptec.com (8.11.6/8.11.6) with ESMTP id iAFHMUx16452
+	for <linux-scsi@vger.kernel.org>; Mon, 15 Nov 2004 09:22:30 -0800
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Mon, Nov 15, 2004 at 02:40:39PM +0000, Alan Cox wrote:
-> On Llu, 2004-11-15 at 02:38, Adrian Bunk wrote:
-> > The patch below removes the unused function t128_setup.
-> > 
-> > Please review whether it's correct.
-> 
-> Its wrong. The fix is to make the setup function get called, IFF you can
-> find anyone with a t128 any more
+I think it would be a good thing:
 
-Ah, it seems your t128 fix which did this in 2.4.17-pre7 is (like your 
-dtc cleanup in the same patch) among the fixes not yet forward-ported 
-from 2.4 to 2.6 ...
+ftp://ftp.t10.org/t10/document.04/04-345r1.pdf
 
-cu
-Adrian
+	Luben
 
--- 
+P.S. CSMI...
 
-       "Is there not promise of rain?" Ling Tan asked suddenly out
-        of the darkness. There had been need of rain for many days.
-       "Only a promise," Lao Er said.
-                                       Pearl S. Buck - Dragon Seed
+
