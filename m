@@ -1,44 +1,66 @@
 From: Jens Axboe <axboe@suse.de>
 Subject: Re: sense visible despite ide-floppy in 2.6 maybe
-Date: Sun, 13 Jun 2004 21:58:13 +0200
+Date: Sun, 13 Jun 2004 22:00:48 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040613195809.GA2566@suse.de>
-References: <20040611093815.GX13836@suse.de> <1087152503.3172.11.camel@patibmrh9>
+Message-ID: <20040613200048.GB2566@suse.de>
+References: <1086710016.3647.4.camel@patibmrh9> <40C8FB79.1050706@torque.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns.virtualhost.dk ([195.184.98.160]:34505 "EHLO virtualhost.dk")
-	by vger.kernel.org with ESMTP id S265257AbUFMT6V (ORCPT
+Received: from ns.virtualhost.dk ([195.184.98.160]:28362 "EHLO virtualhost.dk")
+	by vger.kernel.org with ESMTP id S265258AbUFMUAx (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 13 Jun 2004 15:58:21 -0400
+	Sun, 13 Jun 2004 16:00:53 -0400
 Content-Disposition: inline
-In-Reply-To: <1087152503.3172.11.camel@patibmrh9>
+In-Reply-To: <40C8FB79.1050706@torque.net>
 List-Id: linux-scsi@vger.kernel.org
-To: Pat LaVarre <p.lavarre@ieee.org>
-Cc: linux-scsi@vger.kernel.org
+To: Douglas Gilbert <dougg@torque.net>
+Cc: Pat LaVarre <p.lavarre@ieee.org>, linux-scsi@vger.kernel.org
 
-On Sun, Jun 13 2004, Pat LaVarre wrote:
-> > > should work, I think.
+On Fri, Jun 11 2004, Douglas Gilbert wrote:
+> Pat LaVarre wrote:
+> >Doug G:
+> >
+> >Did I do something wrong, or does "everyone know" already,
+> >
+> >SCSI pass thru in 2.6 omits ide-floppy, except if we do resort to the
+> >ide-scsi deprecated there?
 > 
-> Yes, thank you!
-> 
-> I reverted drivers/ide/ide.c ide-floppy.c to 2.6.7-rc3 and then saw your
-> updated version applied clean.
-> 
-> > Here's an updated version.
-> 
-> For me now ioctl SG_GET_VERSION_NUM works, and ioctl SG_IO works, ...
+> Pat,
+> In lk 2.6 the ide-scsi driver is "deprecated" for cd/dvd device types
+> but not other device types that use the ATAPI protocol. The ide-scsi
 
-Super!
+Direct-device is still clearly superior. ide-scsi is deprecated for any
+ATAPI type device using SG_IO, other uses may vary.
 
-> Except ioctl SG_IO sg_io_hdr_t.resid always comes back unchanged from
-> its initial dxfer_len value.  I see nonzero residue reported by the
-> trivial code I mentioned before, same there as in plscsi.
+> Anyway ide-scsi probably needs some repair work in lk 2.6. Both
+> Willem Riede and I have tried. IMO the ide-scsi driver looks ok
+> from the scsi subsystem side ....
 
-That's expected, I need to change the callback to set these correctly
-(it's not modifying any of the sg_io_hdr output values in the test
-patch). I'll try and get you a patch tomorrow, if you could check error
-reporting + residual with that, we can get something into mainline soon.
+Should work since months.
+
+> >Or more specifically,
+> >
+> >Can ioctl SG_IO fetch the offset 7 Additional Length field of op x03
+> >"REQUEST SENSE" data?
+> >
+> >Naively I thought yes of course, I know that works with /dev/scd$n.
+> >
+> >But then I tried a /dev/hd$v ide-floppy.  No joy.  perror tells me ioctl
+> >SG_IO fails via "Invalid argument", dmesg has no comment.  sg_scan you
+> >know.  ~/bin/sgio source is the trivial exercise quoted in source far
+> >below, specifically with an O_NONBLOCK|O_RDWR open as you can see.
+> 
+> My method with the SG_IO ioctl was to yield errnos
+> if the SCSI command could not be sent (or was rejected
+> at the point of transmission). So if there is an errno
+> there will be no sense buffer (or any other valid
+> response data). It is only when a response to the SCSI
+> command is received that errno will be clear (and the
+> various status variables should be checked).
+
+The issue here is that ide-floppy doesn't grok REQ_BLOCK_PC requests
+correctly, so when SG_IO generates them they are failed.
 
 -- 
 Jens Axboe
