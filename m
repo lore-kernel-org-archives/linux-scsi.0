@@ -1,73 +1,112 @@
-From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
-Subject: RE: 2.6.9 aacraid hangup
-Date: Fri, 22 Oct 2004 08:33:57 -0400
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: [PATCH] tmscsim: scsi device attributes
+Date: Fri, 22 Oct 2004 13:40:07 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <60807403EABEB443939A5A7AA8A7458B40B79B@otce2k01.adaptec.com>
+Message-ID: <20041022124007.GC4201@parcelfarce.linux.theplanet.co.uk>
+References: <Pine.LNX.4.60.0410212223120.7042@poirot.grange>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-2
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from magic.adaptec.com ([216.52.22.17]:5289 "EHLO magic.adaptec.com")
-	by vger.kernel.org with ESMTP id S271286AbUJVMeH convert rfc822-to-8bit
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:50319 "EHLO
+	www.linux.org.uk") by vger.kernel.org with ESMTP id S271301AbUJVMkK
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 22 Oct 2004 08:34:07 -0400
-content-class: urn:content-classes:message
+	Fri, 22 Oct 2004 08:40:10 -0400
+Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.60.0410212223120.7042@poirot.grange>
 List-Id: linux-scsi@vger.kernel.org
-To: Lukas Hejtmanek <xhejtman@mail.muni.cz>
-Cc: linux-scsi@vger.kernel.org
+To: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+Cc: James Bottomley <James.Bottomley@steeleye.com>, linux-scsi@vger.kernel.org
 
-Those series of messages come from the Firmware and are just blindly pr=
-inted by the driver. You have some `real' SCSI bus problems as the card=
- needs to take corrective actions, I would suggest inspecting terminati=
-on, cables and drives (see if one of them gets a LED stuck on before th=
-e problem crops up, stuff like that). One of those corrective actions i=
-s a controller cache flush which may have tipped the scales on the scsi=
- layer regarding timing out on the devices and taking them offline ...
+On Thu, Oct 21, 2004 at 10:31:25PM +0200, Guennadi Liakhovetski wrote:
+> A write method to adjust per-device queue-depth
 
-Sincerely -- Mark Salyzyn
+How about something more along the following lines?  I haven't converted
+sym2 to the generic queue code yet, so it's untested (and is obviously
+broken because nothing initialises max_queue_depth).
 
------Original Message-----
-=46rom: Lukas Hejtmanek [mailto:xhejtman@hell.sks3.muni.cz] On Behalf O=
-f Lukas Hejtmanek
-Sent: Friday, October 22, 2004 8:26 AM
-To: Salyzyn, Mark
-Cc: linux-scsi@vger.kernel.org
-Subject: Re: 2.6.9 aacraid hangup
+Index: drivers/scsi/scsi_sysfs.c
+===================================================================
+RCS file: /var/cvs/linux-2.6/drivers/scsi/scsi_sysfs.c,v
+retrieving revision 1.15
+diff -u -p -r1.15 scsi_sysfs.c
+--- drivers/scsi/scsi_sysfs.c	21 Oct 2004 18:59:23 -0000	1.15
++++ drivers/scsi/scsi_sysfs.c	22 Oct 2004 12:29:51 -0000
+@@ -15,6 +15,7 @@
+ #include <scsi/scsi.h>
+ #include <scsi/scsi_device.h>
+ #include <scsi/scsi_host.h>
++#include <scsi/scsi_tcq.h>
+ #include <scsi/scsi_transport.h>
+ 
+ #include "scsi_priv.h"
+@@ -248,7 +249,7 @@ static DEVICE_ATTR(field, S_IRUGO, sdev_
+ 
+ 
+ /*
+- * sdev_rd_attr: create a function and attribute variable for a
++ * sdev_rw_attr: create a function and attribute variable for a
+  * read/write field.
+  */
+ #define sdev_rw_attr(field, format_string)				\
+@@ -268,7 +269,7 @@ static DEVICE_ATTR(field, S_IRUGO | S_IW
+  * so leave this code in */
+ #if 0
+ /*
+- * sdev_rd_attr: create a function and attribute variable for a
++ * sdev_rw_attr_bit: create a function and attribute variable for a
+  * read/write bit field.
+  */
+ #define sdev_rw_attr_bit(field)						\
+@@ -310,12 +311,28 @@ static int scsi_sdev_check_buf_bit(const
+  * Create the actual show/store functions and data structures.
+  */
+ sdev_rd_attr (device_blocked, "%d\n");
+-sdev_rd_attr (queue_depth, "%d\n");
+ sdev_rd_attr (type, "%d\n");
+ sdev_rd_attr (scsi_level, "%d\n");
+ sdev_rd_attr (vendor, "%.8s\n");
+ sdev_rd_attr (model, "%.16s\n");
+ sdev_rd_attr (rev, "%.4s\n");
++
++sdev_show_function(queue_depth, "%d\n")
++
++static ssize_t
++sdev_store_queue_depth(struct device *dev, const char *buf, size_t count)
++{
++	struct scsi_device *sdev = to_scsi_device(dev);
++	int new_depth = simple_strtoul(buf, NULL, 0);
++
++	if (new_depth > sdev->max_queue_depth)
++		return -EINVAL;
++
++	scsi_activate_tcq(sdev, new_depth);
++	return count;
++}
++
++static DEVICE_ATTR(queue_depth, S_IRUGO | S_IWUSR, sdev_show_queue_depth, sdev_store_queue_depth);
+ 
+ static ssize_t
+ sdev_show_timeout (struct device *dev, char *buf)
+Index: include/scsi/scsi_device.h
+===================================================================
+RCS file: /var/cvs/linux-2.6/include/scsi/scsi_device.h,v
+retrieving revision 1.13
+diff -u -p -r1.13 scsi_device.h
+--- include/scsi/scsi_device.h	21 Oct 2004 19:00:10 -0000	1.13
++++ include/scsi/scsi_device.h	22 Oct 2004 12:29:59 -0000
+@@ -50,6 +50,7 @@ struct scsi_device {
+ 	struct list_head starved_entry;
+ 	struct scsi_cmnd *current_cmnd;	/* currently active command */
+ 	unsigned short queue_depth;	/* How deep of a queue we want */
++	unsigned short max_queue_depth;	/* The limit for the above */
+ 	unsigned short last_queue_full_depth; /* These two are used by */
+ 	unsigned short last_queue_full_count; /* scsi_track_queue_full() */
+ 	unsigned long last_queue_full_time;/* don't let QUEUE_FULLs on the same
 
-On Fri, Oct 22, 2004 at 08:20:20AM -0400, Salyzyn, Mark wrote:
-> Contact Adaptec technical support, you may have a bad card, bad Mothe=
-rboard
-> PCI bus or power supply, SCSI bus issues, or other H/W problems. Driv=
-e
-> compatibility (requiring Drive F/W changes) may also be an issue so m=
-ake sure
-> you list the actual drives model and release when you contact them.
->=20
-> I believe the latest released F/W for this card is 7244, but I may be
-> mistaken. Not sure if 6011 had the high priority cache flush problem =
-(causing
-> the card to be reticent for periods into the minutes) that plagues us=
- on some
-> of the earlier F/W releases of the Dell ROMB products when introduced=
- to
-> faster and faster host processors. One way of checking this out is to=
- turn off
-> the card's cache (both read and write).
-
-However I tested it today and with 2.6.6-bk4 it is OK.=20
-
-Anyway with F/W 5770 it sometimes resulted with message:
-kernel: aacraid:ID(1:02:0) Abort Time-out. Resetting bus.
-kernel: aacraid:SCSI bus reset issued on channel 1
-kernel: aacraid:Drive 1:0:0 online on container 0:
-kernel: aacraid:Drive 1:1:0 online on container 0:
-kernel: aacraid:Drive 1:2:0 online on container 0:
-kernel: aacraid:Drive 1:3:0 online on container 0:
-
---=20
-Luk=E1=B9 Hejtm=E1nek
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+"Next the statesmen will invent cheap lies, putting the blame upon 
+the nation that is attacked, and every man will be glad of those
+conscience-soothing falsities, and will diligently study them, and refuse
+to examine any refutations of them; and thus he will by and by convince 
+himself that the war is just, and will thank God for the better sleep 
+he enjoys after this process of grotesque self-deception." -- Mark Twain
