@@ -1,41 +1,63 @@
-From: Greg KH <greg@kroah.com>
-Subject: Re: cciss CSMI via sysfs for 2.6
-Date: Fri, 18 Feb 2005 12:05:52 -0800
-Message-ID: <20050218200552.GC20171@kroah.com>
-References: <20050216164512.GA5734@beardog.cca.cpqcorp.net> <20050218194628.GA24583@infradead.org>
+From: Matt Domsch <Matt_Domsch@dell.com>
+Subject: [PATCH 2.4.30-pre1] aic7xxx: don't reset chip on pause
+Date: Fri, 18 Feb 2005 15:50:50 -0600
+Message-ID: <20050218215049.GA1960@lists.us.dell.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Received: from mail.kroah.org ([69.55.234.183]:414 "EHLO perch.kroah.org")
-	by vger.kernel.org with ESMTP id S261520AbVBRV3c (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 18 Feb 2005 16:29:32 -0500
+Received: from linux.us.dell.com ([143.166.224.162]:59743 "EHLO
+	lists.us.dell.com") by vger.kernel.org with ESMTP id S261514AbVBRVuv
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 18 Feb 2005 16:50:51 -0500
 Content-Disposition: inline
-In-Reply-To: <20050218194628.GA24583@infradead.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>, mike.miller@hp.com, linux-kernel@vger.kernel.org, mochel@osdl.org, akpm@osdl.org, eric.moore@lsil.com, linux-scsi@vger.kernel.org
+To: marcelo.tosatti@cyclades.com
+Cc: linux-scsi@vger.kernel.org
 
-On Fri, Feb 18, 2005 at 07:46:28PM +0000, Christoph Hellwig wrote:
-> >  /*
-> > + * sysfs stuff
-> > + * this should be moved to it's own file, maybe cciss_sysfs.h
-> > + */
-> > +
-> > +static ssize_t cciss_firmver_show(struct device *dev, char *buf)
-> > +{
-> > +	ctlr_info_t *h = dev->driver_data;
-> > +        return sprintf(buf,"%c%c%c%c\n", h->firm_ver[0], h->firm_ver[1],
-> > +                                h->firm_ver[2], h->firm_ver[3]);
-> > +}
-> 
-> I really wish we had a common firmver release attribut in the driver
-> core, as mentioned in the fc transport class thread.  Greg?
+Patch below taken from RHEL3 Update 4 kernel 2.4.21-27.EL, fixes a bug
+in the aic79xx and aic7xxx drivers, where upon trying to pause the
+controller chip, it is accidentally hard-reset.  This causes PCI
+Parity errors to appear on Dell PowerEdge 4600 servers as the inb()
+immediately after accidental reset receives corrupted data.
 
-For a device?  It seems a huge overkill to add this attribute for
-_every_ device in the system, when only a small minority can actually
-use it.  Just put it as a default scsi or transport class attribute
-instead.
+Patch was submitted by Justin Gibbs many moons ago, but never applied
+to mainline 2.4.  Marcelo, please apply.
 
-thanks,
+Signed-off-by: Matt Domsch <Matt_Domsch@dell.com>
 
-greg k-h
+-- 
+Matt Domsch
+Software Architect
+Dell Linux Solutions linux.dell.com & www.dell.com/linux
+Linux on Dell mailing lists @ http://lists.us.dell.com
+
+diff -urNp --exclude-from=/home/mdomsch/excludes --minimal ./aic79xx_pci.c /home/mdomsch/kernels/linux-2.4.21-27.EL/drivers/scsi/aic7xxx/aic79xx_pci.c
+--- ./aic79xx_pci.c	Fri Feb 18 14:38:22 2005
++++ linux/drivers/scsi/aic7xxx/aic79xx_pci.c	Wed Dec  1 20:49:28 2004
+@@ -451,8 +457,10 @@ ahd_pci_test_register_access(struct ahd_
+ 	 * or read prefetching could be initiated by the
+ 	 * CPU or host bridge.  Our device does not support
+ 	 * either, so look for data corruption and/or flaged
+-	 * PCI errors.
++	 * PCI errors.  First pause without causing another
++	 * chip reset.
+ 	 */
++	hcntrl &= ~CHIPRST;
+ 	ahd_outb(ahd, HCNTRL, hcntrl|PAUSE);
+ 	while (ahd_is_paused(ahd) == 0)
+ 		;
+diff -urNp --exclude-from=/home/mdomsch/excludes --minimal ./aic7xxx_pci.c /home/mdomsch/kernels/linux-2.4.21-27.EL/drivers/scsi/aic7xxx/aic7xxx_pci.c
+--- ./aic7xxx_pci.c	Fri Feb 18 14:38:22 2005
++++ /home/mdomsch/kernels/linux-2.4.21-27.EL/drivers/scsi/aic7xxx/aic7xxx_pci.c	Wed Dec  1 20:49:28 2004
+@@ -1284,8 +1284,10 @@ ahc_pci_test_register_access(struct ahc_
+ 	 * or read prefetching could be initiated by the
+ 	 * CPU or host bridge.  Our device does not support
+ 	 * either, so look for data corruption and/or flagged
+-	 * PCI errors.
++	 * PCI errors.  First pause without causing another
++	 * chip reset.
+ 	 */
++	hcntrl &= ~CHIPRST;
+ 	ahc_outb(ahc, HCNTRL, hcntrl|PAUSE);
+ 	while (ahc_is_paused(ahc) == 0)
+ 		;
