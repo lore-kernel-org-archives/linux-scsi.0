@@ -1,9 +1,9 @@
 From: Luben Tuikov <luben@splentec.com>
-Subject: Re: [PATCH] SCSI Core cmd allocation 3/3
-Date: Mon, 13 Jan 2003 15:40:09 -0500
+Subject: Re: [PATCH] SCSI Core patches
+Date: Mon, 13 Jan 2003 16:30:05 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3E232429.3090300@splentec.com>
-References: <3E1A2140.3000408@splentec.com> <20030111180355.B2225@infradead.org> <3E22F369.5080209@splentec.com> <20030113175948.A27650@infradead.org> <3E2310A0.8080308@splentec.com> <20030113121129.A16510@beaverton.ibm.com>
+Message-ID: <3E232FDD.5000906@splentec.com>
+References: <3E1ADC9A.6090800@splentec.com> <20030107102127.B15528@beaverton.ibm.com> <3E1B2934.8060805@splentec.com> <20030107123301.A16378@beaverton.ibm.com> <3E1B513B.2090409@splentec.com> <20030107173633.A17825@beaverton.ibm.com> <20030111181224.B3178@infradead.org> <20030113123306.A16718@beaverton.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
@@ -13,52 +13,42 @@ To: Patrick Mansfield <patmans@us.ibm.com>
 Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org
 
 Patrick Mansfield wrote:
-> On Mon, Jan 13, 2003 at 02:16:48PM -0500, Luben Tuikov wrote:
-> 
->>Christoph Hellwig wrote:
->>
->>>Well, where do you actually _need_ scsi_get_command(), that's the question.
->>>
->>>I see the purpose, but I don't see it actually used.
->>
->>The scsi devices discovery code *may* use it.
-> 
-> 
-> Then do so in another patch.
+ >
+> This is _not_ just for multi-path. The current scsi code does not properly
+> size the target and lun based on the transport. For SPI the target and lun
+> need only be one byte; for FCP they are 4 and 8 bytes; for iSCSI I don't
+> know what. (Our current four byte host-ordered lun does not match anything
+> in any SCSI spec.)
 
-You're talking to the wrong person.  Someone else is/was working on
-the scsi discovery code.  Furthermore scsi discovery code will evolve
-more, and eventually I see SCSI Core as a two-part subsystem:
-scsi queuing (I'm trying to find out if it's worth it), and
-scsi target discovering.  Scsi queuing will be quite tiny, and
-scsi target discovering --- someone else will do.
+I brought this up last year sometime, either privately or here (search
+the archives if anyone is interested) and the idea of using a 64-bit LUN
+was shot down as in ``we don't need so many bits''.
 
-> 
->>If a global variable is used in a couple of files, belonging
->>to the same functionality, providing a unified service, and if
->>there's more than one of them, then they are better organized
->>as such as I've outlined.
-> 
-> 
-> Then move all the scsi globals into it. But, that should be a separate
-> patch.
+The problem is that due to its hierarchical structure all 64 bits are
+used. If SPI wants to use 5 bits, let it use 5 bits, if iSCSI wants
+to use 64, we've got this covered too.
 
-Right, it should be in a separate patch, but I did not want to do this job.
+But it would not be interpreted by SCSI Core, i.e. SCSI Core will simply
+copy around the LUN.
 
-I just prompted the idea, and left it for the rest of the SCSI Core
-developers to slowly (with each patch) move things therein.
+BTW, a LUN is a well defined object, cf. SAM-3, 4.9.
 
-> You should match the other kernel code as much as possible, it makes it
-> easier for other kernel developers to read it.
+> Having a scsi_nexus or such that is host adapter specific (something like
+> Mike A. posted about) possibly with common transport code (for FCP, SPI,
+> and iSCSI) would be useful, and would make it easier to add multi-pathing
+> or support for future transports. The scsi_device current_tag, sdtr, wdtr,
+> and ppr would be moved to a scsi_nexus since they are SPI specific.
 
-Let's not make a career move out of 2 lines of code in an inline
-function. It's not like my code uses GNU-style -- this is what you
-make it sound like. Don't forget, it's just 2 lines and I was merely
-trying to save macro space -- we don't need 100K line macro files.
+SCSI Core should know as little as possible about the transport, IMHO.
 
-Now let's get some work done.
+Also I'd get rid of ``current_tag'', and leave only information as to
+what kind of task management the device supports (BQue and CmdQue bits
+in INQUIRY data). Also see:
+
+http://MARC.10East.com/?l=linux-scsi&m=103488799412511&w=2
 
 -- 
 Luben
+
 
 
