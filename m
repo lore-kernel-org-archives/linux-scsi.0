@@ -1,97 +1,138 @@
-From: James Bottomley <James.Bottomley@steeleye.com>
-Subject: [PATCH 2.5.31] cli clean up for 53c700
-Date: Wed, 14 Aug 2002 09:23:02 -0500
+From: "Andrew Vasquez" <andrew.vasquez@qlogic.com>
+Subject: [ANNOUNCE] QLogic FC Driver for Linux 6.01b4 Released.
+Date: Wed, 14 Aug 2002 17:14:15 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <200208141423.g7EEN3402521@localhost.localdomain>
+Message-ID: <B179AE41C1147041AA1121F44614F0B02407F6@AVEXCH02.qlogic.org>
 Mime-Version: 1.0
-Content-Type: multipart/mixed ;
-	boundary="==_Exmh_-2800804480"
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: (from root@localhost)
-	by pogo.mtv1.steeleye.com (8.9.3/8.9.3) id HAA30728
-	for <linux-scsi@vger.kernel.org>; Wed, 14 Aug 2002 07:23:08 -0700
-Received: from localhost.localdomain (sshppp-200.mtv1.steeleye.com [172.16.1.200])
-	by pogo.mtv1.steeleye.com (8.9.3/8.9.3) with ESMTP id HAA30591
-	for <linux-scsi@vger.kernel.org>; Wed, 14 Aug 2002 07:23:05 -0700
-Received: from mulgrave (jejb@localhost)
-	by localhost.localdomain (8.11.6/linuxconf) with ESMTP id g7EEN3402521
-	for <linux-scsi@vger.kernel.org>; Wed, 14 Aug 2002 09:23:03 -0500
+content-class: urn:content-classes:message
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-This is a multipart MIME message.
+All,
 
---==_Exmh_-2800804480
-Content-Type: text/plain; charset=us-ascii
+The following made it to the linux-kernel list, but did not 
+seem to appear on linux-scsi.  
 
-This is a trivial fix to remove the 53c700 driver's reliance on 
-cli/restore_flags.
+Regards,
+Andrew Vasquez
 
-James
+-----Original Message-----
+All,
+
+QLogic is pleased to announce the 6.01b4 release of its qla2xxx driver for
+ISP2100/ISP22xx/ISP23xx chips and HBAs.
+
+Major improvements from the 5.3x driver series include:
+
+	o Robust and stable failover implementation
+	o Fast-path cleanup
+	o Support for the new error-handling routines
+	o Report-luns scan
+	o ISP2342 support
+	o IP via FC support (RFC 2625)
+	o ISP2100 support.
+	o 64bit DMA addressing
+	o Remove virt_to_bus/kmalloc --> pci_* routines
+	o Memory mapped I/O support
+	o General code-sanitizing
+		- locking structures
+		- queue structures
+		- extraneous NOP *LOCK/UNLOCK macros
+		- remove old EH routines
+		- remove serial console routines
+
+The 6.xx series driver supports kernels 2.4.x and above ONLY, and contains most
+of Arjan van de Ven's (Redhat) changes made to the 5.31 driver.
+
+A side note regarding ISP2100 support: QLogic has formally retired the QLA2100
+card and will *not* provide technical support for these chips and HBAs.  The
+initial 6.xx series drivers were stripped of ISP2100 card recognition.  The
+current ISP2100 support was forward-ported from 5.3x.  From an engineering
+standpoint, any patches or fixes for the ISP2100 will be considered.
+
+The driver distribution can be downloaded at:
+
+	http://download.qlogic.com/drivers/5537/qla2x00-v6.1b4-dist.tgz
+
+The distribution contains three main components:
+
+	qla2x00src-vX.YY.tgz	-- The FC/SCSI driver
+	qla2xipsrc-vM.NN.tgz	-- The IP network driver
+	qlapi-P.QQ-rel.tgz	-- The SNIA API library
 
 
---==_Exmh_-2800804480
-Content-Type: text/plain ; name="53c700-2.5.31.diff"; charset=us-ascii
-Content-Description: 53c700-2.5.31.diff
-Content-Disposition: attachment; filename="53c700-2.5.31.diff"
+Changes since 6.01b2 distribution:
+----------------------------------
 
-# This is a BitKeeper generated patch for the following project:
-# Project Name: Linux kernel tree
-# This patch format is intended for GNU patch command version 2.5 or higher.
-# This patch includes the following deltas:
-#	           ChangeSet	1.543   -> 1.544  
-#	drivers/scsi/53c700.c	1.11    -> 1.12   
-#
-# The following is the BitKeeper ChangeSet Log
-# --------------------------------------------
-# 02/08/04	jejb@mulgrave.(none)	1.544
-# [SCSI 53c700] clean up cli code
-# --------------------------------------------
-#
-diff -Nru a/drivers/scsi/53c700.c b/drivers/scsi/53c700.c
---- a/drivers/scsi/53c700.c	Wed Aug 14 09:20:48 2002
-+++ b/drivers/scsi/53c700.c	Wed Aug 14 09:20:48 2002
-@@ -1360,6 +1360,8 @@
- }
- 
- 
-+/* The queue lock with interrupts disabled must be held on entry to
-+ * this function */
- STATIC int
- NCR_700_start_command(Scsi_Cmnd *SCp)
- {
-@@ -1367,17 +1369,13 @@
- 		(struct NCR_700_command_slot *)SCp->host_scribble;
- 	struct NCR_700_Host_Parameters *hostdata =
- 		(struct NCR_700_Host_Parameters *)SCp->host->hostdata[0];
--	unsigned long flags;
- 	__u16 count = 1;	/* for IDENTIFY message */
- 	
--	save_flags(flags);
--	cli();
- 	if(hostdata->state != NCR_700_HOST_FREE) {
- 		/* keep this inside the lock to close the race window where
- 		 * the running command finishes on another CPU while we don't
- 		 * change the state to queued on this one */
- 		slot->state = NCR_700_SLOT_QUEUED;
--		restore_flags(flags);
- 
- 		DEBUG(("scsi%d: host busy, queueing command %p, slot %p\n",
- 		       SCp->host->host_no, slot->cmnd, slot));
-@@ -1443,12 +1441,6 @@
- 		       SCp->host, SXFER_REG);
- 	NCR_700_writel(slot->temp, SCp->host, TEMP_REG);
- 	NCR_700_writel(slot->resume_offset, SCp->host, DSP_REG);
--
--	/* allow interrupts here so that if we're selected we can take
--	 * a selection interrupt.  The script start may not be
--	 * effective in this case, but the selection interrupt will
--	 * save our command in that case */
--	restore_flags(flags);
- 
- 	return 1;
- }
+  QLA2X00:
 
---==_Exmh_-2800804480--
+	- Remove qla_dbg.h and qla_def.h files from driver
+	  distribution.
+	- Remove all virt_to_* calls in both SCSI/IP driver sources.
+	  - 64bit DMA addressing through dma_addr_t.
+	- Cleanup structure names/member variables from IP sources.
+	- Add QL_DEBUG_LEVEL_12 for IP debugging.
+	- Add transmission timeout callback for IP driver.
+	- Enable SRAM, Instruction RAM and GP RAM parity checks on
+	  ISP2300s.
+	- Display all luns recognized by driver in /proc, not just
+	  SCSI mid-layer scanned luns.  Luns not scanned by the mid-
+	  layer are marked with an asterisk (*).
+	  - Add FC_SUPPORT_RPT_LUNS flag to the struct fc_port.flags.
+	    Set, if the device supported the report luns command.
+	- Increase Inquiry request buffer to 36 rather than 4.  Some
+	  target devices have problems with the small transfer.
+	- Fix assignment of current_speed during an asyncronous event
+	  MBA_LOOP_UP.  Improper connection speed was being reported
+	  to EXIOCTs and IP driver.
+	- Add ISP2100 support:
+	  - QLogic provides no support for the ISP2100.
+	  - compiled binary name qla2100.o.
+	  - Forward-port chip support from 5.[2|3]x series driver.
+	  - Update Makefile.kernel and Config.in.
+	  - add new 2100 TP firmware (1.19.24).
+	- Fix copy-error in qla2x00_fo_get_params() where the
+	  qla_fo_params notification CDB would be zero'd-out.
+	- Fix kernel-oops when DEBUG level 5 is enabled and a command
+	  is sent to a non-existent lun.
+	- Fix in-kernel compilation problem (Veritas).
+	- Remove superfluous KMALLOC*/KMFREE/BZERO/BCOPY/
+	  BCMP/qla_bcopy defines and functions.
+	- Remove unused ql_list_link structures and functions.
+	- Consistent use of copy_to/from_user() functions (RH).
+	- Consistent use of scsi_qla_host_t instead of
+	  several aliases (RH).
+	- Remove illegal usage of caddr_t (RH).
+	- Remove Target-Mode support from driver.
+	- Cleanup qla_fo.c file:
+	  - Remove old debugging code.
+	  - General sanitizing.
+	- Cleanup compiler warnings during debug builds.
+	- Add new 2300 IP/TP firmware (3.01.13).
 
+  QLA2XIP:
+
+	- Requires v6.01b4 SCSI driver.
+  	- Add completion status to send and receive control buffers.
+  	- Add support for specifying the MTU (mtu) and Receive
+	  buffers count (buffers) on the modules command line.
+	- Add NETIF_F_HIGHDMA to the device feature flags if 64bit
+	  DMA addressing possible.
+	- Add tx_timeout() implementation.
+	- Add display of link connection speed during initialization.
+	- Fix race in qla2xip_free_send_cb().
+	- Remove all virt_to_* calls in driver sources.
+	  - 64bit DMA addressing through dma_addr_t.
+	- Use system-defined structures for network/ethernet
+	  support.
+	  - Use hton/ntoh functions.
+	- Cleanup structure names/member variables.
+
+Regards,
+Andrew Vasquez
+QLogic Corporation
+andrew.vasquez@qlogic.com
 
