@@ -1,52 +1,40 @@
-From: Lukas Hejtmanek <xhejtman@mail.muni.cz>
-Subject: 2.6.9 aacraid hangup
-Date: Fri, 22 Oct 2004 01:32:38 +0200
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20041021233238.GB11607@mail.muni.cz>
+From: "Maciej W. Rozycki" <macro@linux-mips.org>
+Subject: Re: [patch 1/2] cciss: cleans up warnings in the 32/64 bit conversions
+Date: Fri, 22 Oct 2004 01:00:45 +0100 (BST)
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <Pine.LNX.4.58L.0410220054010.15504@blysk.ds.pg.gda.pl>
+References: <20041021211718.GA10462@beardog.cca.cpqcorp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-2
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hell.sks3.muni.cz ([147.251.210.30]:19335 "EHLO
-	hell.sks3.muni.cz") by vger.kernel.org with ESMTP id S271095AbUJUXcn
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 21 Oct 2004 19:32:43 -0400
-Received: from xhejtman by hell.sks3.muni.cz with local (Exim 3.36 #1 (Debian))
-	id 1CKmQA-00032g-00
-	for <linux-scsi@vger.kernel.org>; Fri, 22 Oct 2004 01:32:38 +0200
-Content-Disposition: inline
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-kernel-owner+glk-linux-kernel=40m.gmane.org-S271149AbUJVAEr@vger.kernel.org>
+In-Reply-To: <20041021211718.GA10462@beardog.cca.cpqcorp.net>
+To: mikem@beardog.cca.cpqcorp.net
+Cc: marcelo.tosatti@cyclades.com, axboe@suse.de, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-Hello,
+On Thu, 21 Oct 2004 mike.miller@hp.com wrote:
 
-I'm using vanilla kernel 2.6.9 and ASR 2200S card with firmware 6011.
+> @@ -611,7 +610,7 @@ int cciss_ioctl32_passthru(unsigned int 
+>  	err |= copy_from_user(&arg64.Request, &arg32->Request, sizeof(arg64.Request));
+>  	err |= copy_from_user(&arg64.error_info, &arg32->error_info, sizeof(arg64.error_info));
+>  	err |= get_user(arg64.buf_size, &arg32->buf_size);
+> -	err |= get_user(arg64.buf, &arg32->buf);
+> +	err |= get_user((__u64) arg64.buf, &arg32->buf);
+>  	if (err) 
+>  		return -EFAULT; 
+>  
+> @@ -641,7 +640,7 @@ int cciss_ioctl32_big_passthru(unsigned 
+>  	err |= copy_from_user(&arg64.error_info, &arg32->error_info, sizeof(arg64.error_info));
+>  	err |= get_user(arg64.buf_size, &arg32->buf_size);
+>  	err |= get_user(arg64.malloc_size, &arg32->malloc_size);
+> -	err |= get_user(arg64.buf, &arg32->buf);
+> +	err |= get_user((__u64) arg64.buf, &arg32->buf);
+>  	if (err) return -EFAULT; 
+>  	old_fs = get_fs();
+>  	set_fs(KERNEL_DS);
 
-I have 1 P4 Xeon (HT enabled) and SMP configured kernel with 1GB of RAM=
-=2E
+ These constructs (casts as lvalues) are deprecated with GCC 3.4 (a
+warning is triggered) and no longer supported with 4.0.  Please consider
+rewriting -- you'll probably need an auxiliary variable.
 
-8 SCSI HDD is connected to this card in HW RAID 5 array.
-
-If I do:
-
-dd if=3D/dev/sda of=3D/dev/null bs=3D1M count=3D1204 &
-dd if=3D/dev/sda of=3D/dev/null bs=3D1M count=3D1024 skip=3D2000
-
-then with VERY high probability system hangs. It responds that disks we=
-nt
-offline and no more i/o operation successes.
-
-I have 2 partitions there. Witch EXT3 filesystem and with XFS filesyste=
-m.
-
-Is there something I could do?=20
-
-(please cc me as I'm not in the list)
-
---=20
-Luk=E1=B9 Hejtm=E1nek
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+  Maciej
