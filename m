@@ -1,32 +1,41 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: GFP_ATOMIC allocations...
-Date: 29 Aug 2002 11:47:55 +0100
+From: Michael Heinz <mheinz@infiniconsys.com>
+Subject: Possible bug handling bad I/Os?
+Date: Thu, 29 Aug 2002 09:34:28 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1030618075.7290.110.camel@irongate.swansea.linux.org.uk>
-References: <20020828202534.G30927@redhat.com>
-	<20020828174737.A27554@eng2.beaverton.ibm.com>
-	<20020828214215.A31167@redhat.com>
+Message-ID: <B9939B24.2BFC%mheinz@infiniconsys.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="US-ASCII"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <20020828214215.A31167@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Doug Ledford <dledford@redhat.com>
-Cc: Patrick Mansfield <patmans@us.ibm.com>, linux-scsi@vger.kernel.org
+To: linux-scsi <linux-scsi@vger.kernel.org>
 
-On Thu, 2002-08-29 at 02:42, Doug Ledford wrote:
-> > Do GFP_KERNEL alloc failures during boot time just return NULL?
-> 
-> GFP_ATOMIC returns NULL on failure, GFP_KERNEL *should* never fail until 
-> we get to a true OOM condition because it will block and wait for the vm 
-> subsystem to free us up some space.  Under true OOM conditions it will 
-> return NULL AFAIK.
+I ran into an interesting problem recently, and I'd like to ask if I chose
+the correct solution.
 
-Or maybe deadlock if its happening due to I/O. If it wants to flush a
-page out to that scsi device and the scsi device is doing the allocation
-life gets very unpleasant. SCSI may not be coming from block layer
-access with PF_MEM* set either, think about /proc and scsi-generic
+The "virtual" HBA driver I've written was having a problem recovering when
+it temporarily lost contact with the remote hardware. All signs were that
+the HBA itself recovered, but that SCSI stopped issuing I/Os.
 
-"Here be dragons"
+The last thing to happen seemed to be that my driver would get a call to
+queue_command while I knew the connection was down. Since I knew the
+connection was down I would simply immediately return an error and do
+nothing else.
+
+Since I already had a watchdog process to manage the reconnect, as an
+experiment, I tried putting the bad SCSI_Cmnd on a linked list and returning
+success to the SCSI layer. A few seconds later, the watchdog picks up the
+command and calls the calls its done function. This immediately resolved the
+problem!
+
+So, my question is: Is this the right way to handle this problem, or is
+there another issue? At least part of the SCSI system knows the command was
+bad, because it never tries to abort it - but it never issues another
+command, either.
+
+Any suggestions?
+-- 
+Michael Heinz <mheinz@infiniconsys.com>
+Staff Software Engineer
+InfiniCon Systems, Inc.
 
