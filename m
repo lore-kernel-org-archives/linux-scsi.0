@@ -1,44 +1,68 @@
-From: James Bottomley <James.Bottomley@steeleye.com>
-Subject: Re: PATCH [5/15] qla2xxx:  SG tablesize update
-Date: 14 Mar 2004 17:31:55 -0500
+From: Andrew Vasquez <praka@users.sourceforge.net>
+Subject: Re: [BUG] modprobe qla2300 doesn't complete
+Date: Sun, 14 Mar 2004 21:06:42 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1079303516.2108.73.camel@mulgrave>
-References: <20040314082444.GA3416@linux.local.home>
-	<1079275768.2022.1.camel@mulgrave> <20040314145142.GL6955@suse.de>
-	<1079276396.2022.8.camel@mulgrave>  <20040314203649.GA1463@havoc.gtf.org>
+Message-ID: <20040315050642.GA30707@praka.local.home>
+References: <20040310221241.GA7903@colo.lackof.org> <20040305041850.GA9124@colo.lackof.org> <20040305071721.GA9684@praka.local.home> <20040305172147.GB17305@colo.lackof.org> <20040309164033.GA21648@praka.local.home> <20040310221241.GA7903@colo.lackof.org> <5.1.0.14.2.20040312232611.044c2e98@mira-sjcm-3.cisco.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat1.steeleye.com ([65.114.3.130]:61095 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S261943AbUCNWcM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 14 Mar 2004 17:32:12 -0500
-In-Reply-To: <20040314203649.GA1463@havoc.gtf.org>
+Received: from ms-smtp-01-qfe0.socal.rr.com ([66.75.162.133]:4859 "EHLO
+	ms-smtp-01-eri0.socal.rr.com") by vger.kernel.org with ESMTP
+	id S262266AbUCOF3K (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 15 Mar 2004 00:29:10 -0500
+Content-Disposition: inline
+In-Reply-To: <5.1.0.14.2.20040312232611.044c2e98@mira-sjcm-3.cisco.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Jens Axboe <axboe@suse.de>, Andrew Vasquez <andrew.vasquez@qlogic.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Lincoln Dale <ltd@cisco.com>
+Cc: Andrew Vasquez <andrew.vasquez@qlogic.com>, Grant Grundler <grundler@parisc-linux.org>, linux-scsi@vger.kernel.org
 
-On Sun, 2004-03-14 at 15:36, Jeff Garzik wrote:
-> On Sun, Mar 14, 2004 at 09:59:55AM -0500, James Bottomley wrote:
-> > The Qla chips are rather weird in that they have a single issue queue
-> > (whose size you can vary) but whose entry formats are fixed.  If I
-> > remember correctly, an initial command can have 4 SG elements, but a
-> > follow on entry can have 7 (not sure of the figures).  But anyway, large
-> > SG commands end up having to find multiple entries in this queue (and
-> > being a single issue queue for the entire card, it has to be mutexed
-> > while you search).  The more resources you need, the more difficult the
-> > search and the more contention you generate on the resource mutex.
+On Fri, 12 Mar 2004, Lincoln Dale wrote:
+> At 05:11 PM 12/03/2004, Andrew Vasquez wrote:
+> >So, I'm not entirely clear on what else is going on with your
+> >configuration.  I'll try to get some runtime on an ia64 machine
+> >tomorrow to perform the same test.
 > 
-> The block layer can handle this type of hardware just fine ;-)
+> if you have access to some SAN test equipment (e.g. Agilent SAN Tester), or 
+> SAN-rootkit (e.g. we have internal tools which can cause RSCN floods, FLOGI 
+> floods, PLOGI floods, rogue injection of vast quantities of NS 
+> registrations ...), it currently doesn't seem too hard to upset the qla2300 
+> into a never-ending incomplete state such that Grant has seen.
 > 
-> In my SATA hacking I am finding several devices that one must constrain
-> based on hardware-global resources, rather than just TCQ (or lack
-> thereof).
 
-I'm sorry, I must have missed the multiple queues down to a single HBA
-queue API in the block layer, which one is it again?
-
-James
+Unfortunately (at least locally) we don't have some nice Agilent
+hardware.  I have managed to gather some 'traffic generating' hardware
+together, but, from what we've seen, the disconnect in
+originator/source of the RSCN frames seems to wreak havoc in the BB
+credit area.  In any case, we'll try some other options tomorrow.
 
 
+> have you guys ever considered rate-limiting NS queries following receiving 
+> RSCNs?
+> 
+
+Well, looking through the code, there are a few additional places
+where we could limit processing during loop-resync (i.e. device
+discovery) when there are outstanding loop resyncs (RSCNs) without
+littering the whole process with tons of:
+
+	if (test_bit(LOOP_RESYNC_NEEDED, &ha->dpc_flags))
+		break;		// skip...
+
+
+I can take a look at these places.  
+
+With recent QLogic drivers (8.x series included) on 23xx (and 63xx)
+ISPs, we started to employ a more fabric non-disruptive method of
+handling 'port-type' RSCNs, effectively using a series of ADISCs and
+PLOGIs to handle disconnects/additions and movements of ports within a
+fabric -- for the initiated, qla_rscn.c contains the complete set of
+patterns and logic describing the process.
+
+In a sense, one could consider this 'rate-limiting' in essence, but
+given most devices on a fabric are 'passive' in nature, RSCN handling
+(including tricks and intelligence) at the lowest-link in the chain
+doesn't provide for much in the way of manuverability.
+
+Regards,
+Andrew Vasquez
