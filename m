@@ -1,32 +1,28 @@
 From: "Bryan Henderson" <hbryan@us.ibm.com>
-Subject: Re: /proc/scsi/map
-Date: Tue, 18 Jun 2002 08:40:36 -0700
+Subject: Re: [Possibly OT] Re: /proc/scsi/map
+Date: Tue, 18 Jun 2002 08:49:16 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <OF9E7601D4.31CCE1B5-ON87256BDC.00556B8A@boulder.ibm.com>
+Message-ID: <OF23543BD5.0C1295FA-ON87256BDC.00569E7A@boulder.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 To: Doug Ledford <dledford@redhat.com>
-Cc: Kurt Garloff <kurt@garloff.de>, Linux SCSI list <linux-scsi@vger.kernel.org>
+Cc: Austin Gonyou <austin@digitalroadkill.net>, Kurt Garloff <kurt@garloff.de>, Linux SCSI list <linux-scsi@vger.kernel.org>
 
 
->There simply is *no* guarantee here of
->any consistent naming, so don't bother trying to claim there is.
+>The simple fact of the matter is that to provide truly consistent,
+>persistent device naming requires that the naming be "end-to-end".  You
+>can not rely on *any* ordering issues (such as controllers, PCI busses,
+>devices, etc), you have to read the name from the device itself and the
+>name has to be totally irrespective of the devices current location on
+>whatever bus it uses.
 
-That's quite an overstatement.  With a minor and reasonable qualification,
-there is a guarantee.  That qualification is that you keep your controller
-numbers the same.  On the myriad systems that have only one controller,
-that is a very reasonable qualification indeed.
+Plus, in a case like this, you don't want the name to change if you move
+the data from one disk drive to another.  It's still the same volume, and
+the volume is what you care about.
 
-There are always qualifications when we say "guaranteed."  Here are some
-others in this case that you didn't mention: you keep the device jumpers
-the same, you keep the logical unit numbers the same (frequently not the
-case with large storage subsystems), you keep your devices plugged into the
-same place.
-
-And that's without even getting into the higher issue of what does "the
-same device" mean?
+But we do have look out for other cases.  Like non-storage devices.
 
 
 
