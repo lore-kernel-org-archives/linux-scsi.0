@@ -1,25 +1,38 @@
-From: Rob Landley <landley@trommello.org>
-Subject: Re: [patch] show Fusion MPT dialog only when CONFIG_BLK_DEV_SD is set
-Date: Wed, 9 Oct 2002 15:55:54 -0400
+From: Lionel Elie Mamane <lionel@mamane.lu>
+Subject: Re: PROBLEM: Linux 2.4.19 + aic7xxx driver = crash
+Date: Thu, 10 Oct 2002 08:01:25 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20021010005608.6CA55622@merlin.webofficenow.com>
-References: <Pine.NEB.4.44.0210091354300.8340-100000@mimas.fachschaften.tu-muenchen.de>
+Message-ID: <20021010060125.GA10453@home.mamane.lu>
+References: <20021009133617.GA18381@home.mamane.lu> <20021009202233.2fb23461.Scsi@PragmaSoft.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <Pine.NEB.4.44.0210091354300.8340-100000@mimas.fachschaften.tu-muenchen.de>
+Content-Disposition: inline
+In-Reply-To: <20021009202233.2fb23461.Scsi@PragmaSoft.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Adrian Bunk <bunk@fs.tum.de>, linux-scsi@vger.kernel.org
-Cc: Matt Porter <porter@cox.net>, linux-kernel@vger.kernel.org
+To: Scott Merritt <Scsi@PragmaSoft.com>
+Cc: linux-scsi@vger.kernel.org
 
-On Wednesday 09 October 2002 08:15 am, Adrian Bunk wrote:
+On Wed, Oct 09, 2002 at 08:22:33PM -0400, Scott Merritt wrote:
+> On Wed, 9 Oct 2002 15:36:17 +0200
+> Lionel Elie Mamane <lionel@mamane.lu> wrote:
 
-> Thinking about it the following is perhaps a better solution since the
-> fix is now in the arch-independent part.
+>> [1.] One line summary of the problem:
 
-That's good too, but it still belongs in the scsi low-level driver menu
-since it's a scsi low level driver.  (I just sent a much less ambitius 
-patch...)
+>>      Linux 2.4.19 + aic7xxx driver = crash
 
-Rob
+> Just out of curiousity, do you know if Low Latency Dispatching was
+> enabled when the Kernel was compiled ?
+
+I don't remember seeing any option like that in the "make
+menuconfig". I grepped the .config file for "LAT" and "DIS", no result
+that remotely looked like that.
+
+Maybe you are talking about the low latency / interruptible kernel
+patches, that thus are *not* part of vanilla 2.4.19? Then, definitely
+no, I didn't apply any patch myself. The only difference with the
+official 2.4.19 is what the Debian maintainer did, and is described at
+the end of my report.
+
+-- 
+Lionel
