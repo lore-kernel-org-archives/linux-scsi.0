@@ -1,26 +1,34 @@
-From: Scott Merritt <Scsi@PragmaSoft.com>
+From: Erik Andersen <andersen@codepoet.org>
 Subject: Re: [PATCH] SCSI hotplug support
-Date: Tue, 15 Oct 2002 14:22:54 -0400
+Date: Tue, 15 Oct 2002 12:45:35 -0600
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20021015142254.09a5770f.Scsi@PragmaSoft.com>
-References: <200210142107.g9EL7IX04354@localhost.localdomain>
-	<200210150019.53689.oliver@neukum.name>
-	<20021015002252.GE1274@redhat.com>
-	<200210150953.29905.oliver@neukum.name>
-	<20021015143533.GA4288@redhat.com>
+Message-ID: <20021015184535.GA16401@codepoet.org>
+References: <andersen@codepoet.org> <20021014203749.GA24904@codepoet.org> <200210142107.g9EL7IX04354@localhost.localdomain> <20021014215416.GB25941@codepoet.org> <20021014222515.GD1274@redhat.com> <20021015052521.GA1967@codepoet.org> <20021015182247.GA4391@redhat.com>
+Reply-To: andersen@codepoet.org
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <20021015143533.GA4288@redhat.com>
+Content-Disposition: inline
+In-Reply-To: <20021015182247.GA4391@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Doug Ledford <dledford@redhat.com>
-Cc: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@steeleye.com>, linux-scsi@vger.kernel.org
 
-On Tue, 15 Oct 2002 10:35:33 -0400
-Doug Ledford <dledford@redhat.com> wrote:
+On Tue Oct 15, 2002 at 02:22:47PM -0400, Doug Ledford wrote:
+> On Mon, Oct 14, 2002 at 11:25:22PM -0600, Erik Andersen wrote:
+> > 
+> > It is called from within the insmod's context.
+> 
+> So it's called by what module then?  And what happens if we have a user 
+> add a hard drive and it gets the module loaded and then attaches the 
+> drive, then we attach another drive sometime later, and this time hotplug 
+> doesn't do anything because the right module is already loaded?  How does 
+> the drive get added then?  Am I missing something?
 
-> Now, please, someone tell me why everyone is whining about user space 
-> doing so little to accomplish what the much larger patch that was ...
+Oops.  I spoke wrongly....  It is called from within
+/sbin/hotplug's context.
 
-Not *everyone* is whining about funnelling the scsi attachments back through user space :)  I *much* prefer this approach as it makes it easier for users to install extra/different processing if necessary.  In some sense, this is similar to my previous objections about the scsi drivers insisting on automatically reading the partition tables whenever they (think) they have encountered a scsi block device.
+ -Erik
+
+--
+Erik B. Andersen             http://codepoet-consulting.com/
+--This message was written using 73% post-consumer electrons--
