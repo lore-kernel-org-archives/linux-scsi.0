@@ -1,48 +1,37 @@
-From: James Bottomley <James.Bottomley@steeleye.com>
+From: Luben Tuikov <luben@splentec.com>
 Subject: Re: SCSI woes (followup)
-Date: Tue, 24 Sep 2002 10:29:01 -0400
+Date: Tue, 24 Sep 2002 13:57:51 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <200209241429.g8OET2r10804@localhost.localdomain>
-References: <rmk@arm.linux.org.uk>
+Message-ID: <3D90A79F.47A37BC2@splentec.com>
+References: <200209241346.g8ODkER09516@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: (from root@localhost)
-	by pogo.mtv1.steeleye.com (8.9.3/8.9.3) id HAA00404
-	for <linux-scsi@vger.kernel.org>; Tue, 24 Sep 2002 07:29:08 -0700
-In-Reply-To: Message from Russell King <rmk@arm.linux.org.uk>
-   of "Tue, 24 Sep 2002 14:58:52 BST." <20020924145852.A28042@flint.arm.linux.org.uk>
 List-Id: linux-scsi@vger.kernel.org
-To: Russell King <rmk@arm.linux.org.uk>
-Cc: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Russell King <rmk@arm.linux.org.uk>, linux-scsi@vger.kernel.org
 
-rmk@arm.linux.org.uk said:
-> I think it is misplaced.  It locks the doors of devices that aren't
-> even in use, which is just plain stupid. 
+James Bottomley wrote:
+>
+> I think it's method of operation is misplaced.  What it should probably be
+> doing is simply adding a doorlock to the head of the queue and then go back
+> around.  Since we know the doorlock now preceeds the command that instigated
+> the issue the door should be locked before anything else happens.  It should
+> simply loop around and process the door lock request so it doesn't have to
+> wait for anything else to occur (any commands which come down in the interim
+> should go on the queue tail).
+> 
 
-A better fix is probably to implement a flag to say whether the door should be 
-locked or not.
+Similar mechanism exists in some current SCSI transport/interconnect
+protocols.
 
-The whole lock door before a command goes down philosophy looks slightly wrong 
-to me.  I can see we want to lock the door for a mounted device and other 
-conditions, but locking the door just to send down a test unit ready or 
-inquiry doesn't seem correct.
+The notion of _an_immediate_command_ does exactly that.
 
-Door locking is very similar to reservation maintenance.  Perhaps adding 
-kernel code to maintain certain persistent but fragile states of the device 
-might be in order.
+Add a flag, say unsigned I:1; to scsi_cmnd, which if set to 1, will
+make add it to the head of the queue, irrespective of its serial
+number, else the command is added according to its serial number
+in the pending commands queue.
 
-> Incidentally, I've found another weirdness in the code.  We decide
-> that we need to lock the door based on the "was_reset" flag, which we
-> clear. However, st.c uses "was_reset" to decide whether to suspend
-> operations (due to a bus reset).  The two uses of this flag seem to
-> conflict each other.  How can we guarantee that st.c will see
-> was_reset set if the request function clears it?  st.c appears to use
-> scsi_request_fn, so I guess there's a conflict of use there.
-
-The code is riddled with these.  Reset handling was really just bolted on to 
-the code as an afterthought.
-
-James
-
-
+-- 
+Luben
