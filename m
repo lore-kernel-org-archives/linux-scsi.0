@@ -1,43 +1,60 @@
-From: Olaf Hering <olh@suse.de>
-Subject: Re: sysfs support for sg
-Date: Wed, 7 Jan 2004 23:40:28 +0100
+From: James Bottomley <James.Bottomley@steeleye.com>
+Subject: Re: Patch for reset in ini9100u [Initio 9100U(W)]
+Date: 07 Jan 2004 18:56:04 -0600
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040107224028.GA24290@suse.de>
-References: <20040107223341.GA23799@suse.de>
+Message-ID: <1073523364.1883.12.camel@mulgrave>
+References: <20040106231426.GR1845@earth.li>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns.suse.de ([195.135.220.2]:33967 "EHLO Cantor.suse.de")
-	by vger.kernel.org with ESMTP id S262308AbUAGWk3 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Jan 2004 17:40:29 -0500
-Received: from Hermes.suse.de (Hermes.suse.de [195.135.221.8])
-	(using TLSv1 with cipher EDH-RSA-DES-CBC3-SHA (168/168 bits))
-	(No client certificate requested)
-	by Cantor.suse.de (Postfix) with ESMTP id 0A94219A88C7
-	for <linux-scsi@vger.kernel.org>; Wed,  7 Jan 2004 23:40:29 +0100 (CET)
-Content-Disposition: inline
-In-Reply-To: <20040107223341.GA23799@suse.de>
+Received: from stat1.steeleye.com ([65.114.3.130]:39619 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S262705AbUAHA4g (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 7 Jan 2004 19:56:36 -0500
+In-Reply-To: <20040106231426.GR1845@earth.li>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Jonathan McDowell <noodles@earth.li>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
 
- On Wed, Jan 07, Olaf Hering wrote:
+On Tue, 2004-01-06 at 17:14, Jonathan McDowell wrote:
+> I have an IWill 2935UW SCSI controller which uses the ini9100u driver.
+> This has been working fine under 2.4 but I've recently built up a box of
+> spare bits including the controller and installed 2.6 on it. The driver
+> is marked broken in 2.6, apparently because of a lack of reset/abort
+> functionality as it compiles and runs ok. So I've taken a stab at
+> getting reset support back. Patch is below and it's received minimal
+> testing - it boots, removes the callback trace and error message and
+> doesn't seem to cause problems (the only disk in the machine is on this
+> card).
 
-> Hello,
->=20
-> are there any plans to add sysfs support to the sg driver?
-> I see no 'dev' nodes for it.
-> Can stuff like 'sg_start /dev/sg2 0' be done in another way?
+I think it's a good beginning.  However, there are some things that
+could be done to improve it.
 
-I missed the /sys/block/sda/device/generic symlink. But still, no dev
-node. Is that supposed to work that way?
+> +int i91u_bus_reset(Scsi_Cmnd * SCpnt)
+> +{
+> +	HCS *pHCB;
+> +
+> +	pHCB = (HCS *) SCpnt->device->host->base;
+> +	tul_reset_scsi_bus(pHCB);
 
---=20
-USB is for mice, FireWire is for men!
+This won't quite do beacuse tul_reset_scsi_bus() has some really nasty
+properties
 
-sUse lINUX ag, n=C3=9CRNBERG
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Under the old error handler, the reset routine was responsible for
+resetting the bus, waiting the timeout (which tul_reset_scsi_bus() does
+with a busy wait) and flushing the queue.
+
+In the new scheme, the eh thread takes care of all of this (including a
+nice thread based wait).
+
+I think this may all work correctly if you change this call to:
+
+tul_reset_scsi(pHCB, 0);
+
+instead.  That should simply reset the bus and not busy wait at all,
+which is really what the error handler is expecting.
+
+James
+
+
