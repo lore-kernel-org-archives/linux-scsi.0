@@ -1,34 +1,32 @@
 From: Andrew Morton <akpm@osdl.org>
-Subject: drivers/scsi/megaraid/Kconfig.megaraid
-Date: Wed, 18 Aug 2004 22:53:59 -0700
+Subject: Re: [PATCH] add ssleep(), kill scsi_sleep()
+Date: Wed, 18 Aug 2004 22:58:53 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040818225359.73da69b0.akpm@osdl.org>
+Message-ID: <20040818225853.183b9696.akpm@osdl.org>
+References: <412431D2.5080904@pobox.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fw.osdl.org ([65.172.181.6]:27867 "EHLO mail.osdl.org")
-	by vger.kernel.org with ESMTP id S265910AbUHSFzj (ORCPT
+Received: from fw.osdl.org ([65.172.181.6]:4575 "EHLO mail.osdl.org")
+	by vger.kernel.org with ESMTP id S265943AbUHSGAf (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 19 Aug 2004 01:55:39 -0400
-Received: from bix (build.pdx.osdl.net [172.20.1.2])
-	by mail.osdl.org (8.11.6/8.11.6) with SMTP id i7J5ta121717
-	for <linux-scsi@vger.kernel.org>; Wed, 18 Aug 2004 22:55:37 -0700
+	Thu, 19 Aug 2004 02:00:35 -0400
+In-Reply-To: <412431D2.5080904@pobox.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: James.Bottomley@steeleye.com, linux-scsi@vger.kernel.org
 
+Jeff Garzik <jgarzik@pobox.com> wrote:
+>
+> So, the kernel needs a 'sleep', but that token is far too common, so I 
+>  chose ssleep().
 
-Could someone please fix this up?
+Dorky name, but whatever.
 
-- MEGARAID_NEWGEN and MEGARAID_MM are defaulting to `y' and `m'.  Please
-  make them `n'.
+>  scsi_sleep() is a manually implemented msleep(), so I remove it.
 
-- What's the `$' in here for?
-
-	config MEGARAID_MAILBOX
-		tristate "LSI Logic MegaRAID Driver (New Driver)"
-		depends on PCI && SCSI && MEGARAID_MM
-		default $MEGARAID_MM
-
-- The if/endif in there can surely be replaced via proper Kconfig expressions?
+scsi_sleep() was buggy anyway: the CPU running scsi_sleep_done() could
+still be dinking with the semaphore when it goes out of scope on the CPU
+running scsi_sleep().  That's why struct completion was added.
 
