@@ -1,72 +1,60 @@
 From: Patrick Mansfield <patmans@us.ibm.com>
-Subject: Re: [PATCH 2.5.56] Scsi not compiling without /proc support
-Date: Mon, 13 Jan 2003 12:16:57 -0800
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <20030113121657.A16667@beaverton.ibm.com>
-References: <009001c2ba32$3b4bcdf0$2101a8c0@witbe>
+Subject: Re: [PATCH] SCSI Core patches
+Date: Mon, 13 Jan 2003 12:33:06 -0800
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <20030113123306.A16718@beaverton.ibm.com>
+References: <3E1ADC9A.6090800@splentec.com> <20030107102127.B15528@beaverton.ibm.com> <3E1B2934.8060805@splentec.com> <20030107123301.A16378@beaverton.ibm.com> <3E1B513B.2090409@splentec.com> <20030107173633.A17825@beaverton.ibm.com> <20030111181224.B3178@infradead.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <009001c2ba32$3b4bcdf0$2101a8c0@witbe>; from rol@witbe.net on Sun, Jan 12, 2003 at 01:00:42PM +0100
-To: Paul Rolland <rol@witbe.net>
-Cc: linux-kernel@vger.kernel.org, axboe@suse.de, rol@as2917.net, linux-scsi@vger.kernel.org
+In-Reply-To: <20030111181224.B3178@infradead.org>; from hch@infradead.org on Sat, Jan 11, 2003 at 06:12:24PM +0000
 List-Id: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Luben Tuikov <luben@splentec.com>, linux-scsi@vger.kernel.org
 
-On Sun, Jan 12, 2003 at 01:00:42PM +0100, Paul Rolland wrote:
-> Hello,
+On Sat, Jan 11, 2003 at 06:12:24PM +0000, Christoph Hellwig wrote:
+> On Tue, Jan 07, 2003 at 05:36:33PM -0800, Patrick Mansfield wrote:
+> > Having the LLDD use more data structures does not imply a better
+> > abstraction.  Again, a better abstraction would be to use interfaces to
+> > get the host/channel/target/lun. This could add overhead depending on the
+> > implementation.
 > 
-> This quick patch is used to remove calls to functions in charge of
-> registering/unregistering within /proc when /proc support is not
-> enabled.
-> 
-> Paul Rolland, rol@as2917.net
-> 
-> diff -uN linux-2.5.56/drivers/scsi/hosts.c
-> linux-2.5.56-work/drivers/scsi/hosts.c
-> --- linux-2.5.56/drivers/scsi/hosts.c   2003-01-10 21:11:20.000000000
-> +0100
-> +++ linux-2.5.56-work/drivers/scsi/hosts.c      2003-01-12
-> 12:42:59.000000000 +0100
-> @@ -345,7 +345,9 @@
->         shost->hostt->present--;
->  
->         /* Cleanup proc */
-> +#ifdef CONFIG_PROC_FS
->         scsi_proc_host_rm(shost);
-> +#endif
->  
->         kfree(shost);
->  }
-> @@ -456,7 +458,9 @@
->  found:
->         spin_unlock(&scsi_host_list_lock);
->  
-> +#ifdef CONFIG_PROC_FS
->         scsi_proc_host_add(shost);
-> +#endif
->  
->         shost->eh_notify = &sem;
->         kernel_thread((int (*)(void *)) scsi_error_handler, (void *)
-> shost, 0);
-> 
+> Not having the cmnd replicate information in the device implies a better
+> abstraction :)  The LLDD knows about struct scsi_device anyway.
 
-Paul -
+I'm not against removing the replication, but a scsi_get_lun etc. does
+not imply one implementation or the other.
 
-This should really be:
+This is _not_ just for multi-path. The current scsi code does not properly
+size the target and lun based on the transport. For SPI the target and lun
+need only be one byte; for FCP they are 4 and 8 bytes; for iSCSI I don't
+know what. (Our current four byte host-ordered lun does not match anything
+in any SCSI spec.)
 
---- 1.54/drivers/scsi/scsi.h	Sat Dec 21 08:54:22 2002
-+++ edited/drivers/scsi/scsi.h	Mon Jan 13 11:35:11 2003
-@@ -502,8 +502,8 @@
- static inline void scsi_exit_procfs(void) { ; }
- static inline void proc_print_scsidevice(Scsi_Device * sdev, char *buffer, int *size, int len) { ; }
- 
--static inline void scsi_proc_host_add(struct Scsi_Host *);
--static inline void scsi_proc_host_rm(struct Scsi_Host *);
-+static inline void scsi_proc_host_add(struct Scsi_Host *shost) { ; }
-+static inline void scsi_proc_host_rm(struct Scsi_Host *shost) { ; }
- #endif /* CONFIG_PROC_FS */
- 
- /*
+Having a scsi_nexus or such that is host adapter specific (something like
+Mike A. posted about) possibly with common transport code (for FCP, SPI,
+and iSCSI) would be useful, and would make it easier to add multi-pathing
+or support for future transports. The scsi_device current_tag, sdtr, wdtr,
+and ppr would be moved to a scsi_nexus since they are SPI specific.
+
+The abstraction of the channel should not even be part of scsi_device or
+the scsi mid-layer.
+
+> > > For this reason you might consider the suggestions by Doug, or research moving
+> > > multipathing higher up into the char/block layer, or thereabouts.
+> > 
+> > I have looked into putting multipath in the block layer, I've looked at
+> > md, at the T3 code, and at the qlogic multi-path code. Code in the block
+> > layer would be interesting, but might not solve problems with char
+> > devices,
+> 
+> Scsi character drivers _do_ go through the block layer.  (through
+> scsi_do_req).
+
+Okay - the only blk code the char drivers use is the blk_insert_request
+call, the char drivers never call the generic_make_request. So any
+implementation that relies on make_request (like md) won't currently work
+with char devices.
 
 -- Patrick Mansfield
