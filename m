@@ -1,34 +1,31 @@
 From: Rolf Eike Beer <eike@bilbo.math.uni-mannheim.de>
 Subject: Re: [PATCH 0/2] clean up scsi documentation
-Date: Mon, 11 Nov 2002 17:02:03 +0100
+Date: Mon, 11 Nov 2002 17:07:30 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <200211111702.03837@bilbo.math.uni-mannheim.de>
-References: <200211111633.55526@bilbo.math.uni-mannheim.de> <200211111650.06462@bilbo.math.uni-mannheim.de> <20021111155433.A25131@infradead.org>
+Message-ID: <200211111707.30305@bilbo.math.uni-mannheim.de>
+References: <200211111558.gABFwsh17828@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <20021111155433.A25131@infradead.org>
+In-Reply-To: <200211111558.gABFwsh17828@localhost.localdomain>
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-scsi@vger.kernel.org
+To: "J.E.J. Bottomley" <James.Bottomley@steeleye.com>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org
 
-> > > > here are my patches to clean up the scsi documentation. It is split
-> > > > in three parts:
-> >
-> > [...]
-> >
-> > > Sounds good to me.  Would be nice to separate the steps so BK notices
-> > > the file moves and keeps history.
-> >
-> > Ok. What would be the best way of doing this? Move the files one by one?
-> > One patch per file? Or a better script?
+Am Montag, 11. November 2002 16:58 schrieb J.E.J. Bottomley:
+> eike@bilbo.math.uni-mannheim.de said:
+> > Ok. What would be the best way of doing this? Move the files one by
+> > one? One  patch per file? Or a better script?
 >
-> Let some BK user (e.g. james or me) do the move and then apply your fixup
-> patches.  We can do all moves as one cset without problems.
+> I've already converted this to a BK script and applied it.
+>
+> Except for the removal of ChangeLog.serverraid (I renamed this
+> ChangeLog.ips).
 
-That's why I sent them here. Or did I misunderstood you, Douglas?
+I asked someone from Adaptec some time ago and he said this one is obsolete. 
+Can you explain me the idea behind this?
 
-Please do it.
+Thanks,
 
 Eike
