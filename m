@@ -1,78 +1,78 @@
-From: Matthew Dharm <mdharm-scsi@one-eyed-alien.net>
-Subject: Re: [usb-storage] Re: [PATCH] fix Sony USB mass storage - pass larger receive buffer
-Date: Thu, 13 Nov 2003 18:08:37 -0800
+From: Pat LaVarre <p.lavarre@ieee.org>
+Subject: Re: [usb-storage] Re: [PATCH] fix Sony USB mass storage -
+	pass	larger receive buffer
+Date: 13 Nov 2003 19:10:34 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20031113180837.H30194@one-eyed-alien.net>
-References: <Pine.LNX.4.44L0.0311131638320.949-100000@ida.rowland.org> <1068766632.2851.142.camel@patrh9> <20031113162401.A29775@beaverton.ibm.com> <1068774856.2851.259.camel@patrh9>
+Message-ID: <1068775834.2851.321.camel@patrh9>
+References: <Pine.LNX.4.44L0.0311131638320.949-100000@ida.rowland.org>
+	 <1068767049.2851.166.camel@patrh9>
+	 <1068768796.3fb41e1c8d075@webmail.netregistry.net>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-md5;
-	protocol="application/pgp-signature"; boundary="xHbokkKX1kTiQeDC"
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ziggy.one-eyed-alien.net ([64.169.228.100]:20231 "EHLO
-	ziggy.one-eyed-alien.net") by vger.kernel.org with ESMTP
-	id S264487AbTKNCIq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 13 Nov 2003 21:08:46 -0500
-Content-Disposition: inline
-In-Reply-To: <1068774856.2851.259.camel@patrh9>; from p.lavarre@ieee.org on Thu, Nov 13, 2003 at 06:54:16PM -0700
+Received: from email-out1.iomega.com ([147.178.1.82]:34299 "EHLO
+	email.iomega.com") by vger.kernel.org with ESMTP id S264488AbTKNCLG
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 13 Nov 2003 21:11:06 -0500
+In-Reply-To: <1068768796.3fb41e1c8d075@webmail.netregistry.net>
 List-Id: linux-scsi@vger.kernel.org
-To: Pat LaVarre <p.lavarre@ieee.org>
-Cc: patmans@us.ibm.com, stern@rowland.harvard.edu, james.bottomley@steeleye.com, linux-scsi@vger.kernel.org, usb-storage@one-eyed-alien.net, ronald@kuetemeier.com, dmitrik@users.sourceforge.net, idan@idanso.dyndns.org
+To: dmitrik@users.sourceforge.net
+Cc: usb-storage@one-eyed-alien.net, linux-scsi@vger.kernel.org, stern@rowland.harvard.edu, mdharm-scsi@one-eyed-alien.net, patmans@us.ibm.com, james.bottomley@steeleye.com, ronald@kuetemeier.com, idan@idanso.dyndns.org
+
+> * Define an absolute bare minimum safe subset of SCSI commands and 
+> fall back to it whenever you see a non-compliant device like this one.
+
+Did we find a kind of reset that worked with this device?
+
+> Note that Win98 did not support my Sony Handycam Memory Stick out of 
+> the box, I had to install drivers from Sony installation CD. 
+> Obviously these drivers do not attempt to issue any commands that 
+> the device does not understand. XP did detect Sony out of the box but 
+> it is very likely that it still loaded proprietary Sony driver based 
+> on USB Device/Vendor ID. 
+
+I agree.
+
+I guess this from seeing bInterfaceSubClass = xFF = Formally Reserved
+But Informally Vendor Specific SCSI.  That pushes the bInterfaceClass
+...SubClass ...Protocol outside of the tuples that Microsoft blesses as
+generic usb storage i.e. outside of the set x 08 (02|05|06) 50.
+
+> Also note: the device does not claim any SCSI compliance as indicated 
+> by reserved values in its device descriptor and by scsi version being 
+> set to 0 in reply to INQUIRY.
+
+Aye.
+
+> IMHO the solution is either or both of:
+> * Blacklist it
+
+Can we blacklist mode sense from bInterfaceSubClass = xFF?
+
+That way we don't break as many write-protectable devices as if we
+blacklisted mode sense always?
+
+I remember today already I once proposed blacklisting only
+bInterfaceSubClass = xFF, Matt said no once, I don't think I yet grok
+Matt's no.
+
+Can we blacklist only xFF if I wrote the patch myself?
+
+I've shipped generic devices that I think comply: that gives me a
+personal interest in having their write-protect work, no matter if
+connected via USB.
+
+Pat LaVarre
+
+P.S.
+
+> Also note: the device does not claim any SCSI compliance...
+> miracle it worked at all.
+
+Aye.  Myself, I'd like to get an academic grant to study why computers
+work.  As far as I can tell, they shouldn't.  Fundamentally chaotic
+design.  Try flipping a bit in an instruction stream, and watch what
+happens.
 
 
---xHbokkKX1kTiQeDC
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
-
-On Thu, Nov 13, 2003 at 06:54:16PM -0700, Pat LaVarre wrote:
-> > From: Matthew Dharm ...
-> > ... I think we're basically at a point where
-> > the only problematic command is MODE_SENSE and
-> > MODE_SENSE_10, so I say blacklisting them from
-> > USB devices should be fine.
->=20
-> Lost me sorry help?
->=20
-> If we eat those commands, how then can write-protect work in Linux for
-> that rare case of an actually compliant device with a write-protectab;e
-> disk (like the device firmware I remember shipping myself 1994..2003)?
-
-Presumeably, when the send a WRITE command to the device, it will refuse
-with meaningful sense data.
-
-> > > If we check after the open for a write failure
-> > > to read only media, we cannot keep the same
-> > > open semantics (return EROFS on open).
->=20
-> Without mode sense, we will see the open for write pass thru, and we
-> will have to teach the fs (ext3, fat, fat32, udf, ...) to recover
-> gracefully from a late write error, yes?
-
-This should already be in place.
-
-Matt
-
---=20
-Matthew Dharm                              Home: mdharm-usb@one-eyed-alien.=
-net=20
-Maintainer, Linux USB Mass Storage Driver
-
-We've made a business out of making money from annoying and stupid people.
-I think you fall under that category.
-					-- Chief
-User Friendly, 7/11/1998
-
---xHbokkKX1kTiQeDC
-Content-Type: application/pgp-signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.0.6 (GNU/Linux)
-Comment: For info see http://www.gnupg.org
-
-iD8DBQE/tDklIjReC7bSPZARAhwBAJ9Hc6EJQZfd5N+fYG6aak4zO45BHwCdHfpm
-AFBQHc0KwYO/5Zi3AOQ6o1U=
-=77Z4
------END PGP SIGNATURE-----
-
---xHbokkKX1kTiQeDC--
