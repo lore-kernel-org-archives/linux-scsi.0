@@ -1,32 +1,41 @@
-From: Matthew Jacob <mjacob@feral.com>
-Subject: Re: QLA2200 driver
-Date: Thu, 25 Apr 2002 09:03:02 -0700 (PDT)
+From: berthiaume_wayne@emc.com
+Subject: RE: QLA2200 driver
+Date: Thu, 25 Apr 2002 12:28:06 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.BSF.4.21.0204250901270.34642-100000@beppo>
-References: <3CC7E9E0.5050107@corp.home.nl>
-Reply-To: mjacob@feral.com
+Message-ID: <93F527C91A6ED411AFE10050040665D0049BF949@corpusmx1.us.dg.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain;
+	charset="iso-8859-1"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <3CC7E9E0.5050107@corp.home.nl>
 List-Id: linux-scsi@vger.kernel.org
-To: Thomas Tonino <ttonino@corp.home.nl>
-Cc: linux-scsi@vger.kernel.org
+To: jes@wildopensource.com
+Cc: ttonino@corp.home.nl, linux-scsi@vger.kernel.org
 
-> Is there a reason why Feral's driver is not in the kernel? Having a 
-> driver that is so non-functional is really bad, IMO.
+	No. I'll admit it is quite a hack but it does work.
 
-Needs to:
-
-	a) support SBus cards
-
-	b) have more compilation options so that people only get teh
-	functionality that they want
-
-	c) have the f/w split off as a separate module
-
-	d) handler 64 bit pci which it doesn't as yet
-
-Don't forget that QLogic itself puts out an FC driver.
+-----Original Message-----
+From: Jes Sorensen [mailto:jes@wildopensource.com]
+Sent: Thursday, April 25, 2002 11:53 AM
+To: berthiaume_wayne@emc.com
+Cc: ttonino@corp.home.nl; linux-scsi@vger.kernel.org
+Subject: Re: QLA2200 driver
 
 
+>>>>> ">" == berthiaume wayne <berthiaume_wayne@emc.com> writes:
+
+>> 	Actually, we have been using the latest off the QLogic site
+>> and referencing EMC customers to that driver as the one of
+>> choice. They are referred to the EMC approved driver link. The
+>> Rawhide is way out of date, thus one of the reasons to use what is
+>> on the Qlogic site. The only modification we've had to make is to
+>> the qlavendor.c to contain the definitions for EMC's unique SCSI
+>> command set.
+
+Sorry, but thats really scary to hear, unless of course you have a
+special version thats totally rewamped compared to the one that Red
+Hat has been shipping.
+
+Please note that I am referring to Arjan's work on qla2200.c not
+qla2x00.c!
+
+Jes
