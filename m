@@ -1,63 +1,67 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [RFTesters] Re: [PATCH] refactor tmscsim inititalization code
-Date: Fri, 10 Sep 2004 15:32:54 +0200
+Subject: Re: [PATCH] 3ware 5/6/7/8000 driver v1.26.02.000
+Date: Fri, 10 Sep 2004 15:53:31 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040910133254.GB32530@lst.de>
-References: <20040904130235.GA20552@lst.de> <Pine.LNX.4.60.0409071040120.2966@poirot.grange>
+Message-ID: <20040910135331.GA484@lst.de>
+References: <I3R1V900.IHN@hadar.amcc.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.210]:3046 "EHLO mail.lst.de")
-	by vger.kernel.org with ESMTP id S267405AbUIJNc4 (ORCPT
+Received: from verein.lst.de ([213.95.11.210]:45286 "EHLO mail.lst.de")
+	by vger.kernel.org with ESMTP id S267409AbUIJNxj (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 10 Sep 2004 09:32:56 -0400
+	Fri, 10 Sep 2004 09:53:39 -0400
 Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.60.0409071040120.2966@poirot.grange>
+In-Reply-To: <I3R1V900.IHN@hadar.amcc.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
-Cc: Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org
+To: Adam Radford <aradford@amcc.com>
+Cc: akpm@osdl.org, James.Bottomley@SteelEye.com, hch@lst.de, linux-scsi@vger.kernel.org
 
-On Tue, Sep 07, 2004 at 05:29:43PM +0200, Guennadi Liakhovetski wrote:
-> Hi
+On Wed, Sep 08, 2004 at 06:08:27PM -0700, Adam Radford wrote:
+> Andrew/James/Christoph Hellwig,
 > 
-> I've looked through the patch - I liked it! Still, I've got a few 
-> questions / remarks to this one.
+> Here is a large driver update for the 3ware 5/6/7/8000 series controllers
+> for 2.6.9-rc1-bk16.
 > 
-> 1) My big problem with this patch is, that I don't have any AM53C7974 
-> based hardware with EEPROM, and you re-write the EEPROM handling 
-> functions. Although, it does look like you just inlined some of them and 
-> removed redundant code. Do you have the hardware to test it? If not - I 
-> guess, we'd have to ask for volunteers to test it. Your patch is a bit 
-> less than trivial:-) If nobody volunteers, well, I'll have to try to prove 
-> the equivalence myself:-)
-
-I'll do a new patch with that part excluded (and ontop of all the
-patches currently pending for tmscsim)
-
-> 2) I just realised - we have 2 possibilities to pass parameters to 
-> tmscsim, if it is compiled into the kernel - with tmscsim.tmscsim=... 
-> and with tmscsim=... I guess, breaking scripts by removing one of them now 
-> wouldn't be good... But we could put a warning printk() in dc390_setup 
-> "Deprecated! Use tmscsim.tmscsim=... This will be removed real soon 
-> now!\n" should we?
-
-I think we should deprecated both and use an easy to understand
-module_param-based interface.
-
-> 3) There's a typo:
+> Changes in this release are the following:
 > 
-> >+static void __devinit dc390_eeprom_prepare_read(struct pci_dev *pdev, u8 
-> >cd)
+> - Remove deprecated SCSI_IOCTL_SEND_COMMAND interface.
+> - Remove deprecated /proc/scsi/3w-xxxx interface.
+> - Convert entire driver to pci_driver format.
+> - Remove all mdelays, replace w/msleep to fix possible watchdog
+>   timer issues.
+> - Make all register accesses macros.
+> - Remove all prototypes from header file, reorder functions to
+>   eliminate all prototypes but one.
+> - Add sysfs 'queue_depth' setting attribute.
+> - Add sysfs 'stats' attribute.
+> - Fix spinlocks everywhere, remove tw_lock spinlock.
+> - Remove all bitfields, add bitmask access macros.
+> - Remove un-needed scsi_eh_abort entrypoint.  Controller does not
+>   support aborting invididual IO's, scsi_eh_reset sufficient.
 > 
-> should be
-> 
-> >+static void __devinit dc390_eeprom_prepare_read(struct pci_dev *pdev, u8 
-> >cmd)
+> The patch is rather lengthy due to the function reordering.  I hope it doesn't
+> get sniffed out by the list server.
 
-thanks.
+The patch is indeed extremly huge and because of that not really
+reviewable :P  I did a quick look over the patched sourcefiles and
+the driver looks pretty nice to me (except for the non-standard coding
+style which we tend to accept if the diver is sane otherwise) and it
+also compiles without a warning on ppc64.
 
-> 4) Against which kernel version is it? It did apply to some my version, 
-> but with some fuzz / offsets.
+Minor things (could be fixed in a followup patch)
 
-I don't remember anymore, but I'll rediff anyway.
+ - tw_check_bits should be marked static like everything else
+ - please provide a MODULE_VERSION like most modern scsi drivers
+ - in the ioctl path it might be usefull to use dma_alloc_coherent
+   instead of pci_alloc_consistent because it allows allocations to
+   sleep when use with GFP_KERNEL as last argument (else they're the
+   same on pci devices)
+ - also in the ioctl patch you return the value that copy_to_user
+   returned, but that's not an error code but the number of bytes
+   copied, you probaly want an 
+
+	if (copy_to_user(argp, tw_ioctl, sizeof(TW_New_Ioctl) +
+				data_buffer_length - 1))
+		error = -EFAULT;
 
