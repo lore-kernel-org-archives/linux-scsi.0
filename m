@@ -1,95 +1,38 @@
-From: "Wild Cats" <hereunder@dr.com>
-Subject: Call me                    79560
-Date: Sat, 18 May 2002 15:49:59 -0500
+From: Rabeeh Khoury <rabeeh@galileo.co.il>
+Subject: Hot plugging a disk in runtime
+Date: Mon, 20 May 2002 13:19:53 +0300
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <ac6fre$6mn$2@main.gmane.org>
+Message-ID: <3CE8CDC9.7070200@galileo.co.il>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ws1-9.us4.outblaze.com (205-158-62-37.outblaze.com [205.158.62.37])
-	by mta1-3.us4.outblaze.com (8.12.3/8.12.3/us4-srs) with SMTP id g4IL89of014139
-	for <linux-scsi@vger.kernel.org>; Sat, 18 May 2002 21:08:09 GMT
-Content-Disposition: inline
+Received: from galileo.co.il (linux2.galileo.co.il [10.2.40.2])
+	by galileo.co.il (8.8.5/8.8.5) with ESMTP id NAA26397
+	for <linux-scsi@vger.kernel.org>; Mon, 20 May 2002 13:26:34 +0200 (GMT-2)
 List-Id: linux-scsi@vger.kernel.org
-To: linux@eichsfeld.net, linux-gcc@vger.kernel.org, linux-india@aunet.org, linux_info@jimmo.com, linux-net@vger.rutgers.edu, linux-scsi@vger.kernel.org, linux-serial@vger.kernel.org, linux-smp@vger.rutgers.edu
+To: linux-scsi <linux-scsi@vger.kernel.org>
 
+Hi list,
 
-Hello I am your hot lil horny toy.
-    I am the one you dream About,
-    I am a very open minded person,
-    Love to talk about and any subject.
+I have few questions withregards to hot-plugging disk into a running 
+system -
 
+1.. How is it possible to signal SCSI mid-layer (or other layers) of a 
+presence of a newly hot-plugged disk ?
 
-    Fantasy is my way of life, 
-    Ultimate in sex play.
+2.. Can an adapter's device driver trigger SCSI subsystem to scan 
+channels for new LUNs / Targets ?
 
-     Ummmmmmmmmmmmmm
-     I am Wet and ready for you.
+3.. Is this can be handled in a kernel level ? is there a user space 
+application that can be triggered to start scanning adapters (obviously 
+through SCSI subsystem) and registering new LUNs / Targets etc... ?
 
-     It is not your looks but your imagination that matters most,
-     With My sexy voice I can make your dream come true...
-  
-     Hurry Up! call me let me Cummmmm for you..........................
+4.. How does SCSI API allow insertion of a new disk ?
 
+5.. Is there a generic way of hot-plugging disks ?
 
-TOLL-FREE:             1-877-451-TEEN (1-877-451-8336)
+Thank you alot,
+Rabeeh
 
-For phone billing:     1-900-993-2582
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
--- 
-_______________________________________________
-Sign-up for your own FREE Personalized E-mail at Mail.com
-http://www.mail.com/?sr=signup
 
