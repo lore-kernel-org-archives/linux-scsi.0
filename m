@@ -1,34 +1,38 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: [PATCH, RFC] sym2: remove unkown data direction handling
-Date: Tue, 2 Nov 2004 17:06:49 +0000
-Message-ID: <20041102170649.GB24690@parcelfarce.linux.theplanet.co.uk>
-References: <20041102111835.GA29191@lst.de>
+From: "Tony Battersby" <tonyb@cybernetics.com>
+Subject: RE: [PATCH, RFC] sym2: remove unkown data direction handling
+Date: Tue, 2 Nov 2004 12:46:33 -0500
+Message-ID: <04Nov2.124609est.332219@cyborg.cybernetics.com>
+References: <20041102171511.GA1810@lst.de>
+Reply-To: <tonyb@cybernetics.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:30368 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S261343AbUKBRGv
+Received: from cyborg.cybernetics.com ([206.246.200.18]:63494 "EHLO
+	cybernetics.com") by vger.kernel.org with ESMTP id S261232AbUKBRqN
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 2 Nov 2004 12:06:51 -0500
-Content-Disposition: inline
-In-Reply-To: <20041102111835.GA29191@lst.de>
+	Tue, 2 Nov 2004 12:46:13 -0500
+In-Reply-To: <20041102171511.GA1810@lst.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: matthew@wil.cx, linux-scsi@vger.kernel.org
+To: 'Christoph Hellwig' <hch@lst.de>, 'Matthew Wilcox' <matthew@wil.cx>
+Cc: linux-scsi@vger.kernel.org, dougg@torque.net
 
-On Tue, Nov 02, 2004 at 12:18:35PM +0100, Christoph Hellwig wrote:
-> since 2.3 the LLDD gets the data direction passed down, so we don't
-> need to kludge around an unknown data direction anymore.  I've added
-> a BUG when we get an unkown data direction neverless, and it seems to
-> survive so far under low load.
+> > I thought we could get an unknown data direction from certain
+ioctls?
+>
+> Not anymore.  We could get the wrong direction from some older ioctls,
+> when not used as document but not an unkown one.
 
-I thought we could get an unknown data direction from certain ioctls?
+Isn't it still possible for a userspace program to specify
+SG_DXFER_UNKNOWN when sending a command via /dev/sg* (not that it's a
+good idea, but...)
 
--- 
-"Next the statesmen will invent cheap lies, putting the blame upon 
-the nation that is attacked, and every man will be glad of those
-conscience-soothing falsities, and will diligently study them, and refuse
-to examine any refutations of them; and thus he will by and by convince 
-himself that the war is just, and will thank God for the better sleep 
-he enjoys after this process of grotesque self-deception." -- Mark Twain
+http://gear.torque.net/sg/p/sg_v3_ho.html#AEN166
+
+If you want to BUG() on an unknown data direction, then sg should return
+an error to userspace when it sees SG_DXFER_UNKNOWN to avoid the BUG().
+
+Anthony J. Battersby
+Cybernetics
+
