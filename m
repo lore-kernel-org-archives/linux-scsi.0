@@ -1,58 +1,74 @@
-From: "Randy.Dunlap" <rddunlap@osdl.org>
-Subject: Re: Linux 2.6.8.1 + megaraid-2.20.3.0 == Oops
-Date: Sun, 22 Aug 2004 14:31:08 -0700
+From: Nathan Bryant <nbryant@optonline.net>
+Subject: Re: Incorrect response to SK/ASC/ASCQ = x 02/04/01 (becoming ready)
+Date: Sun, 22 Aug 2004 18:55:57 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040822143108.6435a60b.rddunlap@osdl.org>
-References: <s5g3c2hkcod.fsf@patl=users.sf.net>
-	<20040820160802.7b74cfa3.rddunlap@osdl.org>
-	<s5gr7q0sa2w.fsf@patl=users.sf.net>
-	<20040821110753.0cbcbf74.rddunlap@osdl.org>
-	<s5g3c2fm1t4.fsf@patl=users.sf.net>
+Message-ID: <4129247D.1020309@optonline.net>
+References: <Pine.LNX.4.44L0.0408221154220.15992-100000@netrider.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fw.osdl.org ([65.172.181.6]:31699 "EHLO mail.osdl.org")
-	by vger.kernel.org with ESMTP id S266319AbUHVVlp (ORCPT
+Received: from mail04.vassar.edu ([143.229.1.33]:30415 "EHLO smtp.vassar.edu")
+	by vger.kernel.org with ESMTP id S267497AbUHVW6H (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 22 Aug 2004 17:41:45 -0400
-In-Reply-To: <s5g3c2fm1t4.fsf@patl=users.sf.net>
+	Sun, 22 Aug 2004 18:58:07 -0400
+In-Reply-To: <Pine.LNX.4.44L0.0408221154220.15992-100000@netrider.rowland.org>
 List-Id: linux-scsi@vger.kernel.org
-To: "Patrick J. LoPresti" <patl@users.sourceforge.net>
-Cc: Atul.Mukker@lsil.com, linux-scsi@vger.kernel.org
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: SCSI development list <linux-scsi@vger.kernel.org>, "Mike R." <turbanator1@verizon.net>
 
-On 22 Aug 2004 15:12:56 -0400 Patrick J. LoPresti wrote:
 
-| > and earlier I wrote:
-| > > I expected to be able to build these drivers as modules, but that's
-| > > not allowed by their Kconfig.  Is that because of the module
-| > > inter-dependencies?
-| > 
-| > and Pat replied:
-| > | I do not understand.  The first thing I did was to build these as
-| > | modules against the Fedora Core 2 kernel, but that resulted in a
-| > | different failure.  So I thought I would try them non-modular on a
-| > | vanilla kernel, which is how I ended up with this Oops.
-| > 
-| > The megaraid Kconfig file does not allow these drivers to be built
-| > as loadable modules.  I was asking why not.
-| 
-| And I was saying that I do not understand :-).  I have now just
-| finished running "make gconfig", and I was able to configure both
-| megaraid_mm and megaraid_mbox to compile as modules.  I installed both
-| on the initrd and the system boots fine.  So my earlier problem must
-| have been some incompatibility between the driver and FC2, or a
-| mistake on my part when building the module out-of-tree.
+Alan Stern wrote:
 
-Never mind.  Brain-o.  (a la typo :)
+>The SCSI core doesn't react properly when it receives SK/ASC/ASCQ = x 
+>02/04/01 = Not Ready, Logical unit in process of becoming ready.
+>
+>The core is complex enough that I can't tell exactly what's wrong or how
+>it should be fixed.  That particular sense data combination is spotted in
+>two different places: scsi_lib.c:scsi_io_completion() and
+>scsi_error.c:scsi_check_sense().  It's not clear which one is causing the
+>problem -- maybe they both are.
+>
+>Anyway, the reaction in both routines is to requeue the request for
+>immediate retry.  Obviously that's the wrong thing to do.  The request
+>should be retried, yes, but only after a delay of, say, a second or so.  
+>(Presumably the queue should remain blocked during that time.)  And this
+>should keep happening for up to maybe 30 seconds.
+>  
+>
+I agree that this needs to be fixed in the error handler proper. I'm 
+currently working around this  kind of problem in my scsi suspend/resume 
+patch by inserting explicit spinup calls on resume. It would be much 
+better to not have to do so; I don't think it's possible to implement 
+auto spindown/spinup without the error handler doing it for us.
 
-| Stress testing is next.  We can crash the stock 2.6.x megaraid driver
-| consistently, but it takes around 12 hours of hammering.  I look
-| forward to finding out how the new driver fares.
-| 
-| Thank you for your help, Randy!
+>Instead what happens is that all the retries get exhausted in a fraction 
+>of a second, which isn't long enough for any device to spin up.  The 
+>drivers then proceed blindly with whatever else they want to do, which 
+>generally incurs its own set of errors.
+>
+>This problem seems to be particularly bad for USB DVD drives.  One user
+>was able to work around it by manually loading the usb-storage driver 20
+>to 30 seconds after plugging the drive into the computer.  Obviously it
+>would be much better to have the system do the right thing in the first
+>place.
+>  
+>
+It's probably also going to bite SATA drives. People are going to want 
+SATA drives to have the same power-management features that IDE has, 
+including standby timers and the associated ioctl's... sooner or later 
+I'll bet laptops will end up with SATA.
 
-Sure, no problem.
+>I don't know enough about the SCSI core to change it properly.  Can
+>someone please help?
+>
+>Alan Stern
+>
+>-
+>To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+>the body of a message to majordomo@vger.kernel.org
+>More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+>  
+>
 
---
-~Randy
