@@ -1,94 +1,92 @@
-From: "Cress, Andrew R" <andrew.r.cress@intel.com>
-Subject: RE: [RFC] SCSI Hotplug for lk 2.5
-Date: Mon, 5 Aug 2002 08:09:34 -0700
+From: James Bottomley <James.Bottomley@steeleye.com>
+Subject: Re: [PATCH] Bio Traversal Changes
+Date: Mon, 05 Aug 2002 10:47:39 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <A5974D8E5F98D511BB910002A50A664702CD66B7@hdsmsx103.hd.intel.com>
+Message-ID: <200208051547.g75FldT11138@localhost.localdomain>
+References: <suparna@in.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fmsmsxvs041.fm.intel.com (fmsmsxvs041.fm.intel.com [132.233.42.126])
-	by mail2.hd.intel.com (8.11.6/8.11.6/d: solo.mc,v 1.42 2002/05/23 22:21:11 root Exp $) with SMTP id g75F9Ps07312
-	for <linux-scsi@vger.kernel.org>; Mon, 5 Aug 2002 15:09:25 GMT
+Received: (from root@localhost)
+	by pogo.mtv1.steeleye.com (8.9.3/8.9.3) id IAA03983
+	for <linux-scsi@vger.kernel.org>; Mon, 5 Aug 2002 08:47:48 -0700
+In-Reply-To: Message from Suparna Bhattacharya <suparna@in.ibm.com>
+   of "Mon, 05 Aug 2002 18:08:48 +0530." <20020805180848.A2223@in.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: 'Patrick Mansfield' <patmans@us.ibm.com>, Douglas Gilbert <dougg@torque.net>
-Cc: linux-scsi@vger.kernel.org
+To: suparna@in.ibm.com
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, axboe@kernel.org, B.Zolnierkiewicz@elka.pw.edu.pl, akpm@zip.com.au
 
-Doug/Patrick,
+suparna@in.ibm.com said:
+> There is only one call to ->request_fn for the entire request, and the
+> drivers manages things underneath. The chunks are expected to complete
+> sequentially. In the situation where the request is restarted in the
+> event of an error (say), the submission pointers are rolled back to
+> the last (successfully) completed point before issuing the request
+> again. 
 
-I've been working on a scan daemon in user-space for hot-plug disks (case 3
-below).  It uses sg to access scsi devices, and also to access access any
-SAF-TE HSCs.  It then invokes sfdisk, mdadm, etc. to auto-remove or
-auto-insert the disk in a software raid like a hardware raid would.  It
-works nicely if the device nodes already exist (replace a disk), but has
-enumeration problems for new devices.  I'm currently using kernel 2.4.18,
-but I'm interested in the discussion on this topic for 2.5.
+Yes, that's the way I thought it would operate.
 
-I'm thinking that the kernel changes that would help would be to do a
-rescan_scsis function, slightly different than scan_scsis, so that existing
-devices are left alone, but new devices are initialized and attached to
-device nodes.  This rescan_scsis could be triggered by a scsi reset (and
-maybe by a user directive, which might be needed if the user-space daemon
-detected a SAF-TE insertion, for example).  
+suparna@in.ibm.com said:
+> I must say that I initially did think that this could be  extended to
+> the more generic case which you probably are  referring to and that
+> such an approach could take away the need  to split bios in certain
+> cases (i.e. when the i/o is destined for  a single queue). Later it
+> appeared that trying to cover  the case where each of these pieces
+> gets queued up and might  complete out of order (requiring a tag to
+> correlate things on  completion), would most likely boil down to
+> trying to maintain  all the state that struct request does today.  
 
-What do you think?  Should this kind of thing be done with driverfs rather
-than an sg device node?  
+For this more generic case, most of our problems seem to be because the 
+barrier has width:  It actually belongs to an I/O request.  If the barrier had 
+zero width (i.e. it was simply a barrier in the stream with no I/O attached) 
+then it would be much easier to preserve it correctly across this (or any 
+other) type of bio splitting.  It would also make it much more obvious to the 
+implementing driver where the barrier was supposed to be in the I/O stream, 
+and would allow more efficient "wait for completion" barrier implementations 
+for drivers that couldn't enforce it any other way.
 
-If you are interested, the source to what I'm working on is at
-http://cvs.carrierlinux.org/viewcvs/viewcvs.cgi/components/scsirastools/src/
-sgraidmon.c
+> Would be nice (for me) to understand this in more detail.  There might
+> be some possibilities. Any pointers that I can look up to get a
+> clearer idea ? 
 
-Andy Cress
+The SCSI standards (www.t10.org) are the only real authoritative source (with 
+even some explanation).  However, I'll do my best to summarise.
 
------Original Message-----
-From: Patrick Mansfield [mailto:patmans@us.ibm.com] 
-Sent: Friday, August 02, 2002 9:28 PM
-To: Douglas Gilbert
-Cc: linux-scsi@vger.kernel.org
-Subject: Re: [RFC] SCSI Hotplug for lk 2.5
+In SCSI, commands are allowed to disconnect, that is suspend temporarily while 
+the device does other things.  When the device implements tag command 
+queueing, it is allowed to disconnect one command and subsequently reconnect 
+(restart) a different one.  In theory, this means that we can have multiple 
+active I/Os at once.  The way you signal to the scsi device that you want a 
+barrier is to label one or more of the tags as "ordered" which means that the 
+device must complete all I/O of tags prior to the ordered one before it and 
+may not begin I/O of subsequent tags until the ordered tag has completed.
 
-On Thu, Aug 01, 2002 at 06:57:31PM -0400, Douglas Gilbert wrote:
->                  SCSI Hotplug for lk 2.5
+looping a single request over a big bio means that the SCSI device sees the 
+I/O as a discrete stream of tags.  However, we lose throughput if we stall the 
+queue waiting for this single bio to complete and we can't work out what the 
+next tag is until the prior tag completes.  In the non barrier case, 
+everything will still be OK as long as the queue isn't stalled because we'll 
+be getting throughput from other bios coming down.
 
-Douglas -
+I think basically, I'd like to translate as much of the bio as I can into SCSI 
+tags to improve throughput and each tag currently requires a struct request.
 
-I'm still trying to figure out what events we might need for user versus
-kernel scanning or some combination. I'm re-reading James original OLS
-paper about user scanning, and I've been thinking about how to scan from
-user level. It might be best to do work on user level scanning after we
-have better driverfs support, and always have initrd. 
+> Does completion notification happen only when all the commands
+> covered by a single tag complete ? Otherwise, what is the ordering
+> amongst the multiple commands in question (do they complete in  serial
+> order as well) ? 
 
-I've been trying to re-code scsi_scan.c with user level scanning in mind
-(not such a big deal, since we already have proc scanning), especially
-so that we can scan a single target, rather than a single LUN via the
-proc interface. We probably need a target hotplug event, this would be best
-handled by adding a device_register() for each target; this is not so easy
-for multi-path, since target id's can be different for the same target 
-(even if the linux scsi id was the FC ID), so it would be easier to just
-generate a hotplug event that could kick off scanning.
+Yes and no.  You get a special completion code (INTERMEDIATE_TASK_COMPLETE) 
+which says "I've finished this bit, give me the next part".  You don't get a 
+real SCSI completion until the last part of the linked task set completes.  
+The task is linked sequentially, so it does complete in serial order.
 
-I haven't done anything with the device_list[] (in terms of hotplug or
-moving it to user space).
+However, Don't worry about the linked task stuff, it's a rather esoteric area 
+of the SCSI standard (that allows a single tag to be used across multiple I/Os 
+in very much the same way the bio splitting works) which, on mature 
+reflection, probably isn't such a good idea to use since I'd be doubtful about 
+how well it's implemented in the devices we have to deal with.
 
-> Here are five categories of SCSI events that are candidates for
-> hotplug alerts:
-> 	1) scsi (lower level) driver addition or removal
-> 	2) scsi host (initiator) addition or removal
-> 	3) scsi device (target/lun) addition or removal
-> 	4) removable media addition or removal
-> 	5) unit attention or "asynchronous event notification"
-> I believe hotplug alerts for 2) and 3) are required; for 1)
-> is questionable and for 4) + 5) would be "nice to have".
+James
 
-My understanding is that driverfs will automatically generate hotplug
-events on each device_register() call. These have been added to scsi,
-so the two main events are already handled, and we need not make other
-changes.
 
-Multi-path will also hook into driverfs, and driverfs would then
-generate hotplug events for them.
-
--- Patrick Mansfield
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
