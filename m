@@ -1,83 +1,42 @@
-From: Adrian Bunk <bunk@fs.tum.de>
-Subject: [patch] 2.6.1-rc2-mm1: qla1280.c doesn't compile
-Date: Fri, 9 Jan 2004 02:52:30 +0100
+From: Douglas Gilbert <dougg@torque.net>
+Subject: lsscsi-0.11
+Date: Fri, 09 Jan 2004 17:41:13 +1000
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040109015229.GK13867@fs.tum.de>
-References: <20040107232831.13261f76.akpm@osdl.org>
+Message-ID: <3FFE5B19.7050404@torque.net>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hermes.fachschaften.tu-muenchen.de ([129.187.202.12]:22482 "HELO
-	hermes.fachschaften.tu-muenchen.de") by vger.kernel.org with SMTP
-	id S266392AbUAIBwd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 8 Jan 2004 20:52:33 -0500
-Content-Disposition: inline
-In-Reply-To: <20040107232831.13261f76.akpm@osdl.org>
+Received: from bunyip.cc.uq.edu.au ([130.102.2.1]:23566 "EHLO
+	bunyip.cc.uq.edu.au") by vger.kernel.org with ESMTP id S266430AbUAIHnM
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 9 Jan 2004 02:43:12 -0500
+Received: from torque.net (d-240-123.stlucia.uq.net.au [203.101.240.123])
+	by bunyip.cc.uq.edu.au (8.12.10/8.12.10) with ESMTP id i097h6ci009661
+	for <linux-scsi@vger.kernel.org>; Fri, 9 Jan 2004 17:43:08 +1000 (GMT+1000)
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>, Jes Sorensen <jes@trained-monkey.org>, Christoph Hellwig <hch@infradead.org>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Wed, Jan 07, 2004 at 11:28:31PM -0800, Andrew Morton wrote:
->...
-> Changes since 2.6.1-rc1-mm2:
->...
-> -qla1280-update.patch
-> +qla1280-update-2.patch
-> 
->  Updated qlogic patch
->...
+lsscsi is a utility the uses sysfs in the linux 2.6 series kernels
+to list information about all SCSI devices (including devices
+that use the SCSI stack such as USB mass storage devices)
+or all SCSI hosts that are attached to the system. Both a compact
+format (default), one line per device, and a "classic" format (like
+the output of 'cat /proc/scsi/scsi') are supported for devices.
 
-I got the following compile error when trying to compile this driver 
-statically into a kernel with hotplug enabled:
+Version 0.11 is available at
+http://www.torque.net/scsi/lsscsi.html
 
+This version has been reworked for lk 2.6.1-rc1 (and later)
+since sysfs support for st and sg devices has been (re-)added.
 
-<--  snip  -->
+lsscsi does not yet use libsysfs but may well soon. One thing
+that lsscsi does that is not yet available in libsysfs is
+to sort (and filter) directory entries. This is most likely
+not relevant for most libsysfs based applications but is
+convenient for those applications that display information
+for human consumption.
 
-...
-drivers/scsi/qla1280.c:4849: error: `qla1280_remove_one' undeclared here 
-(not in a function)
-drivers/scsi/qla1280.c:4849: error: initializer element is not constant
-drivers/scsi/qla1280.c:4849: error: (near initialization for 
-`qla1280_pci_driver.remove')
-make[2]: *** [drivers/scsi/qla1280.o] Error 1
+Doug Gilbert
 
-<--  snip  -->
-
-
-Since I don't see a good reason why qla1280_remove_one is #ifdef'ed out 
-in the non-modular case the patch below fixes this problem by removing 
-two #ifdef's.
-
-
-cu
-Adrian
-
-
---- linux-2.6.1-rc2-mm1/drivers/scsi/qla1280.c.old	2004-01-08 22:40:54.000000000 +0100
-+++ linux-2.6.1-rc2-mm1/drivers/scsi/qla1280.c	2004-01-08 22:42:46.000000000 +0100
-@@ -480,9 +480,7 @@
- #endif
- 
- static int qla1280_probe_one(struct pci_dev *, const struct pci_device_id *);
--#if defined(CONFIG_SCSI_QLOGIC_1280_MODULE) || (LINUX_VERSION_CODE < 0x020600)
- static void qla1280_remove_one(struct pci_dev *);
--#endif
- 
- /*
-  *  QLogic Driver Support Function Prototypes.
-@@ -4807,7 +4805,6 @@
- }
- 
- 
--#if defined(CONFIG_SCSI_QLOGIC_1280_MODULE) || (LINUX_VERSION_CODE < 0x020600)
- static void __devexit
- qla1280_remove_one(struct pci_dev *pdev)
- {
-@@ -4839,7 +4836,6 @@
- 
- 	scsi_host_put(host);
- }
--#endif
- 
- #if LINUX_VERSION_CODE >= 0x020600
- static struct pci_driver qla1280_pci_driver = {
