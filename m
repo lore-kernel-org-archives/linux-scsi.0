@@ -1,30 +1,73 @@
-From: James Bottomley <James.Bottomley@steeleye.com>
-Subject: Re: Trivial patch for scsi logging text string
-Date: 15 Apr 2003 12:10:53 -0500
+From: Gary_Lerhaupt@Dell.com
+Subject: Re: [patch for playing] Patch to support 4000 disks and
+ maintain backward
+Date: Tue, 15 Apr 2003 13:52:01 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1050426654.2571.14.camel@mulgrave>
-References: <20030415063303.GC1366@beaverton.ibm.com>
-	<Pine.LNX.4.44L0.0304151059460.1036-100000@ida.rowland.org>
-	<20030415170343.GB12357@kroah.com>
+Message-ID: <36696BAFD8467644ABA0050BE35890591257FD@ausx2kmpc106.aus.amer.dell.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain;
+ charset=iso-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nat9.steeleye.com ([65.114.3.137]:16902 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S261824AbTDOQ7h (for <rfc822;linux-scsi@vger.kernel.org>); Tue, 15 Apr 2003 12:59:37 -0400
-In-Reply-To: <20030415170343.GB12357@kroah.com>
+Received: from ausadmmsrr504.aus.amer.dell.com ([143.166.83.91]:28688 "HELO
+	AUSADMMSRR504.aus.amer.dell.com") by vger.kernel.org with SMTP
+	id S263023AbTDOSkW (for <rfc822;linux-scsi@vger.kernel.org>); Tue, 15 Apr 2003 14:40:22 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: Greg KH <greg@kroah.com>
-Cc: Alan Stern <stern@rowland.harvard.edu>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Cc: Paul.McKenney@us.ibm.com
 
-On Tue, 2003-04-15 at 12:03, Greg KH wrote:
-> Hm, I don't think I can submit scsi patches to Linus :)
-> Why not send them to the scsi maintainers...
+Why not use devlabel?  It's a small userspace app which maps symlinks to
+underlying disk names.  It uses Page83/Page80 data to track the true
+locations of disks even if their hd/sd name changes and simply updates the
+symlink to point to the right place.
 
-The SCSI maintainers are linux-scsi@vger.kernel.org, so we've already
-been copied on this one.
+devlabel to do list:
+- support multipath configs (if devlabel currently finds the same uuid on 2
+disks, it wont let you add a symlink to either)
+- utilize sysfs info (rather than using my user apps to get 83/80 info, just
+get it from sysfs)
 
-James
+http://www.lerhaupt.com/devlabel
 
+Gary
+
+---
+Some compatibility needs more code than other compatibility.
+The desired compatibility includes the following, much of which
+has been noted earlier in this thread, and some of which may
+need to wait for multipath I/O and other of which might be best
+provided by a volume manager:
+
+o     It must be possible to switch between 2.4 and 2.5/6
+      kernels without a given disk's name changing.
+
+o     New 2.5/6 installations should se a clean disk naming
+      scheme without historical cruft.
+
+o     Removing or adding one disk should not affect the
+      names of other disks.  Ideally, moving a given disk
+      from one place to another should not change its
+      name.  "The good news is that we repaired your
+      disk.  The bad news is that, due to the resulting
+      name changes, your application thoroughly
+      corrupted all of its data."
+
+o     Adding or removing a FC or SCSI adapter should not
+      affect the names of disks hanging off of other
+      FC or SCSI controllers.  Ideally, the name of
+      a disk should not change when its FC or SCSI
+      controller is moved from one slot to another.
+
+o     Failures of or repairs to the FC fabric should
+      not change the names of any of the disks (though
+      a sufficiently thorough failure might make some
+      of the disks unreachable).
+
+o     Cluster nodes should ideally have the same name
+      for a given disk.  Extra credit, though greatly
+      appreciated by anyone who has ever had to deal
+      with a cluster where different nodes have different
+      names for the same disk.  ;-)
+
+                              Thanx, Paul
 
