@@ -1,37 +1,52 @@
-From: Steffen Winterfeldt <snwint@suse.de>
-Subject: Re: SuSE hwinfo/yast2 still confusing SYM53C8XX, killing tape backups
-Date: Fri, 26 Nov 2004 15:16:55 +0100 (CET)
-Message-ID: <Pine.LNX.4.61.0411261512320.14112@ligeti.suse.de>
-References: <1100467267.23710.7.camel@mulgrave> <4197E4B7.3050008@pobox.com>
- <1100473795.23649.26.camel@mulgrave> <m3hdnsvvfd.fsf@merlin.emma.line.org>
- <1100477105.24921.3.camel@mulgrave> <m34qjrx6iy.fsf_-_@merlin.emma.line.org>
- <Pine.LNX.4.61.0411221102280.22230@ligeti.suse.de> <m3actaw0pv.fsf@merlin.emma.line.org>
- <20041122133014.GF25636@parcelfarce.linux.theplanet.co.uk>
- <m3mzxaq8ra.fsf@merlin.emma.line.org>
-Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+From: "Smitha Narayanaswamy \(smithan\)" <smithan@cisco.com>
+Subject: RE: [linux-iscsi-devel] [PATCH]cleanup of xmit_task
+Date: Fri, 26 Nov 2004 16:19:43 +0530
+Message-ID: <000001c4d3a5$a3e7f990$6f074d0a@apac.cisco.com>
+References: <41A4C00E.5080603@netapp.com>
+Reply-To: <smithan@cisco.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from zeus.kernel.org ([204.152.189.113]:62401 "EHLO zeus.kernel.org")
-	by vger.kernel.org with ESMTP id S262363AbUKZTV4 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 26 Nov 2004 14:21:56 -0500
-Received: from Cantor.suse.de (cantor.suse.de [195.135.220.2])
-	by zeus.kernel.org (8.12.11/8.11.6) with ESMTP id iAQEI5rL027668
-	for <linux-scsi@vger.kernel.org>; Fri, 26 Nov 2004 06:18:09 -0800
-In-Reply-To: <m3mzxaq8ra.fsf@merlin.emma.line.org>
+Received: from ind-iport-1-sec.cisco.com ([64.104.129.9]:15128 "EHLO
+	ind-iport-1.cisco.com") by vger.kernel.org with ESMTP
+	id S262373AbUKZTWA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 26 Nov 2004 14:22:00 -0500
+In-Reply-To: <41A4C00E.5080603@netapp.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthias Andree <ma@dt.e-technik.uni-dortmund.de>
-Cc: Matthew Wilcox <matthew@wil.cx>, SCSI Mailing List <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@SteelEye.com>, Jeff Garzik <jgarzik@pobox.com>
+To: 'David Wysochanski' <davidw@netapp.com>
+Cc: linux-iscsi-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org
 
-[hwinfo/hwscan reading 256 bytes of pci config space]
+<..snip>
 
-It was indeed libsysfs reading the config space accidentally when one 
-(well, I) wouldn't expect it to do this.
+> @@ -720,17 +720,6 @@ fill_task_immediate_data(struct iscsi_ta
+>   	struct crypto_tfm *tfm= NULL;
+>   	struct scatterlist tmpsg;
+>
+> -	/* make sure we have data to send when we expect to */
+> -	if ((iscsi_expected_data_length(sc) == 0) &&
+> -	    ((sc->request_bufflen == 0) || (sc->request_buffer
+> == NULL))) {
+> -		printk("iSCSI: xmit_task for itt %u, sc 0x%x,
+> expected %u, no "
+> -		       "data in buffer. request_buffer %p len
+> %u, buffer %p "
+> -		       "len %u\n", task->itt, sc->cmnd[0],
+> -		       iscsi_expected_data_length(sc),
+> sc->request_buffer,
+> -		       sc->request_bufflen, sc->buffer, sc->bufflen);
+> -		scsi_print_command(sc);
+> -		return 0;
+> -	}
+>
+> What protects this function from being called with a scsi command
+> that has no data?  Are you sure we don't need this check with maybe
+> just a return here?
+>
 
-If you want to try the fixed hwinfo package (hwinfo-8.70), it's here:
+Is it possible to have scsi write command with no data being sent?
 
-ftp://ftp.suse.com/pub/people/snwint/9.1/hwinfo/
+<snip..>
+
+Thanks,
+Smitha
 
 
-Steffen
