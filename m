@@ -1,60 +1,66 @@
-From: "Steve Weiss" <steve.weiss@virgin.net>
-Subject: Do you sell in Germany?
-Date: Fri, 10 Oct 2003 05:26:36 +0100
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: problems with scsi disk, scsi generic, and compact flash reader
+Date: Fri, 10 Oct 2003 15:35:33 +1000
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <S262436AbTJJEXr/20031010042347Z+11431@vger.kernel.org>
-Reply-To: "Steve Weiss" <steve.weiss@virgin.net>
+Message-ID: <3F864525.3040009@torque.net>
+References: <3F860227.3040909@sympatico.ca>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from m209-mp1.cvx1-a.ren.dial.ntli.net ([62.252.132.209]:46600 "HELO
-	192.168.0.238") by vger.kernel.org with SMTP id S262436AbTJJEXr
+Received: from ns1.triode.net.au ([202.147.124.1]:42706 "EHLO
+	iggy.triode.net.au") by vger.kernel.org with ESMTP id S262419AbTJJFgZ
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 10 Oct 2003 00:23:47 -0400
+	Fri, 10 Oct 2003 01:36:25 -0400
+In-Reply-To: <3F860227.3040909@sympatico.ca>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Chris Friesen <chris_friesen@sympatico.ca>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Inexpensive attractive offices near Frankfurt, Germany
+Chris Friesen wrote:
+> 
+> I have a 2.6.0-test6 kernel with the jumpshot card reader.  I can
+> compile the generic scsi driver no problem, and when I insert the flash
+> card I get the following log entry:
+> 
+> Oct  9 20:33:30 doug kernel: hub 2-1:1.0: new USB device on port 2,
+> assigned address 4
+> Oct  9 20:33:30 doug kernel: scsi1 : SCSI emulation for USB Mass Storage
+> devices
+> Oct  9 20:33:30 doug kernel:   Vendor: Lexar     Model: Jumpshot USB CF
+>   Rev: 0001
+> Oct  9 20:33:30 doug kernel:   Type:   Direct-Access
+>   ANSI SCSI revision: 02
+> Oct  9 20:33:30 doug kernel: Attached scsi generic sg1 at scsi1, channel
+> 0, id 0, lun 0,  type 0
+> 
+> 
+> When I try and load the sd_mod module, that terminal just simply freezes
+> and I can't break out.  Similarly, if I compile scsi disk support right
+> into the kernel, it sits forever at boot time. 
 
-Do you need an office in Europe?
+Chris,
+The compact flash probably doesn't like a MODE SENSE
+command it is being sent by the sd driver. When sd is
+a module then if your other (pseudo) terminals are alive
+after 'modprobe sd_mod' locks up then perhaps you could
+try 'ps -eo cmd,wchan' on another terminal and report
+the result for that modprobe.
 
-It couldn't be easier:
+Some patches went into sd recently (and more are being discussed)
+to lower the MODE SENSE traffic during sd initialization. There
+is a very wide range of devices that use the scsi command set
+and there is no easy way to know during scan/initialization
+how well a device will handle some commands (scsi_level ??).
 
-Everything you need is ready for you right now. You can choose from bar=
-e
-office space to fully-equipped with everything.=20
+Another thing you could do is fetch sg3_utils from
+http://www.torque.net/sg and report the result of
+'sg_modes -a /dev/sg1'. That will report the MODE SENSE
+commands the device claims to support. [BTW Run 'sg_modes'
+before you try to 'modprobe sd_mod'.]
 
-Short or long term rental.
+Doug Gilbert
 
-If you want a base to market to Europe, this is an ideal location. Cent=
-ral
-for Germany and France, Netherlands, Belgium, Switzerland, Czechoslovak=
-ia
-Austria, within easy reach. A massive market for you.=20
 
-Broadband, networked, desks, computers, furniture, English-speaking
-assistants, marketing help, translation, free parking, apartment
-accommodation also available.
 
-Space for 1 to 40 people, 200 to 2000 sq ft
-
-25 mins from Frankfurt airport. =BD mile to main North South Autobahn a=
-nd
-high-speed train service.=20
-
-This office space represents exceptionally good value, newly-built, ful=
-ly
-equipped and inexpensive.
-
-Please give me a call for further info.
-
-Steve Weiss
-
-Tel:  +44 (0)1481 720 294
-=46ax: +44 (0)1481 720 317
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
