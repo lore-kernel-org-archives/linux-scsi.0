@@ -1,49 +1,40 @@
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: HBAAPI
-Date: Fri, 16 Apr 2004 13:10:53 +0100
+Subject: Re: [ANNOUNCE][RELEASE]: megaraid unified driver version 2.20.0.B1
+Date: Fri, 16 Apr 2004 13:18:40 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040416131053.D5080@infradead.org>
-References: <3356669BBE90C448AD4645C843E2BF2802C01631@xbl.ma.emulex.com>
+Message-ID: <20040416131840.E5080@infradead.org>
+References: <0E3FA95632D6D047BA649F95DAB60E570230C7B4@exa-atlanta.se.lsil.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from phoenix.infradead.org ([213.86.99.234]:59664 "EHLO
+Received: from phoenix.infradead.org ([213.86.99.234]:64016 "EHLO
 	phoenix.infradead.org") by vger.kernel.org with ESMTP
-	id S262974AbUDPMK4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 16 Apr 2004 08:10:56 -0400
+	id S262952AbUDPMSw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 16 Apr 2004 08:18:52 -0400
 Content-Disposition: inline
-In-Reply-To: <3356669BBE90C448AD4645C843E2BF2802C01631@xbl.ma.emulex.com>; from James.Smart@Emulex.com on Thu, Apr 08, 2004 at 09:12:13AM -0400
+In-Reply-To: <0E3FA95632D6D047BA649F95DAB60E570230C7B4@exa-atlanta.se.lsil.com>; from sreenib@lsil.com on Wed, Apr 07, 2004 at 07:18:02PM -0400
 List-Id: linux-scsi@vger.kernel.org
-To: "Smart, James" <James.Smart@Emulex.com>
-Cc: Linux SCSI Reflector <linux-scsi@vger.kernel.org>
+To: "Bagalkote, Sreenivas" <sreenib@lsil.com>
+Cc: "'jgarzik@pobox.com'" <jgarzik@pobox.com>, "'Matt_Domsch@dell.com'" <Matt_Domsch@dell.com>, "'paul@kungfoocoder.org'" <paul@kungfoocoder.org>, "'James.Bottomley@SteelEye.com'" <James.Bottomley@SteelEye.com>, "'arjanv@redhat.com'" <arjanv@redhat.com>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>
 
-On Thu, Apr 08, 2004 at 09:12:13AM -0400, Smart, James wrote:
-> The jist of HBAAPI is that each vendor supplies a "provider" module that
-> implements the API for the specific hardware. Ours converts into a lot of
-> ioctls. We see this as a great opportunity to remove the need for a
-> vendor-specific provider module, and simply have a standard API, supported
-> by linux FC drivers. There is already a sample application and template
-> provider over on SourceForge that can be leveraged. We are offering to ante
-> up a proposal for this API.
+kdep.h:
+ - mraid_scsi_host_alloc/mraid_scsi_host_dealloc should go away, just
+   define scsi_host_alloc/scsi_host_put wrappers for 2.4.
+ - mraid_scsi_set_pdev should go away, it's not needed in 2.6 at all
+   because scsi_add_host does all the work and for 2.4 just use
+   scsi_set_pci_device directly.
+ - all the SCP2FOO defines should go away, the 2.6 variants work for 2.4
+   aswell
+ - mraid_set_host_lock should go, just use scsi_assign_lock and define
+   it for 2.4.
 
-I'm not exactly happy with the HBAAPI, like about everything from SNIA
-it's a pretty braindead spec.  But if you want a standard implementation
-for Linux I'd suggest the different FC HBA Vendors sit together and tell
-what additional kernel support they'd need for a _single_ implementation
-of that library instead of the loadable module mess.
+megaraid_clib.c:
+  - why do you need the scb pool managment code at all?  You can dynamically
+    allocate scbs in ->queuecommand
+  - can you explain the need for all the mraid_pci_blk_pool?  I.e. why the
+    generic dma pool routines don't work for megaraid
 
-> Has there been any thoughts/efforts in doing this in the past ? Any
-> recommendations for how this should be implemented ?  Any general thoughts?
-
-Most of the HBA ABI functions that are about attribute querying should be
-handle through the FC transport attributes.  The entry points ending up
-sending down certain scsi commands should invoke SG_IO, for the other
-someone has to come up with ideas.
-
-> HBAAPI provides an interface for setting persistent device mappings. What
-> are the current thoughts on how driver-level persistent data should be
-> maintained/saved/etc ?
-
-Do you mean persistant mappings from WWNNs to scsi target/lun numbers or
-mappings of either of those to Linux device names?
-
+all files:
+  - please avoid using scsi.h and hosts.h from drivers/scsi in favour of
+    the include/scsi/ headers, especially get rid of all the Scsi_Foo
+    typedefs
