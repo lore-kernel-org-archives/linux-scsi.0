@@ -1,52 +1,53 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: Support for CDB length > 16
-Date: Tue, 18 Nov 2003 23:02:37 +1000
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Unaligned scatter-gather buffers and usb-storage
+Date: Tue, 18 Nov 2003 10:20:17 -0500 (EST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3FBA186D.2060907@torque.net>
-References: <OF1494DF8F.2FB4A44D-ONC2256DE2.004036A3-C2256DE2.0040B333@il.ibm.com>
-Reply-To: dougg@torque.net
+Message-ID: <Pine.LNX.4.44L0.0311181001030.735-100000@ida.rowland.org>
+References: <20031110095914.B22518@beaverton.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bunyip.cc.uq.edu.au ([130.102.2.1]:65037 "EHLO
-	bunyip.cc.uq.edu.au") by vger.kernel.org with ESMTP id S261817AbTKRNGF
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 18 Nov 2003 08:06:05 -0500
-In-Reply-To: <OF1494DF8F.2FB4A44D-ONC2256DE2.004036A3-C2256DE2.0040B333@il.ibm.com>
+Received: from ida.rowland.org ([192.131.102.52]:3332 "HELO ida.rowland.org")
+	by vger.kernel.org with SMTP id S263590AbTKRPUT (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 18 Nov 2003 10:20:19 -0500
+In-Reply-To: <20031110095914.B22518@beaverton.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Liran Schour <LIRANS@il.ibm.com>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org
+To: Patrick Mansfield <patmans@us.ibm.com>
+Cc: SCSI development list <linux-scsi@vger.kernel.org>, USB development list <linux-usb-devel@lists.sourceforge.net>
 
-Liran Schour wrote:
-> 
-> 
-> 
-> Christoph Hellwig wrote:
-> 
-> 
->>You'd have to enlarge MAX_COMMAND_SIZE, that'S the whole point of it :)
->>What exactly are you trying to do and for what kernel release?  We've
->>been through increasing it from 12 to 16 at some point in 2.4.
-> 
-> 
-> I am trying to find a way to do that without the need to recompile the
-> kernel.
-> I am trying to support an OSD device see t10 OSD draft, I think that 2.6 is
-> my target kernel release.
+Although most scatter-gather buffers are page aligned, occasionally one of 
+them isn't.  This can happen when the sg and st drivers use direct I/O and 
+the user's buffer doesn't start on a page boundary; the first s-g buffer 
+in the list will coincide with the start of the user buffer even though 
+all the later ones will start at page boundaries.
 
-Liran,
-Yep, I knew that I'd seen really big SCSI commands somewhere.
-OSD, now there is a storage paradigm that doesn't fit
-the block subsystem:-)
+The usb-storage driver has trouble with unaligned buffers.  More 
+accurately, it has trouble with s-g entries having bad lengths.  A buffer 
+that occupies an entire page or is the _last_ entry in the s-g list is 
+okay, but if the _first_ entry isn't aligned properly it is likely to have 
+a bad length.
 
-Perhaps we should starting thinking about kmalloc()ing
-scsi_cmnd::cmnd (rather than having it as a fixed array).
-The mid-level owns that structure so it can take care
-of allocation and de-allocation. We would have to
-find code that does sizeof(scsi_cmnd::cmnd) and fix it.
+[For linux-scsi readers: This has to do with the way USB works.  Data
+transfers are divided up into packets, and packets have a maximum size
+(typically 64 or 512 bytes).  A packet can't span two s-g entries; hence
+if an s-g entry's length isn't divisible by the maxpacket size then one of
+the packets for that entry must be short, i.e., smaller than the maximum
+size.  But USB specifies that short packets always indicate the end of a
+transfer.  Thus if any s-g entry but the last has a bad length, the data
+transfer will terminate prematurely.]
 
-Doug Gilbert
+Alignment to a 512-byte boundary would suffice and page alignment would be
+more than enough.  The cleanest way to fix the problem would be to have st
+and sg refuse to do direct I/O when the user's buffer isn't page aligned.  
+That's probably too draconian (but it would allow us to give the user
+process an appropriate error code right away).
 
+So instead I'm going to change the usb-storage driver to make it reject
+any s-g transfer that doesn't meet the entry length requirements.  My
+question is this: What's the best way to inform the SCSI midlayer about
+what went wrong?  Return a DID_ABORT code?  Or would something else be
+better?
 
+Alan Stern
 
