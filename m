@@ -1,36 +1,50 @@
 From: "J.E.J. Bottomley" <James.Bottomley@steeleye.com>
-Subject: Re: [PATCH 2/2] clean up scsi documentation
-Date: Mon, 11 Nov 2002 11:14:53 -0500
+Subject: Re: PARISC changes to drivers/scsi
+Date: Mon, 11 Nov 2002 11:26:59 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <200211111614.gABGErt18501@localhost.localdomain>
-References: <eike@bilbo.math.uni-mannheim.de>
+Message-ID: <200211111627.gABGQxr18575@localhost.localdomain>
+References: <willy@debian.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Received: (from root@localhost)
-	by pogo.mtv1.steeleye.com (8.9.3/8.9.3) id IAA11719
-	for <linux-scsi@vger.kernel.org>; Mon, 11 Nov 2002 08:14:58 -0800
-In-Reply-To: Message from Rolf Eike Beer <eike@bilbo.math.uni-mannheim.de>
-   of "Mon, 11 Nov 2002 16:53:02 +0100." <200211111653.02208@bilbo.math.uni-mannheim.de>
+	by pogo.mtv1.steeleye.com (8.9.3/8.9.3) id IAA14097
+	for <linux-scsi@vger.kernel.org>; Mon, 11 Nov 2002 08:27:04 -0800
+In-Reply-To: Message from Matthew Wilcox <willy@debian.org>
+   of "Sun, 10 Nov 2002 21:22:26 GMT." <20021110212226.A12011@parcelfarce.linux.theplanet.co.uk>
 List-Id: linux-scsi@vger.kernel.org
-To: Rolf Eike Beer <eike@bilbo.math.uni-mannheim.de>
+To: Matthew Wilcox <willy@debian.org>
 Cc: linux-scsi@vger.kernel.org
 
-This one rejects here:
+willy@debian.org said:
+> Since you guys are starting to discuss stuff pertaining to Linux/
+> PARISC, I'd like to be sure you're aware of our current changes vs
+> Linus' tree. I wouldn't call our current tree even remotely stable in
+> 2.5, so I wasn't planning on submitting these bits.  But do feel free
+> to cherrypick anything you want from this patch and incorporate it.
+> If you notice any bugs, all the better; I don't think anyone one the
+> PA side is paying particular attention to these drivers and changes t=
+o
+> SCSI that affect them at the moment.=20
 
+The zalon changes look OK.  Unfortunately, the ncr53c8xx is a broken dr=
+iver at=20
+the moment (it needs to be converted to the new error handling).  I als=
+o=20
+believe its orphaned, so if you want to sign up to fix it...
 
-eike@bilbo.math.uni-mannheim.de said:
-> Mon Nov 11 08:53:53 2002 @@ -60,7 +60,7 @@
->  Mylex Corp.
->  510/796-6100
->  peters@mylex.com
-> -
-> + 
+Could you run the sym53c8xx_2 changes past G=E9rard Roudier, since I th=
+ink he's=20
+still maintaining that one?
 
-I presume the ^L was mangled by an intermediate mailer.  However, since it 
-seems to be an intentional part of the original press release, I suggest we 
-keep it.
+Thanks,
 
 James
 
 
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
