@@ -1,30 +1,60 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] revamp legacy host registration
-Date: Tue, 3 Jun 2003 22:01:58 +0100
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH] constants.c codingstyle fixes
+Date: Tue, 3 Jun 2003 23:04:27 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030603220158.A28378@infradead.org>
-References: <20030603205924.GA9262@lst.de>
+Message-ID: <20030603210427.GA9336@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from phoenix.mvhi.com ([195.224.96.167]:22290 "EHLO
-	phoenix.infradead.org") by vger.kernel.org with ESMTP
-	id S261168AbTFCUsd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 3 Jun 2003 16:48:33 -0400
+Received: from verein.lst.de ([212.34.189.10]:14505 "EHLO mail.lst.de")
+	by vger.kernel.org with ESMTP id S261166AbTFCUvC (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Jun 2003 16:51:02 -0400
 Content-Disposition: inline
-In-Reply-To: <20030603205924.GA9262@lst.de>; from hch@lst.de on Tue, Jun 03, 2003 at 10:59:24PM +0200
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: James.Bottomley@steeleye.com, linux-scsi@vger.kernel.org
+To: James.Bottomley@steeleye.com
+Cc: linux-scsi@vger.kernel.org
 
-On Tue, Jun 03, 2003 at 10:59:24PM +0200, Christoph Hellwig wrote:
-> The legacy host registration/unregistration is the last user
-> of the scsi_host_list but it really wants a per-template list
-> instead, so switch to one that is maintained in
-> scsi_register/scsi_unregister.  Also the legacy init/exit code
-> is small enough now to be self-contained in scsi_module.c now.
+This is the same procedure most of the scsi source files
+got a while ago.
 
-And just btw, this breaks two usb scanner drivers still using
-scsi_register_host in the scsi tree but they're already fixed
-in mainline to use scsi_add_host directly.
 
+diff -Nru a/drivers/scsi/constants.c b/drivers/scsi/constants.c
+--- a/drivers/scsi/constants.c	Sun Jun  1 21:27:22 2003
++++ b/drivers/scsi/constants.c	Sun Jun  1 21:27:22 2003
+@@ -1004,16 +1004,14 @@
+ #endif
+ }
+ 
+-void print_sense(const char * devclass, Scsi_Cmnd * SCpnt)
++void print_sense(const char *devclass, struct scsi_cmnd *cmd)
+ {
+-	print_sense_internal(devclass, SCpnt->sense_buffer,
+-			     SCpnt->request);
++	print_sense_internal(devclass, cmd->sense_buffer, cmd->request);
+ }
+ 
+-void print_req_sense(const char * devclass, Scsi_Request * SRpnt)
++void print_req_sense(const char *devclass, struct scsi_request *sreq)
+ {
+-	print_sense_internal(devclass, SRpnt->sr_sense_buffer,
+-			     SRpnt->sr_request);
++	print_sense_internal(devclass, sreq->sr_sense_buffer, sreq->sr_request);
+ }
+ 
+ #if (CONSTANTS & CONST_MSG) 
+@@ -1116,13 +1114,13 @@
+     return len;
+ }
+ 
+-void print_Scsi_Cmnd (Scsi_Cmnd *cmd) {
++void print_Scsi_Cmnd(struct scsi_cmnd *cmd) {
+     printk("scsi%d : destination target %d, lun %d\n", 
+ 	   cmd->device->host->host_no, 
+ 	   cmd->device->id, 
+ 	   cmd->device->lun);
+     printk("        command = ");
+-    print_command (cmd->cmnd);
++    print_command(cmd->cmnd);
+ }
+ 
+ #if (CONSTANTS & CONST_HOST)
