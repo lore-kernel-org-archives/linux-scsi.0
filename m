@@ -1,83 +1,36 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [linux-usb-devel] USB Storage oops in 2.5.69-bk8
-Date: Sat, 17 May 2003 11:29:30 -0400 (EDT)
+From: James Bottomley <James.Bottomley@steeleye.com>
+Subject: Re: [PATCH] switch scsi upper driver probing to the driver model
+Date: 17 May 2003 11:19:50 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44L0.0305171108050.26146-100000@netrider.rowland.org>
-References: <20030516222900.GA3236@beaverton.ibm.com>
+Message-ID: <1053188393.1968.97.camel@mulgrave>
+References: <20030516182039.A7369@lst.de>
+	<20030516235718.GA3260@beaverton.ibm.com>
+	<Pine.LNX.4.52.0305171248460.4436@kai.makisara.local>
+	<20030517160801.A9431@infradead.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from netrider.rowland.org ([192.131.102.5]:17416 "HELO
-	netrider.rowland.org") by vger.kernel.org with SMTP id S261580AbTEQPQg
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 17 May 2003 11:16:36 -0400
-In-Reply-To: <20030516222900.GA3236@beaverton.ibm.com>
+Received: from nat9.steeleye.com ([65.114.3.137]:39684 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S261617AbTEQQHq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 17 May 2003 12:07:46 -0400
+In-Reply-To: <20030517160801.A9431@infradead.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Anderson <andmike@us.ibm.com>
-Cc: Florin Iucha <florin@iucha.net>, David Brownell <david-b@pacbell.net>, USB development list <linux-usb-devel@lists.sourceforge.net>, linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Kai Makisara <Kai.Makisara@kolumbus.fi>, Mike Anderson <andmike@us.ibm.com>, Christoph Hellwig <hch@lst.de>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Fri, 16 May 2003, Mike Anderson wrote:
+On Sat, 2003-05-17 at 10:08, Christoph Hellwig wrote:
+> That exactly what I said in my mail to Douglas before - now there always
+> is one driver for each device.  If you have sg loaded but not st (yet)
+> sg will claim your tapes, not st.
 
-> I remember the previous conversation on the MODE-SENSE, but I think
-> there might be more here.
-> 
-> I do not believe the oops is related to the lack of proper hot-plugging
-> support (unless this is another way it will manifest itself). The issue
-> is more the interaction of the error handler and the usb storage driver.
-> 
-> The sequence:
-> "drivers/usb/core/message.c: usb_control/bulk_msg: timeout
-> Error handler scsi_eh_1 waking up
-> scsi_eh_prt_fail_stats: 1:0:0:0 cmds failed: 0, cancel: 1"
-> 
-> would lead one two believe that a timeout was detected both in the usb
-> core and in the mid layer. This would not be a good thing to have two
-> timeout recovery actions happening. I am not familiar with the usb
-> storage code so this may be incorrect. 
+In principle, I'm not opposed to single attachment.  However, we need
+the SG_IO demonstrably working for all devices (including tape) before
+we try turning it off.
 
-I think this is a red herring, and the sequence of log messages above is
-not especially pertinent.  I don't have my copy of the original system log
-with me here, so this is relying on memory and might be wrong -- end
-disclaimer.
+So, let's look at the SG_IO for cdev patch before considering this one.
 
-What happens is that the device crashes because of the 3-byte 
-MODE-SENSE(6) request.  The scsi error handler tries various levels of 
-fault recovery, all the way up to a bus reset.  Usb-storage implements the 
-bus reset as a USB port reset, which requires usbcore to re-enumerate 
-the device.  The line
-
-   drivers/usb/core/message.c: usb_control/bulk_msg: timeout
-
-refers to a failure during the re-enumeration.  Apparently even the port
-reset was not enough to revive the device.  I don't know the reason for
-the line
-
-   Error handler scsi_eh_1 waking up
-
-since the error handler is already running -- maybe it's related to the 
-hot-unplug sequence that usb-storage goes through.  That sequence is 
-pretty much guaranteed to cause an OOPS if the device is busy at the time, 
-since it hasn't yet been updated properly.  (I think Matt Dharm is waiting 
-to hear from someone -- like you, Mike -- that the SCSI core is ready for 
-hot-unplugging.)
-
-When the USB port reset fails as it did here, it automatically causes a 
-hot-unplug event.  Usb-storage currently handles the SCSI part of that as 
-follows:
-
-	// Lock the host
-	for each device on the host: sdev->online = 0;
-	// Unlock the host
-	scsi_remove_host(host);
-	scsi_unregister_host(host);
-
-My guess is that this sequence provokes that error handler message and 
-causes the crash.
-
-At any rate, the two timeout messages are referring to two different 
-things.  One is the failure of the MODE-SENSE and the other is the failure 
-of the re-enumeration.  They do not in themselves indicate a problem.
-
-Alan Stern
+James
 
 
