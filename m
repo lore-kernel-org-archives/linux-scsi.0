@@ -1,41 +1,30 @@
 From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH] ipr: Properly enable/disable TCQ
-Date: Sat, 28 Aug 2004 17:05:02 -0400
+Subject: Re: [PATCH] 2.6.9-rc1  drivers/scsi/libata-core.c
+Date: Sat, 28 Aug 2004 19:03:59 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <4130F37E.2020104@pobox.com>
-References: <200408282014.i7SKEl2S006092@hera.kernel.org>
+Message-ID: <41310F5F.2060808@pobox.com>
+References: <20040826044751.GA125794@sgi.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:25493 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S267889AbUH1VFR
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:13979 "EHLO
+	www.linux.org.uk") by vger.kernel.org with ESMTP id S268111AbUH1XEM
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 28 Aug 2004 17:05:17 -0400
-In-Reply-To: <200408282014.i7SKEl2S006092@hera.kernel.org>
+	Sat, 28 Aug 2004 19:04:12 -0400
+In-Reply-To: <20040826044751.GA125794@sgi.com>
 List-Id: linux-scsi@vger.kernel.org
-To: SCSI Mailing List <linux-scsi@vger.kernel.org>
-Cc: brking@us.ibm.com
+To: Jeremy Higdon <jeremy@sgi.com>
+Cc: linux-scsi@vger.kernel.org
 
-Linux Kernel Mailing List wrote:
-> ChangeSet 1.1803.41.23, 2004/08/14 18:08:08-04:00, brking@us.ibm.com
-> 
-> 	[PATCH] ipr: Properly enable/disable TCQ
-> 	
-> 	This patch correctly enables tagged command queuing for the ipr driver.
-> 	I had misinterpreted scsi_mid_low_api.txt. The following patch has the
-> 	appropriate scsi_activate_tcq/scsi_deactivate_tcq calls.
-> 	
-> 	Signed-off-by: Brian King <brking@us.ibm.com>
-> 	Signed-off-by: James Bottomley <James.Bottomley@SteelEye.com>
+applied, but with a comment:
 
+please use a descriptive subject.  Standard patch-applying scripts we 
+all use take the email subject line as the one-line short description of 
+your change.  Obviously "2.6.9-rc1  drivers/scsi/libata-core.c" doesn't 
+tell us anything about the change itself.
 
-I don't think you misinterpreted scsi_mid_low_api.txt -- it only 
-mentions scsi_adjust_queue_depth(), and does not mention 
-scsi_[de]activate_tcq() at all.
+	Jeff
 
-Seems like a doc bug to me...
-
-	Jeff, who was about to add scsi_adjust_queue_depth() to libata
 
 
