@@ -1,21 +1,23 @@
-From: Andrew Morton <akpm@osdl.org>
-Subject: Re: 2.6.1-rc1: SCSI: `TIMEOUT' redefined
-Date: Tue, 6 Jan 2004 14:40:59 -0800
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <20040106144059.0c896eea.akpm@osdl.org>
-References: <Pine.LNX.4.58.0312310033110.30995@home.osdl.org>
-	<20040106183325.GJ11523@fs.tum.de>
+From: Patrick Mansfield <patmans@ibm.com>
+Subject: [PATCH] Re: 2.6.1-rc1: SCSI: `TIMEOUT' redefined
+Date: Tue, 6 Jan 2004 14:40:33 -0800
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <20040106144033.A13031@beaverton.ibm.com>
+References: <Pine.LNX.4.58.0312310033110.30995@home.osdl.org> <20040106183325.GJ11523@fs.tum.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
-In-Reply-To: <20040106183325.GJ11523@fs.tum.de>
-To: Adrian Bunk <bunk@fs.tum.de>
-Cc: patmans@ibm.com, neuffer@goofy.zdv.uni-mainz.de, a.arnold@kfa-juelich.de, linux-kernel@vger.kernel.org, James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from e32.co.us.ibm.com ([32.97.110.130]:24540 "EHLO
+	e32.co.us.ibm.com") by vger.kernel.org with ESMTP id S265434AbUAFWmR
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 6 Jan 2004 17:42:17 -0500
+Content-Disposition: inline
+In-Reply-To: <20040106183325.GJ11523@fs.tum.de>; from bunk@fs.tum.de on Tue, Jan 06, 2004 at 07:33:25PM +0100
 List-Id: linux-scsi@vger.kernel.org
+To: Adrian Bunk <bunk@fs.tum.de>
+Cc: neuffer@goofy.zdv.uni-mainz.de, a.arnold@kfa-juelich.de, Kernel Mailing List <linux-kernel@vger.kernel.org>, James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org
 
-Adrian Bunk <bunk@fs.tum.de> wrote:
->
+On Tue, Jan 06, 2004 at 07:33:25PM +0100, Adrian Bunk wrote:
 > On Wed, Dec 31, 2003 at 12:36:49AM -0800, Linus Torvalds wrote:
 > >...
 > > Summary of changes from v2.6.0 to v2.6.1-rc1
@@ -28,63 +30,48 @@ Adrian Bunk <bunk@fs.tum.de> wrote:
 > This adds a #define TIMEOUT to scsi.h conflicting with a different 
 > TIMEOUT #define in drivers/scsi/eata_generic.h:
 
-eww, bad idea.  I count more than twenty #defines of TIMEOUT in the kernel
-tree.
+Sorry Adrian, here is a patch renaming TIMEOUT to TIMEOUT_ERROR.  Still
+not a good name for the usage in SCSI core, but it does not conflict, and
+matches the other names for the IO completion results (SUCCESS, FAILED,
+etc., they and others should really be prefixed with at least SCSI).
 
-We should change scsi.h - "TIMEOUT" is waaay too collision-prone.
+eata does not use the TIMEOUT it defines, but there are enough defines of
+TIMEOUT that it could be a problem in other drivers.
 
-In fact, a lot of those identifiers are quite poorly chosen:
+Only compile tested for eata driver.
 
-#define NEEDS_RETRY     0x2001
-#define SUCCESS         0x2002
-#define FAILED          0x2003
-#define QUEUED          0x2004
-#define SOFT_ERROR      0x2005
-#define ADD_TO_MLQUEUE  0x2006
-#define TIMEOUT         0x2007
-
-That's just asking for it.
-
-This untested patch purports to fix just the TIMEOUT thing:
-
-(hmm, SD_TIMEOUT is already taken, too).
-
-
-diff -puN drivers/scsi/scsi.c~scsi-rename-TIMEOUT drivers/scsi/scsi.c
---- 25/drivers/scsi/scsi.c~scsi-rename-TIMEOUT	Tue Jan  6 14:37:24 2004
-+++ 25-akpm/drivers/scsi/scsi.c	Tue Jan  6 14:37:35 2004
-@@ -441,7 +441,7 @@ void scsi_log_completion(struct scsi_cmn
+--- 1.132/drivers/scsi/scsi.c	Tue Sep 30 07:24:17 2003
++++ edited/drivers/scsi/scsi.c	Tue Jan  6 13:13:34 2004
+@@ -441,7 +441,7 @@
  			case FAILED:
  				printk("FAILED ");
  				break;
 -			case TIMEOUT:
-+			case SD_CMD_TIMEOUT:
++			case TIMEOUT_ERROR:
  				/* 
  				 * If called via scsi_times_out.
  				 */
-diff -puN drivers/scsi/scsi_error.c~scsi-rename-TIMEOUT drivers/scsi/scsi_error.c
---- 25/drivers/scsi/scsi_error.c~scsi-rename-TIMEOUT	Tue Jan  6 14:37:24 2004
-+++ 25-akpm/drivers/scsi/scsi_error.c	Tue Jan  6 14:37:45 2004
-@@ -164,7 +164,7 @@ int scsi_delete_timer(struct scsi_cmnd *
+===== drivers/scsi/scsi_error.c 1.67 vs edited =====
+--- 1.67/drivers/scsi/scsi_error.c	Mon Sep 29 05:37:28 2003
++++ edited/drivers/scsi/scsi_error.c	Tue Jan  6 13:12:58 2004
+@@ -164,7 +164,7 @@
   **/
  void scsi_times_out(struct scsi_cmnd *scmd)
  {
 -	scsi_log_completion(scmd, TIMEOUT);
-+	scsi_log_completion(scmd, SD_CMD_TIMEOUT);
++	scsi_log_completion(scmd, TIMEOUT_ERROR);
  	if (unlikely(!scsi_eh_scmd_add(scmd, SCSI_EH_CANCEL_CMD))) {
  		panic("Error handler thread not present at %p %p %s %d",
  		      scmd, scmd->device->host, __FILE__, __LINE__);
-diff -puN include/scsi/scsi.h~scsi-rename-TIMEOUT include/scsi/scsi.h
---- 25/include/scsi/scsi.h~scsi-rename-TIMEOUT	Tue Jan  6 14:37:24 2004
-+++ 25-akpm/include/scsi/scsi.h	Tue Jan  6 14:37:54 2004
-@@ -302,7 +302,7 @@ struct scsi_lun {
+===== include/scsi/scsi.h 1.15 vs edited =====
+--- 1.15/include/scsi/scsi.h	Mon Sep 29 05:39:10 2003
++++ edited/include/scsi/scsi.h	Tue Jan  6 13:12:42 2004
+@@ -302,7 +302,7 @@
  #define QUEUED          0x2004
  #define SOFT_ERROR      0x2005
  #define ADD_TO_MLQUEUE  0x2006
 -#define TIMEOUT         0x2007
-+#define SD_CMD_TIMEOUT  0x2007
++#define TIMEOUT_ERROR   0x2007
  
  /*
   * Midlevel queue return values.
-
-_
