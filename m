@@ -1,48 +1,44 @@
 From: James Bottomley <James.Bottomley@steeleye.com>
-Subject: Re: [RFC PATCH] consolidate SCSI-2 command lun setting
-Date: Tue, 15 Oct 2002 13:29:59 -0700
+Subject: Re: [patch 2.5] ips queue depths
+Date: Tue, 15 Oct 2002 13:38:08 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <200210152029.g9FKTxD03950@localhost.localdomain>
-References: <patmans@us.ibm.com>
+Message-ID: <200210152038.g9FKc8A03995@localhost.localdomain>
+References: <andmike@us.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Received: (from root@localhost)
-	by pogo.mtv1.steeleye.com (8.9.3/8.9.3) id NAA09414
-	for <linux-scsi@vger.kernel.org>; Tue, 15 Oct 2002 13:30:02 -0700
-Received: from localhost.localdomain (sshppp-200.mtv1.steeleye.com [172.16.1.200])
-	by pogo.mtv1.steeleye.com (8.9.3/8.9.3) with ESMTP id NAA09325
-	for <linux-scsi@vger.kernel.org>; Tue, 15 Oct 2002 13:30:00 -0700
-Received: from mulgrave (jejb@localhost)
-	by localhost.localdomain (8.11.6/linuxconf) with ESMTP id g9FKTxD03950
-	for <linux-scsi@vger.kernel.org>; Tue, 15 Oct 2002 13:29:59 -0700
-In-Reply-To: Message from Patrick Mansfield <patmans@us.ibm.com>
-   of "Tue, 15 Oct 2002 09:55:02 PDT." <20021015095502.A25647@eng2.beaverton.ibm.com>
+	by pogo.mtv1.steeleye.com (8.9.3/8.9.3) id NAA11813
+	for <linux-scsi@vger.kernel.org>; Tue, 15 Oct 2002 13:38:17 -0700
+In-Reply-To: Message from Mike Anderson <andmike@us.ibm.com>
+   of "Tue, 15 Oct 2002 13:10:22 PDT." <20021015201022.GB1049@beaverton.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: "Jeffery, David" <David_Jeffery@adaptec.com>, 'Dave Hansen' <haveblue@us.ibm.com>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
 
-This all looks OK, except here:
+andmike@us.ibm.com said:
+> I never seen the mid layer handle device starvation correctly. It
+> might be because in scsi_queue_next_request we do this:
 
-+++ b/drivers/scsi/scsi_lib.c	Tue Oct 15 09:46:06 2002
-@@ -972,6 +972,14 @@
- 				continue;
- 			}
- 		}
-+		/* 
-+		 * If SCSI-2 or lower, store the LUN value in cmnd.
-+		 */
-+		if (SDpnt->scsi_level <= SCSI_2)
-+			SCpnt->cmnd[1] = (SCpnt->cmnd[1] & 0x1f) |
-+				(SCpnt->lun << 5 & 0xe0);
-+
-+
- 		/*
- 		 * Finally, initialize any error handling parameters, and set up
- 		 * the timers for timeouts.
+> /*
+>  * Just hit the requeue function for the queue.
+>  */
+>   q->request_fn(q);
 
-Shouldn't this code go early in scsi_dispatch_io instead? (with something 
-similar in scsi_send_eh_cmnd)
+> before we check for starved. 
+
+This starvation code has nothing to do with fairness.  It's job is purely to 
+restart the device queue if we got a host blocked condition and we had to 
+reject commands with zero depth.  When the host blocked abates then we loop 
+over all the starved devices and call their request functions.  Without this, 
+we could get a hang in the block layer queueing.
+
+This could do with being converted over to the blk_stop/start_queue api.
+
+The SCSI code seems to have been written with the idea that device queue_depth 
+<< can_queue and thus doesn't concern itself with resource fairness issues 
+when the two are closer in size to each other.
 
 James
+
 
 
