@@ -1,16 +1,23 @@
-From: "Nicholas Berry" <nikberry@med.umich.edu>
-Subject: Re: Adaptec 2940 Host controller
-Date: Wed, 03 Jul 2002 08:04:09 -0400
+From: "Taylor, Neville" <TaylorNE@logica.com>
+Subject: RE: Adaptec 2940 Host controller
+Date: Wed, 3 Jul 2002 13:10:48 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <sd22b00b.080@mail-02.med.umich.edu>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 8BIT
+Message-ID: <ABDA876D71F9D211B39D0090274EA8E20BC913E5@Floyd.logica.co.uk>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
-To: TaylorNE@logica.com, linux-scsi@vger.kernel.org
+To: 'Nicholas Berry' <nikberry@med.umich.edu>, "Taylor, Neville" <TaylorNE@logica.com>, linux-scsi@vger.kernel.org
 
+
+
+-----Original Message-----
+From: Nicholas Berry [mailto:nikberry@med.umich.edu]
+Sent: 03 July 2002 13:04
+To: TaylorNE@logica.com; linux-scsi@vger.kernel.org
+Subject: Re: Adaptec 2940 Host controller
+
+
+I did wonder myself but I've previously had the same setup working with a
+Microsoft (Please don't hate me!!) Win2k machine.
 
 
 > >>> "Taylor, Neville" <TaylorNE@logica.com> 07/03/02 07:09AM >>>
@@ -19,13 +26,15 @@ To: TaylorNE@logica.com, linux-scsi@vger.kernel.org
 >
 > When I do "modprobe aic7xxx" I get
 >
-> /lib/modules/2.4.18-3/kernel/drivers/scsi/aic7xxx/aic7xxx.o: init_module: No
+> /lib/modules/2.4.18-3/kernel/drivers/scsi/aic7xxx/aic7xxx.o: init_module:
+No
 > such device
 >
 > /lib/modules/2.4.18-3/kernel/drivers/scsi/aic7xxx/aic7xxx.o: insmod
 > /lib/modules/2.4.18-3/kernel/drivers/scsi/aic7xxx/aic7xxx.o failed
 >
-> /lib/modules/2.4.18-3/kernel/drivers/scsi/aic7xxx/aic7xxx.o: insmod aic7xxx
+> /lib/modules/2.4.18-3/kernel/drivers/scsi/aic7xxx/aic7xxx.o: insmod
+aic7xxx
 > failed
 > 
 > This looks to me like the system can't see the card but  m /proc/pci file
@@ -36,7 +45,8 @@ To: TaylorNE@logica.com, linux-scsi@vger.kernel.org
 >     IRQ 11
 >     Master Capable. Latency=255. Min Gnt=255.Max Lat=255
 
-Rev 255, Latency 255, Min Gnt 255, Max Lat 255. Hmm. They look very suspicious numbers to me!
+Rev 255, Latency 255, Min Gnt 255, Max Lat 255. Hmm. They look very
+suspicious numbers to me!
 
 I think the controller's bad.
 
@@ -49,3 +59,4 @@ Nik
 
 
 
+This e-mail and any attachment is for authorised use by the intended recipient(s) only.  It may contain proprietary material, confidential information and/or be subject to legal privilege.  It should not be copied, disclosed to, retained or used by, any other party.  If you are not an intended recipient then please promptly delete this e-mail and any attachment and all copies and inform the sender.  Thank you.
