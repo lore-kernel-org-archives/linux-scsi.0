@@ -1,37 +1,41 @@
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-Subject: [PATCH] depends on PCI DMA API: Adaptec AIC7xxx_old
-Date: Tue, 20 Jul 2004 20:39:50 +0200
+From: Pavel Machek <pavel@ucw.cz>
+Subject: Re: device_suspend() levels [was Re: [patch] ACPI work on aic7xxx]
+Date: Tue, 20 Jul 2004 21:23:41 +0200
 Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <200407201839.i6KIdo2I015550@anakin.of.borg>
-Return-path: <linux-kernel-owner+glk-linux-kernel=40m.gmane.org-S266139AbUGTTXI@vger.kernel.org>
-To: Linus Torvalds <torvalds@osdl.org>, Andrew Morton <akpm@osdl.org>, James.Bottomley@SteelEye.com
-Cc: Linux Kernel Development <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, Geert Uytterhoeven <geert@linux-m68k.org>
+Message-ID: <20040720192341.GB9461@atrey.karlin.mff.cuni.cz>
+References: <40FD38A0.3000603@optonline.net> <20040720155928.GC10921@atrey.karlin.mff.cuni.cz> <40FD4CFA.6070603@optonline.net> <20040720174611.GI10921@atrey.karlin.mff.cuni.cz> <40FD6002.4070206@optonline.net> <1090347939.1993.7.camel@gaston> <40FD65C2.7060408@optonline.net> <1090350609.2003.9.camel@gaston>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner+glk-linux-kernel=40m.gmane.org-S266121AbUGTT1P@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1090350609.2003.9.camel@gaston>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Nathan Bryant <nbryant@optonline.net>, linux-scsi@vger.kernel.org, random1@o-o.yi.org, Luben Tuikov <luben_tuikov@adaptec.com>, Linux Kernel list <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Adaptec AIC7xxx_old unconditionally depends on the PCI DMA API, so mark it
-broken if !PCI
+Hi!
 
-Signed-off-by: Geert Uytterhoeven <geert@linux-m68k.org>
+> > > 2 comments here:
+> > > 
+> > >  - The low level bus state (PCI D state for example) and the "linux"
+> > > state should be 2 different entities.
+> > > 
+> > >  - For PCI, we probably want a hook so the arch can implement it's own
+> > > version of pci_set_power_state() so that ACPI can use it's own trickery
+> > > there.
+> > 
+> > Ok, so the takeaway message for driver writers is to treat the 
+> > pci_dev->suspend() state parameter as an opaque value as far as 
+> > possible, and just pass it on to the other layers
+> 
+> NO ! The exact opposite in fact. I'll work on cleaning that up and
+> write some doco this week with Pavel.
 
---- linux-2.6.8-rc2/drivers/scsi/Kconfig	2004-07-18 15:55:26.000000000 +0200
-+++ linux-m68k-2.6.8-rc2/drivers/scsi/Kconfig	2004-07-19 23:16:48.000000000 +0200
-@@ -320,7 +320,7 @@
- 
- config SCSI_AIC7XXX_OLD
- 	tristate "Adaptec AIC7xxx support (old driver)"
--	depends on SCSI
-+	depends on SCSI && (PCI || BROKEN)
- 	help
- 	  WARNING This driver is an older aic7xxx driver and is no longer
- 	  under active development.  Adaptec, Inc. is writing a new driver to
+Agreed. I do not have strong opinion about Sx or Dx, but it should
+be enum or equivalent so it is hard to get wrong. [And not "really
+easy to get wrong because noone knows for sure", as it is now].
 
-Gr{oetje,eeting}s,
-
-						Geert
-
---
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
-
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-							    -- Linus Torvalds
+								Pavel
+-- 
+Horseback riding is like software...
+...vgf orggre jura vgf serr.
