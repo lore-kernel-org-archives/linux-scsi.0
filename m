@@ -1,59 +1,90 @@
-From: "Martin Peschke3" <MPESCHKE@de.ibm.com>
-Subject: Re: New SCSI exc handlers: Returning cmnds?
-Date: Fri, 21 Jun 2002 17:15:47 +0200
+From: Patrick Mochel <mochel@osdl.org>
+Subject: Re: [PATCH] /proc/scsi/map
+Date: Fri, 21 Jun 2002 09:17:18 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <OFF3B6F224.7885A87F-ONC1256BDF.0052A9FF@de.ibm.com>
+Message-ID: <Pine.LNX.4.33.0206210850240.8496-100000@geena.pdx.osdl.net>
+References: <20020621092943.D1243@austin.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <20020621092943.D1243@austin.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Kurt Garloff <garloff@suse.de>
-Cc: Linux SCSI list <linux-scsi@vger.kernel.org>
+To: sullivan <sullivan@austin.ibm.com>
+Cc: Martin Dalecki <dalecki@evision-ventures.com>, Linus Torvalds <torvalds@transmeta.com>, Kurt Garloff <garloff@suse.de>, Linux kernel list <linux-kernel@vger.kernel.org>, Linux SCSI list <linux-scsi@vger.kernel.org>
 
 
-Kurt,
+> The driverfs patch for SCSI that was recently posted was the kernel portion of 
+> a device naming project that is intended to support all devices, at least the 
+> ones that implement to driverfs in a standard way. There are three items that
+> IMHO should be considered as part of the standard set that driverfs requires:
+> 
+> 1. device type - It appears that Pat is heading down this path with the class
+> 	type support so maybe this is a no brainer. Currently the scsi
+> 	driverfs provides a "type" file to contain this info. The current
+> 	strings used are taken from the scsi_device_types[] but should be
+> 	replaced with the system wide device types that driverfs will provide.
 
-> To make sure I understand you: The midlayer just discards the timed o=
-ut
-> SCSI commands, whether I give them back with scsi_done() [and result
-> DID_ABORT] or not?
+Yes, they are pretty much the same thing. 
 
-Yes. If your eh_abort_handler returns SUCCESS then the mid layer assume=
-s
-that the concerned command is gone.
-If you call scsi_done() during aborting then only a done_late flag is s=
-et
-for this command. This flag has no importance.
+> 2. uid - Since topology and discovery order of hardware can change, the
+> 	driverfs path names to a device are also subject to change. To
+> 	easily identify a device I think it's important that the driverfs
+> 	bus implementations be responsible for create a unique identifier.
+> 
+> 	Since each bus and the devices attached to it will have varying
+> 	capabilities for identifying themselves the contents for this file
+> 	should probably be a variable length string.
+> 
+> 	Even for older devices that can't do a great job of providing info to
+> 	uniquely identify themselves, the driverfs tree provides the nice
+> 	topological context to fall back upon that allows at least as
+> 	good of a job to be done as we do today.
+> 
+> 	The scsi patch currently creates uid info from the INQUIRY evpd pages
+> 	and makes it available in the name file. I would prefer to see a
+> 	new standard uid file and let the name file contain a descriptive 
+> 	(non-unique) name.
 
-> But I don't understand your comment about race conditions. I just fre=
-e
-> up the structures that are allocated in the driver for the command an=
-d
-> skip the scsi_done() callback that I used to call in the old exc hand=
-ler.
-> No races ...
+Yes, I agree. UUIDs are needed to do any type of persistant naming (well). 
+As you say, there are varying ways for determining the UUID, and some ways 
+may not be present for some devices. It will be up to the various driver 
+levels to determine if they can determine a better UUID than higher level 
+layers.
 
-Since aborting timed out commansd and returning finished
-commands are different control threads, it can happen that
-your driver is going to call scsi_done() for a command
-which is being aborted. If that's no problem
-for your driver then everything is fine.
-You only need to make sure that you do not call scsi_done()
-after eh_abort_handler() returns.
-I remember that this was not a trivial thing in zfcp.
+For example, PCI by default doesn't have very good unique information. 
+About the best it can do is something like munging together:
 
+	<bus><device><function><class><subclass>
 
-Mit freundlichen Gr=FC=DFen / with kind regards
+If that device is a network card, the class driver can set the UUID of the 
+device to the MAC of the device. (Network cards won't be named, but it's 
+only an example). (Or, the label of a disk). 
 
-Martin Peschke
+Further, if the device driver knows an even better way to ID the device, 
+e.g. via a serial number on the device, it can do so. 
 
-IBM Deutschland Entwicklung GmbH
-Linux for eServer Development
-Phone: +49-(0)7031-16-2349
+Some buses and their driver won't have to worry, since that information is 
+mandatory in the devices. 
 
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 3. kdev - To create/manage/interface with the device node we need to know the
+>  	kdev.
+
+Sure. I don't have objections to this. It will likely become obvious that 
+we need this later on...
+
+> Because of coldplugging this information should be available in each
+> driverfs device directory. Also, adding the driverfs path name on
+> /sbin/hotplug events and allowing the consumer to retrieve the info
+> from the filesystem might help simplify some of these implementations
+> too.
+
+This information should be exported, I agree. But, we could theoretically 
+achieve a state where every device discovered gets a call to 
+/sbin/hotplug. 
+
+[ With initramfs, we could have the rootfs partition mounted before we 
+start probing for any devices. As long as that had /sbin/hotplug, and the 
+means and policy to name devices, it should work. ]
+
+	-pat
+
