@@ -1,45 +1,123 @@
-From: Doug Ledford <dledford@redhat.com>
-Subject: Re: Problem with Gdt driver under smp?
-Date: Thu, 31 Oct 2002 07:02:57 -0500
+From: Jens Axboe <axboe@suse.de>
+Subject: Re: possible use-after-free in 2.5.44 scsi changes
+Date: Thu, 31 Oct 2002 14:18:24 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20021031120257.GF23217@redhat.com>
-References: <3DC0EBB3.9030707@holidaymarketing.com>
+Message-ID: <20021031131824.GA6549@suse.de>
+References: <200210302219.g9UMJ5w05948@eng2.beaverton.ibm.com> <20021031021718.8A55F866E5@primary.mx.nitric.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <3DC0EBB3.9030707@holidaymarketing.com>
+In-Reply-To: <20021031021718.8A55F866E5@primary.mx.nitric.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Pedro Pla <pedropla@holidaymarketing.com>
-Cc: linux-scsi@vger.kernel.org
+To: merlin <merlin@merlin.org>
+Cc: Badari Pulavarty <badari@us.ibm.com>, linux-scsi@vger.kernel.org
 
-On Thu, Oct 31, 2002 at 04:37:07PM +0800, Pedro Pla wrote:
-> Hello,
+On Wed, Oct 30 2002, merlin wrote:
+> r/badari@us.ibm.com/2002.10.30/14:19:05
+> >> >- Badari
+> >> 
+> >> Hi; if it's of any use, the patch doesn't seem to solve the scsi
+> >> problem for me (2.5.44-bk3-badari). I get the usual 'Incorrect number
+> >> of segments...' and random kernel death during the boot process.
+> >> 
+> >> Merlin
+> >
+> >Hi Merlin,
+> >
+> >I am looking at the output  of your problem ..
+> >
+> >
+> >Oct 28 12:36:09 badb kernel: Incorrect number of segments after building list 
+> >Oct 28 12:36:09 badb kernel: counted 2, received 1 
+> >Oct 28 12:36:09 badb kernel: req nr_sec 8, cur_nr_sec 8 
+> >Oct 28 12:36:09 badb kernel: end_request: I/O error, dev 08:40, sector 6784528
+> > 
+> >Oct 28 12:36:09 badb kernel: raid5: Disk failure on scsi/host0/bus0/target4/lu
+> >n0/part7, disabling device. Operation continuing on 4 devices 
+> >Oct 28 12:36:09 badb kernel: blk: request botched 
+> >
+> >Huh !! Your IO size is only 4K. You are using 2 sg entries ?
+> >I am curious on finding out whats happening here ..
+> >
+> >Would you mind adding few printk()s to following routine:
+> >
+> >drivers/block/ll_rw_blk.c: blk_rq_map_sg()
+> >
+> >Do something like this ...
 > 
-> I was wondering if there is any known problem with the Gdt driver under 
-> an smp machine, I have a dual p3 scb2 motherboard, with 1-2GB ram, an 
-> scrmr intel 0 channel raid controller and 3 hotswap disks. Initially I 
-> thought it was a memory problem since the kernel was complaining at 
-> mem_alloc:89, however as long as the memory I move is not read from the 
-> disk (through a kernel compile, or a dd if=/dev/sda) then it seems to 
-> work fine. A kernel compiled with no smp works fine as well. I've tried 
-> kernels from the 2.2.22 to the 2.4.17-2.4.20-pre10-ac with pre11 patches 
-> applied on top.
+> Hi Badari,
 > 
-> The symptoms are segmentation faults, signal 11's, and occasionally 
-> kernel oops at mem_alloc:89, I have also seen several kernel oops in 
-> journal.c when I tried using ext3, I disactivated that but the faults 
-> remained. It has also froze once and given a kernel oops while loading 
-> the scsi driver at boot, and another time it simply rebooted the machine 
-> when loading the driver. Any ideas? For now I will work with only one 
-> cpu and smp disactivated since that gives no problems at all, but I 
-> would like to be able to unleash the full power of these machines.
+> I grabbed 2.5.45 and added the printks you describe.. The kernel
+> dies before the syslog is written and I don't have a serial device
+> to try capturing the output there, but this is what I scribbled
+> down:
+> 
+>   ...lots of stuff ...
+>   home: clean
+>   made a new seg: 1 (c18adc70, 4096, 0)
+>   Loop: brvprv: c18adc70 bvec:c18ad838 offset:0 length:4096
+>   made a new seg: 2 (c18ad838, 4096, 0)
+>   returning segs: 2
+>   Incorrect number of segments after building list
+>   counted 2, received 1
+>   ...some stuff...
+> 
+> Things went on for a few more messages before the kernel died
+> a death.
+> 
+> It's an SMP box so the seg stuff that precedes the error may
+> be unrelated; I don't have a good enough grasp to be sure. I
+> guess an interesting value to know might be max_segment_size.
+> 
+> Half tempted to try a non-SMP build, just to see. Each time I
+> do this, I get a bit more (recoverable) fs damage, but still..
 
-Sounds like typical bad RAM problems.  Run a memory test on your RAM.
+SMP should not make a difference. Does this patch make a difference?
+
+===== drivers/block/ll_rw_blk.c 1.135 vs edited =====
+--- 1.135/drivers/block/ll_rw_blk.c	Mon Oct 28 20:57:59 2002
++++ edited/drivers/block/ll_rw_blk.c	Thu Oct 31 14:17:09 2002
+@@ -694,31 +694,23 @@
+ 	seg_size = nr_phys_segs = nr_hw_segs = 0;
+ 	bio_for_each_segment(bv, bio, i) {
+ 		if (bvprv && cluster) {
+-			int phys, seg;
+-
+-			if (seg_size + bv->bv_len > q->max_segment_size) {
+-				nr_phys_segs++;
++			if (seg_size + bv->bv_len > q->max_segment_size)
+ 				goto new_segment;
+-			}
+ 
+-			phys = BIOVEC_PHYS_MERGEABLE(bvprv, bv);
+-			seg = BIOVEC_SEG_BOUNDARY(q, bvprv, bv);
+-			if (!phys || !seg)
+-				nr_phys_segs++;
+-			if (!seg)
++			if (!BIOVEC_PHYS_MERGEABLE(bvprv, bv))
+ 				goto new_segment;
+-
+-			if (!BIOVEC_VIRT_MERGEABLE(bvprv, bv))
++			if (!BIOVEC_SEG_BOUNDARY(q, bvprv, bv))
+ 				goto new_segment;
+ 
+ 			seg_size += bv->bv_len;
+ 			bvprv = bv;
+ 			continue;
+-		} else {
+-			nr_phys_segs++;
+ 		}
+ new_segment:
+-		nr_hw_segs++;
++		if (!bvprv || !BIOVEC_VIRT_MERGEABLE(bvprv, bv))
++			nr_hw_segs++;
++
++		nr_phys_segs++;
+ 		bvprv = bv;
+ 		seg_size = bv->bv_len;
+ 	}
 
 -- 
-  Doug Ledford <dledford@redhat.com>     919-754-3700 x44233
-         Red Hat, Inc. 
-         1801 Varsity Dr.
-         Raleigh, NC 27606
-  
+Jens Axboe
+
