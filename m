@@ -1,38 +1,47 @@
-From: James Bottomley <James.Bottomley@steeleye.com>
-Subject: Re: [linux-usb-devel] Re: USB storage problems on OHCI..
-Date: 22 Sep 2003 14:28:56 -0500
+From: Patrick Mansfield <patmans@us.ibm.com>
+Subject: [PATCH] don't set underflow for REQ_BLOCK_PC
+Date: Mon, 22 Sep 2003 12:50:09 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1064258938.15409.63.camel@mulgrave>
-References: <UTC200309221855.h8MItM216884.aeb@smtp.cwi.nl>
+Message-ID: <20030922125009.A3244@beaverton.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nat9.steeleye.com ([65.114.3.137]:49926 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S261808AbTIVT3s (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 22 Sep 2003 15:29:48 -0400
-In-Reply-To: <UTC200309221855.h8MItM216884.aeb@smtp.cwi.nl>
+Received: from e31.co.us.ibm.com ([32.97.110.129]:17326 "EHLO
+	e31.co.us.ibm.com") by vger.kernel.org with ESMTP id S262861AbTIVTun
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 22 Sep 2003 15:50:43 -0400
+Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
-To: Andries.Brouwer@cwi.nl
-Cc: Patrick Mansfield <patmans@us.ibm.com>, Linus Torvalds <torvalds@osdl.org>, david-b@pacbell.net, greg@kroah.com, hch@infradead.org, SCSI Mailing List <linux-scsi@vger.kernel.org>, linux-usb-devel@lists.sourceforge.net, mdharm-usb@one-eyed-alien.net, stern@rowland.harvard.edu
+To: James Bottomley <James.Bottomley@steeleye.com>, linux-scsi@vger.kernel.org
+Cc: axboe@suse.de
 
-On Mon, 2003-09-22 at 13:55, Andries.Brouwer@cwi.nl wrote:
->         if (sdkp->media_present) {
->                 sd_read_capacity(sdkp, disk->disk_name, sreq, buffer);
->                 if (sdp->removable)
->                         sd_read_write_protect_flag(sdkp, disk->disk_name,
->                                         sreq, buffer);
->                 sd_read_cache_type(sdkp, disk->disk_name, sreq, buffer);
->         }
-> 
-> and I suppose we could skip sd_read_cache_type() in the
-> hot-pluggable case - a flag that USB storage could set.
+I got underflow warnings and failures when sending an INQUIRY page 0x83
+via the SG_IO REQ_BLOCK_PC interface.
 
-what about just having a conservative mode for sd?  This could still
-internally be a set of flags, just one single way of clearing them all
-from slave configure.  For the most conservative setting, we could
-probably dump spin up, read write protect, and read cache type.
+The underflow field should only be set if we know for certain the size of
+the data being transfered, so fix this by leaving it at zero for scsi
+REQ_BLOCK_PC cases.
 
-James
-
+diff -uprN -X /home/patman/dontdiff bl-25/drivers/scsi/sd.c bl-25-sd_underflow-fix/drivers/scsi/sd.c
+--- bl-25/drivers/scsi/sd.c	Mon Sep  8 14:50:56 2003
++++ bl-25-sd_underflow-fix/drivers/scsi/sd.c	Tue Sep 16 16:58:14 2003
+@@ -174,7 +174,6 @@ static int sd_init_command(struct scsi_c
+ 			timeout = rq->timeout;
+ 
+ 		SCpnt->transfersize = rq->data_len;
+-		SCpnt->underflow = rq->data_len;
+ 		goto queue;
+ 	}
+ 
+diff -uprN -X /home/patman/dontdiff bl-25/drivers/scsi/sr.c bl-25-sd_underflow-fix/drivers/scsi/sr.c
+--- bl-25/drivers/scsi/sr.c	Mon Sep  8 14:50:56 2003
++++ bl-25-sd_underflow-fix/drivers/scsi/sr.c	Tue Sep 16 16:58:27 2003
+@@ -301,7 +301,6 @@ static int sr_init_command(struct scsi_c
+ 			timeout = rq->timeout;
+ 
+ 		SCpnt->transfersize = rq->data_len;
+-		SCpnt->underflow = rq->data_len;
+ 		goto queue;
+ 	}
+ 
+-- Patrick Mansfield
