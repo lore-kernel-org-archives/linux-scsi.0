@@ -1,83 +1,71 @@
-From: James Bottomley <James.Bottomley@steeleye.com>
-Subject: Re: Warning - running *really* short on DMA buffers while
- doingfiletransfers
-Date: Sat, 28 Sep 2002 11:52:19 -0400
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <200209281552.g8SFqKS04855@localhost.localdomain>
-References: <gibbs@scsiguy.com>
+From: "Heinz, Michael" <mheinz@infiniconsys.com>
+Subject: RE: is there a clean way to disable a scsi timer
+Date: Sat, 28 Sep 2002 11:47:42 -0400
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <08628CA53C6CBA4ABAFB9E808A5214CB0C4DAF@mercury.infiniconsys.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
-In-Reply-To: Message from "Justin T. Gibbs" <gibbs@scsiguy.com>
-   of "Fri, 27 Sep 2002 15:28:47 MDT." <2645346224.1033162127@aslan.btc.adaptec.com>
-To: "Justin T. Gibbs" <gibbs@scsiguy.com>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, Andrew Morton <akpm@digeo.com>, Jens Axboe <axboe@suse.de>, Matthew Jacob <mjacob@feral.com>, "Pedro M. Rodrigues" <pmanuel@myrealbox.com>, Mathieu Chouquet-Stringer <mathieu@newview.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+content-class: urn:content-classes:message
 List-Id: linux-scsi@vger.kernel.org
+To: "Infante, Jon" <Jon.Infante@Emulex.Com>, Jeremy Higdon <jeremy@classic.engr.sgi.com>, linux-scsi@vger.kernel.org
 
-gibbs@scsiguy.com said:
-> 1) Device returns queue full with no outstanding commands from us
->    (usually occurs in multi-initiator environments). 
+Jon, Jeremy:
 
-That's another manifestation of the problem I referred to.
+What is the intent in having the device driver do timeout handling? I ask because I've run into some issues with the midlayer timeouts not always working correctly and I've been thinking about implementing timeout processing in my driver. Was that the issue you had or was it something else?
 
-> 2) No delay after busy status so devices that will continually
->    report BUSY if you hammer them with commands never come ready. 
+--
+Michael Heinz
+Staff Software Engineer
+Infinicon Systems, Inc.
+http://www.infiniconsys.com 
 
-I think Eric did that because the spec makes BUSY look less severe than QUEUE 
-FULL.  We can easily treat busy as QUEUE FULL.  That will cause a short delay 
-as the cmd goes back into the block queue and gets reissued.
-
-> 3) Queue is restarted as soon as any command completes even if
->    you really need to throttle down the number of tags supported
->    by the device. 
-
-That's a valid flow control response.  Given the variability of queue depths, 
-particularly in multi-initiator/FC environments, it's not clear that 
-attempting to implement high/low water marks would buy anything.
-
-> 4) No tag throttling.  If tag throttling is in 2.5, does it ever
->    increment the tag depth to handle devices that report temporary
->    resource shortages (Atlas II and III do this all the time, other
->    devices usually do this only in multi-initiator environments). 
-
-That depends on the tag philosophy, which is partly what this thread is all 
-about.  If you regard tags as simply a transport engine to the device and tend 
-to keep the number of tags much less than the number the device could accept, 
-then this isn't necessary.
-
-Since this feature is one you particularly want for the aic, send us some code 
-and it can probably go in the mid-layer. (or actually, if you want to talk to 
-Jens about it, the block layer).
-
-> 5) Proper transaction ordering across a queue full.  The aic7xxx
->    driver "requeues" all transactions that have not yet been sent
->    to the device replacing the transaction that experienced the queue
->    full back at the head so that ordering is maintained. 
-
-I'm lost here.  We currently implement TCQ with simple tags which have no 
-guarantee of execution order in the drive I/O scheduler.  Why would we want to 
-bother preserving the order of what will become essentially an unordered queue?
-
-This will become an issue when (or more likely if) journalled fs rely on the 
-barrier being implemented down to the medium, and the mid layer does do 
-reqeueing in the correct order in that case, except for the tiny race where 
-the command following the queue full could be accepted by the device before 
-the queue is blocked.
-
-> No thought was put into any of these issues in 2.4, so I decided not
-> to even think about trusting the mid-layer for this functionality. 
-
-Apart from the TCQ pieces, these are all edge cases which are rarely (if ever) 
-seen.  They afflict all drivers and the only one that causes any problems is 
-the mid-layer assumption that all devices can accept at least one command.
-
-By not using any of the mid-layer queueing, you've got into a catch-22 
-situation where we don't have any bug reports for these problems and you don't 
-see them because you don't use the generic infrastructure.
-
-How about I look at fixing the above and you look at using the generic 
-infrastructure?
-
-I might even think about how to do dynamic tags in the blk code...
-
-James
+> -----Original Message-----
+> From: Infante, Jon [mailto:Jon.Infante@Emulex.Com]
+> Sent: Friday, September 27, 2002 11:27 AM
+> To: 'Jeremy Higdon'; linux-scsi@vger.kernel.org
+> Subject: RE: is there a clean way to disable a scsi timer
+> 
+> 
+> I do my own timeout handling as well. My queuecommand does
+> scsi_delete_timer() just as you suggested. However, just to 
+> be safe, I also
+> do a scsi_add_timer() in my iodone routine just before I call
+> cmnd->scsi_done(cmnd) to put things back the way they were.
+> 
+> Jon Infante
+> 
+> 
+> -----Original Message-----
+> From: Jeremy Higdon [mailto:jeremy@classic.engr.sgi.com]
+> Sent: Friday, September 27, 2002 1:30 AM
+> To: linux-scsi@vger.kernel.org
+> Subject: Re: is there a clean way to disable a scsi timer
+> 
+> 
+> Misremembered the name -- sorry.
+> 
+> s/scsi_disable_timer/scsi_delete_timer/
+> 
+> On Sep 27,  1:24am, Jeremy Higdon wrote:
+> > 
+> > I have a host driver that does its own timeout and error 
+> handling.  Is
+> there
+> > a clean way to disable the midlayer timeout handling?  It 
+> appears that I
+> > can just call scsi_disable_timer() from the queuecommand 
+> function, but
+> > I'd prefer something less nasty.
+> -
+> To unsubscribe from this list: send the line "unsubscribe 
+> linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> -
+> To unsubscribe from this list: send the line "unsubscribe 
+> linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
