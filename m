@@ -1,42 +1,53 @@
-From: Patrick Mansfield <patmans@us.ibm.com>
+From: Brian King <brking@us.ibm.com>
 Subject: Re: [RFC] IBM Power RAID driver (ipr)
-Date: Thu, 22 Jan 2004 08:56:39 -0800
+Date: Thu, 22 Jan 2004 11:09:07 -0600
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040122085639.A14760@beaverton.ibm.com>
+Message-ID: <401003B3.8050805@us.ibm.com>
 References: <40085EDA.4010802@us.ibm.com> <20040119183400.A4182@infradead.org> <400C3E70.9040702@us.ibm.com> <20040120133858.A15671@infradead.org> <400D5A28.1000301@us.ibm.com> <20040120180151.A18616@infradead.org> <400EE5E6.9080709@us.ibm.com> <20040122140248.C11283@infradead.org> <20040122083931.A14612@beaverton.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e3.ny.us.ibm.com ([32.97.182.103]:53501 "EHLO e3.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S266249AbUAVQ5Y (ORCPT
+Received: from e3.ny.us.ibm.com ([32.97.182.103]:43415 "EHLO e3.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S266306AbUAVRJd (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 22 Jan 2004 11:57:24 -0500
-Content-Disposition: inline
-In-Reply-To: <20040122083931.A14612@beaverton.ibm.com>; from patmans@us.ibm.com on Thu, Jan 22, 2004 at 08:39:31AM -0800
+	Thu, 22 Jan 2004 12:09:33 -0500
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Brian King <brking@us.ibm.com>, linux-scsi@vger.kernel.org
+To: Patrick Mansfield <patmans@us.ibm.com>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org
 
-On Thu, Jan 22, 2004 at 08:39:31AM -0800, Patrick Mansfield wrote:
-
-> Also if we can tell via sysfs attributes that a bus (host:channel or maybe
-> just a host) has physical disks attached, udev can be used to create
-> entries in their own directory, like:
+Patrick Mansfield wrote:
+> On Thu, Jan 22, 2004 at 02:02:48PM +0000, Christoph Hellwig wrote:
 > 
-> 	/dev/physical/sdN
+>>On Wed, Jan 21, 2004 at 02:49:42PM -0600, Brian King wrote:
+>>
+>>>How about a flag in the scsi_device struct that an LLD could set in
+>>>slave_configure, which would prevent upper layer drivers from binding
+>>>to it?
+>>
+>>I'm not that happy about this.  But the other solutions I could think
+>>of are ven worse.
+>>
+>>
+>>>Then these devices could be found through the normal scsi scan
+>>>and would have nice sysfs entries and sg devices for them. Not sure what
+>>>we would call the flag... psuedo_device, fake_device?
+>>
+>>ghost? hidden?
+>>
+>>Could you cook up a patch?
 > 
-> Making the node read only can also be done with udev, but that does not
-> help with root write access.
+> 
+> Why not just have the sd's show up? This is not much different then use of
+> a volume manager. Finding the /dev/sg of the physical disk is the same
+> problem as finding the sd.
 
-And we can prevent even root from opening for write with blockdev --setro:
+We will still get errors logged when the partition table is read,
+as the devices are also read protected.
 
-elm3b79:~# dd if=/dev/zero of=/udev/physical/sd_f  count=1
-1+0 records in
-1+0 records out
-elm3b79:~# blockdev --setro /udev/physical/sd_f
-elm3b79:~# dd if=/dev/zero of=/udev/physical/sd_f  count=1
-dd: writing to `/udev/physical/sd_f': Operation not permitted
-1+0 records in
-0+0 records out
 
--- Patrick Mansfield
+-- 
+Brian King
+eServer Storage I/O
+IBM Linux Technology Center
+
