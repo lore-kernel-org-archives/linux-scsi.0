@@ -1,38 +1,32 @@
-From: Matthias Andree <ma@dt.e-technik.uni-dortmund.de>
-Subject: Re: sym53c8xx parity errors on SuSE 9.1's hwscan?
-Date: Mon, 25 Oct 2004 10:16:19 +0200
+From: Arjan van de Ven <arjan@infradead.org>
+Subject: Re: [ANNOUNCE] multipath-tools-0.3.4
+Date: Mon, 25 Oct 2004 10:22:39 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <m3is8zyzzg.fsf@merlin.emma.line.org>
-References: <m3y8j1q4gs.fsf@merlin.emma.line.org>
-	<20040923023914.GV16153@parcelfarce.linux.theplanet.co.uk>
+Message-ID: <1098692559.2798.7.camel@laptop.fenrus.org>
+References: <1096071849.4466.31.camel@zezette>
+	 <1097054573.4163b96d1262c@imp5-q.free.fr>
+	 <1097495416.416a73787e0ae@imp1-q.free.fr> <1098021787.5433.8.camel@zezette>
+	 <1098269169.417641f18a234@imp1-q.free.fr>
+	 <1098656088.9350.88.camel@zezette>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.dt.E-Technik.Uni-Dortmund.DE ([129.217.163.1]:62629 "EHLO
-	mail.dt.e-technik.uni-dortmund.de") by vger.kernel.org with ESMTP
-	id S261687AbUJYIQV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 25 Oct 2004 04:16:21 -0400
-In-Reply-To: <20040923023914.GV16153@parcelfarce.linux.theplanet.co.uk>
-	(Matthew Wilcox's message of "Thu, 23 Sep 2004 03:39:14 +0100")
+Received: from canuck.infradead.org ([205.233.218.70]:34054 "EHLO
+	canuck.infradead.org") by vger.kernel.org with ESMTP
+	id S261717AbUJYIW6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 25 Oct 2004 04:22:58 -0400
+In-Reply-To: <1098656088.9350.88.camel@zezette>
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: Matthias Andree <ma@dt.e-technik.uni-dortmund.de>, linux-scsi@vger.kernel.org
+To: christophe varoqui <christophe.varoqui@free.fr>
+Cc: device-mapper development <dm-devel@redhat.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "linux-hotplug-devel@lists.sourceforge.net" <linux-hotplug-devel@lists.sourceforge.net>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-Matthew Wilcox <matthew@wil.cx> writes:
+On Mon, 2004-10-25 at 00:14 +0200, christophe varoqui wrote:
 
-> On Thu, Sep 23, 2004 at 01:16:51AM +0200, Matthias Andree wrote:
->> SuSE Linux 9.1 (kernel 2.6.5 + SuSE patch set, but also 2.6.7 or a bit
->> milder in 2.6.9-rc2-mm1) uses some SuSE-specific "hwprobe" or "hwinfo"
->> tool to scan for hardware.
->
-> Does anyone have the source?  I'd be interested to see what it's up
-> to.
+> 	* multipath & multipathd now use the same path checkers.
+> 	  Consequence being multipath now need sg loaded
 
-Matthew,
-
-this thread apparently wasn't followed up to within the last four weeks,
-so I'd thought I'd ask if you had the chance to make any progress on
-this one.
-
+why sg and not using SG_IO on the actual devices ?
+mp-tools are 2.6 only anyway, right ?
 -- 
-Matthias Andree
+
