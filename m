@@ -1,40 +1,68 @@
-From: Viktor Rosenfeld <rosenfel@informatik.hu-berlin.de>
-Subject: root on LVM on RAID?
-Date: Fri, 2 Aug 2002 19:01:58 +0200
+From: Mike Anderson <andmike@us.ibm.com>
+Subject: Re: Strange Scsi_Cmnd->request_buffer addresses
+Date: Fri, 2 Aug 2002 11:50:48 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20020802190158.C1725@mitte.informatik.hu-berlin.de>
+Message-ID: <20020802185048.GC1161@beaverton.ibm.com>
+References: <20020801170204.A1876@zuul.cca.cpqcorp.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mitte.informatik.hu-berlin.de (root@mitte [141.20.21.141])
-	by sigma.informatik.hu-berlin.de (8.11.3/8.11.3/INF-2.0-MA-SOLARIS-2.8) with ESMTP id g72H1xB28447
-	for <linux-scsi@vger.kernel.org>; Fri, 2 Aug 2002 19:01:59 +0200 (MEST)
-Received: (from rosenfel@localhost)
-	by mitte.informatik.hu-berlin.de (8.11.6/8.11.6/SuSE Linux 0.5) id g72H1x001762
-	for linux-scsi@vger.kernel.org; Fri, 2 Aug 2002 19:01:59 +0200
 Content-Disposition: inline
+In-Reply-To: <20020801170204.A1876@zuul.cca.cpqcorp.net>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Stephen Cameron <steve.cameron@hp.com>
+Cc: linux-scsi@vger.kernel.org
 
-Hi,
+Stephen,
+	No idea what is causing the problem just a few comments.
 
-I tried to install a root partition on a LVM device that sits on a
-RAID-1 device and failed.
+Stephen Cameron [steve.cameron@hp.com] wrote:
+> Hi,
+> 
+> I'm seeing some strange Scsi_Cmnd->request_buffer addresses....
+> 
+> I'm trying to fix the passthru ioctl in cpqfc driver for 2.5.29.
+> (The cpqfc patch from 2.5.28 -> 2.5.29 makes it compile but not
+> more.  It will panic if you try to use the passthrough ioctl.)  
+> 
+> In my (heavily modified) code for the passthrough ioctl, 
+> I kmalloc buf:
+> 
+> buf = cfe02800  <--- this is kmalloc'ed, and passed into scsi_wait_req(),
+> and eventually comes back into the driver in the form of a Scsi_Cmnd
+> via queuecommand entry point.  I would expect the Scsi_Cmnd->request_buffer
+> to correspond to the buf (maybe it is/will be a copy?)
+> 
 
-The partition type of the RAID-1 partitions is fd, and the RAID-1 device
-is automatically detected at boot time.  However, the LVM device is not
-automatically detected, since the partition type is not 8e.  Therefore I
-get a kernel panic with the message: I have no root and I want to
-scream.
+No it should not be a copy if you follow the call graph the buffer
+passed to scsi_wait_req is passed to scsi_do_req. In scsi_do_req buffer
+is assigned to sr_buffer. In scsi_request_fn scsi_init_cmd_from_req is
+called which will assign sr_buffer to the Scsi_Cmnd buffer.
 
-So, in my very uninformed imponion, wouldn't it be possible to add
-support for this kind of functionality?  When a RAID device is
-autodetected at boot up, couldn't the md driver simply look for a LVM
-signature and queue this device for autodetection of the LFM device at
-bootup?
+In the queuecommand is any other part of the Scsi_Cmnd look odd? Did you
+check the Scsi_Cmnd->request to see if the buffer is bad in the request
+also?
 
-Also, is there any documentation of the Linux LVM and RAID drivers,
-besides the source?
 
-Thanks in advance,
-Viktor
+> pd = c12e2400 pt request_buffer = bffff850 <--- This is the 
+> 	Scsi_Cmnd->request_buffer that should correspond to buf, above.
+> 	The address looks weird.  I would expect 0xCxxxxxxx, not 0xBxxxxxxx
+> 	Scsi_Cmnd->use_sg is 0.  Or, does this kind of address look ok?
+> 
+
+> single request_buffer = bffff850
+> request_bufflen = 00000200  <--- 512 bytes, this looks reasonable.
+> ms fffff850 <----------- This is the result of pci_map_single() on
+> 	the Scsi_Cmnd->request_buffer.   This physical address does
+> 	not look valid to me.  (I have 128 Mbytes in my intel ia32 box)
+> 
+On ia32 systems the pci_map_single will translate to a __pa which will
+subtract PAGE_OFFSET from the address that is passed in. So bffff850 -
+0xC0000000 is fffff850. The problem happen before you got here.
+
+
+-Mike
+-- 
+Michael Anderson
+andmike@us.ibm.com
+
