@@ -1,54 +1,117 @@
-From: "Rajat  Jain, Noida" <rajatj@noida.hcltech.com>
-Subject: 3 simple questions on SCSI
-Date: Wed, 30 Mar 2005 18:56:50 +0530
-Message-ID: <267988DEACEC5A4D86D5FCD780313FBB064AF658@exch-03.noida.hcltech.com>
+From: Kay Sievers <kay.sievers@vrfy.org>
+Subject: Re: [PATCH] 2/2 Use bus dev_attrs to create scsi_device attributes
+Date: Wed, 30 Mar 2005 20:07:02 +0200
+Message-ID: <20050330180702.GA4654@vrfy.org>
+References: <20050302194432.GA9743@us.ibm.com> <20050302194553.GA9776@us.ibm.com> <20050302194647.GB9776@us.ibm.com> <20050316224551.GA21918@us.ibm.com> <1111071201.5994.4.camel@mulgrave> <20050317170853.GA3006@kroah.com> <20050330031555.GA18871@vrfy.org> <20050330042043.GA9002@kroah.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ngate.noida.hcltech.com ([202.54.110.230]:24502 "EHLO
-	ngate.noida.hcltech.com") by vger.kernel.org with ESMTP
-	id S261887AbVC3N05 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 30 Mar 2005 08:26:57 -0500
-Received: from noida.hcltech.com (exch-01.noida.hcltech.com [204.160.254.79] (may be forged))
-	by ngate.noida.hcltech.com (8.12.5/8.12.5) with ESMTP id j2UDUirK021799
-	for <linux-scsi@vger.kernel.org>; Wed, 30 Mar 2005 19:00:45 +0530
+Received: from soundwarez.org ([217.160.171.123]:57276 "EHLO soundwarez.org")
+	by vger.kernel.org with ESMTP id S262372AbVC3SHD (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 30 Mar 2005 13:07:03 -0500
+Content-Disposition: inline
+In-Reply-To: <20050330042043.GA9002@kroah.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: "Rajat  Jain, Noida" <rajatj@noida.hcltech.com>
+To: Greg KH <greg@kroah.com>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, Patrick Mansfield <patmans@us.ibm.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
+On Tue, Mar 29, 2005 at 08:20:43PM -0800, Greg KH wrote:
+> On Wed, Mar 30, 2005 at 05:15:55AM +0200, Kay Sievers wrote:
+> >  /**
+> > + * sysfs_chmod_file - update the modified mode value on an object attribute.
+> > + * @kobj: object we're acting for.
+> > + * @mode: file permissions.
+> > + *
+> > + */
+> > +int sysfs_chmod_file(struct kobject *kobj, const struct attribute *attr)
+> 
+> Your documentation doesn't match up with your function arguments :)
 
-Hi List,
+Bah, I tried both versions. :)
 
-1) Suppose my machine has two similar SCSI HBAs. And my Linux box shows them
-to me as Hosts 0 and 1 respectively. When I open the chassis, is a there a
-way to figure out that physically which of the HBAs I am seeing correspond
-to hosts 0 and 1 respectively? The HBAs are similar in every sense (Model /
-Make etc). 
+> Shouldn't you want an extra mode variable?  Makes it easier to override
+> than remembering to change the mode in the attribute before calling the
+> function.
 
-2) When I boot up the machine, is it fixed that the same HBA will get host
-number 0 every time, or does it depend on some thing?
+If that's better, sure. Here is a new patch.
 
-3) I want to add a new SCSI device at run time. I know when I'll have to use
-"scsi add-single-device" command, but I have to supply Host number, channel,
-ID and lun to it. I know that ID is set on the device it self, and hence
-I'll be knowing it. But how do I know the host no of the HBA that I've added
-the device to. Is it just trial and error?
+Thanks,
+Kay
 
-TIA,
+---
+sysfs: allow changing the permissions for already created attributes
 
-Rajat Jain
+Signed-off-by: Kay Sievers <kay.sievers@vrfy.org>
 
-
-Disclaimer: 
-
-This message and any attachment(s) contained here are information that is
-confidential,proprietary to HCL Technologies and its customers, privileged
-or otherwise protected by law.The information is solely intended for the
-individual or the entity it is addressed to. If you are not the intended
-recipient of this message, you are not authorized to read, forward,
-print,retain, copy or disseminate this message or any part of it. If you
-have received this e-mail in error, please notify the sender immediately by
-return e-mail and delete it from your computer.
-
+===== fs/sysfs/file.c 1.23 vs edited =====
+--- 1.23/fs/sysfs/file.c	2005-02-26 15:48:19 +01:00
++++ edited/fs/sysfs/file.c	2005-03-30 20:01:16 +02:00
+@@ -428,6 +428,41 @@ int sysfs_update_file(struct kobject * k
+ 
+ 
+ /**
++ * sysfs_chmod_file - update the modified mode value on an object attribute.
++ * @kobj: object we're acting for.
++ * @attr: attribute descriptor.
++ * @mode: file permissions.
++ *
++ */
++int sysfs_chmod_file(struct kobject *kobj, struct attribute *attr, mode_t mode)
++{
++	struct dentry *dir = kobj->dentry;
++	struct dentry *victim;
++	struct sysfs_dirent *sd;
++	umode_t umode = (mode & S_IALLUGO) | S_IFREG;
++	int res = -ENOENT;
++
++	down(&dir->d_inode->i_sem);
++	victim = sysfs_get_dentry(dir, attr->name);
++	if (!IS_ERR(victim)) {
++		if (victim->d_inode &&
++		    (victim->d_parent->d_inode == dir->d_inode)) {
++			sd = victim->d_fsdata;
++			attr->mode = mode;
++			sd->s_mode = umode;
++			victim->d_inode->i_mode = umode;
++			dput(victim);
++			res = 0;
++		}
++	}
++	up(&dir->d_inode->i_sem);
++
++	return res;
++}
++EXPORT_SYMBOL_GPL(sysfs_chmod_file);
++
++
++/**
+  *	sysfs_remove_file - remove an object attribute.
+  *	@kobj:	object we're acting for.
+  *	@attr:	attribute descriptor.
+===== include/linux/sysfs.h 1.39 vs edited =====
+--- 1.39/include/linux/sysfs.h	2004-12-21 18:31:01 +01:00
++++ edited/include/linux/sysfs.h	2005-03-30 15:06:23 +02:00
+@@ -99,6 +99,9 @@ sysfs_create_file(struct kobject *, cons
+ extern int
+ sysfs_update_file(struct kobject *, const struct attribute *);
+ 
++extern int
++sysfs_chmod_file(struct kobject *kobj, struct attribute *attr, mode_t mode);
++
+ extern void
+ sysfs_remove_file(struct kobject *, const struct attribute *);
+ 
+@@ -137,6 +140,10 @@ static inline int sysfs_create_file(stru
+ }
+ 
+ static inline int sysfs_update_file(struct kobject * k, const struct attribute * a)
++{
++	return 0;
++}
++static inline int sysfs_chmod_file(struct kobject *kobj, struct attribute *attr, mode_t mode)
+ {
+ 	return 0;
+ }
 
