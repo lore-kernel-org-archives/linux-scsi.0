@@ -1,44 +1,45 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [2.6 patch] SCSI: cleanups
-Date: Mon, 28 Mar 2005 09:21:45 -0600
-Message-ID: <1112023305.5531.2.camel@mulgrave>
-References: <20050327202139.GQ4285@stusta.de>
+From: Marcelo Tosatti <marcelo.tosatti@cyclades.com>
+Subject: program scsi_unique_id is using a deprecated SCSI ioctl, please convert it to SG_IO
+Date: Mon, 28 Mar 2005 07:33:25 -0300
+Message-ID: <20050328103324.GB28175@logos.cnet>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat16.steeleye.com ([209.192.50.48]:45520 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S261865AbVC1PWw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 28 Mar 2005 10:22:52 -0500
-In-Reply-To: <20050327202139.GQ4285@stusta.de>
+Received: from hera.kernel.org ([209.128.68.125]:42670 "EHLO hera.kernel.org")
+	by vger.kernel.org with ESMTP id S261876AbVC1PYI (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 28 Mar 2005 10:24:08 -0500
+Received: from logos.cnet (localhost [127.0.0.1])
+	by hera.kernel.org (8.12.11/8.12.8) with ESMTP id j2SFO6s0022053
+	for <linux-scsi@vger.kernel.org>; Mon, 28 Mar 2005 07:24:06 -0800
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Adrian Bunk <bunk@stusta.de>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
 
-On Sun, 2005-03-27 at 22:21 +0200, Adrian Bunk wrote:
-> This patch contains the following cleanups:
-[..]
 
-No to all of this:
+Hi SCSI gurus,
 
-> - remove the following unused functions:
->   - scsi.h: print_driverbyte
->   - scsi.h: print_hostbyte
-> - #if 0 the following unused functions:
->   - constants.c: scsi_print_hostbyte
->   - constants.c: scsi_print_driverbyte
+You probably already know about this, but just in case:
 
-These are useful to those of us who debug drivers.
+v2.6.12-rc1 yields
 
-> - remove the following unneeded EXPORT_SYMBOL's:
->   - hosts.c: scsi_host_lookup
->   - scsi.c: scsi_device_cancel
->   - scsi_lib.c: scsi_device_resume
+program scsi_unique_id is using a deprecated SCSI ioctl, please convert it to SG_IO
+program scsi_unique_id is using a deprecated SCSI ioctl, please convert it to SG_IO
+program scsi_unique_id is using a deprecated SCSI ioctl, please convert it to SG_IO
+program scsi_unique_id is using a deprecated SCSI ioctl, please convert it to SG_IO
+program scsi_unique_id is using a deprecated SCSI ioctl, please convert it to SG_IO
+program scsi_unique_id is using a deprecated SCSI ioctl, please convert it to SG_IO
+program scsi_unique_id is using a deprecated SCSI ioctl, please convert it to SG_IO
+program scsi_unique_id is using a deprecated SCSI ioctl, please convert it to SG_IO
+program scsi_unique_id is using a deprecated SCSI ioctl, please convert it to SG_IO
+program scsi_unique_id is using a deprecated SCSI ioctl, please convert it to SG_IO
+program scsi_unique_id is using a deprecated SCSI ioctl, please convert it to SG_IO
+program scsi_unique_id is using a deprecated SCSI ioctl, please convert it to SG_IO
 
-These are part of the SCSI API.
+On my Fusion MPT based machine, on bootup.
 
-James
-
+[marcelo@xeon linux-216]$ dmesg | grep Fus
+Fusion MPT base driver 3.01.19
+Fusion MPT SCSI Host driver 3.01.19
 
