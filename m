@@ -1,52 +1,37 @@
-From: Jeremy Higdon <jeremy@sgi.com>
+From: James Bottomley <James.Bottomley@SteelEye.com>
 Subject: Re: [RFC PATCH 2.6.9-rc2] Add sysfs queue depth override to qla2xxx
-Date: Tue, 28 Sep 2004 12:36:14 -0700
+Date: 28 Sep 2004 15:53:10 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040928193614.GB192475@sgi.com>
+Message-ID: <1096401196.2008.97.camel@mulgrave>
 References: <B179AE41C1147041AA1121F44614F0B0012AD92B@AVEXCH02.qlogic.org>
+	<20040928193614.GB192475@sgi.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from omx3-ext.sgi.com ([192.48.171.20]:51333 "EHLO omx3.sgi.com")
-	by vger.kernel.org with ESMTP id S267745AbUI1Tgf (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 28 Sep 2004 15:36:35 -0400
-Content-Disposition: inline
-In-Reply-To: <B179AE41C1147041AA1121F44614F0B0012AD92B@AVEXCH02.qlogic.org>
+Received: from stat16.steeleye.com ([209.192.50.48]:46209 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S267765AbUI1Tx2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 28 Sep 2004 15:53:28 -0400
+In-Reply-To: <20040928193614.GB192475@sgi.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Cc: linux-scsi@vger.kernel.org, James.Bottomley@steeleye.com
+To: Jeremy Higdon <jeremy@sgi.com>
+Cc: Andrew Vasquez <andrew.vasquez@qlogic.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Tue, Sep 28, 2004 at 09:52:55AM -0700, Andrew Vasquez wrote:
-> On Tuesday, September 28, 2004 12:54 AM, Jeremy Higdon wrote:
-> > +static ssize_t
-> > +qla2xxx_store_queue_depth(struct device *dev, const char *buf,
-> > size_t count) +{
-> > +	int			 depth;
-> > +	struct scsi_device	*sdev = to_scsi_device(dev);
-> > +
-> > +	if (sdev->tagged_supported) {
-> > +		depth = simple_strtoul(buf, NULL, 0);
-> > +		if (depth > ql2xmaxqdepth)
-> > +			depth = ql2xmaxqdepth;
+On Tue, 2004-09-28 at 15:36, Jeremy Higdon wrote:
+> I was trying to be conservative -- I didn't know the reason for
+> that limit.  By all means, let's remove it then.
 > 
-> Any particular reason why the ql2xmaxqdepth module-parameter is
-> being used as a high-water limit?  The module-param is (was) used 
-> as a global setting of queue-depth for all luns (quite inflexible).
-> By overriding:
-> 
-> 	/sys/class/scsi_device/22:0:0:0/device/queue_depth
-> 
-> with a writable value, a user should be allowed to update the
-> value to something higher (max(unsigned short)?) based on the 
-> back-end storage.
+> Would you like me to regenerate the patch, or do you just want
+> to apply it to your internal source that will eventually be
+> fed back to us?
+
+Well, don't go overboard on this ... there is a limit to the number of
+outstanding requests any queue can have at one time...there's not much
+point going over that since the block layer will throttle you when you
+reach it.  I think it's 128, but it might be 256 ... but anyway, not
+much larger.
+
+James
 
 
-I was trying to be conservative -- I didn't know the reason for
-that limit.  By all means, let's remove it then.
-
-Would you like me to regenerate the patch, or do you just want
-to apply it to your internal source that will eventually be
-fed back to us?
-
-jeremy
