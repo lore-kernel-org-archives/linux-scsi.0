@@ -1,74 +1,64 @@
-From: Ming Zhang <mingz@ele.uri.edu>
-Subject: RE: SAI_READ_CAPACITY_16?
-Date: Wed, 06 Apr 2005 14:32:49 -0400
-Message-ID: <1112812369.2883.73.camel@localhost.localdomain>
-References: <60807403EABEB443939A5A7AA8A7458BFF22BD@otce2k01.adaptec.com>
-Reply-To: mingz@ele.uri.edu
+From: Patrick Mansfield <patmans@us.ibm.com>
+Subject: Re: proc_name in sysfs
+Date: Wed, 6 Apr 2005 11:36:14 -0700
+Message-ID: <20050406183614.GA25370@us.ibm.com>
+References: <4253CA94.8000500@bull.net>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from leviathan.ele.uri.edu ([131.128.51.64]:20177 "EHLO
-	leviathan.ele.uri.edu") by vger.kernel.org with ESMTP
-	id S262278AbVDFScy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 6 Apr 2005 14:32:54 -0400
-In-Reply-To: <60807403EABEB443939A5A7AA8A7458BFF22BD@otce2k01.adaptec.com>
+Received: from e1.ny.us.ibm.com ([32.97.182.141]:58318 "EHLO e1.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S262279AbVDFSgW (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Apr 2005 14:36:22 -0400
+Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
+	by e1.ny.us.ibm.com (8.12.11/8.12.11) with ESMTP id j36IaMTE002797
+	for <linux-scsi@vger.kernel.org>; Wed, 6 Apr 2005 14:36:22 -0400
+Received: from d01av02.pok.ibm.com (d01av02.pok.ibm.com [9.56.224.216])
+	by d01relay04.pok.ibm.com (8.12.10/NCO/VER6.6) with ESMTP id j36IaMZW245028
+	for <linux-scsi@vger.kernel.org>; Wed, 6 Apr 2005 14:36:22 -0400
+Received: from d01av02.pok.ibm.com (loopback [127.0.0.1])
+	by d01av02.pok.ibm.com (8.12.11/8.12.11) with ESMTP id j36IaMc0002139
+	for <linux-scsi@vger.kernel.org>; Wed, 6 Apr 2005 13:36:22 -0500
+Content-Disposition: inline
+In-Reply-To: <4253CA94.8000500@bull.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
-Cc: Linux SCSI <linux-scsi@vger.kernel.org>
+To: Frederic TEMPORELLI <frederic.temporelli@bull.net>
+Cc: linux-scsi@vger.kernel.org
 
-welcome. let us know if works. thx.
+On Wed, Apr 06, 2005 at 01:40:04PM +0200, Frederic TEMPORELLI wrote:
 
-ming
+> 2/ now, how can we get the adapter module name from sysfs ?
 
-On Wed, 2005-04-06 at 14:30, Salyzyn, Mark wrote:
-> Thanks, needed to set shost->max_cmd_len to 16 in the driver.
-> 
-> Sincerely -- Mark Salyzyn
-> 
-> -----Original Message-----
-> From: Ming Zhang [mailto:mingz@ele.uri.edu] 
-> Sent: Wednesday, April 06, 2005 12:12 PM
-> To: Salyzyn, Mark
-> Cc: Linux SCSI
-> Subject: Re: SAI_READ_CAPACITY_16?
-> 
-> we tested several iSCSI initiator/target combinations that work with
-> >2TB devices in current 2.6.11.x kernel.
-> 
-> our experience is that some code only support cdb len 10 or 12. you need
-> 16.
-> 
-> Ming
-> 
-> 
-> On Wed, 2005-04-06 at 12:00, Salyzyn, Mark wrote:
-> > Troubled spoofing back >2TB support in the aacraid driver.
-> > 
-> > For some reason, sd_read_capacity (in sd.c) in the 2.6.9-5.EL (RHEL4)
-> > kernel is not issuing the SERVICE_REQUEST_IN+SAI_READ_CAPACITY_16
-> > command to the queuecommand handler (the handler is not even called),
-> > even though it instruments up that the command is issued (and returns
-> > not supported). The READ_CAPACITY call makes it through successfully
-> > indicating 0xFFFFFFFF capacity to trigger the SAI_READ_CAPACITY_16
-> > request fine. Could there be a bug in the scsi layers reissuing
-> commands
-> > reusing the request structure misdirecting the requests?
-> > 
-> > The only changes to the current tree appear to be in the handling of
-> the
-> > request sense information, so I expect the same behavior from
-> > latest/greatest.
-> > 
-> > Any successes in the current tree with >2TB support being reported by
-> > the SAI_READ_CAPACITY_16 call?
-> > 
-> > Sincerely -- Mark Salyzyn
-> > -
-> > To unsubscribe from this list: send the line "unsubscribe linux-scsi"
-> in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+Why do you need it?
 
+Anyway, try lsscsi, it walks the sysfs tree:
+
+[elm3b79 patman]$ lsscsi  -H
+[0]    qla1280
+[1]    qla1280
+[2]    qla2xxx
+[3]    qla2xxx
+
+Or, script it:
+
+[elm3b79 tmp]$ more xx.sh
+#! /bin/sh
+
+hdir=/sys/class/scsi_host
+
+for i in ${hdir}/host*
+do
+        host_dir=$(cd ${i}/device;/bin/pwd)
+        driver_dir=$(cd ${host_dir}/../driver;/bin/pwd)
+        module=$(basename ${driver_dir})
+        # echo ${i} is in: ${host_dir}
+        echo "${i} module (driver) is: ${module}"
+done
+
+[elm3b79 tmp]$ sh ./xx.sh
+/sys/class/scsi_host/host0 module (driver) is: qla1280
+/sys/class/scsi_host/host1 module (driver) is: qla1280
+/sys/class/scsi_host/host2 module (driver) is: qla2300
+/sys/class/scsi_host/host3 module (driver) is: qla2300
+
+-- Patrick Mansfield
