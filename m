@@ -1,52 +1,81 @@
-From: "Frank Borich" <Frank_Borich@us.xyratex.com>
-Subject: RE: [PATCH] 2.4.23
-Date: Wed, 31 Dec 2003 07:14:46 -0800
+From: Arjan van de Ven <arjanv@redhat.com>
+Subject: aic7xxx strange code
+Date: Wed, 31 Dec 2003 16:46:17 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <47F3C2BE74738E4683574107469DFA201EE1F2@XYUSEX01.xyus.xyratex.com>
+Message-ID: <1072885576.10877.6.camel@laptop.fenrus.com>
+Reply-To: arjanv@redhat.com
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-Kvn8VKaslfXBmyw4tC4Q"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [65.203.33.17] ([65.203.33.17]:23085 "EHLO
-	XYUSEX01.xyus.xyratex.com") by vger.kernel.org with ESMTP
-	id S265169AbTLaPOr convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 31 Dec 2003 10:14:47 -0500
-content-class: urn:content-classes:message
+Received: from node-d-1fcf.a2000.nl ([62.195.31.207]:44420 "EHLO
+	laptop.fenrus.com") by vger.kernel.org with ESMTP id S265156AbTLaPqV
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 31 Dec 2003 10:46:21 -0500
+Received: from laptop.fenrus.com (laptop.fenrus.com [127.0.0.1])
+	by laptop.fenrus.com (8.12.10/8.12.10) with ESMTP id hBVFkIwa011308
+	for <linux-scsi@vger.kernel.org>; Wed, 31 Dec 2003 16:46:18 +0100
+Received: (from arjan@localhost)
+	by laptop.fenrus.com (8.12.10/8.12.10/Submit) id hBVFkHch011307
+	for linux-scsi@vger.kernel.org; Wed, 31 Dec 2003 16:46:17 +0100
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@steeleye.com>, Christoph Hellwig <hch@infradead.org>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
 
-Shall I generate a patch that uses a function pointer in the blacklist,
-to poke at the inquiry data, for 2.4 ?  
 
-Frank Borich
-------------------------------------------------------------------
-Systems Engineer
-Direct 630 654 6089
-Fax 630 325 2513
-e-mail frank_borich@us.xyratex.com
- 
+--=-Kvn8VKaslfXBmyw4tC4Q
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-> -----Original Message-----
-> From: James Bottomley [mailto:James.Bottomley@steeleye.com]
-> Sent: Sunday, December 28, 2003 2:46 PM
-> To: Christoph Hellwig
-> Cc: Frank Borich; SCSI Mailing List
-> Subject: Re: [PATCH] 2.4.23
-> 
-> On Sun, 2003-12-28 at 14:10, Christoph Hellwig wrote:
-> > I'm not too happy about the form of this patch. Could you cook up
-one
-> > for 2.6.0 that adds a function pointer to poke at the inquiry data
-> > to the blacklist?  We could backport it to 2.4 later.
-> 
-> Actually, this can't really be done at all for 2.6 since we're
-extremely
-> careful not to get inquiry data beyond byte 56 and this patch is
-looking
-> into the vendor specific area at 96.
-> 
-> James
-> 
+Hi,
 
+
+the snippet below (from aic7xxx driver) is rather strange and probably
+broken:
+
+        /*
+         * Although we can dma data above 4GB, our
+         * "consistent" memory is below 4GB for
+         * space efficiency reasons (only need a 4byte
+         * address).  For this reason, we have to reset
+         * our dma mask when doing allocations.
+         */
+        if (ahc->dev_softc !=3D NULL)
+                if (ahc_pci_set_dma_mask(ahc->dev_softc, 0xFFFFFFFF)) {
+                        printk(KERN_WARNING "aic7xxx: No suitable DMA
+available.\n");
+                        return (ENODEV);
+                }
+        *vaddr =3D pci_alloc_consistent(ahc->dev_softc,
+                                      dmat->maxsize, &map->bus_addr);
+        if (ahc->dev_softc !=3D NULL)
+                if (ahc_pci_set_dma_mask(ahc->dev_softc,
+                                     ahc->platform_data->hw_dma_mask)) {
+                        printk(KERN_WARNING "aic7xxx: No suitable DMA
+available.\n");
+                        return (ENODEV);
+                }
+
+
+consistent memory ALWAYS comes from lower 4Gb regardless of the
+pci_set_dma_mask() setting; only the pci_set_consistent_dma_mask()
+function controls where consistent memory comes from, even in 2.4.0
+already (which the ifdef surrounding this code tests for)
+
+Justin: are you willing to just remove the unneeded dma mask sets? They
+can race etc etc and are 100% unneeded.
+
+Greetings,
+   Arjan van de Ven
+
+--=-Kvn8VKaslfXBmyw4tC4Q
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.2.3 (GNU/Linux)
+
+iD8DBQA/8u9IxULwo51rQBIRAl8PAKCBio0sFFpmhxWg+l7zSy/C6FVegQCghkpK
+Iqwzw8xsywvPQ8TMO158kXI=
+=uBuf
+-----END PGP SIGNATURE-----
+
+--=-Kvn8VKaslfXBmyw4tC4Q--
