@@ -1,30 +1,74 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: About ARECA RAID driver for Linux i386/x86-64
-Date: Sun, 6 Feb 2005 14:51:20 +0000
-Message-ID: <20050206145120.GC834@infradead.org>
-References: <001001c508d9$d97a17f0$9300a8c0@erich2003> <20050202180817.47db64c2.akpm@osdl.org> <1107425132.4278.99.camel@laptopd505.fenrus.org>
+From: James.Smart@Emulex.Com
+Subject: RE: [PATCH 3/3] MidLayer updates - extending scsi_target support
+Date: Sun, 6 Feb 2005 12:28:17 -0500
+Message-ID: <0B1E13B586976742A7599D71A6AC733C12EB2A@xbl3.ma.emulex.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Received: from pentafluge.infradead.org ([213.146.154.40]:23724 "EHLO
-	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S261185AbVBFOvY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 6 Feb 2005 09:51:24 -0500
-Content-Disposition: inline
-In-Reply-To: <1107425132.4278.99.camel@laptopd505.fenrus.org>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Received: from emulex.emulex.com ([138.239.112.1]:29607 "EHLO
+	emulex.emulex.com") by vger.kernel.org with ESMTP id S261228AbVBFR2X convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 6 Feb 2005 12:28:23 -0500
+content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Arjan van de Ven <arjan@infradead.org>
-Cc: Andrew Morton <akpm@osdl.org>, erich <erich@areca.com.tw>, linux-scsi@vger.kernel.org
+To: vst@vlnb.net, linux-scsi@vger.kernel.org
 
-On Thu, Feb 03, 2005 at 11:05:32AM +0100, Arjan van de Ven wrote:
-> * needs to use list.h lists not open coded ones
+No - there was no discussion of adding scsi targets to linux (per your
+definition or otherwise).
 
-the only list uses I saw in a quick scan were for internal queueing
-which should go away.  (see the tmscsim driver in 2.6 on what to return
-when the queue is full)
+Since the Emulex driver tracks things by target (actually FC remote port)
+rather than luns, having the ability to have driver data space in the
+lun didn't help much. Yes, the driver data space could be in the
+transport-specific FC remote port, but I thought a more generic solution
+would have been prefered - thus the patch request.
 
-> * uses wrong locking for the scsi layer (eg ->done should be called  
->   without locks)
+At this point, it appears that consensus is against the need for this,
+especially as it can be handled within the only area needed today - that of
+the FC transport.
 
-it's not really wrong but totally superflous, so yes, it should go away.
+-- james s
 
+
+> -----Original Message-----
+> From: Vladislav Bolkhovitin [mailto:vst@vlnb.net]
+> Sent: Sunday, February 06, 2005 9:18 AM
+> To: linux-scsi@vger.kernel.org
+> Cc: Smart, James
+> Subject: Re: [PATCH 3/3] MidLayer updates - extending scsi_target
+> support
+> 
+> 
+> Please, forgive me my ignorance, it looks like something was happened 
+> "behind the scene" (linux-scsi list), and I missed it. Is support for 
+> SCSI targets started to be added in Linux? I mean "SCSI 
+> targets" as the 
+> ability to export local devices on a SCSI bus. If so, please consider 
+> proposed SCSI target mid-level (SCST) living on 
+> http://scst.sourceforge.net. In the next few weeks we are 
+> going to clean 
+> it a bit and prepare the patch, so it could start being part of some 
+> testing tree, probably "-mm", although it is stable enough ever for 
+> Linus one.
+> 
+> BTW, are there any descriptions for current scsi_target 
+> support and in 
+> which direction it's moving?
+> 
+> Vlad
+> 
+> James.Smart@Emulex.Com wrote:
+> > Patch 3: 
+> >   This patch extends scsi_target support:
+> >   - Allows for driver-specific data to be allocated along with the
+> >     target structure and accessible via the 
+> starget->hostdata pointer.
+> >   - Adds scsi target alloc/configure/destory callbacks to the
+> >     scsi host template.
+> >   - Rearranges the calling sequences for scsi targets so that the
+> >     target and slave alloc/configure/destory callbacks are in
+> >     order (target before slave on alloc/configure).
+> > 
+> > -- James S
+> 
+> 
