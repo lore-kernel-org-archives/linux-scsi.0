@@ -1,65 +1,32 @@
-From: "Moore, Eric Dean" <Emoore@lsil.com>
-Subject: RE: Fusion problems with 2.6.5rc1 on AMD x86-64 IV
-Date: Wed, 17 Mar 2004 10:58:09 -0500
+From: Andi Kleen <ak@suse.de>
+Subject: Re: Fusion problems with 2.6.5rc1 on AMD x86-64 IV
+Date: Wed, 17 Mar 2004 16:53:55 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <0E3FA95632D6D047BA649F95DAB60E57040DB1E2@exa-atlanta.se.lsil.com>
+Message-ID: <20040317165355.37c846f0.ak@suse.de>
+References: <0E3FA95632D6D047BA649F95DAB60E57040DB1E2@exa-atlanta.se.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:49288 "EHLO mail0.lsil.com")
-	by vger.kernel.org with ESMTP id S261644AbUCQP61 (ORCPT
+Received: from ns.suse.de ([195.135.220.2]:33478 "EHLO Cantor.suse.de")
+	by vger.kernel.org with ESMTP id S261809AbUCQQPA (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 17 Mar 2004 10:58:27 -0500
+	Wed, 17 Mar 2004 11:15:00 -0500
+In-Reply-To: <0E3FA95632D6D047BA649F95DAB60E57040DB1E2@exa-atlanta.se.lsil.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Andi Kleen <ak@suse.de>
-Cc: linux-scsi@vger.kernel.org, "Moore, Eric Dean" <Emoore@lsil.com>, James.Bottomley@HansenPartnership.com
+Cc: linux-scsi@vger.kernel.org, Emoore@lsil.com, James.Bottomley@HansenPartnership.com
 
-There is a bug in the driver where we do three
-seperate memory allocations for the request/reply FIFOs 
-that need to be on the same 4gb boundary. This is on my todo list,
-hope to fix soon.
+On Wed, 17 Mar 2004 10:58:09 -0500
+"Moore, Eric Dean" <Emoore@lsil.com> wrote:
 
+> There is a bug in the driver where we do three
+> seperate memory allocations for the request/reply FIFOs 
+> that need to be on the same 4gb boundary. This is on my todo list,
+> hope to fix soon.
 
-A temporary fix is there in the driver. Please recompile
-with the following line uncommented in the Makefile
-will put these allocations below 4gb:
+The problem seems to be the broke consistent dma mask.
 
-EXTRA_CFLAGS += -DMPTBASE_MEM_ALLOC_FIFO_FIX
+I currently just mask it with 0xffffffff in pci_alloc_consistent
+and why that workaround it works.
 
-Eric Moore
-
-
-On Wednesday, March 17, 2004 2:07 AM,  Andi Kleen wrote:
-> 
-> On Wed, 17 Mar 2004 10:00:40 +0100
-> Andi Kleen <ak@suse.de> wrote:
-> 
-> > On Wed, 17 Mar 2004 06:03:32 +0100
-> > Andi Kleen <ak@suse.de> wrote:
-> > 
-> > 
-> > > The actual problem is the recent consistent_dma_mask 
-> change from James. For some reason
-> > > the x86-64 pci_alloc_consistent always sees an 
-> 0xffffffffffffffff dma mask now
-> > > and that breaks Fusion.
-> > 
-> > I found some bugs in x86-64 code now that explained the 
-> problem. For some reason
-> > the consistent mask patchkit seems to have triggered them. 
-> It's fixed now.
-> 
-> Sorry for the many follow ups to myself :-)
-> 
-> Anyways the consistent mask problem is still with us. I just 
-> have a workaround that 
-> works (force it to 4GB) and there were related bugs in the 
-> x86-64 IOMMU code.
-> 
-> James, can you take a look at that please? From a first look 
-> i didn't find the place
-> where it is set to 0xffffffffffffffff. It isn't the driver.
-> 
-> -Andi
-> 
+-Andi
