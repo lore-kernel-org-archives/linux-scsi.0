@@ -1,68 +1,35 @@
-From: Craig Tierney <ctierney@hpti.com>
-Subject: Re: Question about Qlogic performance in 2.6 kernel
-Date: Thu, 14 Oct 2004 06:41:08 -0600
+From: mikem <mikem@beardog.cca.cpqcorp.net>
+Subject: Re: cciss update [2/2] fixes for Steeleye Lifekeeper
+Date: Thu, 14 Oct 2004 08:48:29 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1097757667.2939.9.camel@localhost.localdomain>
-References: <1097713700.3213.159.camel@hpti9.fsl.noaa.gov>
-	 <20041014030340.GA290349@sgi.com>
+Message-ID: <20041014134829.GA21960@beardog.cca.cpqcorp.net>
+References: <20041013212253.GB9866@beardog.cca.cpqcorp.net> <20041014083900.GB7747@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from system65-210-78-197.hpti.com ([65.210.78.197]:2913 "EHLO
-	hptimail01.HPTI.COM") by vger.kernel.org with ESMTP id S263778AbUJNMn6
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 14 Oct 2004 08:43:58 -0400
-In-Reply-To: <20041014030340.GA290349@sgi.com>
+Received: from mailout.zma.compaq.com ([161.114.64.105]:4111 "EHLO
+	zmamail05.zma.compaq.com") by vger.kernel.org with ESMTP
+	id S264984AbUJNNsw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 14 Oct 2004 09:48:52 -0400
+Content-Disposition: inline
+In-Reply-To: <20041014083900.GB7747@infradead.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Jeremy Higdon <jeremy@sgi.com>
-Cc: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>, akpm@osdl.org, axboe@suse.de, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Wed, 2004-10-13 at 21:03, Jeremy Higdon wrote:
-> On Wed, Oct 13, 2004 at 06:28:20PM -0600, Craig Tierney wrote:
-> > I am seeing a large disparity in reads and writes from
-> > my Raid box under the 2.6 kernel.  I have tried this from
-> > an Itanium box runing RHEL 4 beta and an Opteron box running
-> > SUSE 9.1 professional.  In both cases I am using 2 qlogic
-> > QLA2200F HBAs.  Each HBA talks to one lun from the array, and
-> > I use dm to create a filesystem.
+On Thu, Oct 14, 2004 at 09:39:00AM +0100, Christoph Hellwig wrote:
+> On Wed, Oct 13, 2004 at 04:22:53PM -0500, mike.miller@hp.com wrote:
+> > This patch addresses a problem with clustering software and also some of our utilies. We had to modify the modify the open specifically for clustering. This is the same as was done for 2.4. We also have to register the reserved volumes with the OS so when the backup server breaks the reservations he can call BLKRRPART to set the volume to the correct size.
+> > We also have to register a controller that may not have any logical volumes configured. This is for the online utils as well as clustering.
 > > 
-> > Using lmdd to create a single stream of IO, I see 190 MB/s for
-> > writes, but only 55 MB/s for reads.  The vendor says reads and
-> > writes can be as much as 300 MB/s if I had the right HBAs, but
-> > the write performance is good for 2 1 Gb/s HBAs.  
-> > 
-> > I tried this with a 2.4 kernel on a dual Xeon box.  Performance
-> > was 150 MB/s for both reads and writes.  The read performance was
-> > that high only after I changed /proc/sys/vm/max-readahead to 1023.
-> > 
-> > I tried changing the readahead size in 2.6 using blockdev.  The
-> > readahead was much larger by default than the 2.4 kernel.  However,
-> > no matter how large I set the readahead (as large as 1 MB), the
-> > read performance did not change.
-> > 
-> > I read on the kernel list that in the linux-2.6.9-rc3, some changes
-> > to the readahead code path had been merged that was supposed to
-> > simplify the logic.  I tried the patch to see if affected performance.
-> > It did not.
-> > 
-> > Does anyone have some suggestions on how to improve the read performance
-> > under 2.6?
-> > 
-> > Thanks,
-> > Craig
+> > Patch applies to 2.6.9-rc4. Please apply in order.
+> > Please consider this for inclusion.
 > 
+> No, this is bogus.  Never call add_disk on a volume that hasn't been
+> configured and full set up.  If you need to talk to our driver without
+> online volumes add a character device.
 > 
-> It's my experience that changing readahead on devices under a dm
-> volume does not actually change the amount of readahead you get.
-> 
-> Your results suggest that you may be having the same problem.
+This is the way we've done it since the 2.2 kernel. We have legacy applications
+in the field that expect to open c?d0 as the controller. Creating a character
+device would require all these apps to change.
 
-I read that somewhere in the docs at one point.  I tried changing
-the readahead on the dm and on the luns themselves.  By
-running blockdev, I saw that the values did indeed change for the
-luns.  My read tests showed no change in performance when
-I read from the filesystem or each of the luns directly.
-
-Craig
-
+mikem
