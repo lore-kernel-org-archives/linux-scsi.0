@@ -1,40 +1,42 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [PATCH] make the SCSI mid-layer obey the device online flag
-Date: Thu, 5 Jun 2003 09:41:34 -0400 (EDT)
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44L0.0306050935160.793-100000@ida.rowland.org>
-References: <20030604173413.A9632@beaverton.ibm.com>
+From: James Bottomley <James.Bottomley@steeleye.com>
+Subject: Re: [PATCH] megaraid driver fix for 2.5.70
+Date: 05 Jun 2003 10:07:24 -0400
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <1054822044.1792.48.camel@mulgrave>
+References: <1054650567.13617.12.camel@markh1.pdx.osdl.net>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ida.rowland.org ([192.131.102.52]:1284 "HELO ida.rowland.org")
-	by vger.kernel.org with SMTP id S264666AbTFEN2D (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Jun 2003 09:28:03 -0400
-In-Reply-To: <20030604173413.A9632@beaverton.ibm.com>
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+In-Reply-To: <1054650567.13617.12.camel@markh1.pdx.osdl.net>
+To: Mark Haverkamp <markh@osdl.org>, atulm@lsil.com
+Cc: Linus Torvalds <torvalds@transmeta.com>, Linux Kernel <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Patrick Mansfield <patmans@us.ibm.com>
-Cc: James Bottomley <James.Bottomley@steeleye.com>, Mike Anderson <andmike@us.ibm.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Wed, 4 Jun 2003, Patrick Mansfield wrote:
+On Tue, 2003-06-03 at 10:29, Mark Haverkamp wrote:
+> A recent change to the megaraid driver to fix some memset calls resulted
+> in overflowing the arrays being cleared and causing a system panic. 
+> This patch fixes the problem by making sure that the arrays being
+> cleared are dimensioned to the correct size.  The patch has been tested
+> on osdl's stp machines that have megaraid controllers.
 
-> I thought that USB sending a command after online cleared was likely the
-> last prepped request being sent. This can't be fixed within scsi_prep_fn,
-> since it will not be called for the last request after online is cleared.
-> 
-> So we might as well move all the checking of online into the
-> scsi_request_fn.
+This patch doesn't quite look like a fix to me:  The megaraid mailboxes
+are always >16 bytes *but* none of the setting commands is supposed to
+touch any of the status parts (which begin at byte 15), so I don't see
+how your patch would prevent a panic.
 
-As far as USB is concerned, it doesn't matter very much if any commands
-are sent after online is cleared, provided it's a relatively limited
-number of commands.  I just would like to clarify whether or not there is
-a guarantee that _no_ commands will be sent.  If it's explicitly agreed
-(and it would help to put it into a comment or kerneldoc) that there is no
-such guarantee, then little code needs to be changed.
+It also looks like the first fifteen (not sixteen) bytes are user data
+and the remaining 51 are for data from the card.
 
-Of course, it goes without saying that if a command is sent when online is
-clear, the midlayer must be prepared to deal gracefully with the
-inevitable error or failure of that command -- don't start a lengthy
-series of retries or are-you-still-alive probes.
+It thus looks like this memcpy in both issue_scb() and issue_scb_block()
+may be wrong
 
-Alan Stern
+	memcpy((char *)mbox, (char *)scb->raw_mbox, 16);
 
+because it's overwriting the mbox->busy return.
+
+Logically, it looks like the mbox_t should be split up into an mbox_out
+(which is what all the routines want to set values in) and an mbox_in
+which is where the status is returned.
+
+James
