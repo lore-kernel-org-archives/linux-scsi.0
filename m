@@ -1,77 +1,88 @@
-From: Lincoln Dale <ltd@cisco.com>
-Subject: Re: Fibre channel FC-4 features ?
-Date: Sat, 14 Feb 2004 09:47:04 +1100
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] aacraid changes for 2.4.24 kernel to add support of AMD64 (part 1)
+Date: Fri, 13 Feb 2004 22:58:36 +0000
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <5.1.0.14.2.20040214093521.048bec08@171.71.163.14>
-References: <BAY7-F6Xn5olXcJPDNL00009b9f@hotmail.com>
+Message-ID: <20040213225835.A21467@infradead.org>
+References: <547AF3BD0F3F0B4CBDC379BAC7E4189F2552B7@otce2k03.adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sj-iport-5.cisco.com ([171.68.10.87]:49063 "EHLO
-	sj-iport-5.cisco.com") by vger.kernel.org with ESMTP
-	id S267276AbUBMWrK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 13 Feb 2004 17:47:10 -0500
-In-Reply-To: <BAY7-F6Xn5olXcJPDNL00009b9f@hotmail.com>
+Received: from phoenix.infradead.org ([213.86.99.234]:55051 "EHLO
+	phoenix.infradead.org") by vger.kernel.org with ESMTP
+	id S267289AbUBMW6j (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 13 Feb 2004 17:58:39 -0500
+Content-Disposition: inline
+In-Reply-To: <547AF3BD0F3F0B4CBDC379BAC7E4189F2552B7@otce2k03.adaptec.com>; from mark_salyzyn@adaptec.com on Fri, Feb 13, 2004 at 05:27:36PM -0500
 List-Id: linux-scsi@vger.kernel.org
-To: invictus rm <invictus_rm@hotmail.com>
-Cc: linux-scsi@vger.kernel.org
+To: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi <linux-scsi@vger.kernel.org>
 
-At 10:35 PM 13/02/2004, invictus rm wrote:
->Hi,
->  Presently i am looking into a way to find the list of FC initiator and 
-> FC targets when i login to the
->  Fibre Chanel switch.
->
->  I want to maintain seperate list for INITIATORS and TARGETS attached to 
-> the switch . The
->  switch at present is not supporting the FC-4 Features request , so i 
-> cant use it to get the list of
->  initiator and the target.
->
->  How do i get the information when i login to the switch ?
+> [MGS] We have found commands issued to the controller with no callback
+> function under some conditions. Admittedly this may only happen on older
+> kernels (?) and sneaks in here, but I would need to test a 2.4.24 kernel
+> under those conditions to prove that this code was not needed. What is
+> wrong, the fact we need to perform this check, or the check itself?
+> Adaptec is paranoid, the test costs little.
 
-devices typically register their FC-4 capabilities (e.g. scsi-fcp, fc-sb-3) 
-with the nameserver after FLOGI.
-if they don't explicitly provide information about themselves, you can try 
-PLOGIing into them to see if they are an initiator or target.
+	If you get a NULL pointer in here it's a serious bug in an upper
+	layer.  That means a) it should get fixed there and b) the system
+	should panic ASAP by dererferencing it instead of continuing to
+	run and possible corrupting data.
+	So no, Adaptec is not beeing paranoid here but rather ACKs the
+	problem wit a printk and continues as usual.
 
-many 'newer' devices also register symbolic-node-name information about 
-themselves in the nameserver:
-for example, we register iSCSI initiators with the IQN embedded in the 
-nameserver also:
-         VSAN:200   FCID:0x0b0202
-         port-wwn (vendor)     :01:01:01:01:01:0d:00:11
-         node-wwn              :01:01:01:01:01:0d:00:10
-         class                 :2,3
-         node-ip-addr          :10.67.16.91
-         fc4-types:fc4_features:scsi-fcp:init iscsi-gw
-         symbolic-node-name 
-:iqn.1987-05.com.cisco:02.68248774bfe8.mel-stglab-host31
-         port-type             :N
-         fabric-port-wwn       :21:81:00:05:30:00:1d:1e
+> As for the lock, this code is simply moved up from another area of the
+> driver so that a prototype was not necessary to head it off. A code
+> change to drop the locks introduces risks that can be dealt with in a
+> later patch. The code works (in smp environments) reliably, I would be
+> nervous to remove the locks as that was not under the prevue of the many
+> AMD64 changes required.
 
-newer QLogic drivers do this also:
-         VSAN:1 FCID:0xea0100
-         port-wwn (vendor) :21:00:00:e0:8b:08:96:22 (Qlogic)
-         node-wwn :20:00:00:e0:8b:08:96:22
-         class :3
-         fc4-types:fc4_features:scsi-fcp:init
-         symbolic-node-name :QLA23xx FW:v3.01.19 DVR:v8.2.2.25 (W2K VI)
-         port-type :N
-         fabric-port-wwn :20:41:00:05:30:00:94:9e
+	Okay, let's wait for the next patch then..
 
-the exact method you use from 'linux' to get this information is highly 
-dependent on the HBA you're using --
-unfortunately, this information isn't yet available in a "standardized" format.
+> 	The num_physpages check is wrong.  There's machines with
+> 	non-continguous memory where you can get addresses bigger than
+> 	32bits with less than 4 GB of memory.
+> 
+> [MGS] The driver functions better in a 32 bit environment as we can load
+> up more scatter gather elements. Although I agree there is this
+> inaccuracy, the cost of bounce buffers in such an environment is a small
+> cost to pay for the improved performance options available through the
+> ability to retune the driver for larger requests.
 
-there is perhaps hope that with Linux 2.7 the nameserver information can 
-perhaps be populated into sysfs.
-my hope is that the same holds true for FC-SP -- and that we don't end up 
-with HBA-specific implementations.
+	Indeed it would be a good idea to ket pci_set_dma_mask with a > 32
+	bit argument fail when the box will never have that big dma addresses.
+	But the way you do it in the driver is plain wrong.  Care to send
+	a kernel patch to do this right?
 
+> 	This is copletely broken.  a scsi LLDD doesn't know about device
+> 	names, it sits below the midlayer.
+> 
+> [MGS] The Applications depend on this function in order to report device
+> linkages. This above code exists in the driver already and was simply
+> moved elsewhere because of a restructuring of code. We will need to
+> figure out a means to fix this code at another time.
 
-cheers,
+	Then your application is broken.  In Linux 2.4 any number of
+	upperlevel drivers can attach to a scsi_device.  And you can
+	even replace the disk driver with one of your own if you want.
+	It just means someone at Adaptec didn't understand layering.
+	You should ask Justin for CAM talk ;-)
 
-lincoln.
-PS. why not post under your Aarohi email address?
+> [MGS] I know, and I keep on pushing back because we have *much* more
+> serious problems if the applications can not determine if the device is
+> busy. We must block the users from making changes to arrays, or causing
+> rescans, when the devices are busy, or if the system is dealing with
+> error recovery. This code helps us reduce the number of panics users
+> experience when they `play' with the arrays. The fact that this code is
+> racy is inconsequential; we are dealing with user initiated actions that
+> have timeframes of activities that are lengthy enough that the window of
+> opportunity for failure is low. Without the test, the window of
+> opportunity of failure is *much* higher.
+
+	What about completly stopping those user actions if they can't
+	work reliably at all.  Really, the Linux 2.4 scsi stack is just
+	not designed for any device reconfigurations.  I know this sucks
+	but I didn't write that code.  I spent a lot of effort in Linux
+	2.6 to fix up all those races from hell.
 
