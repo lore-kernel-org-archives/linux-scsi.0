@@ -1,63 +1,78 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: [PATCH]:Amended:Allow random write for PDT 5 profile 2 Removable Disk
-Date: Sun, 7 Mar 2004 12:45:07 +0100
+From: Willem Riede <wrlk@riede.org>
+Subject: Re: [PATCH] remove dead ATAPI multi-lun support (used for ide-scsi)
+Date: Sun, 7 Mar 2004 08:49:05 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040307114507.GJ23525@suse.de>
-References: <1078593406.2006.4.camel@patibmrh9>
+Message-ID: <20040307134905.GK29509@serve.riede.org>
+References: <200402202247.02345.bzolnier@elka.pw.edu.pl>
+Reply-To: wrlk@riede.org
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns.virtualhost.dk ([195.184.98.160]:4536 "EHLO virtualhost.dk")
-	by vger.kernel.org with ESMTP id S261813AbUCGLpZ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 7 Mar 2004 06:45:25 -0500
+Received: from sccrmhc11.comcast.net ([204.127.202.55]:470 "EHLO
+	sccrmhc11.comcast.net") by vger.kernel.org with ESMTP
+	id S261982AbUCGNtH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 7 Mar 2004 08:49:07 -0500
 Content-Disposition: inline
-In-Reply-To: <1078593406.2006.4.camel@patibmrh9>
+In-Reply-To: <200402202247.02345.bzolnier@elka.pw.edu.pl> (from B.Zolnierkiewicz@elka.pw.edu.pl on Fri, Feb 20, 2004 at 16:47:02 -0500)
 List-Id: linux-scsi@vger.kernel.org
-To: Pat LaVarre <p.lavarre@ieee.org>
-Cc: mckellj@iomega.com, linux-scsi@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Sat, Mar 06 2004, Pat LaVarre wrote:
-> > queued it for 2.6.4-pre
+On 2004.02.20 16:47, Bartlomiej Zolnierkiewicz wrote:
 > 
-> Absent from 2.6.4-rc2, I think.
-
-Will most likely have to wait for 2.6.5-pre/rc
-
-> Perhaps if I knew what -pre meant that would be no surprise to me.
-
-I'm not sure how I can even express that any clearer...
-
-> http://marc.theaimsgroup.com/?l=linux-scsi&s=random+write+pdt+5
-> does not yet enlighten me further, but I observe lk refusing to let Me
-> write:
+> [IDE] remove dead ATAPI multi-lun support (used for ide-scsi)
 > 
-> $ uname -msrv
-> Linux 2.6.4-rc2 #1 SMP Sat Mar 6 09:58:43 MST 2004 i686
-> $
-> $ grep CDF_ include/linux/cdrom.h
-> #define CDF_MRW         0x28
-> $ grep -i HWDM include/linux/cdrom.h
-> $
-> $ sudo rrd scan
-> /dev/scd0 is Iomega RRD 06.3 rw
-> /dev/hdc is Iomega RRD 06.3 rw
-> $
-> $ sudo dd of=/dev/null if=/dev/scd0 bs=64K seek=0 skip=0 count=1
-> 1+0 records in
-> 1+0 records out
-> $ sudo dd of=/dev/null if=/dev/hdc bs=64K seek=0 skip=0 count=1
-> 1+0 records in
-> 1+0 records out
-> $
-> $ sudo dd of=/dev/scd0 if=/dev/zero bs=64K seek=0 skip=0 count=1
-> dd: opening `/dev/scd0': Read-only file system
-> $ sudo dd of=/dev/hdc if=/dev/zero bs=64K seek=0 skip=0 count=1
-> dd: opening `/dev/hdc': Read-only file system
-> $
+> ChangeSet@1.889.69.2 03-01-23 14:51:03-05:00  adam@yggdrasil.com
+> |  The following changes to ide-scsi.c are a recovery of the
+> | changes that I had in ide-scsi.c in the stock kernel's before
+> | Martin Dalecki's IDE tree was reverted and a few other changes.
+> ...
+> 
+> broke it.
+> 
+> Before this change drive->id->last_id & 0x7 was used as shost->max_lun
+> and "hdXlun=" kernel parameter could be used to override it.
+> 
+> It was needed probably only for some rare ATAPI PD-CD drives
+> (http://www.geocrawler.com/archives/3/58/1999/11/50/2877161/).
+> 
+> However it was far from optimal:
+> - people played with "hdXlun=" and then complained about multiple instances
+>   of the same device (most ATAPI drives respond to each LUN)
+> - probably some devices return 7 not 0 in id->last_id (=> 7 x same device)
+> 
+> This patch cleans things up, multi-lun will be fixed if needed in ide-scsi.
+> I think that this may work but can't verify it:
+> 
+> 	if (id->last_lun && id->last_lun != 7)
+> 		shost->max_lun = id->last_lun + 1;
+> 	else
+> 		shost->max_lun = 1;
 
-Is there some other point to the above than stating that the required
-patch hasn't been merged? Feel free to resend.
+I have verified that this works with my PD/CD drive, the patch to ide-scsi.c
+that I suggest (against linux-2.6.4-rc1-mm2) is below.
 
--- 
-Jens Axboe
+Thanks, Willem Riede.
+
+--- m0/drivers/scsi/ide-scsi.c	2004-03-05 19:54:33.000000000 -0500
++++ m1/drivers/scsi/ide-scsi.c	2004-03-06 14:49:47.000000000 -0500
+@@ -1148,7 +1148,16 @@
+ 		return 1;
+ 
+ 	host->max_id = 1;
+-	host->max_lun = 1;
++
++#if IDESCSI_DEBUG_LOG
++	if (drive->id->last_lun)
++		printk(KERN_NOTICE "%s: id->last_lun=%u\n", drive->name, drive->id->last_lun);
++#endif
++	if ((drive->id->last_lun & 0x7) != 7)
++		host->max_lun = (drive->id->last_lun & 0x7) + 1;
++	else
++		host->max_lun = 1;
++
+ 	drive->driver_data = host;
+ 	idescsi = scsihost_to_idescsi(host);
+ 	idescsi->drive = drive;
 
