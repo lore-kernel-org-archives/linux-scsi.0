@@ -1,47 +1,54 @@
-From: "Jenna Wolff" <98maklddn@hotmail.com>
-Subject: We just want to ease your pains so  =?ISO-8859-1?Q?=20you=92ll?= have a better tomorrow zaveuyhawlv
-Date: Thu, 19 Feb 04 08:13:45 GMT
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: new driver
+Date: Thu, 19 Feb 2004 00:32:42 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <66x0p7bqd4mvv8mjo699r$--$-87w0@9rvadjj4u2x>
-Reply-To: "Jenna Wolff" <98maklddn@hotmail.com>
+Message-ID: <40344A7A.5040909@pobox.com>
+References: <7076215DFAA4574099E5CD59FE4222620427ACDF@pcssrv42.pcs.pc.ome.toshiba.co.jp> <1077148668.14308.6.camel@pc1.bout-tyme.net>
 Mime-Version: 1.0
-Content-Type: multipart/alternative;
-	boundary="6CB_D..5B_3D_8.25.3A"
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from c-67-163-63-107.client.comcast.net ([67.163.63.107]:37138 "HELO
-	c-67-163-63-107.client.comcast.net") by vger.kernel.org with SMTP
-	id S266681AbUBSEPe (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 18 Feb 2004 23:15:34 -0500
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:36060 "EHLO
+	www.linux.org.uk") by vger.kernel.org with ESMTP id S264310AbUBSFdF
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 19 Feb 2004 00:33:05 -0500
+In-Reply-To: <1077148668.14308.6.camel@pc1.bout-tyme.net>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Ken Schneider <kschneider@bout-tyme.net>
+Cc: "Tomita, Haruo" <haruo.tomita@toshiba.co.jp>, Arjan van de Ven <arjanv@redhat.com>, "Moore, Eric Dean" <Emoore@lsil.com>, linux-scsi@vger.kernel.org, "Doelfel, Hardy" <hdoelfel@lsil.com>, "Mukker, Atul" <Atulm@lsil.com>, "Jarrett, Peter B." <Peterj@lsil.com>
+
+Ken Schneider wrote:
+> On Wed, 2004-02-18 at 18:39, Tomita, Haruo wrote:
+> 
+>>Hi ken,
+>>
+>>Eric> There was an effort I started to open source some of
+>>Eric> the driver, which was linked to a pre-compiled library. 
+>>
+>>Haruo> The pre-compiled library(megaide_lib.o) is included. 
+>>
+>>Arjan> Then the driver is not available under the terms of the GPL.... 
+>>Arjan> (and not compatible with the kernel license so inclusion is not possible)
+>> 
+>>Ken> And therefore should not any reference to the GPL in the 
+>>Ken> other files. I think this should be all or nothing.
+>>
+>>Is it that the source code of megaide_lib.o should be opened?
+> 
+> 
+> I was told by people on another list that if any part is closed the
+> entire package will not be included in the kernel tree. So yes
+> negaide.lib.o should be open sourced or LSI should provide drivers to
+> linux users as well as any other platform that uses their hardware.
 
 
---6CB_D..5B_3D_8.25.3A
-Content-Type: text/plain;
-Content-Transfer-Encoding: quoted-printable
+Correct.  Drivers must be 100% open source, or they are not included in 
+Linux.
 
-Hello there,
+This is dictated by the GNU General Public License, under which all 
+kernel code is licensed.
 
-How you doing today? Sorry for taking 
-some of your time. 
-
-Just to let you know that the way 
-medicine is sold  has changed in the 21st century.
-
-The link below will show you how this service 
-works worldwide. I hope that there is a solution for you in this e-mail.
-Take good care from the Healing guru.
-
-Show me the way click below:
-http://www.allthemeds.biz/ada/index.htm
+	Jeff
 
 
-
-To stop future visits: click below
-
-
-http://www.allthemeds.biz/r/r.htm
-z khgtxzpds p ks zacssspzt
-
---6CB_D..5B_3D_8.25.3A--
 
