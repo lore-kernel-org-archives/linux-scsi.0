@@ -1,21 +1,65 @@
-From: Vadim Nekhoroshev <vn@sot.com>
-Subject: module aacraid 0.9.10dmb halt system
-Date: Fri, 7 Mar 2003 17:13:48 +0200 (EET)
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44.0303071710100.30229-100000@ares.sot.com>
+From: Patrick Mansfield <patmans@us.ibm.com>
+Subject: Re: [PATCH] scsi_error fix
+Date: Fri, 7 Mar 2003 11:41:59 -0800
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <20030307114159.A941@beaverton.ibm.com>
+References: <UTC200303062337.h26Nbv714178.aeb@smtp.cwi.nl>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-scsi-owner@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <UTC200303062337.h26Nbv714178.aeb@smtp.cwi.nl>; from Andries.Brouwer@cwi.nl on Fri, Mar 07, 2003 at 12:37:57AM +0100
+To: Andries.Brouwer@cwi.nl
+Cc: torvalds@transmeta.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: linux-scsi@vger.kernel.org
 
-I'm running aacraid module on kernel version 2.4.19, compiling with 
-support, SMP and system halt. If i running this module on kernel, 
-compiling without support SMP, all work fine.
+On Fri, Mar 07, 2003 at 12:37:57AM +0100, Andries.Brouwer@cwi.nl wrote:
 
-What are ideas ?
+> scsi_error.c: apart from similar trivialities the only change:
+> 
+>     If a command fails (e.g. because it belongs to a newer
+>     SCSI version than the device), it is fed to
+>     scsi_decide_disposition(). That routine must return
+>     SUCCESS, unless the error handler should be invoked.
+> 
+>     In the situation where host_byte is DID_OK, and message_byte
+>     is COMMAND_COMPLETE, and status is CHECK_CONDITION, there is
+>     no reason at all to invoke aborts and resets. The situation
+>     is normal. I see here UNIT ATTENTION, Power on occurred
+>     and ILLEGAL REQUEST, Invalid field in cdb.
+> 
+>     The 2.5.64 code does not return SUCCESS, but it returns the
+>     return code of scsi_check_sense(), and that may be FAILED
+>     in case we do not have valid sense.
+> 
+>     Further discussion is possible here, but I changed the return
+>     into "return SUCCESS" and 2.5.64 boots fine.
+> 
+> Andries
+> 
+> [Further discussion and things I did not yet investigate:
+> What was changed to make this fail first in 2.5.63?
+> Experience shows that we get into a loop when something else
+> than SUCCESS is returned here. Probably that is a bug elsewhere.
+> Probably the commands that cause problems should never have been
+> sent in the first place.]
 
-Thanks,
-Vadim
+The scsi error handler is also used to retrieve sense data for
+adapters/drivers that do not auto retrieve it. In such cases, it should
+not issue any aborts, resets etc.
 
+Your change effectively disables that support - we never hit the code in
+scsi_eh_get_sense() to request sense. It would be very nice if we could
+fix (or audit) all the scsi drivers, apply your change and remove
+scsi_eh_get_sense, but AFAIK that has not and is not happening.
+
+I don't know if your adapter/driver has auto sense retrieval (imm.c?).
+
+I would guess a change in scsi_error.c related to sense (scsi_eh_get_sense)
+handling is causing problems, and if your driver has auto sense then
+something is wrong with the scmd->sense_buffer.
+
+It would still be useful to see the console log output with scsi_logging=1
+for your failure case.
+
+-- Patrick Mansfield
