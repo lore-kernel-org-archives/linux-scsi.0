@@ -1,95 +1,48 @@
-From: "Ju, Seokmann" <sju@lsil.com>
-Subject: RE: [UPDATE PATCH 15/19] drivers/scsi/megaraid: Use the DMA_{64,
-	32}BIT_MASK constants
-Date: Tue, 22 Mar 2005 08:13:01 -0500
-Message-ID: <0E3FA95632D6D047BA649F95DAB60E570366277D@exa-atlanta>
+From: Holger Kiehl <Holger.Kiehl@dwd.de>
+Subject: RE: Fusion-MPT much faster as module
+Date: Tue, 22 Mar 2005 13:46:06 +0000 (GMT)
+Message-ID: <Pine.LNX.4.61.0503221344170.17195@diagnostix.dwd.de>
+References: <200503221029.j2MATNg12775@unix-os.sc.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
-Received: from mail0.lsil.com ([147.145.40.20]:53672 "EHLO mail0.lsil.com")
-	by vger.kernel.org with ESMTP id S261193AbVCVNNU (ORCPT
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Received: from dwdmx2.dwd.de ([141.38.3.197]:5430 "HELO dwdmx2.dwd.de")
+	by vger.kernel.org with SMTP id S261224AbVCVNq2 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 22 Mar 2005 08:13:20 -0500
+	Tue, 22 Mar 2005 08:46:28 -0500
+In-Reply-To: <200503221029.j2MATNg12775@unix-os.sc.intel.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: 'Tobias Klauser' <tklauser@nuerscht.ch>, kernel-janitors@lists.osdl.org
-Cc: linux-scsi@vger.kernel.org
+To: "Chen, Kenneth W" <kenneth.w.chen@intel.com>
+Cc: Andrew Morton <akpm@osdl.org>, linux-kernel <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, "Moore, Eric  Dean" <emoore@lsil.com>
 
-On Sunday, March 20, 2005 8:14 AM, Tobias wrote:
-> The previous patch did not compile cleanly on all architectures so
-> here's a fixed one.
-> 
-> Use the DMA_{64,32}BIT_MASK constants from dma-mapping.h when calling
-> pci_set_dma_mask() or pci_set_consistent_dma_mask()
-> This patch includes dma-mapping.h explicitly because it caused errors
-> on some architectures otherwise.
-> See http://marc.theaimsgroup.com/?t=108001993000001&r=1&w=2 
-> for details
-Thank you for the patch. 
-However, exact same change is already included on the patch which I'm
-submitting.
-For the above reason, I'm rejecting the patch.
+On Tue, 22 Mar 2005, Chen, Kenneth W wrote:
 
-Thank you for the correction, again.
+> On Mon, 21 Mar 2005, Andrew Morton wrote:
+>> Holger, this problem remains unresolved, does it not?  Have you done any
+>> more experimentation?
+>>
+>> I must say that something funny seems to be happening here.  I have two
+>> MPT-based Dell machines, neither of which is using a modular driver:
+>>
+>> akpm:/usr/src/25> 0 hdparm -t /dev/sda
+>>
+>> /dev/sda:
+>> Timing buffered disk reads:  64 MB in  5.00 seconds = 12.80 MB/sec
+>
+>
+> Holger Kiehl wrote on Tuesday, March 22, 2005 12:31 AM
+>> Got the same result when compiled in, always between 12 and 13 MB/s. As
+>> module it is approx. 75 MB/s.
+>
+>
+> Half guess, half with data to prove: it must be the variable driver_setup
+> initialization.  If compiled as built-in, driver_setup is initialized to
+> zero for all of its member variables, which isn't the fastest setting. If
+> compiled as module, it gets first class treatment with shinny performance
+> setting.  Goofing around, this patch appears to be giving higher throughput.
+>
+Yes, that fixes it.
 
-> -----Original Message-----
-> From: Tobias Klauser [mailto:tklauser@nuerscht.ch] 
-> Sent: Sunday, March 20, 2005 8:14 AM
-> To: kernel-janitors@lists.osdl.org
-> Cc: linux-scsi@vger.kernel.org
-> Subject: [UPDATE PATCH 15/19] drivers/scsi/megaraid: Use the 
-> DMA_{64, 32}BIT_MASK constants
-> 
-> The previous patch did not compile cleanly on all architectures so
-> here's a fixed one.
-> 
-> Use the DMA_{64,32}BIT_MASK constants from dma-mapping.h when calling
-> pci_set_dma_mask() or pci_set_consistent_dma_mask()
-> This patch includes dma-mapping.h explicitly because it caused errors
-> on some architectures otherwise.
-> See http://marc.theaimsgroup.com/?t=108001993000001&r=1&w=2 
-> for details
-> 
-> Signed-off-by: Tobias Klauser <tklauser@nuerscht.ch>
-> 
-> --- linux-2.6.11.orig/drivers/scsi/megaraid.c	2005-03-02 
-> 12:50:36.000000000 +0100
-> +++ linux-2.6.11/drivers/scsi/megaraid.c	2005-03-20 
-> 13:27:54.000000000 +0100
-> @@ -43,6 +43,7 @@
->  #include <linux/interrupt.h>
->  #include <linux/pci.h>
->  #include <linux/init.h>
-> +#include <linux/dma-mapping.h>
->  #include <scsi/scsicam.h>
->  
->  #include "scsi.h"
-> @@ -2060,7 +2061,7 @@ make_local_pdev(adapter_t *adapter, stru
->  
->  	memcpy(*pdev, adapter->dev, sizeof(struct pci_dev));
->  
-> -	if( pci_set_dma_mask(*pdev, 0xffffffff) != 0 ) {
-> +	if( pci_set_dma_mask(*pdev, DMA_32BIT_MASK) != 0 ) {
->  		kfree(*pdev);
->  		return -1;
->  	}
-> @@ -4854,10 +4855,10 @@ megaraid_probe_one(struct pci_dev *pdev,
->  
->  	/* Set the Mode of addressing to 64 bit if we can */
->  	if ((adapter->flag & BOARD_64BIT) && 
-> (sizeof(dma_addr_t) == 8)) {
-> -		pci_set_dma_mask(pdev, 0xffffffffffffffffULL);
-> +		pci_set_dma_mask(pdev, DMA_64BIT_MASK);
->  		adapter->has_64bit_addr = 1;
->  	} else  {
-> -		pci_set_dma_mask(pdev, 0xffffffff);
-> +		pci_set_dma_mask(pdev, DMA_32BIT_MASK);
->  		adapter->has_64bit_addr = 0;
->  	}
->  		
-> -
-> To unsubscribe from this list: send the line "unsubscribe 
-> linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+Many thanks!
+
+Holger
