@@ -1,31 +1,85 @@
-From: James Bottomley <James.Bottomley@steeleye.com>
-Subject: Re: Fw: 2.6.0-test9 kernel oops
-Date: 24 Nov 2003 09:23:44 -0600
+From: Fabien Salvi <fabien@cri74.org>
+Subject: Re: Bad fibre channel performance: need howto
+Date: Mon, 24 Nov 2003 16:26:47 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1069687425.1900.9.camel@mulgrave>
-References: <20031123231037.44115c6f.akpm@osdl.org>
+Message-ID: <3FC22337.3020105@cri74.org>
+References: <1069443458.7047.35.camel@cala>  <3FC1E393.4090907@cri74.org> <1069673445.1231.18.camel@cala>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nat9.steeleye.com ([65.114.3.137]:29190 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S263766AbTKXPXw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 24 Nov 2003 10:23:52 -0500
-In-Reply-To: <20031123231037.44115c6f.akpm@osdl.org>
+Received: from aravis.cur-archamps.fr ([195.202.0.99]:6312 "EHLO
+	aravis.cur-archamps.fr") by vger.kernel.org with ESMTP
+	id S263763AbTKXP0s (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 24 Nov 2003 10:26:48 -0500
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, "Justin T. Gibbs" <gibbs@scsiguy.com>, Tomas Kostrian <kostrian@deepblue.sk>
-
-On Mon, 2003-11-24 at 01:10, Andrew Morton wrote:
-> Can anyone else with an aic7xxx reproduce (and hence fix) this?
-> /proc/scsi/aic7xxx/0 works happily on my test box.
-
-Actually (since I managed to dig out an x86 aic7xxx based machine), I've
-tried this and not seen the problem...it could be because I've been
-testing out with the two SCSI refcount fixes as well...I'll try
-stripping them back.
-
-James
+To: Mario Giammarco <mgiammarco@virgilio.it>
+Cc: linux-scsi@vger.kernel.org
 
 
+
+Mario Giammarco a =E9crit:
+> Il lun, 2003-11-24 alle 11:55, Fabien Salvi ha scritto:
+>=20
+>=20
+>>Hello Mario,
+>>
+>=20
+>=20
+>=20
+>>If you want, I can send you an archive of the howto.
+>>I've downloaded it a long time ago, before sistina removed it from th=
+eir=20
+>>server.
+>>
+>>But, it's true, it's a bit old
+>=20
+>=20
+> Yes send it to me please. I like to read all.
+
+Here :
+ftp://ftp.cri74.org/incoming/services/3c6caf61efc733e03526edac45852ad1/=
+fibrechannel_howto.tar.bz2
+
+>>About your problem, I am not sure it's really because of FibreChannel=
+=2E
+>>There are a lot of differences between theorical values and real ones=
+=2E
+>>Which tool are you using for the benchmark ?
+>=20
+>=20
+> I know but usually the "sequential read" is the easiest test to disco=
+ver
+> if there are problems.
+>=20
+> I have used hdparm and sg3 tools to do a quick sequential read test.
+> On ide world if hdparm tells me that I have  sequential transfer rate
+> lower than shown on web reviews it means that I have to tweak dma, et=
+c.
+> and usually after tweaking I get performance promised.
+>=20
+> Here there is little to tweak and I then discovered with a serious te=
+st
+> (tiobench) that write performance is also worse.
+>=20
+> I suppose there is some problem.
+>=20
+> I am now buying a qlogic2200 to try if it is better.
+> Can someone tell me best drivers for qlogic2200?
+
+I use qlogic 2200 FC HBA with the official qlogic driver and it works=20
+fine. Look at:=20
+http://www.qlogic.com/support/os_detail.asp?productid=3D113&osid=3D26
+
+--=20
+=46abien SALVI      Centre de Ressources Informatiques
+                   Archamps, France -- http://www.cri74.org
+                   PingOO GNU/linux distribution : http://www.pingoo.or=
+g
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
