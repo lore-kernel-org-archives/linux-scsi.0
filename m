@@ -1,39 +1,52 @@
-From: mikem <mikem@beardog.cca.cpqcorp.net>
-Subject: Re: [PATCH 2.6] cciss: CCISS_GETLUNINFO fix
-Date: Tue, 30 Nov 2004 08:21:54 -0600
-Message-ID: <20041130142154.GB32035@beardog.cca.cpqcorp.net>
-References: <20041129220725.GA32035@beardog.cca.cpqcorp.net> <1101800364.2640.25.camel@laptop.fenrus.org>
+From: Dave C Boutcher <sleddog@us.ibm.com>
+Subject: Re: [patch 2/4] ibmvscsi.c: limit size of I/O requests
+Date: Tue, 30 Nov 2004 09:29:16 -0600
+Message-ID: <20041130152916.GA7639@cs.umn.edu>
+References: <20041129203107.GB31011@cs.umn.edu> <20041130075457.GD10450@suse.de>
+Reply-To: boutcher@cs.umn.edu
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ztxmail05.ztx.compaq.com ([161.114.1.209]:55054 "EHLO
-	ztxmail05.ztx.compaq.com") by vger.kernel.org with ESMTP
-	id S262086AbUK3OWK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 30 Nov 2004 09:22:10 -0500
+Received: from mail.cs.umn.edu ([128.101.35.202]:51597 "EHLO mail.cs.umn.edu")
+	by vger.kernel.org with ESMTP id S262124AbUK3P3Y (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 30 Nov 2004 10:29:24 -0500
+Received: from localhost (localhost [127.0.0.1])
+	by augustus.cs.umn.edu (Postfix) with ESMTP id 5213E5C385
+	for <linux-scsi@vger.kernel.org>; Tue, 30 Nov 2004 09:29:20 -0600 (CST)
+Received: from mail.cs.umn.edu ([127.0.0.1])
+ by localhost (augustus [127.0.0.1]) (amavisd-new, port 10024) with LMTP
+ id 03400-01 for <linux-scsi@vger.kernel.org>;
+ Tue, 30 Nov 2004 09:29:18 -0600 (CST)
+Received: from tera.cs.umn.edu (tera.cs.umn.edu [128.101.35.163])
+	by mail.cs.umn.edu (Postfix) with ESMTP id 9AF915C37C
+	for <linux-scsi@vger.kernel.org>; Tue, 30 Nov 2004 09:29:16 -0600 (CST)
 Content-Disposition: inline
-In-Reply-To: <1101800364.2640.25.camel@laptop.fenrus.org>
+In-Reply-To: <20041130075457.GD10450@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Arjan van de Ven <arjan@infradead.org>
-Cc: mike.miller@hp.com, linux-scsi@vger.kernel.org, andrew.patterson@hp.com, akpm@osdl.org
+To: linux-scsi@vger.kernel.org
 
-On Tue, Nov 30, 2004 at 08:39:24AM +0100, Arjan van de Ven wrote:
-> On Mon, 2004-11-29 at 16:07 -0600, mike.miller@hp.com wrote:
-> > This patch addresses a problem with reading the partition table struct.
-> > The last time this was submitted it was rejected on the grounds that the driver
-> > has no business reading the partition table. I don't disagree with that, but
-> > we have legacy apps to consider. Changing the ioctl would break those apps
-> > already in customers hands.
+On Tue, Nov 30, 2004 at 08:54:58AM +0100, Jens Axboe wrote:
+> On Mon, Nov 29 2004, Dave C Boutcher wrote:
+> > Description: Limit the size of I/O requests sent by the 
+> > ibmvscsi adapter.  With better I/O scheduling (and thus larger
+> > requests) we were breaking some servers.
 > 
-> Can we at least get your / HP's commitment that future versions of said
-> tools will not use the ioctl ? (eg so that it eventually can be phased
-> out)
-> -- 
-I will work with our application folks to phase this out. Some apps will
-continue to require the LUN ID and usage count. Hopefully in the near
-future I can obsolete this ioctl and reintroduce CCISS_GETLUNID which
-only returns those values.
+> Nack, why can't you use /dev/block/xxx/queue/max_sectors_kb to control
+> this?
 
-Thanks, 
-mikem
-> 
+The basic function of this patch is to set host->max_sectors based
+on information from the SCSI target.
+
+There is a default value because two of the existing target implementations
+(there are three) don't set the value.
+
+I confess to making the default value a module parameter because I
+took a SWAG at the correct value.  I COULD remove the module
+parameter part of this patch, though if someone actually cares enough
+about performance to tweak it, modprobe.conf seems like a nice place to
+set it.
+
+-- 
+Dave Boutcher
