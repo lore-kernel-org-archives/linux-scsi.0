@@ -1,272 +1,320 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH] fixup some tagged queuing mess
-Date: Mon, 25 Aug 2003 14:27:51 +0200
+Subject: [PATCH] give scsi_allocate_request a gfp_mask
+Date: Mon, 25 Aug 2003 14:28:52 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030825122751.GF15506@lst.de>
+Message-ID: <20030825122852.GG15506@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([212.34.189.10]:58779 "EHLO mail.lst.de")
-	by vger.kernel.org with ESMTP id S261815AbTHYM14 (ORCPT
+Received: from verein.lst.de ([212.34.189.10]:60827 "EHLO mail.lst.de")
+	by vger.kernel.org with ESMTP id S261830AbTHYM24 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 25 Aug 2003 08:27:56 -0400
+	Mon, 25 Aug 2003 08:28:56 -0400
 Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>, dledford@redhat.com
+To: James Bottomley <James.Bottomley@SteelEye.com>
 Cc: linux-scsi@vger.kernel.org
 
-This is a followup to Doug's comments and older work.  It kills
-sdev->tagged_queue which wasn't ever set in 2.5/2.6 except through
-obscure and broken ioctls (!).  As a reason of that tagged queing
-didn't work for a lot of drivers, so this does change behaviour.
-Be careful..
-
-James, can you review the code in 53c700.c?  Calling scsi_activate_tcq
-in ->queuecommand rather than ->slave_configure looks rather strange to
-me..
+most callers really want GFP_KERNEL, not GFP_ATOMIC.
 
 
-diff -Nru a/drivers/message/fusion/mptscsih.c b/drivers/message/fusion/mptscsih.c
---- a/drivers/message/fusion/mptscsih.c	Mon Aug 25 13:37:34 2003
-+++ b/drivers/message/fusion/mptscsih.c	Mon Aug 25 13:37:34 2003
-@@ -3328,9 +3328,8 @@
- 		device, device->id, device->lun, device->channel));
- 	dsprintk((KERN_INFO "sdtr %d wdtr %d ppr %d inq length=%d\n",
- 		device->sdtr, device->wdtr, device->ppr, device->inquiry_len));
--	dsprintk(("tagged %d queue %d simple %d ordered %d\n",
--		device->tagged_supported, device->tagged_queue,
--		device->simple_tags, device->ordered_tags));
-+	dsprintk(("tagged %d simple %d ordered %d\n",
-+		device->tagged_supported, device->simple_tags, device->ordered_tags));
- 
- 	/*	set target parameters, queue depths, set dv flags ?  */
- 	if (hd && (hd->Targets != NULL)) {
-diff -Nru a/drivers/scsi/53c700.c b/drivers/scsi/53c700.c
---- a/drivers/scsi/53c700.c	Mon Aug 25 13:37:34 2003
-+++ b/drivers/scsi/53c700.c	Mon Aug 25 13:37:34 2003
-@@ -1758,7 +1758,7 @@
- 	printk("53c700: scsi%d, command ", SCp->device->host->host_no);
- 	print_command(SCp->cmnd);
- #endif
--	if(SCp->device->tagged_supported && !SCp->device->tagged_queue
-+	if(SCp->device->tagged_supported && !SCp->device->simple_tags &&
- 	   && (hostdata->tag_negotiated &(1<<SCp->device->id)) == 0
- 	   && NCR_700_is_flag_clear(SCp->device, NCR_700_DEV_BEGIN_TAG_QUEUEING)) {
- 		/* upper layer has indicated tags are supported.  We don't
-diff -Nru a/drivers/scsi/AM53C974.c b/drivers/scsi/AM53C974.c
---- a/drivers/scsi/AM53C974.c	Mon Aug 25 13:37:34 2003
-+++ b/drivers/scsi/AM53C974.c	Mon Aug 25 13:37:34 2003
-@@ -1231,8 +1231,8 @@
- 				hostdata->sel_cmd = NULL;
- 				hostdata->selecting = 0;
- #ifdef SCSI2
--				if (!hostdata->connected->device->tagged_queue)
--#endif
-+				if (!hostdata->conneted->device->simple_tags)
-+#else
- 					hostdata->busy[hostdata->connected->device->id] |= (1 << hostdata->connected->device->lun);
- 				/* very strange -- use_sg is sometimes nonzero for request sense commands !! */
- 				if ((hostdata->connected->cmnd[0] == REQUEST_SENSE) && hostdata->connected->use_sg) {
-@@ -1811,7 +1811,7 @@
- 			case HEAD_OF_QUEUE_TAG:
- 			    case ORDERED_QUEUE_TAG:
- 			    case SIMPLE_QUEUE_TAG:
--			    cmd->device->tagged_queue = 0;
-+			    cmd->device->simple_tags = 0;
- 			hostdata->busy[cmd->device->id] |= (1 << cmd->device->lun);
- 			break;
- 			default:
-@@ -1958,7 +1958,7 @@
- #endif
- 
- #ifdef SCSI2
--	if (cmd->device->tagged_queue && (tag != TAG_NONE)) {
-+	if (cmd->device->simple_tags && (tag != TAG_NONE)) {
- 		tmp[1] = SIMPLE_QUEUE_TAG;
- 		if (tag == TAG_NEXT) {
- 			/* 0 is TAG_NONE, used to imply no tag for this command */
-diff -Nru a/drivers/scsi/NCR5380.c b/drivers/scsi/NCR5380.c
---- a/drivers/scsi/NCR5380.c	Mon Aug 25 13:37:34 2003
-+++ b/drivers/scsi/NCR5380.c	Mon Aug 25 13:37:34 2003
-@@ -2514,7 +2514,7 @@
- 					case HEAD_OF_QUEUE_TAG:
- 					case ORDERED_QUEUE_TAG:
- 					case SIMPLE_QUEUE_TAG:
--						cmd->device->tagged_queue = 0;
-+						cmd->device->simple_tags = 0;
- 						hostdata->busy[cmd->device->id] |= (1 << cmd->device->lun);
- 						break;
- 					default:
-diff -Nru a/drivers/scsi/arm/acornscsi.c b/drivers/scsi/arm/acornscsi.c
---- a/drivers/scsi/arm/acornscsi.c	Mon Aug 25 13:37:34 2003
-+++ b/drivers/scsi/arm/acornscsi.c	Mon Aug 25 13:37:34 2003
-@@ -768,7 +768,7 @@
- 	/*
- 	 * tagged queueing - allocate a new tag to this command
- 	 */
--	if (SCpnt->device->tagged_queue) {
-+	if (SCpnt->device->simple_tags) {
- 	    SCpnt->device->current_tag += 1;
- 	    if (SCpnt->device->current_tag == 0)
- 		SCpnt->device->current_tag = 1;
-@@ -1590,7 +1590,7 @@
- 	     */
- 	    printk(KERN_NOTICE "scsi%d.%c: disabling tagged queueing\n",
- 		    host->host->host_no, acornscsi_target(host));
--	    host->SCpnt->device->tagged_queue = 0;
-+	    host->SCpnt->device->simple_tags = 0;
- 	    set_bit(host->SCpnt->device->id * 8 + host->SCpnt->device->lun, host->busyluns);
- 	    break;
- #endif
-@@ -2935,7 +2935,7 @@
- 	p += sprintf(p, "     %d/%d   ", scd->id, scd->lun);
- 	if (scd->tagged_supported)
- 		p += sprintf(p, "%3sabled(%3d) ",
--			     scd->tagged_queue ? "en" : "dis",
-+			     scd->simple_tags ? "en" : "dis",
- 			     scd->current_tag);
- 	else
- 		p += sprintf(p, "unsupported  ");
-diff -Nru a/drivers/scsi/arm/fas216.c b/drivers/scsi/arm/fas216.c
---- a/drivers/scsi/arm/fas216.c	Mon Aug 25 13:37:34 2003
-+++ b/drivers/scsi/arm/fas216.c	Mon Aug 25 13:37:34 2003
-@@ -1819,7 +1819,7 @@
- 	/*
- 	 * tagged queuing - allocate a new tag to this command
- 	 */
--	if (SCpnt->device->tagged_queue && SCpnt->cmnd[0] != REQUEST_SENSE &&
-+	if (SCpnt->device->simple_tags && SCpnt->cmnd[0] != REQUEST_SENSE &&
- 	    SCpnt->cmnd[0] != INQUIRY) {
- 	    SCpnt->device->current_tag += 1;
- 		if (SCpnt->device->current_tag == 0)
-@@ -3012,7 +3012,7 @@
- 		p += sprintf(p, "     %d/%d   ", scd->id, scd->lun);
- 		if (scd->tagged_supported)
- 			p += sprintf(p, "%3sabled(%3d) ",
--				     scd->tagged_queue ? "en" : "dis",
-+				     scd->simple_tags ? "en" : "dis",
- 				     scd->current_tag);
- 		else
- 			p += sprintf(p, "unsupported   ");
-diff -Nru a/drivers/scsi/ncr53c8xx.c b/drivers/scsi/ncr53c8xx.c
---- a/drivers/scsi/ncr53c8xx.c	Mon Aug 25 13:37:34 2003
-+++ b/drivers/scsi/ncr53c8xx.c	Mon Aug 25 13:37:34 2003
-@@ -4357,19 +4357,6 @@
+diff -Nru a/drivers/scsi/cpqfcTSinit.c b/drivers/scsi/cpqfcTSinit.c
+--- a/drivers/scsi/cpqfcTSinit.c	Mon Aug 25 13:37:40 2003
++++ b/drivers/scsi/cpqfcTSinit.c	Mon Aug 25 13:37:40 2003
+@@ -603,7 +603,7 @@
+ 	    return -ENOMEM;
  	}
- 	cp->cmd = cmd;
+         // Now build a Scsi_Request to pass down...
+-        ScsiPassThruReq = scsi_allocate_request(ScsiDev);
++        ScsiPassThruReq = scsi_allocate_request(ScsiDev, GFP_KERNEL);
+ 	if (ScsiPassThruReq == NULL) {
+ 		kfree(buf);
+ 		return -ENOMEM;
+diff -Nru a/drivers/scsi/gdth.c b/drivers/scsi/gdth.c
+--- a/drivers/scsi/gdth.c	Mon Aug 25 13:37:40 2003
++++ b/drivers/scsi/gdth.c	Mon Aug 25 13:37:40 2003
+@@ -4990,7 +4990,7 @@
+         cmd.u.cache.DeviceNo = res.number;
+ #if LINUX_VERSION_CODE >= 0x020503
+         sdev = scsi_get_host_dev(gdth_ctr_tab[hanum]);
+-        srp  = scsi_allocate_request(sdev);
++        srp  = scsi_allocate_request(sdev, GFP_KERNEL);
+         if (!srp)
+             return -ENOMEM;
+         srp->sr_cmd_len = 12;
+@@ -5091,7 +5091,7 @@
  
--	/*---------------------------------------------------
--	**
--	**	Enable tagged queue if asked by scsi ioctl
--	**
--	**----------------------------------------------------
--	*/
--#if 0	/* This stuff was only useful for linux-1.2.13 */
--	if (lp && !lp->numtags && cmd->device && cmd->device->tagged_queue) {
--		lp->numtags = tp->usrtags;
--		ncr_setup_tags (np, cmd->device->id, cmd->device->lun);
--	}
--#endif
--
- 	/*----------------------------------------------------
- 	**
- 	**	Build the identify / tag / sdtr message
-diff -Nru a/drivers/scsi/qla1280.c b/drivers/scsi/qla1280.c
---- a/drivers/scsi/qla1280.c	Mon Aug 25 13:37:34 2003
-+++ b/drivers/scsi/qla1280.c	Mon Aug 25 13:37:34 2003
-@@ -3649,7 +3649,7 @@
- 		(SCSI_TCN_32(cmd) | BIT_7) : SCSI_TCN_32(cmd);
+ #if LINUX_VERSION_CODE >= 0x020503
+         sdev = scsi_get_host_dev(gdth_ctr_tab[hanum]);
+-        srp  = scsi_allocate_request(sdev);
++        srp  = scsi_allocate_request(sdev, GFP_KERNEL);
+         if (!srp)
+             return -ENOMEM;
+         srp->sr_cmd_len = 12;
+@@ -5164,7 +5164,7 @@
+    
+ #if LINUX_VERSION_CODE >= 0x020503
+         sdev = scsi_get_host_dev(gdth_ctr_tab[hanum]);
+-        srp  = scsi_allocate_request(sdev);
++        srp  = scsi_allocate_request(sdev, GFP_KERNEL);
+         if (!srp)
+             return -ENOMEM;
+         srp->sr_cmd_len = 12;
+@@ -5253,7 +5253,7 @@
  
- 	/* Enable simple tag queuing if device supports it. */
--	if (cmd->device->tagged_queue)
-+	if (cmd->device->simple_tags)
- 		pkt->control_flags |= cpu_to_le16(BIT_3);
+ #if LINUX_VERSION_CODE >= 0x020503
+         sdev = scsi_get_host_dev(gdth_ctr_tab[hanum]);
+-        srp  = scsi_allocate_request(sdev);
++        srp  = scsi_allocate_request(sdev, GFP_KERNEL);
+         if (!srp)
+             return -ENOMEM;
+         srp->sr_cmd_len = 12;
+@@ -5631,7 +5631,7 @@
  
- 	/* Load SCSI command packet. */
-@@ -3949,7 +3949,7 @@
- 		(SCSI_TCN_32(cmd) | BIT_7) : SCSI_TCN_32(cmd);
+ #if LINUX_VERSION_CODE >= 0x020503
+     sdev = scsi_get_host_dev(gdth_ctr_tab[hanum]);
+-    srp  = scsi_allocate_request(sdev);
++    srp  = scsi_allocate_request(sdev, GFP_KERNEL);
+     if (!srp)
+         return;
+     srp->sr_cmd_len = 12;
+@@ -5727,7 +5727,7 @@
+         TRACE2(("gdth_halt(): reset controller %d\n", hanum));
+ #if LINUX_VERSION_CODE >= 0x020503
+         sdev = scsi_get_host_dev(gdth_ctr_tab[hanum]);
+-        srp  = scsi_allocate_request(sdev);
++        srp  = scsi_allocate_request(sdev, GFP_KERNEL);
+         if (!srp) {
+ #if LINUX_VERSION_CODE >= 0x020100
+             unregister_reboot_notifier(&gdth_notifier);
+diff -Nru a/drivers/scsi/gdth_proc.c b/drivers/scsi/gdth_proc.c
+--- a/drivers/scsi/gdth_proc.c	Mon Aug 25 13:37:40 2003
++++ b/drivers/scsi/gdth_proc.c	Mon Aug 25 13:37:40 2003
+@@ -44,7 +44,7 @@
  
- 	/* Enable simple tag queuing if device supports it. */
--	if (cmd->device->tagged_queue)
-+	if (cmd->device->simple_tags)
- 		pkt->control_flags |= cpu_to_le16(BIT_3);
+ #if LINUX_VERSION_CODE >= 0x020503
+     sdev = scsi_get_host_dev(gdth_ctr_tab[hanum]);
+-    scp  = scsi_allocate_request(sdev);
++    scp  = scsi_allocate_request(sdev, GFP_KERNEL);
+     if (!scp)
+         return -ENOMEM;
+     scp->sr_cmd_len = 12;
+@@ -797,7 +797,7 @@
  
- 	/* Load SCSI command packet. */
-@@ -4909,7 +4909,7 @@
- 	} else
- 		printk(" Async");
+ #if LINUX_VERSION_CODE >= 0x020503
+     sdev = scsi_get_host_dev(gdth_ctr_tab[hanum]);
+-    scp  = scsi_allocate_request(sdev);
++    scp  = scsi_allocate_request(sdev, GFP_KERNEL);
+     if (!scp)
+         return -ENOMEM;
+     scp->sr_cmd_len = 12;
+diff -Nru a/drivers/scsi/osst.c b/drivers/scsi/osst.c
+--- a/drivers/scsi/osst.c	Mon Aug 25 13:37:40 2003
++++ b/drivers/scsi/osst.c	Mon Aug 25 13:37:40 2003
+@@ -316,7 +316,7 @@
+ 	static   int   repeat = 0;
+ #endif
+ 	if (SRpnt == NULL) {
+-		if ((SRpnt = scsi_allocate_request(STp->device)) == NULL) {
++		if ((SRpnt = scsi_allocate_request(STp->device, GFP_ATOMIC)) == NULL) {
+ 			printk(KERN_ERR "%s:E: Can't get SCSI request.\n", tape_name(STp));
+ 			if (signal_pending(current))
+ 				(STp->buffer)->syscall_result = (-EINTR);
+diff -Nru a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
+--- a/drivers/scsi/scsi.c	Mon Aug 25 13:37:40 2003
++++ b/drivers/scsi/scsi.c	Mon Aug 25 13:37:40 2003
+@@ -113,26 +113,21 @@
+  *
+  * Purpose:     Allocate a request descriptor.
+  *
+- * Arguments:   device    - device for which we want a request
++ * Arguments:   device		- device for which we want a request
++ *		gfp_mask	- allocation flags passed to kmalloc
+  *
+  * Lock status: No locks assumed to be held.  This function is SMP-safe.
+  *
+  * Returns:     Pointer to request block.
+- *
+- * Notes:       With the new queueing code, it becomes important
+- *              to track the difference between a command and a
+- *              request.  A request is a pending item in the queue that
+- *              has not yet reached the top of the queue.
+- *
+- * XXX(hch):	Need to add a gfp_mask argument.
+  */
+-struct scsi_request *scsi_allocate_request(struct scsi_device *sdev)
++struct scsi_request *scsi_allocate_request(struct scsi_device *sdev,
++					   int gfp_mask)
+ {
+ 	const int offset = ALIGN(sizeof(struct scsi_request), 4);
+ 	const int size = offset + sizeof(struct request);
+ 	struct scsi_request *sreq;
+   
+-	sreq = kmalloc(size, GFP_ATOMIC);
++	sreq = kmalloc(size, gfp_mask);
+ 	if (likely(sreq != NULL)) {
+ 		memset(sreq, 0, size);
+ 		sreq->sr_request = (struct request *)(((char *)sreq) + offset);
+diff -Nru a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+--- a/drivers/scsi/scsi_error.c	Mon Aug 25 13:37:40 2003
++++ b/drivers/scsi/scsi_error.c	Mon Aug 25 13:37:40 2003
+@@ -1339,7 +1339,7 @@
+  **/
+ static void scsi_eh_lock_door(struct scsi_device *sdev)
+ {
+-	struct scsi_request *sreq = scsi_allocate_request(sdev);
++	struct scsi_request *sreq = scsi_allocate_request(sdev, GFP_KERNEL);
  
--	if (device->tagged_queue)
-+	if (device->simple_tags)
- 		printk(", Tagged queuing: depth %d", device->queue_depth);
- 	printk("\n");
- }
+ 	if (unlikely(!sreq)) {
+ 		printk(KERN_ERR "%s: request allocate failed,"
 diff -Nru a/drivers/scsi/scsi_ioctl.c b/drivers/scsi/scsi_ioctl.c
---- a/drivers/scsi/scsi_ioctl.c	Mon Aug 25 13:37:34 2003
-+++ b/drivers/scsi/scsi_ioctl.c	Mon Aug 25 13:37:34 2003
-@@ -408,30 +408,6 @@
- 		return 0;
- 	case SCSI_IOCTL_GET_BUS_NUMBER:
- 		return put_user(sdev->host->host_no, (int *)arg);
--	/*
--	 * The next two ioctls either need to go or need to be changed to
--	 * pass tagged queueing changes through the low level drivers.
--	 * Simply enabling or disabling tagged queueing without the knowledge
--	 * of the low level driver is a *BAD* thing.
--	 *
--	 * Oct. 10, 2002 - Doug Ledford <dledford@redhat.com>
--	 */
--	case SCSI_IOCTL_TAGGED_ENABLE:
--		if (!capable(CAP_SYS_ADMIN))
--			return -EACCES;
--		if (!sdev->tagged_supported)
--			return -EINVAL;
--		sdev->tagged_queue = 1;
--		sdev->current_tag = 1;
--		return 0;
--	case SCSI_IOCTL_TAGGED_DISABLE:
--		if (!capable(CAP_SYS_ADMIN))
--			return -EACCES;
--		if (!sdev->tagged_supported)
--			return -EINVAL;
--		sdev->tagged_queue = 0;
--		sdev->current_tag = 0;
--		return 0;
- 	case SCSI_IOCTL_PROBE_HOST:
- 		return ioctl_probe(sdev->host, arg);
- 	case SCSI_IOCTL_SEND_COMMAND:
-diff -Nru a/drivers/scsi/sym53c8xx.c b/drivers/scsi/sym53c8xx.c
---- a/drivers/scsi/sym53c8xx.c	Mon Aug 25 13:37:34 2003
-+++ b/drivers/scsi/sym53c8xx.c	Mon Aug 25 13:37:34 2003
-@@ -6595,19 +6595,6 @@
- 	}
- 	cp->cmd = cmd;
+--- a/drivers/scsi/scsi_ioctl.c	Mon Aug 25 13:37:40 2003
++++ b/drivers/scsi/scsi_ioctl.c	Mon Aug 25 13:37:40 2003
+@@ -98,7 +98,7 @@
  
--	/*---------------------------------------------------
--	**
--	**	Enable tagged queue if asked by scsi ioctl
--	**
--	**----------------------------------------------------
--	*/
--#if 0	/* This stuff was only useful for linux-1.2.13 */
--	if (lp && !lp->numtags && cmd->device && cmd->device->tagged_queue) {
--		lp->numtags = tp->usrtags;
--		ncr_setup_tags (np, cp->target, cp->lun);
--	}
--#endif
--
- 	/*----------------------------------------------------
- 	**
- 	**	Build the identify / tag / sdtr message
-diff -Nru a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
---- a/include/scsi/scsi_device.h	Mon Aug 25 13:37:34 2003
-+++ b/include/scsi/scsi_device.h	Mon Aug 25 13:37:34 2003
-@@ -74,8 +74,6 @@
- 	unsigned wdtr:1;	/* Device supports WDTR messages */
- 	unsigned ppr:1;		/* Device supports PPR messages */
- 	unsigned tagged_supported:1;	/* Supports SCSI-II tagged queuing */
--	unsigned tagged_queue:1;/* This is going away!!!!  Look at simple_tags
--				   instead!!!  Please fix your driver now!! */
- 	unsigned simple_tags:1;	/* simple queue tag messages are enabled */
- 	unsigned ordered_tags:1;/* ordered queue tag messages are enabled */
- 	unsigned single_lun:1;	/* Indicates we should only allow I/O to
+ 	SCSI_LOG_IOCTL(1, printk("Trying ioctl with scsi command %d\n", *cmd));
+ 
+-	sreq = scsi_allocate_request(sdev);
++	sreq = scsi_allocate_request(sdev, GFP_KERNEL);
+ 	if (!sreq) {
+ 		printk("SCSI internal ioctl failed, no memory\n");
+ 		return -ENOMEM;
+@@ -321,7 +321,7 @@
+ 		break;
+ 	}
+ 
+-	sreq = scsi_allocate_request(sdev);
++	sreq = scsi_allocate_request(sdev, GFP_KERNEL);
+         if (!sreq) {
+                 result = -EINTR;
+                 goto error;
+diff -Nru a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+--- a/drivers/scsi/scsi_lib.c	Mon Aug 25 13:37:40 2003
++++ b/drivers/scsi/scsi_lib.c	Mon Aug 25 13:37:40 2003
+@@ -1454,7 +1454,7 @@
+ 		unsigned char *buffer, int len, int timeout, int retries,
+ 		struct scsi_mode_data *data)
+ {
+-	struct scsi_request *sreq = scsi_allocate_request(sdev);
++	struct scsi_request *sreq = scsi_allocate_request(sdev, GFP_KERNEL);
+ 	int ret;
+ 
+ 	if (!sreq)
+diff -Nru a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+--- a/drivers/scsi/scsi_scan.c	Mon Aug 25 13:37:40 2003
++++ b/drivers/scsi/scsi_scan.c	Mon Aug 25 13:37:40 2003
+@@ -693,7 +693,7 @@
+ 	sdev = scsi_alloc_sdev(host, channel, id, lun);
+ 	if (!sdev)
+ 		goto out;
+-	sreq = scsi_allocate_request(sdev);
++	sreq = scsi_allocate_request(sdev, GFP_ATOMIC);
+ 	if (!sreq)
+ 		goto out_free_sdev;
+ 	result = kmalloc(256, GFP_ATOMIC |
+@@ -906,7 +906,7 @@
+ 	if (bflags & BLIST_NOLUN)
+ 		return 0;
+ 
+-	sreq = scsi_allocate_request(sdev);
++	sreq = scsi_allocate_request(sdev, GFP_ATOMIC);
+ 	if (!sreq)
+ 		goto out;
+ 
+diff -Nru a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+--- a/drivers/scsi/sd.c	Mon Aug 25 13:37:40 2003
++++ b/drivers/scsi/sd.c	Mon Aug 25 13:37:40 2003
+@@ -1174,7 +1174,7 @@
+ 	if (!sdp->online)
+ 		goto out;
+ 
+-	sreq = scsi_allocate_request(sdp);
++	sreq = scsi_allocate_request(sdp, GFP_KERNEL);
+ 	if (!sreq) {
+ 		printk(KERN_WARNING "(sd_revalidate_disk:) Request allocation "
+ 		       "failure.\n");
+@@ -1355,12 +1355,12 @@
+ static void sd_shutdown(struct device *dev)
+ {
+ 	struct scsi_device *sdp = to_scsi_device(dev);
+-       struct scsi_disk *sdkp;
++	struct scsi_disk *sdkp;
+ 	struct scsi_request *sreq;
+ 	int retries, res;
+ 
+-       sdkp = dev_get_drvdata(dev);
+-       if (!sdkp)
++	sdkp = dev_get_drvdata(dev);
++	if (!sdkp)
+                return;         /* this can happen */
+ 
+ 	if (!sdp->online || !sdkp->WCE)
+@@ -1369,7 +1369,7 @@
+ 	printk(KERN_NOTICE "Synchronizing SCSI cache for disk %s: ",
+ 			sdkp->disk->disk_name);
+ 
+-	sreq = scsi_allocate_request(sdp);
++	sreq = scsi_allocate_request(sdp, GFP_KERNEL);
+ 	if (!sreq) {
+ 		printk("FAILED\n  No memory for request\n");
+ 		return;
+diff -Nru a/drivers/scsi/sg.c b/drivers/scsi/sg.c
+--- a/drivers/scsi/sg.c	Mon Aug 25 13:37:40 2003
++++ b/drivers/scsi/sg.c	Mon Aug 25 13:37:40 2003
+@@ -680,7 +680,7 @@
+ 		sg_finish_rem_req(srp);
+ 		return -ENODEV;
+ 	}
+-	SRpnt = scsi_allocate_request(sdp->device);
++	SRpnt = scsi_allocate_request(sdp->device, GFP_ATOMIC);
+ 	if (SRpnt == NULL) {
+ 		SCSI_LOG_TIMEOUT(1, printk("sg_write: no mem\n"));
+ 		sg_finish_rem_req(srp);
+diff -Nru a/drivers/scsi/sr.c b/drivers/scsi/sr.c
+--- a/drivers/scsi/sr.c	Mon Aug 25 13:37:40 2003
++++ b/drivers/scsi/sr.c	Mon Aug 25 13:37:40 2003
+@@ -599,7 +599,7 @@
+ 	buffer = kmalloc(512, GFP_KERNEL | GFP_DMA);
+ 	if (!buffer)
+ 		goto Enomem;
+-	SRpnt = scsi_allocate_request(cd->device);
++	SRpnt = scsi_allocate_request(cd->device, GFP_KERNEL);
+ 	if (!SRpnt)
+ 		goto Enomem;
+ 
+diff -Nru a/drivers/scsi/sr_ioctl.c b/drivers/scsi/sr_ioctl.c
+--- a/drivers/scsi/sr_ioctl.c	Mon Aug 25 13:37:40 2003
++++ b/drivers/scsi/sr_ioctl.c	Mon Aug 25 13:37:40 2003
+@@ -82,7 +82,7 @@
+ 	int result, err = 0, retries = 0;
+ 
+ 	SDev = cd->device;
+-	SRpnt = scsi_allocate_request(SDev);
++	SRpnt = scsi_allocate_request(SDev, GFP_KERNEL);
+         if (!SRpnt) {
+                 printk(KERN_ERR "Unable to allocate SCSI request in sr_do_ioctl");
+ 		err = -ENOMEM;
+diff -Nru a/drivers/scsi/st.c b/drivers/scsi/st.c
+--- a/drivers/scsi/st.c	Mon Aug 25 13:37:40 2003
++++ b/drivers/scsi/st.c	Mon Aug 25 13:37:40 2003
+@@ -374,7 +374,7 @@
+ 	unsigned char *bp;
+ 
+ 	if (SRpnt == NULL) {
+-		SRpnt = scsi_allocate_request(STp->device);
++		SRpnt = scsi_allocate_request(STp->device, GFP_ATOMIC);
+ 		if (SRpnt == NULL) {
+ 			DEBC( printk(KERN_ERR "%s: Can't get SCSI request.\n",
+ 				     tape_name(STp)); );
+diff -Nru a/include/scsi/scsi_request.h b/include/scsi/scsi_request.h
+--- a/include/scsi/scsi_request.h	Mon Aug 25 13:37:40 2003
++++ b/include/scsi/scsi_request.h	Mon Aug 25 13:37:40 2003
+@@ -45,7 +45,7 @@
+  					   level driver) of this request */
+ };
+ 
+-extern struct scsi_request *scsi_allocate_request(struct scsi_device *);
++extern struct scsi_request *scsi_allocate_request(struct scsi_device *, int);
+ extern void scsi_release_request(struct scsi_request *);
+ extern void scsi_wait_req(struct scsi_request *, const void *cmnd,
+ 			  void *buffer, unsigned bufflen,
