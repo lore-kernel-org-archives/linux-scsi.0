@@ -1,71 +1,55 @@
-From: Bryan Henderson <hbryan@us.ibm.com>
-Subject: Re: WWN on FC LUN targets
-Date: Tue, 27 Jul 2004 17:54:17 -0700
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Subject: Re: device_suspend() levels [was Re: [patch] ACPI work on aic7xxx]
+Date: Tue, 27 Jul 2004 21:16:55 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <OFD7E2C657.B39E37CA-ON88256EDF.00034E54-88256EDF.0004E839@us.ibm.com>
-References: <20040727205512.24414.qmail@web41403.mail.yahoo.com>
+Message-ID: <1090977414.18239.28.camel@gaston>
+References: <40FD38A0.3000603@optonline.net>
+	 <20040720155928.GC10921@atrey.karlin.mff.cuni.cz>
+	 <40FD4CFA.6070603@optonline.net>
+	 <20040720174611.GI10921@atrey.karlin.mff.cuni.cz>
+	 <40FD6002.4070206@optonline.net> <1090347939.1993.7.camel@gaston>
+	 <40FD65C2.7060408@optonline.net> <1090350609.2003.9.camel@gaston>
+	 <40FD82B1.8030704@optonline.net> <1090356079.1993.12.camel@gaston>
+	 <40FD85A3.2060502@optonline.net> <1090357324.1993.15.camel@gaston>
+	 <410280E9.5040001@optonline.net> <1090684826.1963.6.camel@gaston>
+	 <41029215.1030406@optonline.net> <1090694118.1971.13.camel@gaston>
+	 <4102FC9D.1060100@optonline.net> <1090793440.1987.2.camel@gaston>
+	 <41050EEA.5040107@optonline.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e5.ny.us.ibm.com ([32.97.182.105]:46523 "EHLO e5.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S266702AbUG1AzH (ORCPT
+Received: from gate.crashing.org ([63.228.1.57]:36570 "EHLO gate.crashing.org")
+	by vger.kernel.org with ESMTP id S266749AbUG1BXO (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 27 Jul 2004 20:55:07 -0400
-Received: from northrelay02.pok.ibm.com (northrelay02.pok.ibm.com [9.56.224.150])
-	by e5.ny.us.ibm.com (8.12.10/8.12.9) with ESMTP id i6S0t2jw526990
-	for <linux-scsi@vger.kernel.org>; Tue, 27 Jul 2004 20:55:02 -0400
-Received: from d01ml604.pok.ibm.com (d01av04.pok.ibm.com [9.56.224.64])
-	by northrelay02.pok.ibm.com (8.12.10/NCO/VER6.6) with ESMTP id i6S0uDOK106120
-	for <linux-scsi@vger.kernel.org>; Tue, 27 Jul 2004 20:56:13 -0400
-In-Reply-To: <20040727205512.24414.qmail@web41403.mail.yahoo.com>
+	Tue, 27 Jul 2004 21:23:14 -0400
+In-Reply-To: <41050EEA.5040107@optonline.net>
 List-Id: linux-scsi@vger.kernel.org
-To: Rock Gordon <rockgordon@yahoo.com>
-Cc: linux-scsi@vger.kernel.org
+To: Nathan Bryant <nbryant@optonline.net>
+Cc: linux-scsi@vger.kernel.org, Pavel Machek <pavel@ucw.cz>
 
->I am looking at ways to find out particular WWN (world
->wide names) for SCSI target LUNs 
 
-LUNS don't actually have fibre channel WWNs.  And neither do SCSI logical 
-units, which is probably what you meant (a LUN is a logical unit number). 
-WWNs come in two flavors - World Wide Node Name (WWNN), which identifies a 
-SCSI target, and World Wide Port Name (WWPN), which identifies a port on a 
-target.  Neither of those is what you want, since you probably have 
-multiple logical units per target.
+> For suspend/resume and also initialization on bootup. We're not saving 
+> the chip state for PIIX so I assume we're hoping that ACPI does it for us
 
-If you're like most FC users, your LUNs aren't stable even within a 
-target, so you can't use a combination of WWNN and LUN either.
+ah, that part, yes, well, we hope ;) though it may just come back up
+in the right state for normal PIO access, and we do restore the DMA
+state by calling dma_check again in the ide-disk wakeup code.
 
-So what people use is either SCSI device serial number or SCSI device ID. 
-The latter is newer and better.  There are device IDs for targets, ports, 
-and logical units.  There are device IDs in each of various name spaces, 
-some defined by public standards.  You can read all about that in SCSI 
-specifications.  Device IDs are part of the Vital Product Data (VPD).
+> > We need to issue the stuff from the low level driver (like aix7xxx) or
+> > the disk, that is sd, but we should make sure sg etc... also properly
+> > call the stuff, actually, look at IDE, I defined the special power
+> > request to act as a state machine once down the queue so the ide layer
+> > acts differently for disks, cdroms, etc... by sending appropriate
+> > commands like standby for disks.
+> 
+> There's another one - synchronize cache or disable write back cache on 
+> the drive....
 
-The basic programming interface to get that information is the SCSI 
-INQUIRY command.
+Yes, whatever. STANDBYNOW1 is enough on IDE (it does sync. the cache),
+though I don't think we "restore" the state of the write back cache,
+so that could be a good idea to add too :)
 
-People have written programs to do the INQUIRY and give you the results in 
-usable form and even create the device special files named after the 
-device IDs.  I'm afraid I can't name one at the moment, but I hope someone 
-else on the list chimes in with the specifics.
-
-You could do this with devfs, but you'd be happier doing it with a user 
-space program that just queries the devices at all the relevant 
-major/minor number combinations and creates the /dev files you want.  And 
-the same for responding to hotplug events.  In Linux 2.6, that process is 
-even formalized in 'udev'.
-
-This is, by the way, something people have been doing for years.  It's 
-only starting to become standard so that everyone doesn't have to write 
-his own.
-
->I can mount particular [logical units] from any
->server without worrying about changes in the device
->naming conventions.
-
-Of course, naming conventions are the least of your problems.  When you 
-try to use the /dev/sda etc. names, they will change every time the 
-slightest thing in your system changes -- recabling, adding adapter cards, 
-changing adapter card brand, creating new LUs, and on and on.  And they 
-will be different on every system.
+Ben
+ 
 
