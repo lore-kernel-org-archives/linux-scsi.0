@@ -1,421 +1,298 @@
-From: Willem Riede <wrlk@riede.org>
-Subject: Re: [PATCH] Updated osst driver for 2.6.x
-Date: Tue, 23 Dec 2003 16:29:50 -0500
+From: Andres Salomon <dilinger@voxel.net>
+Subject: [PATCH] final CardServices() removal patches
+Date: Wed, 24 Dec 2003 02:49:21 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20031223212950.GW1277@linnie.riede.org>
-References: <20031223174320.GU1277@linnie.riede.org> <20031223192626.A10262@infradead.org>
-Reply-To: wrlk@riede.org
+Message-ID: <1072252160.16679.9.camel@spiral.internal>
+References: <1072229780.5300.69.camel@spiral.internal>
+	 <20031223182817.0bd3dd3c.akpm@osdl.org>  <3FE8FC2E.3080701@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-HwG/peM2Ol2ZQAK6gLEa"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sccrmhc11.comcast.net ([204.127.202.55]:17560 "EHLO
-	sccrmhc11.comcast.net") by vger.kernel.org with ESMTP
-	id S262353AbTLWV3v (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 23 Dec 2003 16:29:51 -0500
-Content-Disposition: inline
-In-Reply-To: <20031223192626.A10262@infradead.org> (from hch@infradead.org on Tue, Dec 23, 2003 at 14:26:26 -0500)
+Received: from zero.voxel.net ([209.123.232.253]:16091 "EHLO zero.voxel.net")
+	by vger.kernel.org with ESMTP id S263462AbTLXHtW (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 24 Dec 2003 02:49:22 -0500
+In-Reply-To: <3FE8FC2E.3080701@pobox.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: akpm@osdl.org
+Cc: linux-kernel@vger.kernel.org, linux-pcmcia@lists.infradead.org, maxk@qualcomm.com, marcel@holtmann.org, kkeil@suse.de, mtd@infradead.org, linux-scsi@vger.kernel.org
 
-On 2003.12.23 14:26, Christoph Hellwig wrote:
-> On Tue, Dec 23, 2003 at 12:43:20PM -0500, Willem Riede wrote:
-> > - Supports a proc file for each drive (/proc/scsi/osst/osstX) which provides
-> >   ADRversion_major.minor linux_media_version first_data_ppos eod_frame_ppos filemrk_cnt
-> 
-> Please don't.  This is exactly what sysfs is for.
-> 
-I was afraid you were going to say that :-)
 
-The 2.4 version I have on the osst web site has had this /proc file for some time,
-and I simply copied the logic over.
+--=-HwG/peM2Ol2ZQAK6gLEa
+Content-Type: multipart/mixed; boundary="=-FyaTtqSkY/dJSsMorzKV"
 
-But if you don't want me to go there, I won't. I'll come back later with a sysfs
-version that provides that info. One question: should each parameter be in its
-own little file, or can I create them all on one line as I do now?
 
-In the mean time, here is the patch without the offending pieces.
+--=-FyaTtqSkY/dJSsMorzKV
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Is this OK? Thanks, Willem Riede.
+Remove calls to CardServices(); final.
 
---------  start patch  --------
---- drivers/scsi/osst.c.orig	2003-12-17 21:58:49.000000000 -0500
-+++ drivers/scsi/osst.c	2003-12-23 09:31:52.086888871 -0500
-@@ -16,15 +16,15 @@
-   Copyright 1992 - 2002 Kai Makisara / Willem Riede
- 	 email Kai.Makisara@metla.fi / osst@riede.org
- 
--  $Header: /home/cvsroot/Driver/osst.c,v 1.68 2002/12/23 16:33:36 riede Exp $
-+  $Header: /cvsroot/osst/Driver/osst.c,v 1.70 2003/12/23 14:22:12 wriede Exp $
- 
-   Microscopic alterations - Rik Ling, 2000/12/21
-   Last st.c sync: Tue Oct 15 22:01:04 2002 by makisara
-   Some small formal changes - aeb, 950809
- */
- 
--static const char * cvsid = "$Id: osst.c,v 1.68 2002/12/23 16:33:36 riede Exp $";
--const char * osst_version = "0.99.0";
-+static const char * cvsid = "$Id: osst.c,v 1.70 2003/12/23 14:22:12 wriede Exp $";
-+const char * osst_version = "0.99.1";
- 
- /* The "failure to reconnect" firmware bug */
- #define OSST_FW_NEED_POLL_MIN 10601 /*(107A)*/
-@@ -846,9 +847,6 @@
- 	/* TODO: Error handling */
- 	if (STp->poll)
- 		retval = osst_wait_frame (STp, aSRpnt, STp->first_frame_position, 0, timeout);
--#if 0// DEBUG
--	printk ("osst_read: wait for frame returned %i\n", retval);
--#endif
- 	
- 	memset(cmd, 0, MAX_COMMAND_SIZE);
- 	cmd[0] = READ_6;
-@@ -1279,14 +1277,14 @@
- 	Scsi_Request  * SRpnt = * aSRpnt;
- 	unsigned char * buffer, * p;
- 	unsigned char	cmd[MAX_COMMAND_SIZE];
--	int             flag, new_frame, i;
--	int             nframes          = STp->cur_frames;
--	int             blks_per_frame   = ntohs(STp->buffer->aux->dat.dat_list[0].blk_cnt);
--	int             frame_seq_number = ntohl(STp->buffer->aux->frame_seq_num)
-+	int		flag, new_frame, i;
-+	int		nframes          = STp->cur_frames;
-+	int		blks_per_frame   = ntohs(STp->buffer->aux->dat.dat_list[0].blk_cnt);
-+	int		frame_seq_number = ntohl(STp->buffer->aux->frame_seq_num)
- 						- (nframes + pending - 1);
--	int             logical_blk_num  = ntohl(STp->buffer->aux->logical_blk_num) 
-+	int		logical_blk_num  = ntohl(STp->buffer->aux->logical_blk_num) 
- 						- (nframes + pending - 1) * blks_per_frame;
--	char          * name             = tape_name(STp);
-+	char	      * name             = tape_name(STp);
- 	unsigned long	startwait        = jiffies;
- #if DEBUG
- 	int		dbg              = debugging;
-@@ -1472,7 +1470,7 @@
- {
- 	unsigned char	cmd[MAX_COMMAND_SIZE];
- 	Scsi_Request  * SRpnt;
--	char          * name      = tape_name(STp);
-+	char	      * name      = tape_name(STp);
- 	int		expected  = 0;
- 	int		attempts  = 1000 / skip;
- 	int		flag      = 1;
-@@ -2189,6 +2187,7 @@
- 	if (ppos == 5 || ppos == 0xbae || STp->buffer->syscall_result) {
- 		if (osst_set_frame_position(STp, aSRpnt, ppos, 0))
- 			printk(KERN_WARNING "%s:W: Couldn't position tape\n", name);
-+		osst_wait_ready(STp, aSRpnt, 60 * 15, 0);
- 		if (osst_initiate_read (STp, aSRpnt)) {
- 			printk(KERN_WARNING "%s:W: Couldn't initiate read\n", name);
- 			return 0;
-@@ -2817,7 +2816,29 @@
- 	return result;
- }
- 
-+static int osst_write_trailer(OS_Scsi_Tape *STp, Scsi_Request ** aSRpnt, int leave_at_EOT)
-+{
-+	ST_partstat * STps = &(STp->ps[STp->partition]);
-+	int result = 0;
-+
-+	if (STp->write_type != OS_WRITE_NEW_MARK) {
-+		/* true unless the user wrote the filemark for us */
-+		result = osst_flush_drive_buffer(STp, aSRpnt);
-+		if (result < 0) goto out;
-+		result = osst_write_filemark(STp, aSRpnt);
-+		if (result < 0) goto out;
-+
-+		if (STps->drv_file >= 0)
-+			STps->drv_file++ ;
-+		STps->drv_block = 0;
-+	}
-+	result = osst_write_eod(STp, aSRpnt);
-+	osst_write_header(STp, aSRpnt, leave_at_EOT);
- 
-+	STps->eof = ST_FM;
-+out:
-+	return result;
-+}
- 
+This removes the CardServices() calls the rest of the tree, as well as
+CardServices itself from cs.c and cs.h.  My previous patches, along w/
+Arjan's patch for ide-cs.c and Russell's patch for serial_cs.c should
+remove all traces of it.  I've attached a gzipped tarball to hopefully
+make things easier.
 
- /* osst versions of st functions - augmented and stripped to suit OnStream only */
- 
-@@ -2935,7 +2956,7 @@
- 					result = (-EIO);
- 				}
- 			}
--			STps->drv_block = (-1);
-+			STps->drv_block = (-1);		/* FIXME - even if write recovery succeeds? */
- 		}
- 		else {
- 			STp->first_frame_position++;
-@@ -3628,7 +3649,7 @@
- 	/* Change the eof state if no data from tape or buffer */
- 	if (total == 0) {
- 		if (STps->eof == ST_FM_HIT) {
--			STps->eof = (STp->first_frame_position >= STp->eod_frame_ppos)?ST_EOD:ST_FM;
-+			STps->eof = (STp->first_frame_position >= STp->eod_frame_ppos)?ST_EOD_2:ST_FM;
- 			STps->drv_block = 0;
- 			if (STps->drv_file >= 0)
- 				STps->drv_file++;
-@@ -4037,8 +4058,8 @@
- 		if (debugging)
- 		   printk(OSST_DEB_MSG "%s:D: Spacing to end of recorded medium.\n", name);
- #endif
--		osst_set_frame_position(STp, &SRpnt, STp->eod_frame_ppos, 0);
--	if (osst_get_logical_frame(STp, &SRpnt, -1, 0) < 0) {
-+		if ((osst_position_tape_and_confirm(STp, &SRpnt, STp->eod_frame_ppos) < 0) ||
-+			    (osst_get_logical_frame(STp, &SRpnt, -1, 0)               < 0)) {
- 		   ioctl_result = -EIO;
- 		   goto os_bypass;
- 		}
-@@ -4076,6 +4097,23 @@
- 		break;
- 
- 	 case MTSETBLK:           /* Set block length */
-+		 if ((STps->drv_block == 0 )			  &&
-+		     !STp->dirty				  &&
-+		     ((STp->buffer)->buffer_bytes == 0)		  &&
-+		     ((arg & MT_ST_BLKSIZE_MASK) >= 512 )	  && 
-+		     ((arg & MT_ST_BLKSIZE_MASK) <= OS_DATA_SIZE) &&
-+		     !(OS_DATA_SIZE % (arg & MT_ST_BLKSIZE_MASK))  ) {
-+			 /*
-+			  * Only allowed to change the block size if you opened the
-+			  * device at the beginning of a file before writing anything.
-+			  * Note, that when reading, changing block_size is futile,
-+			  * as the size used when writing overrides it.
-+			  */
-+			 STp->block_size = (arg & MT_ST_BLKSIZE_MASK);
-+			 printk(KERN_INFO "%s:I: Block size set to %d bytes.\n",
-+					   name, STp->block_size);
-+			 return 0;
-+		 }
- 	 case MTSETDENSITY:       /* Set tape density */
- 	 case MTSETDRVBUFFER:     /* Set drive buffering */
- 	 case SET_DENS_AND_BLK:   /* Set density and block size */
-@@ -4083,11 +4121,11 @@
- 		 if (STp->dirty || (STp->buffer)->buffer_bytes != 0)
- 			 return (-EIO);       /* Not allowed if data in buffer */
- 		 if ((cmd_in == MTSETBLK || cmd_in == SET_DENS_AND_BLK) &&
--		   (arg & MT_ST_BLKSIZE_MASK) != 0 &&
--		   ((arg & MT_ST_BLKSIZE_MASK) < STp->min_block ||
--		    (arg & MT_ST_BLKSIZE_MASK) > STp->max_block ||
--		    (arg & MT_ST_BLKSIZE_MASK) > osst_buffer_size)) {
--			 printk(KERN_WARNING "%s:W: Illegal block size.\n", name);
-+		     (arg & MT_ST_BLKSIZE_MASK) != 0                    &&
-+		     (arg & MT_ST_BLKSIZE_MASK) != STp->block_size       ) {
-+			 printk(KERN_WARNING "%s:W: Illegal to set block size to %d%s.\n",
-+						name, (int)(arg & MT_ST_BLKSIZE_MASK),
-+						(OS_DATA_SIZE % (arg & MT_ST_BLKSIZE_MASK))?"":" now");
- 			 return (-EINVAL);
- 		 }
- 		 return 0;  /* FIXME silently ignore if block size didn't change */
-@@ -4592,22 +4630,7 @@
- 					       name, STp->nbr_waits, STp->nbr_finished);
- 		}
- #endif
--		if (STp->write_type != OS_WRITE_NEW_MARK) {
--			/* true unless the user wrote the filemark for us */
--			result = osst_flush_drive_buffer(STp, &SRpnt);
--			if (result < 0) goto out;
--			result = osst_write_filemark(STp, &SRpnt);
--			if (result < 0) goto out;
--
--			if (STps->drv_file >= 0)
--				STps->drv_file++ ;
--			STps->drv_block = 0;
--		}
--		result = osst_write_eod(STp, &SRpnt);
--		osst_write_header(STp, &SRpnt, !(STp->rew_at_close));
--
--		STps->eof = ST_FM;
--
-+		result = osst_write_trailer(STp, &SRpnt, !(STp->rew_at_close));
- #if DEBUG
- 		if (debugging)
- 			printk(OSST_DEB_MSG "%s:D: Buffer flushed, %d EOF(s) written\n",
-@@ -4618,7 +4641,7 @@
- 		STps = &(STp->ps[STp->partition]);
- 		if (!STm->sysv || STps->rw != ST_READING) {
- 			if (STp->can_bsr)
--		result = osst_flush_buffer(STp, &SRpnt, 0);	/* this is the default path */
-+				result = osst_flush_buffer(STp, &SRpnt, 0); /* this is the default path */
- 			else if (STps->eof == ST_FM_HIT) {
- 				result = cross_eof(STp, &SRpnt, FALSE);
- 					if (result) {
-@@ -4633,7 +4656,7 @@
- 		}
- 		else if ((STps->eof == ST_NOEOF &&
- 			  !(result = cross_eof(STp, &SRpnt, TRUE))) ||
--			  STps->eof == ST_FM_HIT) {
-+			 STps->eof == ST_FM_HIT) {
- 			if (STps->drv_file >= 0)
- 				STps->drv_file++;
- 			STps->drv_block = 0;
-@@ -4736,6 +4759,7 @@
- #endif
- 	if (cmd_type == _IOC_TYPE(MTIOCTOP) && cmd_nr == _IOC_NR(MTIOCTOP)) {
- 		struct mtop mtc;
-+		int    auto_weof = 0;
- 
- 		if (_IOC_SIZE(cmd_in) != sizeof(mtc)) {
- 			retval = (-EINVAL);
-@@ -4812,10 +4836,41 @@
- 			STp->device->was_reset = 0;
- 		}
- 
--		if (mtc.mt_op != MTNOP && mtc.mt_op != MTWEOF && mtc.mt_op != MTWSM &&
--		    mtc.mt_op != MTSETDENSITY && mtc.mt_op != MTSETBLK &&
--		    mtc.mt_op != MTSETDRVBUFFER && mtc.mt_op != MTSETPART)
--			STps->rw = ST_IDLE;  /* Prevent automatic WEOF and fsf */
-+		if (mtc.mt_op != MTCOMPRESSION  && mtc.mt_op != MTLOCK         &&
-+		    mtc.mt_op != MTNOP          && mtc.mt_op != MTSETBLK       &&
-+		    mtc.mt_op != MTSETDENSITY   && mtc.mt_op != MTSETDRVBUFFER && 
-+		    mtc.mt_op != MTMKPART       && mtc.mt_op != MTSETPART      &&
-+		    mtc.mt_op != MTWEOF         && mtc.mt_op != MTWSM           ) {
-+
-+			/*
-+			 * The user tells us to move to another position on the tape.
-+			 * If we were appending to the tape content, that would leave
-+			 * the tape without proper end, in that case write EOD and
-+			 * update the header to reflect its position.
-+			 */
-+#if DEBUG
-+			printk(KERN_WARNING "%s:D: auto_weod %s at ffp=%d,efp=%d,fsn=%d,lbn=%d,fn=%d,bn=%d\n", name,
-+					STps->rw >= ST_WRITING ? "write" : STps->rw == ST_READING ? "read" : "idle",
-+					STp->first_frame_position, STp->eod_frame_ppos, STp->frame_seq_number,
-+					STp->logical_blk_num, STps->drv_file, STps->drv_block );
-+#endif
-+			if (STps->rw >= ST_WRITING && STp->first_frame_position >= STp->eod_frame_ppos) {
-+				auto_weof = ((STp->write_type != OS_WRITE_NEW_MARK) &&
-+							!(mtc.mt_op == MTREW || mtc.mt_op == MTOFFL));
-+				i = osst_write_trailer(STp, &SRpnt,
-+							!(mtc.mt_op == MTREW || mtc.mt_op == MTOFFL));
-+#if DEBUG
-+				printk(KERN_WARNING "%s:D: post trailer xeof=%d,ffp=%d,efp=%d,fsn=%d,lbn=%d,fn=%d,bn=%d\n",
-+						name, auto_weof, STp->first_frame_position, STp->eod_frame_ppos,
-+						STp->frame_seq_number, STp->logical_blk_num, STps->drv_file, STps->drv_block );
-+#endif
-+				if (i < 0) {
-+					retval = i;
-+					goto out;
-+				}
-+			}
-+			STps->rw = ST_IDLE;
-+		}
- 
- 		if (mtc.mt_op == MTOFFL && STp->door_locked != ST_UNLOCKED)
- 			do_door_lock(STp, 0);  /* Ignore result! */
-@@ -4873,11 +4928,15 @@
- 			retval = do_door_lock(STp, (mtc.mt_op == MTLOCK));
- 			goto out;
- 		}
--			
-+
-+		if (auto_weof)
-+			cross_eof(STp, &SRpnt, FALSE);
-+
- 		if (mtc.mt_op == MTCOMPRESSION)
--			retval = -EINVAL /*osst_compression(STp, (mtc.mt_count & 1))*/;
-+			retval = -EINVAL;       /* OnStream drives don't have compression hardware */
- 		else
--
-+			/* MTBSF MTBSFM MTBSR MTBSS MTEOM MTERASE MTFSF MTFSFB MTFSR MTFSS
-+			 * MTLOAD MTOFFL MTRESET MTRETEN MTREW MTUNLOAD MTWEOF MTWSM */
- 			retval = osst_int_ioctl(STp, &SRpnt, mtc.mt_op, mtc.mt_count);
- 		goto out;
- 	}
-@@ -5527,37 +5646,37 @@
- 
- static int osst_remove(struct device *dev)
- {
--  Scsi_Device * SDp = to_scsi_device(dev);
--  OS_Scsi_Tape * tpnt;
--  int i, mode;
--
--  if ((SDp->type != TYPE_TAPE) || (osst_nr_dev <= 0))
--	  return 0;
--
--  write_lock(&os_scsi_tapes_lock);
--  for(i=0; i < osst_max_dev; i++) {
--	if((tpnt = os_scsi_tapes[i]) && (tpnt->device == SDp)) {
--		tpnt->device = NULL;
--		for (mode = 0; mode < ST_NBR_MODES; ++mode) {
--			devfs_remove("%s/ot%s", SDp->devfs_name, osst_formats[mode]);
--			devfs_remove("%s/ot%sn", SDp->devfs_name, osst_formats[mode]);
--		}
--		devfs_unregister_tape(tpnt->drive->number);
--		put_disk(tpnt->drive);
--		os_scsi_tapes[i] = NULL;
--		osst_nr_dev--;
--		write_unlock(&os_scsi_tapes_lock);
--		if (tpnt->header_cache != NULL) vfree(tpnt->header_cache);
--		if (tpnt->buffer) {
--			normalize_buffer(tpnt->buffer);
--			kfree(tpnt->buffer);
--		}
--		kfree(tpnt);
-+	Scsi_Device  * SDp = to_scsi_device(dev);
-+	OS_Scsi_Tape * tpnt;
-+	int i, mode;
-+
-+	if ((SDp->type != TYPE_TAPE) || (osst_nr_dev <= 0))
- 		return 0;
-+
-+	write_lock(&os_scsi_tapes_lock);
-+	for(i=0; i < osst_max_dev; i++) {
-+		if((tpnt = os_scsi_tapes[i]) && (tpnt->device == SDp)) {
-+			tpnt->device = NULL;
-+			for (mode = 0; mode < ST_NBR_MODES; ++mode) {
-+				devfs_remove("%s/ot%s", SDp->devfs_name, osst_formats[mode]);
-+				devfs_remove("%s/ot%sn", SDp->devfs_name, osst_formats[mode]);
-+			}
-+			devfs_unregister_tape(tpnt->drive->number);
-+			put_disk(tpnt->drive);
-+			os_scsi_tapes[i] = NULL;
-+			osst_nr_dev--;
-+			write_unlock(&os_scsi_tapes_lock);
-+			if (tpnt->header_cache != NULL) vfree(tpnt->header_cache);
-+			if (tpnt->buffer) {
-+				normalize_buffer(tpnt->buffer);
-+				kfree(tpnt->buffer);
-+			}
-+			kfree(tpnt);
-+			return 0;
-+		}
- 	}
--  }
--  write_unlock(&os_scsi_tapes_lock);
--  return 0;
-+	write_unlock(&os_scsi_tapes_lock);
-+	return 0;
- }
- 
- static int __init init_osst(void) 
---- drivers/scsi/osst.h.orig	2003-12-17 21:59:05.000000000 -0500
-+++ drivers/scsi/osst.h	2003-12-14 14:34:38.000000000 -0500
-@@ -1,12 +1,11 @@
- /*
-- *	$Header: /home/cvsroot/Driver/osst.h,v 1.12 2001/10/11 00:30:15 riede Exp $
-+ *	$Header: /cvsroot/osst/Driver/osst.h,v 1.14 2003/12/14 14:34:38 wriede Exp $
-  */
- 
- #include <asm/byteorder.h>
- #include <linux/config.h>
- #include <linux/completion.h>
- 
--
- /*	FIXME - rename and use the following two types or delete them!
-  *              and the types really should go to st.h anyway...
-  *	INQUIRY packet command - Data Format (From Table 6-8 of QIC-157C)
---- drivers/scsi/osst_options.h.orig	2003-12-17 22:00:00.000000000 -0500
-+++ drivers/scsi/osst_options.h	2003-12-23 09:31:57.708132856 -0500
-@@ -8,7 +8,7 @@
-    Changed (and renamed) for OnStream SCSI drives garloff@suse.de
-    2000-06-21
- 
--   $Header: /home/cvsroot/Driver/osst_options.h,v 1.5 2001/01/07 22:19:15 riede Exp $
-+   $Header: /cvsroot/osst/Driver/osst_options.h,v 1.6 2003/12/23 14:22:12 wriede Exp $
- */
- 
- #ifndef _OSST_OPTIONS_H
---------   end patch  ---------
+Files touched:
+                                                                           =
+ 201-cs_remove.patch:+++ mod/sound/pcmcia/vx/vx_entry.c
+202-cs_remove.patch:+++ mod/drivers/bluetooth/bluecard_cs.c
+202-cs_remove.patch:+++ mod/drivers/bluetooth/bt3c_cs.c
+202-cs_remove.patch:+++ mod/drivers/bluetooth/btuart_cs.c
+202-cs_remove.patch:+++ mod/drivers/bluetooth/dtl1_cs.c
+203-cs_remove.patch:+++ mod/drivers/isdn/hardware/avm/avm_cs.c
+203-cs_remove.patch:+++ mod/drivers/isdn/hisax/avma1_cs.c
+203-cs_remove.patch:+++ mod/drivers/isdn/hisax/elsa_cs.c
+203-cs_remove.patch:+++ mod/drivers/isdn/hisax/sedlbauer_cs.c
+204-cs_remove.patch:+++ mod/drivers/parport/parport_cs.c
+205-cs_remove.patch:+++ mod/drivers/telephony/ixj_pcmcia.c
+206-cs_remove.patch:+++ mod/drivers/mtd/maps/pcmciamtd.c
+207-cs_remove.patch:+++ mod/drivers/scsi/pcmcia/aha152x_stub.c
+207-cs_remove.patch:+++ mod/drivers/scsi/pcmcia/fdomain_stub.c
+207-cs_remove.patch:+++ mod/drivers/scsi/pcmcia/nsp_cs.c
+207-cs_remove.patch:+++ mod/drivers/scsi/pcmcia/nsp_cs.h
+207-cs_remove.patch:+++ mod/drivers/scsi/pcmcia/qlogic_stub.c
+208-cs_remove.patch:+++ mod/drivers/char/pcmcia/synclink_cs.c
+209-cs_remove.patch:+++ mod/drivers/pcmcia/cs.c
+209-cs_remove.patch:+++ mod/include/pcmcia/cs.h
+
+(Andrew, if you have problems w/ mime encoding or anything, you can also
+grab patches from http://sloth.voxel.net/~dilinger/kernel/cs_removal/)
+
+
+--=-FyaTtqSkY/dJSsMorzKV
+Content-Disposition: attachment; filename=cs_remove3.tar.gz
+Content-Type: application/x-compressed-tar; name=cs_remove3.tar.gz
+Content-Transfer-Encoding: base64
+
+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
+pv+f9D9keF6RAJABAG==
+
+--=-FyaTtqSkY/dJSsMorzKV--
+
+--=-HwG/peM2Ol2ZQAK6gLEa
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.2.3 (GNU/Linux)
+
+iD8DBQA/6UUA78o9R9NraMQRAudTAKCwd9UNzRA/cdfp430POrVWrnNoNgCcDyFI
+LhzqEdzu99PwFVRD9Rl/plw=
+=m+TB
+-----END PGP SIGNATURE-----
+
+--=-HwG/peM2Ol2ZQAK6gLEa--
+
