@@ -1,63 +1,93 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: possible use-after-free in 2.5.44 scsi changes
-Date: Thu, 31 Oct 2002 16:12:12 +0100
+From: Mike Brown <mbrown@emc.com>
+Subject: [PATCH] Ghost devices being reported with AIC7XXX version 6.2.6
+Date: Thu, 31 Oct 2002 12:03:37 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20021031151212.GG6549@suse.de>
-References: <20021030213619.A183086E82@primary.mx.nitric.com> <200210302219.g9UMJ5w05948@eng2.beaverton.ibm.com> <20021031150408.GF6549@suse.de>
+Message-ID: <20021031170337.GO574@lapi0061>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20021031150408.GF6549@suse.de>
 List-Id: linux-scsi@vger.kernel.org
-To: Badari Pulavarty <badari@us.ibm.com>
-Cc: merlin hughes <merlin@merlin.org>, linux-scsi@vger.kernel.org
+To: bferjul@emc.com, jkrasner@emc.com, gibbs@FreeBSD.org
+Cc: conway_heather@emc.com, linux-scsi@vger.kernel.org
 
-On Thu, Oct 31 2002, Jens Axboe wrote:
-> On Wed, Oct 30 2002, Badari Pulavarty wrote:
-> > > >- Badari
-> > > 
-> > > Hi; if it's of any use, the patch doesn't seem to solve the scsi
-> > > problem for me (2.5.44-bk3-badari). I get the usual 'Incorrect number
-> > > of segments...' and random kernel death during the boot process.
-> > > 
-> > > Merlin
-> > 
-> > Hi Merlin,
-> > 
-> > I am looking at the output  of your problem ..
-> > 
-> > 
-> > Oct 28 12:36:09 badb kernel: Incorrect number of segments after building list 
-> > Oct 28 12:36:09 badb kernel: counted 2, received 1 
-> > Oct 28 12:36:09 badb kernel: req nr_sec 8, cur_nr_sec 8 
-> > Oct 28 12:36:09 badb kernel: end_request: I/O error, dev 08:40, sector 6784528 
-> > Oct 28 12:36:09 badb kernel: raid5: Disk failure on scsi/host0/bus0/target4/lun0/part7, disabling device. Operation continuing on 4 devices 
-> > 
-> > Huh !! Your IO size is only 4K. You are using 2 sg entries ?
-> 
-> Even weirder, nr_sec == cur_nr_sec so there can only be one segment or
-> something is corrupted...
+Hi,
 
-Ah wait, I think I may know at least what is happening in this case.
-I've seen numerous reports of software raid problems botching bio's, and
-this above one could easily be explained with one of the bio's having
-!bi_size. In fact, it's about the only explanation, otherwise there's
-just no way we can have nr_sec == cur_nr_sec unless only _one_ bio is
-attached to the request.
+It seems the kernel reintroduced a bug that I fixed a year ago
+regarding phantom devices being reported by the aic7xxx driver.
+The problem is that the AIC driver defines the maximum LUs it
+supports as 64 (aic7xxx.h:#define AHC_NUM_LUNS 64).  Symmetrix
+reports SCSI_2 devices which according to the spec means no
+target supports more than 8 LUs (LUN 0-7) per target id.  However,
+since the Symmetrix can be configured to support more than 8 LUs per
+target id, its tagged in the blacklist with the BLIST_LARGELUN flag,
+which trips the scanning code into treating the Symmetrix as a
+SCSI_3 device:
 
-Merlin, please also add a
+drivers/scsi/scsi_scan.c:
 
-	blk_dump_rq_flags(req, "scsi_init_io");
+	{"EMC", "SYMMETRIX", "*", BLIST_SPARSELUN | BLIST_LARGELUN | BLIST_FORCELUN},
 
-to drivers/scsi/scsi_lib.c:scsi_init_io() before it calls
-scsi_end_request() and kills the request (right after the incorrect
-segment complaining).
+..........
 
-Badari, I'm not so sure that Merlin's and your bug are the same. Is
-yours solved by the patch I sent out earlier? AFAICT, that should fix
-the segment miscounting.
+	/* don't probe further for luns > 7 for targets <= SCSI_2 */
+	if ((lun0_sl < SCSI_3) && (lun > 7))
+		break;
 
--- 
-Jens Axboe
+	if (!scan_scsis_single(channel, order_dev, lun, lun0_sl,
+			       &max_dev_lun, &sparse_lun, &SDpnt, shpnt,
+			       scsi_result) && !sparse_lun)
+		break;	/* break means don't probe further for luns!=0 */
+	if (SDpnt && (0 == lun)) {
+		int bflags = get_device_flags (scsi_result);
+		if (bflags & BLIST_LARGELUN)
+			lun0_sl = SCSI_3; /* treat as SCSI 3 */
+		else
+			lun0_sl = SDpnt->scsi_level;
 
+
+This isn't a problem so far until we start scanning LUN > 31.  The
+SCSI_3 IDENTIFY Message Format defines 6 bits for LUN, but since
+Symmetrix reports its devices as SCSI_2, we follow the SCSI_2 IDENTIFY
+Message Format which defines 3 bits for the LUNTRN, and we also
+use the 2 reserved bits which gives us 5 bits or 32 LUs.  So, when
+the SCSI subsystem begins scanning for LUNs > 31, the aic7xxx driver
+reports devices that are actually (LUN & 0x0000001f) and LUNs that
+have already been reported are re-reported, hence the phantom device
+problem.
+
+Justin can you change AHC_NUM_LUNS to 32 or suggest an alternative fix?
+
+Alternatively a new BLIST_FLAG could be defined.  This also has its
+problems because Fibre attached Symm's work with LUN > 31 without
+problems since the IDENTIFY Message is unique to Parallel.  Perhaps another
+option is to add a "ahc_num_luns=xxx" module parameter allowing
+the decision to be made at runtime.
+
+Please cc: me on linux replies as I'm not currently subscribed.
+
+--------CUT HERE---------
+--- linux-2.4.19/drivers/scsi/aic7xxx/aic7xxx.h.orig	Wed Aug  7 09:31:30 2002
++++ linux-2.4.19/drivers/scsi/aic7xxx/aic7xxx.h	Thu Oct 31 12:12:26 2002
+@@ -122,7 +122,7 @@
+  * You can have 2^64 luns when information unit transfers are enabled,
+  * but it is doubtful this driver will ever support IUTs.
+  */
+-#define AHC_NUM_LUNS 64
++#define AHC_NUM_LUNS 32
+ 
+ /*
+  * The maximum transfer per S/G segment.
+--------CUT HERE---------
+
+-Michael F. Brown, EMC Corp.
+
+Email:            mbrown@emc.com
+EMC Tie Line:             x43416
+External Line:    (508) 249-3416
+
+"5 years from now everyone will be running free
+ GNU on their 200 MIPS, 64M SPARCstation-5."      -Andrew Tanenbaum '92
+
+(In late 1997 I installed Linux for the first time on my 200Mhz, 128M
+ AMD x86 clone)
