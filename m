@@ -1,86 +1,57 @@
-From: "Moore, Eric Dean" <Eric.Moore@lsil.com>
-Subject: RE: [PATCH] mptscsih: MODULE_PARM() -> module_param()
-Date: Tue, 5 Apr 2005 14:30:21 -0600
-Message-ID: <91888D455306F94EBD4D168954A9457C01DBBC2C@nacos172.co.lsil.com>
+From: Frederic TEMPORELLI <frederic.temporelli@bull.net>
+Subject: proc_name in sysfs
+Date: Wed, 06 Apr 2005 13:40:04 +0200
+Message-ID: <4253CA94.8000500@bull.net>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:52374 "EHLO mail0.lsil.com")
-	by vger.kernel.org with ESMTP id S262086AbVDEUar (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Apr 2005 16:30:47 -0400
+Received: from ecfrec.frec.bull.fr ([129.183.4.8]:20449 "EHLO
+	ecfrec.frec.bull.fr") by vger.kernel.org with ESMTP id S262168AbVDFLkR
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 6 Apr 2005 07:40:17 -0400
+Received: from localhost (localhost [127.0.0.1])
+	by ecfrec.frec.bull.fr (Postfix) with ESMTP id 4810319D90D
+	for <linux-scsi@vger.kernel.org>; Wed,  6 Apr 2005 13:40:08 +0200 (CEST)
+Received: from ecfrec.frec.bull.fr ([127.0.0.1])
+ by localhost (ecfrec.frec.bull.fr [127.0.0.1]) (amavisd-new, port 10024)
+ with ESMTP id 17353-07 for <linux-scsi@vger.kernel.org>;
+ Wed,  6 Apr 2005 13:40:06 +0200 (CEST)
+Received: from ecn002.frec.bull.fr (ecn002.frec.bull.fr [129.183.4.6])
+	by ecfrec.frec.bull.fr (Postfix) with ESMTP id 600C919D90A
+	for <linux-scsi@vger.kernel.org>; Wed,  6 Apr 2005 13:40:06 +0200 (CEST)
+Received: from [127.0.0.1] (localhost [127.0.0.1])
+	by openx3.frec.bull.fr (Postfix) with ESMTP id C4A312B0EC
+	for <linux-scsi@vger.kernel.org>; Wed,  6 Apr 2005 13:40:04 +0200 (CEST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Magnus Damm <damm@opensource.se>, linux-scsi@vger.kernel.org, James.Bottomley@SteelEye.com
-Cc: mpt_linux_developer@lsil.com
+To: linux-scsi@vger.kernel.org
 
-Ok fine - This fix is already there in the series of patches
-I provided a week ago for splitting the mpt fusion drivers
-into seperate bus type drivers.
-
-James any word on whether those series of patches will get
-approved?
-
-In addition, Steve Ralston is no longer working in this group.
-No need to copy him on this.
-
-Eric Moore
-LSI Logic.
+Hello,
 
 
-On Tuesday, April 05, 2005 1:18 PM,  Magnus Damm wrote:
-> 
-> Convert obsolete MODULE_PARM() to module_param(). This also 
-> fixes "mpt_factor"
-> that currently is a short parameter ("h") but the actual 
-> variable is an int.
-> 
-> Signed-off-by: Magnus Damm <damm@opensource.se>
-> 
-> --- linux-2.6.12-rc2/drivers/message/fusion/mptscsih.c	
-> 2005-04-05 16:59:53.000000000 +0200
-> +++ 
-> linux-2.6.12-rc2-autoparam/drivers/message/fusion/mptscsih.c	
-> 2005-04-05 20:28:11.459725880 +0200
-> @@ -98,23 +98,23 @@
->  
->  /* Command line args */
->  static int mpt_dv = MPTSCSIH_DOMAIN_VALIDATION;
-> -MODULE_PARM(mpt_dv, "i");
-> +module_param(mpt_dv, int, 0);
->  MODULE_PARM_DESC(mpt_dv, " DV Algorithm: enhanced=1, basic=0 
-> (default=MPTSCSIH_DOMAIN_VALIDATION=1)");
->  
->  static int mpt_width = MPTSCSIH_MAX_WIDTH;
-> -MODULE_PARM(mpt_width, "i");
-> +module_param(mpt_width, int, 0);
->  MODULE_PARM_DESC(mpt_width, " Max Bus Width: wide=1, 
-> narrow=0 (default=MPTSCSIH_MAX_WIDTH=1)");
->  
->  static int mpt_factor = MPTSCSIH_MIN_SYNC;
-> -MODULE_PARM(mpt_factor, "h");
-> +module_param(mpt_factor, int, 0);
->  MODULE_PARM_DESC(mpt_factor, " Min Sync Factor 
-> (default=MPTSCSIH_MIN_SYNC=0x08)");
->  
->  static int mpt_saf_te = MPTSCSIH_SAF_TE;
-> -MODULE_PARM(mpt_saf_te, "i");
-> +module_param(mpt_saf_te, int, 0);
->  MODULE_PARM_DESC(mpt_saf_te, " Force enabling SEP Processor: 
-> enable=1  (default=MPTSCSIH_SAF_TE=0)");
->  
->  static int mpt_pq_filter = 0;
-> -MODULE_PARM(mpt_pq_filter, "i");
-> +module_param(mpt_pq_filter, int, 0);
->  MODULE_PARM_DESC(mpt_pq_filter, " Enable peripheral 
-> qualifier filter: enable=1  (default=0)");
->  
->  
-> /*=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-> =-=-=-=-=-=-=-=*/
-> -
-> To unsubscribe from this list: send the line "unsubscribe 
-> linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+We are using HBAs modules names from "proc_name" interface in sysfs:
+/sys/class/scsi_host/hostX/proc_name.
+
+But with new Emulex drivers (8.0.21 and +), proc_name is reporting <NULL> 
+(previous drivers were reporting "lpfc").
+=> In the driver code, .proc_name field from scsi_host_template structure is no 
+more initialized.
+James Smart told us that the "removal" of .proc_name field (not really removed, 
+but no more initialized) was part of the /proc interfaces removal (suggested by 
+scsi-linux feedback).
+
+So:
+1/ now, what is the aim of proc_name interface (reporting "<NULL>") in sysfs ?
+2/ now, how can we get the adapter module name from sysfs ?
+
+=> I'm just thinking that .proc_name field has to be kept initialized and/or 
+something has to be changed to replace the confusing "proc" prefix.
+
+
+Best regards
+
+
+-- 
+Frederic TEMPORELLI
+Bull - Echirolles - France
