@@ -1,68 +1,58 @@
-From: "Bagalkote, Sreenivas" <sreenib@lsil.com>
-Subject: RE: How to add/drop SCSI drives from within the driver?
-Date: Mon, 3 Jan 2005 18:02:20 -0500
-Message-ID: <0E3FA95632D6D047BA649F95DAB60E570230CACD@exa-atlanta>
+From: Adrian Bunk <bunk@stusta.de>
+Subject: [2.6 patch] 3w-abcd.h: TW_Device_Extension: remove an unused filed (fwd)
+Date: Tue, 4 Jan 2005 00:51:31 +0100
+Message-ID: <20050103235131.GR2980@stusta.de>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:440 "EHLO mail0.lsil.com")
-	by vger.kernel.org with ESMTP id S261920AbVACXKZ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Jan 2005 18:10:25 -0500
+Received: from emailhub.stusta.mhn.de ([141.84.69.5]:17670 "HELO
+	mailout.stusta.mhn.de") by vger.kernel.org with SMTP
+	id S262013AbVACXvg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 3 Jan 2005 18:51:36 -0500
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: 'Matt Domsch' <Matt_Domsch@dell.com>, James Bottomley <James.Bottomley@SteelEye.com>
-Cc: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>, "Bagalkote, Sreenivas" <sreenib@lsil.com>, brking@us.ibm.com, linux-kernel@vger.kernel.org, SCSI Mailing List <linux-scsi@vger.kernel.org>, bunk@fs.tum.de, Andrew Morton <akpm@osdl.org>, "Ju, Seokmann" <sju@lsil.com>, "Doelfel, Hardy" <hdoelfel@lsil.com>, "Mukker, Atul" <Atulm@lsil.com>
+To: Andrew Morton <akpm@osdl.org>
+Cc: linuxraid@amcc.com, James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Hello All,
 
-I am trying to stoke this thread once more. Please review the brief summary
-of all discussion and a new sysfs based proposal.
+The trivial patch forwarded below still applies against 2.6.10-mm1.
 
-o    The more ideal and long-term way to handle addition and removal of
-devices is through hotplug mechanism. Currently it is not fully developed.
-Moreover, the megaraid SCSI driver doesn't get any event notification from
-the FW that the configuration has been changed.
+Please apply.
 
-o    Management App that communicates to FW via driver private ioctls is the
-one that creates/modifies the configuration. This is transparent to the
-driver.
 
-o    Logical drives being "logical", the driver exports the logical drives
-on virtual
-SCSI addresses. The management app that knows about LD0, LD1 .. LDn, does
-not know the LDn to HCTL mapping (Host:Channel:Target:Lun)
+----- Forwarded message from Adrian Bunk <bunk@stusta.de> -----
 
-o    Everybody understands that as long as the SCSI scan/rescan is triggered
-by 
-the management app, there is no getting around knowing HCTL mapping. The app
-must know the HCTL quad of a logical drive.
+Date:	Tue, 14 Dec 2004 05:10:02 +0100
+From: Adrian Bunk <bunk@stusta.de>
+To: linuxraid@amcc.com
+Cc: James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [2.6 patch] 3w-abcd.h: TW_Device_Extension: remove an unused filed
 
-o    Our original solution was that the driver returns HCTL of a LD via
-ioctl. This
-has been squarely rejected because kernel cannot add any more private
-ioctls.
+[ subject adapted to linux-kernel filters... ]
 
-Considering that the app has to somehow _know_ the HCTL given a logical
-drive
-(that it has deleted or will be adding), please provide your feedback on the
-following
-proposal. I know that it is not radically different.
+num_units in struct TAG_TW_Device_Extension is completely unused.
 
-The driver would create nodes for all possible logical drives.
 
-/sys/modules
- |-- megaraid_mbox
- |   |-- LD0
- |   |-- LD1
- |   |-- LD2
- |   |-- LD(i)
- |   |-- LD40
+Signed-off-by: Adrian Bunk <bunk@stusta.de>
 
-One of the attributes of a LD node would be HCTL information. A management
-app
-can then scan, delete the LDs using corresponding HCTL address.
+--- linux-2.6.10-rc3-mm1-full/drivers/scsi/3w-xxxx.h.old	2004-12-14 04:39:15.000000000 +0100
++++ linux-2.6.10-rc3-mm1-full/drivers/scsi/3w-xxxx.h	2004-12-14 04:39:20.000000000 +0100
+@@ -397,7 +397,6 @@
+ 	unsigned long		*alignment_virtual_address[TW_Q_LENGTH];
+ 	unsigned long		alignment_physical_address[TW_Q_LENGTH];
+ 	int			is_unit_present[TW_MAX_UNITS];
+-	int			num_units;
+ 	unsigned long		*command_packet_virtual_address[TW_Q_LENGTH];
+ 	unsigned long		command_packet_physical_address[TW_Q_LENGTH];
+ 	struct pci_dev		*tw_pci_dev;
 
-Y'all have a great new year!
+-
+To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Please read the FAQ at  http://www.tux.org/lkml/
 
-Sreenivas
-LSI Logic
+----- End forwarded message -----
+
