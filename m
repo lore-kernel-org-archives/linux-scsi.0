@@ -1,41 +1,55 @@
-From: "Tony Battersby" <tonyb@cybernetics.com>
-Subject: [PATCH] make sym53c8xx_2 not reject autosense IWR
-Date: Wed, 11 Jun 2003 12:59:51 -0400
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: PATCH: (as33) Remove /proc/scsi directory in scsi_remove_host()
+Date: Wed, 11 Jun 2003 13:41:03 -0400 (EDT)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <000c01c3303a$e0251970$e0019d89@cybernetics.com>
-Reply-To: <tonyb@cybernetics.com>
+Message-ID: <Pine.LNX.4.44L0.0306111328330.696-100000@ida.rowland.org>
+References: <20030521180308.GD1116@beaverton.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cyborg.cybernetics.com ([206.246.200.18]:27653 "EHLO
-	cybernetics.com") by vger.kernel.org with ESMTP id S262861AbTFKQqG
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 11 Jun 2003 12:46:06 -0400
+Received: from ida.rowland.org ([192.131.102.52]:7172 "HELO ida.rowland.org")
+	by vger.kernel.org with SMTP id S263131AbTFKR1X (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 11 Jun 2003 13:27:23 -0400
+In-Reply-To: <20030521180308.GD1116@beaverton.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: groudier@free.fr
-Cc: linux-scsi@vger.kernel.org
+To: Mike Anderson <andmike@us.ibm.com>
+Cc: SCSI development list <linux-scsi@vger.kernel.org>
 
-This patch against recent 2.4.x makes sym53c8xx_2 silently ignore the Ignore
-Wide Residue message on autosense commands rather than rejecting it.  This
-makes the SCSI communications cleaner for targets that return an odd number
-of sense bytes.
+Mike:
 
-Anthony J. Battersby
-Cybernetics
+You may know this already; if so please forgive the redundant information.  
+The reworking of the host registration code in 2.5.70 has a bug that
+prevents the host's directory in /proc/scsi from being removed when the
+host is unregistered.  The cause of the problem is that
+scsi_proc_host_rm() is checking for shost->hostt->present == 0, but it is
+called before scsi_free_shost() which is where shost->hostt->present gets
+decremented.
 
---- drivers/scsi/sym53c8xx_2/sym_hipd.c.orig	Wed Jun 11 12:29:11 2003
-+++ drivers/scsi/sym53c8xx_2/sym_hipd.c	Wed Jun 11 12:38:54 2003
-@@ -4641,7 +4641,10 @@
- 		case M_IGN_RESIDUE:
- 			if (DEBUG_FLAGS & DEBUG_POINTER)
- 				sym_print_msg(cp,"ign wide residue", np->msgin);
--			sym_modify_dp(np, tp, cp, -1);
-+			if (cp->host_flags & HF_SENSE)
-+				OUTL_DSP (SCRIPTA_BA (np, clrack));
-+			else
-+				sym_modify_dp(np, tp, cp, -1);
- 			return;
- 		case M_REJECT:
- 			if (INB (HS_PRT) == HS_NEGOTIATE)
+Since there doesn't really seem to be any need to check
+shost->hostt->present (hosts shouldn't be removed more than once), I
+removed that line.  I also reset shost->hostt->proc_dir back to NULL, in
+case the same host template is used again later to register another host.
+
+(There's another problem that prevents scsi_free_shost() from being called 
+at all, but that's a bug in the driver model core.  I've submitted a 
+separate report about that.)
+
+Alan Stern
+
+
+===== scsi_proc.c 1.11 vs edited =====
+--- 1.11/drivers/scsi/scsi_proc.c	Mon May 26 14:01:11 2003
++++ edited/drivers/scsi/scsi_proc.c	Wed Jun 11 13:22:43 2003
+@@ -149,8 +149,8 @@
+ 
+ 	sprintf(name,"%d", shost->host_no);
+ 	remove_proc_entry(name, shost->hostt->proc_dir);
+-	if (!shost->hostt->present)
+-		remove_proc_entry(shost->hostt->proc_name, proc_scsi);
++	remove_proc_entry(shost->hostt->proc_name, proc_scsi);
++	shost->hostt->proc_dir = NULL;
+ }
+ 
+ static void proc_print_scsidevice(struct scsi_device* sdev, char *buffer,
 
