@@ -1,32 +1,30 @@
-From: "stan" <lawuson_36@hotmail.com>
-Subject: CAS1N0: New Deal!! 50% Sign Up Bonus! megan cosmos:
-Date: Wed, 12 May 2004 09:44:39 GMT
+From: Jim.Roarick@Bull.com
+Subject: SCSI_IOCTL_GET_IDLUN
+Date: Wed, 12 May 2004 10:33:18 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1084355079-6994__3353.26956487751$1084379832@excite.com>
-Content-Type: text/plain;
+Message-ID: <OFEC3573DC.7085A76C-ON07256E92.00606938-07256E92.00606ED8@az05.bull.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [142.163.196.37] ([142.163.196.37]:46781 "HELO vger.kernel.org")
-	by vger.kernel.org with SMTP id S265126AbUELQgA (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 12 May 2004 12:36:00 -0400
+Received: from lionfish.bull.com ([141.112.4.90]:36037 "EHLO
+	lionfish.az05.bull.com") by vger.kernel.org with ESMTP
+	id S265137AbUELRdT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 12 May 2004 13:33:19 -0400
+Received: from us-phx1.az05.bull.com (us-phx1.az05.bull.com [141.112.40.1])
+	by lionfish.az05.bull.com (8.12.10/8.12.10) with ESMTP id i4CHXIvP010808
+	for <linux-scsi@vger.kernel.org>; Wed, 12 May 2004 10:33:18 -0700
 List-Id: linux-scsi@vger.kernel.org
-To: linux-kernel@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-PREMI|ERE ONLIN}E CAS!INO!
-50% BONU:S for YOUR FIRST DEPO|SIT as a New Player.
+We have an application that does an open of a pseudo tape device ( 
+/dev/st(x) ), followed by an ioctl (SCSI_IOCTL_GET_IDLUN) to get the 
+address information. This worked fine in 2.4.6-20 and 2.6.1 but in 2.6.5 
+returns null with no error indicated.
 
-SI|GN UP now! Don't wait!
+Did something change in mid-stream and, if so, how does one make it work 
+again?
 
-http://www.casino-power.com/_e4faa55afa1972493c43ac8a3f66f869/
-
-Once you're a Mem`ber, there are near WEEK|LY 2-T'O-1, and 3-T'O-1 depo'sit offers!
-
-Imagine, put in $25, GET $50 CRE:DIT BE'FORE YOU PL:ACE YO|UR FI:RST BET!!
-
-CLIC{K HER'E!
-
-http://www.casino-power.com/_e4faa55afa1972493c43ac8a3f66f869/
+Sorry for the lack of a low level description, I am neither a kernel 
+person or a driver person, merely an application person.
 
 
-
-sally corrado pirate lamer molly1 memory norman first angus bernie swimming symbol express hanna warriors dundee guinness amanda1 electric raptor jan james1 center dexter venus don
