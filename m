@@ -1,13 +1,13 @@
 From: janitor@sternwelten.at
-Subject: [patch 07/11]  remove old ifdefs aic79xxx
-Date: Wed, 01 Sep 2004 22:46:32 +0200
+Subject: [patch 02/11]  remove old ifdefs aic79xxx
+Date: Wed, 01 Sep 2004 22:46:05 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <E1C2c01-00073h-0G@sputnik>
+Message-ID: <E1C2bzZ-000709-KC@sputnik>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from baikonur.stro.at ([213.239.196.228]:38096 "EHLO
-	baikonur.stro.at") by vger.kernel.org with ESMTP id S267825AbUIAUqk
+Received: from baikonur.stro.at ([213.239.196.228]:50154 "EHLO
+	baikonur.stro.at") by vger.kernel.org with ESMTP id S267764AbUIAUqG
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 1 Sep 2004 16:46:40 -0400
+	Wed, 1 Sep 2004 16:46:06 -0400
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: James.Bottomley@SteelEye.com, janitor@sternwelten.at
@@ -24,59 +24,54 @@ Signed-off-by: Maximilian Attems <janitor@sternwelten.at>
 
 ---
 
- linux-2.6.9-rc1-bk7-max/drivers/scsi/aic7xxx/aic7xxx.h |   12 ++++++------
- 1 files changed, 6 insertions(+), 6 deletions(-)
+ linux-2.6.9-rc1-bk7-max/drivers/scsi/aic7xxx/aic79xx_core.c |   14 ++++++------
+ 1 files changed, 7 insertions(+), 7 deletions(-)
 
-diff -puN drivers/scsi/aic7xxx/aic7xxx.h~remove-old-ifdefs-aic7xxx drivers/scsi/aic7xxx/aic7xxx.h
---- linux-2.6.9-rc1-bk7/drivers/scsi/aic7xxx/aic7xxx.h~remove-old-ifdefs-aic7xxx	2004-08-31 17:41:34.000000000 +0200
-+++ linux-2.6.9-rc1-bk7-max/drivers/scsi/aic7xxx/aic7xxx.h	2004-08-31 17:41:34.000000000 +0200
-@@ -521,7 +521,7 @@ struct ahc_dma_seg {
+diff -puN drivers/scsi/aic7xxx/aic79xx_core.c~remove-old-ifdefs-aic79xx_core drivers/scsi/aic7xxx/aic79xx_core.c
+--- linux-2.6.9-rc1-bk7/drivers/scsi/aic7xxx/aic79xx_core.c~remove-old-ifdefs-aic79xx_core	2004-08-31 17:41:16.000000000 +0200
++++ linux-2.6.9-rc1-bk7-max/drivers/scsi/aic7xxx/aic79xx_core.c	2004-08-31 17:41:16.000000000 +0200
+@@ -5493,9 +5493,9 @@ ahd_probe_scbs(struct ahd_softc *ahd) {
+ static void
+ ahd_dmamap_cb(void *arg, bus_dma_segment_t *segs, int nseg, int error) 
+ {
+-	bus_addr_t *baddr;
++	dma_addr_t *baddr;
  
- struct sg_map_node {
- 	bus_dmamap_t		 sg_dmamap;
--	bus_addr_t		 sg_physaddr;
-+	dma_addr_t		 sg_physaddr;
- 	struct ahc_dma_seg*	 sg_vaddr;
- 	SLIST_ENTRY(sg_map_node) links;
- };
-@@ -584,7 +584,7 @@ struct scb {
- 	struct scb_platform_data *platform_data;
- 	struct sg_map_node	 *sg_map;
- 	struct ahc_dma_seg 	 *sg_list;
--	bus_addr_t		  sg_list_phys;
-+	dma_addr_t		  sg_list_phys;
- 	u_int			  sg_count;/* How full ahc_dma_seg is */
- };
+-	baddr = (bus_addr_t *)arg;
++	baddr = (dma_addr_t *)arg;
+ 	*baddr = segs->ds_addr;
+ }
  
-@@ -611,10 +611,10 @@ struct scb_data {
- 	 */
- 	bus_dma_tag_t	 hscb_dmat;	/* dmat for our hardware SCB array */
- 	bus_dmamap_t	 hscb_dmamap;
+@@ -5926,9 +5926,9 @@ ahd_alloc_scbs(struct ahd_softc *ahd)
+ 	struct map_node *sense_map;
+ 	uint8_t		*segs;
+ 	uint8_t		*sense_data;
 -	bus_addr_t	 hscb_busaddr;
-+	dma_addr_t	 hscb_busaddr;
- 	bus_dma_tag_t	 sense_dmat;
- 	bus_dmamap_t	 sense_dmamap;
+-	bus_addr_t	 sg_busaddr;
 -	bus_addr_t	 sense_busaddr;
++	dma_addr_t	 hscb_busaddr;
++	dma_addr_t	 sg_busaddr;
 +	dma_addr_t	 sense_busaddr;
- 	bus_dma_tag_t	 sg_dmat;	/* dmat for our sg segments */
- 	SLIST_HEAD(, sg_map_node) sg_maps;
- 	uint8_t	numscbs;
-@@ -1069,14 +1069,14 @@ struct ahc_softc {
- 	bus_dma_tag_t		  parent_dmat;
- 	bus_dma_tag_t		  shared_data_dmat;
- 	bus_dmamap_t		  shared_data_dmamap;
--	bus_addr_t		  shared_data_busaddr;
-+	dma_addr_t		  shared_data_busaddr;
+ 	int		 newcount;
+ 	int		 i;
  
- 	/*
- 	 * Bus address of the one byte buffer used to
- 	 * work-around a DMA bug for chips <= aic7880
- 	 * in target mode.
- 	 */
--	bus_addr_t		  dma_bug_buf;
-+	dma_addr_t		  dma_bug_buf;
- 
- 	/* Number of enabled target mode device on this card */
- 	u_int			  enabled_luns;
+@@ -6161,7 +6161,7 @@ ahd_init(struct ahd_softc *ahd)
+ {
+ 	uint8_t		*base_vaddr;
+ 	uint8_t		*next_vaddr;
+-	bus_addr_t	 next_baddr;
++	dma_addr_t	 next_baddr;
+ 	size_t		 driver_data_size;
+ 	int		 i;
+ 	int		 error;
+@@ -6205,7 +6205,7 @@ ahd_init(struct ahd_softc *ahd)
+ 	if (ahd_dma_tag_create(ahd, ahd->parent_dmat, /*alignment*/1,
+ 			       /*boundary*/BUS_SPACE_MAXADDR_32BIT + 1,
+ 			       /*lowaddr*/ahd->flags & AHD_39BIT_ADDRESSING
+-					? (bus_addr_t)0x7FFFFFFFFFULL
++					? (dma_addr_t)0x7FFFFFFFFFULL
+ 					: BUS_SPACE_MAXADDR_32BIT,
+ 			       /*highaddr*/BUS_SPACE_MAXADDR,
+ 			       /*filter*/NULL, /*filterarg*/NULL,
 
 _
