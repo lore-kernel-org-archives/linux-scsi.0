@@ -1,121 +1,49 @@
 From: Pat LaVarre <p.lavarre@ieee.org>
-Subject: udf folders pointing to self and above
-Date: 29 Sep 2003 13:37:42 -0600
+Subject: zip of GiB cross-platform
+Date: 29 Sep 2003 13:39:39 -0600
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1064864262.4262.49.camel@patehci2>
+Message-ID: <1064864378.4262.53.camel@patehci2>
+References: <1064271322.4797.9.camel@patehci2>
+	 <1064847281.24854.2.camel@patehci2>  <1064850600.25057.7.camel@patehci2>
+	 <1064858121.4262.0.camel@patehci2>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="=-fvUQpZR8TvIwxLwVMk0W"
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from email-out2.iomega.com ([147.178.1.83]:4501 "EHLO
-	email.iomega.com") by vger.kernel.org with ESMTP id S264594AbTI2ThY
+Received: from email-out1.iomega.com ([147.178.1.82]:54517 "EHLO
+	email.iomega.com") by vger.kernel.org with ESMTP id S264595AbTI2TjV
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 29 Sep 2003 15:37:24 -0400
+	Mon, 29 Sep 2003 15:39:21 -0400
 Received: from royntex01.iomegacorp.com (unknown [147.178.90.120])
-	by email.iomega.com (Postfix) with ESMTP id 394E818C3
-	for <linux-scsi@vger.kernel.org>; Mon, 29 Sep 2003 13:37:23 -0600 (MDT)
+	by email.iomega.com (Postfix) with ESMTP id F169419F9
+	for <linux-scsi@vger.kernel.org>; Mon, 29 Sep 2003 13:39:20 -0600 (MDT)
+In-Reply-To: <1064858121.4262.0.camel@patehci2>
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
+Is linux-scsi a place where folk hang out who often mail around GiB from
+Linux?
 
---=-fvUQpZR8TvIwxLwVMk0W
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+I see Linux `zip -r $folder $folder` produces .zip files that Mac OS X
+and Win XP can read ...
 
-To create a place to collect what you & Google teach me over time, I
-will go ahead and mention:
+... only when the folder is small.  When the folder contains a `dd`
+image of a mostly zero 1GiB disk (specifically an initially zero +
+`mkudffs`) disk, then Mac OS X & Win XP choke.
 
-Often I find if I create an initially zero + `mkudffs` disk of 1 GiB,
-the Philips udf verifier udf_test complains as follows.
+`unzip -vt $folder` is happy, `unzip` produces a file that `diff` and
+`cmp` say matches the original.
 
-...
-    309 read block
-EFE  file type DIR    name: "lost+found"
-EFE  28  icbtag error: parentICBLocation: (34,0),
-- recommended: (0,0) for strategy type 4.
-- Icbtag Parent ICB Location shall not point to itself
-- or to a higher parent in the directory hierarchy.
-- ECMA 3rd edition 4/8.10.1, 4/14.6.7, UDF 2.3.5.3.
-- icbtag: ECMA 4/14.6.*, 4/A.5, UDF 2.3.5.*, 6.6
-- name: "lost+found"
-EFE  216 Embedded data, 40 bytes
-...
+Did I commit some brain dead newbie error?  Reproduce a known bug? 
+Discover a new bug?
 
+Pat LaVarre
 
---=-fvUQpZR8TvIwxLwVMk0W
-Content-Disposition: attachment; filename=zlxudf.udfct_1.0r2.txt.bz2
-Content-Type: application/x-bzip; name=zlxudf.udfct_1.0r2.txt.bz2
-Content-Transfer-Encoding: base64
+P.S. For example, Mac OS X reports:
 
-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
-hIbK5gYA
+An error has occurred while expanding the file ...zlxudf.zip"
+(Unspecified StuffIt Engine internal error).
 
---=-fvUQpZR8TvIwxLwVMk0W--
+Error #17999
+
 
