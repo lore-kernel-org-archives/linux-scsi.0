@@ -1,36 +1,54 @@
-From: Andries Brouwer <aebr@win.tue.nl>
+From: Luben Tuikov <tluben@rogers.com>
 Subject: Re: "do ata" scsi command?
-Date: Fri, 16 May 2003 20:37:32 +0200
+Date: Fri, 16 May 2003 14:50:47 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030516183732.GA102@win.tue.nl>
-References: <20030515230223.GA516@gtf.org> <20030516060324.GT812@suse.de> <3EC5135F.50803@pobox.com>
+Message-ID: <3EC53307.5070908@rogers.com>
+References: <20030515230223.GA516@gtf.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from kweetal.tue.nl ([131.155.3.6]:25353 "EHLO kweetal.tue.nl")
-	by vger.kernel.org with ESMTP id S264534AbTEPSYr (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 16 May 2003 14:24:47 -0400
-Content-Disposition: inline
-In-Reply-To: <3EC5135F.50803@pobox.com>
+Received: from fep02-mail.bloor.is.net.cable.rogers.com ([66.185.86.72]:8049
+	"EHLO fep02-mail.bloor.is.net.cable.rogers.com") by vger.kernel.org
+	with ESMTP id S264547AbTEPSiG (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 16 May 2003 14:38:06 -0400
+In-Reply-To: <20030515230223.GA516@gtf.org>
 List-Id: linux-scsi@vger.kernel.org
 To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-scsi@vger.kernel.org, Jens Axboe <axboe@suse.de>
+Cc: linux-scsi@vger.kernel.org
 
-On Fri, May 16, 2003 at 12:35:43PM -0400, Jeff Garzik wrote:
+Jeff Garzik wrote:
+> In terms of a userspace interface for my ata-over-scsi gadget, I would
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+The main point.
 
-> I have chosen the standard, existing scsi-generic nterface as the one by 
-> which raw taskfiles will be sent to devices.  The taskfile will be 
-> wrapped inside a SCSI cdb.  To me this solution is the most flexibility 
-> for least cost.
+> prefer to use /dev/sg instead of inventing a totally new interface.
+> That, in turn, implies a need for a "do ata taskfile" scsi command,
+> which is sorta like ATAPI in reverse:  we are wrapping a raw ata
+> taskfile inside a scsi cdb.
 > 
-> So, what opcode do I choose for "send taskfile"?  Either (a) pick a 
-> vendor-specific one, or (b) someone else already chose an opcode.
+> My question is, does an existing standard or spec exist for such an idea?
 > 
-> So my post was really these questions:  a or b?  if b, what opcode?
+> If not, I'll just roll my own.
 
-0xAA ?
+I read the whole thread.
 
-(have you seen rfc2143 ?)
+It seems like you want what the 3ware LLDD is doing.  The format
+and specs are closed, but the implementation is open: ioctl
+and a char device ioctl.
+
+What you lose is the block/scsi synchronizaion, but if you want
+to support _closed_ vendor extensions, that's what you get.
+
+Unless what you want to support has a command mapping already
+in SCSI?  Did you check SBC-2, SMC-2, SCC-2, SES-2?  Wouldn't
+you find any CDB's there which would fit in?  My guess is not.
+
+Did you also check the mode pages, etc?
+
+-- 
+Luben
+
+
 
 
