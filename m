@@ -1,50 +1,38 @@
 From: Pavel Machek <pavel@ucw.cz>
 Subject: Re: [PATCH] /proc/scsi/map
-Date: Wed, 3 Jul 2002 02:59:23 +0200
+Date: Wed, 3 Jul 2002 03:01:02 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <afvad6$mib$2@main.gmane.org>
-References: <Pine.LNX.4.33.0206250920150.8496-100000@geena.pdx.osdl.net> <3D18AD30.7040904@pacbell.net>
+Message-ID: <20020703010102.GB112@elf.ucw.cz>
+References: <Pine.LNX.4.44.0206251146440.9420-100000@waste.org> <Pine.LNX.4.33.0206251140060.8496-100000@geena.pdx.osdl.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <3D18AD30.7040904@pacbell.net>
+In-Reply-To: <Pine.LNX.4.33.0206251140060.8496-100000@geena.pdx.osdl.net>
 List-Id: linux-scsi@vger.kernel.org
-To: David Brownell <david-b@pacbell.net>
-Cc: Patrick Mochel <mochel@osdl.org>, Nick Bellinger <nickb@attheoffice.org>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Patrick Mochel <mochel@osdl.org>
+Cc: Oliver Xymoron <oxymoron@waste.org>, Linux kernel list <linux-kernel@vger.kernel.org>, Linux SCSI list <linux-scsi@vger.kernel.org>
 
 Hi!
 
-> >>Why shouldn't there be a $DRIVERFS/net/ipv4@10.42.135.99/... style
-> >>hookup for iSCSI devices?  Using whatever physical addressing the
-> >>kernel uses there, which I assume wouldn't necessarily be restricted
-> >>to ipv4.  (And not exposing physical network topology -- routing! --
-> >>in driverfs.)
-> >
-> >
-> >You can very well use driverfs to expose those attributes, and is one of 
-> >the things that we've been discussing at the kernel summit. driverfs will 
-> >take over the world. But, I still think the device is best represented as 
-> >a child of the phsysical network device. 
-> 
-> Which one?  I'd certainly hope that drivers wouldn't have to choose which
-> of the various network interfaces to register under, or register under
-> every network interface concurrently.  (Or only the ones they might
-> conceivably be routed to go out on...)  Given a bonded network link (going
-> out over multiple physical drivers) that'd get hairy.  And what about
-> devices that host several logical interfaces?  Or when the interfaces get
-> moved to some other device?
-> 
-> That's why I think a "non-physical" tree (not under $DRIVERFS/root) is more
-> sensible in such cases.  Which is not to say it's without additional issues
-> (like how to establish/maintain driver linkages that are DAGs not single
-> parent trees) but it wouldn't require drivers to dig as deeply into
-> >>lower
+> [ We could also create a swap interface that we skip over when we notify 
+> these interfaces. Then we walk the tree and save state to the swap 
+> devices. Then, tell the swap devices to suspend, which can notify the 
+> devices to actually go to sleep....maybe..]
 
-Hmm, are dags enough?
+No.
 
-I mean, cycles exist in IP based networks, and I don't see a reason
-why it could not exist with some kind of advanced fibrechannel.
+swsusp works like this
+
+	stop all devices
+	save state
+	atomically copy memory into my_big_buffer
+	start all devices
+	write my_big_buffer into swap
+	poweroff
+
+It does not need explicit knowledge of where swap is. And I believe it
+is reasonable that way.
 									Pavel
 -- 
 (about SSSCA) "I don't say this lightly.  However, I really think that the U.S.
