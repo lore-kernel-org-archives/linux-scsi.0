@@ -1,44 +1,51 @@
 From: James Bottomley <James.Bottomley@steeleye.com>
 Subject: Re: qla1280 endiannes and 64/32bit fixes
-Date: 18 Jan 2004 09:35:40 -0500
+Date: 18 Jan 2004 09:54:13 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1074436541.1756.8.camel@mulgrave>
+Message-ID: <1074437655.1804.12.camel@mulgrave>
 References: <1074382860.1756.20.camel@mulgrave>
 	<20040118024326.GA381527@sgi.com> <1074395819.1756.31.camel@mulgrave>
-	<20040118062157.GA11083@praka.local.home>
+	<20040118062157.GA11083@praka.local.home>  <20040118073321.GC383498@sgi.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat1.steeleye.com ([65.114.3.130]:47781 "EHLO
+Received: from stat1.steeleye.com ([65.114.3.130]:44966 "EHLO
 	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S261774AbUAROfs (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 18 Jan 2004 09:35:48 -0500
-In-Reply-To: <20040118062157.GA11083@praka.local.home>
+	id S261779AbUARO52 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 18 Jan 2004 09:57:28 -0500
+In-Reply-To: <20040118073321.GC383498@sgi.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Vasquez <praka@users.sourceforge.net>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Jeremy Higdon <jeremy@sgi.com>
+Cc: Andrew Vasquez <praka@users.sourceforge.net>, SCSI Mailing List <linux-scsi@vger.kernel.org>, jes@sgi.com
 
-On Sun, 2004-01-18 at 01:21, Andrew Vasquez wrote:
-> That NVRAM setting really has no functional meaning for the card or
-> Linux driver.  I believe it was an artifact from some ancient
-> (non-linux) driver.  In essence, the ha flag simply indicates the
-> which type of IOCBs are used to initiate the CDB transfer.
+On Sun, 2004-01-18 at 02:33, Jeremy Higdon wrote:
+> James, with your code as it is now, ha->flags.enable_64bit_addressing
+> is always 0.  You'd need to add code to read the value out of the
+> nvram.  Then we'll need an nvram override for Altix.
 
-Well, since there are still no published specs, I had to guess...
+Actually, I found it.  There was a missed endianness problem in the 64
+bit path (see patch).
 
-> Here's a small patch, not sure if its going to solve your problem
-> though.  I'll look some more tomorrow.
-
-I tried the patch, but the behaviour is still the same.
-
-What I see is that the returned data from actual data transfer
-instructions is full of NULLs (presumably either because there was no
-transfer, or the transfer was to the wrong location---although the fact
-that the IOMMU doesn't halt the machine does tend to deny the latter).
-
-I'm also using a qla1280 (not a 12160) if that helps.
+However, I have another question for you:  Does the card BIOS actually
+get to run on bootup?  It doesn't (because it can't) on PA, so I get
+strange values for certain NVRAM quantities (like the 32 bit mode, but
+more importantly, the offset of all my devices gets set to 1).  I was
+thinking about doing an override to set them more sensibly and wondered
+if you were having the same problem.
 
 James
 
+===== drivers/scsi/qla1280.c 1.54 vs edited =====
+--- 1.54/drivers/scsi/qla1280.c	Sat Jan 17 17:44:11 2004
++++ edited/drivers/scsi/qla1280.c	Sun Jan 18 08:47:42 2004
+@@ -3332,7 +3336,7 @@
+ #endif
+ 			*dword_ptr++ = cpu_to_le32(pci_dma_lo32(dma_handle));
+ 			*dword_ptr++ = cpu_to_le32(pci_dma_hi32(dma_handle));
+-			*dword_ptr = (uint32_t)cmd->request_bufflen;
++			*dword_ptr = cpu_to_le32(cmd->request_bufflen);
+ 
+ 			dprintk(5, "qla1280_64bit_start_scsi: No scatter/"
+ 				"gather command packet data - b %i, t %i, "
 
