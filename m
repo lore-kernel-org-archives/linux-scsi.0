@@ -1,35 +1,45 @@
-From: christophe varoqui <christophe.varoqui@free.fr>
-Subject: HSV : ghosts & multipath
-Date: Tue, 12 Aug 2003 01:03:37 +0200
+From: "Paul Blazejowski" <paulb@blazebox.homeip.net>
+Subject: Re: Linux [2.6.0-test3/mm1] aic7xxx problems.
+Date: Mon, 11 Aug 2003 21:10:19 -0400 (EDT)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3F3820C9.4060004@free.fr>
+Message-ID: <31044.199.181.174.146.1060650619.squirrel@www.blazebox.homeip.net>
+References: <1060543928.887.19.camel@blaze.homeip.net>	
+    <2425882704.1060622541@aslan.btc.adaptec.com>
+    <1060623576.2826.9.camel@blaze.homeip.net>
+    <3F37F1A4.2030404@genebrew.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp4.wanadoo.fr ([193.252.22.26]:60965 "EHLO
-	mwinf0503.wanadoo.fr") by vger.kernel.org with ESMTP
-	id S274889AbTHKXDu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 11 Aug 2003 19:03:50 -0400
+Received: from pool-141-155-151-209.ny5030.east.verizon.net ([141.155.151.209]:58574
+	"EHLO mail.blazebox.homeip.net") by vger.kernel.org with ESMTP
+	id S274959AbTHLBKY convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 11 Aug 2003 21:10:24 -0400
+In-Reply-To: <3F37F1A4.2030404@genebrew.com>
 List-Id: linux-scsi@vger.kernel.org
-To: evan.felix@pnl.gov
-Cc: linux-scsi@vger.kernel.org
+To: Rahul Karnik <rahul@genebrew.com>
+Cc: "Justin T. Gibbs " <gibbs@scsiguy.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Hello,
+> Paul Blazejowski wrote:
+>
+>> Is this due to my mainboard (nforce2),cpu,ACPI,devfs,sysfs...or all
+>> these together?
+>
+> NForce2 + ACPI IRQ routing is a work in progress. Try turning off ACPI
+> for the time being and see if it helps.
+>
+> Thanks,
+> Rahul
+> --
+> Rahul Karnik
+> rahul@genebrew.com
+>
+>
+>
 
-I read your contribution to scsidev, regarding HSV.
-You seem to have an intimate knowledge of these controlers.
-Do you happen to have a clue on how to force the activation of a ghost 
-LUN from a Linux host ?
+Thanks Rahul, i'll try that.Are acpi=off and pci=noacpi the same options?
+what about APIC, should i also use noapic option upon booting the kernel
+(APIC is compiled in)?
 
-The rationale being : in a multipath config, when all active path are 
-exhausted you should be able to activate the ghosts paths rather than 
-let the device die.
-
-More generally, how do you manage access to your HSV LUNs ? I personnaly 
-would hate to use SecurePath which locks the user to one distribution 
-and has not passed the "community peer-review test". Any alternative 
-applicable in a dual fabric, dual attached hosts & controlers (4 
-paths/host including 2 ghosts : 2 paths through the left fabric, 2 paths 
-through the right) ?
+Paul
 
