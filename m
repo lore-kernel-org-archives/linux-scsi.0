@@ -1,70 +1,36 @@
-From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
-Subject: RE: 2.6.6 + Adaptec I2O
-Date: Tue, 1 Jun 2004 14:39:19 -0400
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Requested changes for the SCSI error handler
+Date: Tue, 1 Jun 2004 14:50:41 -0400 (EDT)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <547AF3BD0F3F0B4CBDC379BAC7E4189FAD5143@otce2k03.adaptec.com>
+Message-ID: <Pine.LNX.4.44L0.0406011439260.693-100000@ida.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from magic.adaptec.com ([216.52.22.17]:37568 "EHLO magic.adaptec.com")
-	by vger.kernel.org with ESMTP id S265122AbUFASjV convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 1 Jun 2004 14:39:21 -0400
-content-class: urn:content-classes:message
+Received: from [192.131.102.52] ([192.131.102.52]:5380 "HELO ida.rowland.org")
+	by vger.kernel.org with SMTP id S264960AbUFASvI (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Jun 2004 14:51:08 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <willy@debian.org>
-Cc: Andi Kleen <ak@muc.de>, linux-scsi@vger.kernel.org
+To: Mike Anderson <andmike@us.ibm.com>
+Cc: SCSI development list <linux-scsi@vger.kernel.org>
 
-There are two parts to the dptsig needs, one is a runtime need by the
-management tools, and other is a binary inspection tool.
+Here are two things I'd like to see changed in the error handler, if 
+possible.
 
-Dptsig inspects the module binary under any OS. It also inspects all of
-the other dpt products for all other operating systems as well. It was
-standard started in 1992 by DPT for their binaries. There is no running
-linux kernel for this information to be acquired by the binary itself.
-One could run the dptsig tool on windows and inspect a linux module
-binary.
+	The recovery xxx_RESET_SETTLE_TIME delays in scsi_sleep() can not 
+	be interrupted, even if the state changes to SDEV_CANCEL or 
+	SHOST_CANCEL.  It would be nice if the delay could be cut short
+	so that scsi_remove_host() doesn't have to wait.  Lengthy pauses
+	during disconnect processing are bad for the USB hub driver.
 
-The management tools could (but doesn't for linux, this is for sake of
-argument) report the driver was built for an i386 processor, yet we
-could be running on an i686 kernel. Other drivers from DPT/Adaptec for
-other operating systems have the same ioctl call populated with the same
-information.
+	In scsi_eh_ready_devs(), it would be good if some of the resets
+	could be skipped sometimes.  For example, if the low-level
+	driver has just done its own bus-device reset (and called
+	scsi_report_device_reset) then there's no point in doing 
+	scsi_eh_bus_device_reset().  The same is true for bus resets.
+	It just adds additional timeout delays to an already-lengthy
+	recovery process.
 
-The management tools themselves contain a hierarchy of dptsig
-structures, each reporting the purpose, the compile environment and the
-runtime environment of each product in layers. For instance, the public
-domain raidutil will report the driver, ioctl engine as well as the
-raidutil's dptsig information.
+Do these things seem feasible?
 
-Sincerely -- Mark Salyzyn
+Alan Stern
 
------Original Message-----
-From: willy@www.linux.org.uk [mailto:willy@www.linux.org.uk] On Behalf
-Of Matthew Wilcox
-Sent: Tuesday, June 01, 2004 2:29 PM
-To: Salyzyn, Mark
-Cc: Andi Kleen; linux-scsi@vger.kernel.org
-Subject: Re: 2.6.6 + Adaptec I2O
-
-On Tue, Jun 01, 2004 at 02:27:44PM -0400, Salyzyn, Mark wrote:
-> It's not the driver that needs to know, it's an information box on the
-> RAID applications that need to know via a management ioctl (see the
-> public domain raidutil tool for the cli variant). It's the `dptsig'
-tool
-> that reads the binary and provides version and processor type the
-binary
-> is compiled for.
-
-Why can't it get this information via uname?
-
--- 
-"Next the statesmen will invent cheap lies, putting the blame upon 
-the nation that is attacked, and every man will be glad of those
-conscience-soothing falsities, and will diligently study them, and
-refuse
-to examine any refutations of them; and thus he will by and by convince 
-himself that the war is just, and will thank God for the better sleep 
-he enjoys after this process of grotesque self-deception." -- Mark Twain
