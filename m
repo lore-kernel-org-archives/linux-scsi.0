@@ -1,55 +1,63 @@
-From: Rusty Russell <rusty@rustcorp.com.au>
-Subject: Re: Why /dev/sdc1 doesn't show up...
-Date: Mon, 25 Nov 2002 09:30:45 +1100
+From: Luben Tuikov <luben@splentec.com>
+Subject: Re: One more change pushed to bk tree
+Date: Mon, 25 Nov 2002 12:02:59 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20021124223234.67B372C0E3@lists.samba.org>
-References: <Pine.LNX.4.44.0211200737020.12032-100000@home.transmeta.com>
+Message-ID: <3DE257C3.C48D4FE6@splentec.com>
+References: <20021122183603.GC16865@redhat.com> <20021122155615.A21301@eng2.beaverton.ibm.com> <20021123024501.GC19547@redhat.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-reply-to: Your message of "Wed, 20 Nov 2002 07:45:20 -0800."
-             <Pine.LNX.4.44.0211200737020.12032-100000@home.transmeta.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Linus Torvalds <torvalds@transmeta.com>
-Cc: Alexander Viro <viro@math.psu.edu>, Doug Ledford <dledford@redhat.com>, Linux Scsi Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+To: Doug Ledford <dledford@redhat.com>
+Cc: Patrick Mansfield <patmans@us.ibm.com>, Linux Scsi Mailing List <linux-scsi@vger.kernel.org>
 
-In message <Pine.LNX.4.44.0211200737020.12032-100000@home.transmeta.com> you wr
-ite:
+Doug Ledford wrote:
 > 
-> On Wed, 20 Nov 2002, Rusty Russell wrote:
-> > 
-> > 	Linus, I would like an answer: how does one register two /proc
-> > entries?
+> Well, before we go too far down this road, I do want to pipe up and
+> publically announce how much I thoroughly *DETEST* that whole section of
+> code with its totally convoluted hoop jumping crap that it does to avoid
+> calling blk_init_queue() on each scan target.  Personally, if it were up
+> to me I would make a much simpler/faster queue init routine, quit this
+> crap of passing around and reusing the same pointer, and clean up *tons*
+> of crap in the scsi scan code.  That being said, anything that increases
+> the complexity of that code is bad IMHO.
 > 
-> I think the answer is simple: you don't.
+> Furthermore, one of my intended near future patches, pending review of the
+> idea because this is a change that would touch *A LOT* of files, is to get
+> rid of scsi_{build,release}_commandblocks entirely and instead change the
+> scsi subsystem to use generic command blocks that are applicable to all
+> hosts, modify all low level drivers to use the cmd->device pointer to get
+> the host/bus/target id/lun values so that they don't need device specific
+> command blocks, then to allocate a small pool of these on startup and lazy
+> allocate/deallocate them as we run and as scsi_adjust_queue_depth() starts
+> getting called for various devices.  If that happens, then most of the
+> discussion about command blocks is moot.  Then, since currently I'm the
+> only user of slave_alloc(), it would also be easy enough for me to make a
+> rule that no device driver is allowed to hard code device numbers in thier
+> alloced struct so that we could do this scanning of devices, not need to
+> rebuild command blocks, not need to realloc slave structs, and still have
+> everything work.  Good enough?
 
-OK.  Two devices?  A device and a sysfs attribute?  A device and a
-filesystem?  A device and a setsockopt?  So I sympathise, but I
-disagree here.
+scsi_adjust_queue_depth() would ideally just change an integer,
+say device->max_device_cmds or something like that (OSLT). This would play
+nicely with int dev->device_cmds_held or int device_cmds_active OSLT, also
+being an integer and it wouldn't matter if you _decrease_ the
+max, but currently there are more active in the device. (you may
+disallow this or set some policy if you wish, etc...)
 
-> This is what happens with built-in drivers already. Modules are nothing 
-> but a convenience. They're not "worthy" of complexity.
+As a spin off of this, if you set max_device_cmds to 0, you've
+effectively turned off the device, but letting it complete what's
+active -- one may not want to do this like that of course, but
+mentioned here just as a consequence.
 
-Agreed.  Having an invisible "MUST NOT fail beyond this point" line is
-leaving a subtle trap for driver writers.
+The point of all this is that this makes a lot more things a lot
+more flexible and makes SCSI core shrink (long, long awaited).
 
-We *already have* a mechanism to isolate a module: we did it to avoid
-a two-stage module destroy policy.  We can use the exact same
-mechanism to avoid such a two-stage module init policy.
+BTW, you've mentioned this change many times before. I don't know
+why you haven't implemented it yet, or how structural (non-cosmetic)
+changes are voted for in linux-scsi for the SCSI layer, but
+you have my vote on this change.
 
-Modulo bugs, I've erred on the side of not breaking the 1500+ modules
-in the kernel, and *not* exposing the unload races to them.  Please
-consider carefully.
-
-Note 1: Al mentioned he wants to fire off userspace before initcalls
-are done, introducing the same races in core kernel init.  Without
-seeing reasons, it's hard to tell why he wants this, but this would
-require everyone to do two-stage init anyway.
-
-Note 2: If you really want two-stage init, you're best off making it
-explicit: ie. two functions: one which can fail (int module_prep()),
-and one which can't (void module_start()).  I regarded this as too
-invasive a change just for an obscure module race.
-
-Hope that clarifies?
-Rusty.
---
-  Anyone who quotes me in their sig is an idiot. -- Rusty Russell.
+-- 
+Luben
