@@ -1,51 +1,45 @@
-From: Doug Ledford <dledford@redhat.com>
+From: "Bryan Henderson" <hbryan@us.ibm.com>
 Subject: Re: GFP_ATOMIC allocations...
-Date: Thu, 29 Aug 2002 11:58:12 -0400
+Date: Thu, 29 Aug 2002 08:59:50 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20020829115812.A31625@redhat.com>
-References: <20020828202534.G30927@redhat.com> <20020828174737.A27554@eng2.beaverton.ibm.com> <20020828214215.A31167@redhat.com> <1030618075.7290.110.camel@irongate.swansea.linux.org.uk>
+Message-ID: <OF9C38FD78.07E54601-ON87256C24.0056B509@boulder.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1030618075.7290.110.camel@irongate.swansea.linux.org.uk>; from alan@lxorguk.ukuu.org.uk on Thu, Aug 29, 2002 at 11:47:55AM +0100
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Patrick Mansfield <patmans@us.ibm.com>, linux-scsi@vger.kernel.org
+To: Doug Ledford <dledford@redhat.com>
+Cc: linux-scsi@vger.kernel.org, patman@beaverton.ibm.com
 
-On Thu, Aug 29, 2002 at 11:47:55AM +0100, Alan Cox wrote:
-> On Thu, 2002-08-29 at 02:42, Doug Ledford wrote:
-> > > Do GFP_KERNEL alloc failures during boot time just return NULL?
-> > 
-> > GFP_ATOMIC returns NULL on failure, GFP_KERNEL *should* never fail until 
-> > we get to a true OOM condition because it will block and wait for the vm 
-> > subsystem to free us up some space.  Under true OOM conditions it will 
-> > return NULL AFAIK.
-> 
-> Or maybe deadlock if its happening due to I/O.
 
-That would be a trick indeed since Patrick and I were referring to the
-scanning code so the device isn't even configured for kernel use yet :-P
+>GFP_KERNEL *should* never fail until
+>we get to a true OOM condition because it will block and wait for the vm
+>subsystem to free us up some space.  Under true OOM conditions it will
+>return NULL AFAIK.
 
-> If it wants to flush a
-> page out to that scsi device and the scsi device is doing the allocation
-> life gets very unpleasant.
+That (the NULL case) doesn't sound right to me.  The purpose of the OOM
+Killer is to choose wisely which processes should die when there's simply
+not enough memory to go around.  And it does it by terminating a process
+directly, not by affecting the return value of kmalloc().  So if
+kmalloc(GFP_KERNEL) returns NULL when the system is out of memory, the
+system is arbitrarily killing whoever is the next guy to ask for memory,
+thus defeating the purpose of the OOM Killer.
 
-Of course.  This is why the mid layer doesn't typically allocate anything 
-at all once initial setup of a device is complete.  No allocations once 
-setup is complete means no deadlock.
+Incidentally, I've had to explain GFP_ATOMIC to many people, and I believe
+the reason for its incorrect usage is that people know it's supposed to be
+called by processes that can't wait, and they think that means "I can't
+wait for this memory, so be sure you give it to me _now_."  Simple
+explanations of GFP_ATOMIC give you the impression that it's just a higher
+priority request than GFP_KERNEL.
 
-> SCSI may not be coming from block layer
-> access with PF_MEM* set either, think about /proc and scsi-generic
-> 
-> "Here be dragons"
+One thing about GFP_ATOMIC that is often overlooked is that what it really
+means is that the caller, instead of VM, is responsible for doing the
+waiting and retrying and whatever to deal with memory allocation failure.
+Failing some operation permanently because a kmalloc(GFP_ATOMIC) it did
+failed is usually the wrong thing to do.
 
-That's why I recommended people think each use through instead of blindly 
-changing things ;-)
+Again, many people have just the opposite impression.  One person told me
+he used GFP_ATOMIC instead of GFP_KERNEL because he needed to be guaranteed
+the allocation wouldn't fail.
 
--- 
-  Doug Ledford <dledford@redhat.com>     919-754-3700 x44233
-         Red Hat, Inc. 
-         1801 Varsity Dr.
-         Raleigh, NC 27606
-  
+
+
