@@ -1,31 +1,38 @@
-From: Jes Sorensen <jes@wildopensource.com>
-Subject: Re: [PATCH] prepare qla1280 drivers for ISP1020/1040 support
-Date: 08 Feb 2004 03:19:11 -0500
+From: Matthew Wilcox <willy@debian.org>
+Subject: Re: [BK PATCH] bug fixes for scsi for linux-2.6.3-rc1
+Date: Sun, 8 Feb 2004 16:19:11 +0000
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <yq08yje9e68.fsf@wildopensource.com>
-References: <20040206155632.GA4679@lst.de>
+Message-ID: <20040208161911.GF24334@parcelfarce.linux.theplanet.co.uk>
+References: <1076256895.2055.6.camel@mulgrave>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from jaguar.mkp.net ([192.139.46.146]:16611 "EHLO jaguar.mkp.net")
-	by vger.kernel.org with ESMTP id S263107AbUBHITP (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 8 Feb 2004 03:19:15 -0500
-In-Reply-To: <20040206155632.GA4679@lst.de>
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:9951 "EHLO
+	www.linux.org.uk") by vger.kernel.org with ESMTP id S263760AbUBHQTN
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 8 Feb 2004 11:19:13 -0500
+Content-Disposition: inline
+In-Reply-To: <1076256895.2055.6.camel@mulgrave>
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@steeleye.com>
+Cc: Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>, Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
->>>>> "Christoph" == Christoph Hellwig <hch@lst.de> writes:
+On Sun, Feb 08, 2004 at 11:14:54AM -0500, James Bottomley wrote:
+> contains four bugfixes for the previous update (actually allow the
+> qla2xxx to build as part of the build process and remove its compile
+> warnings, fix the mptscsih_exit() discard problem and undelete the
+> qlogicfc driver).
 
-Christoph> I thought it might be a good idea to not dump a huge patch
-Christoph> with all my restructuring at you when I'm done, so here's
-Christoph> the bits of the 1040 support I'm already comfortable with
-Christoph> and that make sense to merge.
+Wasn't the mptscsih_exit problem already fixed by:
 
-Christoph,
+http://linux.bkbits.net:8080/linux-2.5/patch@1.1500.2.166?nav=index.html|ChangeSet@-3d|cset@1.1500.2.166
 
-Just a quick note, don't change data types for the sake of changing
-them. Ie. the uint8_t->u8 etc. changes are not acceptable.
+(went in via akpm 48 hours ago)
 
-Cheers,
-Jes
+-- 
+"Next the statesmen will invent cheap lies, putting the blame upon 
+the nation that is attacked, and every man will be glad of those
+conscience-soothing falsities, and will diligently study them, and refuse
+to examine any refutations of them; and thus he will by and by convince 
+himself that the war is just, and will thank God for the better sleep 
+he enjoys after this process of grotesque self-deception." -- Mark Twain
