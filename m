@@ -1,40 +1,66 @@
-From: 'Christoph Hellwig' <hch@infradead.org>
-Subject: Re: Request for review of Linux iSCSI driver version 4.0.0.1
-Date: Wed, 19 Nov 2003 13:38:05 +0000
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20031119133805.A12398@infradead.org>
-References: <20031027153932.A16679@infradead.org> <03111117263601.01918@naveenb-lnx.cisco.com> <20031111173622.A12435@infradead.org> <200311191810.30135.krmurthy@cisco.com>
+From: James Bottomley <James.Bottomley@steeleye.com>
+Subject: Re: Re: Unaligned scatter-gather buffers and
+	usb-storage
+Date: 19 Nov 2003 08:37:20 -0600
+Sender: linux-usb-devel-admin@lists.sourceforge.net
+Message-ID: <1069252642.10768.7.camel@mulgrave>
+References: <20031110095914.B22518@beaverton.ibm.com>
+	<20031118143720.A6411@beaverton.ibm.com> <20031119084729.GA1106@suse.de>
+	<200311191401.34540.oliver@neukum.org>  <20031119130400.GG1106@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pub234.cambridge.redhat.com ([213.86.99.234]:46087 "EHLO
-	phoenix.infradead.org") by vger.kernel.org with ESMTP
-	id S264076AbTKSNiH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 19 Nov 2003 08:38:07 -0500
-Content-Disposition: inline
-In-Reply-To: <200311191810.30135.krmurthy@cisco.com>; from krmurthy@cisco.com on Wed, Nov 19, 2003 at 06:10:30PM +0530
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-usb-devel-admin@lists.sourceforge.net>
+In-Reply-To: <20031119130400.GG1106@suse.de>
+Errors-To: linux-usb-devel-admin@lists.sourceforge.net
+List-Help: <mailto:linux-usb-devel-request@lists.sourceforge.net?subject=help>
+List-Post: <mailto:linux-usb-devel@lists.sourceforge.net>
+List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-devel>,
+	<mailto:linux-usb-devel-request@lists.sourceforge.net?subject=subscribe>
+List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-devel>,
+	<mailto:linux-usb-devel-request@lists.sourceforge.net?subject=unsubscribe>
+List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=linux-usb-devel>
+To: Jens Axboe <axboe@suse.de>
+Cc: Oliver Neukum <oliver@neukum.org>, Patrick Mansfield <patmans@us.ibm.com>, Alan Stern <stern@rowland.harvard.edu>, Douglas Gilbert <dougg@torque.net>, SCSI development list <linux-scsi@vger.kernel.org>, USB development list <linux-usb-devel@lists.sourceforge.net>
 List-Id: linux-scsi@vger.kernel.org
-To: Krishna Murthy <krmurthy@cisco.com>
-Cc: 'Christoph Hellwig' <hch@infradead.org>, linux-scsi@vger.kernel.org, davmyers@cisco.com
 
-On Wed, Nov 19, 2003 at 06:10:30PM +0530, Krishna Murthy wrote:
-> Hi ,
-> 	The following was one of your comments on the iSCSI driver:
+On Wed, 2003-11-19 at 07:04, Jens Axboe wrote:
+> On Wed, Nov 19 2003, Oliver Neukum wrote:
+> > 
+> > > > You could add a scsi_host fields or bits specifying alignment
+> > > > restrictions, and enforce them as needed in upper level drivers.
+> > > 
+> > > The queue already has such a restriction embedded, see bio_map_user()
+> > > and queue_dma_alignment().
+> > 
+> > Very well, as far as sd and sr are concerned, but it doesn't help for
+> > sg and st, does it?
 > 
-> "having multiple  kmap() in the same process at the same time can kmap(),
-> you redesign iscsi_xmit_task/iscsi_xmit_data/iscsi_recv_data not to do that.
-> for the tx path use ->sendpage to avoid a data copy and kmapping altogether"
-> 
-> 
-> In the first line did you intend to say having multiple kmap() can deadlock?
+> They both have a queue through the scsi device structure. But you could
+> put the value someplace else if you wanted.
 
-Yes.
+Actually, the sg case should be fine, because it shares the queue with
+the other attachment (unless it's a processor or other unrecognised
+device).
 
-> Regarding usage of sendpage and avoiding kmapping altogether, 
-> we need to access the data, to calculate data digest.  If we do  not use kmap
-> how else do we achieve it?
+but, regardless, the queue is already set up (for all devices, including
+st) in either slave_alloc, or slave_configure, so you could call the
+alignment setting routine there.
 
-Well, with software crypto someone will have to do the kmap (or
-kmap_atomic), but I'd rather leave that as an implementation detail to
-the crypto API as I already suggested earlier.
+Alternatively, we could add this as yet another parameter to the host
+and template structures.  Any preferences?
 
+James
+
+
+
+
+-------------------------------------------------------
+This SF.net email is sponsored by: SF.net Giveback Program.
+Does SourceForge.net help you be more productive?  Does it
+help you create better code?  SHARE THE LOVE, and help us help
+YOU!  Click Here: http://sourceforge.net/donate/
+_______________________________________________
+linux-usb-devel@lists.sourceforge.net
+To unsubscribe, use the last form field at:
+https://lists.sourceforge.net/lists/listinfo/linux-usb-devel
