@@ -1,39 +1,67 @@
 From: Mike Anderson <andmike@us.ibm.com>
-Subject: Re: 2.5.63-mm2
-Date: Wed, 5 Mar 2003 14:01:40 -0800
+Subject: Re: [PATCH / RFC] scsi_set_host_offline
+Date: Wed, 5 Mar 2003 14:35:04 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030305220140.GA4014@beaverton.ibm.com>
-References: <20030302180959.3c9c437a.akpm@digeo.com> <1046815078.12931.79.camel@ibm-b> <20030304234042.2553deed.akpm@digeo.com> <20030305173854.GA1090@beaverton.ibm.com> <20030305185231.GE1090@beaverton.ibm.com> <20030305133305.A16075@beaverton.ibm.com>
+Message-ID: <20030305223504.GB4014@beaverton.ibm.com>
+References: <20030303221532.GB1587@beaverton.ibm.com> <200303050012.35309.oliver@neukum.name> <1046883135.1784.23.camel@mulgrave> <200303052049.16538.oliver@neukum.name>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20030305133305.A16075@beaverton.ibm.com>
+In-Reply-To: <200303052049.16538.oliver@neukum.name>
 List-Id: linux-scsi@vger.kernel.org
-To: Patrick Mansfield <patmans@us.ibm.com>
-Cc: Andrew Morton <akpm@digeo.com>, Mark Wong <markw@osdl.org>, linux-scsi@vger.kernel.org
+To: Oliver Neukum <oliver@neukum.name>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Matthew Dharm <mdharm-scsi@one-eyed-alien.net>
 
-Thanks for trying this Patrick. I have added this to my list of systems
-available that display error handling signatures for future testing.
+Oliver Neukum [oliver@neukum.name] wrote:
+> Am Mittwoch, 5. M?rz 2003 17:52 schrieben Sie:
+> > On Tue, 2003-03-04 at 17:12, Oliver Neukum wrote:
+> > > It seems to me that there's a race with scan_scsis() and
+> > > scan_scsis_single() which cannot be closed with failing queuecommand, as
+> > > there's a window where the INQUIRY has succeeded but has not yet been
+> > > evaluated by the SCSI layer.
+> >
+> > Consider the offline function as a work in progress.  I think the model
+> 
+> I do. But problems have to be pointed out and fixes proposed.
+> 
+> > we'll ultimately move to is to use the sysfs refcounting, so we could
+> > call the offline function, have the device refuse all incoming requests,
+> > but still process pending ones (which, if this is a forced remove should
+> > fail).  Then call a remove hook when the outstanding command count drops
+> > to zero.
+> 
+> What exactly is a refcount supposed to do? It doesn't help the main problem.
+> You must prevent new references arising. This requires locking and flags.
+> 
 
-Patrick Mansfield [patmans@us.ibm.com] wrote:
-> On Wed, Mar 05, 2003 at 10:52:31AM -0800, Mike Anderson wrote:
-> > The patch below fixed the problem on my system. I had my list empty
-> > checks reversed if aborting and bus device reset failed. The condition
-> > that causes the error handler to run is still unknown. I will look at it
-> > when I get a chance.
+Refcounting is need for proper freeing so it needs to be part of the
+solution. We need to have the refcounting implementation prevent gets
+post "offline"
+
+Yes, currently the kobject_get does not contain any support for
+preventing the incrementing of the ref count. This needs to be wrapped
+by the implementor (I believe as I do not see the object state support
+being implemented in the core code).
+
+> > > I am not quite sure how slave_alloc() is involved into this, but IMHO
+> > > it's wrong to force LLDDs to know about devices if they are hotpluggable.
+> > > Could you clarify?
+> >
+> > By design LLDs need to know about configured devices because they may
+> > (although not all do) need to allocate resources to process them.  The
+> > slave configure/alloc/destroy is the interface for communicating this
+> > information:
 > 
-> Mike -
-> 
-> With your patch, I am able to boot again using the feral driver with an
-> isp1020 (on a NUMAQ system).
-> 
-> Though I still do not know why the feral gets a time out but qlogicisp
-> does not. It is apparently a read that times out while mounting root for
-> the first time (readonly), so this is not the first read sent to the drive
-> (partition code should have sent a read). It could be the queue_depth
-> settings (qlogicisp sets to 1, I have feral setting them to 16).
-> 
+> Very well, but that system should not be overloaded with hotplugging issues.
+> IMHO we must not require drivers to support this interface just because they
+> are hotpluggable.
+
+It is not required, but lack of any online state in a driver will
+possibly cause extended time to cancel the IO. We would not want
+excessive checking in the main IO path so there will be code that races
+with "offline" and makes it to queuecommand.
+
 -andmike
 --
 Michael Anderson
