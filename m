@@ -1,53 +1,78 @@
-From: James Bottomley <James.Bottomley@steeleye.com>
-Subject: Re: [PATCH 2.6.7-mm3] ipr: minor fixes and assorted nit
-Date: 30 Jun 2004 10:52:40 -0500
+From: Ricky Beam <jfbeam@bluetronic.net>
+Subject: 3ware 9500 very slow
+Date: Wed, 30 Jun 2004 13:28:54 -0400 (EDT)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1088610767.1904.13.camel@mulgrave>
-References: <20040628140721.GA10393@devserv.devel.redhat.com>
-	<40E05F43.7040602@us.ibm.com>
-	<20040629235940.A6183@electric-eye.fr.zoreil.com>
-	<40E2D66F.9060900@us.ibm.com>
+Message-ID: <Pine.GSO.4.33.0406301301360.25702-100000@sweetums.bluetronic.net>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat1.steeleye.com ([65.114.3.130]:37269 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S266703AbUF3Pw7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 30 Jun 2004 11:52:59 -0400
-In-Reply-To: <40E2D66F.9060900@us.ibm.com>
+Received: from sweetums.bluetronic.net ([24.199.150.42]:32455 "EHLO
+	sweetums.bluetronic.net") by vger.kernel.org with ESMTP
+	id S266767AbUF3RfM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 30 Jun 2004 13:35:12 -0400
+Received: from localhost (jfbeam@localhost)
+	by sweetums.bluetronic.net (8.11.7/8.11.7) with ESMTP id i5UHSs928840
+	for <linux-scsi@vger.kernel.org>; Wed, 30 Jun 2004 13:28:55 -0400 (EDT)
 List-Id: linux-scsi@vger.kernel.org
-To: brking@us.ibm.com
-Cc: Francois Romieu <romieu@fr.zoreil.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Linux SCSI List <linux-scsi@vger.kernel.org>
 
-On Wed, 2004-06-30 at 10:04, Brian King wrote:
-> Is there any downside to requesting all the memory regions on the 
-> adapter? Some of these adapters have very large BAR windows that are not 
-> needed by the device driver. This is the reason I wrote the code the way 
-> I did, in the thought that I was conserving pci address space.
+[blockdev --report]
+ RO    RA   SSZ   BSZ   StartSec     Size    Device
+ rw   256   512  4096   78140160   15647310  /dev/sda2
 
-Yes, there is.  There's a particular quad tulip card that seems to have
-256k of boot rom for each of it's IO processors, but which only seems to
-get 1MB of BAR space for its bridge, so obviously, when it allocates ROM
-bars, they don't fit.
+ sda == 4 x WD 250G, RAID5, 64k stripe
 
-However, check out what happens for this adapter.  I believe
-pci_request_regions() is now more selective about which BARs it maps.
+3ware 9000 Storage Controller device driver for Linux v2.26.02.001.
+ACPI: PCI interrupt 0000:06:03.0[A] -> GSI 24 (level, low) -> IRQ 217
+scsi0 : 3ware 9000 Storage Controller
+3w-9xxx: scsi0: Found a 3ware 9000 Storage Controller at 0xfe8ffc00, IRQ: 217.
+3w-9xxx: scsi0: Firmware FE9X 2.02.00.011, BIOS BE9X 2.02.01.037, Ports: 4.
 
-> > - ipr_alloc_mem() can not simply issue a call to ipr_free_mem() when
-> >   something goes wrong as it would lead to pci_free_consistent() of
-> >   unset data. Let ipr_alloc_mem() carefully release whatever it has
-> >   allocated instead;
-> 
-> pci_free_consistent specifically checks for NULL, just like kfree. I 
-> figured it was cleaner code to rely on the ability to call kfree on NULL 
-> and pci_free_consistent on NULL. Is this frowned upon?
+[root@alpha5 root]# hdparm -f /dev/sda2 && time ./speed-buffered /dev/sda2
 
-The API doesn't say that.  It works on x86 because dma_free_coherent()
-calls free_pages(), which checks for NULLs, but I think you'll find it
-will produce a panic or warning on other platforms (arm seems to dump
-stack at least).
+/dev/sda2:
+Working with 8388608 byte buffered access buffer (128 16k stripes)
+     7616.00 @  32.00
+Blocks: 956 (  7.47GB)
 
-James
+real    4m11.553s
+user    0m0.008s
+sys     0m15.799s
+[root@alpha5 root]# hdparm -f /dev/sda2 && time ./speed-direct /dev/sda2
+
+/dev/sda2:
+Working with 8388608 byte direct access buffer (128 16k stripes)
+     7584.00 @  64.00
+Blocks: 955 (  7.46GB)
+
+real    2m15.744s
+user    0m0.001s
+sys     0m1.181s
+
+That's usually the other way around...
+I'll also add, this is slower than an 8506 in the same system.
+
+And write performance is 2x that of reads.  Did someone forget to tell
+the controller it has an SDRAM SODIMM it can use for read/write caching?
+
+[root@alpha5 root]# time ./zero-direct /dev/sda2
+Working with 8388608 byte direct access buffer (128 16k stripes)
+     7616.00 @  72.00
+Blocks: 956 (  7.47GB)
+
+real    1m26.171s
+user    0m0.001s
+sys     0m0.930s
+
+[root@alpha5 root]# time ./zero-buffered /dev/sda2
+Working with 8388608 byte buffered access buffer (128 16k stripes)
+     7616.00 @  40.00
+Blocks: 956 (  7.47GB)
+
+real    5m11.709s
+user    0m0.015s
+sys     0m25.315s
+
+--Ricky
 
 
