@@ -1,204 +1,92 @@
-From: Luben Tuikov <luben@splentec.com>
-Subject: Re: [PATCH] scsi: extracting the sense key, ASC and ASCQ
-Date: Wed, 13 Nov 2002 16:49:04 -0500
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3DD2C8D0.803DC1AF@splentec.com>
-References: <3DD2C4D8.4E8B7A7D@splentec.com>
+From: Adam Radford <aradford@3WARE.com>
+Subject: RE: [PATCH] 3w-xxxx: additional ata->sense codes, avoid driver lo
+	ckup
+Date: Wed, 13 Nov 2002 13:57:16 -0800
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <A1964EDB64C8094DA12D2271C04B812672C867@tabby>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
+Content-Type: text/plain;
+	charset="iso-8859-1"
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+To: 'Luben Tuikov' <luben@splentec.com>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 
-Linewrap at 120... DOH!
+Luben,
+
+Thanks for submitting the patch, however, it appears part of it is wrong:
+
+-               if ((command->status == 0xc7) || (command->status == 0xcb))
+{
++               if (command->status & 0xC1) {
+
+What makes you think you should not check for c7 or cb, and only check c1? 
+Do you have the controller firmware spec in front of you?
+
+-Adam
+
+-----Original Message-----
+From: Luben Tuikov [mailto:luben@splentec.com]
+Sent: Wednesday, November 13, 2002 1:01 PM
+To: linux-scsi; linux-kernel
+Subject: [PATCH] 3w-xxxx: additional ata->sense codes, avoid driver
+lockup
 
 
-diff -Nru -X /usr/src/dontdiff linux-2.5.47/drivers/scsi/scsi.c linux/drivers/scsi/scsi.c
---- linux-2.5.47/drivers/scsi/scsi.c	Sun Nov 10 22:28:16 2002
-+++ linux/drivers/scsi/scsi.c	Wed Nov 13 14:00:51 2002
-@@ -2257,7 +2257,7 @@
- 				       SCpnt->internal_timeout,
+A few of our IDE hds were generating those errors.
+
+The first one locks up the 3w-xxxx driver (into an inf. loop)
+when the error register = 0x11; this also resulted sometimes
+in kernel lockup, also when doing raidstop...
+
+The second one (0x51 move) is for completely broken
+sectors/medium -- this makes SCSI core figure this one out
+quickly and do the appropriate action, rather than retry
+the command several times + timeout, of course without
+success.
+
+For the status byte, we're more generous (actually only interested
+in the error bit); if found, good, else the effect is the same.
+
+-- 
+Luben
+
+--- linux-2.5.47/drivers/scsi/3w-xxxx.h Sun Nov 10 22:28:06 2002
++++ linux/drivers/scsi/3w-xxxx.h        Wed Nov 13 15:07:28 2002
+@@ -108,7 +108,9 @@
+   {0x01, 0x03, 0x13, 0x00}, // Address mark not found       Address mark
+not found for data field
+   {0x04, 0x0b, 0x00, 0x00}, // Aborted command              Aborted command
+   {0x10, 0x0b, 0x14, 0x00}, // ID not found                 Recorded entity
+not found
++  {0x11, 0x0b, 0x12, 0x00}, // Address Mark Not Found       Address Mark
+Not Found For ID Field
+   {0x40, 0x03, 0x11, 0x00}, // Uncorrectable ECC error      Unrecovered
+read error
++  {0x51, 0x03, 0x31, 0x00}, // Uncorrectable Data Error     Medium Format
+Corrupted  
+   {0x61, 0x04, 0x00, 0x00}, // Device fault                 Hardware error
+   {0x84, 0x0b, 0x47, 0x00}, // Data CRC error               SCSI parity
+error
+   {0xd0, 0x0b, 0x00, 0x00}, // Device busy                  Aborted command
+@@ -118,7 +120,6 @@
+                             // 3ware Error                  SCSI Error
+   {0x09, 0x0b, 0x00, 0x00}, // Unrecovered disk error       Aborted command
+   {0x37, 0x0b, 0x04, 0x00}, // Unit offline                 Logical unit
+not ready
+-  {0x51, 0x0b, 0x00, 0x00}  // Unspecified                  Aborted command
+ };
  
- 				       SCpnt->cmnd[0],
--				       SCpnt->sense_buffer[2],
-+				       get_sense_key(SCpnt->sense_buffer),
- 				       SCpnt->result);
- 			}
- 		}
-diff -Nru -X /usr/src/dontdiff linux-2.5.47/drivers/scsi/scsi.h linux/drivers/scsi/scsi.h
---- linux-2.5.47/drivers/scsi/scsi.h	Sun Nov 10 22:28:06 2002
-+++ linux/drivers/scsi/scsi.h	Wed Nov 13 13:55:52 2002
-@@ -133,6 +133,33 @@
- #define sense_error(sense)  ((sense) & 0xf)
- #define sense_valid(sense)  ((sense) & 0x80);
+ /* Control register bit definitions */
+--- linux-2.5.47/drivers/scsi/3w-xxxx.c Sun Nov 10 22:28:30 2002
++++ linux/drivers/scsi/3w-xxxx.c        Wed Nov 13 15:07:28 2002
+@@ -716,7 +716,7 @@
  
-+/* Support for descriptor format sense data.
-+ */
-+static inline u8 get_sense_key(unsigned char *sense_buf)
-+{
-+	return (sense_buf[0]&2) ? sense_buf[1]&0xf : sense_buf[2]&0xf;
-+}
-+
-+static inline u8 get_asc(unsigned char *sense_buf)
-+{
-+	if (sense_buf[0]&2)
-+		return sense_buf[2];
-+	else if (sense_buf[7]>4)
-+		return sense_buf[12];
-+	else
-+		return 0;
-+}
-+
-+static inline u8 get_ascq(unsigned char *sense_buf)
-+{
-+	if (sense_buf[0]&2)
-+		return sense_buf[3];
-+	else if (sense_buf[7]>5)
-+		return sense_buf[13];
-+	else
-+		return 0;
-+}
-+
- #define NEEDS_RETRY     0x2001
- #define SUCCESS         0x2002
- #define FAILED          0x2003
-diff -Nru -X /usr/src/dontdiff linux-2.5.47/drivers/scsi/scsi_error.c linux/drivers/scsi/scsi_error.c
---- linux-2.5.47/drivers/scsi/scsi_error.c	Sun Nov 10 22:28:02 2002
-+++ linux/drivers/scsi/scsi_error.c	Wed Nov 13 14:04:24 2002
-@@ -299,13 +299,15 @@
-  **/
- static int scsi_check_sense(Scsi_Cmnd *scmd)
- {
-+	u8 sense_key = get_sense_key(scmd->sense_buffer);
-+	u8 asc  = get_asc(scmd->sense_buffer);
-+	u8 ascq = get_ascq(scmd->sense_buffer);
-+	
- 	if (!SCSI_SENSE_VALID(scmd)) {
- 		return FAILED;
- 	}
--	if (scmd->sense_buffer[2] & 0xe0)
--		return SUCCESS;
- 
--	switch (scmd->sense_buffer[2] & 0xf) {
-+	switch (sense_key) {
- 	case NO_SENSE:
- 		return SUCCESS;
- 	case RECOVERED_ERROR:
-@@ -329,8 +331,7 @@
- 		 * if the device is in the process of becoming ready, we 
- 		 * should retry.
- 		 */
--		if ((scmd->sense_buffer[12] == 0x04) &&
--			(scmd->sense_buffer[13] == 0x01)) {
-+		if (asc == 0x04 && ascq == 0x01) {
- 			return NEEDS_RETRY;
- 		}
- 		return SUCCESS;
-diff -Nru -X /usr/src/dontdiff linux-2.5.47/drivers/scsi/scsi_ioctl.c linux/drivers/scsi/scsi_ioctl.c
---- linux-2.5.47/drivers/scsi/scsi_ioctl.c	Sun Nov 10 22:28:31 2002
-+++ linux/drivers/scsi/scsi_ioctl.c	Wed Nov 13 14:06:04 2002
-@@ -108,7 +108,7 @@
- 	SCSI_LOG_IOCTL(2, printk("Ioctl returned  0x%x\n", SRpnt->sr_result));
- 
- 	if (driver_byte(SRpnt->sr_result) != 0)
--		switch (SRpnt->sr_sense_buffer[2] & 0xf) {
-+		switch (get_sense_key(SRpnt->sr_sense_buffer)) {
- 		case ILLEGAL_REQUEST:
- 			if (cmd[0] == ALLOW_MEDIUM_REMOVAL)
- 				dev->lockable = 0;
-@@ -134,10 +134,10 @@
- 			       dev->id,
- 			       dev->lun,
- 			       SRpnt->sr_result);
--			printk("\tSense class %x, sense error %x, extended sense %x\n",
-+			printk("\tSense class %x, sense error %x, sense key %x\n",
- 			       sense_class(SRpnt->sr_sense_buffer[0]),
- 			       sense_error(SRpnt->sr_sense_buffer[0]),
--			       SRpnt->sr_sense_buffer[2] & 0xf);
-+			       get_sense_key(SRpnt->sr_sense_buffer));
- 
- 		}
- 
-diff -Nru -X /usr/src/dontdiff linux-2.5.47/drivers/scsi/scsi_lib.c linux/drivers/scsi/scsi_lib.c
---- linux-2.5.47/drivers/scsi/scsi_lib.c	Sun Nov 10 22:28:14 2002
-+++ linux/drivers/scsi/scsi_lib.c	Wed Nov 13 14:14:52 2002
-@@ -581,17 +581,17 @@
- 			}
- #endif
- 		}
--		if ((SCpnt->sense_buffer[0] & 0x7f) == 0x70) {
-+		if (SCSI_SENSE_VALID(SCpnt)) {
- 			/*
- 			 * If the device is in the process of becoming ready,
- 			 * retry.
- 			 */
--			if (SCpnt->sense_buffer[12] == 0x04 &&
--			    SCpnt->sense_buffer[13] == 0x01) {
-+			if (get_asc(SCpnt->sense_buffer) == 0x04 &&
-+			    get_ascq(SCpnt->sense_buffer) == 0x01) {
- 				scsi_queue_next_request(q, SCpnt);
- 				return;
- 			}
--			if ((SCpnt->sense_buffer[2] & 0xf) == UNIT_ATTENTION) {
-+			if (get_sense_key(SCpnt->sense_buffer) == UNIT_ATTENTION) {
- 				if (SCpnt->device->removable) {
- 					/* detected disc change.  set a bit 
- 					 * and quietly refuse further access.
-@@ -618,7 +618,7 @@
- 		 * past the end of the disk.
- 		 */
- 
--		switch (SCpnt->sense_buffer[2]) {
-+		switch (get_sense_key(SCpnt->sense_buffer)) {
- 		case ILLEGAL_REQUEST:
- 			if (SCpnt->device->ten) {
- 				SCpnt->device->ten = 0;
-diff -Nru -X /usr/src/dontdiff linux-2.5.47/drivers/scsi/scsi_scan.c linux/drivers/scsi/scsi_scan.c
---- linux-2.5.47/drivers/scsi/scsi_scan.c	Sun Nov 10 22:28:29 2002
-+++ linux/drivers/scsi/scsi_scan.c	Wed Nov 13 14:10:20 2002
-@@ -1205,9 +1205,9 @@
- 
- 	if (sreq->sr_result) {
- 		if ((driver_byte(sreq->sr_result) & DRIVER_SENSE) != 0 &&
--		    (sreq->sr_sense_buffer[2] & 0xf) == UNIT_ATTENTION &&
--		    sreq->sr_sense_buffer[12] == 0x28 &&
--		    sreq->sr_sense_buffer[13] == 0) {
-+		    get_sense_key(sreq->sr_sense_buffer) == UNIT_ATTENTION &&
-+		    get_asc(sreq->sr_sense_buffer) == 0x28 &&
-+		    get_ascq(sreq->sr_sense_buffer) == 0) {
- 			/* not-ready to ready transition - good */
- 			/* dpg: bogus? INQUIRY never returns UNIT_ATTENTION */
- 		} else
-@@ -1830,7 +1830,7 @@
- 				?  "failed" : "successful", retries,
- 				sreq->sr_result));
- 		if (sreq->sr_result == 0
--		    || sreq->sr_sense_buffer[2] != UNIT_ATTENTION)
-+		    || get_sense_key(sreq->sr_sense_buffer) != UNIT_ATTENTION)
- 			break;
- 	}
- 	scsi_release_commandblocks(sdevscan);
-diff -Nru -X /usr/src/dontdiff linux-2.5.47/drivers/scsi/scsiiom.c linux/drivers/scsi/scsiiom.c
---- linux-2.5.47/drivers/scsi/scsiiom.c	Sun Nov 10 22:28:03 2002
-+++ linux/drivers/scsi/scsiiom.c	Wed Nov 13 14:12:01 2002
-@@ -1380,7 +1380,7 @@
- 	pSRB->AdaptStatus = 0;
- 	pSRB->TargetStatus = CHECK_CONDITION << 1;
- #ifdef DC390_REMOVABLEDEBUG
--	switch (pcmd->sense_buffer[2] & 0x0f)
-+	switch (get_sense_key(pcmd->sense_buffer))
- 	{	    
- 	 case NOT_READY: printk (KERN_INFO "DC390: ReqSense: NOT_READY (Cmnd = 0x%02x, Dev = %i-%i, Stat = %i, Scan = %i)\n",
- 				 pcmd->cmnd[0], pDCB->TargetID, pDCB->TargetLUN,
-@@ -1584,8 +1584,8 @@
- 	    else printk ("\n");
- #endif
- 	    if( (host_byte(pcmd->result) != DID_OK && !(status_byte(pcmd->result) & CHECK_CONDITION) && !(status_byte(pcmd->result) & BUSY)) ||
--	       ((driver_byte(pcmd->result) & DRIVER_SENSE) && (pcmd->sense_buffer[0] & 0x70) == 0x70 &&
--		(pcmd->sense_buffer[2] & 0xf) == ILLEGAL_REQUEST) || host_byte(pcmd->result) & DID_ERROR )
-+	       ((driver_byte(pcmd->result) & DRIVER_SENSE) && SCSI_SENSE_VALID(pcmd->sense_buffer) &&
-+		get_sense_key(pcmd->sense_buffer) == ILLEGAL_REQUEST) || host_byte(pcmd->result) & DID_ERROR )
- 	    {
- 	       /* device not present: remove */ 
- 	       //dc390_Going_remove (pDCB, pSRB);
+        /* Attempt to return intelligent sense information */
+        if (fill_sense) {
+-               if ((command->status == 0xc7) || (command->status == 0xcb))
+{
++               if (command->status & 0xC1) {
+                        for
+(i=0;i<(sizeof(tw_sense_table)/sizeof(tw_sense_table[0]));i++) {
+                                if (command->flags == tw_sense_table[i][0])
+{
