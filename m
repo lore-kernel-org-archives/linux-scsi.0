@@ -1,213 +1,50 @@
-From: Mike Anderson <andmike@us.ibm.com>
-Subject: Re: [PATCH] scsi_set_host_offline (resend)
-Date: Wed, 2 Apr 2003 18:05:52 -0800
+From: Zwane Mwaikambo <zwane@linuxpower.ca>
+Subject: Re: isp1020 memory trample in 2.5.66
+Date: Thu, 3 Apr 2003 03:27:38 -0500 (EST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030403020552.GA13105@beaverton.ibm.com>
-References: <20030325100704.GC3868@beaverton.ibm.com> <20030329125302.A10565@one-eyed-alien.net> <1048974903.21704.313.camel@mulgrave> <200303292350.04187.oliver@neukum.org> <20030401024806.GA4991@beaverton.ibm.com> <20030401234210.A14717@one-eyed-alien.net>
+Message-ID: <Pine.LNX.4.50.0304030317230.30262-100000@montezuma.mastecende.com>
+References: <Pine.LNX.4.50.0304020101460.8773-100000@montezuma.mastecende.com>
+ <20030402080226.A25288@beaverton.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20030401234210.A14717@one-eyed-alien.net>
+In-Reply-To: <20030402080226.A25288@beaverton.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Oliver Neukum <oliver@neukum.org>, James Bottomley <James.Bottomley@steeleye.com>, mochel@osdl.org, SCSI Mailing List <linux-scsi@vger.kernel.org>, gregkh@us.ibm.com
+To: Patrick Mansfield <patmans@us.ibm.com>
+Cc: Linux Kernel <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
 
-Matthew Dharm [mdharm-scsi@one-eyed-alien.net] wrote:
-> On Mon, Mar 31, 2003 at 06:48:06PM -0800, Mike Anderson wrote:
-> > Matthew / James I believe I am out of sync with how much is being done
-> > by userspace and how much is being done in the kernel. I believed there
-> > was always userspace action to umount / close devices.
-> 
-> I have no objection to userspace being notified -- I only object to
-> requiring userspace to complete the unplug operation.
-> 
+On Wed, 2 Apr 2003, Patrick Mansfield wrote:
 
-If the unplug operation includes cleanup (i.e. free of the memory) then
-userspace needs to be involved. 
-
-> > Matthew I know in the previous mail you wrote a numbered list of steps.
-> > I believe item #2 should have called scsi_set_host_offline or
-> > scsi_set_device_offline. Item #6 would only happen if scsi_remove_host
-> > was called sometime prior.
+> I've been booting OK with 2.5.66 with isp1020 and qlogicisp driver with
+> multiple disks, though the boot sometimes hangs.
 > 
-> The assumption was that #5 was the call to scsi_remove_host() -- the only
-> question in my mind is: How do I know it is 'safe' to call that?
-> 
+> I've also booted OK with the feral driver.
 
-The changes I am making would allow you to call scsi_remove_host()
-anytime and have your release called later when ref counts go to zero.
+I'll be prepping a kernel with that.
 
-I am traveling until late Friday night so hopefully I will have
-something to post after I get back.
+> This looks a lot like the oops when trying to send IO to more than one
+> disk at a time with the isp1020 + qlogicisp.
+> 
+> Is there something different causing IO to muliple disks at that point?
 
-> > I wrote the following text on the interface I thought we had / where
-> > trying to complete. I would like to add to this so that we possibly
-> > could archive an interface contract between the LLDD and scsi-mid.
-> 
-> Based on my reading of the following, userspace is notified but not
-> required to take any action.  Would that be accurate?
-> 
+Yes it is possible as i have another disk on the same HBA with /usr
 
-Userspace could take no action. You can make all the interface calls,
-but the release calls for the struct scsi_device and struct scsi_host
-may not be called if a filesystem or user operation is holding a
-reference.
+> I hit this once when I enabled parallel fsck (it didn't oops until after I
+> got a late oops, and rebooted).
+> 
+> Martin hit it when the queue depth was not properly checked.
+> 
+> wli has hit it with parallel mkfs (or something).
 
-> > 2.5 SCSI host register interfaces (scsi_add_host / scsi_remove_host)
-> > 
-> > 1. LLDD call graph standard
-> > 
-> > (PROBE)
-> > LLDD                  Mid                  Sysfs
-> > scsi_register      -->
-> > scsi_set_device    --> (depreciated)
-> > scsi_add_host      ---+
-> >                       |
-> >                scsi_sysfs_add_host      --> device_register (shost)
-> >                scsi_scan_host         (i)-> device_register (sdev)
-> 
-> This is how I see it (as an LLDD guy) -- I set up my internal state, then
-> call scsi_register() followed by scsi_add_host().
-> 
-> Then the world starts, and I just keep processing commands whenever I get
-> one.  Then, someone yanks my plug, and:
-> 
-> > (REMOVE)
-> > LLDD                  Mid                  Sysfs
-> > scsi_remove_host  ---+
-> >                      |
-> >                scsi_sysfs_remove_host   --> device_unregister (shost)
-> >                scsi_forget_host       (i)-> device_unregister (sdev)
-> 
-> I presume that I need to offline each device (sdev) before calling
-> scsi_remove_host(), as previously discussed?  That isn't shown here...
-> 
+Ok this thing sounds _very_ fragile ;)
 
-It is shown below for the offline case. This section was to show that if
-no unplug event occurred the caller would not need to call the offline
-interfaces to remove a scsi host.
-
-> > (hotplug "remove" events for shost and sdev where generated by
-> > device_unregister call).
+> The following thread was pretty useful, Doug L mentions that the qlogicisp
+> does bad things, starting with Martin's analysis:
 > 
-> Yes.  Userspace is notified, but not required to take any action.
-> 
+> http://marc.theaimsgroup.com/?l=linux-kernel&m=104457083601573&w=2
 
-Correct.
+Thanks! that looks very familiar.
 
-> > (sdev device ref cnt == 0)
-> >                                             koject_cleanup
-> >                                                    |
-> >                                            scsi_device_release
-> 
-> Good.  I presume that scsi_device_release() will decrement the ref cnt on
-> the shost device?
-> 
-
-Correct.
-
-> > (shost device ref cnt == 0)
-> >                                             koject_cleanup
-> >                                                    |
-> >                      +--                    scsi_host_release
-> >                      |
-> >                   shost->hostt->release
-> 
-> Good.  release() then is responsible for cleaning up.
-> 
-
-Yes the host template release function would clean its internal data and
-call scsi_unregister to free the scsi_host structure.
-
-> > 2. LLDD call graph offline event
-> > 
-> > (OFFLINE single device)
-> > LLDD                       Mid                  Sysfs
-> > scsi_set_device_offline  --+
-> >                            |
-> >                         scsi_eh_scmd_add
-> > 
-> > Note: Do we need hotplug events here or wait until remove???
-> 
-> Good question.  Here's a better one:  Why do we separately offline the
-> device before removal?  Why doesn't scsi_remove_host() do it all for us?
-> 
-
-My thoughts where that they where two separate actions. 
-
-scsi_set_device_offline / host_offline may be called in the future and
-then onlined without calling scsi_remove_host  (i.e. we need the online
-counter parts to these functions to make them symmetric).
-
-A LLLD may wish to call scsi_remove_host while users are still active
-and only be removed once the users are off the device and drained.
-
-To make things more confusing scsi_remove_host does set a device to the
-offline state, but I believe this could be changes to not do this
-action.
-
-> For example, when we unload a USB HCD driver, disconnect() gets called for
-> each device that was on that bus.
-> 
-> > (OFFLINE host)
-> > LLDD                       Mid                  Sysfs
-> > scsi_set_host_offline    --+
-> >                            |
-> >                       scsi_set_device_offline
-> > 
-> > (REMOVE)
-> > Same as above.
-> 
-> I presume that scsi_set_device_offline in this picture leads to
-> scsi_set_device_offline(), which leads to scsi_eh_scmd_add()?
-
-Yes,
-	scsi_set_host_offline will call scsi_set_device_offline for all
-	children devices of the host and if IOs are active
-	scsi_eh_scmd_add will cancel those commands.
-> 
-> > TODO (1):
-> > scsi_add_host scans the host and when outstanding patches are applied
-> > the scsi_host struct device will have a ref count of 1+N where N is the
-> > number of struct scsi_device's found off the host. In turn each struct
-> > scsi_device struct device will have a ref count of 1+N where N is the
-> > number of upper drivers bound or the number of opens (this may not be
-> > correct for sometime as we do not have an option for the multiple bind
-> > sg issue).
-> 
-> Okay.... I think we're on the same page.  It appears that you're going to
-> require me to keep resources around for quite some time, until everything
-> closes/umounts -- but, since every device is offline, I don't have to do
-> any command processing, yes?  That's good, because then I can free some
-> significant resources....
-> 
-
-Yes, The goal is that no more IO will be sent to driver.
-
-> > TODO (2):
-> > We need a common method to stop gets to a struct device post a certain
-> > barrier. In the short term scsi could add a scsi_host flag to stop scan
-> > adds, but cannot effect sysfs gets.
-> 
-> Hrm... good point.  How do other busses do this?
-> 
-
-I believe others do not need this at least in your example there is one
-device per host. Since SCSI provides the scan interface it might be the
-earliest and best place to stop future registers.
-
-> > TODO (3):
-> > When outstanding patches are applied scsi_remove_host will cause a
-> > device_unregister to be called on all child nodes (sdevs) of scsi_host
-> > and scsi_host (these unregisters will generate hot plug "remove" events)
-> > once the scsi_device ref cnt goes to zero scsi_device_release is called
-> > and once scsi_host ref cnt goes to zero scsi_host_release is called.
-> 
-> Sounds good to me.
-> 
-
--andmike
---
-Michael Anderson
-andmike@us.ibm.com
-
+	Zwane
+-- 
+function.linuxpower.ca
