@@ -1,54 +1,38 @@
 From: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Subject: PATCH [0/5]  qla2xxx: fixes for 2.6.8...
-Date: Mon, 12 Jul 2004 07:04:28 -0700
+Subject: PATCH [1/5]  qla2xxx: EH host-reset fixes
+Date: Mon, 12 Jul 2004 07:04:58 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040712140428.GA6938@praka.san.rr.com>
+Message-ID: <20040712140458.GA6947@praka.san.rr.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ms-smtp-01-qfe0.socal.rr.com ([66.75.162.133]:1195 "EHLO
-	ms-smtp-01-eri0.socal.rr.com") by vger.kernel.org with ESMTP
-	id S263159AbUGLVQA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 12 Jul 2004 17:16:00 -0400
+Received: from ms-smtp-02-qfe0.socal.rr.com ([66.75.162.134]:44949 "EHLO
+	ms-smtp-02-eri0.socal.rr.com") by vger.kernel.org with ESMTP
+	id S263204AbUGLVQg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 12 Jul 2004 17:16:36 -0400
 Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@SteelEye.com>, Linux-SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-James,
-
-Here's a set of patches which fix a handful of outstanding issues with
-the qla2xxx driver, including the recent TCQ issues.  Please apply for
-the 2.6.8 release.
-
-All patches can be found at the following URL:
-
-        ftp://ftp.qlogic.com/outgoing/linux/patches/8.x/8.00.00b15k/
-
-Regards,
-Andrew Vasquez
-QLogic Corporation
-
-
-ChangeSet@1.1865, 2004-07-12 09:28:00-07:00, andrew.vasquez@apc.qlogic.com
+ChangeSet
+  1.1865 04/07/12 09:28:00 andrew.vasquez@apc.qlogic.com +1 -0
   Fix issue where host-reset would incorrectly return a
   FAILED status.
 
-ChangeSet@1.1866, 2004-07-12 09:30:06-07:00, andrew.vasquez@apc.qlogic.com
-  Fix issue where firmware options were not properly being
-  set before firmware initialization.
+Signed-off-by: Andrew Vasquez <andrew.vasquez@qlogic.com>
 
-ChangeSet@1.1867, 2004-07-12 09:38:28-07:00, andrew.vasquez@apc.qlogic.com
-  Correct usage of tag-command-queueing methods:
-  
-  o Properly call scsi_activate_tcq() rather than
-    scsi_adjust_queue_depth().
-  o Properly retrieve tag message from command via
-    scsi_populate_tag_msg().
+ drivers/scsi/qla2xxx/qla_os.c |    2 +-
+ 1 files changed, 1 insertion(+), 1 deletion(-)
 
-ChangeSet@1.1868, 2004-07-12 09:42:23-07:00, andrew.vasquez@apc.qlogic.com
-  Fix issue where a single command could inadvertently get 
-  'stuck' in the pending queue during resource availability
-  failures.
-
-ChangeSet@1.1869, 2004-07-12 09:53:48-07:00, andrew.vasquez@apc.qlogic.com
-  Update version number to 8.00.00b15-k.
+diff -Nru a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+--- a/drivers/scsi/qla2xxx/qla_os.c	2004-07-12 09:54:16 -07:00
++++ b/drivers/scsi/qla2xxx/qla_os.c	2004-07-12 09:54:16 -07:00
+@@ -1663,7 +1663,7 @@
+ 		goto out;
+ 
+ 	/* Waiting for our command in done_queue to be returned to OS.*/
+-	if (qla2x00_eh_wait_for_pending_commands(ha))
++	if (!qla2x00_eh_wait_for_pending_commands(ha))
+ 		rval = FAILED;
+ 
+  out:
