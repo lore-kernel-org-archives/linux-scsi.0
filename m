@@ -1,64 +1,83 @@
-From: Matthew Wilcox <willy@debian.org>
-Subject: Re: [PATCH] 2.6.1-rc2 - MPT Fusion driver 3.00.00 update
-Date: Wed, 7 Jan 2004 17:09:44 +0000
+From: Chiaki <ishikawa@yk.rim.or.jp>
+Subject: Re: BusLogic cleanup
+Date: Thu, 08 Jan 2004 02:02:47 +0900
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040107170944.GI17182@parcelfarce.linux.theplanet.co.uk>
-References: <3FFB4E0F.704@lsil.com>
+Message-ID: <3FFC3BB7.7010308@yk.rim.or.jp>
+References: <3FF513FE.17A1C2FD@primenet.com> <20040107153149.A29756@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:32938 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S266248AbUAGRJu
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 7 Jan 2004 12:09:50 -0500
-Content-Disposition: inline
-In-Reply-To: <3FFB4E0F.704@lsil.com>
+Received: from pl1004.nas911.n-yokohama.nttpc.ne.jp ([210.139.42.236]:1228
+	"EHLO standard.erephon") by vger.kernel.org with ESMTP
+	id S265597AbUAGRDx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 7 Jan 2004 12:03:53 -0500
+Received: from (client is using the wrong hostname!) yk.rim.or.jp (really [127.0.0.1]) by yk.rim.or.jp
+	via smail with esmtp
+	id <m1AeH5N-00392HC@standard.erephon> (Debian Smail3.2.0.115)
+	for <linux-scsi@vger.kernel.org>; Thu, 8 Jan 2004 02:03:13 +0900 (JST)
+In-Reply-To: <20040107153149.A29756@infradead.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Eric Moore <emoore@lsil.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, James.Bottomley@steeleye.com
+To: Christoph Hellwig <hch@infradead.org>, Bob Doyle <doyle@primenet.com>
+Cc: linux-scsi@vger.kernel.org
 
-On Tue, Jan 06, 2004 at 05:08:47PM -0700, Eric Moore wrote:
-> +static struct pci_device_id mptbase_pci_table[] = {
-> +    {
-> +        .vendor        = PCI_VENDOR_ID_LSI_LOGIC,
-> +        .device        = PCI_DEVICE_ID_LSI_FC909,
-> +        .subvendor    = PCI_ANY_ID,
-> +        .subdevice    = PCI_ANY_ID,
-> +        .class        = PCI_CLASS_SERIAL_FIBER << 8,
-> +        .class_mask    = 0xFFFF00,
-> +        .driver_data    = DEVT_INDEX_MPT
-> +    },
 
-This is all pretty verbose.  The normal style for device drivers is:
+>>So - now the questions...
+>>
+>>How do I test the eh_* handler functions?  I've tried everything
+>>I can think of to provoke them but haven't managed to.  For now,
+>>I don't know if they work or not.
+> 
+> 
+> The best testcase would be a faulty disk.  You could also try to get
+> into EH szenarios by wrong termination / cabling - but who wants to do
+> that to his system?
+> 
 
-static struct pci_device_id mptbase_pci_table[] = {
-	{ PCI_VENDOR_ID_LSI_LOGIC, PCI_DEVICE_ID_LSI_FC909,
-		PCI_ANY_ID, PCI_ANY_ID, 0, 0, DEVT_INDEX_MPT },
-	{ PCI_VENDOR_ID_LSI_LOGIC, PCI_DEVICE_ID_LSI_FC929,
-		PCI_ANY_ID, PCI_ANY_ID, 0, 0, DEVT_INDEX_MPT },
-	{ PCI_VENDOR_ID_LSI_LOGIC, PCI_DEVICE_ID_LSI_FC919,
-		PCI_ANY_ID, PCI_ANY_ID, 0, 0, DEVT_INDEX_MPT },
-	{ PCI_VENDOR_ID_LSI_LOGIC, PCI_DEVICE_ID_LSI_FC929X,
-		PCI_ANY_ID, PCI_ANY_ID, 0, 0, DEVT_INDEX_MPT },
-	{ PCI_VENDOR_ID_LSI_LOGIC, PCI_DEVICE_ID_LSI_FC919X,
-		PCI_ANY_ID, PCI_ANY_ID, 0, 0, DEVT_INDEX_MPT },
-	{ PCI_VENDOR_ID_LSI_LOGIC, PCI_DEVICE_ID_LSI_53C1030,
-		PCI_ANY_ID, PCI_ANY_ID, 0, 0, DEVT_INDEX_MPT },
-	{ PCI_VENDOR_ID_LSI_LOGIC, PCI_DEVICE_ID_LSI_53C1035,
-		PCI_ANY_ID, PCI_ANY_ID, 0, 0, DEVT_INDEX_MPT },
-	{ }
-}
+I have kept a faulty disk from a raid array of about 5 years ago
+specifically for provoking SCSI driver, mid-layer errors ! :-)
+AND I have buslogic PCI card, which ran fine under 2.2.xx, and 2.4.yy.
 
-Although since you don't make any use of DEVT_INDEX_MPT, you can drop the last
-three entries and simply write:
+Should I take up the challenge?
 
-	{ PCI_VENDOR_ID_LSI_LOGIC, PCI_DEVICE_ID_LSI_53C1035,
-		PCI_ANY_ID, PCI_ANY_ID },
+The only problem is that I haven't used that faulty disk for the last two
+to three years, so I am not sure if it still works.
+The symptom was that it would fault after about one hour or two.
+The problem looks to be a media problem and the driver firmware seems
+to try hard to recover from the error by remapping, etc. and it takes 
+almost forever,
+usually 10-20 sec. This was too lengthy for the linux scsi driver / 
+mid-layer
+a few years ago.
+
+If the disk is not usable by now, I have a working Nakamichi SCSI
+CD changer (7 CD unit) which caused hiccups for some SCSI drivers
+when I tried to access two CDs simultaneously in the changer
+under linux.
+Since the changer needs to shuffle the CDs to access them,
+trying to access them simultaneously causes a lot of
+mechanical shuffling and long deadtime in between, and again
+this dead time of a few seconds (varying) was
+too lengthy for linux SCSI subsystem a few years ago.
+
+I am very curious if these are now handled adequately
+by linux 2.6.0 now. (I still have a feeling that they may not.)
+They were handled adequately by Solaris 7 and
+Windows98SE.
+
+Can the new buslogic driver work as module under 2.6.0?
+This makes testing much easier than built-in driver.
+
+Also, does the problem with the driver kill only the driver
+and the device attached to it, or does the entire system
+gets hung? Again, localizing damage is very important for
+practical considerations.
+
 
 -- 
-"Next the statesmen will invent cheap lies, putting the blame upon 
-the nation that is attacked, and every man will be glad of those
-conscience-soothing falsities, and will diligently study them, and refuse
-to examine any refutations of them; and thus he will by and by convince 
-himself that the war is just, and will thank God for the better sleep 
-he enjoys after this process of grotesque self-deception." -- Mark Twain
+int main(void){int j=2003;/*(c)2003 cishikawa. */
+char t[] ="<CI> @abcdefghijklmnopqrstuvwxyz.,\n\"";
+char *i ="g>qtCIuqivb,gCwe\np@.ietCIuqi\"tqkvv is>dnamz";
+while(*i)((j+=strchr(t,*i++)-(int)t),(j%=sizeof t-1),
+(putchar(t[j])));return 0;}/* under GPL */
+
