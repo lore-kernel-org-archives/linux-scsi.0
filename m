@@ -1,34 +1,42 @@
-From: Russell King <rmk@arm.linux.org.uk>
+From: Jeff Garzik <jgarzik@pobox.com>
 Subject: Re: [RFR] a new SCSI driver
-Date: Sun, 25 May 2003 12:48:36 +0100
+Date: Sun, 25 May 2003 09:21:40 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030525124836.A31489@flint.arm.linux.org.uk>
-References: <200305251119.h4PBJOal000678@81-2-122-30.bradfords.org.uk> <1053859525.1571.0.camel@laptop.fenrus.com>
+Message-ID: <3ED0C364.3020507@pobox.com>
+References: <200305250944.h4P9i5Ct000456@81-2-122-30.bradfords.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from caramon.arm.linux.org.uk ([212.18.232.186]:30988 "EHLO
-	caramon.arm.linux.org.uk") by vger.kernel.org with ESMTP
-	id S261985AbTEYLf3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 25 May 2003 07:35:29 -0400
-Content-Disposition: inline
-In-Reply-To: <1053859525.1571.0.camel@laptop.fenrus.com>; from arjanv@redhat.com on Sun, May 25, 2003 at 12:45:25PM +0200
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:28545 "EHLO
+	www.linux.org.uk") by vger.kernel.org with ESMTP id S262098AbTEYNIx
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 25 May 2003 09:08:53 -0400
+In-Reply-To: <200305250944.h4P9i5Ct000456@81-2-122-30.bradfords.org.uk>
 List-Id: linux-scsi@vger.kernel.org
-To: Arjan van de Ven <arjanv@redhat.com>
-Cc: john@grabjohn.com, jgarzik@pobox.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: john@grabjohn.com
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Sun, May 25, 2003 at 12:45:25PM +0200, Arjan van de Ven wrote:
-> On Sun, 2003-05-25 at 13:19, john@grabjohn.com wrote:
-> > Also embedded world != PDAs.  I was thinking more of things like PVRs, and blade
-> > servers.  What about solid state video cameras?  Are they going to use PIO mode
-> > ATA?
-> on common misunderstanding ; PATA != PIO mode ATA but Parallel ATA, as
-> opposed to Serial ATA
+john@grabjohn.com wrote:
+>>Serial ATA is looming quickly on the horizon.  Both device and host
+>>controller SATA implementations really lend themselves to behaviors
+>>that have existed in SCSI for a while.  SATA even defines use of SCSI
+>>Enclosure Services.
+> 
+> 
+> Thinking ahead, by the 2.8 timescale, PATA could well be legacy hardware 
+> which could be supported only by an 'old' IDE driver, much like we already
+> have at the moment - I.E. we could remove the current 'old' IDE driver
+> sometime during the 2.7 timescale, and support SATA only via the SCSI layer.
+> 
+> This would save having any more than the minimum SATA code going in to the
+> existing IDE driver, and consolidate work in the future.        
 
-I was aware of that point.  That's why I used the term "PIO mode ATA" to
-describe something which isn't "PATA".
 
--- 
-Russell King (rmk@arm.linux.org.uk)                The developer of ARM Linux
-             http://www.arm.linux.org.uk/personal/aboutme.html
+I'm content to let evolution make these decisions...  predicting into 
+the future isn't the best skill a technologist has :)
+
+	Jeff
+
+
 
