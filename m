@@ -1,53 +1,33 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: [PATCH] sg version 3.5.28 for lk 2.5.64
-Date: Wed, 12 Mar 2003 22:54:01 +1000
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3E6F2DE9.5010000@torque.net>
-References: <3E6B405B.3010509@torque.net> <20030311142836.A22992@infradead.org> <20030311081838.A9661@beaverton.ibm.com> <20030311200927.A967@lst.de>
-Reply-To: dougg@torque.net
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: Problem with aacraid driver in 2.5.63-bk-latest
+Date: 13 Mar 2003 00:18:02 +0000
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <1047514681.23725.35.camel@irongate.swansea.linux.org.uk>
+References: <20030228133037.GB7473@jiffies.dk>
+	 <1047510381.12193.28.camel@markh1.pdx.osdl.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+In-Reply-To: <1047510381.12193.28.camel@markh1.pdx.osdl.net>
+To: Mark Haverkamp <markh@osdl.org>
+Cc: Christoffer Hall-Frederiksen <hall@jiffies.dk>, linux-scsi@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux aacraid devel <linux-aacraid-devel@dell.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: Patrick Mansfield <patmans@us.ibm.com>, linux-scsi@vger.kernel.org
 
-Christoph Hellwig wrote:
-> On Tue, Mar 11, 2003 at 08:18:38AM -0800, Patrick Mansfield wrote:
+On Wed, 2003-03-12 at 23:06, Mark Haverkamp wrote:
+> During probe, scsi_alloc_sdev is called.  It calls
+> scsi_adjust_queue_depth with the cmd_per_lun value. 
+> scsi_adjust_queue_depth returns without doing anything if the tags value
+> is greater than 256.  This leaves the Scsi_Device queue_depth at zero. 
+> Later when an I/O is queued, scsi_request_fn checks for device_busy >=
+> queue_depth.  If so, the function does a break and exits.  This is where
+> it hangs.
 > 
->>Is there a patch for putting the aic or all scsi_hosts into the
->>shost_devclass class, like scsi_debug.c does for itself?
-> 
-> 
-> You're right!  This is the snipplet I missed when sending out the
-> aic7xxx hotplug changes (+ the same for aic79xx):
-> 
-> 
-> --- 1.7/drivers/scsi/aic7xxx/aic7xxx_osm_pci.c	Wed Feb 26 18:14:16 2003
-> +++ edited/drivers/scsi/aic7xxx/aic7xxx_osm_pci.c	Tue Mar 11 19:13:02 2003
-> @@ -75,10 +75,13 @@
->  MODULE_DEVICE_TABLE(pci, ahc_linux_pci_id_table);
->  
->  struct pci_driver aic7xxx_pci_driver = {
-> -	name:		"aic7xxx",
-> -	probe:		ahc_linux_pci_dev_probe,
-> -	remove:		ahc_linux_pci_dev_remove,
-> -	id_table:	ahc_linux_pci_id_table
-> +	.name		= "aic7xxx",
-> +	.probe		= ahc_linux_pci_dev_probe,
-> +	.remove		= ahc_linux_pci_dev_remove,
-> +	.id_table	= ahc_linux_pci_id_table,
-> +	.driver		= {
-> +		.devclass	= &shost_devclass,
-> +	},
->  };
->  
->  static void
+> To get things to load I set cmd_per_lun to 256.  I don't know if the is
+> the correct way to deal with the problem.  Maybe someone else can say
+> something about that.
 
-The movement of scsi host information from sg to sysfs
-is starting to look like an experiment that has failed.
-
-Doug Gilbert
-
-
+If the SCSI layer is trying to be clever by ignoring the requested 512
+then thats the actual problem. 512 is the right value because its not
+really a disk you are talking to on the main channel. So the scsi layer
+ought to honour it.
