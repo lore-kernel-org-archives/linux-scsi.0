@@ -1,54 +1,44 @@
-From: Pat LaVarre <p.lavarre@ieee.org>
-Subject: Re: [PATCH] SCSI: limit mode sense usage
-Date: 29 Oct 2003 08:43:27 -0700
+From: James Bottomley <James.Bottomley@steeleye.com>
+Subject: Re: [linux-usb-devel] usb-storage / scsi : new scsi host on each
+	plug
+Date: 29 Oct 2003 09:53:33 -0600
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1067442207.13824.3.camel@patehci2>
-References: <Pine.LNX.4.44L0.0310290947010.874-100000@ida.rowland.org>
+Message-ID: <1067442814.1829.21.camel@mulgrave>
+References: <Pine.LNX.4.44L0.0310291020430.874-100000@ida.rowland.org>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from email-out1.iomega.com ([147.178.1.82]:18172 "EHLO
-	email.iomega.com") by vger.kernel.org with ESMTP id S261850AbTJ2Pnm
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 29 Oct 2003 10:43:42 -0500
-In-Reply-To: <Pine.LNX.4.44L0.0310290947010.874-100000@ida.rowland.org>
+Received: from nat9.steeleye.com ([65.114.3.137]:11014 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S261928AbTJ2PyS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 29 Oct 2003 10:54:18 -0500
+In-Reply-To: <Pine.LNX.4.44L0.0310291020430.874-100000@ida.rowland.org>
 List-Id: linux-scsi@vger.kernel.org
-To: stern@rowland.harvard.edu
-Cc: ronald@kuetemeier.com, patmans@us.ibm.com, linux-scsi@vger.kernel.org, usb-storage@one-eyed-alien.net
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: martin@lorenz.eu.org, USB development list <linux-usb-devel@lists.sourceforge.net>, SCSI development list <linux-scsi@vger.kernel.org>
 
-> >   There now in -test9 I think I see: ...
-> > We guess writable if need be, but we prefer to settle for: ...
-> > sdkp->write_prot = ((data.device_specific & 0x80) != 0); ...
-> > after the first command that works in the sequence: ...
-> > sd_do_mode_sense(..., 0x3F, ..., 4, ...);
-> > sd_do_mode_sense(..., 0, buffer, 4, ...);
-> > sd_do_mode_sense(..., 0x3F, buffer, 255, ...);
+On Wed, 2003-10-29 at 09:24, Alan Stern wrote:
+> > no matter which USB-storage-device I attach (tried CD-ROM, 
+> > Flash Card Reader and memory stick) I get a new scsi host
+> > every time i plug a device in.
 > > 
-> > I mean to suggest, ... more closely ... Talk Like Windows ...
-> > e.g.: ...
-> > sd_do_mode_sense(..., 0x08, ..., 4, ...);
-> 
-> There's an excellent reason for _not_ doing this, at least as far as 
-> usb-storage is concerned.  Namely, many USB Mass Storage devices die when 
-> they receive MODE-SENSE(10) for page x08 but handle page x3F perfectly 
-> well.  Ronald's device is a rather unusual exception.
+> > so when changing devices for several times I finally end up
+> > with /dev/scsi/host0 to 17 or more (diden't go on)
+>
+> This is a SCSI issue, not a USB one.  Maybe someone on the 
+> SCSI development list can enlighten us.  As far as I can tell, the host 
+> number is simply incremented every time a new host, of whatever sort, is 
+> added.  The numbers never get reused.
 
-Do these devices die for all lengths of op x5A MODE_SENSE_10 of page
-x08, or only for the rude, header-only, 4 or 8 byte length that we get
-by default if we patch drivers/scsi/ minimally?
+This is really a design feature.  Not reusing hosts gives us time to
+clean up the old one before the new one is initialised (and prevents
+races where we could be trying to plug in a new host at the same time
+we're cleaning up the old one).
 
-That is, do these devices die only when assaulted by:
+In 2.6 udev discovery should ensure these devices come back to the same
+name.
 
-sd_do_mode_sense(..., 0x08, ..., 4, ...);
-
-in place of the more Windows-like:
-
-sd_do_mode_sense(..., 0x08, ..., 0x1C, ...); // if x5A MODE_SENSE_10
-sd_do_mode_sense(..., 0x08, ..., 0x18, ...); // if x1A MODE_SENSE
-
-?
-
-Pat LaVarre
+James
 
 
