@@ -1,37 +1,36 @@
-From: James Bottomley <James.Bottomley@steeleye.com>
-Subject: Re: PATCH: (as141b) Unaligned scatter-gather buffers and usb-storage
-Date: 03 Feb 2004 10:55:05 -0500
+From: "Moore, Eric Dean" <Emoore@lsil.com>
+Subject: FW: [PATCH] 2.6.2-rc2 - MPT Fusion driver 3.00.02 update
+Date: Tue, 3 Feb 2004 10:59:26 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1075823707.2097.7.camel@mulgrave>
-References: <Pine.LNX.4.44L0.0402031044390.1161-100000@ida.rowland.org>
+Message-ID: <0E3FA95632D6D047BA649F95DAB60E5703D1A34C@exa-atlanta.se.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="iso-8859-1"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat1.steeleye.com ([65.114.3.130]:30906 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S266009AbUBCPzK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 3 Feb 2004 10:55:10 -0500
-In-Reply-To: <Pine.LNX.4.44L0.0402031044390.1161-100000@ida.rowland.org>
+Received: from mail0.lsil.com ([147.145.40.20]:32688 "EHLO mail0.lsil.com")
+	by vger.kernel.org with ESMTP id S266031AbUBCP7k (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Feb 2004 10:59:40 -0500
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: SCSI development list <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
+Cc: James.Bottomley@SteelEye.com
 
-On Tue, 2004-02-03 at 10:47, Alan Stern wrote:
-> Really?  I'm surprised.  Although I know nothing about the details of 
-> using gcc on a 64-bit platform, it seems odd that an explicit cast would 
-> generate a warning.  Was that done deliberately, to try and catch 
-> inadvertent bugs in address arithmetic?
+I have fixed a minor compilation bug in the 3.00.02 MPT Fusion
+driver posted last week.  The bug is shown below in the diff.
 
-Yes, it's specifically to detect incorrect casting.  The warning is
-'cast from pointer to integer of different size'.  If you specifically
-mean the truncation, you have to first cast to the correct integer size
-and then truncate:
+You can download full source and 3.00.02 patches here:
+ftp://ftp.lsil.com/HostAdapterDrivers/linux/Fusion-MPT/2.6-patches/3.00.02
 
-(unsigned int)((unsigned long)buf)
 
-To tell the compiler you really, really mean it.
-
-James
-
+diff -uarN fusion-reference/mptbase.c fusion/mptbase.c
+--- fusion-reference/mptbase.c	2004-02-02 04:33:27.000000000 -0700
++++ fusion/mptbase.c	2004-02-02 11:46:15.117682656 -0700
+@@ -1551,7 +1551,7 @@
+ 	Q_DEL_ITEM(ioc);
+ 	mpt_adapter_dispose(ioc);
+ 
+-	mptscsih_sync_irq(ioc->irq);
++	mptscsih_sync_irq(pdev->irq);
+ 	pci_set_drvdata(pdev, NULL);
+ }
+ 
 
