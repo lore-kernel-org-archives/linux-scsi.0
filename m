@@ -1,58 +1,68 @@
-From: Ricky Beam <jfbeam@bluetronic.net>
-Subject: RE: qla2xxx (2100) vs. qlogicfc [again]
-Date: Thu, 6 May 2004 16:40:56 -0400 (EDT)
+From: Masao Fukuchi <fukuchi.masao@jp.fujitsu.com>
+Subject: Re: [PATCH 2.6 ] MPT Fusion driver 3.01.06 update
+Date: Fri, 07 May 2004 09:47:31 +0900
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.GSO.4.33.0405061633340.14297-100000@sweetums.bluetronic.net>
-References: <B179AE41C1147041AA1121F44614F0B060EE83@AVEXCH02.qlogic.org>
+Message-ID: <200405070047.AA03227@fukuchi.jp.fujitsu.com>
+References: <0E3FA95632D6D047BA649F95DAB60E57045F11CE@exa-atlanta>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sweetums.bluetronic.net ([24.199.150.42]:42224 "EHLO
-	sweetums.bluetronic.net") by vger.kernel.org with ESMTP
-	id S262329AbUEFUp0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 6 May 2004 16:45:26 -0400
-In-Reply-To: <B179AE41C1147041AA1121F44614F0B060EE83@AVEXCH02.qlogic.org>
+Received: from fgwmail5.fujitsu.co.jp ([192.51.44.35]:17328 "EHLO
+	fgwmail5.fujitsu.co.jp") by vger.kernel.org with ESMTP
+	id S261920AbUEGArh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 6 May 2004 20:47:37 -0400
+Received: from m2.gw.fujitsu.co.jp ([10.0.50.72]) by fgwmail5.fujitsu.co.jp (8.12.10/Fujitsu Gateway)
+	id i470lYvH030730 for <linux-scsi@vger.kernel.org>; Fri, 7 May 2004 09:47:34 +0900
+	(envelope-from fukuchi.masao@jp.fujitsu.com)
+Received: from s0.gw.fujitsu.co.jp by m2.gw.fujitsu.co.jp (8.12.10/Fujitsu Domain Master)
+	id i470lX7u019133 for <linux-scsi@vger.kernel.org>; Fri, 7 May 2004 09:47:33 +0900
+	(envelope-from fukuchi.masao@jp.fujitsu.com)
+Received: from fjmail504.fjmail.jp.fujitsu.com (fjmail504-0.fjmail.jp.fujitsu.com [10.59.80.102]) by s0.gw.fujitsu.co.jp (8.12.10)
+	id i470lXgu009692 for <linux-scsi@vger.kernel.org>; Fri, 7 May 2004 09:47:33 +0900
+	(envelope-from fukuchi.masao@jp.fujitsu.com)
+Received: from fukuchi.jp.fujitsu.com
+ (fjscan502-0.fjmail.jp.fujitsu.com [10.59.80.122])
+ by fjmail504.fjmail.jp.fujitsu.com
+ (Sun Internet Mail Server sims.4.0.2001.07.26.11.50.p9)
+ with SMTP id <0HXB00J6WJJ8T2@fjmail504.fjmail.jp.fujitsu.com> for
+ linux-scsi@vger.kernel.org; Fri,  7 May 2004 09:47:32 +0900 (JST)
+In-reply-to: <0E3FA95632D6D047BA649F95DAB60E57045F11CE@exa-atlanta>
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Cc: Linux SCSI List <linux-scsi@vger.kernel.org>
+To: "Moore, Eric Dean" <Emoore@lsil.com>
+Cc: linux-scsi@vger.kernel.org, James.Bottomley@steeleye.com
 
-On Thu, 6 May 2004, Andrew Vasquez wrote:
->>   ql2xdoinitscan=1
+Hi Eric,
 
-Actually, it sometimes is.  Otherwise, it will not (re)detect any disks,
-of course, it's not seeing any disks, so the point is moot :-)
+I confirmed your patch fixes following problem.
+>Date: Wed, 14 Apr 2004 10:07:46 +0900
+>From: Masao Fukuchi <fukuchi.masao@jp.fujitsu.com>
+>Subject: [RFC][PATCH]SCSI signal(I/O) failure causes no response
 
->> If the guys at Qlogic want to watch what I'm seeing, all they have
->> to do is ask.
->>
+Thanks,
+Fukuchi
+
+Moore, Eric Dean wrote:
+>This is an update for the MPT Fusion drivers 2.6 kernel.
 >
->SSH access?
-
-I was thinking winders terminal server so you see the SAN gui's at the same
-time (SANSurfer and Gadzoox's Ventana) plus the serial console.  But the
-console is SSH reachable too.
-
->> PS: If someone wants to give me a QLA2300, I won't complain :-)
->>
+>This is mpt version is 3.01.06  The attached patch is made
+>against 3.01.05 driver.
 >
->I'm tempted... try ebay:
+>Changelog: MPI_IOCSTATUS_SCSI_PROTOCOL_ERROR; return DID_SOFT_ERROR.
 >
->	http://cgi.ebay.com/ws/eBayISAPI.dll?ViewItem&category=44994&item=3095100926&rd=1&ssPageName=WDVW
 >
->20 bucks, 5days left to bid :p
-
-Yeah, it's already on my watch list.  I'm guessing it'll go for much more
-than that.
-
-s/give/loan/ :-)
-
-I can find Fusion MPT cards for ~50$, but that's adding one more wildcard
-to the mess.
-
---Ricky
-
-PS: completely OT but some developer needs to compile the old qla2100 and
-    qla2200 drivers for xp-64 (amd64) :-) (The monkeys at intel need to
-    buy an opteron and type make too.)
-
-
+>You can download full source as well as the patches for this 
+>driver at:
+>ftp://ftp.lsil.com/HostAdapterDrivers/linux/FiberChannel/2.6-patches/3.01.06
+>/
+>
+>
+>Eric Moore
+>Staff Engineer
+>Standard Storage Products Division
+>LSI Logic Corporation
+>4420 Arrowswest Drive
+>Colorado Springs, CO 80907
+>Tel: (719) 533-7056
+>Email: emoore@lsil.com
+>Web: http://www.lsilogic.com/
+>
