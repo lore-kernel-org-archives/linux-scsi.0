@@ -1,221 +1,48 @@
-From: margitsw@t-online.de (Margit Schubert-While)
-Subject: 2.5.53 aic7xxx problems ?
-Date: Fri, 27 Dec 2002 09:18:04 +0100
+From: "flight@beam.screaming.net" <Notams@beam.screaming.net>
+Subject: The FlightTimes
+Date: Fri, 27 Dec 2002 13:26:11 -00
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <4.3.2.7.2.20021227091703.00b558a0@pop.t-online.de>
+Message-ID: <4116-2200212527132610810@OpusOne>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"; format=flowed
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: takeoff <Notams@Beam.Screaming.Net>
 
-Following turns up in the log.
-Cause for concern ?
-HW is:
-  Adaptec 39160 - 2 x U160 on channel A, 2 x U160 on channel B (Id's 0,1,2,3)
-  Adaptec 2940AU - DVD + DAT (Id's 4,5)
+Hello,
 
-Dec 25 11:18:40 margit kernel: (scsi2:A:4:0): SCB 2: requests Check Status
-Dec 25 11:18:40 margit kernel: (scsi2:A:4:0): Handled Residual of 8 bytes
-Dec 25 11:18:40 margit kernel: (scsi2:A:4:0): Sending Sense
-Dec 25 11:18:40 margit kernel: (scsi2:A:4:0): Handled Residual of 14 bytes
-Dec 25 11:18:40 margit kernel: (scsi2:A:4:0): SCB 3: requests Check Status
-Dec 25 11:18:40 margit kernel: (scsi2:A:4:0): Handled Residual of 8 bytes
-Dec 25 11:18:40 margit kernel: (scsi2:A:4:0): Sending Sense
-Dec 25 11:18:40 margit kernel: (scsi2:A:4:0): Handled Residual of 14 bytes
-Dec 25 11:18:40 margit kernel: (scsi2:A:4:0): SCB 2: requests Check Status
-Dec 25 11:18:40 margit kernel: (scsi2:A:4:0): Handled Residual of 8 bytes
-Dec 25 11:18:40 margit kernel: (scsi2:A:4:0): Sending Sense
-Dec 25 11:18:40 margit kernel: (scsi2:A:4:0): Handled Residual of 14 bytes
-Dec 25 11:18:40 margit kernel: (scsi2:A:4:0): SCB 3: requests Check Status
-Dec 25 11:18:40 margit kernel: (scsi2:A:4:0): Sending Sense
-Dec 25 11:18:40 margit kernel: (scsi2:A:4:0): Handled Residual of 14 bytes
-Dec 25 11:18:40 margit kernel: (scsi2:A:4:0): SCB 2: requests Check Status
-Dec 25 11:18:40 margit kernel: (scsi2:A:4:0): Handled Residual of 12 bytes
-Dec 25 11:18:40 margit kernel: (scsi2:A:4:0): Sending Sense
-Dec 25 11:18:40 margit kernel: (scsi2:A:4:0): Handled Residual of 14 bytes
-Dec 25 11:18:40 margit kernel: (scsi2:A:4:0): SCB 3: requests Check Status
-Dec 25 11:18:40 margit kernel: (scsi2:A:4:0): Handled Residual of 12 bytes
-Dec 25 11:18:40 margit kernel: (scsi2:A:4:0): Sending Sense
-Dec 25 11:18:40 margit kernel: (scsi2:A:4:0): Handled Residual of 14 bytes
-Dec 25 11:18:40 margit kernel: (scsi2:A:4:0): SCB 2: requests Check Status
-Dec 25 11:18:40 margit kernel: (scsi2:A:4:0): Handled Residual of 768 bytes
-Dec 25 11:18:40 margit kernel: (scsi2:A:4:0): Sending Sense
-Dec 25 11:18:40 margit kernel: (scsi2:A:4:0): Handled Residual of 14 bytes
-Dec 25 11:18:40 margit kernel: (scsi2:A:5:0): SCB 2: requests Check Status
-Dec 25 11:18:40 margit kernel: (scsi2:A:5:0): Sending Sense
-Dec 25 11:18:40 margit kernel: (scsi2:A:5:0): Handled Residual of 10 bytes
-Dec 25 11:18:40 margit kernel: (scsi0:A:0:0): Handled Residual of 752 bytes
-Dec 25 11:18:40 margit kernel: Saw underflow (752 of 768 bytes). Treated as 
-error
-Dec 25 11:18:40 margit kernel: (scsi0:A:0:0): Handled Residual of 752 bytes
-Dec 25 11:18:40 margit kernel: Saw underflow (752 of 768 bytes). Treated as 
-error
-Dec 25 11:18:40 margit kernel: (scsi0:A:0:0): Handled Residual of 752 bytes
-Dec 25 11:18:40 margit kernel: Saw underflow (752 of 768 bytes). Treated as 
-error
-Dec 25 11:18:40 margit kernel: (scsi0:A:0:0): Handled Residual of 752 bytes
-Dec 25 11:18:40 margit kernel: Saw underflow (752 of 768 bytes). Treated as 
-error
-Dec 25 11:18:40 margit kernel: (scsi0:A:0:0): Handled Residual of 752 bytes
-Dec 25 11:18:40 margit kernel: Saw underflow (752 of 768 bytes). Treated as 
-error
-Dec 25 11:18:40 margit kernel: (scsi0:A:1:0): Handled Residual of 752 bytes
-Dec 25 11:18:40 margit kernel: Saw underflow (752 of 768 bytes). Treated as 
-error
-Dec 25 11:18:40 margit kernel: (scsi0:A:1:0): Handled Residual of 752 bytes
-Dec 25 11:18:40 margit kernel: Saw underflow (752 of 768 bytes). Treated as 
-error
-Dec 25 11:18:40 margit kernel: (scsi0:A:1:0): Handled Residual of 752 bytes
-Dec 25 11:18:40 margit kernel: Saw underflow (752 of 768 bytes). Treated as 
-error
-Dec 25 11:18:40 margit kernel: (scsi0:A:1:0): Handled Residual of 752 bytes
-Dec 25 11:18:40 margit kernel: Saw underflow (752 of 768 bytes). Treated as 
-error
-Dec 25 11:18:40 margit kernel: (scsi0:A:1:0): Handled Residual of 752 bytes
-Dec 25 11:18:40 margit kernel: Saw underflow (752 of 768 bytes). Treated as 
-error
-Dec 25 11:18:40 margit kernel: (scsi1:A:2:0): Handled Residual of 748 bytes
-Dec 25 11:18:40 margit kernel: Saw underflow (748 of 768 bytes). Treated as 
-error
-Dec 25 11:18:40 margit kernel: (scsi1:A:2:0): Handled Residual of 748 bytes
-Dec 25 11:18:40 margit kernel: Saw underflow (748 of 768 bytes). Treated as 
-error
-Dec 25 11:18:40 margit kernel: (scsi1:A:2:0): Handled Residual of 748 bytes
-Dec 25 11:18:40 margit kernel: Saw underflow (748 of 768 bytes). Treated as 
-error
-Dec 25 11:18:40 margit kernel: (scsi1:A:2:0): Handled Residual of 748 bytes
-Dec 25 11:18:40 margit kernel: Saw underflow (748 of 768 bytes). Treated as 
-error
-Dec 25 11:18:40 margit kernel: (scsi1:A:2:0): Handled Residual of 748 bytes
-Dec 25 11:18:40 margit kernel: Saw underflow (748 of 768 bytes). Treated as 
-error
-Dec 25 11:18:40 margit kernel: (scsi1:A:3:0): Handled Residual of 748 bytes
-Dec 25 11:18:40 margit kernel: Saw underflow (748 of 768 bytes). Treated as 
-error
-Dec 25 11:18:40 margit kernel: (scsi1:A:3:0): Handled Residual of 748 bytes
-Dec 25 11:18:40 margit kernel: Saw underflow (748 of 768 bytes). Treated as 
-error
-Dec 25 11:18:40 margit kernel: (scsi1:A:3:0): Handled Residual of 748 bytes
-Dec 25 11:18:40 margit kernel: Saw underflow (748 of 768 bytes). Treated as 
-error
-Dec 25 11:18:40 margit kernel: (scsi1:A:3:0): Handled Residual of 748 bytes
-Dec 25 11:18:40 margit kernel: Saw underflow (748 of 768 bytes). Treated as 
-error
-Dec 25 11:18:40 margit kernel: (scsi1:A:3:0): Handled Residual of 748 bytes
-Dec 25 11:18:40 margit kernel: Saw underflow (748 of 768 bytes). Treated as 
-error
-Dec 25 11:18:40 margit kernel: (scsi2:A:4:0): SCB 3: requests Check Status
-Dec 25 11:18:40 margit kernel: (scsi2:A:4:0): Sending Sense
-Dec 25 11:18:40 margit kernel: (scsi2:A:4:0): Handled Residual of 14 bytes
-Dec 25 11:18:40 margit kernel: (scsi2:A:4:0): SCB 2: requests Check Status
-Dec 25 11:18:40 margit kernel: (scsi2:A:4:0): Sending Sense
-Dec 25 11:18:40 margit kernel: (scsi2:A:4:0): Handled Residual of 14 bytes
-Dec 25 11:18:40 margit kernel: sr0: CDROM not ready.  Make sure there is a 
-disc in the drive.
-Dec 25 11:18:40 margit kernel: cdrom: open failed.
-Dec 25 11:18:40 margit kernel: (scsi2:A:4:0): SCB 2: requests Check Status
-Dec 25 11:18:40 margit kernel: (scsi2:A:4:0): Sending Sense
-Dec 25 11:18:40 margit kernel: (scsi2:A:4:0): Handled Residual of 14 bytes
-Dec 25 11:18:40 margit kernel: (scsi2:A:4:0): SCB 3: requests Check Status
-Dec 25 11:18:40 margit kernel: (scsi2:A:4:0): Handled Residual of 12 bytes
-Dec 25 11:18:40 margit kernel: (scsi2:A:4:0): Sending Sense
-Dec 25 11:18:40 margit kernel: (scsi2:A:4:0): Handled Residual of 14 bytes
-Dec 25 11:18:40 margit kernel: (scsi2:A:4:0): SCB 2: requests Check Status
-Dec 25 11:18:40 margit kernel: (scsi2:A:4:0): Handled Residual of 12 bytes
-Dec 25 11:18:40 margit kernel: (scsi2:A:4:0): Sending Sense
-Dec 25 11:18:40 margit kernel: (scsi2:A:4:0): Handled Residual of 14 bytes
-Dec 25 11:18:40 margit kernel: (scsi2:A:4:0): SCB 3: requests Check Status
-Dec 25 11:18:40 margit kernel: (scsi2:A:4:0): Handled Residual of 8 bytes
-Dec 25 11:18:40 margit kernel: (scsi2:A:4:0): Sending Sense
-Dec 25 11:18:40 margit kernel: (scsi2:A:4:0): Handled Residual of 14 bytes
-Dec 25 11:18:40 margit kernel: (scsi2:A:4:0): SCB 2: requests Check Status
-Dec 25 11:18:40 margit kernel: (scsi2:A:4:0): Handled Residual of 8 bytes
-Dec 25 11:18:40 margit kernel: (scsi2:A:4:0): Sending Sense
-Dec 25 11:18:40 margit kernel: (scsi2:A:4:0): Handled Residual of 14 bytes
-Dec 25 11:18:40 margit kernel: (scsi2:A:4:0): SCB 3: requests Check Status
-Dec 25 11:18:40 margit kernel: (scsi2:A:4:0): Handled Residual of 8 bytes
-Dec 25 11:18:40 margit kernel: (scsi2:A:4:0): Sending Sense
-Dec 25 11:18:40 margit kernel: (scsi2:A:4:0): Handled Residual of 14 bytes
-Dec 25 11:18:40 margit kernel: (scsi2:A:4:0): SCB 2: requests Check Status
-Dec 25 11:18:40 margit kernel: (scsi2:A:4:0): Sending Sense
-Dec 25 11:18:40 margit kernel: (scsi2:A:4:0): Handled Residual of 14 bytes
-Dec 25 11:18:40 margit kernel: (scsi2:A:4:0): SCB 3: requests Check Status
-Dec 25 11:18:40 margit kernel: (scsi2:A:4:0): Handled Residual of 12 bytes
-Dec 25 11:18:40 margit kernel: (scsi2:A:4:0): Sending Sense
-Dec 25 11:18:40 margit kernel: (scsi2:A:4:0): Handled Residual of 14 bytes
-Dec 25 11:18:40 margit kernel: (scsi2:A:4:0): SCB 2: requests Check Status
-Dec 25 11:18:40 margit kernel: (scsi2:A:4:0): Handled Residual of 12 bytes
-Dec 25 11:18:40 margit kernel: (scsi2:A:4:0): Sending Sense
-Dec 25 11:18:40 margit kernel: (scsi2:A:4:0): Handled Residual of 14 bytes
-Dec 25 11:18:40 margit kernel: (scsi2:A:4:0): SCB 3: requests Check Status
-Dec 25 11:18:40 margit kernel: (scsi2:A:4:0): Handled Residual of 768 bytes
-Dec 25 11:18:40 margit kernel: (scsi2:A:4:0): Sending Sense
-Dec 25 11:18:40 margit kernel: (scsi2:A:4:0): Handled Residual of 14 bytes
-Dec 25 11:18:40 margit kernel: (scsi2:A:5:0): SCB 3: requests Check Status
-Dec 25 11:18:40 margit kernel: (scsi2:A:5:0): Sending Sense
-Dec 25 11:18:40 margit kernel: (scsi2:A:5:0): Handled Residual of 10 bytes
-Dec 25 11:18:40 margit kernel: (scsi0:A:0:0): Handled Residual of 752 bytes
-Dec 25 11:18:40 margit kernel: Saw underflow (752 of 768 bytes). Treated as 
-error
-Dec 25 11:18:40 margit kernel: (scsi0:A:0:0): Handled Residual of 752 bytes
-Dec 25 11:18:40 margit kernel: Saw underflow (752 of 768 bytes). Treated as 
-error
-Dec 25 11:18:40 margit kernel: (scsi0:A:0:0): Handled Residual of 752 bytes
-Dec 25 11:18:40 margit kernel: Saw underflow (752 of 768 bytes). Treated as 
-error
-Dec 25 11:18:40 margit kernel: (scsi0:A:0:0): Handled Residual of 752 bytes
-Dec 25 11:18:40 margit kernel: Saw underflow (752 of 768 bytes). Treated as 
-error
-Dec 25 11:18:40 margit kernel: (scsi0:A:0:0): Handled Residual of 752 bytes
-Dec 25 11:18:40 margit kernel: Saw underflow (752 of 768 bytes). Treated as 
-error
-Dec 25 11:18:40 margit kernel: (scsi0:A:1:0): Handled Residual of 752 bytes
-Dec 25 11:18:40 margit kernel: Saw underflow (752 of 768 bytes). Treated as 
-error
-Dec 25 11:18:40 margit kernel: (scsi0:A:1:0): Handled Residual of 752 bytes
-Dec 25 11:18:40 margit kernel: Saw underflow (752 of 768 bytes). Treated as 
-error
-Dec 25 11:18:40 margit kernel: (scsi0:A:1:0): Handled Residual of 752 bytes
-Dec 25 11:18:40 margit kernel: Saw underflow (752 of 768 bytes). Treated as 
-error
-Dec 25 11:18:40 margit kernel: (scsi0:A:1:0): Handled Residual of 752 bytes
-Dec 25 11:18:40 margit kernel: Saw underflow (752 of 768 bytes). Treated as 
-error
-Dec 25 11:18:40 margit kernel: (scsi0:A:1:0): Handled Residual of 752 bytes
-Dec 25 11:18:40 margit kernel: Saw underflow (752 of 768 bytes). Treated as 
-error
-Dec 25 11:18:40 margit kernel: (scsi1:A:2:0): Handled Residual of 748 bytes
-Dec 25 11:18:40 margit kernel: Saw underflow (748 of 768 bytes). Treated as 
-error
-Dec 25 11:18:40 margit kernel: (scsi1:A:2:0): Handled Residual of 748 bytes
-Dec 25 11:18:40 margit kernel: Saw underflow (748 of 768 bytes). Treated as 
-error
-Dec 25 11:18:40 margit kernel: (scsi1:A:2:0): Handled Residual of 748 bytes
-Dec 25 11:18:40 margit kernel: Saw underflow (748 of 768 bytes). Treated as 
-error
-Dec 25 11:18:40 margit kernel: (scsi1:A:2:0): Handled Residual of 748 bytes
-Dec 25 11:18:40 margit kernel: Saw underflow (748 of 768 bytes). Treated as 
-error
-Dec 25 11:18:40 margit kernel: (scsi1:A:2:0): Handled Residual of 748 bytes
-Dec 25 11:18:40 margit kernel: Saw underflow (748 of 768 bytes). Treated as 
-error
-Dec 25 11:18:40 margit kernel: (scsi1:A:3:0): Handled Residual of 748 bytes
-Dec 25 11:18:40 margit kernel: Saw underflow (748 of 768 bytes). Treated as 
-error
-Dec 25 11:18:40 margit kernel: (scsi1:A:3:0): Handled Residual of 748 bytes
-Dec 25 11:18:40 margit kernel: Saw underflow (748 of 768 bytes). Treated as 
-error
-Dec 25 11:18:40 margit kernel: (scsi1:A:3:0): Handled Residual of 748 bytes
-Dec 25 11:18:40 margit kernel: Saw underflow (748 of 768 bytes). Treated as 
-error
-Dec 25 11:18:40 margit kernel: (scsi1:A:3:0): Handled Residual of 748 bytes
-Dec 25 11:18:40 margit kernel: Saw underflow (748 of 768 bytes). Treated as 
-error
-Dec 25 11:18:40 margit kernel: (scsi1:A:3:0): Handled Residual of 748 bytes
-Dec 25 11:18:40 margit kernel: Saw underflow (748 of 768 bytes). Treated as 
-error
+Please pardon my intrusion.
 
-Merry Christmas all.
-Margit 
+Could it be possible that you have an interest in aviation? I am writing to you to offer you a subscription to 
+
+The FlightTimes
+
+An email based newspaper. It is read around the world by the aviation industry obtained by invitation only.
+
+It is for Free..
+
+My simple question.....  My I send you a free sample?
+
+You will not be bothered again; I will only contact you if you answer to this email. Thank you for your time.
+
+James van Etten, editor  The FlightTimes
+London, UK  +44 207 603 5340
+
+flight@beam.screaming.net
+
+
+Finally you can check out all the above and have an instant look at an older issue of my papers on our website; your sample however will be the latest issue.
+
+Http://myweb.tiscali.co.uk/londonmorningpaper
+
+
+
+
+Scratch with the chickens or fly with the eagles
+
+A Publication by The London Morning Paper Group
+166 Blythe Road
+West Kensington - London - W14 0HD
+United Kingdom
 
