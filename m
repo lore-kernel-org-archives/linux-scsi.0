@@ -1,44 +1,41 @@
-From: =?iso-8859-1?q?Liong=20Hoong?= <liongshliongsh@yahoo.com>
-Subject: sg_io_hrd_t - host_status error (0x05)
-Date: Fri, 23 Apr 2004 11:11:08 +0800 (CST)
+From: Jeremy Higdon <jeremy@sgi.com>
+Subject: Re: [RFC][PATCH]SCSI signal(I/O) failure causes no response
+Date: Thu, 22 Apr 2004 21:44:36 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040423031108.68982.qmail@web40001.mail.yahoo.com>
+Message-ID: <20040423044436.GA881054@sgi.com>
+References: <0E3FA95632D6D047BA649F95DAB60E570442C1B2@exa-atlanta.se.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from web40001.mail.yahoo.com ([66.218.78.19]:8082 "HELO
-	web40001.mail.yahoo.com") by vger.kernel.org with SMTP
-	id S264667AbUDWDL2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 22 Apr 2004 23:11:28 -0400
+Received: from mtvcafw.sgi.com ([192.48.171.6]:54395 "EHLO omx3.sgi.com")
+	by vger.kernel.org with ESMTP id S264717AbUDWEps (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 23 Apr 2004 00:45:48 -0400
+Content-Disposition: inline
+In-Reply-To: <0E3FA95632D6D047BA649F95DAB60E570442C1B2@exa-atlanta.se.lsil.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: "Moore, Eric Dean" <Emoore@lsil.com>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, Masao Fukuchi <fukuchi.masao@jp.fujitsu.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-Hi all,
+On Wed, Apr 14, 2004 at 11:56:20AM -0400, Moore, Eric Dean wrote:
+> For this particular issue, Mr Masao Fukuchi has a
+> scsi bus test analyzer, in which he set the C/D signal 
+> to low during read operation.  The MPT firmware
+> returned MPI_IOCSTATUS_SCSI_PROTOCAL_ERROR, which from
+> the mpt manual means " An unrecoverable bus protocal error
+> as terminated the SCSI I/O" and the driver will 
+> return DID_RESET.
+> 
+> Here are some of the other cases which return
+> DID_RESET, however I doubt were returned with 
+> Mr Masao Fukuchi's test anaylzer:
+> 
+> MPI_IOCSTATUS_SCSI_TASK_TERMINATED
+> MPI_IOCSTATUS_SCSI_IOC_TERMINATED
+> MPI_IOCSTATUS_SCSI_EXT_TERMINATED
 
-I have set up the main control structure for the
-version 3 SCSI generic driver. I am trying to send
-down some opcodes (vendor specific) to a usb mass
-storage device. Found that I encountered host_status
-error, SG_ERR_DID_ABORT whenever I send opcodes from
-0x80 to 0x9f, but encountered no errors with other
-opcodes. 
 
-The errors occured even without the device plugged in,
-which seem the sg driver has exclusively blocked the
-opcodes from 0x80 to 0x9f. Is it true?? Is there any
-work around for this??
+I think I would return DID_ERROR for things like that as a sort
+of generic "something-went-wrong" on the SCSI bus.
 
-Is it because of Group 4 (0x80 to 0x9f) need 16 bytes
-of cdb length? But even I prepare the cdb of 16 bytes,
-it also failed. 
-
-I am using red hat 8.0, 2.4.18. 
-
-Thanks for any helps and comments!
-Sean
-
-__________________________________________________
-Do You Yahoo!?
-Log on to Messenger with your mobile phone!
-http://sg.messenger.yahoo.com
+jeremy
