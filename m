@@ -1,66 +1,64 @@
-From: "Cress, Andrew R" <andrew.r.cress@intel.com>
-Subject: RE: A different look at block device hotswap in the Linux kernel
-Date: Fri, 24 Jan 2003 08:36:25 -0800
+From: Doug Ledford <dledford@redhat.com>
+Subject: Re: [linux-usb-devel] Re: [PATCH] USB changes for 2.5.58
+Date: Fri, 24 Jan 2003 12:58:56 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <A5974D8E5F98D511BB910002A50A66470580D59C@hdsmsx103.hd.intel.com>
+Message-ID: <20030124175856.GD26736@redhat.com>
+References: <20030123152554.F12788@one-eyed-alien.net> <Pine.LNX.4.44L0.0301241026060.821-100000@ida.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from talaria.fm.intel.com (talaria.fm.intel.com [10.1.192.39])
-	by caduceus.fm.intel.com (8.11.6/8.11.6/d: outer.mc,v 1.51 2002/09/23 20:43:23 dmccart Exp $) with ESMTP id h0OGS6501391
-	for <linux-scsi@vger.kernel.org>; Fri, 24 Jan 2003 16:28:06 GMT
-Received: from fmsmsxvs042.fm.intel.com (fmsmsxvs042.fm.intel.com [132.233.42.128])
-	by talaria.fm.intel.com (8.11.6/8.11.6/d: inner.mc,v 1.28 2003/01/13 19:44:39 dmccart Exp $) with SMTP id h0OGZfH05854
-	for <linux-scsi@vger.kernel.org>; Fri, 24 Jan 2003 16:35:41 GMT
+Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.44L0.0301241026060.821-100000@ida.rowland.org>
 List-Id: linux-scsi@vger.kernel.org
-To: "'mjacob@feral.com'" <mjacob@feral.com>, David Brownell <david-b@pacbell.net>
-Cc: Oliver Neukum <oliver@neukum.name>, Steven Dake <sdake@mvista.com>, Luben Tuikov <luben@splentec.com>, Alan Stern <stern@rowland.harvard.edu>, Matthew Dharm <mdharm-scsi@one-eyed-alien.net>, Mike Anderson <andmike@us.ibm.com>, Greg KH <greg@kroah.com>, linux-usb-devel@lists.sourceforge.net, Linux SCSI list <linux-scsi@vger.kernel.org>
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: Matthew Dharm <mdharm-scsi@one-eyed-alien.net>, Oliver Neukum <oliver@neukum.name>, Luben Tuikov <luben@splentec.com>, David Brownell <david-b@pacbell.net>, Mike Anderson <andmike@us.ibm.com>, Greg KH <greg@kroah.com>, linux-usb-devel@lists.sourceforge.net, Linux SCSI list <linux-scsi@vger.kernel.org>
 
-My $.02:
+On Fri, Jan 24, 2003 at 10:34:11AM -0500, Alan Stern wrote:
+> On Thu, 23 Jan 2003, Matthew Dharm wrote:
+> 
+> > What I want:
+> > 
+> > I want to be able to free resources associated with a device within a
+> > finite (and well bounded) amount of time after I am notified that the
+> > device is gone.
+> > 
+> > I want to be able to inform the SCSI mid-layer, which will then inform
+> > higher layers, that the device is gone.  This is so that all may deal with
+> > this however they want.  I really don't care who does what, as long as we
+> > don't crash.  This implies that all block-type drivers will need to become
+> > hotplug aware, or the SCSI mid-layer will have to fake command failures.
+> > 
+> > I want to be able to do as little command-trickery as possible.  If I have
+> > to do it, then that means the next hotplug-capable LLDD must do it also.
+> > Duplication of code is bad -- it should all be handled in the mid-layer.
+> 
+> Matt's current proposed patch has the USB LLDD calling
+> scsi_unregister_host()  (because the device is respresented as an emulated
+> host adapter) when it learns that the device is gone.  Provided that
+> routine doesn't block for very long, provided it handles all the details
+> of hotplug notifications, and provided it guarantees that after it returns
+> there will be no more calls to the emulated adapter,
 
-The comparing of a saved device list snapshot with the current device should
-be the responsibility of a user-space daemon, provided that the kernel
-exposes enough information  to uniquely identify the devices (like serial
-numbers, or some other UID if no ser num exists).  
+There is no such guarantee of this.  Last I checked, 
+scsi_unregister_host() can fail if devices are busy.  In fact, I would say 
+that's exactly what happened on my system when I unplugged a USB2.0 CD-ROM 
+that was in use.  The USB stack called this code, it failed due to busy, 
+USB stack didn't care and blew state away, I knew have a permanent CD-ROM 
+device that I can no longer clean up and I had to reboot my machine.
 
-The kernel would assume that the device is new (not the same) unless told so
-by a daemon that is watching.  
+> I don't see any
+> problem.  The LLDD can go ahead and remove all records of the former
+> device, secure in the knowledge that all pointers to data structures and
+> entry points have been erased.
+> 
+> Isn't this exactly what everyone has been asking for and debating about?
+> 
+> Alan Stern
+> 
 
-Andy
-
------Original Message-----
-From: Matthew Jacob [mailto:mjacob@feral.com] 
-Sent: Friday, January 24, 2003 10:26 AM
-To: David Brownell
-Cc: Oliver Neukum; Steven Dake; Luben Tuikov; Alan Stern; Matthew Dharm;
-Mike Anderson; Greg KH; linux-usb-devel@lists.sourceforge.net; Linux SCSI
-list
-Subject: Re: A different look at block device hotswap in the Linux kernel
-
-
-
-> >>...
-> >
-> >
-> > Could this time limit be fixed (or parameterized) known to all LLDDs?
-> > This would allow one to try and avoid flooding SCSI with detach/reattach
-> > events for the 'same' device.
->
-> And what exactly is the "same" device?  And who's keeping history
-> about devices that have previously been attached?  And, says the guy
-> who's full of questions, didn't Linus want to get rid of such history?
-
-Hrmm. That's a damned good point. I was going to say things like "the
-FC HBA driver knows that device XYX left the fabric and now has
-returned", but if XYZ left the fabric, why am I keeping track of it
-still? Once gone, it's gone. I had convinced myself that if an FC device
-(re)appears, it's not up to the HBA to say it's the same (the content
-may have been changed even if the container tag is the same).
-
-Hrm.
-
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+  Doug Ledford <dledford@redhat.com>     919-754-3700 x44233
+         Red Hat, Inc. 
+         1801 Varsity Dr.
+         Raleigh, NC 27606
+  
