@@ -1,50 +1,61 @@
-From: Mike Anderson <andmike@us.ibm.com>
-Subject: Re: How to disconnect a SCSI device without crashing SLES8?
-Date: Fri, 4 Feb 2005 13:51:37 -0800
-Message-ID: <20050204215137.GD11087@us.ibm.com>
-References: <267988DEACEC5A4D86D5FCD780313FBB041F82F3@exch-03.noida.hcltech.com>
+From: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Subject: Re: PATCH [1/3]   qla2xxx: remove internal queuing.
+Date: Fri, 04 Feb 2005 13:52:40 -0800
+Message-ID: <1107553960.15462.1.camel@plap.san.rr.com>
+References: <1107544908.14183.11.camel@plap.san.rr.com>
+	 <1107545071.14183.15.camel@plap.san.rr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Received: from e2.ny.us.ibm.com ([32.97.182.142]:7875 "EHLO e2.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S266478AbVBDVxX (ORCPT
-	<rfc822;Linux-scsi@vger.kernel.org>); Fri, 4 Feb 2005 16:53:23 -0500
-Received: from d01relay02.pok.ibm.com (d01relay02.pok.ibm.com [9.56.227.234])
-	by e2.ny.us.ibm.com (8.12.10/8.12.10) with ESMTP id j14LrK7J011478
-	for <Linux-scsi@vger.kernel.org>; Fri, 4 Feb 2005 16:53:20 -0500
-Received: from d01av01.pok.ibm.com (d01av01.pok.ibm.com [9.56.224.215])
-	by d01relay02.pok.ibm.com (8.12.10/NCO/VER6.6) with ESMTP id j14LrKQ7273624
-	for <Linux-scsi@vger.kernel.org>; Fri, 4 Feb 2005 16:53:20 -0500
-Received: from d01av01.pok.ibm.com (loopback [127.0.0.1])
-	by d01av01.pok.ibm.com (8.12.11/8.12.11) with ESMTP id j14LrK7H025416
-	for <Linux-scsi@vger.kernel.org>; Fri, 4 Feb 2005 16:53:20 -0500
-Content-Disposition: inline
-In-Reply-To: <267988DEACEC5A4D86D5FCD780313FBB041F82F3@exch-03.noida.hcltech.com>
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Received: from avexch02.qlogic.com ([198.70.193.200]:9533 "EHLO
+	avexch01.qlogic.com") by vger.kernel.org with ESMTP id S266084AbVBDVwX
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 4 Feb 2005 16:52:23 -0500
+In-Reply-To: <1107545071.14183.15.camel@plap.san.rr.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Rajat  Jain, Noida" <rajatj@noida.hcltech.com>
-Cc: eraskin@paslists.com, Linux-scsi@vger.kernel.org
+To: Linux-SCSI Mailing List <linux-scsi@vger.kernel.org>
+Cc: andrew.vasquez@qlogic.com
 
-Rajat  Jain, Noida [rajatj@noida.hcltech.com] wrote:
-> Linux 2.6 ????? Uhh .... I thought you did not wanted to REBOOT the
-> system???? 
-> 
-> 
-> The command syntax is same. Devices can be removed using the following
-> command:
-> 
-> echo "scsi remove-single-device <h> <b> <t> <l>" > /proc/scsi/scsi
-> 
-> where the variables are host, bus (channel), target (scsi id) and lun. 
-> 
+Small incremental patch which fixes some annoyances sighted by Christoph
+Hellwig.
 
-on 2.6 you can use the sysfs attributes to add and delete devices. echo
-"1" > scsi/devices/1:0:0:0/delete to delete a device. echo "- - -" >
-class/scsi_host/host0/scan to scan a host. You can alter the "-" wild
-cards if you want to scan a smaller set of targets / luns . Also using
-this scan method allows a report luns command to be sent out.
+      * Correct backing-out of msleep() calls 
+      * remove superfluous return in qla2xxx_slave_destroy.
 
--andmike
---
-Michael Anderson
-andmike@us.ibm.com
+
+Signed-off-by: Andrew Vasquez <andrew.vasquez@qlogic.com>
+
+
+===== drivers/scsi/qla2xxx/qla_os.c 1.56 vs edited =====
+--- 1.56/drivers/scsi/qla2xxx/qla_os.c	2005-02-04 10:24:28 -08:00
++++ edited/drivers/scsi/qla2xxx/qla_os.c	2005-02-04 13:26:23 -08:00
+@@ -467,8 +467,7 @@ qla2x00_wait_for_hba_online(scsi_qla_hos
+ 	    test_bit(ISP_ABORT_RETRY, &ha->dpc_flags) ||
+ 	    ha->dpc_active) && time_before(jiffies, wait_online)) {
+ 
+-		set_current_state(TASK_UNINTERRUPTIBLE);
+-		schedule_timeout(HZ);
++		msleep(1000);
+ 	}
+ 	if (ha->flags.online) 
+ 		return_status = QLA_SUCCESS; 
+@@ -509,8 +508,7 @@ qla2x00_wait_for_loop_ready(scsi_qla_hos
+ 	    atomic_read(&ha->loop_state) == LOOP_DOWN) ||
+ 	    test_bit(CFG_ACTIVE, &ha->cfg_flags) ||
+ 	    atomic_read(&ha->loop_state) != LOOP_READY) {
+-		set_current_state(TASK_UNINTERRUPTIBLE);
+-		schedule_timeout(HZ);
++		msleep(1000);
+ 		if (time_after_eq(jiffies, loop_timeout)) {
+ 			return_status = QLA_FUNCTION_FAILED;
+ 			break;
+@@ -1064,7 +1062,6 @@ static void
+ qla2xxx_slave_destroy(struct scsi_device *sdev)
+ {
+ 	sdev->hostdata = NULL;
+-	return;
+ }
+ 
+ /**
 
