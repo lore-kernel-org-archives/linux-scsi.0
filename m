@@ -1,71 +1,47 @@
-From: Pat LaVarre <p.lavarre@ieee.org>
-Subject: Re: bytes/CDB of SCSI pass thru grossly limited maybe
-Date: Mon, 23 Aug 2004 10:05:50 -0600
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: Incorrect response to SK/ASC/ASCQ = x 02/04/01 (becoming ready)
+Date: 23 Aug 2004 11:31:57 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <4D36722F-F51E-11D8-BFA2-00039398BB5E@ieee.org>
-References: <20040731141240.GE23697@suse.de> <1092678938.4235.37.camel@patli
-	 nux.iomegacorp.com> <20040823154648.GB2301@suse.de>
-Mime-Version: 1.0 (Apple Message framework v619)
-Content-Type: text/plain;
-	charset=US-ASCII;
-	delsp=yes;
-	format=flowed
+Message-ID: <1093275122.1776.52.camel@mulgrave>
+References: <Pine.LNX.4.44L0.0408221154220.15992-100000@netrider.rowland.org>
+	<1093217548.1727.367.camel@mulgrave>
+	<1093218968.3553.17.camel@swtf.comptex.com.au>
+Mime-Version: 1.0
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from email-out1.iomega.com ([147.178.1.82]:8900 "EHLO
-	email.iomega.com") by vger.kernel.org with ESMTP id S265999AbUHWQFr
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 23 Aug 2004 12:05:47 -0400
-In-Reply-To: <20040823154648.GB2301@suse.de>
+Received: from zeus.kernel.org ([204.152.189.113]:3053 "EHLO zeus.kernel.org")
+	by vger.kernel.org with ESMTP id S266096AbUHWQWU (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 23 Aug 2004 12:22:20 -0400
+Received: from hancock.sc.steeleye.com (stat16.steeleye.com [209.192.50.48])
+	by zeus.kernel.org (8.12.11/8.11.6) with ESMTP id i7NGMCiw018856
+	for <linux-scsi@vger.kernel.org>; Mon, 23 Aug 2004 09:22:13 -0700
+In-Reply-To: <1093218968.3553.17.camel@swtf.comptex.com.au>
 List-Id: linux-scsi@vger.kernel.org
-To: Jens Axboe <axboe@suse.de>
-Cc: linux-scsi@vger.kernel.org
+To: Burn Alting <burn@goldweb.com.au>
+Cc: SCSI development list <linux-scsi@vger.kernel.org>
 
-Jens A:
+On Sun, 2004-08-22 at 19:56, Burn Alting wrote:
+> How about when disk arrays are booting? Typically, a disk array will
+> quickly present target(s) to the host and then take some time to
+> initialise before being ready for medium access. I assume most disk
+> arrays will present the above sense condition (becoming ready) to all
+> medium access commands until it is ready for medium access.
 
->> Is there an ide-cd option to allow more bytes/CDB?
-> ...
-> ATAPI cannot do more than 128KiB per command. And
-> that is what q->max_sectors is set to, if you try and submit more than
-> this through SG_IO, bio_add_user() will complain and command will be
-> failed as you experienced.
+If you power off a disc and power it on again, the same thing happens.
 
-Wow.
+I'd like to distinguish between normal occurrences at start of day which
+we need to handle (like spinning up devices or waiting for them to
+become ready from power on).  And normal occurrences during device
+operation.  The former are handled in the ULD and the latter in the
+mid-layer error handler.
 
-Please reply to confirm - you are saying 128 KiB data bytes per command  
-is a Linux PATAPI design limit?
+It's certainly possible to rejig the mid-layer to add an extra delay via
+schedule_delayed_work(), but I'd like to be sure its necessary first,
+since the addition looks to be slightly messy.
 
-I know even twelve-byte-packet PATAPI itself as defined at t13.org and  
-t10.org can do xFFFF = (64 Ki - 1) LBA's via such ten-byte per CDB ops  
-as x28 "READ (10)" and x2A "WRITE (10)".  At 2 KiB/LBA, that's 128 MiB  
-minus 2 KiB.  That's the kind of limit I expected, when instead in  
-Linux I saw limits like 120 KiB in SCSI over USB.  Also I hear  
-sixteen-byte-packet PATAPI can itself pass xFFFF:FFFF data blocks per  
-command.
+James
 
-In parallel, I'll click thru to bio_add_user to read the limits there.
 
-> As I'm sure you know,
-
-I didn't know, thank you, sorry I have no clue, I'm not trying to  
-pretend I do, I got into this at the request of a friend who needs 256  
-KiB data per command.
-
-I specifically have Not yet tried patching the Linux kernel to persuade  
-PATAPI to allow more data bytes per command.  I did try USB.  So far  
-I've failed.  At:
-
-Subject: [usb-storage] faq max_sectors
-https://lists.one-eyed-alien.net/pipermail/usb-storage/2004-August/ 
-000680.html
-
-I have reported that raising SCSI_DEFAULT_MAX_SECTORS alone does not  
-actually allow more data bytes per command in USB.
-
-> max_sectors should be fully exposed so you don't have to guess.
-
-Yes please.
-
-Pat LaVarre
-http://linux-pel.blog-city.com/read/752705.htm
 
