@@ -1,58 +1,46 @@
-From: Brian King <brking@us.ibm.com>
-Subject: Re: [PATCH] ibmvscsi driver - next version
-Date: Mon, 23 Feb 2004 14:52:50 -0600
+From: Jens Axboe <axboe@suse.de>
+Subject: Re: cdrom_ioctl() hanging in 2.6.3
+Date: Mon, 23 Feb 2004 22:11:57 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <403A6822.2040700@us.ibm.com>
-References: <opr3s2iefyl6e53g@us.ibm.com> <20040223144542.A9624@infradead.org>
+Message-ID: <20040223211157.GO32010@suse.de>
+References: <20040222134723.7de65a50.akpm@osdl.org> <c1c43f$pm4$1@sea.gmane.org> <c1dlvr$hc3$1@sea.gmane.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e4.ny.us.ibm.com ([32.97.182.104]:8169 "EHLO e4.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S261958AbUBWUxS (ORCPT
+Received: from ns.virtualhost.dk ([195.184.98.160]:24787 "EHLO virtualhost.dk")
+	by vger.kernel.org with ESMTP id S262055AbUBWVL7 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 23 Feb 2004 15:53:18 -0500
+	Mon, 23 Feb 2004 16:11:59 -0500
+Content-Disposition: inline
+In-Reply-To: <c1dlvr$hc3$1@sea.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Dave Boutcher <sleddog@us.ibm.com>, linux-scsi@vger.kernel.org
+To: Joachim Geiler <Joachim.Geiler@t-online.de>
+Cc: linux-scsi@vger.kernel.org
 
-Christoph Hellwig wrote:
-
-> +	found_evt = NULL;
-> +	spin_lock_irqsave(&hostdata->lock, flags);
-> +	if(!list_empty(&hostdata->sent)) {
-> +		list_for_each_safe(pos, next, &hostdata->sent) {
-> +			tmp_evt = list_entry(pos, struct srp_event_struct, list);
-> +			
-> +			if (tmp_evt->cmnd == cmd) {
-> +				found_evt = tmp_evt;
-> +				break;
-> +			}
-> +		}
-> +	}
-> +	spin_unlock_irqrestore(&hostdata->lock, flags);
-> +	
-> +	/* If we can't find this event, just return false */
-> +	if (found_evt == NULL) {
-> +		printk(KERN_ERR "ibmvscsi: failed to abort command\n");
-> +		return FAILED;
-> +	}
+On Mon, Feb 23 2004, Joachim Geiler wrote:
+> Joachim Geiler wrote:
 > 
-> 	This can't ever happen.  You will only get called for commands
-> 	that you have accepted in queuecommand and not called the completion
-> 	routine for.
+> > Andrew Morton wrote:
+> > 
+> >> 
+> >> Gents,
+> >> 
+> >> apparently KDE's `k3b' command is consistently hanging when accessing a
+> >> SCSI CDROM.  See http://bugs.kde.org/show_bug.cgi?id=75553
+> >> 
+> >> Frank has generated a stack backtrace, below.
+> >> 
+> >> Is this an adaptec driver problem, or a generic thing?
+> >> 
+> >> Thanks.
+> 
+> Hello again,
+> 
+> I did a strace of the syscalls of k3b before it hangs (kernel 2.6.3mm2). I
+> think the following tail of the trace may be of interest:
 
-I'm not sure I agree with this statement. Looking at scsi_error.c, it looks
-to me like there is a race condition in that the midlayer decides whether or
-not to abort an op, then grabs the host lock, then calls eh_abort. From the
-time that the midlayer decides to abort an op and then grabs the host lock, the
-op may have finished. The LLD should return SUCCESS in this scenario, however,
-rather than FAILED.
-
-
+See the other threads on same list about this, problem has been solved.
 
 -- 
-Brian King
-eServer Storage I/O
-IBM Linux Technology Center
+Jens Axboe
 
