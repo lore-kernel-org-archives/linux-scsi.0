@@ -1,49 +1,41 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: sym53c8xx_2 hangs on 53c810 rev 02
-Date: Fri, 18 Feb 2005 20:48:40 +0000
-Message-ID: <20050218204840.GB29917@parcelfarce.linux.theplanet.co.uk>
-References: <41992BE8.22985.49329380@localhost>
+From: Greg KH <greg@kroah.com>
+Subject: Re: cciss CSMI via sysfs for 2.6
+Date: Fri, 18 Feb 2005 12:05:52 -0800
+Message-ID: <20050218200552.GC20171@kroah.com>
+References: <20050216164512.GA5734@beardog.cca.cpqcorp.net> <20050218194628.GA24583@infradead.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:56459 "EHLO
-	parcelfarce.linux.theplanet.co.uk") by vger.kernel.org with ESMTP
-	id S261482AbVBRUsl (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 18 Feb 2005 15:48:41 -0500
+Received: from mail.kroah.org ([69.55.234.183]:414 "EHLO perch.kroah.org")
+	by vger.kernel.org with ESMTP id S261520AbVBRV3c (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 18 Feb 2005 16:29:32 -0500
 Content-Disposition: inline
-In-Reply-To: <41992BE8.22985.49329380@localhost>
+In-Reply-To: <20050218194628.GA24583@infradead.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Ingo Korb <ml@akana.de>
-Cc: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>, mike.miller@hp.com, linux-kernel@vger.kernel.org, mochel@osdl.org, akpm@osdl.org, eric.moore@lsil.com, linux-scsi@vger.kernel.org
 
-On Mon, Nov 15, 2004 at 10:21:28PM +0100, Ingo Korb wrote:
-> While trying to run 2.6.9 on my AlphaStation 200, I noticed that 
-> sym53c8xx_2 doesn't seem to like the onboard 53c810 rev. 02 (see 
-> bootlog below).
+On Fri, Feb 18, 2005 at 07:46:28PM +0000, Christoph Hellwig wrote:
+> >  /*
+> > + * sysfs stuff
+> > + * this should be moved to it's own file, maybe cciss_sysfs.h
+> > + */
+> > +
+> > +static ssize_t cciss_firmver_show(struct device *dev, char *buf)
+> > +{
+> > +	ctlr_info_t *h = dev->driver_data;
+> > +        return sprintf(buf,"%c%c%c%c\n", h->firm_ver[0], h->firm_ver[1],
+> > +                                h->firm_ver[2], h->firm_ver[3]);
+> > +}
+> 
+> I really wish we had a common firmver release attribut in the driver
+> core, as mentioned in the fc transport class thread.  Greg?
 
-Just going through my old bug reports ...
+For a device?  It seems a huge overkill to add this attribute for
+_every_ device in the system, when only a small minority can actually
+use it.  Just put it as a default scsi or transport class attribute
+instead.
 
-> sym0: <810> rev 0x2 at pci 0000:00:06.0 irq 11
-> sym0: No NVRAM, ID 7, Fast-10, SE, parity checking
-> sym0: SCSI BUS has been reset.
-> scsi0 : sym-2.1.18j
-> sym0:0:0: ABORT operation started.
-> sym0:0:0: ABORT operation timed-out.
-> sym0:0:0: DEVICE RESET operation started.
-> sym0:0:0: DEVICE RESET operation timed-out.
-> sym0:0:0: BUS RESET operation started.
-> sym0:0:0: BUS RESET operation timed-out.
-> sym0:0:0: HOST RESET operation started.
-> sym0: SCSI BUS has been reset.
+thanks,
 
-To be honest, this looks like the sym2 driver never received any interrupts.
-Could you boot with sym53c8xx.debug=0xffff on the command line?  That should
-report any interrupts that come in.
-
--- 
-"Next the statesmen will invent cheap lies, putting the blame upon 
-the nation that is attacked, and every man will be glad of those
-conscience-soothing falsities, and will diligently study them, and refuse
-to examine any refutations of them; and thus he will by and by convince 
-himself that the war is just, and will thank God for the better sleep 
-he enjoys after this process of grotesque self-deception." -- Mark Twain
+greg k-h
