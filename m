@@ -1,72 +1,34 @@
-From: Gerhard Schneider <gs@ilsb.tuwien.ac.at>
-Subject: Re: 2.6.10-rc4 tape slow after switch Fusion MPT to Megaraid
-Date: Wed, 02 Mar 2005 11:30:28 +0100
-Message-ID: <1109759428.3666.77.camel@ilfb02.ilsb.tuwien.ac.at>
-References: <1109159088.5896.36.camel@ilfb02.ilsb.tuwien.ac.at>
-	 <Pine.LNX.4.61.0502242246420.9332@kai.makisara.local>
-	 <1109323141.5896.124.camel@ilfb02.ilsb.tuwien.ac.at>
-	 <Pine.LNX.4.61.0502272239580.17367@kai.makisara.local>
+From: Vladislav Bolkhovitin <vst@vlnb.net>
+Subject: Re: [ANNOUNCE] iSCSI enterprise target software
+Date: Wed, 02 Mar 2005 13:47:26 +0300
+Message-ID: <422599BE.9020008@vlnb.net>
+References: <OF551AE89E.73361D54-ON88256FB7.00720071-88256FB7.0072B239@us.ibm.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-dk3IP0PuJ4oOUOVoQDY2"
-Received: from gh-gw1.ilsb.tuwien.ac.at ([128.130.23.14]:6812 "EHLO
-	gh-gw1.ilsb.tuwien.ac.at") by vger.kernel.org with ESMTP
-	id S262253AbVCBKaw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 2 Mar 2005 05:30:52 -0500
-In-Reply-To: <Pine.LNX.4.61.0502272239580.17367@kai.makisara.local>
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
+Received: from smtpout.azz.ru ([81.176.69.27]:31682 "HELO mailserver.azz.ru")
+	by vger.kernel.org with SMTP id S262257AbVCBKof (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Mar 2005 05:44:35 -0500
+In-Reply-To: <OF551AE89E.73361D54-ON88256FB7.00720071-88256FB7.0072B239@us.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Kai Makisara <Kai.Makisara@kolumbus.fi>
-Cc: scsi <linux-scsi@vger.kernel.org>
+To: Bryan Henderson <hbryan@us.ibm.com>
+Cc: Arjan van de Ven <arjan@infradead.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, iscsitarget-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org
 
+Bryan Henderson wrote:
+>>You want to *use* the kernel pagecache as much as you can.
+> 
+> 
+> No, I really don't.  Not always.  I can think of only 2 reasons to 
+> maximize my use of the kernel pagecache: 1) saves me duplicating code; 2) 
+> allows me to share resources (memory and disk bandwidth come to mind) with 
+> others in the same Linux system fairly.  There are many cases where those 
+> two benefits are outweighed by the benefits of using some other cache.  If 
+> you're thinking of other benefits of using the pagecache, let's hear them.
 
---=-dk3IP0PuJ4oOUOVoQDY2
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+You forgot the third reason (benefit), though it doesn't directly 
+related to the page cache: read ahead. It greatly influences on the 
+performance and a direct I/O application has to reimplement this logic, 
+which generally isn't straightforward task.
 
-On Sun, 2005-02-27 at 22:46 +0200, Kai Makisara wrote:
-
->=20
-> This shows that your application is not using very large block size (3=20
-> pages, 10 kB?). You might get better throughput with larger block size (3=
-2=20
-> kB or 64 kB is usually large enough). If the Megaraid command processing=20
-> speed is not fast enough, this might explain the problem (not probable bu=
-t=20
-> I can't see any probable problems ;-)
->=20
-
-After different tries (I had problems w/ my backup schedule - ever tried
-to back up 600 GB with 2.6MB/s? :-)
-
-Tape block sizes between 10k and a few MB don't make any difference
-
-For better understanding I did the tests with
-
-dd if=3D/dev/zero of=3D/dev/nst0 bs=3D1M     and different mt setblk
-
-No chance to go above 2.6 MB/s
-
-                                    Gerhard Schneider
-
---=20
-Gerhard Schneider
-Institute of Lightweight Design and          e-Mail:gs@ilsb.tuwien.ac.at
-Structural Biomechanics (E317)               Tel.:   +43 1 58801 31716
-Vienna University of Technology / Austria    Fax:    +43 1 58801 31799
-A-1040 Wien, Gusshausstrasse 27-29    http://www.ilsb.tuwien.ac.at/~gs/
-
-
---=-dk3IP0PuJ4oOUOVoQDY2
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.2.5 (GNU/Linux)
-
-iD8DBQBCJZXEE6e53f4wQG4RAkJ6AJ9ZynNXVFuOB5NHopeCSu4UBq+VYgCgu4aX
-U6wDYNHur5jwxFntZrPN6yo=
-=//YR
------END PGP SIGNATURE-----
-
---=-dk3IP0PuJ4oOUOVoQDY2--
-
+Vlad
