@@ -1,85 +1,57 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] scsi sysfs cleanups
-Date: Tue, 19 Nov 2002 16:48:56 +0000
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20021119164856.A11391@infradead.org>
-References: <20021119153008.GA1544@beaverton.ibm.com>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: Why /dev/sdc1 doesn't show up...
+Date: Tue, 19 Nov 2002 12:55:20 -0500
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <3DDA7B08.7010101@pobox.com>
+References: <20021119055636.94C182C088@lists.samba.org> <20021119160622.GA8738@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20021119153008.GA1544@beaverton.ibm.com>; from andmike@us.ibm.com on Tue, Nov 19, 2002 at 07:30:08AM -0800
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+In-Reply-To: <20021119055636.94C182C088@lists.samba.org>
+To: Doug Ledford <dledford@redhat.com>
+Cc: Rusty Russell <rusty@rustcorp.com.au>, Alexander Viro <viro@math.psu.edu>, Linux Scsi Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Linus Torvalds <torvalds@transmeta.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Anderson <andmike@us.ibm.com>
-Cc: linux-scsi@vger.kernel.org
 
-On Tue, Nov 19, 2002 at 07:30:08AM -0800, Mike Anderson wrote:
-> +static inline void scsi_class_data_set(struct device *dev,
-> +				       struct Scsi_Host *host)
-> +{
-> +	dev->class_data = (void *)host;
-> +};
-> +
-> +static inline struct Scsi_Host *scsi_class_data_get(struct device *dev)
-> +{
-> +	return (struct Scsi_Host *) dev->class_data;
-> +};
+Doug Ledford wrote:
 
-These casts look rather pointless.
+> On Tue, Nov 19, 2002 at 04:52:25PM +1100, Rusty Russell wrote:
+>
+> >>right).  Or you can run a notifier on "enlivening" a module: I'd hoped
+> >>to avoid that.
+> >
+> >Actually, after some thought, this seems to clearly be the Right
+> >Thing, because it solves another existing race.  Consider a module
+> >which does:
+> >
+> >	if (!register_foo(&my_foo))
+> >		goto cleanup;
+> >	if (!create_proc_entry(&my_entry))
+> >		goto cleanup_foo;
+>
+>
+> There is *NO* module that does this right now and can be considered even
+> close to working.  The rule always has been "register yourself when you
+> are ready for use".  You're trying to add this new "You can fail after
+> registering yourself" semantic for brain dead coders that can't write an
+> init function to save thier ass.  My position is that in doing so, you
+> fuck all of us that do write a reasonable init sequence and handle our
+> error conditions.  Plus, since this is a changes in semantics, you have
+> possibly 50 or 100 modules that rely on the old behaviour, and maybe a 
+> few
+> that are broken in regards to registration ordering.  I think you are
+> trying to fix the wrong group of modules here.
+>
+> So, to me, the answer is clear.  The rule is hard and fast, you don't 
+> hand
+> out your function pointers to other modules or the core kernel until you
+> are ready for them to be used.  Don't muck with the module loader to 
+> solve
+> the problem, fix the maybe 4 or 5 modules that might violate this rule.
 
-> -module_init(init_scsi);
-> +subsys_initcall(init_scsi);
->  module_exit(exit_scsi);
 
 
-What's the exact reason for this change?
+violently agreed.  This has the potential for requiring an update of 
+almost every driver in the kernel, does it not?
 
->  /*
-> - * driverfs support for determining driver types
-> + * sysfs support
->   */
-> -EXPORT_SYMBOL(scsi_driverfs_bus_type);
-> +EXPORT_SYMBOL(scsi_device_driver_register);
-> +EXPORT_SYMBOL(scsi_device_driver_unregister);
-> +EXPORT_SYMBOL(scsi_host_class_register);
-> +EXPORT_SYMBOL(scsi_host_class_unregister);
-> +EXPORT_SYMBOL(shost_devclass);
-
-Why are these exported?
-
-> +/**
-> + * scsi_host_class_register - register class scsi host
-> + * @dev:	class device to register
-> + * @shost:	scsi host associtated with class device
-> + *
-> + * Return value:
-> + **/
-> +int scsi_host_class_register(struct device *dev, struct Scsi_Host *shost)
-> +{
-> +	scsi_class_data_set(dev, shost);
-> +	scsi_host_dev_set(shost, dev);
-> +
-> +	scsi_add_host(shost);
-> +
-> +	return 0;
-> +}
-> +
-> +/**
-> + * scsi_host_class_unregister - unregister class scsi host.
-> + * @dev:	class device to unregister
-> + **/
-> +void scsi_host_class_unregister(struct device *dev)
-> +{
-> +	struct Scsi_Host *shost;
-> +
-> +	shost = scsi_class_data_get(dev);
-> +
-> +	scsi_remove_host(shost);
-> +
-> +	scsi_class_data_set(dev, NULL);
-> +
-> +}
-> diff -Nru a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-
-What the point of these?  They don't seem to be used at all..
-
+	Jeff
