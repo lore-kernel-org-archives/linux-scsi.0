@@ -1,70 +1,68 @@
-From: Mark Haverkamp <markh@osdl.org>
-Subject: Re: [PATCH] megaraid driver fix for 2.5.70
-Date: 05 Jun 2003 07:46:31 -0700
+From: margitsw@t-online.de (Margit Schubert-While)
+Subject: 2.5.70 Adaptec error messages
+Date: Thu, 05 Jun 2003 16:51:58 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1054824389.13060.15.camel@markh1.pdx.osdl.net>
-References: <1054650567.13617.12.camel@markh1.pdx.osdl.net>
-	 <1054822044.1792.48.camel@mulgrave>
-	 <1054823593.13060.12.camel@markh1.pdx.osdl.net>
-	 <1054824142.1792.58.camel@mulgrave>
+Message-ID: <5.1.0.14.2.20030605162325.055137f0@pop.t-online.de>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; format=flowed
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from air-2.osdl.org ([65.172.181.6]:61089 "EHLO mail.osdl.org")
-	by vger.kernel.org with ESMTP id S264705AbTFEOcg (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Jun 2003 10:32:36 -0400
-In-Reply-To: <1054824142.1792.58.camel@mulgrave>
+Received: from mailout07.sul.t-online.com ([194.25.134.83]:40642 "EHLO
+	mailout07.sul.t-online.com") by vger.kernel.org with ESMTP
+	id S264704AbTFEOim (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 5 Jun 2003 10:38:42 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@steeleye.com>
-Cc: atulm@lsil.com, Linus Torvalds <torvalds@transmeta.com>, Linux Kernel <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
 
-On Thu, 2003-06-05 at 07:42, James Bottomley wrote:
-> On Thu, 2003-06-05 at 10:33, Mark Haverkamp wrote:
-> > On Thu, 2003-06-05 at 07:07, James Bottomley wrote:
-> > > On Tue, 2003-06-03 at 10:29, Mark Haverkamp wrote:
-> > > > A recent change to the megaraid driver to fix some memset calls resulted
-> > > > in overflowing the arrays being cleared and causing a system panic. 
-> > > > This patch fixes the problem by making sure that the arrays being
-> > > > cleared are dimensioned to the correct size.  The patch has been tested
-> > > > on osdl's stp machines that have megaraid controllers.
-> > > 
-> > > This patch doesn't quite look like a fix to me:  The megaraid mailboxes
-> > > are always >16 bytes *but* none of the setting commands is supposed to
-> > > touch any of the status parts (which begin at byte 15), so I don't see
-> > > how your patch would prevent a panic.
-> > 
-> > In the memset cases, what fixed the panic was that the size of the
-> > raw_mbox automatic was set to 16 and the memset was using
-> > sizeof(mbox_t).  I just increased the size of the raw_mbox so it
-> > wouldn't be overflowed.  It sounds like, from what you are saying, that
-> > the size of raw_mbox should have been left at 16 and the memset changed
-> > to fill 16 bytes and not the sizeof(mbox_t).
-> 
-> Ah, that's what I couldn't find in the source, thanks.
-> 
-> My observation is that only the first 15 bytes of mbox may be altered by
-> the user thus, since the issue_scb.. functions copy the mbox anyway,
-> there's not much point allocating the full mbox (although there's no
-> harm in doing so).  But rather than going back to the 16 byte
-> allocations and fixing the memset sizes, I think mbox_t should be split
-> into two pieces (and out and an in, with the issue_scb..() routines only
-> taking the in part) that way everything can be correctly written in
-> terms of sizeof.
-> 
-> I was also separately worried about the memcpy in the issue_scb..()
-> routines which looks like it will set the mbox->busy parameter
-> (controlled by the driver) to zero.  So I copied Atul to see if this is
-> a genuine problem or not.
+With 2.5.70(-bk) and also Justin's 20030603, I am getting the below at boot.
+After that, everything works fine.
+Adapter is 39160.
 
-The issue_scb.. functions set the busy parameter to 1 so the memcpy of
-16 should be OK.  For instance in issue_scb_block, busy is preset in the
-raw_mbox before the memcpy.
+Margit
 
-Mark.
+----------------------------------------
+kernel: (scsi0:A:0:0): CDB: 0x12 0x1 0x80 0x0 0xff 0x0
+kernel: (scsi0:A:0:0): Saw underflow (752 of 768 bytes). Treated as error
+         Repeats another 4 times
+kernel: (scsi0:A:1:0): CDB: 0x12 0x1 0x80 0x0 0xff 0x0
+kernel: (scsi0:A:1:0): Saw underflow (752 of 768 bytes). Treated as error
+         Repeats another 4 times
+kernel: (scsi1:A:2:0): CDB: 0x12 0x1 0x80 0x0 0xff 0x0
+kernel: (scsi1:A:2:0): Saw underflow (752 of 768 bytes). Treated as error
+         Repeats another 4 times
+kernel: (scsi1:A:3:0): CDB: 0x12 0x1 0x80 0x0 0xff 0x0
+kernel: (scsi1:A:3:0): Saw underflow (752 of 768 bytes). Treated as error
+         Repeats another 4 times
+----------------------------------------
+         And the above block repeats once more
 
-> 
-> James
--- 
-Mark Haverkamp <markh@osdl.org>
+-- snip --
+<6>scsi0 : Adaptec AIC7XXX EISA/VLB/PCI SCSI HBA DRIVER, Rev 6.2.36
+<4>        <Adaptec 3960D Ultra160 SCSI adapter>
+<4>        aic7899: Ultra160 Wide Channel A, SCSI Id=7, 32/253 SCBs
+<4>
+<4>(scsi0:A:0): 160.000MB/s transfers (80.000MHz DT, offset 127, 16bit)
+<4>(scsi0:A:1): 160.000MB/s transfers (80.000MHz DT, offset 127, 16bit)
+<5>  Vendor: FUJITSU   Model: MAN3184MP         Rev: 0108
+<5>  Type:   Direct-Access                      ANSI SCSI revision: 03
+<4>scsi0:A:0:0: Tagged Queuing enabled.  Depth 32
+<5>  Vendor: FUJITSU   Model: MAN3184MP         Rev: 0108
+<5>  Type:   Direct-Access                      ANSI SCSI revision: 03
+<4>scsi0:A:1:0: Tagged Queuing enabled.  Depth 32
+<6>scsi1 : Adaptec AIC7XXX EISA/VLB/PCI SCSI HBA DRIVER, Rev 6.2.36
+<4>        <Adaptec 3960D Ultra160 SCSI adapter>
+<4>        aic7899: Ultra160 Wide Channel B, SCSI Id=7, 32/253 SCBs
+<4>
+<4>(scsi1:A:2): 160.000MB/s transfers (80.000MHz DT, offset 63, 16bit)
+<4>(scsi1:A:3): 160.000MB/s transfers (80.000MHz DT, offset 63, 16bit)
+<5>  Vendor: IBM       Model: DDYS-T18350N      Rev: S96H
+<5>  Type:   Direct-Access                      ANSI SCSI revision: 03
+<4>scsi1:A:2:0: Tagged Queuing enabled.  Depth 32
+<5>  Vendor: IBM       Model: DDYS-T18350N      Rev: S96H
+<5>  Type:   Direct-Access                      ANSI SCSI revision: 03
+<4>scsi1:A:3:0: Tagged Queuing enabled.  Depth 32
+<6>scsi2 : Adaptec AIC7XXX EISA/VLB/PCI SCSI HBA DRIVER, Rev 6.2.36
+<4>        <Adaptec 2940A Ultra SCSI adapter>
+<4>        aic7860: Ultra Single Channel A, SCSI Id=7, 3/253 SCBs
+<4>
+-- end snip --
 
