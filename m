@@ -1,62 +1,79 @@
 From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: "do ata" scsi command?
-Date: Sat, 17 May 2003 14:17:34 +1000
+Subject: Re: [PATCH] scsi_status() macro
+Date: Sat, 17 May 2003 14:38:44 +1000
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3EC5B7DE.4060402@torque.net>
-References: <20030515230223.GA516@gtf.org> <20030516060324.GT812@suse.de> <3EC509A1.10503@pobox.com> <20030516160502.GE812@suse.de> <3EC51235.8090701@pobox.com> <20030516163558.GH812@suse.de> <3EC514AD.4000504@pobox.com> <20030516164320.GK812@suse.de>
+Message-ID: <3EC5BCD4.3020600@torque.net>
+References: <UTC200305161212.h4GCCcI13287.aeb@smtp.cwi.nl>
 Reply-To: dougg@torque.net
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bunyip.cc.uq.edu.au ([130.102.2.1]:60943 "EHLO
-	bunyip.cc.uq.edu.au") by vger.kernel.org with ESMTP id S261203AbTEQEEJ
+Received: from bunyip.cc.uq.edu.au ([130.102.2.1]:4625 "EHLO
+	bunyip.cc.uq.edu.au") by vger.kernel.org with ESMTP id S261207AbTEQEZT
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 17 May 2003 00:04:09 -0400
-In-Reply-To: <20030516164320.GK812@suse.de>
+	Sat, 17 May 2003 00:25:19 -0400
+In-Reply-To: <UTC200305161212.h4GCCcI13287.aeb@smtp.cwi.nl>
 List-Id: linux-scsi@vger.kernel.org
-To: Jens Axboe <axboe@suse.de>
-Cc: Jeff Garzik <jgarzik@pobox.com>, linux-scsi@vger.kernel.org
+To: Andries.Brouwer@cwi.nl
+Cc: James.Bottomley@steeleye.com, linux-scsi@vger.kernel.org
 
-Jens Axboe wrote:
-> On Fri, May 16 2003, Jeff Garzik wrote:
+Andries.Brouwer@cwi.nl wrote:
+>     > If you're doing this:
+>     > 
+>     >>+#define scsi_status(result) ((result) & 0x7e)
+>     > 
+>     > because bit0 is reserved in SCSI-2, then it should be 0x3e because bits
+>     > 6 and 7 are also reserved.  Of course, this would clash with the SCSI-3
+>     > definition of TASK ABORTED, sigh.
+>     > 
+>     > Perhaps it's better just not to bother with the mask?
 > 
->>Jens Axboe wrote:
->>
->>>How would you shoehorn any given ata command into a scsi
->>>command?
->>
->>
->>Make up a vendor-specific scsi opcode, say 0x70.  Define this opcode 
->>such that it carries the ATA taskfile registers as cdb parameters.  Look 
->>at the taskfile as passed in the cdb to classify it (a la 
->>req_file->data_phase in drivers/ide).  Then execute it.
+>     James,
+>     The macro still gets rid of the upper bytes in
+>     scsi_cmnd::result so in needs to be at least
+>     a mask of 0xff.
 > 
+>     With a mask of 0x7e it is correct for SCSI-3,
+>     bit 6 is reserved in SCSI-2  and "vendor unique"
+>     in SCSI-1 and SCSI_1_CCS. I dug up a SCSI 1 draft and
+>     the Status byte table is attached. So as far as I
+>     can see our only exposure is to SCSI 1 and CCS
+>     devices.
 > 
-> As I wrote in the last email, I think this is about the ugliest idea (or
-> close to) I've ever heard. You can't just go around making up opcodes.
+> Yes, SCSI-1 has RVVSSSSV with R=reserved, V=vendor unique, S=status.
+> Originally this was a bitmap, and it is still the case that codes
+> are not randomly assigned. (We have several places in the
+> kernel source that test (status & CHECK_CONDITION).)
+<snip>
 
-Jens,
-This subject is going to come up in the future. I'm
-thinking about Serial Attached SCSI (SAS) which was
-demo-ed at CeBit and various alliances are trying to
-get to market by the end of this year.
+Andries,
+There is method in the madness with (status & CHECK_CONDITION).
+In SCSI-2 there is COMMAND TERMINATED status which has the
+value of 0x22. It is the only status in SCSI 2, 3 or the most
+recent drafts that has bit 1 set besides CHECK CONDITION.
 
-In SAS we have a pure SCSI command set protocol (SSP),
-a management protocol (SMP) and a protocol for tunnelling
-the ATA/PI command set/task file over an SAS link (STP)**.
-The idea is that users will be able to plug either SAS
-or SATA disks into their RAID backplanes.
+In recent standards and drafts COMMAND TERMINATED is deprecated
+but in the still important SCSI 2 standard it exists and
+also implies that a sense buffer is available and should be
+checked.
 
-So we are likely to get a SAS HBA in the SCSI subsystem
-(from Justin??) that is an initiator for those three
-protocols. How do we handle STP??
+How long since anyone saw COMMAND TERMINATED? Well I'm
+fighting with the ide-scsi driver (and probably losing)
+and I see it often. I have a Creative x52 ATAPI CD
+reader that once in a while when reading a data CD
+with sg_dd fails with COMMAND_TERMINATED/overlapping_
+commands. Since sg_dd sends SCSI reads in a purely
+sequential order it points to something really sick
+in the ide state machine (most likely caused by ide-scsi).
+But I digress.
 
-
-** devices called expanders placed between the SAS HBA
-and the SATA devices will provide fanout and the
-SATA to STP physical/link mapping.
+The bottom line:
+    (status & CHECK_CONDITION)
+is obscure shorthand for:
+    ((status == CHECK_CONDITION) || (status == COMMAND_TERMINATED))
+and that second check should not be dropped any time
+soon.
 
 Doug Gilbert
-
 
