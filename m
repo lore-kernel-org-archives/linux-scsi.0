@@ -1,46 +1,56 @@
-From: Andrew Morton <akpm@digeo.com>
+From: James Bottomley <James.Bottomley@steeleye.com>
 Subject: Re: 2.5.73-mm1 falling over in SDET
-Date: Sat, 28 Jun 2003 17:02:35 -0700
+Date: 28 Jun 2003 22:28:57 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030628170235.51ee2f69.akpm@digeo.com>
+Message-ID: <1056857338.2514.4.camel@mulgrave>
 References: <45120000.1056810681@[10.10.2.4]>
-	<49400000.1056814561@[10.10.2.4]>
+	<49400000.1056814561@[10.10.2.4]>  <20030628170235.51ee2f69.akpm@digeo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="=-Gw0SDRjMbWXjBi0gn4B/"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pao-ex01.pao.digeo.com ([12.47.58.20]:16030 "EHLO
-	pao-ex01.pao.digeo.com") by vger.kernel.org with ESMTP
-	id S265482AbTF1XsS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 28 Jun 2003 19:48:18 -0400
-In-Reply-To: <49400000.1056814561@[10.10.2.4]>
+Received: from nat9.steeleye.com ([65.114.3.137]:31236 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S265536AbTF2DOp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 28 Jun 2003 23:14:45 -0400
+In-Reply-To: <20030628170235.51ee2f69.akpm@digeo.com>
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin J. Bligh" <mbligh@aracnet.com>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Andrew Morton <akpm@digeo.com>
+Cc: "Martin J. Bligh" <mbligh@aracnet.com>, Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-"Martin J. Bligh" <mbligh@aracnet.com> wrote:
->
-> > The killer SDET has got you, but this is all I got from the chewed
-> > remains. Maybe the EIP is enough? ;-) I guess that's a NULL ptr
-> > dereference, though garbled somewhat.
-> 
-> Repeated it and got a much better panic. This is with feral isp driver
-> + Mike's patch, BTW. Maybe it's just some stack overflow?
 
-Oh lovely.
+--=-Gw0SDRjMbWXjBi0gn4B/
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 
-> Call Trace:
->  [<c01c42d3>] blk_insert_request+0x47/0x78
->  [<c01d3679>] scsi_queue_insert+0x71/0x7c
->  [<c01d05a4>] scsi_dispatch_cmd+0x180/0x190
->  [<c01d465c>] scsi_request_fn+0x1f4/0x264
->  [<c01c42f1>] blk_insert_request+0x65/0x78
->  [<c01d3679>] scsi_queue_insert+0x71/0x7c
->  [<c01d05a4>] scsi_dispatch_cmd+0x180/0x190
->  [<c01d465c>] scsi_request_fn+0x1f4/0x264
->  [<c01c42f1>] blk_insert_request+0x65/0x78
+On Sat, 2003-06-28 at 19:02, Andrew Morton wrote:
+> Yes, isplinux_queuecommand() returns non-zero and the scsi generic layer
+> cheerfully goes infinitely recursive.
 
-Yes, isplinux_queuecommand() returns non-zero and the scsi generic layer
-cheerfully goes infinitely recursive.
+Sigh, certain persons need to be more careful when doing logic
+alterations.
 
+Try the attached.
+
+James
+
+
+--=-Gw0SDRjMbWXjBi0gn4B/
+Content-Disposition: attachment; filename=tmp.diff
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; name=tmp.diff; charset=ISO-8859-1
+
+=3D=3D=3D=3D=3D drivers/scsi/hosts.c 1.79 vs edited =3D=3D=3D=3D=3D
+--- 1.79/drivers/scsi/hosts.c	Thu Jun 26 22:51:24 2003
++++ edited/drivers/scsi/hosts.c	Sat Jun 28 22:14:12 2003
+@@ -194,7 +194,7 @@
+ 	shost->use_blk_tcq =3D sht->use_blk_tcq;
+ 	shost->highmem_io =3D sht->highmem_io;
+=20
+-	if (!sht->max_host_blocked)
++	if (sht->max_host_blocked)
+ 		shost->max_host_blocked =3D sht->max_host_blocked;
+ 	else
+ 		shost->max_host_blocked =3D SCSI_DEFAULT_HOST_BLOCKED;
+
+--=-Gw0SDRjMbWXjBi0gn4B/--
 
