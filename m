@@ -1,33 +1,68 @@
-From: "Margarita" <ohjra@ameritech.net>
-Subject: So agitated that his
-Date: Tue, 07 Dec 2004 15:12:08 -0200
-Message-ID: <523376366532-48593943__18226.0139183656$1102444443$gmane$org@ameritech.net>
+From: Adrian Bunk <bunk@stusta.de>
+Subject: [2.6 patch] scsi/ahci.c: remove an unused function (fwd)
+Date: Wed, 8 Dec 2004 02:14:29 +0100
+Message-ID: <20041208011429.GF5496@stusta.de>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="ISO-8859-3";
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from adsl-68-78-124-69.dsl.emhril.ameritech.net ([68.78.124.69]:49420
-	"HELO adsl-68-78-124-69.dsl.emhril.ameritech.net") by vger.kernel.org
-	with SMTP id S261887AbULGSdR (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Dec 2004 13:33:17 -0500
+Received: from emailhub.stusta.mhn.de ([141.84.69.5]:15890 "HELO
+	mailout.stusta.mhn.de") by vger.kernel.org with SMTP
+	id S261985AbULHBOd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 7 Dec 2004 20:14:33 -0500
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "R. Wray" <sparclinux@vger.kernel.org>
+To: Andrew Morton <akpm@osdl.org>
+Cc: jgarzik@pobox.com, James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Tue, 07 Dec 2004 11:16:08 -0600
-CLIENT: 241-5776-733
+The patch forwarded below still applies and compiles against 
+2.6.10-rc2-mm4.
 
-Good day:
+Please apply.
 
-You must complete our form to finalize the process.
-Our company can offer a deal 3.35% at this very moment. 
-We appreciate your business and look forward to following up with you.
 
-Please visit our site
+----- Forwarded message from Adrian Bunk <bunk@stusta.de> -----
 
-http://www.xmaad.com/
+Date:	Fri, 29 Oct 2004 02:26:13 +0200
+From: Adrian Bunk <bunk@stusta.de>
+To: jgarzik@pobox.com
+Cc: James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [2.6 patch] scsi/ahci.c: remove an unused function
 
-Margarita
-Consultant
+The patch below removes an unused function from drivers/scsi/ahci.c
+
+
+diffstat output:
+ drivers/scsi/ahci.c |    9 ---------
+ 1 files changed, 9 deletions(-)
+
+
+Signed-off-by: Adrian Bunk <bunk@stusta.de>
+
+--- linux-2.6.10-rc1-mm1-full/drivers/scsi/ahci.c.old	2004-10-28 23:28:09.000000000 +0200
++++ linux-2.6.10-rc1-mm1-full/drivers/scsi/ahci.c	2004-10-28 23:28:17.000000000 +0200
+@@ -504,15 +504,6 @@
+ 	ahci_fill_sg(qc);
+ }
+ 
+-static inline void ahci_dma_complete (struct ata_port *ap,
+-                                     struct ata_queued_cmd *qc,
+-				     int have_err)
+-{
+-	/* get drive status; clear intr; complete txn */
+-	ata_qc_complete(ata_qc_from_tag(ap, ap->active_tag),
+-			have_err ? ATA_ERR : 0);
+-}
+-
+ static void ahci_intr_error(struct ata_port *ap, u32 irq_stat)
+ {
+ 	void *mmio = ap->host_set->mmio_base;
+-
+To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Please read the FAQ at  http://www.tux.org/lkml/
+
+----- End forwarded message -----
 
