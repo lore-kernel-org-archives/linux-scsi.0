@@ -1,47 +1,41 @@
-From: "Tony Battersby" <tonyb@cybernetics.com>
-Subject: bios_param() incorrect for large disks on 32-bit arch for many SCSI drivers?
-Date: Thu, 23 Dec 2004 16:30:37 -0500
-Message-ID: <04Dec23.163037est.332311@cyborg.cybernetics.com>
-Reply-To: <tonyb@cybernetics.com>
+From: Dave C Boutcher <sleddog@us.ibm.com>
+Subject: Re: [patch] ibmvscsi.c: remove max-sectors module parm
+Date: Thu, 23 Dec 2004 18:36:20 -0600
+Message-ID: <20041224003620.GA31981@cs.umn.edu>
+References: <20041221223645.GA2736@cs.umn.edu> <1103828621.5290.42.camel@mulgrave> <20041223200153.GA18386@cs.umn.edu> <1103835435.5290.45.camel@mulgrave>
+Reply-To: boutcher@cs.umn.edu
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cyborg.cybernetics.com ([206.246.200.18]:65294 "EHLO
-	cybernetics.com") by vger.kernel.org with ESMTP id S261304AbULWVdP
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 23 Dec 2004 16:33:15 -0500
+Received: from mail.cs.umn.edu ([128.101.34.202]:5087 "EHLO mail.cs.umn.edu")
+	by vger.kernel.org with ESMTP id S261348AbULXAgl (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 23 Dec 2004 19:36:41 -0500
+Content-Disposition: inline
+In-Reply-To: <1103835435.5290.45.camel@mulgrave>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-In reviewing the LBD (large block devices) patch for lk 2.4
-(http://www.gelato.unsw.edu.au/patches/lbd/), there are quite a number
-of changes to SCSI driver bios_param() functions that look like:
+On Thu, Dec 23, 2004 at 02:57:15PM -0600, James Bottomley wrote:
+> On Thu, 2004-12-23 at 14:01 -0600, Dave C Boutcher wrote:
+> > The patches I submitted on Tuesday are incremental on top of the four
+> > patches from November 29th.  Let me know if you would like the
+> > November 29th patches re-sent.
+> 
+> Actually, just the limit size of I/O requests with the two patches
+> rolled together (or is there nothing left of this now?)
 
-- cylinders = capacity / (heads * sectors);
-+ cylinders = (long) capacity / (heads * sectors);
+I'm not sure I parse that...but in any case, one of the four patches
+from November limited the size of the I/O requests based on information
+from the SCSI target, with a default value in case the target doesn't
+tell us.  I got overly clever and made the default value a module
+parameter. Jens pointed out that I was being redundant, since
+there are other ways to set max sectors.  The patch I submitted
+on Tuesday leaves the basic function intact (setting max I/O size
+based on input from the target) and just removes the redundant module
+parameter.
 
-I noticed that many of these changes have made it into the lk 2.6
-series:
-
-cd linux-2.6.10-rc3
-find . -type f -name "*.c" | xargs grep "(.*long).*capacity" | grep -v
-"long long"
-
-This prints out numerous places where disk capacity is casted to long or
-unsigned long, mostly in bios_param() functions of SCSI drivers.
-
-Why are these casts used?  Disk capacity is of type sector_t (64-bit),
-but on 32-bit platforms like i386, long and unsigned long are 32-bit.
-These casts truncate the capacity of disks >= 2 TB on 32-bit platforms.
-The only benefit that I can see is using 32/32 division rather than
-64/32 division (something like this is mentioned at
-http://www.gelato.unsw.edu.au/IA64wiki/LBDKernel), but the answer is
-wrong, so what's the point?
-
-Are these typecasts incorrect, or am I missing something?
-
-Anthony J. Battersby
-Cybernetics
-
+-- 
+Dave Boutcher
