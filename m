@@ -1,33 +1,59 @@
-From: James Bottomley <James.Bottomley@steeleye.com>
-Subject: RE: [PATCH] 2.6.2-rc2 - MPT Fusion driver 3.00.02 update
-Date: 26 Jan 2004 11:05:26 -0600
+From: Andrey Borzenkov <arvidjaar@mail.ru>
+Subject: Re: 2.6.1: media change check fails for busy unplugged device
+Date: Mon, 26 Jan 2004 22:16:42 +0300
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1075136727.2290.48.camel@mulgrave>
-References: <0E3FA95632D6D047BA649F95DAB60E5703D19D33@exa-atlanta.se.lsil.com>
+Message-ID: <200401262216.42966.arvidjaar@mail.ru>
+References: <200401182141.12468.arvidjaar@mail.ru> <20040119233641.GA1859@beaverton.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat1.steeleye.com ([65.114.3.130]:27603 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S264485AbUAZRFa (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 26 Jan 2004 12:05:30 -0500
-In-Reply-To: <0E3FA95632D6D047BA649F95DAB60E5703D19D33@exa-atlanta.se.lsil.com>
+Received: from hueytecuilhuitl.mtu.ru ([195.34.32.123]:55301 "EHLO
+	hueymiccailhuitl.mtu.ru") by vger.kernel.org with ESMTP
+	id S264476AbUAZTU6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 26 Jan 2004 14:20:58 -0500
+In-Reply-To: <20040119233641.GA1859@beaverton.ibm.com>
+Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
-To: "Moore, Eric Dean" <Emoore@lsil.com>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, hch@infradead.org
+To: Mike Anderson <andmike@us.ibm.com>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@steeleye.com>
 
-On Mon, 2004-01-26 at 11:01, Moore, Eric Dean wrote:
-> I will work on that.  
+On Tuesday 20 January 2004 02:36, Mike Anderson wrote:
+> Andrey Borzenkov [arvidjaar@mail.ru] wrote:
+> > If we unplug busy device (consider mounted USB stick) media change check
+> > always returns true (no media change happened). It happens because
+> >
+> > - device state is set to SDEV_DEL and scsi_prep_fn silently kills any
+> > request including TEST_UNIT_READY sent by sd_media_changed without
+> > propagating any information back to caller
+>
+> The silently kill would appear to be the issue. The addition of any
+> number of additional checks prior to calling scsi_ioctl would not ensure
+> that as soon as the last check is done the device state has not changed.
+>
 
-Thanks.
+But why sdev->online remains set after device has been deleted? It is 
+definitely cannot accept any command after that point?
 
-> I had avoided it due the comments in the code
-> from sralston and pdelaney about sg interface 
-> gererating wrong direction in some cases.  
+Is it possible to clear sdev->online in scsi_remove_device? That would solve 
+the problem.
 
-If you find a problem, I'll fix the generic code...
+thank you
 
-James
+-andrey
 
+> We need a change in scsi_wait_req to differentiate that we where not woken
+> up from scsi_wait_done, but from end_that_request_last.
+>
+> One way would be to check if rq_status == RQ_SCSI_DONE. I did not see
+> anything on the request to indicate it was BLKPREP_KILL'd.
+>
+> James has worked more on the scsi_prep_fn so maybe he has another
+> suggestion.
+>
+> -andmike
+> --
+> Michael Anderson
+> andmike@us.ibm.com
 
