@@ -1,46 +1,59 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: Kernel 2.6.x hangs with Symbios Logic 53c1010 Ultra3 SCSI Ada pter
-Date: Sat, 6 Nov 2004 18:45:55 +0000
-Message-ID: <20041106184555.GD24690@parcelfarce.linux.theplanet.co.uk>
-References: <D5169CBBC6369D4CBFFABD7905CC9D695D31@tehran.Fars-Robotics.local> <20041106035951.GC24690@parcelfarce.linux.theplanet.co.uk> <20041106120358.GC23305@infradead.org>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [SAS ANNOUNCEMENT] MPT Fusion driver 3.02.07 update
+Date: Sat, 6 Nov 2004 23:03:14 +0000
+Message-ID: <20041106230314.GA27491@infradead.org>
+References: <91888D455306F94EBD4D168954A9457C2D18BA@nacos172.co.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:16304 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S261437AbUKFSp6
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 6 Nov 2004 13:45:58 -0500
+Received: from phoenix.infradead.org ([81.187.226.98]:31753 "EHLO
+	phoenix.infradead.org") by vger.kernel.org with ESMTP
+	id S261495AbUKFXDW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 6 Nov 2004 18:03:22 -0500
 Content-Disposition: inline
-In-Reply-To: <20041106120358.GC23305@infradead.org>
+In-Reply-To: <91888D455306F94EBD4D168954A9457C2D18BA@nacos172.co.lsil.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>, Matthew Wilcox <matthew@wil.cx>, Richard Waltham <richard@fars-robotics.net>, SUPPORT <support@4bridgeworks.com>, Thomas Babut <thomas@babut.net>, linux-kernel@vger.kernel.org, Linux SCSI <linux-scsi@vger.kernel.org>, groudier@free.fr
+To: " Moore, Eric Dean" <Eric.Moore@lsil.com>
+Cc: linux-scsi@vger.kernel.org
 
-On Sat, Nov 06, 2004 at 12:03:58PM +0000, Christoph Hellwig wrote:
-> On Sat, Nov 06, 2004 at 03:59:51AM +0000, Matthew Wilcox wrote:
-> > On Sat, Nov 06, 2004 at 12:02:32AM -0000, Richard Waltham wrote:
-> > > Good as a backup but the original PPR capability is defined in
-> > > scan_scsi.c. Shouldn't scan_scsi.c take note of the bus mode and enable
-> > > PPR capabilities accordingly? This would then cover this issue for all
-> > > relevant LLDDs wouldn't it?
-> > 
-> > scan_scsi.c doesn't know what mode the bus is in.  scan_scsi.c doesn't
-> > even know whether the bus is SPI, FC, iSCSI, SAS or SATA.
-> 
-> And PPR only makes sense for SPI anyway.  An good argument why this
-> should move to the SPI transport class, which does know about SE vs HVD
-> vs LVD.
+On Fri, Nov 05, 2004 at 05:21:06PM -0700,  Moore, Eric Dean wrote:
+> We are pleased to announce the MPT Fusion release candidate for lk 2.=
+6
+>=20
+> Highlights of this release:
+> =B7	SAS Support - 1064, 1066, 1068
+> =B7	mpi headers v1.5.2
+>=20
+> =B7	Also included are hch@ suggestions from previous 3.02.06 release
+> - 	remove ioc->chip_type checks, using the new bus_type member
+> -	removing SAS CSMI Ioctls
+> -	using scsi_remove_device and scsi_add_device =3D> for hot swap supp=
+ort
+>=20
+> This patch applied against bk://linux-scsi.bkbits.net/scsi-misc-2.6
 
-That would make sense if more of this were done at a higher level.
-As it is right now, the decision whether to use PPR, SDTR or WDTR is
-entirely up to the driver.  I think there's a lot more consolidation
-that could be done into the midlayer, but we should probably see what
-other drivers requirements are before making it perfect for sym2.
+It's still a big patch mixing various features and fixes and whitespace
+changes.  Also:
 
--- 
-"Next the statesmen will invent cheap lies, putting the blame upon 
-the nation that is attacked, and every man will be glad of those
-conscience-soothing falsities, and will diligently study them, and refuse
-to examine any refutations of them; and thus he will by and by convince 
-himself that the war is just, and will thank God for the better sleep 
-he enjoys after this process of grotesque self-deception." -- Mark Twain
+ - ioc->sasDeviceList still exists although it's not actually traversed=
+,
+   and quite a lot od dead code to fill it
+ - the mptctl_hba_pciinfo() ioctl call is vetoed, this information
+   can be easily retrived from sysfs, and we aboslutely don't want this
+   duplicated in every LLDD
+ - please don't add TRUE/FALSE defines - Linux codingstyle prefers 0/1
+ - what's that ->last_lun thing about?
+ - your forgot to kill one MPTSCSIH_DBG_TIMEOUT in ->queuecommand
+ - mptscsih_slave_destroy still has the vdev !=3D NULL check - if this
+   case still happens now that the hotremoval is fixed you're in
+   much deeper problems than this check could solve
+ - if you already changed the boot parameter syntax please move to
+   a module_param for each individual parameter
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
