@@ -1,70 +1,75 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH 2.6 ] MPT Fusion driver 3.01.02 update
-Date: Wed, 17 Mar 2004 15:20:33 -0500
+From: Kai Makisara <Kai.Makisara@kolumbus.fi>
+Subject: Re: 2.6.5-rc1 SCSI + st regressions (was: Linux 2.6.5-rc1)
+Date: Wed, 17 Mar 2004 22:35:07 +0200 (EET)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <4058B311.1010502@pobox.com>
-References: <0E3FA95632D6D047BA649F95DAB60E57040DB25E@exa-atlanta.se.lsil.com>
+Message-ID: <Pine.LNX.4.58.0403172145420.1093@kai.makisara.local>
+References: <Pine.LNX.4.58.0403152154070.19853@ppc970.osdl.org>
+ <20040316211203.GA3679@merlin.emma.line.org> <20040316211700.GA25059@parcelfarce.linux.theplanet.co.uk>
+ <20040316215659.GA3861@merlin.emma.line.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:44224 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S261898AbUCQUUy
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 17 Mar 2004 15:20:54 -0500
-In-Reply-To: <0E3FA95632D6D047BA649F95DAB60E57040DB25E@exa-atlanta.se.lsil.com>
+Received: from fep21-0.kolumbus.fi ([193.229.0.48]:49112 "EHLO
+	fep21-app.kolumbus.fi") by vger.kernel.org with ESMTP
+	id S262026AbUCQUfK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 17 Mar 2004 15:35:10 -0500
+In-Reply-To: <20040316215659.GA3861@merlin.emma.line.org>
 List-Id: linux-scsi@vger.kernel.org
-To: "Moore, Eric Dean" <Emoore@lsil.com>
-Cc: linux-scsi@vger.kernel.org, James.Bottomley@steeleye.com, ak@suse.de, Alexander.Stohr@gmx.de, rddunlap@osdl.org
+To: Matthias Andree <ma+lscsi@dt.e-technik.uni-dortmund.de>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Greg KH <greg@kroah.com>
 
-Moore, Eric Dean wrote:
-> This is an update for the MPT Fusion drivers 2.6 kernel.
-> Version 3.01.02.
+On Tue, 16 Mar 2004, Matthias Andree wrote:
+
+> On Tue, 16 Mar 2004, Matthew Wilcox wrote:
 > 
-> Changelog:
+> > On Tue, Mar 16, 2004 at 10:12:03PM +0100, Matthias Andree wrote:
+> > > I have some SCSI troubles with 2.6.5-rc1 (from BK) that 2.6.4 didn't
+> > > have.
+> > > 
+> > > Modprobe, loading the st driver, tries a NULL pointer dereference in
+> > > kernel space and my 2nd tape drive isn't found: st1 is not shown. cat
+> > > /proc/scsi/scsi (typed after the attempted zero page dereference) hangs
+> > > in rwsem_down_read_failed with process state D.
+> > 
+> > I notice you're using the sym2 driver.  Could you try backing out the
+> > changes made to it in 2.6.5-rc1, just to be sure we're looking at an st
+> > problem, not a sym2 problem?
 > 
-> (1) Andi Kleen[ak@suse.de]
-> put warning "Device (0:0:0) reported QUEUE_FULL!" into debug messages
-> 
-> (2) Alexander Stohr[Alexander.Stohr@gmx.de]
-> fix warnings from mptscsih_setup when driver isn't compiled as module
-> 
-> (3) Randy.Dunlap[rddunlap@osdl.org]
-> Remove unnecessary min/max macros and change calls to 
-> use kernel.h macros instead.
+I was able to reproduce this with the scsi_debug driver (you can use it 
+for simple tape tests by changing TYPE_DISK to TYPE_TAPE). Reverting the 
+patch:
 
-Here are some wrappers to remove:
+# ChangeSet
+#   2004/03/12 16:22:36-08:00 greg@kroah.com 
+#   remove cdev_set_name completely as it is not needed.
 
-static inline void CHIPREG_PIO_WRITE32(volatile u32 *a, u32 v)
-{
-         outl(v, (unsigned long)a);
-}
+(and editing drivers/char/tty_io.c to get the kernel to compile) solved 
+the problem for me. st.c is using the name put into kobj.name in making 
+the class file names. I will make a patch that removes this dependency.
 
-static inline u32 CHIPREG_PIO_READ32(volatile u32 *a)
-{
-         return inl((unsigned long)a);
-}
+While looking at this problem, I noticed that the naming changes already 
+committed to BK had disappeared. Looking at st.c history revealed that the 
+following change had been committed (sorry for wrapping) by greg@kroah.com 
+46 hours ago:
 
+--- 1.80+1.79.1.2/drivers/scsi/st.c	Wed Mar 17 12:25:28 2004
++++ 1.81/drivers/scsi/st.c	Wed Mar 17 12:25:28 2004
+@@ -3896,11 +3896,6 @@
+ 				       dev_num);
+ 				goto out_free_tape;
+ 			}
+-			/* Make sure that the minor numbers corresponding 
+to the four
+-			   first modes always get the same names */
+-			i = mode << (4 - ST_NBR_MODE_BITS);
+-			snprintf(cdev->kobj.name, KOBJ_NAME_LEN, "%s%s%s", 
+j ? "n" : "",
+-				 disk->disk_name, st_formats[i]);
+ 			cdev->owner = THIS_MODULE;
+ 			cdev->ops = &st_fops;
 
-Also, I'm not sure about these wrappers, but it's mainly as style issue 
-due to the "if (PortIo)" test.  You should remove the 'volatile' 
-markers, at least.
+The change comment was "merge" and it resulted in st.c version 1.81. (I am 
+not using Bitkeeper but trying to extract information from bkbits.net.)
 
-
-static inline u32 CHIPREG_READ32(volatile u32 *a)
-{
-         if (PortIo)
-                 return inl((unsigned long)a);
-         else
-                 return readl(a);
-}
-
-static inline void CHIPREG_WRITE32(volatile u32 *a, u32 v)
-{
-         if (PortIo)
-                 outl(v, (unsigned long)a);
-         else
-                 writel(v, a);
-}
-
+	Kai
 
