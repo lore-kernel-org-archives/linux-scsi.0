@@ -1,74 +1,65 @@
 From: Andrew Morton <akpm@osdl.org>
-Subject: Re: Fusion-MPT much faster as module
-Date: Mon, 21 Mar 2005 15:27:23 -0800
-Message-ID: <20050321152723.4b86dc3a.akpm@osdl.org>
-References: <Pine.LNX.4.61.0503081327560.28812@praktifix.dwd.de>
+Subject: Re: Adaptec 29160 + Promise Ultratrak100 TX8 problems
+Date: Mon, 21 Mar 2005 15:31:16 -0800
+Message-ID: <20050321153116.7365781c.akpm@osdl.org>
+References: <20050308145251.6b73b8b6.mdeboer@iua.upf.es>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Received: from fire.osdl.org ([65.172.181.4]:26842 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S262180AbVCUX12 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 21 Mar 2005 18:27:28 -0500
-In-Reply-To: <Pine.LNX.4.61.0503081327560.28812@praktifix.dwd.de>
-Sender: linux-scsi-owner@vger.kernel.org
+In-Reply-To: <20050308145251.6b73b8b6.mdeboer@iua.upf.es>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Maarten de Boer <mdeboer@iua.upf.es>
+Cc: linux-kernel@vger.kernel.org, aic7xxx@freebsd.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Holger Kiehl <Holger.Kiehl@dwd.de>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, "Moore, Eric Dean" <emoore@lsil.com>
 
-Holger Kiehl <Holger.Kiehl@dwd.de> wrote:
+Maarten de Boer <mdeboer@iua.upf.es> wrote:
 >
-> Hello
+> Hello,
 > 
-> On a four CPU Opteron compiling the Fusion-MPT as module gives much better
-> performance when compiling it in, here some bonnie++ results:
+> I am having nasty problems with an Adaptec 29160 and Promise
+> Ultratrak100 TX8 external RAID. (kernel 2.6.11)
+
+It would be helpful if you could retest 2.6.12-rc1 or, better,
+2.6.12-rc1-mm1.
+
+But afaik this remains unresolved?
+
+> Initially, I can access the RAID normally. I create a (small, for
+> testing) partition on it, and an ext3 filesystem. But when I start
+> writing, in no-time the RAID and the SCSI adapter get into a broken
+> state, and rebooting both RAID and Linux (simply rmmod/modprobe is not
+> enough) is the only way out.
 > 
-> Version  1.03       ------Sequential Output------ --Sequential Input- --Random-
->                      -Per Chr- --Block-- -Rewrite- -Per Chr- --Block-- --Seeks--
-> Machine        Size K/sec %CP K/sec %CP K/sec %CP K/sec %CP K/sec %CP  /sec %CP
-> compiled in  15872M 38366 71  65602  22 18348   4 53276 84  57947   7 905.4   2
-> module       15872M 51246 96 204914  70 57236  14 59779 96 264171  33 923.0   2
+> I trigger this with a small test like creating 10000 files, or
+> extracting a kernel tar.gz.
 > 
-> This happens with 2.6.10, 2.6.11 and 2.6.11-bk2. Controller is a
-> Symbios Logic 53c1030 PCI-X Fusion-MPT Dual Ultra320 SCSI.
+> In my /var/log/messages I find:
 > 
-> Why is there such a large difference?
+> Mar  8 10:58:22 iua-file-2 kernel: (scsi3:A:0:0): data overrun detected in Data-out phase.  Tag == 0x2.
+> Mar  8 10:58:22 iua-file-2 kernel: (scsi3:A:0:0): Have seen Data Phase.  Length = 524288.  NumSGs = 33.
+> Mar  8 10:58:52 iua-file-2 kernel: scsi3:0:0:0: Attempting to queue an ABORT message
+> Mar  8 10:58:52 iua-file-2 kernel: CDB: 0x2a 0x0 0x0 0x2 0x8c 0x37 0x0 0x4 0x0 0x0
+> Mar  8 10:58:52 iua-file-2 kernel: scsi3: At time of recovery, card was not paused
+> Mar  8 10:58:52 iua-file-2 kernel: >>>>>>>>>>>>>>>>>> Dump Card State Begins <<<<<<<<<<<<<<<<<
+> Mar  8 10:58:52 iua-file-2 kernel: scsi3: Dumping Card State in Data-out phase,
+> at SEQADDR 0x17b
+> Mar  8 10:58:52 iua-file-2 kernel: Card was paused
 > 
-
-Holger, this problem remains unresolved, does it not?  Have you done any
-more experimentation?
-
-I must say that something funny seems to be happening here.  I have two
-MPT-based Dell machines, neither of which is using a modular driver:
-
-
-akpm:/usr/src/25> 0 hdparm -t /dev/sda
-
-/dev/sda:
- Timing buffered disk reads:  64 MB in  5.00 seconds = 12.80 MB/sec
-
-That's a bit disappointing.  Running 2.6.9-rc2-mm2(!) with a
-
- SCSI storage controller: LSI Logic / Symbios Logic 53c1030 (rev 07)
-
-controller on disks which shudl hit 50MB/sec.
-
-
-
-
-And
-
-bix:/home/akpm# hdparm -t /dev/sda
-
-/dev/sda:
- Timing buffered disk reads:  114 MB in  3.03 seconds =  37.57 MB/sec
-
-with 2.6.11-rc4-mm1 using
-
-Fusion MPT SCSI Host driver 3.01.16
-scsi0 : ioc0: LSI53C1030, FwRev=01030600h, Ports=1, MaxQ=222, IRQ=25
-scsi1 : ioc1: LSI53C1030, FwRev=01030600h, Ports=1, MaxQ=222, IRQ=26
-Vendor: SEAGATE   Model: ST3146807LW       Rev: DS09
-Type:   Direct-Access                      ANSI SCSI revision: 03
-
-Better, but again I'd expect >50MB/sec.
+> I have tried changing settings in the adaptec controller BIOS, I tried
+> lowering the global_tag_depth, all to no avail. And having the reboot
+> everytime it goes wrong makes trying things rather slow :-(
+> 
+> I googled for the messages, and found many people mentioning them, but
+> no solution.
+> 
+> I'd very much appreciate your help. Please Cc: me when replying, because
+> I am not subscribed to the lkml.
+> 
+> Kind regards,
+> 
+> Maarten
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
