@@ -1,40 +1,47 @@
-From: Pat LaVarre <p.lavarre@ieee.org>
-Subject: Re: Informational Exception mpage [was: usb storage traces]
-Date: 05 Dec 2003 09:02:25 -0700
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: usb storage traces
+Date: Fri, 5 Dec 2003 11:01:36 -0500 (EST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1070640144.12411.18.camel@patibmrh9>
-References: <Pine.LNX.4.44L0.0312051025560.850-100000@ida.rowland.org>
+Message-ID: <Pine.LNX.4.44L0.0312051049040.850-100000@ida.rowland.org>
+References: <20031204210832.A1757@beaverton.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from email-out2.iomega.com ([147.178.1.83]:60667 "EHLO
-	email.iomega.com") by vger.kernel.org with ESMTP id S264238AbTLEQCg
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 5 Dec 2003 11:02:36 -0500
-In-Reply-To: <Pine.LNX.4.44L0.0312051025560.850-100000@ida.rowland.org>
+Received: from ida.rowland.org ([192.131.102.52]:17156 "HELO ida.rowland.org")
+	by vger.kernel.org with SMTP id S264155AbTLEQBh (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 5 Dec 2003 11:01:37 -0500
+In-Reply-To: <20031204210832.A1757@beaverton.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: Douglas Gilbert <dougg@torque.net>, linux-scsi@vger.kernel.org, Matthew Dharm <mdharm-scsi@one-eyed-alien.net>, Alex Sanks <alex@netchip.com>, Julian Back <jback@mpc-data.co.uk>, David Brownell <david-b@pacbell.net>
+To: Patrick Mansfield <patmans@us.ibm.com>
+Cc: Matthew Dharm <mdharm-scsi@one-eyed-alien.net>, Pat LaVarre <p.lavarre@ieee.org>, Alex Sanks <alex@netchip.com>, Julian Back <jback@mpc-data.co.uk>, David Brownell <david-b@pacbell.net>, SCSI development list <linux-scsi@vger.kernel.org>
 
-> According to the USB Mass Storage Class - UFI Command Specification, which 
-> might be more applicable in this circumstance,
+On Thu, 4 Dec 2003, Patrick Mansfield wrote:
 
-Please NO!!!!!!!!!!
+> On Thu, Dec 04, 2003 at 03:59:58PM -0500, Alan Stern wrote:
+> 
+> > It was generic (transparent) scsi.
+> > 
+> > Perhaps I'll try implementing some of the other protocol codes in FSG,
+> > maybe also the "removeable media" flag.  This would also require
+> > implementing the PREVENT-ALLOW-MEDIUM-REMOVAL, READ-FORMAT-CAPACITIES, and
+> > START-STOP, possibly also REZERO-UNIT, SEEK, READ(12), and WRITE(12).
+> 
+> What is FSG?
+> 
+> -- Patrick Mansfield
 
-On this digressing point, I think all the applicable English texts
-actually agree with each other and with reality.
+Sorry about not explaining that.  FSG is my File-backed Storage Gadget.  
+It's a driver for a Linux-based USB _device_ (as opposed to _host_) that 
+emulates a USB Mass Storage device, using a file or block device as 
+backing storage in somewhat the same manner as the loop driver.
 
-UFI applies exclusively to usb-storage devices with the corresponding
-bInterfaceSubClass.  I think I remember that is x04, not found in Win
-generic x 08 (02|05|06) 50.
+Since FSG is totally under our control, it's perfect for logging the 
+sequence of commands issued by an arbitrary host when connected to a 
+generic USB storage device.  Unfortunately, although I am keenly 
+interested in seeing the results of such tests against a variety of 
+Windows hosts, I don't have any USB device hardware capable of running 
+Linux.  So I have to rely on tests done by the relatively few people who 
+do have such hardware.
 
-Personally I haven't yet had to grok UFI.  I could choose instead to
-study only ANSI T10 SCSI and SFF SCSI and USB Bootable SCSI.  Each of
-those have dozens of subflavours.  I don't want to have to start
-studying a fourth major flavour as yet confined only to USB1FS CBI/CB
-FDD, though rumoured to be coming to USB2HS BBB.
-
-Pat LaVarre
-
+Alan Stern
 
