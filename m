@@ -1,38 +1,63 @@
-From: Bob Hillegas <bobhillegas@houston.rr.com>
-Subject: IOMega REV drive internal scsi...
-Date: Wed, 06 Oct 2004 22:04:40 -0500
+From: "Nikhil Dharashivkar" <dharashivkar.nikhil@spsoftindia.com>
+Subject: Re: scsi Target card and scsi Initiator card
+Date: Thu, 7 Oct 2004 11:14:55 +0530
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1097118280.2378.12.camel@south.rosestar.lan>
+Message-ID: <017901c4ac30$cde21510$1610a8c0@spsoft.com>
+References: <017e01c4ab91$510a3e90$1610a8c0@spsoft.com> <4163DDC6.3030102@vlnb.net>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain;
+	charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ms-smtp-01.texas.rr.com ([24.93.47.40]:39340 "EHLO
-	ms-smtp-01-eri0.texas.rr.com") by vger.kernel.org with ESMTP
-	id S269660AbUJGDEM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 6 Oct 2004 23:04:12 -0400
-Received: from north.rosestar.lan (rrcs-24-173-30-148.sw.biz.rr.com [24.173.30.148])
-	by ms-smtp-01-eri0.texas.rr.com (8.12.10/8.12.7) with ESMTP id i9734AYm011556
-	for <linux-scsi@vger.kernel.org>; Wed, 6 Oct 2004 22:04:10 -0500 (CDT)
-Received: from south.rosestar.lan (south.rosestar.lan [192.168.47.140])
-	by north.rosestar.lan (Postfix) with ESMTP id 43726804C0
-	for <linux-scsi@vger.kernel.org>; Wed,  6 Oct 2004 22:04:10 -0500 (CDT)
+Received: from 134-215-187-203.cable-client.iqara.net ([203.187.215.134]:28140
+	"EHLO mailserver.spsoftindia.com") by vger.kernel.org with ESMTP
+	id S269710AbUJGFrz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 7 Oct 2004 01:47:55 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Vladislav Bolkhovitin <vst@vlnb.net>
 
-If this is not the correct forum for this discussion, can someone
-suggest a better one?
+Hi,
+     Actually our setup of hardware is : There is one board . On that we
+have one target mode card (LSI) and more than one initiator cards.
+       First thing I have to do is I should able to export all LUNS or
+target devices connected to initiator card through this target mode card.
+      For that how should i think to develop software layer . Is there
+already implemeted code ?
 
-Does anyone on the list have experience with the iomega REV drive (35
-gig removable) scsi? I am unable to mount the media under linux (Fedora
-Core 2).
 
-Is this a scsi issue, filesystem issue, driver support under linux
-issue? How does one go about sorting out the details?
+ ---- Original Message -----
+From: "Vladislav Bolkhovitin" <vst@vlnb.net>
+To: "Nikhil Dharashivkar" <dharashivkar.nikhil@spsoftindia.com>
+Sent: Wednesday, October 06, 2004 5:27 PM
+Subject: Re: scsi Target card and scsi Initiator card
 
-I can give details and share diagnostics with any party interested.
 
-Thanks for your help, BobH
+> Nikhil,
+>
+> Everything is done according to appropriate SCSI standards, like Fibre
+> Channel or iSCSI. Try to find their description, for example, on
+> http://www.t10.org.
+>
+> Best regards,
+> Vlad
+>
+> Nikhil Dharashivkar wrote:
+> > hi all,
+> >     I want to know how target card is exposed to the intiator.
+> > How connectivity is done between both cards. How luns are exposed from
+> > target mode card to initiator card.
+> >  How communication is done when there is one target mode card and
+multiple
+> > initiator cards.
+> >
+> >
+> > Thanks,
+> >  Nikhil.
+> >
+> > -
+> > To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> >
+> >
 
--- 
-Bob Hillegas <bobhillegas@houston.rr.com>
