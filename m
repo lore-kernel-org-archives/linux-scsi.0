@@ -1,118 +1,107 @@
-From: Brian King <brking@us.ibm.com>
-Subject: Re: PATCH: Fix assorted dma_addr_t typing errors in ipr driver
-Date: Mon, 28 Jun 2004 13:11:15 -0500
+From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
+Subject: error recovery and command completion
+Date: Mon, 28 Jun 2004 14:16:40 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <40E05F43.7040602@us.ibm.com>
-References: <20040628140721.GA10393@devserv.devel.redhat.com>
-Reply-To: brking@us.ibm.com
+Message-ID: <547AF3BD0F3F0B4CBDC379BAC7E4189FF1D5DB@otce2k03.adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e4.ny.us.ibm.com ([32.97.182.104]:7671 "EHLO e4.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S265103AbUF1SLd (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 28 Jun 2004 14:11:33 -0400
-In-Reply-To: <20040628140721.GA10393@devserv.devel.redhat.com>
+Received: from magic.adaptec.com ([216.52.22.17]:35041 "EHLO magic.adaptec.com")
+	by vger.kernel.org with ESMTP id S265024AbUF1SQm convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 28 Jun 2004 14:16:42 -0400
+content-class: urn:content-classes:message
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Cox <alan@redhat.com>
-Cc: linux-scsi@vger.kernel.org
+To: SCSI Mailing List <linux-scsi@vger.kernel.org>
+Cc: Mark Haverkamp <markh@osdl.org>
 
-Alan Cox wrote:
-> (Not cc the author since the authors email address seems to be an IBM state
->  secret.. 8))
+2.4 (and in 2.6) we have the following concept fragment in scsi_done:
 
-Yep. I buried it in the MODULE_AUTHOR macro;) I'll add it to the comment 
-block at the start of the driver on the next driver update as well, as I 
-assume that is where you were looking for it.
+void scsi_done(Scsi_Cmnd * SCpnt)
+{
+        unsigned long flags;
+        int tstatus;
 
-Thanks for the patch. It looks fine to me.
+        /*
+         * We don't have to worry about this one timing out any more.
+         */
+        tstatus = scsi_delete_timer(SCpnt);
 
--Brian
+        /*
+         * If we are unable to remove the timer, it means that the
+command
+         * has already timed out.  In this case, we have no choice but
+to
+         * let the timeout function run, as we have no idea where in
+fact
+         * that function could really be.  It might be on another
+processor,
+         * etc, etc.
+         */
+        if (!tstatus) {
+                SCpnt->done_late = 1;
+                return;
+        }
+. . .
 
-> diff -u --new-file --recursive --exclude-from /usr/src/exclude linux-2.6.7/drivers/scsi/ipr.c linux-2.6.7-viroized/drivers/scsi/ipr.c
-> --- linux-2.6.7/drivers/scsi/ipr.c	2004-06-16 21:11:36.000000000 +0100
-> +++ linux-2.6.7-viroized/drivers/scsi/ipr.c	2004-06-27 20:07:29.218694904 +0100
-> @@ -5441,7 +5441,7 @@
->  {
->  	struct ipr_cmnd *ipr_cmd;
->  	struct ipr_ioarcb *ioarcb;
-> -	u32 dma_addr;
-> +	dma_addr_t dma_addr;
->  	int i;
->  
->  	ioa_cfg->ipr_cmd_pool = pci_pool_create (IPR_NAME, ioa_cfg->pdev,
-> diff -u --new-file --recursive --exclude-from /usr/src/exclude linux-2.6.7/drivers/scsi/ipr.h linux-2.6.7-viroized/drivers/scsi/ipr.h
-> --- linux-2.6.7/drivers/scsi/ipr.h	2004-06-16 21:11:36.000000000 +0100
-> +++ linux-2.6.7-viroized/drivers/scsi/ipr.h	2004-06-27 20:09:47.231713736 +0100
-> @@ -19,6 +19,8 @@
->   * along with this program; if not, write to the Free Software
->   * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
->   *
-> + * Alan Cox <alan@redhat.com> - Removed several careless u32/dma_addr_t errors
-> + *				that broke 64bit platforms.
->   */
->  
->  #ifndef _IPR_H
-> @@ -667,7 +669,7 @@
->  
->  struct ipr_hostrcb {
->  	struct ipr_hcam hcam;
-> -	u32 hostrcb_dma;
-> +	dma_addr_t hostrcb_dma;
->  	struct list_head queue;
->  };
->  
-> @@ -850,7 +852,7 @@
->  	char cfg_table_start[8];
->  #define IPR_CFG_TBL_START		"cfg"
->  	struct ipr_config_table *cfg_table;
-> -	u32 cfg_table_dma;
-> +	dma_addr_t cfg_table_dma;
->  
->  	char resource_table_label[8];
->  #define IPR_RES_TABLE_LABEL		"res_tbl"
-> @@ -861,12 +863,12 @@
->  	char ipr_hcam_label[8];
->  #define IPR_HCAM_LABEL			"hcams"
->  	struct ipr_hostrcb *hostrcb[IPR_NUM_HCAMS];
-> -	u32 hostrcb_dma[IPR_NUM_HCAMS];
-> +	dma_addr_t hostrcb_dma[IPR_NUM_HCAMS];
->  	struct list_head hostrcb_free_q;
->  	struct list_head hostrcb_pending_q;
->  
->  	u32 *host_rrq;
-> -	u32 host_rrq_dma;
-> +	dma_addr_t host_rrq_dma;
->  #define IPR_HRRQ_REQ_RESP_HANDLE_MASK	0xfffffffc
->  #define IPR_HRRQ_RESP_BIT_SET			0x00000002
->  #define IPR_HRRQ_TOGGLE_BIT				0x00000001
-> @@ -905,7 +907,7 @@
->  	enum ipr_sdt_state sdt_state;
->  
->  	struct ipr_misc_cbs *vpd_cbs;
-> -	u32 vpd_cbs_dma;
-> +	dma_addr_t vpd_cbs_dma;
->  
->  	struct pci_pool *ipr_cmd_pool;
->  
-> 
-> 
-> 
-> ----
-> 
-> Signed-off-by: Alan Cox <alan@redhat.com>
-> 
-> Developer's Certificate of Origin 1.0 included herein by reference.
-> 
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+This means that if the driver's intent is to not perform any error
+recovery, simply administrative health checks and/or minor corrective
+action when the timeout actions are requested, that the command
+completion gets lost. Commands can not be aborted to the RAID adapter,
+The Adapter can not be reset.
 
--- 
-Brian King
-eServer Storage I/O
-IBM Linux Technology Center
+However, if I call scsi_add_timer anew to permit the appropriate command
+completion during this race condition ala:
 
+//DEBUG
+static void aacraid_timeout_dummy_fn(struct scsi_cmnd * scsicmd)
+{
+      return;
+}
+
+static void aac_io_done(struct scsi_cmnd * scsicmd)
+{
+        unsigned long cpu_flags;
+        struct Scsi_Host *host = scsicmd->device->host;
+
+        aac_spin_lock_irqsave(host->host_lock, cpu_flags);
+        /*
+         * Tell system to perform scsi_done functionality even despite
+         * being in the error recovery code. Leave a `timer' to delete
+         * so that completion can progress.
+         */
+//DEBUG
+        scsi_add_timer(scsicmd, 60*HZ, aacraid_timeout_dummy_fn);
+        scsicmd->scsi_done(scsicmd);
+. . .
+
+This resolves the problem in most cases (eg 2.4.9-e.40), but in some
+kernels (2.4.21-timesys-4.1.193) I get address violations in eh_hand1,
+and in others (2.4.21-15.EL) I will get out of memory complaints from
+user applications (!). The failure is not repeatable and extremely rare;
+but without this call, we have command loss even more repeatably.
+
+What is the appropriate action to take. A suggestion has been to remove
+the timer when the command has been issued, and add it again as above
+(effectively turning off timeout activity) but the administrative health
+checks are necessary as a diagnostic aid to catastrophic failure.
+
+I have not tried, but if I remove the scsi_add_timer, and instead do:
+
+-	scsi_add_timer(scsicmd, 60*HZ, aacraid_timeout_dummy_fn);
+	scsicmd->scsi_done(scsicmd);
++	if (scsicmd->done_late) {
++		scsicmd->done_late = 0;
++		scsi_add_timer(scsicmd, 60*HZ,
+aacraid_timeout_dummy_fn);
++		scsicmd->scsi->done(scsicmd);
++	}
+
+Am I making anything better (probably not, but it does remove the risk
+of exposure of running scsi_add_timer at each command completion at a
+time that may just be considered inappropriate). Is my problem forcing
+the command completion, or the scsi_add_timer ...
+
+Sincerely - Mark Salyzyn
