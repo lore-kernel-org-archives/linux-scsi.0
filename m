@@ -1,48 +1,48 @@
-From: Russell King <rmk@arm.linux.org.uk>
+From: James Bottomley <James.Bottomley@steeleye.com>
 Subject: Re: SCSI woes (followup)
-Date: Tue, 24 Sep 2002 14:58:52 +0100
+Date: Tue, 24 Sep 2002 10:29:01 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20020924145852.A28042@flint.arm.linux.org.uk>
-References: <rmk@arm.linux.org.uk> <200209241346.g8ODkER09516@localhost.localdomain>
+Message-ID: <200209241429.g8OET2r10804@localhost.localdomain>
+References: <rmk@arm.linux.org.uk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <200209241346.g8ODkER09516@localhost.localdomain>; from James.Bottomley@steeleye.com on Tue, Sep 24, 2002 at 09:46:14AM -0400
+Received: (from root@localhost)
+	by pogo.mtv1.steeleye.com (8.9.3/8.9.3) id HAA00404
+	for <linux-scsi@vger.kernel.org>; Tue, 24 Sep 2002 07:29:08 -0700
+In-Reply-To: Message from Russell King <rmk@arm.linux.org.uk>
+   of "Tue, 24 Sep 2002 14:58:52 BST." <20020924145852.A28042@flint.arm.linux.org.uk>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@steeleye.com>
+To: Russell King <rmk@arm.linux.org.uk>
 Cc: linux-scsi@vger.kernel.org
 
-On Tue, Sep 24, 2002 at 09:46:14AM -0400, James Bottomley wrote:
-> I think it's method of operation is misplaced.
+rmk@arm.linux.org.uk said:
+> I think it is misplaced.  It locks the doors of devices that aren't
+> even in use, which is just plain stupid. 
 
-I think it is misplaced.  It locks the doors of devices that aren't even
-in use, which is just plain stupid.
+A better fix is probably to implement a flag to say whether the door should be 
+locked or not.
 
-> However, for your case does simply moving the queue empty check to the top 
-> cause the problems to go away? (That would be hiding the problem not fixing 
-> it, but still...)
+The whole lock door before a command goes down philosophy looks slightly wrong 
+to me.  I can see we want to lock the door for a mounted device and other 
+conditions, but locking the door just to send down a test unit ready or 
+inquiry doesn't seem correct.
 
-I #if 0'd it out, and it makes the problem go away.
+Door locking is very similar to reservation maintenance.  Perhaps adding 
+kernel code to maintain certain persistent but fragile states of the device 
+might be in order.
 
-One thing to note is the comment that Eric left in the code about it -
-it seems to indicate that he believes it to be misplaced, but its there
-because we have host drivers using the old error handling code.
+> Incidentally, I've found another weirdness in the code.  We decide
+> that we need to lock the door based on the "was_reset" flag, which we
+> clear. However, st.c uses "was_reset" to decide whether to suspend
+> operations (due to a bus reset).  The two uses of this flag seem to
+> conflict each other.  How can we guarantee that st.c will see
+> was_reset set if the request function clears it?  st.c appears to use
+> scsi_request_fn, so I guess there's a conflict of use there.
 
-I'm wondering if this behaviour only happens with host drivers that use
-the new error handling.  If so, one possibility would be to follow Eric's
-suggestion there, and lock the door in the error handler "as Eric intended"
-and leave that door locking behind for the old error handling.
+The code is riddled with these.  Reset handling was really just bolted on to 
+the code as an afterthought.
 
-Incidentally, I've found another weirdness in the code.  We decide that
-we need to lock the door based on the "was_reset" flag, which we clear.
-However, st.c uses "was_reset" to decide whether to suspend operations
-(due to a bus reset).  The two uses of this flag seem to conflict each
-other.  How can we guarantee that st.c will see was_reset set if the
-request function clears it?  st.c appears to use scsi_request_fn, so
-I guess there's a conflict of use there.
+James
 
--- 
-Russell King (rmk@arm.linux.org.uk)                The developer of ARM Linux
-             http://www.arm.linux.org.uk/personal/aboutme.html
 
