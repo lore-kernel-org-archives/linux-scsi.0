@@ -1,35 +1,44 @@
-From: Wakko Warner <wakko@animx.eu.org>
-Subject: Re: [PATCH] Re: Oops on megaraid.
-Date: Wed, 5 Jan 2005 17:33:20 -0500
-Message-ID: <20050105223320.GA7622@animx.eu.org>
-References: <20050105174752.GA6859@animx.eu.org> <20050105180457.GK26051@parcelfarce.linux.theplanet.co.uk>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: RE: [linux-iscsi-devel] [question] deferred sense
+Date: Wed, 05 Jan 2005 16:51:57 -0500
+Message-ID: <1104961917.3883.4.camel@mulgrave>
+References: <60807403EABEB443939A5A7AA8A7458B9B94AF@otce2k01.adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from animx.eu.org ([216.98.75.249]:11668 "EHLO animx.eu.org")
-	by vger.kernel.org with ESMTP id S262587AbVAEWYZ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 5 Jan 2005 17:24:25 -0500
-Content-Disposition: inline
-In-Reply-To: <20050105180457.GK26051@parcelfarce.linux.theplanet.co.uk>
+Received: from stat16.steeleye.com ([209.192.50.48]:39648 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S262633AbVAEWtD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 5 Jan 2005 17:49:03 -0500
+In-Reply-To: <60807403EABEB443939A5A7AA8A7458B9B94AF@otce2k01.adaptec.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Al Viro <viro@parcelfarce.linux.theplanet.co.uk>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-Al Viro wrote:
-> Someone's removing non-empty directory in procfs.  Let's see...
-> Indeed.
-> #ifdef CONFIG_PROC_FS
->         remove_proc_entry("megaraid", &proc_root);
-> #endif
-> 
->         pci_unregister_driver(&megaraid_pci_driver);
-> so we remove /proc/megaraid and then procees to remove controllers found
-> by driver.  Each of those has a subdirectory in /proc/megaraid...
-> 
-> Fix is trivial:
+On Wed, 2005-01-05 at 12:47 -0500, Salyzyn, Mark wrote:
+> Change the assumptions in Journalling filesystems and make it work in a
+> deferred sense environment.
 
-Cool, thanks.
+It's possible, but I think it will involve large changes to the kernel.
 
--- 
- Lab tests show that use of micro$oft causes cancer in lab animals
+> Don't delete the Journal until a safe point of time when the writeback
+> is confirmed either by underlying knowledge, time (flush interval
+> passed), amount of data (dirty cache is forced flushed), or a read-back
+> (resulting from the deferred error investigation). RAID cards and
+> external enclosures do this all the time, but to be fair with usually
+> more knowledge of all the cache handling.
+
+Well ... this proposal would change every filesystem in the kernel for
+something that occurs rather rarely (I've never actually seen it
+happen), so it is rather a lot of work for not very much benefit.
+However, if you have actual proposals, lets see them.
+
+I suggest you publish the API to linux-scsi and linux-ide since we'd be
+the primary implementers.  The fs changes should go to the relevant fs
+lists (probably cc linux-kernel) and we'll be glad to look them over.
+
+James
+
+
