@@ -1,16 +1,45 @@
-From: "Rajat  Jain, Noida" <rajatj@noida.hcltech.com>
+From: "Eric Raskin" <eraskin@paslists.com>
 Subject: RE: How to disconnect a SCSI device without crashing SLES8?
-Date: Sat, 5 Feb 2005 02:26:55 +0530
-Message-ID: <267988DEACEC5A4D86D5FCD780313FBB041F82F3@exch-03.noida.hcltech.com>
+Date: Fri, 4 Feb 2005 16:26:44 -0500
+Message-ID: <15be01c50b00$3cb7c830$650aa8c0@ehrpc>
+References: <267988DEACEC5A4D86D5FCD780313FBB041F82F3@exch-03.noida.hcltech.com>
+Reply-To: <eraskin@paslists.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Received: from ngate.noida.hcltech.com ([202.54.110.230]:28565 "EHLO
-	ngate.noida.hcltech.com") by vger.kernel.org with ESMTP
-	id S266562AbVBDU77 (ORCPT <rfc822;Linux-scsi@vger.kernel.org>);
-	Fri, 4 Feb 2005 15:59:59 -0500
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Received: from paslists.com ([12.170.105.210]:1223 "EHLO fw.paslists.com")
+	by vger.kernel.org with ESMTP id S264135AbVBDVZF convert rfc822-to-8bit
+	(ORCPT <rfc822;Linux-scsi@vger.kernel.org>);
+	Fri, 4 Feb 2005 16:25:05 -0500
+Received: from ehrpc (ehrpc.paslists.com [192.168.10.101])
+	by fw.paslists.com (8.12.8/8.12.8) with ESMTP id j14LOuo8002886
+	for <Linux-scsi@vger.kernel.org>; Fri, 4 Feb 2005 16:25:05 -0500
+In-Reply-To: <267988DEACEC5A4D86D5FCD780313FBB041F82F3@exch-03.noida.hcltech.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: eraskin@paslists.com, Linux-scsi@vger.kernel.org
+To: Linux-scsi@vger.kernel.org
+
+Yes, that's true.  I went ahead and used the commands on 2.4.  They worked
+just fine this time. :-)
+
+The question about 2.6 was just for my own education -- for when I actually
+get around to installing SLES9 on my production server.
+
+Thanks to everyone for their help.
+
+----------------------------------------------------------------------------
+Eric H. Raskin                                          Voice: 914-765-0500
+Professional Advertising Systems Inc.                   Fax:   914-765-0503
+200 Business Park Dr Suite 107                          eraskin@paslists.com
+Armonk, NY 10504
+
+
+-----Original Message-----
+From: Rajat Jain, Noida [mailto:rajatj@noida.hcltech.com] 
+Sent: Friday, February 04, 2005 3:57 PM
+To: eraskin@paslists.com; Linux-scsi@vger.kernel.org
+Subject: RE: How to disconnect a SCSI device without crashing SLES8?
 
 
 
@@ -85,3 +114,5 @@ update to Linux 2.6.
 To unsubscribe from this list: send the line "unsubscribe linux-scsi" in the
 body of a message to majordomo@vger.kernel.org More majordomo info at
 http://vger.kernel.org/majordomo-info.html
+
+
