@@ -1,33 +1,33 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH] use mod_timer in scsi_add_timer
-Date: Sun, 31 Aug 2003 14:24:28 +0100
+From: Matthew Wilcox <willy@debian.org>
+Subject: Re: [PATCH] scsi_mid_low_api.txt update
+Date: Sun, 31 Aug 2003 14:38:41 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1062336267.31351.50.camel@dhcp23.swansea.linux.org.uk>
-References: <20030831112830.GA19502@lst.de>
-	 <1062334317.31351.30.camel@dhcp23.swansea.linux.org.uk>
-	 <20030831125356.GA20378@lst.de>
+Message-ID: <20030831133841.GU13467@parcelfarce.linux.theplanet.co.uk>
+References: <3F519949.4020603@torque.net>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pc1-cwma1-5-cust4.swan.cable.ntl.com ([80.5.120.4]:48057 "EHLO
-	dhcp23.swansea.linux.org.uk") by vger.kernel.org with ESMTP
-	id S261911AbTHaNZS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 31 Aug 2003 09:25:18 -0400
-In-Reply-To: <20030831125356.GA20378@lst.de>
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:55740 "EHLO
+	www.linux.org.uk") by vger.kernel.org with ESMTP id S262349AbTHaNin
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 31 Aug 2003 09:38:43 -0400
+Content-Disposition: inline
+In-Reply-To: <3F519949.4020603@torque.net>
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, linux-scsi@vger.kernel.org
+To: Douglas Gilbert <dougg@torque.net>
+Cc: linux-scsi@vger.kernel.org
 
-On Sul, 2003-08-31 at 13:53, Christoph Hellwig wrote:
-> > And your change is racy too. You might now call the timer function with
-> > the data from the old timeout and the function of the new...
-> 
-> The data always is scmd.
+On Sun, Aug 31, 2003 at 04:44:25PM +1000, Douglas Gilbert wrote:
+> Thanks to Randy Dunlap, Alan Stern amd Christoph Hellwig
+> for their input. Comments welcome.
 
-So why are you setting that field ?
+-Traditionally a LLD for the SCSI subsystem has been at least two files in
++Traditionally an LLD for the SCSI subsystem has been at least two files in
 
-Even if it is true now its an invitation to a very hard to track down
-and horrible bug.
+I disagree with this change.  LLD isn't a word or a pronouncable
+abbreviation, it's an acronym.
 
-
+-- 
+"It's not Hollywood.  War is real, war is primarily not about defeat or
+victory, it is about death.  I've seen thousands and thousands of dead bodies.
+Do you think I want to have an academic debate on this subject?" -- Robert Fisk
