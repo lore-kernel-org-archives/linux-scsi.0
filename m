@@ -1,48 +1,76 @@
-From: James Bottomley <James.Bottomley@steeleye.com>
-Subject: Re: [PATCH] Fix aic7xxx del_timer_sync() deadlock
-Date: 27 Feb 2004 13:34:11 -0600
+From: Brian King <brking@us.ibm.com>
+Subject: Re: [PATCH] IBM Power RAID driver - third version
+Date: Fri, 27 Feb 2004 13:39:30 -0600
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1077910452.2157.110.camel@mulgrave>
-References: <1077906383.2157.98.camel@mulgrave>
-	<3462370000.1077909838@aslan.btc.adaptec.com>
+Message-ID: <403F9CF2.7000003@us.ibm.com>
+References: <403D0DBE.4020207@us.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat1.steeleye.com ([65.114.3.130]:64745 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S262954AbUB0TeQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 27 Feb 2004 14:34:16 -0500
-In-Reply-To: <3462370000.1077909838@aslan.btc.adaptec.com>
+Received: from e3.ny.us.ibm.com ([32.97.182.103]:64708 "EHLO e3.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S263002AbUB0Tjd (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 27 Feb 2004 14:39:33 -0500
 List-Id: linux-scsi@vger.kernel.org
-To: "Justin T. Gibbs" <gibbs@scsiguy.com>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, Andrew Morton <akpm@osdl.org>
+To: Brian King <brking@us.ibm.com>
+Cc: James.Bottomley@steeleye.com, linux-scsi@vger.kernel.org
 
-On Fri, 2004-02-27 at 13:23, Justin T. Gibbs wrote:
-> 1) The mid-layer doesn't correctly handle this situation.  The mid-layer
->    uses blk_plug_device() to implement this behavior rather than
->    blk_stop_queue().  The leaves the implementation vulnerable to
->    any code that does a manual unplug (e.g. the SCSI scan code) or a
->    blk_run_queues() (e.g. MD) which can alter the duration of the delay.
->    While the host may be able to tune the delay to HZ, the default values
->    are not.  I'm also not sure that leaving the default blk_unplug delay
->    as 0 gives you a deterministic jiffy long delay before the request
->    function will be hit again.
+There was a bug in this version causing system hangs on certain
+machines as I was doing memory space accesses with memory space
+disabled, please use
+http://www-124.ibm.com/storageio/ipr/patch-2.6.3-ipr-2.0.0-7.gz
+instead.
 
-There's no guaranteed minimum delay time required by the specs.  We
-pause for a predetermined number of unplugs if you look at the code,
-which is actually under the control of the driver.  The trade off is
-that we want to try faster under heavy I/O pressure, so the delay isn't
-fixed, it's bounded by the I/O pressure in the system, which is as it
-should be.
+Also, you will need:
+http://www-124.ibm.com/storageio/ipr/patch-2.6.3-ipr-pci-ids
+as well.
 
-> 2) These drivers both include Domain Validation support.  These commands
->    do not go through the mid-layer at all yet require proper queue full
->    and busy handling.
+Thanks
 
-Well, if the driver used the correct command handling infrastructure for
-that, they would go through the mid-layer and there would be no problem.
+-Brian
 
-James
 
+Brian King wrote:
+> I have uploaded the third version of the ipr device driver to:
+> 
+> http://www-124.ibm.com/storageio/ipr/patch-2.6.3-ipr-2.0.0-6.gz
+> 
+> Major changes:
+> 
+> 1. Removed use of bit fields.
+> 2. Removed show_queue_depth since we can use default one.
+> 3. Added FIXME comments to issues still outstanding that
+>    require midlayer changes
+> 4. Several bug fixes.
+> 
+> Outstanding issues:
+> 
+> 1. Driver needs the start_unit patch I submitted in order to function
+>    properly. This has still not been accepted. A 2.6.3 patch can be
+>    found at: http://www-124.ibm.com/storageio/ipr/patch-2.6.3-start_unit.gz
+> 2. Driver needs the array_controller patch, which still has not been
+>    accepted. 
+> http://www-124.ibm.com/storageio/ipr/patch-2.6.3-array_controller.gz
+> 3. Still checking allow_cmds flag in queuecommand. ERP ops (e.g. TUR),
+>    still do not check host_blocked. Patch to force retries to obey
+>    host_blocked flag has been accepted, will be submitting another
+>    patch to fix ERP ops. Once this is accepted, I will remove the check.
+> 4. ioa_is_dead flag still exists and is checked in queuecommand. Need to
+>    add a scsi_set_host_offline interface to change this.
+> 5. res->del_from_ml flag still exists. To remove it requires a
+>    scsi_set_device_offline interface.
+> 6. Driver is still modifying the command timeout. Once an acceptable
+>    alternative is agreed upon, this can be cleaned up.
+> 
+> Please apply. I will continue working the outstanding issues and
+> update the ipr driver along with the rest of the patch.
+> 
+> 
+
+
+-- 
+Brian King
+eServer Storage I/O
+IBM Linux Technology Center
 
