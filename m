@@ -1,45 +1,33 @@
-From: "Adam J. Richter" <adam@yggdrasil.com>
-Subject: Re: [PATCH] get rid of ->detect for upper layer drivers
-Date: Thu, 7 Nov 2002 04:25:24 -0800
+From: MShetty <mranalini.shetty@patni.com>
+Subject: Executing a scsi command
+Date: Thu, 07 Nov 2002 19:14:38 +0530
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <200211071225.EAA29497@adam.yggdrasil.com>
+Message-ID: <3DCA6E46.91894890@patni.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from rakshak.patni.com (rakshak.patni.com [203.124.139.211])
+	by pcsbom.patni.com (8.9.3/8.8.8) with SMTP id TAA24270
+	for <linux-scsi@vger.kernel.org>; Thu, 7 Nov 2002 19:05:58 +0530 (IST)
+Received: from akash.patni.com ([192.168.0.12])
+ by rakshak.patni.com (NAVGW 2.5.2.12) with SMTP id M2002110719055730947
+ for <linux-scsi@vger.kernel.org>; Thu, 07 Nov 2002 19:05:57 +0530
+Received: from patni.com ([204.165.187.192]) by akash.patni.com (8.9.3/SCO5) with ESMTP id TAA07042 for <linux-scsi@vger.kernel.org>; Thu, 7 Nov 2002 19:05:55 +0530 (IST)
 List-Id: linux-scsi@vger.kernel.org
-To: hch@lst.de, linux-scsi@vger.kernel.org
+To: linux-scsi <linux-scsi@vger.kernel.org>
 
->Okay, we're finally at the point where ->detect has become entirely
->superflous.  In sd, sr and st it does nothing but return different
->values that are ignored anyway, in sg it increments a variable
->that is never read (and thus removed in this patch aswell), only
->in osst it increments a variable that is actually checked for beeing
->non-zero.  But if it was zero we'd never reached that place anyway
->(same check in the beginning of osst_detect and osst_attach).
+Hi,
 
->This make the upper layer interface a lot nicer and avoids the
->race condition where a device is remove between detect and attach
->(which currently wouldn't matter anyway as we aren't doing anything
->in detect anymore)
+I want to execute a scsi cmd from my driver. The API's that I found
+(scsi_do_cmd, scsi_wait_req) require a pointer to the scsi_device or
+scsi_host structure.. Any idea how I could get them.... given the major
+and minor no. of the device to which the command is to be sent.
 
-	I think we can get cleaner code by *not* doing that.
+Is there an alternative way of executing a scsi_cmd ??
 
-	If we keep Scsi_Device_Template.detect and just change it so
-that it has no side effects like incrementing a counter, then we can
-shrink scsi_bus_match, previously a list of special cases, like so
-(just typed this code in, haven't tried to compile it):
+Would help if I could get some help on the above.
 
+Thanks and Regards,
+M Shetty
 
-static int scsi_bus_match(struct device *dev, struct device_driver *drv)
-{
-	struct Scsi_Device_Template *scsi_dev_tmpl =
-		container_of(drv, struct Scsi_Device_Template,
-			     scsi_driverfs_driver);
-	struct Scsi_Device_Template *scsi_dev =
-		container_of(dev, struct Scsi_Device, sdev_driverfs_dev);
-
-	return (*scsi_dev_templ->detect)(scsi_dev);
-}
-
-Adam J. Richter     __     ______________   575 Oroville Road
-adam@yggdrasil.com     \ /                  Milpitas, California 95035
-+1 408 309-6081         | g g d r a s i l   United States of America
-                         "Free Software For The Rest Of Us."
