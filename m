@@ -1,117 +1,38 @@
-From: "Martin Peschke3" <MPESCHKE@de.ibm.com>
-Subject: Re: [PATCH] Hidden scsi devices
-Date: Thu, 22 Jan 2004 16:57:07 +0100
+From: Xose Vazquez Perez <xose@wanadoo.es>
+Subject: Re: SCSI Disk layer performance
+Date: Thu, 22 Jan 2004 17:17:30 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <OF8847A70B.4AA684AE-ONC1256E23.00571E7C-C1256E23.0058163C@de.ibm.com>
+Message-ID: <400FF79A.6050108@wanadoo.es>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtagate2.de.ibm.com ([195.212.29.151]:1429 "EHLO
-	mtagate2.de.ibm.com") by vger.kernel.org with ESMTP id S266078AbUAVP5O convert rfc822-to-8bit
+Received: from smtp14.eresmas.com ([62.81.235.114]:12270 "EHLO
+	smtp14.eresmas.com") by vger.kernel.org with ESMTP id S264557AbUAVQVm
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 22 Jan 2004 10:57:14 -0500
-Received: from d12relay02.megacenter.de.ibm.com (d12relay02.megacenter.de.ibm.com [9.149.165.196])
-	by mtagate2.de.ibm.com (8.12.10/8.12.10) with ESMTP id i0MFvBRT132694
-	for <linux-scsi@vger.kernel.org>; Thu, 22 Jan 2004 15:57:11 GMT
+	Thu, 22 Jan 2004 11:21:42 -0500
+Received: from [192.168.108.57] (helo=mx07.eresmas.com)
+	by smtp14.eresmas.com with esmtp (Exim 4.10)
+	id 1AjhaJ-0006rn-00
+	for linux-scsi@vger.kernel.org; Thu, 22 Jan 2004 17:21:35 +0100
+Received: from [80.103.138.182] (helo=wanadoo.es)
+	by mx07.eresmas.com with esmtp (Exim 4.30)
+	id 1AjhaK-0004Yt-NO
+	for linux-scsi@vger.kernel.org; Thu, 22 Jan 2004 17:21:37 +0100
 List-Id: linux-scsi@vger.kernel.org
-To: Brian King <brking@us.ibm.com>
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi <linux-scsi@vger.kernel.org>
 
+Christoph Hellwig wrote:
 
-Brian,
+> What kernel tree do you use?  If you're looking for decent scsi
+> performance use linux 2.6 or the SuSE/RH vendor trees.  Stock Linux 2.4
+                                           ^^^^^^
+_Enterprise_ kernels, RHEL or SLES.
+Fedora Core kernel is, more or less, a plain kernel.org.
 
-why should a LLDD need to bother about device characteristics?
-I tend to say that it is completely up to upper layer drivers to
-handle such device specialties.
-How does a LLDD know about that r/w protection feature anyway?
+I'm runnig RHEL 2.4.21-9.EL kernel and it's _much better_ than any 2.4.xx
+kernel.org. I could call it 2.5 because it's a mix of 2.4 and 2.6 ;-)
 
-Mit freundlichen Gr=FC=DFen / with kind regards
+-- 
+Software is like sex, it's better when it's bug free.
 
-Martin Peschke
-
-IBM Deutschland Entwicklung GmbH
-Linux for eServer Development
-Phone: +49-(0)7031-16-2349
-
-
-Brian King <brking@us.ibm.com>@vger.kernel.org on 22/01/2004 16:21:23
-
-Sent by:    linux-scsi-owner@vger.kernel.org
-
-
-To:    linux-scsi@vger.kernel.org
-cc:
-Subject:    [PATCH] Hidden scsi devices
-
-
-Here is a patch that adds a flag to struct scsi_device which prevents
-upper layer drivers from binding to it. This flag can be set by LLDs
-in their slave_configure routine. I plan to use this in the ipr driver
-so I can have scsi disks that are in RAID arrays show up in sysfs and
-have sg devices created for them, but prevent sd devices from being
-created since these devices will fail reads and writes with data protec=
-t
-errors. I tested this out with the ipr driver it worked as expected.
-
-
-
---
-Brian King
-eServer Storage I/O
-IBM Linux Technology Center
-diff -Naur linux-2.6.1/drivers/scsi/scsi_sysfs.c
-linux-2.6.1-hidden/drivers/scsi/scsi_sysfs.c
---- linux-2.6.1/drivers/scsi/scsi_sysfs.c        Fri Jan  9 00:59:10 20=
-04
-+++ linux-2.6.1-hidden/drivers/scsi/scsi_sysfs.c             Thu Jan 22
-08:54:39 2004
-@@ -149,7 +149,13 @@
- /* all probing is done in the individual ->probe routines */
- static int scsi_bus_match(struct device *dev, struct device_driver
-*gendrv)
- {
--            return 1;
-+            struct scsi_device *sdev;
-+            sdev =3D to_scsi_device(dev);
-+
-+            if (sdev->hidden)
-+                        return 0;
-+            else
-+                        return 1;
- }
-
- struct bus_type scsi_bus_type =3D {
-diff -Naur linux-2.6.1/include/scsi/scsi_device.h
-linux-2.6.1-hidden/include/scsi/scsi_device.h
---- linux-2.6.1/include/scsi/scsi_device.h             Fri Jan  9 00:59=
-:06
-2004
-+++ linux-2.6.1-hidden/include/scsi/scsi_device.h            Thu Jan 22
-08:50:33 2004
-@@ -94,6 +94,7 @@
-             unsigned skip_ms_page_8:1;          /* do not use MODE SEN=
-SE
-page 0x08 */
-             unsigned skip_ms_page_3f:1;         /* do not use MODE SEN=
-SE
-page 0x3f */
-             unsigned no_start_on_add:1;         /* do not issue start =
-on
-add */
-+            unsigned hidden:1;            /* do not bind to upper leve=
-l
-driver */
-
-             unsigned int device_blocked;        /* Device returned
-QUEUE_FULL. */
-
-
-
-
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
