@@ -1,41 +1,65 @@
-From: James Bottomley <James.Bottomley@steeleye.com>
-Subject: Re: why store the search type in the ieee name field?
-Date: 11 Feb 2003 10:43:57 -0600
+From: Luben Tuikov <luben@splentec.com>
+Subject: Re: [PATCH / RFC] scsi_error handler update. (1/4)
+Date: Tue, 11 Feb 2003 11:49:22 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1044981839.1774.10.camel@mulgrave>
-References: <3E482B9E.40803@mvista.com>
-	<1044918776.1776.257.camel@mulgrave>
-	<20030211082039.A27630@beaverton.ibm.com>
+Message-ID: <3E492992.90502@splentec.com>
+References: <20030211081351.GA1368@beaverton.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: (from root@localhost)
-	by pogo.mtv1.steeleye.com (8.9.3/8.9.3) id IAA26949
-	for <linux-scsi@vger.kernel.org>; Tue, 11 Feb 2003 08:44:03 -0800
-In-Reply-To: <20030211082039.A27630@beaverton.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Patrick Mansfield <patmans@us.ibm.com>
-Cc: Steven Dake <sdake@mvista.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Mike Anderson <andmike@us.ibm.com>
+Cc: linux-scsi@vger.kernel.org
 
-On Tue, 2003-02-11 at 10:20, Patrick Mansfield wrote:
-> On Mon, Feb 10, 2003 at 05:12:54PM -0600, James Bottomley wrote:
-> > Erm, it's appending the type to the beginning of the name string
-> > (although it does seem to be relying on the sysfs name field being zero
-> > filled).  I don't see any corruption since the inquiry fields and unique
-> > name name follows this byte.
+Mike Anderson wrote:
+> This patch series is against scsi-misc-2.5.
 > 
-> It should fill in the rest of the 'name' and append a '\0', or return a
-> failure.
+> These patches modify the scsi error handler to process cmds needing
+> recovery off a list. The error handler policy has been altered to do the
+> following:
+> 	1.) Check for legacy behavior of requesting sense.
+> 	2.) Abort commands marked needing to be canceled.
+> 	3.) Ready devices through tur and eh handlers.
+> 	4.) disposition each command on the list to be retried or
+> 	finished.
+> 
+> 00_serror-cmd-list-1.diff:
+> 	- Add per host eh_cmd_list list head.
+> 	- Add per cmd eh_list list head.
 
-No, look at the code.  After doing name[0] = hex_str[...
-it then does a strcat.  If name is full of junk, strcat will append
-after the first \0 it finds (which may be off the end of the name
-field).  It only works because name[1] is zero but nothing seems to
-clear it.  I'm hoping it's being cleared in a piece of code I haven't
-found yet...
+Could you call this ``eh_cmd_entry'' or ``eh_entry''*,
+or why don't you use the already provided ``list'' entry.
 
-James
+* The rest of the kernel calls ".*_?entry_?.*" list_heads
+which will be used as _part_ of lists and lists themselves
+as ".*_?list_?.*". (both regex)
 
+My point here is that ``eh_list'' is symbolically quite similar
+to ``eh_cmd_list'', all the while ``eh_list'' is not the ADT* List,
+but an entry to/of a list.  Forget about the name of the type, i.e.
+that it is struct list_head for both lists and entries of lists --
+this is the whole beauty of the linux lists.
+
+* ADT, Abstract Data Type.
+
+The already provided ``list'' in cmd struct entry is so ambiguous
+that there's no other way but to conclude that it is the entry to
+a list.
+
+In fact this is the whole point when I added it (``list'') -- so
+that the cmd struct would be part of a list depending on it's _state_ ,
+as I've mentioned before. ((This seems to be forming slowly.))
+
+Question: Could you explain when a command becomes a member of
+the eh_cmd_list, and when it ceases to be a member of this list?
+I.e. what is true and false when a command is part and not
+part of this list?  I couldn't quite get it, just looking from the code,
+and probably should've looked ``closer'', but am pressed for time.
+... I suspect it's something we've discussed here.
+
+Thanks,
+-- 
+Luben
 
 
