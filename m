@@ -1,50 +1,39 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: [PATCH] ide-scsi changes for new mid level api and error handling
- in 2.5.52
-Date: Sun, 22 Dec 2002 12:59:05 +1100
+From: Willem Riede <wrlk@riede.org>
+Subject: Re: [PATCH] ide-scsi changes for new mid level api and error handling in 2.5.52
+Date: Sun, 22 Dec 2002 12:14:24 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3E051C69.5000701@torque.net>
-References: <20021221224604.GC7990@linnie.riede.org>
-Reply-To: dougg@torque.net
+Message-ID: <20021222171424.GI7990@linnie.riede.org>
+References: <20021221224604.GC7990@linnie.riede.org> <3E051C69.5000701@torque.net>
+Reply-To: wrlk@riede.org
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from linnie.riede.org (localhost.localdomain [127.0.0.1])
+	by linnie.riede.org (8.11.6/8.11.6) with ESMTP id gBMHEOC31106
+	for <linux-scsi@vger.kernel.org>; Sun, 22 Dec 2002 12:14:24 -0500
+Content-Disposition: inline
+In-Reply-To: <3E051C69.5000701@torque.net>; from dougg@torque.net on Sat, Dec 21, 2002 at 20:59:05 -0500
 List-Id: linux-scsi@vger.kernel.org
-To: wrlk@riede.org
-Cc: linux-scsi@vger.kernel.org, andmike@us.ibm.com
+To: linux-scsi@vger.kernel.org
 
-Willem Riede wrote:
-> Here is my proposal for bringing ide-scsi in line with the current kernel.
+On 2002.12.21 20:59 Douglas Gilbert wrote:
+> Willem Riede wrote:
+> > Here is my proposal for bringing ide-scsi in line with the current kernel.
+> > 
+> > The attached patch does:
+> > 
 > 
-> The attached patch does:
+> Willem,
+> Good work.
 > 
-> 1. Change from old style initialization to the new hotplug initialization model.
->    It involves declaring both a parent device and bus kernel object, which feels
->    a bit awkward, but hey, it works.
+Thanks.
 > 
-> 2. Make ide-scsi request sense itself when CHECK_CONDITION is asserted. This 
->    change particularly makes ide-scsi run much smoother on my test box.
+> BTW Willem's patch is against lk 2.5.52 .
 > 
-> 3. Implement eh_abort_handler and eh_device_reset_handler. I have no real way
->    to thoroughly test these new routines, so for this part particularly I ask
->    for peer review.
+Right. And next to this ide-scsi patch, you will also want
+the one line fix to ide.c I posted earlier.
 
-Willem,
-Good work.
+http://marc.theaimsgroup.com/?l=linux-scsi&m=104017636631422&w=2
 
-I tried it out with an ATAPI cdrom and it worked fine.
-Tried a few error conditions (e.g. purposely reading
-past the end of the cdrom) and it reacted properly.
-
-The introduction of a new sysfs bus type: "ide-scsi" to
-add to scsi_debug's "pseudo" seems a bit messy. It will
-do for now; hopefully Mike Anderson will come up with
-some coherent sysfs naming scheme for drivers
-that bridge to another protocol stack (e.g. ide-scsi,
-usb-storage and ieee1394/sbp2).
-
-BTW Willem's patch is against lk 2.5.52 .
-
-Doug Gilbert
-
+Regards, Willem Riede.
