@@ -1,46 +1,72 @@
-From: James Bottomley <James.Bottomley@steeleye.com>
-Subject: Re: [linux-usb-devel] Re: /proc/scsi/map
-Date: Sun, 16 Jun 2002 12:25:06 -0500
+From: Matthew Wilcox <willy@debian.org>
+Subject: [PATCH] Remove SCSI_BH
+Date: Sun, 16 Jun 2002 19:22:53 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <200206161725.g5GHP6S23020@localhost.localdomain>
-References: <david-b@pacbell.net>
+Message-ID: <20020616192253.Q9435@parcelfarce.linux.theplanet.co.uk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: (from root@localhost)
-	by pogo.mtv1.steeleye.com (8.9.3/8.9.3) id KAA20598
-	for <linux-scsi@vger.kernel.org>; Sun, 16 Jun 2002 10:25:18 -0700
-In-Reply-To: Message from David Brownell <david-b@pacbell.net>
-   of "Sun, 16 Jun 2002 10:05:49 PDT." <3D0CC56D.9050805@pacbell.net>
+Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
-To: David Brownell <david-b@pacbell.net>
-Cc: Andries.Brouwer@cwi.nl, garloff@suse.de, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, sancho@dauskardt.de, linux-usb-devel@lists.sourceforge.net, linux1394-devel@lists.sourceforge.net, dougg@torque.net
-
-Since we already have a huge long list of different ways to identify different 
-devices, I don't think coding any one or even a set of such methods into the 
-kernel would satisfy everyone.
-
-What about a different approach:
-
-We already (nearly) have the scsimon patches to do hot plug events on SCSI 
-devices incorporated.  Any identification could be done from the scsi device 
-hotplug script (i.e. if you see it's USB, get the GID, if it's enterprise 
-storage get the WWN, try the filesystem UUID etc).  Then all the hotplug 
-script does is plug this device into some type of volume idenfication scheme 
-like /dev/volume/<name>.
-
-Any application needing to always know where the device is would refer to it 
-by name, and since there's no prescription at all about what the <name> is, 
-you could even alias horribly unfriendly things like the WWN to more palatable 
-names using a user specified translation table.
-
-This implementation doesn't even depend on SCSI, so it could potentially be 
-used by any subsystem (IDE, block devices).
-
-The only component that doesn't exist is the configurable /dev/volume piece.  
-Since the name would be a property of the device node, it probably makes sense 
-to place this into the new driverfs somehow.
-
-James
+To: Linus Torvalds <torvalds@transmeta.com>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
 
+Hi, Linus.  This patch switches SCSI from a bottom half to a tasklet.
+It's been reviewed, tested & approved by Andrew Morton, James Bottomley &
+Doug Gilbert.  Please apply.
+
+--- linux-2.5.21/drivers/scsi/scsi.c	Sun Jun  2 18:44:50 2002
++++ linux-2.5.21-flock/drivers/scsi/scsi.c	Sat Jun 15 19:45:45 2002
+@@ -1090,6 +1090,9 @@
+ 	SCSI_LOG_MLQUEUE(3, printk("Leaving scsi_do_cmd()\n"));
+ }
+ 
++void scsi_tasklet_func(unsigned long);
++static DECLARE_TASKLET(scsi_tasklet, scsi_tasklet_func, 0);
++
+ /*
+  * This function is the mid-level interrupt routine, which decides how
+  *  to handle error conditions.  Each invocation of this function must
+@@ -1187,7 +1190,7 @@
+ 	/*
+ 	 * Mark the bottom half handler to be run.
+ 	 */
+-	mark_bh(SCSI_BH);
++	tasklet_hi_schedule(&scsi_tasklet);
+ }
+ 
+ /*
+@@ -1213,7 +1216,7 @@
+  * half queue.  Thus the only time we hold the lock here is when
+  * we wish to atomically remove the contents of the queue.
+  */
+-void scsi_bottom_half_handler(void)
++void scsi_tasklet_func(unsigned long ignore)
+ {
+ 	Scsi_Cmnd *SCpnt;
+ 	Scsi_Cmnd *SCnext;
+@@ -2545,11 +2548,6 @@
+         if (scsihosts)
+ 		printk(KERN_INFO "scsi: host order: %s\n", scsihosts);	
+ 	scsi_host_no_init (scsihosts);
+-	/*
+-	 * This is where the processing takes place for most everything
+-	 * when commands are completed.
+-	 */
+-	init_bh(SCSI_BH, scsi_bottom_half_handler);
+ 
+ 	return 0;
+ }
+@@ -2559,7 +2557,7 @@
+ 	Scsi_Host_Name *shn, *shn2 = NULL;
+ 	int i;
+ 
+-	remove_bh(SCSI_BH);
++	tasklet_kill(&scsi_tasklet);
+ 
+         devfs_unregister (scsi_devfs_handle);
+         for (shn = scsi_host_no_list;shn;shn = shn->next) {
+
+-- 
+Revolutions do not require corporate support.
