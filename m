@@ -1,50 +1,84 @@
-From: Kurt Garloff <garloff@suse.de>
-Subject: Re: [PATCH] Re: AMD 53c974 SCSI driver in 2.6
-Date: Wed, 19 Nov 2003 16:34:38 +0100
+From: Pat LaVarre <p.lavarre@ieee.org>
+Subject: Re: [usb-storage] mode sense blacklist how
+Date: 19 Nov 2003 09:34:14 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20031119153437.GA2115@tpkurt.garloff.de>
-References: <20031118092844.GA2995@tpkurt.garloff.de> <Pine.LNX.4.44.0311182339460.3405-100000@poirot.grange>
+Message-ID: <1069259654.2867.6.camel@patrh9>
+References: <Pine.LNX.4.44L0.0311131638320.949-100000@ida.rowland.org>
+	 <1068767049.2851.166.camel@patrh9>
+	 <1068768796.3fb41e1c8d075@webmail.netregistry.net>
+	 <1068775834.2851.321.camel@patrh9>
+	 <20031113181945.I30194@one-eyed-alien.net>
+	 <1068777510.2851.359.camel@patrh9>
+	 <1068779468.3fb447ccc6e60@webmail.netregistry.net>
+	 <1068838908.2852.34.camel@patrh9>
+	 <1069246502.3fbb6826955dd@webmail.netregistry.net>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="W/nzBZO5zC0uMSeA"
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns.suse.de ([195.135.220.2]:23173 "EHLO Cantor.suse.de")
-	by vger.kernel.org with ESMTP id S263891AbTKSQIa (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 19 Nov 2003 11:08:30 -0500
-Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.44.0311182339460.3405-100000@poirot.grange>
+Received: from email-out2.iomega.com ([147.178.1.83]:20097 "EHLO
+	email.iomega.com") by vger.kernel.org with ESMTP id S262761AbTKSQei
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 19 Nov 2003 11:34:38 -0500
+In-Reply-To: <1069246502.3fbb6826955dd@webmail.netregistry.net>
 List-Id: linux-scsi@vger.kernel.org
-To: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
-Cc: "Randy.Dunlap" <rddunlap@osdl.org>, hch@infradead.org, linux-scsi@vger.kernel.org, gl@dsa-ac.de
+To: dmitrik@users.sourceforge.net
+Cc: usb-storage@one-eyed-alien.net, linux-scsi@vger.kernel.org, mdharm-scsi@one-eyed-alien.net, stern@rowland.harvard.edu, patmans@us.ibm.com, james.bottomley@steeleye.com, ronald@kuetemeier.com, idan@idanso.dyndns.org
+
+I'm writing this e-mail only to say:
 
 
---W/nzBZO5zC0uMSeA
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+I'm hereafter trimming this cc line.
 
-On Wed, Nov 19, 2003 at 12:07:06AM +0100, Guennadi Liakhovetski wrote:
-> Yes, I presume, in your patch, Kurt, you meant
-> -       if (pSRB->SRBFlag | AUTO_REQSENSE) {
-> +       if (pSRB->SRBFlag & AUTO_REQSENSE) {
-> right?
 
-Yes, of course.
---=20
-Kurt Garloff  <garloff@suse.de>                            Cologne, DE=20
-SUSE LINUX AG, Nuernberg, DE                          SUSE Labs (Head)
+Also here now I'm correctly substituting @us.ibm.com for @us.ibm.co
 
---W/nzBZO5zC0uMSeA
-Content-Type: application/pgp-signature
-Content-Disposition: inline
+Next I will reply substantively, but only to: Dmitri Katchalov, cc:
+linux-scsi.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.2.2 (GNU/Linux)
+Why trim the cc line?
 
-iD8DBQE/u42NxmLh6hyYd04RAmNtAJ9k1ZOUVpYlMkr86jPQ9Z1TZ3tifACffZx+
-ka3hmKqx9E7fg+OO+ppIrPk=
-=y5Pj
------END PGP SIGNATURE-----
+Well, a complicating factor is that some of us post in ways that Google
+does not archive & index.
 
---W/nzBZO5zC0uMSeA--
+And another complicating factor is that some of us sometimes don't
+clearly receive attachments and email addresses mixed with names e.g. I
+confused ibm.com with ibm.co and I didn't notice that last kern.log.usb
+attachment from Dmitri here til I forwarded this message to myself.
+
+But apart from all that, we have the recent history:
+
+> Subject: Re: [usb-storage] mode sense blacklist how
+>
+> > > From: Pat LaVarre ...
+> > > ...
+> > > I think I'm seeing hints that possibly
+> > > we've carried this reply-to-all convention
+> > > a little too far by now.  Not sure how to
+> > > fix that.
+> >
+> > From: Patrick Mansfield ...
+> > ...
+> > I have seen worse cc: lines. They can always
+> > kill the thread or asked to be removed.
+>
+> From: Dmitri Katchalov ...
+> ...
+> I understand that you guys must be sick and
+> tired of those memory sticks by now ...
+
+Yes, thank you for continuing our investigation, yes I still do want to
+learn more here.
+
+> Subject: Re: [usb-storage] Re: [PATCH] fix Sony USB mass storage - pass larger receive buffer
+> From: Patrick Mansfield ...
+> [Trimmed the cc line]
+
+I see sometimes indeed we do trim cc lines.
+
+Personally I'm too much of a newbie to have a clue when we do and when
+we do not.
+
+Pat LaVarre
+
+
