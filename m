@@ -1,41 +1,39 @@
-From: James.Smart@Emulex.Com
-Subject: [Announce] Emulex lpfcdriver v8.0.12 available
-Date: Mon, 20 Sep 2004 21:34:27 -0400
+From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+Subject: Re: [RFTesters] Re: [PATCH] refactor tmscsim inititalization code
+Date: Tue, 21 Sep 2004 07:41:37 +0200 (CEST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <0B1E13B586976742A7599D71A6AC733C02F1C6@xbl3.ma.emulex.com>
+Message-ID: <Pine.LNX.4.60.0409210739070.2436@poirot.grange>
+References: <20040904130235.GA20552@lst.de> <Pine.LNX.4.60.0409071040120.2966@poirot.grange>
+ <20040910133254.GB32530@lst.de> <Pine.LNX.4.60.0409172052230.31193@poirot.grange>
+ <20040920152450.GA27419@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emulex.emulex.com ([138.239.112.1]:15266 "EHLO
-	emulex.emulex.com") by vger.kernel.org with ESMTP id S267452AbUIUBed convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 20 Sep 2004 21:34:33 -0400
-Received: from xbl3.ad.emulex.com (xbl3.ma.emulex.com [138.239.73.12])
-	by emulex.emulex.com (8.12.10/8.12.10) with ESMTP id i8L1YSgI014790
-	for <linux-scsi@vger.kernel.org>; Mon, 20 Sep 2004 18:34:28 -0700 (PDT)
-content-class: urn:content-classes:message
+Received: from mail.gmx.de ([213.165.64.20]:49887 "HELO mail.gmx.net")
+	by vger.kernel.org with SMTP id S267287AbUIUFmS (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 21 Sep 2004 01:42:18 -0400
+In-Reply-To: <20040920152450.GA27419@lst.de>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: James.Smart@Emulex.Com
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-scsi@vger.kernel.org, Kurt Garloff <garloff@suse.de>
 
-Christoph,
+On Mon, 20 Sep 2004, Christoph Hellwig wrote:
 
-FYI - the 8.0.12 lpfc driver has been posted to SourceForge.
+>> Ok, now, that the patch has been applied, and, as Christoph informed me,
+>> it would be difficult (impossible?) to undo it, we have to fix it. I'll
+>> explain my doubts separately as a reply to another Christoph's email. Or
+>> would it still be possible to get a patch in, reverting the EEPROM rework?
+>
+> might be best to just revert it, I'll cook up a patch.
 
-The driver contains the following changes (refer to the ChangeLog for more detail):
-- Incorporated the ~9 patches received from you.
-- The discovery code was reworked for better organization. Came about as part of supporting the block/unblock patch.
-- Started to add management interfaces (used to be ioctls) to sysfs. This is a WIP and quite a few things are expected to ultimately be moved to the fc transport under a separate RFC/patch.
+And one more thought - would be good to add comments to now inlined code 
+to explain explicitly what previously function names were hinting at. But 
+this can be a follow-up patch. The only problem - I don't quite understand 
+what all EEPROM function names meant. Kurt?
 
-Thanks.
-
--- James S
-
-
-The tarball is here:
-http://prdownloads.sourceforge.net/lpfcxxxx/lpfcdriver-2.6-8.0.12.tar.gz?download
-
-The full ChangeLog is on SourceForge:
-http://sourceforge.net/forum/forum.php?forum_id=408568
+Thanks
+Guennadi
+---
+Guennadi Liakhovetski
 
