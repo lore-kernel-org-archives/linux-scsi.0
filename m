@@ -1,47 +1,68 @@
-From: Andries Brouwer <aebr@win.tue.nl>
-Subject: Re: [PATCH] oops in sd_shutdown
-Date: Wed, 13 Aug 2003 12:46:19 +0200
+From: christophe.varoqui@free.fr
+Subject: Re: HSV : ghosts & multipath
+Date: Wed, 13 Aug 2003 13:53:13 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030813104619.GA7421@win.tue.nl>
-References: <Pine.LNX.4.53.0308111426570.16008@thevillage.soulcatcher> <20030812002844.B1353@pclin040.win.tue.nl> <20030812075353.A18547@infradead.org> <20030812213549.GA2158@kroah.com> <20030813002450.GA8712@beaverton.ibm.com>
+Message-ID: <1060775593.3f3a26a967f2d@impt3-2.free.fr>
+References: <3F3820C9.4060004@free.fr> <1060703573.5430.9.camel@e-linux>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mailhost.tue.nl ([131.155.2.7]:24328 "EHLO mailhost.tue.nl")
-	by vger.kernel.org with ESMTP id S271743AbTHMKqW (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 13 Aug 2003 06:46:22 -0400
-Content-Disposition: inline
-In-Reply-To: <20030813002450.GA8712@beaverton.ibm.com>
+Received: from postfix4-2.free.fr ([213.228.0.176]:8072 "EHLO
+	postfix4-2.free.fr") by vger.kernel.org with ESMTP id S271129AbTHMLxP
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 13 Aug 2003 07:53:15 -0400
+In-Reply-To: <1060703573.5430.9.camel@e-linux>
 List-Id: linux-scsi@vger.kernel.org
-To: Greg KH <greg@kroah.com>, Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, linux-usb-devel@lists.sourceforge.net, linux-kernel@vger.kernel.org
+To: Evan Felix <evan.felix@pnl.gov>
+Cc: linux-scsi@vger.kernel.org
 
-On Tue, Aug 12, 2003 at 05:24:50PM -0700, Mike Anderson wrote:
+Hello,
 
-> > > Well, this same problem could show upb in any other driver.  Could
-> > > you instead send a patch to Pat that the driver model never calls
-> > > the shutdown method for a driver that hasn't finished ->probe?
+sg_start, which comes with latest sg3_utils, does the trick, indeed.
+Thanks for the tip.
+
+Selon Evan Felix <evan.felix@pnl.gov>:
+
+> The HSV Ghost LUNS can be made active by sending the Start Unit Command
+> down the scsi path.  I have not had time to attempt to use this command,
+> and am not sure it can be sent to a Linux scsi device that is showing
+> 'Not Ready'(Sense Code) and 'Not Connected'(Inquiry).  Other on this
+> list may be able to help us in this area.  Once you send this command
+> down, you will need to wait some amount of time while it flushes IO's
+> and changes controllers.
+> 
+> If you get this working i would love to see the results.
+> 
+> Evan
+> 
+> 
+> On Mon, 2003-08-11 at 16:03, christophe varoqui wrote:
+> > Hello,
 > > 
-> > I think it already will not do that due to taking the bus->subsys.rwsem
-> > before calling either probe() or remove().
+> > I read your contribution to scsidev, regarding HSV.
+> > You seem to have an intimate knowledge of these controlers.
+> > Do you happen to have a clue on how to force the activation of a ghost 
+> > LUN from a Linux host ?
+> > 
+> > The rationale being : in a multipath config, when all active path are 
+> > exhausted you should be able to activate the ghosts paths rather than 
+> > let the device die.
+> > 
+> > More generally, how do you manage access to your HSV LUNs ? I personnaly 
+> > would hate to use SecurePath which locks the user to one distribution 
+> > and has not passed the "community peer-review test". Any alternative 
+> > applicable in a dual fabric, dual attached hosts & controlers (4 
+> > paths/host including 2 ghosts : 2 paths through the left fabric, 2 paths 
+> > through the right) ?
+> -- 
+> -------------------------
+> Evan Felix
+> Environmental Molecular Sciences Laboratory
+> Pacific Northwest National Laboratory
+> Operated for the U.S. DOE by Battelle
 > 
-> Is the shutdown being called directly? The shutdown call is protected by
-> a different rwsem. Depending on the call graph setting dev->driver on
-> return of probe may provide a solution.
-
-Yes, that is precisely what I had considered doing.
-
-> I have not looked at all probe
-> routines to understand if this would cause any bad side effects.
 > 
-> Andries,
-> 	Can you send the oops output?
 
-top of stack was reported as (process reboot):
 
-sd_shutdown + 0x22/0x110 NULL deref (namely, sdkp)
-i8042_notify_sys
-device_shutdown
-sys_reboot
-do_clock_nanosleep
-
+-- 
