@@ -1,61 +1,64 @@
-From: "Justin T. Gibbs" <gibbs@scsiguy.com>
+From: James Bottomley <James.Bottomley@steeleye.com>
 Subject: Re: Aic7x_x_x 6.3.4 && Aic79xx 2.0.5 Updates
-Date: Sat, 27 Dec 2003 08:47:44 -0700
+Date: 27 Dec 2003 09:52:43 -0600
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3327750000.1072540064@aslan.btc.adaptec.com>
-References: <1051920000.1054684267@aslan.btc.adaptec.com>	 <3637050000.1054690456@aslan.s			csiguy.com>	 <2113050000.1072285128@aslan.scsiguy.com>	 <1072288242.1906.35.camel@mulgrave		>	 <2148850000.1072292121@aslan.scsiguy.com>	 <1072292714.2415.39.camel@mulgrave	>	 <2304040000.1072326693@aslan.scsiguy.com>	 <1072463795.1873.127.camel@mulgrave>	 <2832150000.1072484024@aslan.scsiguy.com>	 <1072495231.1873.363.camel@mulgrave>	 <2906490000.1072499170@aslan.scsiguy.com> <1072537914.5494.5.camel@dhcp23.swansea.linux.org.uk>
-Reply-To: "Justin T. Gibbs" <gibbs@scsiguy.com>
+Message-ID: <1072540364.2030.41.camel@mulgrave>
+References: <1051920000.1054684267@aslan.btc.adaptec.com>	<3637050000.1054690456@aslan.s
+				csiguy.com>
+	<2113050000.1072285128@aslan.scsiguy.com>	<1072288242.1906.35.camel@mulgrave
+			>	<2148850000.1072292121@aslan.scsiguy.com>
+	<1072292714.2415.39.camel@mulgrave	>
+		<2304040000.1072326693@aslan.scsiguy.com>	<1072463795.1873.127.camel@mulgra
+	ve> <2832150000.1072484024@aslan.scsiguy.com>
+	<1072495231.1873.363.camel@mulgrave>
+	<2906490000.1072499170@aslan.scsiguy.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from magic-mail.adaptec.com ([216.52.22.10]:31911 "EHLO
-	magic.adaptec.com") by vger.kernel.org with ESMTP id S264419AbTL0PmT
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 27 Dec 2003 10:42:19 -0500
-In-Reply-To: <1072537914.5494.5.camel@dhcp23.swansea.linux.org.uk>
-Content-Disposition: inline
+Received: from stat1.steeleye.com ([65.114.3.130]:61840 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S264476AbTL0Pwu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 27 Dec 2003 10:52:50 -0500
+In-Reply-To: <2906490000.1072499170@aslan.scsiguy.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linus Torvalds <torvalds@transmeta.com>, Marcelo Tosatti <marcelo@conectiva.com.br>, Andrew Morton <akpm@osdl.org>
+To: "Justin T. Gibbs" <gibbs@scsiguy.com>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, Linus Torvalds <torvalds@transmeta.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Marcelo Tosatti <marcelo@conectiva.com.br>, Andrew Morton <akpm@osdl.org>
 
-> On Sad, 2003-12-27 at 04:26, Justin T. Gibbs wrote:
->> I'm sorry you feel that way.  I suppose I will just have to continue
->> to point distributors and users of this driver to my own patch sets since
->> that seems to be the only viable alternative you've given me.
->
-> Is that an official Adaptec statement, or should I ask Adaptec if they
-> can assist in resolving this matter ?
- 
-That is my statement.  You can escalate this matter to whatever formum
-you feel is most appropriate.
- 
-That said, Adaptec's typical stance on these matters is that if a change
-is required to these drivers in order to make them work correctly
-(i.e. something required by a major customer) that for some reason is not
-embedded, that providing separate DUD/RPM/SRC distributions to
-our customers is sufficient.  This change is no different.  The current
-SCSI layer offers no other alternative to having fully functional watchdog
-recovery.  This is not a new revelation and my drivers are not the first
-to take *extreme measures* to try and avoid the brokenness.  The changes
-were not made in an attempt to be inflammatory, they were made to fix
-real field issues that could be resolved within the driver in no other way.
- 
-James seems to imply that it is my responsibility as a "good open source
-developer" to "contribute" the fixes to the SCSI layer to correct these
-issues.  I would think that the SCSI layer maintainer would not only
-understand these issues, but take up the charge of discussing and correcting
-them.  Since we don't agree, on a fundamental level, on what the problem is
-much less how to fix it, I think that having me go off and come up with fixes
-would be counter productive to all involved.
- 
-If there is sincere interest in correcting error recovery in the Linux
-SCSI layer, I'm still more than happy to give input and perhaps even
-provide code.  But to say that I cannot embed a driver that has to skirt
-mid-layer brokenness in order to be fully functional - regardless of how
-it does that - until that brokenness can be corrected, is a disservice to
-all users of this hardware.
- 
---
-Justin
+On Fri, 2003-12-26 at 22:26, Justin T. Gibbs wrote:
+> You're telling me that fail-over for a multi-controller external RAID box
+> connected to a single SCSI controller will occur at a higher level?  The
+> fail-over has already occurred by the time the HBA see the timeout.  This
+> means that completion of recovery is the only impediment to completing the
+> fail-over.
+
+The usual architecture of a multiple controller RAID box is no
+SPOF...Therefore *two* or more SCSI cards...local in card attempts at
+recovery only delays eventual failover.
+
+> I've already written one OpenSource SCSI layer, I think I've contributed
+> more than enough in that particular area.  Back in late 2000 and early 2001,
+> I voiced my opinions, based on that experience, on how Linux should improve
+> its SCSI subsystem.  After 3 years of waiting for improvement in the
+> error recovery semantics of Linux, I had to do something to satisfy customer
+> complaints on error recovery.  I still don't see things improving in
+> this area of Linux and I'm not about to *break* the driver until there is
+> a viable alternative.
+
+This is open source...areas which cause problems for many people get
+fixed (OK, often many times).  Areas that only annoy one person don't
+get fixed just by expressing that annoyance.
+
+> I'm sorry you feel that way.  I suppose I will just have to continue
+> to point distributors and users of this driver to my own patch sets since
+> that seems to be the only viable alternative you've given me.
+
+OK, I'll be sorry to see it happen, but if Adaptec formally wishes to
+relinquish maintainership of the aic7xxx/aic79xx drivers and develop
+their own fork of the kernel, that is, of course, their right under the
+GPL.  If this is what you want to do, could you send the list a note to
+that effect so that I can begin looking for a new maintainer now.
+
+James
+
 
