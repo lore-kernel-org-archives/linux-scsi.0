@@ -1,34 +1,56 @@
-From: Gabor Burjan <buga@buvoshetes.hu>
-Subject: Re: problem with megaraid2 driver
-Date: Thu, 4 Dec 2003 10:56:54 +0100
+From: "N.C.Krishna Murthy" <krmurthy@cisco.com>
+Subject: Re: Request for review of Linux iSCSI driver version 4.0.0.1
+Date: Thu, 4 Dec 2003 18:00:55 +0530
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20031204095654.GA9107@odin.sis.hu>
-References: <3FC7696C.2030004@wanadoo.es> <20031128155020.GB18860@odin.sis.hu> <3FC8BD91.6060201@wanadoo.es>
+Message-ID: <200312041800.55663.krmurthy@cisco.com>
+References: <200310231734.10263.krmurthy@cisco.com> <200312011740.09693.krmurthy@cisco.com> <1070292174.2007.14.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from odin.sis.hu ([212.92.23.29]:45188 "EHLO odin.sis.hu")
-	by vger.kernel.org with ESMTP id S263274AbTLDJ44 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 4 Dec 2003 04:56:56 -0500
-Content-Disposition: inline
-In-Reply-To: <3FC8BD91.6060201@wanadoo.es>
+Received: from india-ironport-1.cisco.com ([64.104.129.195]:2567 "EHLO
+	india-ironport-1.cisco.com") by vger.kernel.org with ESMTP
+	id S261733AbTLDMc3 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 4 Dec 2003 07:32:29 -0500
+In-Reply-To: <1070292174.2007.14.camel@mulgrave>
 List-Id: linux-scsi@vger.kernel.org
-To: Xose Vazquez Perez <xose@wanadoo.es>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>
+To: James Bottomley <James.Bottomley@steeleye.com>
+Cc: Christoph Hellwig <hch@infradead.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, davmyers@cisco.com
 
-On Sat, Nov 29, 2003 at 04:38:57PM +0100, Xose Vazquez Perez wrote:
+Hi,
+	Please find my replies/quieries interspersed in your reply.
+On Monday 01 Dec 2003 8:52 pm, James Bottomley wrote:
+> On Mon, 2003-12-01 at 06:10, Krishna Murthy wrote:
+> > Hi,
+> > 	We could use probing code from mid layer provided
+> > scsi_scan_host_selected is exported.
+> >
+> > 	iscsi driver does probe for devices at two places
+> > a)Once after session establishment.
+> > b)Whenever an iSCSI async message indicates a change in
+> > "REPORTED LUNS DATA". (addition/deletion of luns on the target)
+>
+> This sounds like an async event which could be handled by the hotplug
+> system.  Would there be a problem with simply transmitting this to a
+> user level utility and having it trigger the rescan through the exported
+> sysfs interfaces?
+Having user level utility trigger the rescan thru sysfs interfaces will call
+scsi_scan() which will inturn call scsi_scan_host_selected().
+Instead wouldn't it be preferable to call scsi_scan_host_selected()
+from the iSCSI driver itself?
 
-> It looks like the firmware of the board is unable to
-> complete some commands of the pending list. [...]
-> 
-> So, try latest firmware.
 
-Thank you, that solved the problem.
+>
+> We could do with a generic infrastructure within SCSI for generating
+> these events, anyway, if you want to go that route...
+>
+I am not much familiar with SCSI hotplug. 
 
-for the archive, this combination is running now:
+If the generic infrastructure which you mentioned does not exist now and in 
+case there is a plan to do one such thing is there any framework for that?
+Wouldn't that require a kernel API which is capable of both 
+"adding new luns" and "deleting luns which no longer exist"?
 
-adapter: LSI MegaRAID SCSI 320-1
-megaraid2 driver v2.00.9
-firmware 1L26:G112.
-
-Gabor
+Please let us know
+Thanx
+N.C.Krishna Murthy
