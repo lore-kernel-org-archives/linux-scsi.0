@@ -1,87 +1,36 @@
-From: Jeremy Higdon <jeremy@sgi.com>
+From: Matthew Wilcox <matthew@wil.cx>
 Subject: Re: [PATCH] I/O space write barrier
-Date: Fri, 15 Oct 2004 17:38:09 -0700
+Date: Sat, 16 Oct 2004 04:20:44 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20041016003809.GA299051@sgi.com>
-References: <200409271103.39913.jbarnes@engr.sgi.com> <200409291555.29138.jbarnes@engr.sgi.com> <20040930071541.GA201816@sgi.com> <Pine.LNX.4.60.0409302317590.3449@poirot.grange>
+Message-ID: <20041016032044.GB16153@parcelfarce.linux.theplanet.co.uk>
+References: <200409271103.39913.jbarnes@engr.sgi.com> <200409291555.29138.jbarnes@engr.sgi.com> <20040930071541.GA201816@sgi.com> <Pine.LNX.4.60.0409302317590.3449@poirot.grange> <20041016003809.GA299051@sgi.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from omx3-ext.sgi.com ([192.48.171.20]:34495 "EHLO omx3.sgi.com")
-	by vger.kernel.org with ESMTP id S268059AbUJPAie (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 15 Oct 2004 20:38:34 -0400
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:51903 "EHLO
+	www.linux.org.uk") by vger.kernel.org with ESMTP id S268582AbUJPDUq
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 15 Oct 2004 23:20:46 -0400
 Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.60.0409302317590.3449@poirot.grange>
+In-Reply-To: <20041016003809.GA299051@sgi.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Guennadi Liakhovetski <g.liakhovetski@gmx.de>, akpm@osdl.org
-Cc: Jesse Barnes <jbarnes@engr.sgi.com>, linux-kernel@vger.kernel.org, gnb@sgi.com, linux-scsi@vger.kernel.org
+To: Jeremy Higdon <jeremy@sgi.com>
+Cc: Guennadi Liakhovetski <g.liakhovetski@gmx.de>, akpm@osdl.org, Jesse Barnes <jbarnes@engr.sgi.com>, linux-kernel@vger.kernel.org, gnb@sgi.com, linux-scsi@vger.kernel.org
 
-On Thu, Sep 30, 2004 at 11:21:39PM +0200, Guennadi Liakhovetski wrote:
-> 
-> A pretty obvious note: instead of repeating this nice but pretty lengthy 
-> comment 3 times in the same file, wouldn't it be better to write at 
-> further locations something like
-> 
-> 	/* Enforce IO-ordering. See comment in <function> for details. */
-> 
-> Also helps if you later have to modify the comment, or move it, or add 
-> more mmiowb()s, or do some other modifications.
-> 
-> Thanks
-> Guennadi
-> ---
-> Guennadi Liakhovetski
+On Fri, Oct 15, 2004 at 05:38:09PM -0700, Jeremy Higdon wrote:
+> -	(void) RD_REG_WORD(&reg->mailbox4); /* PCI posted write flush */
+> +	/* Enforce mmio write ordering; see comment in qla1280_isp_cmd(). */
+> +	mmiowb();
 
-Suggestion applied.  Now that the mmiowb is in the mm patch, this
-patch to qla1280 should be ready for inclusion therein also.
+I really don't think we want a comment by every mmiowb() explaining what
+it does.  We needed one by the write flush because it had two potential
+meanings, and we didn't want people overoptimising it away.  But mmiowb()
+is clear and unambiguous.
 
-signed-off-by: Jeremy Higdon <jeremy@sgi.com>
-
-
---- linux-2.6.9-rc4.orig/drivers/scsi/qla1280.c	2004-10-15 17:21:21.000000000 -0700
-+++ linux-2.6.9-rc4/drivers/scsi/qla1280.c	2004-10-15 17:23:08.000000000 -0700
-@@ -3409,7 +3409,8 @@
- 	sp->flags |= SRB_SENT;
- 	ha->actthreads++;
- 	WRT_REG_WORD(&reg->mailbox4, ha->req_ring_index);
--	(void) RD_REG_WORD(&reg->mailbox4); /* PCI posted write flush */
-+	/* Enforce mmio write ordering; see comment in qla1280_isp_cmd(). */
-+	mmiowb();
- 
-  out:
- 	if (status)
-@@ -3677,7 +3678,8 @@
- 	sp->flags |= SRB_SENT;
- 	ha->actthreads++;
- 	WRT_REG_WORD(&reg->mailbox4, ha->req_ring_index);
--	(void) RD_REG_WORD(&reg->mailbox4); /* PCI posted write flush */
-+	/* Enforce mmio write ordering; see comment in qla1280_isp_cmd(). */
-+	mmiowb();
- 
- out:
- 	if (status)
-@@ -3787,9 +3789,21 @@
- 	} else
- 		ha->request_ring_ptr++;
- 
--	/* Set chip new ring index. */
-+	/*
-+	 * Update request index to mailbox4 (Request Queue In).
-+	 * The mmiowb() ensures that this write is ordered with writes by other
-+	 * CPUs.  Without the mmiowb(), it is possible for the following:
-+	 *    CPUA posts write of index 5 to mailbox4
-+	 *    CPUA releases host lock
-+	 *    CPUB acquires host lock
-+	 *    CPUB posts write of index 6 to mailbox4
-+	 *    On PCI bus, order reverses and write of 6 posts, then index 5,
-+	 *       causing chip to issue full queue of stale commands
-+	 * The mmiowb() prevents future writes from crossing the barrier.
-+	 * See Documentation/DocBook/deviceiobook.tmpl for more information.
-+	 */
- 	WRT_REG_WORD(&reg->mailbox4, ha->req_ring_index);
--	(void) RD_REG_WORD(&reg->mailbox4); /* PCI posted write flush */
-+	mmiowb();
- 
- 	LEAVE("qla1280_isp_cmd");
- }
+-- 
+"Next the statesmen will invent cheap lies, putting the blame upon 
+the nation that is attacked, and every man will be glad of those
+conscience-soothing falsities, and will diligently study them, and refuse
+to examine any refutations of them; and thus he will by and by convince 
+himself that the war is just, and will thank God for the better sleep 
+he enjoys after this process of grotesque self-deception." -- Mark Twain
