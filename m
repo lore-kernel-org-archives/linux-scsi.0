@@ -1,36 +1,41 @@
-From: Rik van Riel <riel@conectiva.com.br>
-Subject: Re: Warning - running *really* short on DMA buffers while doing file
- transfers
-Date: Fri, 27 Sep 2002 11:56:49 -0300 (BRT)
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44L.0209271155510.22735-100000@imladris.surriel.com>
-References: <389902704.1033133455@aslan.scsiguy.com>
+From: "Infante, Jon" <Jon.Infante@Emulex.Com>
+Subject: RE: is there a clean way to disable a scsi timer
+Date: Fri, 27 Sep 2002 08:26:32 -0700
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <8D43EFD7CCBDB24980134BE078C227E7012B706D@xcm.ad.emulex.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
-In-Reply-To: <389902704.1033133455@aslan.scsiguy.com>
-To: "Justin T. Gibbs" <gibbs@scsiguy.com>
-Cc: Jens Axboe <axboe@suse.de>, Matthew Jacob <mjacob@feral.com>, "Pedro M. Rodrigues" <pmanuel@myrealbox.com>, Mathieu Chouquet-Stringer <mathieu@newview.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain
+Return-path: <linux-scsi-owner@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
+To: 'Jeremy Higdon' <jeremy@classic.engr.sgi.com>, linux-scsi@vger.kernel.org
 
-On Fri, 27 Sep 2002, Justin T. Gibbs wrote:
+I do my own timeout handling as well. My queuecommand does
+scsi_delete_timer() just as you suggested. However, just to be safe, I also
+do a scsi_add_timer() in my iodone routine just before I call
+cmnd->scsi_done(cmnd) to put things back the way they were.
 
-> writes *unless* you are creating an ISO image on your disk.  In my opinion
-> it is much more important to optimize for the more common, concurrent
-> read case, than it is for the sequential write case with intermittent
-> reads.
+Jon Infante
 
-You're missing the point.  The only reason the reads are
-intermittent is that the application can't proceed until
-the read is done and the read is being starved by writes.
 
-If the read was serviced immediately, the next read could
-get scheduled quickly and they wouldn't be intermittant.
+-----Original Message-----
+From: Jeremy Higdon [mailto:jeremy@classic.engr.sgi.com]
+Sent: Friday, September 27, 2002 1:30 AM
+To: linux-scsi@vger.kernel.org
+Subject: Re: is there a clean way to disable a scsi timer
 
-Rik
--- 
-Bravely reimplemented by the knights who say "NIH".
 
-http://www.surriel.com/		http://distro.conectiva.com/
+Misremembered the name -- sorry.
 
-Spamtraps of the month:  september@surriel.com trac@trac.org
+s/scsi_disable_timer/scsi_delete_timer/
+
+On Sep 27,  1:24am, Jeremy Higdon wrote:
+> 
+> I have a host driver that does its own timeout and error handling.  Is
+there
+> a clean way to disable the midlayer timeout handling?  It appears that I
+> can just call scsi_disable_timer() from the queuecommand function, but
+> I'd prefer something less nasty.
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
