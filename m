@@ -1,98 +1,133 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: [OOPS] 2.6.11 - NMI lockup with CFQ scheduler
-Date: Tue, 29 Mar 2005 14:03:11 +0200
-Message-ID: <20050329120311.GO16636@suse.de>
-References: <20050329115405.97559.qmail@web52909.mail.yahoo.com>
+From: Paul Veldema <paul@basenet.nl>
+Subject: Dell 2850 build in (LSI) PERC4/Di 2.6 kernel driver.
+Date: Tue, 29 Mar 2005 14:11:20 +0200
+Message-ID: <424945E8.4040502@basenet.nl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns.virtualhost.dk ([195.184.98.160]:17901 "EHLO virtualhost.dk")
-	by vger.kernel.org with ESMTP id S262240AbVC2MDN (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 29 Mar 2005 07:03:13 -0500
-Content-Disposition: inline
-In-Reply-To: <20050329115405.97559.qmail@web52909.mail.yahoo.com>
+Received: from smtp-vbr11.xs4all.nl ([194.109.24.31]:47633 "EHLO
+	smtp-vbr11.xs4all.nl") by vger.kernel.org with ESMTP
+	id S262248AbVC2MU4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 29 Mar 2005 07:20:56 -0500
+Received: from smtp.realworks.nl (smtp.realworks.nl [194.109.157.47])
+	by smtp-vbr11.xs4all.nl (8.12.11/8.12.11) with ESMTP id j2TCKpND025001
+	for <linux-scsi@vger.kernel.org>; Tue, 29 Mar 2005 14:20:55 +0200 (CEST)
+	(envelope-from paul@basenet.nl)
+Received: from amavis by smtp.realworks.nl with virus-scanned (Exim 3.35 #1 (Debian))
+	id 1DGFYt-0000MX-00
+	for <linux-scsi@vger.kernel.org>; Tue, 29 Mar 2005 14:11:11 +0200
+Received: from smtp.realworks.nl ([127.0.0.1])
+	by localhost (rwlinux12 [127.0.0.1]) (amavisd-new, port 10024)
+	with ESMTP id 31706-24 for <linux-scsi@vger.kernel.org>;
+	Tue, 29 Mar 2005 14:11:11 +0200 (CEST)
+Received: from [213.53.208.101] (helo=[127.0.0.1])
+	by smtp.realworks.nl with esmtp (Exim 3.35 #1 (Debian))
+	id 1DGFYt-0000MN-00
+	for <linux-scsi@vger.kernel.org>; Tue, 29 Mar 2005 14:11:11 +0200
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Chris Rankin <rankincj@yahoo.com>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Tue, Mar 29 2005, Chris Rankin wrote:
+Hello developers,
 
-(please don't top post)
+For the last two months I've been strugling with a driver problem. Our 
+company bought two Dell PowerEdge 2850's
+to try our production kernel version 2.6.8 (debian sarge) on since the 
+2650 are no longer sold. The Dell PE 2650's had Perc4/DC cards in
+them (which work fine with the drivers and kernel 2.6.X) supposedly the 
+same thing as the build in Perc4/Di controllers in the PE2850's.
+According to Dell the LSI chipset in the PERC4 is de LSI53C1020.
 
-> --- Jens Axboe <axboe@suse.de> wrote:
-> > On Sun, Mar 27 2005, Chris Rankin wrote:
-> > > [gcc-3.4.3, Linux-2.6.11-SMP, Dual P4 Xeon with HT enabled]
-> > > 
-> > > Hi,
-> > > 
-> > > My Linux 2.6.11 box oopsed when I tried to logout. I have switched to using the anticipatory
-> > > scheduler instead.
-> > > 
-> > > Cheers,
-> > > Chris
-> > > 
-> > > NMI Watchdog detected LOCKUP on CPU1, eip c0275cc7, registers:
-> > > Modules linked in: snd_pcm_oss snd_mixer_oss snd_usb_audio snd_usb_lib snd_intel8x0
-> > snd_seq_oss
-> > > snd_seq_midi snd_emu10k1_synth snd_emu10k1 snd_ac97_codec snd_pcm snd_page_alloc
-> > snd_emux_synth
-> > > snd_seq_virmidi snd_rawmidi snd_seq_midi_event snd_seq_midi_emul snd_hwdep snd_util_mem
-> > snd_seq
-> > > snd_seq_device snd_rtctimer snd_timer snd nls_iso8859_1 nls_cp437 vfat fat usb_storage radeon
-> > drm
-> > > i2c_algo_bit emu10k1_gp gameport deflate zlib_deflate zlib_inflate twofish serpent aes_i586
-> > > blowfish des sha256 crypto_null af_key binfmt_misc eeprom i2c_sensor button processor psmouse
-> > > pcspkr p4_clockmod speedstep_lib usbserial lp nfsd exportfs md5 ipv6 sd_mod scsi_mod autofs
-> > nfs
-> > > lockd sunrpc af_packet ohci_hcd parport_pc parport e1000 video1394 raw1394 i2c_i801 i2c_core
-> > > ohci1394 ieee1394 ehci_hcd soundcore pwc videodev uhci_hcd usbcore intel_agp agpgart ide_cd
-> > cdrom
-> > > ext3 jbd
-> > > CPU:    1
-> > > EIP:    0060:[<c0275cc7>]    Not tainted VLI
-> > > EFLAGS: 00200086   (2.6.11) 
-> > > EIP is at _spin_lock+0x7/0xf
-> > > eax: f7b8b01c   ebx: f7c82b88   ecx: f7c82b94   edx: f6c33714
-> > > esi: eb68ad88   edi: f6c33708   ebp: f6c33714   esp: f5b32f70
-> > > ds: 007b   es: 007b   ss: 0068
-> > > Process nautilus (pid: 5757, threadinfo=f5b32000 task=f7518020)
-> > > Stack: c01f7f79 00200282 f76bda24 f6c323e4 f7518020 00000000 00000000 c01f1d0c 
-> > >        f5b32000 c011d7b3 00000001 00000000 b65ffa40 00000000 f5b32fac 00000000 
-> > >        00000000 00000000 f5b32000 c011d8d6 c0102e7f 00000000 b65ffbf0 b6640bf0 
-> > > Call Trace:
-> > >  [<c01f7f79>] cfq_exit_io_context+0x54/0xb3
-> > >  [<c01f1d0c>] exit_io_context+0x45/0x51
-> > >  [<c011d7b3>] do_exit+0x205/0x308
-> > >  [<c011d8d6>] next_thread+0x0/0xc
-> > >  [<c0102e7f>] syscall_call+0x7/0xb
-> > > Code: 05 e8 3a e6 ff ff c3 ba 00 f0 ff ff 21 e2 81 42 14 00 01 00 00 f0 81 28 00 00 00 01 74
-> > 05 e8
-> > > 1d e6 ff ff c3 f0 fe 08 79 09 f3 90 <80> 38 00 7e f9 eb f2 c3 f0 81 28 00 00 00 01 74 05 e8 ff
-> > e5
-> > > ff 
-> > > console shuts up ...
-> > 
-> > The queue was gone by the time the process exited. What type of storage
-> > do you have attached to the box? At least with SCSI, it has some
-> > problems in this area - it will glady free the scsi device structure
-> > (where the queue lock is located) while the queue reference count still
-> > hasn't dropped to zero.
->
-> I have one IDE hard disc, but I was using a USB memory stick at one
-> point. (Notice the usb-storage and vfat modules in my list.) Could
-> that be the troublesome SCSI device?
+However, the megaraid drivers don't detect the Perc4/Di controllers 
+resulting in a
+kernel panic when linux wants to start load stuff from disk (can't find 
+file bla).
 
-Yes, it probably is. What happens is that you insert the stick and do io
-against it, which sets up a process io context for that device. That
-context persists until the process exits (or later, if someone still
-holds a reference to it), but the queue_lock will be dead when you yank
-the usb device.
+On http://linux.dell.com/storage.shtml the following info has been 
+posted for a while now:
 
-It is quite a serious problem, not just for CFQ. SCSI referencing is
-badly broken there.
+    * PowerEdge 2800, PowerEdge 2850, PowerEdge 1850 - PERC4e/Di - dual
+      channel, U320 SCSI, PCI Express, with battery-backed cache.
+      Requires megaraid2 driver 2.00.3 or higher (on 2.4.x kernels), on
+      2.6.x kernels you can use the 'megaraid' driver (now historical),
+      or ideally, the 'megaraid_mbox' and 'megaraid_mm' drivers.
 
--- 
-Jens Axboe
+The mentioned "*on 2.6.x kernels you can use the 'megaraid' driver (now 
+historical), or ideally, the 'megaraid_mbox' and 'megaraid_mm' 
+drivers.*"  don't work (kernel 2.6.8 as well as kernel 2.6.9).
+
+I tried the correct driver  source downloaded from 
+http://www.lsilogic.com/downloads/selectDownload.do#driver: 
+mptlinux-3.01.14.23.zip .
+ >From source *'megaraid' driver (now historical)*:
+#define MEGARAID_VERSION        \
+        "v2.00.3 (Release Date: Wed Feb 19 08:51:30 EST 2003)\n"
+
+ >From source "*megaraid_mbox*":
+#define MEGARAID_VERSION        "2.20.3.1"
+
+...
+
+#define PCI_DEVICE_ID_PERC4E_DI_KOBUK                   0x0013
+#define PCI_SUBSYS_ID_PERC4E_DI_KOBUK                   0x016d
+
+#define PCI_DEVICE_ID_PERC4E_DI_CORVETTE                0x0013
+#define PCI_SUBSYS_ID_PERC4E_DI_CORVETTE                0x016e
+
+#define PCI_DEVICE_ID_PERC4E_DI_EXPEDITION              0x0013
+#define PCI_SUBSYS_ID_PERC4E_DI_EXPEDITION              0x016f
+
+#define PCI_DEVICE_ID_PERC4E_DI_GUADALUPE               0x0013
+#define PCI_SUBSYS_ID_PERC4E_DI_GUADALUPE               0x0170
+
+...
+
+I tried the historical, mm and mbox drivers (together, separately, 
+omitting the historical form the build, in different orders also with 
+initrd ramdisk image)
+nothing works. If anyone knows/has working version combinations 
+(kernel+drivers) please email the information to paul@realworks.nl. Also 
+where can I get newer versions of the megaraid drivers than can be 
+downloaded from LSI's download page?
+
+Here some info under the 2.4.27 kernel and megaraid2 driver on one of 
+the PE2850 machines:
+lsmod:
+megaraid2              33768   6 (autoclean)
+scsi_mod               97828   3 (autoclean) [ide-scsi sd_mod megaraid2]
+
+dmesg:
+SCSI subsystem driver Revision: 1.00
+megaraid: v2.10.3 (Release Date: Thu Apr  8 16:16:05 EDT 2004)
+megaraid: found 0x1028:0x0013:bus 2:slot 14:func 0
+scsi0:Found MegaRAID controller at 0xf8838000, IRQ:38
+megaraid: [513O:H418] detected 1 logical drives.
+megaraid: supports extended CDBs.
+megaraid: channel[0] is raid.
+megaraid: channel[1] is scsi.
+scsi0 : LSI Logic MegaRAID 513O 254 commands 16 targs 5 chans 7 luns
+blk: queue f6e45e18, I/O limit 4095Mb (mask 0xffffffff)
+scsi0: scanning scsi channel 0 for logical drives.
+  Vendor: MegaRAID  Model: LD 0 RAID5  279G  Rev: 513O
+  Type:   Direct-Access                      ANSI SCSI revision: 02
+blk: queue f6e45c18, I/O limit 4095Mb (mask 0xffffffff)
+scsi0: scanning scsi channel 1 for logical drives.
+scsi0: scanning scsi channel 2 for logical drives.
+scsi0: scanning scsi channel 4 [P0] for physical devices.
+  Vendor: PE/PV     Model: 1x6 SCSI BP       Rev: 1.0
+  Type:   Processor                          ANSI SCSI revision: 02
+blk: queue f6e45a18, I/O limit 4095Mb (mask 0xffffffff)
+scsi0: scanning scsi channel 5 [P1] for physical devices.
+Attached scsi disk sda at scsi0, channel 0, id 0, lun 0
+SCSI device sda: 572456960 512-byte hdwr sectors (293098 MB)
+Partition check:
+ /dev/scsi/host0/bus0/target0/lun0: p1 p2 p3 p4 < p5 p6 p7 >
+Journalled Block Device driver loaded
+
+I hope this is enough info, if there are fixes I'll be happy to try them 
+and reply the results (dmesg errors etc.)
+I have one machine freely available for testing.
+
+With regards, Paul Veldema (Realworks B.V.).
 
