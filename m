@@ -1,20 +1,19 @@
-From: Luben Tuikov <luben@splentec.com>
+From: Zwane Mwaikambo <zwane@holomorphy.com>
 Subject: Re: inquiry in scsi_scan.c
-Date: Sun, 05 Jan 2003 14:36:54 -0500
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <3E188956.9090907@splentec.com>
+Date: Sun, 5 Jan 2003 15:54:46 -0500 (EST)
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <Pine.LNX.4.50.0301051548150.15466-100000@montezuma.mastecende.com>
 References: <UTC200301051307.h05D7da08203.aeb@smtp.cwi.nl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-scsi-owner@vger.kernel.org>
 In-Reply-To: <UTC200301051307.h05D7da08203.aeb@smtp.cwi.nl>
+List-Id: linux-scsi@vger.kernel.org
 To: Andries.Brouwer@cwi.nl
 Cc: mdharm-kernel@one-eyed-alien.net, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-usb-devel@lists.sourceforge.net
-List-Id: linux-scsi@vger.kernel.org
 
-Andries.Brouwer@cwi.nl wrote:
-> 
+On Sun, 5 Jan 2003 Andries.Brouwer@cwi.nl wrote:
+
 > The SCSI code has no means of knowing the actual length transferred,
 > so has no choice but to believe the length byte in the reply.
 > But the USB code does the transferring itself, and knows precisely
@@ -23,19 +22,26 @@ Andries.Brouwer@cwi.nl wrote:
 > USB code can fix the response and change the additional length byte
 > to 31, indicating a length of 36. That way the SCSI code knows that
 > not 5 but 36 bytes are valid, and it gets actual vendor and model strings.
-> 
 
-And what if the transport is *not* USB? Or they used
-a similar firmware of their device server in another
-product which used another transport?
+This looks related to something i also bumped into;
 
-I suggest that this device is blacklisted in that
-SCSI Core would know that the ADDITIONAL LENGTH field
-in the INQURY response is incorrectly set (to 0).
-I.e. leave it to the interpreter.
+scsi scan: host 2 channel 0 id 0 lun 0 identifier too long, length 60, max
+50. Device might be improperly identified.
 
-A transport is *not* supposed to peek and poke in the
-data it transfers!
+The 'HBA' is idescsi with a memorex cdrw with an inquiry returning a
+length value of 34
 
+scsi_check_fill_deviceid:
+...
+	if (scsi_check_id_size(sdev, 26 + id_page[3]))
+
+I wrote up an ugly hack to truncate the length in idescsi_transform_pc2,
+but i don't know SCSI and it doesn't seem right.
+
+> [the code I showed does the right things; will submit actual diffs
+> sooner or later]
+
+Thanks,
+	Zwane
 -- 
-Luben
+function.linuxpower.ca
