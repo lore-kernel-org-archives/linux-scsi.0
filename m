@@ -1,35 +1,62 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] add spi attributes to qla1280
-Date: Thu, 12 Aug 2004 10:08:17 +0100
+From: Nigel Cunningham <ncunningham@linuxmail.org>
+Subject: Re: [PATCH] SCSI midlayer power management
+Date: Thu, 12 Aug 2004 19:39:51 +1000
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040812100817.A5988@infradead.org>
-References: <20040810230552.GA26569@sgi.com> <20040811081118.A26256@infradead.org> <20040811215651.GA30821@sgi.com> <20040811230555.A984@infradead.org> <20040811221636.GA31154@sgi.com> <20040811232225.A1192@infradead.org> <20040812052924.GA33167@sgi.com>
+Message-ID: <1092303123.3214.3.camel@laptop.cunninghams>
+References: <4119611D.60401@optonline.net>
+	 <20040811080935.GA26098@elf.ucw.cz> <411A1B72.1010302@optonline.net>
+	 <1092262602.3553.14.camel@laptop.cunninghams>
+	 <411AA24C.6050303@optonline.net>
+Reply-To: ncunningham@linuxmail.org
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from imladris.demon.co.uk ([193.237.130.41]:15887 "EHLO
-	phoenix.infradead.org") by vger.kernel.org with ESMTP
-	id S268473AbUHLJIT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 12 Aug 2004 05:08:19 -0400
-Content-Disposition: inline
-In-Reply-To: <20040812052924.GA33167@sgi.com>; from jeremy@sgi.com on Wed, Aug 11, 2004 at 10:29:24PM -0700
+Received: from mail.tpgi.com.au ([203.12.160.61]:53387 "EHLO mail.tpgi.com.au")
+	by vger.kernel.org with ESMTP id S261232AbUHLJnY (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 12 Aug 2004 05:43:24 -0400
+In-Reply-To: <411AA24C.6050303@optonline.net>
 List-Id: linux-scsi@vger.kernel.org
-To: Jeremy Higdon <jeremy@sgi.com>
-Cc: linux-scsi@vger.kernel.org
+To: Nathan Bryant <nbryant@optonline.net>
+Cc: Pavel Machek <pavel@ucw.cz>, 'James Bottomley' <James.Bottomley@steeleye.com>, Linux SCSI Reflector <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, jgarzik@pobox.com
 
-On Wed, Aug 11, 2004 at 10:29:24PM -0700, Jeremy Higdon wrote:
-> On Wed, Aug 11, 2004 at 11:22:25PM +0100, Christoph Hellwig wrote:
-> > On Wed, Aug 11, 2004 at 03:16:36PM -0700, Jeremy Higdon wrote:
-> > > 
-> > > So I'll submit a patch to 2.6.8-rc4-mm1 then, if that's okay.
-> > 
-> > Sounds good.  While you're at it can you also fix the compilation
-> > error when the driver is compiled for port I/O instead of normal
-> > mmio (e.g. SGI ViswW), you broke that with your readb_relaxed changes.
-> 
-> Okay.  Here is the new rendition, based on 2.6.8-rc4-mm1, with the
-> fix for port I/O.  For sync period and offset, it seems that the
-> isp1040 is the same as the isp1280.
+Hi.
 
-Looks good to me.
+On Thu, 2004-08-12 at 08:48, Nathan Bryant wrote: 
+> Just to speculate about what would be required for swsusp: you probably 
+> need to be using a SCSI LLD that properly implements pci suspend/resume, 
+> which implies you need to make sure the card's DMA state machine is 
+> flushed and idle before suspend completes. I've got a patch that fixes 
+> this much up for aic7xxx. And my other midlayer-level patch may also 
+> help... What happens during resume is interesting. I think maybe the 
+> problem is not what the drive is expecting, but what the card's state 
+> engine is expecting when it tries to map commands to command buffers in 
+> DMA space.  Maybe you need to suspend the LLD from the context of the 
+> kernel that is doing the image load, and then resume from the context of 
+> the kernel that was just loaded.
+
+I fully agree. That's what I'm doing at the moment; it's been a while
+since I looked at swsusp though, so can't say anything about Pavel &
+Patrick's implementation.
+
+> >With my 'device tree' code, I'm getting the struct dev of the device
+> >we're using via the struct block_device in the swap_info struct.
+> >
+> Right, though you also need to get the host adapter's struct device, if 
+> you're not already doing so, that is. Many IDE host drivers don't bother 
+> with suspend/resume callbacks at the pci_driver level, but SCSI needs 
+> callbacks because the BIOS usually doesn't handle things for us.
+
+The host adapter isn't in the device's chain of parents?
+
+Nigel 
+
+-- 
+Nigel Cunningham
+Christian Reformed Church of Tuggeranong
+PO Box 1004, Tuggeranong, ACT 2901
+
+Many today claim to be tolerant. But true tolerance can cope with others
+being intolerant.
 
