@@ -1,109 +1,90 @@
-From: Ihno Krumreich <ihno@suse.de>
-Subject: Re: [PATCH] /proc/scsi/map
-Date: Wed, 26 Jun 2002 18:03:50 +0200
+From: Kurt Garloff <garloff@suse.de>
+Subject: Re: max_scsi_luns and 2.4.19-pre10.
+Date: Wed, 26 Jun 2002 18:07:45 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20020626180350.A29197@wotan.suse.de>
-References: <20020620165553.GA16897@win.tue.nl> <Pine.LNX.4.44.0206201046340.8225-100000@home.transmeta.com>
+Message-ID: <afcp0u$f4k$2@main.gmane.org>
+References: <1025052385.19462.5.camel@UberGeek> <20020626123337.GC1217@gum01m.etpnet.phys.tue.nl> <1025101125.19558.4.camel@UberGeek>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="i3lJ51RuaGWuFYNw"
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.44.0206201046340.8225-100000@home.transmeta.com>
+In-Reply-To: <1025101125.19558.4.camel@UberGeek>
 List-Id: linux-scsi@vger.kernel.org
-To: Linus Torvalds <torvalds@transmeta.com>
-Cc: Andries Brouwer <aebr@win.tue.nl>, Martin Schwenke <martin@meltin.net>, Kurt Garloff <garloff@suse.de>, Linux kernel list <linux-kernel@vger.kernel.org>, Linux SCSI list <linux-scsi@vger.kernel.org>, Patrick Mochel <mochel@osdl.org>
-
-On Thu, Jun 20, 2002 at 11:11:45AM -0700, Linus Torvalds wrote:
-> 
-> 
-> On Thu, 20 Jun 2002, Andries Brouwer wrote:
-> >
-> > At present this does not look very useful, but it may have future.
-> 
-> Nobody is actually using it yet, so there hasn't been much feedback (and,
-> for the same reason, not much reason for driver writers to care -
-> everything that shows up there now ends up being pretty much built by the
-> bus that contains the devices rather than any device-specific information
-> itself).
-> 
-> > But there is a pressing present problem. What name do my devices have?
-> > I plug in a SmartMedia card reader. It will become some SCSI device.
-> 
-> That's a user-space issue, the kernel is not going to make any policy.
-> We've seen where policy takes us with devfs.
-> 
+To: Austin Gonyou <austin@digitalroadkill.net>
+Cc: Linux kernel list <linux-kernel@vger.kernel.org>, Linux SCSI list <linux-scsi@vger.kernel.org>
 
 
-Hello,
+--i3lJ51RuaGWuFYNw
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-by following the discussion I still miss a naming sceme for
-devices like disks, tapes, cdrom for the user (no kernelhackers, but the
-daily user running the system for some productive work). Does there exist
-a naming sceme for persistant names for those devices? I think of something
-like scsidev (http://www.garloff.de/kurt/linux/scsidev/#scsidev). 
+Hi Austin,
 
-I think the scsidev idea could be extended to a general sceme that
-satisfies all technologies (not only ide and scsi).
+On Wed, Jun 26, 2002 at 09:18:45AM -0500, Austin Gonyou wrote:
+> On Wed, 2002-06-26 at 07:33, Kurt Garloff wrote:
+> > enough guesses have been there not answering your questions ...
+>=20
+> Sure I hear that. But I posted an earlier question about QLA2200 and a
 
-I think of something like 
+You don't think that somebody who reads your message and tries to post a
+helpful comment scans the list for earlier messages of yours, do you?
 
-/dev/<device-type>/<technologie>_<Uniq-Number>_<Bus-number>_<Target>_<Lun>_<Device_type_specific>
+> PV 660F and not seeing > 8 luns with 2.4.19-pre10.
+  ^^^^^^^
 
-<device-type> would be disks, tapes, cd-rom and other devices (scanner?)
+This device needs BLIST_LARGELUN.
 
-<technologie> is something really readable for the user (ide, scsi, dasd (dasd are
-              disks on the IBM zSeries)
+> I'll take a look at that, and see if I can merge it into -aa4.=20
 
-<Uniq-number>	something to make a device uniq. examples for this could be:
-                - PC the I/O-port used by the controller
-		- DASD the device-port where the dasd is assigned
-<bus-Number>
-<Target>
-<Lun>		As intented by SCSI. On technologies where they make no sense
-		just leave them 0 (for example dasd don`t have that).
+The patch should be in there, just not the additional devices that need
+BLIST_LARGELUN.
 
-<device_type_specific>	depends on the device type. 
-			for disks this is the partition-number
-			for tapes rewind, norewind, compression, density
+> > The flag does allow a device to use more than 8 LUNs despite it reporti=
+ng
+> > as SCSI Version 2 devices (which can not support more than 8 LUNs norma=
+lly
+> > ...)=20
+> > The flag also needs to be set for some more devices, look for DGC, DELL=
+, CMD
+> > and CNSi/CNSI devices that already have the BLIST_SPARSELUN flag.
+>=20
+> This would be a DELL device, so I'll see about changing it from
+> SPARESLUN to LARGELUN?
 
-examples:
+No. Add " | BLIST_LARGELUN" .
 
-disks:
+> > But as you did not post the output of /proc/scsi/scsi nor the syslog
+> > meesages from your SCSI subsystem nobody knows what devices you're usin=
+g or
+> > what actually happens. Just speculations ...
+>=20
+> There's nothing to post from /proc/scsi/scsi or the syslog other than
+> there's no more than 8 devices on my FC chain. I guess the real point
+> here is that if you're using FC, you're probably going to use more than
+> 8 luns, even if not immediately. Especially for large Databases.=20
 
-/dev/disks/ide_01f0_0_0_0_0	for the whole IDE disk
-/dev/disks/ide_01f0_0_0_0_1	for partition 1
-.
-.
-/dev/disks/ide_01f0_0_0_0_31	for partition 31
+People could have seen what SCSI device you're using.
+So I could have told you instead of guessing and risking to add to the noise
+myself.
 
-/dev/disks/scsi_0330_0_1_0_0	for the controller at port 0x330, disk bus 0 target 1, lun 0
-/dev/disks/scsi_0330_0_1_0_1	for partition 1
-.
-.
-/dev/disks/scsi_0330_0_1_0_15	for partition 15
+Regards,
+--=20
+Kurt Garloff  <garloff@suse.de>                          Eindhoven, NL
+GPG key: See mail header, key servers         Linux kernel development
+SuSE Linux AG, Nuernberg, DE                            SCSI, Security
 
-/dev/disks/dasd_0150_0_0_0_0	for dasd at device-port 0x150, whole disk
-/dev/disks/dasd_0150_0_0_0_1	for partition 1
-.
-.
-/dev/disks/dasd_0150_0_0_0_3	for partition 3
+--i3lJ51RuaGWuFYNw
+Content-Type: application/pgp-signature
+Content-Disposition: inline
 
-tapes:
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.0.7 (GNU/Linux)
 
-/dev/tapes/scsi_0330_0_2_0_r	auto-rewind SCSI-Tape at controller at Port 0x330
-/dev/tapes/scsi_0330_0_2_0_n	no-rewind SCSI-Tape at controller at Port 0x330
+iD8DBQE9GebQxmLh6hyYd04RAm3FAKCC0vde624pbJGqc6nrmfHxhtzWlwCdEgbv
+H24DfGZ4+GbxeqRkM+A12z8=
+=Bt7M
+-----END PGP SIGNATURE-----
 
-
-Beside some standard devices, the devices could be created
-
-- at system start for coldplugged devices
-- by /sbin/hotplug for hotpluged devices
-
-This naming sceme could be used for kernel 2.4 by creating nodes and for
-kernel 2.5 by making symbolic links to /devices.
-
-something forgotten?
-
-
-Ihno
-
+--i3lJ51RuaGWuFYNw--
