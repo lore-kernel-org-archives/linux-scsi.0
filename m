@@ -1,39 +1,63 @@
 From: Andre Hedrick <andre@pyxtechnologies.com>
 Subject: Re: linux-2.4.18-modified-scsi-h.patch
-Date: Tue, 19 Nov 2002 10:50:41 -0800 (PST)
+Date: Tue, 19 Nov 2002 10:48:38 -0800 (PST)
 Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.10.10211191049230.1342-100000@master.linux-ide.org>
-References: <3DDA8746.3010409@pobox.com>
+Message-ID: <Pine.LNX.4.10.10211191046110.1342-100000@master.linux-ide.org>
+References: <20021119104004.A21438@eng2.beaverton.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
-In-Reply-To: <3DDA8746.3010409@pobox.com>
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Patrick Mansfield <patmans@us.ibm.com>, Douglas Gilbert <dougg@torque.net>, "J. E. J. Bottomley" <James.Bottomley@SteelEye.com>, Linus Torvalds <torvalds@transmeta.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+In-Reply-To: <20021119104004.A21438@eng2.beaverton.ibm.com>
+To: Patrick Mansfield <patmans@us.ibm.com>
+Cc: Douglas Gilbert <dougg@torque.net>, "J. E. J. Bottomley" <James.Bottomley@SteelEye.com>, Linus Torvalds <torvalds@transmeta.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, 19 Nov 2002, Jeff Garzik wrote:
+On Tue, 19 Nov 2002, Patrick Mansfield wrote:
 
-> Patrick Mansfield wrote:
+> On Tue, Nov 19, 2002 at 09:11:47PM +1100, Douglas Gilbert wrote:
+> > Andre Hedrick wrote:
+> > > Greetings Doug et al.
+> > > 
+> > > Please consider the addition of this simple void ptr to the scsi_request
+> > > struct.  The addition of this simple void pointer allows one to map any
+> > > and all request execution caller the facility to search for a specific
+> > > operation without having to run in circles.  Hunting for these details
+> > > over the global device list of all HBA's is silly and one of the key
+> > > reasons why there error recovery path is so painful.
+> > > 
+> > > 
+> > > Scsi_Request    *req = sc_cmd->sc_request;
+> > > blah_blah_t     *trace = NULL;
+> > > 
+> > > trace = (blah_blah_t *)req->trace_ptr;
+> > > 
+> > > 
+> > > Therefore the specific transport invoking operations via the midlayer will
+> > > have the ablity to track and trace any operation.
+> > 
+> > Andre,
+> > No need to convince me: I have already put a similar pointer
+> > in that structure in lk 2.5 (for either sd, st, sr or sg to use).
+> > In sg case's it saved some ugly looping in (what was formerly
+> > called) the bottom half handler. Sounds like your motivation is
+> > similar.
+> > 
+> > Doug Gilbert
 > 
-> > I don't see why we need the #define, or is that another patch?
+> So we should name it the same in 2.4 as in 2.5: upper_private_data, not
+> trace_ptr (thought it should really have been sr_upper_private_data,
+> like all the other fields in scsi_request).
 > 
-> 
-> 
-> The define exists for the same reason that HAVE_xxx exists in 
-> include/linux/netdevice.h and other headers:  a feature test macro, so 
-> code using this pointer can detect its presence or absence.  The world 
-> of drivers is not all in the kernel tarball, ya know ;-)
-> 
-> But as I said, the macro is misnamed, it should be 
-> HAVE_UPPER_PRIVATE_DATA or similar.
-> 
-> 	Jeff
+> I don't see why we need the #define, or is that another patch?
 
-Hey Jeff!
+Hi Patrick,
 
-Works for me, has each HBA has the need to reserve local structs and not
-pollute the basic kernel w/ bloat!
+The #define was as to determine or notify the driver at build time if it
+had an enhanced capablity or legacy restrictions.  Obviously once it is
+adopted regardless of form then a simple version check will work.
+
+It was for testing purposes.
+
 
 Cheers,
 
