@@ -1,103 +1,171 @@
-From: Matthew Dharm <mdharm-scsi@one-eyed-alien.net>
-Subject: Re: Help - sd vs. sg Devices, and Low-level Driver.
-Date: Tue, 20 Apr 2004 10:56:17 -0700
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040420175617.GB2726@one-eyed-alien.net>
-References: <519672568F040C41B6FAC21ADF51B18FEFB3@mailnode1.commstor.crossroads.com>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: Numerous problems, partial success getting
+ FujiFilm Finepix 3800 to work under 2.6.
+Date: Tue, 20 Apr 2004 15:41:07 -0400 (EDT)
+Sender: linux-usb-devel-admin@lists.sourceforge.net
+Message-ID: <Pine.LNX.4.44L0.0404201527310.1247-100000@ida.rowland.org>
+References: <40856AFF.7070002@nogin.org>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="VrqPEDrXMn8OVzN4"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from multivac.one-eyed-alien.net ([64.169.228.101]:15530 "EHLO
-	multivac.one-eyed-alien.net") by vger.kernel.org with ESMTP
-	id S263354AbUDTR41 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 20 Apr 2004 13:56:27 -0400
-Content-Disposition: inline
-In-Reply-To: <519672568F040C41B6FAC21ADF51B18FEFB3@mailnode1.commstor.crossroads.com>
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-usb-devel-admin@lists.sourceforge.net>
+In-Reply-To: <40856AFF.7070002@nogin.org>
+Errors-To: linux-usb-devel-admin@lists.sourceforge.net
+List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-devel>,
+	<mailto:linux-usb-devel-request@lists.sourceforge.net?subject=unsubscribe>
+List-Post: <mailto:linux-usb-devel@lists.sourceforge.net>
+List-Help: <mailto:linux-usb-devel-request@lists.sourceforge.net?subject=help>
+List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-devel>,
+	<mailto:linux-usb-devel-request@lists.sourceforge.net?subject=subscribe>
+List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=linux-usb-devel>
+To: Aleksey Nogin <aleksey@nogin.org>
+Cc: USB development list <linux-usb-devel@lists.sourceforge.net>, SCSI development list <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Lee Xing <lxing@Crossroads.com>
-Cc: linux-scsi@vger.kernel.org
+
+On Tue, 20 Apr 2004, Aleksey Nogin wrote:
+
+> I am having trouble getting my FujiFilm Finepix 3800 camera to work with
+> the 2.6.5 kernel (under Fedora Core Development - AKA Red Hat Raw Hide).
+> It worked fine under 2.4 (both in Fedora Core 1 and Red Hat Linux 9, I
+> believe).
+> 
+> After a lot of messing up and some blind experimentations with 
+> unusual_devs.h I have been successful in making camera work, but _only_ 
+> when it is connected directly to the computer, not via a hub with other 
+> devices attached.
+
+That doesn't make much sense.  Your original setup, with no unusual_devs.h 
+entry, should have worked the same regardless of whether there was an 
+external hub.
+
+> My setup (which used to work under 2.4) is a follows: I have an external 
+> hub connected to my laptop and I have a mouse, a printer and the camera 
+> is question connected to the hub.
+> 
+> I have tried the following:
+> 
+> ------------ Attempt (0) --------------
+> Using it w/o any changes to the kernel - both via hub and connecting 
+> directly. It did not work:
+> 
+> usb 1-1: new full speed USB device using address 8
+> SCSI subsystem initialized
+> Initializing USB Mass Storage driver...
+> scsi0 : SCSI emulation for USB Mass Storage devices
+> USB Mass Storage device found at 8
+> drivers/usb/core/usb.c: registered new driver usb-storage
+> USB Mass Storage support registered.
+> 
+> and the usb_storage and scsi_mod modules get loaded. However, the camera
+> does not seem to get "attached" to any specific /dev/xyz (or /udev/xyz
+> for that matter) - e.g. when I try to access /dev/sda, I get "No such
+> device or address".
 
 
---VrqPEDrXMn8OVzN4
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+> ------------- Attempt (1) ------------------
+> Next I have compiled the kernel with CONFIG_USB_STORAGE_DEBUG enabled. 
+> Now when I plugged the camera I saw the following:
+> 
+> usb 1-1.3: new full speed USB device using address 5
+> Initializing USB Mass Storage driver...
+> usb-storage: USB Mass Storage device detected
+> usb-storage: altsetting is 0, id_index is 112
+> usb-storage: -- associate_dev
+> usb-storage: Transport: Control/Bulk/Interrupt
+> usb-storage: Protocol: 8070i
+> usb-storage: Endpoints: In: 0xdfc3c2c0 Out: 0xdfc3c2d4 Int: 0xdfc3c2e8 
+> (Period 1)
+> usb-storage: *** thread sleeping.
+> scsi0 : SCSI emulation for USB Mass Storage devices
+> usb-storage: queuecommand called
+> usb-storage: *** thread awakened.
+> usb-storage: Command INQUIRY (6 bytes)
+> usb-storage:  12 00 00 00 24 00
+> usb-storage: usb_stor_ctrl_transfer: rq=00 rqtype=21 value=0000 index=00 
+> len=12
+> usb-storage: Status code 0; transferred 12/12
+> usb-storage: -- transfer complete
+> usb-storage: Call to usb_stor_ctrl_transfer() returned 0
+> usb-storage: usb_stor_bulk_transfer_buf: xfer 36 bytes
+> usb-storage: Status code 0; transferred 36/36
+> usb-storage: -- transfer complete
+> usb-storage: CBI data stage result is 0x0
+> usb-storage: usb_stor_intr_transfer: xfer 2 bytes
+> usb-storage: Status code 0; transferred 2/2
+> usb-storage: -- transfer complete
+> usb-storage: Got interrupt data (0x29, 0x0)
+> usb-storage: CBI IRQ data showed reserved bType 0x29
+> usb-storage: usb_stor_control_msg: rq=01 rqtype=02 value=0000 index=81 len=0
+> usb-storage: usb_stor_clear_halt: result = 0
+> usb-storage: -- transport indicates command failure
+> usb-storage: Issuing auto-REQUEST_SENSE
+> usb-storage: usb_stor_ctrl_transfer: rq=00 rqtype=21 value=0000 index=00 
+> len=12
+> usb-storage: Status code 0; transferred 12/12
+> usb-storage: -- transfer complete
+> usb-storage: Call to usb_stor_ctrl_transfer() returned 0
+> usb-storage: usb_stor_bulk_transfer_buf: xfer 18 bytes
+> usb-storage: Status code 0; transferred 18/18
+> usb-storage: -- transfer complete
+> usb-storage: CBI data stage result is 0x0
+> usb-storage: usb_stor_intr_transfer: xfer 2 bytes
+> usb-storage: Status code 0; transferred 2/2
+> usb-storage: -- transfer complete
+> usb-storage: Got interrupt data (0x0, 0x0)
+> usb-storage: -- Result from auto-sense is 0
+> usb-storage: -- code: 0x70, key: 0x6, ASC: 0x29, ASCQ: 0x0
+> usb-storage: Unit Attention: Power on, reset, or bus device reset occurred
+> usb-storage: scsi cmd done, result=0x2
+> usb-storage: *** thread sleeping.
 
-On Tue, Apr 20, 2004 at 11:31:32AM -0500, Lee Xing wrote:
-> I really appreciate the information and your help.  It makes sense and
-> helps a lot!
->=20
-> Follow up questions:
->=20
-> Q1:
-> Can we say:
-> - if the "Peripheral device type" (bit 0-4 of byte 0) of INQUIRY data is
-> Direct-access device (00h), then this device will be presented as a sd
-> device, and
-> - if the "Peripheral device type" of INQUIRY data is Scanner device
-> (06h), then this device will be presented as a sg device.
+That much is fairly normal.  Your camera should not have replied with Unit 
+Attention status to the INQUIRY command, but it's a fairly common mistake.  
+The SCSI core wasn't expecting it, though, and as a result believed your 
+camera was an invalid device.  That's why you couldn't use it.
 
-No, this is incorrect.
+> usb-storage: queuecommand called
+> usb-storage: *** thread awakened.
+> usb-storage: Bad target number (1:0)
+> usb-storage: scsi cmd done, result=0x40000
+> usb-storage: *** thread sleeping.
 
-First, 'sg' is not specific to SCANNER devices.  It is the 'generic'
-interface, which is compatible for ALL device types.  Thus, the sg driver
-will attach to any device.  Note that sg can be attached to a device at the
-same time as another driver (sg, sr, st, osst, etc.) is attached.
+As you can see, instead of repeating the INQUIRY command the SCSI driver 
+moved on to the next target.
 
-'sg' is used to communicate with scanners because sg provides an interface
-which user-level programs can use to communicate with devices.
+This patch may improve things.  Try it, with nothing added to
+unusual_devs.h, and see if it works even with an external hub.
 
-> Q2:
-> Sounds like the low-level driver just passes the INQUIRY data received
-> from the physical device to the mid-level driver.  The mid-level driver
-> then picks up a right upper-level driver (sd, sg, sr or st) depending on
-> the "Peripheral device type" field of INQUIRY data.  The physical device
-> is presented as the type of the upper-level driver being used.  Is it
-> right?
+Alan Stern
 
-This is _basically_ correct.
 
-> Q3:
-> Suppose the physical device is a FC disk but we (low-level driver) still
-> want to present it as a sg device (because sg can support up to 256
-> physical devices while sd can only support 128).  Can low-level driver
-> fool the SCSI sub-system by sending it a fake "Peripheral device type"
-> such as Scanner device (06h)?  Are there any potential problems by doing
-> this?  If I remember right, all types of SCSI devices are accessible via
-> the sg driver, right?
 
-First, see my above comments -- sg will attach to anything, regardless of
-PDT code.
+===== scsi_scan.c 1.57 vs edited =====
+--- 1.57/drivers/scsi/scsi_scan.c	Wed Mar 17 14:05:26 2004
++++ edited/drivers/scsi/scsi_scan.c	Tue Apr 20 15:35:52 2004
+@@ -355,10 +355,12 @@
+ 	if (sreq->sr_result) {
+ 		if ((driver_byte(sreq->sr_result) & DRIVER_SENSE) != 0 &&
+ 		    (sreq->sr_sense_buffer[2] & 0xf) == UNIT_ATTENTION &&
+-		    sreq->sr_sense_buffer[12] == 0x28 &&
++		    (sreq->sr_sense_buffer[12] == 0x28 ||
++		     sreq->sr_sense_buffer[12] == 0x29) &&
+ 		    sreq->sr_sense_buffer[13] == 0) {
+-			/* not-ready to ready transition - good */
++			/* not-ready to ready transition or power-on - good */
+ 			/* dpg: bogus? INQUIRY never returns UNIT_ATTENTION */
++			/* Supposedly, but many buggy devices do so anyway */
+ 		} else
+ 			/*
+ 			 * assume no peripheral if any other sort of error
 
-Also, while sg will attach to the device, you can't use block-operations on
-an sg device.  That is, programs like 'mount', 'dd', etc. will not function
-on a sg device.  This is likely not what you want to do.
 
-My understanding is that there are patches available to make sg support a
-large number of disks.
 
-Matt
 
---=20
-Matthew Dharm                              Home: mdharm-usb@one-eyed-alien.=
-net=20
-Maintainer, Linux USB Mass Storage Driver
-
-I could always suspend a few hundred accounts and watch what happens.
-					-- Tanya
-User Friendly, 7/31/1998
-
---VrqPEDrXMn8OVzN4
-Content-Type: application/pgp-signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.2.1 (GNU/Linux)
-
-iD8DBQFAhWRBIjReC7bSPZARAgCQAKCRAxJqG8FWwsETXc0pkp3CDiH8IQCfdh4D
-+BGUJOM6c92CNp2aSyyPMLk=
-=sdQg
------END PGP SIGNATURE-----
-
---VrqPEDrXMn8OVzN4--
+-------------------------------------------------------
+This SF.Net email is sponsored by: IBM Linux Tutorials
+Free Linux tutorial presented by Daniel Robbins, President and CEO of
+GenToo technologies. Learn everything from fundamentals to system
+administration.http://ads.osdn.com/?ad_id=1470&alloc_id=3638&op=click
+_______________________________________________
+linux-usb-devel@lists.sourceforge.net
+To unsubscribe, use the last form field at:
+https://lists.sourceforge.net/lists/listinfo/linux-usb-devel
