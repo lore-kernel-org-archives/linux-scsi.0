@@ -1,54 +1,133 @@
-From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
-Subject: RE: EBDA Question
-Date: Mon, 7 Feb 2005 15:54:25 -0500
-Message-ID: <60807403EABEB443939A5A7AA8A7458BBD69C8@otce2k01.adaptec.com>
+From: "Ju, Seokmann" <sju@lsil.com>
+Subject: RE: [PATCH] Convert megaraid2 to compat_ioctl
+Date: Mon, 7 Feb 2005 16:01:11 -0500
+Message-ID: <0E3FA95632D6D047BA649F95DAB60E570366267F@exa-atlanta>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Received: from magic.adaptec.com ([216.52.22.17]:36052 "EHLO magic.adaptec.com")
-	by vger.kernel.org with ESMTP id S261179AbVBGUy2 convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 7 Feb 2005 15:54:28 -0500
-content-class: urn:content-classes:message
+Content-Type: text/plain
+Received: from mail0.lsil.com ([147.145.40.20]:17886 "EHLO mail0.lsil.com")
+	by vger.kernel.org with ESMTP id S261281AbVBGVBj (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Feb 2005 16:01:39 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Moore, Eric Dean" <Eric.Moore@lsil.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: 'Andi Kleen' <ak@muc.de>, James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, "Ju, Seokmann" <sju@lsil.com>
 
-EBDA is safe to use during lilo and grub as part of a BIOS. As long as
-the EBDA is properly formed.
+On Tuesday, January 18, 2005 6:17 AM, Andi wrote:
+> Convert megaraid2 driver to new compat_ioctl entry points.
+> 
+> I don't have easy access to hardware, so only compile tested.
 
-However, it is considered 'bad behavior' to allocate much more than 4k
-of EBDA as we find others (not Linux) that depend on the 640K region of
-memory run out of this precious resource. Beware of several add-in
-BIOSii that each allocate EBDA; nest/size/relocate/offset properly.
+Hi,
 
-Sincerely -- Mark Salyzyn
+I've applied your patch to the driver and getting compilation error as
+follow.
 
------Original Message-----
-From: linux-scsi-owner@vger.kernel.org
-[mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of Moore, Eric Dean
-Sent: Monday, February 07, 2005 2:45 PM
-To: linux-kernel@vger.kernel.org; linux-scsi@vger.kernel.org
-Subject: EBDA Question
+/var/lib/dkms/megaraid/v2.20.4.6/build/megaraid_mm.c:74: error: unknown
+field `compat_ioctl' specified in initializer
+/var/lib/dkms/megaraid/v2.20.4.6/build/megaraid_mm.c:74: warning:
+initialization from incompatible pointer type
 
-EBDA - Extended Bios Data Area
+The kernel that I'm using is 2.6.9 and there is NO entry 'compat_ioctl' on
+file_operations structure which is defined in <linux/fs.h>.
 
-Does Linux and various boot loaders(lilo/grub/etc)
-having any restrictions on where and how big 
-memory allocated in EBDA is? Is this
-handled for 2.4/2.6 Kernels?
+Please correct me know if there is anything that I've missed.
 
-Reason I ask is we are considering having
-BIOS(for a SCSI HBA Controller) allocating
-memory in EBDA for Firmware use. 
-We are concerned whether Linux would be writing
-over this region of memory during the handoff
-of BIOS to scsi lower layer driver loading.
+Thanks,
 
-Eric Moore
-LSI Logic
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Seokmann
+LSI Logic Corporation.
+
+
+
+> -----Original Message-----
+> From: Andi Kleen [mailto:ak@muc.de]
+> Sent: Tuesday, January 18, 2005 6:17 AM
+> To: James.Bottomley@HansenPartnership.com; linux-scsi@vger.kernel.org
+> Subject: [PATCH] Convert megaraid2 to compat_ioctl
+> 
+> Convert megaraid2 driver to new compat_ioctl entry points.
+> 
+> I don't have easy access to hardware, so only compile tested.
+> 
+> Signed-off-by: Andi Kleen <ak@muc.de>
+> 
+> diff -u linux-2.6.11-rc1-bk4/drivers/scsi/megaraid/megaraid_mm.c-o linux-
+> 2.6.11-rc1-bk4/drivers/scsi/megaraid/megaraid_mm.c
+> --- linux-2.6.11-rc1-bk4/drivers/scsi/megaraid/megaraid_mm.c-o
+2005-01-
+> 04 12:13:06.000000000 +0100
+> +++ linux-2.6.11-rc1-bk4/drivers/scsi/megaraid/megaraid_mm.c	2005-01-
+> 18 06:28:34.000000000 +0100
+> @@ -16,6 +16,7 @@
+>   */
+> 
+>  #include "megaraid_mm.h"
+> +#include <linux/smp_lock.h>
+> 
+> 
+>  // Entry points for char node driver
+> @@ -43,8 +44,7 @@
+>  static void mraid_mm_teardown_dma_pools(mraid_mmadp_t *);
+> 
+>  #ifdef CONFIG_COMPAT
+> -static int mraid_mm_compat_ioctl(unsigned int, unsigned int, unsigned
+> long,
+> -		struct file *);
+> +static long mraid_mm_compat_ioctl(struct file *, unsigned int, unsigned
+> long);
+>  #endif
+> 
+>  MODULE_AUTHOR("LSI Logic Corporation");
+> @@ -70,6 +70,9 @@
+>  static struct file_operations lsi_fops = {
+>  	.open	= mraid_mm_open,
+>  	.ioctl	= mraid_mm_ioctl,
+> +#ifdef CONFIG_COMPAT
+> +	.compat_ioctl = mraid_mm_compat_ioctl,
+> +#endif
+>  	.owner	= THIS_MODULE,
+>  };
+> 
+> @@ -1180,8 +1183,6 @@
+> 
+>  	INIT_LIST_HEAD(&adapters_list_g);
+> 
+> -	register_ioctl32_conversion(MEGAIOCCMD, mraid_mm_compat_ioctl);
+> -
+>  	return 0;
+>  }
+> 
+> @@ -1190,13 +1191,15 @@
+>   * mraid_mm_compat_ioctl	: 32bit to 64bit ioctl conversion routine
+>   */
+>  #ifdef CONFIG_COMPAT
+> -static int
+> -mraid_mm_compat_ioctl(unsigned int fd, unsigned int cmd,
+> -			unsigned long arg, struct file *filep)
+> -{
+> -	struct inode *inode = filep->f_dentry->d_inode;
+> -
+> -	return mraid_mm_ioctl(inode, filep, cmd, arg);
+> +static long
+> +mraid_mm_compat_ioctl(struct file *filep, unsigned int cmd,
+> +		      unsigned long arg)
+> +{
+> +	int err;
+> +	lock_kernel();
+> +	err = mraid_mm_ioctl(NULL, filep, cmd, arg);
+> +	unlock_kernel();
+> +	return err;
+>  }
+>  #endif
+> 
+> @@ -1209,7 +1212,6 @@
+>  	con_log(CL_DLEVEL1 , ("exiting common mod\n"));
+> 
+>  	unregister_chrdev(majorno, "megadev");
+> -	unregister_ioctl32_conversion(MEGAIOCCMD);
+>  }
+> 
+>  module_init(mraid_mm_init);
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
