@@ -1,32 +1,44 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: linux-scsi list filtering
-Date: Mon, 10 Jan 2005 09:00:42 +1000
-Message-ID: <41E1B79A.3080706@torque.net>
-Reply-To: dougg@torque.net
+From: Heiko Carstens <Heiko.Carstens@de.ibm.com>
+Subject: Re: [PATCH] zfcp: kfree patch
+Date: Mon, 10 Jan 2005 07:41:53 +0100
+Message-ID: <OFF5A7977B.6DEBE53D-ONC1256F85.00246A36-C1256F85.0024C19A@de.ibm.com>
+References: <1105184681.4196.14.camel@laptopd505.fenrus.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="US-ASCII"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from borg.st.net.au ([65.23.158.22]:62177 "EHLO borg.st.net.au")
-	by vger.kernel.org with ESMTP id S261797AbVAIXAp (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 9 Jan 2005 18:00:45 -0500
+Received: from mtagate2.de.ibm.com ([195.212.29.151]:1449 "EHLO
+	mtagate2.de.ibm.com") by vger.kernel.org with ESMTP id S262122AbVAJGld
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 10 Jan 2005 01:41:33 -0500
+Received: from d12nrmr1607.megacenter.de.ibm.com (d12nrmr1607.megacenter.de.ibm.com [9.149.167.49])
+	by mtagate2.de.ibm.com (8.12.10/8.12.10) with ESMTP id j0A6fWbP205234
+	for <linux-scsi@vger.kernel.org>; Mon, 10 Jan 2005 06:41:32 GMT
+Received: from d12av02.megacenter.de.ibm.com (d12av02.megacenter.de.ibm.com [9.149.165.228])
+	by d12nrmr1607.megacenter.de.ibm.com (8.12.10/NCO/VER6.6) with ESMTP id j0A6gPFq147796
+	for <linux-scsi@vger.kernel.org>; Mon, 10 Jan 2005 07:42:25 +0100
+Received: from d12av02.megacenter.de.ibm.com (loopback [127.0.0.1])
+	by d12av02.megacenter.de.ibm.com (8.12.11/8.12.11) with ESMTP id j0A6fVAq015413
+	for <linux-scsi@vger.kernel.org>; Mon, 10 Jan 2005 07:41:31 +0100
+In-Reply-To: <1105184681.4196.14.camel@laptopd505.fenrus.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: James.Bottomley@SteelEye.com
+To: Arjan van de Ven <arjan@infradead.org>
+Cc: Greg Kroah-Hartman <greg@kroah.com>, James Bottomley <James.Bottomley@SteelEye.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-Twice yesterday I tried to reply to the "spin down idle
-SATA disks" thread. The first was sent to the original
-poster and cc-ed to this list. When my reply didn't appear
-after 12 hours, I resent my reply directly to this list.
-Neither appeared on the linux-scsi list (at least not via
-my subscription or the marc.theaimsgroup.com archive).
+> > this is my next attempt to try to get the patch below merged. Last
+> > time Greg KH objected and it didn't get merged.
+> > 
+> > This patch addresses the following problem: the zfcp device driver
+> > creates own sysfs objects and therefore has its own release function
+> > within the zfcp device driver itself. 
+> 
+> would this be solved by using the fc transport class instead, so that
+> the scsi layer takes care of all this ?
 
-Obviously the original poster received my mail as he has
-recently responded to the list. That tends to suggest
-that incoming mail is being filtered by the linux-scsi
-list.
+What would keep the two release functions defined in
+scsi_transport_fc.c from being called _after_ the fc transport class
+module was unloaded? As usual I might be wrong but this looks like
+the same problem to me.
 
-Is anyone else experiencing this type of behaviour?
+Heiko
 
-Doug Gilbert
