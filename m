@@ -1,46 +1,32 @@
 From: Arjan van de Ven <arjanv@redhat.com>
 Subject: Re: please revert [PATCH] s390: zfcp act enhancements
-Date: Wed, 17 Nov 2004 16:48:02 +0100
-Message-ID: <1100706482.2638.31.camel@laptop.fenrus.org>
-References: <OF185BBE71.A415A9D9-ONC1256F4F.0053BEA6-C1256F4F.00562DD6@de.ibm.com>
-Reply-To: arjanv@redhat.com
+Date: Wed, 17 Nov 2004 17:03:04 +0100
+Message-ID: <20041117160304.GD14119@devserv.devel.redhat.com>
+References: <OFD875A546.5C9126AF-ONC1256F4F.005746F3-C1256F4F.00589AD6@de.ibm.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-7QzT34UoT/ZZpJ4pldnJ"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:33760 "EHLO mx1.redhat.com")
-	by vger.kernel.org with ESMTP id S262350AbUKQPst (ORCPT
+Received: from mx1.redhat.com ([66.187.233.31]:41449 "EHLO mx1.redhat.com")
+	by vger.kernel.org with ESMTP id S262353AbUKQQD1 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 17 Nov 2004 10:48:49 -0500
-In-Reply-To: <OF185BBE71.A415A9D9-ONC1256F4F.0053BEA6-C1256F4F.00562DD6@de.ibm.com>
+	Wed, 17 Nov 2004 11:03:27 -0500
+Content-Disposition: inline
+In-Reply-To: <OFD875A546.5C9126AF-ONC1256F4F.005746F3-C1256F4F.00589AD6@de.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Martin Peschke3 <MPESCHKE@de.ibm.com>
-Cc: Christoph Hellwig <hch@lst.de>, Andrew Morton <akpm@osdl.org>, BOEBLINGEN LINUX390 <linux390@de.ibm.com>, linux-scsi@vger.kernel.org, linux-scsi-owner@vger.kernel.org, Martin Schwidefsky <schwidefsky@de.ibm.com>
+Cc: Andrew Morton <akpm@osdl.org>, BOEBLINGEN LINUX390 <linux390@de.ibm.com>, Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org, linux-scsi-owner@vger.kernel.org, Martin Schwidefsky <schwidefsky@de.ibm.com>
 
+On Wed, Nov 17, 2004 at 05:01:12PM +0100, Martin Peschke3 wrote:
+> 
+> 
+> 
+> 
+> > the answer is "put a sensible interface in the FC transport class".
+> 
+> Obviously a good place. Now the question boils down to "sensible".
+> Which particular functions of the HBA API do you object to?
 
---=-7QzT34UoT/ZZpJ4pldnJ
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+wrong question.
 
-On Wed, 2004-11-17 at 16:34 +0100, Martin Peschke3 wrote:
-
-> What is your answer to those who wish to manage FC HBAs in a
-> common way?
-
-the answer is "put a sensible interface in the FC transport class".
-
-
---=-7QzT34UoT/ZZpJ4pldnJ
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.2.4 (GNU/Linux)
-
-iD8DBQBBm3Kypv2rCoFn+CIRAhgfAJ47/RK6DUMG7ZbVSNtgcMKOeNu12QCffXXX
-C3eCXVIy06ds6KHcD6Sb9Dk=
-=gLY8
------END PGP SIGNATURE-----
-
---=-7QzT34UoT/ZZpJ4pldnJ--
-
+the real question is "What interfaces are missing to do proper management"
