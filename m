@@ -1,79 +1,41 @@
-From: Matthew Dharm <mdharm-scsi@one-eyed-alien.net>
-Subject: st.ko with usb-storage problems
-Date: Sun, 14 Sep 2003 17:41:04 -0700
+From: Anton Blanchard <anton@samba.org>
+Subject: Re: [PATCH] serialize bus scanning
+Date: Mon, 15 Sep 2003 17:13:05 +1000
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030914174104.A20722@one-eyed-alien.net>
+Message-ID: <20030915071305.GA820@krispykreme>
+References: <20030825122416.GE15506@lst.de> <20030827202908.GB7852@krispykreme> <20030827203544.GA27020@lst.de> <20030910075741.GC1532@krispykreme> <20030911133419.A10316@beaverton.ibm.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-md5;
-	protocol="application/pgp-signature"; boundary="jRHKVT23PllUwdXP"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ziggy.one-eyed-alien.net ([64.169.228.100]:1284 "EHLO
-	ziggy.one-eyed-alien.net") by vger.kernel.org with ESMTP
-	id S262143AbTIOAmI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 14 Sep 2003 20:42:08 -0400
-Content-Disposition: inline
-List-Id: linux-scsi@vger.kernel.org
-To: USB Developers <linux-usb-devel@lists.sourceforge.net>, Linux SCSI list <linux-scsi@vger.kernel.org>, USB Storage List <usb-storage@one-eyed-alien.net>
-
-
---jRHKVT23PllUwdXP
 Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from dp.samba.org ([66.70.73.150]:57064 "EHLO lists.samba.org")
+	by vger.kernel.org with ESMTP id S262461AbTIOHRI (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 15 Sep 2003 03:17:08 -0400
 Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+In-Reply-To: <20030911133419.A10316@beaverton.ibm.com>
+List-Id: linux-scsi@vger.kernel.org
+To: Patrick Mansfield <patmans@us.ibm.com>
+Cc: Christoph Hellwig <hch@lst.de>, James Bottomley <James.Bottomley@SteelEye.com>, linux-scsi@vger.kernel.org
 
-(NOTE: Cross-posted to several lists.  Watch your replies.)
 
-For a while now in 2.5 and 2.6, I've been getting reports of an
-incompatibility between st.ko and the usb-storage driver.  I've finally
-managed to figure out the problem; it only affects certain hardware, and
-only on certain operations.
+Hi Pat,
 
-USB is a packet-oriented protocol.  Important to the protocol is the
-concept of a packet being full or not -- in a given transfer, all packets
-should be full except the last one.  Since usb-storage maps the SCSI
-command's scatter-gather list for direct I/O, each scatter-gather segment
-(except for the last one) must be a multiple of the packet size.  That
-value can vary, but is always a power of 2 (I've personally seen up to
-512 bytes).
+> The patch looks fine to me, I hope James will apply it.
 
-When st.ko goes to do a read, it will create a scatter-gather list with
-(what looks like) a mapping of the user-space buffer.  This often results
-in not-so-nicely sized segments, which are often a multiple of 8, but not
-64, 128, or 512 (which are the common USB packet sizes).  This causes a
-problem for the USB host-controller hardware, and the transfer fails.
+Good to see someone else does parallel scan :)
 
-Why this doesn't happen on a write is something of a mystery to me, but it
-doesn't seem to happen.
+> I think we might still have to allow only a scan or delete (per host), and
+> not both in parallel - it looks like we could have some races otherwise,
+> I'm not sure though (mainly where the driver model points to the parent
+> device). Maybe a get of the host device during scanning is enough.
 
-If the module flag 'try_direct_io' is set to 0 (not the default), then
-st.ko doesn't generate scatter-gather lists at all, and all is well.
+Speaking of races... Ive been tripping one when parallel probing.
+I hit a poisoned list pointer in scsi_run_host_queues, which is being
+called out of the error handler thread. (Ive got a few scsi buses in this
+machine full of bad disks)
 
-It's not immediately clear to me how to fix this.  First, I need to figure
-out why 2.4 kernels don't show this problem, I think.  Help from people who
-understand st.ko would be appreciated.
+I havent had a chance to look into it but Im guessing we are racing with
+someone calling scsi_free_sdev. Im not sure how we should be protecting
+->siblings but it looks like we have to do something.
 
-Matt
-
---=20
-Matthew Dharm                              Home: mdharm-usb@one-eyed-alien.=
-net=20
-Maintainer, Linux USB Mass Storage Driver
-
-THEY CASTRATED MY QUAKE BITS! I WANT THEM BACK!!!!
-					-- Greg
-User Friendly, 3/27/1998
-
---jRHKVT23PllUwdXP
-Content-Type: application/pgp-signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.0.6 (GNU/Linux)
-Comment: For info see http://www.gnupg.org
-
-iD8DBQE/ZQqgIjReC7bSPZARApEGAJ93XpxcN59i3VZMOSdR94qw0T/F/gCgx59W
-YofEz/Pbg94+POE7za8YlEQ=
-=WlgG
------END PGP SIGNATURE-----
-
---jRHKVT23PllUwdXP--
+Anton
