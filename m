@@ -1,29 +1,33 @@
 From: Doug Ledford <dledford@redhat.com>
-Subject: Re: 2.5.43 scsi _eh_ buslogic
-Date: Mon, 21 Oct 2002 12:23:21 -0400
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20021021162321.GC28914@redhat.com>
-References: <Pine.LNX.4.30.0210181201060.29276-100000@tosko.alm.com> <20021018224311.GB1066@beaverton.ibm.com>
+Subject: Re: Addressing when lun spans disks
+Date: Mon, 21 Oct 2002 12:31:38 -0400
+Sender: linux-raid-owner@vger.kernel.org
+Message-ID: <20021021163138.GD28914@redhat.com>
+References: <3DB42408.60E2C71D@patni.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
+Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20021018224311.GB1066@beaverton.ibm.com>
+In-Reply-To: <3DB42408.60E2C71D@patni.com>
+To: MShetty <mranalini.shetty@patni.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: andy barlak <andyb@island.net>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Fri, Oct 18, 2002 at 03:43:12PM -0700, Mike Anderson wrote:
-> Andy,
-> 	From looking at the driver it looks like the locking had been
-> update to 2.5, but that the driver error handling has not been updated.
-> scsi_obsolete.c has not existed in the 2.5 view for a while.
+On Mon, Oct 21, 2002 at 09:28:00PM +0530, MShetty wrote:
+> Hi,
+> 
+> What exactly is the value of 'target id' when my lun spans multiple
+> disks ?? I am not able to understand how the physical disk address would
+> be obtained when a lun spans multiple disks
 
-Actually, I sent a patch to Linus for this driver that I think made it 
-into 2.5.44.  Andy, could you let me know if 2.5.44 works?  If not, then 
-I'll see what I can find.  Side note: Mike's right about the error 
-handling being horked, but that shouldn't really make any difference in 
-bootup since it shouldn't be needing error recovery.
-
+If you are using an external drive chassis that turns multiple disks into 
+a single lun, then the target id is whatever the target id for the lun is.  
+The drives that are actually behind the logical lun are *never* exposed to 
+the scsi layer.  If you are talking about using the md raid code to map 
+several disks into a single md device, then it's the job of the md code to 
+remap all incoming requests to point to the proper hard disk, and in the 
+process of doing so it rewrites the target id, the lun, and the block 
+address to the correct values for the underlying physical disk.
 
 -- 
   Doug Ledford <dledford@redhat.com>     919-754-3700 x44233
