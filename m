@@ -1,37 +1,32 @@
 From: Matthew Wilcox <willy@debian.org>
-Subject: Re: Fix for memory leak problem in megaraid2.c /proc entries (fwd)
-Date: Thu, 8 Apr 2004 16:38:35 +0100
+Subject: Re: sym2 probs in bk-scsi tree
+Date: Thu, 8 Apr 2004 16:40:45 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040408153835.GC18329@parcelfarce.linux.theplanet.co.uk>
-References: <Pine.LNX.4.58.0404081126480.9356@les5.10east.com>
+Message-ID: <20040408154045.GD18329@parcelfarce.linux.theplanet.co.uk>
+References: <20040407231820.66dd76cd.akpm@osdl.org> <20040408145700.GB18329@parcelfarce.linux.theplanet.co.uk> <40756CB3.5010902@us.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:16595 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S261952AbUDHPig
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:28371 "EHLO
+	www.linux.org.uk") by vger.kernel.org with ESMTP id S261899AbUDHPkq
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 8 Apr 2004 11:38:36 -0400
+	Thu, 8 Apr 2004 11:40:46 -0400
 Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.58.0404081126480.9356@les5.10east.com>
+In-Reply-To: <40756CB3.5010902@us.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Lester Hightower <hightowe@10east.com>
-Cc: linux-scsi@vger.kernel.org
+To: Brian King <brking@us.ibm.com>
+Cc: Matthew Wilcox <willy@debian.org>, Andrew Morton <akpm@osdl.org>, linux-scsi@vger.kernel.org
 
-On Thu, Apr 08, 2004 at 11:29:20AM -0400, Lester Hightower wrote:
-> This diff fixes a memory leak in megaraid2.c, v2.10.1 (Dec 03, 2003):
+On Thu, Apr 08, 2004 at 10:16:03AM -0500, Brian King wrote:
+> >They certainly are scary.  What is device 15 on this scsi bus?  This
+> >looks like domain validation being applied to a device that can't do it
+> >to me.  Did I get that right, James?
 > 
-> [root@10east scsi]# diff megaraid2.c.MEMORY_LEAK.20040408.lhh megaraid2.c
-> 3395c3395,3399
-> <       if( channel >= max_channels ) return 0;
-> ---
-> >       if( channel >= max_channels ) {
-> >               pci_free_consistent(pdev, 256, scsi_inq, scsi_inq_dma_handle);
-> >               mega_free_inquiry(inquiry, dma_handle, pdev);
-> >               return 0;
-> >         }
+> Looks like a SES to me. Would it make sense to not log errors during 
+> domain validation?
 
-FYI, in future please use diff -u to generate diffs; they are much more
-robust and easier to read than the diff default.
+I was thinking more about disabling domain validation towards these
+kinds of devices ...
 
 -- 
 "Next the statesmen will invent cheap lies, putting the blame upon 
