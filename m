@@ -1,49 +1,74 @@
-From: Adrian Bunk <bunk@fs.tum.de>
-Subject: [2.6 patch] fix megaraid.c with PROC_FS=n
-Date: Mon, 9 Aug 2004 17:43:09 +0200
+From: Noah Misch <noah@cs.caltech.edu>
+Subject: [PATCH] Make scsi.h nominally userspace-clean
+Date: Mon, 9 Aug 2004 10:24:07 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040809154308.GT26174@fs.tum.de>
+Message-ID: <20040809172406.GA1042@orchestra.cs.caltech.edu>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hermes.fachschaften.tu-muenchen.de ([129.187.202.12]:38132 "HELO
-	hermes.fachschaften.tu-muenchen.de") by vger.kernel.org with SMTP
-	id S266303AbUHIPnW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 9 Aug 2004 11:43:22 -0400
+Received: from swordfish.cs.caltech.edu ([131.215.44.124]:9184 "EHLO
+	swordfish.cs.caltech.edu") by vger.kernel.org with ESMTP
+	id S266774AbUHIRYL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 9 Aug 2004 13:24:11 -0400
 Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@SteelEye.com
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, axboe@suse.de, schilling@fokus.fhg.de
 
-I got the following compile error with CONFIG_PROC_FS=n:
+As Joerg Schilling, the author of cdrecord, has noted in threads such as
 
-<--  snip  -->
+http://www.ussg.iu.edu/hypermail/linux/kernel/0309.3/1355.html and
+http://www.ussg.iu.edu/hypermail/linux/kernel/0408.0/0799.html,
 
-...
-  LD      .tmp_vmlinux1
-drivers/built-in.o(.text+0x524563): In function `megaraid_probe_one':
-: undefined reference to `mega_create_proc_entry'
-make: *** [.tmp_vmlinux1] Error 1
+scsi/scsi.h does not compile cleanly in userspace programs due to its use of
+``u8''.  I have confirmed this bug and prepared and tested a fix that simply
+changes all such uses to ``__u8''.  Please consider for inclusion.
 
-<--  snip  -->
+I do not argue that including this header file in a program is appropriate, but
+other kernel headers already take as many precautions as this patch introduces.
+I chose __u8 over uint8_t as more in the style of the kernel generally.
 
+Please keep me on cc:; I do not subscribe to the lists.
 
-The following patch fixes this issue:
-
-
-Signed-off-by: Adrian Bunk <bunk@fs.tum.de>
-
---- linux-2.6.8-rc3-mm2-full/drivers/scsi/megaraid.c.old	2004-08-09 17:35:54.000000000 +0200
-+++ linux-2.6.8-rc3-mm2-full/drivers/scsi/megaraid.c	2004-08-09 17:39:58.000000000 +0200
-@@ -4905,7 +4905,9 @@
+Signed-off-by: Noah Misch <noah@cs.caltech.edu>
+--- pristine-linux-2.6.8-rc3/include/scsi/scsi.h	2004-06-16 01:20:25.000000000 -0400
++++ zlibstack-linux-2.6.8-rc3/include/scsi/scsi.h	2004-08-09 13:03:27.386545874 -0400
+@@ -214,25 +214,25 @@
+  */
  
- 	pci_set_drvdata(pdev, host);
+ struct ccs_modesel_head {
+-	u8 _r1;			/* reserved */
+-	u8 medium;		/* device-specific medium type */
+-	u8 _r2;			/* reserved */
+-	u8 block_desc_length;	/* block descriptor length */
+-	u8 density;		/* device-specific density code */
+-	u8 number_blocks_hi;	/* number of blocks in this block desc */
+-	u8 number_blocks_med;
+-	u8 number_blocks_lo;
+-	u8 _r3;
+-	u8 block_length_hi;	/* block length for blocks in this desc */
+-	u8 block_length_med;
+-	u8 block_length_lo;
++	__u8 _r1;		/* reserved */
++	__u8 medium;		/* device-specific medium type */
++	__u8 _r2;		/* reserved */
++	__u8 block_desc_length;	/* block descriptor length */
++	__u8 density;		/* device-specific density code */
++	__u8 number_blocks_hi;	/* number of blocks in this block desc */
++	__u8 number_blocks_med;
++	__u8 number_blocks_lo;
++	__u8 _r3;
++	__u8 block_length_hi;	/* block length for blocks in this desc */
++	__u8 block_length_med;
++	__u8 block_length_lo;
+ };
  
-+#ifdef CONFIG_PROC_FS
- 	mega_create_proc_entry(hba_count, mega_proc_dir_entry);
-+#endif
+ /*
+  * ScsiLun: 8 byte LUN.
+  */
+ struct scsi_lun {
+-	u8 scsi_lun[8];
++	__u8 scsi_lun[8];
+ };
  
- 	error = scsi_add_host(host, &pdev->dev);
- 	if (error)
-
-
+ /*
