@@ -1,45 +1,37 @@
-From: Lars Marowsky-Bree <lmb@suse.de>
-Subject: Re: [dm-devel] Re: [ANNOUNCE] multipath-tools-0.3.4
-Date: Mon, 25 Oct 2004 23:03:04 +0200
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH] fusion: streamline ->slave_alloc/->slave_destroy
+Date: Tue, 26 Oct 2004 14:55:28 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20041025210304.GH3714@marowsky-bree.de>
-References: <1096071849.4466.31.camel@zezette> <1097054573.4163b96d1262c@imp5-q.free.fr> <1097495416.416a73787e0ae@imp1-q.free.fr> <1098021787.5433.8.camel@zezette> <1098269169.417641f18a234@imp1-q.free.fr> <1098656088.9350.88.camel@zezette> <1098692559.2798.7.camel@laptop.fenrus.org> <1098697123.417cc9a3b5bc5@imp1-q.free.fr>
+Message-ID: <20041026125528.GA25050@lst.de>
+References: <0E3FA95632D6D047BA649F95DAB60E5705262988@exa-atlanta>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gate.in-addr.de ([212.8.193.158]:4062 "EHLO mx.in-addr.de")
-	by vger.kernel.org with ESMTP id S262207AbUJZLCN (ORCPT
+Received: from verein.lst.de ([213.95.11.210]:3042 "EHLO mail.lst.de")
+	by vger.kernel.org with ESMTP id S262249AbUJZMzf (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 26 Oct 2004 07:02:13 -0400
+	Tue, 26 Oct 2004 08:55:35 -0400
 Content-Disposition: inline
-In-Reply-To: <1098697123.417cc9a3b5bc5@imp1-q.free.fr>
+In-Reply-To: <0E3FA95632D6D047BA649F95DAB60E5705262988@exa-atlanta>
 List-Id: linux-scsi@vger.kernel.org
-To: device-mapper development <dm-devel@redhat.com>, Arjan van de Ven <arjan@infradead.org>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "linux-hotplug-devel@lists.sourceforge.net" <linux-hotplug-devel@lists.sourceforge.net>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: "Moore, Eric Dean" <Emoore@lsil.com>
+Cc: Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org
 
-On 2004-10-25T11:38:43, christophe.varoqui@free.fr wrote:
+> The problem is mptscsih_slave_destroy is being called twice. The first
+> time we free hd->Targets, the second time we hit the oops.  I'm still
+> investigating. Here is back trace using source level debugger.   Also
+> beyond the back trace is snip of source, having the embedded printks.
 
-> In fact all the sg stuff I use is done with the SG_IO ioctl (see
-> libcheckers/*.c) But somehow, it doesn't work as expected. I don't
-> remember how exactly it failed in my tests but it did ... I remembere=
-d
-> receiving bad path status and experiencing blocked checkers.
+That was not just with my patch but with your new monster update, right?
 
-Can you please clarify the error you saw? I didn't experience that yet
-with the SG_IO ioctl().
+It contains this totally bogus line:
 
++                       
++                       /* remove the device from our internal data structures */
++                       if(hd->Targets[pScsiReq->TargetID] != NULL) {
++                               mptscsih_slave_destroy(sc->device);
++                       }
++                   
 
-Sincerely,
-    Lars Marowsky-Br=E9e <lmb@suse.de>
+in mptscsih_io_done
 
---=20
-High Availability & Clustering
-SUSE Labs, Research and Development
-SUSE LINUX AG - A Novell company
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
