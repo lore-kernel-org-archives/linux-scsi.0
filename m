@@ -1,97 +1,69 @@
-From: Brian King <brking@us.ibm.com>
-Subject: Re: drivers/block/scsi_ioctl problem
-Date: Thu, 16 Dec 2004 10:31:45 -0600
-Message-ID: <41C1B871.2010504@us.ibm.com>
-References: <41BF7C18.9090303@us.ibm.com> <20041215071852.GM3157@suse.de> <41C08CD5.10309@us.ibm.com> <41C0BE3E.3060003@us.ibm.com> <20041216063218.GA22982@suse.de>
-Reply-To: brking@us.ibm.com
+From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
+Subject: RE: How to add/drop SCSI drives from within the driver?
+Date: Thu, 16 Dec 2004 11:51:28 -0500
+Message-ID: <60807403EABEB443939A5A7AA8A7458B87DC14@otce2k01.adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e32.co.us.ibm.com ([32.97.110.130]:18612 "EHLO
-	e32.co.us.ibm.com") by vger.kernel.org with ESMTP id S261397AbULPQbu
+Received: from magic.adaptec.com ([216.52.22.17]:50855 "EHLO magic.adaptec.com")
+	by vger.kernel.org with ESMTP id S261514AbULPQve convert rfc822-to-8bit
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 16 Dec 2004 11:31:50 -0500
-Received: from westrelay02.boulder.ibm.com (westrelay02.boulder.ibm.com [9.17.195.11])
-	by e32.co.us.ibm.com (8.12.10/8.12.9) with ESMTP id iBGGVkFJ541998
-	for <linux-scsi@vger.kernel.org>; Thu, 16 Dec 2004 11:31:46 -0500
-Received: from d03av04.boulder.ibm.com (d03av04.boulder.ibm.com [9.17.195.170])
-	by westrelay02.boulder.ibm.com (8.12.10/NCO/VER6.6) with ESMTP id iBGGVkBw420766
-	for <linux-scsi@vger.kernel.org>; Thu, 16 Dec 2004 09:31:46 -0700
-Received: from d03av04.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av04.boulder.ibm.com (8.12.11/8.12.11) with ESMTP id iBGGVjGi005675
-	for <linux-scsi@vger.kernel.org>; Thu, 16 Dec 2004 09:31:46 -0700
-In-Reply-To: <20041216063218.GA22982@suse.de>
+	Thu, 16 Dec 2004 11:51:34 -0500
+content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jens Axboe <axboe@suse.de>
-Cc: linux-scsi@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>, Arjan van de Ven <arjan@infradead.org>
+Cc: Matt Domsch <Matt_Domsch@dell.com>, James Bottomley <James.Bottomley@SteelEye.com>, "Bagalkote, Sreenivas" <sreenib@lsil.com>, brking@us.ibm.com, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, bunk@fs.tum.de, Andrew Morton <akpm@osdl.org>, "Ju, Seokmann" <sju@lsil.com>, "Doelfel, Hardy" <hdoelfel@lsil.com>, "Mukker, Atul" <Atulm@lsil.com>
 
-Jens Axboe wrote:
-> On Wed, Dec 15 2004, Brian King wrote:
-> 
->>Brian King wrote:
->>
->>>>It was added to be able to find out which opcode was rejected and thus
->>>>caused an application malfunction. It dumps the specific opcode only
->>>>once, is that such a huge problem?
->>>
->>>
->>>Ok. I didn't realize that it was only dumped once. That's not as bad. I 
->>>guess it might be better if it were only dumped if the op actually failed.
->>
->>How about something like this...
-> 
-> 
->>Currently if an SG_IO ioctl is issued to a block device with an
->>unknown opcode, an error is logged. This error is logged regardless
->>the device successfully processes the command or not. This results in
->>an error getting logged for each unknown opcode ever issued. This patch
->>changes this policy and only prints the unknown opcode if the command
->>fails.
-> 
-> 
-> How about just moving it after the CAP_SYS_RAWIO check, so that it only
-> logs for commands we explicitly reject? The purpose of the opcode dump
-> is not to log failed commands (the app should do that itself), but
-> mainly why a specific opcode was _not_ sent to the drive. This is
-> something you cannot always directly gauge, unless you have the source
-> for the app. And even then you have to dig :-)
+Alan Cox writes:
+ 
+>On Iau, 2004-12-16 at 09:54, Arjan van de Ven wrote:
+>> I'm strongly against adding this. The reason for that is that once an
+>> ioctl is added, it realistically will and can never go away.
+>> LSI is free to have their own fork and give that to dell; but they
+>> should and could have known that it wasn't going to fly. (same I
+guess
+>> for adaptec ioctls). The companies who then commit to some schedule
+>> realize they take a huge risk, but that is no reason to foul up the
+>> kernel more. 
+>
+>I agree. I'd like to see an agreed standard interface for dropping and
+>managing physical volumes and drives, as well as a standard interface
+>for dropping/managing logical volumes.
 
-I guess that would make more sense. Patch looks good.
+Simple transactions, perhaps, but there are many checks, balances and
+complexities associated with a full management application that do not
+make sense to reside in the kernel.
 
-Thanks
+Aacraid uses a FIB to communicate a wide variety of RAID management
+commands.
+Dpt_i2o uses an I2O private frame to communicate the RAID management
+commands.
 
--Brian
+The remaining ioctls pick up driver or OS internal information as has
+been discussed thus far. Moving these pieces of information to sysfs
+does make some sense.
 
-> 
-> ===== drivers/block/scsi_ioctl.c 1.62 vs edited =====
-> --- 1.62/drivers/block/scsi_ioctl.c	2004-11-20 01:50:56 +01:00
-> +++ edited/drivers/block/scsi_ioctl.c	2004-12-16 07:30:39 +01:00
-> @@ -199,14 +199,14 @@
->  			return 0;
->  	}
->  
-> +	/* And root can do any command.. */
-> +	if (capable(CAP_SYS_RAWIO))
-> +		return 0;
-> +
->  	if (!(type & CMD_WARNED)) {
->  		cmd_type[cmd[0]] = CMD_WARNED;
->  		printk(KERN_WARNING "scsi: unknown opcode 0x%02x\n", cmd[0]);
->  	}
-> -
-> -	/* And root can do any command.. */
-> -	if (capable(CAP_SYS_RAWIO))
-> -		return 0;
->  
->  	/* Otherwise fail it with an "Operation not permitted" */
->  	return -EPERM;
-> 
-> 
+However, in order to add the ability to manage the arrays, especially if
+they follow the complexity of the container arrangement, hotspare
+assignments, the multitude of array types and their configuration needs
+and various other RAID or Cache policies; one will find the code sucked
+into the driver to be a lead weight. Adding a `translation' layer from
+FIB, I2O and other frames to a common set is *not* going to be
+lightweight and will not be full coverage. The recent efforts by HP to
+push CSMI added 30% to the size of the driver (Adaptec Branched
+version). Yuck (this is a scientific term) and only added `monitoring'
+and 'drive passthrough' capabilities.
 
+Array status monitoring is complicated enough to pull out into an
+application (the recent dropping of the firmware print messages and
+replacement with the aeventd application).
 
--- 
-Brian King
-eServer Storage I/O
-IBM Linux Technology Center
+By all means, let's set a standard for rudimentary array manipulation,
+but let's not loose sight of the complicated needs of the consumers of
+RAID equipment. Sysfs does not look like it will scale well towards a
+full up management interface.
+
+Sincerely -- Mark Salyzyn
