@@ -1,45 +1,51 @@
-From: Lionel Elie Mamane <lionel@mamane.lu>
-Subject: Re: PROBLEM: Linux 2.4.19 + aic7xxx driver = crash
-Date: Wed, 9 Oct 2002 16:07:51 +0200
+From: Patrick Mansfield <patmans@us.ibm.com>
+Subject: [PATCH] 2.5.41 sd.c sd_synchronize_cache free request after error check
+Date: Wed, 9 Oct 2002 11:05:33 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20021009140751.GC18381@home.mamane.lu>
-References: <20021009133617.GA18381@home.mamane.lu>
+Message-ID: <20021009110533.A968@eng2.beaverton.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from master by tofu.home.mamane.lu with local (Exim 3.35 #1 (Debian))
-	id 17zHV9-0005Ez-00
-	for <linux-scsi@vger.kernel.org>; Wed, 09 Oct 2002 16:07:51 +0200
-Content-Disposition: inline
-In-Reply-To: <20021009133617.GA18381@home.mamane.lu>
+Received: from northrelay03.pok.ibm.com (northrelay03.pok.ibm.com [9.56.224.151])
+	by e3.ny.us.ibm.com (8.12.2/8.12.2) with ESMTP id g99I5gxw132112
+	for <linux-scsi@vger.kernel.org>; Wed, 9 Oct 2002 14:05:42 -0400
+Received: from gateway.beaverton.ibm.com (gateway.beaverton.ibm.com [138.95.180.1])
+	by northrelay03.pok.ibm.com (8.12.3/NCO/VER6.4) with ESMTP id g99I5cn4092000
+	for <linux-scsi@vger.kernel.org>; Wed, 9 Oct 2002 14:05:39 -0400
+Received: from eng2.beaverton.ibm.com (eng2.beaverton.ibm.com [9.47.57.17])
+	by gateway.beaverton.ibm.com (8.10.0.Beta10/8.11.6) with ESMTP id g99I5Zv25413
+	for <linux-scsi@vger.kernel.org>; Wed, 9 Oct 2002 11:05:35 -0700 (PDT)
+Received: (from patman@localhost)
+	by eng2.beaverton.ibm.com (8.10.0.Beta10/8.8.5/token.aware-1.2) id g99I5Xu20784
+	for linux-scsi@vger.kernel.org; Wed, 9 Oct 2002 11:05:33 -0700 (PDT)
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-On Wed, Oct 09, 2002 at 03:36:17PM +0200, Lionel Elie Mamane wrote:
-> [7.4.] Loaded driver and hardware information (/proc/ioports, /proc/iomem)
+Hi -
 
-Forgot /proc/iomem, on tofu:
+This fixes sd_synchronize_cache() to free the scsi request after its
+possible use in printing sense data.
 
-00000000-0009f7ff : System RAM
-0009f800-0009ffff : reserved
-000a0000-000bffff : Video RAM area
-000c0000-000c7fff : Video ROM
-000c8000-000cd7ff : Extension ROM
-000e0000-000effff : Extension ROM
-000f0000-000fffff : System ROM
-00100000-0fffdbff : System RAM
-  00100000-0023411e : Kernel code
-  0023411f-002b891f : Kernel data
-0fffdc00-0ffffbff : ACPI Tables
-0ffffc00-0fffffff : ACPI Non-volatile Storage
-d0000000-d0000fff : Adaptec AHA-3940U2x/395U2x
-d0001000-d0001fff : Adaptec AHA-3940U2x/395U2x (#2)
-d0002000-d000207f : 3Com Corporation 3c905B 100BaseTX [Cyclone]
-d0100000-d1ffffff : PCI Bus #01
-  d0100000-d0100fff : ATI Technologies Inc 3D Rage Pro AGP 1X/2X
-  d1000000-d1ffffff : ATI Technologies Inc 3D Rage Pro AGP 1X/2X
-e0000000-efffffff : Intel Corp. 440BX/ZX/DX - 82443BX/ZX/DX Host bridge
-fffe7000-ffffffff : reserved
+I hit this while running with scsi_debug (with Mike A's patch, or in
+current ac) with 2.5.41, there was an oops when trying to print the
+request sense of a failed SYNCHRONIZE_CACHE.
 
--- 
-Lionel
+diff -Nru a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+--- a/drivers/scsi/sd.c	Wed Oct  9 10:57:02 2002
++++ b/drivers/scsi/sd.c	Wed Oct  9 10:57:02 2002
+@@ -1616,7 +1616,6 @@
+ 	}
+ 
+ 	the_result = SRpnt->sr_result;
+-	scsi_release_request(SRpnt);
+ 	if(verbose) {
+ 		if(the_result != 0) {
+ 			printk("FAILED\n  status = %x, message = %02x, host = %d, driver = %02x\n  ",
+@@ -1629,6 +1628,7 @@
+ 
+ 		}
+ 	}
++	scsi_release_request(SRpnt);
+ 	return (the_result == 0);
+ }
+ 
