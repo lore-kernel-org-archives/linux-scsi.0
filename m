@@ -1,36 +1,45 @@
 From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: How to map between /dev/sdX and dev/sgX devices?
-Date: Fri, 20 Aug 2004 08:07:22 +1000
+Subject: Re: [PATCH] get the kernel to warn about deprecated SCSI ioctls
+Date: Fri, 20 Aug 2004 08:18:40 +1000
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <4125249A.30808@torque.net>
-References: <C8CF60CFC4D8A74E9945E32CF096548A022148EC@silver.nane.netapp.com> <1092942751.2820.5.camel@laptop.fenrus.com>
+Message-ID: <41252740.50401@torque.net>
+References: <1092932342.2378.430.camel@mulgrave>
 Reply-To: dougg@torque.net
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mailhub2.uq.edu.au ([130.102.149.128]:44047 "EHLO
-	mailhub2.uq.edu.au") by vger.kernel.org with ESMTP id S267460AbUHSWIZ
+Received: from mailhub2.uq.edu.au ([130.102.149.128]:51213 "EHLO
+	mailhub2.uq.edu.au") by vger.kernel.org with ESMTP id S267465AbUHSWTb
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 19 Aug 2004 18:08:25 -0400
-In-Reply-To: <1092942751.2820.5.camel@laptop.fenrus.com>
+	Thu, 19 Aug 2004 18:19:31 -0400
+In-Reply-To: <1092932342.2378.430.camel@mulgrave>
 List-Id: linux-scsi@vger.kernel.org
-To: arjanv@redhat.com
-Cc: "Reilley, Peter" <Peter.Reilley@netapp.com>, linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-Arjan van de Ven wrote:
-> On Thu, 2004-08-19 at 20:35, Reilley, Peter wrote:
+James Bottomley wrote:
+> The non unique SCSI ioctls:
 > 
->>What is the correct way to find the corresponding scsi generic
->>device given the scsi disk node name?   I have a situation
->>where I must issue SCSI pass thru commands to a specific
->>/dev/sdX node.  
+> SCSI_IOCTL_SEND_COMMAND
+> SCSI_IOCTL_TEST_UNIT_READY
+> SCSI_IOCTL_BENCHMARK_COMMAND
+> SCSI_IOCTL_SYNC
+> SCSI_IOCTL_START_UNIT
+> SCSI_IOCTL_STOP_UNIT
 > 
-> 
-> don't..... use SG_IO on the device directly
+> Have been deprecated for a while now.  We should make the kernel
+> complain when a program actually uses one of them, so users have had
+> adequate warning before they are removed.
 
-and if that breaks your app then try the equivalent
-sg device to check that you haven't tripped over another
-QOI issue.
+James,
+[Wearing my smartmontools maintainer hat] such a change is going
+to cause a lot of noise in the log from the smartd daemon.
+The code to use SG_IO ioctl in smartmontools is in CVS but
+won't be released for a month or so.
+
+If they are not going to be dropped in the lk 2.6 series
+why not wait until the lk 2.7 development starts (or late
+lk 2.6 series)?
 
 Doug Gilbert
