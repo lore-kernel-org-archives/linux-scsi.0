@@ -1,38 +1,30 @@
-From: Steve Ralston <sjralston1@cox.net>
-Subject: Re: An array failover driver
-Date: Thu, 19 Dec 2002 16:24:32 -0600
+From: Willem Riede <wrlk@riede.org>
+Subject: Re: buggy scsi_register behaviour in 2.5.51
+Date: Fri, 20 Dec 2002 09:46:48 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3E024720.1030005@cox.net>
-References: <EB1DF7EA0D32D611B79C0002A51363F194A7BE@exw-ks.ks.lsil.com>
+Message-ID: <20021220144648.GW7990@linnie.riede.org>
+References: <3DFE998E.1080103@interlog.com> <20021217114730.GE7990@linnie.riede.org> <3E006692.7020503@torque.net>
+Reply-To: wrlk@riede.org
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <3E006692.7020503@torque.net>; from dougg@torque.net on Wed, Dec 18, 2002 at 07:14:10 -0500
 List-Id: linux-scsi@vger.kernel.org
-To: "Qi, Yanling" <yqi@lsil.com>
-Cc: 'linux-scsi-reflector' <linux-scsi@vger.kernel.org>
+To: dougg@torque.net
+Cc: linux-scsi@vger.kernel.org
 
-On 12/19/2002 03:56 PM, Qi, Yanling wrote:
+On 2002.12.18 07:14 Douglas Gilbert wrote:
+> 
+> These are documented in Documentation/scsi/scsi_mid_low_api.txt .
+> If you find mistakes or the explanation is not clear then
+> complain to me. 
 
->Hi All, 
->
->I am going to develop a multiple-pathing driver to support our storage array
->hardware on Linux(2.4 and later). I prefer the driver sit on the top of HBA
->drivers (fibre channel adapter drivers) and below middle level (the unifying
->layer). In other words, insert my pseudo driver into middle level and lower
->level drivers. The driver will take care of path failover. I am still in
->research phase. Do you have any suggestions?
->  
->
+Your doc doesn't define the second parameter to scsi_add_host.
+Can you explain what the purpose is of the struct device *dev
+and how I'm supposed to pull one out of my hat in __init?
+I notice that the old style registration doesn't bother with
+shost->host_gendev.
 
-I've been there & done that, for drivers/message/fusion drivers (aka for 
-FC9x9 HABs).
-The dynamic multi-pathing failover driver I wrote acted as sort of a shim,
-sitting logically between the scsi midlayer and {mptbase+mptscsih} 
-driver(s),
-sort of exactly as you describe above.  The source is available via:
-  ftp://ftp.lsil.com/pub/symchips/fibre_ch/Metastor/dmpath-2.01x25.tar.gz
-
-Which HBA driver are you looking at doing this for?
-
-
+Thanks, Willem Riede.
