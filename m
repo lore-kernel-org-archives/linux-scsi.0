@@ -1,74 +1,44 @@
-From: James Bottomley <James.Bottomley@steeleye.com>
-Subject: [BK PATCH] SCSI updates
-Date: 30 Dec 2003 16:08:32 -0600
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <1072822114.1783.36.camel@mulgrave>
+From: Bjorn Helgaas <bjorn.helgaas@hp.com>
+Subject: [PATCH] Fix 2.4 bounce_limit decl
+Date: Tue, 30 Dec 2003 15:49:46 -0700
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <200312301549.46786.bjorn.helgaas@hp.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain;
+  charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
-To: Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from atlrel8.hp.com ([156.153.255.206]:35807 "EHLO atlrel8.hp.com")
+	by vger.kernel.org with ESMTP id S265880AbTL3Wtw (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 30 Dec 2003 17:49:52 -0500
+Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
+To: Marcelo Tosatti <marcelo.tosatti@cyclades.com>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, linux-scsi@vger.kernel.org
 
-This represents the driver updates and other fairly stable changes that
-have been floating around in the SCSI trees for a while.  The only
-controversial element is updating the aic7xxx/79xx drivers.  I've been
-receiving reports that the 1.3.9 version of the aic79xx was
-non-functional in 2.6, so I updated it to 1.3.11 based on Justin's tree
-(after confirming with the reporters that this fixed their problems).
+Here's another bit from the ia64 patch.  ia64 doesn't define dma64_addr_t.
 
-The tree is at
+There was a discussion about whether ia64 is doing the Right Thing by
+not defining dma64_addr_t:
+    http://www.gelato.unsw.edu.au/linux-ia64/0112/2521.html
+The eventual resolution was that we need not define it because it
+is only used for pci_dac_*, and there's no need for those interfaces
+on ia64 because dma_addr_t is 64 bits.
 
-bk://linux-scsi.bkbits.net/scsi-for-linus
-
-and the short changelog is:
+Bjorn
 
 
-<rask:sygehus.dk>:
-  o aha1740.c: Allow level triggered interrupts to be shared
+diff -urN linux-2.4/drivers/scsi/scsi_merge.c linux-ia64-2.4/drivers/scsi/scsi_merge.c
+--- linux-2.4/drivers/scsi/scsi_merge.c	2003-12-29 17:05:42.000000000 -0700
++++ linux-ia64-2.4/drivers/scsi/scsi_merge.c	2003-12-29 17:06:33.000000000 -0700
+@@ -1155,7 +1155,7 @@
+ {
+ 	struct Scsi_Host *SHpnt = SDpnt->host;
+ 	request_queue_t *q = &SDpnt->request_queue;
+-	dma64_addr_t bounce_limit;
++	u64 bounce_limit;
+ 
+ 	/*
+ 	 * If this host has an unlimited tablesize, then don't bother with a
 
-Andi Kleen:
-  o Mark Ninja SCSI driver as !64BIT
-  o Mark aha152x as ISA and !64BIT driver II
-  o Mark correct aha152x driver (PCMCIA) as !64BIT
-  o Fix 64bit warnings in BusLogic driver
-
-Christoph Hellwig:
-  o aacraid updates for new probing APIs
-  o convert inia100 to new probing API
-
-Douglas Gilbert:
-  o sg Bugfixes
-  o scsi_debug lk 2.6.0t6
-
-James Bottomley:
-  o Megaraid compile fix
-  o Make aic7xxx -Werror conditional on make flag WARNINGS_BECOME_ERRORS
-  o Update aic79xx to 1.3.11, aic7xxx to 6.2.36
-  o Updated osst driver for 2.6.x
-  o More Initio 9100u fixes
-  o [v2] aha152x cmnd->device oops
-  o SCSI: Fix tmscsim driver
-  o Fix another sg mismerge
-  o sg: fix hch/dougg mismerge
-  o sg: char_devs + seq_file lk2.6.0t9
-  o MPT Fusion driver 2.05.00.05 update
-  o sym 2.1.18f
-
-Kai Makisara:
-  o Add char_devs to st This patch adds support for cdevs to the st
-driver. The changes are based on Doug Gilbert's corresponding changes to
-the sg driver. Using cdevs brings the following advantanges:
-
-Mike Christie:
-  o [RFC]  fix compile erros in ini9100 driver
-
-Patrick Mansfield:
-  o consolidate and log scsi command on send and completion
-
-Randy Dunlap:
-  o buslogic: use EH, remove some dup. docs
-  o cpqfcTSinit cleanup
-
-James
