@@ -1,63 +1,58 @@
-From: "Martin K. Petersen" <mkp@mkp.net>
+From: Theodore Tso <tytso@mit.edu>
 Subject: Re: [RFC] Persistent naming of scsi devices
-Date: 09 Apr 2002 23:37:44 -0400
+Date: Wed, 10 Apr 2002 09:19:18 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <yq18z7w1awn.fsf@austin.mkp.net>
-References: <OF8B2F3581.590066BE-ONC1256B95.0068B28C@de.ibm.com>
-	<3CB39285.8000609@vitalstream.com>
+Message-ID: <20020410091918.C546@thunk.org>
+References: <OF8B2F3581.590066BE-ONC1256B95.0068B28C@de.ibm.com> <3CB39285.8000609@vitalstream.com> <yq18z7w1awn.fsf@austin.mkp.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <3CB39285.8000609@vitalstream.com>
+Content-Disposition: inline
+In-Reply-To: <yq18z7w1awn.fsf@austin.mkp.net>; from mkp@mkp.net on Tue, Apr 09, 2002 at 11:37:44PM -0400
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: "Martin K. Petersen" <mkp@mkp.net>
+Cc: linux-scsi@vger.kernel.org
 
+On Tue, Apr 09, 2002 at 11:37:44PM -0400, Martin K. Petersen wrote:
+> Well, imagine you have a set of mirrored disks.  If you only address
+> by content, you will find have two devices that match (or three if MD
+> has done autodetection).  What you really want to mount is the MD
+> device.
+> 
+> Multipathing has a similar problem.  You'll see two copies of the same
+> filesystem/UUID.  And again you really want the metadevice to be
+> mounted.
 
-Rick> E.g. "/dev/dsk/c0t1d2s3" is controller 0 (first SCSI controller
-Rick> seen on the bus), target ID 1, LUN 2, partition (slice) 3.
-Rick> Simple, unambiguous and repeatable.
+Note that fsck (and I think mount, but I definitely know about fsck
+because I maintain it) solves the above problem by searching the MD
+devices first.  Once the multipathing becomes stable, again the right
+answer for fsck is to search the metadevice first.
 
-You plug in another SCSI controller and then what happens?  Or one of
-your existing controllers goes up in blue smoke?
+Andreas Dilger has written a block-device-id library which is really
+promising, and the goal is to abstract out the current search
+algorithms currently used by fsck and mount into a single library.
+Said library will also cache the location of filesystems by UUID and
+label name, and when a particular block device corresponding to
+UUID=XXX or LABEL=YYY is requested, it can look up the location in the
+cache, validate it to make sure that someone hasn't inserted or
+removed a SCSI controller card, and then return the answer.  If the
+validation fails, the library will then do a full sweep of all of the
+known devices (again, doing the metadevices --- LVM, MD, et. al ---
+first, to deal with the problem you listed).
 
-What we want is (at least) three ways of addressing a device:
+This basically deals with all of the problems except for swap (which
+doesn't have a UUID --- but it shouldn't be too hard to add a UUID
+into the swap signature, and then teach swapon how to use it), and the
+problem of initializing new disks, before they have UUID's attached to
+it. 
 
-1. By content.  This is the persistent naming.  Think
-   filesystem/MD/LVM UUID.  This is what you put in /etc/fstab and
-   what metadisk systems use to assemble logical volumes.
+That is indeed a hard problem, and ultimately, the thing that will
+make this easier is if there's some way we can read out a
+drive-specific serial number out of the ATAPI or SCSI interfaces.  I
+don't know if disk serial numbers are commonly supported by disk
+manufacturers, but hopefully the newer disks have something like that
+we can use.  Without it, though, the problem is very, very hard if you
+want to make it 100% foolproof --- and hence, something which
+civilians (i.e., stupid users) can use.
 
-   Content referencing is used for accessing data.
-
-2. By physical path.  This naming is not persistent.  Not even runtime
-   because hotplug, iSCSI and whatnot may mess things up.
-
-   Path naming is for discovery and recovery.  When you add an
-   unlabeled disk you want to reference it by path to give it a name.
-   When you have a failed disk on your system you want to know which
-   physical device to pull from the array.
-
-3. By enumeration.  This is what the kernel happens to be using to
-   reference the device.  diskN.  Certainly not persistent.
-
-   Enumeration is for the kernel.
-
-Now, some magic needs to be involved at discovery time because we
-can't rely only on neither content addressing, nor path addressing
-alone to do the right thing.  And why is that?
-
-Well, imagine you have a set of mirrored disks.  If you only address
-by content, you will find have two devices that match (or three if MD
-has done autodetection).  What you really want to mount is the MD
-device.
-
-Multipathing has a similar problem.  You'll see two copies of the same
-filesystem/UUID.  And again you really want the metadevice to be
-mounted.
-
-So not only is your proposal a bad idea for persistency reasons.  The
-scheme does not carry enough information to do what is needed.
-
--- 
-Martin K. Petersen, Principal Linux Consultant, Linuxcare, Inc.
-mkp@linuxcare.com, http://www.linuxcare.com/
-SGI XFS for Linux Developer, http://oss.sgi.com/projects/xfs/
+						- Ted
