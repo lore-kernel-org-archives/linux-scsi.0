@@ -1,8 +1,8 @@
 From: Patrick Mansfield <patmans@us.ibm.com>
-Subject: [PATCH] 2.5.x use list_head to handle scsi starved request queues
-Date: Wed, 19 Mar 2003 18:27:56 -0800
+Subject: [PATCH] 2.5.x add back missing scsi_queue_next_request calls
+Date: Wed, 19 Mar 2003 18:44:44 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030319182755.A9535@beaverton.ibm.com>
+Message-ID: <20030319184444.A9694@beaverton.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
@@ -10,181 +10,129 @@ Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@steeleye.com>, linux-scsi@vger.kernel.org
 
-This patch (against 2.5 bk on march 18) fixes a few problems with the
-linux scsi "starved" algorithm.
+The change to use a pool for scsi_cmnd allocations removed some
+scsi_queue_next_request calls, this patch restores the calls, and
+exports scsi_put_command and scsi_get_command.
 
-It uses a list_head per scsi_host to store a list of scsi request queues
-that were "starved" (they were not able to send IO because of per host
-limitations).
+The extra scsi_queue_next_request calls are needed to handle non-block
+device IO completion (char devices and scsi scanning).
 
-diff -purN -X /home/patman/dontdiff 25-bk-base/drivers/scsi/hosts.c starve-25/drivers/scsi/hosts.c
---- 25-bk-base/drivers/scsi/hosts.c	Wed Mar 19 11:54:28 2003
-+++ starve-25/drivers/scsi/hosts.c	Wed Mar 19 16:36:40 2003
-@@ -383,6 +383,7 @@ struct Scsi_Host * scsi_register(Scsi_Ho
- 	scsi_assign_lock(shost, &shost->default_lock);
- 	INIT_LIST_HEAD(&shost->my_devices);
- 	INIT_LIST_HEAD(&shost->eh_cmd_q);
-+	INIT_LIST_HEAD(&shost->starved_list);
+This patch applies cleanly on top of the previous "starved" patch, but
+should apply with offsets to the current 2.5.x tree.
+
+diff -purN -X /home/patman/dontdiff starve-25/drivers/scsi/scsi.c put_cmd-25/drivers/scsi/scsi.c
+--- starve-25/drivers/scsi/scsi.c	Wed Mar 19 18:08:46 2003
++++ put_cmd-25/drivers/scsi/scsi.c	Wed Mar 19 18:30:47 2003
+@@ -307,7 +307,7 @@ struct scsi_cmnd *scsi_get_command(struc
+ }				
  
- 	init_waitqueue_head(&shost->host_wait);
- 	shost->dma_channel = 0xff;
-diff -purN -X /home/patman/dontdiff 25-bk-base/drivers/scsi/hosts.h starve-25/drivers/scsi/hosts.h
---- 25-bk-base/drivers/scsi/hosts.h	Wed Mar 19 11:54:28 2003
-+++ starve-25/drivers/scsi/hosts.h	Wed Mar 19 16:36:40 2003
-@@ -380,6 +380,7 @@ struct Scsi_Host
-     struct scsi_host_cmd_pool *cmd_pool;
-     spinlock_t            free_list_lock;
-     struct list_head      free_list;   /* backup store of cmd structs */
-+    struct list_head      starved_list;	/* head of queue limited by can_queue */
- 
-     spinlock_t		  default_lock;
-     spinlock_t		  *host_lock;
-@@ -471,12 +472,6 @@ struct Scsi_Host
-     unsigned reverse_ordering:1;
- 
-     /*
--     * Indicates that one or more devices on this host were starved, and
--     * when the device becomes less busy that we need to feed them.
--     */
--    unsigned some_device_starved:1;
--   
--    /*
-      * Host has rejected a command because it was busy.
-      */
-     unsigned int host_blocked;
-diff -purN -X /home/patman/dontdiff 25-bk-base/drivers/scsi/scsi.h starve-25/drivers/scsi/scsi.h
---- 25-bk-base/drivers/scsi/scsi.h	Wed Mar 19 11:54:28 2003
-+++ starve-25/drivers/scsi/scsi.h	Wed Mar 19 16:36:40 2003
-@@ -555,6 +555,7 @@ struct scsi_device {
- 	volatile unsigned short device_busy;	/* commands actually active on low-level */
- 	spinlock_t list_lock;
- 	struct list_head cmd_list;	/* queue of in use SCSI Command structures */
-+	struct list_head starved_entry;	/* next queue limited via can_queue */
-         Scsi_Cmnd *current_cmnd;	/* currently active command */
- 	unsigned short queue_depth;	/* How deep of a queue we want */
- 	unsigned short last_queue_full_depth; /* These two are used by */
-@@ -615,8 +616,6 @@ struct scsi_device {
- 					 * because we did a bus reset. */
- 	unsigned ten:1;		/* support ten byte read / write */
- 	unsigned remap:1;	/* support remapping  */
--	unsigned starved:1;	/* unable to process commands because
--				   host busy */
- //	unsigned sync:1;	/* Sync transfer state, managed by host */
- //	unsigned wide:1;	/* WIDE transfer state, managed by host */
- 
-diff -purN -X /home/patman/dontdiff 25-bk-base/drivers/scsi/scsi_lib.c starve-25/drivers/scsi/scsi_lib.c
---- 25-bk-base/drivers/scsi/scsi_lib.c	Wed Mar 19 11:54:28 2003
-+++ starve-25/drivers/scsi/scsi_lib.c	Wed Mar 19 16:36:40 2003
-@@ -356,7 +356,6 @@ static void scsi_queue_next_request(requ
- 	struct scsi_device *sdev, *sdev2;
- 	struct Scsi_Host *shost;
+ /*
+- * Function:	scsi_put_command()
++ * Function:	__scsi_put_command()
+  *
+  * Purpose:	Free a scsi command block
+  *
+@@ -317,7 +317,7 @@ struct scsi_cmnd *scsi_get_command(struc
+  *
+  * Notes:	The command must not belong to any lists.
+  */
+-void scsi_put_command(struct scsi_cmnd *cmd)
++void __scsi_put_command(struct scsi_cmnd *cmd)
+ {
+ 	struct Scsi_Host *shost = cmd->device->host;
  	unsigned long flags;
--	int all_clear;
- 
- 	ASSERT_LOCK(q->queue_lock, 0);
- 
-@@ -383,11 +382,6 @@ static void scsi_queue_next_request(requ
- 		__elv_add_request(q, cmd->request, 0, 0);
- 	}
- 
--	/*
--	 * Just hit the requeue function for the queue.
--	 */
--	__blk_run_queue(q);
--
- 	sdev = q->queuedata;
- 	shost = sdev->host;
- 
-@@ -412,31 +406,24 @@ static void scsi_queue_next_request(requ
- 		}
- 	}
- 
--	/*
--	 * Now see whether there are other devices on the bus which
--	 * might be starved.  If so, hit the request function.  If we
--	 * don't find any, then it is safe to reset the flag.  If we
--	 * find any device that it is starved, it isn't safe to reset the
--	 * flag as the queue function releases the lock and thus some
--	 * other device might have become starved along the way.
--	 */
--	all_clear = 1;
--	if (shost->some_device_starved) {
--		list_for_each_entry(sdev, &shost->my_devices, siblings) {
--			if (shost->can_queue > 0 &&
--			    shost->host_busy >= shost->can_queue)
--				break;
--			if (shost->host_blocked || shost->host_self_blocked)
--				break;
--			if (sdev->device_blocked || !sdev->starved)
--				continue;
--			__blk_run_queue(sdev->request_queue);
--			all_clear = 0;
--		}
--
--		if (sdev == NULL && all_clear)
--			shost->some_device_starved = 0;
-+	while (!list_empty(&shost->starved_list) &&
-+	       !shost->host_blocked && !shost->host_self_blocked &&
-+		!((shost->can_queue > 0) &&
-+		  (shost->host_busy >= shost->can_queue))) {
-+		/*
-+		 * As long as shost is accepting commands and we have
-+		 * starved queues, call __blk_run_queue. scsi_request_fn
-+		 * drops the queue_lock and can add us back to the
-+		 * starved_list.
-+		 */
-+		sdev2 = list_entry(shost->starved_list.next,
-+					  struct scsi_device, starved_entry);
-+		list_del_init(&sdev2->starved_entry);
-+		__blk_run_queue(sdev2->request_queue);
- 	}
-+
-+	__blk_run_queue(q);
-+
- 	spin_unlock_irqrestore(q->queue_lock, flags);
+@@ -340,6 +340,23 @@ void scsi_put_command(struct scsi_cmnd *
  }
  
-@@ -1115,23 +1102,16 @@ static void scsi_request_fn(request_queu
+ /*
++ * Function:	scsi_put_command()
++ *
++ * Purpose:	Free a scsi command block and call scsi_q
++ *
++ * Arguments:	cmd	- command block to free
++ *
++ * Returns:	Nothing.
++ */
++void scsi_put_command(struct scsi_cmnd *cmd)
++{
++	struct request_queue *q = cmd->device->request_queue;
++
++	__scsi_put_command(cmd);
++	scsi_queue_next_request(q, NULL);
++}
++
++/*
+  * Function:	scsi_setup_command_freelist()
+  *
+  * Purpose:	Setup the command freelist for a scsi host.
+diff -purN -X /home/patman/dontdiff starve-25/drivers/scsi/scsi.h put_cmd-25/drivers/scsi/scsi.h
+--- starve-25/drivers/scsi/scsi.h	Wed Mar 19 16:36:40 2003
++++ put_cmd-25/drivers/scsi/scsi.h	Wed Mar 19 18:10:54 2003
+@@ -416,6 +416,7 @@ extern int scsi_maybe_unblock_host(Scsi_
+ extern void scsi_setup_cmd_retry(Scsi_Cmnd *SCpnt);
+ extern void scsi_io_completion(Scsi_Cmnd * SCpnt, int good_sectors,
+ 			       int block_sectors);
++extern void scsi_queue_next_request(request_queue_t *q, Scsi_Cmnd *cmd);
+ extern int scsi_queue_insert(struct scsi_cmnd *cmd, int reason);
+ extern request_queue_t *scsi_alloc_queue(struct Scsi_Host *shost);
+ extern void scsi_free_queue(request_queue_t *q);
+@@ -429,6 +430,7 @@ extern int scsi_dispatch_cmd(Scsi_Cmnd *
+ extern int scsi_setup_command_freelist(struct Scsi_Host *shost);
+ extern void scsi_destroy_command_freelist(struct Scsi_Host *shost);
+ extern struct scsi_cmnd *scsi_get_command(struct scsi_device *dev, int flags);
++extern void __scsi_put_command(struct scsi_cmnd *cmd);
+ extern void scsi_put_command(struct scsi_cmnd *cmd);
+ extern void scsi_adjust_queue_depth(Scsi_Device *, int, int);
+ extern int scsi_track_queue_full(Scsi_Device *, int);
+diff -purN -X /home/patman/dontdiff starve-25/drivers/scsi/scsi_lib.c put_cmd-25/drivers/scsi/scsi_lib.c
+--- starve-25/drivers/scsi/scsi_lib.c	Wed Mar 19 16:36:40 2003
++++ put_cmd-25/drivers/scsi/scsi_lib.c	Wed Mar 19 18:10:54 2003
+@@ -351,7 +351,7 @@ void scsi_setup_cmd_retry(struct scsi_cm
+  *		permutations grows as 2**N, and if too many more special cases
+  *		get added, we start to get screwed.
+  */
+-static void scsi_queue_next_request(request_queue_t *q, struct scsi_cmnd *cmd)
++void scsi_queue_next_request(request_queue_t *q, struct scsi_cmnd *cmd)
+ {
+ 	struct scsi_device *sdev, *sdev2;
+ 	struct Scsi_Host *shost;
+@@ -487,7 +487,6 @@ static struct scsi_cmnd *scsi_end_reques
+ 	 * need to worry about launching another command.
+ 	 */
+ 	scsi_put_command(cmd);
+-	scsi_queue_next_request(q, NULL);
+ 	return NULL;
+ }
+ 
+@@ -906,7 +905,7 @@ static int scsi_init_io(struct scsi_cmnd
+ 			req->current_nr_sectors);
+ 
+ 	/* release the command and kill it */
+-	scsi_put_command(cmd);
++	__scsi_put_command(cmd);
+ 	return BLKPREP_KILL;
+ }
+ 
+@@ -1014,7 +1013,7 @@ static int scsi_prep_fn(struct request_q
  		 */
- 		if (sdev->device_blocked)
- 			break;
-+
-+		if (!list_empty(&sdev->starved_entry))
-+			break;
-+
- 		if ((shost->can_queue > 0 && shost->host_busy >= shost->can_queue) ||
- 		    shost->host_blocked || shost->host_self_blocked) {
--			/*
--			 * If we are unable to process any commands at all for
--			 * this device, then we consider it to be starved.
--			 * What this means is that there are no outstanding
--			 * commands for this device and hence we need a
--			 * little help getting it started again
--			 * once the host isn't quite so busy.
--			 */
--			if (sdev->device_busy == 0) {
--				sdev->starved = 1;
--				shost->some_device_starved = 1;
--			}
-+			list_add_tail(&sdev->starved_entry,
-+				      &shost->starved_list);
- 			break;
--		} else
--			sdev->starved = 0;
-+		}
+ 		if (unlikely(!sdt->init_command(cmd))) {
+ 			scsi_release_buffers(cmd);
+-			scsi_put_command(cmd);
++			__scsi_put_command(cmd);
+ 			return BLKPREP_KILL;
+ 		}
+ 	}
+diff -purN -X /home/patman/dontdiff starve-25/drivers/scsi/scsi_syms.c put_cmd-25/drivers/scsi/scsi_syms.c
+--- starve-25/drivers/scsi/scsi_syms.c	Wed Mar 19 11:52:25 2003
++++ put_cmd-25/drivers/scsi/scsi_syms.c	Wed Mar 19 18:10:54 2003
+@@ -60,6 +60,8 @@ EXPORT_SYMBOL(scsi_allocate_request);
+ EXPORT_SYMBOL(scsi_release_request);
+ EXPORT_SYMBOL(scsi_wait_req);
+ EXPORT_SYMBOL(scsi_do_req);
++EXPORT_SYMBOL(scsi_get_command);
++EXPORT_SYMBOL(scsi_put_command);
  
- 		/*
- 		 * If we couldn't find a request that could be queued, then we
-diff -purN -X /home/patman/dontdiff 25-bk-base/drivers/scsi/scsi_scan.c starve-25/drivers/scsi/scsi_scan.c
---- 25-bk-base/drivers/scsi/scsi_scan.c	Wed Mar 19 11:54:28 2003
-+++ starve-25/drivers/scsi/scsi_scan.c	Wed Mar 19 16:36:40 2003
-@@ -400,6 +400,7 @@ static struct scsi_device *scsi_alloc_sd
- 	INIT_LIST_HEAD(&sdev->siblings);
- 	INIT_LIST_HEAD(&sdev->same_target_siblings);
- 	INIT_LIST_HEAD(&sdev->cmd_list);
-+	INIT_LIST_HEAD(&sdev->starved_entry);
- 	spin_lock_init(&sdev->list_lock);
- 
- 	/*
+ EXPORT_SYMBOL(scsi_report_bus_reset);
+ EXPORT_SYMBOL(scsi_block_requests);
 
 -- Patrick Mansfield
