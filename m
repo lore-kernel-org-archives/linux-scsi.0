@@ -1,22 +1,42 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [2.6 patch] SCSI t128.c: remove an unused function
-Date: Mon, 15 Nov 2004 14:40:39 +0000
-Message-ID: <1100529621.27202.9.camel@localhost.localdomain>
-References: <20041115023859.GE2249@stusta.de>
+From: Adrian Bunk <bunk@stusta.de>
+Subject: Re: [2.6 patch] SCSI: misc possible cleanups
+Date: Mon, 15 Nov 2004 17:22:32 +0100
+Message-ID: <20041115162232.GA19860@stusta.de>
+References: <0B1E13B586976742A7599D71A6AC733C12E6F2@xbl3.ma.emulex.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel=40m.gmane.org-S261629AbUKOPp6@vger.kernel.org>
-In-Reply-To: <20041115023859.GE2249@stusta.de>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Adrian Bunk <bunk@stusta.de>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, linux-scsi@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from emailhub.stusta.mhn.de ([141.84.69.5]:43781 "HELO
+	mailout.stusta.mhn.de") by vger.kernel.org with SMTP
+	id S261630AbUKOQ2N (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 15 Nov 2004 11:28:13 -0500
+Content-Disposition: inline
+In-Reply-To: <0B1E13B586976742A7599D71A6AC733C12E6F2@xbl3.ma.emulex.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James.Smart@Emulex.Com
+Cc: James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Llu, 2004-11-15 at 02:38, Adrian Bunk wrote:
-> The patch below removes the unused function t128_setup.
+On Mon, Nov 15, 2004 at 08:57:08AM -0500, James.Smart@Emulex.Com wrote:
+
+> Please don't back out the additions to scsi_transport.c!!!
 > 
-> Please review whether it's correct.
+> These were hard-fought additions, and required by our driver, which we should call for upstream approval in the near future.
 
-Its wrong. The fix is to make the setup function get called, IFF you can
-find anyone with a t128 any more
+Sorry that I didn't state my intention clear enough:
+
+I did not want to propose to simply apply this patch.
+It was intended as a "FYI: the following code is _currently_ unused".
+
+> -- James S
+
+cu
+Adrian
+
+-- 
+
+       "Is there not promise of rain?" Ling Tan asked suddenly out
+        of the darkness. There had been need of rain for many days.
+       "Only a promise," Lao Er said.
+                                       Pearl S. Buck - Dragon Seed
+
