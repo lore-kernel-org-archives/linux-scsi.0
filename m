@@ -1,43 +1,38 @@
 From: Adrian Bunk <bunk@stusta.de>
-Subject: [2.6 patch] ide-scsi.c: make 2 functions static
-Date: Mon, 15 Nov 2004 03:07:55 +0100
-Message-ID: <20041115020755.GM2249@stusta.de>
+Subject: [2.6 patch] SCSI mca_53c9x.c: make 2 functions static
+Date: Mon, 15 Nov 2004 03:13:34 +0100
+Message-ID: <20041115021334.GP2249@stusta.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emailhub.stusta.mhn.de ([141.84.69.5]:42256 "HELO
-	mailout.stusta.mhn.de") by vger.kernel.org with SMTP
-	id S261447AbUKOCTW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 14 Nov 2004 21:19:22 -0500
+Return-path: <linux-kernel-owner+glk-linux-kernel=40m.gmane.org-S261435AbUKOC3c@vger.kernel.org>
 Content-Disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: James.Bottomley@SteelEye.com
 Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 
 The patch below makes two functions without external users static.
 
 
 Signed-off-by: Adrian Bunk <bunk@stusta.de>
 
---- linux-2.6.10-rc1-mm5-full/drivers/scsi/ide-scsi.c.old	2004-11-13 21:51:26.000000000 +0100
-+++ linux-2.6.10-rc1-mm5-full/drivers/scsi/ide-scsi.c	2004-11-13 21:51:41.000000000 +0100
-@@ -301,7 +301,7 @@
- 	return ide_do_drive_cmd(drive, rq, ide_preempt);
- }
+--- linux-2.6.10-rc1-mm5-full/drivers/scsi/mca_53c9x.c.old	2004-11-13 22:42:09.000000000 +0100
++++ linux-2.6.10-rc1-mm5-full/drivers/scsi/mca_53c9x.c	2004-11-13 22:42:22.000000000 +0100
+@@ -103,7 +103,7 @@
+ static struct ESP_regs eregs;
  
--ide_startstop_t idescsi_atapi_error (ide_drive_t *drive, const char *msg, byte stat)
-+static ide_startstop_t idescsi_atapi_error (ide_drive_t *drive, const char *msg, byte stat)
+ /***************************************************************** Detection */
+-int mca_esp_detect(Scsi_Host_Template *tpnt)
++static int mca_esp_detect(Scsi_Host_Template *tpnt)
  {
- 	struct request *rq;
- 	byte err;
-@@ -327,7 +327,7 @@
- 	return ide_stopped;
- }
+ 	struct NCR_ESP *esp;
+ 	static int io_port_by_pos[] = MCA_53C9X_IO_PORTS;
+@@ -283,7 +283,7 @@
  
--ide_startstop_t idescsi_atapi_abort (ide_drive_t *drive, const char *msg)
-+static ide_startstop_t idescsi_atapi_abort (ide_drive_t *drive, const char *msg)
+ /******************************************************************* Release */
+ 
+-int mca_esp_release(struct Scsi_Host *host)
++static int mca_esp_release(struct Scsi_Host *host)
  {
- 	struct request *rq;
- 
-
+ 	struct NCR_ESP *esp = (struct NCR_ESP *)host->hostdata;
+ 	unsigned char tmp_byte;
