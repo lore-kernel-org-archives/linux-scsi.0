@@ -1,52 +1,38 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: ide-scsi fails with kernels > 2.4.1
-Date: Thu, 30 Jan 2003 21:24:46 +1100
+From: "Justin T. Gibbs" <gibbs@scsiguy.com>
+Subject: underflow field
+Date: Thu, 30 Jan 2003 16:45:48 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3E38FD6E.9030509@torque.net>
-References: <Pine.LNX.4.20.0301301047240.24862-100000@users.evp.sf.ukrtel.net>
-Reply-To: dougg@torque.net
+Message-ID: <43220000.1043970348@aslan.btc.adaptec.com>
+Reply-To: "Justin T. Gibbs" <gibbs@scsiguy.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from redfish.adaptec.com (redfish.adaptec.com [162.62.50.11])
+	by magic.adaptec.com (8.11.6+Sun/8.11.6) with ESMTP id h0UNk0D17597
+	for <linux-scsi@vger.kernel.org>; Thu, 30 Jan 2003 15:46:00 -0800 (PST)
+Received: from btc.btc.adaptec.com (btc.btc.adaptec.com [10.100.0.52])
+	by redfish.adaptec.com (8.8.8+Sun/8.8.8) with ESMTP id PAA15630
+	for <linux-scsi@vger.kernel.org>; Thu, 30 Jan 2003 15:45:49 -0800 (PST)
+Received: from [10.100.253.70] (aslan [10.100.253.70])
+	by btc.btc.adaptec.com (8.8.8+Sun/8.8.8) with ESMTP id QAA26500
+	for <linux-scsi@vger.kernel.org>; Thu, 30 Jan 2003 16:45:47 -0700 (MST)
+Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
-To: Andrei Loukinykh <avl@seavenue.net>
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-Andrei Loukinykh wrote:
->  Hi all
->   Being a sort of god damn tired (sorry), i decided to ask here
-> 
->  In short:
->    My CDRW refuses to work with any kernel bigger than 2.4.1.
-> 
-> It is IDE-CDRW . I use ide-scsi driver for this.
-> With 2.4.1 - all o'k.
->  Then I tried 2.4.7 ... 2.4.9 ... 2.4.19.. 2.4.20 ( i dont remember al of
-> them) - none works. I get the following:
-> 
-> hdc: SAMSUNG CD-R/RW SW-408B, ATAPI CD/DVD-ROM drive
-> ide0 at 0x1f0-0x1f7,0x3f6 on irq 14
-> ide1 at 0x170-0x177,0x376 on irq 15
-> blk: queue c030e544, I/O limit 4095Mb (mask 0xffffffff)
-> hda: 12672450 sectors (6488 MB), CHS=788/255/63, UDMA(33)
-> hdc: set_drive_speed_status: status=0x51 { DriveReady SeekComplete Error }
-> hdc: set_drive_speed_status: error=0x04
-> 
-> 
-> Someone please help
->  I desperately need 2.4.20 for my devices to work, but I also need CDR..
+I received a recent report of the aic7xxx driver reporting:
 
-Andrei,
-Do either of these lines help?
-     hdparm -d0 -c1 /dev/hdc
-     hdparm -d 1 -X 34 /dev/hdc
+(scsi0:A:0:0): CDB: 0x12 0x1 0x80 0x0 0x60 0x0
+(scsi0:A:0:0): Saw underflow (80 of 96 bytes). Treated as error
 
-For more information see the:
-     http://www.torque.net/sg/faq.html
-entry on cdrecord [item 3.2].
+This is because the aic7xxx driver (and the aic79xx driver) honors
+the underflow field.  Has this field been deprecated and thus should
+be ignored by HBA drivers?  If not, why is it that scsi_scan.c doesn't
+set underflow to 0 (or maybe 1 in this case) for commands that can have
+variable length responses?  The above is a fetch of the serial number
+from VPD page 0x80.
 
-Hope this helps.
-
-Doug Gilbert
+--
+Justin
 
