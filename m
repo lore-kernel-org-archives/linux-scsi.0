@@ -1,32 +1,59 @@
-From: Rusty Russell <rusty@rustcorp.com.au>
-Subject: Re: [TRIVIAL] fix parallel builds for aic7xxx]
-Date: Fri, 26 Sep 2003 14:20:03 +1000
+From: Rajesh <rajeshsg@netcore.co.in>
+Subject: Adaptec 7901A-iROC - aic79xx
+Date: Fri, 26 Sep 2003 12:38:49 +0530
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030926042833.E5DCB2C296@lists.samba.org>
-References: <1064420472.2658.13.camel@cherrytest.pdx.osdl.net>
+Message-ID: <3F73E601.5060300@netcore.co.in>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from dp.samba.org ([66.70.73.150]:59871 "EHLO lists.samba.org")
-	by vger.kernel.org with ESMTP id S261663AbTIZE2e (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 26 Sep 2003 00:28:34 -0400
-In-reply-to: Your message of "24 Sep 2003 09:21:13 MST."
-             <1064420472.2658.13.camel@cherrytest.pdx.osdl.net>
+Received: from [202.162.229.13] ([202.162.229.13]:36540 "EHLO
+	uucp3.netcore.co.in") by vger.kernel.org with ESMTP id S261959AbTIZHCA
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 26 Sep 2003 03:02:00 -0400
+Received: from uucp1.netcore.co.in (unknown [192.168.2.1])
+	by uucp3.netcore.co.in (Postfix) with ESMTP id BCB7F3CCF9
+	for <linux-scsi@vger.kernel.org>; Fri, 26 Sep 2003 12:28:06 +0530 (IST)
+Received: (from uucp@localhost)
+	by uucp1.netcore.co.in (8.11.0/8.8.7) with UUCP id h8Q718I24234
+	for linux-scsi@vger.kernel.org; Fri, 26 Sep 2003 12:31:08 +0530
 List-Id: linux-scsi@vger.kernel.org
-To: John Cherry <cherry@osdl.org>
-Cc: James Bottomley <James.Bottomley@steeleye.com>, Rusty Trivial Russell <trivial@rustcorp.com.au>, Kai Germaschewski <kai@tp1.ruhr-uni-bochum.de>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Jens Axboe <axboe@suse.de>
+To: linux-scsi@vger.kernel.org, rajeshsg@netcore.co.in
 
-In message <1064420472.2658.13.camel@cherrytest.pdx.osdl.net> you write:
-> While any of the 3 patches (John's, Sam's, and Justin's) should work,
-> Justin has a case (below) for his patch.  
-> 
-> I have verified John's and Sam's patch, but I have not been able to
-> cleanly apply Justin's patch to 2.4 or 2.6 yet.  So please do not
-> forward this patch until we can verify it.
+Hi List,
 
-OK, I'm closing it out of the Trivial Patch Monkey, since well, it's
-not trivial 8)
 
-Cheers,
-Rusty.
---
-  Anyone who quotes me in their sig is an idiot. -- Rusty Russell.
+     I am having on-board Adaptec 7901-iROC (SCSI Raid Controller).  I 
+am not able
+to get it working even with latest 2.4.22 kernel. Kernel 2.4.22 seems to 
+have latest
+source from http://people.freebsd.org/~gibbs/linux/ of the driver. Is 
+this controller supported by
+aic79xx???  Or else i have to try something else???
+
+    The PCI-ID reported by lspci -v for this card is 809e. Any pointers???
+
+
+
+
+- Rajesh
+
+
+----------------------------------------------------------------
+
+NETCORE SOLUTIONS *** Ph: +91 22 5662 8000 Fax: +91 22 5662 8134
+
+MailServ: Email, IM, Proxy, Firewall, Anti-Virus, LDAP
+Fleximail: Mail Storage, Management and Relaying
+http://netcore.co.in
+
+Emergic Freedom: Linux-based Thin Client-Thick Server Computing
+http://www.emergic.com
+
+BlogStreet: Blog Profiles, RSS Ecosystem, Blog Tops, Search
+http://www.blogstreet.com
+
+Rajesh Jain's Weblog on Technology: http://www.emergic.org
+----------------------------------------------------------------
+
+
