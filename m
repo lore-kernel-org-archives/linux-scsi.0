@@ -1,64 +1,28 @@
 From: Patrick Mochel <mochel@osdl.org>
 Subject: Re: [PATCH] /proc/scsi/map
-Date: Tue, 25 Jun 2002 09:33:01 -0700 (PDT)
+Date: Tue, 25 Jun 2002 09:46:23 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.33.0206250920150.8496-100000@geena.pdx.osdl.net>
-References: <3D14B2CF.90002@pacbell.net>
+Message-ID: <Pine.LNX.4.33.0206250940370.8496-100000@geena.pdx.osdl.net>
+References: <1024769900.6875.139.camel@subjeKt>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <3D14B2CF.90002@pacbell.net>
+In-Reply-To: <1024769900.6875.139.camel@subjeKt>
 List-Id: linux-scsi@vger.kernel.org
-To: David Brownell <david-b@pacbell.net>
-Cc: Nick Bellinger <nickb@attheoffice.org>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Nick Bellinger <nickb@attheoffice.org>
+Cc: David Brownell <david-b@pacbell.net>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
 
-On Sat, 22 Jun 2002, David Brownell wrote:
+> This reiterates the need for a sound logical device naming scheme that
+> fits into driverfs without mucking up the basic structure.  Not being a
+> expert on naming, the least offensive format I can think with regard to
+> iSCSI would be something along the lines of:
 
-> > On the other hand there is the obvious fact that an iSCSI initiator
-> > driver is not attached to a bus, and assuming /root/iSCSI.target/disk1
-> > etc, is out of the question.  There is a real need for a solution to
-> > handle virtual devices (as stated your previous message) that are not
-> > assoicated with any physical connectors.  
-> 
-> There are those who see the IP stack as a kind of logical bus ... :)
-> It's just not tied any specific hardware interface; it's "multipathed" in
-> some sense. Linking it to an eth0 entry in $DRIVERFS/root/pci0/00:10.0
-> would be wrong, since it can also be accessed through eth2.
-
-It's not wrong, it's just makes life interesting when you want 
-accurately represent the presence of the device via both paths, or you 
-want to deal with the removal or power management of the bridge device. 
-That problem needs to be addressed; soon. 
-
-> Why shouldn't there be a $DRIVERFS/net/ipv4@10.42.135.99/... style
-> hookup for iSCSI devices?  Using whatever physical addressing the
-> kernel uses there, which I assume wouldn't necessarily be restricted
-> to ipv4.  (And not exposing physical network topology -- routing! --
-> in driverfs.)
-
-You can very well use driverfs to expose those attributes, and is one of 
-the things that we've been discussing at the kernel summit. driverfs will 
-take over the world. But, I still think the device is best represented as 
-a child of the phsysical network device. 
-
-> On a related topic ... if driverfs is going to be providing a nice unique
-> ID for the controller ($DRIVERFS/root/pci0/00:02.0/02:0f.0/03:07.0 for
-> Linus' behind-two-bridges case), why are people talking as if the SCSI
-> layer's arbitrary "controller number" should still be getting pushed as
-> part of user visible names?
-> 
-> That is, I'd sure hope the standard policy for assigning driverfs names
-> would avoid _all_ IDs that are derived from enumeration order.  Otherwise
-> it'll be hard to store those names for (re)use by user mode tools.
-
-The bus_id of the device is intended to represent the bus-specific ID of 
-the device, and is the name of the driverfs directory. 
-
-The name should user-friendly. It shouldn't be a unique name. Use 
-something nice and pretty. If people need/want a UUID, add it to the 
-bus-specific or type-specific structure, and export it via driverfs. It 
-will eventually make it to the generic structure.
+The device model will not give devices default names. It will pass the 
+responsibility to userspace, along with the path to the device via 
+/sbin/hotplug. From the patch, the userspace agent can derive various 
+things from the device's directory, including the device type and the UUID 
+of the device. From this, userspace can look up what to name the device. 
 
 	-pat
 
