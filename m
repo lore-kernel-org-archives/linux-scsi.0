@@ -1,41 +1,50 @@
-From: Andi Kleen <ak@muc.de>
-Subject: Re: [PATCH] Convert megaraid2 to compat_ioctl
-Date: 3 Feb 2005 22:12:10 +0100
-Message-ID: <20050203211210.GA53249@muc.de>
-References: <0E3FA95632D6D047BA649F95DAB60E570366266B@exa-atlanta>
+From: Bryan Henderson <hbryan@us.ibm.com>
+Subject: Re: Debug out from SCSI layers
+Date: Thu, 3 Feb 2005 17:31:33 -0800
+Message-ID: <OFC54C78A0.930EAD99-ON88256F9E.000764F3-88256F9E.00086B35@us.ibm.com>
+References: <A8B003DDA3332A479C0ECCA641F47E6503BE7087@tayexc13.americas.cpqcorp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Received: from colin2.muc.de ([193.149.48.15]:13575 "HELO colin2.muc.de")
-	by vger.kernel.org with SMTP id S263046AbVBCVMP (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Feb 2005 16:12:15 -0500
-Date: Thu, 3 Feb 2005 22:12:10 +0100
-Content-Disposition: inline
-In-Reply-To: <0E3FA95632D6D047BA649F95DAB60E570366266B@exa-atlanta>
+Content-Type: text/plain; charset="US-ASCII"
+Received: from e3.ny.us.ibm.com ([32.97.182.143]:60641 "EHLO e3.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S263304AbVBDBdG (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Feb 2005 20:33:06 -0500
+Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
+	by e3.ny.us.ibm.com (8.12.10/8.12.10) with ESMTP id j141X5ZW012864
+	for <linux-scsi@vger.kernel.org>; Thu, 3 Feb 2005 20:33:05 -0500
+Received: from d01av03.pok.ibm.com (d01av03.pok.ibm.com [9.56.224.217])
+	by d01relay04.pok.ibm.com (8.12.10/NCO/VER6.6) with ESMTP id j141X5oH125128
+	for <linux-scsi@vger.kernel.org>; Thu, 3 Feb 2005 20:33:05 -0500
+Received: from d01av03.pok.ibm.com (loopback [127.0.0.1])
+	by d01av03.pok.ibm.com (8.12.11/8.12.11) with ESMTP id j141X5vV002886
+	for <linux-scsi@vger.kernel.org>; Thu, 3 Feb 2005 20:33:05 -0500
+In-Reply-To: <A8B003DDA3332A479C0ECCA641F47E6503BE7087@tayexc13.americas.cpqcorp.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Ju, Seokmann" <sju@lsil.com>
-Cc: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org
+To: "Dupuis, Chad" <chad.dupuis@hp.com>
+Cc: linux-scsi@vger.kernel.org
 
-On Thu, Feb 03, 2005 at 11:01:39AM -0500, Ju, Seokmann wrote:
-> On Tuesday, January 18, 2005 6:17 AM, Andi wrote:
-> > Convert megaraid2 driver to new compat_ioctl entry points.
-> > 
-> > I don't have easy access to hardware, so only compile tested.
-> 
-> Thanks for your feedback and appreciate changes you've made.
-> The changes look great to me.  
-> One question, though, any reason to have 'lock_kernel'?
+>Is there a way to make the SCSI layers (midlayer, sd, etc.) print out
+>some debug output to /var/log/messages
 
-It was hold before and I didn't want to audit all the code
-to make sure it was safe to not hold it.
+Note that no kernel code puts stuff in /var/log/messages.  The SCSI log 
+messages are ordinary kernel messages, and most people have a user space 
+process or two running that suck recent kernel messages out of the kernel 
+message buffer and write them into /var/log/messages.  They typically 
+control this behavior with /etc/syslog.conf.
 
-> Isn't it too huge to use, here?
+It's good to remember this because of a couple of things.  First of all, a 
+lot of syslog.confs say to ignore "debug" level messages or put them some 
+place besides /var/log/messages.  Second, if the kernel generates the 
+messages faster than the syslog daemon can move them to /var/log/messages, 
+you'll miss some.  Third, the filesystem I/O this process does to write to 
+the log file might interfere with whatever you're trying to investigate.
 
-Probably yes. If you're audited the code and feel confident
-that it doesn't need it feel free to drop.
+A log_buf_len= kernel boot parameter is useful for making the kernel 
+message buffer big enough to avoid overruns.
 
-> It could lead system hung if ioctl goes to sleep for some reason.
+Two sometimes simpler ways to gather your SCSI debug messages are: have 
+the kernel display them on the console, by issuing a 'dmesg -n8' command 
+(this isn't useful if your console is in graphics mode), and simply 
+display or move to a file the contents of the kernel message buffer, with 
+'dmesg'.
 
-No, lock_kernel is magically dropped on sleeps.
-
--Andi
