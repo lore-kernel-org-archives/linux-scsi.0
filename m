@@ -1,44 +1,34 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: RE: [linux-iscsi-devel] [question] deferred sense
-Date: Wed, 05 Jan 2005 16:51:57 -0500
-Message-ID: <1104961917.3883.4.camel@mulgrave>
-References: <60807403EABEB443939A5A7AA8A7458B9B94AF@otce2k01.adaptec.com>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: [linux-iscsi-devel] [question] deferred sense
+Date: Wed, 5 Jan 2005 22:58:06 +0000
+Message-ID: <20050105225806.GF27371@parcelfarce.linux.theplanet.co.uk>
+References: <60807403EABEB443939A5A7AA8A7458B9B94AF@otce2k01.adaptec.com> <1104961917.3883.4.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat16.steeleye.com ([209.192.50.48]:39648 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S262633AbVAEWtD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 5 Jan 2005 17:49:03 -0500
-In-Reply-To: <60807403EABEB443939A5A7AA8A7458B9B94AF@otce2k01.adaptec.com>
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:38630 "EHLO
+	www.linux.org.uk") by vger.kernel.org with ESMTP id S262641AbVAEW6I
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 5 Jan 2005 17:58:08 -0500
+Content-Disposition: inline
+In-Reply-To: <1104961917.3883.4.camel@mulgrave>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Wed, 2005-01-05 at 12:47 -0500, Salyzyn, Mark wrote:
-> Change the assumptions in Journalling filesystems and make it work in a
-> deferred sense environment.
+On Wed, Jan 05, 2005 at 04:51:57PM -0500, James Bottomley wrote:
+> I suggest you publish the API to linux-scsi and linux-ide since we'd be
+> the primary implementers.  The fs changes should go to the relevant fs
+> lists (probably cc linux-kernel) and we'll be glad to look them over.
 
-It's possible, but I think it will involve large changes to the kernel.
+linux-fsdevel (@vger) would probably be the right place to get feedback
+from filesystem authors.
 
-> Don't delete the Journal until a safe point of time when the writeback
-> is confirmed either by underlying knowledge, time (flush interval
-> passed), amount of data (dirty cache is forced flushed), or a read-back
-> (resulting from the deferred error investigation). RAID cards and
-> external enclosures do this all the time, but to be fair with usually
-> more knowledge of all the cache handling.
-
-Well ... this proposal would change every filesystem in the kernel for
-something that occurs rather rarely (I've never actually seen it
-happen), so it is rather a lot of work for not very much benefit.
-However, if you have actual proposals, lets see them.
-
-I suggest you publish the API to linux-scsi and linux-ide since we'd be
-the primary implementers.  The fs changes should go to the relevant fs
-lists (probably cc linux-kernel) and we'll be glad to look them over.
-
-James
-
-
+-- 
+"Next the statesmen will invent cheap lies, putting the blame upon 
+the nation that is attacked, and every man will be glad of those
+conscience-soothing falsities, and will diligently study them, and refuse
+to examine any refutations of them; and thus he will by and by convince 
+himself that the war is just, and will thank God for the better sleep 
+he enjoys after this process of grotesque self-deception." -- Mark Twain
