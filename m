@@ -1,64 +1,64 @@
-From: raray@jam.rr.com
-Subject: Re: SCSI HBA in wrong order
-Date: Fri, 9 Jul 2004 13:04:00 -0500 (CDT)
+From: "Smart, James" <James.Smart@Emulex.Com>
+Subject: RE: [Emulex] Ready for next round...
+Date: Fri, 9 Jul 2004 15:24:14 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.58.0407091257500.16287@rray1.jam.rr.com>
-References: <Pine.LNX.4.58.0407091027580.12759@rray1.jam.rr.com>
- <20040709164359.GF5889@parcelfarce.linux.theplanet.co.uk>
+Message-ID: <3356669BBE90C448AD4645C843E2BF28034F9630@xbl.ma.emulex.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain;
+	charset="iso-8859-1"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ms-smtp-02.texas.rr.com ([24.93.47.41]:56732 "EHLO
-	ms-smtp-02-eri0.texas.rr.com") by vger.kernel.org with ESMTP
-	id S265144AbUGISEE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 9 Jul 2004 14:04:04 -0400
-In-Reply-To: <20040709164359.GF5889@parcelfarce.linux.theplanet.co.uk>
+Received: from emulex.emulex.com ([138.239.112.1]:64672 "EHLO
+	emulex.emulex.com") by vger.kernel.org with ESMTP id S265773AbUGITY3
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 9 Jul 2004 15:24:29 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <willy@debian.org>
-Cc: linux-scsi@vger.kernel.org
+To: 'Christoph Hellwig' <hch@infradead.org>
+Cc: Linux SCSI Reflector <linux-scsi@vger.kernel.org>
 
-I apologize if it sounded like I was complaining.
-My intent was to ask for help.
-I'm using the 2.6.6 kernel I downloaded from www.kernel.org.
-I believe the built in HBA is using the aic7xxx module and the LSIU40HVD
-is using the sym53c8xx module.
-Can you explain how to force modules to be loaded in a certain order?
+Christoph,
 
-Thanks
-Richard Ray
+Can you please take a look at the snapshot just posted on SourceForge.
 
-On Fri, 9 Jul 2004, Matthew Wilcox wrote:
+The following things have been reworked:
+- USE_HGP_HOST_SLIM: finally resolved this issue and implemented it
+correctly.
+- Logging: We killed lpfc_logmsg.c and converted over to a single define
+using dev_printk. Still implements a subsystem filter in the macro.
+- Attributes: They have been moved over to shost_attrs. We changed the basic
+philosophy about per-instance attributes, as many simply aren't needed to be
+set prior to attachment. This allowed them to go back integers. You will
+find several removed as we removed some of the logic that insulated the
+midlayer and above from transient conditions (delayed io error, etc - see
+last paragraph). We killed lpfc.conf and have converted over to a separation
+of attributes from their description arrays. One discrepancy - the static
+configuration array for persistent bindings remains for compatibility - but
+it's own file.
+- Your big patch to lpfc_fcp.c - was incorporated.
+- [PATCH] streamline lpfc error handling: This was incorporated. There were
+some changes to clean up return codes and misplaced blocks.
+- [PATCH] remove dead event counters from lpfc. Rather than remove this
+code, as it will be used later, we have at least consolidated it and made
+the events visible via sysfs.
 
-> On Fri, Jul 09, 2004 at 10:29:34AM -0500, raray@jam.rr.com wrote:
-> > I have 3 Compaq Proliant ML370 servers with RedHat 9.0 and 2.4.23 kernel.
-> > Each of these machines has an optical jukebox with 6 drives attached.
-> > The 2 internal SCSI drives are attached to the HBA built into the system
-> > board.
-> > The jukebox is attached to a LSIU40HVD HBA.
-> > Linux assigns the built in HBAs as scsi0 and scsi1 and assigns the
-> > LSIU40HVD as scsi2 and scsi3.
-> > I upgraded one server to Fedora Core 2 with 2.6.6 kernel.
-> > Now Linux assigns the built in HBAs as scsi2 and scsi3 and assigns the
-> > LSIU40HVD as scsi0 and scsi1.
-> > This really screws things up. Anybody got any ideas how to fix this?
->
-> There is no way to fix this.  Supporting hotplug means that the sym2
-> driver is told about the HBAs in PCI bus scan order.  I assume all your
-> HBAs are driven by the sym2 driver?  If not, you could load the modules
-> in the other order to get the internal HBAs before the external HBAs.
->
-> In any case, this is a Red Hat kernel, you should be complaining to them,
-> not here.
->
-> --
-> "Next the statesmen will invent cheap lies, putting the blame upon
-> the nation that is attacked, and every man will be glad of those
-> conscience-soothing falsities, and will diligently study them, and refuse
-> to examine any refutations of them; and thus he will by and by convince
-> himself that the war is just, and will thank God for the better sleep
-> he enjoys after this process of grotesque self-deception." -- Mark Twain
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+
+Things we're still addressing - and should be in drop on 7/16:
+- clk_data: We're removing the safety list, and converting from multiple
+clock args to 1 so that it better maps to the kernel api.
+- secondary data structures for target/lun data : We're attempting to
+reduce/remove the notions of luns as, in general, the driver issues i/o at
+the target level. Part of this is removing report luns use, etc. Note: We
+will see if we can help the midlayer with addressing mode support.
+
+We have one major issue, which has been partially discussed already
+(http://marc.theaimsgroup.com/?l=linux-scsi&m=108275840501608&w=2). In
+summary, there are discovery state machine events when we lose connectivity
+with the target for a short period. If we do not suspend i/o to the target,
+the upper layer retries can exhaust before the target comes back, triggering
+other system error reports/problems/etc.  James Bottomly suggested adding a
+scsi device SUSPEND function. We are actively addressing this and you should
+see a conversation started shortly.
+
+
+-- James S
+
+
