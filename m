@@ -1,62 +1,36 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: extracting infos from struct scsi_cmnd
-Date: Sat, 27 Nov 2004 16:48:49 +0100
-Message-ID: <20041127154849.GA24460@suse.de>
-References: <20041127124222.GA1200@abulafia>
+From: Ingo Korb <nospam@akana.de>
+Subject: Re: Kernel 2.6.x hangs with Symbios Logic 53c1010 Ultra3 SCSI
+	Adapter
+Date: Sat, 27 Nov 2004 20:52:33 +0100
+Message-ID: <ur7mf2hoe.fsf@dragon.akana.de>
+References: <04Nov8.094419est.332239@cyborg.cybernetics.com>
+	<1099928314.10944.81.camel@compaq-rhel4.xsintricity.com>
+	<41A294C5.8040702@babut.net>
+	<20041123014049.GH25636@parcelfarce.linux.theplanet.co.uk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns.virtualhost.dk ([195.184.98.160]:58505 "EHLO virtualhost.dk")
-	by vger.kernel.org with ESMTP id S261161AbUK0Psx (ORCPT
+Received: from snowcat.de ([213.146.167.7]:23302 "EHLO snowcat.de")
+	by vger.kernel.org with ESMTP id S261318AbUK0Twp (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 27 Nov 2004 10:48:53 -0500
-Content-Disposition: inline
-In-Reply-To: <20041127124222.GA1200@abulafia>
+	Sat, 27 Nov 2004 14:52:45 -0500
+In-Reply-To: <20041123014049.GH25636@parcelfarce.linux.theplanet.co.uk> (Matthew
+ Wilcox's message of "Tue, 23 Nov 2004 01:40:49 +0000")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, tommaso.m@tiscalinet.it
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: Thomas Babut <thomas@babut.net>, linux-scsi@vger.kernel.org
 
-On Sat, Nov 27 2004, Tommaso Moroni wrote:
-> Hi!
-> 
-> I'm writing a module for the 2.6.9 kernel which tracks accesses on a
-> usb-storage device; in particular I'm interested in extracting from a
-> struct scsi_cmnd the data read/written and the associated sector. 
-> 
-> 
-> The code I'vr written till now looks like the following:
-> 
-> 
-> struct scsi_cmnd * cmd;
-> [...]
-> if (cmd->use_sg == 0)
-> {
-> 	buf = cmd->buffer;
-> 	buflen = cmd->bufflen;
-> 	sector = cmd->request->sector;
+Matthew Wilcox <matthew@wil.cx> writes:
 
-->request_bufflen and ->request_buffer.
+> On Tue, Nov 23, 2004 at 02:39:17AM +0100, Thomas Babut wrote:
+>> Perhaps someone could make a patch for Kernel 2.6 which adds the old driver.
+>
+> No.  Don't do this.  Help make sym2 work for your system.
 
-> } else {
-> 	struct scatterlist * sl = (struct scatterlist *) cmd->buffer;
-> 	for (i = 0; i < cmd->use_sg; i++)
-> 	{
-> 		buf = page_address(sl[i].page) + sl[i].offset;
->                 buflen = sl[i].length;
-> 		/* sector? */
-> 	}
-> }
+So what can one do? My Alphastation 200 has a 53C810 rev. 02 that only works
+with the ncr53c8xx-driver from 2.4, sym53c8xx_2 just hangs. Details were
+posted here about two weeks ago, without any replies.
 
-This only works on non-highmem pages, you should use kmap/kmap_atomic
-instead.
-
-> Is it correct?
-> Where can I find the sector involved in the operation if the
-> scatter-gather is used?
-
-It's ->request->sector as well. The total length is just the sum of the
-sg elements.
-
--- 
-Jens Axboe
+-ik
 
