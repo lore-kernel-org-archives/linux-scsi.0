@@ -1,41 +1,31 @@
 From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [BK PATCH] SCSI updates for 2.6.9
-Date: 19 Oct 2004 08:54:43 -0500
+Subject: Re: [PATCH] tmscsim: improve tagging
+Date: 19 Oct 2004 09:01:55 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1098194090.1714.3.camel@mulgrave>
-References: <1098137016.2011.339.camel@mulgrave>
-	<200410182341.13648.dtor_core@ameritech.net>
-	<200410190012.28071.dtor_core@ameritech.net>
-	<Pine.LNX.4.58.0410190009260.2287@ppc970.osdl.org>
+Message-ID: <1098194521.2068.6.camel@mulgrave>
+References: <Pine.LNX.4.60.0410190011090.6761@poirot.grange>
+	<20041019131051.GN16153@parcelfarce.linux.theplanet.co.uk>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat16.steeleye.com ([209.192.50.48]:52156 "EHLO
+Received: from stat16.steeleye.com ([209.192.50.48]:8648 "EHLO
 	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S269411AbUJSNzD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 19 Oct 2004 09:55:03 -0400
-In-Reply-To: <Pine.LNX.4.58.0410190009260.2287@ppc970.osdl.org>
+	id S269416AbUJSOC0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 19 Oct 2004 10:02:26 -0400
+In-Reply-To: <20041019131051.GN16153@parcelfarce.linux.theplanet.co.uk>
 List-Id: linux-scsi@vger.kernel.org
-To: Linus Torvalds <torvalds@osdl.org>
-Cc: Ben Collins <bcollins@debian.org>, Kernel Mailing List <linux-kernel@vger.kernel.org>, Dmitry Torokhov <dtor_core@ameritech.net>, Andrew Morton <akpm@osdl.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, willy@debian.org, Linux1394-Devel <linux1394-devel@lists.sourceforge.net>
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: Guennadi Liakhovetski <g.liakhovetski@gmx.de>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Tue, 2004-10-19 at 02:13, Linus Torvalds wrote:
->  does this look ok to you?
-> 
-> Arguably the SCSI layer should also have proper prefixes for its constants
-> - and in fact they do kind of exist as the GPCMD_xxx constants.  Oh, well.
-> Regardless, the sbp2 constants do look like they want prefixing..
+On Tue, 2004-10-19 at 08:10, Matthew Wilcox wrote:
+> Isn't cmd_per_lun set to only use one tag with this patch?
 
-We're slowly standardising at least some of our namespace problems.
-
-The condition codes are all migrating to SAM_STAT_ prefix, so
-CHECK_CONDITION becomes SAM_STAT_CHECK_CONDITION (and gets shifted in
-the process).
-
-We still have a nasty namespace pollution problem on the SCSI commands
-though and cleaning this up is problematic since they permeate not just
-SCSI but large areas of other drivers as well.
+No, it's the depth associated with untagged devices.  Arguably it should
+always be 2 so that there's always one command executing and one fully
+prepped and waiting to roll, but the driver must know to reject the
+second command with SCSI_MLQUEUE_DEVICE_BUSY to get it to requeue fully
+prepared.
 
 James
 
