@@ -1,40 +1,46 @@
-From: Pavel Machek <pavel@ucw.cz>
-Subject: Re: [PATCH] prelim ACPI support for aic7xxx
-Date: Fri, 23 Jul 2004 03:05:39 +0200
+From: Nathan Bryant <nbryant@optonline.net>
+Subject: Re: suspending I/Os to a device
+Date: Fri, 23 Jul 2004 00:36:03 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040723010539.GA1477@elf.ucw.cz>
-References: <41006A88.9040700@optonline.net>
+Message-ID: <410095B3.8060902@optonline.net>
+References: <3356669BBE90C448AD4645C843E2BF28025AB79F@xbl.ma.emulex.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [216.208.38.106] ([216.208.38.106]:42741 "EHLO amd.ucw.cz")
-	by vger.kernel.org with ESMTP id S267507AbUGWC6d (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 22 Jul 2004 22:58:33 -0400
-Content-Disposition: inline
-In-Reply-To: <41006A88.9040700@optonline.net>
+Received: from mta10.srv.hcvlny.cv.net ([167.206.5.85]:3265 "EHLO
+	mta10.srv.hcvlny.cv.net") by vger.kernel.org with ESMTP
+	id S262085AbUGWEgD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 23 Jul 2004 00:36:03 -0400
+Received: from optonline.net (ool-43564880.dyn.optonline.net [67.86.72.128])
+ by mta10.srv.hcvlny.cv.net
+ (iPlanet Messaging Server 5.2 HotFix 1.25 (built Mar  3 2004))
+ with ESMTP id <0I1A00318FG37A@mta10.srv.hcvlny.cv.net> for
+ linux-scsi@vger.kernel.org; Fri, 23 Jul 2004 00:36:03 -0400 (EDT)
+In-reply-to: <3356669BBE90C448AD4645C843E2BF28025AB79F@xbl.ma.emulex.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Nathan Bryant <nbryant@optonline.net>
-Cc: Luben Tuikov <luben_tuikov@adaptec.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, random1@o-o.yi.org
+To: "Ely, Paul" <Paul.Ely@Emulex.Com>
+Cc: 'Christoph Hellwig' <hch@infradead.org>, "Smart, James" <James.Smart@Emulex.Com>, 'James Bottomley' <James.Bottomley@steeleye.com>, Linux SCSI Reflector <linux-scsi@vger.kernel.org>
 
-Hi!
+Ely, Paul wrote:
 
-> This patch (against arjanv's latest kernel, but should apply to 
-> 2.6.8-rc) is still a little messy and NOT ready to go into the mainline 
-> kernel... Luben hasn't seen it yet (Hi Luben!), so the usual disclaimers 
-> apply. But it's time to get some more eyes on it. The good news is it 
-> works, the bad news is there is no support for error recovery during 
-> those few seconds when the bus is setttling and hard disk is powering up 
-> after a resume. (Need suggestions on how best to attack that part, I 
-> really don't know anything about SCSI...) It works, after a few 
-> residuals if your filesystems are mounted read-only, however. If you are 
-> mounted read-write then you will get aborted commands, ext3 will 
-> complain, and remount your fs read-only until you reboot. To avoid this, 
-> remount read-only, suspend/resume, then remount read-write manually 
-> after everything starts working.
+>All,
+>
+>
+>The following patch provides an implementation of
+>the proposal contained in this mail thread.  The
+>patch does not provide a complete solution such
+>as:
+>	nodevice tmo handling by the scsi midlayer
+>	scsi_device structure member for nodevice tmo
+>	handling of SDEV_SUSPEND state by midlayer
+>
+>Subsequent patches to address remaining implementation.
+>
+I'm a little late to the party. Is this intended to facilitate the PCI 
+power management (queue quiesce) issues that were discussed this week? 
+Will it be sufficient to "just call" these from pcidev->suspend(), 
+pcidev->resume()?
 
-If ou are playing with this kind of stuff, I suggest you to use ext2
-(not ext3) or at least fsck *very* often.
-								Pavel
--- 
-When do you have heart between your knees?
+Duh, like thanks and stuff. I think.
+Nathan
