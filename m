@@ -1,44 +1,55 @@
-From: Mike Anderson <andmike@us.ibm.com>
+From: Oliver Neukum <oliver@neukum.org>
 Subject: Re: [PATCH] scsi_set_host_offline (resend)
-Date: Sat, 29 Mar 2003 11:04:07 -0800
+Date: Sat, 29 Mar 2003 20:24:08 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030329190407.GA1483@beaverton.ibm.com>
-References: <20030325100704.GC3868@beaverton.ibm.com> <1048613872.2070.12.camel@mulgrave> <20030325184530.GA1202@beaverton.ibm.com> <1048618939.1790.29.camel@mulgrave> <20030325232920.GB2692@beaverton.ibm.com> <1048779761.1789.21.camel@mulgrave> <20030328173253.A32352@one-eyed-alien.net> <1048948992.21525.1.camel@mulgrave>
+Message-ID: <200303292024.08893.oliver@neukum.org>
+References: <20030325100704.GC3868@beaverton.ibm.com> <1048948992.21525.1.camel@mulgrave> <20030329190407.GA1483@beaverton.ibm.com>
+Reply-To: oliver@neukum.name
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <20030329190407.GA1483@beaverton.ibm.com>
 Content-Disposition: inline
-In-Reply-To: <1048948992.21525.1.camel@mulgrave>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@steeleye.com>
+To: Mike Anderson <andmike@us.ibm.com>, James Bottomley <James.Bottomley@steeleye.com>
 Cc: Matthew Dharm <mdharm-scsi@one-eyed-alien.net>, mochel@osdl.org, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-James Bottomley [James.Bottomley@steeleye.com] wrote:
-> On Fri, 2003-03-28 at 19:32, Matthew Dharm wrote:
-> > Well, Linus wants this to work for usb-storage more short-term than
-> > long-term....
-> 
-> Well, I think Mike's given us everything you need.  We can use the
-> set_device_offline to alter the remove-single-device path to offline the
-> device, wait for the returning I/Os to complete or error and then remove
-> the device.
-> 
-> You can then trigger this from your hotplug scripts.
+Am Samstag, 29. M=E4rz 2003 20:04 schrieb Mike Anderson:
+> James Bottomley [James.Bottomley@steeleye.com] wrote:
+> > On Fri, 2003-03-28 at 19:32, Matthew Dharm wrote:
+> > > Well, Linus wants this to work for usb-storage more short-term th=
+an
+> > > long-term....
+> >
+> > Well, I think Mike's given us everything you need.  We can use the
+> > set_device_offline to alter the remove-single-device path to offlin=
+e the
+> > device, wait for the returning I/Os to complete or error and then r=
+emove
+> > the device.
+> >
+> > You can then trigger this from your hotplug scripts.
+>
+> I believe we still need to fixup scsi_remove_host to not fail (i.e
+> return void) and call "hostt->release" when the ref count on the host
 
-I believe we still need to fixup scsi_remove_host to not fail (i.e
-return void) and call "hostt->release" when the ref count on the host
-goes to zero. (I believe this was a point that started us on this thread
-of work as the usb implementation was one device per host).
+Yes, we cannot have a failure there.
 
-I have a work in progress patch that ensures that all scsi hosts have a
-sysfs struct device even if the driver is not converted to the driver
-model which allows scsi_devices to be true children of a scsi_host
-struct device. This should allow the usage of kobject ref counting for
-scsi_hosts. I am still working on plugging the holes in this support
-hopefully I will have something out to the list soon.
+> goes to zero. (I believe this was a point that started us on this thr=
+ead
+> of work as the usb implementation was one device per host).
 
--andmike
---
-Michael Anderson
-andmike@us.ibm.com
+Not necessarily. The USB driver cannot tell a simple device apart
+from a SCSI<->USB bridge, which several SCSI devices can be
+attached to. Hotplugging however is always on a host level with
+USB storage.
 
+	Regards
+		Oliver
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
