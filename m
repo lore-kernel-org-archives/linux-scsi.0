@@ -1,53 +1,89 @@
-From: Mike Anderson <andmike@us.ibm.com>
-Subject: Re: PATCH: (as33) Remove /proc/scsi directory in scsi_remove_host()
-Date: Wed, 11 Jun 2003 11:23:24 -0700
+From: Nathan Hunsperger <nathan@munchnet.com>
+Subject: Re: Are QLA2000's doomed under 2.4?
+Date: Wed, 11 Jun 2003 12:56:18 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030611182323.GC1596@beaverton.ibm.com>
-References: <20030521180308.GD1116@beaverton.ibm.com> <Pine.LNX.4.44L0.0306111328330.696-100000@ida.rowland.org>
+Message-ID: <20030611195618.GA21393@munchnet.com>
+References: <20030609042014.GH4373@munchnet.com> <20030609162047.GA24926@praka.local.home>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e32.co.us.ibm.com ([32.97.110.130]:56227 "EHLO
-	e32.co.us.ibm.com") by vger.kernel.org with ESMTP id S262720AbTFKSHV
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 11 Jun 2003 14:07:21 -0400
+Received: from adsl-66-120-172-74.dsl.sntc01.pacbell.net ([66.120.172.74]:43005
+	"EHLO server-linux.munchnet.com") by vger.kernel.org with ESMTP
+	id S263458AbTFKTmi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 11 Jun 2003 15:42:38 -0400
 Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.44L0.0306111328330.696-100000@ida.rowland.org>
+In-Reply-To: <20030609162047.GA24926@praka.local.home>
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: SCSI development list <linux-scsi@vger.kernel.org>
+To: Andrew Vasquez <praka@san.rr.com>, linux-scsi@vger.kernel.org
 
-Alan,
-	This is bug, but I do not think this fix will work for non
-	legacy callers. LLDDs that just use scsi_add_host and
-	scsi_remove_host would have the remove_proc_entry called
-	possibly too early.
-
-	I do not have another fix to offer right now as "present" has race
-	issues and just moving it might not be a good idea.
-
-Alan Stern [stern@rowland.harvard.edu] wrote:
-> ===== scsi_proc.c 1.11 vs edited =====
-> --- 1.11/drivers/scsi/scsi_proc.c	Mon May 26 14:01:11 2003
-> +++ edited/drivers/scsi/scsi_proc.c	Wed Jun 11 13:22:43 2003
-> @@ -149,8 +149,8 @@
->  
->  	sprintf(name,"%d", shost->host_no);
->  	remove_proc_entry(name, shost->hostt->proc_dir);
-> -	if (!shost->hostt->present)
-> -		remove_proc_entry(shost->hostt->proc_name, proc_scsi);
-> +	remove_proc_entry(shost->hostt->proc_name, proc_scsi);
-> +	shost->hostt->proc_dir = NULL;
->  }
->  
->  static void proc_print_scsidevice(struct scsi_device* sdev, char *buffer,
+On Mon, Jun 09, 2003 at 09:20:47AM -0700, Andrew Vasquez wrote:
+> Which version of the QLogic driver are you trying to you trying to
+> use?  The latest beta 6.05.00b9 and the latest formal release
+> (6.04.00) contain no strings in the source which read as 'this should
+> not happen.'  The qlogicfc.c driver (in the kernel) contains the
+> following printk:
 > 
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
--andmike
---
-Michael Anderson
-andmike@us.ibm.com
+> 	printk("qlogicfc%d : no handle slots, this should not happen.\n",
+> 		hostdata->host_id)
+> 
+> Is this the message you are referring to? 
 
+Yeah, thanks for calling me on that.  I've been beating my head on the
+wall over this for about 2 months, so I managed to confuse myself a bit.
+I've just re-run some tests with the various drivers, and have attached
+the kernel logs.
+
+> IAC: Could you try the 6.05.00b9 which is available on the web:
+> 
+> 	http://www.qlogic.com/support/os_detail.asp?productid=255&osid=26
+
+No luck.  This driver performs the same as 6.04.
+
+> QLogic doesn't formally support the EOLd ISP2100 chip, but the driver
+> has worked for a few others, and I'll try to help as best as I can.
+
+Thanks.  Unfortunatly the lack of QLogic support makes it that much
+harder for me to debug.
+
+
+qlogic v6.05.00b9 (f/w 1.19.24):
+
+Jun 10 11:10:38 delta kernel: qla2x00(3): Performing ISP error recovery - ha= f7af807c.
+Jun 10 11:10:38 delta kernel: scsi(3): LIP reset occurred.
+Jun 10 11:10:38 delta kernel: scsi(3): Waiting for LIP to complete...
+Jun 10 11:10:38 delta kernel: scsi(3): Waiting for LIP to complete...
+Jun 10 11:10:39 delta kernel: scsi(3): LIP occurred.
+Jun 10 11:10:39 delta kernel: scsi(3): LOOP UP detected.
+Jun 10 11:10:39 delta kernel: scsi(3): Topology - (Loop), Host Loop address 0x7
+
+or
+
+Jun 10 11:25:32 delta kernel: qla2xxx_eh_abort Exiting: status=Failed
+...
+Jun 10 12:16:08 delta kernel: scsi(3:0:0:0): DEVICE RESET ISSUED.
+...
+Jun 10 12:16:08 delta kernel: scsi(3:0:0:0): LOOP RESET ISSUED.
+Jun 10 12:16:08 delta kernel: qla2xxx_eh_bus_reset Exiting: Reset Failed
+
+(above 2 entries 10 times for each of 14 drives on loop, @ 5s interval)
+
+Jun 10 12:28:06 delta kernel: scsi(3:0:0:0): now issue ADAPTER RESET.
+Jun 10 12:28:06 delta kernel: qla2x00(3): Performing ISP error recovery - ha= f7af807c.
+Jun 10 12:28:07 delta kernel: scsi(3): LIP reset occurred.
+Jun 10 12:28:07 delta kernel: scsi(3): Waiting for LIP to complete...
+Jun 10 12:28:07 delta kernel: scsi(3): LIP occurred.
+Jun 10 12:28:07 delta kernel: scsi(3): LOOP UP detected.
+Jun 10 12:28:07 delta kernel: scsi(3): Topology - (Loop), Host Loop address 0x7
+Jun 10 12:28:07 delta kernel: qla2xxx_eh_host_reset Exiting: status=SUCCESS
+
+qlogic v6.04.00 (f/w 1.19.24):
+
+<same as v6.05.00b9>
+
+qlogicfc:
+
+qlogicfc0 : no handle slots, this should not happen.
+hostdata->queued is 4e, in_ptr: xx
+(above 2 several times, then lockup)
+
+- Nathan
