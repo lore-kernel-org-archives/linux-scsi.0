@@ -1,66 +1,55 @@
-From: "Mukker, Atul" <Atulm@lsil.com>
-Subject: RE: Problem with megaraid and PERC3/dc on a poweredge 6450
-Date: Thu, 6 Jan 2005 14:31:14 -0500
-Message-ID: <0E3FA95632D6D047BA649F95DAB60E57058C0253@exa-atlanta>
+From: Bryan Henderson <hbryan@us.ibm.com>
+Subject: RE: [linux-iscsi-devel] [question] deferred sense
+Date: Thu, 6 Jan 2005 15:09:22 -0800
+Message-ID: <OF20CD96E8.F1590B0E-ON88256F81.007E9E66-88256F81.007F28D1@us.ibm.com>
+References: <1104961917.3883.4.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="US-ASCII"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:2223 "EHLO mail0.lsil.com")
-	by vger.kernel.org with ESMTP id S262985AbVAFTfI convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 6 Jan 2005 14:35:08 -0500
+Received: from e5.ny.us.ibm.com ([32.97.182.145]:51379 "EHLO e5.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S263102AbVAFXLV (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Jan 2005 18:11:21 -0500
+Received: from d01relay02.pok.ibm.com (d01relay02.pok.ibm.com [9.56.227.234])
+	by e5.ny.us.ibm.com (8.12.10/8.12.10) with ESMTP id j06NBJGb012079
+	for <linux-scsi@vger.kernel.org>; Thu, 6 Jan 2005 18:11:19 -0500
+Received: from d01av02.pok.ibm.com (d01av02.pok.ibm.com [9.56.224.216])
+	by d01relay02.pok.ibm.com (8.12.10/NCO/VER6.6) with ESMTP id j06NBJ15242890
+	for <linux-scsi@vger.kernel.org>; Thu, 6 Jan 2005 18:11:19 -0500
+Received: from d01av02.pok.ibm.com (loopback [127.0.0.1])
+	by d01av02.pok.ibm.com (8.12.11/8.12.11) with ESMTP id j06NBJJs031337
+	for <linux-scsi@vger.kernel.org>; Thu, 6 Jan 2005 18:11:19 -0500
+In-Reply-To: <1104961917.3883.4.camel@mulgrave>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: 'Stefan Berder' <sbe@oleane.net>, "Mukker, Atul" <Atulm@lsil.com>
-Cc: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
 
-The target 15/Channel 1 on your first controller ( bus 5:slot 0:func 0,=
- fw
-version:[1.57] bios version:[3.13]) seems to be behaving erratically. C=
-an
-you tell me what kind of device you have on this address?
+>> Change the assumptions in Journalling filesystems and make it work in a
+>> deferred sense environment.
+>
+>It's possible, but I think it will involve large changes to the kernel.
+>
+>> Don't delete the Journal until a safe point of time when the writeback
+>> is confirmed either by underlying knowledge, time (flush interval
+>> passed), amount of data (dirty cache is forced flushed), or a read-back
+>> (resulting from the deferred error investigation). RAID cards and
+>> external enclosures do this all the time, but to be fair with usually
+>> more knowledge of all the cache handling.
+>
+>Well ... this proposal would change every filesystem in the kernel for
+>something that occurs rather rarely (I've never actually seen it
+>happen), so it is rather a lot of work for not very much benefit.
 
-Also, why do you have two versions of the FW on your controllers?
+It's especially little benefit because there's no reason for the SCSI 
+target to be in write back mode.  Caching and I/O scheduling within Linux 
+and SCSI command queueing do pretty much everything write back caching in 
+the target is intended for.  So I think the right solution for this 
+problem (which I agree is a major problem) is for journalled filesystems 
+to keep the disk in non-writeback mode.
 
-Thanks
--Atul
+Don't you usually have to go out of your way to get a disk drive to do 
+writeback?
 
-> -----Original Message-----
-> From: Stefan Berder [mailto:sbe@oleane.net]=20
-> Sent: Thursday, January 06, 2005 12:14 PM
-> To: Mukker, Atul
-> Cc: 'linux-scsi@vger.kernel.org'
-> Subject: Re: Problem with megaraid and PERC3/dc on a poweredge 6450
->=20
-> On Thu, 6 Jan 2005 09:13:32 -0500
-> "Mukker, Atul" <Atulm@lsil.com> wrote:
->=20
-> > Thanks for the files. Both of these controllers should work=20
-> with the=20
-> > new drivers, megaraid_mbox and megaraid_mm. Now, I am=20
-> waiting on the=20
-> > kernel messages, before suggesting a prognosis. I am sure=20
-> you know how=20
-> > to collect the messages by re-directing them to a serial console?
->=20
-> Done, a weird thing is that the megaraid_mm driver no more panics ...
-> but it does some timeout things I don't have in 2.4.28 with megaraid2=
-=2E
->=20
-> Sorry for the noise ...
->=20
-> Stefan
->=20
-> --=20
->  #=3D- Stefan Berder                  tel : 6 14 80        -=3D#
->  #=3D- Ing=E9nieur syst=E8me et r=E9seau          01 53 95 14 80 -=3D=
-#
->  #=3D- TRANSPAC / DO-DAE-ADMG        mail : sbe@oleane.net -=3D#
->  #=3D- /(bb|[^b]{2})/      stefan.berder@francetelecom.com -=3D#
->=20
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+--
+Bryan Henderson                          IBM Almaden Research Center
+San Jose CA                              Filesystems
