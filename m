@@ -1,191 +1,180 @@
-From: mike.miller@hjp.com
-Subject: cciss update [1/2] updates our SCSI support to not use deprecated headers
-Date: Wed, 13 Oct 2004 16:13:02 -0500
+From: mike.miller@hp.com
+Subject: cciss update [2/2] fixes for Steeleye Lifekeeper
+Date: Wed, 13 Oct 2004 16:22:53 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20041013211302.GA9866@beardog.cca.cpqcorp.net>
+Message-ID: <20041013212253.GB9866@beardog.cca.cpqcorp.net>
 Reply-To: mikem@beardog.cca.cpqcorp.net
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palrel10.hp.com ([156.153.255.245]:1431 "EHLO palrel10.hp.com")
-	by vger.kernel.org with ESMTP id S269855AbUJMVN1 (ORCPT
+Received: from palrel10.hp.com ([156.153.255.245]:18348 "EHLO palrel10.hp.com")
+	by vger.kernel.org with ESMTP id S269866AbUJMVXT (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 13 Oct 2004 17:13:27 -0400
+	Wed, 13 Oct 2004 17:23:19 -0400
 Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
 To: akpm@osdl.org, axboe@suse.de
 Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-The following patch updates the cciss scsi support to no longer use the deprecated APIs. This is almost identical to the patch sent in by Christoph Hellwig. I had trouble with his patch, maybe my mailer munged it up????
+This patch addresses a problem with clustering software and also some of our utilies. We had to modify the modify the open specifically for clustering. This is the same as was done for 2.4. We also have to register the reserved volumes with the OS so when the backup server breaks the reservations he can call BLKRRPART to set the volume to the correct size.
+We also have to register a controller that may not have any logical volumes configured. This is for the online utils as well as clustering.
 
-This patch applies to 2.6.9-rc4. Please apply in order.
+Patch applies to 2.6.9-rc4. Please apply in order.
 Please consider this for inclusion.
 
 Thanks,
 mikem
-------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
 
-diff -burNp lx269-rc4.orig/drivers/block/cciss_scsi.c lx269-rc4/drivers/block/cciss_scsi.c
---- lx269-rc4.orig/drivers/block/cciss_scsi.c	2004-08-14 00:36:32.000000000 -0500
-+++ lx269-rc4/drivers/block/cciss_scsi.c	2004-10-13 13:19:22.155575536 -0500
-@@ -28,7 +28,9 @@
-    through the array controller.  Note in particular, neither 
-    physical nor logical disks are presented through the scsi layer. */
+diff -urNp lx269-rc4-p001/drivers/block/cciss.c lx269-rc4/drivers/block/cciss.c
+--- lx269-rc4-p001/drivers/block/cciss.c	2004-10-13 13:53:49.545284000 -0500
++++ lx269-rc4/drivers/block/cciss.c	2004-10-13 15:26:47.312335048 -0500
+@@ -438,13 +438,22 @@ static int cciss_open(struct inode *inod
  
--#include "../scsi/scsi.h" 
-+#include <scsi/scsi.h> 
-+#include <scsi/scsi_cmnd.h>
-+#include <scsi/scsi_device.h>
- #include <scsi/scsi_host.h> 
- #include <asm/atomic.h>
- #include <linux/timer.h>
-@@ -61,15 +63,8 @@ int cciss_scsi_proc_info(
- 		int length, 	   /* length of data in buffer */
- 		int func);	   /* 0 == read, 1 == write */
- 
--int cciss_scsi_queue_command (Scsi_Cmnd *cmd, void (* done)(Scsi_Cmnd *));
--#if 0
--int cciss_scsi_abort(Scsi_Cmnd *cmd);
--#if defined SCSI_RESET_SYNCHRONOUS && defined SCSI_RESET_ASYNCHRONOUS
--int cciss_scsi_reset(Scsi_Cmnd *cmd, unsigned int reset_flags);
--#else
--int cciss_scsi_reset(Scsi_Cmnd *cmd);
--#endif
--#endif
-+int cciss_scsi_queue_command (struct scsi_cmnd *cmd, 
-+		void (* done)(struct scsi_cmnd *));
- 
- static struct cciss_scsi_hba_t ccissscsi[MAX_CTLR] = {
- 	{ .name = "cciss0", .ndevices = 0 },
-@@ -82,7 +77,7 @@ static struct cciss_scsi_hba_t ccissscsi
- 	{ .name = "cciss7", .ndevices = 0 },
- };
- 
--static Scsi_Host_Template cciss_driver_template = {
-+static struct scsi_host_template cciss_driver_template = {
- 	.module			= THIS_MODULE,
- 	.name			= "cciss",
- 	.proc_name		= "cciss",
-@@ -552,11 +547,12 @@ cciss_scsi_setup(int cntl_num)
- static void
- complete_scsi_command( CommandList_struct *cp, int timeout, __u32 tag)
- {
--	Scsi_Cmnd *cmd;
-+	struct scsi_cmnd *cmd;
- 	ctlr_info_t *ctlr;
- 	u64bit addr64;
- 	ErrorInfo_struct *ei;
- 
-+	cmd = kmalloc(sizeof(struct scsi_cmnd), GFP_KERNEL);
- 	ei = cp->err_info;
- 
- 	/* First, see if it was a message rather than a command */
-@@ -565,7 +561,7 @@ complete_scsi_command( CommandList_struc
- 		return;
+ 	/*
+ 	 * Root is allowed to open raw volume zero even if it's not configured
+-	 * so array config can still work.  I don't think I really like this,
++	 * so array config can still work. Root is also allowed to open any
++	 * volume that has a LUN ID, so it can issue IOCTL to reread the
++	 * disk information.  I don't think I really like this
+ 	 * but I'm already using way to many device nodes to claim another one
+ 	 * for "raw controller".
+ 	 */
+ 	if (drv->nr_blocks == 0) {
+-		if (iminor(inode) != 0)
++		if (iminor(inode) != 0)	{ 	/* not node 0? */
++			/* if not node 0 make sure it is a partition = 0 */
++			if (iminor(inode) & 0x0f) {
+ 			return -ENXIO;
++				/* if it is, make sure we have a LUN ID */
++			} else if (drv->LunID == 0) {
++				return -ENXIO;
++			}
++		}
+ 		if (!capable(CAP_SYS_ADMIN))
+ 			return -EPERM;
  	}
- 
--	cmd = (Scsi_Cmnd *) cp->scsi_cmd;	
-+	cmd = (struct scsi_cmnd *) cp->scsi_cmd;	
- 	ctlr = hba[cp->ctlr];
- 
- 	/* undo the DMA mappings */
-@@ -573,14 +569,14 @@ complete_scsi_command( CommandList_struc
- 	if (cmd->use_sg) {
- 		pci_unmap_sg(ctlr->pdev,
- 			cmd->buffer, cmd->use_sg,
--				scsi_to_pci_dma_dir(cmd->sc_data_direction)); 
-+				cmd->sc_data_direction); 
- 	}
- 	else if (cmd->request_bufflen) {
- 		addr64.val32.lower = cp->SG[0].Addr.lower;
-                 addr64.val32.upper = cp->SG[0].Addr.upper;
-                 pci_unmap_single(ctlr->pdev, (dma_addr_t) addr64.val,
-                 	cmd->request_bufflen, 
--				scsi_to_pci_dma_dir(cmd->sc_data_direction));
-+				cmd->sc_data_direction);
- 	}
- 
- 	cmd->result = (DID_OK << 16); 		/* host byte */
-@@ -783,9 +779,8 @@ cciss_scsi_do_simple_cmd(ctlr_info_t *c,
- 	cp->Request.Type.Direction = direction;
- 
- 	/* Fill in the SG list and do dma mapping */
--	cciss_map_one(c->pdev, cp, 
--			(unsigned char *) buf, bufsize,
--			scsi_to_pci_dma_dir(SCSI_DATA_READ)); 
-+	cciss_map_one(c->pdev, cp, (unsigned char *) buf,
-+			bufsize, DMA_FROM_DEVICE); 
- 
- 	cp->waiting = &wait;
- 
-@@ -799,9 +794,7 @@ cciss_scsi_do_simple_cmd(ctlr_info_t *c,
- 	wait_for_completion(&wait);
- 
- 	/* undo the dma mapping */
--	cciss_unmap_one(c->pdev, cp, bufsize,
--				scsi_to_pci_dma_dir(SCSI_DATA_READ)); 
--
-+	cciss_unmap_one(c->pdev, cp, bufsize, DMA_FROM_DEVICE);
- 	return(0);
- }
- 
-@@ -1180,14 +1173,14 @@ cciss_scsi_info(struct Scsi_Host *sa)
- }
- 
- 
--/* cciss_scatter_gather takes a Scsi_Cmnd, (cmd), and does the pci 
-+/* cciss_scatter_gather takes a struct scsi_cmnd, (cmd), and does the pci 
-    dma mapping  and fills in the scatter gather entries of the 
-    cciss command, cp. */
- 
- static void
- cciss_scatter_gather(struct pci_dev *pdev, 
- 		CommandList_struct *cp,	
--		Scsi_Cmnd *cmd)
-+		struct scsi_cmnd *cmd)
- {
- 	unsigned int use_sg, nsegs=0, len;
- 	struct scatterlist *scatter = (struct scatterlist *) cmd->buffer;
-@@ -1200,7 +1193,7 @@ cciss_scatter_gather(struct pci_dev *pde
- 			addr64 = (__u64) pci_map_single(pdev, 
- 				cmd->request_buffer, 
- 				cmd->request_bufflen, 
--				scsi_to_pci_dma_dir(cmd->sc_data_direction)); 
-+				cmd->sc_data_direction); 
+@@ -1095,13 +1104,6 @@ cleanup1:
  	
- 			cp->SG[0].Addr.lower = 
- 			  (__u32) (addr64 & (__u64) 0x00000000FFFFFFFF);
-@@ -1213,7 +1206,7 @@ cciss_scatter_gather(struct pci_dev *pde
- 	else if (cmd->use_sg <= MAXSGENTRIES) {	/* not too many addrs? */
+ }
  
- 		use_sg = pci_map_sg(pdev, cmd->buffer, cmd->use_sg, 
--			scsi_to_pci_dma_dir(cmd->sc_data_direction));
-+			cmd->sc_data_direction);
- 
- 		for (nsegs=0; nsegs < use_sg; nsegs++) {
- 			addr64 = (__u64) sg_dma_address(&scatter[nsegs]);
-@@ -1234,7 +1227,7 @@ cciss_scatter_gather(struct pci_dev *pde
- 
- 
- int 
--cciss_scsi_queue_command (Scsi_Cmnd *cmd, void (* done)(Scsi_Cmnd *))
-+cciss_scsi_queue_command (struct scsi_cmnd *cmd, void (* done)(struct scsi_cmnd *))
- {
- 	ctlr_info_t **c;
- 	int ctlr, rc;
-@@ -1302,11 +1295,10 @@ cciss_scsi_queue_command (Scsi_Cmnd *cmd
- 	cp->Request.Type.Attribute = ATTR_SIMPLE;
- 	switch(cmd->sc_data_direction)
- 	{
--	  case SCSI_DATA_WRITE: cp->Request.Type.Direction = XFER_WRITE; break;
--	  case SCSI_DATA_READ: cp->Request.Type.Direction = XFER_READ; break;
--	  case SCSI_DATA_NONE: cp->Request.Type.Direction = XFER_NONE; break;
+-static int cciss_revalidate(struct gendisk *disk)
+-{
+-	drive_info_struct *drv = disk->private_data;
+-	set_capacity(disk, drv->nr_blocks);
+-	return 0;
+-}
 -
--	  case SCSI_DATA_UNKNOWN:
-+	  case DMA_TO_DEVICE: cp->Request.Type.Direction = XFER_WRITE; break;
-+	  case DMA_FROM_DEVICE: cp->Request.Type.Direction = XFER_READ; break;
-+	  case DMA_NONE: cp->Request.Type.Direction = XFER_NONE; break;
-+	  case DMA_BIDIRECTIONAL:
- 		// This can happen if a buggy application does a scsi passthru
- 		// and sets both inlen and outlen to non-zero. ( see
- 		// ../scsi/scsi_ioctl.c:scsi_ioctl_send_command() )
+ /*
+  * revalidate_allvol is for online array config utilities.  After a
+  * utility reconfigures the drives in the array, it can use this function
+@@ -1153,7 +1155,9 @@ static int revalidate_allvol(ctlr_info_t
+ 	for (i = 0; i < NWD; i++) {
+ 		struct gendisk *disk = host->gendisk[i];
+ 		drive_info_struct *drv = &(host->drv[i]);
+-		if (!drv->nr_blocks)
++		/* we must register the controller even if no disks exist */
++		/* this is for the online array utilities */
++		if (!drv->heads && i)
+ 			continue;
+ 		blk_queue_hardsect_size(host->queue, drv->block_size);
+ 		set_capacity(disk, drv->nr_blocks);
+@@ -1485,13 +1489,7 @@ static void cciss_geometry_inquiry(int c
+ 			}
+ 		}
+ 	} else { /* Get geometry failed */
+-		printk(KERN_WARNING "cciss: reading geometry failed, "
+-			"continuing with default geometry\n");
+-		drv->block_size = block_size;
+-		drv->nr_blocks = total_size;
+-		drv->heads = 255;
+-		drv->sectors = 32; // Sectors per track
+-		drv->cylinders = total_size / 255 / 32;
++		printk(KERN_WARNING "cciss: reading geometry failed\n");
+ 	}
+ 	printk(KERN_INFO "      heads= %d, sectors= %d, cylinders= %d\n\n",
+ 		drv->heads, drv->sectors, drv->cylinders);
+@@ -1520,6 +1518,7 @@ cciss_read_capacity(int ctlr, int logvol
+ 		*total_size, *block_size);
+ 	return;
+ }
++
+ static int register_new_disk(ctlr_info_t *h)
+ {
+         struct gendisk *disk;
+@@ -1663,7 +1662,9 @@ static int register_new_disk(ctlr_info_t
+ 	/* setup partitions per disk */
+         disk = h->gendisk[logvol];
+ 	set_capacity(disk, h->drv[logvol].nr_blocks);
+-	add_disk(disk);
++	/* if it's the controller it's already added */
++	if(logvol)
++		add_disk(disk);
+ freeret:
+ 	kfree(ld_buff);
+ 	kfree(size_buff);
+@@ -1675,6 +1676,53 @@ free_err:
+ 	logvol = -1;
+ 	goto freeret;
+ }
++
++static int cciss_revalidate(struct gendisk *disk)
++{
++	ctlr_info_t *h = get_host(disk);
++	drive_info_struct *drv = get_drv(disk);
++	int logvol;
++	int FOUND=0;
++	unsigned int block_size;
++	unsigned int total_size;
++	ReadCapdata_struct *size_buff = NULL;
++	InquiryData_struct *inq_buff = NULL;
++
++	for(logvol=0; logvol < CISS_MAX_LUN; logvol++)
++	{
++		if(h->drv[logvol].LunID == drv->LunID) {
++			FOUND=1;
++			break;
++		}
++	}
++
++	if (!FOUND) return 1;
++
++	size_buff = kmalloc(sizeof( ReadCapdata_struct), GFP_KERNEL);
++        if (size_buff == NULL)
++        {
++                printk(KERN_WARNING "cciss: out of memory\n");
++                return 1;
++        }
++	inq_buff = kmalloc(sizeof( InquiryData_struct), GFP_KERNEL);
++        if (inq_buff == NULL)
++        {
++                printk(KERN_WARNING "cciss: out of memory\n");
++		kfree(size_buff);
++                return 1;
++        }
++
++	cciss_read_capacity(h->ctlr, logvol, size_buff, 1, &total_size, &block_size);
++	cciss_geometry_inquiry(h->ctlr, logvol, 1, total_size, block_size, inq_buff, drv);
++
++	blk_queue_hardsect_size(h->queue, drv->block_size);
++	set_capacity(disk, drv->nr_blocks);
++
++	kfree(size_buff);
++	kfree(inq_buff);
++	return 0;
++}
++
+ /*
+  *   Wait polling for a command to complete.
+  *   The memory mapped FIFO is polled for the completion.
+@@ -2762,7 +2810,9 @@ static int __devinit cciss_init_one(stru
+ 		disk->fops = &cciss_fops;
+ 		disk->queue = hba[i]->queue;
+ 		disk->private_data = drv;
+-		if( !(drv->nr_blocks))
++		/* we must register the controller even if no disks exist */
++		/* this is for the online array utilities */
++		if(!drv->heads && j)
+ 			continue;
+ 		blk_queue_hardsect_size(hba[i]->queue, drv->block_size);
+ 		set_capacity(disk, drv->nr_blocks);
