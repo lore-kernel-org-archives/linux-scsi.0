@@ -1,31 +1,108 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: IA32 (2.6.1 - 2003-12-30.22.30) - 4 New warnings (gcc 3.2.2)
-Date: Wed, 31 Dec 2003 13:06:06 +0100
+From: Arjan van de Ven <arjanv@redhat.com>
+Subject: fix a few missing return value checks in scsi
+Date: Wed, 31 Dec 2003 14:59:01 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20031231120606.GA16225@lst.de>
-References: <200312311132.hBVBWcg6008411@cherrypit.pdx.osdl.net> <20031231040047.19174e49.akpm@osdl.org>
+Message-ID: <1072879141.4292.5.camel@laptop.fenrus.com>
+Reply-To: arjanv@redhat.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-95jfT4giMrtj+AV7LEMJ"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([212.34.189.10]:47772 "EHLO mail.lst.de")
-	by vger.kernel.org with ESMTP id S264108AbTLaMGL (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 31 Dec 2003 07:06:11 -0500
-Content-Disposition: inline
-In-Reply-To: <20031231040047.19174e49.akpm@osdl.org>
+Received: from node-d-1fcf.a2000.nl ([62.195.31.207]:1412 "EHLO
+	laptop.fenrus.com") by vger.kernel.org with ESMTP id S264937AbTLaN7F
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 31 Dec 2003 08:59:05 -0500
+Received: from laptop.fenrus.com (laptop.fenrus.com [127.0.0.1])
+	by laptop.fenrus.com (8.12.10/8.12.10) with ESMTP id hBVDx2wa010821
+	for <linux-scsi@vger.kernel.org>; Wed, 31 Dec 2003 14:59:03 +0100
+Received: (from arjan@localhost)
+	by laptop.fenrus.com (8.12.10/8.12.10/Submit) id hBVDx2NM010820
+	for linux-scsi@vger.kernel.org; Wed, 31 Dec 2003 14:59:02 +0100
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
-Cc: John Cherry <cherry@osdl.org>, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>
+To: linux-scsi@vger.kernel.org
 
-On Wed, Dec 31, 2003 at 04:00:47AM -0800, Andrew Morton wrote:
-> John Cherry <cherry@osdl.org> wrote:
-> >
-> > drivers/scsi/aacraid/aachba.c:1409: warning: `flag' might be used uninitialized in this function
-> > drivers/scsi/eata_generic.h:84:1: warning: "TIMEOUT" redefined
-> > drivers/scsi/inia100.c:421: warning: `pHCB' might be used uninitialized in this function
-> > include/scsi/scsi.h:305:1: warning: this is the location of the previous definition
-> 
-> err, yes.  The inia100.c one is 100% deadly.
 
-Eek, how did that update make mainline?  I just posted it to linux-scsi
-looking for a tester.  Please back the change out for now.
+--=-95jfT4giMrtj+AV7LEMJ
+Content-Type: multipart/mixed; boundary="=-PeHJZ8JyqF0jxxX2rsU0"
+
+
+--=-PeHJZ8JyqF0jxxX2rsU0
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
+
+Hi,
+
+The attached patch adds a few error checks for the pci dma_mask setting
+routines, which after all can fail and thus need their return code
+checked.
+
+Greetings,
+   Arjan van de Ven
+
+--=-PeHJZ8JyqF0jxxX2rsU0
+Content-Disposition: attachment; filename=pci.patch
+Content-Transfer-Encoding: base64
+Content-Type: text/x-patch; name=pci.patch; charset=UTF-8
+
+LS0tIGxpbnV4LTIuNi4wLXRlc3QxMS9kcml2ZXJzL3Njc2kvYWljN3h4eC9haWM3eHh4X29zbS5j
+Lk9MRAkyMDAzLTEyLTE5IDE2OjI2OjE1LjAwMDAwMDAwMCAtMDUwMA0KKysrIGxpbnV4LTIuNi4w
+LXRlc3QxMS9kcml2ZXJzL3Njc2kvYWljN3h4eC9haWM3eHh4X29zbS5jCTIwMDMtMTItMTkgMTY6
+Mjk6MTcuMDAwMDAwMDAwIC0wNTAwDQpAQCAtMTQwOCwxMiArMTQwOCwxOCBAQA0KIAkgKiBvdXIg
+ZG1hIG1hc2sgd2hlbiBkb2luZyBhbGxvY2F0aW9ucy4NCiAJICovDQogCWlmIChhaGMtPmRldl9z
+b2Z0YyAhPSBOVUxMKQ0KLQkJYWhjX3BjaV9zZXRfZG1hX21hc2soYWhjLT5kZXZfc29mdGMsIDB4
+RkZGRkZGRkYpOw0KKwkJaWYgKGFoY19wY2lfc2V0X2RtYV9tYXNrKGFoYy0+ZGV2X3NvZnRjLCAw
+eEZGRkZGRkZGKSkgew0KKwkJCXByaW50ayhLRVJOX1dBUk5JTkcgImFpYzd4eHg6IE5vIHN1aXRh
+YmxlIERNQSBhdmFpbGFibGUuXG4iKTsNCisJCQlyZXR1cm4gKEVOT0RFVik7DQorCQl9DQogCSp2
+YWRkciA9IHBjaV9hbGxvY19jb25zaXN0ZW50KGFoYy0+ZGV2X3NvZnRjLA0KIAkJCQkgICAgICBk
+bWF0LT5tYXhzaXplLCAmbWFwLT5idXNfYWRkcik7DQogCWlmIChhaGMtPmRldl9zb2Z0YyAhPSBO
+VUxMKQ0KLQkJYWhjX3BjaV9zZXRfZG1hX21hc2soYWhjLT5kZXZfc29mdGMsDQotCQkJCSAgICAg
+YWhjLT5wbGF0Zm9ybV9kYXRhLT5od19kbWFfbWFzayk7DQorCQlpZiAoYWhjX3BjaV9zZXRfZG1h
+X21hc2soYWhjLT5kZXZfc29mdGMsDQorCQkJCSAgICAgYWhjLT5wbGF0Zm9ybV9kYXRhLT5od19k
+bWFfbWFzaykpIHsNCisJCQlwcmludGsoS0VSTl9XQVJOSU5HICJhaWM3eHh4OiBObyBzdWl0YWJs
+ZSBETUEgYXZhaWxhYmxlLlxuIik7DQorCQkJcmV0dXJuIChFTk9ERVYpOw0KKwkJfQ0KICNlbHNl
+IC8qIExJTlVYX1ZFUlNJT05fQ09ERSA8IEtFUk5FTF9WRVJTSU9OKDIsMywwKSAqLw0KIAkvKg0K
+IAkgKiBBdCBsZWFzdCBpbiAyLjIuMTQsIG1hbGxvYyBpcyBhIHNsYWIgYWxsb2NhdG9yIHNvIGFs
+bA0KLS0tIGxpbnV4LTIuNi4wLXRlc3QxMS9kcml2ZXJzL3Njc2kvYWljN3h4eC9haWM3eHh4X29z
+bV9wY2kuYy5PTEQJMjAwMy0xMi0xOSAxNjozMDozMi4wMDAwMDAwMDAgLTA1MDANCisrKyBsaW51
+eC0yLjYuMC10ZXN0MTEvZHJpdmVycy9zY3NpL2FpYzd4eHgvYWljN3h4eF9vc21fcGNpLmMJMjAw
+My0xMi0xOSAxNjozMTo0My4wMDAwMDAwMDAgLTA1MDANCkBAIC0xNjgsNyArMTY4LDEwIEBADQog
+CQlhaGMtPmZsYWdzIHw9IEFIQ18zOUJJVF9BRERSRVNTSU5HOw0KIAkJYWhjLT5wbGF0Zm9ybV9k
+YXRhLT5od19kbWFfbWFzayA9IG1hc2tfMzliaXQ7DQogCX0gZWxzZSB7DQotCQlhaGNfcGNpX3Nl
+dF9kbWFfbWFzayhwZGV2LCAweEZGRkZGRkZGKTsNCisJCWlmIChhaGNfcGNpX3NldF9kbWFfbWFz
+ayhwZGV2LCAweEZGRkZGRkZGKSkgew0KKwkJCXByaW50ayhLRVJOX1dBUk5JTkcgImFpYzd4eHg6
+IE5vIHN1aXRhYmxlIERNQSBhdmFpbGFibGUuXG4iKTsNCisgICAgICAgICAgICAgICAgCXJldHVy
+biAoLUVOT0RFVik7DQorCQl9DQogCQlhaGMtPnBsYXRmb3JtX2RhdGEtPmh3X2RtYV9tYXNrID0g
+MHhGRkZGRkZGRjsNCiAJfQ0KICNlbmRpZg0KLS0tIGxpbnV4LTIuNi4wLXRlc3QxMS9kcml2ZXJz
+L3Njc2kvYWljN3h4eC9haWM3OXh4X29zbS5jLk9MRAkyMDAzLTEyLTE5IDE2OjM0OjAxLjAwMDAw
+MDAwMCAtMDUwMA0KKysrIGxpbnV4LTIuNi4wLXRlc3QxMS9kcml2ZXJzL3Njc2kvYWljN3h4eC9h
+aWM3OXh4X29zbS5jCTIwMDMtMTItMTkgMTY6MzU6MTEuMDAwMDAwMDAwIC0wNTAwDQpAQCAtMTc3
+NiwxMiArMTc3NiwxOCBAQA0KIAkgKiBvdXIgZG1hIG1hc2sgd2hlbiBkb2luZyBhbGxvY2F0aW9u
+cy4NCiAJICovDQogCWlmIChhaGQtPmRldl9zb2Z0YyAhPSBOVUxMKQ0KLQkJYWhkX3BjaV9zZXRf
+ZG1hX21hc2soYWhkLT5kZXZfc29mdGMsIDB4RkZGRkZGRkYpOw0KKwkJaWYgKGFoZF9wY2lfc2V0
+X2RtYV9tYXNrKGFoZC0+ZGV2X3NvZnRjLCAweEZGRkZGRkZGKSkgew0KKwkJCXByaW50ayhLRVJO
+X1dBUk5JTkcgImFpYzc5eHg6IE5vIHN1aXRhYmxlIERNQSBhdmFpbGFibGUuXG4iKTsNCisJCQly
+ZXR1cm4gKEVOT0RFVik7DQorCQl9DQogCSp2YWRkciA9IHBjaV9hbGxvY19jb25zaXN0ZW50KGFo
+ZC0+ZGV2X3NvZnRjLA0KIAkJCQkgICAgICBkbWF0LT5tYXhzaXplLCAmbWFwLT5idXNfYWRkcik7
+DQogCWlmIChhaGQtPmRldl9zb2Z0YyAhPSBOVUxMKQ0KLQkJYWhkX3BjaV9zZXRfZG1hX21hc2so
+YWhkLT5kZXZfc29mdGMsDQotCQkJCSAgICAgYWhkLT5wbGF0Zm9ybV9kYXRhLT5od19kbWFfbWFz
+ayk7DQorCQlpZiAoYWhkX3BjaV9zZXRfZG1hX21hc2soYWhkLT5kZXZfc29mdGMsDQorCQkJCSAg
+ICAgYWhkLT5wbGF0Zm9ybV9kYXRhLT5od19kbWFfbWFzaykpIHsNCisJCQlwcmludGsoS0VSTl9X
+QVJOSU5HICJhaWM3OXh4OiBObyBzdWl0YWJsZSBETUEgYXZhaWxhYmxlLlxuIik7DQorCQkJcmV0
+dXJuIChFTk9ERVYpOw0KKwkJfQ0KICNlbHNlIC8qIExJTlVYX1ZFUlNJT05fQ09ERSA8IEtFUk5F
+TF9WRVJTSU9OKDIsMywwKSAqLw0KIAkvKg0KIAkgKiBBdCBsZWFzdCBpbiAyLjIuMTQsIG1hbGxv
+YyBpcyBhIHNsYWIgYWxsb2NhdG9yIHNvIGFsbA0K
+
+--=-PeHJZ8JyqF0jxxX2rsU0--
+
+--=-95jfT4giMrtj+AV7LEMJ
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.2.3 (GNU/Linux)
+
+iD8DBQA/8tYlxULwo51rQBIRArClAJ9Y8k0r3ARZU4jHxwmScwQa3RbqLgCdHp+b
+rUTjZ2qcPj+tdYqzfjzr3nk=
+=X+2F
+-----END PGP SIGNATURE-----
+
+--=-95jfT4giMrtj+AV7LEMJ--
