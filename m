@@ -1,52 +1,78 @@
-From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
-Subject: RE: [PATCH] 2.6.9 aacraid: aac_count fix
-Date: Wed, 15 Sep 2004 13:43:00 -0400
+From: Kai Makisara <Kai.Makisara@kolumbus.fi>
+Subject: Re: SSC-2 support in Linux
+Date: Wed, 15 Sep 2004 21:38:30 +0300 (EEST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <60807403EABEB443939A5A7AA8A7458B1AAB3A@otce2k01.adaptec.com>
+Message-ID: <Pine.LNX.4.58.0409152114090.1972@kai.makisara.local>
+References: <82C736F456CA3E4EA3D0DC6CC31AA5CB01651157@esply09.cnt.ad.cnt.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from magic.adaptec.com ([216.52.22.17]:15301 "EHLO magic.adaptec.com")
-	by vger.kernel.org with ESMTP id S267184AbUIORnF convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 15 Sep 2004 13:43:05 -0400
-content-class: urn:content-classes:message
+Received: from fep31-0.kolumbus.fi ([193.229.0.35]:30896 "EHLO
+	fep31-app.kolumbus.fi") by vger.kernel.org with ESMTP
+	id S267248AbUIOSic (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 15 Sep 2004 14:38:32 -0400
+In-Reply-To: <82C736F456CA3E4EA3D0DC6CC31AA5CB01651157@esply09.cnt.ad.cnt.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Mark Haverkamp <markh@osdl.org>
-Cc: Christoph Hellwig <hch@infradead.org>, James Bottomley <James.Bottomley@steeleye.com>, linux-scsi <linux-scsi@vger.kernel.org>
+To: "David Peterson (Eng)" <david_peterson@cnt.com>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-The init phase of the driver required this field *before* the call to
-scsi_add_host. I still have to search the fog to remember which system
-service panick'd when called with this field uninitialized ...
+I am dropping linux-kernel from this subthread. This is a SCSI question.
 
-Sincerely -- Mark Salyzyn
+On Tue, 14 Sep 2004, David Peterson (Eng) wrote:
 
------Original Message-----
-From: Mark Haverkamp [mailto:markh@osdl.org] 
-Sent: Wednesday, September 15, 2004 10:25 AM
-To: Salyzyn, Mark
-Cc: Christoph Hellwig; James Bottomley; linux-scsi
-Subject: RE: [PATCH] 2.6.9 aacraid: aac_count fix
-
-On Wed, 2004-09-15 at 04:47, Salyzyn, Mark wrote:
-> Christoph Hellwig writes:
+> I'd like to hear from anyone interested, or has looked into, adding
+> support for SSC-2 (SCSI Stream Commands -2, i.e., tape devices) explicit
+> address mode into the Linux OS.
 > 
-> > > +	scsi_set_device(shost, &pdev->dev);
-> > 
-> > This one is bogus.  scsi_add_host already sets the device.
-> 
-> Which path sets the device? I got an intermittent panic as a result of
-> the device not being set in my unit test (of the kernel of the day at
-> the time of this modification, can't remember which version of the
-> kernel ...). Which version of this kernel sets it?
+I have looked at the specs but I am not sure we need to use explicit 
+address command now. One problem is that there are no/very few shipping 
+drives that support these commands. The explicit address commands will be 
+useful in future but we have to wait until they are a little more than a 
+theory.
 
-In the latest version at least, line 111 in hosts.c sets
-shost->shost_gendev.parent = dev ? dev : &platform_bus which is
-essentially what scsi_set_device does.
+> In summary, SSC-2 explicit address mode enables for tape devices:
+> - robust tagged command queuing
 
+The tape driver (st) does not use any kind of tagged queuing. I have not 
+found this feature useful for tapes. The reasons are:
+- The medium is sequential and so the drive can't intelligently sort the 
+  commands. The benefit would be to able to feed more than one command to 
+  the drive at an time. However, this is not needed in order to keep the
+  drive buffer non-empty.
+- The read()/write() semantics means that we can't touch the data buffer
+  outside the commands. No parallelism is possible except with multiple 
+  threads. Here the problem is synchronization and I am not sure using
+  multiple threads to handle tapes is a good solution.
+
+If there is an interface that benefits from tagged commands and
+- used by software and
+- brings real advantages over using the current simple interface,
+then I am more interested. I don't think we should use low-level interface 
+features unless they bring real benefits for real world user software.
+
+> - multi-path I/O
+
+This is a more general SCSI thing. Work is being done on the general 
+aspects.
+
+> - enhanced error detection and recovery
+
+Here also the problem is what to do with the information. The current 
+interface does not give methods to transfer fine-grained error information 
+to the user space. The final error recovery must in most cases happen in 
+user space. The driver does not have any more the data needed in the 
+recovery.
+
+There have been some interesting suggestions for new interfaces that could 
+be used for more "free-form" error reporting (the event interfaces). A 
+traditional method is to use ioctls but here the problem is that good, 
+fixed-format definitions should be developed. I have actually not seen any 
+enthusiasm among users to do this ;-)
+
+Doug Gilbert has worked on the infrastructure for the descriptor based 
+sense data. I have plans how to use this in st. I think we will be ready 
+when drives start returning this data. Using the new information coming 
+with this sense data takes more time.
 
 -- 
-Mark Haverkamp <markh@osdl.org>
-
+Kai
