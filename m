@@ -1,61 +1,101 @@
-From: Arjan van de Ven <arjanv@redhat.com>
-Subject: Re: ADAPTEC 2.4 drivers too old
-Date: Sat, 13 Mar 2004 20:18:48 +0100
+From: Patrick Mansfield <patmans@us.ibm.com>
+Subject: adding flag for 192 byte mode sense
+Date: Sat, 13 Mar 2004 17:46:51 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040313191848.GB12292@devserv.devel.redhat.com>
-References: <405351A5.3010708@wanadoo.es> <1079203519.4446.5.camel@laptop.fenrus.com> <40535C61.1020408@wanadoo.es> <40535E45.10102@wanadoo.es>
+Message-ID: <20040313174651.A3054@beaverton.ibm.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="ZoaI/ZTpAVc4A5k6"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:37325 "EHLO mx1.redhat.com")
-	by vger.kernel.org with ESMTP id S263167AbUCMTTA (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 13 Mar 2004 14:19:00 -0500
-Content-Disposition: inline
-In-Reply-To: <40535E45.10102@wanadoo.es>
-List-Id: linux-scsi@vger.kernel.org
-To: Xose Vazquez Perez <xose@wanadoo.es>
-Cc: 'linux-scsi' <linux-scsi@vger.kernel.org>
-
-
---ZoaI/ZTpAVc4A5k6
 Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from e31.co.us.ibm.com ([32.97.110.129]:11959 "EHLO
+	e31.co.us.ibm.com") by vger.kernel.org with ESMTP id S263247AbUCNBuD
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 13 Mar 2004 20:50:03 -0500
 Content-Disposition: inline
+List-Id: linux-scsi@vger.kernel.org
+To: stern@rowland.harvard.edu, mdharm-usb@one-eyed-alien.net, James Bottomley <James.Bottomley@steeleye.com>, linux-scsi@vger.kernel.org, usb-storage@lists.one-eyed-alien.net
 
-On Sat, Mar 13, 2004 at 08:17:25PM +0100, Xose Vazquez Perez wrote:
-> Xose Vazquez Perez wrote:
-> 
-> >Arjan van de Ven wrote:
-> >
-> >>I object to the words "too old" in your subject.
-> >>The reality is that 2.4 doesn't have the brand-spanking-newest driver
-> >>version *numbers*. So what? Newer != automatically better.
-> >
-> >
-> >http://marc.theaimsgroup.com/?l=linux-kernel&m=107456492323846&w=2
-> >
-> >"... and left at least the aic79xx driver in a worse state than it
-> >was in before ..."
-> >
-> 
-> there are more examples....
-> 
-> Do you call to aacraid stable driver ?
+Following are patches to support a flag for a 192 byte MODE SENSE, for use
+by USB.
 
-As Christoph said: we're open to individual patches that fix bugs....
-Please send them.
+First patch replaces the scsi_host flags with a per sdev bflag, and sets
+values in a new USB slave_alloc rather than the scsi_host template. I
+grepped code for other users of scsi_host flags, and did not find any, and
+do not recall seeing any added (flags is a bad name). slave_alloc is used
+so that if needed the devinfo code can overwrite any settings.
 
---ZoaI/ZTpAVc4A5k6
-Content-Type: application/pgp-signature
-Content-Disposition: inline
+Second patch adds the 192 flag.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.2.1 (GNU/Linux)
+With both patches we should get the exact behaviour we have now.
 
-iD8DBQFAU16XxULwo51rQBIRApsnAJ0cHmbzHoj11/cfdfw89Y4VBNbopgCfRfEV
-zWBgPJXIWGuudqidlkiEgbU=
-=IRcq
------END PGP SIGNATURE-----
+USB patches are still needed to set the BLIST_MS_192_BYTES_FOR_3F flag,
+and to conditionally use the BLIST_USE_10_BYTE_MS based on the transparent
+scsi versus all others. Alan or Matthew - can you send patches for that?
 
---ZoaI/ZTpAVc4A5k6--
+The scsi core usage of use_10_for_ms might need to change to behave the
+way usb wants, though it probably will not matter. It currently demotes
+from 10 byte to 6 byte if there is an illegal request on the 10 byte
+command. Based on Alan's information, it sounds like USB wants the
+commands to always be 6 or 10 bytes, with no change on an illegal request.
+
+I tested with these usb mass storage devices: sony camera, olympus camera,
+and dazzle card reader with no problems. I thought the sony used to choke
+on the MODE SENSE, but it worked for both the short 8 byte and long 192
+byte requests (did get sense key Illegal Request but no hang on allow
+medium removal).
+
+Some log output with command logging (sysctl -w dev.scsi.logging_level=0x2400)
+on as follows.
+
+Default USB behaviour, no MODE SENSE is sent:
+
+kernel: scsi <1:0:0:0> send                  Inquiry 00 00 00 24 00 
+kernel: scsi <1:0:0:0> done SUCCESS        0 Inquiry 00 00 00 24 00 
+kernel:   Vendor: OLYMPUS   Model: C750UZ            Rev: 1.00
+kernel:   Type:   Direct-Access                      ANSI SCSI revision: 02
+kernel: scsi <1:0:0:0> send                  Test Unit Ready 00 00 00 00 00 
+kernel: scsi <1:0:0:0> done SUCCESS        0 Test Unit Ready 00 00 00 00 00 
+kernel: scsi <1:0:0:0> send                  Read Capacity 00 00 00 00 00 00 00 00 00 
+kernel: scsi <1:0:0:0> done SUCCESS        0 Read Capacity 00 00 00 00 00 00 00 00 00 
+kernel: SCSI device sda: 512000 512-byte hdwr sectors (262 MB)
+kernel: sda: assuming Write Enabled
+kernel: sda: assuming drive cache: write through
+kernel: scsi <1:0:0:0> send                  Test Unit Ready 00 00 00 00 00 
+kernel: scsi <1:0:0:0> done SUCCESS        0 Test Unit Ready 00 00 00 00 00 
+kernel: scsi <1:0:0:0> send                  Prevent/Allow Medium Removal 00 00 00 01 00 
+kernel: scsi <1:0:0:0> done SUCCESS        0 Prevent/Allow Medium Removal 00 00 00 01 00 
+kernel:  sda:<6>scsi <1:0:0:0> send                  Read (10) 00 00 00 00 00 00 00 08 00 
+kernel: scsi <1:0:0:0> done SUCCESS        0 Read (10) 00 00 00 00 00 00 00 08 00 
+kernel:  sda1
+kernel: scsi <1:0:0:0> send                  Prevent/Allow Medium Removal 00 00 00 00 00 
+kernel: scsi <1:0:0:0> done SUCCESS        0 Prevent/Allow Medium Removal 00 00 00 00 00 
+
+Command logs using 192 (0xc0) byte MODE SENSE - tested via addition of
+a devinfo entry using:
+
+	echo "OLYMPUS:C750UZ:0x1a000" > /proc/scsi/device_info
+
+
+kernel: scsi <1:0:0:0> send                  Inquiry 00 00 00 24 00 
+kernel: scsi <1:0:0:0> done SUCCESS        0 Inquiry 00 00 00 24 00 
+kernel:   Vendor: OLYMPUS   Model: C750UZ            Rev: 1.00
+kernel:   Type:   Direct-Access                      ANSI SCSI revision: 02
+kernel: scsi <1:0:0:0> send                  Test Unit Ready 00 00 00 00 00 
+kernel: scsi <1:0:0:0> done SUCCESS        0 Test Unit Ready 00 00 00 00 00 
+kernel: scsi <1:0:0:0> send                  Read Capacity 00 00 00 00 00 00 00 00 00 
+kernel: scsi <1:0:0:0> done SUCCESS        0 Read Capacity 00 00 00 00 00 00 00 00 00 
+kernel: SCSI device sda: 512000 512-byte hdwr sectors (262 MB)
+kernel: scsi <1:0:0:0> send                  Mode Sense (10) 00 3f 00 00 00 00 00 c0 00 
+kernel: scsi <1:0:0:0> done SUCCESS        0 Mode Sense (10) 00 3f 00 00 00 00 00 c0 00 
+kernel: sda: Write Protect is off
+kernel: sda: assuming drive cache: write through
+kernel: scsi <1:0:0:0> send                  Test Unit Ready 00 00 00 00 00 
+kernel: scsi <1:0:0:0> done SUCCESS        0 Test Unit Ready 00 00 00 00 00 
+kernel: scsi <1:0:0:0> send                  Prevent/Allow Medium Removal 00 00 00 01 00 
+kernel: scsi <1:0:0:0> done SUCCESS        0 Prevent/Allow Medium Removal 00 00 00 01 00 
+kernel:  sda:<6>scsi <1:0:0:0> send                  Read (10) 00 00 00 00 00 00 00 08 00 
+kernel: scsi <1:0:0:0> done SUCCESS        0 Read (10) 00 00 00 00 00 00 00 08 00 
+kernel:  sda1
+kernel: scsi <1:0:0:0> send                  Prevent/Allow Medium Removal 00 00 00 00 00 
+kernel: scsi <1:0:0:0> done SUCCESS        0 Prevent/Allow Medium Removal 00 00 00 00 00 
+
+-- Patrick Mansfield
