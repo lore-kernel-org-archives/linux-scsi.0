@@ -1,74 +1,75 @@
 From: Kurt Garloff <garloff@suse.de>
-Subject: [PATCH] unique_id for ide-scsi
-Date: Mon, 9 Feb 2004 16:54:40 +0100
+Subject: [PATCH] sysfs: unique_id in hex
+Date: Mon, 9 Feb 2004 16:56:19 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040209155440.GQ3944@tpkurt.garloff.de>
+Message-ID: <20040209155619.GR3944@tpkurt.garloff.de>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="ixDgnS8AC6zwmyK0"
+	protocol="application/pgp-signature"; boundary="KAk/33nSS6LK84p9"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns.suse.de ([195.135.220.2]:11179 "EHLO Cantor.suse.de")
-	by vger.kernel.org with ESMTP id S262687AbUBIPym (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 9 Feb 2004 10:54:42 -0500
+Received: from ns.suse.de ([195.135.220.2]:62893 "EHLO Cantor.suse.de")
+	by vger.kernel.org with ESMTP id S262128AbUBIQBT (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 9 Feb 2004 11:01:19 -0500
 Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
 To: Linux SCSI list <linux-scsi@vger.kernel.org>
-Cc: Willem Riede <osst@riede.org>, James Bottomley <James.Bottomley@steeleye.com>
+Cc: James Bottomley <James.Bottomley@steeleye.com>
 
 
---ixDgnS8AC6zwmyK0
-Content-Type: multipart/mixed; boundary="a+0P3INHs7aeI7wh"
+--KAk/33nSS6LK84p9
+Content-Type: multipart/mixed; boundary="7Rldj+JZnTQmDdGi"
 Content-Disposition: inline
 
 
---a+0P3INHs7aeI7wh
+--7Rldj+JZnTQmDdGi
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
 Content-Transfer-Encoding: quoted-printable
 
 Hi,
 
-most scsi host adapters do fill in their ioport into thos host's=20
-unique_id field.
-ide-scsi does not. The attached patch changes it.
+the unique ID field is filled by most host adapters with their IO port.
+The io port is printed in hex in /proc/ioports.
+Thus we should probably do the same in
+sys/classes/scsi_host/hostX/unique_id
 
-Caveats: It puts the first PATA port there, the SATA port are not
- considered. Are there SATA chips that don't have PATA ports?
+Consider applying the attached patch.
 
 Regards,
 --=20
 Kurt Garloff  <garloff@suse.de>                            Cologne, DE=20
 SUSE LINUX AG, Nuernberg, DE                          SUSE Labs (Head)
 
---a+0P3INHs7aeI7wh
+--7Rldj+JZnTQmDdGi
 Content-Type: text/plain; charset=us-ascii
-Content-Description: ide-scsi-unique-id.diff
-Content-Disposition: attachment; filename="ide-scsi-unique-id.diff"
+Content-Description: scsi_sysfs-uniqueid-hex.diff
+Content-Disposition: attachment; filename="scsi_sysfs-uniqueid-hex.diff"
 Content-Transfer-Encoding: quoted-printable
 
---- drivers/scsi/ide-scsi.c.orig	2004-01-09 07:59:45.000000000 +0100
-+++ drivers/scsi/ide-scsi.c	2004-02-09 16:26:24.033475704 +0100
-@@ -967,6 +967,7 @@
+--- drivers/scsi/scsi_sysfs.c	2004-02-09 16:29:30.226170112 +0100
++++ drivers/scsi/scsi_sysfs.c.new	2004-02-09 16:30:31.640833664 +0100
+@@ -94,7 +94,7 @@
+ };
+ static CLASS_DEVICE_ATTR(scan, S_IWUSR, NULL, store_scan);
 =20
- 	host->max_id =3D 1;
- 	host->max_lun =3D 1;
-+	host->unique_id =3D drive->hwif->hw.io_ports[0];
- 	drive->driver_data =3D host;
- 	idescsi =3D scsihost_to_idescsi(host);
- 	idescsi->drive =3D drive;
+-shost_rd_attr(unique_id, "%u\n");
++shost_rd_attr(unique_id, "0x%x\n");
+ shost_rd_attr(host_busy, "%hu\n");
+ shost_rd_attr(cmd_per_lun, "%hd\n");
+ shost_rd_attr(sg_tablesize, "%hu\n");
 
---a+0P3INHs7aeI7wh--
+--7Rldj+JZnTQmDdGi--
 
---ixDgnS8AC6zwmyK0
+--KAk/33nSS6LK84p9
 Content-Type: application/pgp-signature
 Content-Disposition: inline
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v1.2.3 (GNU/Linux)
 
-iD8DBQFAJ60/xmLh6hyYd04RAvwaAJ9rUuDCMUDJQcMLo35MOtCoHC8o4ACeL2Tf
-GZX2bxkMZgPXrFwDPTrQGJU=
-=HrHr
+iD8DBQFAJ62ixmLh6hyYd04RAmTLAJ4pExPYgfJWVjtCOqmN9CAB6yKMmwCgo8oK
+lh8Cx/T16fbb1iIvy2B66GE=
+=ek4H
 -----END PGP SIGNATURE-----
 
---ixDgnS8AC6zwmyK0--
+--KAk/33nSS6LK84p9--
