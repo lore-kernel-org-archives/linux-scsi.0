@@ -1,86 +1,33 @@
-From: Sven Neuhaus <sven@ping.de>
-Subject: SMSC USB 2.0 8-in-1 card reader requires max_luns=6 option
-Date: Sun, 6 Jun 2004 18:54:21 +0200
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] tmscsim: init / exit cleanup
+Date: Sun, 6 Jun 2004 18:09:26 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040606165421.GA819@ping.de>
+Message-ID: <20040606170926.GA10396@infradead.org>
+References: <20040603133835.GA16378@infradead.org> <Pine.LNX.4.44.0406032213080.4721-100000@poirot.grange>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from lilly.ping.de ([83.97.42.2]:65289 "HELO lilly.ping.de")
-	by vger.kernel.org with SMTP id S263810AbUFFQy0 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 6 Jun 2004 12:54:26 -0400
+Received: from [213.146.154.40] ([213.146.154.40]:61635 "EHLO
+	pentafluge.infradead.org") by vger.kernel.org with ESMTP
+	id S263827AbUFFRJ2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 6 Jun 2004 13:09:28 -0400
 Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.44.0406032213080.4721-100000@poirot.grange>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Sven Neuhaus <sven@ping.de>
+To: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+Cc: James Bottomley <James.Bottomley@steeleye.com>, Kurt Garloff <garloff@suse.de>, Linux SCSI list <linux-scsi@vger.kernel.org>
 
-Hello,
+On Thu, Jun 03, 2004 at 10:23:45PM +0200, Guennadi Liakhovetski wrote:
+> Sorry, do you have a reference or remember at least apporoximatly when and
+> where the discussion took place?
 
-my USB 2.0 8-in-1 card reader requires the parameter
-max_luns=6 in order to show all devices with kernel 2.6.
-Please add it to the list of devices to probe all luns.
-Here's the dmesg output:
+Sorry, don't remember anymore.  Try searching the lkml archives.
 
-============================8<=====================================
-SCSI subsystem initialized
-usb 3-6: new high speed USB device using address 7
-Initializing USB Mass Storage driver...
-scsi0 : SCSI emulation for USB Mass Storage devices
-  Vendor: SMSC      Model: 223 U HS-CF       Rev: 1.95
-  Type:   Direct-Access                      ANSI SCSI revision: 02
-  Vendor: SMSC      Model: 223 U HS-MS       Rev: 1.95
-  Type:   Direct-Access                      ANSI SCSI revision: 02
-  Vendor: SMSC      Model: 223 U HS-SM       Rev: 1.95
-  Type:   Direct-Access                      ANSI SCSI revision: 02
-  Vendor: SMSC      Model: 223 U HS-SD/MMC   Rev: 1.95
-  Type:   Direct-Access                      ANSI SCSI revision: 02
-Attached scsi removable disk sda at scsi0, channel 0, id 0, lun 0
-Attached scsi removable disk sdb at scsi0, channel 0, id 0, lun 1
-Attached scsi removable disk sdc at scsi0, channel 0, id 0, lun 2
-SCSI device sdd: 250880 512-byte hdwr sectors (128 MB)
-sdd: assuming Write Enabled
-sdd: assuming drive cache: write through
- sdd: sdd1
-Attached scsi removable disk sdd at scsi0, channel 0, id 0, lun 3
-USB Mass Storage device found at 7
-usbcore: registered new driver usb-storage
-USB Mass Storage support registered.
-Device not ready.  Make sure there is a disc in the drive.
-Device not ready.  Make sure there is a disc in the drive.
-Device not ready.  Make sure there is a disc in the drive.
-Device not ready.  Make sure there is a disc in the drive.
-Device not ready.  Make sure there is a disc in the drive.
-Device not ready.  Make sure there is a disc in the drive.
-============================8<=====================================
+>  I don't quite understand your arguments.
+> We do have __dev{init,exit,...} macros, do they have "problems over the
+> module boundary"? If yes - they want to be solved, right?
 
-Here's the "lsusb" output:
+currently you can have pointers to __devinitdata functions in structures
+registered with other modules.  Having more different lifetime rules will
+complicate that enormously and need a audit of the whole kernel first.
 
-============================8<=====================================
-Bus 003 Device 007: ID 0424:223a Standard Microsystems Corp. 
-Bus 003 Device 001: ID 0000:0000  
-Bus 002 Device 002: ID 046d:c00e Logitech, Inc. Optical Mouse
-Bus 002 Device 001: ID 0000:0000  
-Bus 001 Device 002: ID 0731:0528 Susteen, Inc. 
-Bus 001 Device 001: ID 0000:0000  
-============================8<=====================================
-
-Here's /proc/scsi/usb-storage/0:
-
-============================8<=====================================
-   Host scsi0: usb-storage
-       Vendor: SMSC
-      Product: 223 USB97C223
-Serial Number: 031017200000
-     Protocol: Transparent SCSI
-    Transport: Bulk
-       Quirks:
-============================8<=====================================
-
-If you need anything else, let me know.
-
-Thanks,
--Sven Neuhaus
--- 
-index, n.:
-	Alphabetical list of words of no possible interest where an
-	alphabetical list of subjects with references ought to be.
