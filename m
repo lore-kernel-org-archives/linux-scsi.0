@@ -1,37 +1,63 @@
-From: "Bingham" <cbqqovkllkbhje@wanadoo.fr>
-Subject: out entangled affairs. Very
-Date: Mon, 29 Nov 2004 23:15:42 +0500
-Message-ID: <6423718099-95629047__95.3833609402821$1101758103$gmane$org@wanadoo.fr>
+From: Dave C Boutcher <sleddog@us.ibm.com>
+Subject: [patch 1/4]  ibmvscsi.c: replace schedule_timeout() with msleep()
+Date: Mon, 29 Nov 2004 14:29:25 -0600
+Message-ID: <20041129202925.GA31011@cs.umn.edu>
+Reply-To: boutcher@cs.umn.edu
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-6";
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ANantes-252-1-25-208.w82-126.abo.wanadoo.fr ([82.126.22.208]:61200
-	"HELO anantes-252-1-25-208.w82-126.abo.wanadoo.fr") by vger.kernel.org
-	with SMTP id S261633AbUK2TmM (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 29 Nov 2004 14:42:12 -0500
+Received: from mail.cs.umn.edu ([128.101.32.202]:12949 "EHLO mail.cs.umn.edu")
+	by vger.kernel.org with ESMTP id S261786AbUK2U31 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 29 Nov 2004 15:29:27 -0500
+Received: from localhost (localhost [127.0.0.1])
+	by augustus.cs.umn.edu (Postfix) with ESMTP id 38D625C36A
+	for <linux-scsi@vger.kernel.org>; Mon, 29 Nov 2004 14:29:27 -0600 (CST)
+Received: from mail.cs.umn.edu ([127.0.0.1])
+ by localhost (augustus [127.0.0.1]) (amavisd-new, port 10024) with LMTP
+ id 18856-01-6 for <linux-scsi@vger.kernel.org>;
+ Mon, 29 Nov 2004 14:29:25 -0600 (CST)
+Received: from tera.cs.umn.edu (tera.cs.umn.edu [128.101.35.163])
+	by mail.cs.umn.edu (Postfix) with ESMTP id DC5055C353
+	for <linux-scsi@vger.kernel.org>; Mon, 29 Nov 2004 14:29:25 -0600 (CST)
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Burrell Linux-net <linux-net@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
 
-The latest financial news. Economy is still very unstable and 
-ra t es will  jump up to 10% before a new year. A new bill just 
-passed and you have  very little time to - re f i nance. 
+Description: Use msleep() instead of schedule_timeout()
+to guarantee the task delays as expected.  Originally
+submitted to linux-scsi by the janitors, and resubmitted
+by boutcher (after testing :-)
 
-Do it today before its to late !
+Signed-off-by: Nishanth Aravamudan <nacc@us.ibm.com>
+Signed-off-by: Maximilian Attems <janitor@sternwelten.at>
+Signed-off-by: Dave Boutcher <boutcher@us.ibm.com>
+---
 
-You are already   ap p roved  with 4.5 % here
-http://www.ylyrtdq.com/ 
+ linux-2.6.9-max/drivers/scsi/ibmvscsi/ibmvscsi.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-
-
-
-Eeligible a itsitsmadeira
-we Bcathodic via be me decide
-the was a amply schweitzer
-genre greek Nurn oxidate
-Sadulterate I amok lacrosse
-no of bystander craftsperson coddington
-our to cloudburst - to alkaloid
-
+diff -puN drivers/scsi/ibmvscsi/ibmvscsi.c~msleep-drivers_scsi_ibmvscsi drivers/scsi/ibmvscsi/ibmvscsi.c
+--- linux-2.6.9/drivers/scsi/ibmvscsi/ibmvscsi.c~msleep-drivers_scsi_ibmvscsi	2004-10-21 02:41:22.000000000 +0200
++++ linux-2.6.9-max/drivers/scsi/ibmvscsi/ibmvscsi.c	2004-10-21 02:41:22.000000000 +0200
+@@ -69,6 +69,7 @@
+ #include <linux/module.h>
+ #include <linux/moduleparam.h>
+ #include <linux/dma-mapping.h>
++#include <linux/delay.h>
+ #include <asm/vio.h>
+ #include <scsi/scsi.h>
+ #include <scsi/scsi_cmnd.h>
+@@ -1327,8 +1328,7 @@ static int ibmvscsi_probe(struct vio_dev
+ 		     time_before(jiffies, wait_switch) &&
+ 		     atomic_read(&hostdata->request_limit) < 0;) {
+ 
+-			set_current_state(TASK_UNINTERRUPTIBLE);
+-			schedule_timeout(HZ / 100);
++			msleep(10);
+ 		}
+ 
+ 		/* if we now have a valid request_limit, initiate a scan */
+-- 
+Dave Boutcher
