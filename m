@@ -1,30 +1,47 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [2.6 patch] show "Fusion MPT device support" menu only if BLK _DEV_SD
-Date: Wed, 21 Jan 2004 18:01:54 +0000
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <20040121180154.A32424@infradead.org>
-References: <0E3FA95632D6D047BA649F95DAB60E5703A75F51@exa-atlanta.se.lsil.com>
+From: Brian King <brking@us.ibm.com>
+Subject: Re: [RFC] IBM Power RAID driver (ipr)
+Date: Wed, 21 Jan 2004 14:49:42 -0600
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <400EE5E6.9080709@us.ibm.com>
+References: <40085EDA.4010802@us.ibm.com> <20040119183400.A4182@infradead.org> <400C3E70.9040702@us.ibm.com> <20040120133858.A15671@infradead.org> <400D5A28.1000301@us.ibm.com> <20040120180151.A18616@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <0E3FA95632D6D047BA649F95DAB60E5703A75F51@exa-atlanta.se.lsil.com>; from Emoore@lsil.com on Wed, Jan 21, 2004 at 12:00:09PM -0500
-To: "Moore, Eric Dean" <Emoore@lsil.com>
-Cc: Adrian Bunk <bunk@fs.tum.de>, Andrew Morton <akpm@osdl.org>, James.Bottomley@SteelEye.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from e6.ny.us.ibm.com ([32.97.182.106]:57822 "EHLO e6.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S266010AbUAUUuX (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 21 Jan 2004 15:50:23 -0500
 List-Id: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-scsi@vger.kernel.org
 
-On Wed, Jan 21, 2004 at 12:00:09PM -0500, Moore, Eric Dean wrote:
-> The "config FUSION" entry in Kconfig is handling both mptbase.ko 
-> and mptscsih.ko for some reason?
-> 
-> The mptbase.ko driver is the lower layer driver which configures
-> the adapters and is transport layer to and from the chip. It doesn't
-> depend on anything in the scsi mid layer.  
-> 
-> The mptscsih.ko does depend on scsi_mod.ko, but not sd.ko  
-> 
-> Therefore - maybe we could have separate entries in Kconfig for
-> both mptbase and mptscsih.  mptbase depend on PCI, and mptscsih
-> depend on SCSI. What do you think?
+Christoph Hellwig wrote:
 
-Sounds good.  (And mptscsi should depend on mptbase of course)
+>>>Given all the mess these invisble devices create I think they shouldn't
+>>>be invisble but rather exported as a second pseudo-channel on the host.
+>>
+>>Ok. That would solve a lot of problems. I will report these devices in 
+>>as scsi disk devices. They will respond like normal SCSI disks, except 
+>>when issued media commands (read/write) it will fail with data protect 
+>>(07) sense data.
+> 
+> 
+> Now reading this again it might be better to use the "fake" as in not
+> registered with the device model devices I mentioned below for this.
+
+How about a flag in the scsi_device struct that an LLD could set in
+slave_configure, which would prevent upper layer drivers from binding
+to it? Then these devices could be found through the normal scsi scan
+and would have nice sysfs entries and sg devices for them. Not sure what
+we would call the flag... psuedo_device, fake_device? Then upper level
+drivers could check this flag, or if we didn't like that we could move
+the upper layer binding logic into scsi_bus_match and keep it all
+in one place.
+
+
+-- 
+Brian King
+eServer Storage I/O
+IBM Linux Technology Center
+
