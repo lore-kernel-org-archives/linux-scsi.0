@@ -1,100 +1,33 @@
-From: "Justin T. Gibbs" <gibbs@scsiguy.com>
-Subject: (unknown)
-Date: Tue, 03 Jun 2003 17:51:07 -0600
+From: Marc-Christian Petersen <m.c.p@wolk-project.de>
+Subject: Re:
+Date: Wed, 4 Jun 2003 01:58:22 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1051920000.1054684267@aslan.btc.adaptec.com>
-Reply-To: "Justin T. Gibbs" <gibbs@scsiguy.com>
+Message-ID: <200306040157.25813.m.c.p@wolk-project.de>
+References: <1051920000.1054684267@aslan.btc.adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from magic-mail.adaptec.com ([208.236.45.100]:54922 "EHLO
-	magic.adaptec.com") by vger.kernel.org with ESMTP id S261893AbTFCXhN
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 3 Jun 2003 19:37:13 -0400
+Received: from lindsey.linux-systeme.com ([80.190.48.67]:58377 "EHLO
+	mx00.linux-systeme.com") by vger.kernel.org with ESMTP
+	id S261876AbTFCXpW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 3 Jun 2003 19:45:22 -0400
+In-Reply-To: <1051920000.1054684267@aslan.btc.adaptec.com>
 Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: "Justin T. Gibbs" <gibbs@scsiguy.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 Cc: Linus Torvalds <torvalds@transmeta.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Marcelo Tosatti <marcelo@conectiva.com.br>
 
-Folks,
+On Wednesday 04 June 2003 01:51, Justin T. Gibbs wrote:
 
-I've just uploaded version 1.3.10 of the aic79xx driver and version 
-6.2.36 of the aic7xxx driver.  Both are available for 2.4.X and
-2.5.X kernels in either bk send format or as a tarball from here:
- 
-http://people.FreeBSD.org/~gibbs/linux/SRC/
+Hi Justin,
 
-The change sets relative to the 2.5.X tree are:
+> I've just uploaded version 1.3.10 of the aic79xx driver and version
+> 6.2.36 of the aic7xxx driver.  Both are available for 2.4.X and
+> 2.5.X kernels in either bk send format or as a tarball from here:
+many thanks! I'll update them for my tree (as always with your updates 
+:-)
 
-ChangeSet@1.1275, 2003-06-03 17:35:01-06:00, gibbs@overdrive.btc.adaptec.com
-  Update Aic79xx Readme
-
-ChangeSet@1.1274, 2003-06-03 17:22:05-06:00, gibbs@overdrive.btc.adaptec.com
-  Aic7xxx Driver Update
-   o Bump version number to 6.2.36
-   o Document recent aic7xxx driver releases
-
-ChangeSet@1.1273, 2003-06-03 17:20:14-06:00, gibbs@overdrive.btc.adaptec.com
-  Aic79xx Driver Update
-   o Bump driver version to 1.3.10
-   o Document recent releases in driver readme.
-
-ChangeSet@1.1272, 2003-05-31 21:12:09-06:00, gibbs@overdrive.btc.adaptec.com
-  Aic7xxx and Aic79xx Driver Update
-   o Work around negotiation firmware bug in the Quantum Atlas 10K
-   o Clear stale PCI errors in our register mapping test to avoid
-     false positives from rouge accesses to our registers that occur
-     prior to our driver attach.
-
-ChangeSet@1.1271, 2003-05-31 18:34:01-06:00, gibbs@overdrive.btc.adaptec.com
-  Aic79xx Driver Update
-   o Implement suspend and resume
-
-ChangeSet@1.1270, 2003-05-31 18:32:36-06:00, gibbs@overdrive.btc.adaptec.com
-  Aic7xxx Driver Update
-   o Fix some suspend and resume bugs
-
-ChangeSet@1.1269, 2003-05-31 18:27:09-06:00, gibbs@overdrive.btc.adaptec.com
-  Aic7xxx Driver Update
-   o Correct the type of the DV settings array.
-
-ChangeSet@1.1268, 2003-05-31 18:25:28-06:00, gibbs@overdrive.btc.adaptec.com
-  Aic7xxx and Aic79xx driver Update
-   o Remove unecessary and incorrect use of ~0 as a mask.
-
-ChangeSet@1.1267, 2003-05-30 13:50:00-06:00, gibbs@overdrive.btc.adaptec.com
-  Aic7xxx and Aic79xx Driver Update
-   o Adapt to 2.5.X SCSI proc interface change while maitaining
-     compatibility with earlier kernels.
-
-ChangeSet@1.1266, 2003-05-30 11:01:02-06:00, gibbs@overdrive.btc.adaptec.com
-  Merge http://linux.bkbits.net/linux-2.5
-  into overdrive.btc.adaptec.com:/usr/home/gibbs/bk/linux-2.5
-
-ChangeSet@1.1215.4.6, 2003-05-30 10:50:17-06:00, gibbs@overdrive.btc.adaptec.com
-  Aic7xxx Driver Update
-   o Bring in aic7xxx_reg_print.c update that was missed the
-     last time the firmware was regenerated.  The old file worked
-     fine, so this is mostly a cosmetic change.
-
-ChangeSet@1.1215.4.5, 2003-05-30 10:48:31-06:00, gibbs@overdrive.btc.adaptec.com
-  Aic79xx Driver Update
-   o Correct non-zero lun output on post Rev A4 hardware
-     in packetized mode.
-
-ChangeSet@1.1215.4.4, 2003-05-30 10:46:03-06:00, gibbs@overdrive.btc.adaptec.com
-  Aic79xx Driver Update
-   o Return to using 16byte alignment for th SCB_TAG field in our SCB.
-     The hardware seems to corrupt SCBs on some PCI platforms with the
-     tag field in its old location.
-
-ChangeSet@1.1215.4.3, 2003-05-30 10:43:20-06:00, gibbs@overdrive.btc.adaptec.com
-  Aic7xxx Driver Update
-   o Adopt 2.5.X EISA framework for probing aic7770 controllers
-
-ChangeSet@1.1215.4.2, 2003-05-30 10:31:04-06:00, gibbs@overdrive.btc.adaptec.com
-  Aic7xxx Driver Update
-   o Correct card identifcation string for the 2920C
-
+ciao, Marc
 
