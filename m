@@ -1,32 +1,38 @@
-From: Nishanth Aravamudan <nacc@us.ibm.com>
-Subject: no set_current_state() before schedule_timeout() (OSST)
-Date: Tue, 13 Jul 2004 17:40:54 +0000
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: RE: PATCH [3/5]  qla2xxx: TCQ fixes
+Date: 13 Jul 2004 12:43:23 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <40F41EA6.9000900@us.ibm.com>
+Message-ID: <1089740604.1798.54.camel@mulgrave>
+References: <B179AE41C1147041AA1121F44614F0B0DD02FD@AVEXCH02.qlogic.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e5.ny.us.ibm.com ([32.97.182.105]:63135 "EHLO e5.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S265682AbUGMRle (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 13 Jul 2004 13:41:34 -0400
+Received: from stat16.steeleye.com ([209.192.50.48]:42727 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S265668AbUGMRnp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 13 Jul 2004 13:43:45 -0400
+In-Reply-To: <B179AE41C1147041AA1121F44614F0B0DD02FD@AVEXCH02.qlogic.org>
 List-Id: linux-scsi@vger.kernel.org
-To: osst@riede.org
-Cc: osst@linux1.onstream.nl, linux-scsi@vger.kernel.org, kernel-janitors@lists.osdl.org
+To: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Cc: Linux-SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-Hi,
+On Tue, 2004-07-13 at 12:24, Andrew Vasquez wrote:
+> Ok, I'll bite.  What did you have in mind? I've taken a quick peek
+> through the scsi code, the per-hba tag stuff must still be in your
+> head...
 
-In continuing to replace, where appropriate, code with msleep() calls, I 
-ran across the following file(s) / function(s), which do not invoke 
-set_current_state() before schedule_timeout(), which causes the latter 
-to return immediately:
+Well, it exsits in the block layer (the ability to specify an existing
+tag map to blk_queue_init_tags().  Jens is going to expose a bit more of
+the tag map machinary to make that useful, then for host global tags,
+we'll generate a single tag map and share it amongst all the queues.
 
-drivers/scsi/osst.c::osst_reposition_and_retry()
+> Just a small comment, isn't the scsi_populate_tag_msg() function
+> quietly truncating the request->tag value?
 
-If someone could tell me which state (TASK_INTERRUPTIBLE or 
-TASK_UNINTERRUPTIBLE) is desired, I can fix this and perhaps replace the 
-calls with msleep().
+Not for SPI, no.  However, we probably need a different API for the
+sixteen bit tag values FC can use?
 
-Thanks,
-Nish
+James
+
+
