@@ -1,48 +1,57 @@
-From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
-Subject: Re: [PATCH] tmscsim: implement change_queue_depth
-Date: Tue, 28 Dec 2004 01:29:09 +0100 (CET)
-Message-ID: <Pine.LNX.4.60.0412272003340.3560@poirot.grange>
-References: <Pine.LNX.4.60.0412221305140.2636@poirot.grange>
- <1103826862.5290.39.camel@mulgrave>  <Pine.LNX.4.60.0412240126400.27610@poirot.grange>
-  <1104076166.5268.22.camel@mulgrave>  <Pine.LNX.4.60.0412262034030.3808@poirot.grange>
- <1104172298.7447.10.camel@mulgrave>
+From: Takayoshi Kochi <t-kochi@bq.jp.nec.com>
+Subject: qla1280.c /proc/scsi/qla1280/x reads garbage
+Date: Tue, 28 Dec 2004 16:58:52 +0900 (JST)
+Message-ID: <20041228.165852.74724555.t-kochi@bq.jp.nec.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: Multipart/Mixed;
+ boundary="--Next_Part(Tue_Dec_28_16_58_52_2004_253)--"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:9109 "HELO mail.gmx.net")
-	by vger.kernel.org with SMTP id S262008AbUL1A3r (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 27 Dec 2004 19:29:47 -0500
-In-Reply-To: <1104172298.7447.10.camel@mulgrave>
+Received: from TYO201.gate.nec.co.jp ([202.32.8.214]:34481 "EHLO
+	tyo201.gate.nec.co.jp") by vger.kernel.org with ESMTP
+	id S261645AbUL1IAd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 28 Dec 2004 03:00:33 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: jes@wildopensource.com
+Cc: linux-scsi@vger.kernel.org
 
-On Mon, 27 Dec 2004, James Bottomley wrote:
+----Next_Part(Tue_Dec_28_16_58_52_2004_253)--
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 
-> On Sun, 2004-12-26 at 22:49 +0100, Guennadi Liakhovetski wrote:
-> > Ok. Would it make sense / be accepted to change this sitation by either 1) 
-> > adding a new function __scsi_adjust_queue_depth() which would pass the 
-> > return code of the block-layer, or 2) modifying the existing function to 
-> > return an error? 1) has disadvantages, that it's a) confusing, b) even 
-> 
-> To be honest, unless you can find a driver that cares about this
-> failure, I don't think so.
+Hi,
 
-No, I don't know any either. I thought more about a user, doing something 
-like
-$ echo "4" > /sys/.../queue_depth
-$ echo $?
-0
-$ cat /sys/.../queue_depth
-3
-and wondering why... But, I feel I am abusing your time already with this 
-minor issue, so, if you (and everybody else) think, that this possible 
-confusion is unimportant, I'll shut up now:-)
+With 2.6.10, reading /proc/scsi/qla1280/0 sometimes spits garbage.
+This problem seems already fixed in 2.4 series (I checked 2.4.28).
 
-Thanks
-Guennadi
+Why the fix is missing in 2.6?
+Patch attached. (compiled and worked for me)
+
+Signed-off-by: Takayoshi Kochi <t-kochi@bq.jp.nec.com>
+
 ---
-Guennadi Liakhovetski
+Takayoshi Kochi
 
+----Next_Part(Tue_Dec_28_16_58_52_2004_253)--
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline; filename="qla1280.patch"
+
+--- linux-2.6.10.orig/drivers/scsi/qla1280.c	Sat Dec 25 06:35:40 2004
++++ linux-2.6.10/drivers/scsi/qla1280.c	Tue Dec 28 16:53:33 2004
+@@ -776,10 +776,11 @@ static int qla1280_proc_info(struct Scsi
+ 		qla1280_buffer_size = length = 0;
+ 		*start = NULL;
+ 	} else {
+-		*start = &qla1280_buffer[offset];	/* Start of wanted data */
++		*start = buffer;
+ 		if (len - offset < length) {
+ 			length = len - offset;
+ 		}
++		memcpy(buffer, &qla1280_buffer[offset], length);
+ 	}
+ 	return length;
+ }
+
+----Next_Part(Tue_Dec_28_16_58_52_2004_253)----
