@@ -1,53 +1,86 @@
-From: James.Smart@Emulex.Com
-Subject: [Announce] Emulex lpfcdriver v8.0.9 available
-Date: Mon, 16 Aug 2004 16:07:51 -0400
+From: Mike Anderson <andmike@us.ibm.com>
+Subject: [PATCH] reorder call in scsi_remove_host
+Date: Mon, 16 Aug 2004 13:18:35 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <0B1E13B586976742A7599D71A6AC733C02F164@xbl3.ma.emulex.com>
+Message-ID: <20040816201835.GA2179@us.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emulex.emulex.com ([138.239.112.1]:2521 "EHLO emulex.emulex.com")
-	by vger.kernel.org with ESMTP id S267934AbUHPUHx convert rfc822-to-8bit
+Received: from e34.co.us.ibm.com ([32.97.110.132]:48382 "EHLO
+	e34.co.us.ibm.com") by vger.kernel.org with ESMTP id S267935AbUHPUSy
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 16 Aug 2004 16:07:53 -0400
-Received: from xbl3.ad.emulex.com (xbl3.ma.emulex.com [138.239.73.12])
-	by emulex.emulex.com (8.12.10/8.12.10) with ESMTP id i7GK7qgI016967
-	for <linux-scsi@vger.kernel.org>; Mon, 16 Aug 2004 13:07:52 -0700 (PDT)
-content-class: urn:content-classes:message
+	Mon, 16 Aug 2004 16:18:54 -0400
+Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
+Cc: Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@suse.de>
 
-Christoph,
+This patch against scsi-misc-2.6 reorders a call to scsi_forget_host in
+the scsi_remove_host function. This removes the error message
+"Synchronizing SCSI cache..." on rmmod of a scsi host driver module as
+shown in example output 1 and 2 below.
 
-We posted the 8.0.9 lpfc driver on SourceForge last week. 
+I had previous created a much more complicated patch to work around this
+problem. In response Christoph mention a simpler solution (pointer to
+thread below) which is this patch.
 
-Of the more notable changes that have occurred over the last few drops:
-- Applied Christoph's patches for proc info, memory allocation routines, and bld_scsi_cmd dead code.
-- Removed lun handling. Removed code that replicated midlayer functions, issued report luns, did partial VSA, had unnecessary data structures, etc.
-- Reworked the clock/timer handling per Christoph's comments.
-- Reworked driver parameters per Christoph's comments.
-- Use the SCSI host lock instead of our own adapter lock
-- Fixed the reset_bus and reset_device routines. Send "Reset LUN" for reset_device requests.
-- More cleanup: condensing routines, removing casts and dead code, etc.
+http://marc.theaimsgroup.com/?l=linux-scsi&m=108720042210331&w=2
 
-The ChangeLogs have more detail.
+Example output.
 
-To date, the known todos are:
-- Use mid-layer I/O timers
-- No Peeking into timer structures
-- Need to get approvals on all the clock changes, parameter changes, etc.
-- Add calls to scan functions on new device detection, remove_device on device loss.
-- Add interfaces to support managability.
+1.) Before patch.
 
-Thanks
+elm:~# scsi1 : scsi_debug, version 1.73 [20040518], dev_size_mb=8,
+opts=0x0
+  Vendor: Linux     Model: scsi_debug        Rev: 0004
+  Type:   Direct-Access                      ANSI SCSI revision: 03
+SCSI device sdc: 16384 512-byte hdwr sectors (8 MB)
+SCSI device sdc: drive cache: write back
+ sdc: unknown partition table
+Attached scsi disk sdc at scsi1, channel 0, id 0, lun 0
+Attached scsi generic sg4 at scsi1, channel 0, id 0, lun 0,  type 0
+Synchronizing SCSI cache for disk sdc: <4>FAILED
+  status = 0, message = 00, host = 1, driver = 00
 
--- James S
+2.) After patch.
+
+elm:~# scsi1 : scsi_debug, version 1.73 [20040518], dev_size_mb=8, opts=0x0
+  Vendor: Linux     Model: scsi_debug        Rev: 0004
+  Type:   Direct-Access                      ANSI SCSI revision: 03
+SCSI device sdc: 16384 512-byte hdwr sectors (8 MB)
+SCSI device sdc: drive cache: write back
+ sdc: unknown partition table
+Attached scsi disk sdc at scsi1, channel 0, id 0, lun 0
+Attached scsi generic sg4 at scsi1, channel 0, id 0, lun 0,  type 0
+Synchronizing SCSI cache for disk sdc:
+
+-andmike
+--
+Michael Anderson
+andmike@us.ibm.com
 
 
-The tarball is here:
-http://prdownloads.sourceforge.net/lpfcxxxx/lpfcdriver-2.6-8.0.9.tar.gz?download
+DESC
+Reorder call to scsi_forget_host in scsi_remove_host function.
 
-The full ChangeLog is on SourceForge:
-http://sourceforge.net/forum/forum.php?forum_id=398596
+Signed-off-by: Mike Anderson <andmike@us.ibm.com>
+EDESC
 
+
+ patched-scsi-misc-2.6-andmike/drivers/scsi/hosts.c |    2 +-
+ 1 files changed, 1 insertion(+), 1 deletion(-)
+
+diff -puN drivers/scsi/hosts.c~scsi_forget_host drivers/scsi/hosts.c
+--- patched-scsi-misc-2.6/drivers/scsi/hosts.c~scsi_forget_host	Wed Aug 11 17:33:46 2004
++++ patched-scsi-misc-2.6-andmike/drivers/scsi/hosts.c	Wed Aug 11 17:35:07 2004
+@@ -75,9 +75,9 @@ void scsi_host_cancel(struct Scsi_Host *
+  **/
+ void scsi_remove_host(struct Scsi_Host *shost)
+ {
++	scsi_forget_host(shost);
+ 	scsi_host_cancel(shost, 0);
+ 	scsi_proc_host_rm(shost);
+-	scsi_forget_host(shost);
+ 
+ 	set_bit(SHOST_DEL, &shost->shost_state);
+ 
