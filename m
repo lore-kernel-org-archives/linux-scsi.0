@@ -1,31 +1,31 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [patch 1/2] cciss: cleans up warnings in the 32/64 bit
-	conversions
-Date: 26 Oct 2004 15:57:59 -0400
+From: David Wysochanski <davidw@netapp.com>
+Subject: Re: SNIA iSCSI Management API Public Review
+Date: Tue, 26 Oct 2004 15:59:11 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1098820685.2061.398.camel@mulgrave>
-References: <20041021211718.GA10462@beardog.cca.cpqcorp.net>
-	<1098633262.10824.35.camel@mulgrave>
-	<20041026194551.GA21003@beardog.cca.cpqcorp.net>
+Message-ID: <417EAC8F.5010109@netapp.com>
+References: <20041026182914.GA6006@lists.us.dell.com> <20041026194926.GA17456@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat16.steeleye.com ([209.192.50.48]:46813 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S261434AbUJZT6V (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 26 Oct 2004 15:58:21 -0400
-In-Reply-To: <20041026194551.GA21003@beardog.cca.cpqcorp.net>
+Received: from mx1.netapp.com ([216.240.18.38]:24383 "EHLO mx1.netapp.com")
+	by vger.kernel.org with ESMTP id S261449AbUJZT7S (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 26 Oct 2004 15:59:18 -0400
+In-Reply-To: <20041026194926.GA17456@infradead.org>
 List-Id: linux-scsi@vger.kernel.org
-To: mikem <mikem@beardog.cca.cpqcorp.net>
-Cc: marcelo.tosatti@cyclades.com, Jens Axboe <axboe@suse.de>, Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Matt Domsch <Matt_Domsch@dell.com>, linux-scsi@vger.kernel.org
 
-On Tue, 2004-10-26 at 15:45, mikem wrote:
-> Which tree are you applying to? This was made from 2.4.28-pre4.
+Christoph Hellwig wrote:
+> On Tue, Oct 26, 2004 at 01:29:14PM -0500, Matt Domsch wrote:
+>  > FYI.
+> 
+> It has the usual SNIA spec quality - aka totally useless.
+> 
 
-OK, you caught me ... trying to apply a 2.4 patch to a 2.6 tree.  I keep
-forgetting that not all patches on linux-scsi are 2.6
+What specifically is so bad to describe it as totally useless?
 
-James
+(Note that this API isn't kernel related.)
 
 
