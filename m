@@ -1,71 +1,73 @@
-From: Doug Ledford <dledford@redhat.com>
+From: Mike Anderson <andmike@us.ibm.com>
 Subject: Re: [linux-usb-devel] Re: [PATCH] USB changes for 2.5.58
-Date: Fri, 24 Jan 2003 18:17:54 -0500
+Date: Fri, 24 Jan 2003 15:21:28 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030124231754.GD28812@redhat.com>
-References: <Pine.LNX.4.44L0.0301211546410.6926-100000@ida.rowland.org> <200301232159.28656.oliver@neukum.name> <20030123213423.GA26415@redhat.com> <200301232339.40892.oliver@neukum.name> <20030123152554.F12788@one-eyed-alien.net> <20030124214831.GA28812@redhat.com> <20030124225909.GB2775@beaverton.ibm.com>
+Message-ID: <20030124232128.GC2775@beaverton.ibm.com>
+References: <3E31AB91.9080400@splentec.com> <Pine.LNX.4.44L0.0301241649460.692-100000@ida.rowland.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20030124225909.GB2775@beaverton.ibm.com>
+In-Reply-To: <Pine.LNX.4.44L0.0301241649460.692-100000@ida.rowland.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Anderson <andmike@us.ibm.com>
-Cc: Oliver Neukum <oliver@neukum.name>, Luben Tuikov <luben@splentec.com>, Alan Stern <stern@rowland.harvard.edu>, David Brownell <david-b@pacbell.net>, Greg KH <greg@kroah.com>, linux-usb-devel@lists.sourceforge.net, Linux SCSI list <linux-scsi@vger.kernel.org>
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: Luben Tuikov <luben@splentec.com>, Matthew Dharm <mdharm-scsi@one-eyed-alien.net>, Oliver Neukum <oliver@neukum.name>, Doug Ledford <dledford@redhat.com>, David Brownell <david-b@pacbell.net>, Greg KH <greg@kroah.com>, linux-usb-devel@lists.sourceforge.net, Linux SCSI list <linux-scsi@vger.kernel.org>
 
-On Fri, Jan 24, 2003 at 02:59:10PM -0800, Mike Anderson wrote:
-> Doug,
-> 	I started writing the interface you put forth in your email. I
-> 	am currently debugging it in UML so I can generate the error
-> 	conditions in a control manner.
-
-Very cool!  Thanks Mike.
-
->	 I still have some stuff to look
-> 	at in the error handler with it running in this mode as it
-> 	previously expected no one else to be possibly doing operations
-> 	on the host. This could be the case if other LLDD's use this
-> 	interface and have another device that happens to timeout an IO
-> 	post a device being set offline.
-
-Unless someone changed things behind my back, we still have on eh thread 
-per host don't we?  As such, since each device is it's own host in USB 
-(and I think in ieee1394 as well), this shouldn't be an issue...
-
-> A clarification question below.
+Alan Stern [stern@rowland.harvard.edu] wrote:
+> On Fri, 24 Jan 2003, Luben Tuikov wrote:
 > 
-> 
-> Doug Ledford [dledford@redhat.com] wrote:
-> 
-> > So, what you should be doing in 
-> > order to be both a nice scsi host that plays well with the generic 
-> > mechanism we have in place is when you get this removal event, you should 
-> > be free'ing all the state you needed about the usb bus and such and taking 
-> > this usb device off line or whatever you do.  Then let the scsi mid layer 
-> > clean up at it's leisure.  You don't need to worry about it because the 
-> > only thing you will have left is to wait for the scsi subsys to call you 
-> > when it's time to delete things.  You don't even have to keep device 
-> > references around because we pass those in to your deletion routines 
-> > anyway.
+> > >>A LLDD should and must *not* call scsi_unregister_host().  This brakes
+> > >>all hierarchy.
+> > > 
 > > 
-> > > I want to be able to inform the SCSI mid-layer, which will then inform
-> > > higher layers, that the device is gone.
+> > What I probably meant is the detect()/release() pair; release() itself
+> > normally calls scsi_unregister(host); the point is that it got nudged
+> > from ``above'', i.e. SCSI Core.
 > > 
-> > scsi_set_device_offline() as we've been discussing.
-> > 
+> > How can a LLDD be certain that it can safely call scsi_unregister_host()
+> > whenever it wishes?  As Doug pointed out this leads to problems.
 > 
-> I assumed that the hotplug event would only come from this function if
-> no commands where outstanding. If there where commands outstanding the
-> event would not be generated until the error handler gained ownership of
-> all the commands.
+> Apparently it can't.  I don't mean to say that this was the right thing to 
+> do; I just meant that this is what Matt's currently-proposed patch does.  
+> Personally, I'm not very familiar with the details of the SCSI subsystem, 
+> and I don't know what preconditions are required for calling the various 
+> API's.
+> 
+> > Furhtermore, are we talking about scsi_unregister_host() or
+> > scsi_unregister(host)?  The former does drivers and the latter
+> > does hosts.  This would mean that my original statement was
+> > nevertheless correct, how can a LLDD decide to unload itself safely?
+> 
+> I did indeed type it wrong.  The code first calls scsi_remove_host(host)  
+> and then it calls scsi_unregister(host).
+> 
 
-Yes.  But more than that, we really want to also make sure that the 
-current request queue for the device is empty of all commands before 
-sending the hot plug event.
+I probably should have looked at Matt's patch closer, sorry. If a LLDD is
+going to be using scsi_add_host and scsi_remove_host the driver should
+not use scsi_register_host / scsi_unregister_host. 
 
--- 
-  Doug Ledford <dledford@redhat.com>     919-754-3700 x44233
-         Red Hat, Inc. 
-         1801 Varsity Dr.
-         Raleigh, NC 27606
-  
+If the driver is updated to the sysfs driver model then:
+
+	1.) The drivers probe routine should call into the scsi mid with.
+		scsi_register(...);
+		scsi_add_host(...);
+
+	2.) The drivers remove routine should call into the scsi mid with.
+
+		scsi_remove_host(...);
+		scsi_unregister(...);
+
+	(scsi_remove_host is part of this current discussion).
+
+The event that calls probe / remove is the device_register /
+device_unregister of the the adapter device.
+
+The LLDD's device_initcall / module_exit routines will call
+driver_register and driver_unregister to cause device to driver
+binding. Which will cause probe / remove to be called.
+
+-andmike
+--
+Michael Anderson
+andmike@us.ibm.com
+
