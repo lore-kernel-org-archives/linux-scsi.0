@@ -1,56 +1,99 @@
-From: christophe varoqui <christophe.varoqui@free.fr>
-Subject: Re: [sg3_utils] report target group
-Date: Sat, 01 Jan 2005 13:57:44 +0100
-Message-ID: <1104584264.5752.4.camel@zezette>
-References: <1104233396.41d143b44e073@imp5-q.free.fr>
-	 <41D21DDD.5010109@torque.net> <1104307397.41d264c5c5d3c@imp5-q.free.fr>
-	 <41D2AF42.5050007@torque.net> <1104327781.41d2b4654846d@imp5-q.free.fr>
-	 <41D38DBF.6010303@torque.net> <1104415233.41d40a018c287@imp5-q.free.fr>
-	 <1104415927.41d40cb782493@imp5-q.free.fr>  <41D623BF.8060304@torque.net>
+From: mike.miller@hp.com
+Subject: [PATCH 2.6] cciss update to version 2.6.4
+Date: Fri, 7 Jan 2005 16:58:43 -0600
+Message-ID: <20050107225843.GA26037@beardog.cca.cpqcorp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp2.wanadoo.fr ([193.252.22.29]:61557 "EHLO smtp2.wanadoo.fr")
-	by vger.kernel.org with ESMTP id S261648AbVAGVvf convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 7 Jan 2005 16:51:35 -0500
-In-Reply-To: <41D623BF.8060304@torque.net>
+Received: from mailout.zma.compaq.com ([161.114.64.103]:18184 "EHLO
+	zmamail03.zma.compaq.com") by vger.kernel.org with ESMTP
+	id S261679AbVAGW6s (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 7 Jan 2005 17:58:48 -0500
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: dougg@torque.net
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: akpm@osdl.org, axboe@suse.de
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Le samedi 01 janvier 2005 =C3=A0 14:14 +1000, Douglas Gilbert a =C3=A9c=
-rit :
-> christophe.varoqui@free.fr wrote:
-> >>All in all, I don't really see how one can use the result of RTPG.
-> >>
-> >=20
-> > Ok, sorry to bug around.
-> > the response is at chapter 7.6.8 of SPC-3 :
-> > VPD page 88h contains the mapping between relative port ids and por=
-t ids
->=20
-> sg_inq -s /dev/sda
->=20
-> decodes the SCSI Ports VPD (0x88) page. Evidentally it will
-> be present in SAS dual ported disks.
->=20
-> So is sg_rtpg of any use?
->=20
-I have yet to see the output of these commands on a device that support=
-s
-them, but I think the multipath can use that quite well.
+This patch removes support for 2 controllers that were recently cancelled and
+it adds support for the P600, a cciss based SAS controller due to ship in 
+late March/early April '05.
+Neither of these controllers have made it to the field.
 
-I have added a call for contribution for that on the webpage.
+Signed-off-by: Mike Miller <mike.miller@hp.com>
 
-thanks for the help,
---=20
-christophe varoqui <christophe.varoqui@free.fr>
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+ Documentation/cciss.txt |    3 +--
+ drivers/block/cciss.c   |   17 +++++++----------
+ include/linux/pci_ids.h |    2 +-
+ 3 files changed, 9 insertions(+), 13 deletions(-)
+-------------------------------------------------------------------------------
+diff -burNp lx2610.orig/Documentation/cciss.txt lx2610/Documentation/cciss.txt
+--- lx2610.orig/Documentation/cciss.txt	2004-12-24 15:34:00.000000000 -0600
++++ lx2610/Documentation/cciss.txt	2005-01-07 11:51:15.590391280 -0600
+@@ -14,8 +14,7 @@ This driver is known to work with the fo
+ 	* SA 6400
+ 	* SA 6400 U320 Expansion Module
+ 	* SA 6i
+-	* SA 6422
+-	* SA V100
++	* SA P600
+ 
+ If nodes are not already created in the /dev/cciss directory
+ 
+diff -burNp lx2610.orig/drivers/block/cciss.c lx2610/drivers/block/cciss.c
+--- lx2610.orig/drivers/block/cciss.c	2004-12-24 15:35:39.000000000 -0600
++++ lx2610/drivers/block/cciss.c	2005-01-07 11:50:43.366290088 -0600
+@@ -46,14 +46,14 @@
+ #include <linux/completion.h>
+ 
+ #define CCISS_DRIVER_VERSION(maj,min,submin) ((maj<<16)|(min<<8)|(submin))
+-#define DRIVER_NAME "HP CISS Driver (v 2.6.2)"
+-#define DRIVER_VERSION CCISS_DRIVER_VERSION(2,6,2)
++#define DRIVER_NAME "HP CISS Driver (v 2.6.4)"
++#define DRIVER_VERSION CCISS_DRIVER_VERSION(2,6,4)
+ 
+ /* Embedded module documentation macros - see modules.h */
+ MODULE_AUTHOR("Hewlett-Packard Company");
+-MODULE_DESCRIPTION("Driver for HP Controller SA5xxx SA6xxx version 2.6.2");
++MODULE_DESCRIPTION("Driver for HP Controller SA5xxx SA6xxx version 2.6.4");
+ MODULE_SUPPORTED_DEVICE("HP SA5i SA5i+ SA532 SA5300 SA5312 SA641 SA642 SA6400"
+-			" SA6i V100");
++			" SA6i P600");
+ MODULE_LICENSE("GPL");
+ 
+ #include "cciss_cmd.h"
+@@ -80,10 +80,8 @@ const struct pci_device_id cciss_pci_dev
+ 		0x0E11, 0x409D, 0, 0, 0},
+ 	{ PCI_VENDOR_ID_COMPAQ, PCI_DEVICE_ID_COMPAQ_CISSC,
+ 		0x0E11, 0x4091, 0, 0, 0},
+-	{ PCI_VENDOR_ID_COMPAQ, PCI_DEVICE_ID_COMPAQ_CISSC,
+-		0x0E11, 0x409E, 0, 0, 0},
+-	{ PCI_VENDOR_ID_HP, PCI_DEVICE_ID_HP_CISS,
+-		0x103C, 0x3211, 0, 0, 0},
++	{ PCI_VENDOR_ID_HP, PCI_DEVICE_ID_HP_CISSA,
++		0x103C, 0x3225, 0, 0, 0},
+ 	{0,}
+ };
+ MODULE_DEVICE_TABLE(pci, cciss_pci_device_id);
+@@ -104,8 +102,7 @@ static struct board_type products[] = {
+ 	{ 0x409C0E11, "Smart Array 6400", &SA5_access},
+ 	{ 0x409D0E11, "Smart Array 6400 EM", &SA5_access},
+ 	{ 0x40910E11, "Smart Array 6i", &SA5_access},
+-	{ 0x409E0E11, "Smart Array 6422", &SA5_access},
+-	{ 0x3211103C, "Smart Array V100", &SA5_access},
++	{ 0x3225103C, "Smart Array P600", &SA5_access},
+ };
+ 
+ /* How long to wait (in millesconds) for board to go into simple mode */
+diff -burNp lx2610.orig/include/linux/pci_ids.h lx2610/include/linux/pci_ids.h
+--- lx2610.orig/include/linux/pci_ids.h	2004-12-24 15:35:50.000000000 -0600
++++ lx2610/include/linux/pci_ids.h	2005-01-07 11:54:24.945604912 -0600
+@@ -680,7 +680,7 @@
+ #define PCI_DEVICE_ID_HP_SX1000_IOC	0x127c
+ #define PCI_DEVICE_ID_HP_DIVA_EVEREST	0x1282
+ #define PCI_DEVICE_ID_HP_DIVA_AUX	0x1290
+-#define PCI_DEVICE_ID_HP_CISS		0x3210
++#define PCI_DEVICE_ID_HP_CISSA		0x3220
+ 
+ #define PCI_VENDOR_ID_PCTECH		0x1042
+ #define PCI_DEVICE_ID_PCTECH_RZ1000	0x1000
