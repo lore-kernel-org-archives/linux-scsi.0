@@ -1,48 +1,40 @@
-From: Willem Riede <osst@riede.org>
-Subject: Re: [2.6 patch] drivers/scsi/osst.c: remove unused code
-Date: Wed, 23 Mar 2005 12:16:54 +0000
-Message-ID: <1111580214l.12349l.37l@serve.riede.org>
-References: <20050322215948.GP1948@stusta.de>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [PATCH scsi-misc-2.6 08/08] scsi: fix hot unplug sequence
+Date: Wed, 23 Mar 2005 09:12:16 -0600
+Message-ID: <1111590736.5441.10.camel@mulgrave>
+References: <20050323021335.960F95F8@htj.dyndns.org>
+	 <20050323021335.4682C732@htj.dyndns.org>
+	 <1111550882.5520.93.camel@mulgrave>  <4240F5A9.80205@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 8BIT
-Received: from rwcrmhc12.comcast.net ([216.148.227.85]:44761 "EHLO
-	rwcrmhc12.comcast.net") by vger.kernel.org with ESMTP
-	id S261540AbVCWMQ7 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Mar 2005 07:16:59 -0500
-In-Reply-To: <20050322215948.GP1948@stusta.de> (from bunk@stusta.de on Tue
-	Mar 22 16:59:48 2005)
-Content-Disposition: inline
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Received: from stat16.steeleye.com ([209.192.50.48]:46208 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S261616AbVCWPMd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 23 Mar 2005 10:12:33 -0500
+In-Reply-To: <4240F5A9.80205@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Adrian Bunk <bunk@stusta.de>
-Cc: osst-users@lists.sourceforge.net, James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Jens Axboe <axboe@suse.de>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
 
-On 03/22/2005 04:59:48 PM, Adrian Bunk wrote:
-> Thanks to both the Coverity checker and GNU gcc, it was found that this 
-> variable is completely unused.
+On Wed, 2005-03-23 at 13:50 +0900, Tejun Heo wrote:
+>   Well, but it's because scsi midlayer calls back into usb-storage eh 
+> after the detaching process is complete.
+
+Yes, but that's legitimate.  It's always been explicitly stated that we
+can't ensure absolute synchronisation in the stack:  storage devices
+must expect to have to reject I/O for devices they think have been
+removed.
+
+> > However, the current host code does need fixing, but the fix is to move
+> > it over to a proper state model rather than the current bit twiddling we
+> > do.
 > 
-> Signed-off-by: Adrian Bunk <bunk@stusta.de>
+>   I agree & am working on it.  This patch was mainly to verify Jens' oops.
 
-And it is so obvious when your attention is drawn to it.
-The code that did use it moved to os_scsi_tape_flush() recently.
+Thanks!  You can look at the device state model as a guide ...
+originally that was a bit mask too.
 
-James, could you make this change in BK too, please?
-
-Signed-off-by: Willem Riede <osst@riede.org>
-
-> --- linux-2.6.12-rc1-mm1-full/drivers/scsi/osst.c.old	2005-03-22 21:04:36.000000000 +0100
-> +++ linux-2.6.12-rc1-mm1-full/drivers/scsi/osst.c	2005-03-22 22:09:32.000000000 +0100
-> @@ -4770,9 +4770,6 @@ static int os_scsi_tape_close(struct ino
->  {
->  	int		      result = 0;
->  	struct osst_tape    * STp    = filp->private_data;
-> -	struct scsi_request * SRpnt  = NULL;
-> -
-> -	if (SRpnt) scsi_release_request(SRpnt);
->  
->  	if (STp->door_locked == ST_LOCKED_AUTO)
->  		do_door_lock(STp, 0);
-> 
-
+James
 
