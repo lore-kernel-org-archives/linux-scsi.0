@@ -1,56 +1,42 @@
-From: Patrick Mansfield <patmans@us.ibm.com>
+From: Doug Ledford <dledford@redhat.com>
 Subject: Re: [PATCH 2.5.17] Making SCSI not copy the request structure
-Date: Wed, 22 May 2002 15:44:06 -0700
+Date: Wed, 22 May 2002 18:53:49 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20020522154406.A17222@eng2.beaverton.ibm.com>
-References: <200205212311.g4LNBYo09061@localhost.localdomain>
+Message-ID: <20020522185349.D2819@redhat.com>
+References: <200205212311.g4LNBYo09061@localhost.localdomain> <20020522154406.A17222@eng2.beaverton.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <200205212311.g4LNBYo09061@localhost.localdomain>; from James.Bottomley@steeleye.com on Tue, May 21, 2002 at 07:11:34PM -0400
+Content-Disposition: inline
+In-Reply-To: <20020522154406.A17222@eng2.beaverton.ibm.com>; from patmans@us.ibm.com on Wed, May 22, 2002 at 03:44:06PM -0700
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@steeleye.com>
-Cc: linux-scsi@vger.kernel.org
+To: Patrick Mansfield <patmans@us.ibm.com>
+Cc: James Bottomley <James.Bottomley@steeleye.com>, linux-scsi@vger.kernel.org
 
-On Tue, May 21, 2002 at 07:11:34PM -0400, James Bottomley wrote:
-> The attached makes the request field in Scsi_Cmnd and Scsi_Request be pointers 
-> to the block layer request instead of copies of it.  The advantage of this is 
-> that it makes the scsi interface to the block layer conform much more closely 
-> to most other block device drivers.  It should also make it quite a lot easier 
-> to slot in the block layer tag command queueing functions.
-> 
-> The disadvantage is that you now _really_ need to use the scsi request 
-> interfaces instead of the command based ones (you will get a NULL deref if you 
-> allocate and use your own commands with no associated requests).  This also 
-> means that the following fibre drivers need some rework:  cpqfc, gdth, pluto, 
-> tmscsim.
-> 
-> It works on my system (at least it stays up during a full kernel compile).  
-> Any comments would be welcome.
-> 
-> After this, I plan to see if I can implement TCQ using the block level generic 
-> functions.  This would buy us the ability to support request barriers (modulo 
-> the already discussed edge cases) right down through the SCSI subsystem.
+On Wed, May 22, 2002 at 03:44:06PM -0700, Patrick Mansfield wrote:
+> Do you think the queue depth on some of the adapters/devices should be
+> shrunk or the request queue increased with your patch? Some adapters set
 
-Hi - 
+Actually, more appropriate for future versions would be to make the queue
+depth adjustable.  Justin's aic driver sets the depth to 253 because he
+can't increase it later if he wants to, but he can queue things up
+internally if he ever needs to decrease it.  If low level drivers had some
+way of signalling up the stack "hey, this is how many queue slots I can
+handle on this particular device now" at their leisure, then that would be
+a far superior option to what we have now which is the mid layer saying to
+the low level drivers "OK, tell me how many commands you can support on
+this list of devices and you have to stick with that until the next
+reboot".  So, instead of the mid layer calling into the low level driver 
+to tell it to set queue depths, I think the low level driver should be 
+allowed to call into the mid layer and have the mid layer adjust the queue 
+depth on a device.  This should, of course, be properly locked so that a 
+low level driver can change it's mind about a device's queue depth later 
+if it wishes and call back into the mid layer with a new queue depth 
+value without confusing the mid layer.
 
-I applied your patch and successfuly ran with AIC + 2 disks (one the boot
-disk), plus with qla (modified v6.0b20 to remove io request lock) drivers
-attached to both Triton (disk array) and Seagate drives using block and raw io.
-
-Do you think the queue depth on some of the adapters/devices should be
-shrunk or the request queue increased with your patch? Some adapters set
-device queue depths above 200 (for example, aic set mine to 253), this seems
-like overkill, but today it means they can have 200 more IO's on the request
-queue, where freeing the request after the IO completes means the request
-queue (with your patch) means we sometimes would have 200 fewer entries.
-
-I don't understand how/why the journaling file systems want to use a
-barrier, and how it helps their IO.
-
-Are the request barriers needed to prevent earlier IO from completing before
-the barrier, or later IO from completing before the barrier, or both?
-
-How do the request barriers work with volume managers or multi-path devices?
-
--- Patrick Mansfield
+-- 
+  Doug Ledford <dledford@redhat.com>     919-754-3700 x44233
+         Red Hat, Inc. 
+         1801 Varsity Dr.
+         Raleigh, NC 27606
+  
