@@ -1,52 +1,52 @@
 From: James Bottomley <James.Bottomley@steeleye.com>
 Subject: Re: [RFC] Persistent naming of scsi devices
-Date: Mon, 08 Apr 2002 14:07:01 -0500
+Date: Mon, 08 Apr 2002 14:17:42 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <200204081907.g38J71S05041@localhost.localdomain>
-References: <mjacob@feral.com>
+Message-ID: <200204081917.g38JHg905081@localhost.localdomain>
+References: <patmans@us.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Received: (from root@localhost)
-	by pogo.mtv1.steeleye.com (8.9.3/8.9.3) id MAA16711
-	for <linux-scsi@vger.kernel.org>; Mon, 8 Apr 2002 12:07:04 -0700
-In-Reply-To: Message from Matthew Jacob <mjacob@feral.com>
-   of "Mon, 08 Apr 2002 11:34:02 PDT." <Pine.BSF.4.21.0204081129180.46879-100000@beppo>
+	by pogo.mtv1.steeleye.com (8.9.3/8.9.3) id MAA20327
+	for <linux-scsi@vger.kernel.org>; Mon, 8 Apr 2002 12:17:47 -0700
+In-Reply-To: Message from Patrick Mansfield <patmans@us.ibm.com>
+   of "Mon, 08 Apr 2002 11:27:36 PDT." <20020408112735.A26427@eng2.beaverton.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: mjacob@feral.com
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, Oliver Neukum <oliver@neukum.org>, Christoph Hellwig <hch@infradead.org>, sullivan <sullivan@austin.ibm.com>, linux-scsi@vger.kernel.org
+To: Patrick Mansfield <patmans@us.ibm.com>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, Christoph Hellwig <hch@infradead.org>, sullivan <sullivan@austin.ibm.com>, linux-scsi@vger.kernel.org
 
-mjacob@feral.com said:
-> For the current discussion, it seems to me that unlabelled/unimported
-> disks/volumes (i.e., ones w/o a UUID) still can be named unambiguosly
-> by the unwieldy names because you're likely to put a UUID on them very
-> very quickly. Furthermore, a minor amount of effort in userland tools
-> can make the manipulation of said names not as much of a problem.
+patmans@us.ibm.com said:
+> We could have a set of interfaces to get a SCSI UUID, and then have
+> hotplug tell us which interface (or module?) to use. That way we don't
+> require sg.
 
-I agree, but there are the edge cases where you can't put a UUID on them.
+I'm in two minds about this one.  Deciding exactly what constitutes the UUID 
+for a particular device can be non trivial.  Usually you have to probe for the 
+supported vital product pages, and if they have the WWN one use that otherwise 
+fall back to the (less guaranteed to be unique) SCSI-2 serial number page or 
+finally make something up dependent on what unique numbers you can get from 
+the device.
 
-I think, however, that what the discussion is showing us is that there is no 
-one universal way to get a unique name for a volume, so what we want is some 
-type of pluggable infrastructure which allows us to construct a unique name.
+It makes sense to me that this type of complex rule (of thumb almost) based 
+lookup is best done from user level by doing the explicit SCSI commands if 
+necessary.
 
-As far as persistent binding goes, I think having the ability to persistently 
-bind the unique name to a device is a useful feature for those of us who don't 
-want to know what the actual unique name is (or who want a nicer name).
+However, I'm biased.  From a philosophical point of view, I like the hotplug 
+approach because it allows us to eject a lot of the use once initialisation 
+code into user space from the kernel.
 
-However, nothing should prevent you from passing the name as a string to mount 
-instead of using persistent binding (even if the string turns out to have to 
-be a set of hex digits).  Perhaps we could even have a user level table of 
-nice UUID to unwieldy unique name mapping, and you can use a user specified 
-UUID without having to put anything on the device or partition.
+> The device_list[] (black/white list) should also come from user land.
+> Maybe hotplug could get the device_list[] characteristics, including
+> the UUID method for the device.
 
-The summary so far, as I see it, is
+> I'd also like a uuid stored in Scsi_Device for multi-path support in
+> the mid-layer (independent of how it's set). This uuid could not be
+> stored in the partition or as part of the file system. 
 
-1) persistent binding might be a user friendly way of uniquely identifying 
-devices
-2) UUID doesn't solve the problem because not everything has one
-3) ditto for WWN or EVPID
-
-Another wrinkle is that UUID is partition specific, but WWN etc. are device 
-specific.
+If we can come up with a nice, general mechanism, there's no reason why it 
+cannot apply outside the SCSI system, so I wouldn't necessarily tie it to 
+Scsi_Devce.  More likely (and actually what the persistent binding begins) is 
+to tie it to the concept of the Mochel internal device tree.
 
 James
 
