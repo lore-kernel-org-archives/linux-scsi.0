@@ -1,41 +1,40 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: RE: [ANNOUNCE]: megaraid driver version 2.20.0.1
-Date: 06 Jul 2004 15:56:32 -0500
+From: "Surekha.PC" <surekhap@cisco.com>
+Subject: RE: iSCSI device naming issues
+Date: Wed, 7 Jul 2004 14:35:13 +0530
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1089147398.2188.689.camel@mulgrave>
-References: <0E3FA95632D6D047BA649F95DAB60E57033BC826@exa-atlanta>
+Message-ID: <!~!UENERkVCMDkAAQACAAAAAAAAAAAAAAAAABgAAAAAAAAANoIxZIFzbEaqwjJgytz2AeKAAAAQAAAAjzu5VqiH1EizmlIkf87BNwEAAAAA@cisco.com>
+References: <1088971063.2736.10.camel@laptop.fenrus.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain;
+	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat16.steeleye.com ([209.192.50.48]:44461 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S264492AbUGFU4v (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 6 Jul 2004 16:56:51 -0400
-In-Reply-To: <0E3FA95632D6D047BA649F95DAB60E57033BC826@exa-atlanta>
+Received: from ind-iport-1-sec.cisco.com ([64.104.129.9]:7313 "EHLO
+	ind-iport-1.cisco.com") by vger.kernel.org with ESMTP
+	id S265002AbUGGJFV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 7 Jul 2004 05:05:21 -0400
+In-Reply-To: <1088971063.2736.10.camel@laptop.fenrus.com>
 List-Id: linux-scsi@vger.kernel.org
-To: "Mukker, Atul" <Atulm@lsil.com>
-Cc: 'Christoph Hellwig' <hch@infradead.org>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
+To: arjanv@redhat.com
+Cc: 'SCSI Mailing List' <linux-scsi@vger.kernel.org>
 
-On Tue, 2004-07-06 at 13:32, Mukker, Atul wrote:
-> > The biggest structural issue still seems to be the pending queue.  It
-> > looks to me like the driver could be nicely simplified if you 
-> > got rid of
-> > it and simply relied on returning SCSI_MLQUEUE_HOST_BUSY from
-> > queeucommand().  You'd still get the queue restart almost from the ISR
-> This is a very good suggestion and I would be more than willing to include
-> in the driver code. Only one concern though, there are other instances also
-> when we need to stop sending commands to the controllers, but not
-> necessarily stop getting commands from mid-layer. E.g., in case of delete
-> drive operation, driver has to wait till all outstanding commands to the
-> controller are complete, before issuing drive deletion command. In this
-> situation, having a pending list seems natural.
+> On Thu, 2004-07-01 at 15:58, Surekha.PC wrote:
+> > Whenever an iSCSI device is configured in the system, a 
+> hotplug event 
+> > is generated which invokes udev for device node creation. 
+> iSCSI driver 
+> > has a CALLOUT rule for udev to generate a unique name for iSCSI 
+> > devices.
+> 
+> wouldn't this all be a lot cleaner if you follow the 
+> one-hba-per-remote-host model ?
+> 
 
-We have this type of functionality already in the scsi_device_quiesce()
-interface.  It will not return until all normal commands have completed
-(specials and error handling are still allowed).  It was designed for
-Domain Validation, but it sounds like you could use it as well.
+Are you referring to one hba per Discovery IP?
 
-James
+Even if I have single or multiple HBA, the current scheme of
+things is not going to solve iSCSI device naming problem. I
+have to anyway lookup sysfs path to identify iSCSI devices.
 
+-Surekha
 
