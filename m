@@ -1,74 +1,182 @@
-From: James Bottomley <James.Bottomley@steeleye.com>
-Subject: Re: [PATCH] Fix aic7xxx del_timer_sync() deadlock
-Date: 28 Feb 2004 09:39:48 -0600
+From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+Subject: RE: sym53c8xx_2 driver and tekram dc-390u2w kernel-2.6.x
+Date: Sat, 28 Feb 2004 19:02:43 +0100 (CET)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1077982791.2020.25.camel@mulgrave>
-References: <1077906383.2157.98.camel@mulgrave>
-		<3462370000.1077909838@aslan.btc.adaptec.com>
-	<1077910452.2157.110.camel@mulgrave>
-	<3492060000.1077915050@aslan.btc.adaptec.com>
+Message-ID: <Pine.LNX.4.44.0402281901240.4514-100000@poirot.grange>
+References: <008801c3fd40$933d2ca0$6501a8c0@office>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat1.steeleye.com ([65.114.3.130]:58316 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S261871AbUB1Pjz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 28 Feb 2004 10:39:55 -0500
-In-Reply-To: <3492060000.1077915050@aslan.btc.adaptec.com>
+Received: from mail.gmx.de ([213.165.64.20]:31157 "HELO mail.gmx.net")
+	by vger.kernel.org with SMTP id S261896AbUB1SD2 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 28 Feb 2004 13:03:28 -0500
+In-Reply-To: <008801c3fd40$933d2ca0$6501a8c0@office>
 List-Id: linux-scsi@vger.kernel.org
-To: "Justin T. Gibbs" <gibbs@scsiguy.com>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, Andrew Morton <akpm@osdl.org>
+To: Brad Cramer <bcramer@callahanfuneralhome.com>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Fri, 2004-02-27 at 14:50, Justin T. Gibbs wrote:
-> Well, experience shows that if you implement a SCSI system based solely
+Just forwarding this to the _correct_ linux-scsi list address.
 
-Heh, well, I won't disagree with that.
+Guennadi
 
-> There are lots of devices out there that require a delay of at least
-> 250ms in order to not deadlock their internal SCSI processor.  The
-> I/O load of the system has no bearing on when a device will become
-> "unbusy" (we can't even say why it is "busy"), so I fail to see why
-> it should have any effect on how long we wait in response to this
-> condition.
+On Fri, 27 Feb 2004, Brad Cramer wrote:
 
-Could you give the most common example ... I'll see if I can persuade
-the OSDL test people to try it out with the current stack?
+> OK, it took me some time, but here is what I did.
+> I installed a debian kernel image (kernel_image-2.4.24-1-k7) to tell if this
+> was just a problem with the driver or because of the upgrade to kernel 2.6.x
+> I the sym53c8xx and sym53c8xx_2 drivers are modules and this is what I got.
+>
+> bigdaddy:~# modprobe sym53c8xx
+> PCI: Found IRQ 11 for device 00:0f.0
+> PCI: Sharing IRQ 11 with 00:0d.0
+> PCI: Sharing IRQ 11 with 00:0d.1
+> sym53c8xx: at PCI bus 0, device 15, function 0
+> sym53c8xx: 53c895 detected with Tekram NVRAM
+> sym53c895-0: rev 0x1 on pci bus 0 device 15 function 0 irq 11
+> sym53c895-0: Tekram format NVRAM, ID 7, Fast-40, NO Parity
+> sym53c895-0: SCSI bus mode change from 80 to 80.
+> scsi0 : sym53c8xx-1.7.3c-20010512
+> blk: queue f6eed0d4, I/O limit 4095Mb (mask 0xffffffff)
+> Vendor: SEAGATE   Model: SX4234514         Rev: 9E21
+> Type:   Direct-Access                      ANSI SCSI revision: 02
+> blk: queue f6eed2d4, I/O limit 4095Mb (mask 0xffffffff)
+> Vendor: PIONEER   Model: DVD-ROM DVD-303R  Rev: 2.00
+> Type:   CD-ROM                             ANSI SCSI revision: 02
+> blk: queue f6eed3d4, I/O limit 4095Mb (mask 0xffffffff)
+> Vendor: IOMEGA    Model: ZIP 100           Rev: J.02
+> Type:   Direct-Access                      ANSI SCSI revision: 02
+> blk: queue f6eed4d4, I/O limit 4095Mb (mask 0xffffffff)
+> Vendor: SONY      Model: SDT-5000          Rev: 3.26
+> Type:   Sequential-Access                  ANSI SCSI revision: 02
+> blk: queue f6eedad4, I/O limit 4095Mb (mask 0xffffffff)
+> Attached scsi disk sda at scsi0, channel 0, id 0, lun 0
+> Attached scsi removable disk sdb at scsi0, channel 0, id 5, lun 0
+> sym53c895-0-<0,*>: asynchronous.
+> SCSI device sda: 45322644 512-byte hdwr sectors (23205 MB)
+> /dev/scsi/host0/bus0/target0/lun0: p1 p2 p3
+> sym53c895-0-<5,*>: target did not report SYNC.
+> sym53c895-0-<5,*>: target did not report SYNC.
+> sym53c895-0-<5,*>: target did not report SYNC.
+> sdb: Unit Not Ready, sense:
+> Current 00:00: sense key Not Ready
+> Additional sense indicates Medium not present
+> sym53c895-0-<5,*>: target did not report SYNC.
+> sym53c895-0-<5,*>: target did not report SYNC.
+> sym53c895-0-<5,*>: target did not report SYNC.
+> sdb : READ CAPACITY failed.
+> sdb : status = 1, message = 00, host = 0, driver = 28
+> Current sd00:00: sense key Not Ready
+> Additional sense indicates Medium not present
+> sdb : block size assumed to be 512 bytes, disk size 1GB.
+> /dev/scsi/host0/bus0/target5/lun0: I/O error: dev 08:10, sector 0
+> I/O error: dev 08:10, sector 0
+> unable to read partition table
+>
+> sdb is a zip drive without a disk in it and that is the reason for those
+> errors. Then when I mount a partition that is on /dev/sda I get this:
+>
+> bigdaddy:~# mount /var
+> reiserfs: found format "3.6" with standard journal
+> reiserfs: checking transaction log (device sd(8,2)) ...
+> for (sd(8,2))
+> sd(8,2):Using r5 hash to sort names
+>
+> and everything works fine, then when I do :
+>
+> bigdaddy:~# modprobe sym53c8xx_2
+> PCI: Found IRQ 11 for device 00:0f.0
+> PCI: Sharing IRQ 11 with 00:0d.0
+> PCI: Sharing IRQ 11 with 00:0d.1
+> sym.0.15.0: setting PCI_COMMAND_INVALIDATE.
+> sym0: <895> rev 0x1 on pci bus 0 device 15 function 0 irq 11
+> sym0: Tekram NVRAM, ID 7, Fast-40, SE, NO parity
+> sym0: SCSI BUS has been reset.
+> sym0: SCSI BUS mode change from SE to SE.
+> sym0: SCSI BUS has been reset.
+> scsi0 : sym-2.1.17a
+> blk: queue f6eed4d4, I/O limit 4095Mb (mask 0xffffffff)
+> Vendor: SEAGATE   Model: SX4234514         Rev: 9E21
+> Type:   Direct-Access                      ANSI SCSI revision: 02
+> blk: queue f6eed3d4, I/O limit 4095Mb (mask 0xffffffff)
+> Vendor: PIONEER   Model: DVD-ROM DVD-303R  Rev: 2.00
+> Type:   CD-ROM                             ANSI SCSI revision: 02
+> blk: queue f6eed2d4, I/O limit 4095Mb (mask 0xffffffff)
+> Vendor: IOMEGA    Model: ZIP 100           Rev: J.02
+> Type:   Direct-Access                      ANSI SCSI revision: 02
+> blk: queue f6eed0d4, I/O limit 4095Mb (mask 0xffffffff)
+> Vendor: SONY      Model: SDT-5000          Rev: 3.26
+> Type:   Sequential-Access                  ANSI SCSI revision: 02
+> blk: queue f6eed9d4, I/O limit 4095Mb (mask 0xffffffff)
+> sym0:0:0: tagged command queuing enabled, command queue depth 16.
+> Attached scsi disk sda at scsi0, channel 0, id 0, lun 0
+> Attached scsi removable disk sdb at scsi0, channel 0, id 5, lun 0
+> sym0:0: FAST-20 SCSI 20.0 MB/s ST (50.0 ns, offset 15)
+> SCSI device sda: 45322644 512-byte hdwr sectors (23205 MB)
+> /dev/scsi/host0/bus0/target0/lun0: p1 p2 p3
+> sym0:5:0:phase change 6-7 6@35a4cf84 resid=4.
+> sdb: Unit Not Ready, sense:
+> Current 00:00: sense key Not Ready
+> Additional sense indicates Medium not present
+> sdb : READ CAPACITY failed.
+> sdb : status = 1, message = 00, host = 0, driver = 08
+> Current sd00:00: sense key Not Ready
+> Additional sense indicates Medium not present
+> sdb : block size assumed to be 512 bytes, disk size 1GB.
+> /dev/scsi/host0/bus0/target5/lun0: I/O error: dev 08:10, sector 0
+> I/O error: dev 08:10, sector 0
+> unable to read partition table
+>  and then when I try to mount a partition on /dev/sda I get this:
+>
+> bigdaddy:~# mount /var
+> reiserfs: found format "3.6" with standard journal
+> reiserfs: checking transaction log (device sd(8,2)) ...
+> for (sd(8,2))
+> SCSI disk error : host 0 channel 0 id 0 lun 0 return code = 8000002
+> Current sd08:02: sense key Aborted Command
+> Additional sense indicates Scsi parity error
+> I/O error: dev 08:02, sector 65680
+> sd(8,2):reiserfs: journal-837: IO error during journal replay
+> sd(8,2):Replay Failure, unable to mount
+> sd(8,2):sh-2022: reiserfs_read_super: unable to initialize journal space
+> mount: wrong fs type, bad option, bad superblock on /dev/sda2,
+>         or too many mounted file systems
+>
+> So I don't understand what is wrong, my only guess is a problem with the
+> driver, but As I said I am not a programmer and I can not figure out where
+> the problem is.
+> Thanks
+> Brad
+> -----Original Message-----
+> From: Guennadi Liakhovetski [mailto:g.liakhovetski@gmx.de]
+> Sent: Wednesday, February 18, 2004 4:03 PM
+> To: Brad Cramer
+> Cc: linux-kernel@vger.kernel.org
+> Subject: RE: sym53c8xx_2 driver and tekram dc-390u2w kernel-2.6.x
+>
+> On Wed, 18 Feb 2004, Brad Cramer wrote:
+>
+> > Yes that is my drive, but after it scans the scsi bus and finds all the
+> > devices it will not mount any of the partitions. And I know it is not
+> > corrupted partitions because they mount fine under 2.4.18 using the
+> > sym53c8xx driver.
+> > I don't have the exact message in front of me, but when I try to manually
+> > mount the partitions under 2.6.2 I get errors something about parity
+> errors,
+> > again I could get the exact message when I get home tonight.
+>
+> That might give a clue.
+>
+> Guennadi
+> ---
+> Guennadi Liakhovetski
+>
+>
+>
+>
+>
 
-What we currently do is by design ... on busy or queue full at zero
-depth we pause for three unplugs.  The first will be the returning queue
-unplug, but the other two depend on the I/O pressure or the unplug
-timer.  If you tell me what the inquiry strings of these devices are, I
-can blacklist them to have a much larger max_device_blocked count, so if
-there is a problem with them, *all* drivers will work rather than just
-the Adaptec ones.
+---
+Guennadi Liakhovetski
 
-> In order to issue a DV command to the end device via the mid-layer, the
-> host queue and the device queue must not be blocked.  But, for DV to be
-> effective, it must be the only activity occurring on that device.  How do
-> you reconcile the two while using the mid-layer to do your I/O?  The
-> mid-layer has no concept of allowing a client to freeze the queue,
-> wait for the active count to go to zero, effectively pre-empt
-> the command stream with a series of special commands, and then unblock
-> everyone else only at the end.  The closest the mid-layer comes to this
-> is in some of its error recovery handling but those are internal
-> interfaces.
-
-But domain validation is a pretty intrusive thing.  It's only really
-supposed to be run in two places:
-
-1. At start of day, which you should do from slave_configure, where you
-are guaranteed that nothing else is using the device
-
-2. On indication of transport problems.  This you would run for a single
-target from the bus or device reset handler after issuing the command
-and pausing for the settle time (OK, that's bad because the settle time
-is also built into the error handler, but that will improve when error
-handling becomes more transport specific and I can build domain
-validation directly into the SPI transport error handling).
-
-In both of these cases, you are guaranteed a quiescent device queue, so
-I don't see what the problem is.
-
-James
 
