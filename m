@@ -1,67 +1,92 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH] fix parameter naming
-Date: Fri, 6 Jun 2003 09:59:50 +0200
+Subject: [PATCH] kill blk_nohighio boot parameter
+Date: Fri, 6 Jun 2003 10:03:46 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030606075950.GA18838@lst.de>
+Message-ID: <20030606080346.GE18838@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([212.34.189.10]:9169 "EHLO mail.lst.de")
-	by vger.kernel.org with ESMTP id S265388AbTFFHqV (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 6 Jun 2003 03:46:21 -0400
+Received: from verein.lst.de ([212.34.189.10]:16081 "EHLO mail.lst.de")
+	by vger.kernel.org with ESMTP id S264720AbTFFHuQ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 6 Jun 2003 03:50:16 -0400
 Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
 Cc: linux-scsi@vger.kernel.org
 
-use module_param_named to avoid the the superflous scsi strings
-in the option names.
+It was useful in 2.4 to debug the blockhighmem stuff but in 2.5
+it's b0rked because doesn't have any implication except propagation
+of the highmem_io flags from the scsi host template to the scsi
+host structure.  It also only worked on i386.
+
+ACKed by Jens.
 
 
-diff -Nru a/drivers/scsi/scsi_devinfo.c b/drivers/scsi/scsi_devinfo.c
---- a/drivers/scsi/scsi_devinfo.c	Thu Jun  5 12:04:51 2003
-+++ b/drivers/scsi/scsi_devinfo.c	Thu Jun  5 12:04:51 2003
-@@ -451,14 +451,14 @@
- 	return err;
+diff -Nru a/arch/i386/kernel/setup.c b/arch/i386/kernel/setup.c
+--- a/arch/i386/kernel/setup.c	Tue Jun  3 01:32:46 2003
++++ b/arch/i386/kernel/setup.c	Tue Jun  3 01:32:46 2003
+@@ -96,7 +96,6 @@
+ extern void generic_apic_probe(char *);
+ extern int root_mountflags;
+ extern char _text, _etext, _edata, _end;
+-extern int blk_nohighio;
+ 
+ unsigned long saved_videomode;
+ 
+@@ -991,15 +990,6 @@
+ #endif
+ #endif
  }
+-
+-static int __init highio_setup(char *str)
+-{
+-	printk("i386: disabling HIGHMEM block I/O\n");
+-	blk_nohighio = 1;
+-	return 1;
+-}
+-__setup("nohighio", highio_setup);
+- 
  
--module_param_string(scsi_dev_flags, scsi_dev_flags, sizeof(scsi_dev_flags), 0);
--MODULE_PARM_DESC(scsi_dev_flags,
-+module_param_string(dev_flags, scsi_dev_flags, sizeof(scsi_dev_flags), 0);
-+MODULE_PARM_DESC(dev_flags,
- 	 "Given scsi_dev_flags=vendor:model:flags[,v:m:f] add black/white"
- 	 " list entries for vendor and model with an integer value of flags"
- 	 " to the scsi device info list");
+ #include "setup_arch_post.h"
+ /*
+diff -Nru a/drivers/block/ll_rw_blk.c b/drivers/block/ll_rw_blk.c
+--- a/drivers/block/ll_rw_blk.c	Tue Jun  3 01:32:46 2003
++++ b/drivers/block/ll_rw_blk.c	Tue Jun  3 01:32:46 2003
+@@ -49,8 +49,6 @@
+ static int queue_nr_requests;
  
--module_param(scsi_default_dev_flags, int, S_IRUGO|S_IWUSR);
--MODULE_PARM_DESC(scsi_default_dev_flags,
-+module_param_named(default_dev_flags, scsi_default_dev_flags, int, S_IRUGO|S_IWUSR);
-+MODULE_PARM_DESC(default_dev_flags,
- 		 "scsi default device flag integer value");
+ unsigned long blk_max_low_pfn, blk_max_pfn;
+-int blk_nohighio = 0;
+-
+ static wait_queue_head_t congestion_wqh[2];
  
- /**
-diff -Nru a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
---- a/drivers/scsi/scsi_scan.c	Thu Jun  5 12:04:51 2003
-+++ b/drivers/scsi/scsi_scan.c	Thu Jun  5 12:04:51 2003
-@@ -73,8 +73,8 @@
- static unsigned int max_scsi_luns = 1;
- #endif
+ /*
+@@ -2361,7 +2359,6 @@
+ EXPORT_SYMBOL(blk_queue_segment_boundary);
+ EXPORT_SYMBOL(blk_queue_dma_alignment);
+ EXPORT_SYMBOL(blk_rq_map_sg);
+-EXPORT_SYMBOL(blk_nohighio);
+ EXPORT_SYMBOL(blk_dump_rq_flags);
+ EXPORT_SYMBOL(submit_bio);
+ EXPORT_SYMBOL(blk_queue_assign_lock);
+diff -Nru a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
+--- a/drivers/scsi/hosts.c	Tue Jun  3 01:32:46 2003
++++ b/drivers/scsi/hosts.c	Tue Jun  3 01:32:46 2003
+@@ -125,7 +125,6 @@
+  **/
+ struct Scsi_Host *scsi_host_alloc(Scsi_Host_Template *sht, int privsize)
+ {
+-	extern int blk_nohighio;
+ 	struct Scsi_Host *shost;
+ 	int gfp_mask = GFP_KERNEL, rval;
+ 	DECLARE_COMPLETION(complete);
+@@ -186,8 +185,7 @@
+ 	shost->unchecked_isa_dma = sht->unchecked_isa_dma;
+ 	shost->use_clustering = sht->use_clustering;
+ 	shost->use_blk_tcq = sht->use_blk_tcq;
+-	if (!blk_nohighio)
+-		shost->highmem_io = sht->highmem_io;
++	shost->highmem_io = sht->highmem_io;
  
--module_param(max_scsi_luns, int, S_IRUGO|S_IWUSR);
--MODULE_PARM_DESC(max_scsi_luns,
-+module_param_named(max_luns, max_scsi_luns, int, S_IRUGO|S_IWUSR);
-+MODULE_PARM_DESC(max_luns,
- 		 "last scsi LUN (should be between 1 and 2^32-1)");
- 
- #ifdef CONFIG_SCSI_REPORT_LUNS
-@@ -87,8 +87,8 @@
-  */
- static unsigned int max_scsi_report_luns = 128;
- 
--module_param(max_scsi_report_luns, int, S_IRUGO|S_IWUSR);
--MODULE_PARM_DESC(max_scsi_report_luns,
-+module_param_named(max_report_luns, max_scsi_report_luns, int, S_IRUGO|S_IWUSR);
-+MODULE_PARM_DESC(max_report_luns,
- 		 "REPORT LUNS maximum number of LUNS received (should be"
- 		 " between 1 and 16384)");
- #endif
+ 	if (!sht->max_host_blocked)
+ 		shost->max_host_blocked = sht->max_host_blocked;
