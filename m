@@ -1,49 +1,57 @@
-From: John Summerfield <summer@os2.ami.com.au>
-Subject: Re: driverfs is not for everything! (was: [PATCH] /proc/scsi/map )
-Date: Tue, 25 Jun 2002 06:47:16 +0800
+From: Patrick Mochel <mochel@osdl.org>
+Subject: Re: [PATCH] /proc/scsi/map
+Date: Tue, 25 Jun 2002 09:05:01 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <200206242247.g5OMlGg32217@skink.Os2.Ami.Com.Au>
-References: <andrew.grover@intel.com>
+Message-ID: <Pine.LNX.4.33.0206250824590.8496-100000@geena.pdx.osdl.net>
+References: <Pine.LNX.4.44.0206211616510.16808-100000@waste.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: Message from "Grover, Andrew" <andrew.grover@intel.com>
-   of "Mon, 24 Jun 2002 10:35:53 MST." <59885C5E3098D511AD690002A5072D3C02AB7F53@orsmsx111.jf.intel.com>
+In-Reply-To: <Pine.LNX.4.44.0206211616510.16808-100000@waste.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Oliver Xymoron <oxymoron@waste.org>
+Cc: Linux kernel list <linux-kernel@vger.kernel.org>, Linux SCSI list <linux-scsi@vger.kernel.org>
 
 
+On Fri, 21 Jun 2002, Oliver Xymoron wrote:
+
+> On Thu, 20 Jun 2002, Patrick Mochel wrote:
 > 
-> It's a matter of where to draw the line. Obviously when we're talking
-> physical devices, my tcpip connection to www.yahoo.com is not one. My PS/2
-
-I'm far from expert here, but isn't the network card important here?
-
-
+> > > But it was entierly behind me how to fit this
+> > > in to the sheme other sd@4,0:h,raw
+> > > OS-es are using. And finally how would one fit this in to the
+> > > partitioning shemes? For the system aprtitions are simply
+> > > block devices hanging off the corresponding block device.
+> >
+> > Partitions are purely logical entities on a physical disk. They have no
+> > presence in the physical device tree.
 > 
-> If a device can be accessed by multiple machines concurrently, it should not
-> be in driverfs.
-> 
+> As I raised elsewhere in this thread, the distinction between physical and
+> logical is troubling. Consider iSCSI, (aka SCSI-over-IP). It's analogous
+> to SCSI-over-Fibre Channel, except that rather than using an embedded FC
+> stack, it's using the kernel's IP stack. But it's every bit as much a SCSI
+> disk/tape/whatever as a local device. Ergo, it ought to show up in the
+> device tree so that it can be discovered in the same way. But where?
 
-Back in the 1970s I used a computer where disk drives, tape drives and RAM 
-chould be physically connected to and used by more than one computer at once.
+An iSCSI device is a physical device; it just doesn't reside on the local 
+system. We should represent the device in some physical form, since the 
+logical class mappings do/will assume a mapping to a physical device. 
 
-It was an IBM S/370 model 168 MP; you might argue the toss on the RAM, but the 
-disk drives were beyond argument.
+These devices are essentially children of the network via which they're 
+attached. When devices are discovered, I'm assuming you can derive the 
+network device through which you're communicating, so you can get enforce 
+the ancestral relationship. 
 
+You want the ancestral relationship for several reasons. You'd wouldn't 
+power down such a device on PM transitions or during shutdown, but you 
+would stop I/O transactions. The drivers for these devices should recogize 
+it's a remote device and handlethis. And, if you were to remove the bridge 
+device (the network card, etc), you want the devices behind it and their 
+logical mappings to go away gracefully.
 
-On which devices should MVS have ignored power cycling?
--- 
-Cheers
-John Summerfield
+Mulitpath devices, which you could easily have with multiple routes to the 
+same IP address, are another issue that must be addressed. It hasn't yet, 
+but we're getting closer...
 
-Microsoft's most solid OS: http://www.geocities.com/rcwoolley/
-
-Note: mail delivered to me is deemed to be intended for me, for my disposition.
-
-==============================
-If you don't like being told you're wrong,
-	be right!
-
-
+	-pat
 
