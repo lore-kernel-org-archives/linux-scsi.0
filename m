@@ -1,89 +1,148 @@
-From: Anton Blanchard <anton@samba.org>
-Subject: Re: [PATCH] qla2xxx - perform proper SNS scans with ISP2200 HBAs.
-Date: Fri, 23 Jan 2004 11:18:17 +1100
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040123001817.GG11236@krispykreme>
-References: <B179AE41C1147041AA1121F44614F0B0598E53@AVEXCH02.qlogic.org>
+From: "Justin T. Gibbs" <gibbs@scsiguy.com>
+Subject: Re: [PATCH] aic7xxx parallel build
+Date: Thu, 22 Jan 2004 17:53:10 -0700
+Sender: owner-linux-mm@kvack.org
+Message-ID: <1251588112.1074819190@aslan.btc.adaptec.com>
+References: <1074800332.29125.55.camel@cherrypit.pdx.osdl.net>
+Reply-To: "Justin T. Gibbs" <gibbs@scsiguy.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from dp.samba.org ([66.70.73.150]:59030 "EHLO lists.samba.org")
-	by vger.kernel.org with ESMTP id S266482AbUAWATa (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 22 Jan 2004 19:19:30 -0500
-Content-Disposition: inline
-In-Reply-To: <B179AE41C1147041AA1121F44614F0B0598E53@AVEXCH02.qlogic.org>
+Content-Type: multipart/mixed;
+ boundary="==========4C6A61654566DCB0F9AE=========="
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <1074800332.29125.55.camel@cherrypit.pdx.osdl.net>
+To: John Cherry <cherry@osdl.org>, akpm@osdl.org
+Cc: linux-mm@kvack.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, Andrew Morton <akpm@osdl.org>, linux-scsi@vger.kernel.org
 
+--==========4C6A61654566DCB0F9AE==========
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
-Hi Andrew,
+> The Makefiles for aic7xxx and aicasm have changed since I submitted a
+> patch for the parallel build problem several months ago.  Justin's patch
+> has disappeared from the mm builds, so we continue to have parallel
+> build problems.
+> 
+> The following patch fixes the parallel build problem and it still
+> applies to 2.6.2-rc1-mm1.  This is Justin's fix.
 
-> The 2200 firmware doesn't support the MS IOCB interface the driver 
-> uses to issue CT commands to the SNS.  Basically, I had to 
-> forward-port some code from the 6.x driver to get the SNS calls 
-> to go through.  I've had several machines (mixture of 2200s/
-> 2300s/others with loop and fabric connections) running with this
-> patch for the past few days.
+Actually, that's not my fix.  This looks like your original fix.
+I've attached aic7xxx/Makefile and aic7xxx/aicasm/Makefile from my
+tree.  These seem to work just fine in my parallel build tests and
+will work regardless of which generated file is out of date - a flaw
+in your change.  Please let me know if these files don't work for you.
 
-I applied your patch to 2.6.2-rc1 and tested it on my ppc64 box. Looks
-like its not happy :) Maybe a 64bit or big endian issue?
+--
+Justin
 
-Anton
+--==========4C6A61654566DCB0F9AE==========
+Content-Type: application/octet-stream; name="aic7xxx.Makefile"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="aic7xxx.Makefile"; size=3240
 
-QLogic ISP2xxx PCI/PCI-X Fibre Channel HBA Driver (c00000000063a028)
-PCI: Enabling device: (0003:41:01.0), cmd 143
-qla2200 0003:41:01.0: Found an ISP2200, irq 183, iobase 0xa000000080020000
-qla2200 0003:41:01.0: Configuring PCI space...
-qla2200 0003:41:01.0: Configure NVRAM parameters...
-qla2200 0003:41:01.0: Verifying loaded RISC code...
-qla2200 0003:41:01.0: LIP reset occured (0).
-qla2200 0003:41:01.0: Waiting for LIP to complete...
-qla2200 0003:41:01.0: LOOP UP detected (1 Gbps).
-qla2200 0003:41:01.0: Topology - (F_Port), Host Loop address 0xffff
-scsi0 : qla2xxx
-qla2200 0003:41:01.0:
- QLogic ISP2xxx PCI/PCI-X Fibre Channel HBA Driver: 8.00.00b8
-  QLogic QLA22xx -
-  ISP2200: PCI (66 MHz) @ 0003:41:01.0 hdma-, host#=0, fw=2.02.06 TP
-qla2200 0003:41:01.0: Invalid ISP SCSI completion handle
-qla2200 0003:41:01.0: Performing ISP error recovery - ha= c00000000fd202e0.
-qla2200 0003:41:01.0: LIP reset occured (0).
-qla2200 0003:41:01.0: LOOP UP detected (1 Gbps).
-qla2200 0003:41:01.0: Invalid ISP SCSI completion handle
-qla2200 0003:41:01.0: Performing ISP error recovery - ha= c00000000fd202e0.
-qla2200 0003:41:01.0: LIP reset occured (f7f7).
-qla2200 0003:41:01.0: LOOP UP detected (1 Gbps).
-qla2200 0003:41:01.0: Invalid ISP SCSI completion handle
-qla2200 0003:41:01.0: Performing ISP error recovery - ha= c00000000fd202e0.
-qla2200 0003:41:01.0: LIP reset occured (f7f7).
-qla2200 0003:41:01.0: LOOP UP detected (1 Gbps).
-qla2200 0003:41:01.0: Invalid ISP SCSI completion handle
-qla2200 0003:41:01.0: Performing ISP error recovery - ha= c00000000fd202e0.
-qla2200 0003:41:01.0: LIP reset occured (f7f7).
-qla2200 0003:41:01.0: LOOP UP detected (1 Gbps).
-qla2200 0003:41:01.0: Invalid ISP SCSI completion handle
-qla2200 0003:41:01.0: Performing ISP error recovery - ha= c00000000fd202e0.
-qla2200 0003:41:01.0: LIP reset occured (f7f7).
-qla2200 0003:41:01.0: LOOP UP detected (1 Gbps).
-qla2200 0003:41:01.0: Invalid ISP SCSI completion handle
-qla2200 0003:41:01.0: Performing ISP error recovery - ha= c00000000fd202e0.
-qla2200 0003:41:01.0: LIP reset occured (f7f7).
-qla2200 0003:41:01.0: LOOP UP detected (1 Gbps).
-qla2200 0003:41:01.0: Invalid ISP SCSI completion handle
-qla2200 0003:41:01.0: Performing ISP error recovery - ha= c00000000fd202e0.
-qla2200 0003:41:01.0: LIP reset occured (f7f7).
-qla2200 0003:41:01.0: LOOP UP detected (1 Gbps).
-qla2200 0003:41:01.0: Invalid ISP SCSI completion handle
-qla2200 0003:41:01.0: Performing ISP error recovery - ha= c00000000fd202e0.
-qla2200 0003:41:01.0: LIP reset occured (f7f7).
-qla2200 0003:41:01.0: LOOP UP detected (1 Gbps).
-qla2200 0003:41:01.0: Invalid ISP SCSI completion handle
-qla2200 0003:41:01.0: Performing ISP error recovery - ha= c00000000fd202e0.
-qla2200 0003:41:01.0: LIP reset occured (f7f7).
-qla2200 0003:41:01.0: LOOP UP detected (1 Gbps).
-qla2200 0003:41:01.0: Invalid ISP SCSI completion handle
-qla2200 0003:41:01.0: Performing ISP error recovery - ha= c00000000fd202e0.
-qla2200 0003:41:01.0: LIP reset occured (f7f7).
-qla2200 0003:41:01.0: LOOP UP detected (1 Gbps).
+IwojIE1ha2VmaWxlIGZvciB0aGUgTGludXggYWljN3h4eCBTQ1NJIGRyaXZlci4KIwojICRJZDog
+Ly9kZXBvdC9saW51eC1haWM3OXh4LTIuNS4wL2RyaXZlcnMvc2NzaS9haWM3eHh4L01ha2VmaWxl
+IzggJAojCgojIExldCBrYnVpbGQgZGVzY2VuZCBpbnRvIGFpY2FzbSB3aGVuIGNsZWFuaW5nCnN1
+YmRpci0JCQkJKz0gYWljYXNtCgpvYmotJChDT05GSUdfU0NTSV9BSUM3WFhYKQkrPSBhaWM3eHh4
+Lm8Kb2JqLSQoQ09ORklHX1NDU0lfQUlDNzlYWCkJKz0gYWljNzl4eC5vCgojIENvcmUgRmFzdCAt
+PiBVMTYwIGZpbGVzCmFpYzd4eHgteQkJCQkJKz0gYWljN3h4eF9jb3JlLm8JXAoJCQkJCQkgICBh
+aWM3eHh4XzkzY3g2Lm8KYWljN3h4eC0kKENPTkZJR19FSVNBKQkJCQkrPSBhaWM3NzcwLm8KYWlj
+N3h4eC0kKENPTkZJR19QQ0kpCQkJCSs9IGFpYzd4eHhfcGNpLm8KYWljN3h4eC0kKENPTkZJR19B
+SUM3WFhYX1JFR19QUkVUVFlfUFJJTlQpCSs9IGFpYzd4eHhfcmVnX3ByaW50Lm8KCiMgUGxhdGZv
+cm0gU3BlY2lmaWMgRmFzdCAtPiBVMTYwIEZpbGVzCmFpYzd4eHgteQkJCQkJKz0gYWljN3h4eF9v
+c20ubwlcCgkJCQkJCSAgIGFpYzd4eHhfcHJvYy5vCmFpYzd4eHgtJChDT05GSUdfRUlTQSkJCQkJ
+Kz0gYWljNzc3MF9vc20ubwphaWM3eHh4LSQoQ09ORklHX1BDSSkJCQkJKz0gYWljN3h4eF9vc21f
+cGNpLm8KCiMgQ29yZSBVMzIwIGZpbGVzCmFpYzc5eHgteQkJCQkJKz0gYWljNzl4eF9jb3JlLm8J
+XAoJCQkJCQkgICBhaWM3OXh4X3BjaS5vCmFpYzc5eHgtJChDT05GSUdfQUlDNzlYWF9SRUdfUFJF
+VFRZX1BSSU5UKQkrPSBhaWM3OXh4X3JlZ19wcmludC5vCgojIFBsYXRmb3JtIFNwZWNpZmljIFUz
+MjAgRmlsZXMKYWljNzl4eC15CQkJCQkrPSBhaWM3OXh4X29zbS5vCVwKCQkJCQkJICAgYWljNzl4
+eF9wcm9jLm8JXAoJCQkJCQkgICBhaWM3OXh4X29zbV9wY2kubwoKRVhUUkFfQ0ZMQUdTICs9IC1J
+ZHJpdmVycy9zY3NpIC1XZXJyb3IKI0VYVFJBX0NGTEFHUyArPSAtZwoKIyBGaWxlcyBnZW5lcmF0
+ZWQgdGhhdCBzaGFsbCBiZSByZW1vdmVkIHVwb24gbWFrZSBjbGVhbgpjbGVhbi1maWxlcyA6PSBh
+aWM3eHh4X3NlcS5oIGFpYzd4eHhfcmVnLmggYWljN3h4eF9yZWdfcHJpbnQuYwpjbGVhbi1maWxl
+cyArPSBhaWM3OXh4X3NlcS5oIGFpYzc5eHhfcmVnLmggYWljNzl4eF9yZWdfcHJpbnQuYwoKIyBE
+ZXBlbmRlbmNpZXMgZm9yIGdlbmVyYXRlZCBmaWxlcyBuZWVkIHRvIGJlIGxpc3RlZCBleHBsaWNp
+dGx5CgokKG9iaikvYWljN3h4eF9jb3JlLm86ICQob2JqKS9haWM3eHh4X3NlcS5oCiQob2JqKS9h
+aWM3OXh4X2NvcmUubzogJChvYmopL2FpYzc5eHhfc2VxLmgKJChvYmopL2FpYzc5eHhfcmVnX3By
+aW50LmM6ICQoc3JjKS9haWM3OXh4X3JlZ19wcmludC5jX3NoaXBwZWQKJChvYmopL2FpYzd4eHhf
+cmVnX3ByaW50LmM6ICQoc3JjKS9haWM3eHh4X3JlZ19wcmludC5jX3NoaXBwZWQKCiQoYWRkcHJl
+Zml4ICQob2JqKS8sJChhaWM3eHh4LXkpKTogJChvYmopL2FpYzd4eHhfcmVnLmgKJChhZGRwcmVm
+aXggJChvYmopLywkKGFpYzc5eHgteSkpOiAkKG9iaikvYWljNzl4eF9yZWcuaAoKYWljN3h4eC1n
+ZW4tJChDT05GSUdfQUlDN1hYWF9CVUlMRF9GSVJNV0FSRSkJOj0gJChvYmopL2FpYzd4eHhfc2Vx
+LmggXAoJCQkJCQkgICAkKG9iaikvYWljN3h4eF9yZWcuaAphaWM3eHh4LWdlbi0kKENPTkZJR19B
+SUM3WFhYX1JFR19QUkVUVFlfUFJJTlQpCSs9ICQob2JqKS9haWM3eHh4X3JlZ19wcmludC5jCgph
+aWNhc20tN3h4eC1vcHRzLSQoQ09ORklHX0FJQzdYWFhfUkVHX1BSRVRUWV9QUklOVCkgOj0gXAoJ
+LXAgJChvYmopL2FpYzd4eHhfcmVnX3ByaW50LmMgLWkgYWljN3h4eF9vc20uaAoKaWZlcSAoJChD
+T05GSUdfQUlDN1hYWF9CVUlMRF9GSVJNV0FSRSkseSkKIyBDcmVhdGUgYSBkZXBlbmRlbmN5IGNo
+YWluIGluIGdlbmVyYXRlZCBmaWxlcwojIHRvIGF2b2lkIGNvbmN1cnJlbnQgaW52b2NhdGlvbnMg
+b2YgdGhlIHNpbmdsZQojIHJ1bGUgdGhhdCBidWlsZHMgdGhlbSBhbGwuCmFpYzd4eHhfc2VxLmg6
+IGFpYzd4eHhfcmVnLmgKaWZlcSAoJChDT05GSUdfQUlDN1hYWF9SRUdfUFJFVFRZX1BSSU5UKSx5
+KQphaWM3eHh4X3JlZy5oOiBhaWM3eHh4X3JlZ19wcmludC5jCmVuZGlmCiQoYWljN3h4eC1nZW4t
+eSk6ICQoc3JjKS9haWM3eHh4LnNlcSAkKHNyYykvYWljN3h4eC5yZWcgJChvYmopL2FpY2FzbS9h
+aWNhc20KCSQob2JqKS9haWNhc20vYWljYXNtIC1JJChzcmMpIC1yICQob2JqKS9haWM3eHh4X3Jl
+Zy5oIFwKCQkJICAgICAgJChhaWNhc20tN3h4eC1vcHRzLXkpIC1vICQob2JqKS9haWM3eHh4X3Nl
+cS5oIFwKCQkJICAgICAgJChzcmMpL2FpYzd4eHguc2VxCmVuZGlmCgphaWM3OXh4LWdlbi0kKENP
+TkZJR19BSUM3OVhYX0JVSUxEX0ZJUk1XQVJFKQk6PSAkKG9iaikvYWljNzl4eF9zZXEuaCBcCgkJ
+CQkJCSAgICQob2JqKS9haWM3OXh4X3JlZy5oCmFpYzc5eHgtZ2VuLSQoQ09ORklHX0FJQzc5WFhf
+UkVHX1BSRVRUWV9QUklOVCkJKz0gJChvYmopL2FpYzc5eHhfcmVnX3ByaW50LmMKCmFpY2FzbS03
+OXh4LW9wdHMtJChDT05GSUdfQUlDNzlYWF9SRUdfUFJFVFRZX1BSSU5UKSA6PSBcCgktcCAkKG9i
+aikvYWljNzl4eF9yZWdfcHJpbnQuYyAtaSBhaWM3OXh4X29zbS5oCgppZmVxICgkKENPTkZJR19B
+SUM3OVhYX0JVSUxEX0ZJUk1XQVJFKSx5KQojIENyZWF0ZSBhIGRlcGVuZGVuY3kgY2hhaW4gaW4g
+Z2VuZXJhdGVkIGZpbGVzCiMgdG8gYXZvaWQgY29uY3VycmVudCBpbnZvY2F0aW9ucyBvZiB0aGUg
+c2luZ2xlCiMgcnVsZSB0aGF0IGJ1aWxkcyB0aGVtIGFsbC4KYWljNzl4eF9zZXEuaDogYWljNzl4
+eF9yZWcuaAppZmVxICgkKENPTkZJR19BSUM3OVhYX1JFR19QUkVUVFlfUFJJTlQpLHkpCmFpYzc5
+eHhfcmVnLmg6IGFpYzc5eHhfcmVnX3ByaW50LmMKZW5kaWYKJChhaWM3OXh4LWdlbi15KTogJChz
+cmMpL2FpYzc5eHguc2VxICQoc3JjKS9haWM3OXh4LnJlZyAkKG9iaikvYWljYXNtL2FpY2FzbQoJ
+JChvYmopL2FpY2FzbS9haWNhc20gLUkkKHNyYykgLXIgJChvYmopL2FpYzc5eHhfcmVnLmggXAoJ
+CQkgICAgICAkKGFpY2FzbS03OXh4LW9wdHMteSkgLW8gJChvYmopL2FpYzc5eHhfc2VxLmggXAoJ
+CQkgICAgICAkKHNyYykvYWljNzl4eC5zZXEKZW5kaWYKCiQob2JqKS9haWNhc20vYWljYXNtOiAk
+KHNyYykvYWljYXNtLyouW2NoeWxdCgkkKE1BS0UpIC1DICQoc3JjKS9haWNhc20K
+
+--==========4C6A61654566DCB0F9AE==========
+Content-Type: application/octet-stream; name="aicasm.Makefile"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="aicasm.Makefile"; size=1900
+
+UFJPRz0JYWljYXNtCgouU1VGRklYRVM9IC5sIC55IC5jIC5oCgpDU1JDUz0JYWljYXNtLmMgYWlj
+YXNtX3N5bWJvbC5jCllTUkNTPQlhaWNhc21fZ3JhbS55IGFpY2FzbV9tYWNyb19ncmFtLnkKTFNS
+Q1M9CWFpY2FzbV9zY2FuLmwgYWljYXNtX21hY3JvX3NjYW4ubAoKR0VOSERSUz0JYWljZGIuaCAk
+KFlTUkNTOi55PS5oKQpHRU5TUkNTPQkkKFlTUkNTOi55PS5jKSAkKExTUkNTOi5sPS5jKQoKU1JD
+Uz0JJHtDU1JDU30gJHtHRU5TUkNTfQpMSUJTPQktbGRiCmNsZWFuLWZpbGVzOj0gJHtHRU5TUkNT
+fSAke0dFTkhEUlN9ICQoWVNSQ1M6Lnk9Lm91dHB1dCkgJChQUk9HKQojIE92ZXJyaWRlIGRlZmF1
+bHQga2VybmVsIENGTEFHUy4gIFRoaXMgaXMgYSB1c2VybGFuZCBhcHAuCkFJQ0FTTV9DRkxBR1M6
+PSAtSS91c3IvaW5jbHVkZSAtSS4KWUZMQUdTPSAtZAoKTk9NQU49CW5vbWFuCgppZm5lcSAoJChI
+T1NUQ0MpLCkKQUlDQVNNX0NDPSAkKEhPU1RDQykKZWxzZQpBSUNBU01fQ0M9ICQoQ0MpCmVuZGlm
+CgppZmRlZiBERUJVRwpDRkxBR1MrPSAtRERFQlVHIC1nCllGTEFHUys9IC10IC12CkxGTEFHUz0g
+LWQKZW5kaWYKCiQoUFJPRyk6ICAke0dFTkhEUlN9ICQoU1JDUykKCSQoQUlDQVNNX0NDKSAkKEFJ
+Q0FTTV9DRkxBR1MpICQoU1JDUykgLW8gJChQUk9HKSAkKExJQlMpCgphaWNkYi5oOgoJQGlmIFsg
+LWUgIi91c3IvaW5jbHVkZS9kYjMvZGJfMTg1LmgiIF07IHRoZW4JCVwKCQllY2hvICIjaW5jbHVk
+ZSA8ZGIzL2RiXzE4NS5oPiIgPiBhaWNkYi5oOwlcCgkgZWxpZiBbIC1lICIvdXNyL2luY2x1ZGUv
+ZGIyL2RiXzE4NS5oIiBdOyB0aGVuCQlcCgkJZWNobyAiI2luY2x1ZGUgPGRiMi9kYl8xODUuaD4i
+ID4gYWljZGIuaDsJXAoJIGVsaWYgWyAtZSAiL3Vzci9pbmNsdWRlL2RiL2RiXzE4NS5oIiBdOyB0
+aGVuCQlcCgkJZWNobyAiI2luY2x1ZGUgPGRiL2RiXzE4NS5oPiIgPiBhaWNkYi5oOwlcCgkgZWxp
+ZiBbIC1lICIvdXNyL2luY2x1ZGUvZGJfMTg1LmgiIF07IHRoZW4JCVwKCQllY2hvICIjaW5jbHVk
+ZSA8ZGJfMTg1Lmg+IiA+IGFpY2RiLmg7CQlcCgkgZWxzZQkJCQkJCQlcCgkJZWNobyAiKioqIElu
+c3RhbGwgZGIgZGV2ZWxvcG1lbnQgbGlicmFyaWVzIjsJXAoJIGZpCgpjbGVhbjoKCXJtIC1mICQo
+Y2xlYW4tZmlsZXMpCgojIENyZWF0ZSBhIGRlcGVuZGVuY3kgY2hhaW4gaW4gZ2VuZXJhdGVkIGZp
+bGVzCiMgdG8gYXZvaWQgY29uY3VycmVudCBpbnZvY2F0aW9ucyBvZiB0aGUgc2luZ2xlCiMgcnVs
+ZSB0aGF0IGJ1aWxkcyB0aGVtIGFsbC4KYWljYXNtX2dyYW0uYzogYWljYXNtX2dyYW0uaAphaWNh
+c21fZ3JhbS5jIGFpY2FzbV9ncmFtLmg6IGFpY2FzbV9ncmFtLnkKCSQoWUFDQykgJChZRkxBR1Mp
+IC1iICQoPDoueT0pICQ8CgltdiAkKDw6Lnk9KS50YWIuYyAkKDw6Lnk9LmMpCgltdiAkKDw6Lnk9
+KS50YWIuaCAkKDw6Lnk9LmgpCgojIENyZWF0ZSBhIGRlcGVuZGVuY3kgY2hhaW4gaW4gZ2VuZXJh
+dGVkIGZpbGVzCiMgdG8gYXZvaWQgY29uY3VycmVudCBpbnZvY2F0aW9ucyBvZiB0aGUgc2luZ2xl
+CiMgcnVsZSB0aGF0IGJ1aWxkcyB0aGVtIGFsbC4KYWljYXNtX21hY3JvX2dyYW0uYzogYWljYXNt
+X21hY3JvX2dyYW0uaAphaWNhc21fbWFjcm9fZ3JhbS5jIGFpY2FzbV9tYWNyb19ncmFtLmg6IGFp
+Y2FzbV9tYWNyb19ncmFtLnkKCSQoWUFDQykgJChZRkxBR1MpIC1iICQoPDoueT0pIC1wIG1tICQ8
+CgltdiAkKDw6Lnk9KS50YWIuYyAkKDw6Lnk9LmMpCgltdiAkKDw6Lnk9KS50YWIuaCAkKDw6Lnk9
+LmgpCgphaWNhc21fc2Nhbi5jOiBhaWNhc21fc2Nhbi5sCgkkKExFWCkgJChMRkxBR1MpIC1vJEAg
+JDwKCmFpY2FzbV9tYWNyb19zY2FuLmM6IGFpY2FzbV9tYWNyb19zY2FuLmwKCSQoTEVYKSAkKExG
+TEFHUykgLVBtbSAtbyRAICQ8Cg==
+
+--==========4C6A61654566DCB0F9AE==========--
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"aart@kvack.org"> aart@kvack.org </a>
