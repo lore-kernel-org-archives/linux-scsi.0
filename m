@@ -1,59 +1,60 @@
-From: Kurt Garloff <garloff@suse.de>
-Subject: Re: [PATCH] 5/6: scsi_inq_timeout
-Date: Mon, 19 Apr 2004 00:16:10 +0200
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040418221610.GN4868@tpkurt.garloff.de>
-References: <20040418185957.GH4868@tpkurt.garloff.de> <20040418202109.C3393@infradead.org>
+From: Paul Wagland <paul@wagland.net>
+Subject: Re: reiser4 and megaraid problems with debian 2.6.5 (*solved*)
+Date: Mon, 19 Apr 2004 00:36:16 +0200
+Message-ID: <1082327775.2003.5.camel@morsel.kungfoocoder.org>
+References: <36927C82-8DE0-11D8-A41D-000A95CD704C@wagland.net>
+	 <20040414090547.GB13578@raptus.homelinux.org>
+	 <6699459A-8E10-11D8-A41D-000A95CD704C@wagland.net>
+	 <16509.14375.539110.986025@laputa.namesys.com>
+	 <295743F0-8E17-11D8-A41D-000A95CD704C@wagland.net>
+	 <1081987184.11193.87.camel@morsel.kungfoocoder.org>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="HxQt9wRz9wbL5Edg"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns.suse.de ([195.135.220.2]:9643 "EHLO Cantor.suse.de")
-	by vger.kernel.org with ESMTP id S264192AbUDRWRE (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 18 Apr 2004 18:17:04 -0400
-Content-Disposition: inline
-In-Reply-To: <20040418202109.C3393@infradead.org>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-YGH7GBhT02j08IrkG0cH"
+Return-path: <reiserfs-list-return-18036-reiserfs=m.gmane.org@namesys.com>
+list-help: <mailto:reiserfs-list-help@namesys.com>
+list-unsubscribe: <mailto:reiserfs-list-unsubscribe@namesys.com>
+list-post: <mailto:reiserfs-list@namesys.com>
+Errors-To: flx@namesys.com
+In-Reply-To: <1081987184.11193.87.camel@morsel.kungfoocoder.org>
+To: Nikita Danilov <Nikita@Namesys.COM>
+Cc: reiserfs-list@Namesys.COM, Linux SCSI mailing list <linux-scsi@vger.kernel.org>, Atul Mukker <atulm@lsil.com>, Domenico Andreoli <cavok@libero.it>, Hans Reiser <reiser@Namesys.COM>, Linux kernel mailing list <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Linux SCSI list <linux-scsi@vger.kernel.org>
 
-
---HxQt9wRz9wbL5Edg
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+--=-YGH7GBhT02j08IrkG0cH
+Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Sun, Apr 18, 2004 at 08:21:09PM +0100, Christoph Hellwig wrote:
-> On Sun, Apr 18, 2004 at 08:59:57PM +0200, Kurt Garloff wrote:
-> > +#ifdef __powerpc64__
-> > +static unsigned int scsi_inq_timeout =3D SCSI_TIMEOUT/HZ+25;
-> > +#else
-> > +static unsigned int scsi_inq_timeout =3D SCSI_TIMEOUT/HZ+3;
-> > +#endif
->=20
-> Huh?  per-arch ifdefs in the scsi code are completely bogus.
+Hi all,
 
-Well, those broken chips seem to be very common on machines from
-a specific vendor that ships PPC64 hardware ...
-That hunk could be dropped of course in mainline, I would not mind.
+well partly solved anyway... I am just posting this so that if anyone
+finds this thread later they can also find this conclusion... There is
+still more work to be done before this problem can be properly closed,
+but at least now I am certain that it has nothing to do with the
+hardware :-)
 
-Regards,
---=20
-Kurt Garloff                   <kurt@garloff.de>             [Koeln, DE]
-Physics:Plasma modeling <garloff@plasimo.phys.tue.nl> [TU Eindhoven, NL]
-Linux: SUSE Labs (Head)        <garloff@suse.de>    [SUSE Nuernberg, DE]
+It appears (my own unsupported theory) that the problem is that reiser4
+is taking some time to free up the free blocks that are currently in use
+by the wandering log. Since I was running a test that causes a lot of
+wandering log to be created, and I was doing it on a filesystem with
+very little free space, then I was running into the problem.
 
---HxQt9wRz9wbL5Edg
-Content-Type: application/pgp-signature
-Content-Disposition: inline
+Rerunning the test with either a) more space, or b) a smaller data set
+solved the problem. On the reiserfs-list we are now trying to find out
+exactly why this is happening, and how to solve the problem properly.
+
+Cheers,
+Paul
+
+--=-YGH7GBhT02j08IrkG0cH
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v1.2.4 (GNU/Linux)
 
-iD8DBQFAgv4qxmLh6hyYd04RAktmAJ40N71dYSPr/243JfNotVDOLSYtJQCdGysX
-5ZL3w6qqVrkcAX0uhAyYvTM=
-=0gUC
+iD8DBQBAgwLftch0EvEFvxURAp5AAJ47g0pYpmfoLzcxbUJ4eymWDYhcbACfSMII
+hSKeT05AHFB7jFC7SJuGIgE=
+=covQ
 -----END PGP SIGNATURE-----
 
---HxQt9wRz9wbL5Edg--
+--=-YGH7GBhT02j08IrkG0cH--
