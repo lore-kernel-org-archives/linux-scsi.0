@@ -1,241 +1,55 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH] move scsi_reset_provider to scsi_error.c
-Date: Sat, 16 Nov 2002 20:58:17 +0100
+From: Patrick Mansfield <patmans@us.ibm.com>
+Subject: Re: [RFC][PATCH] move dma_mask into struct device
+Date: Sat, 16 Nov 2002 12:33:51 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20021116205816.A24497@lst.de>
+Message-ID: <20021116123351.A7537@eng2.beaverton.ibm.com>
+References: <200211152034.gAFKYC404219@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
+In-Reply-To: <200211152034.gAFKYC404219@localhost.localdomain>; from James.Bottomley@steeleye.com on Fri, Nov 15, 2002 at 03:34:12PM -0500
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org
-
-it's clearly error-handling specific and allows to mark scsi_new_reset
-static
+To: "J.E.J. Bottomley" <James.Bottomley@steeleye.com>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, grundler@dsl2.external.hp.com, willy@debian.org
 
 
---- 1.61/drivers/scsi/scsi.c	Thu Nov 14 13:19:04 2002
-+++ edited/drivers/scsi/scsi.c	Sat Nov 16 19:53:49 2002
-@@ -175,11 +175,6 @@
- void scsi_build_commandblocks(Scsi_Device * SDpnt);
- 
- /*
-- * Private interface into the new error handling code.
-- */
--extern int scsi_new_reset(Scsi_Cmnd *SCpnt, unsigned int flag);
--
--/*
-  * Function:    scsi_initialize_queue()
-  *
-  * Purpose:     Selects queue handler function for a device.
-@@ -2851,112 +2834,3 @@
- 		kfree(SDpnt->inquiry);
-         kfree(SDpnt);
- }
--
--/*
-- * Function:	scsi_reset_provider_done_command
-- *
-- * Purpose:	Dummy done routine.
-- *
-- * Notes:	Some low level drivers will call scsi_done and end up here,
-- *		others won't bother.
-- *		We don't want the bogus command used for the bus/device
-- *		reset to find its way into the mid-layer so we intercept
-- *		it here.
-- */
--static void
--scsi_reset_provider_done_command(Scsi_Cmnd *SCpnt)
--{
--}
--
--/*
-- * Function:	scsi_reset_provider
-- *
-- * Purpose:	Send requested reset to a bus or device at any phase.
-- *
-- * Arguments:	device	- device to send reset to
-- *		flag - reset type (see scsi.h)
-- *
-- * Returns:	SUCCESS/FAILURE.
-- *
-- * Notes:	This is used by the SCSI Generic driver to provide
-- *		Bus/Device reset capability.
-- */
--int
--scsi_reset_provider(Scsi_Device *dev, int flag)
--{
--	Scsi_Cmnd SC, *SCpnt = &SC;
--        struct request req;
--	int rtn;
--
--        SCpnt->request = &req;
--	memset(&SCpnt->eh_timeout, 0, sizeof(SCpnt->eh_timeout));
--	SCpnt->host                    	= dev->host;
--	SCpnt->device                  	= dev;
--	SCpnt->target                  	= dev->id;
--	SCpnt->lun                     	= dev->lun;
--	SCpnt->channel                 	= dev->channel;
--	SCpnt->request->rq_status      	= RQ_SCSI_BUSY;
--	SCpnt->request->waiting        	= NULL;
--	SCpnt->use_sg                  	= 0;
--	SCpnt->old_use_sg              	= 0;
--	SCpnt->old_cmd_len             	= 0;
--	SCpnt->underflow               	= 0;
--	SCpnt->transfersize            	= 0;
--	SCpnt->resid			= 0;
--	SCpnt->serial_number           	= 0;
--	SCpnt->serial_number_at_timeout	= 0;
--	SCpnt->host_scribble           	= NULL;
--	SCpnt->next                    	= NULL;
--	SCpnt->state                   	= SCSI_STATE_INITIALIZING;
--	SCpnt->owner	     		= SCSI_OWNER_MIDLEVEL;
--    
--	memset(&SCpnt->cmnd, '\0', sizeof(SCpnt->cmnd));
--    
--	SCpnt->scsi_done		= scsi_reset_provider_done_command;
--	SCpnt->done			= NULL;
--	SCpnt->reset_chain		= NULL;
--        
--	SCpnt->buffer			= NULL;
--	SCpnt->bufflen			= 0;
--	SCpnt->request_buffer		= NULL;
--	SCpnt->request_bufflen		= 0;
--
--	SCpnt->internal_timeout		= NORMAL_TIMEOUT;
--	SCpnt->abort_reason		= DID_ABORT;
--
--	SCpnt->cmd_len			= 0;
--
--	SCpnt->sc_data_direction	= SCSI_DATA_UNKNOWN;
--	SCpnt->sc_request		= NULL;
--	SCpnt->sc_magic			= SCSI_CMND_MAGIC;
--
--	/*
--	 * Sometimes the command can get back into the timer chain,
--	 * so use the pid as an identifier.
--	 */
--	SCpnt->pid			= 0;
--
--        rtn = scsi_new_reset(SCpnt, flag);
--
--	scsi_delete_timer(SCpnt);
--	return rtn;
--}
--
--/*
-- * Overrides for Emacs so that we follow Linus's tabbing style.
-- * Emacs will notice this stuff at the end of the file and automatically
-- * adjust the settings for this buffer only.  This must remain at the end
-- * of the file.
-- * ---------------------------------------------------------------------------
-- * Local variables:
-- * c-indent-level: 4
-- * c-brace-imaginary-offset: 0
-- * c-brace-offset: -4
-- * c-argdecl-indent: 4
-- * c-label-offset: -4
-- * c-continued-statement-offset: 4
-- * c-continued-brace-offset: 0
-- * indent-tabs-mode: nil
-- * tab-width: 8
-- * End:
-- */
-===== drivers/scsi/scsi_error.c 1.20 vs edited =====
---- 1.20/drivers/scsi/scsi_error.c	Sat Nov  9 22:32:01 2002
-+++ edited/drivers/scsi/scsi_error.c	Sat Nov 16 19:54:08 2002
-@@ -1714,7 +1714,7 @@
-  * Return value:
-  *    SUCCESS/FAILED.
-  **/
--int scsi_new_reset(Scsi_Cmnd *scmd, int flag)
-+static int scsi_new_reset(Scsi_Cmnd *scmd, int flag)
- {
- 	int rtn;
- 
-@@ -1736,5 +1736,84 @@
- 		rtn = FAILED;
- 	}
- 
-+	return rtn;
-+}
-+
-+static void
-+scsi_reset_provider_done_command(Scsi_Cmnd *SCpnt)
-+{
-+}
-+
-+/*
-+ * Function:	scsi_reset_provider
-+ *
-+ * Purpose:	Send requested reset to a bus or device at any phase.
-+ *
-+ * Arguments:	device	- device to send reset to
-+ *		flag - reset type (see scsi.h)
-+ *
-+ * Returns:	SUCCESS/FAILURE.
-+ *
-+ * Notes:	This is used by the SCSI Generic driver to provide
-+ *		Bus/Device reset capability.
-+ */
-+int
-+scsi_reset_provider(Scsi_Device *dev, int flag)
-+{
-+	struct scsi_cmnd SC, *SCpnt = &SC;
-+	struct request req;
-+	int rtn;
-+
-+	SCpnt->request = &req;
-+	memset(&SCpnt->eh_timeout, 0, sizeof(SCpnt->eh_timeout));
-+	SCpnt->host                    	= dev->host;
-+	SCpnt->device                  	= dev;
-+	SCpnt->target                  	= dev->id;
-+	SCpnt->lun                     	= dev->lun;
-+	SCpnt->channel                 	= dev->channel;
-+	SCpnt->request->rq_status      	= RQ_SCSI_BUSY;
-+	SCpnt->request->waiting        	= NULL;
-+	SCpnt->use_sg                  	= 0;
-+	SCpnt->old_use_sg              	= 0;
-+	SCpnt->old_cmd_len             	= 0;
-+	SCpnt->underflow               	= 0;
-+	SCpnt->transfersize            	= 0;
-+	SCpnt->resid			= 0;
-+	SCpnt->serial_number           	= 0;
-+	SCpnt->serial_number_at_timeout	= 0;
-+	SCpnt->host_scribble           	= NULL;
-+	SCpnt->next                    	= NULL;
-+	SCpnt->state                   	= SCSI_STATE_INITIALIZING;
-+	SCpnt->owner	     		= SCSI_OWNER_MIDLEVEL;
-+    
-+	memset(&SCpnt->cmnd, '\0', sizeof(SCpnt->cmnd));
-+    
-+	SCpnt->scsi_done		= scsi_reset_provider_done_command;
-+	SCpnt->done			= NULL;
-+	SCpnt->reset_chain		= NULL;
-+        
-+	SCpnt->buffer			= NULL;
-+	SCpnt->bufflen			= 0;
-+	SCpnt->request_buffer		= NULL;
-+	SCpnt->request_bufflen		= 0;
-+
-+	SCpnt->internal_timeout		= NORMAL_TIMEOUT;
-+	SCpnt->abort_reason		= DID_ABORT;
-+
-+	SCpnt->cmd_len			= 0;
-+
-+	SCpnt->sc_data_direction	= SCSI_DATA_UNKNOWN;
-+	SCpnt->sc_request		= NULL;
-+	SCpnt->sc_magic			= SCSI_CMND_MAGIC;
-+
-+	/*
-+	 * Sometimes the command can get back into the timer chain,
-+	 * so use the pid as an identifier.
-+	 */
-+	SCpnt->pid			= 0;
-+
-+	rtn = scsi_new_reset(SCpnt, flag);
-+
-+	scsi_delete_timer(SCpnt);
- 	return rtn;
- }
+On Fri, Nov 15, 2002 at 03:34:12PM -0500, J.E.J. Bottomley wrote:
+> --- 1.36/drivers/scsi/hosts.h	Thu Nov 14 13:07:27 2002
+> +++ edited/drivers/scsi/hosts.h	Fri Nov 15 14:43:59 2002
+> @@ -468,10 +468,10 @@
+>      unsigned int max_host_blocked;
+>  
+>      /*
+> -     * For SCSI hosts which are PCI devices, set pci_dev so that
+> -     * we can do BIOS EDD 3.0 mappings
+> +     * This is a pointer to the generic device for this host (i.e. the
+> +     * device on the bus);
+>       */
+> -    struct pci_dev *pci_dev;
+> +    struct device *dev;
+>  
+>      /* 
+>       * Support for driverfs filesystem
+> @@ -521,11 +521,17 @@
+>  	shost->host_lock = lock;
+>  }
+>  
+> +static inline void scsi_set_device(struct Scsi_Host *shost,
+> +                                   struct device *dev)
+> +{
+> +        shost->dev = dev;
+> +        shost->host_driverfs_dev.parent = dev;
+> +}
+> +
+>  static inline void scsi_set_pci_device(struct Scsi_Host *shost,
+>                                         struct pci_dev *pdev)
+>  {
+> -	shost->pci_dev = pdev;
+> -	shost->host_driverfs_dev.parent=&pdev->dev;
+> +        scsi_set_device(shost, &pdev->dev);
+>  }
+
+Can shost->host_driverfs_dev.parent be used instead of adding and
+using a duplicate shost->dev?
+
+-- Patrick Mansfield
