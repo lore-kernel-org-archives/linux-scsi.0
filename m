@@ -1,87 +1,104 @@
-From: Scott Merritt <Scsi@PragmaSoft.com>
-Subject: Missing media patch sd.c 2.4.19
-Date: Sun, 29 Sep 2002 12:55:02 -0400
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20020929125502.0a01ef20.Scsi@PragmaSoft.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
+From: Rolf Fokkens <fokkensr@fokkensr.vertis.nl>
+Subject: [PATCH] sg.c and USER_HZ, kernel 2.5.39
+Date: Sun, 29 Sep 2002 21:18:41 +0200
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <200209291918.g8TJIfL04596@fokkensr.vertis.nl>
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+To: dgilbert@interlog.com, James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: mdharm-usb@one-eyed-alien.net
 
-My linux system (RH 7.1 w/ LK 2.4.19) has an SanDisk Imagemate (SDDR31) compact flash card reader connected to one of its USB ports.  My system is typically booted without any media inserted in the reader.  I recently became frustrated with the number error messages (read capacity, sense buffer, can't read partition table, etc.) that appear in my logs under this scenerio.
+Hi!
 
-After quite a bit of poking around, I've come to the impression that most of the problem lies with the handling of "missing" media errors in the scsi disk driver.  I noticed that some work has been in this area for the LK 2.5 series, but was unable to locate any patches for LK 2.4.19.
+Since the introduction of USER_HZ the SG_[GS]ET_TIMEOUT ioctls may have
+a serious BUG when USER_HZ differs from HZ.
 
-As such, I have developed the following patch for the version of sd.c included in the Linux 2.4.19 Kernel.  I did not attempt to "back-port" any of the changes from the LK 2.5 tree, but focused instead on the smallest/safest patch to correct this problem in 2.4.19.
+In x86 HZ=1000 and USER_HZ=100, resulting in confusing timouts as the
+kernel measures time 10 times as fast as userspace.
 
-Comments/suggestions welcomed.  Best regards, Scott.
+This patch is an attempt to fix this by transforming USER_HZ based timing to
+HZ based timing before storing it in timeout. To make sure that SG_GET_TIMEOUT
+and SG_SET_TIMEOUT behave consistently a field timeout_user is added which
+stores the exact value that's passed by SG_SET_TIMEOUT and it's returned on
+SG_GET_TIMEOUT.
 
---- linux-2.4.19/drivers/scsi/sd.org	Sun Sep 29 11:02:28 2002
-+++ linux-2.4.19/drivers/scsi/sd.c	Sun Sep 29 11:03:40 2002
-@@ -28,6 +28,9 @@
-  *	
-  *	 Modified by Alex Davis <letmein@erols.com>
-  *       Fix problem where removable media could be ejected after sd_open.
-+ *
-+ *       Modified by Scott Merritt <scsi@pragmasoft.com.>
-+ *       Fix problems when removable media not present during boot.
-  */
+Rolf Fokkens
+fokkensr@fokkensr.vertis.nl
+
+(3d post of this patch)
+
+diff -ruN linux-2.5.39.orig/drivers/scsi/sg.c linux-2.5.39.sg/drivers/scsi/sg.c
+--- linux-2.5.39.orig/drivers/scsi/sg.c	Sat Sep 21 13:03:19 2002
++++ linux-2.5.39.sg/drivers/scsi/sg.c	Sun Sep 29 18:27:52 2002
+@@ -82,6 +82,19 @@
  
- #include <linux/config.h>
-@@ -774,6 +777,8 @@
- 	int sector_size;
- 	Scsi_Request *SRpnt;
+ #define SG_MAX_DEVS_MASK ((1U << KDEV_MINOR_BITS) - 1)
  
-+	rscsi_disks[i].ready = 0;  /* not ready until proven otherwise */
++/*
++ * Suppose you want to calculate the formula muldiv(x,m,d)=int(x * m / d)
++ * Then when using 32 bit integers x * m may overflow during the calculation.
++ * Replacing muldiv(x) by muldiv(x)=((x % d) * m) / d + int(x / d) * m
++ * calculates the same, but prevents the overflow when both m and d
++ * are "small" numbers (like HZ and USER_HZ).
++ * Of course an overflow is inavoidable if the result of muldiv doesn't fit
++ * in 32 bits.
++ */
++#define MULDIV(X,MUL,DIV) ((((X % DIV) * MUL) / DIV) + ((X / DIV) * MUL))
 +
- 	/*
- 	 * Get the name of the disk, in case we need to log it somewhere.
- 	 */
-@@ -839,13 +844,14 @@
- 		 */
- 		if( the_result != 0
- 		    && ((driver_byte(the_result) & DRIVER_SENSE) != 0)
--		    && SRpnt->sr_sense_buffer[2] == UNIT_ATTENTION
-+		    && (SRpnt->sr_sense_buffer[2] == UNIT_ATTENTION ||
-+			SRpnt->sr_sense_buffer[2] == NOT_READY)
- 		    && SRpnt->sr_sense_buffer[12] == 0x3A ) {
- 			rscsi_disks[i].capacity = 0x1fffff;
- 			sector_size = 512;
- 			rscsi_disks[i].device->changed = 1;
- 			rscsi_disks[i].ready = 0;
--			break;
-+			goto exit_out;
- 		}
- 
- 		/* Look for non-removable devices that return NOT_READY.
-@@ -1075,6 +1081,8 @@
- 	SRpnt->sr_device->ten = 1;
- 	SRpnt->sr_device->remap = 1;
- 	SRpnt->sr_device->sector_size = sector_size;
++#define SG_DEFAULT_TIMEOUT MULDIV(SG_DEFAULT_TIMEOUT_USER, HZ, USER_HZ)
 +
-+exit_out:
- 	/* Wake up a process waiting for device */
- 	scsi_release_request(SRpnt);
- 	SRpnt = NULL;
-@@ -1236,7 +1244,7 @@
- 	for (i = 0; i < sd_template.dev_max; ++i)
- 		if (!rscsi_disks[i].capacity && rscsi_disks[i].device) {
- 			sd_init_onedisk(i);
--			if (!rscsi_disks[i].has_part_table) {
-+			if (rscsi_disks[i].ready && !rscsi_disks[i].has_part_table) {
- 				sd_sizes[i << 4] = rscsi_disks[i].capacity;
- 				register_disk(&SD_GENDISK(i), MKDEV_SD(i),
- 						1<<4, &sd_fops,
-@@ -1364,7 +1372,8 @@
- 	MAYBE_REINIT;
- #endif
+ int sg_big_buff = SG_DEF_RESERVED_SIZE;
+ /* N.B. This variable is readable and writeable via
+    /proc/scsi/sg/def_reserved_size . Each time sg_open() is called a buffer
+@@ -150,7 +163,8 @@
+ 	struct sg_device *parentdp;	/* owning device */
+ 	wait_queue_head_t read_wait;	/* queue read until command done */
+ 	rwlock_t rq_list_lock;	/* protect access to list in req_arr */
+-	int timeout;		/* defaults to SG_DEFAULT_TIMEOUT */
++	int timeout;		/* defaults to SG_DEFAULT_TIMEOUT      */
++	int timeout_user;	/* defaults to SG_DEFAULT_TIMEOUT_USER */
+ 	Sg_scatter_hold reserve;	/* buffer held for this file descriptor */
+ 	unsigned save_scat_len;	/* original length of trunc. scat. element */
+ 	Sg_request *headrp;	/* head of request slist, NULL->empty */
+@@ -790,10 +804,15 @@
+ 			return result;
+ 		if (val < 0)
+ 			return -EIO;
+-		sfp->timeout = val;
++		if (val >= MULDIV (INT_MAX, USER_HZ, HZ))
++		    val = MULDIV (INT_MAX, USER_HZ, HZ);
++		sfp->timeout_user = val;
++		sfp->timeout = MULDIV (val, HZ, USER_HZ);
++
+ 		return 0;
+ 	case SG_GET_TIMEOUT:	/* N.B. User receives timeout as return value */
+-		return sfp->timeout;	/* strange ..., for backward compatibility */
++				/* strange ..., for backward compatibility */
++		return sfp->timeout_user;
+ 	case SG_SET_FORCE_LOW_DMA:
+ 		result = get_user(val, (int *) arg);
+ 		if (result)
+@@ -2432,6 +2451,7 @@
+ 	sfp->rq_list_lock = RW_LOCK_UNLOCKED;
  
--	grok_partitions(&SD_GENDISK(target), target % SCSI_DISKS_PER_MAJOR,
-+	if (rscsi_disks[target].ready)
-+                grok_partitions(&SD_GENDISK(target), target % SCSI_DISKS_PER_MAJOR,
- 			1<<4, CAPACITY);
+ 	sfp->timeout = SG_DEFAULT_TIMEOUT;
++	sfp->timeout_user = SG_DEFAULT_TIMEOUT_USER;
+ 	sfp->force_packid = SG_DEF_FORCE_PACK_ID;
+ 	sfp->low_dma = (SG_DEF_FORCE_LOW_DMA == 0) ?
+ 	    sdp->device->host->unchecked_isa_dma : 1;
+diff -ruN linux-2.5.39.orig/include/scsi/sg.h linux-2.5.39.sg/include/scsi/sg.h
+--- linux-2.5.39.orig/include/scsi/sg.h	Sun Sep  8 09:00:19 2002
++++ linux-2.5.39.sg/include/scsi/sg.h	Sun Sep 29 18:27:53 2002
+@@ -304,7 +304,12 @@
  
- 	DEVICE_BUSY = 0;
+ 
+ /* Defaults, commented if they differ from original sg driver */
+-#define SG_DEFAULT_TIMEOUT (60*HZ) /* HZ == 'jiffies in 1 second' */
++#ifdef __KERNEL__
++#define SG_DEFAULT_TIMEOUT_USER	(60*USER_HZ) /* HZ == 'jiffies in 1 second' */
++#else
++#define SG_DEFAULT_TIMEOUT	(60*HZ)	     /* HZ == 'jiffies in 1 second' */
++#endif
++
+ #define SG_DEF_COMMAND_Q 0     /* command queuing is always on when
+ 				  the new interface is used */
+ #define SG_DEF_UNDERRUN_FLAG 0
