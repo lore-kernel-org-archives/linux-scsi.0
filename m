@@ -1,51 +1,51 @@
-From: Fabio Coatti <cova@ferrara.linux.it>
-Subject: Re: 2.6.0-test9-bk26 fails boot -- aic7890 detection
-Date: Sat, 22 Nov 2003 22:48:44 +0100
+From: Andries Brouwer <aebr@win.tue.nl>
+Subject: Re: [PATCH] Don't retry SG_IO (REQ_BLOCK_PC) commands.
+Date: Sun, 23 Nov 2003 00:00:15 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <200311222248.44381.cova@ferrara.linux.it>
-References: <200311222109.QAA10536@clem.clem-digital.net>
+Message-ID: <20031122230015.GA2366@win.tue.nl>
+References: <20031120085555.A20609@beaverton.ibm.com> <20031120181543.GA3728@beaverton.ibm.com> <20031120191651.GE1106@suse.de> <20031120135123.A2366@beaverton.ibm.com> <20031121101728.GI1106@suse.de> <1069418912.1931.5.camel@mulgrave> <1069423949.1826.10.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mid-2.inet.it ([213.92.5.19]:4534 "EHLO mid-2.inet.it")
-	by vger.kernel.org with ESMTP id S262772AbTKVVs7 (ORCPT
+Received: from mailhost.tue.nl ([131.155.2.7]:1553 "EHLO mailhost.tue.nl")
+	by vger.kernel.org with ESMTP id S262787AbTKVXAY (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 22 Nov 2003 16:48:59 -0500
-In-Reply-To: <200311222109.QAA10536@clem.clem-digital.net>
+	Sat, 22 Nov 2003 18:00:24 -0500
 Content-Disposition: inline
+In-Reply-To: <1069423949.1826.10.camel@mulgrave>
 List-Id: linux-scsi@vger.kernel.org
-To: Pete Clements <clem@clem.clem-digital.net>, James Bottomley <James.Bottomley@SteelEye.com>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@steeleye.com>
+Cc: Jens Axboe <axboe@suse.de>, Patrick Mansfield <patmans@us.ibm.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-Alle 22:09, sabato 22 novembre 2003, Pete Clements ha scritto:
->   >
->   > I've never successfully managed to get the aic7xxx driver to work on my
->   > parisc platform.  However, both with and without the latest SCSI diffs
->   > the behaviour seems the same (it does print out the driver banner
->   > before failing to connect to the drives).  I take it you aren't seeing
->   > this banner?
->
-> Correct, no banner and bk26 has a scsi_scan change.
+On Fri, Nov 21, 2003 at 08:12:29AM -0600, James Bottomley wrote:
 
-I'm seeing the same behaviour on my machine (t9-bk26,SMP,HT,preeemp,P4), the 
-last line displayed is:
-ahc_pci:3:6:0: Host Adapter Bios disabled.  Using default SCSI device 
-parameters
+> To be more specific:
+> 
+> I think we need to divide the error types up into
+> 
+> 1. retryable
+> 2. fatal
+> 
+> and to have at least two, possibly three sources
+> 
+> 1. the transport
+> 2. the device
+> (3. the driver)
+> 
+> so a medium error (say a read failure) is a fatal device error;
+> something like a no connect would be a fatal transport error, etc.
 
-And after this the boot procedure is stopped.
+Yes, the driver is a legitimate source of errors.
 
-The following message, with bk23, is:
-scsi0 : Adaptec AIC7XXX EISA/VLB/PCI SCSI HBA DRIVER, Rev 6.2.35
-         <Adaptec 2902/04/10/15/20/30C SCSI adapter>
-         aic7850: Single Channel A, SCSI Id=7, 3/253 SCBs
+If the driver knows that a certain command is not supported
+and returns an error condition, then retrying is meaningless.
+The error is not necessarily fatal in the sense that the device
+does not work, it works just fine, but this particular command
+will never get any other reply.
 
-HTH
+It also happens that the driver needs to allocate memory for
+some command. If the allocation fails, that may be a retryable
+condition, but immediately retrying is counterproductive.
 
--- 
-Fabio Coatti       http://www.ferrara.linux.it/members/cova     
-Ferrara Linux Users Group           http://ferrara.linux.it
-GnuPG fp:9765 A5B6 6843 17BC A646  BE8C FA56 373A 5374 C703
-Old SysOps never die... they simply forget their password.
+Andries
 
