@@ -1,77 +1,41 @@
 From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: Firewire Disks. (fwd)
-Date: Mon, 10 Jun 2002 20:20:24 -0400
+Subject: fdisk on scsi disks in 2.5.21
+Date: Mon, 10 Jun 2002 20:28:34 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3D054248.84262C73@torque.net>
+Message-ID: <3D054432.88C5BE59@torque.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Andre Bonin <kernel@bonin.ca>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Andre Bonin wrote:
->Roberto Nibali wrote:
->>> I know there is support for "firewire" in the kernel. Is there
->>> support for "firewire" disks? If so, how do I enable it?
->> 
->> 
->> Yes, there is and it is attached to the SCSI layer via the sbp2 driver. 
->> You need following set of modules to get it working:
->> 
->> scsi_mod, sd_mod, ohci1394, raw1394, ieee1394, sbp2
->
->A lot of caddies that wrap hd's have started coming out and, as you may 
->know, USB 2.0 supports 480mbps x-fer rate (ideal).  So it's pretty 
->intreguing.
->
->Does the SCSI layer via sbp2 provide functionality for USB 2.0 (EHCI) 
->disks?
+$ fdisk -l /dev/sda
 
-Yes, disks using USB (2.0 or 1.x) and ieee1394 protocols appear
-as scsi disks in linux. Prompted by your question, I decided
-to check that both are functioning in lk 2.5.21. [ide-scsi is
-broken in lk 2.5.21 (worked in 2.5.20) and Martin says a fix is 
-coming.]
+Disk /dev/sda: 1 heads, 35843670 sectors, 1 cylinders
+Units = cylinders of 35843670 * 512 bytes
 
-Here are 3 "scsi" disks on my system:
-$ cat /proc/scsi/scsi
-Attached devices: 
-Host: scsi0 Channel: 00 Id: 00 Lun: 00
-  Vendor: SEAGATE  Model: ST318451LW       Rev: 0003
-  Type:   Direct-Access                    ANSI SCSI revision: 03
-Host: scsi3 Channel: 00 Id: 00 Lun: 00
-  Vendor: QUANTUM  Model: FIREBALL ST3.2A  Rev:     
-  Type:   Direct-Access                    ANSI SCSI revision: 06
-Host: scsi4 Channel: 00 Id: 00 Lun: 00
-  Vendor: MAXTOR 6 Model: L040J2           Rev: AR1.
-  Type:   Direct-Access                    ANSI SCSI revision: 02
+   Device Boot    Start       End    Blocks   Id  System
+/dev/sda1   *         1         1     32098+  83  Linux
+Partition 1 has different physical/logical beginnings (non-Linux?):
+     phys=(0, 1, 1) logical=(0, 0, 64)
+Partition 1 has different physical/logical endings:
+     phys=(3, 254, 63) logical=(0, 0, 64260)
+Partition 1 does not end on cylinder boundary:
+     phys=(3, 254, 63) should be (3, 0, 35843670)
+/dev/sda2             1         1    168682+  83  Linux
+Partition 2 has different physical/logical beginnings (non-Linux?):
+     phys=(4, 0, 1) logical=(0, 0, 64261)
+Partition 2 has different physical/logical endings:
+     phys=(24, 254, 63) logical=(0, 0, 401625)
+Partition 2 does not end on cylinder boundary:
+     phys=(24, 254, 63) should be (24, 0, 35843670)
+....
 
-The Seagate disk is "real" scsi, the Quantum is an old IDE disk
-in a ieee1394 enclosure, while the Maxtor is recent ATA disk
-in a USB 2.0 enclosure. Here are the modules loaded:
-$ lsmod
-Module                  Size  Used by
-usb-storage            69776   0 
-ehci-hcd               23600   0  (unused)
-sbp2                   15536   0  (unused)
-ohci1394               18608   0  (unused)
-ieee1394               30704   0  [sbp2 ohci1394]
-usbcore                65920   1  [usb-storage ehci-hcd]
+One head, one cylinder and lots of sectors??
+I put some debug in drivers/scsi/scsicam.c and it doesn't
+seem like it was called.
 
-Both sd_mod and scsi_mod are built into the kernel in my system.
-
-If I use the Maxtor in either enclosure, the streaming bandwidth
-is 14 MB/sec which should be more than sufficient for most 
-purposes.
-
-
-One interesting development in the lk 2.5 series is driverfs.
-It may give us a consistent way to show what is going on here
-under the covers. It will also allow user space code to use
-various hotplug alerts to load up the required modules without
-user intervention. Mike Sullivan's persistent naming patch could
-then place the partitions at known device names.
+Is my fdisk (from RH 7.2) too old?
 
 Doug Gilbert
