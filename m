@@ -1,33 +1,29 @@
-From: Patrick Mansfield <patmans@us.ibm.com>
-Subject: Re: [linux-usb-devel] Re: [PATCH] USB changes for 2.5.58
-Date: Thu, 23 Jan 2003 16:15:37 -0800
+From: Matthew Jacob <mjacob@feral.com>
+Subject: Re: A different look at block device hotswap in the Linux kernel
+Date: Thu, 23 Jan 2003 16:21:46 -0800 (PST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030123161537.A11487@beaverton.ibm.com>
-References: <Pine.LNX.4.44L0.0301211546410.6926-100000@ida.rowland.org> <200301231919.40422.oliver@neukum.name> <3E303D5E.5020000@splentec.com> <200301232040.41862.oliver@neukum.name> <20030123202835.GA25838@redhat.com>
+Message-ID: <20030123162034.K95542-100000@wonky.in0.lcl>
+References: <200301240107.36977.oliver@neukum.name>
+Reply-To: mjacob@feral.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20030123202835.GA25838@redhat.com>; from dledford@redhat.com on Thu, Jan 23, 2003 at 03:28:36PM -0500
+In-Reply-To: <200301240107.36977.oliver@neukum.name>
 List-Id: linux-scsi@vger.kernel.org
-To: Oliver Neukum <oliver@neukum.name>, Luben Tuikov <luben@splentec.com>, Alan Stern <stern@rowland.harvard.edu>, David Brownell <david-b@pacbell.net>, Matthew Dharm <mdharm-scsi@one-eyed-alien.net>, Mike Anderson <andmike@us.ibm.com>, Greg KH <greg@kroah.com>, linux-usb-devel@lists.sourceforge.net, Linux SCSI list <linux-scsi@vger.kernel.org>
+To: Oliver Neukum <oliver@neukum.name>
+Cc: Steven Dake <sdake@mvista.com>, Luben Tuikov <luben@splentec.com>, Alan Stern <stern@rowland.harvard.edu>, David Brownell <david-b@pacbell.net>, Matthew Dharm <mdharm-scsi@one-eyed-alien.net>, Mike Anderson <andmike@us.ibm.com>, Greg KH <greg@kroah.com>, linux-usb-devel@lists.sourceforge.net, Linux SCSI list <linux-scsi@vger.kernel.org>
 
-On Thu, Jan 23, 2003 at 03:28:36PM -0500, Doug Ledford wrote:
-> On Thu, Jan 23, 2003 at 08:40:41PM +0100, Oliver Neukum wrote:
-> 
-> No, scsi_set_device_offline() schedules the error handler thread for that 
-> host to be woken up.
-> 
+> I want:
+> LLDD to SCSI: device is gone
+> SCSI to LLDD: Ok. I'll handle from here on.
+> LLDD: OK. I am gone. And won't have any contact until the next device is
+> plugged in.
+>
+> The process can be somewhat more complicated, under some conditions:
+> - it never fails
+> - it is done within a finite, bounded, reasonable time
 
-Doug -
+Could this time limit be fixed (or parameterized) known to all LLDDs?
+This would allow one to try and avoid flooding SCSI with detach/reattach
+events for the 'same' device.
 
-Why would the error handler need to run?
-
-If the LLDD fails all outstanding command with an appropriate error (like
-DID_NO_CONNECT), the failure is passed to the upper levels.
-
-It seems that we could just set the device offline, make sure we do not
-send commands for an offline device, and let the adapter fail all
-outstanding commands.
-
--- Patrick Mansfield
