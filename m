@@ -1,62 +1,42 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH 1/1] build modular usb isd200 with modular ide
-Date: Sun, 24 Oct 2004 14:45:53 +0200
-Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <58cb370e041024054575c09679@mail.gmail.com>
-References: <200410240055.i9O0taCf006206@falcon10.austin.ibm.com>
-	 <20041024100319.GA17183@lst.de>
-Reply-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+From: maximilian attems <janitor@sternwelten.at>
+Subject: Re: [patch 08/10]  scsi/dpt_i2o: replace 	schedule_timeout()withmsleep_interruptible()
+Date: Sun, 24 Oct 2004 16:03:43 +0200
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <20041024140343.GA23059@stro.at>
+References: <60807403EABEB443939A5A7AA8A7458B40B611@otce2k01.adaptec.com> <20041022232225.GA18906@us.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <20041024100319.GA17183@lst.de>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Doug Maxey <dwm@austin.ibm.com>, Paul Mackerras <paulus@samba.org>, Greg Kroah-Hartman <greg@kroah.com>, Linux SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux IDE Mailing List <linux-ide@vger.kernel.org>, linuxppc64-dev@ozlabs.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from baikonur.stro.at ([213.239.196.228]:30881 "EHLO
+	baikonur.stro.at") by vger.kernel.org with ESMTP id S261497AbUJXODz
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 24 Oct 2004 10:03:55 -0400
+Content-Disposition: inline
+In-Reply-To: <20041022232225.GA18906@us.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
+To: Nishanth Aravamudan <nacc@us.ibm.com>
+Cc: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>, James Bottomley <James.Bottomley@SteelEye.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Sun, 24 Oct 2004 12:03:19 +0200, Christoph Hellwig <hch@lst.de> wrote:
-> On Sat, Oct 23, 2004 at 07:55:36PM -0500, Doug Maxey wrote:
-> >
-> > Name: inline ide_fix_driveid()
-> >
-> > Rationale:
-> >       This is a fix for bugme.osdl 3819.
+On Fri, 22 Oct 2004, Nishanth Aravamudan wrote:
+
+> On Thu, Oct 21, 2004 at 10:11:31AM -0400, Salyzyn, Mark wrote:
+> > I have to speak in absence of the original author, but I believe the
+> > decision to conditionalize the unlock was because this routine is called
+> > at init time and at run time.
+> > 
+> > I did not notice the `stutter' of the two schedule_timeout's. Eeeeek!!!
+> > (My scientific replacement for bogus). Thanks for shaking the cobwebs.
+> > 
+> > The second schedule_timeout needs to be *removed*, it does not belong
+> > there at all!
 > 
-> bugme.osdl.org doesn't know of a bug #3819.
+> Please find below a patch which does exactly this.
 > 
-> >       With any of the 2.6.9 release flavors (vanilla, mm1, ac3), one
-> >       cannot build the usb isd200 module due to the dependency on
-> >       ide_fix_driveid() being exported from ide-iops.
-> >
-> > Description:
-> >       When building IDE modular, the current ide_fix_driveid() is
-> >       exported from ide-iops.c.  This patch makes the function an inline.
-> 
-> Still doesn't make any sense. ide_fix_driveid is properly exported from
-> ide-iops.c, so you use it from other modules.  The only case that
-> doesn't work is modular ide and builtin usb-storage, and the BLK_DEV_IDE
-> depency should fix that one.
+> Description: Removes a schedule_timeout() from adpt_i2o_post_wait() whch
+> Mark Salyzyn requested be removed.
+ 
+this patch seems already applied in 2.6.10-rc1.
+please double check.
 
-The new ide_fix_driveid function seems buggy,
-ie. it byte-swaps id->max_multsect with id->vendor3.
+thanks maks
 
-> If you think that depency is ugly (I do) just copy the routine to
-> isd200.c, it's a) too large to inline but b) just a trivial byteswap
-> that should need much changes over time.
-
-The dependency is a bug, <linux/ide.h> is for IDE driver only.
-
-Doug, if you kill debugging code in isd200.c then only:
-
-id->command_set_1
-id->model
-id->fw_rev
-id->capability
-id->lba_capacity
-id->heads
-id->cyls
-id->sectors
-id->command_set_2
-
-need to be byte-swapped.
