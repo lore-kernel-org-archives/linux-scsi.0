@@ -1,50 +1,31 @@
-From: Adrian Bunk <bunk@stusta.de>
-Subject: [2.6 patch] SCSI sim710.c: make some code static
-Date: Wed, 2 Feb 2005 20:52:31 +0100
-Message-ID: <20050202195231.GH3313@stusta.de>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [PATCH] fix the fix for multiple HBA problem with transport
+	classes
+Date: Wed, 02 Feb 2005 14:56:58 -0600
+Message-ID: <1107377819.4541.20.camel@mulgrave>
+References: <0B1E13B586976742A7599D71A6AC733C02F331@xbl3.ma.emulex.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
-Cc: James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Received: from stat16.steeleye.com ([209.192.50.48]:6043 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S262515AbVBBU5H (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 2 Feb 2005 15:57:07 -0500
+In-Reply-To: <0B1E13B586976742A7599D71A6AC733C02F331@xbl3.ma.emulex.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James.Smart@Emulex.Com
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-This patch makes some needlessly global code static.
+On Wed, 2005-02-02 at 15:55 -0500, James.Smart@Emulex.Com wrote:
+> Testing was showing transport devices not being enumerated.
+> 
+> The reason was the wrong attribute container was being compared
+> against in the "match" functions.  This patch fixes it.
 
-Signed-off-by: Adrian Bunk <bunk@stusta.de>
+OK, I confess ... I quietly fixed these three before sending the patch
+to Linus.
 
----
+James
 
-This patch was already sent on:
-- 15 Nov 2004
 
---- linux-2.6.10-rc1-mm5-full/drivers/scsi/sim710.c.old	2004-11-14 01:27:51.000000000 +0100
-+++ linux-2.6.10-rc1-mm5-full/drivers/scsi/sim710.c	2004-11-14 01:28:48.000000000 +0100
-@@ -47,7 +47,7 @@
- #define MAX_SLOTS 8
- static __u8 __initdata id_array[MAX_SLOTS] = { [0 ... MAX_SLOTS-1] = 7 };
- 
--char *sim710;		/* command line passed by insmod */
-+static char *sim710;		/* command line passed by insmod */
- 
- MODULE_AUTHOR("Richard Hirst");
- MODULE_DESCRIPTION("Simple NCR53C710 driver");
-@@ -61,7 +61,7 @@
- #define ARG_SEP ','
- #endif
- 
--__init int
-+static __init int
- param_setup(char *str)
- {
- 	char *pos = str, *next;
-@@ -314,7 +314,7 @@
- 				   differential, scsi_id);
- }
- 
--struct eisa_driver sim710_eisa_driver = {
-+static struct eisa_driver sim710_eisa_driver = {
- 	.id_table		= sim710_eisa_ids,
- 	.driver = {
- 		.name		= "sim710",
