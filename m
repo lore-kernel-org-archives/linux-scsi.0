@@ -1,74 +1,85 @@
-From: Mike Christie <mikenc@us.ibm.com>
-Subject: Re: SCSI API generics (was Re: [PATCH] add block/unblock to iscsi
- class)
-Date: Wed, 23 Feb 2005 16:03:10 -0800
-Message-ID: <421D19BE.1060105@us.ibm.com>
-References: <421C3CA4.8070009@cs.wisc.edu> <20050223181705.GA8694@plap.qlogic.org> <421CDFAE.4090108@us.ibm.com> <20050223220644.GJ8694@plap.qlogic.org> <421D192D.4060400@us.ibm.com>
+From: Andrew Morton <akpm@osdl.org>
+Subject: Fw: 2.6.11-rc4-mm1 and dpt_i2o Adaptec I2O RAID controller
+Date: Wed, 23 Feb 2005 16:51:38 -0800
+Message-ID: <20050223165138.475f5220.akpm@osdl.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Received: from e35.co.us.ibm.com ([32.97.110.133]:45996 "EHLO
-	e35.co.us.ibm.com") by vger.kernel.org with ESMTP id S261736AbVBXADD
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 23 Feb 2005 19:03:03 -0500
-Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
-	by e35.co.us.ibm.com (8.12.10/8.12.9) with ESMTP id j1O032Lg581664
-	for <linux-scsi@vger.kernel.org>; Wed, 23 Feb 2005 19:03:02 -0500
-Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
-	by d03relay04.boulder.ibm.com (8.12.10/NCO/VER6.6) with ESMTP id j1O032Jt166358
-	for <linux-scsi@vger.kernel.org>; Wed, 23 Feb 2005 17:03:02 -0700
-Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av02.boulder.ibm.com (8.12.11/8.12.11) with ESMTP id j1O031eu024645
-	for <linux-scsi@vger.kernel.org>; Wed, 23 Feb 2005 17:03:02 -0700
-In-Reply-To: <421D192D.4060400@us.ibm.com>
+Received: from fire.osdl.org ([65.172.181.4]:11146 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S261731AbVBXAq3 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 23 Feb 2005 19:46:29 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <mikenc@us.ibm.com>
-Cc: Andrew Vasquez <andrew.vasquez@qlogic.com>, Linux-SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
+Cc: go@turbolinux.co.jp, sebastian.faerber@web.de
 
-Mike Christie wrote:
-> Andrew Vasquez wrote:
-> 
->> On Wed, 23 Feb 2005, Mike Christie wrote:
->>
->>
->>> Andrew Vasquez wrote:
->>>
->>>> Speaking of which, are there any major objections to the patches
->>>> proposed here:
->>>>
->>>> Add scsi_target_[un]block() and scsi_target_remove() generics
->>>> http://marc.theaimsgroup.com/?l=linux-scsi&m=110867050306738&w=2
->>>>
->>>> [RFC] adding per scsi-host workqueues for defered processing
->>>> http://marc.theaimsgroup.com/?l=linux-scsi&m=110903148407438&w=2
->>>>
->>>
->>> When using single_threaded_workqueues do all single threaded ones
->>> in the system use the same cpu_workqueue_struct? Will this be
->>> a potential bottleneck if we end up using the workqueue for more
->>> operations in the future?
->>
->>
->>
->> The kernel-thread that is created for a single-threaded workqueue is
->> not bound to any particular CPU:
->>
->>     kthread.c:kthread()
->>
->>     ...   
->>         /* By default we can run anywhere, unlike keventd. */
->>         set_cpus_allowed(current, CPU_MASK_ALL);
->>
-> 
-> My question is not about which cpu it is run on.
-> I am asking about the cpu_workqueue_struct. In
-> create_workqueue_thread cpu always equals zero so
-> later when it is run it can be on any cpu but every
-> single threaded workqueue will access the same
-> cpu_workqueue_struct.
-> 
 
-Oh wait nevermind that too. I should read the code more
-closely next time.
 
+Begin forwarded message:
+
+Date: Wed, 23 Feb 2005 18:18:46 +0100
+From: <sebastian.faerber@web.de>
+To: linux-kernel@vger.kernel.org
+Subject: 2.6.11-rc4-mm1 and dpt_i2o Adaptec I2O RAID controller
+
+
+Hi all,
+
+i'm trying to get an Adaptec 2015S Zero Channel Raid Controller up and running in a very new Asus Mainboard (NCL-DS)
+with Dual Xeons.
+I already tried kernel 2.4.29 and plain 2.6.10 but both just lock up when loading the dpt_i2o driver.
+With 2.6.11-rc4-mm1 i could gather the following output while booting:
+--
+Loading Adaptec I2O RAID: Version 2.4 Build 5go
+Detecting Adaptec I2O RAID controllers...
+ACPI: PCI interrupt 0000:09:01.0[A] -> GSI 11 (level, low) -> IRQ 11
+Adaptec I2O RAID controller 0 irq=11
+     BAR0 f8880000 - size= 100000
+     BAR1 f8a00000 - size= 1000000
+BUG: soft lockup detected on CPU#0!
+
+Pid: 1, comm:              swapper
+EIP: 0060:[<c011d05e>] CPU: 0
+EIP is at __do_softirq+0x2e/0x90
+ EFLAGS: 00000246    Not tainted  (2.6.11-rc4-mm1)
+EAX: dfcb0000 EBX: 00000022 ECX: 00000022 EDX: 00000000
+ESI: c04c8ea0 EDI: 0000000a EBP: 00000246 DS: 007b ES: 007b
+CR0: 8005003b CR2: fffcd000 CR3: 004a3000 CR4: 000006d0
+ [<c011d0e7>] do_softirq+0x27/0x30
+ [<c010472b>] do_IRQ+0x3b/0x70
+ [<c0102fba>] common_interrupt+0x1a/0x20
+ [<c01362c2>] setup_irq+0xa2/0xf0
+ [<c02db930>] adpt_isr+0x0/0x1f0 [more]
+ [<c01364a1>] request_irq+0x71/0x90
+ [<c02da051>] adpt_install_hba+0x2a1/0x420
+ [<c0272993>] bus_add_driver+0xc3/0xd0
+ [<c02d9080>] adpt_detect+0x50/0x1e0
+ [<c049135a>] init_this_scsi_driver+0x3a/0x100
+ [<c04747eb>] do_initcalls+0x2b/0xc0
+ [<c0100290>] init+0x0/0xf0
+ [<c0100290>] init+0x0/0xf0
+ [<c01002b5>] init+0x25/0xf0
+ [<c01012d8>] kernel_thread_helper+0x0/0x18
+ [<c01012dd>] kernel_thread_helper+0x5/0x18
+--
+
+I have several machines running with dpt_i2o raid controller and 2.4.29 for example but they are on older
+Tyan boards.
+
+Any suggestions how to get this controller up and running ? I suppose it has something to do with APIC and/or IRQ routing ?
+If you need any additional information just let me know.
+
+Best Regards,
+
+Sebastian Faerber
+
+______________________________________________________________
+Verschicken Sie romantische, coole und witzige Bilder per SMS!
+Jetzt bei WEB.DE FreeMail: http://f.web.de/?mc=021193
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Please read the FAQ at  http://www.tux.org/lkml/
