@@ -1,50 +1,52 @@
-From: Badari Pulavarty <pbadari@us.ibm.com>
+From: Andries.Brouwer@cwi.nl
 Subject: Re: [patch for playing] Patch to support 4000 disks and maintain backward compatibility
-Date: Thu, 10 Apr 2003 15:22:41 -0700
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <200304101522.41236.pbadari@us.ibm.com>
-References: <UTC200304102209.h3AM9pf11795.aeb@smtp.cwi.nl>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
-In-Reply-To: <UTC200304102209.h3AM9pf11795.aeb@smtp.cwi.nl>
-To: Andries.Brouwer@cwi.nl, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Date: Fri, 11 Apr 2003 01:09:14 +0200 (MEST)
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <UTC200304102309.h3AN9EV07692.aeb@smtp.cwi.nl>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from hera.cwi.nl ([192.16.191.8]:34014 "EHLO hera.cwi.nl")
+	by vger.kernel.org with ESMTP id S264240AbTDJW5e (for <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 10 Apr 2003 18:57:34 -0400
 List-Id: linux-scsi@vger.kernel.org
+To: Andries.Brouwer@cwi.nl, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, pbadari@us.ibm.com
 
-On Thursday 10 April 2003 03:09 pm, Andries.Brouwer@cwi.nl wrote:
+    > A different way out, especially when we use 32+32, is to kill this
+    > sd_index_bits[] array, and give each disk a new number: replace
+    > 	index = find_first_zero_bit(sd_index_bits, SD_DISKS);
+    > by
+    > 	index = next_index++;
 
->
-> I try to make sure there are no assumptions about the
-> size or structure of device numbers anywhere outside kdev_t.h.
-> In particular I object to the use of KDEV_MINOR_BITS.
->
-> Apart from this formal point, there is also the practical point:
-> suppose 64 = 32+32 is used, so that KDEV_MINOR_BITS equals 32.
-> Then LAST_MAJOR_DISKS is 2^28 and sd_index_bits[] would be 32 MB array.
-> Unreasonable.
+    I wish it is that simple. We use sd_index_bits[] since we could
+    sd_detach() and then sd_attach()  few disks. We will end up with
+    holes, name slippage without this. We need to know what disks are
+    currently being in use.
 
-agreed !! (I mentioned this ealier in my previous postings - sd_index_bits[]
-array size)
+It is that simple. (At least with 64-bit dev_t.)
+Look at the use of sd_index_bits[]. It is static in sd.c.
+There is the definition, the first free bit is found (and set)
+in sd_attach() to provide our disk with a number, this bit is
+cleared again in sd_detach().
 
->
-> The conclusion is that the easy way out is to define MAX_NR_DISKS.
+That is all. In other words, a mechanism to give an unused number
+to each disk for which sd_attach() is called.
 
-Unfortunately, MAX_NR_DISK will be dependent on KDEV_MINOR_BITS.
-We can't set MAX_NR_DISKS to arbitrary value and if there are not
-enought MINOR bits, it won't work. Only way to make this work is
-to do dynamic major allocation and update /dev/ entries for them.
+Now suppose we do nothing in sd_detach().
+Then we don't know which disks have disappeared. Pity.
+If the number space is infinite then
+	index = next_index++;
+gives a new number each time we need one.
 
-> A different way out, especially when we use 32+32, is to kill this
-> sd_index_bits[] array, and give each disk a new number: replace
-> 	index = find_first_zero_bit(sd_index_bits, SD_DISKS);
-> by
-> 	index = next_index++;
->
-I wish it is that simple. We use sd_index_bits[] since we could
-sd_detach() and then sd_attach()  few disks. We will end up with
-holes, name slippage without this. We need to know what disks are 
-currently being in use.
+Now that it is finite, some estimates are needed. How often
+will sd_attach() be called during the uptime of this kernel /
+the lifetime of this computer? And how much space is available?
 
-Thanks,
-Badari
+Among 2^64 device numbers, 2^48 reserved for scsi disks
+is a very small fraction. With at most 2^12 partitions
+on each disk that would leave room for 2^36 disks.
+Do you think during the lifetime of this computer a new
+scsi disk will be added more than 68 . 10^9 times?
+That would be adding 400 disks each second for five years.
+
+You see, 2^64 is not infinite, but it is close.
+
+Andries
