@@ -1,44 +1,26 @@
-From: Jamie Wellnitz <Jamie.Wellnitz@emulex.com>
-Subject: fix memory leak in scan_scsis_single
-Date: Sun, 26 Oct 2003 19:23:04 -0500
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH]  2.4.23-pre8 driver udpate for MPT Fusion (2.05.10)
+Date: Mon, 27 Oct 2003 07:11:20 +0000
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20031027002304.GB19172@ma.emulex.com>
+Message-ID: <20031027071120.A11028@infradead.org>
+References: <0E3FA95632D6D047BA649F95DAB60E57035A9458@exa-atlanta.se.lsil.com> <20031025191828.GA17144@kroah.com> <20031025204405.GB5172@parcelfarce.linux.theplanet.co.uk> <20031025210550.GB23437@kroah.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gn78-101.ma.emulex.com ([138.239.78.101]:19862 "EHLO
-	wintermute.ma.emulex.com") by vger.kernel.org with ESMTP
-	id S263702AbTJ0AXF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 26 Oct 2003 19:23:05 -0500
-Received: from wintermute.ma.emulex.com (localhost.localdomain [127.0.0.1])
-	by wintermute.ma.emulex.com (8.12.8/8.12.8) with ESMTP id h9R0N4ZW019649
-	for <linux-scsi@vger.kernel.org>; Sun, 26 Oct 2003 19:23:04 -0500
-Received: (from jamesw@localhost)
-	by wintermute.ma.emulex.com (8.12.8/8.12.8/Submit) id h9R0N4Of019647
-	for linux-scsi@vger.kernel.org; Sun, 26 Oct 2003 19:23:04 -0500
+Received: from pub234.cambridge.redhat.com ([213.86.99.234]:274 "EHLO
+	phoenix.infradead.org") by vger.kernel.org with ESMTP
+	id S261235AbTJ0HLY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 27 Oct 2003 02:11:24 -0500
 Content-Disposition: inline
+In-Reply-To: <20031025210550.GB23437@kroah.com>; from greg@kroah.com on Sat, Oct 25, 2003 at 02:05:50PM -0700
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Greg KH <greg@kroah.com>
+Cc: Matthew Wilcox <willy@debian.org>, "Moore, Eric Dean" <emoore@lsil.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-There is a memory leak in the scan_scsis_single function in
-2.4.23-pre8 (and previous): the scsi_release_commandblocks function is
-not called when a SCSI target ID is probed, but no device exists
-there.  (So a scsi host driver which supports 256 target IDs but only
-has 1 attached will hit this code 255 times when it loads.)
+On Sat, Oct 25, 2003 at 02:05:50PM -0700, Greg KH wrote:
+> Yeah, but some drivers almost do (Adaptec comes to mind.)  It will work
+> in a pci hotplug system, while other scsi drivers will not work at all.
 
-This following small patch fixes this leak.
+No, it won't work.  calling scsi_register outside ->detect on 2.4 will
+just get you a dead Scsi_Host.
 
-Thanks,
-Jamie Wellnitz
-Jamie.Wellnitz@emulex.com
-
---- drivers/scsi/scsi_scan.c.orig	2003-10-26 19:07:45.896336017 -0500
-+++ drivers/scsi/scsi_scan.c	2003-10-26 19:12:08.411006676 -0500
-@@ -619,6 +619,7 @@
- 			/* not-ready to ready transition - good */
- 		} else {
- 			/* assume no peripheral if any other sort of error */
-+			scsi_release_commandblocks(SDpnt);
- 			scsi_release_request(SRpnt);
- 			return 0;
- 		}
