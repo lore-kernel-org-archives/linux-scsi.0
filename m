@@ -1,45 +1,65 @@
-From: Joe Scsi <joe.scsi@gmail.com>
-Subject: LUN discovery by SCSI midlayer?
-Date: Mon, 14 Feb 2005 20:35:25 -0800
-Message-ID: <7526e30505021420354e6a1707@mail.gmail.com>
-Reply-To: Joe Scsi <joe.scsi@gmail.com>
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: [PATCH] cpnvert scsi_debug to use virtual host bus
+Date: Tue, 15 Feb 2005 15:13:00 +1000
+Message-ID: <421184DC.8010900@torque.net>
+References: <420D5E03.2020409@cs.wisc.edu>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Received: from wproxy.gmail.com ([64.233.184.198]:34518 "EHLO wproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S261622AbVBOEf3 (ORCPT
+Received: from borg.st.net.au ([65.23.158.22]:42180 "EHLO borg.st.net.au")
+	by vger.kernel.org with ESMTP id S261627AbVBOFMX (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 14 Feb 2005 23:35:29 -0500
-Received: by wproxy.gmail.com with SMTP id 68so859362wri
-        for <linux-scsi@vger.kernel.org>; Mon, 14 Feb 2005 20:35:26 -0800 (PST)
+	Tue, 15 Feb 2005 00:12:23 -0500
+In-Reply-To: <420D5E03.2020409@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Mike Christie <michaelc@cs.wisc.edu>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
-Hi,
+Mike Christie wrote:
+> The attach patch converts scsi_debug to use the virtual scsi bus.
+> It was built against scsi-rc-fixes-2.6.
+> 
+> The interface has changed a little. Here is an
+> example of adding and removing a single host:
+> 
+> cd /sys/bus/scsi_host/drivers/scsi_debug
+> [root@mina scsi_debug]# ls
+> add_host  dev_size_mb  every_nth  module     num_parts  opts   scsi_level
+> delay     dsense       max_luns   num_hosts  num_tgts   ptype
+> [root@mina scsi_debug]# echo 1 > add_host
+> [root@mina scsi_debug]# ls
+> add_host  dev_size_mb  every_nth  module     num_parts  opts   scsi_level
+> delay     dsense       max_luns   num_hosts  num_tgts   ptype  virt_host4
+> [root@mina scsi_debug]# cd virt_host4/
+> [root@mina virt_host4]# ls
+> detach_state  driver  host4  power  remove_host
+> [root@mina virt_host4]# echo 1 > remove_host
 
-I'm working on a driver for a SCSI protocol that is transported over a network.
-My basic plan is that when the driver is loaded, it will create a SCSI
-host structure
-for its initiator port.  Then target ports will be discovered
-asynchronously (and
-may appear/disappear as target devices come and go on the network).
+Mike,
+I have noticed a few differences in the scsi_debug
+driver with this patch applied.
 
-I'm wondering what the best way to handle LUN discovery is.  Unfortunately it
-seems that scsi_add_device() can only add a single LUN at a time.  However,
-for my protocol, I see target ports and then need to find the LUNs.  So far I've
-come up with a couple of ideas but I'm not totally happy with either:
+Firstly, when loaded the scsi_debug driver has no hosts
+and thus no devices. Previously it defaulted to 1 host,
+1 target and 1 lun (hence 1 device). Now a user needs
+to do something like:
+$ modprobe scsi_debug
+$ cd /sys/bus/scsi_host/drivers/scsi_debug
+$ echo 42 > add_host
 
-  (ugly) Do all the REPORT_LUNs stuff in my driver every time I find a new
-  target port, or
+The next issue is the number passed to "add_host".
+It doesn't matter, one host is added. When add_host
+belonged to scsi_debug the number and sign of the
+value sent to add_host was significant (and a negative
+number tried to remove that number of hosts).
+Perhaps we could get that capability back by making
+"num_hosts" writeable.
 
-  (ab)use the "channel" index and call scsi_scan_single_target() every time
-  I connect to a new target port.  This seems OK but I'm a little put off by the
-  fact that a quick grep shows no callers of scsi_scan_single_target in the
-  current kernel tree.
+Otherwise it looks good and fixes the "pseudo" bus
+problem which prevented two or more drivers using
+the "pseudo" bus at the same time.
 
-So what is the correct way to handle this?  I'm sure the FC and iSCSI people
-must have dealt with a similar issue.
+Doug Gilbert
 
-Thanks,
-  Joe
