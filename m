@@ -1,105 +1,225 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: PROBLEM: kernel crashes on RAID1 drive error
-Date: Thu, 21 Oct 2004 16:02:37 +0200
-Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20041021140236.GO10531@suse.de>
-References: <8FA83ADB-22E4-11D9-AC9C-0003934F6348@aol.com> <20041021084514.GY10531@suse.de> <4177BF22.7060208@steeleye.com> <20041021135557.GN10531@suse.de> <4177C13C.10007@steeleye.com>
+From: "Moore, Eric Dean" <Emoore@lsil.com>
+Subject: RE: [PATCH] fusion: streamline ->queuecommand
+Date: Thu, 21 Oct 2004 10:58:06 -0400
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <0E3FA95632D6D047BA649F95DAB60E57053AEBFA@exa-atlanta>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <4177C13C.10007@steeleye.com>
-To: Paul Clements <paul.clements@steeleye.com>
-Cc: Mark Rustad <MRustad@aol.com>, linux-raid@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain;
+	charset="iso-8859-1"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail0.lsil.com ([147.145.40.20]:62369 "EHLO mail0.lsil.com")
+	by vger.kernel.org with ESMTP id S266183AbUJUO7H (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 21 Oct 2004 10:59:07 -0400
 List-Id: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>, Christoph Hellwig <hch@lst.de>
+Cc: linux-scsi@vger.kernel.org
 
-On Thu, Oct 21 2004, Paul Clements wrote:
-> Jens Axboe wrote:
-> >On Thu, Oct 21 2004, Paul Clements wrote:
-> >
-> >>Jens Axboe wrote:
-> >>
-> >>>On Wed, Oct 20 2004, Mark Rustad wrote:
-> >>>
-> >>>
-> >>>>Folks,
-> >>>>
-> >>>>I have been having trouble with kernel crashes resulting from RAID1 
-> >>>>component device failures. I have been testing the robustness of an 
-> >>>>embedded system and have been using a drive that is known to fail after 
-> >>>>a time under load. When this device returns a media error, I always 
-> >>>>wind up with either a kernel hang or reboot. In this environment, each 
-> >>>>drive has four partitions, each of which is part of a RAID1 with its 
-> >>>>partner on the other device. Swap is on md2 so even it should be 
-> >>>>robust.
-> >>>>
-> >>>>I have gotten this result with the SuSE standard i386 smp kernels 
-> >>>>2.6.5-7.97 and 2.6.5-7.108. I also get these failures with the 
-> >>>>kernel.org kernels 2.6.8.1, 2.6.9-rc4 and 2.6.9.
-> >>>>
-> >>>>The hardware setup is a two cpu Nacona with an Adaptec 7902 SCSI 
-> >>>>controller with two Seagate drives on a SAF-TE bus. I run three or four 
-> >>>>dd commands copying /dev/md0 to /dev/null to provide the activity that 
-> >>>>stimulates the failure.
-> >>>>
-> >>>>I suspect that something is going wrong in the retry of the failed I/O 
-> >>>>operations, but I'm really not familiar with any of this area of the 
-> >>>>kernel at all.
-> >>>>
-> >>>>In one failure, I get the following messages from kernel 2.6.9:
-> >>>>
-> >>>>raid1: Disk failure on sdb1, disabling device.
-> >>>>raid1: sdb1: rescheduling sector 176
-> >>>>raid1: sda1: redirecting sector 176 to another mirror
-> >>>>raid1: sdb1: rescheduling sector 184
-> >>>>raid1: sda1: redirecting sector 184 to another mirror
-> >>>>Incorrect number of segments after building list
-> >>>>counted 2, received 1
-> >>>>req nr_sec 0, cur_nr_sec 7
-> >>>
-> >>>
-> >>>This should be fixed by this patch, can you test it?
-> >>
-> >>There may well be two problems here, but the original problem you're 
-> >>seeing (infinite read retries, and failures) is due to a bug in raid1. 
-> >>Basically the bio handling on read error retry was not quite right. Neil 
-> >>Brown just posted the patch to correct this a couple of days ago:
-> >>
-> >>http://marc.theaimsgroup.com/?l=linux-raid&m=109824318202358&w=2
-> >>
-> >>Please try that. (If you need a patch that applies to SUSE 2.6.5, I also 
-> >>have a version of the patch which should apply to that).
-> >
-> >
-> >Is 2.6.9 not uptodate wrt those raid1 patches?!
+Christoph - This patch and the other patch "kill FusionInitCalled" are fine.
+These two patches are currently incorporated into a driver currently being
+tested in the labs.  I anticpate a posting a new release of the mpt driver 
+early next week having SAS support.
+
+Eric Moore
+
+
+> -----Original Message-----
+> From: Christoph Hellwig [mailto:hch@infradead.org]
+> Sent: Thursday, October 21, 2004 3:22 AM
+> To: Christoph Hellwig
+> Cc: Emoore@lsil.com; linux-scsi@vger.kernel.org
+> Subject: Re: [PATCH] fusion: streamline ->queuecommand
 > 
-> Unfortunately, no. This latest problem (the one he's reporting) is not 
-> fixed in mainline. I discovered the problem a month or so ago while 
-> testing with SLES 9. I posted a patch and Neil expanded on it (to 
-> include raid10, which is now in mainline, and also suffers from the same 
-> problem). Neil just posted the patch two days ago to linux-raid, so I 
-> expect it's in -mm now.
-
-Irk, that's too bad. So we are now looking at probably a month before
-mainline has a stable release with that fixed too :/
-
-> >>Please be aware that there are several other bugs in the SUSE 2.6.5-7.97 
-> >>kernel in md and raid1 (basically it's a matter of that kernel being 
-> >>somewhat behind mainline, where most of these bugs are now fixed). I've 
-> >>sent several patches to SUSE to fix these issues, that hopefully will 
-> >>get into their SP1 release that should be forthcoming soon...
-> >
-> >
-> >-97 is the release kernel, -111 is the current update kernel. And it has
-> >those raid1 issues fixed already, at least the ones that are known. The
-> >scsi segment issue is not, however.
 > 
-> Thanks. Good to know that. -111 is currently available to customers? We 
-> may recommend that our customers use that, rather than patching -97 
-> ourselves.
-
-Yes it is, it's generally available through the online updates.
-
--- 
-Jens Axboe
-
+> ping?
+> 
+> On Sat, Oct 02, 2004 at 10:13:55AM +0200, Christoph Hellwig wrote:
+> > 
+> > --- 1.50/drivers/message/fusion/mptscsih.c	2004-09-29 
+> 01:58:39 +02:00
+> > +++ edited/drivers/message/fusion/mptscsih.c	
+> 2004-10-01 12:45:04 +02:00
+> > @@ -1863,11 +1844,7 @@
+> >  	u32	 cmd_len;
+> >  	int	 my_idx;
+> >  	int	 ii;
+> > -	int	 rc;
+> > -	int	 did_errcode;
+> > -	int	 issueCmd;
+> >  
+> > -	did_errcode = 0;
+> >  	hd = (MPT_SCSI_HOST *) SCpnt->device->host->hostdata;
+> >  	target = SCpnt->device->id;
+> >  	lun = SCpnt->device->lun;
+> > @@ -1966,84 +1943,78 @@
+> >  	/* Now add the SG list
+> >  	 * Always have a SGE even if null length.
+> >  	 */
+> > -	rc = SUCCESS;
+> >  	if (datalen == 0) {
+> >  		/* Add a NULL SGE */
+> >  		mptscsih_add_sge((char *)&pScsiReq->SGL, 
+> MPT_SGE_FLAGS_SSIMPLE_READ | 0,
+> >  			(dma_addr_t) -1);
+> >  	} else {
+> >  		/* Add a 32 or 64 bit SGE */
+> > -		rc = mptscsih_AddSGE(hd->ioc, SCpnt, pScsiReq, my_idx);
+> > +		if (mptscsih_AddSGE(hd->ioc, SCpnt, pScsiReq, 
+> my_idx) != SUCCESS)
+> > +			goto fail;
+> >  	}
+> >  
+> > -
+> > -	if (rc == SUCCESS) {
+> > -		hd->ScsiLookup[my_idx] = SCpnt;
+> > -		SCpnt->host_scribble = NULL;
+> > -
+> > -		/* SCSI specific processing */
+> > -		issueCmd = 1;
+> > -		if (hd->is_spi) {
+> > -			int dvStatus = 
+> hd->ioc->spi_data.dvStatus[target];
+> > -
+> > -			if (dvStatus || hd->ioc->spi_data.forceDv) {
+> > +	hd->ScsiLookup[my_idx] = SCpnt;
+> > +	SCpnt->host_scribble = NULL;
+> >  
+> >  #ifdef MPTSCSIH_ENABLE_DOMAIN_VALIDATION
+> > -				if ((dvStatus & MPT_SCSICFG_NEED_DV) ||
+> > -					
+> (hd->ioc->spi_data.forceDv & MPT_SCSICFG_NEED_DV)) {
+> > -					unsigned long lflags;
+> > -					/* Schedule DV if necessary */
+> > -					
+> spin_lock_irqsave(&dvtaskQ_lock, lflags);
+> > -					if (!dvtaskQ_active) {
+> > -						dvtaskQ_active = 1;
+> > -						
+> spin_unlock_irqrestore(&dvtaskQ_lock, lflags);
+> > -						
+> INIT_WORK(&mptscsih_dvTask, mptscsih_domainValidation, (void *) hd);
+> > -
+> > -						
+> schedule_work(&mptscsih_dvTask);
+> > -					} else {
+> > -						
+> spin_unlock_irqrestore(&dvtaskQ_lock, lflags);
+> > -					}
+> > -					
+> hd->ioc->spi_data.forceDv &= ~MPT_SCSICFG_NEED_DV;
+> > -				}
+> > -
+> > -				/* Trying to do DV to this 
+> target, extend timeout.
+> > -				 * Wait to issue until flag is clear
+> > -				 */
+> > -				if (dvStatus & MPT_SCSICFG_DV_PENDING) {
+> > -					
+> mod_timer(&SCpnt->eh_timeout, jiffies + 40 * HZ);
+> > -					issueCmd = 0;
+> > +	if (hd->is_spi) {
+> > +		int dvStatus = hd->ioc->spi_data.dvStatus[target];
+> > +		int issueCmd = 1;
+> > +
+> > +		if (dvStatus || hd->ioc->spi_data.forceDv) {
+> > +
+> > +			if ((dvStatus & MPT_SCSICFG_NEED_DV) ||
+> > +				(hd->ioc->spi_data.forceDv & 
+> MPT_SCSICFG_NEED_DV)) {
+> > +				unsigned long lflags;
+> > +				/* Schedule DV if necessary */
+> > +				
+> spin_lock_irqsave(&dvtaskQ_lock, lflags);
+> > +				if (!dvtaskQ_active) {
+> > +					dvtaskQ_active = 1;
+> > +					
+> spin_unlock_irqrestore(&dvtaskQ_lock, lflags);
+> > +					
+> INIT_WORK(&mptscsih_dvTask, mptscsih_domainValidation, (void *) hd);
+> > +
+> > +					schedule_work(&mptscsih_dvTask);
+> > +				} else {
+> > +					
+> spin_unlock_irqrestore(&dvtaskQ_lock, lflags);
+> >  				}
+> > +				hd->ioc->spi_data.forceDv &= 
+> ~MPT_SCSICFG_NEED_DV;
+> > +			}
+> >  
+> > -				/* Set the DV flags.
+> > -				 */
+> > -				if (dvStatus & MPT_SCSICFG_DV_NOT_DONE)
+> > -					
+> mptscsih_set_dvflags(hd, pScsiReq);
+> > -#endif
+> > +			/* Trying to do DV to this target, 
+> extend timeout.
+> > +			 * Wait to issue until flag is clear
+> > +			 */
+> > +			if (dvStatus & MPT_SCSICFG_DV_PENDING) {
+> > +				mod_timer(&SCpnt->eh_timeout, 
+> jiffies + 40 * HZ);
+> > +				issueCmd = 0;
+> >  			}
+> > -		}
+> >  
+> > -#ifdef MPTSCSIH_DBG_TIMEOUT
+> > -		if (hd->ioc->timeout_cnt < hd->ioc->timeout_maxcnt) {
+> > -			foo_to[hd->ioc->timeout_cnt] = SCpnt;
+> > -			hd->ioc->timeout_cnt++;
+> > -			//mod_timer(&SCpnt->eh_timeout, jiffies 
+> + hd->ioc->timeout_delta);
+> > -			issueCmd = 0;
+> > -			printk(MYIOC_s_WARN_FMT
+> > -				"to pendingQ: (sc=%p, mf=%p, 
+> time=%ld)\n",
+> > -				hd->ioc->name, SCpnt, mf, jiffies);
+> > +			/* Set the DV flags.
+> > +			 */
+> > +			if (dvStatus & MPT_SCSICFG_DV_NOT_DONE)
+> > +				mptscsih_set_dvflags(hd, pScsiReq);
+> > +
+> > +			if (!issueCmd)
+> > +				goto fail;
+> >  		}
+> > +	}
+> >  #endif
+> >  
+> > -		if (issueCmd) {
+> > -			mpt_put_msg_frame(ScsiDoneCtx, hd->ioc, mf);
+> > -			dmfprintk((MYIOC_s_INFO_FMT "Issued 
+> SCSI cmd (%p) mf=%p idx=%d\n",
+> > -					hd->ioc->name, SCpnt, 
+> mf, my_idx));
+> > -			DBG_DUMP_REQUEST_FRAME(mf)
+> > -		} else
+> > -			goto fail;
+> > -	} else
+> > +#ifdef MPTSCSIH_DBG_TIMEOUT
+> > +	if (hd->ioc->timeout_cnt < hd->ioc->timeout_maxcnt) {
+> > +		foo_to[hd->ioc->timeout_cnt] = SCpnt;
+> > +		hd->ioc->timeout_cnt++;
+> > +		//mod_timer(&SCpnt->eh_timeout, jiffies + 
+> hd->ioc->timeout_delta);
+> > +		printk(MYIOC_s_WARN_FMT
+> > +			"to pendingQ: (sc=%p, mf=%p, time=%ld)\n",
+> > +			hd->ioc->name, SCpnt, mf, jiffies);
+> >  		goto fail;
+> > +	}
+> > +#endif
+> >  
+> > +	mpt_put_msg_frame(ScsiDoneCtx, hd->ioc, mf);
+> > +	dmfprintk((MYIOC_s_INFO_FMT "Issued SCSI cmd (%p) mf=%p 
+> idx=%d\n",
+> > +			hd->ioc->name, SCpnt, mf, my_idx));
+> > +	DBG_DUMP_REQUEST_FRAME(mf)
+> >  	return 0;
+> >  
+> >   fail:
+> > -
+> > To unsubscribe from this list: send the line "unsubscribe 
+> linux-scsi" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> ---end quoted text---
+> 
