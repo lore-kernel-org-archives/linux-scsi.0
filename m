@@ -1,415 +1,280 @@
 From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: [PATCH] ncr53c8xx: remove integrity checking code
-Date: 04 Oct 2004 12:43:52 -0500
+Subject: [PATCH] ncr53c8xx: move driver local quirks into the scsi blacklist
+Date: 04 Oct 2004 12:46:02 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1096911839.2290.19.camel@mulgrave>
+Message-ID: <1096911968.2290.22.camel@mulgrave>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat16.steeleye.com ([209.192.50.48]:28821 "EHLO
+Received: from stat16.steeleye.com ([209.192.50.48]:5785 "EHLO
 	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S268356AbUJDRn7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 4 Oct 2004 13:43:59 -0400
+	id S268367AbUJDRqJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 4 Oct 2004 13:46:09 -0400
 Received: from midgard.sc.steeleye.com (midgard.sc.steeleye.com [172.17.6.40])
-	by hancock.sc.steeleye.com (8.11.6/8.11.6) with ESMTP id i94Hhwm13056
-	for <linux-scsi@vger.kernel.org>; Mon, 4 Oct 2004 13:43:58 -0400
+	by hancock.sc.steeleye.com (8.11.6/8.11.6) with ESMTP id i94Hk7m13239
+	for <linux-scsi@vger.kernel.org>; Mon, 4 Oct 2004 13:46:08 -0400
 List-Id: linux-scsi@vger.kernel.org
 To: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-The comments read like it's a precursor to mid-layer domain validation. 
-However, it's never been compiled into the code base, so it doesn't look
-useful.  I'll switch the ncr53c8xx to transport classes later.
+No driver should have a separate blacklist from the mid-layer.
 
 James
 
 # This is a BitKeeper generated diff -Nru style patch.
 #
 # ChangeSet
-#   2004/10/03 10:47:42-05:00 jejb@pashleys.(none) 
-#   ncr53c8xx: remove integrity checking
+#   2004/10/03 18:20:20-05:00 jejb@pashleys.(none) 
+#   ncr53c8xx: move driver local quirks up to scsi blacklist
 #   
-#   The comments read like it's a precursor to mid layer
-#   domain validation.  Anyway, it's never been compiled.
+#   Signed-off-by: James Bottomley <James.Bottomley@SteelEye.com>
+# 
+# include/scsi/scsi_devinfo.h
+#   2004/10/03 18:16:35-05:00 jejb@pashleys.(none) +1 -0
+#   ncr53c8xx: move driver local quirks up to scsi blacklist
+#   
+#   Signed-off-by: James Bottomley <James.Bottomley@SteelEye.com>
+# 
+# include/scsi/scsi_device.h
+#   2004/10/03 18:16:35-05:00 jejb@pashleys.(none) +1 -0
+#   ncr53c8xx: move driver local quirks up to scsi blacklist
+#   
+#   Signed-off-by: James Bottomley <James.Bottomley@SteelEye.com>
+# 
+# drivers/scsi/scsi_scan.c
+#   2004/10/03 18:16:35-05:00 jejb@pashleys.(none) +7 -0
+#   ncr53c8xx: move driver local quirks up to scsi blacklist
+#   
+#   Signed-off-by: James Bottomley <James.Bottomley@SteelEye.com>
+# 
+# drivers/scsi/scsi_devinfo.c
+#   2004/10/03 18:16:34-05:00 jejb@pashleys.(none) +4 -0
+#   ncr53c8xx: move driver local quirks up to scsi blacklist
 #   
 #   Signed-off-by: James Bottomley <James.Bottomley@SteelEye.com>
 # 
 # drivers/scsi/ncr53c8xx.c
-#   2004/10/03 10:44:22-05:00 jejb@pashleys.(none) +0 -296
-#   ncr53c8xx: remove integrity checking
+#   2004/10/03 18:16:33-05:00 jejb@pashleys.(none) +3 -98
+#   ncr53c8xx: move driver local quirks up to scsi blacklist
+#   
+#   Signed-off-by: James Bottomley <James.Bottomley@SteelEye.com>
 # 
 diff -Nru a/drivers/scsi/ncr53c8xx.c b/drivers/scsi/ncr53c8xx.c
---- a/drivers/scsi/ncr53c8xx.c	2004-10-04 12:42:19 -05:00
-+++ b/drivers/scsi/ncr53c8xx.c	2004-10-04 12:42:19 -05:00
-@@ -126,15 +126,6 @@
+--- a/drivers/scsi/ncr53c8xx.c	2004-10-04 12:44:24 -05:00
++++ b/drivers/scsi/ncr53c8xx.c	2004-10-04 12:44:24 -05:00
+@@ -398,20 +398,6 @@
  
- #include "ncr53c8xx.h"
- 
--/*
--**	Donnot compile integrity checking code for Linux-2.3.0 
--**	and above since SCSI data structures are not ready yet.
--*/
--/* #if LINUX_VERSION_CODE < KERNEL_VERSION(2,3,0) */
--#if 0
--#define	SCSI_NCR_INTEGRITY_CHECKING
--#endif
--
- #define NAME53C			"ncr53c"
- #define NAME53C8XX		"ncr53c8xx"
- 
-@@ -563,13 +554,6 @@
- /*3*/	u_char	wval;
- #endif
- 
--#ifdef SCSI_NCR_INTEGRITY_CHECKING
--	u_char 	ic_min_sync;
--	u_char 	ic_max_width;
--	u_char 	ic_maximums_set;
--	u_char 	ic_done;
--#endif
--
- 	/* User settable limits and options.  */
- 	u_char	usrsync;
- 	u_char	usrwide;
-@@ -1088,17 +1072,6 @@
- 	struct ccb	*ccb;		/* Global CCB			*/
- 	struct usrcmd	user;		/* Command from user		*/
- 	volatile u_char	release_stage;	/* Synchronisation stage on release  */
--
--#ifdef SCSI_NCR_INTEGRITY_CHECKING
--	/*----------------------------------------------------------------
--	**	Fields that are used for integrity check
--	**----------------------------------------------------------------
--	*/
--	unsigned char check_integrity; /* Enable midlayer integ.check on
--					* bus scan. */
--	unsigned char check_integ_par;  /* Set if par or Init. Det. error
--					 * used only during integ check */
--#endif
- };
- 
- #define NCB_SCRIPT_PHYS(np,lbl)	 (np->p_script  + offsetof (struct script, lbl))
-@@ -1281,9 +1254,6 @@
- static	u_long	ncr_lookup	(char* id);
- static	void	ncr_negotiate	(struct ncb* np, struct tcb* tp);
- static	int	ncr_prepare_nego(struct ncb *np, struct ccb *cp, u_char *msgptr);
--#ifdef SCSI_NCR_INTEGRITY_CHECKING
--static	int	ncr_ic_nego(struct ncb *np, struct ccb *cp, struct scsi_cmnd *cmd, u_char *msgptr);
--#endif
- 
- static	void	ncr_script_copy_and_bind
- 				(struct ncb *np, ncrcmd *src, ncrcmd *dst, int len);
-@@ -3421,182 +3391,6 @@
  /*==========================================================
  **
- **
--**	Prepare the next negotiation message for integrity check,
--**	if needed.
+-**	"Special features" of targets.
+-**	quirks field		of struct tcb.
+-**	actualquirks field	of struct ccb.
 -**
--**	Fill in the part of message buffer that contains the 
--**	negotiation and the nego_status field of the CCB.
--**	Returns the size of the message in bytes.
+-**==========================================================
+-*/
+-
+-#define	QUIRK_AUTOSAVE	(0x01)
+-#define	QUIRK_NOMSG	(0x02)
+-#define QUIRK_NOSYNC	(0x10)
+-#define QUIRK_NOWIDE16	(0x20)
+-
+-/*==========================================================
+-**
+ **	Capability bits in Inquire response byte 7.
+ **
+ **==========================================================
+@@ -1151,7 +1137,7 @@
+ #endif
+ 	ncrcmd  save_dp		[  7];
+ 	ncrcmd  restore_dp	[  5];
+-	ncrcmd  disconnect	[ 17];
++	ncrcmd  disconnect	[ 10];
+ 	ncrcmd	msg_out		[  9];
+ 	ncrcmd	msg_out_done	[  7];
+ 	ncrcmd  idle		[  2];
+@@ -1251,7 +1237,6 @@
+ static	void	ncr_int_ma	(struct ncb *np);
+ static	void	ncr_int_sir	(struct ncb *np);
+ static  void    ncr_int_sto     (struct ncb *np);
+-static	u_long	ncr_lookup	(char* id);
+ static	void	ncr_negotiate	(struct ncb* np, struct tcb* tp);
+ static	int	ncr_prepare_nego(struct ncb *np, struct ccb *cp, u_char *msgptr);
+ 
+@@ -1844,21 +1829,6 @@
+ 	*/
+ 	SCR_LOAD_REG (HS_REG, HS_DISCONNECT),
+ 		0,
+-	/*
+-	**	If QUIRK_AUTOSAVE is set,
+-	**	do an "save pointer" operation.
+-	*/
+-	SCR_FROM_REG (QU_REG),
+-		0,
+-	SCR_JUMP ^ IFFALSE (MASK (QUIRK_AUTOSAVE, QUIRK_AUTOSAVE)),
+-		PADDR (cleanup_ok),
+-	/*
+-	**	like SAVE_DP message:
+-	**	Copy TEMP register to SAVEP in header.
+-	*/
+-	SCR_COPY (4),
+-		RADDR (temp),
+-		NADDR (header.savep),
+ 	SCR_JUMP,
+ 		PADDR (cleanup_ok),
+ 
+@@ -3740,7 +3710,7 @@
+ 	/*
+ 	**	status
+ 	*/
+-	cp->actualquirks		= tp->quirks;
++	cp->actualquirks		= 0;
+ 	cp->host_status			= cp->nego_status ? HS_NEGOTIATE : HS_BUSY;
+ 	cp->scsi_status			= S_ILLEGAL;
+ 	cp->parity_status		= 0;
+@@ -6071,7 +6041,7 @@
+ 		/*
+ 		**	Select without ATN for quirky devices.
+ 		*/
+-		if (tp->quirks & QUIRK_NOMSG)
++		if (cmd->device->select_no_atn)
+ 			cp->start.schedule.l_paddr =
+ 			cpu_to_scr(NCB_SCRIPTH_PHYS (np, select_no_atn));
+ 
+@@ -7062,15 +7032,6 @@
+ 		goto fail;
+ 
+ 	/*
+-	**	Get device quirks from a speciality table.
+-	*/
+-	tp->quirks = ncr_lookup (inq_data);
+-	if (tp->quirks && bootverbose) {
+-		PRINT_LUN(np, tn, ln);
+-		printk ("quirks=%x.\n", tp->quirks);
+-	}
+-
+-	/*
+ 	**	Evaluate trustable target/unit capabilities.
+ 	**	We only believe device version >= SCSI-2 that 
+ 	**	use appropriate response data format (2).
+@@ -7338,62 +7299,6 @@
+ 		err |= 4;
+ 	};
+ 	return (err);
+-}
+-
+-/*==========================================================
+-**
+-**
+-**	Device lookup.
+-**
+-**	@GENSCSI@ should be integrated to scsiconf.c
 -**
 -**
 -**==========================================================
 -*/
 -
--#ifdef SCSI_NCR_INTEGRITY_CHECKING
--static int ncr_ic_nego(struct ncb *np, struct ccb *cp, struct scsi_cmnd *cmd, u_char *msgptr)
+-struct table_entry {
+-	char *	manufacturer;
+-	char *	model;
+-	char *	version;
+-	u_long	info;
+-};
+-
+-static struct table_entry device_tab[] =
 -{
--	struct tcb *tp = &np->target[cp->target];
--	int msglen = 0;
--	int nego = 0;
--	u_char no_increase;
--
--	if (tp->inq_done) {
--
--		if (!tp->ic_maximums_set) {
--			tp->ic_maximums_set = 1;
--
--			/* check target and host adapter capabilities */
--			if ( (tp->inq_byte7 & INQ7_WIDE16) && 
--					np->maxwide && tp->usrwide ) 
--				tp->ic_max_width = 1;
--			else
--				tp->ic_max_width = 0;
--
--			if ((tp->inq_byte7 & INQ7_SYNC) && tp->maxoffs) {
--				tp->ic_min_sync   = (tp->minsync < np->minsync) ?
--							np->minsync : tp->minsync;
--			}
--			else 
--				tp->ic_min_sync   = 255;
--			
--			tp->period   = 1;
--			tp->widedone = 1;
--		}
--
--		if (DEBUG_FLAGS & DEBUG_IC) {
--			printk("%s: cmd->ic_nego %d, 1st byte 0x%2X\n",
--				ncr_name(np), cmd->ic_nego, cmd->cmnd[0]);
--		}
--
--		/* First command from integrity check routine will request
--		 * a PPR message.  Disable.
--		 */
--		if ((cmd->ic_nego & NS_PPR) == NS_PPR)
--			cmd->ic_nego &= ~NS_PPR;
--		/* Previous command recorded a parity or an initiator
--		 * detected error condition. Force bus to narrow for this
--		 * target. Clear flag. Negotation on request sense.
--		 * Note: kernel forces 2 bus resets :o( but clears itself out.
--		 * Minor bug? in scsi_obsolete.c (ugly)
--		 */
--		if (np->check_integ_par) {
--			printk("%s: Parity Error. Target set to narrow.\n",
--				ncr_name(np));
--			tp->ic_max_width = 0;
--			tp->widedone = tp->period = 0;
--		}
--		
--		/* In case of a bus reset, ncr_negotiate will reset 
--		 * the flags tp->widedone and tp->period to 0, forcing
--		 * a new negotiation. 
--		 */
--		no_increase = 0;
--		if (tp->widedone == 0) {
--			cmd->ic_nego = NS_WIDE;
--			tp->widedone = 1;
--			no_increase = 1;
--		}
--		else if (tp->period == 0) {
--			cmd->ic_nego = NS_SYNC;
--			tp->period = 1;
--			no_increase = 1;
--		}
--			
--		switch (cmd->ic_nego) {
--		case NS_WIDE:
--			/*
--			**	negotiate wide transfers ?
--			**	Do NOT negotiate if device only supports
--			**	narrow.	
--			*/
--			if (tp->ic_max_width | np->check_integ_par) {
--				nego = NS_WIDE;
--
--				msgptr[msglen++] = M_EXTENDED;
--				msgptr[msglen++] = 2;
--				msgptr[msglen++] = M_X_WIDE_REQ;
--				msgptr[msglen++] = cmd->ic_nego_width & tp->ic_max_width;
--			}
--			else
--				cmd->ic_nego_width &= tp->ic_max_width;
--
--			break;
--
--		case NS_SYNC:
--			/*
--			**	negotiate synchronous transfers?
--			**	Target must support sync transfers.
--			**
--			**	If period becomes longer than max, reset to async
--			*/
--
--			if (tp->inq_byte7 & INQ7_SYNC) {
--
--				nego = NS_SYNC;
--
--				msgptr[msglen++] = M_EXTENDED;
--				msgptr[msglen++] = 3;
--				msgptr[msglen++] = M_X_SYNC_REQ;
--
--				switch (cmd->ic_nego_sync) {
--				case 2: /* increase the period */
--					if (!no_increase) {
--					  if (tp->ic_min_sync <= 0x0A)
--					      tp->ic_min_sync = 0x0C;
--					  else if (tp->ic_min_sync <= 0x0C)
--					      tp->ic_min_sync = 0x19;
--					  else if (tp->ic_min_sync <= 0x19)
--					      tp->ic_min_sync *= 2;
--					  else {
--						tp->ic_min_sync = 255;
--						cmd->ic_nego_sync = 0;
--						tp->maxoffs = 0;
--					   }
--					}
--					msgptr[msglen++] = tp->maxoffs?tp->ic_min_sync:0;
--					msgptr[msglen++] = tp->maxoffs;
--					break;
--
--				case 1: /* nego. to maximum */
--					msgptr[msglen++] = tp->maxoffs?tp->ic_min_sync:0;
--					msgptr[msglen++] = tp->maxoffs;
--					break;
--
--				case 0:	/* nego to async */
--				default:
--					msgptr[msglen++] = 0;
--					msgptr[msglen++] = 0;
--					break;
--				};
--			}
--			else
--				cmd->ic_nego_sync = 0;
--			break;
--
--		case NS_NOCHANGE:
--		default:
--			break;
--		};
--	};
--
--	cp->nego_status = nego;
--	np->check_integ_par = 0;
--
--	if (nego) {
--		tp->nego_cp = cp;
--		if (DEBUG_FLAGS & DEBUG_NEGO) {
--			ncr_print_msg(cp, nego == NS_WIDE ?
--			  "wide/narrow msgout": "sync/async msgout", msgptr);
--		};
--	};
--
--	return msglen;
--}
--#endif /* SCSI_NCR_INTEGRITY_CHECKING */
--
--/*==========================================================
--**
--**
- **	Prepare the next negotiation message if needed.
- **
- **	Fill in the part of message buffer that contains the 
-@@ -3623,10 +3417,6 @@
- 		if (!tp->widedone) {
- 			if (tp->inq_byte7 & INQ7_WIDE16) {
- 				nego = NS_WIDE;
--#ifdef SCSI_NCR_INTEGRITY_CHECKING
--				if (tp->ic_done)
--		       			 tp->usrwide &= tp->ic_max_width;
+-#if 0
+-	{"", "", "", QUIRK_NOMSG},
 -#endif
- 			} else
- 				tp->widedone=1;
- 
-@@ -3639,11 +3429,6 @@
- 		if (!nego && !tp->period) {
- 			if (tp->inq_byte7 & INQ7_SYNC) {
- 				nego = NS_SYNC;
--#ifdef SCSI_NCR_INTEGRITY_CHECKING
--				if ((tp->ic_done) &&
--				 	      (tp->minsync < tp->ic_min_sync))
--		       			 tp->minsync = tp->ic_min_sync;
--#endif
- 			} else {
- 				tp->period  =0xffff;
- 				PRINT_TARGET(np, cp->target);
-@@ -3849,72 +3634,9 @@
- 
- 	cp->nego_status = 0;
- 
--#ifdef SCSI_NCR_INTEGRITY_CHECKING
--	if ((np->check_integrity && tp->ic_done) || !np->check_integrity) {
--		 if ((!tp->widedone || !tp->period) && !tp->nego_cp && lp) {
--			msglen += ncr_prepare_nego (np, cp, msgptr + msglen);
--		 }
+-	{"SONY", "SDT-5000", "3.17", QUIRK_NOMSG},
+-	{"WangDAT", "Model 2600", "01.7", QUIRK_NOMSG},
+-	{"WangDAT", "Model 3200", "02.2", QUIRK_NOMSG},
+-	{"WangDAT", "Model 1300", "02.4", QUIRK_NOMSG},
+-	{"", "", "", 0} /* catch all: must be last entry. */
+-};
+-
+-static u_long ncr_lookup(char * id)
+-{
+-	struct table_entry * p = device_tab;
+-	char *d, *r, c;
+-
+-	for (;;p++) {
+-
+-		d = id+8;
+-		r = p->manufacturer;
+-		while ((c=*r++)) if (c!=*d++) break;
+-		if (c) continue;
+-
+-		d = id+16;
+-		r = p->model;
+-		while ((c=*r++)) if (c!=*d++) break;
+-		if (c) continue;
+-
+-		d = id+32;
+-		r = p->version;
+-		while ((c=*r++)) if (c!=*d++) break;
+-		if (c) continue;
+-
+-		return (p->info);
 -	}
--	else if (np->check_integrity && (cmd->ic_in_progress)) { 
--		msglen += ncr_ic_nego (np, cp, cmd, msgptr + msglen);
--	}
--	else if (np->check_integrity && cmd->ic_complete) {
--		/*
--		 * Midlayer signal to the driver that all of the scsi commands
--		 * for the integrity check have completed. Save the negotiated
--		 * parameters (extracted from sval and wval). 
--		 */ 
--
--		{
--			u_char idiv;
--			idiv = (tp->wval>>4) & 0x07;
--			if ((tp->sval&0x1f) && idiv )
--				tp->period = (((tp->sval>>5)+4)  
--						*div_10M[idiv-1])/np->clock_khz;
--			else
--				tp->period = 0xffff;
--		}
--		/*
--		 * tp->period contains 10 times the transfer period, 
--		 * which itself is 4 * the requested negotiation rate.
--		 */
--		if	(tp->period <= 250)	tp->ic_min_sync = 10;
--		else if	(tp->period <= 303)	tp->ic_min_sync = 11;
--		else if	(tp->period <= 500)	tp->ic_min_sync = 12;
--		else				
--				tp->ic_min_sync = (tp->period + 40 - 1) / 40;
--
--
--		/*
--		 * Negotiation for this target it complete.
--		 */
--		tp->ic_max_width =  (tp->wval & EWS) ? 1: 0;
--		tp->ic_done = 1;
--		tp->widedone = 1;
--
--		printk("%s: Integrity Check Complete: \n", ncr_name(np)); 
--
--		printk("%s: %s %s SCSI", ncr_name(np), 
--				(tp->sval&0x1f)?"SYNC":"ASYNC",
--				tp->ic_max_width?"WIDE":"NARROW");
--
--		if (tp->sval&0x1f) {
--			u_long mbs = 10000 * (tp->ic_max_width + 1);
--
--			printk(" %d.%d  MB/s", (int) (mbs / tp->period),
--					(int) (mbs % tp->period));
--
--			printk(" (%d ns, %d offset)\n", 
--				  tp->period/10, tp->sval&0x1f);
--		} else {
--			printk(" %d MB/s. \n ", (tp->ic_max_width+1)*5);
--		}
--	}
--#else
- 	if ((!tp->widedone || !tp->period) && !tp->nego_cp && lp) {
- 		msglen += ncr_prepare_nego (np, cp, msgptr + msglen);
- 	}
--#endif /* SCSI_NCR_INTEGRITY_CHECKING */
+ }
  
- 	/*----------------------------------------------------
- 	**
-@@ -5883,13 +5605,6 @@
- 	else
- 		msg = M_ID_ERROR;
- 
--#ifdef SCSI_NCR_INTEGRITY_CHECKING
--	/*
--	**      Save error message. For integrity check use only.
--	*/
--	if (np->check_integrity)
--		np->check_integ_par = msg;
--#endif
+ /*==========================================================
+diff -Nru a/drivers/scsi/scsi_devinfo.c b/drivers/scsi/scsi_devinfo.c
+--- a/drivers/scsi/scsi_devinfo.c	2004-10-04 12:44:24 -05:00
++++ b/drivers/scsi/scsi_devinfo.c	2004-10-04 12:44:24 -05:00
+@@ -83,6 +83,7 @@
+ 	{"SONY", "CD-ROM CDU-55S", "1.0i", BLIST_NOLUN},
+ 	{"SONY", "CD-ROM CDU-561", "1.7x", BLIST_NOLUN},
+ 	{"SONY", "CD-ROM CDU-8012", NULL, BLIST_NOLUN},
++	{"SONY", "SDT-5000", "3.17", BLIST_SELECT_NO_ATN},
+ 	{"TANDBERG", "TDC 3600", "U07", BLIST_NOLUN},	/* locks up */
+ 	{"TEAC", "CD-R55S", "1.0H", BLIST_NOLUN},	/* locks up */
+ 	/*
+@@ -196,6 +197,9 @@
+ 	{"TOSHIBA", "CDROM", NULL, BLIST_ISROM},
+ 	{"TOSHIBA", "CD-ROM", NULL, BLIST_ISROM},
+ 	{"USB2.0", "SMARTMEDIA/XD", NULL, BLIST_FORCELUN | BLIST_INQUIRY_36},
++	{"WangDAT", "Model 2600", "01.7", BLIST_SELECT_NO_ATN},
++	{"WangDAT", "Model 3200", "02.2", BLIST_SELECT_NO_ATN},
++	{"WangDAT", "Model 1300", "02.4", BLIST_SELECT_NO_ATN},
+ 	{"XYRATEX", "RS", "*", BLIST_SPARSELUN | BLIST_LARGELUN},
+ 	{"Zzyzx", "RocketStor 500S", NULL, BLIST_SPARSELUN},
+ 	{"Zzyzx", "RocketStor 2000", NULL, BLIST_SPARSELUN},
+diff -Nru a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+--- a/drivers/scsi/scsi_scan.c	2004-10-04 12:44:24 -05:00
++++ b/drivers/scsi/scsi_scan.c	2004-10-04 12:44:24 -05:00
+@@ -575,6 +575,13 @@
+ 		sdev->borken = 0;
  
  	/*
- 	 *	If the NCR stopped on a MOVE ^ DATA_IN, we jump to a 
-@@ -8296,17 +8011,6 @@
- 	instance->can_queue	= (MAX_START-4);
- 	scsi_set_device(instance, device->dev);
++	 * Apparently some really broken devices (contrary to the SCSI
++	 * standards) need to be selected without asserting ATN
++	 */
++	if (*bflags & BLIST_SELECT_NO_ATN)
++		sdev->select_no_atn = 1;
++
++	/*
+ 	 * Some devices may not want to have a start command automatically
+ 	 * issued when a device is added.
+ 	 */
+diff -Nru a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+--- a/include/scsi/scsi_device.h	2004-10-04 12:44:24 -05:00
++++ b/include/scsi/scsi_device.h	2004-10-04 12:44:24 -05:00
+@@ -110,6 +110,7 @@
+ 	unsigned no_start_on_add:1;	/* do not issue start on add */
+ 	unsigned allow_restart:1; /* issue START_UNIT in error handler */
+ 	unsigned no_uld_attach:1; /* disable connecting to upper level drivers */
++	unsigned select_no_atn:1;
  
--#ifdef SCSI_NCR_INTEGRITY_CHECKING
--	np->check_integrity	  = 0;
--	instance->check_integrity = 0;
--
--#ifdef SCSI_NCR_ENABLE_INTEGRITY_CHECK
--	if ( !(driver_setup.bus_check & 0x04) ) {
--		np->check_integrity	  = 1;
--		instance->check_integrity = 1;
--	}
--#endif
--#endif
- 	/* Patch script to physical addresses */
- 	ncr_script_fill(&script0, &scripth0);
+ 	unsigned int device_blocked;	/* Device returned QUEUE_FULL. */
  
-
-
+diff -Nru a/include/scsi/scsi_devinfo.h b/include/scsi/scsi_devinfo.h
+--- a/include/scsi/scsi_devinfo.h	2004-10-04 12:44:24 -05:00
++++ b/include/scsi/scsi_devinfo.h	2004-10-04 12:44:24 -05:00
+@@ -26,4 +26,5 @@
+ #define BLIST_NOREPORTLUN	0x40000	/* don't try REPORT_LUNS scan (SCSI-3 devs) */
+ #define BLIST_NOT_LOCKABLE	0x80000	/* don't use PREVENT-ALLOW commands */
+ #define BLIST_NO_ULD_ATTACH	0x100000 /* device is actually for RAID config */
++#define BLIST_SELECT_NO_ATN	0x200000 /* select without ATN */
+ #endif
 
