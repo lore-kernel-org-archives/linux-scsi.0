@@ -1,2315 +1,557 @@
 From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: [PATCH 8/10][RFC] linux-iscsi driver
-Date: Mon, 10 Jan 2005 15:02:50 -0800
-Message-ID: <41E3099A.9020108@cs.wisc.edu>
+Subject: [PATCH 2/10][RFC] linux-iscsi driver
+Date: Mon, 10 Jan 2005 14:56:55 -0800
+Message-ID: <41E30837.1040605@cs.wisc.edu>
 Mime-Version: 1.0
 Content-Type: multipart/mixed;
- boundary="------------050501070106080704030001"
+ boundary="------------040008040902060800030001"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:732 "EHLO sabe.cs.wisc.edu")
-	by vger.kernel.org with ESMTP id S262753AbVAJXC5 (ORCPT
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:62171 "EHLO sabe.cs.wisc.edu")
+	by vger.kernel.org with ESMTP id S262723AbVAJW5C (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 10 Jan 2005 18:02:57 -0500
+	Mon, 10 Jan 2005 17:57:02 -0500
 Received: from [192.168.1.7] ([199.108.226.254])
 	(authenticated bits=0)
-	by sabe.cs.wisc.edu (8.13.1/8.13.1) with ESMTP id j0AN2thB024994
+	by sabe.cs.wisc.edu (8.13.1/8.13.1) with ESMTP id j0AMv0h0024964
 	(version=TLSv1/SSLv3 cipher=RC4-MD5 bits=128 verify=NO)
-	for <linux-scsi@vger.kernel.org>; Mon, 10 Jan 2005 17:02:55 -0600
+	for <linux-scsi@vger.kernel.org>; Mon, 10 Jan 2005 16:57:00 -0600
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
 This is a multi-part message in MIME format.
---------------050501070106080704030001
+--------------040008040902060800030001
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 
-iSCSI Authentication.
+Attached patch moves definitions found in the iscsi spec to
+a file that could be used by other iscsi drivers including
+sofware iscsi target drivers.
 
-Sorry about the blkdev include in iscsi-auth.h. will
-correct when we figure out what file (or correct order
-of files), to include when using scatterlists and
-sg_init_one. Can we include an asm file before a linux
-one in this case, or does linux/scatterlist.h need
-a forward declaration, or is there sone other file
-we should use?
-
---------------050501070106080704030001
+--------------040008040902060800030001
 Content-Type: text/x-patch;
- name="08-iscsi-auth.patch"
+ name="02-common-iscsi-hdr.patch"
 Content-Transfer-Encoding: 7bit
 Content-Disposition: inline;
- filename="08-iscsi-auth.patch"
+ filename="02-common-iscsi-hdr.patch"
 
-diff -Naurp scsi-misc-2.6.orig/drivers/scsi/iscsi-sfnet/iscsi-auth.c scsi-misc-2.6.patch/drivers/scsi/iscsi-sfnet/iscsi-auth.c
---- scsi-misc-2.6.orig/drivers/scsi/iscsi-sfnet/iscsi-auth.c	1969-12-31 16:00:00.000000000 -0800
-+++ scsi-misc-2.6.patch/drivers/scsi/iscsi-sfnet/iscsi-auth.c	2005-01-10 12:32:30.131322392 -0800
-@@ -0,0 +1,142 @@
+diff -Naurp scsi-misc-2.6.orig/include/scsi/iscsi.h scsi-misc-2.6.test/include/scsi/iscsi.h
+--- scsi-misc-2.6.orig/include/scsi/iscsi.h	1969-12-31 16:00:00.000000000 -0800
++++ scsi-misc-2.6.test/include/scsi/iscsi.h	2005-01-10 10:39:17.000000000 -0800
+@@ -0,0 +1,514 @@
 +/*
-+ * iSCSI driver for Linux
-+ * Copyright (C) 2001 Cisco Systems, Inc.
-+ * maintained by linux-iscsi-devel@lists.sourceforge.net
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License as published
-+ * by the Free Software Foundation; either version 2 of the License, or
-+ * (at your option) any later version.
-+ *
-+ * This program is distributed in the hope that it will be useful, but
-+ * WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
-+ * General Public License for more details.
-+ *
-+ * See the file COPYING included with this distribution for more details.
-+ *
-+ * This file contains kernel wrappers around the iscsi auth common code.
++ * Constants and structures defined in the iSCSI RFC.
 + */
-+#include <linux/crypto.h>
-+#include <linux/blkdev.h>
-+#include <linux/scatterlist.h>
-+
-+#include "iscsi-sfnet.h"
-+#include "iscsi-protocol.h"
-+#include "iscsi-session.h"
-+
-+/*
-+ * Authenticate a target's CHAP response.
-+ *
-+ * Use the kernel crypto API
-+ */
-+enum auth_dbg_status
-+acl_chap_compute_rsp(struct iscsi_acl *client, int rmt_auth, u32 id,
-+		     u8 *challenge_data, u32 challenge_length,
-+		     u8 *response_data)
-+{
-+	struct iscsi_session *session = client->session_handle;
-+	u8 id_data[1];
-+	struct scatterlist sg;
-+	struct crypto_tfm *tfm = session->md5_tfm;
-+	u8 out_data[AUTH_STR_MAX_LEN];
-+	u32 out_length = AUTH_STR_MAX_LEN;
-+
-+	if (!client->passwd_present)
-+		return AUTH_DBG_STATUS_LOCAL_PASSWD_NOT_SET;
-+
-+	crypto_digest_init(tfm);
-+	/* id byte */
-+	id_data[0] = id;
-+	sg_init_one(&sg, &id_data[0], 1);
-+	crypto_digest_update(tfm, &sg, 1);
-+
-+	/* decrypt password */
-+	if (acl_data(out_data, &out_length, client->passwd_data,
-+		     client->passwd_length))
-+		return AUTH_DBG_STATUS_PASSWD_DECRYPT_FAILED;
-+
-+	if (!rmt_auth && !client->ip_sec && out_length < 12)
-+		return AUTH_DBG_STATUS_PASSWD_TOO_SHORT_WITH_NO_IPSEC;
-+
-+	/* shared secret */
-+	sg_init_one(&sg, out_data, out_length);
-+	crypto_digest_update(tfm, &sg, 1);
-+
-+	/* clear decrypted password */
-+	memset(out_data, 0, AUTH_STR_MAX_LEN);
-+
-+	/* challenge value */
-+	sg_init_one(&sg, challenge_data, challenge_length);
-+	crypto_digest_update(tfm, &sg, 1);
-+	crypto_digest_final(tfm, response_data);
-+
-+	return AUTH_DBG_STATUS_NOT_SET;	/* no error */
-+}
-+
-+int
-+acl_chap_auth_request(struct iscsi_acl *client, char *username, unsigned int id,
-+		      unsigned char *challenge_data,
-+		      unsigned int challenge_length,
-+		      unsigned char *response_data,
-+		      unsigned int rsp_length)
-+{
-+	struct iscsi_session *session = client->session_handle;
-+	struct crypto_tfm *tfm = session->md5_tfm;
-+	struct scatterlist sg[3];
-+	unsigned char id_byte = id;
-+	unsigned char verify_data[16];
-+
-+	/* the expected credentials are in the session */
-+	if (session->username_in == NULL) {
-+		iscsi_err("Failing authentication, no incoming username "
-+			  "configured to authenticate target %s\n",
-+			  session->target_name);
-+		return AUTH_STATUS_FAIL;
-+	}
-+	if (strcmp(username, session->username_in) != 0) {
-+		iscsi_err("Failing authentication, received incorrect username "
-+			  "from target %s\n", session->target_name);
-+		return AUTH_STATUS_FAIL;
-+	}
-+
-+	if ((session->password_length_in < 1) ||
-+	    (session->password_in == NULL) ||
-+	    (session->password_in[0] == '\0')) {
-+		iscsi_err("Failing authentication, no incoming password "
-+			  "configured to authenticate target %s\n",
-+			  session->target_name);
-+		return AUTH_STATUS_FAIL;
-+	}
-+
-+	/* challenge length is I->T, and shouldn't need to be checked */
-+
-+	if (rsp_length != sizeof(verify_data)) {
-+		iscsi_err("Failing authentication, received incorrect CHAP "
-+			  "response length %u from target %s\n", rsp_length,
-+			  session->target_name);
-+		return AUTH_STATUS_FAIL;
-+	}
-+
-+	/* id byte */
-+	id_byte = id;
-+	sg_init_one(&sg[0], &id_byte, 1);
-+
-+	/* shared secret */
-+	sg_init_one(&sg[1], session->password_in, session->password_length_in);
-+
-+	/* challenge value */
-+	sg_init_one(&sg[2], challenge_data, challenge_length);
-+
-+	memset(verify_data, 0, sizeof(verify_data));
-+	crypto_digest_init(tfm);
-+	crypto_digest_digest(tfm, sg, 3, verify_data);
-+
-+	if (memcmp(response_data, verify_data, sizeof(verify_data)) == 0)
-+		return AUTH_STATUS_PASS;
-+
-+	iscsi_err("Failing authentication, received incorrect CHAP response "
-+		  "from target %s\n", session->target_name);
-+
-+	return AUTH_STATUS_FAIL;
-+}
-diff -Naurp scsi-misc-2.6.orig/drivers/scsi/iscsi-sfnet/iscsi-auth-client.c scsi-misc-2.6.patch/drivers/scsi/iscsi-sfnet/iscsi-auth-client.c
---- scsi-misc-2.6.orig/drivers/scsi/iscsi-sfnet/iscsi-auth-client.c	1969-12-31 16:00:00.000000000 -0800
-+++ scsi-misc-2.6.patch/drivers/scsi/iscsi-sfnet/iscsi-auth-client.c	2005-01-10 12:32:30.131322392 -0800
-@@ -0,0 +1,1839 @@
-+/*
-+ * iSCSI driver for Linux
-+ * Copyright (C) 2001 Cisco Systems, Inc.
-+ * maintained by linux-iscsi-devel@lists.sourceforge.net
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License as published
-+ * by the Free Software Foundation; either version 2 of the License, or
-+ * (at your option) any later version.
-+ *
-+ * This program is distributed in the hope that it will be useful, but
-+ * WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
-+ * General Public License for more details.
-+ *
-+ * See the file COPYING included with this distribution for more details.
-+ *
-+ * This file implements the iSCSI CHAP authentication method based on
-+ * RFC 3720.  The code in this file is meant to be common for both kernel and
-+ * user level and makes use of only limited  library  functions, presently only
-+ * string.h. Routines specific to kernel, user level are implemented in
-+ * seperate files under the appropriate directories.
-+ * This code in this files assumes a single thread of execution
-+ * for each iscsi_acl structure, and does no locking.
-+ */
-+#include "iscsi-auth-client.h"
-+#include "iscsi-session.h"
-+#include "iscsi-protocol.h"
-+#include "iscsi-sfnet.h"
-+
-+static const char acl_hexstring[] = "0123456789abcdefABCDEF";
-+static const char acl_base64_string[] =
-+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-+static const char acl_authmethod_set_chap_alg_list[] = "CHAP";
-+static const char acl_reject_option_name[] = "Reject";
-+static const char acl_none_option_name[] = "None";
-+
-+static int
-+acl_text_to_number(const char *text, unsigned long *num)
-+{
-+	char *end;
-+	unsigned long number = *num;
-+
-+	if (text[0] == '0' && (text[1] == 'x' || text[1] == 'X'))
-+		number = simple_strtoul(text + 2, &end, 16);
-+	else
-+		number = simple_strtoul(text, &end, 10);
-+
-+	if (*text != '\0' && *end == '\0') {
-+		*num = number;
-+		return 0;	/* No error */
-+	} else
-+		return 1;	/* Error */
-+}
-+
-+static int
-+acl_chk_string(const char *s, unsigned int max_len, unsigned int *out_len)
-+{
-+	unsigned int len;
-+
-+	if (!s)
-+		return 1;
-+
-+	for (len = 0; len < max_len; len++)
-+		if (*s++ == '\0') {
-+			if (out_len)
-+				*out_len = len;
-+			return 0;
-+		}
-+
-+	return 1;
-+}
-+
-+static int
-+acl_str_index(const char *s, int c)
-+{
-+	char *str = strchr(s, c);
-+	
-+	if (str)
-+		return (str - s);
-+	else 
-+		return -1;
-+}
-+
-+static int
-+acl_chk_auth_mthd_optn(int val)
-+{
-+	if (val == AUTH_OPTION_NONE || val == AUTH_METHOD_CHAP)
-+		return 0;
-+
-+	return 1;
-+}
-+
-+static const char *
-+acl_authmethod_optn_to_text(int value)
-+{
-+	const char *s;
-+	switch (value) {
-+	case AUTH_OPTION_REJECT:
-+		s = acl_reject_option_name;
-+		break;
-+	case AUTH_OPTION_NONE:
-+		s = acl_none_option_name;
-+		break;
-+	case AUTH_METHOD_CHAP:
-+		s = acl_authmethod_set_chap_alg_list;
-+		break;
-+	default:
-+		s = 0;
-+	}
-+	return s;
-+}
-+
-+static int
-+acl_chk_chap_alg_optn(int chap_algorithm)
-+{
-+	if (chap_algorithm == AUTH_OPTION_NONE ||
-+	    chap_algorithm == AUTH_CHAP_ALG_MD5)
-+		return 0;
-+
-+	return 1;
-+}
-+
-+static int
-+acl_data_to_text(unsigned char *data, unsigned int data_length, char *text,
-+		 unsigned int text_length)
-+{
-+	unsigned long n;
-+
-+	if (!text || text_length == 0)
-+		return 1;
-+
-+	if (!data || data_length == 0) {
-+		*text = '\0';
-+		return 1;
-+	}
-+
-+	if (text_length < 3) {
-+		*text = '\0';
-+		return 1;
-+	}
-+
-+	*text++ = '0';
-+	*text++ = 'x';
-+
-+	text_length -= 2;
-+
-+	while (data_length > 0) {
-+
-+		if (text_length < 3) {
-+			*text = '\0';
-+			return 1;
-+		}
-+
-+		n = *data++;
-+		data_length--;
-+
-+		*text++ = acl_hexstring[(n >> 4) & 0xf];
-+		*text++ = acl_hexstring[n & 0xf];
-+
-+		text_length -= 2;
-+	}
-+
-+	*text = '\0';
-+
-+	return 0;
-+}
-+
-+static int
-+acl_hex_to_data(const char *text, unsigned int text_length, unsigned char *data,
-+		unsigned int *data_lenp)
-+{
-+	int i;
-+	unsigned int n1;
-+	unsigned int n2;
-+	unsigned int data_length = *data_lenp;
-+
-+	if ((text_length % 2) == 1) {
-+
-+		i = acl_str_index(acl_hexstring, *text++);
-+		if (i < 0)
-+			return 1;	/* error, bad character */
-+
-+		if (i > 15)
-+			i -= 6;
-+		n2 = i;
-+
-+		if (data_length < 1)
-+			return 1;	/* error, too much data */
-+
-+		*data++ = n2;
-+		data_length--;
-+	}
-+
-+	while (*text != '\0') {
-+		i = acl_str_index(acl_hexstring, *text++);
-+		if (i < 0)
-+			return 1;	/* error, bad character */
-+
-+		if (i > 15)
-+			i -= 6;
-+		n1 = i;
-+
-+		if (*text == '\0')
-+			return 1;	/* error, odd string length */
-+
-+		i = acl_str_index(acl_hexstring, *text++);
-+		if (i < 0)
-+			return 1;	/* error, bad character */
-+
-+		if (i > 15)
-+			i -= 6;
-+		n2 = i;
-+
-+		if (data_length < 1)
-+			return 1;	/* error, too much data */
-+
-+		*data++ = (n1 << 4) | n2;
-+		data_length--;
-+	}
-+
-+	if (data_length >= *data_lenp)
-+		return 1;	/* error, no data */
-+
-+	*data_lenp = *data_lenp - data_length;
-+
-+	return 0;		/* no error */
-+}
-+
-+static int
-+acl_base64_to_data(const char *text, unsigned char *data,
-+		   unsigned int *data_lenp)
-+{
-+	int i;
-+	unsigned int n;
-+	unsigned int count;
-+	unsigned int data_length = *data_lenp;
-+
-+	n = 0;
-+	count = 0;
-+
-+	while (*text != '\0' && *text != '=') {
-+
-+		i = acl_str_index(acl_base64_string, *text++);
-+		if (i < 0)
-+			return 1;	/* error, bad character */
-+
-+		n = (n << 6 | (unsigned int)i);
-+		count++;
-+
-+		if (count >= 4) {
-+			if (data_length < 3)
-+				return 1;	/* error, too much data */
-+			*data++ = n >> 16;
-+			*data++ = n >> 8;
-+			*data++ = n;
-+			data_length -= 3;
-+			n = 0;
-+			count = 0;
-+		}
-+	}
-+
-+	while (*text != '\0')
-+		if (*text++ != '=')
-+			return 1;	/* error, bad pad */
-+
-+	if (count == 0) {
-+		/* do nothing */
-+	} else if (count == 2) {
-+		if (data_length < 1)
-+			return 1;	/* error, too much data */
-+		n = n >> 4;
-+		*data++ = n;
-+		data_length--;
-+	} else if (count == 3) {
-+		if (data_length < 2)
-+			return 1;	/* error, too much data */
-+		n = n >> 2;
-+		*data++ = n >> 8;
-+		*data++ = n;
-+		data_length -= 2;
-+	} else
-+		return 1;	/* bad encoding */
-+
-+	if (data_length >= *data_lenp)
-+		return 1;	/* error, no data */
-+
-+	*data_lenp = *data_lenp - data_length;
-+
-+	return 0;		/* no error */
-+}
-+
-+static int
-+acl_text_to_data(const char *text, unsigned char *data,
-+		 unsigned int *data_length)
-+{
-+	int status;
-+	unsigned int text_length;
-+
-+	status = acl_chk_string(text, 2 + 2 * AUTH_LARGE_BINARY_MAX_LEN + 1,
-+				&text_length);
-+	if (status)
-+		return status;
-+
-+	if (text[0] == '0' && (text[1] == 'x' || text[1] == 'X')) {
-+		/* skip prefix */
-+		text += 2;
-+		text_length -= 2;
-+		status = acl_hex_to_data(text, text_length, data, data_length);
-+	} else if (text[0] == '0' && (text[1] == 'b' || text[1] == 'B')) {
-+		/* skip prefix */
-+		text += 2;
-+		text_length -= 2;
-+		status = acl_base64_to_data(text, data, data_length);
-+	} else
-+		status = 1;	/* prefix not recognized. */
-+
-+	return status;
-+}
-+
-+static void
-+acl_init_key_blk(struct auth_key_block *key_blk)
-+{
-+	char *str_block = key_blk->str_block;
-+
-+	memset(key_blk, 0, sizeof(*key_blk));
-+	key_blk->str_block = str_block;
-+}
-+
-+static void
-+acl_set_key_value(struct auth_key_block *key_blk, int key_type,
-+		  const char *key_val)
-+{
-+	unsigned int length;
-+	char *string;
-+
-+	if (key_blk->key[key_type].value_set) {
-+		key_blk->dup_set = 1;
-+		return;
-+	}
-+
-+	key_blk->key[key_type].value_set = 1;
-+
-+	if (!key_val)
-+		return;
-+
-+	if (acl_chk_string(key_val, AUTH_STR_MAX_LEN, &length)) {
-+		key_blk->str_too_long = 1;
-+		return;
-+	}
-+
-+	length += 1;
-+
-+	if ((key_blk->blk_length + length) > AUTH_STR_BLOCK_MAX_LEN) {
-+		key_blk->too_much_data = 1;
-+		return;
-+	}
-+
-+	string = &key_blk->str_block[key_blk->blk_length];
-+
-+	if (strlcpy(string, key_val, length) >= length) {
-+		key_blk->too_much_data = 1;
-+		return;
-+	}
-+	key_blk->blk_length += length;
-+
-+	key_blk->key[key_type].string = string;
-+	key_blk->key[key_type].present = 1;
-+}
-+
-+static const char *
-+acl_get_key_val(struct auth_key_block *key_blk, int key_type)
-+{
-+	key_blk->key[key_type].processed = 1;
-+
-+	if (!key_blk->key[key_type].present)
-+		return 0;
-+
-+	return key_blk->key[key_type].string;
-+}
-+
-+static void
-+acl_chk_key(struct iscsi_acl *client, int key_type, int *negotiated_option,
-+	    unsigned int option_count, int *option_list,
-+	    const char *(*value_to_text) (int))
-+{
-+	const char *key_val;
-+	int length;
-+	unsigned int i;
-+
-+	key_val = acl_get_key_val(&client->recv_key_block, key_type);
-+	if (!key_val) {
-+		*negotiated_option = AUTH_OPTION_NOT_PRESENT;
-+		return;
-+	}
-+
-+	while (*key_val != '\0') {
-+
-+		length = 0;
-+
-+		while (*key_val != '\0' && *key_val != ',')
-+			client->scratch_key_value[length++] = *key_val++;
-+
-+		if (*key_val == ',')
-+			key_val++;
-+		client->scratch_key_value[length++] = '\0';
-+
-+		for (i = 0; i < option_count; i++) {
-+			const char *s = (*value_to_text)(option_list[i]);
-+
-+			if (!s)
-+				continue;
-+
-+			if (strcmp(client->scratch_key_value, s) == 0) {
-+				*negotiated_option = option_list[i];
-+				return;
-+			}
-+		}
-+	}
-+
-+	*negotiated_option = AUTH_OPTION_REJECT;
-+}
-+
-+static void
-+acl_set_key(struct iscsi_acl *client, int key_type, unsigned int option_count,
-+	    int *option_list, const char *(*value_to_text)(int))
-+{
-+	unsigned int i;
-+
-+	if (option_count == 0) {
-+		/*
-+		 * No valid options to send, but we always want to
-+		 * send something.
-+		 */
-+		acl_set_key_value(&client->send_key_block, key_type,
-+				  acl_none_option_name);
-+		return;
-+	}
-+
-+	if (option_count == 1 && option_list[0] == AUTH_OPTION_NOT_PRESENT) {
-+		acl_set_key_value(&client->send_key_block, key_type, 0);
-+		return;
-+	}
-+
-+	for (i = 0; i < option_count; i++) {
-+		const char *s = (*value_to_text)(option_list[i]);
-+
-+		if (!s)
-+			continue;
-+
-+		if (i == 0)
-+			strlcpy(client->scratch_key_value, s,
-+				   AUTH_STR_MAX_LEN);
-+		else {
-+			strlcat(client->scratch_key_value, ",",
-+				   AUTH_STR_MAX_LEN);
-+			strlcat(client->scratch_key_value, s,
-+			  	   AUTH_STR_MAX_LEN);
-+		}
-+	}
-+
-+	acl_set_key_value(&client->send_key_block, key_type,
-+			  client->scratch_key_value);
-+}
-+
-+static void
-+acl_chk_auth_method_key(struct iscsi_acl *client)
-+{
-+	acl_chk_key(client, AUTH_KEY_TYPE_AUTH_METHOD,
-+		    &client->negotiated_auth_method,
-+		    client->auth_method_valid_count,
-+		    client->auth_method_valid_list,
-+		    acl_authmethod_optn_to_text);
-+}
-+
-+static void
-+acl_set_auth_method_key(struct iscsi_acl *client,
-+			unsigned int auth_method_count, int *auth_method_list)
-+{
-+	acl_set_key(client, AUTH_KEY_TYPE_AUTH_METHOD, auth_method_count,
-+		    auth_method_list, acl_authmethod_optn_to_text);
-+}
-+
-+static void
-+acl_chk_chap_alg_key(struct iscsi_acl *client)
-+{
-+	const char *key_val;
-+	int length;
-+	unsigned long number;
-+	unsigned int i;
-+
-+	key_val = acl_get_key_val(&client->recv_key_block,
-+				  AUTH_KEY_TYPE_CHAP_ALG);
-+	if (!key_val) {
-+		client->negotiated_chap_alg = AUTH_OPTION_NOT_PRESENT;
-+		return;
-+	}
-+
-+	while (*key_val != '\0') {
-+
-+		length = 0;
-+
-+		while (*key_val != '\0' && *key_val != ',')
-+			client->scratch_key_value[length++] = *key_val++;
-+
-+		if (*key_val == ',')
-+			key_val++;
-+		client->scratch_key_value[length++] = '\0';
-+
-+		if (acl_text_to_number(client->scratch_key_value, &number))
-+			continue;
-+		
-+
-+		for (i = 0; i < client->chap_alg_count; i++)
-+			if (number == (unsigned long)client->chap_alg_list[i])
-+			{
-+				client->negotiated_chap_alg = number;
-+				return;
-+			}
-+	}
-+
-+	client->negotiated_chap_alg = AUTH_OPTION_REJECT;
-+}
-+
-+static void
-+acl_set_chap_alg_key(struct iscsi_acl *client, unsigned int chap_alg_count,
-+		     int *chap_alg_list)
-+{
-+	unsigned int i;
-+
-+	if (chap_alg_count == 0) {
-+		acl_set_key_value(&client->send_key_block,
-+				  AUTH_KEY_TYPE_CHAP_ALG, 0);
-+		return;
-+	}
-+
-+	if (chap_alg_count == 1 &&
-+	    chap_alg_list[0] == AUTH_OPTION_NOT_PRESENT) {
-+		acl_set_key_value(&client->send_key_block,
-+				  AUTH_KEY_TYPE_CHAP_ALG, 0);
-+		return;
-+	}
-+
-+	if (chap_alg_count == 1 && chap_alg_list[0] == AUTH_OPTION_REJECT) {
-+		acl_set_key_value(&client->send_key_block,
-+				  AUTH_KEY_TYPE_CHAP_ALG,
-+				  acl_reject_option_name);
-+		return;
-+	}
-+
-+	for (i = 0; i < chap_alg_count; i++) {
-+		char s[20];
-+
-+		snprintf(s, sizeof(s), "%lu",(unsigned long)chap_alg_list[i]);
-+
-+		if (i == 0)
-+			strlcpy(client->scratch_key_value, s,
-+				   AUTH_STR_MAX_LEN);
-+		 else {
-+			strlcat(client->scratch_key_value, ",",
-+				   AUTH_STR_MAX_LEN);
-+			strlcat(client->scratch_key_value, s,
-+				   AUTH_STR_MAX_LEN);
-+		}
-+	}
-+
-+	acl_set_key_value(&client->send_key_block, AUTH_KEY_TYPE_CHAP_ALG,
-+			  client->scratch_key_value);
-+}
-+
-+static void
-+acl_next_phase(struct iscsi_acl *client)
-+{
-+	switch (client->phase) {
-+	case AUTH_PHASE_CONFIGURE:
-+		client->phase = AUTH_PHASE_NEGOTIATE;
-+		break;
-+	case AUTH_PHASE_NEGOTIATE:
-+		client->phase = AUTH_PHASE_AUTHENTICATE;
-+
-+		if (client->negotiated_auth_method == AUTH_OPTION_REJECT ||
-+		    client->negotiated_auth_method == AUTH_OPTION_NOT_PRESENT ||
-+		    client->negotiated_auth_method == AUTH_OPTION_NONE) {
-+
-+			client->local_state = AUTH_LOCAL_STATE_DONE;
-+			client->rmt_state = AUTH_RMT_STATE_DONE;
-+
-+			if (client->auth_rmt) {
-+				client->rmt_auth_status = AUTH_STATUS_FAIL;
-+				client->phase = AUTH_PHASE_DONE;
-+			} else
-+				client->rmt_auth_status = AUTH_STATUS_PASS;
-+
-+			switch (client->negotiated_auth_method) {
-+			case AUTH_OPTION_REJECT:
-+				client->dbg_status =
-+				    AUTH_DBG_STATUS_AUTH_METHOD_REJECT;
-+				break;
-+			case AUTH_OPTION_NOT_PRESENT:
-+				client->dbg_status =
-+				    AUTH_DBG_STATUS_AUTH_METHOD_NOT_PRESENT;
-+				break;
-+			case AUTH_OPTION_NONE:
-+				client->dbg_status =
-+				    AUTH_DBG_STATUS_AUTH_METHOD_NONE;
-+			}
-+
-+		} else if (client->negotiated_auth_method == AUTH_METHOD_CHAP) {
-+			client->local_state = AUTH_LOCAL_STATE_SEND_ALG;
-+			client->rmt_state = AUTH_RMT_STATE_SEND_ALG;
-+		} else {
-+
-+			client->local_state = AUTH_LOCAL_STATE_DONE;
-+			client->rmt_state = AUTH_RMT_STATE_DONE;
-+			client->rmt_auth_status = AUTH_STATUS_FAIL;
-+			client->dbg_status = AUTH_DBG_STATUS_AUTH_METHOD_BAD;
-+		}
-+		break;
-+	case AUTH_PHASE_AUTHENTICATE:
-+		client->phase = AUTH_PHASE_DONE;
-+		break;
-+	case AUTH_PHASE_DONE:
-+	case AUTH_PHASE_ERROR:
-+	default:
-+		client->phase = AUTH_PHASE_ERROR;
-+	}
-+}
-+
-+static void
-+acl_local_auth(struct iscsi_acl *client)
-+{
-+	unsigned int chap_identifier;
-+	unsigned char response_data[AUTH_CHAP_RSP_LEN];
-+	unsigned long number;
-+	int status;
-+	enum auth_dbg_status dbg_status;
-+	const char *chap_identifier_key_val;
-+	const char *chap_challenge_key_val;
-+
-+	switch (client->local_state) {
-+	case AUTH_LOCAL_STATE_SEND_ALG:
-+		if (client->node_type == TYPE_INITIATOR) {
-+			acl_set_chap_alg_key(client, client->chap_alg_count,
-+					     client->chap_alg_list);
-+			client->local_state = AUTH_LOCAL_STATE_RECV_ALG;
-+			break;
-+		}
-+		/* Fall through */
-+	case AUTH_LOCAL_STATE_RECV_ALG:
-+		acl_chk_chap_alg_key(client);
-+
-+		if (client->node_type == TYPE_TARGET)
-+			acl_set_chap_alg_key(client, 1,
-+					     &client->negotiated_chap_alg);
-+
-+		/* Make sure only supported CHAP algorithm is used. */
-+		if (client->negotiated_chap_alg == AUTH_OPTION_NOT_PRESENT) {
-+			client->local_state = AUTH_LOCAL_STATE_ERROR;
-+			client->dbg_status = AUTH_DBG_STATUS_CHAP_ALG_EXPECTED;
-+			break;
-+		} else if (client->negotiated_chap_alg == AUTH_OPTION_REJECT) {
-+			client->local_state = AUTH_LOCAL_STATE_ERROR;
-+			client->dbg_status = AUTH_DBG_STATUS_CHAP_ALG_REJECT;
-+			break;
-+		} else if (client->negotiated_chap_alg != AUTH_CHAP_ALG_MD5) {
-+			client->local_state = AUTH_LOCAL_STATE_ERROR;
-+			client->dbg_status = AUTH_DBG_STATUS_CHAP_ALG_BAD;
-+			break;
-+		}
-+		if (client->node_type == TYPE_TARGET) {
-+			client->local_state = AUTH_LOCAL_STATE_RECV_CHALLENGE;
-+			break;
-+		}
-+		/* Fall through */
-+	case AUTH_LOCAL_STATE_RECV_CHALLENGE:
-+		chap_identifier_key_val = acl_get_key_val(&client->recv_key_block,
-+							  AUTH_KEY_TYPE_CHAP_IDENTIFIER);
-+		chap_challenge_key_val = acl_get_key_val(&client->recv_key_block,
-+							 AUTH_KEY_TYPE_CHAP_CHALLENGE);
-+		if (client->node_type == TYPE_TARGET) {
-+			if (!chap_identifier_key_val &&
-+			    !chap_challenge_key_val) {
-+				client->local_state = AUTH_LOCAL_STATE_DONE;
-+				break;
-+			}
-+		}
-+
-+		if (!chap_identifier_key_val) {
-+			client->local_state = AUTH_LOCAL_STATE_ERROR;
-+			client->dbg_status =
-+			    AUTH_DBG_STATUS_CHAP_IDENTIFIER_EXPECTED;
-+			break;
-+		}
-+
-+		if (!chap_challenge_key_val) {
-+			client->local_state = AUTH_LOCAL_STATE_ERROR;
-+			client->dbg_status =
-+			    AUTH_DBG_STATUS_CHAP_CHALLENGE_EXPECTED;
-+			break;
-+		}
-+
-+		status = acl_text_to_number(chap_identifier_key_val, &number);
-+		if (status || (255 < number)) {
-+			client->local_state = AUTH_LOCAL_STATE_ERROR;
-+			client->dbg_status = AUTH_DBG_STATUS_CHAP_IDENTIFIER_BAD;
-+			break;
-+		}
-+		chap_identifier = number;
-+
-+		if (client->recv_chap_challenge_status) {
-+			client->local_state = AUTH_LOCAL_STATE_ERROR;
-+			client->dbg_status = AUTH_DBG_STATUS_CHALLENGE_BAD;
-+			break;
-+		}
-+
-+		if (client->node_type == TYPE_TARGET &&
-+		    client->recv_chap_challenge.length ==
-+		    client->send_chap_challenge.length &&
-+		    memcmp(client->recv_chap_challenge.large_binary,
-+			   client->send_chap_challenge.large_binary,
-+			   client->send_chap_challenge.length) == 0) {
-+			client->local_state = AUTH_LOCAL_STATE_ERROR;
-+			client->dbg_status =
-+			    AUTH_DBG_STATUS_CHAP_CHALLENGE_REFLECTED;
-+			break;
-+		}
-+
-+		dbg_status = acl_chap_compute_rsp(client, 0,
-+						  chap_identifier,
-+						  client->recv_chap_challenge.large_binary,
-+						  client->recv_chap_challenge.length,
-+						  response_data);
-+
-+		if (dbg_status != AUTH_DBG_STATUS_NOT_SET) {
-+			client->local_state = AUTH_LOCAL_STATE_ERROR;
-+			client->dbg_status = dbg_status;
-+			break;
-+		}
-+
-+		acl_data_to_text(response_data,
-+				 AUTH_CHAP_RSP_LEN, client->scratch_key_value,
-+				 AUTH_STR_MAX_LEN);
-+		acl_set_key_value(&client->send_key_block,
-+				  AUTH_KEY_TYPE_CHAP_RSP,
-+				  client->scratch_key_value);
-+		acl_set_key_value(&client->send_key_block,
-+				  AUTH_KEY_TYPE_CHAP_USERNAME,
-+				  client->username);
-+
-+		client->local_state = AUTH_LOCAL_STATE_DONE;
-+		break;
-+	case AUTH_LOCAL_STATE_DONE:
-+		break;
-+	case AUTH_LOCAL_STATE_ERROR:
-+	default:
-+		client->phase = AUTH_PHASE_ERROR;
-+	}
-+}
-+
-+static void
-+acl_rmt_auth(struct iscsi_acl *client)
-+{
-+	unsigned char id_data[1];
-+	unsigned char response_data[AUTH_STR_MAX_LEN];
-+	unsigned int rsp_len = AUTH_STR_MAX_LEN;
-+	unsigned char my_rsp_data[AUTH_CHAP_RSP_LEN];
-+	int status;
-+	enum auth_dbg_status dbg_status;
-+	const char *chap_rsp_key_val;
-+	const char *chap_username_key_val;
-+
-+	switch (client->rmt_state) {
-+	case AUTH_RMT_STATE_SEND_ALG:
-+		if (client->node_type == TYPE_INITIATOR) {
-+			client->rmt_state = AUTH_RMT_STATE_SEND_CHALLENGE;
-+			break;
-+		}
-+		/* Fall through */
-+	case AUTH_RMT_STATE_SEND_CHALLENGE:
-+		if (!client->auth_rmt) {
-+			client->rmt_auth_status = AUTH_STATUS_PASS;
-+			client->dbg_status = AUTH_DBG_STATUS_AUTH_RMT_FALSE;
-+			client->rmt_state = AUTH_RMT_STATE_DONE;
-+			break;
-+		}
-+		get_random_bytes(id_data, 1);
-+		client->send_chap_identifier = id_data[0];
-+		snprintf(client->scratch_key_value, AUTH_STR_MAX_LEN, "%lu",
-+			 (unsigned long)client->send_chap_identifier);
-+		acl_set_key_value(&client->send_key_block,
-+				  AUTH_KEY_TYPE_CHAP_IDENTIFIER,
-+				  client->scratch_key_value);
-+
-+		client->send_chap_challenge.length = client->chap_challenge_len;
-+		get_random_bytes(client->send_chap_challenge.large_binary,
-+				 client->send_chap_challenge.length);
-+		acl_set_key_value(&client->send_key_block,
-+				  AUTH_KEY_TYPE_CHAP_CHALLENGE, "");
-+
-+		client->rmt_state = AUTH_RMT_STATE_RECV_RSP;
-+		break;
-+	case AUTH_RMT_STATE_RECV_RSP:
-+		chap_rsp_key_val = acl_get_key_val(&client->recv_key_block,
-+						   AUTH_KEY_TYPE_CHAP_RSP);
-+		chap_username_key_val = acl_get_key_val(&client->recv_key_block,
-+							 AUTH_KEY_TYPE_CHAP_USERNAME);
-+
-+		if (!chap_rsp_key_val) {
-+			client->rmt_state = AUTH_RMT_STATE_ERROR;
-+			client->dbg_status = AUTH_DBG_STATUS_CHAP_RSP_EXPECTED;
-+			break;
-+		}
-+
-+		if (!chap_username_key_val) {
-+			client->rmt_state = AUTH_RMT_STATE_ERROR;
-+			client->dbg_status = AUTH_DBG_STATUS_CHAP_USERNAME_EXPECTED;
-+			break;
-+		}
-+
-+		status = acl_text_to_data(chap_rsp_key_val, response_data,
-+					  &rsp_len);
-+
-+		if (status) {
-+			client->rmt_state = AUTH_RMT_STATE_ERROR;
-+			client->dbg_status = AUTH_DBG_STATUS_CHAP_RSP_BAD;
-+			break;
-+		}
-+
-+		if (rsp_len == AUTH_CHAP_RSP_LEN) {
-+			dbg_status = acl_chap_compute_rsp(client, 1,
-+							  client->send_chap_identifier,
-+							  client->send_chap_challenge.large_binary,
-+							  client->send_chap_challenge.length,
-+							  my_rsp_data);
-+
-+			if (dbg_status == AUTH_DBG_STATUS_NOT_SET &&
-+			    memcmp(my_rsp_data, response_data,
-+				   AUTH_CHAP_RSP_LEN) == 0) {
-+				client->rmt_state = AUTH_RMT_STATE_ERROR;
-+				client->dbg_status = AUTH_DBG_STATUS_PASSWD_IDENTICAL;
-+				break;
-+			}
-+		}
-+
-+		strlcpy(client->chap_username, chap_username_key_val,
-+			AUTH_STR_MAX_LEN);
-+
-+		status = acl_chap_auth_request(client, client->chap_username,
-+					       client->send_chap_identifier,
-+					       client->send_chap_challenge.
-+					       large_binary,
-+					       client->send_chap_challenge.
-+					       length, response_data,
-+					       rsp_len);
-+
-+		client->rmt_auth_status = (enum auth_status) status;
-+		client->auth_rsp_flag = 1;
-+
-+		if (client->auth_server_error_flag) {
-+			client->rmt_auth_status = AUTH_STATUS_FAIL;
-+			client->dbg_status = AUTH_DBG_STATUS_AUTH_SERVER_ERROR;
-+		} else if (client->rmt_auth_status == AUTH_STATUS_PASS)
-+			client->dbg_status = AUTH_DBG_STATUS_AUTH_PASS;
-+		else if (client->rmt_auth_status == AUTH_STATUS_FAIL)
-+			client->dbg_status = AUTH_DBG_STATUS_AUTH_FAIL;
-+		else {
-+			client->rmt_auth_status = AUTH_STATUS_FAIL;
-+			client->dbg_status = AUTH_DBG_STATUS_AUTH_STATUS_BAD;
-+		}
-+		client->rmt_state = AUTH_RMT_STATE_DONE;
-+
-+		/* Fall through */
-+	case AUTH_RMT_STATE_DONE:
-+		break;
-+	case AUTH_RMT_STATE_ERROR:
-+	default:
-+		client->phase = AUTH_PHASE_ERROR;
-+	}
-+}
-+
-+static void
-+acl_hand_shake(struct iscsi_acl *client)
-+{
-+	if (client->phase == AUTH_PHASE_DONE)
-+
-+		/*
-+		 * Should only happen if authentication
-+		 * protocol error occured.
-+		 */
-+		return;
-+
-+	if (client->node_type == TYPE_INITIATOR)
-+
-+		/*
-+		 * Target should only have set T bit on response if
-+		 * initiator set it on previous message.
-+		 */
-+		if (client->recv_key_block.transit_bit &&
-+		    !client->transit_bit_sent_flag) {
-+			client->rmt_auth_status = AUTH_STATUS_FAIL;
-+			client->phase = AUTH_PHASE_DONE;
-+			client->dbg_status =
-+			    AUTH_DBG_STATUS_T_BIT_SET_ILLEGAL;
-+			return;
-+		}
-+
-+	if (client->phase == AUTH_PHASE_NEGOTIATE) {
-+		/*
-+		 * Should only happen if waiting for peer
-+		 * to send AuthMethod key or set Transit Bit.
-+		 */
-+		if (client->node_type == TYPE_INITIATOR)
-+			client->send_key_block.transit_bit = 1;
-+		return;
-+	}
-+
-+	if (client->rmt_state == AUTH_RMT_STATE_RECV_RSP ||
-+	    client->rmt_state == AUTH_RMT_STATE_DONE) {
-+		if (client->node_type == TYPE_INITIATOR) {
-+			if (client->recv_key_block.transit_bit) {
-+				if (client->rmt_state !=
-+				    AUTH_RMT_STATE_DONE) 
-+					goto recv_transit_bit_err;
-+				acl_next_phase(client);
-+			} else
-+				client->send_key_block.transit_bit = 1;
-+		} else {
-+			if (client->rmt_state == AUTH_RMT_STATE_DONE &&
-+			    client->rmt_auth_status != AUTH_STATUS_PASS)
-+				/*
-+				 * Authentication failed, don't do T bit
-+				 * handshake.
-+				 */
-+				acl_next_phase(client);
-+			else {
-+				/*
-+				 * Target can only set T bit on response if
-+				 * initiator set it on current message.
-+				 */
-+				if (client->recv_key_block.transit_bit) {
-+					client->send_key_block.transit_bit = 1;
-+					acl_next_phase(client);
-+				}
-+			}
-+		}
-+	} else
-+		if (client->node_type == TYPE_INITIATOR)
-+			if (client->recv_key_block.transit_bit)
-+				goto recv_transit_bit_err;
-+	return;
-+
-+ recv_transit_bit_err:
-+	/*
-+	 * Target set T bit on response but
-+	 * initiator was not done with authentication.
-+	 */
-+	client->rmt_auth_status = AUTH_STATUS_FAIL;
-+	client->phase = AUTH_PHASE_DONE;
-+	client->dbg_status = AUTH_DBG_STATUS_T_BIT_SET_PREMATURE;
-+}
-+
-+static int
-+acl_rcv_end_status(struct iscsi_acl *client)
-+{
-+	int auth_status;
-+	int key_type;
-+
-+	if (client->phase == AUTH_PHASE_ERROR)
-+		return AUTH_STATUS_ERROR;
-+
-+	if (client->phase == AUTH_PHASE_DONE) {
-+
-+		/* Perform sanity check against configured parameters. */
-+		if (client->auth_rmt && !client->auth_rsp_flag &&
-+		    client->rmt_auth_status == AUTH_STATUS_PASS) {
-+			client->rmt_auth_status = AUTH_STATUS_FAIL;
-+			client->dbg_status = AUTH_DBG_STATUS_AUTHPASS_NOT_VALID;
-+		}
-+
-+		auth_status = client->rmt_auth_status;
-+
-+	} else
-+		auth_status = AUTH_STATUS_CONTINUE;
-+	
-+	if (auth_status == AUTH_STATUS_CONTINUE ||
-+	    auth_status == AUTH_STATUS_PASS) {
-+		if (client->send_key_block.dup_set) {
-+			client->rmt_auth_status = AUTH_STATUS_FAIL;
-+			client->phase = AUTH_PHASE_DONE;
-+			client->dbg_status =
-+			    AUTH_DBG_STATUS_SEND_DUP_SET_KEY_VALUE;
-+			auth_status = AUTH_STATUS_FAIL;
-+		} else if (client->send_key_block.str_too_long) {
-+			client->rmt_auth_status = AUTH_STATUS_FAIL;
-+			client->phase = AUTH_PHASE_DONE;
-+			client->dbg_status =
-+			    AUTH_DBG_STATUS_SEND_STR_TOO_LONG;
-+			auth_status = AUTH_STATUS_FAIL;
-+		} else if (client->send_key_block.too_much_data) {
-+			client->rmt_auth_status = AUTH_STATUS_FAIL;
-+			client->phase = AUTH_PHASE_DONE;
-+			client->dbg_status =
-+			    AUTH_DBG_STATUS_SEND_TOO_MUCH_DATA;
-+			auth_status = AUTH_STATUS_FAIL;
-+		} else {
-+			/* Check that all incoming keys have been processed. */
-+
-+			for (key_type = AUTH_KEY_TYPE_FIRST;
-+			     key_type < AUTH_KEY_TYPE_MAX_COUNT; key_type++)
-+				if (client->recv_key_block.key[key_type].present &&
-+				    !client->recv_key_block.key[key_type].
-+				    processed)
-+					break;
-+
-+			if (key_type < AUTH_KEY_TYPE_MAX_COUNT) {
-+				client->rmt_auth_status = AUTH_STATUS_FAIL;
-+				client->phase = AUTH_PHASE_DONE;
-+				client->dbg_status =
-+				    AUTH_DBG_STATUS_UNEXPECTED_KEY_PRESENT;
-+				auth_status = AUTH_STATUS_FAIL;
-+			}
-+		}
-+	}
-+
-+	if (auth_status != AUTH_STATUS_PASS &&
-+	    auth_status != AUTH_STATUS_CONTINUE) {
-+		int auth_method_key_present = 0;
-+		int chap_alg_key_present = 0;
-+
-+		/*
-+		 * Suppress send keys on error,
-+		 * except for AuthMethod and CHAP_A.
-+		 */
-+		if (client->node_type == TYPE_TARGET) {
-+			if (acl_get_key_val(&client->send_key_block,
-+					    AUTH_KEY_TYPE_AUTH_METHOD))
-+				auth_method_key_present = 1;
-+			else if (acl_get_key_val(&client->send_key_block,
-+						 AUTH_KEY_TYPE_CHAP_ALG))
-+				chap_alg_key_present = 1;
-+		}
-+
-+		acl_init_key_blk(&client->send_key_block);
-+
-+		if (client->node_type == TYPE_TARGET) {
-+			if (auth_method_key_present &&
-+			    client->negotiated_auth_method ==
-+			    AUTH_OPTION_REJECT)
-+				acl_set_key_value(&client->send_key_block,
-+						  AUTH_KEY_TYPE_AUTH_METHOD,
-+						  acl_reject_option_name);
-+			else if (chap_alg_key_present &&
-+				 client->negotiated_chap_alg ==
-+				 AUTH_OPTION_REJECT)
-+				acl_set_key_value(&client->send_key_block,
-+						  AUTH_KEY_TYPE_CHAP_ALG,
-+						  acl_reject_option_name);
-+		}
-+	}
-+	client->recv_in_progress_flag = 0;
-+
-+	return auth_status;
-+}
-+
-+int
-+acl_recv_begin(struct iscsi_acl *client)
-+{
-+	if (!client || client->signature != ACL_SIGNATURE)
-+		return AUTH_STATUS_ERROR;
-+
-+	if (client->phase == AUTH_PHASE_ERROR)
-+		return AUTH_STATUS_ERROR;
-+
-+	if (client->phase == AUTH_PHASE_DONE) {
-+		client->phase = AUTH_PHASE_ERROR;
-+		return AUTH_STATUS_ERROR;
-+	}
-+
-+	if (client->recv_in_progress_flag) {
-+		client->phase = AUTH_PHASE_ERROR;
-+		return AUTH_STATUS_ERROR;
-+	}
-+
-+	client->recv_in_progress_flag = 1;
-+
-+	if (client->phase == AUTH_PHASE_CONFIGURE)
-+		acl_next_phase(client);
-+
-+	client->transit_bit_sent_flag = client->send_key_block.transit_bit;
-+
-+	acl_init_key_blk(&client->recv_key_block);
-+	acl_init_key_blk(&client->send_key_block);
-+
-+	return AUTH_STATUS_NO_ERROR;
-+}
-+
-+int
-+acl_recv_end(struct iscsi_acl *client)
-+{
-+	int next_phase_flag = 0;
-+
-+	if (!client || client->signature != ACL_SIGNATURE)
-+		return AUTH_STATUS_ERROR;
-+
-+	if (client->phase == AUTH_PHASE_ERROR)
-+		return AUTH_STATUS_ERROR;
-+
-+	if (!client->recv_in_progress_flag)  {
-+		client->phase = AUTH_PHASE_ERROR;
-+		return AUTH_STATUS_ERROR;
-+	}
-+	
-+	if (client->recv_end_count > AUTH_RECV_END_MAX_COUNT) {
-+		client->rmt_auth_status = AUTH_STATUS_FAIL;
-+		client->phase = AUTH_PHASE_DONE;
-+		client->dbg_status = AUTH_DBG_STATUS_RECV_MSG_COUNT_LIMIT;
-+	} else if (client->recv_key_block.dup_set) {
-+		client->rmt_auth_status = AUTH_STATUS_FAIL;
-+		client->phase = AUTH_PHASE_DONE;
-+		client->dbg_status = AUTH_DBG_STATUS_RECV_DUP_SET_KEY_VALUE;
-+	} else if (client->recv_key_block.str_too_long) {
-+		client->rmt_auth_status = AUTH_STATUS_FAIL;
-+		client->phase = AUTH_PHASE_DONE;
-+		client->dbg_status = AUTH_DBG_STATUS_RECV_STR_TOO_LONG;
-+	} else if (client->recv_key_block.too_much_data) {
-+		client->rmt_auth_status = AUTH_STATUS_FAIL;
-+		client->phase = AUTH_PHASE_DONE;
-+		client->dbg_status = AUTH_DBG_STATUS_RECV_TOO_MUCH_DATA;
-+	}
-+
-+	client->recv_end_count++;
-+
-+	switch (client->phase) {
-+	case AUTH_PHASE_NEGOTIATE:
-+		acl_chk_auth_method_key(client);
-+		if (client->auth_method_valid_neg_role ==
-+		    AUTH_NEG_ROLE_RESPONDER) {
-+			if (client->negotiated_auth_method ==
-+			    AUTH_OPTION_NOT_PRESENT) {
-+				if (client->auth_rmt ||
-+				    !client->recv_key_block.transit_bit) {
-+					/*
-+					 * No AuthMethod key from peer on
-+					 * first message, try moving the
-+					 * process along by sending the
-+					 * AuthMethod key.
-+					 */
-+
-+					client->auth_method_valid_neg_role =
-+					    AUTH_NEG_ROLE_ORIGINATOR;
-+					acl_set_auth_method_key(client,
-+								client->auth_method_valid_count,
-+								client->auth_method_valid_list);
-+					break;
-+				}
-+
-+				/*
-+				 * Special case if peer sent no AuthMethod key,
-+				 * but did set Transit Bit, allowing this side
-+				 * to do a null authentication, and compelete
-+				 * the iSCSI security phase without either side
-+				 * sending the AuthMethod key.
-+				 */
-+			} else
-+				/* Send response to AuthMethod key. */
-+				acl_set_auth_method_key(client, 1,
-+						        &client->negotiated_auth_method);
-+
-+			if (client->node_type == TYPE_INITIATOR)
-+				acl_next_phase(client);
-+			else
-+				next_phase_flag = 1;
-+		} else {
-+
-+			if (client->negotiated_auth_method ==
-+			    AUTH_OPTION_NOT_PRESENT) {
-+				client->rmt_auth_status = AUTH_STATUS_FAIL;
-+				client->phase = AUTH_PHASE_DONE;
-+				client->dbg_status =
-+				    AUTH_DBG_STATUS_AUTH_METHOD_EXPECTED;
-+				break;
-+			}
-+
-+			acl_next_phase(client);
-+		}
-+		break;
-+	case AUTH_PHASE_AUTHENTICATE:
-+	case AUTH_PHASE_DONE:
-+		break;
-+	default:
-+		client->phase = AUTH_PHASE_ERROR;
-+		return AUTH_STATUS_ERROR;
-+	}
-+
-+	switch (client->phase) {
-+	case AUTH_PHASE_NEGOTIATE:
-+		if (next_phase_flag)
-+			acl_next_phase(client);
-+		break;
-+	case AUTH_PHASE_AUTHENTICATE:
-+		/*
-+		 * Must call acl_local_auth()
-+		 * before acl_rmt_auth()
-+		 * to insure processing of the CHAP algorithm key,
-+		 * and to avoid leaving an in progress request to the
-+		 * authentication service.
-+		 */
-+		acl_local_auth(client);
-+
-+		if (client->local_state != AUTH_LOCAL_STATE_ERROR)
-+			acl_rmt_auth(client);
-+
-+		if (client->local_state == AUTH_LOCAL_STATE_ERROR ||
-+		    client->rmt_state == AUTH_RMT_STATE_ERROR) {
-+
-+			client->rmt_auth_status = AUTH_STATUS_FAIL;
-+			client->phase = AUTH_PHASE_DONE;
-+			/* client->dbg_status should already be set. */
-+		}
-+		break;
-+	case AUTH_PHASE_DONE:
-+		break;
-+	default:
-+		client->phase = AUTH_PHASE_ERROR;
-+		return AUTH_STATUS_ERROR;
-+	}
-+
-+	acl_hand_shake(client);
-+
-+	return acl_rcv_end_status(client);
-+}
-+
-+const char *
-+acl_get_key_name(int key_type)
-+{
-+	/*
-+	 * Note: The ordering of this table must match the order
-+	 *       defined by enum auth_key_type in iscsi-auth-client.h.
-+	 */
-+	static char *const key_names[AUTH_KEY_TYPE_MAX_COUNT] = {
-+		"AuthMethod",
-+		"CHAP_A",
-+		"CHAP_N",
-+		"CHAP_R",
-+		"CHAP_I",
-+		"CHAP_C"
-+	};
-+
-+	if (key_type < AUTH_KEY_TYPE_FIRST || key_type > AUTH_KEY_TYPE_LAST)
-+		return 0;
-+
-+	return key_names[key_type];
-+}
-+
-+int
-+acl_get_next_key_type(int *key_type)
-+{
-+	if (*key_type >= AUTH_KEY_TYPE_LAST)
-+		return AUTH_STATUS_ERROR;
-+
-+	if (*key_type < AUTH_KEY_TYPE_FIRST)
-+		*key_type = AUTH_KEY_TYPE_FIRST;
-+	else
-+		(*key_type)++;
-+
-+	return AUTH_STATUS_NO_ERROR;
-+}
-+
-+int
-+acl_recv_key_value(struct iscsi_acl *client, int key_type,
-+		   const char *user_key_val)
-+{
-+	if (!client || client->signature != ACL_SIGNATURE)
-+		return AUTH_STATUS_ERROR;
-+
-+	if (client->phase != AUTH_PHASE_NEGOTIATE &&
-+	    client->phase != AUTH_PHASE_AUTHENTICATE) {
-+		client->phase = AUTH_PHASE_ERROR;
-+		return AUTH_STATUS_ERROR;
-+	}
-+
-+	if (key_type < AUTH_KEY_TYPE_FIRST || key_type > AUTH_KEY_TYPE_LAST) {
-+		client->phase = AUTH_PHASE_ERROR;
-+		return AUTH_STATUS_ERROR;
-+	}
-+
-+	if (key_type == AUTH_KEY_TYPE_CHAP_CHALLENGE) {
-+		client->recv_chap_challenge.length =
-+		    AUTH_LARGE_BINARY_MAX_LEN;
-+		client->recv_chap_challenge_status =
-+		    acl_text_to_data(user_key_val,
-+				     client->recv_chap_challenge.large_binary,
-+				     &client->recv_chap_challenge.length);
-+		user_key_val = "";
-+	}
-+
-+	acl_set_key_value(&client->recv_key_block, key_type, user_key_val);
-+
-+	return AUTH_STATUS_NO_ERROR;
-+}
-+
-+int
-+acl_send_key_val(struct iscsi_acl *client, int key_type, int *key_present,
-+		 char *user_key_val, unsigned int max_length)
-+{
-+	const char *key_val;
-+
-+	if (!client || client->signature != ACL_SIGNATURE)
-+		return AUTH_STATUS_ERROR;
-+
-+	if (client->phase != AUTH_PHASE_CONFIGURE &&
-+	    client->phase != AUTH_PHASE_NEGOTIATE &&
-+	    client->phase != AUTH_PHASE_AUTHENTICATE &&
-+	    client->phase != AUTH_PHASE_DONE) {
-+		client->phase = AUTH_PHASE_ERROR;
-+		return AUTH_STATUS_ERROR;
-+	}
-+
-+	if (key_type < AUTH_KEY_TYPE_FIRST || key_type > AUTH_KEY_TYPE_LAST) {
-+		client->phase = AUTH_PHASE_ERROR;
-+		return AUTH_STATUS_ERROR;
-+	}
-+
-+	key_val = acl_get_key_val(&client->send_key_block, key_type);
-+	if (key_val) {
-+		if (key_type == AUTH_KEY_TYPE_CHAP_CHALLENGE) {
-+			if (acl_data_to_text(client->send_chap_challenge.large_binary,
-+					     client->send_chap_challenge.length, user_key_val,
-+					     max_length)) {
-+				client->phase = AUTH_PHASE_ERROR;
-+				return AUTH_STATUS_ERROR;
-+			}
-+		} else if (strlcpy(user_key_val, key_val, max_length) >=
-+			   max_length) {
-+				client->phase = AUTH_PHASE_ERROR;
-+				return AUTH_STATUS_ERROR;
-+			}
-+		*key_present = 1;
-+	} else
-+		*key_present = 0;
-+
-+	return AUTH_STATUS_NO_ERROR;
-+}
-+
-+int
-+acl_recv_transit_bit(struct iscsi_acl *client, int value)
-+{
-+	if (!client || client->signature != ACL_SIGNATURE)
-+		return AUTH_STATUS_ERROR;
-+
-+	if (client->phase != AUTH_PHASE_NEGOTIATE &&
-+	    client->phase != AUTH_PHASE_AUTHENTICATE) {
-+
-+		client->phase = AUTH_PHASE_ERROR;
-+		return AUTH_STATUS_ERROR;
-+	}
-+
-+	if (value)
-+		client->recv_key_block.transit_bit = 1;
-+	else
-+		client->recv_key_block.transit_bit = 0;
-+
-+	return AUTH_STATUS_NO_ERROR;
-+}
-+
-+int
-+acl_send_transit_bit(struct iscsi_acl *client, int *value)
-+{
-+	if (!client || client->signature != ACL_SIGNATURE)
-+		return AUTH_STATUS_ERROR;
-+
-+	if (client->phase != AUTH_PHASE_CONFIGURE &&
-+	    client->phase != AUTH_PHASE_NEGOTIATE &&
-+	    client->phase != AUTH_PHASE_AUTHENTICATE &&
-+	    client->phase != AUTH_PHASE_DONE) {
-+
-+		client->phase = AUTH_PHASE_ERROR;
-+		return AUTH_STATUS_ERROR;
-+	}
-+
-+	*value = client->send_key_block.transit_bit;
-+
-+	return AUTH_STATUS_NO_ERROR;
-+}
-+
-+static int
-+acl_set_option_list(struct iscsi_acl *client, unsigned int opt_count,
-+		    const int *opt_list, unsigned int *clnt_optn_count,
-+		    int *clnt_optn_list, unsigned int optn_max_count,
-+		    int (*chk_option)(int),
-+		    int (*chk_list)(unsigned int opt_count, const int *opt_list))
-+{
-+	unsigned int i, j;
-+
-+	if (!client || client->signature != ACL_SIGNATURE)
-+		return AUTH_STATUS_ERROR;
-+
-+	if (client->phase != AUTH_PHASE_CONFIGURE ||
-+	    opt_count > optn_max_count) {
-+		client->phase = AUTH_PHASE_ERROR;
-+		return AUTH_STATUS_ERROR;
-+	}
-+
-+	for (i = 0; i < opt_count; i++)
-+		if (chk_option(opt_list[i])) {
-+			client->phase = AUTH_PHASE_ERROR;
-+			return AUTH_STATUS_ERROR;
-+		}
-+
-+	/* Check for duplicate entries. */
-+	for (i = 0; i < opt_count; i++)
-+		for (j = 0; j < opt_count; j++) {
-+			if (j == i)
-+				continue;
-+			if (opt_list[i] == opt_list[j]) {
-+				client->phase = AUTH_PHASE_ERROR;
-+				return AUTH_STATUS_ERROR;
-+			}
-+		}
-+
-+	/* Check for key specific constraints. */
-+	if (chk_list)
-+		if (chk_list(opt_count, opt_list)) {
-+			client->phase = AUTH_PHASE_ERROR;
-+			return AUTH_STATUS_ERROR;
-+		}
-+
-+	for (i = 0; i < opt_count; i++)
-+		clnt_optn_list[i] = opt_list[i];
-+
-+	*clnt_optn_count = opt_count;
-+
-+	return AUTH_STATUS_NO_ERROR;
-+}
-+
-+static int
-+acl_chk_auth_method_list(unsigned int option_count, const int *option_list)
-+{
-+	unsigned int i;
-+
-+	if (!option_list || option_count < 2)
-+		return 1;
-+
-+	if (option_list[option_count - 1] != AUTH_OPTION_NONE)
-+		return 1;
-+
-+	for (i = 0; i < (option_count - 1); i++)
-+		if (option_list[i] != AUTH_OPTION_NONE)
-+			return 0;
-+
-+	return 0;
-+}
-+
-+static void
-+acl_set_auth_method_valid(struct iscsi_acl *client)
-+{
-+	unsigned int i, j = 0;
-+	int option = 0;
-+
-+	/*
-+	 * Following checks may need to be revised if
-+	 * authentication options other than CHAP and none
-+	 * are supported.
-+	 */
-+	if (client->node_type == TYPE_INITIATOR) {
-+		if (client->auth_rmt)
-+			/*
-+			 * If initiator doing authentication,
-+			 * don't offer authentication option none.
-+			 */
-+			option = 1;
-+		else if (!client->passwd_present)
-+			/*
-+			 * If initiator password not set,
-+			 * only offer authentication option none.
-+			 */
-+			option = 2;
-+	}
-+
-+	if (client->node_type == TYPE_TARGET) {
-+		if (client->auth_rmt)
-+			/*
-+			 * If target doing authentication,
-+			 * don't accept authentication option none.
-+			 */
-+			option = 1;
-+		else
-+			/*
-+			 * If target not doing authentication,
-+			 * only accept authentication option none.
-+			 */
-+			option = 2;
-+	}
-+
-+	for (i = 0; i < client->auth_method_count; i++) {
-+		if (option == 1) {
-+			if (client->auth_method_list[i] == AUTH_OPTION_NONE)
-+				continue;
-+		} else if (option == 2)
-+			if (client->auth_method_list[i] != AUTH_OPTION_NONE)
-+				continue;
-+		client->auth_method_valid_list[j++] = client->auth_method_list[i];
-+	}
-+
-+	client->auth_method_valid_count = j;
-+
-+	acl_init_key_blk(&client->send_key_block);
-+
-+	if (client->node_type == TYPE_INITIATOR) {
-+		if (client->auth_rmt) {
-+			/*
-+			 * Initiator wants to authenticate target,
-+			 * always send AuthMethod key.
-+			 */
-+			client->send_key_block.transit_bit = 0;
-+			client->auth_method_valid_neg_role =
-+			    AUTH_NEG_ROLE_ORIGINATOR;
-+		} else {
-+			client->send_key_block.transit_bit = 1;
-+			client->auth_method_valid_neg_role =
-+			    client->auth_method_neg_role;
-+		}
-+	} else {
-+		client->send_key_block.transit_bit = 0;
-+		client->auth_method_valid_neg_role = AUTH_NEG_ROLE_RESPONDER;
-+	}
-+
-+	if (client->auth_method_valid_neg_role == AUTH_NEG_ROLE_ORIGINATOR)
-+		acl_set_auth_method_key(client, client->auth_method_valid_count,
-+				        client->auth_method_valid_list);
-+	else {
-+		int value = AUTH_OPTION_NOT_PRESENT;
-+		acl_set_auth_method_key(client, 1, &value);
-+	}
-+}
-+
-+static int
-+acl_set_auth_method_list(struct iscsi_acl *client, unsigned int option_count,
-+			 const int *option_list)
-+{
-+	int status;
-+
-+	status = acl_set_option_list(client, option_count, option_list,
-+				     &client->auth_method_count,
-+				     client->auth_method_list,
-+				     AUTH_METHOD_MAX_COUNT,
-+				     acl_chk_auth_mthd_optn,
-+				     acl_chk_auth_method_list);
-+
-+	if (status != AUTH_STATUS_NO_ERROR)
-+		return status;
-+
-+	/* Setting authMethod affects auth_method_valid. */
-+	acl_set_auth_method_valid(client);
-+
-+	return AUTH_STATUS_NO_ERROR;
-+}
-+
-+static int
-+acl_chk_chap_alg_list(unsigned int option_count, const int *option_list)
-+{
-+	if (!option_list || option_count < 1)
-+		return 1;
-+
-+	return 0;
-+}
-+
-+static int
-+acl_set_chap_alg_list(struct iscsi_acl *client, unsigned int option_count,
-+		      const int *option_list)
-+{
-+	return acl_set_option_list(client, option_count, option_list,
-+				   &client->chap_alg_count,
-+				   client->chap_alg_list,
-+				   AUTH_CHAP_ALG_MAX_COUNT,
-+				   acl_chk_chap_alg_optn,
-+				   acl_chk_chap_alg_list);
-+}
-+
-+int
-+acl_init(int node_type, struct iscsi_session *session)
-+{
-+	struct iscsi_acl *client;
-+	struct auth_str_block *rcv_str_blk;
-+	struct auth_str_block *snd_str_blk;
-+	struct auth_large_binary *rcv_chap_chlng;
-+	struct auth_large_binary *snd_chap_chlng;
-+	int value_list[2];
-+
-+	if (!session->auth_client_block)
-+		return AUTH_STATUS_ERROR;
-+	client = session->auth_client_block;
-+
-+	if (!session->auth_recv_string_block)
-+		return AUTH_STATUS_ERROR;
-+	rcv_str_blk = session->auth_recv_string_block;
-+
-+	if (!session->auth_send_string_block)
-+		return AUTH_STATUS_ERROR;
-+	snd_str_blk = session->auth_send_string_block; 
-+
-+	if (!session->auth_recv_binary_block)
-+		return AUTH_STATUS_ERROR;
-+	rcv_chap_chlng = session->auth_recv_binary_block;
-+
-+	if (!session->auth_send_binary_block)
-+		return AUTH_STATUS_ERROR;
-+	snd_chap_chlng = session->auth_send_binary_block;
-+
-+	memset(client, 0, sizeof(*client));
-+	memset(rcv_str_blk, 0, sizeof(*rcv_str_blk));
-+	memset(snd_str_blk, 0, sizeof(*snd_str_blk));
-+	memset(rcv_chap_chlng, 0, sizeof(*rcv_chap_chlng));
-+	memset(snd_chap_chlng, 0, sizeof(*snd_chap_chlng));
-+
-+	client->recv_key_block.str_block = rcv_str_blk->str_block;
-+	client->send_key_block.str_block = snd_str_blk->str_block;
-+	client->recv_chap_challenge.large_binary = rcv_chap_chlng->large_binary;
-+	client->send_chap_challenge.large_binary = snd_chap_chlng->large_binary;
-+
-+	if (node_type != TYPE_INITIATOR  && node_type != TYPE_TARGET) {
-+		client->phase = AUTH_PHASE_ERROR;
-+		return AUTH_STATUS_ERROR;
-+	}
-+
-+	client->signature = ACL_SIGNATURE;
-+	client->node_type = (enum auth_node_type) node_type;
-+	client->auth_rmt = 1;
-+	client->passwd_present = 0;
-+	client->chap_challenge_len = AUTH_CHAP_RSP_LEN;
-+	client->ip_sec = 0;
-+	client->session_handle = session;
-+
-+	client->phase = AUTH_PHASE_CONFIGURE;
-+	client->negotiated_auth_method = AUTH_OPTION_NOT_PRESENT;
-+	client->negotiated_chap_alg = AUTH_OPTION_NOT_PRESENT;
-+
-+	if (client->node_type == TYPE_INITIATOR)
-+		client->auth_method_neg_role = AUTH_NEG_ROLE_ORIGINATOR;
-+	else
-+		/* Initial value ignored for Target. */
-+		client->auth_method_neg_role = AUTH_NEG_ROLE_RESPONDER;
-+
-+	value_list[0] = AUTH_METHOD_CHAP;
-+	value_list[1] = AUTH_OPTION_NONE;
-+
-+	/*
-+	 * Must call after setting auth_rmt, password,
-+	 * and auth_method_neg_role
-+	 */
-+	if (acl_set_auth_method_list(client, 2, value_list) !=
-+	    AUTH_STATUS_NO_ERROR) {
-+		client->phase = AUTH_PHASE_ERROR;
-+		return AUTH_STATUS_ERROR;
-+	}
-+
-+	value_list[0] = AUTH_CHAP_ALG_MD5;
-+
-+	if (acl_set_chap_alg_list(client, 1, value_list) !=
-+	    AUTH_STATUS_NO_ERROR) {
-+		client->phase = AUTH_PHASE_ERROR;
-+		return AUTH_STATUS_ERROR;
-+	}
-+
-+	return AUTH_STATUS_NO_ERROR;
-+}
-+
-+int
-+acl_finish(struct iscsi_acl *client)
-+{
-+	if (!client || client->signature != ACL_SIGNATURE)
-+		return AUTH_STATUS_ERROR;
-+
-+	memset(client, 0, sizeof(*client));
-+
-+	return AUTH_STATUS_NO_ERROR;
-+}
-+
-+int
-+acl_set_user_name(struct iscsi_acl *client, const char *username)
-+{
-+	if (!client || client->signature != ACL_SIGNATURE)
-+		return AUTH_STATUS_ERROR;
-+
-+	if (client->phase != AUTH_PHASE_CONFIGURE ||
-+	    acl_chk_string(username, AUTH_STR_MAX_LEN, 0)) {
-+		client->phase = AUTH_PHASE_ERROR;
-+		return AUTH_STATUS_ERROR;
-+	}
-+
-+	if (strlcpy(client->username, username, AUTH_STR_MAX_LEN) >= 
-+	    AUTH_STR_MAX_LEN) {
-+		client->phase = AUTH_PHASE_ERROR;
-+		return AUTH_STATUS_ERROR;
-+	}
-+
-+	return AUTH_STATUS_NO_ERROR;
-+}
-+
-+int
-+acl_set_passwd(struct iscsi_acl *client, const unsigned char *passwd_data,
-+	       unsigned int passwd_length)
-+{
-+	if (!client || client->signature != ACL_SIGNATURE)
-+		return AUTH_STATUS_ERROR;
-+
-+	if (client->phase != AUTH_PHASE_CONFIGURE ||
-+	    passwd_length > AUTH_STR_MAX_LEN) {
-+		client->phase = AUTH_PHASE_ERROR;
-+		return AUTH_STATUS_ERROR;
-+	}
-+
-+	memcpy(client->passwd_data, passwd_data, passwd_length);
-+	client->passwd_length = passwd_length;
-+	client->passwd_present = 1;
-+
-+	/* Setting password may affect auth_method_valid. */
-+	acl_set_auth_method_valid(client);
-+
-+	return AUTH_STATUS_NO_ERROR;
-+}
-+
-+int
-+acl_set_auth_rmt(struct iscsi_acl *client, int auth_rmt)
-+{
-+	if (!client || client->signature != ACL_SIGNATURE)
-+		return AUTH_STATUS_ERROR;
-+
-+	if (client->phase != AUTH_PHASE_CONFIGURE) {
-+		client->phase = AUTH_PHASE_ERROR;
-+		return AUTH_STATUS_ERROR;
-+	}
-+
-+	client->auth_rmt = auth_rmt;
-+
-+	/* Setting auth_rmt may affect auth_method_valid. */
-+	acl_set_auth_method_valid(client);
-+
-+	return AUTH_STATUS_NO_ERROR;
-+}
-+
-+int
-+acl_set_ip_sec(struct iscsi_acl *client, int ip_sec)
-+{
-+	if (!client || client->signature != ACL_SIGNATURE)
-+		return AUTH_STATUS_ERROR;
-+
-+	if (client->phase != AUTH_PHASE_CONFIGURE) {
-+		client->phase = AUTH_PHASE_ERROR;
-+		return AUTH_STATUS_ERROR;
-+	}
-+
-+	client->ip_sec = ip_sec;
-+
-+	return AUTH_STATUS_NO_ERROR;
-+}
-+
-+int
-+acl_get_dbg_status(struct iscsi_acl *client, int *value)
-+{
-+	if (!client || client->signature != ACL_SIGNATURE)
-+		return AUTH_STATUS_ERROR;
-+
-+	if (client->phase != AUTH_PHASE_DONE) {
-+		client->phase = AUTH_PHASE_ERROR;
-+		return AUTH_STATUS_ERROR;
-+	}
-+
-+	*value = client->dbg_status;
-+
-+	return AUTH_STATUS_NO_ERROR;
-+}
-+
-+const char *
-+acl_dbg_status_to_text(int dbg_status)
-+{
-+	/*
-+	 * Note: The ordering of this table must match the order
-+	 *       defined by enum auth_dbg_status in iscsi-auth-client.h.
-+	 */
-+	static char *const dbg_text[AUTH_DBG_STATUS_MAX_COUNT] = {
-+		"Debug status not set",
-+		"Authentication request passed",
-+		"Authentication not enabled",
-+		"Authentication request failed",
-+		"AuthMethod bad",
-+		"CHAP algorithm bad",
-+		"Decrypt password failed",
-+		"Local password too short with no IPSec",
-+		"Unexpected error from authentication server",
-+		"Authentication request status bad",
-+		"Authentication pass status not valid",
-+		"Same key set more than once on send",
-+		"Key value too long on send",
-+		"Too much data on send",
-+		"AuthMethod key expected",
-+		"CHAP algorithm key expected",
-+		"CHAP identifier expected",
-+		"CHAP challenge expected",
-+		"CHAP response expected",
-+		"CHAP username expected",
-+		"AuthMethod key not present",
-+		"AuthMethod negotiation failed",
-+		"AuthMethod negotiated to none",
-+		"CHAP algorithm negotiation failed",
-+		"CHAP challange reflected",
-+		"Local password same as remote",
-+		"Local password not set",
-+		"CHAP identifier bad",
-+		"CHAP challenge bad",
-+		"CHAP response bad",
-+		"Unexpected key present",
-+		"T bit set on response, but not on previous message",
-+		"T bit set on response, but authenticaton not complete",
-+		"Message count limit reached on receive",
-+		"Same key set more than once on receive",
-+		"Key value too long on receive",
-+		"Too much data on receive"
-+	};
-+
-+	if (dbg_status < 0 || dbg_status >= AUTH_DBG_STATUS_MAX_COUNT)
-+		return "Unknown error";
-+
-+	return dbg_text[dbg_status];
-+}
-+
-+int
-+acl_data(unsigned char *out_data, unsigned int *out_length,
-+         unsigned char *in_data, unsigned int in_length)
-+{
-+	if (*out_length < in_length)
-+		return 1;       /* error */
-+
-+	memcpy(out_data, in_data, in_length);
-+	*out_length = in_length;
-+
-+	return 0;               /* no error */
-+}
-+
-diff -Naurp scsi-misc-2.6.orig/drivers/scsi/iscsi-sfnet/iscsi-auth-client.h scsi-misc-2.6.patch/drivers/scsi/iscsi-sfnet/iscsi-auth-client.h
---- scsi-misc-2.6.orig/drivers/scsi/iscsi-sfnet/iscsi-auth-client.h	1969-12-31 16:00:00.000000000 -0800
-+++ scsi-misc-2.6.patch/drivers/scsi/iscsi-sfnet/iscsi-auth-client.h	2005-01-10 12:32:30.131322392 -0800
-@@ -0,0 +1,277 @@
-+/* 
-+ * iSCSI driver for Linux
-+ * Copyright (C) 2001 Cisco Systems, Inc.
-+ * maintained by linux-iscsi-devel@lists.sourceforge.net
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License as published
-+ * by the Free Software Foundation; either version 2 of the License, or
-+ * (at your option) any later version.
-+ *
-+ * This program is distributed in the hope that it will be useful, but
-+ * WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
-+ * General Public License for more details.
-+ *
-+ * See the file COPYING included with this distribution for more details.
-+ *
-+ * This file is the include file for for iscsi-auth-client.c
-+ */
-+#ifndef ISCSIAUTHCLIENT_H
-+#define ISCSIAUTHCLIENT_H
-+
-+struct iscsi_session;
-+
-+enum {
-+	AUTH_STR_MAX_LEN = 256,
-+	AUTH_STR_BLOCK_MAX_LEN = 1024,
-+	AUTH_LARGE_BINARY_MAX_LEN = 1024,
-+	AUTH_RECV_END_MAX_COUNT = 10,
-+	ACL_SIGNATURE = 0x5984B2E3,
-+	AUTH_CHAP_RSP_LEN = 16,
++#ifndef ISCSI_H_
++#define ISCSI_H_
++
++#include <linux/types.h>
++
++#define ISCSI_DRAFT20_VERSION	0x00
++
++/* TCP port for iSCSI connections assigned by IANA */
++#define ISCSI_TCP_PORT	3260
++
++/* Reserved value for initiator/target task tag */
++#define ISCSI_RSVD_TASK_TAG	0xffffffff
++
++/* most PDU types have a final bit */
++#define ISCSI_FLAG_FINAL	0x80
++
++/* iSCSI Template Header */
++struct iscsi_hdr {
++	__u8 opcode;
++	__u8 flags;		/* Final bit */
++	__u8 rsvd2[2];
++	__u8 hlength;		/* AHSs total length */
++	__u8 dlength[3];	/* Data length */
++	__u8 lun[8];
++	__u32 itt;
++	__u8 other[28];
 +};
 +
-+/*
-+ * Note: The ordering of these values are chosen to match
-+ *       the ordering of the keys as shown in the iSCSI spec.
-+ *       The order of table key_names in acl_get_key_name()
-+ *       must match the order defined by enum auth_key_type.
-+ */
-+enum auth_key_type {
-+	AUTH_KEY_TYPE_NONE = -1,
-+	AUTH_KEY_TYPE_FIRST = 0,
-+	AUTH_KEY_TYPE_AUTH_METHOD = AUTH_KEY_TYPE_FIRST,
-+	AUTH_KEY_TYPE_CHAP_ALG,
-+	AUTH_KEY_TYPE_CHAP_USERNAME,
-+	AUTH_KEY_TYPE_CHAP_RSP,
-+	AUTH_KEY_TYPE_CHAP_IDENTIFIER,
-+	AUTH_KEY_TYPE_CHAP_CHALLENGE,
-+	AUTH_KEY_TYPE_MAX_COUNT,
-+	AUTH_KEY_TYPE_LAST = AUTH_KEY_TYPE_MAX_COUNT - 1
++/* Opcode encoding bits */
++#define ISCSI_OP_RETRY			0x80
++#define ISCSI_OP_IMMEDIATE		0x40
++#define ISCSI_OPCODE_MASK		0x3F
++
++/* Client to Server Message Opcode values */
++#define ISCSI_OP_NOOP_OUT		0x00
++#define ISCSI_OP_SCSI_CMD		0x01
++#define ISCSI_OP_TASK_MGT_REQ		0x02
++#define ISCSI_OP_LOGIN_CMD		0x03
++#define ISCSI_OP_TEXT_CMD		0x04
++#define ISCSI_OP_SCSI_DATA		0x05
++#define ISCSI_OP_LOGOUT_CMD		0x06
++#define ISCSI_OP_SNACK_CMD		0x10
++
++/* Server to Client Message Opcode values */
++#define ISCSI_OP_NOOP_IN		0x20
++#define ISCSI_OP_SCSI_RSP		0x21
++#define ISCSI_OP_SCSI_TASK_MGT_RSP	0x22
++#define ISCSI_OP_LOGIN_RSP		0x23
++#define ISCSI_OP_TEXT_RSP		0x24
++#define ISCSI_OP_SCSI_DATA_RSP		0x25
++#define ISCSI_OP_LOGOUT_RSP		0x26
++#define ISCSI_OP_R2T			0x31
++#define ISCSI_OP_ASYNC_MSG		0x32
++#define ISCSI_OP_REJECT			0x3f
++
++/* SCSI Command Header */
++struct iscsi_scsi_cmd_hdr {
++	__u8 opcode;
++	__u8 flags;
++	__u8 rsvd2;
++	__u8 cmdrn;
++	__u8 hlength;
++	__u8 dlength[3];
++	__u8 lun[8];
++	__u32 itt;
++	__u32 data_length;
++	__u32 cmdsn;
++	__u32 expstatsn;
++	__u8 scb[16];		/* SCSI Command Block */
++	/* Additional Data (Command Dependent) */
 +};
 +
-+enum {
-+	/* Common options for all keys. */
-+	AUTH_OPTION_REJECT = -2,
-+	AUTH_OPTION_NOT_PRESENT = -1,
-+	AUTH_OPTION_NONE = 1,
++/* Command PDU flags */
++#define ISCSI_FLAG_CMD_READ		0x40
++#define ISCSI_FLAG_CMD_WRITE		0x20
++#define ISCSI_FLAG_CMD_ATTR_MASK	0x07	/* 3 bits */
 +
-+	AUTH_METHOD_CHAP = 2,
-+	AUTH_METHOD_MAX_COUNT = 2,
++/* SCSI Command Attribute values */
++#define ISCSI_ATTR_UNTAGGED		0
++#define ISCSI_ATTR_SIMPLE		1
++#define ISCSI_ATTR_ORDERED		2
++#define ISCSI_ATTR_HEAD_OF_QUEUE	3
++#define ISCSI_ATTR_ACA			4
 +
-+	AUTH_CHAP_ALG_MD5 = 5,
-+	AUTH_CHAP_ALG_MAX_COUNT = 2
++/* SCSI Response Header */
++struct iscsi_scsi_rsp_hdr {
++	__u8 opcode;
++	__u8 flags;
++	__u8 response;
++	__u8 cmd_status;
++	__u8 hlength;
++	__u8 dlength[3];
++	__u8 rsvd[8];
++	__u32 itt;
++	__u32 rsvd1;
++	__u32 statsn;
++	__u32 expcmdsn;
++	__u32 maxcmdsn;
++	__u32 expdatasn;
++	__u32 bi_residual_count;
++	__u32 residual_count;
++	/* Response or Sense Data (optional) */
 +};
 +
-+enum auth_neg_role {
-+	AUTH_NEG_ROLE_ORIGINATOR = 1,
-+	AUTH_NEG_ROLE_RESPONDER = 2
++/* Command Response PDU flags */
++#define ISCSI_FLAG_CMD_BIDI_OVERFLOW	0x10
++#define ISCSI_FLAG_CMD_BIDI_UNDERFLOW	0x08
++#define ISCSI_FLAG_CMD_OVERFLOW 	0x04
++#define ISCSI_FLAG_CMD_UNDERFLOW	0x02
++
++/* iSCSI Status values. Valid if Rsp Selector bit is not set */
++#define ISCSI_STATUS_CMD_COMPLETED	0
++#define ISCSI_STATUS_TARGET_FAILURE	1
++#define ISCSI_STATUS_SUBSYS_FAILURE	2
++
++/* Asynchronous Message Header */
++struct iscsi_async_msg_hdr {
++	__u8 opcode;
++	__u8 flags;
++	__u8 rsvd2[2];
++	__u8 rsvd3;
++	__u8 dlength[3];
++	__u8 lun[8];
++	__u8 rsvd4[8];
++	__u32 statsn;
++	__u32 expcmdsn;
++	__u32 maxcmdsn;
++	__u8 async_event;
++	__u8 async_vcode;
++	__u16 param1;
++	__u16 param2;
++	__u16 param3;
++	__u8 rsvd5[4];
 +};
 +
-+enum auth_status {
-+	AUTH_STATUS_NO_ERROR = 0,
-+	AUTH_STATUS_ERROR,
-+	AUTH_STATUS_PASS,
-+	AUTH_STATUS_FAIL,
-+	AUTH_STATUS_CONTINUE,
++/* iSCSI Event Codes */
++#define ISCSI_ASYNC_MSG_SCSI_EVENT			0
++#define ISCSI_ASYNC_MSG_REQUEST_LOGOUT			1
++#define ISCSI_ASYNC_MSG_DROPPING_CONNECTION		2
++#define ISCSI_ASYNC_MSG_DROPPING_ALL_CONNECTIONS	3
++#define ISCSI_ASYNC_MSG_PARAM_NEGOTIATION		4
++#define ISCSI_ASYNC_MSG_VENDOR_SPECIFIC 		255
++
++/* NOP-Out */
++struct iscsi_nop_out_hdr {
++	__u8 opcode;
++	__u8 flags;
++	__u16 rsvd2;
++	__u8 rsvd3;
++	__u8 dlength[3];
++	__u8 lun[8];
++	__u32 itt;
++	__u32 ttt;
++	__u32 cmdsn;
++	__u32 expstatsn;
++	__u8 rsvd4[16];
 +};
 +
-+/*
-+ * Note: The order of table dbg_text in acl_dbg_status_to_text()
-+ *       must match the ordered defined by enum auth_dbg_status.
-+ */
-+enum auth_dbg_status {
-+	AUTH_DBG_STATUS_NOT_SET = 0,
-+
-+	AUTH_DBG_STATUS_AUTH_PASS,
-+	AUTH_DBG_STATUS_AUTH_RMT_FALSE,
-+
-+	AUTH_DBG_STATUS_AUTH_FAIL,
-+
-+	AUTH_DBG_STATUS_AUTH_METHOD_BAD,
-+	AUTH_DBG_STATUS_CHAP_ALG_BAD,
-+	AUTH_DBG_STATUS_PASSWD_DECRYPT_FAILED,
-+	AUTH_DBG_STATUS_PASSWD_TOO_SHORT_WITH_NO_IPSEC,
-+	AUTH_DBG_STATUS_AUTH_SERVER_ERROR,
-+	AUTH_DBG_STATUS_AUTH_STATUS_BAD,
-+	AUTH_DBG_STATUS_AUTHPASS_NOT_VALID,
-+	AUTH_DBG_STATUS_SEND_DUP_SET_KEY_VALUE,
-+	AUTH_DBG_STATUS_SEND_STR_TOO_LONG,
-+	AUTH_DBG_STATUS_SEND_TOO_MUCH_DATA,
-+
-+	AUTH_DBG_STATUS_AUTH_METHOD_EXPECTED,
-+	AUTH_DBG_STATUS_CHAP_ALG_EXPECTED,
-+	AUTH_DBG_STATUS_CHAP_IDENTIFIER_EXPECTED,
-+	AUTH_DBG_STATUS_CHAP_CHALLENGE_EXPECTED,
-+	AUTH_DBG_STATUS_CHAP_RSP_EXPECTED,
-+	AUTH_DBG_STATUS_CHAP_USERNAME_EXPECTED,
-+
-+	AUTH_DBG_STATUS_AUTH_METHOD_NOT_PRESENT,
-+	AUTH_DBG_STATUS_AUTH_METHOD_REJECT,
-+	AUTH_DBG_STATUS_AUTH_METHOD_NONE,
-+	AUTH_DBG_STATUS_CHAP_ALG_REJECT,
-+	AUTH_DBG_STATUS_CHAP_CHALLENGE_REFLECTED,
-+	AUTH_DBG_STATUS_PASSWD_IDENTICAL,
-+
-+	AUTH_DBG_STATUS_LOCAL_PASSWD_NOT_SET,
-+
-+	AUTH_DBG_STATUS_CHAP_IDENTIFIER_BAD,
-+	AUTH_DBG_STATUS_CHALLENGE_BAD,
-+	AUTH_DBG_STATUS_CHAP_RSP_BAD,
-+	AUTH_DBG_STATUS_UNEXPECTED_KEY_PRESENT,
-+	AUTH_DBG_STATUS_T_BIT_SET_ILLEGAL,
-+	AUTH_DBG_STATUS_T_BIT_SET_PREMATURE,
-+
-+	AUTH_DBG_STATUS_RECV_MSG_COUNT_LIMIT,
-+	AUTH_DBG_STATUS_RECV_DUP_SET_KEY_VALUE,
-+	AUTH_DBG_STATUS_RECV_STR_TOO_LONG,
-+	AUTH_DBG_STATUS_RECV_TOO_MUCH_DATA,
-+	AUTH_DBG_STATUS_MAX_COUNT
++/* NOP-In */
++struct iscsi_nop_in_hdr {
++	__u8 opcode;
++	__u8 flags;
++	__u16 rsvd2;
++	__u8 rsvd3;
++	__u8 dlength[3];
++	__u8 lun[8];
++	__u32 itt;
++	__u32 ttt;
++	__u32 statsn;
++	__u32 expcmdsn;
++	__u32 maxcmdsn;
++	__u8 rsvd4[12];
 +};
 +
-+enum auth_node_type {
-+	TYPE_INITIATOR = 1,
-+	TYPE_TARGET = 2
++/* SCSI Task Management Request Header */
++struct iscsi_scsi_task_mgmt_hdr {
++	__u8 opcode;
++	__u8 flags;
++	__u8 rsvd1[2];
++	__u8 hlength;
++	__u8 dlength[3];
++	__u8 lun[8];
++	__u32 itt;
++	__u32 rtt;
++	__u32 cmdsn;
++	__u32 expstatsn;
++	__u32 refcmdsn;
++	__u32 expdatasn;
++	__u8 rsvd2[8];
 +};
 +
-+enum auth_phase {
-+	AUTH_PHASE_CONFIGURE = 1,
-+	AUTH_PHASE_NEGOTIATE,
-+	AUTH_PHASE_AUTHENTICATE,
-+	AUTH_PHASE_DONE,
-+	AUTH_PHASE_ERROR
++#define ISCSI_FLAG_TMF_MASK		0x7F
++
++/* Function values */
++#define ISCSI_TMF_ABORT_TASK		1
++#define ISCSI_TMF_ABORT_TASK_SET	2
++#define ISCSI_TMF_CLEAR_ACA		3
++#define ISCSI_TMF_CLEAR_TASK_SET	4
++#define ISCSI_TMF_LOGICAL_UNIT_RESET	5
++#define ISCSI_TMF_TARGET_WARM_RESET	6
++#define ISCSI_TMF_TARGET_COLD_RESET	7
++#define ISCSI_TMF_TASK_REASSIGN 	8
++
++/* SCSI Task Management Response Header */
++struct iscsi_scsi_task_mgmt_rsp_hdr {
++	__u8 opcode;
++	__u8 flags;
++	__u8 response;		/* see Response values below */
++	__u8 qualifier;
++	__u8 hlength;
++	__u8 dlength[3];
++	__u8 rsvd2[8];
++	__u32 itt;
++	__u32 rtt;
++	__u32 statsn;
++	__u32 expcmdsn;
++	__u32 maxcmdsn;
++	__u8 rsvd3[12];
 +};
 +
-+enum auth_local_state {
-+	AUTH_LOCAL_STATE_SEND_ALG = 1,
-+	AUTH_LOCAL_STATE_RECV_ALG,
-+	AUTH_LOCAL_STATE_RECV_CHALLENGE,
-+	AUTH_LOCAL_STATE_DONE,
-+	AUTH_LOCAL_STATE_ERROR
++/* Response values */
++#define ISCSI_TMF_RESP_COMPLETE 	0x00
++#define ISCSI_TMF_RESP_UNKNOWN_TASK	0x01
++#define ISCSI_TMF_RESP_UNKNOWN_LUN	0x02
++#define ISCSI_TMF_RESP_TASK_ALLEGIANT	0x03
++#define ISCSI_TMF_RESP_NO_FAILOVER	0x04
++#define ISCSI_TMF_RESP_IN_PRGRESS	0x05
++#define ISCSI_TMF_RESP_REJECTED 	0xff
++
++/* Ready To Transfer Header */
++struct iscsi_r2t_hdr {
++	__u8 opcode;
++	__u8 flags;
++	__u8 rsvd2[2];
++	__u8 rsvd3[12];
++	__u32 itt;
++	__u32 ttt;
++	__u32 statsn;
++	__u32 expcmdsn;
++	__u32 maxcmdsn;
++	__u32 rttsn;
++	__u32 data_offset;
++	__u32 data_length;
 +};
 +
-+enum auth_rmt_state {
-+	AUTH_RMT_STATE_SEND_ALG = 1,
-+	AUTH_RMT_STATE_SEND_CHALLENGE,
-+	AUTH_RMT_STATE_RECV_RSP,
-+	AUTH_RMT_STATE_DONE,
-+	AUTH_RMT_STATE_ERROR
++/* SCSI Data Hdr */
++struct iscsi_data_hdr {
++	__u8 opcode;
++	__u8 flags;
++	__u8 rsvd2[2];
++	__u8 rsvd3;
++	__u8 dlength[3];
++	__u8 lun[8];
++	__u32 itt;
++	__u32 ttt;
++	__u32 rsvd4;
++	__u32 expstatsn;
++	__u32 rsvd5;
++	__u32 datasn;
++	__u32 offset;
++	__u32 rsvd6;
++	/* Payload */
 +};
 +
-+struct auth_key {
-+	unsigned int	present:1;
-+	unsigned int	processed:1;
-+	unsigned int	value_set:1;
-+	char		*string;
++/* SCSI Data Response Hdr */
++struct iscsi_data_rsp_hdr {
++	__u8 opcode;
++	__u8 flags;
++	__u8 rsvd2;
++	__u8 cmd_status;
++	__u8 hlength;
++	__u8 dlength[3];
++	__u8 lun[8];
++	__u32 itt;
++	__u32 ttt;
++	__u32 statsn;
++	__u32 expcmdsn;
++	__u32 maxcmdsn;
++	__u32 datasn;
++	__u32 offset;
++	__u32 residual_count;
 +};
 +
-+struct auth_large_binary_key {
-+	unsigned int	length;
-+	unsigned char	*large_binary;
++/* Data Response PDU flags */
++#define ISCSI_FLAG_DATA_ACK		0x40
++#define ISCSI_FLAG_DATA_OVERFLOW	0x04
++#define ISCSI_FLAG_DATA_UNDERFLOW	0x02
++#define ISCSI_FLAG_DATA_STATUS		0x01
++
++/* Text Header */
++struct iscsi_txt_hdr {
++	__u8 opcode;
++	__u8 flags;
++	__u8 rsvd2[2];
++	__u8 hlength;
++	__u8 dlength[3];
++	__u8 rsvd4[8];
++	__u32 itt;
++	__u32 ttt;
++	__u32 cmdsn;
++	__u32 expstatsn;
++	__u8 rsvd5[16];
++	/* Text - key=value pairs */
 +};
 +
-+struct auth_key_block {
-+	unsigned int	transit_bit:1;
-+	unsigned int	dup_set:1;
-+	unsigned int	str_too_long:1;
-+	unsigned int	too_much_data:1;
-+	unsigned int	blk_length:16;
-+	char		*str_block;
-+	struct		auth_key key[AUTH_KEY_TYPE_MAX_COUNT];
++#define ISCSI_FLAG_TEXT_CONTINUE	0x40
++
++/* Text Response Header */
++struct iscsi_txt_rsp_hdr {
++	__u8 opcode;
++	__u8 flags;
++	__u8 rsvd2[2];
++	__u8 hlength;
++	__u8 dlength[3];
++	__u8 rsvd4[8];
++	__u32 itt;
++	__u32 ttt;
++	__u32 statsn;
++	__u32 expcmdsn;
++	__u32 maxcmdsn;
++	__u8 rsvd5[12];
++	/* Text Response - key:value pairs */
 +};
 +
-+struct auth_str_block {
-+	char str_block[AUTH_STR_BLOCK_MAX_LEN];
++/* Login Header */
++struct iscsi_login_hdr {
++	__u8 opcode;
++	__u8 flags;
++	__u8 max_version;
++	__u8 min_version;
++	__u8 hlength;
++	__u8 dlength[3];
++	__u8 isid[6];
++	__u16 tsih;
++	__u32 itt;
++	__u16 cid;
++	__u16 rsvd3;
++	__u32 cmdsn;
++	__u32 expstatsn;
++	__u8 rsvd5[16];
 +};
 +
-+struct auth_large_binary {
-+	unsigned char large_binary[AUTH_LARGE_BINARY_MAX_LEN];
++/* Login PDU flags */
++#define ISCSI_FLAG_LOGIN_TRANSIT		0x80
++#define ISCSI_FLAG_LOGIN_CONTINUE		0x40
++#define ISCSI_FLAG_LOGIN_CURRENT_STAGE_MASK	0x0C	/* 2 bits */
++#define ISCSI_FLAG_LOGIN_NEXT_STAGE_MASK	0x03	/* 2 bits */
++
++#define ISCSI_LOGIN_CURRENT_STAGE(flags) \
++	((flags & ISCSI_FLAG_LOGIN_CURRENT_STAGE_MASK) >> 2)
++#define ISCSI_LOGIN_NEXT_STAGE(flags) \
++	(flags & ISCSI_FLAG_LOGIN_NEXT_STAGE_MASK)
++
++/* Login Response Header */
++struct iscsi_login_rsp_hdr {
++	__u8 opcode;
++	__u8 flags;
++	__u8 max_version;
++	__u8 active_version;
++	__u8 hlength;
++	__u8 dlength[3];
++	__u8 isid[6];
++	__u16 tsih;
++	__u32 itt;
++	__u32 rsvd3;
++	__u32 statsn;
++	__u32 expcmdsn;
++	__u32 maxcmdsn;
++	__u8 status_class;	/* see Login RSP ststus classes below */
++	__u8 status_detail;	/* see Login RSP Status details below */
++	__u8 rsvd4[10];
 +};
 +
-+struct iscsi_acl {
-+	unsigned long		signature;
++/* Login stage (phase) codes for CSG, NSG */
++#define ISCSI_SECURITY_NEGOTIATION_STAGE	0
++#define ISCSI_OP_PARMS_NEGOTIATION_STAGE	1
++#define ISCSI_FULL_FEATURE_PHASE		3
 +
-+	enum auth_node_type	node_type;
-+	unsigned int		auth_method_count;
-+	int			auth_method_list[AUTH_METHOD_MAX_COUNT];
-+	enum auth_neg_role	auth_method_neg_role;
-+	unsigned int		chap_alg_count;
-+	int			chap_alg_list[AUTH_CHAP_ALG_MAX_COUNT];
-+	int			auth_rmt;
-+	char			username[AUTH_STR_MAX_LEN];
-+	int			passwd_present;
-+	unsigned int		passwd_length;
-+	unsigned char		passwd_data[AUTH_STR_MAX_LEN];
-+	unsigned int		chap_challenge_len;
-+	int			ip_sec;
++/* Login Status response classes */
++#define ISCSI_STATUS_CLS_SUCCESS		0x00
++#define ISCSI_STATUS_CLS_REDIRECT		0x01
++#define ISCSI_STATUS_CLS_INITIATOR_ERR		0x02
++#define ISCSI_STATUS_CLS_TARGET_ERR		0x03
 +
-+	unsigned int		auth_method_valid_count;
-+	int			auth_method_valid_list[AUTH_METHOD_MAX_COUNT];
-+	int			auth_method_valid_neg_role;
++/* Login Status response detail codes */
++/* Class-0 (Success) */
++#define ISCSI_LOGIN_STATUS_ACCEPT		0x00
 +
-+	int			recv_in_progress_flag;
-+	int			recv_end_count;
-+	/*
-+	 * session for callbacks
-+	 */
-+	struct iscsi_session	*session_handle;
-+	enum auth_phase 	phase;
-+	enum auth_local_state	local_state;
-+	enum auth_rmt_state	rmt_state;
-+	enum auth_status	rmt_auth_status;
-+	enum auth_dbg_status	dbg_status;
-+	int			negotiated_auth_method;
-+	int			negotiated_chap_alg;
-+	int			auth_rsp_flag;
-+	int			auth_server_error_flag;
-+	int			transit_bit_sent_flag;
++/* Class-1 (Redirection) */
++#define ISCSI_LOGIN_STATUS_TGT_MOVED_TEMP	0x01
++#define ISCSI_LOGIN_STATUS_TGT_MOVED_PERM	0x02
 +
-+	unsigned int		send_chap_identifier;
-+	struct auth_large_binary_key send_chap_challenge;
-+	char			chap_username[AUTH_STR_MAX_LEN];
++/* Class-2 (Initiator Error) */
++#define ISCSI_LOGIN_STATUS_INIT_ERR		0x00
++#define ISCSI_LOGIN_STATUS_AUTH_FAILED		0x01
++#define ISCSI_LOGIN_STATUS_TGT_FORBIDDEN	0x02
++#define ISCSI_LOGIN_STATUS_TGT_NOT_FOUND	0x03
++#define ISCSI_LOGIN_STATUS_TGT_REMOVED		0x04
++#define ISCSI_LOGIN_STATUS_NO_VERSION		0x05
++#define ISCSI_LOGIN_STATUS_ISID_ERROR		0x06
++#define ISCSI_LOGIN_STATUS_MISSING_FIELDS	0x07
++#define ISCSI_LOGIN_STATUS_CONN_ADD_FAILED	0x08
++#define ISCSI_LOGIN_STATUS_NO_SESSION_TYPE	0x09
++#define ISCSI_LOGIN_STATUS_NO_SESSION		0x0a
++#define ISCSI_LOGIN_STATUS_INVALID_REQUEST	0x0b
 +
-+	int			recv_chap_challenge_status;
-+	struct auth_large_binary_key recv_chap_challenge;
++/* Class-3 (Target Error) */
++#define ISCSI_LOGIN_STATUS_TARGET_ERROR 	0x00
++#define ISCSI_LOGIN_STATUS_SVC_UNAVAILABLE	0x01
++#define ISCSI_LOGIN_STATUS_NO_RESOURCES 	0x02
 +
-+	char			scratch_key_value[AUTH_STR_MAX_LEN];
-+
-+	struct auth_key_block	recv_key_block;
-+	struct auth_key_block	send_key_block;
++/* Logout Header */
++struct iscsi_logout_hdr {
++	__u8 opcode;
++	__u8 flags;
++	__u8 rsvd1[2];
++	__u8 hlength;
++	__u8 dlength[3];
++	__u8 rsvd2[8];
++	__u32 itt;
++	__u16 cid;
++	__u8 rsvd3[2];
++	__u32 cmdsn;
++	__u32 expstatsn;
++	__u8 rsvd4[16];
 +};
 +
-+extern int acl_init(int node_type, struct iscsi_session *session);
-+extern int acl_finish(struct iscsi_acl *client);
++/* Logout PDU flags */
++#define ISCSI_FLAG_LOGOUT_REASON_MASK		0x7F
 +
-+extern int acl_recv_begin(struct iscsi_acl *client);
-+extern int acl_recv_end(struct iscsi_acl *client);
-+extern const char *acl_get_key_name(int key_type);
-+extern int acl_get_next_key_type(int *key_type);
-+extern int acl_recv_key_value(struct iscsi_acl *client, int key_type,
-+			      const char *user_key_val);
-+extern int acl_send_key_val(struct iscsi_acl *client, int key_type,
-+			    int *key_present, char *user_key_val,
-+			    unsigned int max_length);
-+extern int acl_recv_transit_bit(struct iscsi_acl *client, int value);
-+extern int acl_send_transit_bit(struct iscsi_acl *client, int *value);
-+extern int acl_set_user_name(struct iscsi_acl *client, const char *username);
-+extern int acl_set_passwd(struct iscsi_acl *client,
-+			  const unsigned char *pw_data, unsigned int pw_len);
-+extern int acl_set_auth_rmt(struct iscsi_acl *client, int auth_rmt);
-+extern int acl_set_ip_sec(struct iscsi_acl *client, int ip_sec);
-+extern int acl_get_dbg_status(struct iscsi_acl *client, int *value);
-+extern const char *acl_dbg_status_to_text(int dbg_status);
-+extern enum auth_dbg_status acl_chap_compute_rsp(struct iscsi_acl *client,
-+						 int rmt_auth,
-+						 unsigned int id,
-+						 unsigned char *challenge_data,
-+						 unsigned int challenge_len, 
-+						 unsigned char *response_data);
-+extern int acl_chap_auth_request(struct iscsi_acl *client, char *username,
-+				 unsigned int id,
-+				 unsigned char *challenge_data,
-+				 unsigned int challenge_length,
-+				 unsigned char *response_data,
-+				 unsigned int rsp_length);
-+extern int acl_data(unsigned char *out_data, unsigned int *out_length,
-+		    unsigned char *in_data, unsigned int in_length);
-+#endif				/* #ifndef ISCSIAUTHCLIENT_H */
++/* logout reason_code values */
++#define ISCSI_LOGOUT_REASON_CLOSE_SESSION	0
++#define ISCSI_LOGOUT_REASON_CLOSE_CONNECTION	1
++#define ISCSI_LOGOUT_REASON_RECOVERY		2
++#define ISCSI_LOGOUT_REASON_AEN_REQUEST 	3
++
++/* Logout Response Header */
++struct iscsi_logout_rsp_hdr {
++	__u8 opcode;
++	__u8 flags;
++	__u8 response;		/* see Logout response values below */
++	__u8 rsvd2;
++	__u8 hlength;
++	__u8 dlength[3];
++	__u8 rsvd3[8];
++	__u32 itt;
++	__u32 rsvd4;
++	__u32 statsn;
++	__u32 expcmdsn;
++	__u32 maxcmdsn;
++	__u32 rsvd5;
++	__u16 t2wait;
++	__u16 t2retain;
++	__u32 rsvd6;
++};
++
++/* logout response status values */
++#define ISCSI_LOGOUT_SUCCESS			0
++#define ISCSI_LOGOUT_CID_NOT_FOUND		1
++#define ISCSI_LOGOUT_RECOVERY_UNSUPPORTED	2
++#define ISCSI_LOGOUT_CLEANUP_FAILED		3
++
++/* SNACK Header */
++struct iscsi_snack_hdr {
++	__u8 opcode;
++	__u8 flags;
++	__u8 rsvd2[14];
++	__u32 itt;
++	__u32 begrun;
++	__u32 runlength;
++	__u32 expstatsn;
++	__u32 rsvd3;
++	__u32 expdatasn;
++	__u8 rsvd6[8];
++};
++
++/* SNACK PDU flags */
++#define ISCSI_FLAG_SNACK_TYPE_MASK	0x0F	/* 4 bits */
++
++/* Reject Header */
++struct iscsi_reject_hdr {
++	__u8 opcode;
++	__u8 flags;
++	__u8 reason;
++	__u8 rsvd2;
++	__u8 rsvd3;
++	__u8 dlength[3];
++	__u8 rsvd4[16];
++	__u32 statsn;
++	__u32 expcmdsn;
++	__u32 maxcmdsn;
++	__u32 datasn;
++	__u8 rsvd5[8];
++	/* Text - Rejected hdr */
++};
++
++/* Reason for Reject */
++#define ISCSI_REJECT_RESERVED			1
++#define ISCSI_REJECT_DATA_DIGEST_ERROR		2
++#define ISCSI_REJECT_SNACK_REJECT		3
++#define ISCSI_REJECT_ISCSI_PROTOCOL_ERROR	4
++#define ISCSI_REJECT_CMD_NOT_SUPPORTED		5
++#define ISCSI_REJECT_IMM_CMD_REJECT		6
++#define ISCSI_REJECT_TASK_IN_PROGRESS		7
++#define ISCSI_REJECT_INVALID_DATA_ACK		8
++#define ISCSI_REJECT_INVALID_PDU_FIELD		9
++#define ISCSI_REJECT_CANT_GENERATE_TTT		10
++#define ISCSI_REJECT_NEGOTIATION_RESET		11
++#define ISCSI_REJECT_WAITING_FOR_LOGOUT 	12
++
++#endif
 
---------------050501070106080704030001--
+--------------040008040902060800030001--
