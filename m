@@ -1,74 +1,78 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: Kernel 2.6.x hangs with Symbios Logic 53c1010 Ultra3 SCSI Ada pter
-Date: Sat, 6 Nov 2004 03:59:51 +0000
-Message-ID: <20041106035951.GC24690@parcelfarce.linux.theplanet.co.uk>
-References: <D5169CBBC6369D4CBFFABD7905CC9D695D31@tehran.Fars-Robotics.local>
+From: Doug Ledford <dledford@redhat.com>
+Subject: Re: Kernel 2.6.x hangs with Symbios Logic 53c1010 Ultra3 SCSI Ada
+	pter
+Date: Fri, 05 Nov 2004 23:20:20 -0500
+Message-ID: <1099714821.10944.27.camel@compaq-rhel4.xsintricity.com>
+References: <C18BA5DDB58DD511BD0700C0DF0DD4501EEC6A@NTSERVER4>
+	 <20041105203651.GA24690@parcelfarce.linux.theplanet.co.uk>
+	 <418C105E.4040607@babut.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:34785 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S261309AbUKFD7w
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 5 Nov 2004 22:59:52 -0500
-Content-Disposition: inline
-In-Reply-To: <D5169CBBC6369D4CBFFABD7905CC9D695D31@tehran.Fars-Robotics.local>
+Received: from mx1.redhat.com ([66.187.233.31]:61158 "EHLO mx1.redhat.com")
+	by vger.kernel.org with ESMTP id S261311AbUKFEUY (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 5 Nov 2004 23:20:24 -0500
+In-Reply-To: <418C105E.4040607@babut.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Richard Waltham <richard@fars-robotics.net>
-Cc: Matthew Wilcox <matthew@wil.cx>, SUPPORT <support@4bridgeworks.com>, Thomas Babut <thomas@babut.net>, linux-kernel@vger.kernel.org, Linux SCSI <linux-scsi@vger.kernel.org>, groudier@free.fr
+To: Thomas Babut <thomas@babut.net>
+Cc: linux-scsi mailing list <linux-scsi@vger.kernel.org>, Matthew Wilcox <matthew@wil.cx>
 
-On Sat, Nov 06, 2004 at 12:02:32AM -0000, Richard Waltham wrote:
-> Good as a backup but the original PPR capability is defined in
-> scan_scsi.c. Shouldn't scan_scsi.c take note of the bus mode and enable
-> PPR capabilities accordingly? This would then cover this issue for all
-> relevant LLDDs wouldn't it?
+On Sat, 2004-11-06 at 00:44 +0100, Thomas Babut wrote:
 
-scan_scsi.c doesn't know what mode the bus is in.  scan_scsi.c doesn't
-even know whether the bus is SPI, FC, iSCSI, SAS or SATA.
+> None of the patches you posted solved my problems. I'm loosing hope... ;)
 
-> > Thanks, those are interesting.  It's good to see that we 
-> > really are spitting PPR out onto the wire when we shouldn't be.
-> 
-> And from what I've seen is the PPR negotiation keeps on being retied on
-> all subsequent commands. So performance really is killed by this.
+Well, having "been there, done that" many years ago when PPR messages
+were first defined, here's the logic I found that worked in all cases:
 
-Yes, we'll do that as long as the device target parameters differ from
-the achieved parameters.
+OK, in the INQUIRY snoop area of the completion handler, I did the
+appropriate card/device checks to determine if we should enable PPR:
 
-> > I think disabling PPR on an SE bus should be a better fix than that.
-> 
-> And don't forget HVD as well;)   
+if (bus_mode == LVD && sdev->scsi_level >= 3 &&
+	host->user_transfer_settings >= MIN_DT_SPEED)
+	use_ppr = 1;
+else if (bus_mode == LVD && sdev->scsi_level < 3 && 
+	(inquiry_len >= 57 && inq_data[56] & INQUIRY_DT_BIT) &&
+	host->user_transfer_settings >= MIN_DT_SPEED)
+	use_ppr = 1;
+else
+	use_sdtr_wdtr = 1;
 
-Yes, I thought about HVD and decided that I wanted to code the check
-against LVD rather than against SE ;-)
+In the event we set ppr on a device that can't handle it, I had to go
+into the interrupt handler routine and in both the case of BUSFREE and
+MSG_REJECT, if we were in the process of sending a ppr message and we
+get either one of these in return, then turn off ppr messages for the
+device (otherwise, we can get into an infinite loop were we accidentally
+turned PPR on for a device that won't tolerate it for whatever reason,
+and in fact once I know the ppr message has been rejected, the interrupt
+handler would rewrite the ppr message into the closest possible
+WDTR/SDTR message pair, assert ATNO on the bus to get us back in message
+out phase, and proceed to go ahead and send the WDTR message, then wait
+for a WDTR return, then assert ATNO again so we have a chance to do the
+SDTR, then wait for the SDTR return, then proceed with the other
+phases).
 
-> My main concern with my patch to scan_scsi.c was to handle SCSI 3 LVD
-> devices that caused problems. Scan_scsi.c sets all SCSI 3 devices as PPR
-> capable - SE, HVD as well as LVD. I have no issue with explicitly
-> disallowing PPR for SE and HVD devices. But what about SCSI 3 and LVD
-> devices that don't handle PPR - OK they may be broken but...
+Finally, there are devices out there that do target initiated speed
+negotiations.  If we get an incoming PPR message from a device, then you
+are free to skip all those other checks in the INQUIRY snoop area and
+just immediately set PPR on this device.  Now, you still need to do the
+things like check that the bus is LVD before actually enabling LVD
+speeds, but an unsolicited incoming PPR message is a dead giveaway that
+the device supports PPR messages.  So, in the incoming message handling
+portion of the interrupt handler, if we get an unsolicited PPR message
+from a device, then we override any other settings we may have on the
+device in terms of whether or not it supports PPR messages and we
+disable the whole INQUIRY snoop operation for this device because we
+don't want the INQUIRY snoop to disable PPR now that we know for a fact
+that it's supported on this device.
 
-I've got some devices that fail PPR when the bus is in SE mode but
-work fine when the bus is in LVD mode.  So this patch certainly fixes
-those problems.  THe question is whether there exist devices that:
-
- - Claim to be SCSI3 compliant
- - Fail PPR when on an LVD bus
-
-> There is an issue that needs resolving where a drive appears to indicate
-> it is capable of PPR, i.e. says it is SCSI 3 + LVD, but does not
-> actually support PPR. Then when it receives at PPR message it causes
-> problems in the driver because it terminates the PPR MSG OUT early with
-> an unexpected phase change.
-
-I think those devices need blacklisting.  Either that, or we need to do
-DV in non-approved ways.  Perhaps start with SDTR+WDTR.  If we get up
-to Fast-40, then try PPR.  I suspect James has Opinions on this though ;-)
+Implement that, and you won't have these problems any more.
 
 -- 
-"Next the statesmen will invent cheap lies, putting the blame upon 
-the nation that is attacked, and every man will be glad of those
-conscience-soothing falsities, and will diligently study them, and refuse
-to examine any refutations of them; and thus he will by and by convince 
-himself that the war is just, and will thank God for the better sleep 
-he enjoys after this process of grotesque self-deception." -- Mark Twain
+  Doug Ledford <dledford@redhat.com>     919-754-3700 x44233
+         Red Hat, Inc.
+         1801 Varsity Dr.
+         Raleigh, NC 27606
+
+
