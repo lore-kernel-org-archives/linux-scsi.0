@@ -1,61 +1,43 @@
 From: Patrick Mochel <mochel@osdl.org>
-Subject: Re: [PATCH] /proc/scsi/map
-Date: Tue, 25 Jun 2002 11:58:06 -0700 (PDT)
+Subject: Re: driverfs bus_id, name (was: [PATCH] /proc/scsi/map)
+Date: Tue, 25 Jun 2002 12:06:14 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.33.0206251140060.8496-100000@geena.pdx.osdl.net>
-References: <Pine.LNX.4.44.0206251146440.9420-100000@waste.org>
+Message-ID: <Pine.LNX.4.33.0206251159040.8496-100000@geena.pdx.osdl.net>
+References: <3D18AC9B.8050306@pacbell.net>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.44.0206251146440.9420-100000@waste.org>
+In-Reply-To: <3D18AC9B.8050306@pacbell.net>
 List-Id: linux-scsi@vger.kernel.org
-To: Oliver Xymoron <oxymoron@waste.org>
-Cc: Linux kernel list <linux-kernel@vger.kernel.org>, Linux SCSI list <linux-scsi@vger.kernel.org>
+To: David Brownell <david-b@pacbell.net>
+Cc: Nick Bellinger <nickb@attheoffice.org>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
 
-> > You want the ancestral relationship for several reasons. You'd wouldn't
-> > power down such a device on PM transitions or during shutdown, but you
-> > would stop I/O transactions. The drivers for these devices should recogize
-> > it's a remote device and handlethis. And, if you were to remove the bridge
-> > device (the network card, etc), you want the devices behind it and their
-> > logical mappings to go away gracefully.
+> I've been wondering about that.  Right now PCI and USB both use fairly
+> unfriendly/unpretty values in device.name ... "{PCI,USB} device VVVV:PPPP".
 > 
-> Ok, so what's your take on: NBD (iSCSI without all the SCSI crap),
-> software RAID, LVM, ramdisk, partitions (a degenerate case of volume
-> management), loopback, and filesystems. All but the last are block devices
-> that want to be treated just like disks and will want to know about things
-> like PM transitions, etc. Filesystems haven't made it into the tree
-> because we've got that info elsewhere and we've been assuming they're
-> leafnodes, but if we put loopback devices on top of them, that's no longer
-> the case. It'd be cleaner globally if this were all explicit in the driver
-> tree.
+> Let me make sure I understand you right here, by examples of two
+> changes I'd like to see.  Correct me if these seem wrong:
+> 
+> - It'd be more appropriate for PCI devices to copy pci_device.name into
+>    device.name and get the user-friendly names from the PCI device name
+>    database (when available), and only fallback to those nasty strings
+>    when the more user-friendly names aren't available.
 
-This is a topic that has come up several times in the last couple days in 
-Ottawa. I don't promise to have a complete solution, but this what I have 
-so far:
+That is what happens with PCI devices. They're not appearing as meaningful 
+names probably because CONFIG_PCI_NAMES isn't set. Whether or not that 
+information belongs in the kernel is another debate. 
 
-You have two things: a physical device and a number of logical interfaces
-to communicate with the device. iSCSI devices, local disks, video devices, 
-mice, and joysticks are all physical devices and deserve a place in the 
-device tree. 
+I believe the SCSI people mentioned something about being able to set 
+those from userspace. I'm not opposed to such an idea. You just need a 
+writable name file. 
 
-RAID, LVM, DRI, and the input layer are all logical interfaces to physical 
-devices. The drivers are the conduit between the logical and the physical. 
-Drivers register devices with the logical interfcaces as their attached. 
-It's up to the driver to register with the interfaces, which they already 
-do. If registration gets generalized and centralized, you get internal 
-linkage between the interfaces and the devices. This is essentially the 
-device class voodoo that I've been talking about. 
+> - Likewise it'd be more appropriate for USB devices to take the
+>    descriptive strings from the devices, like "Philips USB Digital
+>    Speaker System", than "USB device 0471:0104".
 
-Concerning power management, if we have a list of interfaces, and each had 
-a suspend callback, you could notify the interfaces before you walked the 
-device tree. Maybe this could take care of verifying the devices can 
-suspend and failing if it's doing I/O that's too important to stop. 
-
-[ We could also create a swap interface that we skip over when we notify 
-these interfaces. Then we walk the tree and save state to the swap 
-devices. Then, tell the swap devices to suspend, which can notify the 
-devices to actually go to sleep....maybe..]
+Those are in the devices themselves, right? There is nothing stopping the 
+USB people from doing that... ;)
 
 	-pat
 
