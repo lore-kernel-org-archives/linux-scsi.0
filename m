@@ -1,48 +1,40 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: ide-scsi data transfer residuals
-Date: Fri, 05 Jul 2002 22:10:01 -0400
+From: Matthew Wilcox <willy@debian.org>
+Subject: [PATCH] Compile fix for AIC7xxx
+Date: Sun, 7 Jul 2002 17:29:43 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <ag5ji3$s5q$2@main.gmane.org>
-References: <000301c2242d$596450f0$e0019d89@cybernetics.com>
+Message-ID: <20020707172943.M27706@parcelfarce.linux.theplanet.co.uk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
+Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
-To: tonyb@cybernetics.com
-Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
+To: Linus Torvalds <torvalds@transmeta.com>
+Cc: linux-scsi@vger.kernel.org
 
-Tony Battersby wrote:
-> 
-> Hello,
-> 
-> I am using the scsi-generic and ide-scsi drivers together for low-level
-> access to an IDE tape drive (vanilla 2.4.17).  I noticed that the data
-> transfer residual in sg_io_hdr_t { int resid; } is always zero.  I assume
-> that the residual calculation is just a missing feature from the ide-scsi
-> driver.  Does anyone know how hard it is to add it?
 
-Tony,
-Support for the residual count is optional. A inaccurate
-survey shows these adapter drivers support it:
-  advansys
-  aha152x
-  aic7xxx_old  (but not the newer aic7xxx)
-  dc395x_trm
-  scsiiom
-  sym53c8xx
-  sym53c8xx_2
+Trivial missed fix for this driver:
 
-I do not know how the ide-scsi driver would get the information.
-However here is the calculation it should do:
-  Scsi_Cmnd::resid = Scsi_Cmnd::bufflen - <actual_bytes_transferred>
+diff -urNX dontdiff linux-2.5.25/drivers/scsi/aic7xxx_old.c linux-2.5.25-mm/drivers/scsi/aic7xxx_old.c
+--- linux-2.5.25/drivers/scsi/aic7xxx_old.c	Fri Jul  5 16:42:22 2002
++++ linux-2.5.25-mm/drivers/scsi/aic7xxx_old.c	Sun Jul  7 08:11:24 2002
+@@ -3070,7 +3070,7 @@
+        * we check data_cmnd[0].  This catches the conditions for st.c, but
+        * I'm still not sure if request.cmd is valid for sg devices.
+        */
+-      if ( (rq_data_dir(&cmd->request) == WRITE) || (cmd->data_cmnd[0] == WRITE_6) ||
++      if ( (rq_data_dir(cmd->request) == WRITE) || (cmd->data_cmnd[0] == WRITE_6) ||
+            (cmd->data_cmnd[0] == WRITE_FILEMARKS) )
+       {
+         sp->w_total++;
+@@ -4280,7 +4280,7 @@
+       {
+         printk(INFO_LEAD "Underflow - Wanted %u, %s %u, residual SG "
+           "count %d.\n", p->host_no, CTL_OF_SCB(scb), cmd->underflow,
+-          (rq_data_dir(&cmd->request) == WRITE) ? "wrote" : "read", actual,
++          (rq_data_dir(cmd->request) == WRITE) ? "wrote" : "read", actual,
+           hscb->residual_SG_segment_count);
+         printk(INFO_LEAD "status 0x%x.\n", p->host_no, CTL_OF_SCB(scb),
+           hscb->target_status);
 
-Of the drivers that support "resid" most given a scatter
-gather list will use the sum of the element lengths instead
-of bufflen. Unfortunately that sum can be larger the bufflen 
-due to padding and alignment requirements of the most backward
-DMA engines out there (I was burnt by the aha1542 ISA card).
-IOW HBA driver writers, please use bufflen. Perhaps the CAM
-name of "dxfer_len" would be clearer for this field.
-
-Doug Gilbert
+-- 
+Revolutions do not require corporate support.
