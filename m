@@ -1,60 +1,62 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH] constants.c codingstyle fixes
-Date: Tue, 3 Jun 2003 23:04:27 +0200
+Subject: [PATCH] kill reamining scsi_scan.c typedef abuse
+Date: Tue, 3 Jun 2003 23:05:38 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030603210427.GA9336@lst.de>
+Message-ID: <20030603210538.GC9336@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([212.34.189.10]:14505 "EHLO mail.lst.de")
-	by vger.kernel.org with ESMTP id S261166AbTFCUvC (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Jun 2003 16:51:02 -0400
+Received: from verein.lst.de ([212.34.189.10]:17065 "EHLO mail.lst.de")
+	by vger.kernel.org with ESMTP id S261222AbTFCUwN (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Jun 2003 16:52:13 -0400
 Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
 Cc: linux-scsi@vger.kernel.org
 
-This is the same procedure most of the scsi source files
-got a while ago.
 
-
-diff -Nru a/drivers/scsi/constants.c b/drivers/scsi/constants.c
---- a/drivers/scsi/constants.c	Sun Jun  1 21:27:22 2003
-+++ b/drivers/scsi/constants.c	Sun Jun  1 21:27:22 2003
-@@ -1004,16 +1004,14 @@
- #endif
- }
- 
--void print_sense(const char * devclass, Scsi_Cmnd * SCpnt)
-+void print_sense(const char *devclass, struct scsi_cmnd *cmd)
+diff -Nru a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+--- a/drivers/scsi/scsi_scan.c	Sun Jun  1 21:27:34 2003
++++ b/drivers/scsi/scsi_scan.c	Sun Jun  1 21:27:34 2003
+@@ -141,7 +141,8 @@
+  *     @sreq to unlock a device, storing the (unused) results into result.
+  *     Called for BLIST_KEY devices.
+  **/
+-static void scsi_unlock_floptical(Scsi_Request *sreq, unsigned char *result)
++static void scsi_unlock_floptical(struct scsi_request *sreq,
++				  unsigned char *result)
  {
--	print_sense_internal(devclass, SCpnt->sense_buffer,
--			     SCpnt->request);
-+	print_sense_internal(devclass, cmd->sense_buffer, cmd->request);
+ 	unsigned char scsi_cmd[MAX_COMMAND_SIZE];
+ 
+@@ -154,8 +155,7 @@
+ 	scsi_cmd[5] = 0;
+ 	sreq->sr_cmd_len = 0;
+ 	sreq->sr_data_direction = SCSI_DATA_READ;
+-	scsi_wait_req(sreq, (void *) scsi_cmd, (void *) result, 0x2a /* size */,
+-		      SCSI_TIMEOUT, 3);
++	scsi_wait_req(sreq, scsi_cmd, result, 0x2a /* size */, SCSI_TIMEOUT, 3);
  }
  
--void print_req_sense(const char * devclass, Scsi_Request * SRpnt)
-+void print_req_sense(const char *devclass, struct scsi_request *sreq)
+ /**
+@@ -354,10 +354,10 @@
+  *     are copied to the Scsi_Device at @sreq->sr_device (sdev);
+  *     any flags value is stored in *@bflags.
+  **/
+-static void scsi_probe_lun(Scsi_Request *sreq, char *inq_result,
++static void scsi_probe_lun(struct scsi_request *sreq, char *inq_result,
+ 			   int *bflags)
  {
--	print_sense_internal(devclass, SRpnt->sr_sense_buffer,
--			     SRpnt->sr_request);
-+	print_sense_internal(devclass, sreq->sr_sense_buffer, sreq->sr_request);
- }
+-	Scsi_Device *sdev = sreq->sr_device;	/* a bit ugly */
++	struct scsi_device *sdev = sreq->sr_device;	/* a bit ugly */
+ 	unsigned char scsi_cmd[MAX_COMMAND_SIZE];
+ 	int possible_inq_resp_len;
  
- #if (CONSTANTS & CONST_MSG) 
-@@ -1116,13 +1114,13 @@
-     return len;
- }
- 
--void print_Scsi_Cmnd (Scsi_Cmnd *cmd) {
-+void print_Scsi_Cmnd(struct scsi_cmnd *cmd) {
-     printk("scsi%d : destination target %d, lun %d\n", 
- 	   cmd->device->host->host_no, 
- 	   cmd->device->id, 
- 	   cmd->device->lun);
-     printk("        command = ");
--    print_command (cmd->cmnd);
-+    print_command(cmd->cmnd);
- }
- 
- #if (CONSTANTS & CONST_HOST)
+@@ -522,7 +522,7 @@
+  *     SCSI_SCAN_NO_RESPONSE: could not allocate or setup a Scsi_Device
+  *     SCSI_SCAN_LUN_PRESENT: a new Scsi_Device was allocated and initialized
+  **/
+-static int scsi_add_lun(Scsi_Device *sdev, char *inq_result, int *bflags)
++static int scsi_add_lun(struct scsi_device *sdev, char *inq_result, int *bflags)
+ {
+ 	struct scsi_device *sdev_sibling;
+ 	struct scsi_target *starget;
