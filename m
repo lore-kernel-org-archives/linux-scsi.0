@@ -1,8 +1,8 @@
 From: "Randy.Dunlap" <rddunlap@osdl.org>
 Subject: Re: max GiB written per boot
-Date: Tue, 7 Oct 2003 18:27:14 -0700
+Date: Tue, 7 Oct 2003 21:34:43 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20031007182714.0eb330c2.rddunlap@osdl.org>
+Message-ID: <20031007213443.56dd9b58.rddunlap@osdl.org>
 References: <1064847281.24854.2.camel@patehci2>
 	<1064850600.25057.7.camel@patehci2>
 	<20030929164654.GS15415@suse.de>
@@ -14,40 +14,45 @@ References: <1064847281.24854.2.camel@patehci2>
 	<20031007055714.GO972@suse.de>
 	<20031007151225.0a65dcb7.rddunlap@osdl.org>
 	<20031007225708.GK5662@linnie.riede.org>
+	<20031007182714.0eb330c2.rddunlap@osdl.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fw.osdl.org ([65.172.181.6]:7386 "EHLO mail.osdl.org")
-	by vger.kernel.org with ESMTP id S261263AbTJHBfx (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Oct 2003 21:35:53 -0400
-In-Reply-To: <20031007225708.GK5662@linnie.riede.org>
+Received: from fw.osdl.org ([65.172.181.6]:21701 "EHLO mail.osdl.org")
+	by vger.kernel.org with ESMTP id S261354AbTJHEfp (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Oct 2003 00:35:45 -0400
+In-Reply-To: <20031007182714.0eb330c2.rddunlap@osdl.org>
 List-Id: linux-scsi@vger.kernel.org
 To: wrlk@riede.org
 Cc: linux-scsi@vger.kernel.org
 
-On Tue, 7 Oct 2003 18:57:08 -0400 Willem Riede <wrlk@riede.org> wrote:
+On Tue, 7 Oct 2003 18:27:14 -0700 "Randy.Dunlap" <rddunlap@osdl.org> wrote:
 
-| On 2003.10.07 18:12, Randy.Dunlap wrote:
-| > On Tue, 7 Oct 2003 07:57:14 +0200 Jens Axboe <axboe@suse.de> wrote:
-| > 
-| > | 
-| > | Yeah, ide-scsi is broken so you probably shouldn't be using it.
-| > 
-| > Is there any sense in trying to repair it?
-| > I could spend some time on it...
+| On Tue, 7 Oct 2003 18:57:08 -0400 Willem Riede <wrlk@riede.org> wrote:
 | 
-| Yes, there is IMHO. The Onstream tape driver (osst) depends on ide-scsi
-| for controlling the IDE version of the drive (DI-30). 
+| | On 2003.10.07 18:12, Randy.Dunlap wrote:
+| | > On Tue, 7 Oct 2003 07:57:14 +0200 Jens Axboe <axboe@suse.de> wrote:
+| | > 
+| | > | 
+| | > | Yeah, ide-scsi is broken so you probably shouldn't be using it.
+| | > 
+| | > Is there any sense in trying to repair it?
+| | > I could spend some time on it...
+| | 
+| | Yes, there is IMHO. The Onstream tape driver (osst) depends on ide-scsi
+| | for controlling the IDE version of the drive (DI-30). 
+| | 
+| | Fixing ide-scsi is not trivial, though. I've spent some time on it
+| | on and off and have not been all that successful. The biggest problem
+| | I have is the error recovery -- making ide subsystem error handling
+| | happen when the scsi error handler needs it...
 | 
-| Fixing ide-scsi is not trivial, though. I've spent some time on it
-| on and off and have not been all that successful. The biggest problem
-| I have is the error recovery -- making ide subsystem error handling
-| happen when the scsi error handler needs it...
+| Alan said (a few months back) that he was fixing ide-scsi in 2.4.x-ac
+| and that it should be forward-ported to 2.6.x, so that is where I
+| would begin...  I haven't checked it for progress yet.
 
-Alan said (a few months back) that he was fixing ide-scsi in 2.4.x-ac
-and that it should be forward-ported to 2.6.x, so that is where I
-would begin...  I haven't checked it for progress yet.
+but this hasn't really happened (2.4.x-ac ide-scsi) afaict.
 
 --
 ~Randy
