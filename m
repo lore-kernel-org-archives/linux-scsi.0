@@ -1,107 +1,68 @@
-From: Mike Anderson <andmike@us.ibm.com>
-Subject: Re: [PATCH / RFC] scsi_error handler update. (4/4)
-Date: Tue, 11 Feb 2003 00:19:03 -0800
+From: Rolf Eike Beer <eike-kernel@sf-tec.de>
+Subject: Re: [PATCH 2.5.59] sim710: cleanup/remove most cli()'s
+Date: Tue, 11 Feb 2003 11:55:33 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030211081903.GD1368@beaverton.ibm.com>
-References: <20030211081351.GA1368@beaverton.ibm.com> <20030211081536.GB1368@beaverton.ibm.com> <20030211081744.GC1368@beaverton.ibm.com>
+Message-ID: <200302111155.33075@bilbo.math.uni-mannheim.de>
+References: <200302041123.06204@bilbo.math.uni-mannheim.de> <200302070826.25941@bilbo.math.uni-mannheim.de> <1044676664.3564.107.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from westrelay01.boulder.ibm.com (westrelay01.boulder.ibm.com [9.17.194.22])
-	by e31.co.us.ibm.com (8.12.7/8.12.2) with ESMTP id h1B8HGCA067158
-	for <linux-scsi@vger.kernel.org>; Tue, 11 Feb 2003 03:17:16 -0500
-Received: from hmsbounty (sig-9-65-26-42.mts.ibm.com [9.65.26.42])
-	by westrelay01.boulder.ibm.com (8.12.3/NCO/VER6.5) with ESMTP id h1B8HGih140192
-	for <linux-scsi@vger.kernel.org>; Tue, 11 Feb 2003 01:17:16 -0700
+In-Reply-To: <1044676664.3564.107.camel@mulgrave>
 Content-Disposition: inline
-In-Reply-To: <20030211081744.GC1368@beaverton.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@steeleye.com>
+Cc: linux-scsi@vger.kernel.org
 
-This patch series is against scsi-misc-2.5.
+Am Samstag, 8. Februar 2003 04:57 schrieben Sie:
+> On Fri, 2003-02-07 at 01:26, Rolf Eike Beer wrote:
+> > That would be fine, you know your code better than I ever will.
+>
+> OK, the attached works for me for the 3430 MCA internal SCSI chip and an
+> HP EISA SCSI board.  Let me know how it works for the Compaq.
 
-03_serror-dev-offline-1.diff:
-	- Add scsi_set_device_offline interface.
+This is from my boot.msg:
 
--andmike
---
-Michael Anderson
-andmike@us.ibm.com
+<6>EISA bus registered
+<6>EISA: Probing bus...
+<6>EISA: Motherboard CPQ0601 detected
+<6>EISA: slot 2 : CPQ3011 detected.
+<6>EISA: slot 3 : CPQ6100 detected.
+<6>EISA: slot 7 : CPQ4411 detected.
+<6>EISA: slot 8 : CPQ4410 detected.
+<6>EISA: Detected 4 cards.
 
- scsi.c      |   38 ++++++++++++++++++++++++++++++++++++++
- scsi.h      |    1 +
- scsi_syms.c |    1 +
- 3 files changed, 40 insertions(+)
-------
+[...]
 
-diff -Nru a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
---- a/drivers/scsi/scsi.c	Mon Feb 10 22:25:47 2003
-+++ b/drivers/scsi/scsi.c	Mon Feb 10 22:25:47 2003
-@@ -1519,6 +1519,44 @@
- {
- 	sdev->access_count--;
- 	module_put(sdev->host->hostt->module);
-+}
-+
-+/**
-+ * scsi_set_device_offline - set scsi_device offline
-+ * @sdev:	pointer to struct scsi_device to offline. 
-+ *
-+ * Locks:	host_lock held on entry.
-+ **/
-+void scsi_set_device_offline(struct scsi_device *sdev)
-+{
-+	struct scsi_cmnd *scmd;
-+	int	cmds_active = 0;
-+	unsigned long flags;
-+
-+	sdev->online = FALSE;
-+
-+	spin_lock_irqsave(&sdev->list_lock, flags);
-+	list_for_each_entry(scmd, &sdev->cmd_list, list) {
-+		if (scmd->request && scmd->request->rq_status != RQ_INACTIVE) {
-+			/*
-+			 * If we are unable to remove the timer, it means
-+			 * that the command has already timed out or
-+			 * finished.
-+			 */
-+			if (!scsi_delete_timer(scmd)) {
-+				continue;
-+			}
-+
-+			++cmds_active;
-+
-+			scsi_eh_scmd_add(scmd, SCSI_EH_CANCEL_CMD);
-+		}
-+	}
-+	spin_unlock_irqrestore(&sdev->list_lock, flags);
-+
-+	if (!cmds_active) {
-+		/* FIXME: Send online state change hotplug event */
-+	}
- }
- 
- /*
-diff -Nru a/drivers/scsi/scsi.h b/drivers/scsi/scsi.h
---- a/drivers/scsi/scsi.h	Mon Feb 10 22:25:47 2003
-+++ b/drivers/scsi/scsi.h	Mon Feb 10 22:25:47 2003
-@@ -456,6 +456,7 @@
- extern void scsi_slave_detach(struct scsi_device *);
- extern int scsi_device_get(struct scsi_device *);
- extern void scsi_device_put(struct scsi_device *);
-+extern void scsi_set_device_offline(struct scsi_device *);
- extern void scsi_done(Scsi_Cmnd * SCpnt);
- extern void scsi_finish_command(Scsi_Cmnd *);
- extern int scsi_retry_command(Scsi_Cmnd *);
+<5>IRQ_INDEX 249, 5
+<4>sim710: irq nasty
 
-diff -Nru a/drivers/scsi/scsi_syms.c b/drivers/scsi/scsi_syms.c
---- a/drivers/scsi/scsi_syms.c	Mon Feb 10 22:25:47 2003
-+++ b/drivers/scsi/scsi_syms.c	Mon Feb 10 22:25:47 2003
-@@ -80,6 +80,7 @@
- EXPORT_SYMBOL(scsi_slave_detach);
- EXPORT_SYMBOL(scsi_device_get);
- EXPORT_SYMBOL(scsi_device_put);
-+EXPORT_SYMBOL(scsi_set_device_offline);
- 
- /*
-  * This symbol is for the highlevel drivers (e.g. sg) only.
+This is the Compaq NCR 53c710 on an EISA board, address 0x7000, IRQ 14 (and it 
+works fine with the original sim710).
+
+<5>IRQ_INDEX 2, 5
+<5>sim710: Compaq Integrated 32-Bit Fast-SCSI-2 Controller
+<5>sim710: irq = 15, clock = 50, base = 0x8000, scsi_id = 7
+<5>53c700: Version 2.8 By James.Bottomley@HansenPartnership.com
+<5>scsi0: 53c710 rev 2 
+<6>scsi0 : LSI (Symbios) 710 MCA/EISA
+<6>scsi0: (0:0) Synchronous at offset 8, period 100ns
+<5>  Vendor: SEAGATE   Model: ST51080N          Rev: 0943
+<5>  Type:   Direct-Access                      ANSI SCSI revision: 02
+<6>scsi0: (1:0) Synchronous at offset 8, period 100ns
+<5>  Vendor: SEAGATE   Model: ST51080N          Rev: 0943
+<5>  Type:   Direct-Access                      ANSI SCSI revision: 02
+<6>scsi0: (2:0) Synchronous at offset 8, period 100ns
+<5>  Vendor: COMPAQ    Model: M2694ES-512       Rev: 952D
+<5>  Type:   Direct-Access                      ANSI SCSI revision: 02
+<6>scsi0: (3:0) Synchronous at offset 8, period 100ns
+<5>  Vendor: COMPAQ    Model: M2694ES-512       Rev: 952D
+<5>  Type:   Direct-Access                      ANSI SCSI revision: 02
+<6>scsi0: (0:0) Enabling Tag Command Queuing
+
+And this is the onboard NCR53c710. Works fine so far. Now we have to find a 
+way to get the other board working, I want to use my external drive, too. 
+I'll send some minor changes I made to the new code tomorrow or so.
+
+Eike
