@@ -1,33 +1,64 @@
-From: MShetty <mranalini.shetty@patni.com>
-Subject: Executing a scsi command
-Date: Thu, 07 Nov 2002 19:14:38 +0530
+From: Mike Anderson <andmike@us.ibm.com>
+Subject: Re: [PATCH] get rid of ->detect for upper layer drivers
+Date: Thu, 7 Nov 2002 06:25:25 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3DCA6E46.91894890@patni.com>
+Message-ID: <20021107142525.GA1292@beaverton.ibm.com>
+References: <200211071225.EAA29497@adam.yggdrasil.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rakshak.patni.com (rakshak.patni.com [203.124.139.211])
-	by pcsbom.patni.com (8.9.3/8.8.8) with SMTP id TAA24270
-	for <linux-scsi@vger.kernel.org>; Thu, 7 Nov 2002 19:05:58 +0530 (IST)
-Received: from akash.patni.com ([192.168.0.12])
- by rakshak.patni.com (NAVGW 2.5.2.12) with SMTP id M2002110719055730947
- for <linux-scsi@vger.kernel.org>; Thu, 07 Nov 2002 19:05:57 +0530
-Received: from patni.com ([204.165.187.192]) by akash.patni.com (8.9.3/SCO5) with ESMTP id TAA07042 for <linux-scsi@vger.kernel.org>; Thu, 7 Nov 2002 19:05:55 +0530 (IST)
+Content-Disposition: inline
+In-Reply-To: <200211071225.EAA29497@adam.yggdrasil.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>
+To: "Adam J. Richter" <adam@yggdrasil.com>
+Cc: hch@lst.de, linux-scsi@vger.kernel.org
 
-Hi,
+Adam J. Richter [adam@yggdrasil.com] wrote:
+> 	I think we can get cleaner code by *not* doing that.
+> 
+> 	If we keep Scsi_Device_Template.detect and just change it so
+> that it has no side effects like incrementing a counter, then we can
+> shrink scsi_bus_match, previously a list of special cases, like so
+> (just typed this code in, haven't tried to compile it):
+> 
+> 
+> static int scsi_bus_match(struct device *dev, struct device_driver *drv)
+> {
+> 	struct Scsi_Device_Template *scsi_dev_tmpl =
+> 		container_of(drv, struct Scsi_Device_Template,
+> 			     scsi_driverfs_driver);
+> 	struct Scsi_Device_Template *scsi_dev =
+> 		container_of(dev, struct Scsi_Device, sdev_driverfs_dev);
+> 
+> 	return (*scsi_dev_templ->detect)(scsi_dev);
+> }
 
-I want to execute a scsi cmd from my driver. The API's that I found
-(scsi_do_cmd, scsi_wait_req) require a pointer to the scsi_device or
-scsi_host structure.. Any idea how I could get them.... given the major
-and minor no. of the device to which the command is to be sent.
+I believe the second container_of should be assigned to a struct scsi_device*.
 
-Is there an alternative way of executing a scsi_cmd ??
+If you got it to compile it should result in some unexpected behavior.
 
-Would help if I could get some help on the above.
+The reason scsi_bus_match is not clean is that scsi currently does not
+follow the device model correctly. We currently allow multiple object
+types on the scsi bus device list. This means your second container_of
+may not be operating on a struct scsi_device object.
 
-Thanks and Regards,
-M Shetty
+The multiple objects in the scsi bus device list is the result of some
+mis-placed nodes and trying to work around the one driver to one device
+binding issue. In scsi if sg is loaded a scsi device can have up to 2
+drivers (i.e. sg + sd, etc).
+
+The removal of detect should eventually result in other reductions /
+cleaner code (If the sg binding issue can be resolved cleanly). Scsi can
+then move to device model probe and remove routines and the elimination
+of the scsi_devicelist.
+
+I have ran a patch on top of Christoph's previous set that renamed
+sd_attach and sd_detect to sd_probe and sd_remove. The old sd_attach and
+sd_detect need to just take a struct device *dev and do a
+to_scsi_device. 
+
+-andmike
+--
+Michael Anderson
+andmike@us.ibm.com
 
