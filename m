@@ -1,36 +1,28 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: PATCH: (as355) Fix test for valid sense data present
-Date: 26 Aug 2004 12:09:20 -0400
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1093536566.2326.61.camel@mulgrave>
-References: <Pine.LNX.4.44L0.0408261154360.1089-100000@ida.rowland.org>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: max_sectors in libata when using md
+Date: Thu, 26 Aug 2004 12:30:49 -0400
+Sender: linux-raid-owner@vger.kernel.org
+Message-ID: <412E1039.7030508@pobox.com>
+References: <412DFFA9.8030504@wasp.net.au> <8746466a0408260852205a7842@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat16.steeleye.com ([209.192.50.48]:23730 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S269128AbUHZQJe (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 26 Aug 2004 12:09:34 -0400
-In-Reply-To: <Pine.LNX.4.44L0.0408261154360.1089-100000@ida.rowland.org>
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <8746466a0408260852205a7842@mail.gmail.com>
+To: Dave <dave.jiang@gmail.com>
+Cc: Brad Campbell <brad@wasp.net.au>, linux-ide@vger.kernel.org, SCSI Mailing List <linux-scsi@vger.kernel.org>, RAID Linux <linux-raid@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: SCSI development list <linux-scsi@vger.kernel.org>
 
-On Thu, 2004-08-26 at 11:55, Alan Stern wrote:
-> It hasn't been applied anywhere that I've looked.  Is there any problem 
-> with it?
+Dave wrote:
+> I believe. I wish the SATA layer would allow a mechanism to auto
+> detect drive being LBA48 or LBA28 and adjust accordingly instead of
+> just default to a very low sector count.
 
-Well, it doesn't look quite right.
 
-You haven't modified the SCSI_SENSE_VALID() macro, so DRIVER_SENSE
-doesn't get set for the extra conditions you're checking for.
+The SATA layer already does this...  but only on 2.6.x kernels.
 
-Even if you do fix it, You'll cause us to treat deferred sense
-conditions as errors, which would be wrong.
+drivers/scsi/libata-scsi.c, ata_scsi_slave_config()
 
-What's the actual problem you're trying to fix?
-
-James
+	Jeff
 
 
