@@ -1,21 +1,28 @@
-From: Matthew Wilcox <willy@debian.org>
-Subject: Re: [PATCH 1/3] 2.6.0 aacraid driver update
-Date: Wed, 8 Oct 2003 14:55:53 +0100
+From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
+Subject: RE: [PATCH 1/3] 2.6.0 aacraid driver update
+Date: Wed, 8 Oct 2003 10:26:03 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20031008135553.GI10906@parcelfarce.linux.theplanet.co.uk>
-References: <0998F43EAD645A47B3F6507196DD70EA256AA6@otcexc01.otc.adaptec.com>
+Message-ID: <0998F43EAD645A47B3F6507196DD70EA256AA9@otcexc01.otc.adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="iso-8859-1"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:36582 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S261518AbTJHNz4
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 8 Oct 2003 09:55:56 -0400
-Content-Disposition: inline
-In-Reply-To: <0998F43EAD645A47B3F6507196DD70EA256AA6@otcexc01.otc.adaptec.com>
+Received: from list.adaptec.com ([216.52.22.18]:17323 "EHLO list.adaptec.com")
+	by vger.kernel.org with ESMTP id S261626AbTJHOb2 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Oct 2003 10:31:28 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
 Cc: 'Mark Haverkamp' <markh@osdl.org>, Matthew Wilcox <willy@debian.org>, Jeff Garzik <jgarzik@pobox.com>, linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@steeleye.com>
+
+*perfect*
+
+-----Original Message-----
+From: Matthew Wilcox [mailto:willy@debian.org]
+Sent: Wednesday, October 08, 2003 9:56 AM
+To: Salyzyn, Mark
+Cc: 'Mark Haverkamp'; Matthew Wilcox; Jeff Garzik; linux-scsi; James
+Bottomley
+Subject: Re: [PATCH 1/3] 2.6.0 aacraid driver update
+
 
 On Wed, Oct 08, 2003 at 09:11:24AM -0400, Salyzyn, Mark wrote:
 > The scsicmd->SCp.ptr is `stealing' an unused member of the command to hold
@@ -24,7 +31,8 @@ On Wed, Oct 08, 2003 at 09:11:24AM -0400, Salyzyn, Mark wrote:
 > 
 > My recommendation is to allocate an additional structure to hold on to all
 > classes of `theft' like this in the driver (my guess is there is more) and
-> use the SCp.ptr to point to this allocation rather than try to `steal' more
+> use the SCp.ptr to point to this allocation rather than try to `steal'
+more
 > to make up the full length.
 > 
 > Any wisdom of the list with regards to this?
@@ -52,25 +60,30 @@ diff -u -p -r1.2 aachba.c
  			scsicmd->use_sg,
  			scsi_to_pci_dma_dir(scsicmd->sc_data_direction));
  	else if(scsicmd->request_bufflen)
--		pci_unmap_single(dev->pdev, (dma_addr_t)(ulong)scsicmd->SCp.ptr,
+-		pci_unmap_single(dev->pdev,
+(dma_addr_t)(ulong)scsicmd->SCp.ptr,
 +		pci_unmap_single(dev->pdev, scsicmd->SCp.dma_handle,
  				 scsicmd->request_bufflen,
- 				 scsi_to_pci_dma_dir(scsicmd->sc_data_direction));
+ 
+scsi_to_pci_dma_dir(scsicmd->sc_data_direction));
  	readreply = (struct aac_read_reply *)fib_data(fibptr);
 @@ -603,7 +603,7 @@ static void write_callback(void *context
  			scsicmd->use_sg,
  			scsi_to_pci_dma_dir(scsicmd->sc_data_direction));
  	else if(scsicmd->request_bufflen)
--		pci_unmap_single(dev->pdev, (dma_addr_t)(ulong)scsicmd->SCp.ptr,
+-		pci_unmap_single(dev->pdev,
+(dma_addr_t)(ulong)scsicmd->SCp.ptr,
 +		pci_unmap_single(dev->pdev, scsicmd->SCp.dma_handle,
  				 scsicmd->request_bufflen,
- 				 scsi_to_pci_dma_dir(scsicmd->sc_data_direction));
+ 
+scsi_to_pci_dma_dir(scsicmd->sc_data_direction));
  
 @@ -1235,7 +1235,8 @@ static void aac_srb_callback(void *conte
  			scsicmd->use_sg,
  			scsi_to_pci_dma_dir(scsicmd->sc_data_direction));
  	else if(scsicmd->request_bufflen)
--		pci_unmap_single(dev->pdev, (ulong)scsicmd->SCp.ptr, scsicmd->request_bufflen,
+-		pci_unmap_single(dev->pdev, (ulong)scsicmd->SCp.ptr,
+scsicmd->request_bufflen,
 +		pci_unmap_single(dev->pdev, scsicmd->SCp.dma_handle,
 +			scsicmd->request_bufflen,
  			scsi_to_pci_dma_dir(scsicmd->sc_data_direction));
@@ -85,7 +98,8 @@ diff -u -p -r1.2 aachba.c
 +		scsicmd->SCp.dma_handle = pci_map_single(dev->pdev,
  				scsicmd->request_buffer,
  				scsicmd->request_bufflen,
- 				scsi_to_pci_dma_dir(scsicmd->sc_data_direction));
+ 
+scsi_to_pci_dma_dir(scsicmd->sc_data_direction));
  		psg->count = cpu_to_le32(1);
 -		psg->sg[0].addr = cpu_to_le32(addr);
 +		psg->sg[0].addr = cpu_to_le32(scsicmd->SCp.dma_handle);
@@ -103,7 +117,8 @@ diff -u -p -r1.2 aachba.c
 +		scsicmd->SCp.dma_handle = pci_map_single(dev->pdev,
  				scsicmd->request_buffer,
  				scsicmd->request_bufflen,
- 				scsi_to_pci_dma_dir(scsicmd->sc_data_direction));
+ 
+scsi_to_pci_dma_dir(scsicmd->sc_data_direction));
  		psg->count = cpu_to_le32(1);
 -		le_addr = cpu_to_le64(addr);
 +		le_addr = cpu_to_le64(scsicmd->SCp.dma_handle);
@@ -120,5 +135,7 @@ use a cast :-P
 
 -- 
 "It's not Hollywood.  War is real, war is primarily not about defeat or
-victory, it is about death.  I've seen thousands and thousands of dead bodies.
-Do you think I want to have an academic debate on this subject?" -- Robert Fisk
+victory, it is about death.  I've seen thousands and thousands of dead
+bodies.
+Do you think I want to have an academic debate on this subject?" -- Robert
+Fisk
