@@ -1,65 +1,40 @@
-From: Naveen Burmi <naveenb@cisco.com>
-Subject: [PATCH] iscsi driver update 4.0.1.8
-Date: Thu, 15 Jul 2004 16:02:45 +0530
+From: Matthew Wilcox <willy@debian.org>
+Subject: Re: [PATCH] iscsi driver update 4.0.1.8
+Date: Thu, 15 Jul 2004 12:27:20 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <200407151602.45830.naveenb@cisco.com>
-Reply-To: naveenb@cisco.com
+Message-ID: <20040715112720.GC32326@parcelfarce.linux.theplanet.co.uk>
+References: <200407151602.45830.naveenb@cisco.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from syd-iport-1.cisco.com ([64.104.193.196]:45484 "EHLO
-	syd-iport-1.cisco.com") by vger.kernel.org with ESMTP
-	id S264571AbUGOKc4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 15 Jul 2004 06:32:56 -0400
-Received: from naveenb-lnx.cisco.com (naveenb-lnx.cisco.com [10.77.7.56])
-	by syd-core-1.cisco.com (8.12.10/8.12.6) with ESMTP id i6FAWnNq008766
-	for <linux-scsi@vger.kernel.org>; Thu, 15 Jul 2004 20:32:50 +1000 (EST)
-Received: from localhost (localhost [[UNIX: localhost]])
-	by naveenb-lnx.cisco.com (8.11.6/8.11.6) id i6FAWkc04860
-	for linux-scsi@vger.kernel.org; Thu, 15 Jul 2004 16:02:46 +0530
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:46299 "EHLO
+	www.linux.org.uk") by vger.kernel.org with ESMTP id S265885AbUGOL1V
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 15 Jul 2004 07:27:21 -0400
 Content-Disposition: inline
+In-Reply-To: <200407151602.45830.naveenb@cisco.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Linux-SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Naveen Burmi <naveenb@cisco.com>
+Cc: Linux-SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-This version of the iSCSI driver (4.0.1.8) contains the following changes
-since 4.0.1.7:
+On Thu, Jul 15, 2004 at 04:02:45PM +0530, Naveen Burmi wrote:
+> The driver was not included as a patch because the file is too big, but it can 
+> be downloaded from:
+> 
+> http://sourceforge.net/project/showfiles.php?group_id=26396&package_id=106938&release_id=252559
 
-1. The issue of deadlock due to multiple kmaps has been partially resolved.
-   We now use sendpage along the xmit path.
-2. The driver used to overwrite scsi midlayer naming. This has been removed.
-   Now proc_name field is used for iSCSI device lookup in sysfs.
-3. The driver's queuecommand now returns SCSI_MLQUEUE_DEVICE_BUSY and
-   SCSI_MLQUEUE_HOST_BUSY on failure.
-4. We have removed bus reset handler from the code.
+$ wget 'http://sourceforge.net/project/showfiles.php?group_id=26396&package_id=106938&release_id=252559'
+--07:26:36--  http://sourceforge.net/project/showfiles.php?group_id=26396&package_id=106938&release_id=252559
+           => `showfiles.php?group_id=26396&package_id=106938&release_id=252559'
+Resolving sourceforge.net... 66.35.250.203
+Connecting to sourceforge.net[66.35.250.203]:80... connected.
+HTTP request sent, awaiting response... 404 Not Found
+07:26:36 ERROR 404: Not Found.
 
-The following items are being worked on/debated:
-
-a) Per target probe via hotplug.
-In earlier reviews, it was debated that the hotplug mechanism should be used
-for target activation. Though scsi_scan_host() is exported,
-scsi_scan_host_selected() isn't. So, an adapter scan is exported to LLDD
-whereas anything else (target or lun scan) has to go through hotplug.
-Network oriented storage like iSCSI has to deal with delays in targets
-getting discovered through SendTargets discovery and poll for SLP
-discoveries.
-It would help a lot to use scsi_scan_host_selected() in such cases and needs
-to be exported for such LLDDs.
-
-b) Removal of multiple kmaps from recv path.
-
-c) Use of TCQ from include/linux/scsi_tcq.h
-
-4.0.1.8 release of linux iscsi driver also contains an incremental patch 
-against 4.0.1.7 release. (linux-iscsi-kernel-4.0.1.7-incremental.patch)
-
-The driver was not included as a patch because the file is too big, but it can 
-be downloaded from:
-
-http://sourceforge.net/project/showfiles.php?group_id=26396&package_id=106938&release_id=252559
-
-P.S. The current driver is tested against 2.6.7 linux kernel.
-
-Thanks,
-Naveen.
+-- 
+"Next the statesmen will invent cheap lies, putting the blame upon 
+the nation that is attacked, and every man will be glad of those
+conscience-soothing falsities, and will diligently study them, and refuse
+to examine any refutations of them; and thus he will by and by convince 
+himself that the war is just, and will thank God for the better sleep 
+he enjoys after this process of grotesque self-deception." -- Mark Twain
