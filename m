@@ -1,48 +1,70 @@
-From: "Scott Murray" <scottm@somanetworks.com>
+From: Jeff Garzik <jgarzik@pobox.com>
 Subject: Re: [PATCH] [RFC] Advanced TCA SCSI Disk Hotswap
-Date: Thu, 24 Oct 2002 20:18:19 -0400 (EDT)
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.33.0210241956460.10937-100000@rancor.yyz.somanetworks.com>
-References: <20021024232258.GA26093@kroah.com>
+Date: Thu, 24 Oct 2002 20:20:49 -0400
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <3DB88E61.2010909@pobox.com>
+References: <Pine.LNX.4.33L2.0210241350230.20950-100000@dragon.pdx.osdl.net> <Pine.LNX.4.33.0210241839490.10937-100000@rancor.yyz.somanetworks.com> <20021024232258.GA26093@kroah.com> <3DB886B9.3060304@mvista.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <20021024232258.GA26093@kroah.com>
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+To: Steven Dake <sdake@mvista.com>
+Cc: Greg KH <greg@kroah.com>, Scott Murray <scottm@somanetworks.com>, "Randy.Dunlap" <rddunlap@osdl.org>, James Bottomley <James.Bottomley@steeleye.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Greg KH <greg@kroah.com>
-Cc: "Randy.Dunlap" <rddunlap@osdl.org>, Steven Dake <sdake@mvista.com>, James Bottomley <James.Bottomley@steeleye.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Thu, 24 Oct 2002, Greg KH wrote:
+Steven Dake wrote:
 
-> On Thu, Oct 24, 2002 at 07:00:23PM -0400, Scott Murray wrote:
-> >
-> > I've not implemented it yet, but I'm pretty sure I can detect surprise
-> > extractions in my cPCI driver.  The only thing holding me back at the
-> > moment is that there's no clear way to report this status change via
-> > pcihpfs without doing something a bit funky like reporting "-1" in the
-> > "adapter" node.
+> Montavista has discussed at length Compact PCI hotswap using surprise 
+> removal events.
 >
-> Why would you need to report anything other than if the card is present
-> or not?  What would a "supprise" removal cause you to do differently?
+> The key feature of any hotswap operation that happens in a surprise 
+> fashion is that
+> the device driver might want a hint that the hardware is no longer 
+> present so it can
+> immediatly dump its buffers/io maps/etc and totally stop accessing the 
+> device.  An
+> expected removal, on the other hand, would give the device driver time 
+> to flush its
+> buffers (for example a scsi driver could dump its outstanding queued 
+> scsi messages).
+> Once the driver is done accessing the device, the blue led on the 
+> CompactPCI board
+> can be lit and it can be removed.
+>
+> This is the main difference.  Since the driver model of Linux doesn't 
+> support a surprise
+> extract method call for drivers, I don't think its been implemented 
+> here.  Further the
+> drivers must be modified to actually use the hint instead of doing its 
+> normal shutdown
+> operation. 
 
-Thinking about it a bit more, my idea to use -1 is indeed unnecessary,
-since userspace code can check if the adapter node changes to 0 before
-it itself writes a 0 to it.  If multiple users/software play around with
-the nodes at the same time, they'll get what's coming to them...
 
-> Hm, well I guess we should be extra careful in trying to shut down any
-> driver bound to that card...
+Wrong.  The _only_ supported method so far has been surprise removal. 
+ For years now.  This happens every day in the land of CardBus, which 
+was the first "PCI" hotplug implementation in the Linux kernel.  PCI 
+HotPlug introduces a new, non-surprise removal.
 
-Yeah, as Steven mentions in his reply, Linux drivers don't handle this
-well at the moment.
+Thus, the current model should be assumed to be surprise removal, and 
+you need an additional notification from the system if a "nice" removal 
+is about to occur.
 
-Scott
+> Surprise extraction is not a simple problem especially to ensure the 
+> device drivers exit
+> cleanly without dumping more data on the PCI bus to a PCI device that 
+> may not
+> exist. 
 
+PCI is electrically safe.  Reads to non-existent areas return 
+0xffffffff, etc.  Take a look at net drivers some day, we have been 
+handling this for years.
 
--- 
-Scott Murray
-SOMA Networks, Inc.
-Toronto, Ontario
-e-mail: scottm@somanetworks.com
+Surprise removal is actually easier from many perspectives -- you don't 
+have to worry about quiescing the hardware, you simply have to error out 
+all I/Os, and clean up the kernel structures that are left behind (host 
+info, device info, etc.).  The non-surprise removal is more annoying, in 
+that you could potentially have an indefinite wait (and must actively 
+avoid such a situation) while shutting down the hardware, completing 
+I/Os, etc.
 
-
+    Jeff
