@@ -1,48 +1,25 @@
-From: James Bottomley <James.Bottomley@steeleye.com>
-Subject: Re: Summary of the Multi-Path BOF at OLS and future directions
-Date: 05 Aug 2003 10:06:48 -0700
+From: "Mukker, Atul" <atulm@lsil.com>
+Subject: RE: [ANNOUNCE] megaraid linux driver version 2.00.7
+Date: Tue, 5 Aug 2003 18:09:10 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1060103209.2044.20.camel@fuzzy>
-References: <1060042082.1985.53.camel@fuzzy>
-	<1060102084.1188.10.camel@dhcp22.swansea.linux.org.uk>
+Message-ID: <0E3FA95632D6D047BA649F95DAB60E570185F3FA@EXA-ATLANTA.se.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="iso-8859-1"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nat9.steeleye.com ([65.114.3.137]:57349 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S272881AbTHERGt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 5 Aug 2003 13:06:49 -0400
-In-Reply-To: <1060102084.1188.10.camel@dhcp22.swansea.linux.org.uk>
+Received: from mail0.lsil.com ([147.145.40.20]:57522 "EHLO mail0.lsil.com")
+	by vger.kernel.org with ESMTP id S272920AbTHEXWc (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Aug 2003 19:22:32 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: 'Christoph Hellwig' <hch@infradead.org>
+Cc: "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, "'linux-megaraid-devel@dell.com'" <linux-megaraid-devel@dell.com>
 
-On Tue, 2003-08-05 at 09:48, Alan Cox wrote:
-> On Maw, 2003-08-05 at 04:54, James Bottomley wrote:
-> > transport errors (relevant to multi-path) and medium errors (relevant to
-> > software raid).
-> 
-> And multimedia..
+> +	spin_lock_irqsave(adapter->host->host_lock, flags);
+But all kernels do not have this lock as part of the host structure. With
+2.00.7, I have relapsed a patch which switches the lock to io_request_lock
+if kernel does not support per host lock.
 
-Yes, multi-media probably wants all error indications.
+And not all kernels have the per host lock named as "host->host_lock", some
+simply have "host->lock"
 
-> > 5. Vendor value add for specific devices could be encoded both as
-> > configuration (udev) pieces and plug-ins to the upper layer multi-path
-> > driver to activate any proprietary vendor specific configuration options
-> > that may be needed for specific solutions.
-> 
-> Vendors will try and arrange that their hotplug only works between
-> devices entirely of their form. We must be careful not to encourage them
-> in abusing their userbase.
-
-I'm going to try to walk the tightrope here.  I'd like to encourage
-vendors to be open, but I know we're trying to bring a lot of long time
-proprietary solutions on board, so I'd like to begin by giving them the
-flexibility to bring their own particular value add to the table.  If I
-fall off the tightrope, I'm sure someone will catch me...
-
-James
-
-
-
+-Atul Mukker
