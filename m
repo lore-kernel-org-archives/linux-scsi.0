@@ -1,43 +1,35 @@
 From: "Nicholas A. Bellinger" <nick@pyxtechnologies.com>
-Subject: [ANNOUNCE] iscsi-initiator-core 1.6.2.0-rc1 for 2.6.12-rc1
-Date: Fri, 01 Apr 2005 12:01:41 -0800
-Message-ID: <1112385701.3008.18.camel@haakon>
+Subject: [ANNOUNCE] iscsi-initiator-core-tools v2.3 + HOWTO
+Date: Fri, 01 Apr 2005 12:02:17 -0800
+Message-ID: <1112385737.3008.19.camel@haakon>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp811.mail.sc5.yahoo.com ([66.163.170.81]:52843 "HELO
-	smtp811.mail.sc5.yahoo.com") by vger.kernel.org with SMTP
-	id S262871AbVDAUI7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 1 Apr 2005 15:08:59 -0500
+Received: from smtp813.mail.sc5.yahoo.com ([66.163.170.83]:19282 "HELO
+	smtp813.mail.sc5.yahoo.com") by vger.kernel.org with SMTP
+	id S262872AbVDAUOj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 1 Apr 2005 15:14:39 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: iscsi-initiator-core-announce@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>
+To: iscsi-initiator-core-announce <iscsi-initiator-core-announce@iscsi-initiator-core.org>, linux-scsi <linux-scsi@vger.kernel.org>
 Cc: iscsi-initiator-core-devel <iscsi-initiator-core-devel@iscsi-initiator-core.org>, James Bottomley <James.Bottomley@SteelEye.com>, Christoph Hellwig <hch@lst.de>, Mike Christie <mikenc@us.ibm.com>
 
 Greetings all,
 
-http://www.kernel.org/pub/linux/kernel/people/nab/iscsi-initiator-core/iscsi-initiator-core-1.6.2.0-rc1-2.6.12-rc1.patch.bz2
+http://www.kernel.org/pub/linux/utils/storage/iscsi/iscsi-initiator-core-tools-2.3.tar.bz2
 
-A few minor fixes in this release, with the main feature addition being
-support for persistent connection/session parameters as defined within 
-/etc/sysconfig/initiator.  For example, it is now possible to define
-specific connection/session parameters and have those values remain
-throughout connection/session failures.  Also, the first run of tests
-with dm-multipath have been compelted successful.  I am working on a
-section within the documentation to describe how these two pieces work
-together within linux 2.6.
+A few minor fixes related to the scripts have been commmited since v2.2.
+The most important addition is v1.0 of the HOWTO that is include in the
+top directory of this tarball, as well as manual pages with examples for
+the configuration files.
 
-Also an important milestone has been reached with v1.0 of the
-iscsi-initiator-core.org howto located at:
+A wiki version of the HOWTO can be located at:
 
 http://iscsi-initiator-core.org/mediawiki/index.php/Howto
 
-This is a work in progress as data is imported from the ASCII version
-from iscsi-initiator-core-tools v2.3.
-
-This release is now considered stable and no new features will be added
-until 1.6.2.0-final is released.
+This is not as complete as the one located within the tarball, but will
+be filled out shortly.
 
 Thanks!
 
