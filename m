@@ -1,33 +1,28 @@
-From: Luben Tuikov <luben@splentec.com>
+From: Doug Ledford <dledford@redhat.com>
 Subject: Re: Possible bug handling bad I/Os?
-Date: Thu, 29 Aug 2002 15:16:47 -0400
+Date: Thu, 29 Aug 2002 15:43:00 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3D6E731F.CE4C3A1F@splentec.com>
-References: <20020829124142.D31625@redhat.com> <B993CDEB.2C0F%mheinz@infiniconsys.com> <20020829132728.G31625@redhat.com>
+Message-ID: <20020829154300.L31625@redhat.com>
+References: <20020829124142.D31625@redhat.com> <B993CDEB.2C0F%mheinz@infiniconsys.com> <20020829132728.G31625@redhat.com> <3D6E731F.CE4C3A1F@splentec.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from splentec.com (canoe.splentec.com [209.47.35.250])
-	by pepsi.splentec.com (8.11.6/8.11.0) with ESMTP id g7TJGjH27761
-	for <linux-scsi@vger.kernel.org>; Thu, 29 Aug 2002 15:16:45 -0400
+Content-Disposition: inline
+In-Reply-To: <3D6E731F.CE4C3A1F@splentec.com>; from luben@splentec.com on Thu, Aug 29, 2002 at 03:16:47PM -0400
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>
+To: Luben Tuikov <luben@splentec.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
-Doug Ledford wrote:
+On Thu, Aug 29, 2002 at 03:16:47PM -0400, Luben Tuikov wrote:
+> > It doesn't have a timer backup goose method as of yet.
 > 
-> 
-> Yep.  It's the queue starvation issue that someone else brought up (can't
-> remember who that was...).  Basically, if you don't have some outstanding
-> command that will complete after you fail your queue_command() call then
-> there is no method of goosing the current holding queue in the mid layer.
-> It doesn't have a timer backup goose method as of yet.
-> 
+> How hard would that be to add?
 
-How hard would that be to add?
-
-Wouldn't it be an implied implementation as per SAM-3 status codes?
-(One can do magic using the new list implementation and macros... :-)
+Not really horrible to do.  Just no one has done it.
 
 -- 
-Luben
+  Doug Ledford <dledford@redhat.com>     919-754-3700 x44233
+         Red Hat, Inc. 
+         1801 Varsity Dr.
+         Raleigh, NC 27606
+  
