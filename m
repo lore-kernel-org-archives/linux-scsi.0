@@ -1,48 +1,62 @@
-From: berthiaume_wayne@emc.com
-Subject: RE: [RFC] Persistent naming of scsi devices
-Date: Wed, 10 Apr 2002 12:44:38 -0400
+From: "Martin Peschke3" <MPESCHKE@DE.IBM.COM>
+Subject: Re: [RFC] Persistent naming of scsi devices
+Date: Wed, 10 Apr 2002 17:52:45 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <93F527C91A6ED411AFE10050040665D0049BF8D8@corpusmx1.us.dg.com>
+Message-ID: <OFDDCB335C.1A38AFF1-ONC1256B97.00555052@de.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: hbryan@us.ibm.com
-Cc: linux-scsi@vger.kernel.org
+To: mjacob@feral.com
+Cc: James Bottomley <James.Bottomley@steeleye.com>, Oliver Neukum <oliver@neukum.org>, Christoph Hellwig <hch@infradead.org>, sullivan <sullivan@austin.ibm.com>, linux-scsi@vger.kernel.org
 
-	VLUN = virtual LUN   
+Matt,
 
-	This would be the number assigned by the storage system. A storage
-system can be broken up into multiple virtual storage systems each unique to
-the owner. The real trick is when to virtual storage systems share the same
-LUN. Depending on the order of entry into the virtual storage array on a
-CLARiiON at the time it is being configured it could be a LUN 1 to your
-virtual storage and LUN 6 on mine.
+> > > It's more than just a WWN- it really has to be
+> > > the pair of WWNN/WWPN (node && port name) as you
+> > > can have, e.g., a dual ported disk with the same WWNN but
+> > > different WWPNs.
+> >
+> > Ok, I thought of WWPN and that it would be sufficient to identify t=
+he
+> > target side of a link, isn't it? Do you really need a pair of
+WWNN/WWPN,
+> > i.e. identical WWPNs might exist considering different WWNNs?
+>
+> If the numbering is NAA=3D2 (2 in the top nibble), you can always der=
+ive
+the
+> WWNN from the WWPN. But that's only true for NAA=3D2.
+>
+> In *practice*, WWPN might be enough,  but if we're doing things that
+formally
+> and fully ID a device, and considering that iSCSI identifiers are 255
+bytes or
+> better, two 64 bit ids for Fibre Channel devices is not unreasonable =
+to
+allow
+> for.
+>
+> -matt
 
------Original Message-----
-From: Bryan Henderson [mailto:hbryan@us.ibm.com]
-Sent: Wednesday, April 10, 2002 11:28 AM
-To: berthiaume_wayne@emc.com
-Cc: linux-scsi@vger.kernel.org
-Subject: RE: [RFC] Persistent naming of scsi devices
+If there are cases which require WWNN+WWPN to identify a
+=46C port then a you would need this pair to query a FC ports
+D_ID. I wonder why this is not reflected in the FC name server
+specification, FC-GS-3, (see GID_PN for example).
 
 
+Mit freundlichen Gr=FC=DFen / with kind regards
 
->I believe that if you are sharing a VLUN on the array the
->same WWNN/WWPN is assigned to it. Though it may be represented to you as
->VLUN 1 in your virtual storage system and VLUN 6 in mine I thought the
-same
->WWNN/WWPN was assigned to it.
+Martin Peschke
 
-Yes, every system I've seen does that and it seems to be the intent (for
-whatever that's worth) of the fibre channel architects.  But how is that
-relevant?  We're talking about uniquely identifying a logical unit (which
-is what would appear in Linux as a device).
+IBM Deutschland Entwicklung GmbH
+Linux for eServer Development
+Phone: +49-(0)7031-16-2349
 
-I don't know what a VLUN is, so maybe I'm just lost.  Isn't that redundant?
-Virtual and logical are the same thing.
 
-Leave the WWPN (worldwide port number) out of it, by the way.  That doesn't
-help identify devices, just ports that can be used to reach them.
-
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
