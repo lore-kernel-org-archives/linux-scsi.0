@@ -1,41 +1,48 @@
-From: Adrian Bunk <bunk@fs.tum.de>
-Subject: [2.5 patch] postfix two constants in ips.c with ULL
-Date: Wed, 25 Jun 2003 03:21:42 +0200
+From: Patrick Mansfield <patmans@us.ibm.com>
+Subject: [PATCH] fix return value of scsi_device rescan attribute
+Date: Wed, 25 Jun 2003 09:17:06 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030625012142.GF3710@fs.tum.de>
+Message-ID: <20030625091706.A23194@beaverton.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hermes.fachschaften.tu-muenchen.de ([129.187.202.12]:27849 "HELO
-	hermes.fachschaften.tu-muenchen.de") by vger.kernel.org with SMTP
-	id S263279AbTFYBHf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 24 Jun 2003 21:07:35 -0400
+Received: from e5.ny.us.ibm.com ([32.97.182.105]:3012 "EHLO e5.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S264610AbTFYQHb (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 25 Jun 2003 12:07:31 -0400
 Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
-To: ipslinux@adaptec.com
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, trivial@rustcorp.com.au
+To: James Bottomley <James.Bottomley@steeleye.com>, linux-scsi@vger.kernel.org
 
-The patch below postfixes two constants in ips.c with ULL, on 32 bit
-archs this constant is too big for an int.
-  
-The cast doesn't do the right thing, 0xffffffffffffffff is in C an int
-and the cast casts 0xffffffffffffffff interpreted as an int to an u64.
-  
-cu
-Adrian
+When writing to the rescan attribute, return count as result, otherwise
+some user apps might retry the write forever.
 
---- linux-2.5.73-not-full/drivers/scsi/ips.c.old	2003-06-24 20:07:48.000000000 +0200
-+++ linux-2.5.73-not-full/drivers/scsi/ips.c	2003-06-24 20:08:34.000000000 +0200
-@@ -7009,10 +7009,10 @@
-      * are guaranteed to be < 4G.
-      */
-     if ( IPS_ENABLE_DMA64 && IPS_HAS_ENH_SGLIST(ha) &&
--         !pci_set_dma_mask(ha->pcidev, (u64)0xffffffffffffffff)) {
-+         !pci_set_dma_mask(ha->pcidev, 0xffffffffffffffffULL)) {
-        (ha)->flags |= IPS_HA_ENH_SG;
-     } else {
--       if ( pci_set_dma_mask(ha->pcidev, (u64)0xffffffff) != 0 ) { 
-+       if ( pci_set_dma_mask(ha->pcidev, 0xffffffffULL) != 0 ) { 
-           printk(KERN_WARNING "Unable to set DMA Mask\n");
-           return ips_abort_init(ha, index);
-        }
+And remove the read capability of the attribute.
+
+diff -purN -X /home/patman/dontdiff bleed-2.5/drivers/scsi/scsi_sysfs.c rescan-cleanup-bl-2.5/drivers/scsi/scsi_sysfs.c
+--- bleed-2.5/drivers/scsi/scsi_sysfs.c	Mon Jun 23 16:12:30 2003
++++ rescan-cleanup-bl-2.5/drivers/scsi/scsi_sysfs.c	Wed Jun 25 10:03:48 2003
+@@ -195,19 +195,13 @@ sdev_rd_attr (rev, "%.4s\n");
+ sdev_rw_attr_bit (online);
+ 
+ static ssize_t
+-show_rescan_field (struct device *dev, char *buf)
+-{
+-	return 0; 
+-}
+-
+-static ssize_t
+ store_rescan_field (struct device *dev, const char *buf, size_t count) 
+ {
+ 	scsi_rescan_device(dev);
+-	return 0;
++	return count;
+ }
+ 
+-static DEVICE_ATTR(rescan, S_IRUGO | S_IWUSR, show_rescan_field, store_rescan_field)
++static DEVICE_ATTR(rescan, S_IWUSR, NULL, store_rescan_field)
+ 
+ /* Default template for device attributes.  May NOT be modified */
+ struct device_attribute *scsi_sysfs_sdev_attrs[] = {
+
+-- Patrick Mansfield
