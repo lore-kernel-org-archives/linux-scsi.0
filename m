@@ -1,42 +1,48 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH] scsi/sata write barrier support #2
-Date: Thu, 27 Jan 2005 18:02:29 -0500
-Message-ID: <41F97305.6050404@pobox.com>
-References: <20050127120244.GO2751@suse.de> <20050127150845.GY2751@suse.de>
+From: Jens Axboe <axboe@suse.de>
+Subject: Re: [PATCH] scsi/sata write barrier support
+Date: Fri, 28 Jan 2005 07:54:02 +0100
+Message-ID: <20050128065358.GA4800@suse.de>
+References: <200501272242.j0RMgoP5016154@falcon30.maxeymade.com> <41F97299.2070909@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:57062 "EHLO
-	parcelfarce.linux.theplanet.co.uk") by vger.kernel.org with ESMTP
-	id S261265AbVA0XCo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 27 Jan 2005 18:02:44 -0500
-In-Reply-To: <20050127150845.GY2751@suse.de>
+Received: from ns.virtualhost.dk ([195.184.98.160]:20908 "EHLO virtualhost.dk")
+	by vger.kernel.org with ESMTP id S261487AbVA1GyQ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 28 Jan 2005 01:54:16 -0500
+Content-Disposition: inline
+In-Reply-To: <41F97299.2070909@pobox.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jens Axboe <axboe@suse.de>
-Cc: Linux Kernel <linux-kernel@vger.kernel.org>, Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>, linux-scsi@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Doug Maxey <dwm@maxeymade.com>, Linux Kernel <linux-kernel@vger.kernel.org>, Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>, linux-scsi@vger.kernel.org
 
-Jens Axboe wrote:
-> Hi,
+On Thu, Jan 27 2005, Jeff Garzik wrote:
+> Doug Maxey wrote:
+> >On Thu, 27 Jan 2005 13:02:48 +0100, Jens Axboe wrote:
+> >
+> >>Hi,
+> >>
+> >>For the longest time, only the old PATA drivers supported barrier writes
+> >>with journalled file systems. This patch adds support for the same type
+> >>of cache flushing barriers that PATA uses for SCSI, to be utilized with
+> >>libata. 
+> >
+> >
+> >What, if any mechanism supports changing the underlying write cache?  
+> >
+> >That is, assuming this is common across PATA and SCSI drives, and it is 
+> >possible to turn the cache off on the IDE drives, would switching the 
+> >cache underneath require completing the inflight IO?
 > 
-> A few changes:
+> [ignoring your question, but it made me think...]
 > 
-> - Cleanup up the driver additions even more, blk_complete_barrier_rq()
->   does all the work now.
 > 
-> - Fixed up the exports
-> 
-> - Comment functions
-> 
-> - Fixed a bug with SCSI and write back caching disabled
-> 
-> - Rename blk_queue_flush() to blk_queue_flushing() to indicate it's a
->   state
+> I am thinking the barrier support should know if the write cache is 
+> disabled (some datacenters do this), and avoid flushing if so?
 
+Ehm it does, read the code :)
 
-Tiny nit for SATA drivers:
-
-Define a ATA_ORDERED_IO constant in libata.h, rather than hardcoding the 
-1 in each driver.
+-- 
+Jens Axboe
 
