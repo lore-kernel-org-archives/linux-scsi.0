@@ -1,66 +1,148 @@
-From: R.E.Wolff@BitWizard.nl (Rogier Wolff)
-Subject: Re: Sym53C8xx Driver Hardening
-Date: Tue, 23 Jul 2002 17:38:30 +0200 (MEST)
+From: Mukul Kotwani <mkotwani@yahoo.com>
+Subject: Re: Enhanced error handling
+Date: Tue, 23 Jul 2002 10:37:17 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <200207231538.RAA03408@cave.bitwizard.nl>
-References: <1027437862.31787.136.camel@irongate.swansea.linux.org.uk>
+Message-ID: <20020723173717.27084.qmail@web14005.mail.yahoo.com>
+References: <OF5603E9AB.B82FF85C-ONC1256BFF.0039F1EB@de.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <1027437862.31787.136.camel@irongate.swansea.linux.org.uk> from
- Alan Cox at "Jul 23, 2002 04:24:22 pm"
+In-Reply-To: <OF5603E9AB.B82FF85C-ONC1256BFF.0039F1EB@de.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Rogier Wolff <R.E.Wolff@BitWizard.nl>, "Isabelle, Francois" <Francois.Isabelle@ca.kontron.com>, linux-scsi@vger.kernel.org
+To: Martin Peschke3 <MPESCHKE@de.ibm.com>
+Cc: linux-scsi@vger.kernel.org
 
-Alan Cox wrote:
-> On Tue, 2002-07-23 at 14:57, Rogier Wolff wrote:
-> > Now it won't be as easy as this. But for instance in my firestream
-> > driver, you sometimes put a value in a register in the chip, and if
-> > later on you read it back, you want the chip to have left it
-> > unmodified, or to have it changed in a predictable way. If the value
-> > is unexpected, a panic is the right "way out". 
+
+But does spin_unlock_irq enable interrupts?
+
+Mukul
+
+--- Martin Peschke3 <MPESCHKE@de.ibm.com> wrote:
 > 
-> The high reliability people take a different view. I actually agree with
-> them. It isnt about 'oops didnt happen' it is about controlling the
-> failure case
+> Hi,
 > 
-> Suppose your firestream driver reports catacylsmic internal error
-> status. Their argument is not that you should pretend life is good but
-> that the driver should log a fault and shut off the chip as best it can.
-> So you might have a firestream_failed() function which did
+> we solved this for the zfcp driver this way:
 > 
-> 	Disable master bit
-> 	Put board into D3
-> 	Wait
-> 	Put board into running state
-> 	Try to reset and configure it
-> 	If this fails shove it in D3 and give up
+> my_eh_abort_handler() {
 > 
-> At this point the high reliability system is servicing the other links
-> it manages and flashing warning lights to the engineers, rather than
-> completely down
+>       /* unlock and enable interrupts */
+>       spin_unlock_irq(&io_request_lock);
+> 
+>       do abort and sleep if necessary
+> 
+>       /* lock and disable interrupts */
+>       spin_lock_irq(&io_request_lock);
+> }
+> 
+> All those HBA routines should be called without this
+> lock held.
+> I assume that is or will be changed in 2.5.
+> 
+> Mit freundlichen Grüßen / with kind regards
+> 
+> Martin Peschke
+> 
+> IBM Deutschland Entwicklung GmbH
+> Linux for eServer Development
+> Phone: +49-(0)7031-16-2349
+> 
+> 
+> Mukul Kotwani <mkotwani@yahoo.com>@vger.kernel.org
+> on 07/23/2002 05:16:32
+> AM
+> 
+> Sent by:    linux-scsi-owner@vger.kernel.org
+> 
+> 
+> To:    linux-scsi@vger.kernel.org
+> cc:
+> Subject:    Enhanced error handling
+> 
+> 
+> 
+> Hello!
+> After reading a bunch about the new error handling
+> code, I have a few
+> questions.
+> 
+> I am a low level HBA driver, and the abort handler
+> is
+> called while the
+> io request lock is held. An abort might be completed
+> immediately (
+> might need to send out an ABORT frame  and wait for
+> its completion)
+> and therefore might be completed asynchronously. So
+> I
+> might need to
+> sleep in the abort thread, because from what I read,
+> it indicated that once the abort call returns, we
+> cannot call scsi_done. So the best thing would be to
+> wait for the abort to complete.
+> 
+> So my question is:
+> If interrupts are disabled when the error handler
+> thread is called,
+> and I have to sleep, how do I re-enable interrupts ,
+> because the abort
+> completion is via an interrupt! Ditto with bus
+> reset,
+> device reset
+> etc. How do I get a completion at all? Timer
+> interrupts are also
+> disabled on a UP system so how does someone get a
+> completion at all??
+> If I have to re-enable interrupts in the error
+> handler
+> by calling
+> irqrestore, I need the flags , and the low level
+> driver does not have
+> access to the flags at all. Looking at some sample
+> SCSI drivers,they
+> seem to be queuing up the abort and returning
+> SUCCESS.
+> But there is a
+> problem there..the mid layer thinks the IO is done
+> and
+> freed. Say we
+> reported as 20 the maximum commands we support,
+> wouldnt the mid layer
+> send 20 commands down( obviously if it had 20..) ,
+> when actually the
+> low level driver should be getting 19 because the
+> abort of the IO
+> might not have completed? Either my understanding is
+> totally wrong, or
+> this model seems to be somewhat broken. Can someone
+> please shed some
+> light on this issue?
+> 
+> Thanks!
+> Mukul
+> 
+> 
+> __________________________________________________
+> Do You Yahoo!?
+> Yahoo! Health - Feel better, live better
+> http://health.yahoo.com
+> -
+> To unsubscribe from this list: send the line
+> "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at 
+> http://vger.kernel.org/majordomo-info.html
+> 
+> 
+> 
+> -
+> To unsubscribe from this list: send the line
+> "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at 
+http://vger.kernel.org/majordomo-info.html
 
-That might indeed be preferable. However, the "wild DMA" may have
-corrupted users' data, and/or the kernel's datastructures. So
-continuing may lead to a bad situation getting worse...
 
-Maybe we want to generalize "panic" so that you pass it a pointer to
-"shutdown this hardware" routine, allowing diversion of the "policy"
-about what to do to a user-definable central place.....
-
-Userspace would then be notified: "We shut down atm0 due to an
-irrecoverable error". And userspace can then decide to kick the device
-as you suggest above.
-
-Or, I could configure it to do an immediate reboot, with/without
-attempting to sync disks....
-
-		Roger. 
-
--- 
-** R.E.Wolff@BitWizard.nl ** http://www.BitWizard.nl/ ** +31-15-2137555 **
-*-- BitWizard writes Linux device drivers for any device you may have! --*
-* There are old pilots, and there are bold pilots. 
-* There are also old, bald pilots. 
+__________________________________________________
+Do You Yahoo!?
+Yahoo! Health - Feel better, live better
+http://health.yahoo.com
