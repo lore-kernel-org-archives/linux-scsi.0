@@ -1,1180 +1,1186 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH] scsi_device refcounting and list lockdown
-Date: Mon, 27 Oct 2003 16:57:13 +0100
+From: "Randy.Dunlap" <rddunlap@osdl.org>
+Subject: Fw: PROBLEM: linux-2.6.0-test9 oops when loading scsi module
+ (aha152x)
+Date: Mon, 27 Oct 2003 11:07:05 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20031027155713.GA28140@lst.de>
+Message-ID: <20031027110705.6d2faecb.rddunlap@osdl.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/mixed;
+ boundary="Multipart_Mon__27_Oct_2003_11:07:05_-0800_09a93200"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([212.34.189.10]:52448 "EHLO mail.lst.de")
-	by vger.kernel.org with ESMTP id S263285AbTJ0P5W (ORCPT
+Received: from fw.osdl.org ([65.172.181.6]:40372 "EHLO mail.osdl.org")
+	by vger.kernel.org with ESMTP id S263467AbTJ0TJ1 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 27 Oct 2003 10:57:22 -0500
-Content-Disposition: inline
+	Mon, 27 Oct 2003 14:09:27 -0500
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: kbraun@dgrunt.sneakernet.com, jejb <james.bottomley@steeleye.com>
 
- - shost->my_devices is gone and replaced by ->__devices, which is not
-   exposed to drivers and locked by the host lock.  Use the exported
-   helpers that do proper refcounting to access it.
- - sdev->access_count is gone as a side-effect, the sg interfaces
-   to export it now return 1 for a present scsi_device.
- - drivers/scsi/host.h is empty now.
+This is a multi-part message in MIME format.
+
+--Multipart_Mon__27_Oct_2003_11:07:05_-0800_09a93200
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 
 
---- 1.44/drivers/ieee1394/sbp2.c	Tue Sep  2 20:08:00 2003
-+++ edited/drivers/ieee1394/sbp2.c	Mon Oct 27 12:01:48 2003
-@@ -991,7 +991,7 @@
- static void sbp2_remove_device(struct scsi_id_instance_data *scsi_id)
- {
- 	struct sbp2scsi_host_info *hi = scsi_id->hi;
--	struct scsi_device *sdev = scsi_find_device(hi->scsi_host, 0, scsi_id->id, 0);
-+	struct scsi_device *sdev;
- 
- 	SBP2_DEBUG("sbp2_remove_device");
- 
-@@ -999,8 +999,13 @@
- 	sbp2scsi_complete_all_commands(scsi_id, DID_NO_CONNECT);
- 
- 	/* Remove it from the scsi layer now */
--	if (sdev)
-+	/* XXX(hch): why can't we simply cache the scsi_device
-+	   	     in struct scsi_id_instance_data? */
-+	sdev = scsi_device_lookup(hi->scsi_host, 0, scsi_id->id, 0);
-+	if (sdev) {
- 		scsi_remove_device(sdev);
-+		scsi_device_put(sdev);
-+	}
- 
- 	sbp2util_remove_command_orb_pool(scsi_id);
- 
---- 1.44/drivers/scsi/53c700.c	Sat Sep 20 11:35:53 2003
-+++ edited/drivers/scsi/53c700.c	Mon Oct 27 12:01:48 2003
-@@ -1057,15 +1057,18 @@
- 		__u8 lun;
- 		struct NCR_700_command_slot *slot;
- 		__u8 reselection_id = hostdata->reselection_id;
--		Scsi_Device *SDp;
-+		struct scsi_device *SDp;
-+		unsigned long flags;
- 
- 		lun = hostdata->msgin[0] & 0x1f;
- 
- 		hostdata->reselection_id = 0xff;
- 		DEBUG(("scsi%d: (%d:%d) RESELECTED!\n",
- 		       host->host_no, reselection_id, lun));
-+
- 		/* clear the reselection indicator */
--		SDp = scsi_find_device(host, 0, reselection_id, lun);
-+		spin_lock_irqsave(host->host_lock, flags);
-+		SDp = __scsi_device_lookup(host, 0, reselection_id, lun);
- 		if(unlikely(SDp == NULL)) {
- 			printk(KERN_ERR "scsi%d: (%d:%d) HAS NO device\n",
- 			       host->host_no, reselection_id, lun);
-@@ -1092,6 +1095,7 @@
- 			}
- 			slot = (struct NCR_700_command_slot *)SCp->host_scribble;
- 		}
-+		spin_unlock_irqrestore(host->host_lock, flags);
- 
- 		if(slot == NULL) {
- 			printk(KERN_ERR "scsi%d: (%d:%d) RESELECTED but no saved command (MSG = %02x %02x %02x)!!\n",
-@@ -1498,7 +1502,7 @@
- 			       host->host_no, SCp, SCp == NULL ? NULL : SCp->host_scribble, dsp, dsp - hostdata->pScript);
- 
- 			/* clear all the negotiated parameters */
--	    		list_for_each_entry(SDp, &host->my_devices, siblings)
-+			__shost_for_each_device(SDp, host)
- 				SDp->hostdata = 0;
- 			
- 			/* clear all the slots and their pending commands */
---- 1.28/drivers/scsi/NCR53C9x.c	Sun Jul 27 21:24:27 2003
-+++ edited/drivers/scsi/NCR53C9x.c	Mon Oct 27 12:01:48 2003
-@@ -815,6 +815,7 @@
- 
- static int esp_host_info(struct NCR_ESP *esp, char *ptr, off_t offset, int len)
- {
-+	struct scsi_device *sdev;
- 	struct info_str info;
- 	int i;
- 
-@@ -867,23 +868,20 @@
- 	
- 	/* Now describe the state of each existing target. */
- 	copy_info(&info, "Target #\tconfig3\t\tSync Capabilities\tDisconnect\n");
--	for(i = 0; i < 15; i++) {
--		if(esp->targets_present & (1 << i)) {
--			Scsi_Device *SDptr;
--			struct esp_device *esp_dev;
- 
--			list_for_each_entry(SDptr, &esp->ehost->my_devices,
--					siblings)
--				if(SDptr->id == i)
--					break;
-+	shost_for_each_device(sdev, esp->ehost) {
-+		struct esp_device *esp_dev = sdev->hostdata;
-+		uint id = sdev->id;
-+
-+		if (!(esp->targets_present & (1 << id)))
-+			continue;
- 
--			esp_dev = SDptr->hostdata;
--			copy_info(&info, "%d\t\t", i);
--			copy_info(&info, "%08lx\t", esp->config3[i]);
--			copy_info(&info, "[%02lx,%02lx]\t\t\t", esp_dev->sync_max_offset,
--				  esp_dev->sync_min_period);
--			copy_info(&info, "%s\n", esp_dev->disconnect ? "yes" : "no");
--		}
-+		copy_info(&info, "%d\t\t", id);
-+		copy_info(&info, "%08lx\t", esp->config3[id]);
-+		copy_info(&info, "[%02lx,%02lx]\t\t\t",
-+			esp_dev->sync_max_offset,
-+			esp_dev->sync_min_period);
-+		copy_info(&info, "%s\n", esp_dev->disconnect ? "yes" : "no");
- 	}
- 
- 	return info.pos > info.offset? info.pos - info.offset : 0;
-===== drivers/scsi/constants.c 1.13 vs edited =====
---- 1.13/drivers/scsi/constants.c	Thu Oct 16 10:52:45 2003
-+++ edited/drivers/scsi/constants.c	Mon Oct 27 12:01:49 2003
-@@ -6,13 +6,13 @@
-  *   by D. Gilbert and aeb (20020609)
-  */
- 
--#include <linux/module.h>
--
- #include <linux/config.h>
-+#include <linux/module.h>
- #include <linux/blkdev.h>
- #include <linux/kernel.h>
-+
-+#include <scsi/scsi_host.h>
- #include "scsi.h"
--#include "hosts.h"
- 
- #define CONST_COMMAND   0x01
- #define CONST_STATUS    0x02
---- 1.33/drivers/scsi/esp.c	Sun Aug  3 18:07:28 2003
-+++ edited/drivers/scsi/esp.c	Mon Oct 27 12:01:49 2003
-@@ -1309,6 +1309,7 @@
- 
- static int esp_host_info(struct esp *esp, char *ptr, off_t offset, int len)
- {
-+	struct scsi_device *sdev;
- 	struct info_str info;
- 	int i;
- 
-@@ -1384,25 +1385,23 @@
- 	
- 	/* Now describe the state of each existing target. */
- 	copy_info(&info, "Target #\tconfig3\t\tSync Capabilities\tDisconnect\tWide\n");
--	for (i = 0; i < 15; i++) {
--		if (esp->targets_present & (1 << i)) {
--			Scsi_Device *SDptr;
--			struct esp_device *esp_dev;
- 
--			list_for_each_entry(SDptr, &esp->ehost->my_devices,
--					siblings)
--				if(SDptr->id == i)
--					break;
-+	shost_for_each_device(sdev, esp->ehost) {
-+		struct esp_device *esp_dev = sdev->hostdata;
-+		uint id = sdev->id;
-+
-+		if (!(esp->targets_present & (1 << id)))
-+			continue;
- 
--			esp_dev = SDptr->hostdata;
--			copy_info(&info, "%d\t\t", i);
--			copy_info(&info, "%08lx\t", esp->config3[i]);
--			copy_info(&info, "[%02lx,%02lx]\t\t\t", esp_dev->sync_max_offset,
--				  esp_dev->sync_min_period);
--			copy_info(&info, "%s\t\t", esp_dev->disconnect ? "yes" : "no");
--			copy_info(&info, "%s\n",
--				  (esp->config3[i] & ESP_CONFIG3_EWIDE) ? "yes" : "no");
--		}
-+		copy_info(&info, "%d\t\t", id);
-+		copy_info(&info, "%08lx\t", esp->config3[id]);
-+		copy_info(&info, "[%02lx,%02lx]\t\t\t",
-+			esp_dev->sync_max_offset,
-+			esp_dev->sync_min_period);
-+		copy_info(&info, "%s\t\t",
-+			esp_dev->disconnect ? "yes" : "no");
-+		copy_info(&info, "%s\n",
-+			(esp->config3[id] & ESP_CONFIG3_EWIDE) ? "yes" : "no");
- 	}
- 	return info.pos > info.offset? info.pos - info.offset : 0;
- }
-===== drivers/scsi/fcal.c 1.13 vs edited =====
---- 1.13/drivers/scsi/fcal.c	Sat Sep 20 16:06:41 2003
-+++ edited/drivers/scsi/fcal.c	Mon Oct 27 12:01:49 2003
-@@ -228,7 +228,7 @@
- #endif
- 	SPRINTF ("Initiator AL-PA: %02x\n", fc->sid);
- 
--	SPRINTF ("\nAttached devices: %s\n", !list_empty(&host->my_devices) ? "" : "none");
-+	SPRINTF ("\nAttached devices:\n");
- 	
- 	for (i = 0; i < fc->posmap->len; i++) {
- 		unsigned char alpa = fc->posmap->list[i];
-===== drivers/scsi/hosts.c 1.94 vs edited =====
---- 1.94/drivers/scsi/hosts.c	Sun Sep 21 19:52:38 2003
-+++ edited/drivers/scsi/hosts.c	Mon Oct 27 12:01:49 2003
-@@ -1,6 +1,7 @@
- /*
-  *  hosts.c Copyright (C) 1992 Drew Eckhardt
-  *          Copyright (C) 1993, 1994, 1995 Eric Youngdale
-+ *          Copyright (C) 2002-2003 Christoph Hellwig
-  *
-  *  mid to lowlevel SCSI driver interface
-  *      Initial versions: Drew Eckhardt
-@@ -30,8 +31,8 @@
- #include <linux/completion.h>
- #include <linux/unistd.h>
- 
-+#include <scsi/scsi_host.h>
- #include "scsi.h"
--#include "hosts.h"
- 
- #include "scsi_priv.h"
- #include "scsi_logging.h"
-@@ -50,6 +51,11 @@
- 	.release	= scsi_host_cls_release,
- };
- 
-+static int scsi_device_cancel_cb(struct device *dev, void *data)
-+{
-+	return scsi_device_cancel(to_scsi_device(dev), *(int *)data);
-+}
-+
- /**
-  * scsi_host_cancel - cancel outstanding IO to this host
-  * @shost:	pointer to struct Scsi_Host
-@@ -57,11 +63,7 @@
-  **/
- void scsi_host_cancel(struct Scsi_Host *shost, int recovery)
- {
--	unsigned long flags;
--
--	spin_lock_irqsave(shost->host_lock, flags);
- 	set_bit(SHOST_CANCEL, &shost->shost_state);
--	spin_unlock_irqrestore(shost->host_lock, flags);
- 	device_for_each_child(&shost->shost_gendev, &recovery,
- 			      scsi_device_cancel_cb);
- 	wait_event(shost->host_wait, (!test_bit(SHOST_RECOVERY,
-@@ -74,15 +76,11 @@
-  **/
- void scsi_remove_host(struct Scsi_Host *shost)
- {
--	unsigned long flags;
--
- 	scsi_host_cancel(shost, 0);
- 	scsi_proc_host_rm(shost);
- 	scsi_forget_host(shost);
- 
--	spin_lock_irqsave(shost->host_lock, flags);
- 	set_bit(SHOST_DEL, &shost->shost_state);
--	spin_unlock_irqrestore(shost->host_lock, flags);
- 
- 	class_device_unregister(&shost->shost_classdev);
- 	device_del(&shost->shost_gendev);
-@@ -209,7 +207,7 @@
- 
- 	spin_lock_init(&shost->default_lock);
- 	scsi_assign_lock(shost, &shost->default_lock);
--	INIT_LIST_HEAD(&shost->my_devices);
-+	INIT_LIST_HEAD(&shost->__devices);
- 	INIT_LIST_HEAD(&shost->eh_cmd_q);
- 	INIT_LIST_HEAD(&shost->starved_list);
- 	init_waitqueue_head(&shost->host_wait);
-@@ -323,23 +321,20 @@
-  **/
- struct Scsi_Host *scsi_host_lookup(unsigned short hostnum)
- {
--	struct class *class = class_get(&shost_class);
-+	struct class *class = &shost_class;
- 	struct class_device *cdev;
- 	struct Scsi_Host *shost = ERR_PTR(-ENXIO), *p;
- 
--	if (class) {
--		down_read(&class->subsys.rwsem);
--		list_for_each_entry(cdev, &class->children, node) {
--			p = class_to_shost(cdev);
--			if (p->host_no == hostnum) {
--				shost = scsi_host_get(p);
--				break;
--			}
-+	down_read(&class->subsys.rwsem);
-+	list_for_each_entry(cdev, &class->children, node) {
-+		p = class_to_shost(cdev);
-+		if (p->host_no == hostnum) {
-+			shost = scsi_host_get(p);
-+			break;
- 		}
--		up_read(&class->subsys.rwsem);
- 	}
-+	up_read(&class->subsys.rwsem);
- 
--	class_put(&shost_class);
- 	return shost;
- }
- 
-===== drivers/scsi/hosts.h 1.75 vs edited =====
---- 1.75/drivers/scsi/hosts.h	Mon Sep  1 22:56:57 2003
-+++ edited/drivers/scsi/hosts.h	Mon Oct 27 12:01:49 2003
-@@ -1,49 +1,2 @@
--/*
-- *  hosts.h Copyright (C) 1992 Drew Eckhardt
-- *          Copyright (C) 1993, 1994, 1995, 1998, 1999 Eric Youngdale
-- *
-- *  mid to low-level SCSI driver interface header
-- *      Initial versions: Drew Eckhardt
-- *      Subsequent revisions: Eric Youngdale
-- *
-- *  <drew@colorado.edu>
-- *
-- *	 Modified by Eric Youngdale eric@andante.org to
-- *	 add scatter-gather, multiple outstanding request, and other
-- *	 enhancements.
-- *
-- *  Further modified by Eric Youngdale to support multiple host adapters
-- *  of the same type.
-- *
-- *  Jiffies wrap fixes (host->resetting), 3 Dec 1998 Andrea Arcangeli
-- *
-- *  Restructured scsi_host lists and associated functions.
-- *  September 04, 2002 Mike Anderson (andmike@us.ibm.com)
-- */
--
--#ifndef _HOSTS_H
--#define _HOSTS_H
--
--#include <linux/config.h>
--
-+// #warning "This file is obsolete, please use <scsi/scsi_host.h> instead"
- #include <scsi/scsi_host.h>
--
--/**
-- * scsi_find_device - find a device given the host
-- * @shost:	SCSI host pointer
-- * @channel:	SCSI channel (zero if only one channel)
-- * @pun:	SCSI target number (physical unit number)
-- * @lun:	SCSI Logical Unit Number
-- **/
--static inline struct scsi_device *scsi_find_device(struct Scsi_Host *shost,
--                                            int channel, int pun, int lun) {
--        struct scsi_device *sdev;
--
--	list_for_each_entry (sdev, &shost->my_devices, siblings)
--                if (sdev->channel == channel && sdev->id == pun
--                   && sdev->lun ==lun)
--                        return sdev;
--        return NULL;
--}
--
--#endif
---- 1.129/drivers/scsi/scsi.c	Sat Oct 18 01:14:06 2003
-+++ edited/drivers/scsi/scsi.c	Mon Oct 27 12:01:49 2003
-@@ -1,6 +1,7 @@
- /*
-  *  scsi.c Copyright (C) 1992 Drew Eckhardt
-  *         Copyright (C) 1993, 1994, 1995, 1999 Eric Youngdale
-+ *         Copyright (C) 2002, 2003 Christoph Hellwig
-  *
-  *  generic mid-level SCSI driver
-  *      Initial versions: Drew Eckhardt
-@@ -36,7 +37,6 @@
-  *  out_of_space hacks, D. Gilbert (dpg) 990608
-  */
- 
--#include <linux/config.h>
- #include <linux/module.h>
- #include <linux/moduleparam.h>
- #include <linux/kernel.h>
-@@ -54,8 +54,8 @@
- #include <linux/kmod.h>
- #include <linux/interrupt.h>
- 
-+#include <scsi/scsi_host.h>
- #include "scsi.h"
--#include "hosts.h"
- 
- #include "scsi_priv.h"
- #include "scsi_logging.h"
-@@ -883,49 +883,124 @@
- 	return depth;
- }
- 
-+/**
-+ * scsi_device_get  -  get an addition reference to a scsi_device
-+ * @sdev:	device to get a reference to
-+ *
-+ * Gets a reference to the scsi_device and increments the use count
-+ * of the underlying LLDD module.  You must hold host_lock of the
-+ * parent Scsi_Host or already have a reference when calling this.
-+ */
- int scsi_device_get(struct scsi_device *sdev)
- {
--	struct class *class = class_get(&sdev_class);
--
--	if (!class)
--		goto out;
- 	if (test_bit(SDEV_DEL, &sdev->sdev_state))
--		goto out;
--	if (!try_module_get(sdev->host->hostt->module))
--		goto out;
-+		return -ENXIO;
- 	if (!get_device(&sdev->sdev_gendev))
--		goto out_put_module;
--	atomic_inc(&sdev->access_count);
--	class_put(&sdev_class);
-+		return -ENXIO;
-+	if (!try_module_get(sdev->host->hostt->module)) {
-+		put_device(&sdev->sdev_gendev);
-+		return -ENXIO;
-+	}
- 	return 0;
-+}
-+EXPORT_SYMBOL(scsi_device_get);
- 
-- out_put_module:
-+/**
-+ * scsi_device_put  -  release a reference to a scsi_device
-+ * @sdev:	device to release a reference on.
-+ *
-+ * Release a reference to the scsi_device and decrements the use count
-+ * of the underlying LLDD module.  The device is freed once the last
-+ * user vanishes.
-+ */
-+void scsi_device_put(struct scsi_device *sdev)
-+{
- 	module_put(sdev->host->hostt->module);
-- out:
--	class_put(&sdev_class);
--	return -ENXIO;
-+	put_device(&sdev->sdev_gendev);
- }
-+EXPORT_SYMBOL(scsi_device_put);
- 
--void scsi_device_put(struct scsi_device *sdev)
-+/* helper for shost_for_each_device, thus not documented */
-+struct scsi_device *__scsi_iterate_devices(struct Scsi_Host *shost,
-+					   struct scsi_device *prev)
- {
--	struct class *class = class_get(&sdev_class);
-+	struct list_head *list = (prev ? &prev->siblings : &shost->__devices);
-+	struct scsi_device *next = NULL;
-+	unsigned long flags;
- 
--	if (!class)
--		return;
-+	spin_lock_irqsave(shost->host_lock, flags);
-+	while (list->next != &shost->__devices) {
-+		next = list_entry(list->next, struct scsi_device, siblings);
-+		/* skip devices that we can't get a reference to */
-+		if (!scsi_device_get(next))
-+			break;
-+		list = list->next;
-+	}
-+	spin_unlock_irqrestore(shost->host_lock, flags);
- 
--	module_put(sdev->host->hostt->module);
--	atomic_dec(&sdev->access_count);
--	put_device(&sdev->sdev_gendev);
--	class_put(&sdev_class);
-+	if (prev)
-+		scsi_device_put(prev);
-+	return next;
- }
-+EXPORT_SYMBOL(__scsi_iterate_devices);
- 
--int scsi_device_cancel_cb(struct device *dev, void *data)
-+/**
-+ * scsi_device_lookup - find a device given the host (UNLOCKED)
-+ * @shost:	SCSI host pointer
-+ * @channel:	SCSI channel (zero if only one channel)
-+ * @pun:	SCSI target number (physical unit number)
-+ * @lun:	SCSI Logical Unit Number
-+ *
-+ * Looks up the scsi_device with the specified @channel, @id, @lun for a
-+ * give host. The returned scsi_device does not have an additional reference.
-+ * You must hold the host's host_lock over this call and any access to the
-+ * returned scsi_device.
-+ *
-+ * Note:  The only reason why drivers would want to use this is because
-+ * they're need to access the device list in irq context.  Otherwise you
-+ * really want to use scsi_device_lookup instead.
-+ **/
-+struct scsi_device *__scsi_device_lookup(struct Scsi_Host *shost,
-+		uint channel, uint id, uint lun)
-+{
-+	struct scsi_device *sdev;
-+
-+	list_for_each_entry(sdev, &shost->__devices, siblings) {
-+		if (sdev->channel == channel && sdev->id == id &&
-+				sdev->lun ==lun)
-+			return sdev;
-+	}
-+
-+	return NULL;
-+}
-+EXPORT_SYMBOL(__scsi_device_lookup);
-+
-+/**
-+ * scsi_device_lookup - find a device given the host
-+ * @shost:	SCSI host pointer
-+ * @channel:	SCSI channel (zero if only one channel)
-+ * @id:		SCSI target number (physical unit number)
-+ * @lun:	SCSI Logical Unit Number
-+ *
-+ * Looks up the scsi_device with the specified @channel, @id, @lun for a
-+ * give host.  The returned scsi_device has an additional reference that
-+ * needs to be release with scsi_host_put once you're done with it.
-+ **/
-+struct scsi_device *scsi_device_lookup(struct Scsi_Host *shost,
-+		uint channel, uint id, uint lun)
- {
--	struct scsi_device *sdev = to_scsi_device(dev);
--	int recovery = *(int *)data;
-+	struct scsi_device *sdev;
-+	unsigned long flags;
-+
-+	spin_lock_irqsave(shost->host_lock, flags);
-+	sdev = __scsi_device_lookup(shost, channel, id, lun);
-+	if (sdev && scsi_device_get(sdev))
-+		sdev = NULL;
-+	spin_unlock_irqrestore(shost->host_lock, flags);
- 
--	return scsi_device_cancel(sdev, recovery);
-+	return sdev;
- }
-+EXPORT_SYMBOL(scsi_device_lookup);
- 
- /**
-  * scsi_device_cancel - cancel outstanding IO to this device
-===== drivers/scsi/scsi.h 1.91 vs edited =====
---- 1.91/drivers/scsi/scsi.h	Sat Sep 20 13:50:50 2003
-+++ edited/drivers/scsi/scsi.h	Mon Oct 27 12:01:41 2003
-@@ -116,12 +116,6 @@
- #define scsi_to_pci_dma_dir(scsi_dir)	((int)(scsi_dir))
- #define scsi_to_sbus_dma_dir(scsi_dir)	((int)(scsi_dir))
- 
--/*
-- * This is the crap from the old error handling code.  We have it in a special
-- * place so that we can more easily delete it later on.
-- */
--#include "scsi_obsolete.h"
--
- /* obsolete typedef junk. */
- #include "scsi_typedefs.h"
- 
---- 1.7/drivers/scsi/scsi_devinfo.c	Thu Oct 16 10:56:58 2003
-+++ edited/drivers/scsi/scsi_devinfo.c	Mon Oct 27 12:01:49 2003
-@@ -6,10 +6,11 @@
- #include <linux/moduleparam.h>
- #include <linux/proc_fs.h>
- #include <linux/seq_file.h>
--#include <scsi/scsi_devinfo.h>
- 
-+#include <scsi/scsi_devinfo.h>
-+#include <scsi/scsi_host.h>
- #include "scsi.h"
--#include "hosts.h"
-+
- #include "scsi_priv.h"
- 
- /*
-===== drivers/scsi/scsi_error.c 1.65 vs edited =====
---- 1.65/drivers/scsi/scsi_error.c	Sun Sep 21 19:49:36 2003
-+++ edited/drivers/scsi/scsi_error.c	Mon Oct 27 12:01:49 2003
-@@ -22,11 +22,10 @@
- #include <linux/kernel.h>
- #include <linux/interrupt.h>
- #include <linux/blkdev.h>
--#include <linux/smp_lock.h>
--#include <scsi/scsi_ioctl.h>
- 
-+#include <scsi/scsi_host.h>
-+#include <scsi/scsi_ioctl.h>
- #include "scsi.h"
--#include "hosts.h"
- 
- #include "scsi_priv.h"
- #include "scsi_logging.h"
-===== drivers/scsi/scsi_ioctl.c 1.24 vs edited =====
---- 1.24/drivers/scsi/scsi_ioctl.c	Mon Aug 25 15:37:40 2003
-+++ edited/drivers/scsi/scsi_ioctl.c	Mon Oct 27 12:01:49 2003
-@@ -17,11 +17,11 @@
- #include <linux/sched.h>
- #include <linux/mm.h>
- #include <linux/string.h>
--
- #include <linux/blkdev.h>
--#include "scsi.h"
--#include "hosts.h"
-+
-+#include <scsi/scsi_host.h>
- #include <scsi/scsi_ioctl.h>
-+#include "scsi.h"
- 
- #include "scsi_logging.h"
- 
-===== drivers/scsi/scsi_lib.c 1.113 vs edited =====
---- 1.113/drivers/scsi/scsi_lib.c	Sat Sep 20 15:53:02 2003
-+++ edited/drivers/scsi/scsi_lib.c	Mon Oct 27 12:01:52 2003
-@@ -16,9 +16,9 @@
- #include <linux/init.h>
- #include <linux/pci.h>
- 
--#include "scsi.h"
--#include "hosts.h"
- #include <scsi/scsi_driver.h>
-+#include <scsi/scsi_host.h>
-+#include "scsi.h"
- 
- #include "scsi_priv.h"
- #include "scsi_logging.h"
-@@ -335,13 +335,14 @@
-  */
- static void scsi_single_lun_run(struct scsi_device *current_sdev)
- {
--	struct scsi_device *sdev;
-+	struct Scsi_Host *shost = current_sdev->host;
-+	struct scsi_device *sdev, *tmp;
- 	unsigned long flags;
- 
--	spin_lock_irqsave(current_sdev->host->host_lock, flags);
-+	spin_lock_irqsave(shost->host_lock, flags);
- 	WARN_ON(!current_sdev->sdev_target->starget_sdev_user);
- 	current_sdev->sdev_target->starget_sdev_user = NULL;
--	spin_unlock_irqrestore(current_sdev->host->host_lock, flags);
-+	spin_unlock_irqrestore(shost->host_lock, flags);
- 
- 	/*
- 	 * Call blk_run_queue for all LUNs on the target, starting with
-@@ -351,21 +352,26 @@
- 	 */
- 	blk_run_queue(current_sdev->request_queue);
- 
--	spin_lock_irqsave(current_sdev->host->host_lock, flags);
--	if (current_sdev->sdev_target->starget_sdev_user) {
--		/*
--		 * After unlock, this races with anyone clearing
--		 * starget_sdev_user, but we (should) always enter this
--		 * function again, avoiding any problems.
--		 */
--		spin_unlock_irqrestore(current_sdev->host->host_lock, flags);
--		return;
--	}
--	spin_unlock_irqrestore(current_sdev->host->host_lock, flags);
-+	/*
-+	 * After unlock, this races with anyone clearing starget_sdev_user,
-+	 * but we always enter this function again, avoiding any problems.
-+	 */
-+	spin_lock_irqsave(shost->host_lock, flags);
-+	if (current_sdev->sdev_target->starget_sdev_user)
-+		goto out;
-+	list_for_each_entry_safe(sdev, tmp, &current_sdev->same_target_siblings,
-+			same_target_siblings) {
-+		if (scsi_device_get(sdev))
-+			continue;
- 
--	list_for_each_entry(sdev, &current_sdev->same_target_siblings,
--			    same_target_siblings)
-+		spin_unlock_irqrestore(shost->host_lock, flags);
- 		blk_run_queue(sdev->request_queue);
-+		spin_lock_irqsave(shost->host_lock, flags);
-+	
-+		scsi_device_put(sdev);
-+	}
-+ out:
-+	spin_unlock_irqrestore(shost->host_lock, flags);
- }
- 
- /*
-===== drivers/scsi/scsi_module.c 1.6 vs edited =====
---- 1.6/drivers/scsi/scsi_module.c	Thu Jul 31 16:32:16 2003
-+++ edited/drivers/scsi/scsi_module.c	Mon Oct 27 12:01:50 2003
-@@ -11,8 +11,8 @@
- #include <linux/kernel.h>
- #include <linux/module.h>
- 
-+#include <scsi/scsi_host.h>
- #include "scsi.h"
--#include "hosts.h"
- 
- 
- static int __init init_this_scsi_driver(void)
---- 1.4/drivers/scsi/scsi_pc98.c	Fri May  2 21:28:28 2003
-+++ edited/drivers/scsi/scsi_pc98.c	Mon Oct 27 12:01:50 2003
-@@ -11,8 +11,8 @@
- #include <linux/blkdev.h>
- #include <asm/pc9800.h>
- 
-+#include <scsi/scsi_host.h>
- #include "scsi.h"
--#include "hosts.h"
- 
- 
- static int pc98_first_bios_param(struct scsi_device *sdev, int *ip)
---- 1.38/drivers/scsi/scsi_proc.c	Sat Sep 20 11:35:07 2003
-+++ edited/drivers/scsi/scsi_proc.c	Mon Oct 27 12:01:50 2003
-@@ -27,8 +27,8 @@
- #include <linux/seq_file.h>
- #include <asm/uaccess.h>
- 
-+#include <scsi/scsi_host.h>
- #include "scsi.h"
--#include "hosts.h"
- 
- #include "scsi_priv.h"
- #include "scsi_logging.h"
-@@ -212,15 +212,13 @@
- 	shost = scsi_host_lookup(host);
- 	if (IS_ERR(shost))
- 		return PTR_ERR(shost);
--	sdev = scsi_find_device(shost, channel, id, lun);
--	if (!sdev)
--		goto out;
--	if (atomic_read(&sdev->access_count))
--		goto out;
-+	sdev = scsi_device_lookup(shost, channel, id, lun);
-+	if (sdev) {
-+		scsi_remove_device(sdev);
-+		scsi_device_put(sdev);
-+		error = 0;
-+	}
- 
--	scsi_remove_device(sdev);
--	error = 0;
--out:
- 	scsi_host_put(shost);
- 	return error;
- }
-===== drivers/scsi/scsi_scan.c 1.109 vs edited =====
---- 1.109/drivers/scsi/scsi_scan.c	Thu Oct 16 10:56:58 2003
-+++ edited/drivers/scsi/scsi_scan.c	Mon Oct 27 12:01:50 2003
-@@ -32,10 +32,10 @@
- #include <linux/blkdev.h>
- #include <asm/semaphore.h>
- 
--#include "scsi.h"
--#include "hosts.h"
- #include <scsi/scsi_driver.h>
- #include <scsi/scsi_devinfo.h>
-+#include <scsi/scsi_host.h>
-+#include "scsi.h"
- 
- #include "scsi_priv.h"
- #include "scsi_logging.h"
-@@ -190,13 +190,13 @@
- 	       	uint channel, uint id, uint lun)
- {
- 	struct scsi_device *sdev, *device;
-+	unsigned long flags;
- 
- 	sdev = kmalloc(sizeof(*sdev), GFP_ATOMIC);
- 	if (!sdev)
- 		goto out;
- 
- 	memset(sdev, 0, sizeof(*sdev));
--	atomic_set(&sdev->access_count, 0);
- 	sdev->vendor = scsi_null_device_strs;
- 	sdev->model = scsi_null_device_strs;
- 	sdev->rev = scsi_null_device_strs;
-@@ -240,7 +240,8 @@
- 	 * If there are any same target siblings, add this to the
- 	 * sibling list
- 	 */
--	list_for_each_entry(device, &shost->my_devices, siblings) {
-+	spin_lock_irqsave(shost->host_lock, flags);
-+	list_for_each_entry(device, &shost->__devices, siblings) {
- 		if (device->id == sdev->id &&
- 		    device->channel == sdev->channel) {
- 			list_add_tail(&sdev->same_target_siblings,
-@@ -258,10 +259,8 @@
- 	if (!sdev->scsi_level)
- 		sdev->scsi_level = SCSI_2;
- 
--	/*
--	 * Add it to the end of the shost->my_devices list.
--	 */
--	list_add_tail(&sdev->siblings, &shost->my_devices);
-+	list_add_tail(&sdev->siblings, &shost->__devices);
-+	spin_unlock_irqrestore(shost->host_lock, flags);
- 	return sdev;
- 
- out_free_queue:
-@@ -285,21 +284,21 @@
- {
- 	unsigned long flags;
- 
-+	spin_lock_irqsave(sdev->host->host_lock, flags);
- 	list_del(&sdev->siblings);
- 	list_del(&sdev->same_target_siblings);
-+	spin_unlock_irqrestore(sdev->host->host_lock, flags);
- 
- 	if (sdev->request_queue)
- 		scsi_free_queue(sdev->request_queue);
--	if (sdev->inquiry)
--		kfree(sdev->inquiry);
-+
- 	spin_lock_irqsave(sdev->host->host_lock, flags);
- 	list_del(&sdev->starved_entry);
--	if (sdev->single_lun) {
--		if (--sdev->sdev_target->starget_refcnt == 0)
--			kfree(sdev->sdev_target);
--	}
-+	if (sdev->single_lun && --sdev->sdev_target->starget_refcnt == 0)
-+		kfree(sdev->sdev_target);
- 	spin_unlock_irqrestore(sdev->host->host_lock, flags);
- 
-+	kfree(sdev->inquiry);
- 	kfree(sdev);
- }
- 
-@@ -678,7 +677,7 @@
- 	 * host adapter calls into here with rescan == 0.
- 	 */
- 	if (rescan) {
--		sdev = scsi_find_device(host, channel, id, lun);
-+		sdev = scsi_device_lookup(host, channel, id, lun);
- 		if (sdev) {
- 			SCSI_LOG_SCAN_BUS(3, printk(KERN_INFO
- 				"scsi scan: device exists on <%d:%d:%d:%d>\n",
-@@ -689,6 +688,8 @@
- 				*bflagsp = scsi_get_device_flags(sdev,
- 								 sdev->vendor,
- 								 sdev->model);
-+			/* XXX: bandaid until callers do refcounting */
-+			scsi_device_put(sdev);
- 			return SCSI_SCAN_LUN_PRESENT;
- 		}
- 	}
-@@ -1232,14 +1233,25 @@
- 
- void scsi_forget_host(struct Scsi_Host *shost)
- {
--	struct list_head *le, *lh;
--	struct scsi_device *sdev;
-+	struct scsi_device *sdev, *tmp;
-+	unsigned long flags;
- 
--	list_for_each_safe(le, lh, &shost->my_devices) {
--		sdev = list_entry(le, struct scsi_device, siblings);
--		
-+	/*
-+	 * Ok, this look a bit strange.  We always look for the first device
-+	 * on the list as scsi_remove_device removes them from it - thus we
-+	 * also have to release the lock.
-+	 * We don't need to get another reference to the device before
-+	 * releasing the lock as we already own the reference from
-+	 * scsi_register_device that's release in scsi_remove_device.  And
-+	 * after that we don't look at sdev anymore.
-+	 */
-+	spin_lock_irqsave(shost->host_lock, flags);
-+	list_for_each_entry_safe(sdev, tmp, &shost->__devices, siblings) {
-+		spin_unlock_irqrestore(shost->host_lock, flags);
- 		scsi_remove_device(sdev);
-+		spin_lock_irqsave(shost->host_lock, flags);
- 	}
-+	spin_unlock_irqrestore(shost->host_lock, flags);
- }
- 
- /*
-===== drivers/scsi/scsi_syms.c 1.45 vs edited =====
---- 1.45/drivers/scsi/scsi_syms.c	Thu Jul 31 16:32:18 2003
-+++ edited/drivers/scsi/scsi_syms.c	Mon Oct 27 12:01:50 2003
-@@ -18,13 +18,14 @@
- #include <asm/irq.h>
- #include <asm/dma.h>
- 
--#include "scsi.h"
- #include <scsi/scsi_driver.h>
-+#include <scsi/scsi_host.h>
- #include <scsi/scsi_ioctl.h>
--#include "hosts.h"
-+#include <scsi/scsicam.h>
-+#include "scsi.h"
-+
- #include "scsi_logging.h"
- 
--#include <scsi/scsicam.h>
- 
- /*
-  * This source file contains the symbol table used by scsi loadable
-@@ -82,8 +83,6 @@
- 
- EXPORT_SYMBOL(scsi_io_completion);
- 
--EXPORT_SYMBOL(scsi_device_get);
--EXPORT_SYMBOL(scsi_device_put);
- EXPORT_SYMBOL(scsi_add_device);
- EXPORT_SYMBOL(scsi_remove_device);
- EXPORT_SYMBOL(scsi_device_cancel);
-===== drivers/scsi/scsi_sysfs.c 1.35 vs edited =====
---- 1.35/drivers/scsi/scsi_sysfs.c	Sat Oct 18 01:34:55 2003
-+++ edited/drivers/scsi/scsi_sysfs.c	Mon Oct 27 12:01:50 2003
-@@ -11,8 +11,9 @@
- #include <linux/init.h>
- #include <linux/blkdev.h>
- #include <linux/device.h>
-+
-+#include <scsi/scsi_host.h>
- #include "scsi.h"
--#include "hosts.h"
- 
- #include "scsi_priv.h"
- #include "scsi_logging.h"
-@@ -257,20 +258,12 @@
- 	scsi_rescan_device(dev);
- 	return count;
- }
--
- static DEVICE_ATTR(rescan, S_IWUSR, NULL, store_rescan_field)
- 
- static ssize_t sdev_store_delete(struct device *dev, const char *buf,
- 				 size_t count)
- {
--	struct scsi_device *sdev = to_scsi_device(dev);
--
--	/*
--	 * FIXME and scsi_proc.c: racey use of access_count,
--	 */
--	if (atomic_read(&sdev->access_count))
--		return -EBUSY;
--	scsi_remove_device(sdev);
-+	scsi_remove_device(to_scsi_device(dev));
- 	return count;
- };
- static DEVICE_ATTR(delete, S_IWUSR, NULL, sdev_store_delete);
-@@ -403,22 +396,11 @@
-  **/
- void scsi_remove_device(struct scsi_device *sdev)
- {
--	struct class *class = class_get(&sdev_class);
--
- 	class_device_unregister(&sdev->sdev_classdev);
--
--	if (class) {
--		down_write(&class->subsys.rwsem);
--		set_bit(SDEV_DEL, &sdev->sdev_state);
--		if (sdev->host->hostt->slave_destroy)
--			sdev->host->hostt->slave_destroy(sdev);
--		device_del(&sdev->sdev_gendev);
--		up_write(&class->subsys.rwsem);
--	}
--
-+	if (sdev->host->hostt->slave_destroy)
-+		sdev->host->hostt->slave_destroy(sdev);
-+	device_del(&sdev->sdev_gendev);
- 	put_device(&sdev->sdev_gendev);
--
--	class_put(&sdev_class);
- }
- 
- int scsi_register_driver(struct device_driver *drv)
-===== drivers/scsi/sg.c 1.70 vs edited =====
---- 1.70/drivers/scsi/sg.c	Tue Oct 21 00:15:18 2003
-+++ edited/drivers/scsi/sg.c	Mon Oct 27 12:01:50 2003
-@@ -914,7 +914,8 @@
- 	case SG_GET_VERSION_NUM:
- 		return put_user(sg_version_num, (int *) arg);
- 	case SG_GET_ACCESS_COUNT:
--		val = (sdp->device ? atomic_read(&sdp->device->access_count) : 0);
-+		/* faked - we don't have a real access count anymore */
-+		val = (sdp->device ? 1 : 0);
- 		return put_user(val, (int *) arg);
- 	case SG_GET_REQUEST_TABLE:
- 		result = verify_area(VERIFY_WRITE, (void *) arg,
-@@ -2903,7 +2904,7 @@
- 			PRINT_PROC("%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\n",
- 				   scsidp->host->host_no, scsidp->channel,
- 				   scsidp->id, scsidp->lun, (int) scsidp->type,
--				   (int) atomic_read(&scsidp->access_count),
-+				   1,
- 				   (int) scsidp->queue_depth,
- 				   (int) scsidp->device_busy,
- 				   (int) scsidp->online);
-===== drivers/scsi/arm/acornscsi.c 1.35 vs edited =====
---- 1.35/drivers/scsi/arm/acornscsi.c	Mon Aug 25 15:37:34 2003
-+++ edited/drivers/scsi/arm/acornscsi.c	Mon Oct 27 12:01:49 2003
-@@ -2930,7 +2930,7 @@
- 
-     p += sprintf(p, "\nAttached devices:\n");
- 
--    list_for_each_entry(scd, &instance->my_devices, siblings) {
-+    shost_for_each_device(scd, instance) {
- 	p += sprintf(p, "Device/Lun TaggedQ      Sync\n");
- 	p += sprintf(p, "     %d/%d   ", scd->id, scd->lun);
- 	if (scd->tagged_supported)
-@@ -2953,8 +2953,10 @@
- 	    p = buffer;
- 	}
- 	pos = p - buffer;
--	if (pos + begin > offset + length)
-+	if (pos + begin > offset + length) {
-+	    scsi_device_put(scd);
- 	    break;
-+	}
-     }
- 
-     pos = p - buffer;
---- 1.9/include/scsi/scsi_device.h	Thu Oct 16 10:56:58 2003
-+++ edited/include/scsi/scsi_device.h	Mon Oct 27 12:01:52 2003
-@@ -22,10 +22,13 @@
- };
- 
- struct scsi_device {
--	struct list_head    siblings;   /* list of all devices on this host */
--	struct list_head    same_target_siblings; /* just the devices sharing same target id */
- 	struct Scsi_Host *host;
- 	struct request_queue *request_queue;
-+
-+	/* the next two are protected by the host->host_lock */
-+	struct list_head    siblings;   /* list of all devices on this host */
-+	struct list_head    same_target_siblings; /* just the devices sharing same target id */
-+
- 	volatile unsigned short device_busy;	/* commands actually active on low-level */
- 	spinlock_t sdev_lock;           /* also the request queue_lock */
- 	spinlock_t list_lock;
-@@ -45,8 +48,6 @@
- 					 * vendor-specific cmd's */
- 	unsigned sector_size;	/* size in bytes */
- 
--	atomic_t access_count;	/* Count of open channels/mounts */
--
- 	void *hostdata;		/* available to low-level driver */
- 	char devfs_name[256];	/* devfs junk */
- 	char type;
-@@ -108,14 +109,48 @@
- extern struct scsi_device *scsi_add_device(struct Scsi_Host *,
- 		uint, uint, uint);
- extern void scsi_remove_device(struct scsi_device *);
--extern int scsi_device_cancel_cb(struct device *, void *);
- extern int scsi_device_cancel(struct scsi_device *, int);
- 
- extern int scsi_device_get(struct scsi_device *);
- extern void scsi_device_put(struct scsi_device *);
--
-+extern struct scsi_device *scsi_device_lookup(struct Scsi_Host *,
-+					      uint, uint, uint);
-+extern struct scsi_device *__scsi_device_lookup(struct Scsi_Host *,
-+						uint, uint, uint);
-+
-+/* only exposed to implement shost_for_each_device */
-+extern struct scsi_device *__scsi_iterate_devices(struct Scsi_Host *,
-+						  struct scsi_device *);
-+
-+/**
-+ * shost_for_each_device  -  iterate over all devices of a host
-+ * @sdev:	iterator
-+ * @host:	host whiches devices we want to iterate over
-+ *
-+ * This traverses over each devices of @shost.  The devices have
-+ * a reference that must be released by scsi_host_put when breaking
-+ * out of the loop.
-+ */
- #define shost_for_each_device(sdev, shost) \
--	list_for_each_entry((sdev), &((shost)->my_devices), siblings)
-+	for ((sdev) = __scsi_iterate_devices((shost), NULL); \
-+	     (sdev); \
-+	     (sdev) = __scsi_iterate_devices((shost), (sdev)))
-+
-+/**
-+ * __shost_for_each_device  -  iterate over all devices of a host (UNLOCKED)
-+ * @sdev:	iterator
-+ * @host:	host whiches devices we want to iterate over
-+ *
-+ * This traverses over each devices of @shost.  It does _not_ take a
-+ * reference on the scsi_device, thus it the whole loop must be protected
-+ * by shost->host_lock.
-+ *
-+ * Note:  The only reason why drivers would want to use this is because
-+ * they're need to access the device list in irq context.  Otherwise you
-+ * really want to use shost_for_each_device instead.
-+ */
-+#define __shost_for_each_device(sdev, shost) \
-+	list_for_each_entry((sdev), &((shost)->__devices), siblings)
- 
- extern void scsi_adjust_queue_depth(struct scsi_device *, int, int);
- extern int scsi_track_queue_full(struct scsi_device *, int);
-===== include/scsi/scsi_driver.h 1.1 vs edited =====
---- 1.1/include/scsi/scsi_driver.h	Thu Jun 26 19:08:24 2003
-+++ edited/include/scsi/scsi_driver.h	Mon Oct 27 12:01:50 2003
-@@ -4,6 +4,7 @@
- #include <linux/device.h>
- 
- struct module;
-+struct scsi_cmnd;
- 
- 
- struct scsi_driver {
-===== include/scsi/scsi_host.h 1.12 vs edited =====
---- 1.12/include/scsi/scsi_host.h	Thu Oct 16 10:56:58 2003
-+++ edited/include/scsi/scsi_host.h	Mon Oct 27 12:01:50 2003
-@@ -125,15 +125,6 @@
- 	int (* eh_host_reset_handler)(struct scsi_cmnd *);
- 
- 	/*
--	 * Old EH handlers, no longer used. Make them warn the user of old
--	 * drivers by using a wrong type
--	 *
--	 * Status: MORE THAN OBSOLETE
--	 */
--	int (* abort)(int);
--	int (* reset)(int, int);
--
--	/*
- 	 * Before the mid layer attempts to scan for a new device where none
- 	 * currently exists, it will call this entry in your driver.  Should
- 	 * your driver need to allocate any structs or perform any other init
-@@ -363,19 +354,30 @@
- };
- 
- struct Scsi_Host {
--	struct list_head	my_devices;
-+	/*
-+	 * __devices is protected by the host_lock, but you should
-+	 * usually use scsi_device_lookup / shost_for_each_device
-+	 * to access it and don't care about locking yourself.
-+	 * In the rare case of beeing in irq context you can use
-+	 * their __ prefixed variants with the lock held. NEVER
-+	 * access this list directly from a driver.
-+	 */
-+	struct list_head	__devices;
-+	
- 	struct scsi_host_cmd_pool *cmd_pool;
- 	spinlock_t		free_list_lock;
--	struct list_head	free_list;   /* backup store of cmd structs */
-+	struct list_head	free_list; /* backup store of cmd structs */
- 	struct list_head	starved_list;
- 
- 	spinlock_t		default_lock;
- 	spinlock_t		*host_lock;
- 
-+	struct semaphore	scan_mutex;/* serialize scanning activity */
-+
- 	struct list_head	eh_cmd_q;
- 	struct task_struct    * ehandler;  /* Error recovery thread. */
--	struct semaphore      * eh_wait;   /* The error recovery thread waits on
--                                          this. */
-+	struct semaphore      * eh_wait;   /* The error recovery thread waits
-+					      on this. */
- 	struct completion     * eh_notify; /* wait for eh to begin or end */
- 	struct semaphore      * eh_action; /* Wait for specific actions on the
-                                           host. */
-@@ -477,12 +479,6 @@
- 	 * module_init/module_exit.
- 	 */
- 	struct list_head sht_legacy_list;
--
--	/*
--	 * This mutex serializes all scsi scanning activity from kernel- and
--	 * userspace.
--	 */
--	struct semaphore scan_mutex;
- 
- 	/*
- 	 * We should ensure that this is aligned, both for better performance
+(redirected to linux-scsi mailing list)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Date: Mon, 27 Oct 2003 11:21:52 -0500 (EST)
+From: "Kenneth H. Braun" <kbraun@dgrunt.sneakernet.com>
+To: linux-kernel@vger.kernel.org
+Cc: fischer@norbit.de
+Subject: PROBLEM: linux-2.6.0-test9 oops when loading scsi module (aha152x)
+
+Hi Folks
+
+This is my first attempt at posting an oops report so please bear with me.
+
+Please cc me directly - I am on a horribly slow dial-up and do not
+subscribe to lkml.
+
+The diagnostic stuff that I am attaching was generated
+using kernel 2.6-test9 but 2.6-test7 and 2.6-test8 do the same thing.
+
+Whenever the aha152x driver attempts to load, whether as a module or as a
+kernel "built-in" it Oopses. I have attached a gzipped tarball of all the
+info that I have been able to gather. The stuff from /proc was taken just
+prior to invoking "modprobe aha152x". I have also included excerpts
+from the syslog and messages files.
+
+Let me know if you need anything else and I will try to get it for you.
+
+Thanks for your help
+
+-- Ken --
+
+Ken Braun
+Sysadmin at sneakernet.com
+kbraun@dgrunt.sneakernet.com
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+1.  The oops-files.tar.gz attachment is not gzipped, it's just a tar file.
+
+2.  Looks to me like aha152x::busfree_run() is reference cmnd->device->...
+without initializing it.  Below is a simple patch to initialize it.
+
+SCSI people, is it OK to copy device pointers like this?
+Is there a reference counting method for this?
+Is there a SCSI kernel API that should be used instead?
+
+
+--
+~Randy
+
+
+description:	busfree_run() allocates a cmnd and references
+		cmnd->device->... without setting cmd->device
+changelog:	_
+product_versions: Linux 2.6.0-test9
+patch_name:	aha152x-device-ptr.patch
+author:		Randy.Dunlap <rddunlap@osdl.org>
+patch_version:	2003-10-27.10:54:42
+
+diffstat:=
+ drivers/scsi/aha152x.c |    1 +
+ 1 files changed, 1 insertion(+)
+
+diff -Naurp ./drivers/scsi/aha152x.c~aha152xfix ./drivers/scsi/aha152x.c
+--- ./drivers/scsi/aha152x.c~aha152xfix	2003-10-25 11:42:50.000000000 -0700
++++ ./drivers/scsi/aha152x.c	2003-10-27 10:54:09.000000000 -0800
+@@ -2018,6 +2018,7 @@ static void busfree_run(struct Scsi_Host
+ 					cmnd->cmnd[4]         = sizeof(ptr->sense_buffer);
+ 					cmnd->cmnd[5]         = 0;
+ 					cmnd->cmd_len	      = 6;
++					cmnd->device          = ptr->device;
+ 					cmnd->device->host    = ptr->device->host;
+ 					cmnd->device->id      = ptr->device->id;
+ 					cmnd->device->lun     = ptr->device->lun;
+
+--Multipart_Mon__27_Oct_2003_11:07:05_-0800_09a93200
+Content-Type: APPLICATION/octet-stream;
+ name="oops-files.tar.gz"
+Content-Disposition: attachment;
+ filename="oops-files.tar.gz"
+Content-Transfer-Encoding: base64
+
+Li9rc3ltb29wcy5jb21tYW5kAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADAxMDA2NjYAMDAwMDAw
+MAAwMDAwMDAwADAwMDAwMDAwMTQyADA3NzQ3MjMwMjQxADAxMzE0NQAgMAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAB1c3RhciAgAHJvb3QAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAcm9vdAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABr
+c3ltb29wcyAtdiAvdXNyL3NyYy9saW51eC92bWxpbnV4IC1LIC1MIC1tIC91c3Ivc3JjL2xpbnV4
+L1N5c3RlbS5tYXAgPCBvb3BzLnR4dCA+a3N5bW9vcHMub3V0cHV0CgAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAC4v
+a3N5bW9vcHMub3V0cHV0AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAwMTAwNjY2ADAwMDAwMDAA
+MDAwMDAwMAAwMDAwMDAwNjE1MgAwNzc0NzIzMDQxMwAwMTMwNzcAIDAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAdXN0YXIgIAByb290AAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAHJvb3QAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAa3N5
+bW9vcHMgMi40Ljkgb24gaTU4NiAyLjYuMC10ZXN0OS4gIE9wdGlvbnMgdXNlZAogICAgIC12IC91
+c3Ivc3JjL2xpbnV4L3ZtbGludXggKHNwZWNpZmllZCkKICAgICAtSyAoc3BlY2lmaWVkKQogICAg
+IC1MIChzcGVjaWZpZWQpCiAgICAgLW8gL2xpYi9tb2R1bGVzLzIuNi4wLXRlc3Q5LyAoZGVmYXVs
+dCkKICAgICAtbSAvdXNyL3NyYy9saW51eC9TeXN0ZW0ubWFwIChzcGVjaWZpZWQpCgpObyBtb2R1
+bGVzIGluIGtzeW1zLCBza2lwcGluZyBvYmplY3RzCk9jdCAyNyAwOToyNDoxNiBkZ3J1bnQga2Vy
+bmVsOiBVbmFibGUgdG8gaGFuZGxlIGtlcm5lbCBwYWdpbmcgcmVxdWVzdCBhdCB2aXJ0dWFsIGFk
+ZHJlc3MgMzIyMDc0NzMKT2N0IDI3IDA5OjI0OjE2IGRncnVudCBrZXJuZWw6IGRhOGQ2YjAyCk9j
+dCAyNyAwOToyNDoxNiBkZ3J1bnQga2VybmVsOiAqcGRlID0gMDAwMDAwMDAKT2N0IDI3IDA5OjI0
+OjE2IGRncnVudCBrZXJuZWw6IE9vcHM6IDAwMDIgWyMxXQpPY3QgMjcgMDk6MjQ6MTYgZGdydW50
+IGtlcm5lbDogQ1BVOiAgICAwCk9jdCAyNyAwOToyNDoxNiBkZ3J1bnQga2VybmVsOiBFSVA6ICAg
+IDAwNjA6WzxkYThkNmIwMj5dICAgIE5vdCB0YWludGVkClVzaW5nIGRlZmF1bHRzIGZyb20ga3N5
+bW9vcHMgLXQgZWxmMzItaTM4NiAtYSBpMzg2Ck9jdCAyNyAwOToyNDoxNiBkZ3J1bnQga2VybmVs
+OiBFRkxBR1M6IDAwMDEwMDg2Ck9jdCAyNyAwOToyNDoxNiBkZ3J1bnQga2VybmVsOiBlYXg6IGQ5
+YjVlMDAwICAgZWJ4OiBjMTQzYzAwMCAgIGVjeDogMDAwMDAwMDEgICBlZHg6IDMyMjA3NDYzCk9j
+dCAyNyAwOToyNDoxNiBkZ3J1bnQga2VybmVsOiBlc2k6IGQ5NmRjYTAwICAgZWRpOiBkOWI1ZTAw
+MCAgIGVicDogZDcwZjJlNDAgICBlc3A6IGMxNDNkZjRjCk9jdCAyNyAwOToyNDoxNiBkZ3J1bnQg
+a2VybmVsOiBkczogMDA3YiAgIGVzOiAwMDdiICAgc3M6IDAwNjgKT2N0IDI3IDA5OjI0OjE2IGRn
+cnVudCBrZXJuZWw6IFN0YWNrOiAwMDAwMDAwMCBkOWI1ZTAwMCBjMTQzYzAwMCAwMDAwMDAwMSAw
+MDAwMDAwMiAwMDAwMDI4MiBkYThkOGNjNyBkOWI1ZTAwMCAKT2N0IDI3IDA5OjI0OjE2IGRncnVu
+dCBrZXJuZWw6ICAgICAgICAwMDAwMDAwMCBkYThkZTU3MCBkYThkZTU4MCAwMDAwMDIxNiBkOWI1
+ZTFlOCBkOWI1ZTI1OCBmZmZkOWFhNiBkYThkNjdkMCAKT2N0IDI3IDA5OjI0OjE2IGRncnVudCBr
+ZXJuZWw6ICAgICAgICBkOWI1ZTAwMCBjMTQzYzAwMCBkYThkZTU4NCBjMDEyOGIxMiAwMDAwMDAw
+MCBjMDEyODk1OCAwMDAwMDAwMCAwMDAwMDAwMCAKT2N0IDI3IDA5OjI0OjE2IGRncnVudCBrZXJu
+ZWw6IENhbGwgVHJhY2U6Ck9jdCAyNyAwOToyNDoxNiBkZ3J1bnQga2VybmVsOiAgWzxkYThkOGNj
+Nz5dIGlzX2NvbXBsZXRlKzB4MWJmLzB4MmQwIFthaGExNTJ4XQpPY3QgMjcgMDk6MjQ6MTYgZGdy
+dW50IGtlcm5lbDogIFs8ZGE4ZDY3ZDA+XSBydW4rMHgzMC8weDNjIFthaGExNTJ4XQpPY3QgMjcg
+MDk6MjQ6MTYgZGdydW50IGtlcm5lbDogIFs8YzAxMjhiMTI+XSB3b3JrZXJfdGhyZWFkKzB4MWJh
+LzB4MjdjCk9jdCAyNyAwOToyNDoxNiBkZ3J1bnQga2VybmVsOiAgWzxjMDEyODk1OD5dIHdvcmtl
+cl90aHJlYWQrMHgwLzB4MjdjCk9jdCAyNyAwOToyNDoxNiBkZ3J1bnQga2VybmVsOiAgWzxkYThk
+NjdhMD5dIHJ1bisweDAvMHgzYyBbYWhhMTUyeF0KT2N0IDI3IDA5OjI0OjE2IGRncnVudCBrZXJu
+ZWw6ICBbPGMwMTE4OGI4Pl0gZGVmYXVsdF93YWtlX2Z1bmN0aW9uKzB4MC8weDE4Ck9jdCAyNyAw
+OToyNDoxNiBkZ3J1bnQga2VybmVsOiAgWzxjMDExODhiOD5dIGRlZmF1bHRfd2FrZV9mdW5jdGlv
+bisweDAvMHgxOApPY3QgMjcgMDk6MjQ6MTYgZGdydW50IGtlcm5lbDogIFs8YzAxMDg5N2Q+XSBr
+ZXJuZWxfdGhyZWFkX2hlbHBlcisweDUvMHhjCk9jdCAyNyAwOToyNDoxNiBkZ3J1bnQga2VybmVs
+OiBDb2RlOiA4OSA0MiAxMCA4YiA0NSAwNCA4YiA1NiAwNCA4YiA0MCA0NCA4OSA0MiA0NCA4YiA0
+NSAwNCA4YiA1NiAKCgo+PkVJUDsgZGE4ZDZiMDIgPEVORF9PRl9DT0RFKzFhNWIwZjllLz8/Pz8+
+ICAgPD09PT09CgpUcmFjZTsgZGE4ZDhjYzcgPEVORF9PRl9DT0RFKzFhNWIzMTYzLz8/Pz8+ClRy
+YWNlOyBkYThkNjdkMCA8RU5EX09GX0NPREUrMWE1YjBjNmMvPz8/Pz4KVHJhY2U7IGMwMTI4YjEy
+IDxkb19tcmVtYXArMTQ2LzU5Yz4KVHJhY2U7IGMwMTI4OTU4IDxtb3ZlX3BhZ2VfdGFibGVzKzE0
+Lzg4PgpUcmFjZTsgZGE4ZDY3YTAgPEVORF9PRl9DT0RFKzFhNWIwYzNjLz8/Pz8+ClRyYWNlOyBj
+MDExODhiOCA8Z2V0X21vZHVsZV9saXN0KzFiNC8yZDA+ClRyYWNlOyBjMDExODhiOCA8Z2V0X21v
+ZHVsZV9saXN0KzFiNC8yZDA+ClRyYWNlOyBjMDEwODk3ZCA8c2hvd190cmFjZSsxZC9mMD4KCkNv
+ZGU7ICBkYThkNmIwMiA8RU5EX09GX0NPREUrMWE1YjBmOWUvPz8/Pz4KMDAwMDAwMDAgPF9FSVA+
+OgpDb2RlOyAgZGE4ZDZiMDIgPEVORF9PRl9DT0RFKzFhNWIwZjllLz8/Pz8+ICAgPD09PT09CiAg
+IDA6ICAgODkgNDIgMTAgICAgICAgICAgICAgICAgICBtb3YgICAgJWVheCwweDEwKCVlZHgpICAg
+PD09PT09CkNvZGU7ICBkYThkNmIwNSA8RU5EX09GX0NPREUrMWE1YjBmYTEvPz8/Pz4KICAgMzog
+ICA4YiA0NSAwNCAgICAgICAgICAgICAgICAgIG1vdiAgICAweDQoJWVicCksJWVheApDb2RlOyAg
+ZGE4ZDZiMDggPEVORF9PRl9DT0RFKzFhNWIwZmE0Lz8/Pz8+CiAgIDY6ICAgOGIgNTYgMDQgICAg
+ICAgICAgICAgICAgICBtb3YgICAgMHg0KCVlc2kpLCVlZHgKQ29kZTsgIGRhOGQ2YjBiIDxFTkRf
+T0ZfQ09ERSsxYTViMGZhNy8/Pz8/PgogICA5OiAgIDhiIDQwIDQ0ICAgICAgICAgICAgICAgICAg
+bW92ICAgIDB4NDQoJWVheCksJWVheApDb2RlOyAgZGE4ZDZiMGUgPEVORF9PRl9DT0RFKzFhNWIw
+ZmFhLz8/Pz8+CiAgIGM6ICAgODkgNDIgNDQgICAgICAgICAgICAgICAgICBtb3YgICAgJWVheCww
+eDQ0KCVlZHgpCkNvZGU7ICBkYThkNmIxMSA8RU5EX09GX0NPREUrMWE1YjBmYWQvPz8/Pz4KICAg
+ZjogICA4YiA0NSAwNCAgICAgICAgICAgICAgICAgIG1vdiAgICAweDQoJWVicCksJWVheApDb2Rl
+OyAgZGE4ZDZiMTQgPEVORF9PRl9DT0RFKzFhNWIwZmIwLz8/Pz8+CiAgMTI6ICAgOGIgNTYgMDAg
+ICAgICAgICAgICAgICAgICBtb3YgICAgMHgwKCVlc2kpLCVlZHgKCgAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAuL2xzcGNpLW91
+dHB1dAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMDEwMDY2NgAwMDAwMDAwADAwMDAwMDAA
+MDAwMDAwMDEyNzUAMDc3NDcyMzA1MDcAMDEyMzMxACAwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAHVzdGFyICAAcm9vdAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAByb290AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADAwOjAwLjAgSG9z
+dCBicmlkZ2U6IFZJQSBUZWNobm9sb2dpZXMsIEluYy4gVlQ4MkM1OTggW0Fwb2xsbyBNVlAzXSAo
+cmV2IDA0KQowMDowMS4wIFBDSSBicmlkZ2U6IFZJQSBUZWNobm9sb2dpZXMsIEluYy4gVlQ4MkM1
+OTgvNjk0eCBbQXBvbGxvIE1WUDMvUHJvMTMzeCBBR1BdCjAwOjA3LjAgSVNBIGJyaWRnZTogVklB
+IFRlY2hub2xvZ2llcywgSW5jLiBWVDgyQzU4Ni9BL0IgUENJLXRvLUlTQSBbQXBvbGxvIFZQXSAo
+cmV2IDQ3KQowMDowNy4xIElERSBpbnRlcmZhY2U6IFZJQSBUZWNobm9sb2dpZXMsIEluYy4gQnVz
+IE1hc3RlciBJREUgKHJldiAwNikKMDA6MDcuMyBIb3N0IGJyaWRnZTogVklBIFRlY2hub2xvZ2ll
+cywgSW5jLiBWVDgyQzU4NkIgQUNQSSAocmV2IDEwKQowMDowOC4wIE5ldHdvcmsgY29udHJvbGxl
+cjogSGFycmlzIFNlbWljb25kdWN0b3I6IFVua25vd24gZGV2aWNlIDM4NzMgKHJldiAwMSkKMDA6
+MDkuMCBTQ1NJIHN0b3JhZ2UgY29udHJvbGxlcjogQWRhcHRlYyBBSEEtMjk0MFUvVVcvRCAvIEFJ
+Qy03ODgxVQowMDowYS4wIFZHQSBjb21wYXRpYmxlIGNvbnRyb2xsZXI6IG5WaWRpYSBDb3Jwb3Jh
+dGlvbiBOVjYgW1ZhbnRhXSAocmV2IDE1KQowMDowYi4wIEV0aGVybmV0IGNvbnRyb2xsZXI6IERp
+Z2l0YWwgRXF1aXBtZW50IENvcnBvcmF0aW9uIERFQ2NoaXAgMjExNDAgW0Zhc3Rlck5ldF0gKHJl
+diAyMCkKAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAuL21lc3NhZ2VzLWV4
+Y2VycHQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMDEwMDY0NAAwMDAwMDAwADAwMDAwMDAAMDAw
+MDAwMzUxNzYAMDc3NDcyNDAwNTMAMDEzMTQwACAwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAHVzdGFyICAAcm9vdAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABy
+b290AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAE9jdCAyNyAwOToxNzo1
+MiBkZ3J1bnQgaW5pdDogU3dpdGNoaW5nIHRvIHJ1bmxldmVsOiA2Ck9jdCAyNyAwOToxNzo1MiBk
+Z3J1bnQgcHBwZFsyMjYxMV06IFRlcm1pbmF0aW5nIG9uIHNpZ25hbCAxNS4KT2N0IDI3IDA5OjE3
+OjUzIGRncnVudCBwcHBkWzIyNjExXTogQ29ubmVjdGlvbiB0ZXJtaW5hdGVkLgpPY3QgMjcgMDk6
+MTc6NTMgZGdydW50IHBwcGRbMjI2MTFdOiBDb25uZWN0IHRpbWUgODU3LjkgbWludXRlcy4KT2N0
+IDI3IDA5OjE3OjUzIGRncnVudCBwcHBkWzIyNjExXTogU2VudCA1MjY1Mzk2IGJ5dGVzLCByZWNl
+aXZlZCA0MTI3OTc3NSBieXRlcy4KT2N0IDI3IDA5OjE4OjAzIGRncnVudCBleGl0aW5nIG9uIHNp
+Z25hbCAxNQpPY3QgMjcgMDk6MjI6MjQgZGdydW50IHN5c2xvZ2QgMS40LjE6IHJlc3RhcnQuCk9j
+dCAyNyAwOToyMjoyNSBkZ3J1bnQga2VybmVsOiBrbG9nZCAxLjQuMSwgbG9nIHNvdXJjZSA9IC9w
+cm9jL2ttc2cgc3RhcnRlZC4KT2N0IDI3IDA5OjIyOjI1IGRncnVudCBrZXJuZWw6IExvYWRlZCAx
+NzQ1OCBzeW1ib2xzIGZyb20gL3Vzci9zcmMvbGludXgvU3lzdGVtLm1hcC4KT2N0IDI3IDA5OjIy
+OjI1IGRncnVudCBrZXJuZWw6IE5vIG1vZHVsZSBzeW1ib2xzIGxvYWRlZCAtIGtlcm5lbCBtb2R1
+bGVzIG5vdCBlbmFibGVkLiAKT2N0IDI3IDA5OjIyOjI1IGRncnVudCBrZXJuZWw6IEJJT1MtcHJv
+dmlkZWQgcGh5c2ljYWwgUkFNIG1hcDoKT2N0IDI3IDA5OjIyOjI1IGRncnVudCBrZXJuZWw6IDQx
+Nk1CIExPV01FTSBhdmFpbGFibGUuCk9jdCAyNyAwOToyMjoyNiBkZ3J1bnQga2VybmVsOiBETUkg
+bm90IHByZXNlbnQuCk9jdCAyNyAwOToyMjoyNiBkZ3J1bnQga2VybmVsOiBJbml0aWFsaXppbmcg
+Q1BVIzAKT2N0IDI3IDA5OjIyOjI2IGRncnVudCBrZXJuZWw6IE1lbW9yeTogNDE4MDA0ay80MjU5
+ODRrIGF2YWlsYWJsZSAoMTcwNmsga2VybmVsIGNvZGUsIDcyMzJrIHJlc2VydmVkLCA3NjBrIGRh
+dGEsIDMwOGsgaW5pdCwgMGsgaGlnaG1lbSkKT2N0IDI3IDA5OjIyOjI2IGRncnVudCBrZXJuZWw6
+IERlbnRyeSBjYWNoZSBoYXNoIHRhYmxlIGVudHJpZXM6IDY1NTM2IChvcmRlcjogNiwgMjYyMTQ0
+IGJ5dGVzKQpPY3QgMjcgMDk6MjI6MjYgZGdydW50IGtlcm5lbDogQ1BVOiBMMSBJIENhY2hlOiAz
+MksgKDMyIGJ5dGVzL2xpbmUpLCBEIGNhY2hlIDMySyAoMzIgYnl0ZXMvbGluZSkKT2N0IDI3IDA5
+OjIyOjI2IGRncnVudCBrZXJuZWw6IENoZWNraW5nICdobHQnIGluc3RydWN0aW9uLi4uIE9LLgpP
+Y3QgMjcgMDk6MjI6MjYgZGdydW50IGtlcm5lbDogTkVUOiBSZWdpc3RlcmVkIHByb3RvY29sIGZh
+bWlseSAxNgpPY3QgMjcgMDk6MjI6MjYgZGdydW50IGtlcm5lbDogUENJOiBQQ0kgQklPUyByZXZp
+c2lvbiAyLjEwIGVudHJ5IGF0IDB4ZmI0ZDAsIGxhc3QgYnVzPTEKT2N0IDI3IDA5OjIyOjI2IGRn
+cnVudCBrZXJuZWw6IFBDSTogVXNpbmcgY29uZmlndXJhdGlvbiB0eXBlIDEKT2N0IDI3IDA5OjIy
+OjI2IGRncnVudCBrZXJuZWw6IG10cnI6IHYyLjAgKDIwMDIwNTE5KQpPY3QgMjcgMDk6MjI6MjYg
+ZGdydW50IGtlcm5lbDogQUNQSTogU3Vic3lzdGVtIHJldmlzaW9uIDIwMDMxMDAyCk9jdCAyNyAw
+OToyMjoyNyBkZ3J1bnQga2VybmVsOiBTQ1NJIHN1YnN5c3RlbSBpbml0aWFsaXplZApPY3QgMjcg
+MDk6MjI6MjcgZGdydW50IGtlcm5lbDogUENJOiBVc2luZyBJUlEgcm91dGVyIFZJQSBbMTEwNi8w
+NTg2XSBhdCAwMDAwOjAwOjA3LjAKT2N0IDI3IDA5OjIyOjI3IGRncnVudCBrZXJuZWw6IFBDSTog
+Rm91bmQgSVJRIDEwIGZvciBkZXZpY2UgMDAwMDowMDowYS4wCk9jdCAyNyAwOToyMjoyNyBkZ3J1
+bnQga2VybmVsOiBpa2NvbmZpZyAwLjcgd2l0aCAvcHJvYy9jb25maWcqCk9jdCAyNyAwOToyMjoy
+NyBkZ3J1bnQga2VybmVsOiBJbnN0YWxsaW5nIGtuZnNkIChjb3B5cmlnaHQgKEMpIDE5OTYgb2tp
+ckBtb25hZC5zd2IuZGUpLgpPY3QgMjcgMDk6MjI6MjcgZGdydW50IGtlcm5lbDogSW5pdGlhbGl6
+aW5nIENyeXB0b2dyYXBoaWMgQVBJCk9jdCAyNyAwOToyMjoyNyBkZ3J1bnQga2VybmVsOiBBY3Rp
+dmF0aW5nIElTQSBETUEgaGFuZyB3b3JrYXJvdW5kcy4KT2N0IDI3IDA5OjIyOjI3IGRncnVudCBr
+ZXJuZWw6IFNlcmlhbDogODI1MC8xNjU1MCBkcml2ZXIgJFJldmlzaW9uOiAxLjkwICQgNDggcG9y
+dHMsIElSUSBzaGFyaW5nIGVuYWJsZWQKT2N0IDI3IDA5OjIyOjI3IGRncnVudCBrZXJuZWw6IFVu
+aWZvcm0gTXVsdGktUGxhdGZvcm0gRS1JREUgZHJpdmVyIFJldmlzaW9uOiA3LjAwYWxwaGEyCk9j
+dCAyNyAwOToyMjoyNyBkZ3J1bnQga2VybmVsOiBpZGU6IEFzc3VtaW5nIDMzTUh6IHN5c3RlbSBi
+dXMgc3BlZWQgZm9yIFBJTyBtb2Rlczsgb3ZlcnJpZGUgd2l0aCBpZGVidXM9eHgKT2N0IDI3IDA5
+OjIyOjI3IGRncnVudCBrZXJuZWw6IFZQX0lERTogSURFIGNvbnRyb2xsZXIgYXQgUENJIHNsb3Qg
+MDAwMDowMDowNy4xCk9jdCAyNyAwOToyMjoyNyBkZ3J1bnQga2VybmVsOiBWUF9JREU6IGNoaXBz
+ZXQgcmV2aXNpb24gNgpPY3QgMjcgMDk6MjI6MjcgZGdydW50IGtlcm5lbDogVlBfSURFOiBub3Qg
+MTAwJSUgbmF0aXZlIG1vZGU6IHdpbGwgcHJvYmUgaXJxcyBsYXRlcgpPY3QgMjcgMDk6MjI6Mjcg
+ZGdydW50IGtlcm5lbDogaWRlOiBBc3N1bWluZyAzM01IeiBzeXN0ZW0gYnVzIHNwZWVkIGZvciBQ
+SU8gbW9kZXM7IG92ZXJyaWRlIHdpdGggaWRlYnVzPXh4Ck9jdCAyNyAwOToyMjoyNyBkZ3J1bnQg
+a2VybmVsOiBWUF9JREU6IFZJQSB2dDgyYzU4NmIgKHJldiA0NykgSURFIFVETUEzMyBjb250cm9s
+bGVyIG9uIHBjaTAwMDA6MDA6MDcuMQpPY3QgMjcgMDk6MjI6MjcgZGdydW50IGtlcm5lbDogICAg
+IGlkZTA6IEJNLURNQSBhdCAweGUwMDAtMHhlMDA3LCBCSU9TIHNldHRpbmdzOiBoZGE6RE1BLCBo
+ZGI6RE1BCk9jdCAyNyAwOToyMjoyNyBkZ3J1bnQga2VybmVsOiAgICAgaWRlMTogQk0tRE1BIGF0
+IDB4ZTAwOC0weGUwMGYsIEJJT1Mgc2V0dGluZ3M6IGhkYzpETUEsIGhkZDpETUEKT2N0IDI3IDA5
+OjIyOjI4IGRncnVudCBrZXJuZWw6IGhkYTogODMyMjg4IHNlY3RvcnMgKDQyNiBNQikgdy82NEtp
+QiBDYWNoZSwgQ0hTPTgzOS8xNi82MiwgRE1BCk9jdCAyNyAwOToyMjoyOCBkZ3J1bnQga2VybmVs
+OiAgaGRhOiBoZGExCk9jdCAyNyAwOToyMjoyOCBkZ3J1bnQga2VybmVsOiBoZGI6IDI1MDIzMDgg
+c2VjdG9ycyAoMTI4MSBNQiksIENIUz0yNDgyLzE2LzYzLCBETUEKT2N0IDI3IDA5OjIyOjI4IGRn
+cnVudCBrZXJuZWw6ICBoZGI6IGhkYjEKT2N0IDI3IDA5OjIyOjI4IGRncnVudCBrZXJuZWw6IGhk
+YzogMzkxMDIzMzYgc2VjdG9ycyAoMjAwMjAgTUIpIHcvMjA0OEtpQiBDYWNoZSwgQ0hTPTM4Nzky
+LzE2LzYzLCBVRE1BKDMzKQpPY3QgMjcgMDk6MjI6MjggZGdydW50IGtlcm5lbDogIGhkYzogaGRj
+MQpPY3QgMjcgMDk6MjI6MjggZGdydW50IGtlcm5lbDogUENJOiBGb3VuZCBJUlEgNSBmb3IgZGV2
+aWNlIDAwMDA6MDA6MDkuMApPY3QgMjcgMDk6MjI6MjggZGdydW50IGtlcm5lbDogc2NzaTAgOiBB
+ZGFwdGVjIEFJQzdYWFggRUlTQS9WTEIvUENJIFNDU0kgSEJBIERSSVZFUiwgUmV2IDYuMi4zNQpP
+Y3QgMjcgMDk6MjI6MjggZGdydW50IGtlcm5lbDogICBWZW5kb3I6IENPTk5FUiAgICBNb2RlbDog
+Q0ZQMTA2MFcgMS4wNUdCICAgUmV2OiAyMDNDCk9jdCAyNyAwOToyMjoyOCBkZ3J1bnQga2VybmVs
+OiAgIFR5cGU6ICAgRGlyZWN0LUFjY2VzcyAgICAgICAgICAgICAgICAgICAgICBBTlNJIFNDU0kg
+cmV2aXNpb246IDAyCk9jdCAyNyAwOToyMjoyOCBkZ3J1bnQga2VybmVsOiAgIFZlbmRvcjogQ09O
+TkVSICAgIE1vZGVsOiBDRlAxMDYwVyAxLjA1R0IgICBSZXY6IDIwM0MKT2N0IDI3IDA5OjIyOjI4
+IGRncnVudCBrZXJuZWw6ICAgVHlwZTogICBEaXJlY3QtQWNjZXNzICAgICAgICAgICAgICAgICAg
+ICAgIEFOU0kgU0NTSSByZXZpc2lvbjogMDIKT2N0IDI3IDA5OjIyOjI4IGRncnVudCBrZXJuZWw6
+ICAgVmVuZG9yOiBDT05ORVIgICAgTW9kZWw6IENGUDEwNjBXIDEuMDVHQiAgIFJldjogMjAzQwpP
+Y3QgMjcgMDk6MjI6MjggZGdydW50IGtlcm5lbDogICBUeXBlOiAgIERpcmVjdC1BY2Nlc3MgICAg
+ICAgICAgICAgICAgICAgICAgQU5TSSBTQ1NJIHJldmlzaW9uOiAwMgpPY3QgMjcgMDk6MjI6Mjkg
+ZGdydW50IGtlcm5lbDogICBWZW5kb3I6IFNFQUdBVEUgICBNb2RlbDogU1QzMjE3MVcgU1VOMi4x
+RyAgUmV2OiA3NDYyCk9jdCAyNyAwOToyMjoyOSBkZ3J1bnQga2VybmVsOiAgIFR5cGU6ICAgRGly
+ZWN0LUFjY2VzcyAgICAgICAgICAgICAgICAgICAgICBBTlNJIFNDU0kgcmV2aXNpb246IDAyCk9j
+dCAyNyAwOToyMjoyOSBkZ3J1bnQga2VybmVsOiAgIFZlbmRvcjogU0VBR0FURSAgIE1vZGVsOiBT
+VDMyMTcxVyBTVU4yLjFHICBSZXY6IDc0NjIKT2N0IDI3IDA5OjIyOjI5IGRncnVudCBrZXJuZWw6
+ICAgVHlwZTogICBEaXJlY3QtQWNjZXNzICAgICAgICAgICAgICAgICAgICAgIEFOU0kgU0NTSSBy
+ZXZpc2lvbjogMDIKT2N0IDI3IDA5OjIyOjI5IGRncnVudCBrZXJuZWw6ICAgVmVuZG9yOiBTRUFH
+QVRFICAgTW9kZWw6IFNUMzIxNzFXIFNVTjIuMUcgIFJldjogNzQ2MgpPY3QgMjcgMDk6MjI6Mjkg
+ZGdydW50IGtlcm5lbDogICBUeXBlOiAgIERpcmVjdC1BY2Nlc3MgICAgICAgICAgICAgICAgICAg
+ICAgQU5TSSBTQ1NJIHJldmlzaW9uOiAwMgpPY3QgMjcgMDk6MjI6MjkgZGdydW50IGtlcm5lbDog
+c2NzaTEgOiBTQ1NJIGhvc3QgYWRhcHRlciBlbXVsYXRpb24gZm9yIElERSBBVEFQSSBkZXZpY2Vz
+Ck9jdCAyNyAwOToyMjoyOSBkZ3J1bnQga2VybmVsOiAgIFZlbmRvcjogRS1JREUgICAgIE1vZGVs
+OiBDRC1ST00gNDBYL0FLVSAgICBSZXY6IFU0MCAKT2N0IDI3IDA5OjIyOjI5IGRncnVudCBrZXJu
+ZWw6ICAgVHlwZTogICBDRC1ST00gICAgICAgICAgICAgICAgICAgICAgICAgICAgIEFOU0kgU0NT
+SSByZXZpc2lvbjogMDIKT2N0IDI3IDA5OjIyOjI5IGRncnVudCBrZXJuZWw6IFNDU0kgZGV2aWNl
+IHNkYTogMjA3NDg4MCA1MTItYnl0ZSBoZHdyIHNlY3RvcnMgKDEwNjIgTUIpCk9jdCAyNyAwOToy
+MjoyOSBkZ3J1bnQga2VybmVsOiBTQ1NJIGRldmljZSBzZGE6IGRyaXZlIGNhY2hlOiB3cml0ZSB0
+aHJvdWdoCk9jdCAyNyAwOToyMjoyOSBkZ3J1bnQga2VybmVsOiAgc2RhOiBzZGExCk9jdCAyNyAw
+OToyMjoyOSBkZ3J1bnQga2VybmVsOiBBdHRhY2hlZCBzY3NpIGRpc2sgc2RhIGF0IHNjc2kwLCBj
+aGFubmVsIDAsIGlkIDgsIGx1biAwCk9jdCAyNyAwOToyMjoyOSBkZ3J1bnQga2VybmVsOiBTQ1NJ
+IGRldmljZSBzZGI6IDIwNzQ4ODAgNTEyLWJ5dGUgaGR3ciBzZWN0b3JzICgxMDYyIE1CKQpPY3Qg
+MjcgMDk6MjI6MjkgZGdydW50IGtlcm5lbDogU0NTSSBkZXZpY2Ugc2RiOiBkcml2ZSBjYWNoZTog
+d3JpdGUgdGhyb3VnaApPY3QgMjcgMDk6MjI6MjkgZGdydW50IGtlcm5lbDogIHNkYjogc2RiMQpP
+Y3QgMjcgMDk6MjI6MjkgZGdydW50IGtlcm5lbDogQXR0YWNoZWQgc2NzaSBkaXNrIHNkYiBhdCBz
+Y3NpMCwgY2hhbm5lbCAwLCBpZCA5LCBsdW4gMApPY3QgMjcgMDk6MjI6MjkgZGdydW50IGtlcm5l
+bDogU0NTSSBkZXZpY2Ugc2RjOiAyMDc0ODgwIDUxMi1ieXRlIGhkd3Igc2VjdG9ycyAoMTA2MiBN
+QikKT2N0IDI3IDA5OjIyOjI5IGRncnVudCBrZXJuZWw6IFNDU0kgZGV2aWNlIHNkYzogZHJpdmUg
+Y2FjaGU6IHdyaXRlIHRocm91Z2gKT2N0IDI3IDA5OjIyOjI5IGRncnVudCBrZXJuZWw6ICBzZGM6
+IHNkYzEKT2N0IDI3IDA5OjIyOjI5IGRncnVudCBrZXJuZWw6IEF0dGFjaGVkIHNjc2kgZGlzayBz
+ZGMgYXQgc2NzaTAsIGNoYW5uZWwgMCwgaWQgMTAsIGx1biAwCk9jdCAyNyAwOToyMjoyOSBkZ3J1
+bnQga2VybmVsOiBTQ1NJIGRldmljZSBzZGQ6IDQxNTcyMDEgNTEyLWJ5dGUgaGR3ciBzZWN0b3Jz
+ICgyMTI4IE1CKQpPY3QgMjcgMDk6MjI6MzAgZGdydW50IGtlcm5lbDogU0NTSSBkZXZpY2Ugc2Rk
+OiBkcml2ZSBjYWNoZTogd3JpdGUgdGhyb3VnaApPY3QgMjcgMDk6MjI6MzAgZGdydW50IGtlcm5l
+bDogIHNkZDogc2RkMQpPY3QgMjcgMDk6MjI6MzAgZGdydW50IGtlcm5lbDogQXR0YWNoZWQgc2Nz
+aSBkaXNrIHNkZCBhdCBzY3NpMCwgY2hhbm5lbCAwLCBpZCAxMSwgbHVuIDAKT2N0IDI3IDA5OjIy
+OjMwIGRncnVudCBrZXJuZWw6IFNDU0kgZGV2aWNlIHNkZTogNDE1NzIwMSA1MTItYnl0ZSBoZHdy
+IHNlY3RvcnMgKDIxMjggTUIpCk9jdCAyNyAwOToyMjozMCBkZ3J1bnQga2VybmVsOiBTQ1NJIGRl
+dmljZSBzZGU6IGRyaXZlIGNhY2hlOiB3cml0ZSB0aHJvdWdoCk9jdCAyNyAwOToyMjozMCBkZ3J1
+bnQga2VybmVsOiAgc2RlOiBzZGUxCk9jdCAyNyAwOToyMjozMCBkZ3J1bnQga2VybmVsOiBBdHRh
+Y2hlZCBzY3NpIGRpc2sgc2RlIGF0IHNjc2kwLCBjaGFubmVsIDAsIGlkIDEyLCBsdW4gMApPY3Qg
+MjcgMDk6MjI6MzAgZGdydW50IGtlcm5lbDogU0NTSSBkZXZpY2Ugc2RmOiA0MTU3MjAxIDUxMi1i
+eXRlIGhkd3Igc2VjdG9ycyAoMjEyOCBNQikKT2N0IDI3IDA5OjIyOjMwIGRncnVudCBrZXJuZWw6
+IFNDU0kgZGV2aWNlIHNkZjogZHJpdmUgY2FjaGU6IHdyaXRlIHRocm91Z2gKT2N0IDI3IDA5OjIy
+OjMwIGRncnVudCBrZXJuZWw6ICBzZGY6IHNkZjEKT2N0IDI3IDA5OjIyOjMwIGRncnVudCBrZXJu
+ZWw6IEF0dGFjaGVkIHNjc2kgZGlzayBzZGYgYXQgc2NzaTAsIGNoYW5uZWwgMCwgaWQgMTMsIGx1
+biAwCk9jdCAyNyAwOToyMjozMCBkZ3J1bnQga2VybmVsOiBVbmlmb3JtIENELVJPTSBkcml2ZXIg
+UmV2aXNpb246IDMuMTIKT2N0IDI3IDA5OjIyOjMwIGRncnVudCBrZXJuZWw6IEF0dGFjaGVkIHNj
+c2kgZ2VuZXJpYyBzZzAgYXQgc2NzaTAsIGNoYW5uZWwgMCwgaWQgOCwgbHVuIDAsICB0eXBlIDAK
+T2N0IDI3IDA5OjIyOjMwIGRncnVudCBrZXJuZWw6IEF0dGFjaGVkIHNjc2kgZ2VuZXJpYyBzZzEg
+YXQgc2NzaTAsIGNoYW5uZWwgMCwgaWQgOSwgbHVuIDAsICB0eXBlIDAKT2N0IDI3IDA5OjIyOjMw
+IGRncnVudCBrZXJuZWw6IEF0dGFjaGVkIHNjc2kgZ2VuZXJpYyBzZzIgYXQgc2NzaTAsIGNoYW5u
+ZWwgMCwgaWQgMTAsIGx1biAwLCAgdHlwZSAwCk9jdCAyNyAwOToyMjozMCBkZ3J1bnQga2VybmVs
+OiBBdHRhY2hlZCBzY3NpIGdlbmVyaWMgc2czIGF0IHNjc2kwLCBjaGFubmVsIDAsIGlkIDExLCBs
+dW4gMCwgIHR5cGUgMApPY3QgMjcgMDk6MjI6MzAgZGdydW50IGtlcm5lbDogQXR0YWNoZWQgc2Nz
+aSBnZW5lcmljIHNnNCBhdCBzY3NpMCwgY2hhbm5lbCAwLCBpZCAxMiwgbHVuIDAsICB0eXBlIDAK
+T2N0IDI3IDA5OjIyOjMwIGRncnVudCBrZXJuZWw6IEF0dGFjaGVkIHNjc2kgZ2VuZXJpYyBzZzUg
+YXQgc2NzaTAsIGNoYW5uZWwgMCwgaWQgMTMsIGx1biAwLCAgdHlwZSAwCk9jdCAyNyAwOToyMjoz
+MCBkZ3J1bnQga2VybmVsOiBBdHRhY2hlZCBzY3NpIGdlbmVyaWMgc2c2IGF0IHNjc2kxLCBjaGFu
+bmVsIDAsIGlkIDAsIGx1biAwLCAgdHlwZSA1Ck9jdCAyNyAwOToyMjozMCBkZ3J1bnQga2VybmVs
+OiBtaWNlOiBQUy8yIG1vdXNlIGRldmljZSBjb21tb24gZm9yIGFsbCBtaWNlCk9jdCAyNyAwOToy
+MjozMCBkZ3J1bnQga2VybmVsOiBpbnB1dDogUEMgU3BlYWtlcgpPY3QgMjcgMDk6MjI6MzAgZGdy
+dW50IGtlcm5lbDogaW5wdXQ6IFBTLzIgTG9naXRlY2ggTW91c2Ugb24gaXNhMDA2MC9zZXJpbzEK
+T2N0IDI3IDA5OjIyOjMwIGRncnVudCBrZXJuZWw6IHNlcmlvOiBpODA0MiBBVVggcG9ydCBhdCAw
+eDYwLDB4NjQgaXJxIDEyCk9jdCAyNyAwOToyMjozMCBkZ3J1bnQga2VybmVsOiBpbnB1dDogQVQg
+VHJhbnNsYXRlZCBTZXQgMiBrZXlib2FyZCBvbiBpc2EwMDYwL3NlcmlvMApPY3QgMjcgMDk6MjI6
+MzAgZGdydW50IGtlcm5lbDogc2VyaW86IGk4MDQyIEtCRCBwb3J0IGF0IDB4NjAsMHg2NCBpcnEg
+MQpPY3QgMjcgMDk6MjI6MzAgZGdydW50IGtlcm5lbDogbWQ6IHJhaWQwIHBlcnNvbmFsaXR5IHJl
+Z2lzdGVyZWQgYXMgbnIgMgpPY3QgMjcgMDk6MjI6MzAgZGdydW50IGtlcm5lbDogbWQ6IHJhaWQ1
+IHBlcnNvbmFsaXR5IHJlZ2lzdGVyZWQgYXMgbnIgNApPY3QgMjcgMDk6MjI6MzEgZGdydW50IGtl
+cm5lbDogcmFpZDU6IG1lYXN1cmluZyBjaGVja3N1bW1pbmcgc3BlZWQKT2N0IDI3IDA5OjIyOjMx
+IGRncnVudCBrZXJuZWw6IG1kOiBtZCBkcml2ZXIgMC45MC4wIE1BWF9NRF9ERVZTPTI1NiwgTURf
+U0JfRElTS1M9MjcKT2N0IDI3IDA5OjIyOjMxIGRncnVudCBrZXJuZWw6IE5FVDogUmVnaXN0ZXJl
+ZCBwcm90b2NvbCBmYW1pbHkgMgpPY3QgMjcgMDk6MjI6MzEgZGdydW50IGtlcm5lbDogSVA6IHJv
+dXRpbmcgY2FjaGUgaGFzaCB0YWJsZSBvZiA0MDk2IGJ1Y2tldHMsIDMyS2J5dGVzCk9jdCAyNyAw
+OToyMjozMSBkZ3J1bnQga2VybmVsOiBUQ1A6IEhhc2ggdGFibGVzIGNvbmZpZ3VyZWQgKGVzdGFi
+bGlzaGVkIDMyNzY4IGJpbmQgMzI3NjgpCk9jdCAyNyAwOToyMjozMSBkZ3J1bnQga2VybmVsOiBO
+RVQ6IFJlZ2lzdGVyZWQgcHJvdG9jb2wgZmFtaWx5IDEKT2N0IDI3IDA5OjIyOjMxIGRncnVudCBr
+ZXJuZWw6IE5FVDogUmVnaXN0ZXJlZCBwcm90b2NvbCBmYW1pbHkgMTcKT2N0IDI3IDA5OjIyOjMx
+IGRncnVudCBrZXJuZWw6IG1kOiBBdXRvZGV0ZWN0aW5nIFJBSUQgYXJyYXlzLgpPY3QgMjcgMDk6
+MjI6MzEgZGdydW50IGtlcm5lbDogbWQ6IGF1dG9ydW4gLi4uCk9jdCAyNyAwOToyMjozMSBkZ3J1
+bnQga2VybmVsOiBtZDogLi4uIGF1dG9ydW4gRE9ORS4KT2N0IDI3IDA5OjIyOjMxIGRncnVudCBr
+ZXJuZWw6IEZyZWVpbmcgdW51c2VkIGtlcm5lbCBtZW1vcnk6IDMwOGsgZnJlZWQKT2N0IDI3IDA5
+OjIyOjMxIGRncnVudCBrZXJuZWw6IExpbnV4IFR1bGlwIGRyaXZlciB2ZXJzaW9uIDEuMS4xMyAo
+TWF5IDExLCAyMDAyKQpPY3QgMjcgMDk6MjI6MzEgZGdydW50IGtlcm5lbDogUENJOiBBc3NpZ25l
+ZCBJUlEgNSBmb3IgZGV2aWNlIDAwMDA6MDA6MGIuMApPY3QgMjcgMDk6MjI6MzEgZGdydW50IGtl
+cm5lbDogdHVsaXAwOiAgRUVQUk9NIGRlZmF1bHQgbWVkaWEgdHlwZSBBdXRvc2Vuc2UuCk9jdCAy
+NyAwOToyMjozMSBkZ3J1bnQga2VybmVsOiB0dWxpcDA6ICBJbmRleCAjMCAtIE1lZGlhIE1JSSAo
+IzExKSBkZXNjcmliZWQgYnkgYSAyMTE0MCBNSUkgUEhZICgxKSBibG9jay4KT2N0IDI3IDA5OjIy
+OjMxIGRncnVudCBrZXJuZWw6IHR1bGlwMDogIE1JSSB0cmFuc2NlaXZlciAjOCBjb25maWcgMzEw
+MCBzdGF0dXMgNzgyYiBhZHZlcnRpc2luZyAwMWUxLgpPY3QgMjcgMDk6MjI6MzEgZGdydW50IGtl
+cm5lbDogZXRoMDogRGlnaXRhbCBEUzIxMTQwIFR1bGlwIHJldiAzMiBhdCAweGVjMDAsIDAwOjQw
+OjA1OjMwOkU4OjkzLCBJUlEgNS4KT2N0IDI3IDA5OjIyOjMyIGRncnVudCBrZXJuZWw6IGV0aDA6
+IFNldHRpbmcgZnVsbC1kdXBsZXggYmFzZWQgb24gTUlJIzggbGluayBwYXJ0bmVyIGNhcGFiaWxp
+dHkgb2YgMDVlMS4KT2N0IDI3IDA5OjIyOjMyIGRncnVudCBzc2hkWzQyMl06IFNlcnZlciBsaXN0
+ZW5pbmcgb24gMC4wLjAuMCBwb3J0IDIyLgpPY3QgMjcgMDk6MjI6MzMgZGdydW50IHJwYy5zdGF0
+ZFs0NDhdOiBWZXJzaW9uIDAuMy4zIFN0YXJ0aW5nCk9jdCAyNyAwOToyMjozMyBkZ3J1bnQgbmFt
+ZWRbNDUxXTogc3RhcnRpbmcgQklORCA5LjIuMSAtdSBkYWVtb24KT2N0IDI3IDA5OjIyOjMzIGRn
+cnVudCBuYW1lZFs0NTFdOiB1c2luZyAxIENQVQpPY3QgMjcgMDk6MjI6MzMgZGdydW50IG50cGRb
+NDUzXTogbnRwZCA0LjEuMWJAMS44MjkgVGh1IE1hciAgNiAwNjowNDoyOCBFU1QgMjAwMyAoMSkK
+T2N0IDI3IDA5OjIyOjM0IGRncnVudCBuYW1lZFs0NTFdOiBsb2FkaW5nIGNvbmZpZ3VyYXRpb24g
+ZnJvbSAnL2V0Yy9uYW1lZC5jb25mJwpPY3QgMjcgMDk6MjI6MzQgZGdydW50IG5hbWVkWzQ1MV06
+IG5vIElQdjYgaW50ZXJmYWNlcyBmb3VuZApPY3QgMjcgMDk6MjI6MzQgZGdydW50IG50cGRbNDUz
+XTogcHJlY2lzaW9uID0gMTUgdXNlYwpPY3QgMjcgMDk6MjI6MzQgZGdydW50IG5hbWVkWzQ1MV06
+IGxpc3RlbmluZyBvbiBJUHY0IGludGVyZmFjZSBsbywgMTI3LjAuMC4xIzUzCk9jdCAyNyAwOToy
+MjozNCBkZ3J1bnQgbnRwZFs0NTNdOiBrZXJuZWwgdGltZSBkaXNjaXBsaW5lIHN0YXR1cyAwMDQw
+Ck9jdCAyNyAwOToyMjozNCBkZ3J1bnQgbmFtZWRbNDUxXTogbGlzdGVuaW5nIG9uIElQdjQgaW50
+ZXJmYWNlIGV0aDAsIDIwNC41Mi4yMzguMSM1MwpPY3QgMjcgMDk6MjI6MzUgZGdydW50IG5hbWVk
+WzQ1MV06IGNvbW1hbmQgY2hhbm5lbCBsaXN0ZW5pbmcgb24gMTI3LjAuMC4xIzk1MwpPY3QgMjcg
+MDk6MjI6MzUgZGdydW50IG50cGRbNDUzXTogZnJlcXVlbmN5IGluaXRpYWxpemVkIDEzNS45MTkg
+ZnJvbSAvdXNyL2xvY2FsL050cC9ldGMvbnRwLmRyaWZ0Ck9jdCAyNyAwOToyMjozNSBkZ3J1bnQg
+bmFtZWRbNDUxXTogem9uZSAwLjAuMTI3LmluLWFkZHIuYXJwYS9JTjogbG9hZGVkIHNlcmlhbCAy
+MDAwMDUyMjAyCk9jdCAyNyAwOToyMjozNSBkZ3J1bnQgbmFtZWRbNDUxXTogem9uZSAyMzguNTIu
+MjA0LmluLWFkZHIuYXJwYS9JTjogbG9hZGVkIHNlcmlhbCAyMDAwMDUyMjAyCk9jdCAyNyAwOToy
+MjozNiBkZ3J1bnQgbmFtZWRbNDUxXTogem9uZSBzbmVha2VybmV0LmNvbS9JTjogbG9hZGVkIHNl
+cmlhbCAyMDAwMDUyMjAyCk9jdCAyNyAwOToyMjozNiBkZ3J1bnQgbmFtZWRbNDUxXTogcnVubmlu
+ZwpPY3QgMjcgMDk6MjI6NDMgZGdydW50IGtlcm5lbDogcGFycG9ydDA6IFBDLXN0eWxlIGF0IDB4
+Mzc4LCBpcnEgNyBbUENTUFAsVFJJU1RBVEUsRVBQXQpPY3QgMjcgMDk6MjI6NDMgZGdydW50IGtl
+cm5lbDogbHAwOiB1c2luZyBwYXJwb3J0MCAoaW50ZXJydXB0LWRyaXZlbikuCk9jdCAyNyAwOToy
+Mjo0OSBkZ3J1bnQga2VybmVsOiBtZDogYXV0b3J1biAuLi4KT2N0IDI3IDA5OjIyOjQ5IGRncnVu
+dCBrZXJuZWw6IG1kOiBjb25zaWRlcmluZyBzZGExIC4uLgpPY3QgMjcgMDk6MjI6NDkgZGdydW50
+IGtlcm5lbDogbWQ6ICBhZGRpbmcgc2RhMSAuLi4KT2N0IDI3IDA5OjIyOjQ5IGRncnVudCBrZXJu
+ZWw6IG1kOiBjcmVhdGVkIG1kMQpPY3QgMjcgMDk6MjI6NDkgZGdydW50IGtlcm5lbDogbWQ6IGJp
+bmQ8c2RhMT4KT2N0IDI3IDA5OjIyOjQ5IGRncnVudCBrZXJuZWw6IG1kOiBydW5uaW5nOiA8c2Rh
+MT4KT2N0IDI3IDA5OjIyOjQ5IGRncnVudCBpbml0OiBTd2l0Y2hpbmcgdG8gcnVubGV2ZWw6IDUK
+T2N0IDI3IDA5OjIyOjUwIGRncnVudCBrZXJuZWw6IG1kOiBtZDEgc3RvcHBlZC4KT2N0IDI3IDA5
+OjIyOjUwIGRncnVudCBrZXJuZWw6IG1kOiB1bmJpbmQ8c2RhMT4KT2N0IDI3IDA5OjIyOjUwIGRn
+cnVudCBrZXJuZWw6IG1kOiBleHBvcnRfcmRldihzZGExKQpPY3QgMjcgMDk6MjI6NTAgZGdydW50
+IGtlcm5lbDogbWQ6IC4uLiBhdXRvcnVuIERPTkUuCk9jdCAyNyAwOToyMjo1OSBkZ3J1bnQga2Vy
+bmVsOiBDU0xJUDogY29kZSBjb3B5cmlnaHQgMTk4OSBSZWdlbnRzIG9mIHRoZSBVbml2ZXJzaXR5
+IG9mIENhbGlmb3JuaWEKT2N0IDI3IDA5OjIyOjU5IGRncnVudCBrZXJuZWw6IFBQUCBnZW5lcmlj
+IGRyaXZlciB2ZXJzaW9uIDIuNC4yCk9jdCAyNyAwOToyMjo1OSBkZ3J1bnQgcHBwZFs1ODZdOiBw
+cHBkIDIuNC4xIHN0YXJ0ZWQgYnkgcm9vdCwgdWlkIDAKT2N0IDI3IDA5OjIzOjAwIGRncnVudCBj
+aGF0WzU4OV06IHJlcG9ydCAoQ09OTkVDVCkKT2N0IDI3IDA5OjIzOjAwIGRncnVudCBjaGF0WzU4
+OV06IGFib3J0IG9uIChCVVNZKQpPY3QgMjcgMDk6MjM6MDAgZGdydW50IGNoYXRbNTg5XTogYWJv
+cnQgb24gKE5PIENBUlJJRVIpCk9jdCAyNyAwOToyMzowMCBkZ3J1bnQgY2hhdFs1ODldOiBzZW5k
+IChBVEgwXk0pCk9jdCAyNyAwOToyMzowMSBkZ3J1bnQgY2hhdFs1ODldOiBleHBlY3QgKE9LKQpP
+Y3QgMjcgMDk6MjM6MDEgZGdydW50IGNoYXRbNTg5XTogXk0KT2N0IDI3IDA5OjIzOjAxIGRncnVu
+dCBjaGF0WzU4OV06IE9LCk9jdCAyNyAwOToyMzowMSBkZ3J1bnQgY2hhdFs1ODldOiAgLS0gZ290
+IGl0IApPY3QgMjcgMDk6MjM6MDEgZGdydW50IGNoYXRbNTg5XTogc2VuZCAoQVRFMF5NKQpPY3Qg
+MjcgMDk6MjM6MDEgZGdydW50IGNoYXRbNTg5XTogZXhwZWN0IChPSykKT2N0IDI3IDA5OjIzOjAx
+IGRncnVudCBjaGF0WzU4OV06IF5NCk9jdCAyNyAwOToyMzowMSBkZ3J1bnQgY2hhdFs1ODldOiBe
+TQpPY3QgMjcgMDk6MjM6MDEgZGdydW50IGNoYXRbNTg5XTogT0sKT2N0IDI3IDA5OjIzOjAxIGRn
+cnVudCBjaGF0WzU4OV06ICAtLSBnb3QgaXQgCk9jdCAyNyAwOToyMzowMSBkZ3J1bnQgY2hhdFs1
+ODldOiBzZW5kIChBVEkxMV5NKQpPY3QgMjcgMDk6MjM6MDEgZGdydW50IGNoYXRbNTg5XTogZXhw
+ZWN0IChxdWl0KQpPY3QgMjcgMDk6MjM6MDEgZGdydW50IGNoYXRbNTg5XTogXk0KT2N0IDI3IDA5
+OjIzOjAxIGRncnVudCBsYXN0IG1lc3NhZ2UgcmVwZWF0ZWQgMiB0aW1lcwpPY3QgMjcgMDk6MjM6
+MDEgZGdydW50IGNoYXRbNTg5XTogICAgIERlc2NyaXB0aW9uICAgICAgICAgICAgICAgICAgICAg
+ICAgIFN0YXR1c15NCk9jdCAyNyAwOToyMzowMSBkZ3J1bnQgY2hhdFs1ODldOiAgICAgLS0tLS0t
+LS0tLS0tLS0tICAgICAgICAgICAgICAgICAgICAgLS0tLS0tLS0tLS0tIF5NCk9jdCAyNyAwOToy
+MzowMSBkZ3J1bnQgY2hhdFs1ODldOiAgICAgTGFzdCBDb25uZWN0aW9uICAgICAgICAgICAgICAg
+ICAgICAgVi4zNCAgICAgICAgICAgIF5NCk9jdCAyNyAwOToyMzowMSBkZ3J1bnQgY2hhdFs1ODld
+OiAgICAgSW5pdGlhbCBUcmFuc21pdCBDYXJyaWVyIFJhdGUgICAgICAgMjE2MDAgICAgICAgICAg
+IF5NCk9jdCAyNyAwOToyMzowMSBkZ3J1bnQgY2hhdFs1ODldOiAgICAgSW5pdGlhbCBSZWNlaXZl
+ICBDYXJyaWVyIFJhdGUgICAgICAgNDQwMDAgICAgICAgICAgIF5NCk9jdCAyNyAwOToyMzowMSBk
+Z3J1bnQgY2hhdFs1ODldOiAgICAgRmluYWwgICBUcmFuc21pdCBDYXJyaWVyIFJhdGUgICAgICAg
+MTQ0MDAgICAgICAgICAgIF5NCk9jdCAyNyAwOToyMzowMSBkZ3J1bnQgY2hhdFs1ODldOiAgICAg
+RmluYWwgICBSZWNlaXZlICBDYXJyaWVyIFJhdGUgICAgICAgMjE2MDAgICAgICAgICAgIF5NCk9j
+dCAyNyAwOToyMzowMSBkZ3J1bnQgY2hhdFs1ODldOiAgICAgUHJvdG9jb2wgTmVnb3RpYXRpb24g
+UmVzdWx0ICAgICAgICAgTEFQTS9TUkVKICAgICAgIF5NCk9jdCAyNyAwOToyMzowMSBkZ3J1bnQg
+Y2hhdFs1ODldOiAgICAgRGF0YSBDb21wcmVzc2lvbiBSZXN1bHQgICAgICAgICAgICAgVjQyYmlz
+ICAgICAgICAgIF5NCk9jdCAyNyAwOToyMzowMSBkZ3J1bnQgY2hhdFs1ODldOiAgICAgRXN0aW1h
+dGVkIE5vaXNlIExldmVsICAgICAgICAgICAgICAgMjI2ICAgICAgICAgICAgIF5NCk9jdCAyNyAw
+OToyMzowMSBkZ3J1bnQgY2hhdFs1ODldOiAgICAgUmVjZWl2ZSAgU2lnbmFsIFBvd2VyIExldmVs
+ICAoLWRCbSkgMjYgICAgICAgICAgICAgIF5NCk9jdCAyNyAwOToyMzowMSBkZ3J1bnQgY2hhdFs1
+ODldOiAgICAgVHJhbnNtaXQgU2lnbmFsIFBvd2VyIExldmVsICAoLWRCbSkgMTEgICAgICAgICAg
+ICAgIF5NCk9jdCAyNyAwOToyMzowMSBkZ3J1bnQgY2hhdFs1ODldOiAgICAgUm91bmQgVHJpcCBE
+ZWxheSAgICAgICAgICAgICAobXNlYykgOCAgICAgICAgICAgICAgIF5NCk9jdCAyNyAwOToyMzow
+MSBkZ3J1bnQgY2hhdFs1ODldOiBQcmVzcyBhbnkga2V5IHRvIGNvbnRpbnVlOyBFU0MgdG8gcXVp
+dApPY3QgMjcgMDk6MjM6MDEgZGdydW50IGNoYXRbNTg5XTogIC0tIGdvdCBpdCAKT2N0IDI3IDA5
+OjIzOjAxIGRncnVudCBjaGF0WzU4OV06IHNlbmQgKF5NXk0pCk9jdCAyNyAwOToyMzowMSBkZ3J1
+bnQgY2hhdFs1ODldOiBleHBlY3QgKE9LKQpPY3QgMjcgMDk6MjM6MDEgZGdydW50IGNoYXRbNTg5
+XTogLl5NCk9jdCAyNyAwOToyMzowMSBkZ3J1bnQgY2hhdFs1ODldOiBeTQpPY3QgMjcgMDk6MjM6
+MDEgZGdydW50IGluaXQ6IFN3aXRjaGluZyB0byBydW5sZXZlbDogMwpPY3QgMjcgMDk6MjM6MDEg
+ZGdydW50IHBwcGRbNTg2XTogVGVybWluYXRpbmcgb24gc2lnbmFsIDE1LgpPY3QgMjcgMDk6MjM6
+MDMgZGdydW50IHBwcGRbNTg2XTogRXhpdC4KT2N0IDI3IDA5OjI0OjE0IGRncnVudCBrZXJuZWw6
+IGFoYTE1Mng6IEJJT1MgdGVzdDogcGFzc2VkLCBhdXRvIGNvbmZpZ3VyYXRpb246IG9rLCBkZXRl
+Y3RlZCAxIGNvbnRyb2xsZXIocykKT2N0IDI3IDA5OjI0OjE1IGRncnVudCBrZXJuZWw6IGFoYTE1
+MngyOiB2aXRhbCBkYXRhOiByZXY9MywgaW89MHgzNDAgKDB4MzQwLzB4MzQwKSwgaXJxPTExLCBz
+Y3NpaWQ9NywgcmVjb25uZWN0PWVuYWJsZWQsIHBhcml0eT1kaXNhYmxlZCwgc3luY2hyb25vdXM9
+ZW5hYmxlZCwgZGVsYXk9MTAwMCwgZXh0ZW5kZWQgdHJhbnNsYXRpb249ZGlzYWJsZWQKT2N0IDI3
+IDA5OjI0OjE2IGRncnVudCBrZXJuZWw6IGFoYTE1MngyOiB0cnlpbmcgc29mdHdhcmUgaW50ZXJy
+dXB0LCBvay4KT2N0IDI3IDA5OjI0OjE2IGRncnVudCBrZXJuZWw6IHNjc2kyIDogQWRhcHRlYyAx
+NTJ4IFNDU0kgZHJpdmVyOyAkUmV2aXNpb246IDIuNSAkCk9jdCAyNyAwOToyNDoxNiBkZ3J1bnQg
+a2VybmVsOiAoc2NzaTI6MDowKSBTeW5jaHJvbm91cyBEYXRhIFRyYW5zZmVyIFJlcXVlc3QgcGVy
+aW9kID0gMjAwIG5zLCBvZmZzZXQgPSA4Ck9jdCAyNyAwOToyNDoxNiBkZ3J1bnQga2VybmVsOiAg
+IFZlbmRvcjogUVVBTlRVTSAgIE1vZGVsOiBUUkI4NTBTICAgICAgICAgICBSZXY6IDA0MDUKT2N0
+IDI3IDA5OjI0OjE2IGRncnVudCBrZXJuZWw6ICAgVHlwZTogICBEaXJlY3QtQWNjZXNzICAgICAg
+ICAgICAgICAgICAgICAgIEFOU0kgU0NTSSByZXZpc2lvbjogMDIKT2N0IDI3IDA5OjI0OjMzIGRn
+cnVudCBpbml0OiBTd2l0Y2hpbmcgdG8gcnVubGV2ZWw6IDYKT2N0IDI3IDA5OjMyOjE2IGRncnVu
+dCBzeXNsb2dkIDEuNC4xOiByZXN0YXJ0LgoAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAC4vb29wcy50eHQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAw
+MTAwNjY2ADAwMDAwMDAAMDAwMDAwMAAwMDAwMDAwNDE3MAAwNzc0NzIzMDE2MAAwMTE0NDcAIDAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAdXN0YXIgIAByb290AAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHJvb3QAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAT2N0IDI3IDA5OjI0OjE0IGRncnVudCBrZXJuZWw6IGFoYTE1Mng6IHJlc2V0
+dGluZyBidXMuLi4KT2N0IDI3IDA5OjI0OjE2IGRncnVudCBrZXJuZWw6IFVuYWJsZSB0byBoYW5k
+bGUga2VybmVsIHBhZ2luZyByZXF1ZXN0IGF0IHZpcnR1YWwgYWRkcmVzcyAzMjIwNzQ3MwpPY3Qg
+MjcgMDk6MjQ6MTYgZGdydW50IGtlcm5lbDogIHByaW50aW5nIGVpcDoKT2N0IDI3IDA5OjI0OjE2
+IGRncnVudCBrZXJuZWw6IGRhOGQ2YjAyCk9jdCAyNyAwOToyNDoxNiBkZ3J1bnQga2VybmVsOiAq
+cGRlID0gMDAwMDAwMDAKT2N0IDI3IDA5OjI0OjE2IGRncnVudCBrZXJuZWw6IE9vcHM6IDAwMDIg
+WyMxXQpPY3QgMjcgMDk6MjQ6MTYgZGdydW50IGtlcm5lbDogQ1BVOiAgICAwCk9jdCAyNyAwOToy
+NDoxNiBkZ3J1bnQga2VybmVsOiBFSVA6ICAgIDAwNjA6WzxkYThkNmIwMj5dICAgIE5vdCB0YWlu
+dGVkCk9jdCAyNyAwOToyNDoxNiBkZ3J1bnQga2VybmVsOiBFRkxBR1M6IDAwMDEwMDg2Ck9jdCAy
+NyAwOToyNDoxNiBkZ3J1bnQga2VybmVsOiBFSVAgaXMgYXQgYnVzZnJlZV9ydW4rMHgyNWUvMHg0
+ZDAgW2FoYTE1MnhdCk9jdCAyNyAwOToyNDoxNiBkZ3J1bnQga2VybmVsOiBlYXg6IGQ5YjVlMDAw
+ICAgZWJ4OiBjMTQzYzAwMCAgIGVjeDogMDAwMDAwMDEgICBlZHg6IDMyMjA3NDYzCk9jdCAyNyAw
+OToyNDoxNiBkZ3J1bnQga2VybmVsOiBlc2k6IGQ5NmRjYTAwICAgZWRpOiBkOWI1ZTAwMCAgIGVi
+cDogZDcwZjJlNDAgICBlc3A6IGMxNDNkZjRjCk9jdCAyNyAwOToyNDoxNiBkZ3J1bnQga2VybmVs
+OiBkczogMDA3YiAgIGVzOiAwMDdiICAgc3M6IDAwNjgKT2N0IDI3IDA5OjI0OjE2IGRncnVudCBr
+ZXJuZWw6IFByb2Nlc3MgZXZlbnRzLzAgKHBpZDogMywgdGhyZWFkaW5mbz1jMTQzYzAwMCB0YXNr
+PWMxNDJjY2EwKQpPY3QgMjcgMDk6MjQ6MTYgZGdydW50IGtlcm5lbDogU3RhY2s6IDAwMDAwMDAw
+IGQ5YjVlMDAwIGMxNDNjMDAwIDAwMDAwMDAxIDAwMDAwMDAyIDAwMDAwMjgyIGRhOGQ4Y2M3IGQ5
+YjVlMDAwIApPY3QgMjcgMDk6MjQ6MTYgZGdydW50IGtlcm5lbDogICAgICAgIDAwMDAwMDAwIGRh
+OGRlNTcwIGRhOGRlNTgwIDAwMDAwMjE2IGQ5YjVlMWU4IGQ5YjVlMjU4IGZmZmQ5YWE2IGRhOGQ2
+N2QwIApPY3QgMjcgMDk6MjQ6MTYgZGdydW50IGtlcm5lbDogICAgICAgIGQ5YjVlMDAwIGMxNDNj
+MDAwIGRhOGRlNTg0IGMwMTI4YjEyIDAwMDAwMDAwIGMwMTI4OTU4IDAwMDAwMDAwIDAwMDAwMDAw
+IApPY3QgMjcgMDk6MjQ6MTYgZGdydW50IGtlcm5lbDogQ2FsbCBUcmFjZToKT2N0IDI3IDA5OjI0
+OjE2IGRncnVudCBrZXJuZWw6ICBbPGRhOGQ4Y2M3Pl0gaXNfY29tcGxldGUrMHgxYmYvMHgyZDAg
+W2FoYTE1MnhdCk9jdCAyNyAwOToyNDoxNiBkZ3J1bnQga2VybmVsOiAgWzxkYThkNjdkMD5dIHJ1
+bisweDMwLzB4M2MgW2FoYTE1MnhdCk9jdCAyNyAwOToyNDoxNiBkZ3J1bnQga2VybmVsOiAgWzxj
+MDEyOGIxMj5dIHdvcmtlcl90aHJlYWQrMHgxYmEvMHgyN2MKT2N0IDI3IDA5OjI0OjE2IGRncnVu
+dCBrZXJuZWw6ICBbPGMwMTI4OTU4Pl0gd29ya2VyX3RocmVhZCsweDAvMHgyN2MKT2N0IDI3IDA5
+OjI0OjE2IGRncnVudCBrZXJuZWw6ICBbPGRhOGQ2N2EwPl0gcnVuKzB4MC8weDNjIFthaGExNTJ4
+XQpPY3QgMjcgMDk6MjQ6MTYgZGdydW50IGtlcm5lbDogIFs8YzAxMTg4Yjg+XSBkZWZhdWx0X3dh
+a2VfZnVuY3Rpb24rMHgwLzB4MTgKT2N0IDI3IDA5OjI0OjE2IGRncnVudCBrZXJuZWw6ICBbPGMw
+MTE4OGI4Pl0gZGVmYXVsdF93YWtlX2Z1bmN0aW9uKzB4MC8weDE4Ck9jdCAyNyAwOToyNDoxNiBk
+Z3J1bnQga2VybmVsOiAgWzxjMDEwODk3ZD5dIGtlcm5lbF90aHJlYWRfaGVscGVyKzB4NS8weGMK
+T2N0IDI3IDA5OjI0OjE2IGRncnVudCBrZXJuZWw6IApPY3QgMjcgMDk6MjQ6MTYgZGdydW50IGtl
+cm5lbDogQ29kZTogODkgNDIgMTAgOGIgNDUgMDQgOGIgNTYgMDQgOGIgNDAgNDQgODkgNDIgNDQg
+OGIgNDUgMDQgOGIgNTYgCk9jdCAyNyAwOToyNDoxNiBkZ3J1bnQga2VybmVsOiAgPDY+bm90ZTog
+ZXZlbnRzLzBbM10gZXhpdGVkIHdpdGggcHJlZW1wdF9jb3VudCAxCk9jdCAyNyAwOToyNDo0NiBk
+Z3J1bnQga2VybmVsOiAoc2NzaTI6MDowKSBjYW5ub3QgYWJvcnQgcnVubmluZyBvciBkaXNjb25u
+ZWN0ZWQgY29tbWFuZAoAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+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
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAdXN0YXIgIAByb290AAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAHJvb3QAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAcHJvY2Vz
+c29yCTogMAp2ZW5kb3JfaWQJOiBBdXRoZW50aWNBTUQKY3B1IGZhbWlseQk6IDUKbW9kZWwJCTog
+OAptb2RlbCBuYW1lCTogQU1ELUs2KHRtKSAzRCBwcm9jZXNzb3IKc3RlcHBpbmcJOiAxMgpjcHUg
+TUh6CQk6IDUwMS4yMTIKY2FjaGUgc2l6ZQk6IDY0IEtCCmZkaXZfYnVnCTogbm8KaGx0X2J1ZwkJ
+OiBubwpmMDBmX2J1Zwk6IG5vCmNvbWFfYnVnCTogbm8KZnB1CQk6IHllcwpmcHVfZXhjZXB0aW9u
+CTogeWVzCmNwdWlkIGxldmVsCTogMQp3cAkJOiB5ZXMKZmxhZ3MJCTogZnB1IHZtZSBkZSBwc2Ug
+dHNjIG1zciBtY2UgY3g4IHBnZSBtbXggc3lzY2FsbCAzZG5vdyBrNl9tdHJyCmJvZ29taXBzCTog
+OTg3LjEzCgoAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAuL3Byb2Mt
+aW9tZW0AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMDEwMDY2NgAwMDAwMDAwADAwMDAw
+MDAAMDAwMDAwMDExMDIAMDc3NDcyMjcyNjIAMDExNzIxACAwAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAHVzdGFyICAAcm9vdAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAByb290AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADAwMDAwMDAw
+LTAwMDlmYmZmIDogU3lzdGVtIFJBTQowMDA5ZmMwMC0wMDA5ZmZmZiA6IHJlc2VydmVkCjAwMGEw
+MDAwLTAwMGJmZmZmIDogVmlkZW8gUkFNIGFyZWEKMDAwZDAwMDAtMDAwZDNmZmYgOiBFeHRlbnNp
+b24gUk9NCjAwMGQ0MDAwLTAwMGQ0N2ZmIDogRXh0ZW5zaW9uIFJPTQowMDBmMDAwMC0wMDBmZmZm
+ZiA6IFN5c3RlbSBST00KMDAxMDAwMDAtMTlmZmZmZmYgOiBTeXN0ZW0gUkFNCiAgMDAxMDAwMDAt
+MDAyYWE4NjEgOiBLZXJuZWwgY29kZQogIDAwMmFhODYyLTAwMzY4OGRmIDogS2VybmVsIGRhdGEK
+ZTAwMDAwMDAtZTFmZmZmZmYgOiAwMDAwOjAwOjBhLjAKZTIwMDAwMDAtZTJmZmZmZmYgOiAwMDAw
+OjAwOjBhLjAKZTYwMDAwMDAtZTYzZmZmZmYgOiAwMDAwOjAwOjAwLjAKZTY0MDAwMDAtZTY0MDBm
+ZmYgOiAwMDAwOjAwOjA5LjAKICBlNjQwMDAwMC1lNjQwMGZmZiA6IGFpYzd4eHgKZTY0MDEwMDAt
+ZTY0MDEwN2YgOiAwMDAwOjAwOjBiLjAKICBlNjQwMTAwMC1lNjQwMTA3ZiA6IHR1bGlwCmU2NDAy
+MDAwLWU2NDAyZmZmIDogMDAwMDowMDowOC4wCmZmZmYwMDAwLWZmZmZmZmZmIDogcmVzZXJ2ZWQK
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAuL3Byb2MtaW9w
+b3J0cwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMDEwMDY2NgAwMDAwMDAwADAwMDAwMDAA
+MDAwMDAwMDExMjEAMDc3NDcyMjcyMzYAMDEyMzE0ACAwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAHVzdGFyICAAcm9vdAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAByb290AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADAwMDAtMDAxZiA6
+IGRtYTEKMDAyMC0wMDIxIDogcGljMQowMDQwLTAwNWYgOiB0aW1lcgowMDYwLTAwNmYgOiBrZXli
+b2FyZAowMDgwLTAwOGYgOiBkbWEgcGFnZSByZWcKMDBhMC0wMGExIDogcGljMgowMGMwLTAwZGYg
+OiBkbWEyCjAwZjAtMDBmZiA6IGZwdQowMTcwLTAxNzcgOiBpZGUxCjAxYTAtMDFhNyA6IHNlcmlh
+bAowMWE4LTAxYWYgOiBzZXJpYWwKMDFiMC0wMWI3IDogc2VyaWFsCjAxYjgtMDFiZiA6IHNlcmlh
+bAowMWYwLTAxZjcgOiBpZGUwCjAyZjgtMDJmZiA6IHNlcmlhbAowMzc2LTAzNzYgOiBpZGUxCjAz
+NzgtMDM3YSA6IHBhcnBvcnQwCjAzN2ItMDM3ZiA6IHBhcnBvcnQwCjAzYzAtMDNkZiA6IHZnYSsK
+MDNmNi0wM2Y2IDogaWRlMAowM2Y4LTAzZmYgOiBzZXJpYWwKMGNmOC0wY2ZmIDogUENJIGNvbmYx
+CjUwMDAtNTBmZiA6IDAwMDA6MDA6MDcuMwpkMDAwLWRmZmYgOiBQQ0kgQnVzICMwMQplMDAwLWUw
+MGYgOiAwMDAwOjAwOjA3LjEKICBlMDAwLWUwMDcgOiBpZGUwCiAgZTAwOC1lMDBmIDogaWRlMQpl
+ODAwLWU4ZmYgOiAwMDAwOjAwOjA5LjAKZWMwMC1lYzdmIDogMDAwMDowMDowYi4wCiAgZWMwMC1l
+YzdmIDogdHVsaXAKAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAuL3Byb2Mtc2NzaS1z
+Y3NpAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMDEwMDY2NgAwMDAwMDAwADAwMDAwMDAAMDAw
+MDAwMDIxNDQAMDc3NDcyMjczMTIAMDEyNTE2ACAwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAHVzdGFyICAAcm9vdAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABy
+b290AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEF0dGFjaGVkIGRldmlj
+ZXM6Ckhvc3Q6IHNjc2kwIENoYW5uZWw6IDAwIElkOiAwOCBMdW46IDAwCiAgVmVuZG9yOiBDT05O
+RVIgICBNb2RlbDogQ0ZQMTA2MFcgMS4wNUdCICBSZXY6IDIwM0MKICBUeXBlOiAgIERpcmVjdC1B
+Y2Nlc3MgICAgICAgICAgICAgICAgICAgIEFOU0kgU0NTSSByZXZpc2lvbjogMDIKSG9zdDogc2Nz
+aTAgQ2hhbm5lbDogMDAgSWQ6IDA5IEx1bjogMDAKICBWZW5kb3I6IENPTk5FUiAgIE1vZGVsOiBD
+RlAxMDYwVyAxLjA1R0IgIFJldjogMjAzQwogIFR5cGU6ICAgRGlyZWN0LUFjY2VzcyAgICAgICAg
+ICAgICAgICAgICAgQU5TSSBTQ1NJIHJldmlzaW9uOiAwMgpIb3N0OiBzY3NpMCBDaGFubmVsOiAw
+MCBJZDogMTAgTHVuOiAwMAogIFZlbmRvcjogQ09OTkVSICAgTW9kZWw6IENGUDEwNjBXIDEuMDVH
+QiAgUmV2OiAyMDNDCiAgVHlwZTogICBEaXJlY3QtQWNjZXNzICAgICAgICAgICAgICAgICAgICBB
+TlNJIFNDU0kgcmV2aXNpb246IDAyCkhvc3Q6IHNjc2kwIENoYW5uZWw6IDAwIElkOiAxMSBMdW46
+IDAwCiAgVmVuZG9yOiBTRUFHQVRFICBNb2RlbDogU1QzMjE3MVcgU1VOMi4xRyBSZXY6IDc0NjIK
+ICBUeXBlOiAgIERpcmVjdC1BY2Nlc3MgICAgICAgICAgICAgICAgICAgIEFOU0kgU0NTSSByZXZp
+c2lvbjogMDIKSG9zdDogc2NzaTAgQ2hhbm5lbDogMDAgSWQ6IDEyIEx1bjogMDAKICBWZW5kb3I6
+IFNFQUdBVEUgIE1vZGVsOiBTVDMyMTcxVyBTVU4yLjFHIFJldjogNzQ2MgogIFR5cGU6ICAgRGly
+ZWN0LUFjY2VzcyAgICAgICAgICAgICAgICAgICAgQU5TSSBTQ1NJIHJldmlzaW9uOiAwMgpIb3N0
+OiBzY3NpMCBDaGFubmVsOiAwMCBJZDogMTMgTHVuOiAwMAogIFZlbmRvcjogU0VBR0FURSAgTW9k
+ZWw6IFNUMzIxNzFXIFNVTjIuMUcgUmV2OiA3NDYyCiAgVHlwZTogICBEaXJlY3QtQWNjZXNzICAg
+ICAgICAgICAgICAgICAgICBBTlNJIFNDU0kgcmV2aXNpb246IDAyCkhvc3Q6IHNjc2kxIENoYW5u
+ZWw6IDAwIElkOiAwMCBMdW46IDAwCiAgVmVuZG9yOiBFLUlERSAgICBNb2RlbDogQ0QtUk9NIDQw
+WC9BS1UgICBSZXY6IFU0MCAKICBUeXBlOiAgIENELVJPTSAgICAgICAgICAgICAgICAgICAgICAg
+ICAgIEFOU0kgU0NTSSByZXZpc2lvbjogMDIKAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAC4vcHJvYy12ZXJzaW9uAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAwMTAwNjY2ADAwMDAwMDAAMDAwMDAwMAAwMDAwMDAw
+MDE2MAAwNzc0NzIyNzMzNQAwMTIzMDQAIDAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAdXN0YXIgIAByb290AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHJvb3QA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAATGludXggdmVyc2lvbiAyLjYu
+MC10ZXN0OSAocm9vdEBkZ3J1bnQpIChnY2MgdmVyc2lvbiAyLjk1LjMgMjAwMTAzMTUgKHJlbGVh
+c2UpKSAjMSBNb24gT2N0IDI3IDA5OjA4OjIyIEVTVCAyMDAzCgAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAuL3N5c2xvZy1leGNlcnB0AAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMDEwMDY0NAAwMDAwMDAwADAwMDAwMDAAMDAwMDAwMjI3
+MjMAMDc3NDcyMzc0MDQAMDEyNjUxACAwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAHVzdGFyICAAcm9vdAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAByb290AAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAE9jdC0yNy0wOToxNzo1MiAgKioq
+KiogUElORyBTVE9QICoqKioqCk9jdCAyNyAwOToxNzo1OCBkZ3J1bnQgbW9kcHJvYmU6IG1vZHBy
+b2JlOiBDYW4ndCBsb2NhdGUgbW9kdWxlIGNoYXItbWFqb3ItMTAtMTM1Ck9jdCAyNyAwOToxODow
+MSBkZ3J1bnQgcnBjLnN0YXRkWzQzN106IENhdWdodCBzaWduYWwgMTUsIHVuLXJlZ2lzdGVyaW5n
+IGFuZCBleGl0aW5nLgpPY3QgMjcgMDk6MTg6MDEgZGdydW50IHJwYy5tb3VudGQ6IENhdWdodCBz
+aWduYWwgMTUsIHVuLXJlZ2lzdGVyaW5nIGFuZCBleGl0aW5nLiAKT2N0IDI3IDA5OjE4OjAyIGRn
+cnVudCBrZXJuZWw6IG5mc2Q6IGxhc3Qgc2VydmVyIGhhcyBleGl0ZWQKT2N0IDI3IDA5OjE4OjAy
+IGRncnVudCBrZXJuZWw6IG5mc2Q6IHVuZXhwb3J0aW5nIGFsbCBmaWxlc3lzdGVtcwpPY3QgMjcg
+MDk6MjI6MjUgZGdydW50IGtlcm5lbDogU3ltYm9scyBkbyBub3QgbWF0Y2gga2VybmVsIHZlcnNp
+b24uCk9jdCAyNyAwOToyMjoyNSBkZ3J1bnQga2VybmVsOiBMaW51eCB2ZXJzaW9uIDIuNi4wLXRl
+c3Q5IChyb290QGRncnVudCkgKGdjYyB2ZXJzaW9uIDIuOTUuMyAyMDAxMDMxNSAocmVsZWFzZSkp
+ICMxIE1vbiBPY3QgMjcgMDk6MDg6MjIgRVNUIDIwMDMKT2N0IDI3IDA5OjIyOjI1IGRncnVudCBr
+ZXJuZWw6ICBCSU9TLWU4MjA6IDAwMDAwMDAwMDAwMDAwMDAgLSAwMDAwMDAwMDAwMDlmYzAwICh1
+c2FibGUpCk9jdCAyNyAwOToyMjoyNSBkZ3J1bnQga2VybmVsOiAgQklPUy1lODIwOiAwMDAwMDAw
+MDAwMDlmYzAwIC0gMDAwMDAwMDAwMDBhMDAwMCAocmVzZXJ2ZWQpCk9jdCAyNyAwOToyMjoyNSBk
+Z3J1bnQga2VybmVsOiAgQklPUy1lODIwOiAwMDAwMDAwMDAwMGYwMDAwIC0gMDAwMDAwMDAwMDEw
+MDAwMCAocmVzZXJ2ZWQpCk9jdCAyNyAwOToyMjoyNSBkZ3J1bnQga2VybmVsOiAgQklPUy1lODIw
+OiAwMDAwMDAwMDAwMTAwMDAwIC0gMDAwMDAwMDAxYTAwMDAwMCAodXNhYmxlKQpPY3QgMjcgMDk6
+MjI6MjUgZGdydW50IGtlcm5lbDogIEJJT1MtZTgyMDogMDAwMDAwMDBmZmZmMDAwMCAtIDAwMDAw
+MDAxMDAwMDAwMDAgKHJlc2VydmVkKQpPY3QgMjcgMDk6MjI6MjUgZGdydW50IGtlcm5lbDogT24g
+bm9kZSAwIHRvdGFscGFnZXM6IDEwNjQ5NgpPY3QgMjcgMDk6MjI6MjUgZGdydW50IGtlcm5lbDog
+ICBETUEgem9uZTogNDA5NiBwYWdlcywgTElGTyBiYXRjaDoxCk9jdCAyNyAwOToyMjoyNiBkZ3J1
+bnQga2VybmVsOiAgIE5vcm1hbCB6b25lOiAxMDI0MDAgcGFnZXMsIExJRk8gYmF0Y2g6MTYKT2N0
+IDI3IDA5OjIyOjI2IGRncnVudCBrZXJuZWw6ICAgSGlnaE1lbSB6b25lOiAwIHBhZ2VzLCBMSUZP
+IGJhdGNoOjEKT2N0IDI3IDA5OjIyOjI2IGRncnVudCBrZXJuZWw6IEFDUEk6IFVuYWJsZSB0byBs
+b2NhdGUgUlNEUApPY3QgMjcgMDk6MjI6MjYgZGdydW50IGtlcm5lbDogQnVpbGRpbmcgem9uZWxp
+c3QgZm9yIG5vZGUgOiAwCk9jdCAyNyAwOToyMjoyNiBkZ3J1bnQga2VybmVsOiBLZXJuZWwgY29t
+bWFuZCBsaW5lOiBCT09UX0lNQUdFPXRlc3RzeXMgcm8gcm9vdD04MzEKT2N0IDI3IDA5OjIyOjI2
+IGRncnVudCBrZXJuZWw6IE5vIGxvY2FsIEFQSUMgcHJlc2VudCBvciBoYXJkd2FyZSBkaXNhYmxl
+ZApPY3QgMjcgMDk6MjI6MjYgZGdydW50IGtlcm5lbDogUElEIGhhc2ggdGFibGUgZW50cmllczog
+MjA0OCAob3JkZXIgMTE6IDE2Mzg0IGJ5dGVzKQpPY3QgMjcgMDk6MjI6MjYgZGdydW50IGtlcm5l
+bDogRGV0ZWN0ZWQgNTAxLjE5NCBNSHogcHJvY2Vzc29yLgpPY3QgMjcgMDk6MjI6MjYgZGdydW50
+IGtlcm5lbDogQ29uc29sZTogY29sb3VyIFZHQSsgODB4MjUKT2N0IDI3IDA5OjIyOjI2IGRncnVu
+dCBrZXJuZWw6IENhbGlicmF0aW5nIGRlbGF5IGxvb3AuLi4gOTg3LjEzIEJvZ29NSVBTCk9jdCAy
+NyAwOToyMjoyNiBkZ3J1bnQga2VybmVsOiBJbm9kZS1jYWNoZSBoYXNoIHRhYmxlIGVudHJpZXM6
+IDMyNzY4IChvcmRlcjogNSwgMTMxMDcyIGJ5dGVzKQpPY3QgMjcgMDk6MjI6MjYgZGdydW50IGtl
+cm5lbDogTW91bnQtY2FjaGUgaGFzaCB0YWJsZSBlbnRyaWVzOiA1MTIgKG9yZGVyOiAwLCA0MDk2
+IGJ5dGVzKQpPY3QgMjcgMDk6MjI6MjYgZGdydW50IGtlcm5lbDogQ1BVOiBBTUQtSzYodG0pIDNE
+IHByb2Nlc3NvciBzdGVwcGluZyAwYwpPY3QgMjcgMDk6MjI6MjYgZGdydW50IGtlcm5lbDogUE9T
+SVggY29uZm9ybWFuY2UgdGVzdGluZyBieSBVTklGSVgKT2N0IDI3IDA5OjIyOjI2IGRncnVudCBr
+ZXJuZWw6IEFDUEk6IFN5c3RlbSBkZXNjcmlwdGlvbiB0YWJsZXMgbm90IGZvdW5kCk9jdCAyNyAw
+OToyMjoyNyBkZ3J1bnQga2VybmVsOiAgICAgQUNQSS0wMDg0OiAqKiogRXJyb3I6IGFjcGlfbG9h
+ZF90YWJsZXM6IENvdWxkIG5vdCBnZXQgUlNEUCwgQUVfTk9UX0ZPVU5ECk9jdCAyNyAwOToyMjoy
+NyBkZ3J1bnQga2VybmVsOiAgICAgQUNQSS0wMTM0OiAqKiogRXJyb3I6IGFjcGlfbG9hZF90YWJs
+ZXM6IENvdWxkIG5vdCBsb2FkIHRhYmxlczogQUVfTk9UX0ZPVU5ECk9jdCAyNyAwOToyMjoyNyBk
+Z3J1bnQga2VybmVsOiBBQ1BJOiBVbmFibGUgdG8gbG9hZCB0aGUgU3lzdGVtIERlc2NyaXB0aW9u
+IFRhYmxlcwpPY3QgMjcgMDk6MjI6MjcgZGdydW50IGtlcm5lbDogQUNQSTogQUNQSSB0YWJsZXMg
+Y29udGFpbiBubyBQQ0kgSVJRIHJvdXRpbmcgZW50cmllcwpPY3QgMjcgMDk6MjI6MjcgZGdydW50
+IGtlcm5lbDogUENJOiBJbnZhbGlkIEFDUEktUENJIElSUSByb3V0aW5nIHRhYmxlCk9jdCAyNyAw
+OToyMjoyNyBkZ3J1bnQga2VybmVsOiBQQ0k6IFByb2JpbmcgUENJIGhhcmR3YXJlCk9jdCAyNyAw
+OToyMjoyNyBkZ3J1bnQga2VybmVsOiBQQ0k6IFByb2JpbmcgUENJIGhhcmR3YXJlIChidXMgMDAp
+Ck9jdCAyNyAwOToyMjoyNyBkZ3J1bnQga2VybmVsOiBQQ0k6IElSUSAwIGZvciBkZXZpY2UgMDAw
+MDowMDowYS4wIGRvZXNuJ3QgbWF0Y2ggUElSUSBtYXNrIC0gdHJ5IHBjaT11c2VwaXJxbWFzawpP
+Y3QgMjcgMDk6MjI6MjcgZGdydW50IGtlcm5lbDogcHR5OiAyNTYgVW5peDk4IHB0eXMgY29uZmln
+dXJlZApPY3QgMjcgMDk6MjI6MjcgZGdydW50IGtlcm5lbDogdHR5UzAgYXQgSS9PIDB4M2Y4IChp
+cnEgPSA0KSBpcyBhIDE2NTUwQQpPY3QgMjcgMDk6MjI6MjcgZGdydW50IGtlcm5lbDogdHR5UzEg
+YXQgSS9PIDB4MmY4IChpcnEgPSAzKSBpcyBhIDE2NTUwQQpPY3QgMjcgMDk6MjI6MjcgZGdydW50
+IGtlcm5lbDogUkFNRElTSyBkcml2ZXIgaW5pdGlhbGl6ZWQ6IDE2IFJBTSBkaXNrcyBvZiA0MDk2
+SyBzaXplIDEwMjQgYmxvY2tzaXplCk9jdCAyNyAwOToyMjoyNyBkZ3J1bnQga2VybmVsOiBoZGE6
+IENvbm5lciBQZXJpcGhlcmFscyA0MjVNQiAtIENGUzQyNUEsIEFUQSBESVNLIGRyaXZlCk9jdCAy
+NyAwOToyMjoyNyBkZ3J1bnQga2VybmVsOiBoZGI6IFNlYWdhdGUgVGVjaG5vbG9neSAxMjc1TUIg
+LSBTVDMxMjc2QSwgQVRBIERJU0sgZHJpdmUKT2N0IDI3IDA5OjIyOjI4IGRncnVudCBrZXJuZWw6
+IFVzaW5nIGFudGljaXBhdG9yeSBpbyBzY2hlZHVsZXIKT2N0IDI3IDA5OjIyOjI4IGRncnVudCBr
+ZXJuZWw6IGlkZTAgYXQgMHgxZjAtMHgxZjcsMHgzZjYgb24gaXJxIDE0Ck9jdCAyNyAwOToyMjoy
+OCBkZ3J1bnQga2VybmVsOiBoZGM6IFNUMzIwNDE0QSwgQVRBIERJU0sgZHJpdmUKT2N0IDI3IDA5
+OjIyOjI4IGRncnVudCBrZXJuZWw6IGhkZDogQ0QtUk9NIDQwWC9BS1UsIEFUQVBJIENEL0RWRC1S
+T00gZHJpdmUKT2N0IDI3IDA5OjIyOjI4IGRncnVudCBrZXJuZWw6IGlkZTEgYXQgMHgxNzAtMHgx
+NzcsMHgzNzYgb24gaXJxIDE1Ck9jdCAyNyAwOToyMjoyOCBkZ3J1bnQga2VybmVsOiBoZGE6IG1h
+eCByZXF1ZXN0IHNpemU6IDEyOEtpQgpPY3QgMjcgMDk6MjI6MjggZGdydW50IGtlcm5lbDogaGRi
+OiBtYXggcmVxdWVzdCBzaXplOiAxMjhLaUIKT2N0IDI3IDA5OjIyOjI4IGRncnVudCBrZXJuZWw6
+IGhkYzogbWF4IHJlcXVlc3Qgc2l6ZTogMTI4S2lCCk9jdCAyNyAwOToyMjoyOCBkZ3J1bnQga2Vy
+bmVsOiAgICAgICAgIDxBZGFwdGVjIDI5NDAgVWx0cmEgU0NTSSBhZGFwdGVyPgpPY3QgMjcgMDk6
+MjI6MjggZGdydW50IGtlcm5lbDogICAgICAgICBhaWM3ODgwOiBVbHRyYSBXaWRlIENoYW5uZWwg
+QSwgU0NTSSBJZD03LCAxNi8yNTMgU0NCcwpPY3QgMjcgMDk6MjI6MjggZGdydW50IGtlcm5lbDog
+Ck9jdCAyNyAwOToyMjoyOCBkZ3J1bnQga2VybmVsOiAoc2NzaTA6QTo4KTogMjAuMDAwTUIvcyB0
+cmFuc2ZlcnMgKDEwLjAwME1Ieiwgb2Zmc2V0IDgsIDE2Yml0KQpPY3QgMjcgMDk6MjI6MjggZGdy
+dW50IGtlcm5lbDogKHNjc2kwOkE6OSk6IDIwLjAwME1CL3MgdHJhbnNmZXJzICgxMC4wMDBNSHos
+IG9mZnNldCA4LCAxNmJpdCkKT2N0IDI3IDA5OjIyOjI4IGRncnVudCBrZXJuZWw6IChzY3NpMDpB
+OjEwKTogMjAuMDAwTUIvcyB0cmFuc2ZlcnMgKDEwLjAwME1Ieiwgb2Zmc2V0IDgsIDE2Yml0KQpP
+Y3QgMjcgMDk6MjI6MjggZGdydW50IGtlcm5lbDogKHNjc2kwOkE6MTEpOiA0MC4wMDBNQi9zIHRy
+YW5zZmVycyAoMjAuMDAwTUh6LCBvZmZzZXQgOCwgMTZiaXQpCk9jdCAyNyAwOToyMjoyOCBkZ3J1
+bnQga2VybmVsOiAoc2NzaTA6QToxMik6IDQwLjAwME1CL3MgdHJhbnNmZXJzICgyMC4wMDBNSHos
+IG9mZnNldCA4LCAxNmJpdCkKT2N0IDI3IDA5OjIyOjI4IGRncnVudCBrZXJuZWw6IChzY3NpMDpB
+OjEzKTogNDAuMDAwTUIvcyB0cmFuc2ZlcnMgKDIwLjAwME1Ieiwgb2Zmc2V0IDgsIDE2Yml0KQpP
+Y3QgMjcgMDk6MjI6MjggZGdydW50IGtlcm5lbDogc2NzaTA6QTo4OjA6IFRhZ2dlZCBRdWV1aW5n
+IGVuYWJsZWQuICBEZXB0aCAyNTMKT2N0IDI3IDA5OjIyOjI4IGRncnVudCBrZXJuZWw6IHNjc2kw
+OkE6OTowOiBUYWdnZWQgUXVldWluZyBlbmFibGVkLiAgRGVwdGggMjUzCk9jdCAyNyAwOToyMjoy
+OSBkZ3J1bnQga2VybmVsOiBzY3NpMDpBOjEwOjA6IFRhZ2dlZCBRdWV1aW5nIGVuYWJsZWQuICBE
+ZXB0aCAyNTMKT2N0IDI3IDA5OjIyOjI5IGRncnVudCBrZXJuZWw6IHNjc2kwOkE6MTE6MDogVGFn
+Z2VkIFF1ZXVpbmcgZW5hYmxlZC4gIERlcHRoIDI1MwpPY3QgMjcgMDk6MjI6MjkgZGdydW50IGtl
+cm5lbDogc2NzaTA6QToxMjowOiBUYWdnZWQgUXVldWluZyBlbmFibGVkLiAgRGVwdGggMjUzCk9j
+dCAyNyAwOToyMjoyOSBkZ3J1bnQga2VybmVsOiBzY3NpMDpBOjEzOjA6IFRhZ2dlZCBRdWV1aW5n
+IGVuYWJsZWQuICBEZXB0aCAyNTMKT2N0IDI3IDA5OjIyOjMwIGRncnVudCBrZXJuZWw6IHNyMDog
+c2NzaTMtbW1jIGRyaXZlOiAweC80OHggeGEvZm9ybTIgY2RkYSB0cmF5Ck9jdCAyNyAwOToyMjoz
+MSBkZ3J1bnQga2VybmVsOiAgICA4cmVncyAgICAgOiAgIDU5Ni4wMDAgTUIvc2VjCk9jdCAyNyAw
+OToyMjozMSBkZ3J1bnQga2VybmVsOiAgICA4cmVnc19wcmVmZXRjaDogICA1MjQuMDAwIE1CL3Nl
+YwpPY3QgMjcgMDk6MjI6MzEgZGdydW50IGtlcm5lbDogICAgMzJyZWdzICAgIDogICA0MDQuMDAw
+IE1CL3NlYwpPY3QgMjcgMDk6MjI6MzEgZGdydW50IGtlcm5lbDogICAgMzJyZWdzX3ByZWZldGNo
+OiAgIDM2MC4wMDAgTUIvc2VjCk9jdCAyNyAwOToyMjozMSBkZ3J1bnQga2VybmVsOiAgICBwSUlf
+bW14ICAgOiAgIDc4OC4wMDAgTUIvc2VjCk9jdCAyNyAwOToyMjozMSBkZ3J1bnQga2VybmVsOiAg
+ICBwNV9tbXggICAgOiAgIDgyOC4wMDAgTUIvc2VjCk9jdCAyNyAwOToyMjozMSBkZ3J1bnQga2Vy
+bmVsOiByYWlkNTogdXNpbmcgZnVuY3Rpb246IHA1X21teCAoODI4LjAwMCBNQi9zZWMpCk9jdCAy
+NyAwOToyMjozMSBkZ3J1bnQga2VybmVsOiBWRlM6IE1vdW50ZWQgcm9vdCAoZXh0MiBmaWxlc3lz
+dGVtKSByZWFkb25seS4KT2N0IDI3IDA5OjIyOjMyIGRncnVudCBrZXJuZWw6IGlwX3RhYmxlczog
+KEMpIDIwMDAtMjAwMiBOZXRmaWx0ZXIgY29yZSB0ZWFtCk9jdCAyNyAwOToyMjozMiBkZ3J1bnQg
+a2VybmVsOiBpcF9jb25udHJhY2sgdmVyc2lvbiAyLjEgKDMzMjggYnVja2V0cywgMjY2MjQgbWF4
+KSAtIDMwNCBieXRlcyBwZXIgY29ubnRyYWNrCk9jdCAyNyAwOToyMjozMyBkZ3J1bnQgcnBjLnN0
+YXRkWzQ0OV06IGdldGhvc3RieW5hbWUgZXJyb3IgZm9yIGRncnVudApPY3QgMjcgMDk6MjI6MzUg
+ZGdydW50IG50cGRbNDUzXTogY2FuJ3Qgb3BlbiBrZXkgZmlsZSAvdXNyL2xvY2FsL050cC9ldGMv
+bnRwLmtleXM6IE5vIHN1Y2ggZmlsZSBvciBkaXJlY3RvcnkKT2N0IDI3IDA5OjIyOjM3IGRncnVu
+dCBrZXJuZWw6IHByb2Nlc3MgYG5hbWVkJyBpcyB1c2luZyBvYnNvbGV0ZSBzZXRzb2Nrb3B0IFNP
+X0JTRENPTVBBVApPY3QgMjcgMDk6MjI6NDkgZGdydW50IGtlcm5lbDogbWQ6IGNvdWxkIG5vdCBs
+b2NrIHNkZDEuCk9jdCAyNyAwOToyMjo0OSBkZ3J1bnQga2VybmVsOiBtZDogY291bGQgbm90IGlt
+cG9ydCBzZGQxLCB0cnlpbmcgdG8gcnVuIGFycmF5IG5ldmVydGhlbGVzcy4KT2N0IDI3IDA5OjIy
+OjQ5IGRncnVudCBrZXJuZWw6IG1kOiBjb3VsZCBub3QgbG9jayBzZGUxLgpPY3QgMjcgMDk6MjI6
+NDkgZGdydW50IGtlcm5lbDogbWQ6IGNvdWxkIG5vdCBpbXBvcnQgc2RlMSwgdHJ5aW5nIHRvIHJ1
+biBhcnJheSBuZXZlcnRoZWxlc3MuCk9jdCAyNyAwOToyMjo0OSBkZ3J1bnQga2VybmVsOiBtZDE6
+IHNldHRpbmcgbWF4X3NlY3RvcnMgdG8gOCwgc2VnbWVudCBib3VuZGFyeSB0byAyMDQ3Ck9jdCAy
+NyAwOToyMjo0OSBkZ3J1bnQga2VybmVsOiBibGtfcXVldWVfc2VnbWVudF9ib3VuZGFyeTogc2V0
+IHRvIG1pbmltdW0gZmZmCk9jdCAyNyAwOToyMjo0OSBkZ3J1bnQga2VybmVsOiByYWlkMDogbG9v
+a2luZyBhdCBzZGExCk9jdCAyNyAwOToyMjo0OSBkZ3J1bnQga2VybmVsOiByYWlkMDogICBjb21w
+YXJpbmcgc2RhMSgxMDM3MTg0KSB3aXRoIHNkYTEoMTAzNzE4NCkKT2N0IDI3IDA5OjIyOjQ5IGRn
+cnVudCBrZXJuZWw6IHJhaWQwOiAgIEVORApPY3QgMjcgMDk6MjI6NDkgZGdydW50IGtlcm5lbDog
+cmFpZDA6ICAgPT0+IFVOSVFVRQpPY3QgMjcgMDk6MjI6NDkgZGdydW50IGtlcm5lbDogcmFpZDA6
+IDEgem9uZXMKT2N0IDI3IDA5OjIyOjQ5IGRncnVudCBrZXJuZWw6IHJhaWQwOiBGSU5BTCAxIHpv
+bmVzCk9jdCAyNyAwOToyMjo0OSBkZ3J1bnQga2VybmVsOiByYWlkMDogdG9vIGZldyBkaXNrcyAo
+MSBvZiAyKSAtIGFib3J0aW5nIQpPY3QgMjcgMDk6MjI6NDkgZGdydW50IGtlcm5lbDogbWQ6IHBl
+cnMtPnJ1bigpIGZhaWxlZCAuLi4KT2N0IDI3IDA5OjIyOjQ5IGRncnVudCBrZXJuZWw6IG1kIDpk
+b19tZF9ydW4oKSByZXR1cm5lZCAtMjIKT2N0IDI3IDA5OjIyOjUwIGRncnVudCBrZXJuZWw6IEVY
+VDMtZnM6IHVuYWJsZSB0byByZWFkIHN1cGVyYmxvY2sKT2N0IDI3IDA5OjIzOjAxIGRncnVudCBj
+aGF0WzU4OV06IFNJR1RFUk0KT2N0IDI3IDA5OjIzOjAxIGRncnVudCBwcHBkWzU4Nl06IENvbm5l
+Y3Qgc2NyaXB0IGZhaWxlZApPY3QgMjcgMDk6MjQ6MTQgZGdydW50IGtlcm5lbDogYWhhMTUyeDog
+cmVzZXR0aW5nIGJ1cy4uLgpPY3QgMjcgMDk6MjQ6MTYgZGdydW50IGtlcm5lbDogVW5hYmxlIHRv
+IGhhbmRsZSBrZXJuZWwgcGFnaW5nIHJlcXVlc3QgYXQgdmlydHVhbCBhZGRyZXNzIDMyMjA3NDcz
+Ck9jdCAyNyAwOToyNDoxNiBkZ3J1bnQga2VybmVsOiAgcHJpbnRpbmcgZWlwOgpPY3QgMjcgMDk6
+MjQ6MTYgZGdydW50IGtlcm5lbDogZGE4ZDZiMDIKT2N0IDI3IDA5OjI0OjE2IGRncnVudCBrZXJu
+ZWw6ICpwZGUgPSAwMDAwMDAwMApPY3QgMjcgMDk6MjQ6MTYgZGdydW50IGtlcm5lbDogT29wczog
+MDAwMiBbIzFdCk9jdCAyNyAwOToyNDoxNiBkZ3J1bnQga2VybmVsOiBDUFU6ICAgIDAKT2N0IDI3
+IDA5OjI0OjE2IGRncnVudCBrZXJuZWw6IEVJUDogICAgMDA2MDpbPGRhOGQ2YjAyPl0gICAgTm90
+IHRhaW50ZWQKT2N0IDI3IDA5OjI0OjE2IGRncnVudCBrZXJuZWw6IEVGTEFHUzogMDAwMTAwODYK
+T2N0IDI3IDA5OjI0OjE2IGRncnVudCBrZXJuZWw6IEVJUCBpcyBhdCBidXNmcmVlX3J1bisweDI1
+ZS8weDRkMCBbYWhhMTUyeF0KT2N0IDI3IDA5OjI0OjE2IGRncnVudCBrZXJuZWw6IGVheDogZDli
+NWUwMDAgICBlYng6IGMxNDNjMDAwICAgZWN4OiAwMDAwMDAwMSAgIGVkeDogMzIyMDc0NjMKT2N0
+IDI3IDA5OjI0OjE2IGRncnVudCBrZXJuZWw6IGVzaTogZDk2ZGNhMDAgICBlZGk6IGQ5YjVlMDAw
+ICAgZWJwOiBkNzBmMmU0MCAgIGVzcDogYzE0M2RmNGMKT2N0IDI3IDA5OjI0OjE2IGRncnVudCBr
+ZXJuZWw6IGRzOiAwMDdiICAgZXM6IDAwN2IgICBzczogMDA2OApPY3QgMjcgMDk6MjQ6MTYgZGdy
+dW50IGtlcm5lbDogUHJvY2VzcyBldmVudHMvMCAocGlkOiAzLCB0aHJlYWRpbmZvPWMxNDNjMDAw
+IHRhc2s9YzE0MmNjYTApCk9jdCAyNyAwOToyNDoxNiBkZ3J1bnQga2VybmVsOiBTdGFjazogMDAw
+MDAwMDAgZDliNWUwMDAgYzE0M2MwMDAgMDAwMDAwMDEgMDAwMDAwMDIgMDAwMDAyODIgZGE4ZDhj
+YzcgZDliNWUwMDAgCk9jdCAyNyAwOToyNDoxNiBkZ3J1bnQga2VybmVsOiAgICAgICAgMDAwMDAw
+MDAgZGE4ZGU1NzAgZGE4ZGU1ODAgMDAwMDAyMTYgZDliNWUxZTggZDliNWUyNTggZmZmZDlhYTYg
+ZGE4ZDY3ZDAgCk9jdCAyNyAwOToyNDoxNiBkZ3J1bnQga2VybmVsOiAgICAgICAgZDliNWUwMDAg
+YzE0M2MwMDAgZGE4ZGU1ODQgYzAxMjhiMTIgMDAwMDAwMDAgYzAxMjg5NTggMDAwMDAwMDAgMDAw
+MDAwMDAgCk9jdCAyNyAwOToyNDoxNiBkZ3J1bnQga2VybmVsOiBDYWxsIFRyYWNlOgpPY3QgMjcg
+MDk6MjQ6MTYgZGdydW50IGtlcm5lbDogIFs8ZGE4ZDhjYzc+XSBpc19jb21wbGV0ZSsweDFiZi8w
+eDJkMCBbYWhhMTUyeF0KT2N0IDI3IDA5OjI0OjE2IGRncnVudCBrZXJuZWw6ICBbPGRhOGQ2N2Qw
+Pl0gcnVuKzB4MzAvMHgzYyBbYWhhMTUyeF0KT2N0IDI3IDA5OjI0OjE2IGRncnVudCBrZXJuZWw6
+ICBbPGMwMTI4YjEyPl0gd29ya2VyX3RocmVhZCsweDFiYS8weDI3YwpPY3QgMjcgMDk6MjQ6MTYg
+ZGdydW50IGtlcm5lbDogIFs8YzAxMjg5NTg+XSB3b3JrZXJfdGhyZWFkKzB4MC8weDI3YwpPY3Qg
+MjcgMDk6MjQ6MTYgZGdydW50IGtlcm5lbDogIFs8ZGE4ZDY3YTA+XSBydW4rMHgwLzB4M2MgW2Fo
+YTE1MnhdCk9jdCAyNyAwOToyNDoxNiBkZ3J1bnQga2VybmVsOiAgWzxjMDExODhiOD5dIGRlZmF1
+bHRfd2FrZV9mdW5jdGlvbisweDAvMHgxOApPY3QgMjcgMDk6MjQ6MTYgZGdydW50IGtlcm5lbDog
+IFs8YzAxMTg4Yjg+XSBkZWZhdWx0X3dha2VfZnVuY3Rpb24rMHgwLzB4MTgKT2N0IDI3IDA5OjI0
+OjE2IGRncnVudCBrZXJuZWw6ICBbPGMwMTA4OTdkPl0ga2VybmVsX3RocmVhZF9oZWxwZXIrMHg1
+LzB4YwpPY3QgMjcgMDk6MjQ6MTYgZGdydW50IGtlcm5lbDogCk9jdCAyNyAwOToyNDoxNiBkZ3J1
+bnQga2VybmVsOiBDb2RlOiA4OSA0MiAxMCA4YiA0NSAwNCA4YiA1NiAwNCA4YiA0MCA0NCA4OSA0
+MiA0NCA4YiA0NSAwNCA4YiA1NiAKT2N0IDI3IDA5OjI0OjE2IGRncnVudCBrZXJuZWw6ICA8Nj5u
+b3RlOiBldmVudHMvMFszXSBleGl0ZWQgd2l0aCBwcmVlbXB0X2NvdW50IDEKT2N0IDI3IDA5OjI0
+OjQ2IGRncnVudCBrZXJuZWw6IChzY3NpMjowOjApIGNhbm5vdCBhYm9ydCBydW5uaW5nIG9yIGRp
+c2Nvbm5lY3RlZCBjb21tYW5kCk9jdCAyNyAwOTozMjoxNyBkZ3J1bnQga2VybmVsOiBTeW1ib2xz
+IGRvIG5vdCBtYXRjaCBrZXJuZWwgdmVyc2lvbi4KAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAALi92ZXJfbGludXgub3V0cHV0AAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAADAxMDA2NjYAMDAwMDAwMAAwMDAwMDAwADAwMDAwMDAxNDcwADA3NzQ3MjI3MDUxADAxMzIz
+MAAgMAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAB1c3RhciAgAHJv
+b3QAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAcm9vdAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAABJZiBzb21lIGZpZWxkcyBhcmUgZW1wdHkgb3IgbG9vayB1bnVzdWFs
+IHlvdSBtYXkgaGF2ZSBhbiBvbGQgdmVyc2lvbi4KQ29tcGFyZSB0byB0aGUgY3VycmVudCBtaW5p
+bWFsIHJlcXVpcmVtZW50cyBpbiBEb2N1bWVudGF0aW9uL0NoYW5nZXMuCiAKTGludXggZGdydW50
+IDIuNi4wLXRlc3Q5ICMxIE1vbiBPY3QgMjcgMDk6MDg6MjIgRVNUIDIwMDMgaTU4NiB1bmtub3du
+CiAKR251IEMgICAgICAgICAgICAgICAgICAyLjk1LjMKR251IG1ha2UgICAgICAgICAgICAgICAz
+Ljc5LjEKdXRpbC1saW51eCAgICAgICAgICAgICAyLjExcgptb3VudCAgICAgICAgICAgICAgICAg
+IDIuMTFyCm1vZHVsZS1pbml0LXRvb2xzICAgICAgMC45LjE0CmUyZnNwcm9ncyAgICAgICAgICAg
+ICAgMS4zNApQUFAgICAgICAgICAgICAgICAgICAgIDIuNC4xCm5mcy11dGlscyAgICAgICAgICAg
+ICAgMC4zLjMKTGludXggQyBMaWJyYXJ5ICAgICAgICAyLjIuNQpEeW5hbWljIGxpbmtlciAobGRk
+KSAgIDIuMi41ClByb2NwcyAgICAgICAgICAgICAgICAgMy4xLjEzCk5ldC10b29scyAgICAgICAg
+ICAgICAgMS42MApLYmQgICAgICAgICAgICAgICAgICAgIDEuMDYKU2gtdXRpbHMgICAgICAgICAg
+ICAgICAyLjAKTW9kdWxlcyBMb2FkZWQgICAgICAgICBwcHBfYXN5bmMgcHBwX2dlbmVyaWMgc2xo
+YyBwYXJwb3J0X3BjIGxwIHBhcnBvcnQgaXB0X2xpbWl0IGlwdF9zdGF0ZSBpcHRhYmxlX21hbmds
+ZSBpcHRhYmxlX25hdCBpcHRhYmxlX2ZpbHRlciBpcF9jb25udHJhY2tfZnRwIGlwX2Nvbm50cmFj
+ayBpcHRfUkVKRUNUIGlwdF9MT0cgaXBfdGFibGVzIHR1bGlwIGNyYzMyCgAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+
+--Multipart_Mon__27_Oct_2003_11:07:05_-0800_09a93200--
