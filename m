@@ -1,35 +1,35 @@
 From: Aristeu Sergio Rozanski Filho <aris@cathedrallabs.org>
-Subject: [patch][2/15] qlogic_cs: use a static string as name
-Date: Tue, 9 Mar 2004 10:34:23 -0300
+Subject: [patch][4/15] qlogicfas: force can_queue
+Date: Tue, 9 Mar 2004 10:35:29 -0300
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040309133423.GD651@cathedrallabs.org>
+Message-ID: <20040309133529.GF651@cathedrallabs.org>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="rWhLK7VZz0iBluhq"
+	protocol="application/pgp-signature"; boundary="yr/DzoowOgTDcSCF"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from panda.sul.com.br ([200.219.150.4]:1802 "EHLO panda.sul.com.br")
-	by vger.kernel.org with ESMTP id S261926AbUCINl7 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 9 Mar 2004 08:41:59 -0500
+Received: from panda.sul.com.br ([200.219.150.4]:63753 "EHLO panda.sul.com.br")
+	by vger.kernel.org with ESMTP id S261936AbUCINob (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 9 Mar 2004 08:44:31 -0500
 Received: from cathedrallabs.org (3-133.ctame701-3.telepar.net.br [200.181.174.133])
-	by panda.sul.com.br (Postfix) with ESMTP id 3C48B32846
-	for <linux-scsi@vger.kernel.org>; Tue,  9 Mar 2004 10:38:38 -0300 (EST)
+	by panda.sul.com.br (Postfix) with ESMTP id 03033327B4
+	for <linux-scsi@vger.kernel.org>; Tue,  9 Mar 2004 10:40:40 -0300 (EST)
 Received: from matthew (matthew.cathedral.com [215.50.66.94])
-	by cathedrallabs.org (Postfix) with ESMTP id 880DB2308A
-	for <linux-scsi@vger.kernel.org>; Tue,  9 Mar 2004 10:26:07 -0300 (BRT)
+	by cathedrallabs.org (Postfix) with ESMTP id 32BD8236C0
+	for <linux-scsi@vger.kernel.org>; Tue,  9 Mar 2004 10:27:14 -0300 (BRT)
 Received: from aris by matthew with local (Exim 3.36 #1 (Debian))
-	id 1B0hNH-0000vf-00
-	for <linux-scsi@vger.kernel.org>; Tue, 09 Mar 2004 10:34:23 -0300
+	id 1B0hOM-0000vw-00
+	for <linux-scsi@vger.kernel.org>; Tue, 09 Mar 2004 10:35:30 -0300
 Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
 
---rWhLK7VZz0iBluhq
-Content-Type: multipart/mixed; boundary="HeFlAV5LIbMFYYuh"
+--yr/DzoowOgTDcSCF
+Content-Type: multipart/mixed; boundary="3U8TY7m7wOx7RL1F"
 Content-Disposition: inline
 
 
---HeFlAV5LIbMFYYuh
+--3U8TY7m7wOx7RL1F
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
 Content-Transfer-Encoding: quoted-printable
@@ -40,52 +40,26 @@ Content-Transfer-Encoding: quoted-printable
 aris
 
 
---HeFlAV5LIbMFYYuh
+--3U8TY7m7wOx7RL1F
 Content-Type: text/plain; charset=us-ascii
-Content-Disposition: attachment; filename="02-qlogic_cs-use_qlogic_name.patch"
-Content-Transfer-Encoding: quoted-printable
+Content-Disposition: attachment; filename="04-qlogicfas-force_can_queue.patch"
 
-diff -ur linux-2.6.3-applied/drivers/scsi/pcmcia/qlogic_stub.c linux-2.6.3-=
-work/drivers/scsi/pcmcia/qlogic_stub.c
---- linux-2.6.3-applied/drivers/scsi/pcmcia/qlogic_stub.c	2004-03-05 17:53:=
-13.000000000 -0300
-+++ linux-2.6.3-work/drivers/scsi/pcmcia/qlogic_stub.c	2004-03-05 18:36:06.=
-000000000 -0300
-@@ -60,6 +60,8 @@
- extern struct Scsi_Host *__qlogicfas_detect(Scsi_Host_Template *);
- extern int qlogicfas_bus_reset(Scsi_Cmnd *);
-=20
-+static char *qlogic_name =3D "qlogic_cs";
-+
- #ifdef PCMCIA_DEBUG
- static int pc_debug =3D PCMCIA_DEBUG;
- MODULE_PARM(pc_debug, "i");
-@@ -247,9 +249,11 @@
- 	else
- 		qlogicfas_preset(link->io.BasePort1, link->irq.AssignedIRQ);
-=20
-+	qlogicfas_driver_template.name =3D qlogic_name;
-+	qlogicfas_driver_template.proc_name =3D qlogic_name;
- 	host =3D __qlogicfas_detect(&qlogicfas_driver_template);
- 	if (!host) {
--		printk(KERN_INFO "qlogic_cs: no SCSI devices found\n");
-+		printk(KERN_INFO "%s: no SCSI devices found\n", qlogic_name);
- 		goto out;
- 	}
-=20
-@@ -340,7 +344,7 @@
- static struct pcmcia_driver qlogic_cs_driver =3D {
- 	.owner		=3D THIS_MODULE,
- 	.drv		=3D {
--		.name	=3D "qlogic_cs",
-+	.name		=3D "qlogic_cs",
- 	},
- 	.attach		=3D qlogic_attach,
- 	.detach		=3D qlogic_detach,
+diff -ur linux-2.6.3-applied/drivers/scsi/qlogicfas.c linux-2.6.3-work/drivers/scsi/qlogicfas.c
+--- linux-2.6.3-applied/drivers/scsi/qlogicfas.c	2004-03-05 18:40:31.000000000 -0300
++++ linux-2.6.3-work/drivers/scsi/qlogicfas.c	2004-03-05 18:40:41.000000000 -0300
+@@ -791,7 +791,7 @@
+ 	.eh_device_reset_handler= qlogicfas_device_reset,
+ 	.eh_host_reset_handler	= qlogicfas_host_reset,
+ 	.bios_param		= qlogicfas_biosparam,
+-	.can_queue		= 0,
++	.can_queue		= 1,
+ 	.this_id		= -1,
+ 	.sg_tablesize		= SG_ALL,
+ 	.cmd_per_lun		= 1,
 
---HeFlAV5LIbMFYYuh--
+--3U8TY7m7wOx7RL1F--
 
---rWhLK7VZz0iBluhq
+--yr/DzoowOgTDcSCF
 Content-Type: application/pgp-signature; name="signature.asc"
 Content-Description: Digital signature
 Content-Disposition: inline
@@ -93,9 +67,9 @@ Content-Disposition: inline
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v1.2.4 (GNU/Linux)
 
-iD8DBQFATcfeRRJOudsVYbMRAgiYAJ4vEaDGRbah3b75xkN9JubINvTmpgCaA9kj
-Q5gra4P9nuMkbxnc+7sTB24=
-=Sa3W
+iD8DBQFATcghRRJOudsVYbMRAtOTAJ9S5vhyubOz+I9gOLgpCj52jXQv/ACgmArz
+1Fnj2UxVszV4HgRhfWFnP2s=
+=K9/i
 -----END PGP SIGNATURE-----
 
---rWhLK7VZz0iBluhq--
+--yr/DzoowOgTDcSCF--
