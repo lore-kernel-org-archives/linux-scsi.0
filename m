@@ -1,45 +1,25 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] sym53c500_cs PCMCIA SCSI driver (new)
-Date: Fri, 16 Apr 2004 13:05:48 +0100
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040416130548.B5080@infradead.org>
-References: <20040410021703.946A9DBE3@gherkin.frus.com>
+From: 'Christoph Hellwig' <hch@infradead.org>
+Subject: Re: [ANNOUNCE]: megaraid driver version 2.10.3
+Date: Fri, 16 Apr 2004 13:06:29 +0100
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <20040416130629.C5080@infradead.org>
+References: <0E3FA95632D6D047BA649F95DAB60E57033BC510@exa-atlanta.se.lsil.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from phoenix.infradead.org ([213.86.99.234]:51984 "EHLO
-	phoenix.infradead.org") by vger.kernel.org with ESMTP
-	id S262909AbUDPMFw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 16 Apr 2004 08:05:52 -0400
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20040410021703.946A9DBE3@gherkin.frus.com>; from rct@gherkin.frus.com on Fri, Apr 09, 2004 at 09:17:03PM -0500
+In-Reply-To: <0E3FA95632D6D047BA649F95DAB60E57033BC510@exa-atlanta.se.lsil.com>; from Atulm@lsil.com on Fri, Apr 09, 2004 at 01:11:09AM -0400
+To: "Mukker, Atul" <Atulm@lsil.com>
+Cc: "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, 'Marcelo Tosatti' <marcelo.tosatti@cyclades.com>, "'hightowe@10east.com'" <hightowe@10east.com>, 'Matthew Wilcox' <willy@debian.org>, 'Arjan van de Ven' <arjanv@redhat.com>, "'matt_domsch@dell.com'" <matt_domsch@dell.com>, 'James Bottomley' <James.Bottomley@SteelEye.com>, "'paul@wagland.net'" <paul@wagland.net>, "Bagalkote, Sreenivas" <sreenib@lsil.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Bob Tracy <rct@gherkin.frus.com>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Fri, Apr 09, 2004 at 09:17:03PM -0500, Bob Tracy wrote:
-> The attached patch set implements a PCMCIA SCSI driver for host adapters
-> based on the Symbios 53c500 chip.  The original driver for this chip was
-> written by Thomas Corner and available only as an add-on to the
-> pcmcia-cs package.  I've been maintaining the add-on driver on an
-> infrequent basis for the past several years, and the release of the 2.6
-> kernel "forced" a long overdue update.
+On Fri, Apr 09, 2004 at 01:11:09AM -0400, Mukker, Atul wrote:
+> All,
 > 
-> The only host adapter I'm aware of that uses the sym53c500 controller
-> chip is the "new" version of the New Media Bus Toaster (circa 1996),
-> and the attached driver has been tested using this particular adapter
-> on a 2.6.4 kernel.  The patch set applies cleanly to 2.6.4 and 2.6.5.
-> 
-> Comments / feedback / cheers / jeers accepted...
+> Attached please find the patch for the megaraid2 driver version for LK 2.4
+> against 2.10.2.1 driver, which was released by Sreenivas on 3/22. For a
+> quick update, the patch against lk2.4.25 megaraid2 version 2.10.1 is also
+> inlined. The driver source code and these patches can be downloaded from
+> usual location as well:
 
-I've given it a short spin and here's a bunch of comments:
-
- - the split into three source files is supserflous, one file should do it
- - please don't use host.h or scsi.h from drivers/scsi/.  The defintions
-   not present in include/scsi/ are deprecated and shall not be used (the
-   most prominent example in your driver are the Scsi_<Foo> typedefs that
-   have been replaced by struct scsi_foo
- - the driver doesn't even try to deal with multiple HBAs
- - your detection logic could be streamlined a little, e.g. the request/release
-   resource mess
-
+The patch looks fine to me.
