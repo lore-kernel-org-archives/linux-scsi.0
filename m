@@ -1,47 +1,45 @@
-From: Adrian Bunk <bunk@fs.tum.de>
-Subject: 2.6: modular scsi/mca_53c9x doesn't work
-Date: Sat, 20 Dec 2003 00:17:12 +0100
+From: Jason Van Patten <jvp@lateapex.net>
+Subject: Adaptec DPT_I2O Driver in 2.6
+Date: Sat, 20 Dec 2003 10:45:15 -0500 (EST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20031219231712.GB12750@fs.tum.de>
+Message-ID: <200312201545.hBKFjFQn010471@localhost.localdomain>
+Reply-To: jvp@lateapex.net
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hermes.fachschaften.tu-muenchen.de ([129.187.202.12]:11506 "HELO
-	hermes.fachschaften.tu-muenchen.de") by vger.kernel.org with SMTP
-	id S263692AbTLSXRU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 19 Dec 2003 18:17:20 -0500
-Content-Disposition: inline
+Received: from corvette.lateapex.net ([64.236.104.2]:53952 "EHLO
+	localhost.localdomain") by vger.kernel.org with ESMTP
+	id S264531AbTLTPpU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 20 Dec 2003 10:45:20 -0500
+Received: from localhost.localdomain (corvette [127.0.0.1])
+	by localhost.localdomain (8.12.8/8.12.8) with ESMTP id hBKFjF39010473
+	for <linux-scsi@vger.kernel.org>; Sat, 20 Dec 2003 10:45:15 -0500
+Received: (from jvp@localhost)
+	by localhost.localdomain (8.12.8/8.12.8/Submit) id hBKFjFQn010471
+	for linux-scsi@vger.kernel.org; Sat, 20 Dec 2003 10:45:15 -0500
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-I got the following mesage when trying to build modular a mca_53c9x in 
-2.6.0-test11-mm1:
+Hey folks -
 
-<--  snip  -->
+I asked this question on the main kernel mailing list and got redirected
+here.  In the 2.6 tree, the driver drivers/scsi/dpt_i2o.c has a #error in it
+that prevents it from being compiled.  The note in the file is:
 
-...
-*** Warning: "esp_reset" [drivers/scsi/mca_53c9x.ko] undefined!
-*** Warning: "esp_abort" [drivers/scsi/mca_53c9x.ko] undefined!
-*** Warning: "esp_queue" [drivers/scsi/mca_53c9x.ko] undefined!
-*** Warning: "esps_in_use" [drivers/scsi/mca_53c9x.ko] undefined!
-*** Warning: "esp_initialize" [drivers/scsi/mca_53c9x.ko] undefined!
-*** Warning: "esp_allocate" [drivers/scsi/mca_53c9x.ko] undefined!
-*** Warning: "esp_intr" [drivers/scsi/mca_53c9x.ko] undefined!
-*** Warning: "esp_deallocate" [drivers/scsi/mca_53c9x.ko] undefined!
-...
+#error Please convert me to Documentation/DMA-mapping.txt
 
-<--  snip  -->
+Is anyone actively working on converting this driver to 2.6?  I've
+tried contacting the author, Deanna Bonds at Adaptec, but her email stopped
+working.  I'm not sure if she's no longer with Adaptec, or changed her email
+address so as to stop getting kernel questions. :-)
 
-It seems there are some EXPORT_SYMBOL's needed in NCR53C9x.c?
+In either case, I have two boxen at home with the Adaptec SCSI RAID
+controllers, and I'd like to move them from 2.4 to 2.6.  Can anyone help?
 
-cu
-Adrian
+Thanks!
 
+jas
 -- 
-
-       "Is there not promise of rain?" Ling Tan asked suddenly out
-        of the darkness. There had been need of rain for many days.
-       "Only a promise," Lao Er said.
-                                       Pearl S. Buck - Dragon Seed
-
+Jason Van Patten
+AOL IM: Jason VP 
