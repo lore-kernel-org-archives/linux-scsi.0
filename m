@@ -1,21 +1,30 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: [PATCH] aacraid bad queuecommand return
-Date: Fri, 19 Nov 2004 13:41:27 +0100
-Message-ID: <20041119124126.GD26240@suse.de>
-References: <60807403EABEB443939A5A7AA8A7458B6947FE@otce2k01.adaptec.com>
+From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
+Subject: RE: [PATCH] aacraid bad queuecommand return
+Date: Fri, 19 Nov 2004 07:58:31 -0500
+Message-ID: <60807403EABEB443939A5A7AA8A7458B69480B@otce2k01.adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns.virtualhost.dk ([195.184.98.160]:21419 "EHLO virtualhost.dk")
-	by vger.kernel.org with ESMTP id S261370AbUKSMl5 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 19 Nov 2004 07:41:57 -0500
-Content-Disposition: inline
-In-Reply-To: <60807403EABEB443939A5A7AA8A7458B6947FE@otce2k01.adaptec.com>
+Received: from magic.adaptec.com ([216.52.22.17]:63617 "EHLO magic.adaptec.com")
+	by vger.kernel.org with ESMTP id S261383AbUKSM6e convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 19 Nov 2004 07:58:34 -0500
+content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
+To: Jens Axboe <axboe@suse.de>
 Cc: linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@steeleye.com>
+
+Cool, I'll buy it!!!
+
+-----Original Message-----
+From: Jens Axboe [mailto:axboe@suse.de] 
+Sent: Friday, November 19, 2004 7:41 AM
+To: Salyzyn, Mark
+Cc: linux-scsi@vger.kernel.org; James Bottomley
+Subject: Re: [PATCH] aacraid bad queuecommand return
 
 On Fri, Nov 19 2004, Salyzyn, Mark wrote:
 > In the patch I supplied, I dropped the result setting and aac_io_done
