@@ -1,101 +1,55 @@
-From: Jeff Garzik <jgarzik@pobox.com>
+From: "J. Scott Edwards" <sedwards@xmission.com>
 Subject: Re: PATCH for disabling write cache on SATA drives
-Date: Tue, 29 Jun 2004 23:03:16 -0400
+Date: Tue, 29 Jun 2004 21:47:38 -0600 (MDT)
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <40E22D74.4000600@pobox.com>
+Message-ID: <Pine.LNX.4.60.0406292124280.11993@xmission.xmission.com>
 References: <1F6D1D1660975A4887628A011443A1BC07734C05@uswaumsx13medge.med.ge.com>
+ <40E22D74.4000600@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <1F6D1D1660975A4887628A011443A1BC07734C05@uswaumsx13medge.med.ge.com>
-To: "Edwards, Scott (MED, Kelly IT Resouces)" <James.Edwards@med.ge.com>
-Cc: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, linux-ide@vger.kernel.org, "'sedwards@xmission.com'" <sedwards@xmission.com>
+In-Reply-To: <40E22D74.4000600@pobox.com>
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, linux-ide@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Edwards, Scott (MED, Kelly IT Resouces) wrote:
-> On Monday, June 28, 2004 at 6:12 PM, Jeff Garzik wrote:
-> 
-> 
->>On Fri, Jun 25, 2004 at 06:21:24PM -0500, Edwards, Scott (MED, Kelly
-> 
-> IT Resouces) wrote:
-> 
->>>I don't know if this is useful for anyone or if anyone even cares,
-> 
-> but just
-> 
->>>in case someone does, this is the patch I made to disable the write
-> 
-> cache on
-> 
->>>the Serial ATA drives.  It doesn't make the write cache controllable
-> 
-> from
-> 
->>>the user level, it just ALWAYS disables it.  (I tried to make one
-> 
-> that could
-> 
->>>be sent via an ioctl, but there were far too many things that I
-> 
-> didn't
-> 
->>>understand and it didn't work.)  Since I have never done this before
-> 
-> I don't
-> 
->>>know if there is some protocol that I missed, if so I'm sorry.  If
-> 
-> there are
-> 
->>>glaring stupid mistakes (very likely) please let me know.
->>
->>In principle your patch is fine, but I would really like to find a
->>better way of allowing the user to do this.
->>
->>My immediate guess would be to use the standard SCSI method of
-> 
-> disabling
-> 
->>write cache, and have that initiate wbcache disable on the SATA side.
->>
->>Long term, this would be augmented by an "ATA passthru" opcode or
-> 
-> ioctl.
-> 
->>	Jeff
-> 
-> 
-> I first tried to make a real scsi ioctl command in libata-scsi.c, so I
-> could just use the scsiinfo program to disable the write cache.  I  made
-> a xlat_mode_select command but it didn't work and management didn't want
-> me
-> spending more time trying to figure it out.  And really for it to work
-> correctly there would have to be a xlat_mode_sense because now it is
-> just 
-> simulated (in ata_scsi_simulate).
-> 
-> I'm willing to work on it on my own time as soon as I get a SATA drive, 
-> if someone would be willing to advise me on how to send the ATA commands
-> to the drive (I think this is where it failed before).
 
-Basically, it involves the translation of MODE SELECT, something I've 
-been meaning to add, but is low priority.  If you wanted to work on 
-that, that would be quite useful.
+Jeff Garzik wrote:
 
-The following is a proposal for translating ATA to SCSI:
-http://www.t10.org/ftp/t10/document.04/04-196r0.pdf
+>
+> Basically, it involves the translation of MODE SELECT, something I've been 
+> meaning to add, but is low priority.  If you wanted to work on that, that 
+> would be quite useful.
 
-In that proposal, it describes the use of MODE SELECT Caching Mode Page 
-(8h).
+This is what I did, but now I'm not sure if I still have the code.  We had 
+a couple of discs get trashed during testing.  I hope the code wasn't on 
+one of them. ;-)  I can probably do it again anyway.
 
-Note that, in addition to actually issuing the SET FEATURES command, to 
-disable/enable writeback caching, you must update libata's internal copy 
-of the IDENTIFY DEVICE page.  This involves either re-issuing IDENTIFY 
-DEVICE (difficult), or simply updating the 'enabled' bit in the 
-internally cached data (easy).
+> The following is a proposal for translating ATA to SCSI:
+> http://www.t10.org/ftp/t10/document.04/04-196r0.pdf
+>
+> In that proposal, it describes the use of MODE SELECT Caching Mode Page (8h).
 
-	Jeff
+I will give it a look, some nice bedtime reading :)
+
+> Note that, in addition to actually issuing the SET FEATURES command, to 
+> disable/enable writeback caching, you must update libata's internal copy of 
+> the IDENTIFY DEVICE page.  This involves either re-issuing IDENTIFY DEVICE 
+> (difficult), or simply updating the 'enabled' bit in the internally cached 
+> data (easy).
+>
+
+I have already given this some thought.  I agree that re-issuing the 
+IDENTIFY DEVICE would be difficult, but I would feel more confident that 
+the SET FEATURES actually worked if it was read back.  Maybe I could do it 
+in two stages, do the easy one first and just update the cached data. 
+Then later wrestle with re-issuing the IDENTIFY DEVICE?
+
+If I'm not installing my server this weekend I will buy a SATA drive and 
+take a shot at it again.  If I end up installing the server this weekend 
+it will be a couple of weeks before I will have time (we are moving).
+
+Thanks
+   -Scott
 
 
