@@ -1,12 +1,11 @@
-From: Dmitri Katchalov <dmitrik@users.sourceforge.net>
+From: Alan Stern <stern@rowland.harvard.edu>
 Subject: Re: usb-storage and Sony Handycam
-Date: Sun,  9 Nov 2003 00:29:02 +1100
+Date: Sat, 8 Nov 2003 11:28:37 -0500 (EST)
 Sender: linux-usb-devel-admin@lists.sourceforge.net
-Message-ID: <1068298142.3facef9eda01a@webmail.netregistry.net>
-References: <Pine.LNX.4.44L0.0311071448200.10810-100000@ida.rowland.org> <1068260051.3fac5ad3ea76c@webmail.netregistry.net> <20031107223444.A1747@beaverton.ibm.com>
+Message-ID: <Pine.LNX.4.44L0.0311081105351.28814-100000@netrider.rowland.org>
+References: <20031107223444.A1747@beaverton.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 8bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-usb-devel-admin@lists.sourceforge.net>
 In-Reply-To: <20031107223444.A1747@beaverton.ibm.com>
 Errors-To: linux-usb-devel-admin@lists.sourceforge.net
@@ -18,190 +17,87 @@ List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-devel>
 	<mailto:linux-usb-devel-request@lists.sourceforge.net?subject=unsubscribe>
 List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=linux-usb-devel>
 To: Patrick Mansfield <patmans@us.ibm.com>
-Cc: Alan Stern <stern@rowland.harvard.edu>, "linux-usb-devel@lists.sourceforge.net" <linux-usb-devel@lists.sourceforge.net>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Cc: Dmitri Katchalov <dmitrik@users.sourceforge.net>, Idan Sofer <idan@idanso.dyndns.org>, USB development list <linux-usb-devel@lists.sourceforge.net>, SCSI development list <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Quoting Patrick Mansfield <patmans@us.ibm.com>:
+On Fri, 7 Nov 2003, Patrick Mansfield wrote:
 
 > We need to figure out what is different here, and why (based on other
 > reports for this device) this worked on 2.4 but not on 2.6.
+> 
+> Looking at usb/storage/transport.c, we are not generating the usb
+> "fake_sense" with your change.
+> 
+> Maybe the failed MODE SENSE had a check condition, but the fake_sense
+> prevented us from retrieving it?
 
-USB log from "the other" OS is attached for your perusal.
-I've compressed and parsed it a little. From what I see the device 
-is anything but compliant, but then it does not claim to be.
+No, the "babble" prevented that.
 
+How to deal with babble errors is a serious question that's been under
+discussion in the usb-storage mailing list, but we haven't found a good
+answer.  It doesn't come up often except for certain devices that go crazy
+when given some of the less-common commands.  Babble is a nasty violation
+of the USB protocol (and in particular the USB Mass Storage class
+protocols); it indicates that something has gone very wrong but doesn't
+provide any clue as to how to fix it.  I vaguely recall getting a report
+from someone that even unplugging the USB cable and reinserting it wasn't
+enough to unwedge his device.
 
-Regards,
-Dmitri
+The "fake sense" is a compromise.  It lets us give a clear indication to 
+the higher layers that something is wrong and asks them not to send the 
+same command again.  But it doesn't do much about getting the device back 
+into a working state (if that's even possible).
 
-GET_DESCRIPTOR_FROM_DEVICE		
-Descriptor Type: 0x0001 DEVICE
-0000: 12 01 00 01 00 00 00 08 4c 05 2e 00 00 03 01 02 
-0010: 00 01 
-    bLength            : 0x12 (18)
-    bDescriptorType    : 0x01 (1)
-    bcdUSB             : 0x0100 (256)
-    bDeviceClass       : 0x00 (0)
-    bDeviceSubClass    : 0x00 (0)
-    bDeviceProtocol    : 0x00 (0)
-    bMaxPacketSize0    : 0x08 (8)
-    idVendor           : 0x054c (1356)
-    idProduct          : 0x002e (46)
-    bcdDevice          : 0x0300 (768)
-    iManufacturer      : 0x01 (1)
-    iProduct           : 0x02 (2)
-    iSerialNumber      : 0x00 (0)
-    bNumConfigurations : 0x01 (1)
+> So the next command sent got a check condition, illegal request.
+> 
+> That still doesn't tell us why the MODE SENSE failed, and why the failure
+> does not show up with 2.4.
 
+The best approach for doing this is to have a side-by-side comparison of 
+the usb-storage debugging logs for 2.4 and 2.6.  I think we have to assume 
+that the MODE-SENSE failed because the device simply doesn't support it 
+correctly.
 
-GET_DESCRIPTOR_FROM_DEVICE		
-Descriptor Type: 0x0002   CONFIGURATION
-0000: 09 02 27 00 01 01 00 40 01 09 04 00 00 03 08 ff 
-0010: 01 00 07 05 01 02 40 00 00 07 05 82 02 40 00 00 
-0020: 07 05 83 03 08 00 ff 
-    bLength            : 0x09 (9)
-    bDescriptorType    : 0x02 (2)
-    wTotalLength       : 0x0027 (39)
-    bNumInterfaces     : 0x01 (1)
-    bConfigurationValue: 0x01 (1)
-    iConfiguration     : 0x00 (0)
-    bmAttributes       : 0x40 (64)
-    MaxPower           : 0x01 (1)
+> Can you run the variants on MODE SENE via user space SG_IO, and figure out
+> which ones work?
+> 
+> AFAICT at least three different problems are contributing to the failure:
+> 
+> 1) The MODE SENSE seems to work fine in 2.4, but is failing in 2.6. In
+> 2.4, we always send a MODE SENSE page 3f with length 255; in 2.6 we start by
+> asking for 4 bytes.
+> 
+> 2) scsi core ignores host byte errors (DID_ERROR). This means we behave as
+> if the MODE SENSE worked OK, even though USB tells scsi core that it
+> failed. Fixing this problem (for another user) caused even worse problems.
 
-SELECT_CONFIGURATION		
-Configuration Descriptor:
-bLength: 9 (0x09)
-bDescriptorType: 2 (0x02)
-wTotalLength: 39 (0x0027)
-bNumInterfaces: 1 (0x01)
-bConfigurationValue: 1 (0x01)
-iConfiguration: 0 (0x00)
-bmAttributes: 64 (0x40)
-  0x40: Self Powered
-MaxPower: 1 (0x01)
-  (in 2 mA units, therefore 2 mA power consumption)
+I must have missed that.  It seems odd that fixing an oversight in the
+kernel could make interoperability _worse_.  Maybe that indicates
+something else needs to be fixed.
 
-Number of interfaces: 1
-Interface[0]:
-  Length: 0x004c
-  InterfaceNumber: 0x00
-  AlternateSetting: 0x00
-  Class             = 0x34
-  SubClass          = 0x6d
-  Protocol          = 0x37
-  InterfaceHandle   = 0x00000000
-  NumberOfPipes     = 0x00000003
-  Pipe[0]:
-    MaximumPacketSize = 0xaff0
-    EndpointAddress   = 0x4b
-    Interval          = 0xc1
-    PipeType          = 0x00
-      UsbdPipeTypeControl
-    PipeHandle        = 0x0000ce54
-    MaxTransferSize   = 0x00010000
-    PipeFlags         = 0x00
-  Pipe[1]:
-    MaximumPacketSize = 0x2f68
-    EndpointAddress   = 0x5b
-    Interval          = 0xbc
-    PipeType          = 0x206a2b1b
-      !!! INVALID !!!
-    PipeHandle        = 0x4e4f5300
-    MaxTransferSize   = 0x00010000
-    PipeFlags         = 0x00
-  Pipe[2]:
-    MaximumPacketSize = 0x000d
-    EndpointAddress   = 0x00
-    Interval          = 0x00
-    PipeType          = 0xc15667d0
-      !!! INVALID !!!
-    PipeHandle        = 0xc1566810
-    MaxTransferSize   = 0x00010000
-    PipeFlags         = 0x00
+> 3) The next command - TEST UNIT READY - gets a check condition, illegal
+> request. Maybe the fake sense handling is screwing things up - the device
+> tells us it sent back more data than we asked for, but it is also trying
+> to check us.
 
-SELECT_CONFIGURATION
-Configuration Descriptor:
-bLength: 9 (0x09)
-bDescriptorType: 2 (0x02)
-wTotalLength: 39 (0x0027)
-bNumInterfaces: 1 (0x01)
-bConfigurationValue: 1 (0x01)
-iConfiguration: 0 (0x00)
-bmAttributes: 64 (0x40)
-  0x40: Self Powered
-MaxPower: 1 (0x01)
-  (in 2 mA units, therefore 2 mA power consumption)
+I don't understand your speculation here.  It seems clear to me that this 
+is a situation where the device and the host are out of sync -- the host 
+sends a command and the device sends back status from the _previous_ 
+command.  Repeating the TEST-UNIT-READY may bring us back in sync.  Or 
+maybe some sort of reset will -- no way to tell without trying it.
 
-Number of interfaces: 1
-Interface[0]:
-  Length: 0x004c
-  InterfaceNumber: 0x00
-  AlternateSetting: 0x00
-  Class             = 0x08
-  SubClass          = 0xff
-  Protocol          = 0x01
-  InterfaceHandle   = 0xc1567700
-  NumberOfPipes     = 0x00000003
-  Pipe[0]:
-    MaximumPacketSize = 0x0040
-    EndpointAddress   = 0x01
-    Interval          = 0x00
-    PipeType          = 0x02
-      UsbdPipeTypeBulk
-    PipeHandle        = 0xc1567718
-    MaxTransferSize   = 0x00010000
-    PipeFlags         = 0x00
-  Pipe[1]:
-    MaximumPacketSize = 0x0040
-    EndpointAddress   = 0x82
-    Interval          = 0x00
-    PipeType          = 0x02
-      UsbdPipeTypeBulk
-    PipeHandle        = 0xc156772c
-    MaxTransferSize   = 0x00010000
-    PipeFlags         = 0x00
-  Pipe[2]:
-    MaximumPacketSize = 0x0008
-    EndpointAddress   = 0x83
-    Interval          = 0xff
-    PipeType          = 0x03
-      UsbdPipeTypeInterrupt
-    PipeHandle        = 0xc1567740
-    MaxTransferSize   = 0x00010000
-    PipeFlags         = 0x00
+The ultimate problem is that this device doesn't like some of the 
+MODE-SENSE commands used to determine read-write and cache status.  We 
+need to have either per-device information saying which variants of the  
+commands the device will accept or else per-device information saying not 
+to send the MODE-SENSE commands at all.
 
----------------------------------------------
-out 0c (12) length
-0000: 12 00 00 00 24 00 00 00 00 00 00 00       INQUIRY
+I don't see any other way of coping.  Even trying to send a command and 
+then trying to recover if it fails is not a viable approach if recovery 
+requires the user to cycle the power on the device (or to unplug its 
+cable).
 
-in 0x00000024 (36) length                       
-0000: 00 80 00 01 1f 00 00 00 53 6f 6e 79 20 20 20 20 
-0010: 53 6f 6e 79 20 44 53 43 20 20 20 20 20 20 20 20 
-0020: 33 2e 30 30 
-
-out 0x0000000c (12) length
-0000: 25 00 00 00 00 00 00 00 00 00 00 00       READ CAPACITY
-
-in 0x00000008 (8) length
-0000: 00 00 1e df 00 00 02 00                   7903 blocks x 512 = 4,046,366 
-bytes
-
-out 0x0000000c (12) length
-0000: 00 00 00 00 00 00 00 00 00 00 00 00       TEST UNIT READY
-
-out 0x0000000c (12) length
-0000: 25 00 00 00 00 00 00 00 00 00 00 00       READ CAPACITY
-
-in 0x00000008 (8) length
-0000: 00 00 1e df 00 00 02 00                   7903 blocks x 512 = 4,046,366 
-bytes
-
-out 0x0000000c (12) length
-0000: 28 00 00 00 00 00 00 00 80 00 00 00       READ 128 blocks, starting from 0
-
-<end of log>
-
-
+Alan Stern
 
 
 
