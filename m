@@ -1,54 +1,44 @@
-From: Matt Domsch <Matt_Domsch@dell.com>
-Subject: Re: [Announce] megaraid_mbox 2.20.4.3 patch
-Date: Tue, 1 Feb 2005 12:14:54 -0600
-Message-ID: <20050201181454.GA13076@lists.us.dell.com>
-References: <0E3FA95632D6D047BA649F95DAB60E570366262C@exa-atlanta>
+From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
+Subject: RE: Disk Errors
+Date: Tue, 1 Feb 2005 13:24:43 -0500
+Message-ID: <60807403EABEB443939A5A7AA8A7458BB5232F@otce2k01.adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Received: from linux.us.dell.com ([143.166.224.162]:40322 "EHLO
-	lists.us.dell.com") by vger.kernel.org with ESMTP id S262097AbVBASPB
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Received: from magic.adaptec.com ([216.52.22.17]:53689 "EHLO magic.adaptec.com")
+	by vger.kernel.org with ESMTP id S261281AbVBASZJ convert rfc822-to-8bit
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 1 Feb 2005 13:15:01 -0500
-Content-Disposition: inline
-In-Reply-To: <0E3FA95632D6D047BA649F95DAB60E570366262C@exa-atlanta>
+	Tue, 1 Feb 2005 13:25:09 -0500
+content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Ju, Seokmann" <sju@lsil.com>
-Cc: "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, "Bagalkote, Sreenivas" <sreenib@lsil.com>, "Mukker, Atul" <Atulm@lsil.com>
+To: Bryan Henderson <hbryan@us.ibm.com>, dougg@torque.net
+Cc: Kit Gerrits <kit@gerritsacc.nl>, linux-scsi@vger.kernel.org
 
-On Tue, Jan 25, 2005 at 07:52:42PM -0500, Ju, Seokmann wrote:
-> Hello,
-> 
-> Here is a patch for megaraid_mbox 2.20.4.3 and megaraid_mm 2.20.2.5.
-> The patch includes following changes/fixes
-> - sysfs support for drive addition/removal
-> - Tape drive timeout issue
-> - Made some code static
-> 
-> I am attaching and inlining the patch.
+An unrecoverable medium error is typically `corrected' when a write to
+the block occurs. RAID cards will use the redundancy to calculate the
+data and write it back to the offending drive for instance.
 
-This patch is mangled.  Long lines are wrapped, and appears to be in
-ISO-8859-1, such that spaces (ascii 0x20) appear as hex 0xa0.  This
-makes it difficult to review, and impossible to apply.
+Otherwise, for none-redundant stores, bad media is as good as anything
+to remind one that the data is gone ;->
 
-+// definitions for the device attributes for exporting logical drive number
-+// for a scsi address (Host, Channel, Id, Lun)
-+
-+CLASS_DEVICE_ATTR(megaraid_mbox_app_hndl, S_IRUSR, megaraid_sysfs_show_app_hndl,
-+           NULL);
+Sincerely -- Mark Salyzyn
 
-How is this being used by your apps please?
+-----Original Message-----
+From: linux-scsi-owner@vger.kernel.org
+[mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of Bryan Henderson
+Sent: Tuesday, February 01, 2005 1:01 PM
+To: dougg@torque.net
+Cc: Kit Gerrits; linux-scsi@vger.kernel.org
+Subject: Re: Disk Errors
 
+>So there are two situations in which damaged blocks remain
+>accessible:
+>    1) unrecoverable medium errors
+> ...
 
-Otherwise the patch looks sane.
-
-Thanks,
-Matt
-
-
-
--- 
-Matt Domsch
-Software Architect
-Dell Linux Solutions linux.dell.com & www.dell.com/linux
-Linux on Dell mailing lists @ http://lists.us.dell.com
+What's the rationale behind leaving a damaged block accessible in the
+case 
+of an unrecoverable medium error?  A possibility that someone might 
+actually be able to recover the data?
