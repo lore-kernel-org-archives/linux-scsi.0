@@ -1,27 +1,40 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [Patch] zfcp: act enhancements corrections
-Date: 06 Dec 2004 11:30:55 -0600
-Message-ID: <1102354263.2019.19.camel@mulgrave>
-References: <OF6B03781D.DBAC4EC9-ONC1256F5B.0053E31D-C1256F5B.00540E00@de.ibm.com>
+From: mike.miller@hp.com
+Subject: [PATCH 2.6] cciss: cciss_ioctl return code fix
+Date: Mon, 6 Dec 2004 11:43:54 -0600
+Message-ID: <20041206174354.GA7017@beardog.cca.cpqcorp.net>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat16.steeleye.com ([209.192.50.48]:146 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S261479AbULFRbL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 6 Dec 2004 12:31:11 -0500
-In-Reply-To: <OF6B03781D.DBAC4EC9-ONC1256F5B.0053E31D-C1256F5B.00540E00@de.ibm.com>
+Received: from ztxmail05.ztx.compaq.com ([161.114.1.209]:34058 "EHLO
+	ztxmail05.ztx.compaq.com") by vger.kernel.org with ESMTP
+	id S261601AbULFRoK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 6 Dec 2004 12:44:10 -0500
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andreas Herrmann <AHERRMAN@de.ibm.com>
-Cc: Arjan van de Ven <arjan@infradead.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, linux-scsi-owner@vger.kernel.org
+To: akpm@osdl.org, axboe@suse.de
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, brian.b@hp.com
 
-On Mon, 2004-11-29 at 09:18, Andreas Herrmann wrote:
-> So, here we go again -- with fixed indentation.
+This patches fixes the return code from cciss_ioctl. Without this some 
+block layer (BLK*) ioctls do not work. Please consider this for inclusion.
 
-This doesn't apply against current bk.  Do you have a reroll?
+Thanks to Jens Axboe for pointing this out.
 
-James
+Signed-off-by: Mike Miller <mike.miller@hp.com>
 
+ cciss.c |    2 +-
+ 1 files changed, 1 insertion(+), 1 deletion(-)
 
+--------------------------------------------------------------------------------
+diff -urNp lx2610-rc3.orig/drivers/block/cciss.c lx2610-rc3/drivers/block/cciss.c
+--- lx2610-rc3.orig/drivers/block/cciss.c	2004-12-06 09:36:04.844780000 -0600
++++ lx2610-rc3/drivers/block/cciss.c	2004-12-06 09:39:18.104400072 -0600
+@@ -1100,7 +1100,7 @@ cleanup1:
+ 		return(status);
+ 	}
+ 	default:
+-		return -EBADRQC;
++		return -ENOTTY;
+ 	}
+ 	
+ }
