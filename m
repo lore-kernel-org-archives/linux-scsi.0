@@ -1,106 +1,26 @@
-From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
-Subject: RE: [patch] remove bouncing email address of Deanna Bonds
-Date: Mon, 29 Nov 2004 08:27:39 -0500
-Message-ID: <60807403EABEB443939A5A7AA8A7458B7661DC@otce2k01.adaptec.com>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [PATCH as398] sd.c: adjust READ_CAPACITY for broken devices
+Date: Wed, 24 Nov 2004 16:59:02 -0500 (EST)
+Message-ID: <Pine.LNX.4.44L0.0411241657400.1003-100000@ida.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from magic.adaptec.com ([216.52.22.17]:34755 "EHLO magic.adaptec.com")
-	by vger.kernel.org with ESMTP id S261293AbUK2N1m convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 29 Nov 2004 08:27:42 -0500
-content-class: urn:content-classes:message
+Received: from ida.rowland.org ([192.131.102.52]:516 "HELO ida.rowland.org")
+	by vger.kernel.org with SMTP id S261226AbUK2OjV (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 29 Nov 2004 09:39:21 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Adrian Bunk <bunk@stusta.de>, James.Bottomley@SteelEye.com, Marcelo Tosatti <marcelo.tosatti@cyclades.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: SCSI development list <linux-scsi@vger.kernel.org>
 
-That address should instead become aacraid@adaptec.com to capture
-engineers at Adaptec.
+James:
 
-Sincerely -- Mark Salyzyn
+May I call your attention to this patch submission:
 
------Original Message-----
-From: linux-scsi-owner@vger.kernel.org
-[mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of Adrian Bunk
-Sent: Wednesday, November 24, 2004 1:47 PM
-To: James.Bottomley@SteelEye.com; Marcelo Tosatti
-Cc: linux-scsi@vger.kernel.org; linux-kernel@vger.kernel.org
-Subject: [patch] remove bouncing email address of Deanna Bonds
+http://marc.theaimsgroup.com/?l=linux-scsi&m=110001195527305&w=2
 
-The patch below (applies against both 2.4 and 2.6) removes the bouncing 
-email address of Deanna Bonds (I didn't find a nmore recent address).
+I haven't heard anything back since sending it in two weeks ago.
 
+Alan Stern
 
-diffstat output:
- drivers/scsi/aacraid/README   |    2 +-
- drivers/scsi/dpt/dpti_ioctl.h |    1 -
- drivers/scsi/dpt_i2o.c        |    1 -
- drivers/scsi/dpti.h           |    1 -
- 4 files changed, 1 insertion(+), 4 deletions(-)
-
-
-Signed-off-by: Adrian Bunk <bunk@stusta.de>
-
---- linux-2.6.10-rc2-mm3-full/drivers/scsi/dpti.h.old	2004-11-24
-19:23:47.000000000 +0100
-+++ linux-2.6.10-rc2-mm3-full/drivers/scsi/dpti.h	2004-11-24
-19:23:56.000000000 +0100
-@@ -3,7 +3,6 @@
-                              -------------------
-     begin                : Thu Sep 7 2000
-     copyright            : (C) 2001 by Adaptec
--    email                : deanna_bonds@adaptec.com
- 
-     See Documentation/scsi/dpti.txt for history, notes, license info
-     and credits
---- linux-2.6.10-rc2-mm3-full/drivers/scsi/aacraid/README.old
-2004-11-24 19:24:05.000000000 +0100
-+++ linux-2.6.10-rc2-mm3-full/drivers/scsi/aacraid/README
-2004-11-24 19:24:16.000000000 +0100
-@@ -42,7 +42,7 @@
- Christoph Hellwig <hch@infradead.org>	(updates for new-style PCI
-probing and SCSI host registration,
- 					 small cleanups/fixes)
- Matt Domsch <matt_domsch@dell.com>	(revision ioctl, adapter
-messages)
--Deanna Bonds <deanna_bonds@adaptec.com> (non-DASD support, PAE fibs and
-64 bit, added new adaptec controllers
-+Deanna Bonds                            (non-DASD support, PAE fibs and
-64 bit, added new adaptec controllers
- 					 added new ioctls, changed scsi
-interface to use new error handler,
- 					 increased the number of fibs
-and outstanding commands to a container)
- 
---- linux-2.6.10-rc2-mm3-full/drivers/scsi/dpt/dpti_ioctl.h.old
-2004-11-24 19:24:24.000000000 +0100
-+++ linux-2.6.10-rc2-mm3-full/drivers/scsi/dpt/dpti_ioctl.h
-2004-11-24 19:24:27.000000000 +0100
-@@ -3,7 +3,6 @@
-                              -------------------
-     begin                : Thu Sep 7 2000
-     copyright            : (C) 2001 by Adaptec
--    email                : deanna_bonds@adaptec.com
- 
-     See Documentation/scsi/dpti.txt for history, notes, license info
-     and credits
---- linux-2.6.10-rc2-mm3-full/drivers/scsi/dpt_i2o.c.old
-2004-11-24 19:24:34.000000000 +0100
-+++ linux-2.6.10-rc2-mm3-full/drivers/scsi/dpt_i2o.c	2004-11-24
-19:24:37.000000000 +0100
-@@ -3,7 +3,6 @@
-                              -------------------
-     begin                : Thu Sep 7 2000
-     copyright            : (C) 2000 by Adaptec
--    email                : deanna_bonds@adaptec.com
- 
- 			   July 30, 2001 First version being submitted
- 			   for inclusion in the kernel.  V2.4
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
