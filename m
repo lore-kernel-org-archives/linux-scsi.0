@@ -1,51 +1,59 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: sym53c8xx parity errors on SuSE 9.1's hwscan?
-Date: Thu, 23 Sep 2004 03:39:14 +0100
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: I/O write ordering
+Date: 22 Sep 2004 23:01:10 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040923023914.GV16153@parcelfarce.linux.theplanet.co.uk>
-References: <m3y8j1q4gs.fsf@merlin.emma.line.org>
+Message-ID: <1095908479.2295.53.camel@mulgrave>
+References: <20040922025805.GA148414@sgi.com>
+	<20040922143208.GL16153@parcelfarce.linux.theplanet.co.uk>
+	<1095864485.2143.1.camel@mulgrave> <1095864709.6297.5.camel@gaston>
+	<1095865892.1715.5.camel@mulgrave> <1095865863.6340.7.camel@gaston>
+	<1095866530.2295.8.camel@mulgrave> <1095866930.6340.11.camel@gaston>
+	<1095867824.2295.13.camel@mulgrave> <1095898796.6359.18.camel@gaston>
+	<20040923015819.GU16153@parcelfarce.linux.theplanet.co.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:17108 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S268146AbUIWCjP
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 22 Sep 2004 22:39:15 -0400
-Content-Disposition: inline
-In-Reply-To: <m3y8j1q4gs.fsf@merlin.emma.line.org>
+Received: from stat16.steeleye.com ([209.192.50.48]:65417 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S268155AbUIWDBz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 22 Sep 2004 23:01:55 -0400
+In-Reply-To: <20040923015819.GU16153@parcelfarce.linux.theplanet.co.uk>
 List-Id: linux-scsi@vger.kernel.org
-To: Matthias Andree <ma@dt.e-technik.uni-dortmund.de>
-Cc: linux-scsi@vger.kernel.org, Matthew Wilcox <matthew@wil.cx>
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>, Jeremy Higdon <jeremy@sgi.com>, Grant Grundler <grundler@parisc-linux.org>, Jesse Barnes <jbarnes@engr.sgi.com>, Matthew Wilcox <willy@debian.org>, Andrew Vasquez <andrew.vasquez@qlogic.com>, pj@sgi.com, SCSI Mailing List <linux-scsi@vger.kernel.org>, mdr@cthulhu.engr.sgi.com, jeremy@cthulhu.engr.sgi.com, djh@cthulhu.engr.sgi.com, Andrew Morton <akpm@osdl.org>, Richard Henderson <rth@twiddle.net>, Paul Mackerras <paulus@samba.org>
 
-On Thu, Sep 23, 2004 at 01:16:51AM +0200, Matthias Andree wrote:
-> SuSE Linux 9.1 (kernel 2.6.5 + SuSE patch set, but also 2.6.7 or a bit
-> milder in 2.6.9-rc2-mm1) uses some SuSE-specific "hwprobe" or "hwinfo"
-> tool to scan for hardware.
+On Wed, 2004-09-22 at 21:58, Matthew Wilcox wrote:
+> On Thu, Sep 23, 2004 at 10:19:57AM +1000, Benjamin Herrenschmidt wrote:
+> > And that wouldn't help vs. spinlocks which are in real RAM
+> > (we have a similar issue with IO leaking potentially out of locks, 
+> > if we don't use some heavy barriers there too).
+> 
+> Yep, that was the problem that SGI wanted to solve.
 
-Does anyone have the source?  I'd be interested to see what it's up to.
+Yes, but the ppc introduces an additional issue with the consistent
+memory problem.
 
-> I find it a bit intimidating that user-space (albeit with root
-> permissions) causes "SCSI" parity errors, and given the 2.6.9 logging
-> towards the end of the mail, I am wondering if SuSE's hwinfo stuff
-> triggers some race condition or manages to bypass the SCSI phase state
-> machine or if the probe confuses the chip. I haven't yet managed to
-> isolate (with strace) the cause.
+The io memory barrier is used to prevent writes to PCI space leaking
+around synchronisation primitives.  However, there's also the ordering
+of writes to consistent memory vs writes to PCI space.
 
-I have a suggestion.  If the probe attempts to size the BARs of the
-chip, this is a destructive process that could well cause the chip to
-start spewing errors are require a reset to work again.
+The ownership model for consistent memory solves this.
 
-> Is there a useful debug setting for sym53c8xx that could shed some light
-> on what the user-space has attempted that led to the SCSI parity error?
+Think of it this way: writes to consistent memory are normal memory
+writes (they don't trigger actions in the device), it's the writes to
+the device space that trigger actions.  All you want to ensure is that
+all the consistent memory writes are issued before the device is
+triggered into action.
 
-The trouble is that I suspect the probe is completely bypassing the driver.
-It might be worth instrumenting drivers/pci/proc.c to see if it's writing
-to any of the BARs (particularly the second memory BAR, the one that's 8k).
+So, in the ownership model you transfer the ownership of the consistent
+memory area to the device (which would be the heavyweight barrier on
+ppc) then write to the device space to trigger it.
 
--- 
-"Next the statesmen will invent cheap lies, putting the blame upon 
-the nation that is attacked, and every man will be glad of those
-conscience-soothing falsities, and will diligently study them, and refuse
-to examine any refutations of them; and thus he will by and by convince 
-himself that the war is just, and will thank God for the better sleep 
-he enjoys after this process of grotesque self-deception." -- Mark Twain
+synchronisation of consistent memory accesses can be done via normal
+spin locks; synchronisation of device space needs the the iomb() to
+prevent reordering leaks around the spinlock.
+
+James
+
+
