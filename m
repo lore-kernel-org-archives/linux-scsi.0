@@ -1,44 +1,166 @@
 From: Jeff Garzik <jgarzik@pobox.com>
 Subject: Re: [PATCH] New QStor SATA/RAID Driver for 2.6.9-rc2
-Date: Tue, 14 Sep 2004 13:02:49 -0400
+Date: Tue, 14 Sep 2004 13:00:32 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <41472439.4060300@pobox.com>
-References: <414711AC.5030200@rtr.ca> <41471A84.4090200@pobox.com> <41471EA9.70806@optonline.net>
+Message-ID: <414723B0.1090600@pobox.com>
+References: <41471163.10709@rtr.ca>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:29321 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S269464AbUINRDC
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:51848 "EHLO
+	www.linux.org.uk") by vger.kernel.org with ESMTP id S269506AbUINRAq
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 14 Sep 2004 13:03:02 -0400
-In-Reply-To: <41471EA9.70806@optonline.net>
+	Tue, 14 Sep 2004 13:00:46 -0400
+In-Reply-To: <41471163.10709@rtr.ca>
 List-Id: linux-scsi@vger.kernel.org
-To: Nathan Bryant <nbryant@optonline.net>
-Cc: Mark Lord <lsml@rtr.ca>, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@steeleye.com>
+To: Mark Lord <lkml@rtr.ca>
+Cc: linux-kernel@vger.kernel.org, SCSI Mailing List <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>
 
-Nathan Bryant wrote:
-> Jeff Garzik wrote:
+Mark Lord wrote:
+> My first attempt at posting this seems to have gone AWOL,
+> so here it comes again.  Also being posted to linux-scsi.
+
+There is that CC feature in your mailer, you know... :)
+
+Repeating what I posted to linux-scsi:
+
+
+> Here is the first public release of the 2.6.xx driver
+> source code for the Pacific Digital Corporation QStor SATA/RAID chip.
 > 
->> Linus vetoed future SCSI->ATA translators.  He only allowed libata 
->> because I promised to remove the translation and make it a native 
->> block driver in the future, which I have been working towards.
+> This 4-channel chip has hardware-assisted RAID0/RAID1/RAID10,
+> host-queuing, per-request TCQ/NCQ support, support for hot insertion
+> and removal of drives, etc..  The 64-bit/66Mhz chip shows throughput
+> in excess of 200MByte/sec on my ancient P3-1GHz test system,
+> and can do much better when installed in a PCI-X slot.
+
+How much of the RAID is actually hardware-assisted?
+
+This looks pretty much like an ATA driver to me.
+
+Linus vetoed future SCSI->ATA translators.  He only allowed libata 
+because I promised to remove the translation and make it a native block 
+driver in the future, which I have been working towards (see struct 
+ata_queued_cmd, etc.)
+
+
+> The driver (attached) supports most of the chip features,
+> including host, native and legacy tagged queuing,
+> but does not yet include boot-from-raid support (coming soon).
 > 
-> 
-> Oh, this is incredibly good to hear. It definitely clarifies the path 
-> towards implementing new features such as power management...
-> 
-> Is this written up in a FAQ somewhere?
+> Both hdparm and smartmontools are fully supported by this driver.
 
-Not AFAIK.
+Actual comments on the code:
+0) so far, this driver looks like fake RAID to me...  if so that's a big 
+veto.  if it's real RAID, only the following grumbles apply :)
 
-The basic rule is "don't translate the native protocol into something 
-else." and it has been in place for quite a while.
+1) not endian safe at all
 
-I was allowed a one-time exception for libata, which translates the 
-native ATA into SCSI.  The SCSI portions are separated into 
-libata-scsi.c so that they may be easily excised or made optional (likely).
+2) I am dubious about including Yet Another set of event logging functions
 
-	Jeff
+3) in qstor_read_events you unlock the spinlock without first locking 
+it, in one path (wait_event_interruptible rc==0)
 
+4) qstor_extract_id_string appears to be generic across IDE/libata/qstor
+
+5) new procfs stuff discouraged
+
+6) style:  ditch braces on single statements, e.g.,
+
++               if (drive != NULL) {
++                       qstor_destroy_device(drive);
++               }
+
+
+7) double spin_unlock_irq possible in qstor_create_device
+
+8) use msleep() rather than schedule_timeout()
+
+9) use of do_sleep paradigm is dubious:  you should instead try to keep 
+your locked code regions as small as possible.  in general, this code 
+has far too many unlock-doit-lock sections.
+
+Experience has shown that too much unlock-doit-lock leads to bugs and 
+increases the pain when analyzing your locking.
+
+In particular, releasing the lock and sleeping would be very wrong in 
+the ->queuecommand and error handling paths (alas...  I would love to 
+sleep in the fine-grained eh hooks)
+
+10) in qstor_scsi_done, when is cmd->scsi_done ever NULL?
+
+11) do you properly keep track of the 'done' function passed to you in 
+->queuecommand?  or do you mistakenly assume that cmd->scsi_done is the 
+same as the ->queuecommand argument?
+
+12) fix the sd.c code, don't add silly driver-specific workarounds:
+
++       buf[0] = TYPE_DISK;     // Cannot use TYPE_RAID -- sd.c rejects it
+
+13) doh!  check for pci_map_xxx failure
+
+14) use sg_dma_len() macro, not sg->length
+
+15) Bart and I are slowly moving over to using linux/ata.h for 
+ATA-generic constants and enums.  Please use ATA_CMD_xxx (and add 
+constants to that header as required).
+
+16) There are WAY too many magic numbers in this driver :(
+
+17) Are you 100% certain of your queued error handling?  The reason why 
+libata doesn't do NCQ is purely because error handling is so 
+complicated.  Potential problems I don't see you handling (but I could 
+be missing something!):
+
+	a) on a bus error (not device error), one has _no idea_ which
+	commands complete etc.
+	b) if SERVICE interrupt is enabled, you may not get back the
+	correct D2H Register FIS showing the errored device in question
+	c) even if you receive the correct D2H Register FIS, you may
+	need to manually abort the queue with a NOP
+
+Queueing is easy.  Picking up the pieces when it fails isn't.
+
+libata's error handling is dumb, but also easy to review and verify.
+
+18) return -EFOO values from your PCI probe function
+
+19) propagate return value from pci_enable_device
+
+20) check (and return) pci_set_dma_mask retval
+
+21) use the proper ULL suffix for pci_set_dma_mask argument
+
+22) use pci_set_consistent_dma_mask also
+
+23) use pci_request_regions to reserve resources
+
+24) when qstor_probe fails, don't just return!  undo the stuff that 
+occurred before the error (such as calling pci_disable_device or 
+pci_release_regions or iounmap)
+
+25) propagate return value from request_irq
+
+26) check scsi_add_host return value
+
+27) the following is highly silly.  you are locking a function, just so 
+you can unlock a function so you can sleep.
+
++       spin_lock_irqsave(uhba->lock, flags);
++       qstor_reset(uhba);
++       spin_unlock_irqrestore(uhba->lock, flags);
+
+28) "SECTOR_BYTES" -- how many more definitions of the 512-byte sector 
+do we need?  :)
+
+29) You use QSTOR_PACKED_STRUCTURE when not needed, which causes gcc to 
+generate horribly sub-optimal code
+
+30) style:  use u32/u64 as kernel standard.
+
++       unsigned pLEN           :32;    // Byte count
++       unsigned spare32        :32;    // 0
+
+31) none of your bitfield structures are endian-safe
 
