@@ -1,62 +1,141 @@
-From: "Edwards, Scott (MED, Kelly IT Resouces)" <James.Edwards@med.ge.com>
-Subject: RE: PATCH for disabling write cache on SATA drives
-Date: Tue, 29 Jun 2004 14:19:24 -0500
-Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <1F6D1D1660975A4887628A011443A1BC07734C05@uswaumsx13medge.med.ge.com>
+From: Krzysztof "Sierota (o2.pl/tlen.pl)" <Krzysztof.Sierota@firma.o2.pl>
+Subject: 21610 & 2810 linux problems
+Date: 29 Jun 2004 21:21:59 +0200
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <1088536919.2221.146.camel@rakieeta>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-ide-owner@vger.kernel.org>
-To: 'Jeff Garzik' <jgarzik@pobox.com>
-Cc: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, linux-ide@vger.kernel.org, "'sedwards@xmission.com'" <sedwards@xmission.com>
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from gepard.lm.pl ([212.244.46.42]:57233 "EHLO gepard.lm.pl")
+	by vger.kernel.org with ESMTP id S265978AbUF2TYw (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 29 Jun 2004 15:24:52 -0400
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: Mark Salyzyn <Mark_Salyzyn@adaptec.com>
+
+Hi,
+
+we are deploying several machines with 2810 and 21610 SATA RAID
+controllers installed. However I see problems I am not able to solve so
+far with the machine where both 21610 and 2810 controllers are
+installed.
+
+on RedHats 2.4.21-15.0.2.EL kernel I get:
+
+Red Hat/Adaptec aacraid driver (1.1.2 Jun 29 2004 06:00:44)
+AAC0: kernel 4.1.4 build 7211
+AAC0: monitor 4.1.4 build 7211
+AAC0: bios 4.1.0 build 7244
+AAC0: serial bb1063fafaf001
+AAC1: adapter kernel panic'd.
+aacraid: device initialization failed.
+scsi0 : aacraid
+blk: queue c62f5418, I/O limit 4095Mb (mask 0xffffffff)
+  Vendor: ADAPTEC   Model: AAR-2810SA Mirro  Rev: V1.0
+  Type:   Direct-Access                      ANSI SCSI revision: 02
+blk: queue c62f5218, I/O limit 4095Mb (mask 0xffffffff)
+  Vendor: ADAPTEC   Model: AAR-2810SA Mirro  Rev: V1.0
+  Type:   Direct-Access                      ANSI SCSI revision: 02
+blk: queue c61afe18, I/O limit 4095Mb (mask 0xffffffff)
+  Vendor: ADAPTEC   Model: AAR-2810SA Mirro  Rev: V1.0
+  Type:   Direct-Access                      ANSI SCSI revision: 02
+blk: queue c61afc18, I/O limit 4095Mb (mask 0xffffffff)
+  Vendor: ADAPTEC   Model: AAR-2810SA Mirro  Rev: V1.0
+  Type:   Direct-Access                      ANSI SCSI revision: 02
+blk: queue c61afa18, I/O limit 4095Mb (mask 0xffffffff)
+
+the 21610 controller fails
+
+kernel 2.6.7:
+
+Red Hat/Adaptec aacraid driver (1.1.2-lk1 Jun 29 2004)
+AAC0: kernel 4.1.4 build 7244
+AAC0: monitor 4.1.4 build 7244
+AAC0: bios 4.1.0 build 7244
+AAC0: serial bb6cebfafaf001
+scsi0 : aacraid
+  Vendor: ADAPTEC   Model: AAR-21610SA Mirr  Rev: V1.0
+  Type:   Direct-Access                      ANSI SCSI revision: 02
+  Vendor: ADAPTEC   Model: AAR-21610SA Mirr  Rev: V1.0
+  Type:   Direct-Access                      ANSI SCSI revision: 02
+  Vendor: ADAPTEC   Model: AAR-21610SA Mirr  Rev: V1.0
+  Type:   Direct-Access                      ANSI SCSI revision: 02
+  Vendor: ADAPTEC   Model: AAR-21610SA Mirr  Rev: V1.0
+  Type:   Direct-Access                      ANSI SCSI revision: 02
+  Vendor: ADAPTEC   Model: AAR-21610SA Mirr  Rev: V1.0
+  Type:   Direct-Access                      ANSI SCSI revision: 02
+  Vendor: ADAPTEC   Model: AAR-21610SA Mirr  Rev: V1.0
+  Type:   Direct-Access                      ANSI SCSI revision: 02
+  Vendor: ADAPTEC   Model: AAR-21610SA Mirr  Rev: V1.0
+  Type:   Direct-Access                      ANSI SCSI revision: 02
+  Vendor: ADAPTEC   Model: AAR-21610SA Mirr  Rev: V1.0
+  Type:   Direct-Access                      ANSI SCSI revision: 02
+AAC1: kernel 4.1.4 build 7211
+AAC1: monitor 4.1.4 build 7211
+AAC1: bios 4.1.0 build 7244
+AAC1: serial bb1063fafaf001
+scsi1 : aacraid
+  Vendor: ADAPTEC   Model: AAR-2810SA Mirro  Rev: V1.0
+  Type:   Direct-Access                      ANSI SCSI revision: 02
+  Vendor: ADAPTEC   Model: AAR-2810SA Mirro  Rev: V1.0
+  Type:   Direct-Access                      ANSI SCSI revision: 02
+  Vendor: ADAPTEC   Model: AAR-2810SA Mirro  Rev: V1.0
+  Type:   Direct-Access                      ANSI SCSI revision: 02
+  Vendor: ADAPTEC   Model: AAR-2810SA Mirro  Rev: V1.0
+  Type:   Direct-Access                      ANSI SCSI revision: 02
+ipr: IBM Power RAID SCSI Device Driver version: 2.0.7 (May 21, 2004)
+
+I get both controllers, however, when I start adaptecs-smbe daemons the
+system load is 2.0, there's lots of context switches, about 1k/s, and
+iomagrd gets stuck in D state.
+
+kernel 2.6.7-mm4:
+
+Red Hat/Adaptec aacraid driver (1.1.2-lk2 Jun 29 2004)
+ACPI: PCI interrupt 0000:03:01.0[A] -> GSI 48 (level, low) -> IRQ 48
+AAC0: adapter kernel panic.
+ACPI: PCI interrupt 0000:04:01.0[A] -> GSI 24 (level, low) -> IRQ 24
+AAC0: kernel 4.1.4 build 7211
+AAC0: monitor 4.1.4 build 7211
+AAC0: bios 4.1.0 build 7244
+AAC0: serial bb1063fafaf001
+scsi1 : aacraid
+  Vendor: ADAPTEC   Model: AAR-2810SA Mirro  Rev: V1.0
+  Type:   Direct-Access                      ANSI SCSI revision: 02
+  Vendor: ADAPTEC   Model: AAR-2810SA Mirro  Rev: V1.0
+  Type:   Direct-Access                      ANSI SCSI revision: 02
+  Vendor: ADAPTEC   Model: AAR-2810SA Mirro  Rev: V1.0
+  Type:   Direct-Access                      ANSI SCSI revision: 02
+  Vendor: ADAPTEC   Model: AAR-2810SA Mirro  Rev: V1.0
+  Type:   Direct-Access                      ANSI SCSI revision: 02
+SCSI device sda: 488279040 512-byte hdwr sectors (249999 MB)
+
+yet again only one controller. System load about 2.0, anotyfid daemon,
+looping:
+
+sched_yield()                           = 0
+ioctl(5, FIONREAD, [0])                 = 0
+time(NULL)                              = 1088470036
+sched_yield()                           = 0
+ioctl(5, FIONREAD, [0])                 = 0
+time(NULL)                              = 1088470036
+sched_yield()                           = 0
+ioctl(5, FIONREAD, [0])                 = 0
+time(NULL)                              = 1088470036
+sched_yield()                           = 0
+ioctl(5, FIONREAD, [0])                 = 0
+time(NULL)                              = 1088470036
+sched_yield()                           = 0
+ioctl(5, FIONREAD, [0])                 = 0
+
+iomagrd, seems to be doing sth strange, too.
 
 
-On Monday, June 28, 2004 at 6:12 PM, Jeff Garzik wrote:
+The system is CentOS-3.1 that is based on RedHats ES 3.0 SRPMS with all
+updates. Could someone give any advice on the subject ? I can provide
+more info.
 
-> On Fri, Jun 25, 2004 at 06:21:24PM -0500, Edwards, Scott (MED, Kelly
-IT Resouces) wrote:
->> 
->> I don't know if this is useful for anyone or if anyone even cares,
-but just
->> in case someone does, this is the patch I made to disable the write
-cache on
->> the Serial ATA drives.  It doesn't make the write cache controllable
-from
->> the user level, it just ALWAYS disables it.  (I tried to make one
-that could
->> be sent via an ioctl, but there were far too many things that I
-didn't
->> understand and it didn't work.)  Since I have never done this before
-I don't
->> know if there is some protocol that I missed, if so I'm sorry.  If
-there are
->> glaring stupid mistakes (very likely) please let me know.
->
-> In principle your patch is fine, but I would really like to find a
-> better way of allowing the user to do this.
->
-> My immediate guess would be to use the standard SCSI method of
-disabling
-> write cache, and have that initiate wbcache disable on the SATA side.
->
-> Long term, this would be augmented by an "ATA passthru" opcode or
-ioctl.
->
->	Jeff
 
-I first tried to make a real scsi ioctl command in libata-scsi.c, so I
-could just use the scsiinfo program to disable the write cache.  I  made
-a xlat_mode_select command but it didn't work and management didn't want
-me
-spending more time trying to figure it out.  And really for it to work
-correctly there would have to be a xlat_mode_sense because now it is
-just 
-simulated (in ata_scsi_simulate).
-
-I'm willing to work on it on my own time as soon as I get a SATA drive, 
-if someone would be willing to advise me on how to send the ATA commands
-to the drive (I think this is where it failed before).
-
-Thanks
-  -Scott
 
