@@ -1,126 +1,102 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH] fix sr device number handling
-Date: Fri, 29 Nov 2002 23:30:23 +0100
+Subject: [PATCH] complain about missing host template initializations
+Date: Sat, 30 Nov 2002 01:03:47 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20021129233023.A13089@lst.de>
+Message-ID: <20021130010347.A14052@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@steeleye.com, axboe@suse.de
+To: James.Bottomley@steeleye.com
 Cc: linux-scsi@vger.kernel.org
 
-The same for sr (I didn't actually had a chance to actually test this,
-but it's the same change as in sd).
+Currently scsi_register_host silently fixes up missing initializations
+of max_sectors and release.  Add some printks complaining about this
+so we can get rid of it sooner or later.
 
 
---- 1.68/drivers/scsi/sr.c	Thu Nov 28 15:09:53 2002
-+++ edited/drivers/scsi/sr.c	Fri Nov 29 23:25:16 2002
-@@ -32,8 +32,6 @@
-  *	check resource allocation in sr_init and some cleanups
-  */
+--- 1.38/drivers/scsi/hosts.c	Thu Nov 28 02:02:19 2002
++++ edited/drivers/scsi/hosts.c	Fri Nov 29 23:56:41 2002
+@@ -171,14 +171,14 @@
+ }
  
--#define MAJOR_NR SCSI_CDROM_MAJOR
+ /**
+- * scsi_host_generic_release - default release function for hosts
++ * scsi_host_legacy_release - default release function for hosts
+  * @shost: 
+  * 
+  * Description:
+  * 	This is the default case for the release function.  Its completely
+  *	useless for anything but old ISA adapters
+  **/
+-static void scsi_host_legacy_release(struct Scsi_Host *shost)
++static int scsi_host_legacy_release(struct Scsi_Host *shost)
+ {
+ 	if (shost->irq)
+ 		free_irq(shost->irq, NULL);
+@@ -186,6 +186,8 @@
+ 		free_dma(shost->dma_channel);
+ 	if (shost->io_port && shost->n_io_port)
+ 		release_region(shost->io_port, shost->n_io_port);
++
++	return 0;
+ }
+ 
+ static int scsi_remove_legacy_host(struct Scsi_Host *shost)
+@@ -193,14 +195,8 @@
+ 	int error;
+ 
+ 	error = scsi_remove_host(shost);
+-	if (error)
+-		return error;
 -
- #include <linux/module.h>
- #include <linux/fs.h>
- #include <linux/kernel.h>
-@@ -57,6 +55,9 @@
+-	if (shost->hostt->release)
++	if (!error)
+ 		(*shost->hostt->release)(shost);
+-	else
+-		scsi_host_legacy_release(shost);
+-
+ 	return 0;
+ }
  
- MODULE_PARM(xa_test, "i");	/* see sr_ioctl.c */
- 
-+
-+#define SR_DISKS	(1 << KDEV_MINOR_BITS)
-+
- #define MAX_RETRIES	3
- #define SR_TIMEOUT	(30 * HZ)
- #define SR_CAPABILITIES \
-@@ -82,10 +83,12 @@
- 	},
- };
- 
--static int sr_nr_dev;	/* XXX(hch) bad hack, we want a bitmap instead */
- static LIST_HEAD(sr_devlist);
- static spinlock_t sr_devlist_lock = SPIN_LOCK_UNLOCKED;
- 
-+static unsigned long sr_index_bits[SR_DISKS / BITS_PER_LONG];
-+static spinlock_t sr_index_lock = SPIN_LOCK_UNLOCKED;
-+
- static int sr_open(struct cdrom_device_info *, int);
- static void sr_release(struct cdrom_device_info *);
- 
-@@ -514,16 +517,17 @@
- 	if (!disk)
- 		goto fail_free;
+@@ -487,27 +483,22 @@
+ {
+ 	struct Scsi_Host *shost;
  
 -	/*
--	 * XXX  This doesn't make us better than the previous code in the
--	 * XXX  end (not worse either, though..).
--	 * XXX  To properly support hotplugging we should have a bitmap and
--	 * XXX  use find_first_zero_bit on it.  This will happen at the
--	 * XXX  same time template->nr_* goes away.		--hch
+-	 * Check no detect routine.
 -	 */
--	minor = sr_nr_dev++;
-+	spin_lock(&sr_index_lock);
-+	minor = find_first_zero_bit(sr_index_bits, SR_DISKS);
-+	if (minor == SR_DISKS) {
-+		spin_unlock(&sr_index_lock);
-+		error = -EBUSY;
-+		goto fail_put;
+-	if (!shost_tp->detect)
+-		return 1;
++	BUG_ON(!shost_tp->detect);
+ 
+-	/* If max_sectors isn't set, default to max */
+-	if (!shost_tp->max_sectors)
++	if (!shost_tp->max_sectors) {
++		printk(KERN_WARNING
++		    "scsi HBA driver %s didn't set max_sectors, "
++		    "please fix the template", shost_tp->name);
+ 		shost_tp->max_sectors = 1024;
 +	}
-+	__set_bit(minor, sr_index_bits);
-+	spin_unlock(&sr_index_lock);
  
--	disk->major = MAJOR_NR;
-+	disk->major = SCSI_CDROM_MAJOR;
- 	disk->first_minor = minor;
- 	sprintf(disk->disk_name, "sr%d", minor);
- 	disk->fops = &sr_bdops;
-@@ -570,6 +574,8 @@
- 	    sdev->id, sdev->lun);
- 	return 0;
+-	/*
+-	 * The detect routine must carefully spinunlock/spinlock if it
+-	 * enables interrupts, since all interrupt handlers do spinlock as
+-	 * well.
+-	 */
++	if (!shost_tp->release) {
++		printk(KERN_WARNING
++		    "scsi HBA driver %s didn't set a release method, "
++		    "please fix the template", shost_tp->name);
++		shost_tp->release = &scsi_host_legacy_release;
++	}
  
-+fail_put:
-+	put_disk(disk);
- fail_free:
- 	kfree(cd);
- fail:
-@@ -802,13 +808,15 @@
- 		return;
- 
- 	sr_devlist_remove(cd);
-+	scsi_slave_detach(SDp);
- 	del_gendisk(cd->disk);
--	put_disk(cd->disk);
--	unregister_cdrom(&cd->cdi);
- 
--	scsi_slave_detach(SDp);
--	sr_nr_dev--;
-+	spin_lock(&sr_index_lock);
-+	clear_bit(cd->disk->first_minor, sr_index_bits);
-+	spin_unlock(&sr_index_lock);
- 
-+	put_disk(cd->disk);
-+	unregister_cdrom(&cd->cdi);
- 	kfree(cd);
- }
- 
-@@ -816,7 +824,7 @@
- {
- 	int rc;
- 
--	rc = register_blkdev(MAJOR_NR, "sr", &sr_bdops);
-+	rc = register_blkdev(SCSI_CDROM_MAJOR, "sr", &sr_bdops);
- 	if (rc)
- 		return rc;
- 	return scsi_register_device(&sr_template);
-@@ -825,7 +833,7 @@
- static void __exit exit_sr(void)
- {
- 	scsi_unregister_device(&sr_template);
--	unregister_blkdev(MAJOR_NR, "sr");
-+	unregister_blkdev(SCSI_CDROM_MAJOR, "sr");
- }
- 
- module_init(init_sr);
+-	/*
+-	 * detect should do its own locking
+-	 * FIXME present is now set is scsi_register which breaks manual
+-	 * registration code below.
+-	 */
+ 	shost_tp->detect(shost_tp);
+ 	if (!shost_tp->present)
+ 		return 0;
