@@ -1,48 +1,44 @@
 From: Badari Pulavarty <pbadari@us.ibm.com>
 Subject: Re: [patch for playing] Patch to support 4000 disks and maintain backward compatibility
-Date: Thu, 10 Apr 2003 18:09:55 -0700
+Date: Thu, 10 Apr 2003 18:25:12 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <200304101809.55311.pbadari@us.ibm.com>
-References: <UTC200304102353.h3ANrXv10792.aeb@smtp.cwi.nl>
+Message-ID: <200304101825.12299.pbadari@us.ibm.com>
+References: <200304101339.49895.pbadari@us.ibm.com> <Pine.LNX.4.44.0304110157460.12110-100000@serv>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e35.co.us.ibm.com ([32.97.110.133]:10154 "EHLO
-	e35.co.us.ibm.com") by vger.kernel.org with ESMTP id S264282AbTDKBAi convert rfc822-to-8bit (for <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 10 Apr 2003 21:00:38 -0400
-In-Reply-To: <UTC200304102353.h3ANrXv10792.aeb@smtp.cwi.nl>
+Received: from e34.co.us.ibm.com ([32.97.110.132]:4312 "EHLO e34.co.us.ibm.com")
+	by vger.kernel.org with ESMTP id S264281AbTDKBP5 convert rfc822-to-8bit (for <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 10 Apr 2003 21:15:57 -0400
+In-Reply-To: <Pine.LNX.4.44.0304110157460.12110-100000@serv>
 List-Id: linux-scsi@vger.kernel.org
-To: Andries.Brouwer@cwi.nl, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Roman Zippel <zippel@linux-m68k.org>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Thursday 10 April 2003 04:53 pm, Andries.Brouwer@cwi.nl wrote:
->     From: Badari Pulavarty <pbadari@us.ibm.com>
+On Thursday 10 April 2003 05:08 pm, Roman Zippel wrote:
+> Hi,
 >
->     >     I am more worried about names slipping. I atleast hope
->     >     to see device names not changing by just doing
->     >     rmmod/insmod.
->     >
->     > But you see, the present sd_index_bits[] gives no such
->     > guarantee. In sd_detach a bit is cleared, in sd_attach
->     > the first free bit is given out. There is no memory.
+> On Thu, 10 Apr 2003, Badari Pulavarty wrote:
+> > This patch addresses the backward compatibility with device nodes
+> > issue. All the new disks will be addressed by only last major.
 >
->     But the disks are probed in the same manner as last time
->     (if the disks/controllers are not moved, crashed etc..).
->     So we will end up getting same names.
->
-> Oh, but if next_index is 0 in the module (or reset by the
-> init_module code), then also with index = next_index++
-> things will be the same after rmmod/insmod.
+> This nicely demonstrates, that it's not exactly becoming nicer, when one
+> has to deal with compatibility. This is one more reason to at least
+> consider a more general solution, from which all drivers can benefit from.
 
-Here is my problem..
+I am all for more general solution (dynamic assignment), if I can get
 
-#insmod ips.o
-  < found 10 disks>
-#insmod qla2300.o
-  < found 10 disks>
-#rmmod ips.o
-   <removed 10 disks>
-#insmod ips.o
-  <found 10 disks - but new names>
+(1) backward compatibility with device nodes
+(2) device nodes get updated automagically whenever my
+<major,minor> changes. (may be due to insmod/rmmod, reboot etc..)
 
-- Badari
+I can't see (2) happening easily. I know that Greg KH is working on
+udev (/dev/ memory filesystem). Once that happens, we have to change
+drivers/subsystems (we need) to make dynamic allocation. All of this Is 
+going to happen for 2.6 ?
+
+Thats why, I am trying to come out with half-cooked workable solution for 2.6. 
+
+Thanks,
+Badari
