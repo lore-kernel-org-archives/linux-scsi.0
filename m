@@ -1,60 +1,44 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: RE: [PATCH] fusion: streamline ->queuecommand
-Date: 05 Oct 2004 18:11:22 -0500
+From: Patrick Mansfield <patmans@us.ibm.com>
+Subject: Re: [PATCH] fusion: streamline ->queuecommand
+Date: Tue, 5 Oct 2004 16:37:14 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1097017890.1765.216.camel@mulgrave>
-References: <0E3FA95632D6D047BA649F95DAB60E570526235F@exa-atlanta>
+Message-ID: <20041005233714.GA18081@beaverton.ibm.com>
+References: <0E3FA95632D6D047BA649F95DAB60E570526235F@exa-atlanta> <1097017890.1765.216.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat16.steeleye.com ([209.192.50.48]:12424 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S266555AbUJEXMH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 5 Oct 2004 19:12:07 -0400
-In-Reply-To: <0E3FA95632D6D047BA649F95DAB60E570526235F@exa-atlanta>
+Received: from e5.ny.us.ibm.com ([32.97.182.105]:11180 "EHLO e5.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S266183AbUJEXiC (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Oct 2004 19:38:02 -0400
+Content-Disposition: inline
+In-Reply-To: <1097017890.1765.216.camel@mulgrave>
 List-Id: linux-scsi@vger.kernel.org
-To: Eric Dean Moore <Emoore@lsil.com>
-Cc: "Stephens, Larry" <larry.stephens@lsil.com>, "Shirron, Stephen" <Stephen.Shirron@lsil.com>, "Gibbons, Terry" <Terry.Gibbons@lsil.com>, Christoph Hellwig <hch@infradead.org>, Matthew Wilcox <matthew@wil.cx>, Christoph Hellwig <hch@lst.de>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Eric Dean Moore <Emoore@lsil.com>, "Stephens, Larry" <larry.stephens@lsil.com>, "Shirron, Stephen" <Stephen.Shirron@lsil.com>, "Gibbons, Terry" <Terry.Gibbons@lsil.com>, Christoph Hellwig <hch@infradead.org>, Matthew Wilcox <matthew@wil.cx>, Christoph Hellwig <hch@lst.de>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Tue, 2004-10-05 at 17:38, Moore, Eric Dean wrote:
-> Can we assume that all linux distributions provide at least 57 bytes of
-> inquiry data
-> during the scsi bus scan?   I don't know if Suse has solved this, but they
-> were
-> in 2.4 kernel only sending 36 bytes of inquiry data.
+On Tue, Oct 05, 2004 at 06:11:22PM -0500, James Bottomley wrote:
 
-2.6 always does a two phase inquiry, the minimum first and then the full
-inquiry string.  We pick the negotiation flags you're looking for out of
-the inquiry data and save them away in the scsi_device structure, so you
-don't even have to parse the saved inquiry data.
+> However, the attitude that "my driver works and I've tested it, so I'm
+> not going to change it" is in a large measure what got the SCSI subsytem
+> into its pariah status in 2.4: too many in-driver work arounds and no
+> thought to fixing the problems in the generic code.
 
-> > > (6) DV algorithm works, and well tested, and accepted by 
-> > our OEMS. Nothing
-> > > is broke. Why break it?    
-> > 
-> > Because sharing code and thus increasing its usage is good.
-> 
-> That is not a risk that LSI Logic is willing to take;   
-> currently there is not a 2.7 kernel testbed for this. 
-> Having someone outside LSI blindly posting a patch removing our
-> DV and not having throughly tested could have grave results. 
-> The DV currently in place has been thru many test cycles in our own
-> test labs, and these drivers are well accepted by our customer base.
-> Other LSI employees copied on this email can comment futher on that.
+Yes, we want drivers to move forward, but with our current model, we don't
+have any 2.6.x kernel.org stable kernels. 
 
-I'm not forcing people to use it ... yet.
+When we first went to this model I thought it did not matter, you could
+just get stable kernels from a distro, but now I see problems with it.
 
-However, the attitude that "my driver works and I've tested it, so I'm
-not going to change it" is in a large measure what got the SCSI subsytem
-into its pariah status in 2.4: too many in-driver work arounds and no
-thought to fixing the problems in the generic code.
+If code changes for a mainline kernel scsi driver, there is no place to
+keep a stable driver as part of a stable kernel.org series.
 
-If the benefits of sharing common code in an open source model aren't
-apparent then consider this: the last three critical Adaptec bugs were
-all in the domain validation code; and they thought their driver was
-"thoroughly tested" too.
+Driver maintainers are getting requests to backport current 2.6.x code to
+distributions in order to support stable kernel series, else they have to
+(effectively) maintain a driver version for each distro.
 
-James
+When we had 2.4 stable and 2.5 development, there was a single repository
+for stable kernels, and one for development. Maintainers did not have to
+track distros, the distros could (generally) pull from the latest 2.4.x
+tree to sync up with the latest driver fixes.
 
-
+-- Patrick Mansfield
