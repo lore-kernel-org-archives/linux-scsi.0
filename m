@@ -1,1281 +1,192 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH] consolidate devlist handling in a single file
-Date: Thu, 8 May 2003 21:06:52 +0200
+Subject: [PATCH] fix the aacraid merge a bit more
+Date: Thu, 8 May 2003 21:03:42 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030508210652.D28294@lst.de>
+Message-ID: <20030508210341.A28294@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([212.34.181.86]:40207 "EHLO verein.lst.de")
-	by vger.kernel.org with ESMTP id S261989AbTEHSyT (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 8 May 2003 14:54:19 -0400
+Received: from verein.lst.de ([212.34.181.86]:37647 "EHLO verein.lst.de")
+	by vger.kernel.org with ESMTP id S261968AbTEHSvH (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 8 May 2003 14:51:07 -0400
 Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
 Cc: linux-scsi@vger.kernel.org
 
-Currently it's spread all over the scsi midlayer but having this
-nicely separate out to a file of it's own without exposing the
-data structures sounds like a good idea.
 
-
---- 1.41/drivers/scsi/Makefile	Sat Apr 26 17:19:41 2003
-+++ edited/drivers/scsi/Makefile	Thu May  8 18:31:36 2003
-@@ -124,7 +124,8 @@
+--- 1.13/drivers/scsi/aacraid/aachba.c	Wed May  7 18:16:33 2003
++++ edited/drivers/scsi/aacraid/aachba.c	Thu May  8 18:24:16 2003
+@@ -33,7 +33,6 @@
+ #include <linux/completion.h>
+ #include <asm/semaphore.h>
+ #include <asm/uaccess.h>
+-#define MAJOR_NR SCSI_DISK0_MAJOR	/* For DEVICE_NR() */
+ #include <linux/blk.h>
+ #include "scsi.h"
+ #include "hosts.h"
+@@ -967,9 +966,7 @@
+ 		memset(inq_data_ptr, 0, sizeof (struct inquiry_data));
  
- scsi_mod-y			+= scsi.o hosts.o scsi_ioctl.o constants.o \
- 				   scsicam.o scsi_error.o scsi_lib.o \
--				   scsi_scan.o scsi_syms.o scsi_sysfs.o
-+				   scsi_scan.o scsi_syms.o scsi_sysfs.o \
-+				   scsi_devinfo.o
- scsi_mod-$(CONFIG_PROC_FS)	+= scsi_proc.o
- scsi_mod-$(CONFIG_X86_PC9800)	+= scsi_pc98.o
- 			
---- 1.111/drivers/scsi/scsi.c	Wed Apr 30 18:09:21 2003
-+++ edited/drivers/scsi/scsi.c	Thu May  8 18:31:08 2003
-@@ -114,11 +114,6 @@
- 	"Enclosure        ",
- };
- 
--static const char * const spaces = "                "; /* 16 of them */
--
--static unsigned scsi_default_dev_flags;
--LIST_HEAD(scsi_dev_info_list);
--
- MODULE_PARM(scsi_logging_level, "i");
- MODULE_PARM_DESC(scsi_logging_level, "SCSI logging level; should be zero or nonzero");
- 
-@@ -936,250 +931,6 @@
- 	return depth;
- }
- 
--
--/*
-- * scsi_strcpy_devinfo: called from scsi_dev_info_list_add to copy into
-- * devinfo vendor and model strings.
-- */
--static void scsi_strcpy_devinfo(char *name, char *to, size_t to_length,
--				char *from, int compatible)
--{
--	size_t from_length;
--
--	from_length = strlen(from);
--	strncpy(to, from, min(to_length, from_length));
--	if (from_length < to_length) {
--		if (compatible) {
--			/*
--			 * NUL terminate the string if it is short.
--			 */
--			to[from_length] = '\0';
--		} else {
--			/* 
--			 * space pad the string if it is short. 
--			 */
--			strncpy(&to[from_length], spaces,
--				to_length - from_length);
+ 		inq_data_ptr->inqd_ver = 2;	/* claim compliance to SCSI-2 */
+- 		if(!strstr(UTS_RELEASE,"BOOT")){  // If this is not a RH driver disk kernel
+-			inq_data_ptr->inqd_dtq = 0x80;	/* set RMB bit to one indicating that the medium is removable */
 -		}
--	}
--	if (from_length > to_length)
--		 printk(KERN_WARNING "%s: %s string '%s' is too long\n",
--			__FUNCTION__, name, from);
--}
--
--/**
-- * scsi_dev_info_list_add: add one dev_info list entry.
-- * @vendor:	vendor string
-- * @model:	model (product) string
-- * @strflags:	integer string
-- * @flag:	if strflags NULL, use this flag value
-- *
-- * Description:
-- * 	Create and add one dev_info entry for @vendor, @model, @strflags or
-- * 	@flag. If @compatible, add to the tail of the list, do not space
-- * 	pad, and set devinfo->compatible. The scsi_static_device_list entries
-- * 	are added with @compatible 1 and @clfags NULL.
-- *
-- * Returns: 0 OK, -error on failure.
-- **/
--static int scsi_dev_info_list_add(int compatible, char *vendor, char *model,
--			    char *strflags, int flags)
--{
--	struct scsi_dev_info_list *devinfo;
--
--	devinfo = kmalloc(sizeof(*devinfo), GFP_KERNEL);
--	if (!devinfo) {
--		printk(KERN_ERR "%s: no memory\n", __FUNCTION__);
--		return -ENOMEM;
--	}
--
--	scsi_strcpy_devinfo("vendor", devinfo->vendor, sizeof(devinfo->vendor),
--			    vendor, compatible);
--	scsi_strcpy_devinfo("model", devinfo->model, sizeof(devinfo->model),
--			    model, compatible);
--
--	if (strflags)
--		devinfo->flags = simple_strtoul(strflags, NULL, 0);
--	else
--		devinfo->flags = flags;
--
--	devinfo->compatible = compatible;
--
--	if (compatible)
--		list_add_tail(&devinfo->dev_info_list, &scsi_dev_info_list);
--	else
--		list_add(&devinfo->dev_info_list, &scsi_dev_info_list);
--
--	return 0;
--}
--
--/**
-- * scsi_dev_info_list_add_str: parse dev_list and add to the
-- * scsi_dev_info_list.
-- * @dev_list:	string of device flags to add
-- *
-- * Description:
-- * 	Parse dev_list, and add entries to the scsi_dev_info_list.
-- * 	dev_list is of the form "vendor:product:flag,vendor:product:flag".
-- * 	dev_list is modified via strsep. Can be called for command line
-- * 	addition, for proc or mabye a sysfs interface.
-- *
-- * Returns: 0 if OK, -error on failure.
-- **/
--int scsi_dev_info_list_add_str (char *dev_list)
--{
--	char *vendor, *model, *strflags, *next;
--	char *next_check;
--	int res = 0;
--
--	next = dev_list;
--	if (next && next[0] == '"') {
--		/*
--		 * Ignore both the leading and trailing quote.
--		 */
--		next++;
--		next_check = ",\"";
--	} else {
--		next_check = ",";
--	}
--
--	/*
--	 * For the leading and trailing '"' case, the for loop comes
--	 * through the last time with vendor[0] == '\0'.
--	 */
--	for (vendor = strsep(&next, ":"); vendor && (vendor[0] != '\0')
--	     && (res == 0); vendor = strsep(&next, ":")) {
--		strflags = NULL;
--		model = strsep(&next, ":");
--		if (model)
--			strflags = strsep(&next, next_check);
--		if (!model || !strflags) {
--			printk(KERN_ERR "%s: bad dev info string '%s' '%s'"
--			       " '%s'\n", __FUNCTION__, vendor, model,
--			       strflags);
--			res = -EINVAL;
--		} else
--			res = scsi_dev_info_list_add(0 /* compatible */, vendor,
--						     model, strflags, 0);
--	}
--	return res;
--}
--
--/**
-- * scsi_dev_info_list_delete: called from scsi.c:exit_scsi to remove
-- * 	the scsi_dev_info_list.
-- **/
--static void scsi_dev_info_list_delete (void)
--{
--	struct list_head *lh, *lh_next;
--	struct scsi_dev_info_list *devinfo;
--
--	list_for_each_safe(lh, lh_next, &scsi_dev_info_list) {
--		devinfo = list_entry(lh, struct scsi_dev_info_list,
--				     dev_info_list);
--		kfree(devinfo);
--	}
--}
--
--/**
-- * scsi_dev_list_init: set up the dynamic device list.
-- * @dev_list:	string of device flags to add
-- *
-- * Description:
-- * 	Add command line @dev_list entries, then add
-- * 	scsi_static_device_list entries to the scsi device info list.
-- **/
--static int scsi_dev_info_list_init (char *dev_list)
--{
--	int error, i;
--
--	error = scsi_dev_info_list_add_str(dev_list);
--	if (error)
--		return error;
--
--	for (i = 0; scsi_static_device_list[i].vendor != NULL; i++) {
--		error = scsi_dev_info_list_add(1 /* compatibile */,
--				scsi_static_device_list[i].vendor,
--				scsi_static_device_list[i].model,
--				NULL,
--				scsi_static_device_list[i].flags);
--		if (error)
--			break;
--	}
--
--	if (error)
--		scsi_dev_info_list_delete();
--	return error;
--}
--
--/**
-- * get_device_flags - get device specific flags from the dynamic device
-- * list. Called during scan time.
-- * @vendor:	vendor name
-- * @model:	model name
-- *
-- * Description:
-- *     Search the scsi_dev_info_list for an entry matching @vendor and
-- *     @model, if found, return the matching flags value, else return
-- *     scsi_default_dev_flags.
-- **/
--int scsi_get_device_flags(unsigned char *vendor, unsigned char *model)
--{
--	struct scsi_dev_info_list *devinfo;
--
--	list_for_each_entry(devinfo, &scsi_dev_info_list, dev_info_list) {
--		if (devinfo->compatible) {
--			/*
--			 * Behave like the older version of get_device_flags.
--			 */
--			size_t max;
--			/*
--			 * XXX why skip leading spaces? If an odd INQUIRY
--			 * value, that should have been part of the
--			 * scsi_static_device_list[] entry, such as "  FOO"
--			 * rather than "FOO". Since this code is already
--			 * here, and we don't know what device it is
--			 * trying to work with, leave it as-is.
--			 */
--			max = 8;	/* max length of vendor */
--			while ((max > 0) && *vendor == ' ') {
--				max--;
--				vendor++;
--			}
--			/*
--			 * XXX removing the following strlen() would be
--			 * good, using it means that for a an entry not in
--			 * the list, we scan every byte of every vendor
--			 * listed in scsi_static_device_list[], and never match
--			 * a single one (and still have to compare at
--			 * least the first byte of each vendor).
--			 */
--			if (memcmp(devinfo->vendor, vendor,
--				    min(max, strlen(devinfo->vendor))))
--				continue;
--			/*
--			 * Skip spaces again.
--			 */
--			max = 16;	/* max length of model */
--			while ((max > 0) && *model == ' ') {
--				max--;
--				model++;
--			}
--			if (memcmp(devinfo->model, model,
--				   min(max, strlen(devinfo->model))))
--				continue;
--			return devinfo->flags;
--		} else {
--			if (!memcmp(devinfo->vendor, vendor,
--				     sizeof(devinfo->vendor)) &&
--			     !memcmp(devinfo->model, model,
--				      sizeof(devinfo->model)))
--				return devinfo->flags;
--		}
--	}
--	return scsi_default_dev_flags;
--}
--
- int scsi_attach_device(struct scsi_device *sdev)
++		inq_data_ptr->inqd_dtq = 0x80;	/* set RMB bit to one indicating that the medium is removable */
+ 		inq_data_ptr->inqd_rdf = 2;	/* A response data format value of two indicates that the data shall be in the format specified in SCSI-2 */
+ 		inq_data_ptr->inqd_len = 31;
+ 		/*Format for "pad2" is  RelAdr | WBus32 | WBus16 |  Sync  | Linked |Reserved| CmdQue | SftRe */
+--- 1.6/drivers/scsi/aacraid/aacraid.h	Wed May  7 22:18:41 2003
++++ edited/drivers/scsi/aacraid/aacraid.h	Thu May  8 18:24:16 2003
+@@ -1,7 +1,6 @@
+ //#define dprintk(x) printk x
+ #define dprintk(x)
+ 
+-#include "compat.h"
+ /*------------------------------------------------------------------------------
+  *              D E F I N E S
+  *----------------------------------------------------------------------------*/
+@@ -1461,12 +1460,8 @@
+  */
+ static inline u32 cap_to_cyls(sector_t capacity, u32 divisor)
  {
- 	struct Scsi_Device_Template *sdt;
-@@ -1344,43 +1095,9 @@
- 	return 0;
+-#ifdef CONFIG_LBD
+-	do_div(capacity, divisor);
+-#else
+-	capacity /= divisor;
+-#endif
+-	return (u32) capacity;
++	sector_div(capacity, divisor);
++	return (u32)capacity;
  }
  
--static char *scsi_dev_flags;
--MODULE_PARM(scsi_dev_flags, "s");
--MODULE_PARM_DESC(scsi_dev_flags,
--	 "Given scsi_dev_flags=vendor:model:flags, add a black/white list"
--	 " entry for vendor and model with an integer value of flags"
--	 " to the scsi device info list");
--MODULE_PARM(scsi_default_dev_flags, "i");
--MODULE_PARM_DESC(scsi_default_dev_flags,
--		 "scsi default device flag integer value");
- MODULE_DESCRIPTION("SCSI core");
- MODULE_LICENSE("GPL");
- 
--#ifndef MODULE
--static int __init setup_scsi_dev_flags(char *str)
+ const char *aac_driverinfo(struct Scsi_Host *);
+--- 1.1/drivers/scsi/aacraid/compat.h	Wed May  7 22:08:36 2003
++++ edited/drivers/scsi/aacraid/compat.h	Thu May  8 18:24:16 2003
+@@ -1,114 +0,0 @@
+-/*
+- *	Adaptec AAC series RAID controller driver
+- *	(c) Copyright 2001 Red Hat Inc.	<alan@redhat.com>
+- *
+- * This program is free software; you can redistribute it and/or modify
+- * it under the terms of the GNU General Public License as published by
+- * the Free Software Foundation; either version 2, or (at your option)
+- * any later version.
+- *
+- * This program is distributed in the hope that it will be useful,
+- * but WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+- * GNU General Public License for more details.
+- *
+- * You should have received a copy of the GNU General Public License
+- * along with this program; see the file COPYING.  If not, write to
+- * the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.
+- *
+- */
+-/*
+- * This file is for backwards compatibility with older kernel versions
+- */
+-#include <linux/version.h>
+-#if LINUX_VERSION_CODE  < KERNEL_VERSION(2,4,11)   
+-#include <linux/blk.h>
+-static inline unsigned int block_size(kdev_t dev)
 -{
--	scsi_dev_flags = str;
--	return 1;
--}
--__setup("scsi_dev_flags=", setup_scsi_dev_flags);
+-	int retval = BLOCK_SIZE;
+-	int major = MAJOR(dev);
 -
--static int __init setup_scsi_default_dev_flags(char *str)
--{
--	unsigned int tmp;
--	if (get_option(&str, &tmp) == 1) {
--		scsi_default_dev_flags = tmp;
--		printk(KERN_WARNING "%s %d\n", __FUNCTION__,
--		       scsi_default_dev_flags);
--		return 1;
--	} else {
--		printk(KERN_WARNING "%s: usage scsi_default_dev_flags=intr\n",
--		       __FUNCTION__);
--		return 0;
+-	if (blksize_size[major]) {
+-		int minor = MINOR(dev);
+-		if (blksize_size[major][minor])
+-			retval = blksize_size[major][minor];
 -	}
+-	return retval;
 -}
--__setup("scsi_default_dev_flags=", setup_scsi_default_dev_flags);
 -#endif
 -
- static int __init init_scsi(void)
- {
- 	int error, i;
-@@ -1391,7 +1108,7 @@
- 	error = scsi_init_procfs();
- 	if (error)
- 		goto cleanup_queue;
--	error = scsi_dev_info_list_init(scsi_dev_flags);
-+	error = scsi_init_devinfo();
- 	if (error)
- 		goto cleanup_procfs;
- 	error = scsi_sysfs_register();
-@@ -1408,7 +1125,7 @@
- 	return 0;
- 
- cleanup_devlist:
--	scsi_dev_info_list_delete();
-+	scsi_exit_devinfo();
- cleanup_procfs:
- 	scsi_exit_procfs();
- cleanup_queue:
-@@ -1421,7 +1138,7 @@
- static void __exit exit_scsi(void)
- {
- 	scsi_sysfs_unregister();
--	scsi_dev_info_list_delete();
-+	scsi_exit_devinfo();
- 	devfs_remove("scsi");
- 	scsi_exit_procfs();
- 	scsi_exit_queue();
---- 1.3/drivers/scsi/scsi_priv.h	Wed Apr 30 18:09:21 2003
-+++ edited/drivers/scsi/scsi_priv.h	Thu May  8 19:14:53 2003
-@@ -41,6 +41,8 @@
- #define SCSI_SENSE_VALID(scmd) \
- 	(((scmd)->sense_buffer[0] & 0x70) == 0x70)
- 
-+struct Scsi_Device_Template;
-+
- 
- /*
-  * scsi_target: representation of a scsi target, for now, this is only
-@@ -69,12 +71,16 @@
- extern int scsi_attach_device(struct scsi_device *sdev);
- extern void scsi_detach_device(struct scsi_device *sdev);
- extern void scsi_rescan_device(struct scsi_device *sdev);
--extern int scsi_get_device_flags(unsigned char *vendor, unsigned char *model);
- extern int scsi_insert_special_req(struct scsi_request *sreq, int);
- extern void scsi_init_cmd_from_req(struct scsi_cmnd *cmd,
- 		struct scsi_request *sreq);
- extern void __scsi_release_request(struct scsi_request *sreq);
- 
-+/* scsi_devinfo.c */
-+extern int scsi_get_device_flags(unsigned char *vendor, unsigned char *model);
-+extern int scsi_init_devinfo(void);
-+extern void scsi_exit_devinfo(void);
-+
- /* scsi_error.c */
- extern void scsi_times_out(struct scsi_cmnd *cmd);
- extern void scsi_error_handler(void *host);
-@@ -119,31 +125,5 @@
- extern void scsi_sysfs_remove_host(struct Scsi_Host *);
- extern int scsi_sysfs_register(void);
- extern void scsi_sysfs_unregister(void);
+-#if LINUX_VERSION_CODE  <= KERNEL_VERSION(2,4,7)   
 -
--/*
-- * dev_info: for the black/white list in the old scsi_static_device_list
-- */
--struct dev_info {
--	char *vendor;
--	char *model;
--	char *revision;	/* revision known to be bad, unused */
--	unsigned flags;
+-#ifndef COMPLETION_INITIALIZER
+-
+-#include <linux/wait.h>
+-
+-struct completion {
+-	unsigned int done;
+-	wait_queue_head_t wait;
 -};
+-#define COMPLETION_INITIALIZER(work) \
+-	{ 0, __WAIT_QUEUE_HEAD_INITIALIZER((work).wait) }
 -
--extern struct dev_info scsi_static_device_list[];
+-#define DECLARE_COMPLETION(work) \
+-	struct completion work = COMPLETION_INITIALIZER(work)
+-#define INIT_COMPLETION(x)	((x).done = 0)
 -
--/*
-- * scsi_dev_info_list: structure to hold black/white listed devices.
-- */
--struct scsi_dev_info_list {
--	struct list_head dev_info_list;
--	char vendor[8];
--	char model[16];
--	unsigned flags;
--	unsigned compatible; /* for use with scsi_static_device_list entries */
--};
--
--extern struct list_head scsi_dev_info_list;
--extern int scsi_dev_info_list_add_str(char *);
- 
- #endif /* _SCSI_PRIV_H */
---- 1.21/drivers/scsi/scsi_proc.c	Sat Apr 26 16:46:26 2003
-+++ edited/drivers/scsi/scsi_proc.c	Thu May  8 18:24:15 2003
-@@ -200,77 +200,6 @@
- 	return;
- }
- 
--/* 
-- * proc_scsi_dev_info_read: dump the scsi_dev_info_list via
-- * /proc/scsi/device_info
-- */
--static int proc_scsi_dev_info_read(char *buffer, char **start, off_t offset,
--				   int length)
+-static inline void init_completion(struct completion *x)
 -{
--	struct scsi_dev_info_list *devinfo;
--	int size, len = 0;
--	off_t begin = 0;
--	off_t pos = 0;
+-	x->done = 0;
+-	init_waitqueue_head(&x->wait);
+-}
+-#endif
 -
--	list_for_each_entry(devinfo, &scsi_dev_info_list, dev_info_list) {
--		size = sprintf(buffer + len, "'%.8s' '%.16s' 0x%x\n",
--			       devinfo->vendor, devinfo->model, devinfo->flags);
--		len += size;
--		pos = begin + len;
--		if (pos < offset) {
--			len = 0;
--			begin = pos;
--		}
--		if (pos > offset + length)
--			goto stop_output;
--	}
+-#ifndef complete_and_exit
+-static inline void complete_and_exit(struct completion *comp, long code)
+-{
+-	/*
+-	if (comp)
+-		complete(comp);
+-	
+-	do_exit(code);
+-	*/
+-}
+-#endif
 -
--stop_output:
--	*start = buffer + (offset - begin);	/* Start of wanted data */
--	len -= (offset - begin);	/* Start slop */
--	if (len > length)
--		len = length;	/* Ending slop */
--	return (len);
+-#endif
+-
+-#if LINUX_VERSION_CODE  <= KERNEL_VERSION(2,4,2)   
+-
+-static inline void scsi_set_pci_device(struct Scsi_Host *SHpnt,
+-                                       struct pci_dev *pdev)
+-{
+-//	SHpnt->pci_dev = pdev;
 -}
 -
--/* 
-- * proc_scsi_dev_info_write: allow additions to the scsi_dev_info_list via
-- * /proc.
-- *
-- * Use: echo "vendor:model:flag" > /proc/scsi/device_info
-- *
-- * To add a black/white list entry for vendor and model with an integer
-- * value of flag to the scsi device info list.
-- */
--static int proc_scsi_dev_info_write (struct file * file, const char * buf,
--                              unsigned long length, void *data)
+-static inline void wait_for_completion(struct completion *x)
 -{
--	char *buffer;
--	int err = length;
+-	spin_lock_irq(&x->wait.lock);
+-	if (!x->done) {
+-		DECLARE_WAITQUEUE(wait, current);
 -
--	if (!buf || length>PAGE_SIZE)
--		return -EINVAL;
--	if (!(buffer = (char *) __get_free_page(GFP_KERNEL)))
--		return -ENOMEM;
--	if (copy_from_user(buffer, buf, length)) {
--		err =-EFAULT;
--		goto out;
+-		wait.flags |= WQ_FLAG_EXCLUSIVE;
+-		__add_wait_queue_tail(&x->wait, &wait);
+-		do {
+-			__set_current_state(TASK_UNINTERRUPTIBLE);
+-			spin_unlock_irq(&x->wait.lock);
+-			schedule();
+-			spin_lock_irq(&x->wait.lock);
+-		} while (!x->done);
+-		__remove_wait_queue(&x->wait, &wait);
 -	}
--
--	if (length < PAGE_SIZE)
--		buffer[length] = '\0';
--	else if (buffer[PAGE_SIZE-1]) {
--		err = -EINVAL;
--		goto out;
--	}
--
--	scsi_dev_info_list_add_str(buffer);
--
--out:
--	free_page((unsigned long)buffer);
--	return err;
+-	x->done--;
+-	spin_unlock_irq(&x->wait.lock);
 -}
 -
- static int scsi_proc_info(char *buffer, char **start, off_t offset, int length)
- {
- 	struct Scsi_Host *shost;
-@@ -359,7 +288,6 @@
- 	return error;
- }
- 
+-static inline int pci_set_dma_mask(struct pci_dev *dev, dma_addr_t mask)
+-{
+-    dev->dma_mask = mask;
 -
- static int proc_scsi_gen_write(struct file * file, const char * buf,
-                               unsigned long length, void *data)
- {
-@@ -517,15 +445,8 @@
- 		goto err2;
- 	pde->write_proc = proc_scsi_gen_write;
- 
--	pde = create_proc_info_entry("scsi/device_info", 0, 0,
--					  proc_scsi_dev_info_read);
--	if (!pde)
--		goto err3;
--	pde->write_proc = proc_scsi_dev_info_write;
- 	return 0;
- 
--err3:
--	remove_proc_entry("scsi/scsi", 0);
- err2:
- 	remove_proc_entry("scsi", 0);
- err1:
-@@ -534,7 +455,6 @@
- 
- void scsi_exit_procfs(void)
- {
--	remove_proc_entry("scsi/device_info", 0);
- 	remove_proc_entry("scsi/scsi", 0);
- 	remove_proc_entry("scsi", 0);
- }
---- 1.84/drivers/scsi/scsi_scan.c	Wed May  7 10:16:03 2003
-+++ edited/drivers/scsi/scsi_scan.c	Thu May  8 18:24:15 2003
-@@ -35,171 +35,7 @@
- 
- #include "scsi_priv.h"
- #include "scsi_logging.h"
+-    return 0;
+-}
 -
--
--/*
-- * Flags for SCSI devices that need special treatment
-- */
--#define BLIST_NOLUN     	0x001	/* Only scan LUN 0 */
--#define BLIST_FORCELUN  	0x002	/* Known to have LUNs, force scanning */
--#define BLIST_BORKEN    	0x004	/* Flag for broken handshaking */
--#define BLIST_KEY       	0x008	/* unlock by special command */
--#define BLIST_SINGLELUN 	0x010	/* Do not use LUNs in parallel */
--#define BLIST_NOTQ		0x020	/* Buggy Tagged Command Queuing */
--#define BLIST_SPARSELUN 	0x040	/* Non consecutive LUN numbering */
--#define BLIST_MAX5LUN		0x080	/* Avoid LUNS >= 5 */
--#define BLIST_ISROM     	0x100	/* Treat as (removable) CD-ROM */
--#define BLIST_LARGELUN		0x200	/* LUNs past 7 on a SCSI-2 device */
--#define BLIST_INQUIRY_36	0x400	/* override additional length field */
--#define BLIST_INQUIRY_58	0x800	/* ... for broken inquiry responses */
--
--/*
-- * scsi_static_device_list: deprecated list of devices that require
-- * settings that differ from the default, includes black-listed (broken)
-- * devices. The entries here are added to the tail of scsi_dev_info_list
-- * via scsi_dev_info_list_init.
-- *
-- * Do not add to this list, use the command line or proc interface to add
-- * to the scsi_dev_info_list. This table will eventually go away.
-- */
--struct dev_info scsi_static_device_list[] __initdata = {
--	/*
--	 * The following devices are known not to tolerate a lun != 0 scan
--	 * for one reason or another. Some will respond to all luns,
--	 * others will lock up.
--	 */
--	{"Aashima", "IMAGERY 2400SP", "1.03", BLIST_NOLUN},	/* locks up */
--	{"CHINON", "CD-ROM CDS-431", "H42", BLIST_NOLUN},	/* locks up */
--	{"CHINON", "CD-ROM CDS-535", "Q14", BLIST_NOLUN},	/* locks up */
--	{"DENON", "DRD-25X", "V", BLIST_NOLUN},			/* locks up */
--	{"HITACHI", "DK312C", "CM81", BLIST_NOLUN},	/* responds to all lun */
--	{"HITACHI", "DK314C", "CR21", BLIST_NOLUN},	/* responds to all lun */
--	{"IMS", "CDD521/10", "2.06", BLIST_NOLUN},	/* locks up */
--	{"MAXTOR", "XT-3280", "PR02", BLIST_NOLUN},	/* locks up */
--	{"MAXTOR", "XT-4380S", "B3C", BLIST_NOLUN},	/* locks up */
--	{"MAXTOR", "MXT-1240S", "I1.2", BLIST_NOLUN},	/* locks up */
--	{"MAXTOR", "XT-4170S", "B5A", BLIST_NOLUN},	/* locks up */
--	{"MAXTOR", "XT-8760S", "B7B", BLIST_NOLUN},	/* locks up */
--	{"MEDIAVIS", "RENO CD-ROMX2A", "2.03", BLIST_NOLUN},	/* responds to all lun */
--	{"NEC", "CD-ROM DRIVE:841", "1.0", BLIST_NOLUN},/* locks up */
--	{"PHILIPS", "PCA80SC", "V4-2", BLIST_NOLUN},	/* responds to all lun */
--	{"RODIME", "RO3000S", "2.33", BLIST_NOLUN},	/* locks up */
--	{"SUN", "SENA", NULL, BLIST_NOLUN},		/* responds to all luns */
--	/*
--	 * The following causes a failed REQUEST SENSE on lun 1 for
--	 * aha152x controller, which causes SCSI code to reset bus.
--	 */
--	{"SANYO", "CRD-250S", "1.20", BLIST_NOLUN},
--	/*
--	 * The following causes a failed REQUEST SENSE on lun 1 for
--	 * aha152x controller, which causes SCSI code to reset bus.
--	 */
--	{"SEAGATE", "ST157N", "\004|j", BLIST_NOLUN},
--	{"SEAGATE", "ST296", "921", BLIST_NOLUN},	/* responds to all lun */
--	{"SEAGATE", "ST1581", "6538", BLIST_NOLUN},	/* responds to all lun */
--	{"SONY", "CD-ROM CDU-541", "4.3d", BLIST_NOLUN},
--	{"SONY", "CD-ROM CDU-55S", "1.0i", BLIST_NOLUN},
--	{"SONY", "CD-ROM CDU-561", "1.7x", BLIST_NOLUN},
--	{"SONY", "CD-ROM CDU-8012", NULL, BLIST_NOLUN},
--	{"TANDBERG", "TDC 3600", "U07", BLIST_NOLUN},	/* locks up */
--	{"TEAC", "CD-R55S", "1.0H", BLIST_NOLUN},	/* locks up */
--	/*
--	 * The following causes a failed REQUEST SENSE on lun 1 for
--	 * seagate controller, which causes SCSI code to reset bus.
--	 */
--	{"TEAC", "CD-ROM", "1.06", BLIST_NOLUN},
--	{"TEAC", "MT-2ST/45S2-27", "RV M", BLIST_NOLUN},	/* responds to all lun */
--	/*
--	 * The following causes a failed REQUEST SENSE on lun 1 for
--	 * seagate controller, which causes SCSI code to reset bus.
--	 */
--	{"TEXEL", "CD-ROM", "1.06", BLIST_NOLUN},
--	{"QUANTUM", "LPS525S", "3110", BLIST_NOLUN},	/* locks up */
--	{"QUANTUM", "PD1225S", "3110", BLIST_NOLUN},	/* locks up */
--	{"QUANTUM", "FIREBALL ST4.3S", "0F0C", BLIST_NOLUN},	/* locks up */
--	{"MEDIAVIS", "CDR-H93MV", "1.31", BLIST_NOLUN},	/* locks up */
--	{"SANKYO", "CP525", "6.64", BLIST_NOLUN},	/* causes failed REQ SENSE, extra reset */
--	{"HP", "C1750A", "3226", BLIST_NOLUN},		/* scanjet iic */
--	{"HP", "C1790A", "", BLIST_NOLUN},		/* scanjet iip */
--	{"HP", "C2500A", "", BLIST_NOLUN},		/* scanjet iicx */
--	{"YAMAHA", "CDR100", "1.00", BLIST_NOLUN},	/* locks up */
--	{"YAMAHA", "CDR102", "1.00", BLIST_NOLUN},	/* locks up */
--	{"YAMAHA", "CRW8424S", "1.0", BLIST_NOLUN},	/* locks up */
--	{"YAMAHA", "CRW6416S", "1.0c", BLIST_NOLUN},	/* locks up */
--	{"MITSUMI", "CD-R CR-2201CS", "6119", BLIST_NOLUN},	/* locks up */
--	{"RELISYS", "Scorpio", NULL, BLIST_NOLUN},	/* responds to all lun */
--	{"MICROTEK", "ScanMaker II", "5.61", BLIST_NOLUN},	/* responds to all lun */
--	{"NEC", "D3856", "0009", BLIST_NOLUN},
--
--	/*
--	 * Other types of devices that have special flags.
--	 */
--	{"SONY", "CD-ROM CDU-8001", NULL, BLIST_BORKEN},
--	{"TEXEL", "CD-ROM", "1.06", BLIST_BORKEN},
--	{"IOMEGA", "Io20S         *F", NULL, BLIST_KEY},
--	{"INSITE", "Floptical   F*8I", NULL, BLIST_KEY},
--	{"INSITE", "I325VM", NULL, BLIST_KEY},
--	{"LASOUND", "CDX7405", "3.10", BLIST_MAX5LUN | BLIST_SINGLELUN},
--	{"MICROP", "4110", NULL, BLIST_NOTQ},
--	{"NRC", "MBR-7", NULL, BLIST_FORCELUN | BLIST_SINGLELUN},
--	{"NRC", "MBR-7.4", NULL, BLIST_FORCELUN | BLIST_SINGLELUN},
--	{"REGAL", "CDC-4X", NULL, BLIST_MAX5LUN | BLIST_SINGLELUN},
--	{"NAKAMICH", "MJ-4.8S", NULL, BLIST_FORCELUN | BLIST_SINGLELUN},
--	{"NAKAMICH", "MJ-5.16S", NULL, BLIST_FORCELUN | BLIST_SINGLELUN},
--	{"PIONEER", "CD-ROM DRM-600", NULL, BLIST_FORCELUN | BLIST_SINGLELUN},
--	{"PIONEER", "CD-ROM DRM-602X", NULL, BLIST_FORCELUN | BLIST_SINGLELUN},
--	{"PIONEER", "CD-ROM DRM-604X", NULL, BLIST_FORCELUN | BLIST_SINGLELUN},
--	{"EMULEX", "MD21/S2     ESDI", NULL, BLIST_SINGLELUN},
--	{"CANON", "IPUBJD", NULL, BLIST_SPARSELUN},
--	{"nCipher", "Fastness Crypto", NULL, BLIST_FORCELUN},
--	{"DEC", "HSG80", NULL, BLIST_FORCELUN},
--	{"COMPAQ", "LOGICAL VOLUME", NULL, BLIST_FORCELUN},
--	{"COMPAQ", "CR3500", NULL, BLIST_FORCELUN},
--	{"NEC", "PD-1 ODX654P", NULL, BLIST_FORCELUN | BLIST_SINGLELUN},
--	{"MATSHITA", "PD-1", NULL, BLIST_FORCELUN | BLIST_SINGLELUN},
--	{"iomega", "jaz 1GB", "J.86", BLIST_NOTQ | BLIST_NOLUN},
--	{"TOSHIBA", "CDROM", NULL, BLIST_ISROM},
--	{"TOSHIBA", "CD-ROM", NULL, BLIST_ISROM},
--	{"MegaRAID", "LD", NULL, BLIST_FORCELUN},
--	{"DGC", "RAID", NULL, BLIST_SPARSELUN},	/* Dell PV 650F, storage on LUN 0 */
--	{"DGC", "DISK", NULL, BLIST_SPARSELUN},	/* Dell PV 650F, no storage on LUN 0 */
--	{"DELL", "PV660F", NULL, BLIST_SPARSELUN},
--	{"DELL", "PV660F   PSEUDO", NULL, BLIST_SPARSELUN},
--	{"DELL", "PSEUDO DEVICE .", NULL, BLIST_SPARSELUN},	/* Dell PV 530F */
--	{"DELL", "PV530F", NULL, BLIST_SPARSELUN},
--	{"EMC", "SYMMETRIX", NULL, BLIST_SPARSELUN | BLIST_LARGELUN | BLIST_FORCELUN},
--	{"HP", "A6189A", NULL, BLIST_SPARSELUN | BLIST_LARGELUN},	/* HP VA7400 */
--	{"HP", "OPEN-", "*", BLIST_SPARSELUN | BLIST_LARGELUN}, /* HP XP Arrays */
--	{"CMD", "CRA-7280", NULL, BLIST_SPARSELUN},	/* CMD RAID Controller */
--	{"CNSI", "G7324", NULL, BLIST_SPARSELUN},	/* Chaparral G7324 RAID */
--	{"CNSi", "G8324", NULL, BLIST_SPARSELUN},	/* Chaparral G8324 RAID */
--	{"Zzyzx", "RocketStor 500S", NULL, BLIST_SPARSELUN},
--	{"Zzyzx", "RocketStor 2000", NULL, BLIST_SPARSELUN},
--	{"SONY", "TSL", NULL, BLIST_FORCELUN},		/* DDS3 & DDS4 autoloaders */
--	{"DELL", "PERCRAID", NULL, BLIST_FORCELUN},
--	{"HP", "NetRAID-4M", NULL, BLIST_FORCELUN},
--	{"ADAPTEC", "AACRAID", NULL, BLIST_FORCELUN},
--	{"ADAPTEC", "Adaptec 5400S", NULL, BLIST_FORCELUN},
--	{"COMPAQ", "MSA1000", NULL, BLIST_FORCELUN},
--	{"HP", "C1557A", NULL, BLIST_FORCELUN},
--	{"IBM", "AuSaV1S2", NULL, BLIST_FORCELUN},
--	{"FSC", "CentricStor", "*", BLIST_SPARSELUN | BLIST_LARGELUN},
--	{"DDN", "SAN DataDirector", "*", BLIST_SPARSELUN},
--	{"HITACHI", "DF400", "*", BLIST_SPARSELUN},
--	{"HITACHI", "DF500", "*", BLIST_SPARSELUN},
--	{"HITACHI", "DF600", "*", BLIST_SPARSELUN},
--	{"IBM", "ProFibre 4000R", "*", BLIST_SPARSELUN | BLIST_LARGELUN},
--	{"SUN", "T300", "*", BLIST_SPARSELUN},
--	{"SUN", "T4", "*", BLIST_SPARSELUN},
--	{"SGI", "RAID3", "*", BLIST_SPARSELUN},
--	{"SGI", "RAID5", "*", BLIST_SPARSELUN},
--	{"SGI", "TP9100", "*", BLIST_SPARSELUN | BLIST_LARGELUN},
--	{"SGI", "TP9300", "*", BLIST_SPARSELUN | BLIST_LARGELUN},
--	{"SGI", "TP9400", "*", BLIST_SPARSELUN | BLIST_LARGELUN},
--	{"SGI", "TP9500", "*", BLIST_SPARSELUN | BLIST_LARGELUN},
--	{"MYLEX", "DACARMRB", "*", BLIST_SPARSELUN | BLIST_LARGELUN},
--	{ NULL, NULL, NULL, 0 },
--};
-+#include "scsi_devinfo.h"
+-#endif
+-    
+--- 1.17/drivers/scsi/aacraid/linit.c	Wed May  7 22:18:41 2003
++++ edited/drivers/scsi/aacraid/linit.c	Thu May  8 18:24:16 2003
+@@ -62,9 +62,7 @@
  
- #define ALLOC_FAILURE_MSG	KERN_ERR "%s: Allocation failure during" \
- 	" SCSI scanning, some SCSI devices might not be configured\n"
---- /dev/null	2002-08-30 19:31:37.000000000 -0400
-+++ b/drivers/scsi/scsi_devinfo.c	2003-05-08 18:35:53.000000000 -0400
-@@ -0,0 +1,542 @@
-+
-+#include <linux/blkdev.h>
-+#include <linux/init.h>
-+#include <linux/kernel.h>
-+#include <linux/module.h>
-+#include <linux/proc_fs.h>
-+#include <linux/seq_file.h>
-+
-+#include "scsi.h"
-+#include "scsi_priv.h"
-+#include "scsi_devinfo.h"
-+
-+/*
-+ * scsi_dev_info_list: structure to hold black/white listed devices.
-+ */
-+struct scsi_dev_info_list {
-+	struct list_head dev_info_list;
-+	char vendor[8];
-+	char model[16];
-+	unsigned flags;
-+	unsigned compatible; /* for use with scsi_static_device_list entries */
-+};
-+
-+
-+static const char spaces[] = "                "; /* 16 of them */
-+static char *scsi_dev_flags;
-+static unsigned scsi_default_dev_flags;
-+static LIST_HEAD(scsi_dev_info_list);
-+
-+/*
-+ * scsi_static_device_list: deprecated list of devices that require
-+ * settings that differ from the default, includes black-listed (broken)
-+ * devices. The entries here are added to the tail of scsi_dev_info_list
-+ * via scsi_dev_info_list_init.
-+ *
-+ * Do not add to this list, use the command line or proc interface to add
-+ * to the scsi_dev_info_list. This table will eventually go away.
-+ */
-+static struct {
-+	char *vendor;
-+	char *model;
-+	char *revision;	/* revision known to be bad, unused */
-+	unsigned flags;
-+} scsi_static_device_list[] __initdata = {
-+	/*
-+	 * The following devices are known not to tolerate a lun != 0 scan
-+	 * for one reason or another. Some will respond to all luns,
-+	 * others will lock up.
-+	 */
-+	{"Aashima", "IMAGERY 2400SP", "1.03", BLIST_NOLUN},	/* locks up */
-+	{"CHINON", "CD-ROM CDS-431", "H42", BLIST_NOLUN},	/* locks up */
-+	{"CHINON", "CD-ROM CDS-535", "Q14", BLIST_NOLUN},	/* locks up */
-+	{"DENON", "DRD-25X", "V", BLIST_NOLUN},			/* locks up */
-+	{"HITACHI", "DK312C", "CM81", BLIST_NOLUN},	/* responds to all lun */
-+	{"HITACHI", "DK314C", "CR21", BLIST_NOLUN},	/* responds to all lun */
-+	{"IMS", "CDD521/10", "2.06", BLIST_NOLUN},	/* locks up */
-+	{"MAXTOR", "XT-3280", "PR02", BLIST_NOLUN},	/* locks up */
-+	{"MAXTOR", "XT-4380S", "B3C", BLIST_NOLUN},	/* locks up */
-+	{"MAXTOR", "MXT-1240S", "I1.2", BLIST_NOLUN},	/* locks up */
-+	{"MAXTOR", "XT-4170S", "B5A", BLIST_NOLUN},	/* locks up */
-+	{"MAXTOR", "XT-8760S", "B7B", BLIST_NOLUN},	/* locks up */
-+	{"MEDIAVIS", "RENO CD-ROMX2A", "2.03", BLIST_NOLUN},	/* responds to all lun */
-+	{"NEC", "CD-ROM DRIVE:841", "1.0", BLIST_NOLUN},/* locks up */
-+	{"PHILIPS", "PCA80SC", "V4-2", BLIST_NOLUN},	/* responds to all lun */
-+	{"RODIME", "RO3000S", "2.33", BLIST_NOLUN},	/* locks up */
-+	{"SUN", "SENA", NULL, BLIST_NOLUN},		/* responds to all luns */
-+	/*
-+	 * The following causes a failed REQUEST SENSE on lun 1 for
-+	 * aha152x controller, which causes SCSI code to reset bus.
-+	 */
-+	{"SANYO", "CRD-250S", "1.20", BLIST_NOLUN},
-+	/*
-+	 * The following causes a failed REQUEST SENSE on lun 1 for
-+	 * aha152x controller, which causes SCSI code to reset bus.
-+	 */
-+	{"SEAGATE", "ST157N", "\004|j", BLIST_NOLUN},
-+	{"SEAGATE", "ST296", "921", BLIST_NOLUN},	/* responds to all lun */
-+	{"SEAGATE", "ST1581", "6538", BLIST_NOLUN},	/* responds to all lun */
-+	{"SONY", "CD-ROM CDU-541", "4.3d", BLIST_NOLUN},
-+	{"SONY", "CD-ROM CDU-55S", "1.0i", BLIST_NOLUN},
-+	{"SONY", "CD-ROM CDU-561", "1.7x", BLIST_NOLUN},
-+	{"SONY", "CD-ROM CDU-8012", NULL, BLIST_NOLUN},
-+	{"TANDBERG", "TDC 3600", "U07", BLIST_NOLUN},	/* locks up */
-+	{"TEAC", "CD-R55S", "1.0H", BLIST_NOLUN},	/* locks up */
-+	/*
-+	 * The following causes a failed REQUEST SENSE on lun 1 for
-+	 * seagate controller, which causes SCSI code to reset bus.
-+	 */
-+	{"TEAC", "CD-ROM", "1.06", BLIST_NOLUN},
-+	{"TEAC", "MT-2ST/45S2-27", "RV M", BLIST_NOLUN},	/* responds to all lun */
-+	/*
-+	 * The following causes a failed REQUEST SENSE on lun 1 for
-+	 * seagate controller, which causes SCSI code to reset bus.
-+	 */
-+	{"TEXEL", "CD-ROM", "1.06", BLIST_NOLUN},
-+	{"QUANTUM", "LPS525S", "3110", BLIST_NOLUN},	/* locks up */
-+	{"QUANTUM", "PD1225S", "3110", BLIST_NOLUN},	/* locks up */
-+	{"QUANTUM", "FIREBALL ST4.3S", "0F0C", BLIST_NOLUN},	/* locks up */
-+	{"MEDIAVIS", "CDR-H93MV", "1.31", BLIST_NOLUN},	/* locks up */
-+	{"SANKYO", "CP525", "6.64", BLIST_NOLUN},	/* causes failed REQ SENSE, extra reset */
-+	{"HP", "C1750A", "3226", BLIST_NOLUN},		/* scanjet iic */
-+	{"HP", "C1790A", "", BLIST_NOLUN},		/* scanjet iip */
-+	{"HP", "C2500A", "", BLIST_NOLUN},		/* scanjet iicx */
-+	{"YAMAHA", "CDR100", "1.00", BLIST_NOLUN},	/* locks up */
-+	{"YAMAHA", "CDR102", "1.00", BLIST_NOLUN},	/* locks up */
-+	{"YAMAHA", "CRW8424S", "1.0", BLIST_NOLUN},	/* locks up */
-+	{"YAMAHA", "CRW6416S", "1.0c", BLIST_NOLUN},	/* locks up */
-+	{"MITSUMI", "CD-R CR-2201CS", "6119", BLIST_NOLUN},	/* locks up */
-+	{"RELISYS", "Scorpio", NULL, BLIST_NOLUN},	/* responds to all lun */
-+	{"MICROTEK", "ScanMaker II", "5.61", BLIST_NOLUN},	/* responds to all lun */
-+	{"NEC", "D3856", "0009", BLIST_NOLUN},
-+
-+	/*
-+	 * Other types of devices that have special flags.
-+	 */
-+	{"SONY", "CD-ROM CDU-8001", NULL, BLIST_BORKEN},
-+	{"TEXEL", "CD-ROM", "1.06", BLIST_BORKEN},
-+	{"IOMEGA", "Io20S         *F", NULL, BLIST_KEY},
-+	{"INSITE", "Floptical   F*8I", NULL, BLIST_KEY},
-+	{"INSITE", "I325VM", NULL, BLIST_KEY},
-+	{"LASOUND", "CDX7405", "3.10", BLIST_MAX5LUN | BLIST_SINGLELUN},
-+	{"MICROP", "4110", NULL, BLIST_NOTQ},
-+	{"NRC", "MBR-7", NULL, BLIST_FORCELUN | BLIST_SINGLELUN},
-+	{"NRC", "MBR-7.4", NULL, BLIST_FORCELUN | BLIST_SINGLELUN},
-+	{"REGAL", "CDC-4X", NULL, BLIST_MAX5LUN | BLIST_SINGLELUN},
-+	{"NAKAMICH", "MJ-4.8S", NULL, BLIST_FORCELUN | BLIST_SINGLELUN},
-+	{"NAKAMICH", "MJ-5.16S", NULL, BLIST_FORCELUN | BLIST_SINGLELUN},
-+	{"PIONEER", "CD-ROM DRM-600", NULL, BLIST_FORCELUN | BLIST_SINGLELUN},
-+	{"PIONEER", "CD-ROM DRM-602X", NULL, BLIST_FORCELUN | BLIST_SINGLELUN},
-+	{"PIONEER", "CD-ROM DRM-604X", NULL, BLIST_FORCELUN | BLIST_SINGLELUN},
-+	{"EMULEX", "MD21/S2     ESDI", NULL, BLIST_SINGLELUN},
-+	{"CANON", "IPUBJD", NULL, BLIST_SPARSELUN},
-+	{"nCipher", "Fastness Crypto", NULL, BLIST_FORCELUN},
-+	{"DEC", "HSG80", NULL, BLIST_FORCELUN},
-+	{"COMPAQ", "LOGICAL VOLUME", NULL, BLIST_FORCELUN},
-+	{"COMPAQ", "CR3500", NULL, BLIST_FORCELUN},
-+	{"NEC", "PD-1 ODX654P", NULL, BLIST_FORCELUN | BLIST_SINGLELUN},
-+	{"MATSHITA", "PD-1", NULL, BLIST_FORCELUN | BLIST_SINGLELUN},
-+	{"iomega", "jaz 1GB", "J.86", BLIST_NOTQ | BLIST_NOLUN},
-+	{"TOSHIBA", "CDROM", NULL, BLIST_ISROM},
-+	{"TOSHIBA", "CD-ROM", NULL, BLIST_ISROM},
-+	{"MegaRAID", "LD", NULL, BLIST_FORCELUN},
-+	{"DGC", "RAID", NULL, BLIST_SPARSELUN},	/* Dell PV 650F, storage on LUN 0 */
-+	{"DGC", "DISK", NULL, BLIST_SPARSELUN},	/* Dell PV 650F, no storage on LUN 0 */
-+	{"DELL", "PV660F", NULL, BLIST_SPARSELUN},
-+	{"DELL", "PV660F   PSEUDO", NULL, BLIST_SPARSELUN},
-+	{"DELL", "PSEUDO DEVICE .", NULL, BLIST_SPARSELUN},	/* Dell PV 530F */
-+	{"DELL", "PV530F", NULL, BLIST_SPARSELUN},
-+	{"EMC", "SYMMETRIX", NULL, BLIST_SPARSELUN | BLIST_LARGELUN | BLIST_FORCELUN},
-+	{"HP", "A6189A", NULL, BLIST_SPARSELUN | BLIST_LARGELUN},	/* HP VA7400 */
-+	{"HP", "OPEN-", "*", BLIST_SPARSELUN | BLIST_LARGELUN}, /* HP XP Arrays */
-+	{"CMD", "CRA-7280", NULL, BLIST_SPARSELUN},	/* CMD RAID Controller */
-+	{"CNSI", "G7324", NULL, BLIST_SPARSELUN},	/* Chaparral G7324 RAID */
-+	{"CNSi", "G8324", NULL, BLIST_SPARSELUN},	/* Chaparral G8324 RAID */
-+	{"Zzyzx", "RocketStor 500S", NULL, BLIST_SPARSELUN},
-+	{"Zzyzx", "RocketStor 2000", NULL, BLIST_SPARSELUN},
-+	{"SONY", "TSL", NULL, BLIST_FORCELUN},		/* DDS3 & DDS4 autoloaders */
-+	{"DELL", "PERCRAID", NULL, BLIST_FORCELUN},
-+	{"HP", "NetRAID-4M", NULL, BLIST_FORCELUN},
-+	{"ADAPTEC", "AACRAID", NULL, BLIST_FORCELUN},
-+	{"ADAPTEC", "Adaptec 5400S", NULL, BLIST_FORCELUN},
-+	{"COMPAQ", "MSA1000", NULL, BLIST_FORCELUN},
-+	{"HP", "C1557A", NULL, BLIST_FORCELUN},
-+	{"IBM", "AuSaV1S2", NULL, BLIST_FORCELUN},
-+	{"FSC", "CentricStor", "*", BLIST_SPARSELUN | BLIST_LARGELUN},
-+	{"DDN", "SAN DataDirector", "*", BLIST_SPARSELUN},
-+	{"HITACHI", "DF400", "*", BLIST_SPARSELUN},
-+	{"HITACHI", "DF500", "*", BLIST_SPARSELUN},
-+	{"HITACHI", "DF600", "*", BLIST_SPARSELUN},
-+	{"IBM", "ProFibre 4000R", "*", BLIST_SPARSELUN | BLIST_LARGELUN},
-+	{"SUN", "T300", "*", BLIST_SPARSELUN},
-+	{"SUN", "T4", "*", BLIST_SPARSELUN},
-+	{"SGI", "RAID3", "*", BLIST_SPARSELUN},
-+	{"SGI", "RAID5", "*", BLIST_SPARSELUN},
-+	{"SGI", "TP9100", "*", BLIST_SPARSELUN | BLIST_LARGELUN},
-+	{"SGI", "TP9300", "*", BLIST_SPARSELUN | BLIST_LARGELUN},
-+	{"SGI", "TP9400", "*", BLIST_SPARSELUN | BLIST_LARGELUN},
-+	{"SGI", "TP9500", "*", BLIST_SPARSELUN | BLIST_LARGELUN},
-+	{"MYLEX", "DACARMRB", "*", BLIST_SPARSELUN | BLIST_LARGELUN},
-+	{ NULL, NULL, NULL, 0 },
-+};
-+
-+/*
-+ * scsi_strcpy_devinfo: called from scsi_dev_info_list_add to copy into
-+ * devinfo vendor and model strings.
-+ */
-+static void scsi_strcpy_devinfo(char *name, char *to, size_t to_length,
-+				char *from, int compatible)
-+{
-+	size_t from_length;
-+
-+	from_length = strlen(from);
-+	strncpy(to, from, min(to_length, from_length));
-+	if (from_length < to_length) {
-+		if (compatible) {
-+			/*
-+			 * NUL terminate the string if it is short.
-+			 */
-+			to[from_length] = '\0';
-+		} else {
-+			/* 
-+			 * space pad the string if it is short. 
-+			 */
-+			strncpy(&to[from_length], spaces,
-+				to_length - from_length);
-+		}
-+	}
-+	if (from_length > to_length)
-+		 printk(KERN_WARNING "%s: %s string '%s' is too long\n",
-+			__FUNCTION__, name, from);
-+}
-+
-+/**
-+ * scsi_dev_info_list_add: add one dev_info list entry.
-+ * @vendor:	vendor string
-+ * @model:	model (product) string
-+ * @strflags:	integer string
-+ * @flag:	if strflags NULL, use this flag value
-+ *
-+ * Description:
-+ * 	Create and add one dev_info entry for @vendor, @model, @strflags or
-+ * 	@flag. If @compatible, add to the tail of the list, do not space
-+ * 	pad, and set devinfo->compatible. The scsi_static_device_list entries
-+ * 	are added with @compatible 1 and @clfags NULL.
-+ *
-+ * Returns: 0 OK, -error on failure.
-+ **/
-+static int scsi_dev_info_list_add(int compatible, char *vendor, char *model,
-+			    char *strflags, int flags)
-+{
-+	struct scsi_dev_info_list *devinfo;
-+
-+	devinfo = kmalloc(sizeof(*devinfo), GFP_KERNEL);
-+	if (!devinfo) {
-+		printk(KERN_ERR "%s: no memory\n", __FUNCTION__);
-+		return -ENOMEM;
-+	}
-+
-+	scsi_strcpy_devinfo("vendor", devinfo->vendor, sizeof(devinfo->vendor),
-+			    vendor, compatible);
-+	scsi_strcpy_devinfo("model", devinfo->model, sizeof(devinfo->model),
-+			    model, compatible);
-+
-+	if (strflags)
-+		devinfo->flags = simple_strtoul(strflags, NULL, 0);
-+	else
-+		devinfo->flags = flags;
-+
-+	devinfo->compatible = compatible;
-+
-+	if (compatible)
-+		list_add_tail(&devinfo->dev_info_list, &scsi_dev_info_list);
-+	else
-+		list_add(&devinfo->dev_info_list, &scsi_dev_info_list);
-+
-+	return 0;
-+}
-+
-+/**
-+ * scsi_dev_info_list_add_str: parse dev_list and add to the
-+ * scsi_dev_info_list.
-+ * @dev_list:	string of device flags to add
-+ *
-+ * Description:
-+ * 	Parse dev_list, and add entries to the scsi_dev_info_list.
-+ * 	dev_list is of the form "vendor:product:flag,vendor:product:flag".
-+ * 	dev_list is modified via strsep. Can be called for command line
-+ * 	addition, for proc or mabye a sysfs interface.
-+ *
-+ * Returns: 0 if OK, -error on failure.
-+ **/
-+static int scsi_dev_info_list_add_str(char *dev_list)
-+{
-+	char *vendor, *model, *strflags, *next;
-+	char *next_check;
-+	int res = 0;
-+
-+	next = dev_list;
-+	if (next && next[0] == '"') {
-+		/*
-+		 * Ignore both the leading and trailing quote.
-+		 */
-+		next++;
-+		next_check = ",\"";
-+	} else {
-+		next_check = ",";
-+	}
-+
-+	/*
-+	 * For the leading and trailing '"' case, the for loop comes
-+	 * through the last time with vendor[0] == '\0'.
-+	 */
-+	for (vendor = strsep(&next, ":"); vendor && (vendor[0] != '\0')
-+	     && (res == 0); vendor = strsep(&next, ":")) {
-+		strflags = NULL;
-+		model = strsep(&next, ":");
-+		if (model)
-+			strflags = strsep(&next, next_check);
-+		if (!model || !strflags) {
-+			printk(KERN_ERR "%s: bad dev info string '%s' '%s'"
-+			       " '%s'\n", __FUNCTION__, vendor, model,
-+			       strflags);
-+			res = -EINVAL;
-+		} else
-+			res = scsi_dev_info_list_add(0 /* compatible */, vendor,
-+						     model, strflags, 0);
-+	}
-+	return res;
-+}
-+
-+/**
-+ * get_device_flags - get device specific flags from the dynamic device
-+ * list. Called during scan time.
-+ * @vendor:	vendor name
-+ * @model:	model name
-+ *
-+ * Description:
-+ *     Search the scsi_dev_info_list for an entry matching @vendor and
-+ *     @model, if found, return the matching flags value, else return
-+ *     scsi_default_dev_flags.
-+ **/
-+int scsi_get_device_flags(unsigned char *vendor, unsigned char *model)
-+{
-+	struct scsi_dev_info_list *devinfo;
-+
-+	list_for_each_entry(devinfo, &scsi_dev_info_list, dev_info_list) {
-+		if (devinfo->compatible) {
-+			/*
-+			 * Behave like the older version of get_device_flags.
-+			 */
-+			size_t max;
-+			/*
-+			 * XXX why skip leading spaces? If an odd INQUIRY
-+			 * value, that should have been part of the
-+			 * scsi_static_device_list[] entry, such as "  FOO"
-+			 * rather than "FOO". Since this code is already
-+			 * here, and we don't know what device it is
-+			 * trying to work with, leave it as-is.
-+			 */
-+			max = 8;	/* max length of vendor */
-+			while ((max > 0) && *vendor == ' ') {
-+				max--;
-+				vendor++;
-+			}
-+			/*
-+			 * XXX removing the following strlen() would be
-+			 * good, using it means that for a an entry not in
-+			 * the list, we scan every byte of every vendor
-+			 * listed in scsi_static_device_list[], and never match
-+			 * a single one (and still have to compare at
-+			 * least the first byte of each vendor).
-+			 */
-+			if (memcmp(devinfo->vendor, vendor,
-+				    min(max, strlen(devinfo->vendor))))
-+				continue;
-+			/*
-+			 * Skip spaces again.
-+			 */
-+			max = 16;	/* max length of model */
-+			while ((max > 0) && *model == ' ') {
-+				max--;
-+				model++;
-+			}
-+			if (memcmp(devinfo->model, model,
-+				   min(max, strlen(devinfo->model))))
-+				continue;
-+			return devinfo->flags;
-+		} else {
-+			if (!memcmp(devinfo->vendor, vendor,
-+				     sizeof(devinfo->vendor)) &&
-+			     !memcmp(devinfo->model, model,
-+				      sizeof(devinfo->model)))
-+				return devinfo->flags;
-+		}
-+	}
-+	return scsi_default_dev_flags;
-+}
-+
-+/* 
-+ * proc_scsi_dev_info_read: dump the scsi_dev_info_list via
-+ * /proc/scsi/device_info
-+ */
-+static int proc_scsi_devinfo_read(char *buffer, char **start,
-+				  off_t offset, int length)
-+{
-+	struct scsi_dev_info_list *devinfo;
-+	int size, len = 0;
-+	off_t begin = 0;
-+	off_t pos = 0;
-+
-+	list_for_each_entry(devinfo, &scsi_dev_info_list, dev_info_list) {
-+		size = sprintf(buffer + len, "'%.8s' '%.16s' 0x%x\n",
-+			devinfo->vendor, devinfo->model, devinfo->flags);
-+		len += size;
-+		pos = begin + len;
-+		if (pos < offset) {
-+			len = 0;
-+			begin = pos;
-+		}
-+		if (pos > offset + length)
-+			goto stop_output;
-+	}
-+
-+stop_output:
-+	*start = buffer + (offset - begin);	/* Start of wanted data */
-+	len -= (offset - begin);	/* Start slop */
-+	if (len > length)
-+		len = length;	/* Ending slop */
-+	return (len);
-+}
-+
-+/* 
-+ * proc_scsi_dev_info_write: allow additions to the scsi_dev_info_list via
-+ * /proc.
-+ *
-+ * Use: echo "vendor:model:flag" > /proc/scsi/device_info
-+ *
-+ * To add a black/white list entry for vendor and model with an integer
-+ * value of flag to the scsi device info list.
-+ */
-+static int proc_scsi_devinfo_write(struct file *file, const char *buf,
-+				   unsigned long length, void *data)
-+{
-+	char *buffer;
-+	int err = length;
-+
-+	if (!buf || length>PAGE_SIZE)
-+		return -EINVAL;
-+	if (!(buffer = (char *) __get_free_page(GFP_KERNEL)))
-+		return -ENOMEM;
-+	if (copy_from_user(buffer, buf, length)) {
-+		err =-EFAULT;
-+		goto out;
-+	}
-+
-+	if (length < PAGE_SIZE)
-+		buffer[length] = '\0';
-+	else if (buffer[PAGE_SIZE-1]) {
-+		err = -EINVAL;
-+		goto out;
-+	}
-+
-+	scsi_dev_info_list_add_str(buffer);
-+
-+out:
-+	free_page((unsigned long)buffer);
-+	return err;
-+}
-+
-+MODULE_PARM(scsi_dev_flags, "s");
-+MODULE_PARM_DESC(scsi_dev_flags,
-+	 "Given scsi_dev_flags=vendor:model:flags, add a black/white list"
-+	 " entry for vendor and model with an integer value of flags"
-+	 " to the scsi device info list");
-+MODULE_PARM(scsi_default_dev_flags, "i");
-+MODULE_PARM_DESC(scsi_default_dev_flags,
-+		 "scsi default device flag integer value");
-+
-+static int __init setup_scsi_dev_flags(char *str)
-+{
-+	scsi_dev_flags = str;
-+	return 1;
-+}
-+
-+static int __init setup_scsi_default_dev_flags(char *str)
-+{
-+	unsigned int tmp;
-+	if (get_option(&str, &tmp) == 1) {
-+		scsi_default_dev_flags = tmp;
-+		printk(KERN_WARNING "%s %d\n", __FUNCTION__,
-+		       scsi_default_dev_flags);
-+		return 1;
-+	} else {
-+		printk(KERN_WARNING "%s: usage scsi_default_dev_flags=intr\n",
-+		       __FUNCTION__);
-+		return 0;
-+	}
-+}
-+
-+/**
-+ * scsi_dev_info_list_delete: called from scsi.c:exit_scsi to remove
-+ * 	the scsi_dev_info_list.
-+ **/
-+void scsi_exit_devinfo(void)
-+{
-+	struct list_head *lh, *lh_next;
-+	struct scsi_dev_info_list *devinfo;
-+
-+	remove_proc_entry("scsi/device_info", 0);
-+
-+	list_for_each_safe(lh, lh_next, &scsi_dev_info_list) {
-+		devinfo = list_entry(lh, struct scsi_dev_info_list,
-+				     dev_info_list);
-+		kfree(devinfo);
-+	}
-+}
-+
-+/**
-+ * scsi_dev_list_init: set up the dynamic device list.
-+ * @dev_list:	string of device flags to add
-+ *
-+ * Description:
-+ * 	Add command line @dev_list entries, then add
-+ * 	scsi_static_device_list entries to the scsi device info list.
-+ **/
-+int scsi_init_devinfo(void)
-+{
-+	struct proc_dir_entry *p;
-+	int error, i;
-+
-+	error = scsi_dev_info_list_add_str(scsi_dev_flags);
-+	if (error)
-+		return error;
-+
-+	for (i = 0; scsi_static_device_list[i].vendor; i++) {
-+		error = scsi_dev_info_list_add(1 /* compatibile */,
-+				scsi_static_device_list[i].vendor,
-+				scsi_static_device_list[i].model,
-+				NULL,
-+				scsi_static_device_list[i].flags);
-+		if (error)
-+			goto out;
-+	}
-+
-+	p = create_proc_entry("scsi/device_info", 0, NULL);
-+	if (!p) {
-+		error = -ENOMEM;
-+		goto out;
-+	}
-+
-+	p->owner = THIS_MODULE;
-+	p->get_info = proc_scsi_devinfo_read;
-+	p->write_proc = proc_scsi_devinfo_write;
-+
-+ out:
-+	if (error)
-+		scsi_exit_devinfo();
-+	return error;
-+}
-+
-+__setup("scsi_dev_flags=", setup_scsi_dev_flags);
-+__setup("scsi_default_dev_flags=", setup_scsi_default_dev_flags);
---- /dev/null	2002-08-30 19:31:37.000000000 -0400
-+++ b/drivers/scsi/scsi_devinfo.h	2003-05-01 14:29:55.000000000 -0400
-@@ -0,0 +1,16 @@
-+
-+/*
-+ * Flags for SCSI devices that need special treatment
-+ */
-+#define BLIST_NOLUN     	0x001	/* Only scan LUN 0 */
-+#define BLIST_FORCELUN  	0x002	/* Known to have LUNs, force scanning */
-+#define BLIST_BORKEN    	0x004	/* Flag for broken handshaking */
-+#define BLIST_KEY       	0x008	/* unlock by special command */
-+#define BLIST_SINGLELUN 	0x010	/* Do not use LUNs in parallel */
-+#define BLIST_NOTQ		0x020	/* Buggy Tagged Command Queuing */
-+#define BLIST_SPARSELUN 	0x040	/* Non consecutive LUN numbering */
-+#define BLIST_MAX5LUN		0x080	/* Avoid LUNS >= 5 */
-+#define BLIST_ISROM     	0x100	/* Treat as (removable) CD-ROM */
-+#define BLIST_LARGELUN		0x200	/* LUNs past 7 on a SCSI-2 device */
-+#define BLIST_INQUIRY_36	0x400	/* override additional length field */
-+#define BLIST_INQUIRY_58	0x800	/* ... for broken inquiry responses */
+ MODULE_AUTHOR("Red Hat Inc and Adaptec");
+ MODULE_DESCRIPTION("Supports Dell PERC2, 2/Si, 3/Si, 3/Di, Adaptec Advanced Raid Products, and HP NetRAID-4M devices. http://domsch.com/linux/ or http://linux.adaptec.com");
+-#if LINUX_VERSION_CODE  > KERNEL_VERSION(2,4,7)   
+ MODULE_LICENSE("GPL");
+-#endif
+ MODULE_PARM(nondasd, "i");
+ MODULE_PARM_DESC(nondasd, "Control scanning of hba for nondasd devices. 0=off, 1=on");
+ MODULE_PARM(paemode, "i");
