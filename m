@@ -1,422 +1,381 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [CFT] another try at getting the aic79xx pci table right
-Date: Sun, 10 Oct 2004 13:49:32 +0200
+Subject: [PATCH] fdomain: reduce usage of global variables
+Date: Sun, 10 Oct 2004 15:08:21 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20041010114932.GA1949@lst.de>
+Message-ID: <20041010130820.GA2728@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=unknown-8bit
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.210]:65193 "EHLO mail.lst.de")
-	by vger.kernel.org with ESMTP id S268260AbUJJLus (ORCPT
+Received: from verein.lst.de ([213.95.11.210]:18347 "EHLO mail.lst.de")
+	by vger.kernel.org with ESMTP id S268299AbUJJNIZ (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 10 Oct 2004 07:50:48 -0400
+	Sun, 10 Oct 2004 09:08:25 -0400
 Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
-To: Luben Tuikov <luben_tuikov@adaptec.com>
-Cc: Michael Tokarev <mjt@tls.msk.ru>, Avery Fay <afay@student.umass.edu>, linux-scsi@vger.kernel.org
+To: jejb@steeleye.com
+Cc: linux-scsi@vger.kernel.org
 
-[Patch vs current scsi BK, if someone needs it again=DFt a kernel it
-doesn't apply against ping me]
-
-This is a revision of the previous patch, I've now added a AHD_DEV()
-macro so we automatically get the fakeraid HBAs that have 0x80 added
-to their PCI IDs vs the base ones, and I've removed all subdevice
-matching.  It's now matching all HBAs mentioned in pci.ids and some
-more (generic matches from the existing aic79xx driver)
+preparation for supporting more than HBA instance
 
 
---- 1.14/drivers/scsi/aic7xxx/aic79xx.h	2004-09-23 19:36:11 +02:00
-+++ edited/drivers/scsi/aic7xxx/aic79xx.h	2004-10-09 14:49:02 +02:00
-@@ -1341,9 +1341,7 @@
- }
-=20
- /***************************** PCI Front End *************************=
-********/
--struct	ahd_pci_identity *ahd_find_pci_device(ahd_dev_softc_t);
--int			  ahd_pci_config(struct ahd_softc *,
--					 struct ahd_pci_identity *);
-+int			  ahd_pci_config(struct ahd_softc *);
- int	ahd_pci_test_register_access(struct ahd_softc *);
-=20
- /************************** SCB and SCB queue management *************=
-*********/
-=3D=3D=3D=3D=3D drivers/scsi/aic7xxx/aic79xx_osm_pci.c 1.13 vs edited =3D=
-=3D=3D=3D=3D
---- 1.13/drivers/scsi/aic7xxx/aic79xx_osm_pci.c	2004-09-23 19:36:11 +02=
-:00
-+++ edited/drivers/scsi/aic7xxx/aic79xx_osm_pci.c	2004-10-09 15:12:55 +=
-02:00
-@@ -51,17 +51,32 @@
- 						 uint8_t **maddr);
- static void	ahd_linux_pci_dev_remove(struct pci_dev *pdev);
-=20
--/* We do our own ID filtering.  So, grab all SCSI storage class device=
-s. */
-+#define AHD_DEV(dev, type)						\
-+	/* regular HBA */						\
-+	{ 0x9005, (dev), PCI_ANY_ID, PCI_ANY_ID, 0, 0, (type) },	\
-+	/* fakeraid HBA */						\
-+	{ 0x9005, (dev) + 0x80, PCI_ANY_ID, PCI_ANY_ID, 0, 0, (type) }
-+
- static struct pci_device_id ahd_linux_pci_id_table[] =3D {
--	{
--		0x9005, PCI_ANY_ID, PCI_ANY_ID, PCI_ANY_ID,
--		PCI_CLASS_STORAGE_SCSI << 8, 0xFFFF00, 0
--	},
--	{
--		0x9005, PCI_ANY_ID, PCI_ANY_ID, PCI_ANY_ID,
--		PCI_CLASS_STORAGE_RAID << 8, 0xFFFF00, 0
--	},
--	{ 0 }
-+	AHD_DEV(0x8000, AHD_AIC7901),
-+	AHD_DEV(0x800f, AHD_AIC7901),
-+	AHD_DEV(0x8010, AHD_AIC7902),
-+	AHD_DEV(0x8011, AHD_AIC7902),
-+	AHD_DEV(0x8012, AHD_AIC7902),
-+	AHD_DEV(0x8013, AHD_AIC7902),
-+	AHD_DEV(0x8014, AHD_AIC7902),
-+	AHD_DEV(0x8015, AHD_AIC7902),
-+	AHD_DEV(0x8016, AHD_AIC7902),
-+	AHD_DEV(0x8017, AHD_AIC7901),
-+	AHD_DEV(0x8018, AHD_AIC7902),
-+	AHD_DEV(0x8019, AHD_AIC7902),
-+	AHD_DEV(0x801a, AHD_AIC7902),
-+	AHD_DEV(0x801c, AHD_AIC7902),
-+	AHD_DEV(0x801b, AHD_AIC7902),
-+	AHD_DEV(0x801d, AHD_AIC7902),
-+	AHD_DEV(0x801e, AHD_AIC7901A),
-+	AHD_DEV(0x801f, AHD_AIC7902),
-+	{ }
- };
-=20
- MODULE_DEVICE_TABLE(pci, ahd_linux_pci_id_table);
-@@ -103,7 +118,6 @@
- 	char		 buf[80];
- 	struct		 ahd_softc *ahd;
- 	ahd_dev_softc_t	 pci;
--	struct		 ahd_pci_identity *entry;
- 	char		*name;
- 	int		 error;
-=20
-@@ -124,9 +138,6 @@
- 	}
-=20
- 	pci =3D pdev;
--	entry =3D ahd_find_pci_device(pci);
--	if (entry =3D=3D NULL)
--		return (-ENODEV);
-=20
- 	/*
- 	 * Allocate a softc for this card and
-@@ -172,7 +183,8 @@
- 		ahd->platform_data->hw_dma_mask =3D 0xFFFFFFFF;
- 	}
- 	ahd->dev_softc =3D pci;
--	error =3D ahd_pci_config(ahd, entry);
-+	ahd->chip =3D ent->driver_data;
-+	error =3D ahd_pci_config(ahd);
- 	if (error !=3D 0) {
- 		ahd_free(ahd);
- 		return (-error);
-=3D=3D=3D=3D=3D drivers/scsi/aic7xxx/aic79xx_pci.c 1.15 vs edited =3D=3D=
-=3D=3D=3D
---- 1.15/drivers/scsi/aic7xxx/aic79xx_pci.c	2004-08-21 15:27:19 +02:00
-+++ edited/drivers/scsi/aic7xxx/aic79xx_pci.c	2004-10-09 14:49:03 +02:0=
-0
-@@ -51,175 +51,12 @@
- #include <dev/aic7xxx/aic79xx_inline.h>
+--- 1.30/drivers/scsi/fdomain.c	2004-08-26 03:50:07 +02:00
++++ edited/drivers/scsi/fdomain.c	2004-10-09 17:30:27 +02:00
+@@ -400,20 +400,6 @@
+ static volatile int      in_interrupt_flag;
  #endif
-=20
--static __inline uint64_t
--ahd_compose_id(u_int device, u_int vendor, u_int subdevice, u_int subv=
-endor)
--{
--	uint64_t id;
+ 
+-static int               SCSI_Mode_Cntl_port;
+-static int               FIFO_Data_Count_port;
+-static int               Interrupt_Cntl_port;
+-static int               Interrupt_Status_port;
+-static int               Read_FIFO_port;
+-static int               Read_SCSI_Data_port;
+-static int               SCSI_Cntl_port;
+-static int               SCSI_Data_NoACK_port;
+-static int               SCSI_Status_port;
+-static int               TMC_Cntl_port;
+-static int               TMC_Status_port;
+-static int               Write_FIFO_port;
+-static int               Write_SCSI_Data_port;
 -
--	id =3D subvendor
--	   | (subdevice << 16)
--	   | ((uint64_t)vendor << 32)
--	   | ((uint64_t)device << 48);
--
--	return (id);
--}
--
--#define ID_ALL_MASK			0xFFFFFFFFFFFFFFFFull
--#define ID_ALL_IROC_MASK		0xFF7FFFFFFFFFFFFFull
--#define ID_DEV_VENDOR_MASK		0xFFFFFFFF00000000ull
--#define ID_9005_GENERIC_MASK		0xFFF0FFFF00000000ull
--#define ID_9005_GENERIC_IROC_MASK	0xFF70FFFF00000000ull
--
--#define ID_AIC7901			0x800F9005FFFF9005ull
--#define ID_AHA_29320A			0x8000900500609005ull
--#define ID_AHA_29320ALP			0x8017900500449005ull
--
--#define ID_AIC7901A			0x801E9005FFFF9005ull
--#define ID_AHA_29320			0x8012900500429005ull
--#define ID_AHA_29320B			0x8013900500439005ull
--#define ID_AHA_29320LP			0x8014900500449005ull
--
--#define ID_AIC7902			0x801F9005FFFF9005ull
--#define ID_AIC7902_B			0x801D9005FFFF9005ull
--#define ID_AHA_39320			0x8010900500409005ull
--#define ID_AHA_39320_B			0x8015900500409005ull
--#define ID_AHA_39320A			0x8016900500409005ull
--#define ID_AHA_39320D			0x8011900500419005ull
--#define ID_AHA_39320D_B			0x801C900500419005ull
--#define ID_AHA_39320D_HP		0x8011900500AC0E11ull
--#define ID_AHA_39320D_B_HP		0x801C900500AC0E11ull
- #define ID_AIC7902_PCI_REV_A4		0x3
- #define ID_AIC7902_PCI_REV_B0		0x10
- #define SUBID_HP			0x0E11
-=20
--#define DEVID_9005_HOSTRAID(id) ((id) & 0x80)
--
--#define DEVID_9005_TYPE(id) ((id) & 0xF)
--#define		DEVID_9005_TYPE_HBA		0x0	/* Standard Card */
--#define		DEVID_9005_TYPE_HBA_2EXT	0x1	/* 2 External Ports */
--#define		DEVID_9005_TYPE_IROC		0x8	/* Raid(0,1,10) Card */
--#define		DEVID_9005_TYPE_MB		0xF	/* On Motherboard */
--
--#define DEVID_9005_MFUNC(id) ((id) & 0x10)
--
--#define DEVID_9005_PACKETIZED(id) ((id) & 0x8000)
--
--#define SUBID_9005_TYPE(id) ((id) & 0xF)
--#define		SUBID_9005_TYPE_HBA		0x0	/* Standard Card */
--#define		SUBID_9005_TYPE_MB		0xF	/* On Motherboard */
--
--#define SUBID_9005_AUTOTERM(id)	(((id) & 0x10) =3D=3D 0)
--
--#define SUBID_9005_LEGACYCONN_FUNC(id) ((id) & 0x20)
--
--#define SUBID_9005_SEEPTYPE(id) ((id) & 0x0C0) >> 6)
--#define		SUBID_9005_SEEPTYPE_NONE	0x0
--#define		SUBID_9005_SEEPTYPE_4K		0x1
--
--static ahd_device_setup_t ahd_aic7901_setup;
--static ahd_device_setup_t ahd_aic7901A_setup;
--static ahd_device_setup_t ahd_aic7902_setup;
- static ahd_device_setup_t ahd_aic790X_setup;
-=20
--struct ahd_pci_identity ahd_pci_ident_table [] =3D
--{
--	/* aic7901 based controllers */
--	{
--		ID_AHA_29320A,
--		ID_ALL_MASK,
--		"Adaptec 29320A Ultra320 SCSI adapter",
--		ahd_aic7901_setup
--	},
--	{
--		ID_AHA_29320ALP,
--		ID_ALL_MASK,
--		"Adaptec 29320ALP Ultra320 SCSI adapter",
--		ahd_aic7901_setup
--	},
--	/* aic7902 based controllers */=09
--	{
--		ID_AHA_29320,
--		ID_ALL_MASK,
--		"Adaptec 29320 Ultra320 SCSI adapter",
--		ahd_aic7902_setup
--	},
--	{
--		ID_AHA_29320B,
--		ID_ALL_MASK,
--		"Adaptec 29320B Ultra320 SCSI adapter",
--		ahd_aic7902_setup
--	},
--	{
--		ID_AHA_29320LP,
--		ID_ALL_MASK,
--		"Adaptec 29320LP Ultra320 SCSI adapter",
--		ahd_aic7901A_setup
--	},
--	{
--		ID_AHA_39320,
--		ID_ALL_MASK,
--		"Adaptec 39320 Ultra320 SCSI adapter",
--		ahd_aic7902_setup
--	},
--	{
--		ID_AHA_39320_B,
--		ID_ALL_MASK,
--		"Adaptec 39320 Ultra320 SCSI adapter",
--		ahd_aic7902_setup
--	},
--	{
--		ID_AHA_39320A,
--		ID_ALL_MASK,
--		"Adaptec 39320A Ultra320 SCSI adapter",
--		ahd_aic7902_setup
--	},
--	{
--		ID_AHA_39320D,
--		ID_ALL_MASK,
--		"Adaptec 39320D Ultra320 SCSI adapter",
--		ahd_aic7902_setup
--	},
--	{
--		ID_AHA_39320D_HP,
--		ID_ALL_MASK,
--		"Adaptec (HP OEM) 39320D Ultra320 SCSI adapter",
--		ahd_aic7902_setup
--	},
--	{
--		ID_AHA_39320D_B,
--		ID_ALL_MASK,
--		"Adaptec 39320D Ultra320 SCSI adapter",
--		ahd_aic7902_setup
--	},
--	{
--		ID_AHA_39320D_B_HP,
--		ID_ALL_MASK,
--		"Adaptec (HP OEM) 39320D Ultra320 SCSI adapter",
--		ahd_aic7902_setup
--	},
--	/* Generic chip probes for devices we don't know 'exactly' */
--	{
--		ID_AIC7901 & ID_9005_GENERIC_MASK,
--		ID_9005_GENERIC_MASK,
--		"Adaptec AIC7901 Ultra320 SCSI adapter",
--		ahd_aic7901_setup
--	},
--	{
--		ID_AIC7901A & ID_DEV_VENDOR_MASK,
--		ID_DEV_VENDOR_MASK,
--		"Adaptec AIC7901A Ultra320 SCSI adapter",
--		ahd_aic7901A_setup
--	},
--	{
--		ID_AIC7902 & ID_9005_GENERIC_MASK,
--		ID_9005_GENERIC_MASK,
--		"Adaptec AIC7902 Ultra320 SCSI adapter",
--		ahd_aic7902_setup
--	}
--};
--
--const u_int ahd_num_pci_devs =3D NUM_ELEMENTS(ahd_pci_ident_table);
--	=09
- #define	DEVCONFIG		0x40
- #define		PCIXINITPAT	0x0000E000ul
- #define			PCIXINIT_PCI33_66	0x0000E000ul
-@@ -263,46 +100,8 @@
- 					  u_int adapter_control);
- static void	ahd_pci_split_intr(struct ahd_softc *ahd, u_int intstat);
-=20
--struct ahd_pci_identity *
--ahd_find_pci_device(ahd_dev_softc_t pci)
--{
--	uint64_t  full_id;
--	uint16_t  device;
--	uint16_t  vendor;
--	uint16_t  subdevice;
--	uint16_t  subvendor;
--	struct	  ahd_pci_identity *entry;
--	u_int	  i;
--
--	vendor =3D ahd_pci_read_config(pci, PCIR_DEVVENDOR, /*bytes*/2);
--	device =3D ahd_pci_read_config(pci, PCIR_DEVICE, /*bytes*/2);
--	subvendor =3D ahd_pci_read_config(pci, PCIR_SUBVEND_0, /*bytes*/2);
--	subdevice =3D ahd_pci_read_config(pci, PCIR_SUBDEV_0, /*bytes*/2);
--	full_id =3D ahd_compose_id(device,
--				 vendor,
--				 subdevice,
--				 subvendor);
--
--	/*
--	 * Controllers, mask out the IROC/HostRAID bit
--	 */
--=09
--	full_id &=3D ID_ALL_IROC_MASK;
--
--	for (i =3D 0; i < ahd_num_pci_devs; i++) {
--		entry =3D &ahd_pci_ident_table[i];
--		if (entry->full_id =3D=3D (full_id & entry->id_mask)) {
--			/* Honor exclusion entries. */
--			if (entry->name =3D=3D NULL)
--				return (NULL);
--			return (entry);
--		}
--	}
--	return (NULL);
--}
--
- int
--ahd_pci_config(struct ahd_softc *ahd, struct ahd_pci_identity *entry)
-+ahd_pci_config(struct ahd_softc *ahd)
+ static int               FIFO_Size = 0x2000; /* 8k FIFO for
+ 						pre-tmc18c30 chips */
+ 
+@@ -585,12 +571,12 @@
+ 
+ inline static void fdomain_make_bus_idle( void )
  {
- 	struct scb_data *shared_scb_data;
- 	u_long		 l;
-@@ -312,7 +111,7 @@
- 	int		 error;
-=20
- 	shared_scb_data =3D NULL;
--	ahd->description =3D entry->name;
-+
- 	/*
- 	 * Record if this is an HP board.
- 	 */
-@@ -321,7 +120,22 @@
- 	if (subvendor =3D=3D SUBID_HP)
- 		ahd->flags |=3D AHD_HP_BOARD;
-=20
--	error =3D entry->setup(ahd);
-+	switch (ahd->chip & AHD_CHIPID_MASK) {
-+	case AHD_AIC7901:
-+		ahd->features =3D AHD_AIC7901_FE;
-+		ahd->description =3D "Adaptec AIC7901 Ultra320 SCSI adapter";
-+		break;
-+	case AHD_AIC7901A:
-+		ahd->features =3D AHD_AIC7901A_FE;
-+		ahd->description =3D "Adaptec AIC7901A Ultra320 SCSI adapter";
-+		break;
-+	case AHD_AIC7902:
-+		ahd->features =3D AHD_AIC7902_FE;
-+		ahd->description =3D "Adaptec AIC7902 Ultra320 SCSI adapter";
-+		break;
-+	}
-+
-+	error =3D ahd_aic790X_setup(ahd);
- 	if (error !=3D 0)
- 		return (error);
- =09
-@@ -907,32 +721,6 @@
- 			     pcix_status, /*bytes*/2);
- 	ahd_outb(ahd, CLRINT, CLRSPLTINT);
- 	ahd_restore_modes(ahd, saved_modes);
--}
--
--static int
--ahd_aic7901_setup(struct ahd_softc *ahd)
--{
--
--	ahd->chip =3D AHD_AIC7901;
--	ahd->features =3D AHD_AIC7901_FE;
--	return (ahd_aic790X_setup(ahd));
--}
--
--static int
--ahd_aic7901A_setup(struct ahd_softc *ahd)
--{
--
--	ahd->chip =3D AHD_AIC7901A;
--	ahd->features =3D AHD_AIC7901A_FE;
--	return (ahd_aic790X_setup(ahd));
--}
--
--static int
--ahd_aic7902_setup(struct ahd_softc *ahd)
--{
--	ahd->chip =3D AHD_AIC7902;
--	ahd->features =3D AHD_AIC7902_FE;
--	return (ahd_aic790X_setup(ahd));
+-   outb( 0, SCSI_Cntl_port );
+-   outb( 0, SCSI_Mode_Cntl_port );
++   outb(0, port_base + SCSI_Cntl);
++   outb(0, port_base + SCSI_Mode_Cntl);
+    if (chip == tmc18c50 || chip == tmc18c30)
+-	 outb( 0x21 | PARITY_MASK, TMC_Cntl_port ); /* Clear forced intr. */
++	 outb(0x21 | PARITY_MASK, port_base + TMC_Cntl); /* Clear forced intr. */
+    else
+-	 outb( 0x01 | PARITY_MASK, TMC_Cntl_port );
++	 outb(0x01 | PARITY_MASK, port_base + TMC_Cntl);
  }
-=20
- static int
+ 
+ static int fdomain_is_valid_port( int port )
+@@ -910,20 +896,6 @@
+       }
+    }
+ 
+-   SCSI_Mode_Cntl_port   = port_base + SCSI_Mode_Cntl;
+-   FIFO_Data_Count_port  = port_base + FIFO_Data_Count;
+-   Interrupt_Cntl_port   = port_base + Interrupt_Cntl;
+-   Interrupt_Status_port = port_base + Interrupt_Status;
+-   Read_FIFO_port        = port_base + Read_FIFO;
+-   Read_SCSI_Data_port   = port_base + Read_SCSI_Data;
+-   SCSI_Cntl_port        = port_base + SCSI_Cntl;
+-   SCSI_Data_NoACK_port  = port_base + SCSI_Data_NoACK;
+-   SCSI_Status_port      = port_base + SCSI_Status;
+-   TMC_Cntl_port         = port_base + TMC_Cntl;
+-   TMC_Status_port       = port_base + TMC_Status;
+-   Write_FIFO_port       = port_base + Write_FIFO;
+-   Write_SCSI_Data_port  = port_base + Write_SCSI_Data;
 -
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+    fdomain_16x0_bus_reset(NULL);
+ 
+    if (fdomain_test_loopback()) {
+@@ -1032,13 +1004,13 @@
+    printk( "fdomain_arbitrate()\n" );
+ #endif
+    
+-   outb( 0x00, SCSI_Cntl_port );              /* Disable data drivers */
+-   outb( adapter_mask, port_base + SCSI_Data_NoACK ); /* Set our id bit */
+-   outb( 0x04 | PARITY_MASK, TMC_Cntl_port ); /* Start arbitration */
++   outb(0x00, port_base + SCSI_Cntl);              /* Disable data drivers */
++   outb(adapter_mask, port_base + SCSI_Data_NoACK); /* Set our id bit */
++   outb(0x04 | PARITY_MASK, port_base + TMC_Cntl); /* Start arbitration */
+ 
+    timeout = 500;
+    do {
+-      status = inb( TMC_Status_port );        /* Read adapter status */
++      status = inb(port_base + TMC_Status);        /* Read adapter status */
+       if (status & 0x02)		      /* Arbitration complete */
+ 	    return 0;
+       mdelay(1);			/* Wait one millisecond */
+@@ -1065,19 +1037,19 @@
+    static int    flag = 0;
+ #endif
+ 
+-   outb( 0x82, SCSI_Cntl_port ); /* Bus Enable + Select */
+-   outb( adapter_mask | (1 << target), SCSI_Data_NoACK_port );
++   outb(0x82, port_base + SCSI_Cntl); /* Bus Enable + Select */
++   outb(adapter_mask | (1 << target), port_base + SCSI_Data_NoACK);
+ 
+    /* Stop arbitration and enable parity */
+-   outb( PARITY_MASK, TMC_Cntl_port ); 
++   outb(PARITY_MASK, port_base + TMC_Cntl); 
+ 
+    timeout = 350;			/* 350 msec */
+ 
+    do {
+-      status = inb( SCSI_Status_port ); /* Read adapter status */
++      status = inb(port_base + SCSI_Status); /* Read adapter status */
+       if (status & 1) {			/* Busy asserted */
+ 	 /* Enable SCSI Bus (on error, should make bus idle with 0) */
+-	 outb( 0x80, SCSI_Cntl_port );
++	 outb(0x80, port_base + SCSI_Cntl);
+ 	 return 0;
+       }
+       mdelay(1);			/* wait one msec */
+@@ -1102,7 +1074,7 @@
+ {
+    if (in_command) {
+       in_command = 0;
+-      outb( 0x00, Interrupt_Cntl_port );
++      outb(0x00, port_base + Interrupt_Cntl);
+       fdomain_make_bus_idle();
+       current_SC->result = error;
+       if (current_SC->scsi_done)
+@@ -1131,11 +1103,11 @@
+ 				   running. */
+ 
+    /* Check for other IRQ sources */
+-   if((inb(TMC_Status_port)&0x01)==0)   
++   if ((inb(port_base + TMC_Status) & 0x01) == 0)
+    	return IRQ_NONE;
+ 
+    /* It is our IRQ */   	
+-   outb( 0x00, Interrupt_Cntl_port );
++   outb(0x00, port_base + Interrupt_Cntl);
+ 
+    /* We usually have one spurious interrupt after each command.  Ignore it. */
+    if (!in_command || !current_SC) {	/* Spurious interrupt */
+@@ -1160,7 +1132,7 @@
+ #endif
+ 
+    if (current_SC->SCp.phase & in_arbitration) {
+-      status = inb( TMC_Status_port );        /* Read adapter status */
++      status = inb(port_base + TMC_Status);        /* Read adapter status */
+       if (!(status & 0x02)) {
+ #if EVERY_ACCESS
+ 	 printk( " AFAIL " );
+@@ -1172,19 +1144,19 @@
+       }
+       current_SC->SCp.phase = in_selection;
+       
+-      outb( 0x40 | FIFO_COUNT, Interrupt_Cntl_port );
++      outb(0x40 | FIFO_COUNT, port_base + Interrupt_Cntl);
+ 
+-      outb( 0x82, SCSI_Cntl_port ); /* Bus Enable + Select */
+-      outb( adapter_mask | (1 << current_SC->device->id), SCSI_Data_NoACK_port );
++      outb(0x82, port_base + SCSI_Cntl); /* Bus Enable + Select */
++      outb(adapter_mask | (1 << current_SC->device->id), port_base + SCSI_Data_NoACK);
+       
+       /* Stop arbitration and enable parity */
+-      outb( 0x10 | PARITY_MASK, TMC_Cntl_port );
++      outb(0x10 | PARITY_MASK, port_base + TMC_Cntl);
+ #if DEBUG_RACE
+       in_interrupt_flag = 0;
+ #endif
+       return IRQ_HANDLED;
+    } else if (current_SC->SCp.phase & in_selection) {
+-      status = inb( SCSI_Status_port );
++      status = inb(port_base + SCSI_Status);
+       if (!(status & 0x01)) {
+ 	 /* Try again, for slow devices */
+ 	 if (fdomain_select( current_SC->device->id )) {
+@@ -1200,12 +1172,12 @@
+ 	    printk( " AltSel " );
+ #endif
+ 	    /* Stop arbitration and enable parity */
+-	    outb( 0x10 | PARITY_MASK, TMC_Cntl_port );
++	    outb(0x10 | PARITY_MASK, port_base + TMC_Cntl);
+ 	 }
+       }
+       current_SC->SCp.phase = in_other;
+-      outb( 0x90 | FIFO_COUNT, Interrupt_Cntl_port );
+-      outb( 0x80, SCSI_Cntl_port );
++      outb(0x90 | FIFO_COUNT, port_base + Interrupt_Cntl);
++      outb(0x80, port_base + SCSI_Cntl);
+ #if DEBUG_RACE
+       in_interrupt_flag = 0;
+ #endif
+@@ -1214,15 +1186,15 @@
+    
+    /* current_SC->SCp.phase == in_other: this is the body of the routine */
+    
+-   status = inb( SCSI_Status_port );
++   status = inb(port_base + SCSI_Status);
+    
+    if (status & 0x10) {	/* REQ */
+       
+       switch (status & 0x0e) {
+        
+       case 0x08:		/* COMMAND OUT */
+-	 outb( current_SC->cmnd[current_SC->SCp.sent_command++],
+-	       Write_SCSI_Data_port );
++	 outb(current_SC->cmnd[current_SC->SCp.sent_command++],
++	      port_base + Write_SCSI_Data);
+ #if EVERY_ACCESS
+ 	 printk( "CMD = %x,",
+ 		 current_SC->cmnd[ current_SC->SCp.sent_command - 1] );
+@@ -1231,17 +1203,17 @@
+       case 0x00:		/* DATA OUT -- tmc18c50/tmc18c30 only */
+ 	 if (chip != tmc1800 && !current_SC->SCp.have_data_in) {
+ 	    current_SC->SCp.have_data_in = -1;
+-	    outb( 0xd0 | PARITY_MASK, TMC_Cntl_port );
++	    outb(0xd0 | PARITY_MASK, port_base + TMC_Cntl);
+ 	 }
+ 	 break;
+       case 0x04:		/* DATA IN -- tmc18c50/tmc18c30 only */
+ 	 if (chip != tmc1800 && !current_SC->SCp.have_data_in) {
+ 	    current_SC->SCp.have_data_in = 1;
+-	    outb( 0x90 | PARITY_MASK, TMC_Cntl_port );
++	    outb(0x90 | PARITY_MASK, port_base + TMC_Cntl);
+ 	 }
+ 	 break;
+       case 0x0c:		/* STATUS IN */
+-	 current_SC->SCp.Status = inb( Read_SCSI_Data_port );
++	 current_SC->SCp.Status = inb(port_base + Read_SCSI_Data);
+ #if EVERY_ACCESS
+ 	 printk( "Status = %x, ", current_SC->SCp.Status );
+ #endif
+@@ -1257,10 +1229,10 @@
+ #endif
+ 	       break;
+       case 0x0a:		/* MESSAGE OUT */
+-	 outb( MESSAGE_REJECT, Write_SCSI_Data_port ); /* Reject */
++	 outb(MESSAGE_REJECT, port_base + Write_SCSI_Data); /* Reject */
+ 	 break;
+       case 0x0e:		/* MESSAGE IN */
+-	 current_SC->SCp.Message = inb( Read_SCSI_Data_port );
++	 current_SC->SCp.Message = inb(port_base + Read_SCSI_Data);
+ #if EVERY_ACCESS
+ 	 printk( "Message = %x, ", current_SC->SCp.Message );
+ #endif
+@@ -1281,17 +1253,17 @@
+       if(current_SC->sc_data_direction == DMA_TO_DEVICE)
+       {
+ 	 current_SC->SCp.have_data_in = -1;
+-	 outb( 0xd0 | PARITY_MASK, TMC_Cntl_port );
++	 outb(0xd0 | PARITY_MASK, port_base + TMC_Cntl);
+       }
+       else
+       {
+ 	 current_SC->SCp.have_data_in = 1;
+-	 outb( 0x90 | PARITY_MASK, TMC_Cntl_port );
++	 outb(0x90 | PARITY_MASK, port_base + TMC_Cntl);
+       }
+    }
+ 
+    if (current_SC->SCp.have_data_in == -1) { /* DATA OUT */
+-      while ( (data_count = FIFO_Size - inw( FIFO_Data_Count_port )) > 512 ) {
++      while ((data_count = FIFO_Size - inw(port_base + FIFO_Data_Count)) > 512) {
+ #if EVERY_ACCESS
+ 	 printk( "DC=%d, ", data_count ) ;
+ #endif
+@@ -1302,11 +1274,11 @@
+ 	    printk( "%d OUT, ", data_count );
+ #endif
+ 	    if (data_count == 1) {
+-	       outb( *current_SC->SCp.ptr++, Write_FIFO_port );
++	       outb(*current_SC->SCp.ptr++, port_base + Write_FIFO);
+ 	       --current_SC->SCp.this_residual;
+ 	    } else {
+ 	       data_count >>= 1;
+-	       outsw( Write_FIFO_port, current_SC->SCp.ptr, data_count );
++	       outsw(port_base + Write_FIFO, current_SC->SCp.ptr, data_count);
+ 	       current_SC->SCp.ptr += 2 * data_count;
+ 	       current_SC->SCp.this_residual -= 2 * data_count;
+ 	    }
+@@ -1324,7 +1296,7 @@
+    }
+    
+    if (current_SC->SCp.have_data_in == 1) { /* DATA IN */
+-      while ((data_count = inw( FIFO_Data_Count_port )) > 0) {
++      while ((data_count = inw(port_base + FIFO_Data_Count)) > 0) {
+ #if EVERY_ACCESS
+ 	 printk( "DC=%d, ", data_count );
+ #endif
+@@ -1335,11 +1307,11 @@
+ 	    printk( "%d IN, ", data_count );
+ #endif
+ 	    if (data_count == 1) {
+-	       *current_SC->SCp.ptr++ = inb( Read_FIFO_port );
++	       *current_SC->SCp.ptr++ = inb(port_base + Read_FIFO);
+ 	       --current_SC->SCp.this_residual;
+ 	    } else {
+ 	       data_count >>= 1; /* Number of words */
+-	       insw( Read_FIFO_port, current_SC->SCp.ptr, data_count );
++	       insw(port_base + Read_FIFO, current_SC->SCp.ptr, data_count);
+ 	       current_SC->SCp.ptr += 2 * data_count;
+ 	       current_SC->SCp.this_residual -= 2 * data_count;
+ 	    }
+@@ -1399,10 +1371,10 @@
+       
+    } else {
+       if (current_SC->SCp.phase & disconnect) {
+-	 outb( 0xd0 | FIFO_COUNT, Interrupt_Cntl_port );
+-	 outb( 0x00, SCSI_Cntl_port );
++	 outb(0xd0 | FIFO_COUNT, port_base + Interrupt_Cntl);
++	 outb(0x00, port_base + SCSI_Cntl);
+       } else {
+-	 outb( 0x90 | FIFO_COUNT, Interrupt_Cntl_port );
++	 outb(0x90 | FIFO_COUNT, port_base + Interrupt_Cntl);
+       }
+    }
+ #if DEBUG_RACE
+@@ -1453,12 +1425,12 @@
+    current_SC->SCp.phase               = in_arbitration;
+ 
+    /* Start arbitration */
+-   outb( 0x00, Interrupt_Cntl_port );
+-   outb( 0x00, SCSI_Cntl_port );              /* Disable data drivers */
+-   outb( adapter_mask, SCSI_Data_NoACK_port ); /* Set our id bit */
++   outb(0x00, port_base + Interrupt_Cntl);
++   outb(0x00, port_base + SCSI_Cntl);              /* Disable data drivers */
++   outb(adapter_mask, port_base + SCSI_Data_NoACK); /* Set our id bit */
+    ++in_command;
+-   outb( 0x20, Interrupt_Cntl_port );
+-   outb( 0x14 | PARITY_MASK, TMC_Cntl_port ); /* Start arbitration */
++   outb(0x20, port_base + Interrupt_Cntl);
++   outb(0x14 | PARITY_MASK, port_base + TMC_Cntl); /* Start arbitration */
+ 
+    return 0;
+ }
+@@ -1514,17 +1486,17 @@
+ 	 printk( " (masked)" );
+    printk( ", IRR = 0x%04x, ISR = 0x%04x\n", irr, isr );
+ 
+-   printk( "SCSI Status      = 0x%02x\n", inb( SCSI_Status_port ) );
+-   printk( "TMC Status       = 0x%02x", inb( TMC_Status_port ) );
+-   if (inb( TMC_Status_port & 1))
++   printk( "SCSI Status      = 0x%02x\n", inb(port_base + SCSI_Status));
++   printk( "TMC Status       = 0x%02x", inb(port_base + TMC_Status));
++   if (inb((port_base + TMC_Status) & 1))
+ 	 printk( " (interrupt)" );
+    printk( "\n" );
+-   printk( "Interrupt Status = 0x%02x", inb( Interrupt_Status_port ) );
+-   if (inb( Interrupt_Status_port ) & 0x08)
++   printk("Interrupt Status = 0x%02x", inb(port_base + Interrupt_Status));
++   if (inb(port_base + Interrupt_Status) & 0x08)
+ 	 printk( " (enabled)" );
+    printk( "\n" );
+    if (chip == tmc18c50 || chip == tmc18c30) {
+-      printk( "FIFO Status      = 0x%02x\n", inb( port_base + FIFO_Status ) );
++      printk("FIFO Status      = 0x%02x\n", inb(port_base + FIFO_Status));
+       printk( "Int. Condition   = 0x%02x\n",
+ 	      inb( port_base + Interrupt_Cond ) );
+    }
+@@ -1563,12 +1535,12 @@
+ 
+ int fdomain_16x0_bus_reset(struct scsi_cmnd *SCpnt)
+ {
+-   outb( 1, SCSI_Cntl_port );
++   outb(1, port_base + SCSI_Cntl);
+    do_pause( 2 );
+-   outb( 0, SCSI_Cntl_port );
++   outb(0, port_base + SCSI_Cntl);
+    do_pause( 115 );
+-   outb( 0, SCSI_Mode_Cntl_port );
+-   outb( PARITY_MASK, TMC_Cntl_port );
++   outb(0, port_base + SCSI_Mode_Cntl);
++   outb(PARITY_MASK, port_base + TMC_Cntl);
+    return SUCCESS;
+ }
+ 
