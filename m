@@ -1,42 +1,76 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [PATCH] 2/2 Use bus dev_attrs to create scsi_device attributes
-Date: Thu, 17 Mar 2005 09:53:21 -0500
-Message-ID: <1111071201.5994.4.camel@mulgrave>
-References: <20050302194432.GA9743@us.ibm.com>
-	 <20050302194553.GA9776@us.ibm.com> <20050302194647.GB9776@us.ibm.com>
-	 <20050316224551.GA21918@us.ibm.com>
+From: Jens Axboe <axboe@suse.de>
+Subject: Re: [PATCH 2.6.11] ide-scsi: map sg buffers in idescsi_input/output_buffers() to kernel virtual address
+Date: Thu, 17 Mar 2005 17:21:07 +0100
+Message-ID: <20050317162107.GH1860@suse.de>
+References: <7A8F92187EF7A249BF847F1BF4903C040AFC80@ausx2kmpc103.aus.amer.dell.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Received: from stat16.steeleye.com ([209.192.50.48]:26348 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S262178AbVCQOxb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 17 Mar 2005 09:53:31 -0500
-In-Reply-To: <20050316224551.GA21918@us.ibm.com>
+Content-Type: text/plain; charset=us-ascii
+Received: from ns.virtualhost.dk ([195.184.98.160]:6528 "EHLO virtualhost.dk")
+	by vger.kernel.org with ESMTP id S261940AbVCQQVL (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 17 Mar 2005 11:21:11 -0500
+Content-Disposition: inline
+In-Reply-To: <7A8F92187EF7A249BF847F1BF4903C040AFC80@ausx2kmpc103.aus.amer.dell.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Patrick Mansfield <patmans@us.ibm.com>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, Greg KH <greg@kroah.com>, Kay Sievers <kay.sievers@vrfy.org>
+To: Stuart_Hayes@Dell.com
+Cc: linux-scsi@vger.kernel.org, Joshua_Giles@Dell.com
 
-On Wed, 2005-03-16 at 14:45 -0800, Patrick Mansfield wrote:
-> Any comments on this? Should I resend these patches?
+On Wed, Mar 16 2005, Stuart_Hayes@Dell.com wrote:
+> Jens Axboe wrote:
+> > On Wed, Mar 16 2005, Stuart_Hayes@Dell.com wrote:
+> >> Hayes, Stuart wrote:
+> >>> This patch will map the sg buffers to kernel virtual memory space in
+> >>> the functions idescsi_input_buffers() and idescsi_output_buffers().
+> >>> Without this patch, idescsi passes a null pointer to
+> >>> atapi_input_bytes() and atapi_output_bytes() when sg pages are in
+> >>> high memory (i686 architecture).
+> >>> 
+> >>> I'm attaching as a file, too, as the text will certainly be wrapped.
+> >>> 
+> >>> (Sorry for the subject rename--I'm trying to use the correct format
+> >>> for patch emails.) 
+> >>> 
+> >>> Thanks
+> >>> Stuart
+> >> 
+> >> And, while there's another high memory/kmap patch question on this
+> >> list... 
+> >> 
+> >> Is there some reason nobody seems interested in this patch (except
+> >> Jens--thanks for the help!)?  I'm kind of new to sending in patches,
+> >> and I'm not sure if I'm just not waiting long enough, or if there is
+> >> a problem with this patch... 
+> >> 
+> >> But really, we're getting a null pointer dereference oops when using
+> >> ATAPI tape drives (with ide-scsi) without this patch...
+> > 
+> > Sorry, that did seem to get dropped on the floor. Actually I'm
+> > wondering why you are seeing highmem pages there in the first place,
+> > it would be easier/better just to limit ide-scsi to non-highmem
+> > pages. That would remove the need to add any work arounds in the
+> > driver.    
+> 
+> I think we're seeing highmem pages in the sg list because that's where 
+> the user memory was when st_write() was called.
+> 
+> The sg list is set up when st_write(), which calls setup_buffering(), 
+> which calls st_map_user_pages()... this just sets up the sg pages to
+> point directly to the user memory.  So, by the time ide-scsi comes into 
+> the picture, the sg list is already set up to point to high memory 
+> pages.
+> 
+> Are you suggesting that ide-scsi should change the dma_mask for the
+> device so that st_map_user_pages() won't let sg pages point to high 
+> memory?  Or is there something else I'm missing?
 
-Well, the basic comment is that there are a lot of features that SCSI
-has that the driver core lacks:
+I think that is a bug, this effectively bypasses whatever restrictions
+the scsi host adapter has said about memory limits. It is a problem
+because the request doesn't come from the block layer (which handles all
+of this).
 
-1) Attribute overrides.  This is actually part of the published API for
-SCSI
-2) Ability to add extra attributes---several drivers use this
-3) Ability to change attribute permissions based on capabilities.
+I would much prefer fixing that real issue!
 
-I really rather like all of these features.
-
-Initially when we did all this work for SCSI, there wasn't much
-enthusiasm for incorporating these features into drivers/base.  You
-could look and see what it would take to do this, and propose it to
-Greg ... If he's happy, I'd have no problem moving over because now we
-won't lose any functionality.
-
-James
-
+-- 
+Jens Axboe
 
