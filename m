@@ -1,31 +1,45 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [2.5 patch] remove an unused function from wd7000.c
-Date: 22 Jun 2003 12:26:39 +0100
+From: James Bottomley <James.Bottomley@steeleye.com>
+Subject: Re: PATCH; make sr.c respect use_10_for_ms
+Date: 22 Jun 2003 08:58:00 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1056281197.2075.12.camel@dhcp22.swansea.linux.org.uk>
-References: <20030622000538.GM23337@fs.tum.de>
+Message-ID: <1056290282.1979.4.camel@mulgrave>
+References: <20030621165920.F2811@one-eyed-alien.net>
+	<1056241551.1775.14.camel@mulgrave>
+	<20030621174640.M2811@one-eyed-alien.net>
+	<1056250487.1775.58.camel@mulgrave>
+	<20030621212406.N2811@one-eyed-alien.net>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pc2-cwma1-4-cust86.swan.cable.ntl.com ([213.105.254.86]:39372
-	"EHLO lxorguk.ukuu.org.uk") by vger.kernel.org with ESMTP
-	id S264854AbTFVLPm (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 22 Jun 2003 07:15:42 -0400
-In-Reply-To: <20030622000538.GM23337@fs.tum.de>
+Received: from nat9.steeleye.com ([65.114.3.137]:20485 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S265023AbTFVNoF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 22 Jun 2003 09:44:05 -0400
+In-Reply-To: <20030621212406.N2811@one-eyed-alien.net>
 List-Id: linux-scsi@vger.kernel.org
-To: Adrian Bunk <bunk@fs.tum.de>
-Cc: linux-scsi@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, trivial@rustcorp.com.au
+To: Matthew Dharm <mdharm-scsi@one-eyed-alien.net>
+Cc: torvalds@transmeta.com, Linux SCSI list <linux-scsi@vger.kernel.org>, Greg KH <greg@kroah.com>, USB Developers <linux-usb-devel@lists.sourceforge.net>
 
-On Sul, 2003-06-22 at 01:05, Adrian Bunk wrote:
-> The patch below removes an unused function from drivers/scsi/wd7000.c .
+On Sat, 2003-06-21 at 23:24, Matthew Dharm wrote:
+> On Sat, Jun 21, 2003 at 09:54:46PM -0500, James Bottomley wrote:
+> >  	}
+> > -	n = buffer[3] + 4;
+> > +	n = rc;
+> >  	cd->cdi.speed = ((buffer[n + 8] << 8) + buffer[n + 9]) / 176;
 > 
-> I've tested the compilation with 2.5.72-mm2.
+> This bit isn't right.  n is supposed to point to the start of the page
+> data, not the page header.  The header is a different size if the command
+> is 6-byte or 10-byte.
 
-What you actually need to do for wd7000 is to make that a new_eh abort
-handler. The card every so often loses an IRQ (or we do something that
-upsets it - who knows). In that situation we fake an IRQ event which
-causes the card to recover and life to continue happily.
+Yes it is.
 
-Providing you hold the lock all will then untangle.
+That's why I eliminated the dbd bit.  Your patch was calculating the
+offsets past the dbd headers.  However, if you tell the mode sense not
+to send any dbd headers (which are pointless, because the routine isn't
+interested in them), then you don't have to skip past them. and the mode
+data begins just past the mode header.
+
+James
+
 
