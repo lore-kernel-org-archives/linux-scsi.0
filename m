@@ -1,85 +1,260 @@
-From: linuxscsi <linuxscsi@4bridgeworks.com>
-Subject: Inquiry data buffer corruption during domain validation with SYM5
-	3c8xx_2 driver
-Date: Tue, 30 Nov 2004 18:47:32 -0000
-Message-ID: <C18BA5DDB58DD511BD0700C0DF0DD4501EEC83@NTSERVER4>
+From: Fabio Coatti <cova@ferrara.linux.it>
+Subject: Re: 2.6.10-rc2-mm2 usb storage still oopses
+Date: Tue, 30 Nov 2004 20:27:55 +0100
+Message-ID: <200411302027.56951.cova@ferrara.linux.it>
+References: <200411182203.02176.cova@ferrara.linux.it> <20041129163231.33affbde.akpm@osdl.org> <1101784930.2022.116.camel@mulgrave>
 Mime-Version: 1.0
 Content-Type: text/plain;
-	charset="iso-8859-1"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mailhost.digitalinterfacesltd.com ([62.69.87.37]:5393 "EHLO
-	ntserver4.diluk.co.uk") by vger.kernel.org with ESMTP
-	id S262265AbUK3Sri (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 30 Nov 2004 13:47:38 -0500
-Sender: linux-scsi-owner@vger.kernel.org
+  charset="iso-8859-15"
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-usb-devel-admin@lists.sourceforge.net>
+In-Reply-To: <1101784930.2022.116.camel@mulgrave>
+Content-Disposition: inline
+Sender: linux-usb-devel-admin@lists.sourceforge.net
+Errors-To: linux-usb-devel-admin@lists.sourceforge.net
+List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-devel>,
+	<mailto:linux-usb-devel-request@lists.sourceforge.net?subject=unsubscribe>
+List-Post: <mailto:linux-usb-devel@lists.sourceforge.net>
+List-Help: <mailto:linux-usb-devel-request@lists.sourceforge.net?subject=help>
+List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-devel>,
+	<mailto:linux-usb-devel-request@lists.sourceforge.net?subject=subscribe>
+List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=linux-usb-devel>
+To: James Bottomley <James.Bottomley@steeleye.com>
+Cc: Andrew Morton <akpm@osdl.org>, Pete Zaitcev <zaitcev@redhat.com>, Linux Kernel <linux-kernel@vger.kernel.org>, linux-usb-devel@lists.sourceforge.net, SCSI Mailing List <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Linux SCSI <linux-scsi@vger.kernel.org>
 
-We have a device on test from a customer, a SCSI-FC bridge allowing an FC
-device to be connected to a SCSI HBA, that is highlighting some form of data
-issue during domain validation. The device itself is behaving badly wrt the
-inquiry command _but_ we don't believe this should cause a problem due to
-the way the inquiry command data buffers are initialised and compared.
-However there is a problem with data corruption somewhere and this is
-causing "Domain Validation Initial Inquiry Failed" messages. Looks like data
-is being corrupted somewhere either in the driver or on its way back from
-the driver - maybe in a buffer copy.
+Alle 04:22, martedì 30 novembre 2004, James Bottomley ha scritto:
 
-During the initial inquiry compare, in spi_dv_device_compare_inquiry (in
-scsi_transport_spi.c), the inquiry data buffer is initialised to all zeroes,
-an inquiry command is executed and data loaded into the buffer. This is then
-repeated with a second buffer initialised to all zeroes, a second inquiry
-command exectuted with data loaded into the second buffer. The two buffers
-are then compared. I would not expect a problem however there are data
-errors.
+> >
+> > Guys, is this problem still present in Linus's tree?  If so, is a fix for
+> > 2.6.10 looking feasible?
+>
+> Al Viro has a tentative one at
+>
+> http://ftp.linux.org.uk/pub/people/viro/register_disk-hack
+>
+> If someone could try it out and verify that it fixes the problem, we
+> could put it in.
 
-What we have found is that the initial inquiry data indicates there is 144
-bytes of inquiry data. Inquiry commands after the first are then requesting
-144 bytes - but the device is only returning 64 bytes. This in itself should
-not cause a problem. If the buffers receiving the data are initialised to
-zeroes and are only loaded with 64 bytes the buffers should compare - 64
-bytes of data and 80 bytes of zeroes - 144 bytes total. The problem occurs
-however because the data buffers receiving the inquiry data are being loaded
-with the 64 bytes of inquiry data and the remaining 80 bytes are being
-overwritten with other data from somewhere - from where I cannot yet find.
+OK, here the result for tests, using 2.6.10-rc2-mm4.
+I've to put a 
+options usbcore old_scheme_first=1
+in modprobe.conf, otherwise the device is not detected.
+With this option set, all works just fine (no ub module compiled or loaded, if 
+needed I can try also with this): no oopses, no call trace, it just works :)
 
-There appears two possible causes. 
+The only small issue is that if i leave plugged the usb flash key and 
+power-cycle my box, at boot the device is not detected and it fails in the 
+same way it happens when usbcore old_scheme_first is not set (it's present in 
+modprobe.conf)
 
-1. First the sym53c8xx driver is writing bad data into the buffers - 64
-bytes of valid inquiry data and upto a further 80 bytes of rubbish - I find
-that almost, but not totally, impossible to believe especially as the
-sym53c8xx driver indicates the correct residue. 
+If I unplug/plug the device, all works just fine.
 
-2. Alternatively the sym53c8xx driver could be writing the inquiry data into
-a temporary, uninitialised buffer which is being copied to the buffer set up
-in spi_dv_device_compare_inquiry. If different inquiry commands use
-different temporary buffers then the different temp buffers would be loaded
-with the 64 bytes of valid inquiry data and be left with different
-remainders each of 80 bytes of rubbish.
+Great work !
 
-Can anyone tell me if temporary buffers are used? I have spent a load of
-time looking through the code, adding print statements to display buffer
-contents at various places, using an analyser on the scsi bus, etc. and
-can't find anything so far. 
+Full logs:
 
-Whatever is happening it seems pretty pointless to initialise buffers if
-something is going to write back rubbish into them and not just what is
-returned by the scsi command. When I initialise a buffer and then only write
-part of it I expect the remainder to be unchanged.
- 
-Richard
+Inserting the device with usbcore old_scheme_first=1:
+
+Nov 30 19:54:41 kefk kernel: hub 5-0:1.0: state 5 ports 8 chg ff00 evt 0008
+Nov 30 19:54:41 kefk kernel: ehci_hcd 0000:00:1d.7: GetStatus port 3 status 
+001803 POWER sig=j  CSC CONNECT
+Nov 30 19:54:41 kefk kernel: hub 5-0:1.0: port 3, status 0501, change 0001, 
+480 Mb/s
+Nov 30 19:54:41 kefk kernel: hub 5-0:1.0: debounce: port 3: total 100ms stable 
+100ms status 0x501
+Nov 30 19:54:41 kefk kernel: ehci_hcd 0000:00:1d.7: port 3 high speed
+Nov 30 19:54:41 kefk kernel: ehci_hcd 0000:00:1d.7: GetStatus port 3 status 
+001005 POWER sig=se0  PE CONNECT
+Nov 30 19:54:41 kefk kernel: usb 5-3: new high speed USB device using ehci_hcd 
+and address 3
+Nov 30 19:54:41 kefk kernel: usb 5-3: new device strings: Mfr=1, Product=2, 
+SerialNumber=3
+Nov 30 19:54:41 kefk kernel: usb 5-3: default language 0x0409
+Nov 30 19:54:41 kefk kernel: usb 5-3: Product: Mass storage
+Nov 30 19:54:41 kefk kernel: usb 5-3: Manufacturer: USB
+Nov 30 19:54:41 kefk kernel: usb 5-3: SerialNumber: 142E19413C2FCA34
+Nov 30 19:54:41 kefk kernel: usb 5-3: hotplug
+Nov 30 19:54:41 kefk kernel: usb 5-3: adding 5-3:1.0 (config #1, interface 0)
+Nov 30 19:54:41 kefk kernel: usb 5-3:1.0: hotplug
+Nov 30 19:54:42 kefk kernel: Initializing USB Mass Storage driver...
+Nov 30 19:54:42 kefk kernel: usb-storage 5-3:1.0: usb_probe_interface
+Nov 30 19:54:42 kefk kernel: usb-storage 5-3:1.0: usb_probe_interface - got id
+Nov 30 19:54:42 kefk kernel: scsi3 : SCSI emulation for USB Mass Storage 
+devices
+Nov 30 19:54:42 kefk kernel: usbcore: registered new driver usb-storage
+Nov 30 19:54:42 kefk kernel: USB Mass Storage support registered.
+Nov 30 19:54:42 kefk kernel: usb-storage: device found at 3
+Nov 30 19:54:42 kefk kernel: usb-storage: waiting for device to settle before 
+scanning
+Nov 30 19:54:47 kefk kernel:   Vendor: 512MB     Model: USB2.0FlashDrive  Rev: 
+2.00
+Nov 30 19:54:47 kefk kernel:   Type:   Direct-Access                      ANSI 
+SCSI revision: 02
+Nov 30 19:54:47 kefk kernel: sdb: Unit Not Ready, sense:
+Nov 30 19:54:47 kefk kernel: : Current: sense key=0x6
+Nov 30 19:54:47 kefk kernel:     ASC=0x28 ASCQ=0x0
+Nov 30 19:54:47 kefk kernel: sdb : READ CAPACITY failed.
+Nov 30 19:54:47 kefk kernel: sdb : status=1, message=00, host=0, driver=08
+Nov 30 19:54:47 kefk kernel: sd: Current: sense key=0x6
+Nov 30 19:54:47 kefk kernel:     ASC=0x28 ASCQ=0x0
+Nov 30 19:54:47 kefk kernel: sdb: test WP failed, assume Write Enabled
+Nov 30 19:54:47 kefk kernel: sdb: assuming drive cache: write through
+Nov 30 19:54:47 kefk kernel: sdb: Unit Not Ready, sense:
+Nov 30 19:54:47 kefk kernel: : Current: sense key=0x6
+Nov 30 19:54:47 kefk kernel:     ASC=0x28 ASCQ=0x0
+Nov 30 19:54:47 kefk kernel: SCSI device sdb: 1024000 512-byte hdwr sectors 
+(524 MB)
+Nov 30 19:54:47 kefk kernel: sdb: Write Protect is off
+Nov 30 19:54:47 kefk kernel: sdb: Mode Sense: 03 00 00 00
+Nov 30 19:54:47 kefk kernel: sdb: assuming drive cache: write through
+Nov 30 19:54:47 kefk kernel: SCSI device sdb: 1024000 512-byte hdwr sectors 
+(524 MB)
+Nov 30 19:54:47 kefk kernel: sdb: Write Protect is off
+Nov 30 19:54:47 kefk kernel: sdb: Mode Sense: 03 00 00 00
+Nov 30 19:54:47 kefk kernel: sdb: assuming drive cache: write through
+Nov 30 19:54:47 kefk kernel:  sdb: sdb1
+Nov 30 19:54:47 kefk kernel: Attached scsi removable disk sdb at scsi3, 
+channel 0, id 0, lun 0
+Nov 30 19:54:47 kefk kernel: Attached scsi generic sg4 at scsi3, channel 0, id 
+0, lun 0,  type 0
+Nov 30 19:54:47 kefk kernel: usb-storage: device scan complete
+Nov 30 19:54:47 kefk scsi.agent[7714]: disk 
+at /devices/pci0000:00/0000:00:1d.7/usb5/5-3/5-3:1.0/host3/target3:0:0/3:0:0:0
+
+
+removing it:
+Nov 30 19:55:44 kefk kernel: hub 5-0:1.0: state 5 ports 8 chg ff00 evt 0008
+Nov 30 19:55:44 kefk kernel: ehci_hcd 0000:00:1d.7: GetStatus port 3 status 
+001002 POWER sig=se0  CSC
+Nov 30 19:55:44 kefk kernel: hub 5-0:1.0: port 3, status 0100, change 0001, 12 
+Mb/s
+Nov 30 19:55:44 kefk kernel: usb 5-3: USB disconnect, address 3
+Nov 30 19:55:44 kefk kernel: usb 5-3: usb_disable_device nuking all URBs
+Nov 30 19:55:44 kefk kernel: usb 5-3: unregistering interface 5-3:1.0
+Nov 30 19:55:44 kefk kernel: usb 5-3:1.0: hotplug
+Nov 30 19:55:44 kefk kernel: usb 5-3: unregistering device
+Nov 30 19:55:44 kefk kernel: usb 5-3: hotplug
+Nov 30 19:55:44 kefk kernel: hub 5-0:1.0: debounce: port 3: total 100ms stable 
+100ms status 0x100
+
+
+inserting the device with old_scheme_first not set:
+
+Nov 30 20:00:25 kefk kernel: hub 5-0:1.0: state 5 ports 8 chg ff00 evt 0008
+Nov 30 20:00:25 kefk kernel: ehci_hcd 0000:00:1d.7: GetStatus port 3 status 
+001803 POWER sig=j  CSC CONNECT
+Nov 30 20:00:25 kefk kernel: hub 5-0:1.0: port 3, status 0501, change 0001, 
+480 Mb/s
+Nov 30 20:00:25 kefk kernel: hub 5-0:1.0: debounce: port 3: total 100ms stable 
+100ms status 0x501
+Nov 30 20:00:25 kefk kernel: ehci_hcd 0000:00:1d.7: port 3 high speed
+Nov 30 20:00:25 kefk kernel: ehci_hcd 0000:00:1d.7: GetStatus port 3 status 
+001005 POWER sig=se0  PE CONNECT
+Nov 30 20:00:25 kefk kernel: usb 5-3: new high speed USB device using ehci_hcd 
+and address 3
+Nov 30 20:00:25 kefk kernel: ehci_hcd 0000:00:1d.7: devpath 3 ep0in 3strikes
+Nov 30 20:00:25 kefk kernel: ehci_hcd 0000:00:1d.7: port 3 full speed --> 
+companion
+Nov 30 20:00:25 kefk kernel: ehci_hcd 0000:00:1d.7: GetStatus port 3 status 
+003801 POWER OWNER sig=j  CONNECT
+Nov 30 20:00:25 kefk kernel: uhci_hcd 0000:00:1d.1: wakeup_hc
+Nov 30 20:00:26 kefk kernel: hub 2-0:1.0: state 5 ports 2 chg fffc evt 0002
+Nov 30 20:00:26 kefk kernel: uhci_hcd 0000:00:1d.1: port 1 portsc 0083,00
+Nov 30 20:00:26 kefk kernel: hub 2-0:1.0: port 1, status 0101, change 0001, 12 
+Mb/s
+Nov 30 20:00:26 kefk kernel: hub 2-0:1.0: debounce: port 1: total 100ms stable 
+100ms status 0x101
+Nov 30 20:00:26 kefk kernel: usb 2-1: new full speed USB device using uhci_hcd 
+and address 2
+Nov 30 20:00:26 kefk kernel: uhci_hcd 0000:00:1d.1: uhci_result_control: 
+failed with status 440000
+Nov 30 20:00:26 kefk kernel: [f7977240] link (379771b2) element (37a86040)
+Nov 30 20:00:26 kefk kernel:   0: [f7a86040] link (37a86080) e0 Stalled 
+CRC/Timeo Length=7 MaxLen=7 DT0 EndPt=0 Dev=0, PID=2d(SETUP) (buf=37144ba0)
+Nov 30 20:00:26 kefk kernel:   1: [f7a86080] link (37a860c0) e3 SPD Active 
+Length=0 MaxLen=3f DT1 EndPt=0 Dev=0, PID=69(IN) (buf=355ae500)
+Nov 30 20:00:26 kefk kernel:   2: [f7a860c0] link (00000001) e3 IOC Active 
+Length=0 MaxLen=7ff DT1 EndPt=0 Dev=0, PID=e1(OUT) (buf=00000000)
+Nov 30 20:00:26 kefk kernel:
+Nov 30 20:00:26 kefk kernel: usb 2-1: device descriptor read/64, error -71
+Nov 30 20:00:26 kefk kernel: uhci_hcd 0000:00:1d.1: uhci_result_control: 
+failed with status 440000
+Nov 30 20:00:26 kefk kernel: [f7977240] link (379771b2) element (37a86040)
+Nov 30 20:00:26 kefk kernel:   0: [f7a86040] link (37a86080) e0 Stalled 
+CRC/Timeo Length=7 MaxLen=7 DT0 EndPt=0 Dev=0, PID=2d(SETUP) (buf=36486e60)
+Nov 30 20:00:26 kefk kernel:   1: [f7a86080] link (37a860c0) e3 SPD Active 
+Length=0 MaxLen=3f DT1 EndPt=0 Dev=0, PID=69(IN) (buf=355aef00)
+Nov 30 20:00:26 kefk kernel:   2: [f7a860c0] link (00000001) e3 IOC Active 
+Length=0 MaxLen=7ff DT1 EndPt=0 Dev=0, PID=e1(OUT) (buf=00000000)
+
+Now, rebooting the box leaving the device inserted, with old_scheme_first=1 in 
+modprobe.conf
+
+Nov 30 20:03:40 kefk kernel: usb 4-0:1.0: hotplug
+Nov 30 20:03:40 kefk kernel: hub 4-0:1.0: usb_probe_interface
+Nov 30 20:03:40 kefk kernel: hub 4-0:1.0: usb_probe_interface - got id
+Nov 30 20:03:40 kefk kernel: hub 4-0:1.0: USB hub found
+Nov 30 20:03:40 kefk kernel: hub 4-0:1.0: 2 ports detected
+Nov 30 20:03:40 kefk kernel: hub 4-0:1.0: standalone hub
+Nov 30 20:03:40 kefk kernel: hub 4-0:1.0: no power switching (usb 1.0)
+Nov 30 20:03:40 kefk kernel: hub 4-0:1.0: individual port over-current 
+protection
+Nov 30 20:03:40 kefk kernel: hub 4-0:1.0: power on to power good time: 2ms
+Nov 30 20:03:40 kefk kernel: hub 4-0:1.0: local power source is good
+Nov 30 20:03:40 kefk kernel: hub 2-0:1.0: debounce: port 1: total 100ms stable 
+100ms status 0x101
+Nov 30 20:03:40 kefk kernel: usb 2-1: new full speed USB device using uhci_hcd 
+and address 2
+Nov 30 20:03:40 kefk kernel: uhci_hcd 0000:00:1d.1: uhci_result_control: 
+failed with status 440000
+Nov 30 20:03:40 kefk kernel: [f7ab5240] link (37ab51b2) element (37ab4040)
+Nov 30 20:03:40 kefk kernel:   0: [f7ab4040] link (37ab4080) e0 Stalled 
+CRC/Timeo Length=7 MaxLen=7 DT0 EndPt=0 Dev=0, PID=2d(SETUP) (buf=37998f20)
+Nov 30 20:03:40 kefk kernel:   1: [f7ab4080] link (00000001) e3 IOC Active 
+Length=0 MaxLen=7ff DT1 EndPt=0 Dev=0, PID=69(IN) (buf=00000000)
+Nov 30 20:03:40 kefk kernel:
+Nov 30 20:03:40 kefk kernel: uhci_hcd 0000:00:1d.1: uhci_result_control: 
+failed with status 440000
+Nov 30 20:03:40 kefk kernel: [f7ab5240] link (37ab51b2) element (37ab4040)
+Nov 30 20:03:40 kefk kernel:   0: [f7ab4040] link (37ab4080) e0 Stalled 
+CRC/Timeo Length=7 MaxLen=7 DT0 EndPt=0 Dev=0, PID=2d(SETUP) (buf=378ef180)
+Nov 30 20:03:40 kefk kernel:   1: [f7ab4080] link (00000001) e3 IOC Active 
+Length=0 MaxLen=7ff DT1 EndPt=0 Dev=0, PID=69(IN) (buf=00000000)
+Nov 30 20:03:40 kefk kernel:
+Nov 30 20:03:40 kefk kernel: usb 2-1: device not accepting address 2, error 
+-71
+Nov 30 20:03:40 kefk kernel: usb 2-1: new full speed USB device using uhci_hcd 
+and address 3
+Nov 30 20:03:40 kefk kernel: uhci_hcd 0000:00:1d.1: uhci_result_control: 
+failed with status 440000
+Nov 30 20:03:40 kefk kernel: [f7ab5240] link (37ab51b2) element (37ab4040)
+Nov 30 20:03:40 kefk kernel:   0: [f7ab4040] link (37ab4080) e0 Stalled 
+CRC/Timeo Length=7 MaxLen=7 DT0 EndPt=0 Dev=0, PID=2d(SETUP) (buf=378ef180)
+Nov 30 20:03:40 kefk kernel:   1: [f7ab4080] link (00000001) e3 IOC Active 
+Length=0 MaxLen=7ff DT1 EndPt=0 Dev=0, PID=69(IN) (buf=00000000)
+
+After this, if I remove and plug again the device, all works just fine.
 
 
 
 
-Bridgeworks Ltd
-135 Somerford Road,
-Christchurch
-Dorset, BH23 3PY
-England.
 
-Tel 0870 121 0708
-Fax 0870 121 0709
 
-Email: richardw@4bridgeworks.com
 
+-- 
+Fabio Coatti       http://members.ferrara.linux.it/cova     
+Ferrara Linux Users Group           http://ferrara.linux.it
+GnuPG fp:9765 A5B6 6843 17BC A646  BE8C FA56 373A 5374 C703
+Old SysOps never die... they simply forget their password.
+
+
+-------------------------------------------------------
+SF email is sponsored by - The IT Product Guide
+Read honest & candid reviews on hundreds of IT Products from real users.
+Discover which products truly live up to the hype. Start reading now. 
+http://productguide.itmanagersjournal.com/
+_______________________________________________
+linux-usb-devel@lists.sourceforge.net
+To unsubscribe, use the last form field at:
+https://lists.sourceforge.net/lists/listinfo/linux-usb-devel
