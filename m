@@ -1,40 +1,90 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: Sysfs attribute file for max_sectors
-Date: Tue, 6 Jan 2004 17:00:44 -0500 (EST)
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44L0.0401061652450.621-100000@ida.rowland.org>
-References: <20040106131105.A12358@beaverton.ibm.com>
+From: Andrew Morton <akpm@osdl.org>
+Subject: Re: 2.6.1-rc1: SCSI: `TIMEOUT' redefined
+Date: Tue, 6 Jan 2004 14:40:59 -0800
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <20040106144059.0c896eea.akpm@osdl.org>
+References: <Pine.LNX.4.58.0312310033110.30995@home.osdl.org>
+	<20040106183325.GJ11523@fs.tum.de>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ida.rowland.org ([192.131.102.52]:1284 "HELO ida.rowland.org")
-	by vger.kernel.org with SMTP id S264574AbUAFWAp (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Jan 2004 17:00:45 -0500
-In-Reply-To: <20040106131105.A12358@beaverton.ibm.com>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+In-Reply-To: <20040106183325.GJ11523@fs.tum.de>
+To: Adrian Bunk <bunk@fs.tum.de>
+Cc: patmans@ibm.com, neuffer@goofy.zdv.uni-mainz.de, a.arnold@kfa-juelich.de, linux-kernel@vger.kernel.org, James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Patrick Mansfield <patmans@us.ibm.com>
-Cc: James Bottomley <James.Bottomley@steeleye.com>, Christoph Hellwig <hch@infradead.org>, Matthew Dharm <mdharm-scsi@one-eyed-alien.net>, SCSI development list <linux-scsi@vger.kernel.org>, USB Storage List <usb-storage@one-eyed-alien.net>
 
-On Tue, 6 Jan 2004, Patrick Mansfield wrote:
-
-> Alan -
+Adrian Bunk <bunk@fs.tum.de> wrote:
+>
+> On Wed, Dec 31, 2003 at 12:36:49AM -0800, Linus Torvalds wrote:
+> >...
+> > Summary of changes from v2.6.0 to v2.6.1-rc1
+> > ============================================
+> >...
+> > Patrick Mansfield:
+> >   o consolidate and log scsi command on send and completion
+> >...
 > 
-> Given that we currently don't have any user level intitiated scanning, how
-> can you modify max_sectors in user space prior to the scsi_alloc_queue()
-> call done during scan?
+> This adds a #define TIMEOUT to scsi.h conflicting with a different 
+> TIMEOUT #define in drivers/scsi/eata_generic.h:
 
-We can't.  But scan doesn't put much of a load on a device, and all sd
-initially does is read partition table entries from single sectors
-scattered around a disk.  Even mount doesn't seem to transfer very large
-buffers.  It's only when people start using the devices and doing large
-contiguous data transfers that we begin running against limitations.
+eww, bad idea.  I count more than twenty #defines of TIMEOUT in the kernel
+tree.
 
-So for us it would be enough to have scsi_slave_configure() set 
-max_sectors to 128, insuring that this default value is workable on every 
-device.  Then user space tools could increase that value for more capable 
-devices at any time and reap the benefits of decreased overhead.
+We should change scsi.h - "TIMEOUT" is waaay too collision-prone.
 
-Making the store() method a USB-specific override is okay with me.
+In fact, a lot of those identifiers are quite poorly chosen:
 
-Alan Stern
+#define NEEDS_RETRY     0x2001
+#define SUCCESS         0x2002
+#define FAILED          0x2003
+#define QUEUED          0x2004
+#define SOFT_ERROR      0x2005
+#define ADD_TO_MLQUEUE  0x2006
+#define TIMEOUT         0x2007
 
+That's just asking for it.
+
+This untested patch purports to fix just the TIMEOUT thing:
+
+(hmm, SD_TIMEOUT is already taken, too).
+
+
+diff -puN drivers/scsi/scsi.c~scsi-rename-TIMEOUT drivers/scsi/scsi.c
+--- 25/drivers/scsi/scsi.c~scsi-rename-TIMEOUT	Tue Jan  6 14:37:24 2004
++++ 25-akpm/drivers/scsi/scsi.c	Tue Jan  6 14:37:35 2004
+@@ -441,7 +441,7 @@ void scsi_log_completion(struct scsi_cmn
+ 			case FAILED:
+ 				printk("FAILED ");
+ 				break;
+-			case TIMEOUT:
++			case SD_CMD_TIMEOUT:
+ 				/* 
+ 				 * If called via scsi_times_out.
+ 				 */
+diff -puN drivers/scsi/scsi_error.c~scsi-rename-TIMEOUT drivers/scsi/scsi_error.c
+--- 25/drivers/scsi/scsi_error.c~scsi-rename-TIMEOUT	Tue Jan  6 14:37:24 2004
++++ 25-akpm/drivers/scsi/scsi_error.c	Tue Jan  6 14:37:45 2004
+@@ -164,7 +164,7 @@ int scsi_delete_timer(struct scsi_cmnd *
+  **/
+ void scsi_times_out(struct scsi_cmnd *scmd)
+ {
+-	scsi_log_completion(scmd, TIMEOUT);
++	scsi_log_completion(scmd, SD_CMD_TIMEOUT);
+ 	if (unlikely(!scsi_eh_scmd_add(scmd, SCSI_EH_CANCEL_CMD))) {
+ 		panic("Error handler thread not present at %p %p %s %d",
+ 		      scmd, scmd->device->host, __FILE__, __LINE__);
+diff -puN include/scsi/scsi.h~scsi-rename-TIMEOUT include/scsi/scsi.h
+--- 25/include/scsi/scsi.h~scsi-rename-TIMEOUT	Tue Jan  6 14:37:24 2004
++++ 25-akpm/include/scsi/scsi.h	Tue Jan  6 14:37:54 2004
+@@ -302,7 +302,7 @@ struct scsi_lun {
+ #define QUEUED          0x2004
+ #define SOFT_ERROR      0x2005
+ #define ADD_TO_MLQUEUE  0x2006
+-#define TIMEOUT         0x2007
++#define SD_CMD_TIMEOUT  0x2007
+ 
+ /*
+  * Midlevel queue return values.
+
+_
