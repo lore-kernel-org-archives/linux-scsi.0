@@ -1,46 +1,89 @@
-From: Catalin Muresan <catalin.muresan@astral.ro>
-Subject: Re: Apple Xserve RAID and qlogic ISP2312 (qla2300)
-Date: Fri, 29 Oct 2004 12:01:09 +0300
+From: mclark@metaparadigm.com
+Subject: [2.6.9 PATCH] blacklist device don't use SYNCHRONIZE_CACHE
+Date: Fri, 29 Oct 2004 18:22:15 +0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20041029090109.GG6671@astral.ro>
-References: <20041027233321.GA842@astral.ro> <20041028143734.GA16358@beaverton.ibm.com> <20041028153522.GC1915@astral.ro> <20041028164210.GA16905@beaverton.ibm.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Message-ID: <E1CNTtf-0007Nq-00@localhost>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from dummy.cluj.astral.ro ([193.230.240.25]:33692 "EHLO
-	cnn.astral.ro") by vger.kernel.org with ESMTP id S263171AbUJ2JHR
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 29 Oct 2004 05:07:17 -0400
-Content-Disposition: inline
-In-Reply-To: <20041028164210.GA16905@beaverton.ibm.com>
+Received: from gort.metaparadigm.com ([203.117.131.12]:41886 "EHLO
+	gort.metaparadigm.com") by vger.kernel.org with ESMTP
+	id S263217AbUJ2KVV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 29 Oct 2004 06:21:21 -0400
+Received: from localhost (unknown [127.0.0.1])
+	by gort.metaparadigm.com (Postfix) with ESMTP id B1D7C1ACFD
+	for <linux-scsi@vger.kernel.org>; Fri, 29 Oct 2004 18:21:19 +0800 (SGT)
+Received: from gort.metaparadigm.com ([127.0.0.1])
+ by localhost (gort [127.0.0.1]) (amavisd-new, port 10024) with ESMTP
+ id 09159-02 for <linux-scsi@vger.kernel.org>;
+ Fri, 29 Oct 2004 18:21:19 +0800 (SGT)
+Received: from localhost (monty-ath0.metaparadigm.com [10.1.0.59])
+	by gort.metaparadigm.com (Postfix) with ESMTP id 6AF821ACCD
+	for <linux-scsi@vger.kernel.org>; Fri, 29 Oct 2004 18:21:19 +0800 (SGT)
+Received: from mclark by localhost with local (Exim 3.36 #1 (Debian))
+	id 1CNTtf-0007Nq-00
+	for <linux-scsi@vger.kernel.org>; Fri, 29 Oct 2004 18:22:15 +0800
 List-Id: linux-scsi@vger.kernel.org
-To: Patrick Mansfield <patmans@us.ibm.com>
-Cc: James Bottomley <James.Bottomley@steeleye.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>, linux-scsi@vger.kernel.org, bogdan.luca@astral.ro
+To: linux-scsi@vger.kernel.org
 
-On Thu, Oct 28, 2004 at 09:42:10AM -0700, Patrick Mansfield wrote:
- > What tricks and ugly patch? I haven't tried boot via qlogic on an HS20.
+Adds a flag to the SCSI blacklist infrastructure to allow marking
+devices we shouldn't send a SYNCRONIZE_CACHE command to.
+Adds the Chaparral JFS224 to the blacklist with this flag.
 
-	trick: echo "scsi add-single-device 0 0 0 5" > /proc/scsi/scsi
-	ugly patch, only to help me get past this issue:
+Signed-off-by: Michael Clark <michael@metaparadigm.com>
 
---- linux-2.6.9-orig/drivers/scsi/scsi_scan.c	2004-10-19 00:54:55.000000000 +0300
-+++ linux-2.6.9/drivers/scsi/scsi_scan.c	2004-10-28 14:53:28.355982680 +0300
-@@ -1199,7 +1199,7 @@
- 			 */
- 			scsi_sequential_lun_scan(shost, channel, id, bflags,
- 				       	res, sdev->scsi_level, rescan);
--	} else if (res == SCSI_SCAN_TARGET_PRESENT) {
-+	} else if (res == SCSI_SCAN_TARGET_PRESENT || res == SCSI_SCAN_NO_RESPONSE) {
- 		/*
- 		 * There's a target here, but lun 0 is offline so we
- 		 * can't use the report_lun scan.  Fall back to a
-
-
-
- > 
- > -- Patrick Mansfield
-
--- 
- Catalin Muresan
- ASTRAL Internet & Data
- Technology Manager
+diff -ur linux-2.6.9.orig/drivers/scsi/scsi_devinfo.c linux-2.6.9.edited/drivers/scsi/scsi_devinfo.c
+--- linux-2.6.9.orig/drivers/scsi/scsi_devinfo.c	2004-10-29 15:33:38.000000000 +0800
++++ linux-2.6.9.edited/drivers/scsi/scsi_devinfo.c	2004-10-29 16:35:53.000000000 +0800
+@@ -125,6 +125,7 @@
+ 	{"CMD", "CRA-7280", NULL, BLIST_SPARSELUN},	/* CMD RAID Controller */
+ 	{"CNSI", "G7324", NULL, BLIST_SPARSELUN},	/* Chaparral G7324 RAID */
+ 	{"CNSi", "G8324", NULL, BLIST_SPARSELUN},	/* Chaparral G8324 RAID */
++	{"CNSi", "JFS224", NULL, BLIST_SPARSELUN | BLIST_NO_SYNC_CACHE},
+ 	{"COMPAQ", "LOGICAL VOLUME", NULL, BLIST_FORCELUN},
+ 	{"COMPAQ", "CR3500", NULL, BLIST_FORCELUN},
+ 	{"COMPAQ", "MSA1000", NULL, BLIST_SPARSELUN | BLIST_NOSTARTONADD},
+diff -ur linux-2.6.9.orig/drivers/scsi/scsi_scan.c linux-2.6.9.edited/drivers/scsi/scsi_scan.c
+--- linux-2.6.9.orig/drivers/scsi/scsi_scan.c	2004-10-29 16:00:22.000000000 +0800
++++ linux-2.6.9.edited/drivers/scsi/scsi_scan.c	2004-10-29 16:02:51.000000000 +0800
+@@ -668,6 +668,9 @@
+ 	if (*bflags & BLIST_NOT_LOCKABLE)
+ 		sdev->lockable = 0;
+ 
++	if (*bflags & BLIST_NO_SYNC_CACHE)
++		sdev->no_sync_cache = 1;
++
+ 	if(sdev->host->hostt->slave_configure)
+ 		sdev->host->hostt->slave_configure(sdev);
+ 
+diff -ur linux-2.6.9.orig/drivers/scsi/sd.c linux-2.6.9.edited/drivers/scsi/sd.c
+--- linux-2.6.9.orig/drivers/scsi/sd.c	2004-10-29 08:38:09.000000000 +0800
++++ linux-2.6.9.edited/drivers/scsi/sd.c	2004-10-29 15:59:50.000000000 +0800
+@@ -1560,6 +1560,9 @@
+ 	if (!sdkp->WCE)
+ 		return;
+ 
++	if(sdp->no_sync_cache)
++		return;
++
+ 	printk(KERN_NOTICE "Synchronizing SCSI cache for disk %s: \n",
+ 			sdkp->disk->disk_name);
+ 	sd_sync_cache(sdp);
+diff -ur linux-2.6.9.orig/include/scsi/scsi_device.h linux-2.6.9.edited/include/scsi/scsi_device.h
+--- linux-2.6.9.orig/include/scsi/scsi_device.h	2004-10-29 15:52:57.000000000 +0800
++++ linux-2.6.9.edited/include/scsi/scsi_device.h	2004-10-29 16:32:58.000000000 +0800
+@@ -106,6 +106,7 @@
+ 	unsigned use_192_bytes_for_3f:1; /* ask for 192 bytes from page 0x3f */
+ 	unsigned no_start_on_add:1;	/* do not issue start on add */
+ 	unsigned allow_restart:1; /* issue START_UNIT in error handler */
++	unsigned no_sync_cache:1;	/* do not issue SYNCRONIZE_CACHE */
+ 
+ 	unsigned int device_blocked;	/* Device returned QUEUE_FULL. */
+ 
+diff -ur linux-2.6.9.orig/include/scsi/scsi_devinfo.h linux-2.6.9.edited/include/scsi/scsi_devinfo.h
+--- linux-2.6.9.orig/include/scsi/scsi_devinfo.h	2004-10-29 15:34:52.000000000 +0800
++++ linux-2.6.9.edited/include/scsi/scsi_devinfo.h	2004-10-29 15:47:43.000000000 +0800
+@@ -25,4 +25,5 @@
+  					   (if HBA supports more than 8 LUNs) */
+ #define BLIST_NOREPORTLUN	0x40000	/* don't try REPORT_LUNS scan (SCSI-3 devs) */
+ #define BLIST_NOT_LOCKABLE	0x80000	/* don't use PREVENT-ALLOW commands */
++#define BLIST_NO_SYNC_CACHE	0x100000 /* don't use SYNCHRONIZE_CACHE commands */
+ #endif
