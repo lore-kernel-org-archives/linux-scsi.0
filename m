@@ -1,56 +1,38 @@
-From: "Ranade, Prakash" <prakashr@intgroup.com>
+From: Mike Dresser <mdresser_l@windsormachine.com>
 Subject: RE: how to connect 2 nodes to a SCSI disk (cabinet)
-Date: Fri, 20 Jun 2003 11:59:09 -0500
+Date: Fri, 20 Jun 2003 13:09:24 -0400 (EDT)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <7F2171947E956F4ABE17D12CA19617B40279BF@intermarksrv001.intermark.local>
+Message-ID: <Pine.LNX.4.33.0306201308130.838-100000@router.windsormachine.com>
+References: <7F2171947E956F4ABE17D12CA19617B40279C0@intermarksrv001.intermark.local>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gw.intgroup.com ([65.83.52.2]:7810 "HELO
-	intermarksrv001.intermark.local") by vger.kernel.org with SMTP
-	id S263376AbTFTQpK convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 20 Jun 2003 12:45:10 -0400
-content-class: urn:content-classes:message
+Received: from windsormachine.com ([206.48.122.28]:19211 "EHLO
+	router.windsormachine.com") by vger.kernel.org with ESMTP
+	id S263528AbTFTQz2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 20 Jun 2003 12:55:28 -0400
+In-Reply-To: <7F2171947E956F4ABE17D12CA19617B40279C0@intermarksrv001.intermark.local>
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Dresser <mdresser_l@windsormachine.com>
+To: "Ranade, Prakash" <prakashr@intgroup.com>
 Cc: linux-scsi@vger.kernel.org
-
-but how does it work then ...coz there is no termination ....
-
-Prakash S. Ranade
-OCP - Oracle Certified DBA 8i, 9i
-205 776 2320
-
-"Lets document it and call it a feature"
-
-
------Original Message-----
-From: Mike Dresser [mailto:mdresser_l@windsormachine.com]
-Sent: Friday, June 20, 2003 11:57 AM
-To: Ranade, Prakash
-Cc: linux-scsi@vger.kernel.org
-Subject: RE: how to connect 2 nodes to a SCSI disk (cabinet)
-
 
 
 
 On Fri, 20 Jun 2003, Ranade, Prakash wrote:
 
-> node1 and node2 both running redhat linux 7.2...both have Adaptec scsi card in it...scsi disk is  DataSilo DS-100 (see attached manual) using Seagate HD.
-> node1:scsi id = 14 - scsi termination is disabled
-> node1:scsi id = 15 - scsi termination is automatic (i tried all enabled/disabled/automatic nothing works)
-> external scsi disk id = 0
->
-> node 1 							node 2
-> 	|							|
-> 	|							|
-> 	---------external SCSI drive---------------
->
+> isent it true that...
+> you cannot have two seperate SCSI controllers trying to maintain the same bus.They will fight..for same bus?
 
-Any internal connections on either SCSI card?
+You can have multiple controllers on the same bus.
 
-If not, set both node's to enabled scsi termination.
+As for the termination question, you only terminate at the ends.  So if
+you have  Card - Storage - Card, you need to set the termination to
+enabled on both cards.
+
+If you had InternalDrive - Card - Storage - Card, you'd set the
+termination on the internaldrive(which would normally be done with the
+cableing there), and then on the Card on the other end, but the first card
+would not have termination set at all.
 
 Mike
 
