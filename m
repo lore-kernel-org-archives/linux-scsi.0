@@ -1,22 +1,38 @@
-From: Duncan Gibb <duncangibb@uk.dmgworldmedia.com>
-Subject: Re: aic79xx U320 + e1000 Intel hangs on Idual Xeon 7505
-Date: 09 Apr 2003 16:47:43 +0100
+From: "Cress, Andrew R" <andrew.r.cress@intel.com>
+Subject: RE: aic79xx U320 + e1000 Intel hangs on Idual Xeon 7505
+Date: Wed, 9 Apr 2003 12:26:41 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1049903264.16881.48.camel@astrognat>
+Message-ID: <A5974D8E5F98D511BB910002A50A66470580D766@hdsmsx103.hd.intel.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="=-OvuouTJmRxqBnTGhi2eY"
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [217.169.3.187] ([217.169.3.187]:33159 "EHLO
-	localhost.localdomain") by vger.kernel.org with ESMTP
-	id S263522AbTDIPgb (for <rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Apr 2003 11:36:31 -0400
+Received: from fmr02.intel.com ([192.55.52.25]:18143 "EHLO
+	caduceus.fm.intel.com") by vger.kernel.org with ESMTP
+	id S263732AbTDITLB (for <rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Apr 2003 15:11:01 -0400
+Received: from talaria.fm.intel.com (talaria.fm.intel.com [10.1.192.39])
+	by caduceus.fm.intel.com (8.11.6p2/8.11.6/d: outer.mc,v 1.51 2002/09/23 20:43:23 dmccart Exp $) with ESMTP id h39JFji01617
+	for <linux-scsi@vger.kernel.org>; Wed, 9 Apr 2003 19:15:45 GMT
+Received: from fmsmsxvs041.fm.intel.com (fmsmsxvs041.fm.intel.com [132.233.42.126])
+	by talaria.fm.intel.com (8.11.6p2/8.11.6/d: inner.mc,v 1.28 2003/01/13 19:44:39 dmccart Exp $) with SMTP id h39JNqE13016
+	for <linux-scsi@vger.kernel.org>; Wed, 9 Apr 2003 19:23:52 GMT
 List-Id: linux-scsi@vger.kernel.org
-To: Rohit Gupta <rohit@davsys.com>
+To: 'Duncan Gibb' <duncangibb@uk.dmgworldmedia.com>, Rohit Gupta <rohit@davsys.com>
 Cc: linux-scsi@vger.kernel.org
 
+Duncan & Rohit,
 
---=-OvuouTJmRxqBnTGhi2eY
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+What version of the aic79xx driver is in that kernel?  I hope it is >=
+1.3.1?
+
+Andy
+
+-----Original Message-----
+From: Duncan Gibb [mailto:duncangibb@uk.dmgworldmedia.com] 
+Sent: Wednesday, April 09, 2003 11:48 AM
+To: Rohit Gupta
+Cc: linux-scsi@vger.kernel.org
+Subject: Re: aic79xx U320 + e1000 Intel hangs on Idual Xeon 7505
+
 
 A few days ago, you wrote:
 
@@ -58,252 +74,4 @@ Cheers
 
 
 Duncan
-
-
---=-OvuouTJmRxqBnTGhi2eY
-Content-Disposition: attachment; filename=var_log_messages__edited
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; name=var_log_messages__edited; charset=UTF-8
-
-Apr  9 14:22:06 localhost kernel: scsi1:0:2:0: Attempting to abort cmd f782=
-de00
-Apr  9 14:22:06 localhost kernel: >>>>>>>>>>>>>>>>>> Dump Card State Begins=
- <<<<<<<<<<<<<<<<<
-Apr  9 14:22:06 localhost kernel: scsi1: Dumping Card State at program addr=
-ess 0x1a4 Mode 0x33
-Apr  9 14:22:06 localhost kernel: Card was paused
-Apr  9 14:22:06 localhost kernel: HS_MAILBOX[0x0] INTCTL[0x80] SEQINTSTAT[0=
-x0] SAVED_MODE[0x11]
-Apr  9 14:22:06 localhost kernel: DFFSTAT[0x31] SCSISIGI[0x4] SCSIPHASE[0x0=
-] SCSIBUS[0x0]
-Apr  9 14:22:06 localhost kernel: LASTPHASE[0x1] SCSISEQ0[0x0] SCSISEQ1[0x1=
-2] SEQCTL0[0x10]
-Apr  9 14:22:06 localhost kernel: SEQINTCTL[0x0] SEQ_FLAGS[0x40] SEQ_FLAGS2=
-[0x0] SSTAT0[0x0]
-Apr  9 14:22:06 localhost kernel: SSTAT1[0x0] SSTAT2[0x0] SSTAT3[0x0] PERRD=
-IAG[0x0]
-Apr  9 14:22:06 localhost kernel: SIMODE1[0xac] LQISTAT0[0x0] LQISTAT1[0x0]=
- LQISTAT2[0x0]
-Apr  9 14:22:06 localhost kernel: LQOSTAT0[0x0] LQOSTAT1[0x0] LQOSTAT2[0x0]
-Apr  9 14:22:06 localhost kernel:
-Apr  9 14:22:06 localhost kernel: SCB Count =3D 4 CMDS_PENDING =3D 1 LASTSC=
-B 0x2 CURRSCB 0x2 NEXTSCB 0x0
-Apr  9 14:22:06 localhost kernel: qinstart =3D 10969 qinfifonext =3D 10970
-Apr  9 14:22:06 localhost kernel: QINFIFO: 0x3
-Apr  9 14:22:06 localhost kernel: WAITING_TID_QUEUES:
-Apr  9 14:22:06 localhost kernel: Pending list:
-Apr  9 14:22:06 localhost kernel:   3 SCB_CONTROL[0x48] SCB_SCSIID[0x27] SC=
-B_TAG[0x3]
-Apr  9 14:22:06 localhost kernel:   2 SCB_CONTROL[0x0] SCB_SCSIID[0x37] SCB=
-_TAG[0x2]
-Apr  9 14:22:06 localhost kernel: Total 2
-Apr  9 14:22:06 localhost kernel: Kernel Free SCB list: 1 0
-Apr  9 14:22:06 localhost kernel: Sequencer Complete DMA-inprog list:
-Apr  9 14:22:06 localhost kernel: Sequencer Complete list:
-Apr  9 14:22:06 localhost kernel: Sequencer DMA-Up and Complete list:
-Apr  9 14:22:06 localhost kernel:
-Apr  9 14:22:06 localhost kernel: scsi1: FIFO0 Free, LONGJMP =3D=3D 0x80ff,=
- SCB 0x0, LJSCB 0xff00
-Apr  9 14:22:06 localhost kernel: SEQIMODE[0x3f] SEQINTSRC[0x0] DFCNTRL[0x0=
-] DFSTATUS[0x89]
-Apr  9 14:22:06 localhost kernel: SG_CACHE_SHADOW[0x2] SG_STATE[0x0] DFFSXF=
-RCTL[0x0]
-Apr  9 14:22:06 localhost kernel: SOFFCNT[0x0] MDFFSTAT[0x5] SHADDR =3D 0x0=
-0, SHCNT =3D 0x0
-Apr  9 14:22:06 localhost kernel: HADDR =3D 0x00, HCNT =3D 0x0 CCSGCTL[0x10=
-]
-Apr  9 14:22:06 localhost kernel: scsi1: FIFO1 Free, LONGJMP =3D=3D 0x81e8,=
- SCB 0x3, LJSCB 0x2
-Apr  9 14:22:06 localhost kernel: SEQIMODE[0x3f] SEQINTSRC[0x0] DFCNTRL[0x0=
-] DFSTATUS[0x89]
-Apr  9 14:22:06 localhost kernel: SG_CACHE_SHADOW[0x2] SG_STATE[0x0] DFFSXF=
-RCTL[0x0]
-Apr  9 14:22:06 localhost kernel: SOFFCNT[0x0] MDFFSTAT[0x5] SHADDR =3D 0x0=
-0, SHCNT =3D 0x0
-Apr  9 14:22:06 localhost kernel: HADDR =3D 0x00, HCNT =3D 0x0 CCSGCTL[0x10=
-]
-Apr  9 14:22:06 localhost kernel: LQIN: 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0=
- 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0
-Apr  9 14:22:06 localhost kernel: scsi1: LQISTATE =3D 0x0, LQOSTATE =3D 0x0=
-, OPTIONMODE =3D 0x42
-Apr  9 14:22:06 localhost kernel: scsi1: OS_SPACE_CNT =3D 0x20 MAXCMDCNT =
-=3D 0x0
-Apr  9 14:22:06 localhost kernel: SIMODE0[0xc]
-Apr  9 14:22:06 localhost kernel: CCSCBCTL[0x0]
-Apr  9 14:22:06 localhost kernel: scsi1: REG0 =3D=3D 0x3, SINDEX =3D 0x133,=
- DINDEX =3D 0x108
-Apr  9 14:22:06 localhost kernel: scsi1: SCBPTR =3D=3D 0x2, SCB_NEXT =3D=3D=
- 0xff00, SCB_NEXT2 =3D=3D 0xfffd
-Apr  9 14:22:06 localhost kernel: CDB 3 0 0 0 20 0
-Apr  9 14:22:06 localhost kernel: STACK: 0xdd 0x0 0x0 0x0 0x0 0x0 0x0 0x2e
-Apr  9 14:22:06 localhost kernel: <<<<<<<<<<<<<<<<< Dump Card State Ends >>=
->>>>>>>>>>>>>>>>
-Apr  9 14:22:06 localhost kernel: DevQ(0:2:0): 0 waiting
-Apr  9 14:22:06 localhost kernel: DevQ(0:3:0): 0 waiting
-Apr  9 14:22:06 localhost kernel: DevQ(0:6:0): 0 waiting
-Apr  9 14:22:06 localhost kernel: scsi1:0:2:0: Cmd aborted from QINFIFO
-Apr  9 14:22:16 localhost kernel: scsi1:0:2:0: Attempting to abort cmd f782=
-de00
-Apr  9 14:22:16 localhost kernel: >>>>>>>>>>>>>>>>>> Dump Card State Begins=
- <<<<<<<<<<<<<<<<<
-Apr  9 14:22:16 localhost kernel: scsi1: Dumping Card State at program addr=
-ess 0x1a4 Mode 0x33
-Apr  9 14:22:16 localhost kernel: Card was paused
-Apr  9 14:22:16 localhost kernel: HS_MAILBOX[0x0] INTCTL[0x80] SEQINTSTAT[0=
-x0] SAVED_MODE[0x11]
-Apr  9 14:22:16 localhost kernel: DFFSTAT[0x31] SCSISIGI[0x4] SCSIPHASE[0x0=
-] SCSIBUS[0x0]
-Apr  9 14:22:16 localhost kernel: LASTPHASE[0x1] SCSISEQ0[0x0] SCSISEQ1[0x1=
-2] SEQCTL0[0x10]
-Apr  9 14:22:16 localhost kernel: SEQINTCTL[0x0] SEQ_FLAGS[0x40] SEQ_FLAGS2=
-[0x0] SSTAT0[0x0]
-Apr  9 14:22:16 localhost kernel: SSTAT1[0x0] SSTAT2[0x0] SSTAT3[0x0] PERRD=
-IAG[0x0]
-Apr  9 14:22:16 localhost kernel: SIMODE1[0xac] LQISTAT0[0x0] LQISTAT1[0x0]=
- LQISTAT2[0x0]
-Apr  9 14:22:16 localhost kernel: LQOSTAT0[0x0] LQOSTAT1[0x0] LQOSTAT2[0x0]
-Apr  9 14:22:16 localhost kernel:
-Apr  9 14:22:16 localhost kernel: SCB Count =3D 4 CMDS_PENDING =3D 1 LASTSC=
-B 0x2 CURRSCB 0x2 NEXTSCB 0x0
-Apr  9 14:22:16 localhost kernel: qinstart =3D 10969 qinfifonext =3D 10970
-Apr  9 14:22:16 localhost kernel: QINFIFO: 0x3
-Apr  9 14:22:16 localhost kernel: WAITING_TID_QUEUES:
-Apr  9 14:22:16 localhost kernel: Pending list:
-Apr  9 14:22:16 localhost kernel:   3 SCB_CONTROL[0x48] SCB_SCSIID[0x27] SC=
-B_TAG[0x3]
-Apr  9 14:22:16 localhost kernel:   2 SCB_CONTROL[0x0] SCB_SCSIID[0x37] SCB=
-_TAG[0x2]
-Apr  9 14:22:16 localhost kernel: Total 2
-Apr  9 14:22:16 localhost kernel: Kernel Free SCB list: 1 0
-Apr  9 14:22:16 localhost kernel: Sequencer Complete DMA-inprog list:
-Apr  9 14:22:16 localhost kernel: Sequencer Complete list:
-Apr  9 14:22:16 localhost kernel: Sequencer DMA-Up and Complete list:
-Apr  9 14:22:16 localhost kernel:
-Apr  9 14:22:16 localhost kernel: scsi1: FIFO0 Free, LONGJMP =3D=3D 0x80ff,=
- SCB 0x0, LJSCB 0xff00
-Apr  9 14:22:16 localhost kernel: SEQIMODE[0x3f] SEQINTSRC[0x0] DFCNTRL[0x0=
-] DFSTATUS[0x89]
-Apr  9 14:22:16 localhost kernel: SG_CACHE_SHADOW[0x2] SG_STATE[0x0] DFFSXF=
-RCTL[0x0]
-Apr  9 14:22:16 localhost kernel: SOFFCNT[0x0] MDFFSTAT[0x5] SHADDR =3D 0x0=
-0, SHCNT =3D 0x0
-Apr  9 14:22:16 localhost kernel: HADDR =3D 0x00, HCNT =3D 0x0 CCSGCTL[0x10=
-]
-Apr  9 14:22:16 localhost kernel: scsi1: FIFO1 Free, LONGJMP =3D=3D 0x81e8,=
- SCB 0x3, LJSCB 0x2
-Apr  9 14:22:16 localhost kernel: SEQIMODE[0x3f] SEQINTSRC[0x0] DFCNTRL[0x0=
-] DFSTATUS[0x89]
-Apr  9 14:22:16 localhost kernel: SG_CACHE_SHADOW[0x2] SG_STATE[0x0] DFFSXF=
-RCTL[0x0]
-Apr  9 14:22:16 localhost kernel: SOFFCNT[0x0] MDFFSTAT[0x5] SHADDR =3D 0x0=
-0, SHCNT =3D 0x0
-Apr  9 14:22:16 localhost kernel: HADDR =3D 0x00, HCNT =3D 0x0 CCSGCTL[0x10=
-]
-Apr  9 14:22:16 localhost kernel: LQIN: 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0=
- 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0
-Apr  9 14:22:16 localhost kernel: scsi1: LQISTATE =3D 0x0, LQOSTATE =3D 0x0=
-, OPTIONMODE =3D 0x42
-Apr  9 14:22:16 localhost kernel: scsi1: OS_SPACE_CNT =3D 0x20 MAXCMDCNT =
-=3D 0x0
-Apr  9 14:22:16 localhost kernel: SIMODE0[0xc]
-Apr  9 14:22:16 localhost kernel: CCSCBCTL[0x0]
-Apr  9 14:22:16 localhost kernel: scsi1: REG0 =3D=3D 0x3, SINDEX =3D 0x133,=
- DINDEX =3D 0x108
-Apr  9 14:22:16 localhost kernel: scsi1: SCBPTR =3D=3D 0x2, SCB_NEXT =3D=3D=
- 0xff00, SCB_NEXT2 =3D=3D 0xfffd
-Apr  9 14:22:16 localhost kernel: CDB 3 0 0 0 20 0
-Apr  9 14:22:16 localhost kernel: STACK: 0xdd 0x0 0x0 0x0 0x0 0x0 0x0 0x2e
-Apr  9 14:22:16 localhost kernel: <<<<<<<<<<<<<<<<< Dump Card State Ends >>=
->>>>>>>>>>>>>>>>
-Apr  9 14:22:16 localhost kernel: DevQ(0:2:0): 0 waiting
-Apr  9 14:22:16 localhost kernel: DevQ(0:3:0): 0 waiting
-Apr  9 14:22:16 localhost kernel: DevQ(0:6:0): 0 waiting
-Apr  9 14:22:16 localhost kernel: scsi1:0:2:0: Cmd aborted from QINFIFO
-Apr  9 14:22:16 localhost kernel: scsi1:0:3:0: Attempting to abort cmd f782=
-da00
-Apr  9 14:22:16 localhost kernel: >>>>>>>>>>>>>>>>>> Dump Card State Begins=
- <<<<<<<<<<<<<<<<<
-Apr  9 14:22:16 localhost kernel: scsi1: Dumping Card State at program addr=
-ess 0x1a4 Mode 0x33
-Apr  9 14:22:16 localhost kernel: Card was paused
-Apr  9 14:22:16 localhost kernel: HS_MAILBOX[0x0] INTCTL[0x80] SEQINTSTAT[0=
-x0] SAVED_MODE[0x11]
-Apr  9 14:22:16 localhost kernel: DFFSTAT[0x31] SCSISIGI[0x4] SCSIPHASE[0x0=
-] SCSIBUS[0x0]
-Apr  9 14:22:16 localhost kernel: LASTPHASE[0x1] SCSISEQ0[0x0] SCSISEQ1[0x1=
-2] SEQCTL0[0x10]
-Apr  9 14:22:16 localhost kernel: SEQINTCTL[0x0] SEQ_FLAGS[0x40] SEQ_FLAGS2=
-[0x0] SSTAT0[0x0]
-Apr  9 14:22:16 localhost kernel: SSTAT1[0x0] SSTAT2[0x0] SSTAT3[0x0] PERRD=
-IAG[0x0]
-Apr  9 14:22:16 localhost kernel: SIMODE1[0xac] LQISTAT0[0x0] LQISTAT1[0x0]=
- LQISTAT2[0x0]
-Apr  9 14:22:16 localhost kernel: LQOSTAT0[0x0] LQOSTAT1[0x0] LQOSTAT2[0x0]
-Apr  9 14:22:16 localhost kernel:
-Apr  9 14:22:16 localhost kernel: SCB Count =3D 4 CMDS_PENDING =3D 1 LASTSC=
-B 0x2 CURRSCB 0x2 NEXTSCB 0x0
-Apr  9 14:22:16 localhost kernel: qinstart =3D 10969 qinfifonext =3D 10969
-Apr  9 14:22:16 localhost kernel: QINFIFO:
-Apr  9 14:22:16 localhost kernel: WAITING_TID_QUEUES:
-Apr  9 14:22:16 localhost kernel: Pending list:
-Apr  9 14:22:16 localhost kernel:   2 SCB_CONTROL[0x0] SCB_SCSIID[0x37] SCB=
-_TAG[0x2]
-Apr  9 14:22:16 localhost kernel: Total 1
-Apr  9 14:22:16 localhost kernel: Kernel Free SCB list: 3 1 0
-Apr  9 14:22:16 localhost kernel: Sequencer Complete DMA-inprog list:
-Apr  9 14:22:16 localhost kernel: Sequencer Complete list:
-Apr  9 14:22:16 localhost kernel: Sequencer DMA-Up and Complete list:
-Apr  9 14:22:16 localhost kernel:
-Apr  9 14:22:16 localhost kernel: scsi1: FIFO0 Free, LONGJMP =3D=3D 0x80ff,=
- SCB 0x0, LJSCB 0xff00
-Apr  9 14:22:16 localhost kernel: SEQIMODE[0x3f] SEQINTSRC[0x0] DFCNTRL[0x0=
-] DFSTATUS[0x89]
-Apr  9 14:22:16 localhost kernel: SG_CACHE_SHADOW[0x2] SG_STATE[0x0] DFFSXF=
-RCTL[0x0]
-Apr  9 14:22:16 localhost kernel: SOFFCNT[0x0] MDFFSTAT[0x5] SHADDR =3D 0x0=
-0, SHCNT =3D 0x0
-Apr  9 14:22:16 localhost kernel: HADDR =3D 0x00, HCNT =3D 0x0 CCSGCTL[0x10=
-]
-Apr  9 14:22:16 localhost kernel: scsi1: FIFO1 Free, LONGJMP =3D=3D 0x81e8,=
- SCB 0x3, LJSCB 0x2
-Apr  9 14:22:16 localhost kernel: SEQIMODE[0x3f] SEQINTSRC[0x0] DFCNTRL[0x0=
-] DFSTATUS[0x89]
-Apr  9 14:22:16 localhost kernel: SG_CACHE_SHADOW[0x2] SG_STATE[0x0] DFFSXF=
-RCTL[0x0]
-Apr  9 14:22:16 localhost kernel: SOFFCNT[0x0] MDFFSTAT[0x5] SHADDR =3D 0x0=
-0, SHCNT =3D 0x0
-Apr  9 14:22:16 localhost kernel: HADDR =3D 0x00, HCNT =3D 0x0 CCSGCTL[0x10=
-]
-Apr  9 14:22:16 localhost kernel: LQIN: 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0=
- 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0
-Apr  9 14:22:16 localhost kernel: scsi1: LQISTATE =3D 0x0, LQOSTATE =3D 0x0=
-, OPTIONMODE =3D 0x42
-Apr  9 14:22:16 localhost kernel: scsi1: OS_SPACE_CNT =3D 0x20 MAXCMDCNT =
-=3D 0x0
-Apr  9 14:22:16 localhost kernel: SIMODE0[0xc]
-Apr  9 14:22:16 localhost kernel: CCSCBCTL[0x0]
-Apr  9 14:22:16 localhost kernel: scsi1: REG0 =3D=3D 0x3, SINDEX =3D 0x133,=
- DINDEX =3D 0x108
-Apr  9 14:22:16 localhost kernel: scsi1: SCBPTR =3D=3D 0x2, SCB_NEXT =3D=3D=
- 0xff00, SCB_NEXT2 =3D=3D 0xfffd
-Apr  9 14:22:16 localhost kernel: CDB 3 0 0 0 20 0
-Apr  9 14:22:16 localhost kernel: STACK: 0xdd 0x0 0x0 0x0 0x0 0x0 0x0 0x2e
-Apr  9 14:22:16 localhost kernel: <<<<<<<<<<<<<<<<< Dump Card State Ends >>=
->>>>>>>>>>>>>>>>
-Apr  9 14:22:16 localhost kernel: DevQ(0:2:0): 0 waiting
-Apr  9 14:22:16 localhost kernel: DevQ(0:3:0): 0 waiting
-Apr  9 14:22:16 localhost kernel: DevQ(0:6:0): 0 waiting
-Apr  9 14:22:16 localhost kernel: scsi1:0:3:0: Unable to deliver message
-Apr  9 14:22:16 localhost kernel: Recovery code sleeping
-Apr  9 14:22:21 localhost kernel: Recovery code awake
-Apr  9 14:22:21 localhost kernel: Timer Expired
-Apr  9 14:22:21 localhost kernel: scsi1: Device reset returning 0x2003
-Apr  9 14:22:21 localhost kernel: Recovery code sleeping
-Apr  9 14:22:26 localhost kernel: Recovery code awake
-Apr  9 14:22:26 localhost kernel: Timer Expired
-Apr  9 14:22:26 localhost kernel: scsi1: Device reset returning 0x2003
-Apr  9 14:22:26 localhost kernel: Recovery SCB completes
-Apr  9 14:22:26 localhost kernel: Recovery SCB completes
-
---=-OvuouTJmRxqBnTGhi2eY--
 
