@@ -1,76 +1,102 @@
-From: Andrew Morton <akpm@digeo.com>
+From: Douglas Gilbert <dougg@torque.net>
 Subject: Re: Making sym-2 do 160 MB/sec
-Date: Wed, 19 Feb 2003 15:22:26 -0800
+Date: Thu, 20 Feb 2003 18:43:02 +1100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030219152226.07d381d6.akpm@digeo.com>
+Message-ID: <3E548706.1080004@torque.net>
 References: <20030219120639.3df58497.akpm@digeo.com>
-	<20030219231204.GA3705@beaverton.ibm.com>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=US-ASCII; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from digeo-nav01.digeo.com (digeo-nav01.digeo.com [192.168.1.233])
-	by packet.digeo.com (8.9.3+Sun/8.9.3) with SMTP id PAA03494
-	for <linux-scsi@vger.kernel.org>; Wed, 19 Feb 2003 15:24:41 -0800 (PST)
-In-Reply-To: <20030219231204.GA3705@beaverton.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Anderson <andmike@us.ibm.com>
+To: Andrew Morton <akpm@digeo.com>
 Cc: linux-scsi@vger.kernel.org
 
-Mike Anderson <andmike@us.ibm.com> wrote:
->
-> >  	 * Btw, 'period' is in tenths of nanoseconds.
-> >  	 */
-> >  	period = (4 * div_10M[0] + np->clock_khz - 1) / np->clock_khz;
-> > -	if	(period <= 250)		np->minsync = 10;
-> > +	if	(period == 250)		np->minsync = 9;
-> > +	else if	(period <= 250)		np->minsync = 10;
-> >  	else if	(period <= 303)		np->minsync = 11;
-> >  	else if	(period <= 500)		np->minsync = 12;
-> >  	else				np->minsync = (period + 40 - 1) / 40;
-> > 
-
-On reflection, the above code is fairly weird.  But it works..
-
-> I do not have one of these cards (and my docs are for older 53C chips)
-> so I may be mis-reading something, but if the values are to match the
-> spec I would have thought 9 would be for Fast-80.
+Andrew Morton wrote:
+> I have a machine here in which both the controller (53c1010) and the disk
+> (IBM IC35L036UCD210-0) can do FAST-80, but the sym2 driver only does FAST-40.
 > 
-> The SPI spec I have indicates that the transfer period factors should
-> be:
-> 	FAST-160	Period: 6.25 ns	Value: 8
-> 	FAST-80		Period: 12.5 ns	Value: 9
-> 	FAST-40		Period: 25 ns	Value: 10
-> 	FAST-40		Period: 30.3 ns	Value: 11
-> 	FAST-20		Period: 50 ns	Value: 12
+> The below patch fixes it up, and has been fearsomely tested.
+> 
+> Can anyone tell me whether it is right, and what is generally going on in
+> there?
+> 
+> 
+> diff -puN drivers/scsi/sym53c8xx_2/sym_hipd.c~sym-do-160 drivers/scsi/sym53c8xx_2/sym_hipd.c
+> --- 25-power4/drivers/scsi/sym53c8xx_2/sym_hipd.c~sym-do-160	2003-02-19 01:04:59.000000000 -0800
+> +++ 25-power4-akpm/drivers/scsi/sym53c8xx_2/sym_hipd.c	2003-02-19 01:05:13.000000000 -0800
+> @@ -800,7 +800,8 @@ static int sym_prepare_setting(hcb_p np,
+>  	 * Btw, 'period' is in tenths of nanoseconds.
+>  	 */
+>  	period = (4 * div_10M[0] + np->clock_khz - 1) / np->clock_khz;
+> -	if	(period <= 250)		np->minsync = 10;
+> +	if	(period == 250)		np->minsync = 9;
+> +	else if	(period <= 250)		np->minsync = 10;
+>  	else if	(period <= 303)		np->minsync = 11;
+>  	else if	(period <= 500)		np->minsync = 12;
+>  	else				np->minsync = (period + 40 - 1) / 40;
 
-Yes, certainly the `9' is the magic which yields FAST-80.
+Andrew,
+My Tekram 390U3W card attains "FAST-80" with a Fujitsu
+MAM3184MP disk. This is with the sym53c8xx_2 driver in
+2.5.62 . I haven't noticed any speed problems with earlier
+versions of the 2.5 series. lspci reports:
 
-But the thing is, at that point in the driver, `period' is 250.  I wonder
-where that algorithm to go from `period' to `np->minsync' came from.
+00:0c.0 SCSI storage controller: LSI Logic / Symbios Logic 53c1010
+      Ultra3 SCSI Adapter (rev 01)
+00:0c.1 SCSI storage controller: LSI Logic / Symbios Logic 53c1010
+      Ultra3 SCSI Adapter (rev 01)
 
-Judging by the comment "Btw, 'period' is in tenths of nanoseconds.", I need
-to go further into the driver and work out why it has decided that the period
-is 25 nSec.
+Here is some data from the sym53c8xx_2 driver:
 
-But note that the current code is:
+$ cat /proc/scsi/sym53c8xx/0
+Chip sym53c1010-33, device id 0x20, revision id 0x1
+On PCI bus 0, device 12, function 0, IRQ 11
+Min. period factor 9, Wide SCSI BUS, DT capable
+Max. started commands 510, max. commands per LUN 64
 
-	if	(period <= 250)		np->minsync = 10;
-	else if	(period <= 303)		np->minsync = 11;
-	else if	(period <= 500)		np->minsync = 12;
-	else				np->minsync = (period + 40 - 1) / 40;
+... and here is the relevant boot-up messages from
+my /var/log/messages :
 
-So even if `period' was one nanosecond, we'll still be stuck at FAST-40.
+sym.0.12.1: setting PCI_COMMAND_PARITY...
+sym0: <1010-33> rev 0x1 on pci bus 0 device 12 function 0 irq 11
+sym0: using 64 bit DMA addressing
+sym0: Symbios NVRAM, ID 7, Fast-80, LVD, parity checking
+sym0: open drain IRQ line driver, using on-chip SRAM
+sym0: using LOAD/STORE-based firmware.
+sym0: handling phase mismatch from SCRIPTS.
+sym0: SCSI BUS has been reset.
+sym1: <1010-33> rev 0x1 on pci bus 0 device 12 function 1 irq 11
+sym1: using 64 bit DMA addressing
+sym1: Symbios NVRAM, ID 7, Fast-80, SE, parity checking
+sym1: open drain IRQ line driver, using on-chip SRAM
+sym1: using LOAD/STORE-based firmware.
+sym1: handling phase mismatch from SCRIPTS.
+sym1: SCSI BUS has been reset.
+scsi0 : sym-2.1.16a
+   Vendor: FUJITSU   Model: MAM3184MP         Rev: 0105
+   Type:   Direct-Access                      ANSI SCSI revision: 03
+sym0:1:0: tagged command queuing enabled, command queue depth 16.
+sym0:1: FAST-80 WIDE SCSI 160.0 MB/s DT (12.5 ns, offset 62)
+scsi1 : sym-2.1.16a
+SCSI device sda: 35885344 512-byte hdwr sectors (18373 MB)
+SCSI device sda: drive cache: write back
+  sda: sda1 sda2 sda3 sda4 < sda5 >
+Attached scsi disk sda at scsi0, channel 0, id 1, lun 0
 
-So perhaps something has gone wrong here:
+Here is a snippet from my .config file:
 
-	if	(np->features & (FE_ULTRA3 | FE_ULTRA2))
-		np->clock_khz = 160000;
-	else if	(np->features & FE_ULTRA)
-		np->clock_khz = 80000;
-	else
-		np->clock_khz = 40000;
+CONFIG_SCSI_SYM53C8XX_2=y
+CONFIG_SCSI_SYM53C8XX_DMA_ADDRESSING_MODE=1
+CONFIG_SCSI_SYM53C8XX_DEFAULT_TAGS=16
+CONFIG_SCSI_SYM53C8XX_MAX_TAGS=64
+# CONFIG_SCSI_SYM53C8XX_IOMAPPED is not set
 
-and we need to add a "if (period <= 125)" clause there.
 
-I'll poke at it some more, thanks.
+Doug Gilbert
+
+
+
+
+
