@@ -1,55 +1,202 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] dpt_i2o changes for 2.6.2 kernel in support of 64 bit and bitrot (part 1)
-Date: Mon, 5 Apr 2004 21:47:03 +0100
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040405214703.A9782@infradead.org>
-References: <547AF3BD0F3F0B4CBDC379BAC7E4189F64F204@otce2k03.adaptec.com>
+From: James Bottomley <James.Bottomley@steeleye.com>
+Subject: Re: bug 2400
+Date: 05 Apr 2004 16:07:12 -0500
+Sender: linux-usb-devel-admin@lists.sourceforge.net
+Message-ID: <1081199233.2105.45.camel@mulgrave>
+References: <20040401131502.41136788.akpm@osdl.org>
+	<1080862354.2118.78.camel@mulgrave> <1080949016.1804.161.camel@mulgrave>
+	<20040404213307.A29446@beaverton.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from phoenix.infradead.org ([213.86.99.234]:10768 "EHLO
-	phoenix.infradead.org") by vger.kernel.org with ESMTP
-	id S263191AbUDEUrF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 5 Apr 2004 16:47:05 -0400
-Content-Disposition: inline
-In-Reply-To: <547AF3BD0F3F0B4CBDC379BAC7E4189F64F204@otce2k03.adaptec.com>; from mark_salyzyn@adaptec.com on Mon, Apr 05, 2004 at 01:56:12PM -0400
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-usb-devel-admin@lists.sourceforge.net>
+In-Reply-To: <20040404213307.A29446@beaverton.ibm.com>
+Errors-To: linux-usb-devel-admin@lists.sourceforge.net
+List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-devel>,
+	<mailto:linux-usb-devel-request@lists.sourceforge.net?subject=unsubscribe>
+List-Post: <mailto:linux-usb-devel@lists.sourceforge.net>
+List-Help: <mailto:linux-usb-devel-request@lists.sourceforge.net?subject=help>
+List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-devel>,
+	<mailto:linux-usb-devel-request@lists.sourceforge.net?subject=subscribe>
+List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=linux-usb-devel>
+To: Patrick Mansfield <patmans@us.ibm.com>
+Cc: Andrew Morton <akpm@osdl.org>, greg@kroah.com, Jens Axboe <axboe@suse.de>, linux-usb-devel@lists.sourceforge.net, SCSI Mailing List <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>
 
-On Mon, Apr 05, 2004 at 01:56:12PM -0400, Salyzyn, Mark wrote:
-> We need a means for an application to tell if a scsi device is currently
-> in use; one of in-error or with any I/O still pending or opened or
-> mounted. This is necessary to inform users of the RAID management
-> applications that the device is not to be adjusted.
+On Sun, 2004-04-04 at 23:33, Patrick Mansfield wrote:
+> How is unregister_cdrom(&cd->cdi) called if the device is not open?
 
-We had this a few times already.  If your applications wants to remove
-a volume it'll do exactly that, and that's expected behaviour in unix
-land where you have enough rope to shoot yourself in the foot.
+OK, the attached does everything correctly (as I should have done at
+first) by using a kobject to hold the compound references.
 
-> Unfortunately new members like struct scsi_disk::openers are
-> inaccessible to the scsi driver to indicate whether there are any
-> applications that have the scsi device open.
+I've stressed this one nicely.  Unfortunately, it's showing up a bug in
+scsi_sysfs (hold device open, remove it and re-add it at the same HCTL
+and you'll see an "error 1").
 
-Which is intentional as the opencount of one particular upperlevel driver
-has absolutely no meaning for a LLDD.
+James
 
-> Are there any suggestions, either for the application, or for the scsi
-> driver to meter disk in-use?
+===== drivers/scsi/sr.c 1.103 vs edited =====
+--- 1.103/drivers/scsi/sr.c	Fri Apr  2 11:30:44 2004
++++ edited/drivers/scsi/sr.c	Mon Apr  5 15:59:34 2004
+@@ -113,6 +113,28 @@
+ 	.generic_packet		= sr_packet,
+ };
+ 
++static void sr_kobject_release(struct kobject *kobj);
++
++static struct kobj_type scsi_cdrom_kobj_type = {
++	.release = sr_kobject_release,
++};
++
++/*
++ * The get and put routines for the struct scsi_cd.  Note this entity
++ * has a scsi_device pointer and owns a reference to this.
++ */
++static inline int scsi_cd_get(struct scsi_cd *cd)
++{
++	if (!kobject_get(&cd->kobj))
++		return -ENODEV;
++	return 0;
++}
++
++static inline void scsi_cd_put(struct scsi_cd *cd)
++{
++	kobject_put(&cd->kobj);
++}
++
+ /*
+  * This function checks to see if the media has been changed in the
+  * CDROM drive.  It is possible that we have already sensed a change,
+@@ -424,8 +446,15 @@
+ 
+ static int sr_block_release(struct inode *inode, struct file *file)
+ {
++	int ret;
+ 	struct scsi_cd *cd = scsi_cd(inode->i_bdev->bd_disk);
+-	return cdrom_release(&cd->cdi, file);
++	ret = cdrom_release(&cd->cdi, file);
++	if(ret)
++		return ret;
++	
++	scsi_cd_put(cd);
++
++	return 0;
+ }
+ 
+ static int sr_block_ioctl(struct inode *inode, struct file *file, unsigned cmd,
+@@ -467,7 +496,7 @@
+ 	struct scsi_device *sdev = cd->device;
+ 	int retval;
+ 
+-	retval = scsi_device_get(sdev);
++	retval = scsi_cd_get(cd);
+ 	if (retval)
+ 		return retval;
+ 	
+@@ -489,7 +518,7 @@
+ 	return 0;
+ 
+ error_out:
+-	scsi_device_put(sdev);
++	scsi_cd_put(cd);
+ 	return retval;	
+ }
+ 
+@@ -500,7 +529,6 @@
+ 	if (cd->device->sector_size > 2048)
+ 		sr_set_blocklength(cd, 2048);
+ 
+-	scsi_device_put(cd->device);
+ }
+ 
+ static int sr_probe(struct device *dev)
+@@ -514,12 +542,18 @@
+ 	if (sdev->type != TYPE_ROM && sdev->type != TYPE_WORM)
+ 		goto fail;
+ 
++	if ((err = scsi_device_get(sdev)) != 0)
++		goto fail_put_sdev;
++
+ 	error = -ENOMEM;
+ 	cd = kmalloc(sizeof(*cd), GFP_KERNEL);
+ 	if (!cd)
+ 		goto fail;
+ 	memset(cd, 0, sizeof(*cd));
+ 
++	kobject_init(&cd->kobj);
++	cd->kobj.ktype = &scsi_cdrom_kobj_type;
++
+ 	disk = alloc_disk(1);
+ 	if (!disk)
+ 		goto fail_free;
+@@ -588,6 +622,8 @@
+ 	put_disk(disk);
+ fail_free:
+ 	kfree(cd);
++fail_put_sdev:
++	scsi_device_put(sdev);
+ fail:
+ 	return error;
+ }
+@@ -863,19 +899,31 @@
+ 	return cgc->stat;
+ }
+ 
+-static int sr_remove(struct device *dev)
++static void sr_kobject_release(struct kobject *kobj)
+ {
+-	struct scsi_cd *cd = dev_get_drvdata(dev);
+-
+-	del_gendisk(cd->disk);
++	struct scsi_cd *cd = container_of(kobj, struct scsi_cd, kobj);
++	struct scsi_device *sdev = cd->device;
+ 
+ 	spin_lock(&sr_index_lock);
+ 	clear_bit(cd->disk->first_minor, sr_index_bits);
+ 	spin_unlock(&sr_index_lock);
+ 
+-	put_disk(cd->disk);
+ 	unregister_cdrom(&cd->cdi);
++
++	put_disk(cd->disk);
++
+ 	kfree(cd);
++
++	scsi_device_put(sdev);
++}
++
++static int sr_remove(struct device *dev)
++{
++	struct scsi_cd *cd = dev_get_drvdata(dev);
++
++	del_gendisk(cd->disk);
++
++	scsi_cd_put(cd);
+ 
+ 	return 0;
+ }
+===== drivers/scsi/sr.h 1.10 vs edited =====
+--- 1.10/drivers/scsi/sr.h	Mon May 26 04:50:43 2003
++++ edited/drivers/scsi/sr.h	Mon Apr  5 15:51:37 2004
+@@ -36,6 +36,9 @@
+ 	unsigned readcd_known:1;	/* drive supports READ_CD (0xbe) */
+ 	unsigned readcd_cdda:1;	/* reading audio data using READ_CD */
+ 	struct cdrom_device_info cdi;
++	/* We hold gendisk and scsi_device references on probe and use
++	 * the refs on this kobj to decide when to release them */
++	struct kobject kobj;
+ 	struct gendisk *disk;
+ } Scsi_CD;
+ 
 
-The simple answer is:  don't do it.
 
-> Without this, it is *impossible* for us to
-> support reliable native RAID management applications; a user application
-> should *never* be a source of an OS panic (whether it be someone
-> destroying the boot array, or simply a file system driver panicking when
-> a device no longer exists)
 
-A filesystem should not panic when the underlying device is offlines or
-removed.  At least XFS doesn't and if some other fs does file a bug
-against it.
-
-As for userland tools making the system unsuable, try a simple
-
-	cat /dev/zero > /dev/kmem
-
+-------------------------------------------------------
+This SF.Net email is sponsored by: IBM Linux Tutorials
+Free Linux tutorial presented by Daniel Robbins, President and CEO of
+GenToo technologies. Learn everything from fundamentals to system
+administration.http://ads.osdn.com/?ad_id=1470&alloc_id=3638&op=click
+_______________________________________________
+linux-usb-devel@lists.sourceforge.net
+To unsubscribe, use the last form field at:
+https://lists.sourceforge.net/lists/listinfo/linux-usb-devel
