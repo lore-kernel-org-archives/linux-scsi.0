@@ -1,44 +1,34 @@
-From: "Andrew Vasquez" <andrew.vasquez@qlogic.com>
-Subject: RE: [ANNOUNCE] QLogic qla2xxx driver update available (v8.00.00b6).
-Date: Thu, 6 Nov 2003 09:45:50 -0800
+From: Jens Axboe <axboe@suse.de>
+Subject: Re: [ANNOUNCE] QLogic qla2xxx driver update available (v8.00.00b6).
+Date: Thu, 6 Nov 2003 18:50:32 +0100
 Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <B179AE41C1147041AA1121F44614F0B0598CE6@AVEXCH02.qlogic.org>
+Message-ID: <20031106175032.GO437@suse.de>
+References: <B179AE41C1147041AA1121F44614F0B0598CE5@AVEXCH02.qlogic.org> <20031106171409.GN437@suse.de> <1068140592.5234.8.camel@laptop.fenrus.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
-content-class: urn:content-classes:message
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Linux-Kernel <linux-kernel@vger.kernel.org>, Linux-SCSI <linux-scsi@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1068140592.5234.8.camel@laptop.fenrus.com>
+To: Arjan van de Ven <arjanv@redhat.com>
+Cc: Andrew Vasquez <andrew.vasquez@qlogic.com>, Mike Anderson <andmike@us.ibm.com>, Linux-Kernel <linux-kernel@vger.kernel.org>, Linux-SCSI <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Christoph,
-
-> More comments:
+On Thu, Nov 06 2003, Arjan van de Ven wrote:
+> On Thu, 2003-11-06 at 18:14, Jens Axboe wrote:
 > 
->  - qla_vendor.c is still unused and should be killed
->
-
-Yes, more baggage from old failover code, we should be able to kill it.
-
->  - your ioctl API gets worse and worse.  You don't expect this huge
->  dungpile of ioctls all marked _BAD to be merged, do you?  
->
-
-No.  We've had this IOWR problem since the inception of 5.x series
-driver.  Software (SMS 3.0) has been built on top of the this IOCTL
-interface.  We painfully discovered this problem when we began to look
-at other non-x86 platforms (ppc64).
-
->  Also having different ioctl values for different plattforms is not
->  an option for Linux.
+> > They were there at the same time as Linux supported > 1GB IO at all. So
+> > that is incorrect, it's been there all along.
 > 
+> .... ia64
 
-The better (right) fix would be to push this interface change onto the
-caller of the IOCTLs where they can manage the differences there, and
-the driver could once and for all shed itself of this nagging problem.
-That is the consensus here.  The _BAD conversion was only done so the
-driver would compile.
+Yeah you are right, on 64-bit platforms that could have happened. I
+actually thought that CONTIGUOUS_BUFFERS took care of 4GB, but on
+checking it does not.
 
-Regards,
-Andrew Vasquez
+So clustering should have been disabled then (which in the in-kernel
+drive it is not). Now both 2.4 and 2.6 make that guarentee. The only
+argument for disabling clustering would be for 2.4 for CPU cycle
+reasons.
+
+-- 
+Jens Axboe
