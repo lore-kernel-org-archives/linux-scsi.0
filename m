@@ -1,57 +1,35 @@
-From: Pavel Machek <pavel@suse.cz>
-Subject: Re: [PATCH] SCSI midlayer power management
-Date: Thu, 12 Aug 2004 09:45:20 +0200
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] add spi attributes to qla1280
+Date: Thu, 12 Aug 2004 10:08:17 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040812074520.GE29466@elf.ucw.cz>
-References: <4119611D.60401@optonline.net> <20040811080935.GA26098@elf.ucw.cz> <411A1B72.1010302@optonline.net> <1092231462.2087.3.camel@mulgrave> <1092267400.2136.24.camel@gaston>
+Message-ID: <20040812100817.A5988@infradead.org>
+References: <20040810230552.GA26569@sgi.com> <20040811081118.A26256@infradead.org> <20040811215651.GA30821@sgi.com> <20040811230555.A984@infradead.org> <20040811221636.GA31154@sgi.com> <20040811232225.A1192@infradead.org> <20040812052924.GA33167@sgi.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gprs214-50.eurotel.cz ([160.218.214.50]:22916 "EHLO amd.ucw.cz")
-	by vger.kernel.org with ESMTP id S268448AbUHLHpl (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 12 Aug 2004 03:45:41 -0400
+Received: from imladris.demon.co.uk ([193.237.130.41]:15887 "EHLO
+	phoenix.infradead.org") by vger.kernel.org with ESMTP
+	id S268473AbUHLJIT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 12 Aug 2004 05:08:19 -0400
 Content-Disposition: inline
-In-Reply-To: <1092267400.2136.24.camel@gaston>
+In-Reply-To: <20040812052924.GA33167@sgi.com>; from jeremy@sgi.com on Wed, Aug 11, 2004 at 10:29:24PM -0700
 List-Id: linux-scsi@vger.kernel.org
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, Nathan Bryant <nbryant@optonline.net>, Linux SCSI Reflector <linux-scsi@vger.kernel.org>, Linux Kernel list <linux-kernel@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>
+To: Jeremy Higdon <jeremy@sgi.com>
+Cc: linux-scsi@vger.kernel.org
 
-Hi!
+On Wed, Aug 11, 2004 at 10:29:24PM -0700, Jeremy Higdon wrote:
+> On Wed, Aug 11, 2004 at 11:22:25PM +0100, Christoph Hellwig wrote:
+> > On Wed, Aug 11, 2004 at 03:16:36PM -0700, Jeremy Higdon wrote:
+> > > 
+> > > So I'll submit a patch to 2.6.8-rc4-mm1 then, if that's okay.
+> > 
+> > Sounds good.  While you're at it can you also fix the compilation
+> > error when the driver is compiled for port I/O instead of normal
+> > mmio (e.g. SGI ViswW), you broke that with your readb_relaxed changes.
+> 
+> Okay.  Here is the new rendition, based on 2.6.8-rc4-mm1, with the
+> fix for port I/O.  For sync period and offset, it seems that the
+> isp1040 is the same as the isp1280.
 
-> > Actually, the answer is to most intents and purposes "yes".  You are
-> > technically correct: there's no way to disable DMA in SCSI.  However,
-> > once a device is quiesced, it has no outstanding commands, so there will
-> > be no outstanding DMA to that device.  When all devices on a host have
-> > been quiesced, then there will be no DMA at all going on *except* if the
-> > user initiates any via another interface (like sending a device probe or
-> > doing a unit scan).  The guarantee should be strong enough for swsusp to
-> > proceed, but we can look at quiescing a host properly (however, we'd
-> > need to move to a better host state model than we currently possess).
-> 
-> Some hosts will continuously DMA to memory iirc.. I remember having a
-> problem with 53c8xx on some macs when transitionning from MacOS to Linux
-> because of that.
-> 
-> We need to properly quisce the host, but that's a per host driver thing
-> and shouldn't be too difficult.
-> 
-> Regarding suspend-to-disk, it's fairly easy for the sd driver not to
-> spin down the disk for S4 (only for S3). However, we will still probably
-> do at least a bus reset when waking up...
-> 
-> Pavel: That's one of the reason I wanted an argument to resume() too so
-> drivers can make a difference between the immediate wakeup that happens
-> for writing the image to disk, vs. the real wakeup on resume. In the first
-> case, SCSI can avoid the bus reset, and any kind of re-configuring, in the 
-> second case, the full stuff might be necessary. 
+Looks good to me.
 
-Hmm, and it can not be handled by "just remember why you were
-suspended", because it is one suspend, two resumes...
-
-Yes, I agree that argument will be usefull. Just who does all the
-driver updating? ;-).
-								Pavel
--- 
-People were complaining that M$ turns users into beta-testers...
-...jr ghea gurz vagb qrirybcref, naq gurl frrz gb yvxr vg gung jnl!
