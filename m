@@ -1,89 +1,70 @@
 From: Liran Schour <LIRANS@il.ibm.com>
 Subject: Re: bidirectional, long commands + OSD
-Date: Fri, 30 Jan 2004 00:37:44 +0200
+Date: Fri, 30 Jan 2004 12:39:12 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <OFF08D0FA1.3B48B6E9-ONC2256E2A.005B7FD5-42256E2A.007C4E35@il.ibm.com>
-References: <40190591.5060409@torque.net>
+Message-ID: <OF04DCDB82.2269D90E-ON42256E2B.003249AE-42256E2B.003A8576@il.ibm.com>
+References: <1075396141.2381.65.camel@mulgrave>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtagate6.uk.ibm.com ([195.212.29.139]:30935 "EHLO
-	mtagate6.uk.ibm.com") by vger.kernel.org with ESMTP id S263806AbUA3IwU
+Received: from mtagate7.uk.ibm.com ([195.212.29.140]:44457 "EHLO
+	mtagate7.uk.ibm.com") by vger.kernel.org with ESMTP id S262078AbUA3Kj4
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 30 Jan 2004 03:52:20 -0500
-Received: from d06nrmr1407.portsmouth.uk.ibm.com (d06nrmr1407.portsmouth.uk.ibm.com [9.149.38.185])
-	by mtagate6.uk.ibm.com (8.12.10/8.12.10) with ESMTP id i0U8qJZP031770
-	for <linux-scsi@vger.kernel.org>; Fri, 30 Jan 2004 08:52:19 GMT
-Received: from d10ml001.telaviv.ibm.com (d06av02.portsmouth.uk.ibm.com [9.149.37.228])
-	by d06nrmr1407.portsmouth.uk.ibm.com (8.12.10/NCO/VER6.6) with ESMTP id i0U8qGtQ074858
-	for <linux-scsi@vger.kernel.org>; Fri, 30 Jan 2004 08:52:16 GMT
-In-Reply-To: <40190591.5060409@torque.net>
+	Fri, 30 Jan 2004 05:39:56 -0500
+In-Reply-To: <1075396141.2381.65.camel@mulgrave>
 List-Id: linux-scsi@vger.kernel.org
-To: SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: dougg@torque.net, SCSI Mailing List <linux-scsi@vger.kernel.org>, linux-scsi-owner@vger.kernel.org
 
 
 
 
 
 
-Douglas Gilbert wrote in thread:
-   bidirectional, long commands + OSD
+James Bottomley wrote in thread:
+   bidirectional, long commands + OSD:
 
+>On Thu, 2004-01-29 at 11:08, Liran Schour wrote:
+>> A single buffer for both data in and data out will force the user to
+>> re-copy the buffer.
+>> We can solve it by using a scatter-gather list. Each buffer will have
+its
+>> own data
+>> direction flag.
 
->>>** The Object Storage Device (OSD) commands use bidirectional
->>>data transfers so perhaps we should think about catering for
->>>that.
->>
->>
->> Actually, a much more fundamental problem for OSD is going to be >16
->> byte CDBs.  The mid and block layers today are coded with an internal 16
->> byte array for the CDB.  That's not very scaleable to the hundreds of
->> bytes that OSD needs.
+>This is not necessarily true.  Just because it's a single buffer doesn't
+>mean that the read and write areas cannot be separated inside it.  The
+>actual implementation in most drivers uses a single data pointer, so if
+>the device starts with DATA IN and transitions to DATA OUT, you should
+>get the output data beginning directly after the input data.
 
-We can allow the upper layer driver to set the cmd_len and the cdb pointer
-to the
-desired length, the default will stay 16 byte.
+>I know the spec implies that you keep two data pointers (because the
+>device is allowed to do the DATA IN<->DATA OUT transition many times),
+>so possibly we can't get away with something simple as above, but
+>implementing separate data pointers would require modifying every
+>driver.
 
->Just did a check on recent drafts and SPC-3 doesn't have any
->commands with lengths > 16 bytes but SBC-2 has:
->    XDREAD(32)
->    XDWRITE(32)
->    XDWRITEREAD(32)
->    XPWRITE(32)
+Most of the HBAs today can't support execution of OSD SCSI commands due to
+the
+extended CDB's length and the bidirectional data movement. But when OSD
+technology
+will catch a momentum we will see more and more vendors that will support
+this features.
+My point is that maybe we can keep the current interface while expanding it
+to support
+the needed features by the SCSI OSD commands.
 
->> As far as bidirectional goes, we should be able to support that today
->> providing there's just a *single* data buffer, which the OSD spec
->> implies is the easiest way to support this (although I suspect most SCSI
->> processor coding won't be expecting to see both a data in and a data out
->> from a single command).
+>which OSD devices have you used?  Just ISCSI one's, I assume; what do
+>they do with the data in/out transitions?
 
->... and XDWRITEREAD (both 10 and 32 byte variants) is bidirectional.
-
-A single buffer for both data in and data out will force the user to
-re-copy the buffer.
-We can solve it by using a scatter-gather list. Each buffer will have its
-own data
-direction flag.
-
->> As I see it, OSD seems to require a different interface from the current
->> bio layer, so there would be some type of object layer glue between the
->> fs and the mid-layer, with the block layer relegated simply to queueing
->> specials for the mid-layer, but since no-one's actually come forward
->> with an implementation, that's just a guess.
-
->Both Jens and Linus jumped on me when I suggested
->similar heresy :-)
-
-Intel's iscsi reference implementation includes an upper layer driver for
-OSD, it
-also includes a mini filesystem that works on top of it.
-This implementation only demonstrate the need to solve this 3 issues: (the
-implementation just work around them)
-      1. Coupling of the scsi layer with the bio layer.
-      2. Bidirectional support.
-      3. Extended CDB support.
-
-We will be happy to open this issues for a discussion.
+I have used only ISCSI and TCP/IP (non SCSI) OSD devices. In the devices
+that
+I have used the transitions of data where isolated - first DATA OUT then
+DATA IN.
+But an OSD device can do the following data transitions: DATA IN (user
+data) ; DATA OUT
+(set attributes data and get attributes list) ;  DATA IN (retrieved
+attributes data).
 
 - Liran
 
