@@ -1,50 +1,165 @@
-From: Mike Anderson <andmike@us.ibm.com>
-Subject: Re: [PATCH] sdev_printk for ULDs, example with sd
-Date: Thu, 22 Jan 2004 12:41:30 -0800
+From: Mark Haverkamp <markh@osdl.org>
+Subject: Re: [PATCH] Fix for aacraid and high memory on 2.6.1
+Date: Thu, 22 Jan 2004 13:15:31 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040122204130.GA3571@beaverton.ibm.com>
-References: <200401191355.37522.dsteklof@us.ibm.com> <200401221144.48488.dsteklof@us.ibm.com> <1074802104.1877.58.camel@mulgrave>
+Message-ID: <1074806131.2084.22.camel@markh1.pdx.osdl.net>
+References: <1074113037.7662.45.camel@markh1.pdx.osdl.net>
+	 <1074115078.2054.166.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e34.co.us.ibm.com ([32.97.110.132]:59617 "EHLO
-	e34.co.us.ibm.com") by vger.kernel.org with ESMTP id S265063AbUAVUh1
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 22 Jan 2004 15:37:27 -0500
-Content-Disposition: inline
-In-Reply-To: <1074802104.1877.58.camel@mulgrave>
+Received: from fw.osdl.org ([65.172.181.6]:27350 "EHLO mail.osdl.org")
+	by vger.kernel.org with ESMTP id S265114AbUAVVPj (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 22 Jan 2004 16:15:39 -0500
+In-Reply-To: <1074115078.2054.166.camel@mulgrave>
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@steeleye.com>
-Cc: Daniel Stekloff <dsteklof@us.ibm.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, Mark Salyzyn <mark_salyzyn@adaptec.com>
 
-James Bottomley [James.Bottomley@steeleye.com] wrote:
-> On Thu, 2004-01-22 at 14:44, Daniel Stekloff wrote:
-> > In my recent post concerning sdev_printk I mentioned sdev_printk was useful 
-> > for the mid-layer and LLDs. The macro is also useful for Upper Level Drivers 
-> > as well. He's a patch adding sdev_printk to sd. Sample output includes:
+On Wed, 2004-01-14 at 13:17, James Bottomley wrote:
+> On Wed, 2004-01-14 at 15:43, Mark Haverkamp wrote:
+> > +	if (aac_drivers[index].quirks & AAC_QUIRK_31BIT) {
+> > +		if (pci_set_dma_mask(pdev, 0x7FFFFFFFULL))
+> [...]
+> > +	/*
+> > +	 * If we had set a smaller DMA mask earlier, set it to 4gig
+> > +	 * now since the adapter can dma data to at least a 4gig
+> > +	 * address space.
+> > +	 */
+> > +	if (aac_drivers[index].quirks & AAC_QUIRK_31BIT)
+> > +		if (pci_set_dma_mask(pdev, 0xFFFFFFFFULL))
+> > +			goto out_free_fibs;
 > 
-> Well, the thing about this is that it's a slippery slope that leads into
-> posix logging.  This recently came up in network as well (for
-> netdev_printk()):
+> Rather than doing this, could you just do a 
 > 
-> http://marc.theaimsgroup.com/?t=107454443000004&r=1&w=2
+> pci_set_consistent_dma_mask()?
 > 
-> The principle is sound, but I think the framework for doing it would
-> have to cross all subsystems and be nicely extensible.  I'd really like
-> to see us have some idea of the back end infrastructure before we do
-> something that we'll then have to change again.
+> Unfortunately, it's currently not correctly implemented for this case on
+> x86 (and you don't seem to be able to do what you want on many non-x86
+> archs), but I think we can get the implementation fixed.
+> 
+> James
 > 
 
-I thought after passed discussions that dev_printk was the support to
-build on? It should be extensible to a limit as the struct device is
-passed in as a argument.
+James,
+Here is an update to use pci_set_consistent_dma_mask.  But since
+dma_alloc_coherent uses dma_mask instead of consistent one, I left in
+setting dma_mask as well until the alloc routine changes.
 
-At least for some of the LLDDs that have implemented it I find it more
-consistent when I load and unload modules to get the dev_printk type
-message from the driver.
+Mark.
 
--andmike
---
-Michael Anderson
-andmike@us.ibm.com
+===== drivers/scsi/aacraid/aacraid.h 1.10 vs edited =====
+--- 1.10/drivers/scsi/aacraid/aacraid.h	Wed Nov 19 11:17:01 2003
++++ edited/drivers/scsi/aacraid/aacraid.h	Mon Jan 12 15:29:39 2004
+@@ -525,7 +525,15 @@
+ 	char *	vname;
+ 	char *	model;
+ 	u16	channels;
++	int	quirks;
+ };
++/*
++ * Some adapter firmware needs communication memory 
++ * below 2gig. This tells the init function to set the
++ * dma mask such that fib memory will be allocated where the
++ * adapter firmware can get to it.
++ */
++#define AAC_QUIRK_31BIT	1
+ 
+ /*
+  *	The adapter interface specs all queues to be located in the same
+===== drivers/scsi/aacraid/linit.c 1.23 vs edited =====
+--- 1.23/drivers/scsi/aacraid/linit.c	Wed Nov 19 11:16:13 2003
++++ edited/drivers/scsi/aacraid/linit.c	Thu Jan 22 09:57:36 2004
+@@ -119,22 +119,22 @@
+  * for the card.  At that time we can remove the channels from here
+  */
+ static struct aac_driver_ident aac_drivers[] = {
+-	{ aac_rx_init, "percraid", "DELL    ", "PERCRAID        ", 2 }, /* PERC 2/Si */
+-	{ aac_rx_init, "percraid", "DELL    ", "PERCRAID        ", 2 }, /* PERC 3/Di */
+-	{ aac_rx_init, "percraid", "DELL    ", "PERCRAID        ", 2 }, /* PERC 3/Si */
+-	{ aac_rx_init, "percraid", "DELL    ", "PERCRAID        ", 2 }, /* PERC 3/Si */
+-	{ aac_rx_init, "percraid", "DELL    ", "PERCRAID        ", 2 }, /* PERC 3/Di */
+-	{ aac_rx_init, "percraid", "DELL    ", "PERCRAID        ", 2 }, /* PERC 3/Di */
+-	{ aac_rx_init, "percraid", "DELL    ", "PERCRAID        ", 2 }, /* PERC 3/Di */
+-	{ aac_rx_init, "percraid", "DELL    ", "PERCRAID        ", 2 }, /* PERC 3/Di */
+-	{ aac_rx_init, "percraid", "DELL    ", "PERCRAID        ", 2 }, /* PERC 3/Di */
+-	{ aac_rx_init, "aacraid",  "ADAPTEC ", "catapult        ", 2 }, /* catapult*/
+-	{ aac_rx_init, "aacraid",  "ADAPTEC ", "tomcat          ", 2 }, /* tomcat*/
+-	{ aac_rx_init, "aacraid",  "ADAPTEC ", "Adaptec 2120S   ", 1 }, /* Adaptec 2120S (Crusader)*/
+-	{ aac_rx_init, "aacraid",  "ADAPTEC ", "Adaptec 2200S   ", 2 }, /* Adaptec 2200S (Vulcan)*/
+-	{ aac_rx_init, "aacraid",  "ADAPTEC ", "Adaptec 2200S   ", 2 }, /* Adaptec 2200S (Vulcan-2m)*/
+-	{ aac_rx_init, "aacraid",  "Legend  ", "Legend S220     ", 1 }, /* Legend S220*/
+-	{ aac_rx_init, "aacraid",  "Legend  ", "Legend S230     ", 2 }, /* Legend S230*/
++	{ aac_rx_init, "percraid", "DELL    ", "PERCRAID        ", 2, AAC_QUIRK_31BIT }, /* PERC 2/Si */
++	{ aac_rx_init, "percraid", "DELL    ", "PERCRAID        ", 2, AAC_QUIRK_31BIT }, /* PERC 3/Di */
++	{ aac_rx_init, "percraid", "DELL    ", "PERCRAID        ", 2, AAC_QUIRK_31BIT }, /* PERC 3/Si */
++	{ aac_rx_init, "percraid", "DELL    ", "PERCRAID        ", 2, AAC_QUIRK_31BIT }, /* PERC 3/Si */
++	{ aac_rx_init, "percraid", "DELL    ", "PERCRAID        ", 2, AAC_QUIRK_31BIT }, /* PERC 3/Di */
++	{ aac_rx_init, "percraid", "DELL    ", "PERCRAID        ", 2, AAC_QUIRK_31BIT }, /* PERC 3/Di */
++	{ aac_rx_init, "percraid", "DELL    ", "PERCRAID        ", 2, AAC_QUIRK_31BIT }, /* PERC 3/Di */
++	{ aac_rx_init, "percraid", "DELL    ", "PERCRAID        ", 2, AAC_QUIRK_31BIT }, /* PERC 3/Di */
++	{ aac_rx_init, "percraid", "DELL    ", "PERCRAID        ", 2, AAC_QUIRK_31BIT }, /* PERC 3/Di */
++	{ aac_rx_init, "aacraid",  "ADAPTEC ", "catapult        ", 2, AAC_QUIRK_31BIT }, /* catapult*/
++	{ aac_rx_init, "aacraid",  "ADAPTEC ", "tomcat          ", 2, AAC_QUIRK_31BIT }, /* tomcat*/
++	{ aac_rx_init, "aacraid",  "ADAPTEC ", "Adaptec 2120S   ", 1, AAC_QUIRK_31BIT }, /* Adaptec 2120S (Crusader)*/
++	{ aac_rx_init, "aacraid",  "ADAPTEC ", "Adaptec 2200S   ", 2, AAC_QUIRK_31BIT }, /* Adaptec 2200S (Vulcan)*/
++	{ aac_rx_init, "aacraid",  "ADAPTEC ", "Adaptec 2200S   ", 2, AAC_QUIRK_31BIT }, /* Adaptec 2200S (Vulcan-2m)*/
++	{ aac_rx_init, "aacraid",  "Legend  ", "Legend S220     ", 1, AAC_QUIRK_31BIT }, /* Legend S220*/
++	{ aac_rx_init, "aacraid",  "Legend  ", "Legend S230     ", 2, AAC_QUIRK_31BIT }, /* Legend S230*/
+ 
+ 	{ aac_rx_init, "aacraid",  "ADAPTEC ", "Adaptec 3230S   ", 2 }, /* Adaptec 3230S (Harrier)*/
+ 	{ aac_rx_init, "aacraid",  "ADAPTEC ", "Adaptec 3240S   ", 2 }, /* Adaptec 3240S (Tornado)*/
+@@ -144,10 +144,10 @@
+ 	{ aac_rx_init, "aacraid",  "ADAPTEC ", "Adaptec         ", 2 }, /* (Marco)*/
+ 	{ aac_rx_init, "aacraid",  "ADAPTEC ", "Adaptec         ", 2 }, /* (Sebring)*/
+ 
+-	{ aac_rx_init, "percraid", "DELL    ", "PERC 320/DC     ", 2 }, /* Perc 320/DC*/
++	{ aac_rx_init, "percraid", "DELL    ", "PERC 320/DC     ", 2, AAC_QUIRK_31BIT }, /* Perc 320/DC*/
+ 	{ aac_sa_init, "aacraid",  "ADAPTEC ", "Adaptec 5400S   ", 4 }, /* Adaptec 5400S (Mustang)*/
+ 	{ aac_sa_init, "aacraid",  "ADAPTEC ", "AAC-364         ", 4 }, /* Adaptec 5400S (Mustang)*/
+-	{ aac_sa_init, "percraid", "DELL    ", "PERCRAID        ", 4 }, /* Dell PERC2 "Quad Channel" */
++	{ aac_sa_init, "percraid", "DELL    ", "PERCRAID        ", 4, AAC_QUIRK_31BIT }, /* Dell PERC2 "Quad Channel" */
+ 	{ aac_sa_init, "hpnraid",  "HP      ", "NetRAID         ", 4 }  /* HP NetRAID-4M */
+ };
+ 
+@@ -407,8 +407,17 @@
+ 	if (pci_enable_device(pdev))
+ 		goto out;
+ 
+-	if (pci_set_dma_mask(pdev, 0xFFFFFFFFULL))
++	if (pci_set_dma_mask(pdev, 0xFFFFFFFFULL) || 
++			pci_set_consistent_dma_mask(pdev, 0xFFFFFFFFULL))
+ 		goto out;
++	/*
++	 * If the quirk31 bit is set, the adapter needs adapter
++	 * to driver communication memory to be allocated below 2gig
++	 */
++	if (aac_drivers[index].quirks & AAC_QUIRK_31BIT) 
++		if (pci_set_dma_mask(pdev, 0x7FFFFFFFULL) ||
++				pci_set_consistent_dma_mask(pdev, 0x7FFFFFFFULL))
++			goto out;
+ 	
+ 	pci_set_master(pdev);
+ 
+@@ -442,6 +451,15 @@
+ 
+ 	if ((*aac_drivers[index].init)(aac , shost->unique_id))
+ 		goto out_free_fibs;
++
++	/*
++	 * If we had set a smaller DMA mask earlier, set it to 4gig
++	 * now since the adapter can dma data to at least a 4gig
++	 * address space.
++	 */
++	if (aac_drivers[index].quirks & AAC_QUIRK_31BIT)
++		if (pci_set_dma_mask(pdev, 0xFFFFFFFFULL))
++			goto out_free_fibs;
+ 
+ 	aac_get_adapter_info(aac);
+ 
+
+-- 
+Mark Haverkamp <markh@osdl.org>
 
