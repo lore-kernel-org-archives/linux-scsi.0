@@ -1,86 +1,44 @@
-From: Mike Anderson <andmike@us.ibm.com>
-Subject: [PATCH] reorder call in scsi_remove_host
-Date: Mon, 16 Aug 2004 13:18:35 -0700
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [Announce] Emulex lpfcdriver v8.0.9 available
+Date: Mon, 16 Aug 2004 21:27:06 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040816201835.GA2179@us.ibm.com>
+Message-ID: <20040816212706.A14780@infradead.org>
+References: <0B1E13B586976742A7599D71A6AC733C02F164@xbl3.ma.emulex.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e34.co.us.ibm.com ([32.97.110.132]:48382 "EHLO
-	e34.co.us.ibm.com") by vger.kernel.org with ESMTP id S267935AbUHPUSy
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 16 Aug 2004 16:18:54 -0400
+Received: from imladris.demon.co.uk ([193.237.130.41]:38405 "EHLO
+	phoenix.infradead.org") by vger.kernel.org with ESMTP
+	id S267941AbUHPU1O (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 16 Aug 2004 16:27:14 -0400
 Content-Disposition: inline
+In-Reply-To: <0B1E13B586976742A7599D71A6AC733C02F164@xbl3.ma.emulex.com>; from James.Smart@Emulex.Com on Mon, Aug 16, 2004 at 04:07:51PM -0400
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@suse.de>
+To: James.Smart@Emulex.Com
+Cc: linux-scsi@vger.kernel.org
 
-This patch against scsi-misc-2.6 reorders a call to scsi_forget_host in
-the scsi_remove_host function. This removes the error message
-"Synchronizing SCSI cache..." on rmmod of a scsi host driver module as
-shown in example output 1 and 2 below.
+On Mon, Aug 16, 2004 at 04:07:51PM -0400, James.Smart@Emulex.Com wrote:
+> - Removed lun handling. Removed code that replicated midlayer functions, issued report luns, did partial VSA, had unnecessary data structures, etc.
 
-I had previous created a much more complicated patch to work around this
-problem. In response Christoph mention a simpler solution (pointer to
-thread below) which is this patch.
+this looks very good.
 
-http://marc.theaimsgroup.com/?l=linux-scsi&m=108720042210331&w=2
+> - Reworked the clock/timer handling per Christoph's comments.
 
-Example output.
+Nope.  Rezad the statements about timer_pending() and mod_timer() in
+my mail again.
 
-1.) Before patch.
+> - Reworked driver parameters per Christoph's comments.
 
-elm:~# scsi1 : scsi_debug, version 1.73 [20040518], dev_size_mb=8,
-opts=0x0
-  Vendor: Linux     Model: scsi_debug        Rev: 0004
-  Type:   Direct-Access                      ANSI SCSI revision: 03
-SCSI device sdc: 16384 512-byte hdwr sectors (8 MB)
-SCSI device sdc: drive cache: write back
- sdc: unknown partition table
-Attached scsi disk sdc at scsi1, channel 0, id 0, lun 0
-Attached scsi generic sg4 at scsi1, channel 0, id 0, lun 0,  type 0
-Synchronizing SCSI cache for disk sdc: <4>FAILED
-  status = 0, message = 00, host = 1, driver = 00
+No really.
 
-2.) After patch.
-
-elm:~# scsi1 : scsi_debug, version 1.73 [20040518], dev_size_mb=8, opts=0x0
-  Vendor: Linux     Model: scsi_debug        Rev: 0004
-  Type:   Direct-Access                      ANSI SCSI revision: 03
-SCSI device sdc: 16384 512-byte hdwr sectors (8 MB)
-SCSI device sdc: drive cache: write back
- sdc: unknown partition table
-Attached scsi disk sdc at scsi1, channel 0, id 0, lun 0
-Attached scsi generic sg4 at scsi1, channel 0, id 0, lun 0,  type 0
-Synchronizing SCSI cache for disk sdc:
-
--andmike
---
-Michael Anderson
-andmike@us.ibm.com
+> To date, the known todos are:
+> - Use mid-layer I/O timers
+> - No Peeking into timer structures
+> - Need to get approvals on all the clock changes, parameter changes, etc.
+> - Add calls to scan functions on new device detection, remove_device on device loss.
+> - Add interfaces to support managability.
 
 
-DESC
-Reorder call to scsi_forget_host in scsi_remove_host function.
+ - streamline I/O submission path
+ - sort out memory allocation issues
 
-Signed-off-by: Mike Anderson <andmike@us.ibm.com>
-EDESC
-
-
- patched-scsi-misc-2.6-andmike/drivers/scsi/hosts.c |    2 +-
- 1 files changed, 1 insertion(+), 1 deletion(-)
-
-diff -puN drivers/scsi/hosts.c~scsi_forget_host drivers/scsi/hosts.c
---- patched-scsi-misc-2.6/drivers/scsi/hosts.c~scsi_forget_host	Wed Aug 11 17:33:46 2004
-+++ patched-scsi-misc-2.6-andmike/drivers/scsi/hosts.c	Wed Aug 11 17:35:07 2004
-@@ -75,9 +75,9 @@ void scsi_host_cancel(struct Scsi_Host *
-  **/
- void scsi_remove_host(struct Scsi_Host *shost)
- {
-+	scsi_forget_host(shost);
- 	scsi_host_cancel(shost, 0);
- 	scsi_proc_host_rm(shost);
--	scsi_forget_host(shost);
- 
- 	set_bit(SHOST_DEL, &shost->shost_state);
- 
