@@ -1,62 +1,49 @@
-From: "Tony A. Lambley" <tal@vextech.net>
-Subject: Re: growisofs stopped working with 2.6.8
-Date: Mon, 16 Aug 2004 13:59:16 -0400
+From: Kai Makisara <Kai.Makisara@kolumbus.fi>
+Subject: Re: Sym53c8xx_2
+Date: Mon, 16 Aug 2004 21:02:49 +0300 (EEST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1092679156.2393.8.camel@bony>
-References: <1092674287.3021.19.camel@bony>
-	 <1092672062.20838.29.camel@localhost.localdomain>
+Message-ID: <Pine.LNX.4.58.0408162051470.5241@kai.makisara.local>
+References: <1092366037.28144.202254467@webmail.messagingengine.com>  
+ <Pine.LNX.4.60.0408132049060.4069@poirot.grange>  
+ <1092432298.18813.202307545@webmail.messagingengine.com>  
+ <Pine.LNX.4.60.0408150005570.5333@poirot.grange>  
+ <Pine.LNX.4.58.0408151008400.6676@kai.makisara.local>
+ <1092624889.15338.202386294@webmail.messagingengine.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 130.67-18-18.reverse.theplanet.com ([67.18.18.130]:16325 "EHLO
-	server3.imagelinkusa.net") by vger.kernel.org with ESMTP
-	id S267838AbUHPR7U (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 16 Aug 2004 13:59:20 -0400
-In-Reply-To: <1092672062.20838.29.camel@localhost.localdomain>
+Received: from fep22-0.kolumbus.fi ([193.229.0.60]:25339 "EHLO
+	fep22-app.kolumbus.fi") by vger.kernel.org with ESMTP
+	id S267856AbUHPSCv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 16 Aug 2004 14:02:51 -0400
+In-Reply-To: <1092624889.15338.202386294@webmail.messagingengine.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: LKML <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
+To: Kai OM <epimetreus@fastmail.fm>
+Cc: Guennadi Liakhovetski <g.liakhovetski@gmx.de>, linux-scsi@vger.kernel.org
 
-It still fails, but I get a different message with the patch:
+On Sun, 15 Aug 2004, Kai OM wrote:
 
-$ growisofs -Z /dev/dvd=file.iso
-Executing 'builtin_dd if=file.iso of=/dev/dvd obs=32k seek=0'
-:-( unable to PREVENT MEDIA REMOVAL: Operation not permitted
+> 
+> On Sun, 15 Aug 2004 10:21:35 +0300 (EEST), "Kai Makisara"
+> <Kai.Makisara@kolumbus.fi> said:
+> 
+> > Domain Validation does not fail in all configurations. I am using 
+> > sym53c8xx_2 in two machines to drive the system disk and some other 
+> > devices. I have had no SCSI problems with these systems.
+> 
+> What chipset is your controller based on?
+> 
+> I'm using an LSIU160, based on the LSI53C1010-33 chipset
+> 
+I actually have three systems using sym53c8xx_2. One system has 53c1010-66 
+(Tekram DC390U3W), one has 53c896 (ASUS SC896), and one has 53c895 (Tekram 
+DC390U2W).
 
-K3B fails with the same message as above.
+> I'm pretty sure at least one other person I know that had this problem
+> was using a very similar chipset/controller, which strikes me as
+> pertinent.
+> 
+I am sorry to break this theory ;-)
 
-As you say, it does indeed burn fine as root.
-
-
-On Mon, 2004-08-16 at 12:01, Alan Cox wrote:
-> On Llu, 2004-08-16 at 17:38, Tony A. Lambley wrote:
-> > Hi, burning a dvd iso now fails :(
-> > 
-> > $ growisofs -Z /dev/hdc=file.iso
-> > :-( unable to GET CONFIGURATION: Operation not permitted
-> > :-( non-MMC unit?
-> 
-> We fixed some security holes. In doing so we tightened up so a few apps
-> that worked before no longer work except as root. Thanks for the error
-> message. Thats helpful as it suggests the following patch.
-> 
-> (and does it help K3B ?)
-> 
-> 
-> 
-> 
-> 
-> 
-> ______________________________________________________________________
-> --- drivers/block/scsi_ioctl.c~	2004-08-16 18:01:36.627301624 +0100
-> +++ drivers/block/scsi_ioctl.c	2004-08-16 18:01:36.627301624 +0100
-> @@ -146,6 +146,7 @@
->  		safe_for_read(GPCMD_READ_TOC_PMA_ATIP),
->  		safe_for_read(GPCMD_REPORT_KEY),
->  		safe_for_read(GPCMD_SCAN),
-> +		safe_for_read(GPCMD_GET_CONFIGURATION),
->  
->  		/* Basic writing commands */
->  		safe_for_write(WRITE_6),
-
+-- 
+Kai
