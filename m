@@ -1,57 +1,37 @@
-From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+From: James Bottomley <James.Bottomley@steeleye.com>
 Subject: Re: [BK PATCH] SCSI updates for 2.6.6
-Date: Tue, 18 May 2004 21:47:56 +0200 (CEST)
+Date: 18 May 2004 15:38:43 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44.0405182140050.3207-100000@poirot.grange>
-References: <20040518184527.GC4859@tpkurt.garloff.de>
+Message-ID: <1084912724.2101.44.camel@mulgrave>
+References: <Pine.LNX.4.44.0405182140050.3207-100000@poirot.grange>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:40424 "HELO mail.gmx.net")
-	by vger.kernel.org with SMTP id S262138AbUERTsC (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 18 May 2004 15:48:02 -0400
-In-Reply-To: <20040518184527.GC4859@tpkurt.garloff.de>
+Received: from stat1.steeleye.com ([65.114.3.130]:10132 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S263563AbUERUit (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 18 May 2004 16:38:49 -0400
+In-Reply-To: <Pine.LNX.4.44.0405182140050.3207-100000@poirot.grange>
 List-Id: linux-scsi@vger.kernel.org
-To: Kurt Garloff <garloff@suse.de>
-Cc: James Bottomley <James.Bottomley@steeleye.com>, Linux SCSI list <linux-scsi@vger.kernel.org>, Linux kernel list <linux-kernel@vger.kernel.org>
+To: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+Cc: Kurt Garloff <garloff@suse.de>, Linux SCSI list <linux-scsi@vger.kernel.org>, Linux kernel list <linux-kernel@vger.kernel.org>
 
-On Tue, 18 May 2004, Kurt Garloff wrote:
+On Tue, 2004-05-18 at 14:47, Guennadi Liakhovetski wrote:
+> Well, Kurt, thanks for the offer. I am prepared and willing to do the work
+> on supporting the driver, but I am, perhaps, not skilled enough to be a
+> maintainer of a SCSI LDD. My knowledge of the SCSI protocol and the SCSI
+> Linux subsystem is pretty limited. On one hand, the driver is little used,
+> so, even if I badly break something it is not likely to cause major
+> problems. On the other hand, I would feel more comfortable if, at least at
+> the beginning, somebody would review my patches. Besides, it would be a
+> good opportunity for me to really learn a bit more about SCSI, SCSI Linux
+> driver, BIO,...  oh well...
 
-> On Tue, May 11, 2004 at 02:54:33PM -0500, James Bottomley wrote:
-> > On Tue, 2004-05-11 at 14:29, Guennadi Liakhovetski wrote:
-> > > I hoped the tmscsim 64-bit bugfix would somehow find its way into the
-> > > mainstream after 2.6. Does it still have a chance?
-> >
-> > The DC390 is a maintained driver:
-> >
-> > DC390/AM53C974 SCSI driver
-> > P:	Kurt Garloff
-> > M:	garloff@suse.de
-> > W:	http://www.garloff.de/kurt/linux/dc390/
-> > S:	Maintained
-> >
-> > You need to get the maintainer to approve acceptance.
->
-> Granted ;-)
->
-> Actually, I had discussed the patch before with Guennadi and agreed to
-> it. As I don't really have much time any more for it, I would suggest
-> that Guennadi takes over, if he wants to.
+OK, roll up for me what you'd currently like applied to the driver;
+anything that's less than solid, I'd rather mature in the -mm tree for a
+while.
 
-Well, Kurt, thanks for the offer. I am prepared and willing to do the work
-on supporting the driver, but I am, perhaps, not skilled enough to be a
-maintainer of a SCSI LDD. My knowledge of the SCSI protocol and the SCSI
-Linux subsystem is pretty limited. On one hand, the driver is little used,
-so, even if I badly break something it is not likely to cause major
-problems. On the other hand, I would feel more comfortable if, at least at
-the beginning, somebody would review my patches. Besides, it would be a
-good opportunity for me to really learn a bit more about SCSI, SCSI Linux
-driver, BIO,...  oh well...
-
-Thanks
-Guennadi
----
-Guennadi Liakhovetski
+James
 
 
