@@ -1,60 +1,50 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: [PATCH] Fix aic7xxx del_timer_sync() deadlock
-Date: Sun, 29 Feb 2004 17:39:22 +0100
+From: James Bottomley <James.Bottomley@steeleye.com>
+Subject: Re: lots and lots of disks again
+Date: 29 Feb 2004 10:41:36 -0600
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040229163922.GE31904@suse.de>
-References: <1077906383.2157.98.camel@mulgrave> <3462370000.1077909838@aslan.btc.adaptec.com> <403FFF86.90302@pobox.com> <20040228092512.GD923@suse.de> <4041292C.3090700@pobox.com> <20040229091350.GC3149@suse.de> <40421190.2030008@pobox.com>
+Message-ID: <1078072902.1779.41.camel@mulgrave>
+References: <20040211225348.GM21151@parcelfarce.linux.theplanet.co.uk>
+	<20040212150035.GN1780@tpkurt.garloff.de>
+	<20040212155721.GS21151@parcelfarce.linux.theplanet.co.uk>
+	<20040212161800.GU1780@tpkurt.garloff.de>
+	<1076604183.2576.89.camel@mulgrave>
+	<20040216124047.GG4011@tpkurt.garloff.de>
+	<20040216225704.GA3420@pclin040.win.tue.nl>
+	<1076979373.1758.688.camel@mulgrave>
+	<20040217144959.GA4282@pclin040.win.tue.nl>
+	<1077031099.1757.24.camel@mulgrave>
+	<20040217152714.GG3810@tpkurt.garloff.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns.virtualhost.dk ([195.184.98.160]:35508 "EHLO virtualhost.dk")
-	by vger.kernel.org with ESMTP id S262071AbUB2Qja (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 29 Feb 2004 11:39:30 -0500
-Content-Disposition: inline
-In-Reply-To: <40421190.2030008@pobox.com>
+Received: from stat1.steeleye.com ([65.114.3.130]:63948 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S262076AbUB2Ql6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 29 Feb 2004 11:41:58 -0500
+In-Reply-To: <20040217152714.GG3810@tpkurt.garloff.de>
 List-Id: linux-scsi@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: "Justin T. Gibbs" <gibbs@scsiguy.com>, James Bottomley <James.Bottomley@SteelEye.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Andrew Morton <akpm@osdl.org>
+To: Kurt Garloff <garloff@suse.de>
+Cc: Andries Brouwer <aebr@win.tue.nl>, viro@parcelfarce.linux.theplanet.co.uk, Andrew Morton <akpm@osdl.org>, hch@infradead.org, SCSI Mailing List <linux-scsi@vger.kernel.org>, pbadari@us.ibm.com, willy@debian.org
 
-On Sun, Feb 29 2004, Jeff Garzik wrote:
-> Jens Axboe wrote:
-> >On Sat, Feb 28 2004, Jeff Garzik wrote:
-> >
-> >>Jens Axboe wrote:
-> >>
-> >>>The only nasty right now is that you cannot unconditionally call
-> >>>blk_stop_queue(), it requires a manual blk_start_queue() on io
-> >>>completion which will only happen if io is pending of course. I just got
-> >>>an idea on how to do that properly, I'll make sure it works in any case.
-> >>
-> >>hmmm...  I thought the model was to call blk_stop_queue() when you can 
-> >>accept no more requests, and call blk_start_queue() once you can start 
-> >>accepting more requests.
-> >>
-> >>That would imply that blk_start_queue() is OK when there is no more I/O 
-> >>pending...
-> >
-> >
-> >That is the model. The problem is that you don't have an opportunitty to
-> >call blk_start_queue() if there's no more IO pending (you typicall do it
-> >from io completion). There's no problem with doing that.
+On Tue, 2004-02-17 at 09:27, Kurt Garloff wrote:
+> Agreed. Having it the new scheme optional now (defaulting to off), 
+> deprecating the old numbers in 2.7 (defaulting new scheme to on)
+> and drop from 2.8 looks like a reasonable plan to me.
 > 
-> Help me out here, I must be dumb :)
+> Now we ionly need to get some device space allocated.
+> 
+> PS: I believe 64 partitions is enough. 
 
-It's probably my fault, I didn't list all the conditions carefully
-enough...
+OK, this all went quiet again.
 
-> If you call blk_start_queue() from io completion -- as you should -- 
-> then it gets called unconditionally, regardless of whether there is IO 
-> pending or not.  The LLD should only care if it can accept more 
-> requests.  The opportunity seems to be there, to me...
+The choices are between the current patch from Kurt which is limited to
+16 partitions, or a new patch (which no-one has yet produced) to raise
+us to 64 partitions on a new major number with a switching scheme.
 
-You are still assuming you have io pending when you call
-blk_stop_queue(). If some condition prevents you from queueing the first
-request, you call blk_stop_queue() without having anything to start the
-queue again.
+Kurt, since you're pushing the patch, which do you want me to do?  Apply
+your current patch for 16 or wait for a new one for 64?
 
--- 
-Jens Axboe
+James
+
 
