@@ -1,28 +1,54 @@
-From: "J.E.J. Bottomley" <James.Bottomley@steeleye.com>
-Subject: Re: [RFC][PATCH] move dma_mask into struct device
-Date: Sun, 17 Nov 2002 09:07:39 -0600
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH] make scsi_ioctl.h useable without including scsi.h
+Date: Sun, 17 Nov 2002 16:32:10 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <200211171507.gAHF7de11633@localhost.localdomain>
-References: <patmans@us.ibm.com>
+Message-ID: <20021117163210.A5467@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: (from root@localhost)
-	by pogo.mtv1.steeleye.com (8.9.3/8.9.3) id HAA21686
-	for <linux-scsi@vger.kernel.org>; Sun, 17 Nov 2002 07:07:48 -0800
-In-Reply-To: Message from Patrick Mansfield <patmans@us.ibm.com>
-   of "Sat, 16 Nov 2002 12:33:51 PST." <20021116123351.A7537@eng2.beaverton.ibm.com>
+Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
-To: Patrick Mansfield <patmans@us.ibm.com>
-Cc: "J.E.J. Bottomley" <James.Bottomley@SteelEye.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, grundler@dsl2.external.hp.com, willy@debian.org
+To: James.Bottomley@steeleye.com
+Cc: linux-scsi@vger.kernel.org
 
-patmans@us.ibm.com said:
-> Can shost->host_driverfs_dev.parent be used instead of adding and
-> using a duplicate shost->dev? 
-
-I think so. I believe the parent is always the device we're looking for.  I'll 
-make the fix.
-
-James
+*grr* - silly typedefs..
 
 
+--- 1.1/include/scsi/scsi_ioctl.h	Tue Feb  5 12:39:50 2002
++++ edited/include/scsi/scsi_ioctl.h	Sun Nov 17 14:32:25 2002
+@@ -17,6 +17,8 @@
+ 
+ #ifdef __KERNEL__
+ 
++struct scsi_device;
++
+ /*
+  * Structures used for scsi_ioctl et al.
+  */
+@@ -33,19 +35,15 @@
+ } Scsi_Idlun;
+ 
+ /* Fibre Channel WWN, port_id struct */
+-typedef struct scsi_fctargaddress
+-{
++typedef struct scsi_fctargaddress {
+ 	__u32 host_port_id;
+ 	unsigned char host_wwn[8]; // include NULL term.
+ } Scsi_FCTargAddress;
+ 
+-extern int scsi_ioctl (Scsi_Device *dev, int cmd, void *arg);
+-extern int kernel_scsi_ioctl (Scsi_Device *dev, int cmd, void *arg);
+-extern int scsi_ioctl_send_command(Scsi_Device *dev,
+-				   Scsi_Ioctl_Command *arg);
+-
+-#endif
+-
+-#endif
+-
++extern int scsi_ioctl(struct scsi_device *, int, void *);
++extern int kernel_scsi_ioctl(struct scsi_device *, int , void *);
++extern int scsi_ioctl_send_command(struct scsi_device *,
++				   struct scsi_ioctl_command *);
+ 
++#endif /* __KERNEL__ */
++#endif /* _SCSI_IOCTL_H */
