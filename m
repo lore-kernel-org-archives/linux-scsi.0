@@ -1,31 +1,34 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH] proper replacements for ->proc_info
-Date: Fri, 25 Apr 2003 12:59:18 +0200
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] aha1740 update, take #2
+Date: Fri, 25 Apr 2003 14:40:26 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030425125918.A5330@lst.de>
-References: <20030423212157.A18850@lst.de> <1051126145.1970.7.camel@mulgrave> <20030425122754.A5030@lst.de> <20030425104137.GE10374@parcelfarce.linux.theplanet.co.uk>
+Message-ID: <20030425144026.A747@infradead.org>
+References: <wrpk7dkt84r.fsf@hina.wild-wind.fr.eu.org> <20030424133641.A29770@infradead.org> <wrp1xzqsoas.fsf_-_@hina.wild-wind.fr.eu.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([212.34.181.86]:6158 "EHLO verein.lst.de")
-	by vger.kernel.org with ESMTP id S263862AbTDYKrL (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 25 Apr 2003 06:47:11 -0400
+Received: from phoenix.mvhi.com ([195.224.96.167]:9995 "EHLO
+	phoenix.infradead.org") by vger.kernel.org with ESMTP
+	id S263075AbTDYN2R (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 25 Apr 2003 09:28:17 -0400
 Content-Disposition: inline
-In-Reply-To: <20030425104137.GE10374@parcelfarce.linux.theplanet.co.uk>; from viro@parcelfarce.linux.theplanet.co.uk on Fri, Apr 25, 2003 at 11:41:37AM +0100
+In-Reply-To: <wrp1xzqsoas.fsf_-_@hina.wild-wind.fr.eu.org>; from mzyngier@freesurf.fr on Fri, Apr 25, 2003 at 03:24:11PM +0200
 List-Id: linux-scsi@vger.kernel.org
-To: viro@parcelfarce.linux.theplanet.co.uk
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Marc Zyngier <mzyngier@freesurf.fr>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Fri, Apr 25, 2003 at 11:41:37AM +0100, viro@parcelfarce.linux.theplanet.co.uk wrote:
-> On Fri, Apr 25, 2003 at 12:27:54PM +0200, Christoph Hellwig wrote:
+On Fri, Apr 25, 2003 at 03:24:11PM +0200, Marc Zyngier wrote:
+> Alan, Christoph,
 > 
-> > +	list_for_each_entry(sdev, &host->my_devices, siblings) {
-> > +		seq_printf(s, " %2d:%2d   %4d      %4d\n",
-> > +				sdev->id, sdev->lun,
-> > +				NCR_700_get_depth(sdev),
-> > +				sdev->current_tag);
+> Here is the updated aha1740 driver. All remarks have been taken into
+> account (patch is quite huge because of the re-indentation).
 > 
-> And that loop is protected by ...?
+> I removed the the scsi_to_dma_dir part, and sent it over to James (you
+> still need it though, see my previous mail to LKML for the patch).
 
-The right lock would be sdev->list_lock.
+Btw, scsi driver updates usually go to linux-scsi@vger, James then picks
+them up into the scsi BK tree that Linus pulls from time to time.
+
+And well, the indentation is Alan-stule not Linux-style but the driver
+looks fine.
+
