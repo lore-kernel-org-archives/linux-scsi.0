@@ -1,53 +1,75 @@
-From: Kai Makisara <Kai.Makisara@kolumbus.fi>
-Subject: Re: aic7xxx & st: BUG at include/asm/dma-mapping.h:37
-Date: Fri, 8 Aug 2003 00:00:56 +0300 (EEST)
+From: Gene Heskett <gene.heskett@verizon.net>
+Subject: Re: advansys driver vs 2.6 breakage
+Date: Thu, 7 Aug 2003 17:36:34 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.56.0308072346560.1035@kai.makisara.local>
-References: <20030806231359.A28252@mail.kroptech.com>
+Message-ID: <200308071736.34538.gene.heskett@verizon.net>
+References: <200308070422.41412.gene.heskett@verizon.net> <200308071444.55616.gene.heskett@verizon.net> <20030807195656.GJ22222@parcelfarce.linux.theplanet.co.uk>
+Reply-To: gene.heskett@verizon.net
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fep06-0.kolumbus.fi ([193.229.0.57]:42713 "EHLO
-	fep06-app.kolumbus.fi") by vger.kernel.org with ESMTP
-	id S270766AbTHGVA6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 7 Aug 2003 17:00:58 -0400
-In-Reply-To: <20030806231359.A28252@mail.kroptech.com>
+Received: from out006pub.verizon.net ([206.46.170.106]:3790 "EHLO
+	out006.verizon.net") by vger.kernel.org with ESMTP id S270630AbTHGVgh
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 7 Aug 2003 17:36:37 -0400
+In-Reply-To: <20030807195656.GJ22222@parcelfarce.linux.theplanet.co.uk>
+Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
-To: Adam Kropelin <akropel1@rochester.rr.com>
-Cc: linux-scsi@vger.kernel.org, gibbs@scsiguy.com
+Cc: Matthew Wilcox <willy@debian.org>, linux-scsi@vger.kernel.org
 
-No solution but some test results...
-
-On Wed, 6 Aug 2003, Adam Kropelin wrote:
-
-> When trying to read from my SCSI tape drive using the wrong block size I
-> get the BUG trace shown below. I ran into this by accident after writing
-> a tape with variable blocksize and then trying to 'dd' from it using a
-> fixed blocksize.
+On Thursday 07 August 2003 15:56, Matthew Wilcox wrote:
+>On Thu, Aug 07, 2003 at 02:44:55PM -0400, Gene Heskett wrote:
+>> 1. For whatever reason, the diffs between the 2.4.22-pre10 version
+>> of this driver and the 2.6.0-test2-mm2 versions are extensive,
+>> many kilobytes.  Done by who knows, and basicly
+>> un-commented/un-documented.
 >
-> The BUG trace is from 2.6.0-test2, but it's also reproducable on -test1
-> and test2-mm3. The box is running SMP + PREEMPT. SCSI boot-time messages
-> are shown below.
+>Irrelevant to whether or not check_region is broken.
 >
-> Steps to reproduce:
-> mt -f /dev/st0 setblk 0   # Set variable block size
-> dd if=/dev/zero of=/dev/st0 bs=1237 count=1  # Write an unusual block
-> mt -f /dev/st0 setblk 512 # Set block size to 512 fixed
-> dd if=/dev/st0 bs=512     # BUG
+>> 2. Substituting the request_region call, with no other changes,
+>> made it work.
+>>
+>> 3. Adding the release_region calls broke it again, even worse than
+>> before.
 >
-I tried this with a DDS4 drive and sym53c8xx_2 (with bs=1236 because the
-sym driver does not like odd counts on wide bus). The result was correct,
-i.e., the last dd fails and there is a message in syslog about incorrect
-block size.
+>I don't see how adding release_region can make it "worse than
+> before". Look at what __check_region does in kernel/resource.c.
+>
+>> >Something else is going on here, and someone with one of these
+>> > cards needs to debug it properly.
+>>
+>> I agree.  Its a very good scsi-2 fast (20Mb/sec) card, something
+>> thats impossible to find new today.
+>
+>So you're willing to help debug this properly? 
 
-> --Adam
->
-> kernel BUG at include/asm/dma-mapping.h:37!
+Sure, it me with the hardware.
 
-This comes from 'BUG_ON(direction == DMA_NONE)' in dma_map_sg(). I
-inserted a printk into st_do_scsi() in st.c to see if DMA_NONE is used for
-some command that should transfer data. No errors seen in these printk
-results.
+> OK.  I'd like you to
+>turn on ADVANSYS_DEBUG (around line 828 of the driver).  Then send
+> me the debug messages the driver emits during bootup.
+
+Is it level (0,1,2 etc) sensitive?
+
+>For comparison, I'd also like to see them from 2.4.
+
+Well, I haven't built 2.4.22-rc1 yet, so I will, or would it be better 
+if I went back to -pre8 and turned that one on?  I know it was stable 
+here.
+
+This will take about a day before I can get back with it, do you want 
+it to the list, or just to you?  And would it be better if I made it 
+as a module?, at least I'd have syslog running by the time it was 
+init'ed.
 
 -- 
-Kai
+Cheers, Gene
+AMD K6-III@500mhz 320M
+Athlon1600XP@1400mhz  512M
+99.27% setiathome rank, not too shabby for a WV hillbilly
+Yahoo.com attornies please note, additions to this message
+by Gene Heskett are:
+Copyright 2003 by Maurice Eugene Heskett, all rights reserved.
+
