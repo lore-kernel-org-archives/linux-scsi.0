@@ -1,49 +1,32 @@
-From: James Bottomley <James.Bottomley@steeleye.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
 Subject: Re: [PATCH] as i/o hang with aacraid driver 2.6.0-test1
-Date: 16 Jul 2003 08:56:02 -0400
+Date: 16 Jul 2003 14:06:40 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1058360162.1850.15.camel@mulgrave>
+Message-ID: <1058360799.6600.0.camel@dhcp22.swansea.linux.org.uk>
 References: <1058310172.981.7.camel@markh1.pdx.osdl.net>
-	<1058359278.1856.8.camel@mulgrave>  <20030716124549.GX833@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nat9.steeleye.com ([65.114.3.137]:13063 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S270709AbTGPMlY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 16 Jul 2003 08:41:24 -0400
-In-Reply-To: <20030716124549.GX833@suse.de>
+Received: from pc2-cwma1-4-cust86.swan.cable.ntl.com ([213.105.254.86]:16841
+	"EHLO lxorguk.ukuu.org.uk") by vger.kernel.org with ESMTP
+	id S270545AbTGPMy0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 16 Jul 2003 08:54:26 -0400
+In-Reply-To: <1058310172.981.7.camel@markh1.pdx.osdl.net>
 List-Id: linux-scsi@vger.kernel.org
-To: Jens Axboe <axboe@suse.de>
-Cc: Mark Haverkamp <markh@osdl.org>, Nick Piggin <piggin@cyberone.com.au>, Andrew Morton <akpm@osdl.org>, Cliff White <cliffw@osdl.org>, linux-scsi <linux-scsi@vger.kernel.org>
+To: Mark Haverkamp <markh@osdl.org>
+Cc: Nick Piggin <piggin@cyberone.com.au>, Andrew Morton <akpm@osdl.org>, Cliff White <cliffw@osdl.org>, linux-scsi <linux-scsi@vger.kernel.org>
 
-On Wed, 2003-07-16 at 08:45, Jens Axboe wrote:
-> Completely agree, see my earlier main on the subject.
+On Mer, 2003-07-16 at 00:02, Mark Haverkamp wrote:
+> Daniel McNeil and I have been debugging a hang with the aacraid driver
+> using the as I/O scheduler.  We found that scsi_request_fn would
+> de-queue a request and later re-queued it.  This left the
+> as_data->nr_dispatched variable in an inconsistent state (it was never
+> being decremented back to zero).  We added a call to
+> elv_completed_request to clean up the state before re-adding the
+> request.  This has fixed our hang problem.  The linux-scsi list is being
+> copied for review of the scsi_lib.c change.
 
-Yes, saw that later...processed mails in the order seen.
-
-> SCSI does it right, don't worry. It's a block layer problem that we need
-> to find out how to correctly make sure that we deal it. Basically
-> elv_next_request() does an implicit elv_started_request(), at least that
-> is what AS assumes. So request re-adds should notify the scheduler of
-> that fact.
-
-What about exporting a more generic requeue function (perhaps one that
-would take care of ending the tag)?
-
-Our current requeue code looks like
-
-	if (blk_rq_tagged(req))
-		blk_queue_end_tag(q, req);
-	__elv_add_request(q, req, 0, 0);
-
-which looks slightly fragile given that we have to remember to end the
-tag and then call a __ function (which are usually private).
-
-If we called an explicit request requeue hook, schedulers that need to
-adjust for requeueing would have a single place they could plug into?
-
-James
-
+Your aacraid is now terminally obsolete btw, the 2.4 one adds new cards
+and fixes some bugs including one or two "under high load it dies" cases
 
