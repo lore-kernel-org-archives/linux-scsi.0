@@ -1,31 +1,29 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [linux-usb-devel] 2.6.9-rc4mm1:badness in drivers/scsi/scsi_lib.c
-Date: Mon, 18 Oct 2004 11:30:46 -0400 (EDT)
+From: "Andrew Vasquez" <andrew.vasquez@qlogic.com>
+Subject: RE: [PATCH] sparse __iomem annotations for qla2xxx
+Date: Mon, 18 Oct 2004 09:00:14 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44L0.0410181129520.1194-100000@ida.rowland.org>
-References: <Pine.GSO.4.58.0410181447450.29704@boromir>
+Message-ID: <B179AE41C1147041AA1121F44614F0B0DD05A9@AVEXCH02.qlogic.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ida.rowland.org ([192.131.102.52]:8452 "HELO ida.rowland.org")
-	by vger.kernel.org with SMTP id S266684AbUJRPaq (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 18 Oct 2004 11:30:46 -0400
-In-Reply-To: <Pine.GSO.4.58.0410181447450.29704@boromir>
+Received: from avexch02.qlogic.com ([198.70.193.200]:56473 "EHLO
+	avexch01.qlogic.com") by vger.kernel.org with ESMTP id S266511AbUJRP52 convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 18 Oct 2004 11:57:28 -0400
+content-class: urn:content-classes:message
 List-Id: linux-scsi@vger.kernel.org
-To: Mateusz.Blaszczyk@nask.pl
-Cc: James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org, mdharm-usb@one-eyed-alien.net, linux-usb-users@lists.sourceforge.net, linux-usb-devel@lists.sourceforge.net
+To: Christoph Hellwig <hch@lst.de>, jejb@steeleye.com
+Cc: linux-scsi@vger.kernel.org
 
-On Mon, 18 Oct 2004 Mateusz.Blaszczyk@nask.pl wrote:
+On Saturday, October 09, 2004 6:42 AM, Christoph Hellwig wrote:
+> this also found a real bug, qla2xxx isn't iounmapping at host
+> removal at
+> all currently - and if the right cpp macro would have been set it'd
+> be too late. 
+>
 
-> Hi,
-> 
-> After successful write on USB DVD-R writer (HP-200j), system oops's when unpluging USB device.
-> Same thing with 2.6.9-rc2mm1.
+Thanks for catching this.  James please apply.
 
-Try applying this patch:
-
-http://marc.theaimsgroup.com/?l=linux-usb-devel&m=109744234829347&q=raw
-
-Alan Stern
-
+Regards,
+Andrew Vasquez
