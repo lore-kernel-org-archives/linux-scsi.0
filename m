@@ -1,64 +1,77 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: Warning - running *really* short on DMA buffers while doingfiletransfers
-Date: Mon, 30 Sep 2002 10:34:09 +0200
+From: Fabien Salvi <fabien@cri74.org>
+Subject: Re: qlogic and FC to SCSI bridge
+Date: Mon, 30 Sep 2002 12:09:12 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20020930083409.GI27420@suse.de>
-References: <200209281552.g8SFqKS04855@localhost.localdomain> <3D963A73.F593F5F7@splentec.com>
+Message-ID: <3D9822C8.C24FAD86@cri74.org>
+References: <3D94DB64.C230016@rentapacs.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <3D963A73.F593F5F7@splentec.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Luben Tuikov <luben@splentec.com>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, "Justin T. Gibbs" <gibbs@scsiguy.com>, Andrew Morton <akpm@digeo.com>, Matthew Jacob <mjacob@feral.com>, "Pedro M. Rodrigues" <pmanuel@myrealbox.com>, Mathieu Chouquet-Stringer <mathieu@newview.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Michael Ulbrich <mul@rentapacs.de>
+Cc: linux-scsi@vger.kernel.org
 
-On Sat, Sep 28 2002, Luben Tuikov wrote:
-> James Bottomley wrote:
-> > 
-> > > 5) Proper transaction ordering across a queue full.  The aic7xxx
-> > >    driver "requeues" all transactions that have not yet been sent
-> > >    to the device replacing the transaction that experienced the queue
-> > >    full back at the head so that ordering is maintained.
-> > 
-> > I'm lost here.  We currently implement TCQ with simple tags which have no
-> > guarantee of execution order in the drive I/O scheduler.  Why would we want to
-> > bother preserving the order of what will become essentially an unordered queue?
-> > 
-> > This will become an issue when (or more likely if) journalled fs rely on the
-> > barrier being implemented down to the medium, and the mid layer does do
-> > reqeueing in the correct order in that case, except for the tiny race where
-> > the command following the queue full could be accepted by the device before
-> > the queue is blocked.
+Michael Ulbrich wrote:
 > 
-> Justin has the right idea.
+> Hi all,
 > 
-> TCQ goes hand in hand with Task Attributes. I.e. a tagged task
-> is an I_T_L_Q nexus and has a task attribute (Simple, Ordered, Head
-> of Queue, ACA; cf. SAM-3, 4.9.1).
+> I'm trying to use a Compaq Fibre Channel Tape Controller II as a FC to
+> SCSI bridge assuming that it provides general SCSI bridging
+> functionality and is not limited (as the name might imply) to SCSI
+> tape devices. The FCTC has two wide differential SCSI busses. For
+> testing purposes I connected one harddisk to one of the busses.
 > 
-> Maybe the generator of tags (block layer, user process through sg, etc)
-> should also set the tag attribute of the task, as per SAM-3.
-> Most often (as currently implicitly) this would be a Simple task attribute.
-> Why not the block layer borrow the idea from SAM-3, I see IDE only
-> coming closer to SCSI...
-
-Block layer being the tag generator (and manager), yes I 100% agree that
-if we extend the support of block level tagging slightly it is very
-possible to simply generate the type of tag required (as already replied
-to Patrick, REQ_BARRIER would be an ordered task attribut, etc).
-
-Currently IDE tcq has no notion of tag options, unfortunately.
-
-> This way there'd be no need for explicit barriers. They can be implemented
-> through Ordered and Head of Queue Tasks, everything else is Simple
-> attribute task (IO scheduler can play with those as it wishes).
+> The host bus adapter is a qlogic 2100 in a linux box running RH 7.3 with
+> the Qlogic driver qla2xxx updated to version 6.1b5 - to my knowledge the
+> latest version from qlogic.
 > 
-> This would provide for a more general basis the whole game (IO scheduling,
-> TCQ, IO barriers, etc).
+> During boot the qla ROM BIOS detects the device connected to the FCTC:
+> 
+> > QLogic Corporation
+> > QLA2000,QLA2100 PCI Fibre Channel ROM BIOS Version 1.37
+> > ...
+> >
+> > Press <ALT-Q> for Fast!UTIL
+> >
+> > ISP2000/2100 Firmware Version 1.15.37
+> > QLogic Adapter isung IRQ number 10
+> >
+> > Device Device Adapter Loop Loop Vendor    Product    Product
+> > Number Type   Number   ID  LUN    ID        ID       Revision
+> >  82   Disk     0      125  7    Quantum   XP34361WD  HP10
+> 
+> Booting with qla2100.o version 6.1b5 gives the following result:
+> 
 
-Agree
+> [...]
 
--- 
-Jens Axboe
+> 
+> In both cases the device attached to the SCSI bridge is not recognized
+> by the qlogic driver. The older driver gives obviously some additional
+> (debugging?) output. The kernel is configured with
+> CONFIG_SCSI_MULTI_LUN=y.
+> 
+> Maybe someone on this list knows what I'm doing wrong or can give some
+> hints in which direction to proceed. Any ideas that might help are
+> greatly appreciated.
 
+Hello,
+
+Maybe it's a problem about lun scaning...
+Your SCSI disk seems to use luns > 0
+
+Try using this script (Rescan SCSI bus) :
+http://www.garloff.de/kurt/linux/rescan-scsi-bus.sh
+
+(use option -l to scan all luns)
+
+from Kurt Garloff page :
+http://www.garloff.de/kurt/linux/
+ 
+Good luck !
+
+-------------
+Fabien SALVI      Centre de Ressources Informatiques
+                  Archamps, France -- http://www.cri74.org
+                  PingOO GNU/linux distribution : http://www.pingoo.org
