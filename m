@@ -1,42 +1,45 @@
-From: James Bottomley <James.Bottomley@steeleye.com>
-Subject: Re: [BUG] x86_64 pci_map_sg modifies sg list - fails multiple
-	map/unmaps
-Date: 05 Jan 2004 21:14:45 -0600
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: [PATCH] sg block layer tcqing fix
+Date: Tue, 06 Jan 2004 15:06:51 +1000
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1073358887.2439.39.camel@mulgrave>
-References: <200401051929.i05JTsM0000014248@mudpuddle.cs.wustl.edu.suse.lists.linux.kern
-	 el> <20040105112800.7a9f240b.davem@redhat.com.suse.lists.linux.kernel>
-	<p73brpi1544.fsf@verdi.suse.de> <20040105130118.0cb404b8.davem@redhat.com>
-	<20040105223158.3364a676.ak@suse.de> <1073347548.2439.33.camel@mulgrave>
-	<20040106040640.1d2bcbd8.ak@suse.de>
-	<20040105190439.0a5f7370.davem@redhat.com>
+Message-ID: <3FFA426B.2030406@torque.net>
+References: <3FF08EAF.9080708@us.ibm.com>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat1.steeleye.com ([65.114.3.130]:8171 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S265339AbUAFDO4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 5 Jan 2004 22:14:56 -0500
-In-Reply-To: <20040105190439.0a5f7370.davem@redhat.com>
+Received: from bunyip.cc.uq.edu.au ([130.102.2.1]:64781 "EHLO
+	bunyip.cc.uq.edu.au") by vger.kernel.org with ESMTP id S266040AbUAFFLt
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 6 Jan 2004 00:11:49 -0500
+In-Reply-To: <3FF08EAF.9080708@us.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: "David S. Miller" <davem@redhat.com>
-Cc: Andi Kleen <ak@suse.de>, Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, gibbs@scsiguy.com
+To: Brian King <brking@us.ibm.com>
+Cc: dgilbert@interlog.com, linux-scsi@vger.kernel.org
 
-On Mon, 2004-01-05 at 21:04, David S. Miller wrote:
-> On Tue, 6 Jan 2004 04:06:40 +0100
-> Andi Kleen <ak@suse.de> wrote:
-> 
-> > It's ok. I fixed the code now[1] If you have other undocumented requirements
-> > you should document them though, otherwise there may be more problems.
-> > Since merging is disabled by default now it won't trigger anyways.
-> 
-> I totally agree with you Andi, not documenting this properly was an
-> oversight and not intentional.
+Brian King wrote:
+> In bringing up a new LLD driver I am working on, I came across an oops 
+> related to sg and using the TCQ function provided by the block layer. 
+> The backtrace is shown below. I did some poking around and it looks like 
+> when doing SG_IO ioctls to devices running blk tagged command queuing, 
+> blk_queue_start_tag gets called, but blk_queue_end_tag never does. 
+> Attached is a patch against 2.6.0 which adds the call in sg_cmd_done and 
+> gets rid of the oops for me. Please apply.
 
-I'll go over the SCSI code and see if I spot any other lacunae in the
-API.
+Brian,
+Thanks for this patch. As far as I can tell this patch is needed
+for all SCSI char ULDs (in other words: sg, st and osst) when
+used with a LLD that uses block layer queueing infrastructure.
+At the moment that is only the 53c700 driver (maintained by James B.)
+and that one you are working on (I suspect).
 
-James
+Given that no other ULDs call blk_queue_*_tag() routines it seems
+a bit strange that sg, st and osst need to call blk_queue_end_tag()
+prior to calling scsi_release_request(). Perhaps the cleanup can be
+built into scsi_release_request() or a new variant (e.g.
+scsi_release_special_request() ) could be introduced.
+
+Doug Gilbert
 
 
