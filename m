@@ -1,59 +1,46 @@
-From: Luben Tuikov <tluben@rogers.com>
-Subject: Re: [PATCH] make the SCSI mid-layer obey the device online flag
-Date: Fri, 06 Jun 2003 12:02:23 -0400
+From: Andrew Vasquez <praka@san.rr.com>
+Subject: Re: [ANNOUNCE] QLogic qla2xxx driver update available (v8.00.00b3).
+Date: Fri, 6 Jun 2003 08:07:29 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3EE0BB0F.5010208@rogers.com>
-References: <1054742495.1674.18.camel@mulgrave>	<20030604165146.GA1426@beaverton.ibm.com>	<1054754103.2360.8.camel@mulgrave>  <20030606073603.A13259@infradead.org> <1054912742.1778.25.camel@mulgrave>
+Message-ID: <20030606150729.GA10992@praka.local.home>
+References: <20030530160040.GA11238@praka.local.home> <20030530235234.GA31401@krispykreme>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fep03-mail.bloor.is.net.cable.rogers.com ([66.185.86.73]:52900
-	"EHLO fep03-mail.bloor.is.net.cable.rogers.com") by vger.kernel.org
-	with ESMTP id S261928AbTFFPsu (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 6 Jun 2003 11:48:50 -0400
-In-Reply-To: <1054912742.1778.25.camel@mulgrave>
+Received: from orngca-mls01.socal.rr.com ([66.75.160.16]:61645 "EHLO
+	orngca-mls01.socal.rr.com") by vger.kernel.org with ESMTP
+	id S261932AbTFFPtO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 6 Jun 2003 11:49:14 -0400
+Received: from san.rr.com (66-75-128-22.san.rr.com [66.75.128.22])
+	by orngca-mls01.socal.rr.com (8.11.4/8.11.3) with ESMTP id h56G03M14158
+	for <linux-scsi@vger.kernel.org>; Fri, 6 Jun 2003 09:00:03 -0700 (PDT)
+Received: from san.rr.com (localhost [127.0.0.1])
+	by san.rr.com (8.12.3/8.12.3/SuSE Linux 0.6) with ESMTP id h56F7Uvl011037
+	for <linux-scsi@vger.kernel.org>; Fri, 6 Jun 2003 08:07:30 -0700
+Received: (from praka@localhost)
+	by san.rr.com (8.12.3/8.12.3/Submit) id h56F7TIB011036
+	for linux-scsi@vger.kernel.org; Fri, 6 Jun 2003 08:07:29 -0700
+Content-Disposition: inline
+In-Reply-To: <20030530235234.GA31401@krispykreme>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@steeleye.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Mike Anderson <andmike@us.ibm.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Alan Stern <stern@rowland.harvard.edu>
+To: linux-scsi@vger.kernel.org
 
-James Bottomley wrote:
-> Surprise ejection:
+On Sat, 31 May 2003, Anton Blanchard wrote:
+
+> > A new version of the 8.x series driver for Linux 2.5.x kernels has
+> > been uploaded to SourceForge:
+> > 
+> > 	http://sourceforge.net/projects/linux-qla2xxx/
 > 
-> driver starts returning DID_NO_CONNECT to commands
-> possibly hotplug notify of surprise ejection
-> device->online to be reset
-> command queue drains
-> command queue drops to zero, ->remove can be called and everything
-> cleaned up from user level (including remove-single-device)
+> A few suggestions:
 > 
-> Nice ejection:
+> - Use pci_set_mwi since it will set the cacheline size if necessary.
+> - Dont set/clear IO/MEMORY/MASTER, it should be handled in
+>   pci_enable_device/pci_set_master.
 > 
-> hotplug notify of ejection request
-> eject script cleans up, unmounts, possibly resets online
-> command queue drains
-> command queue drops to zero, ->remove can be called and everything
-> cleaned up from user level (including remove-single-device)
-> ejection may now proceed
 
-Exactly right!  (This is ``ejection'' of a device off the SAN.)
- 
-> For the remove_host scenario, it would be convenient just to do
-> nice/surprise ejections on all the devices (from user level) and then do
-> the clean up when the hosts device count falls to zero.  That may imply
-> some type of host->offline flag which disallows the addition of new scsi
-> devices to the host.
+Thanks for the tips -- changes will be integrated into the next
+release.
 
-Just to be clear: this is when a PCI host (SCSI portal) becomes
-unavailable. (quite different from the above)
-
-In which case SCSI host should NOT call the queuecommand
-(it being a property of the portal) and if user space drivers submit
-commands to a device there of or the host, SCSI Core should return said
-commands with response SERVICE DELIVERY OR TARGET FAILURE (this is NOT
-the status SAM_xxx).
-
--- 
-Luben
-
-
+Regards,
+Andrew Vasquez
