@@ -1,25 +1,66 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: Questions about the midlevel scsi subsystem
-Date: 08 Jun 2002 01:04:58 +0100
+From: Andries.Brouwer@cwi.nl
+Subject: Re: 2.4.18-pre9, Iomega Jaz, PPA - endless loop in SCSI recovery thread
+Date: Sun, 9 Jun 2002 00:50:39 +0200 (MEST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1023494698.27909.0.camel@irongate.swansea.linux.org.uk>
-References: <Pine.LNX.4.33L2.0206061145520.857-100000@ida.rowland.org>
-	<20020607153918.A8319@eng2.beaverton.ibm.com>
-Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Message-ID: <UTC200206082250.g58ModI20444.aeb@smtp.cwi.nl>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <20020607153918.A8319@eng2.beaverton.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Patrick Mansfield <patmans@us.ibm.com>
-Cc: Alan Stern <stern@rowland.org>, linux-scsi@vger.kernel.org, Matthew Dharm <mdharm-usb@one-eyed-alien.net>
+To: Andrej.Borsenkow@mow.siemens.ru, linux-kernel@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org
 
-On Fri, 2002-06-07 at 23:39, Patrick Mansfield wrote:
-> The mid-layer should never send more than can_queue comands to
-> the low-level driver, that would be a bug.
+    From: Borsenkow Andrej <Andrej.Borsenkow@mow.siemens.ru>
 
-The old scsi_eh code used to occasionally do this. I don't know if it
-was ever properly fixed. So if you do think you are seeing it off by
-one, double check your counts but if your counts show the kernel is a
-bit out suspect the mid layer too
+    It looks like a media went corrupted so one expects some reasonable
+    error message. What happens is I get endless loop in SCSI error recovery
+    thread. The only way to clear up situation is to reboot
 
+That is the normal situation. I have never seen the SCSI error handler
+do anything else but bring down the system. Commenting it out
+really increases the stability of Linux (on my hardware).
+
+    the kernel is 2.4.18-18mdk based on 2.4.1-pre9.
+
+    Jun  8 20:50:03 localhost: In eh_done cd8b1e00 result:2
+    Jun  8 20:50:03 localhost: send_eh_cmnd: cd8b1e00 eh_state:2002
+    Jun  8 20:50:03 localhost: scsi_send_eh_cmnd: scsi_eh_completed_normally 2001
+    Jun  8 20:50:03 localhost: Adding timer for command cd8b1e00 at 6000 (d2a12a28)
+    Jun  8 20:50:06 localhost: In eh_done cd8b1e00 result:2
+    Jun  8 20:50:06 localhost: send_eh_cmnd: cd8b1e00 eh_state:2002
+    Jun  8 20:50:06 localhost: scsi_send_eh_cmnd: scsi_eh_completed_normally 2001
+    Jun  8 20:50:06 localhost: Adding timer for command cd8b1e00 at 6000 (d2a12a28)
+    Jun  8 20:50:09 localhost: In eh_done cd8b1e00 result:2
+    Jun  8 20:50:09 localhost: send_eh_cmnd: cd8b1e00 eh_state:2002
+    Jun  8 20:50:09 localhost: scsi_send_eh_cmnd: scsi_eh_completed_normally 2001
+    Jun  8 20:50:09 localhost: Adding timer for command cd8b1e00 at 6000 (d2a12a28)
+
+Hmm. It is clear what happens.
+You are in scsi_error.c:scsi_send_eh_cmnd() and send a command,
+the return status is NEEDS_RETRY, and the same command is sent again. Etc.
+
+Now retrying is evil, and trying more than three times almost always
+stupid, so if you add in this function
+
+	int retry_count = 0;
+
+and
+
+    retry:
+	if (++retry_count > 3) {
+		SCpnt->eh_state = FAILED;
+		return;
+	}
+
+that would surely be an improvement locally.
+Globally one wonders: there is a retry count already - why isn't it
+honoured by everybody involved? (But it isnt - it is only used in
+scsi_decide_disposition().)
+
+Where did we get this NEEDS_RETRY in the first place?
+Well, scsi_check_sense() will return NEEDS_RETRY for MEDIUM_ERROR.
+(Bad: the hardware also did retry many times already; it is usually very
+counterproductive to keep on hitting the same bad spot on the media.)
+
+There are also other code paths that will loop, but this one
+looks most likely here.
+
+Andries
