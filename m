@@ -1,32 +1,41 @@
 From: Troy Klein <res1uo0c@verizon.net>
-Subject: Re: Megaraid corruption?
-Date: Thu, 09 Dec 2004 07:03:47 -0800
-Message-ID: <1102604627.8512.27.camel@TroysLinux.verari.com>
-References: <1102558665.31354.22.camel@TroysLinux.verari.com>
-	 <1102601691.14284.16798.camel@bianchi.boston.redhat.com>
+Subject: RE: Megaraid corruption?
+Date: Thu, 09 Dec 2004 06:54:45 -0800
+Message-ID: <1102604085.8512.17.camel@TroysLinux.verari.com>
+References: <0E3FA95632D6D047BA649F95DAB60E57057A1AF3@exa-atlanta>
 Reply-To: res1uo0c@verizon.net
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from out009pub.verizon.net ([206.46.170.131]:19130 "EHLO
-	out009.verizon.net") by vger.kernel.org with ESMTP id S261480AbULIPDs
+Received: from out004pub.verizon.net ([206.46.170.142]:40190 "EHLO
+	out004.verizon.net") by vger.kernel.org with ESMTP id S261518AbULIOyr
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 9 Dec 2004 10:03:48 -0500
-In-Reply-To: <1102601691.14284.16798.camel@bianchi.boston.redhat.com>
+	Thu, 9 Dec 2004 09:54:47 -0500
+In-Reply-To: <0E3FA95632D6D047BA649F95DAB60E57057A1AF3@exa-atlanta>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Tom Coughlan <coughlan@redhat.com>
-Cc: linux-scsi@vger.kernel.org
+To: "Mukker, Atul" <Atulm@lsil.com>
+Cc: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
 
-No that is the thing I am getting no entry in logs.  
+description:
 
-I do have some questions as to the differences between megaraid version
-1.18f capabilities and megaraid2 2.00.9 capabilities.  Is the megaraid2
-capable of addressing faster drive buses?  What are the major
-differences and major features added to version 2?
+Recently during the migration of users to our two new servers, people 
+started noticing that files were being corrupted. This happened on both 
+servers (one of which also experienced a major filesystem corruption).
+I removed the users from one server and have been using this as a
+testbed to try and pinpoint the problem.
 
-The following is a more detailed descrtiption and some background:
+I was using "rsync" to transfer files, and thought this might be the
+problem.  I upgraded the software, but the problem still occurred.  I
+then used "tar" to try and copy a user's home dir to another dri on the
+server.  
+This had problems also, so that eliminated rsync as the cause.  I then 
+used rsync to copy files locally on the same machine.  The corruption 
+still occurred, so this eliminates the network itself as a source of 
+errors.
+
+Some Background:
 
 My "test case" has been a user home dir with about 12GB of data.  I use 
 "rsync" to copy the files, and then use "diff" to compare the two dirs
@@ -87,18 +96,39 @@ I replaced that disk and then rebuilt the RAID array.  This stopped the
 I/O errors, but another test showed that the file corruption problem
 remained.
 
-Troy
 
-On Thu, 2004-12-09 at 09:14 -0500, Tom Coughlan wrote:
-> On Wed, 2004-12-08 at 21:17, Troy Klein wrote:
-> > I am attempting to find out why I am having data corruption problems on
-> > my megaraid2 driver and not on megaraid.  The system is a 32-bit Xeon
-> > with a LSI 150-6 SATA controller running Redhat EL 3.0AS.  When I am
-> > running megaraid I can write data, read data, and modify data and get NO
-> > corruption.  With megaraid2 I get data corruption with tar, rsync, and
-> > scp.
+On Thu, 2004-12-09 at 09:18 -0500, Mukker, Atul wrote:
+> We would need more details before speculating for the cause. What kind of
+> corruption is happening, mismatch data? How many bytes? Kernel messages when
+> the corruption is seen?
 > 
-> Are there messages in /var/log/messages that correspond to the timeframe
-> of the corruption? 
+> Thanks
+> -Atul Mukker 
 > 
+> > -----Original Message-----
+> > From: Troy Klein [mailto:res1uo0c@verizon.net] 
+> > Sent: Wednesday, December 08, 2004 9:18 PM
+> > To: linux-scsi@vger.kernel.org
+> > Subject: Megaraid corruption?
+> > 
+> > I am attempting to find out why I am having data corruption 
+> > problems on my megaraid2 driver and not on megaraid.  The 
+> > system is a 32-bit Xeon with a LSI 150-6 SATA controller 
+> > running Redhat EL 3.0AS.  When I am running megaraid I can 
+> > write data, read data, and modify data and get NO corruption. 
+> >  With megaraid2 I get data corruption with tar, rsync, and scp.
+> > 
+> > Can anyone help?
+> > 
+> > Troy Perplexed
+> > 
+> > 
+> > 
+> > 
+> > -
+> > To unsubscribe from this list: send the line "unsubscribe 
+> > linux-scsi" in the body of a message to 
+> > majordomo@vger.kernel.org More majordomo info at  
+> > http://vger.kernel.org/majordomo-info.html
+> > 
 
