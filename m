@@ -1,59 +1,54 @@
-From: Kurt Garloff <garloff@suse.de>
-Subject: Re: lots and lots of disks again
-Date: Wed, 3 Mar 2004 20:55:20 +0100
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: [PATCH] add missing free sgtable in scsi_init_io error path
+Date: Wed, 03 Mar 2004 22:24:29 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040303195520.GB3544@tpkurt.garloff.de>
-References: <20040212161800.GU1780@tpkurt.garloff.de> <1076604183.2576.89.camel@mulgrave> <20040216124047.GG4011@tpkurt.garloff.de> <20040216225704.GA3420@pclin040.win.tue.nl> <1076979373.1758.688.camel@mulgrave> <20040217144959.GA4282@pclin040.win.tue.nl> <1077031099.1757.24.camel@mulgrave> <20040217152714.GG3810@tpkurt.garloff.de> <1078072902.1779.41.camel@mulgrave> <20040303193041.GA1190@beaverton.ibm.com>
+Message-ID: <4046CB9D.1010602@cs.wisc.edu>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="BjiB4l14+fRAo82+"
+Content-Type: multipart/mixed;
+ boundary="------------090908080709000407090900"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns.suse.de ([195.135.220.2]:35297 "EHLO Cantor.suse.de")
-	by vger.kernel.org with ESMTP id S261151AbUCCT54 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Mar 2004 14:57:56 -0500
-Content-Disposition: inline
-In-Reply-To: <20040303193041.GA1190@beaverton.ibm.com>
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:39693 "EHLO sabe.cs.wisc.edu")
+	by vger.kernel.org with ESMTP id S261473AbUCDGYh (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 4 Mar 2004 01:24:37 -0500
+Received: from cs.wisc.edu ([199.108.226.254])
+	(authenticated (0 bits))
+	by sabe.cs.wisc.edu (8.11.3/8.11.3) with ESMTP id i246OTO09606
+	(using TLSv1/SSLv3 with cipher RC4-MD5 (128 bits) verified NO)
+	for <linux-scsi@vger.kernel.org>; Thu, 4 Mar 2004 00:24:36 -0600
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@steeleye.com>, Andries Brouwer <aebr@win.tue.nl>, viro@parcelfarce.linux.theplanet.co.uk, Andrew Morton <akpm@osdl.org>, hch@infradead.org, SCSI Mailing List <linux-scsi@vger.kernel.org>, pbadari@us.ibm.com, willy@debian.org
+To: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
+This is a multi-part message in MIME format.
+--------------090908080709000407090900
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 
---BjiB4l14+fRAo82+
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+I was testing different errors while running multipath, and becuase of a 
+bug in dm-multiapth I hit the "Incorrect number of segments after 
+building list" error. The attached patch just adds a missing 
+scsi_release_buffers() at the bottom of the scsi_init_io where the table 
+was allocated successfully, but you can return BLKPREP_KILL when someone 
+messes up segment counts.
 
-Hi Mike,
+Mike Christie
 
-On Wed, Mar 03, 2004 at 11:30:41AM -0800, Mike Anderson wrote:
-> James Bottomley [James.Bottomley@steeleye.com] wrote:
-> It looks like this went quiet yet again or maybe I maybe I missed
-> something. It looks like Badari's patch is still in the mm tree and
-> Kurt's is only in the linux-scsi archives.=20
+--------------090908080709000407090900
+Content-Type: text/plain;
+ name="sgfree.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="sgfree.patch"
 
-and in the SUSE kernel ;-)
+--- linux-2.6.4-rc1-orig/drivers/scsi/scsi_lib.c	2004-02-27 14:21:02.000000000 -0800
++++ linux-2.6.4-rc1-scsi/drivers/scsi/scsi_lib.c	2004-03-03 00:22:31.030243228 -0800
+@@ -917,6 +917,7 @@ static int scsi_init_io(struct scsi_cmnd
+ 			req->current_nr_sectors);
+ 
+ 	/* release the command and kill it */
++	scsi_release_buffers(cmd);
+ 	scsi_put_command(cmd);
+ 	return BLKPREP_KILL;
+ }
 
-> Which patch / direction should we be using if we want to go above the
-> current number of sd's in the mainline.
+--------------090908080709000407090900--
 
-Well, I have an opinion obviously.
-But if we can agree on a common solution, I'd happily adopt it, at least
-if it does not screw up migration from the old numbering scheme.
-
-Regards,
---=20
-Kurt Garloff  <garloff@suse.de>                            Cologne, DE=20
-SUSE LINUX AG, Nuernberg, DE                          SUSE Labs (Head)
-
---BjiB4l14+fRAo82+
-Content-Type: application/pgp-signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.2.3 (GNU/Linux)
-
-iD8DBQFARjgoxmLh6hyYd04RAmBQAKCHBqi1JjXqcXlBlHe9E9w0sb0XjACfSZc1
-iqev1l+aLaexTxme2l6eubU=
-=jZGg
------END PGP SIGNATURE-----
-
---BjiB4l14+fRAo82+--
