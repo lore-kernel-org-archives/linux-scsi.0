@@ -1,23 +1,23 @@
 From: Kurt Garloff <garloff@suse.de>
-Subject: [PATCH] 3/6: allow host adapters to avoid REPORT_LUNS
-Date: Sun, 18 Apr 2004 20:58:48 +0200
+Subject: [PATCH] 4/6: scsi_allow_ghost_devices
+Date: Sun, 18 Apr 2004 20:59:50 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040418185848.GF4868@tpkurt.garloff.de>
+Message-ID: <20040418185950.GG4868@tpkurt.garloff.de>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="dWYAkE0V1FpFQHQ3"
+	protocol="application/pgp-signature"; boundary="df+09Je9rNq3P+GE"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns.suse.de ([195.135.220.2]:38821 "EHLO Cantor.suse.de")
-	by vger.kernel.org with ESMTP id S263853AbUDRTAH (ORCPT
+Received: from ns.suse.de ([195.135.220.2]:54181 "EHLO Cantor.suse.de")
+	by vger.kernel.org with ESMTP id S263879AbUDRTAJ (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 18 Apr 2004 15:00:07 -0400
+	Sun, 18 Apr 2004 15:00:09 -0400
 Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
 To: Linux SCSI list <linux-scsi@vger.kernel.org>
-Cc: James Bottomley <James.Bottomley@steeleye.com>, Andrew Morton <akpm@osdl.org>, Martin Peschke3 <MPESCHKE@de.ibm.com>
+Cc: James Bottomley <James.Bottomley@steeleye.com>, Andrew Morton <akpm@osdl.org>
 
 
---dWYAkE0V1FpFQHQ3
+--df+09Je9rNq3P+GE
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
 Content-Transfer-Encoding: quoted-printable
@@ -25,68 +25,56 @@ Content-Transfer-Encoding: quoted-printable
 
 Feature.
 
-This patch introduces a field in the per SCSI host struct that allows
-host adapters to switch off the user of REPORT_LUNS during SCSI scanning.
-Some host adapters/devices may not cope with the way Linux maps the 8byte=
-=20
-LUNS to a 32bit number and may provide their own mechanism. zfcp (S/390)=20
-is known to do this.
+scsi_allow_ghost_devices=3DN
+This patch introduces a boot/module parameter that allows the user to tell
+the kernel to NOT set the first N devices to offline despite they would
+normally be. Needed for some EMC multipathing devices.
+This parameter is even documented in EMC docs as both RH and SUSE had
+such a parameter in their 2.4 vendor kernels :-/
 
- drivers/scsi/scsi_scan.c |    1 +
- include/scsi/scsi_host.h |    6 ++++++
- 2 files changed, 7 insertions(+)
-
-diff -uNrp linux-2.6.5.replun2/drivers/scsi/scsi_scan.c linux-2.6.5.noreplu=
-nhost/drivers/scsi/scsi_scan.c
---- linux-2.6.5.replun2/drivers/scsi/scsi_scan.c	2004-04-15 22:36:53.844309=
-095 +0200
-+++ linux-2.6.5.noreplunhost/drivers/scsi/scsi_scan.c	2004-04-15 22:42:48.5=
-44207185 +0200
-@@ -951,6 +951,7 @@ static int scsi_report_lun_scan(struct s
- 	 */
- =09
- 	if ( scsi_noreportlun ||
-+	     sdev->host->no_reportlun ||
- 	     sdev->scsi_level < SCSI_2 ||=20
- 	    (sdev->scsi_level < SCSI_3 &&
- 	     (!scsi_reportlun2 || sdev->host->max_lun <=3D 8)))
-Files linux-2.6.5.replun2/drivers/scsi/.scsi_scan.c.swp and linux-2.6.5.nor=
-eplunhost/drivers/scsi/.scsi_scan.c.swp differ
-diff -uNrp linux-2.6.5.replun2/include/scsi/scsi_host.h linux-2.6.5.noreplu=
-nhost/include/scsi/scsi_host.h
---- linux-2.6.5.replun2/include/scsi/scsi_host.h	2004-04-04 05:36:25.000000=
-000 +0200
-+++ linux-2.6.5.noreplunhost/include/scsi/scsi_host.h	2004-04-15 22:41:20.8=
-13609917 +0200
-@@ -459,6 +459,12 @@ struct Scsi_Host {
- 	unsigned reverse_ordering:1;
+--- linux-2.6.5.noreplunhost/drivers/scsi/scsi_scan.c.orig	2004-04-15 22:42=
+:48.544207000 +0200
++++ linux-2.6.5.noreplunhost/drivers/scsi/scsi_scan.c	2004-04-15 22:51:08.2=
+91252857 +0200
+@@ -119,6 +119,12 @@ module_param_named(scsi_reportlun2, scsi
+ MODULE_PARM_DESC(scsi_reportlun2,
+ 		 "Use REPORT_LUNs for scanning SCSI-2 devs as well");
 =20
- 	/*
-+	 * True for host adapters that dislike REPORT_LUN as they
-+	 * use a different mapping of 8byte LUNs to (long) integers
-+	 */
-+	unsigned no_reportlun:1;
++static unsigned int scsi_allow_ghost_devices;
++module_param_named(scsi_allow_ghost_devices ,scsi_allow_ghost_devices, int=
+, S_IRUGO|S_IWUSR);
++MODULE_PARM_DESC(scsi_allow_ghost_devices,=20
++		 "allow devices marked as being offline to be accessed anyway "
++		 "(0 =3D off, else allow ghosts on lun 0 through allow_ghost_devices - 1=
+");
 +
-+	/*
- 	 * Host has rejected a command because it was busy.
+=20
+ /**
+  * scsi_unlock_floptical - unlock device via a special MODE SENSE command
+@@ -573,7 +579,8 @@ static int scsi_add_lun(struct scsi_devi
+ 	 * otherwise, offline devices still get an sd allocated, and they
+ 	 * use up an sd slot.
  	 */
- 	unsigned int host_blocked;
-Files linux-2.6.5.replun2/include/scsi/.scsi_host.h.swp and linux-2.6.5.nor=
-eplunhost/include/scsi/.scsi_host.h.swp differ
+-	if (((inq_result[0] >> 5) & 7) =3D=3D 1) {
++	if (((inq_result[0] >> 5) & 7) =3D=3D 1 &&
++	    (sdev->lun >=3D scsi_allow_ghost_devices)) {
+ 		SCSI_LOG_SCAN_BUS(3, printk(KERN_INFO "scsi scan: peripheral"
+ 				" qualifier of 1, device offlined\n"));
+ 		sdev->online =3D FALSE;
 --=20
 Kurt Garloff  <garloff@suse.de>                            Cologne, DE=20
 SUSE LINUX AG, Nuernberg, DE                          SUSE Labs (Head)
 
---dWYAkE0V1FpFQHQ3
+--df+09Je9rNq3P+GE
 Content-Type: application/pgp-signature
 Content-Disposition: inline
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v1.2.4 (GNU/Linux)
 
-iD8DBQFAgs/nxmLh6hyYd04RAtYMAJ9ZV1icCxWWss4u61fFekaZ1bBazgCgjF+a
-qjB2gDERQHyI7v1gh8nCI+g=
-=1o0T
+iD8DBQFAgtAmxmLh6hyYd04RAvPQAJ9biy3ctV6JjuIHJtCYGcDh83TFUgCg2FZ1
+QywUqiuiBO8Egke9QFn4Ywo=
+=Q8l1
 -----END PGP SIGNATURE-----
 
---dWYAkE0V1FpFQHQ3--
+--df+09Je9rNq3P+GE--
