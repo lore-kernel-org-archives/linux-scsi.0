@@ -1,39 +1,36 @@
-From: Matthew Wilcox <willy@debian.org>
-Subject: Re: advansys driver vs 2.6 breakage
-Date: Thu, 7 Aug 2003 12:21:57 +0100
+From: aa2462@vei.net
+Subject: what are you waiting for
+Date: Thu, 7 Aug 2003 21:30:27 +0900
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030807112157.GF22222@parcelfarce.linux.theplanet.co.uk>
-References: <200308070422.41412.gene.heskett@verizon.net>
+Message-ID: <200308071225.h77CPN632317@zeus.kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="iso-8859-1"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:52393 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S275200AbTHGLV7
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 7 Aug 2003 07:21:59 -0400
-Content-Disposition: inline
-In-Reply-To: <200308070422.41412.gene.heskett@verizon.net>
+Received: from zeus.kernel.org ([204.152.189.113]:7106 "EHLO zeus.kernel.org")
+	by vger.kernel.org with ESMTP id S275300AbTHGMZg (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Aug 2003 08:25:36 -0400
+Received: from oemcomputer ([220.85.104.15])
+	by zeus.kernel.org (8.11.6/8.11.6) with SMTP id h77CPN632317
+	for <linux-scsi@vger.kernel.org>; Thu, 7 Aug 2003 05:25:28 -0700
 List-Id: linux-scsi@vger.kernel.org
-To: Gene Heskett <gene.heskett@verizon.net>
-Cc: bfrey@turbolinux.com.cn, linux-scsi@vger.kernel.org, Janitors <kernel-janitor-discuss@lists.sourceforge.net>
+To: linux-scsi@vger.kernel.org
 
-On Thu, Aug 07, 2003 at 04:22:41AM -0400, Gene Heskett wrote:
-> This is, FWIW, not the only code that is apparently broken by that 
-> ioports.h header redefinition.
-> 
-> I'm getting messages from other modules squawking about the 
-> __deprecated status of "check_region" during the compile too.
+You are receiving this email as a warning.
+are you sure you're safe? most viruses these days allow unauthorized access to your pc
+Norton Antivirus will keep you safe from all virus systems, and scans all emails automatically!
 
-This seems to be a fundamental misunderstanding on your part.
+btw, you look great today.
 
-check_region is not broken.  It is deprecated.  That means we asked the
-compiler to emit a warning when someone tries to use it.  It does not
-mean that it will crash.
+For the BEST Anti-virus package, Click here NOW.
+http://ooq212@softwaresavings2you.biz/default.asp?id=3000
 
-Something else is going on here, and someone with one of these cards
-needs to debug it properly.
 
--- 
-"It's not Hollywood.  War is real, war is primarily not about defeat or
-victory, it is about death.  I've seen thousands and thousands of dead bodies.
-Do you think I want to have an academic debate on this subject?" -- Robert Fisk
+
+
+
+
+
+
+
+ps. dont want any more of this shit?
+http://oo6q212@softwaresavings2you.biz/remove/remove.html
