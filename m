@@ -1,77 +1,51 @@
-From: "Randy.Dunlap" <rddunlap@osdl.org>
-Subject: Re: [PATCH] instrument ide-scsi in 2.5.68
-Date: Tue, 6 May 2003 07:39:23 -0700
+From: James Bottomley <James.Bottomley@steeleye.com>
+Subject: Re: [RFC] scsi host sysfs support again [0/4]
+Date: 06 May 2003 11:28:26 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030506073923.210a82ff.rddunlap@osdl.org>
-References: <3EB11AD3.2070503@torque.net>
-	<3EB22F09.7060906@torque.net>
-	<20030502095536.76dba4dd.rddunlap@osdl.org>
-	<3EB385F3.6010708@torque.net>
-	<20030505095715.6d96e703.rddunlap@osdl.org>
-	<3EB7748F.2030702@torque.net>
+Message-ID: <1052238508.1819.42.camel@mulgrave>
+References: <20030505083315.GB8416@beaverton.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from air-2.osdl.org ([65.172.181.6]:42905 "EHLO mail.osdl.org")
-	by vger.kernel.org with ESMTP id S261279AbTEFO3x (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 6 May 2003 10:29:53 -0400
-In-Reply-To: <3EB7748F.2030702@torque.net>
+Received: from nat9.steeleye.com ([65.114.3.137]:51717 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S263958AbTEFQQE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 6 May 2003 12:16:04 -0400
+In-Reply-To: <20030505083315.GB8416@beaverton.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: dougg@torque.net
-Cc: linux-scsi@vger.kernel.org, alan@lxorguk.ukuu.org.uk
+To: Mike Anderson <andmike@us.ibm.com>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, Patrick Mochel <mochel@osdl.org>
 
-On Tue, 06 May 2003 18:38:39 +1000 Douglas Gilbert <dougg@torque.net> wrote:
+On Mon, 2003-05-05 at 03:33, Mike Anderson wrote:
+> Example tree:
+> 
+> # tree /sys/class/scsi_host
+> /sys/class/scsi_host
+> |-- host0
+> |   |-- cmd_per_lun
+> |   |-- device -> ../../../devices/pci0/00:09.0/host0
+> |   |-- host_busy
+> |   |-- sg_tablesize
+> |   |-- unchecked_isa_dma
+> |   `-- unique_id
 
-| > New kernel log file is now at
-| >   http://www.xenotime.net/linux/capture2.txt
-| > 
-| > Are there any docs on SCSI logging?
-| 
-| Randy,
-| The failure looks very similar. This time it timed
-| out and corrupted on a Mode Sense (10) for page 5
-| (alloc length=2) while last time its failed on a
-| Mode Sense (10) for page 0x2a (alloc length=2).
-| The Mode Sense is not translated (i.e. the app sent a
-| 10 byte Mode Sense). Perhaps there is a weakness
-| when the allocation length is that short.
-| 
-| This time 141 commands where sent (last time 91)
-| with lots of Test Unit Readys. Without timestamps
-| it is hard to say whether a "magicdev" type program
-| is at work or libscg (cdrecord transport layer) is
-| solely responsible for that sequence of SCSI commands.
-| [cdrecord may be accessing the cdwriter via the cdrom
-| driver and the sg driver.]
+Could you elaborate a bit more on why the host properties are under the
+class tree, but the scsi_device properties are under the device tree.
 
-Well, I saw no scsi logging messages except when I ran
-cdrecord.  Does that help any?
+I think this could be my misunderstanding of the class concept:  I
+thought it was going to be a unifying abstraction, e.g. a class for all
+tape devices (be they SCSI, ide or the oddball qic ones) that would
+export a unifying interface that all tapes could use.  Therefore, you
+have a device with a set of intrinsic properties exposed in the device
+tree plus a set of classes whose interfaces it chooses to export.
 
-| Here is the point of failure from Randy's log:
-| 
-| ide-scsi: hdd: que 141, cmd = [ 5a 0 5 0 0 0 0 0 2 0 ]
-| hdd: lost interrupt
-| ide-scsi: Reached idescsi_pc_intr interrupt handler
-| ide-scsi: hdd: DMA complete
-| ide-scsi: CoD != 0 in idescsi_pc_intr
-| hdd: DMA disabled
-| Error handler scsi_eh_2 waking up
-| scsi_eh_<pr4>t_hfdadi: lA_TstAaPIts r: e2se:t0: 0co:m0 plcmetdse
-| failiedde:- sc0s,i :c anRecaeclh: ed1
-| idTeosctsali_ pofc_ 1in ctro mminantdersr oupnt 1  hdanedvliceres
-|   rePaqcuikrete  ceho mmwoanrdk
-| ....
-| 
-| Ouch, after the error handler starts the dump looks like it
-| is in Klingon :-) Lots of data but no information. It could
-| be a result of the corruption or another problem.
+I could see us adding a scsi_device class and moving all the device
+properties under there too, I suppose.
 
-I think (but I'm not sure) that this is because it's a dual-proc
-system and both procs are garbling the message log.  Later on during
-a panic(), all procs except the current one are disabled, but for
-early messages, all procs can lead to this.  I've seen this on 2
-other occasions (non-scsi).
+What I think I'm looking for is clarification of what is a "class
+property" vs what is a "device property"
 
---
-~Randy
+James
+
+
