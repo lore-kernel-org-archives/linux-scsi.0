@@ -1,93 +1,75 @@
-From: Matthew Dharm <mdharm-scsi@one-eyed-alien.net>
-Subject: Re: Notify about errors during initialization
-Date: Sun, 4 Jan 2004 18:10:47 -0800
+From: Andre Hedrick <andre@linux-ide.org>
+Subject: Re: Scsi error handler strategy question
+Date: Sun, 4 Jan 2004 18:42:09 -0800 (PST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040105021047.GD30408@one-eyed-alien.net>
-References: <20031207051634.GB21951@one-eyed-alien.net> <Pine.LNX.4.44L0.0312081101480.1043-100000@ida.rowland.org>
+Message-ID: <Pine.LNX.4.10.10401041839400.31033-100000@master.linux-ide.org>
+References: <20040104232425.GM4339@linnie.riede.org>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="+KJYzRxRHjYqLGl5"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from multivac.one-eyed-alien.net ([64.169.228.101]:18315 "EHLO
-	multivac.one-eyed-alien.net") by vger.kernel.org with ESMTP
-	id S265847AbUAECKu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 4 Jan 2004 21:10:50 -0500
-Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.44L0.0312081101480.1043-100000@ida.rowland.org>
-List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: USB Storage List <usb-storage@one-eyed-alien.net>, SCSI development list <linux-scsi@vger.kernel.org>
-
-
---+KJYzRxRHjYqLGl5
 Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from astound-64-85-224-253.ca.astound.net ([64.85.224.253]:64774
+	"EHLO master.linux-ide.org") by vger.kernel.org with ESMTP
+	id S265849AbUAECpF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 4 Jan 2004 21:45:05 -0500
+In-Reply-To: <20040104232425.GM4339@linnie.riede.org>
+List-Id: linux-scsi@vger.kernel.org
+To: Willem Riede <wrlk@riede.org>
+Cc: linux-scsi@vger.kernel.org
 
-Did you ever get an answer from the linux-scsi people on this?
 
-Matt
+Willem,
 
-On Mon, Dec 08, 2003 at 11:15:06AM -0500, Alan Stern wrote:
-> Cross-posted to the linux-scsi list in the hope that someone there can=20
-> confirm this answer...
->=20
-> On Sat, 6 Dec 2003, Matthew Dharm wrote:
->=20
-> > Question: Are we guaranteed that scsi_scan_host() doesn't return until =
-the
-> > scanning process is complete?
->=20
-> I'm not absolutely certain -- best to check with someone on the linux-scsi
-> list.  But a quick look through the call chain in scsi_scan.c indicates
-> that scsi_scan_host() doesn't return until the scanning process is indeed
-> complete.  The real work is done in scsi_probe_lun() (called from
-> scsi_probe_and_add_lun()), and that uses scsi_wait_req().  After all, it
-> can't tell whether the LUN is there or not until it gets a reply to the
-> INQUIRY!
->=20
-> > I recall a problem that we had with the setting of flags and the call to
-> > scan the host -- without pre-emption, it worked, but with pre-emption
-> > things happened in the wrong order.  Could that happen here?
->=20
-> I don't remember that problem.  But I don't think pre-emption would cause=
-=20
-> any difficulties here.  All the flags should be set before we call=20
-> scsi_scan_host().  If you can provide more details or a reference to what=
-=20
-> you're thinking of, I could reply in more detail.
->=20
-> When pre-emption does cause a problem it's generally because of some
-> assumption that the current task won't be scheduled out when it calls up()
-> or complete() or something like that.
->=20
-> Alan Stern
->=20
->=20
->=20
->=20
->=20
->=20
+You are free to actually deploy an entire independent eh_strategy series
+of functions.  I never got around to doing it but one of the goals was to
+remove the mid-layer timer and manage it in ide-scsi.
 
---=20
-Matthew Dharm                              Home: mdharm-usb@one-eyed-alien.=
-net=20
-Maintainer, Linux USB Mass Storage Driver
+There is much more that can be done, I just do not have my notes handy.
 
-I'm just trying to think of a way to say "up yours" without getting fired.
-					-- Stef
-User Friendly, 10/8/1998
+Cheers,
 
---+KJYzRxRHjYqLGl5
-Content-Type: application/pgp-signature
-Content-Disposition: inline
+Andre Hedrick
+LAD Storage Consulting Group
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.2.1 (GNU/Linux)
+On Sun, 4 Jan 2004, Willem Riede wrote:
 
-iD8DBQE/+MenIjReC7bSPZARAhBaAKCCtymTYwL17eWjAQEmFcayZDfRlACfSWKk
-NudlILMhe3T2hIiAh4sG+0s=
-=O1rC
------END PGP SIGNATURE-----
+> While testing the ide-scsi error handling, I observed that my ATAPI
+> device gets offlined too easily.
+> 
+> At some point, the host + device are getting reset. That's desired.
+> The error handler is programmed to then expect a "CC/UA" (check
+> condition / unit attention) when it does TUR (test unit ready)
+> following reset. That's appropriate.
+> 
+> But here is my first question: is there typically any need to wait 
+> some time between doing the host/bus/device reset and the first TUR?
+> Is there a standard that governs how fast devices have to be done
+> resetting to the point that they can respond to commands (if only to
+> say they're not ready?
+> 
+> When the first TUR completes, the CC/UA expected flag takes care of
+> the reported sense 06:29:00 (power on reset or device reset occurred).
+> So far so good. Second TUR issued. That one typically gets 02:04:01
+> (not ready - in the process of becoming ready) reported. The error
+> handler is programmed to retry TUR once if it sees this.
+> 
+> Second question: if the device firmware takes some time to re-initiate
+> the device, this code can be returned multiple times. So am I allowed
+> to submit a patch to increase that retry count? What would be a good
+> number? Hard to say in general, as this depends on what devices you
+> have and how fast commands get executed :-(
+> 
+> Finally, at least my device, the OnStream DI-30, will eventually want 
+> to report 06:28:00 (not ready to ready transition, medium may have
+> changed). The error handler considers that an error, and is guaranteed
+> to take the device offline, just as it came back to life :-(
+> 
+> Am I allowed to submit a patch that will also retry on that condition?
+> 
+> Thanks, Willem Riede.
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
 
---+KJYzRxRHjYqLGl5--
+
