@@ -1,70 +1,72 @@
-From: Kurt Garloff <garloff@suse.de>
+From: Austin Gonyou <austin@digitalroadkill.net>
 Subject: Re: max_scsi_luns and 2.4.19-pre10.
-Date: Wed, 26 Jun 2002 14:33:37 +0200
+Date: 26 Jun 2002 09:18:45 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20020626123337.GC1217@gum01m.etpnet.phys.tue.nl>
+Message-ID: <1025101125.19558.4.camel@UberGeek>
 References: <1025052385.19462.5.camel@UberGeek>
+	  <20020626123337.GC1217@gum01m.etpnet.phys.tue.nl>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="ZmUaFz6apKcXQszQ"
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1025052385.19462.5.camel@UberGeek>
+In-Reply-To: <20020626123337.GC1217@gum01m.etpnet.phys.tue.nl>
 List-Id: linux-scsi@vger.kernel.org
-To: Austin Gonyou <austin@digitalroadkill.net>
+To: Kurt Garloff <garloff@suse.de>
 Cc: Linux kernel list <linux-kernel@vger.kernel.org>, Linux SCSI list <linux-scsi@vger.kernel.org>
 
+On Wed, 2002-06-26 at 07:33, Kurt Garloff wrote:
+> Hi Austin,
+> 
+> enough guesses have been there not answering your questions ...
 
---ZmUaFz6apKcXQszQ
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Sure I hear that. But I posted an earlier question about QLA2200 and a
+PV 660F and not seeing > 8 luns with 2.4.19-pre10. 
 
-Hi Austin,
 
-enough guesses have been there not answering your questions ...
+> On Tue, Jun 25, 2002 at 07:46:25PM -0500, Austin Gonyou wrote:
+> > This originally was asking for help regarding QLA2200's, but I've since
+> > discovered it's a kernel param problem that I'm not sure how to solve.
+> > 
+> > Using a default RH kernel (from SGI XFS installer) and passing
+> > max_scsi_luns=128 in grub, and for scsi_mod, it seems to work. 
+> 
+> In 2.4.19pre1 a patch was merged into mainline which introduced a flag
+> BLIST_LARGELUN and set it for EMC Symmetrix devices. Some distributors
+> (incl. RH and SuSE) did ship kernels with this patch included.
+> http://van-dijk.net/linuxkernel/200206/0347.html
+> (An older patch for 2.4.16 exists as well.)
 
-On Tue, Jun 25, 2002 at 07:46:25PM -0500, Austin Gonyou wrote:
-> This originally was asking for help regarding QLA2200's, but I've since
-> discovered it's a kernel param problem that I'm not sure how to solve.
->=20
-> Using a default RH kernel (from SGI XFS installer) and passing
-> max_scsi_luns=3D128 in grub, and for scsi_mod, it seems to work.=20
 
-In 2.4.19pre1 a patch was merged into mainline which introduced a flag
-BLIST_LARGELUN and set it for EMC Symmetrix devices. Some distributors
-(incl. RH and SuSE) did ship kernels with this patch included.
-http://van-dijk.net/linuxkernel/200206/0347.html
-(An older patch for 2.4.16 exists as well.)
+I'll take a look at that, and see if I can merge it into -aa4. 
 
-The flag does allow a device to use more than 8 LUNs despite it reporting
-as SCSI Version 2 devices (which can not support more than 8 LUNs normally
-=2E..)=20
-The flag also needs to be set for some more devices, look for DGC, DELL, CMD
-and CNSi/CNSI devices that already have the BLIST_SPARSELUN flag.
+> The flag does allow a device to use more than 8 LUNs despite it reporting
+> as SCSI Version 2 devices (which can not support more than 8 LUNs normally
+> ...) 
+> The flag also needs to be set for some more devices, look for DGC, DELL, CMD
+> and CNSi/CNSI devices that already have the BLIST_SPARSELUN flag.
 
-But as you did not post the output of /proc/scsi/scsi nor the syslog
-meesages from your SCSI subsystem nobody knows what devices you're using or
-what actually happens. Just speculations ...
+This would be a DELL device, so I'll see about changing it from
+SPARESLUN to LARGELUN?
 
-PS: The better list for such questions is linux-scsi@vger.kernel.org
+> But as you did not post the output of /proc/scsi/scsi nor the syslog
+> meesages from your SCSI subsystem nobody knows what devices you're using or
+> what actually happens. Just speculations ...
 
-Regards,
---=20
-Kurt Garloff  <garloff@suse.de>                          Eindhoven, NL
-GPG key: See mail header, key servers         Linux kernel development
-SuSE Linux AG, Nuernberg, DE                            SCSI, Security
+There's nothing to post from /proc/scsi/scsi or the syslog other than
+there's no more than 8 devices on my FC chain. I guess the real point
+here is that if you're using FC, you're probably going to use more than
+8 luns, even if not immediately. Especially for large Databases. 
 
---ZmUaFz6apKcXQszQ
-Content-Type: application/pgp-signature
-Content-Disposition: inline
+> PS: The better list for such questions is linux-scsi@vger.kernel.org
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.0.7 (GNU/Linux)
+That makes sense I'll post to that list immediately and see what I can
+get. Sorry for the confusion. 
 
-iD8DBQE9GbShxmLh6hyYd04RApUpAKCPCxlFaamChzBdpqzjattlZv/nTACZAWy3
-E/Uo/PRsFunt4IW/MObgRUc=
-=OWki
------END PGP SIGNATURE-----
 
---ZmUaFz6apKcXQszQ--
+> Regards,
+> -- 
+> Kurt Garloff  <garloff@suse.de>                          Eindhoven, NL
+> GPG key: See mail header, key servers         Linux kernel development
+> SuSE Linux AG, Nuernberg, DE                            SCSI, Security
+-- 
+Austin Gonyou <austin@digitalroadkill.net>
