@@ -1,35 +1,30 @@
-From: Matthew Wilcox <willy@debian.org>
-Subject: Re: [2.6 patch] show "Fusion MPT device support" menu only if BLK_DEV_SD
-Date: Sun, 25 Jan 2004 23:07:56 +0000
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <20040125230756.GI11844@parcelfarce.linux.theplanet.co.uk>
-References: <20040120232507.GC6441@fs.tum.de> <20040120233537.A23375@infradead.org> <20040120160346.7e466ad2.akpm@osdl.org>
+From: Andrew Morton <akpm@osdl.org>
+Subject: Re: [2.6 patch] show "Fusion MPT device support" menu only if
+ BLK_DEV_SD
+Date: Sun, 25 Jan 2004 15:11:07 -0800
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <20040125151107.1ac381f1.akpm@osdl.org>
+References: <20040120232507.GC6441@fs.tum.de>
+	<20040120233537.A23375@infradead.org>
+	<20040120160346.7e466ad2.akpm@osdl.org>
+	<20040125230756.GI11844@parcelfarce.linux.theplanet.co.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20040120160346.7e466ad2.akpm@osdl.org>
-To: Andrew Morton <akpm@osdl.org>
-Cc: Christoph Hellwig <hch@infradead.org>, bunk@fs.tum.de, James.Bottomley@SteelEye.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from fw.osdl.org ([65.172.181.6]:52964 "EHLO mail.osdl.org")
+	by vger.kernel.org with ESMTP id S265328AbUAYXLV (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 25 Jan 2004 18:11:21 -0500
+In-Reply-To: <20040125230756.GI11844@parcelfarce.linux.theplanet.co.uk>
 List-Id: linux-scsi@vger.kernel.org
+To: Matthew Wilcox <willy@debian.org>
+Cc: hch@infradead.org, bunk@fs.tum.de, James.Bottomley@SteelEye.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Tue, Jan 20, 2004 at 04:03:46PM -0800, Andrew Morton wrote:
-> There's a hint in the config help:
-> 
->           [2] In order enable capability to boot the linux kernel
->           natively from a Fusion MPT target device, you MUST
->           answer Y here! (currently requires CONFIG_BLK_DEV_SD)
-> 
-> But a kernel built with BLK_DEV_SD=n, FUSION=y builds and links OK.
+Matthew Wilcox <willy@debian.org> wrote:
+>
+> Andrew, shall I start
+>  feeding all my Kconfig cleanups through you rather than through
+>  kernel-janitors?
 
-This is one of the patches I have in my tree.  Andrew, shall I start
-feeding all my Kconfig cleanups through you rather than through
-kernel-janitors?
-
--- 
-"Next the statesmen will invent cheap lies, putting the blame upon 
-the nation that is attacked, and every man will be glad of those
-conscience-soothing falsities, and will diligently study them, and refuse
-to examine any refutations of them; and thus he will by and by convince 
-himself that the war is just, and will thank God for the better sleep 
-he enjoys after this process of grotesque self-deception." -- Mark Twain
+Doesn't Randy have some system going there?
