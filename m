@@ -1,268 +1,536 @@
-From: Patrick Mansfield <patmans@us.ibm.com>
-Subject: Re: [PATCH] 2/2 Use bus dev_attrs to create scsi_device attributes
-Date: Wed, 16 Mar 2005 14:45:51 -0800
-Message-ID: <20050316224551.GA21918@us.ibm.com>
-References: <20050302194432.GA9743@us.ibm.com> <20050302194553.GA9776@us.ibm.com> <20050302194647.GB9776@us.ibm.com>
+From: "Ju, Seokmann" <sju@lsil.com>
+Subject: [ANNOUNCE][PATCH] drivers/scsi/megaraid/megaraid_{mm,mbox}
+Date: Wed, 16 Mar 2005 19:39:19 -0500
+Message-ID: <0E3FA95632D6D047BA649F95DAB60E570366276A@exa-atlanta>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Received: from e5.ny.us.ibm.com ([32.97.182.145]:19593 "EHLO e5.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S262834AbVCPWqT (ORCPT
+Content-Type: text/plain
+Received: from mail0.lsil.com ([147.145.40.20]:31407 "EHLO mail0.lsil.com")
+	by vger.kernel.org with ESMTP id S262930AbVCQAj3 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 16 Mar 2005 17:46:19 -0500
-Received: from d01relay02.pok.ibm.com (d01relay02.pok.ibm.com [9.56.227.234])
-	by e5.ny.us.ibm.com (8.12.11/8.12.11) with ESMTP id j2GMkIG3024137
-	for <linux-scsi@vger.kernel.org>; Wed, 16 Mar 2005 17:46:18 -0500
-Received: from d01av02.pok.ibm.com (d01av02.pok.ibm.com [9.56.224.216])
-	by d01relay02.pok.ibm.com (8.12.10/NCO/VER6.6) with ESMTP id j2GMkIs8095906
-	for <linux-scsi@vger.kernel.org>; Wed, 16 Mar 2005 17:46:18 -0500
-Received: from d01av02.pok.ibm.com (loopback [127.0.0.1])
-	by d01av02.pok.ibm.com (8.12.11/8.12.11) with ESMTP id j2GMkD9B030020
-	for <linux-scsi@vger.kernel.org>; Wed, 16 Mar 2005 17:46:13 -0500
-Content-Disposition: inline
-In-Reply-To: <20050302194647.GB9776@us.ibm.com>
+	Wed, 16 Mar 2005 19:39:29 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@steeleye.com>, linux-scsi@vger.kernel.org, Greg KH <greg@kroah.com>, Kay Sievers <kay.sievers@vrfy.org>
+To: "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
+Cc: "Ju, Seokmann" <sju@lsil.com>
 
-On Wed, Mar 02, 2005 at 11:46:47AM -0800, Patrick Mansfield wrote:
-> Use bus dev_attrs to create the default scsi_device attributes.
-> 
-> Note sdev_default_attrs is not a pointer to an array (like
-> scsi_sysfs_sdev_attrs), and so DEVICE_ATTR's can be removed, and __ATTR
-> used instaed.
+Hello,
 
-Any comments on this? Should I resend these patches?
+Here is a patch for megaraid_mm/megaraid_mbox driver which makes it
+2.20.4.6.
+Following is brief on the changes:
+1. Added compat_ioctl
+2. Reordered inputs on memset
+3. Convert pci_module_iit to pci_register_driver 
+4. Added DMA_{32,64}BIT_MASK 5. Modified PCI PnP ID table
 
-Do we need a new driver interface that allows the driver to explicitly
-send the hotplug after all attributes have been created?
+Signed-off-by: Seokmann Ju <sju@lsil.com>
 
-Such a new interface would allow scsi to continue to create attributes
-(based on the underlying HBA or transport capability) that are sometimes
-read only, and sometimes read+write. The current driver interface does not
-allow default attributes to have different read/write properties.
-
-And scsi could keep its current host override ability (we can't use the
-current override code with the default attributes).
-
-In any case, we need changes so udev can stop waiting for sysfs attributes.
-
-> Signed-off-by: Patrick Mansfield <patmans@us.ibm.com>
-> 
-> --- sattrs-linux-2.6.11/drivers/scsi/s1-scsi_sysfs.c	2005-03-02 09:58:21.000000000 -0800
-> +++ sattrs-linux-2.6.11/drivers/scsi/scsi_sysfs.c	2005-03-02 10:22:25.000000000 -0800
-> @@ -193,40 +193,6 @@
->  	.release	= scsi_device_cls_release,
->  };
->  
-> -/* all probing is done in the individual ->probe routines */
-> -static int scsi_bus_match(struct device *dev, struct device_driver *gendrv)
-> -{
-> -	struct scsi_device *sdp = to_scsi_device(dev);
-> -	if (sdp->no_uld_attach)
-> -		return 0;
-> -	return (sdp->inq_periph_qual == SCSI_INQ_PQ_CON)? 1: 0;
-> -}
-> -
-> -struct bus_type scsi_bus_type = {
-> -        .name		= "scsi",
-> -        .match		= scsi_bus_match,
-> -};
-> -
-> -int scsi_sysfs_register(void)
-> -{
-> -	int error;
-> -
-> -	error = bus_register(&scsi_bus_type);
-> -	if (!error) {
-> -		error = class_register(&sdev_class);
-> -		if (error)
-> -			bus_unregister(&scsi_bus_type);
-> -	}
-> -
-> -	return error;
-> -}
-> -
-> -void scsi_sysfs_unregister(void)
-> -{
-> -	class_unregister(&sdev_class);
-> -	bus_unregister(&scsi_bus_type);
-> -}
-> -
->  /*
->   * sdev_show_function: macro to create an attr function that can be used to
->   * show a non-bit field.
-> @@ -245,8 +211,7 @@
->   * read only field.
->   */
->  #define sdev_rd_attr(field, format_string)				\
-> -	sdev_show_function(field, format_string)			\
-> -static DEVICE_ATTR(field, S_IRUGO, sdev_show_##field, NULL);
-> +	sdev_show_function(field, format_string)
->  
->  
->  /*
-> @@ -263,8 +228,7 @@
->  	sdev = to_scsi_device(dev);					\
->  	snscanf (buf, 20, format_string, &sdev->field);			\
->  	return count;							\
-> -}									\
-> -static DEVICE_ATTR(field, S_IRUGO | S_IWUSR, sdev_show_##field, sdev_store_##field);
-> +}
->  
->  /* Currently we don't export bit fields, but we might in future,
->   * so leave this code in */
-> @@ -288,8 +252,7 @@
->  		ret = count;						\
->  	}								\
->  	return ret;							\
-> -}									\
-> -static DEVICE_ATTR(field, S_IRUGO | S_IWUSR, sdev_show_##field, sdev_store_##field);
-> +}
->  
->  /*
->   * scsi_sdev_check_buf_bit: return 0 if buf is "0", return 1 if buf is "1",
-> @@ -336,15 +299,13 @@
->  	sdev->timeout = timeout * HZ;
->  	return count;
->  }
-> -static DEVICE_ATTR(timeout, S_IRUGO | S_IWUSR, sdev_show_timeout, sdev_store_timeout);
->  
->  static ssize_t
-> -store_rescan_field (struct device *dev, const char *buf, size_t count) 
-> +sdev_store_rescan (struct device *dev, const char *buf, size_t count) 
->  {
->  	scsi_rescan_device(dev);
->  	return count;
->  }
-> -static DEVICE_ATTR(rescan, S_IWUSR, NULL, store_rescan_field);
->  
->  static ssize_t sdev_store_delete(struct device *dev, const char *buf,
->  				 size_t count)
-> @@ -352,10 +313,9 @@
->  	scsi_remove_device(to_scsi_device(dev));
->  	return count;
->  };
-> -static DEVICE_ATTR(delete, S_IWUSR, NULL, sdev_store_delete);
->  
->  static ssize_t
-> -store_state_field(struct device *dev, const char *buf, size_t count)
-> +sdev_store_state(struct device *dev, const char *buf, size_t count)
->  {
->  	int i;
->  	struct scsi_device *sdev = to_scsi_device(dev);
-> @@ -378,7 +338,7 @@
->  }
->  
->  static ssize_t
-> -show_state_field(struct device *dev, char *buf)
-> +sdev_show_state(struct device *dev, char *buf)
->  {
->  	struct scsi_device *sdev = to_scsi_device(dev);
->  	const char *name = scsi_device_state_name(sdev->sdev_state);
-> @@ -389,8 +349,6 @@
->  	return snprintf(buf, 20, "%s\n", name);
->  }
->  
-> -static DEVICE_ATTR(state, S_IRUGO | S_IWUSR, show_state_field, store_state_field);
-> -
->  sdev_show_function (queue_depth, "%d\n");
->  
->  static ssize_t sdev_store_queue_depth(struct device *dev, const char *buf,
-> @@ -420,7 +378,7 @@
->  	       sdev_store_queue_depth);
->  
->  static ssize_t
-> -show_queue_type_field(struct device *dev, char *buf)
-> +sdev_show_queue_type(struct device *dev, char *buf)
->  {
->  	struct scsi_device *sdev = to_scsi_device(dev);
->  	const char *name = "none";
-> @@ -461,25 +419,29 @@
->  	return count;
->  }
->  
-> -static struct device_attribute dev_attr_queue_type =
-> -	__ATTR(queue_type, S_IRUGO | S_IWUSR, show_queue_type_field,
-> -	       sdev_store_queue_type);
-> +#define SDEV_ATTR_RO(_name) __ATTR(_name, S_IRUGO, sdev_show_##_name, NULL)
-> +#define SDEV_ATTR_WO(_name) __ATTR(_name, S_IWUSR, NULL, sdev_store_##_name)
-> +#define SDEV_ATTR_RW(_name) __ATTR(_name, S_IRUGO | S_IWUSR, \
-> +				   sdev_show_##_name, sdev_store_##_name)
-> +
-> +/* Default scsi_device attributes, cannot be overidden */
-> +static struct device_attribute sdev_default_attrs[] = {
-> +	SDEV_ATTR_RO(device_blocked),
-> +	SDEV_ATTR_RW(queue_type),
-> +	SDEV_ATTR_RO(type),
-> +	SDEV_ATTR_RO(scsi_level),
-> +	SDEV_ATTR_RO(vendor),
-> +	SDEV_ATTR_RO(model),
-> +	SDEV_ATTR_RO(rev),
-> +	SDEV_ATTR_WO(rescan),
-> +	SDEV_ATTR_WO(delete),
-> +	SDEV_ATTR_RW(state),
-> +	SDEV_ATTR_RW(timeout),
-> +	__ATTR_NULL
-> +};
->  
-> -/* Default template for device attributes.  May NOT be modified */
->  static struct device_attribute *scsi_sysfs_sdev_attrs[] = {
-> -	&dev_attr_device_blocked,
-> -	&dev_attr_queue_depth,
-> -	&dev_attr_queue_type,
-> -	&dev_attr_type,
-> -	&dev_attr_scsi_level,
-> -	&dev_attr_vendor,
-> -	&dev_attr_model,
-> -	&dev_attr_rev,
-> -	&dev_attr_rescan,
-> -	&dev_attr_delete,
-> -	&dev_attr_state,
-> -	&dev_attr_timeout,
-> -	NULL
-> +	&dev_attr_queue_depth
->  };
->  
->  static struct device_attribute *attr_overridden(
-> @@ -518,6 +480,41 @@
->  	return device_create_file(dev, attr);
->  }
->  
-> +/* all probing is done in the individual ->probe routines */
-> +static int scsi_bus_match(struct device *dev, struct device_driver *gendrv)
-> +{
-> +	struct scsi_device *sdp = to_scsi_device(dev);
-> +	if (sdp->no_uld_attach)
-> +		return 0;
-> +	return (sdp->inq_periph_qual == SCSI_INQ_PQ_CON)? 1: 0;
-> +}
-> +
-> +struct bus_type scsi_bus_type = {
-> +        .name		= "scsi",
-> +        .match		= scsi_bus_match,
-> +	.dev_attrs	= sdev_default_attrs,
-> +};
-> +
-> +int scsi_sysfs_register(void)
-> +{
-> +	int error;
-> +
-> +	error = bus_register(&scsi_bus_type);
-> +	if (!error) {
-> +		error = class_register(&sdev_class);
-> +		if (error)
-> +			bus_unregister(&scsi_bus_type);
-> +	}
-> +
-> +	return error;
-> +}
-> +
-> +void scsi_sysfs_unregister(void)
-> +{
-> +	class_unregister(&sdev_class);
-> +	bus_unregister(&scsi_bus_type);
-> +}
-> +
->  static void scsi_target_dev_release(struct device *dev)
->  {
->  	struct scsi_target *starget = to_scsi_target(dev);
+---
+diff -Naur old/Documentation/scsi/ChangeLog.megaraid
+new/Documentation/scsi/ChangeLog.megaraid
+--- old/Documentation/scsi/ChangeLog.megaraid	2005-03-16
+13:34:15.839275224 -0500
++++ new/Documentation/scsi/ChangeLog.megaraid	2005-03-16
+10:24:47.999449560 -0500
+@@ -1,3 +1,38 @@
++Release Date	: Mon Mar 07 12:27:22 EST 2005 - Seokmann Ju <sju@lsil.com>
++Current Version	: 2.20.4.6 (scsi module), 2.20.2.6 (cmm module)
++Older Version	: 2.20.4.5 (scsi module), 2.20.2.5 (cmm module)
++
++1.	Added IOCTL backward compatibility.
++	Convert megaraid_mm driver to new compat_ioctl entry points.
++	I don't have easy access to hardware, so only compile tested.
++		- Signed-off-by:Andi Kleen <ak@muc.de>
++
++2.	megaraid_mbox fix: wrong order of arguments in memset()
++	That, BTW, shows why cross-builds are useful-the only indication of
++	problem had been a new warning showing up in sparse output on alpha
++	build (number of exceeding 256 got truncated).
++		- Signed-off-by: Al Viro
++		<viro@parcelfarce.linux.theplanet.co.uk>
++
++3.	Convert pci_module_init to pci_register_driver
++	Convert from pci_module_init to pci_register_driver
++	(from:http://kerneljanitors.org/TODO)
++		- Signed-off-by: Domen Puncer <domen@coderock.org>
++
++4.	Use the pre defined DMA mask constants from dma-mapping.h
++	Use the DMA_{64,32}BIT_MASK constants from dma-mapping.h when
+calling
++	pci_set_dma_mask() or pci_set_consistend_dma_mask(). See
++	http://marc.theaimsgroup.com/?t=108001993000001&r=1&w=2 for more
++	details.
++		Signed-off-by: Tobias Klauser <tklauser@nuerscht.ch>
++		Signed-off-by: Domen Puncer <domen@coderock.org>
++
++5.	Remove SSID checking for Dobson, Lindsay, and Verde based products.
++	Checking the SSVID/SSID for controllers which have Dobson, Lindsay,
++	and Verde is unnecessary because device ID has been assigned by LSI
++	and it is unique value. So, all controllers with these IOPs have to
+be
++	supported by the driver regardless SSVID/SSID.
++
+ Release Date	: Thu Feb 03 12:27:22 EST 2005 - Seokmann Ju <sju@lsil.com>
+ Current Version	: 2.20.4.5 (scsi module), 2.20.2.5 (cmm module)
+ Older Version	: 2.20.4.4 (scsi module), 2.20.2.4 (cmm module)
+diff -Naur old/drivers/scsi/megaraid/mega_common.h
+new/drivers/scsi/megaraid/mega_common.h
+--- old/drivers/scsi/megaraid/mega_common.h	2005-03-16
+10:20:16.034794472 -0500
++++ new/drivers/scsi/megaraid/mega_common.h	2005-03-16
+14:11:35.110854200 -0500
+@@ -27,6 +27,7 @@
+ #include <linux/list.h>
+ #include <linux/version.h>
+ #include <linux/moduleparam.h>
++#include <linux/dma-mapping.h>
+ #include <asm/semaphore.h>
+ #include <scsi/scsi.h>
+ #include <scsi/scsi_cmnd.h>
+diff -Naur old/drivers/scsi/megaraid/megaraid_mbox.c
+new/drivers/scsi/megaraid/megaraid_mbox.c
+--- old/drivers/scsi/megaraid/megaraid_mbox.c	2005-03-16
+10:20:16.043793104 -0500
++++ new/drivers/scsi/megaraid/megaraid_mbox.c	2005-03-16
+14:11:35.119852832 -0500
+@@ -10,7 +10,7 @@
+  *	   2 of the License, or (at your option) any later version.
+  *
+  * FILE		: megaraid_mbox.c
+- * Version	: v2.20.4.5 (Feb 03 2005)
++ * Version	: v2.20.4.6 (Mar 07 2005)
+  *
+  * Authors:
+  * 	Atul Mukker		<Atul.Mukker@lsil.com>
+@@ -202,7 +202,7 @@
+  * ### global data ###
+  */
+ static uint8_t megaraid_mbox_version[8] =
+-	{ 0x02, 0x20, 0x04, 0x05, 2, 3, 20, 5 };
++	{ 0x02, 0x20, 0x04, 0x06, 3, 7, 20, 5 };
+ 
+ 
+ /*
+@@ -229,9 +229,9 @@
+ 	},
+ 	{
+ 		PCI_VENDOR_ID_LSI_LOGIC,
+-		PCI_DEVICE_ID_PERC4_QC,
+-		PCI_VENDOR_ID_DELL,
+-		PCI_SUBSYS_ID_PERC4_QC,
++		PCI_DEVICE_ID_VERDE,
++		PCI_ANY_ID,
++		PCI_ANY_ID,
+ 	},
+ 	{
+ 		PCI_VENDOR_ID_DELL,
+@@ -271,15 +271,9 @@
+ 	},
+ 	{
+ 		PCI_VENDOR_ID_LSI_LOGIC,
+-		PCI_DEVICE_ID_PERC4E_DC_320_2E,
+-		PCI_VENDOR_ID_DELL,
+-		PCI_SUBSYS_ID_PERC4E_DC_320_2E,
+-	},
+-	{
+-		PCI_VENDOR_ID_LSI_LOGIC,
+-		PCI_DEVICE_ID_PERC4E_SC_320_1E,
+-		PCI_VENDOR_ID_DELL,
+-		PCI_SUBSYS_ID_PERC4E_SC_320_1E,
++		PCI_DEVICE_ID_DOBSON,
++		PCI_ANY_ID,
++		PCI_ANY_ID,
+ 	},
+ 	{
+ 		PCI_VENDOR_ID_AMI,
+@@ -331,36 +325,6 @@
+ 	},
+ 	{
+ 		PCI_VENDOR_ID_LSI_LOGIC,
+-		PCI_DEVICE_ID_MEGARAID_SCSI_320_0x,
+-		PCI_VENDOR_ID_LSI_LOGIC,
+-		PCI_SUBSYS_ID_MEGARAID_SCSI_320_0x,
+-	},
+-	{
+-		PCI_VENDOR_ID_LSI_LOGIC,
+-		PCI_DEVICE_ID_MEGARAID_SCSI_320_2x,
+-		PCI_VENDOR_ID_LSI_LOGIC,
+-		PCI_SUBSYS_ID_MEGARAID_SCSI_320_2x,
+-	},
+-	{
+-		PCI_VENDOR_ID_LSI_LOGIC,
+-		PCI_DEVICE_ID_MEGARAID_SCSI_320_4x,
+-		PCI_VENDOR_ID_LSI_LOGIC,
+-		PCI_SUBSYS_ID_MEGARAID_SCSI_320_4x,
+-	},
+-	{
+-		PCI_VENDOR_ID_LSI_LOGIC,
+-		PCI_DEVICE_ID_MEGARAID_SCSI_320_1E,
+-		PCI_VENDOR_ID_LSI_LOGIC,
+-		PCI_SUBSYS_ID_MEGARAID_SCSI_320_1E,
+-	},
+-	{
+-		PCI_VENDOR_ID_LSI_LOGIC,
+-		PCI_DEVICE_ID_MEGARAID_SCSI_320_2E,
+-		PCI_VENDOR_ID_LSI_LOGIC,
+-		PCI_SUBSYS_ID_MEGARAID_SCSI_320_2E,
+-	},
+-	{
+-		PCI_VENDOR_ID_LSI_LOGIC,
+ 		PCI_DEVICE_ID_MEGARAID_I4_133_RAID,
+ 		PCI_VENDOR_ID_LSI_LOGIC,
+ 		PCI_SUBSYS_ID_MEGARAID_I4_133_RAID,
+@@ -379,21 +343,9 @@
+ 	},
+ 	{
+ 		PCI_VENDOR_ID_LSI_LOGIC,
+-		PCI_DEVICE_ID_MEGARAID_SATA_300_4x,
+-		PCI_VENDOR_ID_LSI_LOGIC,
+-		PCI_SUBSYS_ID_MEGARAID_SATA_300_4x,
+-	},
+-	{
+-		PCI_VENDOR_ID_LSI_LOGIC,
+-		PCI_DEVICE_ID_MEGARAID_SATA_300_8x,
+-		PCI_VENDOR_ID_LSI_LOGIC,
+-		PCI_SUBSYS_ID_MEGARAID_SATA_300_8x,
+-	},
+-	{
+-		PCI_VENDOR_ID_LSI_LOGIC,
+-		PCI_DEVICE_ID_INTEL_RAID_SRCU42X,
+-		PCI_VENDOR_ID_INTEL,
+-		PCI_SUBSYS_ID_INTEL_RAID_SRCU42X,
++		PCI_DEVICE_ID_LINDSAY,
++		PCI_ANY_ID,
++		PCI_ANY_ID,
+ 	},
+ 	{
+ 		PCI_VENDOR_ID_LSI_LOGIC,
+@@ -403,58 +355,10 @@
+ 	},
+ 	{
+ 		PCI_VENDOR_ID_LSI_LOGIC,
+-		PCI_DEVICE_ID_INTEL_RAID_SRCU42E,
+-		PCI_VENDOR_ID_INTEL,
+-		PCI_SUBSYS_ID_INTEL_RAID_SRCU42E,
+-	},
+-	{
+-		PCI_VENDOR_ID_LSI_LOGIC,
+-		PCI_DEVICE_ID_INTEL_RAID_SRCZCRX,
+-		PCI_VENDOR_ID_INTEL,
+-		PCI_SUBSYS_ID_INTEL_RAID_SRCZCRX,
+-	},
+-	{
+-		PCI_VENDOR_ID_LSI_LOGIC,
+-		PCI_DEVICE_ID_INTEL_RAID_SRCS28X,
+-		PCI_VENDOR_ID_INTEL,
+-		PCI_SUBSYS_ID_INTEL_RAID_SRCS28X,
+-	},
+-	{
+-		PCI_VENDOR_ID_LSI_LOGIC,
+-		PCI_DEVICE_ID_INTEL_RAID_SROMBU42E_ALIEF,
+-		PCI_VENDOR_ID_INTEL,
+-		PCI_SUBSYS_ID_INTEL_RAID_SROMBU42E_ALIEF,
+-	},
+-	{
+-		PCI_VENDOR_ID_LSI_LOGIC,
+-		PCI_DEVICE_ID_INTEL_RAID_SROMBU42E_HARWICH,
+-		PCI_VENDOR_ID_INTEL,
+-		PCI_SUBSYS_ID_INTEL_RAID_SROMBU42E_HARWICH,
+-	},
+-	{
+-		PCI_VENDOR_ID_LSI_LOGIC,
+ 		PCI_DEVICE_ID_INTEL_RAID_SRCU41L_LAKE_SHETEK,
+ 		PCI_VENDOR_ID_INTEL,
+ 		PCI_SUBSYS_ID_INTEL_RAID_SRCU41L_LAKE_SHETEK,
+ 	},
+-	{
+-		PCI_VENDOR_ID_LSI_LOGIC,
+-		PCI_DEVICE_ID_FSC_MEGARAID_PCI_EXPRESS_ROMB,
+-		PCI_SUBSYS_ID_FSC,
+-		PCI_SUBSYS_ID_FSC_MEGARAID_PCI_EXPRESS_ROMB,
+-	},
+-	{
+-		PCI_VENDOR_ID_LSI_LOGIC,
+-		PCI_DEVICE_ID_MEGARAID_ACER_ROMB_2E,
+-		PCI_VENDOR_ID_AI,
+-		PCI_SUBSYS_ID_MEGARAID_ACER_ROMB_2E,
+-	},
+-	{
+-		PCI_VENDOR_ID_LSI_LOGIC,
+-		PCI_DEVICE_ID_MEGARAID_NEC_ROMB_2E,
+-		PCI_VENDOR_ID_NEC,
+-		PCI_SUBSYS_ID_MEGARAID_NEC_ROMB_2E,
+-	},
+ 	{0}	/* Terminating entry */
+ };
+ MODULE_DEVICE_TABLE(pci, pci_id_table_g);
+@@ -539,7 +443,8 @@
+ 
+ 
+ 	// register as a PCI hot-plug driver module
+-	if ((rval = pci_module_init(&megaraid_pci_driver_g))) {
++	rval = pci_register_driver(&megaraid_pci_driver_g);
++	if (rval < 0) {
+ 		con_log(CL_ANN, (KERN_WARNING
+ 			"megaraid: could not register hotplug support.\n"));
+ 	}
+@@ -619,7 +524,7 @@
+ 
+ 	// Setup the default DMA mask. This would be changed later on
+ 	// depending on hardware capabilities
+-	if (pci_set_dma_mask(adapter->pdev, 0xFFFFFFFF) != 0) {
++	if (pci_set_dma_mask(adapter->pdev, DMA_32BIT_MASK) != 0) {
+ 
+ 		con_log(CL_ANN, (KERN_WARNING
+ 			"megaraid: pci_set_dma_mask failed:%d\n",
+__LINE__));
+@@ -1031,7 +936,7 @@
+ 
+ 	// Set the DMA mask to 64-bit. All supported controllers as capable
+of
+ 	// DMA in this range
+-	if (pci_set_dma_mask(adapter->pdev, 0xFFFFFFFFFFFFFFFFULL) != 0) {
++	if (pci_set_dma_mask(adapter->pdev, DMA_64BIT_MASK) != 0) {
+ 
+ 		con_log(CL_ANN, (KERN_WARNING
+ 			"megaraid: could not set DMA mask for 64-bit.\n"));
+@@ -4100,9 +4005,9 @@
+ 	mbox64	= raid_dev->sysfs_mbox64;
+ 	ldmap	= raid_dev->sysfs_buffer;
+ 
+-	memset(uioc, sizeof(uioc_t), 0);
+-	memset(mbox64, sizeof(mbox64_t), 0);
+-	memset(ldmap, sizeof(raid_dev->curr_ldmap), 0);
++	memset(uioc, 0, sizeof(uioc_t));
++	memset(mbox64, 0, sizeof(mbox64_t));
++	memset(ldmap, 0, sizeof(raid_dev->curr_ldmap));
+ 
+ 	mbox		= &mbox64->mbox32;
+ 	raw_mbox	= (char *)mbox;
+diff -Naur old/drivers/scsi/megaraid/megaraid_mbox.h
+new/drivers/scsi/megaraid/megaraid_mbox.h
+--- old/drivers/scsi/megaraid/megaraid_mbox.h	2005-03-16
+10:20:16.044792952 -0500
++++ new/drivers/scsi/megaraid/megaraid_mbox.h	2005-03-16
+14:11:35.120852680 -0500
+@@ -21,8 +21,8 @@
+ #include "megaraid_ioctl.h"
+ 
+ 
+-#define MEGARAID_VERSION	"2.20.4.5"
+-#define MEGARAID_EXT_VERSION	"(Release Date: Thu Feb 03 12:27:22 EST
+2005)"
++#define MEGARAID_VERSION	"2.20.4.6"
++#define MEGARAID_EXT_VERSION	"(Release Date: Mon Mar 07 12:27:22 EST
+2005)"
+ 
+ 
+ /*
+@@ -37,8 +37,7 @@
+ #define PCI_DEVICE_ID_PERC4_DC				0x1960
+ #define PCI_SUBSYS_ID_PERC4_DC				0x0518
+ 
+-#define PCI_DEVICE_ID_PERC4_QC				0x0407
+-#define PCI_SUBSYS_ID_PERC4_QC				0x0531
++#define PCI_DEVICE_ID_VERDE				0x0407
+ 
+ #define PCI_DEVICE_ID_PERC4_DI_EVERGLADES		0x000F
+ #define PCI_SUBSYS_ID_PERC4_DI_EVERGLADES		0x014A
+@@ -58,11 +57,7 @@
+ #define PCI_DEVICE_ID_PERC4E_DI_GUADALUPE		0x0013
+ #define PCI_SUBSYS_ID_PERC4E_DI_GUADALUPE		0x0170
+ 
+-#define PCI_DEVICE_ID_PERC4E_DC_320_2E			0x0408
+-#define PCI_SUBSYS_ID_PERC4E_DC_320_2E			0x0002
+-
+-#define PCI_DEVICE_ID_PERC4E_SC_320_1E			0x0408
+-#define PCI_SUBSYS_ID_PERC4E_SC_320_1E			0x0001
++#define PCI_DEVICE_ID_DOBSON				0x0408
+ 
+ #define PCI_DEVICE_ID_MEGARAID_SCSI_320_0		0x1960
+ #define PCI_SUBSYS_ID_MEGARAID_SCSI_320_0		0xA520
+@@ -73,21 +68,6 @@
+ #define PCI_DEVICE_ID_MEGARAID_SCSI_320_2		0x1960
+ #define PCI_SUBSYS_ID_MEGARAID_SCSI_320_2		0x0518
+ 
+-#define PCI_DEVICE_ID_MEGARAID_SCSI_320_0x		0x0407
+-#define PCI_SUBSYS_ID_MEGARAID_SCSI_320_0x		0x0530
+-
+-#define PCI_DEVICE_ID_MEGARAID_SCSI_320_2x		0x0407
+-#define PCI_SUBSYS_ID_MEGARAID_SCSI_320_2x		0x0532
+-
+-#define PCI_DEVICE_ID_MEGARAID_SCSI_320_4x		0x0407
+-#define PCI_SUBSYS_ID_MEGARAID_SCSI_320_4x		0x0531
+-
+-#define PCI_DEVICE_ID_MEGARAID_SCSI_320_1E		0x0408
+-#define PCI_SUBSYS_ID_MEGARAID_SCSI_320_1E		0x0001
+-
+-#define PCI_DEVICE_ID_MEGARAID_SCSI_320_2E		0x0408
+-#define PCI_SUBSYS_ID_MEGARAID_SCSI_320_2E		0x0002
+-
+ #define PCI_DEVICE_ID_MEGARAID_I4_133_RAID		0x1960
+ #define PCI_SUBSYS_ID_MEGARAID_I4_133_RAID		0x0522
+ 
+@@ -97,52 +77,18 @@
+ #define PCI_DEVICE_ID_MEGARAID_SATA_150_6		0x1960
+ #define PCI_SUBSYS_ID_MEGARAID_SATA_150_6		0x0523
+ 
+-#define PCI_DEVICE_ID_MEGARAID_SATA_300_4x		0x0409
+-#define PCI_SUBSYS_ID_MEGARAID_SATA_300_4x		0x3004
+-
+-#define PCI_DEVICE_ID_MEGARAID_SATA_300_8x		0x0409
+-#define PCI_SUBSYS_ID_MEGARAID_SATA_300_8x		0x3008
+-
+-#define PCI_DEVICE_ID_INTEL_RAID_SRCU42X		0x0407
+-#define PCI_SUBSYS_ID_INTEL_RAID_SRCU42X		0x0532
++#define PCI_DEVICE_ID_LINDSAY				0x0409
+ 
+ #define PCI_DEVICE_ID_INTEL_RAID_SRCS16			0x1960
+ #define PCI_SUBSYS_ID_INTEL_RAID_SRCS16			0x0523
+ 
+-#define PCI_DEVICE_ID_INTEL_RAID_SRCU42E		0x0408
+-#define PCI_SUBSYS_ID_INTEL_RAID_SRCU42E		0x0002
+-
+-#define PCI_DEVICE_ID_INTEL_RAID_SRCZCRX		0x0407
+-#define PCI_SUBSYS_ID_INTEL_RAID_SRCZCRX		0x0530
+-
+-#define PCI_DEVICE_ID_INTEL_RAID_SRCS28X		0x0409
+-#define PCI_SUBSYS_ID_INTEL_RAID_SRCS28X		0x3008
+-
+-#define PCI_DEVICE_ID_INTEL_RAID_SROMBU42E_ALIEF	0x0408
+-#define PCI_SUBSYS_ID_INTEL_RAID_SROMBU42E_ALIEF	0x3431
+-
+-#define PCI_DEVICE_ID_INTEL_RAID_SROMBU42E_HARWICH	0x0408
+-#define PCI_SUBSYS_ID_INTEL_RAID_SROMBU42E_HARWICH	0x3499
+-
+ #define PCI_DEVICE_ID_INTEL_RAID_SRCU41L_LAKE_SHETEK	0x1960
+ #define PCI_SUBSYS_ID_INTEL_RAID_SRCU41L_LAKE_SHETEK	0x0520
+ 
+-#define PCI_DEVICE_ID_FSC_MEGARAID_PCI_EXPRESS_ROMB	0x0408
+-#define PCI_SUBSYS_ID_FSC_MEGARAID_PCI_EXPRESS_ROMB	0x1065
+-
+-#define PCI_DEVICE_ID_MEGARAID_ACER_ROMB_2E		0x0408
+-#define PCI_SUBSYS_ID_MEGARAID_ACER_ROMB_2E		0x004D
+-
+ #define PCI_SUBSYS_ID_PERC3_QC				0x0471
+ #define PCI_SUBSYS_ID_PERC3_DC				0x0493
+ #define PCI_SUBSYS_ID_PERC3_SC				0x0475
+ 
+-#define PCI_DEVICE_ID_MEGARAID_NEC_ROMB_2E		0x0408
+-#define PCI_SUBSYS_ID_MEGARAID_NEC_ROMB_2E		0x8287
+-
+-#ifndef PCI_SUBSYS_ID_FSC
+-#define PCI_SUBSYS_ID_FSC				0x1734
+-#endif
+ 
+ #define MBOX_MAX_SCSI_CMDS	128	// number of cmds reserved for
+kernel
+ #define MBOX_MAX_USER_CMDS	32	// number of cmds for applications
+diff -Naur old/drivers/scsi/megaraid/megaraid_mm.c
+new/drivers/scsi/megaraid/megaraid_mm.c
+--- old/drivers/scsi/megaraid/megaraid_mm.c	2005-03-16
+10:20:16.047792496 -0500
++++ new/drivers/scsi/megaraid/megaraid_mm.c	2005-03-16
+14:11:35.122852376 -0500
+@@ -10,7 +10,7 @@
+  *	   2 of the License, or (at your option) any later version.
+  *
+  * FILE		: megaraid_mm.c
+- * Version	: v2.20.2.5 (Jan 21 2005)
++ * Version	: v2.20.2.6 (Mar 7 2005)
+  *
+  * Common management module
+  */
+@@ -43,8 +43,7 @@
+ static void mraid_mm_teardown_dma_pools(mraid_mmadp_t *);
+ 
+ #ifdef CONFIG_COMPAT
+-static int mraid_mm_compat_ioctl(unsigned int, unsigned int, unsigned long,
+-		struct file *);
++static long mraid_mm_compat_ioctl(struct file *, unsigned int, unsigned
+long);
+ #endif
+ 
+ MODULE_AUTHOR("LSI Logic Corporation");
+@@ -61,7 +60,7 @@
+ EXPORT_SYMBOL(mraid_mm_adapter_app_handle);
+ 
+ static int majorno;
+-static uint32_t drvr_ver	= 0x02200201;
++static uint32_t drvr_ver	= 0x02200206;
+ 
+ static int adapters_count_g;
+ static struct list_head adapters_list_g;
+@@ -69,9 +68,12 @@
+ static wait_queue_head_t wait_q;
+ 
+ static struct file_operations lsi_fops = {
+-	.open	= mraid_mm_open,
+-	.ioctl	= mraid_mm_ioctl,
+-	.owner	= THIS_MODULE,
++	.open		= mraid_mm_open,
++	.ioctl		= mraid_mm_ioctl,
++#ifdef CONFIG_COMPAT
++	.compat_ioctl	= mraid_mm_compat_ioctl, 
++#endif
++	.owner		= THIS_MODULE,
+ };
+ 
+ /**
+@@ -1215,8 +1217,6 @@
+ 
+ 	INIT_LIST_HEAD(&adapters_list_g);
+ 
+-	register_ioctl32_conversion(MEGAIOCCMD, mraid_mm_compat_ioctl);
+-
+ 	return 0;
+ }
+ 
+@@ -1225,13 +1225,14 @@
+  * mraid_mm_compat_ioctl	: 32bit to 64bit ioctl conversion routine
+  */
+ #ifdef CONFIG_COMPAT
+-static int
+-mraid_mm_compat_ioctl(unsigned int fd, unsigned int cmd,
+-			unsigned long arg, struct file *filep)
++static long
++mraid_mm_compat_ioctl(struct file *filep, unsigned int cmd, unsigned long
+arg)
+ {
+-	struct inode *inode = filep->f_dentry->d_inode;
++	int err;
++
++	err = mraid_mm_ioctl(NULL, filep, cmd, arg);
+ 
+-	return mraid_mm_ioctl(inode, filep, cmd, arg);
++	return err;
+ }
+ #endif
+ 
+@@ -1244,7 +1245,6 @@
+ 	con_log(CL_DLEVEL1 , ("exiting common mod\n"));
+ 
+ 	unregister_chrdev(majorno, "megadev");
+-	unregister_ioctl32_conversion(MEGAIOCCMD);
+ }
+ 
+ module_init(mraid_mm_init);
+diff -Naur old/drivers/scsi/megaraid/megaraid_mm.h
+new/drivers/scsi/megaraid/megaraid_mm.h
+--- old/drivers/scsi/megaraid/megaraid_mm.h	2005-03-16
+10:20:16.047792496 -0500
++++ new/drivers/scsi/megaraid/megaraid_mm.h	2005-03-16
+14:11:35.122852376 -0500
+@@ -29,9 +29,9 @@
+ #include "megaraid_ioctl.h"
+ 
+ 
+-#define LSI_COMMON_MOD_VERSION	"2.20.2.5"
++#define LSI_COMMON_MOD_VERSION	"2.20.2.6"
+ #define LSI_COMMON_MOD_EXT_VERSION	\
+-		"(Release Date: Fri Jan 21 00:01:03 EST 2005)"
++		"(Release Date: Mon Mar 7 00:01:03 EST 2005)"
+ 
+ 
+ #define LSI_DBGLVL			dbglevel
+---
