@@ -1,31 +1,38 @@
-From: Patrick Mochel <mochel@osdl.org>
+From: Patrick Mansfield <patmans@us.ibm.com>
 Subject: Re: [RFC] Multi-path IO in 2.5/2.6 ?
-Date: Tue, 10 Sep 2002 10:21:53 -0700 (PDT)
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44.0209101019280.1032-100000@cherise.pdx.osdl.net>
-References: <20020909170847.A24352@eng2.beaverton.ibm.com>
+Date: Tue, 10 Sep 2002 11:42:57 -0700
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <20020910114257.A13614@eng2.beaverton.ibm.com>
+References: <20020909170847.A24352@eng2.beaverton.ibm.com> <Pine.LNX.4.44.0209101019280.1032-100000@cherise.pdx.osdl.net>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
-In-Reply-To: <20020909170847.A24352@eng2.beaverton.ibm.com>
-To: Patrick Mansfield <patmans@us.ibm.com>
-Cc: James Bottomley <James.Bottomley@steeleye.com>, Lars Marowsky-Bree <lmb@suse.de>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <Pine.LNX.4.44.0209101019280.1032-100000@cherise.pdx.osdl.net>; from mochel@osdl.org on Tue, Sep 10, 2002 at 10:21:53AM -0700
 List-Id: linux-scsi@vger.kernel.org
+To: Patrick Mochel <mochel@osdl.org>
+Cc: James Bottomley <James.Bottomley@steeleye.com>, Lars Marowsky-Bree <lmb@suse.de>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-
-> > > Generic device naming consistency is a problem if multiple devices
-> > > show up with the same id.
-> > 
-> > Patrick Mochel has an open task to come up with a solution to this.
+On Tue, Sep 10, 2002 at 10:21:53AM -0700, Patrick Mochel wrote:
 > 
-> I don't think this can be solved if multiple devices show up with the same
-> id. If I have five disks that all say I'm disk X, how can there be one
-> name or handle for it from user level?
+> > > > Generic device naming consistency is a problem if multiple devices
+> > > > show up with the same id.
+> > > 
+> > > Patrick Mochel has an open task to come up with a solution to this.
+> > 
+> > I don't think this can be solved if multiple devices show up with the same
+> > id. If I have five disks that all say I'm disk X, how can there be one
+> > name or handle for it from user level?
+> 
+> Easy: you map the unique identifier of the device to a name in userspace.  
+> In our utopian future, /sbin/hotplug is called with that unique ID as one
+> of its parameters. It searches for, and finds names based on the ID is. If
+> the name(s) already exist, then it doesn't continue.
+> 
+> 
+> 	-pat
 
-Easy: you map the unique identifier of the device to a name in userspace.  
-In our utopian future, /sbin/hotplug is called with that unique ID as one
-of its parameters. It searches for, and finds names based on the ID is. If
-the name(s) already exist, then it doesn't continue.
+But then if the md or volume manager wants to do multi-path IO it
+will not be able to find all of the names in userspace since the
+extra ones (second path and on) have been dropped.
 
-
-	-pat
+-- Patrick Mansfield
