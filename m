@@ -1,57 +1,73 @@
-From: Oliver Neukum <oliver@neukum.org>
-Subject: Re: [PATCH] scsi_set_host_offline (resend)
-Date: Thu, 10 Apr 2003 09:51:13 +0200
+From: "William King" <wrking3@dadaboom.com>
+Subject: [PATCH] minor scsi cleanup in 2.4.x
+Date: Thu, 10 Apr 2003 09:01:19 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <200304100951.13652.oliver@neukum.org>
-References: <20030325100704.GC3868@beaverton.ibm.com> <200304100032.11400.oliver@neukum.org> <3E94A5DB.2020007@rogers.com>
-Reply-To: oliver@neukum.name
+Message-ID: <JAEGLIPFMODKGALKJJGNEEJNCAAA.wrking3@dadaboom.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed;
+	boundary="----=_NextPart_000_0000_01C2FF3F.C05A96A0"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from Mail1.KONTENT.De ([81.88.34.36]:19181 "EHLO Mail1.KONTENT.De")
-	by vger.kernel.org with ESMTP id S263994AbTDJHji (for <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 10 Apr 2003 03:39:38 -0400
-In-Reply-To: <3E94A5DB.2020007@rogers.com>
-Content-Disposition: inline
+Received: from gateway.dadaboom.com ([198.144.206.17]:17681 "HELO
+	spider.dadaboom.com") by vger.kernel.org with SMTP id S264077AbTDJPtj (for <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 10 Apr 2003 11:49:39 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: Luben Tuikov <tluben@rogers.com>
-Cc: James Bottomley <James.Bottomley@steeleye.com>, Matthew Dharm <mdharm-scsi@one-eyed-alien.net>, linux-hotplug-devel@lists.sourceforge.net, Mike Anderson <andmike@us.ibm.com>, mochel@osdl.org, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
+This is a multi-part message in MIME format.
 
-> *But*, the _important__point_ is that the LLDD must be able to handle
-> requests (queuecommand()) to non-existant (== just removed) devices,
-> and not oops, or whatever.
+------=_NextPart_000_0000_01C2FF3F.C05A96A0
+Content-Type: text/plain;
+	charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 
-For how long? That's the question.
+Attached is a patch (based off of 2.4.19) which removes 2 unnecessary
+externs and adds a new scsi device type string. The externs are unnecessary
+since the array is declared extern in scsi.h. The string change is
+consistent with the SCSI-3 standard.
 
-> So, in effect, you just call usb_dev_removal(dev) (to be written),
-> and free _your_ resources on the device. (note important point above)
+To whom it may concern, please apply. :-)
 
-The way it is in USB is a little different as the USB device drivers do
-not go directly to the hardware. It would be:
+Thanks,
+Bill
 
-HCD -> USB core -> LLDD -> generic SCSI -> ...
-Steps 1 to 3 work, 4 doesn't.
-For a PCMCIA LLDD it would be different, but that really doesn't
-matter to the generic SCSI layer.
+------=_NextPart_000_0000_01C2FF3F.C05A96A0
+Content-Type: text/plain;
+	name="scsi_patch.txt"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: attachment;
+	filename="scsi_patch.txt"
 
-> > We have indeed discussed this before and the need to notify
-> > user space was never questioned, as far as I recall.
-> > The point of contention always was whether the notification
-> > had to do specific things for the process of unplugging to finish
-> > as far as it concerns the low level driver.
->
-> Right.  As far as I can see, those subsystem entries, xxx_dev_removal(dev),
-> would do things which do not block, like flip a bit, flags, integer,
-> wake up a thread, etc, call the above subsystem's xxx_dev_removal(dev),
-> and return immediately. (as per my other posting)
-> (this needs more thinking though)
+--- g_NCR5380.c	2003/04/10 15:43:13	1.1=0A=
++++ g_NCR5380.c	2003/04/10 15:43:27=0A=
+@@ -781,7 +781,6 @@=0A=
+ 	struct NCR5380_hostdata *hostdata;=0A=
+ #ifdef NCR5380_STATS=0A=
+ 	Scsi_Device *dev;=0A=
+-	extern const char *const scsi_device_types[MAX_SCSI_DEVICE_CODE];=0A=
+ #endif=0A=
+ 	save_flags(flags);=0A=
+ 	cli();=0A=
+--- scsi_proc.c	2003/04/10 15:42:04	1.1=0A=
++++ scsi_proc.c	2003/04/10 15:42:31=0A=
+@@ -260,7 +260,6 @@=0A=
+ {=0A=
+ =0A=
+ 	int x, y =3D *size;=0A=
+-	extern const char *const scsi_device_types[MAX_SCSI_DEVICE_CODE];=0A=
+ =0A=
+ 	y =3D sprintf(buffer + len,=0A=
+ 	     "Host: scsi%d Channel: %02d Id: %02d Lun: %02d\n  Vendor: ",=0A=
+--- scsi.c	2003/04/10 15:29:17	1.1=0A=
++++ scsi.c	2003/04/10 15:31:11=0A=
+@@ -140,7 +140,7 @@=0A=
+ 	"Communications   ",=0A=
+ 	"Unknown          ",=0A=
+ 	"Unknown          ",=0A=
+-	"Unknown          ",=0A=
++	"Storage Array    ",=0A=
+ 	"Enclosure        ",=0A=
+ };=0A=
+ =0A=
 
-If they can't block, they cannot clean up commands still in flight.
-Eventually something needs to wait for the outstanding commands.
-
-	Regards
-		Oliver
+------=_NextPart_000_0000_01C2FF3F.C05A96A0--
 
