@@ -1,43 +1,113 @@
 From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [PATCH] zfcp: updates for -bk
-Date: Tue, 25 Jan 2005 12:40:07 -0600
-Message-ID: <1106678407.6434.43.camel@mulgrave>
-References: <OF09208441.E1CA6752-ONC1256F94.005CDE81-C1256F94.00647837@de.ibm.com>
+Subject: [BK PATCH] SCSI updates for 2.6.11-rc2
+Date: Tue, 25 Jan 2005 12:56:05 -0600
+Message-ID: <1106679365.6434.45.camel@mulgrave>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat16.steeleye.com ([209.192.50.48]:9403 "EHLO
+Received: from stat16.steeleye.com ([209.192.50.48]:38096 "EHLO
 	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S262044AbVAYSls (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 25 Jan 2005 13:41:48 -0500
-In-Reply-To: <OF09208441.E1CA6752-ONC1256F94.005CDE81-C1256F94.00647837@de.ibm.com>
+	id S261729AbVAYS4Y (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 25 Jan 2005 13:56:24 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Martin Peschke3 <MPESCHKE@de.ibm.com>
-Cc: Greg KH <greg@kroah.com>, Heiko Carstens <Heiko.Carstens@de.ibm.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, linux-scsi-owner@vger.kernel.org, Matthew Wilcox <matthew@wil.cx>, willy@www.linux.org.uk
+To: Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>
+Cc: Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Tue, 2005-01-25 at 19:10 +0100, Martin Peschke3 wrote:
-> Actually, you will find the adapter structure be an anchor for several
-> other objects, or lists of them respectively. We tried to organize
-> all the driver private data in a sane way. That means there is a tree
-> of objects representing the SAN topology, including target ports and
-> subordinate LUNs, many of which have an associated mid-layer structure.
-> I can't imagine that anybody would ever argue to collapse all that into
-> the adapter structure. So, why all the fuss about this particular object?
-> The generic services object has nothing to do with the adapter. It's about
-> fabric switch services, or certain well-known FC (target) ports, which can
-> be accessed in the fabric through an adapter. It's not local but remote,
-> like other targets, so to speak. We might also have chosen to call it
-> "fabric switch".
+This is mostly simple updates.  There is one new feature: the move over
+to generic transport classes.  This doesn't impact anything other than
+SCSI (although the idea is that it will in future) but it does introduce
+new abstractions in drivers/base (which I got Greg's sign off on).
 
-OK, take a look at this:
+The patch is available from:
 
-http://marc.theaimsgroup.com/?l=linux-scsi&m=110546207223304
+bk://linux-scsi.bkbits.net/scsi-for-linus-2.6
 
-and tell me if it does everything you need.  If it doesn't, you could
-try adding all the other bits to the fc transport class.
+The short changelog is:
+
+<mark_salyzyn:adaptec.com>:
+  o dpt_i2o: remove schedule_timeout()
+
+Adrian Bunk:
+  o SCSI NCR_Q720.c: make some code static
+
+Alan Stern:
+  o Fix reference to deallocated memory in sd.c
+
+Andi Kleen:
+  o Add compat_ioctl to scsi host structure
+
+Christoph Hellwig:
+  o osst: don't use obsolete SCSI APIs
+  o cosmetic jazz_esp updates
+  o update dec_esp with changes from mips CVS
+  o update mips driver Kconfig bits
+
+Domen Puncer:
+  o delete unused file dpt_osdutil.h
+
+Douglas Gilbert:
+  o sd descriptor sense support
+  o streamline block SG_IO error processing in sd
+  o streamline block SG_IO error processing
+  o sense data helpers lk 2.6.11-rc1-bk1
+  o sg descriptor sense cleanup lk 2.6.11-rc1-bk1
+  o scsi_debug dsense
+
+Geert Uytterhoeven:
+  o SCSI NCR53C9x.c: some cleanups
+
+James Bottomley:
+  o SCSI: Fix style nitpicks
+  o move the SCSI transport classes over to the generic transport class
+  o add a generic device transport class
+  o Add attribute container to generic device model
+  o fix use after potential free in scsi_cd_put
+
+Mark Haverkamp:
+  o aacraid 2.6: add scsi synchronize cache support
+
+and the diffstat:
+
+ b/drivers/base/Makefile               |    3 
+ b/drivers/base/attribute_container.c  |  274 +++++++++++++++++++++++
+ b/drivers/base/init.c                 |    3 
+ b/drivers/base/transport_class.c      |  272 +++++++++++++++++++++++
+ b/drivers/scsi/Kconfig                |    4 
+ b/drivers/scsi/NCR53C9x.c             |    4 
+ b/drivers/scsi/NCR53C9x.h             |    2 
+ b/drivers/scsi/NCR_Q720.c             |    4 
+ b/drivers/scsi/aacraid/aachba.c       |  113 +++++++++
+ b/drivers/scsi/aacraid/aacraid.h      |   24 ++
+ b/drivers/scsi/dec_esp.c              |  396 +++++++++++++++++-----------------
+ b/drivers/scsi/dpt_i2o.c              |    1 
+ b/drivers/scsi/hosts.c                |   21 -
+ b/drivers/scsi/jazz_esp.c             |   49 ++--
+ b/drivers/scsi/oktagon_esp.c          |    2 
+ b/drivers/scsi/osst.c                 |  198 ++++++++---------
+ b/drivers/scsi/osst.h                 |    4 
+ b/drivers/scsi/scsi_debug.c           |    6 
+ b/drivers/scsi/scsi_error.c           |   93 +++++++
+ b/drivers/scsi/scsi_lib.c             |  108 ++++-----
+ b/drivers/scsi/scsi_priv.h            |    2 
+ b/drivers/scsi/scsi_scan.c            |   24 --
+ b/drivers/scsi/scsi_sysfs.c           |  131 ++---------
+ b/drivers/scsi/scsi_transport_fc.c    |  112 +++++----
+ b/drivers/scsi/scsi_transport_iscsi.c |   85 ++++---
+ b/drivers/scsi/scsi_transport_spi.c   |  139 +++++++----
+ b/drivers/scsi/sd.c                   |  169 ++++++++------
+ b/drivers/scsi/sg.c                   |   30 +-
+ b/drivers/scsi/sr.c                   |    4 
+ b/include/linux/attribute_container.h |   61 +++++
+ b/include/linux/transport_class.h     |   77 ++++++
+ b/include/scsi/scsi_device.h          |    9 
+ b/include/scsi/scsi_eh.h              |    6 
+ b/include/scsi/scsi_host.h            |   19 +
+ b/include/scsi/scsi_transport.h       |   33 --
+ b/include/scsi/scsi_transport_spi.h   |    1 
+ drivers/scsi/dpt/dpt_osdutil.h        |  358 ------------------------------
+ 37 files changed, 1729 insertions(+), 1112 deletions(-)
 
 James
-
 
