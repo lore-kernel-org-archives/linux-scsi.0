@@ -1,53 +1,67 @@
-From: Andries.Brouwer@cwi.nl
-Subject: Re: [usb-storage] Re: PATCH: exclude certain commands from emulated SCSI hosts
-Date: Tue, 22 Apr 2003 19:38:44 +0200 (MEST)
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: PATCH: exclude certain commands from emulated SCSI hosts
+Date: Tue, 22 Apr 2003 14:13:17 -0400 (EDT)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <UTC200304221738.h3MHciN16670.aeb@smtp.cwi.nl>
+Message-ID: <Pine.LNX.4.44L0.0304221404210.644-100000@ida.rowland.org>
+References: <1051033033.1768.65.camel@mulgrave>
+Mime-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hera.cwi.nl ([192.16.191.8]:51624 "EHLO hera.cwi.nl")
-	by vger.kernel.org with ESMTP id S263272AbTDVR06 (ORCPT
+Received: from ida.rowland.org ([192.131.102.52]:2564 "HELO ida.rowland.org")
+	by vger.kernel.org with SMTP id S263319AbTDVSBM (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 22 Apr 2003 13:26:58 -0400
+	Tue, 22 Apr 2003 14:01:12 -0400
+In-Reply-To: <1051033033.1768.65.camel@mulgrave>
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@steeleye.com, alan@lxorguk.ukuu.org.uk
-Cc: Andries.Brouwer@cwi.nl, greg@kroah.com, linux-scsi@vger.kernel.org, linux-usb-devel@lists.sourceforge.net, mdharm-scsi@one-eyed-alien.net, torvalds@transmeta.com, usb-storage@one-eyed-alien.net
+To: James Bottomley <James.Bottomley@steeleye.com>
+Cc: Andries.Brouwer@cwi.nl, Alan Cox <alan@lxorguk.ukuu.org.uk>, Greg KH <greg@kroah.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, USB development list <linux-usb-devel@lists.sourceforge.net>, mdharm-scsi@one-eyed-alien.net, mike@hingston.demon.co.uk, torvalds@transmeta.com, USB Storage List <usb-storage@one-eyed-alien.net>
 
-Finally the third one is again of the kind 2.4 works, 2.5 fails.
-So again, not a mysterious device but a software bug in
-usb-storage and/or scsi/sd.
+On 22 Apr 2003, James Bottomley wrote:
 
-It looks different from the other two - the core is
+> On Tue, 2003-04-22 at 12:22, Andries.Brouwer@cwi.nl wrote:
+> [...]
+> 
+> Actually, could this
+> 
+> > Apr  9 17:34:55 lemon: usb-storage: Invoking Mode Translation
+> 
+> Be the root cause?  It indicates that usb storage modified the command.
 
+No, most likely it's not the cause.
 
-Mar 30 15:42:12 crusoe kernel: usb-storage: Command TEST_UNIT_READY (6 bytes)
-Mar 30 15:42:12 crusoe kernel: usb-storage:  00 00 00 00 00 00
-Mar 30 15:42:12 crusoe kernel: usb-storage: usb_stor_ctrl_transfer(): rq=00 rqtype=21 value=0000 index=00 len=12
-Mar 30 15:42:12 crusoe kernel: usb-storage: Status code -32; transferred 0/12
-Mar 30 15:42:12 crusoe kernel: usb-storage: -- stall on control pipe
-Mar 30 15:42:12 crusoe kernel: usb-storage: Call to usb_stor_ctrl_transfer() returned 3
-Mar 30 15:42:12 crusoe kernel: usb-storage: -- transport indicates error, resetting
-Mar 30 15:42:12 crusoe kernel: usb-storage: CB_reset() called
+> In 2.5.68 that's doing a translation from MODE SENSE(6) to MODE
+> SENSE(10) inside the driver.
+> 
+> But the odd thing in usb/storage/protocol.c is this (about line 354):
+> 
+>                 case MODE_SENSE:
+>                 case MODE_SELECT:
+>                         srb->cmd_len = 12;
+>                         srb->cmnd[11] = 0;
+>                         srb->cmnd[10] = 0;
+> 
+> Why is a 10 byte command given a command length of 12?
 
+The USB protocol used by this device is presumably one that requires all
+commands to be 0-padded to 12 bytes.
 
-But I suppose nothing is wrong with the command TEST_UNIT_READY.
-It is just that the device was not ready yet.
-The successful 2.4 trace also has a failing TEST_UNIT_READY,
-but itis followed by a successful one.
+More interesting is this:
 
-Mar 30 19:47:46 crusoe kernel: usb-storage: Command TEST_UNIT_READY (6 bytes)
-Mar 30 19:47:46 crusoe kernel: usb-storage: 00 00 00 00 00 00 00 00 00 00 14 c0
-Mar 30 19:47:46 crusoe kernel: usb-uhci.c: interrupt, status 2, frame# 1414
-Mar 30 19:47:46 crusoe kernel: usb-storage: Call to usb_stor_control_msg() returned -32
-Mar 30 19:47:46 crusoe kernel: usb-storage: -- Stall on control pipe. Clearing
-Mar 30 19:47:46 crusoe kernel: usb-storage: usb_stor_clear_halt: result=0
-...
-Mar 30 19:47:46 crusoe kernel: usb-storage: Command TEST_UNIT_READY (6 bytes)
-Mar 30 19:47:46 crusoe kernel: usb-storage: 00 00 00 00 00 00 00 00 00 00 14 c0
-Mar 30 19:47:46 crusoe kernel: usb-storage: Call to usb_stor_control_msg() returned 12
+> Apr  9 17:34:55 lemon: usb-storage: Command MODE_SENSE (6 bytes)
+> Apr  9 17:34:55 lemon: usb-storage:  1a 00 3f 00 04 00
 
+<snip>
 
-So, it looks like the bad part of 2.5 is that it asks for a reset.
+> Apr  9 17:34:55 lemon: usb-storage: usb_stor_bulk_transfer_buf(): xfer 4 bytes
+> Apr  9 17:34:55 lemon: usb-storage: Status code -75; transferred 4/4
 
-Andries
+The error is -EOVERFLOW, which means that the device tried to send back 
+more data than we were prepared to receive, i.e., more than 4 bytes.  That 
+4 comes from the second-to-last byte of the MODE-SENSE command.  But there 
+is a comment in drivers/storage/usb/protocol.c indicating that 8 is the 
+minimum size for a MODE-SENSE (line 257).  That might or might not be 
+accurate, or it might not apply to this sort of device.  But it is 
+suggestive.
 
+Alan Stern
 
