@@ -1,42 +1,42 @@
-From: Jesper Juhl <juhl-lkml@dif.dk>
-Subject: Re: [PATCH][RFC] clean out old cruft from FD MCS driver
-Date: Thu, 6 Jan 2005 00:18:49 +0100 (CET)
-Message-ID: <Pine.LNX.4.61.0501060015100.3492@dragon.hygekrogen.localhost>
-References: <Pine.LNX.4.61.0501032350040.3529@dragon.hygekrogen.localhost>
- <20050104030717.GQ18080@parcelfarce.linux.theplanet.co.uk>
+From: Andrew Morton <akpm@osdl.org>
+Subject: Re: [PATCH 1/3] osst upgrade to 0.99.3
+Date: Wed, 5 Jan 2005 15:18:19 -0800
+Message-ID: <20050105151819.1a4981ae.akpm@osdl.org>
+References: <1104627552l.3427l.2l@serve.riede.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.dif.dk ([193.138.115.101]:38083 "EHLO mail.dif.dk")
-	by vger.kernel.org with ESMTP id S262640AbVAEXH0 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 5 Jan 2005 18:07:26 -0500
-In-Reply-To: <20050104030717.GQ18080@parcelfarce.linux.theplanet.co.uk>
+Received: from fw.osdl.org ([65.172.181.6]:12524 "EHLO mail.osdl.org")
+	by vger.kernel.org with ESMTP id S262656AbVAEXSb (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 5 Jan 2005 18:18:31 -0500
+In-Reply-To: <1104627552l.3427l.2l@serve.riede.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: Jesper Juhl <juhl-lkml@dif.dk>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, ZP Gu <zpg@castle.net>
+To: Willem Riede <osst@riede.org>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Tue, 4 Jan 2005, Matthew Wilcox wrote:
+Willem Riede <osst@riede.org> wrote:
+>
+> In a series of three mails, I'll present changes I'd like to see 
+>  made to the osst driver in the linux-2.6.11 pre-series.
 
-> On Tue, Jan 04, 2005 at 12:11:27AM +0100, Jesper Juhl wrote:
-> > At this point I got the feeling that this driver had been left to rot and 
-> > I desided to see if there was more cruft in there that we might as well 
-> > get rid of, and indeed there is.
-> 
-> Yup.  There's a lot of cruft in that driver.  I really don't like the
-> look of fd_mcs_intr() -- trying to deduce whether or not there's a data phase
-> out based on the command byte?  urgh.
-> 
-> There's a somehat better-maintained driver -- fdomain.c.  It'd be great
-> if someone could make fdomain.c support the MCA cards -- and even the PCMCIA
-> cards without having the separate fdomain_stub.c.
+All three patches were hopelessly mangled by your email client:
 
-That would be even better, but until that happens why not apply the patch 
-I submitted (assuming it is actually OK) in its current form? That at 
-least would clean out some of the cruft (and kill a warning) so there's 
-less to sift through for someone reading the driver later.
+70 out of 70 hunks FAILED -- saving rejects to file drivers/scsi/osst.c.rej
+osst-style-changes does not apply
 
--- 
-Jesper
+Please sort out your email client and send the patches to yourself to test
+that they still apply.
 
+When resending please ensure that the patch headers are in `-p1' form:
 
+--- osst-patches/osst.h	2005-01-01 19:15:32.700230984 -0500
++++ /home/wriede/SfOsstCVS/Driver26/osst.h	2005-01-01 16:13:35.000000000 -0500
+
+Things like the above will not apply to anyone's tree without jumping
+through hoops.
+
+Also, please don't send multiple patches under the same Subject:.
+
+See http://www.zip.com.au/~akpm/linux/patches/stuff/tpp.txt, thanks.
