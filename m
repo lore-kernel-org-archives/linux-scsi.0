@@ -1,54 +1,48 @@
-From: Pat LaVarre <p.lavarre@ieee.org>
-Subject: Re: SG_IO open flags are which
-Date: 05 Apr 2004 18:49:29 -0600
+From: "Mukker, Atul" <Atulm@lsil.com>
+Subject: RE: Megaraid and Linux 2.6 questions
+Date: Tue, 6 Apr 2004 00:49:23 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1081212569.3439.32.camel@patibmrh9>
+Message-ID: <0E3FA95632D6D047BA649F95DAB60E57033BC4F1@exa-atlanta.se.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="iso-8859-1"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from email-out2.iomega.com ([147.178.1.83]:40397 "EHLO
-	email.iomega.com") by vger.kernel.org with ESMTP id S263595AbUDFBwO
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 5 Apr 2004 21:52:14 -0400
+Received: from mail0.lsil.com ([147.145.40.20]:52187 "EHLO mail0.lsil.com")
+	by vger.kernel.org with ESMTP id S263617AbUDFEt0 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Apr 2004 00:49:26 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: dougg@torque.net
-Cc: linux-scsi@vger.kernel.org
+To: 'Paul Wagland' <paul@wagland.net>, Linux SCSI mailing list <linux-scsi@vger.kernel.org>
+Cc: "Mukker, Atul" <Atulm@lsil.com>
 
-Doug G:
+The two driver model, as suggested by many people on the list, put some
+unique conditions in the driver. The driver for most parts is complete and
+currently undergoing the our development testing.
 
-> > Re: SG_IO open flags are which
-> > http://marc.theaimsgroup.com/?t=107150658300002
-> > ...
-> > So first try and open() with the (O_NONBLOCK
-> > | O_RDWR) flags.  If that yields ENOMEDIUM
-> > look for the corresponding sg device name.
-> > If the initial open() yields EROFS or EACESS
-> > then try to open it (O_NONBLOCK | O_RDONLY).
-> > ...
+I promised a release some weeks ago but we could not make it because of
+stability issues. But it is in much better shape now and would be available
+for review pretty soon.
 
-Clear workarounds for three possible results, yes, thank you.
+-Atul Mukker
 
-Naturally I fear uncertainly and doubt the effects of defaulting to
-O_RDWR or O_RDONLY.
-
-> > Confused enough yet :-)
-
-I can confirm ioctl SG_IO op x2A, in Linux-2.6.5, passes:
-
-thru open O_NONBLOCK of mountable /dev/scd$n, and
-thru open (O_NONBLOCK | O_RDWR) of unmountable /dev/sg$n, but
-NOT thru open O_NONBLOCK of unmountable /dev/sg$n.
-
-I get these same results no matter disc absent or present.
-
-Next steps may include:
-
-a) Contrast PDT x05 ioctl CDROM_SEND_PACKET with ioctl SG_IO.
-
-b) Trace when open/ close implies op x1E "PREVENT" "ALLOW" around ioctl,
-even ioctl of op x1B "START" "STOP" Eject.
-
-Pat LaVarre
+-----Original Message-----
+From: Paul Wagland [mailto:paul@wagland.net]
+Sent: Monday, April 05, 2004 5:25 PM
+To: Linux SCSI mailing list
+Cc: Atul Mukker
+Subject: Megaraid and Linux 2.6 questions
 
 
+Hi all,
+
+One question, one problem:
+
+question: What is the current status of the unified driver for 2.6?
+
+problem: When using dellmgr v 5.31 to delete a logical drive on my
+SATA-150-6 board under linux 2.6.4, the controller seems to hang. I can
+continue to do stuff, so long as I don't want to touch that controller.
+As this is my only IO controller that is a little tricky :-) Has thyis
+problem been seen before? Is there a known workaround?
+
+Cheers,
+Paul
