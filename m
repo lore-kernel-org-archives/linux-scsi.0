@@ -1,48 +1,42 @@
-From: Hartmut Manz <manz@intes.de>
-Subject: Which U320 SCSI controler can be used on IA64 Systems
-Date: Thu, 28 Aug 2003 09:08:44 +0200
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH] fix the scsi_logging_level fix
+Date: Thu, 28 Aug 2003 12:24:58 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <200308271505.53086.manz__11772.8748046376$1062054540@intes.de>
+Message-ID: <20030828102458.GA3972@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.permas.de ([195.143.204.226]:31156 "EHLO netserv.local")
-	by vger.kernel.org with ESMTP id S263734AbTH1HIq (ORCPT
+Received: from verein.lst.de ([212.34.189.10]:4044 "EHLO mail.lst.de")
+	by vger.kernel.org with ESMTP id S262288AbTH1KZD (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 28 Aug 2003 03:08:46 -0400
-Received: from hardy.local ([192.168.1.71] ident=manz)
-	by netserv.local with esmtp (Exim 3.35 #1 (Debian))
-	id 19sGth-00079G-00
-	for <linux-scsi@vger.kernel.org>; Thu, 28 Aug 2003 09:08:45 +0200
+	Thu, 28 Aug 2003 06:25:03 -0400
 Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: linux-scsi@vger.kernel.org
 
-Hello,
+We already had a prototype for it, it just was conditional on
+CONFIG_SCSI_LOGGING..
 
-I need to extend an ITANIUM-2 system with a 4 way striped scratch file-system.
-Now I am looking for working U320 SCSI controllers.
 
-Could anyone tell me which SCSI controller is working on IA64.
-
-My Idea was to use the ADAPTEC Controller 39320D with 
-2 * 2 external Seagate 15K3 Disk and to use softraid.
-Is this a good choice? 
-
-The used operating system is RedHat AS2.1
-Compiling a new kernel is no problem.
-
-Thank You in advance
-
-Hartmut
--- 
------------------------------------------------------------------------------
-Hartmut Manz                                      WWW:    http://www.intes.de
-INTES GmbH                                        Phone:  +49-711-78499-29
-Schulze-Delitzsch-Str. 16                         Fax:    +49-711-78499-10
-D-70565 Stuttgart                                 E-mail: manz@intes.de
-   Ein Mensch sieht, was vor Augen ist; der Herr aber sieht das Herz an.
-------------------------------------------------------- 1. Samuel 16, 7 -----
-
+--- 1.3/drivers/scsi/scsi_logging.h	Wed Aug 27 00:45:29 2003
++++ edited/drivers/scsi/scsi_logging.h	Thu Aug 28 10:49:51 2003
+@@ -37,9 +37,9 @@
+ #define SCSI_LOG_HLCOMPLETE_BITS          3
+ #define SCSI_LOG_IOCTL_BITS               3
+ 
++extern unsigned int scsi_logging_level;
+ 
+ #ifdef CONFIG_SCSI_LOGGING
+-extern unsigned int scsi_logging_level;
+ #define SCSI_CHECK_LOGGING(SHIFT, BITS, LEVEL, CMD)		\
+ {								\
+         unsigned int mask = (1 << (BITS)) - 1;			\
+@@ -75,7 +75,5 @@
+         SCSI_CHECK_LOGGING(SCSI_LOG_HLCOMPLETE_SHIFT, SCSI_LOG_HLCOMPLETE_BITS, LEVEL,CMD);
+ #define SCSI_LOG_IOCTL(LEVEL,CMD)  \
+         SCSI_CHECK_LOGGING(SCSI_LOG_IOCTL_SHIFT, SCSI_LOG_IOCTL_BITS, LEVEL,CMD);
+-
+-extern unsigned int scsi_logging_level;
+ 
+ #endif /* _SCSI_LOGGING_H */
