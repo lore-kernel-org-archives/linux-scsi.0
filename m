@@ -1,34 +1,41 @@
-From: Matthew Wilcox <matthew@wil.cx>
+From: James Bottomley <James.Bottomley@SteelEye.com>
 Subject: Re: Core scsi layer crashes in 2.6.8.1
-Date: Wed, 29 Sep 2004 15:27:23 +0100
+Date: 29 Sep 2004 10:34:25 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040929142723.GG16153@parcelfarce.linux.theplanet.co.uk>
-References: <1096401785.13936.5.camel@localhost.localdomain> <1096467125.2028.11.camel@mulgrave>
+Message-ID: <1096468472.2123.17.camel@mulgrave>
+References: <1096401785.13936.5.camel@localhost.localdomain>
+	<1096467125.2028.11.camel@mulgrave>
+	<1096464245.15907.27.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:57054 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S268511AbUI2O11
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 29 Sep 2004 10:27:27 -0400
-Content-Disposition: inline
-In-Reply-To: <1096467125.2028.11.camel@mulgrave>
+Received: from stat16.steeleye.com ([209.192.50.48]:51936 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S268582AbUI2Oee (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 29 Sep 2004 10:34:34 -0400
+In-Reply-To: <1096464245.15907.27.camel@localhost.localdomain>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Wed, Sep 29, 2004 at 10:11:59AM -0400, James Bottomley wrote:
-> I have a theory that we should be taking a device reference before
-> waking up the error handler, otherwise host removal can race with error
-> handling.
+On Wed, 2004-09-29 at 09:24, Alan Cox wrote:
+>         badness in kref_get
+>                 kobject_get, get_device, scsi_request_fn
+>                 blk_insert_request, scsi_queue_insert
+>                 scsi_eh_flush_done_q, scsi_unjam_host
+>                 scsi_error_handler
 
-That would certainly mesh with what's happening with Anton's sick ppc64
-box ...
+Yes .. this is the significant one ... we're trying to get a reference
+to a device that has already been released
 
--- 
-"Next the statesmen will invent cheap lies, putting the blame upon 
-the nation that is attacked, and every man will be glad of those
-conscience-soothing falsities, and will diligently study them, and refuse
-to examine any refutations of them; and thus he will by and by convince 
-himself that the war is just, and will thank God for the better sleep 
-he enjoys after this process of grotesque self-deception." -- Mark Twain
+>         OOPS scsi_device_dev_release
+>                 device_release
+>                 kobject_cleanup
+>                 kobject_release
+>                 kref_put
+>                 scsi_request_fn
+
+James
+
+
