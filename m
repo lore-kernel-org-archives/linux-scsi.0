@@ -1,42 +1,61 @@
-From: Simon Burley <simonb@lipsyncpost.co.uk>
-Subject: Re: SCSI related kernel errors with 2.4
-Date: Tue, 25 Feb 2003 11:12:38 +0000
+From: Adrian Bunk <bunk@fs.tum.de>
+Subject: [2.5 patch] fix the compilation of sym53c416.c
+Date: Tue, 25 Feb 2003 18:53:10 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3E5B4FA6.86BCA343@lipsyncpost.co.uk>
-References: <20030224204753.13977.qmail@solo.americom.com>
+Message-ID: <20030225175310.GQ7685@fs.tum.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
+Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
-To: jeff@AmeriCom.com
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
 
-jeff@AmeriCom.com wrote:
-> 
-> We've been having crashes we think are related to the scsi driver, I have found other
-> people with the same problem by doing google searches. It happens to people burning
-> CD's, doing tape backups, and sometimes during normal operation. We never experienced
-> this problem with the 2.2 kernel. We tried updating the scsi driver to the latest
-> (6.2.28) and the only thing that changed is the error output is a little more
-> verbose. The tape drive and the hard drive are both on the same SCSI bus, let me know
-> and I can post full hardware specs. It seems when the machine is dead that the hard
-> disk is unaccessable, but I can ping the machine and do simple non-disk-accessing
-> tasks, its as if the scsi hard disk is offline.
-> 
-> Is anybody aware of this bug? Should I bare with it for a while, or downgrade to 2.2?
 
-<snipped>
+In 2.5.63 I get the following compile error in drivers/scsi/sym53c416.c:
 
-Jeffrey,
-I went through exactly the same thing about a year ago with a kernel
-upgrade on one of my machines. You havn't said which Adaptec you're
-using, but this setup was a 2940UW with one internal drive and one
-external drive.
-I can't explain this, but after ripping the box apart and checking
-termination on the internal drive, I found that it wasn't set. Setting
-it fixed the problem, as did reverting to a 2.2 kernel.
 
-Hope that helps a little. Sorry if it seems I'm teaching granny to suck
-eggs.
-Simon
+<--  snip  -->
+
+...
+  gcc -Wp,-MD,drivers/scsi/.sym53c416.o.d -D__KERNEL__ -Iinclude -Wall 
+-Wstrict-prototypes -Wno-trigraphs -O2 -fno-strict-aliasing -fno-common 
+-pipe -mpreferred-stack-boundary=2 -march=k6 
+-Iinclude/asm-i386/mach-default -nostdinc -iwithprefix include    
+-DKBUILD_BASENAME=sym53c416 -DKBUILD_MODNAME=sym53c416 -c -o 
+drivers/scsi/sym53c416.o drivers/scsi/sym53c416.c
+drivers/scsi/sym53c416.c: In function `sym53c416_detect':
+drivers/scsi/sym53c416.c:682: too many arguments to function 
+`pnp_activate_dev'
+make[2]: *** [drivers/scsi/sym53c416.o] Error 1
+
+<--  snip  -->
+
+
+The following patch fixes it:
+
+
+--- linux-2.5.63-notfull/drivers/scsi/sym53c416.c.old	2003-02-25 18:49:37.000000000 +0100
++++ linux-2.5.63-notfull/drivers/scsi/sym53c416.c	2003-02-25 18:50:13.000000000 +0100
+@@ -679,7 +679,7 @@
+ 				printk(KERN_WARNING "sym53c416: unable to attach PnP device.\n");
+ 				continue;
+ 			}
+-			if(pnp_activate_dev(idev, NULL)<0)
++			if(pnp_activate_dev(idev) < 0)
+ 			{
+ 				printk(KERN_WARNING "sym53c416: unable to activate PnP device.\n");
+ 				pnp_device_detach(idev);
+
+
+
+cu
+Adrian
+
+-- 
+
+       "Is there not promise of rain?" Ling Tan asked suddenly out
+        of the darkness. There had been need of rain for many days.
+       "Only a promise," Lao Er said.
+                                       Pearl S. Buck - Dragon Seed
+
