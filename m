@@ -1,31 +1,128 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] qla1820 iomem annotations
-Date: Thu, 21 Oct 2004 18:25:47 +0100
+From: Mark Haverkamp <markh@osdl.org>
+Subject: [PATCH] 2.6.9 aacraid: Support ROMB RAID/SCSI mode
+Date: Thu, 21 Oct 2004 09:56:19 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20041021172547.GA8242@infradead.org>
-References: <20041020235837.GC23987@parcelfarce.linux.theplanet.co.uk> <20041021090032.GA1941@infradead.org> <20041021151406.GB24336@parcelfarce.linux.theplanet.co.uk>
+Message-ID: <1098377779.18354.7.camel@markh1.pdx.osdl.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from phoenix.infradead.org ([81.187.226.98]:21002 "EHLO
-	phoenix.infradead.org") by vger.kernel.org with ESMTP
-	id S270761AbUJURZu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 21 Oct 2004 13:25:50 -0400
-Content-Disposition: inline
-In-Reply-To: <20041021151406.GB24336@parcelfarce.linux.theplanet.co.uk>
+Received: from fire.osdl.org ([65.172.181.4]:15269 "EHLO fire-1.osdl.org")
+	by vger.kernel.org with ESMTP id S270719AbUJUQ4Y (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 21 Oct 2004 12:56:24 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: Al Viro <viro@parcelfarce.linux.theplanet.co.uk>
-Cc: Linus Torvalds <torvalds@osdl.org>, linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@steeleye.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, Mark Salyzyn <mark_salyzyn@adaptec.com>
 
-On Thu, Oct 21, 2004 at 04:14:06PM +0100, Al Viro wrote:
-> On Thu, Oct 21, 2004 at 10:00:32AM +0100, Christoph Hellwig wrote:
-> > This breaks old-style PIO support in this driver which is required for the
-> > Visual Workstations.
-> 
-> Where?  __iomem is #defined to nothing for gcc.  So that leaves only
-> the chunk below as theoretically possible source of changes, right?
+Another patch from Mark Salyzyn's driver. Supports correct operation of
+ROMB (RAID on motherboard) SCSI/RAID.  Applies to the scsi-misc bk tree.
 
-Sorry, this was totlly misworked.  What I actually meant is that it gives
-the sparse warnings again in the PIO-config, so you trade sparse warnings
-for one variant vs ones for another variant.
+Signed-off-by: Mark Haverkamp <markh@osdl.org>
+
+===== drivers/scsi/aacraid/aachba.c 1.29 vs edited =====
+--- 1.29/drivers/scsi/aacraid/aachba.c	2004-10-01 08:10:08 -07:00
++++ edited/drivers/scsi/aacraid/aachba.c	2004-10-21 09:53:08 -07:00
+@@ -645,9 +645,31 @@
+ 			dev->adapter_info.serial[1]);
+ 
+ 	dev->nondasd_support = 0;
++	dev->raid_scsi_mode = 0;
+ 	if(dev->adapter_info.options & AAC_OPT_NONDASD){
+ 		dev->nondasd_support = 1;
+ 	}
++
++	/*
++	 * If the firmware supports ROMB RAID/SCSI mode and we are currently
++	 * in RAID/SCSI mode, set the flag. For now if in this mode we will
++	 * force nondasd support on. If we decide to allow the non-dasd flag
++	 * additional changes changes will have to be made to support
++	 * RAID/SCSI.  the function aac_scsi_cmd in this module will have to be
++	 * changed to support the new dev->raid_scsi_mode flag instead of
++	 * leaching off of the dev->nondasd_support flag. Also in linit.c the
++	 * function aac_detect will have to be modified where it sets up the
++	 * max number of channels based on the aac->nondasd_support flag only.
++	 */
++	if ((dev->adapter_info.options & AAC_OPT_SCSI_MANAGED)
++		&& (dev->adapter_info.options & AAC_OPT_RAID_SCSI_MODE)) {
++		dev->nondasd_support = 1;
++		dev->raid_scsi_mode = 1;
++	}
++	if (dev->raid_scsi_mode != 0)
++		printk(KERN_INFO "%s%d: ROMB RAID/SCSI mode enabled\n",
++				dev->name, dev->id);
++		
+ 	if(nondasd != -1) {  
+ 		dev->nondasd_support = (nondasd!=0);
+ 	}
+@@ -1137,7 +1159,7 @@
+ 		char *cp;
+ 
+ 		dprintk((KERN_DEBUG "READ CAPACITY command.\n"));
+-		if (fsa_dev_ptr[cid].size <= 0x100000000)
++		if (fsa_dev_ptr[cid].size <= 0x100000000LL)
+ 			capacity = fsa_dev_ptr[cid].size - 1;
+ 		else
+ 			capacity = (u32)-1;
+@@ -1446,8 +1468,17 @@
+ 			if( b==TYPE_TAPE || b==TYPE_WORM || b==TYPE_ROM || b==TYPE_MOD|| b==TYPE_MEDIUM_CHANGER 
+ 					|| (b==TYPE_DISK && (b1&0x80)) ){
+ 				scsicmd->result = DID_OK << 16 | COMMAND_COMPLETE << 8;
++			/*
++			 * We will allow disk devices if in RAID/SCSI mode and
++			 * the channel is 2
++			 */
++			} else if ((dev->raid_scsi_mode) &&
++					(scsicmd->device->channel == 2)) {
++				scsicmd->result = DID_OK << 16 | 
++						COMMAND_COMPLETE << 8;
+ 			} else {
+-				scsicmd->result = DID_NO_CONNECT << 16 | COMMAND_COMPLETE << 8;
++				scsicmd->result = DID_NO_CONNECT << 16 | 
++						COMMAND_COMPLETE << 8;
+ 			}
+ 		} else {
+ 			scsicmd->result = DID_OK << 16 | COMMAND_COMPLETE << 8;
+@@ -1479,8 +1510,17 @@
+ 			if( b==TYPE_TAPE || b==TYPE_WORM || b==TYPE_ROM || b==TYPE_MOD|| b==TYPE_MEDIUM_CHANGER
+ 					|| (b==TYPE_DISK && (b1&0x80)) ){
+ 				scsicmd->result = DID_OK << 16 | COMMAND_COMPLETE << 8;
++			/*
++			 * We will allow disk devices if in RAID/SCSI mode and
++			 * the channel is 2
++			 */
++			} else if ((dev->raid_scsi_mode) &&
++					(scsicmd->device->channel == 2)) {
++				scsicmd->result = DID_OK << 16 | 
++						COMMAND_COMPLETE << 8;
+ 			} else {
+-				scsicmd->result = DID_NO_CONNECT << 16 | COMMAND_COMPLETE << 8;
++				scsicmd->result = DID_NO_CONNECT << 16 | 
++						COMMAND_COMPLETE << 8;
+ 			}
+ 			break;
+ 		}
+===== drivers/scsi/aacraid/aacraid.h 1.24 vs edited =====
+--- 1.24/drivers/scsi/aacraid/aacraid.h	2004-10-01 08:09:07 -07:00
++++ edited/drivers/scsi/aacraid/aacraid.h	2004-10-20 13:35:27 -07:00
+@@ -807,6 +807,8 @@
+ #define AAC_OPT_SGMAP_HOST64		cpu_to_le32(1<<10)
+ #define AAC_OPT_ALARM			cpu_to_le32(1<<11)
+ #define AAC_OPT_NONDASD			cpu_to_le32(1<<12)
++#define AAC_OPT_SCSI_MANAGED    	cpu_to_le32(1<<13)
++#define AAC_OPT_RAID_SCSI_MODE		cpu_to_le32(1<<14)
+ 
+ struct aac_dev
+ {
+@@ -879,6 +881,7 @@
+ 	 */
+ 	u8			nondasd_support; 
+ 	u8			dac_support;
++	u8			raid_scsi_mode;
+ };
+ 
+ #define AllocateAndMapFibSpace(dev, MapFibContext) \
+
+-- 
+Mark Haverkamp <markh@osdl.org>
 
