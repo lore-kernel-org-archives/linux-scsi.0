@@ -1,54 +1,43 @@
-From: Russell King <rmk+lkml@arm.linux.org.uk>
-Subject: Re: Proposal for new generic device API: dma_get_required_mask()
-Date: Sun, 20 Jun 2004 20:47:23 +0100
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040620204723.B641@flint.arm.linux.org.uk>
-References: <1087481331.2210.27.camel@mulgrave> <m33c4tsnex.fsf@defiant.pm.waw.pl> <20040618102120.A29213@flint.arm.linux.org.uk> <m3brjg7994.fsf@defiant.pm.waw.pl> <20040619212246.B8063@flint.arm.linux.org.uk> <m3zn6zf68l.fsf@defiant.pm.waw.pl>
+From: "C.Newport" <crn@netunix.com>
+Subject: Re: future of drivers/fc4/
+Date: Sun, 20 Jun 2004 21:05:00 +0100
+Sender: sparclinux-owner@vger.kernel.org
+Message-ID: <200406202105.00577.crn@netunix.com>
+References: <20040620160353.GA17163@lst.de> <20040620114010.73f1b98a.davem@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from caramon.arm.linux.org.uk ([212.18.232.186]:18182 "EHLO
-	caramon.arm.linux.org.uk") by vger.kernel.org with ESMTP
-	id S263770AbUFTTri (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 20 Jun 2004 15:47:38 -0400
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
+Return-path: <sparclinux-owner@vger.kernel.org>
+In-Reply-To: <20040620114010.73f1b98a.davem@redhat.com>
 Content-Disposition: inline
-In-Reply-To: <m3zn6zf68l.fsf@defiant.pm.waw.pl>; from khc@pm.waw.pl on Sun, Jun 20, 2004 at 02:00:42AM +0200
+To: "David S. Miller" <davem@redhat.com>, Christoph Hellwig <hch@lst.de>
+Cc: linux-scsi@vger.kernel.org, sparclinux@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Krzysztof Halasa <khc@pm.waw.pl>
-Cc: James Bottomley <James.Bottomley@steeleye.com>, Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-> Wouldn't it be better to not touch the masks (which are device
-> capabilities rather than platform limitations) and let alloc/map
-> functions always use the correct half of RAM?
+On Sunday 20 June 2004 7:40 pm, David S. Miller wrote:
+> On Sun, 20 Jun 2004 18:03:53 +0200
+>
+> Christoph Hellwig <hch@lst.de> wrote:
+> > The SUN FCAL support has been non-working for ages and needs major work
+> > to keep up with scsi API changes.  Is anyone planning to ressurect it
+> > midterm?  If not I'd like to remove it from the tree.
+>
+> Feel free to remove it, interested parties can resurrect the source
+> really easily.
 
-They are device limitations - the SA1111 device (which is a bus master
-device in its own right) itself is the cause of the problem, so the
-devices integrated inside it need to know.
+If it is that easy could someone tell me what needs doing please ?
+I am NOT a kernel programmer but given a little handholding and
+a list of what to do I can build and test it here.
 
-Eg:
+I also have a spare set of hardware if someone in the UK with the
+needed skills would like it. Sorry, but the disk array is a bit heavy to 
+ship elsewhere. If someone already has the array I will mail a card
+anywhere.
 
-+------------------------+           +---------------------------+
-|                        |           |                           |
-| SSP       CPU--bus i/f-|-----+-----|-bus i/f   OHCI  SSP  SAC  |
-|  |                |    |     |     |    |       |     |    |   |
-|  +----------------+    |     |     |    +-------+-----+----+   |
-|       SA11x0           | +-------+ |          SA1111           |
-+------------------------+ | SDRAM | +---------------------------+
-                           +-------+
+We need this if we are ever to get the Sun4D working again.
+Keith now has a contact for the missing info to get Sun4D working
+properly, but without the fc, soc and pluto it will be rather restricted in
+usefulness.
 
-The SDRAM bus is shared between the SA11x0 and SA1111 devices, and
-there is an arbitration protocol to hand off the SDRAM bus between
-the two devices.
-
-The SSP and CPU itself inside the SA11x0 can access all SDRAM memory,
-but the OHCI, SSP and SAC devices within the SA1111 are affected by
-the problem.
-
-So it's quite correct for this to be a device thing not a platform
-thing.  It _is_ the SA1111 device itself which has the problem.
-
--- 
-Russell King
- Linux kernel    2.6 ARM Linux   - http://www.arm.linux.org.uk/
- maintainer of:  2.6 PCMCIA      - http://pcmcia.arm.linux.org.uk/
-                 2.6 Serial core
+ 
