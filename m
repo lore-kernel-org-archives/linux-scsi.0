@@ -1,38 +1,88 @@
-From: "Patrick J. LoPresti" <patl@users.sourceforge.net>
-Subject: Success with new Megaraid driver
-Date: 25 Aug 2004 16:44:43 -0400
+From: John Damm =?iso-8859-1?Q?S=F8rensen?= <john@hovedpuden.dk>
+Subject: Re: /dev/[*]st* does not work with EXBAYTE 8505 with 2.6 kernels
+Date: Wed, 25 Aug 2004 22:55:20 +0200 (CEST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <s5gn00jge8h.fsf@patl=users.sf.net>
+Message-ID: <28477.192.48.171.17.1093467320.squirrel@192.48.171.17>
+References: <412C315D.1000708@hovedpuden.dk>
+    <Pine.LNX.4.58.0408252225550.1974@kai.makisara.local>
+Reply-To: john@hovedpuden.dk
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-ext.curl.com ([66.228.88.132]:26887 "HELO
-	mail-ext.curl.com") by vger.kernel.org with SMTP id S268675AbUHYUoo
+Received: from pfepa.post.tele.dk ([195.41.46.235]:27939 "EHLO
+	pfepa.post.tele.dk") by vger.kernel.org with ESMTP id S268674AbUHYUz3
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 25 Aug 2004 16:44:44 -0400
+	Wed, 25 Aug 2004 16:55:29 -0400
+In-Reply-To: <Pine.LNX.4.58.0408252225550.1974@kai.makisara.local>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: "Mukker, Atul" <Atulm@lsil.com>
+To: Kai Makisara <Kai.Makisara@kolumbus.fi>
+Cc: linux-scsi@vger.kernel.org
 
-My group has been stress-testing the 2.6 kernel on a Dell PowerEdge
-650 with a PERC 4/SC RAID card.  It has two drives configured as RAID
-1 in a single logical drive.  Our stress test consists of several
-clients hammering our revision control system (Perforce) in parallel.
 
-Using the vanilla 2.6.8.1 kernel and megaraid driver, we can
-consistently make the machine fall over within 12 hours.  Here "fall
-over" means getting some kind of I/O error and then having the logical
-drive enter read-only mode.
+> I am moving this thread to linux-scsi where it belongs.
+>
+> On Wed, 25 Aug 2004, John Damm S=F8rensen wrote:
+>
+>> I have just upgraded from RH9 Linux 2.4 to FC2 Linux 2.6 and now my
+>> EXABYTE 8505 no longer works.
+>>
+>> If I try to access it with mt (using any device like nst0) I get no =
+such
+>> device error message. Same thing with stinit.
+>>
+> This suggests that the st driver has not found your drive. Your tape =
+drive
+> is recognized as a sequential-access device and lsmod shows that st i=
+s
+> loaded. Puzzling.
+>
+> If you look at the kernel messages, do you see something like this:
+>
+> st: Version 20040403, fixed bufsize 32768, s/g segs 256
+> Attached scsi tape st0 at scsi0, channel 0, id 5, lun 0
+> st0: try direct i/o: yes (alignment 512 B), max page reachable by HBA
+> 268435455
 
-The hardware passes Dell's diagnostics.  But it also works fine under
-moderate I/O load, so perhaps that does not mean much.
+Yes, I see this message in dmesg.
 
-After applying the megaraid-2.20.3.0 patch and using the megaraid_mbox
-driver, however, everything looks much better.  Our stress test now
-has been running for 72 hours without issue.  As far as we are
-concerned, the sooner the new driver hits mainline, the better :-).
+>
+> Another thing to check is /sys/class/scsi_tape/. You should see these
+> files: nst0  nst0a  nst0l  nst0m  st0  st0a  st0l  st0m
+>
 
-Just a data point from a random user.  And a "thank you" to the LSI
-folks!
+These device files are also present.
 
- - Pat
+> ...
+>> Any hints?
+>> Please don't tell me that the 8505 is no longer supported.
+>>
+> Any well-behaving drive is supported. I have used EXB8505 some years =
+ago
+> and I don't think this problem has anything to do with the drive.
+
+I have also used this drive for a year or two now. Initially with 2.4 I
+had problems with compression, but that was solved with new firmware th=
+at
+defaults to compression.
+
+With 2.6 the tape  drive fails to work with the Qlogic HBA's ISP1040 (t=
+he
+HBA simply doesn't work with 2.6) and QLA12160, but it works with the
+Symbios/LSI HBA.
+
+/john
+>
+> --
+> Kai
+>
+
+
+--=20
+John Damm S=F8rensen, Stenkrogen 6, 2800 Kgs. Lyngby, +45 4498 6995
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
