@@ -1,108 +1,83 @@
-From: Jeremy Higdon <jeremy@sgi.com>
-Subject: [RFC] [PATCH 2.6.9-rc1] add blacklist attribute indicating no ULD attach
-Date: Tue, 14 Sep 2004 20:18:34 -0700
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: [PATCH] New QStor SATA/RAID Driver for 2.6.9-rc2
+Date: Wed, 15 Sep 2004 14:22:36 +1000
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040915031834.GA102988@sgi.com>
-References: <20040914063237.GA97486@sgi.com> <20040914144023.GA9524@beaverton.ibm.com> <20040914182203.GA100433@sgi.com>
+Message-ID: <4147C38C.3000104@torque.net>
+References: <414711AC.5030200@rtr.ca> <41471A84.4090200@pobox.com>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from omx3-ext.sgi.com ([192.48.171.20]:31918 "EHLO omx3.sgi.com")
-	by vger.kernel.org with ESMTP id S266910AbUIODTk (ORCPT
+Received: from borg.st.net.au ([65.23.158.22]:59873 "EHLO borg.st.net.au")
+	by vger.kernel.org with ESMTP id S267386AbUIOEX2 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 14 Sep 2004 23:19:40 -0400
-Content-Disposition: inline
-In-Reply-To: <20040914182203.GA100433@sgi.com>
+	Wed, 15 Sep 2004 00:23:28 -0400
+In-Reply-To: <41471A84.4090200@pobox.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: patmans@us.ibm.com, axboe@suse.de, james.bottomley@steeleye.com
+To: Jeff Garzik <jgarzik@pobox.com>, Mark Lord <lsml@rtr.ca>
+Cc: linux-scsi@vger.kernel.org
 
-After an IRC chat with jejb, I have a new patch to proffer.
+Jeff Garzik wrote:
+> Mark Lord wrote:
+> 
+>> My first attempt at posting this seems to have gone AWOL,
+>> so here it comes again.  Also being posted to linux-scsi.
+>>
+>> Here is the first public release of the 2.6.xx driver
+>> source code for the Pacific Digital Corporation QStor SATA/RAID chip.
+>>
+>> This 4-channel chip has hardware-assisted RAID0/RAID1/RAID10,
+>> host-queuing, per-request TCQ/NCQ support, support for hot insertion
+>> and removal of drives, etc..  The 64-bit/66Mhz chip shows throughput
+>> in excess of 200MByte/sec on my ancient P3-1GHz test system,
+>> and can do much better when installed in a PCI-X slot.
+> 
+> 
+> How much of the RAID is actually hardware-assisted?
+> 
+> 
+>> The driver (attached) supports most of the chip features,
+>> including host, native and legacy tagged queuing,
+>> but does not yet include boot-from-raid support (coming soon).
+>>
+>> Both hdparm and smartmontools are fully supported by this driver.
 
-This one takes a different tack that is cleaner (thanks James).
+Mark,
+I'm curious how smartmontools is supported. Does the driver
+support SCSI LOG SENSE commands on the physical units or does
+it take the 3ware/Marvell route?
+There is no sign of QStor specific code in smartmontools's CVS.
 
+> Linus vetoed future SCSI->ATA translators.  He only allowed libata 
+> because I promised to remove the translation and make it a native block 
+> driver in the future, which I have been working towards.
 
-# This is a BitKeeper generated diff -Nru style patch.
-# 
-# ChangeSet
-#   2004/09/14 19:48:01-07:00 jeremy@tomahawk.engr.sgi.com 
-#   Add new SCSI blacklist attribute to indicate that a lun should not be
-#   attached to an upper level driver, and use that attribute for UTM luns
-#   for SGI branded LSI/Engenio RAIDs.
-# 
-# include/scsi/scsi_devinfo.h
-#   2004/09/14 19:47:51-07:00 jeremy@tomahawk.engr.sgi.com +1 -1
-#   Add BLIST_NO_ULD_ATTACH blacklist attribute.
-# 
-# include/scsi/scsi_device.h
-#   2004/09/14 19:47:51-07:00 jeremy@tomahawk.engr.sgi.com +1 -0
-#   Add no_uld_attach flag to struct scsi_device.
-# 
-# drivers/scsi/scsi_sysfs.c
-#   2004/09/14 19:47:51-07:00 jeremy@tomahawk.engr.sgi.com +2 -0
-#   If no_uld_attach flag is set, force "mismatch" result to scsi_bus_match().
-# 
-# drivers/scsi/scsi_scan.c
-#   2004/09/14 19:47:51-07:00 jeremy@tomahawk.engr.sgi.com +2 -7
-#   Set no_uld_attach flag for lun if indicated.
-# 
-# drivers/scsi/scsi_devinfo.c
-#   2004/09/14 19:47:51-07:00 jeremy@tomahawk.engr.sgi.com +1 -1
-#   Add UTM luns for SGI branded LSI/Engenio RAIDs to blacklist for no ULD attach.
-# 
-diff -Nru a/drivers/scsi/scsi_devinfo.c b/drivers/scsi/scsi_devinfo.c
---- a/drivers/scsi/scsi_devinfo.c	2004-09-14 19:58:52 -07:00
-+++ b/drivers/scsi/scsi_devinfo.c	2004-09-14 19:58:52 -07:00
-@@ -182,6 +182,7 @@
- 	{"SGI", "RAID3", "*", BLIST_SPARSELUN},
- 	{"SGI", "RAID5", "*", BLIST_SPARSELUN},
- 	{"SGI", "TP9100", "*", BLIST_REPORTLUN2},
-+	{"SGI", "Universal Xport", "*", BLIST_NO_ULD_ATTACH},
- 	{"SMSC", "USB 2 HS-CF", NULL, BLIST_SPARSELUN},
- 	{"SONY", "CD-ROM CDU-8001", NULL, BLIST_BORKEN},
- 	{"SONY", "TSL", NULL, BLIST_FORCELUN},		/* DDS3 & DDS4 autoloaders */
-diff -Nru a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
---- a/drivers/scsi/scsi_scan.c	2004-09-14 19:58:52 -07:00
-+++ b/drivers/scsi/scsi_scan.c	2004-09-14 19:58:52 -07:00
-@@ -532,6 +532,9 @@
- 		inq_result[0] = TYPE_ROM;
- 		inq_result[1] |= 0x80;	/* removable */
- 	}
-+	else if (*bflags & BLIST_NO_ULD_ATTACH) {
-+		sdev->no_uld_attach = 1;
-+	}
- 
- 	switch (sdev->type = (inq_result[0] & 0x1f)) {
- 	case TYPE_TAPE:
-diff -Nru a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
---- a/drivers/scsi/scsi_sysfs.c	2004-09-14 19:58:52 -07:00
-+++ b/drivers/scsi/scsi_sysfs.c	2004-09-14 19:58:52 -07:00
-@@ -183,6 +183,8 @@
- static int scsi_bus_match(struct device *dev, struct device_driver *gendrv)
- {
- 	struct scsi_device *sdp = to_scsi_device(dev);
-+	if (sdp->no_uld_attach)
-+		return 0;
- 	return (sdp->inq_periph_qual == SCSI_INQ_PQ_CON)? 1: 0;
- }
- 
-diff -Nru a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
---- a/include/scsi/scsi_device.h	2004-09-14 19:58:52 -07:00
-+++ b/include/scsi/scsi_device.h	2004-09-14 19:58:52 -07:00
-@@ -106,6 +106,7 @@
- 	unsigned use_192_bytes_for_3f:1; /* ask for 192 bytes from page 0x3f */
- 	unsigned no_start_on_add:1;	/* do not issue start on add */
- 	unsigned allow_restart:1; /* issue START_UNIT in error handler */
-+	unsigned no_uld_attach:1; /* disable connecting to upper level drivers */
- 
- 	unsigned int device_blocked;	/* Device returned QUEUE_FULL. */
- 
-diff -Nru a/include/scsi/scsi_devinfo.h b/include/scsi/scsi_devinfo.h
---- a/include/scsi/scsi_devinfo.h	2004-09-14 19:58:52 -07:00
-+++ b/include/scsi/scsi_devinfo.h	2004-09-14 19:58:52 -07:00
-@@ -25,4 +25,5 @@
-  					   (if HBA supports more than 8 LUNs) */
- #define BLIST_NOREPORTLUN	0x40000	/* don't try REPORT_LUNS scan (SCSI-3 devs) */
- #define BLIST_NOT_LOCKABLE	0x80000	/* don't use PREVENT-ALLOW commands */
-+#define BLIST_NO_ULD_ATTACH	0x100000 /* device is actually for RAID config */
- #endif
+As Jeff is aware, SCSI->ATA translation (SAT) is in
+the process of being standardized at t10.org . The
+model being used outlines a SAT layer going into any
+of three places:
+   - in the host OS above a SATA/ATA HBA driver (i.e.
+     what libata does and Linus frowns upon)
+   - in the host OS above a SAS HBA driver which,
+     amongst other protocols, has the SAS Tunnelling Protocol
+     (STP) which conveys ATA/ATAPI7 commands through SAS
+     infrastructure
+   - somewhere in the service delivery subsystem, specifically
+     in SAS expanders which have phys connected to SATA disks
+     (Linus vetoes have no influence here)
+
+Consider this pathological situation:
+Start with one SATA II disk and connect it to a port selector
+(a SATA II device) which effectively makes the SATA disk dual
+ported. Connect one of those ports to a SATA HBA that lives
+in the Linux ATA subsystem (where no SAT is allowed). Connect the
+other port to a SAS expander which includes a SAT layer and then
+connect that expander to a SAS HBA in the Linux SCSI subsytem.
+That should confuse the !@#$ out of any application client
+trying to get a handle on what is happening.
+
+I assume that OS-based ATA->SCSI translation is also out of
+the question.
+
+Doug Gilbert
