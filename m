@@ -1,84 +1,132 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [OOPS] 2.6.11 - NMI lockup with CFQ scheduler
-Date: Wed, 06 Apr 2005 22:38:59 +0900
-Message-ID: <4253E673.2000001@gmail.com>
-References: <20050329122226.94666.qmail@web52902.mail.yahoo.com> <20050329122635.GP16636@suse.de> <20050406123147.GD9417@suse.de> <1112791930.6275.69.camel@laptopd505.fenrus.org> <20050406125536.GG9417@suse.de>
+From: Andreas Herrmann <aherrman@de.ibm.com>
+Subject: [PATCH] zfcp: convert to compat_ioctl
+Date: Wed, 6 Apr 2005 16:46:39 +0200
+Message-ID: <20050406144639.GA7644@lion28.boeblingen.de.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rproxy.gmail.com ([64.233.170.198]:10374 "EHLO rproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S262201AbVDFNjG (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Apr 2005 09:39:06 -0400
-Received: by rproxy.gmail.com with SMTP id a41so166501rng
-        for <linux-scsi@vger.kernel.org>; Wed, 06 Apr 2005 06:39:06 -0700 (PDT)
-In-Reply-To: <20050406125536.GG9417@suse.de>
+Received: from mtagate3.de.ibm.com ([195.212.29.152]:2947 "EHLO
+	mtagate3.de.ibm.com") by vger.kernel.org with ESMTP id S262218AbVDFOpp
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 6 Apr 2005 10:45:45 -0400
+Received: from d12nrmr1607.megacenter.de.ibm.com (d12nrmr1607.megacenter.de.ibm.com [9.149.167.49])
+	by mtagate3.de.ibm.com (8.12.10/8.12.10) with ESMTP id j36EjiFa094988
+	for <linux-scsi@vger.kernel.org>; Wed, 6 Apr 2005 14:45:44 GMT
+Received: from d12av02.megacenter.de.ibm.com (d12av02.megacenter.de.ibm.com [9.149.165.228])
+	by d12nrmr1607.megacenter.de.ibm.com (8.12.10/NCO/VER6.6) with ESMTP id j36EjiGV213230
+	for <linux-scsi@vger.kernel.org>; Wed, 6 Apr 2005 16:45:44 +0200
+Received: from d12av02.megacenter.de.ibm.com (loopback [127.0.0.1])
+	by d12av02.megacenter.de.ibm.com (8.12.11/8.12.11) with ESMTP id j36Ejh3t013827
+	for <linux-scsi@vger.kernel.org>; Wed, 6 Apr 2005 16:45:44 +0200
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jens Axboe <axboe@suse.de>
-Cc: Arjan van de Ven <arjan@infradead.org>, Chris Rankin <rankincj@yahoo.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: James Bottomley <jejb@steeleye.com>
+Cc: Christoph Hellwig <hch@lst.de>, Linux SCSI <linux-scsi@vger.kernel.org>
 
-Jens Axboe wrote:
-> On Wed, Apr 06 2005, Arjan van de Ven wrote:
-> 
->>>@@ -324,6 +334,7 @@
->>> 	issue_flush_fn		*issue_flush_fn;
->>> 	prepare_flush_fn	*prepare_flush_fn;
->>> 	end_flush_fn		*end_flush_fn;
->>>+	release_queue_data_fn	*release_queue_data_fn;
->>> 
->>> 	/*
->>> 	 * Auto-unplugging state
->>
->>where does this function method actually get called?
-> 
-> 
-> I missed the hunk in ll_rw_blk.c, rmk pointed the same thing out not 5
-> minutes ago :-)
-> 
-> The patch would not work anyways, as scsi_sysfs.c clears queuedata
-> unconditionally. This is a better work-around, it just makes the queue
-> hold a reference to the device as well only killing it when the queue is
-> torn down.
-> 
-> Still not super happy with it, but I don't see how to solve the circular
-> dependency problem otherwise.
-> 
+Hi,
 
-  Hello, Jens.
+Patch converts zfcp to use compat_ioctl.
 
-  I've been thinking about it for a while.  The problem is that we're 
-reference counting two different objects to track lifetime of one 
-entity.  This happens in both SCSI upper and mid layers.  In the upper 
-layer, genhd and scsi_disk (or scsi_cd, ...) are ref'ed separately while 
-they share their destiny together (not really different entity) and in 
-the middle layer scsi_device and request_queue does the same thing. 
-Circular dependency is occuring because we separate one entity into two 
-and reference counting them separately.  Two are actually one and 
-necessarily want each other. (until death aparts.  Wow, serious. :-)
+Thanks to Cristoph who reminded me to adapt zfcp.
 
-  IMHO, what we need to do is consolidate ref counting such that in each 
-layer only one object is reference counted, and the other object is 
-freed when the ref counted object is released.  The object of choice 
-would be genhd in upper layer and request_queue in mid layer.  All 
-ref-counting should be updated to only ref those objects.  We'll need to 
-add a release callback to genhd and make request_queue properly 
-reference counted.
 
-  Conceptually, scsi_disk extends genhd and scsi_device extends 
-request_queue.  So, to go one step further, as what UL represents is 
-genhd (disk device) and ML request_queue (request-based device), 
-embedding scsi_disk into genhd and scsi_device into request_queue will 
-make the architecture clearer.  To do this, we'll need something like 
-alloc_disk_with_udata(int minors, size_t udata_len) and the equivalent 
-for request_queue.
+Regards,
 
-  I've done this half-way and then doing it without fixing the SCSI 
-model seemed silly so got into working on the state model.  (BTW, the 
-state model is almost done, I'm about to run tests.)
+Andreas
 
-  What do you think?  Jens?
 
--- 
-tejun
+zfcp changes: convert zfcp to compat_ioctl
+
+Signed-off-by: Andreas Herrmann <aherrman@de.ibm.com>
+
+===== zfcp_aux.c 1.19 vs edited =====
+--- 1.19/drivers/s390/scsi/zfcp_aux.c	2005-03-29 06:39:24 +02:00
++++ edited/zfcp_aux.c	2005-04-06 14:55:52 +02:00
+@@ -52,19 +52,18 @@
+ static inline int zfcp_sg_list_copy_to_user(void __user *,
+ 					    struct zfcp_sg_list *, size_t);
+ 
+-static int zfcp_cfdc_dev_ioctl(struct inode *, struct file *,
+-	unsigned int, unsigned long);
++static long zfcp_cfdc_dev_ioctl(struct file *, unsigned int, unsigned long);
+ 
+ #define ZFCP_CFDC_IOC_MAGIC                     0xDD
+ #define ZFCP_CFDC_IOC \
+ 	_IOWR(ZFCP_CFDC_IOC_MAGIC, 0, struct zfcp_cfdc_sense_data)
+ 
+-#ifdef CONFIG_COMPAT
+-static struct ioctl_trans zfcp_ioctl_trans = {ZFCP_CFDC_IOC, (void*) sys_ioctl};
+-#endif
+ 
+ static struct file_operations zfcp_cfdc_fops = {
+-	.ioctl = zfcp_cfdc_dev_ioctl
++	.unlocked_ioctl = zfcp_cfdc_dev_ioctl,
++#ifdef CONFIG_COMPAT
++	.compat_ioctl = zfcp_cfdc_dev_ioctl
++#endif
+ };
+ 
+ static struct miscdevice zfcp_cfdc_misc = {
+@@ -308,23 +307,16 @@
+ 	if (!zfcp_transport_template)
+ 		return -ENODEV;
+ 
+-	retval = register_ioctl32_conversion(zfcp_ioctl_trans.cmd,
+-					     zfcp_ioctl_trans.handler);
+-	if (retval != 0) {
+-		ZFCP_LOG_INFO("registration of ioctl32 conversion failed\n");
+-		goto out;
+-	}
+-
+ 	retval = misc_register(&zfcp_cfdc_misc);
+ 	if (retval != 0) {
+ 		ZFCP_LOG_INFO("registration of misc device "
+ 			      "zfcp_cfdc failed\n");
+-		goto out_misc_register;
+-	} else {
+-		ZFCP_LOG_TRACE("major/minor for zfcp_cfdc: %d/%d\n",
+-			       ZFCP_CFDC_DEV_MAJOR, zfcp_cfdc_misc.minor);
++		goto out;
+ 	}
+ 
++	ZFCP_LOG_TRACE("major/minor for zfcp_cfdc: %d/%d\n",
++		       ZFCP_CFDC_DEV_MAJOR, zfcp_cfdc_misc.minor);
++
+ 	/* Initialise proc semaphores */
+ 	sema_init(&zfcp_data.config_sema, 1);
+ 
+@@ -348,8 +340,6 @@
+ 
+  out_ccw_register:
+ 	misc_deregister(&zfcp_cfdc_misc);
+- out_misc_register:
+-	unregister_ioctl32_conversion(zfcp_ioctl_trans.cmd);
+  out:
+ 	return retval;
+ }
+@@ -370,9 +360,9 @@
+  *              -EPERM      - Cannot create or queue FSF request or create SBALs
+  *              -ERESTARTSYS- Received signal (is mapped to EAGAIN by VFS)
+  */
+-static int
+-zfcp_cfdc_dev_ioctl(struct inode *inode, struct file *file,
+-                    unsigned int command, unsigned long buffer)
++static long
++zfcp_cfdc_dev_ioctl(struct file *file, unsigned int command,
++		    unsigned long buffer)
+ {
+ 	struct zfcp_cfdc_sense_data *sense_data, __user *sense_data_user;
+ 	struct zfcp_adapter *adapter = NULL;
+===== zfcp_def.h 1.20 vs edited =====
+--- 1.20/drivers/s390/scsi/zfcp_def.h	2004-12-07 11:19:06 +01:00
++++ edited/zfcp_def.h	2005-04-06 14:19:31 +02:00
+@@ -61,7 +61,6 @@
+ #include <linux/mempool.h>
+ #include <linux/syscalls.h>
+ #include <linux/ioctl.h>
+-#include <linux/ioctl32.h>
+ 
+ /************************ DEBUG FLAGS *****************************************/
+ 
 
