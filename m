@@ -1,38 +1,34 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH] fixes and cleanups for the new command allocation code
-Date: Tue, 4 Feb 2003 19:03:31 +0100
+From: Luben Tuikov <luben@splentec.com>
+Subject: Re: scsi command slab allocation under memory pressure
+Date: Tue, 04 Feb 2003 13:04:53 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030204190331.A32115@lst.de>
-References: <20030204162326.A30755@lst.de> <20030204081616.A24105@beaverton.ibm.com> <20030204175146.A31515@lst.de> <20030204091955.A24785@beaverton.ibm.com> <3E3FFEEF.3040506@splentec.com>
+Message-ID: <3E4000C5.6040006@splentec.com>
+References: <20030129104731.A2811@beaverton.ibm.com>	<3E382E2C.4030201@splentec.com>	<20030129121117.A3389@beaverton.ibm.com>	<20030130225738.1874c2e0.akpm@digeo.com>	<1044020591.2002.16.camel@mulgrave>	<20030131124412.086f2d1c.akpm@digeo.com>	<20030203225550.GJ29516@redhat.com>	<1044313513.1777.91.camel@mulgrave> <20030203151928.1f13c88a.akpm@digeo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <3E3FFEEF.3040506@splentec.com>; from luben@splentec.com on Tue, Feb 04, 2003 at 12:57:03PM -0500
 List-Id: linux-scsi@vger.kernel.org
-To: Luben Tuikov <luben@splentec.com>
-Cc: Patrick Mansfield <patmans@us.ibm.com>, James.Bottomley@steeleye.com, linux-scsi@vger.kernel.org
+To: Andrew Morton <akpm@digeo.com>
+Cc: James Bottomley <James.Bottomley@steeleye.com>, dledford@redhat.com, patmans@us.ibm.com, linux-scsi@vger.kernel.org
 
-On Tue, Feb 04, 2003 at 12:57:03PM -0500, Luben Tuikov wrote:
-> The sole functionality of scsi_get/put_command() is/was(?) to
-> just give/take back a command structure.  This was my intention,
-> to abstract it away, with a well defined functionality.
+Andrew Morton wrote:
 > 
-> Queue depths, limits and such checks should be provided elsewhere,
-> i.e. in the enqueuing piece of code of a scsi_cmnd into a LLDD.  Again,
-> this should be abstracted away with a well defined/sole functionality.
+> One could have designed it to support a pool of >1 command from the outset,
+> but it's unlikely to be necessary.
 
-scsi_get_command/scsi_put_command is only called from the scsi midlayer.
-There are a few stale references in LLDDs, but it's either stubbed out
-(cpqfc) or the driver is far away from beeing useable on 2.5 (gdth).
-Both of them need updating to the scsi_request based APIs anyway.
+Yes, I also that it's not likely to be necessary.
 
-> BTW, is it the trend to have ether-pointers (as I call them) in SCSI Core
-> all over the place or to put SCSI Core data in a structure (i.e. to
-> reflect that it *is* SCSI Core), aka struct scsi_core_data?  I see this is
-> now gone.
+The functionality of support for more than one is there (i.e. in
+the freeing-list code).  As I mentioned in this thread before,
+I had *no* idea (and still have none) on _what_ number to settle if
+greater than one.
 
-The trend is to have as much variables as possible static to one source
-file and if that is not possible have it global in C language scope but
-not exported to modules.
+OTOH, if the powers that be decide that more than one is
+nevertheless necessary, a mempool, I think, would be quite appropriate.
+
+-- 
+Luben
+
+
 
