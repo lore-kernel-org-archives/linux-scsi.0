@@ -1,37 +1,37 @@
 From: Doug Ledford <dledford@redhat.com>
-Subject: Re: aic7xxx problem in 2.4.18-SMP
-Date: Tue, 21 May 2002 13:58:17 -0400
+Subject: Re: Question on drivers/scsi/scsi_error.c
+Date: Tue, 21 May 2002 13:59:19 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <ace1sp$o9t$2@main.gmane.org>
-References: <BD858EA74895F34EBDAED1B61E25B3671F2AC3@whizz999.whizzwork.com> <Pine.LNX.4.21.0205211450520.19017-100000@irz11.physik.hu-berlin.de>
+Message-ID: <20020521135919.C2101@redhat.com>
+References: <20020521143114.21069.qmail@nostromo.freenet-ag.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.21.0205211450520.19017-100000@irz11.physik.hu-berlin.de>; from bunk@physik.hu-berlin.de on Tue, May 21, 2002 at 03:31:35PM +0200
+In-Reply-To: <20020521143114.21069.qmail@nostromo.freenet-ag.de>; from michael@freenet-ag.de on Tue, May 21, 2002 at 02:31:14PM -0000
 List-Id: linux-scsi@vger.kernel.org
-To: Burkhard Bunk <bunk@physik.hu-berlin.de>
-Cc: linux-smp@vger.kernel.org, linux-scsi@vger.kernel.org
+To: michael@freenet-ag.de
+Cc: linux-scsi@vger.kernel.org
 
-On Tue, May 21, 2002 at 03:31:35PM +0200, Burkhard Bunk wrote:
-> Hallo,
+On Tue, May 21, 2002 at 02:31:14PM -0000, michael@freenet-ag.de wrote:
+> Hello,
 > 
-> it took me some time to boot a SCSI system with the aic7xxx driver
-> compiled into kernel 2.4.18-SMP.
+> why does scsi_check_sense return SUCCESS on e.g. HARDWARE_ERRORs?
+> 
+>         case ILLEGAL_REQUEST:
+>         case BLANK_CHECK:
+>         case DATA_PROTECT:
+>         case HARDWARE_ERROR:
+>         default:
+>                 return SUCCESS;
+> 
+> I think that those errors should return FAILED, but I may overlook
+> something.  Please send Cc: to me, as I am not subscribed to the list.
 
-[ snip ]
-
-> But with kernel boot options "noapic" or "nosmp" the new driver works!
-> (both with and without the patch.)
-
-And this is the important bit of information.  You are having IRQ routing 
-problems.  Evidently the smp kernel can not properly set up the apic IRQ 
-routing on your machine.  Try going into the BIOS and looking for an 
-option to set the BIOS MPS table to either version 1.1 or 1.4 and try 
-switching it from whatever it is to the other and see if it works.  If it 
-doesn't, then you'll just have to add noapic to your default kernel boot 
-line until someone knowledgable in ioapic issues can resolve your 
-machine's problem.
+Because returning SUCCESS from scsi_check_sense causes the command to be 
+sent back to the upper layers as completed, where the sd layer can then 
+remap the command to get around the hardware error if it so chooses and 
+then send a new command back down.
 
 -- 
   Doug Ledford <dledford@redhat.com>     919-754-3700 x44233
