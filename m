@@ -1,105 +1,156 @@
-From: Jens Axboe <axboe@suse.de>
+From: Doug Ledford <dledford@redhat.com>
 Subject: Re: Aic7xxx v6.2.22 and Aic79xx v1.3.0Alpha2 Released
-Date: Thu, 12 Dec 2002 18:38:18 +0100
+Date: Thu, 12 Dec 2002 15:20:52 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20021212173818.GA6481@suse.de>
-References: <hch@infradead.org> <200212101602.gBAG2Hi02930@localhost.localdomain> <20021211135855.A19325@infradead.org> <1266570000.1039619906@aslan.scsiguy.com> <20021211153935.A23704@infradead.org> <1313340000.1039622906@aslan.scsiguy.com> <20021211162318.A24958@infradead.org> <20021212071636.GA4318@suse.de> <261670000.1039713623@aslan.btc.adaptec.com>
+Message-ID: <20021212202052.GC8842@redhat.com>
+References: <hch@infradead.org> <200212101602.gBAG2Hi02930@localhost.localdomain> <20021211135855.A19325@infradead.org> <1266570000.1039619906@aslan.scsiguy.com> <20021211153935.A23704@infradead.org> <1221760000.1039627865@aslan.btc.adaptec.com> <20021211181745.A30253@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/mixed; boundary="3V7upXqbjpZ4EhLz"
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <261670000.1039713623@aslan.btc.adaptec.com>
+In-Reply-To: <20021211181745.A30253@infradead.org>
 List-Id: linux-scsi@vger.kernel.org
-To: "Justin T. Gibbs" <gibbs@scsiguy.com>
-Cc: Christoph Hellwig <hch@infradead.org>, James Bottomley <James.Bottomley@steeleye.com>, linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: "Justin T. Gibbs" <gibbs@scsiguy.com>, James Bottomley <James.Bottomley@steeleye.com>, linux-scsi@vger.kernel.org
 
-On Thu, Dec 12 2002, Justin T. Gibbs wrote:
-> > On Wed, Dec 11 2002, Christoph Hellwig wrote:
-> >> > I have no problem with interfaces changing for good reason, but, for
-> >> > example,
-> >> > a driver that alread sets unchecked_isa_dma to 0 and uses the PCI dma
-> >> > mask shouldn't have to set addition flags (with different names in
-> >> > different vendor's trees) to enable HIGHIO.  It's yet-another *stupid*
-> >> > interface change.
-> >> 
-> >> Maybe you could have complained about that more than one year ago when
-> >> the patch came up first?
-> > 
-> > And I still dont see a better way to do it. Remember that this is 2.4
-> > and we must be able to toggle the highmem io capability on a per-driver
-> > basis easily and default to off until a given piece of hardware (and
-> > driver) has been verified.
+
+--3V7upXqbjpZ4EhLz
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+
+On Wed, Dec 11, 2002 at 06:17:46PM +0000, Christoph Hellwig wrote:
 > 
-> >From the perspective of a driver that already meets the requirements
-> for highio, it is simply frustrating that:
-> 
-> 1) You have to set a flag when you've already told the system you
->    dma capabilities.
+> Yupp, it currently crashes when I have both compiled in.  Dough, any chance
+> you could fix that?  A PCI driver is not supposed to stop over already
+> claimed device.
 
-All drivers blindly copy the setting of the dma mask, typically means
-nothing.
-
-> 2) That flag is not documented in hosts.h or in the Documentation directory.
-
-That is true. Name of the member is a good clue, though.
-
-> 3) No warning is given if you use pci_set_dma_mask without setting
-> highmem_io so that you know that your driver needs to be updated.
-
-Two different layers. One is the block layer entry, other deals with the
-hardware.
-
-> 4) highio requires that all SCSI drivers support single length S/G lists,
->    but since single buffers are still allowed by the interfaces, even
->    compliant SCSI drivers cannot strip out this code.
-
-This is not a new requirement, it's just spelled out now. The special
-casing of an sg request with one entry was silly, imho. And yes you do
-have to support both single entry sg requests and non-sg requests. I
-wouldn't mind getting rid of that, but this is the 2.4 series and
-changes must be kept small(ish).
-
-> > Saying the high io stuff could have been done with zero impact to
-> > drivers just shows that you have no idea what you are talking about
-> > here and are living in your Justin world again. Tons of drivers needed
-> > to be changed to be able to deal with highmem pages sanely.
-> 
-> I'm not doubting that "lots of drivers needed to be updated", but since you
-> had to touch these drivers anyway, you could have deprecated all of these
-> older stupid interfaces and effected a real cleanup without needing a
-> positive "highmem enabled" flag.  The subset of devices that used
-
-If I had done that, there was no way we could have had this feature for
-2.4. It is just too invasive.
-
-> pci_set_dma_mask() and were not compliant was probably small.  Fixing
-> them with your initial patch set would have made the proper use of the
-> PCI dma API the "marker" for a highmem enabled device. Instead,
-
-Again, way too much work. The concept of the highmem_io flag is simple.
-If your driver complies with the pci dma api, set the flag and you are
-now handed pages for io up to your pci dma mask. If you either don't
-know about the flag or don't use the pci dma api, behaviour is
-unchanged.
-
-See this way I didn't need to touch _any_ drivers, and I didn't break
-_any_ drivers. Drivers that are compliant just have to set the flag.
-
-> drivers that already were compliant to the PCI dma spec silently
-> started bouncing pages again unless you knew about this poorly
-> documented flag.  <ARGGGGHHHH>
-
-What are you talking about? If you didn't set the flag, behaviour is
-*unchanged* from before. You always got highmem pages bounced.
-
-As Christoph said, if you want to influence changes made to the kernel
-it doesn't help to whine about them years after they were developed. If
-you want to take the back seat to the linux kernel, fine, just dont come
-complaining when you miss out on something. Your timing is just
-excellent, too. You've even had months of 2.4.20-pre time (highmem stuff
-was merged in 2.4.20-pre2, iirc), and the block-highmem patch had
-existed in the public and in vendor kernels about a year before that.
+If you've got a test machine, the attached patch would I think fix the 
+problem.  Let me know if it does in fact work for you and I'll commit it 
+to the tree.
 
 -- 
-Jens Axboe
+  Doug Ledford <dledford@redhat.com>     919-754-3700 x44233
+         Red Hat, Inc. 
+         1801 Varsity Dr.
+         Raleigh, NC 27606
+  
 
+--3V7upXqbjpZ4EhLz
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: attachment; filename="aic-playnice.patch"
+
+===== drivers/scsi/aic7xxx_old.c 1.37 vs edited =====
+--- 1.37/drivers/scsi/aic7xxx_old.c	Fri Nov 22 00:34:44 2002
++++ edited/drivers/scsi/aic7xxx_old.c	Thu Dec 12 13:35:23 2002
+@@ -9246,12 +9246,22 @@
+ 	    {
+               /* duplicate PCI entry, skip it */
+ 	      kfree(temp_p);
+-	      temp_p = NULL;
++              continue;
+ 	    }
+ 	    current_p = current_p->next;
+ 	  }
+-	  if ( temp_p == NULL )
++          if(!pci_request_regions(temp_p->pdev, "aic7xxx"))
++          {
++            printk("aic7xxx: <%s> at PCI %d/%d/%d\n", 
++              board_names[aic_pdevs[i].board_name_index],
++              temp_p->pci_bus,
++              PCI_SLOT(temp_p->pci_device_fn),
++              PCI_FUNC(temp_p->pci_device_fn));
++            printk("aic7xxx: I/O ports already in use, ignoring.\n");
++            kfree(temp_p);
+             continue;
++          }
++
+           if (aic7xxx_verbose & VERBOSE_PROBE2)
+             printk("aic7xxx: <%s> at PCI %d/%d\n", 
+               board_names[aic_pdevs[i].board_name_index],
+@@ -9283,20 +9293,6 @@
+           pci_write_config_dword(pdev, DEVCONFIG, devconfig);
+ #endif /* AIC7XXX_STRICT_PCI_SETUP */
+ 
+-          if(temp_p->base && !request_region(temp_p->base, MAXREG - MINREG,
+-				  "aic7xxx"))
+-          {
+-            printk("aic7xxx: <%s> at PCI %d/%d/%d\n", 
+-              board_names[aic_pdevs[i].board_name_index],
+-              temp_p->pci_bus,
+-              PCI_SLOT(temp_p->pci_device_fn),
+-              PCI_FUNC(temp_p->pci_device_fn));
+-            printk("aic7xxx: I/O ports already in use, ignoring.\n");
+-            kfree(temp_p);
+-            temp_p = NULL;
+-            continue;
+-          }
+-
+           temp_p->unpause = INTEN;
+           temp_p->pause = temp_p->unpause | PAUSE;
+           if ( ((temp_p->base == 0) &&
+@@ -9309,9 +9305,7 @@
+               PCI_SLOT(temp_p->pci_device_fn),
+               PCI_FUNC(temp_p->pci_device_fn));
+             printk("aic7xxx: Controller disabled by BIOS, ignoring.\n");
+-            kfree(temp_p);
+-            temp_p = NULL;
+-            continue;
++            goto skip_pci_controller;
+           }
+ 
+ #ifdef MMAPIO
+@@ -9353,9 +9347,7 @@
+                     PCI_SLOT(temp_p->pci_device_fn),
+                     PCI_FUNC(temp_p->pci_device_fn));
+                   printk("aic7xxx: Controller disabled by BIOS, ignoring.\n");
+-                  kfree(temp_p);
+-                  temp_p = NULL;
+-                  continue;
++                  goto skip_pci_controller;
+                 }
+               }
+             }
+@@ -9398,10 +9390,7 @@
+ 
+           if (aic7xxx_chip_reset(temp_p) == -1)
+           {
+-            release_region(temp_p->base, MAXREG - MINREG);
+-            kfree(temp_p);
+-            temp_p = NULL;
+-            continue;
++            goto skip_pci_controller;
+           }
+           /*
+            * Very quickly put the term setting back into the register since
+@@ -9687,6 +9676,10 @@
+           }
+           temp_p->next = NULL;
+           found++;
++	  continue;
++skip_pci_controller:
++	  pci_release_regions(temp_p->pdev);
++	  kfree(temp_p);
+         }  /* Found an Adaptec PCI device. */
+         else /* Well, we found one, but we couldn't get any memory */
+         {
+@@ -10969,14 +10962,16 @@
+ 
+   if(p->irq)
+     free_irq(p->irq, p);
+-  if(p->base)
+-    release_region(p->base, MAXREG - MINREG);
+ #ifdef MMAPIO
+   if(p->maddr)
+   {
+     iounmap((void *) (((unsigned long) p->maddr) & PAGE_MASK));
+   }
+ #endif /* MMAPIO */
++  if(!p->pdev)
++    release_region(p->base, MAXREG - MINREG);
++  else
++    pci_release_regions(p->pdev);
+   prev = NULL;
+   next = first_aic7xxx;
+   while(next != NULL)
+
+--3V7upXqbjpZ4EhLz--
