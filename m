@@ -1,52 +1,65 @@
-From: Mike Anderson <andmike@us.ibm.com>
-Subject: Re: iSCSI device naming issues
-Date: Thu, 1 Jul 2004 08:57:14 -0700
+From: Bernd Schubert <bernd-schubert@web.de>
+Subject: Re: 2.6.7 aic7xxx oops
+Date: Thu, 1 Jul 2004 17:58:29 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040701155714.GA7172@us.ibm.com>
-References: <!~!UENERkVCMDkAAQACAAAAAAAAAAAAAAAAABgAAAAAAAAANoIxZIFzbEaqwjJgytz2AeKAAAAQAAAAXdSfMOoTnU6X86O4sbqWzAEAAAAA@cisco.com>
+Message-ID: <200407011758.32363.bernd-schubert@web.de>
+References: <200407011631.22587.bernd-schubert@web.de> <20040701075325.2adc333d.rddunlap@osdl.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e6.ny.us.ibm.com ([32.97.182.106]:60596 "EHLO e6.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S265928AbUGAP5o (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Jul 2004 11:57:44 -0400
+Received: from relay.uni-heidelberg.de ([129.206.100.212]:31961 "EHLO
+	relay.uni-heidelberg.de") by vger.kernel.org with ESMTP
+	id S265981AbUGAP6l convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Jul 2004 11:58:41 -0400
+In-Reply-To: <20040701075325.2adc333d.rddunlap@osdl.org>
 Content-Disposition: inline
-In-Reply-To: <!~!UENERkVCMDkAAQACAAAAAAAAAAAAAAAAABgAAAAAAAAANoIxZIFzbEaqwjJgytz2AeKAAAAQAAAAXdSfMOoTnU6X86O4sbqWzAEAAAAA@cisco.com>
 List-Id: linux-scsi@vger.kernel.org
-To: "Surekha.PC" <surekhap@cisco.com>
-Cc: 'SCSI Mailing List' <linux-scsi@vger.kernel.org>
+To: "Randy.Dunlap" <rddunlap@osdl.org>
+Cc: linux-scsi@vger.kernel.org
 
-Surekha.PC [surekhap@cisco.com] wrote:
-> 1) Having an iSCSI pseudo bus.
-> This will create a fake iscsi bus as "/sys/bus/iscsi" and all devices
-> will be under this pseudo bus. This can be used to lookup iSCSI
-> devices. I don't see any other use of this fake bus. Is it still
-> ok to pursue with this approach?
->  
+On Thursday 01 July 2004 16:53, Randy.Dunlap wrote:
+> On Thu, 1 Jul 2004 16:31:21 +0200 Bernd Schubert wrote:
+> | Hi,
+> |
+> | on modprobing the aic7xxx module I just got this oops:
+> |
+> |
+> | Unable to handle kernel paging request at virtual address d08ae620
+> |  printing eip:
+> | c024e642
+> | *pde =3D 0f87b067
+> | Oops: 0002 [#1]
+> | PREEMPT SMP DEBUG_PAGEALLOC
+> | Modules linked in: aic7xxx mga uhci_hcd ohci_hcd md eeprom w83781d
+> | i2c_sensor i2c_isa i2c_piix4 i2c_core
+> | CPU:    0
+> | EIP:    0060:[<c024e642>]    Not tainted
+> | EFLAGS: 00010286   (2.6.7-tc1)
+>
+>                       ~~~~~~~~~
+> What kernel (patches applied) is that?
+>
 
-This sounds like the wrong approach.
+Sofar there are no patches applied to this kernel. We usually add -tcX=20
+(tc =3D=3D theoretical chemistry ;) ) to our different kernel configura=
+tions. So=20
+its a vanilla kernel.
 
-> 2) Having an attribute for iSCSI host which displays the name of
-> iSCSI driver as shown:
-> 
-> $cat /sys/class/scsi_host/hostX/hostname
-> "iSCSI SFnet Driver"
 
-If you set proc_name in your template this value will show up under
-/sys/class/scsi_host/host<n>/proc_name.
+Cheers,
+	Bernd
 
-> 3) Make use of scsi_id.
-> scsi_id can be used to get unique name instead of parsing sysfs
-> path for device name creation. However scsi_id is helpful only
-> for block devices, and there is no way to handle unique naming
-> for tape devices. So this will not make a complete solution.
 
-Well you can still setup a udev rule to use scsi_id for you block
-devices and then use location naming for the tapes ( some newer
-generation tape drives also support serial numbers).
-
--andmike
---
-Michael Anderson
-andmike@us.ibm.com
-
+--=20
+Bernd Schubert
+Physikalisch Chemisches Institut / Theoretische Chemie
+Universit=E4t Heidelberg
+INF 229
+69120 Heidelberg
+e-mail: bernd.schubert@pci.uni-heidelberg.de
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
