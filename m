@@ -1,88 +1,136 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: RE: usb-strage not working in the latest kernel 2.4
-Date: Mon, 8 Sep 2003 10:12:21 -0400 (EDT)
+From: Kristian Eide <kreide@online.no>
+Subject: FW: RE: [Linux-usb-users] USB and iPod detection problem
+Date: Mon, 8 Sep 2003 17:17:14 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44L0.0309081003080.928-100000@ida.rowland.org>
-References: <200309070128.KAA28169@toshiba.co.jp>
+Message-ID: <3F5F8EA0@epostleser.online.no>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset="ISO-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ida.rowland.org ([192.131.102.52]:3844 "HELO ida.rowland.org")
-	by vger.kernel.org with SMTP id S262377AbTIHOMY (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 8 Sep 2003 10:12:24 -0400
-In-Reply-To: <200309070128.KAA28169@toshiba.co.jp>
+Received: from mail41-s.fg.online.no ([148.122.161.41]:31619 "EHLO
+	mail41.fg.online.no") by vger.kernel.org with ESMTP id S262566AbTIHPR1
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 8 Sep 2003 11:17:27 -0400
+Received: from epostleser.online.no (epostleser14.frisurf.no [148.122.3.22])
+	by mail41.fg.online.no (8.9.3p2/8.9.3) with ESMTP id RAA26834
+	for <linux-scsi@vger.kernel.org>; Mon, 8 Sep 2003 17:17:14 +0200 (CEST)
 List-Id: linux-scsi@vger.kernel.org
-To: "Tomita, Haruo" <haruo.tomita@toshiba.co.jp>
-Cc: USB development list <linux-usb-devel@lists.sourceforge.net>, SCSI development list <linux-scsi@vger.kernel.org>, David Brownell <david-b@pacbell.net>, "Tomita, Haruo" <htomita@pcs.pc.ome.toshiba.co.jp>
+To: linux-scsi@vger.kernel.org
 
-On Sun, 7 Sep 2003, Tomita, Haruo wrote:
+>===== Original Message From Matthew Dharm <mdharm-usb@one-eyed-alien.net> 
+=====
+> Additional sense indicates Logical unit is in process of becoming ready
 
-> I am also looking at this pattern repeatedly.
-> It seems that a device does not answer in the case of kernel 2.4.
-> However, when operating by kernel 2.6 and two or more devices
-> are connected simultaneously, it operates. 
-> I cannot think the error of a device.
+The SCSI layer should wait in response to the sense data that indicates LUN
+becoming ready.
 
-Don't be too sure.  It could be that 2.4 and 2.6 are sending different 
-data to the device, but for both systems the data is correct and the 
-device _should_ work correctly.  Maybe it's a device error that causes it 
-to work okay with the data from 2.6 but not the data from 2.4.
+I suggest taking this up with the SCSI folks.
 
-> Alan> This time the bus_reset() routine worked, which is an 
-> Alan> improvement over 
-> Alan> what you were seeing before.  But the device still didn't respond:
-> 
-> If a device becomes an error, it seems that reset is not effective.
-> Using ioctl (fd, USBDEVFS_RESET, 0) and this device,  
-> Is checking whether a device can reset correctly by 
-> performing effective?
+Matt
 
-Go ahead and try it.  I expect it will reset correctly when you test it 
-like this, but it won't reset correctly after one of those errors occurs 
-and the device stops responding.  That's just a guess.
+On Mon, Sep 08, 2003 at 12:32:31AM +0200, Kristian Eide wrote:
+> I recently aquired a 30GB iPod and tried to connect it to my portable Dell
+> X200 running Mandrake 9.1. It works, but it seems there is a problem with 
+the
+> iPod HD not spinning up fast enough for proper detection to take place. The
+> following is from the output of 'dmesg' when I plug in my iPod:
+>
+> usb-uhci.c: interrupt, status 2, frame# 1601
+> usb.c: USB device not accepting new address=3 (error=-110)
+> hub.c: new USB device 00:1d.0-1, assigned address 4
+> usb.c: USB device not accepting new address=4 (error=-110)
+> hub.c: new USB device 00:1d.0-1, assigned address 5
+> scsi0 : SCSI emulation for USB Mass Storage devices
+>   Vendor: Apple     Model: iPod              Rev: 1.40
+>   Type:   Direct-Access                      ANSI SCSI revision: 02
+> WARNING: USB Mass Storage data integrity not assured
+> USB Mass Storage device found at 5
+> Attached scsi removable disk sda at scsi0, channel 0, id 0, lun 0
+> usb-uhci.c: interrupt, status 3, frame# 52
+> sda : READ CAPACITY failed.
+> sda : status = 1, message = 00, host = 0, driver = 08
+> Current sd00:00: sense key Not Ready
+> Additional sense indicates Logical unit is in process of becoming ready
+> sda : block size assumed to be 512 bytes, disk size 1GB.
+>  /dev/scsi/host0/bus0/target0/lun0: I/O error: dev 08:00, sector 0
+>  I/O error: dev 08:00, sector 0
+>  I/O error: dev 08:00, sector 2097144
+>  I/O error: dev 08:00, sector 2097144
+>  I/O error: dev 08:00, sector 0
+>  I/O error: dev 08:00, sector 0
+> ldm_validate_partition_table(): Disk read failed.
+>  I/O error: dev 08:00, sector 0
+>  I/O error: dev 08:00, sector 2
+>  unable to read partition table
+> VFS: Disk change detected on device 08:00
+> sda : READ CAPACITY failed.
+> sda : status = 1, message = 00, host = 0, driver = 08
+> Current sd00:00: sense key Not Ready
+> Additional sense indicates Logical unit is in process of becoming ready
+> sda : block size assumed to be 512 bytes, disk size 1GB.
+> sda: test WP failed, assume Write Enabled
+>  /dev/scsi/host0/bus0/target0/lun0: I/O error: dev 08:00, sector 0
+>  I/O error: dev 08:00, sector 0
+>  I/O error: dev 08:00, sector 2097144
+>  I/O error: dev 08:00, sector 2097144
+>  I/O error: dev 08:00, sector 0
+>  I/O error: dev 08:00, sector 0
+> ldm_validate_partition_table(): Disk read failed.
+>  I/O error: dev 08:00, sector 0
+> VFS: Disk change detected on device 08:00
+> SCSI device sda: 58595040 512-byte hdwr sectors (30001 MB)
+> sda: Write Protect is off
+>  /dev/scsi/host0/bus0/target0/lun0: p1 p2
+>
+> Especially the "sda : block size assumed to be 512 bytes, disk size 1GB." is 
+a
+> problem as the kernel only thinks the HD is 1GB while the partition table of
+> course says 30GB. I can solve it by disconnecting and quickly reconnecting 
+the
+> iPod as the HD will then already be spun up and it is detected correctly as
+> seen above.
+>
+> Perhaps the USB drivers can be made to wait a bit in case the device does 
+not
+> seem ready, or perhaps an exception with extra waiting time in the case of 
+the
+> iPod?
+>
+> Thanks.
+>
+> --
+> Kristian
+>
+>
+>
+> -------------------------------------------------------
+> This sf.net email is sponsored by:ThinkGeek
+> Welcome to geek heaven.
+> http://thinkgeek.com/sf
+> _______________________________________________
+> Linux-usb-users@lists.sourceforge.net
+> To unsubscribe, use the last form field at:
+> https://lists.sourceforge.net/lists/listinfo/linux-usb-users
 
-> Alan> Once that happened there were no error recovery procedures 
-> Alan> left to try, so 
-> Alan> the driver gave up and marked the device offline.
-> 
-> Doesn't a device receive any commands?
+--
+Matthew Dharm                              Home: mdharm-usb@one-eyed-alien.net
+Maintainer, Linux USB Mass Storage Driver
 
-The system sent commands, but the device didn't respond to them.  However, 
-it's possible that this patch will help.  Try it out and see what happens.
+It was a new hope.
+					-- Dust Puppy
+User Friendly, 12/25/1998
 
---- 2.4.22/drivers/usb/storage/protocol.c.orig	Mon Aug 25 07:44:42 2003
-+++ 2.4.22/drivers/usb/storage/protocol.c	Fri Sep  5 16:20:26 2003
-@@ -237,6 +237,10 @@
- 	 * a unsigned char cmnd[12], so we know we have storage available
- 	 */
- 
-+	/* Pad the ATAPI command with zeros */
-+	for (; srb->cmd_len<12; srb->cmd_len++)
-+		srb->cmnd[srb->cmd_len] = 0;
-+
- 	/* set command length to 12 bytes (this affects the transport layer) */
- 	srb->cmd_len = 12;
- 
-> > > 2.  usb_stor_bulk_msg() returned -32
->  
-> Alan> Under what circumstances did this error occur?  It must have 
-> Alan> been quite different from the other error.
-> 
-> The used device(Logitec LCW-WIN40U2) is different. 
-> It is the same circumstances except a device.
+--eAbsdosE1cNLO4uF
+Content-Type: application/pgp-signature
+Content-Disposition: inline
 
-But when the error occurred, had you just plugged in the drive?  Or had it 
-been running already for some time?  What were you doing when the error 
-occurred?  Was there some reason that the drive returned an error code 
-meaning it had just been reset?
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.0.6 (GNU/Linux)
+Comment: For info see http://www.gnupg.org
 
-> If a SCSI driver performs retry, 
-> is it that usb-storage can also restart processing?
+iD8DBQE/W8XDIjReC7bSPZARAlEYAKDKJf4eQ7jSc3T0reG9cKWE5SIk3gCdEKAf
+fFeu/2If18tC1M15N1TcxUo=xS/y
+-----END PGP SIGNATURE-----
 
-usb-storage doesn't do its own retries.  Only the SCSI driver does.  But
-when the SCSI driver retries a command, it sends a new copy of the command
-to usb-storage, so usb-storage sends the new copy of the command to the 
-device.
-
-Alan Stern
+--eAbsdosE1cNLO4uF--
 
