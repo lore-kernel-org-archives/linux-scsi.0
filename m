@@ -1,39 +1,57 @@
-From: James Pearson <james-p@moving-picture.com>
-Subject: Re: Problems seeing raid array attached to a qla2312
-Date: Tue, 07 Sep 2004 16:56:54 +0100
+From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+Subject: [RFTesters] Re: [PATCH] refactor tmscsim inititalization code
+Date: Tue, 7 Sep 2004 17:29:43 +0200 (CEST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <413DDA46.4050400@moving-picture.com>
-References: <41248D91.5070100@moving-picture.com>
+Message-ID: <Pine.LNX.4.60.0409071040120.2966@poirot.grange>
+References: <20040904130235.GA20552@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mpc-26.sohonet.co.uk ([193.203.82.251]:13786 "EHLO
-	moving-picture.com") by vger.kernel.org with ESMTP id S268196AbUIGP4z
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 7 Sep 2004 11:56:55 -0400
-Received: from minion.mpc.local ([172.16.11.112] helo=moving-picture.com)
-	by moving-picture.com with esmtp (Exim 4.24)
-	id 1C4iL0-0001fZ-Dh
-	for linux-scsi@vger.kernel.org; Tue, 07 Sep 2004 16:56:54 +0100
-In-Reply-To: <41248D91.5070100@moving-picture.com>
+Received: from pop.gmx.de ([213.165.64.20]:9431 "HELO mail.gmx.net")
+	by vger.kernel.org with SMTP id S268073AbUIGPaY (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Sep 2004 11:30:24 -0400
+In-Reply-To: <20040904130235.GA20552@lst.de>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-scsi@vger.kernel.org
 
-James Pearson wrote:
-> I'm having problems seeing a Fibrenetix VP-1242-FC raid array via a 
-> qla2312 HBA on a dual Xeon box running a RHEL3.0 clone - using a 2.4.21 
-> based kernel.
-> 
-> The first port on the qla2312 has a Quantum tape library and two SDLT 
-> tape drives - which the OS can see fine.
-> 
-> The raid array is attached to the 2nd port on the qla2312 - it is 
-> configured with 3 volumes at luns 0, 1 and 2 - unfortunately, the OS 
-> can't 'see' the 3 disk volumes ...
-> 
+Hi
 
-This turned out to be a problem with the firmware on the raid array - 
-upgrading to a newer version fixed this issue.
+I've looked through the patch - I liked it! Still, I've got a few 
+questions / remarks to this one.
 
-James Pearson
+1) My big problem with this patch is, that I don't have any AM53C7974 
+based hardware with EEPROM, and you re-write the EEPROM handling 
+functions. Although, it does look like you just inlined some of them and 
+removed redundant code. Do you have the hardware to test it? If not - I 
+guess, we'd have to ask for volunteers to test it. Your patch is a bit 
+less than trivial:-) If nobody volunteers, well, I'll have to try to prove 
+the equivalence myself:-)
+
+2) I just realised - we have 2 possibilities to pass parameters to 
+tmscsim, if it is compiled into the kernel - with tmscsim.tmscsim=... 
+and with tmscsim=... I guess, breaking scripts by removing one of them now 
+wouldn't be good... But we could put a warning printk() in dc390_setup 
+"Deprecated! Use tmscsim.tmscsim=... This will be removed real soon 
+now!\n" should we?
+
+3) There's a typo:
+
+> +static void __devinit dc390_eeprom_prepare_read(struct pci_dev *pdev, u8 cd)
+
+should be
+
+> +static void __devinit dc390_eeprom_prepare_read(struct pci_dev *pdev, u8 cmd)
+
+4) Against which kernel version is it? It did apply to some my version, 
+but with some fuzz / offsets.
+
+So, all in all - looks quite good, but I'd wait a bit until either 
+somebody tests it or I otherwise persuade myself that it is (mostly) 
+harmless:-)
+
+Thanks
+Guennadi
+---
+Guennadi Liakhovetski
+
