@@ -1,127 +1,79 @@
-From: James Bottomley <James.Bottomley@steeleye.com>
-Subject: [BK PATCH] SCSI updates for 2.6.6
-Date: 10 May 2004 17:59:31 -0500
+From: Ricky Beam <jfbeam@bluetronic.net>
+Subject: RE: qla2xxx (2100) vs. qlogicfc [again]
+Date: Mon, 10 May 2004 21:43:23 -0400 (EDT)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1084229974.1763.512.camel@mulgrave>
+Message-ID: <Pine.GSO.4.33.0405102054400.14297-100000@sweetums.bluetronic.net>
+References: <B179AE41C1147041AA1121F44614F0B0DD0145@AVEXCH02.qlogic.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: TEXT/PLAIN; CHARSET=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat1.steeleye.com ([65.114.3.130]:34999 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S261880AbUEJW7g convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 10 May 2004 18:59:36 -0400
+Received: from sweetums.bluetronic.net ([24.199.150.42]:60570 "EHLO
+	sweetums.bluetronic.net") by vger.kernel.org with ESMTP
+	id S263000AbUEKBsB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 10 May 2004 21:48:01 -0400
+In-Reply-To: <B179AE41C1147041AA1121F44614F0B0DD0145@AVEXCH02.qlogic.org>
+Content-ID: <Pine.GSO.4.33.0405102054402.14297@sweetums.bluetronic.net>
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
+To: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Cc: Linux SCSI List <linux-scsi@vger.kernel.org>
 
-This is the latest set of assorted fixes, plus one new driver: the IBM
-Power Raid (ipr).
+On Mon, 10 May 2004, Andrew Vasquez wrote:
+>Ok, well there aren't too many folks using an QLA2100 in a fabric
+>topology
 
-The patch can be pulled from:
+And technically, neither was I :-) (TL-port mode)
 
-bk://linux-scsi.bkbits.net/scsi-for-linus-2.6
+I've switched to Fabric mode for the HBA facing ports (TL for the
+shelves or WWN zoning won't work... hard drives will not login to the
+fabric :-()  AND, I removed the p.o.s. gadzoox hubs -- they try to be
+too smart and don't bring ports into the loop correctly. (Plus, they
+are, in fact, slow. Directly to the switch, I'm moving ~90+MB/s to
+that 7 year old qla2100... addressing 14 drives in 2 sw raid 5 arrays.)
 
-The short changelog is:
+[http://sweetums.bluetronic.net/~jfbeam/private/san/webgui.jpg]
 
-<aradford:amcc.com>:
-  o 3ware driver update
+(Note: that's with the qlogicfc driver.  qla2100 locks up.)
 
-<noodles:earth.li>:
-  o Initio INI-9X00U/UW error handling in 2.6
+BIOS: 1.37 (fw) 1.15.37
 
-<praka:users.sourceforge.net>:
-  o qla2xxx set current state fixes
+That version does not have fabric support, but I don't boot from it. So,
+that's not a problem.
 
-Alan Stern:
-  o (as255) Handle Unit Attention during INQUIRY better
+>since it seems the driver is never receiving a LOOP_UP event from the
+>firmware indicating that we have successfully negotiated with the
+>fabric and may begin discovery.
 
-Andrew Morton:
-  o aic7xxx deadlock fix
-  o scsi_disk_release() warning fix
+I'm thinking this is 100% "translated loop" related.  The switch is logging
+devices in (see above w.r.t. drives.)  Disclaimer: I'm not even going to
+pretend I understand what TL mode is doing.
 
-Andrew Vasquez:
-  o qla2100 fabric fixes
-  o [15/15] qla2xxx: Update driver version
-  o [14/15] qla2xxx: Resync with latest released firmware -- 3.02.28
-  o [13/15] qla2xxx: Misc. code scrubbing
-  o [12/15] qla2xxx: RIO/ZIO fixes
-  o [11/15] qla2xxx: /proc fixes
-  o [10/15] qla2xxx: Use readX_relaxed
-  o [9/15]  qla2xxx: Tape command handling fixes
-  o [8/15]  qla2xxx: Volatile topology fixes
-  o [7/15]  qla2xxx: Firmware options fixes
-  o [6/15]  qla2xxx: LoopID downcast fix
-  o [5/15]  qla2xxx: Debug messages during ISP abort
-  o [4/15]  qla2xxx: PortID binding fixes
-  o [3/15]  qla2xxx: 2100 request-q contraints
-  o [2/15]  qla2xxx: Remove flash routines
-  o [1/15]  qla2xxx: Firmware dump fixes
+At this point, the thing does come up and see the devices in it's zone
+with the HBA port in "Fabric" mode.  But now I'm back to the same problems
+from a month or so back... qla2100 fails immediately under load.
 
-Aristeu Sergio Rozanski Filho:
-  o qlogic_cs: use qlogicfas408 module
-  o qlogicfas: split and create a new module
-  o qlogicfas: kill horrible irq probing
+See also: [http://sweetums.bluetronic.net/~jfbeam/private/san/debug/]
+  qlogic_20040510.log
+  qlogicfc_20040510.log
 
-Bob Tracy:
-  o sym53c500_cs remove irq,ioport scsi attributes
-  o sym53c500_cs PCMCIA SCSI driver (round 5)
+The first is several invocations of qla2100... skip to the bottom to see
+the problem:
+	May 10 20:48:49 master kernel: cmd_timeout: Found in ISP
+	...
+md10 and md20 are started.  I then fire up zcav (from
+bonnie++) to read test the array.  md10 first, and then a bit later, md20.
+The instant I hit enter on the md20 test (two zcav's running), a timeout
+shows up and then the game is over.
 
-Brian King:
-  o Add IBM power RAID driver 2.0.6
-  o Make SCSI timeout modifiable
+The second log is the kernel log from boot to (basically) right now using
+qlogicfc (compiled without optimization and "-g" ... so I could debug it.)
+That's where the traffic in webgui.jpg is coming from.
 
-Chris Wright:
-  o Update aacraid MAINTAINERS entry
+--Ricky
 
-Christoph Hellwig:
-  o mca_53c9x needs CONFIG_MCA_LEGACY
-  o missing pci_set_master in megaraid
-  o imm/ppa style police
-
-Eric Dean Moore:
-  o MPT Fusion driver 3.01.06 update
-  o MPT Fusion add back FC909 support
-
-Herbert Xu:
-  o aic7xxx: fix oops whe hardware is not present
-
-James Bottomley:
-  o fix LLD module refcounting in sr.c
-  o Add SCSI IPR PCI Ids to pci_ids.h
-  o Fix errors in [PATCH] aic7xxx: fix oops whe hardware is not present
-  o Cset exclude: jejb@mulgrave.(none)|ChangeSet|20040404150128|05866
-  o aic7xxx: compile fix for EISA only case
-
-Jeremy Higdon:
-  o minor changes to qla1280 driver
-
-Kai M=E4kisara:
-  o SCSI tape log message fixes
-
-Kurt Garloff:
-  o scsi: don't attach device if PQ indicates not connected
-
-Mark Haverkamp:
-  o aacraid reset handler fix
-
-Michael Veeck:
-  o (3/5) ncr53c8x: use kernel.h min/max
-  o (4/5) nsp32 (ninja): use kernel.h min/max/ARRAY_SIZE
-  o (2/5) aic7xyz_old: use kernel.h min/max/ARRAY_SIZE
-  o (5/5) pcmcia/nsp: use kernel.h min/max/ARRAY_SIZE
-
-Mike Anderson:
-  o fix module unload problem in sd
-
-Pavel Machek:
-  o support swsusp for aic7xxx
-
-James
+BTW...
+  PID USER     PRI  NI  SIZE  RSS SHARE STAT %CPU %MEM   TIME CPU COMMAND
+ 4128 root      15   0     0    0     0 SW   12.9  0.0   4:11   0 md20_raid5
+ 3154 root      15   0     0    0     0 SW   12.3  0.0   4:21   1 md10_raid5
+(single P4 Xeon 2.8GHz w/HT)
 
 
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
