@@ -1,37 +1,28 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: Host drivers and conversion of SCSI to the driver model
-Date: Thu, 3 Jul 2003 11:15:32 -0400 (EDT)
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] aha1740 update
+Date: Thu, 3 Jul 2003 16:13:36 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44L0.0307031110400.4852-100000@ida.rowland.org>
-References: <20030627110259.A3751@infradead.org>
+Message-ID: <20030703161335.A4558@infradead.org>
+References: <wrp7k72ktkg.fsf@hina.wild-wind.fr.eu.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ida.rowland.org ([192.131.102.52]:20228 "HELO ida.rowland.org")
-	by vger.kernel.org with SMTP id S264085AbTGCPBG (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Jul 2003 11:01:06 -0400
-In-Reply-To: <20030627110259.A3751@infradead.org>
+Received: from phoenix.mvhi.com ([195.224.96.167]:18191 "EHLO
+	phoenix.infradead.org") by vger.kernel.org with ESMTP
+	id S264030AbTGCO7M (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 3 Jul 2003 10:59:12 -0400
+Content-Disposition: inline
+In-Reply-To: <wrp7k72ktkg.fsf@hina.wild-wind.fr.eu.org>; from mzyngier@freesurf.fr on Tue, Jul 01, 2003 at 08:09:19PM +0200
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: SCSI development list <linux-scsi@vger.kernel.org>
+To: Marc Zyngier <mzyngier@freesurf.fr>
+Cc: James.Bottomley@steeleye.com, linux-scsi@vger.kernel.org
 
-On Fri, 27 Jun 2003, Christoph Hellwig wrote:
-
-> Right,  And this issue has been discussed on netdev for a long time.
-> The solution that they came up with and I plan to implement in scsi
-> aswell as soon as their code actually shows up is to have a mark this
-> device gone function that makes the struct device never call back
-> into driver code.
+On Tue, Jul 01, 2003 at 08:09:19PM +0200, Marc Zyngier wrote:
+> James,
 > 
-> If you think a bit about this this is what's really needed - even with
-> your notification you'd still have module unload races.  With the above
-> fix you can just free your private data in your ->remove method
-> (or wherever you want) after you marked the struct device / class_device
-> gone and be sure it'll never be used again.
+> The included patch fixes a few bits that were missing when you merged
+> my aha1740 patch (mainly errors handling, and a release method).
 
-How will this interact with the module reference-counting just added to 
-sysfs by Greg K-H?  Maybe with that new feature, none of this will be 
-needed.
-
-Alan Stern
+aha1740 is a newstyle driver and doesn't need a release method so
+this is bogus.
 
