@@ -1,62 +1,35 @@
-From: Nigel Cunningham <ncunningham@linuxmail.org>
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
 Subject: Re: [PATCH] SCSI midlayer power management
-Date: Thu, 12 Aug 2004 19:39:51 +1000
+Date: Thu, 12 Aug 2004 20:38:03 +1000
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1092303123.3214.3.camel@laptop.cunninghams>
+Message-ID: <1092307081.26432.0.camel@gaston>
 References: <4119611D.60401@optonline.net>
 	 <20040811080935.GA26098@elf.ucw.cz> <411A1B72.1010302@optonline.net>
-	 <1092262602.3553.14.camel@laptop.cunninghams>
-	 <411AA24C.6050303@optonline.net>
-Reply-To: ncunningham@linuxmail.org
+	 <1092231462.2087.3.camel@mulgrave> <1092267400.2136.24.camel@gaston>
+	 <20040812074520.GE29466@elf.ucw.cz>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.tpgi.com.au ([203.12.160.61]:53387 "EHLO mail.tpgi.com.au")
-	by vger.kernel.org with ESMTP id S261232AbUHLJnY (ORCPT
+Received: from gate.crashing.org ([63.228.1.57]:7657 "EHLO gate.crashing.org")
+	by vger.kernel.org with ESMTP id S268504AbUHLKn1 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 12 Aug 2004 05:43:24 -0400
-In-Reply-To: <411AA24C.6050303@optonline.net>
+	Thu, 12 Aug 2004 06:43:27 -0400
+In-Reply-To: <20040812074520.GE29466@elf.ucw.cz>
 List-Id: linux-scsi@vger.kernel.org
-To: Nathan Bryant <nbryant@optonline.net>
-Cc: Pavel Machek <pavel@ucw.cz>, 'James Bottomley' <James.Bottomley@steeleye.com>, Linux SCSI Reflector <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, jgarzik@pobox.com
+To: Pavel Machek <pavel@suse.cz>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, Nathan Bryant <nbryant@optonline.net>, Linux SCSI Reflector <linux-scsi@vger.kernel.org>, Linux Kernel list <linux-kernel@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>
 
-Hi.
 
-On Thu, 2004-08-12 at 08:48, Nathan Bryant wrote: 
-> Just to speculate about what would be required for swsusp: you probably 
-> need to be using a SCSI LLD that properly implements pci suspend/resume, 
-> which implies you need to make sure the card's DMA state machine is 
-> flushed and idle before suspend completes. I've got a patch that fixes 
-> this much up for aic7xxx. And my other midlayer-level patch may also 
-> help... What happens during resume is interesting. I think maybe the 
-> problem is not what the drive is expecting, but what the card's state 
-> engine is expecting when it tries to map commands to command buffers in 
-> DMA space.  Maybe you need to suspend the LLD from the context of the 
-> kernel that is doing the image load, and then resume from the context of 
-> the kernel that was just loaded.
+> Hmm, and it can not be handled by "just remember why you were
+> suspended", because it is one suspend, two resumes...
+> 
+> Yes, I agree that argument will be usefull. Just who does all the
+> driver updating? ;-).
 
-I fully agree. That's what I'm doing at the moment; it's been a while
-since I looked at swsusp though, so can't say anything about Pavel &
-Patrick's implementation.
+At this point, no driver cares, so it's just a matter of fixing the
+prototypes, I'll leave that to somebody more familiar with sed :)
 
-> >With my 'device tree' code, I'm getting the struct dev of the device
-> >we're using via the struct block_device in the swap_info struct.
-> >
-> Right, though you also need to get the host adapter's struct device, if 
-> you're not already doing so, that is. Many IDE host drivers don't bother 
-> with suspend/resume callbacks at the pci_driver level, but SCSI needs 
-> callbacks because the BIOS usually doesn't handle things for us.
+Ben.
 
-The host adapter isn't in the device's chain of parents?
-
-Nigel 
-
--- 
-Nigel Cunningham
-Christian Reformed Church of Tuggeranong
-PO Box 1004, Tuggeranong, ACT 2901
-
-Many today claim to be tolerant. But true tolerance can cope with others
-being intolerant.
 
