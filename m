@@ -1,54 +1,45 @@
-From: James.Smart@Emulex.Com
-Subject: RE: [PATCH 3/3] MidLayer updates - extending scsi_target support
-Date: Sat, 5 Feb 2005 21:00:27 -0500
-Message-ID: <0B1E13B586976742A7599D71A6AC733C1FD1CA@xbl3.ma.emulex.com>
+From: Vladislav Bolkhovitin <vst@vlnb.net>
+Subject: Re: [PATCH 3/3] MidLayer updates - extending scsi_target support
+Date: Sun, 06 Feb 2005 17:18:19 +0300
+Message-ID: <4206272B.6030106@vlnb.net>
+References: <0B1E13B586976742A7599D71A6AC733C12EAB3@xbl3.ma.emulex.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Received: from emulex.emulex.com ([138.239.112.1]:56830 "EHLO
-	emulex.emulex.com") by vger.kernel.org with ESMTP id S266695AbVBFCAe convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 5 Feb 2005 21:00:34 -0500
-content-class: urn:content-classes:message
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
+Received: from asplinux.ru ([195.133.213.194]:42503 "EHLO relay.asplinux.ru")
+	by vger.kernel.org with ESMTP id S261234AbVBFOQO (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 6 Feb 2005 09:16:14 -0500
+In-Reply-To: <0B1E13B586976742A7599D71A6AC733C12EAB3@xbl3.ma.emulex.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: dougg@torque.net
-Cc: James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: James.Smart@Emulex.Com
 
-> Targets "speak" the same transport protocol as the HBA.
-> This cannot necessarily be said about logical units.
-> Bridges are being proposed between SAS and SPI in which
-> U160/U320 disks on a SPI bus appear as luns on a single
-> SAS target (i.e. the bridge device). If the initiator
-> wants to speak to the disks then it uses luns (most likely
-> where SPI target ids appear as luns). The initiator may be
-> a little surprised if it queries the protocol specific mode
-> and log pages on those disks (as they will reveal their
-> native SPI transport characteristics). 
+Please, forgive me my ignorance, it looks like something was happened 
+"behind the scene" (linux-scsi list), and I missed it. Is support for 
+SCSI targets started to be added in Linux? I mean "SCSI targets" as the 
+ability to export local devices on a SCSI bus. If so, please consider 
+proposed SCSI target mid-level (SCST) living on 
+http://scst.sourceforge.net. In the next few weeks we are going to clean 
+it a bit and prepare the patch, so it could start being part of some 
+testing tree, probably "-mm", although it is stable enough ever for 
+Linus one.
 
-(I've always hated T10's putting of transport things in the SCSI payloads!).
+BTW, are there any descriptions for current scsi_target support and in 
+which direction it's moving?
 
-If this is true - you haven't done a complete bridge. Having done
-bridge products before, if you don't have a complete bridge, your
-setting yourself up for subtle incompatibility problems that always
-pop up at the worst times...
+Vlad
 
-People have to realize that that a bridge is more than just a
-packet converter. It's actually an endpoint on either side of the
-conversation. Yes, you can make it work 80% of the way with just
-packet conversion, but that last 20% can be a real bugger.
+James.Smart@Emulex.Com wrote:
+> Patch 3: 
+>   This patch extends scsi_target support:
+>   - Allows for driver-specific data to be allocated along with the
+>     target structure and accessible via the starget->hostdata pointer.
+>   - Adds scsi target alloc/configure/destory callbacks to the
+>     scsi host template.
+>   - Rearranges the calling sequences for scsi targets so that the
+>     target and slave alloc/configure/destory callbacks are in
+>     order (target before slave on alloc/configure).
+> 
+> -- James S
 
-> To query and configure
-> the bridge (and  perhaps check its protocol specific mode
-> and logs pages) well known logical unit numbers will be used.
-
-All well and good - just make sure the luns report a vendor-specific
-scsi device type (and use scsi generic to talk to them).
-
-> SCSI targets seem like an important abstraction in their
-> own right, not just containers for lus.
-
-Doug, no disrespect, but I don't see how the above argument relates
-to the issue...
-
--- james s
