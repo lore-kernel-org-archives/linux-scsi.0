@@ -1,47 +1,42 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Incorrect response to SK/ASC/ASCQ = x 02/04/01 (becoming ready)
-Date: Sun, 22 Aug 2004 12:21:50 -0400 (EDT)
+From: Matthias Andree <ma@dt.e-technik.uni-dortmund.de>
+Subject: Re: [PATCH] fix sym2 negotiation
+Date: Sun, 22 Aug 2004 19:32:41 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44L0.0408221154220.15992-100000@netrider.rowland.org>
+Message-ID: <m3hdqvt6x2.fsf@merlin.emma.line.org>
+References: <1093113450.1732.334.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from netrider.rowland.org ([192.131.102.5]:4108 "HELO
-	netrider.rowland.org") by vger.kernel.org with SMTP id S267930AbUHVQVv
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 22 Aug 2004 12:21:51 -0400
+Received: from mail.dt.e-technik.Uni-Dortmund.DE ([129.217.163.1]:43908 "EHLO
+	mail.dt.e-technik.uni-dortmund.de") by vger.kernel.org with ESMTP
+	id S268052AbUHVRcp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 22 Aug 2004 13:32:45 -0400
+In-Reply-To: <1093113450.1732.334.camel@mulgrave> (James Bottomley's message
+	of "21 Aug 2004 14:37:28 -0400")
 List-Id: linux-scsi@vger.kernel.org
-To: SCSI development list <linux-scsi@vger.kernel.org>
-Cc: "Mike R." <turbanator1@verizon.net>
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: willy@debian.org, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-The SCSI core doesn't react properly when it receives SK/ASC/ASCQ = x 
-02/04/01 = Not Ready, Logical unit in process of becoming ready.
+James Bottomley <James.Bottomley@SteelEye.com> writes:
 
-The core is complex enough that I can't tell exactly what's wrong or how
-it should be fixed.  That particular sense data combination is spotted in
-two different places: scsi_lib.c:scsi_io_completion() and
-scsi_error.c:scsi_check_sense().  It's not clear which one is causing the
-problem -- maybe they both are.
+> The problems with domain validation were just the tip of the iceberg in
+> the sym2 driver.  Most of its problems seem to come from an overly
+> complex set of negotiating rules, which I've swept away with this patch.
 
-Anyway, the reaction in both routines is to requeue the request for
-immediate retry.  Obviously that's the wrong thing to do.  The request
-should be retried, yes, but only after a delay of, say, a second or so.  
-(Presumably the queue should remain blocked during that time.)  And this
-should keep happening for up to maybe 30 seconds.
+> ===== drivers/scsi/sym53c8xx_2/sym_hipd.c 1.20 vs edited =====
+> --- 1.20/drivers/scsi/sym53c8xx_2/sym_hipd.c	2004-08-21 09:27:03 -07:00
+> +++ edited/drivers/scsi/sym53c8xx_2/sym_hipd.c	2004-08-21 11:17:09 -07:00
 
-Instead what happens is that all the retries get exhausted in a fraction 
-of a second, which isn't long enough for any device to spin up.  The 
-drivers then proceed blindly with whatever else they want to do, which 
-generally incurs its own set of errors.
+James,
 
-This problem seems to be particularly bad for USB DVD drives.  One user
-was able to work around it by manually loading the usb-storage driver 20
-to 30 seconds after plugging the drive into the computer.  Obviously it
-would be much better to have the system do the right thing in the first
-place.
+is the patch available in a BK tree that the public can pull from?
 
-I don't know enough about the SCSI core to change it properly.  Can
-someone please help?
+I can't seem to get it to apply even with either or both of the patches
+Matt mentioned in another thread.
 
-Alan Stern
+Thanks in advance,
 
+-- 
+Matthias Andree
+
+Encrypted mail welcome: my GnuPG key ID is 0x052E7D95 (PGP/MIME preferred)
