@@ -1,31 +1,39 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [BK PATCH] SCSI updates for 2.6.10
-Date: Tue, 28 Dec 2004 20:56:15 -0600
-Message-ID: <1104288975.5434.1.camel@mulgrave>
-References: <1104171457.7447.5.camel@mulgrave> <41D116FC.2050505@torque.net>
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: [sg3_utils] report target group
+Date: Wed, 29 Dec 2004 13:00:45 +1000
+Message-ID: <41D21DDD.5010109@torque.net>
+References: <1104233396.41d143b44e073@imp5-q.free.fr>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=US-ASCII; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat16.steeleye.com ([209.192.50.48]:23448 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S261182AbUL2C4y (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 28 Dec 2004 21:56:54 -0500
-In-Reply-To: <41D116FC.2050505@torque.net>
+Received: from borg.st.net.au ([65.23.158.22]:19117 "EHLO borg.st.net.au")
+	by vger.kernel.org with ESMTP id S261315AbUL2C7F (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 28 Dec 2004 21:59:05 -0500
+In-Reply-To: <1104233396.41d143b44e073@imp5-q.free.fr>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Douglas Gilbert <dougg@torque.net>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: christophe.varoqui@free.fr
+Cc: linux-scsi@vger.kernel.org
 
-On Tue, 2004-12-28 at 18:19 +1000, Douglas Gilbert wrote:
-> Jmaes,
-> Is a diff representation of this bk patch likely to
-> find it ways into:
-> http://parisc-linux.org/~jejb/scsi_diffs/
+christophe.varoqui@free.fr wrote:
+> Hello,
+> 
+> can someone with the appropriate hardware (SCCS == 1 in sg_inq) can audit the
+> following sg_rtg command.
 
-OK, cockup in the push scripts which I've hopefully sorted out.  It's up
-there now (although it's 3.6MB thanks to the qla firmware patches).
+Christophe,
+I think the condition should be 'TPGS > 0' in a standard
+INQUIRY response (not necessarily the SCCS bit set).
 
-James
+> This command is proposed for inclusion in sg3_utils.
 
+Included in sg3_utils-1.12 beta which can be found at
+http://www.torque.net/sg [in the news section]. I made
+a few superficial changes. None of my hardware sets
+'TPGS > 0' so I hope someone who has such hardware
+can test it.
 
+Doug Gilbert
