@@ -1,56 +1,134 @@
 From: Jesse Barnes <jbarnes@engr.sgi.com>
 Subject: Re: SCSI QLA not working on latest *-mm SN2
-Date: Tue, 21 Sep 2004 09:29:21 -0400
+Date: Tue, 21 Sep 2004 11:13:20 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <200409210929.21373.jbarnes@engr.sgi.com>
-References: <20040917183029.GW642@parcelfarce.linux.theplanet.co.uk> <20040921054626.GF19511@colo.lackof.org> <20040921064506.GA143950@sgi.com>
+Message-ID: <200409211113.20998.jbarnes@engr.sgi.com>
+References: <20040917183029.GW642@parcelfarce.linux.theplanet.co.uk> <200409201709.45008.jbarnes@engr.sgi.com> <20040921054626.GF19511@colo.lackof.org>
 Mime-Version: 1.0
+Content-Type: Multipart/Mixed;
+  boundary="Boundary-00=_QUEUBAYeDZTEGPI"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from omx3-ext.sgi.com ([192.48.171.20]:12998 "EHLO omx3.sgi.com")
+	by vger.kernel.org with ESMTP id S267748AbUIUPTW (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 21 Sep 2004 11:19:22 -0400
+In-Reply-To: <20040921054626.GF19511@colo.lackof.org>
+List-Id: linux-scsi@vger.kernel.org
+To: Grant Grundler <grundler@parisc-linux.org>
+Cc: Andrew Vasquez <andrew.vasquez@qlogic.com>, pj@sgi.com, linux-scsi@vger.kernel.org, mdr@cthulhu.engr.sgi.com, jeremy@cthulhu.engr.sgi.com, djh@cthulhu.engr.sgi.com, Andrew Morton <akpm@osdl.org>
+
+--Boundary-00=_QUEUBAYeDZTEGPI
 Content-Type: text/plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from omx3-ext.sgi.com ([192.48.171.20]:48031 "EHLO omx3.sgi.com")
-	by vger.kernel.org with ESMTP id S267681AbUIUN3f (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 21 Sep 2004 09:29:35 -0400
-In-Reply-To: <20040921064506.GA143950@sgi.com>
 Content-Disposition: inline
-List-Id: linux-scsi@vger.kernel.org
-To: Jeremy Higdon <jeremy@sgi.com>
-Cc: Grant Grundler <grundler@parisc-linux.org>, Andrew Vasquez <andrew.vasquez@qlogic.com>, pj@sgi.com, linux-scsi@vger.kernel.org, mdr@cthulhu.engr.sgi.com, jeremy@cthulhu.engr.sgi.com, djh@cthulhu.engr.sgi.com, Andrew Morton <akpm@osdl.org>
 
-On Tuesday, September 21, 2004 2:45 am, Jeremy Higdon wrote:
-> It was my understanding that this could be a problem on any
-> MP machine where the CPUs use a write buffer (which is just
-> about everything today).
->
-> The question seems to be whether release semantics (or equivalent
-> on other chips) in the IA64 apply to MMIO writes.  I believe that
-> they do not.  It seems that you think that it does.
+On Tuesday, September 21, 2004 1:46 am, Grant Grundler wrote:
+> No it doesn't. Only if it depends on *when* the write hits the device.
+> The classic example is:
+>  writel(x, CMD_RESET);
+>  udelay(10);
+>  readl(x+STATUS); /* parisc will crash if not ready */
 
-I think it's even more subtle than that.  Stores with release semantics will 
-be visible on other CPUs if they're written to cacheable space, but in the 
-case of MMIO writes, it's the local receiving Hub that can cause the problem.  
-It'll try to send the PIO along to its destination Hub as soon as possible, 
-but due to congestion, credit counts, etc., the write may be delayed and 
-occur *after* a write from another CPU whose Hub is closer.  But then again, 
-I could be confused.
+Ok, hopefully I've covered this in this release (patch to deviceiobook will 
+come later).
 
-> On Altix, we ran into a problem with the qla1280 driver (see
-> version 1.56 in the scsi-misc-2.6 bk tree) because the spinunlock
-> (apparently) did not imply a retirement of a previous mmio write.
-> In that rev, I added an mmio read to so that the mmio write would
-> be completed before releasing the spinlock (I believe the host
-> lock held during the call to queuecommand).
->
-> Before making that change, the problem was the two different CPUs
-> would mmio write to the Request In register, and the ordering
-> would flip, causing the qla1280 to think that it suddenly had
-> an entire request queue.  We didn't see this problem on puny
-> 64p machines (at least not under ordinary stress testing); we
-> needed a 512p machine to see it, though odds are that it would
-> have occurred very occasionally on smaller machines.
+The short of it is that we really need pioflush.  I'll resurrect my mmiob 
+patches, change the name and prototype, and resubmit.
 
-Good example, thanks for reminding me.
-
+Thanks,
 Jesse
+
+--Boundary-00=_QUEUBAYeDZTEGPI
+Content-Type: text/plain;
+  charset="iso-8859-1";
+  name="io_ordering.txt"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+	filename="io_ordering.txt"
+
+Dealing with posted writes
+--------------------------
+
+On some platforms platforms, driver writers are responsible for
+ensuring that I/O writes to memory-mapped addresses on their device
+arrive when expected and in the order intended.  This is typically
+done by reading a 'safe' device or bridge register, causing the I/O
+chipset to flush pending writes to the device before any reads are
+posted.  A driver would usually use this technique immediately prior
+to the exit of a critical section of code protected by spinlocks.
+This would ensure that subsequent writes to I/O space arrived only
+after all prior writes (much like a memory barrier op, mb(), only with
+respect to I/O).
+
+Some pseudocode to illustrate the problem of write posting:
+
+...
+spin_lock_irqsave(&dev_lock, flags)
+...
+writel(resetval, reset_reg); /* reset the card */
+udelay(10); /* wait for reset (also needs pioflush) */
+val = readl(ring_ptr); /* read initial value */
+spin_unlock_irqrestore(&dev_lock, flags)
+...
+
+In this case, the card is reset by the first write.  The driver
+attempts to wait for the completion of the reset using udelay.  But
+since the write may be delayed and the udelay will probably start
+executing right away, it may be that there's not enough time for the
+write to actually arrive at the card and for the reset to occur before
+the read is executed.  On some platforms, this can result in a machine
+check.  Without a pioflush routine, the udelay must account for worst
+case behavior.
+
+And an example of reordering of writes between CPUs on a NUMA machine:
+
+	...
+CPU A:  spin_lock_irqsave(&dev_lock, flags)
+CPU A:  ...
+CPU A:  writel(newval, ring_ptr);
+CPU A:  spin_unlock_irqrestore(&dev_lock, flags)
+        ...
+CPU B:  spin_lock_irqsave(&dev_lock, flags)
+CPU B:  ...
+CPU B:  writel(newval2, ring_ptr);
+CPU B:  (void)readl(safe_register); /* or read_relaxed() */
+
+In the case above, the device may receive newval2 before it receives newval,
+which could cause problems.  Fixing it is easy enough though:
+
+        ...
+CPU A:  spin_lock_irqsave(&dev_lock, flags)
+CPU A:  ...
+CPU A:  writel(newval, ring_ptr);
+CPU A:  (void)readl(safe_register); /* maybe a config register? */
+CPU A:  spin_unlock_irqrestore(&dev_lock, flags)
+        ...
+CPU B:  spin_lock_irqsave(&dev_lock, flags)
+CPU B:  ...
+CPU B:  writel(newval2, ring_ptr);
+CPU B:  (void)readl(safe_register); /* or read_relaxed() */
+CPU B:  spin_unlock_irqrestore(&dev_lock, flags)
+
+Here, the reads from safe_register will cause the I/O chipset to flush any
+posted writes before actually sending the read to the chipset, preventing
+possible data corruption.
+
+inX and outX calls, on the other hand, are strongly ordered and
+non-postable.  They do not need special handling. But this is
+something to watch out for when converting drivers to use MMIO space
+from IO Port space.
+
+A new pioflush routine could address both of the above problems
+(though drivers would still have to know how long to wait for card
+resets).  It would ensure that pio writes had arrived at their
+destination device before allowing executing in the current context to
+continue.  Since some platforms would only be able to achieve this
+through a read of a bridge config register, I think a prototype like:
+  pioflush(struct device *dev, unsigned long addr);
+would be necessary.  The dev argument would correspond to the device
+in question, and the addr argument would be a safe register to read on
+the device.  Either could be zero, but not both.
+
+
+--Boundary-00=_QUEUBAYeDZTEGPI--
