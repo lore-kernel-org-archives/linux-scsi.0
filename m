@@ -1,44 +1,52 @@
-From: Erik Mouw <erik@harddisk-recovery.com>
-Subject: Re: CSMI questions
-Date: Thu, 24 Feb 2005 15:25:02 +0100
-Message-ID: <20050224142502.GC13226@harddisk-recovery.com>
-References: <20050222171656.GA5953@beardog.cca.cpqcorp.net> <20050222231450.GB10067@kroah.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Received: from users.linvision.com ([62.58.92.114]:57486 "HELO bitwizard.nl")
-	by vger.kernel.org with SMTP id S262354AbVBXOZH (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 24 Feb 2005 09:25:07 -0500
-Content-Disposition: inline
-In-Reply-To: <20050222231450.GB10067@kroah.com>
+From: brking@us.ibm.com
+Subject: [PATCH 1/1] ipr: Handle new RAID 6 errors
+Date: Thu, 24 Feb 2005 10:40:18 -0600
+Message-ID: <200502241640.j1OGeJlm016789@d03av02.boulder.ibm.com>
+Received: from e31.co.us.ibm.com ([32.97.110.129]:64682 "EHLO
+	e31.co.us.ibm.com") by vger.kernel.org with ESMTP id S262349AbVBXQkW
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 24 Feb 2005 11:40:22 -0500
+Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
+	by e31.co.us.ibm.com (8.12.10/8.12.9) with ESMTP id j1OGeKua228112
+	for <linux-scsi@vger.kernel.org>; Thu, 24 Feb 2005 11:40:20 -0500
+Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
+	by d03relay04.boulder.ibm.com (8.12.10/NCO/VER6.6) with ESMTP id j1OGeKXW158370
+	for <linux-scsi@vger.kernel.org>; Thu, 24 Feb 2005 09:40:20 -0700
+Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av02.boulder.ibm.com (8.12.11/8.12.11) with ESMTP id j1OGeJSx016823
+	for <linux-scsi@vger.kernel.org>; Thu, 24 Feb 2005 09:40:20 -0700
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Greg KH <greg@kroah.com>
-Cc: mikem <mikem@beardog.cca.cpqcorp.net>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
-
-On Tue, Feb 22, 2005 at 03:14:50PM -0800, Greg KH wrote:
-> On Tue, Feb 22, 2005 at 11:16:56AM -0600, mikem wrote:
-> > I'd also like an (brief) explanation of why ioctls are so bad. I've seen the 
-> > reasons of them never going away, etc. But from the beginning of time (UNIX)
-> > ioctls have been the preferred method of user space/kernel communication.
-> 
-> That's because there was no other method.  See the lkml archives for why
-> ioctls are considered bad, I don't want to dredge it up again.
-
-Here's a quote from the official syndicated kernelnewbies fortunes
-file (http://www.kernelnewbies.org/kernelnewbies-fortunes.tar.gz ):
-
-"Basically, ioctl's will _never_ be done right, because of the way people
- think about them. They are a back door. They are by design typeless and
- without rules. They are, in fact, the Microsoft of UNIX."
-
-	- Linus Torvalds on linux-kernel
-
-For the full story, see http://lkml.org/lkml/2001/5/20/81 .
+To: James.Bottomley@steeleye.com
+Cc: linux-scsi@vger.kernel.org, brking@us.ibm.com
 
 
-Erik
+This patch allows ipr to properly log 2 new RAID 6 related
+errors.
 
--- 
-+-- Erik Mouw -- www.harddisk-recovery.com -- +31 70 370 12 90 --
-| Lab address: Delftechpark 26, 2628 XH, Delft, The Netherlands
+Please apply with along the previous batch of ipr patches I sent.
+
+Signed-off-by: Brian King <brking@us.ibm.com>
+---
+
+ linux-2.6.11-rc4-bk9-bjking1/drivers/scsi/ipr.c |    4 +++-
+ 1 files changed, 3 insertions(+), 1 deletion(-)
+
+diff -puN drivers/scsi/ipr.c~ipr_raid6_errors drivers/scsi/ipr.c
+--- linux-2.6.11-rc4-bk9/drivers/scsi/ipr.c~ipr_raid6_errors	2005-02-23 17:16:05.000000000 -0600
++++ linux-2.6.11-rc4-bk9-bjking1/drivers/scsi/ipr.c	2005-02-23 17:18:43.000000000 -0600
+@@ -323,10 +323,12 @@ struct ipr_error_table_t ipr_error_table
+ 	"3150: SCSI bus configuration error"},
+ 	{0x06690200, 0, 1,
+ 	"9041: Array protection temporarily suspended"},
++	{0x06698200, 0, 1,
++	"9042: Corrupt array parity detected on specified device"},
+ 	{0x066B0200, 0, 1,
+ 	"9030: Array no longer protected due to missing or failed disk unit"},
+ 	{0x066B8200, 0, 1,
+-	"9042: Corrupt array parity detected on specified device"},
++	"9032: Array exposed but still protected"},
+ 	{0x07270000, 0, 0,
+ 	"Failure due to other device"},
+ 	{0x07278000, 0, 1,
+_
