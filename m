@@ -1,52 +1,56 @@
-From: Mark Haverkamp <markh@osdl.org>
-Subject: RE: [PATCH] 2.6.9 aacraid: aac_count fix
-Date: Wed, 15 Sep 2004 13:24:31 -0700
+From: Douglas Gilbert <dougg@torque.net>
+Subject: BSG question
+Date: Thu, 16 Sep 2004 12:36:02 +1000
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1095279871.29934.23.camel@markh1.pdx.osdl.net>
-References: <60807403EABEB443939A5A7AA8A7458B1AAB3A@otce2k01.adaptec.com>
+Message-ID: <4148FC12.1010205@torque.net>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fire.osdl.org ([65.172.181.4]:13779 "EHLO fire-1.osdl.org")
-	by vger.kernel.org with ESMTP id S267388AbUIOUYj (ORCPT
+Received: from borg.st.net.au ([65.23.158.22]:53397 "EHLO borg.st.net.au")
+	by vger.kernel.org with ESMTP id S266790AbUIPCg6 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 15 Sep 2004 16:24:39 -0400
-In-Reply-To: <60807403EABEB443939A5A7AA8A7458B1AAB3A@otce2k01.adaptec.com>
+	Wed, 15 Sep 2004 22:36:58 -0400
+Received: from [192.168.48.80] (dsl-175.131.240.220.lns02-wick-bne.dsl.comindico.com.au [220.240.131.175])
+	by borg.st.net.au (Postfix) with ESMTP id A99603944F6
+	for <linux-scsi@vger.kernel.org>; Thu, 16 Sep 2004 12:36:50 +1000 (EST)
 List-Id: linux-scsi@vger.kernel.org
-To: Mark Salyzyn <mark_salyzyn@adaptec.com>
-Cc: Christoph Hellwig <hch@infradead.org>, James Bottomley <James.Bottomley@steeleye.com>, linux-scsi <linux-scsi@vger.kernel.org>
+To: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Wed, 2004-09-15 at 10:43, Salyzyn, Mark wrote:
-> The init phase of the driver required this field *before* the call to
-> scsi_add_host. I still have to search the fog to remember which system
-> service panick'd when called with this field uninitialized ...
+In the "[PATCH] New QStor SATA/RAID Driver for 2.6.9-rc2"
+thread Jeff Garzik wrote:
 
-Is there any reason that we couldn't call scsi_add_host earlier?
+ > * if the userland interface is 100% sending cdbs or taskfiles, then I
+ > would prefer that Jens Axboe's "bsg" be used.  Its a chardev interface
+ > for sending/receiving commands to a request queue.
 
-> 
-> -----Original Message-----
-> From: Mark Haverkamp [mailto:markh@osdl.org] 
-> Sent: Wednesday, September 15, 2004 10:25 AM
-> To: Salyzyn, Mark
-> Cc: Christoph Hellwig; James Bottomley; linux-scsi
-> Subject: RE: [PATCH] 2.6.9 aacraid: aac_count fix
-> 
-> On Wed, 2004-09-15 at 04:47, Salyzyn, Mark wrote:
-> > Christoph Hellwig writes:
-> > 
-> > > > +	scsi_set_device(shost, &pdev->dev);
-> > > 
-> > > This one is bogus.  scsi_add_host already sets the device.
-> > 
-> > Which path sets the device? I got an intermittent panic as a result of
-> > the device not being set in my unit test (of the kernel of the day at
-> > the time of this modification, can't remember which version of the
-> > kernel ...). Which version of this kernel sets it?
-> 
-> In the latest version at least, line 111 in hosts.c sets
-> shost->shost_gendev.parent = dev ? dev : &platform_bus which is
-> essentially what scsi_set_device does.
--- 
-Mark Haverkamp <markh@osdl.org>
+I played around with bsg
+http://marc.theaimsgroup.com/?l=linux-scsi&m=109160967927030&w=2
+about a month ago and it
+looked good (and I would like sg to evolve in that
+direction as well). My plan was to make a version of sg_dd
+from sg3_utils use it. However since it was a patch it is hard
+to keep in sync as kernel versions roll-out.
 
+Any chance of getting it into the main line kernel,
+on the quiet? Failing that, a web site with up to date
+patches.
+
+Various comments were made at the time
+of its release that a more 64/32 bit friendly version
+of struct sg_io_hdr was needed (this is for folks running
+32 bits apps on a 64 bit architectures). As I pointed
+out struct sg_io_hdr was written with alternate interfaces
+in mind (i.e. its first field: 'int interface_id').
+
+bsg has one device node (i.e. "/dev/bsg") which users can
+open and then bind/attach to an existing block device
+node (e.g. /dev/sda). Extending this to bind to sysfs
+device paths might be handy as well for
+    - (SCSI) devices that have an unsupported peripheral device
+       type (e.g. SES)
+    - other devices (e.g. SMP port of an SAS expander)
+
+
+Doug Gilbert
