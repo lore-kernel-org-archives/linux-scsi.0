@@ -1,47 +1,39 @@
-From: James Bottomley <James.Bottomley@steeleye.com>
-Subject: Re: [Patch] dont block device on QUEUE_FULL for last command
-Date: 04 Aug 2003 11:05:40 -0500
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1060013144.2008.28.camel@fuzzy>
-References: <OF122C5E1B.D9D616EB-ONC1256D78.0050C1BC@de.ibm.com>
+From: Patrick Mansfield <patmans@us.ibm.com>
+Subject: Re: Badness in device_release at drivers/base/core.c:84
+Date: Mon, 4 Aug 2003 09:30:35 -0700
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <20030804093035.A24860@beaverton.ibm.com>
+References: <20030801182207.GA3759@blazebox.homeip.net> <20030801144455.450d8e52.akpm@osdl.org> <20030803015510.GB4696@blazebox.homeip.net> <20030802190737.3c41d4d8.akpm@osdl.org> <20030803214755.GA1010@blazebox.homeip.net> <20030803145211.29eb5e7c.akpm@osdl.org> <20030803222313.GA1090@blazebox.homeip.net> <20030803223115.GA1132@blazebox.homeip.net>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nat9.steeleye.com ([65.114.3.137]:18181 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S271825AbTHDQFy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 4 Aug 2003 12:05:54 -0400
-In-Reply-To: <OF122C5E1B.D9D616EB-ONC1256D78.0050C1BC@de.ibm.com>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20030803223115.GA1132@blazebox.homeip.net>; from diffie@blazebox.homeip.net on Sun, Aug 03, 2003 at 06:31:15PM -0400
+To: Diffie <diffie@blazebox.homeip.net>
+Cc: Andrew Morton <akpm@osdl.org>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, "Justin T. Gibbs" <gibbs@scsiguy.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Andreas Herrmann <AHERRMAN@de.ibm.com>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Mon, 2003-08-04 at 10:42, Andreas Herrmann wrote:
-> I observed the following problem:
-> A device was marked as blocked after a QUEUE_FULL status code
-> was returned for the last scsi command for a device.
-> And there's a snag to it -- because no further commands are pending
-> for that device, the device is not set unblocked anymore.
-> 
-> Solution is:
-> Do not block the device/adapter if getting QUEUE_FULL status code
-> for the last pending command of that device/adapter, but retry
-> the command.
+On Sun, Aug 03, 2003 at 06:31:15PM -0400, Diffie wrote:
+> On Sun, Aug 03, 2003 at 06:23:13PM -0400, Diffie wrote:
 
-This looks like 2.4 code, right?
+> > Thank you for all your help.Sorry but i gave the wrong URL in previous
+> > email.The correct one is http://www.blazebox.homeip.net:81/diffie/images/linux-2.6.0-test2/ 
+> > 
 
-The problem was fixed long ago in 2.5.
+Per your screen dump - it found the cd-rom's on id 3 and 4, but not your
+disk drive that was at id 0, and the adapter found something at id 6 (host
+adapter is at id 7).
 
-The fix you propose for 2.4 isn't optimal (although it is what 2.4 does
-for the busy case) because the mid-layer will bang the drive in a tight
-loop until it can accept the command.
+You could try turning on scan logging, it might give more information.
+You can turn on the logging at boot time, make sure you have
+CONFIG_SCSI_LOGGING on, the information of interest (scan of host 0 chan 0
+id 0 lun 0) likely will scroll off screen.
 
-You could try backporting the 2.5 fix.  What we do there is to plug the
-queue and then count down (from 7 for host busy or 3 from device busy)
-replugging each time.  That gives a non-busy delay which is directly
-proportional to the I/O pressure in the system.
+For scan logging, add to your boot line:
 
-James
+	scsi_mod.scsi_logging_level=0x140
 
+To limit the logging info, make sure max_scsi_luns=1 via config or boot
+time option scsi_mod.max_scsi_luns=1.
 
+-- Patrick Mansfield
