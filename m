@@ -1,36 +1,46 @@
-From: "J.E.J. Bottomley" <James.Bottomley@steeleye.com>
-Subject: Re: [PATCH] remove unused includes and misleading comments from
- scsi_lib.c
-Date: Wed, 20 Nov 2002 13:25:29 -0600
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <200211201925.gAKJPTx03466@localhost.localdomain>
-References: <patmans@us.ibm.com>
+From: Patrick Mansfield <patmans@us.ibm.com>
+Subject: Re: [BUG] 2.5.47: sysfs hierarchy can begin to disintegrate
+Date: Wed, 20 Nov 2002 12:11:17 -0800
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <20021120121117.A21414@eng2.beaverton.ibm.com>
+References: <200211200925.gAK9Pl002345@owlet.beaverton.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: (from root@localhost)
-	by pogo.mtv1.steeleye.com (8.9.3/8.9.3) id LAA26492
-	for <linux-scsi@vger.kernel.org>; Wed, 20 Nov 2002 11:25:34 -0800
-In-Reply-To: Message from Patrick Mansfield <patmans@us.ibm.com>
-   of "Wed, 20 Nov 2002 11:10:16 PST." <20021120111016.A20388@eng2.beaverton.ibm.com>
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+In-Reply-To: <200211200925.gAK9Pl002345@owlet.beaverton.ibm.com>; from ricklind@us.ibm.com on Wed, Nov 20, 2002 at 01:25:47AM -0800
+To: Rick Lindsley <ricklind@us.ibm.com>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Patrick Mansfield <patmans@us.ibm.com>
-Cc: Christoph Hellwig <hch@lst.de>, James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-patmans@us.ibm.com said:
-> It is in hardirq.h, arch specific, 11 of the 20 hardirq.h files would
-> need the change (they reference kernel_locked) to include smp_lock.h.
+On Wed, Nov 20, 2002 at 01:25:47AM -0800, Rick Lindsley wrote:
 
-> 665 files include smp_lock.h 89  files include hardirq.h 32  files
-> include both
+> Interesting observation: the megaraid controller has some problem right
+> now (suspected to be hardware) wherein its scsi disks appear at boot
+> time but then cannot be accessed later and are subsequently detached.
+> Since this could well be a little-used and little-tested path, my
+> suspicion is that either the megaraid, scsi, or sysfs code has a bug when
+> disks are detached.  So far, I've not been able to find one, however, so
 
-> So, should I change the arch hardirq.h files to include smp_lock.h, or
-> just add smp_lock.h to scsi_lib.c? 
+Regarding megaraid, Stephen Hemming and Mark Haverkamp posted about
+problems, leading to this:
 
-That magnitude of change needs to go in through the header files project.  
-I'll just apply the smp_lock.h in scsi_lib fix to the scsi tree for now.  They 
-can always take it out again for the proper fix.
+http://marc.theaimsgroup.com/?l=linux-scsi&m=103728900228366&w=2
 
-James
+Generally - the megaraid had problems, where the aic driver did not using
+the same disk drives. AFAICT the megaraid caused a problem, and its error
+handling is non existent, so it is unable to recover from the problem. I'm
+sure Mark or Stephen could provide details.
 
+> I thought I'd report this in case others might know just where to peek.
+> Could it be that removing entries from sysfs is done incorrectly in
+> some cases?
 
+If you are talking about rmmod your-scsi-adapter, or removing a scsi_device
+vi /proc/scsi, yes, there are problems in sysfs and in scsi. None of the
+sysfs fixes are in the current bk tree, I assume Pat Mochel needs to push
+them (he hasn't been online recently).
+
+We can push a simple scsi fix (via James B), but the scsi sysfs code is not
+good, Mike Anderson is working on some patches for that.
+
+-- Patrick Mansfield
