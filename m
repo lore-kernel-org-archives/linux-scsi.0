@@ -1,32 +1,28 @@
-From: Bryan Henderson <hbryan@us.ibm.com>
+From: Matthew Jacob <mjacob@feral.com>
 Subject: RE: A different look at block device hotswap in the Linux kernel
-Date: Fri, 24 Jan 2003 10:01:28 -0800
+Date: Fri, 24 Jan 2003 10:09:32 -0800 (PST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <OF73A095F7.76CA02FF-ON87256CB8.0060AF6A-88256CB8.006323FB@us.ibm.com>
-References: <A5974D8E5F98D511BB910002A50A66470580D59C@hdsmsx103.hd.intel.com>
+Message-ID: <20030124100832.Y1605-100000@wonky.in0.lcl>
+References: <OF73A095F7.76CA02FF-ON87256CB8.0060AF6A-88256CB8.006323FB@us.ibm.com>
+Reply-To: mjacob@feral.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <A5974D8E5F98D511BB910002A50A66470580D59C@hdsmsx103.hd.intel.com>
+In-Reply-To: <OF73A095F7.76CA02FF-ON87256CB8.0060AF6A-88256CB8.006323FB@us.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: "Cress, Andrew R" <andrew.r.cress@intel.com>
-Cc: andmike@us.ibm.com, David Brownell <david-b@pacbell.net>, Greg KH <greg@kroah.com>, Linux SCSI list <linux-scsi@vger.kernel.org>, linux-usb-devel@lists.sourceforge.net, Luben Tuikov <luben@splentec.com>, Matthew Dharm <mdharm-scsi@one-eyed-alien.net>, "'mjacob@feral.com'" <mjacob@feral.com>, Oliver Neukum <oliver@neukum.name>, Steven Dake <sdake@mvista.com>, Alan Stern <stern@rowland.harvard.edu>
+To: Bryan Henderson <hbryan@us.ibm.com>
+Cc: "Cress, Andrew R" <andrew.r.cress@intel.com>, andmike@us.ibm.com, David Brownell <david-b@pacbell.net>, Greg KH <greg@kroah.com>, Linux SCSI list <linux-scsi@vger.kernel.org>, linux-usb-devel@lists.sourceforge.net, Luben Tuikov <luben@splentec.com>, Matthew Dharm <mdharm-scsi@one-eyed-alien.net>, Oliver Neukum <oliver@neukum.name>, Steven Dake <sdake@mvista.com>, Alan Stern <stern@rowland.harvard.edu>
 
+>
+> It's like when I pull the power plug because my system is totally hosed and
+> I want to start over.  I know I can cause damage by doing that, but I would
+> be upset if the new system booted back to the broken state it was in when I
+> unplugged it.
 
+I had this conversation with doug offlist- this is a policy choice. You
+may want your device to reattach as totally new. You may, on the other
+hand, want your device to resume where you left off. I can see valid
+reasons for wanting either behaviour (but it can't/shouldn't be deduced
+by the OS).
 
-
-
->The comparing of a saved device list snapshot with the current device
-should
->be the responsibility of
-
->From a usability standpoint, I don't think any such comparing should be
-done by anyone.  When I unplug a device and then plug it in again, I want a
-total reset.  I'm willing to take my lumps if I unplug something that isn't
-in a state to be safely unplugged.
-
-It's like when I pull the power plug because my system is totally hosed and
-I want to start over.  I know I can cause damage by doing that, but I would
-be upset if the new system booted back to the broken state it was in when I
-unplugged it.
 
