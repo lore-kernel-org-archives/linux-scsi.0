@@ -1,76 +1,30 @@
-From: Rock Gordon <rockgordon@yahoo.com>
-Subject: Re: WWN on FC LUN targets
-Date: Wed, 4 Aug 2004 10:04:33 -0700 (PDT)
+From: "Lee Xing" <lxing@Crossroads.com>
+Subject: Help - looking for IO test tools
+Date: Wed, 4 Aug 2004 13:58:36 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040804170433.52447.qmail@web41404.mail.yahoo.com>
-References: <410CB26E.7060109@torque.net>
+Message-ID: <519672568F040C41B6FAC21ADF51B18F1C4441@mailnode1.commstor.crossroads.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from web41404.mail.yahoo.com ([66.218.93.70]:2999 "HELO
-	web41404.mail.yahoo.com") by vger.kernel.org with SMTP
-	id S267314AbUHDREg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 4 Aug 2004 13:04:36 -0400
-In-Reply-To: <410CB26E.7060109@torque.net>
+Received: from email.crossroads.com ([65.68.235.6]:53821 "HELO
+	email.crossroads.com") by vger.kernel.org with SMTP id S267377AbUHDS6j convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 4 Aug 2004 14:58:39 -0400
+content-class: urn:content-classes:message
 List-Id: linux-scsi@vger.kernel.org
-To: dougg@torque.net, Bryan Henderson <hbryan@us.ibm.com>
-Cc: Rock Gordon <rockgordon@yahoo.com>, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-Hi everyone, thanks once again for your replies!
+Hi,
 
-The sg3_utils is very good - I will probably rely on
-them.
+Sorry, this post may be a bit off topic.
 
-On a related note - the /proc/partitions file can
-handle only one page worth of entries for 2.4.18,
-right? There might be a strong possibility of "losing"
-entries due to this restriction. Is there any patch
-out there to get around this problem?
+Just wondering if there are any IO test tools like IOMeter, with which we can select different parameters (IO size, percentage of read/write, percentage of sequential/random, etc.) and see the IO rate (MB/sec) and num of IO/sec with the selected parameters.
+
+IOMeter is okay but we have to use an extra Windows machine to run it.  If we can find a self-contained IO test tool for Linux, that would be very helpful.
 
 Thanks,
 
-> 
-> The scsi_id program by Patrick Mansfield queries a
-> SCSI device's
-> identification and serial number vital product data
-> (VPD) pages
-> and produces a unique number. It is meant to be used
-> in conjunction
-> with udev (a dynamic device node creation, naming
-> and removal facility
-> based on the hotplug subsystem in the lk 2.6 series)
-> to create device
-> (and partition) node names according to user
-> specified rules.
-> Several versions can be found at this url:
->     http://www-124.ibm.com/storageio/scsi_id/
-> 
-> The sg_inq utility in the sg3_utils package (version
-> 1.07) has
-> a '-i' option that will decode all the
-> "identification descriptors"
-> in the device identification VPD page (0x83) for the
-> nominated device.
-> That information in conjunction with some of the
-> explanations in
-> this thread may show you what identifiers, if any,
-> are available.
-> The unit serial number page can be queried with
-> 'sg_inq -o=80 /dev/sda'.
-> sg3_utils can be found at: http://www.torque.net/sg
-> 
-> SPC-3 (SCSI Primary Commands) can be found
-> http://www.t10.org
-> The most recent draft is version 19 and section
-> 7.6.4 and 7.6.11
-> are relevant.
-> 
-> Doug Gilbert
-> 
 
+Lee
 
-		
-__________________________________
-Do you Yahoo!?
-Yahoo! Mail is new and improved - Check it out!
-http://promotions.yahoo.com/new_mail
