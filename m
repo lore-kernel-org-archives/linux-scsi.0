@@ -1,30 +1,36 @@
-From: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Subject: Re: [RFC] adding per scsi-host workqueues for defered processing
-Date: Tue, 8 Mar 2005 23:38:52 -0800
-Message-ID: <20050309073852.GE4525@plap.qlogic.org>
-References: <0B1E13B586976742A7599D71A6AC733C12ED0C@xbl3.ma.emulex.com>
+From: Arjan van de Ven <arjan@infradead.org>
+Subject: RE: [ANNOUNCE][PATCH 2.6.11 2/3] megaraid_sas: Announcing new mod
+	ule  for LSI Logic's SAS based MegaRAID controllers
+Date: Wed, 09 Mar 2005 09:06:38 +0100
+Message-ID: <1110355598.6280.61.camel@laptopd505.fenrus.org>
+References: <0E3FA95632D6D047BA649F95DAB60E570230CC18@exa-atlanta>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Received: from avexch01.qlogic.com ([198.70.193.200]:45259 "EHLO
-	avexch01.qlogic.com") by vger.kernel.org with ESMTP id S262208AbVCIHiV
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 9 Mar 2005 02:38:21 -0500
-Content-Disposition: inline
-In-Reply-To: <0B1E13B586976742A7599D71A6AC733C12ED0C@xbl3.ma.emulex.com>
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Received: from pentafluge.infradead.org ([213.146.154.40]:2789 "EHLO
+	pentafluge.infradead.org") by vger.kernel.org with ESMTP
+	id S261287AbVCIIGr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 9 Mar 2005 03:06:47 -0500
+In-Reply-To: <0E3FA95632D6D047BA649F95DAB60E570230CC18@exa-atlanta>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Smart@Emulex.Com
-Cc: luben_tuikov@adaptec.com, linux-scsi@vger.kernel.org
+To: "Bagalkote, Sreenivas" <sreenib@lsil.com>
+Cc: "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, 'James Bottomley' <James.Bottomley@SteelEye.com>, "'Matt_Domsch@Dell.com'" <Matt_Domsch@Dell.com>, Andrew Morton <akpm@osdl.org>, 'Christoph Hellwig' <hch@infradead.org>
 
-On Wed, 09 Mar 2005, James.Smart@Emulex.Com wrote:
-
+On Tue, 2005-03-08 at 18:08 -0500, Bagalkote, Sreenivas wrote:
 > 
-> So, is there a reason we aren't just starting the workq thread
-> upon the first call to queue something to it ?
+> I will make this an instance parameter if the idea to reduce as many
+> global variables as possible. But if the objection is because each
+> adapter
+> may have different value for variable, then it is indeed a global
+> value.
+> "is_dma64" - which is computed using the size of dma_addr_t - is
+> telling
+> something about the kernel rather than the controller feature.
 > 
 
-I don't see any reason why that approach wouldn't work in this
-circumstance..
+then having it as variable sounds really really wrong; the size of
+dma_addr_t is a compile time property...
+(and why do you care about it? you see high dma addresses when they come
+in, right?)
 
---
-av
