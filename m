@@ -1,27 +1,38 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: Help - questions on Linux SCSI low-level driver
-Date: Tue, 11 May 2004 19:19:03 +0100
+From: Jens Axboe <axboe@suse.de>
+Subject: Re: [PATCH] Format Unit can take many hours
+Date: Tue, 11 May 2004 20:30:13 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040511191903.A18764@infradead.org>
-References: <519672568F040C41B6FAC21ADF51B18FEFEC@mailnode1.commstor.crossroads.com>
+Message-ID: <20040511183013.GC14789@suse.de>
+References: <20040511162822.C46BFDBDB@gherkin.frus.com> <Pine.GSO.4.33.0405111243300.14297-100000@sweetums.bluetronic.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from phoenix.infradead.org ([213.86.99.234]:20235 "EHLO
-	phoenix.infradead.org") by vger.kernel.org with ESMTP
-	id S262996AbUEKSTF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 11 May 2004 14:19:05 -0400
+Received: from ns.virtualhost.dk ([195.184.98.160]:56289 "EHLO virtualhost.dk")
+	by vger.kernel.org with ESMTP id S263032AbUEKSae (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 11 May 2004 14:30:34 -0400
 Content-Disposition: inline
-In-Reply-To: <519672568F040C41B6FAC21ADF51B18FEFEC@mailnode1.commstor.crossroads.com>; from lxing@Crossroads.com on Tue, May 11, 2004 at 01:00:37PM -0500
+In-Reply-To: <Pine.GSO.4.33.0405111243300.14297-100000@sweetums.bluetronic.net>
 List-Id: linux-scsi@vger.kernel.org
-To: Lee Xing <lxing@Crossroads.com>
-Cc: linux-scsi@vger.kernel.org
+To: Ricky Beam <jfbeam@bluetronic.net>
+Cc: Bob Tracy <rct@gherkin.frus.com>, Kurt Garloff <garloff@suse.de>, Linux SCSI list <linux-scsi@vger.kernel.org>, Linux kernel list <linux-kernel@vger.kernel.org>
 
-On Tue, May 11, 2004 at 01:00:37PM -0500, Lee Xing wrote:
-> Hi,
+On Tue, May 11 2004, Ricky Beam wrote:
+> On Tue, 11 May 2004, Bob Tracy wrote:
+> >Moreover, it simply "feels" wrong to define a constant for something
+> >that isn't...  The quick fix of increasing the timeout doesn't address
+> >the underlying issue of how long a format should take, and as Ricky
+> >implies, that's probably more the concern of the application rather
+> >than the driver.
 > 
-> To make sure we can integrate the functionalities of the Linux SCSI low-level driver into an existing module, a dummy detect( ) (the first function called from the SCSI mid-level) and hosts.h are added into hello_world module (attached bellow).
+> The real problem is a lack of being able to specify a timeout for user
+> supplied commands.  In-kernel drivers can set a command timeout.  The
+> IOCTL interface does not export that capability.
 
-Please see http://www.kernelnebies.org for lots of beginners help on kernel
-programming.
+Noone should use that interface, period. That ioctl is about as bad an
+interface as you could imagine. Use any variant of sg and you should be
+fine.
+
+-- 
+Jens Axboe
 
