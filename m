@@ -1,40 +1,58 @@
-From: Luben Tuikov <luben_tuikov@adaptec.com>
-Subject: Re: Report luns
-Date: Wed, 10 Nov 2004 09:13:34 -0500
-Message-ID: <4192220E.80805@adaptec.com>
-References: <20041028143734.GA16358@beaverton.ibm.com> <20041028153522.GC1915@astral.ro> <20041028164210.GA16905@beaverton.ibm.com> <20041028172143.GA20949@praka.san.rr.com> <20041029085800.GF6671@astral.ro> <20041029180633.GA27267@beaverton.ibm.com> <20041101105611.GJ22603@astral.ro> <20041101194845.GA27913@us.ibm.com> <41903031.3050205@torque.net> <4190DCE0.1070606@adaptec.com> <20041109211055.GA11459@us.ibm.com> <41919D7B.5040703@torque.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+From: "Smitha Narayanaswamy \(smithan\)" <smithan@cisco.com>
+Subject: RE: [linux-iscsi-devel] [PATCH] iSCSI transport class
+Date: Wed, 10 Nov 2004 19:47:27 +0530
+Message-ID: <026501c4c730$023fa6a0$6f074d0a@apac.cisco.com>
+References: <41823426.5090007@cs.wisc.edu>
+Reply-To: <smithan@cisco.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from magic.adaptec.com ([216.52.22.17]:45442 "EHLO magic.adaptec.com")
-	by vger.kernel.org with ESMTP id S261987AbUKJONx (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 10 Nov 2004 09:13:53 -0500
-In-Reply-To: <41919D7B.5040703@torque.net>
+Received: from sj-iport-5.cisco.com ([171.68.10.87]:32325 "EHLO
+	sj-iport-5.cisco.com") by vger.kernel.org with ESMTP
+	id S261893AbUKJORh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 10 Nov 2004 09:17:37 -0500
+In-Reply-To: <41823426.5090007@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: dougg@torque.net
-Cc: Patrick Mansfield <patmans@us.ibm.com>, linux-scsi@vger.kernel.org
+To: 'Mike Christie' <michaelc@cs.wisc.edu>, linux-scsi@vger.kernel.org, linux-iscsi-devel@lists.sourceforge.net, duane.grigsby@qlogic.com, 'James Dykman' <dykman@us.ibm.com>
 
-Douglas Gilbert wrote:
-> 
-> So now if one sends a REPORT LUNS to lun 0 that U320 disk is
-> expected to know about its sibling disks!? That is why I used
-> the term "hack" with respect to lun 0. What really happens
-> is the device server in the bridge intercepts the REPORT LUNS
-> command and produces a response reflecting its knowledge of
-> those 5 U320 disks present. Why play this game? Why not talk
-> directly to the device server (addressed via a well known lu).
-> This way an INQUIRY to a W-LUN yields information about
-> the bridge, while an INQUIRY to lun 0 yields information about
-> that disk.
+I think the patch looks fine.
 
-Very good point!
+Thanks,
+Smitha
 
-So we can reverse the logic into sending REPORT LUNS to
-the REPORT LUNS W-LUN *first* and if this fails (most probably
-in early years), then issue REPORT LUNS to LUN 0.
+> -----Original Message-----
+> From: linux-iscsi-devel-admin@lists.sourceforge.net
+> [mailto:linux-iscsi-devel-admin@lists.sourceforge.net] On
+> Behalf Of Mike Christie
+> Sent: Friday, October 29, 2004 5:45 PM
+> To: linux-scsi@vger.kernel.org;
+> linux-iscsi-devel@lists.sourceforge.net;
+> duane.grigsby@qlogic.com; James Dykman
+> Subject: [linux-iscsi-devel] [PATCH] iSCSI transport class
+>
+>
+> The attached patch adds an iSCSI transport class. It was
+> built against scsi-misc-2.6. It allows the software/virtual
+> iSCSI driver to remove at least one of its ioctl commands.
+> The patch also assumes the no multipath/failover rule in
+> llds applies to iSCSI drivers, so when we remove our
+> portal/portal_group failover support it will allow us to
+> kill all our ioctl commands execpt the session creation one
+> (that will take more thought).
+>
+> We would like to build some functions like the
+> unblock/block capabilites into the iscsi transport class
+> like James Smart has done with FC class. but initially we
+> would like to begin with this smaller patch that only provides
+> an iscsi sysfs interface.
+>
+> Comments? Suggestions?
+>
+> I put some patches to convert our driver here
+> http://www.cs.wisc.edu/~michaelc/iscsi/sysfs/
+> if you want to test the class out. Those patches
+> were made against the current linux-iscsi cvs tree.
+>
+> Mike Christie
+>
 
-	Luben
 
