@@ -1,50 +1,56 @@
-From: Craig Tierney <ctierney@hpti.com>
-Subject: Re: [HELP] qla2200 driver over 4G memory
-Date: Wed, 19 Jun 2002 09:57:47 -0600
+From: Luben Tuikov <luben@splentec.com>
+Subject: Re: Fwd: Patch - SCSI host numbers - please apply
+Date: Wed, 19 Jun 2002 12:26:34 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20020619095747.M20569@hpti.com>
-References: <20020619190228S.miyoshi@hpc.bs1.fc.nec.co.jp>
+Message-ID: <3D10B0BA.17090E63@splentec.com>
+References: <200206171604.57115.nahshon@actcom.co.il> <200206181514.52827.nahshon@actcom.co.il> <3D0FA398.8DA6C959@splentec.com> <200206190303.45188.nahshon@actcom.co.il>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20020619190228S.miyoshi@hpc.bs1.fc.nec.co.jp>; from miyoshi@hpc.bs1.fc.nec.co.jp on Wed, Jun 19, 2002 at 07:02:28PM +0900
 List-Id: linux-scsi@vger.kernel.org
-To: miyoshi@hpc.bs1.fc.nec.co.jp
-Cc: linux-scsi@vger.kernel.org
+To: nahshon@actcom.co.il
+Cc: Marcelo Tosatti <marcelo@conectiva.com.br>, linux-scsi <linux-scsi@vger.kernel.org>
 
-I haven't had to do this, but did you change the bios
-settings on the QLA2200 to allow the card to access
-memory above 4GB?  There is an option in there for
-this.
+Itai Nahshon wrote:
 
-Craig
+> I suspect there
+> is something wrong with your configuration or with the
+> way that you run your tests.
 
-On Wed, Jun 19, 2002 at 07:02:28PM +0900, miyoshi@hpc.bs1.fc.nec.co.jp wrote:
-> 
-> Hi, all
-> 
-> I am using QLA2200 on my IA64 box and when I read data to
-> the area which strides over 4G boundaries, it seems to read
-> the disk data into wrap-around memory area.
-> 
-> I wrote small test kernel patch and read disk contents to
-> physical 0x1ffffc000 to 0x200013fff (0x18000 bytes.)
-> It reads first 16K bytes into 0x1ffffc000-0x1ffffffff correctly
-> but destroys 0x100000000-0x100013fff.
-> 
-> I checked the incorrect data contents via kdb, and also
-> my printk() in qla2100_64bit_start_scsi() says the address is
-> correctly written into request ring, as far as I understood
-> the driver code correctly.
-> 
-> Does anybody have idea?
-> 
-> Thanks,
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+What could be wrong with my configuration? Anything specific
+that you have in mind?
+
+What do you mean ``they way you run your tests''?
+Could you please elaborate...
+
+The second time you loaded the module did you get
+1 to 100 or 31 to 131?
+ 
+> My configuration:
+> RedHat 7.2, non-SMP. All the updates from RedHat applied +KDE-3.0.
+> Relevant RPMS:
+>         gcc-2.96-98
+>         cpp-2.96-98
+>         binutils-2.11.90.0.8-11
+>         modutils-2.4.13-0.7.1
+
+My configuration is as follows (RH7.1):
+- kernel: 2.4.18
+- gcc 3.0.4 
+Reading specs from /usr/local/lib/gcc-lib/i686-pc-linux-gnu/3.0.4/specs
+Configured with: ../gcc-3.0.4/configure --host=i686-pc-linux-gnu --with-gnu-as --with-gnu-ld
+--disable-win32-registry --enable-threads=posix
+Thread model: posix
+gcc version 3.0.4
+- GNU ld version 2.10.91 (with BFD 2.10.91.0.2)
+- modinfo (Linux modutils) 2.4.2
+
+This is very strange, maybe we should get someone else to
+independently test this? (scsi_reg.o with and without your patch
+on a 2.4.18.)
+
+Anyone?
 
 -- 
-Craig Tierney (ctierney@hpti.com)
+Luben
