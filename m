@@ -1,86 +1,79 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH] move max_sectors intitalization fully to scsi_register
-Date: Sun, 27 Apr 2003 17:18:55 +0200
+From: James Bottomley <James.Bottomley@steeleye.com>
+Subject: Re: [example PATCH - not for applying] exclude certain commands
+Date: 27 Apr 2003 10:41:45 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030427171855.A29698@lst.de>
+Message-ID: <1051458107.2427.25.camel@fuzzy>
+References: <UTC200304262144.h3QLiAt04450.aeb@smtp.cwi.nl>
+	<20030426151356.A8697@one-eyed-alien.net>
+	<1051397024.4089.86.camel@mulgrave>
+	<20030426183428.B8697@one-eyed-alien.net>
+	<1051409717.4089.146.camel@mulgrave>
+	<20030427023517.A15212@one-eyed-alien.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([212.34.181.86]:24845 "EHLO verein.lst.de")
-	by vger.kernel.org with ESMTP id S264676AbTD0PGn (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 27 Apr 2003 11:06:43 -0400
-Content-Disposition: inline
+Received: from nat9.steeleye.com ([65.114.3.137]:42500 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S263138AbTD0P3w (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 27 Apr 2003 11:29:52 -0400
+In-Reply-To: <20030427023517.A15212@one-eyed-alien.net>
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org
+To: Matthew Dharm <mdharm-scsi@one-eyed-alien.net>
+Cc: Andries.Brouwer@cwi.nl, greg@kroah.com, SCSI Mailing List <linux-scsi@vger.kernel.org>, linux-usb-devel@lists.sourceforge.net
 
-Addresses the fixme in scsi_alloc_queue.
+On Sun, 2003-04-27 at 04:35, Matthew Dharm wrote:
+> I don't see a way to know the byte count without having additional
+> knowledge about the device.  Maybe I'm wrong -- I certainly don't claim to
+> be a SCSI expert.  So explain it to me.
+
+Certainly.  It's documented in the SCSI3 Primary commands (for
+reference, I'm using SPC-3 r12), section 4.3.
+
+The SCSI opcode is divided into a group code (bits 7-5) and a Command
+Code (bits 4-0), see section 4.3.4.1.
+
+The group code identifies the command length:
+
+Group		Length
+0		6 byte
+1		10 byte
+2		10 byte
+3		reserved (except for 0x7f, the variable length commands)
+4		16 byte
+5		12 byte
+6		vendor specific
+7		vendor specific
+
+Thus, when you | 0x40 into MODE_SENSE, you change it from group0 to
+group2 and it becomes a ten byte command.
+
+For each of the non vendor specific groups, called the fixed length
+commands, the location of the transfer count in each command is laid out
+in the standard, too, section 4.3.3 (as well as other things like the
+block location).
+
+They are
+
+Command	Size	transfer offset		transfer size
+6 byte		byte 4			1 byte
+10 byte		byte 7			2 bytes
+12 byte		byte 6			4 bytes
+16 byte		byte 10			4 bytes
+32 byte(*)	byte 28			2 bytes
+
+* The 32 byte commands are variable length commands (opcode 0x7f) with
+Additional CDB length set to 0x18.  The actual command is specified in
+the service action field (two bytes).
+
+So the algorithm is quite simple: you get the command length from the
+group (using a table with one exception for the 32 byte commands), and
+then extract the transfer length from the command
+
+For the other reserved or vendor specific commands, you just return -1
+or some other indicator that we have to believe the buffer length to be
+the command length.
+
+James
 
 
---- 1.57/drivers/scsi/hosts.c	Tue Apr 15 13:20:37 2003
-+++ edited/drivers/scsi/hosts.c	Sun Apr 27 13:26:36 2003
-@@ -424,8 +424,14 @@
- 	shost->use_clustering = shost_tp->use_clustering;
- 	if (!blk_nohighio)
- 		shost->highmem_io = shost_tp->highmem_io;
--
--	shost->max_sectors = shost_tp->max_sectors;
-+	if (!shost_tp->max_sectors) {
-+		/*
-+		 * Driver imposes no hard sector transfer limit.
-+		 * start at machine infinity initially.
-+		 */
-+		shost->max_sectors = SCSI_DEFAULT_MAX_SECTORS;
-+	} else
-+		shost->max_sectors = shost_tp->max_sectors;
- 	shost->use_blk_tcq = shost_tp->use_blk_tcq;
- 
- 	spin_lock(&scsi_host_list_lock);
---- 1.84/drivers/scsi/scsi_lib.c	Mon Apr 21 10:17:33 2003
-+++ edited/drivers/scsi/scsi_lib.c	Sun Apr 27 14:19:35 2003
-@@ -1257,28 +1236,15 @@
- 	return BLK_BOUNCE_HIGH;
- }
- 
--request_queue_t *scsi_alloc_queue(struct scsi_device *sdev)
-+struct request_queue *scsi_alloc_queue(struct scsi_device *sdev)
- {
--	request_queue_t *q;
--	struct Scsi_Host *shost;
-+	struct Scsi_Host *shost = sdev->host;
-+	struct request_queue *q = kmalloc(sizeof(*q), GFP_ATOMIC);
- 
--	q = kmalloc(sizeof(*q), GFP_ATOMIC);
- 	if (!q)
- 		return NULL;
- 	memset(q, 0, sizeof(*q));
- 
--	/*
--	 * XXX move host code to scsi_register
--	 */
--	shost = sdev->host;
--	if (!shost->max_sectors) {
--		/*
--		 * Driver imposes no hard sector transfer limit.
--		 * start at machine infinity initially.
--		 */
--		shost->max_sectors = SCSI_DEFAULT_MAX_SECTORS;
--	}
--
- 	blk_init_queue(q, scsi_request_fn, &sdev->sdev_lock);
- 	blk_queue_prep_rq(q, scsi_prep_fn);
- 
-@@ -1289,11 +1255,10 @@
- 
- 	if (!shost->use_clustering)
- 		clear_bit(QUEUE_FLAG_CLUSTER, &q->queue_flags);
--
- 	return q;
- }
- 
--void scsi_free_queue(request_queue_t *q)
-+void scsi_free_queue(struct request_queue *q)
- {
- 	blk_cleanup_queue(q);
- 	kfree(q);
