@@ -1,73 +1,42 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: 3ware queue depth [was: Re: HIGHMEM4G config for 1GB RAM on desktop?]
-Date: Sat, 4 Sep 2004 12:10:08 +0200
+From: James.Smart@Emulex.Com
+Subject: RE: [PATCH] [Update] suspending I/Os to a device
+Date: Sat, 4 Sep 2004 06:50:39 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040904101008.GC1610@suse.de>
-References: <200408021602.34320.swsnyder@insightbb.com> <1094030083l.3189l.2l@traveler> <1094030194l.3189l.3l@traveler> <200409010233.31643.lkml@lpbproductions.com> <1094032735l.3189l.7l@traveler> <20040901110944.A10160@infradead.org> <1094036919l.3189l.11l@traveler> <20040901194325.GA11762@beaverton.ibm.com> <1094077436l.22433l.3l@drinkel.cistron.nl>
+Message-ID: <0B1E13B586976742A7599D71A6AC733C02D943@xbl3.ma.emulex.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns.virtualhost.dk ([195.184.98.160]:9152 "EHLO virtualhost.dk")
-	by vger.kernel.org with ESMTP id S269865AbUIDKLe (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 4 Sep 2004 06:11:34 -0400
-Content-Disposition: inline
-In-Reply-To: <1094077436l.22433l.3l@drinkel.cistron.nl>
+Received: from emulex.emulex.com ([138.239.112.1]:60608 "EHLO
+	emulex.emulex.com") by vger.kernel.org with ESMTP id S269875AbUIDKu6 convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 4 Sep 2004 06:50:58 -0400
+content-class: urn:content-classes:message
 List-Id: linux-scsi@vger.kernel.org
-To: Miquel van Smoorenburg <miquels@cistron.nl>
-Cc: Patrick Mansfield <patmans@us.ibm.com>, Christoph Hellwig <hch@infradead.org>, lkml@lpbproductions.com, Timothy Miller <miller@techsource.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: James.Bottomley@SteelEye.com
+Cc: linux-scsi@vger.kernel.org, hch@infradead.org, andmike@us.ibm.com
 
-On Wed, Sep 01 2004, Miquel van Smoorenburg wrote:
-> On Wed, 01 Sep 2004 21:43:25, Patrick Mansfield wrote:
-> >On Wed, Sep 01, 2004 at 11:08:39AM +0000, Miquel van Smoorenburg wrote:
-> >
-> >> +	/* make sure blockdev queue depth is at least 2 * scsi depth */
-> >> +	if (SDptr->request_queue->nr_requests < 2 * max_cmds)
-> >> +		SDptr->request_queue->nr_requests = 2 * max_cmds;
-> >
-> >Why would you want nr_requests different (and larger) only for this
-> >driver?
+Excellent.  We're also struggling as our management interfaces need an sdev_target to hang about a dozen other attributes on. In fact - the fc_transport attributes today, replicated per lun, are actually sdev_target attributes.
+
+-- james s
+
+> -----Original Message-----
+> From: James Bottomley [mailto:James.Bottomley@SteelEye.com]
+> Sent: Friday, September 03, 2004 7:24 PM
+> To: Smart, James
+> Cc: SCSI Mailing List; hch@infradead.org; MikeAnderson
+> Subject: Re: [PATCH] [Update] suspending I/Os to a device
 > 
-> Because for the Linux I/O scheduler to work, nr_requests needs to
-> be at least twice as big as the scsi queue depth.
-
-Well, basically if you want to have a chance to do any io scheduling
-anywhere, you need to have more than 1 request to play with really. And
-if the drive is swallowing all your requests all the time, you are
-screwed. I do think the best option (as some people mentioned in this
-thread) is to limit the 3ware queue depth, not increase the io scheduler
-depth. At least for most of the current io schedulers, this will kill
-your latency quite a bit.
-
-> >Is modifying nr_requests allowed?
 > 
-> Well we need to do the same things that ll_rw_blk::queue_requests_store()
-> does, only we don't need to worry about locking or existing queue
-> contents since the queue has been instantiated but the scsi device
-> is not active yet.
+> On Fri, 2004-09-03 at 16:31, James.Smart@Emulex.Com wrote:
+> > Here's the patch updated based on Christoph's comments.
 > 
-> I do notice now however, that between 2.6.4 and 2.6.9-rc1
-> blk_queue_congestion_threshold() has been added which we should
-> probably call after adjusting nr_requests. Unfortunately it's
-> a static function in ll_rw_blk.c ..
+> I'd still like to see the timer itself housed inside the transport
+> class.  Although, it needs to hang off something attached to the
+> sdev_target.  Let me see if I can cook up something that 
+> would do this.
 > 
-> Perhaps we should export the functionality of queue_requests_store()
-> as, say, queue_adjust_nr_requests() (like scsi_adjust_queue_depth) ?
-> Jens ?
-
-Yes, if you want to do this, we need to export a function to do it that
-takes care of updating the block layer congestion (etc) data.
-
-> Anyway, for now, perhaps the mucking with nr_requests should be
-> taken out and a change like the above should be sent to the
-> people at 3ware.
-
-Indeed.
-
-> I'll submit the sysfs code for inclusion in -mm and the nr_requests
-> stuff to 3ware.
-
-Great!
-
--- 
-Jens Axboe
-
+> James
+> 
+> 
+> 
