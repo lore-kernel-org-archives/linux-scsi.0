@@ -1,39 +1,25 @@
-From: Oliver Neukum <oliver@neukum.name>
-Subject: Re: [PATCH / RFC] scsi_set_host_offline
-Date: Tue, 4 Mar 2003 01:03:18 +0100
+From: Andre Hedrick <andre@linux-ide.org>
+Subject: Large DMA Scatter Gather (48bit)
+Date: Tue, 4 Mar 2003 01:24:08 -0800 (PST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <200303040103.18491.oliver@neukum.name>
-References: <20030303221532.GB1587@beaverton.ibm.com>
+Message-ID: <Pine.LNX.4.10.10303040121530.31347-100000@master.linux-ide.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <20030303221532.GB1587@beaverton.ibm.com>
+Received: from localhost (andre@localhost)
+	by master.linux-ide.org (8.9.3/8.9.3) with ESMTP id BAA31450
+	for <linux-scsi@vger.kernel.org>; Tue, 4 Mar 2003 01:24:08 -0800
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Anderson <andmike@us.ibm.com>, linux-scsi@vger.kernel.org
-Cc: mdharm-scsi@one-eyed-alien.net
+To: linux-scsi@vger.kernel.org
 
-Am Montag, 3. M=E4rz 2003 23:15 schrieb Mike Anderson:
-> I have added a scsi_set_host_offline which supplements
-> scsi_set_device_offline. host_lock should not be held on call of eith=
-er
-> one of these functions.
 
-Very good.
+Okay given SAS is around the corner.
+I have an HBA that is not released yet but does require large DMA tables.
+If anyone has a clue or a hint how to do this in 2.4, you have my
+attention.
 
-> Currently scsi_set_host_offline is just setting
-> each sdev in my_devices offline, but could be expanded without changi=
-ng
-> the api to the LLDD.
+Cheers,
 
-Don't we need to disallow further devices being discovered on this
-host's busses before we set the existing devices offline?
+Andre Hedrick
+LAD Storage Consulting Group
 
-	Regards
-		Oliver
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
