@@ -1,130 +1,45 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH] don't create /proc/scsi/ entries for drivers without ->proc_info
-Date: Wed, 28 May 2003 12:44:10 +0200
+From: =?iso-8859-1?Q?J=F6rn?= Engel <joern@wohnheim.fh-wedel.de>
+Subject: Re: [RFR] a new SCSI driver
+Date: Wed, 28 May 2003 20:25:00 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030528104410.GB25986@lst.de>
+Message-ID: <20030528182500.GB25188@wohnheim.fh-wedel.de>
+References: <200305251119.h4PBJOal000678@81-2-122-30.bradfords.org.uk> <Pine.LNX.4.50.0305250617440.19617-100000@montezuma.mastecende.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([212.34.189.10]:22724 "EHLO mail.lst.de")
-	by vger.kernel.org with ESMTP id S264660AbTE1Ka4 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 28 May 2003 06:30:56 -0400
+Received: from wohnheim.fh-wedel.de ([195.37.86.122]:9344 "EHLO
+	wohnheim.fh-wedel.de") by vger.kernel.org with ESMTP
+	id S264812AbTE1SM0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 28 May 2003 14:12:26 -0400
 Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.50.0305250617440.19617-100000@montezuma.mastecende.com>
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org
+To: Zwane Mwaikambo <zwane@linuxpower.ca>
+Cc: john@grabjohn.com, rmk@arm.linux.org.uk, jgarzik@pobox.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Current code just puts the driver name into it which is utterly useless
+On Sun, 25 May 2003 06:18:34 -0400, Zwane Mwaikambo wrote:
+> On Sun, 25 May 2003 john@grabjohn.com wrote:
+>=20
+> > Also embedded world !=3D PDAs.=20
+>=20
+> I don't mean to troll, but could you elaborate on that.
 
+There are two common definitions for embedded.  One means something
+very small, low power consumption etc.  The other is no
+user-interface.  PDA fits one definition, but not the other.
 
-diff -Nru a/drivers/scsi/scsi_proc.c b/drivers/scsi/scsi_proc.c
---- a/drivers/scsi/scsi_proc.c	Tue May 27 14:52:15 2003
-+++ b/drivers/scsi/scsi_proc.c	Tue May 27 14:52:15 2003
-@@ -42,48 +42,15 @@
- EXPORT_SYMBOL(proc_scsi);
- 
- 
--/* Used if the driver currently has no own support for /proc/scsi */
--static int generic_proc_info(char *buffer, char **start, off_t offset,
--			     int count, const char *(*info)(struct Scsi_Host *),
--			     struct Scsi_Host *shost)
--{
--	int len, pos, begin = 0;
--	static const char noprocfs[] =
--		"The driver does not yet support the proc-fs\n";
+Everyone knows what embedded is, but not everyone agrees with the
+others definition. ;)
+
+J=F6rn
+
+--=20
+Measure. Don't tune for speed until you've measured, and even then
+don't unless one part of the code overwhelms the rest.
+-- Rob Pike
 -
--	if (info && shost)
--		len = sprintf(buffer, "%s\n", info(shost));
--	else
--		len = sprintf(buffer, "%s\n", noprocfs);
--
--	pos = len;
--	if (pos < offset) {
--		len = 0;
--		begin = pos;
--	}
--
--	*start = buffer + (offset - begin);
--	len -= (offset - begin);
--	if (len > count)
--		len = count;
--
--	return len;
--}
--
- static int proc_scsi_read(char *buffer, char **start, off_t offset,
- 			  int length, int *eof, void *data)
- {
- 	struct Scsi_Host *shost = data;
- 	int n;
- 
--	if (shost->hostt->proc_info == NULL)
--		n = generic_proc_info(buffer, start, offset, length,
--				      shost->hostt->info, shost);
--	else
--		n = shost->hostt->proc_info(shost, buffer, start, offset,
--					   length, 0);
--
-+	n = shost->hostt->proc_info(shost, buffer, start, offset, length, 0);
- 	*eof = (n < length);
-+
- 	return n;
- }
- 
-@@ -95,8 +62,6 @@
- 	char *page;
- 	char *start;
-     
--	if (!shost->hostt->proc_info)
--		return -ENOSYS;
- 	if (count > PROC_BLOCK_SIZE)
- 		return -EOVERFLOW;
- 
-@@ -118,6 +83,9 @@
- 	struct proc_dir_entry *p;
- 	char name[10];
- 
-+	if (!sht->proc_info)
-+		return;
-+
- 	if (!sht->proc_dir) {
- 		sht->proc_dir = proc_mkdir(sht->proc_name, proc_scsi);
-         	if (!sht->proc_dir) {
-@@ -130,27 +98,29 @@
- 
- 	sprintf(name,"%d", shost->host_no);
- 	p = create_proc_read_entry(name, S_IFREG | S_IRUGO | S_IWUSR,
--			shost->hostt->proc_dir, proc_scsi_read, shost);
-+			sht->proc_dir, proc_scsi_read, shost);
- 	if (!p) {
- 		printk(KERN_ERR "%s: Failed to register host %d in"
- 		       "%s\n", __FUNCTION__, shost->host_no,
--		       shost->hostt->proc_name);
-+		       sht->proc_name);
- 		return;
- 	} 
- 
- 	p->write_proc = proc_scsi_write_proc;
- 	p->owner = shost->hostt->module;
--
- }
- 
- void scsi_proc_host_rm(struct Scsi_Host *shost)
- {
-+	Scsi_Host_Template *sht = shost->hostt;
- 	char name[10];
- 
--	sprintf(name,"%d", shost->host_no);
--	remove_proc_entry(name, shost->hostt->proc_dir);
--	if (!shost->hostt->present)
--		remove_proc_entry(shost->hostt->proc_name, proc_scsi);
-+	if (sht->proc_info) {
-+		sprintf(name,"%d", shost->host_no);
-+		remove_proc_entry(name, sht->proc_dir);
-+		if (!sht->present)
-+			remove_proc_entry(sht->proc_name, proc_scsi);
-+	}
- }
- 
- static int proc_print_scsidevice(struct device *dev, void *data)
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
