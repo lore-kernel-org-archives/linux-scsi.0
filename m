@@ -1,58 +1,32 @@
-From: Matthew Wilcox <willy@debian.org>
-Subject: Re: U160 on sym53c8xx very slow
-Date: Mon, 20 Oct 2003 14:32:18 +0100
+From: "Tony Battersby" <tonyb@cybernetics.com>
+Subject: RE: U160 on sym53c8xx very slow
+Date: Mon, 20 Oct 2003 09:48:41 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20031020133218.GK18370@parcelfarce.linux.theplanet.co.uk>
+Message-ID: <03Oct20.094816edt.332465@cyborg.cybernetics.com>
 References: <pan.2003.10.20.13.02.47.426779@mandrakesoft.com>
+Reply-To: <tonyb@cybernetics.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:39382 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S262570AbTJTNcT
+Received: from cyborg.cybernetics.com ([206.246.200.18]:41226 "EHLO
+	cybernetics.com") by vger.kernel.org with ESMTP id S262569AbTJTNsX
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 20 Oct 2003 09:32:19 -0400
-Content-Disposition: inline
+	Mon, 20 Oct 2003 09:48:23 -0400
 In-Reply-To: <pan.2003.10.20.13.02.47.426779@mandrakesoft.com>
 List-Id: linux-scsi@vger.kernel.org
-To: nico <nico@mandrakesoft.com>
-Cc: linux-scsi@vger.kernel.org
+To: 'nico' <nico@mandrakesoft.com>, linux-scsi@vger.kernel.org
 
-On Mon, Oct 20, 2003 at 03:02:47PM +0200, nico wrote:
-> I have very poor performance with my Ultra160 disks (fujitsu MAN3184MP,
-> 10000rpms).
-> When I copy a reasonably large (500MB) file from /dev/sda2 to /dev/sda3,
-> it copies at a rate of 10-20 MB/sec maximum.
-> I was expecting better troughput.
-> 
-> Here is the result of a dmesg:
+> sym0: Symbios NVRAM, ID 7, Fast-80, SE, parity checking
 
-(Thanks for the dmesg, this is exactly what you needed to report).
+SE == Single-ended
 
-> sym0:6: FAST-20 WIDE SCSI 40.0 MB/s ST (50.0 ns, offset 31)
+You are using a single-ended terminator, which limits the SCSI bus to 40
+MB/s bandwidth.  Try a LVD terminator which should give you the full 160
+MB/s.  But remember that this only increases the speed at which data can
+burst over the SCSI bus, not the speed at which the disk can access the
+media.
 
-Here's the problem.  For some reason, your 160MB/s disc and 160MB/s
-controller have only managed to negotiate 40MB/s between them.
+Anthony J. Battersby
+Cybernetics
 
-You're copying from sda2 to sda3, so you should get approx half of that
--- 20MB/s which fits with your report (reductions from there would be
-due to head seeks and so on).
-
-> Something wrong with my configuration? Is it a setting of my adapter
-> (Tekram DC-390-U3W) that is wrong? Should I plug it on another pci slot?
-> Else?
-
-I think PCI slot is very unlikely.  Try a shorter SCSI cable, perhaps.
-
-BTW, looking at
-http://www.fujitsu.com/support/computing/storage/hdd/eol/ehdd/man3-catalog.html
-shows you can only expect a maximum of 40MB/s in your test:
-
-Data transfer rate 	To/from media	52.0 to 84.1 MB/s
-			To/from host	160 MB/s
-
-We need to try to figure out why you only get half that though.
-
--- 
-"It's not Hollywood.  War is real, war is primarily not about defeat or
-victory, it is about death.  I've seen thousands and thousands of dead bodies.
-Do you think I want to have an academic debate on this subject?" -- Robert Fisk
