@@ -1,44 +1,45 @@
-From: Adrian Bunk <bunk@stusta.de>
-Subject: Re: [2.6 patch] SCSI aic7xxx: kill kernel 2.2 #ifdef's
-Date: Sun, 24 Oct 2004 11:46:24 +0200
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH 1/1] build modular usb isd200 with modular ide
+Date: Sun, 24 Oct 2004 12:03:19 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20041024094624.GB4216@stusta.de>
-References: <20041023185609.GC3790@stro.at>
+Message-ID: <20041024100319.GA17183@lst.de>
+References: <200410240055.i9O0taCf006206@falcon10.austin.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emailhub.stusta.mhn.de ([141.84.69.5]:19730 "HELO
-	mailout.stusta.mhn.de") by vger.kernel.org with SMTP
-	id S261412AbUJXJqz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 24 Oct 2004 05:46:55 -0400
+Received: from verein.lst.de ([213.95.11.210]:35234 "EHLO mail.lst.de")
+	by vger.kernel.org with ESMTP id S261416AbUJXKDv (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 24 Oct 2004 06:03:51 -0400
 Content-Disposition: inline
-In-Reply-To: <20041023185609.GC3790@stro.at>
+In-Reply-To: <200410240055.i9O0taCf006206@falcon10.austin.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, James.Bottomley@SteelEye.com
+To: Doug Maxey <dwm@austin.ibm.com>
+Cc: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>, Paul Mackerras <paulus@samba.org>, Greg Kroah-Hartman <greg@kroah.com>, Linux SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux IDE Mailing List <linux-ide@vger.kernel.org>, linuxppc64-dev@ozlabs.org
 
-On Sat, Oct 23, 2004 at 08:56:09PM +0200, maximilian attems wrote:
+On Sat, Oct 23, 2004 at 07:55:36PM -0500, Doug Maxey wrote:
 > 
-> previous was wrong also removed 2.4 compatibility sorry.
-> resent
+> Name: inline ide_fix_driveid()
 > 
+> Rationale:
+> 	This is a fix for bugme.osdl 3819.
+
+bugme.osdl.org doesn't know of a bug #3819.
+
+> 	With any of the 2.6.9 release flavors (vanilla, mm1, ac3), one
+> 	cannot build the usb isd200 module due to the dependency on
+> 	ide_fix_driveid() being exported from ide-iops.
 > 
-> the kjt patchset has an similar patch, that got sent to James:
-> the bits below were a leftover of a janitor patch removing
-> aic7xxx and aic79xx old ifdefs.
->...
+> Description:
+> 	When building IDE modular, the current ide_fix_driveid() is
+> 	exported from ide-iops.c.  This patch makes the function an inline.
 
-Thanks for this information.
+Still doesn't make any sense. ide_fix_driveid is properly exported from
+ide-iops.c, so you use it from other modules.  The only case that
+doesn't work is modular ide and builtin usb-storage, and the BLK_DEV_IDE 
+depency should fix that one.
 
-This patch seems pretty similar to my patch with the exception that it 
-doesn't remove ahc_power_state_change.
-
-cu
-Adrian
-
--- 
-
-       "Is there not promise of rain?" Ling Tan asked suddenly out
-        of the darkness. There had been need of rain for many days.
-       "Only a promise," Lao Er said.
-                                       Pearl S. Buck - Dragon Seed
+If you think that depency is ugly (I do) just copy the routine to
+isd200.c, it's a) too large to inline but b) just a trivial byteswap
+that should need much changes over time.
 
