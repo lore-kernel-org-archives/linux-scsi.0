@@ -1,51 +1,45 @@
-From: Mike Anderson <andmike@us.ibm.com>
-Subject: Re: SCSI kobject unregistration ordering problem
-Date: Mon, 20 Oct 2003 10:07:11 -0700
+From: Pat LaVarre <p.lavarre@ieee.org>
+Subject: Re: zero block writes
+Date: 20 Oct 2003 11:55:57 -0600
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20031020170711.GA5183@beaverton.ibm.com>
-References: <20031013151254.521d882e.akpm@osdl.org> <20031017133429.C27349@infradead.org> <20031017155008.GA1298@beaverton.ibm.com>
+Message-ID: <1066672557.2271.7.camel@patehci2>
+References: <1066160907.3501.9.camel@patehci2> <3F8C79F0.6070105@torque.net>
+	 <1066173526.3037.51.camel@patehci2>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e33.co.us.ibm.com ([32.97.110.131]:61351 "EHLO
-	e33.co.us.ibm.com") by vger.kernel.org with ESMTP id S262583AbTJTREo
+Received: from email-out2.iomega.com ([147.178.1.83]:2944 "EHLO
+	email.iomega.com") by vger.kernel.org with ESMTP id S262692AbTJTR4F
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 20 Oct 2003 13:04:44 -0400
-Content-Disposition: inline
-In-Reply-To: <20031017155008.GA1298@beaverton.ibm.com>
+	Mon, 20 Oct 2003 13:56:05 -0400
+In-Reply-To: <1066173526.3037.51.camel@patehci2>
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>, Andrew Morton <akpm@osdl.org>, linux-scsi@vger.kernel.org, Patrick Mochel <mochel@osdl.org>, Greg KH <greg@kroah.com>, Andrey Borzenkov <arvidjaar@mail.ru>
+To: dougg@torque.net
+Cc: linux-scsi@vger.kernel.org
 
-Mike Anderson [andmike@us.ibm.com] wrote:
+> > From: dougg@torque.net ...
+> >
+> > Also when I tested this on scsi_debug, it complained
+> > about getting a NULL data buffer pointer.
 > 
-> While I have it working now without the block layer changes (i.e., no
-> delayed device_del call in SCSI). I also thought there was something
-> needed in the block layer, there may still need to be block layer
-> updates for other issues but I am currently not seeing them in my
-> testing. The issue scsi was having is related to sd_remove freeing the
-> scsi_disk structure to early in some cases. Since sd passed the
-> scsi_disk structure to the block layer subsystem in a gendisk private
-> data pointer sd needs to use a ref count / release function model to
-> know when to free scsi_disk. I am almost done with a few surprise
-> removal test cases and will post the patch for review today.
-> 
+> CONFIG_SCSI_DEBUG option of .config ...
 
-I posted Friday adding a release call to the scsi_disk structure and
-removing the delay call to device_del. On test8 this corrected the
-problem I was seeing of surprise removal with a mounted device. A pointer
-to the patch in the archive is below.
+I continue to see "scsi_debug" here might mean CONFIG_SCSI_DEBUG.  But
+in review later also I noticed the keyword "scsi_debug" appears nearby
+in Google in the context:
 
-http://marc.theaimsgroup.com/?l=linux-scsi&m=106646263401437&w=2
+Linux too has virtual SCSI devices.
 
-I will work today to send this patch to others that have posted bugzilla
-bugs related to this same failure mode and see if this patch corrects
-there problem.
+For Linux 2.4:
+http://www.torque.net/sg/sdebug.html
 
-Based on feedback I will update the patch and repost to linux-scsi and
-lkml.
+For Linux 2.6 since 2003 Oct 8:
+http://www.torque.net/sg/sdebug26.html
 
--andmike
---
-Michael Anderson
-andmike@us.ibm.com
+Whether it is the virtual scsi_debug device or the CONFIG_SCSI_DEBUG
+that complains of NULL data buffer pointers for us, I do not yet know.
+
+Pat LaVarre
+
 
