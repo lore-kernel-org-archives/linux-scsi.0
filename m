@@ -1,108 +1,65 @@
-From: Kurt Garloff <garloff@suse.de>
-Subject: PATCH 4/5: scsi-scan-dont-att-pq-notcon
-Date: Wed, 21 Apr 2004 16:14:17 +0200
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [linux-usb-devel] Numerous problems, partial success getting
+ FujiFilm Finepix 3800 to work under 2.6.
+Date: Wed, 21 Apr 2004 10:43:22 -0400 (EDT)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040421141417.GV28633@tpkurt.garloff.de>
-References: <20040418185751.GC4868@tpkurt.garloff.de> <1082330192.1969.37.camel@mulgrave> <20040420115419.GG4356@tpkurt.garloff.de> <1082471881.1804.34.camel@mulgrave> <20040420160334.GO4356@tpkurt.garloff.de> <20040421134511.GP28633@tpkurt.garloff.de>
+Message-ID: <Pine.LNX.4.44L0.0404211041220.1106-100000@ida.rowland.org>
+References: <40860003.1070406@nogin.org>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="EyuBRJR0MsVMWKTf"
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns.suse.de ([195.135.220.2]:18096 "EHLO Cantor.suse.de")
-	by vger.kernel.org with ESMTP id S262931AbUDUOOj (ORCPT
+Received: from ida.rowland.org ([192.131.102.52]:13326 "HELO ida.rowland.org")
+	by vger.kernel.org with SMTP id S263147AbUDUOnX (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 21 Apr 2004 10:14:39 -0400
-Content-Disposition: inline
-In-Reply-To: <20040421134511.GP28633@tpkurt.garloff.de>
+	Wed, 21 Apr 2004 10:43:23 -0400
+In-Reply-To: <40860003.1070406@nogin.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Linux SCSI list <linux-scsi@vger.kernel.org>
-Cc: James Bottomley <James.Bottomley@steeleye.com>, Andrew Morton <akpm@osdl.org>, Patrick Mansfield <patmans@us.ibm.com>
+To: Aleksey Nogin <aleksey@nogin.org>
+Cc: USB development list <linux-usb-devel@lists.sourceforge.net>, SCSI development list <linux-scsi@vger.kernel.org>
+
+On Tue, 20 Apr 2004, Aleksey Nogin wrote:
+
+> Thanks a lot for your feedback. Unfortunately, your patch does not seem 
+> to affect anything.
+
+Yes, now you come to mention it, I see there isn't any code in there to 
+retry the INQUIRY command after a Unit Attention!  All right, try this 
+patch instead.
+
+Alan Stern
 
 
---EyuBRJR0MsVMWKTf
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+===== drivers/scsi/scsi_scan.c 1.57 vs edited =====
+--- 1.57/drivers/scsi/scsi_scan.c	Wed Mar 17 14:05:26 2004
++++ edited/drivers/scsi/scsi_scan.c	Wed Apr 21 10:40:06 2004
+@@ -331,6 +331,7 @@
+ 	struct scsi_device *sdev = sreq->sr_device;	/* a bit ugly */
+ 	unsigned char scsi_cmd[MAX_COMMAND_SIZE];
+ 	int possible_inq_resp_len;
++	int count = 0;
+ 
+ 	*bflags = 0;
+  repeat_inquiry:
+@@ -351,14 +352,19 @@
+ 	SCSI_LOG_SCAN_BUS(3, printk(KERN_INFO "scsi scan: 1st INQUIRY %s with"
+ 			" code 0x%x\n", sreq->sr_result ?
+ 			"failed" : "successful", sreq->sr_result));
++	++count;
+ 
+ 	if (sreq->sr_result) {
+ 		if ((driver_byte(sreq->sr_result) & DRIVER_SENSE) != 0 &&
+ 		    (sreq->sr_sense_buffer[2] & 0xf) == UNIT_ATTENTION &&
+-		    sreq->sr_sense_buffer[12] == 0x28 &&
++		    (sreq->sr_sense_buffer[12] == 0x28 ||
++		     sreq->sr_sense_buffer[12] == 0x29) &&
+ 		    sreq->sr_sense_buffer[13] == 0) {
+-			/* not-ready to ready transition - good */
++			/* not-ready to ready transition or power-on - good */
+ 			/* dpg: bogus? INQUIRY never returns UNIT_ATTENTION */
++			/* Supposedly, but many buggy devices do so anyway */
++			if (count < 3)
++				goto repeat_inquiry;
+ 		} else
+ 			/*
+ 			 * assume no peripheral if any other sort of error
 
-
-Bugfix
-
-Don't attach high level drivers (except sg) to devices with peripheral
-qualifier indicating not connected (1) or not capable (3).
-SPC3, 7.4.2.
-
-diff -uNrp linux-2.6.5.nooffline/drivers/scsi/osst.c linux-2.6.5.dontattach=
-offl/drivers/scsi/osst.c
---- linux-2.6.5.nooffline/drivers/scsi/osst.c	2004-04-04 05:37:06.000000000=
- +0200
-+++ linux-2.6.5.dontattachoffl/drivers/scsi/osst.c	2004-04-21 14:29:38.0000=
-00000 +0200
-@@ -5433,8 +5433,11 @@ static int osst_probe(struct device *dev
- 	OSST_buffer    * buffer;
- 	struct gendisk * drive;
- 	int              i, mode, dev_num;
-+	int 		 pq =3D (SDp->inquiry[0] >> 5) & 7;
-=20
--	if (SDp->type !=3D TYPE_TAPE || !osst_supports(SDp))
-+	if (SDp->type !=3D TYPE_TAPE ||
-+	    !osst_supports(SDp) ||
-+	    pq !=3D SCSI_INQ_PQ_CON)
- 		return -ENODEV;
-=20
- 	drive =3D alloc_disk(1);
-diff -uNrp linux-2.6.5.nooffline/drivers/scsi/sr.c linux-2.6.5.dontattachof=
-fl/drivers/scsi/sr.c
---- linux-2.6.5.nooffline/drivers/scsi/sr.c	2004-04-20 21:51:41.000000000 +=
-0200
-+++ linux-2.6.5.dontattachoffl/drivers/scsi/sr.c	2004-04-21 14:29:38.000000=
-000 +0200
-@@ -553,9 +553,11 @@ static int sr_probe(struct device *dev)
- 	struct gendisk *disk;
- 	struct scsi_cd *cd;
- 	int minor, error;
-+	int pq =3D (sdev->inquiry[0] >> 5) & 7;
-=20
- 	error =3D -ENODEV;
--	if (sdev->type !=3D TYPE_ROM && sdev->type !=3D TYPE_WORM)
-+	if ((sdev->type !=3D TYPE_ROM && sdev->type !=3D TYPE_WORM) ||
-+	    pq !=3D SCSI_INQ_PQ_CON)
- 		goto fail;
-=20
- 	if ((error =3D scsi_device_get(sdev)) !=3D 0)
-diff -uNrp linux-2.6.5.nooffline/drivers/scsi/st.c linux-2.6.5.dontattachof=
-fl/drivers/scsi/st.c
---- linux-2.6.5.nooffline/drivers/scsi/st.c	2004-04-04 05:37:36.000000000 +=
-0200
-+++ linux-2.6.5.dontattachoffl/drivers/scsi/st.c	2004-04-21 14:29:38.000000=
-000 +0200
-@@ -3736,10 +3736,12 @@ static int st_probe(struct device *dev)
- 	ST_partstat *STps;
- 	ST_buffer *buffer;
- 	int i, j, mode, dev_num, error;
-+	int pq =3D (SDp->inquiry[0] >> 5) & 7;
- 	char *stp;
- 	u64 bounce_limit;
-=20
--	if (SDp->type !=3D TYPE_TAPE)
-+	if (SDp->type !=3D TYPE_TAPE ||
-+	    pq !=3D SCSI_INQ_PQ_CON)
- 		return -ENODEV;
- 	if ((stp =3D st_incompatible(SDp))) {
- 		printk(KERN_INFO
---=20
-Kurt Garloff  <garloff@suse.de>                            Cologne, DE=20
-SUSE LINUX AG, Nuernberg, DE                          SUSE Labs (Head)
-
---EyuBRJR0MsVMWKTf
-Content-Type: application/pgp-signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.2.4 (GNU/Linux)
-
-iD8DBQFAhoG5xmLh6hyYd04RAjpOAJ0baYmYctGhy4L9o7imuZ3EC81XKQCfWnvl
-ch5V4hT/n+tQFhsD+501yAk=
-=eF4e
------END PGP SIGNATURE-----
-
---EyuBRJR0MsVMWKTf--
