@@ -1,38 +1,57 @@
-From: Patrick Mansfield <patmans@us.ibm.com>
+From: Matthew Dharm <mdharm-scsi@one-eyed-alien.net>
 Subject: Re: [RFC] SCSI Hotplug for lk 2.5
-Date: Fri, 2 Aug 2002 12:58:40 -0700
+Date: Fri, 2 Aug 2002 13:37:01 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20020802125840.A795@eng2.beaverton.ibm.com>
-References: <3D49BCDB.392ACAA4@torque.net> <200208021113.g72BD2m01761@fachschaft.cup.uni-muenchen.de>
+Message-ID: <20020802133701.C31990@one-eyed-alien.net>
+References: <3D49BCDB.392ACAA4@torque.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/signed; micalg=pgp-md5;
+	protocol="application/pgp-signature"; boundary="f0KYrhQ4vYSV2aJu"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <200208021113.g72BD2m01761@fachschaft.cup.uni-muenchen.de>; from Oliver.Neukum@lrz.uni-muenchen.de on Fri, Aug 02, 2002 at 11:40:29AM +0200
+Content-Disposition: inline
+In-Reply-To: <3D49BCDB.392ACAA4@torque.net>; from dougg@torque.net on Thu, Aug 01, 2002 at 06:57:31PM -0400
 List-Id: linux-scsi@vger.kernel.org
-To: Oliver Neukum <Oliver.Neukum@lrz.uni-muenchen.de>
-Cc: Douglas Gilbert <dougg@torque.net>, linux-scsi@vger.kernel.org
+To: Douglas Gilbert <dougg@torque.net>
+Cc: linux-scsi@vger.kernel.org
 
-On Fri, Aug 02, 2002 at 11:40:29AM +0200, Oliver Neukum wrote:
-> 
-> How about new paths to a device? It seems that the FibreChannel
-> people need that.
 
-It is not only fibrechannel - dual initiated busses, dual ported
-devices, maybe iSCSI and maybe other low level drivers can have
-mutiple paths to the actual device.
+--f0KYrhQ4vYSV2aJu
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Did you see Doug's:
+On Thu, Aug 01, 2002 at 06:57:31PM -0400, Douglas Gilbert wrote:
+>                  SCSI Hotplug for lk 2.5
 
-  e)	for multipath devices I would expect a hotplug alert for
-	each path a device is discovered on (perhaps this is not
-	practical)	
+On a related note....
 
-With my current multi-path code, a hotplug per path is possible, and
-not difficult to add. The device alert (as Doug describes) already includes
-a path, we probably would also need some flag that says this is the first
-path; on removal, you would want a flag saying if this was the last path.
+It would be really nice if a low-level driver could signal, somehow, to the
+VFS layer that it was a hot-unpluggable device, and thus precautions should
+be taken (i.e. perfer mounting with -o sync, etc.)
 
-User level code would have to notice (for example) that a device was
-already found and mounted, and that this is just another path to the device.
+Matt
 
--- Patrick Mansfield
+--=20
+Matthew Dharm                              Home: mdharm-usb@one-eyed-alien.=
+net=20
+Maintainer, Linux USB Mass Storage Driver
+
+C:  They kicked your ass, didn't they?
+S:  They were cheating!
+					-- The Chief and Stef
+User Friendly, 11/19/1997
+
+--f0KYrhQ4vYSV2aJu
+Content-Type: application/pgp-signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.0.6 (GNU/Linux)
+Comment: For info see http://www.gnupg.org
+
+iD8DBQE9Su1tIjReC7bSPZARAg3QAJ9BtLM+f1WCEQwqT2I+cTl0J2IXkQCfdtLC
+SBUd4PJP1HWG5s+K2TCFkU0=
+=RnlC
+-----END PGP SIGNATURE-----
+
+--f0KYrhQ4vYSV2aJu--
