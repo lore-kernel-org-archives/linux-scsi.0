@@ -1,50 +1,47 @@
-From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
-Subject: RE: the problem about a320raid driver
-Date: Tue, 18 Jan 2005 08:28:30 -0500
-Message-ID: <60807403EABEB443939A5A7AA8A7458BA3C428@otce2k01.adaptec.com>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: [PATCH as448] Fix reference to deallocated memory in sr.c
+Date: Tue, 18 Jan 2005 09:56:22 -0500 (EST)
+Message-ID: <Pine.LNX.4.44L0.0501180955020.1457-100000@ida.rowland.org>
+References: <Pine.LNX.4.44L0.0501141052040.1341-100000@ida.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from magic.adaptec.com ([216.52.22.17]:26009 "EHLO magic.adaptec.com")
-	by vger.kernel.org with ESMTP id S261293AbVARN2c convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 18 Jan 2005 08:28:32 -0500
-content-class: urn:content-classes:message
+Received: from ida.rowland.org ([192.131.102.52]:2052 "HELO ida.rowland.org")
+	by vger.kernel.org with SMTP id S261312AbVARO4Z (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 18 Jan 2005 09:56:25 -0500
+In-Reply-To: <Pine.LNX.4.44L0.0501141052040.1341-100000@ida.rowland.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>, Richard Cai <richardc@sz.webex.com>
-Cc: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: SCSI development list <linux-scsi@vger.kernel.org>
 
-Christoph Hellwig writes:
-On Tue, Jan 18, 2005 at 05:39:03PM +0800, Richard Cai wrote:
->>    I am using intel SE7501WV2 server, with a AIC 7902(A) SCSI control
-,
->> a320raid driver. OS is redhat 8.0 , kernel is 2.4.18-14. if I run
-lsmod,
->> it showes the a320raid module is right. Now I want to recompile to
->> kernel , but every time when I run the command make install, it will
->> prompt : "No module a320raid found for kernel 2.4.18-14custom " . Who
->> can lead me a right way ? thanks. 
-> There's never been an a320raid module in the kernel tree.  Try to find
-> out where you got it from and ask them for the driver source.
+James:
 
-The driver is from Adaptec, and contains proprietary RAID code, and was
-release as a binary only.
+When I posted a patch last week to fix a reference to deallocated memory 
+in sd.c, I forgot to check whether the same problem exists in sr.c.  It 
+does, and here's the patch to fix it.
 
-You have three options:
-1) Risky, recompile using a `standard' RH configuration name (ie: drop
-custom) or be willing to do a forced load of the module, ignore the
-error or circumvent it, and reuse the distributed a320raid module as-is.
-If internal kernel structures change with your custom config, you will
-be SOL.
-2) Acquire the emd driver in combination with aic79xx. Emd reads the
-RAID metadata from the drives. Emd was released by Adaptec (Justin
-Gibbs) as reported in the raid list last year and is a public domain
-replacement for the a320raid driver.
-3) Drop the driver arrays and minimize your data losses, turn off
-HostRAID mode on the adapter and use the aic79xx driver. If you need the
-arrays, transition to one of dm, md or emd software RAID drivers.
+Alan Stern
 
-Sincerely -- Mark Salyzyn
+
+
+Signed-off-by: Alan Stern <stern@rowland.harvard.edu>
+
+===== drivers/scsi/sr.c 1.78 vs edited =====
+--- 1.78/drivers/scsi/sr.c	2005-01-11 11:57:28 -05:00
++++ edited/drivers/scsi/sr.c	2005-01-18 09:53:50 -05:00
+@@ -152,9 +152,11 @@
+ 
+ static inline void scsi_cd_put(struct scsi_cd *cd)
+ {
++	struct scsi_device *sdev = cd->device;
++
+ 	down(&sr_ref_sem);
+ 	kref_put(&cd->kref, sr_kref_release);
+-	scsi_device_put(cd->device);
++	scsi_device_put(sdev);
+ 	up(&sr_ref_sem);
+ }
+ 
+
