@@ -1,92 +1,76 @@
-From: Luben Tuikov <luben@splentec.com>
+From: Patrick Mansfield <patmans@us.ibm.com>
 Subject: Re: [PATCH] SCSI Core patches
-Date: Tue, 07 Jan 2003 17:14:19 -0500
+Date: Tue, 7 Jan 2003 14:53:00 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3E1B513B.2090409@splentec.com>
-References: <3E1ADC9A.6090800@splentec.com> <20030107102127.B15528@beaverton.ibm.com> <3E1B2934.8060805@splentec.com> <20030107123301.A16378@beaverton.ibm.com>
+Message-ID: <20030107145300.A16954@beaverton.ibm.com>
+References: <3E1ADC9A.6090800@splentec.com> <20030107102127.B15528@beaverton.ibm.com> <20030107194445.GC11402@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20030107194445.GC11402@redhat.com>; from dledford@redhat.com on Tue, Jan 07, 2003 at 02:44:45PM -0500
 List-Id: linux-scsi@vger.kernel.org
-To: Patrick Mansfield <patmans@us.ibm.com>
-Cc: linux-scsi@vger.kernel.org
+To: Luben Tuikov <luben@splentec.com>, linux-scsi@vger.kernel.org
 
-Patrick Mansfield wrote:
+On Tue, Jan 07, 2003 at 02:44:45PM -0500, Doug Ledford wrote:
+> On Tue, Jan 07, 2003 at 10:21:27AM -0800, Patrick Mansfield wrote:
+
+> > For use with multi-path, it is very useful to have the path in the
+> > scsi_cmnd, and generally to not have the lldd's know about the scsi_device
+> > at all, such that we can pick a path, and send a scsi_cmnd to a lldd.
+> > 
+> > Putting path information only in scsi_device makes it hard to do
+> > multi-path below (or even in) the block layer, and makes it hard to
+> > multi-path non block devices (like tape).
 > 
-> Removing channel/target/lun from scsi_cmnd forces the LLDD to use the
-> scsi_device (scmd->device-> channel/id/lun).
+> Not true at all.  This is completely an implementation issue.  If you 
+> implement scsi multipath in certain ways, then this is true.  My preferred 
+> implementation for something like this wouldn't have this problem at all.  
+> My preferred implementation would have one scsi_device struct per path, 
+> but would only register the first/primary device with the block layer (or 
+> char layer as the case may be), and during scsi_scan detection the 
+> duplicate paths would be added to the primary path by using a list_struct 
+> item to link the devices.  Then you pick the path by picking the device 
+> struct you need.  The primary path goes away, you change the device 
+> registration to point to a new primary path scsi_device struct.  So I 
+> don't see the difficulty at all myself.
 
-It forces them just as much as it forces them to use
-cmd->{lun, target, channel}. I.e. none at all.
+The hard part is making sure all of the references to scsi_device values
+are OK - that we correctly use and set the values across all of the
+scsi_devices that represent a single scsi device. It would be easy for a
+LLDD to screw this up, unless we have some sort of interface to get/set
+every value in scsi_device.
 
-All LLDD have been converted to use cmd->device->{lun, id, channel}.
+Plus we have the overhead of redundant data for the fields: type,
+scsi_level, inquiry, vendor, etc.
 
-You must agree that the tuple (COMMAND, (lun, target, channel))
-doesn't say as much as (COMMAND, DEVICE). Anywhich way you look at it,
-this is a better abstraction. LUN is a property of a *SCSI* device,
-and not of a SCSI command.
+And the atomic device_active might have to be re-done with SMP locking.
 
-SCSI LLDD provide transport, this is their function and existence. We
-need to represent the devices they provide and struct scsi_device is
-good for it. Multipathing shouldn't be stuffed into it. More below.
+I'm arguing for a linked list of structs that hold the minimum data we
+need to use them as a path - much like a scsi_device with the redundant
+fields removed (and if needed it can also point to the actual
+scsi_device). And then plugging this data (or a pointer) into a scsi_cmnd
+for use by the LLDD.
 
-> In order to allow selection of a path, we should abstract out the path
-> information, not lump it into a single pointer reference (i.e. not
-> scmd->device->lun) spread throughout the scsi mid and LLDD. If we had a
-> single macro or function to access the host/channel/target/lun, the issue
-> goes away, as there is only one point that we have to change for
-> multi-path. But if they are hardcoded into scsi_device, I'll have to
-> revert the changes for multi-path support.
+> > I would prefer we keep the current scsi_cmnd with its
+> > host/channel/target[id]/lun.
+> 
+> One of the goals of this change is to eliminate scsi_build_commandblocks() 
+> entirely and do away with keeping a per-device list of pre-allocated and 
+> pre-filled in commands.  We could put the data items back into the struct, 
+> but that would then mean that scsi_get_command() would have to init the 
+> items from the device struct in question, then the lldd would init their 
+> command from these items.  In short, it would save us having to change all 
+> the lldd (which Luben has already done), but would cost us double init'ing 
+> items for no real purpose.  I would prefer to leave them out.
 
-Right, right, but this is the *first* step; let's get it out of scsi command
-struct first. This opens up enough opportunities already. I.e. we're moving
-the pertinent information *up* where it belongs.
+As long as we have an interface (function or macro), I'm not strongly
+opposed to the above. We can keep the scsi_allocate_device (in dire need
+of a new name), and just have it allocate and init (or not) any fields as
+needed, so there is only one place to change the init of the allocated
+scsi_cmnd.
 
-BTW, in order to be able to do C::D::A(P) stuff as I mentioned in my previous
-letter, you'd have to have the device being an *abstract* device, and
-here we're dealing with SCSI devices which always have a LUN, for example.
-This is in SAM-3 and is unavoidable.
+Adding a new interface to get the host/channel/target/lun is not so easy,
+but IMO worthwhile.
 
-For this reason you might consider the suggestions by Doug, or research moving
-multipathing higher up into the char/block layer, or thereabouts.
-
-SCSI Core is *SCSI*, it's function well defined in delivery/receipt of SCSI
-commands and doing discovery of devices.
-
-Somewhere between write(fd, buf, count) and scsi_request_fn(), multipathing
-will have to have already occured (ideally).
-
-> For scsi_device yes, but the LLDD does not have to look at scsi_device to
-> send a command, it can currently use the values found in scsi_cmnd.
-
-You see, by abstractizing this way, you get rid of redundancies,
-which let's you do all those nice things which Doug mentioned.
-
-Getting rid of redundancies in data design and code design is important.
-
-> I don't see how 2) and 3) are tied into your changes. I can understand
-> your changes leading to fewer changes for a common pool of all
-> scsi_cmnd's.  But, we could also have a single pool if the
-> host/channel/target/lun were set separtely from the allocation.
-
-2 says that you can just grab the command and ``hook'' it
-on the device via its list member. The mechanism is very
-versatile -- take a look at it.
-
-3 comes from discussions with ppl, some research and my own
-implementation of a mini-scsi-core, but basically playing
-with the list member. Putting command on different queues
-depending on its status, etc.
-
-> I haven't found any good research papers, if anyone knows of some please
-> let me know (at least searching online, I should look in a real library).
-
-A real library is your best bet. Papers are sometimes not available online,
-but only in their respective periodicals due to copyright.
-
--- 
-Luben
-
-
-
+-- Patrick Mansfield
