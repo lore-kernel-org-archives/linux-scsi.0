@@ -1,79 +1,54 @@
-From: Thomas Steudten <alpha@steudten.com>
-Subject: Re: SOLVED: BUG: Kernel Panic: kernel-2.6.0-test9-bk21  for alpha
- in scsi context ll_rw_blk.c
-Date: Tue, 18 Nov 2003 22:29:04 +0100
-Sender: linux-alpha-owner@vger.kernel.org
-Message-ID: <3FBA8F20.3050701@steudten.com>
-References: <3FB92938.8040906@steudten.com> <87r806d6n6.fsf@student.uni-tuebingen.de> <3FB93EF6.807@steudten.com> <87islid5tq.fsf@student.uni-tuebingen.de> <20031118021922.A7816@den.park.msu.ru>
+From: Mark Haverkamp <markh@osdl.org>
+Subject: Re: [PATCH] aacraid updates for new proing APIs
+Date: Tue, 18 Nov 2003 13:29:22 -0800
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <1069190962.26419.29.camel@markh1.pdx.osdl.net>
+References: <20031118110110.A22400@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-alpha-owner@vger.kernel.org>
-In-Reply-To: <20031118021922.A7816@den.park.msu.ru>
-To: Ivan Kokshaysky <ink@jurassic.park.msu.ru>
-Cc: Falk Hueffner <falk.hueffner@student.uni-tuebingen.de>, Richard Henderson <rth@twiddle.net>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-alpha@vger.kernel.org, akpm@osdl.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from fw.osdl.org ([65.172.181.6]:6068 "EHLO mail.osdl.org")
+	by vger.kernel.org with ESMTP id S263788AbTKRV3a (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 18 Nov 2003 16:29:30 -0500
+In-Reply-To: <20031118110110.A22400@infradead.org>
 List-Id: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Mark Salyzyn <mark_salyzyn@adaptec.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
-Hi
+On Tue, 2003-11-18 at 03:01, Christoph Hellwig wrote:
+> Anyone interested in reviewing and testing this?
 
-With the patch from Ivan, the prefetch problem is gone.
-Please add this patch to the mainline for 2.6.0 for alpha.
+I tried it out on my system and it seems to be working OK.  It found my
+controller and configured the disks.  I can create a filesystem and copy
+files back and forth.  I'll keep testing for a while and let you know if
+I find something.
 
-Regards
-Tom
 
-> We shouldn't prefetch the spinlocks on UP.
-> 
-> Ivan.
-> 
-> --- 2.6/include/asm-alpha/processor.h	Sat Oct 25 22:44:54 2003
-> +++ linux/include/asm-alpha/processor.h	Tue Nov 18 01:48:39 2003
-> @@ -78,6 +78,11 @@ unsigned long get_wchan(struct task_stru
->  #define ARCH_HAS_PREFETCHW
->  #define ARCH_HAS_SPINLOCK_PREFETCH
->  
-> +#ifndef CONFIG_SMP
-> +/* Nothing to prefetch. */
-> +#define spin_lock_prefetch(lock)  	do { } while (0)
-> +#endif
-> +
->  #if __GNUC__ > 3 || (__GNUC__ == 3 && __GNUC_MINOR__ >= 1)
->  extern inline void prefetch(const void *ptr)  
->  { 
-> @@ -89,10 +94,13 @@ extern inline void prefetchw(const void 
->  	__builtin_prefetch(ptr, 1, 3);
->  }
->  
-> +#ifdef CONFIG_SMP
->  extern inline void spin_lock_prefetch(const void *ptr)  
+> +static int __devinit aac_probe_one(struct pci_dev *pdev,
+> +		const struct pci_device_id *id)
 >  {
->  	__builtin_prefetch(ptr, 1, 3);
->  }
-> +#endif
+> -	printk("aacraid: abort failed\n");
+> -	return FAILED;
+> +	unsigned index = id->driver_data;
+> +	struct Scsi_Host *shost;
+> +	struct fsa_scsi_hba *fsa_dev_ptr;
+> +	struct aac_dev *aac;
+> +	int container;
+> +	int error = -ENODEV;
 > +
->  #else
->  extern inline void prefetch(const void *ptr)  
->  { 
-> @@ -104,10 +112,13 @@ extern inline void prefetchw(const void 
->  	__asm__ ("ldq $31,%0" : : "m"(*(char *)ptr)); 
->  }
->  
-> +#ifdef CONFIG_SMP
->  extern inline void spin_lock_prefetch(const void *ptr)  
->  {
->  	__asm__ ("ldq $31,%0" : : "m"(*(char *)ptr)); 
->  }
-> +#endif
+> +	if (pci_enable_device(pdev))
+> +		goto out;
 > +
->  #endif /* GCC 3.1 */
->  
->  #endif /* __ASM_ALPHA_PROCESSOR_H */
+> +	pci_set_master(pdev);
+> +	pci_set_dma_mask(pdev, 0xFFFFFFFFULL);
 
+I've been told that the return value of this should be checked as it is
+possible for it to fail.
+
+
+Mark.
 -- 
-Tom
-
-LINUX user since kernel 0.99.x 1994.
-RPM Alpha packages at http://alpha.steudten.com/packages
-Want to know what S.u.S.E 1995 cdrom-set contains?
-
+Mark Haverkamp <markh@osdl.org>
 
