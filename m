@@ -1,84 +1,58 @@
-From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
-Subject: dpt_i2o scan fix for 2.4.* kernels
-Date: Tue, 8 Jun 2004 08:46:42 -0400
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: iRiver H100 series and usb-storage issues
+Date: Tue, 8 Jun 2004 10:19:23 -0400 (EDT)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <547AF3BD0F3F0B4CBDC379BAC7E4189FD238E7@otce2k03.adaptec.com>
+Message-ID: <Pine.LNX.4.44L0.0406081016280.1222-100000@ida.rowland.org>
+References: <87y8mzukwk.fsf@ceramic.fifi.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from magic.adaptec.com ([216.52.22.17]:24551 "EHLO magic.adaptec.com")
-	by vger.kernel.org with ESMTP id S265195AbUFHMqo convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 8 Jun 2004 08:46:44 -0400
-Received: from redfish.adaptec.com (redfish.adaptec.com [162.62.50.11])
-	by magic.adaptec.com (8.11.6/8.11.6) with ESMTP id i58CkiX13806
-	for <linux-scsi@vger.kernel.org>; Tue, 8 Jun 2004 05:46:44 -0700
-Received: from otce2k03.adaptec.com (otce2k03.adaptec.com [10.12.1.72])
-	by redfish.adaptec.com (8.11.6/8.11.6) with ESMTP id i58Ckho18597
-	for <linux-scsi@vger.kernel.org>; Tue, 8 Jun 2004 05:46:43 -0700
-content-class: urn:content-classes:message
+Received: from ida.rowland.org ([192.131.102.52]:4612 "HELO ida.rowland.org")
+	by vger.kernel.org with SMTP id S265210AbUFHOTY (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Jun 2004 10:19:24 -0400
+In-Reply-To: <87y8mzukwk.fsf@ceramic.fifi.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Philippe Troin <phil@fifi.org>
+Cc: James Bottomley <James.Bottomley@steeleye.com>, USB Storage list <usb-storage@lists.one-eyed-alien.net>, SCSI development list <linux-scsi@vger.kernel.org>
 
-This patch fixes a problem in the dpt_i2o driver that resulted from the
-initial scan re-using the scsi_device structure without resetting the
-hostdata portion back to zero. Duplicate devices would show up at ghost
-target ids. I have *not* checked if this similar behavior is observed in
-the 2.6.* kernels.
+On 7 Jun 2004, Philippe Troin wrote:
 
-This fix also adds a scan for lun holes and spoofs back a 0x7F inquiry
-response for those holes to permit proper target discovery. This portion
-of the `patch' is appropriate for both 2.4.* and 2.6.* kernel variants
-of this driver (+/-).
+> Alan Stern <stern@rowland.harvard.edu> writes:
+> 
+> > In the log you posted (at the URL above) the CSW was returned correctly.  
+> > The same is true for the messages you referred to.  So that was not the 
+> > source of the problem.
+> 
+> Okay, quite possibly, as I was pointing out I am mostly clueless
+> w.r.t. USB.  But what about:
+> 
+>   usb-storage: usb_stor_transfer_partial(): xfer 512 bytes
+>   usb-storage: usb_stor_bulk_msg() returned 0 xferred 0/512
+>   usb-storage: Bulk data transfer result 0x1
+>   usb-storage: Attempting to get CSW...
+>                ^^^^^^^^^^^^^^^^^^^^^^^^
+>   usb-storage: clearing endpoint halt for pipe 0xc0011e80
+>   usb-storage: usb_stor_clear_halt: result=0
+>   usb-storage: Attempting to get CSW (2nd try)...
+>                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>   usb-storage: Bulk status result = 0
+>   usb-storage: Bulk status Sig 0x53425355 T 0x945 R 512 Stat 0x0
+>   usb-storage: -- unexpectedly short transfer
+>   usb-storage: Issuing auto-REQUEST_SENSE
 
-Sincerely -- Mark Salyzyn
+Those are perfectly normal.  The spec allows a device to halt the 
+bulk-in endpoint the first time the host tries to read the CSW.  The 
+second attempted read is supposed to succeed, and indeed it did.
 
---- /tmp/dpt_i2o/dpt_i2o.c	Tue Jun  1 09:02:48 2004
-+++ dpt_i2o/dpt_i2o.c	Sat Jun  5 14:04:12 2004
-@@ -453,15 +563,29 @@
- 
- 	// TODO if the cmd->device if offline then I may need to issue a
-bus rescan
- 	// followed by a get_lct to see if the device is there anymore
--	if((pDev = (struct adpt_device*) (cmd->device->hostdata)) ==
-NULL) {
-+	if(((pDev = (struct adpt_device*) (cmd->device->hostdata)) ==
-NULL)
-+	 || ((cmd->cmnd[0] == INQUIRY)
-+	  && ((pDev->scsi_channel != cmd->device->channel)
-+	   || (pDev->scsi_id != cmd->device->id)
-+	   || (pDev->scsi_lun != cmd->device->lun)))) {
- 		/*
- 		 * First command request for this device.  Set up a
-pointer
- 		 * to the device structure.  This should be a
-TEST_UNIT_READY
- 		 * command from scan_scsis_single.
- 		 */
- 		if ((pDev = adpt_find_device(pHba,
-(u32)cmd->device->channel, (u32)cmd->device->id, (u32)cmd->device->lun))
-== NULL) {
-+	 		if (cmd->cmnd[0] == INQUIRY) {
-+				int lun = cmd->device->lun;
-+				while (lun < pHba->host->max_lun) {
-+					if (adpt_find_device(pHba,
-(u32)cmd->device->channel, (u32)cmd->device->id, lun) != NULL) {
-+			  			((u8*)cmd->buffer)[0] =
-0x7F;
-+						cmd->result = (DID_OK <<
-16);
-+						cmd->scsi_done(cmd);
-+						return 0;
-+					}
-+					++lun;
-+				}
-+			}
--			// TODO: if any luns are at this bus, scsi id
-then fake a TEST_UNIT_READY and INQUIRY response 
--			// with type 7F (for all luns less than the max
-for this bus,id) so the lun scan will continue.
- 			cmd->result = (DID_NO_CONNECT << 16);
- 			cmd->scsi_done(cmd);
- 			return 0;
+> > Do you know of anyone who has contributed to any versions of this thread 
+> > and still does have an H1xx?
+> 
+> No, I did not keep track.  Nothing prevents me from "trying" another
+> one if you're serious about fixing the above issues.
+
+I am serious about fixing this.  At the moment we don't have anything new
+for you to try, but maybe we'll come up with something soon.  I'm still
+waiting to hear from the SCSI people about how this should be handled...
+
+Alan Stern
+
