@@ -1,42 +1,90 @@
-From: Mike Anderson <andmike@us.ibm.com>
-Subject: Re: Question on qla2xxx Kconfig update in 2.6.2
-Date: Thu, 5 Feb 2004 08:58:07 -0800
+From: "Andrew Vasquez" <andrew.vasquez@qlogic.com>
+Subject: RE: Question on qla2xxx Kconfig update in 2.6.2
+Date: Thu, 5 Feb 2004 09:49:00 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040205165807.GB2498@beaverton.ibm.com>
-References: <20040205163722.GA2498@beaverton.ibm.com> <1075999192.1756.23.camel@mulgrave>
+Message-ID: <B179AE41C1147041AA1121F44614F0B0598EAD@AVEXCH02.qlogic.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e33.co.us.ibm.com ([32.97.110.131]:59339 "EHLO
-	e33.co.us.ibm.com") by vger.kernel.org with ESMTP id S266030AbUBEQxa
+Received: from [198.70.193.2] ([198.70.193.2]:23848 "EHLO avexch01.qlogic.com")
+	by vger.kernel.org with ESMTP id S266516AbUBERso convert rfc822-to-8bit
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 5 Feb 2004 11:53:30 -0500
-Content-Disposition: inline
-In-Reply-To: <1075999192.1756.23.camel@mulgrave>
+	Thu, 5 Feb 2004 12:48:44 -0500
+content-class: urn:content-classes:message
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, Andrew Vasquez <andrew.vasquez@qlogic.com>
+To: James Bottomley <James.Bottomley@SteelEye.com>, Mike Anderson <andmike@us.ibm.com>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-James Bottomley [James.Bottomley@SteelEye.com] wrote:
-> On Thu, 2004-02-05 at 11:37, Mike Anderson wrote:
-> > Is the usage of SCSI_QLA2XXX_CONFIG instead of SCSI_QLA2XXX correct in
-> > drivers/scsi/qla2xxx/Kconfig or have I just not had enough coffee this morning?
-> > 
-> > After a fresh bk pull and make config I could not get the qla2xxx
-> > directory selected during a make modules. If I change to using SCSI_QLA2XXX in the Kconfig file everything is fine.
+On Thursday, February 05, 2004 8:55 AM, James Bottomley wrote:
+> On Thu, 2004-02-05 at 11:58, Mike Anderson wrote:
+> > Should we fix it the other way around (i.e., have qla2xxx Kconfig
+> > use SCSI_QLA2XXX) to be consistent with other Kconfig users. I see
+> > only one other in the .config file that I am using that has a
+> > _CONFIG postfix. 
 > 
-> Erk, my fault.  I quietly fixed it by altering drivers/scsi/Makefile (to
-> make obj-$(CONFIG_SCSI_QLA2XXX_CONFIG) += qla2xxx/)
+> Well, least line of resistance when things don't work.
 > 
+> But I agree, removing the _CONFIG in qla2xxx/Kconfig does look better.
+> 
+> James
 
-ok.
+David Miller had already sent along a patch to me which removes the 
+_CONFIG suffix.  I'll attach it here.
 
-Should we fix it the other way around (i.e., have qla2xxx Kconfig
-use SCSI_QLA2XXX) to be consistent with other Kconfig users. I see only
-one other in the .config file that I am using that has a _CONFIG postfix.
-
--andmike
 --
-Michael Anderson
-andmike@us.ibm.com
+Andrew Vasquez
 
+
+===== drivers/scsi/qla2xxx/Kconfig 1.4 vs edited =====
+--- 1.4/drivers/scsi/qla2xxx/Kconfig	Mon Feb  2 08:02:05 2004
++++ edited/drivers/scsi/qla2xxx/Kconfig	Wed Feb  4 21:31:12 2004
+@@ -1,41 +1,41 @@
+-config SCSI_QLA2XXX_CONFIG
++config SCSI_QLA2XXX
+ 	tristate
+ 	default (SCSI && PCI)
+ 	depends on SCSI && PCI
+ 
+ config SCSI_QLA21XX
+ 	tristate "QLogic ISP2100 host adapter family support"
+-	depends on SCSI_QLA2XXX_CONFIG
++	depends on SCSI_QLA2XXX
+ 	---help---
+ 	This driver supports the QLogic 21xx (ISP2100) host adapter family.
+ 
+ config SCSI_QLA22XX
+ 	tristate "QLogic ISP2200 host adapter family support"
+-	depends on SCSI_QLA2XXX_CONFIG
++	depends on SCSI_QLA2XXX
+ 	---help---
+ 	This driver supports the QLogic 22xx (ISP2200) host adapter family.
+ 
+ config SCSI_QLA2300
+ 	tristate "QLogic ISP2300 host adapter family support"
+-	depends on SCSI_QLA2XXX_CONFIG
++	depends on SCSI_QLA2XXX
+ 	---help---
+ 	This driver supports the QLogic 2300 (ISP2300, and ISP2312) host
+ 	adapter family.
+ 
+ config SCSI_QLA2322
+ 	tristate "QLogic ISP2322 host adapter family support"
+-	depends on SCSI_QLA2XXX_CONFIG
++	depends on SCSI_QLA2XXX
+ 	---help---
+ 	This driver supports the QLogic 2322 (ISP2322) host adapter family.
+ 
+ config SCSI_QLA6312
+ 	tristate "QLogic ISP6312 host adapter family support"
+-	depends on SCSI_QLA2XXX_CONFIG
++	depends on SCSI_QLA2XXX
+ 	---help---
+ 	This driver supports the QLogic 6312 (ISP6312) host adapter family.
+ 
+ config SCSI_QLA6322
+ 	tristate "QLogic ISP6322 host adapter family support"
+-	depends on SCSI_QLA2XXX_CONFIG
++	depends on SCSI_QLA2XXX
+ 	---help---
+ 	This driver supports the QLogic 6322 (ISP6322) host adapter family.
