@@ -1,40 +1,67 @@
 From: Patrick Mansfield <patmans@us.ibm.com>
-Subject: Re: coding style question
-Date: Wed, 25 Feb 2004 14:40:37 -0800
+Subject: [announce] scsi_id release 0.4
+Date: Wed, 25 Feb 2004 14:41:13 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040225144037.A1284@beaverton.ibm.com>
-References: <20040225182523.GD25779@parcelfarce.linux.theplanet.co.uk> <Pine.LNX.4.44.0402251128430.6557-100000@dent.deepthot.org>
+Message-ID: <20040225144113.A1194@beaverton.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e31.co.us.ibm.com ([32.97.110.129]:50153 "EHLO
-	e31.co.us.ibm.com") by vger.kernel.org with ESMTP id S261661AbUBYWkn
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 25 Feb 2004 17:40:43 -0500
+Received: from e35.co.us.ibm.com ([32.97.110.133]:3794 "EHLO e35.co.us.ibm.com")
+	by vger.kernel.org with ESMTP id S261663AbUBYWlX (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 25 Feb 2004 17:41:23 -0500
 Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.44.0402251128430.6557-100000@dent.deepthot.org>; from denebeim@deepthot.org on Wed, Feb 25, 2004 at 11:40:27AM -0700
 List-Id: linux-scsi@vger.kernel.org
-To: Jay Denebeim <denebeim@deepthot.org>
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org, linux-hotplug-devel@lists.sourceforge.net
 
-On Wed, Feb 25, 2004 at 11:40:27AM -0700, Jay Denebeim wrote:
-> On Wed, 25 Feb 2004, Matthew Wilcox wrote:
-> 
-> > On Wed, Feb 25, 2004 at 06:16:48PM +0000, Jay Denebeim wrote:
-> (I mentioned typedefs being removed)
-> > > what was the reasoning for this?
-> > 
-> > We hate typedefs.
-> 
-> Well, that's certainly convincing.  Funny that, I don't recall hating
-> typedefs, in fact I distinctly recall liking them and being happy when
-> they were added to Lattice's Amiga compiler back in the stone age.  Is
-> there some particular reason 'we' hate them?
+Hi -
 
-Hi here's part of Greg's presentation from some time back:
+Version 0.4 of scsi_id is available at:
 
-http://www.kroah.com/linux/talks/ols_2002_kernel_codingstyle_talk/html/mgp00024.html
+http://www-124.ibm.com/storageio/scsi_id/scsi_id-0.4.tar.gz
 
-Really you want the next slide off the above ;-)
+scsi_id is a program to generate a unique identifier for a given SCSI
+device.
 
--- Patrick Mansfield
+It is primarily for use with the udev callout key. It could also be used
+for automatic multi-path configuration or device mapper configuration.
+
+Version 0.4 requires:
+
+- Linux kernel 2.6
+- libsysfs 0.4.0
+
+Major changes since the last release:
+
+	- Support block device partitions
+
+	- Added a script to auto-generate udev rules. The script is not
+	  installed but is part of the tarball.
+
+Detailed changes:
+
+	- Add man page verbage about usage with udev, and running via
+	  hotplug
+
+	- Disable support for -e (all output to stderr) as it cannot be
+	  used in any useful way, and the -c (device specific callout) as
+	  the code is incomplete and has no users.
+
+	- Don't print errno for NULL return from sysfs_get_classdev_device.
+
+	- Get rid of dead/leftover code that checked if we are on a scsi
+	  bus.
+
+	- ":" consistently in output messages.
+
+	- Add missing new lines for some error messages.
+
+	- open O_NONBLOCK so we handle tape drives without tapes loaded.
+
+	- Remove hacks based on KLIBC define to get around problems when
+	  building with udev (udev libsysfs files were rearranged).
+
+	- As done in udev code, support partitions via looking for a
+	  parent of the target path. Uses libsysfs functions to do most of
+	  the work, and includes changing a lot of variables to be struct
+	  sysfs_device instead of sysfs_class_device.
