@@ -1,79 +1,58 @@
-From: Kai Makisara <Kai.Makisara@kolumbus.fi>
-Subject: Re: [PATCH 1/2] SCSI tape fixes (new version): sense descriptor
- init, bsf->weof, blkno, debugging
-Date: Tue, 15 Mar 2005 21:06:44 +0200 (EET)
-Message-ID: <Pine.LNX.4.61.0503152046250.6742@kai.makisara.local>
-References: <Pine.LNX.4.61.0503121903010.6875@kai.makisara.local>
- <1110910469.5685.19.camel@mulgrave>
+From: Domen Puncer <domen@coderock.org>
+Subject: Re: [patch 06/11] drivers/scsi/aacraid/*: convert to pci_register_driver
+Date: Tue, 15 Mar 2005 21:17:10 +0100
+Message-ID: <20050315201710.GG3955@nd47.coderock.org>
+References: <60807403EABEB443939A5A7AA8A7458BE5B10B@otce2k01.adaptec.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Received: from fep32-0.kolumbus.fi ([193.229.0.63]:57953 "EHLO
-	fep32-app.kolumbus.fi") by vger.kernel.org with ESMTP
-	id S261787AbVCOTFZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 15 Mar 2005 14:05:25 -0500
-In-Reply-To: <1110910469.5685.19.camel@mulgrave>
+Content-Type: text/plain; charset=us-ascii
+Received: from coderock.org ([193.77.147.115]:9955 "EHLO trashy.coderock.org")
+	by vger.kernel.org with ESMTP id S261477AbVCOUR0 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 15 Mar 2005 15:17:26 -0500
+Content-Disposition: inline
+In-Reply-To: <60807403EABEB443939A5A7AA8A7458BE5B10B@otce2k01.adaptec.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
+Cc: James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org, c.lucas@ifrance.com
 
-On Tue, 15 Mar 2005, James Bottomley wrote:
-
-> On Sat, 2005-03-12 at 19:04 +0200, Kai Makisara wrote:
-> > This is an updated version of the patch I sent March 7. The sense descriptor
-> > initialization has been made lighter.
-> > 
-> > The patch at the end of this message applies to 2.6.11-bk7 + st descriptor sense
-> > patch + st auto eof patch (i.e., st patches currently in scsi-misc-2.6). The
-> > patch fixes the following problems:
+On 15/03/05 12:59 -0500, Salyzyn, Mark wrote:
+> FC3 != kernel.org, and the problem may not exist in latest tree. The
+> code for pci_module_init used to do a return (ret < 0) ? ret : 0.
 > 
-> I'm afraid this doesn't apply.  It looks like I've got an interim patch
-> that's crept in somewhere in the tree.
+> The problem is then a 'transition' issue, as patches that appear here
+> can and will be used for kernel revisions a few back. By changing the
+> aacraid driver to check for < 0 rather than != 0 we improve reliability.
+> I have discovered that by doing so, the driver in the Adaptec Branch
+> taking this patch works fine all the way back early 2.4 trees.
 > 
-> Could you take a look at scsi-misc-2.6 (or the patches on www.parisc-
-> linux/~jejb/scsi_diffs) and see if you can construct a diff between
-> where I currently am and where I should be?
-> 
-The changelog shows that the patch below is included. It is the previous 
-version of the patch in the message with this subject.
 
-# ChangeSet
-#   2005/03/15 10:37:07-06:00 Kai.Makisara@kolumbus.fi 
-#   [PATCH] SCSI tape fixes: sense descriptor init, bsf->weof, blkno,
+Thanks for clearing that up.
+Forgot that scsi is 2.4 compatible. And I have a note to drop
+pci_register_driver patches for it. Sorry for all the noise.
 
-The patch at the end of this message should take you into the point where 
-you can directly apply 2/2 etc. (If you think that the patch below is not 
-worth the trouble, you can skip that. The other patches are not touching 
-verstr and should then apply with small offset.)
+So, here's a new patch, if someone wants it; i won't be resending :-)
 
-Thanks,
-Kai
 
-This patch changes the sense descriptor initialization a little faster.
+Use pci_register_driver instead of pci_module_init (old API).
 
-Signed-off-by: Kai Makisara <kai.makisara@kolumbus.fi>
+Signed-off-by: Domen Puncer <domen@coderock.org>
 
---- linux-2.6.11-kk1/drivers/scsi/st.c	2005-03-15 20:55:12.000000000 +0200
-+++ linux-2.6.11-bk7-k2/drivers/scsi/st.c	2005-03-12 13:52:30.000000000 +0200
-@@ -17,7 +17,7 @@
-    Last modified: 18-JAN-1998 Richard Gooch <rgooch@atnf.csiro.au> Devfs support
-  */
+--- ./drivers/scsi/aacraid/linit.c.orig	2005-03-15 21:05:53.000000000 +0100
++++ ./drivers/scsi/aacraid/linit.c	2005-03-15 21:06:59.000000000 +0100
+@@ -686,12 +686,12 @@ static struct pci_driver aac_pci_driver 
+ static int __init aac_init(void)
+ {
+ 	int error;
+-	
++
+ 	printk(KERN_INFO "Red Hat/Adaptec aacraid driver (%s %s)\n",
+ 			AAC_DRIVER_VERSION, AAC_DRIVER_BUILD_DATE);
  
--static char *verstr = "20050307";
-+static char *verstr = "20050312";
+-	error = pci_module_init(&aac_pci_driver);
+-	if (error)
++	error = pci_register_driver(&aac_pci_driver);
++	if (error < 0)
+ 		return error;
  
- #include <linux/module.h>
- 
-@@ -268,10 +268,11 @@ static void st_analyze_sense(struct scsi
- 	const u8 *ucp;
- 	const u8 *sense = SRpnt->sr_sense_buffer;
- 
--	memset(s, 0, sizeof(struct st_cmdstatus));
- 	s->have_sense = scsi_request_normalize_sense(SRpnt, &s->sense_hdr);
-+	s->flags = 0;
- 
- 	if (s->have_sense) {
-+		s->deferred = 0;
- 		s->remainder_valid =
- 			scsi_get_sense_info_fld(sense, SCSI_SENSE_BUFFERSIZE, &s->uremainder64);
- 		switch (sense[0] & 0x7f) {
+ 	aac_cfg_major = register_chrdev( 0, "aac", &aac_cfg_fops);
