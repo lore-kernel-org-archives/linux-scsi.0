@@ -1,41 +1,53 @@
 From: Jeff Garzik <jgarzik@pobox.com>
 Subject: Re: [SUBJECT CHANGE]: megaraid unified driver version 2.20.0.0-al
  pha1
-Date: Wed, 25 Feb 2004 21:27:08 -0500
+Date: Wed, 25 Feb 2004 21:38:36 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <403D597C.4020708@pobox.com>
-References: <0E3FA95632D6D047BA649F95DAB60E57033BC3E7@exa-atlanta.se.lsil.com>
+Message-ID: <403D5C2C.7000205@pobox.com>
+References: <0E3FA95632D6D047BA649F95DAB60E57033BC3EA@exa-atlanta.se.lsil.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:22481 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S262605AbUBZC11
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:43985 "EHLO
+	www.linux.org.uk") by vger.kernel.org with ESMTP id S261508AbUBZCiv
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 25 Feb 2004 21:27:27 -0500
-In-Reply-To: <0E3FA95632D6D047BA649F95DAB60E57033BC3E7@exa-atlanta.se.lsil.com>
+	Wed, 25 Feb 2004 21:38:51 -0500
+In-Reply-To: <0E3FA95632D6D047BA649F95DAB60E57033BC3EA@exa-atlanta.se.lsil.com>
 List-Id: linux-scsi@vger.kernel.org
 To: "Mukker, Atul" <Atulm@lsil.com>
-Cc: 'Christoph Hellwig' <hch@infradead.org>, 'Arjan van de Ven' <arjanv@redhat.com>, 'James Bottomley' <James.Bottomley@SteelEye.com>, "'matt_domsch@dell.com'" <matt_domsch@dell.com>, 'Paul Wagland' <paul@wagland.net>, Matthew Wilcox <willy@debian.org>, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
+Cc: 'Matt Domsch' <Matt_Domsch@dell.com>, 'Christoph Hellwig' <hch@infradead.org>, 'Arjan van de Ven' <arjanv@redhat.com>, 'James Bottomley' <James.Bottomley@SteelEye.com>, 'Paul Wagland' <paul@wagland.net>, Matthew Wilcox <willy@debian.org>, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
 
 Mukker, Atul wrote:
->>given that they are completely different from the controller we know
->>as megaraid today this is an extremly bad idea.  Just put it 
->>into an driver
->>of their own, e.g. mptraid
-> 
-> Although, this simplifies the development and maintenance effort, having a
-> single driver to drive both controllers or two independent drivers is not
-> always our decision. Most often, it would be Dell's preference. 
+> With multiple adapters, applications would need to open multiple handles.
+> This would somewhat complicate things for them. But keeping in line with
+> general expectations, we would fork the drivers for different class of
+> controllers now.
 
-If the hardware is similar, a single driver is OK.
+"opening multiple handles" is preferred.  You want one discrete object 
+per controller or per device, depending on the object in question.
 
-If the hardware is not similar, the preference is for separate drivers.
 
-Shared code in a third module, a "library module", is an acceptable 
-solution.  modprobe automatically loads dependent modules, so users 
-running "modprobe driver1" or "modprobe driver2" would automatically 
-load the shared library module.
+> I have not yet gotten strong feelings against a single driver for lk 2.4 and
+> lk 2.6. If this is true, we would like to keep single driver for both
+> kernels - since lk 2.4 still has a big lifecycle.
+
+If you are doing multiple drivers in 2.6, it would seem better to match 
+that as closely as possible in 2.4.
+
+
+> For lk 2.6, the controllers would be detected PCI ordered and because of
+> existing lk 2.4 setups, driver would re-order the registration based on boot
+> controller.
+
+Look at my libata code -- in both 2.4 and 2.6, it uses the proper PCI 
+API calls.
+
+Controller order is irrelevant -- device order is what you really care 
+about, right?  This can be managed by creating a list during probe, and 
+then executing the list after all controllers have been probed. 
+Obviously, this excludes hotplug controllers added after the initial 
+module_init() function exits.
 
 	Jeff
 
