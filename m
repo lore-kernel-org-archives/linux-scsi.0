@@ -1,53 +1,48 @@
-From: Mikael Pettersson <mikpe@csd.uu.se>
+From: Matthew Wilcox <willy@debian.org>
 Subject: Re: 2.4.28-pre3: broken ips update
-Date: Mon, 13 Sep 2004 16:24:12 +0200
+Date: Mon, 13 Sep 2004 15:42:30 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <16709.44428.954085.884545@alkaid.it.uu.se>
-References: <20040911220117.GA4669@logos.cnet>
-	<20040913070334.GD1937@fs.tum.de>
+Message-ID: <20040913144230.GU642@parcelfarce.linux.theplanet.co.uk>
+References: <A121ABA5B472B74EB59076B8E3C8F019796579@rtpe2k01.adaptec.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aun.it.uu.se ([130.238.12.36]:64682 "EHLO aun.it.uu.se")
-	by vger.kernel.org with ESMTP id S267568AbUIMOb4 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 13 Sep 2004 10:31:56 -0400
-In-Reply-To: <20040913070334.GD1937@fs.tum.de>
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:16518 "EHLO
+	www.linux.org.uk") by vger.kernel.org with ESMTP id S267651AbUIMOmd
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 13 Sep 2004 10:42:33 -0400
+Content-Disposition: inline
+In-Reply-To: <A121ABA5B472B74EB59076B8E3C8F019796579@rtpe2k01.adaptec.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Adrian Bunk <bunk@fs.tum.de>
-Cc: Marcelo Tosatti <marcelo.tosatti@cyclades.com>, ipslinux@adaptec.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: "Hammer, Jack" <Jack_Hammer@adaptec.com>
+Cc: Adrian Bunk <bunk@fs.tum.de>, Marcelo Tosatti <marcelo.tosatti@cyclades.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Adrian Bunk writes:
- > On Sat, Sep 11, 2004 at 07:01:17PM -0300, Marcelo Tosatti wrote:
- > >...
- > > Summary of changes from v2.4.28-pre2 to v2.4.28-pre3
- > > ============================================
- > >...
- > > Jack Hammer:
- > >   o ServeRAID driver (ips) Version 7.10.18
- > >...
- > 
- > <--  snip  -->
- > 
- > ...
- > gcc-3.4 -D__KERNEL__ 
- > -I/home/bunk/linux/kernel-2.4/linux-2.4.28-pre3-full/include -Wall 
- > -Wstrict-prototypes -Wno-trigraphs -O2 -fno-strict-aliasing -fno-common 
- > -fomit-frame-pointer -pipe -mpreferred-stack-boundary=2 -march=athlon 
- > -fno-unit-at-a-time   -nostdinc -iwithprefix include 
- > -DKBUILD_BASENAME=ips  -c -o ips.o ips.c
- > In file included from ips.c:190:
- > ips.h:101: error: redefinition of typedef 'irqreturn_t'
- > /home/bunk/linux/kernel-2.4/linux-2.4.28-pre3-full/include/linux/interrupt.h:16: 
- > error: previous declaration of 'irqreturn_t' was here
- > make[3]: *** [ips.o] Error 1
- > make[3]: Leaving directory `/home/bunk/linux/kernel-2.4/linux-2.4.28-pre3-full/drivers/scsi'
+On Mon, Sep 13, 2004 at 10:28:44AM -0400, Hammer, Jack wrote:
+> This trivial one line patch corrects my mistake in ips.h. I assure you
+> that the previous patch was compiled and tested extensively - over a
+> several month test cycle.  However, our testing concentrates on existing
+> customers and shipping distro's.  Most of those changed to the 2.6
+> kernel on or before 2.4.20, so we had no 2.4 kernel in our test matrix
+> beyond that. I apologize for the oversight - we must update our test
+> matrix to always check out latest 2.4 development kernel.
+> 
+> The concerns expressed below about this driver being "blindly submitted"
+> or is "untested" are completely unwarranted.
 
-I posted a patch yesterday fixing this very issue.
-The compat definitions in ips.h are in conflict with the
-kernel's own compat definitions in interrupt.h. The
-workaround is to disable ips.h's irqreturn_t etc emulation
-for kernels >= 2.4.23.
+I disagree.  Your testing, while I'm sure is long drawn out and massively
+complicated, is missing the crucial element of testing what you're
+submitting against.  I don't think you need to check the latest bleeding
+unstable kernel in your test runs, partly because it changes so fast, and
+partly because you'll start to hit bugs that are unrelated to your driver.
 
-/Mikael
+But you absolutely must at least test compiling your driver against the
+tree you submit it against, and a quick boot of the resulting kernel
+wouldn't add much time to your patch submission process.
+
+-- 
+"Next the statesmen will invent cheap lies, putting the blame upon 
+the nation that is attacked, and every man will be glad of those
+conscience-soothing falsities, and will diligently study them, and refuse
+to examine any refutations of them; and thus he will by and by convince 
+himself that the war is just, and will thank God for the better sleep 
+he enjoys after this process of grotesque self-deception." -- Mark Twain
