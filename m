@@ -1,34 +1,29 @@
-From: James Bottomley <James.Bottomley@steeleye.com>
+From: Christoph Hellwig <hch@infradead.org>
 Subject: Re: [PATCH] add sysfs attributes to scan and delete scsi_devices
-Date: 08 Jul 2003 15:50:15 -0500
+Date: Tue, 8 Jul 2003 22:13:51 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1057697416.1825.10.camel@mulgrave>
-References: <20030708134016.A32161@beaverton.ibm.com>
+Message-ID: <20030708221350.A19804@infradead.org>
+References: <20030708134016.A32161@beaverton.ibm.com> <1057697416.1825.10.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nat9.steeleye.com ([65.114.3.137]:40196 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S265337AbTGHUfl (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 8 Jul 2003 16:35:41 -0400
-In-Reply-To: <20030708134016.A32161@beaverton.ibm.com>
+Received: from phoenix.infradead.org ([195.224.96.167]:48906 "EHLO
+	phoenix.infradead.org") by vger.kernel.org with ESMTP
+	id S267647AbTGHU7Q (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 8 Jul 2003 16:59:16 -0400
+Content-Disposition: inline
+In-Reply-To: <1057697416.1825.10.camel@mulgrave>; from James.Bottomley@steeleye.com on Tue, Jul 08, 2003 at 03:50:15PM -0500
 List-Id: linux-scsi@vger.kernel.org
-To: Patrick Mansfield <patmans@us.ibm.com>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: James Bottomley <James.Bottomley@steeleye.com>
+Cc: Patrick Mansfield <patmans@us.ibm.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Tue, 2003-07-08 at 15:40, Patrick Mansfield wrote:
-> This patch against recent 2.5 bk adds a sysfs attribute to allow scanning
-> (or rescanning) and deletion of scsi_devices.
+On Tue, Jul 08, 2003 at 03:50:15PM -0500, James Bottomley wrote:
+> I'm not convinced we need a bus file for this.  What's the reason we
+> can't have a per host file instead?
 > 
-> It also allows scanning of entire hosts, channels, or targets.
+> I'm thinking of the hotplug case where you know the sysfs path to the
+> card just inserted.  Translating that to a hostid will be rather hard.
 
-I'm not convinced we need a bus file for this.  What's the reason we
-can't have a per host file instead?
-
-I'm thinking of the hotplug case where you know the sysfs path to the
-card just inserted.  Translating that to a hostid will be rather hard.
-
-James
-
+After thinking about this again I tend to agree with you that a per-host
+file sounds like the better idea.
 
