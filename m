@@ -1,39 +1,52 @@
-From: Mike Christie <mikenc@us.ibm.com>
-Subject: Re: Request for review of Linux iSCSI driver version 4.0.0.1
-Date: Wed, 29 Oct 2003 09:28:39 -0800
+From: Matthew Wilcox <willy@debian.org>
+Subject: Re: [PATCH] sym53c8xx PPR negotiation fix
+Date: Wed, 29 Oct 2003 17:50:45 +0000
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3F9FF8C7.70909@us.ibm.com>
-References: <20031027153932.A16679@infradead.org> <018b01c39e1f$e013bab0$a0074d0a@apac.cisco.com> <20031029134557.A17523@infradead.org>
+Message-ID: <20031029175045.GC25237@parcelfarce.linux.theplanet.co.uk>
+References: <1067447221.3112.336.camel@compaq.xsintricity.com> <1067447490.1829.30.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e1.ny.us.ibm.com ([32.97.182.101]:13246 "EHLO e1.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S261294AbTJ2RaN (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 29 Oct 2003 12:30:13 -0500
-In-Reply-To: <20031029134557.A17523@infradead.org>
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:9430 "EHLO
+	www.linux.org.uk") by vger.kernel.org with ESMTP id S261262AbTJ2Rur
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 29 Oct 2003 12:50:47 -0500
+Content-Disposition: inline
+In-Reply-To: <1067447490.1829.30.camel@mulgrave>
 List-Id: linux-scsi@vger.kernel.org
-To: 'Christoph Hellwig' <hch@infradead.org>
-Cc: "Surekha.PC" <surekhap@cisco.com>, linux-scsi@vger.kernel.org, davmyers@cisco.com, Richard Bealkowski <ennui@us.ibm.com>
+To: James Bottomley <James.Bottomley@steeleye.com>
+Cc: Doug Ledford <dledford@redhat.com>, Marcelo Tosatti <marcelo@conectiva.com.br>, linux-scsi mailing list <linux-scsi@vger.kernel.org>
 
-Hi Surekha,
-
->>This is again needed for network boot. The n/w driver and iSCSI driver
->>are loaded during early boot. Since the n/w interface is not setup at
->>that time, we need to bring up the interface through this call in iSCSI
->>driver.
+On Wed, Oct 29, 2003 at 11:11:28AM -0600, James Bottomley wrote:
+> On Wed, 2003-10-29 at 11:07, Doug Ledford wrote:
+> > I haven't checked if this is applicable to 2.6 as well.  James?
 > 
-> 
-> That's bogus.  Look at the ip autoconfig code used by rootnfs and reuse
-> that instead of creating such bogus hacks.  A driver has no business dealing
-> with the network configuration.
-> 
+> Well, the sym driver doesn't exist anymore in 2.6...however sym_2 had a
+> similar issue.  Matthew Wilcox has already fixed it though, I think.
 
-Your driver does not even need to mess with that code. Just modify your 
-usersapce tools in the linux-iscsi package that run in the initrd to do 
-this in userspace.
+Oh, wishful thinking.  I'm trying to fix it and haven't succeeded yet.
+These days, there's a PPR bit in the scsi_device, but it never seems to
+be set, so we don't even try negotiating it.  Maybe the drives I have
+to play with aren't really U160.
 
+my current patch looks something like this (terribly mangled):
 
-Mike
+@@ -518,16 +518,21 @@ static int sym_queue_command(struct sym_
+        order = (lp && lp->s.reqtags) ? M_SIMPLE_TAG : 0;
+ 
++       /* Ensure we don't issue unwanted negotiations */
++       if (!ccb->device->ppr) {
++               tp->tinfo.goal.options &= ~PPR_OPT_MASK;
++       }
++
+        /*
+         *  Queue the SCSI IO.
 
+but I have it mixed in with some other changes that're supposed to
+help negotiate U160, so I can't say there might be some reason to not
+do this.
+
+-- 
+"It's not Hollywood.  War is real, war is primarily not about defeat or
+victory, it is about death.  I've seen thousands and thousands of dead bodies.
+Do you think I want to have an academic debate on this subject?" -- Robert Fisk
