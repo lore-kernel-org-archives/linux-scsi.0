@@ -1,50 +1,52 @@
-From: "Wu Zhou" <zhouwu@cn.ibm.com>
-Subject: Re: aic7xxx & st - why does sym driver don't like odd count on wide bus?
-Date: Wed, 13 Aug 2003 11:50:32 +0800
+From: Anton Blanchard <anton@samba.org>
+Subject: Re: [PATCH] Convert sym2 to be hotplug-capable
+Date: Wed, 13 Aug 2003 15:13:52 +1000
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <OF8C687201.E0196FA8-ON48256D81.0012E224@cn.ibm.com>
+Message-ID: <20030813051352.GB30156@krispykreme>
+References: <20030716210059.GR23808@parcelfarce.linux.theplanet.co.uk> <20030812234133.GA30156@krispykreme>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ausmtp02.au.ibm.com ([202.81.18.187]:32445 "EHLO
-	ausmtp02.au.ibm.com") by vger.kernel.org with ESMTP id S271372AbTHMDtZ
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 12 Aug 2003 23:49:25 -0400
+Received: from dp.samba.org ([66.70.73.150]:18077 "EHLO lists.samba.org")
+	by vger.kernel.org with ESMTP id S271389AbTHMFSt (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 13 Aug 2003 01:18:49 -0400
+Content-Disposition: inline
+In-Reply-To: <20030812234133.GA30156@krispykreme>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Kai.Makisara@kolumbus.fi
+To: Matthew Wilcox <willy@debian.org>
+Cc: linux-scsi@vger.kernel.org
 
-Hi, Kai
+ 
+> One problem we found when we hit a bad adapter, we need to use scsi_host_put.
 
-      You ever said that sym driver doesn't like odd counts on wide bus.
-What I want to know is why. Is this a defect? I ever try the following
-command:
+One more fix :)
 
-[root@plinuxt17 root]# mt -f /dev/st0 setblk 0
-[root@plinuxt17 root]# dd if=/dev/zero of=/dev/st0 bs=1025 count=1
-1+0 records in
-1+0 records out
-dd: closing output file `/dev/st0': Input/output error
+In sym_attach we call sym_hcb_attach. If it fails we call
+sym_free_resources which will call sym_hcb_free. Unfortunately
+sym_hcb_attach also calls sym_hcb_free on failure.
 
-and running "dmesg" will show the following message:
-st0: Block limits 1 - 16777215 bytes.
-st0: Mode sense. Length 11, medium 34, WBS 10, BLL 8
-st0: Density 26, tape length: 0, drv buffer: 1
-st0: Block size: 0, buffer size: 32768 (1 blocks).
-sym53c896-1-<0,0>: extraneous data discarded.
-sym53c896-1-<0,0>: COMMAND FAILED (89 0) @c0000002fce6a800.
-st0: Error: 27070000, cmd: a 0 0 4 1 0 Len: 1025
-st0: Async write error (flush) 27070000.
-st0: Rewinding tape.
+This results in a bunch of things being freed twice and it looks like
+the sym2 memory allocator adds them to the freelist twice. Sometime later
+on we allocate the memory twice, with weird consequences.
 
-If it is real that sym driver doesn't like odd counts, then how to explain
-the following command return no error(sdf and st0 are on the same sym53c896
-adapter). I am quite new to SCSI, and just curious about that.
+Anton
 
-Thanks and Best Regards
----------------------------------------------
-Zhou, Wu
-Software Engineer, IBM China Development Lab
-Email: zhouwu@cn.ibm.com
-Notes: Wu Zhou/China/IBM@IBMCN
-
+diff -ru /tmp/sym53c8xx_2/sym_hipd.c gr13_work_miltonm_l4/drivers/scsi/sym53c8xx_2/sym_hipd.c
+--- /tmp/sym53c8xx_2/sym_hipd.c	2003-07-03 13:57:21.000000000 -0500
++++ gr13_work_miltonm_l4/drivers/scsi/sym53c8xx_2/sym_hipd.c	2003-08-12 23:48:37.000000000 -0500
+@@ -5942,14 +5943,7 @@
+ 	 */
+ 	return 0;
+ 
+-	/*
+-	 *  We have failed.
+-	 *  We will try to free all the resources we have 
+-	 *  allocated, but if we are a boot device, this 
+-	 *  will not help that much.;)
+-	 */
+ attach_failed:
+-		sym_hcb_free(np);
+ 	return -ENXIO;
+ }
+ 
