@@ -1,159 +1,156 @@
-From: Doug Ledford <dledford@redhat.com>
-Subject: Re: [linux-usb-devel] Re: [PATCH] USB changes for 2.5.58
-Date: Thu, 23 Jan 2003 15:28:36 -0500
+From: Steven Dake <sdake@mvista.com>
+Subject: A different look at block device hotswap in the Linux kernel
+Date: Thu, 23 Jan 2003 13:41:51 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030123202835.GA25838@redhat.com>
-References: <Pine.LNX.4.44L0.0301211546410.6926-100000@ida.rowland.org> <200301231919.40422.oliver@neukum.name> <3E303D5E.5020000@splentec.com> <200301232040.41862.oliver@neukum.name>
+Message-ID: <3E30538F.4080507@mvista.com>
+References: <Pine.LNX.4.44L0.0301211546410.6926-100000@ida.rowland.org> <200301222346.30329.oliver@neukum.name> <3E302A89.8070703@splentec.com> <200301231919.40422.oliver@neukum.name>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <200301232040.41862.oliver@neukum.name>
+In-Reply-To: <200301231919.40422.oliver@neukum.name>
 List-Id: linux-scsi@vger.kernel.org
 To: Oliver Neukum <oliver@neukum.name>
 Cc: Luben Tuikov <luben@splentec.com>, Alan Stern <stern@rowland.harvard.edu>, David Brownell <david-b@pacbell.net>, Matthew Dharm <mdharm-scsi@one-eyed-alien.net>, Mike Anderson <andmike@us.ibm.com>, Greg KH <greg@kroah.com>, linux-usb-devel@lists.sourceforge.net, Linux SCSI list <linux-scsi@vger.kernel.org>
 
-On Thu, Jan 23, 2003 at 08:40:41PM +0100, Oliver Neukum wrote:
-> Am Donnerstag, 23. Januar 2003 20:07 schrieb Luben Tuikov:
-> 
-> > return value for simpler and more complicated transports has to
-> > be the same (i.e. ones which know about the device disconnect and
-> > others which send out the CDB and which will return with error).
-> 
-> Why? It throws away information needlessly. If the LLDD knows
-> that the reason is unplugging why not report it?
+Oliver and others,
 
-What does it matter?  If you know that the device was unplugged, are you 
-going to then wait for it to be plugged back in and if it's plugged back 
-in (and confirmed to be the same device via serial number or some such) 
-pick back up where you left off like nothing happened?  That would be the 
-only reason to care about whether it was unplugged or died.  And if you 
-did that you would probably violate the rule of least suprise with people 
-unplugging their hard disks in a fit when they realize they did rm -fr on 
-the drive and then when they plug it back in to check out how much damage 
-they did it picks back up where it left off!
+In regards to hotswap, any real operating system should be _told_ that a 
+block device is going to be removed from the top.  There are several 
+reasons.
 
-> A LLDD that doesn't
-> know about devices going away on the other hand can just report
-> an error.
+1) File mounts should be removed from the filesystem layer
+2) files accessing block devices directly should be terminated
+3) raid members using that block device should be hot removed
+4) I'm sure you can think of others :)
 
-For SPI that would be DID_TIMEOUT, aka the device wasn't there.  For iSCSI 
-it would be timeout as well.  Pretty much anything is simply going to be 
-either timeout or if you know it's gone you could return some other error.
+The key is that the removal request should come from the top, not the 
+bottom.  If someone is stupid enough to surprise remove a device (ie: 
+unplug their USB SCSI device while the device is in use by the OS), they 
+get what they deserve (I/O errors, dirty OS data, queued up requests 
+which never shut down).  If they tell the OS that the device is going to 
+be removed, so it may flush the device and shut down I/O to the device, 
+the request should be granted on all accounts (expected removal).
 
-> Can the higher layers simply assume that the device was unplugged?
-> IMHO they can't and should at least try to recover from the error.
+The device driver should not be responsible for managing hotswap in any 
+regard.  Its only purpose should be to tell the block device removal 
+layer that a surprise extraction was initiated such that the block 
+device removal code can ask the mid layer drivers to shut down error 
+correction routines to the device and dump its pending I/O queue and 
+clean up after the device.  The main advantage of this technique is 
+simplicity (the LLDD's don't have to have repetative logic for each 
+device driver), genericity (the block device removal code can be 
+maintained in one place and be guaranteed to ensure the OS is in a 
+stable state after a device is removed either surprise or expected and 
+finally it solves the in-flight I/O problem by stopping new I/O to the 
+device, shutting down I/O to the device, flushing the pending I/O 
+queues, and killing all references in the OS of the device.
 
-Correct.  And this isn't a problem.
+If you think about what your suggesting, your suggesting that the LLDD 
+tells the scsi layer that the device is gone, that then times out errors 
+and leaves the filesystem and sys_open/close file tables, and RAID 
+layers in a state of disarray.  We don't want the LLDD knowing about the 
+RAID system and whether it should tell the RAID layer to hot remove, do we?
 
-> > I forgot to mention this with my previous email: think of a LLDD
-> > more as part of the transport than of SCSI Core.
-> 
-> Hard to do. The scsi mid layer does timing out and error handling.
-> There's a relatively tight connection.
-> 
-> > > So the first thing a LLDD has to do after it has learned about a device
-> > > being removed is to have the device block.
-> >
-> > ``block'' (verb) is such a strong word.
-> 
-> What do you prefer ? ;-) I'll certainly use another word if you like me to
-> do so.
-> 
-> > * Simple transports: call scsi_set_device_offline(dev) or something like
-> > this.
-> >
-> > * More complicated transports: SCSI Core sees Service Response of Service
-> > Delivery Failure and it itself calls scsi_set_device_offline(dev).
+I've developed code to do exactly what I have described here (surprise 
+and expected extractions genericized into one file with one simple call 
+from userland and a method for lower layers to indicate a surprise 
+extraction if they have detected one.  I'll post as soon as I have time 
+to make a patch against 2.5 .
 
-Actually, I would have both complicated and simple transports call 
-scsi_set_device_offline() and for two reasons.  1) you have to provide 
-that function for simple drivers so duplicating other detection code in 
-the scsi completion handler is a waste.  2) pretty much all transports 
-will learn of the device being offline while they are in their interrupt 
-handler and should already be holding the lock for the device, which means 
-that calling scsi_set_device_offline() won't race with scsi_request_fn() 
-which also needs the device lock (which in reality is the host lock).  
-Saving this race is convenient enough IMHO to warrant saying that's the 
-way things need to be.
+Thanks
+-steve
 
-> > scsi_set_device_offline(dev) calls a high-level kernel function to start
-> > higher level things (block queue cut off, etc) which *may* need to be done.
 
-No, scsi_set_device_offline() schedules the error handler thread for that 
-host to be woken up.
+Oliver Neukum wrote:
 
-> How do you differentiate between real failure and device removal?
+>Am Donnerstag, 23. Januar 2003 18:46 schrieb Luben Tuikov:
+>  
+>
+>>Oliver Neukum wrote:
+>>    
+>>
+>>>Not all the world is a SAN. USB has no possibility to even try an
+>>>interaction after the device is gone. We have to handle this flexibly.
+>>>      
+>>>
+>>Thus the example in the original post.  I.e. for simple transports whose
+>>portals get notified when a device is plugged off (USB), the LLDD
+>>can notify SCSI Core, by setting a state variable in scsi_device.
+>>In which case SCSI Core can answer with the proper TARGET error code.
+>>(This was outlined before, scsi_command->online:1 ...)
+>>    
+>>
+>
+>Very well, so you agree that the SCSI layer should export to the LLDD
+>a function to set devices offline?
+>
+>  
+>
+>>>In fact, if a device
+>>>can vanish without a LLDD knowing about it, this is purely a problem of
+>>>the SCSI layer.
+>>>      
+>>>
+>>No, of course not.  (Think of IP.)  When a device vanishes and LLDD doesn't
+>>know about it (more complicated transports), the CDB will return with
+>>the proper Service Response, since the transport(s) won't be able to
+>>deliver it. This will bubble up through SCSI Core and the error returned
+>>will have to be the same as that of the simpler transports, as outlined
+>>above.
+>>    
+>>
+>
+>Yes, sorry. To be precise, this means that the LLDD has to do nothing
+>special, as it has to implement checking for a failing command anyway.
+>But it's not entirely the same. If a command cannot be delivered it may or may
+>not be appropriate to start error recovery. After the LLDD has told
+>the SCSI layer that it has noticed a device going away, there must be no
+>error recovery.
+>
+>  
+>
+>>>That means that we have to have a way to ensure that no more commands
+>>>will reach the LLDD which can be triggered without any commands to be
+>>>executed at all. This functionality has to come from the scsi mid layer.
+>>>      
+>>>
+>>For simple transports yes; for more complicated ones, the CDB will
+>>not be able to be delivered, and will return with error.
+>>    
+>>
+>
+>Good.
+>So the first thing a LLDD has to do after it has learned about a device
+>being removed is to have the device block.
+>1. set device offline
+>But commands may still be in flight.IMHO it is not right to assume that
+>all commands now in flight to a device have failed, as some may have
+>completed successfully in time, or failed for other reasons than unplugging.
+>So it should be the LLDD's responsibility to finish the outstanding commands.
+>Furthermore, there's a window for commands already having passed the check
+>for offline but not yet being noticed by the LLDD. The simplest solution is to
+>use a waiting primitive from RCU. So we are at:
+>
+>1. set device offline
+>2. synchronize the kernel
+>3. finish all pending commands
+>
+>So far with me?
+>The LLDD could now forget about the device and be done with it.
+>However there's a problem left. The device may come back.
+>What happens if a device with the same ID is reconnected?
+>
+>	Regards
+>		Oliver
+>
+>-
+>To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+>the body of a message to majordomo@vger.kernel.org
+>More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+>
+>
+>  
+>
 
-We don't, and we shouldn't.  Device removal *is* a real failure.
-
-> > > So it should be the LLDD's responsibility to finish the outstanding
-> > > commands.
-> >
-> > LLDD cannot really ``finish'' outstanding commands, it's just a transport
-> > portal.
-> 
-> Well, report back the results, if you prefer, thus returning ownership to
-> higher layers.
-
-If the LLDD is the type such that it knows the device is gone (aka, in my 
-driver if I get a selection timeout then I know something is fishy and can 
-proceed from there, iSCSI may not be so lucky), then it has one of two 
-choices.  1) it may flush any commands that it can out of the hardware and 
-return them immediately with the same error condition as the one that it 
-is already returning.  2) it can sit and wait for the commands to timeout 
-one by one if that's what it wants.  Since the device has already been 
-marked offline by scsi_set_device_offline() and the error handler thread 
-is already scheduled to run for the device, 2 is probably the easiest 
-thing for the driver to do.  The error handler will call the abort/reset 
-routine for each command still outstanding and the LLDD can just clean up 
-one at a time and return them as it would under any other error condition.
-
-> > > Furthermore, there's a window for commands already having passed the
-> > > check for offline but not yet being noticed by the LLDD.
-
-No, not if you handle things in the interrupt handler and if your 
-interrupt handler holds the host lock like it's suppossed to.  If you want 
-to go without using these locking methods in your lldd then you are free 
-to do so, but that means *you* need to handle this situation in your 
-driver, the mid layer shouldn't be trying to solve this problem for lldd 
-that want to be lock free.
-
-> > They will return with an appropriate error.
-> 
-> Not quite so simple. Some LLDDs need to know at some point that
-> no more commands will arrive for sure and none are still in flight.
-
-Follow the simple rule above and when you call scsi_set_device_offline() 
-then you will *never* get called in your queuecommand() for that device 
-again.  That is separate from all commands being cleaned up.  That will 
-happen after the error handler thread has run and cleaned your driver out.  
-Once all the commands are gone and no more are arriving, then if, and only 
-if, someone actually removes the device from the scsi subsystem (maybe 
-hotplug manager or something) then you will get the typical 
-slave_destroy() call to tell you that it is safe to release all resources 
-related to this device.  Otherwise, the device will hang around as an 
-offline device until someone does echo "scsi-remove-single-device a b c d" 
-> /proc/scsi/scsi to remove it.
-
-Basically, as I see it, we need a new function scsi_set_device_offline()  
-that marks the device offline, we need an offline check in
-scsi_request_fn(), and we need scsi_set_device_offline() to schedule the
-error handler thread for wakeup (and it should flag the device that needs
-recovered so that the error handler thread knows what to do), then the
-error handler thread routine needs modified to understand what to do with
-a device that's been offlined with commands outstanding, and once all the
-commands are returned it should signal the higher layer (block or
-whatever) that the device is offlined.  Sounds like about an afternoons
-worth of work to me and should solve the issues you are bringing up.
-
-As far as plugging back in, the answer is simple.  Until the old instance 
-is dead *and removed* a new one can't be added at the same ID, aka you 
-simply ignore the hot plug until the hot remove has completed.
-
--- 
-  Doug Ledford <dledford@redhat.com>     919-754-3700 x44233
-         Red Hat, Inc. 
-         1801 Varsity Dr.
-         Raleigh, NC 27606
-  
