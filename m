@@ -1,78 +1,37 @@
-From: Kurt Garloff <garloff@suse.de>
+From: rct@gherkin.frus.com (Bob Tracy)
 Subject: Re: [PATCH] Format Unit can take many hours
-Date: Tue, 11 May 2004 18:26:38 +0200
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040511162638.GU4828@tpkurt.garloff.de>
-References: <20040511114936.GI4828@tpkurt.garloff.de> <20040511122037.GG1906@suse.de> <40A0FAE9.90900@pobox.com> <20040511161427.GW1906@suse.de>
+Date: Tue, 11 May 2004 11:28:22 -0500 (CDT)
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <20040511162822.C46BFDBDB@gherkin.frus.com>
+References: <Pine.GSO.4.33.0405110952380.14297-100000@sweetums.bluetronic.net>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="oIMVlEQ///Q2JYC7"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns.suse.de ([195.135.220.2]:43675 "EHLO Cantor.suse.de")
-	by vger.kernel.org with ESMTP id S264827AbUEKQ0m (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 11 May 2004 12:26:42 -0400
-Content-Disposition: inline
-In-Reply-To: <20040511161427.GW1906@suse.de>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org-S264826AbUEKQb0@vger.kernel.org>
+In-Reply-To: <Pine.GSO.4.33.0405110952380.14297-100000@sweetums.bluetronic.net>
+ "from Ricky Beam at May 11, 2004 10:01:55 am"
+To: Ricky Beam <jfbeam@bluetronic.net>
+Cc: Kurt Garloff <garloff@suse.de>, Linux SCSI list <linux-scsi@vger.kernel.org>, Linux kernel list <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Jens Axboe <axboe@suse.de>
-Cc: Jeff Garzik <jgarzik@pobox.com>, Linux SCSI list <linux-scsi@vger.kernel.org>, Linux kernel list <linux-kernel@vger.kernel.org>
 
+Ricky Beam wrote:
+> On Tue, 11 May 2004, Kurt Garloff wrote:
+> >the timeout for FORMAT_UNIT should be much longer; I've seen 8hrs
+> >already (75Gig). I've increased the timeout from 2hrs to 12hrs.
+> 
+> If you execute a FORMAT_UNIT properly, the timeout is irrelevant.  Set the
+> IMMED bit so the command returns as soon as the drive begins processing it.
+> Send TEST_UNIT_READY to check the progress.  I'll have to consult the
+> spec, but I think support for Immed is required.
 
---oIMVlEQ///Q2JYC7
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Moreover, it simply "feels" wrong to define a constant for something
+that isn't...  The quick fix of increasing the timeout doesn't address
+the underlying issue of how long a format should take, and as Ricky
+implies, that's probably more the concern of the application rather
+than the driver.
 
-Hi,
-
-On Tue, May 11, 2004 at 06:14:27PM +0200, Jens Axboe wrote:
-> On Tue, May 11 2004, Jeff Garzik wrote:
-> > Jens Axboe wrote:
-> > >block/scsi_ioctl.c should likely receive similar treatment then.
-> >=20
-> > This timeout is dependent on media size, I should think...
-> >=20
-> > Is there any reason to think that this timeout will _not_ be continuall=
-y=20
-> > patched in the future, as larger and larger sizes are used?
-
-The disks gets faster as well.
-
-But if we have to touch it every three years, I don't see this as a=20
-huge problem either. If you want some more room, you can set it to=20
-24hrs now ...
-
-> I think the timeout is only used for ancient programs that use the old
-> sg interface. Newer programs should pass in the timeout themselves, or
-> set IMMED as somebody else in this thread noted.
-
-If you do use the sg interface, you can specify the timeout.
-If you use SCSI_IOCTL_SEND_COMMAND, there's no way to do it and
-the value from scsi_ioctl.c applies.
-
-scsiformat is one of the users.
-
-> So I do think the easiest is just to patch this define for the odd case,
-> and forget about it.
-
-Agreed.
-
-Regards,
---=20
-Kurt Garloff  <garloff@suse.de>                            Cologne, DE=20
-SUSE LINUX AG, Nuernberg, DE                          SUSE Labs (Head)
-
---oIMVlEQ///Q2JYC7
-Content-Type: application/pgp-signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.2.4 (GNU/Linux)
-
-iD8DBQFAoP6+xmLh6hyYd04RAgaPAKDHOe0IgAYExTCEPQXGov1+3OIHKACfYRkV
-qBC77/SVlmIc1ynkSwM8lrg=
-=Kvbx
------END PGP SIGNATURE-----
-
---oIMVlEQ///Q2JYC7--
+-- 
+-----------------------------------------------------------------------
+Bob Tracy                   WTO + WIPO = DMCA? http://www.anti-dmca.org
+rct@frus.com
+-----------------------------------------------------------------------
