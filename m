@@ -1,68 +1,95 @@
-From: James Bottomley <James.Bottomley@steeleye.com>
-Subject: Re: [PATCH] allow drivers to hook into watchdog timeout
-Date: 12 Feb 2004 09:42:23 -0500
+From: Kurt Garloff <garloff@suse.de>
+Subject: Re: lots and lots of disks again
+Date: Thu, 12 Feb 2004 16:00:35 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1076596943.2196.71.camel@mulgrave>
-References: <20040120132052.GA6740@lst.de>		<2432440000.1076430858@aslan.btc.adaptec.com
-	 >	<1076431366.1804.24.camel@mulgrave>		<2472850000.1076435243@aslan.btc.ad
-	a	ptec.com>	<1076438507.2165.38.camel@mulgrave>	<2520610000.1076442259@aslan
-	 .btc.adaptec.com>	<1076443541.2080.56.camel@mulgrave>
-	<2549730000.1076444817@aslan.btc.adaptec.com>
-	<1076527539.1737.83.camel@mulgrave>
-	<3156030000.1076544910@aslan.btc.adaptec.com>
+Message-ID: <20040212150035.GN1780@tpkurt.garloff.de>
+References: <20040210110417.GB4010@tpkurt.garloff.de> <20040210112658.GC4010@tpkurt.garloff.de> <20040210133932.A3870@infradead.org> <20040210154751.GH4010@tpkurt.garloff.de> <20040210102603.0c835212.akpm@osdl.org> <20040211145614.GA4010@tpkurt.garloff.de> <20040211132848.49eece0d.akpm@osdl.org> <20040211220918.GJ4010@tpkurt.garloff.de> <20040211142933.484ca978.akpm@osdl.org> <20040211225348.GM21151@parcelfarce.linux.theplanet.co.uk>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="BjavXC7V3ilNTWHC"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat1.steeleye.com ([65.114.3.130]:45730 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S266445AbUBLOmd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 12 Feb 2004 09:42:33 -0500
-In-Reply-To: <3156030000.1076544910@aslan.btc.adaptec.com>
+Received: from ns.suse.de ([195.135.220.2]:7808 "EHLO Cantor.suse.de")
+	by vger.kernel.org with ESMTP id S266488AbUBLPAh (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 12 Feb 2004 10:00:37 -0500
+Content-Disposition: inline
+In-Reply-To: <20040211225348.GM21151@parcelfarce.linux.theplanet.co.uk>
 List-Id: linux-scsi@vger.kernel.org
-To: "Justin T. Gibbs" <gibbs@scsiguy.com>
-Cc: Christoph Hellwig <hch@lst.de>, SCSI Mailing List <linux-scsi@vger.kernel.org>
-
-On Wed, 2004-02-11 at 19:15, Justin T. Gibbs wrote: 
-> > But that's by design.  The application using SG_IO receives the error
-> > code directly and is in control of deciding to retry.
-> 
-> That's fine if the application has good information to go on.  Most
-> of the comments in the SCSI layer indicate that DID_RESET means that
-> a bus reset event happened, not that the LLD wanted to unconditionally
-> retry a command that has never seen the transport.
-
-DID_RESET doesn't mean the LLD wants to retry the command
-unconditionally.  It means that the LLD is reporting that the command
-was affected by error recovery actions and should be retried. 
-
-In the normal course of events, the mid-layer will do the retry without
-incrementing the retry count. 
-
-applications issuing direct commands get to decide what the policy
-should be. 
-
-> > The rule is that the mid-layer only delays for events it initiated.
-> 
-> Well, this breaks lots of devices like external RAID controllers that
-> need at least a few hundred ms bus settle delay before they will handle
-> a new command.  This controllers often initiate the bus reset when they
-> do a module failover or shutdown (e.g. upgrading one of the two controllers
-> in a redundant controller).  Without a bus settle delay, these devices
-> are taken offline by the mid-layer.
-> 
-> You have to enforce the delay regardless of where the reset event comes
-> from.  The devices on the bus don't care who reset the bus, and their
-> behavior doesn't differ when Linux does the reset or some third party
-> does.
-
-Well, there are two delays, aren't there: the bus settle delay and the
-device ready delay.  The latter isn't really determinable, but the
-device is supposed to return NOT_READY while in it.
-
-For the former, it only applies to a bus reset on SPI, so I'd like to
-handle it in the transport class.
-
-James
+To: viro@parcelfarce.linux.theplanet.co.uk
+Cc: Andrew Morton <akpm@osdl.org>, hch@infradead.org, linux-scsi@vger.kernel.org, pbadari@us.ibm.com, willy@debian.org, James.Bottomley@steeleye.com
 
 
+--BjavXC7V3ilNTWHC
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+
+Hi Al Viro,
+
+On Wed, Feb 11, 2004 at 10:53:48PM +0000, viro@parcelfarce.linux.theplanet.=
+co.uk wrote:
+> On Wed, Feb 11, 2004 at 02:29:33PM -0800, Andrew Morton wrote:
+> > I was rather hoping that Al would follow up on his comments yesterday
+> > actually.
+>=20
+> OK.  Proposed "sparse" partition numbers are Bad Idea(tm), for the same
+> reasons why 255.255.252.240 is not a good netmask for a subnet in class B.
+> It might be possible to handle if we do a single ->probe() for entire
+> major and put the smarts into it (about the only way to do that, actually=
+),
+> but we'll have a hell of time hunting down all places assuming that
+> device number =3D=3D first device number + partition number.  Note that we
+> are talking about late-boot code, fs/partition/*, anything that calls
+> bdget_disk(), etc.  _And_ unknown amount of userland code.  And code that
+> exports information to userland (e.g. /proc/paritions or sysfs per-disk
+> subtrees).
+
+OK, so let's scratch that from the proposal.=20
+
+It means we won't get 64 partitions, but I don't think this an=20
+important feature for many users. And it looks like we can't do=20
+it in a sane way without breaking the old numbers any way.
+And the breakage should be deferred to the /dev/disk change in=20
+2.7, IMHO.
+
+Let's just use
+  31     20 19       4 3    0
+ |--major--|---disk---|-part-|
+
+Any problems with that?
+
+I would have reserved 2 bits (19,18) in case somebody finds a way to
+implement it in a sane way, but probably you're right and it's not
+doable in a sane way. As long as we don't bump up the limit to more=20
+than 256k disks, we do not run into conflicts anyway.=20
+
+Expect a patch later.=20
+
+> Unless somebody has a good idea of the modifications involved and is will=
+ing
+> to describe them (_not_ on usual aeb level of handwaving, please), I cons=
+ider
+> that idea as non-feasible.
+
+One could add a hook to gendisk, and do some translation from user-visible
+device numbers to kernel device numbers. Thus only causing hacks at one=20
+place ...
+
+Regards,
+--=20
+Kurt Garloff  <garloff@suse.de>                            Cologne, DE=20
+SUSE LINUX AG, Nuernberg, DE                          SUSE Labs (Head)
+
+--BjavXC7V3ilNTWHC
+Content-Type: application/pgp-signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.2.3 (GNU/Linux)
+
+iD8DBQFAK5UTxmLh6hyYd04RAmRxAKDKpVoWzbgiQyC/oxN2mx/QahoQUgCePZDZ
+VQCip8hKc4MiSUwYgGYV85A=
+=l6yI
+-----END PGP SIGNATURE-----
+
+--BjavXC7V3ilNTWHC--
