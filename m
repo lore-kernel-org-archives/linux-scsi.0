@@ -1,56 +1,37 @@
-From: jshankar <jshankar@CS.ColoState.EDU>
+From: James Bottomley <James.Bottomley@steeleye.com>
 Subject: RE: queue depth help!!
-Date: Wed, 31 Dec 2003 09:23:27 -0700
+Date: 31 Dec 2003 10:26:56 -0600
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3FF4A594@webmail.colostate.edu>
+Message-ID: <1072888017.1893.2.camel@mulgrave>
+References: <3FF4A594@webmail.colostate.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from chico.cs.colostate.edu ([129.82.45.30]:47867 "EHLO
-	chico.cs.colostate.edu") by vger.kernel.org with ESMTP
-	id S265193AbTLaQXa (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 31 Dec 2003 11:23:30 -0500
+Received: from stat1.steeleye.com ([65.114.3.130]:11733 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S265196AbTLaQ1F (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 31 Dec 2003 11:27:05 -0500
+In-Reply-To: <3FF4A594@webmail.colostate.edu>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
+To: jshankar <jshankar@CS.ColoState.EDU>
 Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
-Hello James,
+On Wed, 2003-12-31 at 10:23, jshankar wrote:
+> On issuing a scsi command write, does the  data needs to be written 
+> succesfully 
+> to disk before issuing a scsi response. Is there a chance that the previous 
+> command's data is still cached on scsi controller and the next command issued 
+> is executed.
 
-Case :queue depth=1
+That depends on the drive cache setting.  For a write back cache,
+no--status will be sent before the command reaches the medium (as long
+as the FUA bit isn't set); for all other cache settings, yes.
 
-On issuing a scsi command write, does the  data needs to be written 
-succesfully 
-to disk before issuing a scsi response. Is there a chance that the previous 
-command's data is still cached on scsi controller and the next command issued 
-is executed.
+> Please let me know if there are any  good tools for scsi analyzer.
 
-Please let me know if there are any  good tools for scsi analyzer.
+I don't actually have one of these, so I'll let others answer...
 
-Thanks
-Jay
+James
 
-
-
->===== Original Message From James Bottomley <James.Bottomley@SteelEye.com> 
-=====
->On Sat, 2003-12-27 at 15:38, jshankar wrote:
->> if the scsi target queue depth is 1, does it mean that i can handle only 
-one
->> outstanding command  at a time.
->
->Yes
->
->> Does it mean if another command is issued( queue depth=1), it has to wait 
-till
->> the previous command is done.
->
->Yes.
->
->The mid-layer will start the queued command as soon as the one occupying
->the device returns...this is often why untagged devices actually set
->their depth to 2 so they can have another command all prepared and ready
->to roll as soon as the in-progress one returns.
->
->James
 
