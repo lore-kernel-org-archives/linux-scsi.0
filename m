@@ -1,60 +1,36 @@
-From: Doug Ledford <dledford@redhat.com>
-Subject: [Patch] SCSI: Fix BUSY status handling in new_eh done routine
-Date: Wed, 29 Oct 2003 13:05:14 -0500
+From: James Bottomley <James.Bottomley@steeleye.com>
+Subject: Re: [PATCH] [v2] aha152x cmnd->device oops
+Date: 29 Oct 2003 12:10:17 -0600
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1067450714.3112.366.camel@compaq.xsintricity.com>
+Message-ID: <1067451264.1829.37.camel@mulgrave>
+References: <20031027155713.GA28140@lst.de>
+	<20031027160101.76d5291b.rddunlap@osdl.org> <20031028090600.GA7370@lst.de>
+	<20031028124536.3ce82c23.rddunlap@osdl.org> <3F9EF2B4.9030708@us.ibm.com>
+	<20031028162610.6dcfd06e.rddunlap@osdl.org>
+	<20031029122008.GA5903@linux-buechse.de> <1067439510.1829.4.camel@mulgrave>
+	 <20031029175621.GB5903@linux-buechse.de>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="=-ytduxqejZoYQfGej2I46"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:56076 "EHLO mx1.redhat.com")
-	by vger.kernel.org with ESMTP id S261270AbTJ2SGS (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 29 Oct 2003 13:06:18 -0500
-List-Id: linux-scsi@vger.kernel.org
-To: Marcelo Tosatti <marcelo@conectiva.com.br>
-Cc: linux-scsi mailing list <linux-scsi@vger.kernel.org>
-
-
---=-ytduxqejZoYQfGej2I46
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from nat9.steeleye.com ([65.114.3.137]:47367 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S261152AbTJ2SOd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 29 Oct 2003 13:14:33 -0500
+In-Reply-To: <20031029175621.GB5903@linux-buechse.de>
+List-Id: linux-scsi@vger.kernel.org
+To: "Juergen E. Fischer" <fischer@linux-buechse.de>
+Cc: "Randy.Dunlap" <rddunlap@osdl.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, fischer@norbit.de
 
-The handling of BUSY status messages is not the same between old and new
-eh done functions.  The old eh code does it right.  This updates the new
-eh code so that it does the same thing.
+On Wed, 2003-10-29 at 11:56, Juergen E. Fischer wrote:
+> Why not?  It's a new command after all and if the initialization is
+> done correctly (ie. ->device is setup) it works the way it is now.
 
--- 
-  Doug Ledford <dledford@redhat.com>     919-754-3700 x44233
-         Red Hat, Inc.
-         1801 Varsity Dr.
-         Raleigh, NC 27606
+The usual reason is that ACA emulation is turned around in interrupt
+context, so new memory allocations should be avoided if they can be.
 
+for the aha that could eliminate the check for NULL cmnd.
 
---=-ytduxqejZoYQfGej2I46
-Content-Disposition: attachment; filename=busy.patch
-Content-Type: text/x-patch; name=busy.patch; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+James
 
-diff -Nru a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
---- a/drivers/scsi/scsi_error.c	Wed Oct 29 12:37:56 2003
-+++ b/drivers/scsi/scsi_error.c	Wed Oct 29 12:37:56 2003
-@@ -1044,6 +1044,7 @@
- 	 */
- 	switch (status_byte(SCpnt->result)) {
- 	case QUEUE_FULL:
-+	case BUSY:
- 		/*
- 		 * The case of trying to send too many commands to a tagged queueing
- 		 * device.
-@@ -1065,8 +1066,6 @@
- 		 * Who knows?  FIXME(eric)
- 		 */
- 		return SUCCESS;
--	case BUSY:
--		goto maybe_retry;
- 
- 	case RESERVATION_CONFLICT:
- 		printk("scsi%d (%d,%d,%d) : RESERVATION CONFLICT\n", 
-
---=-ytduxqejZoYQfGej2I46--
 
