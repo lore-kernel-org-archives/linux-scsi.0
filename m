@@ -1,35 +1,38 @@
-From: Christoph Hellwig <hch@infradead.org>
+From: Liran Schour <LIRANS@il.ibm.com>
 Subject: Re: Support for CDB length > 16
-Date: Tue, 18 Nov 2003 11:44:44 +0000
+Date: Tue, 18 Nov 2003 13:46:41 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20031118114444.A24013@infradead.org>
-References: <3FB9E777.6020404@torque.net> <OFD032B1FF.F1D45476-ONC2256DE2.0039CF43-C2256DE2.003DD890@il.ibm.com>
+Message-ID: <OF1494DF8F.2FB4A44D-ONC2256DE2.004036A3-C2256DE2.0040B333@il.ibm.com>
+References: <20031118113148.A23709@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pub234.cambridge.redhat.com ([213.86.99.234]:24334 "EHLO
-	phoenix.infradead.org") by vger.kernel.org with ESMTP
-	id S262591AbTKRLoz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 18 Nov 2003 06:44:55 -0500
-Content-Disposition: inline
-In-Reply-To: <OFD032B1FF.F1D45476-ONC2256DE2.0039CF43-C2256DE2.003DD890@il.ibm.com>; from LIRANS@il.ibm.com on Tue, Nov 18, 2003 at 01:15:31PM +0200
+Received: from mtagate5.de.ibm.com ([195.212.29.154]:9454 "EHLO
+	mtagate5.de.ibm.com") by vger.kernel.org with ESMTP id S262129AbTKRLw5
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 18 Nov 2003 06:52:57 -0500
+In-Reply-To: <20031118113148.A23709@infradead.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Liran Schour <LIRANS@il.ibm.com>
-Cc: dougg@torque.net, linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-scsi@vger.kernel.org
 
-On Tue, Nov 18, 2003 at 01:15:31PM +0200, Liran Schour wrote:
-> > Is there an upper limit on the size of the cdb you are interested in
-> > (e.g. XDWRITE EXTENDED in SBC-2 is 64 bytes)?
-> I have an upperlimit of 256 bytes.
 
-That's far beyond what we could increase the cmnd buffers to.
 
-> 
-> > How were you planning to pass the cdb (length > 16) to the kernel?
-> I am planning to build a filesystem in the kernel that will be over an OSD
-> SCSI device. This layer will interact directly with the SCSI system.
 
-I don't think there's a lot of chance to see your project supported in
-mainline kernels.  Maybe we'll have to find a way to make it work when
-it's ready for mainline submission, but before that you're on your own..
+
+Christoph Hellwig wrote:
+
+> You'd have to enlarge MAX_COMMAND_SIZE, that'S the whole point of it :)
+> What exactly are you trying to do and for what kernel release?  We've
+> been through increasing it from 12 to 16 at some point in 2.4.
+
+I am trying to find a way to do that without the need to recompile the
+kernel.
+I am trying to support an OSD device see t10 OSD draft, I think that 2.6 is
+my target kernel release.
+
+Thanks,
+- Liran
+
+
 
