@@ -1,42 +1,28 @@
-From: Patrick Mansfield <patmans@us.ibm.com>
+From: Christoph Hellwig <hch@lst.de>
 Subject: Re: [PATCH] prepare qla1280 drivers for ISP1020/1040 support
-Date: Fri, 6 Feb 2004 17:48:15 -0800
+Date: Sat, 7 Feb 2004 09:03:00 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040206174815.A10879@beaverton.ibm.com>
-References: <20040206155632.GA4679@lst.de>
+Message-ID: <20040207080300.GA15781@lst.de>
+References: <20040206155632.GA4679@lst.de> <20040206174815.A10879@beaverton.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e35.co.us.ibm.com ([32.97.110.133]:5083 "EHLO e35.co.us.ibm.com")
-	by vger.kernel.org with ESMTP id S265630AbUBGBsx (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 6 Feb 2004 20:48:53 -0500
+Received: from verein.lst.de ([212.34.189.10]:5848 "EHLO mail.lst.de")
+	by vger.kernel.org with ESMTP id S266474AbUBGIDG (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 7 Feb 2004 03:03:06 -0500
 Content-Disposition: inline
-In-Reply-To: <20040206155632.GA4679@lst.de>; from hch@lst.de on Fri, Feb 06, 2004 at 04:56:32PM +0100
+In-Reply-To: <20040206174815.A10879@beaverton.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
+To: Patrick Mansfield <patmans@us.ibm.com>
 Cc: Jes Sorensen <jes@wildopensource.com>, linux-scsi@vger.kernel.org
 
-On Fri, Feb 06, 2004 at 04:56:32PM +0100, Christoph Hellwig wrote:
-> I thought it might be a good idea to not dump a huge patch with all my
-> restructuring at you when I'm done, so here's the bits of the 1040
-> support I'm already comfortable with and that make sense to merge.
+On Fri, Feb 06, 2004 at 05:48:15PM -0800, Patrick Mansfield wrote:
+> > Warning:  this patch hasn't actually been tested on a currently
+> > supported chip due to lack of hardware.
 > 
-> Really new is only the firmware loading by PIO as needed by the
-> 1020/1040, everything else is some restructuring to make the code more
-> readable and easiert to hack.  This includes the flush_cache_all removal
-> I sent to the list.
-> 
-> Warning:  this patch hasn't actually been tested on a currently
-> supported chip due to lack of hardware.
+> So with this patch should 1020's work OK with this driver?
 
-So with this patch should 1020's work OK with this driver?
+Not yet.  There's another bunch of changes needed, but this is the
+intrusive part, I'll hopefully submit those next week when I'm 
+comfortable with the changes.
 
-i.e. these:
-
-00:0a.0 SCSI storage controller: QLogic Corp. ISP1020 Fast-wide SCSI (rev 05)
-02:0a.0 SCSI storage controller: QLogic Corp. ISP1020 Fast-wide SCSI (rev 05)
-
-I am still using qlogicisp for a root disk, and on another system to test
-various storage.
-
--- Patrick Mansfield
