@@ -1,34 +1,55 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH][BUGFIX] : megaraid patch for 2.10.1 (irq disable bug fix)
-Date: Tue, 24 Feb 2004 20:43:27 +0000
+From: "Mukker, Atul" <Atulm@lsil.com>
+Subject: RE: [PATCH][BUGFIX] : megaraid patch for 2.10.1 (irq disable bug
+	 fix)
+Date: Tue, 24 Feb 2004 16:02:34 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040224204327.A27822@infradead.org>
-References: <0E3FA95632D6D047BA649F95DAB60E57033BC3DA@exa-atlanta.se.lsil.com>
+Message-ID: <0E3FA95632D6D047BA649F95DAB60E57033BC3DE@exa-atlanta.se.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="iso-8859-1"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from phoenix.infradead.org ([213.86.99.234]:53002 "EHLO
-	phoenix.infradead.org") by vger.kernel.org with ESMTP
-	id S262454AbUBXUng (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 24 Feb 2004 15:43:36 -0500
-Content-Disposition: inline
-In-Reply-To: <0E3FA95632D6D047BA649F95DAB60E57033BC3DA@exa-atlanta.se.lsil.com>; from Atulm@lsil.com on Tue, Feb 24, 2004 at 11:04:21AM -0500
+Received: from mail0.lsil.com ([147.145.40.20]:43448 "EHLO mail0.lsil.com")
+	by vger.kernel.org with ESMTP id S262458AbUBXVD5 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 24 Feb 2004 16:03:57 -0500
 List-Id: linux-scsi@vger.kernel.org
-To: "Mukker, Atul" <Atulm@lsil.com>
-Cc: 'James Bottomley' <James.Bottomley@SteelEye.com>, 'Arjan van de Ven' <arjanv@redhat.com>, 'Paul Wagland' <paul@wagland.net>, Matthew Wilcox <willy@debian.org>, "Bagalkote, Sreenivas" <sreenib@lsil.com>, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
+To: 'James Bottomley' <James.Bottomley@SteelEye.com>, "'matt_domsch@dell.com'" <matt_domsch@dell.com>
+Cc: 'Arjan van de Ven' <arjanv@redhat.com>, 'Paul Wagland' <paul@wagland.net>, Matthew Wilcox <willy@debian.org>, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
 
-On Tue, Feb 24, 2004 at 11:04:21AM -0500, Mukker, Atul wrote:
-> The driver package is available in usual location, too big to be inlined :-)
-> ftp://ftp.lsil.com/pub/linux-megaraid/drivers/version-unified-2.20.0.0.02.24
-> .2004-alpha1/
+> > controllers and also a single code base, with a very small 
+> footprint patch -
+> > if at all required, to support various kernels.
+> 
+> I didn't say "no".  I'm just warning you that you've chosen a 
+> hard road
+> to hoe, particularly with the limited life of 2.4.
 
-James already mentioned the probing issue and looking further through the
-driver there's lots of need for improvement.  I think we should try to get
-2.6 merged up with all the changes from the last unified driver and additional
-fixes posted to the list (e.g. the dma_sync thing, did you have a chance to
-look at it?) so that we have a proben base until we look into it.
+In my opinion, maintaining support for 2.4 drivers and adding new
+controllers to it would be crucial for a considerable time to come even
+while lk 2.6 becomes mainstream. As support, we would want to provide
+support for as many kernels and controllers as possible.
 
-P.S. from  a sort look the fusion-based adapters seem to be completely
-different from existing megaraid adapters.  What non-trivial code is
-actually shared?
+>From a developer standpoint, It is very difficult to maintain two drivers. I
+am willing to fork iff the code is too hairy - but right now it seems very
+manageable.
 
+> "An important MegaRAID feature is to be able to boot from any logical
+> drive on
+> If you require this functionality in 2.6, you should look at plugging
+> into the udev infrastructure.
+
+Now, this is some new information for me. I am not sure what is Dell's stand
+on this option. Matt, Arjan?
+
+Do we want to discover controllers and devices directed solely by kernel and
+should driver interfere a little bit.
+
+> This is unacceptable:
+> 
+> #if defined (__x86_64__)
+> 		/*
+> 		 * Register the 32-bit ioctl conversion
+> 		 */
+> 		register_ioctl32_conversion(MEGAIOCCMD, sys_ioctl)
+> #endif
+Ok.. Let us find a better solution. 
