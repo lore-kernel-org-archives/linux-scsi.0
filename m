@@ -1,34 +1,28 @@
-From: Pete Zaitcev <zaitcev@redhat.com>
-Subject: Re: Strange code in revalidate_scsidisk
-Date: Tue, 14 Sep 2004 15:51:48 -0700
+From: "David Peterson \(Eng\)" <david_peterson@cnt.com>
+Subject: SSC-2 support in Linux
+Date: Tue, 14 Sep 2004 18:03:29 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040914155148.57e1cc49@lembas.zaitcev.lan>
-References: <20040914152022.5d47cae4@lembas.zaitcev.lan>
-	<20040914233742.A13966@infradead.org>
+Message-ID: <82C736F456CA3E4EA3D0DC6CC31AA5CB01651157@esply09.cnt.ad.cnt.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:23010 "EHLO mx1.redhat.com")
-	by vger.kernel.org with ESMTP id S266275AbUINWwI (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 14 Sep 2004 18:52:08 -0400
-In-Reply-To: <20040914233742.A13966@infradead.org>
+Received: from gatehider.cnt.com ([139.93.128.13]:44611 "EHLO esply07.cnt.com")
+	by vger.kernel.org with ESMTP id S267705AbUINXDj convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 14 Sep 2004 19:03:39 -0400
+Content-class: urn:content-classes:message
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-scsi@vger.kernel.org, dledford@redhat.com
+To: linux-kernel@vger.kernel.org, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Tue, 14 Sep 2004 23:37:43 +0100
-Christoph Hellwig <hch@infradead.org> wrote:
+I'd like to hear from anyone interested, or has looked into, adding
+support for SSC-2 (SCSI Stream Commands -2, i.e., tape devices) explicit
+address mode into the Linux OS.
 
-> On Tue, Sep 14, 2004 at 03:20:22PM -0700, Pete Zaitcev wrote:
+In summary, SSC-2 explicit address mode enables for tape devices:
+- robust tagged command queuing
+- multi-path I/O
+- enhanced error detection and recovery
 
-> > Here's a short summary to provide the context for my question. Fujitsu report
-> > a lockup (on RHEL3, but the code is the same as 2.6). They hook up a USB
-> 
-> Actually the code looks completely different in 2.6.  And yes, the 2.4 code
-> looks extremly fishy.
-
-I must've changed to a wrong directory by accident. Sorry for the confusion.
-
--- Pete
+Thanks...Dave
