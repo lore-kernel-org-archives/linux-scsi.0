@@ -1,35 +1,42 @@
-From: Willem Riede <wrlk@riede.org>
-Subject: [PATCH] osst buglet
-Date: Sat, 25 Oct 2003 17:19:00 -0400
+From: Aristeu Sergio Rozanski Filho <aris@cathedrallabs.org>
+Subject: [patch] qlogic: free irq in pcmcia driver
+Date: Sun, 26 Oct 2003 11:38:26 -0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20031025211900.GI16329@linnie.riede.org>
-Reply-To: wrlk@riede.org
+Message-ID: <20031026133825.GB470@cathedrallabs.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: multipart/mixed; boundary="kORqDWCi7qDJ0mEj"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sccrmhc11.comcast.net ([204.127.202.55]:39423 "EHLO
-	sccrmhc11.comcast.net") by vger.kernel.org with ESMTP
-	id S263005AbTJYVMq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 25 Oct 2003 17:12:46 -0400
+Received: from panda.sul.com.br ([200.219.150.4]:40458 "EHLO panda.sul.com.br")
+	by vger.kernel.org with ESMTP id S263128AbTJZNj3 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 26 Oct 2003 08:39:29 -0500
 Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
+Cc: James.Bottomley@steeleye.com
 
-Can someone please commit the change below to 2.6-test scsi BK for me?
-It fixes a "Bad page state at destroy_compound_page" error.
 
-Thanks, Willem Riede, osst maintainer.
------- start patch ------
---- lk/drivers/scsi/osst_options.h	2003-10-25 10:12:24.000000000 -0400
-+++ wr/drivers/scsi/osst_options.h	2003-10-25 17:09:26.000000000 -0400
-@@ -57,7 +57,7 @@
- /* The size of the first scatter/gather segments (determines the maximum block
-    size for SCSI adapters not supporting scatter/gather). The default is set
-    to try to allocate the buffer as one chunk. */
--#define OSST_FIRST_ORDER  5
-+#define OSST_FIRST_ORDER  (15-PAGE_SHIFT)
+--kORqDWCi7qDJ0mEj
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+
+-- 
+aris
+
+
+--kORqDWCi7qDJ0mEj
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: attachment; filename="qlogic-pcmcia_free_irq.patch"
+
+--- linux/drivers/scsi/pcmcia/qlogic_stub.c.orig	2003-10-23 21:26:11.000000000 -0200
++++ linux/drivers/scsi/pcmcia/qlogic_stub.c	2003-10-24 11:32:58.000000000 -0200
+@@ -284,6 +284,7 @@
+ 	CardServices(ReleaseConfiguration, link->handle);
+ 	CardServices(ReleaseIO, link->handle, &link->io);
+ 	CardServices(ReleaseIRQ, link->handle, &link->irq);
++	free_irq(info->host->irq, info->host);
  
+ 	scsi_host_put(info->host);
  
- /* The following lines define defaults for properties that can be set
------- end patch ------
+
+--kORqDWCi7qDJ0mEj--
