@@ -1,85 +1,25 @@
-From: Andrew Morton <akpm@osdl.org>
-Subject: Fw: 2.6.11-rc4-mm1 and dpt_i2o Adaptec I2O RAID controller
-Date: Wed, 23 Feb 2005 16:51:38 -0800
-Message-ID: <20050223165138.475f5220.akpm@osdl.org>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: Fw: 2.6.11-rc4-mm1 and dpt_i2o Adaptec I2O RAID controller
+Date: Thu, 24 Feb 2005 02:41:20 +0000
+Message-ID: <20050224024120.GA24848@infradead.org>
+References: <20050223165138.475f5220.akpm@osdl.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-Received: from fire.osdl.org ([65.172.181.4]:11146 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S261731AbVBXAq3 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 23 Feb 2005 19:46:29 -0500
+Content-Type: text/plain; charset=us-ascii
+Received: from pentafluge.infradead.org ([213.146.154.40]:8086 "EHLO
+	pentafluge.infradead.org") by vger.kernel.org with ESMTP
+	id S261769AbVBXClV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 23 Feb 2005 21:41:21 -0500
+Content-Disposition: inline
+In-Reply-To: <20050223165138.475f5220.akpm@osdl.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: go@turbolinux.co.jp, sebastian.faerber@web.de
+To: Andrew Morton <akpm@osdl.org>
+Cc: linux-scsi@vger.kernel.org, go@turbolinux.co.jp, sebastian.faerber@web.de
 
+On Wed, Feb 23, 2005 at 04:51:38PM -0800, Andrew Morton wrote:
+> 
+> 
+> Begin forwarded message:
 
+Never use the dpt_i2o driver but rather i2o_block/i2o_scsi
 
-Begin forwarded message:
-
-Date: Wed, 23 Feb 2005 18:18:46 +0100
-From: <sebastian.faerber@web.de>
-To: linux-kernel@vger.kernel.org
-Subject: 2.6.11-rc4-mm1 and dpt_i2o Adaptec I2O RAID controller
-
-
-Hi all,
-
-i'm trying to get an Adaptec 2015S Zero Channel Raid Controller up and running in a very new Asus Mainboard (NCL-DS)
-with Dual Xeons.
-I already tried kernel 2.4.29 and plain 2.6.10 but both just lock up when loading the dpt_i2o driver.
-With 2.6.11-rc4-mm1 i could gather the following output while booting:
---
-Loading Adaptec I2O RAID: Version 2.4 Build 5go
-Detecting Adaptec I2O RAID controllers...
-ACPI: PCI interrupt 0000:09:01.0[A] -> GSI 11 (level, low) -> IRQ 11
-Adaptec I2O RAID controller 0 irq=11
-     BAR0 f8880000 - size= 100000
-     BAR1 f8a00000 - size= 1000000
-BUG: soft lockup detected on CPU#0!
-
-Pid: 1, comm:              swapper
-EIP: 0060:[<c011d05e>] CPU: 0
-EIP is at __do_softirq+0x2e/0x90
- EFLAGS: 00000246    Not tainted  (2.6.11-rc4-mm1)
-EAX: dfcb0000 EBX: 00000022 ECX: 00000022 EDX: 00000000
-ESI: c04c8ea0 EDI: 0000000a EBP: 00000246 DS: 007b ES: 007b
-CR0: 8005003b CR2: fffcd000 CR3: 004a3000 CR4: 000006d0
- [<c011d0e7>] do_softirq+0x27/0x30
- [<c010472b>] do_IRQ+0x3b/0x70
- [<c0102fba>] common_interrupt+0x1a/0x20
- [<c01362c2>] setup_irq+0xa2/0xf0
- [<c02db930>] adpt_isr+0x0/0x1f0 [more]
- [<c01364a1>] request_irq+0x71/0x90
- [<c02da051>] adpt_install_hba+0x2a1/0x420
- [<c0272993>] bus_add_driver+0xc3/0xd0
- [<c02d9080>] adpt_detect+0x50/0x1e0
- [<c049135a>] init_this_scsi_driver+0x3a/0x100
- [<c04747eb>] do_initcalls+0x2b/0xc0
- [<c0100290>] init+0x0/0xf0
- [<c0100290>] init+0x0/0xf0
- [<c01002b5>] init+0x25/0xf0
- [<c01012d8>] kernel_thread_helper+0x0/0x18
- [<c01012dd>] kernel_thread_helper+0x5/0x18
---
-
-I have several machines running with dpt_i2o raid controller and 2.4.29 for example but they are on older
-Tyan boards.
-
-Any suggestions how to get this controller up and running ? I suppose it has something to do with APIC and/or IRQ routing ?
-If you need any additional information just let me know.
-
-Best Regards,
-
-Sebastian Faerber
-
-______________________________________________________________
-Verschicken Sie romantische, coole und witzige Bilder per SMS!
-Jetzt bei WEB.DE FreeMail: http://f.web.de/?mc=021193
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
-Please read the FAQ at  http://www.tux.org/lkml/
