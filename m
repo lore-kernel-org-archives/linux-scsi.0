@@ -1,77 +1,93 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH] serialize bus scanning
-Date: Mon, 25 Aug 2003 14:24:16 +0200
+Subject: Re: GFDL issue in Documentation/DocBook/scsidrivers.tmpl
+Date: Mon, 25 Aug 2003 14:43:26 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030825122416.GE15506@lst.de>
+Message-ID: <20030825124326.GA15940@lst.de>
+References: <20030807162521.GA30904@lst.de> <3F378408.9090708@torque.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([212.34.189.10]:56475 "EHLO mail.lst.de")
-	by vger.kernel.org with ESMTP id S261811AbTHYMYU (ORCPT
+Received: from verein.lst.de ([212.34.189.10]:14492 "EHLO mail.lst.de")
+	by vger.kernel.org with ESMTP id S261795AbTHYMn3 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 25 Aug 2003 08:24:20 -0400
+	Mon, 25 Aug 2003 08:43:29 -0400
 Content-Disposition: inline
+In-Reply-To: <3F378408.9090708@torque.net>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
+To: James.Bottomley@SteelEye.com
 Cc: linux-scsi@vger.kernel.org
 
-Synchronize all scanning activity, this fixes long-standing races
-vs /proc/scsi/scsi and sysfs addition and deletion of devices.
+On Mon, Aug 11, 2003 at 09:54:48PM +1000, Douglas Gilbert wrote:
+> Christoph Hellwig wrote:
+> >As discussed in the thread at
+> >http://www.ussg.iu.edu/hypermail/linux/kernel/0306.1/1928.html
+> >we agreed that GFDL is not an acceptable license for documentation
+> >in the kernel tree, but file in subject still comes under that
+> >license.
+> >
+> >Douglas, any chance you could relicense it under something
+> >GPL-compatible?  It probably wants folding into scsi_mid_low_api.txt
+> >anyway..
+> 
+> Is the attached preferable?
+> [Switch GFDL to GPL]
 
-Note that this does not serialize removing, the lists will get
-their own locking soon.
+James, could you apply this patch?
 
+> 
+> 
+> Doug Gilbert
+> 
 
-diff -Nru a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
---- a/drivers/scsi/scsi_scan.c	Mon Aug 25 13:37:29 2003
-+++ b/drivers/scsi/scsi_scan.c	Mon Aug 25 13:37:29 2003
-@@ -30,6 +30,7 @@
- #include <linux/moduleparam.h>
- #include <linux/init.h>
- #include <linux/blkdev.h>
-+#include <asm/semaphore.h>
- 
- #include "scsi.h"
- #include "hosts.h"
-@@ -94,6 +95,13 @@
- 		 " between 1 and 16384)");
- #endif
- 
-+/*
-+ * This mutex serializes all scsi scanning activity from kernel- and
-+ * userspace.  It could easily be made per-host but I'd like to avoid
-+ * the overhead for now.
-+ */
-+static DECLARE_MUTEX(scsi_scan_mutex);
-+
- /**
-  * scsi_unlock_floptical - unlock device via a special MODE SENSE command
-  * @sreq:	used to send the command
-@@ -1067,9 +1075,12 @@
- 	struct scsi_device *sdev;
- 	int res;
- 
-+	down(&scsi_scan_mutex);
- 	res = scsi_probe_and_add_lun(shost, channel, id, lun, NULL, &sdev, 1);
- 	if (res != SCSI_SCAN_LUN_PRESENT)
- 		sdev = ERR_PTR(-ENODEV);
-+	up(&scsi_scan_mutex);
-+
- 	return sdev;
- }
- 
-@@ -1191,11 +1202,14 @@
- 	    ((lun != SCAN_WILD_CARD) && (lun > shost->max_lun)))
- 		return -EINVAL;
- 
-+	down(&scsi_scan_mutex);
- 	if (channel == SCAN_WILD_CARD) 
- 		for (channel = 0; channel <= shost->max_channel; channel++)
- 			scsi_scan_channel(shost, channel, id, lun, rescan);
- 	else
- 		scsi_scan_channel(shost, channel, id, lun, rescan);
-+	up(&scsi_scan_mutex);
-+
- 	return 0;
- }
- 
+> --- linux/Documentation/DocBook/scsidrivers.tmpl	2003-01-09 22:09:24.000000000 +1000
+> +++ linux/Documentation/DocBook/scsidrivers.tmpl260t3gpl	2003-08-11 08:50:09.000000000 +1000
+> @@ -16,20 +16,40 @@
+>      </affiliation>
+>     </author>
+>    </authorgroup>
+> -  <pubdate>2002-04-27</pubdate>
+> +  <pubdate>2003-08-11</pubdate>
+>  
+>    <copyright>
+>     <year>2002</year>
+> +   <year>2003</year>
+>     <holder>Douglas Gilbert</holder>
+>    </copyright>
+> +
+>    <legalnotice>
+>     <para>
+> -    Permission is granted to copy, distribute and/or modify this
+> -    document under the terms of the GNU Free Documentation License,
+> -    Version 1.1 or any later version published by the Free Software
+> -    Foundation; with no Invariant Sections, with no Front-Cover Texts,
+> -    and with no Back-Cover Texts.  A copy of the license is included
+> -    in the section entitled "GNU Free Documentation License".
+> +     This documentation is free software; you can redistribute
+> +     it and/or modify it under the terms of the GNU General Public
+> +     License as published by the Free Software Foundation; either
+> +     version 2 of the License, or (at your option) any later
+> +     version.
+> +   </para>
+> +      
+> +   <para>
+> +     This program is distributed in the hope that it will be
+> +     useful, but WITHOUT ANY WARRANTY; without even the implied
+> +     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+> +     See the GNU General Public License for more details.
+> +   </para>
+> +      
+> +   <para>
+> +     You should have received a copy of the GNU General Public
+> +     License along with this program; if not, write to the Free
+> +     Software Foundation, Inc., 59 Temple Place, Suite 330, Boston,
+> +     MA 02111-1307 USA
+> +   </para>
+> +      
+> +   <para>
+> +     For more details see the file COPYING in the source
+> +     distribution of Linux.
+>     </para>
+>    </legalnotice>
+>  
+
+---end quoted text---
