@@ -1,64 +1,52 @@
-From: Patrick Mansfield <patmans@us.ibm.com>
-Subject: Re: proc_name in sysfs
-Date: Wed, 6 Apr 2005 11:36:14 -0700
-Message-ID: <20050406183614.GA25370@us.ibm.com>
-References: <4253CA94.8000500@bull.net>
+From: Jens Axboe <axboe@suse.de>
+Subject: Re: [OOPS] 2.6.11 - NMI lockup with CFQ scheduler
+Date: Wed, 6 Apr 2005 21:08:40 +0200
+Message-ID: <20050406190838.GE15165@suse.de>
+References: <20050329115405.97559.qmail@web52909.mail.yahoo.com> <20050329120311.GO16636@suse.de> <1112804840.5476.16.camel@mulgrave> <20050406175838.GC15165@suse.de> <1112811607.5555.15.camel@mulgrave>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e1.ny.us.ibm.com ([32.97.182.141]:58318 "EHLO e1.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S262279AbVDFSgW (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Apr 2005 14:36:22 -0400
-Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
-	by e1.ny.us.ibm.com (8.12.11/8.12.11) with ESMTP id j36IaMTE002797
-	for <linux-scsi@vger.kernel.org>; Wed, 6 Apr 2005 14:36:22 -0400
-Received: from d01av02.pok.ibm.com (d01av02.pok.ibm.com [9.56.224.216])
-	by d01relay04.pok.ibm.com (8.12.10/NCO/VER6.6) with ESMTP id j36IaMZW245028
-	for <linux-scsi@vger.kernel.org>; Wed, 6 Apr 2005 14:36:22 -0400
-Received: from d01av02.pok.ibm.com (loopback [127.0.0.1])
-	by d01av02.pok.ibm.com (8.12.11/8.12.11) with ESMTP id j36IaMc0002139
-	for <linux-scsi@vger.kernel.org>; Wed, 6 Apr 2005 13:36:22 -0500
+Received: from ns.virtualhost.dk ([195.184.98.160]:35258 "EHLO virtualhost.dk")
+	by vger.kernel.org with ESMTP id S262288AbVDFTIv (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Apr 2005 15:08:51 -0400
 Content-Disposition: inline
-In-Reply-To: <4253CA94.8000500@bull.net>
+In-Reply-To: <1112811607.5555.15.camel@mulgrave>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Frederic TEMPORELLI <frederic.temporelli@bull.net>
-Cc: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Chris Rankin <rankincj@yahoo.com>, Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Wed, Apr 06, 2005 at 01:40:04PM +0200, Frederic TEMPORELLI wrote:
+On Wed, Apr 06 2005, James Bottomley wrote:
+> On Wed, 2005-04-06 at 19:58 +0200, Jens Axboe wrote:
+> > I rather like the queue lock being a pointer, so you can share at
+> > whatever level you want. Lets not grow the request_queue a full lock
+> > just to work around a bug elsewhere.
+> 
+> I'm not proposing that it not be a pointer, merely that it could be
+> intialiased to point to a lock structure within the request queue.
 
-> 2/ now, how can we get the adapter module name from sysfs ?
+Sorry that's what I meant, you are adding a lock inside the queue. I
+didn't mean removing q->queue_lock or making it a non-pointer.
 
-Why do you need it?
+> Doing this looks much simpler than your current patch ... one of the
+> problems with which looks to be that removing the scsi_driver module is
+> in trouble because we currently have the queue_release in the sdev
+> release (which won't get called while the queue holds a reference).
 
-Anyway, try lsscsi, it walks the sysfs tree:
+It is simpler, but it only solves this particular problem of the lock
+going away.
 
-[elm3b79 patman]$ lsscsi  -H
-[0]    qla1280
-[1]    qla1280
-[2]    qla2xxx
-[3]    qla2xxx
+> I think the correct model for all of this is that the block driver
+> shouldn't care (or be tied to) the scsi one.  Thus, as long as SCSI can
+> reject requests from a queue whose device has been released (without
+> checking the device) then everything is fine as long as we sort out the
+> lock lifetime problem.
 
-Or, script it:
+But you are tying it completely to the SCSI problem, since we have no
+locking problems of this sort elsewhere. At least the notified could
+potentially be used for something else. The lock is just hack number two
+to work around the problem.
 
-[elm3b79 tmp]$ more xx.sh
-#! /bin/sh
+-- 
+Jens Axboe
 
-hdir=/sys/class/scsi_host
-
-for i in ${hdir}/host*
-do
-        host_dir=$(cd ${i}/device;/bin/pwd)
-        driver_dir=$(cd ${host_dir}/../driver;/bin/pwd)
-        module=$(basename ${driver_dir})
-        # echo ${i} is in: ${host_dir}
-        echo "${i} module (driver) is: ${module}"
-done
-
-[elm3b79 tmp]$ sh ./xx.sh
-/sys/class/scsi_host/host0 module (driver) is: qla1280
-/sys/class/scsi_host/host1 module (driver) is: qla1280
-/sys/class/scsi_host/host2 module (driver) is: qla2300
-/sys/class/scsi_host/host3 module (driver) is: qla2300
-
--- Patrick Mansfield
