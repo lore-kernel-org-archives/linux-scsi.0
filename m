@@ -1,70 +1,92 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH] remove that anoying in_atomic()...
-Date: Sat, 23 Nov 2002 03:42:06 +0100
+From: Doug Ledford <dledford@redhat.com>
+Subject: Re: One more change pushed to bk tree
+Date: Fri, 22 Nov 2002 21:45:01 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20021123034206.A11347@lst.de>
+Message-ID: <20021123024501.GC19547@redhat.com>
+References: <20021122183603.GC16865@redhat.com> <20021122155615.A21301@eng2.beaverton.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Content-Disposition: inline
+In-Reply-To: <20021122155615.A21301@eng2.beaverton.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org
+To: Patrick Mansfield <patmans@us.ibm.com>
+Cc: Linux Scsi Mailing List <linux-scsi@vger.kernel.org>
 
-We're always called from scsi_prep_fn which is guaranteed to be called
-under a spinlock from the block layer.
+On Fri, Nov 22, 2002 at 03:56:15PM -0800, Patrick Mansfield wrote:
+> Hi Doug -
+> 
+> It booted and runs fine on a netfinity + aic. I haven't updated my 
+> modutils yet, so did not try the qla driver (ported to your new naming
+> scheme, I need the qla to test with a qlogics 2300 with a multi-lun target).
+> 
+> Was there a missing scsi_release_commandblocks call?
 
-Also nuke more broken includes.
+Yep (at least it looked like it, so I decided better safe than sorry since 
+scsi_release_commandblocks() is safe even when there are none to release).
 
+> Why not remove the next/prev in scsi_device? Any code referencing
+> them is broken, usage should at least generate a compilation warning.
 
---- 1.54/drivers/scsi/scsi_lib.c	Fri Nov 22 12:59:03 2002
-+++ edited/drivers/scsi/scsi_lib.c	Sat Nov 23 02:45:56 2002
-@@ -7,18 +7,15 @@
-  *                        of people at Linux Expo.
-  */
- 
--#include <linux/string.h>
--#include <linux/slab.h>
- #include <linux/bio.h>
--#include <linux/kernel.h>
- #include <linux/blk.h>
--#include <asm/hardirq.h>
--#include <linux/smp_lock.h>
- #include <linux/completion.h>
-+#include <linux/kernel.h>
-+#include <linux/slab.h>
- 
- #include "scsi.h"
- #include "hosts.h"
--#include <scsi/scsi_ioctl.h>
-+
- 
- /*
-  * Function:    scsi_insert_special_cmd()
-@@ -665,7 +662,7 @@
- {
- 	struct request     *req = SCpnt->request;
- 	struct scatterlist *sgpnt;
--	int count, gfp_mask, ret = 0;
-+	int count, ret = 0;
- 
- 	/*
- 	 * if this is a rq->data based REQ_BLOCK_PC, setup for a non-sg xfer
-@@ -685,16 +682,10 @@
- 	 */
- 	SCpnt->use_sg = req->nr_phys_segments;
- 
--	gfp_mask = GFP_NOIO;
--	if (likely(in_atomic())) {
--		gfp_mask &= ~__GFP_WAIT;
--		gfp_mask |= __GFP_HIGH;
--	}
--
- 	/*
- 	 * if sg table allocation fails, requeue request later.
- 	 */
--	sgpnt = scsi_alloc_sgtable(SCpnt, gfp_mask);
-+	sgpnt = scsi_alloc_sgtable(SCpnt, GFP_ATOMIC);
- 	if (unlikely(!sgpnt)) {
- 		req->flags |= REQ_SPECIAL;
- 		ret = BLKPREP_DEFER;
+I was going to in my next patch.  The first was to change it over, the 
+next would have been various cleanups.
+
+> The slave_destroy should be called before the channel/id/lun is modified
+> during scanning, so slave_destroy if needed can index off of 
+> host/channel/id/lun and figure out properly what to destroy.
+
+Hmmm...I thought that's how I did it....
+
+> Perhaps there
+> should be a common function for this that calls slave_destroy, modifies
+> sdevscan channel/id/lun, and then calls slave_alloc; such a function might
+> also release and build command blocks.
+
+Well, before we go too far down this road, I do want to pipe up and 
+publically announce how much I thoroughly *DETEST* that whole section of 
+code with its totally convoluted hoop jumping crap that it does to avoid 
+calling blk_init_queue() on each scan target.  Personally, if it were up 
+to me I would make a much simpler/faster queue init routine, quit this 
+crap of passing around and reusing the same pointer, and clean up *tons* 
+of crap in the scsi scan code.  That being said, anything that increases 
+the complexity of that code is bad IMHO.
+
+Furthermore, one of my intended near future patches, pending review of the
+idea because this is a change that would touch *A LOT* of files, is to get
+rid of scsi_{build,release}_commandblocks entirely and instead change the
+scsi subsystem to use generic command blocks that are applicable to all
+hosts, modify all low level drivers to use the cmd->device pointer to get
+the host/bus/target id/lun values so that they don't need device specific
+command blocks, then to allocate a small pool of these on startup and lazy
+allocate/deallocate them as we run and as scsi_adjust_queue_depth() starts
+getting called for various devices.  If that happens, then most of the 
+discussion about command blocks is moot.  Then, since currently I'm the 
+only user of slave_alloc(), it would also be easy enough for me to make a 
+rule that no device driver is allowed to hard code device numbers in thier 
+alloced struct so that we could do this scanning of devices, not need to 
+rebuild command blocks, not need to realloc slave structs, and still have 
+everything work.  Good enough?
+
+> The report lun usage does not modify the channel/id/lun, so does not need
+> the slave_destroy/slave_alloc calls.
+
+Umm...doesn't report lun scan get called on successive targets during a 
+host scan using a recycled sdevscan?
+
+> IMO the traversal of scsi_devices should be completely transparent
+> to the user, such as a wrapper or call back function, so we would not 
+> have to change anything if the underlying data structure changed (the
+> list of scsi_hosts contains a list of scsi_devices). Namely, for
+> multi-path  it is useful to have all the scsi_devices on one list, and
+> not have a host centric view of the scsi_devices.
+
+I personally think it makes more sense to keep the host centric view of 
+devices, and for multipath the most I would do is add another list struct 
+for chaining together device structs that all point to the same device.
+
+-- 
+  Doug Ledford <dledford@redhat.com>     919-754-3700 x44233
+         Red Hat, Inc. 
+         1801 Varsity Dr.
+         Raleigh, NC 27606
+  
