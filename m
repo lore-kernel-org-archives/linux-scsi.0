@@ -1,65 +1,33 @@
-From: Kurt Garloff <garloff@suse.de>
-Subject: Re: [PATCH] tmscsim: 64-bit cleanup
-Date: Sat, 22 May 2004 10:09:24 +0200
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: 2.6.6-mm5
+Date: Sat, 22 May 2004 05:09:59 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040522080924.GP4623@tpkurt.garloff.de>
-References: <Pine.LNX.4.44.0405192135160.6790-200000@poirot.grange> <1085152512.2258.21.camel@mulgrave>
+Message-ID: <40AF18E7.4040509@pobox.com>
+References: <20040522013636.61efef73.akpm@osdl.org>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="tZCmRiovzb4sxAVa"
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor.suse.de ([195.135.220.2]:51172 "EHLO Cantor.suse.de")
-	by vger.kernel.org with ESMTP id S264909AbUEVIJ3 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 22 May 2004 04:09:29 -0400
-Content-Disposition: inline
-In-Reply-To: <1085152512.2258.21.camel@mulgrave>
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:37767 "EHLO
+	www.linux.org.uk") by vger.kernel.org with ESMTP id S264925AbUEVJKS
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 22 May 2004 05:10:18 -0400
+In-Reply-To: <20040522013636.61efef73.akpm@osdl.org>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@steeleye.com>
-Cc: Guennadi Liakhovetski <g.liakhovetski@gmx.de>, Linux SCSI list <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>
+To: Andrew Morton <akpm@osdl.org>
+Cc: linux-kernel@vger.kernel.org, SCSI Mailing List <linux-scsi@vger.kernel.org>
+
+Andrew Morton wrote:
+> - Added a new SATA RAID driver from 3ware.  From a quick peek it seem to
+>   need a little work yet.
 
 
---tZCmRiovzb4sxAVa
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+It's not too bad... but it looks more like a 2.2 driver forward ported 
+to 2.4, than a 2.6.x driver.  Needs some luvin' from the 2.6 scsi api crew.
 
-Hi James, Guennadi,
+Overall, it appears to be a message-based firmware engine like 
+drivers/block/carmel.c, that hides the SATA details in the firmware.
 
-On Fri, May 21, 2004 at 10:15:11AM -0500, James Bottomley wrote:
-> On Wed, 2004-05-19 at 14:50, Guennadi Liakhovetski wrote:
-> Actually, no.  struct scatterlist is for the OS platform to use to
-> characterise DMA; it's actually a private structure entirely within the
-> gift of the architecture to define.  It usually contains bits of
-> extraneous data that the driver never sees.  The driver should convert
-> struct scatterlist into its own version of the scatterlist that needs
-> feeding to the hardware rather than try and use struct scatterlist.
+	Jeff
 
-The AM53C974 hardware does not have hardware support for scatter-gather.
-(Yes, this is sad, you get an IRQ after every segment ...)
 
-> You'll find that lvalue use of sg_dma_len() fails on some platforms that
-> actually compute it from page/offset values in the scatterlist.
->=20
-> Could you (eventually) update tmscsim not to use it?
-
-We could just define our own format, make a copy and then use that one.
-
-Regards,
---=20
-Kurt Garloff  <garloff@suse.de>                            Cologne, DE=20
-SUSE LINUX AG / Novell, Nuernberg, DE               Director SUSE Labs
-
---tZCmRiovzb4sxAVa
-Content-Type: application/pgp-signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.2.4 (GNU/Linux)
-
-iD8DBQFArwq0xmLh6hyYd04RApM4AJ9vbsIBSgAa2iGBr9aGCfNlpFd3LQCeMVWh
-RBnnw6qWgVl7kCi/4TUmbqE=
-=EMHi
------END PGP SIGNATURE-----
-
---tZCmRiovzb4sxAVa--
