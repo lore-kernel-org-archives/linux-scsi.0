@@ -1,51 +1,59 @@
-From: Marc Zyngier <mzyngier@freesurf.fr>
-Subject: [PATCH] aha1740 compile fix
-Date: Mon, 18 Aug 2003 18:18:19 +0200
+From: Pat LaVarre <p_lavarre@yahoo.com>
+Subject: [PATCH] mount -w of dvd+rw etc. in vanilla 2.6
+Date: Mon, 18 Aug 2003 11:56:07 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <wrpekzjlz1w.fsf@hina.wild-wind.fr.eu.org>
-Reply-To: mzyngier@freesurf.fr
+Message-ID: <20030818185607.64948.qmail@web21108.mail.yahoo.com>
+Reply-To: p.lavarre@ieee.org
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from lopsy-lu.misterjones.org ([62.4.18.26]:40969 "EHLO
-	young-lust.wild-wind.fr.eu.org") by vger.kernel.org with ESMTP
-	id S272277AbTHRQSZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 18 Aug 2003 12:18:25 -0400
+Received: from web21108.mail.yahoo.com ([216.136.227.110]:51077 "HELO
+	web21108.mail.yahoo.com") by vger.kernel.org with SMTP
+	id S272252AbTHRS4I (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 18 Aug 2003 14:56:08 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@steeleye.com>
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: mdharm-scsi@one-eyed-alien.net, p.lavarre@ieee.org
 
-James,
+I see mount -w -t udf works with my dvd-ram in
+late Linux 2.4 and early 2.6, but mistakenly
+sees my dvd+rw as read-only.
 
-The included patch fixes aha1740 compilation in Linus' latest 2.6 tree
-(dev->name removal, scsi_remove_host now returns void).
+To make my dvd+rw work, I find I can apply
+patches much like:
+http://fy.chalmers.se/~appro/linux/DVD+RW/
+http://fy.chalmers.se/~appro/linux/DVD+RW/linux-2.4.patch
 
-Regards,
+Can I somehow help ... to get a patch like this
+finished & merged into the kernel.org kernel?
 
-        M.
+I'm new to drivers/scsi/sr_vendor.c ... but I
+first glanced thru www.t10.org back in 1994.
 
-===== drivers/scsi/aha1740.c 1.29 vs edited =====
---- 1.29/drivers/scsi/aha1740.c	Sun Jul 20 19:53:13 2003
-+++ edited/drivers/scsi/aha1740.c	Mon Aug 18 05:57:50 2003
-@@ -603,7 +603,7 @@
- 		outb(0, G2CNTRL(slotbase));
- 	}
- 	printk(KERN_INFO "Configuring %s at IO:%x, IRQ %d\n",
--	       dev->name, slotbase, irq_level);
-+	       edev->id.sig, slotbase, irq_level);
- 	printk(KERN_INFO "aha174x: Extended translation %sabled.\n",
- 	       translation ? "en" : "dis");
- 	shpnt = scsi_host_alloc(&aha1740_template,
-@@ -656,8 +656,7 @@
- 	struct Scsi_Host *shpnt = dev->driver_data;
- 	struct aha1740_hostdata *host = HOSTDATA (shpnt);
- 
--	if (scsi_remove_host (shpnt))
--		return -EBUSY;
-+	scsi_remove_host (shpnt);
- 	
- 	free_irq (shpnt->irq, shpnt);
- 	dma_unmap_single (dev, host->ecb_dma_addr,
+Looks to me like this patch begins to expand the
+awareness of Linux beyond the "mode page" x2A of
+dvd-ram/cd-rw into the "profile"s and "feature"s
+that distinguish dvd+rw etc. from other dvd/cd,
+so that with my dvd+rw I achieve:
 
--- 
-Places change, faces change. Life is so very strange.
+scsi_CDs[minor].device->writeable = 1;
+scsi_CDs[minor].cdi.mask &= ~CDC_DVD_RAM;
+
+In particular, in the patch I see 3 mmc3_profile
+values from among the 7 values that mmc4r02c.pdf
+says imply the "feature" "0020h" =
+"Random Writable".
+
+Can I help somehow?
+
+Pat LaVarre
+http://members.aol.com/plscsi/tools/knoppix/
+
+P.S. Reply-to-all will reach me faster than
+reply to p.lavarre@ieee.org or linux-scsi alone.
+
+
+__________________________________
+Do you Yahoo!?
+Yahoo! SiteBuilder - Free, easy-to-use web site design software
+http://sitebuilder.yahoo.com
