@@ -1,63 +1,22 @@
-From: Arnaldo Carvalho de Melo <acme@conectiva.com.br>
-Subject: Re: MPT Fusion FC909 support
-Date: Sat, 24 Apr 2004 19:37:40 -0300
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH] sata_vsc initialization fix
+Date: Sat, 24 Apr 2004 22:16:21 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040424223740.GA2687@conectiva.com.br>
-References: <0E3FA95632D6D047BA649F95DAB60E570442C904@exa-atlanta.se.lsil.com>
+Message-ID: <408B1F75.8070408@pobox.com>
+References: <20040423021544.GA874976@sgi.com> <20040423180843.GA862691@sgi.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from orion.netbank.com.br ([200.203.199.90]:34578 "EHLO
-	orion.netbank.com.br") by vger.kernel.org with ESMTP
-	id S262606AbUDXWhp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 24 Apr 2004 18:37:45 -0400
-Content-Disposition: inline
-In-Reply-To: <0E3FA95632D6D047BA649F95DAB60E570442C904@exa-atlanta.se.lsil.com>
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:19330 "EHLO
+	www.linux.org.uk") by vger.kernel.org with ESMTP id S262060AbUDYCQe
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 24 Apr 2004 22:16:34 -0400
+In-Reply-To: <20040423180843.GA862691@sgi.com>
 List-Id: linux-scsi@vger.kernel.org
-To: "Moore, Eric Dean" <Emoore@lsil.com>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, linux-scsi@vger.kernel.org
+To: Jeremy Higdon <jeremy@sgi.com>
+Cc: linux-scsi@vger.kernel.org, erikj@sgi.com, jbarnes@sgi.com
 
-Em Thu, Apr 22, 2004 at 10:55:26AM -0400, Moore, Eric Dean escreveu:
-> Here is a patch to add FC909 support back.
-> This will be mpt driver version 3.01.05.
-> 
-> Please apply.
-
-Yes, please apply, with it I'm happily using my FC909 card again.
-
-Thanks Eric!
-
-- Arnaldo
- 
-> You can download full source as well as the patches for this 
-> driver at:
-> ftp://ftp.lsil.com/HostAdapterDrivers/linux/FiberChannel/2.6-patches/3.01.05
-> 
-> 
-> 
-> On Thursday, April 22, 2004 8:28 AM,  James Bottomley wrote:
-> > 
-> > On Thu, 2004-04-22 at 10:23, Moore, Eric Dean wrote:
-> > > I'm sorry. It was my understanding this card was
-> > > not being used by anyone, and my manager said it was
-> > > okay to remove this support. This support was removed to 
-> > > to honor some request from Jeff Garzik [jgarzik@pobox.com]
-> > > to clean up the code macro's for accessing the hardware.
-> > 
-> > Well, if there's hardware in the field, I think the driver 
-> > support needs
-> > to go back in.
-> > 
-> > Thanks,
-> > 
-> > James
-> > 
-> > 
-> 
+applied to 2.4 and 2.6
 
 
-
--- 
-
-
-                        - Arnaldo
