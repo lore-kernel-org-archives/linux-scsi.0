@@ -1,99 +1,41 @@
 From: Matthew Wilcox <willy@debian.org>
-Subject: Re: i450nx-scanning-fix.patch
-Date: Mon, 29 Dec 2003 12:28:09 +0000
+Subject: Re: many-disk support
+Date: Mon, 29 Dec 2003 14:27:07 +0000
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20031229122809.GF12479@parcelfarce.linux.theplanet.co.uk>
-References: <20031229030235.315d5502.akpm@osdl.org>
+Message-ID: <20031229142707.GI12479@parcelfarce.linux.theplanet.co.uk>
+References: <20031229022549.50bae6d7.akpm@osdl.org> <20031229110603.A27408@infradead.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:34010 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S263290AbTL2M2K
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:14816 "EHLO
+	www.linux.org.uk") by vger.kernel.org with ESMTP id S263447AbTL2O1K
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 29 Dec 2003 07:28:10 -0500
+	Mon, 29 Dec 2003 09:27:10 -0500
 Content-Disposition: inline
-In-Reply-To: <20031229030235.315d5502.akpm@osdl.org>
+In-Reply-To: <20031229110603.A27408@infradead.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
-Cc: Matthew Wilcox <willy@debian.org>, linux-scsi@vger.kernel.org, linux-pci@atrey.karlin.mff.cuni.cz
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Andrew Morton <akpm@osdl.org>, linux-scsi@vger.kernel.org, Badari Pulavarty <pbadari@us.ibm.com>, "viro@parcelfarce.linux.theplanet.co.uk" <viro@parcelfarce.linux.theplanet.co.uk>
 
-On Mon, Dec 29, 2003 at 03:02:35AM -0800, Andrew Morton wrote:
+On Mon, Dec 29, 2003 at 11:06:04AM +0000, Christoph Hellwig wrote:
+> On Mon, Dec 29, 2003 at 02:25:49AM -0800, Andrew Morton wrote:
+> > Guys, I've had this patch for ages.  Badari seemed to say that it wasn't
+> > the "right" way to do it.
+> > 
+> > Can we get this nailed down please?
 > 
-> I have had this in -mm for some time.  It works on my 450nx-based 4-way. 
-> Was planning on merging it.  Speak now or forever hold your pieces.
+>  - I think the bitmap overhead was killing us on big x86 machines, right?
+>    so that might need some swork.
+>  - a config option definitly is the wrong way to go.
+>  - I don't think assigning more numbers to the last major is a bad idea,
+>    better assign them to the first one, maybe with a hole for what we're
+>    using the other majors currently for, so when udev gets more mature
+>    we can kill the additional majors.
 
-Well, I made the same mistake in this patch as I made in a later patch, so
-I know it never worked for anyone.  Namely, pci_bus->children is the list
-of child busses, not the list of devices on the bus.  That's ->devices.
-I swear I'm going to write a for_each_pci_device_on_this_bus() macro so
-I don't make the same mistake a third time.
+LWN were kind enough to archive my previous thoughts on this at
+http://lwn.net/Articles/54840/
 
->  arch/i386/pci/fixup.c |   33 +++++++++++++++++++++++++++++----
->  1 files changed, 29 insertions(+), 4 deletions(-)
-> 
-> diff -puN arch/i386/pci/fixup.c~i450nx-scanning-fix arch/i386/pci/fixup.c
-> --- 25/arch/i386/pci/fixup.c~i450nx-scanning-fix	2003-11-09 16:58:55.000000000 -0800
-> +++ 25-akpm/arch/i386/pci/fixup.c	2003-11-09 16:58:55.000000000 -0800
-> @@ -6,27 +6,52 @@
->  #include <linux/init.h>
->  #include "pci.h"
->  
-> +static void __devinit i450nx_scan_bus(struct pci_bus *parent, u8 busnr)
-> +{
-> +	struct list_head *tmp;
-> +
-> +	pci_scan_bus(busnr, &pci_root_ops, NULL);
-> +
-> +	list_for_each(tmp, &parent->children) {
-> +		u8 childnr;
-> +		struct pci_dev *dev = pci_dev_b(tmp);
-> +
-> +		if (dev->hdr_type != PCI_HEADER_TYPE_BRIDGE)
-> +			continue;
-> +		pci_read_config_byte(dev, PCI_PRIMARY_BUS, &childnr);
-> +		if (childnr != busnr)
-> +			continue;
-> +
-> +		printk(KERN_WARNING "PCI: Removing fake PCI bridge %s\n",
-> +				pci_name(dev));
-> +		pci_remove_bus_device(dev);
-> +		break;
-> +	}
-> +}
->  
->  static void __devinit pci_fixup_i450nx(struct pci_dev *d)
->  {
->  	/*
->  	 * i450NX -- Find and scan all secondary buses on all PXB's.
-> +	 * Some manufacturers added fake PCI-PCI bridges that also point
-> +	 * to the peer busses.  Look for them and delete them.
->  	 */
->  	int pxb, reg;
->  	u8 busno, suba, subb;
->  
-> -	printk(KERN_WARNING "PCI: Searching for i450NX host bridges on %s\n", pci_name(d));
-> +	printk(KERN_NOTICE "PCI: Searching for i450NX host bridges on %s\n", pci_name(d));
->  	reg = 0xd0;
-> -	for(pxb=0; pxb<2; pxb++) {
-> +	for (pxb = 0; pxb < 2; pxb++) {
->  		pci_read_config_byte(d, reg++, &busno);
->  		pci_read_config_byte(d, reg++, &suba);
->  		pci_read_config_byte(d, reg++, &subb);
->  		DBG("i450NX PXB %d: %02x/%02x/%02x\n", pxb, busno, suba, subb);
->  		if (busno)
-> -			pci_scan_bus(busno, &pci_root_ops, NULL);	/* Bus A */
-> +			i450nx_scan_bus(d->bus, busno);		/* Bus A */
->  		if (suba < subb)
-> -			pci_scan_bus(suba+1, &pci_root_ops, NULL);	/* Bus B */
-> +			i450nx_scan_bus(d->bus, suba+1);	/* Bus B */
->  	}
-> +
->  	pcibios_last_bus = -1;
->  }
->  
-> 
-> _
-> 
+I'd've worked on some code for this if anyone had been interested ...
 
 -- 
 "Next the statesmen will invent cheap lies, putting the blame upon 
