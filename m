@@ -1,127 +1,48 @@
-From: "Aron Zeh" <ARZEH@de.ibm.com>
+From: James Bottomley <James.Bottomley@steeleye.com>
 Subject: Re: [PATCH 2.5.17] Making SCSI not copy the request structure
-Date: Fri, 24 May 2002 11:35:40 +0200
+Date: Fri, 24 May 2002 09:00:55 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <OF0C31DF68.3F987A16-ONC1256BC3.00347B94@de.ibm.com>
+Message-ID: <200205241300.g4OD0uT01742@localhost.localdomain>
+References: <ARZEH@de.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: (from root@localhost)
+	by pogo.mtv1.steeleye.com (8.9.3/8.9.3) id GAA06009
+	for <linux-scsi@vger.kernel.org>; Fri, 24 May 2002 06:00:56 -0700
+In-Reply-To: Message from "Aron Zeh" <ARZEH@de.ibm.com>
+   of "Fri, 24 May 2002 09:52:19 +0200." <OF33C61840.B0D589F0-ONC1256BC3.0029F105@de.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: rakesh rakesh <majordomo_linux@yahoo.com>
+To: Aron Zeh <ARZEH@de.ibm.com>
 Cc: James Bottomley <James.Bottomley@SteelEye.com>, Doug Ledford <dledford@redhat.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, patman@beaverton.ibm.com, linux-scsi@vger.kernel.org
 
-
-True, unfortunately the zSeries FCP adapter does not work that way. You
-have no guarrantee that anything may be queued onto it at any time. I am
-not certain if there are other adapters that work this way.
-
-Aron
-
-
-But the whole hypothesis is that at any point of time
-mid level should be able to queue at least one command
-to low level driver.Reference to doc by  Eric at
-www.andante.org
-
-
---- Aron Zeh <ARZEH@de.ibm.com> wrote:
->
->
-> James,
->
-> I think we are talking about two different things.
-> If I am not mistaken, __scsi_insert_special is only
-> called for character
-> devices or ioctl (at least that is what it states in
-> the description).
-> My problem occurs during normal IO to a disk. I
-> believe it is something of
-> this sort:
-> scsi_dispatch_command is called, host->can_queue is
-> 4096 so the if
-> statement is true.
-> Then, the low-level driver's queuecommand returns
-> with FAILED. The command
-> is put into the mlqueue to be resent when a command
+ARZEH@de.ibm.com said:
+> I think we are talking about two different things. If I am not
+> mistaken, __scsi_insert_special is only called for character devices
+> or ioctl (at least that is what it states in the description).
+[...]
+> The command is put into the mlqueue to be resent when a command
 > completes.
-> Due to the design of the zSeries FCP adapter, it is
-> however possible that
-> temporarily, no command can be accepted at all.
-> Thus it is possible for queuecommand to fail on the
-> one and only active
-> command, which will be put into the mlqueue.
-> There it will sit, waiting for the return of an
-> outstanding command, but
-> there are non. Hence the system will hang.
->
-> I would think, that your problem only appears when
-> using ioctls (e.g.
-> fdisk) or going out to character device (st, sg). Am
-> I correct or am I
-> missing something?
-> Aron
->
-> > Alas, there does not seem to be a timeout handler
-> to restart IO when
-> > queuecommand returned non 0. The only way to
-> retrigger IO seems to be
-> > a completion of an outstanding command. I have
-> seen a lot of hangs in
-> > the FCP driver I am contributing to because of
-> this. We finally
-> > decided never to let queuecommand fail and queue
-> failed requests
-> > internally while there might still be a chance to
-> send them. This is
-> > not too nice though, so it would probably be a
-> good idea to use a
-> > timeout as an alternative trigger to resend
-> commands in the mlqueue.
-> > Maybe a function to be called by the low-level
-> driver would also be an
-> > option.
->
-> I've seen it too occasionally, but I can't reproduce
-> it consistently
-> enough.
-> I think the culprit may be our use of
-> _elv_add_request with a no-plug
-> argument.  Can you just change the last argument
-> from 0 to 1 and see if
-> this
-> helps (in scsi_lib.c:__scsi_insert_special at about
-> line 90)?
->
-> James
->
->
-> -
-> To unsubscribe from this list: send the line
-> "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at
-> http://vger.kernel.org/majordomo-info.html
->
->
->
->
-> -
-> To unsubscribe from this list: send the line
-> "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at
-http://vger.kernel.org/majordomo-info.html
 
+True, but look what happens to it after that:
 
-__________________________________________________
-Do You Yahoo!?
-LAUNCH - Your Yahoo! Music Experience
-http://launch.yahoo.com
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+scsi_mlqueue_insert() -> scsi_insert_special_cmd -> __scsi_insert_special().
 
+__scsi_insert_special() is the ultimate point you always get to in the 
+mid-layer for pushing anything back to the block layer.
 
+My theory is that because we set host or device blocked in scsi_mlqueue_insert 
+which causes the termination of our request processing loop.  But, the block 
+layer only expects this termination on exhaustion or plugging, so it thinks 
+we're still processing commands, however we're actually not.  Thus, the 
+request function is never called again and we get stuck I/Os.  The way to 
+correct this is to tell the block layer we have stopped processing by plugging 
+the device queue.  Actually, I think host_blocked and device_blocked could be 
+eliminated in favour of relying on the device queue plugging status.
+
+The test of this theory is just the previously mentioned change of the 0 to 1, 
+could you try it since you seem to be able to reproduce the problem reliably.
+
+James
 
 
