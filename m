@@ -1,77 +1,89 @@
-From: Fabien Salvi <fabien@cri74.org>
-Subject: Re: Fibre-Channel Access : interuptive access
-Date: Tue, 26 Nov 2002 11:04:53 +0100
+From: Patrick Mansfield <patmans@us.ibm.com>
+Subject: Re: [BUG][2.5.49 SCSI]Duplicate Proc Entries for SCSI
+Date: Tue, 26 Nov 2002 14:24:35 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3DE34745.D6AAC6EF@cri74.org>
-References: <3DE261E5.3F61EBC4@cri74.org> <3DE27BE3.2090402@mvista.com>
+Message-ID: <20021126142435.A1402@eng2.beaverton.ibm.com>
+References: <200211250609.gAP69YS09374@stinkycat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pc00.cri.cur-archamps.fr (pc00.cri.cur-archamps.fr [10.10.10.11])
-	by aravis.cur-archamps.fr (8.9.3/8.9.3) with ESMTP id LAA30305
-	for <linux-scsi@vger.kernel.org>; Tue, 26 Nov 2002 11:04:54 +0100
-Received: from cri74.org (localhost [127.0.0.1])
-	by pc00.cri.cur-archamps.fr (8.9.3/8.9.3) with ESMTP id LAA31464
-	for <linux-scsi@vger.kernel.org>; Tue, 26 Nov 2002 11:04:53 +0100
+In-Reply-To: <200211250609.gAP69YS09374@stinkycat.com>; from rusty@stinkycat.com on Sun, Nov 24, 2002 at 10:09:34PM -0800
 List-Id: linux-scsi@vger.kernel.org
-To: Linux SCSI list <linux-scsi@vger.kernel.org>
+To: Rusty Lynch <rusty@stinkycat.com>
+Cc: groudier@free.fr, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Steven Dake wrote:
+Rusty -
+
+On Sun, Nov 24, 2002 at 10:09:34PM -0800, Rusty Lynch wrote:
+> On my 2.5.49 build, I am seeing duplicate entries in /proc/scsi/scsi. 
+> On this system both scsi devices are both emulated (one is an Sony 
+> IDE ReWritable CD drive and the other is PNY USB flash card reader using 
+> the mass-storage driver.) 
 > 
-> Fabien,
+> Before plugging in the flash card reader, /proc/scsi/scsi looks like: 
+> Attached devices: 
+> Host: scsi0 Channel: 00 Id: 00 Lun: 00 
+>   Vendor: SONY     Model: CD-RW CRX1611    Rev: TYS3 
+>   Type:   CD-ROM                           ANSI SCSI revision: 02 
+> Host: scsi0 Channel: 00 Id: 00 Lun: 01 
+>   Vendor: SONY     Model: CD-RW CRX1611    Rev: TYS3 
+>   Type:   CD-ROM                           ANSI SCSI revision: 02 
 > 
-> What you want is hotswap support.  The kernel has basic support for
-> hotswap but only if a device is not in use.  Search the archives for
-> hotswap.
-> 
-> I'm currently working on forced block device removal, even if the device
-> is in use, properly shutting down files in VFS, RAID, and filesystem
-> mount layers.  This is what you really need when hotswap happens, but it
-> just isn't ready yet.
-> 
-> The correct way to configure your system so it will be alive during this
-> type of failure is to have two HBAs, two switches, and have each hba go
-> through a seperate switch.  This way, if your link/HBA/switch fails,
-> there is automatic failover.
-> 
-> Then create a RAID 1 array across both HBAs.  In the case of a switch
-> failure, the RAID subsystem will automatically correct any errors and
-> rebuild arrays on disk reinsertions.  Or you could use the RAID
-> multipathing personality to create a multipath across two hbas to the
-> same device.
-> 
-> Hope this helps.
+> and after plugging in the flash card reader, /proc/scsi/scsi looks like: 
+> Attached devices: 
+> Host: scsi0 Channel: 00 Id: 00 Lun: 00 
+>   Vendor: SONY     Model: CD-RW CRX1611    Rev: TYS3 
+>   Type:   CD-ROM                           ANSI SCSI revision: 02 
+> Host: scsi0 Channel: 00 Id: 00 Lun: 01 
+>   Vendor: SONY     Model: CD-RW CRX1611    Rev: TYS3 
+>   Type:   CD-ROM                           ANSI SCSI revision: 02 
+> Host: scsi1 Channel: 00 Id: 00 Lun: 00 
+>   Vendor: Datafab  Model: USB to CF + SM C Rev: 0017 
+>   Type:   Direct-Access                    ANSI SCSI revision: 02 
+> Host: scsi1 Channel: 00 Id: 00 Lun: 01 
+>   Vendor: Datafab  Model: USB to CF + SM C Rev: 0017 
+>   Type:   Direct-Access                    ANSI SCSI revision: 02 
 
-Yes, thanks !
+Did you figure out anything? Was there anything of interest in your dmesg?
 
-Our CMD controllers normally support multi-path access but we haven't
-tested it a lot and in good conditions for the moment...
-But, I plan to test HA using a switch for active access and a hub for
-passive access (used only in case of failure or maintenance of the
-switch).
+I tried out 2.5.49, and all scsi devices showed up just once, both for
+the aic driver built into the kernel, and for qla driver built as a
+module, with SCSI revision 2 and 3 devices attached to the qla.
 
-The CMD controllers normally support non-disruptive firmware upgrade, so
-it shouldn't be a problem.
+Maybe it is specific to ide-scsi or the usb-scsi pseudo adapter drivers.
 
-But, this is theory, if something hang, the only way is to reset it,
-this is when the problem occur...
-(yes, it should not :) )
+Try turning on scsi scan logging before inserting the flash card via:
 
+echo scsi log scan 4  >/proc/scsi/scsi
 
-What I thought about is a system to prevent use of a device during a few
-seconds.
-For example, I write 0 or 1 in the properties of a device (in
-/proc/....) to prevent access on it and so prevent it from crashing.
+And send the output.
 
+My single lun scsi 2 disks display the following, showing that
+lun 1 is (correctly) not configured off of id 1 and id 2:
 
-Another thing, is there a way to do a "sync" only on a particular device
-?
-For example, I could flush filesystem buffers only in internal device
-before hard reset so I only lost data on FC Raid but not on local SCSI
-disks...
+[ junk deleted ]
+scsi scan: INQUIRY to host 2 channel 0 id 1 lun 0
+scsi scan: 1st INQUIRY successful with code 0x0
+scsi scan: 2nd INQUIRY successful with code 0x0
+  Vendor: SEAGATE   Model: ST39173F CLAR09   Rev: 351B
+  Type:   Direct-Access                      ANSI SCSI revision: 02
+scsi scan: host 2 channel 0 id 1 lun 0 name/id: '32000002037109657'
+scsi scan: Sequential scan of host 2 channel 0 id 1
+scsi scan: INQUIRY to host 2 channel 0 id 1 lun 1
+scsi scan: 1st INQUIRY successful with code 0x0
+scsi scan: 2nd INQUIRY successful with code 0x0
+scsi scan: peripheral qualifier of 3, no device added
+scsi scan: INQUIRY to host 2 channel 0 id 2 lun 0
+scsi scan: 1st INQUIRY successful with code 0x0
+scsi scan: 2nd INQUIRY successful with code 0x0
+  Vendor: SEAGATE   Model: ST39173F CLAR09   Rev: 351B
+  Type:   Direct-Access                      ANSI SCSI revision: 02
+scsi scan: host 2 channel 0 id 2 lun 0 name/id: '32000002037109db0'
+scsi scan: Sequential scan of host 2 channel 0 id 2
+scsi scan: INQUIRY to host 2 channel 0 id 2 lun 1
+scsi scan: 1st INQUIRY successful with code 0x0
+scsi scan: 2nd INQUIRY successful with code 0x0
+scsi scan: peripheral qualifier of 3, no device added
+[ lots of stuff deleted, as this fcp adapter goes up to id 255 ]
 
-Thanks a lot for your help !
-
--- 
-Fabien
+-- Patrick Mansfield
