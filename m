@@ -1,38 +1,38 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [PATCH 6/7] - MPT FUSION - SPLITTING SCSI HOST DRIVERS
-Date: Fri, 25 Mar 2005 21:52:17 -0600
-Message-ID: <1111809137.5541.7.camel@mulgrave>
-References: <91888D455306F94EBD4D168954A9457C01B70565@nacos172.co.lsil.com>
+From: Luther Best <ruqagerih@168city.com>
+Subject: 9GL: A custom Logo that expresses your company!
+Date: Fri, 25 Mar 2005 14:00:19 +0000
+Message-ID: <80764760038.7551685675126@[201.15.164.252]>
+Reply-To: Luther Best <ruqagerih@168city.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Received: from stat16.steeleye.com ([209.192.50.48]:23212 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S261932AbVCZDwZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 25 Mar 2005 22:52:25 -0500
-In-Reply-To: <91888D455306F94EBD4D168954A9457C01B70565@nacos172.co.lsil.com>
+Content-Type: text/plain; charset=Windows-1252
+Content-Transfer-Encoding: 8bit
+Received: from 201-15-164-252.nhoce700-nrp6.dsl.brasiltelecom.net.br ([201.15.164.252]:58121
+	"HELO [201.15.164.252]") by vger.kernel.org with SMTP
+	id S261977AbVCZD6u (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 25 Mar 2005 22:58:50 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Moore, Eric Dean" <Eric.Moore@lsil.com>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
+To: linux-raid-owner@vger.kernel.org
 
-On Thu, 2005-03-24 at 16:57 -0700, Moore, Eric Dean wrote:
-> +static struct device_attribute mptscsih_queue_depth_attr = {
-> +       .attr = {
-> +               .name =         "queue_depth",
-> +               .mode =         S_IWUSR,
-> +       },
-> +       .store = mpt_core_store_queue_depth,
-> +};
+Your business lacks visual identity?
 
-But in the original which you're removing, this was implemented via the
-change_queue_depth API.
+Marketing efforts falling short?
 
-It looks like the patches you're posting are actually an older version
-of the fusion driver.   Do you have the split done on a current copy?
+Invisible among a sea of competitors?
 
-Thanks,
+You're on the right track for a solution - keep reading...
+Our professional designers specialize in the creation of custom logos and business/corporate identities. Our design needs to be seen only once to gain customer attention and recognition. With one of our unique, eye-catching mages you'll never have to introduce yourself twice!
+We promise fast turnaround and 100% customer satisfaction. Choose from as any design ideas as necessary, select as many colors as you wish, order any modifications you like, and request any format. Our prices are affordable for any size of business, and get this: there are no hidden fees.
 
-James
+Follow the link below to browse our portfolio and check out our Sweet Deals.
+Wipe the "in" from "invisible" in just a few days - with us!
+http://www.innerlogos.com/
+
+Sincerely,
+Luther Best
 
 
+
+======
+To cancel subscribtion, click here:
+http://www.innerlogos.com/u.php
