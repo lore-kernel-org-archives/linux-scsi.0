@@ -1,63 +1,76 @@
 From: David Brownell <david-b@pacbell.net>
 Subject: Re: [linux-usb-devel] Re: [PATCH] USB changes for 2.5.58
-Date: Mon, 20 Jan 2003 14:26:08 -0800
+Date: Mon, 20 Jan 2003 14:51:51 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3E2C7780.2080307@pacbell.net>
-References: <10426732153816@kroah.com> <200301202148.23210.oliver@neukum.name>
- <3E2C68F8.7080405@pacbell.net> <200301202251.08356.oliver@neukum.name>
+Message-ID: <3E2C7D87.6050804@pacbell.net>
+References: <10426732153816@kroah.com> <200301170043.36577.oliver@neukum.name>
+ <20030117085047.GB2531@beaverton.ibm.com>
+ <200301171155.36452.oliver@neukum.name>
+ <20030117105414.E359@one-eyed-alien.net> <3E2C3380.3070700@splentec.com>
+ <3E2C5750.2040301@pacbell.net> <3E2C753B.3090805@splentec.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Received: from pacbell.net ([67.118.247.72])
  by mta6.snfc21.pbi.net (iPlanet Messaging Server 5.1 HotFix 1.6 (built Oct 18
- 2002)) with ESMTP id <0H91002MZ9Z3J8@mta6.snfc21.pbi.net> for
- linux-scsi@vger.kernel.org; Mon, 20 Jan 2003 14:18:42 -0800 (PST)
+ 2002)) with ESMTP id <0H9100HF9B61CS@mta6.snfc21.pbi.net> for
+ linux-scsi@vger.kernel.org; Mon, 20 Jan 2003 14:44:31 -0800 (PST)
 List-Id: linux-scsi@vger.kernel.org
-To: Oliver Neukum <oliver@neukum.name>
-Cc: Luben Tuikov <luben@splentec.com>, Matthew Dharm <mdharm-scsi@one-eyed-alien.net>, Mike Anderson <andmike@us.ibm.com>, Greg KH <greg@kroah.com>, linux-usb-devel@lists.sourceforge.net, Linux SCSI list <linux-scsi@vger.kernel.org>
+To: Luben Tuikov <luben@splentec.com>
+Cc: Matthew Dharm <mdharm-scsi@one-eyed-alien.net>, Oliver Neukum <oliver@neukum.name>, Mike Anderson <andmike@us.ibm.com>, Greg KH <greg@kroah.com>, linux-usb-devel@lists.sourceforge.net, Linux SCSI list <linux-scsi@vger.kernel.org>
 
-Oliver Neukum wrote:
-> I should be more specific.
+Luben Tuikov wrote:
 
-Yes...
+> David, when I said ``... the transport will tell the LLDD that the
+> device ...'' this is *exactly* what I meant.  You're just repeating
+> it here in a more broken-down way.
 
-
-> The SCSI is different for several reasons:
-> - we are talking about bus as well as device detection
-> - there's no common way to probe for devices
->   (the probing of LUNs works only on conventional busses)
-
-So the SCSI stack needs to support more than one model for
-device/bus detection.  This can't be news.  And some of them
-have to handle "conventional" busses, like USB and PCI; maybe
-even handle booting off them...
+OK
 
 
-> - many SCSI devices are not really SCSI devices. They just use
->   the command set
+> By transport I mean USB, FC, SPI, etc; LLDD is the transport portal
+> and the initiator (aka the initiator port).  This terminology is not
+> really that new, but still not that old, and described in SAM-3.
+
+I was hoping for something described in the 2.5.58 kernel docs,
+which only talks about LLD (Documentation/scsi) except in one case
+(looked like a typo) ... I remember SAM-3 as a kind of missile!
+
+
+
+> We just cannot let a transport event just wipe out a device,
+> without consulting hotplugging first -- think security.
+
+Certainly "device gone" would be an auditable event, but this is
+primarily an integrity issue:  don't free objects until other
+components have stopped using them.
+
+If any components attach security policies to that "gone" state
+transition, that'd be atypical but purely their own business.
+(Like a transport erasing session master keys ... most transports
+wouldn't have them, and would likely erase them as soon as the
+device is known to be gone, no hotplug involved.)
+
+
+> That is, when a transport event takes place, the LLDD doesn't
+> have to ``run to'' SCSI Core right away. Just let the kernel
+> know about this event, and start returning errors, on newly
+> queued commands.
 > 
-> SCSI hotplug detection doesn't work for the same reason that USB
-> can handle only detection of devices by itself. Busses on the other
-> hand are not handled by USB itself.
+> The kernel will decide what to do about this device going away,
+> i.e. hotplugging, sysop notification, etc.
 
-Just how is it that USB doesn't handle USB?  "B" == "Bus" ... :)
+Sounds right. Except that it'd normally be the SCSI core that
+we "let" know about the event. (Not always, I can imagine that
+some transports might be able to kick in recovery procedures
+and find some other path for accessing the device.  But in
+such cases, SCSI might never see the device as "gone" ... )
 
-If you mean that HCs hook up to a different bus (often PCI), with its
-own hotplug support, that doesn't seem so different from SCSI HBAs
-hooking up to such busses (often PCI) and cascading the same hotplug
-support...
+- Dave
 
 
->>Erm ... which of the three SCSI layers are you talking about?  I was
->>talking about the highest level,..
-> 
-> 
-> In SCSI view device and bus disconnection is recognised by the lowest
-> level. As it knows nothing about the high layers, it notifies the midlayer
 
-So you were talking past what I said about notifying that highest level,
-not disagreeing with it.
 
 
 
