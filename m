@@ -1,47 +1,34 @@
-From: Sancho Dauskardt <sda-ls@bdit.de>
-Subject: Re: usb-storage and Sony Handycam
-Date: Mon, 10 Nov 2003 23:46:01 +0100
-Sender: linux-usb-devel-admin@lists.sourceforge.net
-Message-ID: <5.0.2.1.2.20031110233937.05634b10@pop.kundenserver.de>
-References: <20031110095914.B22518@beaverton.ibm.com> <Pine.LNX.4.44L0.0311101335310.6288-100000@ida.rowland.org>
+From: Burn Alting <burn@comptex.com.au>
+Subject: LUN Masking
+Date: 11 Nov 2003 09:42:33 +1100
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <1068504153.4203.17.camel@swtf.comptex.com.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"; format=flowed
-Return-path: <linux-usb-devel-admin@lists.sourceforge.net>
-In-Reply-To: <Pine.LNX.4.44L0.0311101335310.6288-100000@ida.rowland.org>
-References: <20031110095914.B22518@beaverton.ibm.com>
-Errors-To: linux-usb-devel-admin@lists.sourceforge.net
-List-Help: <mailto:linux-usb-devel-request@lists.sourceforge.net?subject=help>
-List-Post: <mailto:linux-usb-devel@lists.sourceforge.net>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-devel>,
-	<mailto:linux-usb-devel-request@lists.sourceforge.net?subject=subscribe>
-List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-devel>,
-	<mailto:linux-usb-devel-request@lists.sourceforge.net?subject=unsubscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=linux-usb-devel>
-To: Alan Stern <stern@rowland.harvard.edu>, Patrick Mansfield <patmans@us.ibm.com>
-Cc: Dmitri Katchalov <dmitrik@users.sourceforge.net>, Idan Sofer <idan@idanso.dyndns.org>, ronald@kuetemeier.com, USB development list <linux-usb-devel@lists.sourceforge.net>, SCSI development list <linux-scsi@vger.kernel.org>
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from GOL139579-1.gw.connect.com.au ([203.63.118.157]:54507 "EHLO
+	goldweb.com.au") by vger.kernel.org with ESMTP id S264143AbTKJWoi
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 10 Nov 2003 17:44:38 -0500
+Received: from localhost (localhost [127.0.0.1])
+	by goldweb.com.au (Postfix) with ESMTP id DC21D1C1D1
+	for <linux-scsi@vger.kernel.org>; Tue, 11 Nov 2003 09:42:45 +1100 (EST)
+Received: from [192.168.1.100] (dsl-186.195.240.220.lns02-nort-cbr.dsl.comindico.com.au [220.240.195.186])
+	by goldweb.com.au (Postfix) with ESMTP id F296C1C59A
+	for <linux-scsi@vger.kernel.org>; Tue, 11 Nov 2003 09:42:32 +1100 (EST)
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+
+Hi,
+
+Does anyone know of a reference to LUN Masking - in particular its
+implementation specifications?
+
+I've googled without success.
 
 
-> > Has anyone looked at why the reset failed? I assume that would clear the
-> > sense.
->
->How could anyone attempt to find out why the reset failed?
+Thanks in Advance
+-- 
+Burn Alting <burn@comptex.com.au>
 
-Just some ideas:
-a) not supported - AFAIK many storage devices don't seem to support the 
-bulk-reset, as the 'Other Popular OS' doesn't seem to issue them.
-b) possibly VIA UHCI chipset which got killed by babble ?
-
-- sda
-
-
-
--------------------------------------------------------
-This SF.Net email sponsored by: ApacheCon 2003,
-16-19 November in Las Vegas. Learn firsthand the latest
-developments in Apache, PHP, Perl, XML, Java, MySQL,
-WebDAV, and more! http://www.apachecon.com/
-_______________________________________________
-linux-usb-devel@lists.sourceforge.net
-To unsubscribe, use the last form field at:
-https://lists.sourceforge.net/lists/listinfo/linux-usb-devel
