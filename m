@@ -1,57 +1,101 @@
-From: "Czerkowicz, John" <john.czerkowicz@hp.com>
-Subject: [PATCH] 2.4.26 scsi_scan.c Blacklist Entries
-Date: Fri, 16 Apr 2004 16:29:50 -0400
+From: "Lee Xing" <lxing@Crossroads.com>
+Subject: RE: Help - how to identify the callers in aSCSIlower-leveldriver
+Date: Fri, 16 Apr 2004 16:00:06 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <F65B33CAD23A284EAE6E4AE353BF94DC031A44CC@tayexc13.americas.cpqcorp.net>
+Message-ID: <519672568F040C41B6FAC21ADF51B18FEFAB@mailnode1.commstor.crossroads.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="US-ASCII"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mailout.zma.compaq.com ([161.114.64.105]:28679 "EHLO
-	zmamail05.zma.compaq.com") by vger.kernel.org with ESMTP
-	id S263697AbUDPUaI convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 16 Apr 2004 16:30:08 -0400
-Received: from tayexg11.americas.cpqcorp.net (tayexg11.americas.cpqcorp.net [16.103.130.96])
-	by zmamail05.zma.compaq.com (Postfix) with ESMTP id C9C3619B5
-	for <linux-scsi@vger.kernel.org>; Fri, 16 Apr 2004 16:30:06 -0400 (EDT)
-Content-class: urn:content-classes:message
+Received: from email.crossroads.com ([65.68.235.6]:22993 "HELO
+	email.crossroads.com") by vger.kernel.org with SMTP id S263811AbUDPVAH convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 16 Apr 2004 17:00:07 -0400
+content-class: urn:content-classes:message
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: "Qi, Yanling" <yanling.qi@lsil.com>
+Cc: linux-scsi@vger.kernel.org
 
-Hi,
+Thanks for the info.
 
-The following HP DAT autoloaders have devices at LUN 1:
+When you say "check 'current->comm' in the ioctl() of scsi_host_template."  Did you mean let user application use "current->comm" as one of the args of the ioctl call, and pass it from user space -> upper-level -> mid-level -> ioctl() defined in low-level driver?
 
-HP SureStore DAT8x6
-HP SureStore DAT24x6
-HP SureStore DAT40x6
-HP StorageWorks DAT72x6
+If "current->comm" is related to application's pid, it probably won't be the same every time we run the application, correct?
 
-The DAT24x6 is already present in scsi_scan.c.  The patch below (against
-2.4.26) adds the others.
-
-Many thanks!
-John
-
---- linux-2.4.26/drivers/scsi/scsi_scan.c	2004-04-14
-09:05:31.000000000
--0400
-+++ linux/drivers/scsi/scsi_scan.c	2004-04-16 12:41:59.000000000
--0400
-@@ -208,6 +208,9 @@
- 	{"SMSC", "USB 2 HS", "*", BLIST_SPARSELUN | BLIST_LARGELUN}, 
- 	{"XYRATEX", "RS", "*", BLIST_SPARSELUN | BLIST_LARGELUN},
- 	{"NEC", "iStorage", "*", BLIST_SPARSELUN | BLIST_LARGELUN |
-BLIST_FORCELUN},
-+	{"HP", "C1553A", "*", BLIST_FORCELUN},		/* HP SureStore
-DAT8x6 */
-+	{"HP", "C5713A", "*", BLIST_FORCELUN},		/* HP SureStore
-DAT40x6 */
-+	{"HP", "DAT72X6", "*", BLIST_FORCELUN},		/* HP
-StorageWorks DAT72x6 */
- 
- 	/*
- 	 * Must be at end of list...
+Thanks,
 
 
+Lee
+
+
+-----Original Message-----
+From: Qi, Yanling [mailto:yanling.qi@lsil.com]
+Sent: Tuesday, April 13, 2004 12:13 PM
+To: Lee Xing; Qi, Yanling; arjanv@redhat.com
+Cc: linux-scsi@vger.kernel.org
+Subject: RE: Help - how to identify the callers in aSCSIlower-leveldriver
+
+
+"current" is the current task (process) that calls your kernel function. For read/write IOs, most of time, it is not the user application process. It could be "kupdated", ksoftirqd,or dbflush". But for an pass-through ioctl command, "current" should be the user application that issues the ioctl.
+Yanling 
+-----Original Message----- 
+From: Lee Xing [mailto:lxing@crossroads.com] 
+Sent: Tuesday, April 13, 2004 11:23 AM 
+To: Qi, Yanling; arjanv@redhat.com 
+Cc: linux-scsi@vger.kernel.org 
+Subject: RE: Help - how to identify the callers in a SCSIlower-leveldriver 
+
+
+Thanks for the info. 
+If I understand right, when an user-space application issues an command (such as read( ), write( ), etc.) or a SCSI passthrough ioctl call to an attached SCSI device, it doesn't pass its ID info with such command or ioctl call to SCSI upper-level driver.  If this is really right (please correct me if I'm wrong), how we can get the application's ID info from "current->comm" in the ioctl( ) of scsi_host_template?
+Thanks, 
+
+
+Lee 
+-----Original Message----- 
+From: Qi, Yanling [mailto:yanling.qi@lsil.com] 
+Sent: Wednesday, April 07, 2004 4:04 PM 
+To: Lee Xing; arjanv@redhat.com 
+Cc: linux-scsi@vger.kernel.org 
+Subject: RE: Help - how to identify the callers in a SCSIlower-leveldriver 
+
+
+Can you check "current->comm" in your ioctl() of scsi_host_template? 
+-----Original Message----- 
+From: Lee Xing [mailto:lxing@Crossroads.com] 
+Sent: Wednesday, April 07, 2004 3:43 PM 
+To: arjanv@redhat.com 
+Cc: linux-scsi@vger.kernel.org 
+Subject: RE: Help - how to identify the callers in a SCSI 
+lower-leveldriver 
+
+
+Thanks for the response. 
+The shim (a pseudo SCSI lower-level driver) we are working on sits in between Linux SCSI mid-level driver and our existing kernel driver which interfaces with a FC driver which interacts with the FC HBA.
+To track SCSI initiators' tasks, it would be great if our existing kernel driver knows which application makes the (SCSI passthrough ioctl) call to /dev/sda.
+Thanks, 
+
+
+Lee 
+-----Original Message----- 
+From: Arjan van de Ven [mailto:arjanv@redhat.com] 
+Sent: Wednesday, April 07, 2004 3:02 PM 
+To: Lee Xing 
+Cc: linux-scsi@vger.kernel.org 
+Subject: Re: Help - how to identify the callers in a SCSI 
+lower-leveldriver 
+
+
+On Wed, 2004-04-07 at 21:52, Lee Xing wrote: 
+> Hi, 
+> 
+> I'm writing a pseudo Linux lower-level SCSI driver, which interfaces with the standard mid-level driver and needs to identify different calling applications in Linux user space.  For example, there are 2 applications, app1 and app2, in user space, and they both use /dev/hda.  We don't need the SCSI lower-level driver to know the applications' names "app1" or "app2", but just need it to tell the (SCSI passthrough ioctl) calls are from the "this" application or from "that" application.
+
+
+you'll find that most IO's will come from the VM subsystem and not 
+directly from applications. Why do you think you need this functionality 
+???? 
+- 
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" in 
+the body of a message to majordomo@vger.kernel.org 
+More majordomo info at  http://vger.kernel.org/majordomo-info.html 
