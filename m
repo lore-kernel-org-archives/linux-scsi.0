@@ -1,39 +1,51 @@
-From: Oliver Neukum <oliver@neukum.org>
-Subject: Re: PATCH: (as141b) Unaligned scatter-gather buffers and usb-storage
-Date: Tue, 6 Jan 2004 12:28:08 +0100
+From: Willem Riede <wriede@riede.org>
+Subject: Re: [PATCH] sg block layer tcqing fix
+Date: Tue, 6 Jan 2004 06:46:30 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <200401061228.08161.oliver@neukum.org>
-References: <Pine.LNX.4.44L0.0401051657020.604-100000@ida.rowland.org>
+Message-ID: <20040106114630.GW4339@linnie.riede.org>
+References: <3FF08EAF.9080708@us.ibm.com> <3FFA426B.2030406@torque.net>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail1.kontent.de ([81.88.34.36]:51635 "EHLO Mail1.KONTENT.De")
-	by vger.kernel.org with ESMTP id S261965AbUAFL17 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Jan 2004 06:27:59 -0500
-In-Reply-To: <Pine.LNX.4.44L0.0401051657020.604-100000@ida.rowland.org>
+Received: from sccrmhc12.comcast.net ([204.127.202.56]:23015 "EHLO
+	sccrmhc12.comcast.net") by vger.kernel.org with ESMTP
+	id S261889AbUAFLqb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 6 Jan 2004 06:46:31 -0500
+Received: from linnie.riede.org (localhost.localdomain [127.0.0.1])
+	by linnie.riede.org (8.12.10/8.12.10) with ESMTP id i06BkUEM006358
+	for <linux-scsi@vger.kernel.org>; Tue, 6 Jan 2004 06:46:30 -0500
 Content-Disposition: inline
+In-Reply-To: <3FFA426B.2030406@torque.net> (from dougg@torque.net on Tue, Jan 06, 2004 at 00:06:51 -0500)
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>, Jens Axboe <axboe@suse.de>
-Cc: Kai =?iso-8859-15?q?M=E4kisara?= <kai.makisara@kolumbus.fi>, Douglas Gilbert <dougg@torque.net>, James Bottomley <James.Bottomley@steeleye.com>, Patrick Mansfield <patmans@us.ibm.com>, SCSI development list <linux-scsi@vger.kernel.org>, USB development list <linux-usb-devel@lists.sourceforge.net>
+To: linux-scsi@vger.kernel.org
 
- 
->  static int slave_configure (struct scsi_device *sdev)
->  {
-> +	/* Scatter-gather buffers (all but the last) must have a length
-> +	 * divisible by the bulk maxpacket size.  Otherwise a data packet
-> +	 * would end up being short, causing a premature end to the data
-> +	 * transfer.  Since high-speed bulk pipes have a maxpacket size
-> +	 * of 512, we'll use that as the scsi device queue's DMA alignment
-> +	 * mask.  Guaranteeing proper alignment of the first buffer will
-> +	 * have the desired effect because, except at the beginning and
-> +	 * the end, scatter-gather buffers follow page boundaries. */
-> +	blk_queue_dma_alignment(sdev->request_queue, (512 - 1));
+On 2004.01.06 00:06, Douglas Gilbert wrote:
+> Brian King wrote:
+> > In bringing up a new LLD driver I am working on, I came across an oops 
+> > related to sg and using the TCQ function provided by the block layer. 
+> > The backtrace is shown below. I did some poking around and it looks like 
+> > when doing SG_IO ioctls to devices running blk tagged command queuing, 
+> > blk_queue_start_tag gets called, but blk_queue_end_tag never does. 
+> > Attached is a patch against 2.6.0 which adds the call in sg_cmd_done and 
+> > gets rid of the oops for me. Please apply.
+> 
+> Brian,
+> Thanks for this patch. As far as I can tell this patch is needed
+> for all SCSI char ULDs (in other words: sg, st and osst) when
+> used with a LLD that uses block layer queueing infrastructure.
+> At the moment that is only the 53c700 driver (maintained by James B.)
+> and that one you are working on (I suspect).
+> 
+> Given that no other ULDs call blk_queue_*_tag() routines it seems
+> a bit strange that sg, st and osst need to call blk_queue_end_tag()
+> prior to calling scsi_release_request(). Perhaps the cleanup can be
+> built into scsi_release_request() or a new variant (e.g.
+> scsi_release_special_request() ) could be introduced.
 
-What about the cacheline of the last buffer? It seems to me that we have
-to worry about DMA coherency.
+IMHO, it would be much cleaner if sg, st and osst didn't need to be
+aware of tagging, so I'd prefer that it be handled automagically in
+the existing scsi_release_request().
 
-	Regards
-		Oliver
-
+Thanks, Willem Riede,
+osst maintainer.
