@@ -1,37 +1,39 @@
-From: Russ Garrett <russ@garrett.co.uk>
-Subject: Megaraid on AMD64
-Date: Wed, 01 Sep 2004 16:44:26 +0100
+From: "Patrick" <taffy21khan@hotmail.com>
+Subject: Soma, Prozac, Valium. Discreet. No one needs to know.
+Date: Wed, 01 Sep 2004 18:08:02 GMT
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <4135EE5A.7090304@garrett.co.uk>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Message-ID: <1094062082-24200@excite.com>
+Content-Type: text/plain;
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mta05-svc.ntlworld.com ([62.253.162.45]:13664 "EHLO
-	mta05-svc.ntlworld.com") by vger.kernel.org with ESMTP
-	id S267199AbUIAPmK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 1 Sep 2004 11:42:10 -0400
-Received: from [192.168.99.15] ([81.99.187.205]) by mta05-svc.ntlworld.com
-          (InterMail vM.4.01.03.37 201-229-121-137-20020806) with ESMTP
-          id <20040901153937.TEEJ11492.mta05-svc.ntlworld.com@[192.168.99.15]>
-          for <linux-scsi@vger.kernel.org>; Wed, 1 Sep 2004 16:39:37 +0100
+Received: from ns.wan-wan.co.jp ([210.236.161.202]:21491 "HELO vger.kernel.org")
+	by vger.kernel.org with SMTP id S267359AbUIASJh (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Sep 2004 14:09:37 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: linux-kernel@vger.kernel.org
 
-We have a Megaraid 320-1 in a dual Opteron server, but we were wondering 
-if there's any way to manage the array from inside the OS. 
-Megamgr/dellmgr don't appear to work on 64-bit at all. We're currently 
-using the driver version 2.00.3, since the new unified drivers don't 
-even seem to have an equivalent to the /proc interface to see the 
-array's status. Since the server is 800 miles away, it's a bit of a pain 
-rebooting into the BIOS in order to check anything.
+Save up to 80% on popular meds!
 
-On a slightly different (and off-topic) note, would anyone like to take 
-a guess at how a drive failure managed to corrupt our RAID 0+1 volume? 
-Would it be a driver issue, or just the drive corrupting the data 
-without noticing?
+*** GREAT SPECIALS ***
 
-Thanks in advance,
+Check it out: http://www.cpppo2.com/_85924943b9db73ac62baa654773c6a8e/41
 
-Russ Garrett
-russ@last.fm
+- No doctor visits or hassles
+- Quick delivery to your front door
+
+Visit us here: http://www.cpppo2.com/_85924943b9db73ac62baa654773c6a8e/41
+
+
+On medication long term?  
+Buy bulk through us and LITERALLY SAVE THOUSANDS!
+
+
+
+doug metallicasdfghjk moroni barry
+sherry memorynew e-mail moroni oranges new blowfish 
+denali angus angus 
+moomoo lulusupra jazz kathy
+blowfish hanna happyday 
+jared nimrodsuzuki frederic quest
+
+sundance milesresearch sally justin1 gibson jan rux 
+
