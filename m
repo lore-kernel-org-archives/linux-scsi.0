@@ -1,59 +1,87 @@
-From: Arjan van de Ven <arjanv@redhat.com>
-Subject: Re: pulling failover out of qla2xxx
-Date: Sun, 18 Jan 2004 11:37:36 +0100
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1074422254.4428.3.camel@laptop.fenrus.com>
-References: <B179AE41C1147041AA1121F44614F0B0598E34@AVEXCH02.qlogic.org>
-	 <40084860.90902@pobox.com> <20040117205230.GB8301@praka.local.home>
-	 <1074373727.4429.4.camel@laptop.fenrus.com>
-	 <20040117215203.GA9041@praka.local.home>
-Reply-To: arjanv@redhat.com
+From: Martin Schlemmer <azarah@nosferatu.za.org>
+Subject: Re: Serial ATA (SATA) for Linux status report
+Date: Sun, 18 Jan 2004 14:34:36 +0200
+Sender: linux-ide-owner@vger.kernel.org
+Message-ID: <1074429276.8472.194.camel@nosferatu.lan>
+References: <20031203204445.GA26987@gtf.org>
+	 <87hdyyxjgl.fsf@stark.xeocode.com> <20040114225653.GA32704@codepoet.org>
+	 <4005D141.7050408@superbug.demon.co.uk>  <4005E1D4.6040807@pobox.com>
+Reply-To: Martin Schlemmer <azarah@nosferatu.za.org>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-kpQC9lpvVTD/m2n2LCDV"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from node-d-1fcf.a2000.nl ([62.195.31.207]:28544 "EHLO
-	laptop.fenrus.com") by vger.kernel.org with ESMTP id S266314AbUARKhy
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 18 Jan 2004 05:37:54 -0500
-In-Reply-To: <20040117215203.GA9041@praka.local.home>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-K0wrVZ31Jh9v0g1lH5y8"
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <4005E1D4.6040807@pobox.com>
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: James Courtier-Dutton <James@superbug.demon.co.uk>, andersen@codepoet.org, Greg Stark <gsstark@mit.edu>, Linux Kernel Mailing Lists <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, mplayer@jburgess.uklinux.net
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Vasquez <praka@users.sourceforge.net>
-Cc: Linux-SCSI <linux-scsi@vger.kernel.org>
 
 
---=-kpQC9lpvVTD/m2n2LCDV
+--=-K0wrVZ31Jh9v0g1lH5y8
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Sat, 2004-01-17 at 22:52, Andrew Vasquez wrote:
+On Thu, 2004-01-15 at 02:41, Jeff Garzik wrote:
+> I'm pretty sure the "excessive interrupts" issue was successfully=20
+> tracked down by Jon Burgess (thanks!).  He found this post describing an=20
+> ICH5 hardware issue,
+> http://www.mail-archive.com/freebsd-stable@freebsd.org/msg58421.html
+>=20
+> and he also submitted the attached patch.
+>=20
+> I've been meaning to rewrite his patch to isolate it more to ata_piix,=20
+> but in the meantime maybe folks could test this?
+>=20
 
-> I'll just throw this out, if in fact as you say request_firmware()
-> won't work with the current initrd's used by the distros then perhaps
-> we could simply build the firmware images as modules (minus the
-> per-firmware loader) and have a generic qlafc.ko (or whatever the name
-> you'd like) loader that the user would modprobe. The qlafc driver
-> would then register the pci_device_id tables for all ISP chips and
-> wait for the pci_driver callback to signify which firmwares modules to
-> load.  Load the firmware, call probe(), then move on. =20
+I have an Asus P4C800-E Deluxe, with two drivers on the ICH5 sata
+controllers.  It is a 3Ghz cpu using HT.
 
-this breaks those initrd's just as much.
-The current approach actually is pretty clean (module dependencies pull
-everything in etc etc) and I *really* don't see the objection to it.
-Sure the request_firmware() interface is nicer but it's not like having
-the a few frontend modules is actually a problem; all distros just do
-the right thing with these, even for custom compiled kernels.=20
+I use the normal PIIX ide drivers for the pata channels, and libata for
+the sata ones.  I also use the vector based interrupts.  Kernel is
+2.6.1-bk4.
 
+Anyhow, I do not think  the interrupt count is _that_ high, as it shares
+with usb and network and I cannot complain of problems with cdrom, etc,
+but I decided to try the patch anyhow.  It have some interesting results
+though.  First, network stops responding after a few minutes of uptime
+(especially easy to reproduce if you have heavy network traffic), then
+for some reason you cannot start a new program/login/etc, but those
+running seems Ok, and lastly X becomes totally unresponsive (although
+alt-sysrq-b still do work).
 
---=-kpQC9lpvVTD/m2n2LCDV
+--
+ # cat /proc/interrupts
+           CPU0       CPU1
+  0:   29703539   29690292    IO-APIC-edge  timer
+  2:          0          0          XT-PIC  cascade
+  8:          2          0    IO-APIC-edge  rtc
+  9:          0          0   IO-APIC-level  acpi
+ 14:        564        210    IO-APIC-edge  ide0
+ 15:          1          0    IO-APIC-edge  ide1
+169:    1049180    1055746   IO-APIC-level  libata, uhci_hcd, eth0
+177:      39519      37904   IO-APIC-level  Intel ICH5
+185:    2521873    2494269   IO-APIC-level  uhci_hcd, uhci_hcd, nvidia
+193:          0          0   IO-APIC-level  uhci_hcd
+201:          0          0   IO-APIC-level  ehci_hcd
+NMI:          0          0
+LOC:   59387583   59387287
+ERR:          0
+MIS:          0
+--
+
+--=20
+Martin Schlemmer
+
+--=-K0wrVZ31Jh9v0g1lH5y8
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.2.3 (GNU/Linux)
+Version: GnuPG v1.2.4 (GNU/Linux)
 
-iD8DBQBACmHuxULwo51rQBIRAg1lAJ9Ig6I1iwl9LllhzhX1nUmFWdc5OwCfTphU
-trhEm+i9VNH2GmbgTlVg2gA=
-=mRP4
+iD8DBQBACn1cqburzKaJYLYRAgXGAJ9BE2nsY07vQZkzEpm9ZsmXQ7+CTACeJNr4
+yWweMDTcwdEf07QakUZhiEs=
+=eT1p
 -----END PGP SIGNATURE-----
 
---=-kpQC9lpvVTD/m2n2LCDV--
+--=-K0wrVZ31Jh9v0g1lH5y8--
+
