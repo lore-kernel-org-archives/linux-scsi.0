@@ -1,69 +1,48 @@
-From: "Guy" <bugzilla@watkins-home.com>
-Subject: RE: How to find which (physical) SCSI HBA corresponds to which ho	st number?
-Date: Fri, 1 Apr 2005 15:05:05 -0500
-Message-ID: <200504012005.j31K5Am19844@www.watkins-home.com>
-References: <OF48E31788.A91E33AF-ON88256FD6.00605364-88256FD6.00619462@us.ibm.com>
+From: "Nicholas A. Bellinger" <nick@pyxtechnologies.com>
+Subject: [ANNOUNCE] iscsi-initiator-core 1.6.2.0-rc1 for 2.6.12-rc1
+Date: Fri, 01 Apr 2005 12:01:41 -0800
+Message-ID: <1112385701.3008.18.camel@haakon>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rwcrmhc13.comcast.net ([204.127.198.39]:62143 "EHLO
-	rwcrmhc13.comcast.net") by vger.kernel.org with ESMTP
-	id S262868AbVDAUFP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 1 Apr 2005 15:05:15 -0500
-In-Reply-To: <OF48E31788.A91E33AF-ON88256FD6.00605364-88256FD6.00619462@us.ibm.com>
+Received: from smtp811.mail.sc5.yahoo.com ([66.163.170.81]:52843 "HELO
+	smtp811.mail.sc5.yahoo.com") by vger.kernel.org with SMTP
+	id S262871AbVDAUI7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 1 Apr 2005 15:08:59 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: 'Bryan Henderson' <hbryan@us.ibm.com>
-Cc: linux-scsi@vger.kernel.org, "'Rajat Jain, Noida'" <rajatj@noida.hcltech.com>
+To: iscsi-initiator-core-announce@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>
+Cc: iscsi-initiator-core-devel <iscsi-initiator-core-devel@iscsi-initiator-core.org>, James Bottomley <James.Bottomley@SteelEye.com>, Christoph Hellwig <hch@lst.de>, Mike Christie <mikenc@us.ibm.com>
 
+Greetings all,
 
+http://www.kernel.org/pub/linux/kernel/people/nab/iscsi-initiator-core/iscsi-initiator-core-1.6.2.0-rc1-2.6.12-rc1.patch.bz2
 
-> -----Original Message-----
-> From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-
-> owner@vger.kernel.org] On Behalf Of Bryan Henderson
-> Sent: Friday, April 01, 2005 12:47 PM
-> To: Rajat Jain, Noida
-> Cc: linux-scsi@vger.kernel.org; Rajat Jain, Noida
-> Subject: RE: How to find which (physical) SCSI HBA corresponds to which ho
-> st number?
-> 
-> >>proc/scsi/hba_name/host_number.
-> >
-> >This proc entry is made AFTER the device is registered with SCSI
-> mid-level
-> >driver (scsi_mod).
-> 
-> This proc entry is not related to a device.  It's the entry that describes
-> the HBA, and it gets created as part of registering the HBA (host).
-> 
-> >after I add a SCSI device to one of the HBAs, the only
-> >option I have left with me is following
-> >
-> >For n = 0 to N
-> >Do
-> >                echo "scsi add-single-device n 0 ID 0" > /proc/scsi/scsi
-> 
-> If you and Linux could identify the host in common terms, you wouldn't
-> have to do this.  But the question is open as to in what terms you
-> personally identify the host to which you attached the device.  Is it the
-> controller to the west?  The red one?  The new one?  The one with serial
-> number 8436547?  The one at PCI address X:Y:Z?  The one that has your disk
-> drives on it?
+A few minor fixes in this release, with the main feature addition being
+support for persistent connection/session parameters as defined within 
+/etc/sysconfig/initiator.  For example, it is now possible to define
+specific connection/session parameters and have those values remain
+throughout connection/session failures.  Also, the first run of tests
+with dm-multipath have been compelted successful.  I am working on a
+section within the documentation to describe how these two pieces work
+together within linux 2.6.
 
-It would be great is Linux could maintain IDs based on a hardware address.
-If PCI X:Y:Z is real, then this would be my choice.  Using this method, one
-could replace a card and still have the same IDs.  Or add/remove a card(s).
-I added a tape drive and of course, it became st0 and my old tape drive
-became st1.  Not very well though out.  IMO.
-> 
-> The host proc file often has a serial number in it.  Sometimes it has a
-> fibre channel worldwide node name.
-> 
-> It seems to me that you're probably right, though: the easiest thing is
-> just to try to add the bus/target/LUN to every host.  In an ideal world,
-> you'd do this with hotplug.
+Also an important milestone has been reached with v1.0 of the
+iscsi-initiator-core.org howto located at:
 
-Guy
+http://iscsi-initiator-core.org/mediawiki/index.php/Howto
+
+This is a work in progress as data is imported from the ASCII version
+from iscsi-initiator-core-tools v2.3.
+
+This release is now considered stable and no new features will be added
+until 1.6.2.0-final is released.
+
+Thanks!
+
+-- 
+Nicholas A. Bellinger <nick@pyxtechnologies.com>
+Chief Architect, PyX Technologies, Inc.
+http://www.iscsi-initiator-core.org
 
