@@ -1,46 +1,29 @@
-From: Bjorn Helgaas <bjorn_helgaas@hp.com>
-Subject: sym53c8xx_2 fix
-Date: Thu, 19 Dec 2002 13:14:45 -0700
+From: "Qi, Yanling" <yqi@lsil.com>
+Subject: An array failover driver
+Date: Thu, 19 Dec 2002 15:56:50 -0600
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <200212191314.45778.bjorn_helgaas@hp.com>
+Message-ID: <EB1DF7EA0D32D611B79C0002A51363F194A7BE@exw-ks.ks.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain;
+	charset="iso-8859-1"
 Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mhbs.lsil.com (mhbs.lsil.com [147.145.31.100])
+	by mail0.lsil.com (8.12.4/8.12.4) with ESMTP id gBJJaaCj004516
+	for <linux-scsi@vger.kernel.org>; Thu, 19 Dec 2002 13:56:18 -0800 (PST)
+Received: from [153.79.12.11] by mhbs.lsil.com with ESMTP for linux-scsi@vger.kernel.org; Thu, 19 Dec 2002 13:56:07 -0800
 List-Id: linux-scsi@vger.kernel.org
-To: groudier@free.fr
-Cc: linux-scsi@vger.kernel.org, gibbs@scsiguy.com
+To: 'linux-scsi-reflector' <linux-scsi@vger.kernel.org>
 
-We run the sym53c8xx_2 driver on a simulator.  Because the
-simulator's disk model is somewhat simplified compared to real
-hardware, it exercises some code paths that are not exercised
-on the hardware.
+Hi All, 
 
-Our simulator guru found what appears to be an error in
-one such path.  Here's his description and patch (against
-2.4.20).  Let me know if you need more information.
+I am going to develop a multiple-pathing driver to support our storage array
+hardware on Linux(2.4 and later). I prefer the driver sit on the top of HBA
+drivers (fibre channel adapter drivers) and below middle level (the unifying
+layer). In other words, insert my pseudo driver into middle level and lower
+level drivers. The driver will take care of path failover. I am still in
+research phase. Do you have any suggestions?
 
-Justin, I copied you because the comment immediately preceding
-this code says it's part of an optimization you suggested
-(negotiating for SYNC immediately after a WIDE response).
-
-> ... There is also a bug in the driver that keeps us from
-> booting.  This code path is not executed on hardware but is on the sim with
-> our simple disk model.  The current driver assembles an SDTR request but
-> then calls the SDTR response script.  Here is the fix:
-
-> --- orig/linux-ia64-2.4/drivers/scsi/sym53c8xx_2/sym_hipd.c     Fri Sep 27 17:27:41 2002
-> +++ fixed/linux-ia64-2.4/drivers/scsi/sym53c8xx_2/sym_hipd.c    Wed Dec 18 21:26:25 2002
-> @@ -4363,7 +4363,7 @@
-> 
->                         cp->nego_status = NS_SYNC;
->                         OUTB (HS_PRT, HS_NEGOTIATE);
-> -                       OUTL_DSP (SCRIPTB_BA (np, sdtr_resp));
-> +                       OUTL_DSP (SCRIPTB_BA (np, send_sdtr));
->                         return;
->                 }
-
--- 
-Bjorn Helgaas - bjorn_helgaas at hp.com
-Linux and Open Source Lab
-Hewlett-Packard Company
+  
+Thanks, 
+  
+Yanling Qi 
