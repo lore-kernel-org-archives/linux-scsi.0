@@ -1,50 +1,142 @@
-From: Sulamita Garcia <sulagarcia@yahoo.com.br>
-Subject: Re: Kernel panic - Ththththaats all folks
-Date: Sat, 6 Sep 2003 17:00:17 -0300
+From: "Tomita, Haruo" <haruo.tomita@toshiba.co.jp>
+Subject: RE: usb-strage not working in the latest kernel 2.4
+Date: Sun, 7 Sep 2003 10:28:07 +0900
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <200309061700.17180.sulagarcia@yahoo.com.br>
-References: <20030905140100.53464.qmail@web21106.mail.yahoo.com> <1062772665.32436.4.camel@dhcp23.swansea.linux.org.uk>
+Message-ID: <200309070128.KAA28169@toshiba.co.jp>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=shift_jis
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp015.mail.yahoo.com ([216.136.173.59]:65037 "HELO
-	smtp015.mail.yahoo.com") by vger.kernel.org with SMTP
-	id S261725AbTIFUAX convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 6 Sep 2003 16:00:23 -0400
-In-Reply-To: <1062772665.32436.4.camel@dhcp23.swansea.linux.org.uk>
-Content-Disposition: inline
+Received: from inet-tsb.toshiba.co.jp ([202.33.96.40]:56494 "EHLO
+	inet-tsb.toshiba.co.jp") by vger.kernel.org with ESMTP
+	id S262201AbTIGB3H convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 6 Sep 2003 21:29:07 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: USB development list <linux-usb-devel@lists.sourceforge.net>, SCSI development list <linux-scsi@vger.kernel.org>, David Brownell <david-b@pacbell.net>, "Tomita, Haruo" <htomita@pcs.pc.ome.toshiba.co.jp>
 
-Em Friday 05 September 2003 11:37, Alan Cox escreveu:
-> On Gwe, 2003-09-05 at 15:01, Sulamita Garcia wrote:
-> > instalation default, and rebuild module from source
-> > because kernel module didn't work. Now I have a Raid 0
-> > by hardware
->
-> Problems with HPT's partially binary module should be directed to
-> highpoint not to this list. Looking at the trace its almost certainly
-> a bug in their alternative software raid driver.
->
-> Alan
+Hi Alan,
 
-I found the error. Is the arternative Linux distribution that I used.=20
-I delete RedHat and install Slackware 9.0, and everything it's working.=
-=2E.
-[]'s
+Thank you for your help and useful comment.
 
---=20
+Alan wrote:
 
-  =B0v=B0  Sulamita Garcia               =20
- /(_)\ Alta   Disponibilidade           =20
-  ^ ^  http://ha.underlinux.com.br
- Slackware - Because It Works       Linuxchix-BR - http://br.linuxchix.=
-org/
- Linux Registered User 240300         "Meninas boazinhas v=E3o para o c=
-=E9u.
- BSD050867                                   As m=E1s v=E3o =E0 luta."
+Haruo> I tested using kernel 2.4.22-bk6. It failed by the=20
+Haruo> following two patterns.
+Haruo> 1. Bulk command transfer result=3D-104
+Haruo> 2.  usb_stor_bulk_msg() returned -32
+=20
+Alan> This was two different failures on two separate runs?
 
+Yes. I tested separately.=20
+It is because it is hard to generate an error in testing
+two simultaneously. When testing simultaneously,
+much time is required by the time it generates an error.
+The reason is not known.
+
+Haruo> 1. Bulk command transfer result=3D-104
+
+[skip]
+
+Alan> This was the same sort of pattern we saw before.  No data was=20
+Alan> transferred from the drive, and the command timed out
+=82`=82=8C=82=81=82=8E> and was aborted.
+
+I am also looking at this pattern repeatedly.
+It seems that a device does not answer in the case of kernel 2.4.
+However, when operating by kernel 2.6 and two or more devices
+are connected simultaneously, it operates.=20
+I cannot think the error of a device.
+
+[skip]
+
+Haruo> hub.c: port 1, portstatus 503, change 10, 480 Mb/s
+Haruo> usb.c: ignoring set_interface for dev 3, iface 0, alt 0
+Haruo> usb-storage: Examinging driver usb-storage...skipping ourselves.
+Haruo> usb-storage: bus_reset() complete
+=20
+Alan> This time the bus_reset() routine worked, which is an=20
+Alan> improvement over=20
+Alan> what you were seeing before.  But the device still didn't respond=
+:
+
+If a device becomes an error, it seems that reset is not effective.
+Using ioctl (fd, USBDEVFS_RESET, 0) and this device, =20
+Is checking whether a device can reset correctly by=20
+performing effective?
+
+[skip]
+=20
+Haruo> scsi: device set offline - not ready or command retry=20
+Haruo> failed after bus reset: host 0 channel 0 id 0 lun 0
+Haruo> SCSI cdrom error : host 0 channel 0 id 0 lun 0 return code =3D 5=
+0000
+Haruo>  I/O error: dev 0b:00, sector 473224
+Haruo>  I/O error: dev 0b:00, sector 473228
+Haruo>  I/O error: dev 0b:00, sector 473476
+Haruo>  I/O error: dev 0b:00, sector 473224
+
+Alan> Once that happened there were no error recovery procedures=20
+Alan> left to try, so=20
+Alan> the driver gave up and marked the device offline.
+
+Doesn't a device receive any commands?
+
+Alan> There's something a little strange I just noticed in the log.  It=
+'s
+Alan> probably not related to your problem, but we should check it=20
+Alan> out anyway. =20
+Alan> Please send a copy of /proc/bus/usb/devices, with the drive=20
+Alan> plugged in.
+
+OK.=20
+=20
+> > 2.  usb_stor_bulk_msg() returned -32
+=20
+Alan> Under what circumstances did this error occur?  It must have=20
+Alan> been quite different from the other error.
+
+The used device(Logitec LCW-WIN40U2) is different.=20
+It is the same circumstances except a device.
+
+
+Haruo> usb-storage: usb_stor_transfer_partial(): xfer 2048 bytes
+Haruo> usb-storage: usb_stor_bulk_msg() returned -32 xferred 0/2048
+Haruo> usb-storage: -- code: 0x70, key: 0x2, ASC: 0x4, ASCQ: 0x1
+Haruo> usb-storage: Not Ready: LUN in process of becoming ready
+
+Alan> That's normal.  It means that the drive was just turned on or=20
+Alan> reset, and it's not yet ready to execute commands.
+
+I see.
+
+Haruo> usb-storage: Unit Attention: not ready to ready transition
+=20
+Haruo> More of the same.  This means that the drive just finished its=20
+Haruo> initialization and now it's ready to operate.
+Haruo> usb-storage: scsi cmd done, result=3D0x2
+Haruo> usb-storage: *** thread sleeping.
+Haruo>  I/O error: dev 0b:00, sector 804236
+Haruo>  I/O error: dev 0b:00, sector 804240
+Haruo>  I/O error: dev 0b:00, sector 804492
+Haruo>  I/O error: dev 0b:00, sector 804236
+=20
+Alan> But apparently at this point the SCSI driver got tired of=20
+Alan> waiting and set=20
+Alan> the drive offline.  This should be fixed in the SCSI driver. =20
+
+If a SCSI driver performs retry,=20
+is it that usb-storage can also restart processing?
+
+Alan> That's why=20
+Alan> it's important to know what you were doing when the error occurre=
+d.
+
+Ok, echo is put into a script, and as processing can be distinguished, =
+test it.
+
+Thanks again,
+Haruo=20
 -
 To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
 n
