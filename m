@@ -1,68 +1,48 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: Re: Unaligned scatter-gather buffers and usb-storage
-Date: Wed, 19 Nov 2003 15:39:01 +0100
-Sender: linux-usb-devel-admin@lists.sourceforge.net
-Message-ID: <20031119143901.GI1106@suse.de>
-References: <20031110095914.B22518@beaverton.ibm.com> <20031118143720.A6411@beaverton.ibm.com> <20031119084729.GA1106@suse.de> <200311191401.34540.oliver@neukum.org> <20031119130400.GG1106@suse.de> <1069252642.10768.7.camel@mulgrave>
+From: Naveen Burmi <naveenb@cisco.com>
+Subject: Re: Request for review of Linux iSCSI driver version 4.0.0.1
+Date: Wed, 19 Nov 2003 20:18:32 +0530
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <03111920183201.15831@naveenb-lnx.cisco.com>
+References: <200310231734.10263.krmurthy@cisco.com> <20031027153932.A16679@infradead.org>
+Reply-To: naveenb@cisco.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-usb-devel-admin@lists.sourceforge.net>
-Content-Disposition: inline
-In-Reply-To: <1069252642.10768.7.camel@mulgrave>
-Errors-To: linux-usb-devel-admin@lists.sourceforge.net
-List-Help: <mailto:linux-usb-devel-request@lists.sourceforge.net?subject=help>
-List-Post: <mailto:linux-usb-devel@lists.sourceforge.net>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-devel>,
-	<mailto:linux-usb-devel-request@lists.sourceforge.net?subject=subscribe>
-List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-devel>,
-	<mailto:linux-usb-devel-request@lists.sourceforge.net?subject=unsubscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=linux-usb-devel>
-To: James Bottomley <James.Bottomley@steeleye.com>
-Cc: Oliver Neukum <oliver@neukum.org>, Patrick Mansfield <patmans@us.ibm.com>, Alan Stern <stern@rowland.harvard.edu>, Douglas Gilbert <dougg@torque.net>, SCSI development list <linux-scsi@vger.kernel.org>, USB development list <linux-usb-devel@lists.sourceforge.net>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from sj-iport-2-in.cisco.com ([171.71.176.71]:1660 "EHLO
+	sj-iport-2.cisco.com") by vger.kernel.org with ESMTP
+	id S264126AbTKSOpY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 19 Nov 2003 09:45:24 -0500
+In-Reply-To: <20031027153932.A16679@infradead.org>
 List-Id: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-scsi@vger.kernel.org, davmyers@cisco.com
 
-On Wed, Nov 19 2003, James Bottomley wrote:
-> On Wed, 2003-11-19 at 07:04, Jens Axboe wrote:
-> > On Wed, Nov 19 2003, Oliver Neukum wrote:
-> > > 
-> > > > > You could add a scsi_host fields or bits specifying alignment
-> > > > > restrictions, and enforce them as needed in upper level drivers.
-> > > > 
-> > > > The queue already has such a restriction embedded, see bio_map_user()
-> > > > and queue_dma_alignment().
-> > > 
-> > > Very well, as far as sd and sr are concerned, but it doesn't help for
-> > > sg and st, does it?
-> > 
-> > They both have a queue through the scsi device structure. But you could
-> > put the value someplace else if you wanted.
-> 
-> Actually, the sg case should be fine, because it shares the queue with
-> the other attachment (unless it's a processor or other unrecognised
-> device).
-> 
-> but, regardless, the queue is already set up (for all devices, including
-> st) in either slave_alloc, or slave_configure, so you could call the
-> alignment setting routine there.
+On Monday 27 October 2003 09:09 pm, Christoph Hellwig wrote:
 
-That was my point, yes.
+> iscsi-probe.c:
+> 	- the whole iscsi_do_cmnd use looks very very strange.  
 
-> Alternatively, we could add this as yet another parameter to the host
-> and template structures.  Any preferences?
+After a device gets detected by iSCSI LLD, it uses iscsi_do_cmnd to send scsi 
+commands to that device even before registering it with the scsi mid-layer.
+ 
+For example user can configure in iscsi LLD configuration (iscsi.conf) file 
+what various LUNs of a particular target needs to be activated. To acheive 
+this we need to execute REPORT LUN command on target, to find out what 
+various luns are present and selectively issue scsi_add_device for luns that 
+needs to be activated.
 
-I suppose you have to, if you want LLD to be able to pass it down.
+>          you're probably
+> 	much better of to use the scsi_request based interfaces and use midlayer
+> 	queueing and sometimes even higher level interfaces
 
--- 
-Jens Axboe
+All these interfaces requires scsi_device instance which implies that device 
+must be registered with the scsi mid-layer,  before using these interfaces. 
 
+Naveen.
 
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
--------------------------------------------------------
-This SF.net email is sponsored by: SF.net Giveback Program.
-Does SourceForge.net help you be more productive?  Does it
-help you create better code?  SHARE THE LOVE, and help us help
-YOU!  Click Here: http://sourceforge.net/donate/
-_______________________________________________
-linux-usb-devel@lists.sourceforge.net
-To unsubscribe, use the last form field at:
-https://lists.sourceforge.net/lists/listinfo/linux-usb-devel
