@@ -1,59 +1,119 @@
-From: Anton Blanchard <anton@samba.org>
-Subject: Re: PATCH [5/15] qla2xxx:  SG tablesize update
-Date: Tue, 16 Mar 2004 22:32:56 +1100
+From: Douglas Gilbert <dougg@torque.net>
+Subject: SAS overview
+Date: Tue, 16 Mar 2004 21:46:31 +1000
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040316113256.GT19737@krispykreme>
-References: <B179AE41C1147041AA1121F44614F0B0598FC6@AVEXCH02.qlogic.org>
+Message-ID: <4056E917.7050502@torque.net>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from dp.samba.org ([66.70.73.150]:10155 "EHLO lists.samba.org")
-	by vger.kernel.org with ESMTP id S261427AbUCPLiW (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 16 Mar 2004 06:38:22 -0500
-Content-Disposition: inline
-In-Reply-To: <B179AE41C1147041AA1121F44614F0B0598FC6@AVEXCH02.qlogic.org>
+Received: from bunyip.cc.uq.edu.au ([130.102.2.1]:24580 "EHLO
+	bunyip.cc.uq.edu.au") by vger.kernel.org with ESMTP id S261181AbUCPLqH
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 16 Mar 2004 06:46:07 -0500
+Received: from torque.net (d-232-251.stlucia.uq.net.au [203.101.232.251])
+	by bunyip.cc.uq.edu.au (8.12.10/8.12.10) with ESMTP id i2GBk2ZE021546
+	for <linux-scsi@vger.kernel.org>; Tue, 16 Mar 2004 21:46:03 +1000 (GMT+1000)
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, Jeff Garzik <jgarzik@pobox.com>, Jens Axboe <axboe@suse.de>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: linux-scsi <linux-scsi@vger.kernel.org>
 
- 
-Hi,
+Serial Attached SCSI (SAS) is projected to become available
+later this year. Many of the usual suspects that supply the
+parallel SCSI world have recently been making SAS product
+announcements. See http://www.scsita.org .
 
-> Ideally, no we don't want to do this...how about sending down larger
-> individual SG entries, the ISP only limits the total transfer of a
-> command to 2^32-1 bytes ;)
+Also on that site is an instructive 10 part tutorial by
+Rob Elliot on various aspects of SAS. SAS borrows a lot
+from SATA (and Fibre Channel) and is designed for
+internal storage (as is SATA and it uses the same plugs
+and cables) and "near" external storage (up to around
+10 metres away). Even though the Ultra 640 standard
+(SPI-5) is ratified it seems that vendors are going to
+bypass it and go to SAS.
 
-Many architectures with IOMMUs do virtual merging, so you will get
-much larger individual SG entries on those architectures. On ppc64 its
-now an option, IOMMU_VMERGE.
+A SCSI domain is a set of SCSI initiators and targets (at
+least one of each) interconnected by a service delivery
+subsystem. In the SCSI Parallel Interface (SPI) the service
+delivery subsystem is passive: a multi-drop cable. In SAS
+the service delivery subsystem is either a cable (e.g. a
+SATA cable) or one or more expanders. Over 16000 SAS
+initiators and targets can be interconnected by a set of
+expanders in a single SAS domain. To simplify routing,
+multiple paths between SAS initiators and targets within
+a single SAS domain are not allowed. This leads to some
+interesting topologies (see question 1 of Rob Elliot's
+tutorial after you understand wide links).
 
-Virtual merging is another reason to remove the 32 SG limit. On ppc64 we
-dont use the BIO_VMERGE_BOUNDARY trick (its there to allow early
-estimation of how an sglist can be merged). We do this because in the
-time between the estimation and the actual allocation the IOMMU space
-may have become too fragmented for the allocation to succeeed.
+The unit of serial communication is a "phy". The current
+generation of SATA phys run at 1.5 Gb/sec while the SAS
+phys run at 3.0 Gb/sec. [A byte is encoded in 10 bits in
+the serial stream so for maximum megabyte/sec throughputs,
+just divide by 10.] The SAS standard shows expanders with
+optional SAS-SATA bridges and SATA phys. The standard
+defines the STP protocol for tunnelling the ATA/ATAPI
+command set through the SAS infastructure. Evidentally
+there are autosensing phys that can have either a SAS or
+SATA disk connected to them. It seems as though the first
+generation of SAS HBAs will also have this capability.
 
-Instead we do all the merging at pci_map_sg time which means we can fall 
-back to not merging at all when the IOMMU space becomes fragmented.
-Unfortunately with the 32 SG change we will be limited to requests of
-PAGE_SIZE*32.
+SAS initiators, targets and expanders are identified by SAS
+addresses which are a (world wide unique ?) 64 bit number
+(naa==5). From what I read typical SAS elements will have
+the following:
+   SAS HBA:      4 phys, 1 SAS address
+   SAS disk:     2 phys each with a separate SAS address
+                 (dual ported)
+   Expander:     3 or (usually) more phys, 1 SAS address **
+   SATA disk:    1 (SATA) phy, SAS address??
 
-> Since the driver specifies SG_ALL for the sg_tablesize, from testing
-> (x86 and ppc64), we've seen at most 128 SG entries attached to a
-> command request of 512K bytes (4K page size * 128).  
+Now things start to get interesting. SAS can aggregate
+individual phy interconnects to form "wide" links. So
+if two (single phy) cables are run from a HBA (occupying
+two of its phys) to phys on the same expander then that
+is a wide link. Seen from Linux driving that HBA that is
+two PCI devices (each HBA phy) but only one SCSI initiator
+port. Up to 256 phy interconnects can be ganged to make
+a very wide SAS link (a parallel bus you might say).
 
-Yep, we are limited by the maximum size of the scsi SG list of 128
-entries. James merged a patch recently that allows us to play with
-larger sizes (eg 256 entries), check out SCSI_MAX_PHYS_SEGMENTS and
-MAX_PHYS_SEGMENTS.
+On the other hand if those two HBA phys were cabled to the
+two phys on a SAS disk then that would _not_ be a wide link
+since the two phys at the SAS disk end do _not_ have the same
+SAS address. Further it is two SAS domains since the two
+narrow links are separate service delivery subsystems.
 
-> from queuecommand().  The 8.x series driver inherited alot of the
-> queuing baggage created during driver development of [567].x to
-> address some deficiecies of earlier midlayer implementations (all of
-> which have been addressed in recent kernels).  I'll start to take a
-> look at tearing out the pending_q.
+Hopefully any errors I have made above will be corrected by
+those who have practical experience with SAS. The SAS
+architectural overview tutorial (url given above) has
+diagrams to illustrate.
 
-Yeah that solution sounds promising.
+Linux implementation thoughts:
+   - SAS addresses are 64 bit and correspond to the Linux
+     SCSI id (i.e. third item of <host,channel,id,lun> tuple)
+     which is currently 32 bit
+   - wide links break the one to one relationship between
+     PCI devices (i.e. a phy) and a SAS initiator.
+   - SAS introduces a SAS Management Protocol (SMP) for
+     discovery and configuring SAS expanders and attached
+     devices. SAS expanders are not SCSI devices yet they
+     need to be addressable from the user space for
+     discovery and configuration to be offloaded from the
+     LLD to user space programs. Perhaps a new role for the
+     scsi generic driver (with a guard of 'M' rather than
+     'S')??
 
-Anton
+
+Notes:
+  **  The SAS standard permits an expander to have multiple
+      SAS addresses: the mandatory one for SMP routing
+      purposes and optional ones for embedded devices such
+      as bridges and enclosure services devices.
+
+   -  some SAS disks will have a 2.5" form factor
+   -  as I write the www.scsita.org is down, hopefully it
+      is a temporary outage. The (latest draft before) the
+      SAS standard is at www.t10.org
+
+
+Doug Gilbert
+
