@@ -1,41 +1,35 @@
-From: "Randy.Dunlap" <rddunlap@osdl.org>
+From: denebeim@deepthot.org (Jay Denebeim)
 Subject: Re: coding style question
-Date: Wed, 25 Feb 2004 11:29:05 -0800
+Date: Wed, 25 Feb 2004 19:37:49 +0000 (UTC)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040225112905.33bfdea8.rddunlap@osdl.org>
-References: <20040225182523.GD25779@parcelfarce.linux.theplanet.co.uk>
-	<Pine.LNX.4.44.0402251128430.6557-100000@dent.deepthot.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Message-ID: <c1itid$7md$1@dent.deepthot.org>
+References: <20040225182523.GD25779@parcelfarce.linux.theplanet.co.uk> <Pine.LNX.4.44.0402251128430.6557-100000@dent.deepthot.org> <20040225112905.33bfdea8.rddunlap@osdl.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fw.osdl.org ([65.172.181.6]:64966 "EHLO mail.osdl.org")
-	by vger.kernel.org with ESMTP id S261262AbUBYT3X (ORCPT
+Received: from deepthot.org ([68.14.232.127]:48293 "EHLO dent.deepthot.org")
+	by vger.kernel.org with ESMTP id S261275AbUBYThv (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 25 Feb 2004 14:29:23 -0500
-In-Reply-To: <Pine.LNX.4.44.0402251128430.6557-100000@dent.deepthot.org>
+	Wed, 25 Feb 2004 14:37:51 -0500
+Received: from news by dent.deepthot.org with local (Exim 4.30)
+	id 1Aw4qr-0002FZ-FZ
+	for linux-scsi@vger.kernel.org; Wed, 25 Feb 2004 12:37:49 -0700
 List-Id: linux-scsi@vger.kernel.org
-To: Jay Denebeim <denebeim@deepthot.org>
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Wed, 25 Feb 2004 11:40:27 -0700 (MST) Jay Denebeim wrote:
+In article <20040225112905.33bfdea8.rddunlap@osdl.org>,
+Randy.Dunlap <rddunlap@osdl.org> wrote:
 
-| On Wed, 25 Feb 2004, Matthew Wilcox wrote:
-| 
-| > On Wed, Feb 25, 2004 at 06:16:48PM +0000, Jay Denebeim wrote:
-| (I mentioned typedefs being removed)
-| > > what was the reasoning for this?
-| > 
-| > We hate typedefs.
-| 
-| Well, that's certainly convincing.  Funny that, I don't recall hating
-| typedefs, in fact I distinctly recall liking them and being happy when
-| they were added to Lattice's Amiga compiler back in the stone age.  Is
-| there some particular reason 'we' hate them?
+>For anything other than very basic types, they hide/obfuscate data
+>structures.  If it's a struct, we had rather see a struct used there.
 
-For anything other than very basic types, they hide/obfuscate
-data structures.  If it's a struct, we had rather see a struct
-used there.
+Okay, that's more or less what I figured it was, thanks.  Personally I
+never found that it did that for me, the 'struct' always seemed
+redundant.  That's just my opinion though, and I can certainly
+understand others.
 
---
-~Randy
+Thanks for the answer.
+Jay
+-- 
+* Jay Denebeim  Moderator       rec.arts.sf.tv.babylon5.moderated *
+* newsgroup submission address: b5mod@deepthot.org                *
+* moderator contact address:    b5mod-request@deepthot.org        *
+* personal contact address:     denebeim@deepthot.org             *
