@@ -1,52 +1,60 @@
-From: Tim Pepper <tpepper@vato.org>
-Subject: Re: Bad reactions to QUEUE FULL
-Date: Sun, 4 May 2003 21:09:24 -0700
+From: Rusty Trivial Russell <rusty@rustcorp.com.au>
+Subject: [TRIVIAL] [2.5 patch] remove unneeded #define LinuxVersionCode from eata.c (fwd)
+Date: Mon, 05 May 2003 14:48:58 +1000
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030504210924.A27219@jose.vato.org>
-References: <20030429220259.A13386@jose.vato.org> <1051714713.1818.32.camel@mulgrave> <20030430160851.GA2350@beaverton.ibm.com> <20030430091335.A14743@jose.vato.org> <20030430165130.GC2350@beaverton.ibm.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Message-ID: <20030505050415.7E4AB2C2A0@lists.samba.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cpe-24-221-186-48.ca.sprintbbd.net ([24.221.186.48]:2828 "HELO
-	jose.vato.org") by vger.kernel.org with SMTP id S261886AbTEED5B
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 4 May 2003 23:57:01 -0400
-Content-Disposition: inline
-In-Reply-To: <20030430165130.GC2350@beaverton.ibm.com>; from andmike@us.ibm.com on Wed, Apr 30, 2003 at 09:51:30AM -0700
+Received: from dp.samba.org ([66.70.73.150]:32979 "EHLO lists.samba.org")
+	by vger.kernel.org with ESMTP id S261928AbTEEEvp (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 5 May 2003 00:51:45 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@steeleye.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Jens Axboe <axboe@suse.de>, olh@suse.de
+To: Linus Torvalds <torvalds@transmeta.com>
+Cc: Dario Ballabio <ballabio_dario@emc.com>, linux-scsi@vger.kernel.org
 
-Bad news...this doesn't appear to have made much difference.  With it 3 of the
-six machines were pretty much dead the morning after and the other three all have
-hung IO.
+From:  Adrian Bunk <bunk@fs.tum.de>
 
-On the other front I'm still waiting for word back from Emulex and Qlogic
-on the detailed tracing I sent them.
+  Hi Linus,
+  
+  the trivial patch in the mail below still applies against and compiles 
+  under 2.5.63.
+  
+  Please apply
+  Adrian
+  
+  
+  ----- Forwarded message from Adrian Bunk <bunk@fs.tum.de> -----
+  
+  Date: Sun, 12 Jan 2003 09:42:53 +0100
+  From: Adrian Bunk <bunk@fs.tum.de>
+  To: ballabio_dario@emc.com
+  Subject: [2.5 patch] remove unneeded #define LinuxVersionCode from eata.c
+  
+  Hi Dario,
+  
+  the patch below removes the unneeded #define LinuxVersionCode from 
+  eata.c. It's not used and if it was needed KERNEL_VERSION in 
+  include/linux/version.h does the same.
+  
+  I've tested the compilation with 2.5.56.
+  
+  Please apply
+  Adrian
+  
 
-> 
-> --- linux-2.4/drivers/scsi/scsi_lib.c		Wed Apr 30 09:04:16 2003
-> +++ linux-2.4-p/drivers/scsi/scsi_lib.c		Wed Apr 30 09:04:17 2003
-> @@ -256,6 +256,17 @@
->  	if (SCpnt != NULL) {
->  
->  		/*
-> +		 * This is a work around for a case where this Scsi_Cmnd
-> +		 * may have been through the busy retry paths already. We
-> +		 * clear the special flag and try to restore the
-> +		 * read/write request cmd value.
-> +		 */
-> +		if (SCpnt->request.cmd == SPECIAL)
-> +			SCpnt->request.cmd = 
-> +				(SCpnt->sc_data_direction ==
-> +				 SCSI_DATA_WRITE) ? WRITE : READ;
-> +
-> +		/*
->  		 * For some reason, we are not done with this request.
->  		 * This happens for I/O errors in the middle of the request,
->  		 * in which case we need to request the blocks that come after
-
+--- trivial-2.5.69/drivers/scsi/eata.c.orig	2003-05-05 14:46:14.000000000 +1000
++++ trivial-2.5.69/drivers/scsi/eata.c	2003-05-05 14:46:14.000000000 +1000
+@@ -449,10 +449,6 @@
+ 
+ #include <linux/version.h>
+ 
+-#ifndef LinuxVersionCode
+-#define LinuxVersionCode(v, p, s) (((v)<<16)+((p)<<8)+(s))
+-#endif
+-
+ #define MAX_INT_PARAM 10
+ 
+ #if defined(MODULE)
 -- 
-*********************************************************
-*  tpepper@vato dot org             * Venimus, Vidimus, *
-*  http://www.vato.org/~tpepper     * Dolavimus         *
-*********************************************************
+  What is this? http://www.kernel.org/pub/linux/kernel/people/rusty/trivial/
+  Don't blame me: the Monkey is driving
+  File: Adrian Bunk <bunk@fs.tum.de>: [2.5 patch] remove unneeded #define LinuxVersionCode from eata.c (fwd)
