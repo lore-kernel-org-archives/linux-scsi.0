@@ -1,1403 +1,1752 @@
 From: Luben Tuikov <luben_tuikov@adaptec.com>
-Subject: [ANNOUNCE] Adaptec SAS/SATA device driver [17/27]
-Date: Thu, 17 Feb 2005 12:37:09 -0500
-Message-ID: <4214D645.60709@adaptec.com>
+Subject: [ANNOUNCE] Adaptec SAS/SATA device driver [16/27]
+Date: Thu, 17 Feb 2005 12:37:05 -0500
+Message-ID: <4214D641.4050906@adaptec.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Received: from magic.adaptec.com ([216.52.22.17]:21138 "EHLO magic.adaptec.com")
-	by vger.kernel.org with ESMTP id S262332AbVBQRhT (ORCPT
+Received: from magic.adaptec.com ([216.52.22.17]:18578 "EHLO magic.adaptec.com")
+	by vger.kernel.org with ESMTP id S262331AbVBQRhP (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 17 Feb 2005 12:37:19 -0500
+	Thu, 17 Feb 2005 12:37:15 -0500
 Received: from redfish.adaptec.com (redfish.adaptec.com [162.62.50.11])
-	by magic.adaptec.com (8.11.6/8.11.6) with ESMTP id j1HHbDr31364
-	for <linux-scsi@vger.kernel.org>; Thu, 17 Feb 2005 09:37:13 -0800
+	by magic.adaptec.com (8.11.6/8.11.6) with ESMTP id j1HHb9r31332
+	for <linux-scsi@vger.kernel.org>; Thu, 17 Feb 2005 09:37:09 -0800
 Received: from rtpe2k01.adaptec.com (rtpe2k01.adaptec.com [10.110.12.40])
-	by redfish.adaptec.com (8.11.6/8.11.6) with ESMTP id j1HHbDb21392
-	for <linux-scsi@vger.kernel.org>; Thu, 17 Feb 2005 09:37:13 -0800
+	by redfish.adaptec.com (8.11.6/8.11.6) with ESMTP id j1HHb8b21372
+	for <linux-scsi@vger.kernel.org>; Thu, 17 Feb 2005 09:37:08 -0800
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-OSM header file.
+OSM code.  Part 3/3.
 
-diff -Nru a/drivers/scsi/adp94xx/adp94xx_osm.h b/drivers/scsi/adp94xx/adp94xx_osm.h
---- /dev/null	Wed Dec 31 16:00:00 196900
-+++ b/drivers/scsi/adp94xx/adp94xx_osm.h	2005-02-16 16:08:12 -05:00
-@@ -0,0 +1,1375 @@
-+/*
-+ * Adaptec ADP94xx SAS HBA device driver for Linux. 
++
++/* 
++ * Function:
++ *	asd_pci_dev_remove()
 + *
-+ * Written by : David Chaw <david_chaw@adaptec.com>
-+ * 
-+ * Copyright (c) 2004 Adaptec Inc.
-+ * All rights reserved.
-+ *
-+ * Redistribution and use in source and binary forms, with or without
-+ * modification, are permitted provided that the following conditions
-+ * are met:
-+ * 1. Redistributions of source code must retain the above copyright
-+ *    notice, this list of conditions, and the following disclaimer,
-+ *    without modification.
-+ * 2. Redistributions in binary form must reproduce at minimum a disclaimer
-+ *    substantially similar to the "NO WARRANTY" disclaimer below
-+ *    ("Disclaimer") and any redistribution must be conditioned upon
-+ *    including a substantially similar Disclaimer requirement for further
-+ *    binary redistribution.
-+ * 3. Neither the names of the above-listed copyright holders nor the names
-+ *    of any contributors may be used to endorse or promote products derived
-+ *    from this software without specific prior written permission.
-+ *
-+ * Alternatively, this software may be distributed under the terms of the
-+ * GNU General Public License ("GPL") version 2 as published by the Free
-+ * Software Foundation.
-+ *
-+ * NO WARRANTY
-+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTIBILITY AND FITNESS FOR
-+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-+ * HOLDERS OR CONTRIBUTORS BE LIABLE FOR SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
-+ * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
-+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
-+ * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
-+ * IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-+ * POSSIBILITY OF SUCH DAMAGES.
-+ *
-+ * $Id: //depot/razor/linux/src/adp94xx_osm.h#143 $
-+ * 
-+ */	
-+
-+#ifndef ADP94XX_OSM_H
-+#define ADP94XX_OSM_H
-+
-+#include <asm/byteorder.h>
-+#include <asm/io.h>
-+
-+#include <linux/types.h>
-+#include <linux/delay.h>
-+#include <linux/ioport.h>
-+#include <linux/pci.h>
-+#include <linux/smp_lock.h>
-+#include <linux/version.h>
-+#include <linux/module.h>
-+#include <linux/interrupt.h>
-+#include <linux/config.h>
-+#include <linux/slab.h>
-+#include <linux/nmi.h>
-+#include <linux/hdreg.h>
-+#include <asm/uaccess.h>
-+#include <linux/ioctl.h>
-+#include <linux/init.h>
-+
-+#ifndef KERNEL_VERSION
-+#define KERNEL_VERSION(x,y,z)	(((x)<<16) + ((y)<<8) + (z))
-+#endif
-+
-+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,5,0)
-+#include <linux/blk.h>
-+#include "sd.h"
-+#endif
-+#include <linux/blkdev.h>
-+
-+#include "scsi.h"
-+
-+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,5,0)
-+#include "hosts.h"
-+#else
-+#include <scsi/scsi_host.h>
-+#endif
-+
-+#define __packed __attribute__ ((packed))
-+
-+/* Driver name */
-+#define ASD_DRIVER_NAME		"adp94xx"
-+#define ASD_DRIVER_DESCRIPTION	"Adaptec Linux SAS/SATA Family Driver"
-+#define ASD_DRIVER_VERSION	"1.0.5"
-+#define ASD_RELEASE_VERSION	12
-+
-+/* For now, let's limit ourselves on kernel 2.4, 2.6 and greater */
-+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,4,0)
-+#error "This driver only support kernel 2.4 or greater"
-+#endif
-+
-+/************************* Forward Declarations *******************************/
-+struct asd_softc;
-+struct asd_port;
-+struct scb;
-+struct asd_scb_platform_data; 
-+struct asd_domain;
-+struct asd_done_list;
-+
-+/********************* Definitions Required by the Core ***********************/
-+/*
-+ * Number of SG segments we require.  So long as the S/G segments for
-+ * a particular transaction are allocated in a physically contiguous
-+ * manner, the number of S/G segments is unrestricted.
++ * Description:
++ *	This routine is called when the controller is removed or during 
++ *	module unloading. 
 + */
-+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,5,0)
-+/*
-+ * We dynamically adjust the number of segments in pre-2.5 kernels to
-+ * avoid fragmentation issues in the SCSI mid-layer's private memory
-+ * allocator.  See adp94xx_osm.c asd_size_nseg() for details.
-+ */
-+extern u_int asd_nseg;
-+#define	ASD_NSEG 		asd_nseg
-+#define	ASD_LINUX_MIN_NSEG 	64
-+#else
-+#define	ASD_NSEG 		128
-+#endif
-+
-+/* Constants definition */
-+#define ASD_MAX_QUEUE		ASD_MAX_ALLOCATED_SCBS
-+
-+/*
-+ * DC: Does MAX_SECTORS 255 works for some SATA drives ?
-+ *     Preferable set it to 255 for better performance in 2.6 kernel.
-+ *     In 2.4 kernel, it seems that block layer always limited to 64 sectors.
-+ */ 
-+//#define ASD_MAX_SECTORS	8192
-+#define ASD_MAX_SECTORS		128
-+#define ASD_MAX_IO_HANDLES	6
-+
-+/* Device mapping definition */
-+/*
-+ * XXX This should really be limited by SAS/SAM.  With
-+ *     the use of hash tables in the domain and target
-+ *     structures as well as DDB site recycling, we
-+ *     should have no limit.
-+ */
-+#define ASD_MAX_LUNS		128
-+#define SAS_LUN_LEN		8
-+
-+/********************************** Misc Macros *******************************/
-+#ifndef roundup
-+#define	roundup(x, y)   	((((x)+((y)-1))/(y))*(y))
-+#endif
-+
-+static inline uint32_t
-+roundup_pow2(uint32_t val)
++static void
++asd_pci_dev_remove(struct pci_dev *pdev)
 +{
-+	val--;
-+	val |= val >> 1;
-+	val |= val >> 2;
-+	val |= val >> 4;
-+	val |= val >> 8;
-+	val |= val >> 16;
-+	return (val + 1);
++	struct asd_softc	*asd;
++	unsigned long		 flags;
++	
++	asd = (struct asd_softc *) pci_get_drvdata(pdev);
++	
++	if (asd_get_softc(asd) != NULL) {
++		asd_list_lock(&flags);	
++		list_del(&asd->link);
++		asd_list_unlock(&flags);
++		asd_free_softc(asd);
++	}
 +}
-+
-+#ifndef powerof2
-+#define	powerof2(x)	((((x)-1)&(x))==0)
-+#endif
-+
-+#ifndef MAX
-+#define MAX(a,b) 	(((a) > (b)) ? (a) : (b))
-+#endif
-+
-+#ifndef MIN
-+#define MIN(a,b) 	(((a) < (b)) ? (a) : (b))
-+#endif
-+
-+#define NUM_ELEMENTS(array) (sizeof(array) / sizeof(*array))
-+
-+/******************************* Byte Order ***********************************/
-+#define asd_htobe16(x)		cpu_to_be16(x)
-+#define asd_htobe32(x)		cpu_to_be32(x)
-+#define asd_htobe64(x)		cpu_to_be64(x)
-+#define asd_htole16(x)		cpu_to_le16(x)
-+#define asd_htole32(x)		cpu_to_le32(x)
-+#define asd_htole64(x)		cpu_to_le64(x)
-+
-+#define asd_be16toh(x)		be16_to_cpu(x)
-+#define asd_be32toh(x)		be32_to_cpu(x)
-+#define asd_be64toh(x)		be64_to_cpu(x)
-+#define asd_le16toh(x)		le16_to_cpu(x)
-+#define asd_le32toh(x)		le32_to_cpu(x)
-+#define asd_le64toh(x)		le64_to_cpu(x)
-+
-+#ifndef LITTLE_ENDIAN
-+#define LITTLE_ENDIAN 1234
-+#endif
-+
-+#ifndef BIG_ENDIAN
-+#define BIG_ENDIAN 4321
-+#endif
-+
-+#ifndef BYTE_ORDER
-+#if defined(__BIG_ENDIAN)
-+#define BYTE_ORDER BIG_ENDIAN
-+#endif
-+#if defined(__LITTLE_ENDIAN)
-+#define BYTE_ORDER LITTLE_ENDIAN
-+#endif
-+#endif /* BYTE_ORDER */
-+
-+/***************************** Bus Space/DMA **********************************/
-+
-+struct asd_dma_tag
-+{
-+	uint32_t	alignment;
-+	uint32_t	maxsize;
-+};
-+typedef struct asd_dma_tag *bus_dma_tag_t;
-+
-+struct asd_dmamap
-+{
-+	dma_addr_t	bus_addr;
-+};
-+typedef struct asd_dmamap * bus_dmamap_t;
-+
-+/*
-+ * Data structure used to track a slab of DMA
-+ * safe memory.
-+ */
-+struct map_node {
-+	bus_dmamap_t	 dmamap;
-+	dma_addr_t	 busaddr;
-+	uint8_t		*vaddr;
-+	struct list_head links;
-+};
-+
-+int	asd_dma_tag_create(struct asd_softc *, uint32_t /*alignment*/,
-+			   uint32_t /*maxsize*/, int /*flags*/,
-+			   bus_dma_tag_t * /*dma_tagp*/);
-+void	asd_dma_tag_destroy(struct asd_softc *, bus_dma_tag_t /*tag*/);
-+int	asd_dmamem_alloc(struct asd_softc *, bus_dma_tag_t /*dmat*/,
-+			 void** /*vaddr*/, int /*flags*/,
-+			 bus_dmamap_t * /*mapp*/, dma_addr_t * /*baddr*/);
-+void	asd_dmamem_free(struct asd_softc *, bus_dma_tag_t /*dmat*/,
-+			void* /*vaddr*/, bus_dmamap_t /*map*/);
-+void	asd_dmamap_destroy(struct asd_softc *, bus_dma_tag_t /*tag*/,
-+			   bus_dmamap_t /*map*/);
-+int	asd_alloc_dma_mem(struct asd_softc *, unsigned, void **,
-+			  dma_addr_t *, bus_dma_tag_t *, struct map_node *);
-+void	asd_free_dma_mem(struct asd_softc *, bus_dma_tag_t, struct map_node *);
-+
-+/* IOCTL registration wrappers */
-+int 	asd_register_ioctl_dev(void);
-+int 	asd_unregister_ioctl_dev(void);
-+int 	asd_ctl_init_internal_data(struct asd_softc *asd);
-+struct asd_softc * asd_get_softc_by_hba_index(uint32_t hba_index);
-+int 	asd_get_number_of_hbas_present(void);
-+struct asd_target * 
-+	asd_get_os_target_from_port(struct asd_softc *asd,
-+				    struct asd_port *port,
-+				    struct asd_domain *dm);
-+struct asd_device *
-+	asd_get_device_from_lun(struct asd_softc *asd, 
-+				struct asd_target *targ, uint8_t *saslun);
-+int 	asd_get_os_platform_map_from_sasaddr(struct asd_softc *asd, 
-+					     struct asd_port *port,
-+					     uint8_t *sasaddr, uint8_t *saslun, 
-+					     uint8_t *host, uint8_t *bus, 
-+					     uint8_t *target, uint8_t *lun);
-+struct asd_port *
-+	asd_get_sas_addr_from_platform_map(struct asd_softc *asd, 
-+					   uint8_t host, uint8_t bus, 
-+					   uint8_t target, uint8_t lun, 
-+					   uint8_t *sasaddr, uint8_t *saslun);
-+struct asd_target * 
-+	asd_get_sas_target_from_sasaddr(struct asd_softc *asd, 
-+					struct asd_port *port, 
-+					uint8_t *sasaddr);
-+struct asd_target * 
-+	asd_get_os_target_from_sasaddr(struct asd_softc *asd, 
-+			 	       struct asd_domain *dm, 
-+				       uint8_t *sasddr);
-+struct scb *
-+	asd_find_pending_scb_by_qtag(struct asd_softc *asd, uint32_t qtag);
-+
-+int	asd_hwi_check_cmd_pending(struct asd_softc *asd, struct scb *scb, 
-+		       		  struct asd_done_list *dl);
-+
-+/* indicates that the scsi_cmnd is generated by CSMI */
-+#define ASD_CSMI_COMMAND 0xfaceface
-+
-+#if (BITS_PER_LONG > 32) || \
-+    (defined CONFIG_HIGHMEM64G && defined CONFIG_HIGHIO)
-+	#define ASD_DMA_64BIT_SUPPORT		1
-+#else
-+	#define	ASD_DMA_64BIT_SUPPORT		0
-+#endif 
-+
-+/*************************** Linux DMA Wrappers *******************************/
-+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,5,0)
-+#define	asd_alloc_coherent(asd, size, bus_addr_ptr) \
-+	dma_alloc_coherent(asd->dev, size, bus_addr_ptr, /*flag*/0)
-+
-+#define	asd_free_coherent(asd, size, vaddr, bus_addr) \
-+	dma_free_coherent(asd->dev, size, vaddr, bus_addr)
-+
-+#define	asd_map_single(asd, buf, size, direction) \
-+	dma_map_single(asd->dev, buf, size, direction)
-+
-+#define	asd_unmap_single(asd, busaddr, size, direction) \
-+	dma_unmap_single(asd->dev, busaddr, size, direction)
-+
-+#define	asd_map_sg(asd, sg_list, num_sg, direction) \
-+	dma_map_sg(asd->dev, sg_list, num_sg, direction)
-+
-+#define	asd_unmap_sg(asd, sg_list, num_sg, direction) \
-+	dma_unmap_sg(asd->dev, sg_list, num_sg, direction)
-+
-+#else /* LINUX_VERSION_CODE > KERNEL_VERSION(2,4,0) */
-+
-+#define	asd_alloc_coherent(asd, size, bus_addr_ptr) \
-+	pci_alloc_consistent(asd->dev, size, bus_addr_ptr)
-+
-+#define	asd_free_coherent(asd, size, vaddr, bus_addr) \
-+	pci_free_consistent(asd->dev, size, vaddr, bus_addr)
-+
-+#define	asd_map_single(asd, buf, size, direction) \
-+	pci_map_single(asd->dev, buf, size, direction)
-+
-+#define	asd_unmap_single(asd, busaddr, size, direction) \
-+	pci_unmap_single(asd->dev, busaddr, size, direction)
-+
-+#define	asd_map_sg(asd, sg_list, num_sg, direction) \
-+	pci_map_sg(asd->dev, sg_list, num_sg, direction)
-+
-+#define	asd_unmap_sg(asd, sg_list, num_sg, direction) \
-+	pci_unmap_sg(asd->dev, sg_list, num_sg, direction)
-+#endif /* LINUX_VERSION_CODE > KERNEL_VERSION(2,4,0) */
-+
-+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,5,0)
-+
-+#define asd_set_dma_mask(asd, mask) dma_set_mask(asd->dev, mask)
-+#define asd_set_consistent_dma_mask(asd, mask) \
-+	pci_set_consistent_dma_mask(asd_dev_to_pdev(asd->dev), mask)
-+
-+#elif LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,3)
-+
-+/*
-+ * Device softc is NULL for EISA devices.
-+ */
-+#define asd_set_dma_mask(asd, mask) 			\
-+	((asd)->dev == NULL ? 0 : pci_set_dma_mask(asd->dev, mask))
-+
-+/* Always successfull in 2.4.X kernels */
-+#define asd_set_consistent_dma_mask(asd, mask) (0)
-+
-+#else
-+/*
-+ * Device softc is NULL for EISA devices.
-+ * Always "return" 0 for success.
-+ */
-+#define asd_set_dma_mask(asd, mask)			\
-+    (((asd)->dev == NULL)				\
-+     ? 0						\
-+     : (((asd)->dev->dma_mask = mask) && 0))
-+
-+/* Always successfull in 2.4.X kernels */
-+#define asd_set_consistent_dma_mask(asd, mask) (0)
-+
-+#endif
-+
-+/* Forward compatibility */
-+#if LINUX_VERSION_CODE > KERNEL_VERSION(2,5,0)
-+typedef struct device	*asd_dev_t;
-+#else
-+typedef struct pci_dev	*asd_dev_t;
-+#endif
-+
-+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,5,0)
-+#define	asd_dev_to_pdev(dev)		to_pci_dev(dev)
-+#define	asd_pdev_to_dev(pdev)		(&pdev->dev)
-+#else
-+#define	asd_dev_to_pdev(dev)		(dev)
-+#define	asd_pdev_to_dev(pdev)		(pdev)
-+#endif
-+
-+#define	asd_pci_dev(asd)		asd_dev_to_pdev((asd)->dev)
-+
-+#define ASD_GET_PADR(addr)		((uint32_t) (addr))
-+#if (BITS_PER_LONG > 32)
-+#define ASD_GET_PUADR(addr)		((uint32_t) ((addr) >> 32))
-+#else
-+#define ASD_GET_PUADR(addr)		((uint32_t) (0))
-+#endif
-+
-+typedef enum {
-+	ASD_SCB_UP_EH_SEM	= 0x01,
-+	ASD_TIMEOUT_ACTIVE	= 0x02,
-+	ASD_RELEASE_SIMQ	= 0x04,
-+} asd_scb_flags;
-+
-+/**************************** Front End Queues ********************************/
-+/*
-+ * Data structure used to cast the Linux struct scsi_cmnd to something
-+ * that allows us to use the queue macros.  The linux structure has
-+ * plenty of space to hold the links fields as required by the queue
-+ * macros, but the queue macors require them to have the correct type.
-+ */
-+struct asd_cmd_internal {
-+	/* Area owned by the Linux scsi layer. */
-+	uint8_t	private[offsetof(struct scsi_cmnd, SCp.Status)];
-+	struct list_head		links;
-+	uint32_t			end;
-+};
-+
-+union asd_cmd {
-+	struct asd_cmd_internal	icmd;
-+	struct scsi_cmnd	scsi_cmd;
-+};
-+
-+#define acmd_icmd(cmd)		((cmd)->icmd)
-+#define acmd_scsi_cmd(cmd) 	((cmd)->scsi_cmd)
-+#define acmd_links 		icmd.links
-+
-+/************************** Razor Architecture Layers ************************/
-+/*
-+ * The following typedefs define the protocols for each layer of the Razor
-+ * architecture.
-+ */
-+
-+/*
-+ * The Command Set layer consists of everything having to do with the type
-+ * of command that is sent to the target.
-+ */
-+typedef enum {
-+	ASD_COMMAND_SET_UNKNOWN,
-+	ASD_COMMAND_SET_SCSI,
-+	ASD_COMMAND_SET_ATA,
-+	ASD_COMMAND_SET_ATAPI,
-+	ASD_COMMAND_SET_SMP
-+} COMMAND_SET_TYPE;
-+
-+/*
-+ * The Device Protocol layer are things that are specific to a device, 
-+ * regardless of which command set is used.  For example, a device using
-+ * ASD_DEVICE_PROTOCOL_ATA might use the command set ASD_COMMAND_SET_ATA or
-+ * ASD_COMMAND_SET_ATAPI.
-+ */
-+typedef enum {
-+	ASD_DEVICE_PROTOCOL_UNKNOWN,
-+	ASD_DEVICE_PROTOCOL_SCSI,
-+	ASD_DEVICE_PROTOCOL_ATA,
-+	ASD_DEVICE_PROTOCOL_SMP
-+} DEVICE_PROTOCOL_TYPE;
-+
-+/*
-+ * The transport layer can be thought of as the frame which is used to send
-+ * to a device of type DEVICE_PROTOCOL that supports the COMMAND_SET_TYPE
-+ * command set.
-+ */
-+typedef enum {
-+	ASD_TRANSPORT_UNKNOWN,
-+	ASD_TRANSPORT_SSP,
-+	ASD_TRANSPORT_SMP,
-+	ASD_TRANSPORT_STP,
-+	ASD_TRANSPORT_ATA
-+} TRANSPORT_TYPE;
-+
-+/* 
-+ * The management layer deals with issues of routing.
-+ */
-+typedef enum {
-+	ASD_DEVICE_NONE,
-+	ASD_DEVICE_FANOUT_EXPANDER,
-+	ASD_DEVICE_EDGE_EXPANDER,
-+	ASD_DEVICE_END,
-+	ASD_DEVICE_UNKNOWN
-+} MANAGEMENT_TYPE;
-+
-+/*
-+ * The link layer refers to the link that is connected to the initiator.
-+ */
-+typedef enum {
-+	ASD_LINK_UNKNOWN,
-+	ASD_LINK_SAS,
-+	ASD_LINK_SATA,
-+	ASD_LINK_GPIO,
-+	ASD_LINK_I2C
-+} LINK_TYPE;
-+
-+typedef union asd_cmd *asd_io_ctx_t;
-+
-+/* Discovery include file */
-+#include "adp94xx_discover.h"
-+
-+/* HWI include file */
-+#include "adp94xx_hwi.h"
-+
-+/*************************** Device Data Structures ***************************/
-+/*
-+ * A per probed device structure used to deal with some error recovery
-+ * scenarios that the Linux mid-layer code just doesn't know how to
-+ * handle.  The structure allocated for a device only becomes persistent
-+ * after a successfully completed inquiry command to the target when
-+ * that inquiry data indicates a lun is present.
-+ */
-+typedef enum {
-+	ASD_DEV_UNCONFIGURED	 = 0x0001,
-+	ASD_DEV_FREEZE_TIL_EMPTY = 0x0002, /* Freeze until active is empty */
-+	ASD_DEV_TIMER_ACTIVE	 = 0x0004, /* Our timer is active */
-+	ASD_DEV_ON_RUN_LIST	 = 0x0008, /* Queued to be run later */
-+	ASD_DEV_Q_BASIC		 = 0x0010, /* Allow basic device queuing */
-+	ASD_DEV_Q_TAGGED	 = 0x0020, /* Allow full SCSI2 cmd queueing */
-+	ASD_DEV_SLAVE_CONFIGURED = 0x0040, /* Device has been configured. */
-+	ASD_DEV_DESTROY_WAS_ACTIVE = 0x0080, /* Device has active IO(s) when
-+						the ITNL timer expired. */
-+	ASD_DEV_DPC_ACTIVE	= 0x0100   /* There is an active DPC task,*/
-+} asd_dev_flags;
-+
-+struct asd_target;
-+struct asd_device {
-+	struct list_head 	 links;
-+	struct list_head	 busyq;
-+	/*
-+	 * The number of transactions currently queued to the device.
-+	 */
-+	int			 active;
-+	/*
-+	 * The currently allowed number of transactions that can be queued to
-+	 * the device.  Must be signed for conversion from tagged to untagged
-+	 * mode where the device may have more than one outstanding active 
-+	 * transaction.
-+	 */
-+	int			 openings;
-+	/*
-+	 * A positive count indicates that this device's queue is halted.
-+	 */
-+	u_int			 qfrozen;
-+	/*
-+	 * Cumulative command counter.
-+	 */
-+	u_long			 commands_issued;
-+	/*
-+	 * The number of tagged transactions when running at our current 
-+	 * opening level that have been successfully received by this 
-+	 * device since the last QUEUE FULL.
-+	 */
-+	u_int			 tag_success_count;
-+#define ASD_TAG_SUCCESS_INTERVAL 50
-+
-+	asd_dev_flags		 flags;
-+	/*
-+	 * Per device timer and task.
-+	 */
-+	struct timer_list	 timer;
-+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,5,41)	
-+	struct tq_struct	 taskq;
-+#else
-+	struct work_struct	 workq;
-+#endif	
-+	/*
-+	 * The high limit for the tags variable.
-+	 */
-+	u_int			 maxtags;
-+	/*
-+	 * The computed number of tags outstanding
-+	 * at the time of the last QUEUE FULL event.
-+	 */
-+	u_int			 tags_on_last_queuefull;
-+	/*
-+	 * How many times we have seen a queue full with the same 
-+	 * number of tags.  This is used to stop our adaptive queue depth 
-+	 * algorithm on devices with a fixed number of tags.
-+	 */
-+	u_int			 last_queuefull_same_count;
-+#define ASD_LOCK_TAGS_COUNT 50
-+
-+	/* 
-+	 * Device mapping path for the OS.
-+	 * This is a duplicate of info in scsi_device and
-+	 * should be discarded soon.
-+	 */
-+	u_int			 ch;
-+	u_int			 id;
-+	u_int			 lun;
-+	uint8_t			 saslun[SAS_LUN_LEN];
-+	Scsi_Device	       	*scsi_device;
-+	struct asd_target	*target;
-+#ifdef MULTIPATH_IO
-+	struct asd_target	*current_target;
-+#endif
-+};
-+
-+typedef enum {
-+	ASD_TARG_FLAGS_NONE		= 0x0000,
-+	ASD_TARG_IN_RECOVERY		= 0x0001,
-+	ASD_TARG_ONLINE			= 0x0002,
-+	ASD_TARG_RESEEN			= 0x0004,
-+	ASD_TARG_HOT_REMOVED		= 0x0008,
-+	ASD_TARG_HOT_ADDED		= 0x0010,
-+	ASD_TARG_NEEDS_MAP		= 0x0020,
-+	ASD_TARG_MAPPED			= 0x0040,
-+	ASD_TARG_MAP_BOOT		= 0x0080
-+} asd_targ_flags;
-+
-+/* 
-+ * Contains pertinent fields needed to generete a hardware DDB.
-+ */  
-+struct asd_ddb_data {
-+	uint8_t			sas_addr[SAS_ADDR_LEN];
-+	uint8_t			hashed_sas_addr[HASHED_SAS_ADDR_LEN];
-+	uint8_t			conn_rate;
-+	uint16_t		itnl_const;
-+	/* Index to DDB entry. */
-+	uint16_t		conn_handle;
-+	uint16_t		sister_ddb;
-+	/*
-+	 * Indicates whether the device port protocol is SSP, STP, SMP, 
-+	 * SATA direct attched or SATA Port Multi. This will be used when
-+	 * setting value for OPEN field.
-+	 */   
-+	uint8_t			attr;
-+	/*
-+	 * OPEN bit will be set if the device port is connected by
-+	 * SSP, STP or SMP. In addition for STP, SUPPORT AFFILIATION and 
-+	 * STP AFFLIATION policy need to be set. 
-+	 * Otherwise, for SATA direct attached or SATA Port Multi, OPEN bit
-+ 	 * shall not be set.  
-+	 */  
-+	uint8_t			open_affl; 	
-+	/*
-+	 * Initial FIS status.
-+	 */
-+	uint8_t			sata_status;
-+};
-+
-+#define FIS_LENGTH		20
-+
-+/*
-+ * Defines for the features_state member
-+ */
-+#define SATA_USES_DMA			0x0001
-+#define SATA_USES_48BIT			0x0002
-+#define SATA_USES_QUEUEING		0x0004
-+#define SATA_USES_WRITE_FUA		0x0008
-+#define SATA_USES_REMOVABLE		0x0010
-+#define SATA_USES_WRITE_BUFFER		0x0020
-+#define SATA_USES_READ_BUFFER		0x0040
-+#define SATA_USES_WRITE_CACHE		0x0080
-+#define SATA_USES_READ_AHEAD		0x0100
-+#define SATA_USES_SMART			0x0200
-+#define SATA_USES_UDMA			0x0400
-+
-+/*
-+ * Defines for the features_enabled member
-+ */
-+#define WRITE_CACHE_FEATURE_ENABLED	0x0001
-+#define READ_AHEAD_FEATURE_ENABLED	0x0002
-+#define SMART_FEATURE_ENABLED		0x0004
-+#define NEEDS_XFER_SETFEATURES		0x0008
 +
 +int
-+asd_sata_identify_build(
-+struct asd_softc	*asd,
-+struct asd_target	*target,
-+struct scb		*scb
-+);
++asd_platform_alloc(struct asd_softc *asd)
++{
++	asd->platform_data = asd_alloc_mem(sizeof(struct asd_platform_data),
++					   GFP_ATOMIC);
++	if (asd->platform_data == NULL)
++		return (-ENOMEM);
++	memset(asd->platform_data, 0, sizeof(struct asd_platform_data));
 +
-+// ----------------------------------------------------------------------------
++	asd_lock_init(asd);
++	INIT_LIST_HEAD(&asd->platform_data->pending_os_scbs);
++	INIT_LIST_HEAD(&asd->platform_data->device_runq);
++	INIT_LIST_HEAD(&asd->platform_data->completeq);
++	INIT_LIST_HEAD(&asd->platform_data->lru_ddb_q);
++	init_MUTEX_LOCKED(&asd->platform_data->discovery_sem);
++	init_MUTEX_LOCKED(&asd->platform_data->discovery_ending_sem);
++	init_MUTEX_LOCKED(&asd->platform_data->ehandler_sem);
++	init_MUTEX_LOCKED(&asd->platform_data->ehandler_ending_sem);
++	init_MUTEX_LOCKED(&asd->platform_data->eh_sem);
++	init_MUTEX_LOCKED(&asd->platform_data->wait_sem);
++	init_waitqueue_head(&asd->platform_data->waitq);
 +
-+/*
-+ * For devices supporting the SCSI command set
-+ */
-+struct asd_scsi_command_set {
-+	unsigned			num_luns;
-+	uint32_t			flags;
-+	uint64_t			*luns;
-+	uint8_t				*ident;
-+	unsigned			ident_len;
-+	uint8_t				*inquiry;
-+};
++	asd_init_tasklets(asd);
 +
-+struct asd_smp_command_set {
-+	struct SMPResponseReportManufacturerInfo
-+					manufacturer_info;
-+};
-+
-+/*
-+ * For devices supporting the ATA command set
-+ */
-+struct asd_ata_command_set {
-+	/*
-+	 * There are a few differences in the structures for the data that
-+	 * is returned by IDENTIFY and PACKET IDENTIFY.  We are using the
-+	 * same structure for both ATA and ATAPI.
-+	 */
-+	struct hd_driveid		adp_hd_driveid;
-+
-+	/*
-+	 * These members are in the command set structure because they are
-+	 * deriviced by, or control features and functions specified in the
-+	 * adp_hd_driveid struture.
-+	 */
-+	unsigned			features_state;
-+	unsigned			features_enabled;
-+	unsigned			dma_mode_level;
-+};
-+
-+/*
-+ * For devices supporting the ATAPI command set
-+ */
-+struct asd_atapi_command_set {
-+	/*
-+	 * There are a few differences in the structures for the data that
-+	 * is returned by IDENTIFY and PACKET IDENTIFY.  We are using the
-+	 * same structure for both ATA and ATAPI.
-+	 */
-+	struct hd_driveid		adp_hd_driveid;
-+
-+	/*
-+	 * These members are in the command set structure because they are
-+	 * deriviced by, or control features and functions specified in the
-+	 * adp_hd_driveid struture.
-+	 */
-+	unsigned			features_state;
-+	unsigned			features_enabled;
-+	unsigned			dma_mode_level;
-+};
-+
-+/*
-+ * These are members that are specific to a specific type of command set.
-+ */
-+union asd_command_set {
-+	struct asd_scsi_command_set	scsi_command_set;
-+	struct asd_ata_command_set	ata_command_set;
-+	struct asd_atapi_command_set	atapi_command_set;
-+	struct asd_smp_command_set	smp_command_set;
-+};
-+
-+#define ata_cmdset	command_set.ata_command_set
-+#define scsi_cmdset	command_set.scsi_command_set
-+#define atapi_cmdset	command_set.atapi_command_set
-+#define smp_cmdset	command_set.smp_command_set
-+
-+
-+// ----------------------------------------------------------------------------
-+
-+struct asd_ata_device_protocol {
-+	uint8_t				initial_fis[FIS_LENGTH];
-+};
-+
-+union asd_device_protocol {
-+	struct asd_ata_device_protocol	ata_device_protocol;
-+};
-+
-+/*
-+ * Defines for the menagement_flags member
-+ */
-+#define DEVICE_SET_ROOT		0x0001
-+
-+struct asd_target {
-+	/*
-+	 * A positive count indicates that this
-+	 * target's queue is halted.
-+	 */
-+	u_int			  qfrozen;
-+
-+	/*
-+	 * XXX Use hash table for sparse 8byte lun support???
-+	 */
-+	struct asd_device	 *devices[ASD_MAX_LUNS];
-+	u_int			  target;
-+	int			  refcount;
-+	struct asd_softc	 *softc;
-+	asd_targ_flags	  	  flags;
-+	struct asd_domain	 *domain;
-+
-+	/*
-+	 * Per target timer.
-+	 */
-+	struct timer_list	  timer;
-+
-+	/*
-+	 * Command Set Layer (SCSI, ATAPI, ATA, SMP)
-+	 * --------------------------------------------------------
-+	 */
-+	COMMAND_SET_TYPE		command_set_type;
-+	union asd_command_set		command_set;
-+
-+	/*
-+	 * Device Protocol Layer (SCSI, ATA, SMP)
-+	 * --------------------------------------------------------
-+	 */
-+	DEVICE_PROTOCOL_TYPE		device_protocol_type;
-+	union asd_device_protocol	device_protocol;
-+
-+	/*
-+	 * Transport Layer (SSP, SMP, STP, FIS)
-+	 * --------------------------------------------------------
-+	 */
-+	TRANSPORT_TYPE			transport_type;
-+
-+	/*
-+	 * Management Layer (DIRECT, EXPANDER, FANOUT)
-+	 * --------------------------------------------------------
-+	 */
-+	MANAGEMENT_TYPE			management_type;
-+	unsigned			num_phys;
-+	unsigned			num_route_indexes;
-+	uint16_t			*route_indexes;
-+	struct SMPResponseDiscover	*Phy;
-+	uint8_t				*RouteTable;
-+	uint32_t			management_flags;
-+
-+	/*
-+	 * Our parent SAS device (e.g. expander)
-+	 * in this SAS domain.
-+	 */
-+	struct asd_target	 	*parent;
-+	/*
-+	 * Our children SAS devices (if not end device)
-+	 * in this SAS domain.
-+	 */
-+	struct list_head	  	children;
-+	/*
-+	 * List of targets that are connected to a parent 
-+	 * expander (children)
-+	 */
-+	struct list_head	  	siblings;
-+	/*
-+	 * List links for chaining together all targets
-+	 * in this SAS domain on to the port object.
-+	 */
-+	struct list_head	  	all_domain_targets;
-+	/*
-+	 * List links of targets that need to be validated
-+	 * because they have been hot-added or hot-removed.
-+	 */
-+	struct list_head	  	validate_links;   
-+	/*
-+	 * List links of target structures that map to the
-+	 * same physical sevice.
-+	 */
-+	struct list_head	  	multipath;   
-+
-+	/*
-+	 * Link Layer (SAS, SATA, GPIO, I2C)
-+	 * --------------------------------------------------------
-+	 */
-+	LINK_TYPE			link_type;
-+	struct asd_ddb_data	  	ddb_profile;
-+
-+	/*
-+	 * Controller port used to route to
-+	 * this device.
-+	 */
-+	struct asd_port		 	*src_port;
-+};
-+
-+struct asd_domain {
-+	/*
-+	 * XXX Use Hash table to support
-+	 * large/sparse target configurations.
-+	 */
-+	struct asd_target 	*targets[ASD_MAX_TARGETS];
-+	u_int			 channel_mapping;
-+	u_int			 refcount;
-+};
-+
-+typedef enum {
-+	ASD_DISCOVERY_ACTIVE	= 0x01,
-+	ASD_DISCOVERY_INIT	= 0x02,
-+	ASD_DISCOVERY_SHUTDOWN	= 0x04,
-+	ASD_RECOVERY_SHUTDOWN	= 0x08,
 +#ifdef ASD_EH_SIMULATION
-+	ASD_EH_SIMUL_SHUTDOWN	= 0x10
-+#endif		
-+} asd_platform_flags;
++	init_MUTEX_LOCKED(&asd->platform_data->eh_simul_sem);
++#endif	
++	
++	asd->platform_data->num_domains = ASD_MAX_PORTS;
 +
-+struct asd_scb_platform_data {
-+	struct asd_target 	*targ;
++	return (0);
++}
++
++void
++asd_platform_free(struct asd_softc *asd)
++{
++	struct asd_io_handle	*io_handle;
++	struct asd_domain	*dm;
++	struct asd_target	*targ;
 +	struct asd_device	*dev;
-+	asd_scb_flags	 	 flags;
-+	dma_addr_t		 buf_busaddr;
-+	/*
-+	 * Timeout timer tick, used to timeout internal cmd that is 
-+         * sent to the sequencer or target.
-+	 */	 
-+	struct timer_list	 timeout;	 
-+};
++	u_int			 i;
++	u_int			 j;
++	u_int			 k;
 +
-+struct asd_platform_data {
-+	spinlock_t		  spinlock;
-+	struct Scsi_Host	 *scsi_host;
-+
-+	/*
-+	 * Channel to Domain Mapping.
-+	 */
-+	struct asd_domain	**domains;
-+	u_int			  num_domains;
-+
-+	/*
-+	 * Queued device I/O scheduling support.
-+	 */
-+	struct list_head	  pending_os_scbs;
-+	struct list_head 	  device_runq;
-+	struct tasklet_struct	  runq_tasklet;
-+	struct tasklet_struct	  unblock_tasklet;
-+	u_int			  qfrozen;
-+
-+	/*
-+	 * Completion Ordering Queue.
-+	 */
-+	struct list_head 	  completeq;
-+
-+	/*
-+	 * LRU target DDB ageing queue.  Used to
-+	 * select candidates for DDB recycling.
-+	 * LFU would be a better scheme and could
-+	 * be achieved in O(logN) using a heap
-+	 * queue, but keep this simple for now.
-+	 */
-+	struct list_head 	  lru_ddb_q;
-+
-+	/*
-+	 * Discovery Thread Support.
-+	 */
-+	pid_t			  discovery_pid;
-+	struct semaphore	  discovery_sem;
-+	struct semaphore	  discovery_ending_sem;
-+
-+	/*
-+	 * Error Recovery Thread Support.
-+	 */
-+	pid_t			  ehandler_pid;
-+	struct semaphore	  ehandler_sem;
-+	struct semaphore	  ehandler_ending_sem;
-+
-+#ifdef ASD_EH_SIMULATION
-+	/*
-+	 * EH Recovery Simulation thread.
-+         */
-+	pid_t			  eh_simul_pid;
-+	struct semaphore	  eh_simul_sem;
++	/* Kill any threads that we created. */
++	asd_kill_discovery_thread(asd);
++	asd_kill_ehandler_thread(asd);
++#ifdef ASD_EH_SIMULATION	
++	asd_kill_eh_simul_thread(asd);
 +#endif
++
++	asd_kill_tasklets(asd);
++
++	/* Deregister the Scsi Host with the OS. */
++	if (asd->platform_data->scsi_host) {
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,5,0)
++		scsi_remove_host(asd->platform_data->scsi_host);
++		scsi_host_put(asd->platform_data->scsi_host);
++#else
++		scsi_unregister(asd->platform_data->scsi_host);
++#endif
++	}
++	
++	/* Free up any allocated linux domains, targets and devices. */
++	for (i = 0; i < asd->hw_profile.max_phys; i++) {
++		dm = asd->platform_data->domains[i];	
++		if (dm == NULL)
++			continue;
++
++		for (j = 0; j < ASD_MAX_TARGETS; j++) {
++			targ = dm->targets[j];
++			if (targ == NULL) 
++				continue;
++
++			for (k = 0; k < ASD_MAX_LUNS; k++) {
++				dev = targ->devices[k];
++				if (dev == NULL)
++					continue;
++
++				asd_free_device(asd, dev);
++			}
++			/* 
++			 * For target with no devices allocated previously,
++			 * we need to free target explicitly.
++			 */
++			if (dm->targets[j] != NULL)
++				asd_free_mem(dm->targets[j]);
++		}
++		/* 
++		 * For domain with no targets allocated previously,
++		 * we need to free domain explicitly.
++		 */
++		if (asd->platform_data->domains[i] != NULL)
++			asd_free_mem(asd->platform_data->domains[i]);
++	}
++
++	/*
++	 * Disable chip interrupts if we have successfully mapped
++	 * the controller.  We do this *before* unregistering
++	 * our interrupt handler so that stray interrupts from
++	 * our controller do not hang the machine.
++	 */
++	if (asd->io_handle_cnt != 0)
++		asd_intr_enable(asd, 0);
++
++	/* Unregister the interrupt handler. */
++	if (asd_init_stat.asd_irq_registered == 1)
++		free_irq(asd_pci_dev(asd)->irq, asd);
++
++	/* Lock PCIC_MBAR_KEY. */
++	asd_pcic_write_dword(asd, PCIC_MBAR_KEY, 0xFFFFFFFF);	
++
++	/* Free the IO Handle(s). */
++	for ( ; asd->io_handle_cnt != 0; ) {
++		io_handle = asd->io_handle[(--asd->io_handle_cnt)];
++		if (io_handle->type == ASD_MEMORY_SPACE) {
++			release_mem_region(io_handle->bar_base, 
++					   io_handle->length);
++		} else {
++			release_region(io_handle->bar_base, io_handle->length);
++		}	
++		asd_free_mem(io_handle);
++	}
++}
++
++/* 
++ * Function:
++ *	asd_init_hw()
++ *
++ * Description:
++ *	This routine will call the hwi layer to initialize the controller.
++ *	Allocate any required memory, private data structures (such as scb, 
++ *	edb, dl, etc) for the controller.
++ */
++static int
++asd_init_hw(struct asd_softc *asd)
++{
++	uint32_t	mbar_key;
++	uint32_t	cmd_stat_reg;
++	int 		error;
++
++	/* TODO: Revisit */
++	//ASD_LOCK_ASSERT(asd);
++
++	/* Only support for Rev. B0 chip. */
++	if (asd->hw_profile.rev_id != AIC9410_DEV_REV_B0) {
++		asd_print("Only AIC-9410 Rev. B0 is supported !\n");
++		error = -ENODEV;
++		goto exit;
++	}
++		
++	/*
++	 * Check if the PCIC_MBAR_KEY is not unlocked without permission.
++	 * Value 0x0 means it has been unlocked.
++	 */
++	mbar_key = asd_pcic_read_dword(asd, PCIC_MBAR_KEY);
++       	if (mbar_key == 0x0)
++		asd_log(ASD_DBG_INFO, "MBAR_KEY has been unlocked !!\n");
++	
++	/* Map the IO handle. */
++	error = asd_map_io_handle(asd);
++	if (error != 0) {
++		asd_log(ASD_DBG_ERROR, "Failed to map IO Handle.\n");
++		goto exit;
++	}		
++
++	/* Check if bus master is enabled. Enabled it if it is not. */
++	cmd_stat_reg = asd_pcic_read_dword(asd, PCIC_COMMAND);
++	if (!(cmd_stat_reg & MST_EN)) {
++		cmd_stat_reg |= MST_EN;
++		asd_pcic_write_dword(asd, PCIC_COMMAND, cmd_stat_reg);	
++	}
 +	
 +	/*
-+	 * Wait Queue.
-+         */	
-+	wait_queue_head_t	  waitq;
++	 * Now, unlock the PCIC_MBAR_KEY for write access to MBAR.
++	 * Read the value from the register and write it back to the register
++	 * to unlcok MBAR.
++	 */
++	mbar_key = asd_pcic_read_dword(asd, PCIC_MBAR_KEY);	
++	if (mbar_key != 0x0)
++		asd_pcic_write_dword(asd, PCIC_MBAR_KEY, mbar_key);
++	
++	/*
++	 * AIC9410 CHIP Rev. A1 has the issue where the data transfer hangs
++	 * on the host write DMA. The workaround for this issue is to disable
++	 * PCIX Rewind feature.
++	 */ 
++	if (asd->hw_profile.rev_id == AIC9410_DEV_REV_A1) {
++		asd_pcic_write_dword(asd,  PCIC_HSTPCIX_CNTRL, 
++				    (asd_pcic_read_dword(asd, 
++							 PCIC_HSTPCIX_CNTRL) | 
++							 REWIND_DIS));
++	}
++		
++	error = asd_hwi_init_hw(asd);
++	if (error != 0) {
++		asd_log(ASD_DBG_ERROR, "Init HW failed.\n");
++		goto exit;
++	}
++	
++	/* Register the interrupt handler with the OS. */
++	error = request_irq(asd_pci_dev(asd)->irq, asd_isr, SA_SHIRQ,
++			    ASD_DRIVER_NAME, asd);
++	if (error != 0)
++	     asd_log(ASD_DBG_ERROR, "Failed to register IRQ handler.\n"); 
++
++	asd_init_stat.asd_irq_registered = 1;
++exit:
++	return (error);
++}
++
++/* 
++ * Function:
++ *	asd_map_io_handle()
++ *
++ * Description:
++ *	Map the IO handles for the register access.
++ */
++static int
++asd_map_io_handle(struct asd_softc *asd)
++{
++	uint32_t	cmd_stat_reg;
++	int		error;
++
++	asd->io_handle = asd_alloc_mem((sizeof(struct asd_io_handle) * 
++					ASD_MAX_IO_HANDLES), GFP_KERNEL);
++	if (asd->io_handle == NULL)
++		return (-ENOMEM);
++						
++	cmd_stat_reg = asd_pcic_read_dword(asd, PCIC_COMMAND);
++	
++	/* Whenever possible, map the IO handles using Memory Mapped. */
++	if (cmd_stat_reg & MEM_EN) {
++		error = asd_mem_mapped_io_handle(asd);
++		if (error == 0)
++			goto exit;
++		/*
++		 * We will fall back to IO Mapped if we failed to map using
++		 * Memory Mapped.
++		 */
++	}	
++	
++	if (cmd_stat_reg & IO_EN)
++		error = asd_io_mapped_io_handle(asd);	
++	else
++		error = -ENOMEM;
++exit:
++	return (error);	
++}
++
++/*
++ * asd_mem_mapped_io_handle()
++ *
++ * Description:
++ *	Map the IO Handle using Memory Mapped.
++ */
++static int
++asd_mem_mapped_io_handle(struct asd_softc *asd)
++{
++	struct asd_io_handle	*io_handle;
++	int			 error;
++	uint32_t		 base_addr;
++	uint32_t		 base_page;
++	uint32_t		 base_offset;
++	uint32_t		 bar_type;
++	uint32_t		 bar_len;
++	uint8_t			 index;
++#if 0
++	uint32_t		scb_pro;	
++#endif
++
++#define ASD_FREE_PREV_IO_HANDLE(asd)					    \
++do {									    \
++	for ( ; asd->io_handle_cnt != 0; ) {				    \
++		io_handle = asd->io_handle[(--asd->io_handle_cnt)];	    \
++		release_mem_region(io_handle->bar_base, io_handle->length); \
++		asd_free_mem(io_handle);				    \
++	}								    \
++} while (0)
 +
 +	/*
-+	 * Mid-layer error recovery entry point semaphore.
++	 * TBRV: MBAR0 and MBAR1 of the controller are both 64-bit. 
++	 *	 Linux PCI isn't aware of 64-bit BAR.
++	 *	 For now, it is fine we just map the first 32-bit, as the upper
++	 *	 32-bit are set to 0.
++	 */	
++	for (index = 0; index < 3; index = index+2) {
++		/*
++		 * Acquire the base addr, length of the region to be mapped.
++		 */
++		base_addr = pci_resource_start(asd_dev_to_pdev(asd->dev), 
++					       index);
++		bar_type = pci_resource_flags(asd_dev_to_pdev(asd->dev), 
++					      index);
++		
++		if (index == PCIC_MBAR0_OFFSET) {
++			uint32_t	mbar0_mask;
++			
++			/* 
++		 	 * For MBAR0, we need to figure out the size of 
++			 * the region to be mapped.  The configured size
++			 * of the bar is 8K * 2^N, where N is the number of
++			 * bits set in the MBAR0 size mask.
++		 	 */
++
++			mbar0_mask = asd_pcic_read_dword(asd, PCIC_MBAR0_MASK);
++			mbar0_mask = PCIC_MBAR0_SIZE(mbar0_mask);
++			bar_len = 0x2000;
++			while (mbar0_mask != 0) {
++				mbar0_mask >>= 1;
++				bar_len <<= 1;
++			}
++		} else {
++			/* For MBAR1, we will map 128K. */
++			bar_len = 0x20000;
++		}
++		
++		/*
++		 * Sanity checking.
++		 * TBRV: Shoud we allow to proceed if we failed to map MBAR1 ?
++		 */
++		if ((base_addr == 0) || (bar_len == 0)) { 
++			asd_log(ASD_DBG_ERROR, "Failed in getting "
++				"PCI resources.\n");
++			ASD_FREE_PREV_IO_HANDLE(asd);
++			error = -ENOMEM;
++			goto exit;
++		}
++			
++		io_handle = asd_alloc_mem(sizeof(*io_handle), GFP_KERNEL);
++		if (io_handle == NULL) {
++			asd_log(ASD_DBG_ERROR, "Out of memory resources.\n");
++			ASD_FREE_PREV_IO_HANDLE(asd);
++			error = -ENOMEM;
++			goto exit;		
++		}
++		memset(io_handle, 0x0, sizeof(*io_handle));
++		io_handle->bar_base = base_addr;	
++		io_handle->length = bar_len;
++		io_handle->index = index;
++		io_handle->type = ASD_MEMORY_SPACE;
++			
++		if (request_mem_region(base_addr, bar_len,
++				       ASD_DRIVER_NAME) == 0) {
++			asd_log(ASD_DBG_ERROR, "Failed to request region for "
++				"idx = %d, addr = 0x%x, len = 0x%x.\n",
++				index, base_addr, bar_len);
++			asd_free_mem(io_handle);		
++			ASD_FREE_PREV_IO_HANDLE(asd); 
++			error = -ENOMEM;
++			goto exit;
++		}
++		base_page = base_addr & PAGE_MASK;
++		base_offset = base_addr - base_page;
++		/*
++		 * Request the MBAR to be remapped in the non-cached region.
++		 */
++		io_handle->baseaddr.membase = ioremap_nocache(base_page,
++							      (bar_len +
++							       base_offset));
++		if (io_handle->baseaddr.membase == NULL) {
++			asd_log(ASD_DBG_ERROR, "Failed to perform ioremap "
++				"for addr = 0x%x, len = 0x%x.\n",
++				base_page, (bar_len + base_offset));
++			release_mem_region(base_addr, bar_len);
++			asd_free_mem(io_handle);
++			ASD_FREE_PREV_IO_HANDLE(asd);
++			error = -ENOMEM;
++			goto exit;
++		}	
++
++		asd->io_handle[asd->io_handle_cnt] = io_handle;		
++		asd->io_handle_cnt++;
++	}
++
++	/*
++	 * Do a simple test that the region is properly mapped.
++	 * We are going to read SCBPRO register, and check the upper 16-bits
++	 * value which represent read-only SCBCONS. 
++	 * Write any random value to SCBCONS shouldn't take any effect. 
 +	 */
-+	struct semaphore	  eh_sem;
-+	struct semaphore	  wait_sem;
-+
-+	asd_platform_flags  	  flags;
-+};
++#if 0
++	/* XXX At this point, we do not know if the central sequencer is
++	 *     running or not, so touching the producer index is *not*
++	 *     safe.  We should either map our sliding window before this
++	 *     test so we can pause the CSEQ or come up with a different
++	 *     register to use for this test.
++	 */
++	scb_pro = asd_read_dword(asd, SCBPRO);
++	scb_pro++;
++	scb_pro &= SCBPRO_MASK;
++	asd_write_dword(asd, SCBPRO, scb_pro);
++	if (asd_read_dword(asd, SCBPRO) == scb_pro) {
++		/* 
++		 * If both values matched, that means the SCBCONS got changed.
++		 */
++		asd_log(ASD_DBG_ERROR, "Failed in testing register mapping.\n");
++		ASD_FREE_PREV_IO_HANDLE(asd);
++		error = -ENOMEM;
++		goto exit; 
++	}	
++#endif
++	/* Reaching here means we succeed in mapping the region. */
++	error = 0;
++exit:
++	return (error);
++}
 +
 +/*
-+ * Internal data structures.
++ * asd_io_mapped_io_handle()
++ *
++ * Description:
++ *	Map the IO Handle using IO Mapped.
 + */
-+typedef struct asd_init_status {
-+	uint8_t		asd_notifier_enabled;
-+	uint8_t		asd_pci_registered;
-+	uint8_t		asd_irq_registered;
-+	uint8_t		asd_ioctl_registered;
-+	uint8_t		asd_init_state;
-+} asd_init_status_t;
++static int
++asd_io_mapped_io_handle(struct asd_softc *asd)
++{
++	struct asd_io_handle	*io_handle;
++	int			 error;
++	uint32_t		 base_addr;
++	uint32_t		 bar_type;
++	uint32_t		 bar_len;
++	uint8_t			 index;
 +
++	/*
++	 * TBRV: IOBAR of the controller is 64-bit. 
++	 *	 Linux PCI doesn't aware of 64-bit BAR.
++	 *	 For now, it is fine we just map the first 32-bit, as the upper
++	 *	 32-bit is set to 0.
++	 */
++	index = PCIC_IOBAR_OFFSET;
++			
++	/* Acquire the base addr, length of the region to be mapped. */
++	base_addr = pci_resource_start(asd_dev_to_pdev(asd->dev), index);
++	bar_type = pci_resource_flags(asd_dev_to_pdev(asd->dev), index);
++	bar_len = pci_resource_len(asd_dev_to_pdev(asd->dev), index);
++	
++	if ((base_addr == 0) || (bar_len == 0)) { 
++		asd_log(ASD_DBG_ERROR, "Failed in getting PCI resources.\n");
++	       	error = -ENOMEM;
++	       	goto exit;
++       	}
 +
-+/* SMP Locking mechanism routines */
-+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,5,0) || defined(SCSI_HAS_HOST_LOCK))
-+#define	SCSI_ML_HAS_HOST_LOCK	1
++       	io_handle = asd_alloc_mem(sizeof(*io_handle), GFP_KERNEL);
++       	if (io_handle == NULL) {
++       		asd_log(ASD_DBG_ERROR, "Out of memory resources.\n");
++       		error = -ENOMEM;
++       		goto exit;		
++       	}
++	memset(io_handle, 0x0, sizeof(*io_handle));	
++	io_handle->baseaddr.iobase = base_addr;		
++       	io_handle->length = bar_len;
++       	io_handle->index = index;
++       	io_handle->type = ASD_IO_SPACE;
 +
++ 	if (request_region(base_addr, bar_len, ASD_DRIVER_NAME) == 0) {
++		asd_log(ASD_DBG_ERROR, "Failed to request region for "
++			"idx = %d, addr = 0x%x, len = 0x%x.\n",
++			index, base_addr, bar_len);
++		asd_free_mem(io_handle);	 
++		error = -ENOMEM;
++		goto exit;
++       	}	 
++	
++	/* Reaching here means we succeed in mapping the region. */
++	asd->io_handle[asd->io_handle_cnt] = io_handle;
++	asd->io_handle_cnt++;	 	 
++	error = 0;
++exit:
++	return (error);	
++}
++
++/*
++ * asd_isr()
++ *
++ * Description:
++ *	This is the interrupt handler. Check if we have any interrupt pending.
++ *	If there is, process it. Otherwise, just return.
++ */
++irqreturn_t
++asd_isr(int  irq, void  *dev_id, struct pt_regs  *regs)
++{
++	struct asd_softc	*asd;
++	unsigned long		 flags;
++	int			 irq_retval;
++
++	asd = (struct asd_softc *) dev_id;
++
++	asd_lock(asd, &flags);
++
++	irq_retval = asd_hwi_process_irq(asd);
++
++	if (asd_next_device_to_run(asd) != NULL)
++		asd_schedule_runq(asd);
++
++	asd_unlock(asd, &flags);
++	
++	return IRQ_RETVAL(irq_retval);
++}
++
++/*
++ * asd_queue()
++ *
++ * Description:
++ *	Execute the requested IO.
++ */
++static int
++asd_queue(Scsi_Cmnd  *cmd, void (*scsi_done)(Scsi_Cmnd *))
++{
++	struct asd_softc	*asd;
++	struct asd_device	*dev;
++
++	asd = *((struct asd_softc **) cmd->device->host->hostdata);
++
++	/*
++	 * Save the callback on completion function.
++	 */
++	cmd->scsi_done = scsi_done;
++	asd_sml_lock(asd);
++
++	/*
++	 * Close the race of a command that was in the process of
++	 * being queued to us just as our controller was frozen.
++	 */
++	if (asd->platform_data->qfrozen != 0) {
++		asd_sml_unlock(asd);
++		asd_cmd_set_retry_status(cmd);
++		cmd->scsi_done(cmd);
++		return (0);
++	}
++
++	dev = asd_get_device(asd, cmd->device->channel, cmd->device->id,
++			     cmd->device->lun, /*alloc*/1);
++	if (dev == NULL) {
++		asd_sml_unlock(asd);
++#if LINUX_VERSION_CODE > KERNEL_VERSION(2,5,0)
++		asd_cmd_set_host_status(cmd, DID_NO_CONNECT);
++#else
++		asd_cmd_set_offline_status(cmd);
++#endif
++		cmd->scsi_done(cmd);
++		return (0);
++	} else if (((dev->flags & ASD_DEV_UNCONFIGURED) != 0) && 
++		   (cmd->device->type != -1)) {
++		/*
++		 * Configure devices that have already successfully
++		 * completed an inquiry. This handles the case of
++		 * devices being destroyed due to transient selection
++		 * timeouts.
++		 */
++		dev->flags &= ~ASD_DEV_UNCONFIGURED;
++	 	dev->scsi_device = cmd->device;
++		asd_set_device_queue_depth(asd, dev);
++	} else {
++		/*
++		 * The target is in the process of being destroyed as
++		 * it had been hot-removed. Return the IO back to the
++		 * scsi layer.
++		 */
++		if (dev->target->flags & ASD_TARG_HOT_REMOVED) {
++			asd_sml_unlock(asd);
++#if LINUX_VERSION_CODE > KERNEL_VERSION(2,5,0)
++			asd_cmd_set_host_status(cmd, DID_NO_CONNECT);
++#else
++			asd_cmd_set_offline_status(cmd);
++#endif
++			cmd->scsi_done(cmd);
++			return (0);
++		}
++	}
++
++	/*
++	 * DC: Need extra storage for SSP_LONG tasks to hold the CDB.
++	 *     For now, just limit the CDB to what we can embed in the SCB.
++ 	 */
++	if (cmd->cmd_len > SCB_EMBEDDED_CDB_SIZE) {
++		asd_cmd_set_host_status(cmd, DID_BAD_TARGET);
++		asd_sml_unlock(asd);
++		cmd->scsi_done(cmd);
++		asd_print("%s: asd94xx_queue -"
++			  "CDB length of %d exceeds max!\n",
++			  asd_name(asd), cmd->cmd_len);
++		return (0);
++	}
++
++#ifdef ASD_EH_SIMULATION	
++	++cmd_cnt;
++	if ((cmd_cnt != 0) && ((cmd_cnt % 888) == 0x0)) {
++		asd_print("Setting up cmd %p for eh simulation.\n", cmd);
++		asd_cmd_set_host_status(cmd, 0x88);
++	} else {
++		asd_cmd_set_host_status(cmd, CMD_REQ_INPROG);
++	}
++#else
++	/*
++	 * Workaround for some kernel versions, when the cmd is retried but
++         * the cmd->result is not clear.
++	 */
++	cmd->result = 0;
++	asd_cmd_set_host_status(cmd, CMD_REQ_INPROG);
++#endif /* ASD_EH_SIMULATION */ 	
++
++	list_add_tail(&((union asd_cmd *)cmd)->acmd_links, &dev->busyq);
++	if ((dev->flags & ASD_DEV_ON_RUN_LIST) == 0) {
++		list_add_tail(&dev->links, &asd->platform_data->device_runq);
++		dev->flags |= ASD_DEV_ON_RUN_LIST;
++		asd_run_device_queues(asd);
++	}
++
++	asd_sml_unlock(asd);
++	return (0);
++} 
++
++#if LINUX_VERSION_CODE < KERNEL_VERSION(2,5,0)
++/*
++ * asd_select_queue_depth()
++ *
++ * Description:
++ *	Adjust the queue depth for each device attached to our controller.
++ */
++static void
++asd_select_queue_depth(struct Scsi_Host *host, Scsi_Device *scsi_devs)
++{
++	struct asd_softc	*asd;
++	Scsi_Device 		*device;
++	Scsi_Device 		*ldev;
++	u_long			 flags;
++
++	asd = *((struct asd_softc **)host->hostdata);
++	asd_lock(asd, &flags);
++	for (device = scsi_devs; device != NULL; device = device->next) {
++		/*
++		 * Watch out for duplicate devices.  This works around
++		 * some quirks in how the SCSI scanning code does its
++		 * device management.
++		 */
++		for (ldev = scsi_devs; ldev != device; ldev = ldev->next) {
++			if (ldev->host == device->host
++			 && ldev->channel == device->channel
++			 && ldev->id == device->id
++			 && ldev->lun == device->lun)
++				break;
++		}
++		/* Skip duplicate. */
++		if (ldev != device)
++			continue;
++
++		if (device->host == host) {
++			struct asd_device *dev;
++
++			/*
++			 * Since Linux has attached to the device, configure
++			 * it so we don't free and allocate the device
++			 * structure on every command.
++			 */
++			dev = asd_get_device(asd, device->channel,
++					     device->id, device->lun,
++					     /*alloc*/1);
++			if (dev != NULL) {
++				dev->flags &= ~ASD_DEV_UNCONFIGURED;
++				dev->scsi_device = device;
++				asd_set_device_queue_depth(asd, dev);
++				device->queue_depth = dev->openings + 
++						      dev->active;
++				if ((dev->flags & (ASD_DEV_Q_BASIC | 
++						   ASD_DEV_Q_TAGGED)) == 0) {
++					/*
++					 * We allow the OS to queue 2 untagged
++					 * transactions to us at any time even
++					 * though we can only execute them
++					 * serially on the controller/device.
++					 * This should remove some latency.
++					 */
++					device->queue_depth = 2;
++				}
++			}
++		}
++	}
++	asd_unlock(asd, &flags);
++}
++
++#else
++
++static int
++asd_slave_alloc(Scsi_Device *scsi_devs)
++{
++	struct asd_softc *asd;
++
++	asd = *((struct asd_softc **) scsi_devs->host->hostdata);
++	asd_log(ASD_DBG_INFO, "%s: Slave Alloc %d %d %d\n", asd_name(asd),
++		scsi_devs->channel, scsi_devs->id, scsi_devs->lun);
++
++	return (0);	
++}
++	
++static int
++asd_slave_configure(Scsi_Device *scsi_devs)
++{
++	struct asd_softc 	*asd;
++	struct asd_device	*dev;
++	u_long			 flags;	
++
++	asd = *((struct asd_softc **) scsi_devs->host->hostdata);
++	asd_log(ASD_DBG_INFO, "%s: Slave Configure %d %d %d\n", asd_name(asd),
++		scsi_devs->channel, scsi_devs->id, scsi_devs->lun);
++
++	asd_lock(asd, &flags);
++	/*
++	 * Since Linux has attached to the device, configure it so we don't 
++	 * free and allocate the device structure on every command.
++	 */
++	dev = asd_get_device(asd, scsi_devs->channel, scsi_devs->id, 
++			     scsi_devs->lun, /*alloc*/1);
++	if (dev != NULL) {
++		dev->flags &= ~ASD_DEV_UNCONFIGURED;
++		dev->flags |= ASD_DEV_SLAVE_CONFIGURED;
++		dev->scsi_device = scsi_devs;
++		asd_set_device_queue_depth(asd, dev);
++	}
++	asd_unlock(asd, &flags);
++
++	return (0);
++}
++
++static void
++asd_slave_destroy(Scsi_Device *scsi_devs)
++{
++	struct asd_softc 	*asd;
++	struct asd_device 	*dev;
++	u_long			 flags;	
++
++	asd = *((struct asd_softc **) scsi_devs->host->hostdata);
++	asd_log(ASD_DBG_INFO, "%s: Slave Destroy %d %d %d\n", asd_name(asd),
++		scsi_devs->channel, scsi_devs->id, scsi_devs->lun);
++
++	asd_lock(asd, &flags);
++
++	dev = asd_get_device(asd, scsi_devs->channel, scsi_devs->id, 
++			     scsi_devs->lun, /*alloc*/0);
++
++	if (dev == NULL) {
++		asd_unlock(asd, &flags);
++		return;
++	}
++
++	if ((dev->flags & ASD_DEV_SLAVE_CONFIGURED) != 0) {
++		if ((list_empty(&dev->busyq)) && (dev->active == 0) &&
++		   ((dev->flags & ASD_DEV_TIMER_ACTIVE) == 0)) {
++			if (dev->target->refcount == 1) {
++				if( dev->target->flags & ASD_TARG_HOT_REMOVED) {
++					asd_free_ddb(
++						asd,
++						dev->target->ddb_profile.conn_handle);
++					/* Free the allocated device. */
++					asd_free_device(asd, dev);
++				} else {
++					dev->flags |= ASD_DEV_UNCONFIGURED;
++					dev->flags &= ~ASD_DEV_SLAVE_CONFIGURED;
++					dev->scsi_device = NULL;
++				}
++			}
++		}
++	}
++
++	asd_unlock(asd, &flags);
++}
++
++static int
++asd_initiate_bus_scan(struct asd_softc *asd)
++{
++	int	error;
++
++	error = scsi_add_host(asd->platform_data->scsi_host, asd->dev);
++	if (error != 0)	
++		return (error);
++		
++	scsi_scan_host(asd->platform_data->scsi_host);
++	return (0);
++}
++
++#endif
++
++/*
++ * Return the disk geometry for the given SCSI device.
++ */
++static int
 +#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,5,0)
-+#define asd_assign_host_lock(asd)				\
-+	scsi_assign_lock((asd)->platform_data->scsi_host,	\
-+			 &(asd)->platform_data->spinlock)
-+#elif LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,21)		\
-+		&& defined(ASD_RED_HAT_LINUX_KERNEL)
-+#define asd_assign_host_lock(asd)				\
-+do {								\
-+	(asd)->platform_data->scsi_host->host_lock =		\
-+	    &(asd)->platform_data->spinlock;			\
-+} while (0)
++asd_bios_param(struct scsi_device *sdev, struct block_device *bdev,
++	       sector_t capacity, int geom[])
++{
 +#else
-+#define asd_assign_host_lock(asd)				\
-+do {								\
-+	(asd)->platform_data->scsi_host->lock =			\
-+	    &(asd)->platform_data->spinlock;			\
-+} while (0)
++asd_bios_param(Disk *disk, kdev_t dev, int geom[])
++{
++	u_long			 capacity = disk->capacity;
 +#endif
-+#else	/* !SCSI_ML_HAS_HOST_LOCK */
-+#define	SCSI_ML_HAS_HOST_LOCK	0
-+#define asd_assign_host_lock(asd)
-+#endif	/* !SCSI_ML_HAS_HOST_LOCK */
++	int	 heads;
++	int	 sectors;
++	int	 cylinders;
 +
-+/* OS utility wrappers */
-+#define asd_alloc_mem(size, flags)	kmalloc(size, flags)
-+#define asd_free_mem(ptr)		kfree(ptr)
-+ 
-+/* Debug Logging macro */
-+
-+#define ASD_DBG_INIT		0x01
-+#define ASD_DBG_INFO		0x02
-+#define ASD_DBG_RUNTIME		0x10
-+#define ASD_DBG_ISR		0x20
-+#define ASD_DBG_ERROR		0x40
-+
-+
-+/* Debug mask to control the Debug Level printout. */
-+extern u_int	debug_mask;
-+
-+#ifdef ASD_DEBUG
-+
-+#define asd_log(debug_level, fmt, args...)			\
-+do {								\
-+	if ((debug_level & debug_mask) != 0) {			\
-+		printk("%s(%d) : ", __FUNCTION__, __LINE__);	\
-+		printk(fmt, ##args);				\
-+	}							\
-+} while (0)
-+
-+/* For initial debugging purpose only. */
-+#define IN	0
-+#define OUT	1
-+#define LINE	2
-+
-+#define ASD_DBG_FUNC(x)							\
-+do {									\
-+	if (x == IN) {							\
-+		printk("+++ Entering Function: %s:%d.\n", __FUNCTION__, \
-+			__LINE__);					\
-+	} else if (x == OUT) {						\
-+		printk("--- Exiting Function: %s:%d.\n", __FUNCTION__,  \
-+			__LINE__);					\
-+	} else {							\
-+		printk("*** %s (%d).\n", __FUNCTION__, __LINE__);	\
-+	}								\
-+} while (0)
-+
-+#if KDB_ENABLE
-+#define ASSERT(expression)						\
-+	if (!(expression)) {						\
-+		printk("assertion failed: %s, file: %s, line: %d\n",	\
-+			#expression, __FILE__, __LINE__);		\
-+		KDB_ENTER();						\
++	heads = 64;
++	sectors = 32;
++	cylinders = asd_sector_div(capacity, heads, sectors);
++	
++	if (cylinders >= 1024) {
++		heads = 255;
++		sectors = 63;
++		cylinders = asd_sector_div(capacity, heads, sectors);
 +	}
-+#else
-+#define ASSERT(expression)						\
-+	if (!(expression)) {						\
-+		panic("assertion failed: %s, file: %s, line: %d\n",	\
-+			#expression, __FILE__, __LINE__);		\
-+	}
-+#endif
++	geom[0] = heads;
++	geom[1] = sectors;
++	geom[2] = cylinders;
 +
-+#else
++	return (0);
++}
 +
-+#define asd_log(debug_level, fmt, args...)	/**/
-+#define ASD_DBG_FUNC(x)				/**/
-+
-+#define ASSERT(expression)
-+
-+#endif /* ASD_DEBUG */ 
-+
-+#define asd_print(fmt, args...)		printk(fmt, ##args)
-+
-+#define ASD_DUMP_REG(reg)		/**/
-+
-+#ifndef IRQ_RETVAL
-+typedef void	irqreturn_t;
-+#define IRQ_RETVAL(x)	/**/
-+#endif
 +
 +/*
-+ * SCSI Status Byte
++ * Function:
++ *	asd_get_user_tagdepth()
++ *	
++ * Description:
++ *	Return the user specified device queue depth.
++ * 	If none specified, return a default queue depth.
 + */
-+#define	SCSI_STATUS_OK			0x00
-+#define	SCSI_STATUS_CHECK_COND		0x02
-+#define	SCSI_STATUS_COND_MET		0x04
-+#define	SCSI_STATUS_BUSY		0x08
-+#define SCSI_STATUS_INTERMED		0x10
-+#define SCSI_STATUS_INTERMED_COND_MET	0x14
-+#define SCSI_STATUS_RESERV_CONFLICT	0x18
-+#define SCSI_STATUS_CMD_TERMINATED	0x22	/* Obsolete in SAM-2 */
-+#define SCSI_STATUS_QUEUE_FULL		0x28
-+#define SCSI_STATUS_ACA_ACTIVE		0x30
-+#define SCSI_STATUS_TASK_ABORTED	0x40
-+
-+struct scsi_sense_data
++static u_int
++asd_get_user_tagdepth(struct asd_softc *asd, struct asd_device *dev)
 +{
-+	uint8_t error_code;
-+#define	SSD_ERRCODE			0x7F
-+#define		SSD_CURRENT_ERROR	0x70
-+#define		SSD_DEFERRED_ERROR	0x71
-+#define	SSD_ERRCODE_VALID	0x80	
-+	uint8_t segment;
-+	uint8_t flags;
-+#define	SSD_KEY				0x0F
-+#define		SSD_KEY_NO_SENSE	0x00
-+#define		SSD_KEY_RECOVERED_ERROR	0x01
-+#define		SSD_KEY_NOT_READY	0x02
-+#define		SSD_KEY_MEDIUM_ERROR	0x03
-+#define		SSD_KEY_HARDWARE_ERROR	0x04
-+#define		SSD_KEY_ILLEGAL_REQUEST	0x05
-+#define		SSD_KEY_UNIT_ATTENTION	0x06
-+#define		SSD_KEY_DATA_PROTECT	0x07
-+#define		SSD_KEY_BLANK_CHECK	0x08
-+#define		SSD_KEY_Vendor_Specific	0x09
-+#define		SSD_KEY_COPY_ABORTED	0x0a
-+#define		SSD_KEY_ABORTED_COMMAND	0x0b		
-+#define		SSD_KEY_EQUAL		0x0c
-+#define		SSD_KEY_VOLUME_OVERFLOW	0x0d
-+#define		SSD_KEY_MISCOMPARE	0x0e
-+#define		SSD_KEY_RESERVED	0x0f			
-+#define	SSD_ILI		0x20
-+#define	SSD_EOM		0x40
-+#define	SSD_FILEMARK	0x80
-+	uint8_t info[4];
-+	uint8_t extra_len;
-+	uint8_t cmd_spec_info[4];
-+	uint8_t add_sense_code;
-+	uint8_t add_sense_code_qual;
-+	uint8_t fru;
-+	uint8_t sense_key_spec[3];
-+#define	SSD_SCS_VALID		0x80
-+#define SSD_FIELDPTR_CMD	0x40
-+#define SSD_BITPTR_VALID	0x08
-+#define SSD_BITPTR_VALUE	0x07
-+#define SSD_MIN_SIZE 18
-+	uint8_t extra_bytes[14];
-+#define SSD_FULL_SIZE sizeof(struct scsi_sense_data)
-+};
++	/*
++	 * No queuing support yet for SATA II devices.
++ 	 */
++	if ((dev->target->command_set_type == ASD_COMMAND_SET_ATA) ||
++	    (dev->target->command_set_type == ASD_COMMAND_SET_ATAPI))
++		return 0;
 +
-+static inline void	scsi_ulto2b(uint32_t val, uint8_t *bytes);
-+static inline void	scsi_ulto3b(uint32_t val, uint8_t *bytes);
-+static inline void	scsi_ulto4b(uint32_t val, uint8_t *bytes);
-+static inline uint32_t	scsi_2btoul(uint8_t *bytes);
-+static inline uint32_t	scsi_3btoul(uint8_t *bytes);
-+static inline int32_t	scsi_3btol(uint8_t *bytes);
-+static inline uint32_t 	scsi_4btoul(uint8_t *bytes);
++	if (cmd_per_lun < ASD_MIN_TCQ_PER_DEVICE ||
++	    cmd_per_lun > ASD_MAX_TCQ_PER_DEVICE) {
++		asd_print(ASD_DRIVER_NAME": cmd_per_lun:%d out of range, "
++			  "setting default:%d\n",
++			  cmd_per_lun, ASD_DEF_TCQ_PER_DEVICE);
++		cmd_per_lun = ASD_DEF_TCQ_PER_DEVICE;
++	}	
 +
-+static inline void
-+scsi_ulto2b(uint32_t val, uint8_t *bytes)
-+{
-+	bytes[0] = (val >> 8) & 0xff;
-+	bytes[1] = val & 0xff;
++	return cmd_per_lun;
 +}
 +
-+static inline void
-+scsi_ulto3b(uint32_t val, uint8_t *bytes)
++/*
++ * Function:
++ *	asd_set_device_queue_depth()
++ *
++ * Description: 	  
++ * 	Determines the queue depth for a given device.
++ */
++static void
++asd_set_device_queue_depth(struct asd_softc *asd, struct asd_device *dev)
 +{
-+	bytes[0] = (val >> 16) & 0xff;
-+	bytes[1] = (val >> 8) & 0xff;
-+	bytes[2] = val & 0xff;
++	u_int	tags;
++
++	ASD_LOCK_ASSERT(asd);
++
++	tags = asd_get_user_tagdepth(asd, dev);
++	if (tags != 0 && dev->scsi_device != NULL && 
++	    dev->scsi_device->tagged_supported != 0) {
++		asd_set_tags(asd, dev, ASD_QUEUE_TAGGED);
++
++		asd_print("(%s:%d:%d:%d): Tagged Queuing enabled.  Depth %d\n",
++			  asd_name(asd),
++			  dev->target->domain->channel_mapping,
++			  dev->target->target, dev->lun,
++			  dev->openings + dev->active);
++	} else {
++		asd_set_tags(asd, dev, ASD_QUEUE_NONE);
++	}
 +}
 +
-+static inline void
-+scsi_ulto4b(uint32_t val, uint8_t *bytes)
++/*
++ * Function:
++ *	asd_set_tags()
++ *
++ * Description: 	  
++ * 	Set the device queue depth.
++ */
++static void
++asd_set_tags(struct asd_softc *asd, struct asd_device *dev, asd_queue_alg alg)
 +{
-+	bytes[0] = (val >> 24) & 0xff;
-+	bytes[1] = (val >> 16) & 0xff;
-+	bytes[2] = (val >> 8) & 0xff;
-+	bytes[3] = val & 0xff;
++	int was_queuing;
++	int now_queuing;
++
++	was_queuing = dev->flags & (ASD_DEV_Q_BASIC|ASD_DEV_Q_TAGGED);
++	switch (alg) {
++	default:
++	case ASD_QUEUE_NONE:
++		now_queuing = 0;
++		break; 
++	case ASD_QUEUE_BASIC:
++		now_queuing = ASD_DEV_Q_BASIC;
++		break;
++	case ASD_QUEUE_TAGGED:
++		now_queuing = ASD_DEV_Q_TAGGED;
++		break;
++	}
++
++	dev->flags &= ~(ASD_DEV_Q_BASIC|ASD_DEV_Q_TAGGED);
++	if (now_queuing) {
++		u_int usertags;
++
++		usertags = asd_get_user_tagdepth(asd, dev);
++		if (!was_queuing) {
++			/*
++			 * Start out agressively and allow our
++			 * dynamic queue depth algorithm to take
++			 * care of the rest.
++			 */
++			dev->maxtags = usertags;
++			dev->openings = dev->maxtags - dev->active;
++		}
++		if (dev->maxtags == 0)
++			/*
++			 * Queueing is disabled by the user.
++			 */
++			dev->openings = 1;
++		else if (alg == ASD_QUEUE_TAGGED)
++			dev->flags |= ASD_DEV_Q_TAGGED;
++		else
++			dev->flags |= ASD_DEV_Q_BASIC;
++	} else {
++		/* We can only have one opening. */
++		dev->maxtags = 0;
++		dev->openings =  1 - dev->active;
++	}
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,5,0)
++	if (dev->scsi_device != NULL) {
++		switch ((dev->flags & (ASD_DEV_Q_BASIC|ASD_DEV_Q_TAGGED))) {
++		case ASD_DEV_Q_BASIC:
++			scsi_adjust_queue_depth(dev->scsi_device,
++						MSG_SIMPLE_TAG,
++						dev->maxtags);
++			break;
++		case ASD_DEV_Q_TAGGED:
++			scsi_adjust_queue_depth(dev->scsi_device,
++						MSG_ORDERED_TAG,
++						dev->maxtags);
++			break;
++		default:
++			/*
++			 * We allow the OS to queue 2 untagged transactions to
++			 * us at any time even though we can only execute them
++			 * serially on the controller/device.  This should
++			 * remove some latency.
++			 */
++			scsi_adjust_queue_depth(dev->scsi_device,
++						/* NON-TAGGED */ 0,
++						/* Queue Depth */ 2);
++			break;
++		}
++	}
++#endif
 +}
 +
-+static inline uint32_t
-+scsi_2btoul(uint8_t *bytes)
++		       
++/*
++ * asd_info()
++ *
++ * Description:
++ *	Return an info regarding the driver to the OS.
++ */
++static const char *
++asd_info(struct Scsi_Host  *scsi_host)
 +{
-+	uint32_t rv;
++	struct asd_softc	*asd;
++	const char		*info;
++	
++	info = "";
++	asd = *((struct asd_softc **) scsi_host->hostdata);
++		
++	if (asd_get_softc(asd) != NULL) {
++		info = ((struct asd_pci_driver_data *) 
++				(asd->pci_entry->driver_data))->description;
++	}
 +
-+	rv = (bytes[0] << 8) |
-+	     bytes[1];
-+	return (rv);
++	return (info);
 +}
 +
-+static inline uint32_t
-+scsi_3btoul(uint8_t *bytes)
-+{
-+	uint32_t rv;
 +
-+	rv = (bytes[0] << 16) |
-+	     (bytes[1] << 8) |
-+	     bytes[2];
-+	return (rv);
++/**************************** OS Error Handling *******************************/
++
++/*
++ * Function:
++ *	asd_ehandler_thread()
++ *
++ * Description:
++ *	Thread to handle error recovery.
++ */ 
++static int
++asd_ehandler_thread(void *data)
++{
++	struct asd_softc	*asd;
++	u_long			 flags;	
++
++	asd = (struct asd_softc *) data;
++
++	lock_kernel();
++#if LINUX_VERSION_CODE < KERNEL_VERSION(2,5,60)
++	/*
++	 * Don't care about any signals.
++	 */
++	siginitsetinv(&current->blocked, 0);
++	daemonize();
++	sprintf(current->comm, "asd_eh_%d", asd->profile.unit);
++#else
++	daemonize("asd_eh_%d", asd->profile.unit);
++	current->flags |= PF_FREEZE;	
++#endif
++	unlock_kernel();
++
++	while (1) {
++		/*
++		 * Use down_interruptible() rather than down() to
++		 * avoid this thread to be counted in the load average as
++		 * a running process.
++		 */
++		down_interruptible(&asd->platform_data->ehandler_sem);
++
++		/* Check to see if we've been signaled to exit. */
++		asd_lock(asd, &flags);
++		if ((asd->platform_data->flags & ASD_RECOVERY_SHUTDOWN) != 0) {
++			asd_unlock(asd, &flags);
++			break;
++		}
++		/* 
++		 * Check if any timedout commands that required 
++		 * error handling. 
++		 */
++		if (list_empty(&asd->timedout_scbs)) {
++			asd_unlock(asd, &flags);
++			continue;
++		}
++		asd_unlock(asd, &flags);
++
++		asd_recover_cmds(asd);
++	}
++
++	up(&asd->platform_data->ehandler_ending_sem);
++
++	return (0);
 +}
 +
-+static inline int32_t 
-+scsi_3btol(uint8_t *bytes)
++/*
++ * Function:
++ * 	asd_kill_ehandler_thread()
++ * 
++ * Description:
++ * 	Kill the error handling thread.
++ */
++static void
++asd_kill_ehandler_thread(struct asd_softc *asd)
 +{
-+	uint32_t rc = scsi_3btoul(bytes);
-+ 
-+	if (rc & 0x00800000)
-+		rc |= 0xff000000;
++	u_long	flags;
 +
-+	return (int32_t) rc;
++	asd_lock(asd, &flags);
++
++	if (asd->platform_data->ehandler_pid != 0) {
++		asd->platform_data->flags |= ASD_RECOVERY_SHUTDOWN;
++		asd_unlock(asd, &flags);
++		up(&asd->platform_data->ehandler_sem);
++		asd->platform_data->ehandler_pid = 0;
++	} else {
++		asd_unlock(asd, &flags);
++	}
 +}
 +
-+static inline uint32_t
-+scsi_4btoul(uint8_t *bytes)
++static void
++asd_ehandler_done(struct asd_softc *asd, struct scb *scb)
 +{
-+	uint32_t rv;
-+
-+	rv = (bytes[0] << 24) |
-+	     (bytes[1] << 16) |
-+	     (bytes[2] << 8) |
-+	     bytes[3];
-+	return (rv);
++	scb->platform_data->flags &= ~ASD_SCB_UP_EH_SEM;
++	asd_wakeup_sem(&asd->platform_data->eh_sem);
 +}
 +
-+/*********************** Transaction Access Wrappers **************************/
-+static inline void	asd_cmd_set_host_status(Scsi_Cmnd *cmd, u_int);
-+static inline void 	asd_cmd_set_scsi_status(Scsi_Cmnd *cmd, u_int);
-+static inline uint32_t 	asd_cmd_get_host_status(Scsi_Cmnd *cmd);
-+static inline uint32_t 	asd_cmd_get_scsi_status(Scsi_Cmnd *cmd);
-+static inline void 	asd_freeze_scb(struct scb *scb);
-+static inline void 	asd_unfreeze_scb(struct scb *scb);
-+
-+#define CMD_DRIVER_STATUS_MASK	0xFF000000
-+#define CMD_DRIVER_STATUS_SHIFT	24
-+#define CMD_HOST_STATUS_MASK	0x00FF0000
-+#define CMD_HOST_STATUS_SHIFT	16
-+#define CMD_MSG_STATUS_MASK	0x0000FF00
-+#define CMD_MSG_STATUS_SHIFT	8
-+#define CMD_SCSI_STATUS_MASK	0x000000FF
-+#define CMD_SCSI_STATUS_SHIFT	0
-+#define CMD_REQ_INPROG		0xFF
-+
-+static inline
-+void asd_cmd_set_driver_status(Scsi_Cmnd *cmd, u_int status)
++/*
++ * asd_abort()
++ *
++ * Description:
++ *	Perform abort for the requested command.
++ */
++static int
++asd_abort(Scsi_Cmnd *cmd)
 +{
-+	cmd->result &= ~CMD_DRIVER_STATUS_MASK;
-+	cmd->result |= status << CMD_DRIVER_STATUS_SHIFT;
++	struct asd_softc	*asd;
++	struct asd_device	*dev;
++	struct scb		*scb_to_abort;
++	union asd_cmd 		*acmd;
++	union asd_cmd 		*list_acmd;
++	int			 retval;
++	int			 found;
++
++	asd_print("(scsi%d: Ch %d Id %d Lun %d): ",
++		  cmd->device->host->host_no,
++		  cmd->device->channel, cmd->device->id, cmd->device->lun);
++	asd_print("Abort requested for SCSI cmd %p, opcode 0x%x.\n", cmd,
++		  cmd->cmnd[0]);
++
++	asd = *(struct asd_softc **) cmd->device->host->hostdata;
++	acmd = (union asd_cmd *) cmd;
++	found = 0;
++	retval = SUCCESS;
++
++	asd_sml_lock(asd);
++
++	/* See if any existing device owns this command. */
++	dev = asd_get_device(asd, cmd->device->channel,
++			     cmd->device->id, cmd->device->lun, 0);
++	if (dev == NULL) {
++		/*
++		 * No device exists that owns this command. 
++		 * Return abort successful for the requested command.
++		 */
++		asd_print("(scsi%d: Ch %d Id %d Lun %d): ",
++			  cmd->device->host->host_no, cmd->device->channel, 
++			  cmd->device->id, cmd->device->lun);
++		asd_print("Is not an active device.\n");
++		retval = SUCCESS;
++		goto exit;
++	}
++
++#ifdef ASD_DEBUG	
++	{
++		struct asd_target *t = NULL;
++#ifdef MULTIPATH_IO
++		t = dev->current_target;
++#else
++		t = dev->target;
++#endif
++		if (!t)
++			t = dev->target;
++
++		asd_hwi_dump_seq_state(asd, t->src_port->conn_mask);
++		asd_hwi_dump_ddb_site(asd, t->ddb_profile.conn_handle);
++	}
++#endif /* ASD_DEBUG */
++
++	/*
++	 * Check if the cmd is still in the device queue.
++	 */ 
++	list_for_each_entry(list_acmd, &dev->busyq, acmd_links) {
++		if (list_acmd == acmd) {
++			/* Found it. */
++			found = 1;
++			break;
++		}
++	}
++	if (found == 1) {
++		asd_print_path(asd, dev);
++		asd_print("Cmd %p found on device queue.\n", cmd);
++		list_del(&list_acmd->acmd_links);
++		asd_cmd_set_host_status(cmd, DID_ABORT);
++		cmd->scsi_done(cmd);
++		retval = SUCCESS;
++		goto exit;
++	}
++
++	/*
++	 * Check if the cmd has been submitted to the device.
++	 */
++	list_for_each_entry(scb_to_abort, &asd->platform_data->pending_os_scbs,
++			    owner_links) {
++		if (scb_to_abort->io_ctx == acmd) {
++			/* Found it. */
++			found = 1;
++			break;
++		}
++	}
++	if (found != 1) {
++		/*
++		 * Looks like we are trying to abort command that has
++		 * been completed.
++		 */
++		asd_print_path(asd, dev);
++		asd_print("Cmd %p not found.\n", cmd);
++		retval = SUCCESS;
++		goto exit;
++	}
++
++	/*
++	 * Set the level of error recovery for the error handler thread
++         * to perform.
++	 */
++	scb_to_abort->eh_state = SCB_EH_ABORT_REQ;
++	scb_to_abort->eh_post = asd_ehandler_done;
++	/*
++	 * Mark this SCB as timedout and add it to the timeout queue.
++	 */	 
++	scb_to_abort->flags |= SCB_TIMEDOUT;
++	list_add_tail(&scb_to_abort->timedout_links, &asd->timedout_scbs);
++	
++	asd_wakeup_sem(&asd->platform_data->ehandler_sem);
++	asd->platform_data->flags |= ASD_SCB_UP_EH_SEM;
++
++	/* Release the host's lock prior putting the process to sleep. */
++	spin_unlock_irq(&asd->platform_data->spinlock);
++	
++	asd_sleep_sem(&asd->platform_data->eh_sem);
++
++	retval = (scb_to_abort->eh_status == SCB_EH_SUCCEED) ? SUCCESS : FAILED;
++
++	/* Acquire the host's lock. */
++	spin_lock_irq(&asd->platform_data->spinlock);
++	
++exit:
++	asd_sml_unlock(asd);
++	return (retval);
 +}
 +
-+static inline
-+void asd_cmd_set_host_status(Scsi_Cmnd *cmd, u_int status)
++/******************************** Bus DMA *************************************/
++
++int
++asd_dma_tag_create(struct asd_softc *asd, uint32_t alignment, uint32_t maxsize,
++		   int flags, bus_dma_tag_t *ret_tag)
 +{
-+	cmd->result &= ~CMD_HOST_STATUS_MASK;
-+	cmd->result |= status << CMD_HOST_STATUS_SHIFT;
++	bus_dma_tag_t dmat;
++
++	dmat = asd_alloc_mem(sizeof(*dmat), flags);
++	if (dmat == NULL)
++		return (-ENOMEM);
++
++	dmat->alignment = alignment;
++	dmat->maxsize = maxsize;
++	*ret_tag = dmat;
++	return (0);
 +}
 +
-+static inline
-+void asd_cmd_set_scsi_status(Scsi_Cmnd *cmd, u_int status)
++void
++asd_dma_tag_destroy(struct asd_softc *asd, bus_dma_tag_t dmat)
 +{
-+	cmd->result &= ~CMD_SCSI_STATUS_MASK;
-+	cmd->result |= status;
++	asd_free_mem(dmat);
 +}
 +
-+static inline
-+uint32_t asd_cmd_get_host_status(Scsi_Cmnd *cmd)
++int
++asd_dmamem_alloc(struct asd_softc *asd, bus_dma_tag_t dmat, void** vaddr,
++		 int flags, bus_dmamap_t *mapp, dma_addr_t *baddr)
 +{
-+	return ((cmd->result & CMD_HOST_STATUS_MASK) >> CMD_HOST_STATUS_SHIFT);
++	bus_dmamap_t map;
++
++	map = asd_alloc_mem(sizeof(*map), flags);
++	if (map == NULL)
++		return (-ENOMEM);
++
++	*vaddr = asd_alloc_coherent(asd, dmat->maxsize, &map->bus_addr);
++	if (*vaddr == NULL) {
++		asd_free_mem(map);
++		return (-ENOMEM);
++	}
++	*mapp = map;
++	*baddr = map->bus_addr;
++	return(0);
 +}
 +
-+static inline
-+uint32_t asd_cmd_get_scsi_status(Scsi_Cmnd *cmd)
++void
++asd_dmamem_free(struct asd_softc *asd, bus_dma_tag_t dmat, void *vaddr,
++		bus_dmamap_t map)
 +{
-+	return ((cmd->result & CMD_SCSI_STATUS_MASK) >> CMD_SCSI_STATUS_SHIFT);
++	asd_free_coherent(asd, dmat->maxsize, vaddr, map->bus_addr);
 +}
 +
-+static inline void
-+asd_freeze_scb(struct scb *scb)
++void
++asd_dmamap_destroy(struct asd_softc *asd, bus_dma_tag_t dmat, bus_dmamap_t map)
 +{
-+	if ((scb->flags & SCB_DEV_QFRZN) == 0) {
-+		scb->flags |= SCB_DEV_QFRZN;
-+		scb->platform_data->dev->qfrozen++;
-+        }
++	asd_free_mem(map);
 +}
 +
-+static inline void
-+asd_unfreeze_scb(struct scb *scb)
++int
++asd_alloc_dma_mem(struct asd_softc *asd, unsigned length, void **vaddr,
++		  dma_addr_t *bus_addr, bus_dma_tag_t *buf_dmat,
++		  struct map_node *buf_map)
 +{
-+	if ((scb->flags & SCB_DEV_QFRZN) != 0) {
-+		scb->flags &= ~SCB_DEV_QFRZN;
-+		scb->platform_data->dev->qfrozen--;
-+        }
++	if (asd_dma_tag_create(asd, 4, length, GFP_ATOMIC, buf_dmat) != 0)
++		return (-ENOMEM);
++
++	if (asd_dmamem_alloc(asd, *buf_dmat, (void **) &buf_map->vaddr,
++			     GFP_ATOMIC, &buf_map->dmamap,
++			     &buf_map->busaddr) != 0) {
++		asd_dma_tag_destroy(asd, *buf_dmat);
++		return (-ENOMEM);
++	}
++
++	*vaddr = (void *) buf_map->vaddr;
++	*bus_addr = buf_map->busaddr;
++	memset(*vaddr, 0, length);
++
++	return 0;
 +}
 +
-+// TODO - where is right spot for these???
-+typedef enum {
-+	ASD_COMMAND_BUILD_OK,
-+	ASD_COMMAND_BUILD_FAILED,
-+	ASD_COMMAND_BUILD_FINISHED
-+} ASD_COMMAND_BUILD_STATUS;
++void
++asd_free_dma_mem(struct asd_softc *asd, bus_dma_tag_t buf_dmat,
++		 struct map_node *buf_map)
++{
++	asd_dmamem_free(asd, buf_dmat, buf_map->vaddr, buf_map->dmamap);
++	asd_dmamap_destroy(asd, buf_dmat, buf_map->dmamap);
++	asd_dma_tag_destroy(asd, buf_dmat);
++}
 +
-+ASD_COMMAND_BUILD_STATUS 
-+	asd_setup_data(struct asd_softc *asd, struct scb *scb, Scsi_Cmnd *cmd);
-+
-+DISCOVER_RESULTS
-+	asd_do_discovery(struct asd_softc *asd, struct asd_port *port);
-+
-+DISCOVER_RESULTS
-+	asd_run_state_machine(struct state_machine_context *sm_contextp);
-+
-+int	asd_platform_alloc(struct asd_softc *asd);
-+void	asd_platform_free(struct asd_softc *asd);
++/*************************** Platform Data Routines ***************************/
 +
 +struct asd_scb_platform_data *
-+	asd_alloc_scb_platform_data(struct asd_softc *asd);
-+void	asd_free_scb_platform_data(struct asd_softc *asd,
-+				   struct asd_scb_platform_data *pdata);
-+void	asd_unmap_scb(struct asd_softc *asd, struct scb *scb);
-+void	asd_recover_cmds(struct asd_softc *asd);
-+void	asd_hwi_release_sata_spinup_hold(struct asd_softc *asd,
-+					 struct asd_phy	*phy);
++asd_alloc_scb_platform_data(struct asd_softc *asd)
++{
++	struct asd_scb_platform_data *pdata;
++	
++	pdata = (struct asd_scb_platform_data *) asd_alloc_mem(sizeof(*pdata),
++							       GFP_ATOMIC);
++	return (pdata);
++}
 +
-+struct asd_target *
-+	asd_alloc_target(struct asd_softc *asd, struct asd_port *src_port);
-+void	asd_free_target(struct asd_softc *asd, struct asd_target *targ);
-+int	asd_map_target(struct asd_softc *asd, struct asd_target *targ);
++void
++asd_free_scb_platform_data(struct asd_softc *asd,
++			   struct asd_scb_platform_data *pdata)
++{
++	asd_free_mem(pdata);
++}
 +
-+struct asd_device *
-+	asd_alloc_device(struct asd_softc *asd, struct asd_target *targ, 
-+			 u_int ch, u_int id, u_int lun);
-+void	asd_free_device(struct asd_softc *asd, struct asd_device *dev);
-+struct asd_device *
-+	asd_get_device(struct asd_softc *asd, u_int ch, u_int id,
-+		       u_int lun, int alloc);
-+void	asd_remap_device(struct asd_softc *asd, struct asd_target *target,
-+			 struct asd_target *multipath_target);
-+void	asd_timed_run_dev_queue(u_long arg);
-+void	asd_destroy_device(void *arg);
 +
-+#ifndef list_for_each_entry_safe
-+/**
-+ * list_for_each_entry_safe - iterate over list of given type safe against 
-+ *                              removal of list entry
-+ * @pos:	the type * to use as a loop counter.
-+ * @n:		another type * to use as temporary storage
-+ * @head:	the head for your list.
-+ * @member:	the name of the list_struct within the struct.
-+ */
-+#define list_for_each_entry_safe(pos, n, head, member)			\
-+	for (pos = list_entry((head)->next, typeof(*pos), member),	\
-+		n = list_entry(pos->member.next, typeof(*pos), member);	\
-+	     &pos->member != (head); 					\
-+	     pos = n, n = list_entry(n->member.next, typeof(*n), member))
-+#endif
++/**************************** Proc Filesystem support *************************/
 +
-+#ifndef list_for_each_entry
-+/**
-+ * list_for_each_entry	-	iterate over list of given type
-+ * @pos:	the type * to use as a loop counter.
-+ * @head:	the head for your list.
-+ * @member:	the name of the list_struct within the struct.
-+ */
-+#define list_for_each_entry(pos, head, member)				\
-+	for (pos = list_entry((head)->next, typeof(*pos), member),	\
-+		     prefetch(pos->member.next);			\
-+	     &pos->member != (head); 					\
-+	     pos = list_entry(pos->member.next, typeof(*pos), member),	\
-+		     prefetch(pos->member.next))
++typedef struct proc_info_str {
++	char	*buf;
++	int	len;
++	off_t	off;
++	int	pos;
++} proc_info_str_t;
 +
-+#endif
++static void	copy_mem_info(proc_info_str_t *info_str, char *data, int len);
++static int	copy_info(proc_info_str_t *info_str, char *fmt, ...);
 +
-+#define list_move_all(to_list, from_list)				\
-+	if (!list_empty(from_list)) {					\
-+		(to_list)->next = (from_list)->next;			\
-+		(to_list)->prev = (from_list)->prev;			\
-+		(from_list)->next->prev = to_list;			\
-+		(from_list)->prev->next = to_list;			\
-+		INIT_LIST_HEAD(from_list);				\
-+	} else {							\
-+		INIT_LIST_HEAD(to_list);				\
++static void
++copy_mem_info(proc_info_str_t *info_str, char *data, int len)
++{
++	if (info_str->pos + len > info_str->off + info_str->len)
++		len = info_str->off + info_str->len - info_str->pos;
++
++	if (info_str->pos + len < info_str->off) {
++		info_str->pos += len;
++		return;
 +	}
 +
-+#define list_copy(to_list, from_list)					\
-+do {									\
-+	(to_list)->next = (from_list)->next;				\
-+	(to_list)->prev = (from_list)->prev;				\
-+} while (0)
++	if (info_str->pos < info_str->off) {
++		off_t partial;
 +
-+#endif /* ADP94XX_OSM_H */ 
++		partial = info_str->off - info_str->pos;
++		data += partial;
++		info_str->pos += partial;
++		len  -= partial;
++	}
++
++	if (len > 0) {
++		memcpy(info_str->buf, data, len);
++		info_str->pos += len;
++		info_str->buf += len;
++	}
++}
++
++static int
++copy_info(proc_info_str_t *info_str, char *fmt, ...)
++{
++	va_list	args;
++	char 	buf[256];
++	int 	len;
++
++	va_start(args, fmt);
++	len = vsprintf(buf, fmt, args);
++	va_end(args);
++
++	copy_mem_info(info_str, buf, len);
++	return (len);
++}
++
++void
++asd_dump_indent(
++proc_info_str_t	*info_str,
++unsigned	indent
++)
++{
++	unsigned		i;
++
++	for (i = 0 ; i < indent ; i++) {
++		copy_info(info_str, "   ");
++	}
++}
++
++void
++asd_dump_conn_rate(
++proc_info_str_t	*info_str,
++unsigned	conn_rate
++)
++{
++	switch (conn_rate) {
++	case SAS_RATE_30GBPS:
++		copy_info(info_str, "3000 Mb/s");
++		break;
++	case SAS_RATE_15GBPS:
++		copy_info(info_str, "1500 MB/s");
++		break;
++	default:
++		copy_info(info_str, "\?\? MB/s");
++		break;
++	}
++}
++
++static void
++asd_dump_target_info(struct asd_softc *asd, proc_info_str_t *info_str,
++	struct asd_port *port, struct asd_target *targ, unsigned indent)
++{
++	unsigned		i;
++	struct Discover		*discover;
++	struct asd_target	*child_target;
++	struct hd_driveid	*hd_driveidp;
++
++	asd_dump_indent(info_str, indent);
++
++	copy_info(info_str, "  Connected to ");
++	switch (targ->transport_type) {
++	case ASD_TRANSPORT_SSP:
++		copy_info(info_str, "SAS End Device. ");	
++		copy_info(info_str, "SAS Address: %0llx\n", asd_be64toh(
++			  *((uint64_t *)targ->ddb_profile.sas_addr)));
++
++		asd_dump_indent(info_str, indent);
++		if (targ->scsi_cmdset.inquiry != NULL) {
++			copy_info(info_str,
++				"  Vendor: %8.8s Product: %16.16s "
++				"Revision: %4.4s\n",
++				&targ->scsi_cmdset.inquiry[8],
++				&targ->scsi_cmdset.inquiry[16],
++				&targ->scsi_cmdset.inquiry[32]);
++		}
++		break;
++
++	case ASD_TRANSPORT_STP:
++	case ASD_TRANSPORT_ATA:
++		hd_driveidp = &targ->ata_cmdset.adp_hd_driveid;
++		copy_info(info_str, "SATA End Device. ");
++		copy_info(info_str, "Mapped SAS Address: %0llx\n", asd_be64toh(
++			  *((uint64_t *)targ->ddb_profile.sas_addr)));
++		asd_dump_indent(info_str, indent);
++		copy_info(info_str,
++			"  Vendor: %8.8s Product: %16.16s "
++			"Revision: %4.4s\n",
++			hd_driveidp->model,
++			hd_driveidp->model + 8,
++			hd_driveidp->fw_rev);
++		break;
++
++	case ASD_TRANSPORT_SMP:
++		switch (targ->management_type)
++		{
++		case ASD_DEVICE_EDGE_EXPANDER:
++			copy_info(info_str, "Edge Expander Device. ");
++			copy_info(info_str, "SAS Address: %0llx\n", asd_be64toh(
++				  *((uint64_t *)targ->ddb_profile.sas_addr)));
++			break;
++
++		case ASD_DEVICE_FANOUT_EXPANDER:
++			copy_info(info_str, "Fanout Expander Device. ");
++			copy_info(info_str, "SAS Address: %0llx\n", asd_be64toh(
++				  *((uint64_t *)targ->ddb_profile.sas_addr)));
++			break;
++
++		default:
++			copy_info(info_str, "Unknown Device.");
++			break;
++		}
++
++		asd_dump_indent(info_str, indent);
++		copy_info(info_str,
++			"  Vendor: %8.8s Product: %16.16s Revision: %4.4s - ",
++			targ->smp_cmdset.manufacturer_info.VendorIdentification,
++			targ->smp_cmdset.manufacturer_info.
++				ProductIdentification,
++			targ->smp_cmdset.manufacturer_info.	
++				ProductRevisionLevel);
++		break;
++
++	default:
++		copy_info(info_str, "Unknown Device.");
++		break;
++	}
++
++	if (targ->management_type == ASD_DEVICE_END) {
++		return;
++	}
++
++	copy_info(info_str, "Total Phys: %d\n", targ->num_phys);
++
++	asd_dump_indent(info_str, indent);
++
++	copy_info(info_str, "  Routing: ");
++
++	discover = NULL;
++
++	for (i = 0 ; i < targ->num_phys ; i++) {
++
++		discover = &(targ->Phy[i].Result);
++
++		switch (discover->RoutingAttribute) {
++		case DIRECT:
++			copy_info(info_str, "%d:D", i);
++			break;
++		case SUBTRACTIVE:
++			copy_info(info_str, "%d:S", i);
++			break;
++		case TABLE:
++			copy_info(info_str, "%d:T", i);
++			break;
++		default:
++			copy_info(info_str, "%d:?", i);
++			break;
++		}
++
++		if (i != (targ->num_phys - 1)) {
++			copy_info(info_str, "|");
++		}
++	}
++
++	copy_info(info_str, "\n");
++
++	indent++;
++
++	list_for_each_entry(child_target, &targ->children, siblings) {
++
++		for (i = 0 ; i < targ->num_phys ; i++) {
++
++			discover = &(targ->Phy[i].Result);
++
++			if (SAS_ISEQUAL(child_target->ddb_profile.sas_addr,
++				discover->AttachedSASAddress)) {
++				break;
++			}
++		}
++
++		if (i == targ->num_phys) {
++			continue;
++		}
++
++		asd_dump_indent(info_str, indent);
++
++		copy_info(info_str, "+ Phy %d ", i);
++		copy_info(info_str, "link rate negotiated: ");
++
++		asd_dump_conn_rate(info_str,
++			discover->NegotiatedPhysicalLinkRate);
++
++		copy_info(info_str, " max: ");
++
++		asd_dump_conn_rate(info_str,
++			discover->HardwareMaximumPhysicalLinkRate);
++
++		copy_info(info_str, " min: ");
++
++		asd_dump_conn_rate(info_str,
++			discover->HardwareMinimumPhysicalLinkRate);
++
++		copy_info(info_str, "\n");
++
++		asd_dump_target_info(asd, info_str, port, child_target, 
++			indent);
++	}
++}
++	
++static void
++asd_dump_port_info(struct asd_softc *asd, proc_info_str_t *info_str, 
++		   int port_id)
++{
++	struct asd_port		*port;
++	struct asd_phy		*phy;
++
++	port = asd->port_list[port_id];
++	
++	copy_info(info_str, "Port %d Settings\n", port_id);
++	if (!list_empty(&port->phys_attached)) {
++		/* Dump out info for every phy connected to this port. */
++		list_for_each_entry(phy, &port->phys_attached, links) {
++			asd_dump_indent(info_str, 1);
++			copy_info(info_str, "+ Phy %d link rate "
++				  "negotiated: %d Mb/s "
++				  "max: %d Mb/s min %d Mb/s\n", 
++				  phy->id, (phy->conn_rate / 100000), 
++				  (phy->max_link_rate / 100000),
++				  (phy->min_link_rate / 100000));
++			asd_dump_indent(info_str, 1);
++			copy_info(info_str, "  Phy SAS Addrress: %0llx\n", 
++				  asd_be64toh(*((uint64_t *)
++					      phy->sas_addr)));
++		}
++
++		if (port->tree_root != NULL) {
++
++			asd_dump_target_info(asd, info_str, port, 
++				port->tree_root, 1);
++		}
++		else {
++			copy_info(info_str, "\n");
++		}
++	} else {
++		copy_info(info_str, "\n");
++	}
++	
++	copy_info(info_str, "\n");
++}
++
++/*
++ * asd_proc_info()
++ *
++ * Description:
++ *	Entry point for read and write operations to our driver node in the 
++ *	procfs filesystem.
++ */
++static int
++#if LINUX_VERSION_CODE < KERNEL_VERSION(2,5,0)
++asd_proc_info(char *proc_buffer, char **proc_start, off_t proc_offset,
++	     int proc_length, int proc_hostno, int proc_out)
++#else
++asd_proc_info(struct Scsi_Host *scsi_host, char *proc_buffer, char **proc_start,
++	     off_t proc_offset, int proc_length, int proc_out)
++#endif
++{
++	struct asd_softc  	*asd;
++	proc_info_str_t		 info_str;
++	int			 retval;
++	int			 len;
++	int			 i;
++	
++	retval = -ENOSYS;
++	len = 0;
++
++#if LINUX_VERSION_CODE < KERNEL_VERSION(2,5,0)
++	list_for_each_entry(asd, &asd_hbas, link) {
++		if (asd->platform_data->scsi_host->host_no == proc_hostno)
++			break;
++	}
++#else
++	asd = asd_get_softc(*(struct asd_softc **) scsi_host->hostdata);
++#endif
++	if (asd == NULL)
++		goto exit;
++	
++	if (proc_out) {
++		/* 
++		 * No support for write yet.
++		 */
++		retval = len;
++	      	goto exit;
++     	}
++
++	*proc_start = proc_buffer;
++
++	info_str.buf = proc_buffer;
++	info_str.len = proc_length;
++	info_str.off = proc_offset;	
++	info_str.pos = 0;	
++
++	copy_info(&info_str, "\nAdaptec Linux SAS/SATA Family Driver\n");
++	copy_info(&info_str, "Rev: %s\n", asd_driver_version);
++	copy_info(&info_str, "Controller WWN: %0llx\n",
++		  asd_be64toh(*((uint64_t *) asd->hw_profile.wwn)));
++	copy_info(&info_str, "\n");
++	
++	for (i = 0; i < asd->hw_profile.max_ports; i++)
++		asd_dump_port_info(asd, &info_str, i);		
++		
++	copy_info(&info_str, "\n");
++
++	retval = info_str.pos > info_str.off ? info_str.pos - info_str.off : 0;
++exit:
++	return (retval);
++}
++
++/*************************** ASD Scsi Host Template ***************************/
++
++static Scsi_Host_Template asd_sht = {
++	.module			= THIS_MODULE,
++	.name			= ASD_DRIVER_NAME,
++	.proc_info		= asd_proc_info,
++	.proc_name		= ASD_DRIVER_NAME,
++	.info			= asd_info,
++	.queuecommand		= asd_queue,
++	.eh_abort_handler	= asd_abort,
++	.can_queue		= 2,
++	.this_id		= -1,
++	.max_sectors		= ASD_MAX_SECTORS,
++	.cmd_per_lun		= 2,
++	.use_clustering		= ENABLE_CLUSTERING,
++	.bios_param		= asd_bios_param,
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,5,0)
++	.slave_alloc		= asd_slave_alloc,
++	.slave_configure	= asd_slave_configure,
++	.slave_destroy		= asd_slave_destroy,
++#else
++	.detect			= asd_detect,
++	.release		= asd_release,
++	.select_queue_depths	= asd_select_queue_depth,
++	.use_new_eh_code	= 1,
++#endif		
++};
++
++module_init(asd_init);
++module_exit(asd_exit);
 
