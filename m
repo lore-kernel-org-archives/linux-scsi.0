@@ -1,32 +1,36 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: Kernel panic - Ththththaats all folks
-Date: Fri, 05 Sep 2003 22:38:03 +0100
+From: Miroslav Zagorac <zaga@fly.srk.fer.hr>
+Subject: Re: [TRIVIAL] [2.5 patch] remove an unused function from wd7000.c
+Date: Sat, 6 Sep 2003 08:51:20 +0200 (MEST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1062797882.689.34.camel@dhcp23.swansea.linux.org.uk>
-References: <20030905145235.19968.qmail@web21109.mail.yahoo.com>
+Message-ID: <200309060651.h866pKAV001855@fly.srk.fer.hr>
+References: <1062670154.21777.3.camel@dhcp23.swansea.linux.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pc1-cwma1-5-cust4.swan.cable.ntl.com ([80.5.120.4]:29919 "EHLO
-	dhcp23.swansea.linux.org.uk") by vger.kernel.org with ESMTP
-	id S264829AbTIEVjC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 5 Sep 2003 17:39:02 -0400
-In-Reply-To: <20030905145235.19968.qmail@web21109.mail.yahoo.com>
+Received: from fly.srk.fer.hr ([161.53.74.66]:13481 "EHLO fly.srk.fer.hr")
+	by vger.kernel.org with ESMTP id S264942AbTIFGvv (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 6 Sep 2003 02:51:51 -0400
+In-Reply-To: <1062670154.21777.3.camel@dhcp23.swansea.linux.org.uk>
 List-Id: linux-scsi@vger.kernel.org
-To: Sulamita Garcia <sulagarcia@yahoo.com.br>
-Cc: linux-scsi@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Christoph Hellwig <hch@infradead.org>, Rusty Trivial Russell <trivial@rustcorp.com.au>, John Boyd <boyd@cis.ohio-state.edu>, Miroslav Zagorac <zaga@fly.cc.fer.hr>, linux-scsi@vger.kernel.org, axboe@suse.de
 
-On Gwe, 2003-09-05 at 15:52, Sulamita Garcia wrote:
-> > Problems with HPT's partially binary module should
-> > be directed to
-> > highpoint not to this list. Looking at the trace its
-> > almost certainly
-> > a bug in their alternative software raid driver.
+> On Iau, 2003-09-04 at 08:27, Christoph Hellwig wrote:
+> > >   The patch below removes an unused function from drivers/scsi/wd7000.c .
+> > >   
+> > >   I've tested the compilation with 2.5.72-mm2.
+> > 
+> > Alan said he wanted to keep this for some reason.  Maybe #if 0 it out?
 > 
-> But the module who did the panic was scsi(the panic
-> error is in scsi_merge). I just want know why.
+> Because it needs converting to an eh_abort handler otherwise the card
+> will hang if you try and do anything much useful with it.
+> 
 
-Ask hpt. Only they have the code for both parts. The panic 
-indicates which bit of code spotted a problem not where the bug is
+Hello.  I will make some effort to convert function to eh_abort handler,
+very soon.  I'm sorry for late answer and bad english.
 
+-- 
+Zaga
+
+Honi soit qui mal y pense.
