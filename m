@@ -1,42 +1,47 @@
 From: Christoph Hellwig <hch@infradead.org>
 Subject: Re: scsi_forget_host() and scsi_remove_device()
-Date: Sun, 6 Jul 2003 17:11:29 +0100
+Date: Sun, 6 Jul 2003 17:13:47 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030706171129.B5690@infradead.org>
-References: <20030627110259.A3751@infradead.org> <Pine.LNX.4.44L0.0307031650370.779-100000@ida.rowland.org>
+Message-ID: <20030706171347.C5690@infradead.org>
+References: <20030627110259.A3751@infradead.org> <Pine.LNX.4.44L0.0307031650370.779-100000@ida.rowland.org> <20030703221940.GA5983@beaverton.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from carisma.slowglass.com ([195.224.96.167]:30468 "EHLO
+Received: from phoenix.mvhi.com ([195.224.96.167]:31492 "EHLO
 	phoenix.infradead.org") by vger.kernel.org with ESMTP
-	id S266688AbTGFP47 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 6 Jul 2003 11:56:59 -0400
+	id S262445AbTGFP7Q (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 6 Jul 2003 11:59:16 -0400
 Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.44L0.0307031650370.779-100000@ida.rowland.org>; from stern@rowland.harvard.edu on Thu, Jul 03, 2003 at 05:02:22PM -0400
+In-Reply-To: <20030703221940.GA5983@beaverton.ibm.com>; from andmike@us.ibm.com on Thu, Jul 03, 2003 at 03:19:40PM -0700
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: Mike Anderson <andmike@us.ibm.com>, Christoph Hellwig <hch@infradead.org>, SCSI development list <linux-scsi@vger.kernel.org>
+To: Alan Stern <stern@rowland.harvard.edu>, Christoph Hellwig <hch@infradead.org>, SCSI development list <linux-scsi@vger.kernel.org>
 
-On Thu, Jul 03, 2003 at 05:02:22PM -0400, Alan Stern wrote:
-> There's a real problem about the way scsi_forget_host() calls
-> scsi_remove_device() for each device on the host's bus.  The problem is
-> that scsi_remove_device() unregisters the device in sysfs, which unbinds
-> the device's driver.  This happens immediately, without waiting for the
-> reference count to be 0.  So if the device is open (mounted, for example)  
-> when the host is unplugged, the filesystem will have a dangling reference
-> to the unbound driver.  Of course this will most likely cause a segfault
-> when the user attempts to unmount the device.
+On Thu, Jul 03, 2003 at 03:19:40PM -0700, Mike Anderson wrote:
+> Yes, this is an issue. I became more of issue one we started using the
+> LDM driver probe / remove functions.
+> 
+> I am still cleaning up a patch set for hosts and devices so it is not
+> quite ready for review yet (I got pulled off on to some other issues for
+> a few days).
+> 
+> For scsi devices here is a quick snap shot of what I trying to test.
+> 	scsi_device_register:
+> 		calls device_initialize on sdev_driverfs_dev
+> 		calls class_device_initialize on sdev_classdev
+> 		calls device_add on sdev_driverfs_dev
+> 		calls class_device_add on sdev_classdev
+> 		calls get_device on sdev_driverfs_dev
+> 
+> 	scsi_device_unregister:
+> 		sets a state the scsi_device indicating "delete"
+> 		calls class_device_unregister on sdev_classdev
+> 
+> 	scsi_device_cls_release:
+> 		calls put_device on sdev_driverfs_dev
 
-There's two issues in this area:
+Hmm, where calling the put_device in the class device release func?
 
-b) after scsi_remove_device the upper driver still holds a reference
-   to the struct scsi_device but not the host, so references to
-   sdev->host barf up.  This needs fixing by holding a reference
-a)  struct device/scsi_device misses a proper state bits that sais
-   "I'm gone now".  Mike is implementing this for scsi now but this
-   really needs to be handled at the driver model level as other subsystems
-   have the same problems.
-
-I'm waiting for Mike to post his patches and will attack a) after that.
-In fact it's quite easy and I could just do it now :)
+To be honest I'm everything but happy with the class_device / device
+double-refcounting but it looks we can work around core issues in
+scsi :P
 
