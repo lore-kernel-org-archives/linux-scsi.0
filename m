@@ -1,95 +1,414 @@
-From: phil <philippe.aubry1@mageos.com>
-Subject: Re: Problems with higher SCSI LUN's with SLES8
-Date: Wed, 17 Sep 2003 03:05:47 +0200
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3F67B36B.2060303@mageos.com>
-References: <A00BBCF927F25E4A9D5F6EE1380CDEF2CC88@hedwig.ysl.nl>
+From: "Tomita, Haruo" <haruo.tomita@toshiba.co.jp>
+Subject: RE: usb-strage not working in the latest kernel 2.4
+Date: Wed, 17 Sep 2003 15:50:42 +0900
+Sender: linux-usb-devel-admin@lists.sourceforge.net
+Message-ID: <200309170651.PAA02272@toshiba.co.jp>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp-103-wednesday.nerim.net ([62.4.16.103]:40464 "EHLO
-	kraid.nerim.net") by vger.kernel.org with ESMTP id S262560AbTIQBJK
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 16 Sep 2003 21:09:10 -0400
+Content-Type: text/plain;
+	charset="shift_jis"
+Return-path: <linux-usb-devel-admin@lists.sourceforge.net>
+Errors-To: linux-usb-devel-admin@lists.sourceforge.net
+List-Help: <mailto:linux-usb-devel-request@lists.sourceforge.net?subject=help>
+List-Post: <mailto:linux-usb-devel@lists.sourceforge.net>
+List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-devel>,
+	<mailto:linux-usb-devel-request@lists.sourceforge.net?subject=subscribe>
+List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-devel>,
+	<mailto:linux-usb-devel-request@lists.sourceforge.net?subject=unsubscribe>
+List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=linux-usb-devel>
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: USB development list <linux-usb-devel@lists.sourceforge.net>, SCSI development list <linux-scsi@vger.kernel.org>, David Brownell <david-b@pacbell.net>, "Tomita, Haruo" <htomita@pcs.pc.ome.toshiba.co.jp>
 List-Id: linux-scsi@vger.kernel.org
-To: "Zuylen, G. van" <GvZuylen@ysl.nl>
-Cc: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
 
-Zuylen, G. van wrote:
-> Hi you all,
-> 
-> We are using a HP DL380 server with a Qlogic 2300 HBA adapter. This adapter
-> is connected to a HP EMA12000 SAN (with HSG80 controllers). Behind the HBA
-> (qlogic 2300) we see only the devices up to LUN 7, higher LUN are not
-> detected. We have tried several things like modifying /etc/modules.conf with
-> "options scsi_mod max_scsi_luns=128" and modifying /boot/grub/menu.lst. But
-> nothing seems to be working.
-> We are using SLES8 with kernel version k_smp-2.4.19-304 and the qlogic
-> driver version 6.05.60. Also tested with a newer kernel k_smp-2.4.19-340,
-> but this makes no difference. 
-> 
-> Does anybody know how we can solve this problem or is there somebody who has
-> experience with this ?
-> 
-> Best regards,
-> 
-> Gert van Zuylen
-> 
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+Hi Alan,
 
-Hi,
-On your hsg when you saw your connection ( show conn on the console ) do 
-you have an offset on the connection of your qlogic card ?
-what is the mode of the controler, transparent failover or multibus 
-failover ?
-What is the number of your unit ( D10 D11 D12 D120 for exemple ) ?
-The information on your mail are not sufficient for helping you, they 
-are many possiblities and reasons for see only the 7 fisrt lun.
+Alan> The system sent commands, but the device didn't respond to them. 
+Alan> However, it's possible that this patch will help.
+Alan> Try it out and see what happens.
 
-Do you have compiled your kernel with more than 7 scsi disks, probe all 
-luns, see this options with the make menuconfig ( this is probably a 
-stupid remark but in case of ).
-If you have an offset on the connection of your linux boxe's and they 
-are probably another system on the ema12000, the unit offset on a 
-connection allow to present the device to your system with lun 0 ( if 
-the Command Console Lun is disable ) lun 1, lun 2 ... make sure the unit 
-offset above LUN 7 are right because if you have a unit for exemple D110 
-with a unit offset 120 the result for the lun presentation is :
-unit D110, unit offset connection 120, 110 - 120 = -10, your unit arrive 
-with a LUN equal to -10. The driver doesn't like that and you don't see 
-the unit.
-If the controler is configured for transparent failover ( make a show 
-this and a show other on each controler you must have a stanby port and 
-an active port ) make sure your unit is not greatter than 99, your last 
-unit must be D99, because in transparent failover the unit must be in 0 
-to 99 ( D0 if you don't have the command console lun disable but it is 
-recommended to not use D0 ) D1 to D99, if you unit after D99 i don't 
-remenber but i think the controler refused to attribute a unit with 
-D100, this is a functionnality and a limitation of the transparent 
-failover, because in case of failure on "this controler" all unit are 
-transfered on the "other controler" and the "other controler" become 
-"this controler" with the same wwn.
-If the controler is configured for multibus failover check the unit 
-offset and check where the unit after LUN 7 are presented ( check the 
-port on the controler you use sho unit full or show unit DXX and look 
-where the unit is ONLINE ), check your zoning on your san switch make 
-sure you have the right controler port and the right qlogic card ( you 
-can check this with the world wide name on each device, qla card, port 
-controler).
-I hope that help you, and if you more information about your EMA is 
-better for helping you.
-A tip if you have 2 qlogics on your DL380 you can use the qlogic driver 
-that support a card failover the name of this driver have "FO". Is 
-interesting for fault tolerance on your system, because the failover on 
-the controler is not supported by the qlogic driver at this time... If 
-the driver have this functionality this is probably the end of HP secure 
-path on linux, if you have free why pay.
+Using 2.4.22-bk15, 
+It was adapted in the following patche and I tested.
 
-A+
-phil
+===== your patch =====
 
+--- 2.4.22/drivers/usb/storage/protocol.c.orig	Mon Aug 25 07:44:42 2003
++++ 2.4.22/drivers/usb/storage/protocol.c	Fri Sep  5 16:20:26 2003
+@@ -237,6 +237,10 @@
+ 	 * a unsigned char cmnd[12], so we know we have storage available
+ 	 */
+ 
++	/* Pad the ATAPI command with zeros */
++	for (; srb->cmd_len<12; srb->cmd_len++)
++		srb->cmnd[srb->cmd_len] = 0;
++
+ 	/* set command length to 12 bytes (this affects the transport layer) */
+ 	srb->cmd_len = 12;
+
+===== end of your patch =====
+
+The test was successful the 3rd day or more with this patch.
+However, it became the following errors.
+I think that no data was transferred from the drive, 
+and the command timed out and was aborted.
+Ejection will also be impossible if it will be in this state. 
+I recovered the error by the power supply OFF.
+
+</proc/bus/usb/devices>
+
+:  Bus=05 Lev=00 Prnt=00 Port=00 Cnt=00 Dev#=  1 Spd=12  MxCh= 2
+B:  Alloc=  0/900 us ( 0%), #Int=  0, #Iso=  0
+D:  Ver= 1.00 Cls=09(hub  ) Sub=00 Prot=00 MxPS= 8 #Cfgs=  1
+P:  Vendor=0000 ProdID=0000 Rev= 0.00
+S:  Product=USB UHCI Root Hub
+S:  SerialNumber=d400
+C:* #Ifs= 1 Cfg#= 1 Atr=40 MxPwr=  0mA
+I:  If#= 0 Alt= 0 #EPs= 1 Cls=09(hub  ) Sub=00 Prot=00 Driver=hub
+E:  Ad=81(I) Atr=03(Int.) MxPS=   8 Ivl=255ms
+T:  Bus=04 Lev=00 Prnt=00 Port=00 Cnt=00 Dev#=  1 Spd=12  MxCh= 2
+B:  Alloc=  0/900 us ( 0%), #Int=  0, #Iso=  0
+D:  Ver= 1.00 Cls=09(hub  ) Sub=00 Prot=00 MxPS= 8 #Cfgs=  1
+P:  Vendor=0000 ProdID=0000 Rev= 0.00
+S:  Product=USB UHCI Root Hub
+S:  SerialNumber=d800
+C:* #Ifs= 1 Cfg#= 1 Atr=40 MxPwr=  0mA
+I:  If#= 0 Alt= 0 #EPs= 1 Cls=09(hub  ) Sub=00 Prot=00 Driver=hub
+E:  Ad=81(I) Atr=03(Int.) MxPS=   8 Ivl=255ms
+T:  Bus=03 Lev=00 Prnt=00 Port=00 Cnt=00 Dev#=  1 Spd=12  MxCh= 2
+B:  Alloc=  0/900 us ( 0%), #Int=  0, #Iso=  0
+D:  Ver= 1.00 Cls=09(hub  ) Sub=00 Prot=00 MxPS= 8 #Cfgs=  1
+P:  Vendor=0000 ProdID=0000 Rev= 0.00
+:  Product=USB UHCI Root Hub
+S:  SerialNumber=e400
+C:* #Ifs= 1 Cfg#= 1 Atr=40 MxPwr=  0mA
+I:  If#= 0 Alt= 0 #EPs= 1 Cls=09(hub  ) Sub=00 Prot=00 Driver=hub
+E:  Ad=81(I) Atr=03(Int.) MxPS=   8 Ivl=255ms
+T:  Bus=02 Lev=00 Prnt=00 Port=00 Cnt=00 Dev#=  1 Spd=12  MxCh= 2
+B:  Alloc=  0/900 us ( 0%), #Int=  0, #Iso=  0
+D:  Ver= 1.00 Cls=09(hub  ) Sub=00 Prot=00 MxPS= 8 #Cfgs=  1
+P:  Vendor=0000 ProdID=0000 Rev= 0.00
+S:  Product=USB UHCI Root Hub
+S:  SerialNumber=ec00
+C:* #Ifs= 1 Cfg#= 1 Atr=40 MxPwr=  0mA
+I:  If#= 0 Alt= 0 #EPs= 1 Cls=09(hub  ) Sub=00 Prot=00 Driver=hub
+E:  Ad=81(I) Atr=03(Int.) MxPS=   8 Ivl=255ms
+T:  Bus=01 Lev=00 Prnt=00 Port=00 Cnt=00 Dev#=  1 Spd=480 MxCh= 4
+B:  Alloc=  0/800 us ( 0%), #Int=  0, #Iso=  0
+D:  Ver= 2.00 Cls=09(hub  ) Sub=00 Prot=01 MxPS= 8 #Cfgs=  1
+P:  Vendor=0000 ProdID=0000 Rev= 2.04
+S:  Manufacturer=Linux 2.4.22-bk15 ehci_hcd
+S:  Product=VIA Technologies, Inc. USB 2.0
+S:  SerialNumber=00:0c.2
+C:* #Ifs= 1 Cfg#= 1 Atr=40 MxPwr=  0mA
+I:  If#= 0 Alt= 0 #EPs= 1 Cls=09(hub  ) Sub=00 Prot=00 Driver=hub
+E:  Ad=81(I) Atr=03(Int.) MxPS=   2 Ivl=256ms
+T:  Bus=01 Lev=01 Prnt=01 Port=00 Cnt=01 Dev#=  2 Spd=480 MxCh= 0
+D:  Ver= 2.00 Cls=00(>ifc ) Sub=00 Prot=00 MxPS=64 #Cfgs=  1
+P:  Vendor=093b ProdID=0012 Rev=11.01
+S:  Manufacturer=Plextor Corp.
+S:  Product=USB Storage Adapter
+S:  SerialNumber=11100E000052487C
+C:* #Ifs= 1 Cfg#= 2 Atr=c0 MxPwr=  0mA
+I:  If#= 0 Alt= 0 #EPs= 3 Cls=08(stor.) Sub=02 Prot=50 Driver=usb-storage
+E:  Ad=01(O) Atr=02(Bulk) MxPS= 512 Ivl=125us
+E:  Ad=82(I) Atr=02(Bulk) MxPS= 512 Ivl=0ms
+E:  Ad=83(I) Atr=03(Int.) MxPS=   2 Ivl=32ms
+
+<dmesg>
+rage: usb_stor_bulk_msg() returned 0 xferred 4096/4096
+usb-storage: usb_stor_transfer_partial(): transfer complete
+usb-storage: usb_stor_transfer_partial(): xfer 4096 bytes
+usb-storage: usb_stor_bulk_msg() returned 0 xferred 4096/4096
+usb-storage: usb_stor_transfer_partial(): transfer complete
+usb-storage: usb_stor_transfer_partial(): xfer 4096 bytes
+usb-storage: usb_stor_bulk_msg() returned 0 xferred 4096/4096
+usb-storage: usb_stor_transfer_partial(): transfer complete
+usb-storage: usb_stor_transfer_partial(): xfer 4096 bytes
+usb-storage: usb_stor_bulk_msg() returned 0 xferred 4096/4096
+usb-storage: usb_stor_transfer_partial(): transfer complete
+usb-storage: usb_stor_transfer_partial(): xfer 4096 bytes
+usb-storage: usb_stor_bulk_msg() returned 0 xferred 4096/4096
+usb-storage: usb_stor_transfer_partial(): transfer complete
+usb-storage: usb_stor_transfer_partial(): xfer 4096 bytes
+usb-storage: usb_stor_bulk_msg() returned 0 xferred 4096/4096
+usb-storage: usb_stor_transfer_partial(): transfer complete
+usb-storage: usb_stor_transfer_partial(): xfer 4096 bytes
+usb-storage: usb_stor_bulk_msg() returned 0 xferred 4096/4096
+usb-storage: usb_stor_transfer_partial(): transfer complete
+usb-storage: usb_stor_transfer_partial(): xfer 4096 bytes
+usb-storage: usb_stor_bulk_msg() returned 0 xferred 4096/4096
+usb-storage: usb_stor_transfer_partial(): transfer complete
+usb-storage: usb_stor_transfer_partial(): xfer 4096 bytes
+usb-storage: usb_stor_bulk_msg() returned 0 xferred 4096/4096
+usb-storage: usb_stor_transfer_partial(): transfer complete
+usb-storage: usb_stor_transfer_partial(): xfer 4096 bytes
+usb-storage: usb_stor_bulk_msg() returned 0 xferred 4096/4096
+usb-storage: usb_stor_transfer_partial(): transfer complete
+usb-storage: usb_stor_transfer_partial(): xfer 4096 bytes
+usb-storage: usb_stor_bulk_msg() returned 0 xferred 4096/4096
+usb-storage: usb_stor_transfer_partial(): transfer complete
+usb-storage: usb_stor_transfer_partial(): xfer 4096 bytes
+usb-storage: usb_stor_bulk_msg() returned 0 xferred 4096/4096
+usb-storage: usb_stor_transfer_partial(): transfer complete
+usb-storage: usb_stor_transfer_partial(): xfer 4096 bytes
+usb-storage: usb_stor_bulk_msg() returned 0 xferred 4096/4096
+usb-storage: usb_stor_transfer_partial(): transfer complete
+usb-storage: usb_stor_transfer_partial(): xfer 4096 bytes
+usb-storage: usb_stor_bulk_msg() returned 0 xferred 4096/4096
+usb-storage: usb_stor_transfer_partial(): transfer complete
+usb-storage: usb_stor_transfer_partial(): xfer 4096 bytes
+usb-storage: usb_stor_bulk_msg() returned 0 xferred 4096/4096
+usb-storage: usb_stor_transfer_partial(): transfer complete
+usb-storage: usb_stor_transfer_partial(): xfer 4096 bytes
+usb-storage: usb_stor_bulk_msg() returned 0 xferred 4096/4096
+usb-storage: usb_stor_transfer_partial(): transfer complete
+usb-storage: usb_stor_transfer_partial(): xfer 4096 bytes
+usb-storage: usb_stor_bulk_msg() returned 0 xferred 4096/4096
+usb-storage: usb_stor_transfer_partial(): transfer complete
+usb-storage: usb_stor_transfer_partial(): xfer 4096 bytes
+usb-storage: usb_stor_bulk_msg() returned 0 xferred 4096/4096
+usb-storage: usb_stor_transfer_partial(): transfer complete
+usb-storage: usb_stor_transfer_partial(): xfer 4096 bytes
+usb-storage: usb_stor_bulk_msg() returned 0 xferred 4096/4096
+usb-storage: usb_stor_transfer_partial(): transfer complete
+usb-storage: usb_stor_transfer_partial(): xfer 4096 bytes
+usb-storage: usb_stor_bulk_msg() returned 0 xferred 4096/4096
+usb-storage: usb_stor_transfer_partial(): transfer complete
+usb-storage: usb_stor_transfer_partial(): xfer 4096 bytes
+usb-storage: usb_stor_bulk_msg() returned 0 xferred 4096/4096
+usb-storage: usb_stor_transfer_partial(): transfer complete
+usb-storage: usb_stor_transfer_partial(): xfer 4096 bytes
+usb-storage: usb_stor_bulk_msg() returned 0 xferred 4096/4096
+usb-storage: usb_stor_transfer_partial(): transfer complete
+usb-storage: usb_stor_transfer_partial(): xfer 4096 bytes
+usb-storage: usb_stor_bulk_msg() returned 0 xferred 4096/4096
+usb-storage: usb_stor_transfer_partial(): transfer complete
+usb-storage: usb_stor_transfer_partial(): xfer 4096 bytes
+usb-storage: usb_stor_bulk_msg() returned 0 xferred 4096/4096
+usb-storage: usb_stor_transfer_partial(): transfer complete
+usb-storage: usb_stor_transfer_partial(): xfer 4096 bytes
+usb-storage: usb_stor_bulk_msg() returned 0 xferred 4096/4096
+usb-storage: usb_stor_transfer_partial(): transfer complete
+usb-storage: usb_stor_transfer_partial(): xfer 4096 bytes
+usb-storage: usb_stor_bulk_msg() returned 0 xferred 4096/4096
+usb-storage: usb_stor_transfer_partial(): transfer complete
+usb-storage: usb_stor_transfer_partial(): xfer 2048 bytes
+usb-storage: usb_stor_bulk_msg() returned 0 xferred 2048/2048
+usb-storage: usb_stor_transfer_partial(): transfer complete
+usb-storage: Bulk data transfer result 0x0
+usb-storage: Attempting to get CSW...
+usb-storage: Bulk status result = 0
+usb-storage: Bulk status Sig 0x53425355 T 0x14a4c2d R 0 Stat 0x0
+usb-storage: scsi cmd done, result=0x0
+usb-storage: *** thread sleeping.
+usb-storage: queuecommand() called
+usb-storage: *** thread awakened.
+usb-storage: Command READ_10 (10 bytes)
+usb-storage: 28 00 00 00 2d e1 00 00 01 00 00 00
+usb-storage: Bulk command S 0x43425355 T 0x14a4c2e Trg 0 LUN 0 L 2048 F 128 CL 12
+usb-storage: Bulk command transfer result=0
+usb-storage: usb_stor_transfer_partial(): xfer 2048 bytes
+usb-storage: usb_stor_bulk_msg() returned 0 xferred 2048/2048
+usb-storage: usb_stor_transfer_partial(): transfer complete
+usb-storage: Bulk data transfer result 0x0
+usb-storage: Attempting to get CSW...
+usb-storage: Bulk status result = 0
+usb-storage: Bulk status Sig 0x53425355 T 0x14a4c2e R 0 Stat 0x0
+usb-storage: scsi cmd done, result=0x0
+usb-storage: *** thread sleeping.
+usb-storage: queuecommand() called
+usb-storage: *** thread awakened.
+usb-storage: Command READ_10 (10 bytes)
+usb-storage: 28 00 00 00 2d e2 00 00 3f 00 00 00
+usb-storage: Bulk command S 0x43425355 T 0x14a4c2f Trg 0 LUN 0 L 129024 F 128 CL 12
+usb-storage: Bulk command transfer result=0
+usb-storage: usb_stor_transfer_partial(): xfer 4096 bytes
+usb-storage: usb_stor_bulk_msg() returned 0 xferred 4096/4096
+usb-storage: usb_stor_transfer_partial(): transfer complete
+usb-storage: usb_stor_transfer_partial(): xfer 4096 bytes
+usb-storage: usb_stor_bulk_msg() returned 0 xferred 4096/4096
+usb-storage: usb_stor_transfer_partial(): transfer complete
+usb-storage: usb_stor_transfer_partial(): xfer 4096 bytes
+usb-storage: usb_stor_bulk_msg() returned 0 xferred 4096/4096
+usb-storage: usb_stor_transfer_partial(): transfer complete
+usb-storage: usb_stor_transfer_partial(): xfer 4096 bytes
+usb-storage: usb_stor_bulk_msg() returned 0 xferred 4096/4096
+usb-storage: usb_stor_transfer_partial(): transfer complete
+usb-storage: usb_stor_transfer_partial(): xfer 4096 bytes
+usb-storage: usb_stor_bulk_msg() returned 0 xferred 4096/4096
+usb-storage: usb_stor_transfer_partial(): transfer complete
+usb-storage: usb_stor_transfer_partial(): xfer 4096 bytes
+usb-storage: usb_stor_bulk_msg() returned 0 xferred 4096/4096
+usb-storage: usb_stor_transfer_partial(): transfer complete
+usb-storage: usb_stor_transfer_partial(): xfer 4096 bytes
+usb-storage: usb_stor_bulk_msg() returned 0 xferred 4096/4096
+usb-storage: usb_stor_transfer_partial(): transfer complete
+usb-storage: usb_stor_transfer_partial(): xfer 4096 bytes
+usb-storage: usb_stor_bulk_msg() returned 0 xferred 4096/4096
+usb-storage: usb_stor_transfer_partial(): transfer complete
+usb-storage: usb_stor_transfer_partial(): xfer 4096 bytes
+usb-storage: usb_stor_bulk_msg() returned 0 xferred 4096/4096
+usb-storage: usb_stor_transfer_partial(): transfer complete
+usb-storage: usb_stor_transfer_partial(): xfer 4096 bytes
+usb-storage: usb_stor_bulk_msg() returned 0 xferred 4096/4096
+usb-storage: usb_stor_transfer_partial(): transfer complete
+usb-storage: usb_stor_transfer_partial(): xfer 4096 bytes
+usb-storage: usb_stor_bulk_msg() returned 0 xferred 4096/4096
+usb-storage: usb_stor_transfer_partial(): transfer complete
+usb-storage: usb_stor_transfer_partial(): xfer 4096 bytes
+usb-storage: usb_stor_bulk_msg() returned 0 xferred 4096/4096
+usb-storage: usb_stor_transfer_partial(): transfer complete
+usb-storage: usb_stor_transfer_partial(): xfer 4096 bytes
+usb-storage: usb_stor_bulk_msg() returned 0 xferred 4096/4096
+usb-storage: usb_stor_transfer_partial(): transfer complete
+usb-storage: usb_stor_transfer_partial(): xfer 4096 bytes
+usb-storage: usb_stor_bulk_msg() returned 0 xferred 4096/4096
+usb-storage: usb_stor_transfer_partial(): transfer complete
+usb-storage: usb_stor_transfer_partial(): xfer 4096 bytes
+usb-storage: usb_stor_bulk_msg() returned 0 xferred 4096/4096
+usb-storage: usb_stor_transfer_partial(): transfer complete
+usb-storage: usb_stor_transfer_partial(): xfer 4096 bytes
+usb-storage: usb_stor_bulk_msg() returned 0 xferred 4096/4096
+usb-storage: usb_stor_transfer_partial(): transfer complete
+usb-storage: usb_stor_transfer_partial(): xfer 4096 bytes
+usb-storage: usb_stor_bulk_msg() returned 0 xferred 4096/4096
+usb-storage: usb_stor_transfer_partial(): transfer complete
+usb-storage: usb_stor_transfer_partial(): xfer 4096 bytes
+usb-storage: usb_stor_bulk_msg() returned 0 xferred 4096/4096
+usb-storage: usb_stor_transfer_partial(): transfer complete
+usb-storage: usb_stor_transfer_partial(): xfer 4096 bytes
+usb-storage: usb_stor_bulk_msg() returned 0 xferred 4096/4096
+usb-storage: usb_stor_transfer_partial(): transfer complete
+usb-storage: usb_stor_transfer_partial(): xfer 4096 bytes
+usb-storage: usb_stor_bulk_msg() returned 0 xferred 4096/4096
+usb-storage: usb_stor_transfer_partial(): transfer complete
+usb-storage: usb_stor_transfer_partial(): xfer 4096 bytes
+usb-storage: usb_stor_bulk_msg() returned 0 xferred 4096/4096
+usb-storage: usb_stor_transfer_partial(): transfer complete
+usb-storage: usb_stor_transfer_partial(): xfer 4096 bytes
+usb-storage: usb_stor_bulk_msg() returned 0 xferred 4096/4096
+usb-storage: usb_stor_transfer_partial(): transfer complete
+usb-storage: usb_stor_transfer_partial(): xfer 4096 bytes
+usb-storage: usb_stor_bulk_msg() returned 0 xferred 4096/4096
+usb-storage: usb_stor_transfer_partial(): transfer complete
+usb-storage: usb_stor_transfer_partial(): xfer 4096 bytes
+usb-storage: usb_stor_bulk_msg() returned 0 xferred 4096/4096
+usb-storage: usb_stor_transfer_partial(): transfer complete
+usb-storage: usb_stor_transfer_partial(): xfer 4096 bytes
+usb-storage: usb_stor_bulk_msg() returned 0 xferred 4096/4096
+usb-storage: usb_stor_transfer_partial(): transfer complete
+usb-storage: usb_stor_transfer_partial(): xfer 4096 bytes
+usb-storage: usb_stor_bulk_msg() returned 0 xferred 4096/4096
+usb-storage: usb_stor_transfer_partial(): transfer complete
+usb-storage: usb_stor_transfer_partial(): xfer 4096 bytes
+usb-storage: usb_stor_bulk_msg() returned 0 xferred 4096/4096
+usb-storage: usb_stor_transfer_partial(): transfer complete
+usb-storage: usb_stor_transfer_partial(): xfer 4096 bytes
+usb-storage: usb_stor_bulk_msg() returned 0 xferred 4096/4096
+usb-storage: usb_stor_transfer_partial(): transfer complete
+usb-storage: usb_stor_transfer_partial(): xfer 4096 bytes
+usb-storage: usb_stor_bulk_msg() returned 0 xferred 4096/4096
+usb-storage: usb_stor_transfer_partial(): transfer complete
+usb-storage: usb_stor_transfer_partial(): xfer 4096 bytes
+usb-storage: usb_stor_bulk_msg() returned 0 xferred 4096/4096
+usb-storage: usb_stor_transfer_partial(): transfer complete
+usb-storage: usb_stor_transfer_partial(): xfer 4096 bytes
+usb-storage: usb_stor_bulk_msg() returned 0 xferred 4096/4096
+usb-storage: usb_stor_transfer_partial(): transfer complete
+usb-storage: usb_stor_transfer_partial(): xfer 2048 bytes
+usb-storage: usb_stor_bulk_msg() returned 0 xferred 2048/2048
+usb-storage: usb_stor_transfer_partial(): transfer complete
+usb-storage: Bulk data transfer result 0x0
+usb-storage: Attempting to get CSW...
+usb-storage: Bulk status result = 0
+usb-storage: Bulk status Sig 0x53425355 T 0x14a4c2f R 0 Stat 0x0
+usb-storage: scsi cmd done, result=0x0
+usb-storage: *** thread sleeping.
+usb-storage: queuecommand() called
+usb-storage: *** thread awakened.
+usb-storage: Command READ_10 (10 bytes)
+usb-storage: 28 00 00 00 2e 21 00 00 01 00 00 00
+usb-storage: Bulk command S 0x43425355 T 0x14a4c30 Trg 0 LUN 0 L 2048 F 128 CL 12
+usb-storage: Bulk command transfer result=0
+usb-storage: usb_stor_transfer_partial(): xfer 2048 bytes
+usb-storage: usb_stor_bulk_msg() returned 0 xferred 2048/2048
+usb-storage: usb_stor_transfer_partial(): transfer complete
+usb-storage: Bulk data transfer result 0x0
+usb-storage: Attempting to get CSW...
+usb-storage: Bulk status result = 0
+usb-storage: Bulk status Sig 0x53425355 T 0x14a4c30 R 0 Stat 0x0
+usb-storage: scsi cmd done, result=0x0
+usb-storage: *** thread sleeping.
+usb-storage: queuecommand() called
+usb-storage: *** thread awakened.
+usb-storage: Command READ_10 (10 bytes)
+usb-storage: 28 00 00 00 2e 22 00 00 3f 00 00 00
+usb-storage: Bulk command S 0x43425355 T 0x14a4c31 Trg 0 LUN 0 L 129024 F 128 CL 12
+usb-storage: command_abort() called
+usb-storage: Bulk command transfer result=-104
+usb-storage: -- transport indicates command was aborted
+usb-storage: Bulk reset requested
+usb_control/bulk_msg: timeout
+usb-storage: Bulk soft reset failed -110
+usb-storage: scsi command aborted
+usb-storage: *** thread sleeping.
+usb-storage: queuecommand() called
+usb-storage: *** thread awakened.
+usb-storage: Command TEST_UNIT_READY (6 bytes)
+usb-storage: 00 00 00 00 00 00 00 00 3f 00 00 00
+usb-storage: Bulk command S 0x43425355 T 0x14a4c32 Trg 0 LUN 0 L 0 F 0 CL 12
+usb-storage: Bulk command transfer result=0
+usb-storage: Attempting to get CSW...
+usb-storage: command_abort() called
+usb-storage: -- transport indicates command was aborted
+usb-storage: Bulk reset requested
+usb_control/bulk_msg: timeout
+usb-storage: Bulk soft reset failed -110
+usb-storage: scsi command aborted
+usb-storage: *** thread sleeping.
+usb-storage: device_reset() called
+usb-storage: Bulk reset requested
+usb_control/bulk_msg: timeout
+usb-storage: Bulk soft reset failed -110
+usb-storage: bus_reset() called
+hub.c: port 1, portstatus 511, change 0, 480 Mb/s
+hub.c: port 1 of hub 1 not reset yet, waiting 10ms
+hub.c: port 1, portstatus 511, change 0, 480 Mb/s
+hub.c: port 1 of hub 1 not reset yet, waiting 10ms
+ehci_hcd 00:0c.2: port 1 high speed
+ehci_hcd 00:0c.2: GetStatus port 1 status 001005 POWER sig=se0  PE CONNECT
+hub.c: port 1, portstatus 503, change 10, 480 Mb/s
+usb.c: ignoring set_interface for dev 2, iface 0, alt 0
+usb-storage: Examinging driver usb-storage...skipping ourselves.
+usb-storage: bus_reset() complete
+usb-storage: queuecommand() called
+usb-storage: *** thread awakened.
+usb-storage: Command TEST_UNIT_READY (6 bytes)
+usb-storage: 00 00 00 00 00 00 00 00 3f 00 00 00
+usb-storage: Bulk command S 0x43425355 T 0x14a4c33 Trg 0 LUN 0 L 0 F 0 CL 12
+usb-storage: Bulk command transfer result=0
+usb-storage: Attempting to get CSW...
+usb-storage: command_abort() called
+usb-storage: -- transport indicates command was aborted
+usb-storage: Bulk reset requested
+usb_control/bulk_msg: timeout
+usb-storage: Bulk soft reset failed -110
+usb-storage: scsi command aborted
+usb-storage: *** thread sleeping.
+scsi: device set offline - not ready or command retry failed after bus reset: host 0 channel 0 id 0 lun 0
+SCSI cdrom error : host 0 channel 0 id 0 lun 0 return code = 50000
+ I/O error: dev 0b:00, sector 47240
+ I/O error: dev 0b:00, sector 47244
+ I/O error: dev 0b:00, sector 47492
+ I/O error: dev 0b:00, sector 47240
+
+Thanks!!
+Haruo 
+
+
+-------------------------------------------------------
+This sf.net email is sponsored by:ThinkGeek
+Welcome to geek heaven.
+http://thinkgeek.com/sf
+_______________________________________________
+linux-usb-devel@lists.sourceforge.net
+To unsubscribe, use the last form field at:
+https://lists.sourceforge.net/lists/listinfo/linux-usb-devel
