@@ -1,33 +1,37 @@
-From: Andrew Morton <akpm@osdl.org>
-Subject: Re: [PATCH][2.6.8-rc1-mm1] drivers/scsi/sg.c gcc341 inlining fix
-Date: Mon, 26 Jul 2004 15:09:24 -0700
+From: "eTicket" <nores@e-ticket-marketing.com>
+Subject: free 4 room digital satellite TV system
+Date: Mon, 26 Jul 2004 13:50:04 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040726150924.7bc68188.akpm@osdl.org>
-References: <200407141216.i6ECGHxg008332@harpo.it.uu.se>
-	<40F562FC.50806@pobox.com>
-	<20040714165419.GF7308@fs.tum.de>
-	<200407141931.12249.bzolnier@elka.pw.edu.pl>
-	<20040714183335.GG7308@fs.tum.de>
+Message-ID: <20040726135003.ohguqbseka@bluecomcast.com>
+Reply-To: r.781.31613425@bluecomcast.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="iso-8859-1"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fw.osdl.org ([65.172.181.6]:20909 "EHLO mail.osdl.org")
-	by vger.kernel.org with ESMTP id S265910AbUGZWMB (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 26 Jul 2004 18:12:01 -0400
-In-Reply-To: <20040714183335.GG7308@fs.tum.de>
+Received: from mail237.bluecomcast.com ([216.171.174.237]:41698 "HELO
+	mail237.bluecomcast.com") by vger.kernel.org with SMTP
+	id S264685AbUG0L7v (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 27 Jul 2004 07:59:51 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: Adrian Bunk <bunk@fs.tum.de>
-Cc: B.Zolnierkiewicz@elka.pw.edu.pl, viro@parcelfarce.linux.theplanet.co.uk, jgarzik@pobox.com, mikpe@csd.uu.se, dgilbert@interlog.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-Adrian Bunk <bunk@fs.tum.de> wrote:
->
-> I'm not yet 100% sure whether it's correct, so please double-check it.
-> 
-> 
-> 
->  [patch] kill local sg_ms_to_jif/sg_jif_to_ms functions and use
->          msecs_to_jiffies/jiffies_to_msecs instead
+FREE Digital Satellite TV System with FREE Installation in up to FOUR ROOMS from DishNetwork! Plus, FREE Digital Video Recorders in every room! No equipment to buy! Hurry - offer expires soon!
+http://bluecomcast.com/dbm83/l.php?1103&31613425&phlp=0&chnl=194357&ofr=1070014
 
-Looks good here - thanks.
+--------------------------------------------
+We hope you enjoyed receiving this email, but if you no longer wish to 
+receive our emails please respond here: http://bluecomcast.com/dbm83/un.php?781&31613425
+
+To Remove by Mail
+Removal Department
+PO Box 9
+Irvine Ca 92650
+
+tcjxfry
+
+       
+       
+       
+       
+
+
