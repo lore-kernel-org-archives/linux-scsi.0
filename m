@@ -1,35 +1,27 @@
 From: Ben Collins <bcollins@debian.org>
 Subject: Re: [BK PATCH] SCSI host num allocation improvement
-Date: Thu, 26 Feb 2004 21:50:49 -0500
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <20040227025049.GB617@phunnypharm.org>
+Date: Thu, 26 Feb 2004 22:04:28 -0500
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <20040227030428.GA707@phunnypharm.org>
 References: <20040226235412.GA819@phunnypharm.org> <20040226171928.750f5f6f.akpm@osdl.org> <20040226173743.2bf473b4.akpm@osdl.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bristol.phunnypharm.org ([65.207.35.130]:45525 "EHLO
+	bristol.phunnypharm.org") by vger.kernel.org with ESMTP
+	id S261585AbUB0DFM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 26 Feb 2004 22:05:12 -0500
 Content-Disposition: inline
 In-Reply-To: <20040226173743.2bf473b4.akpm@osdl.org>
+List-Id: linux-scsi@vger.kernel.org
 To: Andrew Morton <akpm@osdl.org>
 Cc: James.Bottomley@steeleye.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
 
-On Thu, Feb 26, 2004 at 05:37:43PM -0800, Andrew Morton wrote:
-> Andrew Morton <akpm@osdl.org> wrote:
-> >
-> > The lib/idr.c code is a bit clumsy but it does do the job relatively
-> > efficiently.
-> 
-> hmm, not too bad actually.  It compiles, but I didn't test it.
-
-Actually there was a bug. You weren't really releasing the idr's. This
-patch should work (linux-scsi added to Cc). Not sure how the legacy
-style case actually gets handled, but I figure this should take care of
-it.
-
+Here's one that actually compiles.
 
 ===== drivers/scsi/hosts.c 1.96 vs edited =====
 --- 1.96/drivers/scsi/hosts.c	Mon Dec 29 16:38:10 2003
-+++ edited/drivers/scsi/hosts.c	Thu Feb 26 21:49:30 2004
++++ edited/drivers/scsi/hosts.c	Thu Feb 26 22:00:33 2004
 @@ -30,6 +30,7 @@
  #include <linux/list.h>
  #include <linux/completion.h>
@@ -89,7 +81,7 @@ it.
  void scsi_unregister(struct Scsi_Host *shost)
  {
 +	down(&host_num_lock);
-+	idr_remove(&allocated_hosts, class_to_shost(class_dev)->host_no);
++	idr_remove(&allocated_hosts, shost->host_no);
 +	up(&host_num_lock);
  	list_del(&shost->sht_legacy_list);
  	scsi_host_put(shost);
@@ -102,7 +94,6 @@ it.
  	return class_register(&shost_class);
  }
  
-
 -- 
 Debian     - http://www.debian.org/
 Linux 1394 - http://www.linux1394.org/
