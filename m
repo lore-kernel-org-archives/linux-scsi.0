@@ -1,51 +1,114 @@
-From: iletisim@turizmkariyerturk.com
-Subject: Ucretsiz Eleman  =?ISO-8859-1?Q?=20ilan=FD?=  =?ISO-8859-1?Q?=20Yay=FDnlama?=
-Date: Sun, 9 May 2004 03:56:55 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [(re)Announce] Emulex LightPulse Device Driver
+Date: Sun, 9 May 2004 09:20:45 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <S264310AbUEIH4z/20040509075655Z+3455@vger.kernel.org>
+Message-ID: <20040509092045.A22643@infradead.org>
+References: <3356669BBE90C448AD4645C843E2BF28034F92F0@xbl.ma.emulex.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [62.29.126.126] ([62.29.126.126]:11538 "helo abc.com")
-	by vger.kernel.org with SMTP id S264310AbUEIH4z (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 9 May 2004 03:56:55 -0400
+Received: from phoenix.infradead.org ([213.86.99.234]:13072 "EHLO
+	phoenix.infradead.org") by vger.kernel.org with ESMTP
+	id S264309AbUEIIUu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 9 May 2004 04:20:50 -0400
+Content-Disposition: inline
+In-Reply-To: <3356669BBE90C448AD4645C843E2BF28034F92F0@xbl.ma.emulex.com>; from James.Smart@Emulex.com on Sun, May 09, 2004 at 12:33:35AM -0400
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: "Smart, James" <James.Smart@Emulex.com>
+Cc: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>
 
-www.TurizmKariyerturk.com
+A bunch of comments from looking over the headers and itnerface to
+upper layers a little:  (next I'll try to understand what's going on
+in the I/O submission path - it's just to freakin complicated..):
 
-Açýldý...!
-
-15 Mayýs' a kadar üye olan Turizm Kurumsal Üyelere
-
-SINIRSIZ ÜCRETSÝZ ilan yayýnlama hakký ...
-
-DÝGER SEKTÖRLERDEKÝ kurumsal uyelerimizde www.kariyerturk.com ‘a üye olduklarýnda bir yýlda 3 ücretsiz eleman ilaný yayýnlama….
-
-Turizm Sektöründe Ýþ ve Eleman Bulma sitesi www.TurizmKariyerTurk.com
-Siz Turizm Sektöründe Eleman arayanlar ve Kariyerini Turizm
-Sektöründe Yapmak isteyenler için Yayýn Hayatýna Baþladý
-HR TÜRK GROUP iþtiraki olan www.TurizmKariyerTurk.com 'a üye olacak Turizm Sektöründeki Kurumsal Üyelerimize Bir yýl içinde SINIRISIZ ÝLAN YAYINLAMA ve Yine Genel Sektor ilanlarý Yayýnlayan www.KariyerTurk.com ' da da 3 adet Eleman ilanlarý Ücretsiz Yayýnlanacaktýr.
-
-CV inceleme, istediginiz zaman kullanabilmek uzere cv arsivleme,
-
-On-Line toplu veya Tek Tek cevaplama, Basvurulara
-
-On-line mesaj gonderme, Gruplama, ozel listeler hazýrlama
-
-kýsaca Tüm sistemi kullanabilme imkaný
-
-Tek yapmanýz gereken
-
-www.TurizmKariyerTurk.com
-
-' a
-
-girerek Kurumsal üye olmanýz.
-
-Kurumsal Üyelik Ücretsizdir
-------------------------------------------------------------------
-www.TurizmKariyerTurk.com
-
-www.hrturkgroup.com Ýþtirakidir
-
+ - the hba api crap must die
+ - lots of strange typedefs in sSuDly Caps that want to die.
+ - Dito for the strange pfoo pointer naming.
+ - please explain USE_HGP_HOST_SLIM and why only ppc64 sets it,
+   per-arch ifdefs in LLDDs are very suspect
+ - do you really care for pre-2.6.5 compat?
+ - lpfc_fcp.h duplicates the scsi opcode - use those from scsi/scsi.h
+ - lpfc_msg* stuff is not acceptable.   simply put the string you
+   want to print into the printks
+ - your module_param usage is b0rked.  Instead of duplicating every
+   option 31 times use module_param_array.  You also seem to miss
+   the paramter descriptions (MODULE_PARAM_DESC)
+ - lpfc_clock.c should go away, just use add_timer/etc. diretly and
+   embedd the timer into your structures.  Yes, I know that's not
+   how SVR4-derivates work, but Linux does.  You also have an
+   unchecked kmalloc and a list_head cast in there..
+ - you're using list_for_each{,_safe} a lot where you'd want to
+   use the _entry versions.
+ - #define EXPORT_SYMTAB in lpfc_fcp.c is wrong, you never need that
+   one in 2.6.
+ - why do you need <linux/if_arp.h> and <linux/rtnetlink.h> in there?
+ - please always include <linux/*> first, then <asm/*>, then <scsi/*>,
+   then private headers.
+ - OpenSource in the module description is useless - MODULE_LICENSE
+   already tels us that.
+ - why do you disable clustering in the 2.6 driver?
+ - lpfcDRVR_t should go away in favour of a bunch of global variables
+ - lpfc_linux_attach should be merged into lpfc_pci_detect, which would
+   better be named lpfc_{,pci_}probe{,one}
+ - same for lpfc_linux_detach into lpfc_pci_release
+ - formatting of lpfc_driver is broken
+ - not need to memset lpfcDRVR, it's 0 if it's in .bss already
+ - what do you need lpfcDRVR.loadtime for?
+ - lpfcDRVR.hba_list_head should be initializes at compile time
+   LIST_HEAD(hba_list); if properly taken out of the struct.
+ - you must attach the driver attributes always unless pci_module_init
+   failed, alese hotpluggin does=B4t work.
+ - lpfc_sleep_ms is broken, it'll happily sleep under spinlock, please
+   use mdelay directly in contexts where you can't sleep and schedule_t=
+imeout
+   only where you can sleep.
+ - lpfc_sleep needs to die, it's just a broken reimplementation of
+   sleep_on{,_interruptible,}{_timeout,}
+ - lpfc_tasklet would probably benefit from a list_splice_init early on
+   so the proceasing can happen without retaking the spinlock all the t=
+ime
+ - why all the EXPORT_SYMBOLS?
+ - pleae kill all those silly one-line wrappers in lpfc_mem.c.
+ - four mempool per hba seems a little much, care to explain why they'r=
+e
+   needed?
+ - you don't need a pci_pool per hba, just one per driver
+ - lpfc_sysfs_set_show/lpfc_sysfs_set_store violate the one value per
+   attribute rule
+ - dito for lpfc_sysfs_params_show/lpfc_sysfs_params_store
+ - dito for lpfc_sysfs_info_show, in short all your sysfs work is compl=
+etely
+   wrong, also you seem to use driver attributes instead of scsi device=
+/host
+   attributes.  why?
+ - in lpfc_queuecommand you don't need to spin_lock_irqsave your drvloc=
+k
+   as the host_lock is already taken with irqs disabled.  you should pr=
+obably
+   redesign your driver to use the host_lock instead of the drvlock eve=
+rywhere.
+ - the error return if queuecommand lpfc_get_scsi_buf fails looks bogus=
+,
+   why do you set DID_BUS_BUSY?  also instead of 1 please return
+   SCSI_MLQUEUE_HOST_BUSY
+ - you shouldn't need the scsi_{bus,target,lun} members in lpfc_cmd but
+   always use the scsi_cmnd->device linked from there.
+ - the lpfc_find_target usage in queuecommand looks bogus.  You have
+   scsi_device->hostdata to put per-lun data, from which you can trivia=
+lly
+   link per-target data directly.  All the checks for inquiry and valid
+   luns are similarly b0rked - scsi probing works by calling ->slave_al=
+loc
+   first so you'll a) have a place where you know the midlayer is probi=
+ng
+   and b) always private data when quecommand is called.
+ - in lpfc_scsi_cmd_start you use lpfc_find_lun_device which is coplete=
+ly
+   bogus again, use scsi_cmnd->device->hostdata
+ - don't mess with eh_timeout from a LLDD please
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
