@@ -1,38 +1,71 @@
-From: "Mukker, Atul" <Atulm@lsil.com>
-Subject: RE: [ANNOUNCE]: megaraid driver version 2.20.0.1, now 2.20.2.0
-Date: Tue, 27 Jul 2004 19:10:37 -0400
+From: Bryan Henderson <hbryan@us.ibm.com>
+Subject: Re: WWN on FC LUN targets
+Date: Tue, 27 Jul 2004 17:54:17 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <0E3FA95632D6D047BA649F95DAB60E57033BC8C9@exa-atlanta>
+Message-ID: <OFD7E2C657.B39E37CA-ON88256EDF.00034E54-88256EDF.0004E839@us.ibm.com>
+References: <20040727205512.24414.qmail@web41403.mail.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
+Content-Type: text/plain; charset="US-ASCII"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:51617 "EHLO mail0.lsil.com")
-	by vger.kernel.org with ESMTP id S266705AbUG0XLJ (ORCPT
+Received: from e5.ny.us.ibm.com ([32.97.182.105]:46523 "EHLO e5.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S266702AbUG1AzH (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 27 Jul 2004 19:11:09 -0400
+	Tue, 27 Jul 2004 20:55:07 -0400
+Received: from northrelay02.pok.ibm.com (northrelay02.pok.ibm.com [9.56.224.150])
+	by e5.ny.us.ibm.com (8.12.10/8.12.9) with ESMTP id i6S0t2jw526990
+	for <linux-scsi@vger.kernel.org>; Tue, 27 Jul 2004 20:55:02 -0400
+Received: from d01ml604.pok.ibm.com (d01av04.pok.ibm.com [9.56.224.64])
+	by northrelay02.pok.ibm.com (8.12.10/NCO/VER6.6) with ESMTP id i6S0uDOK106120
+	for <linux-scsi@vger.kernel.org>; Tue, 27 Jul 2004 20:56:13 -0400
+In-Reply-To: <20040727205512.24414.qmail@web41403.mail.yahoo.com>
 List-Id: linux-scsi@vger.kernel.org
-To: 'Matt Domsch' <Matt_Domsch@dell.com>, "Mukker, Atul" <Atulm@lsil.com>
-Cc: 'James Bottomley' <James.Bottomley@SteelEye.com>, 'Christoph Hellwig' <hch@infradead.org>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
+To: Rock Gordon <rockgordon@yahoo.com>
+Cc: linux-scsi@vger.kernel.org
 
-> On Fri, Jul 23, 2004 at 06:02:49PM -0400, Mukker, Atul wrote:
-> > All,
-> > 
-> > Here is the patch for the 2.20.2.0 as per suggestions made by James
-> > Bottomley. The details are available in the changelog. As 
-> usual, the driver
-> > package with kernel patches, complete driver code, and this patch is
-> > available for download from
-> > 
-> ftp://ftp.lsil.com/pub/linux-megaraid/drivers/version-2.20.2.0
-/ as well.
+>I am looking at ways to find out particular WWN (world
+>wide names) for SCSI target LUNs 
 
+LUNS don't actually have fibre channel WWNs.  And neither do SCSI logical 
+units, which is probably what you meant (a LUN is a logical unit number). 
+WWNs come in two flavors - World Wide Node Name (WWNN), which identifies a 
+SCSI target, and World Wide Port Name (WWPN), which identifies a port on a 
+target.  Neither of those is what you want, since you probably have 
+multiple logical units per target.
 
-Something else to clean up after inclusion: every instance of an
-inline function is actually rendered as a full function call, because
-the function is always used before it is defined.  Atul, please
-re-arrange the code to eliminate the need for most (all) of the
-function prototypes at the top of each file, and define (not just
-declare with a prototype) each inline function before its first use.
+If you're like most FC users, your LUNs aren't stable even within a 
+target, so you can't use a combination of WWNN and LUN either.
 
-Atul> Will do that sure 
+So what people use is either SCSI device serial number or SCSI device ID. 
+The latter is newer and better.  There are device IDs for targets, ports, 
+and logical units.  There are device IDs in each of various name spaces, 
+some defined by public standards.  You can read all about that in SCSI 
+specifications.  Device IDs are part of the Vital Product Data (VPD).
+
+The basic programming interface to get that information is the SCSI 
+INQUIRY command.
+
+People have written programs to do the INQUIRY and give you the results in 
+usable form and even create the device special files named after the 
+device IDs.  I'm afraid I can't name one at the moment, but I hope someone 
+else on the list chimes in with the specifics.
+
+You could do this with devfs, but you'd be happier doing it with a user 
+space program that just queries the devices at all the relevant 
+major/minor number combinations and creates the /dev files you want.  And 
+the same for responding to hotplug events.  In Linux 2.6, that process is 
+even formalized in 'udev'.
+
+This is, by the way, something people have been doing for years.  It's 
+only starting to become standard so that everyone doesn't have to write 
+his own.
+
+>I can mount particular [logical units] from any
+>server without worrying about changes in the device
+>naming conventions.
+
+Of course, naming conventions are the least of your problems.  When you 
+try to use the /dev/sda etc. names, they will change every time the 
+slightest thing in your system changes -- recabling, adding adapter cards, 
+changing adapter card brand, creating new LUs, and on and on.  And they 
+will be different on every system.
+
