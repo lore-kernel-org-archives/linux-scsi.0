@@ -1,17 +1,49 @@
-From: <Salter@alh.com>
-Subject: (unknown)
-Date: Tue, 24 Aug 2004 12:43:52 -0400
+From: Saeed Bishara <Saeed.Bishara@il.marvell.com>
+Subject: scsi eh (in linux 2.4) retries a command without limit
+Date: Tue, 24 Aug 2004 20:29:29 +0300
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <S268100AbUHXQnw/20040824164352Z+268@vger.kernel.org>
+Message-ID: <412B7AF9.3090506@il.marvell.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 94-210-187-203.cable-client.iqara.net ([203.187.210.94]:19723
-	"EHLO 94-210-187-203.cable-client.iqara.net") by vger.kernel.org
-	with ESMTP id S268100AbUHXQnw (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 24 Aug 2004 12:43:52 -0400
+Received: from shosh.galileo.co.il ([199.203.130.250]:48844 "EHLO
+	il.marvell.com") by vger.kernel.org with ESMTP id S268158AbUHXR3c
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 24 Aug 2004 13:29:32 -0400
+Received: from [127.0.0.1] ([10.4.22.164])
+	by il.marvell.com (8.12.10/8.12.10) with ESMTP id i7OHRGDF004102
+	for <linux-scsi@vger.kernel.org>; Tue, 24 Aug 2004 20:27:17 +0300 (IDT)
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-Received=3A from 244=2E49=2E210=2E79 by 94-210-187-203=2Ecable-client=2Eiqara=2Enet=3B Tue=2C 24 Aug 2004 11=3A43=3A41 -0500=0D=0AMessage-ID=3A =3Clabycmvwyjgxthfgqwzhl=40netcabo=2Ept=3E=0D=0AFrom=3A =22Lamar Westbrook=22 =3CSalter=40alh=2Ecom=3E=0D=0AReply-To=3A =22Lamar Westbrook=22 =3CSalter=40alh=2Ecom=3E=0D=0ATo=3A linux-scsi=40vger=2Ekernel=2Eorg=0D=0ASubject=3A The Best Soft=2Eware For Accessible Pric=2Ees =28deform=29=0D=0ADate=3A Tue=2C 24 Aug 2004 11=3A43=3A41 -0500=0D=0AMIME-Version=3A 1=2E0=0D=0AContent-Type=3A multipart=2Falternative=3B=0D=0A=09boundary=3D=22--4408641818115533770=22=0D=0AX-Webmail-Time=3A Tue=2C 24 Aug 2004 11=3A43=3A41 -0500=0D=0A=0D=0A----4408641818115533770=0D=0AContent-Type=3A text=2Fhtml=3B=0D=0A=09 charset=3D=22ISO-8859-1=22=0D=0AContent-Transfer-Encoding=3A quoted-printable=0D=0A=0D=0A=3Chtml=3E=0D=0A=3Cbody=3E=0D=0A=3Cdiv align=3D=22center=22=3E=0D=0
- A  =3Ccenter=3E=0D=0A  =3Ctable border=3D=221=22 width=3D=22600=22 style=3D=22border-collapse=3A collapse=22 =0D=0Abordercolor=3D=22#C0C0C0=22 cellpadding=3D=222=22=3E=0D=0A    =3Ctr=3E=0D=0A      =3Ctd align=3D=22center=22 colspan=3D=224=22 width=3D=22782=22=3E=0D=0A      =3Cp style=3D=22margin-top=3A 2=3B margin-bottom=3A 2=22=3E=3Cb=3E=0D=0A      =3Cfont face=3D=22Tahoma=22=3EThe Best Software For Accessible Prices =0D=0A!=3C=2Ffont=3E=3C=2Fb=3E=3C=2Fp=3E=0D=0A      =3Cp style=3D=22margin-top=3A 2=3B margin-bottom=3A 2=22=3E=0D=0A      =3Cfont face=3D=22Arial=22 size=3D=221=22 color=3D=22#FFFFFC=22=3Eambassador dental =0D=0Aleitmotiv =0D=0A      stark demented=3C=2Ffont=3E=3C=2Ftd=3E=0D=0A    =3C=2Ftr=3E=0D=0A    =3Ctr=3E=0D=0A      =3Ctd colspan=3D=222=22 width=3D=22361=22 bgcolor=3D=22#C0C0C0=22=3E=3Cfont =0D=0Acolor=3D=22#000080=22=3E=3Cb=3EMS Windows XP =0D=0A      Professional=
- 3C=2Fb=3E=3C=2Ffont=3E=3C=2Ftd=3E=0D=0A      =3Ctd width=3D=22413=22 colspan=3D=222=22=3E=3Cfont color=3D=22#808080=22=3E=3Cb=3EAhead NERO =0D=0A6=2E3 =0D=0A      POWERPACK=3C=2Fb=3E=3C=2Ffont=3E=3C=2Ftd=3E=0D=0A    =3C=2Ftr=3E=0D=0A    =3Ctr=3E=0D=0A      =3Ctd width=3D=2256=22 bgcolor=3D=22#CCCCCC=22=3E=0D=0A      =3Cp align=3D=22center=22=3E=3Cfont color=3D=22#FF0000=22=3E=3Cb=3E$80=3C=2Fb=3E=3C=2Ffont=3E=3C=2Ftd=3E=0D=0A      =3Ctd width=3D=22301=22 bgcolor=3D=22#CCCCCC=22=3E=0D=0A      =3Cp style=3D=22margin-top=3A 0=3B margin-bottom=3A 0=22=3E=0D=0A      =3Cfont face=3D=22Tahoma=22 size=3D=222=22=3E&nbsp=3B- Retail Price=3A =3Cstrike=3E=3Cb=3E=0D=0A$270=2E99=3C=2Fb=3E=3C=2Fstrike=3E=3C=2Ffont=3E=3C=2Fp=3E=0D=0A      =3Cp style=3D=22margin-top=3A 0=3B margin-bottom=3A 0=22=3E=0D=0A      =3Cfont face=3D=22Tahoma=22 size=3D=222=22=3E&nbsp=3B- Our Price=3A =3Cb=3E$80=3C=2Fb=3E=0D=0A=
- 3C=2Ffont=3E=3C=2Fp=3E=0D=0A      =3Cp style=3D=22margin-top=3A 0=3B margin-bottom=3A 3=22=3E=0D=0A      =3Cfont face=3D=22Tahoma=22 size=3D=222=22=3E&nbsp=3B- You save=3A =3Cfont =0D=0Acolor=3D=22#000080=22=3E=3Cb=3E$190=2C99=3C=2Fb=3E=3C=2Ffont=3E=3C=2Ffont=3E=3Cp style=3D=22margin-top=3A 0=3B =0D=0Amargin-bottom=3A 0=22 align=3D=22center=22=3E=0D=0A      =3Cb=3E=3Cfont face=3D=22Tahoma=22 size=3D=222=22=3E=0D=0A      =3Ca href=3D=22http=3A=2F=2Fonlineprog=2Einfo=2Findex=2Ephp=3Fs=3D1078=22=3EBUY NOW=3C=2Fa=3E=0D=0A=3C=2Ffont=3E=3C=2Fb=3E=3C=2Ftd=3E=0D=0A      =3Ctd width=3D=2273=22=3E=0D=0A      =3Cp align=3D=22center=22=3E=3Cfont color=3D=22#FF0000=22=3E=3Cb=3E$60=3C=2Fb=3E=3C=2Ffont=3E=3C=2Ftd=3E=0D=0A      =3Ctd width=3D=22340=22=3E=0D=0A      =3Cp style=3D=22margin-top=3A 0=3B margin-bottom=3A 0=22=3E=0D=0A      =3Cfont face=3D=22Tahoma=22 size=3D=222=22=3E&nbsp=3B- Retail Price
- =3A =3Cstrike=3E=3Cb=3E=0D=0A$130=2E99=3C=2Fb=3E=3C=2Fstrike=3E=3C=2Ffont=3E=3C=2Fp=3E=0D=0A      =3Cp style=3D=22margin-top=3A 0=3B margin-bottom=3A 0=22=3E=0D=0A      =3Cfont face=3D=22Tahoma=22 size=3D=222=22=3E&nbsp=3B- Our Price=3A =3Cb=3E$60=3C=2Fb=3E=0D=0A=3C=2Ffont=3E=3C=2Fp=3E=0D=0A      =3Cp style=3D=22margin-top=3A 0=3B margin-bottom=3A 3=22=3E=0D=0A      =3Cfont face=3D=22Tahoma=22 size=3D=
+Hi,
+    I've seen a case where timeout occurs, and one of the timedout 
+commands it a read to a sector with ecc corrupted.
+    when the error handler enters to action, it retries that read which 
+alwasy fails on medium error, but unfortunalty the error handler     
+retries it again and again without finish.
+    I looked  into the scsi error handler code (kernel 2.4.26), and I 
+found that the function scsi_send_eh_cmnd retries the command ( if 
+scsi_eh_completed_normally return NEEDS_RETRY) without any restriction 
+and without increasing and checking the retries counter.
+
+saeed
+
+-- 
+Saeed Bishara
+Marvell Semiconductor Israel Ltd
+6 Ha'mada St.
+Industrial Area
+P.O. Box 692
+Yokneam 20692 ISRAEL
+Email    -  Saeed.Bishara@il.marvell.com
+Tel      -  + 972 4 9091602
+Cell     -  + 972 54 7619030
+Fax      -  + 972 4 9091505
+WWW Page:     http://www.marvell.com 
+
+This message may contain confidential, proprietary or legally privileged information. The information is intended only for the use of the individual or entity named above. If the reader of this message is not the intended recipient, you are hereby notified that any dissemination, distribution or copying of this communication is strictly prohibited. If you have received this communication in error, please notify us immediately by telephone, or by e-mail and delete the message from your computer.
+
+
+
