@@ -1,195 +1,172 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH] kill tmscsim ->proc_info
-Date: Tue, 17 Aug 2004 18:18:58 +0200
+Subject: [PATCH] missing statics in fusion
+Date: Tue, 17 Aug 2004 18:29:10 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040817161858.GA16589@lst.de>
+Message-ID: <20040817162910.GA16734@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.210]:11499 "EHLO mail.lst.de")
-	by vger.kernel.org with ESMTP id S265789AbUHQQTG (ORCPT
+Received: from verein.lst.de ([213.95.11.210]:19179 "EHLO mail.lst.de")
+	by vger.kernel.org with ESMTP id S265795AbUHQQ3P (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 17 Aug 2004 12:19:06 -0400
+	Tue, 17 Aug 2004 12:29:15 -0400
 Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
-To: g.liakhovetski@gmx.de
+To: Emoore@lsil.com
 Cc: linux-scsi@vger.kernel.org
 
-hrrible code like all proc_info implementations and no really usefull
-information.  We might want to add sysfs attributes if some users really
-miss anything.
 
-
---- 1.45/drivers/scsi/tmscsim.c	2004-07-05 00:35:28 +02:00
-+++ edited/drivers/scsi/tmscsim.c	2004-08-15 19:22:09 +02:00
-@@ -295,9 +295,6 @@
- static int    dc390_initAdapter(struct Scsi_Host *psh, unsigned long io_port, u8 Irq, u8 index );
- static void   dc390_updateDCB (struct dc390_acb* pACB, struct dc390_dcb* pDCB);
+--- 1.29/drivers/message/fusion/mptbase.c	2004-08-17 00:49:58 +02:00
++++ edited/drivers/message/fusion/mptbase.c	2004-08-17 20:23:02 +02:00
+@@ -3395,7 +3395,7 @@
+  *	@hd: Pointer to MPT_SCSI_HOST structure
+  *	@init: If set, initialize the spin lock.
+  */
+-int
++static int
+ initChainBuffers(MPT_ADAPTER *ioc)
+ {
+ 	u8		*mem;
+--- 1.28/drivers/message/fusion/mptctl.c	2004-07-02 17:14:30 +02:00
++++ edited/drivers/message/fusion/mptctl.c	2004-08-17 20:19:57 +02:00
+@@ -2865,7 +2865,7 @@
+ };
  
--static int DC390_proc_info (struct Scsi_Host *shpnt, char *buffer, char **start,
--			    off_t offset, int length, int inout);
--
- static struct dc390_acb*	dc390_pACB_start= NULL;
- static struct dc390_acb*	dc390_pACB_current = NULL;
- static u32	dc390_laststatus = 0;
-@@ -1664,7 +1630,6 @@
- static struct scsi_host_template driver_template = {
- 	.module			= THIS_MODULE,
- 	.proc_name		= "tmscsim", 
--	.proc_info		= DC390_proc_info,
- 	.name			= DC390_BANNER " V" DC390_VERSION,
- 	.slave_alloc		= dc390_slave_alloc,
- 	.slave_configure	= dc390_slave_configure,
-@@ -1784,152 +1749,6 @@
- 	scsi_host_put(scsi_host);
- 	pci_set_drvdata(dev, NULL);
+ /*=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*/
+-int __init mptctl_init(void)
++static int __init mptctl_init(void)
+ {
+ 	int err;
+ 	int where = 1;
+@@ -2963,7 +2963,7 @@
  }
--
--/********************************************************************
-- * Function: DC390_proc_info(char* buffer, char **start,
-- *			     off_t offset, int length, int hostno, int inout)
-- *
-- * Purpose: return SCSI Adapter/Device Info
-- *
-- * Input: buffer: Pointer to a buffer where to write info
-- *	  start :
-- *	  offset:
-- *	  hostno: Host adapter index
-- *	  inout : Read (=0) or set(!=0) info
-- *
-- * Output: buffer: contains info
-- *	   length; length of info in buffer
-- *
-- * return value: length
-- *
-- ********************************************************************/
--
--#undef SPRINTF
--#define SPRINTF(args...) pos += sprintf(pos, ## args)
--
--#define YESNO(YN)		\
-- if (YN) SPRINTF(" Yes ");	\
-- else SPRINTF(" No  ")
--
--
--static int DC390_proc_info (struct Scsi_Host *shpnt, char *buffer, char **start,
--			    off_t offset, int length, int inout)
--{
--  int dev, spd, spd1;
--  char *pos = buffer;
--  struct dc390_acb* pACB;
--  struct dc390_dcb* pDCB;
--
--  pACB = dc390_pACB_start;
--
--  while(pACB != (struct dc390_acb*)-1)
--     {
--	if (shpnt == pACB->pScsiHost)
--		break;
--	pACB = pACB->pNextACB;
--     }
--
--  if (pACB == (struct dc390_acb*)-1) return(-ESRCH);
--
--  if(inout) /* Has data been written to the file ? */
--      return -ENOSYS;
--   
--  SPRINTF("Tekram DC390/AM53C974 PCI SCSI Host Adapter, ");
--  SPRINTF("Driver Version %s\n", DC390_VERSION);
--
--  SPRINTF("SCSI Host Nr %i, ", shpnt->host_no);
--  SPRINTF("%s Adapter Nr %i\n", dc390_adapname, pACB->AdapterIndex);
--  SPRINTF("IOPortBase 0x%04x, ", pACB->IOPortBase);
--  SPRINTF("IRQ %02i\n", pACB->IRQLevel);
--
--  SPRINTF("MaxID %i, MaxLUN %i, ", shpnt->max_id, shpnt->max_lun);
--  SPRINTF("AdapterID %i, SelTimeout %i ms, DelayReset %i s\n", 
--	  shpnt->this_id, (pACB->sel_timeout*164)/100,
--	  dc390_eepromBuf[pACB->AdapterIndex][EE_DELAY]);
--
--  SPRINTF("TagMaxNum %i, Status 0x%02x, ACBFlag 0x%02x, GlitchEater %i ns\n",
--	  pACB->TagMaxNum, pACB->status, pACB->ACBFlag, GLITCH_TO_NS(pACB->glitch_cfg)*12);
--
--  SPRINTF("Statistics: Cmnds %li, Cmnds not sent directly %i, Out of SRB conds %i\n",
--	  pACB->Cmds, pACB->CmdInQ, pACB->CmdOutOfSRB);
--  SPRINTF("            Lost arbitrations %i, Sel. connected %i, Connected: %s\n", 
--	  pACB->SelLost, pACB->SelConn, pACB->Connected? "Yes": "No");
--   
--  SPRINTF("Nr of DCBs: %i\n", pACB->DCBCnt);
--  SPRINTF("Map of attached LUNs: %02x %02x %02x %02x %02x %02x %02x %02x\n",
--	  pACB->DCBmap[0], pACB->DCBmap[1], pACB->DCBmap[2], pACB->DCBmap[3], 
--	  pACB->DCBmap[4], pACB->DCBmap[5], pACB->DCBmap[6], pACB->DCBmap[7]);
--
--  SPRINTF("Idx ID LUN Prty Sync DsCn SndS TagQ NegoPeriod SyncSpeed SyncOffs MaxCmd\n");
--
--  pDCB = pACB->pLinkDCB;
--  for (dev = 0; dev < pACB->DCBCnt; dev++)
--     {
--      SPRINTF("%02i  %02i  %02i ", dev, pDCB->TargetID, pDCB->TargetLUN);
--      YESNO(pDCB->DevMode & PARITY_CHK_);
--      YESNO(pDCB->SyncMode & SYNC_NEGO_DONE);
--      YESNO(pDCB->DevMode & EN_DISCONNECT_);
--      YESNO(pDCB->DevMode & SEND_START_);
--      YESNO(pDCB->SyncMode & EN_TAG_QUEUEING);
--      if (pDCB->SyncOffset & 0x0f)
--      {
--	 int sp = pDCB->SyncPeriod; if (! (pDCB->CtrlR3 & FAST_SCSI)) sp++;
--	 SPRINTF("  %03i ns ", (pDCB->NegoPeriod) << 2);
--	 spd = 40/(sp); spd1 = 40%(sp);
--	 spd1 = (spd1 * 10 + sp/2) / (sp);
--	 SPRINTF("   %2i.%1i M      %02i", spd, spd1, (pDCB->SyncOffset & 0x0f));
--      }
--      else SPRINTF(" (%03i ns)                 ", (pDCB->NegoPeriod) << 2);
--      /* Add more info ...*/
--      SPRINTF ("      %02i\n", pDCB->MaxCommand);
--      pDCB = pDCB->pNextDCB;
--     }
--    if (timer_pending(&pACB->Waiting_Timer)) SPRINTF ("Waiting queue timer running\n");
--    else SPRINTF ("\n");
--    pDCB = pACB->pLinkDCB;
--	
--    for (dev = 0; dev < pACB->DCBCnt; dev++)
--    {
--	struct dc390_srb* pSRB;
--	if (pDCB->WaitSRBCnt) 
--		    SPRINTF ("DCB (%02i-%i): Waiting: %i:", pDCB->TargetID, pDCB->TargetLUN,
--			     pDCB->WaitSRBCnt);
--	for (pSRB = pDCB->pWaitingSRB; pSRB; pSRB = pSRB->pNextSRB)
--		SPRINTF(" %li", pSRB->pcmd->pid);
--	if (pDCB->GoingSRBCnt) 
--		    SPRINTF ("\nDCB (%02i-%i): Going  : %i:", pDCB->TargetID, pDCB->TargetLUN,
--			     pDCB->GoingSRBCnt);
--	for (pSRB = pDCB->pGoingSRB; pSRB; pSRB = pSRB->pNextSRB)
--#if 0 //def DC390_DEBUGTRACE
--		SPRINTF(" %s\n  ", pSRB->debugtrace);
--#else
--		SPRINTF(" %li", pSRB->pcmd->pid);
--#endif
--	if (pDCB->WaitSRBCnt || pDCB->GoingSRBCnt) SPRINTF ("\n");
--	pDCB = pDCB->pNextDCB;
--    }
--	
--#ifdef DC390_DEBUGDCB
--    SPRINTF ("DCB list for ACB %p:\n", pACB);
--    pDCB = pACB->pLinkDCB;
--    SPRINTF ("%p", pDCB);
--    for (dev = 0; dev < pACB->DCBCnt; dev++, pDCB=pDCB->pNextDCB)
--	SPRINTF ("->%p", pDCB->pNextDCB);
--    SPRINTF("\n");
--#endif
--  
--  *start = buffer + offset;
--
--  if (pos - buffer < offset)
--    return 0;
--  else if (pos - buffer - offset < length)
--    return pos - buffer - offset;
--  else
--    return length;
--}
--
--#undef YESNO
--#undef SPRINTF
  
- static struct pci_driver dc390_driver = {
- 	.name           = "tmscsim",
+ /*=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*/
+-void mptctl_exit(void)
++static void __exit mptctl_exit(void)
+ {
+ 	misc_deregister(&mptctl_miscdev);
+ 	printk(KERN_INFO MYNAM ": Deregistered /dev/%s @ (major,minor=%d,%d)\n",
+--- 1.45/drivers/message/fusion/mptscsih.c	2004-08-03 01:01:01 +02:00
++++ edited/drivers/message/fusion/mptscsih.c	2004-08-17 20:22:42 +02:00
+@@ -178,7 +178,7 @@
+ static int	mptscsih_event_process(MPT_ADAPTER *ioc, EventNotificationReply_t *pEvReply);
+ 
+ static void	mptscsih_initTarget(MPT_SCSI_HOST *hd, int bus_id, int target_id, u8 lun, char *data, int dlen);
+-void		mptscsih_setTargetNegoParms(MPT_SCSI_HOST *hd, VirtDevice *target, char byte56);
++static void	mptscsih_setTargetNegoParms(MPT_SCSI_HOST *hd, VirtDevice *target, char byte56);
+ static void	mptscsih_set_dvflags(MPT_SCSI_HOST *hd, SCSIIORequest_t *pReq);
+ static void	mptscsih_setDevicePage1Flags (u8 width, u8 factor, u8 offset, int *requestedPtr, int *configurationPtr, u8 flags);
+ static void	mptscsih_no_negotiate(MPT_SCSI_HOST *hd, int target_id);
+@@ -1760,7 +1759,7 @@
+  *
+  *	Returns pointer to buffer where information was written.
+  */
+-const char *
++static const char *
+ mptscsih_info(struct Scsi_Host *SChost)
+ {
+ 	MPT_SCSI_HOST *h;
+@@ -1975,8 +1974,9 @@
+  * 	hostno: scsi host number
+  *	func:   if write = 1; if read = 0
+  */
+-int mptscsih_proc_info(struct Scsi_Host *host, char *buffer, char **start, off_t offset,
+-			int length, int func)
++static int
++mptscsih_proc_info(struct Scsi_Host *host, char *buffer, char **start,
++		off_t offset, int length, int func)
+ {
+ 	MPT_SCSI_HOST	*hd = (MPT_SCSI_HOST *)host->hostdata;
+ 	MPT_ADAPTER	*ioc = hd->ioc;
+@@ -2010,7 +2010,7 @@
+  *
+  *	Returns 0. (rtn value discarded by linux scsi mid-layer)
+  */
+-int
++static int
+ mptscsih_qcmd(struct scsi_cmnd *SCpnt, void (*done)(struct scsi_cmnd *))
+ {
+ 	MPT_SCSI_HOST		*hd;
+@@ -2551,7 +2551,7 @@
+  *
+  *	Returns SUCCESS or FAILED.
+  */
+-int
++static int
+ mptscsih_abort(struct scsi_cmnd * SCpnt)
+ {
+ 	MPT_SCSI_HOST	*hd;
+@@ -2653,7 +2653,7 @@
+  *
+  *	Returns SUCCESS or FAILED.
+  */
+-int
++static int
+ mptscsih_dev_reset(struct scsi_cmnd * SCpnt)
+ {
+ 	MPT_SCSI_HOST	*hd;
+@@ -2708,7 +2708,7 @@
+  *
+  *	Returns SUCCESS or FAILED.
+  */
+-int
++static int
+ mptscsih_bus_reset(struct scsi_cmnd * SCpnt)
+ {
+ 	MPT_SCSI_HOST	*hd;
+@@ -2760,7 +2760,7 @@
+  *
+  *	Returns SUCCESS or FAILED.
+  */
+-int
++static int
+ mptscsih_host_reset(struct scsi_cmnd *SCpnt)
+ {
+ 	MPT_SCSI_HOST *  hd;
+@@ -2937,7 +2937,7 @@
+ /*
+  *	This is anyones guess quite frankly.
+  */
+-int
++static int
+ mptscsih_bios_param(struct scsi_device * sdev, struct block_device *bdev,
+ 		sector_t capacity, int geom[])
+ {
+@@ -2984,7 +2984,7 @@
+  *	Return non-zero if allocation fails.
+  *	Init memory once per id (not LUN).
+  */
+-int
++static int
+ mptscsih_slave_alloc(struct scsi_device *device)
+ {
+ 	struct Scsi_Host	*host = device->host;
+@@ -3033,7 +3033,7 @@
+  *	OS entry point to allow for host driver to free allocated memory
+  *	Called if no device present or device being unloaded
+  */
+-void
++static void
+ mptscsih_slave_destroy(struct scsi_device *device)
+ {
+ 	struct Scsi_Host	*host = device->host;
+@@ -3098,7 +3098,7 @@
+  *	member to 1 if a device does not support Q tags.
+  *	Return non-zero if fails.
+  */
+-int
++static int
+ mptscsih_slave_configure(struct scsi_device *device)
+ {
+ 	struct Scsi_Host	*sh = device->host;
+@@ -3743,7 +3743,8 @@
+  *  the Inquiry data, adapter capabilities, and NVRAM settings.
+  *
+  */
+-void mptscsih_setTargetNegoParms(MPT_SCSI_HOST *hd, VirtDevice *target, char byte56)
++static void
++mptscsih_setTargetNegoParms(MPT_SCSI_HOST *hd, VirtDevice *target, char byte56)
+ {
+ 	ScsiCfgData *pspi_data = &hd->ioc->spi_data;
+ 	int  id = (int) target->target_id;
