@@ -1,18 +1,20 @@
 From: Christoph Hellwig <hch@lst.de>
 Subject: State of NCR53c7xx based drivers
-Date: Sat, 22 Nov 2003 12:37:04 +0100
+Date: Sat, 22 Nov 2003 12:38:34 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20031122113704.GA8005@lst.de>
+Message-ID: <20031122113834.GA8098@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([212.34.189.10]:60086 "EHLO mail.lst.de")
-	by vger.kernel.org with ESMTP id S261868AbTKVLhH (ORCPT
+Received: from verein.lst.de ([212.34.189.10]:61366 "EHLO mail.lst.de")
+	by vger.kernel.org with ESMTP id S262196AbTKVLio (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 22 Nov 2003 06:37:07 -0500
+	Sat, 22 Nov 2003 06:38:44 -0500
 Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
-To: linux-m68k@lists.linux-m68.org, linux-scsi@vger.kernel.org
+To: linux-m68k@lists.linux-m68k.org, linux-scsi@vger.kernel.org
+
+[and now with the right address for the m68k list]
 
 Hi folks,
 
