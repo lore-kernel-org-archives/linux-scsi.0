@@ -1,59 +1,49 @@
 From: Mike Anderson <andmike@us.ibm.com>
-Subject: [PATCH] scsi_error device offline fix
-Date: Mon, 21 Oct 2002 00:37:18 -0700
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <20021021073718.GB3197@beaverton.ibm.com>
+Subject: [PATCH/RFC] scsi sync caches w/ dev offline
+Date: Mon, 21 Oct 2002 00:49:25 -0700
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <20021021074925.GC3197@beaverton.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from westrelay01.boulder.ibm.com (westrelay01.boulder.ibm.com [9.17.194.22])
+	by e34.co.us.ibm.com (8.12.2/8.12.2) with ESMTP id g9L7m75Q032048
+	for <linux-scsi@vger.kernel.org>; Mon, 21 Oct 2002 03:48:07 -0400
+Received: from hmsbounty (sig-9-65-19-52.mts.ibm.com [9.65.19.52])
+	by westrelay01.boulder.ibm.com (8.12.3/NCO/VER6.4) with ESMTP id g9L7m63A251884
+	for <linux-scsi@vger.kernel.org>; Mon, 21 Oct 2002 01:48:07 -0600
 Content-Disposition: inline
-To: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-This patch corrects a problem in scsi error handling.
+When a scsi device is offlined and then the system is shutdown it will
+hang during the synchronizing SCSI caches task. The error handler was
+activated during this step, but post recovery the system did not
+complete the shutdown. 
 
-When a device is offlined indicated by a message like ...Device offlined
-- not ready...
-
-the command return status was not being updated with a failure status if
-the IO was a timeout.
-
-I tested the patch on system with ips, aic, and qlogic fc adapters, but
-was unable to generate a satisfactory device offline test case.
-
-I did test this fix on uml with scsi_debug and generated a device
-offline condition with verified this fix was working correctly.
+This patch just adds a check for online before sending the command. The
+better approach appeared to be to use scsi_block_when_processing_errors,
+but I was concerned that we might block to long in a shutdown case.
 
 -andmike
 --
 Michael Anderson
 andmike@us.ibm.com
 
- scsi_error.c |    8 ++++++--
- 1 files changed, 6 insertions(+), 2 deletions(-)
-------
+ sd.c |    3 +++
+ 1 files changed, 3 insertions(+)
+-----
 
-===== drivers/scsi/scsi_error.c 1.18 vs edited =====
---- 1.18/drivers/scsi/scsi_error.c	Thu Oct 17 10:52:39 2002
-+++ edited/drivers/scsi/scsi_error.c	Sat Oct 19 15:24:06 2002
-@@ -1145,14 +1145,18 @@
- 		if (!scsi_eh_eflags_chk(scmd, SCSI_EH_CMD_ERR))
- 			continue;
+===== drivers/scsi/sd.c 1.73 vs edited =====
+--- 1.73/drivers/scsi/sd.c	Fri Oct 18 13:32:54 2002
++++ edited/drivers/scsi/sd.c	Mon Oct 21 00:03:06 2002
+@@ -1567,6 +1567,9 @@
+ 	Scsi_Device *SDpnt = sdkp->device;
+ 	int retries, the_result;
  
--		printk(KERN_INFO "%s: Device offlined - not"
-+		printk(KERN_INFO "scsi: Device offlined - not"
- 				" ready or command retry failed"
- 				" after error recovery: host"
- 				" %d channel %d id %d lun %d\n",
--				__FUNCTION__, shost->host_no,
-+				shost->host_no,
- 				scmd->device->channel,
- 				scmd->device->id,
- 				scmd->device->lun);
++	if (!SDpnt->online)
++		return 0;
 +
-+		if (scsi_eh_eflags_chk(scmd, SCSI_EH_CMD_TIMEOUT))
-+			scmd->result |= (DRIVER_TIMEOUT << 24);
-+
- 		scmd->device->online = FALSE;
- 		scsi_eh_finish_cmd(scmd, shost);
- 	}
+ 	if(verbose) {
+ 		char buf[16];
+ 
