@@ -1,106 +1,106 @@
-From: "Rajat  Jain, Noida" <rajatj@noida.hcltech.com>
-Subject: RE: How to find which (physical) SCSI HBA corresponds to which ho
-	st n	umber?
-Date: Fri, 1 Apr 2005 09:53:20 +0530
-Message-ID: <267988DEACEC5A4D86D5FCD780313FBB065A083E@exch-03.noida.hcltech.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCH scsi-misc-2.6 01/13] scsi: don't use blk_insert_request() for requeueing
+Date: Fri, 1 Apr 2005 14:01:09 +0900
+Message-ID: <20050401050109.GB11318@htj.dyndns.org>
+References: <20050331090647.FEDC3964@htj.dyndns.org> <20050331090647.BA0001D5@htj.dyndns.org> <1112291600.5619.19.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ngate.noida.hcltech.com ([202.54.110.230]:1993 "EHLO
-	ngate.noida.hcltech.com") by vger.kernel.org with ESMTP
-	id S262616AbVDAEYp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 31 Mar 2005 23:24:45 -0500
+Received: from wproxy.gmail.com ([64.233.184.203]:44406 "EHLO wproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S262622AbVDAFBP (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 1 Apr 2005 00:01:15 -0500
+Received: by wproxy.gmail.com with SMTP id 68so793450wra
+        for <linux-scsi@vger.kernel.org>; Thu, 31 Mar 2005 21:01:14 -0800 (PST)
+Content-Disposition: inline
+In-Reply-To: <1112291600.5619.19.camel@mulgrave>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bryan Henderson <hbryan@us.ibm.com>, "Rajat Jain, Noida" <rajatj@noida.hcltech.com>
-Cc: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Jens Axboe <axboe@suse.de>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
 
+ Hello, James.
 
-Hi Bryan,
-
-Thanks for the reply. I got my queries solved. 
-
+On Thu, Mar 31, 2005 at 11:53:20AM -0600, James Bottomley wrote:
+> On Thu, 2005-03-31 at 18:07 +0900, Tejun Heo wrote:
+> > 01_scsi_no_REQ_SPECIAL_on_requeue.patch
+> > 
+> > 	blk_insert_request() has 'reinsert' argument, which, when set,
+> > 	turns on REQ_SPECIAL and REQ_SOFTBARRIER and requeues the
+> > 	request.  SCSI midlayer was the only user of this feature and
+> > 	all requeued requests become special requests defeating
+> > 	quiesce state.  This patch makes scsi midlayer use
+> > 	blk_requeue_request() for requeueing and removes 'reinsert'
+> > 	feature from blk_insert_request().
 > 
-> As with other SCSI numbering (LUNs, Linux device numbers), 
-> you normally don't try to prescribe which numbers go to which 
-> equipment, but rather discover afterward -- 
-> proc/scsi/hba_name/host_number.  The identifying information 
-> is dependent on the particular HBA type and driver, and 
-> sometimes doesn't exist.
-> 
+> Well, REQ_SPECIAL is the signal to the mid-layer that we've allocated
+> the resources necessary to process the command, so in practice it will
+> be turned on for every requeue request (because we set it when the
+> command is prepared),
 
-This proc entry is made AFTER the device is registered with SCSI mid-level
-driver (scsi_mod). 
+ Sorry, but where?  AFAICT, only blk_insert_request() and
+scsi_init_io() on sgtable allocation failure set REQ_SPECIAL during
+scsi midlayer processing.  This patch replaces blk_insert_request()
+with blk_requeue_request() and the next patch removes REQ_SPECIAL
+setting in scsi_init_io().
 
-I have a system with "N" number of similar HBAs attached. So basically what
-that means is that after I add a SCSI device to one of the HBAs, the only
-option I have left with me is following
+ REQ_SPECIAL is currently overloaded to mean two different things.
 
-For n = 0 to N
-Do
-	echo "scsi add-single-device n 0 ID 0" > /proc/scsi/scsi
-done
- 
-i.e. trial and method that tries to scan for the particular target on ALL
-the HBAs???
+ * The request is a special request.
+ * The request has been requeued using scsi_queue_insert().
+   i.e. It has been prepped.
 
-Rajat
+ However, #2 can be tested by rq->special != NULL condition, and, in
+fact, the prep_fn already has the code.  This is why this and the next
+patch don't break the requeue path.  IMHO, this proves the subtlety of
+the REQ_SPECIAL semantics.  Which path is taken on which case gets
+kind of confusing by meaning two different things with REQ_SPECIAL.
 
-> -----Original Message-----
-> From: linux-scsi-owner@vger.kernel.org 
-> [mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of Bryan Henderson
-> Sent: Friday, April 01, 2005 4:57 AM
-> To: Rajat Jain, Noida
-> Cc: linux-scsi@vger.kernel.org
-> Subject: Re: How to find which (physical) SCSI HBA 
-> corresponds to which host n umber?
-> 
-> By default, Linux assigns host numbers to HBAs somewhat 
-> arbitrarily.  In practice, it's fairly predictable as long as 
-> you don't change anything -- Linux assigns them sequentially 
-> starting at zero in the order in which it discovers them, 
-> which is controlled first by the order in which Linux 
-> initializes the corresponding HBA driver.
-> 
-> But you can control it a little.  The 'scsihosts' module 
-> parameter of the SCSI midlayer driver scsi_mod reserves host 
-> numbers for specific HBA drivers.  It looks like 
-> "scsihosts=aic7xxx,aic7xxx,qla1280".  That means to reserve 
-> host numbers 0 and 1 for the aic7xxx driver and 2 for qla1280. 
-> The two reserved for aic7xxx are assigned in the order that 
-> the aic7xxx driver registers them, which is ordinarily the 
-> order in which the aic7xxx driver detects them.  I don't 
-> think there's usually a way to control that, but it should be 
-> repeatable as long as the hardware configuration stays the 
-> same.  But it's generally not good to rely on the hardware 
-> configuration staying the same.  Some day, one card will be 
-> broken or temporarily removed, and that will change the host 
-> number of the other one.
-> 
-> As with other SCSI numbering (LUNs, Linux device numbers), 
-> you normally don't try to prescribe which numbers go to which 
-> equipment, but rather discover afterward -- 
-> proc/scsi/hba_name/host_number.  The identifying information 
-> is dependent on the particular HBA type and driver, and 
-> sometimes doesn't exist.
-> 
-> -
-> To unsubscribe from this list: send the line "unsubscribe 
-> linux-scsi" in the body of a message to 
-> majordomo@vger.kernel.org More majordomo info at  
-> http://vger.kernel.org/majordomo-info.html
-> 
+> so this patch would have no effect on your stated
+> quiesce problem.  However, if you think about how requests work with
+> head insertion and one command following another, there's really not a
+> huge problem here either.
 
+ I agree that it's not a huge problem, but it's subtle and has the
+potential of causing probably non-destructive but confusing behavior
+on rare cases.
 
-Disclaimer: 
+> The other reason I don't like this is that we've been trying hard to
+> sweep excess block knowledge out of the mid-layer.  I don't think
+> REQ_SOFTBARRIER is anything we really have to know about.
 
-This message and any attachment(s) contained here are information that is
-confidential,proprietary to HCL Technologies and its customers, privileged
-or otherwise protected by law.The information is solely intended for the
-individual or the entity it is addressed to. If you are not the intended
-recipient of this message, you are not authorized to read, forward,
-print,retain, copy or disseminate this message or any part of it. If you
-have received this e-mail in error, please notify the sender immediately by
-return e-mail and delete it from your computer.
+ We currently requeue using two different block functions.
 
+ * blk_insert_request(): this function does two things
+	1. enqueue special requests
+	2. turn on REQ_SPECIAL|REQ_SOFTBARRIER and call
+	   blk_requeue_request().  This is used only by scsi midlayer.
+ * blk_requeue_request()
+
+ REQ_SOFTBARRIER tells the request queue that other requests shouldn't
+pass this one.  We need this to be set for prepped requests;
+otherwise, it may, theoretically, deadlock (unprepped request waiting
+for the prepped request back in the queue).  So, the current code
+
+ * depends on blk_insert_request() sets REQ_SOFTBARRIER when
+   requeueing.  It works but nothing in the interface or semantics
+   is clear about it.  Why expect a request reinserted using
+   blk_insert_request() gets REQ_SOFTBARRIER turned on while a request
+   reinserted with blk_requeue_request() doesn't?  or why are there
+   two different paths doing mostly the same thing with slightly
+   different semantics?
+ * requeueing using blk_requeue_request() in scsi_request_fn() doesn't
+   turn on either REQ_SPECIAL or REQ_SOFTBARRIER.  Missing REQ_SPECIAL
+   is okay, as we have the extra path in prep_fn (if it ever gets requeued
+   due to medium failure, so gets re-prepped), but missing
+   REQ_SOFTBARRIER can *theoretically* cause problem.
+
+ So, it's more likely becoming less dependent on unobvious behavior of
+block layer.  As we need the request to stay on top, we tell the block
+layer to do so, instead of depending on blk_insert_request()
+unobviously doing it for us.
+
+ Thanks.
+
+-- 
+tejun
 
