@@ -1,45 +1,61 @@
-From: "Patrick J. LoPresti" <patl@users.sourceforge.net>
-Subject: Problem with megaraid-2.20.2.0 on Fedora Core 2
-Date: 19 Aug 2004 11:52:14 -0400
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: [PATCH] get the kernel to warn about deprecated SCSI ioctls
+Date: 19 Aug 2004 12:19:01 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <s5g7jrvp2an.fsf@patl=users.sf.net>
+Message-ID: <1092932342.2378.430.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-ext.curl.com ([66.228.88.132]:61457 "HELO
-	mail-ext.curl.com") by vger.kernel.org with SMTP id S266536AbUHSPwR
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 19 Aug 2004 11:52:17 -0400
+Received: from stat16.steeleye.com ([209.192.50.48]:10478 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S266619AbUHSQTE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 19 Aug 2004 12:19:04 -0400
+Received: from midgard.sc.steeleye.com (midgard.sc.steeleye.com [172.17.6.40])
+	by hancock.sc.steeleye.com (8.11.6/8.11.6) with ESMTP id i7JGJ2X15871
+	for <linux-scsi@vger.kernel.org>; Thu, 19 Aug 2004 12:19:02 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Atul.Mukker@lsil.com
+To: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-I am experimenting with Fedora Core 2 on a Dell PowerEdge 650 server.
-The stock megaraid driver in the 2.6 kernel consistently crashes under
-load within about 12 hours, so I thought I would give the LSI driver a
-try.
+The non unique SCSI ioctls:
 
-I downloaded megaraid-2.20.2.0 from
-<ftp://ftp.lsil.com/pub/linux-megaraid/> and built it against the
-current Fedora Core 2 sources (kernel-2.6.7-1.494.2.2smp).  I edited
-my /etc/modprobe.conf to include the line:
+SCSI_IOCTL_SEND_COMMAND
+SCSI_IOCTL_TEST_UNIT_READY
+SCSI_IOCTL_BENCHMARK_COMMAND
+SCSI_IOCTL_SYNC
+SCSI_IOCTL_START_UNIT
+SCSI_IOCTL_STOP_UNIT
 
-    alias scsi_hostadapter megaraid_mbox
+Have been deprecated for a while now.  We should make the kernel
+complain when a program actually uses one of them, so users have had
+adequate warning before they are removed.
 
-Then I used "mkinitrd" to generate an initial ramdisk which includes
-this module.
+James
 
-Shortly after boot, I get:
+===== drivers/scsi/scsi_ioctl.c 1.28 vs edited =====
+--- 1.28/drivers/scsi/scsi_ioctl.c	2004-06-26 17:40:24 -05:00
++++ edited/drivers/scsi/scsi_ioctl.c	2004-08-19 09:45:22 -05:00
+@@ -391,6 +391,21 @@
+ 	if (!scsi_block_when_processing_errors(sdev))
+ 		return -ENODEV;
+ 
++	/* Check for deprecated ioctls ... all the ioctls which don't
++	 * follow the new unique numbering scheme are deprecated */
++	switch (cmd) {
++	case SCSI_IOCTL_SEND_COMMAND:
++	case SCSI_IOCTL_TEST_UNIT_READY:
++	case SCSI_IOCTL_BENCHMARK_COMMAND:
++	case SCSI_IOCTL_SYNC:
++	case SCSI_IOCTL_START_UNIT:
++	case SCSI_IOCTL_STOP_UNIT:
++		printk(KERN_WARNING "program %s is using a deprecated SCSI ioctl, please convert it to SG_IO\n", current->comm);
++		break;
++	default:
++		break;
++	}
++
+ 	switch (cmd) {
+ 	case SCSI_IOCTL_GET_IDLUN:
+ 		if (verify_area(VERIFY_WRITE, arg, sizeof(struct scsi_idlun)))
 
-    Red Hat nash verison 3.5.22 starting
-    <NULL>: can_queue = 0 no longer supported
 
-Browsing drivers/scsi/hosts.c and megaraid_mbox.c itself, this appears
-to mean that Linux has a handle to the controller which has not been
-initialized.  But I do not know my way around the source, so I thought
-I would see if anybody here could give me suggestions for how to
-proceed.
-
-Thanks!
-
- - Pat
