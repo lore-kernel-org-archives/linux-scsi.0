@@ -1,56 +1,80 @@
-From: "Andrew Kinney" <andykinney@advantagecom.net>
-Subject: Re: aacraid died on kernel 2.4.27
-Date: Fri, 11 Mar 2005 13:34:10 -0800
-Message-ID: <42319E52.19095.2CDA5B5A@localhost>
-References: <60807403EABEB443939A5A7AA8A7458BE5A9C9@otce2k01.adaptec.com> (Mark Salyzyn's message of "Fri, 11 Mar 2005 11:06:47 -0500")
-Reply-To: andykinney@advantagecom.net
+From: Andrew Morton <akpm@osdl.org>
+Subject: Re: About ARECA RAID driver for Linux i386/x86-64
+Date: Fri, 11 Mar 2005 14:27:30 -0800
+Message-ID: <20050311142730.10d3c616.akpm@osdl.org>
+References: <000001c524bc$d3c546a0$0b02a8c0@kw.de>
+	<000c01c52626$32bae8d0$9300a8c0@erich2003>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Received: from mail.advantagecom.net ([65.103.151.155]:45225 "EHLO
-	mail.advantagecom.net") by vger.kernel.org with ESMTP
-	id S261468AbVCKVgL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 11 Mar 2005 16:36:11 -0500
-In-reply-to: <87br9plyaf.fsf@tapsellferrier.co.uk>
-Content-description: Mail message body
+Content-Transfer-Encoding: 7bit
+Received: from fire.osdl.org ([65.172.181.4]:31943 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S261799AbVCKW1n (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 11 Mar 2005 17:27:43 -0500
+In-Reply-To: <000c01c52626$32bae8d0$9300a8c0@erich2003>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Nic Ferrier <nferrier@tapsellferrier.co.uk>
-Cc: linux-scsi@vger.kernel.org
+To: erich <erich@areca.com.tw>
+Cc: e0815w@onlinehome.de, linux-scsi@vger.kernel.org, James.Bottomley@SteelEye.com, hch@infradead.org, arjan@infradead.org
 
-On 11 Mar 2005 at 20:31, Nic Ferrier wrote:
+"erich" <erich@areca.com.tw> wrote:
+>
+> Thanks for your kindness comment.
+> I had modify "arcmsr" as your mention and ran it at 2.6.11 kernel.
 
-> The machine I am having trouble with has been running MS Windows for 2
-> years.
-> 
-> I just put linux on it (with no other changes) and we get regular
-> (twice daily) catastrophic crashes.
-> 
-> Can this be a controller problem? I'm not a hardware expert but it
-> doesn't sound like one to me.
+A few points on this patch:
 
-It can be a controller problem, but it can also be a drive problem, 
-cable problem, firmware problem, or a backplane problem.  We had a 
-similar instance that was resolved by replacing the drive with a 
-different brand, replacing the backplane, replacing the cabling, 
-replacing the ROMB, and getting the newest firmware.  Now, drives 
-fail gracefully instead of taking the whole container offline.  Who 
-knows what the actual cause was, but the problem is fixed and that's 
-what I was looking for.
+a) Please don't use full pathnames in the patch headers:
 
-Like Mark S. said, many causes, one symptom.  That Dell trouble 
-ticket is going to be the best way to get it solved.  Their Linux 
-guys have seen it all and can escalate it to an engineer if they 
-haven't.  They're going to ask you for the diagnostic output of 
-afacli, so you'll want to get that installed if you haven't already.  
-They can also swap in new components for you.
+--- /usr/src/linux-2.6.11/drivers/scsi/Makefile.org	2005-03-11 10:20:49.000000000 +0800
++++ /usr/src/linux-2.6.11/drivers/scsi/Makefile	2005-03-11 11:32:07.000000000 +0800
 
-Sincerely,
-Andrew Kinney
-President and
-Chief Technology Officer
-Advantagecom Networks, Inc.
-http://www.advantagecom.net
+   Because not everyone places their kernel tree in /usr/src/linux-2.6.11.
+   See http://www.zip.com.au/~akpm/linux/patches/stuff/tpp.txt
+
+b) Please trim off all trailing whitespace.  Here's a script which you
+   run against a patch to prevent it from introducing new trailing
+   whitespace.  (I swear that this script has shrunk the kernel tree by a
+   megabyte over the past few years)
+
+#!/bin/sh
+
+strip1()
+{
+	TMP=$(mktemp /tmp/XXXXXX)
+	cp $1 $TMP
+	sed -e '/^+/s/[ 	]*$//' < $TMP > $1
+	rm $TMP
+}
+
+for i in $*
+do
+	strip1 $i
+done
+
+c) You cannot use absolute pathnames for include files.  Here's a fix:
 
 
+
+Signed-off-by: Andrew Morton <akpm@osdl.org>
+---
+
+ 25-akpm/drivers/scsi/arcmsr/arcmsr.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
+
+diff -puN drivers/scsi/arcmsr/arcmsr.c~areca-raid-linux-scsi-driver-fix drivers/scsi/arcmsr/arcmsr.c
+--- 25/drivers/scsi/arcmsr/arcmsr.c~areca-raid-linux-scsi-driver-fix	Fri Mar 11 14:22:23 2005
++++ 25-akpm/drivers/scsi/arcmsr/arcmsr.c	Fri Mar 11 14:22:23 2005
+@@ -107,8 +107,8 @@
+ #include <linux/sched.h>
+ #include <linux/init.h>
+ #include <linux/spinlock.h>
+-#include "/usr/src/linux/drivers/scsi/scsi.h"
+-#include "/usr/src/linux/include/scsi/scsi_host.h"
++#include "../scsi.h"
++#include <scsi/scsi_host.h>
+ 
+ #include "arcmsr.h"
+ #endif
+_
 
