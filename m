@@ -1,99 +1,104 @@
-From: Brian King <brking@us.ibm.com>
-Subject: [PATCH] Fix eh_abort race condition
-Date: Wed, 25 Feb 2004 10:11:29 -0600
+From: James Bottomley <James.Bottomley@steeleye.com>
+Subject: Re: Transport Attributes -- attempt#4
+Date: 25 Feb 2004 10:42:47 -0600
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <403CC931.8080309@us.ibm.com>
+Message-ID: <1077727369.1804.208.camel@mulgrave>
+References: <20040120215645.GG15871@localhost>
+	<1077581832.1833.21.camel@mulgrave> <20040224055828.GA503530@sgi.com>
+	<1077634979.1827.7.camel@mulgrave>  <20040225070847.GA504005@sgi.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------050304050203010600040000"
+Content-Type: multipart/mixed; boundary="=-7xyG3NCrhlu8WOGUXf2S"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e4.ny.us.ibm.com ([32.97.182.104]:36343 "EHLO e4.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S261377AbUBYQLc (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 25 Feb 2004 11:11:32 -0500
-Received: from northrelay04.pok.ibm.com (northrelay04.pok.ibm.com [9.56.224.206])
-	by e4.ny.us.ibm.com (8.12.10/8.12.2) with ESMTP id i1PGBVG9866936
-	for <linux-scsi@vger.kernel.org>; Wed, 25 Feb 2004 11:11:31 -0500
-Received: from us.ibm.com (d01av02.pok.ibm.com [9.56.224.216])
-	by northrelay04.pok.ibm.com (8.12.10/NCO/VER6.6) with ESMTP id i1PGBcwJ108596
-	for <linux-scsi@vger.kernel.org>; Wed, 25 Feb 2004 11:11:38 -0500
+Received: from stat1.steeleye.com ([65.114.3.130]:43935 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S261378AbUBYQm6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 25 Feb 2004 11:42:58 -0500
+In-Reply-To: <20040225070847.GA504005@sgi.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Jeremy Higdon <jeremy@sgi.com>
+Cc: Martin Hicks <mort@wildopensource.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-This is a multi-part message in MIME format.
---------------050304050203010600040000
-Content-Type: text/plain; charset=us-ascii; format=flowed
+
+--=-7xyG3NCrhlu8WOGUXf2S
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 
-The following patch fixes the race condition discussed here:
+On Wed, 2004-02-25 at 01:08, Jeremy Higdon wrote:
+> What I meant to say is that I get a compile error at the following
+> line in scsi_scan.c:
+> 
+> 	sdev = kmalloc(sizeof(*sdev) + shost->transportt->size, GFP_ATOMIC);
 
-http://marc.theaimsgroup.com/?l=linux-scsi&m=107757213405773&w=2
+Er, oops, I forgot to do a bk diff in include/scsi.  It should be
+attached, sorry.
 
-
-
--- 
-Brian King
-eServer Storage I/O
-IBM Linux Technology Center
-
---------------050304050203010600040000
-Content-Type: text/plain;
- name="patch-2.6.3-eh_abort.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="patch-2.6.3-eh_abort.patch"
+James
 
 
-The following patch fixes a race condition in abort processing. With this
-patch, the mid-layer can now guarantee to LLDs that it will only call
-eh_abort for ops which returned 0 in queuecommand and have not yet had 
-their ->done function called.
+--=-7xyG3NCrhlu8WOGUXf2S
+Content-Disposition: attachment; filename=tmp.diff
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; name=tmp.diff; charset=ISO-8859-1
 
----
-
-
-diff -puN drivers/scsi/scsi_error.c~eh_abort drivers/scsi/scsi_error.c
---- linux-2.6.3/drivers/scsi/scsi_error.c~eh_abort	Wed Feb 25 09:54:52 2004
-+++ linux-2.6.3-bjking1/drivers/scsi/scsi_error.c	Wed Feb 25 09:54:52 2004
-@@ -471,8 +471,9 @@ static int scsi_send_eh_cmnd(struct scsi
- 		 * we should treat them differently anyways.
- 		 */
- 		spin_lock_irqsave(scmd->device->host->host_lock, flags);
--		if (scmd->device->host->hostt->eh_abort_handler)
--			scmd->device->host->hostt->eh_abort_handler(scmd);
-+		if (scmd->serial_number != 0)
-+			if (scmd->device->host->hostt->eh_abort_handler)
-+				scmd->device->host->hostt->eh_abort_handler(scmd);
- 		spin_unlock_irqrestore(scmd->device->host->host_lock, flags);
- 			
- 		scmd->request->rq_status = RQ_SCSI_DONE;
-@@ -687,17 +688,17 @@ static int scsi_try_to_abort_cmd(struct 
- 	if (!scmd->device->host->hostt->eh_abort_handler)
- 		return rtn;
- 
-+	spin_lock_irqsave(scmd->device->host->host_lock, flags);
- 	/*
- 	 * scsi_done was called just after the command timed out and before
- 	 * we had a chance to process it. (db)
- 	 */
--	if (scmd->serial_number == 0)
--		return SUCCESS;
+=3D=3D=3D=3D=3D include/scsi/scsi_device.h 1.12 vs edited =3D=3D=3D=3D=3D
+--- 1.12/include/scsi/scsi_device.h	Mon Feb 23 14:41:39 2004
++++ edited/include/scsi/scsi_device.h	Mon Feb 23 15:39:55 2004
+@@ -103,11 +103,11 @@
+ 	struct device		sdev_gendev;
+ 	struct class_device	sdev_classdev;
+=20
+-	void			*transport_attr_values;
+ 	struct class_device	transport_classdev;
+=20
+ 	enum scsi_device_state sdev_state;
+-};
++	unsigned long		transport_data[0];
++} __attribute__((aligned(sizeof(unsigned long))));
+ #define	to_scsi_device(d)	\
+ 	container_of(d, struct scsi_device, sdev_gendev)
+ #define	class_to_sdev(d)	\
+=3D=3D=3D=3D=3D include/scsi/scsi_transport.h 1.1 vs edited =3D=3D=3D=3D=3D
+--- 1.1/include/scsi/scsi_transport.h	Mon Feb 23 14:41:44 2004
++++ edited/include/scsi/scsi_transport.h	Mon Feb 23 15:32:33 2004
+@@ -32,9 +32,10 @@
+ 	/* Constructor/Destructor functions */
+ 	int (* setup)(struct scsi_device *);
+ 	void (* cleanup)(struct scsi_device *);
 -
--	scmd->owner = SCSI_OWNER_LOWLEVEL;
--
--	spin_lock_irqsave(scmd->device->host->host_lock, flags);
--	rtn = scmd->device->host->hostt->eh_abort_handler(scmd);
-+	if (scmd->serial_number == 0) {
-+		rtn = SUCCESS;
-+	} else {
-+		scmd->owner = SCSI_OWNER_LOWLEVEL;
-+		rtn = scmd->device->host->hostt->eh_abort_handler(scmd);
-+	}
- 	spin_unlock_irqrestore(scmd->device->host->host_lock, flags);
- 
- 	return rtn;
+-	/* Default values for the transport attributes */
+-	void *default_attr_values;
++	/* The size of the specific transport attribute structure (a
++	 * space of this size will be left at the end of the
++	 * scsi_device structure */
++	int	size;
+ };
+=20
+ #endif /* SCSI_TRANSPORT_H */
+=3D=3D=3D=3D=3D include/scsi/scsi_transport_spi.h 1.1 vs edited =3D=3D=3D=
+=3D=3D
+--- 1.1/include/scsi/scsi_transport_spi.h	Mon Feb 23 14:41:48 2004
++++ edited/include/scsi/scsi_transport_spi.h	Mon Feb 23 15:56:50 2004
+@@ -29,14 +29,10 @@
+ 	int offset;
+ };
+=20
+-extern struct scsi_transport_template spi_transport_template;
++/* accessor functions */
++#define spi_period(x)	(((struct spi_transport_attrs *)&(x)->transport_data=
+)->period)
++#define spi_offset(x)	(((struct spi_transport_attrs *)&(x)->transport_data=
+)->offset)
+=20
+-#ifdef CONFIG_SCSI_SPI_ATTRS
+-extern int scsi_spi_transport_init(void);
+-extern void scsi_spi_transport_exit(void);
+-#else
+-# define scsi_spi_transport_init() 0
+-# define scsi_spi_transport_exit()
+-#endif
++extern struct scsi_transport_template spi_transport_template;
+=20
+ #endif /* SCSI_TRANSPORT_SPI_H */
 
-_
-
---------------050304050203010600040000--
+--=-7xyG3NCrhlu8WOGUXf2S--
 
