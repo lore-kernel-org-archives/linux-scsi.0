@@ -1,232 +1,83 @@
-From: maximilian attems <janitor@sternwelten.at>
-Subject: Re: [2.6 patch] SCSI aic7xxx: kill kernel 2.2 #ifdef's
-Date: Sat, 23 Oct 2004 20:56:09 +0200
+From: Kai Makisara <Kai.Makisara@kolumbus.fi>
+Subject: Re: st.c page_to_pfn() usage
+Date: Sat, 23 Oct 2004 23:20:51 +0300 (EEST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20041023185609.GC3790@stro.at>
-Reply-To: 20041023163219.GF5110@stusta.de
+Message-ID: <Pine.LNX.4.61.0410232255030.6707@kai.makisara.local>
+References: <20041023113547.GD5855@fenrus.demon.nl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from baikonur.stro.at ([213.239.196.228]:9676 "EHLO baikonur.stro.at")
-	by vger.kernel.org with ESMTP id S261272AbUJWS4I (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 23 Oct 2004 14:56:08 -0400
-Content-Disposition: inline
+Received: from fep32-0.kolumbus.fi ([193.229.0.63]:34038 "EHLO
+	fep32-app.kolumbus.fi") by vger.kernel.org with ESMTP
+	id S261303AbUJWUU4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 23 Oct 2004 16:20:56 -0400
+In-Reply-To: <20041023113547.GD5855@fenrus.demon.nl>
 List-Id: linux-scsi@vger.kernel.org
-To: Adrian Bunk <bunk@stusta.de>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, James.Bottomley@SteelEye.com
+To: Arjan van de Ven <arjan@fenrus.demon.nl>
+Cc: William Lee Irwin III <wli@holomorphy.com>, linux-scsi@vger.kernel.org
 
+On Sat, 23 Oct 2004, Arjan van de Ven wrote:
 
-previous was wrong also removed 2.4 compatibility sorry.
-resent
+> Hi,
+> 
+> I'm auditing kernel uses of page_to_pfn() and I came across st.c. 
+> st.c uses page_to_pfn() twice, the first usage is:
+> 
+> if (page_to_pfn(STbp->sg[i].page) == page_to_pfn(STbp->sg[i-1].page) + 1)
+> 	STp->nbr_combinable++;
+> 
+> which looks quite incorrect, I *think* the code wants to check "physically
+> contiguous" however pfn is the wrong thing to check there; with discontigmem
+> (which is basically true now for all 64 bit architectures), the assumption
+> "pfn and pfn+1 are physically next to each other" isn't per se true,
+> example:
+> 
+> |----- zone 1 ----------|     gap     |-------- zone 2 ----------|
+> 
+> the last page of zone 1 and the first page of zone 2 may be 1 pfn appart in the
+> discontigmem case, but physically far appart.
+> 
+The code is inside DEB(), i.e., it is debugging code. The purpose of the 
+code is to count the occasions where physically contiguous pages could be 
+combined to a single scatter/gather segment. No decisions are made based 
+on the result. My experiments suggested that combining is not usually 
+possible and it is not worth trying. I did not rip off the code in case it 
+would prove useful later. If it is incorrect, the easiest solution is to 
+rip off everything related to STp->nbr_combinable.
 
+> 
+> the other page_to_pfn() user is st_map_user_pages():
+>         for (i=0; i < nr_pages; i++) {
+>                 if (page_to_pfn(sgl[i].page) > max_pfn)
+>                         goto out_unmap;
+>         }
+> 
+> and again I get the suspicion this is not the right thing to do...
+> it *looks* like you want to detect userspace mmaped vmalloc() pages or
+> mmaped pci mmio ranges and the like, however the test is entirely the wrong
+> thing for that, take an average x86 server PC with say 6Gb of memory:
+> 
+> 0               3.5Gb              4Gb           6.5Gb
+> |-------------------||-- PCI GAP --||---------------|
+> 
+> and something similar happens for vmalloc; however I fully admit that I
+> don't quite entirely understand the purpose of this code yet, so maybe I'm
+> misreading the intention of the code
 
-the kjt patchset has an similar patch, that got sent to James:
-the bits below were a leftover of a janitor patch removing
-aic7xxx and aic79xx old ifdefs.
- 
---
-maks
-kernel janitor  	http://janitor.kernelnewbies.org/
+The purpose of the code is to check if the pages are directly reachable by 
+the SCSI HBA. If not, the driver reverts to bouncing all pages of this 
+request. As William points out, a better name for the field would
+have been bounce_pfn. The value is computed by the code fragment:
 
- From: Domen Puncer <domen@coderock.org>
+        bounce_limit = scsi_calculate_bounce_limit(SDp->host) >> PAGE_SHIFT;
+        if (bounce_limit > ULONG_MAX)
+                bounce_limit = ULONG_MAX;
+        tpnt->max_pfn = bounce_limit;
 
- Patches to remove some old ifdefs.
- remove most of the #include <linux/version.h>
- kill compat cruft like #define ahd_pci_set_dma_mask pci_set_dma_mask
+I have never been quite sure that this is correct in all architectures. 
+However, I have copied the usage from ll_rw_blk.c. If you suggest a 
+better method, please see that ll_rw_blk.c is also fixed (unless I have 
+read ll_rw_blk.c incorrectly).
 
-Signed-off-by: Maximilian Attems <janitor@sternwelten.at>
-
-
----
-
- linux-2.6.9-rc1-max/drivers/scsi/aic7xxx/aic7xxx_osm_pci.c |   86 -------------
- 1 files changed, 86 deletions(-)
-
-diff -puN drivers/scsi/aic7xxx/aic7xxx_osm_pci.c~remove-old-ifdefs-aic7xxx_osm_pci drivers/scsi/aic7xxx/aic7xxx_osm_pci.c
---- a/drivers/scsi/aic7xxx/aic7xxx_osm_pci.c~remove-old-ifdefs-aic7xxx_osm_pci	2004-10-23 20:51:22.000000000 +0200
-+++ b/drivers/scsi/aic7xxx/aic7xxx_osm_pci.c	2004-10-23 20:51:50.000000000 +0200
-@@ -42,12 +42,6 @@
- #include "aic7xxx_osm.h"
- #include "aic7xxx_pci.h"
- 
--#if LINUX_VERSION_CODE < KERNEL_VERSION(2,4,0)
--struct pci_device_id
--{
--};
--#endif
--
- static int	ahc_linux_pci_dev_probe(struct pci_dev *pdev,
- 					const struct pci_device_id *ent);
- static int	ahc_linux_pci_reserve_io_region(struct ahc_softc *ahc,
-@@ -55,7 +49,6 @@ static int	ahc_linux_pci_reserve_io_regi
- static int	ahc_linux_pci_reserve_mem_region(struct ahc_softc *ahc,
- 						 u_long *bus_addr,
- 						 uint8_t __iomem **maddr);
--#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0)
- static void	ahc_linux_pci_dev_remove(struct pci_dev *pdev);
- 
- /* Define the macro locally since it's different for different class of chips.
-@@ -169,7 +162,6 @@ ahc_linux_pci_dev_remove(struct pci_dev 
- 	} else
- 		ahc_list_unlock(&l);
- }
--#endif /* !LINUX_VERSION_CODE < KERNEL_VERSION(2,4,0) */
- 
- static int
- ahc_linux_pci_dev_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
-@@ -219,7 +211,6 @@ ahc_linux_pci_dev_probe(struct pci_dev *
- 	ahc = ahc_alloc(NULL, name);
- 	if (ahc == NULL)
- 		return (-ENOMEM);
--#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0)
- 	if (pci_enable_device(pdev)) {
- 		ahc_free(ahc);
- 		return (-ENODEV);
-@@ -239,14 +230,12 @@ ahc_linux_pci_dev_probe(struct pci_dev *
- 		}
- 		ahc->platform_data->hw_dma_mask = 0xFFFFFFFF;
- 	}
--#endif
- 	ahc->dev_softc = pci;
- 	error = ahc_pci_config(ahc, entry);
- 	if (error != 0) {
- 		ahc_free(ahc);
- 		return (-error);
- 	}
--#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0)
- 	pci_set_drvdata(pdev, ahc);
- 	if (aic7xxx_detect_complete) {
- #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,5,0)
-@@ -257,39 +246,14 @@ ahc_linux_pci_dev_probe(struct pci_dev *
- 		return (-ENODEV);
- #endif
- 	}
--#endif
- 	return (0);
- }
- 
- int
- ahc_linux_pci_init(void)
- {
--#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0)
- 	/* Translate error or zero return into zero or one */
- 	return pci_module_init(&aic7xxx_pci_driver) ? 0 : 1;
--#else
--	struct pci_dev *pdev;
--	u_int class;
--	int found;
--
--	/* If we don't have a PCI bus, we can't find any adapters. */
--	if (pci_present() == 0)
--		return (0);
--
--	found = 0;
--	pdev = NULL;
--	class = PCI_CLASS_STORAGE_SCSI << 8;
--	while ((pdev = pci_find_class(class, pdev)) != NULL) {
--		ahc_dev_softc_t pci;
--		int error;
--
--		pci = pdev;
--		error = ahc_linux_pci_dev_probe(pdev, /*pci_devid*/NULL);
--		if (error == 0)
--			found++;
--	}
--	return (found);
--#endif
- }
- 
- void
-@@ -304,22 +268,11 @@ ahc_linux_pci_reserve_io_region(struct a
- 	if (aic7xxx_allow_memio == 0)
- 		return (ENOMEM);
- 
--#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,3,0)
- 	*base = pci_resource_start(ahc->dev_softc, 0);
--#else
--	*base = ahc_pci_read_config(ahc->dev_softc, PCIR_MAPS, 4);
--	*base &= PCI_BASE_ADDRESS_IO_MASK;
--#endif
- 	if (*base == 0)
- 		return (ENOMEM);
--#if LINUX_VERSION_CODE < KERNEL_VERSION(2,4,0)
--	if (check_region(*base, 256) != 0)
--		return (ENOMEM);
--	request_region(*base, 256, "aic7xxx");
--#else
- 	if (request_region(*base, 256, "aic7xxx") == 0)
- 		return (ENOMEM);
--#endif
- 	return (0);
- }
- 
-@@ -335,17 +288,13 @@ ahc_linux_pci_reserve_mem_region(struct 
- 	start = pci_resource_start(ahc->dev_softc, 1);
- 	if (start != 0) {
- 		*bus_addr = start;
--#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0)
- 		if (request_mem_region(start, 0x1000, "aic7xxx") == 0)
- 			error = ENOMEM;
--#endif
- 		if (error == 0) {
- 			*maddr = ioremap_nocache(start, 256);
- 			if (*maddr == NULL) {
- 				error = ENOMEM;
--#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0)
- 				release_mem_region(start, 0x1000);
--#endif
- 			}
- 		}
- 	} else
-@@ -388,10 +337,8 @@ ahc_pci_map_registers(struct ahc_softc *
- 			       ahc_get_pci_slot(ahc->dev_softc),
- 			       ahc_get_pci_function(ahc->dev_softc));
- 			iounmap(maddr);
--#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0)
- 			release_mem_region(ahc->platform_data->mem_busaddr,
- 					   0x1000);
--#endif
- 			ahc->bsh.maddr = NULL;
- 			maddr = NULL;
- 		} else
-@@ -444,38 +391,5 @@ ahc_pci_map_int(struct ahc_softc *ahc)
- void
- ahc_power_state_change(struct ahc_softc *ahc, ahc_power_state new_state)
- {
--#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0)
- 	pci_set_power_state(ahc->dev_softc, new_state);
--#else
--	uint32_t cap;
--	u_int cap_offset;
--
--	/*
--	 * Traverse the capability list looking for
--	 * the power management capability.
--	 */
--	cap = 0;
--	cap_offset = ahc_pci_read_config(ahc->dev_softc,
--					 PCIR_CAP_PTR, /*bytes*/1);
--	while (cap_offset != 0) {
--
--		cap = ahc_pci_read_config(ahc->dev_softc,
--					  cap_offset, /*bytes*/4);
--		if ((cap & 0xFF) == 1
--		 && ((cap >> 16) & 0x3) > 0) {
--			uint32_t pm_control;
--
--			pm_control = ahc_pci_read_config(ahc->dev_softc,
--							 cap_offset + 4,
--							 /*bytes*/4);
--			pm_control &= ~0x3;
--			pm_control |= new_state;
--			ahc_pci_write_config(ahc->dev_softc,
--					     cap_offset + 4,
--					     pm_control, /*bytes*/2);
--			break;
--		}
--		cap_offset = (cap >> 8) & 0xFF;
--	}
--#endif 
- }
-_
+-- 
+Kai
