@@ -1,60 +1,82 @@
-From: "Heiko Carstens" <Heiko.Carstens@de.ibm.com>
-Subject: Re: linux-2.6.0-test11 [BUG] -- scsi_add/remove_device - out of memory
-Date: Wed, 14 Jan 2004 11:39:30 +0100
+From: Miquel van Smoorenburg <miquels@cistron.nl>
+Subject: make sysfs scsi queue_depth read/write [patch]
+Date: Wed, 14 Jan 2004 12:41:34 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <OF8911B999.C4375764-ONC1256E1B.00394202-C1256E1B.003A9BC8@de.ibm.com>
+Message-ID: <20040114114132.GA12621@cistron.nl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtagate3.de.ibm.com ([195.212.29.152]:4275 "EHLO
-	mtagate3.de.ibm.com") by vger.kernel.org with ESMTP id S265331AbUANKjh
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 14 Jan 2004 05:39:37 -0500
+Received: from 10fwd.cistron-office.nl ([62.216.29.197]:10958 "EHLO
+	smtp.cistron-office.nl") by vger.kernel.org with ESMTP
+	id S265828AbUANLlh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 14 Jan 2004 06:41:37 -0500
+Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Anderson <andmike@us.ibm.com>
-Cc: Adam Radford <aradford@3WARE.com>, linux-scsi@vger.kernel.org
+To: James.Bottomley@SteelEye.com
+Cc: linux-scsi@vger.kernel.org
 
-I guess you are right and I am wrong :)
+[please keep me Cc:'ed, I'm not on linux-scsi]
 
-What actually happened: when adding and removing scsi devices in an
-endless loop the system ran out of memory and the oom killer started
-killing processes. So I thought that there must be a memory leak.
+I have been testing with a 3ware controller over the last few weeks.
+It turns out that in RAID5 mode, it performs much better if the
+queue depth is limited to 64 instead of the default 254.
 
-But, if you only add and remove a certain amount of disks,then wait
-a moment and then do it with the next bunch this will not happen.
-The reason for the memory shortage was actually that the kernel
-generated lots of hotplug events and each of these events started
-/sbin/hotplug eating up some memory. This explains also why memory
-was available again after waiting for a short moment.
+So I patched the 3ware driver to make this tunable through a kernel/module
+command line option, documented my findings, and send all that
+stuff to the (very responsive) 3ware folks who are now looking at it
+to see if this fixes a problem or just the symptoms of a
+bigger problem.
 
-So, the solution to this problem seems to be: don't do it.
+Then it occured to me that it would be much easier to set this
+limit (which is per device, not per host anyway) though sysfs.
+Since a lot of SCSI drivers have options to set the queue depth,
+it probably fills a need.
 
-Heiko
+Below is a patch that makes /sys/block/<dev>/device/queue_depth
+a read/write variable. Minimum limit is 1, maximum limit is the
+value set in host->cmd_per_lun, so it should be perfectly safe.
 
-To:     Heiko Carstens/Germany/IBM@IBMDE
-cc:     Adam Radford <aradford@3WARE.com>, linux-scsi@vger.kernel.org 
-Subject:        Re: linux-2.6.0-test11 [BUG] -- scsi_add/remove_device - out of memory
+Since the patch is trivial and it fixes a real problem (in my case,
+tuning this gains 200% performance) please consider this for
+2.6.NEXT (or 2.6.mm-next).
+
+Thanks,
+
+Mike.
+
+--- linux-2.6.1/drivers/scsi/scsi_sysfs.c.ORIG	2004-01-09 07:59:10.000000000 +0100
++++ linux-2.6.1/drivers/scsi/scsi_sysfs.c	2004-01-14 12:26:23.000000000 +0100
+@@ -259,7 +259,6 @@
+  * Create the actual show/store functions and data structures.
+  */
+ sdev_rd_attr (device_blocked, "%d\n");
+-sdev_rd_attr (queue_depth, "%d\n");
+ sdev_rd_attr (type, "%d\n");
+ sdev_rd_attr (scsi_level, "%d\n");
+ sdev_rd_attr (vendor, "%.8s\n");
+@@ -283,6 +282,22 @@
+ };
+ static DEVICE_ATTR(delete, S_IWUSR, NULL, sdev_store_delete);
+ 
++sdev_show_function(queue_depth, "%d\n")
++static ssize_t sdev_store_queue_depth(struct device *dev, const char *buf,
++				 size_t count)
++{
++	int val;
++	struct scsi_device *sdev;
++	if (sscanf(buf, "%d", &val) != 1)
++		return -EINVAL;
++	sdev = to_scsi_device(dev);
++	if (!sdev || val < 1 || val > sdev->host->cmd_per_lun)
++		return -EINVAL;
++	sdev->queue_depth = val;
++	return count;
++}
++static DEVICE_ATTR(queue_depth, S_IRUGO | S_IWUSR, sdev_show_queue_depth, sdev_store_queue_depth)
++
+ /* Default template for device attributes.  May NOT be modified */
+ static struct device_attribute *scsi_sysfs_sdev_attrs[] = {
+ 	&dev_attr_device_blocked,
 
 
-Heiko Carstens [Heiko.Carstens@de.ibm.com] wrote:
-> Hi,
-> 
-> yes, now that I had some more time to look into it I found a leak.
-> Actually the scsi mid layer creates a lot of sysfs attributes but
-> doesn't remove a single one if a scsi device or a host gets removed.
-> Since e.g. device_del (as it is called by scsi_remove_device) does
-> not automatically remove all previously registered sysfs
-> attributes, we end up with objects that have a reference count > 0
-> and thus will never be released and eat up memory.
-> 
-> Heiko
-
-Maybe something has changed, but the device_del calls kobject_del which
-calls sysfs_remove_dir. sysfs_remove_dir removes all children enteries
-created by sysfs_create_file. This should clean up the attributes.
-
--andmike
---
-Michael Anderson
-andmike@us.ibm.com
 
