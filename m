@@ -1,200 +1,42 @@
-From: Mischa <mischa@multiply.ch>
-Subject: Kernel Panic (probably caused by aic7xxx module) with 2.6.x
-Date: Thu, 4 Nov 2004 11:57:01 +0100
-Message-ID: <200411041157.01703.mischa@multiply.ch>
+From: "Dana " <522tombstone@cassava.net>
+Subject: adrenal
+Date: Thu, 04 Nov 2004 04:52:35 -0800
+Message-ID: <20041025PUKWANNJS1254MVR__21353.7167328925$1099572400$gmane$org@asapsc.com>
+Reply-To: "Dana " <522tombstone@cassava.net>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail03.agrinet.ch ([81.221.250.52]:43531 "EHLO
-	mail03.agrinet.ch") by vger.kernel.org with ESMTP id S261385AbUKDKtn
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 4 Nov 2004 05:49:43 -0500
-Received: from ikarus.care.sys (80.254.173.133) by mail03.agrinet.ch (7.0.024)
-        id 4178161300146274 for linux-scsi@vger.kernel.org; Thu, 4 Nov 2004 11:49:42 +0100
-Received: from [192.168.2.51] (unknown [192.168.2.51])
-	by ikarus.care.sys (Postfix) with ESMTP id E616420DD01
-	for <linux-scsi@vger.kernel.org>; Thu,  4 Nov 2004 11:49:41 +0100 (CET)
-Content-Disposition: inline
+Received: from 200-161-213-159.dsl.telesp.net.br ([200.161.213.159]:64270 "HELO
+	200-161-213-159.dsl.telesp.net.br") by vger.kernel.org with SMTP
+	id S262204AbUKDMmz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 4 Nov 2004 07:42:55 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-Hi 
- 
-We have several Kernel Panics with the following Hardware: 
- 
-Hardware Setup: 
- 
-Dell PowerEdge 2650 
-1 Dual Channel RAID Controller 
-1 Adaptec 3960D Ultra160 SCSI adapter (onBoard, not used) 
-1 Dual Channel Adaptec aic7899 Ultra160 SCSI adapter (used for extarnal 
-Tape-Backup) 
- 
-Kernel Version: 
-2.6.8.1 
- 
-Problems: 
-The Kernel Panics appear if you try to use the external tape, but also 
-randomly in time. There were also Panics with a less output than the posted 
-one. 
- 
-Temporary Solution: 
-If we don't load the aic7xxx kernel module, the server run stable. 
- 
-The panics also appear with Kernel 2.6.9 and if we deactivated the unused 
-onboard SCSI-Controller. 
- 
-Does anyone else know a solution or has seen problems like this? 
- 
-Thanks a lot for help. 
- 
-Mischa 
- 
-dmesg output: 
--=================================================================== -
- scsi1 : Adaptec AIC7XXX EISA/VLB/PCI SCSI HBA DRIVER, Rev 6.2.36 
-         <Adaptec 3960D Ultra160 SCSI adapter> 
-         aic7899: Ultra160 Wide Channel A, SCSI Id=7, 32/253 SCBs 
- 
- (scsi1:A:3): 10.000MB/s transfers (10.000MHz, offset 32) 
-   Vendor: HP        Model: C1537A            Rev: L105 
-   Type:   Sequential-Access                  ANSI SCSI revision: 02 
- Attached scsi tape st0 at scsi1, channel 0, id 3, lun 0 
- st0: try direct i/o: yes (alignment 512 B), max page reachable by HBA 1048575 
- Attached scsi generic sg2 at scsi1, channel 0, id 3, lun 0,  type 1 
- scsi2 : Adaptec AIC7XXX EISA/VLB/PCI SCSI HBA DRIVER, Rev 6.2.36 
-         <Adaptec 3960D Ultra160 SCSI adapter> 
-         aic7899: Ultra160 Wide Channel B, SCSI Id=7, 32/253 SCBs 
- 
- scsi3 : Adaptec AIC7XXX EISA/VLB/PCI SCSI HBA DRIVER, Rev 6.2.36 
-         <Adaptec aic7899 Ultra160 SCSI adapter> 
-         aic7899: Ultra160 Wide Channel A, SCSI Id=7, 32/253 SCBs 
- 
- scsi4 : Adaptec AIC7XXX EISA/VLB/PCI SCSI HBA DRIVER, Rev 6.2.36 
-         <Adaptec aic7899 Ultra160 SCSI adapter> 
-         aic7899: Ultra160 Wide Channel B, SCSI Id=7, 32/253 SCBs 
- 
- XFS mounting filesystem dm-18 
- Starting XFS recovery on filesystem: dm-18 (dev: dm-18) 
- Ending XFS recovery on filesystem: dm-18 (dev: dm-18) 
- XFS mounting filesystem dm-8 
- Starting XFS recovery on filesystem: dm-8 (dev: dm-8) 
- Ending XFS recovery on filesystem: dm-8 (dev: dm-8) 
- XFS mounting filesystem dm-6 
- Starting XFS recovery on filesystem: dm-6 (dev: dm-6) 
- Ending XFS recovery on filesystem: dm-6 (dev: dm-6) 
- XFS mounting filesystem dm-10 
- Starting XFS recovery on filesystem: dm-10 (dev: dm-10) 
- Ending XFS recovery on filesystem: dm-10 (dev: dm-10) 
- XFS mounting filesystem dm-14 
- Starting XFS recovery on filesystem: dm-14 (dev: dm-14) 
- Ending XFS recovery on filesystem: dm-14 (dev: dm-14) 
- XFS mounting filesystem dm-2 
- Starting XFS recovery on filesystem: dm-2 (dev: dm-2) 
- Ending XFS recovery on filesystem: dm-2 (dev: dm-2) 
- ISO 9660 Extensions: Microsoft Joliet Level 1 
- ISOFS: changing to secondary root 
- tg3: eth1: Link is up at 100 Mbps, full duplex. 
- tg3: eth1: Flow control is off for TX and off for RX. 
- process `named' is using obsolete setsockopt SO_BSDCOMPAT 
- tg3: eth0: Link is up at 1000 Mbps, full duplex. 
- tg3: eth0: Flow control is on for TX and on for RX. 
- st0: Block limits 1 - 16777215 bytes. 
- Unable to handle kernel paging request at virtual address 6e6962d0 
-  printing eip: 
- c0117d8f 
- *pde = 00000000 
- Oops: 0000 [#1] 
- PREEMPT SMP 
- Modules linked in: aic7xxx st 
- CPU:    27 
- EIP:    0060:[<c0117d8f>]    Not tainted 
- EFLAGS: 00010897   (2.6.8.1) 
- EIP is at do_page_fault+0x44/0x56f 
- eax: d0ca4000   ebx: 00000246   ecx: 0000007b   edx: 00000000 
- esi: 00000000   edi: c0117d4b   ebp: 6e696268   esp: d0ca40a8 
- ds: 007b   es: 007b   ss: 0068 
- Process desk[1].txt (pid: -801734524, threadinfo=d0ca3000 task=d0368000) 
- Stack: 0000040d 0000004a fffffffb 0000003b 4d677541 6e6962d0 00000001 
-00000001 
-        00030001 00000000 73c92b7c 6f4b0010 6e756d6d 74616b69 006e6f69 
-4d4d4f4b 
-        317e4e55 00000000 040d0000 003a0000 fffb0000 002cffff 75410000 
-00014d67 
- Call Trace: 
-  [<c0117d4b>] do_page_fault+0x0/0x56f 
-  [<c0106b81>] error_code+0x2d/0x38 
-  [<c0117d4b>] do_page_fault+0x0/0x56f 
-  [<c0117d8f>] do_page_fault+0x44/0x56f 
-  [<c0117d4b>] do_page_fault+0x0/0x56f 
-  [<c0106b81>] error_code+0x2d/0x38 
-  [<c0117d4b>] do_page_fault+0x0/0x56f 
-  [<c0117d8f>] do_page_fault+0x44/0x56f 
-  [<c0117d4b>] do_page_fault+0x0/0x56f 
-  [<c0106b81>] error_code+0x2d/0x38 
-  [<c0117d4b>] do_page_fault+0x0/0x56f 
-  [<c0117d8f>] do_page_fault+0x44/0x56f 
-  [<c0117d4b>] do_page_fault+0x0/0x56f 
-  [<c0106b81>] error_code+0x2d/0x38 
-  [<c0117d4b>] do_page_fault+0x0/0x56f 
-  [<c0117d8f>] do_page_fault+0x44/0x56f 
-  [<c0117d4b>] do_page_fault+0x0/0x56f 
-  [<c0106b81>] error_code+0x2d/0x38 
-  [<c0117d4b>] do_page_fault+0x0/0x56f 
-  [<c0117d8f>] do_page_fault+0x44/0x56f 
-  [<c0117d4b>] do_page_fault+0x0/0x56f 
-  [<c0106b81>] error_code+0x2d/0x38 
-  [<c0117d4b>] do_page_fault+0x0/0x56f 
-  [<c0117d8f>] do_page_fault+0x44/0x56f 
-  [<c0117d4b>] do_page_fault+0x0/0x56f 
-  [<c0106b81>] error_code+0x2d/0x38 
-  [<c0117d4b>] do_page_fault+0x0/0x56f 
-  [<c0117d8f>] do_page_fault+0x44/0x56f 
-  [<c0117d4b>] do_page_fault+0x0/0x56f 
-  [<c0106b81>] error_code+0x2d/0x38 
-  [<c0117d4b>] do_page_fault+0x0/0x56f 
-  [<c0117d8f>] do_page_fault+0x44/0x56f 
-  [<c0117d4b>] do_page_fault+0x0/0x56f 
-  [<c0106b81>] error_code+0x2d/0x38 
-  [<c0117d4b>] do_page_fault+0x0/0x56f 
-  [<c0117d8f>] do_page_fault+0x44/0x56f 
-  [<c0117d4b>] do_page_fault+0x0/0x56f 
-  [<c0106b81>] error_code+0x2d/0x38 
-  [<c0117d4b>] do_page_fault+0x0/0x56f 
-  [<c0117d8f>] do_page_fault+0x44/0x56f 
-  [<c0117d4b>] do_page_fault+0x0/0x56f 
-  [<c0106b81>] error_code+0x2d/0x38 
-  [<c0117d4b>] do_page_fault+0x0/0x56f 
-  [<c0117d8f>] do_page_fault+0x44/0x56f 
-  [<c0117d4b>] do_page_fault+0x0/0x56f 
-  [<c0106b81>] error_code+0x2d/0x38 
-  [<c0117d4b>] do_page_fault+0x0/0x56f 
-  [<c0117d8f>] do_page_fault+0x44/0x56f 
-  [<c0117d4b>] do_page_fault+0x0/0x56f 
-  [<c0106b81>] error_code+0x2d/0x38 
-  [<c0117d4b>] do_page_fault+0x0/0x56f 
-  [<c0117d8f>] do_page_fault+0x44/0x56f 
-  [<c0117d4b>] do_page_fault+0x0/0x56f 
-  [<c0106b81>] error_code+0x2d/0x38 
-  [<c0117d4b>] do_page_fault+0x0/0x56f 
-  [<c0117d8f>] do_page_fault+0x44/0x56f 
-  [<c0117d4b>] do_page_fault+0x0/0x56f 
-  [<c0106b81>] error_code+0x2d/0x38 
-  [<c0117d4b>] do_page_fault+0x0/0x56f 
-  [<c0117d8f>] do_page_fault+0x44/0x56f 
-  [<c0117d4b>] do_page_fault+0x0/0x56f 
-  [<c0106b81>] error_code+0x2d/0x38 
-  [<c0117d4b>] do_page_fault+0x0/0x56f 
-  [<c0117d8f>] do_page_fault+0x44/0x56f 
-  [<c0117d4b>] do_page_fault+0x0/0x56f 
-  [<c0106b81>] error_code+0x2d/0x38 
-  [<c0117d4b>] do_page_fault+0x0/0x56f 
-  ======================= 
- Unable to handle kernel NULL pointer dereference at virtual address 00000001 
-  printing eip: 
- c0106d84 
- *pde = 00000000 
--=================================================================== -
+You're invited...
+
+You have been nominated by a friend to participate in our new initiative.
+
+As of this year, we are allowing a select few individuals to obtain an Official Degree from one of ten respected Universities without ever opening a book or taking a test.
+
+All we require is that you confirm your nomination on our secure site and we will ship the degree of your choice to you worldwide.
+
+
+http://quickcollegedegree.com/?partid=wh6
+
+--Dana 
+Independent University Organization
+I.D. #wh6-455
+
+
+
+If you have recieved this message in error please go here:
+http://quickcollegedegree.com/st.htm
+
+
+
+
+
+
+
+
