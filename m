@@ -1,83 +1,154 @@
-From: Badari Pulavarty <pbadari@us.ibm.com>
-Subject: Re: [patch for playing] 2.5.65 patch to support > 256 disks
-Date: Mon, 24 Mar 2003 14:54:03 -0800
+From: Patrick Mansfield <patmans@us.ibm.com>
+Subject: [PATCH] 3/7 consolidate single_lun code
+Date: Mon, 24 Mar 2003 18:02:47 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <200303241454.03744.pbadari@us.ibm.com>
-References: <200303211056.04060.pbadari@us.ibm.com> <200303241332.56996.pbadari@us.ibm.com> <3E7F853B.1020603@torque.net>
+Message-ID: <20030324180247.B15047@beaverton.ibm.com>
+References: <20030324175337.A14957@beaverton.ibm.com> <20030324175422.A14996@beaverton.ibm.com> <20030324180227.A15047@beaverton.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <3E7F853B.1020603@torque.net>
+Received: from westrelay04.boulder.ibm.com (westrelay04.boulder.ibm.com [9.17.193.32])
+	by e35.co.us.ibm.com (8.12.8/8.12.2) with ESMTP id h2P26LgJ072818
+	for <linux-scsi@vger.kernel.org>; Mon, 24 Mar 2003 21:06:21 -0500
+Received: from localhost.localdomain (d03av02.boulder.ibm.com [9.17.193.82])
+	by westrelay04.boulder.ibm.com (8.12.8/NCO/VER6.5) with ESMTP id h2P26KVR125776
+	for <linux-scsi@vger.kernel.org>; Mon, 24 Mar 2003 19:06:20 -0700
+Received: (from patman@localhost)
+	by localhost.localdomain (8.11.2/8.11.6) id h2P22lq15133
+	for linux-scsi@vger.kernel.org; Mon, 24 Mar 2003 18:02:47 -0800
+Content-Disposition: inline
+In-Reply-To: <20030324180227.A15047@beaverton.ibm.com>; from patmans@us.ibm.com on Mon, Mar 24, 2003 at 06:02:27PM -0800
 List-Id: linux-scsi@vger.kernel.org
-To: dougg@torque.net
-Cc: Andrew Morton <akpm@digeo.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Jens Axboe <axboe@suse.de>
+To: linux-scsi@vger.kernel.org
 
-On Monday 24 March 2003 02:22 pm, Douglas Gilbert wrote:
-> Badari Pulavarty wrote:
-> > On Saturday 22 March 2003 04:05 am, Andrew Morton wrote:
-> >>OK, thanks.  So with 48 disks you've lost five megabytes to
-> >> blkdev_requests and deadline_drq objects.  With 4000 disks, you're
-> >> toast.  That's enough request structures to put 200 gigabytes of memory
-> >> under I/O ;)
-> >>
-> >>We need to make the request structures dymanically allocated for other
-> >>reasons (which I cannot immediately remember) but it didn't happen.  I
-> >>guess we have some motivation now.
-> >
-> > Here is the list of slab caches which consumed more than 1 MB
-> > in the process of inserting 4000 disks.
-> >
-> > #insmod scsi_debug.ko add_host=4 num_devs=1000
-> >
-> > deadline_drq    before:1280 after:1025420 diff:1024140 size:64
-> > incr:65544960 blkdev_requests  before:1280 after:1025400 diff:1024120
-> > size:156 incr:159762720
-> >
-> > * deadline_drq, blkdev_requests consumed almost 80 MB. We need to fix
-> > this.
-> >
-> > inode_cache     before:700 after:140770 diff:140070 size:364
-> > incr:50985480 dentry_cache    before:4977 after:145061 diff:140084
-> > size:172 incr:24094448
-> >
-> > * inode cache increased by 50 MB, dentry cache 24 MB.
-> > It looks like we cached 140,000 inodes. I wonder why ?
-> >
->  > <snip/>
->
-> Badari,
-> What number do you get from
->   # cd /sys; du -a | wc
-> when you have 4000 disks?
+Consolidate scsi single_lun code.
 
-[root@elm3b78 sysfs]# du -a | wc -l
- 140735
-
-Okay. That explains the inodes.
-
->
-> Also scsi_debug should use only 8 MB (default) for
-> simulated storage shared between all pseudo disks
-> (i.e. not 8 MB per simulated host).
-
-Hmm. When I did
-insmod scsi_debug.o add_host=1 num_devs=4000
-it used 8MB. 
-
-But when I did
-insmod scsi_debug.o add_host=4 num_devs=1000
-it used 32 MB. So I assumed it is per host.
-
-Before:
-size-8192              8      8   8192    8    8    2 :    8    4 :      9      
-12    10    2    0    0   37 :      3     12      7      0
-After:
-size-8192           4010   4010   8192 4010 4010    2 :    8    4 :   4010    
-4014  4012    2    0    0   37 :   4006   4014   4011      0
-
-Thanks,
-Badari
-
-
-
+diff -purN -X /home/patman/dontdiff put_cmd-25/drivers/scsi/scsi_lib.c lun-single-25/drivers/scsi/scsi_lib.c
+--- put_cmd-25/drivers/scsi/scsi_lib.c	Mon Mar 24 12:14:51 2003
++++ lun-single-25/drivers/scsi/scsi_lib.c	Mon Mar 24 12:14:55 2003
+@@ -323,6 +323,49 @@ void scsi_setup_cmd_retry(struct scsi_cm
+ }
+ 
+ /*
++ * Called for single_lun devices. The target associated with current_sdev can
++ * only handle one active command at a time. Scan through all of the luns
++ * on the same target as current_sdev, return 1 if any are active.
++ */
++static int scsi_single_lun_check(struct scsi_device *current_sdev)
++{
++	struct scsi_device *sdev;
++
++	list_for_each_entry(sdev, &current_sdev->same_target_siblings,
++			    same_target_siblings)
++		if (sdev->device_busy)
++			return 1;
++	return 0;
++}
++
++/*
++ * Called for single_lun devices on IO completion. If no requests
++ * outstanding for current_sdev, call __blk_run_queue for the next
++ * scsi_device on the same target that has requests.
++ *
++ * Called with queue_lock held.
++ */
++static void scsi_single_lun_run(struct scsi_device *current_sdev,
++				 struct request_queue *q)
++{
++	struct scsi_device *sdev;
++	struct Scsi_Host *shost;
++
++	shost = current_sdev->host;
++	if (blk_queue_empty(q) && current_sdev->device_busy == 0 &&
++	    !shost->host_blocked && !shost->host_self_blocked &&
++	    !((shost->can_queue > 0) &&
++	      (shost->host_busy >= shost->can_queue)))
++		list_for_each_entry(sdev, &current_sdev->same_target_siblings,
++				    same_target_siblings)
++			if (!sdev->device_blocked &&
++			    !blk_queue_empty(sdev->request_queue)) {
++				__blk_run_queue(sdev->request_queue);
++				break;
++			}
++}
++
++/*
+  * Function:    scsi_queue_next_request()
+  *
+  * Purpose:     Handle post-processing of completed commands.
+@@ -390,29 +433,11 @@ void scsi_queue_next_request(request_que
+ 	}
+ 
+ 	sdev = q->queuedata;
+-	shost = sdev->host;
+ 
+-	/*
+-	 * If this is a single-lun device, and we are currently finished
+-	 * with this device, then see if we need to get another device
+-	 * started.  FIXME(eric) - if this function gets too cluttered
+-	 * with special case code, then spin off separate versions and
+-	 * use function pointers to pick the right one.
+-	 */
+-	if (sdev->single_lun && blk_queue_empty(q) && sdev->device_busy ==0 &&
+-			!shost->host_blocked && !shost->host_self_blocked &&
+-			!((shost->can_queue > 0) && (shost->host_busy >=
+-				       		     shost->can_queue))) {
+-		list_for_each_entry(sdev2, &sdev->same_target_siblings,
+-			       same_target_siblings) {
+-			if (!sdev2->device_blocked &&
+-			    !blk_queue_empty(sdev2->request_queue)) {
+-				__blk_run_queue(sdev2->request_queue);
+-				break;
+-			}
+-		}
+-	}
++	if (sdev->single_lun)
++		scsi_single_lun_run(sdev, q);
+ 
++	shost = sdev->host;
+ 	while (!list_empty(&shost->starved_list) &&
+ 	       !shost->host_blocked && !shost->host_self_blocked &&
+ 		!((shost->can_queue > 0) &&
+@@ -917,22 +942,6 @@ static int scsi_init_io(struct scsi_cmnd
+ 	return BLKPREP_KILL;
+ }
+ 
+-/*
+- * The target associated with myself can only handle one active command at
+- * a time. Scan through all of the luns on the same target as myself,
+- * return 1 if any are active.
+- */
+-static int check_all_luns(struct scsi_device *myself)
+-{
+-	struct scsi_device *sdev;
+-
+-	list_for_each_entry(sdev, &myself->same_target_siblings,
+-			    same_target_siblings)
+-		if (sdev->device_busy)
+-			return 1;
+-	return 0;
+-}
+-
+ static int scsi_prep_fn(struct request_queue *q, struct request *req)
+ {
+ 	struct Scsi_Device_Template *sdt;
+@@ -1077,9 +1086,6 @@ static void scsi_request_fn(request_queu
+ 		if (sdev->device_busy >= sdev->queue_depth)
+ 			break;
+ 
+-		if (sdev->single_lun && check_all_luns(sdev))
+-			break;
+-
+ 		if (shost->host_busy == 0 && shost->host_blocked) {
+ 			/* unblock after host_blocked iterates to zero */
+ 			if (--shost->host_blocked == 0) {
+@@ -1120,6 +1126,9 @@ static void scsi_request_fn(request_queu
+ 			break;
+ 		}
+ 
++		if (sdev->single_lun && scsi_single_lun_check(sdev))
++			break;
++
+ 		/*
+ 		 * If we couldn't find a request that could be queued, then we
+ 		 * can also quit.
