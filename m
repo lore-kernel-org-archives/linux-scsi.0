@@ -1,57 +1,54 @@
-From: Luben Tuikov <luben@splentec.com>
-Subject: Q: aborting commands
-Date: Tue, 15 Oct 2002 16:48:47 -0400
+From: Patrick Mansfield <patmans@us.ibm.com>
+Subject: Re: [patch 2.5] ips queue depths
+Date: Tue, 15 Oct 2002 14:27:33 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3DAC7F2F.AA9348F7@splentec.com>
+Message-ID: <20021015142733.A2611@eng2.beaverton.ibm.com>
+References: <A3B9245C291EEF4785A24A1DBE8D852B0376BC@rtpexc01.adaptec.com> <20021015194705.GD4391@redhat.com> <3DAC7A05.31B17A39@splentec.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from splentec.com (canoe.splentec.com [209.47.35.250])
-	by pepsi.splentec.com (8.11.6/8.11.0) with ESMTP id g9FKmjf27497
-	for <linux-scsi@vger.kernel.org>; Tue, 15 Oct 2002 16:48:45 -0400
+In-Reply-To: <3DAC7A05.31B17A39@splentec.com>; from luben@splentec.com on Tue, Oct 15, 2002 at 04:26:45PM -0400
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>
+To: Luben Tuikov <luben@splentec.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
-I've been meaning to ask this for some time now:
-What is the consensus on the meaning of an aborted command?
+On Tue, Oct 15, 2002 at 04:26:45PM -0400, Luben Tuikov wrote:
 
-Most notably in the SCSI LLP standards, a successfully aborted command
-will NOT return status as non-aborted commands would (normally) do.
+> Re. bashing the too large a number of tags allowed -- this actually
+> makes sense sometimes -- e.g. an iSCSI Initiator wants to have
+> as many tagged commands under its control rather than they
+> be waiting in SCSI core. If the mid layer has a problem with
+> a scsi tagged command, then it can notify the LLDD and it
+> will resolve this (*** please see my next Q. posting ***).
+> 
+> Statements like this: ``The queue depth should be as small as
+> possible without limiting the performance.'' cannot be generalized
+> to all devices, be it hardware or software emulations (YKWIM).
+> 
 
-1. Should successfully aborted commands call scsi_done()?
-   (of course with result=DID_ABORT)
+I'm saying don't set the queue depth really high when it gives no or
+very little performance gain. If an adapter driver finds that a large
+queue depth helps more than it hurts for all IO loads (for sequential
+as well as random IO), go ahead, but I would guess that queue depths over
+100 give zero or very little performance gain compared to a queue depth
+of say 50 for most devices. I was trying to run some tests on this
+in the past but never had time to get it working well, plus it would have
+been for only two different devices (disk and disk array), and the
+drives I have are not really fast (20 mb/sec for disk, about 50mb/sec for
+the disk array).
 
->From the point of view of:
-Sometimes, a SCSI LLDD can reply with SUCCESS to a command abortion,
-BUT the scsi_cmnd structure, including the sg lists may NOT be freed
-right away, that is, until later time when the driver can get around
-to it to actually yank out/free its own resources, etc. (This is especially
-true in queuing models when the command has been submitted to another
-entity (HW/SF) which also operates on a similar queueing model.)
-Then the SCSI LLDD can notify SCSI core that all its (SCSI core's) memory
-is free by calling scsi_done() with DID_ABORT set -- the mid layer
-would know what has happened and will reuse/reissue/etc the command.
+What is really needed are IO performance numbers for varying queue depths.
 
-I do realize that the above IS a two-edged sword in many respects, I just
-rambled it just to show another point of view, aside the one taken
-by SCSI LLP (transports/interconnects).
+With 2.5, the number of commands outstanding to the device is not
+subtracted from the blk request queue size (we don't release a blk request
+until the IO is completed, there is no call to blkdev_release_request in
+scsi_request_fn) - this means large queue depths will cause the blk request
+queue to fill up and even be full without any available blk request queue
+commands to merge or sort with.
 
-2. Can/Should/Must SCSI core assume that a _successfully_ aborted command
-   did NOT make it to the medium?
+There are also issues like Andrew had with the read latency - although
+his benchmark is aritificial, and has more to do with too many dirty
+pages, it still showed that higher queue depths can have an impact
+on interactive performance (i.e. read latencies).
 
-This would be especially useful to UL beasts like journalling FSs, databases,
-etc.
-
-I think that if the device supports it, when SUCCESS has been returned, this
-should also mean that the command did NOT make it to the medium. (This would
-also make it consistent to the semantics of aborting a command.)
-
-Of couse ``medium'' may just mean some cache/buffer on the lowest point
-of the physical device (or whatever the manuf. decided to muster up), but
-should nevertheless mean that a READ on the media should give consistent
-results with aborting the command not making it to the media.
-
-?
--- 
-Luben
+-- Patrick Mansfield
