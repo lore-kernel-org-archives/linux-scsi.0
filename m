@@ -1,35 +1,50 @@
-From: Greg KH <greg@kroah.com>
+From: Oliver Xymoron <oxymoron@waste.org>
 Subject: Re: [PATCH] /proc/scsi/map
-Date: Thu, 20 Jun 2002 12:55:05 -0700
+Date: Thu, 20 Jun 2002 15:06:55 -0500 (CDT)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20020620195504.GJ32698@kroah.com>
-References: <200206200711.RAA10165@thucydides.inspired.net.au> <Pine.LNX.4.44.0206200800260.8012-100000@home.transmeta.com> <20020620165553.GA16897@win.tue.nl>
+Message-ID: <Pine.LNX.4.44.0206201442060.16808-100000@waste.org>
+References: <Pine.LNX.4.44.0206201210420.8225-100000@home.transmeta.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20020620165553.GA16897@win.tue.nl>
+In-Reply-To: <Pine.LNX.4.44.0206201210420.8225-100000@home.transmeta.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Andries Brouwer <aebr@win.tue.nl>
-Cc: Linus Torvalds <torvalds@transmeta.com>, Martin Schwenke <martin@meltin.net>, Kurt Garloff <garloff@suse.de>, Linux kernel list <linux-kernel@vger.kernel.org>, Linux SCSI list <linux-scsi@vger.kernel.org>, Patrick Mochel <mochel@osdl.org>
+To: Linus Torvalds <torvalds@transmeta.com>
+Cc: James Bottomley <James.Bottomley@steeleye.com>, Patrick Mansfield <patmans@us.ibm.com>, Andries Brouwer <aebr@win.tue.nl>, Martin Schwenke <martin@meltin.net>, Kurt Garloff <garloff@suse.de>, Linux kernel list <linux-kernel@vger.kernel.org>, Linux SCSI list <linux-scsi@vger.kernel.org>, Patrick Mochel <mochel@osdl.org>
 
-On Thu, Jun 20, 2002 at 06:55:53PM +0200, Andries Brouwer wrote:
-> USB device 0000:0000
-> figure out some name...
+On Thu, 20 Jun 2002, Linus Torvalds wrote:
 
-<snip>
+> On Thu, 20 Jun 2002, James Bottomley wrote:
+> >
+> > We should probably have some more discussion about the layout of the device
+> > tree, particularly if it's going to be consistent with other devices like ide
+> > discs and cds.
+>
+> Absolutely. I suspect that the _real_ issues start coming up only once
+> people start using this for useful work, and we should just accept that
+> the format (for now) is in flux. But that doesn't mean that we shouldn't
+> try to make it reasonably sane from the very start.
+>
+> And make sure that the naming convention works for both IDE and SCSI (ie
+> there should be a way to figure out _portably_ whether a device is a disk
+> or CD-RW or whatever, without even knowing whether it's SCSI or IDE).
 
-Heh, this is the first time anyone has ever reported those names to me.
-Yes, the names aren't very useful yet, but give us time, patches gladly
-accepted to fix this :)
+There are other device classes beyond disks we need to do similar things
+with that we ought to figure out at the same time. Examples off the top of
+my head: disk (disk? cdaudio? dvd? cdrw?), sound (wave table? 3d?), v4l
+(tuner? radio? mpeg?), net (wireless?).
 
-The physical representation of the USB trees within the PCI tree is
-(imho) a _vast_ improvement over anything we have had before, and that
-is currently working quite well.
+One possibility is an "interfaces" file that lists the types of interfaces
+that a device supports, possibly along with major:minor for that
+interface. Then you can do find /devices -name interfaces | xargs grep
+disk to locate your disks..
 
-Now to hook up the USB bus code to the struct bus_type style code, like
-PCI now is...
+Another general question is how to fit "virtual" devices that aren't
+associated with a bus into this scheme. For instance, PPP, VPNs, loopback
+block devices, ramdisks, iSCSI, NBD. While you might argue that most of
+these aren't really devices, iSCSI is every bit as "real" as a "local" FC
+disk. And then you get into logical devices ala LVM and RAID..
 
-thanks,
+-- 
+ "Love the dolphins," she advised him. "Write by W.A.S.T.E.."
 
-greg k-h
