@@ -1,58 +1,34 @@
-From: "Justin T. Gibbs" <gibbs@scsiguy.com>
-Subject: Re: aic7xxx woes in 2.5
-Date: Mon, 16 Dec 2002 12:26:27 -0700
+From: Rusty Trivial Russell <rusty@rustcorp.com.au>
+Subject: [TRIVIAL] 16) request_region check, 11-20
+Date: Mon, 16 Dec 2002 21:49:39 +1100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <54180000.1040066787@aslan.btc.adaptec.com>
-References: <3DFD9F89.4B994586@digeo.com>
- <32310000.1040064745@aslan.btc.adaptec.com> <3DFE24BE.A8E3755F@digeo.com>
-Reply-To: "Justin T. Gibbs" <gibbs@scsiguy.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Message-ID: <20021216210038.8339A2C2CC@lists.samba.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <3DFE24BE.A8E3755F@digeo.com>
-Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@digeo.com>
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org, rmk@arm.linux.org.uk
 
->> Since you are running 2.5.X, the ahc_unlock never occurs.
->> In 2.4.X, ahd_midlayer_entrypoint_lock() saves the cpu flags
->> for us, so the variable is never uninitialized in the case
->> where it actually is compiled in.
-> 
-> In 2.5.52 uniprocessor a
-> 
-> 	make drivers/scsi/aic7xxx/aic7xxx_linux.i
-> 
-> gives:
-> 
-> static __inline void
-> ahc_unlock(struct ahc_softc *ahc, unsigned long *flags)
-> {
->         do { do { (void)(  &ahc->platform_data->spin_lock  ); } while(0)
-> ; __asm__ __volatile__("pushl %0 ; popfl":   :"g" (   *flags  ):"memory",
-> "cc") ; do { } while (0) ; } while (0) ; }
-> 
-> Which is loading *flags into the CPU's interrupt status register.
+(Included in 2.5)
+From:  johnpol@2ka.mipt.ru
 
-Since I wrote the routine, I'm well aware of how it operates.
+  here is one more trivial check.
+  
+  So please test and apply.
+  
+  	Evgeniy Polyakov ( s0mbre )
+  
 
-> And it is being called from ahc_linux_queue_recovery_cmd:
-> 
->         if (wait) {
->                 struct timer_list timer;
->                 int ret;
-> 
->                 ahc_unlock(ahc, &s);
->                 init_timer(&timer);
-
-You must have botched the integration of the latest driver from here:
-http://people.FreeBSD.org/~gibbs/linux/SRC.
-
-I just downloaded it again (both the archive from the 10th and the 13th)
-and neither use ahc_unlock under 2.5.X in ahc_linux_queue_recovery_cmd().
-What are the $Id$ strings at the top of the file?
-
---
-Justin
+--- trivial-2.4.21-pre1/drivers/acorn/scsi/oak.c.orig	2002-12-16 17:22:38.000000000 +1100
++++ trivial-2.4.21-pre1/drivers/acorn/scsi/oak.c	2002-12-16 17:22:38.000000000 +1100
+@@ -134,7 +134,8 @@
+ 	ecard_claim(ecs[count]);
+ 
+ 	instance->n_io_port = 255;
+-	request_region (instance->io_port, instance->n_io_port, "Oak SCSI");
++	if (!request_region (instance->io_port, instance->n_io_port, "Oak SCSI"))
++		break;
+ 
+ 	if (instance->irq != IRQ_NONE)
+ 	    if (request_irq(instance->irq, do_oakscsi_intr, SA_INTERRUPT, "Oak SCSI", NULL)) {
+-- 
+  Don't blame me: the Monkey is driving
+  File: johnpol@2ka.mipt.ru: 16) request_region check, 11-20
