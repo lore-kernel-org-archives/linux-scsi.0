@@ -1,42 +1,130 @@
-From: Andreas Schwab <schwab@suse.de>
-Subject: Re: Symbios 53C8XX broken on ia64?
-Date: Wed, 24 Mar 2004 10:12:23 +0100
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: BUG() in 2.4: sg direct IO + exit()
+Date: Wed, 24 Mar 2004 22:57:42 +1000
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <je8yhq622w.fsf@sykes.suse.de>
-References: <je3c80ph2o.fsf@sykes.suse.de>
-	<1080060468.2091.28.camel@patsy.fc.hp.com>
-	<jeisgvxh2j.fsf@sykes.suse.de>
-	<20040324015043.GE25059@parcelfarce.linux.theplanet.co.uk>
+Message-ID: <406185C6.6050705@torque.net>
+References: <04Mar23.100431est.332209@cyborg.cybernetics.com>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns.suse.de ([195.135.220.2]:53717 "EHLO Cantor.suse.de")
-	by vger.kernel.org with ESMTP id S261691AbUCXJM0 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 24 Mar 2004 04:12:26 -0500
-In-Reply-To: <20040324015043.GE25059@parcelfarce.linux.theplanet.co.uk> (Matthew
- Wilcox's message of "Wed, 24 Mar 2004 01:50:43 +0000")
+Received: from bunyip.cc.uq.edu.au ([130.102.2.1]:28682 "EHLO
+	bunyip.cc.uq.edu.au") by vger.kernel.org with ESMTP id S263328AbUCXM5G
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 24 Mar 2004 07:57:06 -0500
+In-Reply-To: <04Mar23.100431est.332209@cyborg.cybernetics.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <willy@debian.org>
-Cc: Alex Williamson <alex.williamson@hp.com>, linux-ia64 <linux-ia64@vger.kernel.org>, linux-scsi@vger.kernel.org
+To: tonyb@cybernetics.com
+Cc: linux-scsi@vger.kernel.org
 
-Matthew Wilcox <willy@debian.org> writes:
+Tony Battersby wrote:
+> The following BUG() is triggered in 2.4.x when a program calls exit()
+> immediately after sending a SCSI command that uses direct IO:
+> 
+> kernel BUG at page_alloc.c:98!
+> invalid operand: 0000
+> sg sym53c8xx_2 e1000
+> CPU:    0
+> EIP:    0010:[<c0133d22>]    Not tainted
+> EFLAGS: 00010202
+> EIP is at __free_pages_ok+0x32/0x2b0 [kernel]
+> eax: 00000001   ebx: c12aceb0   ecx: c12aceb0   edx: 00000000
+> esi: 00000000   edi: 00000000   ebp: 00000001   esp: c02bbe94
+> ds: 0018   es: 0018   ss: 0018
+> Process swapper (pid: 0, stackpage=c02bb000)
+> Stack: cfefc640 cfdf2de8 cfbe93c0 cfefc600 00000001 00000000 cfefc600
+> c12aceb0
+>        cf926fa0 00000000 cfb8b040 c0127cb0 cfb8b04c cfb8b04c cfb8b000
+> d0885db6
+>        cf926fa0 00000000 cfb8b040 d0885cc9 cfb8b04c 00000001 cfd08680
+> cfd086c8
+> Call Trace:
+>  [<c0127cb0>] unmap_kiobuf+0x30/0x50 [kernel]
+>  [<d0885db6>] sg_unmap_and+0x26/0x50 [sg]
+>  [<d0885cc9>] sg_finish_rem_req+0x39/0x70 [sg]
+>  [<d0885451>] sg_cmd_done_bh+0x281/0x380 [sg]
+>  [<c01ab65a>] scsi_finish_command+0xda/0xe0 [kernel]
+>  [<c01ab380>] scsi_bottom_half_handler+0xc0/0x230 [kernel]
+>  [<c011dacb>] bh_action+0x4b/0x90 [kernel]
+>  [<c011d971>] tasklet_hi_action+0x61/0xa0 [kernel]
+>  [<c011d6fb>] do_softirq+0x6b/0xd0 [kernel]
+>  [<c0108baf>] do_IRQ+0xdf/0xf0 [kernel]
+>  [<c01052c0>] default_idle+0x0/0x40 [kernel]
+>  [<c01052c0>] default_idle+0x0/0x40 [kernel]
+>  [<c010b388>] call_do_IRQ+0x5/0xd [kernel]
+>  [<c01052c0>] default_idle+0x0/0x40 [kernel]
+>  [<c01052c0>] default_idle+0x0/0x40 [kernel]
+>  [<c01052ec>] default_idle+0x2c/0x40 [kernel]
+>  [<c0105372>] cpu_idle+0x52/0x70 [kernel]
+>  [<c0105000>] stext+0x0/0x50 [kernel]
+> 
+> Code: 0f 0b 62 00 ab 04 23 c0 89 d8 e8 2f ed ff ff 8b 7b 28 85 ff
+>  <0>Kernel panic: Aiee, killing interrupt handler!
+> In interrupt handler - not syncing
+> 
+> The following program reproduces the problem:
+> 
+> #include <stdlib.h>
+> #include <stdio.h>
+> #include <string.h>
+> #include <unistd.h>
+> #include <scsi/sg.h>
+> #include <limits.h>
+> #include <sys/types.h>
+> #include <sys/stat.h>
+> #include <fcntl.h>
+> 
+> unsigned char mode_sense_cdb[] = { 0x1a, 0x00, 0x3f, 0x00, 0xff, 0x00 };
+> 
+> int main(int argc, char *argv[])
+> {
+>     int fd;
+>     unsigned char sense_data[256];
+>     unsigned char buf[256];
+>     sg_io_hdr_t io;
+> 
+>     fd = open("/dev/sg0", O_RDWR);
+>     if (fd == -1) {
+>         perror("open(/dev/sg0)");
+>         exit(1);
+>     }
+> 
+>     memset(&io, 0, sizeof(sg_io_hdr_t));
+>     io.interface_id = 'S';
+>     io.timeout = UINT_MAX;
+>     io.flags = SG_FLAG_DIRECT_IO;
+>     io.sbp = sense_data;
+>     io.mx_sb_len = 0xff;
+>     io.cmdp = mode_sense_cdb;
+>     io.cmd_len = 6;
+>     io.dxfer_direction = SG_DXFER_FROM_DEV;
+>     io.dxferp = buf;
+>     io.dxfer_len = 0xff;
+>     write(fd, &io, sizeof(sg_io_hdr_t));
+> 
+>     return 0;
+> }
+> 
+> Just compile, echo 1 > /proc/scsi/sg/allow_dio, and run.  The SCSI
+> device that I am using is a tape drive, but it shouldn't matter.
+> 
+> I have tested this with 2.4.21+kksymoops and 2.4.26-pre5+kksymoops with
+> the same results.  The above stack trace is from 2.4.26-pre5.  I haven't
+> tried 2.6.
+> 
+> I am running a SMP kernel on a UP Intel P4 with 256 MB RAM.  The test
+> machine does not have any swap space configured (swapoff -a).
 
-> However, I think I may have an idea ... what do you get in the line
-> that reports the SAL version?
+Tony,
+It is not causing an oops when I try with scsi_debug and lk 2.6.5-rc2.
+Neither is there a problem with a Suse 9 stock SMP kernel
+(2.4.21-99-smp4G) on an old dual celeron (A-bit mb) box with a
+Sony SDT-7000 tape drive on /dev/sg0.
 
-SAL 0.20: HP version 3.20
+I'll keep looking. The oops suggests that the memory is not being
+locked down (as you are probably aware).
 
-Andreas.
+Doug Gilbert
 
---=20
-Andreas Schwab, SuSE Labs, schwab@suse.de
-SuSE Linux AG, Maxfeldstra=DFe 5, 90409 N=FCrnberg, Germany
-Key fingerprint =3D 58CA 54C7 6D53 942B 1756  01D3 44D5 214B 8276 4ED5
-"And now for something completely different."
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
