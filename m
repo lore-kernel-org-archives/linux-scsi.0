@@ -1,39 +1,41 @@
-From: Willem Riede <osst@riede.org>
-Subject: Re: [PATCH 1/3] osst upgrade to 0.99.3
-Date: Wed, 12 Jan 2005 23:28:30 +0000
-Message-ID: <1105572510l.8514l.0l@serve.riede.org>
-References: <1104627552l.3427l.2l@serve.riede.org>
-	<20050105151819.1a4981ae.akpm@osdl.org>
+From: Nishanth Aravamudan <nacc@us.ibm.com>
+Subject: Re: [patch 2/7] scsi/ppa: replace schedule_timeout() with msleep()
+Date: Wed, 12 Jan 2005 15:40:43 -0800
+Message-ID: <20050112234043.GA2688@us.ibm.com>
+References: <20050111232251.3BBB31F226@trashy.coderock.org> <1105547090.5577.13.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; DelSp=Yes; Format=Flowed
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-kernel-owner+glk-linux-kernel=40m.gmane.org-S261585AbVALXak@vger.kernel.org>
-In-Reply-To: <20050105151819.1a4981ae.akpm@osdl.org> (from akpm@osdl.org on
-	Wed Jan  5 18:18:19 2005)
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from e2.ny.us.ibm.com ([32.97.182.142]:65186 "EHLO e2.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S261583AbVALXk5 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 12 Jan 2005 18:40:57 -0500
+Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
+	by e2.ny.us.ibm.com (8.12.10/8.12.10) with ESMTP id j0CNepBW009601
+	for <linux-scsi@vger.kernel.org>; Wed, 12 Jan 2005 18:40:51 -0500
+Received: from d01av02.pok.ibm.com (d01av02.pok.ibm.com [9.56.224.216])
+	by d01relay04.pok.ibm.com (8.12.10/NCO/VER6.6) with ESMTP id j0CNejHZ288400
+	for <linux-scsi@vger.kernel.org>; Wed, 12 Jan 2005 18:40:45 -0500
+Received: from d01av02.pok.ibm.com (loopback [127.0.0.1])
+	by d01av02.pok.ibm.com (8.12.11/8.12.11) with ESMTP id j0CNejXh013953
+	for <linux-scsi@vger.kernel.org>; Wed, 12 Jan 2005 18:40:45 -0500
 Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+In-Reply-To: <1105547090.5577.13.camel@mulgrave>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: domen@coderock.org, SCSI Mailing List <linux-scsi@vger.kernel.org>, janitor@sternwelten.at
 
-On 01/05/2005 06:18:19 PM, Andrew Morton wrote:
-> Willem Riede <osst@riede.org> wrote:
-> >
-> > In a series of three mails, I'll present changes I'd like to see 
-> >  made to the osst driver in the linux-2.6.11 pre-series.
+On Wed, Jan 12, 2005 at 10:24:50AM -0600, James Bottomley wrote:
+> On Wed, 2005-01-12 at 00:22 +0100, domen@coderock.org wrote:
+> > -		schedule_timeout(3 * HZ);
+> > +		msleep(3000);
 > 
-> All three patches were hopelessly mangled by your email client:
-> 
-> 70 out of 70 hunks FAILED -- saving rejects to file drivers/scsi/osst.c.rej
-> osst-style-changes does not apply
+> This would make more sense as ssleep(3), wouldn't it?
 
-I'm confused - James Bottomley pulled those patches into scsi-bk from my  
-mails, and they are present in 2.6.10-mm1...
+Actually, this patch should be dropped! :) msleep() will ignore any wait-queue
+events (triggered because of the prepare_to_wait() call). So please revert, if
+applied.
 
-> When resending please ensure that the patch headers are in `-p1' form:
-> Also, please don't send multiple patches under the same Subject:.
-
-James Bottomley chastised me for that too, so I solemny swear never to make  
-that mistake again :-)
-
-Regards, Willem Riede.
+Thanks,
+Nish
