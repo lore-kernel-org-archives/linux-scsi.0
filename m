@@ -1,146 +1,99 @@
-From: Mark Haverkamp <markh@osdl.org>
-Subject: Re: [PATCH] 2.6.9 aacraid: Support ROMB RAID/SCSI mode - Resend -
-Date: Thu, 18 Nov 2004 13:52:32 -0800
-Message-ID: <1100814752.6026.36.camel@markh1.pdx.osdl.net>
-References: <1100800586.6026.31.camel@markh1.pdx.osdl.net>
-	 <20041118193428.GA26622@infradead.org>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: (added subject) RE: USB oops in scsi_host_cancel
+Date: 18 Nov 2004 17:40:41 -0600
+Message-ID: <1100821249.1574.42.camel@mulgrave>
+References: <200411181952.46993.chrivers@iversen-net.dk>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fire.osdl.org ([65.172.181.4]:47756 "EHLO fire-1.osdl.org")
-	by vger.kernel.org with ESMTP id S262990AbUKRVwn (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 18 Nov 2004 16:52:43 -0500
-In-Reply-To: <20041118193428.GA26622@infradead.org>
+Received: from stat16.steeleye.com ([209.192.50.48]:44724 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S261209AbUKRXk5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 18 Nov 2004 18:40:57 -0500
+In-Reply-To: <200411181952.46993.chrivers@iversen-net.dk>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@steeleye.com>, Christoph Hellwig <hch@infradead.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, Mark Salyzyn <mark_salyzyn@adaptec.com>
+To: Christian Iversen <chrivers@iversen-net.dk>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
-On Thu, 2004-11-18 at 19:34 +0000, Christoph Hellwig wrote:
-> > +	if ((dev->adapter_info.options & AAC_OPT_SCSI_MANAGED)
-> > +		&& (dev->adapter_info.options & AAC_OPT_RAID_SCSI_MODE)) {
+On Thu, 2004-11-18 at 12:52, Christian Iversen wrote:
+> I have a bug to report. I previously wrote (on linux-usb-devel) about problems 
+> with http://bugme.osdl.org/show_bug.cgi?id=3728, which has now been fixed. 
+> However, the world is not trouble-free yet, as linux still crashes in certain 
+> situations on 2.6.10-rc2 with SMP systems. (UP systems are fine).
 > 
-> Should be
+> The new bug is http://bugme.osdl.org/show_bug.cgi?id=3761, which I marked as 
+> "blocking" because it's very easy to bring the whole system down.
 > 
-> 	if ((dev->adapter_info.options & AAC_OPT_SCSI_MANAGED) &&
-> 	    (dev->adapter_info.options & AAC_OPT_RAID_SCSI_MODE)) {
+> Could someone smart please take a look at the dmesg I attached 
+> to the bug post? Particularly, what the foo is going on here: ?
 > 
+> usb 4-2: USB disconnect, address 2
+> usb 4-2.3: USB disconnect, address 5
+>  target5:0:0: Illegal state transition <NULL>->cancel
+> Badness in scsi_device_set_state at drivers/scsi/scsi_lib.c:1717
+>  [<b0324d16>] scsi_device_set_state+0xc6/0x130
+>  [<b031fcaa>] scsi_device_cancel+0x2a/0x106
+>  [<b031fe10>] scsi_device_cancel_cb+0x0/0x20
+>  [<b02f128e>] device_for_each_child+0x3e/0x70
 
-OK, how about this.
----
+Well, Oops.  The I posted the patch to fix this a while ago (it was
+subsequently modified by Mike Christie).  Apparently I put Mike's update
+in the BK tree, but not my own initial patch (I suppose dropping other
+people's patches can be considered unfortunate, but dropping your own
+looks like carelessness).
 
-Another patch from Mark Salyzyn's driver. Supports correct operation of
-ROMB (RAID on motherboard) SCSI/RAID.  Applies to the scsi-misc bk tree.
+Anyway, the attached should fix it, if you give it a whirl.
 
-Signed-off-by: Mark Haverkamp <markh@osdl.org>
+James
 
-===== drivers/scsi/aacraid/aachba.c 1.29 vs edited =====
---- 1.29/drivers/scsi/aacraid/aachba.c	2004-10-01 08:10:08 -07:00
-+++ edited/drivers/scsi/aacraid/aachba.c	2004-10-21 09:53:08 -07:00
-@@ -645,9 +645,31 @@
- 			dev->adapter_info.serial[1]);
- 
- 	dev->nondasd_support = 0;
-+	dev->raid_scsi_mode = 0;
- 	if(dev->adapter_info.options & AAC_OPT_NONDASD){
- 		dev->nondasd_support = 1;
- 	}
-+
-+	/*
-+	 * If the firmware supports ROMB RAID/SCSI mode and we are currently
-+	 * in RAID/SCSI mode, set the flag. For now if in this mode we will
-+	 * force nondasd support on. If we decide to allow the non-dasd flag
-+	 * additional changes changes will have to be made to support
-+	 * RAID/SCSI.  the function aac_scsi_cmd in this module will have to be
-+	 * changed to support the new dev->raid_scsi_mode flag instead of
-+	 * leaching off of the dev->nondasd_support flag. Also in linit.c the
-+	 * function aac_detect will have to be modified where it sets up the
-+	 * max number of channels based on the aac->nondasd_support flag only.
-+	 */
-+	if ((dev->adapter_info.options & AAC_OPT_SCSI_MANAGED) &&
-+	    (dev->adapter_info.options & AAC_OPT_RAID_SCSI_MODE)) {
-+		dev->nondasd_support = 1;
-+		dev->raid_scsi_mode = 1;
-+	}
-+	if (dev->raid_scsi_mode != 0)
-+		printk(KERN_INFO "%s%d: ROMB RAID/SCSI mode enabled\n",
-+				dev->name, dev->id);
-+		
- 	if(nondasd != -1) {  
- 		dev->nondasd_support = (nondasd!=0);
- 	}
-@@ -1137,7 +1159,7 @@
- 		char *cp;
- 
- 		dprintk((KERN_DEBUG "READ CAPACITY command.\n"));
--		if (fsa_dev_ptr[cid].size <= 0x100000000)
-+		if (fsa_dev_ptr[cid].size <= 0x100000000LL)
- 			capacity = fsa_dev_ptr[cid].size - 1;
- 		else
- 			capacity = (u32)-1;
-@@ -1446,8 +1468,17 @@
- 			if( b==TYPE_TAPE || b==TYPE_WORM || b==TYPE_ROM || b==TYPE_MOD|| b==TYPE_MEDIUM_CHANGER 
- 					|| (b==TYPE_DISK && (b1&0x80)) ){
- 				scsicmd->result = DID_OK << 16 | COMMAND_COMPLETE << 8;
-+			/*
-+			 * We will allow disk devices if in RAID/SCSI mode and
-+			 * the channel is 2
-+			 */
-+			} else if ((dev->raid_scsi_mode) &&
-+					(scsicmd->device->channel == 2)) {
-+				scsicmd->result = DID_OK << 16 | 
-+						COMMAND_COMPLETE << 8;
- 			} else {
--				scsicmd->result = DID_NO_CONNECT << 16 | COMMAND_COMPLETE << 8;
-+				scsicmd->result = DID_NO_CONNECT << 16 | 
-+						COMMAND_COMPLETE << 8;
- 			}
- 		} else {
- 			scsicmd->result = DID_OK << 16 | COMMAND_COMPLETE << 8;
-@@ -1479,8 +1510,17 @@
- 			if( b==TYPE_TAPE || b==TYPE_WORM || b==TYPE_ROM || b==TYPE_MOD|| b==TYPE_MEDIUM_CHANGER
- 					|| (b==TYPE_DISK && (b1&0x80)) ){
- 				scsicmd->result = DID_OK << 16 | COMMAND_COMPLETE << 8;
-+			/*
-+			 * We will allow disk devices if in RAID/SCSI mode and
-+			 * the channel is 2
-+			 */
-+			} else if ((dev->raid_scsi_mode) &&
-+					(scsicmd->device->channel == 2)) {
-+				scsicmd->result = DID_OK << 16 | 
-+						COMMAND_COMPLETE << 8;
- 			} else {
--				scsicmd->result = DID_NO_CONNECT << 16 | COMMAND_COMPLETE << 8;
-+				scsicmd->result = DID_NO_CONNECT << 16 | 
-+						COMMAND_COMPLETE << 8;
- 			}
- 			break;
- 		}
-===== drivers/scsi/aacraid/aacraid.h 1.24 vs edited =====
---- 1.24/drivers/scsi/aacraid/aacraid.h	2004-10-01 08:09:07 -07:00
-+++ edited/drivers/scsi/aacraid/aacraid.h	2004-10-20 13:35:27 -07:00
-@@ -807,6 +807,8 @@
- #define AAC_OPT_SGMAP_HOST64		cpu_to_le32(1<<10)
- #define AAC_OPT_ALARM			cpu_to_le32(1<<11)
- #define AAC_OPT_NONDASD			cpu_to_le32(1<<12)
-+#define AAC_OPT_SCSI_MANAGED    	cpu_to_le32(1<<13)
-+#define AAC_OPT_RAID_SCSI_MODE		cpu_to_le32(1<<14)
- 
- struct aac_dev
- {
-@@ -879,6 +881,7 @@
- 	 */
- 	u8			nondasd_support; 
- 	u8			dac_support;
-+	u8			raid_scsi_mode;
+# This is a BitKeeper generated diff -Nru style patch.
+#
+# ChangeSet
+#   2004/11/18 17:00:19-06:00 jejb@mulgrave.(none) 
+#   SCSI: fix USB forced remove oops
+#   
+#   Because of the changes to add the target in to the
+#   driver model, the cancellation method no-longer works
+#   correctly.
+#   
+#   Fix it by iterating using shost_for_each_device instead.
+#   
+#   Signed-off-by: James Bottomley <James.Bottomley@SteelEye.com>
+# 
+# drivers/scsi/hosts.c
+#   2004/11/18 16:59:11-06:00 jejb@mulgrave.(none) +5 -7
+#   SCSI: fix USB forced remove oops
+# 
+diff -Nru a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
+--- a/drivers/scsi/hosts.c	2004-11-18 17:38:59 -06:00
++++ b/drivers/scsi/hosts.c	2004-11-18 17:38:59 -06:00
+@@ -50,11 +50,6 @@
+ 	.release	= scsi_host_cls_release,
  };
  
- #define AllocateAndMapFibSpace(dev, MapFibContext) \
-
-
-
--- 
-Mark Haverkamp <markh@osdl.org>
+-static int scsi_device_cancel_cb(struct device *dev, void *data)
+-{
+-	return scsi_device_cancel(to_scsi_device(dev), *(int *)data);
+-}
+-
+ /**
+  * scsi_host_cancel - cancel outstanding IO to this host
+  * @shost:	pointer to struct Scsi_Host
+@@ -62,9 +57,12 @@
+  **/
+ void scsi_host_cancel(struct Scsi_Host *shost, int recovery)
+ {
++	struct scsi_device *sdev;
++
+ 	set_bit(SHOST_CANCEL, &shost->shost_state);
+-	device_for_each_child(&shost->shost_gendev, &recovery,
+-			      scsi_device_cancel_cb);
++	shost_for_each_device(sdev, shost) {
++		scsi_device_cancel(sdev, recovery);
++	}
+ 	wait_event(shost->host_wait, (!test_bit(SHOST_RECOVERY,
+ 						&shost->shost_state)));
+ }
 
