@@ -1,34 +1,44 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: iRiver H100 series and usb-storage issues
-Date: Mon, 7 Jun 2004 10:47:31 -0400 (EDT)
+From: "cedric" <kisseugene@backtomyplace.com>
+Subject: Save a ton on Microsoft Office!
+Date: Mon, 07 Jun 2004 18:18:51 GMT
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44L0.0406071040310.1800-100000@ida.rowland.org>
-References: <1086533333.10787.45.camel@mulgrave>
-Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Message-ID: <1086632331-14647__7795.82461477748$1086632394@excite.com>
+Content-Type: text/plain;
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ida.rowland.org ([192.131.102.52]:11780 "HELO ida.rowland.org")
-	by vger.kernel.org with SMTP id S264720AbUFGOrb (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Jun 2004 10:47:31 -0400
-In-Reply-To: <1086533333.10787.45.camel@mulgrave>
+Received: from [207.8.131.172] ([207.8.131.172]:33542 "HELO
+	vermont.starway.net.au") by vger.kernel.org with SMTP
+	id S264975AbUFGSSq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 7 Jun 2004 14:18:46 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@steeleye.com>, Philippe Troin <phil@fifi.org>
-Cc: USB Storage list <usb-storage@lists.one-eyed-alien.net>, SCSI development list <linux-scsi@vger.kernel.org>
+To: linux-kernel@vger.kernel.org
 
-I just noticed this thread on linux-kernel:
+Need software but not the price that comes with it?
+We sell OEM software at major discounts.
+Don't pay the department store markups, buy on the internet.
 
-http://marc.theaimsgroup.com/?l=linux-kernel&m=108372064000188&w=2
+Free Delivery and Extra Discounts on orders over $200!
 
-Apparently under some circumstances the iRiver H100 returns 0 bytes 
-transferred with GOOD status and residue=512 for a READ(10) command 
-asking for 1 sector.  As far as I know this is legal, and it indicates the 
-command should simply be retried.
+Save yourself or your company thousands of dollars, reap the rewards!
 
-But apparently the sd driver doesn't realize what has happened and assumes 
-the transfer was successful.  If I'm right then the sd driver should be 
-fixed, but I'm not sure what is the best thing to do.
+Q:  How can you sell this software as OEM ? It seems too good to be true - is there a catch?
 
-James, can you offer some advice?
+A:  There is no catch - the software versions that we sell are OEM (Original Equipment Manufacturer) which means you will receive the installation CDs only (they do not come in their original retail packing and do not include the manual). We do guarantee that all programs are the 100% full working retail versions - no demos or academic versions! When you order, you will receive all materials required for a complete installation - or your money back! Why pay hundreds of dollars more when you can get exactly the same but OEM-CD? You don't have to pay that much for the fancy box and manuals. 
 
-Alan Stern
 
+
+Click here!!
+http://allpackages.com/index.php?s=7555
+
+
+
+
+
+
+
+
+
+bullet softballgenius shit politics bigmac horizon barry 
+gambit reznorscuba1 tequila gordon
+hanna warriors timber 
+
+REMOV3: http://mycomp.biz/soft/chair.php
