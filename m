@@ -1,144 +1,76 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] Convert i2o to compat_ioctl
-Date: Tue, 5 Apr 2005 13:24:39 +0100
-Message-ID: <20050405122439.GA31778@infradead.org>
-References: <20050118112455.GK43344@muc.de> <20050331194118.GA24242@infradead.org> <424D2082.4010209@shadowconnect.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: IPSI-2005 Conferences <pescara2005@vreme.yubc.net>
+Subject: Invitation to Italy, Holland, and Montenegro 2005; c/bb
+Date: Tue, 5 Apr 2005 15:24:48 +0200
+Message-ID: <200504051324.j35DOmYA010748@vreme.yubc.net>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:8674 "EHLO
-	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S261710AbVDEMZV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 5 Apr 2005 08:25:21 -0400
-Content-Disposition: inline
-In-Reply-To: <424D2082.4010209@shadowconnect.com>
+Received: from vreme.yubc.net ([212.124.160.13]:28554 "EHLO vreme.yubc.net")
+	by vger.kernel.org with ESMTP id S261737AbVDENYt (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Apr 2005 09:24:49 -0400
+Received: from vreme.yubc.net (localhost.localdomain [127.0.0.1])
+	by vreme.yubc.net (8.12.11/8.12.11) with ESMTP id j35DOm4M010751
+	for <linux-scsi@vger.kernel.org>; Tue, 5 Apr 2005 15:24:48 +0200
+Received: (from root@localhost)
+	by vreme.yubc.net (8.12.11/8.12.11/Submit) id j35DOmYA010748
+	for linux-scsi@vger.kernel.org; Tue, 5 Apr 2005 15:24:48 +0200
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Markus Lidel <Markus.Lidel@shadowconnect.com>
-Cc: Andi Kleen <ak@muc.de>, James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Fri, Apr 01, 2005 at 12:20:50PM +0200, Markus Lidel wrote:
-> Hello,
-> 
-> Christoph Hellwig wrote:
-> >Markus, is this patch actually okay?  I just talked to Andi about the
-> >ioctl32 issues and he told me about this patch.
-> 
-> OK, i don't own a 64-bit system, so i couldn't test it out :-(
-> 
-> The only thing i would change is rename compat_i2o_cfg_ioctl() into 
-> i2o_cfg_compat_ioctl() because all I2O specific functions begin with 
-> "i2o_<osm-name>_"...
+Dear potential Speaker:
 
-Okay, here's Andi's patch with that trivial change applied:
+On behalf of the organizing committee, I would like to extend a cordial invitation for you to attend one of the upcoming IPSI BgD multidisciplinary, interdisciplinary, and transdisciplinary conferences.
 
----- snip ----
+The first one will take place in Loreto Aprutino, Italy:
 
-Convert I2O to new compat_ioctl entry points
+IPSI-2005 ITALY
+Hotel Castello Chiola (arrival: 27 July 05 / departure: 1 August 05)
+New deadlines: 10 April 05 (abstract) / 10 May 05 (full paper)
 
-Also broken design in its compat handlers - CONFIG_COMPAT doesn't 
-mean that there should be no native ioctls.
+The second one will take place in Amsterdam, Holland:
 
-Signed-off-by: Andi Kleen <ak@muc.de>
+IPSI-2005 HOLLAND
+Hotel Okura (arrival: 1 September 05 / departure: 4 September 05)
+deadlines: 15 April 05 (abstract) / 1 June 05 (full paper)
 
-diff -u linux-2.6.11-rc1-bk4/drivers/message/i2o/i2o_config.c-o linux-2.6.11-rc1-bk4/drivers/message/i2o/i2o_config.c
---- linux-2.6.11-rc1-bk4/drivers/message/i2o/i2o_config.c-o	2005-01-17 10:39:40.000000000 +0100
-+++ linux-2.6.11-rc1-bk4/drivers/message/i2o/i2o_config.c	2005-01-18 06:27:24.000000000 +0100
-@@ -54,6 +54,9 @@
- 
- extern int i2o_parm_issue(struct i2o_device *, int, void *, int, void *, int);
- 
-+static int i2o_cfg_ioctl(struct inode *inode, struct file *fp, unsigned int cmd,
-+			 unsigned long arg);
-+
- static spinlock_t i2o_config_lock;::::::::::::::::::::::::::::::::::;
- 
- #define MODINC(x,y) ((x) = ((x) + 1) % (y))
-@@ -538,8 +541,7 @@
- }
- 
- #ifdef CONFIG_COMPAT
--static int i2o_cfg_passthru32(unsigned fd, unsigned cmnd, unsigned long arg,
--			      struct file *file)
-+static int i2o_cfg_passthru32(struct file *file, unsigned cmnd, unsigned long arg)
- {
- 	struct i2o_cmd_passthru32 __user *cmd;
- 	struct i2o_controller *c;
-@@ -752,7 +754,26 @@
- 	return rcode;
- }
- 
--#else
-+static long i2o_cfg_compat_ioctl(struct file *file, unsigned cmd, unsigned long arg)
-+{
-+	int ret;
-+	lock_kernel();		
-+	switch (cmd) { 
-+	case I2OGETIOPS:
-+		ret = i2o_cfg_ioctl(NULL, file, cmd, arg);
-+		break;
-+	case I2OPASSTHRU32:
-+		ret = i2o_cfg_passthru32(file, cmd, arg);
-+		break;
-+	default:
-+		ret = -ENOIOCTLCMD;
-+		break;
-+	}
-+	unlock_kernel();
-+	return ret;
-+}
-+
-+#endif
- 
- static int i2o_cfg_passthru(unsigned long arg)
- {
-@@ -958,7 +979,6 @@
- 	kfree(reply);
- 	return rcode;
- }
--#endif
- 
- /*
-  * IOCTL Handler
-@@ -1013,11 +1033,9 @@
- 		ret = i2o_cfg_evt_get(arg, fp);
- 		break;
- 
--#ifndef CONFIG_COMPAT
- 	case I2OPASSTHRU:
- 		ret = i2o_cfg_passthru(arg);
- 		break;
--#endif
- 
- 	default:
- 		osm_debug("unknown ioctl called!\n");
-@@ -1105,6 +1123,9 @@
- 	.owner = THIS_MODULE,
- 	.llseek = no_llseek,
- 	.ioctl = i2o_cfg_ioctl,
-+#ifdef CONFIG_COMPAT
-+	.compat_ioctl = i2o_cfg_compat_ioctl,
-+#endif
- 	.open = cfg_open,
- 	.release = cfg_release,
- 	.fasync = cfg_fasync,
-@@ -1134,19 +1155,11 @@
- 		misc_deregister(&i2o_miscdev);
- 		return -EBUSY;
- 	}
--#ifdef CONFIG_COMPAT
--	register_ioctl32_conversion(I2OPASSTHRU32, i2o_cfg_passthru32);
--	register_ioctl32_conversion(I2OGETIOPS, (void *)sys_ioctl);
--#endif
- 	return 0;
- }
- 
- static void i2o_config_exit(void)
- {
--#ifdef CONFIG_COMPAT
--	unregister_ioctl32_conversion(I2OPASSTHRU32);
--	unregister_ioctl32_conversion(I2OGETIOPS);
--#endif
- 	misc_deregister(&i2o_miscdev);
- 	i2o_driver_unregister(&i2o_config_driver);
- }
+The third one will take place in Sveti Stefan, Montenegro:
+
+IPSI-2005 MONTENEGRO
+Hotel Sveti Stefan (arrival: 1 October 05 / departure: 8 October 05)
+Deadlines: 1 May 05 (abstract) / 1 July 05 (full paper)
+
+All IPSI BgD conferences are non-profit. They bring together the elite of the world science; so far, we have had seven Nobel Laureates speaking at the opening ceremonies. The conferences always take place in some of the most attractive places of the world. All those who come to IPSI conferences once, always love to come back (because of the unique professional quality and the extremely creative atmosphere); lists of past participants are on the web, as well as details of future conferences.
+
+These conferences are in line with the newest recommendations of the US National Science Foundation and of the EU research sponsoring agencies, to stress multidisciplinary, interdisciplinary, and transdisciplinary research (M+I+T++ research). The speakers and activities at the conferences truly support this type of scientific interaction.
+
+One of the main topics of this conference is "E-education and E-business with Special Emphasis on Semantic Web and Web Datamining"
+
+Other topics of interest include, but are not limited to:
+
+* Internet
+* Computer Science and Engineering
+* Mobile Communications/Computing for Science and Business
+* Management and Business Administration
+* Education
+* e-Medicine
+* e-Oriented Bio Engineering/Science and Molecular Engineering/Science
+* Environmental Protection
+* e-Economy
+* e-Law
+* Technology Based Art and Art to Inspire Technology Developments
+* Internet Psychology
+
+If you would like more information on either conference, please reply to this e-mail message.
+
+If you plan to submit an abstract and paper, please let us know immediately for planning purposes. Note that you can submit your paper also to the IPSI Transactions journal.
+
+Sincerely Yours,
+
+Prof. V. Milutinovic, Chairman,
+IPSI BgD Conferences
+
+
+* * * CONTROLLING OUR E-MAILS TO YOU * * *
+
+If you would like to continue to be informed about future IPSI BgD conferences, please reply to this e-mail message with a subject line of SUBSCRIBE.
+
+If you would like to be removed from our mailing list, please reply to this e-mail message with a subject line of REMOVE.
