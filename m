@@ -1,35 +1,41 @@
 From: Patrick Mansfield <patmans@us.ibm.com>
-Subject: Re: [PATCH] get rid of ->finish method for highlevel drivers
-Date: Tue, 22 Oct 2002 11:43:54 -0700
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20021022114354.A3993@eng2.beaverton.ibm.com>
-References: <James.Bottomley@SteelEye.com> <200210221548.g9MFmJx02529@localhost.localdomain>
+Subject: INQUIRY VPD page 0 hangs disk [was scsi_error device offline fix]
+Date: Tue, 22 Oct 2002 12:05:03 -0700
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <20021022120503.A4185@eng2.beaverton.ibm.com>
+References: <20021022083815.A61@eng2.beaverton.ibm.com> <Pine.LNX.4.30.0210220905560.20878-100000@tosko.alm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <200210221548.g9MFmJx02529@localhost.localdomain>; from James.Bottomley@steeleye.com on Tue, Oct 22, 2002 at 10:48:19AM -0500
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+In-Reply-To: <Pine.LNX.4.30.0210220905560.20878-100000@tosko.alm.com>; from andyb@island.net on Tue, Oct 22, 2002 at 09:14:55AM -0700
+To: andy barlak <andyb@island.net>
+Cc: Mike Anderson <andmike@us.ibm.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@steeleye.com>
-Cc: Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org
 
-On Tue, Oct 22, 2002 at 10:48:19AM -0500, James Bottomley wrote:
+On Tue, Oct 22, 2002 at 09:14:55AM -0700, andy barlak wrote:
 > 
-> I tracked down the essential problem: the CD rom finish method expects to have 
-> allocated command blocks to do a mode sense.  I also fixed a trivial 
-> initialisation problem (the device pointer in Scsi_CD was being used before it 
-> was initialised).
+> On Tue, 22 Oct 2002, Patrick Mansfield wrote:
+> > Try removing the scsi_load_identifier call in scsi_scan.c and
+> > see if you can boot. And/or get sg_utils and on your 2.4 system
+> > send a INQUIRY page 0 to the device, and see if that hangs or
+> > not, like:
 > 
-> The attached patch fixes the problem for me.
 > 
-> I still can't detach and add a CD-ROM, but the panic is in sr_init, so doesn't 
-> look to be affected by these changes, but I'll continue debugging.
-> 
-> James
+> On this 2.4.19 box with the Buslogic 958, that command hangs:
+> # ./sg_inq -e -o=0 /dev/sg1
+> EVPD INQUIRY, page code=0x00:
 > 
 
-James -
+That really sucks.
 
-How do we end up with no command blocks if the slave_attach is
-calling scsi_build_commandblocks via scsi_adjust_queue_depth?
+If you remove the scsi_load_identifier, does 2.5 boot?
+
+We can black list your device, never sending it INQUIRY page 0.
+
+Since there is one disk like yours out there, there are probably more,
+so we should add a module/boot and maybe config time option to disable
+the INQUIRY page 0.
+
+Anyone have some other suggestion, besides throwing away the disk?
 
 -- Patrick Mansfield
