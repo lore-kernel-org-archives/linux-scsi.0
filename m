@@ -1,41 +1,34 @@
-From: Jasper Slits <slits@xs4all.nl>
-Subject: Re: latest 2.6 patch for dpt_i20 driver
-Date: Mon, 26 Jan 2004 13:09:09 +0100
+From: Simon Kelley <simon@thekelleys.org.uk>
+Subject: Is there a grand plan for FC failover?
+Date: Mon, 26 Jan 2004 14:18:15 +0000
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040126120908.GA40438@xs4all.nl>
+Message-ID: <401521A7.5030808@thekelleys.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp-out3.xs4all.nl ([194.109.24.13]:27908 "EHLO
-	smtp-out3.xs4all.nl") by vger.kernel.org with ESMTP id S263653AbUAZMJN
+Received: from smtp.sanger.ac.uk ([193.62.203.215]:29244 "EHLO
+	smtp.sanger.ac.uk") by vger.kernel.org with ESMTP id S263775AbUAZORt
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 26 Jan 2004 07:09:13 -0500
-Content-Disposition: inline
+	Mon, 26 Jan 2004 09:17:49 -0500
+Received: from thekelleys.org.uk (srk@09559vai [172.25.17.183])
+	by smtp.sanger.ac.uk (8.12.8/8.12.8) with ESMTP id i0QEHlGG177923
+	for <linux-scsi@vger.kernel.org>; Mon, 26 Jan 2004 14:17:48 GMT
 List-Id: linux-scsi@vger.kernel.org
-To: shaeffer@neuralscape.com
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-I managed to get dpt_i2o working with kernel 2.6.1-rc2. 
+I see that 2.6.x kernels now have the qla2xxx driver in the mainline, 
+but without the failover code.
 
-First of it all, it's still risky to do it. But here is how:
+What is the reason for that? Is there a plan provide failover facilities 
+  at a higher level which will be usable with all suitable low-level 
+drivers and hardware?
 
-get Mark's patch -> 
-http://marc.theaimsgroup.com/?l=linux-scsi&m=107210932819564&w=2
+I'm very much in favour of using drivers which are developed in the 
+kernel mainline but I have an application which needs failover so I 
+might be forced back to the qlogic-distributed code.
 
-Hack the ./drivers/scsi/dpt_i2o.c and remove all references to the
-access_count member. 
+Cheers,
 
-The access_count member doesnt exist anymore but is it still included in
-the shipped dpt_i2o.c file. I googled some changelogs and it appears to
-be removed in a 2.5.x kernel, but correct me if i am wrong. 
-
-it's q&d but it works so far ;)
-
-Compile & boot :)
-
-
-I enabled bigmem (4GB) and didnt encounter any problems yet. I have to
-do some benchmarks bonnie/postal to get a high load for a couple of
-hours. Just to make sure it doesnt die ;)
-
+Simon.
 
