@@ -1,51 +1,136 @@
-From: Matt Domsch <Matt_Domsch@dell.com>
-Subject: Re: Fw: [Bugme-new] [Bug 3651] New: dell poweredge 4600aacraidPERC 3/Di Container goes offline
-Date: Tue, 23 Nov 2004 16:50:19 -0600
-Message-ID: <20041123225019.GD30452@lists.us.dell.com>
-References: <60807403EABEB443939A5A7AA8A7458B694F38@otce2k01.adaptec.com>
+From: Dan Finn <dhrider@gmail.com>
+Subject: PE 2450 with flashing health light and PERC Raid utility says Raid status is critical
+Date: Tue, 23 Nov 2004 14:07:08 -0800
+Message-ID: <89ceee704112314072631ecd8@mail.gmail.com>
+Reply-To: Dan Finn <dhrider@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from lists.us.dell.com ([143.166.224.162]:33965 "EHLO
-	lists.us.dell.com") by vger.kernel.org with ESMTP id S261608AbUKWWuY
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 23 Nov 2004 17:50:24 -0500
-Content-Disposition: inline
-In-Reply-To: <60807403EABEB443939A5A7AA8A7458B694F38@otce2k01.adaptec.com>
+Received: from rproxy.gmail.com ([64.233.170.197]:28570 "EHLO rproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S261367AbUKWWHI (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 23 Nov 2004 17:07:08 -0500
+Received: by rproxy.gmail.com with SMTP id a36so23245rnf
+        for <linux-scsi@vger.kernel.org>; Tue, 23 Nov 2004 14:07:08 -0800 (PST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
-Cc: Ryan Anderson <ryan@autoweb.net>, Andrew Morton <akpm@osdl.org>, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Tue, Nov 23, 2004 at 05:27:36PM -0500, Salyzyn, Mark wrote:
-> Yes, somewhat irrelevant. The firmware engineer that made the changes
-> has not had recent contact with me, so I am not sure what he did when he
-> went to 6092.
+I have a PE 2450 here that has had a flashing orange health light for
+a couple of months now. I scheduled some downtime for it last night to
+investigate. The raid utility says that RAID0 (a raid 5 array with 3
+18G drives, the only raid array on the system and the only drives in
+the system) is critical, but it does not tell me why or what is wrong.
+It lists all 3 disks and it doesn't show any errors for them at all.
 
-The firmware architecture is cooperative multitasking, meaning one
-process must explicitly yield to allow another task to run.  The
-firmware flush buffer routine could run for a very long time,
-preventing further I/Os from being accepted by the card from the OS,
-and preventing I/O completion to the OS.  The change for build 6092
-was to explicitly yield the flush buffer routine after flushing some
-buffers to allow other firmware processes to be scheduled.  This
-alleviates the failure scenario that we could reproduce in our lab,
-and allows the controller read and write caches to be re-enabled via
-the command line tool.
+This server is running redhat 6.2 and kernel 2.2.14-6.1.1smp, loading
+the percraid kernel module. It has been running fine now for quite
+some time but I would like to figure out if there is really a problem
+or not.
 
-It appears that Ryan has a different failure scenario that this fix
-doesn't address.  Ryan, please try disabling your controller read and
-write caches via afacli and see if that helps.  Also, if you haven't
-already, please call Dell Tech Support and make sure they file an
-incident report, collect as much data as they can (afacli diag dump in
-particular) about the failure, and maybe, just maybe, it can get
-reproduced in an environment we can debug and fix it.
+After rebooting it the health light on the front of the server is now
+solid green, which I think is how it should be if there are no
+problems. But, during bootup I still see the error from the scsi card
+saying that the raid is critical.
 
-Thanks,
-Matt
+I came accross this site:
+http://www.redflag-linux.com/ppd/product_files/2003-AP001-01-01/base_doc/Dell_AACRAID.htm
 
--- 
-Matt Domsch
-Sr. Software Engineer, Lead Engineer
-Dell Linux Solutions linux.dell.com & www.dell.com/linux
-Linux on Dell mailing lists @ http://lists.us.dell.com
+And installed the Dell command line interface software from:
+http://www.domsch.com/linux/aacraid/afaapps-2.6-0.tar.gz
+
+I then can use the software and get the following for output:
+FASTCMD> controller list
+Executing: controller list
+
+Adapter Name Adapter Type Availability Clustering
+------------ ------------ ------------ ------------
+afa0 PERC 3/Si read/write No
+_controller show > open afa0
+Executing: open "afa0"
+
+_controller show > controller show channels
+Executing: controller show channels
+
+Ch# Host ID Targets Type Max Usage
+--- ------- ------- --------- ---------
+0 7 15 Ultra160 NoInfo
+
+_controller firmware > disk list
+Executing: disk list
+
+B:ID:L Device Type Blocks Bytes/Block Usage Shared Rate
+------ -------------- --------- ----------- ---------------- ------ ----
+0:00:0 Disk 35566478 512 Initialized NO 160
+0:01:0 Disk 35566478 512 Initialized NO 160
+0:02:0 Disk 35566478 512 Initialized NO 160
+
+AFA0> disk show defects 0
+Executing: disk show defects (ID=0)
+
+Number of PRIMARY defects on drive: 951
+
+Number of GROWN defects on drive: 0
+
+AFA0> disk show defects 1
+Executing: disk show defects (ID=1)
+
+Number of PRIMARY defects on drive: 641
+
+Number of GROWN defects on drive: 0
+
+AFA0> disk show defects 2
+Executing: disk show defects (ID=2)
+
+Number of PRIMARY defects on drive: 168
+
+Number of GROWN defects on drive: 0
+
+_enclosure identify > enclosure list
+Executing: enclosure list
+
+Enclosure
+ID (B:ID:L) Fan Power Slot Sensor Door Speaker Standard Diagnostic
+----------- --- ----- ---- ------ ---- -------- -------- ----------
+0 0:06:0 0 0 4 2 0 No SAF-TE PASSED
+
+
+_enclosure identify > enclosure show status
+Executing: enclosure show status
+
+Enclosure
+ID (B:ID:L) UpTime D:H:M PowerCycle Interval Door Alarm
+----------- -------------- ---------- -------- -------- -----
+0 0:06:0 0:00:00 0 10 UNLOCKED OFF
+
+Enclosure
+ID (B:ID:L) Fan Status
+----------- --- -------------
+
+Enclosure
+ID (B:ID:L) Power State Status
+----------- ----- ------------ -------
+
+Enclosure
+ID (B:ID:L) Slot scsiId Insert Status
+----------- ---- ------ ------- ------------------------------------------
+0 0:06:0 0 0:00:0 1 OK FAILED CRITICAL ACTIVATE
+0 0:06:0 1 0:01:0 1 OK FAILED CRITICAL ACTIVATE
+0 0:06:0 2 0:02:0 1 OK FAILED CRITICAL ACTIVATE
+0 0:06:0 3 0:255:0 0 OK UNCONFIG EMPTY I/R READY NOTACTIVATE
+
+Enclosure
+ID (B:ID:L) Sensor Temperature Threshold Status
+----------- ------ ----------- --------- --------
+0 0:06:0 0 73 F 120 NORMAL
+0 0:06:0 1 86 F 120 NORMAL
+
+Pretty cool software but it's still not telling where the problem is.
+Could it be flaky software on the PERC controller, and there really
+isn't a problem?
+
+Any help would be really appreciated.
+
+Thanks
+Dan
