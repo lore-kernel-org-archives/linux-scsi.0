@@ -1,49 +1,96 @@
-From: "David S. Miller" <davem@davemloft.net>
-Subject: Re: sym2 on sparc
-Date: Sat, 2 Oct 2004 16:41:54 -0700
-Sender: sparclinux-owner@vger.kernel.org
-Message-ID: <20041002164154.6918a43c.davem@davemloft.net>
-References: <20041001182056.GI16153@parcelfarce.linux.theplanet.co.uk>
-	<1096724000.2157.1.camel@mulgrave>
-	<20041002144408.GS16153@parcelfarce.linux.theplanet.co.uk>
+From: Mohammed Sameer <uniball@gmx.net>
+Subject: Re: BUG: CD driver sends command during host removal
+Date: Sun, 3 Oct 2004 01:57:14 +0200
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <20041002235714.GA2189@uniball>
+References: <20040929210751.GC6179@us.ibm.com> <Pine.LNX.4.44L0.0409291719170.1700-100000@ida.rowland.org>
+Reply-To: Mohammed Sameer <uniball@gmx.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-Return-path: <sparclinux-owner@vger.kernel.org>
-In-Reply-To: <20041002144408.GS16153@parcelfarce.linux.theplanet.co.uk>
-Cc: James.Bottomley@SteelEye.com, matthew@wil.cx, sparclinux@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="TB36FDmn/VVEgNH/"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from host-81.10.17.94.tedata.net ([81.10.17.94]:59011 "EHLO
+	uniball.foolab.org") by vger.kernel.org with ESMTP id S267624AbUJBX73
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 2 Oct 2004 19:59:29 -0400
+Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.44L0.0409291719170.1700-100000@ida.rowland.org>
 List-Id: linux-scsi@vger.kernel.org
+To: USB users list <linux-usb-users@lists.sourceforge.net>
+Cc: SCSI development list <linux-scsi@vger.kernel.org>
 
-On Sat, 2 Oct 2004 15:44:08 +0100
-Matthew Wilcox <matthew@wil.cx> wrote:
 
-> > Putting architecture specific knowledge into a device driver is almost
-> > never a good thing to do.  If all you want to do is print out the IRQ
-> > designation, I suspect this is a generic problem, not a sym2 specific
-> > problem, so what we need is something like an irq_to_string()
-> > abstraction.
-> 
-> I agree.  We could probably use something similar on PA-RISC.  There's
-> about 25 drivers in-tree that're currently using __irq_itoa().  Most
-> of them would be better-written if everybody were using a string.
+--TB36FDmn/VVEgNH/
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-The strings used to be useful in debugging IRQ routing issues
-on sparc64, but that's no longer the case now that I print
-out all of the PCI irq routing info at boot time on sparc64 like
-so:
+On Wed, Sep 29, 2004 at 05:20:21PM -0400, Alan Stern wrote:
+> On Wed, 29 Sep 2004, Mike Anderson wrote:
+>=20
+> > So now that this thread and the other thread related to similar
+> > shutdown issues has grown long is the next step to see if we can get the
+> > usb queuecommand to return DID_NO_CONNECT in this shutdown case.
+>=20
+> Here's a patch.  Mohammed, please try it out and tell us how it works.  I=
+=20
+> just wrote it, so I haven't had a chance to test it myself yet.
+>=20
+> Alan Stern
+>=20
+>=20
+> =3D=3D=3D=3D=3D drivers/usb/storage/scsiglue.c 1.84 vs edited =3D=3D=3D=
+=3D=3D
+> --- 1.84/drivers/usb/storage/scsiglue.c	2004-09-13 08:11:34 -04:00
+> +++ edited/drivers/usb/storage/scsiglue.c	2004-09-29 16:08:47 -04:00
+> @@ -183,6 +183,14 @@
+>  		return SCSI_MLQUEUE_HOST_BUSY;
+>  	}
+> =20
+> +	/* fail the command if we are disconnecting */
+> +	if (test_bit(US_FLIDX_DISCONNECTING, &us->flags)) {
+> +		US_DEBUGP("Command failed for disconnect\n");
+> +		srb->result =3D DID_NO_CONNECT << 16;
+> +		done(srb);
+> +		return 0;
+> +	}
+> +
+>  	srb->scsi_done =3D done;
+>  	us->srb =3D srb;
+> =20
+>=20
+though patch complained:
 
-PCI-IRQ: Routing bus[ 0] slot[ 2] map[0] to INO[10]
-PCI-IRQ: Routing bus[ 0] slot[ 3] map[0] to INO[14]
-PCI-IRQ: Routing bus[ 0] slot[ 5] map[0] to INO[1d]
-PCI-IRQ: Routing bus[ 0] slot[ 5] map[0] to INO[1e]
-PCI-IRQ: Routing bus[ 0] slot[ 5] map[0] to INO[1f]
-PCI-IRQ: Routing bus[ 0] slot[ 6] map[0] to INO[18]
-PCI-IRQ: Routing bus[ 0] slot[ 6] map[0] to INO[19]
-PCI-IRQ: Routing bus[ 1] slot[ 0] map[1] to INO[0d]
-PCI-IRQ: Routing bus[ 1] slot[ 1] map[1] to INO[0e]
-PCI-IRQ: Routing bus[ 1] slot[ 2] map[1] to INO[0f]
-PCI-IRQ: Routing bus[ 1] slot[ 3] map[1] to INO[0c]
-PCI0(PBMB): Bus running at 33MHz
-PCI-IRQ: Routing bus[ 0] slot[ 1] map[0] to INO[00]
-PCI-IRQ: Routing bus[ 0] slot[ 4] map[0] to INO[04]
-PCI0(PBMA): Bus running at 66MHz
+patching file drivers/usb/storage/scsiglue.c
+Hunk #1 succeeded at 166 (offset -17 lines).
+
+But the patch works fine, Thanks!
+May god bless you all!!
+
+
+--=20
+----------------
+-- Katoob Main Developer, Arabbix Maintainer.
+Linux registered user #224950
+Proud Egyptian GNU/Linux User Group <www.eglug.org> Admin.
+Life powered by Debian, Homepage: www.foolab.org
+--
+Don't send me any attachment in Micro$oft (.DOC, .PPT) format please
+Read http://www.fsf.org/philosophy/no-word-attachments.html
+Preferable attachments: .PDF, .HTML, .TXT
+Thanx for adding this text to Your signature
+
+--TB36FDmn/VVEgNH/
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.2.4 (GNU/Linux)
+
+iD8DBQFBX0Bay2aOKaP9DfcRAuo0AKCmTUSQRWzBIY4R538xxg6+/Xmm/QCgtK8o
+gKt/+EtIWHt22TZklQv7jnE=
+=ghaM
+-----END PGP SIGNATURE-----
+
+--TB36FDmn/VVEgNH/--
