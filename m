@@ -1,30 +1,56 @@
-From: 'Christoph Hellwig' <hch@infradead.org>
-Subject: Re: [SUBJECT CHANGE]: megaraid unified driver version 2.20.0.0-al pha1
-Date: Wed, 25 Feb 2004 20:44:41 +0000
+From: Brian King <brking@us.ibm.com>
+Subject: [PATCH] IBM Power RAID driver - third version
+Date: Wed, 25 Feb 2004 15:03:58 -0600
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040225204441.A9291@infradead.org>
-References: <0E3FA95632D6D047BA649F95DAB60E57033BC3E7@exa-atlanta.se.lsil.com>
+Message-ID: <403D0DBE.4020207@us.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from phoenix.infradead.org ([213.86.99.234]:2309 "EHLO
-	phoenix.infradead.org") by vger.kernel.org with ESMTP
-	id S261443AbUBYUoz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 25 Feb 2004 15:44:55 -0500
-Content-Disposition: inline
-In-Reply-To: <0E3FA95632D6D047BA649F95DAB60E57033BC3E7@exa-atlanta.se.lsil.com>; from Atulm@lsil.com on Wed, Feb 25, 2004 at 03:38:48PM -0500
+Received: from e6.ny.us.ibm.com ([32.97.182.106]:30925 "EHLO e6.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S261486AbUBYVEF (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 25 Feb 2004 16:04:05 -0500
 List-Id: linux-scsi@vger.kernel.org
-To: "Mukker, Atul" <Atulm@lsil.com>
-Cc: 'Arjan van de Ven' <arjanv@redhat.com>, 'James Bottomley' <James.Bottomley@SteelEye.com>, "'matt_domsch@dell.com'" <matt_domsch@dell.com>, 'Paul Wagland' <paul@wagland.net>, Matthew Wilcox <willy@debian.org>, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
+To: James.Bottomley@steeleye.com
+Cc: linux-scsi@vger.kernel.org
 
-On Wed, Feb 25, 2004 at 03:38:48PM -0500, Mukker, Atul wrote:
-> > of their own, e.g. mptraid
-> Although, this simplifies the development and maintenance effort, having a
-> single driver to drive both controllers or two independent drivers is not
-> always our decision. Most often, it would be Dell's preference. 
+I have uploaded the third version of the ipr device driver to:
 
-Well, I think the people at Dell should get down from their fucking crackpipe
-then.  (Matt, did you hear that?  please stop this kind of marketing driven
-junk, thanks)
+http://www-124.ibm.com/storageio/ipr/patch-2.6.3-ipr-2.0.0-6.gz
 
+Major changes:
+
+1. Removed use of bit fields.
+2. Removed show_queue_depth since we can use default one.
+3. Added FIXME comments to issues still outstanding that
+    require midlayer changes
+4. Several bug fixes.
+
+Outstanding issues:
+
+1. Driver needs the start_unit patch I submitted in order to function
+    properly. This has still not been accepted. A 2.6.3 patch can be
+    found at: http://www-124.ibm.com/storageio/ipr/patch-2.6.3-start_unit.gz
+2. Driver needs the array_controller patch, which still has not been
+    accepted. http://www-124.ibm.com/storageio/ipr/patch-2.6.3-array_controller.gz
+3. Still checking allow_cmds flag in queuecommand. ERP ops (e.g. TUR),
+    still do not check host_blocked. Patch to force retries to obey
+    host_blocked flag has been accepted, will be submitting another
+    patch to fix ERP ops. Once this is accepted, I will remove the check.
+4. ioa_is_dead flag still exists and is checked in queuecommand. Need to
+    add a scsi_set_host_offline interface to change this.
+5. res->del_from_ml flag still exists. To remove it requires a
+    scsi_set_device_offline interface.
+6. Driver is still modifying the command timeout. Once an acceptable
+    alternative is agreed upon, this can be cleaned up.
+
+Please apply. I will continue working the outstanding issues and
+update the ipr driver along with the rest of the patch.
+
+
+-- 
+Brian King
+eServer Storage I/O
+IBM Linux Technology Center
 
