@@ -1,23 +1,39 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: Troobleshooting
-Date: Sat, 22 Jun 2002 00:33:06 +0100 (BST)
+From: Luben Tuikov <luben@splentec.com>
+Subject: Q: calling SCpnt->scsi_done() on cancelled commands?
+Date: Fri, 21 Jun 2002 23:03:56 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <E17LXtq-0001re-00@the-village.bc.nu>
-References: <005901c216f5$a451d460$c600a8c0@alecto>
+Message-ID: <3D13E91C.4E7BD549@splentec.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <005901c216f5$a451d460$c600a8c0@alecto> from "Jonatan Rullman" at Jun 18, 2002 08:26:14 PM
+Received: from splentec.com (canoe.splentec.com [209.47.35.250])
+	by pepsi.splentec.com (8.11.6/8.11.0) with ESMTP id g5M33t406541
+	for <linux-scsi@vger.kernel.org>; Fri, 21 Jun 2002 23:03:55 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: Jonatan Rullman <jonatan@sverok.se>
-Cc: linux-scsi@vger.kernel.org, linux-mca@vger.kernel.org
+To: linux-scsi <linux-scsi@vger.kernel.org>
 
-> on. As far as too booting it everything worked out very nicely.
-> When using a Slackware bootdisk (using ibmmca.s or scsi.s) the computer
-> hangs and starts shewing through de floppy. The message given before this is
-> 
-> "Checking 386/387 coupling... OK, FPU using exception 16 error reporting."
-> "Checking 'hlt' instruction..."
+It was recently mentioned that calling scsi_done()
+for cancelled commands doesn't matter.
 
-But with "nohlt" - not a scsi problem but a PS/2 funny
+I'd like to inquire as the the future of this
+condition?
+
+I also noticed that aic7xxx also calls
+scsi_done() on cancelled commands (by the mid-layer,
+or otherwise).
+
+In my code, I don't always know how the command was
+cancelled, it may have been cancelled by the middle
+layer or by other sources/means -- whenever this
+happens I just set a flag and let ``the command movers''
+(from queue to queue) actually cancel the command
+(set the result code, if scsi_done() call scsi_done()
+and release the command to the mid-layer).
+
+What is the future of calling scsi_done() on
+cancelled by the mid-layer commands?
+
+TIA,
+-- 
+Luben
