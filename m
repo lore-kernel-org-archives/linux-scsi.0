@@ -1,317 +1,476 @@
 From: Luben Tuikov <luben_tuikov@adaptec.com>
-Subject: [ANNOUNCE] Adaptec SAS/SATA device driver [27/27]
-Date: Thu, 17 Feb 2005 12:38:46 -0500
-Message-ID: <4214D6A6.4010100@adaptec.com>
+Subject: [ANNOUNCE] Adaptec SAS/SATA device driver [26/27]
+Date: Thu, 17 Feb 2005 12:38:10 -0500
+Message-ID: <4214D682.8030903@adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Received: from magic.adaptec.com ([216.52.22.17]:23443 "EHLO magic.adaptec.com")
-	by vger.kernel.org with ESMTP id S262343AbVBQRiv (ORCPT
+Content-Type: multipart/mixed;
+ boundary="------------020703020008030408000507"
+Received: from magic.adaptec.com ([216.52.22.17]:57234 "EHLO magic.adaptec.com")
+	by vger.kernel.org with ESMTP id S262339AbVBQRiP (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 17 Feb 2005 12:38:51 -0500
+	Thu, 17 Feb 2005 12:38:15 -0500
 Received: from redfish.adaptec.com (redfish.adaptec.com [162.62.50.11])
-	by magic.adaptec.com (8.11.6/8.11.6) with ESMTP id j1HHcor32125
-	for <linux-scsi@vger.kernel.org>; Thu, 17 Feb 2005 09:38:50 -0800
+	by magic.adaptec.com (8.11.6/8.11.6) with ESMTP id j1HHcEr31789
+	for <linux-scsi@vger.kernel.org>; Thu, 17 Feb 2005 09:38:14 -0800
 Received: from rtpe2k01.adaptec.com (rtpe2k01.adaptec.com [10.110.12.40])
-	by redfish.adaptec.com (8.11.6/8.11.6) with ESMTP id j1HHcnb21913
-	for <linux-scsi@vger.kernel.org>; Thu, 17 Feb 2005 09:38:49 -0800
+	by redfish.adaptec.com (8.11.6/8.11.6) with ESMTP id j1HHcDb21653
+	for <linux-scsi@vger.kernel.org>; Thu, 17 Feb 2005 09:38:13 -0800
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-The readme file.
+This is a multi-part message in MIME format.
+--------------020703020008030408000507
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 
-diff -Nru a/drivers/scsi/adp94xx/readme.txt b/drivers/scsi/adp94xx/readme.txt
+The sequencer programs.
+
+diff -Nru a/drivers/scsi/adp94xx/adp94xx_seq.h b/drivers/scsi/adp94xx/adp94xx_seq.h
 --- /dev/null	Wed Dec 31 16:00:00 196900
-+++ b/drivers/scsi/adp94xx/readme.txt	2005-02-16 16:08:12 -05:00
-@@ -0,0 +1,289 @@
-+====================================================================
-+=            Adaptec SAS/SATA Family Manager Set v1.0.0            =
-+=                                                                  =
-+=                            README for                            =
-+=                  Red Hat Linux Advanced Server 2.1               =
-+=		   Red Hat Enterprise Linux 3.0                    =	
-+=           SuSE Linux Enterprise Server 8 / UnitedLinux 1.0       =
-+=                   SuSE Linux Enterprise Server 9                 =
-+=                                                                  =
-+= $Id: //depot/razor/linux/src/readme.txt#11 $                     =
-+====================================================================
++++ b/drivers/scsi/adp94xx/adp94xx_seq.h	2005-02-16 16:08:12 -05:00
+@@ -0,0 +1,2840 @@
++/* 
++ * Central and Link Sequencer Code for AIC-94xx 
++ * Version: Alpha_7g18
++ *
++ * $Id: //depot/razor/linux/src/adp94xx_seq.h#38 $
++ * 
++ */
++#if SAS_SEQUENCER_A1 
 +
-+0. Supported Hardware
-+
-+   The following Adaptec SAS/SATA Host Adapters are supported by this 
-+   driver set. 
-+
-+   SAS/SATA Adapters          Description
-+   ----------------------------------------------------------------
-+   ASC-48300                  Eight port SAS and SATA 64-bit PCI-X
-+                              133MHz to SAS/SATA host bus adapter
-+                              with 4X SFF-8484 internal connector
-+                              and 4X SFF-8470 external connector.
-+   AIC-9410                   Eight port SAS and SATA 64-bit PCI-X
-+                              133MHz ASIC.
-+
-+
-+1. Version History
-+   1.0.0, November 1st, 2004, Initial driver release.
-+
-+1.1. Software/Hardware Features
-+     - Support for the Serial Attached SCSI (SAS) protocol
-+       as specified in T10/1562-D specification, Revision 5.
-+     - Protocol supported: SSP, STP and SMP.
-+     - Support for ATA/ATAPI protocols as specified in
-+       ATA/ATAPI-7 V1, Revision 4b and ATA/ATAPI-7 V3,
-+       Revision 4a.
-+     - Protocol supported: SATA and ATAPI.
-+     - Initiator Mode (target mode not currently supported)
-+     - Support for the PCI-x standard up to 133MHz
-+     - Support for the PCI v2.2 standard
-+
-+1.2. Kernel support
-+     2.4.x, x86, AMD64 and EM64T
-+     2.6.x, x86, AMD64 and EM64T
-+
-+     Refer to the User's Guide for more details.
-+
-+2. Installation Instructions
-+
-+2.1. Installing Red Hat Linux Advanced Server 2.1 /
-+     Enterprise Linux 3.0 with a SAS/SATA Host Adapter
-+
-+     1) Install the SAS/SATA adapter and power on your
-+        system.
-+     2) Boot from the Red Hat CDROM.
-+     3) At the boot menu, type 'linux dd' and press ENTER.
-+     4) Follow the on-screen prompts to insert the Adaptec
-+        Red Hat driver disk.
-+     5) Proceed with the normal Red Hat installation steps.
-+
-+2.2. Installing SuSE Linux Enterprise Server 8, UnitedLinux
-+     1.0, SuSE Linux Enterprise Server 9 with a SAS/SATA
-+     Host Adapter
-+
-+     1) Install the SAS/SATA adapter and power on your system.
-+     2) Boot from the SuSE CDROM.
-+     3) At the boot menu, press the ALT key to stop the boot.
-+        For SLES 9, use F6 key instead ALT key.
-+     4) Press 'Enter' and follow the on-screen prompts to insert
-+        the Adaptec SuSE driver disk.
-+     5) Proceed with the normal SuSE installation steps.
-+
-+2.3. Installing the Driver when Red Hat or SuSE is Already
-+     Installed
-+
-+     1) Download the Adaptec driver RPM file appropriate to
-+        your version of Red Hat/SuSE.
-+     2) From a shell prompt, type: rpm -ivh <RPM file>
-+     3) Make sure to reboot the system by issuing the
-+        command "shutdown -h now". After the system reboots,
-+        the procedure is then done.
-+ 
-+2.3. Removing the Driver
-+
-+     Removing the Adaptec SAS/SATA driver is not presently supported.
-+
-+3. Command Line Options
-+
-+        WARNING: ALTERING OR ADDING THESE DRIVER PARAMETERS
-+                 INCORRECTLY CAN RENDER YOUR SYSTEM INOPERABLE.
-+                 USE THEM WITH CAUTION. 
-+
-+   Module parameters for loadable modules are specified only
-+   as the parameter name with optional '=' and value as
-+   appropriate, such as:
-+
-+       modprobe adp94xx attach_HostRAID=1 cmd_per_lun=10
-+
-+   Module parameters for modules that are built into the kernel image
-+   are specified on the kernel command line.
-+
-+   2.6.x: The module name plus '.' plus parameter name, with
-+     '=' and value if appropriate, such as:
-+
-+        adp94xx.attach_HostRAID=1 adp94xx.cmd_per_lun=10
-+
-+   2.4.x: The module name plus '=', plus the parameters,
-+     assignment is done by ':', parameters are period separated, such as:
-+
-+        adp94xx=attach_HostRAID:1.cmd_per_lun:10
-+	    
-+   The parameters are:
-+
-+   cmd_per_lun:<int>
-+	Global tag depth for all targets on all ports.
-+	This option sets the default tag depth for all
-+	targets if they support tag-queueing.
-+	Default Value: 32, range 1 to 64.
-+
-+   attach_HostRAID:<int>
-+	Controls whether the driver should atttach to
-+	HostRAID enabled controllers.
-+	Default: 0, false, the driver would *not* attach to
-+	RAID enabled controllers.  To make the driver
-+	attach to RAID controllers, turn this on by setting
-+	it to 1.
-+
-+   debug_mask:<int>
-+	Sets the debug mask for the driver.  Must be compiled
-+	with ASD_DEBUG macro defined for this to work. Default: 0.
-+
-+   To see complete list of parameters, try "modinfo -p <module>".
-+
-+4. Additional Notes
-+
-+4.1. Known/Unresolved or FYI Issues
-+
-+4.2. Third-Party Compatibility Issues
-+
-+     Adaptec only supports SAS and SATA hard drives running
-+     the latest firmware available. Please check with your
-+     hard drive manufacturer to ensure you have the latest
-+     version.
-+
-+4.3. Operating System or Technology Limitations
-+
-+     * PCI Hot Plug is untested, use at your own risk!
-+
-+     * Sparse LUN space may not be automatically probed.
-+       This is a limitation of some kernels.  Contact your
-+       OS vendor for support on this.
-+
-+     * Using the Driver Update Disk version of this package
-+       during OS installation under Red Hat might result in
-+       two versions of this driver being installed into the
-+       system module directory.  This might cause problems
-+       with the /sbin/mkinitrd program and/or other RPM
-+       packages that try to install system modules.  The
-+       best way to correct this once the system is running
-+       is to install the latest RPM package version of this
-+       driver, available from http://www.adaptec.com/.
-+
-+
-+5. Diskette Structure (obsolete section)
-+
-+   Red Hat Advanced Server 2.1 (x86):
-+   modules.cgz
-+   modules.dep
-+   pcitable
-+   readme.txt
-+   rhdd-6.1
-+
-+   Red Hat Enterprise Linux 3.0 (x86):
-+   modules.cgz
-+   modules.dep
-+   pcitable
-+   readme.txt
-+   rhdd-6.1
-+
-+   Red Hat Enterprise Linux 3.0 (AMD64, EM64/T):
-+   modules.cgz
-+   modules.dep
-+   pcitable
-+   readme.txt
-+   rhdd
-+
-+   SuSE Linux Enterprise Server 8, UnitedLinux 1.0 (x86):
-+   readme.txt
-+   linux/UnitedLinux/i386-ul1/install/update.post
-+   linux/UnitedLinux/i386-ul1/install/update.pre
-+   linux/UnitedLinux/i386-ul1/install/update.tar.gz
-+   linux/UnitedLinux/i386-ul1/modules/adp94xx.o
-+
-+   SuSE Linux Enterprise Server 8, UnitedLinux 1.0 (AMD64, EM64/T):
-+   readme.txt
-+   linux/UnitedLinux/x86_64-ul1/install/update.post
-+   linux/UnitedLinux/x86_64-ul1/install/update.pre
-+   linux/UnitedLinux/x86_64-ul1/install/update.tar.gz
-+   linux/UnitedLinux/x86_64-ul1/modules/adp94xx.o
-+
-+   SuSE Linux Enterprise Server 9 (x86):
-+   readme.txt
-+   linux/suse/i386-sles9/install/update.post
-+   linux/suse/i386-sles9/install/update.pre
-+   linux/suse/i386-sles9/install/update.tar.gz
-+   linux/suse/i386-sles9/modules/adp94xx.ko
-+   linux/suse/i386-sles9/y2update/modules/Vendor.ycp
-+   
-+   SuSE Linux Enterprise Server 9 (AMD64, EM64/T):
-+   readme.txt
-+   linux/suse/x86_64-sles9/install/update.post
-+   linux/suse/x86_64-sles9/install/update.pre
-+   linux/suse/x86_64-sles9/install/update.tar.gz
-+   linux/suse/x86_64-sles9/modules/adp94xx.ko
-+   linux/suse/x86_64-sles9/y2update/modules/Vendor.ycp
-+   
-+6. Contacting Adaptec
-+
-+   A Technical Support Identification (TSID) Number is required for 
-+   Adaptec technical support.
-+    - The 12-digit TSID can be found on the white barcode-type label
-+      included inside the box with your product. The TSID helps us 
-+      provide more efficient service by accurately identifying your 
-+      product and support status.
-+   Support Options
-+    - Search the Adaptec Support Knowledgebase (ASK) at
-+      http://ask.adaptec.com for articles, troubleshooting tips, and
-+      frequently asked questions for your product.
-+    - For support via Email, submit your question to Adaptec's 
-+      Technical Support Specialists at http://ask.adaptec.com.
-+     
-+   North America
-+    - Visit our Web site at http://www.adaptec.com.
-+    - To speak with a Fibre Channel/RAID/External Storage Technical
-+      Support Specialist, call 1-321-207-2000,
-+      Hours: Monday-Friday, 3:00 A.M. to 5:00 P.M., PST.
-+      (Not open on holidays)
-+    - For Technical Support in all other technologies including 
-+      SAS, call 1-408-934-7274,
-+      Hours: Monday-Friday, 6:00 A.M. to 5:00 P.M., PST.
-+      (Not open on holidays)
-+    - For after hours support, call 1-800-416-8066 ($99/call, 
-+      $149/call on holidays)
-+    - To order Adaptec products including software and cables, call
-+      1-800-442-7274 or 1-408-957-7274. You can also visit our 
-+      online store at http://www.adaptecstore.com
-+
-+   Europe
-+    - Visit our Web site at http://www.adaptec-europe.com.
-+    - English and French: To speak with a Technical Support 
-+      Specialist, call one of the following numbers:
-+        - English: +32-2-352-3470
-+        - French:  +32-2-352-3460
-+      Hours: Monday-Thursday, 10:00 to 12:30, 13:30 to 17:30 CET 
-+             Friday, 10:00 to 12:30, 13:30 to 16:30 CET
-+    - German: To speak with a Technical Support Specialist,
-+      call +49-89-456-40660
-+      Hours: Monday-Thursday, 09:30 to 12:30, 13:30 to 16:30 CET
-+             Friday, 09:30 to 12:30, 13:30 to 15:00 CET
-+    - To order Adaptec products, including accessories and cables:
-+        - UK: +0800-96-65-26 or fax +0800-731-02-95
-+        - Other European countries: +32-11-300-379
-+
-+   Australia and New Zealand
-+    - Visit our Web site at http://www.adaptec.com.au.
-+    - To speak with a Technical Support Specialist, call 
-+      +612-9416-0698
-+      Hours: Monday-Friday, 10:00 A.M. to 4:30 P.M., EAT
-+      (Not open on holidays)
-+
-+   Japan
-+    - To speak with a Technical Support Specialist, call 
-+      +81-3-5308-6120 
-+      Hours: Monday-Friday, 9:00 a.m. to 12:00 p.m., 1:00 p.m. to
-+      6:00 p.m. TSC
-+
-+   Hong Kong and China
-+    - To speak with a Technical Support Specialist, call 
-+      +852-2869-7200
-+      Hours: Monday-Friday, 10:00 to 17:00.
-+    - Fax Technical Support at +852-2869-7100.
-+
-+   Singapore
-+    - To speak with a Technical Support Specialist, call 
-+      +65-245-7470
-+      Hours: Monday-Friday, 10:00 to 17:00.
-+    - Fax Technical Support at +852-2869-7100
-+
++uint8_t Csa1[] = {
++0x00,0x0C,0x32,0xC0,0x05,0x00,0x0C,0x38,0x00,0x0C,0xBC,0xC3,0x01,0x11,0x2A,0x80,
++0x02,0x11,0x2A,0x80,0x01,0x05,0x0A,0x84,0x06,0x11,0x48,0x80,0x01,0x00,0x8C,0xB3,
++0x02,0x20,0x88,0xB3,0x02,0x06,0x80,0xB3,0x02,0x06,0x84,0x33,0x01,0xC7,0x8F,0x03,
++0x04,0x11,0x48,0x00,0x88,0x11,0x00,0x80,0x00,0x0C,0x66,0x40,0xFE,0xC7,0x8F,0x8B,
++0x01,0xC6,0x01,0xB0,0x02,0xC4,0x41,0xB0,0x02,0xC2,0x0D,0x30,0x02,0xC0,0x0D,0xB0,
++0x07,0x11,0x48,0x84,0x80,0xE1,0xC3,0x03,0x00,0x0C,0x32,0xC0,0x02,0x06,0xC0,0x33,
++0x02,0x20,0xC4,0x33,0x88,0x11,0x00,0x80,0x06,0x11,0x48,0x80,0x01,0xC7,0x1F,0xE8,
++0xFD,0x05,0x0A,0x88,0x02,0x05,0x0A,0x00,0x07,0x11,0x48,0x00,0x00,0x00,0x14,0x38,
+...
 
+The rest is zipped and attached.
+
+	Luben
+
+
+
+
+--------------020703020008030408000507
+Content-Type: application/x-bzip2;
+ name="17.patch.bz2"
+Content-Transfer-Encoding: base64
+Content-Disposition: inline;
+ filename="17.patch.bz2"
+
+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
+76zFMOnvU+OFcO+XRz1hiV3KnjfCUvWmzKTjTx9zDJ7SlR6Rfj5l0kjCWo6RFJUltyy7cqct
++OTDljhmlMpYLTNsJWuTSyyUTJaUlaS0lhMMJi3GFsImSaQkij8sLXEymoZmrTt4wuJSYJiU
+RHiUlQomCyZUqOUqWrxZFpLlEnCaJ47ma+YbfJUcGZUKSTDlRHKSBcsJLSha1KlOFKtCSkRP
+KyFLRCZSpSjpaLJSXsatFJXDBpbCVsFEolSkkomEpUTlatqSYVC22VR8mcojbUksITaImK9c
+NsowlJEstxbErlGLtZC0VJKiFKU+ypllLMrUSn9RgeqYTcnemIZS5ZJdr2StypLJ0vJLklo5
+JR439ldrjFaZaNOWdrTpywjS6W28uNJLTKWpVEqdpt26VbCO1x4+e2ly3HDpUzM/MKRJyllM
+dEx+TGU9JdJPWKblUmHzaWWGX5y6+YjKEpU6JUiZTzSnRN/Tt00jh8pTtp0tvKko4S6SpE9p
+YTikq2qkevHil9tpphw00y6bjaYilO2Faj86W28K07KYRhTK0UlFvynTrb3t707S7U0tTh69
+cKht4mOlqZlLThpz7KZMUntvHHL1hJJLxystJwkpKUcFczOHymHimWmFLWpThKllrStam1Fl
+sPG3qQLMiXLSmWD6VQlwopOXCXrB27bFkpdWyythl0fH526WlK2lOFNO2nq2EsOnkothhx+m
+lxERERERtKPDb10w5S9epU+W9W7bd9vkfOiT5wlJk9SpGVKNO1HiXOXDCmHiXkxMsuWWmHqc
+unTqERiEpjhK0rJRbxvER+du2nqni3bp8l0k0X+VaUSTC7VFkvUu1U6Y2tKSkvU/kx0wdPXj
+1+Uy8aU5fOnS2WGSNEpScMP2HBlty2ll8+aS/KZS4SU4UhcSl2tlbD5PiW4lpSWUU4wjSlLZ
+eM4NJMNrcuXD1hpty6uIwliksMLUtphjLLLKTCXijb5bxzw/fr7cuoMrZfdSz+2699TmDBKT
+hSKSlJeXS1pfOFvzD1p0yp6fnultrYduVsI/JctU0/OWXzCmVNsuGWEtrabWyty0W0wW030w
+t0wp4thFJflMLS5cF6SY9nbSOmDJ86UYcqacKdWnJKTbEfJcMPYwxEpfm4y4c5Wk/Ol26dKR
+8y7I9cPnLLKGThLBn2j8l08nSeSTbt02tl65fOI0w6aWwtlTClH4lno+bYSrG0sOUlJPGlCk
+pcKI6ctqafmVpO1tqevktOG0abYUMPzlh2bSl6l6w/OWHTha3rKkYUlq1LUt4pl+OkssOksu
+UnD1lErfmnaXpt0lFtJdJcJTnitumXK0uC3r123KmVPXaVLZYfnjovCJlfauVPuWGGGm+lLe
+tLetuHEUt7c6bdYPzttw5ZN4NquX6WGUflPevWfHj84beJ5UlTxyto0lyw2ptipmXzx22c8u
+mFqbeYTpllaT4lti3zbOFzLLp0pLC2H5pv5wnbh65WNMumblpnaXDfTLBhKSX5tUtcfOWW5R
+rK1pSpJw9U6eRlbSTpEpR44MluhhtpZO2VJOBLpcuXK8vVumFPnb84Wlwlt06dracM9cOGmE
+YiGCmERhKPHCTSGDtq2WGFKMHbnTLbpwYbcMKdKZbaepdjCkWk6Sj105RA4SORphaS0IW1ZE
+qbcvWDho008WtbCyzDlYlK221O1LdsNMsuErINEmUo28KQgmI7ZRaWHCULJWbRakSNJREssn
+TRwk+S9SjtbhbTZSVMuHKWX5iXRSVqcR9zl6tr7G5MMKhalKUlSVKaJS8OIKa004SYUnaXDx
+pppJw24duTfMU7fmUYy6dUoqWtJ1hpSjPvTjCllHDpy7ZZJcu3Dw9aiLe5P2HrM7cOi2222W
+zhLKPyVPzbbzLl2/PFaUzKsrdPmWWHLx2lp2wbaOE04ZJcxnyIpp+bS+4T8rMzu9MrepcJcJ
+S258Xx5O+L/fTr8/MLfKXRERwk8aSo/EmUofMsGGREpSpbGEvY0jJEsYXKmlqbWjt+cstzET
+PzLhtw4cFnCJHA8KLY6Twwl9a1uUuEolMW5ZUw5iooptly6VTyK2uXXLm0+T2y0taDTTDdMI
+ltfWHKzhXER9fC0m7dvVcyU00ldO+qW0mlJaXAujpxURBqY502lymSlQzzFc5Mr8WSxheV2W
+pPdtRK2CVqbUtMSnT1h022yophpSVsRKy1t+s+KvK51404aYm2W6ZWZSy8Xy6w7yviN2mjKk
+pe2xdEcZdJPMMpcOnsvWtNJYaNrcHazowiPkuUptwl0y8fcPzkj1ZLlplyYRpL5LlK0Sk8ad
+4fmeXR0lLLtJ3KnajSWmmTaWHL1h2thphaFopIpRcwmbItMRRMQkiURaISj1Eoh295WjDRDS
+1RFJokaU8R4YYSpZo7Sa4S+SpJKRSkZeumRybWuIs2ytGmTlKGmMyOYOrA72V5tE8zFeR39q
+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
+TphSVMkpZcsmWHbtEqaWy6W6YbdJ2lhszHDDpphKXCmVtrEpdJbUppKW2jDbLCXDLbTxw5bU
+XLaNRpPSWmYpanbx000ZKinKkpcrMpUSiJHSo8W30YZYaZbwyw2pSimXzL4y9aduHC4pMy5e
+lMOW1u1vm22MokS02p6lwbWstaUo5l2lxTamorC6ZY4actGttLJfNsRmYpypxbEUuHKemame
+ZTUaq1ylURZ6zhb847XKmHUNHTrbDbbKM9IcKpLTTaFGmHWWTrRy01TtovHTpGlspcrS4MGF
+NGWFnSilFrUwl4lbltNKdOGXZ47YS6U4cGHDbTxky8U2lLlKYi0/lIpy20/ZZhKzlaidJNvF
+30mNujI34yUjCG3zlhqMKy6VG3CkpjKlJS5L6cMro5LVGDSnUmCWClJdVSLVFruCRJbFqLVC
+KJJYibTF2lLlZallEmGGGELSaglhxDK8xCGFGlNLUYStFo+JbiyeDLCSd7srm23mlOni3TRy
+tySpKoTcKKUi1LtNHC3XJ2nHHXDVIpnPKmJciUpbSpXMDbTC0MKUyzGO1PDKm1JfmvvXrSXT
+xyWw8MvVotJ6R4bO5R+GA7XqXaVcIqJJ3wlhJ0yknKZYdOiyn5o7RhtpLTBSWHFpo4VSelMe
+OWYp02ZYR428Yo7VthDn2ldUz+U4W7S5TemVGUpduFlMCmnZpUOMZVl7l435xDm2YuVuVPXb
+KNPWWmCPRtKEpZPck5NNuaJCbx4n0RaTJJy2Ryy7YYcx6Rwp2tT1T562RbLbthLC1O4yllop
+wypK2U0owlplSkvXOtnDDTTLK3C1FJSYLKUjK2mUpUwlGkq4ht2nLDV0yUk04UppwtFpRglF
+LU2lFsoy0whlJplpSNJYZYbJcNOmWUmnHKW2IjhMOV6Sw5ZZRgzlK+GotwyzeVMrUztpTGWV
+tKsttSWdzm4NFulKaZ2tZcSlTaXKmmVtOdMtxK1tpUtZaWVNxz5dxc3xnl5TCcpSxKUkwlKX
+KkUjkPRwu5KaSz47W7bWiVnKUkqTGGFsFG1M0wpNRtPhZlLplDCMpUlKEssvzhtbk7acsMrU
+Sxh1HSuGVK0pLCbww1Wc4lMUp3bBph4raIdIyk5Ww1lLKMpS3nLLCNMPE7fZS4WBlrbMYkmY
+cMLSGDpKs4XBlTFrcKW08vXe3m7xm5Go5i7LQqfY5FJ0lplilLiLkylLCMklqSlLhlhK4jHS
+ikoyrNulqGmEqpwwhhFIiyaRCJ6RMQzE2wlUz4lw5csLYUd9pdvCWUOXaXEVKYlw7pmWWcIx
+PJnG1KSzpdISyrtnemocItwziLdKNGnJbS1tssuXxpaW2Lb0t67YcstJdlG0qW09dpLaQkyN
+qttEsRces7W7WbUl8wOFmHC0owdsqXFfO2jbhZ006S+flu3bLlKOiYswpSVOylKNPVKezuWn
+jF4k5dR665fPm8PXPatZtLt4ymJHa0vneDaR8/KRy7ZG2HJSjanSUnjAlKmGuCmEsFFI/MrM
+MsstO3rThp+XtLhLK1My7ZdeNGUtKaJbU1jC21Gnq1pNPErQk3O1rlH50+OmnPC0cOGFGFFw
+x3dMcOVcZSy1pLLOW1SvTFolilMSxFqlq1EcsJ1RLDLLUJZYTa46X7pnKparPIyy4aY1Lh3G
+ltKTSTv63jWUacpZUqJS1GFOXedQzhTE9tJzlcM3lZLDMuMswqNs1nL5vK3CJiZi2UtLbWpw
+pEpi1qNtIw2oYW/abZbawzw2acOGVfaMPPxMcPX5Ecu20esKVQlQ8fo0wy0lbbDLxKkpS4Y4
++YeMuXEU6W26Zj9bR00Py3kHTyS4l0xGO7adM+K9cxGIOkol4uLPkmE24W/LPH0vXDt4p2mX
+kdtZetuHDxy6dx69T8un5lw8ePH54ty0/LbW/KdHzl+NKdO23ceucpW6elMvdUS8XHaWnMSl
+8wly+PWlqX56naXaUxrXL589fPXEItwp0lxtSG/rk2sjLD5pylPntPtNMPX5vTx3Prpt2rTl
+lwt06PGHDrumzeeoXqz1wlppRy6bYUkcKU+bbdMHmGnxGiXr3OrcJhp2s3C2mWCUSiUpQy4W
+/Pz10y7yng009aYerS5YbKZbWlwyytw7w2qMpdKcNLLaYenTBFJQy0o04abUhhMPVPVuHT58
++cPzk/Pz8pp09S0w04bdvnLKOR6fk5WinT9G/vjx6pTL14th64aYcOHb8l252oj8/OOvI+bW
+94GX5fW4g5588eNu3Xjc8z+W7S4cukvvnBz1wvLLlzg+W1ej33zOekOlvFEYMummUj509prz
+jb1bv3JRTxlj9taVu2TuUkpW7W8Rg+j1b17L80lpy6VDzCzx4/LePzK1cPluX5FPn6NO9o9Z
+UWU26YMvlJfPz9zy4fueHinTbd6c8vlp/MOWs+c5OktsJqZfnqnLClIcNvWVFsmTDFp9duGH
+TDDVmnTplhuLd1lbx1Gku2W21Os/nTC3jt8955bYbdPOlMLabfnbTRSfTht4lMVppnZe3jDl
++wp204k4dcu2Xb88fPH5p48j1lXKmHZ+fLdj7KPnKKJYRyywKbS2z6w25l09clPVLW04MnDT
+jtlg4aW7J4YYSxg+q0w1JjVKhM6mGUs1+tWDLCMUtUGVsrMEjtLpphppLhMFtpbMuVlpJVl2
+3U04aYiUqw1MdI00UwpS2mExMmJSpSPySoljbK0sJMS9SuGE0iWolMTCyY12n84cMZWlhfyO
+GDlxhw9SzTpSkwwtp0wZStSmHA06fOyllp6W3Z0V0ttSkufXbzB6uaW5h40o4etR2lllzbDp
+thbpliyVsrdMuGni3zLxgwoyltL5hh+fnjxLJy+U02ZOmH0fJU6aUl4pTx2w4eSWmG2XS8ve
+1KYk7dsIw5aa7YMraW74YcmkkZjCiSmlmUpPHalojRywlhGnLxV644UszLbvMYq7mW6V++Xb
+jS4YevFRFMMYYRUnSu16r5qJOW1aYdspJSZUXJaFLYthSkKSMpUfks6dxlMpSwVKlJfnq/z5
+6/NotIcEpinCnKX5w+25Z6tUOUmVqlJhE4StNOUrYUlLDswo0S7ZWj8doUl0w1hhaSXLRt9S
+KeKilLtbtt2sth3208cMHc6jtSoo7cKjGFXS4+S4TGVFGHopxMPUxlarZha/yYXFqOEuBgoi
+VNrFZZSXaynL5y04crfTM2c8OD8/K09bYaWbValYJSw9YaZhbZbeWW1o2aU07Sls4bUmJUq7
+cNNrJQxbfrSKjCkotly8fnWrbUvMxwcuIimUElNqaprTbL5R020j1zHSUROIclIlblTB0tr7
+ymVq6dPxLjctMlvTL1xDSWVdKwljaXzt67cPdrZJZOlWo7Zp0zwz6uPjCYgmXaSUuSQTFOo7
+eMkUp7C2pzAwy3mkSafNstMkmsKUiSUSt+UoRxhSy0uEvHfp+O00fkkY+dCUvXHxSPXj0KMN
+aZUR20yspGiPFtOkumERl0pBylEm3DJlZa1d/gpKUkZU8SaIcPnA7jMR2mJSIy0lmDMJUUiG
+GThhbTKFJRClOS1EkrbW0nrznbUN3qN6DlJtXjjq2UPuvlVbo20iUSnCna5UpHDaztKH5LMN
+iUbTEcRHSVlsKbIotJKWEqRsptFxilESpTrDttTxjC1sybdnz0pDpwp+7QjaYcEuo6ZUKhbh
+mKjLIplGYS4W0206SintNXJvTDbjZvIwypKJUpxHRMuV8ktqjlwwmDhVpGEkpcbUt8eqWlyp
+y7OnBw0yyppTffbqPY6iNUxtwSlwkts2ty0j8inKR89ZSmC9J5WijpLktl9K2fFtuplPi1Ol
+qXts5FMPnStJZWp05YZwywfKYMMu1mXi0vfc9Z13Pufd3bOLtve7xNc9MIUU9UUXDh45jDtw
+pl8pDbhyKPzh0tL1s2lZ+ZiDxh7+SW27ZpHBwqWDH6nykuVHKlJUwjOHT1tw4cO3566YdQlp
+2xCMJePCMsmTDTxtplts2VtLCPVPGnrt80s4dvFHSLO1xizCTK2EePOV6bcPnHLxlUtcrV3b
+Bam21a6ZcJYiJcQpXDDTpLGsnaW0mJjnbjHLlzxpTlot20vlz1jmXrjpxu3m8THMsJuJ/JYx
+UdRXa+DEo6XCnxTuNzHU8LcZZJVFNtMQXznNZpVxPmLtMl43088xpzPSXLCUusdKrTrbOKVO
+Gkj1pwlx423tp9XPU5+zzhw49cmOE4dKtiImHRLttyj8ZeqcHOv37WuHfjpFJjDCPFsXE+Pe
+FssqjSojlcduT52du+Hrx66cLafKadPaX68KStpSyXLNJYTGn7580o7fnbbtaXikeONsJXuX
+Cmkm5cKthK8mmbMNMpMrSydpZUlTNIklqKoks/dKhwX45acMJUZbeJjk37mcJ/Nun2T9+pXv
+HfnDeOPnLTpww/JfmmCUWlLto/PyhLCXCm2WksWjJaWzRw004JaRe2mWyinunqJSlLgpLDKz
+hY2lFmVPGVMI8KSS4SjeVumW2lnba1HLxw/NMNtpSqYi1I2kcpMFu1MsLWswscPIywoy8SVG
+ESmJJk2cLcLGUmEssHKUcFpykwyeu0RvZyVpHj8ly9S6RL859OUvXraPERJhLKS34puduEuF
+PHnlYq7uHalNwyttT88WZV+c/MymMnThlbnxTLSWXLHCfmKcfKPyXa2vGH7llpplR2lSWH5b
+6T15Hz5h6nt25YYS2ptyly8+UqXjDaTxoZYbZe6eM9PUmK70rt2ruXUbpvh7Lide8KjjjvDj
+nlrOYLNF9AFSbVLWWaMaSRQ0aXqqmKAUSJNM6kx225l87aW6pTTLS3Ltk040vtwwtlKGVQVM
+zJlKJSWkpw+Wy0wtZh7a0eNvm1rdPzWHLKVLZcCmFMl0mlLc24WUplTai0u0rZZW9LZWy7VS
+XLpbRh89drdqcJPaecKOVNslLVEo7La7bdyW4bW2tR05ZWtKXananDKm0ZNeqYGEk+PVOUuk
+vzTclyyuSjnhgyzhlWnD1ba2a0ys2wRERETGjhamlvS0rZthExZlEQCKShLBSbSswklFmUsx
+lkwpaLWYSwepLMqpEbWiNJRKNoihKMLZRZSGpicRENYZSuoVEiVFpPm22dujTiMpqMpVHS35
+g2k4eFN9qJTstKlImJTDlSJWookpak2xU3CPezjRlamThRRG3bxl6zHLs2cOmW2kvzvDhKI4
+aSqIlSTtLlly+Uy6Zae9OVtOpbtNtqjpHyUul+uXC4WS2W4pccLcHDG1srU0yly8cLSwptw2
+uMuWz8jenLSOnZtl0ckutssraaFLKS7UdpW5Swy7cODSWWkqS16t02pyeNUl+Wpwp3l0y9ad
+Yt4lbabTplk9ZYbLayt+Wphw2nVspNulLjzCacJW7YUdNMpbdLdpcO3bDClmGFJdyolKS0lN
+NLYiMbcNMNEopJ2py4Zcyrvq1xSVIpJd1GK4VwMYuUyp82fnLLjTlcnTcZZWy1izDTDlRarY
+MNNTpS1rW2/MGMOGVpSlRR4iWYb81NoplGzSX5w4JNunaWm1RlLlhKyjDT4ultuNbdLfI+rj
+Lhb87jyOm9PLiox+Ki35WOny1NNM5ZR88VAk5LYSx11DtlhhtSlMo2l6llHMczCY0sthylw0
+y6eUyty02sl+aaSRKUqS6ZJYWtphh6+U8JRplURo9Uj1KGX5y0w5ScEo22hlL5Lx600w2SiL
+epOGWFspWS4eMrZS4tztlvRTlThs05XJhpopKTSUWSi0mJJ0dKWZUySWPVKcOkR12w2S6TEc
+57bg1FMopLlswtPCYrOG5LRJ0lSJcuGkn53hhhTQjKzGUDthlG2mrUpESw5l+YcpYUpHTxL1
+8trLLSlEi1nZbZ805aUS/PRl65XCP3Qo7W4WQwy5WgszSFEohTLDbCMO+7MJNlGUU2+IywYZ
+Rk5SlHKSKbfNHBlwacM5RGIlThwwaSlamnCnixlLxJ60lgo5YEdO3Kwwlwssslo0WlFmG2Gn
+b7T1Rw5aU2jb1i3CPVGnakJSrB6sYRKTDRScnqHqWUkxHPTTgxlI7cKdqUhlaXKVLiOknumU
+EpSOk6W6ZuLZbbMJdJODpTtLDSVHjxhwxwVlSnmHfJ2plnhlWnSUlpbStLqnSRaUnDpty6wt
+p0Tl1LpTDEZimWtcOGWVMJW41txHDSGeFMGEvLwlJrF3FMuGsnLLip0crYcRGkqpN8ZblpSc
+oznLx00tvhtHDtW2WGlKU5rhbStNOs8t5cqMtkrcKbYctHTZppnbTDl1zFZZ2ucJXUZwz0pj
+GrYXlU1esnCmGl6pTc7jT3zLlk44TxTLLKUcGaSks0lhT1ilum9L7eYjLqXDLfSXLWy21qZW
+opLDhpTpk6aU9hw09NLWdu/rLbLdukJiJnhSWGlLSS6W2iWCRSmkojtpRlklh69dNKcNOSmH
+qhQlaXCxplSO0vHrb1+fn5bcvWoi5TMdrvD0qNOmtIxFvvz6PzuOXjhpinjl0s7ePxPMM9L5
+UrlbhLK1okplaIs7ZWt2owlh0euHLB64dKfop5bhTXrp7DljxtMZSXMUplaMpad9bmY8ZU34
+W28cMokxS0tJds7ZV2826flMpZh+S8ZfMnK3DRh8dJWtL1EWqNuXzxi2GW3KkvpK5MMNvWnT
+1wetpcPxLhZ968aa/MuFy5fMNP3bhy3pbW7PHlPHjt894dmnzx827w0+CJNMn53GWSvnb9lw
+1i3Ltyev1G0rW+cGGXjrTLl+dLfcspwx07cnSy3LqlvnTUdfnb18+VKeFpfnp2thppInol4c
+vVvOHjDDhL1h45emT897W06SnTh4y/fmm2FumNPFL9U0xhPg/MPZTaGGzSs6ptT5gtiNLk1t
+h25eulvjxbTSXyWUrlp5J4tThhklw99w4dOjo6etFP0LaZpLho6zGnzRplaVOolG1MO9TLam
+nq2luHqKXKZYcPuG2Te1HrhL1wp24drUkynbDK8sO4w4KaY6W6dqzLRgpKNJfnh06YU0cLcP
+mHJDEtqdJfcKfKcsK5ol7+thL84YzvPJppanL1pJpbTh4t+YZ4dlW7W6UtZmJfvveW3OGle/
+o/dtfSXSGJMK2n5OWjDTrtPEc2y5ll8t3FM8JaeMKcNuUdOFMNKRcRMX+ZSlly4culsukvzx
+Xy/m2XyPTbk9fjm3jtD5lyh1KXDqFvmVRCUoZcuHr0t+dfvWW6dunDMd+W6w0xtTph39lP5v
+Thlh88YQaPVXFtpdPt4eOmXbT3C1knbxT3753hTqO1uZMVHLyMPnksMPWXrLTSNvOWjvfR02
+9YYaYrh+V5KUzky0Rwy4dtO3qWn5t6w/Kjb8zDavnbLPcqfNSteLPXaVvEuuZezUdHDhLl5t
+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
+SytK45bRniyjhhFDKabUiWXjLTT6nCWG0slpWx+SlydLlh0yxpPDTxp8wcnL3M0YOUs8vVIw
+llhl+WlgjhLLCUhyvKYj1LZw0eJRaSVLLJilKlZKlO2Yw02tptl2ywywSy2y7YdNNmu2SsKb
+ZUtzyvl2oeuFPMMrO0ospl06iVIzBS1sEWpUI6VCkdqcJZcsrJaST3b3eN4mkQ56enJvq9me
+yzpnDEEoS+Wyt1/pf4iBECI4qkIhKPVqSq7+nRSqcYRxokF7r1ypF/ClVZRm22a2tVZmllUo
+1MUyJm2wSYkzS2ZLaIIpFEmkyaRZLZLZJEltLYkEklJZLVqYls0mlqESWLW0hJtktRbJpZJJ
+tJtWkaRqSxESkS2yRWJNSWiSZJqsTJbZRVKEiJRohEZLbSaIysRJMSJYqjU0hI1CUkTaqaTV
+tSpbNJkTIkUjSYkpiSJkjSxaJYlk0lTSatZEtkhLahIIhCTQmmliKqSyWyiJLEtsRKSEjQml
+qaREItiiVMSSVtEaLahJa0tWaVaWklqSSaWympmiW1UZq2QbKzKRZsVgRYytjJFagJYlskyV
+rYrbZLbCJa2KyWEkqMTJpNEkKy1FksJZrTUSRKRWklaSTSaTSaatCSRSslIiNLZFsUiLVSKz
+JaiQtIsylaTS2KJbbSLSTU1Is0VtNElW2olpFViQbRGEkiWZSLCtEiJNE0tsSJppNqwllbGA
+kEkkiS1tpEiSQk0kmSaQraWKpVMkGsmkxQSTW2JZTVWa0SrYi20iEkNESZESSySmaREkEsSU
+aWlskaUmkS2aJE0hVMppJEmlTEmixLSVpKS21Uiq1lbSIjQmk0WxEk2iymSSJJNLUyJpNpNN
+NE2klsiKNVNlNKkgkyREkiRNWVksTSLSatqSakTIttIyTJNoiJpJNWSaTFtZCbSNLJJBImkh
+pJMkkyRJpEkmIgkEkiRJkmkkkkrZpGSTSaaSaaIJJEhpbNLZq2xTUssoJbSKyWFZqZLbFGJC
+1pbZTUZLFbJpomQtaLW1bUkSaW2pjSykkmJrS2yIaiWMlsyTSJUkakmSJNmysyIkibJExqqr
+MpmWZTGtkrNDTSTaQkSBTSS1NLZkiTWSJpJJM2ptJtLYi1asJM2kxikpWYisySW0tkqzKsxI
+xq2oRtSkNiW1UEW221YrEgSSJJDWs1ZQSKFbUy1ijGmm1SS2oIjFMkaTNJLbNpKNtqZlMkka
+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
+lT5TKWH9OVOHS3TTOXoduXy3j577bBy0halO0tpIajacuHLJKUuXjZZgpTK3jxl3hyt4h4kj
+87fNu23TVO+XLt2+fRKXjhh80jlthl9ywV/SXnrDPielHraszCTxENo+Zb+8dI6SiUoS9cLQ
+y8x+beoy7YQ8cMMpYZeumSVP3Unzt8jR9r1+ZesPqdO2GsHzbx/UIgRH/z5jCERER2V/HRhL
+gw0tha3S4i2ks7U2vE2Sf0lhKUxLK2mDtp/G42jj+JcmOG2mmVLS5UtJL5blJ/Hvm010ytVO
+FtcuXjyLU2tdvXPDt46dx01mJynPTTB6zpy5d6cusdcJmsKWl2/ilusuXDLajKOkxSTMS9ai
+22Yw4ZZ7Wo2waMMsNMtpbetxazLhtqXSz+JTG5qcnIttttskc+L28ekn1T2XhVKSJS0tRRyl
+plLOmDCMJjBlT5ThtyydOFI5bWlthHbBhh3Fu9JMu0raYpwpMaywxGHTtjZhLLTLlelsOHDJ
+bRKlpO2lHJlytS1YYOVtuVMIZaMpWpaMKZSl80kltw/FsGyMPDbblTbbptwUqJfi1otS0ijh
+hamopwlLtpKkmGsMvyjQ0fmGnbD5pbhLLhl6w0la3LbbZk1uJt00042l6p4jnxyl8c4evDh2
+2ZetvmXztUfjckpKdbcKwz+U7caZfo5LS7lDpUqcJRhLLh8kiUu35LtKXHTrlLxtgw7eI/dt
+suER6kppVrLeytak01VJR6ktEkpiySkoj8llJhJFEepR8v1LnRWXFrdREpdJPm0YeGPsGDyH
+KYhaSHLpEOm0uVtOCnyUWeOUUjLxLlh4jp0p0p4wzspo5cpZj1SGlKPELMmXrLtJhbvOWfv3
+jvLk2WS7WSjxIaSR4ypjtyjtKOHiiSWW421ClRCPExGEoeJOkZSUjtTbT5ESt+H5pan6H5+n
+xo9Up2iOLWslt65S/PWEuDbbbDBl68bcJW+11htlRl20aOHay1oS2s26Ux07WphWsdvJZzLp
+L08S/RDltt20z5Udwyhp1FH5VplSiluXrbrCfFNumPm2GHri4vja3Drq2tmu2krY8W5cpMYZ
+W7PH51SUpRkkpJ+SUmPXTxKn5ZS2T8wpGH6nR6fjx26eLeGXrL828do2SeErcrMsFJSkpKSk
+WRJRZTZtw0UwNtNN0x8fKQ+dsumzs6SiKQSjt22o6eNdEGG0qWjZ88eKcvTJ2W0mL6cJS4xm
+p8XjsyduUuUvGnaY7RO3LtS8PU/KbWcI5PeVI0lt6wlty2eu2nqjZtJtb97Sp3MzcqmZp0Sj
+k8dpcuFsNqOiW3kI5Sh0mIR28cuHiUU8ZbS7S8HiOVTEdJ+ww2jp+ZUesuzbt0+SqLZ0ntlg
+lhaH5JwlEpHtu3ZhhlK2HClvGWX5t405eI5ZMcOqWqJRwmjx44lOf0/nZw2yes+py8fNNOXD
+R2zmZZzM3c8uXDp626R3JliI4eGnOU/HSy1OTiqy5S2xRklopcRw9Ywx0xHL5LDKXbTDl104
+bUlkt07cKW9Sw4UpMPkxa4wdtJaRk/LXl+dnTivyn8IgiDUxERERHcxBAf7phwZTXTjD4/hy
+2zbT+mHDLiMqf1ly5fluOlOXrty0xhlju6z8YYU24Yf0l4y13jDc9LdnjpS0sKVS3K/HHPns
+tKdLcjrh2w8j+NqabeOZeJYePHilqWpw8docMPGl8fKcNcex5HCorl08wilPnDDptt6RhKXX
+IpwdpOnzDXrSjptRg9dbeOjl6l/HBp4+S8dn7fzCnJ66cMOXzBtTDtI6PzDw/HD84cnZ6/Jc
+MsuWFqaY6c1acNuOWXjuWdyl3xwt9+NcOzxKnzx8iOXblTh+OVJMMvmVvy/Vckqz8t+Pz5ha
+TluXzt6epRpJEWfYSZd9u1GI5cNpesad6XGkOEofOHa3D9PaUuFOEU57a+8qsbYdNODh0tg7
+JYlSpdvVvpcnGVR+evOladePylHStJXw/Mp5c+GmHfDaka9jEOUqcvzTDhpTDn84U224fj5x
+1MS2jB549SdunTh1emqXfqJe7/yulSvVqUHzf78fV4PV/4aA3jfXDnLoNIxDocg41bOEBisr
+I14DGV3jO0uFmn+Vds9P9h44zLhpiPOHdxzGahy66/vL6PIlvUS6ZYcrUyUw2iPEiXarYa0x
+GWTbbCIWlRLkcO3q+G3ZpUdNGrLYeLphKUuUMO2FOGWmh3I6S8SiLbtTPzG457dMMYjgp6xw
+lbJph09O3rBpMbfPmHpl0w0Wlkl0wwbrttLk+fOXKKSjSSI7S4eOXLx2y6Xlpy1wLbV8mPlp
+VDaSKUUjvvcusvmj5Xpm2HcrVhUW7SR4lCGHkOSYJIsaZomRyl6lEU5ZF+u1LjtzLC1xhy7U
+gw0VFqP9ha2nyxZ51Sr/ccplXTlmI7Si0spYTTxUVMRH5ah51MHSy5D5LcrYO2GeERFJQdu3
+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
+AGzj9Q/j/nPsP/xdyRThQkHBG+Zo
+--------------020703020008030408000507--
