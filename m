@@ -1,51 +1,71 @@
-From: Samuel Colin <Samuel.Colin3@wanadoo.fr>
-Subject: Re: Magical ansi scsi revision (was Re: [linux-usb-devel] Re: What
- is SCSI command 0xa0 ?)
-Date: Thu, 17 Feb 2005 23:49:53 +0100
-Message-ID: <20050217234953.15816a82@hebus>
-References: <20050217221803.091fd840@hebus>
-	<Pine.LNX.4.44L0.0502171719290.627-100000@ida.rowland.org>
-Reply-To: samuel.colin3@wanadoo.fr
+From: David Chaw <david.chaw@gmail.com>
+Subject: Re: [ANNOUNCE] Adaptec SAS/SATA device driver [0/27]
+Date: Thu, 17 Feb 2005 15:33:53 -0800
+Message-ID: <73edde4605021715335275c27@mail.gmail.com>
+References: <4214D5B1.1060701@adaptec.com> <1108673824.5507.32.camel@mulgrave>
+	 <4215093C.3010702@adaptec.com>
+Reply-To: David Chaw <david.chaw@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Received: from smtp2.wanadoo.fr ([193.252.22.29]:29077 "EHLO smtp2.wanadoo.fr")
-	by vger.kernel.org with ESMTP id S261214AbVBQWtu (ORCPT
+Received: from wproxy.gmail.com ([64.233.184.206]:18879 "EHLO wproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S261242AbVBQXd5 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 17 Feb 2005 17:49:50 -0500
-In-Reply-To: <Pine.LNX.4.44L0.0502171719290.627-100000@ida.rowland.org>
+	Thu, 17 Feb 2005 18:33:57 -0500
+Received: by wproxy.gmail.com with SMTP id 68so435845wra
+        for <linux-scsi@vger.kernel.org>; Thu, 17 Feb 2005 15:33:53 -0800 (PST)
+In-Reply-To: <4215093C.3010702@adaptec.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: SCSI development list <linux-scsi@vger.kernel.org>
+To: James Bottomley <James.Bottomley@steeleye.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+Cc: Luben Tuikov <luben_tuikov@adaptec.com>
 
-The Thu, 17 Feb 2005 17:23:54 -0500 (EST)
-Alan Stern <stern@rowland.harvard.edu> wrote:
+Hi all,
 
-> Well, that explains why you had problems starting with 2.6.10!
+Thanks for the all responses for this driver.
+I really appreciate the comments / suggestions.
+We definetely looking to making changes in the next few weeks.
+
+Thanks again,
+
+david
+
+
+On Thu, 17 Feb 2005 16:14:36 -0500, Luben Tuikov
+<luben_tuikov@adaptec.com> wrote:
+> On 02/17/05 15:57, James Bottomley wrote:
+> > Well, the initial reaction is yuk.
+> >
+> > Just from a brief glance over the files, the code is full of obfuscation
+> > and unnecessary compatibility gunk which needs removing.
+> >
+> > It's also full of the same queueing junk that I asked be taken out of
+> > the aic7xxx driver.
 > 
-> The explanation is simple enough, and it can be found in a line from your 
-> logs:
+> Thank you for all the comments guys!
 > 
-> Feb 17 21:19:09 gnondpom kernel: usb-storage: Fixing INQUIRY data to show
-> SCSI rev 2 - was 4
+> > Then we get to the architectural stuff, which should really have been
+> > discussed before you wrote the driver, not after
 > 
-> Back in 2.6.8, the usb-storage driver would automatically change the SCSI 
-> revision of any device to 2.  In 2.6.10 it doesn't do that if the actual 
-> revision is > 2.
+> Just for the record: I did *not* write this driver!  I was merely given
+> it to present it to the community.
 > 
-Then it explains a lot. I see you have sent a patch for the REPORT_LUNS
-problems. On my part all seem to work well so I can not do much more :-).
-Here is the product page of the offending disk : 
-
-http://www.lacie.com/products/product.htm?pid=10025
-
-As usb (and firewire) disks will become more popular, I guess the scsi-dev
-list should expect more problems of this kind :-(
-
-Anyway, many thanks for your kindness and your reactivity (you and both
-lists) :-)
-
-Regards,
-Samuel Colin
-
+> > - We need a SAS and a PHY transport class.  Three of your files are to
+> > do domain discover and should actually be part of the SAS transport
+> > class.  In fact, it looks like a large amount of the code should be in
+> > the various transport classes.
+> 
+> I absolutely agree.
+> 
+> > - The SATA pieces should use libata instead of trying to reinvent what
+> > already exists.
+> 
+> I agree here as well.
+> 
+> Thanks for all the comments guys!
+>        Luben
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
