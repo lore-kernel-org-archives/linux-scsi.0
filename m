@@ -1,30 +1,48 @@
-From: Heiko Carstens <Heiko.Carstens@de.ibm.com>
-Subject: Re: Calling sd_shutdown when in state SDEV_DEL
-Date: Wed, 24 Mar 2004 17:28:14 +0100
+From: Marcelo Tosatti <marcelo.tosatti@cyclades.com>
+Subject: Re: [PATCH][RELEASE] megaraid 2.10.2 Driver
+Date: Wed, 24 Mar 2004 17:39:15 -0300
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <OFBF4BB3D4.D3E1B9A6-ONC1256E61.005A3D8C-C1256E61.005AAB6E@de.ibm.com>
-References: <1080142505.2706.25.camel@mulgrave>
+Message-ID: <20040324203915.GH5551@logos.cnet>
+References: <0E3FA95632D6D047BA649F95DAB60E570230C77B@exa-atlanta.se.lsil.com> <20040323004543.GP25059@parcelfarce.linux.theplanet.co.uk> <20040323062708.A29405@infradead.org> <20040323133035.GU25059@parcelfarce.linux.theplanet.co.uk> <20040324061553.GA13681@logos.cnet>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtagate3.de.ibm.com ([195.212.29.152]:23704 "EHLO
-	mtagate3.de.ibm.com") by vger.kernel.org with ESMTP id S263789AbUCXR2K
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 24 Mar 2004 12:28:10 -0500
-In-Reply-To: <1080142505.2706.25.camel@mulgrave>
+Received: from hera.kernel.org ([63.209.29.2]:18318 "EHLO hera.kernel.org")
+	by vger.kernel.org with ESMTP id S263163AbUCXTji (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 24 Mar 2004 14:39:38 -0500
+Content-Disposition: inline
+In-Reply-To: <20040324061553.GA13681@logos.cnet>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@steeleye.com>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, linux-scsi-owner@vger.kernel.org
+To: Matthew Wilcox <willy@debian.org>
+Cc: Christoph Hellwig <hch@infradead.org>, "Bagalkote, Sreenivas" <sreenib@lsil.com>, 'Jeff Garzik' <jgarzik@pobox.com>, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
 
-> > upon scsi_remove_device the sd driver tries to send out a 
-SYNCHRONIZE_CACHE
-> > command (sd_shutdown) which is not possible because the sdev_state for 
-the
-> > device in question is already SDEV_DEL.
-> How about the attached instead.  That forces every deleted device to go
-> through CANCEL (uncompiled, but you can test it...)
+> On Tue, Mar 23, 2004 at 01:30:35PM +0000, Matthew Wilcox wrote:
+> > On Tue, Mar 23, 2004 at 06:27:08AM +0000, Christoph Hellwig wrote:
+> > > On Tue, Mar 23, 2004 at 12:45:43AM +0000, Matthew Wilcox wrote:
+> > > > I don't think you understand how CONFIG_COMPAT works.  x86-64 defines it
+> > > > when it wants it:
+> > > 
+> > > But not in 2.4, and this is a 2.4-only patch..
+> > 
+> > It is?  I didn't see that mentioned anywhere.
+> > 
+> > Anyway, it's wrong to define LSI_CONFIG_COMPAT based solely on __x86_64__.
+> > You'd also need to check IA32_EMULATION.  Really, it would be simpler
+> > to add CONFIG_COMPAT to 2.4.
 
-Your patch works fine for me. Are you going to apply that one?
+I think is ok to use such XXX_CONFIG_COMPAT and #ifdef the register_ioctl calls 
+around it in the driver. Acceptable for 2.4. Comments?  
 
-Heiko
+I think you are right about checking for IA32_EMULATION too. 
+
+Does SPARC also define it?
+
+The MPT fusion driver currently does:
+
+#if (defined(__sparc__) && defined(__sparc_v9__)) || defined(__x86_64__)
+#define MPT_CONFIG_COMPAT
+#endif
+
+Sreenivas: about the megaraid2 update, please work on the commentaries by Jeff.
 
