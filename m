@@ -1,57 +1,52 @@
-From: Luben Tuikov <luben@splentec.com>
+From: James Bottomley <James.Bottomley@steeleye.com>
 Subject: Re: Warning - running *really* short on DMA buffers while
  doingfiletransfers
-Date: Sat, 28 Sep 2002 19:25:39 -0400
+Date: Sat, 28 Sep 2002 22:48:36 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3D963A73.F593F5F7@splentec.com>
-References: <200209281552.g8SFqKS04855@localhost.localdomain>
+Message-ID: <200209290248.g8T2mbx02015@localhost.localdomain>
+References: <luben@splentec.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: (from root@localhost)
+	by pogo.mtv1.steeleye.com (8.9.3/8.9.3) id TAA05397
+	for <linux-scsi@vger.kernel.org>; Sat, 28 Sep 2002 19:48:49 -0700
+In-Reply-To: Message from Luben Tuikov <luben@splentec.com>
+   of "Sat, 28 Sep 2002 19:25:39 EDT." <3D963A73.F593F5F7@splentec.com>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: "Justin T. Gibbs" <gibbs@scsiguy.com>, Andrew Morton <akpm@digeo.com>, Jens Axboe <axboe@suse.de>, Matthew Jacob <mjacob@feral.com>, "Pedro M. Rodrigues" <pmanuel@myrealbox.com>, Mathieu Chouquet-Stringer <mathieu@newview.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Luben Tuikov <luben@splentec.com>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, "Justin T. Gibbs" <gibbs@scsiguy.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-James Bottomley wrote:
-> 
-> > 5) Proper transaction ordering across a queue full.  The aic7xxx
-> >    driver "requeues" all transactions that have not yet been sent
-> >    to the device replacing the transaction that experienced the queue
-> >    full back at the head so that ordering is maintained.
-> 
-> I'm lost here.  We currently implement TCQ with simple tags which have no
-> guarantee of execution order in the drive I/O scheduler.  Why would we want to
-> bother preserving the order of what will become essentially an unordered queue?
-> 
-> This will become an issue when (or more likely if) journalled fs rely on the
-> barrier being implemented down to the medium, and the mid layer does do
-> reqeueing in the correct order in that case, except for the tiny race where
-> the command following the queue full could be accepted by the device before
-> the queue is blocked.
+luben@splentec.com said:
+> TCQ goes hand in hand with Task Attributes. I.e. a tagged task is an
+> I_T_L_Q nexus and has a task attribute (Simple, Ordered, Head of
+> Queue, ACA; cf. SAM-3, 4.9.1). 
 
-Justin has the right idea.
+I believe the point I was making is that our only current expectation is 
+simple tag, which is unordered.
 
-TCQ goes hand in hand with Task Attributes. I.e. a tagged task
-is an I_T_L_Q nexus and has a task attribute (Simple, Ordered, Head
-of Queue, ACA; cf. SAM-3, 4.9.1).
+> aybe the generator of tags (block layer, user process through sg, etc)
+> should also set the tag attribute of the task, as per SAM-3. Most
+> often (as currently implicitly) this would be a Simple task attribute.
+> Why not the block layer borrow the idea from SAM-3, I see IDE only
+> coming closer to SCSI...
 
-Maybe the generator of tags (block layer, user process through sg, etc)
-should also set the tag attribute of the task, as per SAM-3.
-Most often (as currently implicitly) this would be a Simple task attribute.
-Why not the block layer borrow the idea from SAM-3, I see IDE only
-coming closer to SCSI...
+> This way there'd be no need for explicit barriers. They can be
+> implemented through Ordered and Head of Queue Tasks, everything else
+> is Simple attribute task (IO scheduler can play with those as it
+> wishes).
 
-This way there'd be no need for explicit barriers. They can be implemented
-through Ordered and Head of Queue Tasks, everything else is Simple
-attribute task (IO scheduler can play with those as it wishes).
+> This would provide for a more general basis the whole game (IO
+> scheduling, TCQ, IO barriers, etc). 
 
-This would provide for a more general basis the whole game (IO scheduling,
-TCQ, IO barriers, etc).
+That would be rather the wrong approach.  As the layers move up from the 
+physical hardware, the level of abstraction becomes greater, so the current 
+proposal is (descending the abstractions):
 
-If the device is not SCSI or it doesn't provide for those (the applicable
-bits in the INQ data and mode pages), then those can be succesfully
-simulated in the kernel, but at lowest level as I mentioned before.
+journal transaction->REQ_BARRIER->cache synchronise (ide) or ordered tag (scsi)
 
--- 
-Luben
+Most of the implementation is in ll_rw_blk.c if you want to take a look
+
+James
+
+
