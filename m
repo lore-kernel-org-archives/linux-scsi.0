@@ -1,52 +1,46 @@
-From: Sebastian Just <zeeman@gmx.net>
-Subject: Problem: DC390/AM53/79C974 can't compile
-Date: Sun, 24 Aug 2003 12:02:53 +0200
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] 2.6.0 aacraid driver update
+Date: Sun, 24 Aug 2003 13:33:12 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3F488D4D.4090804@gmx.net>
+Message-ID: <20030824133312.A16798@infradead.org>
+References: <1061567229.2067.15.camel@markh1.pdx.osdl.net> <20030822171600.A19262@infradead.org> <1061573399.2067.65.camel@markh1.pdx.osdl.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:11403 "HELO mail.gmx.net")
-	by vger.kernel.org with SMTP id S265920AbTHXKCu (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 24 Aug 2003 06:02:50 -0400
+Received: from pub234.cambridge.redhat.com ([213.86.99.234]:36357 "EHLO
+	phoenix.infradead.org") by vger.kernel.org with ESMTP
+	id S263417AbTHXMdN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 24 Aug 2003 08:33:13 -0400
+Content-Disposition: inline
+In-Reply-To: <1061573399.2067.65.camel@markh1.pdx.osdl.net>; from markh@osdl.org on Fri, Aug 22, 2003 at 10:29:59AM -0700
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Mark Haverkamp <markh@osdl.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>
 
-Hi!
+On Fri, Aug 22, 2003 at 10:29:59AM -0700, Mark Haverkamp wrote:
+> > I'm not very happy with exporting this to drivers.  Can you explain the
+> > code using it a bit?
+> 
+> Sorry, I can't explain it,  this code turned up in the 2.4 version.  I
+> assume it was added by someone from Adaptec. Although it looks like I
+> accidentally lost some comments when I brought the code over.  Here it
+> is, I'll add it back into the function.
 
-I tried the kernel 2.6test3 and 2.6test4.
+Maybe you can ping the adaptec folks for this change?
 
-I can configure both and compile them without problems.
+> > 
+> > 
+> > Also please convert the driver to be hotplug capable while you're
+> > at it.
+> 
+> Is there a how-to posted somewhere for this?
 
-But if I try to add scsi-controller-support for the Tekram DC390 or the 
-  AM53/79C974 I can't compile the kernel.
-There is no difference between compiling the scsi-card-support as modul 
-or direct into the kernel.
-Alwasy it stops with
-drivers/scsi/tmscsim.c: In function `dc390_Query_append':
-drivers/scsi/tmscsim.c:872: structure has no member named `next'
-drivers/scsi/tmscsim.c:877: structure has no member named `next'
-drivers/scsi/tmscsim.c: In function `dc390_Query_get':
-drivers/scsi/tmscsim.c:889: structure has no member named `next'
-drivers/scsi/tmscsim.c:890: structure has no member named `next'
-[...]
-drivers/scsi/tmscsim.c: In function `DC390_proc_info':
-drivers/scsi/tmscsim.c:2935: structure has no member named `next'
-drivers/scsi/tmscsim.c: At top level:
-drivers/scsi/tmscsim.c:3060: `DC390_T' undeclared here (not in a function)
-drivers/scsi/tmscsim.c:3061: syntax error before '.' token
-drivers/scsi/tmscsim.c:277: warning: `tmscsim_pci_tbl' defined but not used
-make[2]: *** [drivers/scsi/tmscsim.o] Error 1
-make[1]: *** [drivers/scsi] Error 2
-make: *** [drivers] Error 2
+I don't think so.  In short:
 
-Is there a way to get the kernel working?
-
-I use at the moment Debian Woody 3.0rc1, GCC 3.2.3 and the kernel 2.4.21
-
-
-Greetings
-Sebastian
+Convert it to the 2.4+ pci init scheme (struct pci_driver, etc..),
+then kill of ->detect and put the unrolled loop over all HBAs in
+the pci ->probe function, there call scsi_host_alloc instead of
+scsi_register and call scsi_add_host(host, &pdev->dev) and
+scsi_scan_host(host) at the end of the function.  the scsi_host_template
+->release gets folded into the pci driver ->release.
 
