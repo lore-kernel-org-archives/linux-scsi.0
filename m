@@ -1,61 +1,61 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: SCSI vs SATA considerations
-Date: Sun, 09 May 2004 12:25:37 +1000
+From: "Smart, James" <James.Smart@Emulex.com>
+Subject: [(re)Announce] Emulex LightPulse Device Driver
+Date: Sun, 9 May 2004 00:33:35 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <409D96A1.7000500@torque.net>
-References: <200405071455.i47EtBB18653@www.watkins-home.com> <409D2C56.7B7BEE7E@danbbs.dk>
-Reply-To: dougg@torque.net
+Message-ID: <3356669BBE90C448AD4645C843E2BF28034F92F0@xbl.ma.emulex.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="iso-8859-1"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bunyip.cc.uq.edu.au ([130.102.2.1]:24849 "EHLO
-	bunyip.cc.uq.edu.au") by vger.kernel.org with ESMTP id S264262AbUEIC2H
+Received: from emulex.emulex.com ([138.239.112.1]:63168 "EHLO
+	emulex.emulex.com") by vger.kernel.org with ESMTP id S264268AbUEIEdi
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 8 May 2004 22:28:07 -0400
-In-Reply-To: <409D2C56.7B7BEE7E@danbbs.dk>
+	Sun, 9 May 2004 00:33:38 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: monz@danbbs.dk
-Cc: Guy <bugzilla@watkins-home.com>, Linux-scsi <linux-scsi@vger.kernel.org>
+To: "Smart, James" <James.Smart@Emulex.com>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>
 
-Mogens Valentin wrote:
-> Guy wrote:
+All,
+
+Emulex has spent the last 8 wks significantly reorganizing its code base to
+create a native 2.6 driver. Although there are still a couple of small items
+remaining, we believe we're ready to have the community review the sources.
+
+The source for the driver can be downloaded from it's project page on source
+forge - http://sourceforge.net/projects/lpfcxxxx/ . Be sure to download the
+20040507 snapshot - and the version for the 2.6 kernel.
+
+If you have any questions, please contact me.  I look forward to your
+comments.
+
+Thanks...
+
+-- James Smart
+
+
+>  -----Original Message-----
+> From: 	Smart, James  
+> Sent:	Tuesday, March 09, 2004 5:45 PM
+> To:	'linux-scsi@vger.kernel.org'; 'linux-kernel@vger.kernel.org'
+> Subject:	[Announce] Emulex LightPulse Device Driver
 > 
->>Check the jumpers on the disk.  Most have a force SE jumper, that would
->>limit you to 40M/s.
->>Also, anything else on the SCSI bus?  If so, if 1 device is SE the bus
->>must be SE, which would limit you to 40M/s.
+> All,
 > 
+> Emulex is embarking on an effort to open source the driver 
+> for its LightPulse Fibre Channel Adapter family. This effort 
+> will migrate Emulex's current code base to a driver centric 
+> to the Linux 2.6 kernel, with the goal to eventually gain 
+> inclusion in the base Linux kernel.
 > 
-> No other devices on the scsi bus.
-> The SE jumper is not installed. Tried with/without - once had an older
-> IBM scsi disk where the docs had the definition on one pin reverted :-
-> I had it jumpered as ID2; making it ID0, for some reason it properly
-> negotiates as a 160 device, at 80MHz, of cause.
-> I still get only 34.4 MB/s, though (misspelled the speed in first post).
-> Tried forcing 80MB/s, disabling domain validation, and forcing
-> termination on the 29160, no change.
+> A new project has been created on SourceForge to host this 
+> effort - see http://sourceforge.net/projects/lpfcxxxx/ . 
+> Further information, such as the lastest FAQ, can be found on 
+> the project site.
 > 
-> Been thinking if IBM at some point sold some DDYS's as pure UW 40MB/s
-> disks, to satisfy the market...
+> We realize that this will be a significant effort for Emulex. 
+> We welcome any feedback that the community can provide us.
 > 
-> Out of ideas, except flashing the controller. Latest BIOS should do some
-> BIOS optimizations and device order stuff, whatever that means.
-
-Mogens,
-Perhaps you could try sg_rbuf in the sg3_utils package (see
-http://www.torque.net/sg ). sg_rbuf uses the READ BUFFER
-SCSI command and on most disks (e.g. recent seagate and
-fujitsu) sources data out of the disk cache quickly. The best
-figure that I have seen is about 110 MB/sec on a U160 bus when
-the streaming performance of the disk was about half that figure.
-
-IBM transferred their disk business to Hitachi (joint venture?)
-a few years back.
-
-BTW recent press releases from maxtor and fujitsu claim 100
-MB/sec streaming performance on the U320 bus for
-(soon to be released) 15k rpm disks.
-
-Doug Gilbert
-
+> Thanks,
+> 
+> -- James Smart
+>    Emulex Corporation
+> 
