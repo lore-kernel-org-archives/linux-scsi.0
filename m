@@ -1,56 +1,74 @@
-From: James Bottomley <James.Bottomley@steeleye.com>
+From: "Martin J. Bligh" <mbligh@aracnet.com>
 Subject: Re: 2.5.73-mm1 falling over in SDET
-Date: 28 Jun 2003 22:28:57 -0500
+Date: Sat, 28 Jun 2003 22:35:45 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1056857338.2514.4.camel@mulgrave>
-References: <45120000.1056810681@[10.10.2.4]>
-	<49400000.1056814561@[10.10.2.4]>  <20030628170235.51ee2f69.akpm@digeo.com>
+Message-ID: <6620000.1056864944@[10.10.2.4]>
+References: <45120000.1056810681@[10.10.2.4]><49400000.1056814561@[10.10.2.4]>  <20030628170235.51ee2f69.akpm@digeo.com> <1056857338.2514.4.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="=-Gw0SDRjMbWXjBi0gn4B/"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nat9.steeleye.com ([65.114.3.137]:31236 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S265536AbTF2DOp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 28 Jun 2003 23:14:45 -0400
-In-Reply-To: <20030628170235.51ee2f69.akpm@digeo.com>
-List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@digeo.com>
-Cc: "Martin J. Bligh" <mbligh@aracnet.com>, Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
-
-
---=-Gw0SDRjMbWXjBi0gn4B/
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from franka.aracnet.com ([216.99.193.44]:5766 "EHLO
+	franka.aracnet.com") by vger.kernel.org with ESMTP id S265577AbTF2FVq
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 29 Jun 2003 01:21:46 -0400
+In-Reply-To: <1056857338.2514.4.camel@mulgrave>
+Content-Disposition: inline
+List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>, Andrew Morton <akpm@digeo.com>
+Cc: Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Sat, 2003-06-28 at 19:02, Andrew Morton wrote:
-> Yes, isplinux_queuecommand() returns non-zero and the scsi generic layer
-> cheerfully goes infinitely recursive.
+--James Bottomley <James.Bottomley@SteelEye.com> wrote (on Saturday, June 28, 2003 22:28:57 -0500):
 
-Sigh, certain persons need to be more careful when doing logic
-alterations.
+> On Sat, 2003-06-28 at 19:02, Andrew Morton wrote:
+>> Yes, isplinux_queuecommand() returns non-zero and the scsi generic layer
+>> cheerfully goes infinitely recursive.
+> 
+> Sigh, certain persons need to be more careful when doing logic
+> alterations.
+> 
+> Try the attached.
 
-Try the attached.
+OK, that gets rather further, and I strongly suspect fixes the SCSI
+problem. Thanks very much.
 
-James
+But now it just OOMs instead, which seems to be slab failing 
+dismally to shrink it's fat ass enough to fit in that lazy-boy.
+Ext2 doesn't look desparately happy either. Maybe it's really
+that one's fault?
 
+ EXT2-fs error (device sda2): ext2_new_inode: Free inodes count corrupted in group 30
+Remounting filesystem read-only
+Out of Memory: Killed process 215 (portmap).
+Out of Memory: Killed process 338 (sshd).
 
---=-Gw0SDRjMbWXjBi0gn4B/
-Content-Disposition: attachment; filename=tmp.diff
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; name=tmp.diff; charset=ISO-8859-1
+larry:~# cat /proc/meminfo
+MemTotal:     16076324 kB
+MemFree:      15068968 kB
+Buffers:           476 kB
+Cached:         260824 kB
+SwapCached:          0 kB
+Active:         241972 kB
+Inactive:        23196 kB
+HighTotal:    15335424 kB
+HighFree:     15047680 kB
+LowTotal:       740900 kB
+LowFree:         21288 kB
+SwapTotal:           0 kB
+SwapFree:            0 kB
+Dirty:               0 kB
+Writeback:           0 kB
+Mapped:           5396 kB
+Slab:           697856 kB
+Committed_AS:     9688 kB
+PageTables:        264 kB
+VmallocTotal:   114680 kB
+VmallocUsed:      3156 kB
+VmallocChunk:   111524 kB
 
-=3D=3D=3D=3D=3D drivers/scsi/hosts.c 1.79 vs edited =3D=3D=3D=3D=3D
---- 1.79/drivers/scsi/hosts.c	Thu Jun 26 22:51:24 2003
-+++ edited/drivers/scsi/hosts.c	Sat Jun 28 22:14:12 2003
-@@ -194,7 +194,7 @@
- 	shost->use_blk_tcq =3D sht->use_blk_tcq;
- 	shost->highmem_io =3D sht->highmem_io;
-=20
--	if (!sht->max_host_blocked)
-+	if (sht->max_host_blocked)
- 		shost->max_host_blocked =3D sht->max_host_blocked;
- 	else
- 		shost->max_host_blocked =3D SCSI_DEFAULT_HOST_BLOCKED;
+slabinfo:
 
---=-Gw0SDRjMbWXjBi0gn4B/--
+dentry_cache      3999781 4011624    160   24    1 : tunables  120   60    8 : slabdata 167151 167151      0
+
+Bad dentries. no no.
 
