@@ -1,34 +1,33 @@
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] change scsi_cmd_ioctl to take a gendisk instead of a queue
-Date: Sun, 1 Feb 2004 22:13:55 +0000
+Subject: Re: [PATCH] add scsi_cmd_ioctl (SG_IO) support for st
+Date: Sun, 1 Feb 2004 22:36:49 +0000
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040201221355.A18561@infradead.org>
-References: <20040201124803.A18050@beaverton.ibm.com> <20040201213334.A17988@infradead.org> <20040201134916.A18509@beaverton.ibm.com>
+Message-ID: <20040201223649.A18653@infradead.org>
+References: <20040201124803.A18050@beaverton.ibm.com> <20040201125031.A18128@beaverton.ibm.com> <20040201213552.B17988@infradead.org> <20040201222818.GI26962@serve.riede.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from phoenix.infradead.org ([213.86.99.234]:3853 "EHLO
+Received: from phoenix.infradead.org ([213.86.99.234]:14093 "EHLO
 	phoenix.infradead.org") by vger.kernel.org with ESMTP
-	id S265479AbUBAWOA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 1 Feb 2004 17:14:00 -0500
+	id S265465AbUBAWgu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 1 Feb 2004 17:36:50 -0500
 Content-Disposition: inline
-In-Reply-To: <20040201134916.A18509@beaverton.ibm.com>; from patmans@us.ibm.com on Sun, Feb 01, 2004 at 01:49:16PM -0800
+In-Reply-To: <20040201222818.GI26962@serve.riede.org>; from wrlk@riede.org on Sun, Feb 01, 2004 at 05:28:18PM -0500
 List-Id: linux-scsi@vger.kernel.org
-To: Patrick Mansfield <patmans@us.ibm.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Jens Axboe <axboe@suse.de>, linux-scsi@vger.kernel.org
+To: Willem Riede <wrlk@riede.org>
+Cc: linux-scsi@vger.kernel.org
 
-On Sun, Feb 01, 2004 at 01:49:16PM -0800, Patrick Mansfield wrote:
-> Yes. That would also clean up the upper level driver code (for example,
-> sd.c's sd_init_command), but I have not tried this.
+On Sun, Feb 01, 2004 at 05:28:18PM -0500, Willem Riede wrote:
+> > What about st_done instead?  I know sd and sr use the intr names, but
+> > they're really misleading.  Also convention for new code is to use
+> > cmd or scmd as variable names for scsi commands.
+> 
+> Is there any desire to change SCpnt to scmd in existing code (such as osst)?
 
-Heh, I just took a short look at sd_rw_intr vs rw_intr (sr) and moving
-those into common code defintily looks like a good thing.  There's a
-bunch of small difference, but I think we'd better off having those
-two unified instead of two sets of bugs.  It's probably worth investigating.
+For the scsi midlayer (and new driver if possible) it would be nice to
+have a single common notation.  For existing drivers it's of course
+left to the author.
 
-> Then in the future we could use sg_io instead of the scsi_do_req,
-> scsi_wait_req, etc., and get rid of REQ_CMD in favor of REQ_BLOCK_PC.
-
-Hmmm..  Sound like an interesting path to investigate.  But unlike the
-REQ_PC unification it sounds more like a 2.7 thing.
+That beeing said it would of course be nice to have driver/scsi/ as
+homogeneous as possible.
 
