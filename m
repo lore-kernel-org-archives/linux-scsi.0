@@ -1,54 +1,47 @@
-From: Adrian Bunk <bunk@fs.tum.de>
-Subject: Re: SCSI sg: Questions regarding jiffies usage
-Date: Tue, 13 Jul 2004 01:59:39 +0200
+From: Mike Christie <mikenc@us.ibm.com>
+Subject: Re: PATCH [3/5]  qla2xxx: TCQ fixes
+Date: Mon, 12 Jul 2004 17:19:58 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040712235939.GA4701@fs.tum.de>
-References: <20040711004153.GZ28324@fs.tum.de> <40F2E7EA.6010907@torque.net> <20040712224629.GY4701@fs.tum.de> <40F31ABA.1060709@torque.net>
+Message-ID: <40F32AAE.5070508@us.ibm.com>
+References: <20040712140558.GA6961@praka.san.rr.com> <1089668486.1799.62.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hermes.fachschaften.tu-muenchen.de ([129.187.202.12]:46280 "HELO
-	hermes.fachschaften.tu-muenchen.de") by vger.kernel.org with SMTP
-	id S264367AbUGLX7o (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 12 Jul 2004 19:59:44 -0400
-Content-Disposition: inline
-In-Reply-To: <40F31ABA.1060709@torque.net>
+Received: from e32.co.us.ibm.com ([32.97.110.130]:21936 "EHLO
+	e32.co.us.ibm.com") by vger.kernel.org with ESMTP id S264519AbUGMAWe
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 12 Jul 2004 20:22:34 -0400
+In-Reply-To: <1089668486.1799.62.camel@mulgrave>
 List-Id: linux-scsi@vger.kernel.org
-To: Douglas Gilbert <dougg@torque.net>
-Cc: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Andrew Vasquez <andrew.vasquez@qlogic.com>, Linux-SCSI Mailing List <linux-scsi@vger.kernel.org>, linux-iscsi-devel@lists.sourceforge.net, Krishna Murthy <krmurthy@cisco.com>
 
-On Mon, Jul 12, 2004 at 07:11:54PM -0400, Douglas Gilbert wrote:
-
-> Adrian,
-
-Hi Doug,
-
-> There may be some confusion here. The older struct
-> sg_header interface did not have explicit per command timeouts.
-> As a poor substitute an ioctl was added to associate
-> a timeout (in seconds) to the file descriptor. This way
-> subsequent commands issued via that file descriptor
-> got the new timeout value. This is the "sfp->timeout"
-> value. The snippets above show the "sfp->timeout"
-> value being set to a default when a sg device is opened
-> and then being changed after a SG_SET_TIMEOUT ioctl call.
+James Bottomley wrote:
+> On Mon, 2004-07-12 at 09:05, Andrew Vasquez wrote:
 > 
-> The newer sg_io_hdr interface has per command timeouts
-> (in milliseconds). A sg_io_hdr::timeout value overrides
-> the "sfp->timeout" value. In the above code the
-> sg_io_hdr::timeout value is in "srp->header.timeout".
+>>ChangeSet
+>>  1.1867 04/07/12 09:38:28 andrew.vasquez@apc.qlogic.com +2 -0
+>>  Correct usage of tag-command-queueing methods:
+> 
+> 
+> I really don't think it is.
+> 
+> For the way the qla2xxx works, the correct tag usage would be to use per
+> HBA tags (which were introduced for aic7xxx but never used by them, so I
+> haven't actually created the mid-layer API), to populate your queue
+> handle field with the tag and to dispense with your outstanding_cmnds[]
+> array and use scsi_find_tag() to get back the command from the handle.
+> 
+> Since you'd be the first user of this API, I'd be happy to come up with
+> it for a willing victim^Wvolunteer.
 
-thanks for the explanations.
+Depending on the API, we might be able to use it for the linux-iscsi 
+driver. Today the driver uses scsi_activate_tcq(), but does not uses the 
+tag numbers. Instead it uses its own initiator task tags values for 
+session wide identifiers, becuase we need tag values for iscsi ops. For 
+example if we need to send a ping how should we get a tag from the mid 
+layer? Or maybe becuase there are some transport specific tag values 
+should we use someting else or keep it in the driver?
 
-> Doug Gilbert
-
-cu
-Adrian
-
--- 
-
-       "Is there not promise of rain?" Ling Tan asked suddenly out
-        of the darkness. There had been need of rain for many days.
-       "Only a promise," Lao Er said.
-                                       Pearl S. Buck - Dragon Seed
-
+Mike
