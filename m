@@ -1,124 +1,56 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: [PATCH] scsi_mid_low_api.txt in lk 2.5.69
-Date: Sun, 18 May 2003 11:29:06 +1000
+From: Kai Makisara <Kai.Makisara@kolumbus.fi>
+Subject: Re: [PATCH] switch scsi upper driver probing to the driver model
+Date: Sun, 18 May 2003 12:35:55 +0300 (EEST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3EC6E1E2.90801@torque.net>
-Reply-To: dougg@torque.net
+Message-ID: <Pine.LNX.4.52.0305181220320.6614@kai.makisara.local>
+References: <20030516182039.A7369@lst.de> <20030516235718.GA3260@beaverton.ibm.com>
+ <Pine.LNX.4.52.0305171248460.4436@kai.makisara.local>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------040701030600030501060409"
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bunyip.cc.uq.edu.au ([130.102.2.1]:55825 "EHLO
-	bunyip.cc.uq.edu.au") by vger.kernel.org with ESMTP id S261916AbTERBPg
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 17 May 2003 21:15:36 -0400
+Received: from fep02-0.kolumbus.fi ([193.229.0.44]:28633 "EHLO
+	fep02-app.kolumbus.fi") by vger.kernel.org with ESMTP
+	id S262000AbTERJXH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 18 May 2003 05:23:07 -0400
+In-Reply-To: <Pine.LNX.4.52.0305171248460.4436@kai.makisara.local>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, James.Bottomley@steeleye.com
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-scsi@vger.kernel.org
 
-This is a multi-part message in MIME format.
---------------040701030600030501060409
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+On Sat, 17 May 2003, Kai Makisara wrote:
 
-This is a catch up, applying the patch that Andries
-Brouwer sent a while back. It will apply to lk 2.5.69
-and 2.5.69-bk10 .
+...
+> I don't mind removal of the mt* files. I tested in 2.5.69-bk11 a
+> modification to st that was essentially what Christoph has just
+> posted. No problems there (i.e., tape found and works ok, sysfs shows
+> the tape as SCSI device).
+>
+> However, when I add to this Christoph's patch to change probing, I don't
+> find any tapes any more. What I did was to first modprobe aic7xxx.
+...
+> Modprobing st did not result in any messages (each attached tape causes
+> one line to be printed). The tape device does not exist:
+>
+I have done more experiments that may be useful. I used both a SCSI disk
+(sd) and a SCSI tape (st) to see if the problems are related to the high
+level driver. The behaviour with sd and st was similar, i.e., this problem
+is not related to st specifically.
 
-Other people who change this interface feel free to send
-patches to James :-)
+The result from the experiments was that nothing will be recognised
+properly after the sg driver is initialised. I had it in the kernel in the
+first experiment. The same applies to using sg as a module. If I load
+first sd and/or st, the devices will be recognised. If I load sg and then
+sd and/or st, the devices will not be recognised. They are not properly
+visible as sg devices either. It does not seem to matter if the HBA driver
+is in kernel or a module or loaded before or after the high-level driver.
 
-Doug Gilbert
+To some extent these results are expected. Your said that only one
+high-level driver can be attached to one device. What is not explainable
+is why they don't show as sg devices or in the sysfs /bus/scsi/devices
+directory.
 
---------------040701030600030501060409
-Content-Type: text/plain;
- name="scsi_mid_low_api_2569.diff"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="scsi_mid_low_api_2569.diff"
+I think it should be possible to attach several high-level drivers to one
+device. It is useful in some cases.
 
---- scsi_mid_low_api.txt	2003-05-05 14:03:22.000000000 +1000
-+++ scsi_mid_low_api.txt030429	2003-04-29 09:34:05.000000000 +1000
-@@ -22,7 +22,10 @@
- a SCSI host and a PCI device is common but not required (e.g. with
- ISA or MCA adapters).]
- 
--This version of the document roughly matches linux kernel version 2.5.67 .
-+This version of the document roughly matches linux kernel version 2.5.68 .
-+This document can be found in the Linux kernel source Documentation/scsi
-+directory and is called scsi_mid_low_api.txt . A more recent copy may
-+be found at http://www.torque.net/scsi/scsi_mid_low_api.txt.gz .
- 
- Documentation
- =============
-@@ -142,13 +145,14 @@
-                     slave_configure() -->  scsi_adjust_queue_depth()
- 			 |
- 		    slave_alloc()
--                    slave_configure() -->  scsi_adjust_queue_depth()
-+                    slave_configure()
- 			 |
- 		    slave_alloc()   **
-                     slave_destroy() **
- 
--The invocation of scsi_adjust_queue_depth() by the LLD is required
--if slave_configure() is supplied.
-+If the LLD wants to adjust the default queue settings, it can invoke
-+scsi_adjust_queue_depth() in its slave_configure() routine.
-+
- ** For scsi devices that the mid level tries to scan but do not
-    respond, a slave_alloc(), slave_destroy() pair is called.
- 
-@@ -179,7 +183,7 @@
- scsi_add_device()  ------+
-                          |
- 		    slave_alloc()
--                    slave_configure() -->  scsi_adjust_queue_depth()
-+                    slave_configure()   [--> scsi_adjust_queue_depth()]
- 
- [DEVICE unplug]
- LLD                      mid level                 LLD
-@@ -228,13 +232,14 @@
- 		      slave_destroy() **
-                             |
- 		      slave_alloc()
--                      slave_configure()  -->  scsi_adjust_queue_depth()
-+                      slave_configure()
- 		      slave_alloc()   **
- 		      slave_destroy() **
- 
--If the LLD does not supply a slave_configure() then the mid level invokes
--scsi_adjust_queue_depth() itself with tagged queuing off and "cmd_per_lun"
--for that host as the queue length.
-+The mid level invokes scsi_adjust_queue_depth() with tagged queuing off and
-+"cmd_per_lun" for that host as the queue length. These settings can be
-+overridden by a slave_configure() supplied by the LLD.
-+
- ** For scsi devices that the mid level tries to scan but do not
-    respond, a slave_alloc(), slave_destroy() pair is called.
- 
-@@ -1093,11 +1098,6 @@
-  *      Notes: Allows the driver to inspect the response to the initial
-  *	INQUIRY done by the scanning code and take appropriate action.
-  *	For more details see the hosts.h file.
-- *	If this function is not supplied, the mid level will call
-- *	scsi_adjust_queue_depth() with the struct Scsi_Host::cmd_per_lun
-- *	value on behalf of the given device. If this function is
-- *	supplied then its implementation must call
-- *	scsi_adjust_queue_depth(). 	
-  *
-  *	Defined in: LLD
-  **/
-@@ -1277,8 +1277,9 @@
-         Patrick Mansfield <patmans@us.ibm.com> 
- 	Christoph Hellwig <hch@infradead.org>
- 	Doug Ledford <dledford@redhat.com>
-+        Andries Brouwer <Andries.Brouwer@cwi.nl>
- 
- 
- Douglas Gilbert
- dgilbert@interlog.com
--19th April 2003
-+29th April 2003
-
---------------040701030600030501060409--
-
+-- 
+Kai
