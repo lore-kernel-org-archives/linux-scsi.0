@@ -1,87 +1,48 @@
-From: "Cress, Andrew R" <andrew.r.cress@intel.com>
-Subject: RE: Seagate Cheetah: Firmware, Bugs, Compatibility?
-Date: Fri, 3 Jan 2003 05:54:00 -0800
+From: "Justin T. Gibbs" <gibbs@scsiguy.com>
+Subject: Re: aic7xxx broken in 2.5.53/54 ?
+Date: Fri, 03 Jan 2003 08:14:06 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <A5974D8E5F98D511BB910002A50A66470580D4EB@hdsmsx103.hd.intel.com>
+Message-ID: <596830816.1041606846@aslan.scsiguy.com>
+References: <20030103101618.GB8582@in.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from petasus.fm.intel.com (petasus.fm.intel.com [10.1.192.37])
-	by hermes.fm.intel.com (8.11.6/8.11.6/d: outer.mc,v 1.51 2002/09/23 20:43:23 dmccart Exp $) with ESMTP id h03Dn3j08497
-	for <linux-scsi@vger.kernel.org>; Fri, 3 Jan 2003 13:49:03 GMT
-Received: from fmsmsxvs042.fm.intel.com (fmsmsxvs042.fm.intel.com [132.233.42.128])
-	by petasus.fm.intel.com (8.11.6/8.11.6/d: inner.mc,v 1.27 2002/10/16 23:46:59 dmccart Exp $) with SMTP id h03Dkif26591
-	for <linux-scsi@vger.kernel.org>; Fri, 3 Jan 2003 13:46:44 GMT
+In-Reply-To: <20030103101618.GB8582@in.ibm.com>
+Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
-To: 'Shanker Balan' <shanu@exocore.com>, Linux-SCSI <linux-scsi@vger.kernel.org>
+To: dipankar@in.ibm.com, linux-scsi@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
 
-Shanu,
+> Looks like the aic7xxx driver in 2.5.53 and 54 are broken on my hardware.
 
-We also had some problems with those same Atlas drives from Maxtor/Quantum.
-The B700 firmware seems to resolve the problems and we have been satisfied
-with it.  
+It looks like the driver recovers fine.
 
-I have a Linux tool that should help you download the firmware images
-successfully.  See http://scsirastools.sourceforge.net, and the tool is
-named sgdskfl.  I put a copy of the B700 firmware out there and the firmware
-update procedure is documented in the UserGuide.
+...
 
-Both Maxtor/Quantum and Seagate firmware images contain the model number of
-the disks that they are intended to be compatible with inside the image
-file.  sgdskfl checks the model number against the image itself for safety.
+> aic7xxx: PCI Device 0:1:0 failed memory mapped test.  Using PIO.
+> Uhhuh. NMI received for unknown reason 25 on CPU 0.
 
-The Seagate firmware images I have I got via email from Seagate support.
+SERR must be enabled by your BIOS.  I will change the driver so
+that, should the memory mapped I/O test fail, an SERR (and thus an
+NMI) is not generated.
 
-Andy
+...
 
------Original Message-----
-From: Shanker Balan [mailto:shanu@exocore.com] 
-Sent: Friday, January 03, 2003 2:03 AM
-To: Linux-SCSI
-Subject: Seagate Cheetah: Firmware, Bugs, Compatibility?
+> scsi0: PCI error Interrupt at seqaddr = 0x2
+> scsi0: Signaled a Target Abort
 
+These are left over from the failed memory mapped I/O test.  They
+should have been cleared by the test, but the behavior must be
+different for the 7896/97.  I'll review the documentation for this
+chip and see if I can quiet up the failure.
 
-Hello:
+Just out of curiosity, do you have any strange PCI options enabled
+in your BIOS?  I remeber seeing memory mapped I/O failures on this
+ServerWorks chipset under FreeBSD in the past, but an updated BIOS
+resolved the issue for the affected users.  It seemed that the BIOS
+incorrectly placed the Adaptec controller in a prefetchable region.
 
-I recently wrote in to ask about the "Queued IO" errors I have been
-experiencing on all 3 of my Quantum Atlas 10KIII drivers. According to
-Justin, its a firmware problem and upgrading to the latest will
-hopefully fix it.
+--
+Justin
 
-Like Mikael Abrahamsson mentioned in the same thread, it has been next
-to impossible to find any information on the firmware update procedure
-and result thereof with the updates available on the Quantum FTP site:
-
-ftp://ftpdownload.maxtor.com/pub/QuantumProducts/
-Disk_Firmware/Atlas-10KIII/160/
-
-Quantum support in India is next to impossible with vendors having a
-"take it or leave it" kind of attitude and Quantum web support is yet to
-get back to me on my query. Basically, I have burnt my fingers with the
-Quantum.
-
-Anyway, I need another SCSI hard disk for my cluster and the only other
-brand available in the local market is the Seagate Cheetah ST318406LC.
-
-Before I make the purchase (not that I have a choice here :( ), should I
-be aware of any bugs/compatibility issues with this specific model? The
-SCSI controller is a Adaptec AIC-7892A U160/m (rev 02).
-
-Any specific firmware releases to avoid with the ST318406LC?
-
-Thank you for your time.
-
--- Shanu
-http://shankerbalan.com/
-
-BTW: Any one have the URL to the Seagate firmware location?
-
-
--- 
-Westheimer's Discovery:
-	A couple of months in the laboratory can frequently save a
-couple of hours in the library.
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
