@@ -1,84 +1,49 @@
-From: "Randy.Dunlap" <rddunlap@osdl.org>
-Subject: Re: Fw: 2.6.0-test9 kernel oops
-Date: Mon, 24 Nov 2003 10:56:17 -0800
+From: Ken Tyler <kent@werple.net.au>
+Subject: Re: State of NCR53c7xx based drivers
+Date: Tue, 25 Nov 2003 06:13:48 +1100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20031124105617.3d600b74.rddunlap@osdl.org>
-References: <20031123231037.44115c6f.akpm@osdl.org>
+Message-ID: <Pine.LNX.4.44.0311250551380.22816-100000@leo.crm114.net>
+References: <20031124152653.A1292@sygehus.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fw.osdl.org ([65.172.181.6]:48365 "EHLO mail.osdl.org")
-	by vger.kernel.org with ESMTP id S263822AbTKXTCP (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 24 Nov 2003 14:02:15 -0500
-In-Reply-To: <20031123231037.44115c6f.akpm@osdl.org>
+Received: from gizmo03bw.bigpond.com ([144.140.70.13]:44940 "HELO
+	gizmo03bw.bigpond.com") by vger.kernel.org with SMTP
+	id S263846AbTKXTNx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 24 Nov 2003 14:13:53 -0500
+In-Reply-To: <20031124152653.A1292@sygehus.dk>
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
-Cc: linux-scsi@vger.kernel.org, gibbs@scsiguy.com, kostrian@deepblue.sk
+To: Rask Ingemann Lambertsen <rask@sygehus.dk>
+Cc: Linux/m68k <linux-m68k@lists.linux-m68k.org>, linux-scsi@vger.kernel.org
 
-On Sun, 23 Nov 2003 23:10:37 -0800 Andrew Morton <akpm@osdl.org> wrote:
+On Mon, 24 Nov 2003, Rask Ingemann Lambertsen wrote:
 
-| 
-| Can anyone else with an aic7xxx reproduce (and hence fix) this?
-| /proc/scsi/aic7xxx/0 works happily on my test box.
-| 
-| 
-| Begin forwarded message:
-| 
-| Date: Mon, 24 Nov 2003 06:36:32 +0100
-| From: Tomas Kostrian <kostrian@deepblue.sk>
-| To: akpm@osdl.org
-| Subject: 2.6.0-test9 kernel oops
-| 
-| 
-| kostrian@test:~$ uname -a
-| Linux test.[SNIFF].sk 2.6.0-test9 #1 Sun Nov 9 01:35:44 CET 2003 i686
-| unknown
-| kostrian@test:~$ ls -la /proc/scsi/aic7xxx/
-| total 0
-| dr-xr-xr-x    2 root     root            0 Nov 24 00:06 .
-| dr-xr-xr-x    4 root     root            0 Nov 24 00:06 ..
-| -rw-r--r--    1 root     root            0 Nov 24 00:06 0
-| kostrian@test:~$ cat /proc/scsi/aic7xxx/0
-| Segmentation fault
-| kostrian@test:~$ dmesg
-| .
-| .
-| [SNIFF]
-| .
-| .
-| Unable to handle kernel NULL pointer dereference at virtual address
-| 00000120
-|  printing eip:
-| c02624d8
-| *pde = 00000000
-| Oops: 0000 [#1]
-| CPU:    0
-| EIP:    0060:[<c02624d8>]    Not tainted
-| EFLAGS: 00010286
-| EIP is at aic7xxx_proc_info+0x1c/0xab4
-| eax: c02624bc   ebx: c3a63f78   ecx: 00000000   edx: 00000000
-| esi: 00000400   edi: c3aca000   ebp: c3a63f74   esp: c3a63ef4
-| s: 007b   es: 007b   ss: 0068
-| Process cat (pid: 657, threadinfo=c3a62000 task=c5e37350)
-| Stack: c3a63f78 00000400 c3aca000 c3a63f74 00000000 c03a8054 c012d24b c025139b
-|        c1187000 c3aca000 c3a63f78 00000000 00000400 00000000 00000000 c6332400
-|        00000400 c3aca000 c016a508 c3aca000 c3a63f78 00000000 00000400 c3a63f74
-| Call Trace:
-|  [<c012d24b>] __alloc_pages+0xa3/0x2dc
-|  [<c025139b>] proc_scsi_read+0x2b/0x44
-|  [<c016a508>] proc_file_read+0x10c/0x238
-|  [<c013fdb5>] vfs_read+0xb5/0xe4
-|  [<c013ffb5>] sys_read+0x31/0x4c
-|  [<c0108a53>] syscall_call+0x7/0xb
-| 
-| Code: 83 b9 20 01 00 00 00 75 f1 85 c9 75 2f 0f b7 05 58 00 00 00
-| -
+> On Mon, Nov 24, 2003 at 04:12:02PM +1100, Ken Tyler wrote:
 
-I can reproduce it (note, this is with aic7xyx_old, not Justin's driver).
-I'll see if I can produce a fix or something...
+> I'm confused. What SCSI on PPC A4000s is that? Is it the 53c770 on the
+> CyberStorm PPC or the 53c710 on the A4000 tower motherboard?
 
---
-~Randy
-MOTD:  Always include version info.
+Sorry, not clear at all, 53c710 on DKB A4091 in A4000 (not tower) ZORRO 
+slot, with Cyberstorm 060 and 200MHz 604e.
+
+Is there a 53c710 in A4000 towers and if so is it on the mother board at a 
+fixed address?
+
+> The Zorro<->PPC logic should be out of the equation on the CyberStorm PPC
+> since the 53c770 is connected directly to the processor bus.
+
+I was meaning BUS REQ, GRANT and ACK bus arbitration logic and DMA cycle
+control that is used to manage DMA transfers rather than the ZORRO auto 
+config hardware. 
+
+I recall reading that the PPC on the Cyberstorm cards is made to look like
+a 68000 to talk on the ZORRO bus.
+
+I assume that the same arbitration logic is used for bus control even 
+though the Cyberstorm on board SCSI is at a fixed address and doesn't need 
+to be allocated a ZORRO address range as a real plug in ZORRO card does.
+
+Does that make any sense?
+
+Ken.
+
