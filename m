@@ -1,58 +1,31 @@
-From: Adrian Bunk <bunk@stusta.de>
-Subject: [2.6 patch] drivers/scsi/dpti.h: remove kernel 2.2 #if's
-Date: Sun, 27 Mar 2005 16:34:21 +0200
-Message-ID: <20050327143421.GF4285@stusta.de>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [PATCH 6/7] - MPT FUSION - SPLITTING SCSI HOST DRIVERS
+Date: Sun, 27 Mar 2005 09:04:17 -0600
+Message-ID: <1111935857.5567.17.camel@mulgrave>
+References: <91888D455306F94EBD4D168954A9457C01B70565@nacos172.co.lsil.com>
+	 <1111809137.5541.7.camel@mulgrave>  <20050327091630.GA938785@sgi.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Received: from emailhub.stusta.mhn.de ([141.84.69.5]:7437 "HELO
-	mailout.stusta.mhn.de") by vger.kernel.org with SMTP
-	id S261691AbVC0OeW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 27 Mar 2005 09:34:22 -0500
-Content-Disposition: inline
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Received: from stat16.steeleye.com ([209.192.50.48]:37313 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S261691AbVC0PE1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 27 Mar 2005 10:04:27 -0500
+In-Reply-To: <20050327091630.GA938785@sgi.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
-Cc: James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Jeremy Higdon <jeremy@sgi.com>
+Cc: "Moore, Eric Dean" <Eric.Moore@lsil.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
 
-This patch removes #if's for kernel 2.2 .
+On Sun, 2005-03-27 at 01:16 -0800, Jeremy Higdon wrote:
+> James, actually this queue depth code predates your change_queue_depth
+> API.  I don't think it was ever converted to the new API.
 
-Signed-off-by: Adrian Bunk <bunk@stusta.de>
+Erk, you're right.  My todo list says I'm only waiting on 3ware patches
+for all the conversions to be complete, but I think I missed auditing
+fusion because it's not in the scsi directory...OK I'll do it after we
+get the driver split sorted out.
 
----
+James
 
-This patch was already sent on:
-- 12 Mar 2005
-
- drivers/scsi/dpti.h |   10 ----------
- 1 files changed, 10 deletions(-)
-
---- linux-2.6.11-mm2-full/drivers/scsi/dpti.h.old	2005-03-12 12:22:23.000000000 +0100
-+++ linux-2.6.11-mm2-full/drivers/scsi/dpti.h	2005-03-12 12:22:46.000000000 +0100
-@@ -20,15 +20,9 @@
- #ifndef _DPT_H
- #define _DPT_H
- 
--#ifndef LINUX_VERSION_CODE
- #include <linux/version.h>
--#endif
-
--#if LINUX_VERSION_CODE < KERNEL_VERSION(2,4,00)
--#define MAX_TO_IOP_MESSAGES   (210)
--#else
- #define MAX_TO_IOP_MESSAGES   (255)
--#endif
- #define MAX_FROM_IOP_MESSAGES (255)
- 
- 
-@@ -321,10 +313,6 @@
- static void adpt_delay(int millisec);
- #endif
- 
--#if LINUX_VERSION_CODE < KERNEL_VERSION(2,4,0)
--static struct pci_dev* adpt_pci_find_device(uint vendor, struct pci_dev* from);
--#endif
--
- #if defined __ia64__ 
- static void adpt_ia64_info(sysInfo_S* si);
- #endif
 
