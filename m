@@ -1,38 +1,27 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: [PATCH] dc395x: Fix support for highmem
-Date: Wed, 16 Mar 2005 18:04:17 +0100
-Message-ID: <20050316170417.GY7842@suse.de>
-References: <200503160209.j2G29cAf010870@hera.kernel.org> <20050316075839.GC7842@suse.de> <1110986016.5771.3.camel@mulgrave> <20050316160447.GU7842@suse.de> <20050316164806.GO21986@parcelfarce.linux.theplanet.co.uk> <20050316165338.GX7842@suse.de> <20050316170259.GA25056@infradead.org>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [BK PATCH] SCSI updates for 2.6.11
+Date: Wed, 16 Mar 2005 13:35:40 -0500
+Message-ID: <42387C7C.9040407@pobox.com>
+References: <1110934411.5685.39.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Received: from ns.virtualhost.dk ([195.184.98.160]:2734 "EHLO virtualhost.dk")
-	by vger.kernel.org with ESMTP id S262682AbVCPRE1 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 16 Mar 2005 12:04:27 -0500
-Content-Disposition: inline
-In-Reply-To: <20050316170259.GA25056@infradead.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
+In-Reply-To: <1110934411.5685.39.camel@mulgrave>
+Sender: linux-kernel-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Matthew Wilcox <matthew@wil.cx>, James Bottomley <James.Bottomley@SteelEye.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, g.liakhovetski@gmx.de
 
-On Wed, Mar 16 2005, Christoph Hellwig wrote:
-> On Wed, Mar 16, 2005 at 05:53:39PM +0100, Jens Axboe wrote:
-> > The list doesn't really need dma mapping at that point, the problem here
-> > is that the driver needs to punt to pio mode because of foo. So calling
-> > pci/dma_map_* is pointless, since the CPU will have to do the transfer
-> > anyways. What the driver is really looking for at this point, is a way
-> > to map the pages in the sglist to a virtual address.
+James Bottomley wrote:
+> This is my current tranch of patches that were waiting the transition
+> from -rc to released (sorry it's late ... I've been on holiday).
 > 
-> Given that there's quite a few cases of this "problem" it would be nice
-> to have common helpers for it.  Especially as it's really difficult when
-> we allow merging of sg list entries
+> The patch is available here:
+> 
+> bk://linux-scsi.bkbits.net/scsi-for-linus-2.6
 
-I thought about that when writing the above, but is there really more
-than one case for SCSI drivers? If there is, sure lets add the helpers.
-But I would consider it a quite rare occurence, I've never seen it
-before.
+Are my 3ware bugfixes in the queue?  Currently 3ware claims it handled 
+the interrupt, even the interrupt is a shared one and the event was 
+meant for another driver.
 
--- 
-Jens Axboe
-
+	Jeff
