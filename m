@@ -1,52 +1,59 @@
-From: christophe.varoqui@free.fr
-Subject: [ANNOUNCE] multipath-tools-0.3.5
-Date: Tue, 26 Oct 2004 12:06:31 +0200
-Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <1098785191.417e21a7a7c28@imp1-q.free.fr>
-References: <1096071849.4466.31.camel@zezette> <1097054573.4163b96d1262c@imp5-q.free.fr> <1097495416.416a73787e0ae@imp1-q.free.fr> <1098021787.5433.8.camel@zezette> <1098269169.417641f18a234@imp1-q.free.fr> <1098656088.9350.88.camel@zezette>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [ANNOUNCE] MPT Fusion driver 3.02.06 update
+Date: Tue, 26 Oct 2004 11:38:29 +0100
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <20041026103828.GC12026@infradead.org>
+References: <0E3FA95632D6D047BA649F95DAB60E57053AF031@exa-atlanta>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1098656088.9350.88.camel@zezette>
-To: device-mapper development <dm-devel@redhat.com>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "linux-hotplug-devel@lists.sourceforge.net" <linux-hotplug-devel@lists.sourceforge.net>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from phoenix.infradead.org ([81.187.226.98]:34317 "EHLO
+	phoenix.infradead.org") by vger.kernel.org with ESMTP
+	id S262207AbUJZKig (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 26 Oct 2004 06:38:36 -0400
+Content-Disposition: inline
+In-Reply-To: <0E3FA95632D6D047BA649F95DAB60E57053AF031@exa-atlanta>
 List-Id: linux-scsi@vger.kernel.org
+To: "Moore, Eric Dean" <Emoore@lsil.com>
+Cc: linux-scsi@vger.kernel.org
 
-Hello,
+On Mon, Oct 25, 2004 at 07:32:35PM -0400, Moore, Eric Dean wrote:
+> All,
+>=20
+> We are pleased to announce the MPT Fusion release candidate for lk 2.=
+6
 
-here goes multipath-tools-0.3.5
+Some things that come to mind immediately:
 
-As expected, 0.3.4 was still cutting at the edges, so this is a bugfix oriented
-release. Thanks for the feedback so far.
+>=20
+>=20
+> Highlights of this release:
+> =B7	SAS Support - 1064, 1066, 1068
 
-Note the changes to udev config files : they need updating
-Note the unproven 2.6.10-rc1+ new dependency for SG_IO ioctl on bdevs.
+there's still tons of ioc->chip_type checks for SPI vs FC vs SAS -=20
+please always use the new bus_type member
 
-Full ChangeLog for the release :
 
-	* [multipathd] fix broken test for path going up or shaky
-	  that kept executing multipath when it shouldn't
-	* change multipath.dev to exit early when udev' DEVNAME is
-	  a devmap (/dev/dm-*). This avoids a recursion case when
-	  the kernel devmapper keeps removing a map after multipath
-	  configures it.
-	* change multipath.rules to follow the new -D synthax
-	* [multipath] "-D major minor" synthax changed to
-	  "-D major:minor" to match the sysfs attribute value.
-	  This change removes a few translations in multipath and
-	  multipathd.
-	* [multipath] fix segfault in test if conf->dev is a devmap
-	  (the one forwarded by MikeAnd)
-	* SG_IO ioctl seem to work in lk 2.6.10+, so remove all sg
-	  device knowledge and advertise (here) the new dependency.
-	* [multipath] remove unused do_tur()
-	* [multipath] fix sort_pg_by_summed_prio(), and don't add up
-	  failed path priority
+> =B7	csmi ioctl support
 
-As usual, doc and download at :
-http://christophe.varoqui.free.fr/
+rejected, this ioctl interface is completely horrible, even worse than
+the fc hbaapi.  Please help to provide a proper sas transport class sim=
+ilar
+to the fc one.
 
-regards,
---
-christophe varoqui <christophe.varoqui@free.fr>
+> =B7	fc_transport support
+
+please don't put this under all kinds of ifdefs, also it's not working =
+with
+current mainline anymore anyway.
+
+Any reason there's no SPI transport attribute support, it's rather asym=
+etric
+this way..
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
