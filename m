@@ -1,399 +1,98 @@
-From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
-Subject: Reselection (bug-2139)
-Date: Tue, 6 Apr 2004 00:31:05 +0200 (CEST)
+From: David Brownell <david-b@pacbell.net>
+Subject: Re: [linux-usb-devel] Re: bug 2400
+Date: Mon, 05 Apr 2004 16:23:46 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44.0404042319580.2249-200000@poirot.grange>
+Message-ID: <4071EA82.3020901@pacbell.net>
+References: <Pine.LNX.4.44L0.0404032026590.30873-100000@netrider.rowland.org>	<108109222	3.2034.8.camel@mulgrave>  <407050F4.2090607@pacbell.net>	<1081104161.2112.34.camel@mulgrave>  <4070D891.9040409@pacbell.net> <1081201463.2050.92.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: MULTIPART/MIXED; BOUNDARY="-1463811839-1459589314-1081204013=:7610"
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:52662 "HELO mail.gmx.net")
-	by vger.kernel.org with SMTP id S263573AbUDEWbv (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 5 Apr 2004 18:31:51 -0400
-Received: from lyakh (helo=localhost)
-	by poirot.grange with local-esmtp (Exim 3.35 #1 (Debian))
-	id 1BAccT-0002D4-00
-	for <linux-scsi@vger.kernel.org>; Tue, 06 Apr 2004 00:31:05 +0200
-Content-ID: <Pine.LNX.4.44.0404060027020.7610@poirot.grange>
+Received: from mta7.pltn13.pbi.net ([64.164.98.8]:59609 "EHLO
+	mta7.pltn13.pbi.net") by vger.kernel.org with ESMTP id S263555AbUDEXY7
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 5 Apr 2004 19:24:59 -0400
+In-Reply-To: <1081201463.2050.92.camel@mulgrave>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@steeleye.com>
+Cc: Alan Stern <stern@rowland.harvard.edu>, Mike Anderson <andmike@us.ibm.com>, Andrew Morton <akpm@osdl.org>, greg@kroah.com, Jens Axboe <axboe@suse.de>, linux-usb-devel@lists.sourceforge.net, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
-  Send mail to mime@docserver.cac.washington.edu for more info.
+James Bottomley wrote:
+> On Sun, 2004-04-04 at 22:54, David Brownell wrote:
+> 
+>>Which directly follows from what I said ... USB propagates
+>>that knowledge in carefully defined ways.   Other layers can
+>>do the same, although clearly state associated with open file
+>>descriptors needs to use a slightly different strategy.  And
+>>that strategy is what Alan's original comment was about.
+> 
+> 
+> Well, again, this is at the core of the argument.
+> 
+> I say that as long as we have all our objects correctly refcounted, how
+> disconnections propagate up the stack is irrelevant.
 
----1463811839-1459589314-1081204013=:7610
-Content-Type: TEXT/PLAIN; CHARSET=US-ASCII
-Content-ID: <Pine.LNX.4.44.0404060027021.7610@poirot.grange>
+"Irrelevant" is pointlessly strong, even for what I'm guessing
+you really mean to be saying.
 
-Hello
+Minimally, there needs to be synchronization to prevent open() on
+one CPU from using data structures disconnect() just invalidated
+on another CPU.  That's a basic "how to write multi-threaded code"
+kind of issue, which I won't bother to explain (yet again).
 
-I think, I could use some help at this point.
 
-Bug 2139 in kernel-bugzilla is triggered on the tmscsim driver by the
-following sequence:
+> If you have to have a "carefully defined" order for the propagation of
+> an asynchronous event to save you from oopsing, it's a sure sign of bugs
+> in the code.
 
-1) tagged command (in this case second INQUIRY)
-2) disconnect from the device (a disk) - note - without save-pointer...
-3) reselect
-4) immediately an interrupt with a data-in phase SCSI-status byte.
+It was "carefully defined" to ensure that there are clearly
+defined points where it's safe to delete the hardware state.
+Those are needed in situations other than disconnect().
 
-(log attached)
+Not having such synchronization points meant that HCDs were
+reduced to _guessing_ whether it's safe to free that state.
+Which was a sure sign of API bugs (inside usbcore), and made
+for way too many oops-on-unplug reports in 2.4 kernels (and
+kept various other things from working right, too).
 
-According to the book I am holding in my hand now (rather, according to my
-current interpretation of the book), there are 2 violations here - no
-save-pointer, and no msg-in phase. I.e., either the controller doesn't
-send them, or the driver misses them, or I don't see them. At least, the
-absense of restore-pointers is the one that confuses the driver and brings
-to the Oops.
 
-So, could anybody, please, help me understand, whether the controller
-really misbehaves (hard to believe), or the driver misses the respective
-phase. I can imagine, that the reselection interrupt also contains the
-message-in phase ("stacked" in the datasheet terminology), and the driver
-just misses it. Looks like the interrupt handler is not trying to retrieve
-the complete interrupt stack, rather services only the first interrupt.
-But why and how did it work before? E.g., in a similar log from 2.4 I see
-at another place (as a reply to a test-unit-ready command) a reselect with
-a following message-in phase.
+> My reasoning is that I/O down the stack will ultimately hit the part of
+> the kernel (or even just timeout in transmission to the device if it's
+> disappeared without trace) that contains the knowledge and be returned
+> with an error.  Ordering the disconnection propagation cannot change
+> this fact, merely alter *which* component returns the error.
 
-And, of course, ideas for a proper fix are most welcome.
+Ensuring such a behaviour certainly requires "careful design".
+As does ensuring that the event propagation _completes_ every
+time, rather than sometimes just refusing to finish.  Surely
+you've seen both kinds of design botch.
 
-Unfortunately, my (only) SCSI-disk, attached to the AM53C974 doesn't
-support tags, and without tags the same situation (no msg-in phase after a
-reselect) doesn't cause problems to the driver. Kostas Papadopoulos is
-kindly helping me to debug this problem, so, hopefully, when I have an
-idea how to properly fix it, we'll be able to test the fix.
 
-Thanks
-Guennadi
----
-Guennadi Liakhovetski
+> As long as we're robust to the error there is no problem.
 
+The only system "error" in this discussion was that oops.
 
+It may be a minor point ... but "disconnecting device while in use"
+isn't an error at all.  It's a fault, maybe sometimes undesirable,
+but one with behavior specified as fully as reading or writing a
+block of data.
 
 
----1463811839-1459589314-1081204013=:7610
-Content-Type: TEXT/PLAIN; CHARSET=US-ASCII; NAME="debug2.6"
-Content-Transfer-Encoding: BASE64
-Content-ID: <Pine.LNX.4.44.0404060026520.7610@poirot.grange>
-Content-Description: 
-Content-Disposition: ATTACHMENT; FILENAME="debug2.6"
+> At this point, the object lifetime does nothing more that count how long
+> we have to keep the object around to return the error.
 
-REMzOTA6IFF1ZXVlIENtZD0xMixUZ3Q9NCxMVU49MCAocGlkPTQpLCBidWZm
+And that's basically what I said about the careful design of the
+disconnect sequence, ensuring that there _is_ such a point:  one
+where the only issues left are when references get dropped, so
+that the only issue left is memory management.
 
-ZXI9YzAzNDBlNjANCkRDMzkwOiBHZXQgRnJlZSBTUkIgZGZkZjYyOTQNCkRD
+- Dave
 
-MzkwOiBGcmVlIFNSQiB3L28gV2FpdGluZw0KZGMzOTBfcGNpX21hcCgpOiBN
 
-YXBwZWQgcmVxdWVzdCBidWZmZXIgYzAzNDBlNjAgYXQgMzQwZTYwDQpEQzM5
 
-MDogU3RhcnQgU0NTSSBjb21tYW5kOiAxMiAoU3luYzowMSkNCkRDMzkwOiBB
+> James
+> 
+> 
+> 
 
-cHBlbmQgU1JCIGRmZGY2Mjk0IHRvIEdvaW5nDQpEQzM5MDogSXJxICgxMCkg
 
-Y2F1Z2h0OiA8Nz5zc3RhdHVzPTg3LDw2PklzdGF0dXMoUmVzLEludixEaXMs
-
-U2VydixTdWNjLFJlUyxTZWxBLFNlbCk9MTgsPDY+REMzOTA6IFs1XWRjMzkw
-
-X05vcF8wKDApICg4NykNCkRDMzkwOiBbN11kYzM5MF9Nc2dJblBoYXNlKDEp
-
-ICg4NykNCi4uIElSUSByZXR1cm5lZA0KREMzOTA6IElycSAoMTApIGNhdWdo
-
-dDogPDc+c3N0YXR1cz04Nyw8Nj5Jc3RhdHVzKFJlcyxJbnYsRGlzLFNlcnYs
-
-U3VjYyxSZVMsU2VsQSxTZWwpPTA4LDw2PkRDMzkwOiBbN11kYzM5MF9Nc2dJ
-
-bl8wKDApICg4NykNCkRDMzkwOiBNc2dJbjogMDQNCkRDMzkwOiBbNF1kYzM5
-
-MF9Ob3BfMCgxKSAoMDQpDQouLiBJUlEgcmV0dXJuZWQNCkRDMzkwOiBJcnEg
-
-KDEwKSBjYXVnaHQ6IDw3PnNzdGF0dXM9ODAsPDY+SXN0YXR1cyhSZXMsSW52
-
-LERpcyxTZXJ2LFN1Y2MsUmVTLFNlbEEsU2VsKT0yMCw8Nj5ESVNDLC4uIElS
-
-USByZXR1cm5lZA0KREMzOTA6IElycSAoMTApIGNhdWdodDogPDc+c3N0YXR1
-
-cz04Nyw8Nj5Jc3RhdHVzKFJlcyxJbnYsRGlzLFNlcnYsU3VjYyxSZVMsU2Vs
-
-QSxTZWwpPTBjLDw2PlJTRUwsRGV2IDkwLCgwNC0wKSw8Nz5SZXNlbCBTUkIo
-
-ZGZkZjYyOTQpOiBUYWdOdW0gKGZmKQ0KLi4gSVJRIHJldHVybmVkDQpEQzM5
-
-MDogSXJxICgxMCkgY2F1Z2h0OiA8Nz5zc3RhdHVzPTgxLDw2PklzdGF0dXMo
-
-UmVzLEludixEaXMsU2VydixTdWNjLFJlUyxTZWxBLFNlbCk9MTAsPDY+REMz
-
-OTA6IFs0XWRjMzkwX05vcF8wKDApICg4MSkNCkRDMzkwOiBbMV1kYzM5MF9E
-
-YXRhSW5QaGFzZSgxKSAoODEpDQouLiBJUlEgcmV0dXJuZWQNCkRDMzkwOiBJ
-
-cnEgKDEwKSBjYXVnaHQ6IDw3PnNzdGF0dXM9OTMsPDY+SXN0YXR1cyhSZXMs
-
-SW52LERpcyxTZXJ2LFN1Y2MsUmVTLFNlbEEsU2VsKT0xMCw8Nj5EQzM5MDog
-
-WzFdZGMzOTBfRGF0YUluXzAoMCkgKDkzKQ0KLi4gSVJRIHJldHVybmVkDQpE
-
-QzM5MDogSXJxICgxMCkgY2F1Z2h0OiA8Nz5zc3RhdHVzPTk3LDw2PklzdGF0
-
-dXMoUmVzLEludixEaXMsU2VydixTdWNjLFJlUyxTZWxBLFNlbCk9MDgsPDY+
-
-REMzOTA6IFszXWRjMzkwX1N0YXR1c18wKDApICg5NykNCkRDMzkwOiBbNF1k
-
-YzM5MF9Ob3BfMCgxKSAoMDQpDQouLiBJUlEgcmV0dXJuZWQNCkRDMzkwOiBJ
-
-cnEgKDEwKSBjYXVnaHQ6IDw3PnNzdGF0dXM9OTAsPDY+SXN0YXR1cyhSZXMs
-
-SW52LERpcyxTZXJ2LFN1Y2MsUmVTLFNlbEEsU2VsKT0yMCw8Nj5ESVNDLGRj
-
-MzkwX3BjaV91bm1hcCgpOiBVbm1hcHBlZCByZXF1ZXN0IGJ1ZmZlciBhdCAz
-
-NDBlNjANCiBTUkJkb25lICgwMCwwMDAwMDAwMCksIFNSQiBkZmRmNjI5NCwg
-
-cGlkIDQNCkRDMzkwOiBJTlFVSVJZOiByZXN1bHQ6IDAwMDAwMDAwDQpEQzM5
-
-MDogUmVtb3ZlIFNSQiBkZmRmNjI5NCBmcm9tIEdvaW5nDQpEQzM5MDogRnJl
-
-ZSBTUkIgZGZkZjYyOTQNCi4uIElSUSByZXR1cm5lZA0KREMzOTA6IFF1ZXVl
-
-IENtZD0xMixUZ3Q9NCxMVU49MCAocGlkPTUpLCBidWZmZXI9YzAzNDBlNjAN
-
-CkRDMzkwOiBHZXQgRnJlZSBTUkIgZGZkZjYyOTQNCkRDMzkwOiBGcmVlIFNS
-
-QiB3L28gV2FpdGluZw0KZGMzOTBfcGNpX21hcCgpOiBNYXBwZWQgcmVxdWVz
-
-dCBidWZmZXIgYzAzNDBlNjAgYXQgMzQwZTYwDQpEQzM5MDogU3RhcnQgU0NT
-
-SSBjb21tYW5kOiAxMiAoU3luYzoxMSkNCkRDMzkwOiBORVcgU3luYyBOZWdv
-
-IGNvZGUgdHJpZ2dlcmVkICg0IDApDQpEQzM5MDogQXBwZW5kIFNSQiBkZmRm
-
-NjI5NCB0byBHb2luZw0KREMzOTA6IElycSAoMTApIGNhdWdodDogPDc+c3N0
-
-YXR1cz05Niw8Nj5Jc3RhdHVzKFJlcyxJbnYsRGlzLFNlcnYsU3VjYyxSZVMs
-
-U2VsQSxTZWwpPTE4LDw2PkRDMzkwOiBbNV1kYzM5MF9Ob3BfMCgwKSAoOTYp
-
-DQpEQzM5MDogWzZdZGMzOTBfTXNnT3V0UGhhc2UoMSkgKDk2KQ0KLi4gSVJR
-
-IHJldHVybmVkDQpEQzM5MDogSXJxICgxMCkgY2F1Z2h0OiA8Nz5zc3RhdHVz
-
-PTk3LDw2PklzdGF0dXMoUmVzLEludixEaXMsU2VydixTdWNjLFJlUyxTZWxB
-
-LFNlbCk9MTAsPDY+REMzOTA6IFs2XWRjMzkwX01zZ091dF8wKDApICg5NykN
-
-CkRDMzkwOiBbN11kYzM5MF9Nc2dJblBoYXNlKDEpICg5NykNCi4uIElSUSBy
-
-ZXR1cm5lZA0KREMzOTA6IElycSAoMTApIGNhdWdodDogPDc+c3N0YXR1cz05
-
-Nyw8Nj5Jc3RhdHVzKFJlcyxJbnYsRGlzLFNlcnYsU3VjYyxSZVMsU2VsQSxT
-
-ZWwpPTA4LDw2PkRDMzkwOiBbN11kYzM5MF9Nc2dJbl8wKDApICg5NykNCkRD
-
-MzkwOiBbNF1kYzM5MF9Ob3BfMCgxKSAoMDQpDQouLiBJUlEgcmV0dXJuZWQN
-
-CkRDMzkwOiBJcnEgKDEwKSBjYXVnaHQ6IDw3PnNzdGF0dXM9OTcsPDY+SXN0
-
-YXR1cyhSZXMsSW52LERpcyxTZXJ2LFN1Y2MsUmVTLFNlbEEsU2VsKT0xMCw8
-
-Nj5EQzM5MDogWzRdZGMzOTBfTm9wXzAoMCkgKDk3KQ0KREMzOTA6IFs3XWRj
-
-MzkwX01zZ0luUGhhc2UoMSkgKDk3KQ0KLi4gSVJRIHJldHVybmVkDQpEQzM5
-
-MDogSXJxICgxMCkgY2F1Z2h0OiA8Nz5zc3RhdHVzPTk3LDw2PklzdGF0dXMo
-
-UmVzLEludixEaXMsU2VydixTdWNjLFJlUyxTZWxBLFNlbCk9MDgsPDY+REMz
-
-OTA6IFs3XWRjMzkwX01zZ0luXzAoMCkgKDk3KQ0KREMzOTA6IFs0XWRjMzkw
-
-X05vcF8wKDEpICgwNCkNCi4uIElSUSByZXR1cm5lZA0KREMzOTA6IElycSAo
-
-MTApIGNhdWdodDogPDc+c3N0YXR1cz05Nyw8Nj5Jc3RhdHVzKFJlcyxJbnYs
-
-RGlzLFNlcnYsU3VjYyxSZVMsU2VsQSxTZWwpPTEwLDw2PkRDMzkwOiBbNF1k
-
-YzM5MF9Ob3BfMCgwKSAoOTcpDQpEQzM5MDogWzddZGMzOTBfTXNnSW5QaGFz
-
-ZSgxKSAoOTcpDQouLiBJUlEgcmV0dXJuZWQNCkRDMzkwOiBJcnEgKDEwKSBj
-
-YXVnaHQ6IDw3PnNzdGF0dXM9OTcsPDY+SXN0YXR1cyhSZXMsSW52LERpcyxT
-
-ZXJ2LFN1Y2MsUmVTLFNlbEEsU2VsKT0wOCw8Nj5EQzM5MDogWzddZGMzOTBf
-
-TXNnSW5fMCgwKSAoOTcpDQpEQzM5MDogWzRdZGMzOTBfTm9wXzAoMSkgKDA0
-
-KQ0KLi4gSVJRIHJldHVybmVkDQpEQzM5MDogSXJxICgxMCkgY2F1Z2h0OiA8
-
-Nz5zc3RhdHVzPTk3LDw2PklzdGF0dXMoUmVzLEludixEaXMsU2VydixTdWNj
-
-LFJlUyxTZWxBLFNlbCk9MTAsPDY+REMzOTA6IFs0XWRjMzkwX05vcF8wKDAp
-
-ICg5NykNCkRDMzkwOiBbN11kYzM5MF9Nc2dJblBoYXNlKDEpICg5NykNCi4u
-
-IElSUSByZXR1cm5lZA0KREMzOTA6IElycSAoMTApIGNhdWdodDogPDc+c3N0
-
-YXR1cz05Nyw8Nj5Jc3RhdHVzKFJlcyxJbnYsRGlzLFNlcnYsU3VjYyxSZVMs
-
-U2VsQSxTZWwpPTA4LDw2PkRDMzkwOiBbN11kYzM5MF9Nc2dJbl8wKDApICg5
-
-NykNCkRDMzkwOiBbNF1kYzM5MF9Ob3BfMCgxKSAoMDQpDQouLiBJUlEgcmV0
-
-dXJuZWQNCkRDMzkwOiBJcnEgKDEwKSBjYXVnaHQ6IDw3PnNzdGF0dXM9OTcs
-
-PDY+SXN0YXR1cyhSZXMsSW52LERpcyxTZXJ2LFN1Y2MsUmVTLFNlbEEsU2Vs
-
-KT0xMCw8Nj5EQzM5MDogWzRdZGMzOTBfTm9wXzAoMCkgKDk3KQ0KREMzOTA6
-
-IFs3XWRjMzkwX01zZ0luUGhhc2UoMSkgKDk3KQ0KLi4gSVJRIHJldHVybmVk
-
-DQpEQzM5MDogSXJxICgxMCkgY2F1Z2h0OiA8Nz5zc3RhdHVzPTk3LDw2Pklz
-
-dGF0dXMoUmVzLEludixEaXMsU2VydixTdWNjLFJlUyxTZWxBLFNlbCk9MDgs
-
-PDY+REMzOTA6IFs3XWRjMzkwX01zZ0luXzAoMCkgKDk3KQ0KREMzOTA6IE1z
-
-Z0luOiAwMSAwMyAwMSAxOSAwZg0KREMzOTA6IFRhcmdldCA0OiBTeW5jIHRy
-
-YW5zZmVyIDEwLjAgTUh6LCBPZmZzZXQgMTUNCkRDMzkwOiBbNF1kYzM5MF9O
-
-b3BfMCgxKSAoMDQpDQouLiBJUlEgcmV0dXJuZWQNCkRDMzkwOiBJcnEgKDEw
-
-KSBjYXVnaHQ6IDw3PnNzdGF0dXM9OTIsPDY+SXN0YXR1cyhSZXMsSW52LERp
-
-cyxTZXJ2LFN1Y2MsUmVTLFNlbEEsU2VsKT0xMCw8Nj5EQzM5MDogWzRdZGMz
-
-OTBfTm9wXzAoMCkgKDkyKQ0KREMzOTA6IFsyXWRjMzkwX0NvbW1hbmRQaGFz
-
-ZSgxKSAoOTIpDQouLiBJUlEgcmV0dXJuZWQNCkRDMzkwOiBJcnEgKDEwKSBj
-
-YXVnaHQ6IDw3PnNzdGF0dXM9OTcsPDY+SXN0YXR1cyhSZXMsSW52LERpcyxT
-
-ZXJ2LFN1Y2MsUmVTLFNlbEEsU2VsKT0xMCw8Nj5EQzM5MDogWzJdZGMzOTBf
-
-Q29tbWFuZF8wKDApICg5NykNCkRDMzkwOiBbN11kYzM5MF9Nc2dJblBoYXNl
-
-KDEpICg5NykNCi4uIElSUSByZXR1cm5lZA0KREMzOTA6IElycSAoMTApIGNh
-
-dWdodDogPDc+c3N0YXR1cz05Nyw8Nj5Jc3RhdHVzKFJlcyxJbnYsRGlzLFNl
-
-cnYsU3VjYyxSZVMsU2VsQSxTZWwpPTA4LDw2PkRDMzkwOiBbN11kYzM5MF9N
-
-c2dJbl8wKDApICg5NykNCkRDMzkwOiBNc2dJbjogMDQNCkRDMzkwOiBbNF1k
-
-YzM5MF9Ob3BfMCgxKSAoMDQpDQouLiBJUlEgcmV0dXJuZWQNCkRDMzkwOiBJ
-
-cnEgKDEwKSBjYXVnaHQ6IDw3PnNzdGF0dXM9OTAsPDY+SXN0YXR1cyhSZXMs
-
-SW52LERpcyxTZXJ2LFN1Y2MsUmVTLFNlbEEsU2VsKT0yMCw8Nj5ESVNDLC4u
-
-IElSUSByZXR1cm5lZA0KREMzOTA6IElycSAoMTApIGNhdWdodDogPDc+c3N0
-
-YXR1cz05Nyw8Nj5Jc3RhdHVzKFJlcyxJbnYsRGlzLFNlcnYsU3VjYyxSZVMs
-
-U2VsQSxTZWwpPTBjLDw2PlJTRUwsRGV2IDkwLCgwNC0wKSw8Nz5SZXNlbCBT
-
-UkIoZGZkZjYyNDQpOiBUYWdOdW0gKDAwKQ0KLi4gSVJRIHJldHVybmVkDQpE
-
-QzM5MDogSXJxICgxMCkgY2F1Z2h0OiA8Nz5zc3RhdHVzPTkxLDw2PklzdGF0
-
-dXMoUmVzLEludixEaXMsU2VydixTdWNjLFJlUyxTZWxBLFNlbCk9MTAsPDY+
-
-REMzOTA6IFs0XWRjMzkwX05vcF8wKDApICg5MSkNCkRDMzkwOiBbMV1kYzM5
-
-MF9EYXRhSW5QaGFzZSgxKSAoOTEpDQpEQzM5MDogcFNSQiA9PSBwVG1wU1JC
-
-ISAoVGFnUSBFcnJvcj8pICgwNC0wKQ0KVW5hYmxlIHRvIGhhbmRsZSBrZXJu
-
-ZWwgTlVMTCBwb2ludGVyIGRlcmVmZXJlbmNlIGF0IHZpcnR1YWwgYWRkcmVz
-
-cyAwMDAwMDAyNw0KIHByaW50aW5nIGVpcDoNCmMwMWU5ODVkDQoqcGRlID0g
-
-MDAwMDAwMDANCk9vcHM6IDAwMDIgWyMxXQ0KUFJFRU1QVCANCkNQVTogICAg
-
-MA0KRUlQOiAgICAwMDYwOls8YzAxZTk4NWQ+XSAgICBOb3QgdGFpbnRlZA0K
-
-RUZMQUdTOiAwMDAxMDAwNg0KRUlQIGlzIGF0IGRjMzkwX0VuYWJsZU1zZ091
-
-dF9BYm9ydCsweDFkLzB4MzANCmVheDogMDAwMDAwMDAgICBlYng6IGRmZTkw
-
-NWUwICAgZWN4OiBkZmRmNjI0NCAgIGVkeDogMDAwMGU4MGMNCmVzaTogZGZk
-
-ZjYyNDQgICBlZGk6IGRmZGY2MWM0ICAgZWJwOiBkZmRmNjI0NCAgIGVzcDog
-
-ZGZmOTNjOWMNCmRzOiAwMDdiICAgZXM6IDAwN2IgICBzczogMDA2OA0KUHJv
-
-Y2VzcyBzd2FwcGVyIChwaWQ6IDEsIHRocmVhZGluZm89ZGZmOTIwMDAgdGFz
-
-az1kZmY5MTZjMCkNClN0YWNrOiBjMDFlYTAwMiBkZmRmNjFjNCBkZmRmNjI0
-
-NCAwMDAwMDAwMCA4MDAwMDA3YiAwMDAwMDAwMSBkZmY5M2NkYiBkZmRmNjFj
-
-NCANCiAgICAgICBkZmRmNjI0NCBjMDFlOTJlYiBkZmRmNjFjNCBkZmRmNjI0
-
-NCAwMDAwMDA4MCAwMDAwMDA5MSAwMDAwMDI4NiA5MTEwMDA3YiANCiAgICAg
-
-ICBkZmZkY2Q4MCAwNDAwMDAwMSAwMDAwMDAwMCBkZmY5M2QzNCBjMDEwYjMw
-
-OSAwMDAwMDAwYSBkZmRmNjFjNCBkZmY5M2QzNCANCkNhbGwgVHJhY2U6DQog
-
-WzxjMDFlYTAwMj5dIGRjMzkwX0RhdGFJT19Db21tKzB4MTUyLzB4MTgwDQog
-
-WzxjMDFlOTJlYj5dIGRvX0RDMzkwX0ludGVycnVwdCsweDFkYi8weDJiMA0K
-
-IFs8YzAxMGIzMDk+XSBoYW5kbGVfSVJRX2V2ZW50KzB4NDkvMHg4MA0KIFs8
-
-YzAxMGI2YWY+XSBkb19JUlErMHg4Zi8weDEzMA0KIFs8YzAxMDk5ZTg+XSBj
-
-b21tb25faW50ZXJydXB0KzB4MTgvMHgyMA0KIFs8YzAxMjAzMWU+XSBkb19z
-
-b2Z0aXJxKzB4M2UvMHhhMA0KIFs8YzAxMGI3MWI+XSBkb19JUlErMHhmYi8w
-
-eDEzMA0KIFs8YzAxMDk5ZTg+XSBjb21tb25faW50ZXJydXB0KzB4MTgvMHgy
-
-MA0KIFs8YzAxZGVkNzY+XSBzY3NpX2Rpc3BhdGNoX2NtZCsweDE5Ni8weDI3
-
-MA0KIFs8YzAxZGVmYzA+XSBzY3NpX2RvbmUrMHgwLzB4NzANCiBbPGMwMWUx
-
-MzkwPl0gc2NzaV90aW1lc19vdXQrMHgwLzB4NzANCiBbPGMwMWU0MzhhPl0g
-
-c2NzaV9yZXF1ZXN0X2ZuKzB4MjBhLzB4MzkwDQogWzxjMDFkNWNkOT5dIGJs
-
-a19pbnNlcnRfcmVxdWVzdCsweGY5LzB4MTMwDQogWzxjMDFlMmZhOD5dIHNj
-
-c2lfaW5zZXJ0X3NwZWNpYWxfcmVxKzB4MzgvMHg0MA0KIFs8YzAxZTMyMjg+
-
-XSBzY3NpX3dhaXRfcmVxKzB4NjgvMHhiMA0KIFs8YzAxZTMxMzA+XSBzY3Np
-
-X3dhaXRfZG9uZSsweDAvMHg5MA0KIFs8YzAxZTRmOGE+XSBzY3NpX3Byb2Jl
-
-X2x1bisweDE5YS8weDJjMA0KIFs8YzAxZGU0ZmU+XSBzY3NpX2FsbG9jYXRl
-
-X3JlcXVlc3QrMHgyZS8weDcwDQogWzxjMDFlNTUyYz5dIHNjc2lfcHJvYmVf
-
-YW5kX2FkZF9sdW4rMHhhYy8weDIxMA0KIFs8YzAxZTU4ZmE+XSBzY3NpX3Nj
-
-YW5fdGFyZ2V0KzB4OWEvMHgxMDANCiBbPGMwMWU1OWU5Pl0gc2NzaV9zY2Fu
-
-X2NoYW5uZWwrMHg4OS8weGEwDQogWzxjMDFlNWFkMT5dIHNjc2lfc2Nhbl9o
-
-b3N0X3NlbGVjdGVkKzB4ZDEvMHgxMTANCiBbPGMwMWU1YjQwPl0gc2NzaV9z
-
-Y2FuX2hvc3QrMHgzMC8weDQwDQogWzxjMDJlODRkYz5dIGluaXRfdGhpc19z
-
-Y3NpX2RyaXZlcisweDhjLzB4MTAwDQogWzxjMDJkMDdkYj5dIGRvX2luaXRj
-
-YWxscysweDJiLzB4YzANCiBbPGMwMTJjMDRmPl0gaW5pdF93b3JrcXVldWVz
-
-KzB4Zi8weDMwDQogWzxjMDEwNTBkMj5dIGluaXQrMHgzMi8weDE0MA0KIFs8
-
-YzAxMDUwYTA+XSBpbml0KzB4MC8weDE0MA0KIFs8YzAxMDZmMjU+XSBrZXJu
-
-ZWxfdGhyZWFkX2hlbHBlcisweDUvMHgxMA0KDQpDb2RlOiA4MCA2MCAyNyBm
-
-ZSBjMyA4ZCBiNCAyNiAwMCAwMCAwMCAwMCA4ZCBiYyAyNyAwMCAwMCAwMCAw
-
-MCA1NyANCiA8MD5LZXJuZWwgcGFuaWM6IEZhdGFsIGV4Y2VwdGlvbiBpbiBp
-
-bnRlcnJ1cHQNCkluIGludGVycnVwdCBoYW5kbGVyIC0gbm90IHN5bmNpbmcN
-
-CiANCg==
----1463811839-1459589314-1081204013=:7610--
