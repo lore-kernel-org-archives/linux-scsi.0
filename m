@@ -1,45 +1,116 @@
-From: Richard Smith <rsmith@bitworks.com>
-Subject: 2.6.x scsi software raid IO tuning
-Date: Wed, 29 Oct 2003 16:00:02 -0600
+From: Patrick Mansfield <patmans@us.ibm.com>
+Subject: Re: [PATCH/RFT] check non-scsi part of status in scsi_status_is_good
+Date: Wed, 29 Oct 2003 15:16:27 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3FA03862.5080203@bitworks.com>
-Reply-To: rsmith@bitworks.com
+Message-ID: <20031029151627.A21549@beaverton.ibm.com>
+References: <1067313069.1277.17.camel@ronald.kuetemeier.com> <Pine.LNX.4.44L0.0310280959590.793-100000@ida.rowland.org> <20031028071637.B8503@beaverton.ibm.com> <1067355769.1102.17.camel@ronald.kuetemeier.com> <20031029084656.B18130@beaverton.ibm.com> <1067449993.1168.15.camel@ronald.kuetemeier.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from b44.xdsl.pgtc.com ([198.70.248.44]:46841 "HELO bitworks.com")
-	by vger.kernel.org with SMTP id S261699AbTJ2WAU (ORCPT
+Received: from e3.ny.us.ibm.com ([32.97.182.103]:3021 "EHLO e3.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S262081AbTJ2XR0 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 29 Oct 2003 17:00:20 -0500
-Received: from bitworks.com [192.168.1.22] by bitworks.com [127.0.0.1] with SMTP (MDaemon.v2.7.SP4.R) for <linux-scsi@vger.kernel.org>; Wed, 29 Oct 2003 15:58:59 -0600
+	Wed, 29 Oct 2003 18:17:26 -0500
+Content-Disposition: inline
+In-Reply-To: <1067449993.1168.15.camel@ronald.kuetemeier.com>; from ronald@kuetemeier.com on Wed, Oct 29, 2003 at 10:53:13AM -0700
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Ronald Kuetemeier <ronald@kuetemeier.com>
+Cc: Alan Stern <stern@rowland.harvard.edu>, SCSI development list <linux-scsi@vger.kernel.org>, USB Storage List <usb-storage@one-eyed-alien.net>, James Bottomley <James.Bottomley@steeleye.com>
 
-I receintly came across several SCSI racks with drives.  So I've been
-playing with various software RAID setups with between 8 - 15 drives. I
-have a sym8xx SE chain and a AIC7xxx HVD chain.  Using Bonnie++ to
-measure IO throughput of my RAID 5 setup.
+On Wed, Oct 29, 2003 at 10:53:13AM -0700, Ronald Kuetemeier wrote:
+> Patrick,
+> here is the test (didn't work).
 
-I also decided to try the latest 2.6 test kernels.  I built the 2.6 with
-the same setup as my 2.4.22 kernel.  Preemption was disabled and I
-believe that I have all debugging output turned off.
+Ugh. It is behaving worse than before. 
 
-I found that in every test case I ran Bonnie++ reported the 2.6 kernel
-IO as 3 to 5 MB/s slower than the 2.4 kernel.  File creation/deletion 
-was also slower.
+The patch should be applied, since we are otherwise ignoring non scsi
+errors in multiple places.
 
-Is there some tuning knobs that I need to tweak or some option that
-might be enabled causing this?  I thought the 2.6 was supposed to have
-much better IO throughput when setup in non-preempt.  So I expected to
-at least get the same numbers not less.
+Before, we ignored the failed MODE SENSE and used whatever data was
+returned, and later the TEST UNIT READY failed.
 
-My apologies if this is a md issue rather than a scsi issue but out of 
-my info searches so far this list seemed like the best place to ask for 
-info.
+With the patch, the MODE SENSE page 3f len 4 fails, so we try a MODE SENSE
+page 0 len 4 and it hangs. The error handling should complete and allow us
+to continue (though it would probably just resend the failed command 4
+more times, and you'd have to wait 150 seconds), and then try the MODE
+SENSE page 3f len 255.
 
--- 
-Richard A. Smith
-rsmith@bitworks.com
+If the first MODE SENSE were 10 bytes your device would probably work OK,
+but per comments in sd.c, we should not increase this. 
 
+But, the 2.4 code used only a 255 byte MODE SENSE request.
 
+Any suggestions?
+
+If we can't workaround this by modifying the code (increasing the length,
+or somehow workaround this in SCSI or USB code), we are back to black
+listing or command filtering.
+
+> BTW, your scsi.h is different from the test-9 file, I had to patch by
+> hand.
+
+Sorry the patch was against current bk.
+
+> 1st. apply the patch (compile ...)
+> reboot, no 3f flag
+> attach camera
+> try to mount
+> file: err-pat-scsi.h_messages.txt
+
+Alan or USB gurus - is the following what we expect on a timeout?
+
+> Oct 29 10:09:53 ronald kernel: usb-storage: Command MODE_SENSE_10 (10 bytes)
+> Oct 29 10:09:53 ronald kernel: usb-storage:  5a 00 00 00 00 00 00 00 08 00
+> Oct 29 10:09:53 ronald kernel: usb-storage: usb_stor_ctrl_transfer: rq=00 rqtype=21 value=0000 index=00 len=10
+> Oct 29 10:09:53 ronald kernel: usb-storage: Status code 0; transferred 10/10
+> Oct 29 10:09:53 ronald kernel: usb-storage: -- transfer complete
+> Oct 29 10:09:53 ronald kernel: usb-storage: Call to usb_stor_ctrl_transfer() returned 0
+> Oct 29 10:09:53 ronald kernel: usb-storage: usb_stor_bulk_transfer_buf: xfer 8 bytes
+
+Looks like the scsi timeout kicks in here, since we waited 30 seconds.
+
+> Oct 29 10:10:22 ronald kernel: usb-storage: command_abort called
+> Oct 29 10:10:22 ronald kernel: usb-storage: usb_stor_stop_transport called
+> Oct 29 10:10:22 ronald kernel: usb-storage: -- cancelling URB
+> Oct 29 10:10:22 ronald kernel: usb-storage: Status code -104; transferred 0/8
+> Oct 29 10:10:22 ronald kernel: usb-storage: -- transfer cancelled
+> Oct 29 10:10:22 ronald kernel: usb-storage: CB data stage result is 0x4
+> Oct 29 10:10:22 ronald kernel: usb-storage: -- command was aborted
+> Oct 29 10:10:22 ronald kernel: usb-storage: scsi command aborted
+> Oct 29 10:10:22 ronald kernel: usb-storage: *** thread sleeping.
+> Oct 29 10:10:22 ronald kernel: usb-storage: queuecommand called
+> Oct 29 10:10:22 ronald kernel: usb-storage: *** thread awakened.
+
+And then I assume the scsi error handling:
+
+> Oct 29 10:10:22 ronald kernel: usb-storage: Command TEST_UNIT_READY (6 bytes)
+> Oct 29 10:10:22 ronald kernel: usb-storage:  00 00 00 00 00 00
+> Oct 29 10:10:22 ronald kernel: usb-storage: usb_stor_ctrl_transfer: rq=00 rqtype=21 value=0000 index=00 len=6
+> Oct 29 10:10:22 ronald kernel: usb-storage: Status code 0; transferred 6/6
+> Oct 29 10:10:22 ronald kernel: usb-storage: -- transfer complete
+> Oct 29 10:10:22 ronald kernel: usb-storage: Call to usb_stor_ctrl_transfer() returned 0
+> Oct 29 10:10:22 ronald kernel: usb-storage: -- CB transport device requiring auto-sense
+> Oct 29 10:10:22 ronald kernel: usb-storage: Issuing auto-REQUEST_SENSE
+> Oct 29 10:10:22 ronald kernel: usb-storage: usb_stor_ctrl_transfer: rq=00 rqtype=21 value=0000 index=00 len=6
+> Oct 29 10:10:22 ronald kernel: usb-storage: Status code 0; transferred 6/6
+> Oct 29 10:10:22 ronald kernel: usb-storage: -- transfer complete
+> Oct 29 10:10:22 ronald kernel: usb-storage: Call to usb_stor_ctrl_transfer() returned 0
+> Oct 29 10:10:22 ronald kernel: usb-storage: usb_stor_bulk_transfer_buf: xfer 18 bytes
+> Oct 29 10:10:32 ronald kernel: usb-storage: command_abort called
+> Oct 29 10:10:32 ronald kernel: usb-storage: usb_stor_stop_transport called
+> Oct 29 10:10:32 ronald kernel: usb-storage: -- cancelling URB
+> Oct 29 10:10:32 ronald kernel: usb-storage: Status code -104; transferred 0/18
+> Oct 29 10:10:32 ronald kernel: usb-storage: -- transfer cancelled
+> Oct 29 10:10:32 ronald kernel: usb-storage: CB data stage result is 0x4
+> Oct 29 10:10:32 ronald kernel: usb-storage: -- auto-sense aborted
+> Oct 29 10:10:32 ronald kernel: usb-storage: scsi command aborted
+> Oct 29 10:10:32 ronald kernel: usb-storage: *** thread sleeping.
+> Oct 29 10:10:32 ronald kernel: usb-storage: device_reset called
+> Oct 29 10:10:32 ronald kernel: usb-storage: usb_stor_CB_reset called
+> Oct 29 10:10:32 ronald kernel: usb-storage: usb_stor_control_msg: rq=00 rqtype=21 value=0000 index=00 len=12
+> Oct 29 10:10:32 ronald kernel: usb-storage: Soft reset failed: -32
+> Oct 29 10:10:32 ronald kernel: usb-storage: bus_reset called
+
+It would be nice if it came back :-(
+
+-- Patrick Mansfield
