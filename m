@@ -1,37 +1,58 @@
-From: christophe varoqui <christophe.varoqui@free.fr>
-Subject: Re: [bug]
-Date: Tue, 02 Mar 2004 00:04:18 +0100
+From: "Andrew Vasquez" <andrew.vasquez@qlogic.com>
+Subject: RE: [PATCH] 2.6.3 qla2xxx driver -- use readX_relaxed
+Date: Mon, 1 Mar 2004 16:45:49 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <4043C172.1060800@free.fr>
-References: <40426118.6000904@free.fr> <1078181191.1804.82.camel@mulgrave>
+Message-ID: <B179AE41C1147041AA1121F44614F0B060EE25@AVEXCH02.qlogic.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp5.wanadoo.fr ([193.252.22.26]:28876 "EHLO
-	mwinf0504.wanadoo.fr") by vger.kernel.org with ESMTP
-	id S261466AbUCAXEV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 1 Mar 2004 18:04:21 -0500
-In-Reply-To: <1078181191.1804.82.camel@mulgrave>
+Received: from pat.qlogic.com ([198.70.193.2]:48336 "EHLO avexch01.qlogic.com")
+	by vger.kernel.org with ESMTP id S261523AbUCBApZ convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 1 Mar 2004 19:45:25 -0500
+content-class: urn:content-classes:message
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@steeleye.com>, linux-scsi@vger.kernel.org
+To: Jeremy Higdon <jeremy@sgi.com>
+Cc: linux-scsi@vger.kernel.org
 
+On Wednesday, February 25, 2004 8:06 PM,
+linux-scsi-owner@vger.kernel.org wrote: 
+> For those to whom this is new (it was discussed on linux-kernel and
+> linux-ia64 I believe), normal PCI register reads imply that PCI DMA
+> writes that occured prior to the PCI MMR (memory mapped register)
+> read (on the PCI bus) will be reflected in system memory once the
+> MMR read is complete.
 > 
-> Unfortunately, without the top of the trace showing what happened and in
-> which function, it's fairly difficult to debug what went on.
+> On our platforms, we can speed up the MMR read significantly if that
+> ordering requirement is "relaxed".
 > 
-> Could you attach a serial console and reproduce, so you can get the
-> whole trace?
+
+Interesting...but this implementation seems to be applying a different
+set of semantic rules to the term 'relaxed' in comparison to the
+'relaxed ordering' rules defined by PCI-X and PCI-Express, no?
+
+> So I attempted to find the common register reads that don't have a
+> need for this ordering so that I could make them use this faster
+> read.
 > 
-mm, digging this, I traced the bug to an sg_inq in my userspace code :
-do_inq(fd, 0, 1, 0x83, buff, 64, 1);
+> I did not change this line (111 of drivers/scsi/qla2xxx/qla_isr.c),
+> because it may in some cases imply that a DMA write has completed.
+> 
+> 		stat = RD_REG_DWORD(&reg->u.isp2300.host_status);
+> 
 
-seting the size of the buff to a higher value (#define MX_ALLOC_LEN 255) 
-mutes the oops. Dunno what happened, it worked with size = 64 until 
-recently.
+Yes in several cases it would.
 
-For completeness, the bug triggered at modprobe qla2200 because my code 
-got exec'ed by scsi hotplug events.
+> Andrew, if you have a chance to look at this and incorporate it in
+> the driver, it would be great.  Also, any comments would be welcome.
+> 
 
-regards,
-cvaroqui
+Sounds good, I just wish I had an Altix machine to test with.  You
+seem to have covered most of the fast-path cases, I'll look some more
+tonight for any others.  I guess my only nit-pick is the lowercase
+_relaxed() suffix applied to RD_REG* #defines.
+
+Thanks,
+Andrew Vasquez
