@@ -1,49 +1,44 @@
 From: James Bottomley <James.Bottomley@steeleye.com>
 Subject: Re: scsi write barriers (ordered tags)?
-Date: 05 Feb 2003 10:55:32 -0600
+Date: 05 Feb 2003 14:24:49 -0600
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1044464134.1775.56.camel@mulgrave>
-References: <3E413530.8060103@attbi.com>
+Message-ID: <1044476691.1775.72.camel@mulgrave>
+References: <200302051809.NAA23237@orville.steeleye.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Received: (from root@localhost)
-	by pogo.mtv1.steeleye.com (8.9.3/8.9.3) id IAA15478
-	for <linux-scsi@vger.kernel.org>; Wed, 5 Feb 2003 08:55:37 -0800
-In-Reply-To: <3E413530.8060103@attbi.com>
+	by pogo.mtv1.steeleye.com (8.9.3/8.9.3) id MAA28611
+	for <linux-scsi@vger.kernel.org>; Wed, 5 Feb 2003 12:24:54 -0800
+In-Reply-To: <200302051809.NAA23237@orville.steeleye.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Jordan Breeding <jordan.breeding@attbi.com>
+To: jordan.breeding@attbi.com
 Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Wed, 2003-02-05 at 10:00, Jordan Breeding wrote:
-> The part I am concerned with is his statement about SCSI being harder to 
-> implement this on.  I guess this doesn't matter as much since my SCSI 
-> drive with write back cache off is faster than any IDE drive I have used 
-> with it on, but still it would be nice to be able to run both type of 
-> drives with the write back cache on.  So my question is, are the things 
-> Jens stated above about SCSI enough to keep this feature completely out 
-> of 2.5.x even once IDE has the code merged, or will SCSI be able to have 
-> this feature as well by 2.6?  Thanks for any info and/or speculation 
-> about this.
+On Wed, 2003-02-05 at 11:58, jordan.breeding@attbi.com wrote:
 
-There are two really significant differences between SCSI and IDE with
-regard to barrier implementation (the basic one is that SCSI has a more
-complex queueing model).
+> I understand that SCSI drives and controllers are much more
+ complicated than their IDE counterparts and that to implement ordered
+ tags in SCSI is more complicated.  However, doesn't FreeBSD's CAM
+ layer have some kind of implementation of this which makes it safe to
+ use soft-updates and write back cache together?
 
-1) SCSI devices can have multiple simultaneously outstanding commands
+Actually, no.  The problem that caches cause is that they cache data,
+not transactions.  You can force the caches to respect transaction order
+by flushing them, but that gets expensive.
 
-2) Some SCSI devices (like high end arrays) have huge caches, so you
-can't implement a barrier simply by flushing the cache, like IDE does,
-because that might cause significant slow downs.
+ I thought that I read  that sometime ago but I have been trying to
+ find references to it on  google this morning and couldn't find any. 
+ I guess what I am really  after is to fold:  1) Will Linux's SCSI
+ layer get modified at _any_  point to support something like this to
+ benefit  ext3/reiserfs/xfs/jfs?  2)  If this will be attempted at some
+ point  will it be later in 2.5/2.6 or will this definitely be 2.7/2.8
+ material?  Thanks for the info and the response.
 
-As Jens says, there are ways to do this, and we do have most of the
-infrastructure in place.  However, we'd need different error recovery
-behaviour for a complete solution, and no-one's done that work yet.
-
-Finally, even if the error recovery work is done, drivers which use
-internal issue queues would probably need modifying to do the right
-thing on ordered tag error return (and that's quite a huge effort).
+Like I said, the infrastructure exists.  There's no compelling reason
+to enable it (mainly because most of the benchmarks say it causes a
+slowdown).
 
 James
 
