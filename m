@@ -1,122 +1,58 @@
 From: Michael Clark <michael@metaparadigm.com>
-Subject: [PATCH] blacklist device don't use SYNCHRONIZE_CACHE
-Date: Fri, 29 Oct 2004 17:00:55 +0800
+Subject: Re: [PATCH] blacklist device don't use SYNCHRONIZE_CACHE
+Date: Fri, 29 Oct 2004 17:04:57 +0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <418206C7.2070908@metaparadigm.com>
+Message-ID: <418207B9.20908@metaparadigm.com>
+References: <418206C7.2070908@metaparadigm.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------090305020809050903000207"
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gort.metaparadigm.com ([203.117.131.12]:56985 "EHLO
+Received: from gort.metaparadigm.com ([203.117.131.12]:8090 "EHLO
 	gort.metaparadigm.com") by vger.kernel.org with ESMTP
-	id S263161AbUJ2JAD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 29 Oct 2004 05:00:03 -0400
+	id S261390AbUJ2JEC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 29 Oct 2004 05:04:02 -0400
 Received: from localhost (unknown [127.0.0.1])
-	by gort.metaparadigm.com (Postfix) with ESMTP id 3F6FF1ACFD
-	for <linux-scsi@vger.kernel.org>; Fri, 29 Oct 2004 17:00:00 +0800 (SGT)
+	by gort.metaparadigm.com (Postfix) with ESMTP id 4F7F81ACFD
+	for <linux-scsi@vger.kernel.org>; Fri, 29 Oct 2004 17:04:01 +0800 (SGT)
 Received: from gort.metaparadigm.com ([127.0.0.1])
  by localhost (gort [127.0.0.1]) (amavisd-new, port 10024) with ESMTP
- id 06077-03 for <linux-scsi@vger.kernel.org>;
- Fri, 29 Oct 2004 16:59:59 +0800 (SGT)
+ id 05615-09 for <linux-scsi@vger.kernel.org>;
+ Fri, 29 Oct 2004 17:04:00 +0800 (SGT)
 Received: from [10.1.0.59] (monty-ath0.metaparadigm.com [10.1.0.59])
-	by gort.metaparadigm.com (Postfix) with ESMTP id 88FF41ACCD
-	for <linux-scsi@vger.kernel.org>; Fri, 29 Oct 2004 16:59:59 +0800 (SGT)
+	by gort.metaparadigm.com (Postfix) with ESMTP id 9E90C1ACCD
+	for <linux-scsi@vger.kernel.org>; Fri, 29 Oct 2004 17:04:00 +0800 (SGT)
+In-Reply-To: <418206C7.2070908@metaparadigm.com>
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi <linux-scsi@vger.kernel.org>
 
-This is a multi-part message in MIME format.
---------------090305020809050903000207
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
-
-Hi all,
-
-With qla2300 loaded (and sdc a LUN on an external FC RAID controller),
-I was getting a hang on reboot at:
-
-   Synchronizing SCSI cache for disk sdc:
-
-I did some debugging by changing the timeout in sd_sync_cache and
-found the RAID Controller was just dropping the commands (it's an
-external battery backed RAID array so the sd_sync_cache is not
-important anyway).
-
-So, attached patch adds to the SCSI blacklist infrastructure to
-allow listing devices for which we shouldn't send a SYNCRONIZE_CACHE
-command and adds in the misbehaving device i have here.
-
-Now I can reboot ;) without waiting 7.5 minutes.
-
-BTW - The default of 15 retries of 30 secs each is insane
-(3 in sd_sync_cache x 5 in scsi_wait_req) - any real need
-for the additional outer loop in sd_sync_cache ?
+Apologies for base64 attachment - if anyone can tell me how
+to stop my Debian Mozilla 1.7 from randomly deciding to base64
+my attached patches (it only decides to do it on some of them).
 
 ~mc
 
-
---------------090305020809050903000207
-Content-Type: application/octect-stream;
- name="scsi-blist-no_sync_cache.patch"
-Content-Transfer-Encoding: base64
-Content-Disposition: inline;
- filename="scsi-blist-no_sync_cache.patch"
-
-QWRkcyBhIGZsYWcgdG8gdGhlIFNDU0kgYmxhY2tsaXN0IGluZnJhc3RydWN0dXJlIHRvIGFs
-bG93IG1hcmtpbmcKZGV2aWNlcyB3ZSBzaG91bGRuJ3Qgc2VuZCBhIFNZTkNST05JWkVfQ0FD
-SEUgY29tbWFuZCB0by4KQWRkcyB0aGUgQ2hhcGFycmFsIEpGUzIyNCB0byB0aGUgYmxhY2ts
-aXN0IHdpdGggdGhpcyBmbGFnLgoKU2lnbmVkLW9mZi1ieTogTWljaGFlbCBDbGFyayA8bWlj
-aGFlbEBtZXRhcGFyYWRpZ20uY29tPgoKZGlmZiAtdXIgbGludXgtMi42Ljkub3JpZy9kcml2
-ZXJzL3Njc2kvc2NzaV9kZXZpbmZvLmMgbGludXgtMi42LjkuZWRpdGVkL2RyaXZlcnMvc2Nz
-aS9zY3NpX2RldmluZm8uYwotLS0gbGludXgtMi42Ljkub3JpZy9kcml2ZXJzL3Njc2kvc2Nz
-aV9kZXZpbmZvLmMJMjAwNC0xMC0yOSAxNTozMzozOC4wMDAwMDAwMDAgKzA4MDAKKysrIGxp
-bnV4LTIuNi45LmVkaXRlZC9kcml2ZXJzL3Njc2kvc2NzaV9kZXZpbmZvLmMJMjAwNC0xMC0y
-OSAxNjozNTo1My4wMDAwMDAwMDAgKzA4MDAKQEAgLTEyNSw2ICsxMjUsNyBAQAogCXsiQ01E
-IiwgIkNSQS03MjgwIiwgTlVMTCwgQkxJU1RfU1BBUlNFTFVOfSwJLyogQ01EIFJBSUQgQ29u
-dHJvbGxlciAqLwogCXsiQ05TSSIsICJHNzMyNCIsIE5VTEwsIEJMSVNUX1NQQVJTRUxVTn0s
-CS8qIENoYXBhcnJhbCBHNzMyNCBSQUlEICovCiAJeyJDTlNpIiwgIkc4MzI0IiwgTlVMTCwg
-QkxJU1RfU1BBUlNFTFVOfSwJLyogQ2hhcGFycmFsIEc4MzI0IFJBSUQgKi8KKwl7IkNOU2ki
-LCAiSkZTMjI0IiwgTlVMTCwgQkxJU1RfU1BBUlNFTFVOIHwgQkxJU1RfTk9fU1lOQ19DQUNI
-RX0sCiAJeyJDT01QQVEiLCAiTE9HSUNBTCBWT0xVTUUiLCBOVUxMLCBCTElTVF9GT1JDRUxV
-Tn0sCiAJeyJDT01QQVEiLCAiQ1IzNTAwIiwgTlVMTCwgQkxJU1RfRk9SQ0VMVU59LAogCXsi
-Q09NUEFRIiwgIk1TQTEwMDAiLCBOVUxMLCBCTElTVF9TUEFSU0VMVU4gfCBCTElTVF9OT1NU
-QVJUT05BRER9LApkaWZmIC11ciBsaW51eC0yLjYuOS5vcmlnL2RyaXZlcnMvc2NzaS9zY3Np
-X3NjYW4uYyBsaW51eC0yLjYuOS5lZGl0ZWQvZHJpdmVycy9zY3NpL3Njc2lfc2Nhbi5jCi0t
-LSBsaW51eC0yLjYuOS5vcmlnL2RyaXZlcnMvc2NzaS9zY3NpX3NjYW4uYwkyMDA0LTEwLTI5
-IDE2OjAwOjIyLjAwMDAwMDAwMCArMDgwMAorKysgbGludXgtMi42LjkuZWRpdGVkL2RyaXZl
-cnMvc2NzaS9zY3NpX3NjYW4uYwkyMDA0LTEwLTI5IDE2OjAyOjUxLjAwMDAwMDAwMCArMDgw
-MApAQCAtNjY4LDYgKzY2OCw5IEBACiAJaWYgKCpiZmxhZ3MgJiBCTElTVF9OT1RfTE9DS0FC
-TEUpCiAJCXNkZXYtPmxvY2thYmxlID0gMDsKIAorCWlmICgqYmZsYWdzICYgQkxJU1RfTk9f
-U1lOQ19DQUNIRSkKKwkJc2Rldi0+bm9fc3luY19jYWNoZSA9IDE7CisKIAlpZihzZGV2LT5o
-b3N0LT5ob3N0dC0+c2xhdmVfY29uZmlndXJlKQogCQlzZGV2LT5ob3N0LT5ob3N0dC0+c2xh
-dmVfY29uZmlndXJlKHNkZXYpOwogCmRpZmYgLXVyIGxpbnV4LTIuNi45Lm9yaWcvZHJpdmVy
-cy9zY3NpL3NkLmMgbGludXgtMi42LjkuZWRpdGVkL2RyaXZlcnMvc2NzaS9zZC5jCi0tLSBs
-aW51eC0yLjYuOS5vcmlnL2RyaXZlcnMvc2NzaS9zZC5jCTIwMDQtMTAtMjkgMDg6Mzg6MDku
-MDAwMDAwMDAwICswODAwCisrKyBsaW51eC0yLjYuOS5lZGl0ZWQvZHJpdmVycy9zY3NpL3Nk
-LmMJMjAwNC0xMC0yOSAxNTo1OTo1MC4wMDAwMDAwMDAgKzA4MDAKQEAgLTE1NjAsNiArMTU2
-MCw5IEBACiAJaWYgKCFzZGtwLT5XQ0UpCiAJCXJldHVybjsKIAorCWlmKHNkcC0+bm9fc3lu
-Y19jYWNoZSkKKwkJcmV0dXJuOworCiAJcHJpbnRrKEtFUk5fTk9USUNFICJTeW5jaHJvbml6
-aW5nIFNDU0kgY2FjaGUgZm9yIGRpc2sgJXM6IFxuIiwKIAkJCXNka3AtPmRpc2stPmRpc2tf
-bmFtZSk7CiAJc2Rfc3luY19jYWNoZShzZHApOwpkaWZmIC11ciBsaW51eC0yLjYuOS5vcmln
-L2luY2x1ZGUvc2NzaS9zY3NpX2RldmljZS5oIGxpbnV4LTIuNi45LmVkaXRlZC9pbmNsdWRl
-L3Njc2kvc2NzaV9kZXZpY2UuaAotLS0gbGludXgtMi42Ljkub3JpZy9pbmNsdWRlL3Njc2kv
-c2NzaV9kZXZpY2UuaAkyMDA0LTEwLTI5IDE1OjUyOjU3LjAwMDAwMDAwMCArMDgwMAorKysg
-bGludXgtMi42LjkuZWRpdGVkL2luY2x1ZGUvc2NzaS9zY3NpX2RldmljZS5oCTIwMDQtMTAt
-MjkgMTY6MzI6NTguMDAwMDAwMDAwICswODAwCkBAIC0xMDYsNiArMTA2LDcgQEAKIAl1bnNp
-Z25lZCB1c2VfMTkyX2J5dGVzX2Zvcl8zZjoxOyAvKiBhc2sgZm9yIDE5MiBieXRlcyBmcm9t
-IHBhZ2UgMHgzZiAqLwogCXVuc2lnbmVkIG5vX3N0YXJ0X29uX2FkZDoxOwkvKiBkbyBub3Qg
-aXNzdWUgc3RhcnQgb24gYWRkICovCiAJdW5zaWduZWQgYWxsb3dfcmVzdGFydDoxOyAvKiBp
-c3N1ZSBTVEFSVF9VTklUIGluIGVycm9yIGhhbmRsZXIgKi8KKwl1bnNpZ25lZCBub19zeW5j
-X2NhY2hlOjE7CS8qIGRvIG5vdCBpc3N1ZSBTWU5DUk9OSVpFX0NBQ0hFICovCiAKIAl1bnNp
-Z25lZCBpbnQgZGV2aWNlX2Jsb2NrZWQ7CS8qIERldmljZSByZXR1cm5lZCBRVUVVRV9GVUxM
-LiAqLwogCmRpZmYgLXVyIGxpbnV4LTIuNi45Lm9yaWcvaW5jbHVkZS9zY3NpL3Njc2lfZGV2
-aW5mby5oIGxpbnV4LTIuNi45LmVkaXRlZC9pbmNsdWRlL3Njc2kvc2NzaV9kZXZpbmZvLmgK
-LS0tIGxpbnV4LTIuNi45Lm9yaWcvaW5jbHVkZS9zY3NpL3Njc2lfZGV2aW5mby5oCTIwMDQt
-MTAtMjkgMTU6MzQ6NTIuMDAwMDAwMDAwICswODAwCisrKyBsaW51eC0yLjYuOS5lZGl0ZWQv
-aW5jbHVkZS9zY3NpL3Njc2lfZGV2aW5mby5oCTIwMDQtMTAtMjkgMTU6NDc6NDMuMDAwMDAw
-MDAwICswODAwCkBAIC0yNSw0ICsyNSw1IEBACiAgCQkJCQkgICAoaWYgSEJBIHN1cHBvcnRz
-IG1vcmUgdGhhbiA4IExVTnMpICovCiAjZGVmaW5lIEJMSVNUX05PUkVQT1JUTFVOCTB4NDAw
-MDAJLyogZG9uJ3QgdHJ5IFJFUE9SVF9MVU5TIHNjYW4gKFNDU0ktMyBkZXZzKSAqLwogI2Rl
-ZmluZSBCTElTVF9OT1RfTE9DS0FCTEUJMHg4MDAwMAkvKiBkb24ndCB1c2UgUFJFVkVOVC1B
-TExPVyBjb21tYW5kcyAqLworI2RlZmluZSBCTElTVF9OT19TWU5DX0NBQ0hFCTB4MTAwMDAw
-IC8qIGRvbid0IHVzZSBTWU5DSFJPTklaRV9DQUNIRSBjb21tYW5kcyAqLwogI2VuZGlmCg==
---------------090305020809050903000207--
+On 10/29/04 17:00, Michael Clark wrote:
+> Hi all,
+> 
+> With qla2300 loaded (and sdc a LUN on an external FC RAID controller),
+> I was getting a hang on reboot at:
+> 
+>   Synchronizing SCSI cache for disk sdc:
+> 
+> I did some debugging by changing the timeout in sd_sync_cache and
+> found the RAID Controller was just dropping the commands (it's an
+> external battery backed RAID array so the sd_sync_cache is not
+> important anyway).
+> 
+> So, attached patch adds to the SCSI blacklist infrastructure to
+> allow listing devices for which we shouldn't send a SYNCRONIZE_CACHE
+> command and adds in the misbehaving device i have here.
+> 
+> Now I can reboot ;) without waiting 7.5 minutes.
+> 
+> BTW - The default of 15 retries of 30 secs each is insane
+> (3 in sd_sync_cache x 5 in scsi_wait_req) - any real need
+> for the additional outer loop in sd_sync_cache ?
+> 
+> ~mc
