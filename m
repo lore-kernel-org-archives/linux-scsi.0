@@ -1,41 +1,106 @@
-From: Vivek Goyal <vgoyal@in.ibm.com>
-Subject: Re: SCSI aic7xxx driver: Initialization Failure over a kdump reboot
-Date: 07 Jan 2005 10:57:25 +0530
-Message-ID: <1105075645.2688.363.camel@2fwv946.in.ibm.com>
-References: <1105014959.2688.296.camel@2fwv946.in.ibm.com>
-	 <1105013524.4468.3.camel@laptopd505.fenrus.org>
-	 <20050106195043.4b77c63e.akpm@osdl.org>
+From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+Subject: Re: dc395x: can't write to tape
+Date: Thu, 6 Jan 2005 22:48:38 +0100 (CET)
+Message-ID: <Pine.LNX.4.60.0501062138580.7568@poirot.grange>
+References: <200501060518.25782.andrex@alumni.utexas.net>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e31.co.us.ibm.com ([32.97.110.129]:51448 "EHLO
-	e31.co.us.ibm.com") by vger.kernel.org with ESMTP id S261228AbVAGEpe
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 6 Jan 2005 23:45:34 -0500
-In-Reply-To: <20050106195043.4b77c63e.akpm@osdl.org>
+Received: from pop.gmx.de ([213.165.64.20]:35006 "HELO mail.gmx.net")
+	by vger.kernel.org with SMTP id S261267AbVAGGiI (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 7 Jan 2005 01:38:08 -0500
+In-Reply-To: <200501060518.25782.andrex@alumni.utexas.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
-Cc: Arjan van de Ven <arjan@infradead.org>, lkml <linux-kernel@vger.kernel.org>, linux scsi <linux-scsi@vger.kernel.org>
+To: Andrew Schulman <andrex@alumni.utexas.net>
+Cc: linux-scsi@vger.kernel.org, Jamie Lenehan <lenehan@twibble.org>
 
-Hi,
+Hi
 
-> yes, that's exactly what e100 was doing on my laptop last month.  Fixed
-> that by arranging for the NIC to be reset before the call to
-> pci_set_master().
+On Thu, 6 Jan 2005, Andrew Schulman wrote:
+
+> I have a Travan NS-20 tape drive connected to a Tekram DC395UW controller.  
+> Both have worked without trouble for years.  My kernel is 2.6.7, and I use 
+> the dc395x driver (built as a module) from the kernel source. 
 > 
-> I expect the adaptec driver could be fixed by calling ahc_reset() from a
-> strategic place in either ahc_linux_pci_dev_probe() or in the shutdown
-> handler.  
+> Since about a month ago, I can't write a tar archive to tape.  The operation 
+> aborts before completion:
+> 
+> # tar -vv --one-file-system --file=/dev/st0 --create / /boot /home
+> tar: Removing leading `/' from member names
+> tar: /dev/st0: Wrote only 0 of 10240 bytes
+> tar: Error is not recoverable: exiting now
+> 
+> I've cleaned the drive with the approved head cleaner, tried three 
+> different tapes, and retensioned each tape before writing.  Still no joy.  I 
+> haven't rebuilt my kernel since the problem started, so it seems likely to be 
+> a hardware problem.
+> 
+> /var/log/kern.log says
+> 
+> Jan  5 22:50:18 helium kernel: dc395x: sg_update_list: sg_to_virt failed
 
-> (Does the crashdump code call shutdown handlers?  Sounds like a
-> bad idea...)
+This doesn't look good. However, after a brief look at the code, I cannot 
+say what exactly went wrong there. Jamie?
+
+> Jan  5 22:50:18 helium kernel: st0: Error with sense data: Info fld=0x67, 
+> Current st0: sense = f0  4
+
+Sense key 4 - hardware error.
+
+> Jan  5 22:50:18 helium kernel: ASC=80 ASCQ=98
+
+Additional sense code 0x80 - vendor specific.
+
+So, the sense codes indicate a hardware problem on the tape drive, but the 
+first message might mean a software bug. You don't have highmem on that 
+machine (> 1GB RAM), do you?
+
+Regards
+Guennadi
+
+> Jan  5 22:50:18 helium kernel: Raw sense data:0xf0 0x00 0x04 0x00 0x00 0x00 
+> 0x67 0x0a 0x00 0x00 0x00 0x00 0x80 0x98 0x00 0x00 0x00 0x00
+> Jan  5 22:50:18 helium kernel: st0: Error with sense data: Current st0: sense 
+> = 70  4
+> Jan  5 22:50:18 helium kernel: ASC=80 ASCQ=98
+> Jan  5 22:50:18 helium kernel: Raw sense data:0x70 0x00 0x04 0x00 0x00 0x00 
+> 0x00 0x0a 0x00 0x00 0x00 0x00 0x80 0x98 0x00 0x00 0x00 0x00
+> Jan  5 22:50:18 helium kernel: st0: Error on write filemark.
+> Jan  5 22:50:18 helium kernel: st0: Error with sense data: Info 
+> fld=0xffffff63, Current st0: sense = f0  4
+> Jan  5 22:50:18 helium kernel: ASC=80 ASCQ=98
+> Jan  5 22:50:18 helium kernel: Raw sense data:0xf0 0x00 0x04 0xff 0xff 0xff 
+> 0x63 0x0a 0x00 0x00 0x00 0x00 0x80 0x98 0x00 0x00 0x00 0x00
+> 
+> Question: from this log output, can anyone tell if my problem is more 
+> likely in the controller, or in the tape drive?  I realize there's not a lot 
+> of data there... unfortunately even that doesn't mean anything to me.
+> 
+> To get more information, I uncommented
+> 
+> #define DEBUG_MASK (DBG_0|DBG_1|DBG_SG|DBG_FIFO|DBG_PIO)
+> 
+> in drivers/scsi/dc395x.c, rebuilt and reinserted the module, and tried to tar 
+> again.  But this resulted in multi-GB log files, so if there's a smaller 
+> subset of debug options that would be useful, please let me know and I'll try 
+> again.
+> 
+> I'd like very much to keep using this tape drive for several more years.  It's 
+> noisy and slow, but 10 GB/tape still isn't bad, and to replace the drive and 
+> 6 tapes would cost around $400, even today.
+> 
+> OTOH, SCSI cards are cheap and I wouldn't mind junking my old DC395 if it's at 
+> fault.
+> 
+> Thanks in advance for any light you can shed.
+> Andrew.
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 > 
 
-No. Crash dump code does not call shutdown handlers...
-
-Thanks
-Vivek
-
+---
+Guennadi Liakhovetski
 
