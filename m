@@ -1,32 +1,34 @@
 From: Doug Ledford <dledford@redhat.com>
-Subject: Re: [Possibly OT] Re: /proc/scsi/map
-Date: Tue, 18 Jun 2002 12:08:10 -0400
+Subject: Re: /proc/scsi/map
+Date: Tue, 18 Jun 2002 12:09:39 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20020618120810.C7800@redhat.com>
-References: <OF23543BD5.0C1295FA-ON87256BDC.00569E7A@boulder.ibm.com> <1024416395.7685.36.camel@UberGeek>
+Message-ID: <20020618120939.D7800@redhat.com>
+References: <OF9E7601D4.31CCE1B5-ON87256BDC.00556B8A@boulder.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <1024416395.7685.36.camel@UberGeek>; from austin@digitalroadkill.net on Tue, Jun 18, 2002 at 11:06:35AM -0500
+In-Reply-To: <OF9E7601D4.31CCE1B5-ON87256BDC.00556B8A@boulder.ibm.com>; from hbryan@us.ibm.com on Tue, Jun 18, 2002 at 08:40:36AM -0700
 List-Id: linux-scsi@vger.kernel.org
-To: Austin Gonyou <austin@digitalroadkill.net>
-Cc: Bryan Henderson <hbryan@us.ibm.com>, Kurt Garloff <kurt@garloff.de>, Linux SCSI list <linux-scsi@vger.kernel.org>
+To: Bryan Henderson <hbryan@us.ibm.com>
+Cc: Kurt Garloff <kurt@garloff.de>, Linux SCSI list <linux-scsi@vger.kernel.org>
 
-On Tue, Jun 18, 2002 at 11:06:35AM -0500, Austin Gonyou wrote:
+On Tue, Jun 18, 2002 at 08:40:36AM -0700, Bryan Henderson wrote:
 > 
+> >There simply is *no* guarantee here of
+> >any consistent naming, so don't bother trying to claim there is.
 > 
-> On Tue, 2002-06-18 at 10:49, Bryan Henderson wrote:
-> ....
-> > But we do have look out for other cases.  Like non-storage devices.
-> > 
-> 
-> I'm not sure what you mean here?
+> That's quite an overstatement.  With a minor and reasonable qualification,
+> there is a guarantee.  That qualification is that you keep your controller
+> numbers the same.  On the myriad systems that have only one controller,
+> that is a very reasonable qualification indeed.
 
-He's talking about the fact that you can put a volume label on a disk 
-drive, but it's hard to do the same to a tape drive or maybe a SCSI 
-DVD-RAM drive or anything else where you can't write to a permanent part 
-of the device instead of a removeable part of the device.
+That's only reasonable for as long as you are going to exclude servers and 
+SAN type storage environements.  I would argue that the people that are 
+willing to live with your qualification, could likely live without this 
+whole bit of software because they could just make their ZIP drive be the 
+last one on the chain so no other devices get renumbered at boot up if 
+their ZIP disk is off ;-)
 
 -- 
   Doug Ledford <dledford@redhat.com>     919-754-3700 x44233
