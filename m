@@ -1,58 +1,31 @@
-From: Gene Heskett <gene.heskett@verizon.net>
-Subject: Re: advansys driver vs 2.6 breakage
-Date: Mon, 11 Aug 2003 21:42:04 -0400
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <200308112142.04943.gene.heskett@verizon.net>
-References: <20030810224402.5c7fa063.rddunlap@osdl.org> <200308111729.04184.gene.heskett@verizon.net> <20030811143402.1df9184c.rddunlap@osdl.org>
-Reply-To: gene.heskett@verizon.net
+From: Andries Brouwer <aebr@win.tue.nl>
+Subject: Re: [PATCH] oops in sd_shutdown
+Date: Tue, 12 Aug 2003 04:49:01 +0200
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <20030812044901.A1650@pclin040.win.tue.nl>
+References: <Pine.LNX.4.53.0308111426570.16008@thevillage.soulcatcher> <Pine.LNX.4.53.0308111426570.16008@thevillage.soulcatcher> <20030812002844.B1353@pclin040.win.tue.nl> <5.2.1.1.0.20030811180413.01a67dc0@no.incoming.mail>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from out006pub.verizon.net ([206.46.170.106]:4744 "EHLO
-	out006.verizon.net") by vger.kernel.org with ESMTP id S274969AbTHLBmK
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 11 Aug 2003 21:42:10 -0400
-In-Reply-To: <20030811143402.1df9184c.rddunlap@osdl.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
 Content-Disposition: inline
+In-Reply-To: <5.2.1.1.0.20030811180413.01a67dc0@no.incoming.mail>; from kazrak+kernel@cesmail.net on Mon, Aug 11, 2003 at 06:13:50PM -0700
+To: Jeff Woods <kazrak+kernel@cesmail.net>
+Cc: Andries Brouwer <aebr@win.tue.nl>, linux-scsi@vger.kernel.org, linux-usb-devel@lists.sourceforge.net, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Randy.Dunlap" <rddunlap@osdl.org>
-Cc: linux-scsi@vger.kernel.org, willy@debian.org
 
-On Monday 11 August 2003 17:34, Randy.Dunlap wrote:
->On Mon, 11 Aug 2003 17:29:04 -0400 Gene Heskett 
-<gene.heskett@verizon.net> wrote:
->| On Monday 11 August 2003 01:44, Randy.Dunlap wrote:
->| >Gene,
->| >
->| >This patch should make the advansys driver build on 2.6.0-test3
->| >after you #define ADVANSYS_DEBUG so that run-time debug output
->| >can be generated.
->| >
->| >--
->|
->| Ok Randy, I have some logs, stripped down to about 1650 lines from
->| just under half a million.
->|
->| Should I send them privately?
->
->How many bytes?  If <= roughly 60 KB, I'd say just post them here.
+On Mon, Aug 11, 2003 at 06:13:50PM -0700, Jeff Woods wrote:
 
-Its 115k Randy, a bit bulky for the list I'd say.  But thats raw, not 
-gzip'ed.
+> Looking only at the above code snippet, I'd suggest something more like:
 
->--
->~Randy				For Linux-2.6, see:
->http://www.kernel.org/pub/linux/kernel/people/davej/misc/post-hallow
->een-2.5.txt
+> +       if (!sdp || 
 
--- 
-Cheers, Gene
-AMD K6-III@500mhz 320M
-Athlon1600XP@1400mhz  512M
-99.27% setiathome rank, not too shabby for a WV hillbilly
-Yahoo.com attornies please note, additions to this message
-by Gene Heskett are:
-Copyright 2003 by Maurice Eugene Heskett, all rights reserved.
 
+This is not meaningful.
+
+A general kind of convention is that a pointer will be NULL either
+by mistake, when it is uninitialized, or on purpose, when no object
+is present or no action (other than the default) needs to be performed.
+
+But that general idea is broken by container_of(), which just subtracts
+a constant. So, one should check before subtracting that the pointer
+is non-NULL. Checking afterwards is meaningless.
