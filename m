@@ -1,50 +1,42 @@
-From: Dag Nygren <dag@newtech.fi>
-Subject: Re: Bug in the sg driver
-Date: Tue, 07 Oct 2003 15:50:10 +0300
+From: Andi Kleen <ak@muc.de>
+Subject: [PATCH] Fix 64bit warnings in BusLogic driver
+Date: Tue, 7 Oct 2003 19:30:44 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20031007125010.21495.qmail@dag.newtech.fi>
-References: <dougg@torque.net>
+Message-ID: <20031007173044.GA1567@averell>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ip213-185-39-113.laajakaista.mtv3.fi ([213.185.39.113]:6285
-	"HELO dag.newtech.fi") by vger.kernel.org with SMTP id S262312AbTJGMuL
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 7 Oct 2003 08:50:11 -0400
-In-Reply-To: Message from Douglas Gilbert <dougg@torque.net>
-   of "Tue, 07 Oct 2003 22:37:39 +1000." <3F82B393.4050900@torque.net>
+Received: from zero.aec.at ([193.170.194.10]:17412 "EHLO zero.aec.at")
+	by vger.kernel.org with ESMTP id S262544AbTJGRar (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Oct 2003 13:30:47 -0400
+Received: from fred.muc.de (Purzil_Crofe@localhost.localdomain [127.0.0.1])
+	by zero.aec.at (8.11.6/8.11.2) with ESMTP id h97HUeS22466
+	for <linux-scsi@vger.kernel.org>; Tue, 7 Oct 2003 19:30:41 +0200
+Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
-To: dougg@torque.net
-Cc: Dag Nygren <dag@newtech.fi>, Matthew Wilcox <willy@debian.org>, "Randy.Dunlap" <rddunlap@osdl.org>, linux-scsi@vger.kernel.orgdag@newtech.fi
+To: linux-scsi@vger.kernel.org
 
 
+During a make allyesconfig on x86-64 I noticed several integer/pointer
+mismatch warnings in the bus logic driver.
 
-Thanks for this response, this is of the kind that could
-be useful.
+This cleans them up.
 
-> Dag,
-> I presume the hp_ltt program is controlling a tape
-> robot. hp_ltt sent a command to sg which passed it
-> through the mid level to the aic7xxx driver which
-> crashed. Hard to say why.
+-Andi
 
-hp_ltt is a utility from HP to control their tapedrives,
-ie. update firmware, diagnostic functions and so on.
+diff -u linux-2.5-cleanup/drivers/scsi/BusLogic.c-o linux-2.5-cleanup/drivers/scsi/BusLogic.c
+--- linux-2.5-cleanup/drivers/scsi/BusLogic.c-o	2003-09-28 06:33:44.000000000 +0200
++++ linux-2.5-cleanup/drivers/scsi/BusLogic.c	2003-12-02 16:51:52.119244784 +0100
+@@ -3538,8 +3538,8 @@
+       CCB->DataLength = Count * sizeof(BusLogic_ScatterGatherSegment_T);
+       if (BusLogic_MultiMasterHostAdapterP(HostAdapter))
+ 	CCB->DataPointer = (unsigned int)CCB->DMA_Handle +
+-			    ((unsigned int)&CCB->ScatterGatherList - 
+-			     (unsigned int)CCB);
++			    ((unsigned long)&CCB->ScatterGatherList - 
++			     (unsigned long)CCB);
+       else CCB->DataPointer = Virtual_to_32Bit_Virtual(CCB->ScatterGatherList);
+       for (Segment = 0; Segment < Count; Segment++)
+ 	{
 
-The strange thing is that the URL I gave earlier in this thread 
-would indicate the same behaviour with a completely
-different SCSI-driver....
-
-> New aic7xxx drivers can be found at:
->     http://people.freebsd.org/~gibbs/linux
-> At the bottom of that page are newer rpms for RedHat 9
-> (than distributed by redhat).
-
-Thanks for that, I could try this out at some point.
-Now the update of the tapedrive could be done by adding mem=512M
-to the boot line, running the firmware update and then reboot again wo.
-the memory limit.
-So this was meant more like a report that something is wrong in there.
-
---- Dag
 
