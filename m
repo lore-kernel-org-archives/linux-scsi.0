@@ -1,27 +1,32 @@
-From: "Smart, James" <James.Smart@Emulex.Com>
+From: James Bottomley <James.Bottomley@steeleye.com>
 Subject: RE: [PATCH]: Flexible timeout infrastructure
-Date: Wed, 16 Jun 2004 12:58:40 -0400
+Date: 16 Jun 2004 12:04:00 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3356669BBE90C448AD4645C843E2BF28034F94EE@xbl.ma.emulex.com>
+Message-ID: <1087405441.2067.25.camel@mulgrave>
+References: <3356669BBE90C448AD4645C843E2BF28034F94EE@xbl.ma.emulex.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emulex.emulex.com ([138.239.112.1]:17133 "EHLO
-	emulex.emulex.com") by vger.kernel.org with ESMTP id S264239AbUFPQ7b
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 16 Jun 2004 12:59:31 -0400
+Received: from stat1.steeleye.com ([65.114.3.130]:24995 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S264270AbUFPREt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 16 Jun 2004 13:04:49 -0400
+In-Reply-To: <3356669BBE90C448AD4645C843E2BF28034F94EE@xbl.ma.emulex.com>
 List-Id: linux-scsi@vger.kernel.org
-To: 'James Bottomley' <James.Bottomley@steeleye.com>, Luben Tuikov <luben_tuikov@adaptec.com>
-Cc: Mike Anderson <andmike@us.ibm.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: "Smart, James" <James.Smart@Emulex.Com>
+Cc: Luben Tuikov <luben_tuikov@adaptec.com>, Mike Anderson <andmike@us.ibm.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-> +		case EH_RESET_TIMER:
-> +			/* This allows a single retry even of a command
-> +			 * with allowed == 0 */
-> +			if (scmd->retries++ > scmd->allowed)
-> +				break;
-> +			scsi_add_timer(scmd, scmd->timeout_per_command,
-> +				       scsi_times_out);
-> +			return;
+On Wed, 2004-06-16 at 11:58, Smart, James wrote:
+> So why increment the retries counter at all ? 
 
-So why increment the retries counter at all ? 
+So drivers can't return EH_RESET_TIMER forever. This really ties the
+handling into the behaviour the user has requested.  The only wrinkle
+was the no retry streaming commands.  The assumption is that a retry
+doesn't actually happen under eh_timed_out, but only an attempt to
+collect an existing command which may be delayed because of transport or
+other problems the host knows about.
+
+James
+
+
