@@ -1,39 +1,49 @@
-From: Christoph Hellwig <hch@infradead.org>
+From: "Justin T. Gibbs" <gibbs@scsiguy.com>
 Subject: Re: [PATCH] aic7xxx bouncing over 4G
-Date: Sat, 21 Dec 2002 08:55:10 +0000
+Date: Sat, 21 Dec 2002 08:19:13 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20021221085510.A25881@infradead.org>
-References: <200212210012.gBL0Cng21338@eng2.beaverton.ibm.com> <176730000.1040430221@aslan.btc.adaptec.com> <20021221002940.GM25000@holomorphy.com> <190380000.1040432350@aslan.btc.adaptec.com> <20021221013500.GN25000@holomorphy.com> <223910000.1040435985@aslan.btc.adaptec.com>
+Message-ID: <4085892704.1040483953@aslan.scsiguy.com>
+References: <200212210012.gBL0Cng21338@eng2.beaverton.ibm.com>
+ 	<176730000.1040430221@aslan.btc.adaptec.com>
+ 	<20021221002940.GM25000@holomorphy.com>
+ 	<190380000.1040432350@aslan.btc.adaptec.com>
+ 	<20021221013500.GN25000@holomorphy.com>
+ 	<223910000.1040435985@aslan.btc.adaptec.com>
+ <1040443851.1441.0.camel@rth.ninka.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <1040443851.1441.0.camel@rth.ninka.net>
 Content-Disposition: inline
-In-Reply-To: <223910000.1040435985@aslan.btc.adaptec.com>; from gibbs@scsiguy.com on Fri, Dec 20, 2002 at 06:59:46PM -0700
 List-Id: linux-scsi@vger.kernel.org
-To: "Justin T. Gibbs" <gibbs@scsiguy.com>
+To: "David S. Miller" <davem@redhat.com>
 Cc: William Lee Irwin III <wli@holomorphy.com>, Janet Morgan <janetmor@us.ibm.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Fri, Dec 20, 2002 at 06:59:46PM -0700, Justin T. Gibbs wrote:
-> Those were committed in separate changes into our local Perforce
-> repository, but I simply don't have the patience to replicate each
-> individual change in Perforce into a BK change.  Since all of the
-> Linux universe likes stuff in BK format, I do what I can to accomodate
-> them.
+> On Fri, 2002-12-20 at 17:59, Justin T. Gibbs wrote:
+>> Those were committed in separate changes into our local Perforce
+>> repository, but I simply don't have the patience to replicate each
+>> individual change in Perforce into a BK change.  Since all of the
+>> Linux universe likes stuff in BK format, I do what I can to accomodate
+>> them.
+> 
+> Justin, no offense, but if you're not going to use the tool properly,
+> just stick with patches.
 
-perforce can export unified diffs for each changeste-equivalent right?
-for the sgi ptools SCCS we use internally I wrote a simple script
-that extracts this diff, the commit message automates a BK checking
-with this.  This makes my job of keeping mainline in sync a lot easier
-and preserves the fine granuality.  And it works nicely although the
-internal tree has some additional noise in it (kdb and HSM support).
+David,
 
-> If it wasn't such a pain to get stuff into the tree, you would see
-> smaller changesets.
+I'm glad you performed a thorough analysis of how I use BK prior
+to commenting.  I think that if you look here, I put more information
+into BK than most people.  Considering that it was only recently that
+the Linux community decided that revision control was a good thing
+and revision information was routinely "lost" on the push to Marcelo
+or Linus, I don't see why everyone is being so critical:
 
-Umm, getting smaller changesets in is not such a pain :)  Linus has
-stated very often that he prefers small patches that do one thing and
-I 100% agree with him.  Let me suggest we heel you out to get the
-current update in (and I think with your latest slave_* fixes and/or
-Doug's scsi_scan.c revamp it's time to get it in now) and you send
-small, self-contained patches afterwards?
+http://linux-scsi.bkbits.net:8080/scsi-aic7xxx-2.5/cset@1.865.2.6?nav=index
+.html|ChangeSet@-1d
+
+And yes, this changeset was created *before* this thread even started.
+
+--
+Justin
 
