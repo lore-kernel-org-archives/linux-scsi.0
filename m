@@ -1,32 +1,59 @@
-From: Willem Riede <wrlk@riede.org>
-Subject: Re: buggy scsi_register behaviour in 2.5.51
-Date: Wed, 18 Dec 2002 18:20:14 -0500
+From: Andrew Morton <akpm@digeo.com>
+Subject: [patch] fix drivers/scsi/sd.c warnings
+Date: Wed, 18 Dec 2002 22:04:08 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20021218232014.GS7990@linnie.riede.org>
-References: <3DFE998E.1080103@interlog.com> <20021217114730.GE7990@linnie.riede.org> <3E006692.7020503@torque.net>
-Reply-To: wrlk@riede.org
+Message-ID: <3E016158.CC3D9909@digeo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <3E006692.7020503@torque.net>; from dougg@torque.net on Wed, Dec 18, 2002 at 07:14:10 -0500
+Received: from digeo-nav01.digeo.com (digeo-nav01.digeo.com [192.168.1.233])
+	by packet.digeo.com (8.9.3+Sun/8.9.3) with SMTP id WAA07794
+	for <linux-scsi@vger.kernel.org>; Wed, 18 Dec 2002 22:04:08 -0800 (PST)
 List-Id: linux-scsi@vger.kernel.org
-To: dougg@torque.net
+To: James Bottomley <James.Bottomley@SteelEye.com>
 Cc: linux-scsi@vger.kernel.org
 
-On 2002.12.18 07:14 Douglas Gilbert wrote:
-> Willem,
-> ide-scsi in lk 2.5 ...
-> a) needs .eh_bus_reset_handler defined in idescsi_template
->     and implemented. It probably would be a dummy unless there
->     is a clean way to do an ATAPI bus (or device) reset.
-> b) replace .detect and .release in idescsi_template with the
->     slave_alloc, slave_configure and slave_destroy interface
-> 
-And do request_sense itself as prescibed by the "new" error
-handling I assume.
+Somebody forgot to test with CONFIG_LBD=n:
 
-I'll be back with code when I have it.
+drivers/scsi/sd.c: In function `sd_init_command':
+drivers/scsi/sd.c:304: warning: right shift count >= width of type
+drivers/scsi/sd.c:305: warning: right shift count >= width of type
+drivers/scsi/sd.c:306: warning: right shift count >= width of type
+drivers/scsi/sd.c:307: warning: right shift count >= width of type
+drivers/scsi/sd.c: In function `sd_read_capacity':
+drivers/scsi/sd.c:1016: warning: left shift count >= width of type
+drivers/scsi/sd.c:1017: warning: left shift count >= width of type
+drivers/scsi/sd.c:1018: warning: left shift count >= width of type
+drivers/scsi/sd.c:1019: warning: left shift count >= width of type
 
-Thanks, Willem Riede.
+
+
+--- 25/drivers/scsi/sd.c~scsi-warnings	Wed Dec 18 22:01:40 2002
++++ 25-akpm/drivers/scsi/sd.c	Wed Dec 18 22:02:41 2002
+@@ -174,7 +174,7 @@ static int sd_init_command(struct scsi_c
+ {
+ 	unsigned int this_count, timeout;
+ 	struct gendisk *disk;
+-	sector_t block;
++	u64 block;
+ 	struct scsi_device *sdp = SCpnt->device;
+ 
+ 	timeout = SD_TIMEOUT;
+@@ -1013,10 +1013,10 @@ repeat:
+ 			(buffer[2] << 8) |
+ 			buffer[3]);			
+ 	} else {
+-		sdkp->capacity = 1 + (((sector_t)buffer[0] << 56) |
+-			((sector_t)buffer[1] << 48) |
+-			((sector_t)buffer[2] << 40) |
+-			((sector_t)buffer[3] << 32) |
++		sdkp->capacity = 1 + (((u64)buffer[0] << 56) |
++			((u64)buffer[1] << 48) |
++			((u64)buffer[2] << 40) |
++			((u64)buffer[3] << 32) |
+ 			((sector_t)buffer[4] << 24) |
+ 			((sector_t)buffer[5] << 16) |
+ 			((sector_t)buffer[6] << 8)  |
+
+_
