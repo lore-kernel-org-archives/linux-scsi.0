@@ -1,1017 +1,755 @@
 From: Mark Haverkamp <markh@osdl.org>
-Subject: [PATCH 2/3] 2.6.0 aacraid driver update
-Date: Mon, 06 Oct 2003 14:21:16 -0700
+Subject: [PATCH 3/3] 2.6.0 aacraid driver update
+Date: Mon, 06 Oct 2003 14:21:25 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1065475276.17021.77.camel@markh1.pdx.osdl.net>
+Message-ID: <1065475285.17021.79.camel@markh1.pdx.osdl.net>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fw.osdl.org ([65.172.181.6]:5043 "EHLO mail.osdl.org")
-	by vger.kernel.org with ESMTP id S261774AbTJFVVT (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Oct 2003 17:21:19 -0400
+Received: from fw.osdl.org ([65.172.181.6]:6835 "EHLO mail.osdl.org")
+	by vger.kernel.org with ESMTP id S261783AbTJFVV1 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Oct 2003 17:21:27 -0400
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@steeleye.com>
 Cc: Mark Salyzyn <mark_salyzyn@adaptec.com>
 
-===== drivers/scsi/aacraid/commctrl.c 1.3 vs edited =====
---- 1.3/drivers/scsi/aacraid/commctrl.c	Fri May  2 12:30:31 2003
-+++ edited/drivers/scsi/aacraid/commctrl.c	Tue Sep 30 09:33:19 2003
-@@ -150,7 +150,7 @@
- 		 *	the list to 0.
- 		 */
- 		fibctx->count = 0;
--		AAC_INIT_LIST_HEAD(&fibctx->hw_fib_list);
-+		INIT_LIST_HEAD(&fibctx->fib_list);
- 		fibctx->jiffies = jiffies/HZ;
- 		/*
- 		 *	Now add this context onto the adapter's 
-@@ -181,7 +181,7 @@
- {
- 	struct fib_ioctl f;
- 	struct aac_fib_context *fibctx, *aifcp;
--	struct hw_fib * hw_fib;
-+	struct fib *fib;
- 	int status;
- 	struct list_head * entry;
- 	int found;
-@@ -224,27 +224,28 @@
- 	 *	-EAGAIN
+===== drivers/scsi/aacraid/dpcsup.c 1.4 vs edited =====
+--- 1.4/drivers/scsi/aacraid/dpcsup.c	Fri May  2 12:31:00 2003
++++ edited/drivers/scsi/aacraid/dpcsup.c	Wed Oct  1 15:26:48 2003
+@@ -73,11 +73,12 @@
  	 */
- return_fib:
--	if (!aac_list_empty(&fibctx->hw_fib_list)) {
--		struct aac_list_head * entry;
-+	if (!list_empty(&fibctx->fib_list)) {
-+		struct list_head * entry;
- 		/*
- 		 *	Pull the next fib from the fibs
- 		 */
--		entry = (struct aac_list_head*)(ulong)fibctx->hw_fib_list.next;
--		aac_list_del(entry);
-+		entry = fibctx->fib_list.next;
-+		list_del(entry);
- 		
--		hw_fib = aac_list_entry(entry, struct hw_fib, header.FibLinks);
-+		fib = list_entry(entry, struct fib, fiblink);
- 		fibctx->count--;
- 		spin_unlock_irqrestore(&dev->fib_lock, flags);
--		if (copy_to_user(f.fib, hw_fib, sizeof(struct hw_fib))) {
--			kfree(hw_fib);
-+		if (copy_to_user(f.fib, fib->hw_fib, sizeof(struct hw_fib))) {
-+			kfree(fib->hw_fib);
-+			kfree(fib);
- 			return -EFAULT;
- 		}	
- 		/*
- 		 *	Free the space occupied by this copy of the fib.
- 		 */
--		kfree(hw_fib);
-+		kfree(fib->hw_fib);
-+		kfree(fib);
- 		status = 0;
--		fibctx->jiffies = jiffies/HZ;
- 	} else {
- 		spin_unlock_irqrestore(&dev->fib_lock, flags);
- 		if (f.wait) {
-@@ -259,29 +260,31 @@
- 			status = -EAGAIN;
- 		}	
- 	}
-+	fibctx->jiffies = jiffies/HZ;
- 	return status;
- }
+ 	while(aac_consumer_get(dev, q, &entry))
+ 	{
+-		u32 fast ;
+-		fast = (entry->addr & cpu_to_le32(0x01));
+-		hwfib = (struct hw_fib *)((char *)dev->hw_fib_va + 
+-				((entry->addr & ~0x01) - dev->hw_fib_pa));
+-		fib = &dev->fibs[hwfib->header.SenderData];
++		int fast;
++		u32 index;
++		index = le32_to_cpu(entry->addr);
++		fast = index & 0x01;
++		fib = &dev->fibs[index >> 1];
++		hwfib = fib->hw_fib;
  
- int aac_close_fib_context(struct aac_dev * dev, struct aac_fib_context * fibctx)
- {
--	struct hw_fib *hw_fib;
-+	struct fib *fib;
- 
- 	/*
- 	 *	First free any FIBs that have not been consumed.
+ 		aac_consumer_free(dev, q, HostNormRespQueue);
+ 		/*
+@@ -170,31 +171,50 @@
+ 	 *	up the waiters until there are no more QEs. We then return
+ 	 *	back to the system.
  	 */
--	while (!aac_list_empty(&fibctx->hw_fib_list)) {
--		struct aac_list_head * entry;
-+	while (!list_empty(&fibctx->fib_list)) {
-+		struct list_head * entry;
- 		/*
- 		 *	Pull the next fib from the fibs
- 		 */
--		entry = (struct aac_list_head*)(ulong)(fibctx->hw_fib_list.next);
--		aac_list_del(entry);
--		hw_fib = aac_list_entry(entry, struct hw_fib, header.FibLinks);
-+		entry = fibctx->fib_list.next;
-+		list_del(entry);
-+		fib = list_entry(entry, struct fib, fiblink);
- 		fibctx->count--;
- 		/*
- 		 *	Free the space occupied by this copy of the fib.
- 		 */
--		kfree(hw_fib);
-+		kfree(fib->hw_fib);
-+		kfree(fib);
++	dprintk((KERN_INFO
++	  "dev=%p, dev->comm_phys=%x, dev->comm_addr=%p, dev->comm_size=%u\n",
++	  dev, (u32)dev->comm_phys, dev->comm_addr, (unsigned)dev->comm_size));
++
+ 	while(aac_consumer_get(dev, q, &entry))
+ 	{
++		struct fib fibctx;
+ 		struct hw_fib * hw_fib;
+-		hw_fib = (struct hw_fib *)((char *)dev->hw_fib_va + 
+-				((entry->addr & ~0x01) - dev->hw_fib_pa));
++		u32 index;
++		struct fib *fib = &fibctx;
++
++		index = le32_to_cpu(entry->addr / sizeof(struct hw_fib));
++		hw_fib = &dev->aif_base_va[index];
+ 
+-		if (dev->aif_thread) {
+-		        aac_list_add_tail(&hw_fib->header.FibLinks, &q->cmdq);
++		/*
++		 *	Allocate a FIB at all costs. For non queued stuff
++		 *	we can just use the stack so we are happy. We need
++		 *	a fib object in order to manage the linked lists
++		 */
++		if (dev->aif_thread)
++			if((fib = kmalloc(sizeof(struct fib), GFP_ATOMIC))==NULL)
++				fib = &fibctx;
++			
++		memset(fib, 0, sizeof(struct fib));
++		INIT_LIST_HEAD(&fib->fiblink);
++		fib->type = FSAFS_NTC_FIB_CONTEXT;
++		fib->size = sizeof(struct fib);
++		fib->hw_fib = hw_fib;
++		fib->data = hw_fib->data;
++		fib->dev = dev;
++		
++		if (dev->aif_thread && fib != &fibctx)
++		{		
++			list_add_tail(&fib->fiblink, &q->cmdq);
+ 	 	        aac_consumer_free(dev, q, HostNormCmdQueue);
+ 		        wake_up_interruptible(&q->cmdready);
+ 		} else {
+-			struct fib fibctx;
+ 	 	        aac_consumer_free(dev, q, HostNormCmdQueue);
+ 			spin_unlock_irqrestore(q->lock, flags);
+-			memset(&fibctx, 0, sizeof(struct fib));
+-			fibctx.type = FSAFS_NTC_FIB_CONTEXT;
+-			fibctx.size = sizeof(struct fib);
+-			fibctx.hw_fib = hw_fib;
+-			fibctx.data = hw_fib->data;
+-			fibctx.dev = dev;
+ 			/*
+ 			 *	Set the status of this FIB
+ 			 */
+ 			*(u32 *)hw_fib->data = cpu_to_le32(ST_OK);
+-			fib_adapter_complete(&fibctx, sizeof(u32));
++			fib_adapter_complete(fib, sizeof(u32));
+ 			spin_lock_irqsave(q->lock, flags);
+ 		}		
  	}
- 	/*
- 	 *	Remove the Context from the AdapterFibContext List
-@@ -355,17 +358,19 @@
-  *	@dev: adapter
-  *	@arg: ioctl arguments
-  *
-- *	This routine returns the firmware version.
-- *      Under Linux, there have been no version incompatibilities, so this is simple!
-+ *	This routine returns the driver version.
-+ *      Under Linux, there have been no version incompatibilities, so 
-+ *      this is simple!
+===== drivers/scsi/aacraid/linit.c 1.22 vs edited =====
+--- 1.22/drivers/scsi/aacraid/linit.c	Tue Aug 26 09:25:41 2003
++++ edited/drivers/scsi/aacraid/linit.c	Tue Sep 30 15:29:05 2003
+@@ -35,8 +35,8 @@
+  *	
   */
  
- static int check_revision(struct aac_dev *dev, void *arg)
- {
- 	struct revision response;
-+	extern unsigned long aac_driver_version;
+-#define AAC_DRIVER_VERSION		"1.1.2"
+-#define AAC_DRIVER_BUILD_DATE		__DATE__
++#define AAC_DRIVER_VERSION		0x01010400
++#define AAC_DRIVER_BUILD_DATE		__DATE__ " " __TIME__
  
- 	response.compat = 1;
--	response.version = dev->adapter_info.kernelrev;
--	response.build = dev->adapter_info.kernelbuild;
-+	response.version = aac_driver_version;
-+	response.build = AAC_DRIVER_BUILD;
+ #include <linux/module.h>
+ #include <linux/config.h>
+@@ -63,18 +63,12 @@
+ MODULE_AUTHOR("Red Hat Inc and Adaptec");
+ MODULE_DESCRIPTION("Supports Dell PERC2, 2/Si, 3/Si, 3/Di, Adaptec Advanced Raid Products, and HP NetRAID-4M devices. http://domsch.com/linux/ or http://linux.adaptec.com");
+ MODULE_LICENSE("GPL");
+-MODULE_PARM(nondasd, "i");
+-MODULE_PARM_DESC(nondasd, "Control scanning of hba for nondasd devices. 0=off, 1=on");
+-MODULE_PARM(paemode, "i");
+-MODULE_PARM_DESC(paemode, "Control whether dma addressing is using PAE. 0=off, 1=on");
+-
+-int nondasd=-1;
+-int paemode=-1;
  
- 	if (copy_to_user(arg, &response, sizeof(response)))
- 		return -EFAULT;
-@@ -430,14 +435,14 @@
- 	// Fix up srb for endian and force some values
- 	srbcmd->function = cpu_to_le32(SRBF_ExecuteScsi);	// Force this
- 	srbcmd->channel  = cpu_to_le32(srbcmd->channel);
--	srbcmd->target   = cpu_to_le32(srbcmd->target);
-+	srbcmd->id       = cpu_to_le32(srbcmd->id);
- 	srbcmd->lun      = cpu_to_le32(srbcmd->lun);
- 	srbcmd->flags    = cpu_to_le32(srbcmd->flags);
- 	srbcmd->timeout  = cpu_to_le32(srbcmd->timeout);
- 	srbcmd->retry_limit =cpu_to_le32(0); // Obsolete parameter
- 	srbcmd->cdb_size = cpu_to_le32(srbcmd->cdb_size);
+ struct aac_dev *aac_devices[MAXIMUM_NUM_ADAPTERS];
+ 
+ static unsigned aac_count = 0;
+ static int aac_cfg_major = -1;
++unsigned long aac_driver_version = AAC_DRIVER_VERSION;
+ 
+ /*
+  * Because of the way Linux names scsi devices, the order in this table has
+@@ -85,37 +79,52 @@
+  * In the future we should add a fib that reports the number of channels
+  * for the card.  At that time we can remove the channels from here
+  */
++
+ static struct aac_driver_ident aac_drivers[] = {
+-	{ 0x1028, 0x0001, 0x1028, 0x0001, aac_rx_init, "percraid", "DELL    ", "PERCRAID        ", 2 }, /* PERC 2/Si */
+-	{ 0x1028, 0x0002, 0x1028, 0x0002, aac_rx_init, "percraid", "DELL    ", "PERCRAID        ", 2 }, /* PERC 3/Di */
+-	{ 0x1028, 0x0003, 0x1028, 0x0003, aac_rx_init, "percraid", "DELL    ", "PERCRAID        ", 2 }, /* PERC 3/Si */
+-	{ 0x1028, 0x0004, 0x1028, 0x00d0, aac_rx_init, "percraid", "DELL    ", "PERCRAID        ", 2 }, /* PERC 3/Si */
+-	{ 0x1028, 0x0002, 0x1028, 0x00d1, aac_rx_init, "percraid", "DELL    ", "PERCRAID        ", 2 }, /* PERC 3/Di */
+-	{ 0x1028, 0x0002, 0x1028, 0x00d9, aac_rx_init, "percraid", "DELL    ", "PERCRAID        ", 2 }, /* PERC 3/Di */
+-	{ 0x1028, 0x000a, 0x1028, 0x0106, aac_rx_init, "percraid", "DELL    ", "PERCRAID        ", 2 }, /* PERC 3/Di */
+-	{ 0x1028, 0x000a, 0x1028, 0x011b, aac_rx_init, "percraid", "DELL    ", "PERCRAID        ", 2 }, /* PERC 3/Di */
+-	{ 0x1028, 0x000a, 0x1028, 0x0121, aac_rx_init, "percraid", "DELL    ", "PERCRAID        ", 2 }, /* PERC 3/Di */
+-	{ 0x9005, 0x0283, 0x9005, 0x0283, aac_rx_init, "aacraid",  "ADAPTEC ", "catapult        ", 2 }, /* catapult*/
+-	{ 0x9005, 0x0284, 0x9005, 0x0284, aac_rx_init, "aacraid",  "ADAPTEC ", "tomcat          ", 2 }, /* tomcat*/
+-	{ 0x9005, 0x0285, 0x9005, 0x0286, aac_rx_init, "aacraid",  "ADAPTEC ", "Adaptec 2120S   ", 1 }, /* Adaptec 2120S (Crusader)*/
+-	{ 0x9005, 0x0285, 0x9005, 0x0285, aac_rx_init, "aacraid",  "ADAPTEC ", "Adaptec 2200S   ", 2 }, /* Adaptec 2200S (Vulcan)*/
+-	{ 0x9005, 0x0285, 0x9005, 0x0287, aac_rx_init, "aacraid",  "ADAPTEC ", "Adaptec 2200S   ", 2 }, /* Adaptec 2200S (Vulcan-2m)*/
+-	{ 0x9005, 0x0285, 0x17aa, 0x0286, aac_rx_init, "aacraid",  "Legend  ", "Legend S220     ", 1 }, /* Legend S220*/
+-	{ 0x9005, 0x0285, 0x17aa, 0x0287, aac_rx_init, "aacraid",  "Legend  ", "Legend S230     ", 2 }, /* Legend S230*/
+-
+-	{ 0x9005, 0x0285, 0x9005, 0x0288, aac_rx_init, "aacraid",  "ADAPTEC ", "Adaptec 3230S   ", 2 }, /* Adaptec 3230S (Harrier)*/
+-	{ 0x9005, 0x0285, 0x9005, 0x0289, aac_rx_init, "aacraid",  "ADAPTEC ", "Adaptec 3240S   ", 2 }, /* Adaptec 3240S (Tornado)*/
+-	{ 0x9005, 0x0285, 0x9005, 0x028a, aac_rx_init, "aacraid",  "ADAPTEC ", "ASR-2020S PCI-X ", 2 }, /* ASR-2020S PCI-X ZCR (Skyhawk)*/
+-	{ 0x9005, 0x0285, 0x9005, 0x028b, aac_rx_init, "aacraid",  "ADAPTEC ", "ASR-2020S PCI-X ", 2 }, /* ASR-2020S SO-DIMM PCI-X ZCR(Terminator)*/
+-	{ 0x9005, 0x0285, 0x9005, 0x0290, aac_rx_init, "aacraid",  "ADAPTEC ", "AAR-2410SA SATA ", 2 }, /* AAR-2410SA PCI SATA 4ch (Jaguar II)*/
+-	{ 0x9005, 0x0250, 0x1014, 0x0279, aac_rx_init, "aacraid",  "ADAPTEC ", "Adaptec         ", 2 }, /* (Marco)*/
+-	{ 0x9005, 0x0250, 0x1014, 0x028c, aac_rx_init, "aacraid",  "ADAPTEC ", "Adaptec         ", 2 }, /* (Sebring)*/
++	{ 0x1028, 0x0001, 0x1028, 0x0001, aac_rx_init, "percraid", "DELL    ", "PERCRAID        ", 2, AAC_QUIRK_31BIT }, /* PERC 2/Si (Iguana/PERC2Si) */
++	{ 0x1028, 0x0002, 0x1028, 0x0002, aac_rx_init, "percraid", "DELL    ", "PERCRAID        ", 2, AAC_QUIRK_31BIT }, /* PERC 3/Di (Opal/PERC3Di) */
++	{ 0x1028, 0x0003, 0x1028, 0x0003, aac_rx_init, "percraid", "DELL    ", "PERCRAID        ", 2, AAC_QUIRK_31BIT }, /* PERC 3/Si (SlimFast/PERC3Si */
++	{ 0x1028, 0x0004, 0x1028, 0x00d0, aac_rx_init, "percraid", "DELL    ", "PERCRAID        ", 2, AAC_QUIRK_31BIT }, /* PERC 3/Di (Iguana FlipChip/PERC3DiF */
++	{ 0x1028, 0x0002, 0x1028, 0x00d1, aac_rx_init, "percraid", "DELL    ", "PERCRAID        ", 2, AAC_QUIRK_31BIT }, /* PERC 3/Di (Viper/PERC3DiV) */
++	{ 0x1028, 0x0002, 0x1028, 0x00d9, aac_rx_init, "percraid", "DELL    ", "PERCRAID        ", 2, AAC_QUIRK_31BIT }, /* PERC 3/Di (Lexus/PERC3DiL) */
++	{ 0x1028, 0x000a, 0x1028, 0x0106, aac_rx_init, "percraid", "DELL    ", "PERCRAID        ", 1, AAC_QUIRK_31BIT }, /* PERC 3/Di (Jaguar/PERC3DiJ) */
++	{ 0x1028, 0x000a, 0x1028, 0x011b, aac_rx_init, "percraid", "DELL    ", "PERCRAID        ", 2, AAC_QUIRK_31BIT }, /* PERC 3/Di (Dagger/PERC3DiD) */
++	{ 0x1028, 0x000a, 0x1028, 0x0121, aac_rx_init, "percraid", "DELL    ", "PERCRAID        ", 2, AAC_QUIRK_31BIT }, /* PERC 3/Di (Boxster/PERC3DiB) */
++	{ 0x9005, 0x0283, 0x9005, 0x0283, aac_rx_init, "aacraid",  "ADAPTEC ", "catapult        ", 2, AAC_QUIRK_31BIT }, /* catapult */
++	{ 0x9005, 0x0284, 0x9005, 0x0284, aac_rx_init, "aacraid",  "ADAPTEC ", "tomcat          ", 2, AAC_QUIRK_31BIT }, /* tomcat */
++	{ 0x9005, 0x0285, 0x9005, 0x0286, aac_rx_init, "aacraid",  "ADAPTEC ", "Adaptec 2120S   ", 1, AAC_QUIRK_31BIT }, /* Adaptec 2120S (Crusader) */
++	{ 0x9005, 0x0285, 0x9005, 0x0285, aac_rx_init, "aacraid",  "ADAPTEC ", "Adaptec 2200S   ", 2, AAC_QUIRK_31BIT }, /* Adaptec 2200S (Vulcan) */
++	{ 0x9005, 0x0285, 0x9005, 0x0287, aac_rx_init, "aacraid",  "ADAPTEC ", "Adaptec 2200S   ", 2, AAC_QUIRK_31BIT }, /* Adaptec 2200S (Vulcan-2m) */
++	{ 0x9005, 0x0285, 0x17aa, 0x0286, aac_rx_init, "aacraid",  "Legend  ", "Legend S220     ", 1, AAC_QUIRK_31BIT }, /* Legend S220 (Legend Crusader) */
++	{ 0x9005, 0x0285, 0x17aa, 0x0287, aac_rx_init, "aacraid",  "Legend  ", "Legend S230     ", 2, AAC_QUIRK_31BIT }, /* Legend S230 (Legend Vulcan) */
++
++	{ 0x9005, 0x0285, 0x9005, 0x0288, aac_rx_init, "aacraid",  "ADAPTEC ", "Adaptec 3230S   ", 2 }, /* Adaptec 3230S (Harrier) */
++	{ 0x9005, 0x0285, 0x9005, 0x0289, aac_rx_init, "aacraid",  "ADAPTEC ", "Adaptec 3240S   ", 2 }, /* Adaptec 3240S (Tornado) */
++	{ 0x9005, 0x0285, 0x9005, 0x028a, aac_rx_init, "aacraid",  "ADAPTEC ", "ASR-2020S PCI-X ", 2 }, /* ASR-2020S PCI-X ZCR (Skyhawk) */
++	{ 0x9005, 0x0285, 0x9005, 0x028b, aac_rx_init, "aacraid",  "ADAPTEC ", "ASR-2020S PCI-X ", 2 }, /* ASR-2020S SO-DIMM PCI-X ZCR (Terminator) */
++/*	{ 0x9005, 0x0286, 0x9005, 0x028c, aac_rx_init, "aacraid",  "ADAPTEC ", "ASR-2230S PCI-X ", 2 }, */ /* ASR-2230S PCI-X (Lancer pre-production) */
++	{ 0x9005, 0x0286, 0x9005, 0x028c, aac_rkt_init, "aacraid",  "ADAPTEC ", "ASR-2230S PCI-X ", 2 }, /* ASR-2230S + ASR-2230SLP PCI-X (Lancer) */
++	{ 0x9005, 0x0285, 0x9005, 0x0290, aac_rx_init, "aacraid",  "ADAPTEC ", "AAR-2410SA SATA ", 1 }, /* AAR-2410SA PCI SATA 4ch (Jaguar II) */
++	{ 0x9005, 0x0285, 0x1028, 0x0291, aac_rx_init, "aacraid",  "DELL    ", "CERC SR2        ", 1 }, /* CERC SATA RAID 2 PCI SATA 6ch (DellCorsair) */
++	{ 0x9005, 0x0285, 0x9005, 0x0292, aac_rx_init, "aacraid",  "ADAPTEC ", "AAR-2810SA SATA ", 1 }, /* AAR-2810SA PCI SATA 8ch (Corsair-8) */
++	{ 0x9005, 0x0285, 0x9005, 0x0293, aac_rx_init, "aacraid",  "ADAPTEC ", "AAR-21610SA SATA", 1 }, /* AAR-21610SA PCI SATA 16ch (Corsair-16) */
++	{ 0x9005, 0x0285, 0x9005, 0x0294, aac_rx_init, "aacraid",  "ADAPTEC ", "SO-DIMM SATA ZCR", 1 }, /* ESD SO-DIMM PCI-X SATA ZCR (Prowler) */
++	{ 0x9005, 0x0285, 0x0E11, 0x0295, aac_rx_init, "aacraid",  "ADAPTEC ", "SATA 6Channel   ", 1 }, /* SATA 6Ch (Bearcat) */
+ 
+-	{ 0x9005, 0x0285, 0x1028, 0x0287, aac_rx_init, "percraid", "DELL    ", "PERC 320/DC     ", 2 }, /* Perc 320/DC*/
++	{ 0x9005, 0x0285, 0x1028, 0x0287, aac_rx_init, "percraid", "DELL    ", "PERC 320/DC     ", 2, AAC_QUIRK_31BIT }, /* Perc 320/DC*/
+ 	{ 0x1011, 0x0046, 0x9005, 0x0365, aac_sa_init, "aacraid",  "ADAPTEC ", "Adaptec 5400S   ", 4 }, /* Adaptec 5400S (Mustang)*/
+ 	{ 0x1011, 0x0046, 0x9005, 0x0364, aac_sa_init, "aacraid",  "ADAPTEC ", "AAC-364         ", 4 }, /* Adaptec 5400S (Mustang)*/
+-	{ 0x1011, 0x0046, 0x9005, 0x1364, aac_sa_init, "percraid", "DELL    ", "PERCRAID        ", 4 }, /* Dell PERC2 "Quad Channel" */
+-	{ 0x1011, 0x0046, 0x103c, 0x10c2, aac_sa_init, "hpnraid",  "HP      ", "NetRAID         ", 4 }  /* HP NetRAID-4M */
++	{ 0x1011, 0x0046, 0x9005, 0x1364, aac_sa_init, "percraid", "DELL    ", "PERCRAID        ", 4, AAC_QUIRK_31BIT }, /* Dell PERC2/QC */
++	{ 0x1011, 0x0046, 0x103c, 0x10c2, aac_sa_init, "hpnraid",  "HP      ", "NetRAID         ", 4 }, /* HP NetRAID-4M */
++
++	{ 0x9005, 0x0285, 0x1028, PCI_ANY_ID,
++					  aac_rx_init, "aacraid",  "DELL    ", "RAID            ", 2, AAC_QUIRK_31BIT }, /* Dell Catchall */
++	{ 0x9005, 0x0285, 0x17aa, PCI_ANY_ID,
++					  aac_rx_init, "aacraid",  "Legend  ", "RAID            ", 2, AAC_QUIRK_31BIT }, /* Legend Catchall */
++	{ 0x9005, 0x0285, PCI_ANY_ID, PCI_ANY_ID,
++					  aac_rx_init, "aacraid",  "ADAPTEC ", "RAID            ", 2, AAC_QUIRK_31BIT }, /* Adaptec Catch All */
++	{ 0x9005, 0x0286, PCI_ANY_ID, PCI_ANY_ID,
++					  aac_rkt_init, "aacraid", "ADAPTEC ", "RAID            ", 2 } /* Adaptec Rocket Catch All */
+ };
+ 
+ #define NUM_AACTYPES	(sizeof(aac_drivers) / sizeof(struct aac_driver_ident))
+@@ -174,8 +183,13 @@
+ 	struct aac_dev *aac;
+ 	struct fsa_scsi_hba *fsa_dev_ptr;
+ 	char *name = NULL;
++	int ret;
  	
--	switch(srbcmd->flags){
-+	switch(srbcmd->flags & (SRB_DataIn | SRB_DataOut)){
- 	case SRB_DataOut:
- 		data_dir = SCSI_DATA_WRITE;
- 		break;
-@@ -455,12 +460,19 @@
- 		byte_count = 0;
+-	printk(KERN_INFO "Red Hat/Adaptec aacraid driver (%s %s)\n", AAC_DRIVER_VERSION, AAC_DRIVER_BUILD_DATE);
++	printk(KERN_INFO "Red Hat/Adaptec aacraid driver (%d.%d.%d %s)\n", 
++			AAC_DRIVER_VERSION >> 24, 
++			(AAC_DRIVER_VERSION >> 16) & 0xFF, 
++			(AAC_DRIVER_VERSION >> 8) & 0xFF, 
++			AAC_DRIVER_BUILD_DATE);
  
- 		// This should also catch if user used the 32 bit sgmap
--		actual_fibsize = sizeof (struct aac_srb) + (((srbcmd->sg.count & 0xff) - 1) * sizeof (struct sgentry64));
-+		actual_fibsize = sizeof (struct aac_srb) - 
-+			sizeof(struct sgentry) + ((srbcmd->sg.count & 0xff) * 
-+					sizeof (struct sgentry64));
- 		if(actual_fibsize != fibsize){ // User made a mistake - should not continue
- 			printk(KERN_DEBUG"aacraid: Bad Size specified in Raw SRB command\n");
- 			rcode = -EINVAL;
- 			goto cleanup;
+ 	/* setting up the proc directory structure */
+ 	template->proc_name = "aacraid";
+@@ -194,8 +208,17 @@
+ 			if (pci_enable_device(dev))
+ 				continue;
+ 			pci_set_master(dev);
+-			pci_set_dma_mask(dev, 0xFFFFFFFFULL);
+ 
++			if (aac_drivers[index].quirks & AAC_QUIRK_31BIT)
++				ret = pci_set_dma_mask(dev, 0x7FFFFFFFULL);
++			else
++				ret = pci_set_dma_mask(dev, 0xFFFFFFFFULL);
++
++			if (ret) {
++				printk(KERN_WARNING "aacraid: Can't set DMA mask.\n");
++				continue;
++			}
++				
+ 			if((dev->subsystem_vendor != aac_drivers[index].subsystem_vendor) || 
+ 			   (dev->subsystem_device != aac_drivers[index].subsystem_device))
+ 					continue;
+@@ -203,8 +226,6 @@
+ 			dprintk((KERN_DEBUG "%s device detected.\n", name));
+ 			dprintk((KERN_DEBUG "%x/%x/%x/%x.\n", vendor_id, device_id, 
+ 				aac_drivers[index].subsystem_vendor, aac_drivers[index].subsystem_device));
+-			/* Increment the host adapter count */
+-			aac_count++;
+ 			/*
+ 			 * scsi_register() allocates memory for a Scsi_Hosts structure and
+ 			 * links it into the linked list of host adapters. This linked list
+@@ -218,6 +239,12 @@
+ 			 * specific information.
+ 			 */
+ 			host_ptr = scsi_register( template, sizeof(struct aac_dev) );
++			if (!host_ptr) {
++				continue;
++			}
++
++			/* Increment the host adapter count */
++			aac_count++;
+ 			/* 
+ 			 * These three parameters can be used to allow for wide SCSI 
+ 			 * and for host adapters that support multiple buses.
+@@ -278,13 +305,12 @@
+ 			dprintk((KERN_DEBUG "Device has %d logical channels\n",host_ptr->max_channel));
+ 			aac_get_containers(aac);
+ 			aac_devices[aac_count-1] = aac;
+-//			spin_unlock_irqrestore(&aac->fib_lock, flags);
+ 
+ 			/*
+ 			 * dmb - we may need to move the setting of these parms somewhere else once
+ 			 * we get a fib that can report the actual numbers
+ 			 */
+-			host_ptr->max_id = AAC_MAX_TARGET;
++			host_ptr->max_id = MAXIMUM_NUM_CONTAINERS;
+ 			host_ptr->max_lun = AAC_MAX_LUN;
+ 
  		}
-+		if ((data_dir == SCSI_DATA_NONE) && psg->count) { // Dogs and cats sleeping with eachother - should not continue
-+			printk(KERN_DEBUG"aacraid: SG with no direction specified in Raw SRB command\n");
-+			rcode = -EINVAL;
-+			goto cleanup;
-+		}
+@@ -514,7 +540,7 @@
+ }
  
- 		for (i = 0; i < psg->count; i++) {
- 			dma_addr_t addr; 
-@@ -475,7 +487,7 @@
- 			}
- 			sg_user[i] = (ulong)psg->sg[i].addr;
- 			sg_list[i] = (ulong)p; // save so we can clean up later
--			sg_indx = i;
-+			sg_indx = i + 1;
- 
- 			if( flags & SRB_DataOut ){
- 				if(copy_from_user(p,psg->sg[i].addr,psg->sg[i].count)){
-@@ -505,6 +517,11 @@
- 			rcode = -EINVAL;
- 			goto cleanup;
- 		}
-+		if ((data_dir == SCSI_DATA_NONE) && psg->count) { // Dogs and cats sleeping with eachother - should not continue
-+			printk(KERN_DEBUG"aacraid: SG with no direction specified in Raw SRB command\n");
-+			rcode = -EINVAL;
-+			goto cleanup;
-+		}
- 		for (i = 0; i < psg->count; i++) {
- 			dma_addr_t addr; 
- 			void* p;
-@@ -517,7 +534,7 @@
- 			}
- 			sg_user[i] = (ulong)(psg->sg[i].addr);
- 			sg_list[i] = (ulong)p; // save so we can clean up later
--			sg_indx = i;
-+			sg_indx = i + 1;
- 
- 			if( flags & SRB_DataOut ){
- 				if(copy_from_user((void*)p,(void*)(ulong)(psg->sg[i].addr),psg->sg[i].count)){
-@@ -543,7 +560,7 @@
- 	}
- 
- 	if( flags & SRB_DataIn ) {
--		for(i = 0 ; i <= sg_indx; i++){
-+		for(i = 0 ; i < sg_indx; i++){
- 			if(copy_to_user((void*)(sg_user[i]),(void*)(sg_list[i]),le32_to_cpu(srbcmd->sg.sg[i].count))){
- 				printk(KERN_DEBUG"aacraid: Could not copy sg data to user\n"); 
- 				rcode = -EFAULT;
-@@ -561,7 +578,7 @@
- 	}
- 
- cleanup:
--	for(i=0; i <= sg_indx; i++){
-+	for(i=0; i < sg_indx; i++){
- 		kfree((void*)sg_list[i]);
- 	}
- 	fib_complete(srbfib);
-@@ -579,17 +596,17 @@
- 
- int aac_get_pci_info(struct aac_dev* dev, void* arg)
+ /**
+- *	aac_queuedepth		-	compute queue depths
++ *	aac_slave_configure		-	compute queue depths
+  *	@host:	SCSI host in question
+  *	@dev:	SCSI device we are considering
+  *
+@@ -543,7 +569,6 @@
+ 		Handle SCSI ioctls
+  *----------------------------------------------------------------------------*/
+ static int aac_ioctl(Scsi_Device * scsi_dev_ptr, int cmd, void * arg)
+-/*----------------------------------------------------------------------------*/
  {
--        struct aac_pci_info pci_info;
-+	struct aac_pci_info pci_info;
- 
- 	pci_info.bus = dev->pdev->bus->number;
- 	pci_info.slot = PCI_SLOT(dev->pdev->devfn);
- 
--       if(copy_to_user( arg, (void*)&pci_info, sizeof(struct aac_pci_info))){
-+	if (copy_to_user(arg, (void*)&pci_info, sizeof(struct aac_pci_info))) {
- 		printk(KERN_DEBUG "aacraid: Could not copy pci info\n");
--               return -EFAULT;
-+		return -EFAULT;
- 	}
--        return 0;
-- }
+ 	struct aac_dev *dev;
+ 	dprintk((KERN_DEBUG "aac_ioctl.\n"));
+===== drivers/scsi/aacraid/rkt.c 1.1 vs edited =====
+--- 1.1/drivers/scsi/aacraid/rkt.c	Thu Oct  2 07:32:58 2003
++++ edited/drivers/scsi/aacraid/rkt.c	Fri Oct  3 14:27:34 2003
+@@ -0,0 +1,417 @@
++/*
++ *	Adaptec AAC series RAID controller driver
++ *	(c) Copyright 2001 Red Hat Inc.	<alan@redhat.com>
++ *
++ * based on the old aacraid driver that is..
++ * Adaptec aacraid device driver for Linux.
++ *
++ * Copyright (c) 2000 Adaptec, Inc. (aacraid@adaptec.com)
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2, or (at your option)
++ * any later version.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; see the file COPYING.  If not, write to
++ * the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.
++ *
++ * Module Name:
++ *  rkt.c
++ *
++ * Abstract: Hardware miniport for Drawbridge specific hardware functions.
++ *
++ */
++
++#include <linux/config.h>
++#include <linux/kernel.h>
++#include <linux/init.h>
++#include <linux/types.h>
++#include <linux/sched.h>
++#include <linux/pci.h>
++#include <linux/spinlock.h>
++#include <linux/slab.h>
++#include <linux/blkdev.h>
++#include <linux/delay.h>
++#include <linux/completion.h>
++# include <linux/interrupt.h>
++#include <asm/semaphore.h>
++#include "scsi.h"
++#include "hosts.h"
++
++#include "aacraid.h"
++
++static irqreturn_t aac_rkt_intr(int irq, void *dev_id, struct pt_regs *regs)
++{
++	struct aac_dev *dev = dev_id;
++	unsigned long bellbits;
++	u8 intstat, mask;
++	intstat = rkt_readb(dev, MUnit.OISR);
++	/*
++	 *	Read mask and invert because drawbridge is reversed.
++	 *	This allows us to only service interrupts that have 
++	 *	been enabled.
++	 */
++	mask = ~(rkt_readb(dev, MUnit.OIMR));
++	/* Check to see if this is our interrupt.  If it isn't just return */
++	if (intstat & mask) 
++	{
++		bellbits = rkt_readl(dev, OutboundDoorbellReg);
++		if (bellbits & DoorBellPrintfReady) {
++			aac_printf(dev, le32_to_cpu(rkt_readl (dev, IndexRegs.Mailbox[5])));
++			rkt_writel(dev, MUnit.ODR,DoorBellPrintfReady);
++			rkt_writel(dev, InboundDoorbellReg,DoorBellPrintfDone);
++		}
++		else if (bellbits & DoorBellAdapterNormCmdReady) {
++			aac_command_normal(&dev->queues->queue[HostNormCmdQueue]);
++			rkt_writel(dev, MUnit.ODR, DoorBellAdapterNormCmdReady);
++		}
++		else if (bellbits & DoorBellAdapterNormRespReady) {
++			aac_response_normal(&dev->queues->queue[HostNormRespQueue]);
++			rkt_writel(dev, MUnit.ODR,DoorBellAdapterNormRespReady);
++		}
++		else if (bellbits & DoorBellAdapterNormCmdNotFull) {
++			rkt_writel(dev, MUnit.ODR, DoorBellAdapterNormCmdNotFull);
++		}
++		else if (bellbits & DoorBellAdapterNormRespNotFull) {
++			rkt_writel(dev, MUnit.ODR, DoorBellAdapterNormCmdNotFull);
++			rkt_writel(dev, MUnit.ODR, DoorBellAdapterNormRespNotFull);
++		}
++		return IRQ_HANDLED;
++	}
++	return IRQ_NONE;
++}
++
++/**
++ *	aac_rkt_enable_interrupt	-	Enable event reporting
++ *	@dev: Adapter
++ *	@event: Event to enable
++ *
++ *	Enable event reporting from the i960 for a given event.
++ */
++ 
++static void aac_rkt_enable_interrupt(struct aac_dev * dev, u32 event)
++{
++	switch (event) {
++
++	case HostNormCmdQue:
++		dev->irq_mask &= ~(OUTBOUNDDOORBELL_1);
++		break;
++
++	case HostNormRespQue:
++		dev->irq_mask &= ~(OUTBOUNDDOORBELL_2);
++		break;
++
++	case AdapNormCmdNotFull:
++		dev->irq_mask &= ~(OUTBOUNDDOORBELL_3);
++		break;
++
++	case AdapNormRespNotFull:
++		dev->irq_mask &= ~(OUTBOUNDDOORBELL_4);
++		break;
++	}
++}
++
++/**
++ *	aac_rkt_disable_interrupt	-	Disable event reporting
++ *	@dev: Adapter
++ *	@event: Event to enable
++ *
++ *	Disable event reporting from the i960 for a given event.
++ */
++
++static void aac_rkt_disable_interrupt(struct aac_dev *dev, u32 event)
++{
++	switch (event) {
++
++	case HostNormCmdQue:
++		dev->irq_mask |= (OUTBOUNDDOORBELL_1);
++		break;
++
++	case HostNormRespQue:
++		dev->irq_mask |= (OUTBOUNDDOORBELL_2);
++		break;
++
++	case AdapNormCmdNotFull:
++		dev->irq_mask |= (OUTBOUNDDOORBELL_3);
++		break;
++
++	case AdapNormRespNotFull:
++		dev->irq_mask |= (OUTBOUNDDOORBELL_4);
++		break;
++	}
++}
++
++/**
++ *	rkt_sync_cmd	-	send a command and wait
++ *	@dev: Adapter
++ *	@command: Command to execute
++ *	@p1: first parameter
++ *	@ret: adapter status
++ *
++ *	This routine will send a synchronous comamnd to the adapter and wait 
++ *	for its	completion.
++ */
++
++static int rkt_sync_cmd(struct aac_dev *dev, u32 command, u32 p1, u32 *status)
++{
++	unsigned long start;
++	int ok;
++	/*
++	 *	Write the command into Mailbox 0
++	 */
++	rkt_writel(dev, InboundMailbox0, cpu_to_le32(command));
++	/*
++	 *	Write the parameters into Mailboxes 1 - 4
++	 */
++	rkt_writel(dev, InboundMailbox1, cpu_to_le32(p1));
++	rkt_writel(dev, InboundMailbox2, 0);
++	rkt_writel(dev, InboundMailbox3, 0);
++	rkt_writel(dev, InboundMailbox4, 0);
++	/*
++	 *	Clear the synch command doorbell to start on a clean slate.
++	 */
++	rkt_writel(dev, OutboundDoorbellReg, OUTBOUNDDOORBELL_0);
++	/*
++	 *	Disable doorbell interrupts
++	 */
++	rkt_writeb(dev, MUnit.OIMR, rkt_readb(dev, MUnit.OIMR) | 0x04);
++	/*
++	 *	Force the completion of the mask register write before issuing
++	 *	the interrupt.
++	 */
++	rkt_readb (dev, MUnit.OIMR);
++	/*
++	 *	Signal that there is a new synch command
++	 */
++	rkt_writel(dev, InboundDoorbellReg, INBOUNDDOORBELL_0);
++
++	ok = 0;
++	start = jiffies;
++
++	/*
++	 *	Wait up to 30 seconds
++	 */
++	while (time_before(jiffies, start+30*HZ)) 
++	{
++		udelay(5);	/* Delay 5 microseconds to let Mon960 get info. */
++		/*
++		 *	Mon960 will set doorbell0 bit when it has completed the command.
++		 */
++		if (rkt_readl(dev, OutboundDoorbellReg) & OUTBOUNDDOORBELL_0) {
++			/*
++			 *	Clear the doorbell.
++			 */
++			rkt_writel(dev, OutboundDoorbellReg, OUTBOUNDDOORBELL_0);
++			ok = 1;
++			break;
++		}
++		/*
++		 *	Yield the processor in case we are slow 
++		 */
++		set_current_state(TASK_UNINTERRUPTIBLE);
++		schedule_timeout(1);
++	}
++	if (ok != 1) {
++		/*
++		 *	Restore interrupt mask even though we timed out
++		 */
++		rkt_writeb(dev, MUnit.OIMR, rkt_readl(dev, MUnit.OIMR) & 0xfb);
++		return -ETIMEDOUT;
++	}
++	/*
++	 *	Pull the synch status from Mailbox 0.
++	 */
++	*status = le32_to_cpu(rkt_readl(dev, IndexRegs.Mailbox[0]));
++	/*
++	 *	Clear the synch command doorbell.
++	 */
++	rkt_writel(dev, OutboundDoorbellReg, OUTBOUNDDOORBELL_0);
++	/*
++	 *	Restore interrupt mask
++	 */
++	rkt_writeb(dev, MUnit.OIMR, rkt_readl(dev, MUnit.OIMR) & 0xfb);
++	return 0;
++
++}
++
++/**
++ *	aac_rkt_interrupt_adapter	-	interrupt adapter
++ *	@dev: Adapter
++ *
++ *	Send an interrupt to the i960 and breakpoint it.
++ */
++
++static void aac_rkt_interrupt_adapter(struct aac_dev *dev)
++{
++	u32 ret;
++	rkt_sync_cmd(dev, BREAKPOINT_REQUEST, 0, &ret);
++}
++
++/**
++ *	aac_rkt_notify_adapter		-	send an event to the adapter
++ *	@dev: Adapter
++ *	@event: Event to send
++ *
++ *	Notify the i960 that something it probably cares about has
++ *	happened.
++ */
++
++static void aac_rkt_notify_adapter(struct aac_dev *dev, u32 event)
++{
++	switch (event) {
++
++	case AdapNormCmdQue:
++		rkt_writel(dev, MUnit.IDR,INBOUNDDOORBELL_1);
++		break;
++	case HostNormRespNotFull:
++		rkt_writel(dev, MUnit.IDR,INBOUNDDOORBELL_4);
++		break;
++	case AdapNormRespQue:
++		rkt_writel(dev, MUnit.IDR,INBOUNDDOORBELL_2);
++		break;
++	case HostNormCmdNotFull:
++		rkt_writel(dev, MUnit.IDR,INBOUNDDOORBELL_3);
++		break;
++	case HostShutdown:
++/*		rkt_sync_cmd(dev, HOST_CRASHING, 0, 0, 0, 0, &ret); */
++		break;
++	case FastIo:
++		rkt_writel(dev, MUnit.IDR,INBOUNDDOORBELL_6);
++		break;
++	case AdapPrintfDone:
++		rkt_writel(dev, MUnit.IDR,INBOUNDDOORBELL_5);
++		break;
++	default:
++		BUG();
++		break;
++	}
++}
++
++/**
++ *	aac_rkt_start_adapter		-	activate adapter
++ *	@dev:	Adapter
++ *
++ *	Start up processing on an i960 based AAC adapter
++ */
++
++static void aac_rkt_start_adapter(struct aac_dev *dev)
++{
++	u32 status;
++	struct aac_init *init;
++
++	init = dev->init;
++	init->HostElapsedSeconds = cpu_to_le32(jiffies/HZ);
++	/*
++	 *	Tell the adapter we are back and up and running so it will scan
++	 *	its command queues and enable our interrupts
++	 */
++	dev->irq_mask = (DoorBellPrintfReady | OUTBOUNDDOORBELL_1 | OUTBOUNDDOORBELL_2 | OUTBOUNDDOORBELL_3 | OUTBOUNDDOORBELL_4);
++	/*
++	 *	First clear out all interrupts.  Then enable the one's that we
++	 *	can handle.
++	 */
++	rkt_writeb(dev, MUnit.OIMR, 0xff);
++	rkt_writel(dev, MUnit.ODR, 0xffffffff);
++/*	rkt_writeb(dev, MUnit.OIMR, ~(u8)OUTBOUND_DOORBELL_INTERRUPT_MASK); */
++	rkt_writeb(dev, MUnit.OIMR, 0xfb);
++
++	/* We can only use a 32 bit address here */
++	rkt_sync_cmd(dev, INIT_STRUCT_BASE_ADDRESS, (u32)(ulong)dev->init_pa, &status);
++}
++
++/**
++ *	aac_rkt_init	-	initialize an i960 based AAC card
++ *	@dev: device to configure
++ *	@devnum: adapter number
++ *
++ *	Allocate and set up resources for the i960 based AAC variants. The 
++ *	device_interface in the commregion will be allocated and linked 
++ *	to the comm region.
++ */
++
++int aac_rkt_init(struct aac_dev *dev, unsigned long num)
++{
++	unsigned long start;
++	unsigned long status;
++	int instance;
++	const char * name;
++
++	dev->devnum = num;
++	instance = dev->id;
++	name     = dev->name;
++
++	/*
++	 *	Map in the registers from the adapter.
++	 */
++	if((dev->regs.rkt = (struct rkt_registers *)ioremap((unsigned long)dev->scsi_host_ptr->base, 8192))==NULL)
++	{	
++		printk(KERN_WARNING "aacraid: unable to map i960.\n" );
++		return -1;
++	}
++	/*
++	 *	Check to see if the board failed any self tests.
++	 */
++	if (rkt_readl(dev, IndexRegs.Mailbox[7]) & SELF_TEST_FAILED) {
++		printk(KERN_ERR "%s%d: adapter self-test failed.\n", dev->name, instance);
++		return -1;
++	}
++	/*
++	 *	Check to see if the board panic'd while booting.
++	 */
++	if (rkt_readl(dev, IndexRegs.Mailbox[7]) & KERNEL_PANIC) {
++		printk(KERN_ERR "%s%d: adapter kernel panic'd.\n", dev->name, instance);
++		return -1;
++	}
++	start = jiffies;
++	/*
++	 *	Wait for the adapter to be up and running. Wait up to 3 minutes
++	 */
++	while (!(rkt_readl(dev, IndexRegs.Mailbox[7]) & KERNEL_UP_AND_RUNNING)) 
++	{
++		if(time_after(jiffies, start+180*HZ))
++		{
++			status = rkt_readl(dev, IndexRegs.Mailbox[7]) >> 16;
++			printk(KERN_ERR "%s%d: adapter kernel failed to start, init status = %ld.\n", dev->name, instance, status);
++			return -1;
++		}
++		set_current_state(TASK_UNINTERRUPTIBLE);
++		schedule_timeout(1);
++	}
++	if (request_irq(dev->scsi_host_ptr->irq, aac_rkt_intr, SA_SHIRQ|SA_INTERRUPT, "aacraid", (void *)dev)<0) 
++	{
++		printk(KERN_ERR "%s%d: Interrupt unavailable.\n", name, instance);
++		return -1;
++	}
++	/*
++	 *	Fill in the function dispatch table.
++	 */
++	dev->a_ops.adapter_interrupt = aac_rkt_interrupt_adapter;
++	dev->a_ops.adapter_enable_int = aac_rkt_enable_interrupt;
++	dev->a_ops.adapter_disable_int = aac_rkt_disable_interrupt;
++	dev->a_ops.adapter_notify = aac_rkt_notify_adapter;
++	dev->a_ops.adapter_sync_cmd = rkt_sync_cmd;
++
++	if (aac_init_adapter(dev) == NULL)
++		return -1;
++	/*
++	 *	Start any kernel threads needed
++	 */
++	dev->thread_pid = kernel_thread((int (*)(void *))aac_command_thread, dev, 0);
++	if(dev->thread_pid < 0)
++	{
++		printk(KERN_ERR "aacraid: Unable to create rkt thread.\n");
++		return -1;
++	}	
++	/*
++	 *	Tell the adapter that all is configured, and it can start
++	 *	accepting requests
++	 */
++	aac_rkt_start_adapter(dev);
 +	return 0;
 +}
-  
- 
- int aac_do_ioctl(struct aac_dev * dev, int cmd, void *arg)
-===== drivers/scsi/aacraid/comminit.c 1.6 vs edited =====
---- 1.6/drivers/scsi/aacraid/comminit.c	Fri May  2 12:30:22 2003
-+++ edited/drivers/scsi/aacraid/comminit.c	Tue Sep 30 14:57:28 2003
-@@ -86,13 +86,22 @@
- 	 *	Adapter Fibs are the first thing allocated so that they
- 	 *	start page aligned
+===== drivers/scsi/aacraid/rx.c 1.4 vs edited =====
+--- 1.4/drivers/scsi/aacraid/rx.c	Fri May  2 12:31:27 2003
++++ edited/drivers/scsi/aacraid/rx.c	Mon Aug 18 10:45:02 2003
+@@ -403,6 +403,11 @@
+ 	 *	Start any kernel threads needed
  	 */
--	dev->fib_base_va = (ulong)base;
-+	dev->aif_base_va = (struct hw_fib *)base;
- 	
--	init->AdapterFibsVirtualAddress = cpu_to_le32((u32)(ulong)phys);
-+	/* We submit the physical address for AIF tags to limit to 32 bits */
-+	init->AdapterFibsVirtualAddress = cpu_to_le32(0);
- 	init->AdapterFibsPhysicalAddress = cpu_to_le32((u32)phys);
- 	init->AdapterFibsSize = cpu_to_le32(fibsize);
- 	init->AdapterFibAlign = cpu_to_le32(sizeof(struct hw_fib));
--	init->HostPhysMemPages = cpu_to_le32(num_physpages);		// number of 4k pages of host physical memory
-+	/* 
-+	 * number of 4k pages of host physical memory.  The aacraid fw needs
-+	 * this number to be less than 4gb worth of pages.
-+	 */
-+	if (num_physpages <= AAC_MAX_HOSTPHYSMEMPAGES) {
-+		init->HostPhysMemPages = cpu_to_le32(num_physpages);
-+	} else {
-+		init->HostPhysMemPages = cpu_to_le32(AAC_MAX_HOSTPHYSMEMPAGES);
-+	}
- 
- 	/*
- 	 * Increment the base address by the amount already used
-@@ -131,7 +140,7 @@
- 	q->dev = dev;
- 	INIT_LIST_HEAD(&q->pendingq);
- 	init_waitqueue_head(&q->cmdready);
--	AAC_INIT_LIST_HEAD(&q->cmdq);
-+	INIT_LIST_HEAD(&q->cmdq);
- 	init_waitqueue_head(&q->qfull);
- 	spin_lock_init(&q->lockdata);
- 	q->lock = &q->lockdata;
-@@ -156,6 +165,8 @@
- 	int status;
- 
- 	fibctx = fib_alloc(dev);
-+	if (!fibctx) 
-+		return -ENOMEM;
- 	fib_init(fibctx);
- 
- 	cmd = (struct aac_close *) fib_data(fibctx);
-===== drivers/scsi/aacraid/commsup.c 1.6 vs edited =====
---- 1.6/drivers/scsi/aacraid/commsup.c	Fri May  2 12:31:18 2003
-+++ edited/drivers/scsi/aacraid/commsup.c	Fri Oct  3 14:26:00 2003
-@@ -136,6 +136,7 @@
- {
- 	struct fib * fibptr;
- 	unsigned long flags;
-+	
- 	spin_lock_irqsave(&dev->fib_lock, flags);
- 	fibptr = dev->free_fib;	
- 	while(!fibptr){
-@@ -143,7 +144,7 @@
- 		set_current_state(TASK_UNINTERRUPTIBLE);
- 		schedule_timeout(1);
- 		spin_lock_irqsave(&dev->fib_lock, flags);
--		fibptr = dev->free_fib;	
-+		fibptr = dev->free_fib;
- 	}
- 	dev->free_fib = fibptr->next;
- 	spin_unlock_irqrestore(&dev->fib_lock, flags);
-@@ -205,7 +206,7 @@
- 	hw_fib->header.StructType = FIB_MAGIC;
- 	hw_fib->header.Size = cpu_to_le16(sizeof(struct hw_fib));
-         hw_fib->header.XferState = cpu_to_le32(HostOwned | FibInitialized | FibEmpty | FastResponseCapable);
--	hw_fib->header.SenderFibAddress = cpu_to_le32(fibptr->hw_fib_pa);
-+	hw_fib->header.SenderFibAddress = 0; /* Filled in later if needed */
- 	hw_fib->header.ReceiverFibAddress = cpu_to_le32(fibptr->hw_fib_pa);
- 	hw_fib->header.SenderSize = cpu_to_le16(sizeof(struct hw_fib));
- }
-@@ -286,7 +287,7 @@
- 	}
- 
-         if ((*index + 1) == le32_to_cpu(*(q->headers.consumer))) { /* Queue is full */
--		printk(KERN_WARNING "Queue %d full, %d outstanding.\n",
-+		printk(KERN_WARNING "Queue %d full, %ld outstanding.\n",
- 				qid, q->numpending);
- 		return 0;
- 	} else {
-@@ -295,7 +296,7 @@
- 	}
- }   
- 
--/*Command thread: *
-+/*
-  *	aac_queue_get		-	get the next free QE
-  *	@dev: Adapter
-  *	@index: Returned index
-@@ -315,10 +316,7 @@
- {
- 	struct aac_entry * entry = NULL;
- 	int map = 0;
--	struct aac_queue * q = &dev->queues->queue[qid];
- 		
--	spin_lock_irqsave(q->lock, q->SavedIrql);
--	    
- 	if (qid == AdapHighCmdQueue || qid == AdapNormCmdQueue) 
- 	{
- 		/*  if no entries wait for some if caller wants to */
-@@ -357,41 +355,6 @@
- }
- 
- 
--/**
-- *	aac_insert_entry	-	insert a queue entry
-- *	@dev: Adapter
-- *	@index: Index of entry to insert
-- *	@qid: Queue number
-- *	@nonotify: Suppress adapter notification
-- *
-- *	Gets the next free QE off the requested priorty adapter command
-- *	queue and associates the Fib with the QE. The QE represented by
-- *	index is ready to insert on the queue when this routine returns
-- *	success.
-- */
-- 
--static int aac_insert_entry(struct aac_dev * dev, u32 index, u32 qid, unsigned long nonotify) 
--{
--	struct aac_queue * q = &dev->queues->queue[qid];
--
--	if(q == NULL)
--		BUG();
--	*(q->headers.producer) = cpu_to_le32(index + 1);
--	spin_unlock_irqrestore(q->lock, q->SavedIrql);
--
--	if (qid == AdapHighCmdQueue ||
--	    qid == AdapNormCmdQueue ||
--	    qid == AdapHighRespQueue ||
--	    qid == AdapNormRespQueue)
--	{
--		if (!nonotify)
--			aac_adapter_notify(dev, qid);
--	}
--	else
--		printk("Suprise insert!\n");
--	return 0;
--}
--
- /*
-  *	Define the highest level of host to adapter communication routines. 
-  *	These routines will support host to adapter FS commuication. These 
-@@ -416,8 +379,12 @@
-  *	an event to wait on must be supplied. This event will be set when a
-  *	response FIB is received from the adapter.
-  */
-- 
--int fib_send(u16 command, struct fib * fibptr, unsigned long size,  int priority, int wait, int reply, fib_callback callback, void * callback_data)
-+
-+fib_send_t fib_send = aac_fib_send;
-+
-+int aac_fib_send(u16 command, struct fib * fibptr, unsigned long size,  
-+		int priority, int wait, int reply, fib_callback callback, 
-+		void * callback_data)
- {
- 	u32 index;
- 	u32 qid;
-@@ -426,13 +393,14 @@
- 	struct hw_fib * hw_fib = fibptr->hw_fib;
- 	struct aac_queue * q;
- 	unsigned long flags = 0;
-+	unsigned long qflags;
- 	if (!(le32_to_cpu(hw_fib->header.XferState) & HostOwned))
- 		return -EBUSY;
- 	/*
- 	 *	There are 5 cases with the wait and reponse requested flags. 
- 	 *	The only invalid cases are if the caller requests to wait and
- 	 *	does not request a response and if the caller does not want a
--	 *	response and the Fibis not allocated from pool. If a response
-+	 *	response and the Fib is not allocated from pool. If a response
- 	 *	is not requesed the Fib will just be deallocaed by the DPC
- 	 *	routine when the response comes back from the adapter. No
- 	 *	further processing will be done besides deleting the Fib. We 
-@@ -455,8 +423,7 @@
- 	 *	Map the fib into 32bits by using the fib number
- 	 */
- 
--//	hw_fib->header.SenderFibAddress = ((u32)(fibptr-dev->fibs)) << 1;
--	hw_fib->header.SenderFibAddress = cpu_to_le32((u32)(ulong)fibptr->hw_fib_pa);
-+	hw_fib->header.SenderFibAddress = cpu_to_le32(((u32)(fibptr - dev->fibs)) << 1);
- 	hw_fib->header.SenderData = (u32)(fibptr - dev->fibs);
- 	/*
- 	 *	Set FIB state to indicate where it came from and if we want a
-@@ -490,14 +457,17 @@
- 
- 	if(wait)
- 		spin_lock_irqsave(&fibptr->event_lock, flags);
--	if(aac_queue_get( dev, &index, qid, hw_fib, 1, fibptr, &nointr)<0)
--		return -EWOULDBLOCK;
-+
-+
-+	spin_lock_irqsave(q->lock, qflags);
-+	aac_queue_get(dev, &index, qid, hw_fib, 1, fibptr, &nointr);
-+
- 	dprintk((KERN_DEBUG "fib_send: inserting a queue entry at index %d.\n",index));
- 	dprintk((KERN_DEBUG "Fib contents:.\n"));
- 	dprintk((KERN_DEBUG "  Command =               %d.\n", hw_fib->header.Command));
- 	dprintk((KERN_DEBUG "  XferState  =            %x.\n", hw_fib->header.XferState));
- 	dprintk((KERN_DEBUG "  hw_fib va being sent=%p\n",fibptr->hw_fib));
--	dprintk((KERN_DEBUG "  hw_fib pa being sent=%xl\n",(ulong)fibptr->hw_fib_pa));
-+	dprintk((KERN_DEBUG "  hw_fib pa being sent=%lx\n",(ulong)fibptr->hw_fib_pa));
- 	dprintk((KERN_DEBUG "  fib being sent=%p\n",fibptr));
- 	/*
- 	 *	Fill in the Callback and CallbackContext if we are not
-@@ -514,8 +484,10 @@
- 	fibptr->done = 0;
- 	fibptr->flags = 0;
- 
--	if(aac_insert_entry(dev, index, qid, (nointr & aac_config.irq_mod)) < 0)
--		return -EWOULDBLOCK;
-+	*(q->headers.producer) = cpu_to_le32(index+1);
-+	spin_unlock_irqrestore(q->lock, qflags);
-+	if (!(nointr & aac_config.irq_mod))
-+		aac_adapter_notify(dev, qid);
- 	/*
- 	 *	If the caller wanted us to wait for response wait now. 
- 	 */
-@@ -526,7 +498,7 @@
- 		if(fibptr->done == 0)
- 			BUG();
- 			
--		if((fibptr->flags & FIB_CONTEXT_FLAG_TIMED_OUT)){
-+		if ((fibptr->flags & FIB_CONTEXT_FLAG_TIMED_OUT)) {
- 			return -ETIMEDOUT;
- 		} else {
- 			return 0;
-@@ -640,15 +612,24 @@
- {
- 	struct hw_fib * hw_fib = fibptr->hw_fib;
- 	struct aac_dev * dev = fibptr->dev;
-+	struct aac_queue * q;
- 	unsigned long nointr = 0;
--	if (le32_to_cpu(hw_fib->header.XferState) == 0)
--        	return 0;
-+	unsigned long qflags;
-+	u32 qid;
-+	int ret = 0;
-+
-+	if (le32_to_cpu(hw_fib->header.XferState) == 0) {
-+		ret = 0;
-+		goto out;
-+	}
- 	/*
- 	 *	If we plan to do anything check the structure type first.
- 	 */ 
--	if ( hw_fib->header.StructType != FIB_MAGIC ) {
--        	return -EINVAL;
-+	if (hw_fib->header.StructType != FIB_MAGIC) {
-+        	ret = -EINVAL;
-+		goto out;
- 	}
-+
- 	/*
- 	 *	This block handles the case where the adapter had sent us a
- 	 *	command and we have finished processing the command. We
-@@ -657,45 +638,41 @@
- 	 *	send the completed cdb to the adapter.
- 	 */
- 	if (hw_fib->header.XferState & cpu_to_le32(SentFromAdapter)) {
-+        	u32 index;
- 	        hw_fib->header.XferState |= cpu_to_le32(HostProcessed);
- 	        if (hw_fib->header.XferState & cpu_to_le32(HighPriority)) {
--        		u32 index;
--       			if (size) 
--			{
--				size += sizeof(struct aac_fibhdr);
--				if (size > le16_to_cpu(hw_fib->header.SenderSize))
--					return -EMSGSIZE;
--				hw_fib->header.Size = cpu_to_le16(size);
--			}
--			if(aac_queue_get(dev, &index, AdapHighRespQueue, hw_fib, 1, NULL, &nointr) < 0) {
--				return -EWOULDBLOCK;
--			}
--			if (aac_insert_entry(dev, index, AdapHighRespQueue,  (nointr & (int)aac_config.irq_mod)) != 0) {
--			}
-+			qid = AdapHighRespQueue;
- 		}
- 		else if (hw_fib->header.XferState & NormalPriority) 
- 		{
--			u32 index;
-+			qid = AdapNormRespQueue;
-+		} else {
-+			goto out;
-+		}
- 
--			if (size) {
--				size += sizeof(struct aac_fibhdr);
--				if (size > le16_to_cpu(hw_fib->header.SenderSize)) 
--					return -EMSGSIZE;
--				hw_fib->header.Size = cpu_to_le16(size);
--			}
--			if (aac_queue_get(dev, &index, AdapNormRespQueue, hw_fib, 1, NULL, &nointr) < 0) 
--				return -EWOULDBLOCK;
--			if (aac_insert_entry(dev, index, AdapNormRespQueue, (nointr & (int)aac_config.irq_mod)) != 0) 
--			{
-+		if (size) {
-+			size += sizeof(struct aac_fibhdr);
-+			if (size > le16_to_cpu(hw_fib->header.SenderSize)) {
-+				ret = -EMSGSIZE;
-+				goto out;
- 			}
-+			hw_fib->header.Size = cpu_to_le16(size);
- 		}
-+		q = &dev->queues->queue[qid];
-+		spin_lock_irqsave(q->lock, qflags);
-+		aac_queue_get(dev, &index, qid, hw_fib, 1, NULL, &nointr);
-+		*(q->headers.producer) = cpu_to_le32(index+1);
-+		spin_unlock_irqrestore(q->lock, qflags);
-+		if (!(nointr & (int)aac_config.irq_mod))
-+			aac_adapter_notify(dev, qid);
- 	}
- 	else 
- 	{
-         	printk(KERN_WARNING "fib_adapter_complete: Unknown xferstate detected.\n");
-         	BUG();
- 	}   
--	return 0;
-+out:
-+	return ret;
- }
- 
- /**
-@@ -777,7 +754,6 @@
- 	memset(cp, 0,  256);
- }
- 
--
- /**
-  *	aac_handle_aif		-	Handle a message from the firmware
-  *	@dev: Which adapter this fib is from
-@@ -790,13 +766,252 @@
- static void aac_handle_aif(struct aac_dev * dev, struct fib * fibptr)
- {
- 	struct hw_fib * hw_fib = fibptr->hw_fib;
-+	struct aac_aifcmd * aifcmd = (struct aac_aifcmd *)hw_fib->data;
-+	int busy;
-+	u32 container;
-+	struct scsi_device *device;
-+
-+	enum {
-+		NOTHING,
-+		DELETE,
-+		ADD,
-+		CHANGE
-+	} DeviceConfigNeeded;
-+
-+	/* Sniff for container changes */
-+	dprintk ((KERN_INFO "aac_handle_aif: Aif command=%x type=%x\n",
-+	  le32_to_cpu(aifcmd->command), le32_to_cpu(*(u32 *)aifcmd->data)));
-+
-+	DeviceConfigNeeded = NOTHING;
-+
-+	/*
-+	 *	We have set this up to try and minimize the number of
-+	 * re-configures that take place. As a result of this when
-+	 * certain AIF's come in we will set a flag waiting for another
-+	 * type of AIF before setting the re-config flag.
-+	 */
-+	switch (le32_to_cpu(aifcmd->command)) {
-+	case AifCmdDriverNotify:
-+		switch (le32_to_cpu(((u32 *)aifcmd->data)[0])) {
-+		/*
-+		 *	Morph or Expand complete
-+		 */
-+		case AifDenMorphComplete:
-+		case AifDenVolumeExtendComplete:
-+			container = le32_to_cpu(((u32 *)aifcmd->data)[1]);
-+			if (container >= MAXIMUM_NUM_CONTAINERS) 
-+				break;
-+			dprintk ((KERN_INFO "container=%d(%d,%d,%d,%d)\n",
-+			  container,
-+			  (dev && dev->scsi_host_ptr)
-+			    ? dev->scsi_host_ptr->host_no
-+			    : -1,
-+			  CONTAINER_CHANNEL,
-+			  container,
-+			  CONTAINER_LUN));
-+
-+			/*
-+			 *	Find the Scsi_Device associated with the SCSI
-+			 * address. Make sure we have the right array, and if
-+			 * so set the flag to initiate a new re-config once we
-+			 * see an AifEnConfigChange AIF come through.
-+			 */
-+
-+			if ((dev != (struct aac_dev *)NULL)
-+			 && (dev->scsi_host_ptr != (struct Scsi_Host *)NULL)) {
-+
-+				list_for_each_entry(device, 
-+						&dev->scsi_host_ptr->my_devices, siblings) {
-+					if ((device->channel == CONTAINER_CHANNEL)
-+					 && (device->id == container)
-+					 && (device->lun == CONTAINER_LUN)) {
-+						dev->DeviceContainerID = container;
-+						dev->DeviceConfigNeeded = CHANGE;
-+						dev->DeviceConfigWaitingOn = AifEnConfigChange;
-+						break;
-+					} /* if */
-+				} /* for */
-+			} /* if */
-+		} /* switch */
-+
-+		/*
-+		 *	If we are waiting on something and this happens to be
-+		 * that thing then set the re-configure flag.
-+		 */
-+		if (dev->DeviceConfigWaitingOn == le32_to_cpu(*(u32 *)aifcmd->data)) {
-+			DeviceConfigNeeded = dev->DeviceConfigNeeded;
-+		}
-+		break;
-+
-+	case AifCmdEventNotify:
-+		switch (le32_to_cpu(((u32 *)aifcmd->data)[0])) {
-+		/*
-+		 *	Add an Array.
-+		 */
-+		case AifEnAddContainer:
-+			container = le32_to_cpu(((u32 *)aifcmd->data)[1]);
-+			if (container >= MAXIMUM_NUM_CONTAINERS) 
-+				break;
-+			dprintk ((KERN_INFO "Add container=%d(%d,%d,%d,%d)\n",
-+			  container,
-+			  (dev && dev->scsi_host_ptr)
-+			    ? dev->scsi_host_ptr->host_no
-+			    : -1,
-+			  CONTAINER_CHANNEL,
-+			  container,
-+			  CONTAINER_LUN));
-+			dev->DeviceContainerID = container;
-+			dev->DeviceConfigNeeded = ADD;
-+			dev->DeviceConfigWaitingOn = AifEnConfigChange;
-+			break;
-+
-+		/*
-+		 *	Delete an Array.
-+		 */
-+		case AifEnDeleteContainer:
-+			container = le32_to_cpu(((u32 *)aifcmd->data)[1]);
-+			if (container >= MAXIMUM_NUM_CONTAINERS) 
-+				break;
-+			dprintk ((KERN_INFO "Delete container=%d(%d,%d,%d,%d)\n",
-+			  container,
-+			  (dev && dev->scsi_host_ptr)
-+			    ? dev->scsi_host_ptr->host_no
-+			    : -1,
-+			  CONTAINER_CHANNEL,
-+			  container,
-+			  CONTAINER_LUN));
-+			dev->DeviceContainerID = container;
-+			dev->DeviceConfigNeeded = DELETE;
-+			dev->DeviceConfigWaitingOn = AifEnConfigChange;
-+			break;
-+
-+		/*
-+		 *	Container change detected. If we currently are not
-+		 * waiting on something else, setup to wait on a Config Change.
-+		 */
-+		case AifEnContainerChange:
-+			container = le32_to_cpu(((u32 *)aifcmd->data)[1]);
-+			if (container >= MAXIMUM_NUM_CONTAINERS) 
-+				break;
-+			dprintk ((KERN_INFO "Change container=%d(%d,%d,%d,%d)\n",
-+			  container,
-+			  (dev && dev->scsi_host_ptr)
-+			    ? dev->scsi_host_ptr->host_no
-+			    : -1,
-+			  CONTAINER_CHANNEL,
-+			  container,
-+			  CONTAINER_LUN));
-+			dev->DeviceContainerID = container;
-+			if (dev->DeviceConfigWaitingOn) {
-+				break;
-+			}
-+			dev->DeviceConfigNeeded = CHANGE;
-+			dev->DeviceConfigWaitingOn = AifEnConfigChange;
-+			break;
-+		} /* switch */
-+
-+		/*
-+		 *	If we are waiting on something and this happens to be
-+		 * that thing then set the re-configure flag.
-+		 */
-+		if (dev->DeviceConfigWaitingOn == le32_to_cpu(*(u32 *)aifcmd->data)) {
-+			DeviceConfigNeeded = dev->DeviceConfigNeeded;
-+		}
-+		break;
-+
-+	case AifCmdJobProgress:
-+		/*
-+		 *	These are job progress AIF's. When a Clear is being
-+		 * done on a container it is initially created then hidden from
-+		 * the OS. When the clear completes we don't get a config
-+		 * change so we monitor the job status complete on a clear then
-+		 * wait for a containe change.
-+		 */
-+
-+		if ((((u32 *)aifcmd->data)[1] == cpu_to_le32(AifJobCtrZero))
-+		 && ((((u32 *)aifcmd->data)[6] == ((u32 *)aifcmd->data)[5])
-+		  || (((u32 *)aifcmd->data)[4] == cpu_to_le32(AifJobStsSuccess)))) {
-+			dev->DeviceContainerID = -1;
-+			dev->DeviceConfigWaitingOn = AifEnContainerChange;
-+			dev->DeviceConfigNeeded = ADD;
-+		}
-+		break;
-+	} /* switch */
-+
-+	if (DeviceConfigNeeded == NOTHING) {
-+		return;
-+	}
-+
-+
- 	/*
--	 * Set the status of this FIB to be Invalid parameter.
--	 *
--	 *	*(u32 *)fib->data = ST_INVAL;
-+	 *	If we decided that a re-configuration needs to be done,
-+	 * schedule it here on the way out the door, please close the door
-+	 * behind you.
- 	 */
--	*(u32 *)hw_fib->data = cpu_to_le32(ST_OK);
--	fib_adapter_complete(fibptr, sizeof(u32));
-+	dev->DeviceConfigWaitingOn = 0;
-+	dev->DeviceConfigNeeded = NOTHING;
-+	container = dev->DeviceContainerID;
-+	dev->DeviceContainerID = -1;
-+
-+	busy = 0;
-+
-+	dprintk ((KERN_INFO "container=%d(%d,%d,%d,%d)\n", container,
-+		(dev && dev->scsi_host_ptr) 
-+		? dev->scsi_host_ptr->host_no : -1,
-+		CONTAINER_CHANNEL,
-+	  	container,
-+		CONTAINER_LUN));
-+
-+	/*
-+	 *	Find the Scsi_Device associated with the SCSI address,
-+	 * and mark it as changed, invalidating the cache. This deals
-+	 * with changes to existing device IDs.
-+	 */
-+
-+	if (!dev || !dev->scsi_host_ptr) {
-+		return;
-+	}
-+
-+	list_for_each_entry(device, &dev->scsi_host_ptr->my_devices, siblings)
+ 	dev->thread_pid = kernel_thread((int (*)(void *))aac_command_thread, dev, 0);
++	if(dev->thread_pid < 0)
 +	{
-+		struct fsa_scsi_hba *fsa_dev_ptr = &(dev->fsa_dev);
-+
-+		dprintk((KERN_INFO "aifd: device (%d,%d,%d,%d)?\n",
-+		  dev->scsi_host_ptr->host_no,
-+		  device->channel,
-+		  device->id,
-+		  device->lun));
-+		if ((device->channel == CONTAINER_CHANNEL)
-+		 && (device->id == container)
-+		 && (device->lun == CONTAINER_LUN)) {
-+			busy |= (atomic_read(&device->access_count) != 0);
-+			dprintk ((KERN_INFO"busy=%d DeviceConfigNeeded %d\n", 
-+						busy, DeviceConfigNeeded));
-+			if (busy == 0) {
-+				device->removable = TRUE;
-+				switch (DeviceConfigNeeded) {
-+				case CHANGE:
-+					dprintk((KERN_INFO"Change\n"));
-+					/*
-+					 * force reload of disk info via probe_container
-+					 */
-+					if (fsa_dev_ptr->valid[container] == 1)
-+						fsa_dev_ptr->valid[container] = 2;
-+					scsi_rescan_device(&device->sdev_gendev);
-+					break;
-+				case DELETE:
-+					dprintk((KERN_INFO"Delete\n"));
-+					break;
-+				case ADD:
-+					dprintk((KERN_INFO"Add\n"));
-+					break;
-+				default:
-+					dprintk((KERN_INFO"Other\n"));
-+					break;
-+				}
-+			}
-+		}
-+	}
- }
- 
- /**
-@@ -808,12 +1023,11 @@
-  *	until the queue is empty. When the queue is empty it will wait for
-  *	more FIBs.
-  */
-- 
- int aac_command_thread(struct aac_dev * dev)
- {
--	struct hw_fib *hw_fib, *newfib;
--	struct fib fibptr; /* for error logging */
--	struct aac_queue_block *queues = dev->queues;
-+	struct hw_fib *hw_fib, *hw_newfib;
-+	struct fib *fib, *newfib;
-+	struct aac_queue *q = &dev->queues->queue[HostNormCmdQueue];
- 	struct aac_fib_context *fibctx;
- 	unsigned long flags;
- 	DECLARE_WAITQUEUE(wait, current);
-@@ -833,42 +1047,46 @@
- 	 *	Let the DPC know it has a place to send the AIF's to.
++		printk(KERN_ERR "aacraid: Unable to create rx thread.\n");
++		return -1;
++	}	
+ 	/*
+ 	 *	Tell the adapter that all is configured, and it can start
+ 	 *	accepting requests
+===== drivers/scsi/aacraid/sa.c 1.5 vs edited =====
+--- 1.5/drivers/scsi/aacraid/sa.c	Fri May  2 12:31:09 2003
++++ edited/drivers/scsi/aacraid/sa.c	Mon Aug 18 10:46:31 2003
+@@ -387,6 +387,10 @@
+ 	 *	Start any kernel threads needed
  	 */
- 	dev->aif_thread = 1;
--	memset(&fibptr, 0, sizeof(struct fib));
--	add_wait_queue(&queues->queue[HostNormCmdQueue].cmdready, &wait);
-+	add_wait_queue(&q->cmdready, &wait);
- 	set_current_state(TASK_INTERRUPTIBLE);
-+	dprintk ((KERN_INFO "aac_command_thread start\n"));
- 	while(1) 
- 	{
--		spin_lock_irqsave(queues->queue[HostNormCmdQueue].lock, flags);
--		while(!aac_list_empty(&(queues->queue[HostNormCmdQueue].cmdq))) {
--			struct aac_list_head *entry;
-+		spin_lock_irqsave(q->lock, flags);
-+		while(!list_empty(&(q->cmdq))) {
-+			struct list_head *entry;
- 			struct aac_aifcmd * aifcmd;
- 
- 			set_current_state(TASK_RUNNING);
--		
--			entry = (struct aac_list_head*)(ulong)(queues->queue[HostNormCmdQueue].cmdq.next);
--			dprintk(("aacraid: Command thread: removing fib from cmdq (%p)\n",entry));
--			aac_list_del(entry);
--			
--			spin_unlock_irqrestore(queues->queue[HostNormCmdQueue].lock, flags);
--			hw_fib = aac_list_entry(entry, struct hw_fib, header.FibLinks);
-+
-+			entry = q->cmdq.next;
-+			list_del(entry);
-+	
-+			spin_unlock_irqrestore(q->lock, flags);
-+			fib = list_entry(entry, struct fib, fiblink);
- 			/*
- 			 *	We will process the FIB here or pass it to a 
- 			 *	worker thread that is TBD. We Really can't 
- 			 *	do anything at this point since we don't have
- 			 *	anything defined for this thread to do.
- 			 */
--			memset(&fibptr, 0, sizeof(struct fib));
--			fibptr.type = FSAFS_NTC_FIB_CONTEXT;
--			fibptr.size = sizeof( struct fib );
--			fibptr.hw_fib = hw_fib;
--			fibptr.data = hw_fib->data;
--			fibptr.dev = dev;
-+			hw_fib = fib->hw_fib;
-+			
-+			memset(fib, 0, sizeof(struct fib));
-+			fib->type = FSAFS_NTC_FIB_CONTEXT;
-+			fib->size = sizeof( struct fib );
-+			fib->hw_fib = hw_fib;
-+			fib->data = hw_fib->data;
-+			fib->dev = dev;
- 			/*
- 			 *	We only handle AifRequest fibs from the adapter.
- 			 */
- 			aifcmd = (struct aac_aifcmd *) hw_fib->data;
--			if (aifcmd->command == le16_to_cpu(AifCmdDriverNotify)) {
--				aac_handle_aif(dev, &fibptr);
-+			if (aifcmd->command == cpu_to_le32(AifCmdDriverNotify)) {
-+				/* Handle Driver Notify Events */
-+				aac_handle_aif(dev, fib);
-+				*(u32 *)hw_fib->data = cpu_to_le32(ST_OK);
-+				fib_adapter_complete(fib, sizeof(u32));
- 			} else {
- 				struct list_head *entry;
- 				/* The u32 here is important and intended. We are using
-@@ -877,6 +1095,12 @@
- 				u32 time_now, time_last;
- 				unsigned long flagv;
- 				
-+				/* Sniff events */
-+				if ((aifcmd->command == cpu_to_le32(AifCmdEventNotify))
-+				 || (aifcmd->command == cpu_to_le32(AifCmdJobProgress))) {
-+					aac_handle_aif(dev, fib);
-+				}
-+
- 				time_now = jiffies/HZ;
- 
- 				spin_lock_irqsave(&dev->fib_lock, flagv);
-@@ -898,6 +1122,11 @@
- 					 */
- 					if (fibctx->count > 20)
- 					{
-+						/*
-+						 * It's *not* jiffies folks,
-+						 * but jiffies / HZ, so do not
-+						 * panic ...
-+						 */
- 						time_last = fibctx->jiffies;
- 						/*
- 						 * Has it been > 2 minutes 
-@@ -914,17 +1143,21 @@
- 					 * Warning: no sleep allowed while
- 					 * holding spinlock
- 					 */
--					newfib = kmalloc(sizeof(struct hw_fib), GFP_ATOMIC);
--					if (newfib) {
-+					hw_newfib = kmalloc(sizeof(struct hw_fib), GFP_ATOMIC);
-+					newfib = kmalloc(sizeof(struct fib), GFP_ATOMIC);
-+					if (newfib && hw_newfib) {
- 						/*
- 						 * Make the copy of the FIB
-+						 * FIXME: check if we need to fix other fields up
- 						 */
--						memcpy(newfib, hw_fib, sizeof(struct hw_fib));
-+						memcpy(hw_newfib, hw_fib, sizeof(struct hw_fib));
-+						memcpy(newfib, fib, sizeof(struct fib));
-+						newfib->hw_fib = hw_newfib;
- 						/*
- 						 * Put the FIB onto the
- 						 * fibctx's fibs
- 						 */
--						aac_list_add_tail(&newfib->header.FibLinks, &fibctx->hw_fib_list);
-+						list_add_tail(&newfib->fiblink, &fibctx->fib_list);
- 						fibctx->count++;
- 						/* 
- 						 * Set the event to wake up the
-@@ -933,6 +1166,10 @@
- 						up(&fibctx->wait_sem);
- 					} else {
- 						printk(KERN_WARNING "aifd: didn't allocate NewFib.\n");
-+						if(newfib)
-+							kfree(newfib);
-+						if(hw_newfib)
-+							kfree(hw_newfib);
- 					}
- 					entry = entry->next;
- 				}
-@@ -940,22 +1177,24 @@
- 				 *	Set the status of this FIB
- 				 */
- 				*(u32 *)hw_fib->data = cpu_to_le32(ST_OK);
--				fib_adapter_complete(&fibptr, sizeof(u32));
-+				fib_adapter_complete(fib, sizeof(u32));
- 				spin_unlock_irqrestore(&dev->fib_lock, flagv);
- 			}
--			spin_lock_irqsave(queues->queue[HostNormCmdQueue].lock, flags);
-+			spin_lock_irqsave(q->lock, flags);
-+			kfree(fib);
- 		}
- 		/*
- 		 *	There are no more AIF's
- 		 */
--		spin_unlock_irqrestore(queues->queue[HostNormCmdQueue].lock, flags);
-+		spin_unlock_irqrestore(q->lock, flags);
- 		schedule();
- 
- 		if(signal_pending(current))
- 			break;
- 		set_current_state(TASK_INTERRUPTIBLE);
- 	}
--	remove_wait_queue(&queues->queue[HostNormCmdQueue].cmdready, &wait);
-+	remove_wait_queue(&q->cmdready, &wait);
- 	dev->aif_thread = 0;
- 	complete_and_exit(&dev->aif_completion, 0);
- }
-+ 
+ 	dev->thread_pid = kernel_thread((int (*)(void *))aac_command_thread, dev, 0);
++	if (dev->thread_pid < 0) {
++	     printk(KERN_ERR "aacraid: Unable to create command thread.\n");
++	     return -1;
++	}
+ 	/*
+ 	 *	Tell the adapter that all is configure, and it can start 
+ 	 *	accepting requests
 
 -- 
 Mark Haverkamp <markh@osdl.org>
