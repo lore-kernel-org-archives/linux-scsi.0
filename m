@@ -1,47 +1,72 @@
 From: "Mukker, Atul" <Atulm@lsil.com>
-Subject: RE: Megaraid corruption?
-Date: Thu, 9 Dec 2004 09:18:55 -0500
-Message-ID: <0E3FA95632D6D047BA649F95DAB60E57057A1AF3@exa-atlanta>
+Subject: RE: How to add/drop SCSI drives from within the driver?
+Date: Thu, 9 Dec 2004 09:11:15 -0500
+Message-ID: <0E3FA95632D6D047BA649F95DAB60E57057A1AEA@exa-atlanta>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:19639 "EHLO mail0.lsil.com")
-	by vger.kernel.org with ESMTP id S261397AbULIOTD (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Dec 2004 09:19:03 -0500
+Received: from mail0.lsil.com ([147.145.40.20]:21943 "EHLO mail0.lsil.com")
+	by vger.kernel.org with ESMTP id S261412AbULIOTJ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Dec 2004 09:19:09 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "'res1uo0c@verizon.net'" <res1uo0c@verizon.net>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
+To: 'James Bottomley' <James.Bottomley@SteelEye.com>, "Bagalkote, Sreenivas" <sreenib@lsil.com>
+Cc: 'Matt Domsch' <Matt_Domsch@Dell.com>, "'brking@us.ibm.com'" <brking@us.ibm.com>, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, 'SCSI Mailing List' <linux-scsi@vger.kernel.org>, "'bunk@fs.tum.de'" <bunk@fs.tum.de>, 'Andrew Morton' <akpm@osdl.org>, "Ju, Seokmann" <sju@lsil.com>, "Doelfel, Hardy" <hdoelfel@lsil.com>, "Mukker, Atul" <Atulm@lsil.com>
 
-We would need more details before speculating for the cause. What kind of
-corruption is happening, mismatch data? How many bytes? Kernel messages when
-the corruption is seen?
+ 
+> > >The real way I'd like to handle this is via hotplug.  The hotplug 
+> > >event would transmit the HCTL in the environment.
+> > >Whether the drive actually gets incorporated into the system and 
+> > >where is user policy, so it's appropriate that it should be in 
+> > >userland.
+> > 
+> > James, it is the application that is adding the drive. So 
+> it is not a 
+> > hotplug event for the driver.
+> 
+> Then perhaps I don't understand what the issue is.  If the 
+> application is adding the drive, then surely it would know 
+> the numbers.  If not, then the driver must communicate this 
+> back, and that's what the hotplug would be about.
+> 
+> James
+> 
+> 
+Let me elaborate it.
 
-Thanks
--Atul Mukker 
+1. The management applications decide to created new logical drives or
+remove some of the existing ones.
 
-> -----Original Message-----
-> From: Troy Klein [mailto:res1uo0c@verizon.net] 
-> Sent: Wednesday, December 08, 2004 9:18 PM
-> To: linux-scsi@vger.kernel.org
-> Subject: Megaraid corruption?
-> 
-> I am attempting to find out why I am having data corruption 
-> problems on my megaraid2 driver and not on megaraid.  The 
-> system is a 32-bit Xeon with a LSI 150-6 SATA controller 
-> running Redhat EL 3.0AS.  When I am running megaraid I can 
-> write data, read data, and modify data and get NO corruption. 
->  With megaraid2 I get data corruption with tar, rsync, and scp.
-> 
-> Can anyone help?
-> 
-> Troy Perplexed
-> 
-> 
-> 
-> 
-> -
-> To unsubscribe from this list: send the line "unsubscribe 
-> linux-scsi" in the body of a message to 
-> majordomo@vger.kernel.org More majordomo info at  
-> http://vger.kernel.org/majordomo-info.html
-> 
+2. How applications would do this, is by sending commands to the megaraid
+firmware via driver. Driver does not intercept these commands for a simple
+reason that the driver code would become unnecessarily bulky to understanad
+all the possible ways applications can change the number of logical devices.
+
+3. Once the change in configuration has happened, someone must notify kernel
+about new or removed devices.
+
+4. Since megaraid driver does not know about these changes, it cannot notify
+kernel.
+
+5. So this becomes the responsibility of the application which caused the
+change in configuration. Application dilemma is, all it know is it created a
+few devices and removed some. But there is no way for it to relate the
+affected devices with the way how kernel was or would be seeing them, that
+is, the affected device's scsi address. Remember, the affected devices are
+only logical, there is no physical bus, target, lun associated with them.
+Driver creates this mapping on the fly.
+
+6. That's where application seeks help from driver and requests for the scsi
+address driver would be using for the affected devices.
+
+7. Once it has the scsi address for the devices in question, depending on
+the application and system administrator's preference, application would
+either use sysfs to add/remove affected devices or cause a hotplug event
+resulting in the configured behavior.
+
+8. So, all driver has to do to assist applications is to provide the logical
+drive number to scsi address mapping. Application would say, hey! I
+added/removed logical drive number 5, driver reverts, here is the scsi
+address for it "host:2, channel:5, target:5 lun:0" :-)
+
+-Atul Mukker
