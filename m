@@ -1,37 +1,28 @@
-From: "J.E.J. Bottomley" <James.Bottomley@steeleye.com>
-Subject: Re: scsi in 2.5.48
-Date: Mon, 18 Nov 2002 09:05:34 -0600
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <200211181505.gAIF5am02001@localhost.localdomain>
-References: <axboe@suse.de>
+From: Patrick Mansfield <patmans@us.ibm.com>
+Subject: Re: [PATCH] rationalize allocation and freeing of struct scsi_device
+Date: Mon, 18 Nov 2002 10:24:10 -0800
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <20021118102410.A19492@eng2.beaverton.ibm.com>
+References: <20021117234901.A9784@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
-In-Reply-To: Message from Jens Axboe <axboe@suse.de>
-   of "Mon, 18 Nov 2002 14:56:14 +0100." <20021118135614.GA834@suse.de>
-To: Jens Axboe <axboe@suse.de>
-Cc: Andrew Morton <akpm@digeo.com>, lkml <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@SteelEye.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <20021117234901.A9784@lst.de>; from hch@lst.de on Sun, Nov 17, 2002 at 11:49:01PM +0100
 List-Id: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: James.Bottomley@steeleye.com, linux-scsi@vger.kernel.org
 
-akpm@digeo.com said:
-> > Andrew Morton wrote:
-> 
-> > Appears to be DOA.  Just a simple mke2fs hangs in get_request_wait().
-> This makes it work again. 
+On Sun, Nov 17, 2002 at 11:49:01PM +0100, Christoph Hellwig wrote:
+> Currently allocation and freeing of struct scsi_device is a mess.
+> We have two nice functions in scsi_scan.c (scsi_allocate_sdev/
+> scsi_free_sdev) that are the right interfaces to deal with it, so I moved
+> them to scsi and made them non-static.  I've changed all functions
+> allocation freeing them to use it.
 
-That can't be entirely right, because we can't exit the request function with 
-pending requests and something like an unplugged queue to start them.  It will 
-work for the adaptec because the prep defer is caused by the huge queue depth 
-running us out of command blocks, so the queues would get re-run by a 
-returning command.  If the failure were caused by zero outstanding commands, 
-this would hang the system forever.
+What happened to the scsi_release_sdev that was in your previous version
+of the patch?
 
-axboe@suse.de said:
-> Right fix would be something ala: 
+That was a nice place to call device_unregister(), and would be the right
+place to remove sysfs scsi_device files.
 
-That looks about right.  On returning I/O we need to unplug and restart.
-
-However, with regard to Andrew's problem, how can the queue plug indefinitely? 
- I thought it was guaranteed to be unplugged and run eventually?
-
-James
+-- Patrick Mansfield
