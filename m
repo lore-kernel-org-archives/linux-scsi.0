@@ -1,49 +1,28 @@
-From: "Justin T. Gibbs" <gibbs@scsiguy.com>
-Subject: Re: AIC7xxx LUN enumeration failure and DV config failure
-Date: Wed, 17 Sep 2003 10:20:02 -0600
+From: Michael =?ISO-8859-1?Q?Schl=FCter?= <michael@johalla.de>
+Subject: Tekram DC390(T) and linux 2.6
+Date: Wed, 17 Sep 2003 22:44:13 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <2589900000.1063815602@aslan.btc.adaptec.com>
-References: <20030917130656.GA2948@m23.limsi.fr>
-Reply-To: "Justin T. Gibbs" <gibbs@scsiguy.com>
+Message-ID: <1063831452.698.8.camel@localhost>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from magic-mail.adaptec.com ([216.52.22.10]:51131 "EHLO
-	magic.adaptec.com") by vger.kernel.org with ESMTP id S261175AbTIQQQv
+Received: from evision30.do.revmap.vianetworks.de ([194.77.215.62]:40624 "EHLO
+	maus.johalla.de") by vger.kernel.org with ESMTP id S262592AbTIQUoH
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 17 Sep 2003 12:16:51 -0400
-In-Reply-To: <20030917130656.GA2948@m23.limsi.fr>
-Content-Disposition: inline
+	Wed, 17 Sep 2003 16:44:07 -0400
+Received: from donald (pD950A2FD.dip.t-dialin.net [217.80.162.253])
+	(authenticated bits=0)
+	by maus.johalla.de (8.12.3/8.12.3/Debian-6.4) with ESMTP id h8HKi7O6019746
+	(version=TLSv1/SSLv3 cipher=RC4-MD5 bits=128 verify=NO)
+	for <linux-scsi@vger.kernel.org>; Wed, 17 Sep 2003 22:44:09 +0200
 List-Id: linux-scsi@vger.kernel.org
-To: Olivier Galibert <olivier.galibert@limsi.fr>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-> We have two transtec 5016 IDE disks/SCSI interface raid arrays
-> connected to a motherboard Adaptec AIC7902 Ultra320 SCSI adapter on
-> scsi1.  Each is split in two LUNs, 2x1.4Tb for the first and 2x2Tb for
-> the second.
+Hi,,
 
-...
+is there anybody working on porting the Tekram DC390(T) driver to linux
+2.6? If not I'll try it :).
 
-> Sep 17 14:41:42 m61 kernel: scsi1:A:0:0: DV failed to configure device.  Please file a bug report against this driver.
-> Sep 17 14:41:42 m61 kernel: scsi1:A:1:0: DV failed to configure device.  Please file a bug report against this driver.
-
-In the case of SCSI-IDE RAID arrays, many of which are of questionable
-quality, this typically means that the device is not providing a valid
-echo buffer size for performing domain validation.  In this case, the
-driver defaults to running at the maximum speed supported by the device,
-but also prints out a diagnostic.  I plan to remove the diagnostic for
-the echo buffer issue since there seem to be lots of broken devices
-out there.
-
-Your RAID array only supports U160, so it only runs at that speed.
-This has everything to do with the device, and nothing to do with the
-aic79xx controller/driver.
-
-As to the LUN issues, as already pointed out by others, it looks like
-the report luns support in this device is broken.  Perhaps the vendor
-has a firmware update available.
-
---
-Justin
+Bye, Michael
 
