@@ -1,25 +1,36 @@
-From: 'Christoph Hellwig' <hch@infradead.org>
-Subject: Re: [ANNOUNCE]: megaraid driver version 2.10.3
-Date: Fri, 16 Apr 2004 13:06:29 +0100
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <20040416130629.C5080@infradead.org>
-References: <0E3FA95632D6D047BA649F95DAB60E57033BC510@exa-atlanta.se.lsil.com>
+From: Jens Axboe <axboe@suse.de>
+Subject: Re: CDC_RAM for lk 2.4, PATCH proposed
+Date: Fri, 16 Apr 2004 14:09:02 +0200
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <20040416120902.GE1966@suse.de>
+References: <1082047960.15520.82.camel@patibmrh9>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from ns.virtualhost.dk ([195.184.98.160]:13547 "EHLO virtualhost.dk")
+	by vger.kernel.org with ESMTP id S262996AbUDPMJQ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 16 Apr 2004 08:09:16 -0400
 Content-Disposition: inline
-In-Reply-To: <0E3FA95632D6D047BA649F95DAB60E57033BC510@exa-atlanta.se.lsil.com>; from Atulm@lsil.com on Fri, Apr 09, 2004 at 01:11:09AM -0400
-To: "Mukker, Atul" <Atulm@lsil.com>
-Cc: "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, 'Marcelo Tosatti' <marcelo.tosatti@cyclades.com>, "'hightowe@10east.com'" <hightowe@10east.com>, 'Matthew Wilcox' <willy@debian.org>, 'Arjan van de Ven' <arjanv@redhat.com>, "'matt_domsch@dell.com'" <matt_domsch@dell.com>, 'James Bottomley' <James.Bottomley@SteelEye.com>, "'paul@wagland.net'" <paul@wagland.net>, "Bagalkote, Sreenivas" <sreenib@lsil.com>
+In-Reply-To: <1082047960.15520.82.camel@patibmrh9>
 List-Id: linux-scsi@vger.kernel.org
+To: Pat LaVarre <p.lavarre@ieee.org>
+Cc: mckellj@iomega.com, linux-scsi@vger.kernel.org
 
-On Fri, Apr 09, 2004 at 01:11:09AM -0400, Mukker, Atul wrote:
-> All,
+On Thu, Apr 15 2004, Pat LaVarre wrote:
+> Jens A:
 > 
-> Attached please find the patch for the megaraid2 driver version for LK 2.4
-> against 2.10.2.1 driver, which was released by Sreenivas on 3/22. For a
-> quick update, the patch against lk2.4.25 megaraid2 version 2.10.1 is also
-> inlined. The driver source code and these patches can be downloaded from
-> usual location as well:
+> Would you consider for 2.4.27, a patch written to give us CDC_RAM alone?
+> 
+> I ask because I notice, we don't need the problematic op x46
+> GPCMD_GET_CONFIGURATION feature x0028 MRW for 2.4.27 to support
+> CDC_RAM.  We only need that for MRW.
 
-The patch looks fine to me.
+If you send me a patch, I'll be sure to review it. I won't be adding MRW
+in 2.4. I made a substantial amount of changes and bug fixes while
+migrating the code to 2.6, and I don't want to spend time on porting
+that back to 2.4.
+
+-- 
+Jens Axboe
+
