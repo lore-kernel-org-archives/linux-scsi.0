@@ -1,46 +1,37 @@
-From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
-Subject: RE: PATCH: Further aacraid work
-Date: Fri, 18 Jun 2004 16:53:13 -0400
+From: "Lee Xing" <lxing@Crossroads.com>
+Subject: Help - why mid-layer does not scan LUNs?
+Date: Fri, 18 Jun 2004 16:10:23 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <547AF3BD0F3F0B4CBDC379BAC7E4189FD241D1@otce2k03.adaptec.com>
+Message-ID: <519672568F040C41B6FAC21ADF51B18FF039@mailnode1.commstor.crossroads.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from magic.adaptec.com ([216.52.22.17]:45485 "EHLO magic.adaptec.com")
-	by vger.kernel.org with ESMTP id S262085AbUFRUx1 convert rfc822-to-8bit
+Received: from email.crossroads.com ([65.68.235.6]:8215 "HELO
+	email.crossroads.com") by vger.kernel.org with SMTP id S264500AbUFRVKY convert rfc822-to-8bit
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 18 Jun 2004 16:53:27 -0400
+	Fri, 18 Jun 2004 17:10:24 -0400
 content-class: urn:content-classes:message
 List-Id: linux-scsi@vger.kernel.org
-To: William Lee Irwin III <wli@holomorphy.com>, Alan Cox <alan@redhat.com>, y@redhat.com, Clay Haapala <chaapala@cisco.com>, James Bottomley <James.Bottomley@steeleye.com>, Christoph Hellwig <hch@infradead.org>, Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, akpm@osdl.org
+To: linux-scsi@vger.kernel.org
 
-`Adaptec' has been overloaded with internal work and has Bosses of
-Bosses of Bosses setting priorities.
+Hi,
 
-I had `respond to William' in my queue ... hopefully with results ...
-but alas not today :-(
+Can some one please tell me why mid-layer doesn't scan LUNs but just Buses and Targets in lk 2.4?  
 
-Sincerely -- Mark `apologizing is not a sign of weakness' Salyzyn
+The default max_channel, max_id and max_lun defined in mid-layer are 0, 8 and 8 respectively.  I use scsi_debug low-level driver to check which B:T:L mid-layer scans, but find it only scans 0:0:0, 0:1:0, 0:2:0...  Why it doesn't scan 0:0:1, 0:0:2...?
 
------Original Message-----
-From: William Lee Irwin III [mailto:wli@holomorphy.com] 
-Sent: Friday, June 18, 2004 4:32 PM
-To: Alan Cox; Salyzyn, Mark; y@redhat.com; Clay Haapala; James
-Bottomley; Christoph Hellwig; Linux Kernel; SCSI Mailing List;
-akpm@osdl.org
-Subject: Re: PATCH: Further aacraid work
+I have taken out:
 
-On Fri, Jun 18, 2004 at 08:05:18AM -0700, William Lee Irwin III wrote:
-> Proper changelog this time, and comments, too. Adaptec et al, please
-> verify this resolves the issues you've been having.
-> Someone say _something_.
+	if ((target > driver_template.this_id) || (SCpnt->lun != 0))
+		return schedule_resp(SCpnt, NULL, done, DID_NO_CONNECT << 16, 0);
 
-jejb's seeing such improved results that I don't believe we need to
-wait for Adaptec's ack to merge this.
+from scsi_debug_queuecommand(...) of scsi_debug driver, but mid-layer still does not scan LUNs.
 
-akpm, please apply.
+I would appreciate it if some one could tell me what I missed.
+
+Thanks,
 
 
--- wli
+Lee
+
