@@ -1,66 +1,28 @@
-From: Willem Riede <wrlk@riede.org>
-Subject: Re: [RFC] add transfer request length?
-Date: Thu, 30 May 2002 06:58:57 -0400
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: Enterprise patch needed - please help
+Date: 30 May 2002 13:38:27 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20020530105857.GI12126@linnie.riede.org>
-References: <20020529230047.D26782@one-eyed-alien.net>
-Reply-To: wrlk@riede.org
+Message-ID: <1022762307.4123.364.camel@irongate.swansea.linux.org.uk>
+References: <6BD67FFB937FD411A04F00D0B74FE87807C249F0@xrose06.rose.hp.com>
+	<1022719300.4124.312.camel@irongate.swansea.linux.org.uk>
+	<3CF5AEA4.4050404@metaparadigm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20020529230047.D26782@one-eyed-alien.net>; from mdharm-scsi@one-eyed-alien.net on Thu, May 30, 2002 at 02:00:48 -0400
+In-Reply-To: <3CF5AEA4.4050404@metaparadigm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Dharm <mdharm-scsi@one-eyed-alien.net>
-Cc: Linux SCSI list <linux-scsi@vger.kernel.org>
+To: Michael Clark <michael@metaparadigm.com>
+Cc: "HINCHMAN,PAUL    (HP-Roseville,ex1)" <paul_hinchman@hp.com>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
 
-On 2002.05.30 02:00 Matthew Dharm wrote:
-> I'd like to add another field to the Scsi_Cmnd structure.  At least, I
-> think I need another field to accomplish what I want....
-> 
-> Right now, a low-level SCSI driver (i.e. HBA) can't actually tell in
-> advance how much data will be moved by a command.  The driver can see the
-> buffer and the buffer length, and can enforce that the transfer length does
-> not exceed that buffer length, but we can't actually algorithmically
-> determine the amount of data we expect to move....
-> 
-> For example, imagine an INQUIRY for 36 bytes issued with a buffer for 256
-> bytes.  This actually does happen.
-> 
-> In this case, it's easy to figure out how much data is requested by reading
-> the command.  However, block device commands talk in 'number of blocks',
-> which is something that the HBAs shouldn't have to keep track of.
-> 
-> The worst device is the OnStream driver, which makes allocations in page
-> sizes and then transfers a strange number of bytes (n * 4096 + 512 bytes).
+On Thu, 2002-05-30 at 05:46, Michael Clark wrote:
+> Also, some devices need a BLIST_SPARSELUN added in scsi_scan.c - even if 
+> the device
+> reports SCSI-3, the scanning code by defaults stops when it finds a lun 
+> that doesn't
+> respond. It is quite common with enterpise storage to have sparse 
+> between luns.
 
-Not any more... Turns out that was a problem for the IEEE1394 subsystem,
-so I changed it to an exact memory allocation.
+If we use report luns should we even be checking BLIST_SPARSELUN I
+wonder
 
-> drivers/usb/storage/scsiglue.c has some code to try to figure out how much
-> data should be transfered.  This is important for emulated SCSI devices
-> (sbp2, usb, etc.).
-> 
-> So, I'd like to add a field so that high-level drivers (sd, sr, sg, etc.)
-> can tell us how many bytes they intend to move.  sg already collects this
-> information, but the HBA can't see it.
-> 
-> Comments?
-
-/*
- * Function:    scsi_do_req
- *
- * Purpose:     Queue a SCSI request
- *
- * Arguments:   SRpnt     - command descriptor.
- *              cmnd      - actual SCSI command to be performed.
- *              buffer    - data buffer.
- *              bufflen   - size of data buffer.
- *              done      - completion function to be run.
- *              timeout   - how long to let it run before timeout.
- *              retries   - number of retries we allow.
-
-The bufflen above is not enough?
-
-Thanks, Willem Riede.
