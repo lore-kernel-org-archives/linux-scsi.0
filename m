@@ -1,35 +1,43 @@
-From: Patrick Mansfield <patmans@us.ibm.com>
-Subject: Re: Time to conclude the Sony USB mass storage thread
-Date: Fri, 14 Nov 2003 09:58:23 -0800
+From: Pat LaVarre <p.lavarre@ieee.org>
+Subject: Re: [usb-storage] Re: [PATCH] fix Sony USB mass storage - pass
+	larger receive buffer
+Date: 14 Nov 2003 10:50:33 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20031114095823.A3597@beaverton.ibm.com>
-References: <1068825146.2134.6.camel@mulgrave> <20031114092644.A2794@beaverton.ibm.com> <20031114093503.B19467@one-eyed-alien.net>
+Message-ID: <1068832232.5539.69.camel@patrh9>
+References: <Pine.LNX.4.44L0.0311141058290.1090-100000@ida.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e33.co.us.ibm.com ([32.97.110.131]:49043 "EHLO
-	e33.co.us.ibm.com") by vger.kernel.org with ESMTP id S264558AbTKNR6i
+Received: from email-out1.iomega.com ([147.178.1.82]:43489 "EHLO
+	email.iomega.com") by vger.kernel.org with ESMTP id S264614AbTKNRvL
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 14 Nov 2003 12:58:38 -0500
-Content-Disposition: inline
-In-Reply-To: <20031114093503.B19467@one-eyed-alien.net>; from mdharm-scsi@one-eyed-alien.net on Fri, Nov 14, 2003 at 09:35:03AM -0800
+	Fri, 14 Nov 2003 12:51:11 -0500
+In-Reply-To: <Pine.LNX.4.44L0.0311141058290.1090-100000@ida.rowland.org>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@steeleye.com>, usb-storage@one-eyed-alien.net, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: stern@rowland.harvard.edu
+Cc: mdharm-scsi@one-eyed-alien.net, patmans@us.ibm.com, james.bottomley@steeleye.com, linux-scsi@vger.kernel.org, usb-storage@one-eyed-alien.net, ronald@kuetemeier.com, dmitrik@users.sourceforge.net, idan@idanso.dyndns.org
 
-On Fri, Nov 14, 2003 at 09:35:03AM -0800, Matthew Dharm wrote:
-> I'm strongly attempted to agree with you guys.... blacklisting looks like
-> the way to go.
-> 
-> I'm concerned about the names, tho.... BLIST_MS_SKIP_PAGE_08 sounds more
-> general than it is -- as I understand it, this flag will only affect sd.c,
-> tho it looks much more general.
+All clear now, thanks.
 
-We can change the name.
+> we lose the ability to tell if a compliant
+> device/media is write-protected.
 
-> I think I'd rather tweak the structure in slave_configure, where it will be
-> easier to add more logic if people decide we need it in the future.
+Yes.
 
-Unlike scsi_devinfo/dev_flags, we can't override slave_configure changes
-(unless you add other code).
+> different versions of Windows were so incompatible they 
+> often couldn't communicate among themselves.
 
--- Patrick Mansfield
+Yes.
+
+> CDs, DVDs, etc. present their own set of problems.  For the moment I'm
+> just concerned about disk-type devices, and the only reliable way I can
+> see to deal with them is to avoid sending any MODE-SENSE commands over
+> USB.
+
+I'll stay tuned to see if eventually we choose to break sd write-protect
+for the sake of blacklisting mode sense in ATAPI and 1394 as well.
+
+Pat LaVarre
+
+
