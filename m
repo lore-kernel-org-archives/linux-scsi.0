@@ -1,87 +1,78 @@
-From: Josef =?iso-8859-1?Q?M=F6llers?=
-	<josef.moellers@fujitsu-siemens.com>
-Subject: Re: REPORT LUNS
-Date: Mon, 16 Jun 2003 08:55:18 +0200
+From: Mike Christie <mikenc@us.ibm.com>
+Subject: [patch] [resend] fixes compile error in inia100.c
+Date: Mon, 16 Jun 2003 16:31:31 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3EED69D6.BDB411F7@fujitsu-siemens.com>
-References: <3EE9DA00.A429F83F@fujitsu-siemens.com> <20030613112222.A23260@beaverton.ibm.com>
+Message-ID: <3EEE5353.6080500@us.ibm.com>
+Reply-To: mikenc@us.ibm.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: multipart/mixed;
+ boundary="------------020606020100060908080002"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from plim.fujitsu-siemens.com ([217.115.66.8]:14119 "EHLO
-	plim.fujitsu-siemens.com") by vger.kernel.org with ESMTP
-	id S262176AbTFPGlD convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 16 Jun 2003 02:41:03 -0400
+Received: from e6.ny.us.ibm.com ([32.97.182.106]:60911 "EHLO e6.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S264449AbTFPXRi (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 16 Jun 2003 19:17:38 -0400
+Received: from northrelay02.pok.ibm.com (northrelay02.pok.ibm.com [9.56.224.150])
+	by e6.ny.us.ibm.com (8.12.9/8.12.2) with ESMTP id h5GNVWxr136468
+	for <linux-scsi@vger.kernel.org>; Mon, 16 Jun 2003 19:31:32 -0400
+Received: from us.ibm.com (d01av02.pok.ibm.com [9.56.224.216])
+	by northrelay02.pok.ibm.com (8.12.9/NCO/VER6.5) with ESMTP id h5GNVVHO032688
+	for <linux-scsi@vger.kernel.org>; Mon, 16 Jun 2003 19:31:32 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: Patrick Mansfield <patmans@us.ibm.com>
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-Patrick Mansfield wrote:
->=20
-> On Fri, Jun 13, 2003 at 04:04:48PM +0200, Josef M=F6llers wrote:
-> > Hi,
-> >
-> > Wile trying to figure out how to ignore non-existing LUNs on RAID
-> > devices, I have fallen across an error in scsilun_to_int() where it
-> > doesn't behave as the comment suggests and a problematic piece of c=
-ode
-> > in scsi_report_lun_scan().
-> >
-> > Patch is included.
->=20
-> If we clear the upper bits (address method, per SAM-3), someone has t=
-o
-> eventually set them again, and this is not handled today in linux scs=
-i
-> core.
+This is a multi-part message in MIME format.
+--------------020606020100060908080002
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 
-The comment said that the upper two bits were ignored which they were
-not in the original code, so, apart from fixing the shifts, I also adde=
-d
-the mask to keep the code in sync with the comment. I haven't yet
-followed the use of the value thus created.
+The attached patch fixes the compile errors in inia100.c described in
+Bugzilla bug #345 at http://bugme.osdl.org/show_bug.cgi?id=345. It was
+built against 2.5.71. I do not have the hardware, so I have only
+verified that it compiles correctly.
 
-> > @@ -1027,13 +1027,18 @@
-> >        * the header, so start at 1 and go up to and including num_l=
-uns.
-> >        */
-> >       for (lunp =3D &lun_data[1]; lunp <=3D &lun_data[num_luns]; lu=
-np++) {
-> > +             int j;
-> > +
-> >               lun =3D scsilun_to_int(lunp);
-> >
-> >               /*
-> >                * Check if the unused part of lunp is non-zero, and =
-so
-> >                * does not fit in lun.
-> >                */
-> > -             if (memcmp(&lunp->scsi_lun[sizeof(lun)], "\0\0\0\0", =
-4)) {
-> > +             for (j =3D sizeof(lun); j < sizeof(struct scsi_lun); =
-j++)
-> > +                 if (lunp->scsi_lun[j] !=3D 0)
-> > +                     break;
-> > +             if (j < sizeof(struct scsi_lun)) {
-> >                       int i;
-> >
-> >                       /*
->=20
-> What does the above patch fix? It looks like they both check if the l=
-ast
-> four bytes are 0.
+Mike Christie
+mikenc@us.ibm.com
 
-It does so, iff sizeof(lun) is 4 and sizeof(struct scsi_lun) is 8.
-Perhaps it was more a question of personal taste to change the code so
-that it also works for 64 bit ints.
 
---=20
-Josef M=F6llers (Pinguinpfleger bei FSC)
-	If failure had no penalty success would not be a prize
-						-- T.  Pratchett
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+inia100.c |    8 ++++----
+1 files changed, 4 insertions(+), 4 deletions(-)
+
+
+--------------020606020100060908080002
+Content-Type: text/plain;
+ name="inia100.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="inia100.patch"
+
+--- linux-2.5.71/drivers/scsi/inia100.c	Sat Jun 14 12:18:06 2003
++++ linux-2.5.71_test/drivers/scsi/inia100.c	Mon Jun 16 15:48:22 2003
+@@ -156,11 +156,11 @@
+ 
+ 	spin_lock_irqsave(&(pHCB->pSRB_lock), flags);
+ 
+-	pSRB->next = NULL;	/* Pointer to next */
++	pSRB->SCp.ptr = NULL;	/* Pointer to next */
+ 	if (pHCB->pSRB_head == NULL)
+ 		pHCB->pSRB_head = pSRB;
+ 	else
+-		pHCB->pSRB_tail->next = pSRB;	/* Pointer to next */
++		pHCB->pSRB_tail->SCp.ptr = (char *)pSRB;	/* Pointer to next */
+ 	pHCB->pSRB_tail = pSRB;
+ 	spin_unlock_irqrestore(&(pHCB->pSRB_lock), flags);
+ 	return;
+@@ -179,8 +179,8 @@
+ 	ULONG flags;
+ 	spin_lock_irqsave(&(pHCB->pSRB_lock), flags);
+ 	if ((pSRB = (Scsi_Cmnd *) pHCB->pSRB_head) != NULL) {
+-		pHCB->pSRB_head = pHCB->pSRB_head->next;
+-		pSRB->next = NULL;
++		pHCB->pSRB_head = (Scsi_Cmnd *) pHCB->pSRB_head->SCp.ptr;
++		pSRB->SCp.ptr = NULL;
+ 	}
+ 	spin_unlock_irqrestore(&(pHCB->pSRB_lock), flags);
+ 	return (pSRB);
+
+--------------020606020100060908080002--
+
