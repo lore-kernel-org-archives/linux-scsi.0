@@ -1,30 +1,29 @@
-From: "Kai OM" <epimetreus@fastmail.fm>
-Subject: Sym53c8xx_2
-Date: Thu, 12 Aug 2004 23:00:37 -0400
+From: "Russell" <denaliruth@anarchynow.com>
+Subject: You've seen it on TV, now get Cailis for $5 ($2.50 a dose)
+Date: Fri, 13 Aug 2004 04:45:52 GMT
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1092366037.28144.202254467@webmail.messagingengine.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"
-Content-Transfer-Encoding: 7bit
+Message-ID: <1092372352-18009__20606.8580774174$1092372563$gmane$org@excite.com>
+Content-Type: text/plain;
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from frontend1.messagingengine.com ([66.111.4.30]:20125 "EHLO
-	frontend1.messagingengine.com") by vger.kernel.org with ESMTP
-	id S268956AbUHMDAm (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 12 Aug 2004 23:00:42 -0400
-Received: from server2.messagingengine.com (server2.internal [10.202.2.133])
-	by frontend1.messagingengine.com (Postfix) with ESMTP id E7D90C143EB
-	for <linux-scsi@vger.kernel.org>; Thu, 12 Aug 2004 23:00:36 -0400 (EDT)
-Content-Disposition: inline
+Received: from c140.greenville.k12.pa.us ([206.180.69.140]:2309 "HELO
+	vermontel.com") by vger.kernel.org with SMTP id S268973AbUHMEpx
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 13 Aug 2004 00:45:53 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: linux-kernel@vger.kernel.org
 
-A while back I mailed the list a few times about an issue I was having
-with the Sym53c8xx_2 driver in the 2.6.7-8 kernels, as well as mailing
-the driver maintainer listed in the kernel source.
+Wholesale Drugstore
 
-Nobody ever replied or acknowledged my e-mails, save a couple other
-people with the same issue.
+Buy in bulk & save up to 80%
 
-I'm wondering, with all this activity in the list now, would it be worth
-mailing everyone again, or does anyone have suggestions for someone else
-I can e-mail?
+We stock all popular Rx Pills:
+
+Learn more here: http://www.ijjad.com/_85924943b9db73ac62baa654773c6a8e/9
+
+
+
+
+
+rambo1 guinnesswombat tarzan scuba1 nimrod wanker promethe 
+hornet marsjimbo corwin dgj
+frogs soccer1 bfi 
