@@ -1,23 +1,27 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] current scsi-misc-2.5 scsi_lib.c needs init.h
-Date: Thu, 5 Dec 2002 22:58:57 +0000
+From: "Mr. James W. Laferriere" <babydr@baby-dragons.com>
+Subject: Fyi: HP CD-Writer Plus Drives - Firmware Update
+Date: Thu, 5 Dec 2002 20:43:24 -0500 (EST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20021205225857.A12721@infradead.org>
-References: <patmans@us.ibm.com> <200212052226.gB5MQjf05474@localhost.localdomain> <20021205145441.A10578@beaverton.ibm.com>
+Message-ID: <Pine.LNX.4.50.0212052041180.15328-100000@filesrv1.baby-dragons.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20021205145441.A10578@beaverton.ibm.com>; from patmans@us.ibm.com on Thu, Dec 05, 2002 at 02:54:41PM -0800
+Received: from localhost (babydr@localhost)
+	by filesrv1.baby-dragons.com (8.11.4/8.11.4) with ESMTP id gB61hOS15330
+	for <linux-scsi@vger.kernel.org>; Thu, 5 Dec 2002 20:43:24 -0500
 List-Id: linux-scsi@vger.kernel.org
-To: Patrick Mansfield <patmans@us.ibm.com>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org
+To: Linux Scsi maillist <linux-scsi@vger.kernel.org>
 
-On Thu, Dec 05, 2002 at 02:54:41PM -0800, Patrick Mansfield wrote:
-> highmem.h does not include asm/highmem.h unless #ifdef CONFIG_HIGHMEM.
-> 
-> I changed my config to use highmem 4g, and it compiled OK.
 
-Sorry for the breakage.  I'll do a sweep over all asm headers to get rid of
-implicit inclusions of init.h (unless impossible, but I dount it)
+	Hello All ,  I have been experiencing difficulties like this
+	announcement mentions .  So for those with simular problems .
+		Hth ,  JimL
 
+	http://h20015.www2.hp.com/en/document.jhtml?lc=en&docName=lpg40348
+
+-- 
+       +------------------------------------------------------------------+
+       | James   W.   Laferriere | System    Techniques | Give me VMS     |
+       | Network        Engineer |     P.O. Box 854     |  Give me Linux  |
+       | babydr@baby-dragons.com | Coudersport PA 16915 |   only  on  AXP |
+       +------------------------------------------------------------------+
