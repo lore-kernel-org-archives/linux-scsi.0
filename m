@@ -1,79 +1,40 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: sg_dd bpt= count=
-Date: Tue, 21 Oct 2003 09:53:09 +1000
+From: Ming Zhang <mingz@ele.uri.edu>
+Subject: Re: insmod options for aic7xxx
+Date: Mon, 20 Oct 2003 20:30:03 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3F947565.1030804@torque.net>
-References: <1066174844.3399.6.camel@patehci2>	 <1066674092.2833.0.camel@patehci2> <1066679354.2833.66.camel@patehci2>
-Reply-To: dougg@torque.net
+Message-ID: <1066696203.2624.0.camel@localhost.localdomain>
+References: <S262839AbTJTVwK/20031020215210Z+18204@vger.kernel.org>
+Reply-To: mingz@ele.uri.edu
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns1.triode.net.au ([202.147.124.1]:46055 "EHLO
-	iggy.triode.net.au") by vger.kernel.org with ESMTP id S263039AbTJTXxW
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 20 Oct 2003 19:53:22 -0400
-In-Reply-To: <1066679354.2833.66.camel@patehci2>
+Received: from leviathan.ele.uri.edu ([131.128.51.64]:55432 "EHLO
+	leviathan.ele.uri.edu") by vger.kernel.org with ESMTP
+	id S263413AbTJUAaK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 20 Oct 2003 20:30:10 -0400
+In-Reply-To: <S262839AbTJTVwK/20031020215210Z+18204@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Pat LaVarre <p.lavarre@ieee.org>
-Cc: linux-scsi@vger.kernel.org
+To: "Deas, Jim" <James.Deas@warnerbros.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
-Pat LaVarre wrote:
->>>sudo sg_dd of=/dev/sg0 if=/dev/zero bs=2k bpt= count=
->>>may reliably take down kernels.
-> 
-> 
-> To sg3_utils sg_dd.c I first propose the following patch, to persuade
-> get_num to return determinate results more often.
-> 
-> Specifically I propose changing:
-> 
->         char c;
->         res = sscanf(buf, "%d%c", &num, &c);
->         if (0 == res) ...
->         else if (1 == res) ...
->         else {
->                 switch (c) { ...
-> 
-> Personally I believe that source fragment switches on uninitialised c in
-> the situation `man sscanf` describes as: "RETURN VALUE ... The value EOF
-> is returned if an input failure occurs before any conversion such as an
-> end-of-file occurs ...".
-> 
-> As a test, I did separately execute get_num("").  For me once the
-> uninitialised c and num were then 8 and 1108545272 (aka x42130EF8), so
-> the result was -1.  I notice gcc -Wall doesn't mention this kind of
-> read-before-write.
-> 
-> Pat LaVarre
-> 
-> P.S. Also I wonder if we would prefer rewriting these "return -1" as
-> loud exits e.g.:
-> 
-> fprintf(stderr, "file %s line %d\n", __FILE__, __LINE__);
-> exit(-1);
-> 
-> --- sg3_utils-1.05/sg_dd.c	2003-10-19 03:35:32.000000000 -0600
-> +++ sg3_utils/sg_dd.c	2003-10-20 13:35:20.515143520 -0600
-> @@ -475,10 +475,10 @@
->      char c;
->  
->      res = sscanf(buf, "%d%c", &num, &c);
-> -    if (0 == res)
-> -        return -1;
-> -    else if (1 == res)
-> +    if (1 == res)
->          return num;
-> +    else if (2 != res)
-> +        return -1;
->      else {
->          switch (c) {
->          case 'c':
+for module load option, use modinfo
 
-Pat,
-Applied to sg3_utils. Also added a check for non-positive bpt.
-There is a new beta on http://www.torque.net/sg
+ming
 
-Doug Gilbert
-
+On Mon, 2003-10-20 at 17:52, Deas, Jim wrote:
+> Where can I find the module load options and IOCTLs for the aic7xxx SCSI
+> module? I have checked the source tree docs but have not found anything.
+> 
+> I am looking for a way to mount and unmount SCSI drives that is a bit
+> slicker than just loading and unloading the module.
+> 
+> Thanks for any help
+> J. Deas
+> 
+> 
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
