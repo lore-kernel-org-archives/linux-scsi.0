@@ -1,58 +1,69 @@
-From: Brian King <brking@us.ibm.com>
-Subject: Re: PATCH [3/5]  qla2xxx: TCQ fixes
-Date: Mon, 12 Jul 2004 21:28:20 -0500
+From: Matthew Dharm <mdharm-scsi@one-eyed-alien.net>
+Subject: Re: Is scsi_cmnd::underflow still useful?
+Date: Mon, 12 Jul 2004 22:09:20 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <40F348C4.7070600@us.ibm.com>
-References: <20040712140558.GA6961@praka.san.rr.com> <1089668486.1799.62.camel@mulgrave> <40F32AAE.5070508@us.ibm.com>
+Message-ID: <20040713050920.GA31062@one-eyed-alien.net>
+References: <40F2E93B.3040607@torque.net> <1089680114.2074.198.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="Kj7319i9nmIyA2yE"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e4.ny.us.ibm.com ([32.97.182.104]:45812 "EHLO e4.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S261638AbUGMC2s (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 12 Jul 2004 22:28:48 -0400
-In-Reply-To: <40F32AAE.5070508@us.ibm.com>
+Received: from multivac.one-eyed-alien.net ([64.169.228.101]:35729 "EHLO
+	multivac.one-eyed-alien.net") by vger.kernel.org with ESMTP
+	id S263824AbUGMFKa (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 13 Jul 2004 01:10:30 -0400
+Content-Disposition: inline
+In-Reply-To: <1089680114.2074.198.camel@mulgrave>
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <mikenc@us.ibm.com>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>, Linux-SCSI Mailing List <linux-scsi@vger.kernel.org>, linux-iscsi-devel@lists.sourceforge.net, Krishna Murthy <krmurthy@cisco.com>
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Douglas Gilbert <dougg@torque.net>, SCSI Mailing List <linux-scsi@vger.kernel.org>, bunk@fs.tum.de
 
-Mike Christie wrote:
-> James Bottomley wrote:
-> 
->> On Mon, 2004-07-12 at 09:05, Andrew Vasquez wrote:
->>
->>> ChangeSet
->>>  1.1867 04/07/12 09:38:28 andrew.vasquez@apc.qlogic.com +2 -0
->>>  Correct usage of tag-command-queueing methods:
->>
->>
->>
->> I really don't think it is.
->>
->> For the way the qla2xxx works, the correct tag usage would be to use per
->> HBA tags (which were introduced for aic7xxx but never used by them, so I
->> haven't actually created the mid-layer API), to populate your queue
->> handle field with the tag and to dispense with your outstanding_cmnds[]
->> array and use scsi_find_tag() to get back the command from the handle.
->>
->> Since you'd be the first user of this API, I'd be happy to come up with
->> it for a willing victim^Wvolunteer.
-> 
-> 
-> Depending on the API, we might be able to use it for the linux-iscsi 
-> driver. Today the driver uses scsi_activate_tcq(), but does not uses the 
-> tag numbers. Instead it uses its own initiator task tags values for 
-> session wide identifiers, becuase we need tag values for iscsi ops. For 
-> example if we need to send a ping how should we get a tag from the mid 
-> layer? Or maybe becuase there are some transport specific tag values 
-> should we use someting else or keep it in the driver?
 
-ipr is not interested in the tag numbers either, as the adapter 
-microcode generates them.
+--Kj7319i9nmIyA2yE
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
--- 
-Brian King
-eServer Storage I/O
-IBM Linux Technology Center
+On Mon, Jul 12, 2004 at 07:55:13PM -0500, James Bottomley wrote:
+> On Mon, 2004-07-12 at 14:40, Douglas Gilbert wrote:
+> > Doesn't look like many LLDs act on scsi_cmnd::underflow.
+> > Seems to me that scsi_cmnd::resid is a more general
+> > replacement.
+>=20
+> well, I know I suggested a recent use of it to the USB people , so I
+> don't think it's entirely unused.  resid can't be a replacement because
+> they mean different things:
+>=20
+> resid - number of bytes left over after a transaction
+> underflow - driver must return error if less than this amount
+> transferred.
 
+I think the recent USB usage of it was because some mid-level drivers look
+for the error condition related to the underflow value.
+
+We don't really use it, other than to trigger an error.
+
+Matt
+
+--=20
+Matthew Dharm                              Home: mdharm-usb@one-eyed-alien.=
+net=20
+Maintainer, Linux USB Mass Storage Driver
+
+Stef, you just got beaten by a ball of DIRT.
+					-- Greg
+User Friendly, 12/7/1997
+
+--Kj7319i9nmIyA2yE
+Content-Type: application/pgp-signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.2.1 (GNU/Linux)
+
+iD8DBQFA826AIjReC7bSPZARAg9UAJ0cyE/acBAR/s7zkLzOPFWR4H1BJwCgl+8U
+g9AF4E4PCthEPaXvpk0nKog=
+=U10g
+-----END PGP SIGNATURE-----
+
+--Kj7319i9nmIyA2yE--
