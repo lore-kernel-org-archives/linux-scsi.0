@@ -1,60 +1,67 @@
-From: Xose Vazquez Perez <xose@wanadoo.es>
-Subject: [patch] 2.4.23-pre8: link error with both megaraid drivers
-Date: Thu, 23 Oct 2003 17:27:25 +0200
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <3F97F35D.30101@wanadoo.es>
+From: Nicolas Mailhot <Nicolas.Mailhot@one2team.com>
+Subject: Adaptec scsi probe failure
+Date: Thu, 23 Oct 2003 18:25:17 +0200
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <1066926316.20919.6.camel@ulysse.olympe.o2t>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------070706090603000102060209"
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
-To: Marcelo Tosatti <marcelo.tosatti@cyclades.com>, linux-kernel <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-7w7rv2kVQWkAkG581Yeu"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp3.clb.oleane.net ([213.56.31.19]:14811 "EHLO
+	smtp3.clb.oleane.net") by vger.kernel.org with ESMTP
+	id S263620AbTJWQZT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 23 Oct 2003 12:25:19 -0400
+Received: from smtp.olympe.o2t (cerbere.one2team.com [194.206.159.179])
+	by smtp3.clb.oleane.net with ESMTP id h9NGPITa028160
+	for <linux-scsi@vger.kernel.org>; Thu, 23 Oct 2003 18:25:18 +0200
+Received: from ulysse.olympe.o2t (ulysse.olympe.o2t [192.168.1.40])
+	by smtp.olympe.o2t (Postfix) with ESMTP id B9EB21CB4D
+	for <linux-scsi@vger.kernel.org>; Thu, 23 Oct 2003 18:25:17 +0200 (CEST)
+Received: from localhost (localhost.localdomain [127.0.0.1])
+	by ulysse.olympe.o2t (Postfix) with ESMTP id 77C81A88E7
+	for <linux-scsi@vger.kernel.org>; Thu, 23 Oct 2003 18:25:17 +0200 (CEST)
 List-Id: linux-scsi@vger.kernel.org
-
-This is a multi-part message in MIME format.
---------------070706090603000102060209
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-
-Adrian Bunk wrote:
-
-> The patch below fixes this issue by disalllowing the static inclusion of
-> both drivers at the same time.
-
-IMO this patch makes a better job. It only allows one in kernel,
-and it allows two modules at same time.
-
-xconfig and menuconfig work ok.
-
--thanks-
---
-HTML mails are going to trash automatically
-
---------------070706090603000102060209
-Content-Type: text/plain;
- name="config-megaraid.diff"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="config-megaraid.diff"
-
---- linux/drivers/scsi/Config.in	2003-10-23 16:56:13.000000000 +0200
-+++ new/drivers/scsi/Config.in	2003-10-23 17:00:51.000000000 +0200
-@@ -66,8 +66,14 @@
- dep_tristate 'AdvanSys SCSI support' CONFIG_SCSI_ADVANSYS $CONFIG_SCSI
- dep_tristate 'Always IN2000 SCSI support' CONFIG_SCSI_IN2000 $CONFIG_SCSI
- dep_tristate 'AM53/79C974 PCI SCSI support' CONFIG_SCSI_AM53C974 $CONFIG_SCSI $CONFIG_PCI
--dep_tristate 'AMI MegaRAID support' CONFIG_SCSI_MEGARAID $CONFIG_SCSI
--dep_tristate 'AMI MegaRAID2 support' CONFIG_SCSI_MEGARAID2 $CONFIG_SCSI
-+
-+if [ "$CONFIG_SCSI_MEGARAID2" != "y" ]; then
-+	dep_tristate 'AMI MegaRAID support' CONFIG_SCSI_MEGARAID $CONFIG_SCSI
-+fi
-+
-+if [ "$CONFIG_SCSI_MEGARAID" != "y" ]; then
-+	dep_tristate 'AMI MegaRAID2 support' CONFIG_SCSI_MEGARAID2 $CONFIG_SCSI
-+fi
- 
- dep_tristate 'BusLogic SCSI support' CONFIG_SCSI_BUSLOGIC $CONFIG_SCSI
- if [ "$CONFIG_SCSI_BUSLOGIC" != "n" ]; then
+To: linux-scsi@vger.kernel.org
 
 
---------------070706090603000102060209--
+--=-7w7rv2kVQWkAkG581Yeu
+Content-Type: text/plain; charset=ISO-8859-15
+Content-Transfer-Encoding: quoted-printable
+
+Hi,
+
+I'm currently investigating a problem at a remote site when a new tape
+drive failed being detected by the system. According to the customer the
+tape drive does appear in the scsi bios messages. The problem is - dmesg
+shows the system thinks nothing is plugged on the scsi channel (nothing
+shows in the device enumeration that usually follows chipset detection)
+
+System is RH 7.3 (latest official kernel), hardware Compaq ML 350G3 +
+internal ultrium 460.
+
+The on-motherboard scsi chipset is adaptec-based.
+
+What could cause this ? I'd understand communication problems, but not
+showing up at all is way too strange. Any ideas ?
+
+Cheers,
+
+--=20
+Nicolas Mailhot
+One2team : 12 bis rue de la Pierre lev=E9e - 75011 Paris - France =20
+T=E9l : + 33 1 43 38 19 80 - Fax : +33 1 43 14 23 07
+
+--=-7w7rv2kVQWkAkG581Yeu
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: Ceci est une partie de message
+	=?ISO-8859-1?Q?num=E9riquement?= =?ISO-8859-1?Q?_sign=E9e=2E?=
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.2.2 (GNU/Linux)
+
+iD8DBQA/mADrmsj7VFSyrYsRAu8VAKCXXLzWYlBD+ySUcVDgSqhM/B0EIACgmlLH
+gJx6F6/GXERYdcXtNw2rV2E=
+=k7MU
+-----END PGP SIGNATURE-----
+
+--=-7w7rv2kVQWkAkG581Yeu--
+
