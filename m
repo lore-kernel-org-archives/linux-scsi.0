@@ -1,54 +1,76 @@
 From: Patrick Mansfield <patmans@us.ibm.com>
-Subject: [PATCH] current scsi-misc-2.5 include files
-Date: Thu, 21 Nov 2002 09:08:44 -0800
+Subject: Re: [PATCH] cleanup code for /proc add/remove single device
+Date: Thu, 21 Nov 2002 09:21:15 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20021121090844.A17281@eng2.beaverton.ibm.com>
-References: <dledford@redhat.com> <200211211612.gALGCNo03331@localhost.localdomain>
+Message-ID: <20021121092115.A17363@eng2.beaverton.ibm.com>
+References: <20021121022314.A8931@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <200211211612.gALGCNo03331@localhost.localdomain>; from James.Bottomley@SteelEye.com on Thu, Nov 21, 2002 at 10:12:23AM -0600
+In-Reply-To: <20021121022314.A8931@lst.de>; from hch@lst.de on Thu, Nov 21, 2002 at 02:23:14AM +0100
 List-Id: linux-scsi@vger.kernel.org
-To: "J.E.J. Bottomley" <James.Bottomley@SteelEye.com>
-Cc: Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: James.Bottomley@steeleye.com, linux-scsi@vger.kernel.org
 
-On Thu, Nov 21, 2002 at 10:12:23AM -0600, J.E.J. Bottomley wrote:
-> The scsi-misc-2.5 resync should be done now.
+On Thu, Nov 21, 2002 at 02:23:14AM +0100, Christoph Hellwig wrote:
+> two new helpers in scsi_scan.c: scsi_add_single_device and
+> scsi_remove_single_device that do all hard work.  Thanks to
+> beeing in scsi_scan.c and using proper helpers they're a lot
+> smaller and cleaner.
 > 
-> James
+> 
+> --- 1.44/drivers/scsi/scsi.h	Sun Nov 17 16:44:35 2002
+> +++ edited/drivers/scsi/scsi.h	Thu Nov 21 01:05:39 2002
+> -
+> -		err = -ENOSYS;
+> -		if (sdev)
+> -			goto out;	/* We do not yet support unplugging */
+> -
+> -		scan_scsis(shost, 1, channel, id, lun);
+> -		err = length;
+> -		goto out;
+> -	}
+> +		err = scsi_add_single_device(host, channel, id, lun);
+> +		if (err >= 0)
+> +			err = length;
 
-Hi -
+> ===== drivers/scsi/scsi_scan.c 1.38 vs edited =====
+> --- 1.38/drivers/scsi/scsi_scan.c	Sun Nov 17 16:47:20 2002
+> +++ edited/drivers/scsi/scsi_scan.c	Thu Nov 21 01:16:03 2002
+> @@ -1862,6 +1862,69 @@
+>  
+>  }
+>  
+> +int scsi_add_single_device(uint host, uint channel, uint id, uint lun)
+> +{
+> +	struct scsi_device *sdevscan, *sdev;
+> +	struct Scsi_Host *shost;
+> +	int error = -ENODEV;
+> +
+> +	shost = scsi_host_hn_get(host);
+> +	if (!shost)
+> +		return -ENODEV;
+> +	sdev = scsi_find_device(shost, channel, id, lun);
+> +	if (!sdev)
+> +		goto out;
+> +
 
-hardirq.h and init.h were removed from scsi.h. So I had to make the
-following changes to compile. I also removed two extraneous includes. 
+James/Christoph -
 
---- 1.52/drivers/scsi/scsi_lib.c	Thu Nov 21 07:52:29 2002
-+++ edited/drivers/scsi/scsi_lib.c	Thu Nov 21 08:48:16 2002
-@@ -12,6 +12,7 @@
- #include <linux/bio.h>
- #include <linux/kernel.h>
- #include <linux/blk.h>
-+#include <asm/hardirq.h>
- #include <linux/smp_lock.h>
- #include <linux/completion.h>
+I had to change the above to a "if (sdev)" per the following patch (against
+current scsi-misc-2.5) to get the add to work correctly. Otherwise, this
+worked fine.
+
+--- 1.40/drivers/scsi/scsi_scan.c	Wed Nov 20 17:16:03 2002
++++ edited/drivers/scsi/scsi_scan.c	Thu Nov 21 09:01:56 2002
+@@ -1872,7 +1872,7 @@
+ 	if (!shost)
+ 		return -ENODEV;
+ 	sdev = scsi_find_device(shost, channel, id, lun);
+-	if (!sdev)
++	if (sdev)
+ 		goto out;
  
-===== drivers/scsi/scsi_proc.c 1.10 vs edited =====
---- 1.10/drivers/scsi/scsi_proc.c	Wed Nov 20 17:17:50 2002
-+++ edited/drivers/scsi/scsi_proc.c	Thu Nov 21 08:47:56 2002
-@@ -16,14 +16,13 @@
-  * Michael A. Griffith <grif@acm.org>
-  */
- 
--#include <linux/config.h>
- #include <linux/module.h>
-+#include <linux/init.h>
- #include <linux/string.h>
- #include <linux/mm.h>
- #include <linux/slab.h>
- #include <linux/proc_fs.h>
- #include <linux/errno.h>
--#include <linux/stat.h>
- #include <linux/blk.h>
- #include <asm/uaccess.h>
- 
+ 	error = -ENOMEM;
+
 -- Patrick Mansfield
