@@ -1,60 +1,46 @@
-From: Mike Anderson <andmike@us.ibm.com>
-Subject: Re: Broken SCSI code in the BK tree (was: 2.5.59-mm8)
-Date: Fri, 7 Feb 2003 00:50:43 -0800
+From: Matthew Wilcox <willy@debian.org>
+Subject: Remove 53c7,8xx driver?
+Date: Fri, 7 Feb 2003 13:39:23 +0000
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030207085043.GA2001@beaverton.ibm.com>
-References: <211570000.1044508407@[10.10.2.4]> <265170000.1044564655@[10.10.2.4]> <275930000.1044570608@[10.10.2.4]> <1044573927.2332.100.camel@mulgrave> <20030206172434.A15559@beaverton.ibm.com> <293060000.1044583265@[10.10.2.4]> <20030206182502.A16364@beaverton.ibm.com> <20030206230544.E19868@redhat.com> <20030207041936.GA26189@krispykreme>
+Message-ID: <20030207133923.M32277@parcelfarce.linux.theplanet.co.uk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from willy by www.linux.org.uk with local (Exim 3.33 #5)
+	id 18h8ix-0007l0-00
+	for linux-scsi@vger.kernel.org; Fri, 07 Feb 2003 13:39:23 +0000
 Content-Disposition: inline
-In-Reply-To: <20030207041936.GA26189@krispykreme>
 List-Id: linux-scsi@vger.kernel.org
-To: Anton Blanchard <anton@samba.org>
-Cc: Patrick Mansfield <patmans@us.ibm.com>, "Martin J. Bligh" <mbligh@aracnet.com>, James Bottomley <James.Bottomley@steeleye.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-I removed the other Mike Anderson (mikeand@us.ibm.com) from the cc
-list, we seem to have many Mike Anderson's around hear :-).
 
-Anton Blanchard [anton@samba.org] wrote:
->  
-> Hi,
-> 
-> > If I understand correctly, Matthew Jacob's latest isp driver set drives
-> > *all* qlogic hardware (or at least all the older stuff like the qlogicisp
-> > driver drives).  I would much prefer that people simply test out Matthew's
-> > driver and use it instead.  In fact, if it's ready for 2.5 kernel use, I
-> > would strongly recommend that it be considered as a possible replacement
-> > in the linux kernel for the default driver on all qlogic cards not handled
-> > by the new qla2x00 driver version 6 (DaveM may have objections to that 
-> > related to sparc if Matthew's driver isn't sparc friendly, but I don't 
-> > know of any other reason not to switch over).
-> 
-> I had a bunch of problems with the in kernel and vendor qlogic drivers
-> on my ppc64 box. Matt Jacob's driver worked out of the box. Davem
-> sounded positive last time I asked him about it.
-> 
-> I did a quick forward port to 2.5 a month or two ago, sounds like we
-> should work to get it in the kernel. There are some rough edges but
-> Mike kindly offered to lend a hand here.
+Drew Eckhardt's 53c7,8xx driver seems to be unmaintained:
 
-I have been buried lately so I have only taken the patch you sent me
-and updated it so it will compile with the most recent SCSI
-changes. I also made a few tweaks to the make files.
+ - #error for conversion to DMA-mapping.txt
+ - still uses cli()
+ - still uses pci_find_device()
+ - still uses ->abort() and ->reset()
 
-Currently it is running on my 2202 card system.
+Is it time to put it out of its misery?
 
-When I ran it my other system that has a Qlogic ISP1020 and two Qlogic
-2300's it would hang post initing the driver. The driver seemed to be
-responsive to external events like port downs, but appeared to not
-complete its init. When I use the driver disable defines to turn off
-detection of the ISP1020 the driver loaded ok (I only ran it up to 60MB
-on a few spindles so not a very good test).
+Are there any devices this driver supports which are not supported by
+one (or more ;-) of:
 
-I will look at this more and see if I can understand the cause.
+ - 53c700
+ - 53c7xx
+ - NCR_D700
+ - lasi700
+ - ncr53c8xx
+ - sym53c8xx
+ - sym53c8xx_2
+ - sim710
+ - zalon
 
--andmike
---
-Michael Anderson
-andmike@us.ibm.com
+As it stands, it seems to only support the 810, 815, 820 & 825 chips,
+so I really think it should be removed.  But maybe I misread the driver;
+what do you think?
 
+-- 
+"It's not Hollywood.  War is real, war is primarily not about defeat or
+victory, it is about death.  I've seen thousands and thousands of dead bodies.
+Do you think I want to have an academic debate on this subject?" -- Robert Fisk
