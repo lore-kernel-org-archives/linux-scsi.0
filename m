@@ -1,43 +1,72 @@
-From: Kai Makisara <Kai.Makisara@kolumbus.fi>
-Subject: Re: 2.4.19 SCSI error handing, door locking, etc
-Date: Sat, 5 Oct 2002 10:54:50 +0300 (EEST)
+From: Matej Kenda <matejkenda@REMOVE.volja.net.hermes.si>
+Subject: Re: 2.4.1[89]: SMP computer hangs when accessing tape drive via scsi
+ generic
+Date: Tue, 08 Oct 2002 16:55:24 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44.0210051043290.3098-100000@kai.makisara.local>
-References: <20021004143217.A18636@eng2.beaverton.ibm.com>
+Message-ID: <3DA2F1DC.4040500@REMOVE.volja.net>
+References: <3D9848FD.6040007@REMOVE.volja.net>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <20021004143217.A18636@eng2.beaverton.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Patrick Mansfield <patmans@us.ibm.com>
+To: dgilbert@interlog.com
 Cc: linux-scsi@vger.kernel.org
 
-On Fri, 4 Oct 2002, Patrick Mansfield wrote:
+Hi Gilbert,
 
-> Hi -
->
-> I noticed that the tape drivers (st.c and osst.c) are not using the
-> scsi_ioctl() for door locking, so they won't ever set the new
-> Scsi_Device::locked.
->
-> There is some auto-relock code, but AFAICT (at least st.c, searching for
-> MTLOCK) it will only relock after a reset (if was_reset is still set),
-> and we are calling st_ioctl() for one of these MT commands:
->
-> 	MTREW MTOFFL MTRETEN MTERASE MTSEEK MTEOM
->
-> The user can't even relock the door unless one of the above commands
-> was sent (again, if was_reset is still set).
->
-> The auto-relock in rw_checks() is never hit if was_reset is set.
->
-> Kai - should st.c (and osst.c?) be using scsi_ioctl(SCSI_IOCTL_DOORLOCK/UNLOCK)?
->
-st.c should definitely do it. I will do the changes very soon (together
-with some other changes related to resets done by the midlayer). (The
-ioctl did not exist when I put the current code into st.c and I have not
-seen any pressing reason the change that until now.) The same changes
-should probably be made to osst.c. I will tell the maintainers.
+I have been wrestling with this problem for quite a while, using different 
+computers (UP, SMP), connecting tape drives to SCSI sdapters in different ways 
+(one drive per adapter, multiple drives per adapter, etc).
 
-	Kai
+I have also tried to use different Linux distributions with different kernel 
+versions:
+
+* RedHat 7.3 with vanilla 2.4.18 + EA patch
+* RedHat 8.0 with RedHat's 2.8.18 kernel
+* SuSE Linux Enterprise Edition B3 with SuSE's 2.4.19 kernel
+
+I came to the conclusion that the "lethal" combination that displays kernel 
+oops and the machine hangs is:
+
+* SMP computer,
+* scsi generic direct I/O turned on (/proc/scsi/sg/allow_dio)
+
+All other combinations are irrelevant.
+
+For now, I won't use the direct I/O feature of SG. If you need any help on 
+locationg the cause of the problem, I will be happy to assist.
+
+I hope that this information will be of any help to you.
+
+Best regards,
+
+Matej
+
+Matej Kenda wrote:
+> Hi,
+> 
+> We have experienced major problems dealing with tape drives via SCSI 
+> generic driver on RedHat ((null)) and SuSE Linux Enterprise Server 8 
+> Beta3. The computer just hangs without logging anything to the 
+> /var/log/messages.
+> 
+> On RedHat ((null)) we got the stack trace on the screen and managed to 
+> get some more information.
+> 
+> Manually copied stack trace (last function on top):
+> 
+> sg_cmd_done_bh
+> sg_common_write
+> scsi_insert_special_req
+> scsi_insert_special
+> ahc_linux_run_device_queue (+offset 666)
+> pci_map_sg (asm-386/pci.h)
+> 
+> Macro BUG() is called in that function, because one of the parameters is 
+> not OK. We were not able to detect which parameter was not OK.
+> 
+> The application that we develop was writing one 64kB and one 32kB block 
+> of data via sg using direct IO flag at the time of the hang.
+> 
 
