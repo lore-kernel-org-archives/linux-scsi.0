@@ -1,47 +1,26 @@
-From: Mark Overmeer <Mark@Overmeer.net>
-Subject: Re: Adaptec 2810SA problems
-Date: Sat, 26 Jun 2004 13:23:28 +0200
+From: jdooley@ugcs.caltech.edu (James Dooley)
+Subject: New email address for jdooley
+Date: Sat, 26 Jun 2004 13:00:44 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040626132327.B31119@speeltuin.ATComputing.nl>
-References: <547AF3BD0F3F0B4CBDC379BAC7E4189FF1D40D@otce2k03.adaptec.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Message-ID: <200406262000.i5QK0iSe030414@beg.ugcs.caltech.edu>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from speeltuin.ATComputing.nl ([195.108.229.26]:11024 "EHLO
-	speeltuin.ATComputing.nl") by vger.kernel.org with ESMTP
-	id S266256AbUFZLae (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 26 Jun 2004 07:30:34 -0400
-Content-Disposition: inline
-In-Reply-To: <547AF3BD0F3F0B4CBDC379BAC7E4189FF1D40D@otce2k03.adaptec.com>; from mark_salyzyn@adaptec.com on Fri, Jun 25, 2004 at 08:59:06AM -0400
+Received: from beg.ugcs.caltech.edu ([131.215.43.168]:31897 "EHLO
+	beg.ugcs.caltech.edu") by vger.kernel.org with ESMTP
+	id S264595AbUFZUAp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 26 Jun 2004 16:00:45 -0400
+Received: from beg.ugcs.caltech.edu (localhost [127.0.0.1])
+	by beg.ugcs.caltech.edu (8.12.8p1/8.12.8/UGCS/5.0) with ESMTP id i5QK0iQ9030416
+	for <linux-scsi@vger.kernel.org>; Sat, 26 Jun 2004 13:00:44 -0700
+Received: (from jdooley@localhost)
+	by beg.ugcs.caltech.edu (8.12.8p1/8.12.8/Submit) id i5QK0iSe030414
+	for linux-scsi@vger.kernel.org; Sat, 26 Jun 2004 13:00:44 -0700
 List-Id: linux-scsi@vger.kernel.org
-To: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-* Salyzyn, Mark (mark_salyzyn@adaptec.com) [040625 14:52]:
-> Your best bet to hone in on the problem is to contact Adaptec Technical
-> support, make sure you have your products TSID handy.
+Either you sent email to me, or someone spammed it on your behalf.
+Just want to let you know - this email address is no longer valid.
+All email sent to it is just deleted.
 
-I will try that, (but usually as last resort)
+thanks,
+-james
 
-> The appears dead message is a result of a failure in the adapter
-> identified by performing a sequence of health checks. Finer resolution
-> of this failure mode is available in the Adaptec release for this
-> driver.
-
-Is there a 2.6.7 driver of Adaptec itself?  I thought they only had their
-own 2.4.* versions...
-
-> The card's firmware can be updated by using the native Linux cli tool
-> supplied with the card.
-
-It's not in the description of the driver software.  That always worries
-me a little....  The docs are rather unsatisfactory...
--- 
-Thanks for the answer,
-
-               MarkOv
-
-------------------------------------------------------------------------
-drs Mark A.C.J. Overmeer                                MARKOV Solutions
-       Mark@Overmeer.net                          solutions@overmeer.net
-http://Mark.Overmeer.net                   http://solutions.overmeer.net
