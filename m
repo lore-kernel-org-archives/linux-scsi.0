@@ -1,74 +1,28 @@
-From: Mike Anderson <andmike@us.ibm.com>
-Subject: Re: Bad reactions to QUEUE FULL
-Date: Wed, 30 Apr 2003 09:51:30 -0700
+From: "Subodh S" <subodh_s_1975@mail.com>
+Subject: Cmd/Api to view no. of buffer heads
+Date: Wed, 30 Apr 2003 12:14:32 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030430165130.GC2350@beaverton.ibm.com>
-References: <20030429220259.A13386@jose.vato.org> <1051714713.1818.32.camel@mulgrave> <20030430160851.GA2350@beaverton.ibm.com> <20030430091335.A14743@jose.vato.org>
+Message-ID: <20030430171432.70986.qmail@mail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e35.co.us.ibm.com ([32.97.110.133]:62711 "EHLO
-	e35.co.us.ibm.com") by vger.kernel.org with ESMTP id S261302AbTD3Qgr
+Received: from 205-158-62-158.outblaze.com ([205.158.62.158]:35996 "HELO
+	spf1.us.outblaze.com") by vger.kernel.org with SMTP id S262239AbTD3RCv
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 30 Apr 2003 12:36:47 -0400
+	Wed, 30 Apr 2003 13:02:51 -0400
 Content-Disposition: inline
-In-Reply-To: <20030430091335.A14743@jose.vato.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Tim Pepper <tpepper@linux.ibm.com>, James Bottomley <James.Bottomley@steeleye.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Jens Axboe <axboe@suse.de>, olh@suse.de
+To: linux-scsi@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
 
-You should not need the previous patch you posted.
+Hi,
 
-As James stated I would be suspicious about only restoring this one field
-in the command.
+Is there a way to check the total number of buffer heads available, free and used. Tried to check /proc/slabinfo, didn't make sense, keeps changing all the time. 
 
-The side effect of the work around patch is that sd_init_command (if you
-where doing IO to sd) will be called again on the command and
-sc_data_direction will get set.
-
-Tim Pepper [tpepper@vato.org] wrote:
-> Thanks Mike!  I'll run with this and see what happens.  Should I do it instead of
-> the one restoring the old direction?
-> 
-> Since it sounds LLDD related I'll bounce detailed trace info from each of
-> those drivers to the vendors for comment.
-> 
-> Thanks!
-> 
-> Tim
-> 
-> > 
-> > --- linux-2.4/drivers/scsi/scsi_lib.c		Wed Apr 30 09:04:16 2003
-> > +++ linux-2.4-p/drivers/scsi/scsi_lib.c		Wed Apr 30 09:04:17 2003
-> > @@ -256,6 +256,17 @@
-> >  	if (SCpnt != NULL) {
-> >  
-> >  		/*
-> > +		 * This is a work around for a case where this Scsi_Cmnd
-> > +		 * may have been through the busy retry paths already. We
-> > +		 * clear the special flag and try to restore the
-> > +		 * read/write request cmd value.
-> > +		 */
-> > +		if (SCpnt->request.cmd == SPECIAL)
-> > +			SCpnt->request.cmd = 
-> > +				(SCpnt->sc_data_direction ==
-> > +				 SCSI_DATA_WRITE) ? WRITE : READ;
-> > +
-> > +		/*
-> >  		 * For some reason, we are not done with this request.
-> >  		 * This happens for I/O errors in the middle of the request,
-> >  		 * in which case we need to request the blocks that come after
-> 
-> -- 
-> *********************************************************
-> *  tpepper@vato dot org             * Venimus, Vidimus, *
-> *  http://www.vato.org/~tpepper     * Dolavimus         *
-> *********************************************************
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
--andmike
---
-Michael Anderson
-andmike@us.ibm.com
+-subodh
+-- 
+__________________________________________________________
+Sign-up for your own FREE Personalized E-mail at Mail.com
+http://www.mail.com/?sr=signup
 
