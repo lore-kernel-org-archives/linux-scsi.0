@@ -1,64 +1,77 @@
-From: Paul Wagland <paul@wagland.net>
-Subject: Re: assertion failure with new megaraid beta driver leads to sche duling failure
-Date: Fri, 16 Apr 2004 07:44:52 +0200
+From: Heiko Carstens <Heiko.Carstens@de.ibm.com>
+Subject: Re: call_usermodehelper hang
+Date: Fri, 16 Apr 2004 10:52:39 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <2E7711F2-8F69-11D8-8B4A-000A95CD704C@wagland.net>
-References: <0E3FA95632D6D047BA649F95DAB60E57033BC533@exa-atlanta.se.lsil.com>
-Mime-Version: 1.0 (Apple Message framework v613)
-Content-Type: multipart/signed; protocol="application/pgp-signature"; micalg=pgp-sha1; boundary="Apple-Mail-8-707877079"
-Content-Transfer-Encoding: 7bit
+Message-ID: <OFD911A46B.B4FA5620-ONC1256E78.002FEC42-C1256E78.0030BCD4@de.ibm.com>
+References: <4072E2F5.9060604@us.ibm.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="US-ASCII"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp-out2.xs4all.nl ([194.109.24.12]:7942 "EHLO
-	smtp-out2.xs4all.nl") by vger.kernel.org with ESMTP id S262416AbUDPFpW
+Received: from mtagate6.de.ibm.com ([195.212.29.155]:44756 "EHLO
+	mtagate6.de.ibm.com") by vger.kernel.org with ESMTP id S262730AbUDPIw5
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 16 Apr 2004 01:45:22 -0400
-In-Reply-To: <0E3FA95632D6D047BA649F95DAB60E57033BC533@exa-atlanta.se.lsil.com>
+	Fri, 16 Apr 2004 04:52:57 -0400
+In-Reply-To: <4072E2F5.9060604@us.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: "Mukker, Atul" <Atulm@lsil.com>
-Cc: Linux SCSI mailing list <linux-scsi@vger.kernel.org>, Sreenivas Bagalkote <sreenib@lsil.com>, Linux kernel mailing list <linux-kernel@vger.kernel.org>
+To: rusty@rustcorp.com.au
+Cc: brking@us.ibm.com, linux-scsi@vger.kernel.org, linux-scsi-owner@vger.kernel.org, linux-kernel@vger.kernel.org
 
+> I have been running into some kernel hangs due to call_usermodehelper. 
+Looking
+> at the backtrace, it looks to me like there are deadlock issues with 
+adding
+> devices from work queues. Attached is a sample backtrace from one of the
+> hangs I experienced. My question is why does call_usermodehelper do 
+> 2 different
+> things depending on whether or not it is called from the kevent 
+> task? It appears
+> that the simple way to fix the hang would be to never have 
+call_usermodehelper
+> use a work_queue since it must be called from process context anyway, or
+> am I missing something?
 
---Apple-Mail-8-707877079
-Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset=US-ASCII; format=flowed
+Do you have a solution for this problem? As it appears we have the very 
+same
+problem with the zfcp lldd, since we also trigger a scsi_add_device call 
+by
+using schedule_work. IMO the right way to solve this problem would be to 
+not
+trigger any hotplug events while holding a semaphore.
 
-Atul,
-
-On Apr 16, 2004, at 0:36, Mukker, Atul wrote:
-
-> Paul,
->
-> Random deletion has issues with this version of the driver. Sreenivas 
-> will
-> release the next version tomorrow morning with the fix.
-
-As I understand it you want this new driver to replace the one in the 
-kernel, correct?
-
-If so, would it be possible to rename the output file to megaraid.o, 
-instead of megaraid_nm.o. The reason for this is that then the various 
-vendor tools that produce initrd images would then most likely not need 
-to be changed.
-
-If not, then a new name is good ;-)
-
-Cheers,
-Paul
-
---Apple-Mail-8-707877079
-content-type: application/pgp-signature; x-mac-type=70674453;
-	name=PGP.sig
-content-description: This is a digitally signed message part
-content-disposition: inline; filename=PGP.sig
-content-transfer-encoding: 7bit
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.2.4 (Darwin)
-
-iD8DBQFAf3LXtch0EvEFvxURAjApAKCoXzm0reXD0RrAsthl8F/IJGTXmACgyPov
-FdMC9l/QcdGCEbkHjHOWDTE=
-=jVIJ
------END PGP SIGNATURE-----
-
---Apple-Mail-8-707877079--
+> 0xc0000000017df300        1        0  0    0   D  0xc0000000017df7b0 
+swapper
+>            SP(esp)            PC(eip)      Function(args)
+> 0xc00000003fc9f460  0x0000000000000000  NO_SYMBOL or Userspace
+> 0xc00000003fc9f4f0  0xc000000000058c40  .schedule +0xb4
+> 0xc00000003fc9f5c0  0xc00000000005a464  .wait_for_completion +0x138
+> 0xc00000003fc9f6c0  0xc00000000007c594  .call_usermodehelper +0x104
+> 0xc00000003fc9f810  0xc00000000022d3e8  .kobject_hotplug +0x3c4
+> 0xc00000003fc9f900  0xc00000000022d67c  .kobject_add +0x134
+> 0xc00000003fc9f9a0  0xc00000000012b3d8  .register_disk +0x70
+> 0xc00000003fc9fa40  0xc00000000027dfe4  .add_disk +0x60
+> 0xc00000003fc9fad0  0xc0000000002dc7dc  .sd_probe +0x290
+> 0xc00000003fc9fb80  0xc00000000026fbe8  .bus_match +0x94
+> 0xc00000003fc9fc10  0xc00000000026ff70  .driver_attach +0x8c
+> 0xc00000003fc9fca0  0xc000000000270104  .bus_add_driver +0x110
+> 0xc00000003fc9fd50  0xc000000000270a18  .driver_register +0x38
+> 0xc00000003fc9fdd0  0xc0000000002cd8f8  .scsi_register_driver +0x28
+> 0xc00000003fc9fe50  0xc0000000004941d8  .init_sd +0x8c
+> 0xc00000003fc9fee0  0xc00000000000c720  .init +0x25c
+> 0xc00000003fc9ff90  0xc0000000000183ec  .kernel_thread +0x4c
+> 
+> 0xc00000003fab3380        4        1  0    0   D  0xc00000003fab3830 
+events/0
+>            SP(esp)            PC(eip)      Function(args)
+> 0xc00000003faaf6e0  0x0000000000000000  NO_SYMBOL or Userspace
+> 0xc00000003faaf770  0xc000000000058c40  .schedule +0xb4
+> 0xc00000003faaf840  0xc00000000022fa20  .rwsem_down_write_failed +0x14c
+> 0xc00000003faaf910  0xc00000000026fed0  .bus_add_device +0x11c
+> 0xc00000003faaf9b0  0xc00000000026e288  .device_add +0xd0
+> 0xc00000003faafa50  0xc0000000002cdb00  .scsi_sysfs_add_sdev +0x8c
+> 0xc00000003faafb00  0xc0000000002cbff8  .scsi_probe_and_add_lun +0xb04
+> 0xc00000003faafc00  0xc0000000002ccca0  .scsi_add_device +0x90
+> 0xc00000003faafcb0  0xc0000000002d9458  .ipr_worker_thread +0xc60
+> 0xc00000003faafdc0  0xc00000000007cd9c  .worker_thread +0x268
+> 0xc00000003faafee0  0xc0000000000839cc  .kthread +0x160
+> 0xc00000003faaff90  0xc0000000000183ec  .kernel_thread +0x4c
 
