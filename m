@@ -1,32 +1,29 @@
-From: Alberto Bertogli <albertogli@telpin.com.ar>
-Subject: Re: [linux-usb-devel] BUG when removing USB flash drive
-Date: Fri, 14 May 2004 18:55:01 -0300
+From: "Lee Xing" <lxing@Crossroads.com>
+Subject: How does low-level driver report disks changes to mid-level on the fly?
+Date: Fri, 14 May 2004 18:28:34 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040514215501.GD10575@telpin.com.ar>
-References: <1084565070.1841.373.camel@mulgrave> <Pine.LNX.4.44L0.0405141710290.20244-100000@ida.rowland.org>
+Message-ID: <519672568F040C41B6FAC21ADF51B18FEFF2@mailnode1.commstor.crossroads.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.telpin.com.ar ([200.43.18.243]:2212 "EHLO
-	mail.telpin.com.ar") by vger.kernel.org with ESMTP id S262961AbUENV4i
+Received: from email.crossroads.com ([65.68.235.6]:60313 "HELO
+	email.crossroads.com") by vger.kernel.org with SMTP id S264569AbUENX2i convert rfc822-to-8bit
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 14 May 2004 17:56:38 -0400
-Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.44L0.0405141710290.20244-100000@ida.rowland.org>
+	Fri, 14 May 2004 19:28:38 -0400
+content-class: urn:content-classes:message
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: James Bottomley <James.Bottomley@steeleye.com>, Mike Anderson <andmike@us.ibm.com>, USB development list <linux-usb-devel@lists.sourceforge.net>, SCSI development list <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
 
-On Fri, May 14, 2004 at 05:13:38PM -0400, Alan Stern wrote:
-> I'll work on a patch.  Testing it won't be easy, though; it's hard to 
-> prove that a race _isn't_ happening!
+Hi Gentlemen,
 
-I'm going to have to repeat this tests a few more times (in fact, I'll
-boot -mm2 in a couple of minutes to see if I can reproduce the bug there),
-so if you want me to try some patch let me know. As you say, I can't
-_prove_ it, but at least I can confirm I can't hit it =)
+Could some one please give me some information/hint on this question?
 
-Thanks,
-		Alberto
+Suppose we hot plug-in or pull-off FC disks, how does the low-level driver report such disk/device changes to SCSI mid-level driver **on the fly**?  Can low-level driver "manually" call scsi_register_module() to re-register itself, which in turn calls scsi_register_host() then scan_scsis(), or should low-level driver do something else?
+
+Thanks in advance,
+
+
+Lee
 
 
