@@ -1,50 +1,47 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: "do ata" scsi command?
-Date: Fri, 16 May 2003 15:31:16 -0400
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [linux-usb-devel] USB Storage oops in 2.5.69-bk8
+Date: Fri, 16 May 2003 17:23:59 -0400 (EDT)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3EC53C84.7020306@pobox.com>
-References: <20030515230223.GA516@gtf.org> <3EC53307.5070908@rogers.com>
+Message-ID: <Pine.LNX.4.44L0.0305161715250.1555-100000@ida.rowland.org>
+References: <20030516190414.GD11884@iucha.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:52940 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S264592AbTEPTSp
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 16 May 2003 15:18:45 -0400
-In-Reply-To: <3EC53307.5070908@rogers.com>
+Received: from ida.rowland.org ([192.131.102.52]:46084 "HELO ida.rowland.org")
+	by vger.kernel.org with SMTP id S264609AbTEPVLH (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 16 May 2003 17:11:07 -0400
+In-Reply-To: <20030516190414.GD11884@iucha.net>
 List-Id: linux-scsi@vger.kernel.org
-To: Luben Tuikov <tluben@rogers.com>
-Cc: linux-scsi@vger.kernel.org, axboe@suse.de
+To: Florin Iucha <florin@iucha.net>
+Cc: David Brownell <david-b@pacbell.net>, USB development list <linux-usb-devel@lists.sourceforge.net>, linux-scsi@vger.kernel.org
 
-Luben Tuikov wrote:
-> It seems like you want what the 3ware LLDD is doing.  The format
-> and specs are closed, but the implementation is open: ioctl
-> and a char device ioctl.
+On Fri, 16 May 2003, Florin Iucha wrote:
+
+> On Fri, May 16, 2003 at 02:54:00PM -0400, Alan Stern wrote:
+> > 
+> > The logs you posted did not include the usb-storage debugging output.  
+> > Either you didn't configure it in your kernel, or you had the console 
+> > logging level set too low to capture debug-priority messages.
+> > 
+> > Maybe David Brownell will be able to learn something from the ehci log
+> > messages.
 > 
-> What you lose is the block/scsi synchronizaion, but if you want
-> to support _closed_ vendor extensions, that's what you get.
+> D'oh! I have attached the respective kern.log. 
 
-This is for programming the drive via userspace.  Same purpose as 
-HDIO_DRIVE_TASKFILE.  I would rather move non-essential stuff to 
-userspace where possible.  Sending taskfiles directly allows one to 
-validate the driver without other parts of the kernel getting in the 
-way.  That allows me to narrow down problems to my driver, or 
-not-my-driver.  :)
+Good.  This clearly shows the problem.  It's an error in the SCSI driver.  
+It has shown up before and been discussed at length a few weeks ago.  The
+problem is that a MODE-SENSE(6) command is requesting a transfer of 3
+bytes, which is smaller than the minimum of 4 bytes for that command.  
+The device doesn't like it and crashes.
 
-But since it's _far_ more contentious than I thought it would be, I'll 
-just put it off until later.
+The SCSI people are supposed to be working on this.  First, we should be 
+using MODE-SENSE(10) by default rather than MODE-SENSE(6).  Second, we 
+should never request a transfer smaller than the minimum allowed size.  
+When these changes are ready you shouldn't have any more trouble.
 
+The OOPS you got originally was caused by the lack of proper 
+hot-unplugging cooperation between usb-storage and the SCSI driver.
 
-> Unless what you want to support has a command mapping already
-> in SCSI?  Did you check SBC-2, SMC-2, SCC-2, SES-2?  Wouldn't
-> you find any CDB's there which would fit in?  My guess is not.
-
-I would like to create a target that is fully verifyable as SCSI-2, and 
-eventually SCSI-3.  So I _do_ want to support such mappings.  But that 
-is parallel to the capability of talking directly to the ATA device.
-
-	Jeff
-
-
+Alan Stern
 
