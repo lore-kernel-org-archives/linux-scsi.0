@@ -1,41 +1,36 @@
-From: Alex Tomas <bzzz@tmi.comex.ru>
-Subject: Re: -test4 detects scsi hdds in another order than -test2 does
-Date: Fri, 29 Aug 2003 21:34:39 +0400
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <m3vfsgnz9s.fsf@bzzz.home.net>
-References: <m33cfm19ar.fsf@bzzz.home.net> <3F4E4605.6040706@wmich.edu>
-	<m3vfshrola.fsf@bzzz.home.net> <3F4F7129.1050506@wmich.edu>
-	<m3vfsgpj8b.fsf@bzzz.home.net> <20030829091135.559a121f.akpm@osdl.org>
-	<m3d6eopfvt.fsf_-_@bzzz.home.net>
-	<20030829100356.512debe7.akpm@osdl.org>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: libata update posted (was Re: VIA Serial ATA chipset)
+Date: Fri, 29 Aug 2003 13:59:55 -0400
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <3F4F949B.6030900@pobox.com>
+References: <20030813074535.C3AB427AC8@mail.medav.de> <3F4F6863.4080400@pobox.com> <3F4F8BA7.1080002@rackable.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from tmi.comex.ru ([217.10.33.92]:28566 "EHLO gw.home.net")
-	by vger.kernel.org with ESMTP id S261595AbTH2R3K (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 29 Aug 2003 13:29:10 -0400
-In-Reply-To: <20030829100356.512debe7.akpm@osdl.org> (Andrew Morton's
- message of "Fri, 29 Aug 2003 10:03:56 -0700")
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+In-Reply-To: <3F4F8BA7.1080002@rackable.com>
+To: Samuel Flory <sflory@rackable.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
-Cc: Alex Tomas <bzzz@tmi.comex.ru>, linux-scsi@vger.kernel.org
 
->>>>> Andrew Morton (AM) writes:
+Samuel Flory wrote:
+> Jeff Garzik wrote:
+>> Changes:
+>> * continue work towards fully async taskfile API:  you call 
+>> submit_tf(), and later on, your callback is called when the taskfile 
+>> completes or times out.   async taskfile API is required for ATAPI and 
+>> supporting more advanced host controllers like Promise or AHCI (SATA2).
+>> * some cleanups
 
- AM> Alex Tomas <bzzz@tmi.comex.ru> wrote:
- >> 
- >> output for -test4:
- >> 
- >> ...
- >> 
- >> output for -test2:
- >> 
+>   I'm guessing there is no support for Promise yet?
 
- AM> Make it easy for us please.  What is the difference between these two?  What
- AM> bug are we looking for?
-
-with -test2 first found drive is IBM DNES, 2nd - QUANTUM.
-with -test4 first found drive is QUANTUM, 2nd - IBM DNES
+Not yet.  Once I finish the item mentioned above, "async taskfile API", 
+Promise support will appear quite rapidly.
 
 
+> PS-  The driver works great on the silcon image chipset.  (Once I 
+> realized that my Seagate drive needed newer firmware.)
+
+Um... libata doesn't support Silicon Image yet?
+
+	Jeff
