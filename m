@@ -1,33 +1,40 @@
-From: "Randy.Dunlap" <rddunlap@osdl.org>
-Subject: Re: [PATCH] add scsi bus for virtual drivers take3
-Date: Mon, 14 Feb 2005 10:02:55 -0800
-Message-ID: <4210E7CF.4060808@osdl.org>
-References: <420D92DA.10409@cs.wisc.edu>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: What is SCSI command 0xa0 ?
+Date: Mon, 14 Feb 2005 16:07:05 -0500 (EST)
+Message-ID: <Pine.LNX.4.44L0.0502141558290.1175-100000@ida.rowland.org>
+References: <20050214160210.6c7e7e52@hebus>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Received: from fire.osdl.org ([65.172.181.4]:11219 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S261503AbVBNSM6 (ORCPT
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from ida.rowland.org ([192.131.102.52]:23300 "HELO ida.rowland.org")
+	by vger.kernel.org with SMTP id S261473AbVBNVHG (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 14 Feb 2005 13:12:58 -0500
-In-Reply-To: <420D92DA.10409@cs.wisc.edu>
+	Mon, 14 Feb 2005 16:07:06 -0500
+In-Reply-To: <20050214160210.6c7e7e52@hebus>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>
-Cc: linux-iscsi-devel <linux-iscsi-devel@lists.sourceforge.net>, linux-scsi <linux-scsi@vger.kernel.org>
+To: SCSI development list <linux-scsi@vger.kernel.org>
+Cc: Samuel Colin <Samuel.Colin3@wanadoo.fr>
 
-Mike Christie wrote:
-> I do not know what I was diffing the last time.
-> The attached patch should work now.
-> 
-> Sorry.
-> 
-> Mike
-> 
+Can anybody tell me what this CDB is supposed to do, when issued to a 
+direct-access device (a disk drive)?
 
-It would be nice to include the full patch description in the
-email body so that people don't have to refer 2-3 emails
-back to read it.... in the future, please.
+	a0 00 00 00 00 00 00 00 10 00 00 00
 
--- 
-~Randy
+It's crashing the firmware on Samuel's disk and generally causing 
+problems.  The command gets sent right after the partition table is 
+read.
+
+Equally important, can someone suggest how to suppress the command?
+
+Thanks,
+
+Alan Stern
+
+P.S.: Samuel, that one command seems to be causing all your problems.  
+For some reason it gets sent to the lacie1 disk and not to the lacieroot
+disk.  I think the USB controller is working okay and has nothing to do 
+with this.  Maybe the command is sent by some daemon running on the 
+openbrick system, like hald.  Is there a hald process, and if you kill the 
+process does the disk then start working?
+
