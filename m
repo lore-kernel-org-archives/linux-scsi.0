@@ -1,53 +1,72 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: [PATCH 2.6.11] ide-scsi: map sg buffers in idescsi_input/output_buffers() to kernel virtual address
-Date: Wed, 16 Mar 2005 17:06:46 +0100
-Message-ID: <20050316160645.GW7842@suse.de>
-References: <7A8F92187EF7A249BF847F1BF4903C04010EEA11@ausx2kmpc103.aus.amer.dell.com>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: [PATCH] dc395x: Fix support for highmem
+Date: Wed, 16 Mar 2005 16:48:06 +0000
+Message-ID: <20050316164806.GO21986@parcelfarce.linux.theplanet.co.uk>
+References: <200503160209.j2G29cAf010870@hera.kernel.org> <20050316075839.GC7842@suse.de> <1110986016.5771.3.camel@mulgrave> <20050316160447.GU7842@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Received: from ns.virtualhost.dk ([195.184.98.160]:6806 "EHLO virtualhost.dk")
-	by vger.kernel.org with ESMTP id S262663AbVCPQGv (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 16 Mar 2005 11:06:51 -0500
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:17543 "EHLO
+	parcelfarce.linux.theplanet.co.uk") by vger.kernel.org with ESMTP
+	id S262680AbVCPQsH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 16 Mar 2005 11:48:07 -0500
 Content-Disposition: inline
-In-Reply-To: <7A8F92187EF7A249BF847F1BF4903C04010EEA11@ausx2kmpc103.aus.amer.dell.com>
+In-Reply-To: <20050316160447.GU7842@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Stuart_Hayes@Dell.com
-Cc: linux-scsi@vger.kernel.org, Joshua_Giles@Dell.com
+To: Jens Axboe <axboe@suse.de>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, g.liakhovetski@gmx.de
 
-On Wed, Mar 16 2005, Stuart_Hayes@Dell.com wrote:
-> Hayes, Stuart wrote:
-> > This patch will map the sg buffers to kernel virtual memory space in
-> > the functions idescsi_input_buffers() and idescsi_output_buffers(). 
-> > Without this patch, idescsi passes a null pointer to
-> > atapi_input_bytes() and atapi_output_bytes() when sg pages are in
-> > high memory (i686 architecture).   
-> > 
-> > I'm attaching as a file, too, as the text will certainly be wrapped.
-> > 
-> > (Sorry for the subject rename--I'm trying to use the correct format
-> > for patch emails.) 
-> > 
-> > Thanks
-> > Stuart
+On Wed, Mar 16, 2005 at 05:04:47PM +0100, Jens Axboe wrote:
+> The kmap() isn't just inefficient, it's a problem to iterate over the sg
+> list and kmap all the pages. That is illegal.
 > 
-> And, while there's another high memory/kmap patch question on this 
-> list...
+> But it's not so tricky to get right, if the punting just happens in the
+> isr. Basically just iterate over every sg entry left ala:
 > 
-> Is there some reason nobody seems interested in this patch (except 
-> Jens--thanks for the help!)?  I'm kind of new to sending in patches, 
-> and I'm not sure if I'm just not waiting long enough, or if there is 
-> a problem with this patch... 
+>         for (i = start; i < sg_entries; i++) {
+>                 unsigned long flags;
+>                 char *ptr;
 > 
-> But really, we're getting a null pointer dereference oops when using 
-> ATAPI tape drives (with ide-scsi) without this patch...
+>                 local_irq_save(flags);
+>                 ptr = kmap_atomic(sg->page, KM_BIO_SRC_IRQ);
+> 
+>                 /* transfer to/from ptr + sg->offset, sg->length bytes */
+> 
+>                 kunmap_atomic(ptr, KM_BIO_SRC_IRQ);
+>                 local_irq_restore(flags);
+>         }
+> 
+> I _think_ the sg->length field is universally called so, you should not
+> use sg->dma_length/sg_dma_len() or sg_dma_address(), as we are outside
+> the work of the iommu at this point.
 
-Sorry, that did seem to get dropped on the floor. Actually I'm wondering
-why you are seeing highmem pages there in the first place, it would be
-easier/better just to limit ide-scsi to non-highmem pages. That would
-remove the need to add any work arounds in the driver.
+Documentation/DMA-mapping.txt agrees with you:
+
+                        Platform Issues
+
+1) Struct scatterlist requirements.
+
+   Struct scatterlist must contain, at a minimum, the following
+   members:
+
+        struct page *page;
+        unsigned int offset;
+        unsigned int length;
+
+Would you mind writing up a change to DMA-mapping.txt that explains why
+one would need to do the kmap solution you outline above?  If it needs
+to be done for IDE and one SCSI driver, I bet it needs to be done for
+more devices, and it'd be a handy place to refer to.
+
+I'm a bit confused why the approach outlined in DMA-mapping.txt doesn't
+work for this driver.  Is it because you don't find out until you're
+in the interrupt handler that you need to map the sg-list and you can't
+call pci_map_sg() from interrupt context?
 
 -- 
-Jens Axboe
-
+"Next the statesmen will invent cheap lies, putting the blame upon 
+the nation that is attacked, and every man will be glad of those
+conscience-soothing falsities, and will diligently study them, and refuse
+to examine any refutations of them; and thus he will by and by convince 
+himself that the war is just, and will thank God for the better sleep 
+he enjoys after this process of grotesque self-deception." -- Mark Twain
