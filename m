@@ -1,25 +1,51 @@
-From: Andrew Morton <akpm@osdl.org>
-Subject: Re: Fusion-MPT much faster as module
-Date: Thu, 31 Mar 2005 12:22:13 -0800
-Message-ID: <20050331122213.0d359837.akpm@osdl.org>
-References: <91888D455306F94EBD4D168954A9457C01AEAC93@nacos172.co.lsil.com>
-	<Pine.LNX.4.62.0503311359360.3702@penguin.linuxhardware.org>
+From: Adrian Bunk <bunk@stusta.de>
+Subject: Re: [2.6 patch] SCSI: cleanups
+Date: Thu, 31 Mar 2005 23:07:45 +0200
+Message-ID: <20050331210745.GH3185@stusta.de>
+References: <20050327202139.GQ4285@stusta.de> <1112023305.5531.2.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fire.osdl.org ([65.172.181.4]:35012 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S261750AbVCaUWh (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 31 Mar 2005 15:22:37 -0500
-In-Reply-To: <Pine.LNX.4.62.0503311359360.3702@penguin.linuxhardware.org>
+Received: from mailout.stusta.mhn.de ([141.84.69.5]:6159 "HELO
+	mailout.stusta.mhn.de") by vger.kernel.org with SMTP
+	id S261936AbVCaVHv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 31 Mar 2005 16:07:51 -0500
+Content-Disposition: inline
+In-Reply-To: <1112023305.5531.2.camel@mulgrave>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: augustus@linuxhardware.org
-Cc: Eric.Moore@lsil.com, Holger.Kiehl@dwd.de, linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
 
-augustus@linuxhardware.org wrote:
->
->  Any word on this bug yet?
+On Mon, Mar 28, 2005 at 09:21:45AM -0600, James Bottomley wrote:
+> On Sun, 2005-03-27 at 22:21 +0200, Adrian Bunk wrote:
+> > This patch contains the following cleanups:
+> [..]
+> 
+> No to all of this:
+> 
+> > - remove the following unused functions:
+> >   - scsi.h: print_driverbyte
+> >   - scsi.h: print_hostbyte
+> > - #if 0 the following unused functions:
+> >   - constants.c: scsi_print_hostbyte
+> >   - constants.c: scsi_print_driverbyte
+> 
+> These are useful to those of us who debug drivers.
+>...
 
-Linus merged the fix yesterday.
+Does this really include the legacy print_driverbyte and print_hostbyte 
+wrappers?
+
+> James
+
+cu
+Adrian
+
+-- 
+
+       "Is there not promise of rain?" Ling Tan asked suddenly out
+        of the darkness. There had been need of rain for many days.
+       "Only a promise," Lao Er said.
+                                       Pearl S. Buck - Dragon Seed
+
