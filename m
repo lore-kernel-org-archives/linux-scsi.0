@@ -1,43 +1,30 @@
-From: James Bottomley <James.Bottomley@steeleye.com>
-Subject: Re: [PATCH] scsi_host sysfs updates scsi-misc-2.5 [0/2]
-Date: 12 May 2003 16:50:21 -0500
+From: Xose Vazquez Perez <xose@wanadoo.es>
+Subject: Re: [ANNOUNCE] QLogic FC Driver for Linux kernel 2.5 available.
+Date: Mon, 12 May 2003 23:53:37 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1052776222.3600.9.camel@mulgrave>
-References: <20030509063321.GA3259@beaverton.ibm.com>
-	<1052711864.1768.7.camel@mulgrave>
-	<20030512063833.GA4133@beaverton.ibm.com>
-	<1052761851.2093.55.camel@mulgrave> <1052762365.2148.59.camel@mulgrave>
-	<20030512184140.GB3226@beaverton.ibm.com>
-	<1052770234.1769.75.camel@mulgrave>
-	<20030512203507.GC3226@beaverton.ibm.com>
-	<1052772136.1769.103.camel@mulgrave>
-	<20030512214902.GD3226@beaverton.ibm.com>
+Message-ID: <3EC017E1.3050507@wanadoo.es>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nat9.steeleye.com ([65.114.3.137]:56068 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S261860AbTELVhp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 12 May 2003 17:37:45 -0400
-In-Reply-To: <20030512214902.GD3226@beaverton.ibm.com>
+Received: from [62.37.236.142] ([62.37.236.142]:7555 "EHLO smtp.wanadoo.es")
+	by vger.kernel.org with ESMTP id S262728AbTELVki (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 12 May 2003 17:40:38 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Anderson <andmike@us.ibm.com>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, mochel@osdl.org
+To: linux-scsi <linux-scsi@vger.kernel.org>, jes@wildopensource.com, James.Bottomley@steeleye.com
 
-On Mon, 2003-05-12 at 16:49, Mike Anderson wrote:
-> I am seeing size-512 with my modified version of scsi_debug. I modified
-> slab.c to store last user for this size and it indicates it was
-> scsi_free_shost. I am looking at this now.
+Jes Sorensen wrote:
 
-I found it: you have a use after free in the sysfs code:
+>I very strongly support that idea, right now all the changes I have
+>made to the qla1280 driver have pretty much been done in the dark.
 
-scsi_host_put does put_device followed by class_device_put, but the
-put_device will free the shost containing the class_device in it's
-release, so the class_device_put touches a freed object.
+you have here latest drivers/firmware:
 
-The solution is just to reverse the order of the puts.
+ - latest: 3.12 August 17, 2000 http://download.qlogic.com/drivers/2206/qla1x160src-3.12.tgz
+ - beta: 3.23  January 12, 2001 http://download.qlogic.com/drivers/2209/qla1x160src-3.23Beta.tgz
 
-James
-
+regards,
+-- 
+Galiza nin perdoa nin esquence. Governo demision!
 
