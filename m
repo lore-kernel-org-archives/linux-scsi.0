@@ -1,42 +1,51 @@
-From: "dario" <sonia_16@hotmail.com>
-Subject: Next Generation V-I-A-G-R-A!  Not herbal!
-Date: Wed, 18 Feb 2004 17:31:38 GMT
+From: "Doelfel, Hardy" <hdoelfel@lsil.com>
+Subject: RE: new driver
+Date: Wed, 18 Feb 2004 19:27:09 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1077125498-12587__43759.2850103558$1077162106@excite.com>
+Message-ID: <0E3FA95632D6D047BA649F95DAB60E5703EF93EE@exa-atlanta.se.lsil.com>
+Mime-Version: 1.0
 Content-Type: text/plain;
+	charset="iso-2022-jp"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from host82-145.pool217141.interbusiness.it ([217.141.145.82]:25351
-	"HELO vfiddle.com") by vger.kernel.org with SMTP id S267210AbUBSA3s
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 18 Feb 2004 19:29:48 -0500
+Received: from mail0.lsil.com ([147.145.40.20]:36533 "EHLO mail0.lsil.com")
+	by vger.kernel.org with ESMTP id S267198AbUBSA1q (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 18 Feb 2004 19:27:46 -0500
 List-Id: linux-scsi@vger.kernel.org
-To: linux-kernel@vger.kernel.org
+To: "Tomita, Haruo" <haruo.tomita@toshiba.co.jp>, Ken Schneider <kschneider@bout-tyme.net>, Arjan van de Ven <arjanv@redhat.com>
+Cc: "Moore, Eric Dean" <Emoore@lsil.com>, linux-scsi@vger.kernel.org, "Mukker, Atul" <Atulm@lsil.com>, "Jarrett, Peter B." <Peterj@lsil.com>
+
+Hi Haruo,
+the library will stay closed source. The header files are only meant to make
+it easier to compile for different kernel versions.
+
+Thanks
+	Hardy
+
+-----Original Message-----
+From: Tomita, Haruo [mailto:haruo.tomita@toshiba.co.jp]
+Sent: Wednesday, February 18, 2004 6:40 PM
+To: Ken Schneider; Arjan van de Ven
+Cc: Moore, Eric Dean; linux-scsi@vger.kernel.org; Doelfel, Hardy; Mukker,
+Atul; Jarrett, Peter B.
+Subject: RE: new driver
 
 
-"I went from about 6in. to over 7.5 in 90days!" - JL - Tulsa, OK
+Hi ken,
 
-http://drlaurent.com/mm/index.php?pid=eph9106
+Eric> There was an effort I started to open source some of
+Eric> the driver, which was linked to a pre-compiled library. 
 
+Haruo> The pre-compiled library(megaide_lib.o) is included. 
 
-"NOT only the SIZE increased..but also the feeling!" - ER - Dallas, TX
+Arjan> Then the driver is not available under the terms of the GPL.... 
+Arjan> (and not compatible with the kernel license so inclusion is not
+possible)
+ 
+Ken> And therefore should not any reference to the GPL in the 
+Ken> other files. I think this should be all or nothing.
 
-http://drlaurent.com/mm/index.php?pid=eph9106
+Is it that the source code of megaide_lib.o should be opened?
 
-
-"I grew about 2in - and more so..remain rock-hard during love making. I owe it
-all to Maxaman! Not bad for a 56 year old."  MT - Pensacola, FL
-
-http://drlaurent.com/mm/index.php?pid=eph9106
-
-
-
-
-
-
-
-
-<P> stevenson Fisher steciak goldman dolotta Hotrod  lyanna canadian 
-avasaris tejachle padula  kithsiri  jonathan &nbsp; metallic merchant sanjuan Robbie kctachma ramdass  shepard winter shithead  koko weissman gwbahren student
-Cougar
-Get off this list by writing to getmeoff731@mail.com
-
+-- 
+Haruo
