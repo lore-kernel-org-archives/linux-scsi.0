@@ -1,47 +1,47 @@
-From: James Bottomley <James.Bottomley@steeleye.com>
-Subject: RE: [Announce] Emulex LightPulse Device Driver
-Date: 10 Mar 2004 20:10:54 -0500
+From: "dan carpenter" <error27@email.com>
+Subject: megaraid on opteron w/ 8G RAM
+Date: Wed, 10 Mar 2004 21:18:47 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1078967456.10834.80.camel@mulgrave>
-References: <3356669BBE90C448AD4645C843E2BF2802C014F1@xbl.ma.emulex.com>
+Message-ID: <20040311021847.B02281D7244@ws3-3.us4.outblaze.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat1.steeleye.com ([65.114.3.130]:43217 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S262922AbUCKBLD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 10 Mar 2004 20:11:03 -0500
-In-Reply-To: <3356669BBE90C448AD4645C843E2BF2802C014F1@xbl.ma.emulex.com>
+Received: from webmail-outgoing.us4.outblaze.com ([205.158.62.67]:6318 "EHLO
+	webmail-outgoing.us4.outblaze.com") by vger.kernel.org with ESMTP
+	id S262941AbUCKCSs (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 10 Mar 2004 21:18:48 -0500
+Received: from wfilter.us4.outblaze.com (wfilter.us4.outblaze.com [205.158.62.180])
+	by webmail-outgoing.us4.outblaze.com (Postfix) with QMQP id CEFCF1801356
+	for <linux-scsi@vger.kernel.org>; Thu, 11 Mar 2004 02:18:47 +0000 (GMT)
+Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
-To: "Smart, James" <James.Smart@Emulex.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>
+To: linux-kernel@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org
 
-On Wed, 2004-03-10 at 17:47, Smart, James wrote:
-> we receive comments. There are constructs in the driver that are likely not
-> going to change, such as the logging facility. How contentious is this ?
-> What about the IP interfaces? and so on.  Anything we receive, especially on
-> the larger concepts in the driver, only helps us understand what's ahead. 
+I'm using the megaraid 1.19.6 driver on RedHat Work Station 
+x86_64.  It works great with only 4 gigs of RAM installed, 
+but it locks up when I load the module with 8 gigs of RAM 
+installed.  It generally locks up in the issue_scb_block() 
+but it's not always consistent about which line it locks 
+up on within that function.
 
-Well, what your logging facility tries to do (discriminated messages to
-the console based on a mask) is extremely standard for drivers.  The way
-you implement it is slightly, erm, less than desirable.  Having your own
-version of sprintf in your driver is a definite no-no (why do you do
-this?  You never seem actually to use the added formatting characters
-like %E?).  But at least it doesn't do anything silly like try to ouput
-to the serial port.
+On the default Suse Linux Enterprise Server 8 the module 
+loads but after around 5 hours of running drive tests the 
+drives stop responding.
 
-As far as the IP portion goes: layering and separation should really be
-the order of the day---perhaps even to the point where you have a core
-module with a scsi and an IP one that sit on top of it.
+I also tried the megaraid2 module and that kernel panics 
+when the module is loaded.
 
-> Our plans are to complete most of the work list on the FAQ by early April.
-> We'll try to make weekly drops on SourceForge, with each snapshot containing
-> a log of the changes.  Once the code base matures, we will ping the lists
-> again, asking for feedback.
+I'm using an arima motherboard with the 1.84 BIOS.
 
-OK, I'll look forward to it.
+Is this a known issue?  Has anyone been able to make a 
+similar config work?
 
-James
-
+regards,
+dan carpenter
+-- 
+___________________________________________________________
+Sign-up for Ads Free at Mail.com
+http://promo.mail.com/adsfreejump.htm
 
