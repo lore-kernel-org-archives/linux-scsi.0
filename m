@@ -1,18 +1,18 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH scsi-misc-2.6 01/13] scsi: don't use blk_insert_request() for requeueing
-Date: Fri, 1 Apr 2005 14:01:09 +0900
-Message-ID: <20050401050109.GB11318@htj.dyndns.org>
-References: <20050331090647.FEDC3964@htj.dyndns.org> <20050331090647.BA0001D5@htj.dyndns.org> <1112291600.5619.19.camel@mulgrave>
+Subject: Re: [PATCH scsi-misc-2.6 02/13] scsi: don't turn on REQ_SPECIAL on sgtable allocation failure.
+Date: Fri, 1 Apr 2005 14:14:42 +0900
+Message-ID: <20050401051442.GC11318@htj.dyndns.org>
+References: <20050331090647.FEDC3964@htj.dyndns.org> <20050331090647.C0E52845@htj.dyndns.org> <1112291625.5619.21.camel@mulgrave>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from wproxy.gmail.com ([64.233.184.203]:44406 "EHLO wproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S262622AbVDAFBP (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 1 Apr 2005 00:01:15 -0500
-Received: by wproxy.gmail.com with SMTP id 68so793450wra
-        for <linux-scsi@vger.kernel.org>; Thu, 31 Mar 2005 21:01:14 -0800 (PST)
+Received: from wproxy.gmail.com ([64.233.184.195]:9464 "EHLO wproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S262626AbVDAFOs (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 1 Apr 2005 00:14:48 -0500
+Received: by wproxy.gmail.com with SMTP id 68so860603wri
+        for <linux-scsi@vger.kernel.org>; Thu, 31 Mar 2005 21:14:48 -0800 (PST)
 Content-Disposition: inline
-In-Reply-To: <1112291600.5619.19.camel@mulgrave>
+In-Reply-To: <1112291625.5619.21.camel@mulgrave>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@SteelEye.com>
@@ -20,84 +20,17 @@ Cc: Jens Axboe <axboe@suse.de>, SCSI Mailing List <linux-scsi@vger.kernel.org>, 
 
  Hello, James.
 
-On Thu, Mar 31, 2005 at 11:53:20AM -0600, James Bottomley wrote:
-> On Thu, 2005-03-31 at 18:07 +0900, Tejun Heo wrote:
-> > 01_scsi_no_REQ_SPECIAL_on_requeue.patch
-> > 
-> > 	blk_insert_request() has 'reinsert' argument, which, when set,
-> > 	turns on REQ_SPECIAL and REQ_SOFTBARRIER and requeues the
-> > 	request.  SCSI midlayer was the only user of this feature and
-> > 	all requeued requests become special requests defeating
-> > 	quiesce state.  This patch makes scsi midlayer use
-> > 	blk_requeue_request() for requeueing and removes 'reinsert'
-> > 	feature from blk_insert_request().
+On Thu, Mar 31, 2005 at 11:53:45AM -0600, James Bottomley wrote:
+> On Thu, 2005-03-31 at 18:08 +0900, Tejun Heo wrote:
+> > 	Don't turn on REQ_SPECIAL on sgtable allocation failure.  This
+> > 	was the last place where REQ_SPECIAL is turned on for normal
+> > 	requests.
 > 
-> Well, REQ_SPECIAL is the signal to the mid-layer that we've allocated
-> the resources necessary to process the command, so in practice it will
-> be turned on for every requeue request (because we set it when the
-> command is prepared),
+> If you do this, you'll leak a command every time the sgtable allocation
+> fails.
 
- Sorry, but where?  AFAICT, only blk_insert_request() and
-scsi_init_io() on sgtable allocation failure set REQ_SPECIAL during
-scsi midlayer processing.  This patch replaces blk_insert_request()
-with blk_requeue_request() and the next patch removes REQ_SPECIAL
-setting in scsi_init_io().
-
- REQ_SPECIAL is currently overloaded to mean two different things.
-
- * The request is a special request.
- * The request has been requeued using scsi_queue_insert().
-   i.e. It has been prepped.
-
- However, #2 can be tested by rq->special != NULL condition, and, in
-fact, the prep_fn already has the code.  This is why this and the next
-patch don't break the requeue path.  IMHO, this proves the subtlety of
-the REQ_SPECIAL semantics.  Which path is taken on which case gets
-kind of confusing by meaning two different things with REQ_SPECIAL.
-
-> so this patch would have no effect on your stated
-> quiesce problem.  However, if you think about how requests work with
-> head insertion and one command following another, there's really not a
-> huge problem here either.
-
- I agree that it's not a huge problem, but it's subtle and has the
-potential of causing probably non-destructive but confusing behavior
-on rare cases.
-
-> The other reason I don't like this is that we've been trying hard to
-> sweep excess block knowledge out of the mid-layer.  I don't think
-> REQ_SOFTBARRIER is anything we really have to know about.
-
- We currently requeue using two different block functions.
-
- * blk_insert_request(): this function does two things
-	1. enqueue special requests
-	2. turn on REQ_SPECIAL|REQ_SOFTBARRIER and call
-	   blk_requeue_request().  This is used only by scsi midlayer.
- * blk_requeue_request()
-
- REQ_SOFTBARRIER tells the request queue that other requests shouldn't
-pass this one.  We need this to be set for prepped requests;
-otherwise, it may, theoretically, deadlock (unprepped request waiting
-for the prepped request back in the queue).  So, the current code
-
- * depends on blk_insert_request() sets REQ_SOFTBARRIER when
-   requeueing.  It works but nothing in the interface or semantics
-   is clear about it.  Why expect a request reinserted using
-   blk_insert_request() gets REQ_SOFTBARRIER turned on while a request
-   reinserted with blk_requeue_request() doesn't?  or why are there
-   two different paths doing mostly the same thing with slightly
-   different semantics?
- * requeueing using blk_requeue_request() in scsi_request_fn() doesn't
-   turn on either REQ_SPECIAL or REQ_SOFTBARRIER.  Missing REQ_SPECIAL
-   is okay, as we have the extra path in prep_fn (if it ever gets requeued
-   due to medium failure, so gets re-prepped), but missing
-   REQ_SOFTBARRIER can *theoretically* cause problem.
-
- So, it's more likely becoming less dependent on unobvious behavior of
-block layer.  As we need the request to stay on top, we tell the block
-layer to do so, instead of depending on blk_insert_request()
-unobviously doing it for us.
+ AFAICT, not really.  We don't allocate another scsi_cmnd for normal
+requests if req->special != NULL.
 
  Thanks.
 
