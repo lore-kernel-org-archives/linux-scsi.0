@@ -1,192 +1,54 @@
-From: James Bottomley <James.Bottomley@steeleye.com>
-Subject: Re: bug 2400
-Date: 06 Apr 2004 08:56:45 -0500
-Sender: linux-usb-devel-admin@lists.sourceforge.net
-Message-ID: <1081259807.1804.9.camel@mulgrave>
-References: <20040401131502.41136788.akpm@osdl.org>
-	<1080862354.2118.78.camel@mulgrave> <1080949016.1804.161.camel@mulgrave>
-	<20040404213307.A29446@beaverton.ibm.com>
-	<1081199233.2105.45.camel@mulgrave>  <20040406092244.GH28109@suse.de>
+From: Jamie Lenehan <lenehan@twibble.org>
+Subject: Re: dc395x: CD writer causes endless "sg_to_virt failed" loop
+Date: Wed, 7 Apr 2004 00:01:23 +1000
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <20040406140123.GA9884@twibble.org>
+References: <20040327161034.GA9963@twibble.org> <200403271759.08361.andrex@alumni.utexas.net> <200404050120.56111.andrex@alumni.utexas.net>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-usb-devel-admin@lists.sourceforge.net>
-In-Reply-To: <20040406092244.GH28109@suse.de>
-Errors-To: linux-usb-devel-admin@lists.sourceforge.net
-List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-devel>,
-	<mailto:linux-usb-devel-request@lists.sourceforge.net?subject=unsubscribe>
-List-Post: <mailto:linux-usb-devel@lists.sourceforge.net>
-List-Help: <mailto:linux-usb-devel-request@lists.sourceforge.net?subject=help>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-devel>,
-	<mailto:linux-usb-devel-request@lists.sourceforge.net?subject=subscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=linux-usb-devel>
-To: Jens Axboe <axboe@suse.de>
-Cc: Patrick Mansfield <patmans@us.ibm.com>, Andrew Morton <akpm@osdl.org>, greg@kroah.com, linux-usb-devel@lists.sourceforge.net, SCSI Mailing List <linux-scsi@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from tuon.twibble.org ([203.217.29.157]:34784 "EHLO tuon.twibble.org")
+	by vger.kernel.org with ESMTP id S263823AbUDFOB3 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Apr 2004 10:01:29 -0400
+Content-Disposition: inline
+In-Reply-To: <200404050120.56111.andrex@alumni.utexas.net>
 List-Id: linux-scsi@vger.kernel.org
+To: Andrew Schulman <andrex@alumni.utexas.net>
+Cc: linux-scsi@vger.kernel.org, dc395x@twibble.org
 
-On Tue, 2004-04-06 at 04:22, Jens Axboe wrote:
-> Really? It doesn't even compile :-)
+On Mon, Apr 05, 2004 at 01:20:56AM -0400, Andrew Schulman wrote:
+> > First thing to try would be to upgrade to 2.6.5-rc1 (or newer) and
+> > see if that works any better.
+> 
+> I'm now running kernel 2.6.5.  The good news is that my CD writer (HP 9200i) 
+> works again.  The bad news is that I'm still getting e.g.
+> 
+> Apr  5 00:46:50 helium kernel: dc395x: sg_update_list: sg_to_virt failed
+> Apr  5 00:47:21 helium last message repeated 576 times
+> Apr  5 00:48:22 helium last message repeated 974 times
+> Apr  5 00:49:23 helium last message repeated 979 times
+> Apr  5 00:50:24 helium last message repeated 971 times
+> Apr  5 00:51:25 helium last message repeated 970 times
+> Apr  5 00:52:26 helium last message repeated 974 times
+> Apr  5 00:52:40 helium last message repeated 228 times
+> 
+> (result of burning a CD).  This isn't great, but it's tolerable and at least 
+> the CD writer works again.
 
-Heh, I really must learn that I have to copy the file from the test
-machine to the email machine *before* attaching it.  You got a stale
-copy of an older incarnation, I think.
+Have you verified that the CD(s) were actually written correctly?
+That's the one thing I'd really be concerned about. If so then you
+can always just comment the message out of the source code for now.
 
-The attached (hopefully) is what I compiled and tested with.  The test,
-incidentally, is simply to hold the device open and then forcibly remove
-it using scsi remove-single-device before closing it.
+I'll look over that code again and see if I can see why it thinks it
+cannot find the address it's looking for (and if it matters).
 
-James
+What would be helpful (if your bored!) would be to enable the
+debugging at the top of dc395x.c and do a very short run (half a
+dozen copies of the message is enough, no need for 10k of them ;) and
+then compress the logs and put them somewhere I can grab them (or
+e-mail them if < 5MB).
 
-===== drivers/scsi/sr.c 1.103 vs edited =====
---- 1.103/drivers/scsi/sr.c	Fri Apr  2 11:30:44 2004
-+++ edited/drivers/scsi/sr.c	Tue Apr  6 08:49:30 2004
-@@ -113,6 +113,28 @@
- 	.generic_packet		= sr_packet,
- };
- 
-+static void sr_kobject_release(struct kobject *kobj);
-+
-+static struct kobj_type scsi_cdrom_kobj_type = {
-+	.release = sr_kobject_release,
-+};
-+
-+/*
-+ * The get and put routines for the struct scsi_cd.  Note this entity
-+ * has a scsi_device pointer and owns a reference to this.
-+ */
-+static inline int scsi_cd_get(struct scsi_cd *cd)
-+{
-+	if (!kobject_get(&cd->kobj))
-+		return -ENODEV;
-+	return 0;
-+}
-+
-+static inline void scsi_cd_put(struct scsi_cd *cd)
-+{
-+	kobject_put(&cd->kobj);
-+}
-+
- /*
-  * This function checks to see if the media has been changed in the
-  * CDROM drive.  It is possible that we have already sensed a change,
-@@ -424,8 +446,15 @@
- 
- static int sr_block_release(struct inode *inode, struct file *file)
- {
-+	int ret;
- 	struct scsi_cd *cd = scsi_cd(inode->i_bdev->bd_disk);
--	return cdrom_release(&cd->cdi, file);
-+	ret = cdrom_release(&cd->cdi, file);
-+	if(ret)
-+		return ret;
-+	
-+	scsi_cd_put(cd);
-+
-+	return 0;
- }
- 
- static int sr_block_ioctl(struct inode *inode, struct file *file, unsigned cmd,
-@@ -467,7 +496,7 @@
- 	struct scsi_device *sdev = cd->device;
- 	int retval;
- 
--	retval = scsi_device_get(sdev);
-+	retval = scsi_cd_get(cd);
- 	if (retval)
- 		return retval;
- 	
-@@ -489,7 +518,7 @@
- 	return 0;
- 
- error_out:
--	scsi_device_put(sdev);
-+	scsi_cd_put(cd);
- 	return retval;	
- }
- 
-@@ -500,7 +529,6 @@
- 	if (cd->device->sector_size > 2048)
- 		sr_set_blocklength(cd, 2048);
- 
--	scsi_device_put(cd->device);
- }
- 
- static int sr_probe(struct device *dev)
-@@ -514,12 +542,18 @@
- 	if (sdev->type != TYPE_ROM && sdev->type != TYPE_WORM)
- 		goto fail;
- 
-+	if ((error = scsi_device_get(sdev)) != 0)
-+		goto fail;
-+
- 	error = -ENOMEM;
- 	cd = kmalloc(sizeof(*cd), GFP_KERNEL);
- 	if (!cd)
--		goto fail;
-+		goto fail_put_sdev;
- 	memset(cd, 0, sizeof(*cd));
- 
-+	kobject_init(&cd->kobj);
-+	cd->kobj.ktype = &scsi_cdrom_kobj_type;
-+
- 	disk = alloc_disk(1);
- 	if (!disk)
- 		goto fail_free;
-@@ -588,6 +622,8 @@
- 	put_disk(disk);
- fail_free:
- 	kfree(cd);
-+fail_put_sdev:
-+	scsi_device_put(sdev);
- fail:
- 	return error;
- }
-@@ -863,19 +899,31 @@
- 	return cgc->stat;
- }
- 
--static int sr_remove(struct device *dev)
-+static void sr_kobject_release(struct kobject *kobj)
- {
--	struct scsi_cd *cd = dev_get_drvdata(dev);
--
--	del_gendisk(cd->disk);
-+	struct scsi_cd *cd = container_of(kobj, struct scsi_cd, kobj);
-+	struct scsi_device *sdev = cd->device;
- 
- 	spin_lock(&sr_index_lock);
- 	clear_bit(cd->disk->first_minor, sr_index_bits);
- 	spin_unlock(&sr_index_lock);
- 
--	put_disk(cd->disk);
- 	unregister_cdrom(&cd->cdi);
-+
-+	put_disk(cd->disk);
-+
- 	kfree(cd);
-+
-+	scsi_device_put(sdev);
-+}
-+
-+static int sr_remove(struct device *dev)
-+{
-+	struct scsi_cd *cd = dev_get_drvdata(dev);
-+
-+	del_gendisk(cd->disk);
-+
-+	scsi_cd_put(cd);
- 
- 	return 0;
- }
+Thanks.
 
-
-
--------------------------------------------------------
-This SF.Net email is sponsored by: IBM Linux Tutorials
-Free Linux tutorial presented by Daniel Robbins, President and CEO of
-GenToo technologies. Learn everything from fundamentals to system
-administration.http://ads.osdn.com/?ad_id=1470&alloc_id=3638&op=click
-_______________________________________________
-linux-usb-devel@lists.sourceforge.net
-To unsubscribe, use the last form field at:
-https://lists.sourceforge.net/lists/listinfo/linux-usb-devel
+-- 
+ Jamie Lenehan <lenehan@twibble.org>
