@@ -1,80 +1,65 @@
-From: Patrick Mansfield <patmans@us.ibm.com>
-Subject: Re: iSCSI HBA needs to have a unique host id
-Date: Fri, 14 Nov 2003 09:31:24 -0800
+From: Matthew Dharm <mdharm-scsi@one-eyed-alien.net>
+Subject: Re: [usb-storage] Re: [PATCH] fix Sony USB mass storage - pass larger receive buffer
+Date: Fri, 14 Nov 2003 09:29:13 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20031114093124.B2794@beaverton.ibm.com>
-References: <009d01c3aa95$9d613b70$a0074d0a@apac.cisco.com>
+Message-ID: <20031114092913.A19467@one-eyed-alien.net>
+References: <1068767049.2851.166.camel@patrh9> <Pine.LNX.4.44L0.0311141058290.1090-100000@ida.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/signed; micalg=pgp-md5;
+	protocol="application/pgp-signature"; boundary="4Ckj6UjgE2iN1+kY"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e3.ny.us.ibm.com ([32.97.182.103]:58805 "EHLO e3.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S264518AbTKNRcM (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 14 Nov 2003 12:32:12 -0500
+Received: from ziggy.one-eyed-alien.net ([64.169.228.100]:9489 "EHLO
+	ziggy.one-eyed-alien.net") by vger.kernel.org with ESMTP
+	id S262795AbTKNR3Z (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 14 Nov 2003 12:29:25 -0500
 Content-Disposition: inline
-In-Reply-To: <009d01c3aa95$9d613b70$a0074d0a@apac.cisco.com>; from surekhap@cisco.com on Fri, Nov 14, 2003 at 03:26:36PM +0530
+In-Reply-To: <Pine.LNX.4.44L0.0311141058290.1090-100000@ida.rowland.org>; from stern@rowland.harvard.edu on Fri, Nov 14, 2003 at 11:14:08AM -0500
 List-Id: linux-scsi@vger.kernel.org
-To: "Surekha.PC" <surekhap@cisco.com>
-Cc: linux-scsi@vger.kernel.org
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: Pat LaVarre <p.lavarre@ieee.org>, patmans@us.ibm.com, james.bottomley@steeleye.com, linux-scsi@vger.kernel.org, usb-storage@one-eyed-alien.net, ronald@kuetemeier.com, dmitrik@users.sourceforge.net, idan@idanso.dyndns.org
 
-On Fri, Nov 14, 2003 at 03:26:36PM +0530, Surekha.PC wrote:
-> 
-> Hi all,
-> 
->    The host id for iSCSI HBA does not remain unique with  2.6 linux
-> kernel. It keeps changing when iSCSI host is added and removed
-> dynamically. This is a problem for persistent device naming for iSCSI
-> devices through host id.
-> 
-> It would be good to maintain a database of already allocated host id's
-> for the existing hosts. This would render the iSCSI HBA to get the same
-> controller id, irrespective of loading/unloading the driver repeatedly.
 
-The N in hostN  has to be unique across all hosts, since we have
-/sysfs/class/scsi_host/hostN.
+--4Ckj6UjgE2iN1+kY
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-> Would like to know if there is any provision in 2.6 to achieve the
-> above?
+On Fri, Nov 14, 2003 at 11:14:08AM -0500, Alan Stern wrote:
+> Unfortunately that does mean we lose the ability to tell if a compliant
+> device/media is write-protected.  You suggested allowing MODE-SENSE
+> commands for devices that present certain standard SubClass and Protocol
+> values, or disallowing them only for devices that present vendor-specific
+> values.  I'm not so sure that will work -- I haven't kept good records of
+> users' reports, but it wouldn't be at all surprising to find that some
+> apparently-compliant devices (bInterfaceSubClass =3D x06, Protocol =3D x5=
+0)
+> still have problems with MODE-SENSE.
 
-udev + scsi_id will be able to give persistent names to any SCSI attached
-storage that supply a unique ID, including iSCSI.
+I _know_ that some 'apparently-compliant' devices have trouble with
+MODE_SENSE.
 
-If you want to name based on location (like host, chan, id, lun), udev has
-a topology and "place" matching.  It needs work so we can wild card the
-host number and use it for scsi, and it has to include the parent name for
-scsi, but the general idea is include in udev (I'm not working on this for
-udev).
+Matt
 
-As long as the iSCSI uses a parent that has unique and relevant name, then
-the udev place can be modified to work.
+--=20
+Matthew Dharm                              Home: mdharm-usb@one-eyed-alien.=
+net=20
+Maintainer, Linux USB Mass Storage Driver
 
-i.e for pci we have:
+It was a new hope.
+					-- Dust Puppy
+User Friendly, 12/25/1998
 
-[elm3b79 patman]$ ls /sysfs/devices/pci0000:01/0000:01:0c.0/host5/5:0:6:0
-block   detach_state    model   queue_depth  rev         type
-delete  device_blocked  online  rescan       scsi_level  vendor
+--4Ckj6UjgE2iN1+kY
+Content-Type: application/pgp-signature
+Content-Disposition: inline
 
-So if you could use "place" with wildcards something like:
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.0.6 (GNU/Linux)
+Comment: For info see http://www.gnupg.org
 
-	0000:01:0c.0/*/*:0:6:0
+iD8DBQE/tRDpIjReC7bSPZARAtm2AJ0eKW9hTdM2Ip2OsblGMT++FOxdiQCg0Les
+8+Jb9H8FkKxNDQhbiQRi3jQ=
+=DNtg
+-----END PGP SIGNATURE-----
 
-We could use it to name scsi devices based on location.
-
-It would be nice if the host number was a tag or name based on the
-parent's name (or as you say stored), but then we would have to encode the parent's bus or such
-to avoid name collision, and the scsi_device bus_id names get long. 
-
-For sysfs devices would look like:
-
-devices/pci0000:01/0000:01:0c.0/host_pci_0000:01:0c.0/pci_0000:01:0c.0:0:6:0
-
-And: 
-
-/sysfs/class/scsi_host/pci_0000:01:0c.0:0:6:0
-
-So the hostN is replaced by the <parent's bus>_<parent's bus_id>, ugly,
-but then the scsi device bus_id is unique, and (assuming the parent
-assigned channels and target id's the same) can by itself be used with
-udev's "place" with no modifications to udev.
-
--- Patrick Mansfield
+--4Ckj6UjgE2iN1+kY--
