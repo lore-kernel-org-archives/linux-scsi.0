@@ -1,362 +1,178 @@
 From: Mike Anderson <andmike@us.ibm.com>
-Subject: [PATCH] scsi host cleanup 3/3 (driver changes)
-Date: Wed, 16 Oct 2002 23:58:01 -0700
+Subject: [PATCH] scsi_debug new scan fix
+Date: Thu, 17 Oct 2002 00:08:14 -0700
 Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <20021017065801.GC1977@beaverton.ibm.com>
-References: <20021017065112.GA1977@beaverton.ibm.com> <20021017065352.GB1977@beaverton.ibm.com>
+Message-ID: <20021017070814.GA2410@beaverton.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20021017065352.GB1977@beaverton.ibm.com>
 To: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
+If you use scsi_debug the patch below fixes a problem that has existed
+since the updated scan code was merged in. scsi_debug previously assumed
+that the scsi_device used to probe and the device permanently added to the
+host_queue would be the same. This caused scsi_debug to allocate some
+internal data and key it off the scsi_device pointer for later use.  This
+resulted in scsi_debug failing all IO post scanning. This patch corrects
+this problem.
 
-If you read my previous post on this patch I indicated that few of the
-driver changes I was only able to compile test ( block/cciss_scsi.c,
-scsi/53c700.c, scsi/pcmcia/*, scsi/wd33c93.c). The changes to the
-drivers are to remove the old interfaces and possibly extra NULL inits
-of struct members. These changes will need to be ok'd by there
-respective maintainers. I did receive feedback from two.
+Note:
+	Douglas Gilbert is the maintainer of this driver.
+	dougg@gear.torque.net
+	http://www.torque.net/sg/
 
-I have tested these changes on ips, aic, qlogicisp, and scsi_debug
-drivers.
+	During Douglas Gilbert's time-off he connects when he can so it
+	maybe a bit until he can address this.
 
-This is a resend of my previous patch clean ups to the scsi_host lists.
+	In the interim this patch makes scsi_debug functional.
 
-	* Made function naming consistent with rest of SCSI
-	* Corrected a problem with driverfs registration to early. Also
-	  changed from put_device to device_unregister.
-        * Fixed a regression in my previous patch that the scsi_host
-          list was not sorted by host number. When we get some device
-          naming this hack can be removed.
-        * Switch scsi host template, name, host lists to struct
-          list_head's.
-        * Moved all scsi_host related register / unregister functions
-          into hosts.c
-        * Added list accessor interface and created a function similar
-          to driverfs bus_for_each_dev.
 
 The full patch is available at:
-http://www-124.ibm.com/storageio/patches/2.5/scsi-host
-
+http://www-124.ibm.com/storageio/patches/2.5/scsi-debug
 -andmike
 --
 Michael Anderson
 andmike@us.ibm.com
 
- acorn/scsi/acornscsi.c            |    6 ++----
- acorn/scsi/arxescsi.c             |    8 ++------
- acorn/scsi/cumana_2.c             |    8 ++------
- acorn/scsi/eesox.c                |    8 ++------
- acorn/scsi/powertec.c             |    8 ++------
- block/cciss_scsi.c                |   21 ++-------------------
- scsi/53c700.c                     |    6 ++----
- scsi/aic7xxx/aic7xxx_linux_host.h |    1 -
- scsi/cpqfcTSinit.c                |    4 +---
- scsi/fcal.c                       |    4 +---
- scsi/ips.h                        |    3 ---
- scsi/pcmcia/aha152x_stub.c        |    3 ++-
- scsi/pcmcia/fdomain_stub.c        |    3 ++-
- scsi/pcmcia/nsp_cs.c              |    3 ++-
- scsi/pcmcia/qlogic_stub.c         |    3 ++-
- scsi/wd33c93.c                    |    5 +----
- 16 files changed, 25 insertions(+), 69 deletions(-)
+ scsi_debug.c |   59 +++++++++++++++++++++++++++++++----------------------------
+ 1 files changed, 31 insertions(+), 28 deletions(-)
 ------
 
-diff -Nru a/drivers/acorn/scsi/acornscsi.c b/drivers/acorn/scsi/acornscsi.c
---- a/drivers/acorn/scsi/acornscsi.c	Wed Oct 16 22:51:48 2002
-+++ b/drivers/acorn/scsi/acornscsi.c	Wed Oct 16 22:51:48 2002
-@@ -3010,14 +3010,12 @@
- 			int length, int host_no, int inout)
- {
-     int pos, begin = 0, devidx;
--    struct Scsi_Host *instance = scsi_hostlist;
-+    struct Scsi_Host *instance;
-     Scsi_Device *scd;
-     AS_Host *host;
-     char *p = buffer;
+diff -Nru a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
+--- a/drivers/scsi/scsi_debug.c	Thu Oct 17 00:00:50 2002
++++ b/drivers/scsi/scsi_debug.c	Thu Oct 17 00:00:50 2002
+@@ -108,9 +108,13 @@
+ #define SDEBUG_SENSE_LEN 32
  
--    for (instance = scsi_hostlist;
--	    instance && instance->host_no != host_no;
--		instance = instance->next);
-+    instance = scsi_host_hn_get(host_no);
- 
-     if (inout == 1 || !instance)
- 	return -EINVAL;
-diff -Nru a/drivers/acorn/scsi/arxescsi.c b/drivers/acorn/scsi/arxescsi.c
---- a/drivers/acorn/scsi/arxescsi.c	Wed Oct 16 22:51:48 2002
-+++ b/drivers/acorn/scsi/arxescsi.c	Wed Oct 16 22:51:48 2002
-@@ -384,15 +384,11 @@
- 			    int length, int host_no, int inout)
- {
- 	int pos, begin;
--	struct Scsi_Host *host = scsi_hostlist;
+ struct sdebug_dev_info {
+-	Scsi_Device * sdp;
+ 	unsigned char sense_buff[SDEBUG_SENSE_LEN];	/* weak nexus */
++	unsigned int channel;
++	unsigned int target;
++	unsigned int lun;
 +	struct Scsi_Host *host;
- 	ARXEScsi_Info *info;
- 	Scsi_Device *scd;
+ 	char reset;
++	char used;
+ };
+ static struct sdebug_dev_info * devInfop;
  
--	while (host) {
--		if (host->host_no == host_no)
--			break;
--		host = host->next;
+@@ -154,7 +158,7 @@
+ static int resp_report_luns(unsigned char * cmd, unsigned char * buff,
+ 			    int bufflen, struct sdebug_dev_info * devip);
+ static void timer_intr_handler(unsigned long);
+-static struct sdebug_dev_info * devInfoReg(Scsi_Device * sdp);
++static struct sdebug_dev_info * devInfoReg(Scsi_Cmnd *scmd);
+ static void mk_sense_buffer(struct sdebug_dev_info * devip, int key, 
+ 			    int asc, int asq, int inbandLen);
+ static int check_reset(Scsi_Cmnd * SCpnt, struct sdebug_dev_info * devip);
+@@ -222,7 +226,7 @@
+ 		return schedule_resp(SCpnt, NULL, done, 0, 0);
+         }
+ 
+-	if ((target > driver_template.this_id) || (SCpnt->lun != 0))
++	if (SCpnt->lun != 0)
+ 		return schedule_resp(SCpnt, NULL, done, 
+ 				     DID_NO_CONNECT << 16, 0);
+ #if 0
+@@ -230,14 +234,10 @@
+ 	       (int)SCpnt->device->host->host_no, (int)SCpnt->device->id,
+ 	       SCpnt->device, (int)*cmd);
+ #endif
+-	if (NULL == SCpnt->device->hostdata) {
+-		devip = devInfoReg(SCpnt->device);
+-		if (NULL == devip)
+-			return schedule_resp(SCpnt, NULL, done, 
+-					     DID_NO_CONNECT << 16, 0);
+-		SCpnt->device->hostdata = devip;
 -	}
-+	host = scsi_host_hn_get(host_no);
- 	if (!host)
- 		return 0;
+-	devip = SCpnt->device->hostdata;
++	devip = devInfoReg(SCpnt);
++	if (NULL == devip)
++		return schedule_resp(SCpnt, NULL, done, 
++				     DID_NO_CONNECT << 16, 0);
  
-diff -Nru a/drivers/acorn/scsi/cumana_2.c b/drivers/acorn/scsi/cumana_2.c
---- a/drivers/acorn/scsi/cumana_2.c	Wed Oct 16 22:51:48 2002
-+++ b/drivers/acorn/scsi/cumana_2.c	Wed Oct 16 22:51:48 2002
-@@ -498,15 +498,11 @@
- 			    int length, int host_no, int inout)
- {
- 	int pos, begin;
--	struct Scsi_Host *host = scsi_hostlist;
-+	struct Scsi_Host *host;
- 	CumanaScsi2_Info *info;
- 	Scsi_Device *scd;
- 
--	while (host) {
--		if (host->host_no == host_no)
--			break;
--		host = host->next;
--	}
-+	host = scsi_host_hn_get(host_no);
- 	if (!host)
- 		return 0;
- 
-diff -Nru a/drivers/acorn/scsi/eesox.c b/drivers/acorn/scsi/eesox.c
---- a/drivers/acorn/scsi/eesox.c	Wed Oct 16 22:51:48 2002
-+++ b/drivers/acorn/scsi/eesox.c	Wed Oct 16 22:51:48 2002
-@@ -499,15 +499,11 @@
- 			    int length, int host_no, int inout)
- {
- 	int pos, begin;
--	struct Scsi_Host *host = scsi_hostlist;
-+	struct Scsi_Host *host;
- 	EESOXScsi_Info *info;
- 	Scsi_Device *scd;
- 
--	while (host) {
--		if (host->host_no == host_no)
--			break;
--		host = host->next;
--	}
-+	host = scsi_host_hn_get(host_no);
- 	if (!host)
- 		return 0;
- 
-diff -Nru a/drivers/acorn/scsi/powertec.c b/drivers/acorn/scsi/powertec.c
---- a/drivers/acorn/scsi/powertec.c	Wed Oct 16 22:51:48 2002
-+++ b/drivers/acorn/scsi/powertec.c	Wed Oct 16 22:51:48 2002
-@@ -404,15 +404,11 @@
- 			    int length, int host_no, int inout)
- {
- 	int pos, begin;
--	struct Scsi_Host *host = scsi_hostlist;
-+	struct Scsi_Host *host;
- 	PowerTecScsi_Info *info;
- 	Scsi_Device *scd;
- 
--	while (host) {
--		if (host->host_no == host_no)
--			break;
--		host = host->next;
--	}
-+	host = scsi_host_hn_get(host_no);
- 	if (!host)
- 		return 0;
- 
-diff -Nru a/drivers/block/cciss_scsi.c b/drivers/block/cciss_scsi.c
---- a/drivers/block/cciss_scsi.c	Wed Oct 16 22:51:48 2002
-+++ b/drivers/block/cciss_scsi.c	Wed Oct 16 22:51:48 2002
-@@ -1250,8 +1250,6 @@
- 	return length;
+         if ((SCSI_DEBUG_OPT_EVERY_NTH & scsi_debug_opts) &&
+             (scsi_debug_every_nth > 0) &&
+@@ -474,8 +474,8 @@
+ 		int dev_id_num, len;
+ 		char dev_id_str[6];
+ 		
+-		dev_id_num = ((devip->sdp->host->host_no + 1) * 1000) + 
+-			      devip->sdp->id;
++		dev_id_num = ((devip->host->host_no + 1) * 1000) + 
++			      devip->target;
+ 		len = snprintf(dev_id_str, 6, "%d", dev_id_num);
+ 		len = (len > 6) ? 6 : len;
+ 		if (0 == cmd[2]) { /* supported vital product data pages */
+@@ -870,21 +870,28 @@
+ 	return 0;
  }
  
--/* It's a pity that we need this, but, we do... */
--extern struct Scsi_Host *scsi_hostlist;  /* from ../scsi/hosts.c */
+-static struct sdebug_dev_info * devInfoReg(Scsi_Device * sdp)
++static struct sdebug_dev_info * devInfoReg(Scsi_Cmnd *scmd)
+ {
+ 	int k;
+ 	struct sdebug_dev_info * devip;
  
- int
- cciss_scsi_proc_info(char *buffer, /* data buffer */
-@@ -1268,24 +1266,9 @@
- 	ctlr_info_t *ci;
- 	int cntl_num;
+ 	for (k = 0; k < scsi_debug_num_devs; ++k) {
+ 		devip = &devInfop[k];
+-		if (devip->sdp == sdp)
++		if ((devip->channel == scmd->channel) &&
++		    (devip->target == scmd->target) &&
++		    (devip->lun == scmd->lun) &&
++		    (devip->host == scmd->host))
+ 			return devip;
+ 	}
+ 	for (k = 0; k < scsi_debug_num_devs; ++k) {
+ 		devip = &devInfop[k];
+-		if (NULL == devip->sdp) {
+-			devip->sdp = sdp;
++		if (!devip->used) {
++			devip->channel = scmd->channel;
++			devip->target = scmd->target;
++			devip->lun = scmd->lun;
++			devip->host = scmd->host;
+ 			devip->reset = 1;
++			devip->used = 1;
+ 			memset(devip->sense_buff, 0, SDEBUG_SENSE_LEN);
+ 			devip->sense_buff[0] = 0x70;
+ 			return devip;
+@@ -934,19 +941,15 @@
  
--	/* Lets see if we can find our Scsi_Host... 
--	   this might be kind of "bad", searching scis_hostlist this way
--	   but how else can we find the scsi host?  I think I've seen
--	   this coded both ways, (circular list and null terminated list)
--	   I coded it to work either way, since I wasn't sure.  */
+ static int scsi_debug_device_reset(Scsi_Cmnd * SCpnt)
+ {
+-	Scsi_Device * sdp;
+-	int k;
++	struct sdebug_dev_info * devip;
  
--	sh = scsi_hostlist;
--	found=0;
--	do {
--		if (sh == NULL) break;
--		if (sh->host_no == hostnum) {
--			found++;
--			break;
+ 	if (SCSI_DEBUG_OPT_NOISE & scsi_debug_opts)
+ 		printk(KERN_INFO "scsi_debug: device_reset\n");
+ 	++num_dev_resets;
+-	if (SCpnt && ((sdp = SCpnt->device))) {
+-		for (k = 0; k < scsi_debug_num_devs; ++k) {
+-			if (sdp->hostdata == (devInfop + k))
+-				break;
 -		}
--		sh = sh->next;
--	} while (sh != scsi_hostlist && sh != NULL);
--
--	if (sh == NULL || found == 0) /* This really shouldn't ever happen. */
-+	sh = scsi_host_hn_get(hostnum);
-+	if (sh == NULL) /* This really shouldn't ever happen. */
- 		return -EINVAL;
- 
- 	ci = (ctlr_info_t *) sh->hostdata[0];
-diff -Nru a/drivers/scsi/53c700.c b/drivers/scsi/53c700.c
---- a/drivers/scsi/53c700.c	Wed Oct 16 22:51:48 2002
-+++ b/drivers/scsi/53c700.c	Wed Oct 16 22:51:48 2002
-@@ -1719,13 +1719,11 @@
- {
- 	static char buf[4096];	/* 1 page should be sufficient */
- 	int len = 0;
--	struct Scsi_Host *host = scsi_hostlist;
-+	struct Scsi_Host *host;
- 	struct NCR_700_Host_Parameters *hostdata;
- 	Scsi_Device *SDp;
- 
--	while(host != NULL && host->host_no != host_no)
--		host = host->next;
--
-+	host = scsi_host_hn_get(host_no);
- 	if(host == NULL)
- 		return 0;
- 
-diff -Nru a/drivers/scsi/aic7xxx/aic7xxx_linux_host.h b/drivers/scsi/aic7xxx/aic7xxx_linux_host.h
---- a/drivers/scsi/aic7xxx/aic7xxx_linux_host.h	Wed Oct 16 22:51:48 2002
-+++ b/drivers/scsi/aic7xxx/aic7xxx_linux_host.h	Wed Oct 16 22:51:48 2002
-@@ -63,7 +63,6 @@
-  * to do with card config are filled in after the card is detected.
-  */
- #define AIC7XXX	{						\
--	next: NULL,						\
- 	module: NULL,						\
- 	proc_dir: NULL,						\
- 	proc_info: ahc_linux_proc_info,				\
-diff -Nru a/drivers/scsi/cpqfcTSinit.c b/drivers/scsi/cpqfcTSinit.c
---- a/drivers/scsi/cpqfcTSinit.c	Wed Oct 16 22:51:48 2002
-+++ b/drivers/scsi/cpqfcTSinit.c	Wed Oct 16 22:51:48 2002
-@@ -938,9 +938,7 @@
-   char buf[81];
- 
-   // Search the Scsi host list for our controller
--  for (host=scsi_hostlist; host; host=host->next)
--    if (host->host_no == hostno)
--      break;
-+  host = scsi_host_hn_get(hostno);
- 
-   if (!host) return -ESRCH;
- 
-diff -Nru a/drivers/scsi/fcal.c b/drivers/scsi/fcal.c
---- a/drivers/scsi/fcal.c	Wed Oct 16 22:51:48 2002
-+++ b/drivers/scsi/fcal.c	Wed Oct 16 22:51:48 2002
-@@ -213,9 +213,7 @@
- 	char *pos = buffer;
- 	int i, j;
- 
--	for (host=scsi_hostlist; host; host=host->next)
--		if (host->host_no == hostno)
--                      break;
-+	host = scsi_host_hn_get(hostno);
- 
- 	if (!host) return -ESRCH;
- 
-diff -Nru a/drivers/scsi/ips.h b/drivers/scsi/ips.h
---- a/drivers/scsi/ips.h	Wed Oct 16 22:51:48 2002
-+++ b/drivers/scsi/ips.h	Wed Oct 16 22:51:48 2002
-@@ -407,7 +407,6 @@
-     */
- #if LINUX_VERSION_CODE < LinuxVersionCode(2,4,0)
-  #define IPS {                            \
--    next : NULL,                          \
-     module : NULL,                        \
-     proc_info : NULL,                     \
-     proc_dir : NULL,                      \
-@@ -437,7 +436,6 @@
+-		if (k < scsi_debug_num_devs)
+-			devInfop[k].reset = 1;
++	if (SCpnt) {
++		devip = devInfoReg(SCpnt);
++		if (devip)
++			devip->reset = 1;
+ 	}
+ 	return SUCCESS;
  }
- #elif LINUX_VERSION_CODE < LinuxVersionCode(2,5,0)
-  #define IPS {                            \
--    next : NULL,                          \
-     module : NULL,                        \
-     proc_info : NULL,                     \
-     name : NULL,                          \
-@@ -466,7 +464,6 @@
- }
- #else
-  #define IPS {                            \
--    next : NULL,                          \
-     module : NULL,                        \
-     proc_info : NULL,                     \
-     name : NULL,                          \
-diff -Nru a/drivers/scsi/wd33c93.c b/drivers/scsi/wd33c93.c
---- a/drivers/scsi/wd33c93.c	Wed Oct 16 22:51:48 2002
-+++ b/drivers/scsi/wd33c93.c	Wed Oct 16 22:51:48 2002
-@@ -1871,10 +1871,7 @@
- int x,i;
- static int stop = 0;
- 
--   for (instance=scsi_hostlist; instance; instance=instance->next) {
--      if (instance->host_no == hn)
--         break;
--      }
-+   instance = scsi_host_hn_get(hn);
-    if (!instance) {
-       printk("*** Hmm... Can't find host #%d!\n",hn);
-       return (-ESRCH);
-diff -Nru a/drivers/scsi/pcmcia/aha152x_stub.c b/drivers/scsi/pcmcia/aha152x_stub.c
---- a/drivers/scsi/pcmcia/aha152x_stub.c	Wed Oct 16 22:51:48 2002
-+++ b/drivers/scsi/pcmcia/aha152x_stub.c	Wed Oct 16 22:51:48 2002
-@@ -294,7 +294,8 @@
- 
-     tail = &link->dev;
-     info->ndev = 0;
--    for (host = scsi_hostlist; host; host = host->next)
-+    for (host = scsi_host_get_next(NULL); host;
-+	 host = scsi_host_get_next(host))
- 	if (host->hostt == &driver_template)
- 	    for (dev = host->host_queue; dev; dev = dev->next) {
- 	    u_long arg[2], id;
-diff -Nru a/drivers/scsi/pcmcia/fdomain_stub.c b/drivers/scsi/pcmcia/fdomain_stub.c
---- a/drivers/scsi/pcmcia/fdomain_stub.c	Wed Oct 16 22:51:48 2002
-+++ b/drivers/scsi/pcmcia/fdomain_stub.c	Wed Oct 16 22:51:48 2002
-@@ -258,7 +258,8 @@
- 
-     tail = &link->dev;
-     info->ndev = 0;
--    for (host = scsi_hostlist; host; host = host->next)
-+    for (host = scsi_host_get_next(NULL); host;
-+	 host = scsi_host_get_next(host))
- 	if (host->hostt == &driver_template)
- 	    for (dev = host->host_queue; dev; dev = dev->next) {
- 	    u_long arg[2], id;
-diff -Nru a/drivers/scsi/pcmcia/nsp_cs.c b/drivers/scsi/pcmcia/nsp_cs.c
---- a/drivers/scsi/pcmcia/nsp_cs.c	Wed Oct 16 22:51:48 2002
-+++ b/drivers/scsi/pcmcia/nsp_cs.c	Wed Oct 16 22:51:48 2002
-@@ -1520,7 +1520,8 @@
- 	DEBUG(0, "GET_SCSI_INFO\n");
- 	tail = &link->dev;
- 	info->ndev = 0;
--	for (host = scsi_hostlist; host != NULL; host = host->next) {
-+	for (host = scsi_host_get_next(NULL); host;
-+	     host = scsi_host_get_next(host))
- 		if (host->hostt == &driver_template) {
- 			for (dev = host->host_queue; dev != NULL; dev = dev->next) {
- 				u_long arg[2], id;
-diff -Nru a/drivers/scsi/pcmcia/qlogic_stub.c b/drivers/scsi/pcmcia/qlogic_stub.c
---- a/drivers/scsi/pcmcia/qlogic_stub.c	Wed Oct 16 22:51:48 2002
-+++ b/drivers/scsi/pcmcia/qlogic_stub.c	Wed Oct 16 22:51:48 2002
-@@ -281,7 +281,8 @@
- 
-     tail = &link->dev;
-     info->ndev = 0;
--    for (host = scsi_hostlist; host; host = host->next)
-+	for (host = scsi_host_get_next(NULL); host;
-+	     host = scsi_host_get_next(host))
- 	if (host->hostt == &driver_template)
- 	    for (dev = host->host_queue; dev; dev = dev->next) {
- 	    u_long arg[2], id;
+@@ -960,9 +963,9 @@
+ 	if (SCSI_DEBUG_OPT_NOISE & scsi_debug_opts)
+ 		printk(KERN_INFO "scsi_debug: bus_reset\n");
+ 	++num_bus_resets;
+-	if (SCpnt && ((sdp = SCpnt->device)) && ((hp = sdp->host))) {
++	if (SCpnt && ((sdp = SCpnt->device)) && ((hp = SCpnt->host))) {
+ 		for (k = 0; k < scsi_debug_num_devs; ++k) {
+-			if (hp == devInfop[k].sdp->host)
++			if (hp == devInfop[k].host)
+ 				devInfop[k].reset = 1;
+ 		}
+ 	}
