@@ -1,39 +1,45 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: lsscsi-0.08
-Date: Tue, 04 Mar 2003 09:15:00 +1100
+From: Patrick Mansfield <patmans@us.ibm.com>
+Subject: Re: [RFC][PATCH] scsi-misc-2.5 software enqueue when can_queue reached
+Date: Mon, 3 Mar 2003 15:41:19 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3E63D3E4.9010908@torque.net>
-Reply-To: dougg@torque.net
+Message-ID: <20030303154119.A31562@beaverton.ibm.com>
+References: <20030228111924.A32018@beaverton.ibm.com> <3E627037.9060809@splentec.com> <20030303125254.A30662@beaverton.ibm.com> <3E63D9FB.1010602@splentec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from torque.net (d-242-92.stlucia.uq.net.au [203.101.242.92])
-	by bunyip.cc.uq.edu.au (8.12.8/8.12.8) with ESMTP id h23NGUGf014187
-	for <linux-scsi@vger.kernel.org>; Tue, 4 Mar 2003 09:16:31 +1000 (GMT+1000)
+Content-Disposition: inline
+In-Reply-To: <3E63D9FB.1010602@splentec.com>; from luben@splentec.com on Mon, Mar 03, 2003 at 05:40:59PM -0500
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Luben Tuikov <luben@splentec.com>
+Cc: linux-scsi@vger.kernel.org
 
-lsscsi is a utility the uses sysfs in kernels >= lk 2.5.50
-to list information about all SCSI devices (including devices
-that use the SCSI stack such as USB mass storage devices)
-and SCSI hosts. Both a compact format (default), one line
-per device, and a "classic" format (like the output of
-'cat /proc/scsi/scsi') are supported for devices.
+Luben -
 
-Version 0.08 is available at
-http://www.torque.net/scsi/lsscsi.html
+On Mon, Mar 03, 2003 at 05:40:59PM -0500, Luben Tuikov wrote:
 
-This version starts to add listing support for SCSI hosts
-(i.e. instances of scsi_host). This follows on from work
-by Christoph Hellwig to transfer procfs information
-provided by sg into sysfs in lk 2.5.63 .
-The only hosts that I can currently get to appear are those
-created by the scsi_debug driver. So the appropriate magic
-that the scsi_debug driver does (supplied by Mike Anderson)
-either needs to be:
-  - placed in all LLDs,
-  - or placed in the mid level
+> Ah, yes, sadly I see the [political] compromize -- I promize to
+> straighten this out with the source right after I finish this email.
+> In due time you're allowed free thinking. :-)
 
-Doug Gilbert
+Well they are just names, the important issue is that we understand how
+the code uses them.
 
+> But isn't it a queue? Furhermore isn't it a queue of _deferred_
+> *by SCSI Core* commands, because the host command limit were hit?
+> 
+> Then wouldn't it *make sense* to call it ``deferred_q'' or
+> ``deferred_cmd_q''?
+> 
+> Doesn't this just *make sense*?
+
+It is a struct list_head, you can call it a queue but it is coded as a
+list_head. Adding _q or _queue does not change anything, or make the code
+easier to understand.
+
+There is not much difference between "pending" and "deferred" (damn I
+actually had to go look those up in a dictionary), though SAM-3 references
+pending, I don't see any SAM references to deferred.
+
+The name can always be modified via future patches.
+
+-- Patrick Mansfield
