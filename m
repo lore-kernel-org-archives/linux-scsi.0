@@ -1,71 +1,30 @@
-From: Adrian Bunk <bunk@fs.tum.de>
-Subject: [patch] sym53c8xx_2 uses SYM_MEM_CLUSTER_SHIFT before its #define'd
-Date: Sat, 7 Feb 2004 21:30:58 +0100
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040207203058.GA7388@fs.tum.de>
+From: Matthew Wilcox <willy@debian.org>
+Subject: Re: [patch] sym53c8xx_2: warning: "BYTE_ORDER" is not defined
+Date: Sat, 7 Feb 2004 20:41:56 +0000
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <20040207204156.GZ24334@parcelfarce.linux.theplanet.co.uk>
+References: <20040207190051.GN26093@fs.tum.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hermes.fachschaften.tu-muenchen.de ([129.187.202.12]:55254 "HELO
-	hermes.fachschaften.tu-muenchen.de") by vger.kernel.org with SMTP
-	id S265795AbUBGUbG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 7 Feb 2004 15:31:06 -0500
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
 Content-Disposition: inline
+In-Reply-To: <20040207190051.GN26093@fs.tum.de>
+To: Adrian Bunk <bunk@fs.tum.de>
+Cc: Gerard Roudier <groudier@free.fr>, matthew@wil.cx, linux-scsi@vger.kernel.org, James.Bottomley@SteelEye.com, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: matthew@wil.cx, linux-scsi@vger.kernel.org, James.Bottomley@SteelEye.com, linux-kernel@vger.kernel.org
 
-When compiling 2.6.2-mm1 (this problem doesn't seem to be specific
-to -mm) with -Wundef I got many of the following warnings:
+On Sat, Feb 07, 2004 at 08:00:51PM +0100, Adrian Bunk wrote:
+> Hi,
+> 
+> when compiling 2.6.2-mm1 (this problem doesn't seem to be specific
+> to -mm)) with -Wundef I got many of the following warnings:
 
-<--  snip  -->
+Thanks for the patch; I've taken it into my tree.
 
-...
-In file included from drivers/scsi/sym53c8xx_2/sym_glue.h:446,
-                 from drivers/scsi/sym53c8xx_2/sym_fw.c:56:
-drivers/scsi/sym53c8xx_2/sym_hipd.h:186:30: 
-warning: "SYM_MEM_CLUSTER_SIZE" is not defined
-...
-
-<--  snip  -->
-
-This seems to be a bug:
-SYM_MEM_CLUSTER_SIZE is used before it's #define'd.
-
-The patch below fixes this issue.
-
-cu
-Adrian
-
---- linux-2.6.2-mm1/drivers/scsi/sym53c8xx_2/sym_hipd.h.old	2004-02-07 21:20:04.000000000 +0100
-+++ linux-2.6.2-mm1/drivers/scsi/sym53c8xx_2/sym_hipd.h	2004-02-07 21:20:54.000000000 +0100
-@@ -171,6 +171,15 @@
- #define	SYM_CONF_MIN_ASYNC (40)
- 
- /*
-+ *  Shortest memory chunk is (1<<SYM_MEM_SHIFT), currently 16.
-+ *  Actual allocations happen as SYM_MEM_CLUSTER_SIZE sized.
-+ *  (1 PAGE at a time is just fine).
-+ */
-+#define SYM_MEM_SHIFT   4
-+#define SYM_MEM_CLUSTER_SIZE    (1UL << SYM_MEM_CLUSTER_SHIFT)
-+#define SYM_MEM_CLUSTER_MASK    (SYM_MEM_CLUSTER_SIZE-1)
-+
-+/*
-  *  Number of entries in the START and DONE queues.
-  *
-  *  We limit to 1 PAGE in order to succeed allocation of 
-@@ -1322,14 +1331,6 @@
-  *  MEMORY ALLOCATOR.
-  */
- 
--/*
-- *  Shortest memory chunk is (1<<SYM_MEM_SHIFT), currently 16.
-- *  Actual allocations happen as SYM_MEM_CLUSTER_SIZE sized.
-- *  (1 PAGE at a time is just fine).
-- */
--#define SYM_MEM_SHIFT	4
--#define SYM_MEM_CLUSTER_SIZE	(1UL << SYM_MEM_CLUSTER_SHIFT)
--#define SYM_MEM_CLUSTER_MASK	(SYM_MEM_CLUSTER_SIZE-1)
- 
- /*
-  *  Link between free memory chunks of a given size.
+-- 
+"Next the statesmen will invent cheap lies, putting the blame upon 
+the nation that is attacked, and every man will be glad of those
+conscience-soothing falsities, and will diligently study them, and refuse
+to examine any refutations of them; and thus he will by and by convince 
+himself that the war is just, and will thank God for the better sleep 
+he enjoys after this process of grotesque self-deception." -- Mark Twain
