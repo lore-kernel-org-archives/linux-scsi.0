@@ -1,41 +1,42 @@
-From: Naveen Burmi <naveenb@cisco.com>
-Subject: Re: Request for review of Linux iSCSI driver version 4.0.0.1
-Date: Thu, 11 Dec 2003 16:51:18 +0530
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: Suggestion for aiding debugging of host removal
+Date: Thu, 11 Dec 2003 11:39:08 +0000
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <03121116511801.15757@naveenb-lnx.cisco.com>
-References: <03120118001300.08627@naveenb-lnx.cisco.com> <yquj4qwh3a29.fsf@chaapala-lnx2.cisco.com> <1070486359.1984.51.camel@mulgrave>
-Reply-To: naveenb@cisco.com
+Message-ID: <20031211113908.A17005@infradead.org>
+References: <20030709144410.GA3544@beaverton.ibm.com> <Pine.LNX.4.44L0.0312100947550.775-100000@ida.rowland.org> <20031210151456.A2927@infradead.org> <20031211074827.GA3076@beaverton.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sj-iport-5.cisco.com ([171.68.10.87]:3898 "EHLO
-	sj-iport-5.cisco.com") by vger.kernel.org with ESMTP
-	id S264886AbTLKLTe (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 11 Dec 2003 06:19:34 -0500
-In-Reply-To: <1070486359.1984.51.camel@mulgrave>
+Received: from phoenix.infradead.org ([213.86.99.234]:36366 "EHLO
+	phoenix.infradead.org") by vger.kernel.org with ESMTP
+	id S264884AbTLKLjL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 11 Dec 2003 06:39:11 -0500
+Content-Disposition: inline
+In-Reply-To: <20031211074827.GA3076@beaverton.ibm.com>; from andmike@us.ibm.com on Wed, Dec 10, 2003 at 11:48:28PM -0800
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: naveenb@cisco.com, Roman Zippel <zippel@linux-m68k.org>, hch@infradead.org, SCSI Mailing List <linux-scsi@vger.kernel.org>, davmyers@cisco.com, chaapala@cisco.com
+To: Alan Stern <stern@rowland.harvard.edu>, SCSI development list <linux-scsi@vger.kernel.org>
 
+On Wed, Dec 10, 2003 at 11:48:28PM -0800, Mike Anderson wrote:
+> > > I've got a question about host removal.  Once scsi_remove_host() has
+> > > returned, the host driver's module is free to unload from memory (assuming
+> > > the module's reference count is 0, which it normally is).  Hence it is a
+> > > mistake to access the host template in any way after that time.
+> 
+> Normally it would not be zero on the return from scsi_remove_host. It
+> would not go to zero until scsi_host_put is called. If the scsi_host_put
+> is the last ref then prior to the returning of the scsi_host_put
+> scsi_host_dev_release would have been called. If it is not then there
+> must of been a open on a device outstanding (which would keep a rmmod
+> from being called, but would allow hotplug and unexpectged disconnects).
 
-Hi James,
+An opened sysfs file won't stop the unload.  Only if we still have
+a scsi_device still referencing the host.
 
-On Thursday 04 December 2003 02:49 am, James Bottomley wrote:
-> On Wed, 2003-12-03 at 14:45, Clay Haapala wrote:
-> > A couple of related SCSI (not necessarily iSCSI) questions:
-> >
-> > "If the allowed count has not been exceeded" - The first two commands
-> > after a connection has been estabilished will fail with
-> > Unit_Attention. What if that first command then also gets a crc error
-> > (Aborted_command)?  Will the retry count be large enough?
->
-> Yes and it may not be, that's why I think we give you a DID_ code that
-> doesn't affect the retry count.
->
+> > I'll see whether I can come up with a fix.
+> 
+> Unless I missing something I do not see any interlock / wait in free_netdev
+> (in looking at test11).
 
-Please provide DID_ code(say, DID_IMMEDIATE_RETRY) so that LLD can use it to 
-initiate the retry of scsi command without affecting the retry count.
+Sorry, it's actually unregister_nedevice (throuch netdev_run_todo and
+netdev_wait_allrefs).
 
-Thanks,
-Naveen. 
