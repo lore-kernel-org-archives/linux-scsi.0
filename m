@@ -1,33 +1,25 @@
-From: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Subject: Re: PATCH [0/3]   qla2xxx: new experimental changes...
-Date: Fri, 04 Feb 2005 13:09:02 -0800
-Message-ID: <1107551342.14183.41.camel@plap.san.rr.com>
-References: <1107544908.14183.11.camel@plap.san.rr.com>
-	 <20050204203501.GA25239@infradead.org>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: How to disconnect a SCSI device without crashing SLES8?
+Date: Fri, 4 Feb 2005 21:06:11 +0000
+Message-ID: <20050204210611.GA25619@infradead.org>
+References: <20050204202501.GA25126@infradead.org> <15ae01c50af9$42f42c40$650aa8c0@ehrpc>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Received: from avexch01.qlogic.com ([198.70.193.200]:16956 "EHLO
-	avexch01.qlogic.com") by vger.kernel.org with ESMTP id S266254AbVBDVIm
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 4 Feb 2005 16:08:42 -0500
-In-Reply-To: <20050204203501.GA25239@infradead.org>
+Content-Type: text/plain; charset=us-ascii
+Received: from pentafluge.infradead.org ([213.146.154.40]:59538 "EHLO
+	pentafluge.infradead.org") by vger.kernel.org with ESMTP
+	id S263369AbVBDVGS (ORCPT <rfc822;Linux-scsi@vger.kernel.org>);
+	Fri, 4 Feb 2005 16:06:18 -0500
+Content-Disposition: inline
+In-Reply-To: <15ae01c50af9$42f42c40$650aa8c0@ehrpc>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Linux-SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Eric Raskin <eraskin@paslists.com>
+Cc: Linux-scsi@vger.kernel.org
 
-On Fri, 2005-02-04 at 20:35 +0000, Christoph Hellwig wrote:
-> patch3 seems to not have made it to the list.
+On Fri, Feb 04, 2005 at 03:36:48PM -0500, Eric Raskin wrote:
+> Thanks, Christoph.  Would we use the same commands on 2.6?
 
-I'll resend...
+They still work if CONFIG_SCSI_PROC_FS is enabled.  Always available
+and easier to use is to do echo "1" > /sys/device/N:N:N:N/device/delete
+where N:N:N:N is bus, channel, target, lun of the device to be deleted.
 
->   From a quick view
-> the first three patches look fine, except for backing out one msleep
-> conversion and the superflous return at the end of qla2xxx_slave_destroy
-> 
-
-I'll send an incremental patch which fixes this.
-
---
-AV
