@@ -1,60 +1,35 @@
-From: google@familycook1.net
-Subject: Re: Is it possible to spin down idle SATA disks that use scsi drivers
-Date: Sun,  9 Jan 2005 14:23:56 -0500
-Message-ID: <1105298636.41e184cc1fbeb@familycook1.net>
-References: <1105168894.41df89fe3a9cf@familycook1.net> <41E05DB4.8040704@torque.net>
+From: Stian Jordet <liste@jordet.nu>
+Subject: SCSI cd-burning
+Date: Sun, 09 Jan 2005 23:11:37 +0100
+Message-ID: <1105308697.22643.5.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ace.securenet-server.net ([63.247.93.10]:26580 "EHLO
-	ace.securenet-server.net") by vger.kernel.org with ESMTP
-	id S261718AbVAITYJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 9 Jan 2005 14:24:09 -0500
-In-Reply-To: <41E05DB4.8040704@torque.net>
+Received: from [82.147.40.124] ([82.147.40.124]:13697 "EHLO dodge.jordet.nu")
+	by vger.kernel.org with ESMTP id S261839AbVAIWLm (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 9 Jan 2005 17:11:42 -0500
+Received: from chevrolet.jordet (stianj@cadillac.jordet [192.168.1.1])
+	(authenticated bits=0)
+	by dodge.jordet.nu (8.13.2/8.13.2/Debian-1) with ESMTP id j09MBcPF026948
+	(version=TLSv1/SSLv3 cipher=RC4-MD5 bits=128 verify=NOT)
+	for <linux-scsi@vger.kernel.org>; Sun, 9 Jan 2005 23:11:39 +0100
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: dougg@torque.net
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-Dougg,
+Hi,
 
-Thank you for your replay.  I will check out the information you provid=
-ed to me.
+I have a Yamaha CRW-2100S which there is no way to get to burn cd's with
+the latest kernels as a normal user. It works well as root. I am well
+aware of the security changes made a couple of kernel versions ago, but
+it now works for ide cd burners, and I haven't found any other complaint
+about it not working with scsi burners - but perhaps noone owns any but
+me?
 
-donald
+Anyway, is this intended, or am I doing something wrong? What
+information can I provide?
 
-Quoting Douglas Gilbert <dougg@torque.net>:
+Bst regards,
+Stian
 
-> google@familycook1.net wrote:
-> > Is it possible to spin down idle SATA disks that are using the scsi
-> drivers?
->
-> There are some patches around that implement the proposed
-> SCSI ATA pass-through command from the SCSI-ATA Translation
-> (SAT) draft in libata. Also ioctls are defined so hdparm
-> can work on SATA disks connected via libata. These patches
-> allowed me to use smartmontools on a SATA disk.
->
-> > I have searched the archives with =93spindown=94 and =93scsi-idle=94=
- and have found
-> > nothing current.
->
-> The SAT draft defines the SCSI START STOP UNIT command which
-> controls the spin up and down of SCSI disks. Hopefully
-> libata implements this command so SCSI utilities (e.g.
-> sg_start) can control spin up and down. Control via
-> SCSI commands is important since the SAT layer may be
-> in an intermediate device (e.g. a SAS expander/enclosure)
-> rather than in the OS (e.g. libata).
->
-> Doug Gilbert
->
-
-
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
