@@ -1,88 +1,76 @@
-From: Stas Nikiforov <stas@itam.nsc.ru>
-Subject: RE: (SOLVED) megaraid aborting problem (RHEL 3WS)
-Date: Tue, 21 Sep 2004 14:15:16 +0700
+From: Matthew Wilcox <willy@debian.org>
+Subject: [PATCH] Add SPI-5 constants to scsi.h
+Date: Tue, 21 Sep 2004 12:50:59 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1095750915.2726.35.camel@whirl.lab7.lan>
-References: <7076215DFAA4574099E5CD59FE422262050538CE@pcssrv42.pcs.pc.ome.toshiba.co.jp>
-	 <1095407740.7060.5.camel@whirl.lab7.lan>
-Reply-To: stas@itam.nsc.ru
+Message-ID: <20040921115059.GU642@parcelfarce.linux.theplanet.co.uk>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns.itam.nsc.ru ([194.226.179.15]:36780 "EHLO ns.itam.nsc.ru")
-	by vger.kernel.org with ESMTP id S267494AbUIUHP1 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 21 Sep 2004 03:15:27 -0400
-Received: from site.lan (itut.itam.nsc.ru [194.226.179.2])
-	by ns.itam.nsc.ru (8.12.8/8.12.8) with ESMTP id i8L7FKI2025059
-	for <linux-scsi@vger.kernel.org>; Tue, 21 Sep 2004 14:15:20 +0700
-Received: from [192.168.7.215] ([192.168.7.215])
-	(authenticated bits=0)
-	by site.lan (8.12.11/8.12.11) with ESMTP id i8L7FG5d023540
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-scsi@vger.kernel.org>; Tue, 21 Sep 2004 14:15:16 +0700
-In-Reply-To: <1095407740.7060.5.camel@whirl.lab7.lan>
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:3483 "EHLO
+	www.linux.org.uk") by vger.kernel.org with ESMTP id S267587AbUIULvA
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 21 Sep 2004 07:51:00 -0400
+Received: from willy by www.linux.org.uk with local (Exim 4.33)
+	id 1C9jAh-0007Id-CV
+	for linux-scsi@vger.kernel.org; Tue, 21 Sep 2004 12:50:59 +0100
+Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
-To: Linux-scsi list <linux-scsi@vger.kernel.org>
-
-Hi,
-
-I've re-write firmware, re-initialized RAID
-and moved to kernel-2.4.20-RHEL.
-I've passed IOZONE test and got no errors
-on a controller.
-
-Best regard,
-Stas
+To: linux-scsi@vger.kernel.org
 
 
-On Fri, 2004-09-17 at 14:55, Stas Nikiforov wrote:
-> Hi,
-> 
-> Sorry for a very long delay. I try to do some things with hardware.
-> 
-> I have 2.4.21-20EL,
-> WD 6xHDD SATA DISK drive 250GB,
-> RAID 5, LSI firmware [713G:G117]
-> 
-> I've get the nvram log from the controller. 
-> Here it is.
-> 
-> LOG 48356182 event 0x390 time .....
-> Channel 0, Targed 255, lun 0
-> Code: 0x390
-> Category: i960 Hardware Error Event
-> 
-> My vendor told me to re-write firmware,
-> check all HDDs and re-initialize RAID. 
-> Now I do these things.
-> 
-> Stas.
-> 
-> On Fri, 2004-09-10 at 09:46, Tomita, Haruo wrote: 
-> > Hi all
-> > 
-> > > megaraid: aborting-1441961 cmd=2a <c=0 t=0 l=0>
-> > 
-> > Please let me know the environment which
-> > the abort issue of megaraid2 driver.
-> > 
-> >    - vender name of HDD
-> >    - HDD fw version
-> >    - RAID level
-> >    - raid controller's FW version.
-> > 
-> > I used three disks of Hitachi (Daytona S28B),
-> > and constituted them RAID5. 
-> > The same error is experienced by 2.4.21-15.04EL.
-> > megaraid2 driver is 2.10.3, raid fw is 1T23.
-> > 
-> > Best regards,
-> > Haruo
-> 
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Add the new constant names from SPI-5 to <scsi/scsi.h>
 
+Index: linux-2.6/include/scsi/scsi.h
+===================================================================
+RCS file: /var/cvs/linux-2.6/include/scsi/scsi.h,v
+retrieving revision 1.10
+diff -u -p -r1.10 scsi.h
+--- linux-2.6/include/scsi/scsi.h	13 Sep 2004 15:24:18 -0000	1.10
++++ linux-2.6/include/scsi/scsi.h	21 Sep 2004 11:48:09 -0000
+@@ -246,24 +246,34 @@ struct scsi_lun {
+ #define     EXTENDED_SDTR                   0x01
+ #define     EXTENDED_EXTENDED_IDENTIFY      0x02    /* SCSI-I only */
+ #define     EXTENDED_WDTR                   0x03
++#define     EXTENDED_PPR                    0x04
++#define     EXTENDED_MODIFY_BIDI_DATA_PTR   0x05
+ #define SAVE_POINTERS       0x02
+ #define RESTORE_POINTERS    0x03
+ #define DISCONNECT          0x04
+ #define INITIATOR_ERROR     0x05
+-#define ABORT               0x06
++#define ABORT_TASK_SET      0x06		/* SPI-5 name */
++#define ABORT               ABORT_TASK_SET	/* Old name */
+ #define MESSAGE_REJECT      0x07
+ #define NOP                 0x08
+ #define MSG_PARITY_ERROR    0x09
+ #define LINKED_CMD_COMPLETE 0x0a
+ #define LINKED_FLG_CMD_COMPLETE 0x0b
+-#define BUS_DEVICE_RESET    0x0c
+-
++#define TARGET_RESET        0x0c		/* SPI-5 name */
++#define BUS_DEVICE_RESET    TARGET_RESET	/* Old name */
++#define ABORT_TASK          0x0d
++#define CLEAR_TASK_SET      0x0e
+ #define INITIATE_RECOVERY   0x0f            /* SCSI-II only */
+ #define RELEASE_RECOVERY    0x10            /* SCSI-II only */
+-
++#define CLEAR_ACA           0x16
++#define LOGICAL_UNIT_RESET  0x17
+ #define SIMPLE_QUEUE_TAG    0x20
+ #define HEAD_OF_QUEUE_TAG   0x21
+ #define ORDERED_QUEUE_TAG   0x22
++#define IGNORE_WIDE_RESIDUE 0x23
++#define ACA                 0x24
++#define QAS_REQUEST         0x55
++#define IDENTIFY            0x80
+ 
+ /*
+  * Host byte codes
+
+-- 
+"Next the statesmen will invent cheap lies, putting the blame upon 
+the nation that is attacked, and every man will be glad of those
+conscience-soothing falsities, and will diligently study them, and refuse
+to examine any refutations of them; and thus he will by and by convince 
+himself that the war is just, and will thank God for the better sleep 
+he enjoys after this process of grotesque self-deception." -- Mark Twain
