@@ -1,91 +1,93 @@
-From: James Bottomley <James.Bottomley@steeleye.com>
-Subject: RE: [PATCH][BUGFIX] : megaraid patch for 2.10.1 (irq disable bug
-	fix)
-Date: 24 Feb 2004 10:47:11 -0600
+From: "Steven J. Hill" <sjhill@realitydiluted.com>
+Subject: Re: [PATCH] 2.6.2, Partition support for SCSI CDROM...
+Date: Tue, 24 Feb 2004 11:51:20 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1077641233.1804.145.camel@mulgrave>
-References: <0E3FA95632D6D047BA649F95DAB60E57033BC3DA@exa-atlanta.se.lsil.com>
+Message-ID: <403B8108.6080606@realitydiluted.com>
+References: <40396134.6030906@realitydiluted.com> <20040222190047.01f6f024.akpm@osdl.org> <40396E8F.4050307@realitydiluted.com> <20040224061130.GC503530@sgi.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed;
+ boundary="------------060109060609020107080702"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat1.steeleye.com ([65.114.3.130]:9918 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S262292AbUBXQr0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 24 Feb 2004 11:47:26 -0500
-In-Reply-To: <0E3FA95632D6D047BA649F95DAB60E57033BC3DA@exa-atlanta.se.lsil.com>
+Received: from eth13.com-link.com ([208.242.241.164]:30136 "EHLO
+	real.realitydiluted.com") by vger.kernel.org with ESMTP
+	id S262295AbUBXQvp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 24 Feb 2004 11:51:45 -0500
+In-Reply-To: <20040224061130.GC503530@sgi.com>
 List-Id: linux-scsi@vger.kernel.org
-To: "Mukker, Atul" <Atulm@lsil.com>
-Cc: 'Arjan van de Ven' <arjanv@redhat.com>, 'Paul Wagland' <paul@wagland.net>, Matthew Wilcox <willy@debian.org>, "Bagalkote, Sreenivas" <sreenib@lsil.com>, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
+To: Jeremy Higdon <jeremy@sgi.com>
+Cc: Andrew Morton <akpm@osdl.org>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Tue, 2004-02-24 at 10:04, Mukker, Atul wrote:
-> Wow! That's a lot of no-no. But we'll let the code speak for itself. The
-> major driving force behind the unified design is support for MPT raid
-> controllers and also a single code base, with a very small footprint patch -
-> if at all required, to support various kernels.
+This is a multi-part message in MIME format.
+--------------060109060609020107080702
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 
-I didn't say "no".  I'm just warning you that you've chosen a hard road
-to hoe, particularly with the limited life of 2.4.
+Here is the second try at the patch.
 
-> In this driver, the base kernel is assumed to be a lk 2.6.x with appropriate
-> APIs added for lk 2.4.x.
-> 
-> I recommend reading the concise design document, mraid_hotplug.doc, which
-> explains the overall layout of the driver and some design concerns. This
-> document is part of the driver package.
+-Steve
 
-OK, I read it.
+--------------060109060609020107080702
+Content-Type: text/x-patch;
+ name="scsi-sr-partitions-2.6.2-2.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="scsi-sr-partitions-2.6.2-2.patch"
 
-This is worrying:
+diff -urN linux-2.6.2/drivers/scsi/sr.c linux-2.6.2-patched/drivers/scsi/sr.c
+--- linux-2.6.2/drivers/scsi/sr.c	2004-02-22 20:15:08.000000000 -0500
++++ linux-2.6.2-patched/drivers/scsi/sr.c	2004-02-24 11:48:16.000000000 -0500
+@@ -55,6 +55,23 @@
+ #include "scsi_logging.h"
+ #include "sr.h"
+ 
++/*
++ * Device node mappings are as follows:
++ *
++ *    sr0 - first CDROM, whole disk
++ *    sr1 - first CDROM, first partition
++ *
++ *    [...]
++ *
++ *    sr16 - first CDROM, sixteenth partition
++ *    sr17 - second CDROM, whole disk
++ *    sr18 - second CDROM, first partition
++ *
++ *    [...]
++ */
++static int partitions = 16;
++MODULE_PARM(partitions, "i");
++MODULE_PARM_DESC(partitions, "number of SCSI CDROM partitions to support");
+ 
+ MODULE_PARM(xa_test, "i");	/* see sr_ioctl.c */
+ 
+@@ -518,7 +535,7 @@
+ 		goto fail;
+ 	memset(cd, 0, sizeof(*cd));
+ 
+-	disk = alloc_disk(1);
++	disk = alloc_disk(partitions + 1);
+ 	if (!disk)
+ 		goto fail_free;
+ 
+@@ -533,7 +550,7 @@
+ 	spin_unlock(&sr_index_lock);
+ 
+ 	disk->major = SCSI_CDROM_MAJOR;
+-	disk->first_minor = minor;
++	disk->first_minor = minor * (partitions + 1);
+ 	sprintf(disk->disk_name, "sr%d", minor);
+ 	disk->fops = &sr_bdops;
+ 	disk->flags = GENHD_FL_CD;
+@@ -868,6 +885,10 @@
+ {
+ 	int rc;
+ 
++	/* Check number of partitions specified. */
++	if (partitions < 0)
++		partitions = 0;
++
+ 	rc = register_blkdev(SCSI_CDROM_MAJOR, "sr");
+ 	if (rc)
+ 		return rc;
 
-"Even though the use of pure hotplug APIs is very appealing, I want to
-propose
-some deviation from this approach. If drivers rely on the PCI framework
-to
-discover adapters, we lose flexibility of registering controllers in a
-particular order with the operating system."
-
-Anything relying on discovery ordering in 2.6 is broken.
-
-And so is this:
-
-"An important MegaRAID feature is to be able to boot from any logical
-drive on
-any controller. Since persistent device naming is not prevalent in Linux
-world
-as of this writing, the order in which the devices are discovered is
-very
-important. We would like to continue to give users flexibility to
-designate
-any logical drive on any controller as the boot drive. As long as the
-BIOS on
-this controller is enabled, and only on this one :-), the chosen disk
-would be
-exported to the OS before any other disk."
-
-If you require this functionality in 2.6, you should look at plugging
-into the udev infrastructure.
-
-> Obviously we are open to all suggestions and ready to modify the code if
-> there is a general feeling in that direction. Also, this driver would
-> required to sit in a directory because of a split in files
-
-Well, I cast a brief glance over it, the #ifdef structure is horrible
-(and basically a product of trying to support 2.4).
-
-This is unacceptable:
-
-#if defined (__x86_64__)
-		/*
-		 * Register the 32-bit ioctl conversion
-		 */
-		register_ioctl32_conversion(MEGAIOCCMD, sys_ioctl)
-#endif
-
-The best thing to do would be to design the API to be 32/64 agnostic,
-but if you can't do that, at least use the CONFIG_COMPAT infrastructure
-that already exists.
-
-James
-
-
+--------------060109060609020107080702--
