@@ -1,82 +1,52 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: [PATCH] 2.5.51 SCSI_IOCTL_GET_IDLUN + _GET_BUS_NUMBER
-Date: Fri, 13 Dec 2002 09:40:14 +1100
+From: Michel Wilson <michel@crondor.net>
+Subject: sym53c810a gives CACHE TEST FAILED
+Date: Fri, 13 Dec 2002 00:03:31 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3DF9104E.4090509@torque.net>
-References: <3DF83E4F.8000704@torque.net> <200212121427.gBCERG502453@localhost.localdomain> <20021212174241.GB6481@suse.de>
-Reply-To: dougg@torque.net
+Message-ID: <200212130003.45824.michel@crondor.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from andromeda (andromeda.hgd.net [10.0.0.2])
+	by aeon.hgd.net (8.12.1/8.12.1) with ESMTP id gBCN3kfV026743
+	for <linux-scsi@vger.kernel.org>; Fri, 13 Dec 2002 00:03:46 +0100
 List-Id: linux-scsi@vger.kernel.org
-To: Jens Axboe <axboe@suse.de>
-Cc: James Bottomley <James.Bottomley@steeleye.com>, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-Jens Axboe wrote:
-> On Thu, Dec 12 2002, James Bottomley wrote:
-> 
->>dougg@torque.net said:
->>
->>>For disks both the SCSI_IOCTL_GET_IDLUN and SCSI_IOCTL_GET_BUS_NUMBER
->>>ioctls return the value 0 (type: int) in all cases. The attachment
->>>removes the dummy definitions of these ioctls in driver/block/
->>>scsi_ioctl.c so they fall through to the scsi mid level which
->>>correctly implements them (at least in terms of lk 2.4). 
->>
->>I'm not sure this is the correct thing to do.  These ioctls may be there 
->>because cdrecord is using them.  In the new scheme, you can record a CD 
->>without ever troubling the scsi mid-layer, so if cdrecord wants them, they 
->>have to be provided in some fashion without relying on a fall through.
->>
->>I've copied Jens on this mail, since he's the one that knows this stuff and 
->>should be able to confirm or deny this suspicion.  Jens?
-> 
-> 
-> Hmm, I _may_ be wrong but I think the main reason for GET_IDLUN and
-> GET_BUS_NUMBER in the generic block layer is to stop them from failing
-> in libscg and thus fooling it into believing we are scsi. You would need
-> to check libscg/scsi-linux-sg.c to be sure.
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
 
-One reason libscg/scsi-linux-sg.c (cdrecord) would use
-them is to differentiate between multiple "pseudo" scsi
-devices when it is doing a scd to sg mapping. [This is the area
-where I saw my sg_utils break.]
+Hello,
 
-So defining them and always yielding 0 is going to confuse
-it when there are two or more devices (e.g. 2 cd writers).
+I recently blew the dust off my old Digital Alpha XL300, but I couldn't get 
+2.4.20 to boot on it. It didn't like my onboard sym53c810a for some reason. 
+It says:
+CACHE TEST FAILED: DMA error (dstat=0xa0).
+CACHE INCORRECTLY CONFIGURED.
+with the sym-driver, or with the ncr-driver:
+CACHE TEST FAILED: script execution failed.
+start-886b3414, pc=886b3414, end=886b3440
+CACHE INCORRECTLY CONFIGURED
+I remember trying the sym53c8xx-2 driver, but it gave the same message. 
+Didn't make a screenshot of that one though, so I don't know the exact 
+message.
+I did some searching on it, I came across a few people with the same, or 
+similar problems, but there weren't any answers...
+Does anyone know what I should try next, or how I can get more debugging 
+info on this? It must be a driver problem, the card works fine onder 
+2.2.7...
 
-cdrecord uses the <host, target_id, lun> triple to enumerate
-cd writers (rather than linux's <host, channel, target_id, lun>).
-It is not clear to me how trying to define a correct
-SCSI_IOCTL_GET_IDLUN ioctl in the block level can cope with
-the strange combination of one scsi cdwriter and one atapi
-cdrwiter in the same box. [That is, will they have distinct
-host numbers?]
+Regards,
 
-There are also applications like cdparanoia to consider.
+Michel Wilson.
+- -- 
+Eagles may soar, but weasels don't get sucked into jet engines.
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.0.7 (GNU/Linux)
 
-> For one thing, we need to maintain the behaviour we have now of _not_
-> failing them for ata devices. If you want to pass them down to SCSI as
-> well and get the right id/lun and bus, fine, but don't break the ata
-> one.
-
-There is also the meaning of these ioctls in lk 2.4
-to consider.
-
-How to define these ioctls properly for scsi block devices
-and return "0" for other types of block devices??
-Well sd and sr could be patched to route these two ioctls
-to the scsi mid level and let other ioctls be diverted
-through drivers/block/scsi_ioctl.c . Is that ugly enough :-)
-
-
-
-BTW SCSI_IOCTL_GET_IDLUN ioctl in lk 2.4 and earlier yields
-2 integer values (not 1).
-
-Doug Gilbert
-
-
-
+iD8DBQE9+RXRL2ru+9LLS34RAowvAKDBuHb6updCPHEDOjNLZA3SXBtiKQCcC6TB
+lfo3qSdFw46h3zkR1L0AYTs=
+=UO0M
+-----END PGP SIGNATURE-----
 
