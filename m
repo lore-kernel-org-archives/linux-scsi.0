@@ -1,96 +1,74 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: sym2 on sparc
-Date: Fri, 1 Oct 2004 19:20:56 +0100
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20041001182056.GI16153@parcelfarce.linux.theplanet.co.uk>
+From: "Bagalkote, Sreenivas" <sreenib@lsil.com>
+Subject: RE: [PATCH]: megaraid 2.20.4: Fixes a data corruption bug
+Date: Fri, 1 Oct 2004 16:08:59 -0400
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <0E3FA95632D6D047BA649F95DAB60E570230C985@exa-atlanta>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:2486 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S266127AbUJASVA
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 1 Oct 2004 14:21:00 -0400
-Content-Disposition: inline
+Content-Type: text/plain;
+	charset="iso-8859-1"
+Return-path: <linux-kernel-owner+glk-linux-kernel=40m.gmane.org-S266474AbUJAUXF@vger.kernel.org>
+To: 'James Bottomley' <James.Bottomley@SteelEye.com>, "Mukker, Atul" <Atulm@lsil.com>
+Cc: "Bagalkote, Sreenivas" <sreenib@lsil.com>, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, "'bunk@fs.tum.de'" <bunk@fs.tum.de>, 'Andrew Morton' <akpm@osdl.org>, "'Matt_Domsch@dell.com'" <Matt_Domsch@dell.com>, "Ju, Seokmann" <sju@lsil.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-sparc@vger.kernel.org
-Cc: linux-scsi@vger.kernel.org
 
+James,
 
-Could someone with a symbios 53c8xx chip test this patch?  It works
-on non-sparc.  If I don't hear of any problems, it'll be in the next
-driver update.
+The submitted previous version of megaraid (2.20.3.1) had 
+register_ioctl32_conversion & unregister_ioctl32_conversion 
+defined to empty statements if CONFIG_COMPAT was _not_
+defined.
 
-Index: drivers/scsi/sym53c8xx_2/sym_glue.c
-===================================================================
-RCS file: /var/cvs/linux-2.6/drivers/scsi/sym53c8xx_2/sym_glue.c,v
-retrieving revision 1.63
-diff -u -p -r1.63 sym_glue.c
---- drivers/scsi/sym53c8xx_2/sym_glue.c	28 Sep 2004 12:34:20 -0000	1.63
-+++ drivers/scsi/sym53c8xx_2/sym_glue.c	1 Oct 2004 18:15:30 -0000
-@@ -56,6 +56,15 @@
- #define NAME53C		"sym53c"
- #define NAME53C8XX	"sym53c8xx"
+But I think the preferred way was to have the occurances of 
+(un)register_ioctl32_conversion in the code surrounded by 
+#ifdef CONFIG_COMPAT ... #endif directly. In the kernel source
+only register_ioctl32_conversion has these #ifdef .. #endif. The
+unregister_ioctl32_conversion doesn't.
+
+This patch should take care of that.
+
+Thanks,
+Sreenivas
+
+---
+diff -Naur linux-error/drivers/scsi/megaraid/megaraid_mm.c
+linux-fixed/drivers/scsi/megaraid/megaraid_mm.c
+--- linux-error/drivers/scsi/megaraid/megaraid_mm.c	2004-10-01
+08:42:09.999572008 -0700
++++ linux-fixed/drivers/scsi/megaraid/megaraid_mm.c	2004-10-01
+08:42:51.383280728 -0700
+@@ -1151,7 +1151,9 @@
+ 	con_log(CL_DLEVEL1 , ("exiting common mod\n"));
  
-+/* Bloody SPARC can't do anything normal ... */
-+#ifdef __sparc__
-+#define IRQ_FMT "%s"
-+#define IRQ_PRM(x) __irq_itoa(x)
-+#else
-+#define IRQ_FMT "%d"
-+#define IRQ_PRM(x) (x)
+ 	unregister_chrdev(majorno, "megadev");
++#ifdef CONFIG_COMPAT
+ 	unregister_ioctl32_conversion(MEGAIOCCMD);
 +#endif
-+
- static int __devinit
- pci_get_base_address(struct pci_dev *pdev, int index, u_long *base)
- {
-@@ -1400,18 +1409,8 @@ static int sym_host_info(struct sym_hcb 
- 	copy_info(&info, "Chip " NAME53C "%s, device id 0x%x, "
- 			 "revision id 0x%x\n",
- 			 np->s.chip_name, np->device_id, np->revision_id);
--	copy_info(&info, "At PCI address %s, "
--#ifdef __sparc__
--		"IRQ %s\n",
--#else
--		"IRQ %d\n",
--#endif
--		pci_name(np->s.device),
--#ifdef __sparc__
--		__irq_itoa(np->s.irq));
--#else
--		(int) np->s.irq);
--#endif
-+	copy_info(&info, "At PCI address %s, IRQ " IRQ_FMT "\n",
-+		pci_name(np->s.device), IRQ_PRM(np->s.irq));
- 	copy_info(&info, "Min. period factor %d, %s SCSI BUS%s\n",
- 			 (int) (np->minsync_dt ? np->minsync_dt : np->minsync),
- 			 np->maxwide ? "Wide" : "Narrow",
-@@ -1539,19 +1538,9 @@ static struct Scsi_Host * __devinit sym_
- 	struct sym_fw *fw;
+ }
  
- 	printk(KERN_INFO
--		"sym%d: <%s> rev 0x%x at pci %s "
--#ifdef __sparc__
--		"irq %s\n",
--#else
--		"irq %d\n",
--#endif
-+		"sym%d: <%s> rev 0x%x at pci %s irq " IRQ_FMT "\n",
- 		unit, dev->chip.name, dev->chip.revision_id,
--		pci_name(dev->pdev),
--#ifdef __sparc__
--		__irq_itoa(dev->s.irq));
--#else
--		dev->s.irq);
--#endif
-+		pci_name(dev->pdev), IRQ_PRM(dev->s.irq));
- 
- 	/*
- 	 *  Get the firmware for this chip.
+ module_init(mraid_mm_init);
 
--- 
-"Next the statesmen will invent cheap lies, putting the blame upon 
-the nation that is attacked, and every man will be glad of those
-conscience-soothing falsities, and will diligently study them, and refuse
-to examine any refutations of them; and thus he will by and by convince 
-himself that the war is just, and will thank God for the better sleep 
-he enjoys after this process of grotesque self-deception." -- Mark Twain
+---
+
+>-----Original Message-----
+>From: James Bottomley [mailto:James.Bottomley@SteelEye.com]
+>Sent: Wednesday, September 29, 2004 11:16 PM
+>To: Mukker, Atul
+>Cc: Bagalkote, Sreenivas; 'linux-kernel@vger.kernel.org';
+>'linux-scsi@vger.kernel.org'; 'bunk@fs.tum.de'; 'Andrew Morton';
+>'Matt_Domsch@dell.com'
+>Subject: RE: [PATCH]: megaraid 2.20.4: Fixes a data corruption bug
+>
+>
+>On Wed, 2004-09-29 at 17:28, Mukker, Atul wrote:
+>> Considering the criticality of this fix, we hope it make 
+>into the 2.6.9
+>> release candidate as soon as possible. Can you update us 
+>with your views on
+>> this.
+>
+>The attached patch is mangled by the emailer...do you have a pristine
+>version?
+>
+>James
+>
+>
