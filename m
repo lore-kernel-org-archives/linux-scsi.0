@@ -1,53 +1,43 @@
-From: James Bottomley <James.Bottomley@steeleye.com>
-Subject: Re: Removal of driverfs files in drivers/cdrom/cdrom.c
-Date: Sun, 28 Jul 2002 14:50:02 -0500
+From: Matt_Domsch@Dell.com
+Subject: RE: [PATCH] SD_EXTRA_DEVS module option
+Date: Sun, 28 Jul 2002 15:09:40 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <200207281950.g6SJo2Z02368@localhost.localdomain>
-References: <sullivan@austin.ibm.com>
+Message-ID: <F44891A593A6DE4B99FDCB7CC537BBBBB83971@AUSXMPS308.aus.amer.dell.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+ charset=iso-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: (from root@localhost)
-	by pogo.mtv1.steeleye.com (8.9.3/8.9.3) id MAA25552
-	for <linux-scsi@vger.kernel.org>; Sun, 28 Jul 2002 12:50:42 -0700
-In-Reply-To: Message from sullivan <sullivan@austin.ibm.com>
-   of "Thu, 25 Jul 2002 08:36:49 CDT." <20020725083649.D1757@austin.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: sullivan <sullivan@austin.ibm.com>
-Cc: Patrick Mochel <mochel@osdl.org>, linux-scsi@vger.kernel.org
+To: berthiaume_wayne@emc.com
+Cc: linux-scsi@vger.kernel.org
 
-mochel@osdl.org said:
-> This looks wrong, based on the fact that it wasn't the cdrom layer
-> that  created these files. They were, I believe, created by the SCSI
-> cdrom  layer. So, why are they being removed here, esp. since they are
-> removed at  a more general layer?  
+> 	Well in RH 7.1, lk 2.4.2, the option already exist under SCSI
+> Support -> Maximum number of SCSI diasks that can be loaded 
+> as modules. I
+> haven't looked at a vanilla kernel so this may be a Red Hat addition.
 
-sullivan@austin.ibm.com said:
-> Maybe a first good step would be to move the cdrom support completely
-> up into the general layer and use the presence of a non NULL parent
-> field to indicate whether the lower level driver has added support for
-> driverfs. We'd have to make sure the cdrom_drverfs_dev structure is
-> initialized with zeros for all of the cdrom related driver layers that
-> don't support driverfs yet. Let me know what you think. I'll pull a
-> patch together...  
+Yes, but that is exactly the problem.  It's a compile time config option
+(set to 40 by default, and kept that way in most distributions), which is
+insufficient in the case of more than 40 disks (or 20 dual-pathed disks).
+My patch was to make this a runtime configurable option that defaults to the
+value of CONFIG_SD_EXTRA_DISKS, but which the user can override at module
+load time.
 
-Pat,
+Kurt Garloff of SuSE posted on Friday a set of patches targeted at 2.4.20pre
+that extends this much further (see thread sd_many done right on
+linux-kernel), and deletes CONFIG_SD_EXTRA_DISKS entirely, dynamically using
+unassigned majors as needed.  I'll follow that patch progress.  If it
+appears that won't make 2.4.x, then I'll see about submitting my simple
+patch.
 
-I think the root cause of all the ugly code is that none of us knows how to 
-match up the partitions or other adjunct elements which belong in the class 
-code with the actual device, and the fact that the generic code (cdrom and 
-genhd) is more than just SCSI, so we're all a little wary of messing too much 
-with it.  Are you planning to embed a driverfs parent pointer in the relevant 
-structures?  Do you think the best approach is to do driverfs creation/removal 
-for everything in the generic cdrom driver?  We're all a bit reticent to do a 
-wholesale rework of none scsi code without a clear idea of what we're supposed 
-to be doing.
+Thanks,
+Matt
 
-If you give me an idea of how you are thinking of matching up the parent 
-pointers, I'll have a go at doing this more generally.
-
-James
-
-
-
+--
+Matt Domsch
+Sr. Software Engineer, Lead Engineer, Architect
+Dell Linux Solutions www.dell.com/linux
+Linux on Dell mailing lists @ http://lists.us.dell.com
+#1 US Linux Server provider for 2001 and Q1/2002! (IDC May 2002)
 
