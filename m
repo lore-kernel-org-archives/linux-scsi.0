@@ -1,139 +1,143 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH][RFC] kill scsi_dump_status
-Date: Sat, 26 Apr 2003 23:35:29 +0200
+From: Andries.Brouwer@cwi.nl
+Subject: Re: [example PATCH - not for applying] exclude certain commands
+Date: Sat, 26 Apr 2003 23:44:10 +0200 (MEST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030426233529.A22904@lst.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Message-ID: <UTC200304262144.h3QLiAt04450.aeb@smtp.cwi.nl>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([212.34.181.86]:13576 "EHLO verein.lst.de")
-	by vger.kernel.org with ESMTP id S263048AbTDZVXS (ORCPT
+Received: from hera.cwi.nl ([192.16.191.8]:33670 "EHLO hera.cwi.nl")
+	by vger.kernel.org with ESMTP id S263082AbTDZVcO (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 26 Apr 2003 17:23:18 -0400
-Content-Disposition: inline
+	Sat, 26 Apr 2003 17:32:14 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org
+To: mdharm-scsi@one-eyed-alien.net
+Cc: Andries.Brouwer@cwi.nl, James.Bottomley@steeleye.com, greg@kroah.com, linux-scsi@vger.kernel.org, linux-usb-devel@lists.sourceforge.net
 
-Is someone still using the echo dump > /proc/scsi/scsi feature?  I think
-we should kill it as we're getting much nicer output from sysfs these
-days..
+[[problem solved, we understand the hardware, it seems,
+now wish to find an elegant way of doing what is required
+(and only what is required) in the scsi and/or usb storage code]]
 
+(1) usb-storage is broken in the sense that it uses sr_bufflen
+for the transfer size instead of the buffer length, then fudges
+commands to make them transfer a different length, but without
+updating sr_bufflen.
 
---- 1.19/drivers/scsi/scsi_proc.c	Wed Apr 23 04:03:43 2003
-+++ edited/drivers/scsi/scsi_proc.c	Sat Apr 26 20:46:26 2003
-@@ -312,91 +316,6 @@
- 	return (len);
- }
- 
--#ifdef CONFIG_SCSI_LOGGING
--/*
-- * Function:    scsi_dump_status
-- *
-- * Purpose:     Brain dump of scsi system, used for problem solving.
-- *
-- * Arguments:   level - used to indicate level of detail.
-- *
-- * Notes:       The level isn't used at all yet, but we need to find some
-- *		way of sensibly logging varying degrees of information.
-- *		A quick one-line display of each command, plus the status
-- *		would be most useful.
-- *
-- *              This does depend upon CONFIG_SCSI_LOGGING - I do want some
-- *		way of turning it all off if the user wants a lean and mean
-- *		kernel.  It would probably also be useful to allow the user
-- *		to specify one single host to be dumped.  A second argument
-- *		to the function would be useful for that purpose.
-- *
-- *              FIXME - some formatting of the output into tables would be
-- *		        very handy.
-- */
--static void scsi_dump_status(int level)
+(1A)
+Of course it is bad when variables have a function that differs
+from what is suggested by their name. So, sr_bufflen must be
+the length of the buffer and nothing else. If the length of
+the transfer is needed, there must be a field sr_xferlen or so.
+
+(1B)
+Of course it is bad when usb-storage fudges commands.
+
+(2) Also other parts of the kernel do this translation,
+so there is a lot of duplication; see for example
+the idescsi_transform code in ide-scsi.c.
+
+Lazy as I am I had hoped that I would find the right setup
+in my mailbox. But upon returning I see essentially two replies:
+
+(a) Matt tells about sr_bufflen.
+(b) Alan says that changing must be avoided when possible.
+Of course I agree. (By the way, he says among other things
+"The SCSI midlayer could try multiple forms of MODE_SENSE", but
+that happens already.)
+
+So I made a patch, but will only describe it since it is long,
+and I am not quite happy yet, as you will see below.
+
+The first part, in drivers/usb/storage/scsiglue.c is very
+satisfactory:
+
+-
+-#define USB_STOR_SCSI_SENSE_HDRSZ 4
+-#define USB_STOR_SCSI_SENSE_10_HDRSZ 8
+-
+-struct usb_stor_scsi_sense_hdr
 -{
--	int i;
--	struct Scsi_Host *shpnt;
--	Scsi_Cmnd *SCpnt;
--	Scsi_Device *SDpnt;
--	printk(KERN_INFO "Dump of scsi host parameters:\n");
--	i = 0;
--	for (shpnt = scsi_host_get_next(NULL); shpnt;
--	     shpnt = scsi_host_get_next(shpnt)) {
--		printk(KERN_INFO " %d %d : %d %d\n",
--		       shpnt->host_failed,
--		       shpnt->host_busy,
--		       shpnt->host_blocked,
--		       shpnt->host_self_blocked);
--	}
+-  __u8* dataLength;
+-  __u8* mediumType;
+...
+-       }
+-    }
 -
--	printk(KERN_INFO "\n\n");
--	printk(KERN_INFO "Dump of scsi command parameters:\n");
--	for (shpnt = scsi_host_get_next(NULL); shpnt;
--	     shpnt = scsi_host_get_next(shpnt)) {
--		printk(KERN_INFO "h:c:t:l (dev sect nsect cnumsec sg) "
--			"(ret all flg) (to/cmd to ito) cmd snse result\n");
--		list_for_each_entry(SDpnt, &shpnt->my_devices, siblings) {
--			unsigned long flags;
--
--			spin_lock_irqsave(&SDpnt->list_lock, flags);
--			list_for_each_entry(SCpnt, &SDpnt->cmd_list, list) {
--				/*  (0) h:c:t:l (dev sect nsect cnumsec sg) (ret all flg) (to/cmd to ito) cmd snse result %d %x      */
--				printk(KERN_INFO "(%3d) %2d:%1d:%2d:%2d (%6s %4llu %4ld %4ld %4x %1d) (%1d %1d 0x%2x) (%4d %4d %4d) 0x%2.2x 0x%2.2x 0x%8.8x\n",
--				       i++,
--
--				       SCpnt->device->host->host_no,
--				       SCpnt->device->channel,
--                                       SCpnt->device->id,
--                                       SCpnt->device->lun,
--
--                                       SCpnt->request->rq_disk ?
--                                       SCpnt->request->rq_disk->disk_name : "?",
--                                       (unsigned long long)SCpnt->request->sector,
--				       SCpnt->request->nr_sectors,
--				       (long)SCpnt->request->current_nr_sectors,
--				       SCpnt->request->rq_status,
--				       SCpnt->use_sg,
--
--				       SCpnt->retries,
--				       SCpnt->allowed,
--				       SCpnt->flags,
--
--				       SCpnt->timeout_per_command,
--				       SCpnt->timeout,
--				       SCpnt->internal_timeout,
--
--				       SCpnt->cmnd[0],
--				       SCpnt->sense_buffer[2],
--				       SCpnt->result);
--			}
--			spin_unlock_irqrestore(&SDpnt->list_lock, flags);
--		}
--	}
+-  /* Set value of length passed in */
+-  *length_p = length;
 -}
--#endif	/* CONFIG_SCSI_LOGGING */ 
 -
- static int scsi_add_single_device(uint host, uint channel, uint id, uint lun)
- {
- 	struct Scsi_Host *shost;
-@@ -470,22 +389,6 @@
- 		goto out;
- 
- #ifdef CONFIG_SCSI_LOGGING
--	/*
--	 * Usage: echo "scsi dump #N" > /proc/scsi/scsi
--	 * to dump status of all scsi commands.  The number is used to
--	 * specify the level of detail in the dump.
--	 */
--	if (!strncmp("dump", buffer + 5, 4)) {
--		unsigned int level;
+
+(496 lines deleted). That is a good start.
+If we do not fudge commands in usb-storage, then a lot of fudging code
+can go.
+
+The next part, in drivers/usb/storage/protocol.c, is almost
+as satisfactory:
+
+...
+-       /* determine the correct (or minimum) data length for these commands */
+-       switch (srb->cmnd[0]) {
 -
--		p = buffer + 10;
--
--		if (*p == '\0')
--			goto out;
--
--		level = simple_strtoul(p, NULL, 0);
--		scsi_dump_status(level);
--	}
- 	/*
- 	 * Usage: echo "scsi log token #N" > /proc/scsi/scsi
- 	 * where token is one of [error,scan,mlqueue,mlcomplete,llqueue,
+-               /* change MODE_SENSE/MODE_SELECT from 6 to 10 byte commands */
+-       case MODE_SENSE:
+-       case MODE_SELECT:
+-               /* save the command so we can tell what it was */
+-               old_cmnd = srb->cmnd[0];
+...
+-               /* change READ_6/WRITE_6 to READ_10/WRITE_10, which
+-                * are ATAPI commands */
+-       case WRITE_6:
+-       case READ_6:
+-               srb->cmnd[11] = 0;
+-               srb->cmnd[10] = 0;
+...
+
+(deleted some 200 lines changing READ_6 into READ_10, etc.)
+
+These lines can be deleted because the SCSI layer does not send
+such commands. (What about sg you ask? I don't care. People who
+send commands "by hand" are responsible themselves. Moreover, it
+is really bad when these handcrafted commands are changed by the
+driver - probably they were intended precisely as written.)
+
+Why doesnt SCSI send READ_6/WRITE_6? Because there is a field "ten"
+that is initially 1 and says that READ_10 must be used. It will be
+cleared only when the device returns ILLEGAL_REQUEST.
+
+I dislike the choice of identifier "ten" - it is difficult to grep for,
+and I changed it into use_10_for_rw, with the same function as before.
+Added a field use_10_for_ms. Thus, in scsi.h:
+
++       unsigned use_10_for_rw:1; /* first try 10-byte read / write */
++       unsigned use_10_for_ms:1; /* first try 10-byte mode sense/select */
+
+in the declaration of struct scsi_device.
+
+Now sd_do_mode_sense6() becomes sd_do_mode_sense() and does
+
++       if (SRpnt->sr_device->use_10_for_ms) {
++               if (len < 8)
++                       len = 8;
++
++               cmd[0] = MODE_SENSE_10;
++               cmd[8] = len;
++       } else {
++               if (len < 4)
++                       len = 4;
++
++               cmd[0] = MODE_SENSE;
++               cmd[4] = len;
++       }
+
+(and its first parameter can go).
+
+All this is nice and well. Remains the question how usb-storage
+makes sure that the use_10_for_rw and use_10_for_ms flags are set
+for its devices.
+
+Tonight I kludged this by setting this (in protocol.c) at the moment
+the first INQUIRY is done. But that is terribly ugly.
+Did I overlook some obvious means of communication?
+
+Comments?
+
+Andries
