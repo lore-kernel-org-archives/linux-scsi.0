@@ -1,51 +1,71 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] ibmvscsi driver - next version
-Date: Mon, 23 Feb 2004 19:49:13 +0000
+From: Joachim Geiler <Joachim.Geiler@t-online.de>
+Subject: Re: cdrom_ioctl() hanging in 2.6.3
+Date: Mon, 23 Feb 2004 20:58:27 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040223194913.A13181@infradead.org>
-References: <opr3s2iefyl6e53g@us.ibm.com> <20040223144542.A9624@infradead.org> <opr3t8zmyel6e53g@us.ibm.com>
+Message-ID: <c1dlvr$hc3$1@sea.gmane.org>
+References: <20040222134723.7de65a50.akpm@osdl.org> <c1c43f$pm4$1@sea.gmane.org>
+Reply-To: Joachim.Geiler@t-online.de
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7Bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from phoenix.infradead.org ([213.86.99.234]:23824 "EHLO
-	phoenix.infradead.org") by vger.kernel.org with ESMTP
-	id S262018AbUBWTtO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 23 Feb 2004 14:49:14 -0500
-Content-Disposition: inline
-In-Reply-To: <opr3t8zmyel6e53g@us.ibm.com>; from sleddog@us.ibm.com on Mon, Feb 23, 2004 at 01:41:36PM -0600
+Received: from main.gmane.org ([80.91.224.249]:59326 "EHLO main.gmane.org")
+	by vger.kernel.org with ESMTP id S262006AbUBWT5u (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 23 Feb 2004 14:57:50 -0500
+Received: from list by main.gmane.org with local (Exim 3.35 #1 (Debian))
+	id 1AvMD8-0005Xs-00
+	for <linux-scsi@vger.kernel.org>; Mon, 23 Feb 2004 20:57:50 +0100
+Received: from p50912f78.dip.t-dialin.net ([80.145.47.120])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-scsi@vger.kernel.org>; Mon Feb 23 19:57:50 2004
+Received: from Joachim.Geiler by p50912f78.dip.t-dialin.net with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-scsi@vger.kernel.org>; Mon Feb 23 19:57:50 2004
 List-Id: linux-scsi@vger.kernel.org
-To: Dave Boutcher <sleddog@us.ibm.com>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Mon, Feb 23, 2004 at 01:41:36PM -0600, Dave Boutcher wrote:
-> > 	any reason you hid all headers in ibmvscsi.h?  normally we include
-> > 	them in the source files directly.
+Joachim Geiler wrote:
+
+> Andrew Morton wrote:
 > 
-> Philosophy question....I usually assume that a header file should in turn 
-> include anything it needs...so ibmvscsi.h includes all the scsi header 
-> files it uses...bad philosophy?
+>> 
+>> Gents,
+>> 
+>> apparently KDE's `k3b' command is consistently hanging when accessing a
+>> SCSI CDROM.  See http://bugs.kde.org/show_bug.cgi?id=75553
+>> 
+>> Frank has generated a stack backtrace, below.
+>> 
+>> Is this an adaptec driver problem, or a generic thing?
+>> 
+>> Thanks.
 
-If you actually need them you need to include them.  But in ibmvscsi.h
-I only see pointers to the scsi datastructures - for those a simple
-forward-declaration is enough.
+Hello again,
+
+I did a strace of the syscalls of k3b before it hangs (kernel 2.6.3mm2). I
+think the following tail of the trace may be of interest:
 
 
-> > 	This can't ever happen.  You will only get called for commands
-> > 	that you have accepted in queuecommand and not called the completion
-> > 	routine for.
-> 
-> The above code was in the abort routine....I would personally prefer to 
-> leave the check in there from pure paranoia.  If we are into aborts, bad 
-> things are happening, and I don't really care about code path in 
-> abort...perhaps I should add a "this should never happen" comment? :-)  I 
-> could make it a BUG()...I'm not a huge fan of BUG() in drivers...
+lstat64("/dev/sr0", {st_mode=S_IFBLK|0660, st_rdev=makedev(11, 0), ...}) = 0
+open("/dev/sr0", O_RDONLY|O_NONBLOCK)   = 12
+fstat64(12, {st_mode=S_IFBLK|0660, st_rdev=makedev(11, 0), ...}) = 0
+ioctl(12, 0x5321, 0x1)                  = 12
+close(12)                               = 0
+open("/dev/sr0", O_RDONLY|O_NONBLOCK)   = 12
+fstat64(12, {st_mode=S_IFBLK|0660, st_rdev=makedev(11, 0), ...}) = 0
+ioctl(12, 0x5382, 0xbfffdc58)           = 0
+ioctl(12, 0x5386, 0xbfffdd24)           = 0
+close(12)                               = 0
+open("/dev/sr0", O_RDONLY|O_NONBLOCK)   = 12
+ioctl(12, 0x5393 <unfinished ...>
 
-Just remove it.  If you don't trust the midlayer it's hard to write
-a scsi driver..
+Here the process hangs in D state....
 
-> The INIT_WORK call needs to be done before we get back to the subdriver in 
-> case the first message gets turned around really fast.  Having this stub 
-> seemed the cleanest way to handle that generically.
+/dev/sr0 is a yamaha cdrw 6416 at symbios 53c875.
 
-Why can't you simply do it in ibmvscsi_init_crq_queue for example?
+
+Joachim
+ 
 
