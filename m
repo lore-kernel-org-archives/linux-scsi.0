@@ -1,75 +1,58 @@
 From: Kurt Garloff <garloff@suse.de>
-Subject: [PATCH] sysfs: unique_id in hex
-Date: Mon, 9 Feb 2004 16:56:19 +0100
+Subject: WWID / SerialNo in sysfs?
+Date: Mon, 9 Feb 2004 17:08:56 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040209155619.GR3944@tpkurt.garloff.de>
+Message-ID: <20040209160856.GS3944@tpkurt.garloff.de>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="KAk/33nSS6LK84p9"
+	protocol="application/pgp-signature"; boundary="XDqeUMnLaDfDQgU1"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns.suse.de ([195.135.220.2]:62893 "EHLO Cantor.suse.de")
-	by vger.kernel.org with ESMTP id S262128AbUBIQBT (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 9 Feb 2004 11:01:19 -0500
+Received: from ns.suse.de ([195.135.220.2]:61619 "EHLO Cantor.suse.de")
+	by vger.kernel.org with ESMTP id S265201AbUBIQI6 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 9 Feb 2004 11:08:58 -0500
+Received: from hermes.suse.de (Hermes.suse.de [195.135.221.8])
+	(using TLSv1 with cipher EDH-RSA-DES-CBC3-SHA (168/168 bits))
+	(No client certificate requested)
+	by Cantor.suse.de (Postfix) with ESMTP id 3FDA418AEE2
+	for <linux-scsi@vger.kernel.org>; Mon,  9 Feb 2004 17:08:57 +0100 (CET)
 Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
 To: Linux SCSI list <linux-scsi@vger.kernel.org>
-Cc: James Bottomley <James.Bottomley@steeleye.com>
 
 
---KAk/33nSS6LK84p9
-Content-Type: multipart/mixed; boundary="7Rldj+JZnTQmDdGi"
-Content-Disposition: inline
-
-
---7Rldj+JZnTQmDdGi
+--XDqeUMnLaDfDQgU1
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
 Content-Transfer-Encoding: quoted-printable
 
 Hi,
 
-the unique ID field is filled by most host adapters with their IO port.
-The io port is printed in hex in /proc/ioports.
-Thus we should probably do the same in
-sys/classes/scsi_host/hostX/unique_id
+I would like to add a few lines to the SCSI scanning code to retrieve
+WWID and/or serial number from pages INQUIRY pages 0x83 and 0x80.
 
-Consider applying the attached patch.
+I'm aware that this can be done from userspace. I've done it before
+(scsidev). However, you need some code to relate device nodes=20
+(sg, sd) to device IDs (C:B:T:U), thus it's non-trivial to do.
+
+Thus, IMHO, it would be good to retrieve WWID and/or serial no
+and export it via sysfs to make persistent device naming in userspace
+easier. The USB subsystem already does it.
 
 Regards,
 --=20
 Kurt Garloff  <garloff@suse.de>                            Cologne, DE=20
 SUSE LINUX AG, Nuernberg, DE                          SUSE Labs (Head)
 
---7Rldj+JZnTQmDdGi
-Content-Type: text/plain; charset=us-ascii
-Content-Description: scsi_sysfs-uniqueid-hex.diff
-Content-Disposition: attachment; filename="scsi_sysfs-uniqueid-hex.diff"
-Content-Transfer-Encoding: quoted-printable
-
---- drivers/scsi/scsi_sysfs.c	2004-02-09 16:29:30.226170112 +0100
-+++ drivers/scsi/scsi_sysfs.c.new	2004-02-09 16:30:31.640833664 +0100
-@@ -94,7 +94,7 @@
- };
- static CLASS_DEVICE_ATTR(scan, S_IWUSR, NULL, store_scan);
-=20
--shost_rd_attr(unique_id, "%u\n");
-+shost_rd_attr(unique_id, "0x%x\n");
- shost_rd_attr(host_busy, "%hu\n");
- shost_rd_attr(cmd_per_lun, "%hd\n");
- shost_rd_attr(sg_tablesize, "%hu\n");
-
---7Rldj+JZnTQmDdGi--
-
---KAk/33nSS6LK84p9
+--XDqeUMnLaDfDQgU1
 Content-Type: application/pgp-signature
 Content-Disposition: inline
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v1.2.3 (GNU/Linux)
 
-iD8DBQFAJ62ixmLh6hyYd04RAmTLAJ4pExPYgfJWVjtCOqmN9CAB6yKMmwCgo8oK
-lh8Cx/T16fbb1iIvy2B66GE=
-=ek4H
+iD8DBQFAJ7CXxmLh6hyYd04RAntfAJsENzqrwHfkOAIk3/u37BohQN2DBgCeLnIn
+yDERdm0uL5GGSnKQKaN1qvI=
+=VBc6
 -----END PGP SIGNATURE-----
 
---KAk/33nSS6LK84p9--
+--XDqeUMnLaDfDQgU1--
