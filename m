@@ -1,115 +1,91 @@
-From: "Moore, Eric Dean" <Emoore@lsil.com>
-Subject: [PATCH 2.4 ] MPT Fusion driver 2.05.16 update
-Date: Mon, 26 Apr 2004 17:59:46 -0400
+From: =?iso-8859-1?q?Liong=20Hoong?= <liongshliongsh@yahoo.com>
+Subject: Re: sg_io_hrd_t - host_status error (0x05)
+Date: Tue, 27 Apr 2004 11:43:08 +0800 (CST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <0E3FA95632D6D047BA649F95DAB60E570442CB4F@exa-atlanta.se.lsil.com>
+Message-ID: <20040427034308.89924.qmail@web40004.mail.yahoo.com>
+References: <4089E368.5040002@torque.net>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:10390 "EHLO mail0.lsil.com")
-	by vger.kernel.org with ESMTP id S263609AbUDZV7w (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 26 Apr 2004 17:59:52 -0400
+Received: from web40004.mail.yahoo.com ([66.218.78.22]:33363 "HELO
+	web40004.mail.yahoo.com") by vger.kernel.org with SMTP
+	id S263731AbUD0DnJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 26 Apr 2004 23:43:09 -0400
+In-Reply-To: <4089E368.5040002@torque.net>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: marcelo.tosatti@cyclades.com
+To: dougg@torque.net
+Cc: linux-scsi@vger.kernel.org
 
-This is an update for the MPT Fusion drivers 2.4 kernel.
+Hi Douglas Gilbert,
 
-This is mpt version is 2.05.16  The attached patch is made
-against 2.05.11.03 driver found in 2.4.25 kernel or later.
+Thanks for commenting on the problem I am facing. I
+have few other question,
 
+1) Is it a common error on kernel 2.4.18 where the
+host_status error, SG_ERR_DID_ABORT occured whenever
+pass through opcodes from 0x80 to 0x9f?
 
-----------------------------------------------------------------
+2) Is there any patch to work around this error?
 
-Changelog for 2.05.16, Release Date: March 17, 2004
+3) Can you point me to any links or codes that have
+caused the error?
 
-(1) SDTR/WDTR Disallow bits were not being set
-in Device Configuration Page 1 for SEP devices.
-(2) Increase the timeout in RAID Action Request
-from 2 to 10 seconds.  Under stress conditions, the
-QUIESCE_PHYS_IO action request was taking longer 
-than 2 seconds timeout to complete, thus resulting
-in the driver going into a host bus reset.
-(3) Replace sys_ioctl with our own defined function
-compat_mptctl_ioctl. This removes the warning messages.
+Thanks for spending time on my doubts.
 
---------------------------------------------------
+Best Regards,
+Sean
 
+--- Douglas Gilbert <dougg@torque.net> wrote: > Liong
+Hoong wrote:
+> > Hi all,
+> > 
+> > I have set up the main control structure for the
+> > version 3 SCSI generic driver. I am trying to send
+> > down some opcodes (vendor specific) to a usb mass
+> > storage device. Found that I encountered
+> host_status
+> > error, SG_ERR_DID_ABORT whenever I send opcodes
+> from
+> > 0x80 to 0x9f, but encountered no errors with other
+> > opcodes. 
+> > 
+> > The errors occured even without the device plugged
+> in,
+> > which seem the sg driver has exclusively blocked
+> the
+> > opcodes from 0x80 to 0x9f. Is it true?? Is there
+> any
+> > work around for this??
+> > 
+> > Is it because of Group 4 (0x80 to 0x9f) need 16
+> bytes
+> > of cdb length? But even I prepare the cdb of 16
+> bytes,
+> > it also failed. 
+> > 
+> > I am using red hat 8.0, 2.4.18. 
+> 
+> The scsi subsystem mid level allowed 16 byte cdbs
+> through
+> from and including lk 2.4.15 . The sg driver allows
+> them
+> through. That leaves the usb-storage driver (and
+> drivers
+> further down the USB stack) and the device itself as
+> the
+> cause of your problem.
+> 
+> Doug Gilbert
+> 
+> -
+> To unsubscribe from this list: send the line
+> "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at 
+http://vger.kernel.org/majordomo-info.html 
 
-Changelog for 2.05.15, Release Date: March 16, 2004
-
-(1) Processing of an IOCStatus of 
-MPI_IOCSTATUS_SCSI_RESIDUAL_MISMATCH was changed to
-allow the OS SCSI layer to retry the command.
-(2) Firmware upload and downloadboot was 
-simplified to match the algorithms in the MPI 1.2 spec.
-
---------------------------------------------------
-
-
-Changelog for 2.05.14, Release Date: March 8, 2004
-
-(1) Search IOCPage3 for Id being a physical drive
-of a volume.  If so, don't include its information in 
-Ioctl TargetInfo data.
-(2) Default to QAS before checking for QAS capable
-in inquiry data.  This allows Ultra320 drives to
-operate with QAS in SuSE systems.
-
---------------------------------------------------
-
-Changelog for 2.05.13, Release Date: Feb 20, 2004
-
-(1) Read IOCPage2 and IOCPage3 on each Ioctl 
-TargetInfo request.  Prevents stale data from being 
-used if volume is changed while the driver is operational
-(via Ioctl interface).
-(2) Extend time to at least 5 seconds for Doorbell
-Interrupt and Ack checks.
-(3) Allow Check Conditions to take precedence over
-data length checks in DATA_UNDERRUN error processing.
-
---------------------------------------------------
-
-Changelog for 2.05.12, Release Date: Feb 6, 2004
-
-
-(1) The driver now supports the FC929XL.  
-(2) The driver now supports I2C requirements. 
-Toolbox message generation and processing has been 
-added to IOCTL processing.
-(3) Rpm and DUD files are now available for 
-Redhat 3.0 on ia64 machines.
-(4) Added code to check for QAS enabled or disabled 
-in SCSI Port Page 0.  Ultra 320 negotiations will reflect 
-the QAS setting in SCSI Port Page 0.
-(5) Added code to obtain IOC Page 2 data in order to 
-provide Volume data in Target Info Data returned by an IOCTL
-request.
-(6) Fixed Target Info code to prevent overrunning the 
-data buffer length provided by the application.  Also fixed 
-that code to include checking for the last id on the IOC.
-(7) Added code in the data underrun response processing
- to return an error code if no data was transferred.
-(9) Added code to properly set each device's queue_depth
- for Fibre Channel devices.
-(10) Fixed code to allow Ioctl operation on ia64 machines.
-(11) Performance enhancements were made.
-
-
-You can download full source as well as the patches for this 
-driver at:
-ftp://ftp.lsil.com/HostAdapterDrivers/linux/FiberChannel/2.05.16
-
-
-Eric Moore
-Staff Engineer
-Standard Storage Products Division
-LSI Logic Corporation
-4420 Arrowswest Drive
-Colorado Springs, CO 80907
-Tel: (719) 533-7056
-Email: emoore@lsil.com
-Web: http://www.lsilogic.com/
+__________________________________________________
+Do You Yahoo!?
+Log on to Messenger with your mobile phone!
+http://sg.messenger.yahoo.com
