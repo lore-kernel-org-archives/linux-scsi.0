@@ -1,140 +1,79 @@
-From: Kurt Garloff <garloff@suse.de>
+From: Linus Torvalds <torvalds@transmeta.com>
 Subject: Re: [PATCH] /proc/scsi/map
-Date: Thu, 20 Jun 2002 13:25:43 +0200
+Date: Thu, 20 Jun 2002 08:13:22 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <aese9o$nea$2@main.gmane.org>
-References: <20020620004442.GA19824@gum01m.etpnet.phys.tue.nl> <Pine.LNX.4.33.0206192149410.2638-100000@penguin.transmeta.com>
+Message-ID: <Pine.LNX.4.44.0206200800260.8012-100000@home.transmeta.com>
+References: <200206200711.RAA10165@thucydides.inspired.net.au>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="FFoLq8A0u+X9iRU8"
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.33.0206192149410.2638-100000@penguin.transmeta.com>
+In-Reply-To: <200206200711.RAA10165@thucydides.inspired.net.au>
 List-Id: linux-scsi@vger.kernel.org
-To: Linus Torvalds <torvalds@transmeta.com>
-Cc: Linux kernel list <linux-kernel@vger.kernel.org>, Linux SCSI list <linux-scsi@vger.kernel.org>
+To: Martin Schwenke <martin@meltin.net>
+Cc: Kurt Garloff <garloff@suse.de>, Linux kernel list <linux-kernel@vger.kernel.org>, Linux SCSI list <linux-scsi@vger.kernel.org>, Patrick Mochel <mochel@osdl.org>
 
 
---FFoLq8A0u+X9iRU8
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
 
-Hi Linus,
+On Thu, 20 Jun 2002, Martin Schwenke wrote:
+>
+> Do you mean the /devices tree or the Open Firmware (OF) device-tree
+> (as in IEEE Std 1275).  I suspect that you mean the former, but...
 
-On Wed, Jun 19, 2002 at 10:03:16PM -0700, Linus Torvalds wrote:
-> On Thu, 20 Jun 2002, Kurt Garloff wrote:
-> >=20
-> > find attached a patch (against 2.5.23-dj2) to the SCSI subsystem which=
-=20
-> > adds a file /proc/scsi/map, which provides a listing of SCSI devices,
-> > enumerated by the CBTU/HCIL tuple and the high-level devices attached to
-> > them.=20
->=20
-> I really despise this.
+The "struct device" tree that is already built up by
 
-Thanks for your feedback.
+>
+>     Linus> [...]
+>
+>     Linus> All fixed at least to _some_ degree by giving the most
+>     Linus> complete address we can, ie something like
+>
+>     Linus> 	/devices/root/pci0/00:02.0/02:1f.0/03:07.0
+>
+> That looks similar, but not identical to an Open Firmware node for a
+> SCSI device:
+>
+>   device-tree/pci@3fff5e09000/pci@b,6/scsi@1,1/sd/...
 
-Actually, I think you want to address a different problem than I want to.
+Try it out yourself. Just do
 
-I do believe that the scsi subsystem does not expose enough information for
-many things.=20
+	mount -t driverfs /devices /devices
 
-Look at /proc/scsi/scsi: The information is useful for the reader who wants
-to know what devices he has and were found by the SCSI subsystem.
+and then look at the whole glory in some graphical file manager to get a
+view of the tree (actually, most file managers are somewhat confused about
+the fact that the directory counts don't reflect sub-directories, so you
+may have to open the subdirectories by hand, whatever. That's a bug.
+Should be fixed. I'm cc'ing Pat)
 
-And completely useless for any program that wants to find a scanner,
-CD-Writer, ... as there is no connection to the high-level drivers attached
-to them. Which means that all these programs basically contain their own
-SCSI scanning code, which means opnening all sg devices and collecting the
-information. I do not think that this is a good idea that a lot of userspace
-programs need to do a lot of effort to get some information that could just
-be exported by the kernel.
+> Why not use the structure of, and a subset of the capabilities of, an
+> OF device-tree for building /devices?  It's a little more verbose, but
+> it's a standard and it fits the current problem pretty well.
 
-But I indeed had persistent naming in mind as well and mentioned it, so this
-is probably why the discussion went that way.
-scsidev, which I took over from Eric Youngdale some time ago, tries to
-provide persistent naming for SCSI devices and suffers the problem, that
-it can't work reliably, as open() of sr/st/osst devices can fail because
-devices are already in use (-EBUSY) or have no medium inserted. (O_NONBLOCK
-does not always help.) And it can take considerable time or cause unwanted
-side-effects.=20
+Because an OF devices tree has nothing to do with Linux?
 
-You're right that just enumerating all scsi devices in a somewhat more
-persistent way does not constitute a complete solution to the problem of
-persistent naming of attached storage devices. That is something that would
-need to be addressed at a higher level and not inside SCSI midlevel, of
-course.
+Open Firmware is dead, dead, dead. It's not sleeping. It's an ex-standard.
+Intel and the PC market never bought into it, so it doesn't exist.
 
-But I still think the SCSI subsystem should report which SCSI (low-level)
-device is mapped to what high-level driver.
-Would you accept a patch that adds a line like
+End result: Linux has a notion of a "struct device", and it's an internal
+kernel representation of the whole bus structure as far as Linux can tell.
+It's then exported as a filesystem, but that's not the important part: the
+device tree is valid (and important) even when it's not exported to user
+space, simply because things like power-management events etc have to
+honor the tree and traverse it in the right order.
 
-Host: scsi3 Channel: 00 Id: 12 Lun: 00
-  Vendor: IBM      Model: DPSS-336950N     Rev: S84D
-  Type:   Direct-Access                    ANSI SCSI revision: 03
-  Attached drivers: sg12(c:15:0c) sdf(b:08:50)
-  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-to /proc/scsi/scsi ?
+If you like OF, you can actually use OF to _populate_ the Linux device
+tree. The people who like ACPI (yet, they exist) do that with ACPI. The
+Linux device tree is _completely_ agnostic, and absolutely does _not_ want
+to know or depend on firmware issues, since firmware is not portable.
 
-Actually that was my first idea, but I was reluctant to change the format of
-an existing file, as it might be parsed by existing code.=20
-But, given the uselessness of /proc/scsi/scsi for code, I guess that's
-a small risk ...=20
+(Right now ACPI does this, so all the strange ACPI nodes will show up in
+/devices/root/ACPI if you have ACPI enabled).
 
-> It's just _wrong_ to have one file with a collection of devices in it, an=
-d=20
-> it is _doubly_ wrong when that one file
->=20
->  - is limited to a (arbitrary) subset of the disks in your system
+Right now you cannot do a lot with it, but it does already give you a
+global view of the system - at least for those buses that use "struct
+device", namely USB and PCI.
 
-You mean all disks driven by the SCSI subsystem, right?
+It should be possible to export _any_ bus using this. Most definitely
+including SCSI.
 
->  - has completely bogus information about "location" that has nothing to=
-=20
->    do with real life, yet pruports to be an "address" even though it=20
->    obviously isn't.
+		Linus
 
-The CBTU tuple uniquely addresses a SCSI device in a running system.
-It's just not persistent against configuration changes, unfortunately.
-But it's reported by /proc/scsi/scsi as well and therefore useful to
-find back in map, IMHO.
-
-[...]
-> Either you enumerate things without any structure (like the current SCSI
-> layer does: disk0, disk1, disk2 ...) or you give full their addresses. =
-=20
-> Don't do the half-assed thing.
-
-I would certainly like to see code at block layer that does provide the
-infrastructure to see persistent names for all sort of attached devices,
-especially disks.
-
-> PLEASE don't add these kinds of SCSI-specific hacks, that are _useless_ to
-> find other types of disks, and that makes no sense, and will not work for
-> things like DAC960, for IDE, or for anything else that just ignores the=
-=20
-> SCSI layer (even if it physically uses SCSI disks, like the DAC960 setup).
-
-Please consider the possibility of adding the reporting of the attached
-high-level drivers to /proc/scsi/scsi
-
-Regards,
---=20
-Kurt Garloff  <garloff@suse.de>                          Eindhoven, NL
-GPG key: See mail header, key servers         Linux kernel development
-SuSE Linux AG, Nuernberg, DE                            SCSI, Security
-
---FFoLq8A0u+X9iRU8
-Content-Type: application/pgp-signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.0.7 (GNU/Linux)
-
-iD8DBQE9Ebu2xmLh6hyYd04RAmwmAKCB/VE1UCLynm4h6A9TNmu9z/aTrACaAiPM
-Xq1eAnWHUusy01yQAf1Z1Xw=
-=0EFB
------END PGP SIGNATURE-----
-
---FFoLq8A0u+X9iRU8--
