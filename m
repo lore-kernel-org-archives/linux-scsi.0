@@ -1,123 +1,71 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH] update NCR5380 comments
-Date: Sun, 29 Aug 2004 02:11:56 +0200
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: [PATCH] normalize fixed and descriptor sense data
+Date: Sun, 29 Aug 2004 10:36:03 +1000
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040829001156.GB21743@lst.de>
+Message-ID: <413124F3.6090505@torque.net>
+References: <412EF74A.1070106@torque.net> <4130129F.40503@torque.net> <20040828202335.GA18962@lst.de>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.210]:3238 "EHLO mail.lst.de")
-	by vger.kernel.org with ESMTP id S267438AbUH2AL7 (ORCPT
+Received: from borg.st.net.au ([65.23.158.22]:44737 "EHLO borg.st.net.au")
+	by vger.kernel.org with ESMTP id S267457AbUH2Agr (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 28 Aug 2004 20:11:59 -0400
-Content-Disposition: inline
+	Sat, 28 Aug 2004 20:36:47 -0400
+In-Reply-To: <20040828202335.GA18962@lst.de>
 List-Id: linux-scsi@vger.kernel.org
-To: jejb@steeleye.com
-Cc: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-scsi@vger.kernel.org, James.Bottomley@SteelEye.com
+
+Christoph Hellwig wrote:
+> On Sat, Aug 28, 2004 at 03:05:35PM +1000, Douglas Gilbert wrote:
+> 
+>>Here is a second cut of the patch.
+>>
+>>If James accepts it naturally he is free to enforce the
+>>appropriate coding style.
+>>
+>>I believe that cleaning up scsi error processing is going
+>>to be a "work in progress" for a while.
+> 
+> 
+> Here's a version with a few small adjustments:
+> 
+>  - moved the code to the scsi_error.c/scsi_eh.c
+>  - small style cleanups
+>  - added the two helpers I suggested
+>  - don't do the memset if we return failure, callers shouldn't look at
+>    it then
+> 
+> --- linux-2.6.9-rc1-mm1/drivers/scsi/scsi_error.c	2004-08-28 12:17:33.000000000 +0200
+> +++ linux-2.6.9-rc1-mm1-hch/drivers/scsi/scsi_error.c	2004-08-28 13:20:30.000000000 +0200
+> @@ -1850,3 +1850,79 @@
+>  	scsi_next_command(scmd);
+>  	return rtn;
+>  }
+> +
+> +/**
+> + * scsi_normalize_sense - normalize main elements from either fixed or
+> + *			descriptor sense data format into a common format.
+> + *
+> + * @sense_buffer:	byte array containing sense data returned by device
+> + * @sb_len:		number of valid bytes in sense_buffer
+> + * @sshdr:		pointer to instance of structure that common
+> + *			elements are written to. Ignored if NULL.
+
+Christoph,
+I'm happy with this patch. Now it's my turn to be a reviewer ...
+The "Ignored if NULL." sentence above is no longer correct and
+should be removed. Actually it's my oversight.
 
 
---- 1.27/drivers/scsi/NCR5380.c	2004-08-25 01:42:28 +02:00
-+++ edited/drivers/scsi/NCR5380.c	2004-08-29 00:10:12 +02:00
-@@ -113,32 +113,18 @@
- 
- /*
-  * Design
-- * Issues :
-  *
-- * The other Linux SCSI drivers were written when Linux was Intel PC-only,
-- * and specifically for each board rather than each chip.  This makes their
-- * adaptation to platforms like the Mac (Some of which use NCR5380's)
-- * more difficult than it has to be.
-- *
-- * Also, many of the SCSI drivers were written before the command queuing
-- * routines were implemented, meaning their implementations of queued 
-- * commands were hacked on rather than designed in from the start.
-- *
-- * When I designed the Linux SCSI drivers I figured that 
-- * while having two different SCSI boards in a system might be useful
-- * for debugging things, two of the same type wouldn't be used.
-- * Well, I was wrong and a number of users have mailed me about running
-- * multiple high-performance SCSI boards in a server.
-- *
-- * Finally, when I get questions from users, I have no idea what 
-- * revision of my driver they are running.
-- *
-- * This driver attempts to address these problems :
-  * This is a generic 5380 driver.  To use it on a different platform, 
-  * one simply writes appropriate system specific macros (ie, data
-  * transfer - some PC's will use the I/O bus, 68K's must use 
-  * memory mapped) and drops this file in their 'C' wrapper.
-  *
-+ * (Note from hch:  unfortunately it was not enough for the different
-+ * m68k folks and instead of improving this driver they copied it
-+ * and hacked it up for their needs.  As a consequence they lost
-+ * most updates to this driver.  Maybe someone will fix all these
-+ * drivers to use a common core one day..)
-+ *
-  * As far as command queueing, two queues are maintained for 
-  * each 5380 in the system - commands that haven't been issued yet,
-  * and commands that are currently executing.  This means that an 
-@@ -148,17 +134,6 @@
-  * allowing multiple commands to propagate all the way to a SCSI-II device 
-  * while a command is already executing.
-  *
-- * To solve the multiple-boards-in-the-same-system problem, 
-- * there is a separate instance structure for each instance
-- * of a 5380 in the system.  So, multiple NCR5380 drivers will
-- * be able to coexist with appropriate changes to the high level
-- * SCSI code.  
-- *
-- * A NCR5380_PUBLIC_REVISION macro is provided, with the release
-- * number (updated for each public release) printed by the 
-- * NCR5380_print_options command, which should be called from the 
-- * wrapper detect function, so that I know what release of the driver
-- * users are using.
-  *
-  * Issues specific to the NCR5380 : 
-  *
-@@ -183,11 +158,10 @@
-  * Architecture :
-  *
-  * At the heart of the design is a coroutine, NCR5380_main,
-- * which is started when not running by the interrupt handler,
-- * timer, and queue command function.  It attempts to establish
-- * I_T_L or I_T_L_Q nexuses by removing the commands from the 
-- * issue queue and calling NCR5380_select() if a nexus 
-- * is not established. 
-+ * which is started from a workqueue for each NCR5380 host in the
-+ * system.  It attempts to establish I_T_L or I_T_L_Q nexuses by
-+ * removing the commands from the issue queue and calling
-+ * NCR5380_select() if a nexus is not established. 
-  *
-  * Once a nexus is established, the NCR5380_information_transfer()
-  * phase goes through the various phases as instructed by the target.
-@@ -289,27 +263,12 @@
-  * NCR5380_pwrite(instance, src, count)
-  * NCR5380_pread(instance, dst, count);
-  *
-- * If nothing specific to this implementation needs doing (ie, with external
-- * hardware), you must also define 
-- *  
-- * NCR5380_queue_command
-- * NCR5380_reset
-- * NCR5380_abort
-- * NCR5380_proc_info
-- *
-- * to be the global entry points into the specific driver, ie 
-- * #define NCR5380_queue_command t128_queue_command.
-- *
-- * If this is not done, the routines will be defined as static functions
-- * with the NCR5380* names and the user must provide a globally
-- * accessible wrapper function.
-- *
-  * The generic driver is initialized by calling NCR5380_init(instance),
-  * after setting the appropriate host specific fields and ID.  If the 
-  * driver wishes to autoprobe for an IRQ line, the NCR5380_probe_irq(instance,
-- * possible) function may be used.  Before the specific driver initialization
-- * code finishes, NCR5380_print_options should be called.
-+ * possible) function may be used.
-  */
-+
- static int do_abort(struct Scsi_Host *host);
- static void do_reset(struct Scsi_Host *host);
- 
+So if this could be applied we could refine an error reporting
+policy after the comments from Kai. Obviously if the midlevel
+issues the command then it should handle all of the errors/alerts
+(e.g. midlevel device discovery). At the other extreme are
+pass through interfaces which want no retries and all errors
+and alerts "returned to sender". Then there are the cases in
+between.
+
+Doug Gilbert
