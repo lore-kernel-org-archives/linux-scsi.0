@@ -1,63 +1,42 @@
-From: Brian King <brking@us.ibm.com>
-Subject: [PATCH 3/3] ipr bump version to 2.0.10
-Date: Wed, 09 Jun 2004 09:56:42 -0500
+From: Pat LaVarre <p.lavarre@ieee.org>
+Subject: Re: sense visible despite ide-floppy in 2.6 maybe
+Date: 09 Jun 2004 10:22:34 -0600
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <40C7252A.9070602@us.ibm.com>
+Message-ID: <1086798154.7074.24.camel@patibmrh9>
+References: <1086710016.3647.4.camel@patibmrh9><20040609080013.GS13836@suse
+	.de>  <20040609082045.GT13836@suse.de>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------070401060003030605000603"
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e6.ny.us.ibm.com ([32.97.182.106]:5796 "EHLO e6.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S266151AbUFIO4o (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Jun 2004 10:56:44 -0400
+Received: from email-out2.iomega.com ([147.178.1.83]:37021 "EHLO
+	email.iomega.com") by vger.kernel.org with ESMTP id S265824AbUFIQWp
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 9 Jun 2004 12:22:45 -0400
+In-Reply-To: <20040609082045.GT13836@suse.de>
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org
+To: Jens Axboe <axboe@suse.de>
+Cc: dougg@torque.net, linux-scsi@vger.kernel.org
 
-This is a multi-part message in MIME format.
---------------070401060003030605000603
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+> Hmm fudge.
 
+Sorry, this English I do not understand.
 
--- 
-Brian King
-eServer Storage I/O
-IBM Linux Technology Center
+> --- 1.149/drivers/ide/ide.c     2004-06-04 21:14:59 +02:00
+> +++ edited/drivers/ide/ide.c    2004-06-09 10:07:46 +02:00
 
---------------070401060003030605000603
-Content-Type: text/plain;
- name="ipr_driver_version_2_0_10.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="ipr_driver_version_2_0_10.patch"
+Patch!  Cool, thank you.
 
+> Pat, can you test
 
-Bump driver version
+Gladly.  Unless redirected, I will try combining:
 
+a) kernel.org 2.6.7-rc3 plus the patch of this thread,
+b) PATAPI drive connected as /dev/hdd,
+c) open of /dev/hdd with flags O_NONBLOCK|O_RDWR, ioctl SG_IO
+d) cdb = x 1B 00:00:00 00 00 // Stop
+e) cdb = x 1B 00:00:00 01 00 // Start
 
+Pat LaVarre
 
----
-
- linux-2.6.7-rc2-bjking1/drivers/scsi/ipr.h |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
-
-diff -puN drivers/scsi/ipr.h~ipr_driver_version_2_0_10 drivers/scsi/ipr.h
---- linux-2.6.7-rc2/drivers/scsi/ipr.h~ipr_driver_version_2_0_10	2004-06-07 17:11:31.000000000 -0500
-+++ linux-2.6.7-rc2-bjking1/drivers/scsi/ipr.h	2004-06-07 17:11:42.000000000 -0500
-@@ -36,8 +36,8 @@
- /*
-  * Literals
-  */
--#define IPR_DRIVER_VERSION "2.0.9"
--#define IPR_DRIVER_DATE "(May 26, 2004)"
-+#define IPR_DRIVER_VERSION "2.0.10"
-+#define IPR_DRIVER_DATE "(June 7, 2004)"
- 
- /*
-  * IPR_DBG_TRACE: Setting this to 1 will turn on some general function tracing
-
-_
-
---------------070401060003030605000603--
 
