@@ -1,70 +1,70 @@
-From: Philippe =?ISO-8859-1?Q?Gramoull=E9?=
-	<philippe.gramoulle@mmania.com>
-Subject: Re: [PATCH 2.5] fix megaraid driver compile error
-Date: Fri, 7 Feb 2003 00:40:37 +0100
+From: Doug Ledford <dledford@redhat.com>
+Subject: Re: Broken SCSI code in the BK tree (was: 2.5.59-mm8)
+Date: Thu, 6 Feb 2003 23:05:44 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030207004037.334abaaf.philippe.gramoulle@mmania.com>
-References: <1044559247.4858.49.camel@markh1.pdx.osdl.net>
-	<Pine.LNX.4.44.0302061202430.3545-100000@home.transmeta.com>
+Message-ID: <20030206230544.E19868@redhat.com>
+References: <20030203233156.39be7770.akpm@digeo.com><167540000.1044346173@[10.10.2.4]> <20030204001709.5e2942e8.akpm@digeo.com><384960000.1044396931@flay> <211570000.1044508407@[10.10.2.4]> <265170000.1044564655@[10.10.2.4]> <275930000.1044570608@[10.10.2.4]> <1044573927.2332.100.camel@mulgrave> <20030206172434.A15559@beaverton.ibm.com> <293060000.1044583265@[10.10.2.4]> <20030206182502.A16364@beaverton.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.44.0302061202430.3545-100000@home.transmeta.com>
+Content-Disposition: inline
+In-Reply-To: <20030206182502.A16364@beaverton.ibm.com>; from patmans@us.ibm.com on Thu, Feb 06, 2003 at 06:25:02PM -0800
 List-Id: linux-scsi@vger.kernel.org
-To: Linus Torvalds <torvalds@transmeta.com>
-Cc: markh@osdl.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Patrick Mansfield <patmans@us.ibm.com>
+Cc: "Martin J. Bligh" <mbligh@aracnet.com>, James Bottomley <James.Bottomley@steeleye.com>, mikeand@us.ibm.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Hi,
+On Thu, Feb 06, 2003 at 06:25:02PM -0800, Patrick Mansfield wrote:
+> On Thu, Feb 06, 2003 at 06:01:06PM -0800, Martin J. Bligh wrote:
+> > 
+> > Curious. I've no idea why the changes brought this out then ... I've done
+> > hundreds and hundreds of reboots on 2.5 on all sorts of different kernels,
+> > and never, ever seen this. Yet in 2.5.59-bk I see it every single time.
+> > Very odd.
+> > 
+> > M.
+> 
+> Okay:
+> 
+> There were some bk scsi changes that ignored the queue depth (qlogicisp
+> sets them all to one). 
+> 
+> Current bk (I just pulled and checked) has a fix, the cleaner shinier 
+> better scsi_lib.c scsi_request_fn now has this code:
+> 
+> 	if (sdev->device_busy >= sdev->queue_depth)
+> 		break;
+> 
+> So the oops has to do with the isp handling multiple requests in a row or
+> in quick succession.
+> 
+> Hopefully going to the latest bk will fix your oops.
 
-Sorry, i posted the fix on Feb 4th, but i forgot=20
- 1) to include [PATCH] in the subject and 2) to send it to the
-right person instead of just posting to LKML, as it's my first post :o)
+It might, but please understand this.  The qlogicisp driver does things to
+the scsi mid layer that the scsi mid layer does not protect itself against
+and as a result is the biggest pile of steaming, unsupportable, crap code
+in the universe!  The scsi mid layer was designed from day one to think
+that the host->can_queue, sdev->queue_depth, and host->sg_tablesize items
+were *static* on a given host/device unless specifically changed by
+calling into the adjustment routines (scsi_adjust_queue_depth).  The
+qlogicisp driver violates those principles and I make no warranty of any
+kind that said driver will continue to operate properly unless someone
+takes the time to actually audit the qlogicisp_queuecommand() and
+qlogicisp_irq() routine to make sure it is actually doing the right thing
+when making those changes!
 
-The fix was attached as well and shouldn't have whitespace<->tab issue
+If I understand correctly, Matthew Jacob's latest isp driver set drives
+*all* qlogic hardware (or at least all the older stuff like the qlogicisp
+driver drives).  I would much prefer that people simply test out Matthew's
+driver and use it instead.  In fact, if it's ready for 2.5 kernel use, I
+would strongly recommend that it be considered as a possible replacement
+in the linux kernel for the default driver on all qlogic cards not handled
+by the new qla2x00 driver version 6 (DaveM may have objections to that 
+related to sparc if Matthew's driver isn't sparc friendly, but I don't 
+know of any other reason not to switch over).
 
-Thanks,
-
-Philippe
-
---
-Philippe Gramoull=E9
-philippe.gramoulle@mmania.com
-Lycos Europe - NOC France
-
-
-On Thu, 6 Feb 2003 12:04:15 -0800 (PST)
-Linus Torvalds <torvalds@transmeta.com> wrote:
-
-
-  | =20
-  |  On 6 Feb 2003, Mark Haverkamp wrote:
-  |  >
-  |  > This moves access of the host element to device since host has b=
-een
-  |  > removed from struct scsi_cmnd.
-  | =20
-  |  This is whitespace-damaged.
-  | =20
-  |  Please fix broken mailers. I generally don't bother to fix up whit=
-espace
-  |  damage from people who can't bother to have a good mailer. It's ju=
-st not=20
-  |  worth it - if I try to fix it up (even if it is often trivial), it=
- just=20
-  |  means that people will continue to send crap patches to me.
-  | =20
-  |  		Linus
-  | =20
-  |  -
-  |  To unsubscribe from this list: send the line "unsubscribe linux-ke=
-rnel" in
-  |  the body of a message to majordomo@vger.kernel.org
-  |  More majordomo info at  http://vger.kernel.org/majordomo-info.html
-  |  Please read the FAQ at  http://www.tux.org/lkml/
-  | =20
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+  Doug Ledford <dledford@redhat.com>     919-754-3700 x44233
+         Red Hat, Inc. 
+         1801 Varsity Dr.
+         Raleigh, NC 27606
+  
