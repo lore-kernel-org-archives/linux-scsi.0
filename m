@@ -1,24 +1,35 @@
-From: specialtytools@netzero.net
-Subject: Perfectly clean automotive glass and mirrors
-Date: Mon, 08 Jul 2002 11:40:55 -0400
+From: Gary_Lerhaupt@Dell.com
+Subject: saferawdevices - Avoiding device name inconsistency with raw
+ devi ces
+Date: Mon, 8 Jul 2002 10:43:20 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <200207081540.g68Fetg10016@zeus.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
+Message-ID: <F44891A593A6DE4B99FDCB7CC537BBBB18A17A@AUSXMPS308.aus.amer.dell.com>
+Mime-Version: 1.0
+Content-Type: text/plain;
+ charset=iso-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from DKESOVB3.ne1.client2.attbi.com (h0002b3889ac1.ne.client2.attbi.com [66.30.33.81])
-	by zeus.kernel.org (8.11.6/8.11.6) with SMTP id g68Fetg10016
-	for <linux-scsi@vger.kernel.org>; Mon, 8 Jul 2002 08:40:55 -0700
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-Cleaning windows can be a hassle - getting them streak-free and perfectly clean can be 
-almost impossible without the right cleaner.
+saferawdevices available @
+http://support.dell.com/us/en/filelib/download/index.asp?fileid=r45472
 
-If you would like to receive more information about how to make your automotive and home
-glass and mirrors so clean they become almost invisible, please REPLY to this email and
-enter "glass cleaner" in the SUBJECT line - make sure it's the SUBJECT line otherwise our
-system will not recognize your request!
+This is a replacement for the rawdevices System V initialization script
+which grabs SCSI page83/page80 information from your devices and adds this
+information to /etc/sysconfig/saferawdevices.  With these unique identifiers
+placed with each raw -> block device mapping, user's can be assured that the
+correct mapping will take place.  This can especially important when running
+an Oracle database amongst other scenarios.  
 
-If you are not interested in these products please accept our apologies for this intrusion. To stop
-further emails from us, please reply to this email and enter "remove" in the subject line.
+In the event that your device names have changed, it will not allow the
+mappings to occur and instead will prompt you to run a remap, where it will
+attempt to determine the new names of your devices based off of the UUIDs in
+the file.  This should serve as a decent band-aid until the whole device
+consistency issue is firmly answered.  A man page is included with the RPM.
 
-Thank you.
+Gary Lerhaupt
+ESG Linux Solutions
+Dell Computer Corporation
+(512) 728-1860
+
