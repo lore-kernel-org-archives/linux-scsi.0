@@ -1,24 +1,39 @@
 From: Alan <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [2.5 patch] MegaRAID driver: remove kernel 2.0 and 2.2 code
-Date: 21 Jan 2003 02:43:51 +0000
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <1043117030.13113.15.camel@dhcp22.swansea.linux.org.uk>
-References: <20030118162243.GF10647@fs.tum.de>
+Subject: Re: [linux-usb-devel] Re: [PATCH] USB changes for 2.5.58
+Date: 21 Jan 2003 03:31:54 +0000
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <1043119913.13397.14.camel@dhcp22.swansea.linux.org.uk>
+References: <10426732153816@kroah.com>
+	 <20030117105414.E359@one-eyed-alien.net> <3E2C3380.3070700@splentec.com>
+	 <200301201923.50467.oliver@neukum.name>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
-In-Reply-To: <20030118162243.GF10647@fs.tum.de>
-To: Adrian Bunk <bunk@fs.tum.de>
-Cc: groudier@free.fr, linux-scsi@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <200301201923.50467.oliver@neukum.name>
 List-Id: linux-scsi@vger.kernel.org
+To: Oliver Neukum <oliver@neukum.name>
+Cc: Luben Tuikov <luben@splentec.com>, Matthew Dharm <mdharm-scsi@one-eyed-alien.net>, Mike Anderson <andmike@us.ibm.com>, David Brownell <david-b@pacbell.net>, Greg KH <greg@kroah.com>, linux-usb-devel@lists.sourceforge.net, Linux SCSI list <linux-scsi@vger.kernel.org>
 
-On Sat, 2003-01-18 at 16:22, Adrian Bunk wrote:
-> The patch below removes obsolete #if'd code for kernel 2.0 and 2.2 from
-> drivers/scsi/megaraid.{h,c} (this includes the expansion of some
-> #define's that were definded differently for different kernel versions).
+On Mon, 2003-01-20 at 18:23, Oliver Neukum wrote:
+> > The transport can notify that the device is gone, but an ULP entity will
+> > call scsi_remove_device() not the other way around.
 > 
-> I've tested the compilation with 2.5.59.
+> NO!
+> 
+> This is an insanely complicated scheme.
+> We have no notification beforehand. User yanks out cable.
+> That's it. No preperation at all.
+> 
+> We as the writers of device drivers need a way to get rid of the device
+> as we are notified of the physical disconnect. It is not our job to maintain
+> devices in an undead state.
 
-AMI still issue 2.2 versions of this driver so its probably excessive
-(AMI ? -- LSI now I guess)
+If you think about it rationally there isnt a lot that can be done higher
+up. At the point the hardware vanishes there may be other threads of execution
+already in your driver, so undead state is a reality you have to live with, at
+least briefly.
+
+Providing you refcount objects and defer freeing of resources its not normally
+too terrible 
+
