@@ -1,67 +1,39 @@
-From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
-Subject: RE: [PATCH] aacraid changes for 2.4.24 kernel to add support for the 2230S (Makefile)
-Date: Fri, 13 Feb 2004 15:20:09 -0500
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] aacraid changes for 2.4.24 kernel to ride through SCSI hang ?
+Date: Fri, 13 Feb 2004 20:36:33 +0000
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <547AF3BD0F3F0B4CBDC379BAC7E4189F255299@otce2k03.adaptec.com>
+Message-ID: <20040213203632.A19671@infradead.org>
+References: <547AF3BD0F3F0B4CBDC379BAC7E4189F25528E@otce2k03.adaptec.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="----_=_NextPart_001_01C3F26E.C6FFCA9E"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from magic.adaptec.com ([216.52.22.17]:37856 "EHLO magic.adaptec.com")
-	by vger.kernel.org with ESMTP id S264353AbUBMUUM (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 13 Feb 2004 15:20:12 -0500
-Received: from redfish.adaptec.com (redfish.adaptec.com [162.62.50.11])
-	by magic.adaptec.com (8.11.6/8.11.6) with ESMTP id i1DKKBJ25385
-	for <linux-scsi@vger.kernel.org>; Fri, 13 Feb 2004 12:20:11 -0800
-Received: from otce2k03.adaptec.com (otce2k03.adaptec.com [10.12.1.72])
-	by redfish.adaptec.com (8.11.6/8.11.6) with ESMTP id i1DKKB813413
-	for <linux-scsi@vger.kernel.org>; Fri, 13 Feb 2004 12:20:11 -0800
-content-class: urn:content-classes:message
+Received: from phoenix.infradead.org ([213.86.99.234]:12810 "EHLO
+	phoenix.infradead.org") by vger.kernel.org with ESMTP
+	id S267203AbUBMUge (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 13 Feb 2004 15:36:34 -0500
+Content-Disposition: inline
+In-Reply-To: <547AF3BD0F3F0B4CBDC379BAC7E4189F25528E@otce2k03.adaptec.com>; from mark_salyzyn@adaptec.com on Fri, Feb 13, 2004 at 01:56:40PM -0500
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>
+To: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
-This is a multi-part message in MIME format.
+On Fri, Feb 13, 2004 at 01:56:40PM -0500, Salyzyn, Mark wrote:
+> This patch allows the system to ride through an Adapter that is
+> temporarily reticent to commands.
+> 
+> The cause of this reticence is usually a combination of a Fast Host
+> Processors loading up the adapter full with commands and a less than
+> perfect SCSI cable or drive triggering an Adapter Cache Flush operation.
+> Some Adapters with large cache configuration have been clocked as being
+> unresponsive for more than 90 seconds.
+> 
+> When the SCSI subsystem times out and asks for the Adapter to be reset,
+> we wait a minute longer for the Adapter to complete all outstanding
+> commands before giving up and returning to the SCSI layers recovery
+> code. Without this delay, the first test unit ready issued to the device
+> times out and the device is taken offline; usually resulting in a panic
+> of the filesystem driver.
 
-------_=_NextPart_001_01C3F26E.C6FFCA9E
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+Patch looks okay, what about a 2.6 version as we usually require that
+for 2.4 updates these days?
 
-Ooops, forgot the Makefile change to accompany the patch.
-
-Sincerely -- Mark Salyzyn
-
------Original Message-----
-From: linux-scsi-owner@vger.kernel.org
-[mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of Salyzyn, Mark
-Sent: Friday, February 13, 2004 2:26 PM
-To: linux-scsi
-Subject: [PATCH] aacraid changes for 2.4.24 kernel to add support for
-the 2230S
-
-This patch adds support for the 2230S Adapter to the aacraid driver.
-
-Sincerely -- Mark Salyzyn
-
-------_=_NextPart_001_01C3F26E.C6FFCA9E
-Content-Type: application/octet-stream;
-	name="rkt.Makefile.patch"
-Content-Transfer-Encoding: base64
-Content-Description: rkt.Makefile.patch
-Content-Disposition: attachment;
-	filename="rkt.Makefile.patch"
-
-ZGlmZiAtdSAtUCAtLXJlY3Vyc2l2ZSBsaW51eC0yLjQuMjQvZHJpdmVycy9zY3NpL2FhY3JhaWQv
-TWFrZWZpbGUgbGludXgtMi40LjI0LTIzMjIvZHJpdmVycy9zY3NpL2FhY3JhaWQvTWFrZWZpbGUK
-LS0tIGxpbnV4LTIuNC4yNC9kcml2ZXJzL3Njc2kvYWFjcmFpZC9NYWtlZmlsZQlUdWUgTWFyIDE4
-IDE1OjAyOjQzIDIwMDMKKysrIGxpbnV4LTIuNC4yNC0yMzIyL2RyaXZlcnMvc2NzaS9hYWNyYWlk
-L01ha2VmaWxlCUZyaSBGZWIgMTMgMTI6MTY6MTAgMjAwNApAQCAtMSwxMCArMSwxMSBAQAorIyBB
-ZGFwdGVjIGFhY3JhaWQKIAotRVhUUkFfQ0ZMQUdTCSs9IC1JJChUT1BESVIpL2RyaXZlcnMvc2Nz
-aQorRVhUUkFfQ0ZMQUdTCSs9IC1JJChUT1BESVIpL2RyaXZlcnMvc2NzaSAke0VYVFJBX0ZMQUdT
-fQogCiBPX1RBUkdFVAk6PSBhYWNyYWlkLm8KIG9iai1tCQk6PSAkKE9fVEFSR0VUKQogCiBvYmot
-eQkJOj0gbGluaXQubyBhYWNoYmEubyBjb21tY3RybC5vIGNvbW1pbml0Lm8gY29tbXN1cC5vIFwK
-LQkJICAgZHBjc3VwLm8gcngubyBzYS5vCisJCSAgIGRwY3N1cC5vIHJ4Lm8gc2EubyBya3Qubwog
-CiBpbmNsdWRlICQoVE9QRElSKS9SdWxlcy5tYWtlCg==
-
-------_=_NextPart_001_01C3F26E.C6FFCA9E--
