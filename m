@@ -1,44 +1,62 @@
-From: Mark Lord <lkml@rtr.ca>
+From: James Bottomley <James.Bottomley@SteelEye.com>
 Subject: Re: [PATCH] QStor SATA/RAID driver for 2.6.9-rc3
-Date: Tue, 12 Oct 2004 13:51:53 -0400
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <416C19B9.7000806@rtr.ca>
-References: <4161A06D.8010601@rtr.ca>	<416547B6.5080505@rtr.ca>	<20041007150709.B12688@i			nfradead.org>	<4165624C.5060405@rtr.ca>	<416565DB.4050006@pobox.com>	<4165	A	4	5D.2090200@rtr.ca>	<4165A766.1040104@pobox.com>	<4165A85D.7080704@rtr.ca	>		<4	165AB1B.8000204@pobox.com>	<4165ACF8.8060208@rtr.ca>		<20041007221537.	A17	712@infradead.org>	<1097241583.2412.15.camel@mulgrave>		<4166AF2F.607090	4@rtr.ca> <1097249266.1678.40.camel@mulgrave>		<4166B48E.3020006@rtr.ca>	<1097250465.2412.49.camel@mulgrave> 	<416C0D55.1020603@rtr.ca>	<1097601478.2044.103.camel@mulgrave>  <416C12CC.1050301@rtr.ca> <1097602220.2044.119.camel@mulgrave> <416C157A.6030400@rtr.ca> <416C177B.6030504@pobox.com>
+Date: 12 Oct 2004 13:12:03 -0500
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <1097604730.1763.177.camel@mulgrave>
+References: <4161A06D.8010601@rtr.ca>	<416547B6.5080505@rtr.ca>	<20041007150709.B12688@i
+				nfradead.org>	<4165624C.5060405@rtr.ca>	<416565DB.4050006@pobox.com>	<416
+	5	A	4	5D.2090200@rtr.ca>	<4165A766.1040104@pobox.com>	<4165A85D.7080704@rtr.
+	ca	>		<4	165AB1B.8000204@pobox.com>	<4165ACF8.8060208@rtr.ca>		<200410072215
+	37.	A17	712@infradead.org>	<1097241583.2412.15.camel@mulgrave>		<4166AF2F.60
+	7090	4@rtr.ca>
+	<1097249266.1678.40.camel@mulgrave>		<4166B48E.3020006@rtr.ca>	<1097250465.2
+	412.49.camel@mulgrave>
+		<416C0D55.1020603@rtr.ca>	<1097601478.2044.103.camel@mulgrave>
+	<416C12CC.1050301@rtr.ca> <1097602220.2044.119.camel@mulgrave>
+	<416C157A.6030400@rtr.ca> <416C177B.6030504@pobox.com>
+	<416C19B9.7000806@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cpu1185.adsl.bellglobal.com ([207.236.110.166]:35267 "EHLO
-	mail.rtr.ca") by vger.kernel.org with ESMTP id S266236AbUJLRxn
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 12 Oct 2004 13:53:43 -0400
-In-Reply-To: <416C177B.6030504@pobox.com>
+Return-path: <linux-kernel-owner+glk-linux-kernel=40m.gmane.org-S266611AbUJLSP5@vger.kernel.org>
+In-Reply-To: <416C19B9.7000806@rtr.ca>
+To: Mark Lord <lkml@rtr.ca>
+Cc: Jeff Garzik <jgarzik@pobox.com>, Christoph Hellwig <hch@infradead.org>, Mark Lord <lsml@rtr.ca>, Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, Christoph Hellwig <hch@infradead.org>, Mark Lord <lsml@rtr.ca>, Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-Jeff Garzik wrote:
-..
-> The usual way to do what you want is either
+On Tue, 2004-10-12 at 12:51, Mark Lord wrote:
+> That's how it works already, thanks, except that it
+> does have a few calls to in_interrupt() rather than
+> simply passing itself a flag parameter to convey the
+> same information -- I'll fix that now.
+> 
+> Except that it uses schedule_work() rather than a tasklet.
+> The bottom half is only there for abnormal conditions
+> like major chip errors and hotplug events.
+> 
+> So the only new suggestion here is to use a tasklet for
+> the bottom-half processing rather than schedule_work()?
+> 
+> I thought work queues were the preferred mechanism for
+> infrequent uses such as this these days?  A tasklet is no
+> problem here though, so long as worker threads (schedule_work)
+> do not also rely on tasklets.
 
-That's how it works already, thanks, except that it
-does have a few calls to in_interrupt() rather than
-simply passing itself a flag parameter to convey the
-same information -- I'll fix that now.
+Really, no, you don't want to be doing what you are doing in
+qs_process_sff_entry()
 
-Except that it uses schedule_work() rather than a tasklet.
-The bottom half is only there for abnormal conditions
-like major chip errors and hotplug events.
+At certain points you decide you have too much work, disable interrupts
+on the card and reschedule the routine in a work queue.
 
-So the only new suggestion here is to use a tasklet for
-the bottom-half processing rather than schedule_work()?
+Please, please don't do this.  It's a sure fire recipe for a hang. 
+Suppose a prior task in the workqueue needs to page something in from
+swap and you're the swap device for instance....
 
-I thought work queues were the preferred mechanism for
-infrequent uses such as this these days?  A tasklet is no
-problem here though, so long as worker threads (schedule_work)
-do not also rely on tasklets.
+What you need to do is to gather as much information as will reset the
+interrupt and then process the data as a tasklet.  For your hotplug
+events, they should be fire and forget as schedule_work().
 
-Cheers
--- 
-Mark Lord
-(hdparm keeper & the original "Linux IDE Guy")
+*never* disable interrupts and have re-enabling them contingent on a
+workqueue thread.
+
+James
