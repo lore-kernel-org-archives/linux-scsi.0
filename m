@@ -1,55 +1,51 @@
-From: Steven Dake <sdake@mvista.com>
-Subject: Re: scsi bus-reset in qlogic causes system stall
-Date: Fri, 17 Jan 2003 11:32:32 -0700
+From: "Justin T. Gibbs" <gibbs@btc.adaptec.com>
+Subject: [PATCH] 2.4.21-pre3 scsi_scan.c memory leak.
+Date: Fri, 17 Jan 2003 11:58:47 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3E284C40.3060701@mvista.com>
-References: <20030117182013.22919.qmail@web20422.mail.yahoo.com>
+Message-ID: <1216290000.1042829927@aslan.btc.adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <20030117182013.22919.qmail@web20422.mail.yahoo.com>
+Received: from redfish.adaptec.com (redfish.adaptec.com [162.62.50.11])
+	by magic.adaptec.com (8.11.6+Sun/8.11.6) with ESMTP id h0HIwsj03171
+	for <linux-scsi@vger.kernel.org>; Fri, 17 Jan 2003 10:58:54 -0800 (PST)
+Received: from btc.btc.adaptec.com (btc.btc.adaptec.com [10.100.0.52])
+	by redfish.adaptec.com (8.8.8+Sun/8.8.8) with ESMTP id KAA07780
+	for <linux-scsi@vger.kernel.org>; Fri, 17 Jan 2003 10:58:49 -0800 (PST)
+Received: from [10.100.253.70] (aslan [10.100.253.70])
+	by btc.btc.adaptec.com (8.8.8+Sun/8.8.8) with ESMTP id LAA19110
+	for <linux-scsi@vger.kernel.org>; Fri, 17 Jan 2003 11:58:46 -0700 (MST)
+Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
-To: devnetfs <devnetfs@yahoo.com>
-Cc: linux-scsi@vger.kernel.org
+To: Linux Scsi Mailing List <linux-scsi@vger.kernel.org>
 
-bug in qlogic driver I think this has been fixed to a schedule_timeout 
-in the 6.X drivers (from a spin on i/o)
+I found this while doing a longevity load/unload test of the aic79xx
+driver.  I can't say if this is the only memory leak in the unload
+process, but its at least one of them.  This only cleans up properly
+in the common cases of failure in scan_scsis_single().  The whole
+routines a bit of a mess....
 
-I have done this same thing with the 6.x driver and the system is still 
-usable.  Keep in mind that the I/O's will retry until the FC LIP has 
-completed.
+--
+Justin
 
-Thanks
--steve
 
-devnetfs wrote:
-
->Hello,
->
->I am running RedHat 2.4.9-13 with qlogic qla2x00 driver (ver 4.31.7b).
->Trying to do a bus-reset (in an multi-initiator, shared-scsi scenario)
->stalls one (or more) nodes in the system for a while. dmesg shows the
->message: "Waiting for LIP to complete...", on all nodes. Everything
->freezes for a while (around 10-40secs). It happens on UP/SMP both.
->
->Is this normal? or a bug in qlogic driver? 
->
->Thanks in advance for any insight,
->A.
->
->
->__________________________________________________
->Do you Yahoo!?
->Yahoo! Mail Plus - Powerful. Affordable. Sign up now.
->http://mailplus.yahoo.com
->-
->To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
->the body of a message to majordomo@vger.kernel.org
->More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
->
->
->  
->
+--- scsi_scan.c	2003-01-17 11:53:07.000000000 -0700
++++ scsi_scan.c.mine	2003-01-17 11:53:03.000000000 -0700
+@@ -596,6 +596,7 @@
+ 		} else {
+ 			/* assume no peripheral if any other sort of error */
+ 			scsi_release_request(SRpnt);
++			scsi_release_commandblocks(SDpnt);
+ 			return 0;
+ 		}
+ 	}
+@@ -619,6 +620,7 @@
+ 	 */
+ 	if ((scsi_result[0] >> 5) == 3) {
+ 		scsi_release_request(SRpnt);
++		scsi_release_commandblocks(SDpnt);
+ 		return 0;	/* assume no peripheral if any sort of error */
+ 	}
+ 	 /*   The Toshiba ROM was "gender-changed" here as an inline hack.
 
