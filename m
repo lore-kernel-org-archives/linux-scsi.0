@@ -1,35 +1,205 @@
-From: Xose Vazquez Perez <xose@wanadoo.es>
-Subject: Re: FW: [PATCH] 2.4.25-pre4 SCSI fusion driver
-Date: Sat, 24 Jan 2004 01:32:08 +0100
+From: Kai Makisara <Kai.Makisara@kolumbus.fi>
+Subject: [PATCH] SCSI tape cdev fixes for 2.6.2-rc1
+Date: Sat, 24 Jan 2004 10:39:16 +0200 (EET)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <4011BD08.9030808@wanadoo.es>
-References: <0E3FA95632D6D047BA649F95DAB60E5703A7603B@exa-atlanta.se.lsil.com>
+Message-ID: <Pine.LNX.4.58.0401241023210.7426@kai.makisara.local>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp13.eresmas.com ([62.81.235.113]:31174 "EHLO
-	smtp13.eresmas.com") by vger.kernel.org with ESMTP id S266817AbUAXAgZ
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 23 Jan 2004 19:36:25 -0500
-In-Reply-To: <0E3FA95632D6D047BA649F95DAB60E5703A7603B@exa-atlanta.se.lsil.com>
+Received: from fep21-0.kolumbus.fi ([193.229.0.48]:27281 "EHLO
+	fep21-app.kolumbus.fi") by vger.kernel.org with ESMTP
+	id S266891AbUAXIjT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 24 Jan 2004 03:39:19 -0500
 List-Id: linux-scsi@vger.kernel.org
-To: "Moore, Eric Dean" <Emoore@lsil.com>
-Cc: Marcelo Tosatti <marcelo.tosatti@cyclades.com>, "Stephens, Larry" <larry.stephens@lsil.com>, "Gibbons, Terry" <Terry.Gibbons@lsil.com>, linux-scsi@vger.kernel.org, "David S. Miller" <davem@redhat.com>
+To: linux-scsi@vger.kernel.org
+Cc: Mike Fedyk <mfedyk@matchmail.com>, Mike Black <mblack@csi-inc.com>, Andrew Morton <akpm@osdl.org>, James Bottomley <James.Bottomley@steeleye.com>
 
-Moore, Eric Dean wrote:
+The patch at the end of this message fixes the following problems:
 
-> I was involved with the CONFIG_COMPAT fix's. They were for
-> I customer having a 32bit application running on x86_64.  The
-> mpt driver isn't enabling the CONFIG_COMPAT define.  I tested
-> this change on SuSE Sles and Redhats Rhes enterprise editions using their
-> respective lastest service packs and updates, and it seemed to get enabled.
-> Maybe this occured in the x86_64 branch?
+- cdev allocation moved outside st_dev_arr_lock, prevents the debugging 
+error messages reported by Mike and Mike
+- cdev_unmap() added before cdev_del(), prevents oops (and kernel data 
+corruption) in case someone tries to use a device after removing the 
+module
+- better error handling for failures in cdev allocation
 
-CONFIG_COMPAT is _only_ in RHEL kernels.
-kernel.org is *very different* from Enterprise distributions kernels.
-It looks like it's for '32 bit syscall support on 64 bit kernels'
+As far as I am concerned, the patch is tested but testing by others might 
+be useful :-)
 
---
-Software is like sex, it's better when it's bug free.
-
+-- 
+Kai
+----------------------------------8<-------------------------------------
+--- linux-2.6.2-rc1/drivers/scsi/st.c	2004-01-20 20:16:20.000000000 +0200
++++ linux-2.6.2-rc1-k1/drivers/scsi/st.c	2004-01-22 23:16:04.000000000 +0200
+@@ -9,7 +9,7 @@
+    Steve Hirsch, Andreas Koppenh"ofer, Michael Leodolter, Eyal Lebedinsky,
+    Michael Schaefer, J"org Weule, and Eric Youngdale.
+ 
+-   Copyright 1992 - 2003 Kai Makisara
++   Copyright 1992 - 2004 Kai Makisara
+    email Kai.Makisara@kolumbus.fi
+ 
+    Some small formal changes - aeb, 950809
+@@ -17,7 +17,7 @@
+    Last modified: 18-JAN-1998 Richard Gooch <rgooch@atnf.csiro.au> Devfs support
+  */
+ 
+-static char *verstr = "20031228";
++static char *verstr = "20040122";
+ 
+ #include <linux/module.h>
+ 
+@@ -3846,27 +3846,53 @@
+ 		STm->default_compression = ST_DONT_TOUCH;
+ 		STm->default_blksize = (-1);	/* No forced size */
+ 		STm->default_density = (-1);	/* No forced density */
++	}
++
++	for (i = 0; i < ST_NBR_PARTITIONS; i++) {
++		STps = &(tpnt->ps[i]);
++		STps->rw = ST_IDLE;
++		STps->eof = ST_NOEOF;
++		STps->at_sm = 0;
++		STps->last_block_valid = FALSE;
++		STps->drv_block = (-1);
++		STps->drv_file = (-1);
++	}
++
++	tpnt->current_mode = 0;
++	tpnt->modes[0].defined = TRUE;
+ 
++	tpnt->density_changed = tpnt->compression_changed =
++	    tpnt->blksize_changed = FALSE;
++	init_MUTEX(&tpnt->lock);
++
++	st_nr_dev++;
++	write_unlock(&st_dev_arr_lock);
++
++	for (mode = 0; mode < ST_NBR_MODES; ++mode) {
++		STm = &(tpnt->modes[mode]);
+ 		for (j=0; j < 2; j++) {
+ 			cdev = cdev_alloc();
+ 			if (!cdev) {
+ 				printk(KERN_ERR
+-				       "st: out of memory. Device not attached.\n");
+-				goto out_put_disk;
++				       "st%d: out of memory. Device not attached.\n",
++				       dev_num);
++				goto out_free_tape;
+ 			}
+ 			snprintf(cdev->kobj.name, KOBJ_NAME_LEN, "%sm%d%s", disk->disk_name,
+-				 i, j ? "n" : "");
++				 mode, j ? "n" : "");
+ 			cdev->owner = THIS_MODULE;
+ 			cdev->ops = &st_fops;
+-			STm->cdevs[j] = cdev;
+ 
+-			error = cdev_add(STm->cdevs[j],
+-					 MKDEV(SCSI_TAPE_MAJOR, TAPE_MINOR(dev_num, i, j)),
++			error = cdev_add(cdev,
++					 MKDEV(SCSI_TAPE_MAJOR, TAPE_MINOR(dev_num, mode, j)),
+ 					 1);
+ 			if (error) {
+ 				printk(KERN_ERR "st%d: Can't add %s-rewind mode %d\n",
+-				       dev_num, j ? "non" : "auto", i);
++				       dev_num, j ? "non" : "auto", mode);
++				printk(KERN_ERR "st%d: Device not attached.\n", dev_num);
++				goto out_free_tape;
+ 			}
++			STm->cdevs[j] = cdev;
+ 
+ 			error = sysfs_create_link(&STm->cdevs[j]->kobj, &SDp->sdev_gendev.kobj,
+ 						  "device");
+@@ -3884,35 +3910,15 @@
+ 		       dev_num);
+ 	}
+ 
+-	for (i = 0; i < ST_NBR_PARTITIONS; i++) {
+-		STps = &(tpnt->ps[i]);
+-		STps->rw = ST_IDLE;
+-		STps->eof = ST_NOEOF;
+-		STps->at_sm = 0;
+-		STps->last_block_valid = FALSE;
+-		STps->drv_block = (-1);
+-		STps->drv_file = (-1);
+-	}
+-
+-	tpnt->current_mode = 0;
+-	tpnt->modes[0].defined = TRUE;
+-
+-	tpnt->density_changed = tpnt->compression_changed =
+-	    tpnt->blksize_changed = FALSE;
+-	init_MUTEX(&tpnt->lock);
+-
+-	st_nr_dev++;
+-	write_unlock(&st_dev_arr_lock);
+-
+ 	for (mode = 0; mode < ST_NBR_MODES; ++mode) {
+-	    /*  Rewind entry  */
+-	    devfs_mk_cdev(MKDEV(SCSI_TAPE_MAJOR, dev_num + (mode << 5)),
+-				S_IFCHR | S_IRUGO | S_IWUGO,
+-				"%s/mt%s", SDp->devfs_name, st_formats[mode]);
+-	    /*  No-rewind entry  */
+-	    devfs_mk_cdev(MKDEV(SCSI_TAPE_MAJOR, dev_num + (mode << 5) + 128),
+-				S_IFCHR | S_IRUGO | S_IWUGO,
+-				"%s/mt%sn", SDp->devfs_name, st_formats[mode]);
++		/*  Rewind entry  */
++		devfs_mk_cdev(MKDEV(SCSI_TAPE_MAJOR, dev_num + (mode << 5)),
++			      S_IFCHR | S_IRUGO | S_IWUGO,
++			      "%s/mt%s", SDp->devfs_name, st_formats[mode]);
++		/*  No-rewind entry  */
++		devfs_mk_cdev(MKDEV(SCSI_TAPE_MAJOR, dev_num + (mode << 5) + 128),
++			      S_IFCHR | S_IRUGO | S_IWUGO,
++			      "%s/mt%sn", SDp->devfs_name, st_formats[mode]);
+ 	}
+ 	disk->number = devfs_register_tape(SDp->devfs_name);
+ 
+@@ -3924,18 +3930,30 @@
+ 
+ 	return 0;
+ 
++out_free_tape:
++	for (mode=0; mode < ST_NBR_MODES; mode++) {
++		STm = &(tpnt->modes[mode]);
++		for (j=0; j < 2; j++) {
++			if (STm->cdevs[j]) {
++				if (cdev == STm->cdevs[j])
++					cdev = NULL;
++				sysfs_remove_link(&STm->cdevs[j]->kobj, "device");
++				cdev_unmap(MKDEV(SCSI_TAPE_MAJOR,
++						 TAPE_MINOR(dev_num, mode, j)), 1);
++				cdev_del(STm->cdevs[j]);
++			}
++		}
++	}
++	if (cdev)
++		kobject_put(&cdev->kobj);
++	write_lock(&st_dev_arr_lock);
++	scsi_tapes[dev_num] = NULL;
++	st_nr_dev--;
++	write_unlock(&st_dev_arr_lock);
+ out_put_disk:
+ 	put_disk(disk);
+-	if (tpnt) {
+-		for (i=0; i < ST_NBR_MODES; i++) {
+-			STm = &(tpnt->modes[i]);
+-			if (STm->cdevs[0])
+-				kobject_put(&STm->cdevs[0]->kobj);
+-			if (STm->cdevs[1])
+-				kobject_put(&STm->cdevs[1]->kobj);
+-		}
++	if (tpnt)
+ 		kfree(tpnt);
+-	}
+ out_buffer_free:
+ 	kfree(buffer);
+ out:
+@@ -3964,6 +3982,8 @@
+ 				for (j=0; j < 2; j++) {
+ 					sysfs_remove_link(&tpnt->modes[mode].cdevs[j]->kobj,
+ 							  "device");
++					cdev_unmap(MKDEV(SCSI_TAPE_MAJOR,
++							 TAPE_MINOR(i, mode, j)), 1);
+ 					cdev_del(tpnt->modes[mode].cdevs[j]);
+ 					tpnt->modes[mode].cdevs[j] = NULL;
+ 				}
