@@ -1,126 +1,93 @@
-From: Andre Hedrick <andre@linux-ide.org>
+From: Clay Haapala <chaapala@cisco.com>
 Subject: Re: Request for review of Linux iSCSI driver version 4.0.0.1
-Date: Mon, 1 Dec 2003 11:23:42 -0800 (PST)
+Date: Mon, 01 Dec 2003 14:06:20 -0600
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.10.10312011048410.17836-100000@master.linux-ide.org>
-References: <03120119384002.08627@naveenb-lnx.cisco.com>
+Message-ID: <yquju14kqp4z.fsf@chaapala-lnx2.cisco.com>
+References: <20031201171915.0F9DB5DC7E@bambi.visi.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from astound-64-85-224-253.ca.astound.net ([64.85.224.253]:48905
-	"EHLO master.linux-ide.org") by vger.kernel.org with ESMTP
-	id S263906AbTLAT1k (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 1 Dec 2003 14:27:40 -0500
-In-Reply-To: <03120119384002.08627@naveenb-lnx.cisco.com>
+Received: from sj-iport-4.cisco.com ([171.68.10.86]:37170 "EHLO
+	sj-iport-4.cisco.com") by vger.kernel.org with ESMTP
+	id S263705AbTLAUG1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 1 Dec 2003 15:06:27 -0500
+In-Reply-To: <20031201171915.0F9DB5DC7E@bambi.visi.com> (Scott M. Ferris's
+ message of "Mon, 1 Dec 2003 11:19:15 -0600 (CST)")
 List-Id: linux-scsi@vger.kernel.org
-To: Naveen Burmi <naveenb@cisco.com>
-Cc: hch@infradead.org, linux-scsi@vger.kernel.org
+To: "Scott M. Ferris" <sferris@acm.org>
+Cc: Roman Zippel <zippel@linux-m68k.org>, Naveen Burmi <naveenb@cisco.com>, hch@infradead.org, linux-scsi@vger.kernel.org
 
-
-Sorry spaz attack on the first reply.
-
-Naveen, all your memcpy of buffers did was insure the content you want
-down never got there.  Committing CRC32C's on the fly in a ZERO Copy call
-will require the higher levels of ERL support. ERL < 1 is a "JOKE".
-Sync-and-Steering with at least ERL >= 1 will allow for content in each
-PDU to be independent from the other.  Additionally one can logically
-retry segments and not the entire command.
-
-If your initiator can not tell or process the difference and know to
-retry, to put it nicely "EWW".  Anyone who has ever dealt with the storage
-stack in Linux knows, failing commands back up to originator is a last
-effort and basically hopeless.  There are no paths back for direct
-notification on real or virtual HBA to the caller.  Only if you lose a
-channel or device would one abort and fail itself.
-
-Additionally, since the Cisco 4.0.0 is just a virtual HBA, where does the
-Qlogic error occur?  If the target is not capable of mapping and retrying
-(real disk + real hba) transport errors to notify the initiator to retry,
-well lets not go there because it will hurt.
-
-Well I think I am going off task, sigh.
-
-Cheers,
-
-Andre Hedrick
-LAD Storage Consulting Group
-
-On Mon, 1 Dec 2003, Naveen Burmi wrote:
-
+On Mon, 1 Dec 2003, Scott M. Ferris verbalised:
+> Roman Zippel wrote:
+>> Hi,
+>> 
+>> On Mon, 1 Dec 2003, Naveen Burmi wrote:
+>> 
+>> > In linux kernel there is a rare occurrence of data
+>> > corruption. This data can be buffer cache data as well as raw I/O
+>> > data. Don't know the actual root cause of the problem, but the
+>> > fix that we put under macro "PREVENT_DATA_CORRUPTION" is capable
+>> > of resolving this problem.
+>> 
+>> You probably mean the page cache and it's normal that a page can be
+>> modified, while it's written out.
+>> 
+>> > On iSCSI target, 5428-2, upon detecting the CRC data error by the
+>> > QlogicFC card it generates the sense data with sense key as
+>> > HARDWARE ERROR and Additional sense data as LOGICAL UNIT
+>> > COMMUNICATION FAILURE.  Upon receving this sense data iSCSI
+>> > initiator driver is not retrying this command and failing the
+>> > command to the upper layers of SCSI subsystem.  But linux SCSI
+>> > subsystem does not perform any error recovery for this kind of
+>> > sense data.
+>> 
+>> The answer from the target is weird, why does it react with a scsi
+>> error to an iSCSI transport problem?
 > 
-> Following is a simpler explanation:
+> I don't think he's describing an iSCSI transport problem.  It's not
+> the iSCSI CRC that was bad.  A Fibre Channel HBA in an iSCSI<->FCP
+> gateway detected a Fibre Channel CRC error, and the gateway decided
+> to report it as a HARDWARE ERROR to the iSCSI initiator.  Linux
+> doesn't retry HARDWARE ERRORs, so they have a problem.
 > 
-> iSCSI driver computes checksum on the buffer cache data, pointed to by 
-> sglist. It passes the checksum and list of data buffers to TCP layer for 
-> transmission to the iSCSI target. On very rare occasions data present in the 
-> buffer gets corrupted, after iSCSI driver gives the computed checksum and 
-> list of data buffers to TCP layers. At the iSCSI target side checksum is 
-> again calculated and compared with checksum sent along with data by iSCSI 
-> driver. iSCSI target detects data crc error in case of corrupted data.
+> I think that's a bad choice of sense key by the gateway. COMMAND
+> ABORTED would be a better choice if the gateway wants the initiator
+> to retry the command.  0B/47xx and 0B/48xx are commonly used to
+> report CRC and parity errors.  Fixing the gateway seems like the
+> best solution to me.
 > 
-> Since the data buffers(present in buffer cache) has got corrupted even if 
-> iSCSI initiator driver re-tries to send data and computed checksum to target 
-> and if target's checksum matches with the initiator ckecksum, the garbled 
-> data gets written on to the disk(scsi target).
-> 
-> To prevent writing garbled data onto disk(scsi target) iSCSI driver copies 
-> the buffer cache data into locally allocated buffers, computes the checksum 
-> and give the list of locally allocated buffers to the TCP layer  for 
-> transmission of data to iSCSI target.
-> 
-> Thanks,
-> Naveen.
-> 
-> 
-> On Monday 01 December 2003 06:00 pm, Naveen Burmi wrote:
-> > Christoph,
-> >
-> > You have following review comment for linux-iscsi driver:
-> > "the explanation of  PREVENT_DATA_CORRUPTION does'nt make sense".
-> >
-> > Following is the explanation of the requirement of 
-> > "PREVENT_DATA_CORRUPTION":
-> >
-> > In linux kernel there is a rare occurrence of data corruption. This data
-> > can be buffer cache data as well as raw I/O data. Don't know the actual
-> > root cause of the problem, but the fix that we put under macro
-> > "PREVENT_DATA_CORRUPTION" is capable of resolving this problem.
-> >
-> > Following is the scenario where we have observed this problem (still
-> > persist in test9, 2.6 linux kernel):
-> >
-> > On iSCSI target, 5428-2, upon detecting the CRC data error by the QlogicFC
-> > card it generates  the sense data with sense key as HARDWARE ERROR
-> > and Additional sense data as LOGICAL UNIT COMMUNICATION FAILURE.
-> > Upon receving this sense data iSCSI initiator driver is not retrying this
-> > command and failing the command to the upper layers of SCSI subsystem.
-> > But linux SCSI subsystem does not perform any error recovery for this kind
-> > of sense data.
-> >
-> > Following is the fix:
-> > 1) Protecting the original buffer cache and raw I/O data from getting
-> > garbled. This is acheived by copying the incoming I/O buffer temporarily
-> > in an internal buffer and then sending the copied data down to TCP.
-> >
-> > 2) Before failing the scsi command to upper SCSI layers, iSCSI driver
-> > is retrying the scsi command upon receiving the sense data with sense key
-> > as HARDWARE ERROR.
-> >
-> >
-> > Are you aware of this issue OR any related issue?
-> >
-> > Thanks,
-> > Naveen.
-> >
-> >
-> > -
-> > To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+> Copying the data is not a good solution to anything.  If they think
+> there's a bug in the TCP stack that is corrupting the data, they
+> ought to go fix the TCP stack.  If the TCP stack isn't corrupting
+> the data, then copying the data is a waste of time, and puts memory
+> allocation in the I/O path, which is really not a good idea.
 
+We need to make sure which type of error we are really talking about,
+here, iSCSI-CRC32c digest error or Fibre Channel link error.
+
+Using the Cisco SN 5428-2 as the example gateway here, in the case of
+a Fibre Channel CRC error, the command is retried a [configurable]
+number of times.  If no success, then the ususal SCSI sense codes are
+sent back to the initiator, and they should indicate HARDWARE ERROR.
+
+In the case of an error in the iSCSI-CRC32c digest, this is computed
+in the SN 5428-2 by the QL 2320 HBA.  (That's where the references to
+QLogic came from.)  Early releases of the SN 5428 returned the
+HARDWARE ERROR (LUN failure) status, but that has been changed to
+match the iSCSI spec in an upcoming release and return the 0B/4705
+code (COMMAND ABORT) in that case.  (That fix for the 2320-offload
+lagged the fix in the software computation.)
+
+So, Naveen, which type of error are we talking about here?  If it is
+the digest error, and COMMAND ABORT happens instead of HARDWARE ERROR,
+is the buffer copy still necessary?  I can see the case above where
+the page buffer is modified while it is being written (and,
+presumably, still marked dirty so another write of it will happen),
+but I dimly recall discussion of a case where the buffer got thrown
+away.  If a COMMAND ABORT is returned rather than the other code, does
+this case still obtain?
+-- 
+Clay Haapala (chaapala@cisco.com) Cisco Systems SRBU +1 763-398-1056
+   6450 Wedgwood Rd, Suite 130 Maple Grove MN 55311 PGP: C89240AD
+     Well, looks like hypocrisy is back on the airwaves.
+       C'mon, Rush!  Do the crime, do the time, right?
