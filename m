@@ -1,25 +1,49 @@
-From: "Justin T. Gibbs" <gibbs@scsiguy.com>
-Subject: Re: [PATCH] sd.c fixes applied incorectly to 2.4.19-preXX
-Date: Tue, 16 Apr 2002 11:38:24 -0600
+From: Michael Clark <michael@metaparadigm.com>
+Subject: ANNOUNCE: saftemon - SCSI Enclosure monitor for linux
+Date: Wed, 17 Apr 2002 19:01:10 +0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <200204161738.g3GHcO992836@aslan.scsiguy.com>
-References: <Pine.LNX.4.44.0204161055070.3933-100000@waste.org>
+Message-ID: <3CBD55F6.10401@metaparadigm.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: Your message of "Tue, 16 Apr 2002 11:18:01 CDT."
-             <Pine.LNX.4.44.0204161055070.3933-100000@waste.org>
+Received: from metaparadigm.com (mcns198.docsis241.scvmaxonline.com.sg [202.156.241.198])
+	by gort.metaparadigm.com (Postfix) with ESMTP id 4A03214400E
+	for <linux-scsi@vger.kernel.org>; Wed, 17 Apr 2002 19:01:12 +0800 (SGT)
 List-Id: linux-scsi@vger.kernel.org
-To: Oliver Xymoron <oxymoron@waste.org>
-Cc: James Bottomley <James.Bottomley@steeleye.com>, Marcelo Tosatti <marcelo@conectiva.com.br>, linux-scsi@vger.kernel.org, Alan Cox <alan@redhat.com>
+To: linux-scsi@vger.kernel.org
 
->From my recent inspection:
->
->1) sense handling
->2) timeouts and error recovery
->3) initialization and lun probing
->4) scalability
->5) readability
+saftemon - SCSI Enclosure monitor for SAFTE enclosures
 
-That about covers it! 8-)
+   http://gort.metaparadigm.com/saftemon/
 
---
-Justin
+saftemon reads disk enclosure status information from SAF-TE
+capable enclosures (SCSI Accessible Fault Tolerant Enclosures).
+SAF-TE is a component of SES (SCSI Enclosure Services) which
+is common on most SCSI disk enclosures these days. saftemon
+can monitor multiple SAF-TE devices and will automatically probe
+and detect them.
+
+The information retreived includes power supply and fan status,
+temperature, audible alarm, drive faults, array critical /
+failed / rebuilding state and door lock status. saftemon logs
+changes in the status of these enclosure elements to syslog and
+can optionally execute an alert help program with details of the
+component failure. This could send a pager message for example.
+Temperate alert limits also be set.
+
+saftemon is specifcally useful if you have equipment deployed in
+remote locations or unattended over weekends when no-one may hear
+an audible alarm.
+
+It also includes an embedded web server for web status display
+of enclosure information.
+
+This is the initial public release so i'd be keen to receive any
+feedback or compatibility testing. It has currently only been
+tested on nStor external enclosures and Intel internal SAFTE
+capable enclosures.
+
+~mc
+
+
