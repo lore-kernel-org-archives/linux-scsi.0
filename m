@@ -1,71 +1,37 @@
-From: Mike Anderson <andmike@us.ibm.com>
-Subject: [PATCH] Call release on scsi legacy LLDD
-Date: Thu, 15 May 2003 22:48:38 -0700
+From: Jens Axboe <axboe@suse.de>
+Subject: Re: "do ata" scsi command?
+Date: Fri, 16 May 2003 08:03:24 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030516054838.GA1736@beaverton.ibm.com>
+Message-ID: <20030516060324.GT812@suse.de>
+References: <20030515230223.GA516@gtf.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e32.co.us.ibm.com ([32.97.110.130]:1450 "EHLO e32.co.us.ibm.com")
-	by vger.kernel.org with ESMTP id S264293AbTEPFdT (ORCPT
+Received: from ns.virtualhost.dk ([195.184.98.160]:7376 "EHLO virtualhost.dk")
+	by vger.kernel.org with ESMTP id S264294AbTEPFuj (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 16 May 2003 01:33:19 -0400
-Received: from westrelay01.boulder.ibm.com (westrelay01.boulder.ibm.com [9.17.195.10])
-	by e32.co.us.ibm.com (8.12.9/8.12.2) with ESMTP id h4G5k5kc251356
-	for <linux-scsi@vger.kernel.org>; Fri, 16 May 2003 01:46:05 -0400
-Received: from hmsbounty (sig-9-65-47-206.mts.ibm.com [9.65.47.206])
-	by westrelay01.boulder.ibm.com (8.12.9/NCO/VER6.5) with ESMTP id h4G5k4ld013982
-	for <linux-scsi@vger.kernel.org>; Thu, 15 May 2003 23:46:05 -0600
+	Fri, 16 May 2003 01:50:39 -0400
 Content-Disposition: inline
+In-Reply-To: <20030515230223.GA516@gtf.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-scsi@vger.kernel.org
 
+On Thu, May 15 2003, Jeff Garzik wrote:
+> In terms of a userspace interface for my ata-over-scsi gadget, I would
+> prefer to use /dev/sg instead of inventing a totally new interface.
+> That, in turn, implies a need for a "do ata taskfile" scsi command,
+> which is sorta like ATAPI in reverse:  we are wrapping a raw ata
+> taskfile inside a scsi cdb.
+>
+> My question is, does an existing standard or spec exist for such an idea?
+> 
+> If not, I'll just roll my own.
 
--andmike
---
-Michael Anderson
-andmike@us.ibm.com
+For ATAPI/SCSI like stuff, you have SG_IO. No need to invent yet another
+submission interface for that. For ata, you have HDIO_DRIVE_TASKFILE
+which is getting to be sane on the kernel side after Bart cleaned it up.
 
-
-DESC
-In the sysfs scsi host reference counting merge the call to a legacy hosts
-release function was removed.
-
-This patch adds the call back in.
-
-This patch was tested with insmod / rmmod on LLDDs using the legacy interface
-and LLDDs using the new interface:
-
-Legacy Interface:
-qla2xxx-v8.00.00b1
-qlogicisp
-aic7xxx_old (Does not call scsi_unregister in release, but unloaded)
-
-New Interface:
-scsi_debug
-aic7xxx (Many illegal context warnings caused by mid vs LLDD primitive
-         mixing, but appears to unload clean).
-
-EDESC
-
-
- drivers/scsi/hosts.c |    4 ++++
- 1 files changed, 4 insertions(+)
-
-diff -puN drivers/scsi/hosts.c~scsi-legacy-release-call drivers/scsi/hosts.c
---- sysfs-bleed-2.5/drivers/scsi/hosts.c~scsi-legacy-release-call	Thu May 15 13:05:07 2003
-+++ sysfs-bleed-2.5-andmike/drivers/scsi/hosts.c	Thu May 15 13:08:47 2003
-@@ -215,6 +215,10 @@ int scsi_remove_host(struct Scsi_Host *s
- 	scsi_proc_host_rm(shost);
- 	scsi_forget_host(shost);
- 	scsi_sysfs_remove_host(shost);
-+
-+	if (shost->hostt->release)
-+		(*shost->hostt->release)(shost);
-+
- 	return 0;
- }
- 
-
-_
+-- 
+Jens Axboe
 
