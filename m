@@ -1,38 +1,57 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: ANNOUNCE: Windows XP USB Mass Storage traces available
-Date: Wed, 4 Feb 2004 16:50:07 -0500 (EST)
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44L0.0402041637310.613-100000@ida.rowland.org>
+From: "Juergen E. Fischer" <fischer@linux-buechse.de>
+Subject: Re: Problem with module-init-tools-3.0-pre3
+Date: Wed, 4 Feb 2004 23:05:58 +0100
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <20040204220558.GA31361@linux-buechse.de>
+References: <16417.24074.807107.128849@ronispc.chem.mcgill.ca>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ida.rowland.org ([192.131.102.52]:7684 "HELO ida.rowland.org")
-	by vger.kernel.org with SMTP id S266638AbUBDVuH (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Feb 2004 16:50:07 -0500
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="BXVAT5kNtrzKuDFl"
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <16417.24074.807107.128849@ronispc.chem.mcgill.ca>
+To: david.ronis@mcgill.ca
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Rusty Russell <rusty@rustcorp.com.au>, Douglas Gilbert <dougg@torque.net>
 List-Id: linux-scsi@vger.kernel.org
-To: USB Storage List <usb-storage@one-eyed-alien.net>, SCSI development list <linux-scsi@vger.kernel.org>
 
-A series of USB Mass Storage traces for Windows XP is available at
 
-	http://www.win.tue.nl/~aeb/linux/usb/traces/winxp/
+--BXVAT5kNtrzKuDFl
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-These data sets all use the Bulk-only transport, together with protocol 
-x06 (Transparent SCSI) or x05 (SFF-8070).  There are variants with 
-removable and non-removable media, but all are for Disk-type devices.
+Hi David,
 
-Similar traces for other versions of Windows are also available in the
-parent directory.
+On Wed, Feb 04, 2004 at 16:03:06 -0500, David Ronis wrote:
+> OK, I applied the patch and rebuilt/reinstalled kernel and modules.
+> Problem is still present. =20
 
-Note that Windows XP does issue MODE SENSE commands for page x08 and page
-x3f.  This indicates that Linux ought to be able to use the same commands
-when communicating with a Bulk-Only device, provided we Talk Like Windows
-and always ask for 192 bytes.  With luck this will provide a general
-solution to what has been the trickiest problem for the usb-storage
-driver.  (However I can't rule out the possibility that some vendors may
-supply specialized Windows drivers for their devices that omit these
-commands.)
+Ok. That was just a thought.
 
-Thanks to Andries Brouwer for providing space on his web server.
+Looks like the same problem was also reported twice on linux-kernel
 
-Alan Stern
+Both while running cdrecord -scanbus with the usb-storage driver, but
+not the aha152x driver  (References:
+<20040106174755.GA8855@paradigm.rfc822.org>
+<1075241217.3851.8.camel@localhost.localdomain>).
 
+Your report and those two all involve sg.  So I guess the problem is in
+sg (or an upper layer).
+
+
+J=FCrgen
+
+--BXVAT5kNtrzKuDFl
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.2.4 (GNU/Linux)
+
+iD8DBQFAIWzGc/GhTF5ESHURAhnEAJ9+Y0ftSjGVvbxrxJtdT8K5aiI8UgCfRqNz
+b6gjpH24688RYrB2tDSR3J8=
+=EQId
+-----END PGP SIGNATURE-----
+
+--BXVAT5kNtrzKuDFl--
