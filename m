@@ -1,54 +1,40 @@
-From: William Lee Irwin III <wli@holomorphy.com>
+From: Alan Cox <alan@redhat.com>
 Subject: Re: PATCH: Further aacraid work
-Date: Thu, 17 Jun 2004 13:48:28 -0700
+Date: Thu, 17 Jun 2004 16:54:14 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040617204828.GC1495@holomorphy.com>
-References: <547AF3BD0F3F0B4CBDC379BAC7E4189FD2407B@otce2k03.adaptec.com> <20040617203842.GC8705@devserv.devel.redhat.com>
+Message-ID: <20040617205414.GE8705@devserv.devel.redhat.com>
+References: <286GI-5y3-11@gated-at.bofh.it> <286Qp-5EU-19@gated-at.bofh.it> <m3smcut2z0.fsf@averell.firstfloor.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from holomorphy.com ([207.189.100.168]:18818 "EHLO holomorphy.com")
-	by vger.kernel.org with ESMTP id S262951AbUFQUtb (ORCPT
+Received: from mx1.redhat.com ([66.187.233.31]:31442 "EHLO mx1.redhat.com")
+	by vger.kernel.org with ESMTP id S263147AbUFQUyv (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 17 Jun 2004 16:49:31 -0400
+	Thu, 17 Jun 2004 16:54:51 -0400
 Content-Disposition: inline
-In-Reply-To: <20040617203842.GC8705@devserv.devel.redhat.com>
+In-Reply-To: <m3smcut2z0.fsf@averell.firstfloor.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Cox <alan@redhat.com>
-Cc: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>, y@redhat.com, Clay Haapala <chaapala@cisco.com>, James Bottomley <James.Bottomley@steeleye.com>, Christoph Hellwig <hch@infradead.org>, Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Andi Kleen <ak@muc.de>
+Cc: Anton Blanchard <anton@samba.org>, mark_salyzyn@adaptec.com, Christoph Hellwig <hch@infradead.org>, Alan Cox <alan@redhat.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Thu, Jun 17, 2004 at 01:54:38PM -0400, Salyzyn, Mark wrote:
->> And I might add, undoing the entropy to result in the descending page
->> list (but that is the forth time I've said this).
->> I ran heavy sequential load overnight and continued to have this
->> characteristic when taking snapshots of command SG lists. The average SG
->> element size statistically was 4168 bytes.
+On Thu, Jun 17, 2004 at 09:10:43PM +0200, Andi Kleen wrote:
+> The AMD64 IOMMU could do it too (and the code to do it exists in
+> 2.6). But the problem is that the current IO layer doesn't provide a
+> sufficient fallback path when this fails. You have to promise in
+> advance that you can merge and then later it's too late to change your
+> mind without signalling an IO error.
 
-On Thu, Jun 17, 2004 at 04:38:42PM -0400, Alan Cox wrote:
-> What do the stats look like with the patch Andrew Morton (I think) posted
-> to reverse the page order from the allocator ?
+I would rather see it below the I/O layer for things like AMD64. The
+reason I say this is that many drivers would suffer from iommu merging not
+gain, and others may have limits.
 
-Say, could you guys try this? jejb seemed to get decent results with it.
+Something like
 
+	new_sglist = sg_squash(old_sglist, [target max segments], [max per seg])
 
-===== mm/page_alloc.c 1.211 vs edited =====
---- 1.211/mm/page_alloc.c	Sat Jun 12 20:52:26 2004
-+++ edited/mm/page_alloc.c	Thu Jun 17 13:46:36 2004
-@@ -297,14 +297,12 @@
- 	unsigned long size = 1 << high;
- 
- 	while (high > low) {
--		BUG_ON(bad_range(zone, page));
- 		area--;
- 		high--;
- 		size >>= 1;
--		list_add(&page->lru, &area->free_list);
--		MARK_USED(index, high, area);
--		index += size;
--		page += size;
-+		BUG_ON(bad_range(zone, &page[size]));
-+		list_add(&page[size].lru, &area->free_list);
-+		MARK_USED(index + size, high, area);
- 	}
- 	return page;
- }
+could be used by drivers when appropriate to hand back a better sg list
+(or if not possible the existing one). That would put control rather closer
+to the driver. 
+
+Alan
+
