@@ -1,29 +1,34 @@
-From: Andrew Morton <akpm@osdl.org>
-Subject: Re: About ARECA RAID driver for Linux i386/x86-64
-Date: Wed, 2 Feb 2005 20:51:41 -0800
-Message-ID: <20050202205141.0c28faf4.akpm@osdl.org>
-References: <003f01c509a9$87913290$9300a8c0@erich2003>
+From: Andi Kleen <ak@muc.de>
+Subject: Re: Disk Errors
+Date: Thu, 03 Feb 2005 09:18:21 +0100
+Message-ID: <m1sm4eukdu.fsf@muc.de>
+References: <60807403EABEB443939A5A7AA8A7458BBD5E44@otce2k01.adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-Received: from fw.osdl.org ([65.172.181.6]:3218 "EHLO mail.osdl.org")
-	by vger.kernel.org with ESMTP id S262315AbVBCEvr (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Feb 2005 23:51:47 -0500
-In-Reply-To: <003f01c509a9$87913290$9300a8c0@erich2003>
+Content-Type: text/plain; charset=us-ascii
+Received: from one.firstfloor.org ([213.235.205.2]:15335 "EHLO
+	one.firstfloor.org") by vger.kernel.org with ESMTP id S262787AbVBCISY
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 3 Feb 2005 03:18:24 -0500
+In-Reply-To: <60807403EABEB443939A5A7AA8A7458BBD5E44@otce2k01.adaptec.com> (Mark
+ Salyzyn's message of "Wed, 2 Feb 2005 09:12:57 -0500")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: erich <erich@areca.com.tw>
-Cc: linux-scsi@vger.kernel.org
+To: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
+Cc: Bryan Henderson <hbryan@us.ibm.com>, Kit Gerrits <kit@gerritsacc.nl>, linux-scsi@vger.kernel.org
 
-"erich" <erich@areca.com.tw> wrote:
+"Salyzyn, Mark" <mark_salyzyn@adaptec.com> writes:
 >
-> Thanks for your doing.
->  ARECA Linux RAID driver need to support old linux kerenel version.
->  There are a lot of  NAS RAID STORAGE SYSTEM development worker still use it
->  at old linux kernel.
-
-Well that's a decision which the scsi maintainers will need to make.  Lots
-of current drivers use LINUX_VERSION_CODE, even though we'd prefer they not
-do so.  I don't know what the scsi policy is for new submissions.
+> If the data is of the form to permit some loss, for example video, audio
+> content or an error correcting stream of data, someone can make a case
+> where READ_LONG is an appropriate action to take to help fill in missing
+> content. 
+>
+> A fun thought ...
 
 
+It's an interesting idea. How about adding a sysfs attribute for
+the device that says "tolerate some errors". Default to off of course.
+I guess a lot of people would value such an option while recovering
+their disks.
+
+-Andi
