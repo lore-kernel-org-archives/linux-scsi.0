@@ -1,72 +1,47 @@
-From: "Randy.Dunlap" <rddunlap@osdl.org>
-Subject: Re: shouldn't "irq" be module_param_array instead of module_param
- in scsi/gdth.c ?
-Date: Sun, 30 Jan 2005 09:01:11 -0800
-Message-ID: <41FD12D7.90108@osdl.org>
-References: <Pine.LNX.4.62.0501301653480.2731@dragon.hygekrogen.localhost> <41FD0FED.9000806@osdl.org> <Pine.LNX.4.62.0501301805390.2731@dragon.hygekrogen.localhost>
+From: Marcelo Tosatti <marcelo.tosatti@cyclades.com>
+Subject: Re: SCSI aic7xxx driver: Initialization Failure over a kdump reboot
+Date: Sun, 30 Jan 2005 13:27:49 -0200
+Message-ID: <20050130152749.GF5186@logos.cnet>
+References: <1105014959.2688.296.camel@2fwv946.in.ibm.com> <1105013524.4468.3.camel@laptopd505.fenrus.org> <20050106195043.4b77c63e.akpm@osdl.org> <41DE15C7.6030102@nit.ca> <20050107043832.GR27371@parcelfarce.linux.theplanet.co.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fire.osdl.org ([65.172.181.4]:17351 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S261740AbVA3RJv (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 30 Jan 2005 12:09:51 -0500
-In-Reply-To: <Pine.LNX.4.62.0501301805390.2731@dragon.hygekrogen.localhost>
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:18635 "EHLO
+	parcelfarce.linux.theplanet.co.uk") by vger.kernel.org with ESMTP
+	id S261643AbVA3SY3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 30 Jan 2005 13:24:29 -0500
+Content-Disposition: inline
+In-Reply-To: <20050107043832.GR27371@parcelfarce.linux.theplanet.co.uk>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jesper Juhl <juhl-lkml@dif.dk>
-Cc: linux-kernel <linux-kernel@vger.kernel.org>, Achim Leubner <achim_leubner@adaptec.com>, Boji Tony Kannanthanam <boji.t.kannanthanam@intel.com>, Johannes Dinner <johannes_dinner@adaptec.com>, linux-scsi@vger.kernel.org
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: Lukasz Kosewski <lkosewsk@nit.ca>, Andrew Morton <akpm@osdl.org>, Arjan van de Ven <arjan@infradead.org>, vgoyal@in.ibm.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Jesper Juhl wrote:
-> On Sun, 30 Jan 2005, Randy.Dunlap wrote:
+On Fri, Jan 07, 2005 at 04:38:32AM +0000, Matthew Wilcox wrote:
+> On Thu, Jan 06, 2005 at 11:53:27PM -0500, Lukasz Kosewski wrote:
+> > I have an idea of something I might do for 2.6.11, but I doubt anyone
+> > will actually agree with it.  Say we keep a counter of how many times
+> > interrupt x has been fired off since the last timer interrupt
+> > (obviously, a timer interrupt resets the counter).  Then we can pick an
+> > arbitrary threshold for masking out this interrupt until another device
+> > actually pines for it.
+> > 
+> > Or something.  The point is, we need a general solution to the problem,
+> > not poking about in every single driver trying to tie it down.
 > 
-> 
->>Jesper Juhl wrote:
->>
->>>This little warning made me take a closer look : drivers/scsi/gdth.c:645:
->>>warning: return from incompatible pointer type
->>>
->>>And line 645 looks like this :
->>>
->>>module_param(irq, int, 0);
->>>
->>>looking a bit up in the file I find :
->>>
->>>/* IRQ list for GDT3000/3020 EISA controllers */
->>>static int irq[MAXHA] __initdata =
->>>{0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,
->>> 0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff};
->>>
->>>That certainly looks like an array to me, so I'm wondering if something like
->>>this patch would be correct?  I'm not familliar enough with module_param* to
->>>be completely confident, but this silences the warning.
->>>
->>>Signed-off-by: Jesper Juhl <juhl-lkml@dif.dk>
->>>
->>>--- linux-2.6.11-rc2-bk7-orig/drivers/scsi/gdth.c	2005-01-22
->>>21:59:46.000000000 +0100
->>>+++ linux-2.6.11-rc2-bk7/drivers/scsi/gdth.c	2005-01-30 16:52:45.000000000
->>>+0100
->>>@@ -642,7 +642,7 @@ static int probe_eisa_isa = 0;
->>> static int force_dma32 = 0;
->>>  /* parameters for modprobe/insmod */
->>>-module_param(irq, int, 0);
->>>+module_param_array(irq, int, NULL, 0);
->>> module_param(disable, int, 0);
->>> module_param(reserve_mode, int, 0);
->>> module_param_array(reserve_list, int, NULL, 0);
->>
->>Yep, same as:
->>http://marc.theaimsgroup.com/?l=linux-scsi&m=110540330511653&w=2
->>
-> 
-> Ohh, I was not aware of that patch, guess I should have searched the 
-> archives before posting. Thank you for the info.
+> Something like note_interrupt() in kernel/irq/spurious.c?
 
-Or I should have added to my reply:
+BTW I wonder if its feasible to add an interface on top of kernel/irq/spurious.c for 
+notifying drivers about interrupts storms, so they can take appropriate action 
+(try to reset the device).
 
-Acked-by: Randy Dunlap <rddunlap@osdl.org>   8:}
+For example I've seen a 8390 based pcnet_cs driven (Linksys EtherFast 10/100+ + 56K Modem) PCMCIA
+card go nuts and trigger infinite interrupt storms on custom PowerPC hardware under certain situations, 
+and resetting the device after a high limit of bogus interrupts "brought the hardware back", stabilizing
+the system.
 
--- 
-~Randy
+Would be nice to be able to change the current hardcoded nr-of-interrupt limits, and 
+have a notification mechanism.
+
+Not sure if this kind of problem is common enough that adding a generic API 
+is worth it, though ?
