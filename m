@@ -1,44 +1,56 @@
-From: Greg KH <greg@kroah.com>
-Subject: Re: [PATCH] drop some attibutes from the FC transport class
-Date: Wed, 19 Jan 2005 09:21:06 -0800
-Message-ID: <20050119172106.GB32702@kroah.com>
-References: <20050119171357.GA16136@lst.de>
+From: "Moore, Eric Dean" <Eric.Moore@lsil.com>
+Subject: RE: [PATCH] Add compat_ioctl to mptctl
+Date: Wed, 19 Jan 2005 11:25:42 -0700
+Message-ID: <91888D455306F94EBD4D168954A9457CEAA513@nacos172.co.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="iso-8859-1"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e5.ny.us.ibm.com ([32.97.182.145]:61887 "EHLO e5.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S261811AbVASRzS (ORCPT
+Received: from mail0.lsil.com ([147.145.40.20]:4589 "EHLO mail0.lsil.com")
+	by vger.kernel.org with ESMTP id S261827AbVASS0I (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 19 Jan 2005 12:55:18 -0500
-Received: from d01relay02.pok.ibm.com (d01relay02.pok.ibm.com [9.56.227.234])
-	by e5.ny.us.ibm.com (8.12.10/8.12.10) with ESMTP id j0JHtIJX005114
-	for <linux-scsi@vger.kernel.org>; Wed, 19 Jan 2005 12:55:18 -0500
-Received: from d01av02.pok.ibm.com (d01av02.pok.ibm.com [9.56.224.216])
-	by d01relay02.pok.ibm.com (8.12.10/NCO/VER6.6) with ESMTP id j0JHtDGu255176
-	for <linux-scsi@vger.kernel.org>; Wed, 19 Jan 2005 12:55:13 -0500
-Received: from d01av02.pok.ibm.com (loopback [127.0.0.1])
-	by d01av02.pok.ibm.com (8.12.11/8.12.11) with ESMTP id j0JHtCNd001704
-	for <linux-scsi@vger.kernel.org>; Wed, 19 Jan 2005 12:55:12 -0500
-Content-Disposition: inline
-In-Reply-To: <20050119171357.GA16136@lst.de>
+	Wed, 19 Jan 2005 13:26:08 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: jejb@steeleye.com, James.Smart@Emulex.Com, linux-scsi@vger.kernel.org
+To: Andi Kleen <ak@muc.de>, James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org
 
-On Wed, Jan 19, 2005 at 06:13:57PM +0100, Christoph Hellwig wrote:
-> I think the hardware_version, firmware_version, rom_version and
-> driver_version don't belong into the FC transport class, there's
-> nothign specific to FC or even SCSI specific in them.
+On Tuesday, January 18, 2005 4:22 AM, Andi Kleen wrote:
+> 
+> Convert mptctl driver to new compat_ioctl entry point.
+> 
+> Only compile tested.
+> 
+> Signed-off-by: Andi Kleen <ak@muc.de>
+> 
 
-Then put them in the individual driver (not the driver_version one
-though, that belongs as a MODULE_VERSION() paramater).
+This doesn't compile. Andi - Pls fix, resend, and
+I will test.
 
-> If you want these attributes talk to Greg about fiding a place in
-> the common driver model code for them.
+Three issues are:
 
-No, they don't belong there either, sorry :)
+(1) incompatible number of paramters being passed 
+when calling __mptctl_ioctl; look at line 649
+(2) definition of unlocked_ioctl is three parameters, however
+mptctl_ioctl is having four paramters; line 2686
+(3) compat_mptctl_ioctl - is passing NULL pointer to mptctl_ioctl,
+this will panic in __mptctl_ioctl; look at line 2820, then line 566
 
-thanks,
+Here is output of compiling:
 
-greg k-h
+emoore-test5:/usr/src/linux-2.6.11-rc1-bk7 # make modules
+  CHK     include/linux/version.h
+make[1]: `arch/x86_64/kernel/asm-offsets.s' is up to date.
+  CC [M]  drivers/message/fusion/mptctl.o
+drivers/message/fusion/mptctl.c: In function `mptctl_ioctl':
+drivers/message/fusion/mptctl.c:649: warning: passing arg 1 of
+`__mptctl_ioctl' from incompatible pointer type
+drivers/message/fusion/mptctl.c:649: warning: passing arg 2 of
+`__mptctl_ioctl' makes integer from pointer without a cast
+drivers/message/fusion/mptctl.c:649: error: too many arguments to function
+`__mptctl_ioctl'
+drivers/message/fusion/mptctl.c: At top level:
+drivers/message/fusion/mptctl.c:2686: warning: initialization from
+incompatible pointer type
+make[3]: *** [drivers/message/fusion/mptctl.o] Error 1
+make[2]: *** [drivers/message/fusion] Error 2
+make[1]: *** [drivers/message] Error 2
