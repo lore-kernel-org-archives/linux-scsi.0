@@ -1,60 +1,38 @@
-From: Luben Tuikov <luben_tuikov@adaptec.com>
-Subject: Re: Report luns [was: Apple Xserve RAID and qlogic ISP2312 (qla2300)]
-Date: Tue, 09 Nov 2004 10:06:08 -0500
-Message-ID: <4190DCE0.1070606@adaptec.com>
-References: <20041027233321.GA842@astral.ro> <20041028143734.GA16358@beaverton.ibm.com> <20041028153522.GC1915@astral.ro> <20041028164210.GA16905@beaverton.ibm.com> <20041028172143.GA20949@praka.san.rr.com> <20041029085800.GF6671@astral.ro> <20041029180633.GA27267@beaverton.ibm.com> <20041101105611.GJ22603@astral.ro> <20041101194845.GA27913@us.ibm.com> <41903031.3050205@torque.net>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: [SAS ANNOUNCEMENT] MPT Fusion driver 3.02.07 update
+Date: Tue, 9 Nov 2004 16:18:59 +0000
+Message-ID: <20041109161859.GS24690@parcelfarce.linux.theplanet.co.uk>
+References: <91888D455306F94EBD4D168954A9457C2D1EB5@nacos172.co.lsil.com> <20041109142004.GA5565@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from magic.adaptec.com ([216.52.22.17]:40122 "EHLO magic.adaptec.com")
-	by vger.kernel.org with ESMTP id S261552AbUKIPG3 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 9 Nov 2004 10:06:29 -0500
-In-Reply-To: <41903031.3050205@torque.net>
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:36313 "EHLO
+	www.linux.org.uk") by vger.kernel.org with ESMTP id S261569AbUKIQTG
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 9 Nov 2004 11:19:06 -0500
+Content-Disposition: inline
+In-Reply-To: <20041109142004.GA5565@infradead.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: dougg@torque.net
-Cc: Patrick Mansfield <patmans@us.ibm.com>, linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: "Moore, Eric Dean" <Eric.Moore@lsil.com>, linux-scsi@vger.kernel.org, "Stephens, Larry" <larry.stephens@lsil.com>
 
-Douglas Gilbert wrote:
-> So if that fails scsi_scan.c might issue a REPORT LUNS command to
-> this lun: 0xc101 which is the value of the REPORT LUNS well-known lu.
- > Note that this is a 16 bit quantity (not 64 bit as I said in a
-> previous post about luns). For simplicity let us assume that
-> that it is at the top level. [If a device returns HiSup=1 in its
-> standard INQUIRY response then it claims to support a 4 level
-> hierarchy in its luns (with 16 bits in each level).]
+On Tue, Nov 09, 2004 at 02:20:04PM +0000, Christoph Hellwig wrote:
+> Well, you're disallowing one of the existant syntaxes anyway, right?
+> 
+> At least add a separate one for each of the parameters (and only
+> add those for the new parameter) so the old ones can spit a warning
+> and be removed after a longer timeframe.
 
-And also supports REPORT LUNS.
+This may not be possible.  It wasn't with sym2 -- the module code said
+"Oh, I found both old and new style parameters, I'm going to disable
+the new ones".  Rusty refused to fix it, claiming he was going to remove
+the old code within a couple of minor releases.
 
-So in either case, we send REPORT LUNS to LUN 0 and if
-this fails to REPORT LUNS W-LUN (0xC101...).
-
-Since the standard says that depending on the transport
-protocol LUNs are either 16 or 64 bit values, how do
-we decide this from SCSI Core/app. client?  Wouldn't it
-be better to just send 64 bits with bytes 2 to 7 all 0-ed?
-
-So in general SCSI Core always uses 64 bits and the LLDD
-decides between 16 and 64 bits, since the transport could
-be messier.
-
-> So if a modern SCSI enclosure or bridge uses well known lus
-> rather than the lun 0 hack, how will applications in linux
-> access them? They are certainly not block devices.
-
-Ah, good question.  No, they cannot be block devices since
-they are not mountable.  But they are _addressable_ devices.
-
-If it is decided to not create a new OS type, then those
-could be char devices on the bus, and accessed via sg.
-
-If it is decided to create a new OS type, then 'a' would
-be appropriate to denote addressable devices, again
-being accessed via sg.  Do you think expanders could
-be represented by those device types too?
-
-	Luben
-
-
-
+-- 
+"Next the statesmen will invent cheap lies, putting the blame upon 
+the nation that is attacked, and every man will be glad of those
+conscience-soothing falsities, and will diligently study them, and refuse
+to examine any refutations of them; and thus he will by and by convince 
+himself that the war is just, and will thank God for the better sleep 
+he enjoys after this process of grotesque self-deception." -- Mark Twain
