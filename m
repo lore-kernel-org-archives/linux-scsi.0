@@ -1,36 +1,46 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: RFC: moving drivers to a new drivers/ata directory
-Date: Fri, 15 Oct 2004 18:37:13 +1000
-Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <416F8C39.6010804@torque.net>
-References: <416F5757.8000306@pobox.com>
-Reply-To: dougg@torque.net
+From: "John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [PATCH] Export ata_scsi_simulate() for use by non-libata drivers
+Date: Fri, 15 Oct 2004 09:25:35 -0400
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <20041015092535.C25937@tuxdriver.com>
+References: <416D8A4E.5030106@pobox.com> <416DA951.2090104@rtr.ca> <416DAF1A.2040204@pobox.com> <416DB912.7040805@rtr.ca> <416DBC96.2090602@pobox.com> <416EA996.4040402@rtr.ca> <416EAECC.7070000@rtr.ca> <416EB1B6.5070603@pobox.com> <416EC90A.30607@rtr.ca> <416F5A72.9080602@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <416F5757.8000306@pobox.com>
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from ra.tuxdriver.com ([24.172.12.4]:13575 "EHLO ra.tuxdriver.com")
+	by vger.kernel.org with ESMTP id S267901AbUJOO3V (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 15 Oct 2004 10:29:21 -0400
+Content-Disposition: inline
+In-Reply-To: <416F5A72.9080602@pobox.com>; from jgarzik@pobox.com on Fri, Oct 15, 2004 at 01:04:50AM -0400
 List-Id: linux-scsi@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Mark Lord <lsml@rtr.ca>, linux-scsi@vger.kernel.org, Linux Kernel <linux-kernel@vger.kernel.org>, akpm@osdl.org
 
-Jeff Garzik wrote:
-> 
-> Eventually I would like to move libata, and a few non-libata driver like 
-> 3ware, to drivers/ata.  It would appear in the makefile (and link order) 
-> _after_ drivers/ide and drivers/scsi.
-> 
-> Comments/objections?
+On Fri, Oct 15, 2004 at 01:04:50AM -0400, Jeff Garzik wrote:
+> The full body of your email is pasted into the BitKeeper changeset 
+> description.
 
-A comment: if SAS HBAs ever get installed on motherboards then
-it won't be obvious to the average user which susbsystem they
-should configure (i.e. ATA/SATA or SCSI/SAS). In both cases an
-internal SATA disk could be connected via a SATA cable to a
-plug on the motherboard.
+Jeff,
 
-So if you do move the drivers to the ata directory it may be
-useful to stress that it is the category of HBA that is
-signficant rather than the device at the far end of the cable.
+Andrews "The perfect patch"
+(http://www.zip.com.au/~akpm/linux/patches/stuff/tpp.txt) in section
+3.e says: 
 
-Doug Gilbert
+   Most people's patch receiving scripts will treat a ^--- string
+   as the separator between the changelog and the patch itself.  You can
+   use this to ensure that any diffstat information is discarded when the
+   patch is applied:
 
+Do your scripts act this way as well?
+
+It is nice to be able to send a single e-mail both w/
+changelog-appropriate comments and with "this relates to the last
+message" comments as well...
+
+John
+
+P.S.  Hopefully I didn't misunderstand Andrew...
+-- 
+John W. Linville
+linville@tuxdriver.com
