@@ -1,48 +1,58 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: scsi proc_info called unconditionally
-Date: Sat, 16 Aug 2003 11:06:16 +0100
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <20030816110616.A26667@infradead.org>
-References: <20030816084409.GA8038@suse.de>
+From: Jamie Lenehan <lenehan@twibble.org>
+Subject: [PATCH] dc395x - fix compile
+Date: Sun, 17 Aug 2003 13:51:59 +1000
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <20030817035159.GA13666@twibble.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from tuon.twibble.org ([203.217.29.157]:36278 "EHLO tuon.twibble.org")
+	by vger.kernel.org with ESMTP id S275010AbTHQDvz (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 16 Aug 2003 23:51:55 -0400
 Content-Disposition: inline
-In-Reply-To: <20030816084409.GA8038@suse.de>; from olh@suse.de on Sat, Aug 16, 2003 at 10:44:09AM +0200
-To: Olaf Hering <olh@suse.de>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: James Bottomley <James.Bottomley@steeleye.com>, dc395x@twibble.org
 
-On Sat, Aug 16, 2003 at 10:44:09AM +0200, Olaf Hering wrote:
-> 
-> Why is ->proc_info() called when the function pointer is NULL?
+Hi,
 
-Looks like the check for it's presence got lost in
+this patch is good and needs to be applied to get the dc395x driver
+in the current tree (2.6.0-test3-bk3) to build (it's not yet included
+in the scsi-misc tree).
 
-	[PATCH] Correct removal of procfs host enteries [1/2]
+Thanks.
 
-Here's a trivial patch to get it back:
+----- Forwarded message from Christoph Hellwig <hch@lst.de> -----
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH] fix dc395x compile
+Date: Fri, 8 Aug 2003 21:07:06 +0200
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
+The recent update made it check the scsi_remove_host retval which
+is void now.
 
---- 1.32/drivers/scsi/scsi_proc.c	Thu Jul 31 10:31:51 2003
-+++ edited/drivers/scsi/scsi_proc.c	Sat Aug 16 10:31:37 2003
-@@ -81,6 +81,9 @@
+diff -Nru a/drivers/scsi/dc395x.c b/drivers/scsi/dc395x.c
+--- a/drivers/scsi/dc395x.c	Fri Aug  8 11:11:11 2003
++++ b/drivers/scsi/dc395x.c	Fri Aug  8 11:11:11 2003
+@@ -5862,14 +5862,7 @@
+ 	struct Scsi_Host *host = pci_get_drvdata(dev);
  
- void scsi_proc_hostdir_add(struct scsi_host_template *sht)
- {
-+	if (!sht->proc_info)
-+		return;
-+
- 	down(&global_host_template_sem);
- 	if (!sht->present++) {
- 		sht->proc_dir = proc_mkdir(sht->proc_name, proc_scsi);
-@@ -96,6 +99,9 @@
- 
- void scsi_proc_hostdir_rm(struct scsi_host_template *sht)
- {
-+	if (!sht->proc_info)
-+		return;
-+
- 	down(&global_host_template_sem);
- 	if (!--sht->present && sht->proc_dir) {
- 		remove_proc_entry(sht->proc_name, proc_scsi);
+ 	dprintkdbg(DBG_0, "Removing instance\n");
+-	if (!host) {
+-		dprintkl(KERN_ERR, "no host allocated\n");
+-		return;
+-	}
+-	if (scsi_remove_host(host)) {
+-		dprintkl(KERN_ERR, "scsi_remove_host failed\n");
+-		return;
+-	}
++	scsi_remove_host(host);
+ 	host_release(host);
+ 	scsi_host_put(host);
+ 	pci_set_drvdata(dev, NULL);
+
+----- End forwarded message -----
+
+-- 
+ Jamie Lenehan <lenehan@twibble.org>
