@@ -1,74 +1,41 @@
-From: Ming Zhang <mingz@ele.uri.edu>
-Subject: Re: [Iscsitarget-devel] Re: [ANNOUNCE] iSCSI enterprise target
-	software
-Date: Tue, 01 Mar 2005 14:29:25 -0500
-Message-ID: <1109705365.2878.25.camel@localhost.localdomain>
-References: <20050301190140.97212.qmail@web30006.mail.mud.yahoo.com>
-Reply-To: mingz@ele.uri.edu
+From: Andi Kleen <ak@muc.de>
+Subject: Re: [ANNOUNCE] iSCSI enterprise target software
+Date: Tue, 01 Mar 2005 21:38:34 +0100
+Message-ID: <m1d5ujp0dx.fsf@muc.de>
+References: <OF00F39C19.AE2C12A8-ON88256FB7.00641755-88256FB7.0065149B@us.ibm.com>
+	<1109702227.6293.137.camel@laptopd505.fenrus.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Received: from leviathan.ele.uri.edu ([131.128.51.64]:14277 "EHLO
-	leviathan.ele.uri.edu") by vger.kernel.org with ESMTP
-	id S262006AbVCATaE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 1 Mar 2005 14:30:04 -0500
-In-Reply-To: <20050301190140.97212.qmail@web30006.mail.mud.yahoo.com>
+Content-Type: text/plain; charset=us-ascii
+Received: from one.firstfloor.org ([213.235.205.2]:49566 "EHLO
+	one.firstfloor.org") by vger.kernel.org with ESMTP id S262025AbVCAUif
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 1 Mar 2005 15:38:35 -0500
+In-Reply-To: <1109702227.6293.137.camel@laptopd505.fenrus.org> (Arjan van de
+ Ven's message of "Tue, 01 Mar 2005 19:37:07 +0100")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Vikas Aggarwal <vaggarwal2002@yahoo.com>
-Cc: Bryan Henderson <hbryan@us.ibm.com>, Tomonori Fujita <fujita.tomonori@lab.ntt.co.jp>, arjan@infradead.org, iet-dev <iscsitarget-devel@lists.sourceforge.net>, linux-scsi <linux-scsi@vger.kernel.org>
+To: Arjan van de Ven <arjan@infradead.org>
+Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, iscsitarget-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org
 
-On Tue, 2005-03-01 at 14:01, Vikas Aggarwal wrote:
-> And If  future IET be visioned as an Enterprise Class Array(Multiple
-> Host-Side Adapters ie., FAs + Multiple Device Side Adapters ie., DAs),
-> should better be in direct control of all the system-resources without
-> being pushed out the kernel.
-> 
-of course this is the reason why we use that name.
+Arjan van de Ven <arjan@infradead.org> writes:
+>
+> You want to *use* the kernel pagecache as much as you can. You do so by
+> using mmap and such, and msync to force content to disk. That uses the
 
-ming
+Last time I checked you couldn't mmap block devices. Has this changed
+now?  Could be a problem for an iSCSI target.
 
-> Bryan Henderson <hbryan@us.ibm.com> wrote:
->         One thing that's implicit in your reasons for wanting to be in
->         the kernel 
->         is that you've chosen to exploit the kernel's page cache. As a
->         user of 
->         the page cache, you have more control from inside the kernel
->         than from 
->         user space. The page cache was designed to be fundamentally
->         invisible to 
->         user space.
->         
->         A pure user space implementation of an ISCSI target would use
->         process 
->         virtual memory for a cache and manage it itself. It would
->         access the 
->         storage with direct I/O. It looks to me like this is aimed at
->         a 
->         single-application Linux system (the whole system is just an
->         ISCSI 
->         target), which means there's not much need for a kernel to
->         manage shared 
->         resources.
->         
->         --
->         Bryan Henderson IBM Almaden Research Center
->         San Jose CA Filesystems
->         
->         
->         -------------------------------------------------------
->         SF email is sponsored by - The IT Pro duct Guide
->         Read honest & candid reviews on hundreds of IT Products from
->         real users.
->         Discover which products truly live up to the hype. Start
->         reading now.
->         http://ads.osdn.com/?ad_id=6595&alloc_id=14396&op=click
->         _______________________________________________
->         Iscsitarget-devel mailing list
->         Iscsitarget-devel@lists.sourceforge.net
->         https://lists.sourceforge.net/lists/listinfo/iscsitarget-devel
-> 
-> ______________________________________________________________________
-> Do you Yahoo!?
-> Read only the mail you want - Yahoo! Mail SpamGuard.
+I remember there used to be a hack in 2.2 to map them to a pseudo fs
+to allow mmaping, but that's not very nice and would require
+another step by the administrator.
 
+Also using mmap would imply the server only works on 64bit systems,
+and may even there have uncomfortable limits. One issue is that
+the kernel currently doesn't garbage collect page tables, so 
+e.g. when you map a 10TB volume this way and the user accesses
+it randomly you will eventually have quite a lot of page tables
+filling up your RAM. And those will not go away.
+
+My overall feeling is that mmap is not a good idea for this.
+
+-Andi
