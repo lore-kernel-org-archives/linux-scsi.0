@@ -1,46 +1,39 @@
 From: Rusty Trivial Russell <rusty@rustcorp.com.au>
-Subject: [TRIVIAL] 2.5.46 kill unneeded declaration from drivers_scsi_sim710.h (fwd)
-Date: Fri, 06 Dec 2002 14:01:32 +1100
+Subject: [TRIVIAL] NCR5380.c compile fix Re: Linux v2.5.50
+Date: Fri, 06 Dec 2002 14:40:18 +1100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20021206035755.771322C2B1@lists.samba.org>
+Message-ID: <20021206035757.C07B62C2BC@lists.samba.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 To: torvalds@transmeta.com, linux-scsi@vger.kernel.org
 
-From:  Adrian Bunk <bunk@fs.tum.de>
+From:  Paul <set@pobox.com>
 
-  The patch below is obviously correct (only occurence of sim710_biosparam
-  in the whole kernel sources).
+  Linus Torvalds <torvalds@transmeta.com>, on Wed Nov 27, 2002 [03:07:38 PM] said:
+  > 
+  > Taking a small thanksgiving break, but before that here's 2.5.50.
+  > 
   
-  cu
-  Adrian
+  	Hi;
   
+  	Needed this so NCR5380.c would compile. (via pas16)
   
-  ----- Forwarded message from Rolf Eike Beer <eike@bilbo.math.uni-mannheim.de> -----
-  
-  Date:	Sat, 9 Nov 2002 21:33:37 +0100
-  From: Rolf Eike Beer <eike@bilbo.math.uni-mannheim.de>
-  To: linux-kernel@vger.kernel.org
-  Subject: [PATCH] 2.5.46 kill unneeded declaration from drivers/scsi/sim710.h
-  
-  Hi,
-  
-  Richard agreed that this is completely unneeded so we should just kill it.
-  
-  Eike
+  Paul
+  set@pobox.com
   
 
---- trivial-2.5-bk/drivers/scsi/sim710.h.orig	2002-12-06 13:56:30.000000000 +1100
-+++ trivial-2.5-bk/drivers/scsi/sim710.h	2002-12-06 13:56:30.000000000 +1100
-@@ -14,8 +14,6 @@
- int sim710_bus_reset(Scsi_Cmnd * SCpnt);
- int sim710_dev_reset(Scsi_Cmnd * SCpnt);
- int sim710_host_reset(Scsi_Cmnd * SCpnt);
--int sim710_biosparam(struct scsi_device *, struct block_device *,
--		sector_t, int*);
- #ifdef MODULE
- int sim710_release(struct Scsi_Host *);
- #else
+--- trivial-2.5-bk/drivers/scsi/NCR5380.c.orig	2002-12-06 13:56:49.000000000 +1100
++++ trivial-2.5-bk/drivers/scsi/NCR5380.c	2002-12-06 13:56:49.000000000 +1100
+@@ -1477,8 +1477,8 @@
+ 	int len;
+ 	unsigned long timeout;
+ 	unsigned char value;
+-	NCR5380_setup(instance);
+ 	int err;
++	NCR5380_setup(instance);
+ 
+ 	if (hostdata->selecting) {
+ 		if(instance->irq != IRQ_NONE)
 -- 
   Don't blame me: the Monkey is driving
-  File: Adrian Bunk <bunk@fs.tum.de>: [PATCH] 2.5.46 kill unneeded declaration from drivers_scsi_sim710.h (fwd)
+  File: Paul <set@pobox.com>: [uPATCH] NCR5380.c compile fix Re: Linux v2.5.50
