@@ -1,71 +1,76 @@
-From: Jeremy Higdon <jeremy@sgi.com>
-Subject: Re: SCSI QLA not working on latest *-mm SN2
-Date: Tue, 21 Sep 2004 19:58:05 -0700
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: Where is max_scsi_adapter_scatter_gather_elements found in the
+ Linux source code?
+Date: Wed, 22 Sep 2004 14:44:00 +1000
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040922025805.GA148414@sgi.com>
-References: <200409211346.58267.jbarnes@engr.sgi.com> <1095789421.2467.414.camel@mulgrave> <200409211409.11095.jbarnes@engr.sgi.com> <20040921190625.GB11708@colo.lackof.org> <20040921210341.GC146363@sgi.com> <20040921211108.GA16153@parcelfarce.linux.theplanet.co.uk> <20040921214302.GG146363@sgi.com> <20040922000211.GE16153@parcelfarce.linux.theplanet.co.uk> <20040922011652.GD147856@sgi.com> <20040922014428.GD20053@colo.lackof.org>
+Message-ID: <41510310.4040500@torque.net>
+References: <16236EEEF4D4264DA31C2E35E3607CFE08EA23@coex02.trans.corp>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from omx2-ext.sgi.com ([192.48.171.19]:18140 "EHLO omx2.sgi.com")
-	by vger.kernel.org with ESMTP id S267708AbUIVC6a (ORCPT
+Received: from borg.st.net.au ([65.23.158.22]:32164 "EHLO borg.st.net.au")
+	by vger.kernel.org with ESMTP id S267864AbUIVEpF (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 21 Sep 2004 22:58:30 -0400
-Content-Disposition: inline
-In-Reply-To: <20040922014428.GD20053@colo.lackof.org>
+	Wed, 22 Sep 2004 00:45:05 -0400
+In-Reply-To: <16236EEEF4D4264DA31C2E35E3607CFE08EA23@coex02.trans.corp>
 List-Id: linux-scsi@vger.kernel.org
-To: Grant Grundler <grundler@parisc-linux.org>
-Cc: Matthew Wilcox <matthew@wil.cx>, Jesse Barnes <jbarnes@engr.sgi.com>, James Bottomley <James.Bottomley@steeleye.com>, Matthew Wilcox <willy@debian.org>, Andrew Vasquez <andrew.vasquez@qlogic.com>, pj@sgi.com, SCSI Mailing List <linux-scsi@vger.kernel.org>, mdr@cthulhu.engr.sgi.com, jeremy@cthulhu.engr.sgi.com, djh@cthulhu.engr.sgi.com, Andrew Morton <akpm@osdl.org>
+To: Nate Iverson <niverson@pillardata.com>
+Cc: linux-scsi@vger.kernel.org
 
-On Tue, Sep 21, 2004 at 07:44:28PM -0600, Grant Grundler wrote:
-> On Tue, Sep 21, 2004 at 06:16:52PM -0700, Jeremy Higdon wrote:
-> > First let's make sure that we like it best.
-> > 
-> > The other alternative is an explicit I/O barrier.
-> > 
-> > 	writel(high-water, request-in)
-> > 	mmiob()  /* memory-mapped I/O barrier */
-> > 	spin_unlock(hostlock)
-> 
-> I strongly prefer a seperate function call.
-> 
-> I'm wondering if one for write posting and a different for write ordering
-> would be called for. These are really distinct uses but I'm not sure
-> it's a distinction that's clear to most folks and they will get misused.
-> If not, then io_mwb() would be my preference.
+Nate Iverson wrote:
+>>I'm resending this becuase I missed the http links are treated as SPAM thing.
+>>
+>>In en.tldp.org/HOWTO/SCSI-Generic-HOWTO/dio.html it says 
+>>
+>>Notes
+>>
+>>[1]	Unfortunately that setup time is large enough in some 
+ >> versions of the lk 2.4 series to adversely impact direct IO
+ >> performance. Also memory malloc()-ed in the user space
+ >> tends to be made up of discontinuous pages seen from the
+ >> SCSI adapter. This requires the sg driver to build heavily
+ >> splintered scatter gather lists which is less than desirable.
+ >> This limits the maximum transfer size to
+ >> [(max_scsi_adapter_scatter_gather_elements - 1) * PAGE_SIZE].
+ >> [This is a _different_ scatter gather mechanism to that which
+ >> the user sees in the sg interface based on iovec.]
+>>
+>>
+>>I have grepped through the Linux source code, but I can't find 
+ >> max_scsi_adapter_scatter_gather_elements. The max data transfer
+ >> appears to be ~1MB on my kernel. I'm using Redhat 9 with a
+ >> custom kernel I built.(4.20-8_SPARSE_16). I would like to double
+ >> the max tranfer size so my target device can be forced to do
+ >> iterations on large read and write command. I'm assuming changing
+ >> PAGE_SIZE would cause problems for other modules.
 
-I risk opening yet another can of worms, but here goes . . .
+Natham,
+The name inside the SCSI mid-level is "sg_tablesize" and it is
+set by the low level driver (e.g. aic7xxx). The maximum value
+is 256 (or 255?) and may have been trimmed down to 128 in lk 2.6 .
+I was trying to use a more descriptive name, sorry for the
+confusion.
 
-I think I'm convinced that we want separate solutions for
-write ordering and (I'll call it) write flushing.
+In lk 2.4 you can see this value with:
+# cd /proc/scsi/sg
+# cat host_hdr hosts
 
-Both issues are derived from write posting.
+In lk 2.6 you can see this value with:
+# cat /sys/class/scsi_host/host<host_num>/sg_tablesize
 
-I'd define write posting as: a store instruction completing
-before the write is completed.  Write ordering is a problem
-if posted writes from two CPUs can complete to the device
-out of order.  Write flushing would be the process of
-assuring that a posted write has indeed been completed.
-A write flush takes care of write ordering.
+PAGE_SIZE cannot practically be changed (it's 4 KB for i386
+architecture) although there is "big" page support in lk 2.6
+(but it won't help here). I have since been told that the scatter
+gather setup time per element (in a typical low level driver) does
+not take much time, but if the kernel has to build and tear down
+a large scatter gather list per IO, that will slow throughput.
+To get larger amounts of data per IO through
+quickly I would suggest that you use mmap-ed IO since the sg
+driver's per fd reserve buffer is built from 32 KB elements (and
+you can change that [in sg.h]) giving a maximum transfer size
+of around 8MB. mmap-ed IO in sg is also the fastest in my tests.
 
-I think the only way to perform a write flush is to issue
-a register read to the card in question.  This makes it
-very heavy weight when all you need is ordering, especially
-since ordering is apparently not a problem for many (most?)
-platforms that do write posting.
+Doug Gilbert
 
-So I think we need one solution for write ordering, and
-a separate heavier-weight solution for write flushing.  For
-platforms in which write posting does not create ordering problems
-the write ordering primitive would be a no-op.
-
-The solution for write ordering on the two arches I know about
-is processor/CPU chipset specific (SGI MIPS is a "sync" instruction,
-Altix is a read of a SHub register).
-
-Whether we call it io_mwb() or mmiob() is not important to me.
-Does io_mwb stand for I/O Memory-mapped Write Barrier?
-
-Sorry to be long-winded.
-
-jeremy
