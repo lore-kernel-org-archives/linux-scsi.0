@@ -1,31 +1,56 @@
-From: "David S. Miller" <davem@redhat.com>
+From: Andi Kleen <ak@muc.de>
 Subject: Re: [BUG] x86_64 pci_map_sg modifies sg list - fails multiple
  map/unmaps
-Date: Mon, 5 Jan 2004 11:28:00 -0800
+Date: Mon, 05 Jan 2004 20:47:19 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040105112800.7a9f240b.davem@redhat.com>
-References: <200401051929.i05JTsM0000014248@mudpuddle.cs.wustl.edu>
+Message-ID: <m3brpi41q0.fsf@averell.firstfloor.org>
+References: <2938942704.1073325455@aslan.btc.adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pizda.ninka.net ([216.101.162.242]:19341 "EHLO pizda.ninka.net")
-	by vger.kernel.org with ESMTP id S265218AbUAETdg (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 5 Jan 2004 14:33:36 -0500
-In-Reply-To: <200401051929.i05JTsM0000014248@mudpuddle.cs.wustl.edu>
+Received: from p50821721.dip.t-dialin.net ([80.130.23.33]:4494 "EHLO
+	averell.firstfloor.org") by vger.kernel.org with ESMTP
+	id S265328AbUAETre (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 5 Jan 2004 14:47:34 -0500
+In-Reply-To: <2938942704.1073325455@aslan.btc.adaptec.com> ("Justin T.
+ Gibbs"'s message of "Mon, 05 Jan 2004 10:57:35 -0700")
 List-Id: linux-scsi@vger.kernel.org
-Cc: gibbs@scsiguy.com, berkley@cs.wustl.edu, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: "Justin T. Gibbs" <gibbs@scsiguy.com>
+Cc: linux-kernel@vger.kernel.org, davem@redhat.com, linux-scsi@vger.kernel.org
 
-On Mon, 5 Jan 2004 13:29:54 -0600 (CST)
-Berkley Shands <berkley@cs.wustl.edu> wrote:
+"Justin T. Gibbs" <gibbs@scsiguy.com> writes:
 
-> 	The pci layer is modifying the sg list, and then placing a zero
-> in the length field. pci-gart.c at line 453 (2.6.0 sources) checks this length field
-> after a retry, sees that it is zero, and bughalts.
+> Berkley Shands recently tripped over this problem.  The 2.6.X pci_map_sg
+> code for x86_64 modifies the passed in S/G list to compact it for mapping
+> by the GART.  This modification is not reversed when pci_unmap_sg is
+> called.  In the case of a retried SCSI command, this causes any attempt
 
-Oh that's a bug.  It is allowed to modify the dma_length field but not
-the physical length field.
+Qlogic has the same bug.
 
-I imagine x86_64 is doing this so that there need not be a seperate dma_length
-field in the scatter_gather struct defined for that platform, and that's too bad it will
-definitely need such a seperate field if it wants to implement coalescing.
+Actually I disabled merging by default in the latest x86-64 code,
+but it can be still enabled by the user using options (it makes some
+adapters run several percent faster). I would appreciate if you could
+fix the problem anyways.
+
+I was actually planning to add a BUG() for this. Should do that.
+There is already one that triggers often when the problem occurs.
+
+> to map the command a second time to fail with a BUG assertion since the
+> nseg parameter passed into the second map call is state.  nseg comes from
+> the "use_sg" field in the SCSI command structure which is never touched
+> by the HBA drivers invoking pci_map_sg.
+>
+> DMA-API.txt doesn't seem to cover this issue.  Should the low-level DMA
+
+It does actually, but not very clearly. I've suggested changes of wording
+recently to make this more clear, but it hasn't gotten in.
+
+> code restore the S/G list to its original state on unmap or should the
+> SCSI HBA drivers be changed to update "use_sg" with the segment count
+> reported by the pci_map_sg() API?  If the latter, this seems to contradict
+
+You should never remap an already mapped sg list. Either reuse the already mapped
+list or keep a copy of the original list around. First is better because the later
+may have problems with the page reference counts.
+
+-Andi
