@@ -1,45 +1,47 @@
 From: "Kai OM" <epimetreus@fastmail.fm>
 Subject: Re: Sym53c8xx_2
-Date: Tue, 17 Aug 2004 06:19:23 -0400
+Date: Tue, 17 Aug 2004 06:24:32 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1092737963.28193.202482480@webmail.messagingengine.com>
+Message-ID: <1092738272.28646.202482540@webmail.messagingengine.com>
 References: <1092366037.28144.202254467@webmail.messagingengine.com>
    <Pine.LNX.4.60.0408132049060.4069@poirot.grange>
    <1092432298.18813.202307545@webmail.messagingengine.com>
    <Pine.LNX.4.60.0408150005570.5333@poirot.grange>
    <Pine.LNX.4.58.0408151008400.6676@kai.makisara.local>
    <1092624889.15338.202386294@webmail.messagingengine.com>
-   <Pine.LNX.4.58.0408162051470.5241@kai.makisara.local>
+   <41209D02.6010202@jound.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="ISO-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from frontend1.messagingengine.com ([66.111.4.30]:14240 "EHLO
+Received: from frontend1.messagingengine.com ([66.111.4.30]:24532 "EHLO
 	frontend1.messagingengine.com") by vger.kernel.org with ESMTP
-	id S264808AbUHQKTX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 17 Aug 2004 06:19:23 -0400
+	id S264750AbUHQKYc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 17 Aug 2004 06:24:32 -0400
 Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.58.0408162051470.5241@kai.makisara.local>
+In-Reply-To: <41209D02.6010202@jound.net>
 List-Id: linux-scsi@vger.kernel.org
-To: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
-Cc: linux-scsi@vger.kernel.org
+To: Lance Dryden <lance@jound.net>, linux-scsi@vger.kernel.org
 
 
-On Mon, 16 Aug 2004 21:02:49 +0300 (EEST), "Kai Makisara"
-<Kai.Makisara@kolumbus.fi> said:
+On Mon, 16 Aug 2004 07:39:46 -0400, "Lance Dryden" <lance@jound.net>
+said:
 
-> > I'm pretty sure at least one other person I know that had this problem
-> > was using a very similar chipset/controller, which strikes me as
-> > pertinent.
-> > 
-> I am sorry to break this theory ;-)
+> I can replicate the same problem with a Tekram DC390U3W, which is also
+> based on the LSI53C1010.  I am guessing it's a specific problem with the
+> 53c1010, as I have since replaced it with a 53c895-based card (Tekram
+> DC390U2W) and it functions normally in the same system.
+> 
+> For me, the failure symptom starts with domain validation of the first 
+> device on the bus (Quantum Atlas V 18).  The last lines indicate that 
+> domain validation is beginning for the device.  After a delay, the SCSI 
+> layer reports an attempted device reset.  Once that finishes, another 
+> delay and then the SCSI layer reports an attempted bus reset.  I will 
+> need to re-attach a c1010 to the host in order to provide a precise log.
 
-Well, it weakens it, but it could always also be an issue with very
-specific chipset revisions, or something more obscure. I can't test to
-say that you're wrong, so I'd like someone who gets the same errors as
-me(ABORT operations followed by device, bus, and host resets, for those
-newly reading this thread) to try the tests suggested -- namely, moving
-devices and controllers around, to see which the problem follows.
+The device I have attached to my LSIU160 is a Quantum Atlas 10K II.
+Model ATLAS10K2-TY734J.
+I wonder if it's an issue with 53c1010 variants in general, or maybe
+only when connected to certain devices?
 
-Could anyone who's gotten this error do some swapping around so we can
-get some more data?
+Can you test a different drive on the 53c1010 controller?
