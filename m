@@ -1,78 +1,43 @@
-From: Pat LaVarre <p.lavarre@ieee.org>
-Subject: Re: [PATCH] CDC_WR_OVER
-Date: 18 Nov 2003 17:00:02 -0700
+From: Jens Axboe <axboe@suse.de>
+Subject: Re: Unaligned scatter-gather buffers and usb-storage
+Date: Wed, 19 Nov 2003 09:47:30 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1069200002.2912.8.camel@patrh9>
-References: <1068851585.2851.17.camel@patrh9>
+Message-ID: <20031119084729.GA1106@suse.de>
+References: <20031110095914.B22518@beaverton.ibm.com> <Pine.LNX.4.44L0.0311181001030.735-100000@ida.rowland.org> <20031118143720.A6411@beaverton.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from email-out2.iomega.com ([147.178.1.83]:17027 "EHLO
-	email.iomega.com") by vger.kernel.org with ESMTP id S263837AbTKSAAa
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 18 Nov 2003 19:00:30 -0500
-Received: from royntex01.iomegacorp.com (unknown [147.178.90.120])
-	by email.iomega.com (Postfix) with ESMTP id 610351899
-	for <linux-scsi@vger.kernel.org>; Tue, 18 Nov 2003 17:00:29 -0700 (MST)
-In-Reply-To: <1068851585.2851.17.camel@patrh9>
+Received: from ns.virtualhost.dk ([195.184.98.160]:49574 "EHLO virtualhost.dk")
+	by vger.kernel.org with ESMTP id S261957AbTKSIrh (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 19 Nov 2003 03:47:37 -0500
+Content-Disposition: inline
+In-Reply-To: <20031118143720.A6411@beaverton.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Patrick Mansfield <patmans@us.ibm.com>
+Cc: Alan Stern <stern@rowland.harvard.edu>, Douglas Gilbert <dougg@torque.net>, SCSI development list <linux-scsi@vger.kernel.org>, USB development list <linux-usb-devel@lists.sourceforge.net>
 
-> we can begin to move forward now by accepting or
-> revising the patch of this e-mail?
+On Tue, Nov 18 2003, Patrick Mansfield wrote:
+> On Tue, Nov 18, 2003 at 10:20:17AM -0500, Alan Stern wrote:
+> 
+> > Alignment to a 512-byte boundary would suffice and page alignment would be
+> > more than enough.  The cleanest way to fix the problem would be to have st
+> > and sg refuse to do direct I/O when the user's buffer isn't page aligned.  
+> > That's probably too draconian (but it would allow us to give the user
+> > process an appropriate error code right away).
+> 
+> The above restriction sounds reasonable to me, but I do not have
+> experience in this area. I thought that the raw and direct block
+> interfaces already had such restrictions.
+> 
+> Jens or Doug G can you comment on this?
+> 
+> You could add a scsi_host fields or bits specifying alignment
+> restrictions, and enforce them as needed in upper level drivers.
 
-As yet revising, Not accepting.
+The queue already has such a restriction embedded, see bio_map_user()
+and queue_dma_alignment().
 
-In fact somehow we have moved this profile/ features/ writability patch
-of too many names from sr_mod.ko into cdrom.ko without actually
-achieving writability for devices other than DVD-RAM connected via
-ide-cd.ko.
-
-> -	if (ide_cdrom_get_capabilities(drive, &cap))
-> +	if (ide_cdrom_get_capabilities(drive, &cap)) {
-> +		; /* FIXME: mask CDC_WR */
->  		return 0;
-> +	}
->  
->  	if (cap.lock == 0)
->  		CDROM_CONFIG_FLAGS(drive)->no_doorlock = 1;
-> @@ -3211,6 +3214,7 @@
->  
->  	nslots = ide_cdrom_probe_capabilities (drive);
->  
-> +	; /* FIXME: also not ro if CDC_WR */
->  	if (CDROM_CONFIG_FLAGS(drive)->dvd_ram)
->  		set_disk_ro(drive->disk, 0);
-
-Possibly some of those conjectured ide-cd FIXME are necessary.
-
-Now substituting ATAPI for USB, even with the patch applied to
-2.6.0-test9, still we see:
-
-$ sudo sg_scan -i
-/dev/sg0: scsi0 channel=0 id=0 lun=0 [em]  type=5
-    Iomega    RRD               40.D [wide=0 sync=0 cmdq=0 sftre=0 pq=0x0]
-$
-$ sudo sg_dd of=/dev/sg0 if=/dev/zero bs=2k count=1
-1+0 records in
-1+0 records out
-$
-$ sudo sg_inq /dev/hdd | egrep 'id'
- Vendor identification: Iomega
- Product identification: RRD
-$
-$ sudo dd of=/dev/hdd if=/dev/zero bs=2k count=1
-dd: writing `/dev/hdd': Operation not permitted
-1+0 records in
-0+0 records out
-$
-$ grep -i permitted /usr/include/asm/errno.h
-#define EPERM            1      /* Operation not permitted */
-$ grep EPERM drivers/ide/ide-cd.c
-$ grep EPERM drivers/cdrom/cdrom.c
-$
-
-Pat LaVarre
-
+-- 
+Jens Axboe
 
