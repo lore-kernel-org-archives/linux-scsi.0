@@ -1,50 +1,44 @@
-From: Bjorn Helgaas <bjorn.helgaas@hp.com>
-Subject: Re: [PATCH] fix fusion breakage with multiple PCI domains
-Date: Fri, 18 Mar 2005 10:25:18 -0700
-Message-ID: <1111166718.13286.23.camel@eeyore>
-References: <1111089617.11380.40.camel@eeyore>
+From: "Mr. Berkley Shands" <bshands@exegy.com>
+Subject: Adaptec SC4100 AltEvo reports 64 bits of LUN - kernel panics (2.6.9-2.6.12)
+Date: Fri, 18 Mar 2005 12:26:48 -0600
+Message-ID: <423B1D68.5050503@exegy.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Received: from atlrel7.hp.com ([156.153.255.213]:41385 "EHLO atlrel7.hp.com")
-	by vger.kernel.org with ESMTP id S261997AbVCRRZ0 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 18 Mar 2005 12:25:26 -0500
-In-Reply-To: <1111089617.11380.40.camel@eeyore>
+Received: from [207.150.135.24] ([207.150.135.24]:20240 "EHLO
+	HANAFORD.eng.exegy.net") by vger.kernel.org with ESMTP
+	id S262023AbVCRS0y (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 18 Mar 2005 13:26:54 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: sjralston1@netscape.net
-Cc: mpt_linux_developer@lsil.com, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Thu, 2005-03-17 at 13:00 -0700, Bjorn Helgaas wrote:
-> mpt_detect_bound_ports(): Don't assume that two devices with the same
->     dev->bus->number are on the same bus.  With multiple PCI domains,
->     many buses may have the same number.
+I have an Adaptec 12 bay U320 scsi disk array. It is divided in this 
+case into 2 sections
+of 6 drives each. Each string of drives reports a "Processor" on unit #15.
+Why would the scsi layer scan unit #15 for LUN's? it reports a HUGE 
+number of LUN's,
+many times more than 511. 0x908789244a030402 LUNs in some cases. The 
+scsi layer then
+attempts to ask each of these LUNS what it is doing, overruns the 
+allocated space, and
+panics the kernel. This is independent of the controller. AIC79XX 
+(39320A-R) or LSI Fusion
+(LSI22320) all see this device, duly report it to the scsi layer, which 
+75% of the time panics
+and then panics during the panic, or OOPSes and then panics in the OOPS.
 
-Maybe mpt_detect_bound_ports() could be rewritten to use pci_get_slot()
-instead?  tg3_find_5704_peer() looks like it's doing basically the
-same thing; maybe you could copy it.
+Mar 18 12:01:11 typhoon kernel:   Vendor: ADAPTEC   Model: AltEvo 
+U320       Rev: 0028
+Mar 18 12:01:11 typhoon kernel:   Type:   
+Processor                          ANSI SCSI revision: 03
 
-> ===== drivers/message/fusion/mptbase.c 1.40 vs edited =====
-> --- 1.40/drivers/message/fusion/mptbase.c	2005-03-13 16:30:09 -07:00
-> +++ edited/drivers/message/fusion/mptbase.c	2005-03-17 12:46:57 -07:00
-> @@ -1834,14 +1834,14 @@
->  
->  	match_lo = pdev->devfn-1;
->  	match_hi = pdev->devfn+1;
-> -	dprintk((MYIOC_s_INFO_FMT "PCI bus/devfn=%x/%x, searching for devfn match on %x or %x\n",
-> -			ioc->name, pdev->bus->number, pdev->devfn, match_lo, match_hi));
-> +	dprintk((MYIOC_s_INFO_FMT "PCI device %s devfn=%x/%x, searching for devfn match on %x or %x\n",
-> +			ioc->name, pci_name(pdev), pdev->devfn, match_lo, match_hi));
->  
->  	list_for_each_entry(ioc_srch, &ioc_list, list) {
->  		struct pci_dev *_pcidev = ioc_srch->pcidev;
->  
->  		if ((_pcidev->device == pdev->device) &&
-> -		    (_pcidev->bus->number == pdev->bus->number) &&
-> +		    (_pcidev->bus == pdev->bus) &&
->  		    (_pcidev->devfn == match_lo || _pcidev->devfn == match_hi) ) {
->  			/* Paranoia checks */
->  			if (ioc->alt_ioc != NULL) {
-> 
+If the reported LUN count is odd, don't bother scanning it. If the 
+reported unit is NOT a disk,
+don't scan it. drivers/scsi/scsi_scan.c happily scans ALL the given 
+units, and walks over itself.
+I used a redhat es4.0 base on an AMD64 dual opteron with vanilla 2.6.9 - 
+2.6.12-rc1, all will
+crash with this hardware being present.
 
+details are available via email.
