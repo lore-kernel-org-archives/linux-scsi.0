@@ -1,75 +1,41 @@
-From: Pat LaVarre <p.lavarre@ieee.org>
-Subject: usb storage traces
-Date: 22 Sep 2003 17:25:17 -0600
+From: NucleoDyne Systems <nucleodyne@comcast.net>
+Subject: lsi20320 target mode firmware
+Date: Mon, 22 Sep 2003 22:16:04 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1064273117.4797.41.camel@patehci2>
-References: <UTC200309222307.h8MN7xs00433.aeb@smtp.cwi.nl>
+Message-ID: <3F6FD714.2030508@comcast.net>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from email-out2.iomega.com ([147.178.1.83]:39919 "EHLO
-	email.iomega.com") by vger.kernel.org with ESMTP id S261905AbTIVXYj
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 22 Sep 2003 19:24:39 -0400
-In-Reply-To: <UTC200309222307.h8MN7xs00433.aeb@smtp.cwi.nl>
+Received: from rwcrmhc11.comcast.net ([204.127.198.35]:55785 "EHLO
+	rwcrmhc11.comcast.net") by vger.kernel.org with ESMTP
+	id S263285AbTIWFK2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 23 Sep 2003 01:10:28 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: Andries.Brouwer@cwi.nl
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
+Hello,
+      We are developing a SCSI storage system
+with the LSI20320 cards. The cards will be put
+into target mode. We have the skeleton target
+mode drivers, but the target mode firmware also
+is required.
 
-> > Tell me we care to hear specifically what
-> > some win sends to some of my usb hdd/rmb,
-> > and I'll go collect a few sample usb bus
-> > traces.
->
-> From: Andries.Brouwer@cwi.nl
-> Date: Tue, 23 Sep 2003 01:07:59 +0200 (MEST)	
->
-> I'll collect and publish.
-> (Change the subject line to "USB storage
-> traces" or so.)
-> Must have some old traces somewhere myself too.
+The page:
+http://lsionline3.lsil.com/primus/esupportlsi/consumer/esupport.asp?id=73ec92d8-eee2-4f79-af03-6e84cba57dd7&resource=&number=6&isExternal=0&nShowFacts=&nShowCause=&nShowChange=&nShowAddInfo=&activepage=statement.asp&bForceMatch=&strCurrentSymptom=&searchtype=normal&searchclass=QuickSearch&bnewsession=false&selecttype=match
 
-Thank you.
+does not have the target mode firmware.
 
-I'm replying before you publish only to confirm we agree we wish to
-survey both:
-bInterfaceSubClass == x06 TransparentScsi
-bInterfaceSubClass != x06 TransparentScsi
+I understand that there are many LSI engineers who watch this list.
+A reply will greatly help us evaluate if we can build
+our system with the LSI logic's HBAs.
 
-as suggested by:
+Kallol Biswas
 
-USB Storage FAQ
-Updated: May 20, 2003
-http://www.microsoft.com/whdc/hwdev/bus/usb/usbfaq.mspx
-
----
-
-Q: Which device classes does usbstor.sys understand?
-
-In Windows XP, Windows 2000, and Windows Me, usbstor.sys makes only one
-distinction:
-
-bInterfaceSubClass == 06h
-- OR -
-bInterfaceSubClass != 06h
-
-The value bInterfaceSubClass == 06h means that:
-Command descriptor blocks (CDBs) should not be padded to 12 bytes.
-Mode Sense / Mode Select commands should not be translated from 1AH /
-15h to 5AH / 55h.
-
-Subclass 0x06 should generally be used for flash memory devices.
-
-The value bInterfaceSubClass != 06h means that:
-CDBs should be padded to 12 bytes.
-Mode Sense / Mode Select commands should be translated from 1AH / 15h to
-5AH / 55h.
-
----
-
-Pat LaVarre
-
+-- 
+www.nucleodyne.com
+nucleodyne@comcast.net
+nucleo@nucleodyne.com
+Phone: 408-718-8164
 
 
