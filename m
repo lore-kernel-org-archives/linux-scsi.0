@@ -1,65 +1,61 @@
-From: Matthew Dharm <mdharm-scsi@one-eyed-alien.net>
-Subject: Fusion-MPT with 53C1030 and no flash?
-Date: Fri, 8 Oct 2004 12:56:48 -0700
+From: Lan Tran <transter@gmail.com>
+Subject: Re: BUG: SCSI INQUIRY thru SCSI_IOCTL_SEND_COMMAND returns no errno for disconnected device
+Date: Fri, 8 Oct 2004 16:43:52 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20041008195648.GA5719@one-eyed-alien.net>
+Message-ID: <ac71172a04100816436c59c5c3@mail.gmail.com>
+References: <ac71172a04093012437c353f83@mail.gmail.com>
+	 <20041001163131.GA23156@beaverton.ibm.com>
+Reply-To: Lan Tran <transter@gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="J2SCkAp4GZ/dPZZf"
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from multivac.one-eyed-alien.net ([64.169.228.101]:20623 "EHLO
-	multivac.one-eyed-alien.net") by vger.kernel.org with ESMTP
-	id S263664AbUJHT4t (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 8 Oct 2004 15:56:49 -0400
-Received: from multivac.one-eyed-alien.net (localhost.localdomain [127.0.0.1])
-	by multivac.one-eyed-alien.net (8.12.8/8.12.8) with ESMTP id i98Jum8o006843
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-scsi@vger.kernel.org>; Fri, 8 Oct 2004 12:56:48 -0700
-Received: (from mdharm@localhost)
-	by multivac.one-eyed-alien.net (8.12.8/8.12.8/Submit) id i98Jum5I006841
-	for linux-scsi@vger.kernel.org; Fri, 8 Oct 2004 12:56:48 -0700
-Content-Disposition: inline
+Received: from rproxy.gmail.com ([64.233.170.192]:41052 "EHLO mproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S266221AbUJHXoP (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Oct 2004 19:44:15 -0400
+Received: by mproxy.gmail.com with SMTP id 80so62275rnk
+        for <linux-scsi@vger.kernel.org>; Fri, 08 Oct 2004 16:43:52 -0700 (PDT)
+In-Reply-To: <20041001163131.GA23156@beaverton.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Linux SCSI list <linux-scsi@vger.kernel.org>
+To: Patrick Mansfield <patmans@us.ibm.com>
+Cc: Jens Axboe <axboe@suse.de>, linux-scsi@vger.kernel.org, johntsai@us.ibm.com, tranlan@us.ibm.com
 
+Thanks Patrick for the tip! After trying out SG_IO, it works, as long
+as we use Mike C's patch.
 
---J2SCkAp4GZ/dPZZf
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Lan
 
-Has anyone ever used an LSI 53C1030 chip WITHOUT attached flash?
-
-As I read the technical docs, it's possible... but it requires a driver
-which can download the firmware to the ARM processor.  It looks like the
-current 2.6.x driver can't do that.
-
-In fact, I can't seem to locate a suitable firmware image anywhere...
-
-Does anyone have any experience in this area they could share?
-
-Matt
-
---=20
-Matthew Dharm                              Home: mdharm-usb@one-eyed-alien.=
-net=20
-Maintainer, Linux USB Mass Storage Driver
-
-S:  Another stupid question?
-G:  There's no such thing as a stupid question, only stupid people.
-					-- Stef and Greg
-User Friendly, 7/15/1998
-
---J2SCkAp4GZ/dPZZf
-Content-Type: application/pgp-signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.2.1 (GNU/Linux)
-
-iD8DBQFBZvEAIjReC7bSPZARAkDIAJ9rdnDfeE8catn1zQ246qse6fxu2wCgudjF
-PnDgs5WsrKtUrbckiwXGf9A=
-=4xT2
------END PGP SIGNATURE-----
-
---J2SCkAp4GZ/dPZZf--
+On Fri, 1 Oct 2004 09:31:31 -0700, Patrick Mansfield <patmans@us.ibm.com> wrote:
+> On Thu, Sep 30, 2004 at 12:43:47PM -0700, Lan Tran wrote:
+> > We have a SAN system set up, where our host is connected to IBM ESS
+> > storage and SVC storage. When we disconnect ALL FC cables between the
+> > host and storage devices, and then send a SCSI INQUIRY using the
+> > SCSI_IOCTL_SEND_COMMAND ioctl to the
+> > sd devices, the ioctl does not return with a failure code. Instead, it
+> > returns with a zero-length buffer.
+> >
+> > Is there a reason why we would get a zeroed-length buffer instead of
+> > an error return code?
+> 
+> SCSI_IOCTL_SEND_COMMAND is deprecated, you should be using SG_IO instead.
+> 
+> There was a bug with SG_IO, it does not correctly set all of the status
+> bytes, a patch has been submitted a few times, Mike C's patch
+> fixed problems compared to ones I posted earlier, this patch:
+> 
+>         http://marc.theaimsgroup.com/?l=linux-scsi&m=108617935710955&w=2
+> 
+> It looks like SCSI_IOCTL_SEND_COMMAND has a similiar issue, in that it
+> only checks the low byte of the results, so for example a DID_NO_CONNECT
+> returned by the qlogic or emulex driver would be ignored.
+> 
+> See drivers/block/scsi_ioctl.c near the end of sg_scsi_ioctl, this:
+> 
+>         err = rq->errors & 0xff;        /* only 8 bit SCSI status */
+> 
+> Compare that to code in drivers/scsi/scsi_ioctl.c near the end of
+> scsi_ioctl_send_command, where the entire result is checked, not just the
+> SCSI byte.
+> 
+> -- Patrick Mansfield
+>
