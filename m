@@ -1,53 +1,46 @@
-From: "K.R. Foley" <kr@cybsft.com>
-Subject: Re: 2.6.9-rc3-mm3 fails to detect aic7xxx
-Date: Thu, 07 Oct 2004 15:49:39 -0500
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] Add proper module ID tables to Adaptec aic7[9x]xx drivers
+Date: Thu, 7 Oct 2004 21:36:12 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <4165ABE3.8000504@cybsft.com>
-References: <1097178019.24355.39.camel@localhost>	<4165A369.60306@cybsft.com> <20041007133956.39c2427e.akpm@osdl.org>
+Message-ID: <20041007213612.A17286@infradead.org>
+References: <linux.scsi.20040621161047.GD16453@master.mivlgu.local> <41644BD5.7030807@tls.msk.ru> <20041006202543.GA22794@wotan.suse.de> <4165862E.1040904@adaptec.com> <4165950C.509@tls.msk.ru> <41659D30.7050705@adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail4.utc.com ([192.249.46.193]:64195 "EHLO mail4.utc.com")
-	by vger.kernel.org with ESMTP id S269646AbUJGUuF (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Oct 2004 16:50:05 -0400
-In-Reply-To: <20041007133956.39c2427e.akpm@osdl.org>
+Received: from baythorne.infradead.org ([81.187.226.107]:38921 "EHLO
+	phoenix.infradead.org") by vger.kernel.org with ESMTP
+	id S268088AbUJGUgU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 7 Oct 2004 16:36:20 -0400
+Content-Disposition: inline
+In-Reply-To: <41659D30.7050705@adaptec.com>; from luben_tuikov@adaptec.com on Thu, Oct 07, 2004 at 03:46:56PM -0400
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
-Cc: haveblue@us.ibm.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Luben Tuikov <luben_tuikov@adaptec.com>
+Cc: Michael Tokarev <mjt@tls.msk.ru>, linux-scsi@vger.kernel.org
 
-Andrew Morton wrote:
-> "K.R. Foley" <kr@cybsft.com> wrote:
+On Thu, Oct 07, 2004 at 03:46:56PM -0400, Luben Tuikov wrote:
+> Michael Tokarev wrote:
+> > Luben Tuikov wrote:
+> > 
+> >> Andi Kleen wrote:
+> >>
+> > []
+> > 
+> >>> Luben, can you just do a proper pci_id table please? You probably
+> >>> know the requirements best.
+> >>
+> >>
+> >> Yes, no problem. (It'd be tricky but I'll try to augment it properly.)
+> > 
+> > 
+> > Christoph Hellwig already did that, it seems --
+> > see his post to linux-scsi dated Sep-12,
+> > http://marc.theaimsgroup.com/?m=109500574722283
 > 
->>Dave Hansen wrote:
->>
->>>I just booted 2.6.9-rc3-mm3 and got the good ol' 
->>>
->>>VFS: Cannot open root device "sda2" or unknown-block(0,0)
->>>Please append a correct "root=" boot option
->>>Kernel panic - not syncing: VFS: Unable to mount root fs on
->>>unknown-block(0,0)
->>>
->>>backing out bk-scsi.patch seems to fix it.  I believe this worked in
->>>2.6.9-rc3-mm2.
->>>
->>>-- Dave
->>
->>While I can't verify that backing out bk-scsi.patch fixes it for me yet, 
->>I can verify that I get the exact same error trying to boot this kernel. 
->>I too am using the aic7xxx.
->>
-> 
-> 
-> Were some earlier messages printed out, during the scsi bringup stage?
-> 
-> A full dmesg dump would be nice.
-> 
+> Yes, I forgot about this one -- this is pretty much what I
+> had intended to do.
 
-Yes it would. Unfortunately I am not near the machine right now. I do 
-know that there is not much info being displayed prior to the failure 
-message listed above and I don't have a serial console on this system 
-currently. I will be glad to try to dig into it further when I get home 
-in a few hours.
+The version had a few bugs unfortunately.  For various HP boards
+I mixed up vendor and subvendor id, and the raid boards are completely
+missing.  I tried to fix that up but got totally lost in the various ids.
 
-kr
+If there's a completely list of AIC79XX board variants I could try again.
