@@ -1,122 +1,31 @@
-From: Mike Anderson <andmike@us.ibm.com>
+From: Patrick Mochel <mochel@osdl.org>
 Subject: Re: [RFC] Multi-path IO in 2.5/2.6 ?
-Date: Tue, 10 Sep 2002 09:27:31 -0700
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20020910162731.GA1249@beaverton.ibm.com>
-References: <20020909095652.A21245@eng2.beaverton.ibm.com> <200209091734.g89HY5p11796@localhost.localdomain> <20020909184026.GD1334@beaverton.ibm.com> <20020910130201.GO2992@marowsky-bree.de>
+Date: Tue, 10 Sep 2002 10:21:53 -0700 (PDT)
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <Pine.LNX.4.44.0209101019280.1032-100000@cherise.pdx.osdl.net>
+References: <20020909170847.A24352@eng2.beaverton.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20020910130201.GO2992@marowsky-bree.de>
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+In-Reply-To: <20020909170847.A24352@eng2.beaverton.ibm.com>
+To: Patrick Mansfield <patmans@us.ibm.com>
+Cc: James Bottomley <James.Bottomley@steeleye.com>, Lars Marowsky-Bree <lmb@suse.de>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Lars Marowsky-Bree <lmb@suse.de>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, Patrick Mansfield <patmans@us.ibm.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Lars Marowsky-Bree [lmb@suse.de] wrote:
-> On 2002-09-09T11:40:26,
->    Mike Anderson <andmike@us.ibm.com> said:
+
+> > > Generic device naming consistency is a problem if multiple devices
+> > > show up with the same id.
+> > 
+> > Patrick Mochel has an open task to come up with a solution to this.
 > 
-> > When you get into networking I believe we may get into path failover
-> > capability that is already implemented by the network stack. So the
-> > paths may not be visible to the block layer.
-> 
-> It depends. The block layer might need knowledge of the different paths for
-> load balancing.
-> 
-> > The utility does transcend SCSI, but transport / device specific
-> > characteristics may make "true" generic implementations difficult.
-> 
-> I disagree. What makes "generic" implementations difficult is the absolutely
-> mediocre error reporting and handling from the lower layers.
-> 
+> I don't think this can be solved if multiple devices show up with the same
+> id. If I have five disks that all say I'm disk X, how can there be one
+> name or handle for it from user level?
 
-Where working on it. I have done a mid scsi_error cleanup patch for 2.5
-so that we can better view where we are at currently. Hopefully soon we
-can do some actual useful improvements.
-
-My main point on the previous comment though was that some transports may
-decide not to expose there paths (i.e. the may manage them at the
-transport layer) and the block layer would be unable to attach to
-individual paths.
-
-The second point I was trying to make is that if you look at most
-multi-path solutions across different operating systems once they have
-failover capability and move to support more performant / advanced
-multi-path solutions they need specific attributes of the device or
-path. These attributes have sometimes been called personalities. 
-
-Examples of these personalities are path usage models (failover,
-transparent failover, active load balancing), ports per controller
-config,  platform memory latency (NUMA), cache characteristics, special
-error decoding for device events, etc.
-
-I mention a few in these in this document.
-http://www-124.ibm.com/storageio/multipath/scsi-multipath/docs/index.html
-
-These personalities could be acquired at any level of the IO stack, but
-involve some API if we want to try and get as close as possible to
-"generic".
-
-> With multipathing, you want the lower level to hand you the error
-> _immediately_ if there is some way it could be related to a path failure and
-> no automatic retries should take place - so you can immediately mark the path
-> as faulty and go to another. 
-> 
-
-Agreed, In a past O/S we worked hard to have our error policy structure
-so that transports worried about transport errors and devices worried
-about device errors. If a transport received a completion of an IO its
-job was done (we did have some edge case and heuristics to stop paths
-from cycling from disabled to enabled)
-
-> However, on a "access beyond end of device" or a clear read error, failing a
-> path is a rather stupid idea, but instead the error should go up immediately.
-> 
-
-Agreed, each layer should only deal with error in there domain.
-
-> This will need to be sorted regardless of the layer it is implemented in.
-> 
-> How far has this been already addressed in 2.5 ?
-
-See previous comment.
-
-> 
-> > > > For sd, this means if you have n paths to each SCSI device, you are
-> > > > limited to whatever limit sd has divided by n, right now 128 / n.
-> > > > Having four paths to a device is very reasonable, limiting us to 32
-> > > > devices, but with the overhead of 128 devices. 
-> > > 
-> > > I really don't expect this to be true in 2.6.
-> > > 
-> > While the device space may be increased in 2.6 you are still consuming
-> > extra resources, but we do this in other places also.
-> 
-> For user-space reprobing of failed paths, it may be vital to expose the
-> physical paths too. Then "reprobing" could be as simple as
-> 
-> 	dd if=/dev/physical/path of=/dev/null count=1 && enable_path_again
-> 
-> I dislike reprobing in kernel space, in particular using live requests as
-> the LVM1 patch by IBM does it.
-> 
+Easy: you map the unique identifier of the device to a name in userspace.  
+In our utopian future, /sbin/hotplug is called with that unique ID as one
+of its parameters. It searches for, and finds names based on the ID is. If
+the name(s) already exist, then it doesn't continue.
 
 
-In the current mid-mp patch the paths are exposed through the proc
-interface and can be activated / state changed through a echo command. 
-
-While live requests are sometimes viewed as a bad things to activate a
-path very small IO sizes in optical networks a unreliable in
-determining anything but completely dead paths. The size of the payload
-is important.
-
-I believe the difference in views here is what to expose and what
-size/type of structure represents each piece of the nexus (b:c:t:l).
-
--Mike
-
--- 
-Michael Anderson
-andmike@us.ibm.com
-
+	-pat
