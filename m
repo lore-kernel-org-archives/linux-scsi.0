@@ -1,37 +1,49 @@
-From: Mike Anderson <andmike@us.ibm.com>
-Subject: Re: PROBLEM: 2.6.0-test9: SCSI mid layer tells a lie.
-Date: Thu, 4 Dec 2003 12:21:27 -0800
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: usb storage traces
+Date: Thu, 4 Dec 2003 15:59:58 -0500 (EST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20031204202127.GB2265@beaverton.ibm.com>
-References: <0E3FA95632D6D047BA649F95DAB60E57037F83D5@exa-atlanta.se.lsil.com> <200312032348.AA02824@fukuchi.jp.fujitsu.com> <20031204020508.GB1775@beaverton.ibm.com> <007b01c3ba77$07612f30$2987110a@lsd.css.fujitsu.com>
+Message-ID: <Pine.LNX.4.44L0.0312041509380.994-100000@ida.rowland.org>
+References: <20031204184428.GA17116@one-eyed-alien.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e34.co.us.ibm.com ([32.97.110.132]:53135 "EHLO
-	e34.co.us.ibm.com") by vger.kernel.org with ESMTP id S263298AbTLDURC
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 4 Dec 2003 15:17:02 -0500
-Content-Disposition: inline
-In-Reply-To: <007b01c3ba77$07612f30$2987110a@lsd.css.fujitsu.com>
+Received: from ida.rowland.org ([192.131.102.52]:15108 "HELO ida.rowland.org")
+	by vger.kernel.org with SMTP id S263539AbTLDU77 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 4 Dec 2003 15:59:59 -0500
+In-Reply-To: <20031204184428.GA17116@one-eyed-alien.net>
 List-Id: linux-scsi@vger.kernel.org
-To: Hironobu Ishii <ishii.hironobu@jp.fujitsu.com>
-Cc: Masao Fukuchi <fukuchi.masao@jp.fujitsu.com>, "Moore, Eric Dean" <emoore@lsil.com>, linux-scsi <linux-scsi@vger.kernel.org>, mpt_linux_developer@lsil.com
+To: Matthew Dharm <mdharm-scsi@one-eyed-alien.net>
+Cc: Pat LaVarre <p.lavarre@ieee.org>, Alex Sanks <alex@netchip.com>, Julian Back <jback@mpc-data.co.uk>, David Brownell <david-b@pacbell.net>, SCSI development list <linux-scsi@vger.kernel.org>
 
-Hironobu Ishii [ishii.hironobu@jp.fujitsu.com] wrote:
-> Thank you, Mike.
+On Thu, 4 Dec 2003, Matthew Dharm wrote:
+
+> Did the device advertise 'generic scsi' or one of the other protocol codes?
 > 
-> Your patch solved the problem.
-> I appreciate your quick help.
+> Microsoft has published information that indicates that they 'translate'
+> the mode-sense commands into the 10-byte variants for everything bug
+> 'transparent scsi' -- I think actually seeing that information would be
+> necessary in constructing a new algorithm for Linux.
+> 
+> Matt
 
-Thanks for testing it. I am going to make a slight change and then
-repost the patch on a new thread.
+It was generic (transparent) scsi.
 
-In looking at the patch we only want to set result if it is not already
-set. This is rare case as the error handler is normally ran for commands
-that have timedout.
+Perhaps I'll try implementing some of the other protocol codes in FSG,
+maybe also the "removeable media" flag.  This would also require
+implementing the PREVENT-ALLOW-MEDIUM-REMOVAL, READ-FORMAT-CAPACITIES, and
+START-STOP, possibly also REZERO-UNIT, SEEK, READ(12), and WRITE(12).
 
--andmike
---
-Michael Anderson
-andmike@us.ibm.com
+(1).  Am I missing anything important?
+
+(2).  Can I afford to leave out some of those?  The last four don't look 
+very useful.
+
+As I understand it, the only real difference between the protocols is that
+everything but transparent scsi and RBC requires padding the commands to
+12 bytes.  Pat LaVarre says that protocols x02 (SFF-8020i = CD/DVD) and
+x05 (SFF-8070i = Removeable media, floppy) are the most important, since
+they are the only other ones the generic Windows USB mass storage drivers
+recognize.
+
+Alan Stern
 
