@@ -1,30 +1,46 @@
-From: =?ISO-8859-1?Q?=22Mauricio_R=2E_P=E9rez=22?=
-	<linuxadm@pergamino.gov.ar>
-Subject: kernel 2.6.9 and megaraid and sym53c8xx on HP Netserver LH4
-Date: Fri, 03 Dec 2004 17:32:01 -0300
-Message-ID: <41B0CD41.9070306@pergamino.gov.ar>
+From: Matthias Andree <ma@dt.e-technik.uni-dortmund.de>
+Subject: Re: SuSE hwinfo/yast2 still confusing SYM53C8XX, killing tape backups
+Date: Fri, 03 Dec 2004 23:35:08 +0100
+Message-ID: <m3brdbc8o3.fsf@merlin.emma.line.org>
+References: <1100467267.23710.7.camel@mulgrave> <4197E4B7.3050008@pobox.com>
+	<1100473795.23649.26.camel@mulgrave>
+	<m3hdnsvvfd.fsf@merlin.emma.line.org>
+	<1100477105.24921.3.camel@mulgrave>
+	<m34qjrx6iy.fsf_-_@merlin.emma.line.org>
+	<Pine.LNX.4.61.0411221102280.22230@ligeti.suse.de>
+	<m3actaw0pv.fsf@merlin.emma.line.org>
+	<20041122133014.GF25636@parcelfarce.linux.theplanet.co.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 200-112-131-37.bbt.net.ar ([200.112.131.37]:30132 "EHLO
-	mail.pergamino.gov.ar") by vger.kernel.org with ESMTP
-	id S262502AbULCUcJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 3 Dec 2004 15:32:09 -0500
-Received: from localhost (pergamino.gov.ar [127.0.0.1])
-	by mail.pergamino.gov.ar (Postfix) with ESMTP id 10FBFA3810
-	for <linux-scsi@vger.kernel.org>; Fri,  3 Dec 2004 17:32:18 -0300 (ART)
-Received: from mail.pergamino.gov.ar ([127.0.0.1])
- by localhost (server.pergamino.gov.ar [127.0.0.1]) (amavisd-new, port 10024)
- with LMTP id 17578-01 for <linux-scsi@vger.kernel.org>;
- Fri,  3 Dec 2004 17:32:17 -0300 (ART)
-Received: from [10.175.60.100] (unknown [10.175.60.100])
-	by mail.pergamino.gov.ar (Postfix) with ESMTP id 912789EAC4
-	for <linux-scsi@vger.kernel.org>; Fri,  3 Dec 2004 17:32:17 -0300 (ART)
+Received: from krusty.dt.e-technik.Uni-Dortmund.DE ([129.217.163.1]:47069 "EHLO
+	mail.dt.e-technik.uni-dortmund.de") by vger.kernel.org with ESMTP
+	id S262434AbULCWfN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 3 Dec 2004 17:35:13 -0500
+In-Reply-To: <20041122133014.GF25636@parcelfarce.linux.theplanet.co.uk>
+	(Matthew Wilcox's message of "Mon, 22 Nov 2004 13:30:14 +0000")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: Matthias Andree <ma@dt.e-technik.uni-dortmund.de>, Steffen Winterfeldt <snwint@suse.de>, SCSI Mailing List <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@SteelEye.com>, Jeff Garzik <jgarzik@pobox.com>
 
-Hi, i've tried to install kernel 2.6.9, but it doesn't even starts 
-megaraid, it hangs on start, kernel 2.4.26 is working, but sym53c8xx 
-doesnt loads...
+Matthew Wilcox <matthew@wil.cx> writes:
+
+>> 2. is it a kernel bug if reading offset #216 (byte-wise) in the config
+>>    file in sysfs confuses the hardware?
+>
+> No, but it does seem to me that we could do better.  Unfortunately,
+> the obvious thing to do (set the file size to less than 256 bytes) isn't
+> really possible in sysfs.  But we could use the 'undocumented feature'
+> in drivers/pci/pci-sysfs.c:pci_read_config() of setting the pci_dev's
+> cfg_size to 128 bytes.  This would prevent even root from reading more
+> than 128 bytes.  That'd be OK -- there's no *PCI* data in this range,
+> even on the latest 1010/1030 controllers.  The operating registers are
+> exposed in the 0x80-0xFF range only up to the 875; the 876 and later
+> return only 0 in that range.
+
+Have you had a look at this already? If not, how would I go about
+inplementing this?
+
+-- 
+Matthias Andree
