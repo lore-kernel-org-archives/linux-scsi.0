@@ -1,69 +1,44 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: lots and lots of disks again
-Date: Tue, 10 Feb 2004 13:39:32 +0000
+From: Xose Vazquez Perez <xose@wanadoo.es>
+Subject: Re: Kernel panic on Redhat Linux AS2.1 with QLogic 2342 HBA
+Date: Tue, 10 Feb 2004 14:58:43 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040210133932.A3870@infradead.org>
-References: <20040204024512.5bf68428.akpm@osdl.org> <20040210110417.GB4010@tpkurt.garloff.de> <20040210112658.GC4010@tpkurt.garloff.de>
+Message-ID: <4028E393.1010701@wanadoo.es>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from phoenix.infradead.org ([213.86.99.234]:17419 "EHLO
-	phoenix.infradead.org") by vger.kernel.org with ESMTP
-	id S265896AbUBJNjj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 10 Feb 2004 08:39:39 -0500
-Content-Disposition: inline
-In-Reply-To: <20040210112658.GC4010@tpkurt.garloff.de>; from garloff@suse.de on Tue, Feb 10, 2004 at 12:26:58PM +0100
+Received: from smtp14.eresmas.com ([62.81.235.114]:32917 "EHLO
+	smtp14.eresmas.com") by vger.kernel.org with ESMTP id S265875AbUBJN6r
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 10 Feb 2004 08:58:47 -0500
+Received: from [192.168.108.54] (helo=mx04.eresmas.com)
+	by smtp14.eresmas.com with esmtp (Exim 4.10)
+	id 1AqYPU-0002h9-00
+	for linux-scsi@vger.kernel.org; Tue, 10 Feb 2004 14:58:44 +0100
+Received: from [80.102.70.33] (helo=wanadoo.es)
+	by mx04.eresmas.com with esmtp (Exim 4.30)
+	id 1AqYPV-0003wA-08
+	for linux-scsi@vger.kernel.org; Tue, 10 Feb 2004 14:58:45 +0100
 List-Id: linux-scsi@vger.kernel.org
-To: Kurt Garloff <garloff@suse.de>, Andrew Morton <akpm@osdl.org>, linux-scsi@vger.kernel.org, Badari Pulavarty <pbadari@us.ibm.com>, Matthew Wilcox <willy@debian.org>, James Bottomley <James.Bottomley@steeleye.com>, Christoph Hellwig <hch@infradead.org>
+To: linux-scsi <linux-scsi@vger.kernel.org>
 
-On Tue, Feb 10, 2004 at 12:26:58PM +0100, Kurt Garloff wrote:
-> +/* sd_index_bits array size / disks
-> + * 			32  /    256
-> + * 		      4096  /  32768
-> + * 		     32768  / 262144
-> + */
-> +#ifdef CONFIG_EMBEDDED
-> +# define SD_DISKS	256
-> +#else
-> +# define SD_DISKS	32768	// we can raise this to 262144 if needed
-> +#endif
+Matthew Wilcox wrote:
 
-Umm, using CONFIG_EMBEDDED doesn't mean no config option - it just mean
-another config option which no-one would think of changing the number of
-support scsi disks.
+> On Tue, Feb 10, 2004 at 10:45:59AM +0530, veeresh wrote:
+>> Hi,
+>> 
+>> I am getting kernel panic under following configuration:
+>> Machine: DL580 multiprocessor Intel Xeon 2GHZ processors(2); 32-bit
+>> OS: Redhat Linux Advanced Server 2.1
+>> Kernel Version:2.4.9-e25smp
+> 
+> You need to contact Red Hat for problems with RH AS.
 
-Really, any solution that requires huge static allocations is wrong.  The
-bitmap either needs to be replaced with a saner algorithm or dynamic
-allocation and reallocation on growth.
+I just can imagine the Arjan's answer: we don't support any
+external modules, old kernels, tainted kernels... as is your case
 
->  }
->  
-> +static int inv_sd_major(int major)
-> +{
-> +	switch (major) {
-> +	case SCSI_DISK0_MAJOR:
-> +		return 0;
-> +	case SCSI_DISK1_MAJOR ... SCSI_DISK7_MAJOR:
-> +		return major + 1 - SCSI_DISK1_MAJOR;
-> +	case SCSI_DISK8_MAJOR ... SCSI_DISK15_MAJOR:
-> +		return major + 8 - SCSI_DISK8_MAJOR;
-> +	default:
-> +		BUG();
-> +		return 0;	/* shut up gcc */
-> +	}
-> +}
-> +
-> +unsigned int dev_to_sd_nr(unsigned int dev) {
-> +	return  ((dev >> 4) & 15) | (inv_sd_major(dev >> 20) << 4) |
-> +		(dev & 0x3ff00);
-> +}
-> +unsigned int dev_to_sd_part(unsigned int dev) {
-> +	return  (dev & 15) | ((dev >> 14) & 0x30);
-> +}
-> +
+;-)
 
-Maybe I missed something but this seems completely unused?
-
-Also please follow the coding style guidelines, that is opening brace
-for functions on the next line and non-exported functions always static.
+--
+LiNUX Is Not UniX
 
