@@ -1,42 +1,38 @@
 From: Patrick Mansfield <patmans@us.ibm.com>
-Subject: Re: [PATCH] split private and public scsi headers
-Date: Mon, 28 Apr 2003 10:08:19 -0700
+Subject: Re: [PATCH] scsi_requeuest_fn
+Date: Mon, 28 Apr 2003 10:14:11 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030428100819.A27762@beaverton.ibm.com>
-References: <20030426233054.A22823@lst.de>
+Message-ID: <20030428101411.A27787@beaverton.ibm.com>
+References: <20030427170440.A29493@lst.de> <20030427110711.A21878@beaverton.ibm.com> <20030427205303.A31125@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 216-99-218-173.dsl.aracnet.com ([216.99.218.173]:50424 "EHLO
+Received: from 216-99-218-173.dsl.aracnet.com ([216.99.218.173]:51960 "EHLO
 	dyn9-47-17-132.beaverton.ibm.com") by vger.kernel.org with ESMTP
-	id S261198AbTD1Q7w (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 28 Apr 2003 12:59:52 -0400
+	id S261210AbTD1RFm (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 28 Apr 2003 13:05:42 -0400
 Content-Disposition: inline
-In-Reply-To: <20030426233054.A22823@lst.de>; from hch@lst.de on Sat, Apr 26, 2003 at 11:30:54PM +0200
+In-Reply-To: <20030427205303.A31125@lst.de>; from hch@lst.de on Sun, Apr 27, 2003 at 08:53:03PM +0200
 List-Id: linux-scsi@vger.kernel.org
 To: Christoph Hellwig <hch@lst.de>
 Cc: James.Bottomley@steeleye.com, linux-scsi@vger.kernel.org
 
-On Sat, Apr 26, 2003 at 11:30:54PM +0200, Christoph Hellwig wrote:
-> Two new headers:
+On Sun, Apr 27, 2003 at 08:53:03PM +0200, Christoph Hellwig wrote:
 > 
->   scsi_priv.h - for macros/declarations private to the scsi midlayer
-> 		  (= not EXPORT_SYMBOL()ed)
->   scsi_logging.h - for SCSI_LOG_* and friends, semi-private to the
->   		midlayer and the upper drivers.  One abuse of this
-> 		in dpt_i2o killed.
+> > Also - do you have a patch rollup somewhere (in case these recent
+> > patches aren't applied soon)?
+> 
+> Currently I don't have.  I'll merge everything together if this isn't
+> applied until tomorrow.
+> 
 
-Hi -
+FYI -
 
-I had to add an include of scsi_logging.h to compile with logging configured:
+I compiled and booted (on one machine with aic driver) with all but the
+first (the header split up) and last patch (changes to drivers I don't
+use) applied.
 
---- sm-inclsplit-hch/drivers/scsi/scsi_syms.c-orig	Mon Apr 28 09:47:50 2003
-+++ sm-inclsplit-hch/drivers/scsi/scsi_syms.c	Mon Apr 28 09:59:48 2003
-@@ -21,6 +21,7 @@
- #include "scsi.h"
- #include <scsi/scsi_ioctl.h>
- #include "hosts.h"
-+#include "scsi_logging.h"
- 
- #include <scsi/scsicam.h>
- 
+The header split up had a conflict with the nuke externs, plus the
+missing include mentioned in a separate email.
+
+-- Patrick Mansfield
