@@ -1,30 +1,41 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [PATCH] add iSCSI session creation sysfs attributes
-Date: Tue, 25 Jan 2005 15:08:46 -0600
-Message-ID: <1106687326.6434.46.camel@mulgrave>
-References: <41F4D072.5040800@cs.wisc.edu>
-	 <1106580841.5513.10.camel@mulgrave>  <41F6AE02.3040400@cs.wisc.edu>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [Announce] Emulex lpfcdriver v8.0.20 available
+Date: Tue, 25 Jan 2005 21:40:13 +0000
+Message-ID: <20050125214013.GA28707@infradead.org>
+References: <0B1E13B586976742A7599D71A6AC733C12EA20@xbl3.ma.emulex.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat16.steeleye.com ([209.192.50.48]:50867 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S262158AbVAYVJA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 25 Jan 2005 16:09:00 -0500
-In-Reply-To: <41F6AE02.3040400@cs.wisc.edu>
+Received: from pentafluge.infradead.org ([213.146.154.40]:52132 "EHLO
+	pentafluge.infradead.org") by vger.kernel.org with ESMTP
+	id S262132AbVAYVkY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 25 Jan 2005 16:40:24 -0500
+Content-Disposition: inline
+In-Reply-To: <0B1E13B586976742A7599D71A6AC733C12EA20@xbl3.ma.emulex.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: James.Smart@Emulex.Com
+Cc: linux-scsi@vger.kernel.org
 
-On Tue, 2005-01-25 at 12:37 -0800, Mike Christie wrote:
-> Will do. One question though. If a function like
-> transport_add_device or transport_setup_device fails,
-> how does the caller detect this?
+On Thu, Jan 20, 2005 at 11:26:00AM -0500, James.Smart@Emulex.Com wrote:
+> > This sounds like a good idea, but I wonder if we have userland relying
+> > on those attributes already.  But given that the fc transport class
+> > was mostly a joke before you encehanced it it might be worth breaking
+> > it..
+> 
+> You and James would have to give the approval for this one. I already
+> encountered issues with these attributes when then went from scsi_device
+> to scsi_target. The most significant hiccup was to udev and the projects
+> depending on it... Also, given the potential amount of change may be
+> needed to move to rports, I wouldn't want to pull the rug out from under
+> the other drivers until they are ready...
 
-It doesn't; the system runs degraded.
+James just returned from a long journey and he hasn't read the thread yet,
+but after a short discussion we agree that it's better to move the attributes
+over to the rnode.  If we're seeing compatiblity problems we'll have to
+add symlinks.
 
-James
-
-
+> 
+> 
+> -- james s
+---end quoted text---
