@@ -1,62 +1,68 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: CDC_RAM for lk 2.4, PATCH proposed
-Date: Thu, 20 May 2004 10:06:23 +0200
+From: "kory" <nikitagod@bekloppt.com>
+Subject: Save a bundle on Windows XP!
+Date: Thu, 20 May 2004 22:12:45 GMT
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040520080622.GF1952@suse.de>
-References: <20040519081534.GE30348@suse.de> <1084981551.3082.80.camel@patibmrh9>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Message-ID: <1085091165-14993@excite.com>
+Content-Type: text/plain;
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns.virtualhost.dk ([195.184.98.160]:1926 "EHLO virtualhost.dk")
-	by vger.kernel.org with ESMTP id S265036AbUETIGb (ORCPT
+Received: from [211.108.90.8] ([211.108.90.8]:4016 "HELO vermontel.net")
+	by vger.kernel.org with SMTP id S265076AbUETKLN (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 20 May 2004 04:06:31 -0400
-Content-Disposition: inline
-In-Reply-To: <1084981551.3082.80.camel@patibmrh9>
+	Thu, 20 May 2004 06:11:13 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: Pat LaVarre <p.lavarre@ieee.org>
-Cc: linux-scsi@vger.kernel.org, John McKell <McKellj@iomega.com>
+To: linux-kernel@vger.kernel.org
 
-On Wed, May 19 2004, Pat LaVarre wrote:
-> Jens A:
-> 
-> > Please explain your reasoning for this patch.
-> 
-> I fear to answer fully, because I see I have a history of answering in
-> ways that make you lose interest.
+Incredible DEALS on SOFTWARE you NEED!
 
-Sorry you feel that way. It's not loss of interesting, mainly juggling
-other tasks.
+Save 40% on Windows XP Professional!
+Save 40% on Microsoft Office 2003 Professional!
+Save $90 on Adobe Photoshop!
+Save 60% on Norton AntiVirus!!
 
-> I see you have not yet volunteered to review the 2.4.26 patch proposed
-> in this thread 2004-04-23 by John McKell, written to give us CDC_RAM
-> alone without MRW in 2.4.
-> 
-> Can I help best by updating that patch to become a 2.4.27-pre3 patch?
+Save your company thousands of dollars when it needs software!
 
-2.4.26 patch should apply to 2.4.27-pre3 as well, I think. But it
-doesn't hurt to check.
+That promotion just got closer...
 
-> ----- ----- -----
-> 
-> P.S. An alternative, less short reply that I also drafted was:
-> 
-> > > linux-2.4.18/drivers/ide/ide-cd.c
-> > if we succeed in getting the mode sense capabilities page,
-> > you force setting og dvd-rom/ram?!
-> > ...
-> > > linux-2.4.18/drivers/scsi/sr.c
-> > Ditto here.
-> 
-> Yes.
-> 
-> I believe 2.4.18 patch actually makes `mount -w` work there by way of
-> "see all DVD/CD drives as DVD-RAM/ DVD-ROM compatible".
+Click here!!
+http://teddychoice.biz/index.php?s=7555
 
-But that's not what the patch does at all. The patch simply says "If we
-succeeded in retriving the mode capability page, ignore what it says and
-flag the drive as dvd-rom/ram capable" which is clearly bogus.
 
--- 
-Jens Axboe
+Software packages you can save big on:
 
+Windows XP Professional
+Norton Antivirus 2004
+Adobe Photoshop 7.0
+Microsoft Office XP Professional
+Microsoft Office 2003 Professional
+Microsoft Money 2004
+Microsoft 2000 Professional
+Adobe Photoshop CS
+Adobe Pagemaker 7.0
+Adobe Illustrator 10
+Corel Draw Graphics Suite 11
+Adobe Acrobat 6.0 Professional
+Borland Delphi 7 Professional
+Visual Studio.Net Enterprise Architecht
+MS SQL Server 2000 Enterprise
+MS Windows Server 2003 Enterprise
+MS Windows 2000 Server
+Red Hat Linux 7.3
+
+
+
+Click here!!
+http://teddychoice.biz/index.php?s=7555
+
+
+
+
+
+
+
+
+
+image tacobellzhongguo eugene yoda malcolm goat excalibu 
+khan alisonuser1 gray aylmer
+aylmer kenneth monopoly 
+
+REMOV3: http://teddychoice.biz/soft/chair.php
