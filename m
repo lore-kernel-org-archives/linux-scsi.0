@@ -1,122 +1,79 @@
-From: Pat LaVarre <p.lavarre@ieee.org>
-Subject: Re: [usb-storage] mode sense blacklist how
-Date: 19 Nov 2003 10:02:57 -0700
+From: Jens Axboe <axboe@suse.de>
+Subject: Re: Unaligned scatter-gather buffers and usb-storage
+Date: Wed, 19 Nov 2003 18:03:20 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1069261377.2867.37.camel@patrh9>
-References: <Pine.LNX.4.44L0.0311131638320.949-100000@ida.rowland.org>
-	 <1068767049.2851.166.camel@patrh9>
-	 <1068768796.3fb41e1c8d075@webmail.netregistry.net>
-	 <1068775834.2851.321.camel@patrh9>
-	 <20031113181945.I30194@one-eyed-alien.net>
-	 <1068777510.2851.359.camel@patrh9>
-	 <1068779468.3fb447ccc6e60@webmail.netregistry.net>
-	 <1068838908.2852.34.camel@patrh9>
-	 <1069246502.3fbb6826955dd@webmail.netregistry.net>
+Message-ID: <20031119170320.GP1106@suse.de>
+References: <20031119154911.GM1106@suse.de> <Pine.LNX.4.44L0.0311191147270.957-100000@ida.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from email-out1.iomega.com ([147.178.1.82]:63987 "EHLO
-	email.iomega.com") by vger.kernel.org with ESMTP id S261957AbTKSRDV
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 19 Nov 2003 12:03:21 -0500
-In-Reply-To: <1069246502.3fbb6826955dd@webmail.netregistry.net>
+Received: from ns.virtualhost.dk ([195.184.98.160]:24256 "EHLO virtualhost.dk")
+	by vger.kernel.org with ESMTP id S263920AbTKSRDx (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 19 Nov 2003 12:03:53 -0500
+Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.44L0.0311191147270.957-100000@ida.rowland.org>
 List-Id: linux-scsi@vger.kernel.org
-To: dmitrik@users.sourceforge.net
-Cc: linux-scsi@vger.kernel.org
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: Patrick Mansfield <patmans@us.ibm.com>, Douglas Gilbert <dougg@torque.net>, James Bottomley <James.Bottomley@steeleye.com>, Oliver Neukum <oliver@neukum.org>, SCSI development list <linux-scsi@vger.kernel.org>, USB development list <linux-usb-devel@lists.sourceforge.net>
 
-Apologies in advance for each reboot these experiments force on you.
+On Wed, Nov 19 2003, Alan Stern wrote:
+> On Wed, 19 Nov 2003, Jens Axboe wrote:
+> 
+> > > any main code path, and it wouldn't get invoked by anything using the st
+> > > or sg drivers.  In fact, it looks like scsi_ioctl.c:scsi_cmd_ioctl() is
+> > > only called from within the sd driver.
+> > 
+> > It's invoked from user space. Don't mix block and scsi scsi_ioctl() up.
+> > bio_map_user() would be used by a block layer sg driver too, for
+> > instance.
+> 
+> You've lost me.  scsi_cmd_ioctl() and bio_map_user() are _not_ used by the
+> sg driver -- did you mean that a hypothetical block layer sg driver would
+> call them?  That doesn't seem relevant to the point of this thread.  
 
->  MODE SENSE (10): plscsi hangs and sits there in 
->  usb_stor_bulk_transfer_buf until the device is 
->  physically unplugged. kill -9 has no effect.
+Well you brought up bio_map_user(), so I'm telling where it's used and
+why. The block layer provides SG_IO functionality for non-scsi devices,
+that is its current use.
 
-Yes why `kill -9` has no effect on SG_IO in progress remains an open
-question here at linux-scsi.
+> Although come to think of it, you probably never saw the start of the
+> thread.  Take a look at
+> 
+> http://marc.theaimsgroup.com/?l=linux-usb-devel&m=106916943618090&w=2
+> 
+> to understand my problem.
 
-Meanwhile people have suggested the plscsi workaround: -X time 5 0. 
-Does that work for you?  That option overrides a default something like
--X time 100800 0.  You can include that option in your `export PLSCSI`
-setup, if you like.
+Ok I see. Then make sg/st return -EINVAL if the address isn't 512-byte
+aligned would be the rigth fix, imo.
 
-For device folk working to explain why the device hangs, how to suppress
-automagic resets despite short timeouts also remains an open question
-here at linux-scsi.
+> > > So something needs to be fixed up.  Is there some spot in the block layer 
+> > > that's supposed to be checking dma alignments but isn't doing so?
+> > 
+> > The queue dma alignment was added to better cater to cdrecord, for
+> > instance. We need better than 512b granularity there, or you cannot use
+> > DMA on certain types of burns (lots of sector types are non-2kb aligned
+> > there).
+> > 
+> > If you can 512-byte align the data and transfer from user space, _that
+> > is enough_. The program just needs to be aware of this, it's not an odd
+> > restriction. There are just scenarious where you cannot do this, and
+> > that is why I added the queue dma alignment attribute. To me, it doesn't
+> > sound like your case applies.
+> 
+> This isn't a userspace problem as such; it's a problem of enforcing dma
+> alignment restrictions within the block layer or lower.  I'm not working
+> on a user program; I'm working on the usb-storage driver.  It too needs
+> 512-byte alignment, but under the right circumstances the st and sg
+> drivers can submit scatter-gather buffers that aren't aligned.  You said
+> earlier that misaligned buffers would be caught in the block layer
+> queueing code, but I don't see any place where that happens.
 
-> kill -9 has no effect.
+sg/st submissions would never pass through the block layer, even if they
+use the queue as a transport between the scsi mid layer. They need to
+impose this restrictions themselves. I still don't think this warrants
+adding a host template attribute for this. 512-byte alignment is
+perfectly fine.
 
-Have you tried `modprobe -r usb-storage`?
-
->  MODE SENSE (10): plscsi hangs and sits there
-
-I see in the log you say what plscsi line you tried:
-
-./plscsi -p -i xC0 -x "5A 00 1C:00:00:00 00 00:C0 00 00:00"
-
-Adding -v might tell us more.
-
-In the log I see this command repeated, time and again.  Did you ask for
-this command repeatedly yourself, or is it the code of SG_IO and below
-that is so helpfully retrying?
-
->  Another interesting "feature": the camera does not work 
->  as a USB device without memory stick in its slot. That is 
->  if I plug it in without the stick nothing happens. When I 
->  then insert the stick it goes through the normal port 
->  status change/discovery/enumeration routine. When I
->  remove the stick from its slot the device pretends it 
->  has been disconnected.
-
-Aye, USB storage varies here.  In byte 1 mask x80 of the op x12 Inquiry
-data the device has to say if the disk can be removed without removing
-the drive.  A device that clears that bit to say the disk and drive do
-plug and unplug together has to virtually unplug USB when you
-mechanically remove the disk.  Other devices may virtually unplug USB
-when you mechanically remove the disk.
-
-> Short version:
->  MODE SENSE (6): ...
-
-Can you easily share the tty log of plscsi -v?  I ask because for me the
-extra detail of a standard kernel log helps explain the plscsi tty log
-without easily yielding an equally concise summary.
-
-> Short version:
->  MODE SENSE (6): device reports STALL condition.
-
-Stall is normal in mass storage, because provoking failure and
-tolerating partial success is normal in mass storage.
-
-Here the device design choice of bInterfaceProtocol = x01 = CB =
-"Transport: Control/Bulk" makes control stall normal, rather than the
-bulk stall of generic usb mass storage (bInterfaceProtocol = x50 =
-*"Pat").
-
->  Subsequent
->  auto-REQUEST SENSE reports "Illegal Request in CDB".
->  As far as I undertand the device tries to tell us that the
->  command is not supported.
-
-SCSI as defined by t10.org makes a subtle distinction.
-
-Here we see "auto-sense" "code: 0x70, key: 0x5, ASC: 0x24, ASCQ: 0x0".
-
-In the t10.org English, x 5 24 means cdb[0] opcode understood, but whole
-cdb not understood.  x 5 20 means cdb[0] opcode not understood.
-
-This result suggests, without guaranteeing, that the vendor-specific
-bInterfaceSubClass = xFF SCSI of this device includes some cdb's that
-begin with op x1A Mode Sense (6).
-
-> here is my report ... Long version ... attached ...
-
-Yes to interpret the English report and plscsi tty logs confidently, I
-need the kernel log, thank you.
-
-> in case you're still interested
-
-Yes!
-
-Pat LaVarre
-
+-- 
+Jens Axboe
 
