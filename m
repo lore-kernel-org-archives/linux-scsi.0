@@ -1,55 +1,53 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [SUBJECT CHANGE]: megaraid unified driver version 2.20.0.0-al
- pha1
-Date: Wed, 25 Feb 2004 21:38:36 -0500
+From: Matt Domsch <Matt_Domsch@dell.com>
+Subject: Re: [SUBJECT CHANGE]: megaraid unified driver version 2.20.0.0-al pha1
+Date: Wed, 25 Feb 2004 20:44:10 -0600
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <403D5C2C.7000205@pobox.com>
+Message-ID: <20040225204410.A28880@lists.us.dell.com>
 References: <0E3FA95632D6D047BA649F95DAB60E57033BC3EA@exa-atlanta.se.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:43985 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S261508AbUBZCiv
+Received: from lists.us.dell.com ([143.166.224.162]:56294 "EHLO
+	lists.us.dell.com") by vger.kernel.org with ESMTP id S261528AbUBZCox
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 25 Feb 2004 21:38:51 -0500
-In-Reply-To: <0E3FA95632D6D047BA649F95DAB60E57033BC3EA@exa-atlanta.se.lsil.com>
+	Wed, 25 Feb 2004 21:44:53 -0500
+Content-Disposition: inline
+In-Reply-To: <0E3FA95632D6D047BA649F95DAB60E57033BC3EA@exa-atlanta.se.lsil.com>; from Atulm@lsil.com on Wed, Feb 25, 2004 at 06:05:43PM -0500
 List-Id: linux-scsi@vger.kernel.org
 To: "Mukker, Atul" <Atulm@lsil.com>
-Cc: 'Matt Domsch' <Matt_Domsch@dell.com>, 'Christoph Hellwig' <hch@infradead.org>, 'Arjan van de Ven' <arjanv@redhat.com>, 'James Bottomley' <James.Bottomley@SteelEye.com>, 'Paul Wagland' <paul@wagland.net>, Matthew Wilcox <willy@debian.org>, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
+Cc: 'Christoph Hellwig' <hch@infradead.org>, 'Arjan van de Ven' <arjanv@redhat.com>, 'James Bottomley' <James.Bottomley@SteelEye.com>, 'Paul Wagland' <paul@wagland.net>, Matthew Wilcox <willy@debian.org>, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
 
-Mukker, Atul wrote:
+On Wed, Feb 25, 2004 at 06:05:43PM -0500, Mukker, Atul wrote:
+> Thanks a lot for the valuable feedback. The general consensus is against a
+> single driver for different class of controllers. This would put a strain on
+> our applications, which expect all the controllers to be exported from
+> single driver's private ioctl interface.
+> 
 > With multiple adapters, applications would need to open multiple handles.
 > This would somewhat complicate things for them. But keeping in line with
 > general expectations, we would fork the drivers for different class of
 > controllers now.
 
-"opening multiple handles" is preferred.  You want one discrete object 
-per controller or per device, depending on the object in question.
+It probably isn't difficult to add this to the applications, but since
+I haven't seen the source code to them, it's hard to say.  When I
+modified efibootmgr to handle either /proc-style or /sys-style
+entries, whichever was present, it wasn't difficult, and really made
+the code cleaner.  I wouldn't think your tools would be that much more difficult.
 
+As Jeff hinted, if your userspace<->driver ABI is consistent between
+your new MPT-based RAID controllers and your existing megaraid driver,
+then perhaps you need a single small helper module (lsiioctl or some
+better name), loaded by both mptraid and megaraid automatically, which
+handles registering the /dev/megaraid node dynamically.  In this case,
+both mptraid and megaraid would register with lsiioctl for each
+adapter discovered, and lsiioctl would essentially be a switch,
+redirecting userspace tool ioctls to the appropriate driver.
 
-> I have not yet gotten strong feelings against a single driver for lk 2.4 and
-> lk 2.6. If this is true, we would like to keep single driver for both
-> kernels - since lk 2.4 still has a big lifecycle.
+Thanks,
+Matt
 
-If you are doing multiple drivers in 2.6, it would seem better to match 
-that as closely as possible in 2.4.
-
-
-> For lk 2.6, the controllers would be detected PCI ordered and because of
-> existing lk 2.4 setups, driver would re-order the registration based on boot
-> controller.
-
-Look at my libata code -- in both 2.4 and 2.6, it uses the proper PCI 
-API calls.
-
-Controller order is irrelevant -- device order is what you really care 
-about, right?  This can be managed by creating a list during probe, and 
-then executing the list after all controllers have been probed. 
-Obviously, this excludes hotplug controllers added after the initial 
-module_init() function exits.
-
-	Jeff
-
-
-
+-- 
+Matt Domsch
+Sr. Software Engineer, Lead Engineer
+Dell Linux Solutions linux.dell.com & www.dell.com/linux
+Linux on Dell mailing lists @ http://lists.us.dell.com
