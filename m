@@ -1,75 +1,87 @@
-From: Chris Gamache <cgg007@yahoo.com>
-Subject: RE: Assistance with an upgraded scsi driver
-Date: Thu, 1 Jul 2004 12:49:29 -0700 (PDT)
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: PATCH: (as284b) Add BLIST_INQUIRY_36 to all USB blacklist entries
+Date: Thu, 1 Jul 2004 16:23:41 -0400 (EDT)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040701194929.14255.qmail@web13811.mail.yahoo.com>
-References: <0E3FA95632D6D047BA649F95DAB60E57033BC805@exa-atlanta>
-Reply-To: cgg007@yahoo.com
+Message-ID: <Pine.LNX.4.44L0.0407011614400.631-100000@ida.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from web13811.mail.yahoo.com ([216.136.175.219]:26756 "HELO
-	web13811.mail.yahoo.com") by vger.kernel.org with SMTP
-	id S266242AbUGATtc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 1 Jul 2004 15:49:32 -0400
-In-Reply-To: <0E3FA95632D6D047BA649F95DAB60E57033BC805@exa-atlanta>
+Received: from ida.rowland.org ([192.131.102.52]:2820 "HELO ida.rowland.org")
+	by vger.kernel.org with SMTP id S266256AbUGAUXm (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Jul 2004 16:23:42 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: "Mukker, Atul" <Atulm@lsil.com>, linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: SCSI development list <linux-scsi@vger.kernel.org>
 
---- "Mukker, Atul" <Atulm@lsil.com> wrote:
-> > New tarball:
-> > Makefile     mega_common.h  megaraid_mbox.c  megaraid_mm.c
-> > Kconfig.megaraid    mbox_defs.h  megaraid_ioctl.h     
-> > megaraid_mbox.h  megaraid_mm.h
-> > 
-> > ...
-> > 
-> > I've created a megaraid directory under /usr/src/linux/drivers/scsi
-> > 
-> > I modified the Makefile and Kconfig in /usr/src/linux/drivers/scsi
-> > 
-> > I cleaned out the old files
-> > 
-> > I re-configured to include the new options for compiling the 
-> > MEGARAID_NEWGEN as
-> > a module
-> > 
-> > I ran make all
-> > 
-> > ... ... ...
-> > 
-> > No new module code was generated. :(
-> > 
-> Try
-> # make drivers/scsi/megaraid/
-> 
-> or
-> # cd drivers/scsi/megaraid
-> # make -C /usr/src/linux-.../ SUBDIRS=`pwd` clean
-> # make -C /usr/src/linux-.../ SUBDIRS=`pwd` modules
-> 
-> Modules megaraid_mm.ko and megaraid_mbox.ko should now be available. Load
-> megaraid_mm before loading megaraid_mbox
-> 
-> -Atul Mukker
-> LSI Logic
-> 
+James:
 
-Thank you for the super-fast response. Those shortcuts saved me a bunch of
-compile-time. Here was my /real/ problem:
+This patch adds the BLIST_INQUIRY_36 flag to all the SCSI blacklist
+entries for USB devices (unless some have been added since I last did a bk
+pull).  While it may not be strictly necessary for all of them, it doesn't
+hurt: Since the usb-storage driver doesn't use any of the INQUIRY data
+after the first 36 bytes, there's no reason to try reading any more of it.  
+And some devices crash when we try to read more, even though they
+advertise that more bytes are available.  The usb-storage driver does try
+to set the flag automatically, but the blacklist entries override that
+setting.
 
-After posting my message I took a little break. When I came back, I found that
-I was including the configuration directives CONFIG_SCSI_MEGARAID_* instead of
-CONFIG_MEGARAID_* which is what LSI intended! How silly of me! Once I changed
-the config directives, everything worked as smooth as silk.
+Please apply.
 
-CG
+Alan Stern
 
 
 
+Signed-off-by: Alan Stern <stern@rowland.harvard.edu>
 
-		
-__________________________________
-Do you Yahoo!?
-Take Yahoo! Mail with you! Get it on your mobile phone.
-http://mobile.yahoo.com/maildemo 
+===== drivers/scsi/scsi_devinfo.c 1.9 vs edited =====
+--- 1.9/drivers/scsi/scsi_devinfo.c	Sat Jun 19 07:49:23 2004
++++ edited/drivers/scsi/scsi_devinfo.c	Thu Jul  1 16:19:21 2004
+@@ -114,13 +114,14 @@
+ 
+ 	/*
+ 	 * Other types of devices that have special flags.
++	 * Note that all USB devices should have the BLIST_INQUIRY_36 flag.
+ 	 */
+ 	{"ADAPTEC", "AACRAID", NULL, BLIST_FORCELUN},
+ 	{"ADAPTEC", "Adaptec 5400S", NULL, BLIST_FORCELUN},
+ 	{"AFT PRO", "-IX CF", "0.0>", BLIST_FORCELUN},
+-	{"BELKIN", "USB 2 HS-CF", "1.95",  BLIST_FORCELUN},
++	{"BELKIN", "USB 2 HS-CF", "1.95",  BLIST_FORCELUN | BLIST_INQUIRY_36},
+ 	{"CANON", "IPUBJD", NULL, BLIST_SPARSELUN},
+-	{"CBOX3", "USB Storage-SMC", "300A", BLIST_FORCELUN},
++	{"CBOX3", "USB Storage-SMC", "300A", BLIST_FORCELUN | BLIST_INQUIRY_36},
+ 	{"CMD", "CRA-7280", NULL, BLIST_SPARSELUN},	/* CMD RAID Controller */
+ 	{"CNSI", "G7324", NULL, BLIST_SPARSELUN},	/* Chaparral G7324 RAID */
+ 	{"CNSi", "G8324", NULL, BLIST_SPARSELUN},	/* Chaparral G8324 RAID */
+@@ -141,9 +142,9 @@
+ 	{"EMC", "SYMMETRIX", NULL, BLIST_SPARSELUN | BLIST_LARGELUN | BLIST_FORCELUN},
+ 	{"EMULEX", "MD21/S2     ESDI", NULL, BLIST_SINGLELUN},
+ 	{"FSC", "CentricStor", "*", BLIST_SPARSELUN | BLIST_LARGELUN},
+-	{"Generic", "USB SD Reader", "1.00", BLIST_FORCELUN},
+-	{"Generic", "USB Storage-SMC", "0180", BLIST_FORCELUN},
+-	{"Generic", "USB Storage-SMC", "0207", BLIST_FORCELUN},
++	{"Generic", "USB SD Reader", "1.00", BLIST_FORCELUN | BLIST_INQUIRY_36},
++	{"Generic", "USB Storage-SMC", "0180", BLIST_FORCELUN | BLIST_INQUIRY_36},
++	{"Generic", "USB Storage-SMC", "0207", BLIST_FORCELUN | BLIST_INQUIRY_36},
+ 	{"HITACHI", "DF400", "*", BLIST_SPARSELUN},
+ 	{"HITACHI", "DF500", "*", BLIST_SPARSELUN},
+ 	{"HITACHI", "DF600", "*", BLIST_SPARSELUN},
+@@ -178,7 +179,7 @@
+ 	{"SGI", "RAID3", "*", BLIST_SPARSELUN},
+ 	{"SGI", "RAID5", "*", BLIST_SPARSELUN},
+ 	{"SGI", "TP9100", "*", BLIST_SPARSELUN | BLIST_LARGELUN},
+-	{"SMSC", "USB 2 HS-CF", NULL, BLIST_SPARSELUN},
++	{"SMSC", "USB 2 HS-CF", NULL, BLIST_SPARSELUN | BLIST_INQUIRY_36},
+ 	{"SONY", "CD-ROM CDU-8001", NULL, BLIST_BORKEN},
+ 	{"SONY", "TSL", NULL, BLIST_FORCELUN},		/* DDS3 & DDS4 autoloaders */
+ 	{"SUN", "T300", "*", BLIST_SPARSELUN},
+@@ -186,7 +187,7 @@
+ 	{"TEXEL", "CD-ROM", "1.06", BLIST_BORKEN},
+ 	{"TOSHIBA", "CDROM", NULL, BLIST_ISROM},
+ 	{"TOSHIBA", "CD-ROM", NULL, BLIST_ISROM},
+-	{"USB2.0", "SMARTMEDIA/XD", NULL, BLIST_FORCELUN},
++	{"USB2.0", "SMARTMEDIA/XD", NULL, BLIST_FORCELUN | BLIST_INQUIRY_36},
+ 	{"XYRATEX", "RS", "*", BLIST_SPARSELUN | BLIST_LARGELUN},
+ 	{"Zzyzx", "RocketStor 500S", NULL, BLIST_SPARSELUN},
+ 	{"Zzyzx", "RocketStor 2000", NULL, BLIST_SPARSELUN},
+
