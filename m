@@ -1,24 +1,58 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [Emulex] Ready for next round...
-Date: Sun, 20 Jun 2004 14:35:43 +0100
+From: James Bottomley <James.Bottomley@steeleye.com>
+Subject: Re: [PATCH] tmscsim: host_lock use in LLD
+Date: 20 Jun 2004 08:49:37 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040620133543.GA4243@infradead.org>
-References: <3356669BBE90C448AD4645C843E2BF28034F94D5@xbl.ma.emulex.com>
+Message-ID: <1087739384.10858.9.camel@mulgrave>
+References: <Pine.LNX.4.60.0406182225260.10481@poirot.grange>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [213.146.154.40] ([213.146.154.40]:19929 "EHLO
-	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S265377AbUFTNfp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 20 Jun 2004 09:35:45 -0400
-Content-Disposition: inline
-In-Reply-To: <3356669BBE90C448AD4645C843E2BF28034F94D5@xbl.ma.emulex.com>
+Received: from stat1.steeleye.com ([65.114.3.130]:51853 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S263975AbUFTNtr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 20 Jun 2004 09:49:47 -0400
+In-Reply-To: <Pine.LNX.4.60.0406182225260.10481@poirot.grange>
 List-Id: linux-scsi@vger.kernel.org
-To: "Smart, James" <James.Smart@Emulex.Com>
-Cc: Linux SCSI Reflector <linux-scsi@vger.kernel.org>
+To: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, Kurt Garloff <garloff@suse.de>
+
+On Fri, 2004-06-18 at 16:28, Guennadi Liakhovetski wrote:
+> While reviewing tmscsim, I noticed something, I didn't quite like / 
+> understand. The driver takes the host_lock (with irqsave) at the entry to 
+> the ISR, and releases it at the exit. And inside the ISR there are 
+> potentially long busy-waits... Like
+> 
+>  	int ctr = 6000000; /* only try for about a second */
+>  	while( --ctr && !((dstate = DC390_read8 (DMA_Status)) &
+>  				DMA_XFER_DONE) && pSRB->SGToBeXferLen );
+> 
+> The attached patch is attempting to fix those places. Not sure if this is 
+> a proper fix though. In my understanding, after looking through the code, 
+> the host_lock is used to protect host-specific data and host-registers. 
+> The ->queuecommand is already called with it help, so, one just, 
+> basically, have to protect other contexts - interrupt, timer,... So, looks 
+> mostly right.
+
+This patch is rejecting in this part:
+
+static void __devexit dc390_remove_one(struct pci_dev *dev)
+ {
+        struct Scsi_Host *scsi_host = pci_get_drvdata(dev);
+-       DC390_IFLAGS;
++       unsigned long iflags;
+        PACB pACB = (PACB) scsi_host->hostdata;
+ 
+        scsi_remove_host(scsi_host);
+ 
+-       DC390_LOCK_IO(scsi_host);
++       spin_lock_irqsave(scsi_host->host_lock, iflags);
+ 
+
+As best as I can tell, DC390_IFLAGS has never been part of the tmscsim.c
+file ... I think this must be against some modification of the driver
+you have in your tree.
+
+James
 
 
-Can you please try to get rid of lpfc_disc_issue_rptlun()?  The scsi midlayer
-already issues REPORT_LUNS on your behalf during scanning, and you should
-be able to use it.  (IIRC we don't have midlayer help for the addressing mode
-yet, but an addition of that would be welcome)
