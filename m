@@ -1,45 +1,76 @@
-From: "Randy.Dunlap" <rddunlap@osdl.org>
-Subject: Re: Linux 2.6.8.1 + megaraid-2.20.3.0 == Oops
-Date: Fri, 20 Aug 2004 16:08:02 -0700
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: [PATCH] add extra inquiry byte 56 data to struct scsi_device
+Date: 20 Aug 2004 21:56:05 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040820160802.7b74cfa3.rddunlap@osdl.org>
-References: <s5g3c2hkcod.fsf@patl=users.sf.net>
+Message-ID: <1093053368.3318.569.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fw.osdl.org ([65.172.181.6]:43972 "EHLO mail.osdl.org")
-	by vger.kernel.org with ESMTP id S268795AbUHTXJf (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 20 Aug 2004 19:09:35 -0400
-In-Reply-To: <s5g3c2hkcod.fsf@patl=users.sf.net>
+Received: from stat16.steeleye.com ([209.192.50.48]:23988 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S268817AbUHUB4J (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 20 Aug 2004 21:56:09 -0400
+Received: from midgard.sc.steeleye.com (midgard.sc.steeleye.com [172.17.6.40])
+	by hancock.sc.steeleye.com (8.11.6/8.11.6) with ESMTP id i7L1u6X06332
+	for <linux-scsi@vger.kernel.org>; Fri, 20 Aug 2004 21:56:08 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: "Patrick J. LoPresti" <patl@users.sourceforge.net>
-Cc: Atul.Mukker@lsil.com, linux-scsi@vger.kernel.org
+To: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On 20 Aug 2004 12:22:26 -0400 Patrick J. LoPresti wrote:
+The idea here is to get a full range of device capabilites in the
+scsi_device structure so there's absolutely no need at all for drivers
+to snoop the inquiry data.
 
-| My hardware is a Dell PowerEdge 650 server with a PERC4/SC RAID
-| controller.  I downloaded the 2.6.8.1 Linux kernel from kernel.org and
-| applied this patch:
-| 
-|   ftp://ftp.lsil.com/pub/linux-megaraid/drivers/version-2.20.3.0/megaraid2.20.3.0-lk2.6.8.1.patch.gz
-| 
-| The system generates an Oops on boot.  I am attaching both my kernel
-| .config and the console startup messages below.
-| 
-| Let me know if I can provide any other information.
+The missing parameters were:
 
-Looks like mraid_mm_init() hasn't done the
-	INIT_LIST_HEAD(&adapters_list_g);
-yet.  You might be able to verify that by using
-"initcall_debug" on the kernel boot/command line.
-I don't see the expected "megaraid cmm:" message, e.g.
+dt_only - means the device only supports DT transfers (not ST)
+ius - means the device supports information unit (IU) transfers
+qas - means the device supports the Quick Arbitration and Selection
+protocol
 
-I expected to be able to build these drivers as modules, but that's
-not allowed by their Kconfig.  Is that because of the module
-inter-dependencies?
+Our rather misnamed ones are:
 
+ppr - means the device does DT (DT negotiation may only be done via PPR)
+wdtr - means the device does wide
+sdtr - means the device does sync
 
---
-~Randy
+James
+
+===== drivers/scsi/scsi_scan.c 1.127 vs edited =====
+--- 1.127/drivers/scsi/scsi_scan.c	2004-06-25 06:56:28 -05:00
++++ edited/drivers/scsi/scsi_scan.c	2004-08-20 11:30:09 -05:00
+@@ -576,9 +576,16 @@
+ 	sdev->lockable = sdev->removable;
+ 	sdev->soft_reset = (inq_result[7] & 1) && ((inq_result[3] & 7) == 2);
+ 
+-	if (sdev->scsi_level >= SCSI_3 || (sdev->inquiry_len > 56 &&
+-		inq_result[56] & 0x04))
+-		sdev->ppr = 1;
++	if (sdev->inquiry_len > 56) {
++		if (inq_result[56] & 0x04)
++			sdev->ppr = 1;
++		if ((inq_result[56] & 0x0c) == 0x04)
++			sdev->dt_only = 1;
++		if (inq_result[56] & 0x01)
++			sdev->ius = 1;
++		if (inq_result[56] & 0x02)
++			sdev->qas = 1;
++	}
+ 	if (inq_result[7] & 0x60)
+ 		sdev->wdtr = 1;
+ 	if (inq_result[7] & 0x10)
+===== include/scsi/scsi_device.h 1.19 vs edited =====
+--- 1.19/include/scsi/scsi_device.h	2004-07-07 11:24:13 -05:00
++++ edited/include/scsi/scsi_device.h	2004-08-20 11:31:05 -05:00
+@@ -89,6 +92,10 @@
+ 	unsigned sdtr:1;	/* Device supports SDTR messages */
+ 	unsigned wdtr:1;	/* Device supports WDTR messages */
+ 	unsigned ppr:1;		/* Device supports PPR messages */
++	unsigned dt_only:1;	/* Device only supports DT */
++	unsigned ius:1;		/* Device Supports IUs */
++	unsigned qas:1;		/* Device Support Quick Arbitration
++				 * and Selection */
+ 	unsigned tagged_supported:1;	/* Supports SCSI-II tagged queuing */
+ 	unsigned simple_tags:1;	/* simple queue tag messages are enabled */
+ 	unsigned ordered_tags:1;/* ordered queue tag messages are enabled */
+
