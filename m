@@ -1,30 +1,42 @@
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [RFC] 2.6.0 EDD enhancements
-Date: Sun, 28 Dec 2003 20:08:54 +0000
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <20031228200854.B22668@infradead.org>
-References: <Pine.LNX.4.44.0312191254550.2465-100000@humbolt.us.dell.com> <20031219130129.B6530@lists.us.dell.com>
+Subject: Re: [PATCH] 2.4.23
+Date: Sun, 28 Dec 2003 20:10:20 +0000
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <20031228201020.C22668@infradead.org>
+References: <47F3C2BE74738E4683574107469DFA201EE1D8@XYUSEX01.xyus.xyratex.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from phoenix.infradead.org ([213.86.99.234]:30729 "EHLO
+	phoenix.infradead.org") by vger.kernel.org with ESMTP
+	id S261965AbTL1UKV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 28 Dec 2003 15:10:21 -0500
 Content-Disposition: inline
-In-Reply-To: <20031219130129.B6530@lists.us.dell.com>; from Matt_Domsch@dell.com on Fri, Dec 19, 2003 at 01:01:29PM -0600
-To: Matt Domsch <Matt_Domsch@dell.com>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+In-Reply-To: <47F3C2BE74738E4683574107469DFA201EE1D8@XYUSEX01.xyus.xyratex.com>; from Frank_Borich@us.xyratex.com on Wed, Dec 17, 2003 at 08:13:40AM -0800
 List-Id: linux-scsi@vger.kernel.org
+To: Frank Borich <Frank_Borich@us.xyratex.com>
+Cc: linux-scsi@vger.kernel.org
 
-On Fri, Dec 19, 2003 at 01:01:29PM -0600, Matt Domsch wrote:
-> ChangeSet@1.1532.1.2, 2003-12-18 16:35:16-06:00, Matt_Domsch@dell.com
->   EDD: enable symlinks to SCSI devices
->   
->   Symlinks from /sys/firmware/edd/int13_dev8x/disc to the appropriate
->   SCSI discs were added a year ago, but disabled because the
->   scsi_bus list contained non-'scsi_device's at that time, which
->   could have lead to an improper pointer following.    The SCSI
->   mid-layer has rectified this, so this code can be re-enabled
->   in edd.c once again.
+On Wed, Dec 17, 2003 at 08:13:40AM -0800, Frank Borich wrote:
+> Hi All,
+> 
+> My name is Frank Borich, representing Xyratex International
+> (http://www.xyratex.com).  We design, and manufacture Data Storage
+> Subsystems.  During integration testing, we discovered that a patch to
+> scsi_scan.c is required (2.4.x kernels only), in order to set the
+> BLIST_SPARSELUN flag for our subsystems.  This flag adds support for
+> non-contiguous lun numbering.  We are unable to use the already
+> implemented "device_list" to set flags for our subsystems.  This is due
+> to the fact that we sell only to OEMs, and vendor name will change.
+> Rather than submit a separate patch for each branded subsystem we can
+> look elsewhere in the SCSI inquiry data, and set the flag accordingly.
+> The logic below, is executed once the end of the device_list is reached.
+> When the end of the table is reached, a memcmp is issued to look for a
+> particular string located at offset 96.  If the string is found, the
+> flag BLIST_SPARSELUN is returned.  Below is a patch for the SCSI driver
+> (scsi_scan.c). 
 
-As James already said you're poking far too deep into scsi internals.
-In addition to his comment I'd suggest putting the symlink creating
-into scsi_sysfs.c and exporting a procedural interface for the edd
-code.  That way it'll get updated automatically if we change something.
+I'm not too happy about the form of this patch. Could you cook up one
+for 2.6.0 that adds a function pointer to poke at the inquiry data
+to the blacklist?  We could backport it to 2.4 later.
+
