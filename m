@@ -1,37 +1,48 @@
-From: Patrick Mansfield <patmans@us.ibm.com>
-Subject: Re: [announce] scsi_id release 0.2
-Date: Sun, 7 Dec 2003 12:38:32 -0800
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20031207123832.A30616@beaverton.ibm.com>
-References: <20031205151810.A8891@beaverton.ibm.com> <20031207153802.GA6700@suse.de> <20031207114242.A29572@beaverton.ibm.com> <20031207195915.GA6714@suse.de>
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+Subject: [PATCH] MAINTAINERS vger.rutgers.edu
+Date: Sun, 7 Dec 2003 22:09:57 +0100 (MET)
+Sender: linux-net-owner@vger.kernel.org
+Message-ID: <Pine.GSO.4.21.0312072207280.2316-100000@waterleaf.sonytel.be>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e5.ny.us.ibm.com ([32.97.182.105]:4590 "EHLO e5.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S264512AbTLGUiu (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 7 Dec 2003 15:38:50 -0500
-Content-Disposition: inline
-In-Reply-To: <20031207195915.GA6714@suse.de>; from olh@suse.de on Sun, Dec 07, 2003 at 08:59:15PM +0100
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-net-owner@vger.kernel.org>
+To: Marcelo Tosatti <marcelo.tosatti@cyclades.com>, Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>
+Cc: Linux Kernel Development <linux-kernel@vger.kernel.org>, linux-net@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Olaf Hering <olh@suse.de>
-Cc: linux-scsi@vger.kernel.org, linux-hotplug-devel@lists.sourceforge.net
 
-On Sun, Dec 07, 2003 at 08:59:15PM +0100, Olaf Hering wrote:
->  On Sun, Dec 07, Patrick Mansfield wrote:
-> 
-> > Is it breaking your build? If so I'll just remove it.
-> 
-> Yes, just try to build a udev debug binary.
 
-It worked fine for me, something must be different in our build
-environments. I have:
+Mailing lists at vger.rutgers.edu are obsolete, use vger.kernel.org instead.
+Applies to 2.4.23 and 2.6.0-test11.
 
-[elm3b79 udev-bk]$ gcc -v
-Reading specs from /usr/lib/gcc-lib/i386-linux/2.95.4/specs
-gcc version 2.95.4 20011002 (Debian prerelease)
+--- linux/MAINTAINERS.orig	2003-11-26 07:52:57.000000000 +0100
++++ linux/MAINTAINERS	2003-12-07 22:04:52.000000000 +0100
+@@ -73,7 +73,7 @@
+ 3C359 NETWORK DRIVER
+ P:	Mike Phillips
+ M:	mikep@linuxtr.net
+-L:	linux-net@vger.rutgers.edu
++L:	linux-net@vger.kernel.org
+ L:	linux-tr@linuxtr.net
+ W:	http://www.linuxtr.net
+ S:	Maintained
+@@ -1345,7 +1345,7 @@
+ P:	Willem Riede
+ M:	osst@riede.org
+ L:	osst@linux1.onstream.nl
+-L:	linux-scsi@vger.rutgers.edu
++L:	linux-scsi@vger.kernel.org
+ S:	Maintained
+ 
+ OPL3-SA2, SA3, and SAx DRIVER
 
-I should probably upgrade.
+Gr{oetje,eeting}s,
 
-But in any case I applied your patch to my view, thanks.
+						Geert
 
--- Patrick Mansfield
+--
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+							    -- Linus Torvalds
+
