@@ -1,59 +1,44 @@
-From: Patrick Mansfield <patmans@us.ibm.com>
-Subject: [PATCH] fix scsi_mode_data length result
-Date: Mon, 7 Jul 2003 17:28:56 -0700
+From: Rusty Russell <rusty@rustcorp.com.au>
+Subject: Re: [TRIVIAL] [2.5 patch] remove an unused function from NCR53c406a.c
+Date: Tue, 08 Jul 2003 11:27:45 +1000
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030707172856.A26196@beaverton.ibm.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Message-ID: <20030708034706.C1ABF2C244@lists.samba.org>
+References: <1057586204.1812.2.camel@mulgrave>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e31.co.us.ibm.com ([32.97.110.129]:21953 "EHLO
-	e31.co.us.ibm.com") by vger.kernel.org with ESMTP id S265024AbTGHAOT
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 7 Jul 2003 20:14:19 -0400
-Content-Disposition: inline
+Received: from dp.samba.org ([66.70.73.150]:27327 "EHLO lists.samba.org")
+	by vger.kernel.org with ESMTP id S266881AbTGHDcb (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Jul 2003 23:32:31 -0400
+In-reply-to: Your message of "07 Jul 2003 08:56:42 EST."
+             <1057586204.1812.2.camel@mulgrave>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@steeleye.com>
+To: James Bottomley <James.Bottomley@steeleye.com>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, Jens Axboe <axboe@suse.de>, Adrian Bunk <bunk@fs.tum.de>
 
-Hi -
+In message <1057586204.1812.2.camel@mulgrave> you write:
+> On Mon, 2003-07-07 at 02:46, Rusty Trivial Russell wrote:
+> > From:  Adrian Bunk <bunk@fs.tum.de>
+> > 
+> >   The patch below removes an unused function from 
+> >   drivers/scsi/NCR53c406a.c .
+> >    
+> >   I've tested the compilation with 2.5.72-mm2.
+> 
+> Rusty, I'm not going to remove this immediately.
+> 
+> It's the old polling interface for the chip.  It was unplumbed when the
+> ->command() API was removed, but these chips were strangely connected to
+> soundblaster cards and may need to operate in no-interrupt mode (in
+> which case we'll need to ressurect it).  I'm just waiting to see if
+> anyone complains that their sound card attached CDROM no-longer works.
 
-I have some Seagate drives that apparently return to much data when asked
-for 31 bytes for a MODE SENSE cache page, resulting in buffer overruns.
-Requests for 4 bytes work fine.
+Thanks for taking the time to explain, James.  From the other patches
+Adrian sent, I think he was on a warning hunt.
 
-Changing __scsi_mode_sense to correctly set the scsi_mode_data length
-per the following patch fixed the problem for me.
+I'll turn off re-transmit on this patch, so if it gets applied later
+Adrian will get a closure mail, otherwise I'll dredge it up again late
+in the 2.6-pre stuff.
 
-diff -purN -X /home/patman/dontdiff bleed-2.5/drivers/scsi/scsi_lib.c ms-bl-2.5/drivers/scsi/scsi_lib.c
---- bleed-2.5/drivers/scsi/scsi_lib.c	Wed Jul  2 18:33:55 2003
-+++ ms-bl-2.5/drivers/scsi/scsi_lib.c	Mon Jul  7 17:05:05 2003
-@@ -1426,14 +1426,14 @@ __scsi_mode_sense(struct scsi_request *s
- 	if(scsi_status_is_good(sreq->sr_result)) {
- 		data->header_length = header_length;
- 		if(use_10_for_ms) {
--			data->length = buffer[0]*256 + buffer[1];
-+			data->length = buffer[0]*256 + buffer[1] + 2;
- 			data->medium_type = buffer[2];
- 			data->device_specific = buffer[3];
- 			data->longlba = buffer[4] & 0x01;
- 			data->block_descriptor_length = buffer[6]*256
- 				+ buffer[7];
- 		} else {
--			data->length = buffer[0];
-+			data->length = buffer[0] + 1;
- 			data->medium_type = buffer[1];
- 			data->device_specific = buffer[3];
- 			data->block_descriptor_length = buffer[4];
-diff -purN -X /home/patman/dontdiff bleed-2.5/include/scsi/scsi_request.h ms-bl-2.5/include/scsi/scsi_request.h
---- bleed-2.5/include/scsi/scsi_request.h	Wed Jul  2 18:33:56 2003
-+++ ms-bl-2.5/include/scsi/scsi_request.h	Mon Jul  7 17:05:27 2003
-@@ -56,7 +56,7 @@ extern void scsi_do_req(struct scsi_requ
- 			int timeout, int retries);
- 
- struct scsi_mode_data {
--	__u16	length;
-+	__u32	length;
- 	__u16	block_descriptor_length;
- 	__u8	medium_type;
- 	__u8	device_specific;
-
--- Patrick Mansfield
+Thanks!
+Rusty.
+--
+  Anyone who quotes me in their sig is an idiot. -- Rusty Russell.
