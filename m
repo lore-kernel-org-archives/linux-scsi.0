@@ -1,55 +1,107 @@
 From: James Bottomley <James.Bottomley@steeleye.com>
-Subject: Re: [PATCH] IBM Power RAID driver (ipr) 2.0.6
-Date: 10 May 2004 15:38:57 -0500
+Subject: [PATCH] fix LLD module refcounting in sr.c
+Date: 10 May 2004 16:20:38 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1084221540.2659.353.camel@mulgrave>
-References: <4097D863.8040505@us.ibm.com>
+Message-ID: <1084224040.2659.400.camel@mulgrave>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat1.steeleye.com ([65.114.3.130]:11439 "EHLO
+Received: from stat1.steeleye.com ([65.114.3.130]:44977 "EHLO
 	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S261580AbUEJUjF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 10 May 2004 16:39:05 -0400
-In-Reply-To: <4097D863.8040505@us.ibm.com>
+	id S261918AbUEJVUq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 10 May 2004 17:20:46 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: Brian King <brking@us.ibm.com>
+To: Jens Axboe <axboe@suse.de>
 Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Tue, 2004-05-04 at 12:52, Brian King wrote:
-> Here is the latest version of the LLD for the IBM Power RAID family of
-> adapters. This includes several IBM iSeries and pSeries SCSI adapters.
-> Please apply.
+The patch to close all the open/close/hotplug races in sr left the
+module refcounting broken so that the ULD housing the CD device now
+can't be removed until the device itself is removed.
 
-OK, I put this in the tree.  However, it fails to compile on parisc:
-
- CC [M]  drivers/scsi/ipr.o
-{standard input}: Assembler messages:
-{standard input}:1788: Error: Field not properly aligned [8] (1028).
-{standard input}:1788: Error: Invalid operands 
-[...]
-
-The problem is your use of list_head pointers in packed structures.  You
-can't simply pass a pointer to a misaligned structure to a common kernel
-function and expect it to work: the packed attribute is lost doing this
-and what you end up with is a misaligned pointer reference.
-
-The attached actually allows me to compile, but all it's doing is hiding
-the problem.
+This patch (structurally identical to the one for sd.c to perform the
+same function) fixes the module refcounting.
 
 James
 
-===== drivers/scsi/ipr.h 1.1 vs edited =====
---- 1.1/drivers/scsi/ipr.h	Mon May 10 11:26:37 2004
-+++ edited/drivers/scsi/ipr.h	Mon May 10 14:53:55 2004
-@@ -666,7 +666,7 @@
+===== drivers/scsi/sr.c 1.105 vs edited =====
+--- 1.105/drivers/scsi/sr.c	Mon Apr 12 20:27:08 2004
++++ edited/drivers/scsi/sr.c	Mon May 10 16:12:15 2004
+@@ -138,7 +138,15 @@
+ 		goto out;
+ 	cd = scsi_cd(disk);
+ 	if (!kref_get(&cd->kref))
+-		cd = NULL;
++		goto out_null;
++	if (scsi_device_get(cd->device))
++		goto out_put;
++	goto out;
++
++ out_put:
++	kref_put(&cd->kref);
++ out_null:
++	cd = NULL;
+  out:
+ 	up(&sr_ref_sem);
+ 	return cd;
+@@ -147,6 +155,7 @@
+ static inline void scsi_cd_put(struct scsi_cd *cd)
+ {
+ 	down(&sr_ref_sem);
++	scsi_device_put(cd->device);
+ 	kref_put(&cd->kref);
+ 	up(&sr_ref_sem);
+ }
+@@ -558,13 +567,10 @@
+ 	if (sdev->type != TYPE_ROM && sdev->type != TYPE_WORM)
+ 		goto fail;
  
- 	/* Driver added data */
- 	u32 hostrcb_dma;
--	struct list_head queue;
-+	struct list_head queue __attribute__((aligned(sizeof(unsigned long))));
- }__attribute__((packed, aligned (4)));
+-	if ((error = scsi_device_get(sdev)) != 0)
+-		goto fail;
+-
+ 	error = -ENOMEM;
+ 	cd = kmalloc(sizeof(*cd), GFP_KERNEL);
+ 	if (!cd)
+-		goto fail_put_sdev;
++		goto fail;
+ 	memset(cd, 0, sizeof(*cd));
  
- #define IPR_HOSTRCB_SZ offsetof(struct ipr_hostrcb, hostrcb_dma)
+ 	kref_init(&cd->kref, sr_kref_release);
+@@ -637,8 +643,6 @@
+ 	put_disk(disk);
+ fail_free:
+ 	kfree(cd);
+-fail_put_sdev:
+-	scsi_device_put(sdev);
+ fail:
+ 	return error;
+ }
+@@ -926,7 +930,6 @@
+ static void sr_kref_release(struct kref *kref)
+ {
+ 	struct scsi_cd *cd = container_of(kref, struct scsi_cd, kref);
+-	struct scsi_device *sdev = cd->device;
+ 	struct gendisk *disk = cd->disk;
+ 
+ 	spin_lock(&sr_index_lock);
+@@ -940,8 +943,6 @@
+ 	put_disk(disk);
+ 
+ 	kfree(cd);
+-
+-	scsi_device_put(sdev);
+ }
+ 
+ static int sr_remove(struct device *dev)
+@@ -950,7 +951,9 @@
+ 
+ 	del_gendisk(cd->disk);
+ 
+-	scsi_cd_put(cd);
++	down(&sr_ref_sem);
++	kref_put(&cd->kref);
++	up(&sr_ref_sem);
+ 
+ 	return 0;
+ }
 
