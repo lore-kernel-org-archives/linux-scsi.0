@@ -1,129 +1,104 @@
-From: Dave Richards <drichards@mahinetworks.com>
-Subject: FW: sym53c8xx_2 / Promise UltraTrak RM8000
-Date: Fri, 28 Feb 2003 13:18:24 -0800
+From: Matthew Dharm <mdharm-scsi@one-eyed-alien.net>
+Subject: Re: [linux-usb-devel] Re: [PATCH] USB changes for 2.5.58
+Date: Fri, 28 Feb 2003 17:41:49 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <9D6D37E97A57D411BB7C00508BAE29C902D242EA@main.mahinetworks.com>
+Message-ID: <20030228174149.A31554@one-eyed-alien.net>
+References: <20030202101317.A26796@one-eyed-alien.net> <20030202120628.A28024@one-eyed-alien.net> <20030203171726.GA1583@beaverton.ibm.com> <20030216131835.B23422@one-eyed-alien.net> <20030217193737.GB1990@beaverton.ibm.com> <20030222234834.A32167@one-eyed-alien.net> <20030226233702.GC1376@beaverton.ibm.com> <20030226171043.F28571@one-eyed-alien.net> <20030227063737.GB13803@beaverton.ibm.com> <20030227113239.A19703@one-eyed-alien.net>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
+Content-Type: multipart/signed; micalg=pgp-md5;
+	protocol="application/pgp-signature"; boundary="OXfL5xGRrasGEqWY"
 Return-path: <linux-scsi-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20030227113239.A19703@one-eyed-alien.net>; from mdharm-scsi@one-eyed-alien.net on Thu, Feb 27, 2003 at 11:32:39AM -0800
 List-Id: linux-scsi@vger.kernel.org
-To: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
-
-According to Promise, the INQUIRY data format version 3 is correct.  See
-bwlow.  Thus, the sym53c8xx/sym53c8xx_2 drivers are incorrect.  It's
-possible that similiar bugs may exist in other SCSI HBA drivers; I have not
-looked.
-
-	Dave
-
------Original Message-----
-From: Victor Pacheo [mailto:victorp@promise.com]
-Sent: Friday, February 28, 2003 8:58 AM
-To: drichards@mahinetworks.com
-Subject: RE: sym53c8xx_2 / Promise UltraTrak RM8000
+To: Mike Anderson <andmike@us.ibm.com>, Oliver Neukum <oliver@neukum.name>, Luben Tuikov <luben@splentec.com>, Alan Stern <stern@rowland.harvard.edu>, David Brownell <david-b@pacbell.net>, Greg KH <greg@kroah.com>, linux-usb-devel@lists.sourceforge.net, Linux SCSI list <linux-scsi@vger.kernel.org>
 
 
-Hi, Dave
+--OXfL5xGRrasGEqWY
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-This is the responce of our engineers:
-The standard INQUIRY data format is as followes:
+After conversing with Mike some more, there is a deadlock problem.  I need
+to hold the host_lock to walk the device list, but I can't hold the
+host_lock when I call scsi_set_device_offline().
 
-   | 7 | 6 | 5 | 4 | 3 | 2 | 1 | 0 |
-0  |P Qualifier| Device Class      |
-1  |RMB|       Reserved(SCSI-1)    |
-2  |  ISO  | ECMA      |   ANSI    |
-3  |AEN|TIO|Res|Res|  Data Format  |
-4  ....
+Mike's looking into this.  Until he finds a good answer, no patch for
+usb-storage.
 
-Field description:
-ANSI: ANSI version see the following tale
-Data Format: Indicates the response format of the following standard
-INQUIRY data. Interpreted in the same way as the ANSI version field.
+Matt
 
-Table of ANSI Version
-Status |	Meaning
-0h	 | The device supports the SCSI-1 standard
-1h	 | The device supports the CCS
-2h	 | The device supports SCSI-2
-3h	 | The device supports SCSI-3
-
-So, the Data format and ANSI should be the same 03h which means the
-device support SCSI-3 Standard
-
-Thanks
-
-
------Original Message-----
-From: Dave Richards [mailto:drichards@mahinetworks.com]
-Sent: Wednesday, February 26, 2003 1:19 PM
-To: Victor Pacheo
-Subject: FW: sym53c8xx_2 / Promise UltraTrak RM8000
-
-
-I sent the message below to the Linux folks yesterday.  I called
-Promise's
-tech support line this afternoon; they said I needed to e-mail you.
-
-The fundemental question raised below has to do with the 4th byte
-(offset 3)
-of the data returned by the UltraTrak RM8000 in response to a SCSI
-INQUIRY
-command.  There is a hex dump of the response below.  The byte at offset
-3
-is 03 (indicating INQUIRY data format version 3), the SCSI driver is
-expecting version 2, it has no knowledge of an INQUIRY data format
-version
-3.  Is there a SCSI standard which defines an INQUIRY data format
-version 3?
-I.e. is the RM8000 returning a value allowed via some version of the
-spec?
-I have no documentation for INQUIRY data format version 3.
-
-	Thanks!
-
-	Dave
-
------Original Message-----
-From: Dave Richards 
-Sent: Tuesday, February 25, 2003 3:28 PM
-To: 'linux-scsi@vger.kernel.org'
-Subject: sym53c8xx_2 / Promise UltraTrak RM8000
+On Thu, Feb 27, 2003 at 11:32:39AM -0800, Matthew Dharm wrote:
+> This was discussed, but I didn't recall a firm decision.
+>=20
+> I'll keep my eyes open for the patch that uses release().
+>=20
+> Matt
+>=20
+> On Wed, Feb 26, 2003 at 10:37:37PM -0800, Mike Anderson wrote:
+> > Matthew Dharm [mdharm-scsi@one-eyed-alien.net] wrote:
+> > > Right... but I removed the release() function because that was marked=
+ (in
+> > > the documentation) as only for the old-style drivers.  So I'll need to
+> > > re-introduce it -- but it looks like all it has to do is free some me=
+mory.
+> > > Does that sound about right?
+> >=20
+> > Yes it was previously removed, but IIRC this is the direction
+> > discussed on this thread. For a idle device the release functionality c=
+ould
+> > be done in the context of the scsi_remove_host call, but for a busy
+> > device we need to have this call to clean up later.
+> >=20
+> > -andmike
+> > --
+> > Michael Anderson
+> > andmike@us.ibm.com
+> >=20
+> >=20
+> >=20
+> > -------------------------------------------------------
+> > This SF.net email is sponsored by: Scholarships for Techies!
+> > Can't afford IT training? All 2003 ictp students receive scholarships.
+> > Get hands-on training in Microsoft, Cisco, Sun, Linux/UNIX, and more.
+> > www.ictp.com/training/sourceforge.asp
+> > _______________________________________________
+> > linux-usb-devel@lists.sourceforge.net
+> > To unsubscribe, use the last form field at:
+> > https://lists.sourceforge.net/lists/listinfo/linux-usb-devel
+>=20
+> --=20
+> Matthew Dharm                              Home: mdharm-usb@one-eyed-alie=
+n.net=20
+> Maintainer, Linux USB Mass Storage Driver
+>=20
+> C:  They kicked your ass, didn't they?
+> S:  They were cheating!
+> 					-- The Chief and Stef
+> User Friendly, 11/19/1997
 
 
-Our IS folks have had problems with the Promise Tech. UltraTrak RM8000
-under
-2.4.20 kernel (and earlier versions).  I've diagnosed the problem, but I
-am not
-familiar enough with the SCSI specs to know who to blame.  So, here's
-the
-data and you can decide.
 
-The following is a dump of the INQUIRY data returned by the RM8000:
+--=20
+Matthew Dharm                              Home: mdharm-usb@one-eyed-alien.=
+net=20
+Maintainer, Linux USB Mass Storage Driver
 
-00 00 03 03 3b 00 00 32 50 72 6f 6d 69 73 65 20 ....;..2Promise
-34 20 44 69 73 6b 20 52 41 49 44 35 20 20 20 20 4 Disk RAID5
-31 2e 31 30 39 38 30 33 31 36 31 32 00 00 00 00 1.1098031612....
-00 00 00 00 00 00 00 00 0c 00 00 00 00 00 00 00 ................
+It was a new hope.
+					-- Dust Puppy
+User Friendly, 12/25/1998
 
-The problem with this INQUIRY data (from the 8xx driver's perspective)
-is
-that the SCSI version is ANSI 3 and the INQUIRY data format is 3 (not
-2).  I
-changed sym_misc.c line 297: (2.4.20)
+--OXfL5xGRrasGEqWY
+Content-Type: application/pgp-signature
+Content-Disposition: inline
 
-#if 0
-        if (inq_version >= 2 && (inq_data[3] & 0xf) == 2) {
-#else
-        if (inq_version >= 2 && (inq_data[3] & 0xf) >= 2) {
-#endif
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.0.6 (GNU/Linux)
+Comment: For info see http://www.gnupg.org
 
-This causes the Promise box to come up Fast-80 Wide16 (as it should).
+iD8DBQE+YA/dIjReC7bSPZARAv8MAJ9eBNm0a+FRa5eDEy7IUon/SuXq5QCdGiUm
+3C9QK2msSHQs9W9EO2xsTVM=
+=RMXX
+-----END PGP SIGNATURE-----
 
-So, whose bug is this?  Is it the sym53c8xx_2 driver for not recognizing
-the
-valid INQUIRY data format version 3, or is it Promise's for returning
-the
-invalid INQUIRY data format version 3?
-
-	Dave
+--OXfL5xGRrasGEqWY--
