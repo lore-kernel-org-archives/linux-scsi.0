@@ -1,73 +1,83 @@
-From: James Bottomley <James.Bottomley@steeleye.com>
-Subject: Re: [PATCH] fixes and cleanups for the new command allocation code
-Date: 05 Feb 2003 09:59:40 -0600
+From: Jordan Breeding <jordan.breeding@attbi.com>
+Subject: scsi write barriers (ordered tags)?
+Date: Wed, 05 Feb 2003 10:00:48 -0600
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1044460782.1773.39.camel@mulgrave>
-References: <20030204162326.A30755@lst.de>
-	<20030204081616.A24105@beaverton.ibm.com> <20030204175146.A31515@lst.de>
-	<20030204091955.A24785@beaverton.ibm.com>
-	<1044383605.2014.23.camel@mulgrave> <20030204202935.A325@lst.de>
-	<1044399797.3484.15.camel@mulgrave>
-	<20030204172505.A28812@beaverton.ibm.com>
-	<1044410039.3485.61.camel@mulgrave>
-	<20030204211516.A30419@beaverton.ibm.com>
-	<1044458540.1807.19.camel@mulgrave>
+Message-ID: <3E413530.8060103@attbi.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="=-dQRZv/gRDQwSt19CYhCz"
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ protocol="application/pgp-signature";
+ boundary="------------enig9D99DDDF1E831E5C2144B540"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: (from root@localhost)
-	by pogo.mtv1.steeleye.com (8.9.3/8.9.3) id HAA11039
-	for <linux-scsi@vger.kernel.org>; Wed, 5 Feb 2003 07:59:49 -0800
-In-Reply-To: <1044458540.1807.19.camel@mulgrave>
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>, Patrick Mansfield <patmans@us.ibm.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
 
-
---=-dQRZv/gRDQwSt19CYhCz
-Content-Type: text/plain
+This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
+--------------enig9D99DDDF1E831E5C2144B540
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 
-The patches to block after prepping the command are attached.
+Today regarding his message about ide write barriers I got the following 
+message:
 
-James
+Jens Axboe wrote:
+> On Wed, Feb 05 2003, Jordan Breeding wrote:
+> 
+>>Jens Axboe wrote:
+>>
+>>>Hi,
+>>>
+>>>The attached patch implements write barrier operations in the block
+>>>layer and for IDE, specifically. The goal is to make the use of write
+>>>back cache enabled ide drives safe with journalled file systems.
+>>>
+>>>Patch is against 2.4.21-pre4-bk as of today, and includes a small patch
+>>>to enable it on ext3. Chris has a patch for reiserfs as well.
+>>>
+>>
+>>Does the above mean that the patch only works for IDE and not for SCSI? 
+> 
+> 
+> The above is just for IDE.
+> 
+> 
+>> If so when will SCSI be able to use write back cache safely?  Also, 
+> 
+> 
+> Hmmm well, it's simple enough to make the low level driver generate an
+> ordered tag when appropriate, but it's very tricky to make sure that no
+> re-ordering takes place in case of errors, timeouts, etc.
+> 
+> 
+>>will this patch be ported to 2.5.x or is it already present there?  Thanks.
+> 
+> 
+> Block layer infrastructure is there, has been since bio was merged in
+> 2.5.1-pre. The ide bits will be send for inclusion shortly.
+> 
 
+The part I am concerned with is his statement about SCSI being harder to 
+implement this on.  I guess this doesn't matter as much since my SCSI 
+drive with write back cache off is faster than any IDE drive I have used 
+with it on, but still it would be nice to be able to run both type of 
+drives with the write back cache on.  So my question is, are the things 
+Jens stated above about SCSI enough to keep this feature completely out 
+of 2.5.x even once IDE has the code merged, or will SCSI be able to have 
+this feature as well by 2.6?  Thanks for any info and/or speculation 
+about this.
 
---=-dQRZv/gRDQwSt19CYhCz
-Content-Disposition: attachment; filename=tmp.diff
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; name=tmp.diff; charset=ISO-8859-1
+Jordan
 
-=3D=3D=3D=3D=3D ./scsi_lib.c 1.65 vs edited =3D=3D=3D=3D=3D
---- 1.65/drivers/scsi/scsi_lib.c	Tue Feb  4 14:19:00 2003
-+++ edited/./scsi_lib.c	Wed Feb  5 09:45:45 2003
-@@ -814,8 +814,6 @@
- 		SRpnt =3D (Scsi_Request *) req->special;
- 	=09
- 		if (SRpnt->sr_magic =3D=3D SCSI_REQ_MAGIC) {
--			if (SDpnt->device_busy >=3D SDpnt->queue_depth)
--				return BLKPREP_DEFER;
- 			SCpnt =3D scsi_get_command(SRpnt->sr_device, GFP_ATOMIC);
- 			if (!SCpnt)
- 				return BLKPREP_DEFER;
-@@ -827,8 +825,6 @@
- 		 * Now try and find a command block that we can use.
- 		 */
- 		if (!req->special) {
--			if (SDpnt->device_busy >=3D SDpnt->queue_depth)
--				return BLKPREP_DEFER;
- 			SCpnt =3D scsi_get_command(SDpnt, GFP_ATOMIC);
- 			if (unlikely(!SCpnt))
- 				return BLKPREP_DEFER;
-@@ -950,6 +946,9 @@
- 		 * lower down.
- 		 */
- 		req =3D elv_next_request(q);
-+
-+		if (SDpnt->device_busy >=3D SDpnt->queue_depth)
-+			break;
-=20
- 		if(SHpnt->host_busy =3D=3D 0 && SHpnt->host_blocked) {
- 			/* unblock after host_blocked iterates to zero */
+--------------enig9D99DDDF1E831E5C2144B540
+Content-Type: application/pgp-signature
 
---=-dQRZv/gRDQwSt19CYhCz--
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.2.1 (MingW32)
+Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org
+
+iD8DBQE+QTU1SigNyqq/SRwRAqlPAKDME0wbJxVMABZ0JMVy59uLtwSILACgwEku
+Ng52SQG9sUbMsGRny4TMTlo=
+=dEDy
+-----END PGP SIGNATURE-----
+
+--------------enig9D99DDDF1E831E5C2144B540--
 
