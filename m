@@ -1,72 +1,52 @@
-From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
-Subject: Re: [PATCH] tmscsim: INQUIRY always only untagged
-Date: Mon, 6 Sep 2004 15:17:27 +0200 (CEST)
+From: Olaf Hering <olh@suse.de>
+Subject: Re: [PACH] mesh is ppc32-only
+Date: Mon, 6 Sep 2004 15:32:32 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.60.0409061400560.1676@poirot.grange>
-References: <Pine.LNX.4.60.0409040033310.5266@poirot.grange>
- <20040904140102.A15247@infradead.org> <Pine.LNX.4.60.0409050022570.3092@poirot.grange>
- <20040904233835.A18659@infradead.org> <Pine.LNX.4.60.0409051654460.3039@poirot.grange>
- <1094398979.10977.9.camel@mulgrave> <20040905173134.A31521@infradead.org>
- <1094422949.10977.15.camel@mulgrave> <Pine.LNX.4.60.0409061042240.6252@poirot.grange>
- <Pine.LNX.4.60.0409061143020.8550@poirot.grange> <20040906110150.A4845@infradead.org>
+Message-ID: <20040906133232.GA9133@suse.de>
+References: <20040825164043.GB12679@lst.de>
 Mime-Version: 1.0
-Content-Type: MULTIPART/MIXED; BOUNDARY="-1463811839-101279756-1094476647=:1676"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from imap.gmx.net ([213.165.64.20]:3818 "HELO mail.gmx.net")
-	by vger.kernel.org with SMTP id S267393AbUIFNSM (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Sep 2004 09:18:12 -0400
-In-Reply-To: <20040906110150.A4845@infradead.org>
-List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
-
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
-
----1463811839-101279756-1094476647=:1676
-Content-Type: TEXT/PLAIN; charset=koi8-r; format=flowed
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from cantor.suse.de ([195.135.220.2]:50592 "EHLO Cantor.suse.de")
+	by vger.kernel.org with ESMTP id S267393AbUIFNce (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Sep 2004 09:32:34 -0400
+Content-Disposition: inline
+In-Reply-To: <20040825164043.GB12679@lst.de>
+List-Id: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: jejb@steeleye.com, linux-scsi@vger.kernel.org
 
-On Mon, 6 Sep 2004, Christoph Hellwig wrote:
+ On Wed, Aug 25, Christoph Hellwig wrote:
 
-> Patch looks good to me.  Two hints for a possible followon patch:
->
->> @@ -1552,15 +1520,11 @@
->>  =09    pDCB->Inquiry7 =3D ptr->Flags;
->>
->>  ckc_e:
->
-> Here we still have some INQUIRY snooping, and if you look how
-> ptr is set you'll see it'll OOPS for machines with more than 1GB of memor=
-y.
+> mesh is only present on older 32bit pmac boards and doesn't compile
+> on ppc64.
 
-Right. Will think about a fix, thanks.
+This applies also to the other pmac-only scsi driver:
 
->> -=09dc390_updateDCB(pACB, pDCB);
->> +=09if (pDCB->DevMode & SYNC_NEGO_)
->> +=09=09pDCB->SyncMode |=3D SYNC_ENABLE;
->> +=09else {
->> +=09=09pDCB->SyncMode =3D 0;
->
-> pDCB is memset to 0 =E5t the start of the function, so the 0 initializati=
-on
-> here isn't nessecary strictly speaking.
 
-Well, a few lines above on a multi-LUN device for LUN > 0 it will be set=20
-from LUN 0:
+diff -purN linux-2.6.9-rc1-bk13.orig/drivers/scsi/Kconfig linux-2.6.9-r=
+c1-bk13/drivers/scsi/Kconfig
+--- linux-2.6.9-rc1-bk13.orig/drivers/scsi/Kconfig	2004-09-06 15:23:36.=
+000000000 +0200
++++ linux-2.6.9-rc1-bk13/drivers/scsi/Kconfig	2004-09-06 15:26:43.14805=
+2174 +0200
+@@ -1494,7 +1494,7 @@ config SCSI_MESH_RESET_DELAY_MS
+=20
+ config SCSI_MAC53C94
+ 	tristate "53C94 (Power Mac external SCSI) support"
+-	depends on PPC_PMAC && SCSI
++	depends on PPC32 && PPC_PMAC && SCSI
+ 	help
+ 	  On Power Macintoshes (and clones) with two SCSI buses, the external
+ 	  SCSI bus is usually controlled by a 53C94 SCSI bus adaptor. Older
 
-                 pDCB->SyncMode =3D pDCB2->SyncMode & SYNC_NEGO_DONE;
+--=20
+USB is for mice, FireWire is for men!
 
-so, purely theoretically it could be non-zero at that point, at least,=20
-that's why I put
-
-                 pDCB->SyncMode =3D 0;
-
-there. But, DevMode is set from LUN 0, so, yes, you are right.
-
-Thanks
-Guennadi
----
-Guennadi Liakhovetski
-
----1463811839-101279756-1094476647=:1676--
+sUse lINUX ag, n=C3=9CRNBERG
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
