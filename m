@@ -1,34 +1,32 @@
-From: "Tony Battersby" <tonyb@cybernetics.com>
-Subject: RE: BUG() in 2.4: sg direct IO + exit()
-Date: Wed, 24 Mar 2004 11:22:55 -0500
+From: Mike Anderson <andmike@us.ibm.com>
+Subject: Re: Calling sd_shutdown when in state SDEV_DEL
+Date: Wed, 24 Mar 2004 08:46:39 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <04Mar24.112256est.332201@cyborg.cybernetics.com>
-References: <406185C6.6050705@torque.net>
-Reply-To: <tonyb@cybernetics.com>
+Message-ID: <20040324164639.GA1679@beaverton.ibm.com>
+References: <200403241603.23269.heiko.carstens@de.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cyborg.cybernetics.com ([206.246.200.18]:51985 "EHLO
-	cybernetics.com") by vger.kernel.org with ESMTP id S263756AbUCXQXK
+Received: from e35.co.us.ibm.com ([32.97.110.133]:51604 "EHLO
+	e35.co.us.ibm.com") by vger.kernel.org with ESMTP id S263768AbUCXQrO
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 24 Mar 2004 11:23:10 -0500
-In-Reply-To: <406185C6.6050705@torque.net>
+	Wed, 24 Mar 2004 11:47:14 -0500
+Content-Disposition: inline
+In-Reply-To: <200403241603.23269.heiko.carstens@de.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: dougg@torque.net
-Cc: linux-scsi@vger.kernel.org
+To: Heiko Carstens <heiko.carstens@de.ibm.com>
+Cc: James Bottomley <James.Bottomley@steeleye.com>, linux-scsi@vger.kernel.org
 
-> It is not causing an oops when I try with scsi_debug and lk 2.6.5-rc2.
-> Neither is there a problem with a Suse 9 stock SMP kernel
-> (2.4.21-99-smp4G) on an old dual celeron (A-bit mb) box with a
-> Sony SDT-7000 tape drive on /dev/sg0.
+Heiko Carstens [heiko.carstens@de.ibm.com] wrote:
+> The patch below solves the problem, but I'm not sure if this is the right
+> way to do it. Also setting the state to SDEV_DEL after calling device_del
+> is probably pointless...
 
-It could be that on your machine the command finishes before the exit(),
-causing unmap_kiobuf->__free_pages->put_page_testzero(page) to leave the
-page reference count nonzero instead of calling __free_pages_ok.  A
-command that takes longer to finish (e.g. READ(6)) might trigger the
-BUG() on your machine.
+One point of setting SDEV_DEL is to reduce future scsi_device_get calls from
+incrementing the ref count.
 
-Anthony J. Battersby
-Cybernetics
+-andmike
+--
+Michael Anderson
+andmike@us.ibm.com
 
