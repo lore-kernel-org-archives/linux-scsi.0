@@ -1,105 +1,56 @@
-From: Kai Makisara <Kai.Makisara@kolumbus.fi>
-Subject: Re: Fwd: Multi tape problems with cpio
-Date: Wed, 19 Jan 2005 20:50:32 +0200 (EET)
-Message-ID: <Pine.LNX.4.61.0501192023550.6929@kai.makisara.local>
-References: <12c7da3e0501132353150d51f2@mail.gmail.com>
- <12c7da3e050114233249899ca1@mail.gmail.com>  <Pine.LNX.4.61.0501162041120.18018@kai.makisara.local>
-  <12c7da3e050116112875ff287d@mail.gmail.com> <12c7da3e05011816162f1a9e09@mail.gmail.com>
+From: Greg KH <greg@kroah.com>
+Subject: Re: [PATCH] drop some attibutes from the FC transport class
+Date: Wed, 19 Jan 2005 10:45:34 -0800
+Message-ID: <20050119184534.GC1235@kroah.com>
+References: <20050119171357.GA16136@lst.de> <20050119172106.GB32702@kroah.com> <41EEA927.7070602@us.ibm.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fep06-0.kolumbus.fi ([193.229.0.57]:57769 "EHLO
-	fep06-app.kolumbus.fi") by vger.kernel.org with ESMTP
-	id S261844AbVASSuS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 19 Jan 2005 13:50:18 -0500
-In-Reply-To: <12c7da3e05011816162f1a9e09@mail.gmail.com>
+Received: from e35.co.us.ibm.com ([32.97.110.133]:52681 "EHLO
+	e35.co.us.ibm.com") by vger.kernel.org with ESMTP id S261838AbVASSpk
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 19 Jan 2005 13:45:40 -0500
+Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
+	by e35.co.us.ibm.com (8.12.10/8.12.9) with ESMTP id j0JIjdZ7276228
+	for <linux-scsi@vger.kernel.org>; Wed, 19 Jan 2005 13:45:39 -0500
+Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
+	by d03relay04.boulder.ibm.com (8.12.10/NCO/VER6.6) with ESMTP id j0JIjdjI316712
+	for <linux-scsi@vger.kernel.org>; Wed, 19 Jan 2005 11:45:39 -0700
+Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av02.boulder.ibm.com (8.12.11/8.12.11) with ESMTP id j0JIjcme030703
+	for <linux-scsi@vger.kernel.org>; Wed, 19 Jan 2005 11:45:38 -0700
+Content-Disposition: inline
+In-Reply-To: <41EEA927.7070602@us.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Tape Help <tape.help@gmail.com>
-Cc: linux-scsi@vger.kernel.org
+To: Brian King <brking@us.ibm.com>
+Cc: Christoph Hellwig <hch@lst.de>, jejb@steeleye.com, James.Smart@Emulex.Com, linux-scsi@vger.kernel.org
 
-On Tue, 18 Jan 2005, Tape Help wrote:
-
-> Ok, I have the debug info, with comments where needed.
-> Thanks alot!
+On Wed, Jan 19, 2005 at 12:38:31PM -0600, Brian King wrote:
+> Greg KH wrote:
+> >On Wed, Jan 19, 2005 at 06:13:57PM +0100, Christoph Hellwig wrote:
+> >
+> >>I think the hardware_version, firmware_version, rom_version and
+> >>driver_version don't belong into the FC transport class, there's
+> >>nothign specific to FC or even SCSI specific in them.
+> >
+> >
+> >Then put them in the individual driver (not the driver_version one
+> >though, that belongs as a MODULE_VERSION() paramater).
+> >
+> >
+> >>If you want these attributes talk to Greg about fiding a place in
+> >>the common driver model code for them.
+> >
+> >
+> >No, they don't belong there either, sorry :)
 > 
-...
-> # find home -depth|cpio -o --format=newc --block-size=128 -F /dev/st0
-> 14:24:48 kernel: st0: Block limits 1 - 16777215 bytes.
-> 14:24:48 kernel: st0: Mode sense. Length 11, medium 0, WBS 10, BLL 8
-> 14:24:48 kernel: st0: Density 40, tape length: 0, drv buffer: 1
-> 14:24:48 kernel: st0: Block size: 0, buffer size: 32768 (1 blocks).
-                                    ^
-This shows that your drive is in variable block mode.
+> How about at an attribute on the pci object?
 
-> 14:24:48 kernel: st: Succeeded to enlarge buffer to 65536 bytes (segs
-> 1->9, 4096).
-> 16:32:28 kernel: st0: Error: 8000002, cmd: a 0 1 0 0 0 Len: 65536
-> 16:32:28 kernel: Info fld=0x0, EOM Current st09:00: sense key None
-> 16:32:28 kernel: Additional sense indicates End-of-partition/medium detected
-> 16:32:28 kernel: st0: Async write error (write) 7fffffff.
+It is a pci specific attribute?  If so, I'll add it to the pci core.
+Otherwise you are free to add it yourself to the pci device in your pci
+driver to that location.
 
-This is actually a 'magic error code' within st: the previous write did 
-see the EOM early warning but all data was written. The code 7fffffff is 
-later interpreted as succesful write and reported as such but the next 
-write then returns the EOM error.
+thanks,
 
-Next I would expect to see a message telling that one filemark is written. 
-It can be done by the application but it is also automatically done when 
-the device file is closed at this point (i.e., after write). But ...
-
-> 16:32:28 kernel: st0: Unloading tape.
-
-at this point cpio ejects the tape and no filemark is written.
-
-> 16:32:58 kernel: st: Buffer at c0310000 normalized to 32768 bytes (segs 9).
-> # cpio ejected the tape and was waiting for another.
-> # I hit <cntrl>c
-> # I put the tape back in
-> # cpio -i --only-verify-crc --list --block-size=128< /dev/st0
-> 16:40:52 kernel: st0: Error: 8000002, cmd: 0 0 0 0 0 0 Len: 0
-> 16:40:52 kernel: Current st09:00: sense key Unit Attention
-> 16:40:52 kernel: Additional sense indicates Not ready to ready
-> change,medium may have changed
-> 16:40:52 kernel: st0: Block limits 1 - 16777215 bytes.
-> 16:40:52 kernel: st0: Mode sense. Length 11, medium 0, WBS 10, BLL 8
-> 16:40:52 kernel: st0: Density 40, tape length: 0, drv buffer: 1
-> 16:40:52 kernel: st0: Block size: 0, buffer size: 32768 (1 blocks).
-> 16:40:52 kernel: st: Succeeded to enlarge buffer to 65536 bytes (segs
-> 1->9, 4096).
-> 18:45:58 kernel: st0: Error: 8000002, cmd: 8 0 1 0 0 0 Len: 65536
-> 18:45:58 kernel: Info fld=0x10000, Current st09:00: sense key Blank Check
-> 18:45:58 kernel: Additional sense indicates End-of-data detected
-> 18:45:58 kernel: st0: Sense: f0  0  8  0  1  0  0  e
-
-Now st encounters end of data and this is reported as read error.
-
-My drive behaves in a slightly different way: it returns the same data but 
-it also sets the EOM bit. In this case the st driver interprets the 
-situation as normal end of data assuming that this is where the writing 
-application stopped writing.
-
-> 18:45:58 kernel: st0: Tape error while reading.
-> 18:45:58 kernel: st0: Rewinding tape.
-> 18:46:07 kernel: st: Buffer at c0310000 normalized to 32768 bytes (segs 9).
-> # cpio give this error: cpio: read error: Input/output error
-> 
-
-So, your debugging data and my debugging data revealed what was happening 
-and why we had different results. It is debatable what is the basic 
-problem. The st driver is working as it has been designed to work but this does 
-not match the expectations of cpio. My opinion is that any application 
-should at least try to write a filemark at the end of each tape file and 
-not rely on certain behaviour of drives and drivers at the end of an 
-incomplete file. This is especially important because there is no common 
-standard for tape semantics.
-
-The problem can be solved by either changing st semantics or cpio 
-behavior. Before changing st semantics I would like to be convinced that 
-the changed semantics is what all (most) other unix tape drivers use. Any 
-change of semantics can break other applications.
-
-I will forward this analysis (with a preface) to the cpio maintainers.
-
--- 
-Kai
+greg k-h
