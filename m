@@ -1,34 +1,33 @@
-From: Matthew Wilcox <willy@debian.org>
-Subject: Re: [announce] scsi_id 0.1 - generate unique scsi id
-Date: Wed, 22 Oct 2003 16:52:31 +0100
+From: Mike Anderson <andmike@us.ibm.com>
+Subject: Re: [PATCH] Add release function to sd for scsi_disk structure
+Date: Wed, 22 Oct 2003 09:08:55 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20031022155231.GQ18370@parcelfarce.linux.theplanet.co.uk>
-References: <20031021165857.A8240@beaverton.ibm.com> <20031022153140.A22298@infradead.org> <1066808536.27285.19.camel@w-stekloff.beaverton.ibm.com> <20031022154638.A22952@infradead.org> <1066809889.27285.36.camel@w-stekloff.beaverton.ibm.com>
+Message-ID: <20031022160855.GC1684@beaverton.ibm.com>
+References: <20031018074040.GA1210@beaverton.ibm.com> <20031021092654.A22958@infradead.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:51418 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S263480AbTJVPwc
+Received: from e33.co.us.ibm.com ([32.97.110.131]:51076 "EHLO
+	e33.co.us.ibm.com") by vger.kernel.org with ESMTP id S263686AbTJVQFV
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 22 Oct 2003 11:52:32 -0400
+	Wed, 22 Oct 2003 12:05:21 -0400
 Content-Disposition: inline
-In-Reply-To: <1066809889.27285.36.camel@w-stekloff.beaverton.ibm.com>
+In-Reply-To: <20031021092654.A22958@infradead.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Daniel Stekloff <dsteklof@us.ibm.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Patrick Mansfield <patmans@us.ibm.com>, linux-hotplug-devel@lists.sourceforge, linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-scsi@vger.kernel.org
 
-On Wed, Oct 22, 2003 at 01:05:21AM -0700, Daniel Stekloff wrote:
-> The headers are being installed into /usr/local/include, I believe this
-> can be configured differently using autoconf tools. If they should be
-> installed elsewhere by default, please let us know.
+Christoph Hellwig [hch@infradead.org] wrote:
 > 
-> Patrick told us that we weren't even installing headers. Don't mind me,
-> need more tea. 
+> This looks like a reasonable bandaid until the block layer is fixed.  
+> 
 
-You shouldn't be installing them into the <sys/> namespace, that's
-basically owned by POSIX.  How about <sysfs/> instead?
+Since I do not know the extent of the block layer changes maybe my
+assumption is incorrect, but wouldn't will still need a release of some
+kind to know when it is safe to do a free?
 
--- 
-"It's not Hollywood.  War is real, war is primarily not about defeat or
-victory, it is about death.  I've seen thousands and thousands of dead bodies.
-Do you think I want to have an academic debate on this subject?" -- Robert Fisk
+-andmike
+--
+Michael Anderson
+andmike@us.ibm.com
+
