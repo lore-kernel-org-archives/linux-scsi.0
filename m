@@ -1,41 +1,28 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: BUG in sd.c
-Date: Thu, 19 Feb 2004 10:00:01 -0500 (EST)
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH, 2.6] tmscsim - no internal command-queuing
+Date: Thu, 19 Feb 2004 15:13:33 +0000
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44L0.0402190957210.629-100000@ida.rowland.org>
-References: <20040204171401.GA1687@beaverton.ibm.com>
+Message-ID: <20040219151333.A24006@infradead.org>
+References: <20040201111726.A14042@infradead.org> <Pine.LNX.4.44.0402032337230.3772-100000@poirot.grange>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ida.rowland.org ([192.131.102.52]:4868 "HELO ida.rowland.org")
-	by vger.kernel.org with SMTP id S267305AbUBSPAD (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 19 Feb 2004 10:00:03 -0500
-In-Reply-To: <20040204171401.GA1687@beaverton.ibm.com>
+Received: from phoenix.infradead.org ([213.86.99.234]:7173 "EHLO
+	phoenix.infradead.org") by vger.kernel.org with ESMTP
+	id S267395AbUBSPNl (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 19 Feb 2004 10:13:41 -0500
+Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.44.0402032337230.3772-100000@poirot.grange>; from g.liakhovetski@gmx.de on Tue, Feb 03, 2004 at 11:41:43PM +0100
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Anderson <andmike@us.ibm.com>
-Cc: SCSI development list <linux-scsi@vger.kernel.org>
+To: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, Kurt Garloff <kurt@garloff.de>
 
-On Wed, 4 Feb 2004, Mike Anderson wrote:
+> Ouch. Whereas the rest are either rather intelligent things I didn't know
+> about, or something I didn't want / dare to modify without a burning need,
+> this is definitely just a plain simple bug - I did see it was a noop, and
+> I did think at some point to preserve its consistency, until I forgot
+> about it:-)
 
-> Just a quick look. We are racing scsi_disk_release with sd_open. The
-> return code check in scsi_disk_get from the call to kobject_get is
-> worthless. The kobject_get will take do a inc even if we may already be
-> in release. This will cause a oops as we will fail the scsi_device_get
-> call in scsi_disk_get which will cause a call to kobject_put on a struct
-> that will most likely be free'd. 
-> 
-> Maybe I am still reading the block layer locking wrong, but I do not see a
-> method to close the race with blkdev_open. I will look at this some more
-> and see if I can get a clue what I am missing.
-
-Did you ever find anything in the block layer to prevent the race between 
-open and release?
-
-If there's nothing there, does this mean that protection needs to be added 
-to the sd and sr drivers?  What about sg, which doesn't use the blocking 
-layer?  This race is generic; every device driver needs to deal with it 
-somehow.
-
-Alan Stern
+Kurt, do you have any opinion on those patches?  I'd love to see them going
+in for 2.6.4
 
