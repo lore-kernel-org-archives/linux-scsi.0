@@ -1,31 +1,30 @@
-From: "John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [patch] 2.6 -- add IOI Media Bay to SCSI quirk list
-Date: Thu, 12 Aug 2004 21:21:56 -0400
+From: "Kai OM" <epimetreus@fastmail.fm>
+Subject: Sym53c8xx_2
+Date: Thu, 12 Aug 2004 23:00:37 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <411C17B4.7030804@tuxdriver.com>
-References: <200408122137.i7CLbGU13688@ra.tuxdriver.com> <20040812225118.GA20904@beaverton.ibm.com> <411BF6A5.2030306@tuxdriver.com> <20040813002756.GA21763@beaverton.ibm.com>
+Message-ID: <1092366037.28144.202254467@webmail.messagingengine.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset="ISO-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from apollo.tuxdriver.com ([24.172.12.4]:35858 "EHLO
-	ra.tuxdriver.com") by vger.kernel.org with ESMTP id S268924AbUHMBV1
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 12 Aug 2004 21:21:27 -0400
-In-Reply-To: <20040813002756.GA21763@beaverton.ibm.com>
+Received: from frontend1.messagingengine.com ([66.111.4.30]:20125 "EHLO
+	frontend1.messagingengine.com") by vger.kernel.org with ESMTP
+	id S268956AbUHMDAm (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 12 Aug 2004 23:00:42 -0400
+Received: from server2.messagingengine.com (server2.internal [10.202.2.133])
+	by frontend1.messagingengine.com (Postfix) with ESMTP id E7D90C143EB
+	for <linux-scsi@vger.kernel.org>; Thu, 12 Aug 2004 23:00:36 -0400 (EDT)
+Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
-To: Patrick Mansfield <patmans@us.ibm.com>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, James.Bottomley@SteelEye.com
+To: linux-scsi@vger.kernel.org
 
-Patrick Mansfield wrote:
+A while back I mailed the list a few times about an issue I was having
+with the Sym53c8xx_2 driver in the 2.6.7-8 kernels, as well as mailing
+the driver maintainer listed in the kernel source.
 
->Only add borken devices to the list, so it is a list of bad devices rather
->than a list of good ones.
->  
->
+Nobody ever replied or acknowledged my e-mails, save a couple other
+people with the same issue.
 
-I now see the comments about the list being deprecated.  I withdraw the 
-2.6 patch.  I still think the 2.4 patch is wortwhile, unless there is an 
-overhaul going-on there as well.
-
-John
+I'm wondering, with all this activity in the list now, would it be worth
+mailing everyone again, or does anyone have suggestions for someone else
+I can e-mail?
