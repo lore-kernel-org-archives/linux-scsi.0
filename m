@@ -1,45 +1,38 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: increasing host numbers
-Date: Tue, 24 Jun 2003 18:16:58 +1000
+From: Andrew Morton <akpm@digeo.com>
+Subject: Re: [PATCH] remove a bogus check in sym2 driver
+Date: Tue, 24 Jun 2003 01:17:23 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3EF808FA.5020503@torque.net>
-Reply-To: dougg@torque.net
+Message-ID: <20030624011723.0d13bbb1.akpm@digeo.com>
+References: <20030624033422.GB927@krispykreme>
+	<1056441769.14611.4.camel@dhcp22.swansea.linux.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bunyip.cc.uq.edu.au ([130.102.2.1]:12050 "EHLO
-	bunyip.cc.uq.edu.au") by vger.kernel.org with ESMTP id S264679AbTFXICz
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 24 Jun 2003 04:02:55 -0400
-Received: from torque.net (d-241-87.stlucia.uq.net.au [203.101.241.87])
-	by bunyip.cc.uq.edu.au (8.12.9/8.12.9) with ESMTP id h5O8H0hp003717
-	for <linux-scsi@vger.kernel.org>; Tue, 24 Jun 2003 18:17:01 +1000 (GMT+1000)
+Received: from pao-ex01.pao.digeo.com ([12.47.58.20]:8928 "EHLO
+	pao-ex01.pao.digeo.com") by vger.kernel.org with ESMTP
+	id S264540AbTFXICc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 24 Jun 2003 04:02:32 -0400
+In-Reply-To: <1056441769.14611.4.camel@dhcp22.swansea.linux.org.uk>
 List-Id: linux-scsi@vger.kernel.org
-To: SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: anton@samba.org, linux-scsi@vger.kernel.org
 
-It seems as though host numbers are no longer re-used.
-This pattern started in lk 2.5.73:
+Alan Cox <alan@lxorguk.ukuu.org.uk> wrote:
+>
+> > When we move to the scsi hotplug interface all this code will go away
+>  > but in the short term we need the following fix.
+> 
+>  Hardly. When you move to scsi hotplug you'll still have to work around
+>  the boxes where the same device pops up multiple times.
+> 
+>  Just check the domain is 0 ?
+> 
 
-# lsscsi
-[0:0:1:0]    disk    FUJITSU  MAM3184MP        0106  /dev/sda
-# modprobe scsi_debug
-# lsscsi
-[0:0:1:0]    disk    FUJITSU  MAM3184MP        0106  /dev/sda
-[2:0:0:0]    disk    Linux    scsi_debug       0004  /dev/sdb
-# rmmod scsi_debug
-# modprobe scsi_debug
-# lsscsi
-[0:0:1:0]    disk    FUJITSU  MAM3184MP        0106  /dev/sda
-[3:0:0:0]    disk    Linux    scsi_debug       0004  /dev/sdb
-# rmmod scsi_debug
-# modprobe scsi_debug
-# lsscsi
-[0:0:1:0]    disk    FUJITSU  MAM3184MP        0106  /dev/sda
-[4:0:0:0]    disk    Linux    scsi_debug       0004  /dev/sdb
+Is this a bug in the adapter's BIOS or in the main BIOS?
 
-Feature?
+If the latter then shouldn't this workaround live somewhere other than
+$RANDOM_DRIVER?
 
-Doug Gilbert
 
 
