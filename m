@@ -1,33 +1,52 @@
-From: rct@gherkin.frus.com (Bob Tracy)
-Subject: followup: sym53c500_cs driver addition
-Date: Tue, 6 Apr 2004 15:40:50 -0500 (CDT)
+From: "Mukker, Atul" <Atulm@lsil.com>
+Subject: RE: Megaraid and Linux 2.6 questions
+Date: Tue, 6 Apr 2004 16:56:49 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040406204050.4DE26DBDB@gherkin.frus.com>
+Message-ID: <0E3FA95632D6D047BA649F95DAB60E57033BC4F7@exa-atlanta.se.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="iso-8859-1"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gherkin.frus.com ([192.158.254.49]:47780 "EHLO gherkin.frus.com")
-	by vger.kernel.org with ESMTP id S264000AbUDFUkv (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Apr 2004 16:40:51 -0400
+Received: from mail0.lsil.com ([147.145.40.20]:58323 "EHLO mail0.lsil.com")
+	by vger.kernel.org with ESMTP id S264005AbUDFU4y (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Apr 2004 16:56:54 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: 'Jiann-Ming Su' <jsu2@emory.edu>, "Mukker, Atul" <Atulm@lsil.com>
+Cc: Linux SCSI mailing list <linux-scsi@vger.kernel.org>
 
-Back on April 1st, I wondered "out loud" if anyone else might be working
-on porting the sym53c500_cs driver to compile/work with the 2.6 kernel,
-because I wanted to avoid duplication of effort.
+Can you elaborate further on the "latency issue"
 
-As of this afternoon, I'm pleased to announce it's too late :-).  Haven't
-actually tried I/O with an attached device, but the driver will at least
-load and unload cleanly.  I'll submit the patch set for peer review in a
-few days...  Lots of cleanup work left to do, not to mention testing the
-basic functionality of the driver :-).
+-Atul Mukker
 
-Anyone besides me have a circa 1996 New Media Bus Toaster PCMCIA SCSI
-card that might be willing to assist with the testing?
-
--- 
------------------------------------------------------------------------
-Bob Tracy                   WTO + WIPO = DMCA? http://www.anti-dmca.org
-rct@frus.com
------------------------------------------------------------------------
+> -----Original Message-----
+> From: Jiann-Ming Su [mailto:jsu2@emory.edu]
+> Sent: Tuesday, April 06, 2004 2:56 PM
+> To: Mukker, Atul
+> Cc: Linux SCSI mailing list
+> Subject: RE: Megaraid and Linux 2.6 questions
+> 
+> 
+> On Tue, 6 Apr 2004, Mukker, Atul wrote:
+> 
+> > The two driver model, as suggested by many people on the 
+> list, put some
+> > unique conditions in the driver. The driver for most parts 
+> is complete and
+> > currently undergoing the our development testing.
+> > 
+> > I promised a release some weeks ago but we could not make 
+> it because of
+> > stability issues. But it is in much better shape now and 
+> would be available
+> > for review pretty soon.
+> > 
+> 
+> I'll ask again... does the new unified driver solve the latency issues
+> with Dell's PERC/4Di controllers?  If not, how do go about 
+> giving better
+> debugging information for the developers?
+> -- 
+> Jiann-Ming Su  jsu2@emory.edu  404-712-2603
+> Development Team Systems Administrator
+> General Libraries Systems Division
+> 
