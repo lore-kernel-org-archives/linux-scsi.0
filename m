@@ -1,47 +1,47 @@
-From: Patrick Mochel <mochel@osdl.org>
-Subject: Re: [PATCH] scsi_host sysfs updates scsi-misc-2.5 [0/2]
-Date: Tue, 13 May 2003 17:00:24 -0700 (PDT)
+From: Ben Collins <bcollins@debian.org>
+Subject: SCSI add/remove device for 2.4
+Date: Tue, 13 May 2003 20:49:10 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44.0305131659110.9816-100000@cherise>
-References: <20030512184140.GB3226@beaverton.ibm.com>
+Message-ID: <20030514004910.GT433@phunnypharm.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from air-2.osdl.org ([65.172.181.6]:15324 "EHLO mail.osdl.org")
-	by vger.kernel.org with ESMTP id S263273AbTEMXrT (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 13 May 2003 19:47:19 -0400
-In-Reply-To: <20030512184140.GB3226@beaverton.ibm.com>
+Received: from bristol.phunnypharm.org ([65.207.35.130]:35721 "EHLO
+	bristol.phunnypharm.org") by vger.kernel.org with ESMTP
+	id S261881AbTENBLk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 13 May 2003 21:11:40 -0400
+Received: from hopper.phunnypharm.org ([65.207.35.143] ident=mail)
+	by bristol.phunnypharm.org with esmtp (Exim 3.36 #1 (Debian))
+	id 19Fl0K-0004Vp-00
+	for <linux-scsi@vger.kernel.org>; Tue, 13 May 2003 21:24:24 -0400
+Received: from bmc by hopper.phunnypharm.org with local (Exim 3.36 #1 (Debian))
+	id 19FkSF-0005xz-00
+	for <linux-scsi@vger.kernel.org>; Tue, 13 May 2003 20:49:11 -0400
+Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Anderson <andmike@us.ibm.com>
-Cc: James Bottomley <James.Bottomley@steeleye.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
 
+This may be beating a dead horse. I had heard this patch was rejected on
+more than one occasion for Linux-2.4, but I'm here to pimp it again,
+because ieee1394 disk insertion sucks without it.
 
-On Mon, 12 May 2003, Mike Anderson wrote:
+Right now linux1394 requires rescan-scsi-bus.sh on linux-2.4 when an
+SBP-2 (scsi) device is attached or removed. Yes, I know USB handles this
+quite well, but that's only because USB does a scsi-host per device.
+It's not uncommon for Firewire drives to be setup as high-volume raids
+though (especially now that S800 is coming out), so this is really not
+suitable for Firewire.
 
-> James Bottomley [James.Bottomley@steeleye.com] wrote:
-> > On Mon, 2003-05-12 at 12:50, James Bottomley wrote:
-> > > Surprisingly, it still fails.  I've debugged the refcounting and I see
-> > > it fall to zero in scsi_host_put but the dev release method doesn't
-> > > trigger for no reason I can see.
-> > > 
-> > > It's probably a kobject initialisation problem somewhere.
-> > 
-> > OK, found it.  the ->release is triggered by the kobj_kset, which isn't
-> > set until device_add time, not device init time.
-> > 
-> > Therefore, we shouldn't really put and get objects until they've been
-> > added (or the kobj_set_kset_s needs to be moved to device_initialize()).
-> > 
-> 
-> I would like to have feedback from Mochel on the device_initialize
-> call.
+Problem is, there's no way to let the scsi layer know about add/remove
+of devices other than rescan-scsi-bus.sh. Why not export that
+functionality for things like sbp2? Yes, I know a well thought out and
+defined hotplug setup could do the same thing, but that's not what I am
+after.
 
-Just to set the record straight - James suggested this on irc yesterday, 
-and I've added it to my tree. I haven't seen any issues with it, and based 
-on later emails, you've worked out the slab issue. So, it'll be pushed to 
-Linus. 
+Here's the patch, I'm hoping someone takes it and pushes it to Marcelo.
 
-
-	-pat
-
+-- 
+Debian     - http://www.debian.org/
+Linux 1394 - http://www.linux1394.org/
+Subversion - http://subversion.tigris.org/
+Deqo       - http://www.deqo.com/
