@@ -1,424 +1,133 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH scsi-misc-2.6 01/13] scsi: don't use blk_insert_request() for requeueing
-Date: Thu, 31 Mar 2005 18:07:55 +0900 (KST)
-Message-ID: <20050331090647.BA0001D5@htj.dyndns.org>
+Subject: Re: [PATCH scsi-misc-2.6 03/13] scsi: remove unused scsi_cmnd->internal_timeout field
+Date: Thu, 31 Mar 2005 18:08:05 +0900 (KST)
+Message-ID: <20050331090647.CFA961FE@htj.dyndns.org>
 References: <20050331090647.FEDC3964@htj.dyndns.org>
 Content-Type: text/plain; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from wproxy.gmail.com ([64.233.184.199]:32293 "EHLO wproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S261223AbVCaJIA (ORCPT
+Received: from rproxy.gmail.com ([64.233.170.203]:49256 "EHLO rproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S261226AbVCaJIK (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 31 Mar 2005 04:08:00 -0500
-Received: by wproxy.gmail.com with SMTP id 68so491679wra
-        for <linux-scsi@vger.kernel.org>; Thu, 31 Mar 2005 01:08:00 -0800 (PST)
+	Thu, 31 Mar 2005 04:08:10 -0500
+Received: by rproxy.gmail.com with SMTP id a41so330728rng
+        for <linux-scsi@vger.kernel.org>; Thu, 31 Mar 2005 01:08:10 -0800 (PST)
 In-Reply-To: <20050331090647.FEDC3964@htj.dyndns.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com, axboe@suse.de
 Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-01_scsi_no_REQ_SPECIAL_on_requeue.patch
+03_scsi_remove_internal_timeout.patch
 
-	blk_insert_request() has 'reinsert' argument, which, when set,
-	turns on REQ_SPECIAL and REQ_SOFTBARRIER and requeues the
-	request.  SCSI midlayer was the only user of this feature and
-	all requeued requests become special requests defeating
-	quiesce state.  This patch makes scsi midlayer use
-	blk_requeue_request() for requeueing and removes 'reinsert'
-	feature from blk_insert_request().
-
-	Note: In drivers/scsi/scsi_lib.c, scsi_single_lun_run() and
-	scsi_run_queue() are moved upward unchanged.
+	scsi_cmnd->internal_timeout field doesn't have any meaning
+	anymore.  Kill the field.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 
- drivers/block/ll_rw_blk.c |   20 +--
- drivers/block/paride/pd.c |    2 
- drivers/block/sx8.c       |    4 
- drivers/scsi/scsi_lib.c   |  238 +++++++++++++++++++++++-----------------------
- include/linux/blkdev.h    |    2 
- 5 files changed, 133 insertions(+), 133 deletions(-)
+ drivers/scsi/advansys.c   |    2 --
+ drivers/scsi/pci2000.c    |    4 ++--
+ drivers/scsi/scsi.c       |    1 -
+ drivers/scsi/scsi_error.c |    1 -
+ drivers/scsi/scsi_lib.c   |    1 -
+ drivers/scsi/scsi_priv.h  |    5 -----
+ include/scsi/scsi_cmnd.h  |    6 ------
+ 7 files changed, 2 insertions(+), 18 deletions(-)
 
-Index: scsi-export/drivers/block/ll_rw_blk.c
+Index: scsi-export/drivers/scsi/advansys.c
 ===================================================================
---- scsi-export.orig/drivers/block/ll_rw_blk.c	2005-03-31 17:42:05.000000000 +0900
-+++ scsi-export/drivers/block/ll_rw_blk.c	2005-03-31 18:06:19.000000000 +0900
-@@ -2028,7 +2028,6 @@ EXPORT_SYMBOL(blk_requeue_request);
-  * @rq:		request to be inserted
-  * @at_head:	insert request at head or tail of queue
-  * @data:	private data
-- * @reinsert:	true if request it a reinsertion of previously processed one
-  *
-  * Description:
-  *    Many block devices need to execute commands asynchronously, so they don't
-@@ -2043,8 +2042,9 @@ EXPORT_SYMBOL(blk_requeue_request);
-  *    host that is unable to accept a particular command.
-  */
- void blk_insert_request(request_queue_t *q, struct request *rq,
--			int at_head, void *data, int reinsert)
-+			int at_head, void *data)
- {
-+	int where = at_head ? ELEVATOR_INSERT_FRONT : ELEVATOR_INSERT_BACK;
- 	unsigned long flags;
+--- scsi-export.orig/drivers/scsi/advansys.c	2005-03-31 17:42:05.000000000 +0900
++++ scsi-export/drivers/scsi/advansys.c	2005-03-31 18:06:20.000000000 +0900
+@@ -9206,8 +9206,6 @@ asc_prt_scsi_cmnd(struct scsi_cmnd *s)
+ " timeout_per_command %d, timeout_total %d, timeout %d\n",
+         s->timeout_per_command, s->timeout_total, s->timeout);
  
- 	/*
-@@ -2061,20 +2061,12 @@ void blk_insert_request(request_queue_t 
- 	/*
- 	 * If command is tagged, release the tag
- 	 */
--	if (reinsert)
--		blk_requeue_request(q, rq);
--	else {
--		int where = ELEVATOR_INSERT_BACK;
-+	if (blk_rq_tagged(rq))
-+		blk_queue_end_tag(q, rq);
- 
--		if (at_head)
--			where = ELEVATOR_INSERT_FRONT;
-+	drive_stat_acct(rq, rq->nr_sectors, 1);
-+	__elv_add_request(q, rq, where, 0);
- 
--		if (blk_rq_tagged(rq))
--			blk_queue_end_tag(q, rq);
+-    printk(" internal_timeout %u\n", s->internal_timeout);
 -
--		drive_stat_acct(rq, rq->nr_sectors, 1);
--		__elv_add_request(q, rq, where, 0);
--	}
- 	if (blk_queue_plugged(q))
- 		__generic_unplug_device(q);
- 	else
-Index: scsi-export/drivers/block/paride/pd.c
+     printk(
+ " scsi_done 0x%lx, done 0x%lx, host_scribble 0x%lx, result 0x%x\n",
+         (ulong) s->scsi_done, (ulong) s->done,
+Index: scsi-export/drivers/scsi/pci2000.c
 ===================================================================
---- scsi-export.orig/drivers/block/paride/pd.c	2005-03-31 17:42:05.000000000 +0900
-+++ scsi-export/drivers/block/paride/pd.c	2005-03-31 18:06:19.000000000 +0900
-@@ -723,7 +723,7 @@ static int pd_special_command(struct pd_
- 	rq.ref_count = 1;
- 	rq.waiting = &wait;
- 	rq.end_io = blk_end_sync_rq;
--	blk_insert_request(disk->gd->queue, &rq, 0, func, 0);
-+	blk_insert_request(disk->gd->queue, &rq, 0, func);
- 	wait_for_completion(&wait);
- 	rq.waiting = NULL;
- 	if (rq.errors)
-Index: scsi-export/drivers/block/sx8.c
+--- scsi-export.orig/drivers/scsi/pci2000.c	2005-03-31 17:42:05.000000000 +0900
++++ scsi-export/drivers/scsi/pci2000.c	2005-03-31 18:06:20.000000000 +0900
+@@ -438,8 +438,8 @@ int Pci2000_QueueCommand (Scsi_Cmnd *SCp
+ 	if ( bus )
+ 		{
+ 		DEB (if(*cdb) printk ("\nCDB: %X-  %X %X %X %X %X %X %X %X %X %X ", SCpnt->cmd_len, cdb[0], cdb[1], cdb[2], cdb[3], cdb[4], cdb[5], cdb[6], cdb[7], cdb[8], cdb[9]));
+-		DEB (if(*cdb) printk ("\ntimeout_per_command: %d, timeout_total: %d, timeout: %d, internal_timout: %d", SCpnt->timeout_per_command,
+-							  SCpnt->timeout_total, SCpnt->timeout, SCpnt->internal_timeout));
++		DEB (if(*cdb) printk ("\ntimeout_per_command: %d, timeout_total: %d, timeout: %d", SCpnt->timeout_per_command,
++							  SCpnt->timeout_total, SCpnt->timeout));
+ 		outl (SCpnt->timeout_per_command, padapter->mb1);
+ 		outb_p (CMD_SCSI_TIMEOUT, padapter->cmd);
+ 		if ( WaitReady (padapter) )
+Index: scsi-export/drivers/scsi/scsi.c
 ===================================================================
---- scsi-export.orig/drivers/block/sx8.c	2005-03-31 17:42:05.000000000 +0900
-+++ scsi-export/drivers/block/sx8.c	2005-03-31 18:06:19.000000000 +0900
-@@ -614,7 +614,7 @@ static int carm_array_info (struct carm_
- 	spin_unlock_irq(&host->lock);
+--- scsi-export.orig/drivers/scsi/scsi.c	2005-03-31 17:42:05.000000000 +0900
++++ scsi-export/drivers/scsi/scsi.c	2005-03-31 18:06:20.000000000 +0900
+@@ -716,7 +716,6 @@ void scsi_init_cmd_from_req(struct scsi_
+ 	/*
+ 	 * Start the timer ticking.
+ 	 */
+-	cmd->internal_timeout = NORMAL_TIMEOUT;
+ 	cmd->abort_reason = 0;
+ 	cmd->result = 0;
  
- 	DPRINTK("blk_insert_request, tag == %u\n", idx);
--	blk_insert_request(host->oob_q, crq->rq, 1, crq, 0);
-+	blk_insert_request(host->oob_q, crq->rq, 1, crq);
+Index: scsi-export/drivers/scsi/scsi_error.c
+===================================================================
+--- scsi-export.orig/drivers/scsi/scsi_error.c	2005-03-31 17:42:05.000000000 +0900
++++ scsi-export/drivers/scsi/scsi_error.c	2005-03-31 18:06:20.000000000 +0900
+@@ -1843,7 +1843,6 @@ scsi_reset_provider(struct scsi_device *
+ 	scmd->bufflen			= 0;
+ 	scmd->request_buffer		= NULL;
+ 	scmd->request_bufflen		= 0;
+-	scmd->internal_timeout		= NORMAL_TIMEOUT;
+ 	scmd->abort_reason		= DID_ABORT;
  
- 	return 0;
- 
-@@ -653,7 +653,7 @@ static int carm_send_special (struct car
- 	crq->msg_bucket = (u32) rc;
- 
- 	DPRINTK("blk_insert_request, tag == %u\n", idx);
--	blk_insert_request(host->oob_q, crq->rq, 1, crq, 0);
-+	blk_insert_request(host->oob_q, crq->rq, 1, crq);
- 
- 	return 0;
- }
+ 	scmd->cmd_len			= 0;
 Index: scsi-export/drivers/scsi/scsi_lib.c
 ===================================================================
---- scsi-export.orig/drivers/scsi/scsi_lib.c	2005-03-31 17:42:05.000000000 +0900
-+++ scsi-export/drivers/scsi/scsi_lib.c	2005-03-31 18:06:19.000000000 +0900
-@@ -65,6 +65,109 @@ struct scsi_host_sg_pool scsi_sg_pools[]
+--- scsi-export.orig/drivers/scsi/scsi_lib.c	2005-03-31 18:06:20.000000000 +0900
++++ scsi-export/drivers/scsi/scsi_lib.c	2005-03-31 18:06:20.000000000 +0900
+@@ -414,7 +414,6 @@ static int scsi_init_cmd_errh(struct scs
+ 	memcpy(cmd->data_cmnd, cmd->cmnd, sizeof(cmd->cmnd));
+ 	cmd->buffer = cmd->request_buffer;
+ 	cmd->bufflen = cmd->request_bufflen;
+-	cmd->internal_timeout = NORMAL_TIMEOUT;
+ 	cmd->abort_reason = 0;
  
- 
- /*
-+ * Called for single_lun devices on IO completion. Clear starget_sdev_user,
-+ * and call blk_run_queue for all the scsi_devices on the target -
-+ * including current_sdev first.
-+ *
-+ * Called with *no* scsi locks held.
-+ */
-+static void scsi_single_lun_run(struct scsi_device *current_sdev)
-+{
-+	struct Scsi_Host *shost = current_sdev->host;
-+	struct scsi_device *sdev, *tmp;
-+	struct scsi_target *starget = scsi_target(current_sdev);
-+	unsigned long flags;
-+
-+	spin_lock_irqsave(shost->host_lock, flags);
-+	starget->starget_sdev_user = NULL;
-+	spin_unlock_irqrestore(shost->host_lock, flags);
-+
-+	/*
-+	 * Call blk_run_queue for all LUNs on the target, starting with
-+	 * current_sdev. We race with others (to set starget_sdev_user),
-+	 * but in most cases, we will be first. Ideally, each LU on the
-+	 * target would get some limited time or requests on the target.
-+	 */
-+	blk_run_queue(current_sdev->request_queue);
-+
-+	spin_lock_irqsave(shost->host_lock, flags);
-+	if (starget->starget_sdev_user)
-+		goto out;
-+	list_for_each_entry_safe(sdev, tmp, &starget->devices,
-+			same_target_siblings) {
-+		if (sdev == current_sdev)
-+			continue;
-+		if (scsi_device_get(sdev))
-+			continue;
-+
-+		spin_unlock_irqrestore(shost->host_lock, flags);
-+		blk_run_queue(sdev->request_queue);
-+		spin_lock_irqsave(shost->host_lock, flags);
-+	
-+		scsi_device_put(sdev);
-+	}
-+ out:
-+	spin_unlock_irqrestore(shost->host_lock, flags);
-+}
-+
-+/*
-+ * Function:	scsi_run_queue()
-+ *
-+ * Purpose:	Select a proper request queue to serve next
-+ *
-+ * Arguments:	q	- last request's queue
-+ *
-+ * Returns:     Nothing
-+ *
-+ * Notes:	The previous command was completely finished, start
-+ *		a new one if possible.
-+ */
-+static void scsi_run_queue(struct request_queue *q)
-+{
-+	struct scsi_device *sdev = q->queuedata;
-+	struct Scsi_Host *shost = sdev->host;
-+	unsigned long flags;
-+
-+	if (sdev->single_lun)
-+		scsi_single_lun_run(sdev);
-+
-+	spin_lock_irqsave(shost->host_lock, flags);
-+	while (!list_empty(&shost->starved_list) &&
-+	       !shost->host_blocked && !shost->host_self_blocked &&
-+		!((shost->can_queue > 0) &&
-+		  (shost->host_busy >= shost->can_queue))) {
-+		/*
-+		 * As long as shost is accepting commands and we have
-+		 * starved queues, call blk_run_queue. scsi_request_fn
-+		 * drops the queue_lock and can add us back to the
-+		 * starved_list.
-+		 *
-+		 * host_lock protects the starved_list and starved_entry.
-+		 * scsi_request_fn must get the host_lock before checking
-+		 * or modifying starved_list or starved_entry.
-+		 */
-+		sdev = list_entry(shost->starved_list.next,
-+					  struct scsi_device, starved_entry);
-+		list_del_init(&sdev->starved_entry);
-+		spin_unlock_irqrestore(shost->host_lock, flags);
-+
-+		blk_run_queue(sdev->request_queue);
-+
-+		spin_lock_irqsave(shost->host_lock, flags);
-+		if (unlikely(!list_empty(&sdev->starved_entry)))
-+			/*
-+			 * sdev lost a race, and was put back on the
-+			 * starved list. This is unlikely but without this
-+			 * in theory we could loop forever.
-+			 */
-+			break;
-+	}
-+	spin_unlock_irqrestore(shost->host_lock, flags);
-+
-+	blk_run_queue(q);
-+}
-+
-+/*
-  * Function:    scsi_insert_special_req()
-  *
-  * Purpose:     Insert pre-formed request into request queue.
-@@ -92,7 +195,7 @@ int scsi_insert_special_req(struct scsi_
- 	 */
- 	sreq->sr_request->flags &= ~REQ_DONTPREP;
- 	blk_insert_request(sreq->sr_device->request_queue, sreq->sr_request,
--		       	   at_head, sreq, 0);
-+		       	   at_head, sreq);
- 	return 0;
- }
- 
-@@ -119,6 +222,8 @@ int scsi_queue_insert(struct scsi_cmnd *
- {
- 	struct Scsi_Host *host = cmd->device->host;
- 	struct scsi_device *device = cmd->device;
-+	struct request_queue *q = device->request_queue;
-+	unsigned long flags;
- 
- 	SCSI_LOG_MLQUEUE(1,
- 		 printk("Inserting command %p into mlqueue\n", cmd));
-@@ -160,17 +265,17 @@ int scsi_queue_insert(struct scsi_cmnd *
- 	scsi_device_unbusy(device);
- 
- 	/*
--	 * Insert this command at the head of the queue for it's device.
--	 * It will go before all other commands that are already in the queue.
--	 *
--	 * NOTE: there is magic here about the way the queue is plugged if
--	 * we have no outstanding commands.
--	 * 
--	 * Although this *doesn't* plug the queue, it does call the request
--	 * function.  The SCSI request function detects the blocked condition
--	 * and plugs the queue appropriately.
-+	 * Requeue the command.  Turn on REQ_SOFTBARRIER to prevent
-+	 * other requests from passing this request.
- 	 */
--	blk_insert_request(device->request_queue, cmd->request, 1, cmd, 1);
-+	cmd->request->flags |= REQ_SOFTBARRIER;
-+
-+	spin_lock_irqsave(q->queue_lock, flags);
-+	blk_requeue_request(q, cmd->request);
-+	spin_unlock_irqrestore(q->queue_lock, flags);
-+
-+	scsi_run_queue(q);
-+
- 	return 0;
- }
- 
-@@ -355,109 +460,6 @@ void scsi_device_unbusy(struct scsi_devi
- }
- 
- /*
-- * Called for single_lun devices on IO completion. Clear starget_sdev_user,
-- * and call blk_run_queue for all the scsi_devices on the target -
-- * including current_sdev first.
-- *
-- * Called with *no* scsi locks held.
-- */
--static void scsi_single_lun_run(struct scsi_device *current_sdev)
--{
--	struct Scsi_Host *shost = current_sdev->host;
--	struct scsi_device *sdev, *tmp;
--	struct scsi_target *starget = scsi_target(current_sdev);
--	unsigned long flags;
--
--	spin_lock_irqsave(shost->host_lock, flags);
--	starget->starget_sdev_user = NULL;
--	spin_unlock_irqrestore(shost->host_lock, flags);
--
--	/*
--	 * Call blk_run_queue for all LUNs on the target, starting with
--	 * current_sdev. We race with others (to set starget_sdev_user),
--	 * but in most cases, we will be first. Ideally, each LU on the
--	 * target would get some limited time or requests on the target.
--	 */
--	blk_run_queue(current_sdev->request_queue);
--
--	spin_lock_irqsave(shost->host_lock, flags);
--	if (starget->starget_sdev_user)
--		goto out;
--	list_for_each_entry_safe(sdev, tmp, &starget->devices,
--			same_target_siblings) {
--		if (sdev == current_sdev)
--			continue;
--		if (scsi_device_get(sdev))
--			continue;
--
--		spin_unlock_irqrestore(shost->host_lock, flags);
--		blk_run_queue(sdev->request_queue);
--		spin_lock_irqsave(shost->host_lock, flags);
--	
--		scsi_device_put(sdev);
--	}
-- out:
--	spin_unlock_irqrestore(shost->host_lock, flags);
--}
--
--/*
-- * Function:	scsi_run_queue()
-- *
-- * Purpose:	Select a proper request queue to serve next
-- *
-- * Arguments:	q	- last request's queue
-- *
-- * Returns:     Nothing
-- *
-- * Notes:	The previous command was completely finished, start
-- *		a new one if possible.
-- */
--static void scsi_run_queue(struct request_queue *q)
--{
--	struct scsi_device *sdev = q->queuedata;
--	struct Scsi_Host *shost = sdev->host;
--	unsigned long flags;
--
--	if (sdev->single_lun)
--		scsi_single_lun_run(sdev);
--
--	spin_lock_irqsave(shost->host_lock, flags);
--	while (!list_empty(&shost->starved_list) &&
--	       !shost->host_blocked && !shost->host_self_blocked &&
--		!((shost->can_queue > 0) &&
--		  (shost->host_busy >= shost->can_queue))) {
--		/*
--		 * As long as shost is accepting commands and we have
--		 * starved queues, call blk_run_queue. scsi_request_fn
--		 * drops the queue_lock and can add us back to the
--		 * starved_list.
--		 *
--		 * host_lock protects the starved_list and starved_entry.
--		 * scsi_request_fn must get the host_lock before checking
--		 * or modifying starved_list or starved_entry.
--		 */
--		sdev = list_entry(shost->starved_list.next,
--					  struct scsi_device, starved_entry);
--		list_del_init(&sdev->starved_entry);
--		spin_unlock_irqrestore(shost->host_lock, flags);
--
--		blk_run_queue(sdev->request_queue);
--
--		spin_lock_irqsave(shost->host_lock, flags);
--		if (unlikely(!list_empty(&sdev->starved_entry)))
--			/*
--			 * sdev lost a race, and was put back on the
--			 * starved list. This is unlikely but without this
--			 * in theory we could loop forever.
--			 */
--			break;
--	}
--	spin_unlock_irqrestore(shost->host_lock, flags);
--
--	blk_run_queue(q);
--}
--
--/*
-  * Function:	scsi_requeue_command()
-  *
-  * Purpose:	Handle post-processing of completed commands.
-@@ -476,8 +478,14 @@ static void scsi_run_queue(struct reques
-  */
- static void scsi_requeue_command(struct request_queue *q, struct scsi_cmnd *cmd)
- {
-+	unsigned long flags;
-+
- 	cmd->request->flags &= ~REQ_DONTPREP;
--	blk_insert_request(q, cmd->request, 1, cmd, 1);
-+	cmd->request->flags |= REQ_SOFTBARRIER;
-+
-+	spin_lock_irqsave(q->queue_lock, flags);
-+	blk_requeue_request(q, cmd->request);
-+	spin_unlock_irqrestore(q->queue_lock, flags);
- 
- 	scsi_run_queue(q);
- }
-Index: scsi-export/include/linux/blkdev.h
+ 	return 1;
+Index: scsi-export/drivers/scsi/scsi_priv.h
 ===================================================================
---- scsi-export.orig/include/linux/blkdev.h	2005-03-31 17:42:05.000000000 +0900
-+++ scsi-export/include/linux/blkdev.h	2005-03-31 18:06:19.000000000 +0900
-@@ -541,7 +541,7 @@ extern void blk_end_sync_rq(struct reque
- extern void blk_attempt_remerge(request_queue_t *, struct request *);
- extern void __blk_attempt_remerge(request_queue_t *, struct request *);
- extern struct request *blk_get_request(request_queue_t *, int, int);
--extern void blk_insert_request(request_queue_t *, struct request *, int, void *, int);
-+extern void blk_insert_request(request_queue_t *, struct request *, int, void *);
- extern void blk_requeue_request(request_queue_t *, struct request *);
- extern void blk_plug_device(request_queue_t *);
- extern int blk_remove_plug(request_queue_t *);
+--- scsi-export.orig/drivers/scsi/scsi_priv.h	2005-03-31 17:42:05.000000000 +0900
++++ scsi-export/drivers/scsi/scsi_priv.h	2005-03-31 18:06:20.000000000 +0900
+@@ -30,11 +30,6 @@ struct Scsi_Host;
+ #define SCSI_REQ_MAGIC		0x75F6D354
+ 
+ /*
+- *  Flag bit for the internal_timeout array
+- */
+-#define NORMAL_TIMEOUT		0
+-
+-/*
+  * Scsi Error Handler Flags
+  */
+ #define scsi_eh_eflags_chk(scp, flags) \
+Index: scsi-export/include/scsi/scsi_cmnd.h
+===================================================================
+--- scsi-export.orig/include/scsi/scsi_cmnd.h	2005-03-31 17:42:05.000000000 +0900
++++ scsi-export/include/scsi/scsi_cmnd.h	2005-03-31 18:06:20.000000000 +0900
+@@ -65,12 +65,6 @@ struct scsi_cmnd {
+ 	int timeout_total;
+ 	int timeout;
+ 
+-	/*
+-	 * We handle the timeout differently if it happens when a reset, 
+-	 * abort, etc are in process. 
+-	 */
+-	unsigned volatile char internal_timeout;
+-
+ 	unsigned char cmd_len;
+ 	unsigned char old_cmd_len;
+ 	enum dma_data_direction sc_data_direction;
 
