@@ -1,30 +1,35 @@
-From: Christer Weinigel <wingel@acolyte.hack.org>
-Subject: Why not CAM?
-Date: 27 Oct 2002 16:26:22 +0100
+From: Alexy Khrabrov <braver@pobox.com>
+Subject: A modern RAID solution?
+Date: Sun, 27 Oct 2002 10:30:48 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <87smyrgaxt.fsf@zoo.weinigel.se>
+Message-ID: <20021027153048.GA5642@angle.setup.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: (from alexy@localhost)
+	by angle.badbox.com (8.12.5/8.12.5) id g9RFUnDK005679
+	for linux-scsi@vger.kernel.org; Sun, 27 Oct 2002 10:30:49 -0500
+Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-Hi,
 
-I've wanted to ask this for a long time: Why not switch to SCSI CAM
-when you are redoing the Linux SCSI layer anyways? 
+Now that I got all those drives spinning, I'm eager to try out 
+a RAID array.  I reckon it's a better way to hedge against disk
+failures than backups on tape -- even 20/40 GB dds4 or DLT is
+not enough those days, and loading/rotating is tedious.
 
-This is not intended to start a flamewar of any kind, I don't know
-very much about CAM except that it is some kind of standard and
-FreeBSD uses it and they seem to be mostly happy with it.  So I'm just
-curious if any of the SCSI hackers think that CAM would be worthwhile
-and if not, why?  Too heavyweight?  Too ugly?  Won't fit well with the
-new BIO design in the 2.5 kernel?
+I heard an opinion that software RAID on Linux with SCSI is
+"almost" as good as a hardware controller.  What is the experience
+here?  Also, since I'm running LVM throughout, including the root
+partition, does RAID coexist well with LVM?
 
-  /Christer
+But if I go the way of the hardware controller, is it better
+to get a separate one, or one of those new cards from Adaptec
+which say they have a Host RAID 0/1 or some such?
+
+I'm looking at a 3 drives RAID to begin with, perhaps 4.
 
 -- 
-"Just how much can I get away with and still go to heaven?"
-
-Freelance consultant specializing in device driver programming for Linux 
-Christer Weinigel <christer@weinigel.se>  http://www.weinigel.se
+Cheers,
+Alexy Khrabrov :: www.setup.org :: Age Quod Agis
