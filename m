@@ -1,113 +1,63 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Bugs in scsi system, need help to fix
-Date: Sat, 12 Apr 2003 16:10:03 -0400 (EDT)
+From: Aaron Traas <atraas@syncsort.com>
+Subject: st ioctl documentation error (MT_ST_SYSV)
+Date: Sun, 13 Apr 2003 10:05:10 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44L0.0304121546330.3290-100000@netrider.rowland.org>
-References: <3E982DDE.7010002@pacbell.net>
+Message-ID: <3E996E96.3040502@syncsort.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1;
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from netrider.rowland.org ([192.131.102.5]:18959 "HELO
-	netrider.rowland.org") by vger.kernel.org with SMTP id S263388AbTDLT6R (for <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 12 Apr 2003 15:58:17 -0400
-In-Reply-To: <3E982DDE.7010002@pacbell.net>
+Received: from pool-141-153-194-157.mad.east.verizon.net ([141.153.194.157]:60290
+	"EHLO claymore.tyrfing.org") by vger.kernel.org with ESMTP
+	id S263517AbTDMN4x (for <rfc822;linux-scsi@vger.kernel.org>); Sun, 13 Apr 2003 09:56:53 -0400
+Received: from rapier.tyrfing.org ([10.1.1.166] helo=syncsort.com)
+	by claymore.tyrfing.org with esmtp (Exim 3.35 #1 (Debian))
+	id 194i9o-0004Rm-00
+	for <linux-scsi@vger.kernel.org>; Sun, 13 Apr 2003 10:08:33 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: David Brownell <david-b@pacbell.net>, Mike Anderson <andmike@us.ibm.com>
-Cc: Linux SCSI list <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
 
-While tracking down some problems involving usb-storage, I traced them to
-a couple of bugs in the scsi system.  Unfortunately, I don't know enough
-about how things are supposed to work to fix them; I'm hoping to attract
-some help.
+Hello. I'm trying to fix some bugs in a port of my company's proprietar=
+y=20
+tape backup software. Our software works flawlessly on most commercial=20
+UNIX platforms. When handling tape reads, we use one of two different=20
+subroutines for handling the positioning of the read-head after a read.=
+=20
+On BSD-flavored systems (such as *BSD), we do more-or-less nothing, as=20
+after a read, the tape is spaced forward to the next filemark. On SysV=20
+flavored systems (like Solaris 8), we advance the filemark manually.
 
-The first problem is in the error-handling code in scsi_error.c.  The
-scsi_eh_lock_done() function is the callback for a special request
-inserted at the beginning of the queue while restarting normal operations.  
-(It locks the drive's door.)  But this function does not call
-scsi_io_completion(), scsi_end_request(), or scsi_queue_next_request(),
-with the result that the device's request queue stops once the door-lock
-command has been processed.  The callback needs to do _something_ to keep
-the queue going, but I don't know what.
+We have a problem on Linux, as it states in the st(4) manpage:
 
-Maybe I'm wrong about that, and the problem doesn't lie in 
-scsi_eh_lock_done().  But there is no doubt that at the end of error 
-recovery, after the door-lock command finishes up no other commands are 
-processed.  Logging just stops after the "Notifying upper driver of 
-completion" message.
+MT_ST_SYSV (Default: false)
+    When  this  option  is  enabled,  the  tape
+    devices use the SystemV  semantics.  Other=AD
+    wise  the  BSD semantics are used. The most
+    important difference between the  semantics
+    is  what  happens  when  a  device used for
+    reading is closed: in  SYSV  semantics  the
+    tape  is spaced forward past the next file=AD
+    mark if this has not happened  while  using
+    the device. In BSD semantics the tape posi=AD
+    tion is not changed.
 
+Which switches what we have defined as BSD and SYSV semantics. It state=
+s=20
+that Linux uses BSD semantics by default, and then says SYSV semantics=20
+are what we know are BSD semantics, and that BSD semantics are what we=20
+know as SYSV semantics. How do we know? BSD and Solaris' man pages on=20
+the subject contradict Linux's, and our software properly works on thos=
+e=20
+  systems.
 
-The second problem is a coding mistake in scsi_check_device_busy(), in
-hosts.c.  Here is an excerpt from the source:
-
----------------
-
-static int scsi_check_device_busy(struct scsi_device *sdev)
-{
-	struct Scsi_Host *shost = sdev->host;
-	struct scsi_cmnd *scmd;
-	unsigned long flags;
-
-	/*
-	 * Loop over all of the commands associated with the
-	 * device.  If any of them are busy, then set the state
-	 * back to inactive and bail.
-	 */
-	spin_lock_irqsave(&sdev->list_lock, flags);
-	list_for_each_entry(scmd, &sdev->cmd_list, list) {
-		if (scmd->request && scmd->request->rq_status != RQ_INACTIVE)
-			goto active;
-
-<snip>
-
-active:
-	printk(KERN_ERR "SCSI device not inactive - rq_status=%d, target=%d, "
-			"pid=%ld, state=%d, owner=%d.\n",
-			scmd->request->rq_status, scmd->device->id,
-			scmd->pid, scmd->state, scmd->owner);
-
-(A)	list_for_each_entry(sdev, &shost->my_devices, siblings) {
-		list_for_each_entry(scmd, &sdev->cmd_list, list) {
-(B)			if (scmd->request->rq_status == RQ_SCSI_DISCONNECTING)
-				scmd->request->rq_status = RQ_INACTIVE;
-		}
-	}
-
-(C)	spin_unlock_irqrestore(&sdev->list_lock, flags);
-	printk(KERN_ERR "Device busy???\n");
-	return 1;
-}
-
----------------
-
-The line labelled (A) is definitely wrong.  Maybe it doesn't belong there
-at all -- I don't see any reason why a function devoted to checking
-whether a particular device is busy needs to look at any other devices on
-the same host.  Furthermore, line (A) changes the value of the sdev
-variable, which means that line (C) unlocks the wrong spinlock.  Finally,
-judging from the style of the code earlier on, line (B) needs to test that
-scmd->request is non-NULL before dereferencing it.
+So, going by the description in the page on what the semantics are, we=20
+have defined Linux in our build system as using non-BSD style tape read=
+=20
+semantics. This results in fsf errors.
 
 
-The third problem is very minor.  In scsi_lib.c, line 716 contains an 
-extra blank space at the end of a logging text string, just following a 
-\n.  This messes up whatever log message follows, because the severity 
-indicator (KERN_ERR or whatever) then doesn't fall at the start of a line.  
-Here's the line in question, with a few extra lines of context.
-
----------------
-
-	if (good_sectors >= 0) {
-		SCSI_LOG_HLCOMPLETE(1, printk("%ld sectors total, %d sectors done.\n",
-					      req->nr_sectors, good_sectors));
-		SCSI_LOG_HLCOMPLETE(1, printk("use_sg is %d\n ", cmd->use_sg));
-
-		if (clear_errors)
-			req->errors = 0;
-
----------------
-
-While I feel perfectly capable of fixing that third bug by myself, I 
-certainly need help fixing the first two.
-
-Alan Stern
-
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
