@@ -1,8 +1,8 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH] fix wd7000 for scsi command block changes
-Date: Mon, 10 Feb 2003 09:01:40 +0100
+Subject: [PATCH] remove cpqioctl.c
+Date: Mon, 10 Feb 2003 09:03:01 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030210090140.A11628@lst.de>
+Message-ID: <20030210090301.B11628@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
@@ -11,50 +11,85 @@ List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
 Cc: linux-scsi@vger.kernel.org
 
+This is userland testing code that leaked into the kernel tree somehow.
 
---- 1.16/drivers/scsi/wd7000.c	Fri Nov 22 12:59:03 2002
-+++ edited/drivers/scsi/wd7000.c	Thu Feb  6 11:54:19 2003
-@@ -1122,13 +1122,13 @@
- 	register unchar *cdb = (unchar *) SCpnt->cmnd;
- 	register unchar idlun;
- 	register short cdblen;
--	Adapter *host = (Adapter *) SCpnt->host->hostdata;
-+	Adapter *host = (Adapter *) SCpnt->device->host->hostdata;
- 
- 	cdblen = SCpnt->cmd_len;
--	idlun = ((SCpnt->target << 5) & 0xe0) | (SCpnt->lun & 7);
-+	idlun = ((SCpnt->device->id << 5) & 0xe0) | (SCpnt->device->lun & 7);
- 	SCpnt->scsi_done = done;
- 	SCpnt->SCp.phase = 1;
--	scb = alloc_scbs(SCpnt->host, 1);
-+	scb = alloc_scbs(SCpnt->device->host, 1);
- 	scb->idlun = idlun;
- 	memcpy(scb->cdb, cdb, cdblen);
- 	scb->direc = 0x40;	/* Disable direction check */
-@@ -1141,7 +1141,7 @@
- 		struct scatterlist *sg = (struct scatterlist *) SCpnt->request_buffer;
- 		unsigned i;
- 
--		if (SCpnt->host->sg_tablesize == SG_NONE) {
-+		if (SCpnt->device->host->sg_tablesize == SG_NONE) {
- 			panic("wd7000_queuecommand: scatter/gather not supported.\n");
- 		}
- 		dprintk("Using scatter/gather with %d elements.\n", SCpnt->use_sg);
-@@ -1646,7 +1646,7 @@
-  */
- static int wd7000_abort(Scsi_Cmnd * SCpnt)
- {
--	Adapter *host = (Adapter *) SCpnt->host->hostdata;
-+	Adapter *host = (Adapter *) SCpnt->device->host->hostdata;
- 
- 	if (inb(host->iobase + ASC_STAT) & INT_IM) {
- 		printk("wd7000_abort: lost interrupt\n");
-@@ -1677,7 +1677,7 @@
- 
- static int wd7000_host_reset(Scsi_Cmnd * SCpnt)
- {
--	Adapter *host = (Adapter *) SCpnt->host->hostdata;
-+	Adapter *host = (Adapter *) SCpnt->device->host->hostdata;
- 
- 	if (wd7000_adapter_reset(host) < 0)
- 		return FAILED;
+
+--- 1.1/drivers/scsi/cpqioctl.c	Tue Feb  5 12:40:09 2002
++++ edited/drivers/scsi/cpqioctl.c	Wed Feb  5 02:13:16 2003
+@@ -1,76 +0,0 @@
+-// Test program for CPQFCTS ioctl calls
+-// build with:
+-// gcc -o cpqioctl cpqioctl.c
+-// ld -o cpqioctl /lib/crt0.o cpqioctl.o -lc
+-
+-#include <stdio.h>
+-#include <sys/stat.h>
+-#include <sys/ioctl.h>
+-#include <fcntl.h>
+-#include <unistd.h>
+-#include <linux/types.h>
+-#include "../../include/scsi/scsi.h"
+-#include "cpqfcTSioctl.h"
+-
+-typedef struct scsi_fctargaddress {
+-        unsigned long host_port_id;
+-        unsigned char host_wwn[8];
+-} Scsi_FCTargAddress;
+-
+-int main(int argc, char **argv) {
+-
+- int fd, i;
+- Scsi_FCTargAddress targ;
+- int uselect=0;
+-
+-
+-
+-  if ( argc < 2 ) {
+-    printf("usage: cpqioctl <Devfile>\n");
+-    exit(1);
+-  }
+-
+-  if ( (fd = open(argv[1], O_RDONLY)) == -1) {
+-    perror("open");
+-    exit(1);
+-  }
+-
+-  if ( ioctl(fd, SCSI_IOCTL_FC_TARGET_ADDRESS, &targ) ) {
+-    perror("ioctl");
+-    exit(1);
+-  }
+-
+-
+-  printf("portid: %08x. wwn: ", targ.host_port_id);
+-
+-  for (i=0;i<8;i++) printf(" %02x", targ.host_wwn[i]);
+-  printf("\n");
+-
+- while( uselect != 27 ) // not ESC key
+-  {
+-    printf("\n IOCTL \n");
+-    printf( "1. Get PCI info\n");
+-    printf( "2. Send Passthru\n");
+-    printf( " ==> ");
+-    scanf("%c", &uselect);
+-
+-    switch( uselect  )
+-    {
+-      case '1':
+-      {
+-        cciss_pci_info_struct pciinfo;
+-	
+-  	if( ioctl( fd, CCPQFCTS_GETPCIINFO ,&pciinfo ))
+-          perror("ioctl");
+-	else
+-          printf( "\nPCI bus %d, dev_fn %d, board_id %Xh\n",
+-            pciinfo.bus, pciinfo.dev_fn, pciinfo.board_id);
+-      }
+-
+-    }
+-  }
+-
+-
+-  close(fd);
+-  return 0;
+-} 
