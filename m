@@ -1,31 +1,39 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: Request for review of Linux iSCSI driver version 4.0.0.1
-Date: Wed, 19 Nov 2003 15:20:36 +0000
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: Unaligned scatter-gather buffers and usb-storage
+Date: Wed, 19 Nov 2003 10:44:18 -0500 (EST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20031119152036.A13979@infradead.org>
-References: <200310231734.10263.krmurthy@cisco.com> <03111920183201.15831@naveenb-lnx.cisco.com> <20031119144809.A13541@infradead.org> <03111920493602.15831@naveenb-lnx.cisco.com>
+Message-ID: <Pine.LNX.4.44L0.0311191033300.957-100000@ida.rowland.org>
+References: <20031119084729.GA1106@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pub234.cambridge.redhat.com ([213.86.99.234]:36617 "EHLO
-	phoenix.infradead.org") by vger.kernel.org with ESMTP
-	id S264113AbTKSPUh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 19 Nov 2003 10:20:37 -0500
-Content-Disposition: inline
-In-Reply-To: <03111920493602.15831@naveenb-lnx.cisco.com>; from naveenb@cisco.com on Wed, Nov 19, 2003 at 08:49:36PM +0530
+Received: from ida.rowland.org ([192.131.102.52]:3588 "HELO ida.rowland.org")
+	by vger.kernel.org with SMTP id S264119AbTKSPoS (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 19 Nov 2003 10:44:18 -0500
+In-Reply-To: <20031119084729.GA1106@suse.de>
 List-Id: linux-scsi@vger.kernel.org
-To: Naveen Burmi <naveenb@cisco.com>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, davmyers@cisco.com
+To: Jens Axboe <axboe@suse.de>
+Cc: Patrick Mansfield <patmans@us.ibm.com>, Douglas Gilbert <dougg@torque.net>, James Bottomley <James.Bottomley@steeleye.com>, Oliver Neukum <oliver@neukum.org>, SCSI development list <linux-scsi@vger.kernel.org>, USB development list <linux-usb-devel@lists.sourceforge.net>
 
-On Wed, Nov 19, 2003 at 08:49:36PM +0530, Naveen Burmi wrote:
-> scsi_scan_host_selected can be used for activating LUNs, selectively.
-> But that is the second step.
-> First step is to execute the REPORT LUN command without registering a device 
-> with scsi mid-layer. That's what we are acheiving through iscsi_do_cmnd .
-> Once we know what all luns are available for a target,   
-> scsi_scan_host_selected can be used to activate the luns, selectively.
+On Wed, 19 Nov 2003, Jens Axboe wrote:
 
-Why do you insist on not using a struct scsi_device?  You acn still free
-it if you don't want it. scsi_report_lun is doing all the REPORT_LUNS work
-for you, no need to duplicate it.
+> The queue already has such a restriction embedded, see bio_map_user()
+> and queue_dma_alignment().
+
+Searching through the 2.6 kernel source gave some interesting results.
+
+queue_dma_alignment() does nothing but set the dma_alignment field of the
+request queue structure.  The _only_ place this field is used is in
+fs/bio.c by __bio_map_user(), called from bio_map_user().  In turn, the
+_only_ place bio_map_user() is called is from drivers/block/scsi_ioctl.c,
+and that's only for a certain specific type of SCSI ioctl.  It's not on
+any main code path, and it wouldn't get invoked by anything using the st
+or sg drivers.  In fact, it looks like scsi_ioctl.c:scsi_cmd_ioctl() is
+only called from within the sd driver.
+
+So something needs to be fixed up.  Is there some spot in the block layer 
+that's supposed to be checking dma alignments but isn't doing so?
+
+Alan Stern
 
