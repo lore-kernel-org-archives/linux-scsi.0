@@ -1,43 +1,36 @@
-From: Greg KH <greg@kroah.com>
-Subject: Re: [linux-usb-devel] Feiya 5-in-1 Card Reader
-Date: Wed, 4 Sep 2002 16:09:01 -0700
+From: Andries Brouwer <aebr@win.tue.nl>
+Subject: Re: [RFC][PATCH] 2.5 hosts.c and scsi_host list cleanup
+Date: Thu, 5 Sep 2002 01:26:24 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20020904230901.GA8574@kroah.com>
-References: <UTC200209042256.g84Mu0w15389.aeb@smtp.cwi.nl>
+Message-ID: <20020904232624.GA10227@win.tue.nl>
+References: <20020904204310.GA3588@beaverton.ibm.com> <20020905000158.A14644@infradead.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <UTC200209042256.g84Mu0w15389.aeb@smtp.cwi.nl>
+In-Reply-To: <20020905000158.A14644@infradead.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Andries.Brouwer@cwi.nl
-Cc: mdharm-kernel@one-eyed-alien.net, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-usb-devel@lists.sourceforge.net
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-scsi@vger.kernel.org
 
-On Thu, Sep 05, 2002 at 12:56:00AM +0200, Andries.Brouwer@cwi.nl wrote:
-> >> Matt, is it ok with you for me to add this patch to the tree?
-> 
-> > I'd like to hold off a few more days while I try to find out what the
-> > 'secret sauce' that the other OSes use for a device like this.
-> 
-> Hmm. You do not confuse two situations, do you?
-> In the past few days I made two devices work.
-> 
-> One was a Feiya 5-in-1 CF / SM / SD card reader
-> (Vendor Id: 090c, Product Id: 1132, Revision 1.00).
-> It returned a capacity that is one too large, and becomes
-> very unhappy if one tries to read a sector past the end.
-> So, a flag was needed to tell that the result of READ CAPACITY
-> needs fixing.
+On Thu, Sep 05, 2002 at 12:01:58AM +0100, Christoph Hellwig wrote:
 
-Seems reasonble, Matt, any objection?
+ +       shost_name = (Scsi_Host_Name *) kmalloc(sizeof(Scsi_Host_Name),
+ +                                               GFP_KERNEL);
+  
+ Cast isn't really needed again.
 
-> The other was a Travelmate CF / SM / SD card reader
-> (Vendor Id: 3538, Product Id: 0001, Revision 2.05).
-> It became unhappy when MODE_SENSE asked for too much data.
-> A patch on sd.c solved this.
 
-Linus already added this patch to his tree :)
+It is true that the cast is not needed, but it belongs to the good casts.
+Usually a cast is bad because it disables checks.
+In this case the cast is a good one, it enables checks.
 
-thanks,
+[Indeed, a void * can be assigned to any pointer, so without the cast
+gcc will only check that shost_name is a pointer. With the cast it
+will check that it is a pointer of the right type.
 
-greg k-h
+	foo = (type *) kmalloc(N*sizeof(type), ...)
+
+is a good coding habit. Of course using  sizeof(*foo)  is an alternative.]
+
+Andries
