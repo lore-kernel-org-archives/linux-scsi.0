@@ -1,40 +1,68 @@
-From: David Brownell <david-b@pacbell.net>
-Subject: Re: Usb storage mounting was broken
-Date: Wed, 22 Oct 2003 11:44:30 -0700
+From: Mark Haverkamp <markh@osdl.org>
+Subject: [PATCH bug fix] Work around aacraid FW problem
+Date: Wed, 22 Oct 2003 12:53:57 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3F96D00E.1080500@pacbell.net>
-References: <1066775616.3458.8.camel@m70.net81-64-235.noos.fr>	 <20031021175556.A8670@beaverton.ibm.com>	 <1066808944.3699.9.camel@ulysse.olympe.o2t> <3F969E04.6060801@pacbell.net>	 <1066837537.6960.3.camel@ulysse.olympe.o2t> <3F96AE64.5020305@pacbell.net> <1066845819.2806.11.camel@m70.net81-64-235.noos.fr>
+Message-ID: <1066852437.1499.19.camel@markh1.pdx.osdl.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtaw6.prodigy.net ([64.164.98.56]:16377 "EHLO mtaw6.prodigy.net")
-	by vger.kernel.org with ESMTP id S263488AbTJVSjq (ORCPT
+Received: from fw.osdl.org ([65.172.181.6]:17572 "EHLO mail.osdl.org")
+	by vger.kernel.org with ESMTP id S263415AbTJVTx7 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 22 Oct 2003 14:39:46 -0400
-In-Reply-To: <1066845819.2806.11.camel@m70.net81-64-235.noos.fr>
+	Wed, 22 Oct 2003 15:53:59 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: Nicolas Mailhot <Nicolas.Mailhot@laPoste.net>
-Cc: Patrick Mansfield <patmans@us.ibm.com>, linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@steeleye.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, Mark Salyzyn <mark_salyzyn@adaptec.com>
+
+I think that this qualifies as a bug fix.
+
+If you have a 4gig or greater system, some versions of aacraid firmware
+have problems if you set HostPhysMemPages >= 0x100000.  This can
+potentially cause data corruption.  If you have 4gig or greater memory,
+this patch sets the HostPhysMemPages to something that the firmware can
+deal with.
 
 
-> The only weird thing is some messages made it to /var/log/messages,
-> /var/log/kernel and show up with dmesg, but didn't end up in
-> /var/log/dmesg (which is what I used as attachement before, but the
-> other messages were extracted from /var/log/kernel and put in the bug
-> too). I suppose RedHat stops writing in /var/log/dmesg after the end of
-> the boot.
+===== drivers/scsi/aacraid/aacraid.h 1.8 vs edited =====
+--- 1.8/drivers/scsi/aacraid/aacraid.h	Thu Aug 21 00:06:52 2003
++++ edited/drivers/scsi/aacraid/aacraid.h	Wed Oct 22 09:52:43 2003
+@@ -14,6 +14,8 @@
+ #define AAC_MAX_TARGET (MAXIMUM_NUM_CONTAINERS+1)
+ #define AAC_MAX_LUN	(8)
+ 
++#define AAC_MAX_HOSTPHYSMEMPAGES (0xfffff)
++
+ /*
+  * These macros convert from physical channels to virtual channels
+  */
+===== drivers/scsi/aacraid/comminit.c 1.6 vs edited =====
+--- 1.6/drivers/scsi/aacraid/comminit.c	Fri May  2 12:30:22 2003
++++ edited/drivers/scsi/aacraid/comminit.c	Wed Oct 22 09:54:35 2003
+@@ -92,7 +92,21 @@
+ 	init->AdapterFibsPhysicalAddress = cpu_to_le32((u32)phys);
+ 	init->AdapterFibsSize = cpu_to_le32(fibsize);
+ 	init->AdapterFibAlign = cpu_to_le32(sizeof(struct hw_fib));
+-	init->HostPhysMemPages = cpu_to_le32(num_physpages);		// number of 4k pages of host physical memory
++	/* 
++	 * number of 4k pages of host physical memory. The aacraid fw needs
++	 * this number to be less than 4gb worth of pages. num_physpages is in
++	 * system page units. New firmware doesn't have any issues with the
++	 * mapping system, but older Firmware did, and had *troubles* dealing
++	 * with the math overloading past 32 bits, thus we must limit this
++	 * field.
++	 */
++	if ((num_physpages << (PAGE_SHIFT - 12)) <= AAC_MAX_HOSTPHYSMEMPAGES) {
++		init->HostPhysMemPages = 
++			cpu_to_le32(num_physpages << (PAGE_SHIFT-12));
++	} else {
++		init->HostPhysMemPages = cpu_to_le32(AAC_MAX_HOSTPHYSMEMPAGES);
++	}
++
+ 
+ 	/*
+ 	 * Increment the base address by the amount already used
 
-As a rule, "dmesg output" means "output of dmesg command" ... :)
-Boot messages (/var/log/dmesg) aren't a substitute.
-
-OK, at this point what's needed is the more customary usb debug
-information.  Contents of /proc/bus/usb/devices for starters.
-And since this resembles an enumeration failure, it'd be good
-to have the Alt-Sysrq-t output for "khubd".
-
-And does this happen if you try this with, say, OHCI not EHCI?
-
-- Dave
-
+-- 
+Mark Haverkamp <markh@osdl.org>
 
