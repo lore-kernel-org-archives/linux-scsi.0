@@ -1,36 +1,52 @@
 From: Andries Brouwer <aebr@win.tue.nl>
-Subject: Re: [RFC][PATCH] 2.5 hosts.c and scsi_host list cleanup
-Date: Thu, 5 Sep 2002 01:26:24 +0200
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20020904232624.GA10227@win.tue.nl>
-References: <20020904204310.GA3588@beaverton.ibm.com> <20020905000158.A14644@infradead.org>
+Subject: Re: Feiya 5-in-1 Card Reader
+Date: Thu, 5 Sep 2002 01:46:53 +0200
+Sender: linux-usb-devel-admin@lists.sourceforge.net
+Message-ID: <20020904234653.GB10227@win.tue.nl>
+References: <UTC200209042256.g84Mu0w15389.aeb@smtp.cwi.nl> <20020904161042.O13478@one-eyed-alien.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
+Return-path: <linux-usb-devel-admin@lists.sourceforge.net>
 Content-Disposition: inline
-In-Reply-To: <20020905000158.A14644@infradead.org>
+In-Reply-To: <20020904161042.O13478@one-eyed-alien.net>
+Errors-To: linux-usb-devel-admin@lists.sourceforge.net
+List-Help: <mailto:linux-usb-devel-request@lists.sourceforge.net?subject=help>
+List-Post: <mailto:linux-usb-devel@lists.sourceforge.net>
+List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-devel>,
+	<mailto:linux-usb-devel-request@lists.sourceforge.net?subject=subscribe>
+List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-devel>,
+	<mailto:linux-usb-devel-request@lists.sourceforge.net?subject=unsubscribe>
+List-Archive: <http://www.geocrawler.com/redir-sf.php3?list=linux-usb-devel>
+To: Andries.Brouwer@cwi.nl, greg@kroah.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-usb-devel@lists.sourceforge.net
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-scsi@vger.kernel.org
 
-On Thu, Sep 05, 2002 at 12:01:58AM +0100, Christoph Hellwig wrote:
+On Wed, Sep 04, 2002 at 04:10:42PM -0700, Matthew Dharm wrote:
 
- +       shost_name = (Scsi_Host_Name *) kmalloc(sizeof(Scsi_Host_Name),
- +                                               GFP_KERNEL);
-  
- Cast isn't really needed again.
+> I'm trying to find out why Windows doesn't choke on the strange
+> READ_CAPACITY value.
 
+That is an easy one.
+It belongs to the recent partitioning discussion on l-k.
 
-It is true that the cast is not needed, but it belongs to the good casts.
-Usually a cast is bad because it disables checks.
-In this case the cast is a good one, it enables checks.
+Windows knows the type of partition table, so reads the
+partition table and the boot sector and the FAT and is happy.
 
-[Indeed, a void * can be assigned to any pointer, so without the cast
-gcc will only check that shost_name is a pointer. With the cast it
-will check that it is a pointer of the right type.
+Linux tries various things, depending on how you compiled your kernel,
+and among other things also needs to examine the last sector.
+So, only Linux will do bad things in case the capacity is off by one,
+and only when your config includes partitioning types that use this
+last sector.
 
-	foo = (type *) kmalloc(N*sizeof(type), ...)
-
-is a good coding habit. Of course using  sizeof(*foo)  is an alternative.]
 
 Andries
+
+
+
+-------------------------------------------------------
+This sf.net email is sponsored by: OSDN - Tired of that same old
+cell phone?  Get a new here for FREE!
+https://www.inphonic.com/r.asp?r=sourceforge1&refcode1=vs3390
+_______________________________________________
+linux-usb-devel@lists.sourceforge.net
+To unsubscribe, use the last form field at:
+https://lists.sourceforge.net/lists/listinfo/linux-usb-devel
