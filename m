@@ -1,46 +1,65 @@
-From: Mike Anderson <andmike@us.ibm.com>
-Subject: Re: 2.6.1: media change check fails for busy unplugged device
-Date: Mon, 19 Jan 2004 15:36:41 -0800
+From: James Bottomley <James.Bottomley@steeleye.com>
+Subject: [BK PATCH] SCSI bug fixes for 2.6.1
+Date: 19 Jan 2004 19:46:40 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040119233641.GA1859@beaverton.ibm.com>
-References: <200401182141.12468.arvidjaar@mail.ru>
+Message-ID: <1074539066.1647.32.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e33.co.us.ibm.com ([32.97.110.131]:14750 "EHLO
-	e33.co.us.ibm.com") by vger.kernel.org with ESMTP id S264974AbUASXcr
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 19 Jan 2004 18:32:47 -0500
-Content-Disposition: inline
-In-Reply-To: <200401182141.12468.arvidjaar@mail.ru>
+Received: from stat1.steeleye.com ([65.114.3.130]:27019 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S265352AbUATAqu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 19 Jan 2004 19:46:50 -0500
 List-Id: linux-scsi@vger.kernel.org
-To: Andrey Borzenkov <arvidjaar@mail.ru>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@steeleye.com>
+To: Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>
+Cc: Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-Andrey Borzenkov [arvidjaar@mail.ru] wrote:
-> If we unplug busy device (consider mounted USB stick) media change check 
-> always returns true (no media change happened). It happens because
-> 
-> - device state is set to SDEV_DEL and scsi_prep_fn silently kills any request 
-> including TEST_UNIT_READY sent by sd_media_changed without propagating any 
-> information back to caller
-> 
+The attached is specifically bugfixes only for 2.6.1 that I'd like to
+get in before we begin release candidates for 2.6.2.  Some of them are
+bug fix only pieces from driver updates that I'll begin pushing after
+2.6.2 is out.
 
-The silently kill would appear to be the issue. The addition of any
-number of additional checks prior to calling scsi_ioctl would not ensure
-that as soon as the last check is done the device state has not changed.
+The update is available at:
 
-We need a change in scsi_wait_req to differentiate that we where not woken
-up from scsi_wait_done, but from end_that_request_last.
+bk://linux-scsi.bkbits.net/scsi-for-linus-2.6
 
-One way would be to check if rq_status == RQ_SCSI_DONE. I did not see
-anything on the request to indicate it was BLKPREP_KILL'd.
+The short changelog is
 
-James has worked more on the scsi_prep_fn so maybe he has another
-suggestion.
+<andrew.vasquez:qlogic.com>:
+  o No LUNs detected with qla2xxx / qla2300
 
--andmike
---
-Michael Anderson
-andmike@us.ibm.com
+<emoore:lsil.com>:
+  o MPT Fusion x86-64 boot fix
+
+<mort:bork.org>:
+  o Fix error path when adding sysfs attributes
+
+Andrew Morton:
+  o fix qla2xxx build for older gcc's
+
+James Bottomley:
+  o aha152x PCMCIA fix
+
+Jes Sorensen:
+  o qla1280 update
+
+Mike Anderson:
+  o scsi_eh_flush_done_q return status
+
+The diffstats are
+
+ message/fusion/mptbase.h  |    4 -
+ message/fusion/mptscsih.c |    4 +
+ scsi/aha152x.c            |    2 
+ scsi/qla1280.c            |  133 ++++++++++++++++++++++++++++++----------------
+ scsi/qla1280.h            |   23 ++++---
+ scsi/qla2xxx/qla_def.h    |    6 +-
+ scsi/qla2xxx/qla_init.c   |    2 
+ scsi/scsi_error.c         |   28 ++++-----
+ scsi/scsi_sysfs.c         |   11 ++-
+ 9 files changed, 134 insertions(+), 79 deletions(-)
+
+James
+
 
