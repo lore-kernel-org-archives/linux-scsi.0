@@ -1,125 +1,68 @@
-From: Paul Blazejowski <paulb@blazebox.homeip.net>
-Subject: Re: Badness in device_release at drivers/base/core.c:84
-Date: Tue, 05 Aug 2003 03:18:09 -0400
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <1060067889.7118.7.camel@blaze.homeip.net>
-References: <20030801182207.GA3759@blazebox.homeip.net>
-	 <20030801144455.450d8e52.akpm@osdl.org>
-	 <20030803015510.GB4696@blazebox.homeip.net>
-	 <20030802190737.3c41d4d8.akpm@osdl.org>
-	 <20030803214755.GA1010@blazebox.homeip.net>
-	 <20030803145211.29eb5e7c.akpm@osdl.org>
-	 <20030803222313.GA1090@blazebox.homeip.net>
-	 <20030803223115.GA1132@blazebox.homeip.net>
-	 <20030804093035.A24860@beaverton.ibm.com>
-	 <1060021614.889.6.camel@blaze.homeip.net>
-	 <1352160000.1060025773@aslan.btc.adaptec.com>
+From: "Andreas Herrmann" <AHERRMAN@de.ibm.com>
+Subject: Re: [Patch] dont block device on QUEUE_FULL for last command
+Date: Tue, 5 Aug 2003 09:15:32 +0200
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <OFB8D09C1A.E75A6F97-ONC1256D79.00276F21@de.ibm.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-sXoOMQCLJnTRdv84vNv7"
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
-In-Reply-To: <1352160000.1060025773@aslan.btc.adaptec.com>
-To: "Justin T. Gibbs" <gibbs@scsiguy.com>
-Cc: Patrick Mansfield <patmans@us.ibm.com>, Andrew Morton <akpm@osdl.org>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from d12lmsgate.de.ibm.com ([194.196.100.234]:46820 "EHLO
+	d12lmsgate.de.ibm.com") by vger.kernel.org with ESMTP
+	id S272478AbTHEHPi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 5 Aug 2003 03:15:38 -0400
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
+        James Bottomley <James.Bottomley@SteelEye.com>
+        08/04/03 06:05 PM
 
---=-sXoOMQCLJnTRdv84vNv7
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+> On Mon, 2003-08-04 at 10:42, Andreas Herrmann wrote:
+> > I observed the following problem:
+> > A device was marked as blocked after a QUEUE_FULL status code
+> > was returned for the last scsi command for a device.
+> > And there's a snag to it -- because no further commands are pending
+> > for that device, the device is not set unblocked anymore.
+> > 
+> > Solution is:
+> > Do not block the device/adapter if getting QUEUE_FULL status code
+> > for the last pending command of that device/adapter, but retry
+> > the command.
 
-On Mon, 2003-08-04 at 15:36, Justin T. Gibbs wrote:
-> > Patrick,
-> >=20
-> > I enabled CONFIG_SCSI_LOGGING=3Dy in kernel then i used
-> > scsi_mod.scsi_logging_level=3D0x140 and scsi_mod.max_scsi_luns=3D1 when
-> > booting the kernel from lilo.I can see some debug information scroll on
-> > the screen and i did see ID0 LUN0 get probed even the correct transfer
-> > rate for the SCSI disk is set.I forgot but isn't there a key sequence
-> > when pressed it will stop the screen output like pause/break key?
->=20
-> You might be able to get useful information without using a serial
-> console if you turn off your CDROM drives so they don't add extra output,
-> but your best bet is to use a serial console.
->=20
-> --
-> Justin
->=20
->=20
+> This looks like 2.4 code, right?
 
-Hi Justin,
+Right, the patch is against 2.4.21
 
-This time with both plextor cdroms removed i get this in console:
+> The problem was fixed long ago in 2.5.
 
-scsi scan: INQUIRY to host 0 chanel 0 id0 lun 0
-scsi scan: 1st INQUIRY failed with code 0x10000
+> The fix you propose for 2.4 isn't optimal (although it is what 2.4 does
+> for the busy case) because the mid-layer will bang the drive in a tight
+> loop until it can accept the command.
 
-and this repeats for all 15 id's on the cards with same 0x10000 code.
+The fix is short.
+It works.
+Has no severe side effects. (except the loop until the command is
+accepted.)
 
-When using aic7xxx_old driver i get this in dmesg:
+> You could try backporting the 2.5 fix.  What we do there is to plug the
+> queue and then count down (from 7 for host busy or 3 from device busy)
+> replugging each time.  That gives a non-busy delay which is directly
+> proportional to the I/O pressure in the system.
 
-(scsi0) <Adaptec AHA-294X Ultra2 SCSI host adapter> found at PCI 1/10/0
-(scsi0) Wide Channel, SCSI ID=3D7, 32/255 SCBs
-(scsi0) Downloading sequencer code... 398 instructions downloaded
-scsi0 : Adaptec AHA274x/284x/294x (EISA/VLB/PCI-Fast SCSI) 5.2.6/5.2.0
-       <Adaptec AHA-294X Ultra2 SCSI host adapter>
-scsi scan: INQUIRY to host 0 channel 0 id 0 lun 0
-scsi scan: 1st INQUIRY successful with code 0x0
-  Vendor:           Model:                   Rev:
-  Type:   Direct-Access                      ANSI SCSI revision: 00
-scsi scan: Sequential scan of host 0 channel 0 id 0
-scsi scan: INQUIRY to host 0 channel 0 id 1 lun 0
-scsi: Device offlined - not ready after error recovery: host 0 channel 0
-id 1 lun 0
-scsi scan: 1st INQUIRY failed with code 0x6030000
-scsi scan: INQUIRY to host 0 channel 0 id 2 lun 0
-scsi scan: 1st INQUIRY failed with code 0x30000
-scsi scan: INQUIRY to host 0 channel 0 id 3 lun 0
-scsi scan: 1st INQUIRY failed with code 0x30000
-scsi scan: INQUIRY to host 0 channel 0 id 4 lun 0
-scsi scan: 1st INQUIRY failed with code 0x30000
-scsi scan: INQUIRY to host 0 channel 0 id 5 lun 0
-scsi scan: 1st INQUIRY failed with code 0x30000
-scsi scan: INQUIRY to host 0 channel 0 id 6 lun 0
-scsi scan: 1st INQUIRY failed with code 0x30000
-scsi scan: INQUIRY to host 0 channel 0 id 8 lun 0
-scsi scan: 1st INQUIRY failed with code 0x30000
-scsi scan: INQUIRY to host 0 channel 0 id 9 lun 0
-scsi scan: 1st INQUIRY failed with code 0x30000
-scsi scan: INQUIRY to host 0 channel 0 id 10 lun 0
-scsi scan: 1st INQUIRY failed with code 0x30000
-scsi scan: INQUIRY to host 0 channel 0 id 11 lun 0
-scsi scan: 1st INQUIRY failed with code 0x30000
-scsi scan: INQUIRY to host 0 channel 0 id 12 lun 0
-scsi scan: 1st INQUIRY failed with code 0x30000
-scsi scan: INQUIRY to host 0 channel 0 id 13 lun 0
-scsi scan: 1st INQUIRY failed with code 0x30000
-scsi scan: INQUIRY to host 0 channel 0 id 14 lun 0
-scsi scan: 1st INQUIRY failed with code 0x30000
-scsi scan: INQUIRY to host 0 channel 0 id 15 lun 0
-scsi scan: 1st INQUIRY failed with code 0x30000
-SCSI device sda: 71687340 512-byte hdwr sectors (36704 MB)
-SCSI device sda: drive cache: write back
- /dev/scsi/host0/bus0/target0/lun0: p1 p2 p3 p4 < p5 p6 p7 p8 p9 p10 >
-Attached scsi disk sda at scsi0, channel 0, id 0, lun 0
-Attached scsi generic sg0 at scsi0, channel 0, id 0, lun 0,  type 0
+I could try, if I had time ... ;-)
+But why backporting, if a "two-line-changing" patch will fix something,
+that looks somehow strange in any case?
+IMHO, the condition
 
-Once i get null modem serial cable i will try to get more info from
-serial console.
+                if (cmd->device->device_busy == 0)
+
+is never met in scsi_mlqueue_insert(), because device_busy (same with
+host_busy) is always > 0 if there is a command pending for a device 
+(host).
+
+> James
+
 
 Regards,
 
-Paul
-
---=-sXoOMQCLJnTRdv84vNv7
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.2.2 (GNU/Linux)
-
-iD8DBQA/L1owIymMQsXoRDARArgSAJ9MR1onWlEr9B50KH7cMAvsS6wbmACgibRA
-KiNdNA+moh/dCFI4z2XTi7M=
-=6vWH
------END PGP SIGNATURE-----
-
---=-sXoOMQCLJnTRdv84vNv7--
+Andreas
