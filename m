@@ -1,98 +1,86 @@
-From: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Subject: Re: Mid-layer handling of NOT_READY conditions...
-Date: Mon, 31 Jan 2005 23:21:45 -0800
-Message-ID: <1107242505.6305.15.camel@plap>
-References: <0B1E13B586976742A7599D71A6AC733C02F326@xbl3.ma.emulex.com>
-	 <20050131173629.GA29928@us.ibm.com>
+From: "Kit Gerrits" <kit@gerritsacc.nl>
+Subject: Re: Disk Errors
+Date: Tue, 1 Feb 2005 09:53:47 +0100
+Message-ID: <20050201084926.21CC986F@frisbee.gerritsacc.nl>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain;
+	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Received: from avexch01.qlogic.com ([198.70.193.200]:33476 "EHLO
-	avexch01.qlogic.com") by vger.kernel.org with ESMTP id S261667AbVBAHV1
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 1 Feb 2005 02:21:27 -0500
-In-Reply-To: <20050131173629.GA29928@us.ibm.com>
+Received: from www.gerritsaa.nl ([82.168.101.83]:23119 "EHLO
+	frisbee.gerritsacc.nl") by vger.kernel.org with ESMTP
+	id S261880AbVBAIx1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 1 Feb 2005 03:53:27 -0500
+Received: from localhost (localhost [127.0.0.1])
+	by frisbee.gerritsacc.nl (Postfix) with ESMTP id BE37086D
+	for <linux-scsi@vger.kernel.org>; Tue,  1 Feb 2005 09:49:34 +0100 (CET)
+Received: from frisbee.gerritsacc.nl ([127.0.0.1])
+ by localhost (Frisbee [127.0.0.1]) (amavisd-new, port 10024) with ESMTP
+ id 55669-07 for <linux-scsi@vger.kernel.org>;
+ Tue,  1 Feb 2005 09:49:26 +0100 (CET)
+Received: from kaglapxp (unknown [10.2.2.121])
+	by frisbee.gerritsacc.nl (Postfix) with ESMTP id 21CC986F
+	for <linux-scsi@vger.kernel.org>; Tue,  1 Feb 2005 09:49:26 +0100 (CET)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Patrick Mansfield <patmans@us.ibm.com>
-Cc: James.Smart@Emulex.Com, James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Mon, 2005-01-31 at 09:36 -0800, Patrick Mansfield wrote:
-> On Mon, Jan 31, 2005 at 11:56:02AM -0500, James.Smart@Emulex.Com wrote:
-> > > On Sat, 2005-01-29 at 11:34 -0800, Patrick Mansfield wrote:
+I have found 08:05 to correspond to /dev/sda5, mounted as /usr(Thanks for
+the pointer!).
+
+Sda is the single-drive volume
+(non-RAID, as it is only for the O/S,
+which needs to be speedy and can be pulled from tape easily).
+
+This explains several things:
+A/ Why a single error can take an entire volume offline B/ Why the error is
+not logged
+	If it only took the partition offline, 
+	it would still have been logged, 
+	as / is mounted from sda3
+
+And leaves one question:
+What caused the error?
+
+There are no GROWN defects on the drive in this volume
+
+
+---------------
+Reference logs:
+---------------
+
+Executing: disk show defects (ID=0)
+Number of PRIMARY defects on drive: 1912 Number of GROWN defects on drive: 0
+
+Executing: container list
+Num          Total  Oth Chunk          Scsi   Partition    
+Label Type   Size   Ctr Size   Usage   B:ID:L Offset:Size
+----- ------ ------ --- ------ ------- ------ -------------
+ 0    Volume 8.47GB            Open    0:00:0 64.0KB:8.47GB
+ /dev/sda             NT
+ 1    RAID-5 16.9GB       32KB Open    0:01:0 64.0KB:8.47GB
+ /dev/sdb             DATA             0:02:0 64.0KB:8.47GB
+                                       ?:??:?  - Missing - Mount points it
+to:
+# /dev/sda5             5.3G  1.5G  3.6G  30% /usr
+ 
+
+> -----Oorspronkelijk bericht-----
+> Van: Salyzyn, Mark [mailto:mark_salyzyn@adaptec.com]
+> Verzonden: dinsdag 1 februari 2005 4:15
+> Aan: Kit Gerrits
+> Onderwerp: RE: Disk errors
 > 
-> > > > 
-> > > > Why not just set scmd->retries to zero in scsi_requeue_command()?
-> > > > 
-> > > 
-> > > This is exactly what I was thinking would be a fairly straight-forward
-> > > approach at solving the problem...
-> > 
-> > This is ultimately a hack, and raises the potential for the retries value
-> > to perpetually be rezero'd.  The better solution is the use the block
-> > primitives available to avoid the i/o being issued at all if the transport
-> > can't handle it.
+> The controller does not appear to be busted; you have a Volume and a 
+> RAID-5. Are you missing an Array?
 > 
-> No, it does not change the potential to retry forever, someone still has
-> to requeue the IO again outside of the NEEDS_RETRY/scsi_retry_command case
-> for that to happen.
+> A two drive failure on a RAID-5 gives you an offline array.
 > 
-> We only check retries in scsi_decide_disposition (well not counting error
-> handling), and if we hit the limit, return SUCCESS. The change is that we
-> reset retries to zero if the command is *not* retried via
-> NEEDS_RETRY/scsi_retry_command.
+> A single drive failure in a Volume gives you an offline array.
 > 
-> It would be even clearer to zero retries in scsi_decide_disposition.
+> You need to find who is 08:05, look through /dev for the major/minor 
+> number and relate it to the 'device'. Look through /proc/scsi/scsi and 
+> /var/messages to help correlate it.
 > 
-> For NOT_READY, we would be better off always using the
-> scsi_requeue_command path ever: get rid of the check in scsi_check_sense,
-> as it will be requeued via scsi_io_completion code. This would have to
-> happen even if delaying retries to NOT_READY devices.
+> Sincerely -- Mark Salyzyn
 > 
 
-Here's a small patch against the latest scsi-rc-fixes tree I've been
-running with which allows my basic cable-pull test to complete without
-incident.
-
-Please consider for inclusion.
-
-
-As per Patrick M's suggestions:
-
-      * reset a command's retries count in scsi_decide_disposition() in
-        case of additional requiring by upper layer.
-      * remove redundant check for NOT_READY (ASC: 0x04 ASCQ: 0x01) in
-        scsi_check_sense().
-
-Signed-off-by: Andrew Vasquez <andrew.vasquez@qlogic.com>
-
- scsi_error.c |    9 +++------
- 1 files changed, 3 insertions(+), 6 deletions(-)
-
-===== drivers/scsi/scsi_error.c 1.86 vs edited =====
---- 1.86/drivers/scsi/scsi_error.c	2005-01-17 22:54:45 -08:00
-+++ edited/drivers/scsi/scsi_error.c	2005-01-31 23:01:54 -08:00
-@@ -327,12 +327,6 @@ static int scsi_check_sense(struct scsi_
- 			return NEEDS_RETRY;
- 		}
- 		/*
--		 * if the device is in the process of becoming ready, we 
--		 * should retry.
--		 */
--		if ((sshdr.asc == 0x04) && (sshdr.ascq == 0x01))
--			return NEEDS_RETRY;
--		/*
- 		 * if the device is not started, we need to wake
- 		 * the error handler to start the motor
- 		 */
-@@ -1405,7 +1399,10 @@ int scsi_decide_disposition(struct scsi_
- 	} else {
- 		/*
- 		 * no more retries - report this one back to upper level.
-+		 * clear retries in case the command is requeued by
-+		 * upper level.
- 		 */
-+		scmd->retries = 0;
- 		return SUCCESS;
- 	}
- }
