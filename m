@@ -1,39 +1,59 @@
-From: Bryan Henderson <hbryan@us.ibm.com>
-Subject: Re: What factors limit the SCSI I/O request size?
-Date: Wed, 19 May 2004 13:30:33 -0700
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH] fix assorted wd7000 warnings
+Date: Wed, 19 May 2004 22:33:50 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <OF6F1CA3C2.88C29D01-ON85256E99.0070455A-88256E99.0070B22C@us.ibm.com>
-References: <!~!UENERkVCMDkAAQACAAAAAAAAAAAAAAAAABgAAAAAAAAANoIxZIFzbEaqwjJgytz2AeKAAAAQAAAAtCTpDJFaLE2uBc3buWekQgEAAAAA@cisco.com>
+Message-ID: <20040519203350.GA10507@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e3.ny.us.ibm.com ([32.97.182.103]:16858 "EHLO e3.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S264531AbUESUbD (ORCPT
+Received: from verein.lst.de ([212.34.189.10]:6044 "EHLO mail.lst.de")
+	by vger.kernel.org with ESMTP id S264500AbUESUdz (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 19 May 2004 16:31:03 -0400
-In-Reply-To: <!~!UENERkVCMDkAAQACAAAAAAAAAAAAAAAAABgAAAAAAAAANoIxZIFzbEaqwjJgytz2AeKAAAAQAAAAtCTpDJFaLE2uBc3buWekQgEAAAAA@cisco.com>
+	Wed, 19 May 2004 16:33:55 -0400
+Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
-To: "Surekha.PC" <surekhap@cisco.com>
-Cc: 'SCSI Mailing List' <linux-scsi@vger.kernel.org>
+To: jejb@steeleye.com
+Cc: linux-scsi@vger.kernel.org
 
->By tuning sg_table_size
->and max_sectors setting in scsi_host temple following was the
->SCSI I/O request size being sent per command.
->
->Sg_table_size            max_sectors          SCSI I/O size
->   64                       256                   128k
->  128                       256                   128k
->   64                      1024                   256k
->  128                      1024                   512k
-> 
-> I would like to know on what basis the SCSI I/O request size per
->command is determined. What are the other factors apart from
->sg_table_size and max_sectors which can limit the I/O size?
+ - needs linux/delay.h for udelay
+ - C doesn't allow taking addresses of register variables and gcc even
+   complains these days
 
-I'm not sure what the relationship between the table and the question is; 
-are you implying that there is something other than sg_table_size and 
-max_sectors that affects the "SCSI I/O size" column in your experiment? 
-Because the numbers there conform exactly to the limits imposed by 
-sg_table_size and max_sectors (with a sector size of .5K and an sg entry 
-covering one page = 4K).
 
+--- 1.28/drivers/scsi/wd7000.c	Fri May  2 21:48:35 2003
++++ edited/drivers/scsi/wd7000.c	Wed May 19 17:46:14 2004
+@@ -165,6 +165,7 @@
+  * Removed now obsolete wd7000.h
+  */
+ 
++#include <linux/delay.h>
+ #include <linux/module.h>
+ #include <linux/interrupt.h>
+ #include <linux/kernel.h>
+@@ -846,7 +847,7 @@
+ static inline Scb *alloc_scbs(struct Scsi_Host *host, int needed)
+ {
+ 	register Scb *scb, *p = NULL;
+-	register unsigned long flags;
++	unsigned long flags;
+ 	register unsigned long timeout = jiffies + WAITnexttimeout;
+ 	register unsigned long now;
+ 	int i;
+@@ -898,7 +899,7 @@
+ 
+ static inline void free_scb(Scb * scb)
+ {
+-	register unsigned long flags;
++	unsigned long flags;
+ 
+ 	spin_lock_irqsave(&scbpool_lock, flags);
+ 
+@@ -936,7 +937,7 @@
+  */
+ {
+ 	register int i, ogmb;
+-	register unsigned long flags;
++	unsigned long flags;
+ 	unchar start_ogmb;
+ 	Mailbox *ogmbs = host->mb.ogmb;
+ 	int *next_ogmb = &(host->next_ogmb);
