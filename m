@@ -1,29 +1,34 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] add card types to 2.6.2 aacraid driver
-Date: Wed, 4 Feb 2004 19:30:42 +0000
+From: James Bottomley <James.Bottomley@steeleye.com>
+Subject: Re: Mount by WWN (FC, using qlogic 2200)
+Date: 04 Feb 2004 15:06:33 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040204193042.A21946@infradead.org>
-References: <1075922128.16628.41.camel@markh1.pdx.osdl.net>
+Message-ID: <1075925194.2029.102.camel@mulgrave>
+References: <OF21001894.F77A2C4A-ONC1256E30.006C8B35-C1256E30.006E2DB9@de.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from phoenix.infradead.org ([213.86.99.234]:26118 "EHLO
-	phoenix.infradead.org") by vger.kernel.org with ESMTP
-	id S263787AbUBDTaq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 4 Feb 2004 14:30:46 -0500
-Content-Disposition: inline
-In-Reply-To: <1075922128.16628.41.camel@markh1.pdx.osdl.net>; from markh@osdl.org on Wed, Feb 04, 2004 at 11:15:28AM -0800
+Received: from stat1.steeleye.com ([65.114.3.130]:55525 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S264233AbUBDUGk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 4 Feb 2004 15:06:40 -0500
+In-Reply-To: <OF21001894.F77A2C4A-ONC1256E30.006C8B35-C1256E30.006E2DB9@de.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Mark Haverkamp <markh@osdl.org>
-Cc: James Bottomley <James.Bottomley@steeleye.com>, linux-scsi <linux-scsi@vger.kernel.org>, Mark Salyzyn <mark_salyzyn@adaptec.com>
+To: Martin Peschke3 <MPESCHKE@de.ibm.com>
+Cc: "Robert J. Adams (jason)" <radams@siscom.net>, EXT / DEVOTEAM VAROQUI Christophe <ext.devoteam.varoqui@sncf.fr>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
 
-On Wed, Feb 04, 2004 at 11:15:28AM -0800, Mark Haverkamp wrote:
-> + * Module Name:
-> + *  rkt.c
-> + *
-> + * Abstract: Hardware miniport for Drawbridge specific hardware functions.
-> + *
-> + */
+On Wed, 2004-02-04 at 14:58, Martin Peschke3 wrote:
+> As there might be several paths to a device identified by a WWPN
+> in the form of 2 or more host bus adapters connecting to that WWPN,
+> don't you want to mount an FCP device by
+> <adapter identifier> + <WWPN> + <FCP_LUN> ?
 
-rx.c already claims it supports 'Drawbridge'
+Actually, I think the question was about WWN, i.e. the EVPD page 0x83
+World Wide Name, which uniquely identifies the device independent of
+transport.
+
+The answer is that someone needs to think about doing it using udev.
+
+James
+
 
