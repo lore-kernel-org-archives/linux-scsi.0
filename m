@@ -1,68 +1,79 @@
-From: Andrew Vasquez <praka@users.sourceforge.net>
-Subject: Re: [BUG] modprobe qla2300 doesn't complete
-Date: Sun, 14 Mar 2004 21:06:42 -0800
+From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
+Subject: RE: ADAPTEC 2.4 drivers too old
+Date: Mon, 15 Mar 2004 10:30:39 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040315050642.GA30707@praka.local.home>
-References: <20040310221241.GA7903@colo.lackof.org> <20040305041850.GA9124@colo.lackof.org> <20040305071721.GA9684@praka.local.home> <20040305172147.GB17305@colo.lackof.org> <20040309164033.GA21648@praka.local.home> <20040310221241.GA7903@colo.lackof.org> <5.1.0.14.2.20040312232611.044c2e98@mira-sjcm-3.cisco.com>
+Message-ID: <547AF3BD0F3F0B4CBDC379BAC7E4189F64E534@otce2k03.adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ms-smtp-01-qfe0.socal.rr.com ([66.75.162.133]:4859 "EHLO
-	ms-smtp-01-eri0.socal.rr.com") by vger.kernel.org with ESMTP
-	id S262266AbUCOF3K (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 15 Mar 2004 00:29:10 -0500
-Content-Disposition: inline
-In-Reply-To: <5.1.0.14.2.20040312232611.044c2e98@mira-sjcm-3.cisco.com>
+Received: from magic.adaptec.com ([216.52.22.17]:3796 "EHLO magic.adaptec.com")
+	by vger.kernel.org with ESMTP id S262608AbUCOPan convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 15 Mar 2004 10:30:43 -0500
+content-class: urn:content-classes:message
 List-Id: linux-scsi@vger.kernel.org
-To: Lincoln Dale <ltd@cisco.com>
-Cc: Andrew Vasquez <andrew.vasquez@qlogic.com>, Grant Grundler <grundler@parisc-linux.org>, linux-scsi@vger.kernel.org
+To: Xose Vazquez Perez <xose@wanadoo.es>
+Cc: arjanv@redhat.com, linux-scsi <linux-scsi@vger.kernel.org>
 
-On Fri, 12 Mar 2004, Lincoln Dale wrote:
-> At 05:11 PM 12/03/2004, Andrew Vasquez wrote:
-> >So, I'm not entirely clear on what else is going on with your
-> >configuration.  I'll try to get some runtime on an ia64 machine
-> >tomorrow to perform the same test.
+I would *hate* to point fingers until the root cause is completed for
+all issues. But the Driver has yet to be the root cause of any of the
+problems experienced by the Dell 2650 users. In each case where an
+alternate driver is selected that appears to resolve the issue, it is a
+detuned variant. Remember, most of the people solved their problems by
+turning off Hyperthreading, or turning of the card's Cache.
+
+The issues experienced by some of the 2650 owners have several causes.
+One root cause has been hardware problems. For instance, where the PCI
+bus no longer responds (traced to a faulty power supply), another was
+traced to a bad hard drive locking up the SCSI bus, another issue was
+addressed by a driver workaround for the Adapter Firmware being
+overloaded during times of internal Cache Flush.
+
+To add to the frustration, in none of the other peripheral cases have we
+been able to duplicate the issue in-house (Dell or at Adaptec), which
+generally means to me that the issue is hardware specific. Systems that
+exhibited the problem have been shipped to the factory, only to stop
+exhibiting the problem.
+
+It certainly is not for a lack of trying ...
+
+Sincerely -- Mark Salyzyn
+
+-----Original Message-----
+From: linux-scsi-owner@vger.kernel.org
+[mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of Xose Vazquez
+Perez
+Sent: Saturday, March 13, 2004 2:17 PM
+To: unlisted-recipients
+Cc: arjanv@redhat.com; 'linux-scsi'
+Subject: Re: ADAPTEC 2.4 drivers too old
+
+Xose Vazquez Perez wrote:
+
+> Arjan van de Ven wrote:
 > 
-> if you have access to some SAN test equipment (e.g. Agilent SAN Tester), or 
-> SAN-rootkit (e.g. we have internal tools which can cause RSCN floods, FLOGI 
-> floods, PLOGI floods, rogue injection of vast quantities of NS 
-> registrations ...), it currently doesn't seem too hard to upset the qla2300 
-> into a never-ending incomplete state such that Grant has seen.
+>> I object to the words "too old" in your subject.
+>> The reality is that 2.4 doesn't have the brand-spanking-newest driver
+>> version *numbers*. So what? Newer != automatically better.
+> 
+> 
+> http://marc.theaimsgroup.com/?l=linux-kernel&m=107456492323846&w=2
+> 
+> "... and left at least the aic79xx driver in a worse state than it
+> was in before ..."
 > 
 
-Unfortunately (at least locally) we don't have some nice Agilent
-hardware.  I have managed to gather some 'traffic generating' hardware
-together, but, from what we've seen, the disconnect in
-originator/source of the RSCN frames seems to wreak havoc in the BB
-credit area.  In any case, we'll try some other options tomorrow.
+there are more examples....
 
+Do you call to aacraid stable driver ?
 
-> have you guys ever considered rate-limiting NS queries following receiving 
-> RSCNs?
-> 
+ask to Dell 2650 owners:
+http://bugzilla.redhat.com/bugzilla/show_bug.cgi?id=92129
+http://lists.us.dell.com/pipermail/linux-aacraid-devel/
 
-Well, looking through the code, there are a few additional places
-where we could limit processing during loop-resync (i.e. device
-discovery) when there are outstanding loop resyncs (RSCNs) without
-littering the whole process with tons of:
-
-	if (test_bit(LOOP_RESYNC_NEEDED, &ha->dpc_flags))
-		break;		// skip...
-
-
-I can take a look at these places.  
-
-With recent QLogic drivers (8.x series included) on 23xx (and 63xx)
-ISPs, we started to employ a more fabric non-disruptive method of
-handling 'port-type' RSCNs, effectively using a series of ADISCs and
-PLOGIs to handle disconnects/additions and movements of ports within a
-fabric -- for the initiated, qla_rscn.c contains the complete set of
-patterns and logic describing the process.
-
-In a sense, one could consider this 'rate-limiting' in essence, but
-given most devices on a fabric are 'passive' in nature, RSCN handling
-(including tricks and intelligence) at the lowest-link in the chain
-doesn't provide for much in the way of manuverability.
-
-Regards,
-Andrew Vasquez
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
