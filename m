@@ -1,64 +1,60 @@
-From: Matthew Dharm <mdharm-scsi@one-eyed-alien.net>
-Subject: Re: PATCH: exclude certain commands from emulated SCSI hosts
-Date: Sat, 5 Apr 2003 16:22:34 -0800
+From: Douglas Gilbert <dougg@torque.net>
+Subject: sg3_utils-1.03 released
+Date: Sun, 06 Apr 2003 10:27:18 +1000
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030405162234.E4320@one-eyed-alien.net>
-References: <20030322233136.D17056@one-eyed-alien.net> <1048467235.1634.22.camel@mulgrave> <20030323173733.B24668@one-eyed-alien.net> <1048469946.1643.2.camel@mulgrave> <20030323230438.E24668@one-eyed-alien.net> <1048519237.1982.16.camel@mulgrave> <20030324093028.A1066@one-eyed-alien.net> <1049556643.1762.16.camel@mulgrave> <20030405112759.B4320@one-eyed-alien.net> <1049571946.2538.94.camel@mulgrave>
+Message-ID: <3E8F7466.40406@torque.net>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-md5;
-	protocol="application/pgp-signature"; boundary="sfyO1m2EN8ZOtJL6"
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ziggy.one-eyed-alien.net ([64.169.228.100]:4871 "EHLO
-	ziggy.one-eyed-alien.net") by vger.kernel.org with ESMTP
-	id S262736AbTDFALO (for <rfc822;linux-scsi@vger.kernel.org>); Sat, 5 Apr 2003 19:11:14 -0500
-Content-Disposition: inline
-In-Reply-To: <1049571946.2538.94.camel@mulgrave>; from James.Bottomley@SteelEye.com on Sat, Apr 05, 2003 at 01:45:43PM -0600
+Received: from bunyip.cc.uq.edu.au ([130.102.2.1]:19462 "EHLO
+	bunyip.cc.uq.edu.au") by vger.kernel.org with ESMTP id S262737AbTDFAOc (for <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 5 Apr 2003 19:14:32 -0500
+Received: from torque.net (d-241-81.stlucia.uq.net.au [203.101.241.81])
+	by bunyip.cc.uq.edu.au (8.12.9/8.12.9) with ESMTP id h360PuGW000973
+	for <linux-scsi@vger.kernel.org>; Sun, 6 Apr 2003 10:26:02 +1000 (GMT+1000)
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Linus Torvalds <torvalds@transmeta.com>, USB Developers <linux-usb-devel@lists.sourceforge.net>, USB Storage List <usb-storage@one-eyed-alien.net>, Linux SCSI list <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
 
+Tarball and rpms found on http://www.torque.net/sg .
+Summary of sg3_utils, sg_utils and other packages on
+this page: http://www.torque.net/sg/u_index.html
+A release announcement has been sent to freshmeat.net
 
---sfyO1m2EN8ZOtJL6
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Changelog for sg3_utils-1.03 [20030402]
+   - sg_senddiag: added, allows self tests and listing of diag pages
+   - sg_start: changed to use SG_IO so works on block devices
+   - sg_err: print out some "sense key specific" data [Trent Piepho]
+   - sg_modes: add "-6" switch for force 6 byte MODE SENSE [Trent Piepho]
+   - sg_modes: more information on page codes and controls
+   - sg_inq, sg_modes, sg_logs, sg_senddiag: add man pages
+   - sg_dd: add "append=0|1" switch for glueing together large files
+   - note in README about utilities offered by scsirastools package
 
-On Sat, Apr 05, 2003 at 01:45:43PM -0600, James Bottomley wrote:
-> What's wrong with
->=20
-> -		if(scsi_filter_cmd(SCp, &filter)) {
-> +		if(SCp->device->type =3D=3D TYPE_DISK && scsi_filter_cmd(SCp, &filter)=
-) {
->=20
-> ?
+Changelog for sg3_utils-1.02 [20030101]
+   - sg_inq: check if cmddt or evpd bits ignored
+   - sg_inq: warn -o=<n> not used for standard INQUIRY
+   - sg_turs: add -t option to time Test Unit Ready commands
+   - sg_errs: (used by most utilities) warn if sense buffer empty
+   - sg_modes: make safe with block SG_IO (bypass SG_GET_SCSI_ID ioctl)
+   - sg_logs: make safe with block SG_IO, self-test page work
+   - sg_dd: add "blksg_io=" switch to experiment with block SG_IO
+   - sg_read: now use SG_IO ioctl rather than sg write/read
+   - sginfo: fix writing parameters, check for block devices that answer
+     sg's ioctls, recognize "scd<n>" device names
+   - sg_map: stop close error report on tape devices
+   - sg_readcap: make safe with block SG_IO
+   - sg_start: make safe with block SG_IO
+   - sg_test_rwbuf: make safe with block SG_IO
 
-Out of curiosity, at what point is SCp->device->type a valid reference?  I
-would hope that none of those pointers would be NULL during a probe at init
-time.  I also hope that the type field contains the right data as soon as
-the INQUIRY data comes back... but does anyone actually know for certain?
+A recent discovery was a utility called SeaTools from
+Seagate ( http://www.seagate.com ). Although slanted
+towards Seagate disks, it supports self tests, setting
+performance critical mode page parameters, and formatting
+(including to different block sizes). It seems to be
+freely distributed in binary for Linux 2.4 series
+(works fine with 2.5 as well).
 
-Matt
+Doug Gilbert
 
---=20
-Matthew Dharm                              Home: mdharm-usb@one-eyed-alien.=
-net=20
-Maintainer, Linux USB Mass Storage Driver
-
-Pitr!  That's brilliant!  Funded by Microsoft refunds.  What sweet irony!
-					-- A.J.
-User Friendly, 2/15/1999
-
---sfyO1m2EN8ZOtJL6
-Content-Type: application/pgp-signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.0.6 (GNU/Linux)
-Comment: For info see http://www.gnupg.org
-
-iD8DBQE+j3NKIjReC7bSPZARAkIIAJ9rn3e7rYx+eCBnch3miVTPA5Ov2gCfTcji
-adRPyYYrt+97A7LiccdtlG0=
-=iMSE
------END PGP SIGNATURE-----
-
---sfyO1m2EN8ZOtJL6--
