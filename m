@@ -1,40 +1,38 @@
 From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: 100% repeatable way to send firewire out to lunch permanently
-	on 2.6.8.1
-Date: 24 Oct 2004 11:22:30 -0400
-Sender: linux1394-devel-admin@lists.sourceforge.net
-Message-ID: <1098631356.10824.33.camel@mulgrave>
-References: <Pine.LNX.4.44.0409050434540.8779-100000@sasami.anime.net>
-	<20041024144236.GA21793@suse.de> <1098629588.10908.23.camel@mulgrave>
-	<20041024150051.GA21922@suse.de>
+Subject: Re: [patch 1/2] cciss: cleans up warnings in the 32/64 bit
+	conversions
+Date: 24 Oct 2004 11:54:15 -0400
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <1098633262.10824.35.camel@mulgrave>
+References: <20041021211718.GA10462@beardog.cca.cpqcorp.net>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux1394-devel-admin@lists.sourceforge.net>
-In-Reply-To: <20041024150051.GA21922@suse.de>
-Errors-To: linux1394-devel-admin@lists.sourceforge.net
-List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
-	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=unsubscribe>
-List-Post: <mailto:linux1394-devel@lists.sourceforge.net>
-List-Help: <mailto:linux1394-devel-request@lists.sourceforge.net?subject=help>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
-	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=subscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=linux1394-devel>
-To: Olaf Hering <olh@suse.de>
-Cc: Dan Hollis <goemon@anime.net>, SCSI Mailing List <linux-scsi@vger.kernel.org>, bcollins@debian.org, linux1394-devel@lists.sourceforge.net
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from stat16.steeleye.com ([209.192.50.48]:13736 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S261543AbUJXPye (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 24 Oct 2004 11:54:34 -0400
+In-Reply-To: <20041021211718.GA10462@beardog.cca.cpqcorp.net>
 List-Id: linux-scsi@vger.kernel.org
+To: mikem@beardog.cca.cpqcorp.net
+Cc: marcelo.tosatti@cyclades.com, Jens Axboe <axboe@suse.de>, Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-The trace doesn't show any error handler activity at all.  Are there no
-messages in the log about offlining the device?  If not, it sounds like
-there's a problem somewhere in the firewire system.
+On Thu, 2004-10-21 at 17:17, mike.miller@hp.com wrote:
+> Patch 1 of 2 for 20041021.
+> This patch cleans up some warnings in the 32-bit to 64-bit conversions.
+> Please consider this for inclusion. Built against 2.4.28-pre4.
+> Please apply in order.
+
+There's something wrong with this patch (it might be a missing prior
+patch) that's causing it to reject comprehensively.
+
+> -typedef long (*handler_type) (unsigned int, unsigned int, unsigned long,
+> +typedef int (*handler_type) (unsigned int, unsigned int, unsigned long,
+
+Things like this.  handler_type has always been int not long in the
+source that's currently in the tree.
 
 James
 
 
-
-
--------------------------------------------------------
-This SF.net email is sponsored by: IT Product Guide on ITManagersJournal
-Use IT products in your business? Tell us what you think of them. Give us
-Your Opinions, Get Free ThinkGeek Gift Certificates! Click to find out more
-http://productguide.itmanagersjournal.com/guidepromo.tmpl
