@@ -1,63 +1,39 @@
-From: Pat LaVarre <p.lavarre@ieee.org>
-Subject: Re: /dev/hd* in sg_scan
-Date: 29 Oct 2003 10:16:03 -0700
+From: Mike Christie <mikenc@us.ibm.com>
+Subject: Re: Request for review of Linux iSCSI driver version 4.0.0.1
+Date: Wed, 29 Oct 2003 09:28:39 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1067447763.13824.26.camel@patehci2>
-References: <1067299763.3469.6.camel@patehci2> <3F9F4393.5060602@torque.net>
+Message-ID: <3F9FF8C7.70909@us.ibm.com>
+References: <20031027153932.A16679@infradead.org> <018b01c39e1f$e013bab0$a0074d0a@apac.cisco.com> <20031029134557.A17523@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from email-out2.iomega.com ([147.178.1.83]:27010 "EHLO
-	email.iomega.com") by vger.kernel.org with ESMTP id S261152AbTJ2RQN
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 29 Oct 2003 12:16:13 -0500
-In-Reply-To: <3F9F4393.5060602@torque.net>
+Received: from e1.ny.us.ibm.com ([32.97.182.101]:13246 "EHLO e1.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S261294AbTJ2RaN (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 29 Oct 2003 12:30:13 -0500
+In-Reply-To: <20031029134557.A17523@infradead.org>
 List-Id: linux-scsi@vger.kernel.org
-To: dougg@torque.net
-Cc: linux-scsi@vger.kernel.org
+To: 'Christoph Hellwig' <hch@infradead.org>
+Cc: "Surekha.PC" <surekhap@cisco.com>, linux-scsi@vger.kernel.org, davmyers@cisco.com, Richard Bealkowski <ennui@us.ibm.com>
 
-> Sg3_utils' sg_map and sg_scan for lk 2.6 still have me
-> thinking ... waiting ...
-> sg .. to use cdevs (char ... sysfs ... > 256 minors)
-> latest freeze ... scsi tape robots and enclosures ...
+Hi Surekha,
 
-Prompt & cogent as usual, thank you.
+>>This is again needed for network boot. The n/w driver and iSCSI driver
+>>are loaded during early boot. Since the n/w interface is not setup at
+>>that time, we need to bring up the interface through this call in iSCSI
+>>driver.
+> 
+> 
+> That's bogus.  Look at the ip autoconfig code used by rootnfs and reuse
+> that instead of creating such bogus hacks.  A driver has no business dealing
+> with the network configuration.
+> 
 
-> >http://tldp.org/HOWTO/SCSI-Generic-HOWTO/open.html
-> > >... O_NONBLOCK ... ignored by ioctl(SG_IO)
-> > 
-> > As of 2.6, in fact we now need O_NONBLOCK if we want open O_RDONLY to
-> > let us talk SG_IO to a DVD/CD with no disk present?  Also we discard the
-> > history of passing thru less commands for O_RDONLY than for O_RDWR?
+Your driver does not even need to mess with that code. Just modify your 
+usersapce tools in the linux-iscsi package that run in the initrd to do 
+this in userspace.
 
-I guess, but I do not know.
 
-> With either /dev/hd and /dev/sd ...
-
-Thanks for hinting at /dev/sd$v or /dev/sd$v$n.
-
-I see /dev/scd$n rejects SG_IO.
-
-So far I have only seen /dev/hd$v and /dev/sg$n work.
-
-> With either /dev/hd and /dev/sd you may soon want to find
-> out (or probe) before making any assumptions:
->    - what protocol are you using (e.g. ATA, ATAPI, SCSI)
->    - what transport (e.g. pATA, sATA, SPI, FC, USB, SAS)
-
-I see you hint darkly ... at what I do not know.
-
-Why am I going to want to discover protocol & transport?
-
-How will I do so?
-
-> currently I'm rewriting sginfo).
-
-Thank you.
-
-I trust you won't let me slow you down with my ignorant questions.
-
-Pat LaVarre
-
+Mike
 
