@@ -1,44 +1,62 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: Handling erroneous READ CAPACITY response in sd.c
-Date: Tue, 19 Oct 2004 17:52:38 -0400 (EDT)
+From: "Randy.Dunlap" <rddunlap@osdl.org>
+Subject: [PATCH] qla1280: driver_setup not __initdata
+Date: Tue, 19 Oct 2004 21:28:10 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44L0.0410191738250.713-100000@netrider.rowland.org>
-References: <41758003.2060005@adaptec.com>
+Message-ID: <4175E95A.9090107@osdl.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: multipart/mixed;
+ boundary="------------090009020406020908040207"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from netrider.rowland.org ([192.131.102.5]:18948 "HELO
-	netrider.rowland.org") by vger.kernel.org with SMTP id S269913AbUJSVwm
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 19 Oct 2004 17:52:42 -0400
-In-Reply-To: <41758003.2060005@adaptec.com>
+Received: from fw.osdl.org ([65.172.181.6]:39602 "EHLO mail.osdl.org")
+	by vger.kernel.org with ESMTP id S268092AbUJTEcK (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 20 Oct 2004 00:32:10 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: Luben Tuikov <luben_tuikov@adaptec.com>
-Cc: SCSI development list <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org, James.Bottomley@SteelEye.com, jes@trained-monkey.org
 
-On Tue, 19 Oct 2004, Luben Tuikov wrote:
+This is a multi-part message in MIME format.
+--------------090009020406020908040207
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 
-> Alan, do you have such a USB device handy?
 
-I don't have one myself, but I know several users who do.
+-- 
+~Randy
 
-> A third possibility is to use the PMI bit to get the proper value
-> of the LBA of the last logical block.
-> 
-> If you want to move this into sd, then do you know if those
-> devices support the use of PMI bit in READ CAPACITY CDB?
-> As block devices they should.
+--------------090009020406020908040207
+Content-Type: text/x-patch;
+ name="qla1280_init.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="qla1280_init.patch"
 
-I don't know.  Yes, they should -- but considering that the READ CAPACITY 
-support is wrong it wouldn't be surprising if the PMI support is also 
-wrong.  There's an excellent chance the devices will return the same value 
-whether PMI is set or not.
 
-> See the appended/attached patch.  Can you test it against such a USB
-> device?
+'driver_setup' cannot be __initdata if slave_configure() can be called
+after driver-init:
+Error: ./drivers/scsi/qla1280.o .text refers to 0000000000000fbf R_X86_64_PC32     .init.data+0x000000000000007b
+Error: ./drivers/scsi/qla1280.o .text refers to 0000000000000fc9 R_X86_64_PC32     .init.data+0x000000000000007e
+Error: ./drivers/scsi/qla1280.o .text refers to 0000000000000fea R_X86_64_PC32     .init.data+0x000000000000007b
+Error: ./drivers/scsi/qla1280.o .text refers to 0000000000000ff4 R_X86_64_PC32     .init.data+0x0000000000000080
+Error: ./drivers/scsi/qla1280.o .text refers to 0000000000001039 R_X86_64_PC32     .init.data+0x000000000000007b
+Error: ./drivers/scsi/qla1280.o .text refers to 0000000000001043 R_X86_64_PC32     .init.data+0x0000000000000082
 
-I'll ask some people to try.  Do you think that READ FORMAT CAPACITIES (op
-0x23) might be a better approach?
+Signed-off-by: Randy Dunlap <rddunlap@osdl.org>
 
-Alan Stern
+diffstat:=
+ drivers/scsi/qla1280.c |    2 +-
+ 1 files changed, 1 insertion(+), 1 deletion(-)
 
+diff -Naurp ./drivers/scsi/qla1280.c~qla1280_init ./drivers/scsi/qla1280.c
+--- ./drivers/scsi/qla1280.c~qla1280_init	2004-10-18 14:55:35.000000000 -0700
++++ ./drivers/scsi/qla1280.c	2004-10-19 21:01:59.414022600 -0700
+@@ -549,7 +549,7 @@ static void qla1280_get_target_parameter
+ static int qla1280_set_target_parameters(struct scsi_qla_host *, int, int);
+ 
+ 
+-static struct qla_driver_setup driver_setup __initdata;
++static struct qla_driver_setup driver_setup;
+ 
+ /*
+  * convert scsi data direction to request_t control flags
+
+--------------090009020406020908040207--
