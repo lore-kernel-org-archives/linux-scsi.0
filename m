@@ -1,31 +1,27 @@
-From: James Bottomley <James.Bottomley@steeleye.com>
-Subject: Re: Using ncr53c8xx.c for a 53c770 chip
-Date: 13 Jan 2004 11:45:36 -0500
+From: Mike Anderson <andmike@us.ibm.com>
+Subject: Re: linux-2.6.0-test11 [BUG] -- scsi_add/remove_device - out of memory
+Date: Tue, 13 Jan 2004 10:11:31 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1074012337.2173.131.camel@mulgrave>
-References: <20031122113834.GA8098@lst.de>
-	<20031123175041.A1461@sygehus.dk> <1069606797.2066.2.camel@mulgrave>
-	<20040113145553.A1738@sygehus.dk>  <20040113151503.B1738@sygehus.dk>
+Message-ID: <20040113181131.GC899@beaverton.ibm.com>
+References: <OF11CFD4DA.B5836830-ONC1256E1A.00322027-C1256E1A.00356646@de.ibm.com> <20040113162646.GA2550@beaverton.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat1.steeleye.com ([65.114.3.130]:20401 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S264411AbUAMQpl (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 13 Jan 2004 11:45:41 -0500
-In-Reply-To: <20040113151503.B1738@sygehus.dk>
+Received: from e33.co.us.ibm.com ([32.97.110.131]:11489 "EHLO
+	e33.co.us.ibm.com") by vger.kernel.org with ESMTP id S265517AbUAMSGW
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 13 Jan 2004 13:06:22 -0500
+Content-Disposition: inline
+In-Reply-To: <20040113162646.GA2550@beaverton.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Rask Ingemann Lambertsen <rask@sygehus.dk>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Heiko Carstens <Heiko.Carstens@de.ibm.com>, Adam Radford <aradford@3WARE.com>, linux-scsi@vger.kernel.org
 
-On Tue, 2004-01-13 at 09:15, Rask Ingemann Lambertsen wrote:
-> I just got hold of the 53c770 programming guide, and it helps a lot with
-> this part, but comments are still welcome, of course.
+I forgot to ask are you still seeing this failure on recent version of
+2.6 as there was an issue of the scsi-mid not calling slave_destroy in
+certain cases.
 
-OK, I forgot to say that because you have a non-standard 50MHz clock,
-you'll need to set FE_VARCLK to make the driver compute the clock speed.
-
-James
-
+-andmike
+--
+Michael Anderson
+andmike@us.ibm.com
 
