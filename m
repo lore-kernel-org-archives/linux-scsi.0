@@ -1,113 +1,88 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: sg3_utils-1.12 released
-Date: Fri, 21 Jan 2005 18:00:43 +1000
-Message-ID: <41F0B6AB.4020900@torque.net>
-Reply-To: dougg@torque.net
+From: "Mukker, Atul" <Atulm@lsil.com>
+Subject: RE: How to add/drop SCSI drives from within the driver?
+Date: Fri, 21 Jan 2005 17:11:17 -0500
+Message-ID: <0E3FA95632D6D047BA649F95DAB60E5705A70B74@exa-atlanta>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from borg.st.net.au ([65.23.158.22]:47785 "EHLO borg.st.net.au")
-	by vger.kernel.org with ESMTP id S261523AbVAUIAh (ORCPT
+Received: from mail0.lsil.com ([147.145.40.20]:969 "EHLO mail0.lsil.com")
+	by vger.kernel.org with ESMTP id S262566AbVAUWTS (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 21 Jan 2005 03:00:37 -0500
-Received: from localhost (localhost [127.0.0.1])
-	by borg.st.net.au (Postfix) with ESMTP id 1E4B8394576
-	for <linux-scsi@vger.kernel.org>; Fri, 21 Jan 2005 18:00:35 +1000 (EST)
-Received: from [192.168.48.80] (dsl-234.128.240.220.lns02-wick-bne.dsl.comindico.com.au [220.240.128.234])
-	by borg.st.net.au (Postfix) with ESMTP id CC7EA39451D
-	for <linux-scsi@vger.kernel.org>; Fri, 21 Jan 2005 18:00:33 +1000 (EST)
+	Fri, 21 Jan 2005 17:19:18 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: 'James Bottomley' <James.Bottomley@SteelEye.com>, 'Matt Domsch' <Matt_Domsch@Dell.com>
+Cc: "'Salyzyn, Mark'" <mark_salyzyn@adaptec.com>, "Bagalkote, Sreenivas" <sreenib@lsil.com>, "'brking@us.ibm.com'" <brking@us.ibm.com>, 'Linux Kernel' <linux-kernel@vger.kernel.org>, 'SCSI Mailing List' <linux-scsi@vger.kernel.org>, "'bunk@fs.tum.de'" <bunk@fs.tum.de>, 'Andrew Morton' <akpm@osdl.org>, "Ju, Seokmann" <sju@lsil.com>, "Doelfel, Hardy" <hdoelfel@lsil.com>, "Mukker, Atul" <Atulm@lsil.com>
 
-Tarball, rpm and deb can be found on http://www.torque.net/sg .
-Overview of sg3_utils, sg_utils and other packages are on
-this page: http://www.torque.net/sg/u_index.html
-A release announcement has been sent to freshmeat.net .
+All right! The implementation is complete for this and the driver has
+thoroughly gone through testing. Everything looks good except for a minor
+glitch.
 
-Changelog for sg3_utils-1.12 [20050121]
-   - sg_wr_mode: new utility to modify (i.e. write to) mode pages
-   - sg_reassign: new utility: issues Reassign Blocks command
-   - sg_rtpg: new utility: issues Report Target Port Groups command
-              [Christophe Varoqui]
-   - ATA IDENTIFY command misspelt as "IDENTITY" in several places
-   - sginfo: tweak SAS mode pages to match sas 1.1 rev 07
-         - add NV_DIS bit to disk caching mode page
-   - sg_map: open /dev/nst* rather than /dev/st* (to stop
-             spurious rewinds)
-   - sg_lib: ATA return sense descriptor
-         - add sg_get_sense_info_fld() to fetch info field from
-           sense data
-         - fix bug in sg_scsi_sense_desc_find()
-         - add sense key specific decoding for fixed format sense data
-   - sg_modes: extend '-p' option to allow
-               '-p=<page_code>,<subpage_code>'
-         - add '-A' option to output all mode pages and subpages
-         - extend '-l' option to show subpages, selected command
-           set pages
-   - sg_inq: fix LUN WWN output in unit path report VPD page (emc)
-             [Hergen Lange]
-   - sg_get_config: some additions for DVD-R dual layer
-   - sg_modes: show write protect (WP) and DpoFua flags for disks
-   - sg_cmds: add llbaa argument to sg_ll_mode_sense10()
+After the new logical drives are created with "- - -" written to the
+scsi_host scan attribute, there is a highly noticeable delay before device
+names (e.g., sda) appears in the /dev directory. If the management
+application tried to access the device immediately after creating new, the
+access fails. Putting a 1 second delay helped, but of course this is not a
+deterministic solution.
 
+What are the other possibilities?
 
-                         Command coverage
-                         ================
-The following table lists SCSI commands in alphabetical order on the
-left and the sg3_utils utilities that implement invocations of them
-on the right. The second table lists supported ATA commands.
+Thanks
+-Atul Mukker
+LSI Logic
 
-SCSI command        sg3_utils utilities that use this SCSI command
-------------        ----------------------------------------------
-GET CONFIGURATION   sg_get_config
-INQUIRY             sg_inq, sginfo, sg_logs, sg_map('-i'), sg_modes,
-                     sg_opcodes, sg_persist, sg_scan, sg_ses
-LOG SELECT          sg_logs('-r')
-LOG SENSE           sg_logs
-MODE SELECT(6)      sg_wr_mode, sginfo, sg_emc_trespass
-MODE SELECT(10)     sg_wr_mode, sginfo, sg_emc_trespass
-MODE SENSE(6)       sg_modes, sg_wr_mode, sginfo, sg_senddiag('-e')
-MODE SENSE(10)      sg_modes, sg_wr_mode, sginfo, sg_senddiag('-e')
-PERSISTENT IN       sg_persist
-PERSISTENT OUT      sg_persist
-PREVENT ALLOW MEDIUM REMOVAL            sg_prevent
-READ(6)             sg_dd, sgm_dd, sgp_dd, sg_read
-READ(10)            sg_dd, sgm_dd, sgp_dd, sg_read
-READ(12)            sg_dd, sgm_dd, sgp_dd, sg_read
-READ(16)            sg_dd, sgm_dd, sgp_dd, sg_read
-READ BUFFER         sg_rbuf, sg_test_rwbuf
-READ CAPACITY(10)   sg_readcap, sg_dd, sgm_dd, sgp_dd
-READ CAPACITY(16)   sg_readcap, sg_dd, sgm_dd, sgp_dd
-READ DEFECT(10)     sginfo
-READ DEFECT(12)     sginfo
-READ LONG           sg_read_long
-REASSIGN BLOCKS     sg_reassign
-RECEIVE DIAGNOSTIC  sg_senddiag, sg_ses
-REPORT LUNS         sg_luns
-REPORT SUPPORTED OPERATION CODES              sg_opcodes
-REPORT SUPPORTED TASK MANAGEMENT FUNCTIONS    sg_opcodes
-REPORT TARGET PORT GROUPS       sg_rtpg
-REQUEST SENSE       sg_requests
-SEND DIAGNOSTIC     sg_senddiag, sg_ses
-START STOP          sg_start
-SYNCHRONIZE CACHE   sg_sync, sg_dd, sgm_dd, sgp_dd
-TEST UNIT READY     sg_turs
-VERIFY(10)          sg_verify
-WRITE(6)            sg_dd, sgm_dd, sgp_dd
-WRITE(10)           sg_dd, sgm_dd, sgp_dd
-WRITE(12)           sg_dd, sgm_dd, sgp_dd
-WRITE(16)           sg_dd, sgm_dd, sgp_dd
-WRITE BUFFER        sg_test_rwbuf
-WRITE LONG          sg_write_long
-
-
-ATA command         sg3_utils utilities that use this SCSI command
------------         ----------------------------------------------
-IDENTIFY            sg_inq, sg_scan
-
-
-Doug Gilbert
-
-
+> -----Original Message-----
+> From: James Bottomley [mailto:James.Bottomley@SteelEye.com] 
+> Sent: Wednesday, December 15, 2004 1:49 PM
+> To: Matt Domsch
+> Cc: Salyzyn, Mark; Bagalkote, Sreenivas; brking@us.ibm.com; 
+> Linux Kernel; SCSI Mailing List; bunk@fs.tum.de; Andrew 
+> Morton; Ju, Seokmann; Doelfel, Hardy; Mukker, Atul
+> Subject: Re: How to add/drop SCSI drives from within the driver?
+> 
+> On Wed, 2004-12-15 at 01:24 -0600, Matt Domsch wrote:
+> > James, I've been thinking about this a little more, and you 
+> may be on 
+> > to something here. Let each driver add files as such:
+> > 
+> > /sys/class/scsi_host
+> >  |-- host0
+> >  |   |-- add_logical_drive
+> >  |   |-- remove_logical_drive
+> >  |   `-- rescan_logical_drive
+> > 
+> > Then we can go 2 ways with this.
+> > 1) driver functions directly call scsi_add_device(), 
+> > scsi_remove_device(), and something for rescan (option 2 
+> handles this 
+> > one cleanly for us).  ATM, megaraid_mbox doesn't implement a rescan 
+> > function, so this point may be moot.
+> > 
+> > 2) driver functions call a midlayer library function, which invokes
+> >    /sbin/hotplug with appropriate data, and add a new /etc/hotplug.d
+> >    helper app which would then write to these files:
+> > 
+> > /sys/class/scsi_host
+> > |-- host0
+> > |   |-- scan
+> > /sys/devices/pci0000:0x/0000:0x:0x.0/host0
+> > |-- 0:0:0:0
+> > |   |-- delete
+> > |   |-- rescan
+> > 
+> > to do likewise.
+> 
+> I'll buy this (option 2).. it seems like a good way to export 
+> the megaraid specific information and at the same time 
+> integrate it more fully into the evolving hotplug infrastructure.
+> 
+> James
+> 
+> 
+> -
+> To unsubscribe from this list: send the line "unsubscribe 
+> linux-kernel" in the body of a message to 
+> majordomo@vger.kernel.org More majordomo info at  
+> http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
+> 
