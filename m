@@ -1,60 +1,61 @@
-From: George Magklaras <george.magklaras@biotek.uio.no>
-Subject: Re: SCSI Disk layer performance
-Date: Thu, 29 Jan 2004 13:26:50 +0100
+From: Steve Sutphen <steve@cs.ualberta.ca>
+Subject: LSI MegaRAID on Tyan S2469 MB
+Date: Thu, 29 Jan 2004 05:53:21 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <4018FC0A.3050309@biotek.uio.no>
-References: <400FF79A.6050108@wanadoo.es>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Message-ID: <S560698AbUA2MxV/20040129125322Z+855@sunkay.cs.ualberta.ca>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pat.uio.no ([129.240.130.16]:62953 "EHLO pat.uio.no")
-	by vger.kernel.org with ESMTP id S265895AbUA2M1p (ORCPT
+Received: from sunkay.cs.ualberta.ca ([129.128.4.11]:9390 "EHLO
+	sunkay.cs.ualberta.ca") by vger.kernel.org with ESMTP
+	id S265981AbUA2MxX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 29 Jan 2004 07:53:23 -0500
+Received: (from localhost user: 'steve' uid#10 fake: STDIN (steve@snaring))
+	by sunkay.cs.ualberta.ca id S560698AbUA2MxV (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 29 Jan 2004 07:27:45 -0500
-In-Reply-To: <400FF79A.6050108@wanadoo.es>
+	Thu, 29 Jan 2004 05:53:21 -0700
 List-Id: linux-scsi@vger.kernel.org
-To: Xose Vazquez Perez <xose@wanadoo.es>, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: philipl@aslan.ab.ca
 
+I am having a difficult problem with an LSI MegaRAID 320-2 that is installed
+on a Tyan S2469 mother board with AMD Athlon's.  The disks that I am using
+are Seagate 147GB drives. 
+The problem is that the MegaRAID slows to a crawl, and then slows so much
+that it times out and cannot complete the queued commands (for ever it
+seems).
+I have verified that the controller is working.  I have not been able to 
+get it to fail when I move the controller, disk array, and boot disk 
+to a different system with a Tyan S2466 motherboard (and dual Athlon's).
 
+Some things that I have tried include: replacing the S2469 motherboard
+with another copy of the same.  I have upgraded the BIOS code on the 
+motherboard to the latest version V1.07.  I have upgraded the firmware 
+on the LSI MegaRAID to the latest version on their web site.  I have 
+tried a 2.4.18, a 2.4.23 and a 2.4.34 Linux kernel.  I have tried an
+earlier version (I cannot check right now to see which one--what ever
+came standard in the 2.4.23 kernel) and have upgraded to the 2.0.9 
+version of the megaraid2 driver (I see that a 2.0.10 is now out, I
+will try it tomorrow).  I have tried the system with just one CPU.
+I have switched the CPU's with the ones on the S2466 based system mentioned
+above.  I have replaced all the memory.  I not only have tested the disk
+arrays by installing them in the S2466 based system, I have also hooked
+them up to the on-board SCSI on the S2469 motherboard, and have
+run bonnie++ testing with three of the drives in parallel (i.e. three
+bonnie++ jobs in the background).  
 
-Xose Vazquez Perez wrote:
-> Christoph Hellwig wrote:
-> 
-> 
->>What kernel tree do you use?  If you're looking for decent scsi
->>performance use linux 2.6 or the SuSE/RH vendor trees.  Stock Linux 2.4
-> 
->                                            ^^^^^^
-> _Enterprise_ kernels, RHEL or SLES.
-> Fedora Core kernel is, more or less, a plain kernel.org.
-> 
-> I'm runnig RHEL 2.4.21-9.EL kernel and it's _much better_ than any 2.4.xx
-> kernel.org. I could call it 2.5 because it's a mix of 2.4 and 2.6 ;-)
-> 
-The 2.4.21-9EL might have clever things backported into it, but it is 
-still missing essential things that can make a difference in the block 
-layer, like an anticipatory I/O schedule. My impression is that all 
-2.4 kernels use the Linus Elevator. That works well with moderate SMP 
-loads, but it does not perform well on my large-ish Hardware RAID0 
-1.1Tbyte ext3 partition on a Power Vault 220S with a Dell PERC4 host 
-adapter. The 2.6.1 does work a lot more better in that sense, giving 
-me an average read of 90 Mbytes/sec as opposed to 
-60+somethingMbytes/sec I used to get before with 2.4.21-9ELsmp.
+My current theory is that there is some sort of incompatibility between
+that motherboard (or perhaps the AMD chipset) and the LSI Logic MegaRAID
+controller.  
 
-The new I/O schedulers (let alone driver maturity issues) are the way 
-to go for maximum performance! I won't place -for the moment- a 2.6 on 
-a production grade system, but in a couple of releases, I will put 2.4 
-in the museum :-) with respect to SCSI I/O performance.
+Does anyone have a similar system that is working?  Has anyone encountered
+similar problems?  What should I do next?
 
-Regards,
--- 
---
-George B. Magklaras
+Thank you.
+	steve@cs.ualberta.ca.
 
-Computer Systems Engineer/UNIX Systems Administrator
-The Biotechnology Centre of Oslo
-
-
-
+PS I have on occasion had the system running for long enough that I could 
+complete a test.   When I did I found the performance was not up to 
+what I expected.  Sequential writes to a 3-disk RAID-5 array were
+14MB/s, re-writes were 7.5MB/s and reads were 48MB/s.  Are these 
+reasonable?
+	ss.
 
