@@ -1,37 +1,26 @@
-From: Doug Ledford <dledford@redhat.com>
-Subject: Re: aic7xxx 6.2.24 bug report
-Date: Sun, 29 Dec 2002 14:07:37 -0500
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH] aic7xxx bouncing over 4G
+Date: 30 Dec 2002 01:23:37 +0000
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20021229140737.I29061@redhat.com>
-References: <20021228204505.GC9319@linnie.riede.org> <766648112.1041108533@aslan.scsiguy.com> <20021228222620.GE9319@linnie.riede.org> <834928112.1041114482@aslan.scsiguy.com> <20021228232624.GG9319@linnie.riede.org> <910548112.1041122117@aslan.scsiguy.com> <20021229015759.GI9319@linnie.riede.org> <3E0E5E2F.9030403@torque.net> <20021229141729.GK9319@linnie.riede.org>
+Message-ID: <1041211417.1215.28.camel@irongate.swansea.linux.org.uk>
+References: <200212210012.gBL0Cng21338@eng2.beaverton.ibm.com>
+	<176730000.1040430221@aslan.btc.adaptec.com>
+	<3E03BB0D.5070605@rackable.com>
+	<Pine.LNX.4.50L.0212280331110.30646-100000@freak.distro.conectiva>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20021229141729.GK9319@linnie.riede.org>; from wrlk@riede.org on Sun, Dec 29, 2002 at 09:17:29AM -0500
+In-Reply-To: <Pine.LNX.4.50L.0212280331110.30646-100000@freak.distro.conectiva>
 List-Id: linux-scsi@vger.kernel.org
-To: Willem Riede <wrlk@riede.org>
-Cc: dougg@torque.net, linux-scsi@vger.kernel.org
+To: Marcelo Tosatti <marcelo@conectiva.com.br>
+Cc: Samuel Flory <sflory@rackable.com>, "Justin T. Gibbs" <gibbs@scsiguy.com>, Janet Morgan <janetmor@us.ibm.com>, linux-scsi@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 
-On Sun, Dec 29, 2002 at 09:17:29AM -0500, Willem Riede wrote:
+On Sat, 2002-12-28 at 05:32, Marcelo Tosatti wrote:
+> >     I've been using both drivers for some time with no issues.  Or maybe
+> > you'd prefer Alan put it in his tree 1st?
 > 
-> Red Hat nash version 3.4.28 starting
-> 
-> it's from their 8.0 release.
+> Ho, hum, I prefer getting it tested in -ac for a while first.
 
-I'm not sure, but it could be.  I think the current initrd still uses the 
-available insmod instead of trying to do the syscalls internally, so that 
-shouldn't be a problem.  But, nash doesn't do command line arguments 
-exactly identical to bash so I had to play with the command line argument 
-escaping in the past to get it to work right in nash.  But, try adding 
-ash.static to your initrd, then as the last line in linuxrc call 
-ash.static and it will drop you to a shell prompt where you can attempt to 
-perform the insmod by hand and see if you can get it to work before the 
-kernel panics for lack of a root device.
+Well 79xx driver is a new driver for new hardware so less of a concern
 
--- 
-  Doug Ledford <dledford@redhat.com>     919-754-3700 x44233
-         Red Hat, Inc. 
-         1801 Varsity Dr.
-         Raleigh, NC 27606
-  
