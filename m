@@ -1,30 +1,29 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH] nuke some junk from the pcmcia scsi drivers
-Date: Sat, 9 Aug 2003 05:31:52 +0200
+From: Kai Makisara <Kai.Makisara@kolumbus.fi>
+Subject: Re: aic7xxx & st: BUG at include/asm/dma-mapping.h:37
+Date: Sat, 9 Aug 2003 10:09:52 +0300 (EEST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030809033152.GA23644@lst.de>
-References: <20030808191050.GD17983@lst.de> <5.2.0.9.0.20030808161151.029e9e00@mail.speakeasy.net>
+Message-ID: <Pine.LNX.4.56.0308091005540.6012@kai.makisara.local>
+References: <20030806231359.A28252@mail.kroptech.com>
+ <Pine.LNX.4.56.0308072346560.1035@kai.makisara.local> <20030807201916.A1065@mail.kroptech.com>
+ <20030808173003.GA3231@kai.makisara.local> <Pine.LNX.4.56.0308081357160.13076@filesrv1.baby-dragons.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([212.34.189.10]:45961 "EHLO mail.lst.de")
-	by vger.kernel.org with ESMTP id S272223AbTHIDb6 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Aug 2003 23:31:58 -0400
-Content-Disposition: inline
-In-Reply-To: <5.2.0.9.0.20030808161151.029e9e00@mail.speakeasy.net>
+Received: from fep06-0.kolumbus.fi ([193.229.0.57]:55455 "EHLO
+	fep06-app.kolumbus.fi") by vger.kernel.org with ESMTP
+	id S272223AbTHIHJ4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 9 Aug 2003 03:09:56 -0400
+In-Reply-To: <Pine.LNX.4.56.0308081357160.13076@filesrv1.baby-dragons.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Jeff Woods <jdw@apple2.com>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: "Mr. James W. Laferriere" <babydr@baby-dragons.com>
+Cc: Linux Scsi maillist <linux-scsi@vger.kernel.org>
 
-On Fri, Aug 08, 2003 at 04:18:11PM -0700, Jeff Woods wrote:
-> I'm totally unfamiliar with the code involved, but it occurs to me that 
-> there may be dependencies in the SCSI drivers for PCMCIA code due to 
-> PCMCIA-based SCSI adapters (e.g., Adaptec 1480).  Someone may need to 
-> confirm if the DEV_STALE_* references are there to handle PCMCIA-SCSI 
-> adapters.
+On Fri, 8 Aug 2003, Mr. James W. Laferriere wrote:
 
-Umm, this code can't be triggered.  These bits aren't touched by
-generic pcmcia code but only set by the individual drivers.
+> 	Hello Kai ,  Is this (or something simular) necessary for 2.4.x ?
 
-Btw, are you using 2.6?  There might be some other issue with pcmcia
-scsi..
+No. This bug crept in while adding direct transfers between the user
+buffer and SCSI HBA at 2.5.32.
+
+-- 
+Kai
