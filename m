@@ -1,84 +1,101 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH] get rid of obsolete APIs in BusLogic
-Date: Sat, 9 Oct 2004 15:45:02 +0200
+Subject: [PATCH] kill aac_io_done
+Date: Sat, 9 Oct 2004 15:46:57 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20041009134502.GB20025@lst.de>
+Message-ID: <20041009134657.GA20075@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.210]:14227 "EHLO mail.lst.de")
-	by vger.kernel.org with ESMTP id S266838AbUJINpE (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 9 Oct 2004 09:45:04 -0400
+Received: from verein.lst.de ([213.95.11.210]:17555 "EHLO mail.lst.de")
+	by vger.kernel.org with ESMTP id S266839AbUJINrC (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 9 Oct 2004 09:47:02 -0400
 Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
-To: jejb@steeleye.com
+To: mark_salyzyn@adaptec.com, jejb@steeleye.com
 Cc: linux-scsi@vger.kernel.org
 
+there's not need anymore to take the host lock before calling ->done
 
---- 1.35/drivers/scsi/BusLogic.c	2004-09-14 22:11:49 +02:00
-+++ edited/drivers/scsi/BusLogic.c	2004-10-09 14:24:03 +02:00
-@@ -47,8 +47,11 @@
- #include <asm/io.h>
- #include <asm/system.h>
+
+--- 1.29/drivers/scsi/aacraid/aachba.c	2004-10-01 17:10:08 +02:00
++++ edited/drivers/scsi/aacraid/aachba.c	2004-10-09 14:38:04 +02:00
+@@ -335,15 +335,6 @@
+ 	return status;
+ }
  
--#include "scsi.h"
-+#include <scsi/scsi.h>
-+#include <scsi/scsi_cmnd.h>
-+#include <scsi/scsi_device.h>
- #include <scsi/scsi_host.h>
-+#include <scsi/scsi_tcq.h>
- #include "BusLogic.h"
- #include "FlashPoint.c"
- 
-@@ -300,12 +303,19 @@
- static void BusLogic_DeallocateCCB(struct BusLogic_CCB *CCB)
+-static void aac_io_done(struct scsi_cmnd * scsicmd)
+-{
+-	unsigned long cpu_flags;
+-	struct Scsi_Host *host = scsicmd->device->host;
+-	spin_lock_irqsave(host->host_lock, cpu_flags);
+-	scsicmd->scsi_done(scsicmd);
+-	spin_unlock_irqrestore(host->host_lock, cpu_flags);
+-}
+-
+ static void get_container_name_callback(void *context, struct fib * fibptr)
  {
- 	struct BusLogic_HostAdapter *HostAdapter = CCB->HostAdapter;
--	if (CCB->Command->use_sg != 0) {
--		pci_unmap_sg(HostAdapter->PCI_Device, (struct scatterlist *) CCB->Command->request_buffer, CCB->Command->use_sg, scsi_to_pci_dma_dir(CCB->Command->sc_data_direction));
--	} else if (CCB->Command->request_bufflen != 0) {
--		pci_unmap_single(HostAdapter->PCI_Device, CCB->DataPointer, CCB->DataLength, scsi_to_pci_dma_dir(CCB->Command->sc_data_direction));
-+	struct scsi_cmnd *cmd = CCB->Command;
+ 	struct aac_get_name_resp * get_name_reply;
+@@ -375,7 +366,8 @@
+ 
+ 	fib_complete(fibptr);
+ 	fib_free(fibptr);
+-	aac_io_done(scsicmd);
 +
-+	if (cmd->use_sg != 0) {
-+		pci_unmap_sg(HostAdapter->PCI_Device,
-+				(struct scatterlist *)cmd->request_buffer,
-+				cmd->use_sg, cmd->sc_data_direction);
-+	} else if (cmd->request_bufflen != 0) {
-+		pci_unmap_single(HostAdapter->PCI_Device, CCB->DataPointer,
-+				CCB->DataLength, cmd->sc_data_direction);
++	scsicmd->scsi_done(scsicmd);
+ }
+ 
+ /**
+@@ -735,7 +727,7 @@
+ 	fib_complete(fibptr);
+ 	fib_free(fibptr);
+ 
+-	aac_io_done(scsicmd);
++	scsicmd->scsi_done(scsicmd);
+ }
+ 
+ static void write_callback(void *context, struct fib * fibptr)
+@@ -782,7 +774,7 @@
+ 
+ 	fib_complete(fibptr);
+ 	fib_free(fibptr);
+-	aac_io_done(scsicmd);
++	scsicmd->scsi_done(scsicmd);
+ }
+ 
+ int aac_read(struct scsi_cmnd * scsicmd, int cid)
+@@ -891,7 +883,7 @@
+ 	 *	For some reason, the Fib didn't queue, return QUEUE_FULL
+ 	 */
+ 	scsicmd->result = DID_OK << 16 | COMMAND_COMPLETE << 8 | SAM_STAT_TASK_SET_FULL;
+-	aac_io_done(scsicmd);
++	scsicmd->scsi_done(scsicmd);
+ 	fib_complete(cmd_fibcontext);
+ 	fib_free(cmd_fibcontext);
+ 	return -1;
+@@ -927,7 +919,7 @@
+ 	 */
+ 	if (!(cmd_fibcontext = fib_alloc(dev))) {
+ 		scsicmd->result = DID_ERROR << 16;
+-		aac_io_done(scsicmd);
++		scsicmd->scsi_done(scsicmd);
+ 		return -1;
  	}
--	pci_unmap_single(HostAdapter->PCI_Device, CCB->SenseDataPointer, CCB->SenseDataLength, PCI_DMA_FROMDEVICE);
-+	pci_unmap_single(HostAdapter->PCI_Device, CCB->SenseDataPointer,
-+			CCB->SenseDataLength, PCI_DMA_FROMDEVICE);
-+
- 	CCB->Command = NULL;
- 	CCB->Status = BusLogic_CCB_Free;
- 	CCB->Next = HostAdapter->Free_CCBs;
-@@ -2730,7 +2740,7 @@
+ 	fib_init(cmd_fibcontext);
+@@ -1000,7 +992,7 @@
+ 	 *	For some reason, the Fib didn't queue, return QUEUE_FULL
+ 	 */
+ 	scsicmd->result = DID_OK << 16 | COMMAND_COMPLETE << 8 | SAM_STAT_TASK_SET_FULL;
+-	aac_io_done(scsicmd);
++	scsicmd->scsi_done(scsicmd);
  
- /* Error Handling (EH) support */
+ 	fib_complete(cmd_fibcontext);
+ 	fib_free(cmd_fibcontext);
+@@ -1568,7 +1560,7 @@
  
--static int BusLogic_host_reset(Scsi_Cmnd * SCpnt)
-+static int BusLogic_host_reset(struct scsi_cmnd * SCpnt)
- {
- 	struct BusLogic_HostAdapter *HostAdapter = (struct BusLogic_HostAdapter *) SCpnt->device->host->hostdata;
+ 	fib_complete(fibptr);
+ 	fib_free(fibptr);
+-	aac_io_done(scsicmd);
++	scsicmd->scsi_done(scsicmd);
+ }
  
-@@ -2793,12 +2803,15 @@
- 	if (SegmentCount == 0 && BufferLength != 0) {
- 		CCB->Opcode = BusLogic_InitiatorCCB;
- 		CCB->DataLength = BufferLength;
--		CCB->DataPointer = pci_map_single(HostAdapter->PCI_Device, BufferPointer, BufferLength, scsi_to_pci_dma_dir(Command->sc_data_direction));
-+		CCB->DataPointer = pci_map_single(HostAdapter->PCI_Device,
-+				BufferPointer, BufferLength,
-+				Command->sc_data_direction);
- 	} else if (SegmentCount != 0) {
- 		struct scatterlist *ScatterList = (struct scatterlist *) BufferPointer;
- 		int Segment, Count;
- 
--		Count = pci_map_sg(HostAdapter->PCI_Device, ScatterList, SegmentCount, scsi_to_pci_dma_dir(Command->sc_data_direction));
-+		Count = pci_map_sg(HostAdapter->PCI_Device, ScatterList, SegmentCount,
-+				Command->sc_data_direction);
- 		CCB->Opcode = BusLogic_InitiatorCCB_ScatterGather;
- 		CCB->DataLength = Count * sizeof(struct BusLogic_ScatterGatherSegment);
- 		if (BusLogic_MultiMasterHostAdapterP(HostAdapter))
+ /**
