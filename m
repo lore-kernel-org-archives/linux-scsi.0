@@ -1,25 +1,49 @@
-From: "datex" <kenny@datexstorage.com>
-Subject: disk drives
-Date: Fri, 11 Apr 2003 10:09:33 -0700
+From: Joel Becker <Joel.Becker@oracle.com>
+Subject: Re: [patch for playing] Patch to support 4000 disks and maintain
+Date: Fri, 11 Apr 2003 10:57:37 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <200304111709.h3BH9e732581@zeus.kernel.org>
+Message-ID: <20030411175736.GY31739@ca-server1.us.oracle.com>
+References: <200304101339.49895.pbadari@us.ibm.com> <XFMail.20030411100430.pochini@shiny.it> <20030411154450.GW31739@ca-server1.us.oracle.com> <200304110928.32978.pbadari@us.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from zeus.kernel.org ([204.152.189.113]:7368 "EHLO zeus.kernel.org")
-	by vger.kernel.org with ESMTP id S261294AbTDKQ6I (for <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 11 Apr 2003 12:58:08 -0400
-Received: from datexstorage.com (bdsl.66.12.146.162.gte.net [66.12.146.162])
-	by zeus.kernel.org (8.11.6/8.11.6) with SMTP id h3BH9e732581
-	for <linux-scsi@vger.kernel.org>; Fri, 11 Apr 2003 10:09:40 -0700
+Received: from inet-mail4.oracle.com ([148.87.2.204]:62889 "EHLO
+	inet-mail4.oracle.com") by vger.kernel.org with ESMTP
+	id S261246AbTDKRqN (for <rfc822;linux-scsi@vger.kernel.org>); Fri, 11 Apr 2003 13:46:13 -0400
+Content-Disposition: inline
+In-Reply-To: <200304110928.32978.pbadari@us.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Badari Pulavarty <pbadari@us.ibm.com>
+Cc: Giuliano Pochini <pochini@shiny.it>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-We are looking to buy excess SCSI and IDE disk drives.
-If you have any disk drives for sale please let us no.
+On Fri, Apr 11, 2003 at 08:28:32AM -0800, Badari Pulavarty wrote:
+> Well !! My patch does not have anything hardcoded to 4000.
+> Depends on how many minor bits. But we have to put a hardlimit
+> somewhere ..
 
+	Yes, but that hardlimit has to expect the number to be Very
+Large in the very near future.  16K disks on a big compute farm is not
+too far off.
 
+> Fortunately, the multipath solution Mike Anderson & Patrick Mansfield
+> working on, colapses all the disks you see thro multiple paths into 
+> number of  realdisks (4000). So you don't really need extra devices 
+> to support multipathing.
 
-Thanks
-Datex Storage
+	Yes, but what if I want to see the multiple paths?  Does their
+solution allow you to specify the path behind the 'realdisk'?  Does it
+allow querying of the paths?
+
+Joel
+
+-- 
+
+Life's Little Instruction Book #451
+
+	"Don't be afraid to say, 'I'm sorry.'"
+
+Joel Becker
+Senior Member of Technical Staff
+Oracle Corporation
+E-mail: joel.becker@oracle.com
+Phone: (650) 506-8127
