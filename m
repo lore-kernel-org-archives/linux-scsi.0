@@ -1,48 +1,54 @@
-From: Rolf Eike Beer <eike-kernel@sf-tec.de>
-Subject: Re: [PATCH 2.5.59] sim710: cleanup/remove most cli()'s
-Date: Wed, 5 Feb 2003 16:03:48 +0100
+From: James Bottomley <James.Bottomley@steeleye.com>
+Subject: Re: [PATCH] fixes and cleanups for the new command allocation code
+Date: 05 Feb 2003 09:22:18 -0600
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <200302051603.48510@bilbo.math.uni-mannheim.de>
-References: <200302041123.06204@bilbo.math.uni-mannheim.de>
+Message-ID: <1044458540.1807.19.camel@mulgrave>
+References: <20030204162326.A30755@lst.de>
+	<20030204081616.A24105@beaverton.ibm.com> <20030204175146.A31515@lst.de>
+	<20030204091955.A24785@beaverton.ibm.com>
+	<1044383605.2014.23.camel@mulgrave> <20030204202935.A325@lst.de>
+	<1044399797.3484.15.camel@mulgrave>
+	<20030204172505.A28812@beaverton.ibm.com>
+	<1044410039.3485.61.camel@mulgrave>
+	<20030204211516.A30419@beaverton.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <200302041123.06204@bilbo.math.uni-mannheim.de>
+Received: (from root@localhost)
+	by pogo.mtv1.steeleye.com (8.9.3/8.9.3) id HAA07217
+	for <linux-scsi@vger.kernel.org>; Wed, 5 Feb 2003 07:22:24 -0800
+In-Reply-To: <20030204211516.A30419@beaverton.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Patrick Mansfield <patmans@us.ibm.com>
+Cc: Christoph Hellwig <hch@lst.de>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-Hi again,
+On Tue, 2003-02-04 at 23:15, Patrick Mansfield wrote:
+> OK that sounds great, except we should not plug the queue since we
+> have outstanding IO.
 
-I'm now looking for the best way to port this to use 53c700.c. This will 
-surely take a while, should I fix my fix and resend it or better leave this 
-unfixed until I find time to port it?
+Yes, that's true.  The guaranteed returning I/O will restart it.
 
-For today this fix should be enough. The second one is unneeded because 
-mca_register_driver does it.
+> > And the slave_{alloc,configure,destroy} needs fixing too.
+> 
+> What is broken?
 
-Eike
+This one, I'm not sure.  The patch just drew my attention to the
+breakage.  The way I understand the API:
 
-Note: Please CC me, I'm not ...
+slave_alloc tells the LLD we're going to issue probes to the device
+slave_configure tells the LLD we've probed it and we're now going to
+configure and use it
+slave_destroy tells the LLD we're no longer interested.
 
---- linux-2.5.59-test/drivers/scsi/53c700.c     Fri Jan 17 03:21:40 2003
-+++ linux-2.5.59/drivers/scsi/53c700.c  Wed Feb  5 15:47:00 2003
-@@ -1769,7 +1769,7 @@
-        NCR_700_set_depth(SCp->device, NCR_700_get_depth(SCp->device) + 1);
+The patch removes the slave_configure call from scsi_slave_attach()
+which is called by the upper level drivers.  However, it looks like
+scsi_add_lun always calls it.
 
-        /* begin the command here */
--       /* no need to check for NULL, test for command_slot_cound above
-+       /* no need to check for NULL, test for command_slot_count above
-         * ensures a slot is free */
-        slot = find_empty_slot(hostdata);
+The correct thing, I think, is not to call slave_configure until we're
+sure an ULD is attaching (there's no point getting the LLD to allocate
+resources to a command queue until we have an attachment).
 
---- linux-2.5.59-test/drivers/scsi/NCR_D700.c   Fri Jan 17 03:21:39 2003
-+++ linux-2.5.59/drivers/scsi/NCR_D700.c        Wed Feb  5 15:47:02 2003
-@@ -340,7 +340,6 @@
-        .id_table = NCR_D700_id_table,
-        .driver = {
-                .name = "NCR_D700",
--               .bus = &mca_bus_type,
-                .probe = NCR_D700_probe,
-        },
- };
+James
+
+
