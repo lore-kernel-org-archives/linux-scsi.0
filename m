@@ -1,42 +1,37 @@
-From: Adrian Bunk <bunk@stusta.de>
-Subject: Re: [2.6 patch] SCSI: misc possible cleanups
-Date: Mon, 15 Nov 2004 17:22:32 +0100
-Message-ID: <20041115162232.GA19860@stusta.de>
-References: <0B1E13B586976742A7599D71A6AC733C12E6F2@xbl3.ma.emulex.com>
+From: Luben Tuikov <luben_tuikov@adaptec.com>
+Subject: Re: drivers/scsi/aic7xxx/: How can I edit the _shipped files?
+Date: Mon, 15 Nov 2004 11:44:09 -0500
+Message-ID: <4198DCD9.5040907@adaptec.com>
+References: <20041113161400.GA2249@stusta.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emailhub.stusta.mhn.de ([141.84.69.5]:43781 "HELO
-	mailout.stusta.mhn.de") by vger.kernel.org with SMTP
-	id S261630AbUKOQ2N (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 15 Nov 2004 11:28:13 -0500
-Content-Disposition: inline
-In-Reply-To: <0B1E13B586976742A7599D71A6AC733C12E6F2@xbl3.ma.emulex.com>
+Received: from magic.adaptec.com ([216.52.22.17]:13234 "EHLO magic.adaptec.com")
+	by vger.kernel.org with ESMTP id S261630AbUKOQoZ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 15 Nov 2004 11:44:25 -0500
+In-Reply-To: <20041113161400.GA2249@stusta.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Smart@Emulex.Com
-Cc: James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Adrian Bunk <bunk@stusta.de>
+Cc: linux-scsi@vger.kernel.org
 
-On Mon, Nov 15, 2004 at 08:57:08AM -0500, James.Smart@Emulex.Com wrote:
+Adrian Bunk wrote:
+ > How can I edit the _shipped files under drivers/scsi/aic7xxx/?
+ >
+ > The source files they claim to be built from aren't shipped with the
+ > kernel.
+ >
 
-> Please don't back out the additions to scsi_transport.c!!!
-> 
-> These were hard-fought additions, and required by our driver, which we should call for upstream approval in the near future.
+Hi Adrian,
 
-Sorry that I didn't state my intention clear enough:
+Do you mind sharing why you need to change the _shipped files?
 
-I did not want to propose to simply apply this patch.
-It was intended as a "FYI: the following code is _currently_ unused".
+This is how I've changed them in the past: Make the changes in the
+generator files (i.e. the ones the _shipped file(s) depends on),
+build them and then rename them to _shipped.
 
-> -- James S
+	Luben
 
-cu
-Adrian
-
--- 
-
-       "Is there not promise of rain?" Ling Tan asked suddenly out
-        of the darkness. There had been need of rain for many days.
-       "Only a promise," Lao Er said.
-                                       Pearl S. Buck - Dragon Seed
 
