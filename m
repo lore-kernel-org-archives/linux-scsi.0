@@ -1,59 +1,62 @@
-From: "Robert T. Johnson" <rtjohnso@eecs.berkeley.edu>
-Subject: PATCH: 2.6.7-rc3 drivers/scsi/megaraid.c: user/kernel pointer bugs
-Date: 09 Jun 2004 16:14:44 -0700
+From: "Aleks Sheynkman" <aleks@Narus.com>
+Subject: RE: blocked mailbox error!!
+Date: Wed, 9 Jun 2004 16:27:10 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1086822884.32057.143.camel@dooby.cs.berkeley.edu>
+Message-ID: <FA6D803197D0E14C88E1B74C5A021B8202E7D9@snitch.narus.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from relay2.EECS.Berkeley.EDU ([169.229.60.28]:44932 "EHLO
-	relay2.EECS.Berkeley.EDU") by vger.kernel.org with ESMTP
-	id S265889AbUFIXOp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 9 Jun 2004 19:14:45 -0400
-Received: from relay3.EECS.Berkeley.EDU (localhost [127.0.0.1])
-	by relay2.EECS.Berkeley.EDU (8.12.10/8.9.3) with ESMTP id i59NEiVe000806
-	for <linux-scsi@vger.kernel.org>; Wed, 9 Jun 2004 16:14:44 -0700 (PDT)
-Received: from localhost.localdomain (dooby.CS.Berkeley.EDU [128.32.35.171])
-	by relay3.EECS.Berkeley.EDU (8.12.10/8.9.3) with ESMTP id i59NEiFp009312
-	for <linux-scsi@vger.kernel.org>; Wed, 9 Jun 2004 16:14:44 -0700 (PDT)
+Received: from mx2.narus.com ([66.236.101.211]:9195 "EHLO mx2.narus.com")
+	by vger.kernel.org with ESMTP id S265939AbUFIX1O convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 9 Jun 2004 19:27:14 -0400
+content-class: urn:content-classes:message
 List-Id: linux-scsi@vger.kernel.org
-To: Linux SCSI developers <linux-scsi@vger.kernel.org>
+To: "Mukker, Atul" <Atulm@lsil.com>, linux-scsi@vger.kernel.org
 
-Since arg is a user pointer, so are uioc_mimd and uiocp, and hence umc is 
-a user pointer.  Thus reading umc->xferaddr requires dereferencing a user 
-pointer, which isn't safe.  Let me know if you have any questions or I've
-made an error.
+sorry for asking , but looking through the code of new driver , it seems that
+new driver can be also stuck in mega_busywait_mbox and mbox->busy never got cleared up.
+or I'm missing something ?
 
-Best,
-Rob
+thanks a lot !
 
-P.S. megaraid.c still lists linux-megaraid-devel@dell.com as the updates
-address, even though the list has been discontinued.
+-Aleks
 
---- linux-2.6.7-rc3-full/drivers/scsi/megaraid.c.orig	Wed Jun  9 12:43:49 2004
-+++ linux-2.6.7-rc3-full/drivers/scsi/megaraid.c	Wed Jun  9 12:43:10 2004
-@@ -3815,7 +3815,8 @@ mega_n_to_m(void *arg, megacmd_t *mc)
- 
- 			umc = MBOX_P(uiocp);
- 
--			upthru = (mega_passthru *)umc->xferaddr;
-+			if (get_user(upthru, (mega_passthru **)&umc->xferaddr))
-+				return (-EFAULT);
- 
- 			if( put_user(mc->status, (u8 *)&upthru->scsistatus) )
- 				return (-EFAULT);
-@@ -3831,7 +3832,8 @@ mega_n_to_m(void *arg, megacmd_t *mc)
- 
- 			umc = (megacmd_t *)uioc_mimd->mbox;
- 
--			upthru = (mega_passthru *)umc->xferaddr;
-+			if (get_user(upthru, (mega_passthru **)&umc->xferaddr))
-+				return (-EFAULT);
- 
- 			if( put_user(mc->status, (u8 *)&upthru->scsistatus) )
- 				return (-EFAULT);
-
-
-
-
+> -----Original Message-----
+> From: Mukker, Atul [mailto:Atulm@lsil.com]
+> Sent: Wednesday, June 09, 2004 1:21 PM
+> To: Aleks Sheynkman; Pat LaVarre; Jens Axboe
+> Cc: dougg@torque.net; linux-scsi@vger.kernel.org
+> Subject: RE: blocked mailbox error!!
+> 
+> 
+> All you would need to do is to replace ".vary_io = 1" by 
+> ".can_do_varyio =1"
+> in megaraid2.h
+> 
+> -Atul Mukker
+> 
+> > -----Original Message-----
+> > From: Aleks Sheynkman [mailto:aleks@Narus.com]
+> > Sent: Wednesday, June 09, 2004 2:56 PM
+> > To: Pat LaVarre; Jens Axboe
+> > Cc: dougg@torque.net; linux-scsi@vger.kernel.org
+> > Subject: blocked mailbox error!!
+> > 
+> > 
+> > Hello,
+> >  I was wondering to ask if someone had any luck running 
+> > megraid 2.x drivers on RH 7.3.
+> >  
+> > Please advice ,
+> >  
+> >  Thanks!!
+> >  
+> > -
+> > To unsubscribe from this list: send the line "unsubscribe 
+> > linux-scsi" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > 
+> 
