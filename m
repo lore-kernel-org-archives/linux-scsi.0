@@ -1,56 +1,40 @@
-From: Andi Kleen <ak@muc.de>
-Subject: Re: [BUG] x86_64 pci_map_sg modifies sg list - fails multiple
- map/unmaps
-Date: Mon, 05 Jan 2004 20:47:19 +0100
+From: Berkley Shands <berkley@cs.wustl.edu>
+Subject: Re: [BUG] x86_64 pci_map_sg modifies sg list - fails multiple map/unmaps
+Date: Mon, 5 Jan 2004 14:00:16 -0600 (CST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <m3brpi41q0.fsf@averell.firstfloor.org>
-References: <2938942704.1073325455@aslan.btc.adaptec.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Message-ID: <200401052000.i05K0Gc0000014396@mudpuddle.cs.wustl.edu>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from p50821721.dip.t-dialin.net ([80.130.23.33]:4494 "EHLO
-	averell.firstfloor.org") by vger.kernel.org with ESMTP
-	id S265328AbUAETre (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 5 Jan 2004 14:47:34 -0500
-In-Reply-To: <2938942704.1073325455@aslan.btc.adaptec.com> ("Justin T.
- Gibbs"'s message of "Mon, 05 Jan 2004 10:57:35 -0700")
+Received: from cliff.cse.wustl.edu ([128.252.166.5]:65444 "EHLO
+	cliff.cse.wustl.edu") by vger.kernel.org with ESMTP id S265350AbUAEUAT
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 5 Jan 2004 15:00:19 -0500
 List-Id: linux-scsi@vger.kernel.org
-To: "Justin T. Gibbs" <gibbs@scsiguy.com>
-Cc: linux-kernel@vger.kernel.org, davem@redhat.com, linux-scsi@vger.kernel.org
+To: berkley@cs.wustl.edu, davem@redhat.com
+Cc: gibbs@scsiguy.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-"Justin T. Gibbs" <gibbs@scsiguy.com> writes:
+	   		BUG_ON(s->length == 0);
 
-> Berkley Shands recently tripped over this problem.  The 2.6.X pci_map_sg
-> code for x86_64 modifies the passed in S/G list to compact it for mapping
-> by the GART.  This modification is not reversed when pci_unmap_sg is
-> called.  In the case of a retried SCSI command, this causes any attempt
+		size += s->length; 
 
-Qlogic has the same bug.
+		/* Handle the previous not yet processed entries */
 
-Actually I disabled merging by default in the latest x86-64 code,
-but it can be still enabled by the user using options (it makes some
-adapters run several percent faster). I would appreciate if you could
-fix the problem anyways.
+		if (i > start) {
+			struct scatterlist *ps = &sg[i-1];
+			/* Can only merge when the last chunk ends on a page 
+			   boundary. */
+			if (1 || !force_iommu || !need || (i-1 > start && ps->offset) ||
+			    (ps->offset + ps->length) % PAGE_SIZE) { 
+				if (pci_map_cont(sg, start, i, sg+out, pages, 
+						 need) < 0)
+					goto error;
 
-I was actually planning to add a BUG() for this. Should do that.
-There is already one that triggers often when the problem occurs.
+If I totally disable coalescing, in arch/x86_64/pci-gart.c by adding the if (1 || ...
+then the bughalt goes away. So might some performance, but a system that runs is
+MUCH better than one that hard faults on a regular basis.
 
-> to map the command a second time to fail with a BUG assertion since the
-> nseg parameter passed into the second map call is state.  nseg comes from
-> the "use_sg" field in the SCSI command structure which is never touched
-> by the HBA drivers invoking pci_map_sg.
->
-> DMA-API.txt doesn't seem to cover this issue.  Should the low-level DMA
+The shipped scsi driver still needs to be updated to NOT "offline" the drives.
+the 2.0.5 driver does this quite well.
 
-It does actually, but not very clearly. I've suggested changes of wording
-recently to make this more clear, but it hasn't gotten in.
+Thank you.
 
-> code restore the S/G list to its original state on unmap or should the
-> SCSI HBA drivers be changed to update "use_sg" with the segment count
-> reported by the pci_map_sg() API?  If the latter, this seems to contradict
-
-You should never remap an already mapped sg list. Either reuse the already mapped
-list or keep a copy of the original list around. First is better because the later
-may have problems with the page reference counts.
-
--Andi
+berkley
