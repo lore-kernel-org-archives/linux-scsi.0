@@ -1,70 +1,69 @@
-From: Hiroaki Fuse <fuse@sm.sony.co.jp>
-Subject: [patch] scsicam: scsi_partsize work correctly on a big-endian
- machine
-Date: Wed, 28 Jul 2004 13:52:07 +0900 (JST)
+From: PinkFreud <pf-linux-scsi-20040717@mirkwood.net>
+Subject: Re: sym53c8xx_2 funkiness...
+Date: Wed, 28 Jul 2004 08:45:09 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040728.135207.74732275.fuse@sm.sony.co.jp>
+Message-ID: <20040728124509.GK1105@eriador.mirkwood.net>
+References: <20040718030514.GJ1105@eriador.mirkwood.net> <20040724165625.GA1105@eriador.mirkwood.net> <m3zn5nxi6j.fsf@merlin.emma.line.org> <20040726160214.GB1105@eriador.mirkwood.net> <20040726161825.GA14799@merlin.emma.line.org>
 Mime-Version: 1.0
-Content-Type: Multipart/Mixed;
- boundary="--Next_Part(Wed_Jul_28_13:52:07_2004_253)--"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from NS8.Sony.CO.JP ([137.153.0.33]:47332 "EHLO ns8.sony.co.jp")
-	by vger.kernel.org with ESMTP id S266780AbUG1E4M (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 28 Jul 2004 00:56:12 -0400
-Received: from mail20.sony.co.jp (localhost [127.0.0.1])
-	by mail20.sony.co.jp (R8/Sony) with ESMTP id i6S4uAv7007185
-	for <linux-scsi@vger.kernel.org>; Wed, 28 Jul 2004 13:56:10 +0900 (JST)
-Received: from smail1.sm.sony.co.jp (smail1.sm.sony.co.jp [43.11.253.1])
-	by mail20.sony.co.jp (R8/Sony) with ESMTP id i6S4uACP007178
-	for <linux-scsi@vger.kernel.org>; Wed, 28 Jul 2004 13:56:10 +0900 (JST)
-Received: from imail.sm.sony.co.jp (imail.sm.sony.co.jp [43.2.217.16]) by smail1.sm.sony.co.jp (8.11.6p2/8.11.6) with ESMTP id i6S4u9D10833 for <linux-scsi@vger.kernel.org>; Wed, 28 Jul 2004 13:56:09 +0900 (JST)
-Received: from localhost (IDENT:fuse@valentina.sm.sony.co.jp [43.2.226.21]) by imail.sm.sony.co.jp (8.11.6p2/3.7W) with ESMTP id i6S4u9I25179 for <linux-scsi@vger.kernel.org>; Wed, 28 Jul 2004 13:56:09 +0900 (JST)
+Received: from pcp09895235pcs.ewndsr01.nj.comcast.net ([68.36.161.84]:4881
+	"HELO rivendell.mirkwood.net") by vger.kernel.org with SMTP
+	id S266902AbUG1MpQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 28 Jul 2004 08:45:16 -0400
+Content-Disposition: inline
+In-Reply-To: <20040726161825.GA14799@merlin.emma.line.org>
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-----Next_Part(Wed_Jul_28_13:52:07_2004_253)--
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+On Mon, Jul 26, 2004 at 06:18:26PM +0200, Matthias Andree babbled thus:
+> On Mon, 26 Jul 2004, PinkFreud wrote:
+> 
+> > Can one safely disable disconnect if there are multiple devices on the
+> > bus?  In particular, the system has a hard disk and a cdrom (both
+> > external - and yes, I tried replacing the cable from the box to the
+> > drives, and at the moment, I only have the hd plugged in).
+> 
+> It'll cause some quirks, such as the HD not being able to be accessed
+> while the CD-ROM retries reading a defective sector or while it is
+> operating its tray to eject or load a disc.
+
+Uhgh.
+
+> 
+> > It's possible I just need to provide some options to the driver - I
+> > wouldn't be surprised if some defaults have changed to favor newer
+> > hardware.  I merely need to find out *what* needs changing...
+> 
+> The documentation in the kernel sources (Documentation/scsi/...) is
+> quite detailed.
+
+Alas, 2.4.26's Documentation/ only seems to contain:
+scsi-changer.txt  scsi-generic.txt  scsi.txt          
+
+Nothing directly referencing sym53c8xx.
+
+I've looked at the sym53c8xx docs from 2.6.x, though.  You're right in
+saying they're detailed.  Unfortunately, there are quite a few options
+one can pass to the driver, and I'm not sure which might help me, and
+what arguments I should use.
+
+It's like trying to find a needle in a haystack... in the dark.
+
+I analyzed the error I got out of 2.6.6, using the 2.6.x docs.  All I
+really got out of that was 'it's broken, someone with scsi knowledge
+might have a clue'.
+
+What do I do?  Just give up on having Linux work on this box?
 
 
-Hello.
+> 
+> -- 
+> Matthias Andree
 
-The attached patch fix the problem of scsi_partsize function.
-Now, scsi_partsize works correctly on a big-endian machine.
-
-Thanks.
-
-Hiroaki Fuse
-
-
-----Next_Part(Wed_Jul_28_13:52:07_2004_253)--
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline; filename="scsicam.c-diff"
-
---- linux-2.4.26/drivers/scsi/scsicam.c	Sat Dec 22 02:41:55 2001
-+++ linux-2.4.26-new/drivers/scsi/scsicam.c	Wed Jul 28 13:27:08 2004
-@@ -97,7 +97,7 @@
- 	unsigned int logical_end, physical_end, ext_physical_end;
- 
- 
--	if (*(unsigned short *) (bh->b_data + 510) == 0xAA55) {
-+	if (*(unsigned short *) (bh->b_data + 510) == __cpu_to_le16(0xAA55)) {
- 		for (largest_cyl = -1, p = (struct partition *)
- 		     (0x1BE + bh->b_data), i = 0; i < 4; ++i, ++p) {
- 			if (!p->sys_ind)
-@@ -130,8 +130,8 @@
- 		    end_head * end_sector + end_sector;
- 
- 		/* This is the actual _sector_ number at the end */
--		logical_end = get_unaligned(&largest->start_sect)
--		    + get_unaligned(&largest->nr_sects);
-+		logical_end = __le32_to_cpu(get_unaligned(&largest->start_sect))
-+		    + __le32_to_cpu(get_unaligned(&largest->nr_sects));
- 
- 		/* This is for >1023 cylinders */
- 		ext_cyl = (logical_end - (end_head * end_sector + end_sector))
-
-----Next_Part(Wed_Jul_28_13:52:07_2004_253)----
+-- 
+                                                                      
+Mike Edwards                    |   If this email address disappears,   
+Unsolicited advertisments to    |   assume it was spammed to death.  To
+this address are not welcome.   |   reach me in that case, s/-.*@/@/
+(This means you, Cogent!)       |                                   
