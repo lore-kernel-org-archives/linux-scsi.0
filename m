@@ -1,53 +1,51 @@
 From: Doug Ledford <dledford@redhat.com>
 Subject: Re: [PATCH] SCSI hotplug support
-Date: Mon, 14 Oct 2002 18:25:15 -0400
+Date: Mon, 14 Oct 2002 20:22:52 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20021014222515.GD1274@redhat.com>
-References: <andersen@codepoet.org> <20021014203749.GA24904@codepoet.org> <200210142107.g9EL7IX04354@localhost.localdomain> <20021014215416.GB25941@codepoet.org>
+Message-ID: <20021015002252.GE1274@redhat.com>
+References: <200210142107.g9EL7IX04354@localhost.localdomain> <200210150019.53689.oliver@neukum.name>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20021014215416.GB25941@codepoet.org>
+In-Reply-To: <200210150019.53689.oliver@neukum.name>
 List-Id: linux-scsi@vger.kernel.org
-To: Erik Andersen <andersen@codepoet.org>
-Cc: James Bottomley <James.Bottomley@steeleye.com>, linux-scsi@vger.kernel.org
+To: Oliver Neukum <oliver@neukum.name>
+Cc: James Bottomley <James.Bottomley@steeleye.com>, andersen@codepoet.org, linux-scsi@vger.kernel.org
 
-On Mon, Oct 14, 2002 at 03:54:17PM -0600, Erik Andersen wrote:
+On Tue, Oct 15, 2002 at 12:19:53AM +0200, Oliver Neukum wrote:
+> Am Montag, 14. Oktober 2002 23:07 schrieb James Bottomley:
+> > andersen@codepoet.org said:
+> > > If the user space interface were perfectly adequate, I would not have
+> > > written this patch.  User space does not have sufficient information
+> > > to know _which_ devices must to be added or removed. The best we can
+> > > do from user space is a full rescan of _all_ scsi host adaptors (http:/
+> > > /www.garloff.de/kurt/linux/rescan-scsi-bus.sh)  using something like
+> >
+> > The API you expose has identical inputs to the user space one.
+> >
+> > Therefore it seems to me that your spb2 driver must already know the values
+> > to fill in to use the API.  So what's wrong with triggering a hotplug event
+> > from this driver that causes the add/remove single device to be done from
+> > user level?
 > 
-> I have a 4 slot firewire RAID system with 4 hotswapable 120 GB
-> drives in it connected via a single firewire cable.  This is very
-> small compared to the potential size.  Imagine someone plugs in a
-> 63 device firewire RAID box.  Then nodemgr.c determines if the
-> device being hotplugged is an SBP-2 device and if so execs
-> /sbin/hotplug with some extra SBP-2 specific arguments.  Then
-> /sbin/hotplug writes some junk into /proc/scsi/scsi 63 times, and
-> so 63 times we context switch back into kernel space to
-> register/unregister a device and then 63 times we context switch
-> back into user space so we can continue doing the hotplug thing.
-> 
-> And the point of this exercise again was?  Its not like userspace
-> is setting policy -- the sbp2.c driver knew exactly what the
-> Right Thing(tm) was all along.  I think using the function calls
-> per my patch is a far cleaner solution,
+> It's harder than doing it the simple way. User space really can do nothing but
+> do the call.
 
-First, 63 context switches is a red herring.  The total amount of work
-required to attach a scsi disk is high enough that a context switch per
-disk is totally lost noise.  Second, user space *does* set policy.  The
-hot plug manager can end up doing things like changing the ownership of
-the newly added device to that of the current console owner and then
-automatically mounting it on /mnt/camera_drive (just an example).  IOW,
-user space hot plug *needs* to be involved whether you make the kernel hot
-plug work or not.  Secondly, once you accept that user space hot plug
-*needs* to be involved, then letting it take care of the hot plugging for
-you instead of writing a kernel patch makes more sense.
+Not true, see my last email.  User space can do a *lot* more than just 
+make the call to add the device, and as a matter of fact it already does.
 
-Also, it's likely that calling in from the hot plug manager is *much*
-better from the kernel perspective for one very important reason, user
-context.  The add_single_device operation will not be done from an
-interrupt/tasklet/softirq/etc. context if the hot plug manager does it,
-making sleeping, memory allocation, and such easier to get right.  What
-context does the 1394 code call the scsi code from in your patch?
+> Plus, you can use such a kernel API to really free the device's
+> memory, because you cannot know when user space, or indeed if, has
+> freed the device.
+
+Not true at all.  Define a revoke/slave_detach entry point to your driver 
+and you get called when the device is removed so that you can free up any 
+of your resources.
+
+> Doing it in kernel is the only sane thing.
+
+Read source first, post sanity comments later.
 
 -- 
   Doug Ledford <dledford@redhat.com>     919-754-3700 x44233
