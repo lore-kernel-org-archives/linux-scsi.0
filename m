@@ -1,145 +1,189 @@
-From: "Martin Peschke3" <MPESCHKE@de.ibm.com>
-Subject: Re: Adaptec 7XXX/DPT SmartRAID V
-Date: Thu, 31 Oct 2002 18:28:12 +0100
+From: merlin <merlin@merlin.org>
+Subject: Re: possible use-after-free in 2.5.44 scsi changes
+Date: Thu, 31 Oct 2002 12:41:10 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <OF7F8933F7.64694C72-ONC1256C63.005F0612@de.ibm.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Message-ID: <20021031174110.5217B86E7D@primary.mx.nitric.com>
+References: <20021031151212.GG6549@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
+In-reply-to: <20021031151212.GG6549@suse.de> 
 List-Id: linux-scsi@vger.kernel.org
-To: gnu_is_not_unix <gnu_is_not_unix@wp.pl>
-Cc: linux-scsi@vger.kernel.org
+To: Jens Axboe <axboe@suse.de>
+Cc: Badari Pulavarty <badari@us.ibm.com>, linux-scsi@vger.kernel.org
 
+r/axboe@suse.de/2002.10.31/16:12:12
+>On Thu, Oct 31 2002, Jens Axboe wrote:
+>> On Wed, Oct 30 2002, Badari Pulavarty wrote:
+>> > > >- Badari
+>> > > 
+>> > > Hi; if it's of any use, the patch doesn't seem to solve the scsi
+>> > > problem for me (2.5.44-bk3-badari). I get the usual 'Incorrect number
+>> > > of segments...' and random kernel death during the boot process.
+>> > > 
+>> > > Merlin
+>> > 
+>> > Hi Merlin,
+>> > 
+>> > I am looking at the output  of your problem ..
+>> > 
+>> > 
+>> > Oct 28 12:36:09 badb kernel: Incorrect number of segments after building l
+>ist 
+>> > Oct 28 12:36:09 badb kernel: counted 2, received 1 
+>> > Oct 28 12:36:09 badb kernel: req nr_sec 8, cur_nr_sec 8 
+>> > Oct 28 12:36:09 badb kernel: end_request: I/O error, dev 08:40, sector 678
+>4528 
+>> > Oct 28 12:36:09 badb kernel: raid5: Disk failure on scsi/host0/bus0/target
+>4/lun0/part7, disabling device. Operation continuing on 4 devices 
+>> > 
+>> > Huh !! Your IO size is only 4K. You are using 2 sg entries ?
+>> 
+>> Even weirder, nr_sec == cur_nr_sec so there can only be one segment or
+>> something is corrupted...
+>
+>Ah wait, I think I may know at least what is happening in this case.
+>I've seen numerous reports of software raid problems botching bio's, and
+>this above one could easily be explained with one of the bio's having
+>!bi_size. In fact, it's about the only explanation, otherwise there's
+>just no way we can have nr_sec == cur_nr_sec unless only _one_ bio is
+>attached to the request.
+>
+>Merlin, please also add a
+>
+>	blk_dump_rq_flags(req, "scsi_init_io");
+>
+>to drivers/scsi/scsi_lib.c:scsi_init_io() before it calls
+>scsi_end_request() and kills the request (right after the incorrect
+>segment complaining).
 
-Hello,
+Hi Jens,
 
-you are missing the scsihosts boot parameter which a limited mean
-for defining the order of your HBAs, e.g.
+Disabling clustering in the aic7xxx driver results in blk: request
+botched, NULL dereference, panic (but no segment count complaint).
 
-scsihosts=3Daic7xxx,dpt
+Booting with the nosmp flag results in strange aic7xxx (I believe)
+death really early on.
 
-Mit freundlichen Gr=FC=DFen / with kind regards
+I have tried no earlier 2.5 kernels on the machine.
 
-Martin Peschke
+For peace of mind, I switched 2.5.45 to root from an old
+non--s/w-RAID drive in the machine. syslog goes to a working
+root, and it lets me bring up the raid devices manually.
 
-IBM Deutschland Entwicklung GmbH
-Linux for eServer Development
-Phone: +49-(0)7031-16-2349
+Kernel 2.5.45 WITH your ll_rw_blk.c patch, WITHOUT Badari's
+VIRT_MERGEABLE patch, WITHOUT disabling aic7xxx clustering,
+WITH this extra logging..
 
+I can boot successfully (well, no keyboard and lots if init
+garbage. but no crash) which suggests strongly that it is an
+md problem. The drive is on a different controller, but I
+doubt that's relevant; it's still an aic7xxx.
 
-gnu_is_not_unix <gnu_is_not_unix@wp.pl>@vger.kernel.org on 10/30/2002
-09:45:59 PM
+I could then bring up md0 (RAID 1 across two disks) and do a
+basic scan (zcav) through it without problems. I didn't stress
+things (typing on a zaurus isn't easy enough) but it seemed
+okay.
 
-Please respond to gnu_is_not_unix <gnu_is_not_unix@wp.pl>
+Then I brought up md3 (RAID 5 across five disks) and ran zcav
+across it. Worked for a while, then:
 
-Sent by:    linux-scsi-owner@vger.kernel.org
+--8<--
+Oct 31 12:00:57 badb kernel: (scsi0:A:2:0): data overrun detected in Data-in phase.  Tag == 0x6.
+Oct 31 12:00:57 badb kernel: (scsi0:A:2:0): Have seen Data Phase.  Length = 8192.  NumSGs = 2.
+Oct 31 12:00:57 badb kernel: sg[0] - Addr 0x037a2c000 : Length 4096
+Oct 31 12:00:57 badb kernel: sg[1] - Addr 0x037a31000 : Length 4096
+Oct 31 12:01:27 badb kernel: scsi0:0:4:0: Attempting to queue an ABORT message
+Oct 31 12:01:27 badb kernel: scsi0: Dumping Card State in Data-in phase, at SEQADDR 0x168
+Oct 31 12:01:27 badb kernel: ACCUM = 0x0, SINDEX = 0x91, DINDEX = 0xe4, ARG_2 = 0x1
+Oct 31 12:01:27 badb kernel: HCNT = 0x0
+Oct 31 12:01:27 badb kernel: SCSISEQ = 0x12, SBLKCTL = 0xa
+Oct 31 12:01:27 badb kernel:  DFCNTRL = 0x0, DFSTATUS = 0x89
+Oct 31 12:01:27 badb kernel: LASTPHASE = 0x40, SCSISIGI = 0x46, SXFRCTL0 = 0x88
+Oct 31 12:01:27 badb kernel: SSTAT0 = 0x2, SSTAT1 = 0x0
+Oct 31 12:01:27 badb kernel: SCSIPHASE = 0x0
+Oct 31 12:01:27 badb kernel: STACK == 0x63, 0x160, 0x0, 0x34
+Oct 31 12:01:27 badb kernel: SCB count = 8
+Oct 31 12:01:27 badb kernel: Kernel NEXTQSCB = 0
+Oct 31 12:01:27 badb kernel: Card NEXTQSCB = 7
+Oct 31 12:01:27 badb kernel: QINFIFO entries: 7 1 3
+Oct 31 12:01:27 badb kernel: Waiting Queue entries:
+Oct 31 12:01:27 badb kernel: Disconnected Queue entries:
+Oct 31 12:01:27 badb kernel: QOUTFIFO entries:
+Oct 31 12:01:27 badb kernel: Sequencer Free SCB List: 0 1 2 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31
+Oct 31 12:01:27 badb kernel: Pending list: 3, 1, 7, 6
+Oct 31 12:01:27 badb kernel: Kernel Free SCB list: 2 5 4
+Oct 31 12:01:27 badb kernel: DevQ(0:0:0): 0 waiting
+Oct 31 12:01:27 badb kernel: DevQ(0:1:0): 0 waiting
+Oct 31 12:01:27 badb kernel: DevQ(0:2:0): 0 waiting
+Oct 31 12:01:27 badb kernel: DevQ(0:3:0): 0 waiting
+Oct 31 12:01:27 badb kernel: DevQ(0:4:0): 0 waiting
+Oct 31 12:01:27 badb kernel: scsi0:0:4:0: Cmd aborted from QINFIFO
+Oct 31 12:01:27 badb kernel: aic7xxx_abort returns 0x2002
+Oct 31 12:01:37 badb kernel: scsi0:0:4:0: Attempting to queue an ABORT message
+Oct 31 12:01:37 badb kernel: scsi0: Dumping Card State in Data-in phase, at SEQADDR 0x168
+Oct 31 12:01:37 badb kernel: ACCUM = 0x0, SINDEX = 0x91, DINDEX = 0xe4, ARG_2 = 0x1
+Oct 31 12:01:37 badb kernel: HCNT = 0x0
+Oct 31 12:01:37 badb kernel: SCSISEQ = 0x12, SBLKCTL = 0xa
+Oct 31 12:01:37 badb kernel:  DFCNTRL = 0x0, DFSTATUS = 0x89
+Oct 31 12:01:37 badb kernel: LASTPHASE = 0x40, SCSISIGI = 0x46, SXFRCTL0 = 0x88
+Oct 31 12:01:37 badb kernel: SSTAT0 = 0x2, SSTAT1 = 0x0
+Oct 31 12:01:37 badb kernel: SCSIPHASE = 0x0
+Oct 31 12:01:37 badb kernel: STACK == 0x63, 0x160, 0x0, 0x34
+Oct 31 12:01:37 badb kernel: SCB count = 8
+Oct 31 12:01:37 badb kernel: Kernel NEXTQSCB = 3
+Oct 31 12:01:37 badb kernel: Card NEXTQSCB = 0
+Oct 31 12:01:37 badb kernel: QINFIFO entries: 0 1 7
+Oct 31 12:01:37 badb kernel: Waiting Queue entries:
+Oct 31 12:01:37 badb kernel: Disconnected Queue entries:
+Oct 31 12:01:37 badb kernel: QOUTFIFO entries:
+Oct 31 12:01:37 badb kernel: Sequencer Free SCB List: 0 1 2 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31
+Oct 31 12:01:37 badb kernel: Pending list: 7, 1, 0, 6
+Oct 31 12:01:37 badb kernel: Kernel Free SCB list: 2 5 4
+Oct 31 12:01:37 badb kernel: DevQ(0:0:0): 0 waiting
+Oct 31 12:01:37 badb kernel: DevQ(0:1:0): 0 waiting
+Oct 31 12:01:37 badb kernel: DevQ(0:2:0): 0 waiting
+Oct 31 12:01:37 badb kernel: DevQ(0:3:0): 0 waiting
+Oct 31 12:01:37 badb kernel: DevQ(0:4:0): 0 waiting
+Oct 31 12:01:37 badb kernel: scsi0:0:4:0: Cmd aborted from QINFIFO
+Oct 31 12:01:37 badb kernel: aic7xxx_abort returns 0x2002
+Oct 31 12:01:37 badb kernel: scsi0:0:3:0: Attempting to queue an ABORT message
+Oct 31 12:01:37 badb kernel: scsi0: Dumping Card State in Data-in phase, at SEQADDR 0x168
+Oct 31 12:01:37 badb kernel: ACCUM = 0x0, SINDEX = 0x91, DINDEX = 0xe4, ARG_2 = 0x1
+Oct 31 12:01:37 badb kernel: HCNT = 0x0
+Oct 31 12:01:37 badb kernel: SCSISEQ = 0x12, SBLKCTL = 0xa
+Oct 31 12:01:37 badb kernel:  DFCNTRL = 0x0, DFSTATUS = 0x89
+Oct 31 12:01:37 badb kernel: LASTPHASE = 0x40, SCSISIGI = 0x46, SXFRCTL0 = 0x88
+Oct 31 12:01:37 badb kernel: SSTAT0 = 0x2, SSTAT1 = 0x0
+Oct 31 12:01:37 badb kernel: SCSIPHASE = 0x0
+Oct 31 12:01:37 badb kernel: STACK == 0x63, 0x160, 0x0, 0x34
+Oct 31 12:01:37 badb kernel: SCB count = 8
+Oct 31 12:01:37 badb kernel: Kernel NEXTQSCB = 0
+Oct 31 12:01:37 badb kernel: Card NEXTQSCB = 3
+Oct 31 12:01:37 badb kernel: QINFIFO entries: 3 1
+Oct 31 12:01:37 badb kernel: Waiting Queue entries:
+Oct 31 12:01:37 badb kernel: Disconnected Queue entries:
+Oct 31 12:01:37 badb kernel: QOUTFIFO entries:
+Oct 31 12:01:37 badb kernel: Sequencer Free SCB List: 0 1 2 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31
+Oct 31 12:01:37 badb kernel: Pending list: 1, 3, 6
+Oct 31 12:01:37 badb kernel: Kernel Free SCB list: 7 2 5 4
+Oct 31 12:01:37 badb kernel: DevQ(0:0:0): 0 waiting
+Oct 31 12:01:37 badb kernel: DevQ(0:1:0): 0 waiting
+Oct 31 12:01:37 badb kernel: DevQ(0:2:0): 0 waiting
+Oct 31 12:01:37 badb kernel: DevQ(0:3:0): 0 waiting
+Oct 31 12:01:37 badb kernel: DevQ(0:4:0): 0 waiting
+Oct 31 12:01:37 badb kernel: scsi0:0:3:0: Cmd aborted from QINFIFO
+Oct 31 12:01:37 badb kernel: aic7xxx_abort returns 0x2002
+... panic (not logged)
+-->8--
 
+I'll reboot again, when people are off this machine, with
+the raid devices mounted at boot time, to see if I can get
+the segment error and that blk_dump_rq_flags stuff.
 
-To:    linux-scsi@vger.kernel.org
-cc:
-Subject:    Adaptec 7XXX/DPT SmartRAID V
+merlin
 
-
-
-Hello dear linux-scsi subscribers,
-
-I got machine with squid and apache. It is a normal PC (2x550PIII, 400M=
-B
-ram, SCSI adaptec 2940,
-DPT SmartRAID V Controller, network card ...) - nothing special.
-
-[root@bishop root]# lspci
-00:00.0 Host bridge: Intel Corp. 440BX/ZX/DX - 82443BX/ZX/DX Host bridg=
-e
-(rev 03)
-00:01.0 PCI bridge: Intel Corp. 440BX/ZX/DX - 82443BX/ZX/DX AGP bridge =
-(rev
-03)
-00:07.0 ISA bridge: Intel Corp. 82371AB/EB/MB PIIX4 ISA (rev 02)
-00:07.1 IDE interface: Intel Corp. 82371AB/EB/MB PIIX4 IDE (rev 01)
-00:07.2 USB Controller: Intel Corp. 82371AB/EB/MB PIIX4 USB (rev 01)
-00:07.3 Bridge: Intel Corp. 82371AB/EB/MB PIIX4 ACPI (rev 02)
-00:08.0 VGA compatible controller: ATI Technologies Inc 215CT [Mach64 C=
-T]
-(rev 09)
-00:09.0 SCSI storage controller: Adaptec AIC-7892A U160/m (rev 02)
-00:0a.0 PCI bridge: Distributed Processing Technology PCI Bridge (rev 0=
-3)
-00:0a.1 I2O: Distributed Processing Technology SmartRAID V Controller (=
-rev
-03)
-00:0b.0 Ethernet controller: Intel Corp. 82557/8/9 [Ethernet Pro 100] (=
-rev
-08)
-00:0c.0 SCSI storage controller: Adaptec AHA-2940U/UW / AHA-39xx / AIC-=
-7895
-(rev 04)
-00:0c.1 SCSI storage controller: Adaptec AHA-2940U/UW / AHA-39xx / AIC-=
-7895
-(rev 04)
-
-[root@bishop root]# lsmod
-Module                  Size  Used by    Not tainted
-eepro100               20816   1
-reiserfs              189824   1  (autoclean)
-usb-uhci               25604   0  (unused)
-usbcore                77024   1  [usb-uhci]
-dpt_i2o                28768   1
-aic7xxx               125440   6
-sd_mod                 12896  14
-scsi_mod              112272   3  [dpt_i2o aic7xxx sd_mod]
-
-System is rh 7.3 with updates and rh kernel (2.4.18 not compiled by my =
-self
-i mean).
-Partitions with system are on the disk on adaptec, directory for squid
-cache
-on DPT SmartRAID V Controller (raid 0 - 4 x 18 GB)
-
-I got one problem with this configuration. When I try to boot from "my
-self" compiled kernel (2.4.18), as first controller, linux recognize DP=
-T,
-so my root partitions can not be mounted (can not find root fs etc./etc=
-=2E).
-
-Booting from rh kernel gives good results:
-
-[root@bishop root]# mount
-/dev/sda7 on / type ext2 (rw,nosuid)
-none on /proc type proc (rw)
-usbdevfs on /proc/bus/usb type usbdevfs (rw)
-/dev/sda1 on /boot type ext2 (rw,nosuid,nodev,noexec)
-/dev/sdb1 on /cache type reiserfs (rw)
-none on /dev/pts type devpts (rw,gid=3D5,mode=3D620)
-none on /dev/shm type tmpfs (rw)
-/dev/sda8 on /tmp type ext2 (rw,nosuid,nodev,noexec)
-/dev/sda6 on /usr type ext2 (rw,nosuid,nodev)
-/dev/sda5 on /var type ext2 (rw,nosuid,nodev,noexec)
-
-BIOS shows good order - adaptec is the first, dpt - second.
-
-I know that i can do some workarounds with lilo but it is not good solu=
-tion
-i think.
-
-Am i missing something ?
-
-ps. sorry for my poor english.
-
-greetz
-boka
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>Badari, I'm not so sure that Merlin's and your bug are the same. Is
+>yours solved by the patch I sent out earlier? AFAICT, that should fix
+>the segment miscounting.
+>
+>-- 
+>Jens Axboe
