@@ -1,48 +1,65 @@
-From: Joel Becker <Joel.Becker@oracle.com>
-Subject: Re: Fwd: 32bit dev_t
-Date: Fri, 24 Jan 2003 10:29:53 -0800
+From: Luben Tuikov <luben@splentec.com>
+Subject: Re: [linux-usb-devel] Re: [PATCH] USB changes for 2.5.58
+Date: Fri, 24 Jan 2003 14:00:47 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030124182952.GF20972@ca-server1.us.oracle.com>
-References: <3E2DC21D.9010204@torque.net> <20030123183131.GA2126@nbkurt.garloff.de> <20030123221805.A2468@infradead.org>
+Message-ID: <3E318D5F.20200@splentec.com>
+References: <Pine.LNX.4.44L0.0301241026060.821-100000@ida.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from inet-mail2.oracle.com (localhost [127.0.0.1])
-	by inet-mail2.oracle.com (Switch-2.2.3/Switch-2.2.3) with ESMTP id h0OIU2n26027
-	for <linux-scsi@vger.kernel.org>; Fri, 24 Jan 2003 10:30:02 -0800 (PST)
-Received: from rgmgw6.us.oracle.com (rgmgw6.us.oracle.com [138.1.191.15])
-	by inet-mail2.oracle.com (Switch-2.2.3/Switch-2.2.3) with ESMTP id h0OIU2a25896
-	for <linux-scsi@vger.kernel.org>; Fri, 24 Jan 2003 10:30:02 -0800 (PST)
-Received: from rgmgw6.us.oracle.com (localhost [127.0.0.1])
-	by rgmgw6.us.oracle.com (Switch-2.1.3/Switch-2.1.0) with ESMTP id h0OIU1w23784
-	for <linux-scsi@vger.kernel.org>; Fri, 24 Jan 2003 11:30:01 -0700 (MST)
-Content-Disposition: inline
-In-Reply-To: <20030123221805.A2468@infradead.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Kurt Garloff <kurt@garloff.de>, Douglas Gilbert <dougg@torque.net>, Linux SCSI list <linux-scsi@vger.kernel.org>
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: Matthew Dharm <mdharm-scsi@one-eyed-alien.net>, Oliver Neukum <oliver@neukum.name>, Doug Ledford <dledford@redhat.com>, David Brownell <david-b@pacbell.net>, Mike Anderson <andmike@us.ibm.com>, Greg KH <greg@kroah.com>, linux-usb-devel@lists.sourceforge.net, Linux SCSI list <linux-scsi@vger.kernel.org>
 
-On Thu, Jan 23, 2003 at 10:18:05PM +0000, Christoph Hellwig wrote:
-> the Linux 2.5 sd and sr drivers are only limited by the number of majors
-> allocated to them.  There's no more architectural limit or any global
-> array.
+Alan Stern wrote:
+ >
+> Matt's current proposed patch has the USB LLDD calling
+> scsi_unregister_host()  (because the device is respresented as an emulated
 
-	How are they allocated?  Is this dynamic, or compiled in?  In
-addition, what is the maximum amount?  If it's less than 1000 disks,
-it's too small for today.  If it's less than 2000 disks, it's probably
-too small for 2.6's lifetime.
+A LLDD should and must *not* call scsi_unregister_host().  This brakes
+all hierarchy.
 
-Joel
+Let's not make a distinction between a USB LLDD and any LLDD wrt hotplugging,
+else we'll have a big mess and plenty of code duplication.
 
+When a device gets unplugged and the LLDD notices it, it will set the device
+to off in its own tables, call scsi_set_device_offline(dev) and from that
+point on *if* any commands for that device step in through queuecommand()
+method, they will return with the appropriate error.
+
+scsi_set_device_offline(dev) will do whatever it has to do, which IMHO
+is to, as Doug suggested, start error recovery (i.e. less code, less code
+duplication in LLDD), and call an upper level hook. *
+
+* Though I'm not quite certain where that error recovery should
+be started... Maybe that upper level hook after doing whatever it
+has to do, it will start the error recovery, or maybe it doesn't matter
+for now.  But, an upper level hook call is, IMHO, mandatory for many
+reasons.
+
+Now, here we have the alternatives: scsi_set_device_offline() calls
+slave_destroy(), or slave_destory() is called later on when upper
+level structs has been cleaned.
+
+In fact, it wouldn't matter, if SCSI Core takes over error return,
+via post scsi_set_device_offline(dev) call.
+
+> host adapter) when it learns that the device is gone.  Provided that
+> routine doesn't block for very long, provided it handles all the details
+> of hotplug notifications, and provided it guarantees that after it returns
+> there will be no more calls to the emulated adapter, I don't see any
+> problem.  The LLDD can go ahead and remove all records of the former
+> device, secure in the knowledge that all pointers to data structures and
+> entry points have been erased.
+
+A LLDD shouldn't be so concerned with ``blocking'', unless *it* sets timers
+on calls to an upper level like SCSI Core functions.
+
+A LLDD has quite a clean and clear function it's supposed to do.
 
 -- 
+Luben
 
- "Practice random acts of kindness and senseless acts of beauty."
 
- Oh, and don't forget where your towel is.
 
-Joel Becker
-Senior Member of Technical Staff
-Oracle Corporation
-E-mail: joel.becker@oracle.com
-Phone: (650) 506-8127
