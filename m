@@ -1,13 +1,13 @@
 From: Tobias Klauser <tklauser@nuerscht.ch>
-Subject: [PATCH 17/19] drivers/scsi/qla1280: Use the DMA_{64,32}BIT_MASK constants
-Date: Sun, 20 Feb 2005 18:12:00 +0100
-Message-ID: <20050220171200.GR14375@helium.tklauser.home>
+Subject: [PATCH 18/19] drivers/scsi/qlogicfc: Use the DMA_{64,32}BIT_MASK constants
+Date: Sun, 20 Feb 2005 18:12:44 +0100
+Message-ID: <20050220171244.GS14375@helium.tklauser.home>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Received: from server3.hostpoint.ch ([217.26.52.13]:2835 "EHLO
+Received: from server3.hostpoint.ch ([217.26.52.13]:7436 "EHLO
 	server3.hostpoint.ch") by vger.kernel.org with ESMTP
-	id S261891AbVBTRLO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 20 Feb 2005 12:11:14 -0500
+	id S261892AbVBTRL5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 20 Feb 2005 12:11:57 -0500
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -22,23 +22,16 @@ See http://marc.theaimsgroup.com/?t=108001993000001&r=1&w=2 for details
 
 Signed-off-by: Tobias Klauser <tklauser@nuerscht.ch>
 
---- linux-2.6.11-rc4.orig/drivers/scsi/qla1280.c	2005-02-13 17:13:07.000000000 +0100
-+++ linux-2.6.11-rc4/drivers/scsi/qla1280.c	2005-02-16 21:16:19.000000000 +0100
-@@ -4741,7 +4741,7 @@ qla1280_probe_one(struct pci_dev *pdev, 
+--- linux-2.6.11-rc4.orig/drivers/scsi/qlogicfc.c	2005-02-13 17:13:07.000000000 +0100
++++ linux-2.6.11-rc4/drivers/scsi/qlogicfc.c	2005-02-16 21:24:00.000000000 +0100
+@@ -719,8 +719,8 @@ int isp2x00_detect(Scsi_Host_Template * 
+ 				continue;
  
- #ifdef QLA_64BIT_PTR
- 	if (pci_set_dma_mask(ha->pdev, (dma_addr_t) ~ 0ULL)) {
--		if (pci_set_dma_mask(ha->pdev, 0xffffffff)) {
-+		if (pci_set_dma_mask(ha->pdev, DMA_32BIT_MASK)) {
- 			printk(KERN_WARNING "scsi(%li): Unable to set a "
- 			       " suitable DMA mask - aboring\n", ha->host_no);
- 			error = -ENODEV;
-@@ -4751,7 +4751,7 @@ qla1280_probe_one(struct pci_dev *pdev, 
- 		dprintk(2, "scsi(%li): 64 Bit PCI Addressing Enabled\n",
- 			ha->host_no);
- #else
--	if (pci_set_dma_mask(ha->pdev, 0xffffffff)) {
-+	if (pci_set_dma_mask(ha->pdev, DMA_32BIT_MASK)) {
- 		printk(KERN_WARNING "scsi(%li): Unable to set a "
- 		       " suitable DMA mask - aboring\n", ha->host_no);
- 		error = -ENODEV;
+ 			/* Try to configure DMA attributes. */
+-			if (pci_set_dma_mask(pdev, 0xffffffffffffffffULL) &&
+-			    pci_set_dma_mask(pdev, 0xffffffffULL))
++			if (pci_set_dma_mask(pdev, DMA_64BIT_MASK) &&
++			    pci_set_dma_mask(pdev, DMA_32BIT_MASK))
+ 					continue;
+ 
+ 		        host = scsi_register(tmpt, sizeof(struct isp2x00_hostdata));
