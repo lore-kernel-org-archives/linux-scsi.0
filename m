@@ -1,45 +1,39 @@
 From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: bytes/CDB of SCSI pass thru grossly limited maybe
-Date: 29 Aug 2004 09:34:10 -0400
+Subject: Re: [patch] 2.6.9-rc1-mm1: megaraid_mbox.c compile error with gcc
+	3.4
+Date: 29 Aug 2004 09:34:22 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1093742128.1670.2.camel@mulgrave>
-References: <A8E06BE4-F7BA-11D8-AC6B-00039398BB5E@ieee.org>
-	<Pine.LNX.4.44L0.0408271100590.1238-100000@ida.rowland.org>
-	<20040828143124.GB2518@suse.de> <1093715498.3682.4.camel@mulgrave>
-	<20040828175547.GA8339@suse.de> <1093717255.3682.13.camel@mulgrave>
-	<20040828184104.GA8460@suse.de>
+Message-ID: <1093742635.1670.5.camel@mulgrave>
+References: <0E3FA95632D6D047BA649F95DAB60E57033BC9BB@exa-atlanta>
+	<20040828130419.57a56cdd.akpm@osdl.org>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat16.steeleye.com ([209.192.50.48]:20142 "EHLO
+Received: from stat16.steeleye.com ([209.192.50.48]:51120 "EHLO
 	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S267815AbUH2NeW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 29 Aug 2004 09:34:22 -0400
-In-Reply-To: <20040828184104.GA8460@suse.de>
+	id S267823AbUH2Nfl (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 29 Aug 2004 09:35:41 -0400
+In-Reply-To: <20040828130419.57a56cdd.akpm@osdl.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Jens Axboe <axboe@suse.de>
-Cc: Alan Stern <stern@rowland.harvard.edu>, Pat LaVarre <p.lavarre@ieee.org>, SCSI development list <linux-scsi@vger.kernel.org>
+To: Andrew Morton <akpm@osdl.org>
+Cc: "Mukker, Atul" <Atulm@lsil.com>, bunk@fs.tum.de, sreenib@lsil.com, Manojj@lsil.com, Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Sat, 2004-08-28 at 14:41, Jens Axboe wrote:
-> Since SCSI doesn't build > 128 pages anyways, yes it doesn't make sense
-> to maintain a BIO_MAX_PAGES of 256. Didn't the SCSI part used to be 256
+On Sat, 2004-08-28 at 16:04, Andrew Morton wrote:
+> I dunno about James, but I *really* dislike receiving patches by going and
+> getting them from internet servers.  It breaks our commonly-used tools.  It
+> loses authorship info.  It loses Signed-off-by: info.  There is no
+> changelog.  All this means that your patch is more likely to be ignored by
+> busy people.  Please, just email the diffs.
 
-Agreed.
+Yes, I dislike it, but I've learned to live with downloading...
 
-> pages as well, I'm pretty sure that's what I put in when the
-> scsi_malloc() crud was dumped?
+The Megaraid patch set, by the way, annoys me even more by not actually
+applying to the kernel tree.  it doesn't reflect the fact that the
+Changelog.megaraid is under Documentation/scsi not drivers/scsi.
 
-I don't think so.  I only looked at it about six months ago when SGI
-wanted better merging for qla.  There was quite a bit of work to get the
-maximum to be 256.
-
-> bio has 1, 4, 16, 64, 128, 256 pools. 32 might make more sense, I seem
-> to recall mpages using that. I'll see if I can sneak a BIO_MAX_PAGES
-> reduction in, and spend that extra pool on 32 instead :)
-
-OK I'll follow whatever you do in SCSI.  I think at least aligning all
-of our pool maximums is the correct thing to do.
+However, it's all merged into the vanilla kernel now but in future, if
+you could follow Andrew's guide, I'd be very grateful.
 
 James
 
