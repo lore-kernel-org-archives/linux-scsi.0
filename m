@@ -1,79 +1,52 @@
-From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
-Subject: RE: ADAPTEC 2.4 drivers too old
-Date: Mon, 15 Mar 2004 10:30:39 -0500
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: PATCH [5/15] qla2xxx:  SG tablesize update
+Date: Mon, 15 Mar 2004 11:09:51 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <547AF3BD0F3F0B4CBDC379BAC7E4189F64E534@otce2k03.adaptec.com>
+Message-ID: <4055D54F.8010908@pobox.com>
+References: <20040314082444.GA3416@linux.local.home>	<1079275768.2022.1.camel@mulgrave> <20040314145142.GL6955@suse.de>	<1079276396.2022.8.camel@mulgrave>  <20040314203649.GA1463@havoc.gtf.org> <1079303516.2108.73.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from magic.adaptec.com ([216.52.22.17]:3796 "EHLO magic.adaptec.com")
-	by vger.kernel.org with ESMTP id S262608AbUCOPan convert rfc822-to-8bit
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:10985 "EHLO
+	www.linux.org.uk") by vger.kernel.org with ESMTP id S262641AbUCOQKJ
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 15 Mar 2004 10:30:43 -0500
-content-class: urn:content-classes:message
+	Mon, 15 Mar 2004 11:10:09 -0500
+In-Reply-To: <1079303516.2108.73.camel@mulgrave>
 List-Id: linux-scsi@vger.kernel.org
-To: Xose Vazquez Perez <xose@wanadoo.es>
-Cc: arjanv@redhat.com, linux-scsi <linux-scsi@vger.kernel.org>
+To: James Bottomley <James.Bottomley@steeleye.com>
+Cc: Jens Axboe <axboe@suse.de>, Andrew Vasquez <andrew.vasquez@qlogic.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-I would *hate* to point fingers until the root cause is completed for
-all issues. But the Driver has yet to be the root cause of any of the
-problems experienced by the Dell 2650 users. In each case where an
-alternate driver is selected that appears to resolve the issue, it is a
-detuned variant. Remember, most of the people solved their problems by
-turning off Hyperthreading, or turning of the card's Cache.
-
-The issues experienced by some of the 2650 owners have several causes.
-One root cause has been hardware problems. For instance, where the PCI
-bus no longer responds (traced to a faulty power supply), another was
-traced to a bad hard drive locking up the SCSI bus, another issue was
-addressed by a driver workaround for the Adapter Firmware being
-overloaded during times of internal Cache Flush.
-
-To add to the frustration, in none of the other peripheral cases have we
-been able to duplicate the issue in-house (Dell or at Adaptec), which
-generally means to me that the issue is hardware specific. Systems that
-exhibited the problem have been shipped to the factory, only to stop
-exhibiting the problem.
-
-It certainly is not for a lack of trying ...
-
-Sincerely -- Mark Salyzyn
-
------Original Message-----
-From: linux-scsi-owner@vger.kernel.org
-[mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of Xose Vazquez
-Perez
-Sent: Saturday, March 13, 2004 2:17 PM
-To: unlisted-recipients
-Cc: arjanv@redhat.com; 'linux-scsi'
-Subject: Re: ADAPTEC 2.4 drivers too old
-
-Xose Vazquez Perez wrote:
-
-> Arjan van de Ven wrote:
+James Bottomley wrote:
+> On Sun, 2004-03-14 at 15:36, Jeff Garzik wrote:
 > 
->> I object to the words "too old" in your subject.
->> The reality is that 2.4 doesn't have the brand-spanking-newest driver
->> version *numbers*. So what? Newer != automatically better.
+>>On Sun, Mar 14, 2004 at 09:59:55AM -0500, James Bottomley wrote:
+>>
+>>>The Qla chips are rather weird in that they have a single issue queue
+>>>(whose size you can vary) but whose entry formats are fixed.  If I
+>>>remember correctly, an initial command can have 4 SG elements, but a
+>>>follow on entry can have 7 (not sure of the figures).  But anyway, large
+>>>SG commands end up having to find multiple entries in this queue (and
+>>>being a single issue queue for the entire card, it has to be mutexed
+>>>while you search).  The more resources you need, the more difficult the
+>>>search and the more contention you generate on the resource mutex.
+>>
+>>The block layer can handle this type of hardware just fine ;-)
+>>
+>>In my SATA hacking I am finding several devices that one must constrain
+>>based on hardware-global resources, rather than just TCQ (or lack
+>>thereof).
 > 
 > 
-> http://marc.theaimsgroup.com/?l=linux-kernel&m=107456492323846&w=2
-> 
-> "... and left at least the aic79xx driver in a worse state than it
-> was in before ..."
-> 
+> I'm sorry, I must have missed the multiple queues down to a single HBA
+> queue API in the block layer, which one is it again?
 
-there are more examples....
+Not saying the block layer provides this capability, simply that it is 
+possible in any block driver.  It required < 20 LOC in carmel.c to do 
+this in a hardware-specific fashion, so it seemed unnecessary to invent 
+a new API...  I would like to see something similar in cciss.c, in fact...
 
-Do you call to aacraid stable driver ?
+	Jeff
 
-ask to Dell 2650 owners:
-http://bugzilla.redhat.com/bugzilla/show_bug.cgi?id=92129
-http://lists.us.dell.com/pipermail/linux-aacraid-devel/
 
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
