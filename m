@@ -1,48 +1,27 @@
-From: Matt Domsch <Matt_Domsch@dell.com>
-Subject: Re: [RFC][PATCH 2.6.11-rc2] Linux SCSI hotplug infrastructure
-Date: Mon, 7 Feb 2005 13:40:38 -0600
-Message-ID: <20050207194038.GA19320@lists.us.dell.com>
-References: <20050207182753.GA16526@lists.us.dell.com> <4207BFF5.4000404@us.ibm.com>
+From: "Moore, Eric Dean" <Eric.Moore@lsil.com>
+Subject: EBDA Question
+Date: Mon, 7 Feb 2005 12:45:17 -0700
+Message-ID: <91888D455306F94EBD4D168954A9457C01297B87@nacos172.co.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <4207BFF5.4000404@us.ibm.com>
-Sender: linux-hotplug-devel-admin@lists.sourceforge.net
-Errors-To: linux-hotplug-devel-admin@lists.sourceforge.net
-List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux-hotplug-devel>,
-	<mailto:linux-hotplug-devel-request@lists.sourceforge.net?subject=unsubscribe>
-List-Post: <mailto:linux-hotplug-devel@lists.sourceforge.net>
-List-Help: <mailto:linux-hotplug-devel-request@lists.sourceforge.net?subject=help>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux-hotplug-devel>,
-	<mailto:linux-hotplug-devel-request@lists.sourceforge.net?subject=subscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=linux-hotplug-devel>
-To: Brian King <brking@us.ibm.com>
-Cc: linux-scsi@vger.kernel.org, linux-hotplug-devel@lists.sourceforge.net
+Content-Type: text/plain;
+	charset="iso-8859-1"
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, Feb 07, 2005 at 01:22:29PM -0600, Brian King wrote:
-> Just curious why the following flow would not work/be preferred:
-> 
-> 1. echo "2" > /sys/class/scsi_host/host2/logical_drive_created
-> 2. megaraid_mbox.c sysfs method converts logical drive number to HCTL 
-> value, calls scsi_add_device.
-> 3. scsi_add_device works as it does today and generates hotplug events
-> 
-> -Brian
+EBDA - Extended Bios Data Area
 
+Does Linux and various boot loaders(lilo/grub/etc)
+having any restrictions on where and how big 
+memory allocated in EBDA is? Is this
+handled for 2.4/2.6 Kernels?
 
-This direction was what came out of this thread back in December.
-http://marc.theaimsgroup.com/?l=linux-kernel&m=110314267629902&w=2
+Reason I ask is we are considering having
+BIOS(for a SCSI HBA Controller) allocating
+memory in EBDA for Firmware use. 
+We are concerned whether Linux would be writing
+over this region of memory during the handoff
+of BIOS to scsi lower layer driver loading.
 
--- 
-Matt Domsch
-Software Architect
-Dell Linux Solutions linux.dell.com & www.dell.com/linux
-Linux on Dell mailing lists @ http://lists.us.dell.com
-
-
--------------------------------------------------------
-SF email is sponsored by - The IT Product Guide
-Read honest & candid reviews on hundreds of IT Products from real users.
-Discover which products truly live up to the hype. Start reading now.
-http://ads.osdn.com/?ad_id=6595&alloc_id=14396&op=click
+Eric Moore
+LSI Logic
