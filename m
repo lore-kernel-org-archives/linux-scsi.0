@@ -1,31 +1,33 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [2.6 patch] let "PCMCIA SCSI adapter support" menu depend on MODULES
-Date: Thu, 4 Sep 2003 08:26:43 +0100
+From: "Zuylen, G. van" <GvZuylen@ysl.nl>
+Subject: Problems with higher SCSI LUN's with SLES8
+Date: Thu, 4 Sep 2003 09:48:24 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030904082643.A26801@infradead.org>
-References: <20030903232334.GL18025@fs.tum.de>
+Message-ID: <A00BBCF927F25E4A9D5F6EE1380CDEF2CC88@hedwig.ysl.nl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pub234.cambridge.redhat.com ([213.86.99.234]:18181 "EHLO
-	phoenix.infradead.org") by vger.kernel.org with ESMTP
-	id S264787AbTIDH0o (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 4 Sep 2003 03:26:44 -0400
-Content-Disposition: inline
-In-Reply-To: <20030903232334.GL18025@fs.tum.de>; from bunk@fs.tum.de on Thu, Sep 04, 2003 at 01:23:34AM +0200
+Received: from [62.58.77.3] ([62.58.77.3]:14094 "HELO hedwig.ysl.nl")
+	by vger.kernel.org with SMTP id S264841AbTIDHs0 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 4 Sep 2003 03:48:26 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: Adrian Bunk <bunk@fs.tum.de>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, trivial@rustcorp.com.au
+To: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
 
-On Thu, Sep 04, 2003 at 01:23:34AM +0200, Adrian Bunk wrote:
-> When configuring a kernel without modules support "PCMCIA SCSI adapter 
-> support" is a menu with no available items in it (all drivers depend on 
-> "m").
-> 
-> The patch below only shows this menu when MODULES is enabled.
+Hi you all,
 
-Not too happy with this watch although it's better than the previous
-situation.  For one thing I'd get rid of the menu - we don't have menus
-for PCI/ISA/MCA/whatever cards either.  Secondly these drivers probably
-should work non-modular these days.
+We are using a HP DL380 server with a Qlogic 2300 HBA adapter. This adapter
+is connected to a HP EMA12000 SAN (with HSG80 controllers). Behind the HBA
+(qlogic 2300) we see only the devices up to LUN 7, higher LUN are not
+detected. We have tried several things like modifying /etc/modules.conf with
+"options scsi_mod max_scsi_luns=128" and modifying /boot/grub/menu.lst. But
+nothing seems to be working.
+We are using SLES8 with kernel version k_smp-2.4.19-304 and the qlogic
+driver version 6.05.60. Also tested with a newer kernel k_smp-2.4.19-340,
+but this makes no difference. 
+
+Does anybody know how we can solve this problem or is there somebody who has
+experience with this ?
+
+Best regards,
+
+Gert van Zuylen
 
