@@ -1,55 +1,69 @@
-From: James Bottomley <James.Bottomley@steeleye.com>
-Subject: Re: [PATCH 1/2] sdev_printk - scsi_device helper macro
-Date: 31 Mar 2004 14:29:14 -0500
+From: Kai Makisara <Kai.Makisara@kolumbus.fi>
+Subject: Re: [PATCH] message fix of st.c
+Date: Wed, 31 Mar 2004 22:31:25 +0300 (EEST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1080761358.2071.35.camel@mulgrave>
-References: <200310071318.11847.dsteklof@us.ibm.com>
-	<1080758108.1804.18.camel@mulgrave>
-	<200403311123.53361.dsteklof@us.ibm.com>
+Message-ID: <Pine.LNX.4.58.0403312224060.1158@kai.makisara.local>
+References: <040801c4171c$4dd73890$2987110a@lsd.css.fujitsu.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat1.steeleye.com ([65.114.3.130]:60846 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S262356AbUCaT3v (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 31 Mar 2004 14:29:51 -0500
-In-Reply-To: <200403311123.53361.dsteklof@us.ibm.com>
+Received: from fep19-0.kolumbus.fi ([193.229.0.45]:34723 "EHLO
+	fep19-app.kolumbus.fi") by vger.kernel.org with ESMTP
+	id S262374AbUCaTb1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 31 Mar 2004 14:31:27 -0500
+In-Reply-To: <040801c4171c$4dd73890$2987110a@lsd.css.fujitsu.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Daniel Stekloff <dsteklof@us.ibm.com>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Hironobu Ishii <ishii.hironobu@jp.fujitsu.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
-On Wed, 2004-03-31 at 14:23, Daniel Stekloff wrote:
-> One of the reasons why I didn't make this a #define to dev_printk() in the 
-> first place was because dev_printk() references "(dev)->driver->name", which 
-> isn't always valid when sdev_printk() is used. Please see scsi_scan.c as an 
-> example. The dev_printk() macro has that limitation. 
+On Wed, 31 Mar 2004, Hironobu Ishii wrote:
+
+> Hi Kai,
 > 
-> How would you like to proceed? 
+> st.c has some messages that does not tell us the error device.
+> This patch adds device name to such messages.
+> This is a patch for linux-2.6.5-rc3.
 > 
-> 1) Make the #define to dev_printk and only use sdev_printk in situations where 
-> struct device_driver is valid? This will reduce the number of places it can 
-> be used.
-
-I think this is my preferred option.  That only leaves our scanning and
-inquiry code as the exception.  It still sweeps up most of the driver
-stuff.
-
-It might be possible to improve this situation by initialising the
-device earlier too.
-
-> 2) Keep sdev_printk() as is.
+> Please apply!
 > 
-> 3) Create a check in the macro to see if dev->driver is valid.
+> Thanks,
+> Hironobu Ishii.
 > 
-> 4) Don't use sdev_printk().
 > 
-> I've noticed a number of patches lately that print out SCSI device information 
-> and believe this macro is useful for cleaning things up a bit and providing a 
-> standard format for sdev information. 
+> diff -urN linux-2.6.5-rc3/drivers/scsi/st.c linux-2.6.5-rc3-work/drivers/scsi/st.c
+> --- linux-2.6.5-rc3/drivers/scsi/st.c 2004-03-30 19:02:47.000000000 +0900
+> +++ linux-2.6.5-rc3-work/drivers/scsi/st.c 2004-03-30 22:25:30.000000000 +0900
+> @@ -174,12 +174,12 @@
+>  static int modes_defined;
+>  
+>  static ST_buffer *new_tape_buffer(int, int, int);
+> -static int enlarge_buffer(ST_buffer *, int, int);
+> -static void normalize_buffer(ST_buffer *);
+> -static int append_to_buffer(const char *, ST_buffer *, int);
+> -static int from_buffer(ST_buffer *, char *, int);
+> -static void move_buffer_data(ST_buffer *, int);
+> -static void buf_to_sg(ST_buffer *, unsigned int);
+> +static int enlarge_buffer(Scsi_Tape *, int, int);
+> +static void normalize_buffer(Scsi_Tape *);
+> +static int append_to_buffer(const char *, Scsi_Tape *, int);
+> +static int from_buffer(Scsi_Tape *, char *, int);
+> +static void move_buffer_data(Scsi_Tape *, int);
+> +static void buf_to_sg(Scsi_Tape *, unsigned int);
+>  
+I don't like these changes. The functions operate on tape buffers and this 
+is why the arguments are pointers to buffers. It is true that currently 
+only one buffer is attached to each tape but this may not be the case 
+forever.
 
-Yes, that's why I dusted this off again.
+The patch corrects mostly debugging output and I don't think changing the 
+function prototypes for this is worth the trouble. There is one case where 
+the message may have some significance to "real" users: enlarge_buffer() 
+telling that it can't allocate the extra space. enlarge_buffer() is called 
+at two places. In one place the calling code prints an error message 
+telling the tape name. Similar printk could be put after the other call 
+and the printk() from enlarge_buffer() could be removed. After these 
+changes, the tape name would be printed in all messages where it really 
+matters.
 
-James
-
-
+-- 
+Kai
