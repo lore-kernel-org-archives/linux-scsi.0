@@ -1,44 +1,48 @@
-From: Sam Ravnborg <sam@ravnborg.org>
-Subject: Re: [PATCH] fix parallel builds for aic7xxx
-Date: Sat, 16 Aug 2003 09:15:29 +0200
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030816071529.GA946@mars.ravnborg.org>
-References: <1060906080.4753.92.camel@cherrytest.pdx.osdl.net> <3F3DD0FD.9060705@torque.net>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: scsi proc_info called unconditionally
+Date: Sat, 16 Aug 2003 11:06:16 +0100
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <20030816110616.A26667@infradead.org>
+References: <20030816084409.GA8038@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pasmtp.tele.dk ([193.162.159.95]:34059 "EHLO pasmtp.tele.dk")
-	by vger.kernel.org with ESMTP id S270928AbTHPHPc (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 16 Aug 2003 03:15:32 -0400
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <3F3DD0FD.9060705@torque.net>
+In-Reply-To: <20030816084409.GA8038@suse.de>; from olh@suse.de on Sat, Aug 16, 2003 at 10:44:09AM +0200
+To: Olaf Hering <olh@suse.de>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Douglas Gilbert <dougg@torque.net>
-Cc: John Cherry <cherry@osdl.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
 
-On Sat, Aug 16, 2003 at 04:36:45PM +1000, Douglas Gilbert wrote:
-> While on the subject of aic7xxx Makefiles, they add the
-> "-Werror" flag to CFLAGS in both lk 2.4.22-rc2 and
-> lk 2.6.0-test3 .
+On Sat, Aug 16, 2003 at 10:44:09AM +0200, Olaf Hering wrote:
 > 
-> This flag can be annoying if there is some messiness in
-> include files somewhere. In my case some mis-applied patches
-> in the ide headers cause otherwise harmless compiler warning.
-> That is until my kernel build tries to build the aic7xxx driver.
+> Why is ->proc_info() called when the function pointer is NULL?
 
-The incentive for the aic7xx maintainer is that he do detect if a 
-warning happens before actually shipping a patch.
-Same goes for alpha and sparc64, I recall both David and Richard
-wanted to achieve the same goal.
+Looks like the check for it's presence got lost in
 
-[Wondering if kbuild could do something smart here...]
+	[PATCH] Correct removal of procfs host enteries [1/2]
 
-During the 2.4 series Linus added -Werror to CFLAGS in the top-level
-makefile, simply to put more focus on warnings. If was only momentarily
-but a lot af patches showed up removing the source of the errors.
-The dense output from kbuild these days makes warnings much more
-visible, and if you follow John Cherry nice statistics you can see that
-the number of warnings generally decrease for each new kernel release.
+Here's a trivial patch to get it back:
 
-	Sam
+
+--- 1.32/drivers/scsi/scsi_proc.c	Thu Jul 31 10:31:51 2003
++++ edited/drivers/scsi/scsi_proc.c	Sat Aug 16 10:31:37 2003
+@@ -81,6 +81,9 @@
+ 
+ void scsi_proc_hostdir_add(struct scsi_host_template *sht)
+ {
++	if (!sht->proc_info)
++		return;
++
+ 	down(&global_host_template_sem);
+ 	if (!sht->present++) {
+ 		sht->proc_dir = proc_mkdir(sht->proc_name, proc_scsi);
+@@ -96,6 +99,9 @@
+ 
+ void scsi_proc_hostdir_rm(struct scsi_host_template *sht)
+ {
++	if (!sht->proc_info)
++		return;
++
+ 	down(&global_host_template_sem);
+ 	if (!--sht->present && sht->proc_dir) {
+ 		remove_proc_entry(sht->proc_name, proc_scsi);
