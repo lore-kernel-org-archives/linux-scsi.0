@@ -1,195 +1,33 @@
-From: James Bottomley <James.Bottomley@steeleye.com>
-Subject: [PATCH] Flexible timout intfrastructure take II
-Date: 16 Jun 2004 16:37:47 -0500
+From: Alan Cox <alan@redhat.com>
+Subject: Re: PATCH: Further aacraid work
+Date: Wed, 16 Jun 2004 18:06:07 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1087421869.2796.80.camel@mulgrave>
+Message-ID: <20040616220607.GA6451@devserv.devel.redhat.com>
+References: <20040616210455.GA13385@devserv.devel.redhat.com> <20040616213343.GA20488@infradead.org> <20040616214048.GA27169@devserv.devel.redhat.com> <20040616214257.GA20787@infradead.org> <20040616214825.GA29750@devserv.devel.redhat.com> <20040616215834.GA21072@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat1.steeleye.com ([65.114.3.130]:22915 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S266317AbUFPVht (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 16 Jun 2004 17:37:49 -0400
-Received: from midgard.sc.steeleye.com (midgard.sc.steeleye.com [172.17.6.40])
-	by hancock.sc.steeleye.com (8.11.6/linuxconf) with ESMTP id i5GLbmi02827
-	for <linux-scsi@vger.kernel.org>; Wed, 16 Jun 2004 17:37:49 -0400
+Received: from mx1.redhat.com ([66.187.233.31]:198 "EHLO mx1.redhat.com")
+	by vger.kernel.org with ESMTP id S266335AbUFPWG3 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 16 Jun 2004 18:06:29 -0400
+Content-Disposition: inline
+In-Reply-To: <20040616215834.GA21072@infradead.org>
 List-Id: linux-scsi@vger.kernel.org
-To: SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Christoph Hellwig <hch@infradead.org>, Alan Cox <alan@redhat.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-[This is basically the same patch posted on the flexible timeout
-infrastructure thread, but with all the comments/doc stuff done as well]
+On Wed, Jun 16, 2004 at 10:58:34PM +0100, Christoph Hellwig wrote:
+> Yikes.  This looked like they usual use 32bit dma descriptors if not
+> enough memory hacks to me.  If aacraid is that royally fucked we should
+> probably add CONFIG_X86 to it.
 
-The object of this infrastructure is to give HBAs early warning that
-error handling is about to happen and also provide them with the
-opportunity to do something about it.
+Its working on x86-32, x86-64 and I believe (Mark can confirm this) IA-64.
+I'm fairly sure there are some platforms that aren't going to fit the
+hardware's view of the world which seems to be
 
-It introduces the extra template callback:
+0[DMAable area..................]defined limit   [4Gb+.. PAE mode on some]
 
-eh_timed_out()
+The later cards also have a 2Gb limit for the ring buffers, but not for the
+I/O you want to target
 
-which scsi_times_out() will call if it is populated to notify the LLD
-that an outstanding command took a timeout.
-
-There are three possible returns:
-
-EH_HANDLED:	I've fixed the problem, please complete the command for me
-(as soon as the timer fires, scsi_done will do nothing, so the timer
-itself will call a special version of scsi_done that doesn't check the
-timer).
-
-EH_NOT_HANDLED:	Invoke error recovery as normal
-
-EH_RESET_TIMER:	The command will complete, reset the timer to its
-original value and start it ticking again.
-
-James
-
-===== Documentation/scsi/scsi_mid_low_api.txt 1.16 vs edited =====
---- 1.16/Documentation/scsi/scsi_mid_low_api.txt	2004-02-01 04:45:23 -06:00
-+++ edited/Documentation/scsi/scsi_mid_low_api.txt	2004-06-16 14:53:28 -05:00
-@@ -827,6 +827,7 @@
- Summary:
-    bios_param - fetch head, sector, cylinder info for a disk
-    detect - detects HBAs this driver wants to control
-+   eh_timed_out - notify the host that a command timer expired
-    eh_abort_handler - abort given command
-    eh_bus_reset_handler - issue SCSI bus reset
-    eh_device_reset_handler - issue SCSI device reset
-@@ -892,6 +893,32 @@
-  *                       not invoked in "hotplug initialization mode")
-  **/
-     int detect(struct scsi_host_template * shtp)
-+
-+
-+/**
-+ *      eh_timed_out - The timer for the command has just fired
-+ *      @scp: identifies command timing out
-+ *
-+ *      Returns:
-+ *
-+ *	EH_HANDLED:		I fixed the error, please complete the command
-+ *	EH_RESET_TIMER:		I need more time, reset the timer and
-+ *				begin counting again
-+ *	EH_NOT_HANDLED		Begin normal error recovery
-+
-+ *
-+ *      Locks: None held
-+ *
-+ *      Calling context: interrupt
-+ *
-+ *	Notes: This is to give the LLD an opportunity to do local recovery.
-+ *	This recovery is limited to determining if the outstanding command
-+ *	will ever complete.  You may not abort and restart the command from
-+ *	this callback.
-+ *
-+ *      Optionally defined in: LLD
-+ **/
-+     int eh_timed_out(struct scsi_cmnd * scp)
- 
-
- /**
-===== drivers/scsi/scsi.c 1.143 vs edited =====
---- 1.143/drivers/scsi/scsi.c	2004-04-28 11:32:09 -05:00
-+++ edited/drivers/scsi/scsi.c	2004-06-16 10:47:05 -05:00
-@@ -689,8 +689,6 @@
-  */
- void scsi_done(struct scsi_cmnd *cmd)
- {
--	unsigned long flags;
--
- 	/*
- 	 * We don't have to worry about this one timing out any more.
- 	 * If we are unable to remove the timer, then the command
-@@ -701,6 +699,14 @@
- 	 */
- 	if (!scsi_delete_timer(cmd))
- 		return;
-+	__scsi_done(cmd);
-+}
-+
-+/* Private entry to scsi_done() to complete a command when the timer
-+ * isn't running --- used by scsi_times_out */
-+void __scsi_done(struct scsi_cmnd *cmd)
-+{
-+	unsigned long flags;
- 
- 	/*
- 	 * Set the serial numbers back to zero
-===== drivers/scsi/scsi_error.c 1.77 vs edited =====
---- 1.77/drivers/scsi/scsi_error.c	2004-06-06 06:19:15 -05:00
-+++ edited/drivers/scsi/scsi_error.c	2004-06-16 10:53:02 -05:00
-@@ -162,6 +162,24 @@
- void scsi_times_out(struct scsi_cmnd *scmd)
- {
- 	scsi_log_completion(scmd, TIMEOUT_ERROR);
-+
-+	if (scmd->device->host->hostt->eh_timed_out)
-+		switch (scmd->device->host->hostt->eh_timed_out(scmd)) {
-+		case EH_HANDLED:
-+			__scsi_done(scmd);
-+			return;
-+		case EH_RESET_TIMER:
-+			/* This allows a single retry even of a command
-+			 * with allowed == 0 */
-+			if (scmd->retries++ > scmd->allowed)
-+				break;
-+			scsi_add_timer(scmd, scmd->timeout_per_command,
-+				       scsi_times_out);
-+			return;
-+		case EH_NOT_HANDLED:
-+			break;
-+		}
-+
- 	if (unlikely(!scsi_eh_scmd_add(scmd, SCSI_EH_CANCEL_CMD))) {
- 		panic("Error handler thread not present at %p %p %s %d",
- 		      scmd, scmd->device->host, __FILE__, __LINE__);
-===== drivers/scsi/scsi_priv.h 1.32 vs edited =====
---- 1.32/drivers/scsi/scsi_priv.h	2004-03-10 22:20:08 -06:00
-+++ edited/drivers/scsi/scsi_priv.h	2004-06-16 10:45:44 -05:00
-@@ -82,6 +82,7 @@
- extern void scsi_init_cmd_from_req(struct scsi_cmnd *cmd,
- 		struct scsi_request *sreq);
- extern void __scsi_release_request(struct scsi_request *sreq);
-+extern void __scsi_done(struct scsi_cmnd *cmd);
- #ifdef CONFIG_SCSI_LOGGING
- void scsi_log_send(struct scsi_cmnd *cmd);
- void scsi_log_completion(struct scsi_cmnd *cmd, int disposition);
-===== include/scsi/scsi_host.h 1.17 vs edited =====
---- 1.17/include/scsi/scsi_host.h	2004-06-04 11:51:31 -05:00
-+++ edited/include/scsi/scsi_host.h	2004-06-16 14:36:04 -05:00
-@@ -30,6 +30,12 @@
- #define DISABLE_CLUSTERING 0
- #define ENABLE_CLUSTERING 1
- 
-+enum scsi_eh_timer_return {
-+	EH_NOT_HANDLED,
-+	EH_HANDLED,
-+	EH_RESET_TIMER,
-+};
-+
- 
- struct scsi_host_template {
- 	struct module *module;
-@@ -124,6 +130,20 @@
- 	int (* eh_device_reset_handler)(struct scsi_cmnd *);
- 	int (* eh_bus_reset_handler)(struct scsi_cmnd *);
- 	int (* eh_host_reset_handler)(struct scsi_cmnd *);
-+
-+	/*
-+	 * This is an optional routine to notify the host that the scsi
-+	 * timer just fired.  The returns tell the timer routine what to
-+	 * do about this:
-+	 *
-+	 * EH_HANDLED:		I fixed the error, please complete the command
-+	 * EH_RESET_TIMER:	I need more time, reset the timer and
-+	 *			begin counting again
-+	 * EH_NOT_HANDLED	Begin normal error recovery
-+	 *
-+	 * Status: OPTIONAL
-+	 */
-+	enum scsi_eh_timer_return (* eh_timed_out)(struct scsi_cmnd *);
- 
- 	/*
- 	 * Old EH handlers, no longer used. Make them warn the user of old
 
