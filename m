@@ -1,172 +1,143 @@
-From: =?iso-8859-1?q?Liong=20Hoong?= <liongshliongsh@yahoo.com>
-Subject: Re: sg_io_hrd_t - host_status error (0x05)
-Date: Fri, 7 May 2004 12:25:37 +0800 (CST)
+From: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Subject: PATCH [0/15]  qla2xxx: summary of changes...
+Date: Thu, 6 May 2004 22:48:45 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040507042537.4356.qmail@web40007.mail.yahoo.com>
-References: <40930334.4040908@torque.net>
+Message-ID: <20040507054845.GA4858@linux.local.home>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from web40007.mail.yahoo.com ([66.218.78.25]:47794 "HELO
-	web40007.mail.yahoo.com") by vger.kernel.org with SMTP
-	id S262914AbUEGEZh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 7 May 2004 00:25:37 -0400
-In-Reply-To: <40930334.4040908@torque.net>
+Received: from ms-smtp-03-qfe0.socal.rr.com ([66.75.162.135]:30199 "EHLO
+	ms-smtp-03-eri0.socal.rr.com") by vger.kernel.org with ESMTP
+	id S263169AbUEGFrB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 7 May 2004 01:47:01 -0400
+Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
-To: dougg@torque.net
-Cc: linux-scsi@vger.kernel.org
+To: SCSI Mailing List <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@steeleye.com>
 
-Hi,
+James,
 
-Below is the some coding extracted from the Linux
-kernel. It seems that before the opcodes of Group4
-(0x80 and 0x9f) able to pass down to the device, the
-scsi.c already failed the commands thus yield the
-DID_ABORT error. 
+Please apply the following patches I'm about to send to update the
+qla2xxx driver.  A summary of the patches can be found towards the end
+of this message.
 
-Is it possible to edit scsi.c or the host.c to allow
-the Group4 opcodes pass down to scsi device. Why is
-there having such a restriction in scsi.c/host.c when
-the sg drivers is already support of 16 bytes command
-size?
+With the exception of the rather large firmware image update
+(direct pointer to bzip'd patch listed), subsequent messages will
+contain inlined patches.
 
-scsi.c
-/*
- * Macro to determine the size of SCSI command. This
-macro takes vendor
- * unique commands into account. SCSI commands in
-groups 6 and 7 are
- * vendor unique and we will depend upon the command
-length being
- * supplied correctly in cmd_len.
- */
-#define CDB_SIZE(SCpnt)	((((SCpnt->cmnd[0] >> 5) & 7)
-< 6) ? \
-				COMMAND_SIZE(SCpnt->cmnd[0]) : SCpnt->cmd_len)
+All patches can be found at the following URL:
 
-================================================================================================
-scsi.c
-
-/*
-	 * Before we queue this command, check if the command
-	 * length exceeds what the host adapter can handle.
-*/
-	if (CDB_SIZE(SCpnt) > host->max_cmd_len) {
-		SCSI_LOG_MLQUEUE(3, printk("scsi_dispatch_cmd :
-command too long %d(Max %d).\n", CDB_SIZE(SCpnt),
-host->max_cmd_len));
-		SCpnt->result = (DID_ABORT << 16);
-		scsi_done(SCpnt);
-		return 1;
-	}
-
-=======================================================================================
-sg drivers notes
-
-Linux kernel prior to 2.4.15 limited SCSI commands to
-a length of 12 bytes. In lk 2.4.15 this was raised to
-16 bytes. However unless lower level drivers (e.g.
-aic7xxx) indicate that they can handle 16 byte
-commands (and few currently do) then the command is
-aborted with a DID_ABORT host status.
-
-========================================================================
-host.c
-
-/*
-     * All drivers right now should be able to handle
-12 byte commands.
-     * Every so often there are requests for 16 byte
-commands, but individual
-     * low-level drivers need to certify that they
-actually do something
-     * sensible with such commands.
-*/
-    retval->max_cmd_len = 12;
-
-=========================================================================
-host.h
-
-/*
-     * The maximum length of SCSI commands that this
-host can accept.
-     * Probably 12 for most host adapters, but could
-be 16 for others.
-     * For drivers that don't set this field, a value
-of 12 is
-     * assumed.  I am leaving this as a number rather
-than a bit
-     * because you never know what subsequent SCSI
-standards might do
-     * (i.e. could there be a 20 byte or a 24-byte
-command a few years
-     * down the road?).  
-*/
-
-    unsigned char max_cmd_len;
+	ftp://ftp.qlogic.com/outgoing/linux/patches/8.x/8.00.00b12k/
 
 Regards,
-Sean
+Andrew Vasquez
+QLogic Corporation
 
- --- Douglas Gilbert <dougg@torque.net> wrote: > Liong
-Hoong wrote:
-> > Hi,
-> > 
-> > Sorry if there is any misunderstanding in my
-> previous
-> > questions.
-> > I would like to ask, 
-> > I am using Linux Red Hat 8.0, kernel 2.4.18. I
-> used
-> > the SG driver version 3 without any modification
-> of
-> > the kernel. I encountered host_status error (0x05)
-> > ONLY on sending opcodes from 0x80 to 0x9f. Can
-> anyone
-> > give me hints on why or which part of the kernel
-> codes
-> > that might failed this specific range of opcodes?
-> Or
-> > is there any work around or patches? Anyone out
-> there
-> > did experience similar problems and like to share
-> with
-> > me?
-> 
-> Sean,
-> I assume that you have already determined (via
-> another OS)
-> that the device really does accept 16 byte SCSI
-> commands
-> in that opcode range.
-> 
-> As mentioned in my previous post the 12 to 16 byte
-> cdb
-> expansion occurred in lk 2.4.15. Maybe the
-> usb-storage driver
-> took a few versions to catch up. Apart from vendor
-> specific
-> commands, there would not be a lot of demand for the
-> usb-storage driver to support 16 byte commands.
-> Perhaps you should try a more recent version of the
-> linux
-> kernel. If the problem persists then you are more
-> likely to
-> get help.
-> 
-> Doug Gilbert
-> 
-> 
-> -
-> To unsubscribe from this list: send the line
-> "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at 
-http://vger.kernel.org/majordomo-info.html 
+ChangeSet@1.1922, 2004-04-29 14:20:53-07:00, andrew.vasquez@apc.qlogic.com
+  ISP dump routine fixes:
+  
+  	o Properly release hardware_lock in failure path.
+  
+  	o Fix inability to complete ISP2100 dump, by properly
+  	  reseting the RISC after register reads.
 
+ChangeSet@1.1923, 2004-04-29 14:40:24-07:00, andrew.vasquez@apc.qlogic.com
+  Remove flash support from embedded driver:
+  
+  	o Remove unused option-rom variables from host structure.
+  	o Remove flash manipulation routines.
 
-__________________________________________________
-Do You Yahoo!?
-Log on to Messenger with your mobile phone!
-http://sg.messenger.yahoo.com
+ChangeSet@1.1924, 2004-04-30 10:39:56-07:00, andrew.vasquez@apc.qlogic.com
+  Older, notably the ISP2100, chips have some contraints for the request
+  queue depth and number of scatter-gather elements allowed for a 
+  given command.  For this chip, reduce request queue size to 128 and 
+  maximum number of scatter-gather entries for a command to 32.   
+
+ChangeSet@1.1925, 2004-04-30 10:48:48-07:00, andrew.vasquez@apc.qlogic.com
+  Fix problem where port ID binding would not be honoured when
+  a device was moved within the fabric.
+
+ChangeSet@1.1926, 2004-04-30 11:07:02-07:00, andrew.vasquez@apc.qlogic.com
+  Issue a kernel warning message before initiating an ISP abort (big
+  hammer) -- additional debugging mechanism in case of event.
+
+ChangeSet@1.1927, 2004-04-30 11:12:45-07:00, andrew.vasquez@apc.qlogic.com
+  Fix problem where the driver would incorrectly down-cast the target
+  loop_id while retrieving link statistics.
+
+ChangeSet@1.1928, 2004-04-30 12:47:27-07:00, andrew.vasquez@apc.qlogic.com
+  Cleanup retrieval and update of firmware options:
+  
+  	o Update only valid for non-(2[12]00) ISPs.
+  	o Instruct firmware to return completed IOCBs without
+  	  waiting for an ABTS to complete.
+
+ChangeSet@1.1929, 2004-04-30 13:15:14-07:00, andrew.vasquez@apc.qlogic.com
+  Fix problem where during ISP initialization in a volatile topology
+  (i.e. fabric environment with large number of streaming RSCNs) the
+  driver would loop indefinitely or hang due to termination of an 
+  invalid thread pid.
+
+ChangeSet@1.1930, 2004-04-30 14:01:16-07:00, andrew.vasquez@apc.qlogic.com
+  Fix several problems when handling commands issued to tape devices:
+  
+  	1) insure commands are not prematurely returned to the mid-layer
+  	   with a failed status during loop/fabric transitions.
+  
+  	2) tape commands tend to have rather 'long' timeout values,
+  	   unfortunately, as the these values increase into the 17 to
+  	   20 minute range (and larger), the cumulative skew of the
+  	   RISC's own timer result in commands being held for seconds
+  	   beyond their defined timeout values.  Compensate for this
+  	   in the driver's command timeout function.
+
+ChangeSet@1.1931, 2004-04-30 14:32:56-07:00, andrew.vasquez@apc.qlogic.com
+  Jeremy Higdon <jeremy () sgi ! com>:
+  
+  	For those to whom this is new (it was discussed on linux-kernel
+  	and linux-ia64 I believe), normal PCI register reads imply that
+  	PCI DMA writes that occured prior to the PCI MMR (memory mapped
+  	register) read (on the PCI bus) will be reflected in system
+  	memory once the MMR read is complete.
+  
+  	On our platforms, we can speed up the MMR read significantly if
+  	that ordering requirement is "relaxed".
+  
+  	So I attempted to find the common register reads that don't
+  	have a need for this ordering so that I could make them use
+  	this faster read.
+
+ChangeSet@1.1932, 2004-04-30 15:06:20-07:00, andrew.vasquez@apc.qlogic.com
+  /proc file updates:
+  
+  	o Address 'unaligned access' message on ia64 platorms
+  	  while displaying bit-field flags.
+  
+  	o Iterate through the the OS target array to display 
+  	  target ID bindings.
+  
+
+ChangeSet@1.1933, 2004-04-30 15:24:16-07:00, andrew.vasquez@apc.qlogic.com
+  RIO/ZIO fixes:
+  
+  	o Reduce register access during RIO operation by checking
+  	  for a 'dirtied' signature.
+  
+  	o Fix problem where ZIO mode handling could result in a 
+  	  nasty recursive call-frame.
+
+ChangeSet@1.1934, 2004-04-30 15:31:33-07:00, andrew.vasquez@apc.qlogic.com
+  Misc. driver scrubbing:
+  
+  	o Use kernel #define for PCI command register bit.
+  
+  	o Fix rate-limiting check the queue-depth module
+  	  parameter.
+  
+  	o Clean-up comments.
+
+ChangeSet@1.1935, 2004-04-30 15:36:51-07:00, andrew.vasquez@apc.qlogic.com
+  Resync with latest released firmware -- 3.02.28.
+
+ChangeSet@1.1936, 2004-04-30 15:39:30-07:00, andrew.vasquez@apc.qlogic.com
+  Update version number to 8.00.00b12-k.
+
