@@ -1,35 +1,31 @@
-From: Alexy Khrabrov <braver@pobox.com>
-Subject: Software/Hardware RAID
-Date: Mon, 28 Oct 2002 11:12:01 -0500
+From: Jens Axboe <axboe@suse.de>
+Subject: Re: Redirecting request
+Date: Mon, 28 Oct 2002 17:24:33 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20021028161201.GA10555@angle.setup.org>
+Message-ID: <20021028162433.GL2937@suse.de>
+References: <3DBD3F8B.CDA9F96B@patni.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: (from alexy@localhost)
-	by angle.badbox.com (8.12.5/8.12.5) id g9SGC1VI010568
-	for linux-scsi@vger.kernel.org; Mon, 28 Oct 2002 11:12:01 -0500
 Content-Disposition: inline
+In-Reply-To: <3DBD3F8B.CDA9F96B@patni.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: MShetty <mranalini.shetty@patni.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
+On Mon, Oct 28 2002, MShetty wrote:
+> Hi,
+> 
+> In my make_request function (registered with blk_queue_make_request) I
+> want to redirect the current request to "sd". To achieve this is it
+> sufficient to write :
+> bh->b_rdev = MKDEV(SCSI_DISK0_MAJOR, 0);
+> 
+> where bh is buffer_head
 
-Now that I got all those drives spinning, I'm eager to try out 
-a RAID array.  I reckon it's a better way to hedge against disk
-failures than backups on tape -- even 20/40 GB dds4 or DLT is
-not enough those days, and loading/rotating is tedious.
-
-I heard an opinion that software RAID on Linux with SCSI is
-"almost" as good as a hardware controller.  What is the experience
-here?  Also, since I'm running LVM throughout, including the root
-partition, does RAID coexist well with LVM?
-
-But if I go the way of the hardware controller, is it better
-to get a separate one, or one of those new cards from Adaptec
-which say they have a Host RAID 0/1 or some such?
-
-I'm looking at a 3 drives RAID to begin with, perhaps 4.
+If b_rsector already points to the right offset off /dev/sda (not
+partition), then yes.
 
 -- 
-Cheers,
-Alexy Khrabrov :: www.setup.org :: Age Quod Agis
+Jens Axboe
+
