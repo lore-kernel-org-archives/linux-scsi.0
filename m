@@ -1,57 +1,33 @@
-From: Patrick Mansfield <patmans@us.ibm.com>
+From: James Bottomley <James.Bottomley@steeleye.com>
 Subject: Re: [patch for playing] Patch to support 4000 disks and maintain
-Date: Fri, 11 Apr 2003 13:04:07 -0700
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030411130407.A9302@beaverton.ibm.com>
-References: <200304101339.49895.pbadari@us.ibm.com> <XFMail.20030411100430.pochini@shiny.it> <20030411154450.GW31739@ca-server1.us.oracle.com> <200304110928.32978.pbadari@us.ibm.com> <20030411175736.GY31739@ca-server1.us.oracle.com> <20030411111232.A7756@beaverton.ibm.com> <20030411183543.GA31739@ca-server1.us.oracle.com>
+	backward compatibility
+Date: 11 Apr 2003 15:14:32 -0500
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <1050092073.2078.219.camel@mulgrave>
+References: <UTC200304111945.h3BJjU409008.aeb@smtp.cwi.nl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e34.co.us.ibm.com ([32.97.110.132]:45749 "EHLO
-	e34.co.us.ibm.com") by vger.kernel.org with ESMTP id S261609AbTDKT4V (for <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 11 Apr 2003 15:56:21 -0400
-Content-Disposition: inline
-In-Reply-To: <20030411183543.GA31739@ca-server1.us.oracle.com>; from Joel.Becker@oracle.com on Fri, Apr 11, 2003 at 11:35:43AM -0700
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+In-Reply-To: <UTC200304111945.h3BJjU409008.aeb@smtp.cwi.nl>
+To: Andries.Brouwer@cwi.nl
+Cc: Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, pbadari@us.ibm.com
 List-Id: linux-scsi@vger.kernel.org
-To: Joel Becker <Joel.Becker@oracle.com>
-Cc: Badari Pulavarty <pbadari@us.ibm.com>, Giuliano Pochini <pochini@shiny.it>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Mike Anderson <andmike@us.ibm.com>
 
-On Fri, Apr 11, 2003 at 11:35:43AM -0700, Joel Becker wrote:
-> On Fri, Apr 11, 2003 at 11:12:32AM -0700, Patrick Mansfield wrote:
-> > I'm trying to pull the current multi-path patch up to 2.5.66 (ouch). 
-> 
-> 	I wasn't aware of this work.  This is very interesting.  Two
-> questions:
-> 
-> 1) When does it failover?  Meaning, if I I/O to a disk, but someone
-> yanks the fibrechannel plug.  Does your multipath wait for a SCSI
-> timeout to redirect the I/O?
+On Fri, 2003-04-11 at 14:45, Andries.Brouwer@cwi.nl wrote:
+> I think compatibility is very important.
+> Linux does not arbitrarily break old systems. The aim must be
+> to have all combinations of (old/new) kernel with (old/new) glibc
+> to work well in all situations where old kernel + old glibc worked.
 
-> 2) If so, have you considered trapping loop up/down events to handle
-> such a case?  Real users of multipath tech do not want to wait 90s for
-> failover.
-> 
-> Joel
+Well, if you're going to do this, at least make it possible to tie all
+the sd devices to a single major (i.e. the numeric compatibility layer
+simply maps to the new single major scheme internally).  It would also
+be nice for numeric compatibility to be a compile time option too...
 
-Generally it fails a path when we get a path specific error; it fails the
-IO if we get a device (i.e. logical unit) error. If there are no paths
-available, the IO is failed (though this could be changed to be
-user-settable).
+It's also possible that SCSI may not be the only consumer of such a
+compatibility layer (IDE also has multiple majors), so it may be
+worthwhile putting it somewhere more globally useful (like
+fs/block_dev.c)
 
-Behaviour on a cable removal is fibre, adapter, and adapter drive specific
-- the qla driver has some sort of timeout on a port down that can be
-lowered. It (fibre channel) can immediately complete (with failure) an
-outstanding IO on a port down (or SCN notification). loop attached does
-not always give you notification.
-
-So with loop attached (AFAIK) you still might have to wait for a timeout
-if you yank a disk.
-
-Timeouts are the hardest to deal with - since we don't know where the
-error occurred, so generally should not fail the IO (or path).
-
-If we had user scanning, and some sort of hotplug for targets coming and
-going, those be used to add and remove (or just fail) paths (at least for
-switch attached).
-
--- Patrick Mansfield
+James
