@@ -1,35 +1,51 @@
-From: James Bottomley <James.Bottomley@steeleye.com>
+From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
 Subject: Re: TMSCSIM [2.6]
-Date: 29 Nov 2003 12:36:50 -0600
+Date: Sat, 29 Nov 2003 21:37:48 +0100 (CET)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1070131012.1927.6.camel@mulgrave>
-References: <3FC7FC89.4060601@yk.rim.or.jp>
-	<Pine.LNX.4.44.0311291030500.1672-100000@poirot.grange>
-	<20031129181131.GL3049@tpkurt.garloff.de>
+Message-ID: <Pine.LNX.4.44.0311292126060.529-100000@poirot.grange>
+References: <m3r7zr1g05.fsf@merlin.emma.line.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nat9.steeleye.com ([65.114.3.137]:3076 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S264439AbTK2ShB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 29 Nov 2003 13:37:01 -0500
-In-Reply-To: <20031129181131.GL3049@tpkurt.garloff.de>
+Received: from pop.gmx.de ([213.165.64.20]:26018 "HELO mail.gmx.net")
+	by vger.kernel.org with SMTP id S263408AbTK2Ui4 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 29 Nov 2003 15:38:56 -0500
+In-Reply-To: <m3r7zr1g05.fsf@merlin.emma.line.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Kurt Garloff <kurt@garloff.de>
-Cc: Guennadi Liakhovetski <g.liakhovetski@gmx.de>, Chiaki <ishikawa@yk.rim.or.jp>, Linux SCSI list <linux-scsi@vger.kernel.org>, Thorsten Leemhuis <Thorsten_Leemhuis@gmx.de>, gl@dsa-ac.de
+To: Matthias Andree <ma@dt.e-technik.uni-dortmund.de>
+Cc: Chiaki <ishikawa@yk.rim.or.jp>, linux-scsi@vger.kernel.org, Thorsten Leemhuis <Thorsten_Leemhuis@gmx.de>, gl@dsa-ac.de
 
-On Sat, 2003-11-29 at 12:11, Kurt Garloff wrote:
-> I can put it for download on my site; 
-> we should try to push it into 2.6.0/1, of course.
+On Sat, 29 Nov 2003, Matthias Andree wrote:
 
-It's too late for 2.6.0, I'm afraid.  I'll keep it in the queue for
-scsi-misc-2.7.
+> Please bump the version, I'd choose 2.0f-gl1 (where gl are your initials
+> and 1 is the first "release" you deem stable).
 
-I anticipate the driver updates gate opening again before 2.7 begins, so
-it may be able to go into 2.6.1 or later, but that depends on Andrew's
-policy.
+Yeah-yeah, I know what "gl" means - as well as anybody living / working in
+Germany does:-) It's one of favorite jokes in the company, I am working
+for (see my working email address in the CC-list).
 
-James
+> If some maintainer (Kurt? 2.6-SCSI-bugfixes maintainer?) wants a
+> different version, he shall have the last word and can still choose a
+> different version string.
+
+Ok, version string is one of the smallest problems, the real question is -
+what to do with the patch? Just post it to the list, so that one of
+maintainers could pick it up and include in his / her tree?
+
+Also, would be nice if somebody could test this driver on a highmem-PC,
+and on non i386 platforms...
+
+Well, it has been fun. I guess, I could try to fill in those "TODOs" Kurt
+has inserted in the code. But that will be for -gl2. Otherwise, there are
+quite a few more SCSI drivers, depending on BROKEN. Do any of them need
+fixing and currently have nobody to do the work or they are there just
+waiting to be removed? Anyway, I don't have any of that hardware at
+hand...
+
+Thanks
+Guennadi
+---
+Guennadi Liakhovetski
 
 
