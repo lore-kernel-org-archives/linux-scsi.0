@@ -1,28 +1,36 @@
-From: "Tony Battersby" <tonyb@cybernetics.com>
-Subject: RE: [PATCH] SCSI Core patches
-Date: Tue, 14 Jan 2003 11:51:49 -0500
+From: Mike Anderson <andmike@us.ibm.com>
+Subject: Re: [PATCH / RFC] osst, st, sg sysfs removes
+Date: Tue, 14 Jan 2003 10:33:14 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <03Jan14.115140est.119077@cyborg.cybernetics.com>
-References: <OF17AF196C.AE6043CD-ONC1256CAE.00549A53@de.ibm.com>
-Reply-To: <tonyb@cybernetics.com>
+Message-ID: <20030114183314.GC1613@beaverton.ibm.com>
+References: <20030112195901.GC1414@beaverton.ibm.com> <Pine.LNX.4.33.0301140925160.1025-100000@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <OF17AF196C.AE6043CD-ONC1256CAE.00549A53@de.ibm.com>
+Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.33.0301140925160.1025-100000@localhost.localdomain>
 List-Id: linux-scsi@vger.kernel.org
-To: 'Martin Peschke3' <MPESCHKE@de.ibm.com>
-Cc: linux-scsi@vger.kernel.org
+To: Patrick Mochel <mochel@osdl.org>
+Cc: Willem Riede <wrlk@riede.org>, Kai Makisara <Kai.Makisara@kolumbus.fi>, linux-scsi@vger.kernel.org, Matt_Domsch@Dell.com, Douglas Gilbert <dougg@torque.net>
 
-> Furthermore, does anybody know what the largest IDs are which are
-> defined by any SCSI transport?
+Patrick Mochel [mochel@osdl.org] wrote:
+> 
+> I have reservations about blindly adding a 'char' subsystem. However, I 
+> think it would be useful, and encourage someone to do the leg work..
 
-iSCSI identifies targets and initiators by world-wide unique name strings up
-to 223 bytes in length.  An iSCSI initiator is additionally qualified by a
-6-byte ISID value, and an iSCSI target is additionally qualified by a 16-bit
-Portal Group Tag.  A full iSCSI I_T nexus is identified by the initiator
-name string, the ISID, the target name string, and the portal group tag.
+That was not my intention. A char subsystem would need to have leg work
+similar to what others did for block. We do not want to create a char
+directory in sysfs and start populating it quickly to solve point
+problems.
 
-Anthony J. Battersby
-Cybernetics
+One point I was trying to make in previous mail was that if a char tree
+follows the semantics of a block tree and creates a back link from the
+device we need to consider the issue of "sg" (i.e. possible multiple
+registers with the char subsystem per device) along with other devices up
+front. 
+
+-andmike
+--
+Michael Anderson
+andmike@us.ibm.com
 
