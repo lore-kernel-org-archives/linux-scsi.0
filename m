@@ -1,63 +1,59 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: PATCH: (as54) Fix hot-unplugging for sr.c
-Date: Wed, 9 Jul 2003 12:02:34 -0400 (EDT)
+From: Kurt Garloff <garloff@suse.de>
+Subject: scsi-many ported to 2.4.21
+Date: Wed, 9 Jul 2003 21:38:01 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44L0.0307091147290.885-100000@ida.rowland.org>
-References: <20030709144410.GA3544@beaverton.ibm.com>
+Message-ID: <20030709193800.GX10137@nbkurt.garloff.de>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="nbhonbzV/xpXxmuC"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ida.rowland.org ([192.131.102.52]:6148 "HELO ida.rowland.org")
-	by vger.kernel.org with SMTP id S268386AbTGIPr4 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Jul 2003 11:47:56 -0400
-In-Reply-To: <20030709144410.GA3544@beaverton.ibm.com>
+Received: from ns.suse.de ([213.95.15.193]:39948 "EHLO Cantor.suse.de")
+	by vger.kernel.org with ESMTP id S268512AbTGITXY (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Jul 2003 15:23:24 -0400
+Received: from Hermes.suse.de (Hermes.suse.de [213.95.15.136])
+	by Cantor.suse.de (Postfix) with ESMTP id 2C3FE14E03
+	for <linux-scsi@vger.kernel.org>; Wed,  9 Jul 2003 21:38:01 +0200 (MEST)
+Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Anderson <andmike@us.ibm.com>
-Cc: SCSI development list <linux-scsi@vger.kernel.org>
+To: Linux SCSI list <linux-scsi@vger.kernel.org>
 
-On Wed, 9 Jul 2003, Mike Anderson wrote:
 
-> struct device_driver remove() is called as a result of device_unregister
-> or device_del being called which usually is called by the SCSI core.
-> 
-> I changed scsi_device_put to check if access_count drops to zero and the
-> device is marked to be deleted. If these two checks are true then call
-> device_del. access_count is also checked in the scsi_sysfs.c code under
-> a common sema.
+--nbhonbzV/xpXxmuC
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-I'll need to see all the changes together to fully grasp it.  There are 
-lots of little things not described explicitly anywhere but only implicit 
-in the code.  In particular, the detailed nature of the interlocks 
-relating the struct scsi_device and the struct scsi_cd is unclear (and 
-seems to be changing rapidly).  Not to mention the struct gendisk and the 
-struct cdrom_device_info.
+Hi,
 
-> > Speaking of /proc/scsi, have you given any thought to making the procinfo 
-> > contents available through sysfs?  That way the /proc entry points can be 
-> > deprecated and eventually removed, but the information will still be 
-> > easily available.
-> 
-> Yes we should look into this. A old issue was a policy for sysfs of
-> one attribute value per file. This would be a large overhead for some of
-> the LLDDs to convert to and it would probably be a mess in the
-> directory.
+I ported the scsi-many patches to 2.4.21.
+The patches provide a possibility to support a large number of SCSI
+devices with Linux - 2.4 kernels. Support for 2000 disks and even more
+sg devices is provided, based on dynamic allocation of block majors
+(after the first 16 defined ones).
+There are also patches to provide an enhancement to /proc/scsi/scsi=20
+(can be switched on and off) to report the high-level devices
+attached to a low-level device. A patch for a boot parameter
+root=3D/dev/scsi/sdcHbCtIuLpP (HCILP =3D host channel ID Lun Partition)
+is also provided.
 
-As far as I'm concerned, that policy need not be a stumbling block.  I can 
-envision two reasons for wanting to have more than one value per file:
+http://www.suse.de/~garloff/linux/scsi-many/
 
-	1. The file might represent a snapshot of real-time data being
-maintained by the driver.  If the values were stored in different 
-attribute files there would be no way to retrieve a consistent snapshot.
+Regards,
+--=20
+Kurt Garloff  <garloff@suse.de>                          Eindhoven, NL
+GPG key: See mail header, key servers                 SuSE Labs (Head)
+SuSE Linux AG, Nuernberg, DE                            SCSI, Security
 
-	2. The file might be intended to convey summarized information
-of interest to a human but not meant to be parsed by any sort of automatic 
-tool.  A summary is a lot easier to use when it's all in one place and not 
-scattered among lots of little files.
+--nbhonbzV/xpXxmuC
+Content-Type: application/pgp-signature
+Content-Disposition: inline
 
-Of course, the information in /proc/scsi/scsi is already in sysfs, obeying 
-the one-value-per-file dictate.  But the /proc/scsi/host/host# files were 
-never meant to be structured at all, so far as I know -- they would fall 
-under category 2 above.
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.2.2-rc1-SuSE (GNU/Linux)
 
-Alan Stern
+iD8DBQE/DG8YxmLh6hyYd04RApRAAJ4o5vgEnW0qwBD06Jm5ocP1vFfxogCfR7q9
+NP4MK7Ok7BWz/RV3kgVIa9g=
+=PpOx
+-----END PGP SIGNATURE-----
 
+--nbhonbzV/xpXxmuC--
