@@ -1,46 +1,55 @@
-From: jg9600@sohu.com
-Subject: (unknown)
-Date: Tue, 30 Mar 2004 20:39:30 +0800
+From: Pavel Machek <pavel@suse.cz>
+Subject: Re: Binary-only firmware covered by the GPL?
+Date: Tue, 30 Mar 2004 13:39:15 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <S263636AbUC3Mjt/20040330123949Z+457@vger.kernel.org>
-Reply-To: jg9600@163.com
-Content-Type: text/plain;charset="GB2312"
-Content-Transfer-Encoding: 8bit
+Message-ID: <20040330113915.GB3084@openzaurus.ucw.cz>
+References: <20040325225423.GT9248@cheney.cx> <MDEHLPKNGKAHNMBLJOLKCEEOLEAA.davids@webmaster.com> <20040326131629.GB26910@zombie.inka.de> <40643BFA.1000302@stesmi.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [221.12.119.38] ([221.12.119.38]:14095 "ehlo sohu.com")
-	by vger.kernel.org with ESMTP id S263636AbUC3Mjt (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 30 Mar 2004 07:39:49 -0500
+Received: from atrey.karlin.mff.cuni.cz ([195.113.31.123]:19392 "EHLO
+	atrey.karlin.mff.cuni.cz") by vger.kernel.org with ESMTP
+	id S263660AbUC3N7i (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 30 Mar 2004 08:59:38 -0500
+Content-Disposition: inline
+In-Reply-To: <40643BFA.1000302@stesmi.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Stefan Smietanowski <stesmi@stesmi.com>
+Cc: Eduard Bloch <edi@gmx.de>, David Schwartz <davids@webmaster.com>, debian-devel@lists.debian.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Welcome to Shaoxing Paojiang Industrial Zone---
-the largest development zone in Zhejiang province, China
+Hi!
 
-Dear Sir or Madam,
-Firstly, we would like to express our warmly regards!
-Shaoxing is a city of historic heritage, a tourist-friendly city, an investor-friendly city and an economic powerhouse. Shaoxing is an old city with a culture formation of more than 4,000 years and a city has history of 2,500 years and is renowned as "a museum without wall". Shaoxing city is famous for its attractive tourism and is famed as the town of water, bridges, rice wine, Chinese calligraphy and historical celebrities.
-Shaoxing Paojiang Industrial Zone (SPIZ) is one of the largest development zones in China, a new & modernized, high-tech oriented industrial city and one of the four component areas in Shaoxing. By the year 2020, SPIZ will cover 60 square kilometer with a population of 0.2 million. SPIZ has Foreign Investment Park, IT Park, Bio-engineering Pharmaceutical Park, Traditional Industries Upgrading Section and Central Commercial & Residential Section under construction. SPIZ focuses on developing new high-tech industries such as IT, biology & pharmaceutical, food & beverage and encourages the innovation and upgrading of light textile. Till now, 180 industrial projects with planned investment USD 20 billion have been approved.
-SPIZ is characterized for its own three advantages as follows:        
-I. Geographic location:
-SPIZ is located in the Yangtze River Delta, which is the most Dynamic area and has the strongest purchasing power Located near Shaoxing entrance of Shanghai-Hangzhou-Ningbo Expressway, SPIZ enjoys a favorable geographical position by land, water and air. It is only 200 km from Shanghai and 20 km from Hangzhou International Airport. In the zone, civil facilities have been set up inthe first-phase construction area of 60 square kilometer, and basic infrastructures including water, electricity, steam gas, road, telecom, and sewage disposal will meet the demands of various kinds of investment projects. Comprehensive public service facilities such as schools, hospitals, and banks are also available.
-II. Preferential policies:
-  As a coastal economically dynamic area, Shaoxing city will provide a lot of preferential policies for SPIZ's investors as follows: (1) Preferential policy for land: For the foreign-invested enterprises, the price for using land is US$ 9-18 per sqm. (2) Financial aid: For the foreign-invested enterprises, the local portion of the tax (include VAT and income tax)will be totally refunded in the first two years and 50% refunded from the 3rd to 5th years; For the enterprises with actual investment above USD 3 million, the local part of the tax will be totally refunded in the first five years and 50% refunded from the 6th to 10th years. (3) Remitting or reduction of charges: SPIZ Administrative Committee shall insist on the policy of "no fee required excluding taxes" for all the solely foreign ventures settled in the zone, namely, the fee shall be totally remitted or paid by the committee ex
- cept the taxes to the central and provincial governments.
-III. Preferential service:
-  As a branch of Shaoxing Municipal People's Government, SPIZ Administrative Committee directly carries out the management function of the local government. The Administrative Committee has an investment service center and offers qualified and efficient service for the investors sincerely.
+> >#include <hallo.h>
+> >* David Schwartz [Thu, Mar 25 2004, 04:41:23PM]:
+> >
+> >
+> >>>IMHO code that can be compiled would probably be the preferred form
+> >>>of the work.
+> >>
+> >>	You are seriously arguing that the obfuscated binary of the 
+> >>	firmware is the
+> >>preferred form of the firmware for the purpose of making 
+> >>modifications to
+> >>it?!
+> >
+> >
+> >Yes, the driver authors PREFERS to make the changes on the C source
+> >code, he never has to modify the firmware. Exactly what the GPL
+> >requests, where is your problem?
+> 
+> But the firmware didn't appear out of thin air - someone wrote it
+> somehow. If that's using a hex editor or inside the C code doesn't
+> matter, but most likely they used some other language like either
+> C or assembly (no, not all firmware is written using assembly), and
+> there are cases where some are in fact written using a hex editor but
+> I can't remember any that has been for the last 30 or so years but
+> I'm sure there has been cases where there hasn't been a working
+> assembler.
 
-"No nationalities for capitals, no boundary for markets", we sincerely welcome you to visit and invest in Shaoxing Paojiang Industrial Zone.
-"Choosing Paojiang is just choosing great hope, investing in Paojiang is just investing the future."
-Best wishes and regards!
+If my code contains picture of human, do I have to provide his DNA, too?
+				Pavel
 
-                                                               
+(runs away)
+-- 
+64 bytes from 195.113.31.123: icmp_seq=28 ttl=51 time=448769.1 ms         
 
-Contact:  Philip Jin
-Address:  International investment&Cooperation Bureau
-Shaoxing Paojiang Industrial Zone, PRC
-Telephone:  0086 575 8132209
-Fax:        0086 575 8030150
-Website:     www.paojiang.com
-E-mail:    jg9600@163.com
-Postcode:     312071
