@@ -1,79 +1,45 @@
-From: Ishikawa <ishikawa@yk.rim.or.jp>
-Subject: Re: Badness in device_release at drivers/base/core.c:84
-Date: Wed, 06 Aug 2003 01:10:21 +0900
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <3F2FD6ED.1005BB2C@yk.rim.or.jp>
-References: <20030801182207.GA3759@blazebox.homeip.net>	    <20030801144455.450d8e52.akpm@osdl.org>	    <20030803015510.GB4696@blazebox.homeip.net>	    <20030802190737.3c41d4d8.akpm@osdl.org>	    <20030803214755.GA1010@blazebox.homeip.net>	    <20030803145211.29eb5e7c.akpm@osdl.org>	    <20030803222313.GA1090@blazebox.homeip.net>	    <20030803223115.GA1132@blazebox.homeip.net>	    <20030804093035.A24860@beaverton.ibm.com>    <1060021614.889.6.camel@blaze.homeip.net>    <1352160000.1060025773@aslan.btc.adaptec.com> <5793.199.181.174.146.1060050091.squirrel@www.blazebox.homeip.net> <3F2F84D2.8000202@nospam.com>
+From: James Bottomley <James.Bottomley@steeleye.com>
+Subject: Re: qla1280 compile problems
+Date: 05 Aug 2003 09:17:38 -0700
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <1060100259.2044.3.camel@fuzzy>
+References: <20030805121813.GA24647@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-2022-jp
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
-To: wb <dead_email@nospam.com>
-Cc: Paul Blazejowski <paulb@blazebox.homeip.net>, "Justin T. Gibbs" <gibbs@scsiguy.com>, Patrick Mansfield <patmans@us.ibm.com>, Andrew Morton <akpm@osdl.org>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from nat9.steeleye.com ([65.114.3.137]:17926 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S272819AbTHEQRs (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 5 Aug 2003 12:17:48 -0400
+In-Reply-To: <20030805121813.GA24647@lst.de>
 List-Id: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: Jes Sorensen <jes@wildopensource.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-(Sorry this is not strictly related to SCSI, but I could not help it.)
+On Tue, 2003-08-05 at 05:18, Christoph Hellwig wrote:
+> The qla1280 update still has some issues, mostly because it backs
+> out all the 2.5 changes applied to the driver in the last months,
+> also it doesn't work on ia64 because the IA64 generic build references
+> sn2-specific symbols that don't exist in that build.
 
-Regarding the use of a program from uucp suite
-for console output capture,
-we can use C-Kermit as well.
+Could you be more explicit on this?  I thought I'd re-added all of the
+backed out patches (although I might have missed some).
 
->   Your need a NULL modem serial cable available
->   from any computer store.
-> 
-> Install uucp - I use on the HOST :
-> 
-> uucp-1.06.1-33.7.2.
+> In file included from drivers/scsi/qla1280.c:299:
+> include/linux/blk.h:1:2: warning: #warning this file is obsolete, please use <linux/blkdev.h> instead
+> drivers/scsi/qla1280.c: In function `qla1280_done':
+> drivers/scsi/qla1280.c:1833: warning: implicit declaration of function `qla1280_get_target_options'
+> drivers/scsi/qla1280.c: At top level:
+> drivers/scsi/qla1280.c:4506: warning: type mismatch with previous implicit declaration
+> drivers/scsi/qla1280.c:1833: warning: previous implicit declaration of `qla1280_get_target_options'
+> drivers/scsi/qla1280.c:4506: warning: `qla1280_get_target_options' was previously implicitly declared to return `int'
+> drivers/scsi/qla1280.c:4830: warning: initialization from incompatible pointer type
+> drivers/scsi/qla1280.c:4830: error: unknown field `command' specified in initializer
 
-Or you can use C-Kermit.
-See
+For what it's worth, this compiled for me without warnings on parisc64
+(although I haven't got around to actually testing it).
 
-   http://www.columbia.edu/kermit/ckermit.html
-
-for details. There are precompiled packages.
-
->  ... [omission ] ...
-
-> 5. Start uucp on the HOST:
-> 
->      cu -l /dev/ttyS0 -s 9600
-
-       kermit
-       set line /dev/ttyS0
-       set speed 9600
-       connect
- 
-and you can issue other commands.
-        set [space] ?
-will print all the available options at that point.
-(You can log the interaction into a file by issueing
-a command to kermit, too, but using script and then run kermit
-inside the scripted session might be easier.)
-(Generally speaking hitting ? somewhere on the kermit command line
-prints usable options/setting/keywords, and so
-you can learn the basics very quickly.)
-You can set up a startup file that sets
-the device name, speed, parity, data size, etc. and
-so you don't have to type all the command every time.
-
-While I agree cu might work well for one shot job,
-running a full terminal emulator like C-Kermit
-helps us in the long term.
-
-Just thought to let you know a full-featured terminal
-emulator is available under linux.
-
-> John Donnelly AT HP DOT com
-
-Is the succinct and to the point steps
-part of a widely available document?
-
-I wish I knew this a few years ago.
+James
 
 
--- 
-int main(void){int j=2003;/*(c)2003 cishikawa. */
-char t[] ="<CI> @abcdefghijklmnopqrstuvwxyz.,\n\"";
-char *i ="g>qtCIuqivb,gCwe\np@.ietCIuqi\"tqkvv is>dnamz";
-while(*i)((j+=strchr(t,*i++)-(int)t),(j%=sizeof t-1),
-(putchar(t[j])));return 0;}/* under GPL */
