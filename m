@@ -1,99 +1,81 @@
-From: Arjan van de Ven <arjanv@redhat.com>
-Subject: Re: [PATCH] 2.6.0 aic7xxx and aic79xx stale pci_device list entry
-Date: Sun, 4 Jan 2004 11:04:48 +0100
+From: James Bottomley <James.Bottomley@steeleye.com>
+Subject: Re: [PATCH] Transport Attributes Export API
+Date: 04 Jan 2004 09:44:32 -0600
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040104100448.GA2416@devserv.devel.redhat.com>
-References: <1073076654.2048.19.camel@opiate> <1073120514.4429.0.camel@laptop.fenrus.com> <1282412704.1073168696@aslan.scsiguy.com>
+Message-ID: <1073231073.2069.8.camel@mulgrave>
+References: <20031231190849.GE3066@localhost>
+	<20040102211848.A1894@infradead.org>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="tKW2IUtsqtDRztdT"
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:52958 "EHLO mx1.redhat.com")
-	by vger.kernel.org with ESMTP id S265151AbUADKFA (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 4 Jan 2004 05:05:00 -0500
-Content-Disposition: inline
-In-Reply-To: <1282412704.1073168696@aslan.scsiguy.com>
+Received: from stat1.steeleye.com ([65.114.3.130]:34494 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S265699AbUADPom (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 4 Jan 2004 10:44:42 -0500
+In-Reply-To: <20040102211848.A1894@infradead.org>
 List-Id: linux-scsi@vger.kernel.org
-To: "Justin T. Gibbs" <gibbs@scsiguy.com>
-Cc: Eric Kerin <eric@bootseg.com>, linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Martin Hicks <mort@wildopensource.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+
+On Fri, 2004-01-02 at 15:18, Christoph Hellwig wrote:
+> You could get rid of most code in the drivers by placing a pointer
+> to the transport attributes and the desired transport class into
+> the host template and letting the common code do all setup for you.
+
+Yes, that's what I was thinking: just make the transport class an object
+that embeds the device class.  it could then contain the useful
+parameters (which drivers would use directly).  We could then use a
+transport specific API for updating their values (which the driver could
+choose to implement, but the attribute would be exported ro if it
+didn't).
+
+> That's also consistant to how we handle all the other attributes.
+> 
+> > - Separate the transports out into two separate .c files
+> 
+> probably a good idea.
+> 
+> > (so they can be loaded as modules).
+> 
+> for the sysfs code alone that's total overkill.
+
+But if the the error handler (and domain validation for SPI) are bound
+up in here, it won't be...when someone offers to do work for you you
+don't say no.
+
+> > This also plays in to future work I'm thinking
+> > about: make the error handler more transport specific.
+> 
+> Yupp, that's a good idea, but not really much related to this patch.
+> 
+> > - Then, the class register/unregister can be done in the
+> > module_init/exit routines
+> > - Probably move all the show/store routines in .h files so they can be
+> > used equally for fc and parallel
+> > - This switch on ttype (and the enum transport_type) in
+> 
+> > scsi_add_transport_attributes is not scaleable.  I think a better
+> > solution might be to have a struct scsi_transport which has the class
+> > device and a pointer to the overridden attribute.  Then, this is the
+> > thing pointed to in the scsi host structure (and it can contain the
+> > attributes, the class and a pointer to the default attributes, so most
+> > of the trying to find the defaults code goes away).
+> 
+> Or no extra structure and put the two pointers directly in the host
+> template as I suggested above.  Yes, that means drivers that support
+> multiple transports need a template for each of them, but that's not
+> a big overhead anyway.
+
+Actually, I think we really only need one set of overrideable
+attributes, which we have in the sdev class.  All the other classes we
+add (for transport or anything else) should be API driven---that is,
+after all, the job of a class: to embody an interface, so I think the
+transport classes will only ever have a fixed set of attributes.
+
+Of course, the mechanism will exist to allow arbitrary transport classes
+to be registered for drivers that wish to create them...
+
+James
 
 
---tKW2IUtsqtDRztdT
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
-
-On Sat, Jan 03, 2004 at 03:24:56PM -0700, Justin T. Gibbs wrote:
-> > well in 2.6 modules are supposed to remain loaded even though no device
-> > is found (since one can be hotplugged later) so that part of the driver
-> > needs changing; other than that yes the driver needs to deregister
-> > itself....
->=20
-> Is this policy change documented somewhere?
-
-Documentation/pci.txt has it (albeit not extremely explicit):
-
-0. Structure of PCI drivers
-~~~~~~~~~~~~~~~~~~~~~~~~~~
-There exist two kinds of PCI drivers: new-style ones (which leave most of
-probing for devices to the PCI layer and support online insertion and
-removal of devices [thus supporting PCI, hot-pluggable PCI and CardBus in a
-single driver]) <snip>
-
-1. New-style drivers
-~~~~~~~~~~~~~~~~~~~
-The new-style drivers just call pci_register_driver during their
-initialization with a pointer to a structure describing the driver (struct
-pci_driver) which contains:
-<snip>
-        probe           Pointer to a probing function which gets called (du=
-ring
-                        execution of pci_register_driver for already existi=
-ng
-                        devices or later if a new device gets inserted) for=
- all
-                        PCI devices which match the ID table and are not ha=
-ndled
-                        by the other drivers yet. This function gets passed=
- a
-                        pointer to the pci_dev structure representing the d=
-evice
-                        and also which entry in the ID table did the device
-                        match. It returns zero when the driver has accepted=
- the
-                        device or an error code (negative number) otherwise.
-                        This function always gets called from process conte=
-xt,
-                        so it can sleep.
-<snip the rest>
------------------
-
-There are 2 reasons to work this way, and I would very much prefer the
-adaptec drivers to behave like this:
-1) PCI Hotplugging
-2) Adding PCI ID's at runtime
-
-While you may not care about 1), a lot of IHV/distros care about 2); eg if
-Adaptec puts out a card that can be driven by aic79xx but with just a new P=
-CI ID,
-hardware vendors can just add the ID at runtime and have it work in the
-(factory) installer etc but only *if the driver is loaded* ....
-
-Greetings,
-    Arjan van de Ven
-
-
-
---tKW2IUtsqtDRztdT
-Content-Type: application/pgp-signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.2.1 (GNU/Linux)
-
-iD8DBQE/9+U/xULwo51rQBIRAnVkAKCc0tv+/WD0ixpYcePbVeKbcjXwsgCgpOua
-qqCLDPf1YZ4LnJ3aKGxW2aw=
-=63Qu
------END PGP SIGNATURE-----
-
---tKW2IUtsqtDRztdT--
