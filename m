@@ -1,40 +1,41 @@
-From: Andrew Morton <akpm@osdl.org>
-Subject: Re: Badness in device_release at drivers/base/core.c:84
-Date: Sat, 2 Aug 2003 19:07:37 -0700
+From: Jamie Lenehan <lenehan@twibble.org>
+Subject: [PATCH] dc395x - description
+Date: Sun, 3 Aug 2003 18:27:18 +1000
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030802190737.3c41d4d8.akpm@osdl.org>
-References: <20030801182207.GA3759@blazebox.homeip.net>
-	<20030801144455.450d8e52.akpm@osdl.org>
-	<20030803015510.GB4696@blazebox.homeip.net>
+Message-ID: <20030803082718.GA4594@twibble.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fw.osdl.org ([65.172.181.6]:20650 "EHLO mail.osdl.org")
-	by vger.kernel.org with ESMTP id S270980AbTHCCGc (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 2 Aug 2003 22:06:32 -0400
-In-Reply-To: <20030803015510.GB4696@blazebox.homeip.net>
+Received: from tuon.twibble.org ([203.217.29.157]:30899 "EHLO tuon.twibble.org")
+	by vger.kernel.org with ESMTP id S270435AbTHCI1X (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 3 Aug 2003 04:27:23 -0400
+Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
-To: Diffie <diffie@blazebox.homeip.net>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: dc395x@twibble.org
 
-Diffie <diffie@blazebox.homeip.net> wrote:
->
-> After applaying the above patch and testing it still oopses the kernel.
-> 
-> I noticed same patch in today's mm3 which i compiled and use right now.
-> 
-> When using cat /proc/scsi/aic7xxx/0 i get segmentation fault and oops
-> which i'll attach to this email.
->
-> ...
->
->  EIP is at aic7xxx_proc_info+0xc28/0xc80
+A few updates for the dc395x driver.
+Patches against 2.6.0-test2-bk2
 
-This is crashing in a different place.  Probably the same bug, showing up
-later on.
+01-remove-static-eeprom-struct.patch:
 
-I don't know if anyone is maintaining aic7xxx_old in 2.7.  It looks like it
-was subject to some random untested change a couple of months back.
+ Move the eeprom details from a static struct indexed by adapter
+ number into the adapter information block of the adapter. This
+ removes the fixed size static array and removes the need to count
+ the number of adapters.
 
+02-remove-static-adapter-list.patch:
 
+ Remove the static list of adapters and the code related to keeping
+ this up to date. The only remaining use for the static list was for
+ the proc info function to find the scsi_host, but that's passed as a
+ parameter anyway.
+
+03-fix-failures.patch:
+
+ Handle the case where scsi_add_host fails and update the removal
+ function to correctly unregister everything.
+
+-- 
+ Jamie Lenehan              Work Phone: +61 3 9843 8817
+ lenehan@twibble.org        Work Email: jamie.lenehan@activcard.com.au
