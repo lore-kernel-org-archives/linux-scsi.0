@@ -1,54 +1,59 @@
-From: Patrick Mansfield <patmans@us.ibm.com>
-Subject: Re: [PATCH] scsi-misc-2.5 remove scsi_scan.c EVPD code
-Date: Mon, 5 May 2003 15:51:27 -0700
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030505155127.A11734@beaverton.ibm.com>
-References: <UTC200304250047.h3P0lhl03517.aeb@smtp.cwi.nl> <3EB619A4.5090407@torque.net> <20030505093834.B7831@beaverton.ibm.com> <20030505174602.GA3433@beaverton.ibm.com>
+From: James Bottomley <James.Bottomley@steeleye.com>
+Subject: Re: [RFC] support for sysfs string based properties for SCSI (1/3)
+Date: 05 May 2003 19:05:52 -0500
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <1052179553.1888.461.camel@mulgrave>
+References: <1051989099.2036.7.camel@mulgrave>
+	<1051989565.2036.14.camel@mulgrave> <20030505170202.GA1296@kroah.com>
+	<1052154516.1888.33.camel@mulgrave>  <20030505171745.GA1477@kroah.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bi01p1.co.us.ibm.com ([32.97.110.142]:42590 "EHLO laptop")
-	by vger.kernel.org with ESMTP id S262073AbTEEWov (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 5 May 2003 18:44:51 -0400
-Content-Disposition: inline
-In-Reply-To: <20030505174602.GA3433@beaverton.ibm.com>; from andmike@us.ibm.com on Mon, May 05, 2003 at 10:46:02AM -0700
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+In-Reply-To: <20030505171745.GA1477@kroah.com>
+To: Greg KH <greg@kroah.com>
+Cc: Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Patrick Mochel <mochel@osdl.org>, Mike Anderson <andmike@us.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Douglas Gilbert <dougg@torque.net>, Andries.Brouwer@cwi.nl, James.Bottomley@steeleye.com, linux-scsi@vger.kernel.org, linux-usb-devel@lists.sourceforge.net, mdharm-scsi@one-eyed-alien.net
 
-On Mon, May 05, 2003 at 10:46:02AM -0700, Mike Anderson wrote:
-> Patrick Mansfield [patmans@us.ibm.com] wrote:
-
-> > Right now, we could have an sgid that runs whenever an sg is found (sg
-> > hotplug generated via device_register), and stores a sysfs path and the id
-> > returned into a flat file.
+On Mon, 2003-05-05 at 12:17, Greg KH wrote:
+> On Mon, May 05, 2003 at 12:08:35PM -0500, James Bottomley wrote:
+> > Nothing prevents users from doing it the callback way.  However,
+> > callbacks aren't a scaleable interface for properties that have to be
+> > shared and overridden.
 > 
-> I believe devlabel's scsi_unique_id.c file does some of this, though I
-> have not looked at it closely.
-> 
-> -andmike
+> I don't understand the "shared and overridden" aspect.  Do you mean a
+> default attribute for all types of SCSI devices, with the ability for an
+> individual device to override the attribute with it's own values if it
+> wants to?  That still seems doable within the driver model today,
+> without having to rely on bus specific functions.
 
-Yes, it looks very close, and has the underlying infrastructure (uses the
-SCSI_IOCTL_SEND_COMMAND, not sg, so can be used for all upper level linux
-scsi devices). It looks like we would need functionallity that is in the
-devlabel script itself (to output just a  single ID), maybe just integrate
-that into scsi_unique_id. (I did not look closely at devlabel, it has more
-lines than the scsi_unique_id.c source.)
+Yes, but the problem is how to communicate the override between the HBA
+driver and SCSI. The override is required because changing some
+properties may require changes at many levels.  The queue_depth in the
+example I gave is the obvious one:
 
-It looks like scsi_unique_id should also dump the code set, so it can pick
-one code set (the same one) over anoother (if both were ever used by a
-single LU).
+- the device needs to make sure it has internal resources for the
+revised queue depth.  It also has to implement the change.
+- the mid-layer needs to do the adjustment
+- As does the block layer (I didn't implement this one in my patch).
 
-It fails for character devices, but that is easily fixed by deletion of
-the check (SCSI_IOCTL_SEND_COMMAND works for any scsi device: st, sd, sr
-or sg). I deleted the check and it ran ok on a "processor" scsi device,
-though the device does not support page 80 or page 83. 
+The interface obviously belongs in the SCSI API, but one API entry per
+property causes the interface to explode and also makes it quite
+difficult to add new ones, so we need a generic get/set property
+interface; however, then we need to know what property, hence the
+strings.
 
-scsi_unique_id should also have some sort of error checking/reporting, so
-we can tell if a device is not functioning (versus does not support page
-80 or 83).
+> Hm, this is _really_ calling for what Pat calls "attributes".  Take a
+> look at the ones in the class model, and let me know if those would work
+> for you for devices.  If so, I'll be glad to add them, which should help
+> you out here.
 
-I don't know how this would be integrated into the scsi device model tree,
-given the current flux (class or bus for upper level devices, as well as
-for the scsi_device itself).
+Well, I analysed the class interface.  It currently won't do what we
+need, but it might be able to if it supported an inheritance, so there
+would be a device class which could then be extended by the drivers to
+override the properties they need.  However, isn't this type of
+inheritance going to be a real pain using function pointers, and if we
+only support overrides of show/store, it's probably simpler just to
+support the strings based interface.
 
--- Patrick Mansfield
+James
