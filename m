@@ -1,63 +1,58 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: [ANNOUNCE] QLogic qla2xxx driver update available (v8.00.00b6).
-Date: Thu, 6 Nov 2003 18:14:09 +0100
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <20031106171409.GN437@suse.de>
-References: <B179AE41C1147041AA1121F44614F0B0598CE5@AVEXCH02.qlogic.org>
+From: Pat LaVarre <p.lavarre@ieee.org>
+Subject: Re: [PATCH] CDC_MMC_WR
+Date: 06 Nov 2003 10:44:06 -0700
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <1068140646.23487.119.camel@patrh9>
+References: <1067647915.2682.5.camel@patrh9>
+	 <1068136355.23487.44.camel@patrh9>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <B179AE41C1147041AA1121F44614F0B0598CE5@AVEXCH02.qlogic.org>
-To: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Cc: Mike Anderson <andmike@us.ibm.com>, Linux-Kernel <linux-kernel@vger.kernel.org>, Linux-SCSI <linux-scsi@vger.kernel.org>
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from email-out1.iomega.com ([147.178.1.82]:57268 "EHLO
+	email.iomega.com") by vger.kernel.org with ESMTP id S263788AbTKFRof
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 6 Nov 2003 12:44:35 -0500
+Received: from royntex01.iomegacorp.com (unknown [147.178.90.120])
+	by email.iomega.com (Postfix) with ESMTP id 4F1B82A42
+	for <linux-scsi@vger.kernel.org>; Thu,  6 Nov 2003 10:44:32 -0700 (MST)
+In-Reply-To: <1068136355.23487.44.camel@patrh9>
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Thu, Nov 06 2003, Andrew Vasquez wrote:
-> Jens,
-> 
-> > > 	o Given the ISPs inability to handle data segments that cross
-> > > 	  32-bit page boundaries, and the overhead in defensive logic
-> > > 	  within the driver to prevent these cases (compare the 6.x
-> > > 	  code to the 8.x code and you will see what I mean), by
-> > > 	  disabling clustering we guarantee that a single SG element
-> > > 	  never crosses a 4GB boundary.
-> > 
-> > That is not, however. Linux will never give you a segment crossing a
-> > 4GB boundary, exactly because most hardware cannot handle this.
-> > 
-> > > Now, in 2.6 there are some significant changes.  For one, with the
-> > > block layer rewrite and the ability to limit segment boundaries of a
-> > > block queue request with the blk_queue_segment_boundary() call, a LLDD
-> > > need not concern itself with any defensive fast-path logic to handle
-> > > the 4GB cross.
-> > 
-> > Ditto 2.4. See BH_PHYS_4G().
-> > 
-> 
-> Yes, but if I recall, these checks did not enter until late in the 2.4
-> branch.  The original (engineering) intent of the 6.x series branch
-> was to support all 2.4 kernels, though we are slowly (formally) moving
-> away from the restrictions.
+> Does the ->writeable bit exist for ide-cd devices, or only for sr
+> devices?
 
-They were there at the same time as Linux supported > 1GB IO at all. So
-that is incorrect, it's been there all along.
+I'm guessing only sr devices, since grep writeable fails in drivers/ide/
+and in drivers/cdrom/.
 
-> > > So, we're left with the benefits of the overhead of this merge
-> > > process done by the block layer.  I'm certainly receptive to the
-> > > notion of reexamining the use of clustering given some solid data
-> > > points showing an (significant -- this is subjective) increase in
-> > > performance and/or a resounding 'yeah, enable it!' from those in
-> > > the block-layer 'know.'
-> > 
-> > In 2.6 clustering comes for free, so it would be silly not to enable
-> > it.
-> > 
-> 
-> Thanks for the clarification, I'll add the parameter back into the
-> template for the 8.x series driver.
+> When cdrom.ko decides a device is not writable, how does cdrom.ko name
+> that bit, else how does cdrom.ko call into ide-cd/sr to clear that bit?
 
-Cool, thanks.
+Call back into sr from cdrom may occur via the cdrom_device_ops.
 
--- 
-Jens Axboe
+We define cdrom_ioctl CDROM_GET_CAPABILITY but no SET of capability,
+though we do define CDROM_SET_OPTIONS.
+
+Maybe we're telling me to add a call back to the cdrom_device_ops for
+cdrom to notify ide-cd/sr that the capabilities have changed.  ide-cd
+could ignore that notification, sr could set
+scsi_cd->scsi_device->writeable accordingly.
+
+> Have "the ->writeable bit actually be set if the device is writeable".
+
+grep is failing to find code for me that fetches this bit.
+
+Is this bit ever fetched?
+
+http://lxr.linux.no/ident?v=2.6.0-test7&i=writeable
+no hits.
+
+http://lxr.linux.no/search?v=2.6.0-test7&string=writeable
+over seventy hits.  Apparently none relevant, except to say scsi_scan
+sets this bit for sd, clears this bit for sr, and sr sometimes sets and
+fetches this bit until I patch sr to branch on CDC_MMC_WR instead.
+
+Pat LaVarre
+
+
