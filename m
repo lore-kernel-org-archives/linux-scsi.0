@@ -1,86 +1,60 @@
-From: James Bottomley <James.Bottomley@steeleye.com>
-Subject: Re: [PATCH] ibmvscsi driver - fourth version
-Date: 11 Mar 2004 12:43:57 -0500
+From: Mark Haverkamp <markh@osdl.org>
+Subject: [PATCH 2.6] aacraid driver patch
+Date: Thu, 11 Mar 2004 11:16:49 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1079027038.2820.57.camel@mulgrave>
-References: <opr3u0ffo7l6e53g@us.ibm.com>
-	<20040225134518.A4238@infradead.org>  <opr3xta6gbl6e53g@us.ibm.com>
+Message-ID: <1079032608.10128.48.camel@markh1.pdx.osdl.net>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat1.steeleye.com ([65.114.3.130]:61928 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S261626AbUCKRpW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 11 Mar 2004 12:45:22 -0500
-In-Reply-To: <opr3xta6gbl6e53g@us.ibm.com>
+Received: from fw.osdl.org ([65.172.181.6]:13224 "EHLO mail.osdl.org")
+	by vger.kernel.org with ESMTP id S261531AbUCKTQv (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 11 Mar 2004 14:16:51 -0500
 List-Id: linux-scsi@vger.kernel.org
-To: Dave Boutcher <sleddog@us.ibm.com>
-Cc: Christoph Hellwig <hch@infradead.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: James Bottomley <James.Bottomley@steeleye.com>, linux-scsi <linux-scsi@vger.kernel.org>
+Cc: Mark Salyzyn <mark_salyzyn@adaptec.com>
 
-+static int map_sg_data(struct scsi_cmnd *cmd,
-+		       struct SRP_CMD *srp_cmd, struct device *dev)
-+{
-[...]
-+		data->virtual_address = sg[0].dma_address;
-+		data->length = sg[0].dma_length;
-
-This is wrong, you must use the data accessors sg_dma_addres() and
-sg_dma_len().
+I submitted a patch last month for the aacraid driver's reset handler. 
+I left out setting function pointers in the adapter_ops structure for
+the adapter_check_health element.
 
 
-+static int map_single_data(struct scsi_cmnd *cmd,
-+			   struct SRP_CMD *srp_cmd, struct device *dev)
-+{
-[...]
-+	data->virtual_address =
-+	    (u64) (unsigned long)dma_map_single(dev, cmd->request_buffer,
-+						cmd->request_bufflen,
-+						DMA_BIDIRECTIONAL);
-+	if (data->virtual_address == 0xFFFFFFFF) {
-+		printk(KERN_ERR
-+		       "ibmvscsi: Unable to map request_buffer for command!\n");
+ ===== drivers/scsi/aacraid/rkt.c 1.2 vs edited =====
+--- 1.2/drivers/scsi/aacraid/rkt.c	Fri Feb 13 06:06:03 2004
++++ edited/drivers/scsi/aacraid/rkt.c	Thu Mar 11 10:50:52 2004
+@@ -427,6 +427,7 @@
+ 	dev->a_ops.adapter_disable_int = aac_rkt_disable_interrupt;
+ 	dev->a_ops.adapter_notify = aac_rkt_notify_adapter;
+ 	dev->a_ops.adapter_sync_cmd = rkt_sync_cmd;
++	dev->a_ops.adapter_check_health = aac_rkt_check_health;
+ 
+ 	if (aac_init_adapter(dev) == NULL)
+ 		return -1;
+===== drivers/scsi/aacraid/rx.c 1.7 vs edited =====
+--- 1.7/drivers/scsi/aacraid/rx.c	Fri Feb 13 06:04:31 2004
++++ edited/drivers/scsi/aacraid/rx.c	Thu Mar 11 10:50:46 2004
+@@ -427,6 +427,7 @@
+ 	dev->a_ops.adapter_disable_int = aac_rx_disable_interrupt;
+ 	dev->a_ops.adapter_notify = aac_rx_notify_adapter;
+ 	dev->a_ops.adapter_sync_cmd = rx_sync_cmd;
++	dev->a_ops.adapter_check_health = aac_rx_check_health;
+ 
+ 	if (aac_init_adapter(dev) == NULL)
+ 		return -1;
+===== drivers/scsi/aacraid/sa.c 1.7 vs edited =====
+--- 1.7/drivers/scsi/aacraid/sa.c	Fri Feb 13 06:03:46 2004
++++ edited/drivers/scsi/aacraid/sa.c	Thu Mar 11 10:50:42 2004
+@@ -407,6 +407,7 @@
+ 	dev->a_ops.adapter_disable_int = aac_sa_disable_interrupt;
+ 	dev->a_ops.adapter_notify = aac_sa_notify_adapter;
+ 	dev->a_ops.adapter_sync_cmd = sa_sync_cmd;
++	dev->a_ops.adapter_check_health = aac_sa_check_health;
+ 
+ 	dprintk(("FUNCDONE\n"));
+ 
 
-dma_map_single() has no error return currently, what is this trying to
-do?
 
-+
-+	/* Block requests until we get the SRP login back */
-+	scsi_block_requests(host);
-+
-+	if (!scsi_add_host(hostdata->host, hostdata->dev)) {
-+
-+		scsi_scan_host(host);
-+		return hostdata;
-+	}
-
-Er, have you actually tried this ... the block requests will block all
-requests including the attempt to scan. I assume the unblock is coming
-from the schedule_work, but you're still hanging the rest of the system
-waiting for this on a bootup.
-
-+static int ibmvscsi_send_srp_event(struct srp_event_struct *evt_struct,
-+				   struct ibmvscsi_host_data *hostdata)
-+{
-[...]
-+	if (ibmvscsi_send_crq(hostdata, crq_as_u64[0], crq_as_u64[1]) != 0) {
-+		list_del(&evt_struct->list);
-+
-+		cmnd = evt_struct->cmnd;
-+		printk(KERN_ERR "ibmvscsi: failed to send event struct\n");
-+		unmap_cmd_data(&evt_struct->evt->srp.cmd, hostdata->dev);
-+		ibmvscsi_free_event_struct(&hostdata->pool, evt_struct);
-+		cmnd->result = DID_ERROR << 16;
-+		evt_struct->cmnd_done(cmnd);
-+	}
-
-This is still in the queuecommand path.  Are you sure you want to end
-the command with DID_ERROR here, which will decrement the retry count in
-error handling rather than returning SCSI_MQUEUE_DEVICE_BUSY?
-
-There seem to be other places in the driver where the return status of
-ibmvscsi_send_crq isn't being checked, should it be?
-
-James
-
+-- 
+Mark Haverkamp <markh@osdl.org>
 
