@@ -1,37 +1,64 @@
-From: David Wysochanski <davidw@netapp.com>
-Subject: Re: reiserfs and SCSI oops seen in 2.6.9-rc2 with local SCSI disk
- IO
-Date: Fri, 24 Sep 2004 15:42:44 -0400
-Sender: linux-fsdevel-owner@vger.kernel.org
-Message-ID: <415478B4.7090208@netapp.com>
-References: <4154372C.7070506@netapp.com> <20040924193942.GA17460@ip68-4-98-123.oc.oc.cox.net>
+From: Rodrigo Severo <rodrigo.lists@fabricadeideias.com>
+Subject: Re: SCSI Initio 9100UW (INIC-950p chipset) support nunder kernel
+ 2.6.x
+Date: Fri, 24 Sep 2004 18:21:44 -0300
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <41548FFE.60803@fabricadeideias.com>
+References: <4151A24A.7000302@fabricadeideias.com> <20040922170651.A3340@infradead.org> <20040922201424.GC2098@unicorn.sch.bme.hu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
-In-Reply-To: <20040924193942.GA17460@ip68-4-98-123.oc.oc.cox.net>
-To: "Barry K. Nathan" <barryn@pobox.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from scorsese.fabricadeideias.com.br ([200.157.56.34]:48269 "EHLO
+	scorsese.fabricadeideias.com") by vger.kernel.org with ESMTP
+	id S268899AbUIXVVr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 24 Sep 2004 17:21:47 -0400
+In-Reply-To: <20040922201424.GC2098@unicorn.sch.bme.hu>
 List-Id: linux-scsi@vger.kernel.org
+To: Pozsar Balazs <pozsy@uhulinux.hu>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Barry K. Nathan wrote:
-> On Fri, Sep 24, 2004 at 11:03:08AM -0400, David Wysochanski wrote:
->  > I can reproduce this pretty easily with local disk.
-> [snip]
-> 
-> Make absolutely very very sure that you are *NOT* using SELinux --
-> reiserfs and SELinux do NOT get along right now (this is a known
-> problem). If you try to use the two together, you'll almost certainly
-> get freezes and oopses.
-> 
-Nope - here's my /proc/cmdline:
-root=0802 vga=0x314 selinux=0 splash=silent desktop resume=/dev/sda1 showopts console=tty0 console=ttyS0,9600n8 nmi_watchdog=1
+Pozsar Balazs wrote:
+
+>On Wed, Sep 22, 2004 at 05:06:51PM +0100, Christoph Hellwig wrote:
+>  
+>
+>>On Wed, Sep 22, 2004 at 01:03:00PM -0300, Rodrigo Severo wrote:
+>>    
+>>
+>>>with kernel 2.4.24 (yes, I know it's old).
+>>>
+>>>I want to update my kernel do 2.6.8. The question: is there support for 
+>>>this board/chipset under kernel 2.6.x?
+>>>
+>>>I looked around a lot and couldn't find much. www.initio.com says their 
+>>>code is in the kernel since 2.0.32. Has it been left out for 2.6.x?
+>>>
+>>>Is anyone working on this port? Anyone intending to work on it?
+>>>      
+>>>
+>>The driver still exists and actually compiles.  It's marked BROKEN, although
+>>I don't know why.  If you want to help testing we can update it to current
+>>standards.
+>>    
+>>
+>
+>It works perfectly for me. (I have 1 disk and 1 cdrom.)
+>
+>Also note that mandrake ships a kernel with the BROKEN flag patched off.
+>
+>I do not know why was it marked as such.
+>
+In fact it works just fine for me too. As Christoph Hellwig latest 
+message suggested I was suffering lack-of-st-driver sickness *:">
+
+As far as I can tell the driver is really fine. Maybe it's time to 
+remove the BROKEN flag from it? I am not sure who is responsible for 
+this but here is my Works For Me vote.
 
 
-> If you're seeing this type of problem even without SELinux, that's
-> interesting...
-> 
-> -Barry K. Nathan <barryn@pobox.com>
-> 
+Thanks you all for your help,
 
+Rodrigo Severo
 
+*
