@@ -1,81 +1,32 @@
 From: Steven Dake <sdake@mvista.com>
 Subject: Re: Adding a new FC disk to a linux host
-Date: Thu, 13 Feb 2003 13:22:13 -0700
+Date: Thu, 13 Feb 2003 13:23:40 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3E4BFE75.20207@mvista.com>
-References: <JOEEIMDPCNOOJCHLMKHMCEGMCKAA.suresh@veritas.com>
+Message-ID: <3E4BFECC.608@mvista.com>
+References: <JOEEIMDPCNOOJCHLMKHMAEGLCKAA.suresh@veritas.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <JOEEIMDPCNOOJCHLMKHMCEGMCKAA.suresh@veritas.com>
+In-Reply-To: <JOEEIMDPCNOOJCHLMKHMAEGLCKAA.suresh@veritas.com>
 List-Id: linux-scsi@vger.kernel.org
 To: Suresh Kr N <suresh@veritas.com>
 Cc: linux-scsi@vger.kernel.org
 
-Suresh,
+There is a patch (search sourceforge for scsiras) that will 
+automatically issue a rescan on the scsi bus whenever a reset occurs. 
+ This won't help for fibrechannel, but you might be able to have your 
+driver issue a reset causing the scsi bus to rescan with this modified 
+kernel patch.
 
-The locking of the SCSI devices is not correct in the SCSI midlayer, 
-resulting in potential linked list walk-offs during insertion on one 
-processor and removal on another processor in the system.  There are 
-other problems even for single-processor configurations.
+But I'd stick to just inserting what you know it out there rather then 
+rescanning all 255 targets.
 
-I have partially fixed this, but my patch is incomplete and i've not had 
-time to revise it so it is correct.
-
-If you want to insert by FibreChannel WWN, you can look at
-www.sourceforge.net/projects/atca-hotswap.
-
-This allows insertion by a FC WWN via a kernel patch and provides a 
-userspace library to do the same.  This patch was mainly made for 2.4 
-where there was no way to correlate a FibreChannel WWN with a scsi 
-target ID.  Since sysfs in linux scsi has added FibreChannel IEEE ID 
-support (wwns), I will eventually change the userspace library to do the 
-correct thing when you request an insertion on a fibrechannel id by 
-scanning the scsi list in sysfs and finding the correct 
-host/channel/id/lun on which to insert and doing the insert 
-automatically.  If you want to write that hotswap library code, i'll put 
-it in to the sourceforge project.
-
-It would also be possible to request that the fibrehcannel device list 
-out its supproted scsi target ids, and compare that to the SCSI layer's 
-view, and automatically insert those that are not in the scsi midlayer. 
- Exercise for the reader.
-
-Thanks!
+Thanks
 -steve
 
 Suresh Kr N wrote:
 
->ok , i see this in scsi.c .
->Is this safe in a Fibre channel SAN scenario ? could it corrupt an ongoing
->data tranfer in a fibre channel SAN scenario ?
->and also are there are easier ways to achieve this ( without you supplying a
->scsi id etc ).
->
->suresh
->
->  /*
->         * Usage: echo "scsi add-single-device 0 1 2 3" >/proc/scsi/scsi
->         * with  "0 1 2 3" replaced by your "Host Channel Id Lun".
->         * Consider this feature BETA.
->         *     CAUTION: This is not for hotplugging your peripherals. As
->         *     SCSI was not designed for this you could damage your
->         *     hardware !
->         * However perhaps it is legal to switch on an
->         * already connected device. It is perhaps not
->         * guaranteed this device doesn't corrupt an ongoing data transfer.
->         */
->
->-----Original Message-----
->From: linux-scsi-owner@vger.kernel.org
->[mailto:linux-scsi-owner@vger.kernel.org]On Behalf Of Suresh Kr N
->Sent: Thursday, February 13, 2003 11:01 PM
->To: Steven Dake
->Cc: linux-scsi@vger.kernel.org
->Subject: RE: Adding a new FC disk to a linux host
->
->
 >This works for me ( by the way is this still BETA ? i dont see this comment
 >in the kernel scsi sources anymore ).
 >But then i need to deduce the these input parameters of target no , lun no
@@ -255,16 +206,6 @@ Suresh Kr N wrote:
 >>
 >>    
 >>
->
->-
->To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
->the body of a message to majordomo@vger.kernel.org
->More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
->-
->To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
->the body of a message to majordomo@vger.kernel.org
->More majordomo info at  http://vger.kernel.org/majordomo-info.html
 >
 >-
 >To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
