@@ -1,42 +1,50 @@
-From: "J. Ryan Earl" <heretic@clanhk.org>
-Subject: Re: Serial ATA (SATA) for Linux status report
-Date: Tue, 9 Dec 2003 13:59:24 -0600
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <200312091359.24546.heretic@clanhk.org>
-References: <20031203204445.GA26987@gtf.org>
-Reply-To: heretic@clanhk.org
+From: "James" <jdaniel@dakotacom.net>
+Subject: Re: Initio 9100 Ultra Driver -- Compiler Errors
+Date: Tue, 9 Dec 2003 14:05:26 -0700
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <004601c3be98$2b879c80$0200000a@nightsky>
+References: <003001c3be83$dbb521a0$0200000a@nightsky> <1070996191.2122.16.camel@mulgrave>
 Mime-Version: 1.0
 Content-Type: text/plain;
-  charset="iso-8859-1"
+	charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
-In-Reply-To: <20031203204445.GA26987@gtf.org>
-Content-Disposition: inline
-To: Jeff Garzik <jgarzik@pobox.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from breaker.dakotacom.net ([66.192.152.146]:52692 "EHLO
+	breaker.dakotacom.net") by vger.kernel.org with ESMTP
+	id S266132AbTLIVFQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 9 Dec 2003 16:05:16 -0500
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@steeleye.com>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Wednesday 03 December 2003 02:44 pm, Jeff Garzik wrote:
-> Queueing support
-> 3) "Native Command Queueing" -- both host and drive cooperate in the
-> queueing and execution of drive commands.  This should provide the
-> highest performance and lowest latency of all three options.
+Yes. Only controller I have that can run the 18 gig barracuda in my
+server... hence my concern. ;)
 
-Has anyone gotten their hands on any Silicon Image 3124 hardware?  It was 
-announced 3 months ago and supports PCI-X plus it's designed to support 
-whatever the final SATA 2.0 spec ends up being.  Full NCQ support.
+----- Original Message -----
+From: "James Bottomley" <James.Bottomley@steeleye.com>
+To: "James" <jdaniel@dakotacom.net>
+Cc: "SCSI Mailing List" <linux-scsi@vger.kernel.org>
+Sent: Tuesday, December 09, 2003 11:56 AM
+Subject: Re: Initio 9100 Ultra Driver -- Compiler Errors
 
-http://www.siliconimage.com/products/sii3124.asp
 
-> Hotplug support
-> ---------------
-> All SATA is hotplug.
+> On Tue, 2003-12-09 at 13:40, James wrote:
+> > These appear to be an extension of the errors someone had mailed the
+list
+> > about back in
+> > MAY 2002! Is anyone going to fix this before 2.6.0 is released? Kinda
+short
+> > on time here,
+> > and I would love to actually be able to compile the kernel when it's
+> > released as "stable"...
 >
-> libata does not support hotplug... yet.
+> Do you actually have one of these cards?
+>
+> James
+>
+>
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-Hot-Plug seems like one of the most universally supported features.  What will 
-it take to get it working?  And what will it take to get it working on 2.4?  
-Is that a major feature we'll just have to wait for in libata?
-
-I personally need hot-swap on production servers.
-
--ryan
