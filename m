@@ -1,170 +1,83 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: [PATCH] scsi_mid_low_api doesn't mention scsi_scan_host
-Date: Thu, 24 Mar 2005 18:45:40 +1000
-Message-ID: <42427E34.6060308@torque.net>
-References: <9BB4DECD4CFE6D43AA8EA8D768ED51C201AF54@xbl3.ad.emulex.com>
-Reply-To: dougg@torque.net
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: [PATCH as494] Add a scsi_device flag for RETRY_HWERROR
+Date: Thu, 24 Mar 2005 11:45:50 -0500 (EST)
+Message-ID: <Pine.LNX.4.44L0.0503241134300.1345-100000@ida.rowland.org>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------070904010005070900090603"
-Received: from zorg.st.net.au ([203.16.233.9]:17885 "EHLO borg.st.net.au")
-	by vger.kernel.org with ESMTP id S262434AbVCXIoZ (ORCPT
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Received: from ida.rowland.org ([192.131.102.52]:6404 "HELO ida.rowland.org")
+	by vger.kernel.org with SMTP id S262638AbVCXQp6 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 24 Mar 2005 03:44:25 -0500
-In-Reply-To: <9BB4DECD4CFE6D43AA8EA8D768ED51C201AF54@xbl3.ad.emulex.com>
+	Thu, 24 Mar 2005 11:45:58 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Smart@Emulex.Com
-Cc: matthew@wil.cx, James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: SCSI development list <linux-scsi@vger.kernel.org>
 
-This is a multi-part message in MIME format.
---------------070904010005070900090603
-Content-Type: text/plain; charset=US-ASCII; format=flowed
-Content-Transfer-Encoding: 7bit
+James:
 
-James.Smart@Emulex.Com wrote:
->>Thanks for the correction.  How does this look?
->>
->> *      Notes: Only required in "hotplug initialization model" after a
->> *      successful call to scsi_host_alloc().  This function does not
->> *      scan the bus; this can be done by calling scsi_scan_host() or
->> *      in some other transport-specific way.  The LLD must set up
->> *      the transport template before calling this function 
->>and may only
->> *      access the transport class data after this function 
->>has been called.
-> 
-> 
-> a work of art :)
+It turns out that a bunch of USB-IDE converters make the mistake of
+returning SK = 04 (Hardware Error) whenever the IDE device signals any
+sort of error, without bothering to distinguish recoverable from
+non-recoverable errors.  The best way to handle this is for usb-storage to
+set a per-device flag indicating that these errors should always be
+retried.  The current scheme (blacklist flag but no per-device flag) isn't
+well suited for this situation.
 
-So attached is Matthew's patch plus the above change
-diffed against lk 2.6.11
+This patch adds the per-device flag and sets it initially based on the
+blacklist setting.  Once this has been merged, a separate patch will be
+submitted to Matt Dharm adding the corresponding support to usb-storage.
 
-
-Signed-off-by: Douglas Gilbert <dougg@torque.net>
+Alan Stern
 
 
 
---------------070904010005070900090603
-Content-Type: text/x-patch;
- name="scsi_mid_low_api2611mw.diff"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="scsi_mid_low_api2611mw.diff"
+Signed-off-by: Alan Stern <stern@rowland.harvard.edu>
 
---- linux/Documentation/scsi/scsi_mid_low_api.txt	2005-03-03 07:48:09.000000000 +1000
-+++ linux/Documentation/scsi/scsi_mid_low_api.txt2611mw	2005-03-24 18:41:43.000000000 +1000
-@@ -150,7 +150,8 @@
- LLD                   mid level                    LLD
- ===-------------------=========--------------------===------
- scsi_host_alloc()  -->
--scsi_add_host()  --------+
-+scsi_add_host()  ---->
-+scsi_scan_host()  -------+
-                          |
-                     slave_alloc()
-                     slave_configure() -->  scsi_adjust_queue_depth()
-@@ -196,7 +197,7 @@
+===== include/scsi/scsi_device.h 1.18 vs edited =====
+--- 1.18/include/scsi/scsi_device.h	2005-03-22 01:44:56 -05:00
++++ edited/include/scsi/scsi_device.h	2005-03-23 16:58:05 -05:00
+@@ -112,6 +112,7 @@
+ 	unsigned no_uld_attach:1; /* disable connecting to upper level drivers */
+ 	unsigned select_no_atn:1;
+ 	unsigned fix_capacity:1;	/* READ_CAPACITY is too high by 1 */
++	unsigned retry_hwerror:1;	/* Retry HARDWARE_ERROR */
  
+ 	unsigned int device_blocked;	/* Device returned QUEUE_FULL. */
  
- The hotplug concept may be extended to SCSI devices. Currently, when an
--HBA is added, the scsi_add_host() function causes a scan for SCSI devices
-+HBA is added, the scsi_scan_host() function causes a scan for SCSI devices
- attached to the HBA's SCSI transport. On newer SCSI transports the HBA
- may become aware of a new SCSI device _after_ the scan has completed.
- An LLD can use this sequence to make the mid level aware of a SCSI device:
-@@ -372,7 +373,7 @@
- Summary:
-    scsi_activate_tcq - turn on tag command queueing
-    scsi_add_device - creates new scsi device (lu) instance
--   scsi_add_host - perform sysfs registration and SCSI bus scan.
-+   scsi_add_host - perform sysfs registration and set up transport class
-    scsi_add_timer - (re-)start timer on a SCSI command.
-    scsi_adjust_queue_depth - change the queue depth on a SCSI device
-    scsi_assign_lock - replace default host_lock with given lock
-@@ -388,6 +389,7 @@
-    scsi_remove_device - detach and remove a SCSI device
-    scsi_remove_host - detach and remove all SCSI devices owned by host
-    scsi_report_bus_reset - report scsi _bus_ reset observed
-+   scsi_scan_host - scan SCSI bus
-    scsi_set_device - place device reference in host structure
-    scsi_to_pci_dma_dir - convert SCSI subsystem direction flag to PCI
-    scsi_to_sbus_dma_dir - convert SCSI subsystem direction flag to SBUS
-@@ -430,10 +432,10 @@
-  *      Might block: yes
-  *
-  *      Notes: This call is usually performed internally during a scsi
-- *      bus scan when an HBA is added (i.e. scsi_add_host()). So it
-+ *      bus scan when an HBA is added (i.e. scsi_scan_host()). So it
-  *      should only be called if the HBA becomes aware of a new scsi
-- *      device (lu) after scsi_add_host() has completed. If successful
-- *      this call we lead to slave_alloc() and slave_configure() callbacks
-+ *      device (lu) after scsi_scan_host() has completed. If successful
-+ *      this call can lead to slave_alloc() and slave_configure() callbacks
-  *      into the LLD.
-  *
-  *      Defined in: drivers/scsi/scsi_scan.c
-@@ -444,7 +446,7 @@
+===== drivers/scsi/scsi_error.c 1.48 vs edited =====
+--- 1.48/drivers/scsi/scsi_error.c	2005-03-22 01:44:55 -05:00
++++ edited/drivers/scsi/scsi_error.c	2005-03-24 11:41:29 -05:00
+@@ -31,7 +31,6 @@
+ #include <scsi/scsi_host.h>
+ #include <scsi/scsi_ioctl.h>
+ #include <scsi/scsi_request.h>
+-#include <scsi/scsi_devinfo.h>
  
+ #include "scsi_priv.h"
+ #include "scsi_logging.h"
+@@ -352,10 +351,7 @@
+ 		return NEEDS_RETRY;
  
- /**
-- * scsi_add_host - perform sysfs registration and SCSI bus scan.
-+ * scsi_add_host - perform sysfs registration and set up transport class
-  * @shost:   pointer to scsi host instance
-  * @dev:     pointer to struct device of type scsi class
-  *
-@@ -453,7 +455,11 @@
-  *      Might block: no
-  *
-  *      Notes: Only required in "hotplug initialization model" after a
-- *      successful call to scsi_host_alloc().
-+ *      successful call to scsi_host_alloc().  This function does not
-+ *      scan the bus; this can be done by calling scsi_scan_host() or
-+ *      in some other transport-specific way.  The LLD must set up
-+ *      the transport template before calling this function and may only
-+ *      access the transport class data after this function has been called.
-  *
-  *      Defined in: drivers/scsi/hosts.c
-  **/
-@@ -603,7 +609,7 @@
-  *      area for the LLD's exclusive use.
-  *      Both associated refcounting objects have their refcount set to 1.
-  *      Full registration (in sysfs) and a bus scan are performed later when
-- *      scsi_add_host() is called.
-+ *      scsi_add_host() and scsi_scan_host() are called.
-  *
-  *      Defined in: drivers/scsi/hosts.c .
-  **/
-@@ -743,6 +749,19 @@
+ 	case HARDWARE_ERROR:
+-		if (scsi_get_device_flags(scmd->device,
+-					scmd->device->vendor,
+-					scmd->device->model)
+-				& BLIST_RETRY_HWERROR)
++		if (scmd->device->retry_hwerror)
+ 			return NEEDS_RETRY;
+ 		else
+ 			return SUCCESS;
+===== drivers/scsi/scsi_scan.c 1.68 vs edited =====
+--- 1.68/drivers/scsi/scsi_scan.c	2005-03-22 01:48:14 -05:00
++++ edited/drivers/scsi/scsi_scan.c	2005-03-23 16:58:13 -05:00
+@@ -725,6 +725,9 @@
+ 	if (*bflags & BLIST_NOT_LOCKABLE)
+ 		sdev->lockable = 0;
  
- 
- /**
-+ * scsi_scan_host - scan SCSI bus
-+ * @shost: a pointer to a scsi host instance
-+ *
-+ *	Might block: yes
-+ *
-+ *	Notes: Should be called after scsi_add_host()
-+ *
-+ *	Defined in: drivers/scsi/scsi_scan.c
-+ **/
-+void scsi_scan_host(struct Scsi_Host *shost)
++	if (*bflags & BLIST_RETRY_HWERROR)
++		sdev->retry_hwerror = 1;
 +
-+
-+/**
-  * scsi_set_device - place device reference in host structure
-  * @shost: a pointer to a scsi host instance
-  * @pdev: pointer to device instance to assign
-@@ -1539,8 +1558,9 @@
-         Andries Brouwer <Andries dot Brouwer at cwi dot nl>
-         Randy Dunlap <rddunlap at osdl dot org>
-         Alan Stern <stern at rowland dot harvard dot edu>
-+        Matthew Wilcox <matthew at wil dot cx>
+ 	transport_configure_device(&sdev->sdev_gendev);
  
- 
- Douglas Gilbert
- dgilbert at interlog dot com
--21st September 2004
-+24th March 2005
+ 	if (sdev->host->hostt->slave_configure)
 
---------------070904010005070900090603--
