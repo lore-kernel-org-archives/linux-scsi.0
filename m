@@ -1,62 +1,81 @@
-From: Stelian Pop <stelian@popies.net>
+From: Mike Bursell <mike@hingston.demon.co.uk>
 Subject: Re: [example PATCH - not for applying] exclude certain commands
-Date: Thu, 24 Apr 2003 11:56:52 +0200
+Date: 24 Apr 2003 12:45:53 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030424095652.GC3352@deep-space-9.dsnet>
-References: <UTC200304240946.h3O9kA600867.aeb@smtp.cwi.nl>
-Reply-To: Stelian Pop <stelian@popies.net>
+Message-ID: <1051184753.1373.2.camel@lemon.hingston>
+References: <UTC200304232239.h3NMdSf07801.aeb@smtp.cwi.nl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-cfNILZyU0QLMdRsSjRoS"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from d146.dhcp212-198-27.noos.fr ([212.198.27.146]:60295 "EHLO
-	deep-space-9.dsnet") by vger.kernel.org with ESMTP id S262649AbTDXJo7
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 24 Apr 2003 05:44:59 -0400
-Content-Disposition: inline
-In-Reply-To: <UTC200304240946.h3O9kA600867.aeb@smtp.cwi.nl>
+Received: from anchor-post-35.mail.demon.net ([194.217.242.85]:21391 "EHLO
+	anchor-post-35.mail.demon.net") by vger.kernel.org with ESMTP
+	id S262693AbTDXLdX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 24 Apr 2003 07:33:23 -0400
+In-Reply-To: <UTC200304232239.h3NMdSf07801.aeb@smtp.cwi.nl>
 List-Id: linux-scsi@vger.kernel.org
 To: Andries.Brouwer@cwi.nl
-Cc: James.Bottomley@steeleye.com, afafc@rnl.ist.utl.pt, alan@lxorguk.ukuu.org.uk, greg@kroah.com, linux-scsi@vger.kernel.org, linux-usb-devel@lists.sourceforge.net, mike@hingston.demon.co.uk, torvalds@transmeta.com
-
-On Thu, Apr 24, 2003 at 11:46:10AM +0200, Andries.Brouwer@cwi.nl wrote:
-
->     This patch (applied without the first one) does not make any
->     difference: memory stick initialisation still takes several
->     minutes to complete, floppy drive initialisation takes about
->     10 minutes before the block layer aborts the requests with
->     a read error.
-> 
-> OK. That perhaps means that the mode sense command doesnt
-> pass through this code, e.g. because US_FL_MODE_XLATE
-> is not set?
-> 
-> At first sight your reports do not give VendorID, ProductID.
-
-Sorry.
-
-Memory stick reader: 
-	  idVendor           0x054c Sony Corp.
-	  idProduct          0x0032 MemoryStick MSC-U01 Reader
-Floppy drive:
-	  idVendor           0x057b Y-E Data, Inc.
-	  idProduct          0x0000 FlashBuster-U Floppy
-    
-> Do these devices occur in the unusual devices list?
-
-Yes they are:
-	UNUSUAL_DEV(  0x054c, 0x0032, 0x0000, 0x9999,
-	                "Sony",
-	                "Memorystick MSC-U01N",
-	                US_SC_UFI, US_PR_CB, NULL,
-	                US_FL_SINGLE_LUN | US_FL_START_STOP ),
-
-	UNUSUAL_DEV(  0x057b, 0x0000, 0x0000, 0x0299,
-	                "Y-E Data",
-	                "Flashbuster-U",
-	                US_SC_UFI,  US_PR_CB, NULL,
-	                US_FL_SINGLE_LUN),
+Cc: James.Bottomley@steeleye.com, afafc@rnl.ist.utl.pt, alan@lxorguk.ukuu.org.uk, greg@kroah.com, linux-scsi@vger.kernel.org, linux-usb-devel@lists.sourceforge.net, stelian@popies.net, torvalds@transmeta.com
 
 
-Stelian.
--- 
-Stelian Pop <stelian@popies.net>
+--=-cfNILZyU0QLMdRsSjRoS
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
+
+On Wed, 2003-04-23 at 23:39, Andries.Brouwer@cwi.nl wrote:
+> Yesterday or so we discussed three people's problems with USB devices.
+> Today a fourth very similar complaint was reported.
+>=20
+> I asked
+>=20
+> > Could you try this patch of drivers/scsi/sd.c?
+> >
+> > --- sd.c~       Sun Apr 20 12:59:32 2003
+> > +++ sd.c        Wed Apr 23 21:45:10 2003
+> > @@ -1079,6 +1079,9 @@
+> >                   int dbd, int modepage, unsigned char *buffer, int len=
+) {
+> >         unsigned char cmd[8];
+> >
+> > +       if (len < 8)
+> > +               len =3D 8;
+> > +
+> >         memset((void *) &cmd[0], 0, 8);
+> >         cmd[0] =3D MODE_SENSE;
+> >         cmd[1] =3D dbd;
+>=20
+> and got the reply
+>=20
+> #
+> # Wohoo! Patch worked like a charm. Thanks Andries!
+> #
+>=20
+> So, for the time being I assume we know what is causing
+> these problems. It would be nice if the other three
+> (afafc@rnl.ist.utl.pt, mike@hingston.demon.co.uk, stelian@popies.net)
+> could report on their experiences with the above patch.
+
+I can confirm that this patch worked for me under 2.5.68: everything
+works absolutely fine.  However, given that I can't open terminals under
+Gnome in 2.5.68, I think I'll stick with 2.5.67 (I assume that that the
+patch is also OK with this version).
+
+Well done, and thanks.
+
+-Mike.
+--=20
+07050 144575 mike@hingston.demon.co.uk
+
+--=-cfNILZyU0QLMdRsSjRoS
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.2.1 (GNU/Linux)
+
+iD8DBQA+p85xj6h57cc9oOkRAosLAKCFcM4eQUeGj+EbDOAJwcd3x6KPQQCgg7BS
+TpwgDbvtCRnWzk7PY1bd5c8=
+=Wr03
+-----END PGP SIGNATURE-----
+
+--=-cfNILZyU0QLMdRsSjRoS--
+
