@@ -1,64 +1,37 @@
-From: Roman Zippel <roman@ardistech.com>
-Subject: [ANNOUNCE] iSCSI target implementation
-Date: Thu, 16 Oct 2003 15:31:16 +0200
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Race in removal of host class device attribute file
+Date: Thu, 16 Oct 2003 17:09:04 -0400 (EDT)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3F8E9DA4.11ED60DA@ardistech.com>
+Message-ID: <Pine.LNX.4.44L0.0310161656400.890-100000@ida.rowland.org>
+References: <20030709144410.GA3544@beaverton.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtpzilla2.xs4all.nl ([194.109.127.138]:15888 "EHLO
-	smtpzilla2.xs4all.nl") by vger.kernel.org with ESMTP
-	id S262954AbTJPNmi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 16 Oct 2003 09:42:38 -0400
+Received: from ida.rowland.org ([192.131.102.52]:4356 "HELO ida.rowland.org")
+	by vger.kernel.org with SMTP id S263201AbTJPVJF (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 16 Oct 2003 17:09:05 -0400
+In-Reply-To: <20030709144410.GA3544@beaverton.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Mike Anderson <andmike@us.ibm.com>, Christoph Hellwig <hch@infradead.org>
+Cc: SCSI development list <linux-scsi@vger.kernel.org>
 
-Hi,
+I've created a class device attribute file for the hosts supported by the
+usb-storage driver, using the shost_attrs member of the host template.  
+It seems to contain an intractable race condition when unregistering the
+host.  There's no way for the driver to know when the scsi host's class
+device is released, so there's no way to know when it's safe to deallocate
+the host's driver-specific data structure.  Waiting until
+scsi_remove_host() returns isn't good enough, because a user process might
+keep the attribute file open and thus prevent release of the class device
+indefinitely.
 
-I'm proud to announce the first public release of this iSCSI target
-implementation. It's already usable, but it doesn't implement everything
-yet what is required by the iSCSI spec. The missing parts shouldn't be
-that difficult to add (I just didn't need them so far). Other more
-interesting parts of the spec (e.g. session recovery) are not
-implemented because I had no client to test it with (although recent UNH
-releases seem to support this now). It was mostly tested with Cisco
-iSCSI initiator driver, but also with with the MS initiator driver. You
-can download the driver from http://www.ardistech.com/iscsi/ , the
-README should have all the information to configure and build the
-driver.
+What's the right way to solve this problem?  It seems to me that it must 
+involve creating a kobject in the driver-specific host data structure, on 
+which the class device's release() routine could do a kobject_put().  That 
+way the driver would be able to tell when it should free the data 
+structure.  But code to handle this would have to be added to the scsi 
+core.
 
-This target driver is partly implemented in the kernel, the user space
-daemon takes care of session startup, cleanup and discovery and the
-kernel module takes care of the iSCSI requests and disk IO. There are a
-few reasons to put part of it into the kernel, the main reason is to
-have direct access to the page cache, this is also a main difference to
-other available target implementations, which don't use the page cache
-directly. User space has not that fine grained control (yet) and had to
-use a lot of threads (the kernel module currently uses 2 threads per
-target and 1 per device). Part of the problem could be solved with async
-IO, another part is to be able to control what is in the cache (this is
-somewhat related to the recent direct IO discussion). So this also an
-experiment of what is needed if it should be ever moved to user space.
-
-Anyway, while it's in the kernel, there are also some interesting issues
-for the kernel-user space communication. Right now it's a proc only
-interface (no sysfs as it's 2.4 only, no evil ioctl, but someone will
-kill me for the macro abuse :) ), but it should be rather easy to
-replace it with something else. Perfomance isn't not that important at
-the moment (but not completely unimportant, if a lot of information has
-to be read from the kernel, e.g. at startup). More important issues are
-error reporting and event handling, which could benefit from a better
-integrated interface. So this driver is also intended to experiment with
-a few things, if anyone is interested I can explain it further.
-
-Further development will depend a bit on the feed back. This is an older
-project and we thought about for a while and since we have no immediate
-need and not the resources to develop it alone, we decided it would be a
-good idea to release it completely under the GPL. So I updated it to the
-latest spec and fixed some of the worst embarrasments. If there is
-enough interest, the development will continue, but without some help it
-will be rather slow. :-)
-
-bye, Roman
+Alan Stern
 
