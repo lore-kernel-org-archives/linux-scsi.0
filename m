@@ -1,49 +1,40 @@
 From: Markus Lidel <Markus.Lidel@shadowconnect.com>
 Subject: Re: adaptec 2120S software under RedHat 8.0 and FC2
-Date: Wed, 23 Mar 2005 18:43:31 +0100
-Message-ID: <4241AAC3.7050702@shadowconnect.com>
-References: <60807403EABEB443939A5A7AA8A7458BED3211@otce2k01.adaptec.com>
+Date: Wed, 23 Mar 2005 18:53:43 +0100
+Message-ID: <4241AD27.6040706@shadowconnect.com>
+References: <60807403EABEB443939A5A7AA8A7458BED25F7@otce2k01.adaptec.com> <20050320091251.GB12000@infradead.org> <3423.137.195.14.2.1111509124.squirrel@www.macs.hw.ac.uk> <20050323110406.GA3691@infradead.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Received: from s0003.shadowconnect.net ([213.239.201.226]:17034 "EHLO
+Received: from s0003.shadowconnect.net ([213.239.201.226]:30347 "EHLO
 	mail.shadowconnect.com") by vger.kernel.org with ESMTP
-	id S261966AbVCWRmz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 23 Mar 2005 12:42:55 -0500
-In-Reply-To: <60807403EABEB443939A5A7AA8A7458BED3211@otce2k01.adaptec.com>
+	id S262010AbVCWRws (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 23 Mar 2005 12:52:48 -0500
+In-Reply-To: <20050323110406.GA3691@infradead.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Ross Macintyre <raz@macs.hw.ac.uk>, Mark Haverkamp <markh@osdl.org>, linux-scsi <linux-scsi@vger.kernel.org>, matt_domsch@dell.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Ross Macintyre <raz@macs.hw.ac.uk>, "Salyzyn, Mark" <mark_salyzyn@adaptec.com>, Mark Haverkamp <markh@osdl.org>, linux-scsi <linux-scsi@vger.kernel.org>, matt_domsch@dell.com
 
 Hello,
 
-Salyzyn, Mark wrote:
- > [...]
->>note that if adaptec simply opensourced their managment tools we wouldn't
->>have this problem at all. I wonder why Adaptec did that for the old
->>i2o-based controllers but not aacraid.  
-> Oh yes, that, worked hard on the powers-that-be to permit this. Could
-> not release a substantial majority of it because it would violate
-> licensed libraries (Zinc, being one of them, I am sorry to admit). So we
-> release the engine and the raidutil. No logger, no remote communication
-> engine, no GUI and no browser engine either. It was the best we could
-> do.
-> Once released, and under a BSD license, the open source community failed
-> to contribute one change to the sources. All it did was permit the tools
-> to be packaged, archived and to continue in-perpetuity when
-> compatibility libraries failed to work on newer installations.
+Christoph Hellwig wrote:
+> [...]
+>>can you advise users what RAID
+>>/ Storage vendors to use? ie what quality vendors support Linux?
+> LSI and 3ware for example do provide frequent driver updates, working
+> managment tools and cooperate with the linux community very well.
 
-Hmmm, IMHO that's not 100% correct... It's true that currently there is 
-no new version. I'm working on the 64-bit version and a rewrite of the 
-kernel-interface to get rid of the ioctl's... Because i'm still working 
-on the interface, i haven't released both the kernel as well as the 
-raidutils yet. But you could look into subversion to see that there *is* 
-developement. Also IMHO it is be better to provide documentation for how 
-to program the controller instead of releasing the source of the 
-management tool itself.
+Hmmm, can't say something about 3ware, but i've tried to get a technical 
+documentation from LSI on how to program their I2O controller series to 
+create or remove an RAID array, and the answer i became back (after a lot 
+of e-mails) was:
 
- > [...]
+ > Unfortunately that is not supported.
+
+AFAIK the managament tool from LSI isn't open source, and there is no 
+documentation... In oposite to that i've got the spec and the tool from 
+Adaptec...
 
 
 
