@@ -1,47 +1,58 @@
-From: James Bottomley <James.Bottomley@steeleye.com>
-Subject: Re: [PATCH] make the SCSI mid-layer obey the device online flag
-Date: 06 Jun 2003 19:43:35 -0400
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1054943015.1777.67.camel@mulgrave>
-References: <1054742495.1674.18.camel@mulgrave>
-	<20030604165146.GA1426@beaverton.ibm.com>
-	<1054754103.2360.8.camel@mulgrave> <20030606073603.A13259@infradead.org>
-	<3EE0B316.4060207@rogers.com> <1054913984.1778.31.camel@mulgrave>
-	<3EE0B8D8.4020909@rogers.com> <20030606215152.B3240@infradead.org>
-	<3EE12371.90403@rogers.com>
+From: Friedrich Lobenstock <fl@fl.priv.at>
+Subject: Re: 3ware and scsi ids
+Date: Sat, 07 Jun 2003 01:51:12 +0200
+Sender: linux-raid-owner@vger.kernel.org
+Message-ID: <3EE128F0.6050209@fl.priv.at>
+References: <12C23B584849261-01@MMS__ad.corp.aoltw.net_>
+Reply-To: Linux RAID Mailing Liste <linux-raid@vger.kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nat9.steeleye.com ([65.114.3.137]:18692 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S262363AbTFFXaq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 6 Jun 2003 19:30:46 -0400
-In-Reply-To: <3EE12371.90403@rogers.com>
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <12C23B584849261-01@MMS__ad.corp.aoltw.net_>
+To: Linux RAID Mailing Liste <linux-raid@vger.kernel.org>
+Cc: linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Luben Tuikov <tluben@rogers.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Mike Anderson <andmike@us.ibm.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Alan Stern <stern@rowland.harvard.edu>
 
-On Fri, 2003-06-06 at 19:27, Luben Tuikov wrote:
-> *If* eh is to be done in SCSI Core you just cannot avoid it --
-> this is *the whole point* which James had in mind to allow
-> to send cmnds if !online. (see prev msgs on this thread)
+Deas, Jim wrote:
+> I am currently using 3wares products to create 2T raids.
+> To increase performance on my NAS type boxes I am
+> using software raids.
+>  My problem relates to a falure of a IDE drive.
+> Once a drive fails the next boot of the machine remaps all scsi ids.
+> so /dev/sda-adi becomes /dev/sda-sdh.
+> In short, if /dev/sdb dies, all raids become bad as all scsi ids
+> shift down making my raidtab file now point at the wrong drives.
+> (I assume this will also be a possible problem when I use
+> my USB dongle to update software.)
+> 
+>  Is there a way to hard assign logical /dev/sd(x) in the driver
+> so they will always map the same ide port on the 3ware controllers?
+> 3ware is no help on this. They say it is the bios/system and they
+> have no control over this.
 
-Actually, I didn't.  Error handling has its own separate entry into
-->queuecommand() (scsi_send_eh_cmnd()), so it wouldn't be affected by my
-changes.
+You'd better use mdadm instead of the raidtools.
 
-My purpose is quite simple: Any normal block actions (read/write from
-mounted fs, or CD burning via SG_IO) would be errored.  Any special
-commands (from ioctls, direct commands or stack generated) would not be
-affected.
+The config file for mdadm looks like this:
+# cat /etc/mdadm.conf
+DEVICE /dev/hd* /dev/sd*
+ARRAY /dev/md0 level=raid1 num-devices=2 UUID=52094036:b2e9cf8b:4267c923:750757da
 
-i.e.
+So you do not have to worry about which drive gets assigned which
+scsi id.
 
-REQ_CMD	errors
-REQ_BLOCK_PC errors
-REQ_SPECIAL is allowed
+A
+    /sbin/mdadm --assemble --scan
+will do the trick.
 
-James
+Get it at http://www.cse.unsw.edu.au/~neilb/source/mdadm/
+
+-- 
+MfG / Regards
+Friedrich Lobenstock
+____________________________________________________________________
+Friedrich Lobenstock                       Linux Services Lobenstock
+URL: http://www.lsl.at/                         Email: fl@fl.priv.at
+____________________________________________________________________
 
 
