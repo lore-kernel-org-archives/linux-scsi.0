@@ -1,67 +1,150 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [usb-storage] Re: PATCH: exclude certain commands from emulated
- SCSI hosts
-Date: Tue, 22 Apr 2003 14:23:26 -0400 (EDT)
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44L0.0304221413580.644-100000@ida.rowland.org>
-References: <UTC200304221738.h3MHciN16670.aeb@smtp.cwi.nl>
+From: Art Haas <ahaas@airmail.net>
+Subject: [PATCH] C99 initializers for drivers/scsi
+Date: Tue, 22 Apr 2003 11:02:03 -0500
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <20030422160203.GD7260@debian>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ida.rowland.org ([192.131.102.52]:17412 "HELO ida.rowland.org")
-	by vger.kernel.org with SMTP id S263320AbTDVSLU (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 22 Apr 2003 14:11:20 -0400
-In-Reply-To: <UTC200304221738.h3MHciN16670.aeb@smtp.cwi.nl>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+Content-Disposition: inline
+To: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andries.Brouwer@cwi.nl
-Cc: James.Bottomley@steeleye.com, alan@lxorguk.ukuu.org.uk, greg@kroah.com, linux-scsi@vger.kernel.org, linux-usb-devel@lists.sourceforge.net, mdharm-scsi@one-eyed-alien.net, torvalds@transmeta.com, usb-storage@one-eyed-alien.net
 
-On Tue, 22 Apr 2003 Andries.Brouwer@cwi.nl wrote:
+Hi.
 
-> Finally the third one is again of the kind 2.4 works, 2.5 fails.
-> So again, not a mysterious device but a software bug in
-> usb-storage and/or scsi/sd.
-> 
-> It looks different from the other two - the core is
-> 
-> 
-> Mar 30 15:42:12 crusoe kernel: usb-storage: Command TEST_UNIT_READY (6 bytes)
-> Mar 30 15:42:12 crusoe kernel: usb-storage:  00 00 00 00 00 00
-> Mar 30 15:42:12 crusoe kernel: usb-storage: usb_stor_ctrl_transfer(): rq=00 rqtype=21 value=0000 index=00 len=12
-> Mar 30 15:42:12 crusoe kernel: usb-storage: Status code -32; transferred 0/12
-> Mar 30 15:42:12 crusoe kernel: usb-storage: -- stall on control pipe
-> Mar 30 15:42:12 crusoe kernel: usb-storage: Call to usb_stor_ctrl_transfer() returned 3
-> Mar 30 15:42:12 crusoe kernel: usb-storage: -- transport indicates error, resetting
-> Mar 30 15:42:12 crusoe kernel: usb-storage: CB_reset() called
-> 
-> 
-> But I suppose nothing is wrong with the command TEST_UNIT_READY.
-> It is just that the device was not ready yet.
-> The successful 2.4 trace also has a failing TEST_UNIT_READY,
-> but itis followed by a successful one.
-> 
-> Mar 30 19:47:46 crusoe kernel: usb-storage: Command TEST_UNIT_READY (6 bytes)
-> Mar 30 19:47:46 crusoe kernel: usb-storage: 00 00 00 00 00 00 00 00 00 00 14 c0
-> Mar 30 19:47:46 crusoe kernel: usb-uhci.c: interrupt, status 2, frame# 1414
-> Mar 30 19:47:46 crusoe kernel: usb-storage: Call to usb_stor_control_msg() returned -32
-> Mar 30 19:47:46 crusoe kernel: usb-storage: -- Stall on control pipe. Clearing
-> Mar 30 19:47:46 crusoe kernel: usb-storage: usb_stor_clear_halt: result=0
-> ...
-> Mar 30 19:47:46 crusoe kernel: usb-storage: Command TEST_UNIT_READY (6 bytes)
-> Mar 30 19:47:46 crusoe kernel: usb-storage: 00 00 00 00 00 00 00 00 00 00 14 c0
-> Mar 30 19:47:46 crusoe kernel: usb-storage: Call to usb_stor_control_msg() returned 12
-> 
-> 
-> So, it looks like the bad part of 2.5 is that it asks for a reset.
-> 
-> Andries
+This set of 4 patches convert files to use C99 initializers. The patches
+are against the current BK.
 
-I believe a recent patch addressed this problem.  I've lost track of the 
-Bugzilla bug #'s, but the patch is documented as fixing bug #510: a STALL 
-on a control endpoint isn't necessarily an error; it can indicate a 
-command failure.  See drivers/usb/storage/transport.c rev 1.971.70.16:
-<http://linux.bkbits.net:8080/linux-2.5/related/drivers/usb/storage/transport.c?nav=index.html|src/|src/drivers|src/drivers/usb|src/drivers/usb/storage>
+Art Haas
 
-Alan Stern
-
+===== drivers/scsi/aic7xxx_old/aic7xxx.h 1.12 vs edited =====
+--- 1.12/drivers/scsi/aic7xxx_old/aic7xxx.h	Fri Dec 20 20:00:57 2002
++++ edited/drivers/scsi/aic7xxx_old/aic7xxx.h	Sat Mar  1 15:43:30 2003
+@@ -30,26 +30,26 @@
+  * to do with card config are filled in after the card is detected.
+  */
+ #define AIC7XXX	{						\
+-	proc_info: aic7xxx_proc_info,				\
+-	detect: aic7xxx_detect,					\
+-	release: aic7xxx_release,				\
+-	info: aic7xxx_info,					\
+-	queuecommand: aic7xxx_queue,				\
+-	slave_alloc: aic7xxx_slave_alloc,			\
+-	slave_configure: aic7xxx_slave_configure,		\
+-	slave_destroy: aic7xxx_slave_destroy,			\
+-	bios_param: aic7xxx_biosparam,				\
+-	eh_abort_handler: aic7xxx_abort,			\
+-	eh_device_reset_handler: aic7xxx_bus_device_reset,	\
+-	eh_host_reset_handler: aic7xxx_reset,			\
+-	can_queue: 255,		/* max simultaneous cmds      */\
+-	this_id: -1,		/* scsi id of host adapter    */\
+-	sg_tablesize: 0,	/* max scatter-gather cmds    */\
+-	max_sectors: 2048,	/* max physical sectors in 1 cmd */\
+-	cmd_per_lun: 3,		/* cmds per lun (linked cmds) */\
+-	present: 0,		/* number of 7xxx's present   */\
+-	unchecked_isa_dma: 0,	/* no memory DMA restrictions */\
+-	use_clustering: ENABLE_CLUSTERING,			\
++	.proc_info		= aic7xxx_proc_info,		\
++	.detect			= aic7xxx_detect,		\
++	.release		= aic7xxx_release,		\
++	.info			= aic7xxx_info,			\
++	.queuecommand		= aic7xxx_queue,		\
++	.slave_alloc		= aic7xxx_slave_alloc,		\
++	.slave_configure	= aic7xxx_slave_configure,	\
++	.slave_destroy		= aic7xxx_slave_destroy,	\
++	.bios_param		= aic7xxx_biosparam,		\
++	.eh_abort_handler	= aic7xxx_abort,		\
++	.eh_device_reset_handler	= aic7xxx_bus_device_reset,	\
++	.eh_host_reset_handler	= aic7xxx_reset,			\
++	.can_queue		= 255,	/* max simultaneous cmds      */\
++	.this_id		= -1,	/* scsi id of host adapter    */\
++	.sg_tablesize		= 0,	/* max scatter-gather cmds    */\
++	.max_sectors		= 2048,	/* max physical sectors in 1 cmd */\
++	.cmd_per_lun		= 3,	/* cmds per lun (linked cmds) */\
++	.present		= 0,	/* number of 7xxx's present   */\
++	.unchecked_isa_dma	= 0,	/* no memory DMA restrictions */\
++	.use_clustering		= ENABLE_CLUSTERING,			\
+ }
+ 
+ extern int aic7xxx_queue(Scsi_Cmnd *, void (*)(Scsi_Cmnd *));
+===== drivers/scsi/sym53c8xx_2/sym53c8xx.h 1.7 vs edited =====
+--- 1.7/drivers/scsi/sym53c8xx_2/sym53c8xx.h	Thu Nov 21 23:34:45 2002
++++ edited/drivers/scsi/sym53c8xx_2/sym53c8xx.h	Sat Mar  1 15:48:32 2003
+@@ -106,22 +106,22 @@
+ #include <scsi/scsicam.h>
+ 
+ #define SYM53C8XX {							\
+-	name:			"sym53c8xx",				\
+-	detect:			sym53c8xx_detect,			\
+-	release:		sym53c8xx_release,			\
+-	info:			sym53c8xx_info, 			\
+-	queuecommand:		sym53c8xx_queue_command,		\
+-	slave_configure:	sym53c8xx_slave_configure,		\
+-	eh_abort_handler:	sym53c8xx_eh_abort_handler,		\
+-	eh_device_reset_handler:sym53c8xx_eh_device_reset_handler,	\
+-	eh_bus_reset_handler:	sym53c8xx_eh_bus_reset_handler,		\
+-	eh_host_reset_handler:	sym53c8xx_eh_host_reset_handler,	\
+-	can_queue:		0,					\
+-	this_id:		7,					\
+-	sg_tablesize:		0,					\
+-	cmd_per_lun:		0,					\
+-	use_clustering:		DISABLE_CLUSTERING,			\
+-	highmem_io:		1}
++	.name			= "sym53c8xx",				\
++	.detect			= sym53c8xx_detect,			\
++	.release		= sym53c8xx_release,			\
++	.info			= sym53c8xx_info, 			\
++	.queuecommand		= sym53c8xx_queue_command,		\
++	.slave_configure	= sym53c8xx_slave_configure,		\
++	.eh_abort_handler	= sym53c8xx_eh_abort_handler,		\
++	.eh_device_reset_handler	= sym53c8xx_eh_device_reset_handler,\
++	.eh_bus_reset_handler	= sym53c8xx_eh_bus_reset_handler,	\
++	.eh_host_reset_handler	= sym53c8xx_eh_host_reset_handler,	\
++	.can_queue		= 0,					\
++	.this_id		= 7,					\
++	.sg_tablesize		= 0,					\
++	.cmd_per_lun		= 0,					\
++	.use_clustering		= DISABLE_CLUSTERING,			\
++	.highmem_io		= 1}
+ 
+ #endif /* defined(HOSTS_C) || defined(MODULE) */ 
+ 
+===== drivers/scsi/3w-xxxx.c 1.28 vs edited =====
+--- 1.28/drivers/scsi/3w-xxxx.c	Wed Mar 26 14:10:23 2003
++++ edited/drivers/scsi/3w-xxxx.c	Wed Apr  2 07:15:18 2003
+@@ -226,10 +226,10 @@
+ 
+ /* File operations struct for character device */
+ static struct file_operations tw_fops = {
+-	owner: THIS_MODULE,
+-	ioctl: tw_chrdev_ioctl,
+-	open: tw_chrdev_open,
+-	release: tw_chrdev_release
++	.owner		= THIS_MODULE,
++	.ioctl		= tw_chrdev_ioctl,
++	.open		= tw_chrdev_open,
++	.release	= tw_chrdev_release
+ };
+ 
+ /* Globals */
+===== drivers/scsi/gdth.c 1.22 vs edited =====
+--- 1.22/drivers/scsi/gdth.c	Thu Mar  6 17:11:01 2003
++++ edited/drivers/scsi/gdth.c	Wed Apr  2 07:14:37 2003
+@@ -747,9 +747,9 @@
+ #ifdef GDTH_IOCTL_CHRDEV
+ /* ioctl interface */
+ static struct file_operations gdth_fops = {
+-    ioctl:gdth_ioctl,
+-    open:gdth_open,
+-    release:gdth_close,
++	.ioctl		= gdth_ioctl,
++	.open		= gdth_open,
++	.release	= gdth_close,
+ };
+ #endif
+ 
+-- 
+To announce that there must be no criticism of the President, or that we
+are to stand by the President, right or wrong, is not only unpatriotic
+and servile, but is morally treasonable to the American public.
+ -- Theodore Roosevelt, Kansas City Star, 1918
