@@ -1,36 +1,37 @@
 From: Luben Tuikov <luben_tuikov@adaptec.com>
-Subject: [ANNOUNCE] Adaptec SAS/SATA device driver [12/27]
-Date: Thu, 17 Feb 2005 12:36:37 -0500
-Message-ID: <4214D625.6060602@adaptec.com>
+Subject: [ANNOUNCE] Adaptec SAS/SATA device driver [10/27]
+Date: Thu, 17 Feb 2005 12:36:25 -0500
+Message-ID: <4214D619.20400@adaptec.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Received: from magic.adaptec.com ([216.52.22.17]:53137 "EHLO magic.adaptec.com")
-	by vger.kernel.org with ESMTP id S262326AbVBQRgm (ORCPT
+Received: from magic.adaptec.com ([216.52.22.17]:46481 "EHLO magic.adaptec.com")
+	by vger.kernel.org with ESMTP id S262324AbVBQRga (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 17 Feb 2005 12:36:42 -0500
+	Thu, 17 Feb 2005 12:36:30 -0500
 Received: from redfish.adaptec.com (redfish.adaptec.com [162.62.50.11])
-	by magic.adaptec.com (8.11.6/8.11.6) with ESMTP id j1HHaer31000
-	for <linux-scsi@vger.kernel.org>; Thu, 17 Feb 2005 09:36:40 -0800
+	by magic.adaptec.com (8.11.6/8.11.6) with ESMTP id j1HHaTr30903
+	for <linux-scsi@vger.kernel.org>; Thu, 17 Feb 2005 09:36:29 -0800
 Received: from rtpe2k01.adaptec.com (rtpe2k01.adaptec.com [10.110.12.40])
-	by redfish.adaptec.com (8.11.6/8.11.6) with ESMTP id j1HHaeb21163
-	for <linux-scsi@vger.kernel.org>; Thu, 17 Feb 2005 09:36:40 -0800
+	by redfish.adaptec.com (8.11.6/8.11.6) with ESMTP id j1HHaSb21087
+	for <linux-scsi@vger.kernel.org>; Thu, 17 Feb 2005 09:36:28 -0800
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-IOCTL code.
+Hardware interface header file.
 
-diff -Nru a/drivers/scsi/adp94xx/adp94xx_ioctl.c b/drivers/scsi/adp94xx/adp94xx_ioctl.c
+diff -Nru a/drivers/scsi/adp94xx/adp94xx_hwi.h b/drivers/scsi/adp94xx/adp94xx_hwi.h
 --- /dev/null	Wed Dec 31 16:00:00 196900
-+++ b/drivers/scsi/adp94xx/adp94xx_ioctl.c	2005-02-16 16:08:12 -05:00
-@@ -0,0 +1,1041 @@
++++ b/drivers/scsi/adp94xx/adp94xx_hwi.h	2005-02-16 16:08:12 -05:00
+@@ -0,0 +1,1242 @@
 +/*
-+ * Adaptec ADP94xx SAS HBA driver for Linux - IOCTL interface for Linux.
++ * Adaptec ADP94xx SAS HBA device driver for Linux.
 + *
-+ * Written by : Naveen Chandrasekaran <naveen_chandrasekaran@adaptec.com>
++ * Written by : David Chaw <david_chaw@adaptec.com>
++ * Modified by : Naveen Chandrasekaran <naveen_chandrasekaran@adaptec.com>
 + * 
-+ * Copyright (c) 2004-05 Adaptec Inc.
++ * Copyright (c) 2004 Adaptec Inc.
 + * All rights reserved.
 + *
 + * Redistribution and use in source and binary forms, with or without
@@ -65,1005 +66,1205 @@ diff -Nru a/drivers/scsi/adp94xx/adp94xx_ioctl.c b/drivers/scsi/adp94xx/adp94xx_
 + * IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 + * POSSIBILITY OF SUCH DAMAGES.
 + *
-+ * $Id: //depot/razor/linux/src/adp94xx_ioctl.c#10 $
-+ *
++ * $Id: //depot/razor/linux/src/adp94xx_hwi.h#113 $
++ * 
 + */	
 +
-+#include "adp94xx_osm.h"
-+#include "adp94xx_inline.h"
-+#include "adp94xx_ioctl.h"
++#ifndef ADP94XX_HWI_H
++#define ADP94XX_HWI_H
 +
-+#ifdef __x86_64__
-+#include <asm/ioctl32.h>
-+#if LINUX_VERSION_CODE > KERNEL_VERSION(2, 6, 0)	
-+#include <linux/syscalls.h>
-+#endif
-+#endif
++#include "adp94xx_sas.h"
++#include "adp94xx_reg.h"
 +
-+/* IOCTL control device name */
-+#define ASD_CTL_DEV_NAME	"asdctl"
-+static int asd_ctl_major;
++struct asd_softc;
++struct asd_platform_data;
++struct asd_target;
++struct asd_device;
++struct asd_conn_desc_format;
++struct asd_nd_phydesc_format;
 +
-+/* protos for char device entry points */
-+static int asd_ctl_open(struct inode *inode, struct file *file);
-+static int asd_ctl_close(struct inode *inode, struct file *file);
-+static int asd_ctl_ioctl(struct inode *inode, struct file *file,
-+			 unsigned int cmd, unsigned long arg);
++/* CHIP Revision ID */
++#define AIC9410_DEV_REV_A0	0
++#define AIC9410_DEV_REV_A1	1
++#define AIC9410_DEV_REV_B0	8
++#define COMSTOCK_LATEST_RTL	26
 +
-+/* protos for ioctl handlers */
-+static int asd_ctl_get_cntlr_config(unsigned long arg);
++/* Controller profile */
++#define ASD_MAX_WWN_LEN		SAS_ADDR_LEN	/* World Wide Name size */
 +
-+/* protos for Adaptec NVRAM access ioctl handlers */
-+static int asd_ctl_sas_get_adpt_cntlr_conf(unsigned long arg);
-+static int asd_ctl_sas_get_nv_seg_prop(unsigned long arg);
-+static int asd_ctl_sas_write_nv_seg(unsigned long arg);
-+static int asd_ctl_sas_read_nv_seg(unsigned long arg);
-+
-+/* protos for helper - work horse routines for ioctl handlers */
-+static int asd_ctl_write_to_nvram(struct asd_softc *asd,
-+	struct ASD_SAS_WRITE_NV_SEGMENT_BUFFER *pasd_write_nv_buf,
-+	uint8_t *psource_buffer);
-+
-+static int asd_ctl_read_from_nvram(struct asd_softc *asd,
-+	struct ASD_SAS_READ_NV_SEGMENT_BUFFER *pasd_read_nv_buf,
-+	uint8_t *pdest_buffer);
-+
-+static uint32_t asd_ctl_write_to_flash (struct asd_softc *asd, 
-+			uint8_t *src_img_addr, uint32_t segment_id, 
-+			uint32_t src_img_offset, uint32_t src_img_size);
-+
-+/* protos for extern routines */
-+#ifdef __x86_64__
-+extern int register_ioctl32_conversion(unsigned int cmd, 
-+	int (*handler)(unsigned int, unsigned int, unsigned long,
-+	struct file *));
-+
-+extern int unregister_ioctl32_conversion(unsigned int cmd); 
++#if SAS_COMSTOCK_SUPPORT
++#define ASD_MAX_PHYS		1		/* Max supported phys */
++#define ASD_MAX_PORTS		ASD_MAX_PHYS	/* Max supported ports */
++#else
++#define ASD_MAX_PHYS		8		/* Max supported phys */
++#define ASD_MAX_PORTS		ASD_MAX_PHYS	/* Max supported ports */
 +#endif
 +
-+extern int asd_hwi_search_nv_cookie(struct asd_softc *asd, 
-+			uint32_t *addr,
-+			struct asd_flash_dir_layout *pflash_dir_buf);
++#define ASD_MAX_SCB_SITES	512		/*
++						 * Max supported built-in
++						 * SCB sites
++						 */
++#define ASD_RSVD_SCBS		11		/* Reserved SCBs */
++#define ASD_MAX_EDBS_PER_SCB	7		/* 
++						 * Max number of Empty
++						 * data buffers that can
++						 * be queued in a single SCB.
++						 */
++#define ASD_MAX_EDBS		21		/* 
++						 * Max number of Empty
++						 * data buffers.
++						 */
 +
-+/* fops table */
-+static struct file_operations asd_ctl_fops = {
-+	.owner		= THIS_MODULE,
-+	.open		= asd_ctl_open,
-+	.release	= asd_ctl_close,
-+	.ioctl		= asd_ctl_ioctl
++/*
++ * There is a workaround fix required by the sequencer to skip
++ * using the free scb sites that ended with FF.
++ */ 
++static inline u_int
++asd_calc_free_scb_sites(u_int max_scbs)
++{
++	uint16_t	site_no;
++	u_int		usable_scb_sites;
++
++	usable_scb_sites = max_scbs;
++	for (site_no = 0; site_no < max_scbs; site_no++) {
++		if ((site_no & 0xF0FF) == 0x00FF)
++			usable_scb_sites--;
++	}
++	
++	return (usable_scb_sites);
++}
++
++#define ASD_USABLE_SCB_SITES	asd_calc_free_scb_sites(ASD_MAX_SCB_SITES)
++
++#define ASD_MAX_ALLOCATED_SCBS	\
++	(ASD_USABLE_SCB_SITES - (ASD_MAX_EDBS/ASD_MAX_EDBS_PER_SCB))
++
++#define ASD_MAX_USABLE_SCBS	ASD_USABLE_SCB_SITES
++
++#define ASD_MAX_DEVICES		128		/* Max supported devices */
++#define ASD_MAX_EXPANDERS	16		/* Max supported expanders */
++#define ASD_MAX_TARGETS		(ASD_MAX_DEVICES - ASD_MAX_EXPANDERS)
++#define ASD_MAX_DDBS		128		/* Max number of HW DDB sites */
++#define ASD_MIN_DLS		4		/* Minimum DL amount allowed */
++#define ASD_MAX_DLS		16384		/* Maximum DL amount allowed */
++#define ASD_SCB_SIZE		sizeof(union hardware_scb)
++#define ASD_DDB_SIZE		sizeof(struct asd_ddb)
++#define ASD_DL_SIZE		sizeof(struct asd_done_list)
++
++#define ASD_QDONE_PASS_DEF	1
++		 
++/* Controller Delay */
++#define ASD_DELAY_COUNT		5		/* Set to 5 microseconds */
++#define ASD_REG_TIMEOUT_VAL	2000
++#define ASD_REG_TIMEOUT_TICK	((ASD_REG_TIMEOUT_VAL * 1000) / ASD_DELAY_COUNT)
++ 
++/* Controller functionality */
++#define ASD_PIO_DOWNLOAD_SEQS	1		/* 
++						 * Download the SEQS code using
++						 * PIO mode.
++						 */		
++#define ASD_DMA_DOWNLOAD_SEQS	0		/*
++						 * Download the SEQS code using
++						 * Overlay DMA mode.
++						 */
++
++/* Tunable constant. */
++#define SAS_NOTIFY_TIMER_TIMEOUT_CONST	500	/* 
++						 * The default value 500 (in 
++						 * msecs) for time interval for
++						 * transmission interval between
++						 * successive NOTIFY 
++						 * (ENABLE_SPINUP) primitive.
++						 */
++
++/* Available activity LED bits in GPIOx registers */
++#define ASD_MAX_XDEVLED_BITS		8
++
++typedef enum {
++	SCB_EH_NONE 		= 0x0000,
++	SCB_EH_INITIATED	= 0x0001,
++	SCB_EH_IN_PROGRESS	= 0x0002,
++	SCB_EH_TIMEDOUT		= 0x0004,
++	SCB_EH_DONE		= 0x0008,
++	SCB_EH_ABORT_REQ	= 0x0010,
++	SCB_EH_LU_RESET_REQ	= 0x0020,
++	SCB_EH_DEV_RESET_REQ	= 0x0040,
++	SCB_EH_PORT_RESET_REQ	= 0x0080,
++	SCB_EH_CLR_NXS_REQ	= 0x0100,
++	SCB_EH_SUSPEND_SENDQ	= 0x0200,
++	SCB_EH_RESUME_SENDQ	= 0x0400,
++	SCB_EH_PHY_NO_OP_REQ	= 0x0800,
++	SCB_EH_PHY_REPORT_REQ	= 0x1000
++} scb_eh_state;
++
++#define SCB_EH_LEVEL_MASK	0x00F0
++
++typedef enum {
++	SCB_EH_SUCCEED,
++	SCB_EH_FAILED
++} scb_eh_status;
++
++typedef enum {
++	SCB_FLAG_NONE		= 0x00,
++	SCB_ACTIVE		= 0x01,
++	SCB_DEV_QFRZN		= 0x02,
++	SCB_TIMEDOUT		= 0x04,
++	SCB_PENDING		= 0x08,
++	SCB_INTERNAL		= 0x10,
++	SCB_RECOVERY		= 0x20,
++	SCB_RESERVED		= 0x40
++} scb_flag;
++
++/* Data structures used to manage CSMI commands */
++struct asd_ctl_mgmt {
++	wait_queue_head_t	waitq;
++	struct semaphore 	sem;
++	struct timer_list 	timer;
++	u_long 			busy;
++	int 			err;
 +};
 +
-+/* macros */
-+#define asd_valloc_mem(size)		vmalloc(size)
-+#define asd_vfree_mem(ptr)		vfree(ptr)
-+#define ASD_CTL_TIMEOUT(pioctl_header) 	\
-+((pioctl_header->Timeout == 0? ASD_ADAPTEC_TIMEOUT: \
-+				pioctl_header->Timeout) * HZ) 
++struct asd_ctl_internal_data {
++	struct asd_ctl_mgmt mgmt; 
++};
 +
-+/* represents busy bit number */
-+#define ASD_CTL_INTERNAL_BUSY_BIT_NR 0
++typedef void asd_scb_post_t(struct asd_softc *, struct scb *,
++			    struct asd_done_list *);
++typedef void asd_scb_eh_post_t(struct asd_softc *, struct scb *);
 +
-+/* inline routines */
++#define SCB_POST_STACK_DEPTH	5
++
++struct asd_scb_post_stack {
++	/*
++	 * Completion callback.
++	 */
++	asd_scb_post_t		*post;
++
++	/*
++	 * OS per I/O context structure.
++	 */
++	asd_io_ctx_t		 io_ctx;
++};
++
 +/*
-+ * Function:
-+ * 	asd_ctl_check_buf_len()
-+ *
-+ * Description:
-+ * 	This routine validates the buffer length specified in the CSMI
-+ * 	IOCTL header with the actual size of the buffer needed for the 
-+ * 	corresponding IOCTL.
++ * SCB buffer descriptor.  Contains HWI layer information
++ * pertaining to SCB data DMAed to and from the controller.
 + */
-+static inline int asd_ctl_check_buf_len(unsigned long arg, int buffer_length)
-+{
-+	struct IOCTL_HEADER ioctl_header;
-+	int err;
-+	
-+	if ((err = copy_from_user(&ioctl_header, (void *)arg, 
-+				 sizeof(ioctl_header)))) {
-+		return -EFAULT;
-+	}
-+
-+	if (ioctl_header.Length < buffer_length) {
-+		ioctl_header.ReturnCode = ASD_SAS_STATUS_INVALID_PARAMETER;
-+		if ((err = copy_to_user((void *)arg, &ioctl_header, 
-+					sizeof(ioctl_header)))) {
-+			return -EFAULT;
-+		}
-+		return -EINVAL;
-+	}
-+	return 0;
-+}
-+
-+static inline int asd_ctl_copy_to_user(void *dest, void *src, uint32_t length, 
-+			uint32_t status)
-+{
-+	struct IOCTL_HEADER *pioctl_header;
-+	int err;
-+
-+	pioctl_header = (struct IOCTL_HEADER *)src;
-+	pioctl_header->ReturnCode = status;
-+	if ((err = copy_to_user(dest, src, length))) {
-+		return -EFAULT;
-+	}
-+	return 0;
-+}
-+
-+static inline int asd_ctl_map_nv_segid_from_ext(uint32_t ext_segid, 
-+			uint32_t *asd_segid)
-+{
-+	switch (ext_segid) {
-+	case ASD_SAS_SEGMENT_ID_CTRL_A_USER_SETTINGS0:
-+		*asd_segid = NVRAM_CTRL_A_SETTING;
-+		break;
-+	case ASD_SAS_SEGMENT_ID_MANUFACTURING_SECTOR0: 
-+		*asd_segid = NVRAM_MANUF_TYPE;
-+		break;
-+	case ASD_SAS_SEGMENT_ID_FLASH_DIRECTORY0:/*TBD*/
-+	case ASD_SAS_SEGMENT_ID_FLASH0:
-+	case ASD_SAS_SEGMENT_ID_SEEPROM0:
-+	case ASD_SAS_SEGMENT_ID_COMPATIBILITY_SECTOR0:
-+		*asd_segid = NVRAM_NO_SEGMENT_ID;
-+	default:
-+		return -1;
-+	}
-+
-+	return 0;
-+}
-+
-+static inline int asd_ctl_map_seg_attr_to_ext(uint16_t asd_seg_attr, 
-+			uint16_t *ext_seg_attr)
-+{
-+	switch (asd_seg_attr) {
-+	case 0:
-+		*ext_seg_attr = ASD_SAS_SEGMENT_ATTRIBUTE_READONLY;
-+		break;	
-+	case 1:
-+		*ext_seg_attr = ASD_SAS_SEGMENT_ATTRIBUTE_ERASEWRITE;
-+		break;
-+	default:
-+		return -1;
-+	}
-+	return 0;
-+}
-+
-+/* registration routines */
-+int asd_register_ioctl_dev(void)
-+{
-+	int err;
-+	
-+	err = 0;
-+	asd_ctl_major = 0;
-+
-+	/* 
-+	 * Register the IOCTL control device and request 
-+	 * for a dynamic major number 
++struct scb {
++	/*
++	 * Links for chaining SCBs onto the pending, or free list.
 +	 */
-+	if (!(asd_ctl_major = register_chrdev(0, ASD_CTL_DEV_NAME, 
-+						&asd_ctl_fops))) {
-+		return -ENODEV;
-+	}
-+
-+#ifdef __x86_64__
-+	/* 
-+	 * This ioctl handler module is compatible between 64 and 32 bit
-+	 * environments, hence register the default handler as 32bit 
-+	 * ioctl conversion handler.
++	struct list_head	 hwi_links;
++	/*
++	 * Links for use by the owner (e.g. originator) of the SCB.
 +	 */
-+	err |= register_ioctl32_conversion(ASD_CC_SAS_GET_CNTLR_CONFIG, 
-+							(void *)sys_ioctl);
-+	err |= register_ioctl32_conversion(ASD_CC_SAS_GET_ADPT_CNTLR_CONFIG,
-+							(void *)sys_ioctl);
-+	err |= register_ioctl32_conversion(
-+				ASD_CC_SAS_GET_NV_SEGMENT_PROPERTIES,
-+							(void *)sys_ioctl);
-+	err |= register_ioctl32_conversion(ASD_CC_SAS_WRITE_NV_SEGMENT,
-+							(void *)sys_ioctl);
-+	err |= register_ioctl32_conversion(ASD_CC_SAS_READ_NV_SEGMENT,
-+							(void *)sys_ioctl);
-+#endif /* #ifdef __x86_64__ */
-+	return err;
-+}
-+
-+int asd_unregister_ioctl_dev(void)
-+{
-+#ifdef __x86_64__
-+	unregister_ioctl32_conversion(ASD_CC_SAS_GET_CNTLR_CONFIG);
-+	unregister_ioctl32_conversion(ASD_CC_SAS_GET_ADPT_CNTLR_CONFIG);
-+	unregister_ioctl32_conversion(ASD_CC_SAS_GET_NV_SEGMENT_PROPERTIES);
-+	unregister_ioctl32_conversion(ASD_CC_SAS_WRITE_NV_SEGMENT);
-+	unregister_ioctl32_conversion(ASD_CC_SAS_READ_NV_SEGMENT);
-+#endif /* #ifdef __x86_64__ */
-+
-+	return unregister_chrdev(asd_ctl_major, ASD_CTL_DEV_NAME);
-+}
-+
-+/* init routine */
-+int asd_ctl_init_internal_data(struct asd_softc *asd)
-+{
-+	struct asd_ctl_mgmt *pasd_ctl_mgmt;
-+	
-+	pasd_ctl_mgmt = &asd->asd_ctl_internal.mgmt;
-+	
-+	/* Initialize waitq */
-+	init_waitqueue_head(&pasd_ctl_mgmt->waitq);
-+	
-+	/* Initialize busy flags */
-+	pasd_ctl_mgmt->busy = 0;
-+	
-+	/* Initialize semaphore */
-+	init_MUTEX(&pasd_ctl_mgmt->sem);
-+	
-+	/* Initialize timers */
-+	init_timer(&pasd_ctl_mgmt->timer);
-+
-+	/* Initialize err flag */
-+	pasd_ctl_mgmt->err = SCB_EH_FAILED;
-+	
-+	return 0;
-+}
-+
-+/* entry points */
-+static int asd_ctl_open(struct inode *inode, struct file *file)
-+{
-+#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 5, 0)	
-+	MOD_INC_USE_COUNT;
-+#endif	
-+	return 0;
-+}
-+
-+static int asd_ctl_close(struct inode *inode, struct file *file)
-+{
-+#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 5, 0)	
-+	MOD_DEC_USE_COUNT;
-+#endif	
-+	return 0;
-+}
-+
-+static int asd_ctl_ioctl(struct inode *inode, struct file *file,
-+			unsigned int cmd, unsigned long arg)
-+{
-+	struct IOCTL_HEADER ioctl_header;
-+	int asd_user_buf_len;
-+	int hba, max_hba;
-+	int err;
-+
-+	if (!capable(CAP_SYS_ADMIN)) {
-+		return -EACCES;
-+	}
-+	
-+	asd_user_buf_len = sizeof(ioctl_header);
-+	if ((err = copy_from_user(&ioctl_header, (void *)arg, 
-+				asd_user_buf_len))) {
-+		return -EFAULT;
-+	}
-+
-+	hba = ioctl_header.IOControllerNumber;
-+
-+	max_hba = asd_get_number_of_hbas_present();
-+
-+	if (hba < 0 || hba >= max_hba) {
-+		asd_ctl_copy_to_user((void *)arg, 
-+				     &ioctl_header, 
-+				     asd_user_buf_len,
-+				     ASD_SAS_STATUS_INVALID_PARAMETER);
-+		return -ENODEV;
-+	}
-+
-+	switch (cmd) {
-+	case ASD_CC_SAS_GET_CNTLR_CONFIG:
-+		err = asd_ctl_get_cntlr_config(arg);
-+		break;
-+	case ASD_CC_SAS_GET_ADPT_CNTLR_CONFIG:
-+		err = asd_ctl_sas_get_adpt_cntlr_conf(arg);
-+		break;
-+	case ASD_CC_SAS_GET_NV_SEGMENT_PROPERTIES:
-+		err = asd_ctl_sas_get_nv_seg_prop(arg);
-+		break;
-+	case ASD_CC_SAS_WRITE_NV_SEGMENT:
-+		err = asd_ctl_sas_write_nv_seg(arg);
-+		break;
-+	case ASD_CC_SAS_READ_NV_SEGMENT:
-+		err = asd_ctl_sas_read_nv_seg(arg);
-+		break;
-+	/* Unsupported/Unknown IOCTLs */
-+	default:
-+		asd_ctl_copy_to_user((void *)arg, 
-+				     &ioctl_header, 
-+				     asd_user_buf_len,
-+				     ASD_SAS_STATUS_BAD_CNTL_CODE);
-+		return -EINVAL;
-+	}
-+
-+	return err;
-+}
-+
-+
-+/* ioctl handler routines */
-+static int asd_ctl_get_cntlr_config(unsigned long arg)
-+{
-+	struct ASD_SAS_CNTLR_CONFIG_BUFFER asd_cntlr_conf_buf;
-+	struct ASD_SAS_CNTLR_CONFIG *pasd_sas_cntlr_config;
-+	union ASD_SAS_IO_BUS_ADDRESS *pasd_sas_io_bus_address;
-+	struct ASD_SAS_PCI_BUS_ADDRESS *pasd_sas_pci_bus_address;
-+	struct IOCTL_HEADER *pioctl_header;
-+	struct asd_softc *asd;
-+	int asd_user_buf_len;
-+	int retcode;
-+	int err;
-+	
-+	asd_user_buf_len = sizeof(asd_cntlr_conf_buf);
-+	if ((err = asd_ctl_check_buf_len(arg, asd_user_buf_len))) {
-+		return -EINVAL;
-+	}
-+	
-+	if ((err = copy_from_user(&asd_cntlr_conf_buf, (void *)arg, 
-+				  asd_user_buf_len))) {
-+		return -EFAULT;
-+	}
-+	
-+	pioctl_header = &asd_cntlr_conf_buf.IoctlHeader;
-+	
-+	asd = asd_get_softc_by_hba_index(pioctl_header->IOControllerNumber);
-+	if (asd == NULL) {
-+		/* Requested controller not found */
-+		retcode = ASD_SAS_STATUS_INVALID_PARAMETER;
-+		err = -ENODEV;
-+		goto done;
-+	}
-+		
-+	retcode = ASD_SAS_STATUS_SUCCESS;
-+	err = 0;
-+	pasd_sas_cntlr_config = &asd_cntlr_conf_buf.Configuration;
-+	pasd_sas_io_bus_address = &pasd_sas_cntlr_config->BusAddress;
-+	pasd_sas_pci_bus_address = &pasd_sas_io_bus_address->PciAddress;
-+
-+	pasd_sas_cntlr_config->uBaseIoAddress = 
-+				asd_pcic_read_dword(asd, PCI_BASE_ADDRESS_0);
-+	pasd_sas_cntlr_config->BaseMemoryAddress.uLowPart =
-+				asd_pcic_read_dword(asd, PCI_BASE_ADDRESS_2);
-+	pasd_sas_cntlr_config->BaseMemoryAddress.uHighPart =
-+				asd_pcic_read_dword(asd, PCI_BASE_ADDRESS_3);
-+
-+	pasd_sas_cntlr_config->uBoardID =
-+				(asd_pci_dev(asd)->device << 16) |
-+				asd_pci_dev(asd)->vendor;
-+
-+	pasd_sas_cntlr_config->usSlotNumber = 
-+				PCI_SLOT(asd_pci_dev(asd)->devfn);
-+	pasd_sas_cntlr_config->bControllerClass = ASD_SAS_CNTLR_CLASS_HBA;
-+	pasd_sas_cntlr_config->bIoBusType = ASD_SAS_BUS_TYPE_PCI;
-+	pasd_sas_pci_bus_address->bBusNumber = asd_pci_dev(asd)->bus->number;
-+	pasd_sas_pci_bus_address->bDeviceNumber =
-+				PCI_SLOT(asd_pci_dev(asd)->devfn);
-+	pasd_sas_pci_bus_address->bFunctionNumber =
-+				PCI_FUNC(asd_pci_dev(asd)->devfn);
-+	
-+	sprintf(pasd_sas_cntlr_config->szSerialNumber,"%01x%06x%08x%x", 
-+			ASD_BSAR_GET_NAA(asd->hw_profile.wwn), 
-+			ASD_BSAR_GET_IEEE_ID(asd->hw_profile.wwn),
-+			ASD_BSAR_GET_SN(asd->hw_profile.wwn),
-+			ASD_BSAR_GET_LSB(asd->hw_profile.wwn));
-+
-+	pasd_sas_cntlr_config->usMajorRevision = 0;
-+	pasd_sas_cntlr_config->usMinorRevision = 0;
-+	pasd_sas_cntlr_config->usBuildRevision = 0;
-+	pasd_sas_cntlr_config->usReleaseRevision = 0;
-+	pasd_sas_cntlr_config->usBIOSMajorRevision = 
-+				asd->hw_profile.bios_maj_ver; 
-+	pasd_sas_cntlr_config->usBIOSMinorRevision = 
-+				asd->hw_profile.bios_min_ver; 
-+	pasd_sas_cntlr_config->usBIOSBuildRevision = 
-+				asd->hw_profile.bios_bld_num & 0xffff; 
-+	pasd_sas_cntlr_config->usBIOSReleaseRevision = 
-+				asd->hw_profile.bios_bld_num >> 16; 
-+	
-+	pasd_sas_cntlr_config->uControllerFlags = ASD_SAS_CNTLR_SAS_HBA;
-+					   //|ASD_SAS_CNTLR_SATA_HBA;//TBD
-+	pasd_sas_cntlr_config->usRromMajorRevision = 0;
-+	pasd_sas_cntlr_config->usRromMinorRevision = 0;
-+	pasd_sas_cntlr_config->usRromBuildRevision = 0;
-+	pasd_sas_cntlr_config->usRromReleaseRevision = 0;
-+	pasd_sas_cntlr_config->usRromBIOSMajorRevision = 0;
-+	pasd_sas_cntlr_config->usRromBIOSMinorRevision = 0;
-+	pasd_sas_cntlr_config->usRromBIOSBuildRevision = 0;
-+	pasd_sas_cntlr_config->usRromBIOSReleaseRevision = 0;
-+
-+done:
-+	/* return status */	
-+	asd_ctl_copy_to_user((void *)arg, &asd_cntlr_conf_buf, 
-+			     asd_user_buf_len, retcode);
-+	return err;
-+}	
-+
-+/* Adaptec extension IOCTL handler routines */
-+static int asd_ctl_sas_get_adpt_cntlr_conf(unsigned long arg)
-+{
-+	struct ASD_SAS_GET_ADPT_CNTLR_CONFIG_BUFFER asd_adpt_cntlr_conf_buf;
-+	struct ASD_SAS_GET_ADPT_CNTLR_CONFIG *pasd_sas_adpt_cntlr_config;
-+	struct IOCTL_HEADER *pioctl_header;
-+	struct asd_softc *asd;
-+	u_long flags;
-+	int asd_user_buf_len;
-+	int retcode;
-+	int err;
-+	
-+	asd_user_buf_len = sizeof(asd_adpt_cntlr_conf_buf);
-+	if ((err = asd_ctl_check_buf_len(arg, asd_user_buf_len))) {
-+		return -EINVAL;
-+	}
-+	
-+	if ((err = copy_from_user(&asd_adpt_cntlr_conf_buf, 
-+				  (void *)arg, 
-+				  asd_user_buf_len))) {
-+		return -EFAULT;
-+	}
-+	
-+	pioctl_header = &asd_adpt_cntlr_conf_buf.IoctlHeader;
-+	
-+	asd = asd_get_softc_by_hba_index(pioctl_header->IOControllerNumber);
-+	if (asd == NULL) {
-+		/* Requested controller not found */
-+		retcode = ASD_SAS_STATUS_INVALID_PARAMETER;
-+		err = -ENODEV;
-+		goto done;
-+	}
-+
-+	pasd_sas_adpt_cntlr_config = &asd_adpt_cntlr_conf_buf.Configuration;
-+
-+	asd_lock(asd, &flags);
-+	pasd_sas_adpt_cntlr_config->usPCIVendorID = asd_pci_dev(asd)->vendor;
-+	pasd_sas_adpt_cntlr_config->usPCIDeviceID = asd_pci_dev(asd)->device;
-+	pasd_sas_adpt_cntlr_config->usPCISubsystemVendorID =  
-+					asd_pci_dev(asd)->subsystem_vendor;
-+	pasd_sas_adpt_cntlr_config->usPCISubsystemID = 
-+					asd_pci_dev(asd)->subsystem_device;
-+		
-+	if (asd->hw_profile.flash_present) {
-+		pasd_sas_adpt_cntlr_config->usFlashManufacturerID =
-+					asd->hw_profile.flash_manuf_id;
-+		pasd_sas_adpt_cntlr_config->usFlashDeviceID = 
-+					asd->hw_profile.flash_dev_id;
-+		if (asd->hw_profile.flash_wr_prot) {
-+			pasd_sas_adpt_cntlr_config->uControllerFlags 
-+				= ASD_ADPT_CNTLR_FLASH_READONLY;
-+		}
-+		retcode = ASD_SAS_STATUS_SUCCESS;
-+	} else {
-+		pasd_sas_adpt_cntlr_config->usFlashManufacturerID 
-+				= ASD_SAS_APDT_INVALID_FLASH_MANUFACTURER_ID; 
-+		pasd_sas_adpt_cntlr_config->usFlashDeviceID 
-+				= ASD_SAS_ADPT_INVALID_FLASH_DEVICE_ID; 
-+		pasd_sas_adpt_cntlr_config->uControllerFlags 
-+				= ASD_ADPT_CNTLR_FLASH_NOT_PRESENT; 
-+		retcode = ASD_SAS_STATUS_FAILED;
-+	}
-+	asd_unlock(asd, &flags);
-+done:
-+	/* return status */	
-+	asd_ctl_copy_to_user((void *)arg, &asd_adpt_cntlr_conf_buf, 
-+			     asd_user_buf_len, retcode);
-+	return err;
-+}
-+
-+static int asd_ctl_sas_get_nv_seg_prop(unsigned long arg)
-+{
-+	struct ASD_SAS_NV_SEGMENT_PROPERTIES_BUFFER asd_nvseg_prop_buf;
-+	struct ASD_SAS_NV_SEGMENT_PROPERTIES *pasd_nvseg_prop;
-+	struct IOCTL_HEADER *pioctl_header;
-+	struct asd_softc *asd;
-+	u_long flags;
-+	uint32_t seg_offset, nv_offset;
-+	uint32_t pad_size, image_size, attr, bytes_read;
-+	int asd_user_buf_len;
-+	int err;
-+	int retcode; 
-+	
-+	asd_user_buf_len = sizeof(asd_nvseg_prop_buf);
-+	if ((err = asd_ctl_check_buf_len(arg, asd_user_buf_len))) {
-+		return -EINVAL;
-+	}
-+	
-+	if ((err = copy_from_user(&asd_nvseg_prop_buf, 
-+				  (void *)arg, 
-+				  asd_user_buf_len))) {
-+		return -EFAULT;
-+	}
-+	
-+	pioctl_header = &asd_nvseg_prop_buf.IoctlHeader;
-+	
-+	asd = asd_get_softc_by_hba_index(pioctl_header->IOControllerNumber);
-+	if (asd == NULL) {
-+		/* Requested controller not found */
-+		retcode = ASD_SAS_STATUS_INVALID_PARAMETER; 
-+		err = -ENODEV;
-+		goto done;
-+	}
-+	
-+	err = 0;
-+	retcode = ASD_SAS_STATUS_SUCCESS;
-+	pasd_nvseg_prop = &asd_nvseg_prop_buf.Information;
-+	asd_lock(asd, &flags);
-+	
-+	switch (pasd_nvseg_prop->uSegmentID) {
-+	case ASD_SAS_SEGMENT_ID_MANUFACTURING_SECTOR0:
-+	{
-+		struct asd_manuf_base_seg_layout manuf_layout;
-+		
-+		if ((err = asd_hwi_search_nv_segment(asd, NVRAM_MANUF_TYPE,
-+				&nv_offset, &pad_size, &image_size, 
-+				&attr)) != 0) {
-+			err = -1;
-+			break;
-+		}
-+		asd_ctl_map_seg_attr_to_ext(attr, 
-+			&pasd_nvseg_prop->usSegmentAttributes); 
-+		
-+		seg_offset = 0;
-+		memset(&manuf_layout, 0x0, sizeof(manuf_layout));
-+		
-+		/* Read Manufacturing base segment */
-+		if (asd_hwi_read_nv_segment(asd, NVRAM_MANUF_TYPE, 
-+				&manuf_layout, seg_offset, 
-+				sizeof(manuf_layout), &bytes_read) != 0) {
-+			err = -1;
-+			break;
-+		}
-+		image_size = manuf_layout.sector_size;
-+		pad_size = image_size;
-+		break;
-+	}
-+	case ASD_SAS_SEGMENT_ID_CTRL_A_USER_SETTINGS0:
-+	{
-+		struct asd_pci_layout pci_layout;
-+
-+		if ((err = asd_hwi_search_nv_segment(asd, NVRAM_CTRL_A_SETTING,
-+				&nv_offset, &pad_size, &image_size, 
-+				&attr)) != 0) {
-+			err = -1;
-+			break;
-+		}
-+		asd_ctl_map_seg_attr_to_ext(attr, 
-+			&pasd_nvseg_prop->usSegmentAttributes); 
-+		
-+		seg_offset = 0;
-+		memset(&pci_layout, 0x0, sizeof(pci_layout));
-+		
-+		/* Read Ctrl-A first segment */
-+		if (asd_hwi_read_nv_segment(asd, NVRAM_CTRL_A_SETTING, 
-+				&pci_layout, seg_offset, sizeof(pci_layout),
-+				&bytes_read) != 0) {
-+			err = -1;
-+			break;
-+		}
-+		image_size = pci_layout.image_size;
-+		pad_size = image_size;
-+		break;
-+	}
-+	case ASD_SAS_SEGMENT_ID_FLASH_DIRECTORY0:
-+	{
-+		struct asd_flash_dir_layout flash_dir;
-+		uint32_t nv_addr, active_entries;
-+		int i;
-+		if (asd_hwi_search_nv_cookie(asd, &nv_addr, &flash_dir) != 0) {
-+			err = -1;
-+			break;
-+		}
-+		seg_offset = 0;
-+		active_entries = 0;
-+		for (i = 0; i < NVRAM_MAX_ENTRIES; i++) {
-+			if (flash_dir.ae_mask & (1 << i)) {
-+				active_entries++;
-+			}
-+		}
-+		image_size = sizeof(flash_dir) +
-+			     (active_entries * 
-+			     sizeof(struct asd_fd_entry_layout));
-+		pad_size = sizeof(flash_dir) + 
-+			   (NVRAM_MAX_ENTRIES * 
-+			   sizeof(struct asd_fd_entry_layout));
-+		break;
-+	}
-+	case ASD_SAS_SEGMENT_ID_FLASH0:
-+	case ASD_SAS_SEGMENT_ID_SEEPROM0:
-+	case ASD_SAS_SEGMENT_ID_COMPATIBILITY_SECTOR0:
-+	{
-+		pad_size = ASD_SAS_SEGMENT_SIZE_INVALID;
-+		image_size = ASD_SAS_SEGMENT_IMAGE_SIZE_INVALID;
-+		pasd_nvseg_prop->usSegmentAttributes = 0;
-+		break;
-+	}
-+	default:
-+		err = -1;
-+		break;
-+	}
-+	asd_unlock(asd, &flags);
-+
-+	if (err) {
-+		pasd_nvseg_prop->uStatus = ASD_SAS_NV_FAILURE;
-+		retcode = ASD_SAS_STATUS_FAILED;
-+	} else {
-+		pasd_nvseg_prop->uSegmentSize = pad_size;
-+		pasd_nvseg_prop->uSegmentImageSize = image_size;
-+		pasd_nvseg_prop->uStatus = ASD_SAS_NV_SUCCESS;
-+		retcode = ASD_SAS_STATUS_SUCCESS;
-+	}
-+done:
-+	/* return status */	
-+	asd_ctl_copy_to_user((void *)arg, &asd_nvseg_prop_buf, 
-+			     asd_user_buf_len, retcode);
-+	return err;
-+}
-+
-+static int asd_ctl_sas_write_nv_seg(unsigned long arg)
-+{
-+	struct ASD_SAS_WRITE_NV_SEGMENT_BUFFER *pasd_write_nv_buf;
-+	struct ASD_SAS_WRITE_NV_SEGMENT *pasd_write_nv_seg;
-+	struct IOCTL_HEADER *pioctl_header;
-+	struct asd_ctl_mgmt *pasd_ctl_mgmt;
-+	struct asd_softc *asd;
-+	uint8_t *psource_buffer;
-+	int asd_user_buf_len;
-+	int retcode;
-+	int err;
-+	
-+	/* 
-+	 * Leave the data buffer at the end of the struct as the
-+	 * data buffer will be allocated separately
++	struct list_head	 owner_links;
++	/*
++	 * Links for chaining SCBs onto the timedout SCB list.
 +	 */
-+	asd_user_buf_len = offsetof(struct ASD_SAS_WRITE_NV_SEGMENT_BUFFER, 
-+				     bSourceBuffer) ;
-+	
-+	if ((pasd_write_nv_buf = asd_alloc_mem(asd_user_buf_len,
-+					       GFP_ATOMIC)) == NULL) {
-+		return -ENOMEM;
-+	}
-+
-+	if ((err = copy_from_user(pasd_write_nv_buf, (void *)arg, 
-+				  asd_user_buf_len))) {
-+		asd_free_mem(pasd_write_nv_buf);
-+		return -EFAULT;
-+	}
-+	
-+	pioctl_header = &pasd_write_nv_buf->IoctlHeader;
-+	pasd_write_nv_seg = 
-+		&pasd_write_nv_buf->Information;
-+
-+	if ((err = asd_ctl_check_buf_len(arg, 
-+			  asd_user_buf_len
-+			  + pasd_write_nv_seg->uBufferLength))) {
-+		asd_free_mem(pasd_write_nv_buf);
-+		return -EINVAL;
-+	}
-+	
-+	asd = asd_get_softc_by_hba_index(pioctl_header->IOControllerNumber);
-+	
-+	if (asd == NULL) {
-+		/* Requested controller not found */
-+		retcode = ASD_SAS_STATUS_INVALID_PARAMETER;
-+		err = -ENODEV;
-+		goto done;
-+	}
-+
-+	if (!asd->hw_profile.flash_present) {
-+		retcode = ASD_SAS_STATUS_FAILED;
-+		err = -EINVAL;
-+		goto done;
-+	}
-+	
-+	err = 0;
-+	retcode = ASD_SAS_STATUS_SUCCESS; 
-+	psource_buffer = NULL;	
-+	pasd_ctl_mgmt = &asd->asd_ctl_internal.mgmt;
-+
-+	if ((psource_buffer = (uint8_t *)asd_valloc_mem(
-+				pasd_write_nv_seg->uBufferLength)) == NULL) {
-+		retcode = ASD_SAS_STATUS_FAILED;
-+		err = -ENOMEM;
-+		goto done;
-+	}
-+	memset(psource_buffer, 0, pasd_write_nv_seg->uBufferLength);
-+
-+	if ((err = copy_from_user(psource_buffer,
-+			 (void *)arg + asd_user_buf_len,
-+			 pasd_write_nv_seg->uBufferLength))) {
-+		asd_vfree_mem(psource_buffer);
-+		retcode = ASD_SAS_STATUS_FAILED;
-+		err = -EFAULT;
-+		goto done;
-+	}
-+	
-+	down_interruptible(&pasd_ctl_mgmt->sem);
-+	err = asd_ctl_write_to_nvram(asd, pasd_write_nv_buf, 
-+				     psource_buffer);
-+	up(&pasd_ctl_mgmt->sem);
-+
-+	asd_vfree_mem(psource_buffer);
-+
-+	retcode = err ? ASD_SAS_STATUS_FAILED : ASD_SAS_STATUS_SUCCESS; 
-+done:
-+	asd_ctl_copy_to_user((void *)arg, pasd_write_nv_buf, 
-+			     asd_user_buf_len, retcode);
-+	asd_free_mem(pasd_write_nv_buf);
-+	return err;
-+}
-+
-+static int asd_ctl_sas_read_nv_seg(unsigned long arg)
-+{
-+	struct ASD_SAS_READ_NV_SEGMENT_BUFFER *pasd_read_nv_buf;
-+	struct ASD_SAS_READ_NV_SEGMENT *pasd_read_nv_seg;
-+	struct IOCTL_HEADER *pioctl_header;
-+	struct asd_ctl_mgmt *pasd_ctl_mgmt;
-+	struct asd_softc *asd;
-+	uint8_t *pdest_buffer;
-+	int asd_user_buf_len;
-+	int retcode;
-+	int err;
-+	
-+	/* 
-+	 * Leave the data buffer at the end of the struct as the
-+	 * data buffer will be allocated separately
++	struct list_head	 timedout_links;
++	/*
++	 * Completion callback.
 +	 */
-+	asd_user_buf_len = offsetof(struct ASD_SAS_READ_NV_SEGMENT_BUFFER, 
-+				     bDestinationBuffer) ;
++	asd_scb_post_t		*post;
++	/*
++	 * OS per I/O context structure.
++	 */
++	asd_io_ctx_t		 io_ctx;
++	/*
++	 * OSM specific, per-context data.
++	 */
++	struct asd_scb_platform_data *platform_data;
++	/*
++	 * Per-context, hardware specific, data that is
++	 * actually DMA'ed to the controller.
++	 */
++	union hardware_scb	*hscb;
++	struct map_node		*hscb_map;
++	dma_addr_t		 hscb_busaddr;
++	/*
++	 * Index to the Device Descriptor Block representing
++	 * the device to which this transaction is targeted.
++	 */
++	uint16_t		 conn_handle;
++	/*
++	 * Scatter/Gather list data structures.
++	 */
++	struct map_node		*sg_map;
++	struct sg_element	*sg_list;
++	dma_addr_t		 sg_list_busaddr;
++	u_int			 sg_count;
++	/*
++	 * Pointer back to our per-controller instance.
++	 * Used only in timer callbacks where the SCB
++	 * is the saved argument to the timer callback.
++	 */
++	struct asd_softc	*softc;
++	/*
++	 * Misc Flags.
++	 */
++	scb_flag		 flags;
++	/*
++	 * Error Recovery state and status info.
++	 */ 
++	scb_eh_state     	 eh_state;
++	scb_eh_status     	 eh_status;
++	asd_scb_eh_post_t	*eh_post;
++
++	uint32_t			post_stack_depth;
++	struct asd_scb_post_stack	post_stack[SCB_POST_STACK_DEPTH];
++};
++
++#define	SCB_GET_INDEX(SCB)	(asd_le16toh((SCB)->hscb->header.index))
++#define SCB_GET_OPCODE(SCB)	((SCB)->hscb->header.opcode)
++#define SCB_GET_SRC_PORT(SCB)	((SCB)->platform_data->targ->src_port)
++
++/* Common attributes for Phy and Port. */
++typedef enum {
++	ASD_SSP_INITIATOR	= 0x01,
++	ASD_SMP_INITIATOR 	= 0x02,
++	ASD_STP_INITIATOR 	= 0x04,
++	ASD_SATA_SPINUP_HOLD 	= 0x08,
++	ASD_SAS_MODE      	= 0x10,
++	ASD_SATA_MODE     	= 0x20,
++	ASD_DEVICE_PRESENT 	= 0x40 
++} asd_attrib;
++
++typedef enum {
++	ASD_IDLE	  	= 0x00,
++	ASD_RESP_PENDING  	= 0x01,
++	ASD_ID_ADDR_RCVD  	= 0x02,
++	ASD_DISCOVERY_REQ 	= 0x04,
++	ASD_DISCOVERY_PROCESS 	= 0x08,
++	ASD_DISCOVERY_EVENT 	= 0x10,
++	ASD_VALIDATION_REQ	= 0x20,
++	ASD_LOSS_OF_SIGNAL	= 0X40,
++	ASD_DISCOVERY_RETRY	= 0X80
++} asd_event;
++
++/*
++ * Port structure.
++ * It is used to reference a SCSI or SATA initiator port for the adapter.
++ */
++typedef enum {
++	ASD_PORT_UNUSED,
++	ASD_PORT_ONLINE,
++	ASD_PORT_OFFLINE
++} asd_port_state;
++
++struct discover_context {
++	struct asd_softc	*asd;
++	struct asd_port		*port;
++	uint8_t			 openStatus;
++	unsigned		 resid_len;
++
++	/*
++	 * -------------------------------------
++	 * DMA-able memory used for SMP request
++	 */
++	struct SMPRequest	*SMPRequestFrame;
++	dma_addr_t		 SMPRequestBusAddr;
++	bus_dma_tag_t		 smp_req_dmat;
++	struct map_node		 smp_req_map;
++
++	/*
++	 * -------------------------------------
++	 * DMA-able memory used for SMP response
++	 */
++	struct SMPResponse	*SMPResponseFrame;
++	dma_addr_t		 SMPResponseBusAddr;
++	bus_dma_tag_t		 smp_resp_dmat;
++	struct map_node		 smp_resp_map;
++
++	/*
++	 * -------------------------------------
++	 * DMA-able memory used for Report LUNS and Unit Serial Number
++	 */
++	uint8_t			*SASInfoFrame;
++	dma_addr_t		 SASInfoBusAddr;
++	unsigned		 sas_info_len;
++	bus_dma_tag_t		 sas_info_dmat;
++	struct map_node		 sas_info_map;
++
++	/*
++	 * For state machine
++	 * -------------------------------------
++	 */
++	struct state_machine_context	sm_context;
++};
++
++struct asd_port {
++	struct list_head	 phys_attached;
++	struct list_head	 targets;
++	struct list_head	 targets_to_validate;
++	void			*softc;
++	uint8_t			 sas_addr[SAS_ADDR_LEN];
++	uint8_t			 hashed_sas_addr[HASHED_SAS_ADDR_LEN];
++	uint8_t			 attached_sas_addr[SAS_ADDR_LEN];
++	u_char			 num_phys;
++	uint8_t			 conn_rate;
++	/* 
++	 * Bit field indicating which phy id belongs to this port.
++	 */  
++	uint8_t			 conn_mask;
++	uint8_t			 reset_mask;
++	u_char			 id;
++	asd_port_state		 state;
++	asd_attrib		 attr;
++	asd_event		 events;
++	LINK_TYPE		 link_type;
++	MANAGEMENT_TYPE		 management_type;
++	struct discover_context	 dc;
++	struct asd_target	*tree_root;
++};
++
++/*
++ * Phy structure.
++ * It is used to reference a service delivery subsystem for the adapter.
++ */
++typedef enum {
++	ASD_PHY_UNUSED,
++	ASD_PHY_WAITING_FOR_ID_ADDR,
++	ASD_PHY_ONLINE,
++	ASD_PHY_OFFLINE,
++	ASD_PHY_CONNECTED
++} asd_phy_state;
++
++#define PRODUCT_SERIAL_NUMBER_LEN	64
++
++struct asd_phy {
++	struct list_head	 pending_scbs;
++	struct list_head	 links;
++	void			*softc;
++    	struct asd_port		*src_port;
++	uint8_t			 sas_addr[SAS_ADDR_LEN];
++	u_int			 max_link_rate;
++	u_int			 min_link_rate;
++	u_int			 conn_rate;
++	uint8_t			 id;
++	asd_phy_state 		 state;
++	asd_attrib		 attr;
++	asd_event		 events;
++
++	/* Phy Error information. */
++	uint8_t			 brdcst_rcvd_cnt;
++
++	/* Phy control register info */
++	uint8_t			 phy_state;
++	uint8_t			 phy_ctl0;
++	uint8_t			 phy_ctl1;
++	uint8_t			 phy_ctl2;
++	uint8_t			 phy_ctl3;
++
++	/* Identify Address frame buffer. */
++	bus_dma_tag_t		 id_addr_dmat;
++	struct map_node		 id_addr_map;
++	union sas_bytes_dmaed	 bytes_dmaed_rcvd;
++
++	u_int			 link_rst_cnt;
++#define MAX_LINK_RESET_RETRY	 2
++
++	/* TBD: Temp var, should remove after checking with HW */
++	uint8_t			 pat_gen;
++};
++
++#define PHY_GET_ID_SAS_ADDR(PHY)	\
++	((PHY)->bytes_dmaed_rcvd.id_addr_rcvd.sas_addr)
++
++typedef enum {
++	ASD_IO_SPACE,
++	ASD_MEMORY_SPACE
++} asd_mem_space_type;
++
++struct asd_io_handle {
++	union {
++		uint8_t		*membase;
++		unsigned long	 iobase;
++	} baseaddr;
++	uint32_t		 bar_base; 
++	uint32_t		 length;
++	uint32_t		 swb_base;
++	uint8_t			 index;		/* BAR index */
++	asd_mem_space_type	 type;
++};
++
++struct asd_host_profile {
++	uint16_t		max_cmds_per_lun;
++	uint16_t		can_queue;
++	uint8_t			initiator_id;
++	uint8_t			max_luns;
++	uint8_t			max_scsi_ids;
++	uint8_t			max_channels;
++	uint8_t			irq;
++	uint8_t			unit;
++	uint8_t			dma64_addr;
++	dma_addr_t		dma_mask;
++	char			*name;
++};
++
++/*
++ * Controller specific information.
++ */
++struct asd_hw_profile {
++	/* HW info. */
++	uint8_t			wwn[ASD_MAX_WWN_LEN];
++	uint8_t			max_ports;
++	uint8_t			ports_allocated;
++	uint8_t			max_phys;
++	uint8_t			enabled_phys;
++	int			rev_id;
++	/* Target info. */
++	uint16_t		max_devices;
++	uint16_t		max_targets;
++	uint8_t			max_expanders;
++	/* Runtime info. */
++	uint16_t		max_scbs;
++	uint16_t		max_ddbs;
++	/* Queue info. */
++	uint16_t		scbpro_cnt;	
++	/* NVRAM info */
++	uint8_t			flash_present;
++	uint16_t		flash_manuf_id;
++	uint16_t		flash_dev_id;
++	uint32_t		flash_wr_prot;
++	u_char			nv_exist;
++	uint32_t		nv_cookie_addr;
++	u_int			nv_cookie_found;
++	uint32_t		nv_segment_type;
++	uint32_t		nv_flash_bar;
++	uint32_t		bios_bld_num;
++	uint8_t			bios_maj_ver;
++	uint8_t			bios_min_ver;
++};
++
++typedef enum {
++	ASD_SCB_RESOURCE_SHORTAGE	= 0x01,
++	ASD_RUNNING_DONE_LIST		= 0x02,
++	ASD_WAITING_FOR_RESOURCE	= 0x04
++} asd_softc_flags;
++
++struct asd_softc {
++	/*
++	 * The next hardware SCB already known to the sequencer.
++	 */
++	union hardware_scb	*next_queued_hscb;
++	struct map_node		*next_queued_hscb_map;
++	uint64_t		 next_queued_hscb_busaddr;
++	/*
++	 * Pool of SCBs available to execute new commands.
++	 */
++	struct list_head	 free_scbs;
++	/*
++	 * Pool of reserved SCBS to be used for error recovery.
++         */	 
++	struct list_head	 rsvd_scbs;
++	/*
++	 * SCBs that have been sent to the controller
++	 */
++	struct list_head	 pending_scbs;
++	/*
++	 * Mapping from 16bit scb index to SCB.
++	 */
++	struct scb		**scbindex;
++	/*
++	 * Platform specific data.
++	 */
++	struct asd_platform_data *platform_data;
++	/* 
++	 * Command Queues info
++	 */
++	struct asd_done_list	*done_list;
++	uint16_t		 dl_next;
++	uint16_t		 dl_valid;
++	uint16_t		 dl_wrap_mask;
++	uint16_t		 qinfifonext;
++	uint16_t		*qinfifo;
++#define	ASD_QIN_WRAP(asd) ((asd)->qinfifonext & (asd->hw_profile.max_scbs - 1))
++
++	/*
++	 * Free Device Descriptor Block bitmap.
++	 */
++	u_long			*free_ddb_bitmap;
++	u_int			 ddb_bitmap_size;
++#define ASD_INVALID_DDB_INDEX 0xFFFF
++
++	/*
++	 * Misc controller state flags.
++	 */
++	asd_softc_flags		 flags;
++	/*
++	 * SCBs whose timeout routine has been called.
++	 */
++	struct list_head	 timedout_scbs;
++	/*
++	 * SCBs that have been sent to the controller
++	 */
++	struct list_head	 empty_scbs;
++	/*
++	 * "Bus" addresses of our data structures.
++	 */
++	bus_dma_tag_t	 	 shared_data_dmat;
++	struct map_node	 	 shared_data_map;
 +	
-+	if ((pasd_read_nv_buf = asd_alloc_mem(asd_user_buf_len,
-+					      GFP_ATOMIC)) == NULL) {
-+		return -ENOMEM;
-+	}
++	/* dmat for our hardware SCB array */
++	bus_dma_tag_t	 	 hscb_dmat;
++	/* dmat for our sg segments */
++	bus_dma_tag_t	 	 sg_dmat;
++	struct list_head 	 hscb_maps;
++	struct list_head 	 sg_maps;
++	/* Unallocated scbs in head map_node */
++	int		 	 scbs_left;
++	/* Unallocated sgs in head map_node */
++	int			 sgs_left;	
++	/* Allocated edbs */
++	int		 	 edbs;	
++	uint16_t	 	 numscbs;
++	/*
++	 * Platform specific device information.
++	 */
++	asd_dev_t		 dev;
++	/*
++	 * Used to chain all controller instances
++	 * managed by this driver.
++	 */
++	struct list_head	 link;
++	struct list_head	*old_discover_listp;
++	struct list_head	*discover_listp;
++	struct asd_port		*port_list[ASD_MAX_PORTS];
++	struct asd_phy		*phy_list[ASD_MAX_PHYS];
++	struct asd_host_profile  profile;
++	struct asd_hw_profile	 hw_profile;
++	const struct pci_device_id *pci_entry;
++	struct asd_io_handle	**io_handle;
++	struct asd_ctl_internal_data asd_ctl_internal;
++	uint32_t		 asd_hba_index;
++	uint8_t			 io_handle_cnt;
++	uint8_t			 init_level;
 +
-+	if ((err = copy_from_user(pasd_read_nv_buf, (void *)arg, 
-+				  asd_user_buf_len)) != 0) {
-+		asd_free_mem(pasd_read_nv_buf);
-+		return -EFAULT;
-+	}
++	unsigned		 num_discovery;
++	unsigned		 num_unit_elements;
++	struct asd_unit_element_format	*unit_elements;
++};
++
++
++/* Scatter/Gather list Handling */
++#define	asd_sglist_size(asd) (ASD_NSEG * sizeof(struct sg_element))
++
++
++/*
++ * Hardware Interface functions prototypes.
++ */
++void		asd_intr_enable(struct asd_softc *asd, int enable);
++int		asd_hwi_init_hw(struct asd_softc *asd);
++int		asd_hwi_process_irq(struct asd_softc *asd);
++struct asd_softc * asd_alloc_softc(asd_dev_t dev);
++void		asd_free_softc(struct asd_softc *asd);
++
++/* 
++ * Device Descriptor Block resource management. 
++ */
++uint16_t	asd_alloc_ddb(struct asd_softc *asd);
++void		asd_free_ddb(struct asd_softc *asd, uint16_t ddb_index);
++int		asd_hwi_setup_ddb_site(struct asd_softc *asd,
++				       struct asd_target *target);
++
++/* 
++ * Function prototypes for interfacing with Sequencers. 
++ */
++int		asd_hwi_pause_cseq(struct asd_softc *asd);
++int		asd_hwi_pause_lseq(struct asd_softc *asd, uint8_t lseq_mask);
++int		asd_hwi_unpause_cseq(struct asd_softc *asd);
++int		asd_hwi_unpause_lseq(struct asd_softc *asd, uint8_t lseq_mask);
++int		asd_hwi_download_seqs(struct asd_softc *asd);
++void		asd_hwi_setup_seqs(struct asd_softc *asd);
++int		asd_hwi_start_cseq(struct asd_softc *asd);
++int		asd_hwi_start_lseq(struct asd_softc *asd, uint8_t link_num);
++struct scb *	asd_hwi_get_scb(struct asd_softc *asd, int rsvd_pool);
++void		asd_hwi_post_scb(struct asd_softc *asd, struct scb *scb);
++union edb *	asd_hwi_indexes_to_edb(struct asd_softc *asd, struct scb **pscb,
++				       u_int escb_index, u_int edb_index);
++void		asd_hwi_free_edb(struct asd_softc  *asd,
++				 struct scb *scb, int edb_index);
++void		asd_hwi_init_internal_ddb(struct asd_softc *asd);
++void		asd_hwi_build_ddb_site(struct asd_softc  *asd, 
++				      struct asd_target *target);
++void		asd_hwi_update_sata(struct asd_softc *asd, 
++				      struct asd_target *target);
++void		asd_hwi_update_conn_mask(struct asd_softc *asd,
++					 struct asd_target *target);
++int		asd_hwi_enable_phy(struct asd_softc *asd, struct asd_phy *phy);
++void		asd_hwi_release_sata_spinup_hold(struct asd_softc *asd,
++						 struct asd_phy *phy);
++
++/*
++ * Error handling function prototypes.
++ */
++int		asd_hwi_post_eh_scb(struct asd_softc *asd, struct scb *scb);
++void		asd_hwi_build_ssp_tmf(struct scb *scb, struct asd_target *targ,
++				      uint8_t *lun, u_int tmf_opcode);
++void		asd_hwi_build_clear_nexus(struct scb *scb, u_int nexus_ind,
++					  u_int parm, u_int context);
++void		asd_hwi_build_abort_task(struct scb *scb,
++					 struct scb *scb_to_abort);
++void		asd_hwi_build_query_task(struct scb *scb, 
++					 struct scb *scb_to_query);
++void		asd_hwi_build_control_phy(struct scb *scb, struct asd_phy *phy, 
++					  uint8_t sub_func);
++void		asd_hwi_map_tmf_resp(struct scb *scb, u_int resp_code);
++
++/* SCB build routines */
++void 		asd_hwi_build_smp_task(struct scb *scb, struct asd_target *targ,
++				       uint64_t req_bus_addr, u_int req_len,
++				       uint64_t resp_bus_addr, u_int resp_len);
++void 		asd_hwi_build_ssp_task(struct scb *scb, struct asd_target *targ,
++					uint8_t *saslun, uint8_t *cdb,
++					uint32_t cdb_len, uint8_t addl_cdb_len,
++				       	uint32_t data_len);
++void 		asd_hwi_build_stp_task(struct scb *scb, struct asd_target *targ,
++				       uint32_t data_len);
++
++int 		asd_hwi_get_nv_conn_info(struct asd_softc *asd, uint8_t **pconn,
++					 uint32_t *pconn_size, uint8_t **pnoded,
++					 uint32_t *pnoded_size);
++
++int 		asd_hwi_control_activity_leds(struct asd_softc *asd,
++					      uint8_t phy_id,
++					      uint32_t asd_phy_ctl_func);
++
++int		asd_hwi_search_nv_segment(struct asd_softc *asd, 
++					  u_int segment_id, uint32_t *offset,
++					  uint32_t *pad_size, 
++					  uint32_t *image_size, 
++					  uint32_t *attr);
++int 		asd_hwi_write_nv_segment(struct asd_softc *asd,
++					void *src, u_int segment_id, 
++					uint32_t dest_offset, 
++					uint32_t bytes_to_write);
++
++int asd_hwi_read_nv_segment(struct asd_softc *asd, uint32_t segment_id, 
++					void *dest, uint32_t src_offset, 
++					uint32_t bytes_to_read,
++					uint32_t *bytes_read);
++
++ 
++/* Debug function prototypes. */
++#ifdef ASD_DEBUG
++void	asd_hwi_dump_seq_state(struct asd_softc *asd, uint8_t lseq_mask);
++void	asd_hwi_dump_ddb_site(struct asd_softc *asd, u_int site_no);
++#endif
++
++
++#if ASD_PIO_DOWNLOAD_SEQS
++/* PIO Mode */
++int		asd_hwi_pio_load_seqs(struct asd_softc *asd, uint8_t *code,
++				      uint32_t code_size, uint8_t lseq_mask);
++				      
++#define ASD_HWI_DOWNLOAD_SEQS(asd, code, code_size, lseq_mask)		\
++		asd_hwi_pio_load_seqs(asd, (uint8_t *) code,		\
++				     (uint32_t) code_size, (uint8_t) lseq_mask)	
++#else 
++/* Overlay DMA Mode */
++int		asd_hwi_dma_load_seqs(struct asd_softc *asd, uint8_t *code,
++				      uint32_t code_size, uint8_t lseq_mask);
++
++#define ASD_HWI_DOWNLOAD_SEQS(asd, code, code_size, lseq_mask)		\
++		asd_hwi_dma_load_seqs(asd, (uint8_t *) code,		\
++				     (uint32_t) code_size, (uint8_t) lseq_mask)
++
++#endif /* ASD_DMA_DOWNLOAD_SEQS */
++
++
++/********** External Memory (NVRAM, SEEPROM, etc) strucutres layout ***********/
++
++#define NVRAM_SUPPORT			1
++
++#if NVRAM_SUPPORT
++
++#define NVRAM_RESET			0xF0
++#define NVRAM_NO_SEGMENT_ID		0xFF
++#define NVRAM_INVALID_SIZE		0xFFFFFFFF
++#define NVRAM_COOKIE_SIZE		0x20
++#define NVRAM_FIRST_DIR_ENTRY		0x90
++#define NVRAM_NEXT_ENTRY_OFFSET		0x2000
++#define NVRAM_MAX_ENTRIES		0x20
++#define NVRAM_SEGMENT_ATTR_ERASEWRITE	1
++
++/* NVRAM Entry Type Values. */
++#define NVRAM_FLASH_DIR			0x00000000
++#define NVRAM_BIOS_CORE			0x00000020
++#define NVRAM_BIOS_UTILS		0x00000040
++#define NVRAM_BIOS_CHIM			0x00000060
++#define NVRAM_CTRL_A_SETTING		0x000000E0
++#define NVRAM_CTRL_A_DEFAULT		0x00000100
++#define NVRAM_MANUF_TYPE		0x00000120
++
++
++#define SAS_ADDR_WWID_MASK		0xF0
++
++/* OCM directory entry format */
++struct asd_ocm_entry_format {
++	uint8_t		type;
++#define OCM_DE_OCM_DIR			0x00
++#define OCM_DE_WIN_DRVR			0x01
++#define OCM_DE_BIOS_CHIM		0x02
++#define OCM_DE_RAID_ENGN		0x03
++#define OCM_DE_BIOS_INTL		0x04
++#define OCM_DE_BIOS_CHIM_OSM		0x05
++#define OCM_DE_BIOS_CHIM_DYNAMIC	0x06
++#define OCM_DE_ADDC2C_RES0		0x07
++#define OCM_DE_ADDC2C_RES1		0x08
++#define OCM_DE_ADDC2C_RES2		0x09
++#define OCM_DE_ADDC2C_RES3		0x0A
++
++	uint8_t		offset[3];
++/* retrieves offset/size from the 3 byte array */
++#define OCM_DE_OFFSET_SIZE_CONV(x) ((x[2] << 16) | (x[1] << 8) | x[0])
++
++	uint8_t		res1;
++	uint8_t		size[3];
++} __packed;
++
++/* OCM directory format */
++struct asd_ocm_dir_format {
++	/* 'O'n-chip memory 'D'irectory */
++	uint16_t	signature;	
++#define OCM_DIR_SIGN 0x4F4D
 +	
-+	pioctl_header = &pasd_read_nv_buf->IoctlHeader;
-+	pasd_read_nv_seg = &pasd_read_nv_buf->Information;
++	uint16_t	res1;
++	uint8_t		maj_ver;
++	uint8_t		min_ver;
++	uint8_t		res2;
++	uint8_t		num_entries;
++#define OCM_NUM_ENTRIES_MASK	0x0f
 +
-+	if ((err = asd_ctl_check_buf_len(arg, 
-+			  asd_user_buf_len
-+			  + pasd_read_nv_seg->uBytesToRead))) {
-+		asd_free_mem(pasd_read_nv_buf);
-+		return -EINVAL;
-+	}
++	//struct asd_ocm_entry_format entry[1];
++} __packed;
++
++#if 0
++//TBD: check and remove
++struct asd_unit_id_direct_attached_sata {
++	uint8_t		phy_id;
++	uint8_t		res[15];
++} __packed;
++
++struct asd_unit_id_logical_unit {
++	uint8_t		sas_address[SAS_ADDR_LEN];
++	uint8_t		lun[8];
++} __packed;
++
++struct asd_unit_id_volume_set {
++	uint8_t		volume_set_uid[8];
++	uint8_t		res[8];
++} __packed;
++
++/* unit element */
++struct asd_unit_element_format {
++	uint8_t		id[16];
++#define UNIT_ELEMENT_DIRECT_ATTACHED_SATA	0x00
++#define UNIT_ELEMENT_LOGICAL_UNIT		0x01
++#define UNIT_ELEMENT_VOLUME_SET			0x02
++	uint8_t		type;
++	uint8_t		res1;
++	uint8_t		dos_drv_num;
++	uint8_t		removable;
++	uint32_t	res2;
++} __packed;
++#endif
++
++struct asd_uid_lu_naa_wwn {
++	uint8_t		naa;
++	/* length specified by unit_id_len */
++} __packed;
++
++struct asd_uid_lu_sata_model_num {
++	uint32_t	id; /* "ata." */
++#define UNITID_SATA_ID 0x6174612E
++
++	uint8_t		model[40];
++	uint8_t		serial[20];
++	uint32_t	null_data;
++	/* length specified by unit_id_len */
++} __packed;
++
++
++struct asd_uid_vol_set {
++#define UNITID_VOLUME_SET_UID_LEN	24
++	uint8_t		vol_set_uid[UNITID_VOLUME_SET_UID_LEN];
++	/* length specified by unit_id_len */
++} __packed;
++
++struct asd_uid_lu_sgpio {
++	uint8_t		conn_idx;
++	uint8_t		box_id;
++	uint8_t		bay_id;
++	uint32_t	res1[5];
++	uint8_t		lun[8];
++	/* length specified by unit_id_len */
++} __packed;
++
++struct asd_uid_lu_sas_topology {
++	uint8_t		exp_dev_name[8];
++	uint8_t		lun[8];
++	uint8_t		phy_id;
++	/* length specified by unit_id_len */
++} __packed;
++
++/* unit element */
++struct asd_unit_element_format {
++	uint8_t		id;
++#define UNITELEM_LU_NAA_WWN		0x00
++#define UNITELEM_LU_SATA_MOD_SERIAL_NUM	0x01
++#define UNITELEM_VOLUME_SET_DDF_GUID	0x02
++#define UNITELEM_LU_SGPIO		0x03
++#define UNITELEM_LU_SAS_TOPOLOGY	0x04
++
++	uint8_t		dos_drv_num;
++	uint8_t		removable_unit;
++#define UNITELEM_REMOVABLE_UNIT_MASK 	0x01
++
++	uint32_t	res1;
++	uint8_t		unit_id_len;
++	uint8_t		res2[8];
++} __packed;
++
++/* BIOS CHIM section */
++struct asd_bios_chim_format {
++	uint32_t	signature;	/* 'BIOS' or 'ASPI' */
++#define OCM_BC_BIOS_SIGN 0x42494F53
++#define OCM_BC_ASPI_SIGN 0x41535049
++
++	uint8_t		maj_ver;	/* 0x01 */
++	uint8_t		min_ver;	/* 0x00 */
++	uint8_t		bios_maj_ver;
++	uint8_t		bios_min_ver;
++	uint32_t	bios_bld_num;
++	uint8_t		bios_present;
++#define OCM_BC_BBS_MASK		0x04
++#define OCM_BC_BIOS_INSLD_MASK	0x02
++#define OCM_BC_BIOS_PRSNT_MASK	0x01
 +	
-+	asd = asd_get_softc_by_hba_index(pioctl_header->IOControllerNumber);
++	uint8_t		pci_slot_num;
++	uint16_t	num_elements;
++	uint16_t	size_unit_elem;
++	uint8_t		res1[14];	
++	struct asd_unit_element_format unit_elm[1];
++} __packed;
++
++/* 
++ * These macros take a 8 byte base SAS address and get/set 
++ * it's constituent elements. 
++ */
++
++/* Default: 0x5 */
++#define ASD_BSAR_GET_NAA(x) 	((x[0] >> 4) & 0x0f)
++
++/* Default: 0x0000D1 - 3 byte IEEE Id assigned to Adaptec */
++#define ASD_BSAR_GET_IEEE_ID(x) \
++(((x[0] & 0x0f) << 20) | (x[1] << 12) | (x[2] << 4) | ((x[3] >> 4) & 0x0f)) 
++
++/* get the 4 byte Razor serial number */
++#define ASD_BSAR_GET_SN(x) \
++(((x[3] & 0x0f) << 28) | (x[4] << 20) | (x[5] << 12) \
++| (x[6] << 4) | (((x[7] >> 5) & 0x07) << 1)) 
++
++/*Default: 00000b - configurable using Ctrl-A */
++#define ASD_BSAR_GET_LSB(x) 	(x[7] & 0x1f)
++#define ASD_BSAR_SET_LSB(x, y) 	(x[7] = ((x[7] & 0x1f) & (y & 0x1f)))
++
++struct asd_manuf_seg_sign {
++	uint16_t	signature;
++#define NVRAM_MNF_BASE_SEG_SIGN	 0x4D53	/* 'M'anufacturing 'S'egment */
++#define NVRAM_MNF_PHY_PARAM_SIGN 0x4D50	/* 'M'anufacturing 'P'hy Parameters */
++#define NVRAM_MNF_CONN_MAP	 0x434D	/* 'C'onnector 'M'ap */
++
++	uint16_t	next_seg_ptr;
++} __packed;
++
++/* Manufacturing Base Segment Layout. */
++struct asd_manuf_base_seg_layout {
++	struct asd_manuf_seg_sign seg_sign;
++	uint8_t		major_ver;	/* 0x00 */
++	uint8_t		minor_ver;	/* 0x00 */
++	uint16_t	checksum;
++	uint16_t	sector_size;
++	uint8_t		res1[6];
++	uint8_t		base_sas_addr[8];
++	uint8_t		pcba_sn[12];
++} __packed;
++
++/* Phy Descriptor sub structure */
++struct asd_phy_desc_format {
++	uint8_t		state;
++#define NVRAM_PHY_ENABLEABLE		0x00
++#define NVRAM_PHY_REPORTED		0x01
++#define NVRAM_PHY_HIDDEN		0x02
++#define PHY_STATE_MASK			0x0F
++#define PHY_STATE_DEFAULT		NVRAM_PHY_ENABLEABLE
++
++	uint8_t		phy_id;
++	uint16_t	res1;
++	uint8_t		ctl0;
++#define PHY_CTL0_DEFAULT		0xF6
++#define PHY_CTL0_MASK			0x1C
 +	
-+	if (asd == NULL) {
-+		/* Requested controller not found */
-+		retcode = ASD_SAS_STATUS_INVALID_PARAMETER;
-+		err = -ENODEV;
-+		goto done;
-+	}
++	uint8_t		ctl1;
++#define PHY_CTL1_DEFAULT		0x10
++
++	uint8_t		ctl2;
++#define PHY_CTL2_DEFAULT		0x43
++
++	uint8_t		ctl3;
++#define PHY_CTL3_DEFAULT		0x83
++
++} __packed;
++
++/* Manufacturing Phy Parameters Layout */
++struct asd_manuf_phy_param_layout {
++	struct asd_manuf_seg_sign seg_sign;
++	uint8_t		major_ver;	/* 0x00 */
++	uint8_t		minor_ver;	/* 0x02 */
++	uint8_t		num_phy_desc;	/* 0x08 */
++	uint8_t		phy_desc_size;	/* 0x08 */
++	uint8_t		res1[3];
++	uint8_t		usage_model_id;
++	uint8_t		res2[4];
++} __packed;
++
++
++/* Phy Descriptor Unattached Layout */
++struct asd_pd_ua_format {
++	uint16_t	res1;
++	uint8_t		rel_phy_id;
++	/* size is specified by the node_desc format */
++} __packed;
++
++/* Phy Descriptor connector attached Layout */
++struct asd_pd_ca_format {
++	uint8_t		idx;
++	uint8_t		lane;
++	uint8_t		rel_phy_id;
++	/* size is specified by the node_desc format */
++} __packed;
++
++/* Phy Descriptor node attached Layout */
++struct asd_pd_na_format {
++	uint8_t		idx;
++	uint8_t		att_phy_id;
++	uint8_t		rel_phy_id;
++	/* size is specified by the node_desc format */
++} __packed;
++
++/* Node descriptor's Phy descriptor entries */
++struct asd_nd_phydesc_format {
++	uint8_t		type;
++#define NV_PD_UATTACH		0x00
++#define NV_PD_CONATTACH		0x01
++#define NV_PD_NODEATTACH	0x02
++
++	union {
++		struct asd_pd_ua_format uatt;
++		struct asd_pd_ca_format catt;
++		struct asd_pd_na_format natt;
++	}att_type;
++} __packed;
++
++/* Node Descriptor Layout */
++struct asd_node_desc_format {
++	uint8_t		type;
++#define NV_NODET_IOP		0x00
++#define NV_NODET_IOCTLR		0x01
++#define NV_NODET_EXPANDER	0x02
++#define NV_NODET_PORT_MUL	0x03
++#define NV_NODET_PORT_MUX	0x04
++#define NV_NODET_PORT_MDI2C_BUS	0x05
++
++	uint8_t		num_phy_desc;
++	uint8_t		phy_desc_size;
++	uint8_t		res1;
++
++#define NV_NODED_INST_NAME_SIZE 16
++	uint8_t		inst_name[NV_NODED_INST_NAME_SIZE];
++} __packed;
++
++/* SideBand Descriptor Layout */
++struct asd_sb_desc_format {
++	uint8_t		type;
++#define NV_SBT_UNKNOWN		0x00
++#define NV_SBT_SGPIO		0x01
++#define NV_SBT_ADPTI2C		0x80
++#define NV_SBT_VEN_UNQ01	0x81
++#define NV_SBT_VEN_UNQ7F	0xFF
++
++	uint8_t		node_desc_idx;
++	uint8_t		conn_desc_idx;
++	uint8_t		res1;
++	/* size is specified by the conn_desc format */
++} __packed;
++
++/* Connector Descriptor Layout */
++struct asd_conn_desc_format {
++	uint8_t		type;
++#define NV_CONNT_UNKNOWN	0x00
++#define NV_CONNT_SFF8470	0x08
++#define NV_CONNT_SFF8482	0x09
++#define NV_CONNT_SFF8484	0x0A
++#define NV_CONNT_PCIX_D0	0x80
++#define NV_CONNT_SAS_D0		0x81
++#define NV_CONNT_VEN_UNQ02	0x82
++#define NV_CONNT_VEN_UNQ7F	0xFF
++
++	uint8_t		location;
++#define NV_CONNL_UNKNOWN	0x00
++#define NV_CONNL_INTERNAL	0x01
++#define NV_CONNL_EXTERNAL	0x02
++#define NV_CONNL_B2B		0x03
++
++	uint8_t		num_sb_desc;
++	uint8_t		sb_desc_size;
++	uint32_t	res1;
++
++#define NV_CONND_INST_NAME_SIZE 16
++	uint8_t		inst_name[NV_CONND_INST_NAME_SIZE];
++} __packed;
++
++/* Connector Map Layout */
++struct asd_conn_map_format {
++	struct asd_manuf_seg_sign seg_sign;
++	uint8_t		major_ver;	/* 0x00 */
++	uint8_t		minor_ver;	/* 0x00 */
++	uint16_t	size;
++	uint8_t		num_conn_desc;
++	uint8_t		conn_desc_size;
++	uint8_t		num_node_desc;
++	uint8_t		usage_model_id;
++	uint32_t	res1;
++} __packed;
++
++struct asd_settings_layout {
++	uint8_t		id;
++#define NVRAM_PHY_SETTINGS_ID   	0x68
++#define NVRAM_BOOT_UNIT_SETTINGS_ID 	0x42
++#define NVRAM_BOOTLUN_SETTINGS_ID 	0x4c
++
++	uint8_t		res;
++	uint16_t	next_ptr;
++} __packed;
++
++
++/*
++ * The size of Flash directory structure must be 64 bytes for backward
++ * compatibility.
++ */
++struct asd_fd_entry_layout {
++	uint32_t	attr;
++#define FD_ENTRYTYPE_CODE	0x3FFFFFFF
++#define FD_SEGMENT_ATTR		0x40000000
++
++	uint32_t	offset;
++	uint32_t	pad_size;
++	uint32_t	image_size;
++	uint32_t	checksum;
++	uint8_t		res[12];
++	uint8_t		ver_data[32];
++} __packed;
++
++struct asd_flash_dir_layout {
 +	
-+	if (!asd->hw_profile.flash_present) {
-+		retcode = ASD_SAS_STATUS_FAILED;
-+		err = -EINVAL;
-+		goto done;
-+	}
-+	
-+	err = 0;
-+	retcode = ASD_SAS_STATUS_SUCCESS; 
-+	pdest_buffer = NULL;
-+	pasd_ctl_mgmt = &asd->asd_ctl_internal.mgmt;
-+	
-+	if ((pdest_buffer = (uint8_t *)asd_valloc_mem(
-+				pasd_read_nv_seg->uBytesToRead)) == NULL) {
-+		retcode = ASD_SAS_STATUS_FAILED;
-+		err = -ENOMEM;
-+		goto done;
-+	}
-+	memset(pdest_buffer, 0, pasd_read_nv_seg->uBytesToRead);
-+	
-+	down_interruptible(&pasd_ctl_mgmt->sem);
-+	err = asd_ctl_read_from_nvram(asd, pasd_read_nv_buf, 
-+				      pdest_buffer);
-+	up(&pasd_ctl_mgmt->sem);
++	uint8_t		cookie[32];	/* "*** ADAPTEC FLASH DIRECTORY *** " */
++	uint32_t	rev;		/* 0x00000002 */
++	uint32_t	wchk_sum;
++	uint32_t	wchk_sum_antidote;
++	uint32_t	build_num;
++	uint8_t		build_id[32];
++	uint8_t		ver_data[32];
++	uint32_t	ae_mask;
++	uint32_t	v_mask;
++	uint32_t	oc_mask;
++	uint8_t		res1[20];
++	//struct asd_fd_entry_layout entry[1];
++} __packed;
 +
-+	if (err) {
-+		retcode = ASD_SAS_STATUS_FAILED; 
-+	} else {
-+		retcode = ASD_SAS_STATUS_SUCCESS; 
-+		if ((err = copy_to_user((void *)arg + asd_user_buf_len,
-+					pdest_buffer,
-+					pasd_read_nv_seg->uBytesRead))) {
-+			retcode = ASD_SAS_STATUS_FAILED; 
-+		}
-+	}
++struct asd_phy_settings_entry_layout {
++	uint8_t		sas_addr[SAS_ADDR_LEN];
++	uint8_t		link_rate;		/*
++						 * bits 0-3: minimum link rate
++						 * bits 4-7: maximum link rate
++						 */
++#define PHY_MIN_LINK_RATE_15	0x08
++#define PHY_MIN_LINK_RATE_30	0x09
++#define PHY_MIN_LINK_RATE_MASK	0x0F
 +
-+	asd_vfree_mem(pdest_buffer);
-+done:
-+	asd_ctl_copy_to_user((void *)arg, pasd_read_nv_buf, 
-+			     asd_user_buf_len, retcode);
-+	asd_free_mem(pasd_read_nv_buf);
-+	return err;
-+}
++#define PHY_MAX_LINK_RATE_15	0x80
++#define PHY_MAX_LINK_RATE_30	0x90
++#define PHY_MAX_LINK_RATE_MASK	0xF0
 +
-+/* helper routines */
-+static int asd_ctl_write_to_nvram(struct asd_softc *asd,
-+	struct ASD_SAS_WRITE_NV_SEGMENT_BUFFER *pasd_write_nv_buf,
-+	uint8_t *psource_buffer)
-+{
-+	struct ASD_SAS_WRITE_NV_SEGMENT *pasd_write_nv_seg;
-+	struct IOCTL_HEADER *pioctl_header;
-+	struct asd_ctl_mgmt *pasd_ctl_mgmt;
-+	uint32_t nv_segment_id, nv_offset;
-+	uint32_t pad_size, image_size, attr;
-+	u_long flags;
-+	int retcode;
-+	int err;
-+	
-+	pioctl_header = &pasd_write_nv_buf->IoctlHeader;
-+	pasd_write_nv_seg = &pasd_write_nv_buf->Information;
-+	pasd_ctl_mgmt = &asd->asd_ctl_internal.mgmt;
-+	
-+	if (test_and_set_bit(ASD_CTL_INTERNAL_BUSY_BIT_NR, 
-+			     &pasd_ctl_mgmt->busy)) { 
-+		return -EBUSY;
-+	}
-+	asd_lock(asd, &flags);
-+	err = 0;
-+	retcode = ASD_SAS_STATUS_SUCCESS;
-+	switch (pasd_write_nv_seg->uSegmentID) {
-+	case ASD_SAS_SEGMENT_ID_MANUFACTURING_SECTOR0:
-+	{
-+		asd_ctl_map_nv_segid_from_ext(pasd_write_nv_seg->uSegmentID,
-+					      &nv_segment_id);
-+		if ((err = asd_hwi_search_nv_segment(asd, nv_segment_id, 
-+				&nv_offset, &pad_size, &image_size, 
-+				&attr)) != 0) {
-+			err = -1;
-+			pasd_write_nv_seg->uStatus = ASD_SAS_NV_FAILURE;
-+			break;
-+		}
-+		err = asd_ctl_write_to_flash(asd, psource_buffer, 
-+			nv_segment_id,
-+			pasd_write_nv_seg->uDestinationOffset, 
-+			pasd_write_nv_seg->uBufferLength);
-+		break;
-+	}
-+	case ASD_SAS_SEGMENT_ID_FLASH0:
-+	{
-+		err = asd_ctl_write_to_flash(asd, psource_buffer, 
-+			NVRAM_NO_SEGMENT_ID,
-+			pasd_write_nv_seg->uDestinationOffset, 
-+			pasd_write_nv_seg->uBufferLength);
-+		break;
-+	}
-+	case ASD_SAS_SEGMENT_ID_SEEPROM0:
-+	case ASD_SAS_SEGMENT_ID_FLASH_DIRECTORY0:
-+	case ASD_SAS_SEGMENT_ID_CTRL_A_USER_SETTINGS0:
-+	case ASD_SAS_SEGMENT_ID_COMPATIBILITY_SECTOR0:
-+	default:
-+		pasd_write_nv_seg->uStatus = ASD_SAS_NV_FAILURE;
-+		err = -EINVAL;
-+		break;
-+	}
++	uint8_t		attr;			/*
++						 * bit 0: disable CRC checking
++						 * bit 1: SATA spinup hold
++						 */
++	uint8_t		res1[6];
++} __packed;
++    
++struct asd_phy_settings_layout {
++	struct asd_settings_layout settings;
++	uint8_t		num_phys;
++	uint8_t		res2[3];
++	//struct asd_phy_settings_entry_layout entry[1];
++} __packed;
 +
-+	asd_unlock(asd, &flags);
++struct asd_boot_lu_layout {
++	uint8_t		serial_no[4];		/* Adapter serial number */
++	/* Boot device's SAS address */
++	uint8_t		dev_port_sas_addr[SAS_ADDR_LEN];
++	uint8_t		lun[8];			/* Boot device LUN */
++	uint8_t		phy_id;			/*
++						 * Phy ID of the attached boot
++						 * device (direct attached
++						 * SATA only).
++						 */
++	uint8_t		res1;
++	uint16_t	attr;
++	uint8_t		conn_rate;		/*
++						 * bit   0: force connection
++						 * bit 4-7: connection rate
++						 */
++#define BOOT_FORCE_CONN 	0x01
++#define BOOT_CONN_RATE_15	0x80
++#define BOOT_CONN_RATE_30	0x90
++#define BOOT_CONN_RATE_MASK	0xF0
 +
-+	/* return */
-+	clear_bit(ASD_CTL_INTERNAL_BUSY_BIT_NR, &pasd_ctl_mgmt->busy);
-+	return err;
-+}
++	uint8_t		res2[7];
++} __packed;
++    
++struct asd_pci_layout {
++	uint8_t		id;
++	uint8_t		res;
++	uint16_t	next_ptr;
++	uint8_t		major_ver;
++	uint8_t		minor_ver;
++	uint16_t	checksum;
++	uint16_t	image_size;
++} __packed;
 +
-+static int asd_ctl_read_from_nvram(struct asd_softc *asd,
-+	struct ASD_SAS_READ_NV_SEGMENT_BUFFER *pasd_read_nv_buf,
-+	uint8_t *pdest_buffer)
-+{
-+	struct ASD_SAS_READ_NV_SEGMENT *pasd_read_nv_seg;
-+	struct IOCTL_HEADER *pioctl_header;
-+	struct asd_ctl_mgmt *pasd_ctl_mgmt;
-+	uint32_t nv_segment_id;
-+	u_long flags;
-+	int retcode;
-+	int err;
-+	
-+	pioctl_header = &pasd_read_nv_buf->IoctlHeader;
-+	pasd_read_nv_seg = &pasd_read_nv_buf->Information;
-+	pasd_ctl_mgmt = &asd->asd_ctl_internal.mgmt;
-+	
-+	if (test_and_set_bit(ASD_CTL_INTERNAL_BUSY_BIT_NR, 
-+			     &pasd_ctl_mgmt->busy)) { 
-+		return -EBUSY;
-+	}
-+	err = 0;
-+	retcode = ASD_SAS_STATUS_SUCCESS;
-+	
-+	asd_lock(asd, &flags);
-+	switch (pasd_read_nv_seg->uSegmentID) {
-+	case ASD_SAS_SEGMENT_ID_CTRL_A_USER_SETTINGS0:
-+	case ASD_SAS_SEGMENT_ID_MANUFACTURING_SECTOR0:
-+	{
-+		asd_ctl_map_nv_segid_from_ext(
-+			pasd_read_nv_seg->uSegmentID,
-+			&nv_segment_id);
++/************************ Flash part related macros ***********************/
++#define FLASH_MANUF_ID_AMD		0x01
++#define FLASH_MANUF_ID_UNKNOWN		0xFF
 +
-+		if (asd_hwi_read_nv_segment(asd, 
-+				nv_segment_id,
-+				(void *)pdest_buffer,
-+				pasd_read_nv_seg->uSourceOffset, 
-+				pasd_read_nv_seg->uBytesToRead, 
-+				&pasd_read_nv_seg->uBytesRead
-+				) != 0) {
-+			pasd_read_nv_seg->uStatus = ASD_SAS_NV_FAILURE;
-+			err = -EINVAL;
-+			break;
-+		}
-+		pasd_read_nv_seg->uStatus = ASD_SAS_NV_SUCCESS;
-+		break;
-+	}
-+	case ASD_SAS_SEGMENT_ID_FLASH_DIRECTORY0:
-+	{
-+		struct asd_flash_dir_layout flash_dir;
-+		uint32_t nv_addr;
++#define FLASH_DEV_ID_AM29LV008B		0x3E
++#define FLASH_DEV_ID_AM29LV800D		0xDA
++#define FLASH_DEV_ID_UNKNOWN		0xFF
 +
-+		if (asd_hwi_search_nv_cookie(asd, &nv_addr, &flash_dir) != 0) {
-+			err = -1;
-+			break;
-+		}
-+		nv_addr += /*NVRAM_FIRST_DIR_ENTRY +*/
-+			pasd_read_nv_seg->uSourceOffset;
++/* status bit mask values */
++#define FLASH_STATUS_BIT_MASK_DQ6	0x40
++#define FLASH_STATUS_BIT_MASK_DQ5	0x20
++#define FLASH_STATUS_BIT_MASK_DQ2	0x04
 +
-+		if (asd_hwi_read_nv_segment(asd, NVRAM_NO_SEGMENT_ID,
-+				(void *)pdest_buffer, nv_addr,
-+				pasd_read_nv_seg->uBytesToRead, 
-+				&pasd_read_nv_seg->uBytesRead
-+				) != 0) {
-+			err = -1;
-+			break;
-+		}
-+		break;
-+	}	
-+	case ASD_SAS_SEGMENT_ID_FLASH0:
-+	{
-+		if (asd_hwi_read_nv_segment(asd, 
-+				NVRAM_NO_SEGMENT_ID,
-+				(void *)pdest_buffer,
-+				pasd_read_nv_seg->uSourceOffset, 
-+				pasd_read_nv_seg->uBytesToRead, 
-+				&pasd_read_nv_seg->uBytesRead
-+				) != 0) {
-+			pasd_read_nv_seg->uStatus = ASD_SAS_NV_FAILURE;
-+			err = -EINVAL;
-+			break;
-+		}
-+		pasd_read_nv_seg->uStatus = ASD_SAS_NV_SUCCESS;
-+		break;
-+	}
-+	case ASD_SAS_SEGMENT_ID_SEEPROM0:
-+	case ASD_SAS_SEGMENT_ID_COMPATIBILITY_SECTOR0:/*TBD*/
-+	default:
-+		pasd_read_nv_seg->uStatus = ASD_SAS_NV_FAILURE;
-+		err = -EINVAL;
-+		break;
-+	}
-+	asd_unlock(asd, &flags);
++/* minimum value in micro seconds needed for checking status */
++#define FLASH_STATUS_ERASE_DELAY_COUNT	50
++#define FLASH_STATUS_WRITE_DELAY_COUNT	25
 +
-+	/* return */
-+	clear_bit(ASD_CTL_INTERNAL_BUSY_BIT_NR, &pasd_ctl_mgmt->busy);
-+	return err;
-+}
++#endif /* NVRAM_SUPPORT */
 +
-+static uint32_t asd_ctl_write_to_flash(struct asd_softc *asd, 
-+			uint8_t *src_img_addr, uint32_t segment_id, 
-+			uint32_t dest_nv_offset, uint32_t src_img_size)
-+{
-+	uint32_t flash_addr;
++#endif /* ADP94XX_HWI_H */
 +
-+	flash_addr = 0;
-+
-+	/* Need to unlock MBAR key register */
-+	flash_addr = asd_pcic_read_dword(asd, PCIC_MBAR_KEY);
-+	if (flash_addr != 0) {
-+		/* currently locked, need to unlock */
-+		asd_pcic_write_dword(asd, PCIC_MBAR_KEY, flash_addr);
-+	}
-+	if (asd_hwi_write_nv_segment(asd, 
-+			(void *)src_img_addr, segment_id, 
-+			dest_nv_offset, src_img_size) != 0) {
-+		return -EINVAL;
-+	}
-+	return 0;
-+}
 
