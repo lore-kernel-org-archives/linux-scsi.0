@@ -1,74 +1,50 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: /dev/hd* in sg_scan
-Date: Tue, 28 Oct 2003 23:35:31 -0500
+From: Patrick Mansfield <patmans@us.ibm.com>
+Subject: Re: [usb-storage] Re: [PATCH] SCSI: limit mode sense usage
+Date: Tue, 28 Oct 2003 23:21:54 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3F9F4393.5060602@torque.net>
-References: <1067299763.3469.6.camel@patehci2>
-Reply-To: dougg@torque.net
+Message-ID: <20031028232154.A15780@beaverton.ibm.com>
+References: <1067376788.1056.5.camel@ronald.kuetemeier.com> <Pine.LNX.4.44L0.0310281737350.6912-100000@ida.rowland.org> <20031028175157.A14803@beaverton.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from tomts20.bellnexxia.net ([209.226.175.74]:22928 "EHLO
-	tomts20-srv.bellnexxia.net") by vger.kernel.org with ESMTP
-	id S261740AbTJ2Efi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 28 Oct 2003 23:35:38 -0500
-In-Reply-To: <1067299763.3469.6.camel@patehci2>
+Received: from e4.ny.us.ibm.com ([32.97.182.104]:44197 "EHLO e4.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S261923AbTJ2HXv (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 29 Oct 2003 02:23:51 -0500
+Content-Disposition: inline
+In-Reply-To: <20031028175157.A14803@beaverton.ibm.com>; from patmans@us.ibm.com on Tue, Oct 28, 2003 at 05:51:57PM -0800
 List-Id: linux-scsi@vger.kernel.org
-To: Pat LaVarre <p.lavarre@ieee.org>
-Cc: linux-scsi@vger.kernel.org
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: Ronald Kuetemeier <ronald@kuetemeier.com>, SCSI development list <linux-scsi@vger.kernel.org>, USB Storage List <usb-storage@one-eyed-alien.net>
 
-Pat LaVarre wrote:
->>http://tldp.org/HOWTO/SCSI-Generic-HOWTO/open.html
->>... O_NONBLOCK ... ignored by ioctl(SG_IO)
-> 
-> 
-> As of 2.6, in fact we now need O_NONBLOCK if we want open O_RDONLY to
-> let us talk SG_IO to a DVD/CD with no disk present?  Also we discard the
-> history of passing thru less commands for O_RDONLY than for O_RDWR?
-> 
-> Reaching those conclusions inspired me to try the following trivial
-> inline patch for sg3_utils-1.05/sg_scan.c.  I see this patch brings much
-> of /dev/hd* to the notice of sg utils sg_scan.  However, this patch may
-> not be ready for prime-time, some of the code I flowed around I do not
-> understand.
-> 
-> Do we intend to make /dev/hd[a-z] available for passing ioctl SG_IO thru
-> to ATAPI DVD/CD, in 2.6?  Or for 2.6 do we recommend ab/using some other
-> device name?
-> 
-> Patched sg_scan success here looks like:
-> 
-> $ sudo sg_scan -i
-> /dev/hda: scsi0 channel=0 id=0 lun=0
-> /dev/hdc: scsi0 channel=0 id=0 lun=0 [em]
->     LITE-ON   COMBO LTC-48161H  KH0K [wide=0 sync=0 cmdq=0 sftre=0 pq=0x0]
-> /dev/sg0: scsi0 channel=0 id=0 lun=0 [em]  type=5
->     Iomega    RRD               01.U [wide=0 sync=0 cmdq=0 sftre=0 pq=0x0]
-> $
-> 
-> Perhaps the soft bridge from SCSI to ATA HDD in Linux, like some
-> FireWire HDD, is an apparently SCSI device that does not support op x12
-> Inquiry.
+On Tue, Oct 28, 2003 at 05:51:57PM -0800, Patrick Mansfield wrote:
+> On Tue, Oct 28, 2003 at 05:49:48PM -0500, Alan Stern wrote:
 
-Pat,
-Sg3_utils' sg_map and sg_scan for lk 2.6 still have me
-thinking (and waiting). Currently sg devices have no
-sysfs presence (yes Christoph, I'm still waiting). My
-patch to the sg driver to use cdevs (char devices with
-sysfs visibility and > 256 minors) seems to fallen foul
-of the latest freeze. So scsi tape robots and enclosures
-won't have any sysfs visibility.
+> > Your device doesn't like the MODE-SENSE(10) for page 3F.  But instead of 
+> > reporting a normal error code, it tries to send an overlong packet (i.e., 
+> > longer than the host asked for).  Of course this is an error, and the SCSI 
+> > code retries several times, eventually giving up.  Oddly enough, the 
+> > device then returns an Invalid Command status for the _next_ command, 
+> > which is an innocuous TEST-UNIT-READY.  I don't understand that.
 
-Now as for /dev/hd and /dev/sd the situation is complex
-and probably going to get worse before it get better.
-With either /dev/hd and /dev/sd you may soon want to find
-out (or probe) before making any assumptions:
-   - what protocol are you using (e.g. ATA, ATAPI, SCSI)
-   - what transport (e.g. pATA, sATA, SPI, FC, USB, SAS)
+> I think the sdev->changed is getting set, causing the read command
+> (sd_init_command fails) to fail.
+> 
+> I'll look more tomorrow. If anyone figures out or knows the sdev->changed
+> code please post.
 
-Anyways your patch looks interesting and hope to add it
-soon (currently I'm rewriting sginfo).
+If we get ILLEGAL REQUEST for the TEST UNIT READY via scsi_ioctl in the
+sd_media_changed, the sdev->changed will be set. So that explains the
+failure of the sd_init_command (on READ), given the the TEST UNIT READY is
+getting one (Invalid Command status).
 
-Doug Gilbert
+So (still) why the odd result of the TEST UNIT READY? 
 
+And why so many apparent open's?
+
+If USB code is OK, and we can't detect and fix anything in USB, one patch
+(hack) might be to treat an ILLEGAL REQUEST with TEST UNIT READY as a
+retry case in scsi_decide_disposition, since that is generally impossible.
+
+-- Patrick Mansfield
+~                                                      
