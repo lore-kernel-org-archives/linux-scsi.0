@@ -1,49 +1,39 @@
-From: Jens Axboe <axboe@suse.de>
+From: William Lee Irwin III <wli@holomorphy.com>
 Subject: Re: [PATCH][2.6.8-rc1-mm1] drivers/scsi/sg.c gcc341 inlining fix
-Date: Thu, 15 Jul 2004 07:56:56 +0200
+Date: Wed, 14 Jul 2004 23:12:54 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040715055655.GE9383@suse.de>
-References: <200407141751.i6EHprhf009045@harpo.it.uu.se> <40F57D14.9030005@pobox.com> <20040714143508.3dc25d58.akpm@osdl.org>
+Message-ID: <20040715061254.GP3411@holomorphy.com>
+References: <200407141751.i6EHprhf009045@harpo.it.uu.se> <40F57D14.9030005@pobox.com> <20040714143508.3dc25d58.akpm@osdl.org> <20040715055655.GE9383@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns.virtualhost.dk ([195.184.98.160]:38062 "EHLO virtualhost.dk")
-	by vger.kernel.org with ESMTP id S266016AbUGOF5Q (ORCPT
+Received: from holomorphy.com ([207.189.100.168]:41634 "EHLO holomorphy.com")
+	by vger.kernel.org with ESMTP id S266114AbUGOGNO (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 15 Jul 2004 01:57:16 -0400
+	Thu, 15 Jul 2004 02:13:14 -0400
 Content-Disposition: inline
-In-Reply-To: <20040714143508.3dc25d58.akpm@osdl.org>
+In-Reply-To: <20040715055655.GE9383@suse.de>
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
-Cc: Jeff Garzik <jgarzik@pobox.com>, mikpe@csd.uu.se, B.Zolnierkiewicz@elka.pw.edu.pl, dgilbert@interlog.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Jens Axboe <axboe@suse.de>
+Cc: Andrew Morton <akpm@osdl.org>, Jeff Garzik <jgarzik@pobox.com>, mikpe@csd.uu.se, B.Zolnierkiewicz@elka.pw.edu.pl, dgilbert@interlog.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+
+Jeff Garzik <jgarzik@pobox.com> wrote:
+>>> Or you could just call it "gcc is dumb" rather than a compiler bug.
 
 On Wed, Jul 14 2004, Andrew Morton wrote:
-> Jeff Garzik <jgarzik@pobox.com> wrote:
-> >
-> > Or you could just call it "gcc is dumb" rather than a compiler bug.
-> 
-> Yeah, but doing:
-> 
-> 	static inline foo(void);
-> 
-> 	bar()
-> 	{
-> 		...
-> 		foo();
-> 	}
-> 
-> 	static inline foo(void)
-> 	{
-> 		...
-> 	}
-> 
-> is pretty dumb too.  I don't see any harm if this compiler feature/problem
-> pushes us to fix the above in the obvious way.
+[... code snippet ...]
+>> is pretty dumb too.  I don't see any harm if this compiler feature/problem
+>> pushes us to fix the above in the obvious way.
 
-Excuse my ignorance, but why on earth would that be dumb? Looks
-perfectly legit to me, and I have to agree with Jeff that the compiler
-is exceedingly dumb if it fails to inline that case.
+On Thu, Jul 15, 2004 at 07:56:56AM +0200, Jens Axboe wrote:
+> Excuse my ignorance, but why on earth would that be dumb? Looks
+> perfectly legit to me, and I have to agree with Jeff that the compiler
+> is exceedingly dumb if it fails to inline that case.
 
--- 
-Jens Axboe
+Enter gcc...
 
+Maybe "the obvious way" is sending a someone off to whip gcc into shape,
+or possibly reporting it as a gcc problem.
+
+
+-- wli
