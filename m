@@ -1,62 +1,67 @@
 From: Matthew Dharm <mdharm-scsi@one-eyed-alien.net>
-Subject: Re: PATCH: usb-storage: move to SCSI hotplugging
-Date: Sun, 19 Jan 2003 17:11:45 -0800
+Subject: PATCH: usb-storage: fix typo
+Date: Sun, 19 Jan 2003 17:16:02 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030119171144.B31114@one-eyed-alien.net>
-References: <20030119143058.A31114@one-eyed-alien.net> <200301192356.01601.oliver@neukum.name>
+Message-ID: <20030119171602.D31114@one-eyed-alien.net>
+References: <20030119143058.A31114@one-eyed-alien.net>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=pgp-md5;
-	protocol="application/pgp-signature"; boundary="ftEhullJWpWg/VHq"
+	protocol="application/pgp-signature"; boundary="3Pql8miugIZX0722"
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <200301192356.01601.oliver@neukum.name>; from oliver@neukum.name on Sun, Jan 19, 2003 at 11:56:01PM +0100
+In-Reply-To: <20030119143058.A31114@one-eyed-alien.net>; from mdharm-usb@one-eyed-alien.net on Sun, Jan 19, 2003 at 02:30:58PM -0800
 List-Id: linux-scsi@vger.kernel.org
-To: Oliver Neukum <oliver@neukum.name>
-Cc: Greg KH <greg@kroah.com>, USB Developers <linux-usb-devel@lists.sourceforge.net>, USB Storage List <usb-storage@one-eyed-alien.net>, Mike Anderson <andmike@us.ibm.com>, Linux SCSI list <linux-scsi@vger.kernel.org>
+To: Greg KH <greg@kroah.com>, USB Developers <linux-usb-devel@lists.sourceforge.net>, USB Storage List <usb-storage@one-eyed-alien.net>, Mike Anderson <andmike@us.ibm.com>, Linux SCSI list <linux-scsi@vger.kernel.org>
 
 
---ftEhullJWpWg/VHq
+--3Pql8miugIZX0722
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
 Content-Transfer-Encoding: quoted-printable
 
-On Sun, Jan 19, 2003 at 11:56:01PM +0100, Oliver Neukum wrote:
-> Am Sonntag, 19. Januar 2003 23:30 schrieb Matthew Dharm:
-> > The attached patch is my first implementation of SCSI hotplugging.
-> >
-> > It's only been tested that it compiles, as I can't get the current
-> > linux-2.5 tree from linuxusb to boot.  It dies _very_ early.  Greg, I'm=
- not
->=20
-> Just a black screen?
-> I suffered from the same problem until today. The key was to compile
-> without VGA mode selection.
+This patch goes on top of the last one.  It fixes a typo in the test for
+scsi_register() failure.
 
-Nope.  It loads, uncompresses, and stops a few lines after reading the
-memory map.
-
-> As for the patch itself, it's quite hard to grasp something of this size.
-> Is the information previously used to make GUID available to other parts
-> of the kernel? Otherwise I think you should not cut it out, but only remo=
-ve
-> the reattachment part.
-
-GUID is a combination of VID, PID, and serial number.  Anyone can make one.
-The only reason to have it was for re-attachment.
+Please apply.
 
 Matt
 
+# This is a BitKeeper generated patch for the following project:
+# Project Name: greg k-h's linux 2.5 USB kernel tree
+# This patch format is intended for GNU patch command version 2.5 or higher.
+# This patch includes the following deltas:
+#	           ChangeSet	1.667   -> 1.668 =20
+#	drivers/usb/storage/usb.c	1.68    -> 1.69  =20
+#
+# The following is the BitKeeper ChangeSet Log
+# --------------------------------------------
+# 03/01/19	mdharm@zen.san.one-eyed-alien.net	1.668
+# Fix a typo -- reversed the logic of failure test for scsi_register()
+# --------------------------------------------
+#
+diff -Nru a/drivers/usb/storage/usb.c b/drivers/usb/storage/usb.c
+--- a/drivers/usb/storage/usb.c	Sun Jan 19 17:15:18 2003
++++ b/drivers/usb/storage/usb.c	Sun Jan 19 17:15:18 2003
+@@ -912,7 +912,7 @@
+=20
+ 	/* now register	*/
+ 	ss->host =3D scsi_register(&usb_stor_host_template, sizeof(ss));
+-	if (ss->host) {
++	if (!ss->host) {
+ 		printk(KERN_WARNING USB_STORAGE
+ 			"Unable to register the scsi host\n");
+=20
 --=20
 Matthew Dharm                              Home: mdharm-usb@one-eyed-alien.=
 net=20
 Maintainer, Linux USB Mass Storage Driver
 
-We've made a business out of making money from annoying and stupid people.
-I think you fall under that category.
-					-- Chief
-User Friendly, 7/11/1998
+I don't have a left mouse button.  I only have one mouse and it's on my rig=
+ht.
+					-- Customer
+User Friendly, 2/13/1999
 
---ftEhullJWpWg/VHq
+--3Pql8miugIZX0722
 Content-Type: application/pgp-signature
 Content-Disposition: inline
 
@@ -64,9 +69,9 @@ Content-Disposition: inline
 Version: GnuPG v1.0.6 (GNU/Linux)
 Comment: For info see http://www.gnupg.org
 
-iD8DBQE+K0zQIjReC7bSPZARAg0xAJ9bRLpnWz5HeS74NGgdnBWTNZ2v2gCcCi9y
-KmtmxMotSOHdvDI01Nmpnp8=
-=fTUq
+iD8DBQE+K03RIjReC7bSPZARAuZkAJ0cXEpT9Xg3QV1JUP9lx0bsPZQW4gCgo0l+
+7z7kvBeIjOtbNWSysH/qBxQ=
+=w817
 -----END PGP SIGNATURE-----
 
---ftEhullJWpWg/VHq--
+--3Pql8miugIZX0722--
