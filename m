@@ -1,48 +1,28 @@
-From: Patrick Mansfield <patmans@us.ibm.com>
-Subject: [PATCH/RFT] check non-scsi part of status in scsi_status_is_good
-Date: Wed, 29 Oct 2003 08:46:56 -0800
+From: James Bottomley <James.Bottomley@steeleye.com>
+Subject: Re: [PATCH] sym53c8xx PPR negotiation fix
+Date: 29 Oct 2003 11:11:28 -0600
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20031029084656.B18130@beaverton.ibm.com>
-References: <1067313069.1277.17.camel@ronald.kuetemeier.com> <Pine.LNX.4.44L0.0310280959590.793-100000@ida.rowland.org> <20031028071637.B8503@beaverton.ibm.com> <1067355769.1102.17.camel@ronald.kuetemeier.com>
+Message-ID: <1067447490.1829.30.camel@mulgrave>
+References: <1067447221.3112.336.camel@compaq.xsintricity.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e32.co.us.ibm.com ([32.97.110.130]:22189 "EHLO
-	e32.co.us.ibm.com") by vger.kernel.org with ESMTP id S261923AbTJ2QsC
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 29 Oct 2003 11:48:02 -0500
-Content-Disposition: inline
-In-Reply-To: <1067355769.1102.17.camel@ronald.kuetemeier.com>; from ronald@kuetemeier.com on Tue, Oct 28, 2003 at 08:42:49AM -0700
+Received: from nat9.steeleye.com ([65.114.3.137]:5124 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S262098AbTJ2RLm (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 29 Oct 2003 12:11:42 -0500
+In-Reply-To: <1067447221.3112.336.camel@compaq.xsintricity.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Ronald Kuetemeier <ronald@kuetemeier.com>
-Cc: Alan Stern <stern@rowland.harvard.edu>, SCSI development list <linux-scsi@vger.kernel.org>, USB Storage List <usb-storage@one-eyed-alien.net>, James Bottomley <James.Bottomley@steeleye.com>
+To: Doug Ledford <dledford@redhat.com>
+Cc: Marcelo Tosatti <marcelo@conectiva.com.br>, linux-scsi mailing list <linux-scsi@vger.kernel.org>
 
-Ronald can you test this out, and send usb storage logs?
+On Wed, 2003-10-29 at 11:07, Doug Ledford wrote:
+> I haven't checked if this is applicable to 2.6 as well.  James?
 
-For your device I assume we will now send a MODE SENSE page 0x0 that will
-get a bogus ILLEGAL REQUEST, but then the following MODE SENSE page 0x3f
-with a longer length might work.
+Well, the sym driver doesn't exist anymore in 2.6...however sym_2 had a
+similar issue.  Matthew Wilcox has already fixed it though, I think.
 
-I test booted, but do not have any removable media or USB storage
-attached.
+James
 
-----------------
 
-Only the scsi status byte is being checked for all callers of
-scsi_status_is_good. This means non-scsi errors are treated as no error at
-all without this fix.
-
-diff -uprN -X /home/patman/dontdiff bl-25/include/scsi/scsi.h status-fix-bl-2.5/include/scsi/scsi.h
---- bl-25/include/scsi/scsi.h	Mon Sep 29 12:21:10 2003
-+++ status-fix-bl-2.5/include/scsi/scsi.h	Wed Oct 29 07:19:56 2003
-@@ -126,6 +126,8 @@ extern const unsigned char scsi_command_
-  */
- static inline int scsi_status_is_good(int status)
- {
-+	if (status & 0xffffff00)
-+		return 0;
- 	/*
- 	 * FIXME: bit0 is listed as reserved in SCSI-2, but is
- 	 * significant in SCSI-3.  For now, we follow the SCSI-2
-
--- Patrick Mansfield
