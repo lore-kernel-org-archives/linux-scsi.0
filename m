@@ -1,44 +1,36 @@
-From: Bryan Henderson <hbryan@us.ibm.com>
-Subject: Re: [linux-iscsi-devel] Re: [PATCH RFC] replace ioctl for sysfs take 2
-Date: Wed, 8 Sep 2004 11:11:25 -0700
+From: jklaas <jklaas@comcast.net>
+Subject: firmware help
+Date: Wed, 8 Sep 2004 14:51:42 -0400 (EDT)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <OF59D5DAF5.BDA4196D-ON88256F09.0062890C-88256F09.0063EF14@us.ibm.com>
-References: <20040908073843.7dbcddb6.rddunlap@osdl.org>
+Message-ID: <Pine.LNX.4.58.0409081347100.27903@shenandoah>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e4.ny.us.ibm.com ([32.97.182.104]:25279 "EHLO e4.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S269277AbUIHSNU (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Sep 2004 14:13:20 -0400
-In-Reply-To: <20040908073843.7dbcddb6.rddunlap@osdl.org>
+Received: from rwcrmhc12.comcast.net ([216.148.227.85]:44772 "EHLO
+	rwcrmhc12.comcast.net") by vger.kernel.org with ESMTP
+	id S269301AbUIHSvk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 8 Sep 2004 14:51:40 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: "Randy.Dunlap" <rddunlap@osdl.org>
-Cc: dougg@torque.net, hch@lst.de, James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org, linux-scsi-owner@vger.kernel.org, michaelc@cs.wisc.edu, mikenc@us.ibm.com, sferris@acm.org, surekhap@cisco.com, willy@debian.org
+To: linux-scsi@vger.kernel.org
 
->Sorry to be dense here, but what is an "initiator port" in this context?
->Is it a physical connector or something else?  A logical connector?
->(whatever that means)
+>From everything I've read about firmware on SCSI drives, it appears to be
+impossible to extract the firmware from a drive.  I was hoping that there
+was some sort of SCSI programming judo to make this drive divulge this
+information.  Would I be better off trying to extract the firmware
+directly from the flash chip somehow?
 
-The context is ISCSI; the ISCSI spec rigorously defines the term "SCSI 
-initiator port."  But it defines it quite abstractly, which is why we can 
-have discussions like this one -- whether in a Linux implementation a SCSI 
-initiator port should map to a Linux SCSI host or channel or whatever.
+I was hoping to find some firmware for some EMC Symmetrix/Seagate drives.
+These are Elite 47 drives labelled with Seagate model #ST446452W, and
+a "non-Seagate" part number 9K7001-021.  These drives were apparently only
+ever sold to EMC and were designed by Seagate for EMC specifically.  (Is
+this true of all the Elite drives?)
 
-The SCSI initiator port is what in simpler times was a physical connector. 
- In ISCSI it is just the initiator-side endpoint of an ISCSI 
-(initator-target) session.  It is more abstract than a physical connector, 
-and even more abstract than a TCP port.  A SCSI initiator port is 
-identified by an ISCSI initiator device name (= node name) and ISID.  A 
-SCSI initiator port belongs to a particular SCSI initiator device. 
-Multiple SCSI initiator ports can go to a single SCSI initiator device. An 
-ISCSI target reaches a SCSI initiator device via a SCSI initiator port. An 
-ISCSI target reaches a SCSI initiator port via TCP ports, but not in any 
-simple mapping.
+Seagate said "The part number you provided for us indicates that the drive
+is OEM.  Please contact your vendor to receive the proper firmware
+upgrade."  Unfortunately, EMCs support site is impenetrable.
 
-If you're asking how an ISCSI initiator port is _implemented_ in a 
-Linux-based initiator, that's what's under discussion.  There's more than 
-one way to do it, and different people have done it different ways.
+Thank you for your help.
 
---
-Bryan Henderson                          IBM Almaden Research Center
-San Jose CA                              Filesystems
+			James Klaas
+
+Procrastinate NOW!!!! -- Don't put it off.
