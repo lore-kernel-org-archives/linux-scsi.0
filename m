@@ -1,30 +1,36 @@
-From: Pat LaVarre <p.lavarre@ieee.org>
-Subject: Re: CDC_RAM for lk 2.4, PATCH proposed
-Date: 04 Jun 2004 09:27:35 -0600
+From: James Bottomley <James.Bottomley@steeleye.com>
+Subject: Re: [PATCH] sg driver against lk 2.6.6
+Date: 04 Jun 2004 10:28:39 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1086362855.16914.5.camel@patibmrh9>
-References: <20040604145346.GA18777@logos.cnet><1086362327.16498.21.camel@p
-	atibmrh9>  <20040604152422.GE1946@suse.de>
+Message-ID: <1086362921.2047.2.camel@mulgrave>
+References: <20040502214525.5ad05bed.akpm@osdl.org>
+	<20040503122948.GI2281@parcelfarce.linux.theplanet.co.uk>
+	<20040503203512.GP2281@parcelfarce.linux.theplanet.co.uk>
+	<40A36286.4020604@torque.net> <40A6D00D.7070306@torque.net>
+	<20040604082107.A20637@beaverton.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from email-out1.iomega.com ([147.178.1.82]:6357 "EHLO
-	email.iomega.com") by vger.kernel.org with ESMTP id S265814AbUFDP1t
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 4 Jun 2004 11:27:49 -0400
-In-Reply-To: <20040604152422.GE1946@suse.de>
+Received: from stat1.steeleye.com ([65.114.3.130]:48866 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S265798AbUFDPaA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 4 Jun 2004 11:30:00 -0400
+In-Reply-To: <20040604082107.A20637@beaverton.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Jens Axboe <axboe@suse.de>
-Cc: Marcelo Tosatti <marcelo.tosatti@cyclades.com>, linux-scsi@vger.kernel.org, John McKell <McKellj@iomega.com>
+To: Patrick Mansfield <patmans@us.ibm.com>
+Cc: Douglas Gilbert <dougg@torque.net>, Matthew Wilcox <willy@debian.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-> I already sent an updated to Marcelo 5 minutes ago which has that fixed
-> incorporated. JFYI Marcelo, apply that version and the above is void.
+On Fri, 2004-06-04 at 10:21, Patrick Mansfield wrote:
+> Is this patch in your queue?
+> 
+> I tried it out, and it worked fine for me with up to 16k of scsi_debug
+> devices.
 
-Thank you.
+Er, I can't find it ... I'll check back through the mail archives.
 
-Therefore, absolutely no work remains for me?  I cannot help further?
+Thanks,
 
-Pat LaVarre
+James
 
 
