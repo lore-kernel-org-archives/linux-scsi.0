@@ -1,88 +1,36 @@
-From: "Robert K. Nelson" <rnelson@airflowsciences.com>
-Subject: Re: SCSI Bus Parity errors with all Kernels after 2.4.26
-Date: Wed, 18 Aug 2004 10:48:01 -0400
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <41236C21.40102@airflowsciences.com>
-References: <41210601.6090202@airflowsciences.com>
-Reply-To: rnelson@airflowsciences.com
+From: mikem <mikem@beardog.cca.cpqcorp.net>
+Subject: cciss fix for 2.6.8.1-mm1, V100 PCI ID fix again
+Date: Wed, 18 Aug 2004 11:01:52 -0500
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <20040818160152.GA6080@beardog.cca.cpqcorp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel=40m.gmane.org-S266806AbUHROxY@vger.kernel.org>
-In-Reply-To: <41210601.6090202@airflowsciences.com>
-To: linux-kernel@vger.kernel.org
-Cc: linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from ztxmail04.ztx.compaq.com ([161.114.1.208]:51461 "EHLO
+	ztxmail04.ztx.compaq.com") by vger.kernel.org with ESMTP
+	id S267251AbUHRQCb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 18 Aug 2004 12:02:31 -0400
+Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
+To: akpm@osdl.org, axboe@suse.de
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
- >> I have a machine conf. which runs fine under a variety of older
- >> kernels and fails under a variety of newer ones. I was hoping someone
- >> could direct me to a person who would like to look further into this.
-...
+Somehow I managed to get the wrong PCI ID in pci_ids.h.
+3210 is the correct PCI ID, 3211 is the subsystem ID. Sorry.
+Applies to 2.6.8.1-mm1. Please consider this for inclusion.
 
- >What are the exact error messages? CC linux-scsi@xxxxxxxxxxxxxxx
-
-Under SuSE 9.1 the output during module loading is as follows:
--------------------------------------------------------
-SCSI subsystem initialized
-PCI: Found IRQ 5 for device 0000:00:0a.0
-sym0: <875> rev 0x4 at pci 0000:00:0a.0 irq 5
-sym0: Symbios NVRAM, ID 7, Fast-20, SE, parity checking
-sym0: open drain IRQ line driver, using on-chip SRAM
-sym0: using LOAD/STORE-based firmware.
-sym0: SCSI BUS has been reset.
-scsi0 : sym-2.1.18i
-   Vendor: IOMEGA    Model: ZIP 100           Rev: J.03
-   Type:   Direct-Access                      ANSI SCSI revision: 02
-sym0:5:0:phase change 6-7 6@3738cf84 resid=4.
-Attached scsi removable disk sda at scsi0, channel 0, id 5, lin0
-Attached scsi generic sg0 at scsi0, channel 0, id 5, lun 0,  type 0
-   Vendor: PIONEER   Model: CD-ROM DR-U065    Rev: 1.05
-   Type:  CD-ROM                              ANSI SCSI revision: 02
-sym0:6: FAST-20 SCSI 19.2 MB/s ST (52.0 ns, offset 16)
-Uniform CD-ROM driver Revision: 3.20
-Attached scsi generic sg1 at scsi0, channel 0, id 6, lun 0,  type 5
-PCI: Found IRQ 11 for device 0000:00:0c.0
-sym1: <895> rev 0x1 at pci 0000:00:0c.0 irq 11
-sym1: Symbios NVRAM, ID 7, Fast-40, LVD, parity checking
-sym1: open drain IRQ line driver, using on-chip SRAM
-sym1: using LOAD/STORE-based firmware.
-sym1: SCSI BUS has been reset.
-scsi1 : sym-2.1.18i
-   Vendor: QUANTUM   Model: VIKING II 4.5WLS  Rev: 4110
-   Type:   Direct-Access                      ANSI SCSI revision: 02
-sym1:0:0: tagged command queuind enabled, command queue depth 16.
-sym1:0: FAST-40 WIDE SCSI 80.0 MB/s ST (25.0 ns, offset 31)
-SCSI device sdb: 8910423 512-byte hdwr sectors (4562 MB)
-SCSI device sdb: drive cache: write back
-  sdb: sdb1 sdb2
-Attached scsi disk sdb at scsi1, channel 0, id 0, lun 0
-Attached scsi generic sg2 at scsi1, channel 0, id 0, lun 0,  type 0
-   Vendor: IBM       Model: DNES-309170W      Rev: SAH0
-   Type:   Direct-Access                      ANSI SCSI revision: 03
-sym1:6:0: tagged command queuing enabled, command queue depth 16.
-sym1:6: FAST-40 WIDE SCSI 80.0 MB/s ST (25.0 ns, offset 30)
-SCSI: device sdc: 17916240 512-byte hdwr sectors (9173 MB)
-SCSI device sdc: drive cache: write back
-  sdc: sdc1 sdc2
-Attached scsi disk sdc at scsi1, channel 0, id 6, lun 0
-Attached scsi generic sg3 at scsi1, channel 0, id 6, lun 0,  type 0
-sym0: SCSI parity error detected: SCR1=1 DBC=50000000 SBCL=0
-sym0:15: ERROR (a0:0) (8-0-0) (0/5/0) @ (mem cd800020:cd800020).
-sym0: regdump: da 00 00 05 47 00 0f 0e 00 08 00 00 80 00 0f 02 ff ff ff 
-00 02 ff ff ff.
-sym0: PCI STATUS = 0x20000
-sym0: SCSI BUS reset detected.
-sym0: SCSI BUS has been reset.
-sym1: SCSI parity error detected: SCR1=1 DBC=50000000 SBCL=0
-sym1: SCSI phase error fixup: CCB already dequeued.
-sym1:15: ERROR (81:0) (8-0-0) (0/7/0) @ (scripta 48:a9100786).
-sym1: script cmd = f31c0004
-sym1: regdump: da 00 00 07 47 00 0f 0a 00 08 86 00 80 00 0f 02 28 71 01 
-37 02 ff ff ff.
-sym1: SCSI BUS reset detected.
-sym1: SCSI BUS has been reset.
----------------------------------------------------
-Please cc: rnelson@airflwosciences.com since I do not subscribe.  Note 
-that I will be out of town for the next 5 days.
-
-Bob Nelson
+Thanks,
+mikem
+-------------------------------------------------------------------------------
+diff -burNp lx2681-mm1.orig/include/linux/pci_ids.h lx2681-mm1/include/linux/pci_ids.h
+--- lx2681-mm1.orig/include/linux/pci_ids.h	2004-08-17 13:40:35.000000000 -0500
++++ lx2681-mm1/include/linux/pci_ids.h	2004-08-18 10:49:27.788871640 -0500
+@@ -676,7 +676,7 @@
+ #define PCI_DEVICE_ID_HP_SX1000_IOC	0x127c
+ #define PCI_DEVICE_ID_HP_DIVA_EVEREST	0x1282
+ #define PCI_DEVICE_ID_HP_DIVA_AUX	0x1290
+-#define PCI_DEVICE_ID_HP_CISS		0x3211
++#define PCI_DEVICE_ID_HP_CISS		0x3210
+ 
+ #define PCI_VENDOR_ID_PCTECH		0x1042
+ #define PCI_DEVICE_ID_PCTECH_RZ1000	0x1000
