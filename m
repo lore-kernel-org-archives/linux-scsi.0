@@ -1,79 +1,42 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: Unaligned scatter-gather buffers and usb-storage
-Date: Wed, 19 Nov 2003 18:03:20 +0100
+From: Patrick Mansfield <patmans@us.ibm.com>
+Subject: Re: Request for review of Linux iSCSI driver version 4.0.0.1
+Date: Wed, 19 Nov 2003 09:17:17 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20031119170320.GP1106@suse.de>
-References: <20031119154911.GM1106@suse.de> <Pine.LNX.4.44L0.0311191147270.957-100000@ida.rowland.org>
+Message-ID: <20031119091717.A11499@beaverton.ibm.com>
+References: <200310231734.10263.krmurthy@cisco.com> <20031027153932.A16679@infradead.org> <03111920183201.15831@naveenb-lnx.cisco.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns.virtualhost.dk ([195.184.98.160]:24256 "EHLO virtualhost.dk")
-	by vger.kernel.org with ESMTP id S263920AbTKSRDx (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 19 Nov 2003 12:03:53 -0500
+Received: from e35.co.us.ibm.com ([32.97.110.133]:28830 "EHLO
+	e35.co.us.ibm.com") by vger.kernel.org with ESMTP id S263953AbTKSRSM
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 19 Nov 2003 12:18:12 -0500
 Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.44L0.0311191147270.957-100000@ida.rowland.org>
+In-Reply-To: <03111920183201.15831@naveenb-lnx.cisco.com>; from naveenb@cisco.com on Wed, Nov 19, 2003 at 08:18:32PM +0530
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: Patrick Mansfield <patmans@us.ibm.com>, Douglas Gilbert <dougg@torque.net>, James Bottomley <James.Bottomley@steeleye.com>, Oliver Neukum <oliver@neukum.org>, SCSI development list <linux-scsi@vger.kernel.org>, USB development list <linux-usb-devel@lists.sourceforge.net>
+To: Naveen Burmi <naveenb@cisco.com>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, davmyers@cisco.com
 
-On Wed, Nov 19 2003, Alan Stern wrote:
-> On Wed, 19 Nov 2003, Jens Axboe wrote:
-> 
-> > > any main code path, and it wouldn't get invoked by anything using the st
-> > > or sg drivers.  In fact, it looks like scsi_ioctl.c:scsi_cmd_ioctl() is
-> > > only called from within the sd driver.
-> > 
-> > It's invoked from user space. Don't mix block and scsi scsi_ioctl() up.
-> > bio_map_user() would be used by a block layer sg driver too, for
-> > instance.
-> 
-> You've lost me.  scsi_cmd_ioctl() and bio_map_user() are _not_ used by the
-> sg driver -- did you mean that a hypothetical block layer sg driver would
-> call them?  That doesn't seem relevant to the point of this thread.  
+On Wed, Nov 19, 2003 at 08:18:32PM +0530, Naveen Burmi wrote:
 
-Well you brought up bio_map_user(), so I'm telling where it's used and
-why. The block layer provides SG_IO functionality for non-scsi devices,
-that is its current use.
+> After a device gets detected by iSCSI LLD, it uses iscsi_do_cmnd to send scsi 
+> commands to that device even before registering it with the scsi mid-layer.
+>  
+> For example user can configure in iscsi LLD configuration (iscsi.conf) file 
+> what various LUNs of a particular target needs to be activated. To acheive 
+> this we need to execute REPORT LUN command on target, to find out what 
+> various luns are present and selectively issue scsi_add_device for luns that 
+> needs to be activated.
 
-> Although come to think of it, you probably never saw the start of the
-> thread.  Take a look at
-> 
-> http://marc.theaimsgroup.com/?l=linux-usb-devel&m=106916943618090&w=2
-> 
-> to understand my problem.
+If you already have the LUN specified, why do you need to issue a REPORT
+LUN command?
 
-Ok I see. Then make sg/st return -EINVAL if the address isn't 512-byte
-aligned would be the rigth fix, imo.
+I don't know iSCSI specification details, but I would want to specify a
+target, not a LUN, in a configuration file and have all LUNs on the target
+be automatically configured.
 
-> > > So something needs to be fixed up.  Is there some spot in the block layer 
-> > > that's supposed to be checking dma alignments but isn't doing so?
-> > 
-> > The queue dma alignment was added to better cater to cdrecord, for
-> > instance. We need better than 512b granularity there, or you cannot use
-> > DMA on certain types of burns (lots of sector types are non-2kb aligned
-> > there).
-> > 
-> > If you can 512-byte align the data and transfer from user space, _that
-> > is enough_. The program just needs to be aware of this, it's not an odd
-> > restriction. There are just scenarious where you cannot do this, and
-> > that is why I added the queue dma alignment attribute. To me, it doesn't
-> > sound like your case applies.
-> 
-> This isn't a userspace problem as such; it's a problem of enforcing dma
-> alignment restrictions within the block layer or lower.  I'm not working
-> on a user program; I'm working on the usb-storage driver.  It too needs
-> 512-byte alignment, but under the right circumstances the st and sg
-> drivers can submit scatter-gather buffers that aren't aligned.  You said
-> earlier that misaligned buffers would be caught in the block layer
-> queueing code, but I don't see any place where that happens.
+The iSCSI target itself, or actual storage (if iSCSI is just passing
+through commands to an actual disk drive) could control what LUNs are seen
+by an individual host.
 
-sg/st submissions would never pass through the block layer, even if they
-use the queue as a transport between the scsi mid layer. They need to
-impose this restrictions themselves. I still don't think this warrants
-adding a host template attribute for this. 512-byte alignment is
-perfectly fine.
-
--- 
-Jens Axboe
-
+-- Patrick Mansfield
