@@ -1,129 +1,76 @@
-From: "Andrew Vasquez" <andrew.vasquez@qlogic.com>
-Subject: [ANNOUNCE] QLogic FC Driver for Linux kernel 2.5 available.
-Date: Thu, 8 May 2003 15:25:52 -0700
+From: Mike Christie <mikenc@us.ibm.com>
+Subject: [patch] fixes compile error in inia100.c
+Date: Thu, 08 May 2003 16:17:12 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <B179AE41C1147041AA1121F44614F0B05989EA@AVEXCH02.qlogic.org>
+Message-ID: <3EBAE578.3010301@us.ibm.com>
+Reply-To: mikenc@us.ibm.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: multipart/mixed;
+ boundary="------------010606010202030107000505"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [198.70.193.2] ([198.70.193.2]:3390 "EHLO AVEXCH01.qlogic.org")
-	by vger.kernel.org with ESMTP id S262170AbTEHWOd convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 8 May 2003 18:14:33 -0400
-content-class: urn:content-classes:message
+Received: from e6.ny.us.ibm.com ([32.97.182.106]:54989 "EHLO e6.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S262219AbTEHXEl (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 8 May 2003 19:04:41 -0400
+Received: from northrelay02.pok.ibm.com (northrelay02.pok.ibm.com [9.56.224.150])
+	by e6.ny.us.ibm.com (8.12.9/8.12.2) with ESMTP id h48NHD9d075716
+	for <linux-scsi@vger.kernel.org>; Thu, 8 May 2003 19:17:13 -0400
+Received: from us.ibm.com (d01av02.pok.ibm.com [9.56.224.216])
+	by northrelay02.pok.ibm.com (8.12.9/NCO/VER6.5) with ESMTP id h48NHAiO138784
+	for <linux-scsi@vger.kernel.org>; Thu, 8 May 2003 19:17:10 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-All,
+This is a multi-part message in MIME format.
+--------------010606010202030107000505
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 
-QLogic is pleased to announce the availability of a completely new
-version of the QLogic FC driver (8.00.00b1) for its
-ISP21xx/ISP22xx/ISP23xx chips and HBAs.  Our desire after community
-review and continued driver development is inclusion of this work into
-the Linux 2.5 kernel tree.
+The attached patch fixes the compile errors in inia100.c described in 
+Bugzilla bug #345 at http://bugme.osdl.org/show_bug.cgi?id=345. It was 
+built against 2.5.69. I do not have the hardware, so I have only 
+verified that it compiles correctly.
 
-This driver contains support for Linux kernels 2.5.x and above *only*
-(all 2.4.x support has been removed).  It's based on the QLogic 6.x
-driver which is qualified with a number of OEMs and is functionally
-equivalent to the 6.05.00b9 driver.
+Mike Christie
+mikenc@us.ibm.com
 
-The new driver contains a number of key functional changes,
-initialization (device scanning), I/O handling -- command queuing
-refinements (front-end), ISR rewrite (backend).  The last two notables
-should assist in a reasonable performance improvement.  Details
-pertaining to the these changes and the development direction of this
-work can be found towards the end of this email.
 
-Driver tar-balls are available in two-forms from our SourceForge site:
+inia100.c |    8 ++++----
+1 files changed, 4 insertions(+), 4 deletions(-)
 
-	http://sourceforge.net/projects/linux-qla2xxx/
+--------------010606010202030107000505
+Content-Type: text/plain;
+ name="inia100_patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="inia100_patch"
 
-   o Kernel tree drop-in tarball (synced with 2.5.69):
+--- linux-2.5.69-orig/drivers/scsi/inia100.c	Sun May  4 16:53:08 2003
++++ linux-2.5.69-inia100/drivers/scsi/inia100.c	Wed May  7 11:39:57 2003
+@@ -142,11 +142,11 @@
+ 
+ 	spin_lock_irqsave(&(pHCB->pSRB_lock), flags);
+ 
+-	pSRB->next = NULL;	/* Pointer to next */
++	pSRB->SCp.ptr = NULL;	/* Pointer to next */
+ 	if (pHCB->pSRB_head == NULL)
+ 		pHCB->pSRB_head = pSRB;
+ 	else
+-		pHCB->pSRB_tail->next = pSRB;	/* Pointer to next */
++		pHCB->pSRB_tail->SCp.ptr = (char *)pSRB;	/* Pointer to next */
+ 	pHCB->pSRB_tail = pSRB;
+ 	spin_unlock_irqrestore(&(pHCB->pSRB_lock), flags);
+ 	return;
+@@ -165,8 +165,8 @@
+ 	ULONG flags;
+ 	spin_lock_irqsave(&(pHCB->pSRB_lock), flags);
+ 	if ((pSRB = (Scsi_Cmnd *) pHCB->pSRB_head) != NULL) {
+-		pHCB->pSRB_head = pHCB->pSRB_head->next;
+-		pSRB->next = NULL;
++		pHCB->pSRB_head = (Scsi_Cmnd *) pHCB->pSRB_head->SCp.ptr;
++		pSRB->SCp.ptr = NULL;
+ 	}
+ 	spin_unlock_irqrestore(&(pHCB->pSRB_lock), flags);
+ 	return (pSRB);
 
-	qla2xxx-kernel-v8.00.00b1.tar.bz2
+--------------010606010202030107000505--
 
-	Extract the contents directly in the kernel tree:
-
-		# cd /usr/src/linux-2.5.69
-		# tar xvfj /tmp/qla2xxx-kernel-v8.00.00b1.tar.bz2
-		# make config
-		# ...
-
-   o External build tarball:
-
-	qla2xxx-src-v8.00.00b1.tar.bz2
-
-	Extract the contents to your build directory:
-
-		# mkdir /tmp/qla-8.00.00b1
-		# cd /tmp/qla-8.00.00b1
-		# tar xvfj /tmp/qla2xxx-src-v8.00.00b1.tar.bz2
-		# make -C /usr/src/linux-2.5.69 SUBDIRS=$PWD modules
-
-Please note, this is a (pre)beta release.  Testing has been performed
-against a number of storage devices (JBODs, and FC raid boxes), but
-certainly has not received the level of test coverage present with the
-6.x series code -- basic error injection (cable-pulls and recovery).
-
-NOTE: The driver group will try to address any issues with this work
-within the linux-scsi and linux-kernel mailing lists.  Please do not 
-contact QLogic technical support regarding this driver.
-
-Details:
-
-This driver is and will continue to be in a very fluid state.  Changes
-thus far include basic infrastructure and semantic rewrites of some core
-components of the driver:
-
-	o Initialization:
-	  - pci_driver scanning.
-	  - Fabric scanning:
-	    - GID_PT (if not supported, fallback to GA_NXT).
-	    - SNS registration - RFT_ID, RFF_ID RNN_ID, RSNN_ID.
-	  - ISP abstractions:
-	    - Firmware loading mechanism.
-	    - NVRAM configuration.
-	  - 2k port login support (ISP23xx only).
-	  - SRB pool allocations.
-
-	o Queuing mechanisms:
-	  - Rewrite command IOCB handling.
-
-	o Command response handling:
-	  - Rewrite ISR -- simplification.
-	  - Bottom-half handling via work queues.
-
-	o Code restructuring.
-
-	o Kernel 2.5 support -- currently in sync with 2.5.69.
-	
-Additional work to be done include:
-
-	o Further fabric scanning refinements:
-	  - Minimizing SNS queries.
-	  - Asynchronous fabric logins.
-
-	o Review Locking mechanisms -- there are still a number of
-	  structures which depend on our high-level hardware lock for
-	  mutual exclusion.
-
-	o Internal device-list management unification.
-
-	o Rework mailbox and IOCTL request handling:
-	  - To use wait queues.
-
-	o Logging mechanisms.  The current debugging requirement is to
-	  recompile the driver in 'debug' mode.  Once included in the
-	  kernel tree, recompilation is not a guaranteed option.
-	  Make use of 'Extended error logging' NVRAM parameter to enable
-	  additional debug statements.
-	
-	o Kernel 2.5 support:
-	  - module_param() interface.
-
-Any feedback (comments, suggestions, criticisms) would be appreciated.
-
-Regards,
-Andrew Vasquez
-QLogic Corporation
