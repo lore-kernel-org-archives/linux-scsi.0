@@ -1,38 +1,37 @@
-From: Luben Tuikov <luben_tuikov@adaptec.com>
-Subject: Re: [2.6 patch] SCSI: possible cleanups
-Date: Tue, 01 Mar 2005 09:40:48 -0500
-Message-ID: <42247EF0.9000404@adaptec.com>
-References: <20050228213159.GO4021@stusta.de> <4224245E.6090503@torque.net>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: One question about SCSI device hotplug
+Date: Tue, 1 Mar 2005 14:46:04 +0000
+Message-ID: <20050301144604.GJ28741@parcelfarce.linux.theplanet.co.uk>
+References: <8126E4F969BA254AB43EA03C59F44E840184FB09@pdsmsx404>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Received: from magic.adaptec.com ([216.52.22.17]:26011 "EHLO magic.adaptec.com")
-	by vger.kernel.org with ESMTP id S261927AbVCAOk4 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Mar 2005 09:40:56 -0500
-In-Reply-To: <4224245E.6090503@torque.net>
+Content-Type: text/plain; charset=us-ascii
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:1427 "EHLO
+	parcelfarce.linux.theplanet.co.uk") by vger.kernel.org with ESMTP
+	id S261929AbVCAOqF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 1 Mar 2005 09:46:05 -0500
+Content-Disposition: inline
+In-Reply-To: <8126E4F969BA254AB43EA03C59F44E840184FB09@pdsmsx404>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: dougg@torque.net
-Cc: Adrian Bunk <bunk@stusta.de>, James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: "Zhao, Forrest" <forrest.zhao@intel.com>
+Cc: linux-scsi@vger.kernel.org, "Caushik, Ramesh" <ramesh.caushik@intel.com>
 
-On 03/01/05 03:14, Douglas Gilbert wrote:
->>   - scsi_error.c: scsi_normalize_sense
+On Tue, Mar 01, 2005 at 05:06:55PM +0800, Zhao, Forrest wrote:
+> If I surprisingly hot-remove a SCSI disk from HBA manually 
+> without executing "echo "scsi remove-single-device
+>  <h> <b> <t <l>" > /proc/scsi/scsi", can the "hotplug"
+> event be notified to SCSI mid-layer or user space?
 > 
-> 
-> I introduced scsi_normalize_sense() recently, Christoph H.
-> proposed it should be static but Luben Tuikov (aic7xxx
-> maintainer) said he wished to use it in the future.
-> Hence it was left global.
+> I briefly browse some code of LLDD, it seems that LLDD never
+> report "hotplug" event to upper-level layer. Am I right?
 
-Hi guys,
+I don't think it *can* ... the SCSI protocols don't tell the host "hey,
+this device has disappeared".
 
-I think the idea of normalized sense is very good.
-Basically the question is if LLDD would submit normalized
-sense to SCSI Core or whether they would submit a pointer
-to raw sense data as returned by the device and let SCSI
-Core decipher it.
-
-If the former, then it should be global, if the latter then
-it should be static to SCSI Core.
-
-	Luben
+-- 
+"Next the statesmen will invent cheap lies, putting the blame upon 
+the nation that is attacked, and every man will be glad of those
+conscience-soothing falsities, and will diligently study them, and refuse
+to examine any refutations of them; and thus he will by and by convince 
+himself that the war is just, and will thank God for the better sleep 
+he enjoys after this process of grotesque self-deception." -- Mark Twain
