@@ -1,485 +1,496 @@
 From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: [PATCH] cpnvert scsi_debug to use virtual host bus
-Date: Fri, 11 Feb 2005 17:38:11 -0800
-Message-ID: <420D5E03.2020409@cs.wisc.edu>
+Subject: [PATCH] add scsi bus for virtual drivers
+Date: Fri, 11 Feb 2005 17:39:08 -0800
+Message-ID: <420D5E3C.3020005@cs.wisc.edu>
 Mime-Version: 1.0
 Content-Type: multipart/mixed;
- boundary="------------080500080402020206070409"
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:44439 "EHLO sabe.cs.wisc.edu")
-	by vger.kernel.org with ESMTP id S261961AbVBLBiS (ORCPT
+ boundary="------------080607070502000609060803"
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:45207 "EHLO sabe.cs.wisc.edu")
+	by vger.kernel.org with ESMTP id S261951AbVBLBjR (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 11 Feb 2005 20:38:18 -0500
-Received: from [192.168.0.2] ([199.108.226.254])
-	(authenticated bits=0)
-	by sabe.cs.wisc.edu (8.13.1/8.13.1) with ESMTP id j1C1cGrT012340
-	(version=TLSv1/SSLv3 cipher=RC4-MD5 bits=128 verify=NO)
-	for <linux-scsi@vger.kernel.org>; Fri, 11 Feb 2005 19:38:17 -0600
+	Fri, 11 Feb 2005 20:39:17 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>
+To: linux-scsi <linux-scsi@vger.kernel.org>, linux-iscsi-devel <linux-iscsi-devel@lists.sourceforge.net>
 
 This is a multi-part message in MIME format.
---------------080500080402020206070409
+--------------080607070502000609060803
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 
-The attach patch converts scsi_debug to use the virtual scsi bus.
-It was built against scsi-rc-fixes-2.6.
+Currently, LLDs using the newer driver model APIs use a driver's probe 
+routine to perform setup and call scsi_host_alloc and scsi_add_host. 
+And, then in remove the driver calls scsi_remove_host and scsi_host_put.
 
-The interface has changed a little. Here is an
-example of adding and removing a single host:
+Virtual drivers like scsi_debug and software iscsi do not have a driver 
+model bus or device_driver, so scsi_debug impements its own and software 
+iscsi just adds and removes hosts from where ever makes it happy. A 
+review comment we recieved for the software iscsi driver was to use a 
+bus and driver and the callouts they provide. But instead of having the 
+driver implement its own driver model bus code, the attached patch has 
+scsi-ml maintain a virtual host bus for scsi_debug and software iscsi to 
+use.
 
-cd /sys/bus/scsi_host/drivers/scsi_debug
-[root@mina scsi_debug]# ls
-add_host  dev_size_mb  every_nth  module     num_parts  opts   scsi_level
-delay     dsense       max_luns   num_hosts  num_tgts   ptype
-[root@mina scsi_debug]# echo 1 > add_host
-[root@mina scsi_debug]# ls
-add_host  dev_size_mb  every_nth  module     num_parts  opts   scsi_level
-delay     dsense       max_luns   num_hosts  num_tgts   ptype  virt_host4
-[root@mina scsi_debug]# cd virt_host4/
-[root@mina virt_host4]# ls
-detach_state  driver  host4  power  remove_host
-[root@mina virt_host4]# echo 1 > remove_host
+I had tried to just use the existing scsi bus, but it ends up that the 
+host level device would need the bus's semaphore and the hosts' scanned 
+scsi devices would try to grab the bus's semaphore at the same time.
 
+The attached patch was made against scsi-rc-fixes-2.6.
+I will also send a patch in the next mail to convert
+scsi_debug.
 
 Mike
 
---------------080500080402020206070409
+--------------080607070502000609060803
 Content-Type: text/x-patch;
- name="use-ml-virtual-bus.patch"
+ name="add-ml-virtual-bus.patch"
 Content-Transfer-Encoding: 7bit
 Content-Disposition: inline;
- filename="use-ml-virtual-bus.patch"
+ filename="add-ml-virtual-bus.patch"
 
---- scsi-rc-fixes-2.6.orig/drivers/scsi/scsi_debug.c	2005-02-04 22:11:25.000000000 -0800
-+++ scsi-rc-fixes-2.6.work/drivers/scsi/scsi_debug.c	2005-02-11 00:54:13.000000000 -0800
-@@ -44,6 +44,7 @@
- #include <linux/blkdev.h>
- #include "scsi.h"
- #include <scsi/scsi_host.h>
+diff -aurp scsi-rc-fixes-2.6.orig/drivers/scsi/hosts.c scsi-rc-fixes-2.6.work/drivers/scsi/hosts.c
+--- scsi-rc-fixes-2.6.orig/drivers/scsi/hosts.c	2005-02-04 22:10:09.000000000 -0800
++++ scsi-rc-fixes-2.6.work/drivers/scsi/hosts.c	2005-02-11 16:18:20.000000000 -0800
+@@ -31,6 +31,7 @@
+ #include <linux/transport_class.h>
+ 
+ #include <scsi/scsi_device.h>
 +#include <scsi/scsi_driver.h>
- #include <scsi/scsicam.h>
+ #include <scsi/scsi_host.h>
+ #include <scsi/scsi_transport.h>
  
- #include <linux/stat.h>
-@@ -112,7 +113,7 @@ static const char * scsi_debug_version_d
-  * or "peripheral device" addressing (value 0) */
- #define SAM2_LUN_ADDRESS_METHOD 0
+@@ -39,6 +40,7 @@
  
--static int scsi_debug_add_host = DEF_NUM_HOST;
-+static int scsi_debug_num_hosts;
- static int scsi_debug_delay = DEF_DELAY;
- static int scsi_debug_dev_size_mb = DEF_DEV_SIZE_MB;
- static int scsi_debug_every_nth = DEF_EVERY_NTH;
-@@ -161,13 +162,9 @@ struct sdebug_dev_info {
- struct sdebug_host_info {
- 	struct list_head host_list;
- 	struct Scsi_Host *shost;
--	struct device dev;
- 	struct list_head dev_info_list;
+ 
+ static int scsi_host_next_hn;		/* host_no for next new host */
++static int scsi_host_next_vhn;		/* host_no for next new virtual host */
+ 
+ 
+ static void scsi_host_cls_release(struct class_device *class_dev)
+@@ -51,6 +53,16 @@ static struct class shost_class = {
+ 	.release	= scsi_host_cls_release,
  };
  
--#define to_sdebug_host(d)	\
--	container_of(d, struct sdebug_host_info, dev)
--
- static LIST_HEAD(sdebug_host_list);
- static DEFINE_SPINLOCK(sdebug_host_list_lock);
- 
-@@ -218,21 +215,12 @@ static DEFINE_RWLOCK(atomic_rw);
- 
- static char sdebug_proc_name[] = "scsi_debug";
- 
--static int sdebug_driver_probe(struct device *);
--static int sdebug_driver_remove(struct device *);
--static struct bus_type pseudo_lld_bus;
--
--static struct device_driver sdebug_driverfs_driver = {
--	.name 		= sdebug_proc_name,
--	.bus		= &pseudo_lld_bus,
--	.probe          = sdebug_driver_probe,
--	.remove         = sdebug_driver_remove,
--};
--
- static const int check_condition_result =
- 		(DRIVER_SENSE << 24) | SAM_STAT_CHECK_CONDITION;
- 
- /* function declarations */
-+static int sdebug_driver_probe(struct scsi_virt_host *);
-+static int sdebug_driver_remove(struct scsi_virt_host *);
- static int resp_inquiry(struct scsi_cmnd * SCpnt, int target,
- 			struct sdebug_dev_info * devip);
- static int resp_requests(struct scsi_cmnd * SCpnt,
-@@ -266,17 +254,11 @@ static void stop_all_queued(void);
- static int stop_queued_cmnd(struct scsi_cmnd * cmnd);
- static int inquiry_evpd_83(unsigned char * arr, int dev_id_num,
-                            const char * dev_id_str, int dev_id_str_len);
--static void do_create_driverfs_files(void);
--static void do_remove_driverfs_files(void);
- 
--static int sdebug_add_adapter(void);
--static void sdebug_remove_adapter(void);
-+static int sdebug_add_adapter(struct sdebug_host_info * sdbg_host);
-+static void sdebug_remove_adapter(struct sdebug_host_info * sdbg_host);
- static void sdebug_max_tgts_luns(void);
- 
--static struct device pseudo_primary;
--static struct bus_type pseudo_lld_bus;
--
--
- static
- int scsi_debug_queuecommand(struct scsi_cmnd * SCpnt, done_funct_t done)
- {
-@@ -1054,7 +1036,7 @@ static struct sdebug_dev_info * devInfoR
- 
- 	if (devip)
- 		return devip;
--	sdbg_host = *(struct sdebug_host_info **) sdev->host->hostdata;
-+	sdbg_host = (struct sdebug_host_info *) sdev->host->hostdata;
-         if(! sdbg_host) {
-                 printk(KERN_ERR "Host info NULL\n");
- 		return NULL;
-@@ -1181,7 +1163,7 @@ static int scsi_debug_bus_reset(struct s
- 		printk(KERN_INFO "scsi_debug: bus_reset\n");
- 	++num_bus_resets;
- 	if (SCpnt && ((sdp = SCpnt->device)) && ((hp = sdp->host))) {
--		sdbg_host = *(struct sdebug_host_info **) hp->hostdata;
-+		sdbg_host = (struct sdebug_host_info *) hp->hostdata;
- 		if (sdbg_host) {
- 			list_for_each_entry(dev_info,
-                                             &sdbg_host->dev_info_list,
-@@ -1379,7 +1361,6 @@ static int schedule_resp(struct scsi_cmn
-  * of sysfs parameters (which module_param doesn't yet support).
-  * Sysfs parameters defined explicitly below.
-  */
--module_param_named(add_host, scsi_debug_add_host, int, 0); /* perm=0644 */
- module_param_named(delay, scsi_debug_delay, int, 0); /* perm=0644 */
- module_param_named(dev_size_mb, scsi_debug_dev_size_mb, int, 0);
- module_param_named(dsense, scsi_debug_dsense, int, 0);
-@@ -1633,78 +1614,42 @@ static ssize_t sdebug_scsi_level_show(st
- }
- DRIVER_ATTR(scsi_level, S_IRUGO, sdebug_scsi_level_show, NULL);
- 
--static ssize_t sdebug_add_host_show(struct device_driver * ddp, char * buf)
-+static ssize_t sdebug_num_hosts_show(struct device_driver * ddp, char * buf)
- {
--        return scnprintf(buf, PAGE_SIZE, "%d\n", scsi_debug_add_host);
-+        return scnprintf(buf, PAGE_SIZE, "%d\n", scsi_debug_num_hosts);
- }
-+DRIVER_ATTR(num_hosts, S_IRUGO, sdebug_num_hosts_show, NULL);
- 
--static ssize_t sdebug_add_host_store(struct device_driver * ddp,
--				     const char * buf, size_t count)
--{
--        int delta_hosts;
--	char work[20];
-+static struct attribute *sdebug_attrs[] = {
-+	&driver_attr_num_hosts.attr,
-+	&driver_attr_delay.attr,
-+	&driver_attr_dev_size_mb.attr,
-+	&driver_attr_dsense.attr,
-+	&driver_attr_every_nth.attr,
-+	&driver_attr_max_luns.attr,
-+	&driver_attr_num_tgts.attr,
-+	&driver_attr_num_parts.attr,
-+	&driver_attr_ptype.attr,
-+	&driver_attr_opts.attr,
-+	&driver_attr_scsi_level.attr,
-+	NULL,
-+};
- 
--        if (1 != sscanf(buf, "%10s", work))
--		return -EINVAL;
--	{	/* temporary hack around sscanf() problem with -ve nums */
--		int neg = 0;
--
--		if ('-' == *work)
--			neg = 1;
--		if (1 != sscanf(work + neg, "%d", &delta_hosts))
--			return -EINVAL;
--		if (neg)
--			delta_hosts = -delta_hosts;
--	}
--	if (delta_hosts > 0) {
--		do {
--			sdebug_add_adapter();
--		} while (--delta_hosts);
--	} else if (delta_hosts < 0) {
--		do {
--			sdebug_remove_adapter();
--		} while (++delta_hosts);
--	}
--	return count;
--}
--DRIVER_ATTR(add_host, S_IRUGO | S_IWUSR, sdebug_add_host_show, 
--	    sdebug_add_host_store);
-+static struct attribute_group sdebug_attr_group = {
-+	.attrs = sdebug_attrs,
-+};
- 
--static void do_create_driverfs_files(void)
--{
--	driver_create_file(&sdebug_driverfs_driver, &driver_attr_add_host);
--	driver_create_file(&sdebug_driverfs_driver, &driver_attr_delay);
--	driver_create_file(&sdebug_driverfs_driver, &driver_attr_dev_size_mb);
--	driver_create_file(&sdebug_driverfs_driver, &driver_attr_dsense);
--	driver_create_file(&sdebug_driverfs_driver, &driver_attr_every_nth);
--	driver_create_file(&sdebug_driverfs_driver, &driver_attr_max_luns);
--	driver_create_file(&sdebug_driverfs_driver, &driver_attr_num_tgts);
--	driver_create_file(&sdebug_driverfs_driver, &driver_attr_num_parts);
--	driver_create_file(&sdebug_driverfs_driver, &driver_attr_ptype);
--	driver_create_file(&sdebug_driverfs_driver, &driver_attr_opts);
--	driver_create_file(&sdebug_driverfs_driver, &driver_attr_scsi_level);
--}
--
--static void do_remove_driverfs_files(void)
--{
--	driver_remove_file(&sdebug_driverfs_driver, &driver_attr_scsi_level);
--	driver_remove_file(&sdebug_driverfs_driver, &driver_attr_opts);
--	driver_remove_file(&sdebug_driverfs_driver, &driver_attr_ptype);
--	driver_remove_file(&sdebug_driverfs_driver, &driver_attr_num_parts);
--	driver_remove_file(&sdebug_driverfs_driver, &driver_attr_num_tgts);
--	driver_remove_file(&sdebug_driverfs_driver, &driver_attr_max_luns);
--	driver_remove_file(&sdebug_driverfs_driver, &driver_attr_every_nth);
--	driver_remove_file(&sdebug_driverfs_driver, &driver_attr_dsense);
--	driver_remove_file(&sdebug_driverfs_driver, &driver_attr_dev_size_mb);
--	driver_remove_file(&sdebug_driverfs_driver, &driver_attr_delay);
--	driver_remove_file(&sdebug_driverfs_driver, &driver_attr_add_host);
--}
-+static struct scsi_host_driver sdebug_driverfs_driver = {
-+	.owner		= THIS_MODULE,
-+	.name 		= sdebug_proc_name,
-+	.attrs		= &sdebug_attr_group,
-+	.probe          = sdebug_driver_probe,
-+	.remove         = sdebug_driver_remove,
-+};
- 
- static int __init scsi_debug_init(void)
- {
- 	unsigned long sz;
--	int host_to_add;
--	int k;
- 
- 	if (scsi_debug_dev_size_mb < 1)
- 		scsi_debug_dev_size_mb = 1;  /* force minimum 1 MB ramdisk */
-@@ -1740,42 +1685,19 @@ static int __init scsi_debug_init(void)
- 
- 	init_all_queued();
- 
--	device_register(&pseudo_primary);
--	bus_register(&pseudo_lld_bus);
--	driver_register(&sdebug_driverfs_driver);
--	do_create_driverfs_files();
--
-+	scsi_register_host_driver(&sdebug_driverfs_driver);
- 	sdebug_driver_template.proc_name = (char *)sdebug_proc_name;
- 
--	host_to_add = scsi_debug_add_host;
--        scsi_debug_add_host = 0;
--
--        for (k = 0; k < host_to_add; k++) {
--                if (sdebug_add_adapter()) {
--                        printk(KERN_ERR "scsi_debug_init: "
--                               "sdebug_add_adapter failed k=%d\n", k);
--                        break;
--                }
--        }
--
- 	if (SCSI_DEBUG_OPT_NOISE & scsi_debug_opts) {
--		printk(KERN_INFO "scsi_debug_init: built %d host(s)\n",
--		       scsi_debug_add_host);
-+		printk(KERN_INFO "scsi_debug driver\n");
- 	}
- 	return 0;
- }
- 
- static void __exit scsi_debug_exit(void)
- {
--	int k = scsi_debug_add_host;
--
- 	stop_all_queued();
--	for (; k; k--)
--		sdebug_remove_adapter();
--	do_remove_driverfs_files();
--	driver_unregister(&sdebug_driverfs_driver);
--	bus_unregister(&pseudo_lld_bus);
--	device_unregister(&pseudo_primary);
-+	scsi_unregister_host_driver(&sdebug_driverfs_driver);
- 
- 	vfree(fake_storep);
- }
-@@ -1783,52 +1705,13 @@ static void __exit scsi_debug_exit(void)
- device_initcall(scsi_debug_init);
- module_exit(scsi_debug_exit);
- 
--void pseudo_0_release(struct device * dev)
--{
--	if (SCSI_DEBUG_OPT_NOISE & scsi_debug_opts)
--		printk(KERN_INFO "scsi_debug: pseudo_0_release() called\n");
--}
--
--static struct device pseudo_primary = {
--	.bus_id		= "pseudo_0",
--	.release	= pseudo_0_release,
--};
--
--static int pseudo_lld_bus_match(struct device *dev,
--                          struct device_driver *dev_driver)
--{
--        return 1;
--}
--
--static struct bus_type pseudo_lld_bus = {
--        .name = "pseudo",
--        .match = pseudo_lld_bus_match,
--};
--
--static void sdebug_release_adapter(struct device * dev)
--{
--        struct sdebug_host_info *sdbg_host;
--
--	sdbg_host = to_sdebug_host(dev);
--        kfree(sdbg_host);
--}
--
--static int sdebug_add_adapter(void)
-+static int sdebug_add_adapter(struct sdebug_host_info * sdbg_host)
- {
- 	int k, devs_per_host;
-         int error = 0;
--        struct sdebug_host_info *sdbg_host;
-         struct sdebug_dev_info *sdbg_devinfo;
-         struct list_head *lh, *lh_sf;
- 
--        sdbg_host = kmalloc(sizeof(*sdbg_host),GFP_KERNEL);
--
--        if (NULL == sdbg_host) {
--                printk(KERN_ERR "%s: out of memory at line %d\n",
--                       __FUNCTION__, __LINE__);
--                return -ENOMEM;
--        }
--
-         memset(sdbg_host, 0, sizeof(*sdbg_host));
-         INIT_LIST_HEAD(&sdbg_host->dev_info_list);
- 
-@@ -1851,17 +1734,7 @@ static int sdebug_add_adapter(void)
-         list_add_tail(&sdbg_host->host_list, &sdebug_host_list);
-         spin_unlock(&sdebug_host_list_lock);
- 
--        sdbg_host->dev.bus = &pseudo_lld_bus;
--        sdbg_host->dev.parent = &pseudo_primary;
--        sdbg_host->dev.release = &sdebug_release_adapter;
--        sprintf(sdbg_host->dev.bus_id, "adapter%d", scsi_debug_add_host);
--
--        error = device_register(&sdbg_host->dev);
--
--        if (error)
--		goto clean;
--
--	++scsi_debug_add_host;
-+	++scsi_debug_num_hosts;
-         return error;
- 
- clean:
-@@ -1872,77 +1745,64 @@ clean:
- 		kfree(sdbg_devinfo);
- 	}
- 
--	kfree(sdbg_host);
-         return error;
- }
- 
--static void sdebug_remove_adapter(void)
-+static void sdebug_remove_adapter(struct sdebug_host_info * sdbg_host)
- {
--        struct sdebug_host_info * sdbg_host = NULL;
--
-         spin_lock(&sdebug_host_list_lock);
--        if (!list_empty(&sdebug_host_list)) {
--                sdbg_host = list_entry(sdebug_host_list.prev,
--                                       struct sdebug_host_info, host_list);
--		list_del(&sdbg_host->host_list);
--	}
-+	list_del(&sdbg_host->host_list);
-         spin_unlock(&sdebug_host_list_lock);
- 
--	if (!sdbg_host)
--		return;
--
--        device_unregister(&sdbg_host->dev);
--        --scsi_debug_add_host;
-+        --scsi_debug_num_hosts;
- }
- 
--static int sdebug_driver_probe(struct device * dev)
-+static int sdebug_driver_probe(struct scsi_virt_host * vhost)
- {
-         int error = 0;
-         struct sdebug_host_info *sdbg_host;
-         struct Scsi_Host *hpnt;
- 
--	sdbg_host = to_sdebug_host(dev);
--
--        hpnt = scsi_host_alloc(&sdebug_driver_template, sizeof(sdbg_host));
-+        hpnt = scsi_host_alloc(&sdebug_driver_template, sizeof(*sdbg_host));
-         if (NULL == hpnt) {
-                 printk(KERN_ERR "%s: scsi_register failed\n", __FUNCTION__);
-                 error = -ENODEV;
- 		return error;
-         }
- 
--        sdbg_host->shost = hpnt;
--	*((struct sdebug_host_info **)hpnt->hostdata) = sdbg_host;
-+	sdbg_host = (struct sdebug_host_info *)hpnt->hostdata;
-+	if (sdebug_add_adapter(sdbg_host))
-+		goto failed;
-+	sdbg_host->shost = hpnt;
-+	dev_set_drvdata(&vhost->dev, sdbg_host);
++static int scsi_host_match(struct device *dev, struct device_driver *gendrv)
++{
++	return 1;
++}
 +
- 	if ((hpnt->this_id >= 0) && (scsi_debug_num_tgts > hpnt->this_id))
- 		hpnt->max_id = scsi_debug_num_tgts + 1;
- 	else
- 		hpnt->max_id = scsi_debug_num_tgts;
- 	hpnt->max_lun = scsi_debug_max_luns;
- 
--        error = scsi_add_host(hpnt, &sdbg_host->dev);
--        if (error) {
--                printk(KERN_ERR "%s: scsi_add_host failed\n", __FUNCTION__);
--                error = -ENODEV;
--		scsi_host_put(hpnt);
--        } else
--		scsi_scan_host(hpnt);
--
-+        error = scsi_add_host(hpnt, &vhost->dev);
-+        if (error)
-+		goto failed;
- 
-+	scsi_scan_host(hpnt);
-         return error;
++static struct bus_type shost_bus_type = {
++        .name		= "scsi_host",
++        .match		= scsi_host_match,
++};
 +
-+ failed:
-+	printk(KERN_ERR "%s: scsi_add_host failed\n", __FUNCTION__);
-+	scsi_host_put(hpnt);
-+	return -ENODEV;
+ /**
+  * scsi_host_cancel - cancel outstanding IO to this host
+  * @shost:	pointer to struct Scsi_Host
+@@ -379,12 +391,23 @@ EXPORT_SYMBOL(scsi_host_put);
+ 
+ int scsi_init_hosts(void)
+ {
+-	return class_register(&shost_class);
++	int error;
++
++	error = class_register(&shost_class);
++	if (error)
++		return error;
++
++	error = bus_register(&shost_bus_type);
++	if (error)
++		class_unregister(&shost_class);
++
++	return 0;
  }
  
--static int sdebug_driver_remove(struct device * dev)
-+static int sdebug_driver_remove(struct scsi_virt_host * vhost)
+ void scsi_exit_hosts(void)
  {
-         struct list_head *lh, *lh_sf;
-         struct sdebug_host_info *sdbg_host;
-         struct sdebug_dev_info *sdbg_devinfo;
+ 	class_unregister(&shost_class);
++	bus_unregister(&shost_bus_type);
+ }
  
--	sdbg_host = to_sdebug_host(dev);
+ int scsi_is_host_device(const struct device *dev)
+@@ -392,3 +415,141 @@ int scsi_is_host_device(const struct dev
+ 	return dev->release == scsi_host_dev_release;
+ }
+ EXPORT_SYMBOL(scsi_is_host_device);
++
++static void __scsi_host_driver_remove_host(struct scsi_host_driver *sdrv,
++					   struct scsi_virt_host *vhost)
++{
++	spin_lock(&sdrv->devices_lock);
++	list_del(&vhost->list);
++	spin_unlock(&sdrv->devices_lock);
++	device_unregister(&vhost->dev);
++}
++
++static ssize_t scsi_host_driver_remove_host(struct device *dev,
++					    const char *buf, size_t count)
++{
++	struct scsi_host_driver *sdrv = to_scsi_host_driver(dev->driver);
++	struct scsi_virt_host *vhost = to_scsi_virt_host(dev);
++
++	__scsi_host_driver_remove_host(sdrv, vhost);
++	return count;
++}
++static DEVICE_ATTR(remove_host, S_IWUSR, NULL, scsi_host_driver_remove_host);
++
++static void scsi_virt_host_release(struct device *dev)
++{
++	struct scsi_virt_host *vhost;
++
++	vhost = to_scsi_virt_host(dev);
++	kfree(vhost);
++}
++
++static ssize_t scsi_host_driver_add_host(struct device_driver *drv,
++					 const char *buf, size_t count)
++{
++	struct scsi_host_driver *sdrv = to_scsi_host_driver(drv);
++	struct device *dev;
++	struct scsi_virt_host *vhost;
++	int error;
++
++	vhost = kmalloc(sizeof(*vhost), GFP_KERNEL);
++	if (!vhost)
++		return -ENOMEM;
++
++	memset(vhost, 0, sizeof(*vhost));
++	INIT_LIST_HEAD(&vhost->list);
++	spin_lock(&sdrv->devices_lock);
++	list_add_tail(&vhost->list, &sdrv->devices);
++	spin_unlock(&sdrv->devices_lock);
++
++	dev = &vhost->dev;
++	dev->bus = &shost_bus_type;
++	dev->release = scsi_virt_host_release;
++	snprintf(dev->bus_id, BUS_ID_SIZE, "virt_host%d",
++		 scsi_host_next_vhn++);
++	error = device_register(dev);
++	if (error) {
++		kfree(vhost);
++		return error;
++	}
++	/*
++	 * this is not a ciritical file, so we can fail and limp on
++	 */
++	dev_attr_remove_host.attr.owner = sdrv->owner;
++	device_create_file(dev, &dev_attr_remove_host);
++
++	return count;
++}
++static DRIVER_ATTR(add_host, S_IWUSR, NULL, scsi_host_driver_add_host);
++
++static int scsi_host_driver_probe(struct device *dev)
++{
++	struct scsi_host_driver *sdrv;
++
++	sdrv = to_scsi_host_driver(dev->driver);
++	if (!sdrv->probe)
++		return 0;
++	return sdrv->probe(to_scsi_virt_host(dev));
++}
++
++static int scsi_host_driver_remove(struct device *dev)
++{
++	struct scsi_host_driver *sdrv;
++
++	sdrv = to_scsi_host_driver(dev->driver);
++	if (!sdrv->remove)
++		return 0;
++	return sdrv->remove(to_scsi_virt_host(dev));
++}
++
++int scsi_register_host_driver(struct scsi_host_driver *sdrv)
++{
++	int error;
++
++	INIT_LIST_HEAD(&sdrv->devices);
++	spin_lock_init(&sdrv->devices_lock);
++
++	sdrv->gendrv.name = sdrv->name;
++	sdrv->gendrv.owner = sdrv->owner;
++	sdrv->gendrv.probe = scsi_host_driver_probe;
++	sdrv->gendrv.remove = scsi_host_driver_remove;
++	sdrv->gendrv.bus = &shost_bus_type;
++
++	error = driver_register(&sdrv->gendrv);
++	if (error)
++		return error;
++
++	driver_attr_add_host.attr.owner = sdrv->owner;
++	error = driver_create_file(&sdrv->gendrv, &driver_attr_add_host);
++	if (error)
++		goto unregister_drv;
++
++	error = sysfs_create_group(&sdrv->gendrv.kobj, sdrv->attrs);
++	if (error)
++		goto remove_add_file;
++
++	return 0;
++
++ remove_add_file:
++	driver_remove_file(&sdrv->gendrv, &driver_attr_add_host);
++ unregister_drv:
++	driver_unregister(&sdrv->gendrv);
++	return error;
++}
++EXPORT_SYMBOL(scsi_register_host_driver);
++
++void scsi_unregister_host_driver(struct scsi_host_driver *sdrv)
++{
++	struct scsi_virt_host *vhost, *tmp;
++
++	driver_remove_file(&sdrv->gendrv, &driver_attr_add_host);
++	sysfs_remove_group(&sdrv->gendrv.kobj, sdrv->attrs);
++	/*
++	 * this is only called from LLDs module_exit functions
++	 * so we should not need a lock.
++	 */
++	list_for_each_entry_safe(vhost, tmp, &sdrv->devices, list)
++		__scsi_host_driver_remove_host(sdrv, vhost);
++	driver_unregister(&sdrv->gendrv);
++}
++EXPORT_SYMBOL(scsi_unregister_host_driver);
+diff -aurp scsi-rc-fixes-2.6.orig/drivers/scsi/osst.c scsi-rc-fixes-2.6.work/drivers/scsi/osst.c
+--- scsi-rc-fixes-2.6.orig/drivers/scsi/osst.c	2005-02-04 22:10:56.000000000 -0800
++++ scsi-rc-fixes-2.6.work/drivers/scsi/osst.c	2005-02-11 16:28:05.000000000 -0800
+@@ -170,7 +170,7 @@ static int osst_copy_from_buffer(struct 
+ static int osst_probe(struct device *);
+ static int osst_remove(struct device *);
+ 
+-struct scsi_driver osst_template = {
++struct scsi_device_driver osst_template = {
+ 	.owner			= THIS_MODULE,
+ 	.gendrv = {
+ 		.name		=  "osst",
+@@ -5850,7 +5850,7 @@ static int __init init_osst(void) 
+ 	validate_options();
+ 	osst_sysfs_init();
+ 
+-	if ((register_chrdev(OSST_MAJOR,"osst", &osst_fops) < 0) || scsi_register_driver(&osst_template.gendrv)) {
++	if ((register_chrdev(OSST_MAJOR,"osst", &osst_fops) < 0) || scsi_register_device_driver(&osst_template.gendrv)) {
+ 		printk(KERN_ERR "osst :E: Unable to register major %d for OnStream tapes\n", OSST_MAJOR);
+ 		osst_sysfs_cleanup();
+ 		return 1;
+diff -aurp scsi-rc-fixes-2.6.orig/drivers/scsi/scsi_lib.c scsi-rc-fixes-2.6.work/drivers/scsi/scsi_lib.c
+--- scsi-rc-fixes-2.6.orig/drivers/scsi/scsi_lib.c	2005-02-04 22:11:02.000000000 -0800
++++ scsi-rc-fixes-2.6.work/drivers/scsi/scsi_lib.c	2005-02-10 20:25:50.000000000 -0800
+@@ -966,12 +966,12 @@ static int scsi_issue_flush_fn(request_q
+ 			       sector_t *error_sector)
+ {
+ 	struct scsi_device *sdev = q->queuedata;
+-	struct scsi_driver *drv;
++	struct scsi_device_driver *drv;
+ 
+ 	if (sdev->sdev_state != SDEV_RUNNING)
+ 		return -ENXIO;
+ 
+-	drv = *(struct scsi_driver **) disk->private_data;
++	drv = *(struct scsi_device_driver **) disk->private_data;
+ 	if (drv->issue_flush)
+ 		return drv->issue_flush(&sdev->sdev_gendev, error_sector);
+ 
+@@ -1073,7 +1073,7 @@ static int scsi_prep_fn(struct request_q
+ 	 * happening now.
+ 	 */
+ 	if (req->flags & (REQ_CMD | REQ_BLOCK_PC)) {
+-		struct scsi_driver *drv;
++		struct scsi_device_driver *drv;
+ 		int ret;
+ 
+ 		/*
+@@ -1100,7 +1100,7 @@ static int scsi_prep_fn(struct request_q
+ 		/*
+ 		 * Initialize the actual SCSI command for this request.
+ 		 */
+-		drv = *(struct scsi_driver **)req->rq_disk->private_data;
++		drv = *(struct scsi_device_driver **)req->rq_disk->private_data;
+ 		if (unlikely(!drv->init_command(cmd))) {
+ 			scsi_release_buffers(cmd);
+ 			scsi_put_command(cmd);
+diff -aurp scsi-rc-fixes-2.6.orig/drivers/scsi/scsi_scan.c scsi-rc-fixes-2.6.work/drivers/scsi/scsi_scan.c
+--- scsi-rc-fixes-2.6.orig/drivers/scsi/scsi_scan.c	2005-02-04 22:12:05.000000000 -0800
++++ scsi-rc-fixes-2.6.work/drivers/scsi/scsi_scan.c	2005-02-10 20:26:51.000000000 -0800
+@@ -1089,12 +1089,12 @@ EXPORT_SYMBOL(__scsi_add_device);
+ 
+ void scsi_rescan_device(struct device *dev)
+ {
+-	struct scsi_driver *drv;
++	struct scsi_device_driver *drv;
+ 	
+ 	if (!dev->driver)
+ 		return;
+ 
+-	drv = to_scsi_driver(dev->driver);
++	drv = to_scsi_device_driver(dev->driver);
+ 	if (try_module_get(drv->owner)) {
+ 		if (drv->rescan)
+ 			drv->rescan(dev);
+diff -aurp scsi-rc-fixes-2.6.orig/drivers/scsi/scsi_sysfs.c scsi-rc-fixes-2.6.work/drivers/scsi/scsi_sysfs.c
+--- scsi-rc-fixes-2.6.orig/drivers/scsi/scsi_sysfs.c	2005-02-04 22:10:23.000000000 -0800
++++ scsi-rc-fixes-2.6.work/drivers/scsi/scsi_sysfs.c	2005-02-11 16:27:33.000000000 -0800
+@@ -197,6 +197,7 @@ struct class sdev_class = {
+ static int scsi_bus_match(struct device *dev, struct device_driver *gendrv)
+ {
+ 	struct scsi_device *sdp = to_scsi_device(dev);
++
+ 	if (sdp->no_uld_attach)
+ 		return 0;
+ 	return (sdp->inq_periph_qual == SCSI_INQ_PQ_CON)? 1: 0;
+@@ -653,13 +654,13 @@ out:
+ }
+ EXPORT_SYMBOL(scsi_remove_device);
+ 
+-int scsi_register_driver(struct device_driver *drv)
++int scsi_register_device_driver(struct device_driver *drv)
+ {
+ 	drv->bus = &scsi_bus_type;
+ 
+ 	return driver_register(drv);
+ }
+-EXPORT_SYMBOL(scsi_register_driver);
++EXPORT_SYMBOL(scsi_register_device_driver);
+ 
+ int scsi_register_interface(struct class_interface *intf)
+ {
+@@ -669,7 +670,6 @@ int scsi_register_interface(struct class
+ }
+ EXPORT_SYMBOL(scsi_register_interface);
+ 
 -
--	if (!sdbg_host) {
--		printk(KERN_ERR "%s: Unable to locate host info\n",
--		       __FUNCTION__);
--		return -ENODEV;
--	}
-+	sdbg_host = dev_get_drvdata(&vhost->dev);
-+	sdebug_remove_adapter(sdbg_host);
+ static struct class_device_attribute *class_attr_overridden(
+ 		struct class_device_attribute **attrs,
+ 		struct class_device_attribute *attr)
+diff -aurp scsi-rc-fixes-2.6.orig/drivers/scsi/sd.c scsi-rc-fixes-2.6.work/drivers/scsi/sd.c
+--- scsi-rc-fixes-2.6.orig/drivers/scsi/sd.c	2005-02-04 22:11:57.000000000 -0800
++++ scsi-rc-fixes-2.6.work/drivers/scsi/sd.c	2005-02-11 16:28:15.000000000 -0800
+@@ -92,7 +92,7 @@
+ static void scsi_disk_release(struct kref *kref);
  
-         scsi_remove_host(sdbg_host->shost);
+ struct scsi_disk {
+-	struct scsi_driver *driver;	/* always &sd_template */
++	struct scsi_device_driver *driver;	/* always &sd_template */
+ 	struct scsi_device *device;
+ 	struct kref	kref;
+ 	struct gendisk	*disk;
+@@ -125,7 +125,7 @@ static int sd_issue_flush(struct device 
+ static void sd_read_capacity(struct scsi_disk *sdkp, char *diskname,
+ 		 struct scsi_request *SRpnt, unsigned char *buffer);
  
+-static struct scsi_driver sd_template = {
++static struct scsi_device_driver sd_template = {
+ 	.owner			= THIS_MODULE,
+ 	.gendrv = {
+ 		.name		= "sd",
+@@ -1631,7 +1631,7 @@ static int __init init_sd(void)
+ 	if (!majors)
+ 		return -ENODEV;
+ 
+-	return scsi_register_driver(&sd_template.gendrv);
++	return scsi_register_device_driver(&sd_template.gendrv);
+ }
+ 
+ /**
+diff -aurp scsi-rc-fixes-2.6.orig/drivers/scsi/sr.c scsi-rc-fixes-2.6.work/drivers/scsi/sr.c
+--- scsi-rc-fixes-2.6.orig/drivers/scsi/sr.c	2005-02-04 22:13:14.000000000 -0800
++++ scsi-rc-fixes-2.6.work/drivers/scsi/sr.c	2005-02-11 16:28:25.000000000 -0800
+@@ -74,7 +74,7 @@ static int sr_probe(struct device *);
+ static int sr_remove(struct device *);
+ static int sr_init_command(struct scsi_cmnd *);
+ 
+-static struct scsi_driver sr_template = {
++static struct scsi_device_driver sr_template = {
+ 	.owner			= THIS_MODULE,
+ 	.gendrv = {
+ 		.name   	= "sr",
+@@ -947,7 +947,7 @@ static int __init init_sr(void)
+ 	rc = register_blkdev(SCSI_CDROM_MAJOR, "sr");
+ 	if (rc)
+ 		return rc;
+-	return scsi_register_driver(&sr_template.gendrv);
++	return scsi_register_device_driver(&sr_template.gendrv);
+ }
+ 
+ static void __exit exit_sr(void)
+diff -aurp scsi-rc-fixes-2.6.orig/drivers/scsi/st.c scsi-rc-fixes-2.6.work/drivers/scsi/st.c
+--- scsi-rc-fixes-2.6.orig/drivers/scsi/st.c	2005-02-04 22:11:33.000000000 -0800
++++ scsi-rc-fixes-2.6.work/drivers/scsi/st.c	2005-02-11 16:28:32.000000000 -0800
+@@ -198,7 +198,7 @@ static void do_create_driverfs_files(voi
+ static void do_remove_driverfs_files(void);
+ static void do_create_class_files(struct scsi_tape *, int, int);
+ 
+-static struct scsi_driver st_template = {
++static struct scsi_device_driver st_template = {
+ 	.owner			= THIS_MODULE,
+ 	.gendrv = {
+ 		.name		= "st",
+@@ -4062,7 +4062,7 @@ static int __init init_st(void)
+ 
+ 	if (!register_chrdev_region(MKDEV(SCSI_TAPE_MAJOR, 0),
+ 				    ST_MAX_TAPE_ENTRIES, "st")) {
+-		if (scsi_register_driver(&st_template.gendrv) == 0) {
++		if (scsi_register_device_driver(&st_template.gendrv) == 0) {
+ 			do_create_driverfs_files();
+ 			return 0;
+ 		}
+diff -aurp scsi-rc-fixes-2.6.orig/include/scsi/scsi_driver.h scsi-rc-fixes-2.6.work/include/scsi/scsi_driver.h
+--- scsi-rc-fixes-2.6.orig/include/scsi/scsi_driver.h	2005-02-04 22:11:49.000000000 -0800
++++ scsi-rc-fixes-2.6.work/include/scsi/scsi_driver.h	2005-02-11 16:26:50.000000000 -0800
+@@ -7,7 +7,7 @@ struct module;
+ struct scsi_cmnd;
+ 
+ 
+-struct scsi_driver {
++struct scsi_device_driver {
+ 	struct module		*owner;
+ 	struct device_driver	gendrv;
+ 
+@@ -15,15 +15,42 @@ struct scsi_driver {
+ 	void (*rescan)(struct device *);
+ 	int (*issue_flush)(struct device *, sector_t *);
+ };
+-#define to_scsi_driver(drv) \
+-	container_of((drv), struct scsi_driver, gendrv)
++#define to_scsi_device_driver(drv) \
++	container_of((drv), struct scsi_device_driver, gendrv)
+ 
+-extern int scsi_register_driver(struct device_driver *);
+-#define scsi_unregister_driver(drv) \
++extern int scsi_register_device_driver(struct device_driver *);
++#define scsi_unregister_device_driver(drv) \
+ 	driver_unregister(drv);
+ 
+ extern int scsi_register_interface(struct class_interface *);
+ #define scsi_unregister_interface(intf) \
+ 	class_interface_unregister(intf)
+ 
++struct scsi_virt_host {
++	struct device		dev;
++	struct list_head	list;
++};
++#define to_scsi_virt_host(_dev) \
++	container_of((_dev), struct scsi_virt_host, dev)
++
++struct scsi_host_driver {
++	char			*name;
++	struct module		*owner;
++	struct attribute_group	*attrs;
++
++	int (*probe)(struct scsi_virt_host *);
++	int (*remove)(struct scsi_virt_host *);
++	/*
++	 * internal fields
++	 */
++	struct device_driver	gendrv;
++	struct list_head	devices;
++	spinlock_t		devices_lock;
++};
++#define to_scsi_host_driver(_drv) \
++	container_of((_drv), struct scsi_host_driver, gendrv)
++
++extern int scsi_register_host_driver(struct scsi_host_driver *);
++extern void scsi_unregister_host_driver(struct scsi_host_driver *);
++
+ #endif /* _SCSI_SCSI_DRIVER_H */
 
---------------080500080402020206070409--
+--------------080607070502000609060803--
