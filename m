@@ -1,23 +1,23 @@
-From: James Bottomley <James.Bottomley@steeleye.com>
+From: Matthew Wilcox <willy@debian.org>
 Subject: Re: Scatter Gather question : 2.6.test4 . page to vaddr
-Date: 22 Sep 2003 15:34:25 -0500
+Date: Mon, 22 Sep 2003 21:41:09 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1064262866.15409.135.camel@mulgrave>
+Message-ID: <20030922204109.GY13172@parcelfarce.linux.theplanet.co.uk>
 References: <20030922201540.68358.qmail@web60210.mail.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nat9.steeleye.com ([65.114.3.137]:18951 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S263279AbTIVUnG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 22 Sep 2003 16:43:06 -0400
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:50840 "EHLO
+	www.linux.org.uk") by vger.kernel.org with ESMTP id S263281AbTIVUlN
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 22 Sep 2003 16:41:13 -0400
+Content-Disposition: inline
 In-Reply-To: <20030922201540.68358.qmail@web60210.mail.yahoo.com>
 List-Id: linux-scsi@vger.kernel.org
-To: dead_emaill@nospam.com
+To: jd <jpd_hp_linux_scsi@yahoo.com>
 Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
-On Mon, 2003-09-22 at 15:15, jd wrote:
+On Mon, Sep 22, 2003 at 01:15:40PM -0700, jd wrote:
 > I see that 2.6 scatterlist.h has eliminated the "address" element
 > and uses page struct only, and that  pci_map_sg() is used to 
 > populate the dma_address field. I'm not really planning on
@@ -26,11 +26,13 @@ On Mon, 2003-09-22 at 15:15, jd wrote:
 > How can I convert the page * entry 
 > pointed to by  SCpnt->request_buffer   back to a vaddr ? 
 > I don't see a page-to-vaddr() . function ?
-> Thanks for any insight.
 
-In general, you can't...the page may not be mapped in the kernel's
-space.  You can use kmap/kunmap to look at its contents.
+The trick is that there may not be a vaddr for that struct page.  If it's
+in highmem on x86, then it only ever gets temporary mappings into the
+kernel's space.  You're probably looking for kmap(), kmap_atomic() or,
+if you really really know it's a lowmem page, page_address().
 
-James
-
-
+-- 
+"It's not Hollywood.  War is real, war is primarily not about defeat or
+victory, it is about death.  I've seen thousands and thousands of dead bodies.
+Do you think I want to have an academic debate on this subject?" -- Robert Fisk
