@@ -1,243 +1,60 @@
 From: James Bottomley <James.Bottomley@steeleye.com>
-Subject: [BK PATCH] SCSI updates to 2.6.7
-Date: 27 Jun 2004 12:33:06 -0500
+Subject: Re: PATCH: Further aacraid work
+Date: 27 Jun 2004 12:33:19 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1088357587.1747.67.camel@mulgrave>
+Message-ID: <1088357603.10872.69.camel@mulgrave>
+References: <547AF3BD0F3F0B4CBDC379BAC7E4189FD2407B@otce2k03.adaptec.com>
+	<20040617203842.GC8705@devserv.devel.redhat.com>
+	<20040617204828.GC1495@holomorphy.com>
+	<20040618150518.GB1863@holomorphy.com>
+	<20040618203207.GK1863@holomorphy.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat1.steeleye.com ([65.114.3.130]:17852 "EHLO
+Received: from stat1.steeleye.com ([65.114.3.130]:34492 "EHLO
 	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S264206AbUF0RdN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 27 Jun 2004 13:33:13 -0400
+	id S264212AbUF0Rdr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 27 Jun 2004 13:33:47 -0400
+In-Reply-To: <20040618203207.GK1863@holomorphy.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
+To: William Lee Irwin III <wli@holomorphy.com>
+Cc: Alan Cox <alan@redhat.com>, "Salyzyn, Mark" <mark_salyzyn@adaptec.com>, Arjan van de Ven <arjanv@redhat.com>, Clay Haapala <chaapala@cisco.com>, Christoph Hellwig <hch@infradead.org>, Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Andrew Morton <akpm@osdl.org>
 
-These are the set of patches (barring uncovered bug fixes) that I'd like
-to get in before the current kernel goes -rc
+On Fri, 2004-06-18 at 15:32, William Lee Irwin III wrote:
+> On Fri, Jun 18, 2004 at 08:05:18AM -0700, William Lee Irwin III wrote:
+> > Proper changelog this time, and comments, too. Adaptec et al, please
+> > verify this resolves the issues you've been having.
+> > Someone say _something_.
+> 
+> jejb's seeing such improved results that I don't believe we need to
+> wait for Adaptec's ack to merge this.
+> 
+> akpm, please apply.
 
-The patch is mainly bugfixes, clean ups and janatorial stuff.  It also
-includes the deprecation of the drivers/scsi/hosts.h file---all current
-in-tree drivers have been converted to get this from
-include/scsi/scsi_hosts.h instead.  To take advantage of our new page
-allocation routine that favours clustering, I've turned it on in the two
-drivers I can verify that it makes quite a difference.
+The patch is already in mainline, but here's my final set of statistics
+on it.  I traced the effectiveness over a full day's operations on a
+scsi build and test machine (I don't get uptime much over a day on these
+machines since they're usually being rebooted to test new patches).
 
-The major API update is the addition of the flexible timeout
-infrastructure which, hopefully, will help Adaptec to get their current
-out of tree updates into a mergeable condition.
+The machine is an 8-way p66 voyager with 256k of memory.
 
-I'm afraid we have another qlogic firmware update skewing the diffstats
-again...
+I did notice the mergers start off high (at around 50%) after first boot
+and then decline.  The asymptote of the decline appears to be around 26%
+which is still a respectable merge rate for a non-iommu machine.  I was
+impressed to see that even at the end of the day I was still getting
+multi-page merges (still up to 128 pages).
 
-The patch is available from:
+The instrumentation counts the total number of pages in merged segments
+and the total number of segments through the machine.  The final figures
+for the day were
 
-bk://linux-scsi.bkbits.net/scsi-for-linus-2.6
+Total pages merged:	192682
+Total segments:		549497
 
-The short changelog is:
-
-Alan Cox:
-  o Further aacraid work
-
-Alan Stern:
-  o (as333) BLIST flag for non-lockable devices
-
-Andrew Morton:
-  o mptbase.c build fix
-
-Andrew Vasquez:
-  o qla2xxx: Remove qla_os.h
-  o [18/18] qla2xxx: Update driver version
-  o [17/18] qla2xxx: Bus reset handler fixes
-  o [16/18] qla2xxx: 23xx/63xx firmware updates
-  o [15/18] qla2xxx: SRB handling cleanup and fixes
-  o [14/18] qla2xxx: Use proper include files
-  o [13/18] qla2xxx: Remove TRUE/FALSE usage
-  o [12/18] qla2xxx: Extend firmware dump support
-  o [11/18] qla2xxx: Misc. fixes
-  o [10/18] qla2xxx: Additional tape handling fixes
-  o [9/18]  qla2xxx: Tape command handling fixes
-  o [8/18]  qla2xxx: Remove dead code
-  o [7/18]  qla2xxx: Tape command handling fixes
-  o [6/18]  qla2xxx: Initialization fixes
-  o [5/18]  qla2xxx: Add module parameter permissions
-  o [4/18]  qla2xxx: ISR RISC paused fixes
-  o [3/18]  qla2xxx: PCI DMA mappings rework
-  o qla2xxx: remove unnecessary command direction determination
-  o [2/18]  qla2xxx: Correct residual counts
-  o [1/18]  qla2xxx: Add wmb() to critical paths
-
-Arjan van de Ven:
-  o final hosts.h usage removal
-
-Brian King:
-  o ipr bump version to 2.0.10
-  o ipr only tcq cancel all
-  o ipr abort hang fix
-
-Christoph Hellwig:
-  o some tmscsim consolidation
-  o MPT Fusion driver 3.01.09 update
-  o avoid obsolete APIs in atp870u
-  o avoid obsolete APIs in fdomain
-  o avoid obsolete APIs in sr
-  o wd33c93 update
-  o wd7000 updates
-  o avoiding obsolete scsi APIs in dc395
-  o switch scsi core and sd to <scsi/*.h> headers
-
-Douglas Gilbert:
-  o More advansys fixes
-
-Guennadi Liakhovetski:
-  o kill obsolete typedefs and wrappers from tmscsim
-  o tmscsim: host_lock use in LLD
-  o tmscsim: init / exit cleanup
-
-James Bottomley:
-  o ncr53c8xx turn on clustering
-  o Fix up fdomain after mismerge
-  o fix aic7xxx probing
-  o advansys: add warning and convert #includes
-  o HSV100 is verified as supporting REPORT LUNs
-  o [patch-kj] kernel_thread() audit drivers/scsi/aacraid/rx.c
-  o SCSI Flexible timout intfrastructure
-  o Enable clustering in the 53c700 driver
-
-Jeremy Higdon:
-  o SCSI whitelist changes
-
-Joel Soete:
-  o Make ncr53c8xx respect clustering
-
-Mark Haverkamp:
-  o aacraid 32bit app ioctl compat patch (Updated)
-
-Matthew Wilcox:
-  o ncr53c8xx updates
-
-Maximilian Attems:
-  o kernel_thread() audit drivers/scsi/aacraid/sa.c
-  o [patch-kj] kernel_thread() audit drivers/scsi/aacraid/rkt.c
-
-Randy Dunlap:
-  o fdomain screwup
-
-The diffstats are:
-
- b/Documentation/scsi/scsi_mid_low_api.txt |   27 
- b/drivers/block/cciss_scsi.c              |    2 
- b/drivers/fc4/fc.c                        |    2 
- b/drivers/ieee1394/sbp2.c                 |    2 
- b/drivers/message/fusion/linux_compat.h   |   10 
- b/drivers/message/fusion/mptbase.c        | 1156 --
- b/drivers/message/fusion/mptbase.h        |   72 
- b/drivers/message/fusion/mptctl.c         |  171 
- b/drivers/message/fusion/mptlan.c         |   16 
- b/drivers/message/fusion/mptscsih.c       |  365 
- b/drivers/net/fc/iph5526.c                |    2 
- b/drivers/scsi/53c700.c                   |    2 
- b/drivers/scsi/Kconfig                    |    2 
- b/drivers/scsi/Makefile                   |    9 
- b/drivers/scsi/NCR_Q720.c                 |    6 
- b/drivers/scsi/aacraid/README             |   18 
- b/drivers/scsi/aacraid/TODO               |    2 
- b/drivers/scsi/aacraid/aachba.c           |  118 
- b/drivers/scsi/aacraid/aacraid.h          |   73 
- b/drivers/scsi/aacraid/commctrl.c         |  121 
- b/drivers/scsi/aacraid/comminit.c         |   11 
- b/drivers/scsi/aacraid/linit.c            |   79 
- b/drivers/scsi/aacraid/rkt.c              |   81 
- b/drivers/scsi/aacraid/rx.c               |   83 
- b/drivers/scsi/aacraid/sa.c               |   34 
- b/drivers/scsi/advansys.c                 |  126 
- b/drivers/scsi/advansys.h                 |    8 
- b/drivers/scsi/aha152x.c                  |    2 
- b/drivers/scsi/aic7xxx/aic7xxx_osm.c      |   13 
- b/drivers/scsi/aic7xxx/aic7xxx_osm.h      |    2 
- b/drivers/scsi/aic7xxx/aic7xxx_osm_pci.c  |    3 
- b/drivers/scsi/arm/acornscsi.c            |    2 
- b/drivers/scsi/arm/arxescsi.c             |    2 
- b/drivers/scsi/arm/cumana_1.c             |    2 
- b/drivers/scsi/arm/cumana_2.c             |    2 
- b/drivers/scsi/arm/ecoscsi.c              |    2 
- b/drivers/scsi/arm/eesox.c                |    2 
- b/drivers/scsi/arm/fas216.c               |    2 
- b/drivers/scsi/arm/oak.c                  |    2 
- b/drivers/scsi/arm/powertec.c             |    2 
- b/drivers/scsi/atp870u.c                  |   80 
- b/drivers/scsi/atp870u.h                  |   23 
- b/drivers/scsi/constants.c                |    9 
- b/drivers/scsi/dc395x.c                   |   55 
- b/drivers/scsi/fdomain.c                  |   45 
- b/drivers/scsi/fdomain.h                  |   24 
- b/drivers/scsi/gdth.c                     |    2 
- b/drivers/scsi/hosts.c                    |    4 
- b/drivers/scsi/hosts.h                    |    2 
- b/drivers/scsi/ipr.c                      |   20 
- b/drivers/scsi/ipr.h                      |    6 
- b/drivers/scsi/ncr53c8xx.c                | 1442 +-
- b/drivers/scsi/ncr53c8xx.h                |   53 
- b/drivers/scsi/pcmcia/fdomain_stub.c      |   12 
- b/drivers/scsi/pcmcia/nsp_cs.c            |    2 
- b/drivers/scsi/qla2xxx/Makefile           |    2 
- b/drivers/scsi/qla2xxx/ql2100.c           |    1 
- b/drivers/scsi/qla2xxx/ql2200.c           |    1 
- b/drivers/scsi/qla2xxx/ql2300.c           |    1 
- b/drivers/scsi/qla2xxx/ql2300_fw.c        |14098 ++++++++++++++--------------
- b/drivers/scsi/qla2xxx/ql2322.c           |    1 
- b/drivers/scsi/qla2xxx/ql2322_fw.c        |14646 +++++++++++++++---------------
- b/drivers/scsi/qla2xxx/ql6312.c           |    1 
- b/drivers/scsi/qla2xxx/ql6312_fw.c        |12858 +++++++++++++-------------
- b/drivers/scsi/qla2xxx/ql6322.c           |    1 
- b/drivers/scsi/qla2xxx/ql6322_fw.c        |13500 +++++++++++++--------------
- b/drivers/scsi/qla2xxx/qla_dbg.c          |   22 
- b/drivers/scsi/qla2xxx/qla_dbg.h          |    6 
- b/drivers/scsi/qla2xxx/qla_def.h          |   42 
- b/drivers/scsi/qla2xxx/qla_gbl.h          |    7 
- b/drivers/scsi/qla2xxx/qla_gs.c           |    2 
- b/drivers/scsi/qla2xxx/qla_init.c         |  136 
- b/drivers/scsi/qla2xxx/qla_inline.h       |    4 
- b/drivers/scsi/qla2xxx/qla_iocb.c         |  109 
- b/drivers/scsi/qla2xxx/qla_isr.c          |   65 
- b/drivers/scsi/qla2xxx/qla_mbx.c          |   76 
- b/drivers/scsi/qla2xxx/qla_os.c           |  349 
- b/drivers/scsi/qla2xxx/qla_rscn.c         |    6 
- b/drivers/scsi/qla2xxx/qla_sup.c          |    4 
- b/drivers/scsi/qla2xxx/qla_version.h      |    4 
- b/drivers/scsi/scsi.c                     |   24 
- b/drivers/scsi/scsi_devinfo.c             |   16 
- b/drivers/scsi/scsi_error.c               |   28 
- b/drivers/scsi/scsi_ioctl.c               |   14 
- b/drivers/scsi/scsi_lib.c                 |   12 
- b/drivers/scsi/scsi_priv.h                |    1 
- b/drivers/scsi/scsi_proc.c                |    3 
- b/drivers/scsi/scsi_scan.c                |    7 
- b/drivers/scsi/scsi_syms.c                |   19 
- b/drivers/scsi/scsi_sysfs.c               |    3 
- b/drivers/scsi/scsicam.c                  |    5 
- b/drivers/scsi/scsiiom.c                  |  399 
- b/drivers/scsi/sd.c                       |   20 
- b/drivers/scsi/sr.c                       |   23 
- b/drivers/scsi/sr.h                       |    6 
- b/drivers/scsi/sr_ioctl.c                 |   36 
- b/drivers/scsi/sr_vendor.c                |   20 
- b/drivers/scsi/sym53c8xx_comm.h           |  703 -
- b/drivers/scsi/sym53c8xx_defs.h           |  710 -
- b/drivers/scsi/tmscsim.c                  |  803 -
- b/drivers/scsi/tmscsim.h                  |  276 
- b/drivers/scsi/wd33c93.c                  |   98 
- b/drivers/scsi/wd33c93.h                  |   21 
- b/drivers/scsi/wd7000.c                   |  179 
- b/drivers/scsi/zalon.c                    |   42 
- b/drivers/usb/image/hpusbscsi.c           |    2 
- b/drivers/usb/image/microtek.c            |    2 
- b/include/scsi/scsi_devinfo.h             |    1 
- b/include/scsi/scsi_host.h                |   20 
- drivers/scsi/qla2xxx/qla_os.h             |   94 
- 110 files changed, 30983 insertions(+), 32961 deletions(-)
+So the amount of I/O through the system is 2.2-2.9GB or more than ten
+times the machine's actual memory capacity (hopefully this puts me well
+up into the usual operating region for physical page fragmentation).
 
 James
 
