@@ -1,69 +1,78 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: [PATCH] fix HBA removal problem with transport classes
-Date: Tue, 01 Feb 2005 14:50:02 -0600
-Message-ID: <1107291002.4800.67.camel@mulgrave>
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: Disk Errors
+Date: Wed, 02 Feb 2005 13:55:15 +1000
+Message-ID: <42004F23.10009@torque.net>
+References: <60807403EABEB443939A5A7AA8A7458BB5232F@otce2k01.adaptec.com>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
-Received: from stat16.steeleye.com ([209.192.50.48]:24551 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S262120AbVBAUuJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 1 Feb 2005 15:50:09 -0500
-Received: from midgard.sc.steeleye.com (midgard.sc.steeleye.com [172.17.6.40])
-	by hancock.sc.steeleye.com (8.11.6/8.11.6) with ESMTP id j11Ko8C00521
-	for <linux-scsi@vger.kernel.org>; Tue, 1 Feb 2005 15:50:08 -0500
+Received: from borg.st.net.au ([65.23.158.22]:59024 "EHLO borg.st.net.au")
+	by vger.kernel.org with ESMTP id S262257AbVBBDzC (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Feb 2005 22:55:02 -0500
+In-Reply-To: <60807403EABEB443939A5A7AA8A7458BB5232F@otce2k01.adaptec.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
+Cc: Bryan Henderson <hbryan@us.ibm.com>, Kit Gerrits <kit@gerritsacc.nl>, linux-scsi@vger.kernel.org
 
-James Smart pointed out that if you insert and remove a HBA driver a few
-times, eventually the system oopses.
+Salyzyn, Mark wrote:
+> An unrecoverable medium error is typically `corrected' when a write to
+> the block occurs. RAID cards will use the redundancy to calculate the
+> data and write it back to the offending drive for instance.
+> 
+> Otherwise, for none-redundant stores, bad media is as good as anything
+> to remind one that the data is gone ;->
+> 
+> Sincerely -- Mark Salyzyn
 
-The reason is that the transport classes all kfree their attribute
-containers, but don't actually unregister them first (so we have freed
-memory on the container list).  The attached should fix this.
+All may not be lost. If a medium error occurs and the ASC and
+ASCQ imply the sector could be read but
+failed ECC then the READ LONG SCSI command should fetch the
+block (plus ECC and other data). For example a Fujitsu MAM3184
+returns 576 bytes. It is probably too much to expect that all
+the damage will be in the last 64 bytes.
 
-James
+As Mark pointed out, if /dev/sda is a virtual disk then it is
+unlikely that the READ LONG SCSI command will be supported.
 
-===== drivers/scsi/scsi_transport_fc.c 1.15 vs edited =====
---- 1.15/drivers/scsi/scsi_transport_fc.c	2005-02-01 10:45:41 -06:00
-+++ edited/drivers/scsi/scsi_transport_fc.c	2005-02-01 13:24:03 -06:00
-@@ -846,6 +846,9 @@
- void fc_release_transport(struct scsi_transport_template *t)
- {
- 	struct fc_internal *i = to_fc_internal(t);
-+
-+	attribute_container_unregister(&i->t.target_attrs);
-+	attribute_container_unregister(&i->t.host_attrs);
- 
- 	kfree(i);
- }
-===== drivers/scsi/scsi_transport_iscsi.c 1.3 vs edited =====
---- 1.3/drivers/scsi/scsi_transport_iscsi.c	2005-02-01 10:45:41 -06:00
-+++ edited/drivers/scsi/scsi_transport_iscsi.c	2005-02-01 13:23:55 -06:00
-@@ -356,6 +356,10 @@
- void iscsi_release_transport(struct scsi_transport_template *t)
- {
- 	struct iscsi_internal *i = to_iscsi_internal(t);
-+
-+	attribute_container_unregister(&i->t.target_attrs);
-+	attribute_container_unregister(&i->t.host_attrs);
-+
- 	kfree(i);
- }
- 
-===== drivers/scsi/scsi_transport_spi.c 1.24 vs edited =====
---- 1.24/drivers/scsi/scsi_transport_spi.c	2005-02-01 10:45:41 -06:00
-+++ edited/drivers/scsi/scsi_transport_spi.c	2005-02-01 13:24:05 -06:00
-@@ -921,6 +921,9 @@
- {
- 	struct spi_internal *i = to_spi_internal(t);
- 
-+	attribute_container_unregister(&i->t.target_attrs);
-+	attribute_container_unregister(&i->t.host_attrs);
-+
- 	kfree(i);
- }
- EXPORT_SYMBOL(spi_release_transport);
+sg3_utils has a sg_read_long utility. "Long" blocks can
+be written to the media with the sg_write_long utility
+which was introduced mainly for testing (e.g. creating
+"artificial" medium errors).
 
+
+BTW I noticed that the block layer reads "around" a medium
+error. Say 8 KB is being read and a medium error occurs
+(and the info field is set to the lba of the first failure)
+then several small reads are done to reconstruct as much
+of the original 8 KB as possible (probably with a block of
+zeroes corresponding to the medium error).
+
+Doug Gilbert
+
+> -----Original Message-----
+> From: linux-scsi-owner@vger.kernel.org
+> [mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of Bryan Henderson
+> Sent: Tuesday, February 01, 2005 1:01 PM
+> To: dougg@torque.net
+> Cc: Kit Gerrits; linux-scsi@vger.kernel.org
+> Subject: Re: Disk Errors
+> 
+> 
+>>So there are two situations in which damaged blocks remain
+>>accessible:
+>>   1) unrecoverable medium errors
+>>...
+> 
+> 
+> What's the rationale behind leaving a damaged block accessible in the
+> case 
+> of an unrecoverable medium error?  A possibility that someone might 
+> actually be able to recover the data?
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
 
