@@ -1,162 +1,43 @@
-From: Mike Anderson <andmike@us.ibm.com>
-Subject: Re: 2.4.39 "Sleeping function called from illegal context at slab.c:1374"
-Date: Wed, 2 Oct 2002 14:21:22 -0700
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <20021002212122.GF1317@beaverton.ibm.com>
-References: <3D99885B.533C320D@aitel.hist.no> <3D99EF62.3A3E6932@digeo.com> <20021001215907.GA8273@midgaard.us> <3D9A207A.14BFF440@digeo.com> <20021002162443.GA1317@beaverton.ibm.com> <20021002184437.GA17474@midgaard.us>
+From: Rogier Wolff <R.E.Wolff@BitWizard.nl>
+Subject: Re: Inhibit auto-attach of scsi disks ?
+Date: Wed, 2 Oct 2002 23:30:45 +0200
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <20021002233045.A12192@bitwizard.nl>
+References: <OF4F84AA07.A8C2EDB0-ON87256C46.0062DDBA@boulder.ibm.com> <1033588299.23661.34.camel@irongate.swansea.linux.org.uk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20021002184437.GA17474@midgaard.us>
-To: akpm@digeo.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, dougg@gear.torque.net
+In-Reply-To: <1033588299.23661.34.camel@irongate.swansea.linux.org.uk>
 List-Id: linux-scsi@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Bryan Henderson <hbryan@us.ibm.com>, Scott Merritt <Scsi@PragmaSoft.com>, linux-scsi@vger.kernel.org
 
-Andreas,
-	Here is the updated patch.
+On Wed, Oct 02, 2002 at 08:51:39PM +0100, Alan Cox wrote:
+> On Wed, 2002-10-02 at 19:10, Bryan Henderson wrote:
+> > But when we speak of inhibiting partition table reading, I think that's
+> > another (missing) feature:  I should be able to control whether Linux
+> > considers there to be partitions on my disk or not (and change the fact
+> 
+> Why do you want to. Linux always offers you the entire disk anyway. 
 
--andmike
---
-Michael Anderson
-andmike@us.ibm.com
+Andries has argued this before, but I encountered a real-life example
+today.
 
- sg.c |   59 ++++++++++++++++++++++++++++++++++++++++-------------------
- 1 files changed, 40 insertions(+), 19 deletions(-)
+Today I was asked to recover data from a device where reading one
+of the "bad" blocks would cause an immediate "lockup" of the device:
+It would report ALL future blocks as bad as well. Only a power-cycle
+could revert it to reporting other blocks as "working". 
 
-diff -Nru a/drivers/scsi/sg.c b/drivers/scsi/sg.c
---- a/drivers/scsi/sg.c	Wed Oct  2 12:19:48 2002
-+++ b/drivers/scsi/sg.c	Wed Oct  2 12:19:48 2002
-@@ -1354,32 +1354,42 @@
- {
- 	static int sg_registered = 0;
- 	unsigned long iflags;
-+	int tmp_dev_max;
-+	Sg_device **tmp_da;
- 
- 	if ((sg_template.dev_noticed == 0) || sg_dev_arr)
- 		return 0;
- 
-+	SCSI_LOG_TIMEOUT(3, printk("sg_init\n"));
-+
- 	write_lock_irqsave(&sg_dev_arr_lock, iflags);
-+	tmp_dev_max = sg_template.dev_noticed + SG_DEV_ARR_LUMP;
-+	write_unlock_irqrestore(&sg_dev_arr_lock, iflags);
-+
-+	tmp_da = (Sg_device **)vmalloc(
-+				tmp_dev_max * sizeof(Sg_device *));
-+	if (NULL == tmp_da) {
-+		printk(KERN_ERR "sg_init: no space for sg_dev_arr\n");
-+		return 1;
-+	}
-+	write_lock_irqsave(&sg_dev_arr_lock, iflags);
-+
- 	if (!sg_registered) {
- 		if (register_chrdev(SCSI_GENERIC_MAJOR, "sg", &sg_fops)) {
- 			printk(KERN_ERR
- 			       "Unable to get major %d for generic SCSI device\n",
- 			       SCSI_GENERIC_MAJOR);
- 			write_unlock_irqrestore(&sg_dev_arr_lock, iflags);
-+			vfree((char *) tmp_da);
- 			return 1;
- 		}
- 		sg_registered++;
- 	}
- 
--	SCSI_LOG_TIMEOUT(3, printk("sg_init\n"));
--	sg_template.dev_max = sg_template.dev_noticed + SG_DEV_ARR_LUMP;
--	sg_dev_arr = (Sg_device **)vmalloc(
--			sg_template.dev_max * sizeof(Sg_device *));
--	if (NULL == sg_dev_arr) {
--		printk(KERN_ERR "sg_init: no space for sg_dev_arr\n");
--		write_unlock_irqrestore(&sg_dev_arr_lock, iflags);
--		return 1;
--	}
--	memset(sg_dev_arr, 0, sg_template.dev_max * sizeof (Sg_device *));
-+	memset(tmp_da, 0, tmp_dev_max * sizeof (Sg_device *));
-+	sg_template.dev_max = tmp_dev_max;
-+	sg_dev_arr = tmp_da;
-+
- 	write_unlock_irqrestore(&sg_dev_arr_lock, iflags);
- #ifdef CONFIG_PROC_FS
- 	sg_proc_init();
-@@ -1430,7 +1440,7 @@
- static int
- sg_attach(Scsi_Device * scsidp)
- {
--	Sg_device *sdp;
-+	Sg_device *sdp = NULL;
- 	unsigned long iflags;
- 	int k;
- 
-@@ -1439,15 +1449,16 @@
- 		Sg_device **tmp_da;
- 		int tmp_dev_max = sg_template.nr_dev + SG_DEV_ARR_LUMP;
- 
-+		write_unlock_irqrestore(&sg_dev_arr_lock, iflags);
- 		tmp_da = (Sg_device **)vmalloc(
- 				tmp_dev_max * sizeof(Sg_device *));
- 		if (NULL == tmp_da) {
- 			scsidp->attached--;
--			write_unlock_irqrestore(&sg_dev_arr_lock, iflags);
- 			printk(KERN_ERR
- 			       "sg_attach: device array cannot be resized\n");
- 			return 1;
- 		}
-+		write_lock_irqsave(&sg_dev_arr_lock, iflags);
- 		memset(tmp_da, 0, tmp_dev_max * sizeof (Sg_device *));
- 		memcpy(tmp_da, sg_dev_arr,
- 		       sg_template.dev_max * sizeof (Sg_device *));
-@@ -1456,6 +1467,7 @@
- 		sg_template.dev_max = tmp_dev_max;
- 	}
- 
-+find_empty_slot:
- 	for (k = 0; k < sg_template.dev_max; k++)
- 		if (!sg_dev_arr[k])
- 			break;
-@@ -1467,11 +1479,19 @@
- 		       " type=%d, minor number exceed %d\n",
- 		       scsidp->host->host_no, scsidp->channel, scsidp->id,
- 		       scsidp->lun, scsidp->type, SG_MAX_DEVS_MASK);
-+		if (NULL != sdp)
-+			vfree((char *) sdp);
- 		return 1;
- 	}
--	if (k < sg_template.dev_max)
--		sdp = (Sg_device *)vmalloc(sizeof(Sg_device));
--	else
-+	if (k < sg_template.dev_max) {
-+		if (NULL == sdp) {
-+			write_unlock_irqrestore(&sg_dev_arr_lock, iflags);
-+			sdp = (Sg_device *)vmalloc(sizeof(Sg_device));
-+			write_lock_irqsave(&sg_dev_arr_lock, iflags);
-+			if (!sg_dev_arr[k])
-+				goto find_empty_slot;
-+		}
-+	} else
- 		sdp = NULL;
- 	if (NULL == sdp) {
- 		scsidp->attached--;
-@@ -1498,17 +1518,18 @@
- 		scsidp->sdev_driverfs_dev.name);
- 	sdp->sg_driverfs_dev.parent = &scsidp->sdev_driverfs_dev;
- 	sdp->sg_driverfs_dev.bus = &scsi_driverfs_bus_type;
-+
-+	sg_template.nr_dev++;
-+	sg_dev_arr[k] = sdp;
-+	write_unlock_irqrestore(&sg_dev_arr_lock, iflags);
-+
- 	device_register(&sdp->sg_driverfs_dev);
- 	device_create_file(&sdp->sg_driverfs_dev, &dev_attr_type);
- 	device_create_file(&sdp->sg_driverfs_dev, &dev_attr_kdev);
--
- 	sdp->de = devfs_register(scsidp->de, "generic", DEVFS_FL_DEFAULT,
- 				 SCSI_GENERIC_MAJOR, k,
- 				 S_IFCHR | S_IRUSR | S_IWUSR | S_IRGRP,
- 				 &sg_fops, sdp);
--	sg_template.nr_dev++;
--	sg_dev_arr[k] = sdp;
--	write_unlock_irqrestore(&sg_dev_arr_lock, iflags);
- 	switch (scsidp->type) {
- 	case TYPE_DISK:
- 	case TYPE_MOD:
+In this case, the partition table luckily didn't reference any of the
+bad blocks. But if it did, it would have made the recoverable 99% of
+the device unaccessable. 
+
+		Roger. 
+
+-- 
+** R.E.Wolff@BitWizard.nl ** http://www.BitWizard.nl/ ** +31-15-2600998 **
+*-- BitWizard writes Linux device drivers for any device you may have! --*
+* The Worlds Ecosystem is a stable system. Stable systems may experience *
+* excursions from the stable situation. We are currenly in such an       * 
+* excursion: The stable situation does not include humans. ***************
