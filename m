@@ -1,39 +1,47 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: SCSI synchronization and error handling
-Date: Wed, 30 Jun 2004 15:43:21 -0400
+From: Byron Stanoszek <gandalf@winds.org>
+Subject: RE: PATCH: Further aacraid work
+Date: Wed, 30 Jun 2004 15:52:46 -0400 (EDT)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <40E317D9.80904@pobox.com>
+Message-ID: <Pine.LNX.4.60.0406301549590.30468@winds.org>
+References: <547AF3BD0F3F0B4CBDC379BAC7E4189FF1D6EE@otce2k03.adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:41862 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S261682AbUF3Tnf
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 30 Jun 2004 15:43:35 -0400
+Received: from winds.org ([68.75.195.9]:50072 "EHLO winds.org")
+	by vger.kernel.org with ESMTP id S261987AbUF3Twx (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 30 Jun 2004 15:52:53 -0400
+In-Reply-To: <547AF3BD0F3F0B4CBDC379BAC7E4189FF1D6EE@otce2k03.adaptec.com>
 List-Id: linux-scsi@vger.kernel.org
-To: SCSI Mailing List <linux-scsi@vger.kernel.org>
-Cc: James Bottomley <James.Bottomley@steeleye.com>
+To: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
+Cc: Mark Haverkamp <markh@osdl.org>, Alan Cox <alan@redhat.com>, linux-kernel <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
 
+On Tue, 29 Jun 2004, Salyzyn, Mark wrote:
 
-I'm doing some more work on my scsi LLD, libata, and have a few 
-questions for the experts in the crowd.
+> Oooo, good!
+>
+> The Adapter has declared itself `dead' (maybe for reasons other than a
+> controlled blinkLED situation). Effectively a crash or complete loss of
+> communications with the Adapter. Last time I've seen this happened it
+> was a bad power supply.
+>
+> Contact technical support to have them narrow down the actual cause of
+> adapter failure ... I don't know where the F/W updates are held on the
+> Dell Site.
 
-In ATA, some commands need to be sent when no other commands are queued 
-to hardware.  Let's say I have a command stream that looks like
+I was able to upgrade the firmware to build 6089 and everything works
+flawlessly now. I'm currently using your aacraid-1.1.5-2345 driver and things
+haven't complained once. I also haven't had a problem with Alan's aacraid
+driver on my development server, which is running Perc 3/Si fw 2951.
 
-	queued write
-	queued read
-	queued read
-	queued write
-	non-queued SMART command
-	queued write
-	queued write
+So Perc 2/Si fw 2939 must be buggy, all there is to it. :)
 
-What's the best way to ensure that the SMART command is only executed 
-after preceding, queued commands are completed?  My guess is to return 
-MLQUEUE_BUSY if (a) ->queuecommand is passed a non-queued command AND 
-(b) there are commands queued to hardware already.
+Anyways, thanks for your quick help! I'll let you know if anything else goes
+wrong.
 
+  -Byron
 
-
+--
+Byron Stanoszek                         Ph: (330) 644-3059
+Systems Programmer                      Fax: (330) 644-8110
+Commercial Timesharing Inc.             Email: byron@comtime.com
