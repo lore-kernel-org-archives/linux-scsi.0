@@ -1,65 +1,32 @@
-From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
-Subject: RE: [PATCH] (7/27) *really* dumb typo in aacraid (cast to pointer to structure that doesn't exist ;-)
-Date: Wed, 2 Feb 2005 16:32:14 -0500
-Message-ID: <60807403EABEB443939A5A7AA8A7458BBD6089@otce2k01.adaptec.com>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: RE: [Announce] megaraid_mbox 2.20.4.4 patch
+Date: Wed, 02 Feb 2005 16:43:21 -0600
+Message-ID: <1107384201.4541.30.camel@mulgrave>
+References: <0E3FA95632D6D047BA649F95DAB60E570366265E@exa-atlanta>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Received: from magic.adaptec.com ([216.52.22.17]:14827 "EHLO magic.adaptec.com")
-	by vger.kernel.org with ESMTP id S262623AbVBBVcS convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 2 Feb 2005 16:32:18 -0500
-content-class: urn:content-classes:message
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Received: from stat16.steeleye.com ([209.192.50.48]:24989 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S262913AbVBBWnf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 2 Feb 2005 17:43:35 -0500
+In-Reply-To: <0E3FA95632D6D047BA649F95DAB60E570366265E@exa-atlanta>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Al Viro <viro@parcelfarce.linux.theplanet.co.uk>, Linus Torvalds <torvalds@osdl.org>
-Cc: linux-scsi@vger.kernel.org, Mark Haverkamp <markh@osdl.org>
+To: "Ju, Seokmann" <sju@lsil.com>
+Cc: Matt Domsch <Matt_Domsch@Dell.com>, Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, "Bagalkote, Sreenivas" <sreenib@lsil.com>, "Mukker, Atul" <Atulm@lsil.com>
 
-Cool! A good catch that could only be caught with many eyes looking at
-the code.
+On Wed, 2005-02-02 at 10:56 -0500, Ju, Seokmann wrote:
+> +	.sdev_attrs			= megaraid_device_attrs,
+> +	.shost_attrs			= megaraid_class_device_attrs,
 
-Wasn't in my branch though, but it looks like a common typo ;-/. But the
-sad part of this is that I use casts around voids to improve type
-checking (and enforce/document intentions) and it now appears to be a
-waste. I assume you did not see a warning message from your compile
-environment, right?
+These are, perhaps, slightly confusing names.  The terms device and
+class_device have well defined meanings in the generic device model,
+neither of which is what you mean here.  Why not simply
+megaraid_sdev_attrs and megaraid_shost_attrs?
 
-Sincerely -- Mark Salyzyn
+Other than this, it looks fine to me too.
 
------Original Message-----
-From: linux-scsi-owner@vger.kernel.org
-[mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of Al Viro
-Sent: Wednesday, February 02, 2005 2:14 PM
-To: Linus Torvalds
-Cc: linux-scsi@vger.kernel.org
-Subject: [PATCH] (7/27) *really* dumb typo in aacraid (cast to pointer
-to structure that doesn't exist ;-)
+James
 
-	spot the typo...  It's harmless, in a sense that code compiles
-right,
-but...
-Signed-off-by: Al Viro <viro@parcelfarce.linux.theplanet.co.uk>
-----
-diff -urN RC11-rc2-bk10-rme9652/drivers/scsi/aacraid/aachba.c
-RC11-rc2-bk10-aacraid/drivers/scsi/aacraid/aachba.c
---- RC11-rc2-bk10-rme9652/drivers/scsi/aacraid/aachba.c	Tue Feb  1
-21:44:42 2005
-+++ RC11-rc2-bk10-aacraid/drivers/scsi/aacraid/aachba.c	Wed Feb  2
-08:12:13 2005
-@@ -1047,7 +1047,7 @@
- 			COMMAND_COMPLETE << 8 | SAM_STAT_GOOD;
- 	else {
- 		struct scsi_device *sdev = cmd->device;
--		struct aac_dev *dev = (struct aav_dev
-*)sdev->host->hostdata;
-+		struct aac_dev *dev = (struct aac_dev
-*)sdev->host->hostdata;
- 		u32 cid = ID_LUN_TO_CONTAINER(sdev->id, sdev->lun);
- 		printk(KERN_WARNING 
- 		     "synchronize_callback: synchronize failed, status =
-%d\n",
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
