@@ -1,294 +1,129 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: [RFC] generic scsi ioctls for character devices
-Date: Fri, 23 May 2003 10:33:41 +0200
+From: Eddie Williams <Eddie.Williams@steeleye.com>
+Subject: Re: Patch:  allow devices to restrict start on add
+Date: Fri, 23 May 2003 11:00:21 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030523103341.A30181@lst.de>
+Message-ID: <200305231100.21287.Eddie.Williams@Steeleye.com>
+References: <200305221140.59633.Eddie.Williams@Steeleye.com> <20030522110522.A7240@beaverton.ibm.com> <200305221610.07839.Eddie.Williams@Steeleye.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: Multipart/Mixed;
+  boundary="------------Boundary-00=_LOHCZAP8HLIYDJD1YLYW"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([212.34.181.86]:8710 "EHLO verein.lst.de")
-	by vger.kernel.org with ESMTP id S263938AbTEWIUi (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 23 May 2003 04:20:38 -0400
-Content-Disposition: inline
+Received: from nat9.steeleye.com ([65.114.3.137]:28165 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S264072AbTEWOz7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 23 May 2003 10:55:59 -0400
+Received: from aslan (aslan.sc.steeleye.com [172.17.6.51])
+	by hancock.sc.steeleye.com (8.11.6/linuxconf) with ESMTP id h4NF95I03705
+	for <linux-scsi@vger.kernel.org>; Fri, 23 May 2003 11:09:05 -0400
+In-Reply-To: <200305221610.07839.Eddie.Williams@Steeleye.com>
 List-Id: linux-scsi@vger.kernel.org
-To: axboe@suse.de
-Cc: linux-scsi@vger.kernel.org
-
-add a scsi_cmd_ioctl variant that works for character devices that have
-a gendisk/queue.  It's a bit ugly because the fs/bio.c wants a struct
-block_device * for each bio so we have to fake one up.  The codepathes
-scsi_cmd_ioctl uses only ever looks into it's ->bd_queue though..
+To: linux-scsi@vger.kernel.org
 
 
---- 1.26/drivers/block/scsi_ioctl.c	Wed May 14 12:22:25 2003
-+++ edited/drivers/block/scsi_ioctl.c	Fri May 16 23:08:01 2003
-@@ -45,13 +45,12 @@
- #define SCSI_SENSE_BUFFERSIZE 64
- #endif
+--------------Boundary-00=_LOHCZAP8HLIYDJD1YLYW
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+
+> On Thursday 22 May 2003 04:10 pm, Eddie Williams wrote:
+> > On Thursday 22 May 2003 02:05 pm, Patrick Mansfield wrote:
+
+> > Also you should patch against scsi-misc-2.5, or a recent bk, since hc=
+h
+> > moved all of the devinfo code into scsi_devinfo.c
+>
+> Yes.  I had taken a snapshot of the kernel a couple of weeks ago but it
+> took a while for me to test it out but did not go back and remerge.  I =
+will
+> have that out tomorrow.
+
+I updated to bk16.
+
+Eddie
+--------------Boundary-00=_LOHCZAP8HLIYDJD1YLYW
+Content-Type: text/x-diff;
+  charset="iso-8859-1";
+  name="noadd.bk16.diff"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment; filename="noadd.bk16.diff"
+
+diff -Nru linux-2.5.69/drivers/scsi.orig/scsi.h linux-2.5.69/drivers/scsi/scsi.h
+--- linux-2.5.69/drivers/scsi.orig/scsi.h	Fri May 23 10:38:43 2003
++++ linux-2.5.69/drivers/scsi/scsi.h	Fri May 23 11:01:50 2003
+@@ -389,6 +389,7 @@
+ 	unsigned remap:1;	/* support remapping  */
+ //	unsigned sync:1;	/* Sync transfer state, managed by host */
+ //	unsigned wide:1;	/* WIDE transfer state, managed by host */
++	unsigned no_start_on_add:1;	/* do not issue start on add */
  
--static int blk_do_rq(request_queue_t *q, struct block_device *bdev, 
--		     struct request *rq)
-+static int blk_do_rq(struct gendisk *disk, struct request *rq)
- {
- 	DECLARE_COMPLETION(wait);
- 	int err = 0;
+ 	unsigned int device_blocked;	/* Device returned QUEUE_FULL. */
  
--	rq->rq_disk = bdev->bd_disk;
-+	rq->rq_disk = disk;
+diff -Nru linux-2.5.69/drivers/scsi.orig/scsi_devinfo.c linux-2.5.69/drivers/scsi/scsi_devinfo.c
+--- linux-2.5.69/drivers/scsi.orig/scsi_devinfo.c	Fri May 23 10:29:20 2003
++++ linux-2.5.69/drivers/scsi/scsi_devinfo.c	Fri May 23 11:01:50 2003
+@@ -131,7 +131,7 @@
+ 	{"EMULEX", "MD21/S2     ESDI", NULL, BLIST_SINGLELUN},
+ 	{"CANON", "IPUBJD", NULL, BLIST_SPARSELUN},
+ 	{"nCipher", "Fastness Crypto", NULL, BLIST_FORCELUN},
+-	{"DEC", "HSG80", NULL, BLIST_FORCELUN},
++	{"DEC", "HSG80", NULL, BLIST_SPARSELUN | BLIST_NOSTARTONADD},
+ 	{"COMPAQ", "LOGICAL VOLUME", NULL, BLIST_FORCELUN},
+ 	{"COMPAQ", "CR3500", NULL, BLIST_FORCELUN},
+ 	{"NEC", "PD-1 ODX654P", NULL, BLIST_FORCELUN | BLIST_SINGLELUN},
+@@ -159,7 +159,10 @@
+ 	{"HP", "NetRAID-4M", NULL, BLIST_FORCELUN},
+ 	{"ADAPTEC", "AACRAID", NULL, BLIST_FORCELUN},
+ 	{"ADAPTEC", "Adaptec 5400S", NULL, BLIST_FORCELUN},
+-	{"COMPAQ", "MSA1000", NULL, BLIST_FORCELUN},
++	{"COMPAQ", "MSA1000", NULL, BLIST_SPARSELUN | BLIST_NOSTARTONADD},
++	{"COMPAQ", "MSA1000 VOLUME", NULL, BLIST_SPARSELUN | BLIST_NOSTARTONADD},
++	{"COMPAQ", "HSV110", NULL, BLIST_SPARSELUN | BLIST_NOSTARTONADD},
++	{"HP", "HSV100", NULL, BLIST_SPARSELUN | BLIST_NOSTARTONADD},
+ 	{"HP", "C1557A", NULL, BLIST_FORCELUN},
+ 	{"IBM", "AuSaV1S2", NULL, BLIST_FORCELUN},
+ 	{"FSC", "CentricStor", "*", BLIST_SPARSELUN | BLIST_LARGELUN},
+diff -Nru linux-2.5.69/drivers/scsi.orig/scsi_devinfo.h linux-2.5.69/drivers/scsi/scsi_devinfo.h
+--- linux-2.5.69/drivers/scsi.orig/scsi_devinfo.h	Fri May 23 10:32:57 2003
++++ linux-2.5.69/drivers/scsi/scsi_devinfo.h	Fri May 23 11:01:50 2003
+@@ -14,3 +14,4 @@
+ #define BLIST_LARGELUN		0x200	/* LUNs past 7 on a SCSI-2 device */
+ #define BLIST_INQUIRY_36	0x400	/* override additional length field */
+ #define BLIST_INQUIRY_58	0x800	/* ... for broken inquiry responses */
++#define BLIST_NOSTARTONADD      0x1000  /* do not do automatic start on add */
+diff -Nru linux-2.5.69/drivers/scsi.orig/scsi_scan.c linux-2.5.69/drivers/scsi/scsi_scan.c
+--- linux-2.5.69/drivers/scsi.orig/scsi_scan.c	Fri May 23 10:37:35 2003
++++ linux-2.5.69/drivers/scsi/scsi_scan.c	Fri May 23 11:01:50 2003
+@@ -641,6 +641,13 @@
+ 		sdev->borken = 0;
  
  	/*
- 	 * we need an extra reference to the request, so we can look at
-@@ -62,8 +61,8 @@
- 	rq->flags |= REQ_NOMERGE;
- 	rq->waiting = &wait;
-         drive_stat_acct(rq, rq->nr_sectors, 1);
--	elv_add_request(q, rq, 1, 1);
--	generic_unplug_device(q);
-+	elv_add_request(disk->queue, rq, 1, 1);
-+	generic_unplug_device(disk->queue);
- 	wait_for_completion(&wait);
- 
- 	if (rq->errors)
-@@ -80,12 +79,12 @@
- 	return put_user(sg_version_num, p);
- }
- 
--static int scsi_get_idlun(request_queue_t *q, int *p)
-+static int scsi_get_idlun(int *p)
- {
- 	return put_user(0, p);
- }
- 
--static int scsi_get_bus(request_queue_t *q, int *p)
-+static int scsi_get_bus(int *p)
- {
- 	return put_user(0, p);
- }
-@@ -124,14 +123,15 @@
-  * will always return that we are ATAPI even for a real SCSI drive, I'm not
-  * so sure this is worth doing anything about (why would you care??)
-  */
--static int sg_emulated_host(request_queue_t *q, int *p)
-+static int sg_emulated_host(int *p)
- {
- 	return put_user(1, p);
- }
- 
--static int sg_io(request_queue_t *q, struct block_device *bdev,
--		 struct sg_io_hdr *uptr)
-+static int sg_io(struct gendisk *disk, struct sg_io_hdr *uptr,
-+		struct block_device *bdev)
- {
-+	struct request_queue *q = disk->queue;
- 	unsigned long uaddr, start_time;
- 	int reading, writing, nr_sectors;
- 	struct sg_io_hdr hdr;
-@@ -251,7 +251,7 @@
- 	 * (if he doesn't check that is his problem).
- 	 * N.B. a non-zero SCSI status is _not_ necessarily an error.
- 	 */
--	blk_do_rq(q, bdev, rq);
-+	blk_do_rq(disk, rq);
- 
- 	if (bio)
- 		bio_unmap_user(bio, reading);
-@@ -299,8 +299,7 @@
- #define READ_DEFECT_DATA_TIMEOUT	(60 * HZ )
- #define OMAX_SB_LEN 16          /* For backward compatibility */
- 
--static int sg_scsi_ioctl(request_queue_t *q, struct block_device *bdev,
--			 Scsi_Ioctl_Command *sic)
-+static int sg_scsi_ioctl(struct gendisk *disk, struct scsi_ioctl_command *sic)
- {
- 	struct request *rq;
- 	int err, in_len, out_len, bytes, opcode, cmdlen;
-@@ -320,14 +319,14 @@
- 
- 	bytes = max(in_len, out_len);
- 	if (bytes) {
--		buffer = kmalloc(bytes, q->bounce_gfp | GFP_USER);
-+		buffer = kmalloc(bytes, disk->queue->bounce_gfp | GFP_USER);
- 		if (!buffer)
- 			return -ENOMEM;
- 
- 		memset(buffer, 0, bytes);
- 	}
- 
--	rq = blk_get_request(q, in_len ? WRITE : READ, __GFP_WAIT);
-+	rq = blk_get_request(disk->queue, in_len ? WRITE : READ, __GFP_WAIT);
- 
- 	cmdlen = COMMAND_SIZE(opcode);
- 
-@@ -372,7 +371,7 @@
- 	rq->data_len = bytes;
- 	rq->flags |= REQ_BLOCK_PC;
- 
--	blk_do_rq(q, bdev, rq);
-+	blk_do_rq(disk, rq);
- 	err = rq->errors & 0xff;	/* only 8 bit SCSI status */
- 	if (err) {
- 		if (rq->sense_len && rq->sense) {
-@@ -392,77 +391,98 @@
- 	return err;
- }
- 
--int scsi_cmd_ioctl(struct block_device *bdev, unsigned int cmd, unsigned long arg)
-+static int tray_ioctl(struct gendisk *disk, int close)
- {
--	request_queue_t *q;
--	struct request *rq;
--	int close = 0, err;
-+	struct request *rq = blk_get_request(disk->queue, WRITE, __GFP_WAIT);
-+	int error;
-+
-+	rq->flags = REQ_BLOCK_PC;
-+	rq->data = NULL;
-+	rq->data_len = 0;
-+	rq->timeout = BLK_DEFAULT_TIMEOUT;
-+	memset(rq->cmd, 0, sizeof(rq->cmd));
-+	rq->cmd[0] = GPCMD_START_STOP_UNIT;
-+	rq->cmd[4] = 0x02 + (close != 0);
-+	rq->cmd_len = 6;
-+	error = blk_do_rq(disk, rq);
-+	blk_put_request(rq);
-+
-+	return error;
-+}
- 
--	q = bdev_get_queue(bdev);
--	if (!q)
--		return -ENXIO;
-+static int __scsi_cmd_ioctl(struct block_device *bdev,
-+		unsigned int cmd, unsigned long arg)
-+{
-+	struct gendisk *disk = bdev->bd_disk;
-+	struct request_queue *q = disk->queue;
- 
- 	switch (cmd) {
--		/*
--		 * new sgv3 interface
--		 */
--		case SG_GET_VERSION_NUM:
--			return sg_get_version((int *) arg);
--		case SCSI_IOCTL_GET_IDLUN:
--			return scsi_get_idlun(q, (int *) arg);
--		case SCSI_IOCTL_GET_BUS_NUMBER:
--			return scsi_get_bus(q, (int *) arg);
--		case SG_SET_TIMEOUT:
--			return sg_set_timeout(q, (int *) arg);
--		case SG_GET_TIMEOUT:
--			return sg_get_timeout(q);
--		case SG_GET_RESERVED_SIZE:
--			return sg_get_reserved_size(q, (int *) arg);
--		case SG_SET_RESERVED_SIZE:
--			return sg_set_reserved_size(q, (int *) arg);
--		case SG_EMULATED_HOST:
--			return sg_emulated_host(q, (int *) arg);
--		case SG_IO:
--			err = bd_claim(bdev, current);
--			if (err)
--				break;
--			err = sg_io(q, bdev, (struct sg_io_hdr *) arg);
--			bd_release(bdev);
--			break;
--		/*
--		 * old junk scsi send command ioctl
--		 */
--		case SCSI_IOCTL_SEND_COMMAND:
--			if (!arg)
--				return -EINVAL;
--
--			err = bd_claim(bdev, current);
--			if (err)
--				break;
--			err = sg_scsi_ioctl(q, bdev, (Scsi_Ioctl_Command *)arg);
-+	/*
-+	 * new sgv3 interface
++	 * Some devices may not want to have a start command automatically
++	 * issued when a device is added.
 +	 */
-+	case SG_GET_VERSION_NUM:
-+		return sg_get_version((int *) arg);
-+	case SCSI_IOCTL_GET_IDLUN:
-+		return scsi_get_idlun((int *) arg);
-+	case SCSI_IOCTL_GET_BUS_NUMBER:
-+		return scsi_get_bus((int *) arg);
-+	case SG_SET_TIMEOUT:
-+		return sg_set_timeout(q, (int *) arg);
-+	case SG_GET_TIMEOUT:
-+		return sg_get_timeout(q);
-+	case SG_GET_RESERVED_SIZE:
-+		return sg_get_reserved_size(q, (int *) arg);
-+	case SG_SET_RESERVED_SIZE:
-+		return sg_set_reserved_size(q, (int *) arg);
-+	case SG_EMULATED_HOST:
-+		return sg_emulated_host((int *) arg);
-+	case SG_IO:
-+		return sg_io(disk, (struct sg_io_hdr *)arg, bdev);
++	if (*bflags & BLIST_NOSTARTONADD)
++		sdev->no_start_on_add = 1;
++
 +	/*
-+	 * old junk scsi send command ioctl
-+	 */
-+	case SCSI_IOCTL_SEND_COMMAND:
-+		return sg_scsi_ioctl(disk, (struct scsi_ioctl_command *)arg);
-+	/*
-+	 * CDROM ioctls.
-+	 */
-+	case CDROMCLOSETRAY:
-+		return tray_ioctl(disk, 1);
-+	case CDROMEJECT:
-+		return tray_ioctl(disk, 0);
-+
-+	default:
-+		return -ENOTTY;
-+	}
-+}
-+
-+int scsi_cmd_ioctl(struct block_device *bdev, unsigned int cmd, unsigned long arg)
-+{
-+	int error;
-+
-+	switch (cmd) {
-+	case SG_IO:
-+	case SCSI_IOCTL_SEND_COMMAND:
-+		error = bd_claim(bdev, current);
-+		if (!error) {
-+			error = __scsi_cmd_ioctl(bdev, cmd, arg);
- 			bd_release(bdev);
--			break;
--		case CDROMCLOSETRAY:
--			close = 1;
--		case CDROMEJECT:
--			rq = blk_get_request(q, WRITE, __GFP_WAIT);
--			rq->flags = REQ_BLOCK_PC;
--			rq->data = NULL;
--			rq->data_len = 0;
--			rq->timeout = BLK_DEFAULT_TIMEOUT;
--			memset(rq->cmd, 0, sizeof(rq->cmd));
--			rq->cmd[0] = GPCMD_START_STOP_UNIT;
--			rq->cmd[4] = 0x02 + (close != 0);
--			rq->cmd_len = 6;
--			err = blk_do_rq(q, bdev, rq);
--			blk_put_request(rq);
--			break;
--		default:
--			err = -ENOTTY;
+ 	 * If we need to allow I/O to only one of the luns attached to
+ 	 * this target id at a time set single_lun, and allocate or modify
+ 	 * sdev_target.
+diff -Nru linux-2.5.69/drivers/scsi.orig/sd.c linux-2.5.69/drivers/scsi/sd.c
+--- linux-2.5.69/drivers/scsi.orig/sd.c	Fri May 23 10:39:39 2003
++++ linux-2.5.69/drivers/scsi/sd.c	Fri May 23 11:01:50 2003
+@@ -855,7 +855,12 @@
+ 			break;
+ 		}
+ 					
+-					
++		/*
++		 * The device does not want the automatic start to be issued.
++		 */
++		if (sdkp->device->no_start_on_add) {
++			break;
 +		}
-+
-+		return error;
- 	}
  
--	blk_put_queue(q);
--	return err;
-+	return __scsi_cmd_ioctl(bdev, cmd, arg);
-+}
-+
-+int scsi_cmd_ioctl_chrdev(struct gendisk *disk, unsigned int cmd, unsigned long arg)
-+{
-+	struct block_device fake_bdev;
-+
-+	memset(&fake_bdev, 0x0e, sizeof(fake_bdev));
-+	fake_bdev.bd_disk = disk;
-+
-+	return __scsi_cmd_ioctl(&fake_bdev, cmd, arg);
- }
- 
- EXPORT_SYMBOL(scsi_cmd_ioctl);
+ 		/*
+ 		 * If manual intervention is required, or this is an
+
+--------------Boundary-00=_LOHCZAP8HLIYDJD1YLYW--
+
