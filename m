@@ -1,64 +1,36 @@
-From: "MARAMARA Erotik Market" <aysen@yahoo.com>
-Subject: BU FIRSATTAN RARARLANIN.
-Date: Tue, 11 Mar 2003 15:46:00 +0200
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] sg version 3.5.28 for lk 2.5.64
+Date: Tue, 11 Mar 2003 14:28:36 +0000
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030311133431Z262921-25575+28770__26295.6624421806$1047390295@vger.kernel.org>
-Reply-To: aysen@yahoo.com
+Message-ID: <20030311142836.A22992@infradead.org>
+References: <3E6B405B.3010509@torque.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <3E6B405B.3010509@torque.net>; from dougg@torque.net on Sun, Mar 09, 2003 at 11:23:39PM +1000
 List-Id: linux-scsi@vger.kernel.org
-To: linux-fsdevel@vger.kernel.org
+To: Douglas Gilbert <dougg@torque.net>
+Cc: linux-scsi@vger.kernel.org
 
-DIKKAT
+On Sun, Mar 09, 2003 at 11:23:39PM +1000, Douglas Gilbert wrote:
+> ** Christoph moved the host listing functionality into
+>     a more central sysfs position (i.e. not dependent on
+>     sg). However scsi_debug is the only LLD that I can
+>     get to post any "host" info under the new arrangement.
 
-VIDEO CD :
-Iddia ediyoruz.. Hic bir yerden temin edemeyeceginiz ses ve g=F6runtu k=
-alitesi ile=20
-yuzlerce porno video CD. arSivimiz yenilenmistir. istemis oldugunuz vid=
-eo CD.ler=20
-bire bir yollanir kesinlikle isteginiz harici alakasiz baSka video CD.l=
-er yollanmaz.
+Hmm, it works for me with aic7xxx (that's how I tested it).
 
-Anal. Oral. Vajinal. Grup. Zenci. FethiS. Ayak fethiS. Gay. Zenci gay. =
-Trans. Transexual.
-Lezbiyen ve daha bircok ceSit ....  <http://www.erotik.sites.cc/>
+>     Should devices, device_strs and device_hdrs also be
+>     moved out of sg's procfs interface?
 
-ZENGIN URUN CESITLERIMIZ :
+Sounds like a good idea to me,
 
-Sisme Bebekler ..... (Erkek & Bayan) Kesinlikle size hayir demeyecek.
-Vibrat=F6rler ........ Istediginiz boy ve ebatlarda (Vajinal/Anal/catal=
-=2EPilli.Motorlu.TitreSimli)
-Suni Vajinalar ..... Asla gerceginden ayirt edemeyeceksiniz (Gercek ten=
- hassasiyetinde)
-Reailistik Penisler. Gercek ten hassasiyetinde ve dokusunda (Vantuzlu/D=
-eri kemer kilotlu)
-Vakum Pompalari .... Ereksiyonu kolaylastirici ve duzenli kullanimlarda=
- peniste irilesme saglar.
-Geciktiriciler ..... Erken boSalmayi dert etmeyin (Sprey ceSitleri/Krem=
-ler)
-Kremler ............ Anal ve Vajinal iliSkilerde kullanabileceginiz kay=
-ganlaStirici krem ceSitleri
-Uyandiricilar ...... Cinsel istek uyandirici haplar ve damlalar.
+> *** I find sg's "debug" in its procfs interface very
+>      useful for debugging (sg itself amongst other things).
+>      However it does not seem suitable for sysfs. Should
+>      it move?
 
-Yapmaniz gereken tek Sey <http://www.erotik.sites.cc/>   TIKLAMAK ..
+Let it stay for now - maybe someone comes up with a better way
+to do that,
 
-
-
-NOT : BU MAIL REKLAM AMAcLI OLUP HIcBIR SEKILDE TARAFIMIZDA KAYDINIZ BU=
-LUNMAMAKTADIR.
-      ILGI ALANINIZIN DISINDA ISE EGER LUTFEN DIKKATE ALMAYINIZ TESEKKU=
-RLER..=20
-
-
-
-
-
-
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
