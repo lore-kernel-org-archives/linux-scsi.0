@@ -1,45 +1,39 @@
-From: James Bottomley <James.Bottomley@steeleye.com>
-Subject: Re: Fwd: Kernel Oops with Adaptec 1460D (PCMCIA SCSI-Controller)
-	and Kernel 2.6.0
-Date: 08 Jan 2004 13:05:40 -0500
+From: Xose Vazquez Perez <xose@wanadoo.es>
+Subject: Re: [PATCH] ips driver for 2.4.23-pre4
+Date: Thu, 08 Jan 2004 19:18:54 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1073585142.2915.31.camel@mulgrave>
-References: <20040108112905.B14674@flint.arm.linux.org.uk>
+Message-ID: <3FFD9F0E.4060604@wanadoo.es>
+References: <3FFC5B2C.6000302@wanadoo.es> <20040108171531.B12595@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat1.steeleye.com ([65.114.3.130]:64983 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S265880AbUAHSFw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 8 Jan 2004 13:05:52 -0500
-In-Reply-To: <20040108112905.B14674@flint.arm.linux.org.uk>
+Received: from smtp11.eresmas.com ([62.81.235.111]:24789 "EHLO
+	smtp11.eresmas.com") by vger.kernel.org with ESMTP id S265592AbUAHSUG
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 8 Jan 2004 13:20:06 -0500
 List-Id: linux-scsi@vger.kernel.org
-To: Russell King <rmk@arm.linux.org.uk>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, Tosatti <marcelo.tosatti@cyclades.com>
 
-On Thu, 2004-01-08 at 06:29, Russell King wrote:
-> Could someone look into this - it seems that it's more of a scsi
-> bug than a pcmcia bug.
+Christoph Hellwig wrote:
 
-The problem seems to be this code in aha152x.c:
+> On Wed, Jan 07, 2004 at 08:17:00PM +0100, Xose Vazquez Perez wrote:
+> 
+>>-#if !defined(__i386__) && !defined(__ia64__)
+>>-#error "This driver has only been tested on the x86/ia64 platforms"
+>>+#if !defined(__i386__) && !defined(__ia64__) && !defined(__x86_64__)
+>>+#error "This driver has only been tested on the x86/ia64/x86_64 platforms"
+>> #endif
+> 
+> 
+> This warning schould be removed completly.  Lots of PCI drivers have
+> been tested only on a few plattforms.
+> 
+> Else the patch is okay, but where's the maintainer?
 
-#ifndef PCMCIA
-#define driver_template aha152x_driver_template
-#include "scsi_module.c"
-#endif
+the maintainer sent this patch _directly_ to Marcelo, again.
 
-Since it's still behaving as a legacy driver (by calling
-register_scsi()), it needs the aha152x_driver_template.legacy_hosts list
-initialised (which is done in scsi_module.c).
-
-The true fix would be to convert aha152x to the new API.  However, a
-quick fix is probably to add
-
-	INIT_LIST_HEAD(&s.legacy_hosts);
-
-just before the call to aha152x_probe_one() in aha152x_stub.c
-
-James
-
+Ask to them:
+Jack Hammer <Jack_Hammer@adaptec.com> David Jeffery <David_Jeffery@adaptec.com>
 
