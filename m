@@ -1,226 +1,196 @@
 From: Patrick Mansfield <patmans@us.ibm.com>
-Subject: [PATCH] 5/7 alloc a request_queue on each scsi_alloc_sdev call
-Date: Mon, 24 Mar 2003 18:03:25 -0800
+Subject: [PATCH] 1/7 starved changes - use a list_head for starved queue's
+Date: Mon, 24 Mar 2003 17:54:22 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030324180325.D15047@beaverton.ibm.com>
-References: <20030324175337.A14957@beaverton.ibm.com> <20030324175422.A14996@beaverton.ibm.com> <20030324180227.A15047@beaverton.ibm.com> <20030324180247.B15047@beaverton.ibm.com> <20030324180304.C15047@beaverton.ibm.com>
+Message-ID: <20030324175422.A14996@beaverton.ibm.com>
+References: <20030324175337.A14957@beaverton.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Received: from westrelay04.boulder.ibm.com (westrelay04.boulder.ibm.com [9.17.193.32])
-	by e35.co.us.ibm.com (8.12.8/8.12.2) with ESMTP id h2P26xgJ062390
-	for <linux-scsi@vger.kernel.org>; Mon, 24 Mar 2003 21:06:59 -0500
+	by e34.co.us.ibm.com (8.12.8/8.12.2) with ESMTP id h2P1vu64186662
+	for <linux-scsi@vger.kernel.org>; Mon, 24 Mar 2003 20:57:56 -0500
 Received: from localhost.localdomain (d03av02.boulder.ibm.com [9.17.193.82])
-	by westrelay04.boulder.ibm.com (8.12.8/NCO/VER6.5) with ESMTP id h2P26wVR229608
-	for <linux-scsi@vger.kernel.org>; Mon, 24 Mar 2003 19:06:58 -0700
+	by westrelay04.boulder.ibm.com (8.12.8/NCO/VER6.5) with ESMTP id h2P1vtVR102958
+	for <linux-scsi@vger.kernel.org>; Mon, 24 Mar 2003 18:57:56 -0700
 Received: (from patman@localhost)
-	by localhost.localdomain (8.11.2/8.11.6) id h2P23PF15153
-	for linux-scsi@vger.kernel.org; Mon, 24 Mar 2003 18:03:25 -0800
+	by localhost.localdomain (8.11.2/8.11.6) id h2P1sMa15003
+	for linux-scsi@vger.kernel.org; Mon, 24 Mar 2003 17:54:22 -0800
 Content-Disposition: inline
-In-Reply-To: <20030324180304.C15047@beaverton.ibm.com>; from patmans@us.ibm.com on Mon, Mar 24, 2003 at 06:03:04PM -0800
+In-Reply-To: <20030324175337.A14957@beaverton.ibm.com>; from patmans@us.ibm.com on Mon, Mar 24, 2003 at 05:53:37PM -0800
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-Call scsi_alloc_queue each time we call scsi_alloc_sdev; call
-scsi_free_queue each time we do not find backing LUN.
+Use a list_head per scsi_host to store a list of scsi request queues
+that were "starved" (they were not able to send IO because of per host
+limitations).
 
-This code is less optimal, but leads to cleaner code, and the lock
-split-up patch needs this change.
-
-diff -purN -X /home/patman/dontdiff req_fn-cleanup-25/drivers/scsi/scsi_scan.c salloc_queue-25/drivers/scsi/scsi_scan.c
---- req_fn-cleanup-25/drivers/scsi/scsi_scan.c	Mon Mar 24 12:14:28 2003
-+++ salloc_queue-25/drivers/scsi/scsi_scan.c	Mon Mar 24 12:15:05 2003
-@@ -380,7 +380,7 @@ static void print_inquiry(unsigned char 
-  *     Scsi_Device pointer, or NULL on failure.
-  **/
- static struct scsi_device *scsi_alloc_sdev(struct Scsi_Host *shost,
--	       	struct request_queue **q, uint channel, uint id, uint lun)
-+	       	uint channel, uint id, uint lun)
- {
- 	struct scsi_device *sdev, *device;
+diff -purN -X /home/patman/dontdiff 25-bk-base/drivers/scsi/hosts.c starve-25/drivers/scsi/hosts.c
+--- 25-bk-base/drivers/scsi/hosts.c	Thu Mar  6 12:34:47 2003
++++ starve-25/drivers/scsi/hosts.c	Mon Mar 24 12:14:28 2003
+@@ -383,6 +383,7 @@ struct Scsi_Host * scsi_register(Scsi_Ho
+ 	scsi_assign_lock(shost, &shost->default_lock);
+ 	INIT_LIST_HEAD(&shost->my_devices);
+ 	INIT_LIST_HEAD(&shost->eh_cmd_q);
++	INIT_LIST_HEAD(&shost->starved_list);
  
-@@ -415,14 +415,9 @@ static struct scsi_device *scsi_alloc_sd
- 	 */
- 	sdev->borken = 1;
+ 	init_waitqueue_head(&shost->host_wait);
+ 	shost->dma_channel = 0xff;
+diff -purN -X /home/patman/dontdiff 25-bk-base/drivers/scsi/hosts.h starve-25/drivers/scsi/hosts.h
+--- 25-bk-base/drivers/scsi/hosts.h	Tue Mar 18 12:53:33 2003
++++ starve-25/drivers/scsi/hosts.h	Mon Mar 24 12:14:28 2003
+@@ -380,6 +380,7 @@ struct Scsi_Host
+     struct scsi_host_cmd_pool *cmd_pool;
+     spinlock_t            free_list_lock;
+     struct list_head      free_list;   /* backup store of cmd structs */
++    struct list_head      starved_list;
  
--	if (!q || *q == NULL) {
--		sdev->request_queue = scsi_alloc_queue(shost);
--		if (!sdev->request_queue)
--			goto out_free_dev;
--	} else {
--		sdev->request_queue = *q;
--		*q = NULL;
--	}
-+	sdev->request_queue = scsi_alloc_queue(shost);
-+	if (!sdev->request_queue)
-+		goto out_free_dev;
+     spinlock_t		  default_lock;
+     spinlock_t		  *host_lock;
+@@ -471,12 +472,6 @@ struct Scsi_Host
+     unsigned reverse_ordering:1;
  
- 	sdev->request_queue->queuedata = sdev;
- 	scsi_adjust_queue_depth(sdev, 0, sdev->host->cmd_per_lun);
-@@ -462,10 +457,7 @@ static struct scsi_device *scsi_alloc_sd
- 	return sdev;
+     /*
+-     * Indicates that one or more devices on this host were starved, and
+-     * when the device becomes less busy that we need to feed them.
+-     */
+-    unsigned some_device_starved:1;
+-   
+-    /*
+      * Host has rejected a command because it was busy.
+      */
+     unsigned int host_blocked;
+diff -purN -X /home/patman/dontdiff 25-bk-base/drivers/scsi/scsi.h starve-25/drivers/scsi/scsi.h
+--- 25-bk-base/drivers/scsi/scsi.h	Mon Mar 24 11:57:13 2003
++++ starve-25/drivers/scsi/scsi.h	Mon Mar 24 12:14:28 2003
+@@ -555,6 +555,7 @@ struct scsi_device {
+ 	volatile unsigned short device_busy;	/* commands actually active on low-level */
+ 	spinlock_t list_lock;
+ 	struct list_head cmd_list;	/* queue of in use SCSI Command structures */
++	struct list_head starved_entry;
+         Scsi_Cmnd *current_cmnd;	/* currently active command */
+ 	unsigned short queue_depth;	/* How deep of a queue we want */
+ 	unsigned short last_queue_full_depth; /* These two are used by */
+@@ -615,8 +616,6 @@ struct scsi_device {
+ 					 * because we did a bus reset. */
+ 	unsigned ten:1;		/* support ten byte read / write */
+ 	unsigned remap:1;	/* support remapping  */
+-	unsigned starved:1;	/* unable to process commands because
+-				   host busy */
+ //	unsigned sync:1;	/* Sync transfer state, managed by host */
+ //	unsigned wide:1;	/* WIDE transfer state, managed by host */
  
- out_free_queue:
--	if (q && sdev->request_queue) {
--		*q = sdev->request_queue;
--		sdev->request_queue = NULL;
--	} else if (sdev->request_queue)
-+	if (sdev->request_queue)
- 		scsi_free_queue(sdev->request_queue);
+diff -purN -X /home/patman/dontdiff 25-bk-base/drivers/scsi/scsi_lib.c starve-25/drivers/scsi/scsi_lib.c
+--- 25-bk-base/drivers/scsi/scsi_lib.c	Tue Mar 18 12:53:33 2003
++++ starve-25/drivers/scsi/scsi_lib.c	Mon Mar 24 12:14:28 2003
+@@ -356,7 +356,6 @@ static void scsi_queue_next_request(requ
+ 	struct scsi_device *sdev, *sdev2;
+ 	struct Scsi_Host *shost;
+ 	unsigned long flags;
+-	int all_clear;
  
- out_free_dev:
-@@ -1282,15 +1274,15 @@ static int scsi_add_lun(Scsi_Device *sde
-  *     SCSI_SCAN_LUN_PRESENT: a new Scsi_Device was allocated and initialized
-  **/
- static int scsi_probe_and_add_lun(struct Scsi_Host *host,
--		struct request_queue **q, uint channel, uint id, uint lun,
--		int *bflagsp, struct scsi_device **sdevp)
-+		uint channel, uint id, uint lun, int *bflagsp,
-+		struct scsi_device **sdevp)
- {
- 	struct scsi_device *sdev;
- 	struct scsi_request *sreq;
- 	unsigned char *result;
- 	int bflags, res = SCSI_SCAN_NO_RESPONSE;
+ 	ASSERT_LOCK(q->queue_lock, 0);
  
--	sdev = scsi_alloc_sdev(host, q, channel, id, lun);
-+	sdev = scsi_alloc_sdev(host, channel, id, lun);
- 	if (!sdev)
- 		goto out;
- 	sreq = scsi_allocate_request(sdev);
-@@ -1344,13 +1336,8 @@ static int scsi_probe_and_add_lun(struct
- 	if (res == SCSI_SCAN_LUN_PRESENT) {
- 		if (sdevp)
- 			*sdevp = sdev;
--	} else {
--		if (q) {
--			*q = sdev->request_queue;
--			sdev->request_queue = NULL;
--		}
-+	} else
- 		scsi_free_sdev(sdev);
--	}
-  out:
- 	return res;
- }
-@@ -1368,9 +1355,8 @@ static int scsi_probe_and_add_lun(struct
-  *
-  *     Modifies sdevscan->lun.
-  **/
--static void scsi_sequential_lun_scan(struct Scsi_Host *shost,
--	       	struct request_queue **q, uint channel, uint id,
--	       	int bflags, int lun0_res, int scsi_level)
-+static void scsi_sequential_lun_scan(struct Scsi_Host *shost, uint channel,
-+		uint id, int bflags, int lun0_res, int scsi_level)
- {
- 	unsigned int sparse_lun, lun, max_dev_lun;
- 
-@@ -1438,7 +1424,7 @@ static void scsi_sequential_lun_scan(str
- 	 * sparse_lun.
- 	 */
- 	for (lun = 1; lun < max_dev_lun; ++lun)
--		if ((scsi_probe_and_add_lun(shost, q, channel, id, lun,
-+		if ((scsi_probe_and_add_lun(shost, channel, id, lun,
- 		      NULL, NULL) != SCSI_SCAN_LUN_PRESENT) && !sparse_lun)
- 			return;
- }
-@@ -1491,8 +1477,7 @@ static int scsilun_to_int(ScsiLun *scsil
-  *     0: scan completed (or no memory, so further scanning is futile)
-  *     1: no report lun scan, or not configured
-  **/
--static int scsi_report_lun_scan(Scsi_Device *sdev, struct request_queue **q,
--		int bflags)
-+static int scsi_report_lun_scan(Scsi_Device *sdev, int bflags)
- {
- #ifdef CONFIG_SCSI_REPORT_LUNS
- 
-@@ -1653,8 +1638,8 @@ static int scsi_report_lun_scan(Scsi_Dev
- 		} else {
- 			int res;
- 
--			res = scsi_probe_and_add_lun(sdev->host, q,
--				sdev->channel, sdev->id, lun, NULL, NULL);
-+			res = scsi_probe_and_add_lun(sdev->host, sdev->channel,
-+				sdev->id, lun, NULL, NULL);
- 			if (res == SCSI_SCAN_NO_RESPONSE) {
- 				/*
- 				 * Got some results, but now none, abort.
-@@ -1682,8 +1667,7 @@ struct scsi_device *scsi_add_device(stru
- 	struct scsi_device *sdev;
- 	int error = -ENODEV, res;
- 
--	res = scsi_probe_and_add_lun(shost, NULL, channel, id, lun,
--			NULL, &sdev);
-+	res = scsi_probe_and_add_lun(shost, channel, id, lun, NULL, &sdev);
- 	if (res == SCSI_SCAN_LUN_PRESENT)
- 		error = scsi_attach_device(sdev);
- 
-@@ -1724,8 +1708,8 @@ int scsi_remove_device(struct scsi_devic
-  *     First try a REPORT LUN scan, if that does not scan the target, do a
-  *     sequential scan of LUNs on the target id.
-  **/
--static void scsi_scan_target(struct Scsi_Host *shost, struct request_queue **q,
--			     unsigned int channel, unsigned int id)
-+static void scsi_scan_target(struct Scsi_Host *shost, unsigned int channel,
-+			     unsigned int id)
- {
- 	int bflags = 0;
- 	int res;
-@@ -1741,14 +1725,14 @@ static void scsi_scan_target(struct Scsi
- 	 * Scan LUN 0, if there is some response, scan further. Ideally, we
- 	 * would not configure LUN 0 until all LUNs are scanned.
- 	 */
--	res = scsi_probe_and_add_lun(shost, q, channel, id, 0, &bflags, &sdev);
-+	res = scsi_probe_and_add_lun(shost, channel, id, 0, &bflags, &sdev);
- 	if (res == SCSI_SCAN_LUN_PRESENT) {
--		if (scsi_report_lun_scan(sdev, q, bflags) != 0)
-+		if (scsi_report_lun_scan(sdev, bflags) != 0)
- 			/*
- 			 * The REPORT LUN did not scan the target,
- 			 * do a sequential scan.
- 			 */
--			scsi_sequential_lun_scan(shost, q, channel, id, bflags,
-+			scsi_sequential_lun_scan(shost, channel, id, bflags,
- 				       	res, sdev->scsi_level);
- 	} else if (res == SCSI_SCAN_TARGET_PRESENT) {
- 		/*
-@@ -1757,7 +1741,7 @@ static void scsi_scan_target(struct Scsi
- 		 * sequential lun scan with a bflags of SPARSELUN and
- 		 * a default scsi level of SCSI_2
- 		 */
--		scsi_sequential_lun_scan(shost, q, channel, id, BLIST_SPARSELUN,
-+		scsi_sequential_lun_scan(shost, channel, id, BLIST_SPARSELUN,
- 				SCSI_SCAN_TARGET_PRESENT, SCSI_2);
+@@ -383,11 +382,6 @@ static void scsi_queue_next_request(requ
+ 		__elv_add_request(q, cmd->request, 0, 0);
  	}
- }
-@@ -1772,7 +1756,6 @@ static void scsi_scan_target(struct Scsi
-  **/
- void scsi_scan_host(struct Scsi_Host *shost)
- {
--	struct request_queue *q = NULL;
- 	uint channel, id, order_id;
  
- 	/*
-@@ -1797,12 +1780,9 @@ void scsi_scan_host(struct Scsi_Host *sh
- 				order_id = shost->max_id - id - 1;
- 			else
- 				order_id = id;
--			scsi_scan_target(shost, &q, channel, order_id);
-+			scsi_scan_target(shost, channel, order_id);
+-	/*
+-	 * Just hit the requeue function for the queue.
+-	 */
+-	__blk_run_queue(q);
+-
+ 	sdev = q->queuedata;
+ 	shost = sdev->host;
+ 
+@@ -412,31 +406,24 @@ static void scsi_queue_next_request(requ
  		}
  	}
+ 
+-	/*
+-	 * Now see whether there are other devices on the bus which
+-	 * might be starved.  If so, hit the request function.  If we
+-	 * don't find any, then it is safe to reset the flag.  If we
+-	 * find any device that it is starved, it isn't safe to reset the
+-	 * flag as the queue function releases the lock and thus some
+-	 * other device might have become starved along the way.
+-	 */
+-	all_clear = 1;
+-	if (shost->some_device_starved) {
+-		list_for_each_entry(sdev, &shost->my_devices, siblings) {
+-			if (shost->can_queue > 0 &&
+-			    shost->host_busy >= shost->can_queue)
+-				break;
+-			if (shost->host_blocked || shost->host_self_blocked)
+-				break;
+-			if (sdev->device_blocked || !sdev->starved)
+-				continue;
+-			__blk_run_queue(sdev->request_queue);
+-			all_clear = 0;
+-		}
 -
--	if (q)
--		scsi_free_queue(q);
+-		if (sdev == NULL && all_clear)
+-			shost->some_device_starved = 0;
++	while (!list_empty(&shost->starved_list) &&
++	       !shost->host_blocked && !shost->host_self_blocked &&
++		!((shost->can_queue > 0) &&
++		  (shost->host_busy >= shost->can_queue))) {
++		/*
++		 * As long as shost is accepting commands and we have
++		 * starved queues, call __blk_run_queue. scsi_request_fn
++		 * drops the queue_lock and can add us back to the
++		 * starved_list.
++		 */
++		sdev2 = list_entry(shost->starved_list.next,
++					  struct scsi_device, starved_entry);
++		list_del_init(&sdev2->starved_entry);
++		__blk_run_queue(sdev2->request_queue);
+ 	}
++
++	__blk_run_queue(q);
++
+ 	spin_unlock_irqrestore(q->queue_lock, flags);
  }
  
- void scsi_forget_host(struct Scsi_Host *shost)
-@@ -1841,7 +1821,7 @@ struct scsi_device *scsi_get_host_dev(st
- {
- 	struct scsi_device *sdev;
+@@ -1115,23 +1102,16 @@ static void scsi_request_fn(request_queu
+ 		 */
+ 		if (sdev->device_blocked)
+ 			break;
++
++		if (!list_empty(&sdev->starved_entry))
++			break;
++
+ 		if ((shost->can_queue > 0 && shost->host_busy >= shost->can_queue) ||
+ 		    shost->host_blocked || shost->host_self_blocked) {
+-			/*
+-			 * If we are unable to process any commands at all for
+-			 * this device, then we consider it to be starved.
+-			 * What this means is that there are no outstanding
+-			 * commands for this device and hence we need a
+-			 * little help getting it started again
+-			 * once the host isn't quite so busy.
+-			 */
+-			if (sdev->device_busy == 0) {
+-				sdev->starved = 1;
+-				shost->some_device_starved = 1;
+-			}
++			list_add_tail(&sdev->starved_entry,
++				      &shost->starved_list);
+ 			break;
+-		} else
+-			sdev->starved = 0;
++		}
  
--	sdev = scsi_alloc_sdev(shost, NULL, 0, shost->this_id, 0);
-+	sdev = scsi_alloc_sdev(shost, 0, shost->this_id, 0);
- 	if (sdev) {
- 		sdev->borken = 0;
- 	}
+ 		/*
+ 		 * If we couldn't find a request that could be queued, then we
+diff -purN -X /home/patman/dontdiff 25-bk-base/drivers/scsi/scsi_scan.c starve-25/drivers/scsi/scsi_scan.c
+--- 25-bk-base/drivers/scsi/scsi_scan.c	Mon Mar 24 11:57:13 2003
++++ starve-25/drivers/scsi/scsi_scan.c	Mon Mar 24 12:14:28 2003
+@@ -400,6 +400,7 @@ static struct scsi_device *scsi_alloc_sd
+ 	INIT_LIST_HEAD(&sdev->siblings);
+ 	INIT_LIST_HEAD(&sdev->same_target_siblings);
+ 	INIT_LIST_HEAD(&sdev->cmd_list);
++	INIT_LIST_HEAD(&sdev->starved_entry);
+ 	spin_lock_init(&sdev->list_lock);
+ 
+ 	/*
