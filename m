@@ -1,49 +1,38 @@
-From: Pat LaVarre <p.lavarre@ieee.org>
+From: Patrick Mansfield <patmans@us.ibm.com>
 Subject: Re: [PATCH/RFT] mode sense madness always use page 8
-Date: 30 Oct 2003 12:06:59 -0700
+Date: Thu, 30 Oct 2003 11:26:21 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1067540819.4199.23.camel@pathost1.iomegacorp.com>
-References: <Pine.LNX.4.44L0.0310301351380.1440-100000@ida.rowland.org>
+Message-ID: <20031030112621.A7844@beaverton.ibm.com>
+References: <20031030100501.A7250@beaverton.ibm.com> <Pine.LNX.4.44L0.0310301351380.1440-100000@ida.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from email-out1.iomega.com ([147.178.1.82]:61149 "EHLO
-	email.iomega.com") by vger.kernel.org with ESMTP id S262772AbTJ3THX
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 30 Oct 2003 14:07:23 -0500
-In-Reply-To: <Pine.LNX.4.44L0.0310301351380.1440-100000@ida.rowland.org>
+Received: from e6.ny.us.ibm.com ([32.97.182.106]:61875 "EHLO e6.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S262775AbTJ3T1N (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 30 Oct 2003 14:27:13 -0500
+Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.44L0.0310301351380.1440-100000@ida.rowland.org>; from stern@rowland.harvard.edu on Thu, Oct 30, 2003 at 01:56:36PM -0500
 List-Id: linux-scsi@vger.kernel.org
-To: stern@rowland.harvard.edu
-Cc: patmans@us.ibm.com, ronald@kuetemeier.com, linux-scsi@vger.kernel.org, usb-storage@one-eyed-alien.net, james.bottomley@steeleye.com
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: Pat LaVarre <p.lavarre@ieee.org>, ronald@kuetemeier.com, linux-scsi@vger.kernel.org, usb-storage@one-eyed-alien.net, james.bottomley@steeleye.com
 
-> If in the future other routines decide to call __scsi_mode_sense(), they
-> might not appreciate having len changed out from under them.
+On Thu, Oct 30, 2003 at 01:56:36PM -0500, Alan Stern wrote:
 
-I concur.
+> Why bother to test and shorten len in __scsi_mode_sense() if the callers 
+> have already taken care of that?  Right now the only users of 
+> __scsi_mode_sense() are the read-write-flag and cache-type routines in 
+> sd.c, and your patch makes them use the values you want for len.  If in 
+> the future other routines decide to call __scsi_mode_sense(), they might 
+> not appreciate having len changed out from under them.
 
-I vote we make patch drivers/scsi/ to always calculate the op x5A
-MODE_SENSE_10 length in the caller, so that __scsi_mode_sense only ever
-reduces len by the 4 missing bytes of header, and never increases the
-len.
+I wanted the auto-retry in __scsi_mode_sense to use the length we would
+want if called from sd.c for mode page 8.
 
-Also I vote we execute the { memset(buffer, 0, len); } of
-__scsi_mode_sense before it reduces len, so that we never introduce
-indeterminacy by reducing len.
+But you are right, decreasing the len there is wrong, I can yank that
+part. 
 
-> I am very doubtful that this will work, or rather that it will work with
-> all devices.  I've seen _lots_ of reports of USB devices that can't handle
-> page 8, with all sorts of combinations of values for len attempted.
+And per Pat L's comment, should we decrement the len by four if going from
+MODE SENSE 10 to MODE SENSE? Or request four more bytes than required?
 
-Are we confident that back then we tried the Win value for len?
-
-Are we confident the Win value is x1C = header + optional block
-descriptor + page?
-
-Win may have logic different than sd for whether to bother trying page
-x08.  Indeed, Win may often assume writable by default, and wait to go
-boom later if a disk turns out to be read-only.
-
-Pat LaVarre
-
-
+-- Patrick Mansfield
