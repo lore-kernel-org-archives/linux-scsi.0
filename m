@@ -1,66 +1,43 @@
-From: "Peter Stokes" <peter_stokes@dadeos.freeserve.co.uk>
-Subject: =?iso-8859-1?Q?aacraid_1.1.5-2372_waiting..?=
-Date: Tue, 25 Jan 2005 18:27:09 -0000
-Message-ID: <001101c5030b$7b038900$f800000a@tuscan>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [PATCH] zfcp: updates for -bk
+Date: Tue, 25 Jan 2005 12:40:07 -0600
+Message-ID: <1106678407.6434.43.camel@mulgrave>
+References: <OF09208441.E1CA6752-ONC1256F94.005CDE81-C1256F94.00647837@de.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	format=flowed;
-	charset="iso-8859-1";
-	reply-type=original
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cmailg1.svr.pol.co.uk ([195.92.195.171]:29444 "EHLO
-	cmailg1.svr.pol.co.uk") by vger.kernel.org with ESMTP
-	id S262039AbVAYS1T (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 25 Jan 2005 13:27:19 -0500
-Received: from user-7310.l1.c3.dsl.pol.co.uk ([81.79.28.142] helo=tuscan)
-	by cmailg1.svr.pol.co.uk with smtp (Exim 4.14)
-	id 1CtVPB-0000HK-3v
-	for linux-scsi@vger.kernel.org; Tue, 25 Jan 2005 18:27:09 +0000
+Received: from stat16.steeleye.com ([209.192.50.48]:9403 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S262044AbVAYSls (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 25 Jan 2005 13:41:48 -0500
+In-Reply-To: <OF09208441.E1CA6752-ONC1256F94.005CDE81-C1256F94.00647837@de.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Martin Peschke3 <MPESCHKE@de.ibm.com>
+Cc: Greg KH <greg@kroah.com>, Heiko Carstens <Heiko.Carstens@de.ibm.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, linux-scsi-owner@vger.kernel.org, Matthew Wilcox <matthew@wil.cx>, willy@www.linux.org.uk
 
-Hi,
+On Tue, 2005-01-25 at 19:10 +0100, Martin Peschke3 wrote:
+> Actually, you will find the adapter structure be an anchor for several
+> other objects, or lists of them respectively. We tried to organize
+> all the driver private data in a sane way. That means there is a tree
+> of objects representing the SAN topology, including target ports and
+> subordinate LUNs, many of which have an associated mid-layer structure.
+> I can't imagine that anybody would ever argue to collapse all that into
+> the adapter structure. So, why all the fuss about this particular object?
+> The generic services object has nothing to do with the adapter. It's about
+> fabric switch services, or certain well-known FC (target) ports, which can
+> be accessed in the fabric through an adapter. It's not local but remote,
+> like other targets, so to speak. We might also have chosen to call it
+> "fabric switch".
 
-I have recently bought an Adaptec 2410SA raid controller and I am having 
-some IO performance difficulties. Basically, whenever I access the 
-configured RAID5 logical device the CPU appears to be spending most of it's 
-time in the 'iowait' state (I am running 'top' and the 'wa' figure shoots up 
-(I think that's what it's telling me?)) this occurs for both reads and 
-writes and is having a very detrimental affect on everything else running on 
-the system. After some extensive googling I have come across other people's 
-reports of similar behaviour but I have been unable to find any solutions?
+OK, take a look at this:
 
-My system configuration: -
+http://marc.theaimsgroup.com/?l=linux-scsi&m=110546207223304
 
-AMD Athlon XP 2000+ (133MHz FSB)
-512MB DDR RAM (Dual channel)
-Asus A7N8X nForce2 motherboard (Rev 2.0 board with latest BIOS)
-Adaptec 2410SA using 7348 firmware (installed in a 32-bit PCI slot)
-3xHitachi Deskstar 7K250 250GB drives (1 RAID5 logical device using default 
-64K stripe size containing 1 Ext3 partition made with appropriate 'stripe' 
-option to mke2fs.
+and tell me if it does everything you need.  If it doesn't, you could
+try adding all the other bits to the fc transport class.
 
-Slackware 10 base installation updated with most of the latest packages 
-available.
-Custom built 2.6.10 kernel (I have tried 2.4.26 as well)
-aacraid 1.1.5-2372 (I have also tried the stock linux 2.6.10 aacraid driver)
+James
 
-The system appears to be running reasonably well apart from the dire 
-performance, it always finds that array on boot, I can use the Adaptec 
-Storage manager software etc. (Although the performance has prevented me 
-using the RAID storage properly, at the moment it spends most of its time 
-sitting in the system idle)
-
-I have tried lots of different things, changing the PCI slot, changing the 
-PCI latencies of the controller and other PCI devices, various combinations 
-of drivers and kernels, turning IOAPIC on/off for the motherboard..
-
-I would really appreciate any assistance anyone can provide me with this 
-problem, even if it's only further diagnostics that I can try.
-
-Thanks in advance.
-
-Peter Stokes 
 
