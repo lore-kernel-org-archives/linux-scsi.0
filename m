@@ -1,74 +1,53 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] Transport Attributes Export API
-Date: Fri, 2 Jan 2004 21:18:48 +0000
+From: Arjan van de Ven <arjanv@redhat.com>
+Subject: Re: [PATCH] 2.6.0 aic7xxx and aic79xx stale pci_device list entry
+Date: Sat, 03 Jan 2004 10:01:54 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040102211848.A1894@infradead.org>
-References: <20031231190849.GE3066@localhost>
+Message-ID: <1073120514.4429.0.camel@laptop.fenrus.com>
+References: <1073076654.2048.19.camel@opiate>
+Reply-To: arjanv@redhat.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-CaEaVdPF5DgGuU2NE9NN"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from phoenix.infradead.org ([213.86.99.234]:27922 "EHLO
-	phoenix.infradead.org") by vger.kernel.org with ESMTP
-	id S265644AbUABVSu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 2 Jan 2004 16:18:50 -0500
-Content-Disposition: inline
-In-Reply-To: <20031231190849.GE3066@localhost>; from mort@wildopensource.com on Wed, Dec 31, 2003 at 02:08:49PM -0500
+Received: from node-d-1fcf.a2000.nl ([62.195.31.207]:32384 "EHLO
+	laptop.fenrus.com") by vger.kernel.org with ESMTP id S262792AbUACJCC
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 3 Jan 2004 04:02:02 -0500
+In-Reply-To: <1073076654.2048.19.camel@opiate>
 List-Id: linux-scsi@vger.kernel.org
-To: Martin Hicks <mort@wildopensource.com>
+To: Eric Kerin <eric@bootseg.com>
 Cc: linux-scsi@vger.kernel.org
 
-On Wed, Dec 31, 2003 at 02:08:49PM -0500, Martin Hicks wrote:
-> 
-> Hello,
-> 
-> I've run into a situation where I need to export driver-hidden
-> information to sysfs.  This information is specific to a transport
-> (e.g., Parallel SCSI or Fiber Channel) and, in general, the kernel
-> doesn't use this information so it is not available outside the HBA
-> driver.
-> 
-> Attached is a patch that attempts to provide a means to export this
-> information to sysfs.  It introduces a new class for the scsi_device's
-> transport and provides facilities to export class_device_attributes.
-> 
-> A few suggestions that James Bottomley has already given are below, but
-> I thought that it was time that others saw this and could give their
-> suggestions too.  Thanks.
 
-You could get rid of most code in the drivers by placing a pointer
-to the transport attributes and the desired transport class into
-the host template and letting the common code do all setup for you.
+--=-CaEaVdPF5DgGuU2NE9NN
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-That's also consistant to how we handle all the other attributes.
+On Fri, 2004-01-02 at 21:50, Eric Kerin wrote:
+> Loading the aic7xxx or aic79xx modules, on a machine that did not
+> contain the card, left a stale entry in the pci_device list.  This
+> caused an oops upon loading the next module that registered a
+> pci_device.=20
+>=20
+> The patches below will unregister the pci_device if it successfully
+> registers the device, but does not find any cards.=20
+>=20
+> Comments are appreciated.
 
-> - Separate the transports out into two separate .c files
+well in 2.6 modules are supposed to remain loaded even though no device
+is found (since one can be hotplugged later) so that part of the driver
+needs changing; other than that yes the driver needs to deregister
+itself....
 
-probably a good idea.
+--=-CaEaVdPF5DgGuU2NE9NN
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
-> (so they can be loaded as modules).
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.2.3 (GNU/Linux)
 
-for the sysfs code alone that's total overkill.
+iD8DBQA/9oUBxULwo51rQBIRAjAHAJ9oeDoqhOJow7s2mTujD51mQcAYIgCdFsJs
+FN6KQkCsGyC88s+ohlfK7nI=
+=fJd2
+-----END PGP SIGNATURE-----
 
-> This also plays in to future work I'm thinking
-> about: make the error handler more transport specific.
-
-Yupp, that's a good idea, but not really much related to this patch.
-
-> - Then, the class register/unregister can be done in the
-> module_init/exit routines
-> - Probably move all the show/store routines in .h files so they can be
-> used equally for fc and parallel
-> - This switch on ttype (and the enum transport_type) in
-
-> scsi_add_transport_attributes is not scaleable.  I think a better
-> solution might be to have a struct scsi_transport which has the class
-> device and a pointer to the overridden attribute.  Then, this is the
-> thing pointed to in the scsi host structure (and it can contain the
-> attributes, the class and a pointer to the default attributes, so most
-> of the trying to find the defaults code goes away).
-
-Or no extra structure and put the two pointers directly in the host
-template as I suggested above.  Yes, that means drivers that support
-multiple transports need a template for each of them, but that's not
-a big overhead anyway.
-
+--=-CaEaVdPF5DgGuU2NE9NN--
