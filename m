@@ -1,37 +1,38 @@
-From: Matthew Jacob <mjacob@feral.com>
-Subject: Re: 2.5.63-mm2
-Date: Wed, 5 Mar 2003 23:38:23 -0800 (PST)
+From: Zwane Mwaikambo <zwane@linuxpower.ca>
+Subject: Re: 2.5.63/64 do not boot: loop in scsi_error
+Date: Thu, 6 Mar 2003 02:59:45 -0500 (EST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030305233253.P20267@mailhost.quaver.net>
-References: <20030302180959.3c9c437a.akpm@digeo.com> <1046815078.12931.79.camel@ibm-b>
- <20030304234042.2553deed.akpm@digeo.com> <20030305173854.GA1090@beaverton.ibm.com>
- <20030305185231.GE1090@beaverton.ibm.com> <20030305133305.A16075@beaverton.ibm.com>
-Reply-To: mjacob@quaver.net
+Message-ID: <Pine.LNX.4.50.0303060256200.25282-100000@montezuma.mastecende.com>
+References: <UTC200303060639.h266dIo22884.aeb@smtp.cwi.nl>
+ <20030306064921.GA1425@beaverton.ibm.com>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <20030305133305.A16075@beaverton.ibm.com>
+In-Reply-To: <20030306064921.GA1425@beaverton.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Patrick Mansfield <patmans@us.ibm.com>
-Cc: Andrew Morton <akpm@digeo.com>, Mark Wong <markw@osdl.org>, linux-scsi@vger.kernel.org
+To: Mike Anderson <andmike@us.ibm.com>
+Cc: Andries.Brouwer@cwi.nl, torvalds@transmeta.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-> Though I still do not know why the feral gets a time out but qlogicisp
-> does not. It is apparently a read that times out while mounting root for
-> the first time (readonly), so this is not the first read sent to the drive
+On Wed, 5 Mar 2003, Mike Anderson wrote:
 
-The command in question that's timing out is "ABOUT FIRMWARE".
+> Andries.Brouwer@cwi.nl [Andries.Brouwer@cwi.nl] wrote:
+> > > See if this fixes it..
+> > 
+> > No, I am afraid not. My infinite loop does not pass through
+> > scsi_eh_ready_devs().
+> > 
+> 
+> Can you send me your console log. If you have scsi_logging=1 that would
+> be greate also.
 
-If at reset you see the pattern "ISP " in mailbox registers 1, 2, 3
-you're supposed to be at the hard PROM- i.e., no firmware has been
-loaded and set running by system boot procedures. Unfortunately you get
-some platforms where if this is not set this means that the card is
-neither in hard reset state (i.e., running out of it's prom) nor
-actually running f/w. Hence the timeout on the command.
+If you can figure out which paths this goes through because it completely 
+locks up right before printing 'scsi: device offlined' on 2.5.63. I 
+can't provide much more information at present.
 
-I've always considered this a relatively minor buglet as it doesn't
-occur on *that* many systems but I should probably fix it.
+scsi1 : QLogic ISP1020 SCSI on PCI bus 04 device 70 irq 89 MEM base 0xf8a18000
+scsi: Device offlined - not ready or command retry failed after error recovery: host 1 channel 0 id 0 lun 0
+scsi: Device offlined - not ready or command retry failed after error recovery: host 1 channel 0 id 1 lun 0
 
--matt
-
-
-
+	Zwane
+-- 
+function.linuxpower.ca
