@@ -1,45 +1,53 @@
-From: Mike Anderson <andmike@us.ibm.com>
-Subject: Re: [PATCH] reduce stack in qlogicfc.c
-Date: Wed, 12 Mar 2003 01:38:26 -0800
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: [PATCH] sg version 3.5.28 for lk 2.5.64
+Date: Wed, 12 Mar 2003 22:54:01 +1000
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030312093826.GA5322@beaverton.ibm.com>
-References: <3E6ECFAD.A4363F5E@verizon.net> <20030312072049.GA2428@beaverton.ibm.com> <20030312005220.637494ae.akpm@digeo.com>
+Message-ID: <3E6F2DE9.5010000@torque.net>
+References: <3E6B405B.3010509@torque.net> <20030311142836.A22992@infradead.org> <20030311081838.A9661@beaverton.ibm.com> <20030311200927.A967@lst.de>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20030312005220.637494ae.akpm@digeo.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@digeo.com>
-Cc: randy.dunlap@verizon.net, linux-scsi@vger.kernel.org, mjacob@feral.com
+To: Christoph Hellwig <hch@lst.de>
+Cc: Patrick Mansfield <patmans@us.ibm.com>, linux-scsi@vger.kernel.org
 
-Andrew Morton [akpm@digeo.com] wrote:
-> Mike Anderson <andmike@us.ibm.com> wrote:
-> >
-> > Randy.Dunlap [randy.dunlap@verizon.net] wrote:
-> > > Can anyone suggest way(s) to have the isp2x00_make_portdb() function
-> > > called over and over again until it gets its job done?
-> > > Or does anyone even still use this driver?
-> > 
-> > We have been using the Feral as it covers both Qlogic SCSI and FC cards
-> > (both 2200 and 2300 series, the qlogicfc only handles 2200). I believe
-> > Andrew Morton is carrying the driver in the mm series of patches.
-> > 
+Christoph Hellwig wrote:
+> On Tue, Mar 11, 2003 at 08:18:38AM -0800, Patrick Mansfield wrote:
 > 
-> Does it work?   After an initial spurt of not-so-hot testing reports
-> everything went quiet and I'd assumed people had given up on it
-> for the while.
+>>Is there a patch for putting the aic or all scsi_hosts into the
+>>shost_devclass class, like scsi_debug.c does for itself?
+> 
+> 
+> You're right!  This is the snipplet I missed when sending out the
+> aic7xxx hotplug changes (+ the same for aic79xx):
+> 
+> 
+> --- 1.7/drivers/scsi/aic7xxx/aic7xxx_osm_pci.c	Wed Feb 26 18:14:16 2003
+> +++ edited/drivers/scsi/aic7xxx/aic7xxx_osm_pci.c	Tue Mar 11 19:13:02 2003
+> @@ -75,10 +75,13 @@
+>  MODULE_DEVICE_TABLE(pci, ahc_linux_pci_id_table);
+>  
+>  struct pci_driver aic7xxx_pci_driver = {
+> -	name:		"aic7xxx",
+> -	probe:		ahc_linux_pci_dev_probe,
+> -	remove:		ahc_linux_pci_dev_remove,
+> -	id_table:	ahc_linux_pci_id_table
+> +	.name		= "aic7xxx",
+> +	.probe		= ahc_linux_pci_dev_probe,
+> +	.remove		= ahc_linux_pci_dev_remove,
+> +	.id_table	= ahc_linux_pci_id_table,
+> +	.driver		= {
+> +		.devclass	= &shost_devclass,
+> +	},
+>  };
+>  
+>  static void
 
-No we have not given up. It works, but we still have the outstanding
-issue that we can overdrive the card do to the combination of can_queue,
-device queue_depth and the ring size allocated for the card. A longer
-term fix is need for this which Matthew is aware of. In the short term
-some adjustments of these values will reduce the number of requeues that
-are happening and also keep the SCSI error handler for firing for
-timeouts.
+The movement of scsi host information from sg to sysfs
+is starting to look like an experiment that has failed.
 
--andmike
---
-Michael Anderson
-andmike@us.ibm.com
+Doug Gilbert
+
 
