@@ -1,67 +1,98 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [PATCH] get the kernel to warn about deprecated SCSI ioctls
-Date: 19 Aug 2004 17:06:00 -0400
+From: "Mukker, Atul" <Atulm@lsil.com>
+Subject: RE: [Bug 3244] New: megaraid_mbox.c broken: unimplemented parts
+Date: Thu, 19 Aug 2004 17:09:49 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1092949566.1728.1314.camel@mulgrave>
-References: <1092932342.2378.430.camel@mulgrave>
-	<20040819172109.A10853@infradead.org>
+Message-ID: <0E3FA95632D6D047BA649F95DAB60E57033BC97E@exa-atlanta>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="iso-8859-1"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat16.steeleye.com ([209.192.50.48]:2714 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S267407AbUHSVGL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 19 Aug 2004 17:06:11 -0400
-In-Reply-To: <20040819172109.A10853@infradead.org>
+Received: from mail0.lsil.com ([147.145.40.20]:25794 "EHLO mail0.lsil.com")
+	by vger.kernel.org with ESMTP id S267401AbUHSVJz (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 19 Aug 2004 17:09:55 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: 'Andrew Morton' <akpm@osdl.org>, linux-scsi@vger.kernel.org
 
-On Thu, 2004-08-19 at 12:21, Christoph Hellwig wrote:
-> drivers/block/scsi_ioctl.c also implements SCSI_IOCTL_SEND_COMMAND, so
-> you'll have to warn there aswell.
+Is this something specific to gcc 3.4.1. I do not see any such issue with
+3.3.3 (this driver was tested on IA32, x86-64, and Itenium). Would, what
+Matt Domsch mentioned in his post on 7/27 "Re: [ANNOUNCE]: megaraid driver
+version 2.20.0.1, now 2.20.2.0" help. He talked about defining the inline
+function before they are actually used.
 
-Done.
+Thanks
+-Atul Mukker
 
-No other places I've missed?
-
-James
-
-===== drivers/block/scsi_ioctl.c 1.53 vs edited =====
---- 1.53/drivers/block/scsi_ioctl.c	2004-08-14 05:24:49 -05:00
-+++ edited/drivers/block/scsi_ioctl.c	2004-08-19 15:51:44 -05:00
-@@ -510,6 +510,7 @@
- 		 * old junk scsi send command ioctl
- 		 */
- 		case SCSI_IOCTL_SEND_COMMAND:
-+			printk(KERN_WARNING "program %s is using a deprecated SCSI ioctl, please convert it to SG_IO\n", current->comm);
- 			err = -EINVAL;
- 			if (!arg)
- 				break;
-===== drivers/scsi/scsi_ioctl.c 1.28 vs edited =====
---- 1.28/drivers/scsi/scsi_ioctl.c	2004-06-26 17:40:24 -05:00
-+++ edited/drivers/scsi/scsi_ioctl.c	2004-08-19 09:45:22 -05:00
-@@ -391,6 +391,21 @@
- 	if (!scsi_block_when_processing_errors(sdev))
- 		return -ENODEV;
- 
-+	/* Check for deprecated ioctls ... all the ioctls which don't
-+	 * follow the new unique numbering scheme are deprecated */
-+	switch (cmd) {
-+	case SCSI_IOCTL_SEND_COMMAND:
-+	case SCSI_IOCTL_TEST_UNIT_READY:
-+	case SCSI_IOCTL_BENCHMARK_COMMAND:
-+	case SCSI_IOCTL_SYNC:
-+	case SCSI_IOCTL_START_UNIT:
-+	case SCSI_IOCTL_STOP_UNIT:
-+		printk(KERN_WARNING "program %s is using a deprecated SCSI ioctl, please convert it to SG_IO\n", current->comm);
-+		break;
-+	default:
-+		break;
-+	}
-+
- 	switch (cmd) {
- 	case SCSI_IOCTL_GET_IDLUN:
- 		if (verify_area(VERIFY_WRITE, arg, sizeof(struct scsi_idlun)))
-
+> -----Original Message-----
+> From: Andrew Morton [mailto:akpm@osdl.org]
+> Sent: Thursday, August 19, 2004 12:22 PM
+> To: linux-scsi@vger.kernel.org
+> Subject: Fw: [Bug 3244] New: megaraid_mbox.c broken: 
+> unimplemented parts
+> 
+> 
+> 
+> 
+> Begin forwarded message:
+> 
+> Date: Thu, 19 Aug 2004 05:11:37 -0700
+> From: bugme-daemon@osdl.org
+> To: akpm@digeo.com
+> Subject: [Bug 3244] New: megaraid_mbox.c broken: unimplemented parts
+> 
+> 
+> http://bugme.osdl.org/show_bug.cgi?id=3244
+> 
+>            Summary: megaraid_mbox.c broken: unimplemented parts
+>     Kernel Version: 2.6.8.1-mm2
+>             Status: NEW
+>           Severity: high
+>              Owner: akpm@digeo.com
+>          Submitter: damir.perisa@bluewin.ch
+> 
+> 
+> Distribution: ArchLinux CURRENT 
+> (i'm the pkg maintainer of kernel26mm) 
+>  
+> Hardware Environment: P4 
+>  
+> Software Environment: gcc 3.4.1 
+>  
+> Problem Description:  
+>  
+>   LD      drivers/scsi/megaraid/built-in.o 
+>   CC [M]  drivers/scsi/megaraid/megaraid_mbox.o 
+> drivers/scsi/megaraid/megaraid_mbox.c: In function 
+> `megaraid_queue_command': 
+> drivers/scsi/megaraid/megaraid_mbox.c:112: sorry, 
+> unimplemented: inlining 
+> failed in call to 'megaraid_mbox_build_cmd': function body 
+> not available 
+> drivers/scsi/megaraid/megaraid_mbox.c:1455: sorry, 
+> unimplemented: called from 
+> here 
+> drivers/scsi/megaraid/megaraid_mbox.c:121: sorry, 
+> unimplemented: inlining 
+> failed in call to 'megaraid_mbox_runpendq': function body not 
+> available 
+> drivers/scsi/megaraid/megaraid_mbox.c:1458: sorry, 
+> unimplemented: called from 
+> here 
+> make[3]: *** [drivers/scsi/megaraid/megaraid_mbox.o] Error 1 
+> make[2]: *** [drivers/scsi/megaraid] Error 2 
+> make[1]: *** [drivers/scsi] Error 2 
+> make: *** [drivers] Error 2 
+> ==> ERROR: Build Failed.  Aborting... 
+>  
+> Steps to reproduce: 
+> 1) try to compile this as module 
+> 2) watch it failing
+> 
+> ------- You are receiving this mail because: -------
+> You are the assignee for the bug, or are watching the assignee.
+> -
+> To unsubscribe from this list: send the line "unsubscribe 
+> linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
