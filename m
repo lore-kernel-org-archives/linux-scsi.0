@@ -1,51 +1,82 @@
-From: "Justin T. Gibbs" <gibbs@btc.adaptec.com>
-Subject: [PATCH] 2.4.21-pre3 scsi_scan.c memory leak.
-Date: Fri, 17 Jan 2003 11:58:47 -0700
+From: Matthew Dharm <mdharm-scsi@one-eyed-alien.net>
+Subject: Re: [linux-usb-devel] Re: [PATCH] USB changes for 2.5.58
+Date: Fri, 17 Jan 2003 10:54:14 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1216290000.1042829927@aslan.btc.adaptec.com>
+Message-ID: <20030117105414.E359@one-eyed-alien.net>
+References: <10426732153816@kroah.com> <200301170043.36577.oliver@neukum.name> <20030117085047.GB2531@beaverton.ibm.com> <200301171155.36452.oliver@neukum.name>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-md5;
+	protocol="application/pgp-signature"; boundary="dFWYt1i2NyOo1oI9"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from redfish.adaptec.com (redfish.adaptec.com [162.62.50.11])
-	by magic.adaptec.com (8.11.6+Sun/8.11.6) with ESMTP id h0HIwsj03171
-	for <linux-scsi@vger.kernel.org>; Fri, 17 Jan 2003 10:58:54 -0800 (PST)
-Received: from btc.btc.adaptec.com (btc.btc.adaptec.com [10.100.0.52])
-	by redfish.adaptec.com (8.8.8+Sun/8.8.8) with ESMTP id KAA07780
-	for <linux-scsi@vger.kernel.org>; Fri, 17 Jan 2003 10:58:49 -0800 (PST)
-Received: from [10.100.253.70] (aslan [10.100.253.70])
-	by btc.btc.adaptec.com (8.8.8+Sun/8.8.8) with ESMTP id LAA19110
-	for <linux-scsi@vger.kernel.org>; Fri, 17 Jan 2003 11:58:46 -0700 (MST)
 Content-Disposition: inline
+In-Reply-To: <200301171155.36452.oliver@neukum.name>; from oliver@neukum.name on Fri, Jan 17, 2003 at 11:55:36AM +0100
 List-Id: linux-scsi@vger.kernel.org
-To: Linux Scsi Mailing List <linux-scsi@vger.kernel.org>
-
-I found this while doing a longevity load/unload test of the aic79xx
-driver.  I can't say if this is the only memory leak in the unload
-process, but its at least one of them.  This only cleans up properly
-in the common cases of failure in scan_scsis_single().  The whole
-routines a bit of a mess....
-
---
-Justin
+To: Oliver Neukum <oliver@neukum.name>
+Cc: Mike Anderson <andmike@us.ibm.com>, David Brownell <david-b@pacbell.net>, Greg KH <greg@kroah.com>, linux-usb-devel@lists.sourceforge.net, Linux SCSI list <linux-scsi@vger.kernel.org>
 
 
---- scsi_scan.c	2003-01-17 11:53:07.000000000 -0700
-+++ scsi_scan.c.mine	2003-01-17 11:53:03.000000000 -0700
-@@ -596,6 +596,7 @@
- 		} else {
- 			/* assume no peripheral if any other sort of error */
- 			scsi_release_request(SRpnt);
-+			scsi_release_commandblocks(SDpnt);
- 			return 0;
- 		}
- 	}
-@@ -619,6 +620,7 @@
- 	 */
- 	if ((scsi_result[0] >> 5) == 3) {
- 		scsi_release_request(SRpnt);
-+		scsi_release_commandblocks(SDpnt);
- 		return 0;	/* assume no peripheral if any sort of error */
- 	}
- 	 /*   The Toshiba ROM was "gender-changed" here as an inline hack.
+--dFWYt1i2NyOo1oI9
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
+On Fri, Jan 17, 2003 at 11:55:36AM +0100, Oliver Neukum wrote:
+> That is simply wrong. Reporting somebody having pulled a plug must
+> not fail. What are you supposed to do with an error here?
+>=20
+> There must be a way for a LLD to report that reliably.
+> If the answer is, take that lock, call that function, error all pending
+> requests, release that lock and call that function, it's OK.
+>=20
+> But it must work in all cases.
+
+I absolutely agree.  The device is gone.  I can't do anything about it.
+If the SCSI layer decides it can't let go, what am I supposed to do about
+it?
+
+In a separate discussion with Mike, he mentioned that you can't
+scsi_remove_device() unless there are no pending commands.
+
+How the hell is an LLD supposed to assure that!?!?
+
+The minute I error a command and call scsi_done(), I can get a new one.
+Unless I lock out requests with scsi_block_requests(), but that comes with
+major warnings about needing to get unblocked.
+
+The way this should work is that the LLD calls scsi_remove_device(), and
+that cuts off the flow of commands.  The LLD can promise to error-out any
+pending commands in the device command queue.
+
+That is, unless scsi_block_requests() and scsi_unblock_requests() are more
+useful than the documentation suggests... block(), error all commands,=20
+unregister()... that would make some sense.  We could call
+scsi_block_request() as soon as we know the unit is gone, and unregister()
+as soon as the queue is empty.
+
+Matt
+
+--=20
+Matthew Dharm                              Home: mdharm-usb@one-eyed-alien.=
+net=20
+Maintainer, Linux USB Mass Storage Driver
+
+A:  The most ironic oxymoron wins ...
+DP: "Microsoft Works"
+A:  Uh, okay, you win.
+					-- A.J. & Dust Puppy
+User Friendly, 1/18/1998
+
+--dFWYt1i2NyOo1oI9
+Content-Type: application/pgp-signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.0.6 (GNU/Linux)
+Comment: For info see http://www.gnupg.org
+
+iD8DBQE+KFFVIjReC7bSPZARAtpdAJ4x3B/64NkeM+GgEEUWidOC3Vg2jgCfYtZP
+5JZVTq3XHLZ7QdDQ1JVNAxU=
+=doLO
+-----END PGP SIGNATURE-----
+
+--dFWYt1i2NyOo1oI9--
