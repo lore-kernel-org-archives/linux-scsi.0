@@ -1,85 +1,75 @@
 From: Jens Axboe <axboe@suse.de>
-Subject: Re: bytes/CDB of SCSI pass thru grossly limited maybe
-Date: Mon, 23 Aug 2004 19:08:27 +0200
+Subject: Re: [PATCH 2.4] rewritable USB DVD-RAM vs. mode sense op choice
+Date: Mon, 23 Aug 2004 19:12:53 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040823170827.GC24089@suse.de>
-References: <20040731141240.GE23697@suse.de> <1092678938.4235.37.camel@patlinux.iomegacorp.com> <20040823154648.GB2301@suse.de> <4D36722F-F51E-11D8-BFA2-00039398BB5E@ieee.org>
+Message-ID: <20040823171253.GD24089@suse.de>
+References: <1092673789.4297.7.camel@patlinux.iomegacorp.com> <20040823154850.GC2301@suse.de> <F631591B-F523-11D8-BFA2-00039398BB5E@ieee.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns.virtualhost.dk ([195.184.98.160]:17825 "EHLO virtualhost.dk")
-	by vger.kernel.org with ESMTP id S266081AbUHWRIe (ORCPT
+Received: from ns.virtualhost.dk ([195.184.98.160]:49058 "EHLO virtualhost.dk")
+	by vger.kernel.org with ESMTP id S266127AbUHWRM5 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 23 Aug 2004 13:08:34 -0400
+	Mon, 23 Aug 2004 13:12:57 -0400
 Content-Disposition: inline
-In-Reply-To: <4D36722F-F51E-11D8-BFA2-00039398BB5E@ieee.org>
+In-Reply-To: <F631591B-F523-11D8-BFA2-00039398BB5E@ieee.org>
 List-Id: linux-scsi@vger.kernel.org
 To: Pat LaVarre <p.lavarre@ieee.org>
 Cc: linux-scsi@vger.kernel.org
 
 On Mon, Aug 23 2004, Pat LaVarre wrote:
-> Jens A:
+> >the MODE_SENSE_10 a fall back when MODE_SENSE fails
 > 
-> >>Is there an ide-cd option to allow more bytes/CDB?
-> >...
-> >ATAPI cannot do more than 128KiB per command. And
-> >that is what q->max_sectors is set to, if you try and submit more than
-> >this through SG_IO, bio_add_user() will complain and command will be
-> >failed as you experienced.
+> I believe the specs on the web instead tell us to try MODE_SENSE_10 
+> first and then fall back to MODE_SENSE.  I hear you requesting the 
+> reverse, I will deliver what I hear you request.
+
+That's what I would do as well, actually. But since this is 2.4 it's
+safe to keep old behaviour and only try something new if that fails.
+
+> >your device is failing ... ?
 > 
-> Wow.
+> Help, I have more than one device.
+
+Doesn't matter
+
+> My Iomega REV drive works here because that device accepts both ops, 
+> implementing the SFF/ ANSI MMC specification for op x5A and the 
+> incompatible ANSI SPC specification for op x1A.  To achieve 
+> compatibility, I believe every host should try both ops and every 
+> device should accept both ops.
 > 
-> Please reply to confirm - you are saying 128 KiB data bytes per command  
-> is a Linux PATAPI design limit?
+> I mean only to say that I see Linux 2.4 sr_mod mischaracterises the 
+> many DVD/ CD devices that do reject op x1A while accepting only op x5A 
+> MODE_SENSE_10.
 > 
-> I know even twelve-byte-packet PATAPI itself as defined at t13.org and  
-> t10.org can do xFFFF = (64 Ki - 1) LBA's via such ten-byte per CDB ops  
-> as x28 "READ (10)" and x2A "WRITE (10)".  At 2 KiB/LBA, that's 128 MiB  
-> minus 2 KiB.  That's the kind of limit I expected, when instead in  
-> Linux I saw limits like 120 KiB in SCSI over USB.  Also I hear  
-> sixteen-byte-packet PATAPI can itself pass xFFFF:FFFF data blocks per  
-> command.
+> I hesitate to accept the Linux name MODE_SENSE for the op x1A, because 
+> I do not find that claim well-founded in the web for PDT x05 = DVD/ CD 
+> = MMC.  I remember Mt Fuji in particular neglects to name op x1A.
 
-What you can shove into the cdb is of lesser interest than the fact that
-ATAPI itself cannot do more than 128KiB _per command_.
+That's the classical naming, since the 6-byte variant was the original
+(and surely people would have found it stupid to name it MODE_SENSE_6
+back then). So experience usually tell people that when you see READ and
+READ_10, the former is the old 6-byte variant.
 
-> In parallel, I'll click thru to bio_add_user to read the limits there.
+Mt Fuji doesn't name any of the 6-byte variants, since they are long
+deprecated for that class of devices.
 
-There are no extra limits there, it's just in the queue itself
-(max_sectors, segments, etc).
-
-> >As I'm sure you know,
+> >your device is failing ... ?
 > 
-> I didn't know, thank you, sorry I have no clue, I'm not trying to  
-> pretend I do, I got into this at the request of a friend who needs 256  
-> KiB data per command.
-
-??? You must have some clue on the actual hardware, if you have been
-working on the hardware side for many years :-)
-
-> I specifically have Not yet tried patching the Linux kernel to persuade  
-> PATAPI to allow more data bytes per command.  I did try USB.  So far  
-> I've failed.  At:
+> In this thread I meant to share the example of 2.4 sr_mod 
+> mischaracterising a USB DVD-RAM drive that rejects op x1A.
 > 
-> Subject: [usb-storage] faq max_sectors
-> https://lists.one-eyed-alien.net/pipermail/usb-storage/2004-August/ 
-> 000680.html
-> 
-> I have reported that raising SCSI_DEFAULT_MAX_SECTORS alone does not  
-> actually allow more data bytes per command in USB.
+> I hear of PATAPI DVD/CD devices that reject op x1A also.  I imagine 
+> ide-cd works only by trying op x5A, and not just x1A.  Want me to 
+> check?  I don't yet know how to trace in Linux the plain hex of the 
+> CDB's that ide-cd sends.
 
-Ok, let me try to explain. There are several factors that limit how big
-a command you can send to a device - some of these are hardware, some of
-these are just imposed by the driver. If you look inside the
-request_queue structure in blkdev.h, you'll find such things as:
+Only sr issues 6-byte commands, I don't think support for them was ever
+required for ATAPI devices.
 
-        unsigned short          max_sectors;
-        unsigned short          max_phys_segments;
-        unsigned short          max_hw_segments;
-        unsigned int            max_segment_size;
-
-which are set by the driver and limit how big a request you can submit
-through SG_IO.
+So if you add a fallback to issue MODE_SENSE_10 when _6 fails, you
+should be golden.
 
 -- 
 Jens Axboe
