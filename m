@@ -1,150 +1,56 @@
-From: Art Haas <ahaas@airmail.net>
-Subject: [PATCH] C99 initializers for drivers/scsi
-Date: Tue, 22 Apr 2003 11:02:03 -0500
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <20030422160203.GD7260@debian>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
-Content-Disposition: inline
-To: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+From: Andries.Brouwer@cwi.nl
+Subject: Re: [usb-storage] Re: PATCH: exclude certain commands from emulated SCSI hosts
+Date: Tue, 22 Apr 2003 20:44:23 +0200 (MEST)
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <UTC200304221844.h3MIiNX18598.aeb@smtp.cwi.nl>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from hera.cwi.nl ([192.16.191.8]:39864 "EHLO hera.cwi.nl")
+	by vger.kernel.org with ESMTP id S263336AbTDVSci (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 22 Apr 2003 14:32:38 -0400
 List-Id: linux-scsi@vger.kernel.org
+To: Andries.Brouwer@cwi.nl, stern@rowland.harvard.edu
+Cc: James.Bottomley@steeleye.com, alan@lxorguk.ukuu.org.uk, greg@kroah.com, linux-scsi@vger.kernel.org, linux-usb-devel@lists.sourceforge.net, mdharm-scsi@one-eyed-alien.net, torvalds@transmeta.com, usb-storage@one-eyed-alien.net
 
-Hi.
+> I believe a recent patch addressed this problem.
+> the patch is documented as fixing bug #510
 
-This set of 4 patches convert files to use C99 initializers. The patches
-are against the current BK.
+Very good. And see, I had no time to look at all of these
+Bugzilla texts, but now that I am back and look at the sequel
+for this bug #510 it turns out that it was semi-fixed.
+However, the author complains
 
-Art Haas
+=====
+I confirm that your patch makes my memory stick reader work again.
 
-===== drivers/scsi/aic7xxx_old/aic7xxx.h 1.12 vs edited =====
---- 1.12/drivers/scsi/aic7xxx_old/aic7xxx.h	Fri Dec 20 20:00:57 2002
-+++ edited/drivers/scsi/aic7xxx_old/aic7xxx.h	Sat Mar  1 15:43:30 2003
-@@ -30,26 +30,26 @@
-  * to do with card config are filled in after the card is detected.
-  */
- #define AIC7XXX	{						\
--	proc_info: aic7xxx_proc_info,				\
--	detect: aic7xxx_detect,					\
--	release: aic7xxx_release,				\
--	info: aic7xxx_info,					\
--	queuecommand: aic7xxx_queue,				\
--	slave_alloc: aic7xxx_slave_alloc,			\
--	slave_configure: aic7xxx_slave_configure,		\
--	slave_destroy: aic7xxx_slave_destroy,			\
--	bios_param: aic7xxx_biosparam,				\
--	eh_abort_handler: aic7xxx_abort,			\
--	eh_device_reset_handler: aic7xxx_bus_device_reset,	\
--	eh_host_reset_handler: aic7xxx_reset,			\
--	can_queue: 255,		/* max simultaneous cmds      */\
--	this_id: -1,		/* scsi id of host adapter    */\
--	sg_tablesize: 0,	/* max scatter-gather cmds    */\
--	max_sectors: 2048,	/* max physical sectors in 1 cmd */\
--	cmd_per_lun: 3,		/* cmds per lun (linked cmds) */\
--	present: 0,		/* number of 7xxx's present   */\
--	unchecked_isa_dma: 0,	/* no memory DMA restrictions */\
--	use_clustering: ENABLE_CLUSTERING,			\
-+	.proc_info		= aic7xxx_proc_info,		\
-+	.detect			= aic7xxx_detect,		\
-+	.release		= aic7xxx_release,		\
-+	.info			= aic7xxx_info,			\
-+	.queuecommand		= aic7xxx_queue,		\
-+	.slave_alloc		= aic7xxx_slave_alloc,		\
-+	.slave_configure	= aic7xxx_slave_configure,	\
-+	.slave_destroy		= aic7xxx_slave_destroy,	\
-+	.bios_param		= aic7xxx_biosparam,		\
-+	.eh_abort_handler	= aic7xxx_abort,		\
-+	.eh_device_reset_handler	= aic7xxx_bus_device_reset,	\
-+	.eh_host_reset_handler	= aic7xxx_reset,			\
-+	.can_queue		= 255,	/* max simultaneous cmds      */\
-+	.this_id		= -1,	/* scsi id of host adapter    */\
-+	.sg_tablesize		= 0,	/* max scatter-gather cmds    */\
-+	.max_sectors		= 2048,	/* max physical sectors in 1 cmd */\
-+	.cmd_per_lun		= 3,	/* cmds per lun (linked cmds) */\
-+	.present		= 0,	/* number of 7xxx's present   */\
-+	.unchecked_isa_dma	= 0,	/* no memory DMA restrictions */\
-+	.use_clustering		= ENABLE_CLUSTERING,			\
- }
- 
- extern int aic7xxx_queue(Scsi_Cmnd *, void (*)(Scsi_Cmnd *));
-===== drivers/scsi/sym53c8xx_2/sym53c8xx.h 1.7 vs edited =====
---- 1.7/drivers/scsi/sym53c8xx_2/sym53c8xx.h	Thu Nov 21 23:34:45 2002
-+++ edited/drivers/scsi/sym53c8xx_2/sym53c8xx.h	Sat Mar  1 15:48:32 2003
-@@ -106,22 +106,22 @@
- #include <scsi/scsicam.h>
- 
- #define SYM53C8XX {							\
--	name:			"sym53c8xx",				\
--	detect:			sym53c8xx_detect,			\
--	release:		sym53c8xx_release,			\
--	info:			sym53c8xx_info, 			\
--	queuecommand:		sym53c8xx_queue_command,		\
--	slave_configure:	sym53c8xx_slave_configure,		\
--	eh_abort_handler:	sym53c8xx_eh_abort_handler,		\
--	eh_device_reset_handler:sym53c8xx_eh_device_reset_handler,	\
--	eh_bus_reset_handler:	sym53c8xx_eh_bus_reset_handler,		\
--	eh_host_reset_handler:	sym53c8xx_eh_host_reset_handler,	\
--	can_queue:		0,					\
--	this_id:		7,					\
--	sg_tablesize:		0,					\
--	cmd_per_lun:		0,					\
--	use_clustering:		DISABLE_CLUSTERING,			\
--	highmem_io:		1}
-+	.name			= "sym53c8xx",				\
-+	.detect			= sym53c8xx_detect,			\
-+	.release		= sym53c8xx_release,			\
-+	.info			= sym53c8xx_info, 			\
-+	.queuecommand		= sym53c8xx_queue_command,		\
-+	.slave_configure	= sym53c8xx_slave_configure,		\
-+	.eh_abort_handler	= sym53c8xx_eh_abort_handler,		\
-+	.eh_device_reset_handler	= sym53c8xx_eh_device_reset_handler,\
-+	.eh_bus_reset_handler	= sym53c8xx_eh_bus_reset_handler,	\
-+	.eh_host_reset_handler	= sym53c8xx_eh_host_reset_handler,	\
-+	.can_queue		= 0,					\
-+	.this_id		= 7,					\
-+	.sg_tablesize		= 0,					\
-+	.cmd_per_lun		= 0,					\
-+	.use_clustering		= DISABLE_CLUSTERING,			\
-+	.highmem_io		= 1}
- 
- #endif /* defined(HOSTS_C) || defined(MODULE) */ 
- 
-===== drivers/scsi/3w-xxxx.c 1.28 vs edited =====
---- 1.28/drivers/scsi/3w-xxxx.c	Wed Mar 26 14:10:23 2003
-+++ edited/drivers/scsi/3w-xxxx.c	Wed Apr  2 07:15:18 2003
-@@ -226,10 +226,10 @@
- 
- /* File operations struct for character device */
- static struct file_operations tw_fops = {
--	owner: THIS_MODULE,
--	ioctl: tw_chrdev_ioctl,
--	open: tw_chrdev_open,
--	release: tw_chrdev_release
-+	.owner		= THIS_MODULE,
-+	.ioctl		= tw_chrdev_ioctl,
-+	.open		= tw_chrdev_open,
-+	.release	= tw_chrdev_release
- };
- 
- /* Globals */
-===== drivers/scsi/gdth.c 1.22 vs edited =====
---- 1.22/drivers/scsi/gdth.c	Thu Mar  6 17:11:01 2003
-+++ edited/drivers/scsi/gdth.c	Wed Apr  2 07:14:37 2003
-@@ -747,9 +747,9 @@
- #ifdef GDTH_IOCTL_CHRDEV
- /* ioctl interface */
- static struct file_operations gdth_fops = {
--    ioctl:gdth_ioctl,
--    open:gdth_open,
--    release:gdth_close,
-+	.ioctl		= gdth_ioctl,
-+	.open		= gdth_open,
-+	.release	= gdth_close,
- };
- #endif
- 
--- 
-To announce that there must be no criticism of the President, or that we
-are to stand by the President, right or wrong, is not only unpatriotic
-and servile, but is morally treasonable to the American public.
- -- Theodore Roosevelt, Kansas City Star, 1918
+However, the usb-storage module initialisation is still slow. See the attached
+traces: I modprobe usb-storage at 08:50:16, and the initialisation was not
+ended until 08:50:53. Under 2.4 it takes only a few (2-3) seconds to do this...
+=====
+
+and the trace shows
+
+=====
+Apr  8 11:46:10 crusoe: usb-storage: Command MODE_SENSE (6 bytes)
+Apr  8 11:46:10 crusoe: usb-storage:  1a 00 3f 00 04 00
+Apr  8 11:46:10 crusoe: usb-storage: usb_stor_ctrl_transfer(): rq=00 rqtype=21 value=0000 index=00 len=12
+Apr  8 11:46:10 crusoe: usb-storage: Status code 0; transferred 12/12
+Apr  8 11:46:10 crusoe: usb-storage: -- transfer complete
+Apr  8 11:46:10 crusoe: usb-storage: Call to usb_stor_ctrl_transfer() returned 0
+Apr  8 11:46:11 crusoe: usb-storage: usb_stor_bulk_transfer_buf(): xfer 4 bytes
+Apr  8 11:46:11 crusoe: usb-storage: Status code -75; transferred 4/4
+Apr  8 11:46:11 crusoe: usb-storage: -- unknown error
+Apr  8 11:46:11 crusoe: usb-storage: CB data stage result is 0x3
+Apr  8 11:46:11 crusoe: usb-storage: -- transport indicates error, resetting
+Apr  8 11:46:11 crusoe: usb-storage: CB_reset() called
+=====
+
+That is, now all three bug reports talk about the same problem.
+
+OK. Something is wrong with MODE_SENSE, that was not yet wrong
+in 2.4. If we fix that, then all bug reports mentioned so far
+are covered.
+
+[James, I saw your mail, but have not yet looked at the code.]
+
+Andries
