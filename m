@@ -1,34 +1,66 @@
-From: mikem <mikem@beardog.cca.cpqcorp.net>
-Subject: Re: [patch 1/2] cciss: cleans up warnings in the 32/64 bit conversions
-Date: Tue, 26 Oct 2004 16:44:42 -0500
+From: christophe varoqui <christophe.varoqui@free.fr>
+Subject: Re: [multipath] SCSI device capacity mess
+Date: Tue, 26 Oct 2004 23:46:26 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20041026214442.GA4837@beardog.cca.cpqcorp.net>
-References: <20041021211718.GA10462@beardog.cca.cpqcorp.net> <1098633262.10824.35.camel@mulgrave> <20041026194551.GA21003@beardog.cca.cpqcorp.net> <1098820685.2061.398.camel@mulgrave>
+Message-ID: <1098827186.4914.34.camel@zezette>
+References: <1098833278.4914.24.camel@zezette>
+	 <1098826481.2140.534.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from zcamail05.zca.compaq.com ([161.114.32.105]:18187 "EHLO
-	zcamail05.zca.compaq.com") by vger.kernel.org with ESMTP
-	id S261485AbUJZVpH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 26 Oct 2004 17:45:07 -0400
-Content-Disposition: inline
-In-Reply-To: <1098820685.2061.398.camel@mulgrave>
+Received: from smtp4.wanadoo.fr ([193.252.22.27]:6812 "EHLO
+	mwinf0408.wanadoo.fr") by vger.kernel.org with ESMTP
+	id S261486AbUJZVq3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 26 Oct 2004 17:46:29 -0400
+In-Reply-To: <1098826481.2140.534.camel@mulgrave>
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: marcelo.tosatti@cyclades.com, Jens Axboe <axboe@suse.de>, Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+Cc: device-mapper development <dm-devel@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Tue, Oct 26, 2004 at 03:57:59PM -0400, James Bottomley wrote:
-> On Tue, 2004-10-26 at 15:45, mikem wrote:
-> > Which tree are you applying to? This was made from 2.4.28-pre4.
-> 
-> OK, you caught me ... trying to apply a 2.4 patch to a 2.6 tree.  I keep
-> forgetting that not all patches on linux-scsi are 2.6
-> 
-> James
+Le mardi 26 octobre 2004 =C3=A0 17:34 -0400, James Bottomley a =C3=A9cr=
+it :
+> On Tue, 2004-10-26 at 19:27, christophe varoqui wrote:
+> > 1) make the /sys/block/*/size attribute writable
+> > 2) resurrect a BLKSETSIZE ioctl
+> > 3) make device-mapper less strict, and hope we can fix the size by =
+a
+> > device rescan when it get activated
+> > 4) sell the culprit hardware
+>=20
+> Only 3 & 4 look viable.  There's little point introducing an extra AP=
+I
+> or ioctl specifically to defeat a check, since the check will now be
+> useless anyway.
+>=20
+:) I feared you would vote for 4)
+That is not that viable for me, as you can imagine.
 
-I should put the kernel version in the subject.
+The culprit hardware, should I have reported, is a HSG80 controler pair
+configured in multibus mode.
 
-mikem
+I though you could have considered 1) as it is just another way for roo=
+t
+to shoot itself and the multipath daemon can apply to detected valid
+size on other paths to apply it to ghost paths. That didn't seem so
+awkward to me.
 
-> 
-> 
+I fear Alasdair reaction to 3) will be cold ... I still hope we can com=
+e
+out with a solution, even one I havn't thought about.
+
+> The "random" value is 1GB by the way.  Since the dawn of time SCSI ha=
+s
+> reported this for devices that failed read capacity.
+>=20
+Ah, good to know. Thanks
+
+regards,
+--=20
+christophe varoqui <christophe.varoqui@free.fr>
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
