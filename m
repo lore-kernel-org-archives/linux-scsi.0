@@ -1,58 +1,29 @@
-From: Jeremy Higdon <jeremy@sgi.com>
-Subject: Re: Incorrect response to SK/ASC/ASCQ = x 02/04/01 (becoming ready)
-Date: Thu, 26 Aug 2004 15:36:34 -0700
+From: marek_kubala/Praha/INCHEBA@incheba.cz
+Subject: marek kubala/Praha/INCHEBA je mimo =?iso-8859-2?Q?kancel=E1=F8=2E?=
+Date: Fri, 27 Aug 2004 01:00:14 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040826223634.GB131056@sgi.com>
-References: <Pine.LNX.4.44L0.0408221154220.15992-100000@netrider.rowland.org> <1093217548.1727.367.camel@mulgrave> <1093218968.3553.17.camel@swtf.comptex.com.au> <1093275122.1776.52.camel@mulgrave> <20040826025453.GA125799@sgi.com> <1093534695.1684.28.camel@mulgrave>
+Message-ID: <OF2FF843B8.A72AC563-ONC1256EFC.007E5D45-C1256EFC.007E5D45@LocalDomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-2
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from omx2-ext.sgi.com ([192.48.171.19]:33924 "EHLO omx2.sgi.com")
-	by vger.kernel.org with ESMTP id S269770AbUHZWhp (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 26 Aug 2004 18:37:45 -0400
-Content-Disposition: inline
-In-Reply-To: <1093534695.1684.28.camel@mulgrave>
+Received: from batman.incheba.cz ([212.65.252.109]:21929 "EHLO
+	mailserver.inchebapraha") by vger.kernel.org with ESMTP
+	id S269780AbUHZW6h convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 26 Aug 2004 18:58:37 -0400
+Received: from charon (unknown [192.168.2.231])
+	by mailserver.inchebapraha (Postfix) with ESMTP id 09E31A2670
+	for <linux-scsi@vger.kernel.org>; Fri, 27 Aug 2004 00:57:58 +0200 (CEST)
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Burn Alting <burn@goldweb.com.au>, SCSI development list <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
 
-On Thu, Aug 26, 2004 at 11:38:08AM -0400, James Bottomley wrote:
-> On Wed, 2004-08-25 at 22:54, Jeremy Higdon wrote:
-> > I believe that 02/04/01 should be treated like a Busy status.  The
-> > semantics are slightly different, but the action taken by the
-> > initiator is the same: wait a bit and then retry.
-> 
-> Well, that's dangerous.  BUSY is assumed always to be a transient
-> condition, so it doesn't count against the retries, so if this thing
-> never comes back, we'd loop forever there.
+Mimo kancel=E1=F8 budu od  20.08.2004 a nevr=E1t=EDm se do 30.08.2004.
 
-Hmm.  I think an exponential backoff would be better.
+Na va=B9i zpr=E1vu odpov=EDm, jakmile se vr=E1t=EDm.
 
-In any case, the 02/04/01 is also a transient condition.  It means
-that the device is in the process of becoming read, but is not ready yet.
 
-> The other thing about BUSY handling is that, for a device with no
-> outstanding commands like this, we retry based on I/O pressure, so even
-> if I increment the retry count time waited would depend on how much I/O
-> pressure the system had.
-
-The amount of time you wait to retry is based on I/O pressure?
-The amount of time that it will take before the device is ready is
-not based on I/O pressure.
-
-> > I have seen this key/asc/asq before and had to handle it that way.
-> > I believe the device in question was a disk drive that had been
-> > powered on recently.  Disks set to have a variable spinup delay
-> > (based on ID, so that not all disks in a 16-drive box power up at
-> > the same time and overstress a power supply) can return this code
-> > up to a couple of minutes after power on.
-> 
-> But that's a start of day thing, which would be handled by sd's TUR
-> code.
-
-True.  However, in the future, I might expect to see more of this
-behavior, as drives are spun down for power conservation.  Probably
-more on small systems than on big ones.
-
-jeremy
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
