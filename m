@@ -1,53 +1,60 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [Announce] Emulex LightPulse Device Driver
-Date: Wed, 10 Mar 2004 13:04:24 -0500
+From: Pat LaVarre <p.lavarre@ieee.org>
+Subject: Re: [usb-storage] Time to allow MODE SENSE for USB disk-type
+	storag edevices?
+Date: 10 Mar 2004 11:53:15 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <404F58A8.8040304@pobox.com>
-References: <3356669BBE90C448AD4645C843E2BF2802C014D7@xbl.ma.emulex.com>	<mailman.1078908361.15239.linux-kernel2news@redhat.com> <20040310095908.33b2082f.zaitcev@redhat.com>
+Message-ID: <1078944795.5156.210.camel@patibmrh9>
+References: <Pine.LNX.4.44L0.0403081046190.1187-100000@ida.rowland.org>
+	 <200 40308201328.GA13708@apps.cwi.nl>
+	 <20040309174353.A15780@beaverton.ibm.com>
+	 <20040310091312.GA25632@apps.cwi.nl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:47761 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S262736AbUCJSEj
+Received: from email-out1.iomega.com ([147.178.1.82]:29108 "EHLO
+	email.iomega.com") by vger.kernel.org with ESMTP id S262767AbUCJSz1
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 10 Mar 2004 13:04:39 -0500
-In-Reply-To: <20040310095908.33b2082f.zaitcev@redhat.com>
+	Wed, 10 Mar 2004 13:55:27 -0500
+In-Reply-To: <20040310091312.GA25632@apps.cwi.nl>
 List-Id: linux-scsi@vger.kernel.org
-To: Pete Zaitcev <zaitcev@redhat.com>
-Cc: linux-kernel@vger.kernel.org, James.Smart@Emulex.com, linux-scsi@vger.kernel.org
+To: Andries Brouwer <Andries.Brouwer@cwi.nl>
+Cc: Patrick Mansfield <patmans@us.ibm.com>, USB Storage List <usb-storage@lists.one-eyed-alien.net>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, SCSI development list <linux-scsi@vger.kernel.org>
 
-Pete Zaitcev wrote:
-> Jeff Garzik <jgarzik@pobox.com> wrote:
-> Flag problem on sparc is fixed by Keith Wesolowsky for 2.6.3-rcX,
-> and it never existed on sparc64, which keeps CWP in a separate register.
-> 
-> Why it took years to resolve is that the expirience showed that
-> there is no legitimate reason to pass flags as arguments. Every damn
-> time it was done, the author was being stupid. Keith resolved it
-> primarily because it was an unorthogonality in sparc implementation.
+> > res = sd_do_mode_sense(SRpnt, 0, 0x3F, buffer, 4, &data);
 
-You would never know there were so many sparc people, until I post 
-something incorrect about it.  <grin>
+I see the structure of this code arbitrarily requires H = C.  That
+structure makes sense only when H = D <= C.  Why we guess D <= C when C
+is 4, I do not understand.
 
-I stand corrected.  As someone mentioned in private, it's actually a 
-shame that was fixed, since that's one less argument that can be used 
-against such wrappers ;-)
+> * First attempt: ask for all pages (0x3F), ...
 
+I hear Windows starts with page x08, not x3F.
 
->>But this bug is only an example that serves to highlight the importance 
->>of directly using Linux API functions throughout your code.  It may 
->>sound redundant, but "Linux code should look like Linux code."  This 
->>emphasis on style may sound trivial, but it's important for 
->>review-ability, long term maintenance, and as we see here, bug prevention.
-> 
-> 
-> Yes yes yes. This is the way elx_sli_lock is harmful, not because
-> of its passing flags.
+> all pages (0x3F), but only 4 bytes.
 
-Agreed.
+SCSI Pass-Through Mode Sense Command May Crash the Computer
+http://support.microsoft.com/?kbid=813908
 
-	Jeff
+suggests Talk-like-Windows excludes 4 bytes, by saying -i 4 -y "1A
+xx:xx:xx 04 00" crashes the Win 2K kernel for much Atapi, just as -y "12
+00:00:00 00 00" crashes some lk for much Usb.
 
+> some devices hang if we ask for more than is available.
+
+Also some hosts hang when D < H.
+
+Offline recently I received an as yet unconfirmed report that 2.4.25
+ioctl CDROM_SEND_PACKET fails (but does not hang) when D < H.
+
+> ... my devices ... work...
+
+Yes, here we choose among evils.
+
+If Windows doesn't discover PDT x00/0E writability except by trying to
+write blocks, then any other technique we invent will fail to
+interoperate broadly.
+
+Pat LaVarre
 
 
