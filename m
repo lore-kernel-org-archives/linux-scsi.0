@@ -1,63 +1,54 @@
-From: Mike Anderson <andmike@us.ibm.com>
+From: Christoph Hellwig <hch@infradead.org>
 Subject: Re: [RFC] scsi host sysfs support again [0/4]
-Date: Mon, 5 May 2003 03:00:56 -0700
+Date: Mon, 5 May 2003 11:17:35 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030505100056.GI8416@beaverton.ibm.com>
-References: <20030505083315.GB8416@beaverton.ibm.com> <20030505093833.A13506@infradead.org> <3EB63188.3080703@torque.net>
+Message-ID: <20030505111735.A16914@infradead.org>
+References: <20030505083315.GB8416@beaverton.ibm.com> <20030505093833.A13506@infradead.org> <20030505094818.GH8416@beaverton.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e35.co.us.ibm.com ([32.97.110.133]:20376 "EHLO
-	e35.co.us.ibm.com") by vger.kernel.org with ESMTP id S262124AbTEEJrF
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 5 May 2003 05:47:05 -0400
+Received: from phoenix.mvhi.com ([195.224.96.167]:60425 "EHLO
+	phoenix.infradead.org") by vger.kernel.org with ESMTP
+	id S261199AbTEEKFG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 5 May 2003 06:05:06 -0400
 Content-Disposition: inline
-In-Reply-To: <3EB63188.3080703@torque.net>
+In-Reply-To: <20030505094818.GH8416@beaverton.ibm.com>; from andmike@us.ibm.com on Mon, May 05, 2003 at 02:48:18AM -0700
 List-Id: linux-scsi@vger.kernel.org
-To: Douglas Gilbert <dougg@torque.net>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org, Patrick Mochel <mochel@osdl.org>
 
-Douglas Gilbert [dougg@torque.net] wrote:
-> [HBA REMOVAL new]
-> LLD                      mid level                 LLD
-> ---                      ---------                 ---
-> scsi_remove_host() ---------+
->                             |
->                      slave_destroy()
->                      slave_destroy()
->                         release()     -->     scsi_unregister()
-> 
-> In the new model there is nothing left to do after
-> scsi_remove_host() has finished since everything happened
-> during that call. The the LLD is re-entered to cleanup
-> up any HBA specific device resources (slave_destroy()).
-> Finally the LLD is re-entered by the release().
-> 
-> Also module unloads (should) use the ->remove
-> method as well. Does the LLD need to know
-> whether a HBA removal is hot or not?
-> 
+On Mon, May 05, 2003 at 02:48:18AM -0700, Mike Anderson wrote:
+> While scsi_remove_host cannot imply a scsi_set_host_offline unless we
+> change the previous definition. We indicated that scsi_set_host_offline
+> may cancel commands in flight which implys some sync point.
 
-I believe Christoph is indicating that if something has a ref on
-scsi_host and this causes the release to be called after the return from
-scsi_remove_host than this would not be good. I believe the LLDD model
-would stay like the old method except in the mid layer there would be a
-change in how / when kfree(shost) is called.
+Yes.
 
-LLD			mid level
-scsi_remove_host()  -----+
-                         |
-		     slave_destroy()
-		     slave_destroy()
-		     slave_destroy()
-scsi_unregister()  ------+
-			 |
-			 kfree of scsi_host may happen here or sometime
-			 later depending on the ref count.
+> Ok I will look at the change you suggest in the morning after I have
+> some sleep. I guess the first step would be moving the kfree(shost) out
+> of scsi_unregister. This would then stay around until ref counts go to
+> zero.
 
+Actually what I think must happen is that scsi_unregister will do
+nothing unless the refcount reaches zero.  It should also be renamed
+to scsi_put_host to make this more explicit.
 
--andmike
---
-Michael Anderson
-andmike@us.ibm.com
+Then we'd have:
+
+	scsi_alloc_host
+		- allocate storage for struct Scsi_Host, some
+		  basic initalization.  refcount set to 1;
+	scsi_get_host
+		- get a reference to an existing struct Scsi_Host
+	scsi_put_host
+		- decrement usecount of an existing struct Scsi_Host,
+		  free it if this was the last reference
+	scsi_add_host
+		- register host with the scsi midlayer
+	scsi_remove_host
+		- unregister host with the scsi midlayer, force all
+		  I/O to fail from now on and never call back into
+		  the driver.
+
+To avoid touching all old-style drivers we should probably keep
+the scsi_register/scsi_unregister aliases for 2.6.
 
