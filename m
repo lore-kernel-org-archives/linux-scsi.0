@@ -1,28 +1,33 @@
-From: Matthew Wilcox <willy@debian.org>
+From: Pat LaVarre <p.lavarre@ieee.org>
 Subject: Re: zip of GiB cross-platform
-Date: Mon, 29 Sep 2003 20:50:18 +0100
+Date: 29 Sep 2003 13:56:02 -0600
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030929195018.GT24824@parcelfarce.linux.theplanet.co.uk>
-References: <1064271322.4797.9.camel@patehci2> <1064847281.24854.2.camel@patehci2> <1064850600.25057.7.camel@patehci2> <1064858121.4262.0.camel@patehci2> <1064864378.4262.53.camel@patehci2>
+Message-ID: <1064865361.4262.55.camel@patehci2>
+References: <1064271322.4797.9.camel@patehci2>
+	 <1064847281.24854.2.camel@patehci2> <1064850600.25057.7.camel@patehci2>
+	 <1064858121.4262.0.camel@patehci2> <1064864378.4262.53.camel@patehci2>
+	 <20030929195018.GT24824@parcelfarce.linux.theplanet.co.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:18051 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S264644AbTI2TuU
+Received: from email-out2.iomega.com ([147.178.1.83]:58518 "EHLO
+	email.iomega.com") by vger.kernel.org with ESMTP id S264678AbTI2Tzn
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 29 Sep 2003 15:50:20 -0400
-Content-Disposition: inline
-In-Reply-To: <1064864378.4262.53.camel@patehci2>
+	Mon, 29 Sep 2003 15:55:43 -0400
+In-Reply-To: <20030929195018.GT24824@parcelfarce.linux.theplanet.co.uk>
 List-Id: linux-scsi@vger.kernel.org
-To: Pat LaVarre <p.lavarre@ieee.org>
+To: willy@debian.org
 Cc: linux-scsi@vger.kernel.org
 
 
-I suggest you file a bug with your distribution (if you're using one)
-or talk to the zip maintainers (if you're not).  This kind of question
-does not belong on this list.
+> I suggest ... zip maintainers (if you're not).
+> This kind of question
+> does not belong on this list.
 
--- 
-"It's not Hollywood.  War is real, war is primarily not about defeat or
-victory, it is about death.  I've seen thousands and thousands of dead bodies.
-Do you think I want to have an academic debate on this subject?" -- Robert Fisk
+Thanks for clueing me in, sorry to take your time.
+
+Pat LaVarre
+
+
+
