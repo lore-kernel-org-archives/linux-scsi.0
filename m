@@ -1,213 +1,81 @@
-From: "Mukker, Atul" <Atulm@lsil.com>
-Subject: RE: megaraid doesn't detect when bios jumper is off...
-Date: Mon, 26 Jul 2004 11:53:10 -0400
+From: PinkFreud <pf-linux-scsi-20040717@mirkwood.net>
+Subject: Re: sym53c8xx_2 funkiness...
+Date: Mon, 26 Jul 2004 12:02:14 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <0E3FA95632D6D047BA649F95DAB60E57033BC8B7@exa-atlanta>
+Message-ID: <20040726160214.GB1105@eriador.mirkwood.net>
+References: <20040718030514.GJ1105@eriador.mirkwood.net> <20040724165625.GA1105@eriador.mirkwood.net> <m3zn5nxi6j.fsf@merlin.emma.line.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:5357 "EHLO mail0.lsil.com")
-	by vger.kernel.org with ESMTP id S265815AbUGZPxR (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 26 Jul 2004 11:53:17 -0400
+Received: from pcp09895235pcs.ewndsr01.nj.comcast.net ([68.36.161.84]:58894
+	"HELO rivendell.mirkwood.net") by vger.kernel.org with SMTP
+	id S266198AbUGZQCQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 26 Jul 2004 12:02:16 -0400
+Content-Disposition: inline
+In-Reply-To: <m3zn5nxi6j.fsf@merlin.emma.line.org>
 List-Id: linux-scsi@vger.kernel.org
-To: 'Tom Oehser' <tom@Toms.NET>, "Mukker, Atul" <Atulm@lsil.com>
-Cc: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
+To: Matthias Andree <ma@dt.e-technik.uni-dortmund.de>
+Cc: linux-scsi@vger.kernel.org
 
-Again, please have the mails routed to linux-scsi as well.
+On Mon, Jul 26, 2004 at 10:54:12AM +0200, Matthias Andree babbled thus:
+> > Any ideas on why this is happening?  This system has become quite
+> > unstable...
+> >> I have a box with an old NCR 53c810 scsi card.  It was running fine
+> >> with Slackware and a vanilla 2.4.19 kernel for the past year or so.
+> >> I recently decided to install Debian on it, and started out with the
+> >> Debian 2.4.26 package.  It wasn't long before I started noticing
+> >> messages like
+> >> sym0: SCSI BUS reset detected.
+> >> sym0: SCSI BUS has been reset.
+> >> in dmesg.  This also seems to hose the box more often than not...
+> 
+> Try booting with ACPI switched off
+> and also check if you have devices on the bus that misbehave.
 
-> human readable- how can I tell if the new driver is correctly in
-> 64-bit addressing mode?
-2.20.x.x driver *always* work in 64-bit mode. The current 2.20 driver does
-not have the /proc interface built in yet. Can you send the information
-/proc/megaraid/hbaX/config file with the stock driver.
+$ dmesg | grep -i acpi
+ACPI: Unable to locate RSDP
+ACPI: Subsystem revision 20040326
+ACPI: Interpreter disabled.
+PCI: ACPI tables contain no PCI IRQ routing entries
 
--Atul Mukker
+The box in question is an old Digital Multia (Intel variety).  Doesn't
+appear to have ACPI support, unsurprisingly.
 
-> -----Original Message-----
-> From: Tom Oehser [mailto:tom@Toms.NET]
-> Sent: Sunday, July 25, 2004 11:39 AM
-> To: Mukker, Atul
-> Subject: RE: megaraid doesn't detect when bios jumper is off...
 > 
+> I've found it necessary to prohibit SCSI disconnect by module option for
+> an elderly Tandberg TDC3800 tape drive after switching from 2.4's
+> ncr53c8xx driver to the only official 2.6 driver, sym53c8xx_2; the
+> controller in question was a Tekram DC-310U (SYM53C860) that was
+> accompanied by a Plextor PX-40TSi (that also provides the active
+> termination).
+
+The ncr53c8xx driver was the source of a major headache for me a few
+years back.  The sym53c8xx driver worked through vanilla 2.4.19 -
+however, it doesn't seem to work now.  Blegh.
+
+Can one safely disable disconnect if there are multiple devices on the
+bus?  In particular, the system has a hard disk and a cdrom (both
+external - and yes, I tried replacing the cable from the box to the
+drives, and at the moment, I only have the hd plugged in).
+
 > 
+> I haven't bothered to check if there's a driver bug or a bug of the
+> drive, a TDC4222 and an SLR6 work fine with a both a Tekram DC-390U and
+> a Tekram DC-390F (both SYM53C875).
+
+It's possible I just need to provide some options to the driver - I
+wouldn't be surprised if some defaults have changed to favor newer
+hardware.  I merely need to find out *what* needs changing...
+
 > 
-> Something else I don't understand-
+> -- 
+> Matthias Andree
 > 
-> There is a 64bit/32bit jumper,
-> 
-> The stock 2.6.7 drivers always reports in /proc...megaraid...
-> that it is not using 64bit addressing (no matter what the jumper
-> setting), (yes, it is a 64-bit PCI slot).  On the newest driver
-> from the LSI site, though, the /proc megaraid directory doesn't
-> seem to exist, and the megaraid info under /sys is binary, not
-> human readable- how can I tell if the new driver is correctly in
-> 64-bit addressing mode?
-> 
-> -Tom
-> 
-> On Fri, 23 Jul 2004, Mukker, Atul wrote:
-> 
-> > Date: Fri, 23 Jul 2004 15:00:24 -0400
-> > From: "Mukker, Atul" <Atulm@lsil.com>
-> > To: 'Tom Oehser' <tom@Toms.NET>, "Mukker, Atul" <Atulm@lsil.com>
-> > Cc: linux-scsi@vger.kernel.org
-> > Subject: RE: megaraid doesn't detect when bios jumper is off...
-> >
-> > Select Objects->adapter->disable bios option in CTRL-M
-> >
-> >
-> > > -----Original Message-----
-> > > From: Tom Oehser [mailto:tom@Toms.NET]
-> > > Sent: Friday, July 23, 2004 1:46 PM
-> > > To: Mukker, Atul
-> > > Cc: linux-scsi@vger.kernel.org
-> > > Subject: RE: megaraid doesn't detect when bios jumper is off...
-> > >
-> > >
-> > >
-> > > CTRL-M screens do not, as far as I can tell, give me a way to
-> > > disable a boot-drive- they only give a way to choose which of
-> > > several drives is the boot drive- nor do they provide a way to
-> > > disable the bios completely.  The jumper seems to be clearly
-> > > defined as disabling the bios, and shouldn't be otherwise
-> > > interfering with the correct function of the adapter or its
-> > > detection by the driver.
-> > >
-> > > I will walk through the ctrl-m and ctrl-w screens again, and
-> > > flash the adapter to the newest bios first, but as far as I
-> > > can tell, the CTRL-M doesn't give me a way to turn off boot.
-> > >
-> > > The motherboard definitely doesn't give me a way in its bios
-> > > to control the boot order between several scsi add-in cards.
-> > >
-> > > -Tom
-> > >
-> > > On Fri, 23 Jul 2004, Mukker, Atul wrote:
-> > >
-> > > > Date: Fri, 23 Jul 2004 12:27:17 -0400
-> > > > From: "Mukker, Atul" <Atulm@lsil.com>
-> > > > To: 'Tom Oehser' <tom@Toms.NET>, "Mukker, Atul" <Atulm@lsil.com>
-> > > > Cc: linux-scsi@vger.kernel.org
-> > > > Subject: RE: megaraid doesn't detect when bios jumper is off...
-> > > >
-> > > > Are you sure you should be shorting this jumper! I would
-> > > recommend, disable
-> > > > BIOS with the configuration program CTRL-M
-> > > >
-> > > > -Atul Mukker
-> > > >
-> > > > > -----Original Message-----
-> > > > > From: Tom Oehser [mailto:tom@Toms.NET]
-> > > > > Sent: Friday, July 23, 2004 10:01 AM
-> > > > > To: Mukker, Atul
-> > > > > Cc: linux-scsi@vger.kernel.org
-> > > > > Subject: RE: megaraid doesn't detect when bios jumper 
-> is off...
-> > > > >
-> > > > >
-> > > > >
-> > > > > With the 2.20.1.0 driver it still doesn't find the card...
-> > > > >
-> > > > > -Tom
-> > > > >
-> > > > > On Thu, 22 Jul 2004, Mukker, Atul wrote:
-> > > > >
-> > > > > > Date: Thu, 22 Jul 2004 11:50:09 -0400
-> > > > > > From: "Mukker, Atul" <Atulm@lsil.com>
-> > > > > > To: 'Tom Oehser' <tom@Toms.NET>, "Mukker, Atul" 
-> <Atulm@lsil.com>
-> > > > > > Cc: linux-scsi@vger.kernel.org
-> > > > > > Subject: RE: megaraid doesn't detect when bios 
-> jumper is off...
-> > > > > >
-> > > > > > Try the 2.10.1.0 driver from
-> > > > > > 
-> ftp://ftp.lsil.com/pub/linux-megaraid/drivers/version-2.20.1.0/
-> > > > > >
-> > > > > > -Atul Mukker
-> > > > > >
-> > > > > > > -----Original Message-----
-> > > > > > > From: Tom Oehser [mailto:tom@Toms.NET]
-> > > > > > > Sent: Thursday, July 22, 2004 11:41 AM
-> > > > > > > To: Mukker, Atul
-> > > > > > > Cc: linux-scsi@vger.kernel.org
-> > > > > > > Subject: RE: megaraid doesn't detect when bios jumper
-> > > is off...
-> > > > > > >
-> > > > > > >
-> > > > > > >
-> > > > > > > 2.6.7 stock megaraid.c driver. -Tom
-> > > > > > >
-> > > > > > > On Thu, 22 Jul 2004, Mukker, Atul wrote:
-> > > > > > >
-> > > > > > > > Date: Thu, 22 Jul 2004 10:24:35 -0400
-> > > > > > > > From: "Mukker, Atul" <Atulm@lsil.com>
-> > > > > > > > To: 'Tom Oehser' <tom@toms.net>, 
-> linux-scsi@vger.kernel.org
-> > > > > > > > Subject: RE: megaraid doesn't detect when bios
-> > > jumper is off...
-> > > > > > > >
-> > > > > > > > It would be helpful to know the driver and kernel
-> > > > > version as well.
-> > > > > > > >
-> > > > > > > > -Atul Mukker
-> > > > > > > >
-> > > > > > > > > -----Original Message-----
-> > > > > > > > > From: Tom Oehser [mailto:tom@toms.net]
-> > > > > > > > > Sent: Wednesday, July 21, 2004 10:36 PM
-> > > > > > > > > To: linux-scsi@vger.kernel.org
-> > > > > > > > > Subject: megaraid doesn't detect when bios jumper
-> > > is off...
-> > > > > > > > >
-> > > > > > > > >
-> > > > > > > > >
-> > > > > > > > > Hi, I have a MegaRAID SATA 150-6, which is in the
-> > > > > same box as a
-> > > > > > > > > Mylex AcceleRaid-250 which is the boot drive.
-> > > The motherboard
-> > > > > > > > > doesn't give a way to control boot priority between
-> > > > > scsi cards,
-> > > > > > > > > so I set the bios-disable jumper on the MegaRAID
-> > > card, so that
-> > > > > > > > > it will boot the Mylex, which works fine...
-> > > > > > > > >
-> > > > > > > > > BUT, the MegaRAID driver isn't detecting the
-> > > MegaRAID when its
-> > > > > > > > > boot bios is disabled!  I can't find a way to get the
-> > > > > driver to
-> > > > > > > > > find it and enable it...  And the BIOS setup of the
-> > > > > MegaRAID is
-> > > > > > > > > not seeming to have a way to tell it not to 
-> try to boot...
-> > > > > > > > >
-> > > > > > > > > So, if I enable the bios jumper on the MegaRAID, it
-> > > > > tries to boot
-> > > > > > > > > from it (which fails miserably, as it isn't a boot
-> > > > > drive), and if
-> > > > > > > > > I disable the bios jumper on the MegaRAID, it doesn't
-> > > > > try to boot
-> > > > > > > > > it, but then the Linux driver doesn't enable 
-> it, either!
-> > > > > > > > >
-> > > > > > > > > Help?
-> > > > > > > > >
-> > > > > > > > > -Tom
-> > > > > > > > >
-> > > > > > > > > -
-> > > > > > > > > To unsubscribe from this list: send the line 
-> "unsubscribe
-> > > > > > > > > linux-scsi" in
-> > > > > > > > > the body of a message to majordomo@vger.kernel.org
-> > > > > > > > > More majordomo info at
-> > > > > http://vger.kernel.org/majordomo-info.html
-> > > > > > > > >
-> > > > > > > >
-> > > > > > >
-> > > > > >
-> > > > >
-> > > >
-> > >
-> >
-> 
+> Encrypted mail welcome: my GnuPG key ID is 0x052E7D95 (PGP/MIME preferred)
+
+-- 
+                                                                      
+Mike Edwards                    |   If this email address disappears,   
+Unsolicited advertisments to    |   assume it was spammed to death.  To
+this address are not welcome.   |   reach me in that case, s/-.*@/@/
+(This means you, Cogent!)       |                                   
