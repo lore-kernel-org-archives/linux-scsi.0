@@ -1,39 +1,49 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [PATCH] - Fusion-MPT much faster as module
-Date: Tue, 22 Mar 2005 13:05:23 -0600
-Message-ID: <1111518323.5520.60.camel@mulgrave>
-References: <91888D455306F94EBD4D168954A9457C01AEB0A8@nacos172.co.lsil.com>
+From: Bryan Henderson <hbryan@us.ibm.com>
+Subject: Re: Fusion-MPT much faster as module - ifdef MODULE considered harmful
+Date: Tue, 22 Mar 2005 11:36:35 -0800
+Message-ID: <OF1B4228CB.88311E5C-ON88256FCC.00696D64-88256FCC.006B947E@us.ibm.com>
+References: <20050322122801.GI3982@stusta.de>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Received: from stat16.steeleye.com ([209.192.50.48]:56543 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S261659AbVCVTFc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 22 Mar 2005 14:05:32 -0500
-In-Reply-To: <91888D455306F94EBD4D168954A9457C01AEB0A8@nacos172.co.lsil.com>
+Content-Type: text/plain; charset="US-ASCII"
+Received: from e5.ny.us.ibm.com ([32.97.182.145]:50905 "EHLO e5.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S261733AbVCVTgj (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 22 Mar 2005 14:36:39 -0500
+Received: from d01relay02.pok.ibm.com (d01relay02.pok.ibm.com [9.56.227.234])
+	by e5.ny.us.ibm.com (8.12.11/8.12.11) with ESMTP id j2MJaYEO024490
+	for <linux-scsi@vger.kernel.org>; Tue, 22 Mar 2005 14:36:34 -0500
+Received: from d01av02.pok.ibm.com (d01av02.pok.ibm.com [9.56.224.216])
+	by d01relay02.pok.ibm.com (8.12.10/NCO/VER6.6) with ESMTP id j2MJaY27084626
+	for <linux-scsi@vger.kernel.org>; Tue, 22 Mar 2005 14:36:34 -0500
+Received: from d01av02.pok.ibm.com (loopback [127.0.0.1])
+	by d01av02.pok.ibm.com (8.12.11/8.12.11) with ESMTP id j2MJaXoe002556
+	for <linux-scsi@vger.kernel.org>; Tue, 22 Mar 2005 14:36:34 -0500
+In-Reply-To: <20050322122801.GI3982@stusta.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Moore, Eric Dean" <Eric.Moore@lsil.com>
-Cc: linux-kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Andrew Morton <akpm@osdl.org>, kenneth.w.chen@intel.com
+To: Adrian Bunk <bunk@stusta.de>
+Cc: Andrew Morton <akpm@osdl.org>, Arjan van de Ven <arjan@infradead.org>, "Moore, Eric Dean" <emoore@lsil.com>, 'Holger Kiehl' <Holger.Kiehl@dwd.de>, "Chen, Kenneth W" <kenneth.w.chen@intel.com>, linux-scsi@vger.kernel.org
 
-On Tue, 2005-03-22 at 11:40 -0700, Moore, Eric Dean wrote:
-> History on this:
-> Between the 3.01.16 and 3.01.18, we introduced new method
-> to passing command line options to the driver.  Some of the
-> command line options are used for fine tuning dv(domain
-> validation) in the driver.  By accident, these command line options were
-> wrapped around #ifdef MODULE in the 3.01.18 version of the driver.
-> What this meant is when the driver is compiled built-in the kernel,
-> the optimal settings for dv were ignored, thus poor performance.  
+>  #if defined(CONFIG_FOO) || (defined(MODULE) && 
+defined(CONFIG_FOO_MODULE))
+>
+>is a good way to express that driver bar can use functionality of driver 
+>foo if it's available.
 
-OK, I'll add this to the queue.
+We need a way for a module to dynamically link itself, to whatever other 
+modules it wants to use, and to be able to do that conditionally based on 
+whether those other modules are loaded at the time it wants to use them.
 
-Could I just point out that if your driver actually printed the results
-of negotiation, this would have been an awful lot easier to debug.
+Then we would not only get rid of one of the remaining distinctions 
+between binding a module into the base kernel and loading it dynamically, 
+but also this possibly last excuse for defined(MODULE).
 
-Additionally, if you used the SPI transport class domain validation, the
-issue wouldn't have arisen in the first place.
+As far as I know, we still don't have any kind of a generic registration 
+service like this in the kernel.  I've had to resort to faking ioctls and 
+proc file reads inside the kernel in order to get an address from another 
+dynamically loaded module.
 
-James
-
+--
+Bryan Henderson                          IBM Almaden Research Center
+San Jose CA                              Filesystems
 
