@@ -1,59 +1,47 @@
-From: Lars Marowsky-Bree <lmb@suse.de>
-Subject: Re: [ANNOUNCE 0/6] Open-iSCSI High-Performance Initiator for Linux
-Date: Thu, 10 Mar 2005 11:27:26 +0100
-Message-ID: <20050310102726.GT4105@marowsky-bree.de>
-References: <422BFCB2.6080309@yahoo.com> <20050309050434.GT3163@waste.org> <422E8EEB.7090209@yahoo.com> <20050309060544.GW3120@waste.org> <422E96D9.6090202@yahoo.com> <20050309222114.GF4105@marowsky-bree.de> <422FB2B5.3070803@yahoo.com>
+From: Nic Ferrier <nferrier@tapsellferrier.co.uk>
+Subject: aacraid died on kernel 2.4.27
+Date: Thu, 10 Mar 2005 21:01:50 +0000
+Message-ID: <87sm33kyf5.fsf@tapsellferrier.co.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Received: from gate.in-addr.de ([212.8.193.158]:59881 "EHLO mx.in-addr.de")
-	by vger.kernel.org with ESMTP id S262510AbVCJK2Y (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 10 Mar 2005 05:28:24 -0500
-Content-Disposition: inline
-In-Reply-To: <422FB2B5.3070803@yahoo.com>
+Content-Type: text/plain; charset=us-ascii
+Received: from owls-tree.tapsellferrier.co.uk ([80.168.156.78]:34973 "EHLO
+	owls-tree.tapsellferrier.co.uk") by vger.kernel.org with ESMTP
+	id S261239AbVCJVG6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 10 Mar 2005 16:06:58 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alex Aizman <itn780@yahoo.com>
-Cc: Matt Mackall <mpm@selenic.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On 2005-03-09T18:36:37, Alex Aizman <itn780@yahoo.com> wrote:
+I've been trying, without success, to get the aacraid driver to work
+reliably on a Dell 2650 Poweredge.
 
-> Heartbeat is good for reliability, etc. WRT "getting paged-out" -=20
-> non-deterministic (things depend on time), right?
+I'm using Debian so I tried kernel 2.6.8 first (Debian has it packaged
+nicely but from a SCSI driver point of view it's just a standard
+kernel.org source).
 
-Right, if we didn't get scheduled often enough for us to send our
-heartbeat messages to the other peers, they'll evict us from the cluste=
-r
-and fence us, causing a service disruption.
+2.6.8 worked... but died as soon as we put the server under load.
 
-With all these protections in place though, we can run at roughly 50ms
-heartbeat intervals from user-space, reliably, which allows us a node
-dead timer of ~200ms. I think that's pretty damn good.
+2.6.11 also died under load.
 
-(Of course, realistically, even for subsecond fail-over, 200ms keep
-alives are sufficient, and 50ms would be quite extreme. But, it works.)
+Yesterday I put 2.4.27 on the box because I had understood that the
+aacraid is stable in that release of the kernel. But a few hours ago
+the box died in exactly the same way (it was under quite heavy load).
 
-> >That works well in our current development series, and if you want t=
-o
-> >share code, you can either rip it off (Open Source, we love ya ;) or=
- we
-> >can spin off these parts into a sub-package for you to depend on...
-> If it's not a big deal :-) let's do the "sub-package" option.
-
-I've brought this up on the linux-ha-dev list. When do you need this?
+Unfortunately, I can't give you error messages because I don't have
+any log from the failures. It comes out on the console and I don't
+have it saved anywhere. But it definitely is the raid controller.
 
 
-Sincerely,
-    Lars Marowsky-Br=E9e <lmb@suse.de>
+Maybe someone can answer the following for me:
 
---=20
-High Availability & Clustering
-SUSE Labs, Research and Development
-SUSE LINUX Products GmbH - A Novell Business
+- is the driver understood to be stable in 2.4.27?
 
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+- is there another driver I could try (would the pre-Cox one work?)
+
+- is there anything I can do to alleviate the problem?
+
+
+
+
+Nic Ferrier
+http://www.tapsellferrier.co.uk
