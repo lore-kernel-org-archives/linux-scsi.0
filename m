@@ -1,28 +1,46 @@
-From: Mark Bellon <mbellon@mvista.com>
-Subject: Re: Problems with updated firmware for qla2xxx driver.
-Date: Tue, 23 Mar 2004 15:50:06 -0700
+From: Andreas Schwab <schwab@suse.de>
+Subject: Re: Symbios 53C8XX broken on ia64?
+Date: Wed, 24 Mar 2004 00:46:28 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <4060BF1E.6050206@mvista.com>
-References: <B179AE41C1147041AA1121F44614F0B0DCFFB3@AVEXCH02.qlogic.org>
+Message-ID: <jeisgvxh2j.fsf@sykes.suse.de>
+References: <je3c80ph2o.fsf@sykes.suse.de>
+	<1080060468.2091.28.camel@patsy.fc.hp.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gateway-1237.mvista.com ([12.44.186.158]:20719 "EHLO
-	av.mvista.com") by vger.kernel.org with ESMTP id S262902AbUCWWuQ
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 23 Mar 2004 17:50:16 -0500
-In-Reply-To: <B179AE41C1147041AA1121F44614F0B0DCFFB3@AVEXCH02.qlogic.org>
+Received: from ns.suse.de ([195.135.220.2]:10989 "EHLO Cantor.suse.de")
+	by vger.kernel.org with ESMTP id S262943AbUCWXqe (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 23 Mar 2004 18:46:34 -0500
+In-Reply-To: <1080060468.2091.28.camel@patsy.fc.hp.com> (Alex Williamson's
+ message of "Tue, 23 Mar 2004 09:47:48 -0700")
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Cc: "Caushik, Ramesh" <ramesh.caushik@intel.com>, linux-scsi@vger.kernel.org
+To: Alex Williamson <alex.williamson@hp.com>
+Cc: linux-ia64 <linux-ia64@vger.kernel.org>, linux-scsi@vger.kernel.org
 
-With the 2.4 version of the driver I had problems with some Intel ATCA 
-prototypes (1 or 2 out of 5). There is a hardware issue that required a 
-respin for one fix and I think there is one outstanding issue as well. 
-You should find out if you board has the "power rail" respin (or a "blue 
-wire" workaround).
+Alex Williamson <alex.williamson@hp.com> writes:
 
-mark
+>    Seems to work just fine on an rx2600 w/ latest bk plus this patch
+> that was being tossed around yesterday:
+>
+> http://marc.theaimsgroup.com/?l=3Dlinux-ia64&m=3D107999504909154&w=3D=
+2
+>
+> I'm building it statically in my case.
 
+I can't confirm, still fails for me.  I see sym2_init called, but never
+sym2_probe.  This is with an Everest (rx5670).
 
+Andreas.
+
+--=20
+Andreas Schwab, SuSE Labs, schwab@suse.de
+SuSE Linux AG, Maxfeldstra=DFe 5, 90409 N=FCrnberg, Germany
+Key fingerprint =3D 58CA 54C7 6D53 942B 1756  01D3 44D5 214B 8276 4ED5
+"And now for something completely different."
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
