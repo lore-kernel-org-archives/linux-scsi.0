@@ -1,78 +1,82 @@
-From: "Cress, Andrew R" <andrew.r.cress@intel.com>
-Subject: RE: [RFC] SCSI Hotplug for lk 2.5
-Date: Wed, 7 Aug 2002 08:56:10 -0700
+From: Doug Ledford <dledford@redhat.com>
+Subject: Re: When must the io_request_lock be held?
+Date: Wed, 7 Aug 2002 12:18:46 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <A5974D8E5F98D511BB910002A50A664702CD66C5@hdsmsx103.hd.intel.com>
+Message-ID: <20020807121846.F10872@redhat.com>
+References: <dledford@redhat.com> <200208071526.g77FQOt03034@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from petasus.jf.intel.com (petasus.jf.intel.com [10.7.209.6])
-	by caduceus.jf.intel.com (8.11.6/8.11.6/d: outer.mc,v 1.48 2002/05/24 00:39:04 root Exp $) with ESMTP id g77FsIb28339
-	for <linux-scsi@vger.kernel.org>; Wed, 7 Aug 2002 15:54:18 GMT
-Received: from orsmsxvs040.jf.intel.com (orsmsxvs040.jf.intel.com [192.168.65.206])
-	by petasus.jf.intel.com (8.11.6/8.11.6/d: inner.mc,v 1.22 2002/05/24 00:38:22 root Exp $) with SMTP id g77FrcW23516
-	for <linux-scsi@vger.kernel.org>; Wed, 7 Aug 2002 15:53:38 GMT
+Content-Disposition: inline
+In-Reply-To: <200208071526.g77FQOt03034@localhost.localdomain>; from James.Bottomley@steeleye.com on Wed, Aug 07, 2002 at 10:26:24AM -0500
 List-Id: linux-scsi@vger.kernel.org
-To: 'Patrick Mansfield' <patmans@us.ibm.com>
-Cc: Douglas Gilbert <dougg@torque.net>, linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@steeleye.com>
+Cc: Jamie Wellnitz <Jamie.Wellnitz@emulex.com>, linux-scsi@vger.kernel.org
 
+On Wed, Aug 07, 2002 at 10:26:24AM -0500, James Bottomley wrote:
+> dledford@redhat.com said:
+> > You can use the spin_unlock() variant if you wish, but that will leave
+> > interrupts disabled and therefore buy you exactly zero benefit on UP
+> > systems.
+> 
+> This isn't necessarily true.  Some SCSI cards have a single mailbox for 
+> outgoing and incoming transfer parameters and commands.  If you have one of 
+> these, you need to keep interrupts disabled as you set up a command so that 
+> your own interrupt routine doesn't overwrite the values if you get a reconnect 
+> interrupt while you're programming the card.
 
-The SCSI SAF-TE interface to hot-swap controllers reports the number of
-insertion events by slot number.  If there is a SAF-TE HSC, detecting the
-insertion is easy, but if not, the user-space daemon has to have help to
-notice that the insertion has happened.  
+Then you better not *ever* release the lock under those conditions.  
+Leaving interrupts disabled may work on UP, but on SMP it only disables 
+interrupts on that one CPU and if you aren't holding your lock then 
+another CPU can run the interrupt routine and trash your data.  So, back 
+to my point, if you aren't enabling interrupts, then there is no reason to 
+release the lock because you obviously need some sort of lock type 
+protection.
 
-The two types of disk enclosures I have do generate resets when a new disk
-is inserted, but I believe that there are disk units/enclosures that just
-bring the disk online.  Perhaps even these have Unit Attention, or Start
-Unit, or something to detect.  
+> dledford@redhat.com said:
+> > You are, of course, responsible for doing sane locking in your driver
+> > if you choose to unlock the locks the mid layer holds for you.
+> 
+> This is a very important point to bear in mind.  Since the io_request_lock 
+> must be held when calling the done() routine,
 
-TODO:
-- Detect the disk insertion, which I think has to be done in kernel space.
-  If there is HSC:  Use SAF-TE (or SES) to detect the insertion.
-  If there is no HSC:
-  Reset is one entry point to trigger looking for new SCSI disks, but we  
-  probably need to trigger it at Unit Attention too as you suggest.
-  Since the idea is to make this automatic, rather than require user 
-  intervention, we don't know which target and/or lun to look for, so I
-  think we still have to scan at the whole channel with Inquiry commands 
-  (like scan_scsis does).  
-- Create and attach a device node for the new disk.
-  This logic would be similar to what scan_scsis does, but would be more
-  surgical if the HSC is present.
+Don't get too hung up on this point.  In 2.5 you don't need either the 
+io_request_lock or host->host_lock when calling the done function.  In 
+2.4.19 you don't need it if you are a new eh driver, only if you are old.  
+And hopefully by 2.4.20 that won't be true either.  If Marcello takes the 
+patch I've got for 2.4 that we shipped in our Red Hat 7.3 product, then 
+both new and old eh drivers will no longer have to hold a lock when they 
+call the done function because both of them will be using the new eh 
+code's bottom half mechanism.
 
-Andy
+> you are asking to create a 
+> deadlock if you use your own locks in the driver (it's not impossible to get 
+> this correct, just very difficult).
 
------Original Message-----
-From: Patrick Mansfield [mailto:patmans@us.ibm.com] 
-Sent: Tuesday, August 06, 2002 6:43 PM
-Subject: Re: [RFC] SCSI Hotplug for lk 2.5
+Again, if Marcello takes my patch, this will become easier as well since 
+it adds a host->lock lock that allows you to get your driver off the 
+horrible io_request_lock once and for all.  (Note: I may have to change 
+the name to host->host_lock to make it match 2.5, but that just annoys the 
+hell out of me because I *detest* totally redundant names like that...)
 
-[...]
-Your program polls a special interface to the SAF-TE to figure out
-what LUNs (or targets) are attached, and if a new LUN or target shows
-up, you scan it? Does mdadm do the scan for you? 
+> Basically, the io_request_lock is used to protect structures within the SCSI 
+> and block layer.  Once you get into the LLD, you may extend it if you wish to 
+> protect the individual data structures of your driver (which is why it's held 
+> on entry to most of the LLD API) but if you don't want to, it is safe to drop 
+> it (as long as your queuecommand is re-entrant and you re-acquire it before 
+> exiting the API routines).
+> 
+> James
+> 
+> 
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-Does it always generate a bus reset when a device is added or removed?
-
-> [...]  This rescan_scsis could be triggered by a scsi reset (and
-> maybe by a user directive, which might be needed if the user-space daemon
-> detected a SAF-TE insertion, for example).  
-[...]
-
-Triggering off of a scsi reset would not be good, since the error handler
-can send a reset, and not all SPI busses (enclosures) will generate a bus
-reset on device addition or removal. Triggering a rescan via a daemon (like
-your SAF-TE) would be ok, especially a rescan of a single LUN.
-
-[...]
-When a new LUN is made available on a target, you could get a unit
-attention (SPC spec shows a ASC/ASCQ 3F/0E REPORTED LUNS DATA HAS CHANGED),
-but this would come back to every initiator on that target for every
-LUN (not sure if it is really for every LUN, that could be specific to the
-hardware). If it's every LUN, it might be execessive or difficult to
-figure out if a rescan of the target is needed (imagine 100 LUNs on one
-target, some of them seldom used, and getting a hotplug event flood).
-Letting an admin manually rescan might be safer in such cases.
-
-[...]
+-- 
+  Doug Ledford <dledford@redhat.com>     919-754-3700 x44233
+         Red Hat, Inc. 
+         1801 Varsity Dr.
+         Raleigh, NC 27606
+  
