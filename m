@@ -1,81 +1,60 @@
-From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
-Subject: Re: [PATCH, RFC] tmscsim: kernel bugzilla bug #2139
-Date: Tue, 6 Jul 2004 10:11:05 +0200 (CEST)
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: RE: [ANNOUNCE]: megaraid driver version 2.20.0.1
+Date: 06 Jul 2004 09:46:48 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.60.0407061002200.2004@poirot.grange>
-References: <Pine.LNX.4.60.0406302241200.8236@poirot.grange>
+Message-ID: <1089125210.1767.128.camel@mulgrave>
+References: <0E3FA95632D6D047BA649F95DAB60E57033BC7D9@exa-atlanta>
 Mime-Version: 1.0
-Content-Type: MULTIPART/MIXED; BOUNDARY="-1463811839-1235175847-1089101465=:2004"
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:26826 "HELO mail.gmx.net")
-	by vger.kernel.org with SMTP id S263664AbUGFIMY (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Jul 2004 04:12:24 -0400
-In-Reply-To: <Pine.LNX.4.60.0406302241200.8236@poirot.grange>
+Received: from stat16.steeleye.com ([209.192.50.48]:21683 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S263923AbUGFOrD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 6 Jul 2004 10:47:03 -0400
+In-Reply-To: <0E3FA95632D6D047BA649F95DAB60E57033BC7D9@exa-atlanta>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@steeleye.com>
-Cc: linux-scsi@vger.kernel.org, Kurt Garloff <garloff@suse.de>
+To: "Mukker, Atul" <Atulm@lsil.com>
+Cc: 'Christoph Hellwig' <hch@infradead.org>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
+On Fri, 2004-06-25 at 19:55, Mukker, Atul wrote:
+> A bug was discovered in the driver unload path, causing kernel panic. The
+> new driver will be available in the FTP site soon. The patch with the fix is
+> inlined.
 
----1463811839-1235175847-1089101465=:2004
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+OK, I think I'm looking at the latest one now.
 
-Hi
+The biggest structural issue still seems to be the pending queue.  It
+looks to me like the driver could be nicely simplified if you got rid of
+it and simply relied on returning SCSI_MLQUEUE_HOST_BUSY from
+queeucommand().  You'd still get the queue restart almost from the ISR
+like you want.
 
-On Wed, 30 Jun 2004, Guennadi Liakhovetski wrote:
+My other main gripe is things like this:
 
-> Short: The attached patch fixes the bug-report #2139 from kernel bugzilla.
++	// wait for maximum 1 second for status to post
++	for (i = 0; i < 40000; i++) {
++		if (mbox->numstatus != 0xFF) break;
++		udelay(25); yield();
++	}
 
-I wasn't quite convenient with the previous version of the patch, but I 
-just wanted to get it working at first and get some comments as to whether 
-the approach (put a workaround vs. blacklisting) is at all valid. Since no 
-objections arrived, I guess, nobody minds this small trick. So, I am 
-enclosing a reworked patch, which does essentially the same, but has some 
-more careful checking, and overall looks saner, than the previous one.
 
-James, please undo the previous version (in case you have already applied 
-it) and apply this one instead. Sorry for the double work.
+which litter the driver.  Use of yield() in drivers is deprecated.   I
+suspect what you want is a minimum delay to wait if the relevant bit is
+not set 
 
-Comments are still welcome:-)
+Something like
 
-Thanks
-Guennadi
----
-Guennadi Liakhovetski
+if (mbox->numstatus != 0xFF)
+	goto out;
+udelay(25);
+for (i = 0; mbox->numstatus != 0xFF && i < 1000; i++)
+	msleep(1);
+out:
 
----1463811839-1235175847-1089101465=:2004
-Content-Type: TEXT/PLAIN; charset=US-ASCII; name="tmscsim-bug2139.2.patch"
-Content-Transfer-Encoding: BASE64
-Content-ID: <Pine.LNX.4.60.0407061011050.2004@poirot.grange>
-Content-Description: 
-Content-Disposition: attachment; filename="tmscsim-bug2139.2.patch"
+which will give initially 25us to see if the box becomes ready and then
+begin yeilding the CPU.
 
-ZGlmZiAtdSBhL2RyaXZlcnMvc2NzaS9zY3NpaW9tLmMgYi9kcml2ZXJzL3Nj
-c2kvc2NzaWlvbS5jDQotLS0gYS9kcml2ZXJzL3Njc2kvc2NzaWlvbS5jCVR1
-ZSBKdWwgIDYgMDk6NTY6NTEgMjAwNA0KKysrIGIvZHJpdmVycy9zY3NpL3Nj
-c2lpb20uYwlUdWUgSnVsICA2IDA5OjQ3OjQyIDIwMDQNCkBAIC04OTAsMTQg
-Kzg5MCwyMiBAQA0KIA0KICAgICBpZiAocFNSQiA9PSBwQUNCLT5wVG1wU1JC
-KQ0KICAgICB7DQotCWlmIChwRENCKSBwcmludGsgKEtFUk5fRVJSICJEQzM5
-MDogcFNSQiA9PSBwVG1wU1JCISAoVGFnUSBFcnJvcj8pICglMDJpLSVpKVxu
-IiwNCi0JCQkgIHBEQ0ItPlRhcmdldElELCBwRENCLT5UYXJnZXRMVU4pOw0K
-LQllbHNlIHByaW50ayAoS0VSTl9FUlIgIkRDMzkwOiBwU1JCID09IHBUbXBT
-UkIhIChUYWdRIEVycm9yPykgKERDQiAwISlcbiIpOw0KKwlpZiAocERDQikN
-CisJCXByaW50ayhLRVJOX0VSUiAiREMzOTA6IHBTUkIgPT0gcFRtcFNSQiEg
-KFRhZ1EgRXJyb3I/KSAoJTAyaS0laSlcbiIsIHBEQ0ItPlRhcmdldElELCBw
-RENCLT5UYXJnZXRMVU4pOw0KKwllbHNlDQorCQlwcmludGsoS0VSTl9FUlIg
-IkRDMzkwOiBwU1JCID09IHBUbXBTUkIhIChUYWdRIEVycm9yPykgKERDQiAw
-ISlcbiIpOw0KIA0KLQlwU1JCLT5wU1JCRENCID0gcERDQjsNCi0JZGMzOTBf
-RW5hYmxlTXNnT3V0X0Fib3J0IChwQUNCLCBwU1JCKTsNCi0JaWYgKHBEQ0Ip
-IHBEQ0ItPkRDQkZsYWcgfD0gQUJPUlRfREVWOw0KLQlyZXR1cm47DQorCS8q
-IFRyeSB0byByZWNvdmVyIC0gc29tZSBicm9rZW4gZGlza3MgcmVhY3QgYmFk
-bHkgdG8gdGFnZ2VkIElOUVVJUlkgKi8NCisJaWYgKHBEQ0IgJiYgcEFDQi0+
-c2Nhbl9kZXZpY2VzICYmIHBEQ0ItPkdvaW5nU1JCQ250ID09IDEpIHsNCisJ
-CXBTUkIgPSBwRENCLT5wR29pbmdTUkI7DQorCQlwRENCLT5wQWN0aXZlU1JC
-ID0gcFNSQjsNCisJfSBlbHNlIHsNCisJCXBTUkItPnBTUkJEQ0IgPSBwRENC
-Ow0KKwkJZGMzOTBfRW5hYmxlTXNnT3V0X0Fib3J0KHBBQ0IsIHBTUkIpOw0K
-KwkJaWYgKHBEQ0IpDQorCQkJcERDQi0+RENCRmxhZyB8PSBBQk9SVF9ERVY7
-DQorCQlyZXR1cm47DQorCX0NCiAgICAgfQ0KIA0KICAgICBpZiggcFNSQi0+
-U0dJbmRleCA8IHBTUkItPlNHY291bnQgKQ0K
+James
 
----1463811839-1235175847-1089101465=:2004--
+
