@@ -1,62 +1,50 @@
-From: Rusty Trivial Russell <rusty@rustcorp.com.au>
-Subject: [TRIVIAL] warning cleanup for drivers_scsi_qla1280.c
-Date: Mon, 16 Dec 2002 17:43:02 +1100
+From: Doug Ledford <dledford@redhat.com>
+Subject: Re: aix7xxx_old woes in 2.5
+Date: Mon, 16 Dec 2002 02:40:08 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20021216064636.D06F32C2A1@lists.samba.org>
+Message-ID: <20021216074008.GC13989@redhat.com>
+References: <3DFC06C9.19AFADE2@digeo.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <3DFC06C9.19AFADE2@digeo.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Marcelo Tosatti <marcelo@conectiva.com.br>
+To: Andrew Morton <akpm@digeo.com>
 Cc: linux-scsi@vger.kernel.org
 
-[ Indeed, the only call to qla1280_do_dpc is already inside 
-  #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,1,95), so this changes nothing ]
+On Sat, Dec 14, 2002 at 08:36:25PM -0800, Andrew Morton wrote:
+> 
+> ho hum.
+> 
+> It just doesn't start at all:
+> 
+> scsi HBA driver <NULL> didn't set max_sectors, please fix the template<6>(scsi0) <Adaptec AIC-7892 Ultra 160/m SCSI host adapter> found at PCI 3/4/0
+> (scsi0) Wide Channel, SCSI ID=7, 32/255 SCBs
+> (scsi0) Downloading sequencer code... 396 instructions downloaded
+> (scsi1) <Adaptec AIC-7880 Ultra SCSI host adapter> found at PCI 0/10/0
+> (scsi1) Wide Channel, SCSI ID=7, 16/255 SCBs
+> (scsi1) Downloading sequencer code... 436 instructions downloaded
+> scsi0 : Adaptec AHA274x/284x/294x (EISA/VLB/PCI-Fast SCSI) 5.2.6/5.2.0
+>        <Adaptec AIC-7892 Ultra 160/m SCSI host adapter>
+> scsi: Device offlined - not ready or command retry failed after error recovery: host 0 channel 0 id 0 lun 0
+> scsi: Device offlined - not ready or command retry failed after error recovery: host 0 channel 0 id 1 lun 0
+> scsi: Device offlined - not ready or command retry failed after error recovery: host 0 channel 0 id 2 lun 0
+> scsi: Device offlined - not ready or command retry failed after error recovery: host 0 channel 0 id 3 lun 0
+> scsi: Device offlined - not ready or command retry failed after error recovery: host 0 channel 0 id 4 lun 0
+> scsi: Device offlined - not ready or command retry failed after error recovery: host 0 channel 0 id 5 lun 0
+> scsi: Device offlined - not ready or command retry failed after error recovery: host 0 channel 0 id 6 lun 0
+> scsi: Device offlined - not ready or command retry failed after error recovery: host 0 channel 0 id 8 lun 0
+> 
+> (The above took three minutes or more)
 
-From:  Eric Sandeen <sandeen@sgi.com>
+Interrupt routing problems is what that looks like to me, not driver 
+problems.  Try booting with different interrupt settings or with a 
+different kernel (smp vs. up, that sort of thing).
 
-
---- trivial-2.4.21-pre1/drivers/scsi/qla1280.c.orig	2002-12-16 17:22:08.000000000 +1100
-+++ trivial-2.4.21-pre1/drivers/scsi/qla1280.c	2002-12-16 17:22:08.000000000 +1100
-@@ -312,7 +312,9 @@
- STATIC int qla1280_return_status( sts_entry_t *sts, Scsi_Cmnd       *cp);
- STATIC void qla1280_removeq(scsi_lu_t *q, srb_t *sp);
- STATIC void qla1280_mem_free(scsi_qla_host_t *ha);
-+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,1,95)
- static void qla1280_do_dpc(void *p);
-+#endif
- #ifdef  QLA1280_UNUSED 
- static void qla1280_set_flags(char * s);
- #endif
-@@ -1611,17 +1613,12 @@
-  * "host->can_queue". This can cause a panic if we were in our interrupt
-  * code .
-  **************************************************************************/
-+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,1,95)
- static void qla1280_do_dpc(void *p)
- {
-     scsi_qla_host_t *ha = (scsi_qla_host_t *) p;
--#if LINUX_VERSION_CODE > KERNEL_VERSION(2,1,95)
--    unsigned long cpu_flags = 0;
--#endif
- 
-     COMTRACE('p')  
--#if LINUX_VERSION_CODE > KERNEL_VERSION(2,1,95)
--    spin_lock_irqsave(&io_request_lock, cpu_flags);
--#endif
-     if (ha->flags.isp_abort_needed)
-         qla1280_abort_isp(ha);
- 
-@@ -1631,10 +1628,8 @@
-     if (ha->done_q_first)
-         qla1280_done(ha, (srb_t **)&ha->done_q_first, (srb_t **)&ha->done_q_last);
-     ha->flags.dpc_sched = FALSE;
--#if LINUX_VERSION_CODE > KERNEL_VERSION(2,1,95)
--    spin_unlock_irqrestore(&io_request_lock, cpu_flags);
--#endif
- }
-+#endif /* LINUX_VERSION_CODE < KERNEL_VERSION(2,1,95) */
- 
- /**************************************************************************
-  *   qla1280_device_queue_depth
 -- 
-  Don't blame me: the Monkey is driving
-  File: Eric Sandeen <sandeen@sgi.com>: warning cleanup for drivers_scsi_qla1280.c
+  Doug Ledford <dledford@redhat.com>     919-754-3700 x44233
+         Red Hat, Inc. 
+         1801 Varsity Dr.
+         Raleigh, NC 27606
+  
