@@ -1,39 +1,35 @@
-From: Andrew Morton <akpm@osdl.org>
-Subject: Re: 2.1.6 st.o sleeping invalid context
-Date: Fri, 23 Jan 2004 14:32:08 -0800
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <20040123143208.54b4f962.akpm@osdl.org>
-References: <000701c3e1a6$ac762330$c8de11cc@black>
+From: Xose Vazquez Perez <xose@wanadoo.es>
+Subject: Re: FW: [PATCH] 2.4.25-pre4 SCSI fusion driver
+Date: Sat, 24 Jan 2004 01:32:08 +0100
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <4011BD08.9030808@wanadoo.es>
+References: <0E3FA95632D6D047BA649F95DAB60E5703A7603B@exa-atlanta.se.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
-In-Reply-To: <000701c3e1a6$ac762330$c8de11cc@black>
-To: Mike Black <mblack@csi-inc.com>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp13.eresmas.com ([62.81.235.113]:31174 "EHLO
+	smtp13.eresmas.com") by vger.kernel.org with ESMTP id S266817AbUAXAgZ
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 23 Jan 2004 19:36:25 -0500
+In-Reply-To: <0E3FA95632D6D047BA649F95DAB60E5703A7603B@exa-atlanta.se.lsil.com>
 List-Id: linux-scsi@vger.kernel.org
+To: "Moore, Eric Dean" <Emoore@lsil.com>
+Cc: Marcelo Tosatti <marcelo.tosatti@cyclades.com>, "Stephens, Larry" <larry.stephens@lsil.com>, "Gibbons, Terry" <Terry.Gibbons@lsil.com>, linux-scsi@vger.kernel.org, "David S. Miller" <davem@redhat.com>
 
-"Mike Black" <mblack@csi-inc.com> wrote:
->
-> Testing 2.6.1 and got the following message during boot -- apparently when loading the st.o module -- although the modules still
-> loads successfully.
-> 
-> Jan 23 06:41:49 yeti kernel: Debug: sleeping function called from invalid context at mm/slab.c:1856
-> Jan 23 06:41:49 yeti kernel: in_atomic():1, irqs_disabled():0
-> Jan 23 06:41:49 yeti kernel: Call Trace:
-> Jan 23 06:41:49 yeti kernel:  [<c011da0c>] __might_sleep+0xab/0xc9
-> Jan 23 06:41:49 yeti kernel:  [<c0142a4a>] kmem_cache_alloc+0x74/0x76
-> Jan 23 06:41:49 yeti kernel:  [<c0162e81>] cdev_alloc+0x24/0x5e
-> Jan 23 06:41:49 yeti kernel:  [<f8871743>] st_probe+0x3f4/0x7c1 [st]
-> Jan 23 06:41:49 yeti kernel:  [<c018f7b0>] init_dir+0x0/0x22
-> Jan 23 06:41:49 yeti kernel:  [<c01f7d29>] bus_match+0x3d/0x65
-> Jan 23 06:41:49 yeti kernel:  [<c01f7e42>] driver_attach+0x59/0x83
-> Jan 23 06:41:49 yeti kernel:  [<c01f810b>] bus_add_driver+0x9e/0xb1
-> Jan 23 06:41:49 yeti kernel:  [<f881905e>] init_st+0x5e/0x9c [st]
-> Jan 23 06:41:49 yeti kernel:  [<c013898f>] sys_init_module+0x13e/0x29a
-> Jan 23 06:41:49 yeti kernel:  [<c01091e3>] syscall_call+0x7/0xb
-> 
+Moore, Eric Dean wrote:
 
-st_probe() is calling cdev_alloc() under write_lock(&st_dev_arr_lock);
+> I was involved with the CONFIG_COMPAT fix's. They were for
+> I customer having a 32bit application running on x86_64.  The
+> mpt driver isn't enabling the CONFIG_COMPAT define.  I tested
+> this change on SuSE Sles and Redhats Rhes enterprise editions using their
+> respective lastest service packs and updates, and it seemed to get enabled.
+> Maybe this occured in the x86_64 branch?
 
-Optimistically Cc'ing linux-scsi...
+CONFIG_COMPAT is _only_ in RHEL kernels.
+kernel.org is *very different* from Enterprise distributions kernels.
+It looks like it's for '32 bit syscall support on 64 bit kernels'
+
+--
+Software is like sex, it's better when it's bug free.
+
