@@ -1,85 +1,61 @@
-From: Mike Anderson <andmike@us.ibm.com>
-Subject: Re: [patch 2.5] ips queue depths
-Date: Thu, 17 Oct 2002 10:01:15 -0700
+From: Bleh <luben@splentec.com>
+Subject: [Fwd: block TCQ [was: Re: Degraded I/O performance, since 2.5.41]]
+Date: Thu, 17 Oct 2002 16:52:07 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20021017170115.GA4558@beaverton.ibm.com>
-References: <A3B9245C291EEF4785A24A1DBE8D852B0376BC@rtpexc01.adaptec.com> <20021015194705.GD4391@redhat.com> <20021015130445.A829@eng2.beaverton.ibm.com> <20021015205218.GG4391@redhat.com> <20021015163057.A7687@eng2.beaverton.ibm.com> <20021016023231.GA4690@redhat.com> <20021016120436.A1598@eng2.beaverton.ibm.com> <3DAE06B9.FBB60D49@splentec.com>
+Message-ID: <3DAF22F7.36A79210@splentec.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <3DAE06B9.FBB60D49@splentec.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Luben Tuikov <luben@splentec.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>
+To: Doug Ledford <dledford@redhat.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
-Luben Tuikov [luben@splentec.com] wrote:
-> Valid point, but what kind of memory allocator are you thinking of?
+Doug,
+
+That is, what I meant, is that you are right:
+the block layer should NOT set the tags, this is
+the job of the SCSI Initiator port (SCSI LLDD)
+since the tags are closely tied with the interconnect.
+
+That is, setting the tags in the block layer in Linux
+should be rethought.
+
+Doug Ledford wrote:
 > 
-> I'm thinking more of the lines of, what was once suggested by Doug,
-> a pool of the objects and if we need one, just unhook it from its
-> struct list_head (great solution), and use it... (search linux-scsi for
-> the exact message)
-> 
-> That is, the queue becomes just a NUMBER, an int if you like, and
-> the resource management is centralized, thus wasting LESS resources,
-> as resource users increases (OS 101).
-> 
-> Now let's take this step further, and _delegate_. Let's give resource
-> management to the lookaside cache (kmem_cache_create() and friends) and let
-> that (the) resource manager worry about whether it uses struct list_head,
-> or what not and how many pages it has preallocated and what not, and if
-> we have a problem with how fast or what not, we can get in touch with its
-> maintainers. (Though I've used that solution in my drivers and I get
-> _excellent_ performance.)
-> 
-> So you see, the tagged device queue itself would be a number rather than
-> wasted resources.
+> As a side note, the generic block layer tagged queueing mechanism may not
+> be suitable for a lot of SCSI drivers (I know it's not suitable for mine
+> at all).  How many of the drivers in the scsi tree today keep a shared tag
+> table between all devices on a host and how many of them have separate tag
+> tables for each device?  Show of hands anyone?  Justin, what about the
+> modern aic7xxx driver?  Gerard?
 > 
 
-I assume all devices will be guaranteed a min of the poll otherwise under
-memory pressure we could be unable to do IO on swap devices.
+Ok. SAM-3 specifies that the initiator assigns task tags (4.9.1).
+Who is the initiator?
 
-> This discussion should be dropped already.
-> 
-> Just imagine what would happen if a SCSI LLDD suddently finds out that
-> its tagged device queue depth has been changed, what is it supposed to do?
-> 
-> Furthermore, you say ``so the default depth can be modified as needed'',
-> which contradicts the meaning of ``default''.
-> 
-> In fact the default setting wouldn't play much, and would be quickly forgotten
-> as soon as the driver is run and disk/devices are connected to it. So in this
-> respect it has little significance.
-> 
-> Even if you have little memory (thin client) it makes sense to have a TCQ depth
-> of 200 if you're connected to a monster storage system, since if you send
-> 200 tagged commands to /dev/sda they may NOT necessarily go to one ``device''.
-> Imagine that!
+But, the Abort Task and Abort Task Set (and friends) task management
+functions are requested by the application client.
+Futhermore, 6.2 Abort Task uses an I_T_L_Q nexus, that is, a tagged task.
+So, to cancel an untagged task, one would use the 6.3 Abort Task Set,
+which would be consistent since there should be only one untagged task
+per initiator.
 
-Just because a device can accept a command and not return busy does not
-mean it is always a good thing to give it 200 commands. Most larger
-arrays will have dynamic queue depths and accept a lot of IO without
-really working on it. If the delta of time is increasing on your IO than
-at some point you are inefficient. We have already seen on some adapters
-that reducing the queue depths achieved the same amount of IO rate with
-reduced CPU overhead. Which is a good thing as users usally want to do
-something else besides IO.
+What are the implications and can we model around this?
 
-If you are using shared resources (i.e. sg_table pool mem, the above
-suggested scsi command poll, timers, etc) to avoid resource starvation
-you might need to set limits outside of what a single LLDD believes is
-best. More efficient implementations would also reduce some of the
-overhead.
+Checking up on the definitions, 3.1.4 application client and 3.1.93
+the initiator is your driver and the application client is the
+SCSI core/block layer/sg/whatever.
 
-A administrator may want to adjust the overall policy for a specific
-work load. Maybe proper values can be set and feedback information can
-allow self adjustment, but there are probably workloads that the
-values are incorrect. What that policy is would depend on the resources.
-Something similar to vm adjustments.
+AFAIR, IDE happened to support some type of tagging and all of a sudden
+TCQ was moved up to the block layer, since SCSI has had it all along.
 
--andmike
---
-Michael Anderson
-andmike@us.ibm.com
+While this is alright, SAM-3 suggests that TCQ _generation_ is performed
+by the SCSI initiator port (i.e. the SCSI LLDD) and for valid reasons...
+(again those have to do with the underlying transport/interconnect...)
 
+Thus, the only thing which the block layer would need to know is
+_if_ TCQ is supported, but genereration of tags should be left to the
+SCSI LLDD.
+
+-- 
+Luben
