@@ -1,116 +1,135 @@
-From: Grant Grundler <grundler@parisc-linux.org>
-Subject: Re: SCSI QLA not working on latest *-mm SN2
-Date: Sat, 18 Sep 2004 00:10:01 -0600
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: [PATCH] add SCSI reset ioctls to scsi_ioctl.c (and sd and sr)
+Date: 18 Sep 2004 12:57:44 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040918061001.GC21456@colo.lackof.org>
-References: <20040917183029.GW642@parcelfarce.linux.theplanet.co.uk>
+Message-ID: <1095526671.2483.5.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from colo.lackof.org ([198.49.126.79]:50060 "EHLO colo.lackof.org")
-	by vger.kernel.org with ESMTP id S269139AbUIRGKE (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 18 Sep 2004 02:10:04 -0400
-Content-Disposition: inline
-In-Reply-To: <200409171021.20263.jbarnes@engr.sgi.com>
+Received: from stat16.steeleye.com ([209.192.50.48]:27872 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S269581AbUIRQ5v (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 18 Sep 2004 12:57:51 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: Jesse Barnes <jbarnes@engr.sgi.com>
-Cc: Andrew Vasquez <andrew.vasquez@qlogic.com>, pj@sgi.com, linux-scsi@vger.kernel.org, mdr@cthulhu.engr.sgi.com, jeremy@cthulhu.engr.sgi.com, djh@cthulhu.engr.sgi.com, Andrew Morton <akpm@osdl.org>
+To: SCSI Mailing List <linux-scsi@vger.kernel.org>
+Cc: Jens Axboe <axboe@suse.de>, Kai Makisara <Kai.Makisara@kolumbus.fi>
 
+The purpose of this patch is to allow a SCSI reset to be issued directly
+to the devices without having to go via sg.  Because the reset may be
+issued even while the device is in recovery, this had to be done via a
+new api (sd won't invoke scsi_ioctl() while the device is in recovery).
 
-Jesse Barnes wrote:
-...
-> Btw Andrew (Vasquez), there's a small doc I put together that should describe 
-> when you have to worry about PCI posting.  It's in the tree:  
-> Documentation/io_ordering.txt.  If it's incomplete or confusing, just let me 
-> know and I'll update it.
+Kai, do you want me to plum this into st as well?
 
-Jesse,
-Both. incomplete and confusing.
-"concrete example of a hypothetical driver" wasn't my first warning
-this document needed work. :^)
+James
 
-I've hacked up the 2.6.9 version and even what I did still needs more work.
-Have time to correct my mistakes and answer the questions I ask?
-
-I'd be happy to review it again after you've done another round on it.
-
-[]'s should all go away - used those to mark editorial notes.
-
-hth,
-grant
-
-
---------------------- cut here ------------------
-
-Weakly Ordered Memory Mapped IO
--------------------------------
-
-SGI Altix chipset implements weakly ordered Memory-Mapped I/O writes.
-On this platform, driver writers are responsible for ensuring I/O writes
-to memory-mapped addresses arrive in the order intended.
-
-Like for PCI write posting problems, this is done by reading
-a 'safe' device or bridge register, causing the I/O chipset to
-flush pending writes to the device before any reads are issued.
-A driver would issue the "safe" read immediately prior to the exit
-of a critical section of code protected by spinlocks.  This would
-ensure subsequent writes to I/O space arrived only after all prior
-writes (much like a memory barrier op, mb(), only with respect to I/O).
-
-Note: MMIO reads are expensive! Don't add MMIO reads after *every* MMIO
-      write unless the device programming model absolutely requires it.
-
-
-An example from a hypothetical device driver might help:
-
-        ...
-CPU A:  spin_lock_irqsave(&dev_lock, flags)
-CPU A:  val = readl(my_status);
-CPU A:  ...
-CPU A:  writel(newval, ring_ptr);
-CPU A:  spin_unlock_irqrestore(&dev_lock, flags)
-        ...
-CPU B:  spin_lock_irqsave(&dev_lock, flags)
-CPU B:  val = readl(my_status);
-CPU B:  ...
-CPU B:  writel(newval2, ring_ptr);
-CPU B:  spin_unlock_irqrestore(&dev_lock, flags)
-        ...
-
-In the case above, the device may receive newval2 before it receives newval,
-which could cause problems.
-
-[ Is this example broken or am I just staying up too late?
-  The example is doing a readl() in the second critical section.
-  Shouldn't that enforce the write ordering?
-]
-
-Fixing it is easy enough though:
-
-        ...
-CPU A:  spin_lock_irqsave(&dev_lock, flags)
-CPU A:  val = readl(my_status);
-CPU A:  ...
-CPU A:  writel(newval, ring_ptr);
-CPU A:  (void)readl(safe_register); /* maybe a config register? */
-CPU A:  spin_unlock_irqrestore(&dev_lock, flags)
-        ...
-CPU B:  spin_lock_irqsave(&dev_lock, flags)
-CPU B:  val = readl(my_status);
-CPU B:  ...
-CPU B:  writel(newval2, ring_ptr);
-CPU B:  (void)readl(safe_register); /* maybe a config register? */
-CPU B:  spin_unlock_irqrestore(&dev_lock, flags)
-
-The reads from safe_register will cause the I/O chipset to flush any
-pending writes before actually posting the read to the chipset, preventing
-possible data corruption.
-
-[ How about interactions with:
-  o read_relaxed()?
-  o DMA?
-  o IO Port space reads?
-  o IO Port space writes?
-]
+===== drivers/scsi/scsi_ioctl.c 1.30 vs edited =====
+--- 1.30/drivers/scsi/scsi_ioctl.c	2004-08-25 11:21:41 -05:00
++++ edited/drivers/scsi/scsi_ioctl.c	2004-09-18 11:35:17 -05:00
+@@ -20,6 +20,7 @@
+ #include <scsi/scsi_host.h>
+ #include <scsi/scsi_ioctl.h>
+ #include <scsi/scsi_request.h>
++#include <scsi/sg.h>
+ 
+ #include "scsi_logging.h"
+ 
+@@ -456,3 +457,51 @@
+ 	}
+ 	return -EINVAL;
+ }
++
++/*
++ * the scsi_nonblock_ioctl() function is designed for ioctls which may
++ * be executed even if the device is in recovery.
++ */
++int scsi_nonblockable_ioctl(struct scsi_device *sdev, int cmd,
++			    void __user *arg, struct file *filp)
++{
++	int val, result;
++
++	/* The first set of iocts may be executed even if we're doing
++	 * error processing, as long as the device was opened
++	 * non-blocking */
++	if (filp && filp->f_flags & O_NONBLOCK) {
++		if (test_bit(SHOST_RECOVERY,
++			     &sdev->host->shost_state))
++			return -ENODEV;
++	} else if (!scsi_block_when_processing_errors(sdev))
++		return -ENODEV;
++
++	switch (cmd) {
++	case SG_SCSI_RESET:
++		result = get_user(val, (int __user *)arg);
++		if (result)
++			return result;
++		if (val == SG_SCSI_RESET_NOTHING)
++			return 0;
++		switch (val) {
++		case SG_SCSI_RESET_DEVICE:
++			val = SCSI_TRY_RESET_DEVICE;
++			break;
++		case SG_SCSI_RESET_BUS:
++			val = SCSI_TRY_RESET_BUS;
++			break;
++		case SG_SCSI_RESET_HOST:
++			val = SCSI_TRY_RESET_HOST;
++			break;
++		default:
++			return -EINVAL;
++		}
++		if (!capable(CAP_SYS_ADMIN) || !capable(CAP_SYS_RAWIO))
++			return -EACCES;
++		return (scsi_reset_provider(sdev, val) ==
++			SUCCESS) ? 0 : -EIO;
++	}
++	return -ENODEV;
++}
++EXPORT_SYMBOL(scsi_nonblockable_ioctl);
+===== drivers/scsi/sd.c 1.159 vs edited =====
+--- 1.159/drivers/scsi/sd.c	2004-09-01 12:35:48 -05:00
++++ edited/drivers/scsi/sd.c	2004-09-18 11:37:41 -05:00
+@@ -575,7 +575,7 @@
+ 	 * access to the device is prohibited.
+ 	 */
+ 	if (!scsi_block_when_processing_errors(sdp))
+-		return -ENODEV;
++		return scsi_nonblockable_ioctl(sdp, cmd, p, filp);
+ 
+ 	if (cmd == HDIO_GETGEO) {
+ 		if (!arg)
+===== drivers/scsi/sr_ioctl.c 1.36 vs edited =====
+--- 1.36/drivers/scsi/sr_ioctl.c	2004-08-18 21:45:43 -05:00
++++ edited/drivers/scsi/sr_ioctl.c	2004-09-18 11:34:40 -05:00
+@@ -549,5 +549,17 @@
+ 		 unsigned int cmd, unsigned long arg)
+ {
+ 	Scsi_CD *cd = cdi->handle;
++	int ret;
++	
++	ret = scsi_nonblockable_ioctl(cd->device, cmd,
++				      (void __user *)arg, NULL);
++	/*
++	 * ENODEV means that we didn't recognise the ioctl, or that we
++	 * cannot execute it in the current device state.  In either
++	 * case fall through to scsi_ioctl, which will return ENDOEV again
++	 * if it doesn't recognise the ioctl
++	 */
++	if (ret != -ENODEV)
++		return ret;
+ 	return scsi_ioctl(cd->device, cmd, (void __user *)arg);
+ }
+===== include/scsi/scsi_ioctl.h 1.4 vs edited =====
+--- 1.4/include/scsi/scsi_ioctl.h	2004-06-18 09:38:19 -05:00
++++ edited/include/scsi/scsi_ioctl.h	2004-09-18 11:31:04 -05:00
+@@ -43,6 +43,8 @@
+ extern int scsi_ioctl(struct scsi_device *, int, void __user *);
+ extern int scsi_ioctl_send_command(struct scsi_device *,
+ 				   struct scsi_ioctl_command __user *);
++extern int scsi_nonblockable_ioctl(struct scsi_device *sdev, int cmd,
++				   void __user *arg, struct file *filp);
+ 
+ #endif /* __KERNEL__ */
+ #endif /* _SCSI_IOCTL_H */
 
