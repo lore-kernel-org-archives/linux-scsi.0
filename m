@@ -1,52 +1,33 @@
-From: Mike Anderson <andmike@us.ibm.com>
-Subject: Re: State Model for scsi device badness PATCH
-Date: Thu, 20 Nov 2003 18:37:40 -0800
+From: Willem Riede <wrlk@riede.org>
+Subject: Re: SG_IO ioctl (was: mode sense blacklist how)
+Date: Thu, 20 Nov 2003 22:18:05 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20031121023740.GA1150@beaverton.ibm.com>
-References: <20031120190105.7456.qmail@web13007.mail.yahoo.com> <1069354978.1770.221.camel@mulgrave>
+Message-ID: <20031121031805.GH5672@linnie.riede.org>
+References: <1068775834.2851.321.camel@patrh9> <20031113181945.I30194@one-eyed-alien.net> <1068777510.2851.359.camel@patrh9> <1068779468.3fb447ccc6e60@webmail.netregistry.net> <1068838908.2852.34.camel@patrh9> <1069246502.3fbb6826955dd@webmail.netregistry.net> <1069261377.2867.37.camel@patrh9> <3FBBFDFB.9010406@torque.net> <1069345927.6663.27.camel@patrh9> <3FBD679C.5010405@torque.net>
+Reply-To: wrlk@riede.org
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e31.co.us.ibm.com ([32.97.110.129]:50375 "EHLO
-	e31.co.us.ibm.com") by vger.kernel.org with ESMTP id S264235AbTKUCdV
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 20 Nov 2003 21:33:21 -0500
+Received: from rwcrmhc11.comcast.net ([204.127.198.35]:52628 "EHLO
+	rwcrmhc11.comcast.net") by vger.kernel.org with ESMTP
+	id S264241AbTKUDSH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 20 Nov 2003 22:18:07 -0500
 Content-Disposition: inline
-In-Reply-To: <1069354978.1770.221.camel@mulgrave>
+In-Reply-To: <3FBD679C.5010405@torque.net> (from dougg@torque.net on Thu, Nov 20, 2003 at 20:17:16 -0500)
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@steeleye.com>
-Cc: Amit Patel <patelamitv@yahoo.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
 
-James Bottomley [James.Bottomley@steeleye.com] wrote:
-> On Thu, 2003-11-20 at 13:01, Amit Patel wrote:
-> > I just walked through some of the code and I could
-> > work around the badness problem by not doing
-> > get_device if the scsi device is not in running state
-> > yet. I have attached the patch for scsi_lib.c where I
-> > do not call get_device if the state is not
-> > SDEV_RUNNING and similarly do not do put_device if you
-> > have not done get_device because of the device state.
+On 2003.11.20 20:17, Douglas Gilbert wrote:
 > 
-> Ah, I'm sorry, warning light goes off.
-> 
-> The patch is designed to operate on top of Mike Anderson's rework of our
-> device initialisation code.
-> 
-> http://marc.theaimsgroup.com/?l=linux-scsi&m=106810957502435&w=2
-> 
-> The get_device in the request function causes the badness without this
-> other patch.
-> 
-> Mike hasn't yet posted an update (hey, this is a hint, Mike) otherwise I
-> would already have folded it into the bugfixes tree.
-> 
+> ** The sd/sr/st <-> sg mapping problem would be much simpler
+> in lk 2.6 if sg (plus st + osst) had sysfs visibility. Perhaps
+> udev could work out this mapping but this would still rely
+> on polling through sg, st and osst file descriptors with the
+> attendant problems that brings (e.g. blocking, O_EXCL, O(n)).
 
-Got the hint :-).
+If I'm not mistaken, Kai posted an initial patch to add sysfs
+support to st. If that works, and this mapping is important,
+I'll be happy to do the same for osst.
 
-I will re-roll tonight.
-
--andmike
---
-Michael Anderson
-andmike@us.ibm.com
-
+Regards, Willem Riede.
