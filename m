@@ -1,49 +1,59 @@
-From: Rusty Trivial Russell <trivial@rustcorp.com.au>
-Subject: [TRIVIAL] 2.6] 2 spelling patches in helps
-Date: Sun, 05 Oct 2003 16:54:52 +1000
+From: Paul Mackerras <paulus@samba.org>
+Subject: oops when removing sbp2 module
+Date: Sun, 5 Oct 2003 23:12:18 +1000
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20031005072052.CC01F2CC53@lists.samba.org>
+Message-ID: <16256.6322.388402.857084@cargo.ozlabs.ibm.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from dp.samba.org ([66.70.73.150]:61635 "EHLO lists.samba.org")
-	by vger.kernel.org with ESMTP id S262993AbTJEHUx (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 5 Oct 2003 03:20:53 -0400
+Received: from ozlabs.org ([203.10.76.45]:16070 "EHLO ozlabs.org")
+	by vger.kernel.org with ESMTP id S263106AbTJENMw (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 5 Oct 2003 09:12:52 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: Linus Torvalds <torvalds@transmeta.com>
-Cc: linux-scsi@vger.kernel.org, axboe@suse.de, zippel@linux-m68k.org
+To: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux1394-devel@lists.sourceforge.net
 
-From:  Maciej Soltysiak <solt@dns.toxicfilms.tv>
+I'm getting an oops inside the sysfs stuff when I try to remove the
+sbp2 (firewire disk) module.  I am running Linus' current BK tree as
+of yesterday, i.e. 2.6.0-test6 (plus).  I'm not sure whether the
+problem is in sysfs, kobject, scsi or ieee1394 stuff, which is why I'm
+posting this to 3 lists.
 
-  Hi,
-  
-  please consider these patches to fix spelling.
-  
-  Regards,
-  Maciej Soltysiak
-  
+I have a 40GB disk in a firewire enclosure.  To use it, I insert the
+ohci1394 and sbp2 modules, and the disk appears as a SCSI disk.
+If I then remove the sbp2 module I get an oops from a null pointer
+dereference in sysfs_hash_and_remove.  At that point dir->d_inode is
+NULL.  It turns out that sysfs_remove_dir has already been called for
+the directory and that is why dir->d_inode is NULL.
 
---- trivial-2.6.0-test6-bk6/net/Kconfig.orig	2003-10-05 16:50:47.000000000 +1000
-+++ trivial-2.6.0-test6-bk6/net/Kconfig	2003-10-05 16:50:47.000000000 +1000
-@@ -586,7 +586,7 @@
- 	depends on EXPERIMENTAL
- 	---help---
- 	  This option enables NIC (Network Interface Card) hardware throttling
--	  during periods of extremal congestion. At the moment only a couple
-+	  during periods of extreme congestion. At the moment only a couple
- 	  of device drivers support it (really only one -- tulip, a modified
- 	  8390 driver can be found at
- 	  <ftp://ftp.inr.ac.ru/ip-routing/fastroute/fastroute-8390.tar.gz>).
---- trivial-2.6.0-test6-bk6/Documentation/scsi/ncr53c8xx.txt.orig	2003-10-05 16:50:47.000000000 +1000
-+++ trivial-2.6.0-test6-bk6/Documentation/scsi/ncr53c8xx.txt	2003-10-05 16:50:47.000000000 +1000
-@@ -1025,7 +1025,7 @@
- then it will for sure win the next SCSI BUS arbitration.
- 
- Since, there is no way to know what devices are trying to arbitrate for the 
--BUS, using this feature can be extremally unfair. So, you are not advised 
-+BUS, using this feature can be extremely unfair. So, you are not advised
- to enable it, or at most enable this feature for the case the chip lost 
- the previous arbitration (boot option 'iarb:1').
- 
--- 
-  What is this? http://www.kernel.org/pub/linux/kernel/people/rusty/trivial/
-  Don't blame me: the Monkey is driving
-  File: Maciej Soltysiak <solt@dns.toxicfilms.tv>: [TRIVIAL][PATCH 2.6] 2 spelling patches in helps
+In fact what is happening is that class_device_unregister gets called
+twice for the same classdev.  This is because scsi_remove_device gets
+called twice for the same device.  The first time, the call chain
+looks like this:
+
+scsi_remove_device
+sbp2_remove_device
+sbp2_remove
+device_release_driver
+driver_detach
+bus_remove_driver
+driver_unregister
+hpsb_unregister_protocol
+sbp2_module_exit
+
+and the second time it looks like this:
+
+scsi_remove_device
+scsi_forget_host
+scsi_remove_host
+sbp2_remove_host
+hpsb_unregister_highlevel
+sbp2_module_exit
+
+So, is this a reference counting problem on the classdev, a problem
+where the scsi layer doesn't remove the scsi device from its internal
+lists properly in scsi_remove_device, or a problem in the sbp2 code?
+Anyone got a fix?
+
+Thanks,
+Paul.
