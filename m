@@ -1,104 +1,40 @@
-From: Rolf Fokkens <fokkensr@fokkensr.vertis.nl>
-Subject: [PATCH] sg.c and USER_HZ, kernel 2.5.39
-Date: Sun, 29 Sep 2002 21:18:41 +0200
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <200209291918.g8TJIfL04596@fokkensr.vertis.nl>
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
-To: dgilbert@interlog.com, James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+From: Andrew Morton <akpm@digeo.com>
+Subject: Re: Possible explanation for SCSI benchmark problems in 2.5
+Date: Sun, 29 Sep 2002 13:53:56 -0700
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <3D976864.65C82D7B@digeo.com>
+References: <200209292048.g8TKmN424799@localhost.localdomain>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from digeo-nav01.digeo.com (digeo-nav01.digeo.com [192.168.1.233])
+	by packet.digeo.com (8.9.3+Sun/8.9.3) with SMTP id NAA13207
+	for <linux-scsi@vger.kernel.org>; Sun, 29 Sep 2002 13:53:59 -0700 (PDT)
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@steeleye.com>
+Cc: linux-scsi@vger.kernel.org, Jens Axboe <axboe@suse.de>
 
-Hi!
+James Bottomley wrote:
+> 
+> Hi All,
+> 
+> While looking at other code (OK, how to get the MCA drivers not to use bounce
+> buffers...)  I discovered that the way scsi_scan.c calls
+> scsi_initialize_merge_fn() guarantees (on an x86) that the
+> blk_queue_bounce_limit is always called with BLK_BOUNCE_HIGH.  This will
+> probably hurt benchmarks on machines with 1Gb or more of memory.
+> 
+> The problem is that scsi_initialize_merge_fn() checks sdev->type, but this is
+> always -1 in scsi_alloc_sdev, and thus it never uses the pci dma mask for disk
+> devices.
+> 
+> The attached patch moves the initialisation to after sdev->type has the
+> correct value.
+> 
 
-Since the introduction of USER_HZ the SG_[GS]ET_TIMEOUT ioctls may have
-a serious BUG when USER_HZ differs from HZ.
+argh, sorry.  I've had such a patch in my tree for ages, and
+I do all testing with it in place.
 
-In x86 HZ=1000 and USER_HZ=100, resulting in confusing timouts as the
-kernel measures time 10 times as fast as userspace.
-
-This patch is an attempt to fix this by transforming USER_HZ based timing to
-HZ based timing before storing it in timeout. To make sure that SG_GET_TIMEOUT
-and SG_SET_TIMEOUT behave consistently a field timeout_user is added which
-stores the exact value that's passed by SG_SET_TIMEOUT and it's returned on
-SG_GET_TIMEOUT.
-
-Rolf Fokkens
-fokkensr@fokkensr.vertis.nl
-
-(3d post of this patch)
-
-diff -ruN linux-2.5.39.orig/drivers/scsi/sg.c linux-2.5.39.sg/drivers/scsi/sg.c
---- linux-2.5.39.orig/drivers/scsi/sg.c	Sat Sep 21 13:03:19 2002
-+++ linux-2.5.39.sg/drivers/scsi/sg.c	Sun Sep 29 18:27:52 2002
-@@ -82,6 +82,19 @@
- 
- #define SG_MAX_DEVS_MASK ((1U << KDEV_MINOR_BITS) - 1)
- 
-+/*
-+ * Suppose you want to calculate the formula muldiv(x,m,d)=int(x * m / d)
-+ * Then when using 32 bit integers x * m may overflow during the calculation.
-+ * Replacing muldiv(x) by muldiv(x)=((x % d) * m) / d + int(x / d) * m
-+ * calculates the same, but prevents the overflow when both m and d
-+ * are "small" numbers (like HZ and USER_HZ).
-+ * Of course an overflow is inavoidable if the result of muldiv doesn't fit
-+ * in 32 bits.
-+ */
-+#define MULDIV(X,MUL,DIV) ((((X % DIV) * MUL) / DIV) + ((X / DIV) * MUL))
-+
-+#define SG_DEFAULT_TIMEOUT MULDIV(SG_DEFAULT_TIMEOUT_USER, HZ, USER_HZ)
-+
- int sg_big_buff = SG_DEF_RESERVED_SIZE;
- /* N.B. This variable is readable and writeable via
-    /proc/scsi/sg/def_reserved_size . Each time sg_open() is called a buffer
-@@ -150,7 +163,8 @@
- 	struct sg_device *parentdp;	/* owning device */
- 	wait_queue_head_t read_wait;	/* queue read until command done */
- 	rwlock_t rq_list_lock;	/* protect access to list in req_arr */
--	int timeout;		/* defaults to SG_DEFAULT_TIMEOUT */
-+	int timeout;		/* defaults to SG_DEFAULT_TIMEOUT      */
-+	int timeout_user;	/* defaults to SG_DEFAULT_TIMEOUT_USER */
- 	Sg_scatter_hold reserve;	/* buffer held for this file descriptor */
- 	unsigned save_scat_len;	/* original length of trunc. scat. element */
- 	Sg_request *headrp;	/* head of request slist, NULL->empty */
-@@ -790,10 +804,15 @@
- 			return result;
- 		if (val < 0)
- 			return -EIO;
--		sfp->timeout = val;
-+		if (val >= MULDIV (INT_MAX, USER_HZ, HZ))
-+		    val = MULDIV (INT_MAX, USER_HZ, HZ);
-+		sfp->timeout_user = val;
-+		sfp->timeout = MULDIV (val, HZ, USER_HZ);
-+
- 		return 0;
- 	case SG_GET_TIMEOUT:	/* N.B. User receives timeout as return value */
--		return sfp->timeout;	/* strange ..., for backward compatibility */
-+				/* strange ..., for backward compatibility */
-+		return sfp->timeout_user;
- 	case SG_SET_FORCE_LOW_DMA:
- 		result = get_user(val, (int *) arg);
- 		if (result)
-@@ -2432,6 +2451,7 @@
- 	sfp->rq_list_lock = RW_LOCK_UNLOCKED;
- 
- 	sfp->timeout = SG_DEFAULT_TIMEOUT;
-+	sfp->timeout_user = SG_DEFAULT_TIMEOUT_USER;
- 	sfp->force_packid = SG_DEF_FORCE_PACK_ID;
- 	sfp->low_dma = (SG_DEF_FORCE_LOW_DMA == 0) ?
- 	    sdp->device->host->unchecked_isa_dma : 1;
-diff -ruN linux-2.5.39.orig/include/scsi/sg.h linux-2.5.39.sg/include/scsi/sg.h
---- linux-2.5.39.orig/include/scsi/sg.h	Sun Sep  8 09:00:19 2002
-+++ linux-2.5.39.sg/include/scsi/sg.h	Sun Sep 29 18:27:53 2002
-@@ -304,7 +304,12 @@
- 
- 
- /* Defaults, commented if they differ from original sg driver */
--#define SG_DEFAULT_TIMEOUT (60*HZ) /* HZ == 'jiffies in 1 second' */
-+#ifdef __KERNEL__
-+#define SG_DEFAULT_TIMEOUT_USER	(60*USER_HZ) /* HZ == 'jiffies in 1 second' */
-+#else
-+#define SG_DEFAULT_TIMEOUT	(60*HZ)	     /* HZ == 'jiffies in 1 second' */
-+#endif
-+
- #define SG_DEF_COMMAND_Q 0     /* command queuing is always on when
- 				  the new interface is used */
- #define SG_DEF_UNDERRUN_FLAG 0
+But high-IO is bust for IDE as well at present, so at least
+we're being fair ;)
