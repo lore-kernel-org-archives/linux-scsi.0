@@ -1,81 +1,71 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: suspending I/Os to a device
-Date: Sat, 17 Jul 2004 13:24:37 +0100
+From: christophe varoqui <christophe.varoqui@free.fr>
+Subject: [ANNOUNCE] multipath-tools-0.2.6
+Date: Sat, 17 Jul 2004 17:45:58 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040717122437.GA31551@infradead.org>
-References: <3356669BBE90C448AD4645C843E2BF28025AB744@xbl.ma.emulex.com>
+Message-ID: <1090079158.4535.3.camel@zezette>
+References: <1084519750.40a47546dd0e6@imp1-q.free.fr>
+	 <1086256342.40bef4d61b3e9@imp3-q.free.fr>
+	 <1086619426.40c47f220de01@imp5-q.free.fr>
+	 <1087209011.40cd7e338ca44@imp5-q.free.fr>
+	 <1088441934.40e04e4ebe7e8@imp1-q.free.fr>
+	 <1089213139.40ec12d3a447b@imp2-q.free.fr>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [213.146.154.40] ([213.146.154.40]:19626 "EHLO
-	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S266566AbUGQMYl (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 17 Jul 2004 08:24:41 -0400
-Content-Disposition: inline
-In-Reply-To: <3356669BBE90C448AD4645C843E2BF28025AB744@xbl.ma.emulex.com>
+Received: from smtp1.wanadoo.fr ([193.252.22.30]:63680 "EHLO
+	mwinf0109.wanadoo.fr") by vger.kernel.org with ESMTP
+	id S266185AbUGQPqA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 17 Jul 2004 11:46:00 -0400
+In-Reply-To: <1089213139.40ec12d3a447b@imp2-q.free.fr>
 List-Id: linux-scsi@vger.kernel.org
-To: "Ely, Paul" <Paul.Ely@Emulex.Com>
-Cc: "Smart, James" <James.Smart@Emulex.Com>, 'James Bottomley' <James.Bottomley@steeleye.com>, Linux SCSI Reflector <linux-scsi@vger.kernel.org>
+To: device-mapper development <dm-devel@redhat.com>
+Cc: linux-raid@vger.kernel.org, linux-hotplug-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org
 
-On Mon, Jul 12, 2004 at 04:53:34PM -0400, Ely, Paul wrote:
-> The proposal:
-> 	o A new device state called SDEV_SUSPEND
-> 		- The device's current state must be SDEV_CREATED or
-> SDEV_RUNNING.
-> 		- Once in SDEV_SUSPEND, the device state is allowed to
-> transition
-> 		  to SDEV_RUNNING or SDEV_CANCEL.
-> 
-> 	o A new routine called scsi_device_suspend to enter the SDEV_SUSPEND
-> 	  state.
-> 		- Called by scsi LLDs only.
-> 		- scsi LLD must not hold any locks, including the host lock,
-> 		  when calling this routine.
-> 		- Routine can be called from interrupt context or normal
-> kernel
-> 		  context.
-> 		- This routine calls into the scsi_device_set_state
-> 		  function to handle the state transition.  Other
-> functionality
-> 		  is TBD.
-> 
-> 	o A routine that the scsi LLD calls to successfully transition from
-> 	  SDEV_SUSPEND to SDEV_RUNNING state and restart scsi commands.  I
-> am
-> 	  proposing some alternatives.
+Hello,
+here goes multipath-tools-0.2.6
+It's a really big feature update.
+I hope I'll get feedback on the new features :
 
-This sounds fine to me.
+1) system-disk-on-SAN corner case treated with private namespace and
+ramfs for callback programs. Next release I'll move the mknod to the
+ramfs too by binding the ramfs to /tmp so scsi_id's mknod will have the
+safety net too. See prepare_namespace() in main.c for review.
 
-> 		- Reuse scsi_device_resume.
-> 			+ Overloads quiesce and suspend.  This may work
-> since
-> 			  the state machine will not allow transitions
-> to/from
-> 			  SDEV_QUIESCE and SDEV_SUSPEND.
-> 
-> 		OR
-> 
-> 		- Provide a new routine called scsi_device_continue 
-> 			+ Analogous functionality as scsi_device_resume, but
-> is
-> 			  called specifically to transition out of
-> SDEV_SUSPEND.
+2) multipath config tool now get path id from callback proggys.
+/bin/scsi_id by default. The tools now rely heavily on callbacks, so I'd
+like to have insights about how to treat the out-of-memory case with
+regard to these execv(). I'm also pondering ripping off the
+get_evpd_wiid() fallback : does someone care ?
 
-Please use separate functions.
+Finally note you *need* to update your config file. Not because I want
+you to ackowledge to huge work put into reformatting and commenting, but
+simply because the synthax has changed.
 
-> 	o Provide TMO control that limits the amount of time a device can 
-> 	  disappear.  The timeout handling would clean up pending
-> 	  commands on the device queue.  I am proposing some
-> 	  alternatives here.
-> 		- Require the scsi LLD to provide tmo functionality.
-> Timeout 
-> 		  value would be a driver default, but also settable via a
-> sysfs
-> 		  class transport attribute.  For example, Fibre Channel
-> drivers
-> 		  would use a FC transport value in sysfs.
+Changelog for this release :
+        * [multipathd] implement the system-disk-on-SAN safety net
+        * [multipathd] add exit_daemon() wrapper function
+        * [multipathd] mlockall() all daemon threads
+        * [multipath] fix a bug in the mp_iopolicy_handler that kept
+          the iopolicy per LUN override from working
+        * [multipath] display the tur bit value in print_path
+          as requested by SUN
+        * try to open /$udev/reverse/$major:$minor before falling back
+          to mknod
+        * add "udev_dir" to the defaults block in the config file
+        * merge "daemon" & "device_maps" config blocks into a new
+          "defaults" block
+        * [multipath] properly comment the config file
+        * [multipath] generalize the dbg() macro usage
+          Makefile now has a DEBUG flag
+        * [multipath] move to callout based WWID fetching. Default to
+          scsi_id callout. I merged execute_program from udev for that
+          (so credit goes to GregKH)
+        * [multipath] get rid of "devnodes in /dev" assumption
+          ie move to "maj:min" device mapper target synthax
 
-Not sure if I parsed that correctly.  You want a timeout after which the
-device gets unblocked again?  In that case the scsi_device should get a timer
-that calls the unblock routine, sounds fine to me and can be done in the
-scsi midlayer.
+Downloads and docs at http://christophe.varoqui.free.fr
+
+regards,
+cvaroqui
+
