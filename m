@@ -1,49 +1,34 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: constants.c fix for 2.5.22 compile error
-Date: Mon, 17 Jun 2002 09:29:16 -0400
+From: James Bottomley <James.Bottomley@steeleye.com>
+Subject: Re: [garloff@suse.de: Re: [linux-usb-devel] Re: /proc/scsi/map]
+Date: Mon, 17 Jun 2002 09:29:11 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3D0DE42C.E2F8C328@torque.net>
+Message-ID: <200206171429.g5HETBV02481@localhost.localdomain>
+References: <kurt@garloff.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: (from root@localhost)
+	by pogo.mtv1.steeleye.com (8.9.3/8.9.3) id HAA22626
+	for <linux-scsi@vger.kernel.org>; Mon, 17 Jun 2002 07:29:29 -0700
+In-Reply-To: Message from Kurt Garloff <kurt@garloff.de>
+   of "Mon, 17 Jun 2002 03:24:00 +0200." <20020617012400.GH21461@gum01m.etpnet.phys.tue.nl>
 List-Id: linux-scsi@vger.kernel.org
-To: Jason Straight <jason@blazeconnect.net>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Kurt Garloff <kurt@garloff.de>, Oliver Neukum <oliver@neukum.name>, dougg@torque.net, Linux SCSI list <linux-scsi@vger.kernel.org>, Linux kernel list <linux-kernel@vger.kernel.org>, James Bottomley <James.Bottomley@SteelEye.com>, David Brownell <david-b@pacbell.net>, Andries.Brouwer@cwi.nl, sancho@dauskardt.de, linux-usb-devel@lists.sourceforge.net, linux1394-devel@lists.sourceforge.net
 
-Jason Straight wrote:
-> line 997 in /drivers/scsi/constants.c tries to use 
-> i without declaring it.
-> add i to the int declaration in 910 seems to fix.
+kurt@garloff.de said:
+> This may work for your disks. You just can't open the device node for
+> a tape, if there is no medium inserted. If you know the mapping
+> between to a sg device you can use it.
 
-This occurs when CONFIG_SCSI_CONSTANTS is not set in
-the .config file.
+Actually, you have to use sg for a disc as well since you send a scsi CDB 
+directly to the device for inquiry page 0x83.
 
-BTW Defining CONFIG_SCSI_CONSTANTS adds about 30KB to
-the size of the kernel (not 12 KB as indicated during
-configuration).
+> That's the second piece of information that /proc/scsi/map provides. 
 
-Doug Gilbert
+Oh no question.  The way the current code doing this works is that it opens 
+all scsi devices and issues a GET_IDLUN to compile a database of the nodes and 
+then matches them up to sg nodes.
 
---- linux/drivers/scsi/constants.c	Mon Jun 17 08:44:48 2002
-+++ linux/drivers/scsi/constants.c2522fix	Mon Jun 17 09:20:48 2002
-@@ -993,10 +993,14 @@
- 	}
-     
- #if !(CONSTANTS & CONST_SENSE)
--	printk("Raw sense data:");
--	for (i = 0; i < s; ++i) 
--		printk("0x%02x ", sense_buffer[i]);
--	printk("\n");
-+	{
-+		int i;
-+
-+		printk("Raw sense data:");
-+		for (i = 0; i < s; ++i) 
-+			printk("0x%02x ", sense_buffer[i]);
-+		printk("\n");
-+	}
- #endif
- }
- 
+James
+
 
