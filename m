@@ -1,73 +1,39 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] aacraid 32/64 ioctl support (update)
-Date: Wed, 16 Jun 2004 18:19:24 +0100
+From: James Bottomley <James.Bottomley@steeleye.com>
+Subject: RE: [PATCH]: Flexible timeout infrastructure
+Date: 16 Jun 2004 12:21:03 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040616171924.GA15925@infradead.org>
-References: <1087401137.13488.61.camel@markh1.pdx.osdl.net> <20040616160107.GA14144@infradead.org> <20040616160232.GB14144@infradead.org> <1087405920.13488.82.camel@markh1.pdx.osdl.net>
+Message-ID: <1087406464.2796.30.camel@mulgrave>
+References: <3356669BBE90C448AD4645C843E2BF28034F94F0@xbl.ma.emulex.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [213.146.154.40] ([213.146.154.40]:55708 "EHLO
-	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S264215AbUFPRT0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 16 Jun 2004 13:19:26 -0400
-Content-Disposition: inline
-In-Reply-To: <1087405920.13488.82.camel@markh1.pdx.osdl.net>
+Received: from stat1.steeleye.com ([65.114.3.130]:63655 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S264239AbUFPRVO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 16 Jun 2004 13:21:14 -0400
+In-Reply-To: <3356669BBE90C448AD4645C843E2BF28034F94F0@xbl.ma.emulex.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Mark Haverkamp <markh@osdl.org>
-Cc: Christoph Hellwig <hch@infradead.org>, James Bottomley <James.Bottomley@steeleye.com>, linux-scsi <linux-scsi@vger.kernel.org>, Mark Salyzyn <mark_salyzyn@adaptec.com>
+To: "Smart, James" <James.Smart@Emulex.Com>
+Cc: Luben Tuikov <luben_tuikov@adaptec.com>, Mike Anderson <andmike@us.ibm.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Wed, Jun 16, 2004 at 10:12:00AM -0700, Mark Haverkamp wrote:
-> On Wed, 2004-06-16 at 09:02, Christoph Hellwig wrote:
-> > On Wed, Jun 16, 2004 at 05:01:07PM +0100, Christoph Hellwig wrote:
-> > > > +		register_ioctl32_conversion(2131, NULL);
-> > > > +#	endif
-> > > 
-> > > #ifdef please and no additional indentation inside the ifdef please.
-> > 
-> > btw, what's ioctl2131?  It doesn't seem to be implemented, so no need to translate it.
-> 
-> Christoph,
-> 
-> I think that I have addressed all of your comments in this patch.
-> 
-> removed != 0
-> fixed indentation
-> fixed include order
-> fixed ifdefs
-> used compat_alloc_user_space
+On Wed, 2004-06-16 at 12:10, Smart, James wrote:
+> I can appreciate the protectionist point of view. My only contention is -
+> how do you really derive that 1 reset is any less valid than 2 ? it totally
+> depends on what the original timeout was relative to whatever the duration
+> is for the LLDD event that is requesting the reset. 
 
-Although the compat_alloc_user_space implementations I looked at don't fail I
-think a check for NULL wouldn't hurt.
+Who said anything about reset?
 
-> I checked, and 2131 is implemented in aachba.c and looks like it gets
-> container info.
+This is just early notification of something going wrong.  If the
+command needs to be retried (or an event that throws the command away is
+to be triggered), that's done using the EH_NOT_HANDLED and activating
+the eh thread.
 
-Hmm, could we please get a symbolic name for that from adaptec?
+I'm not wedded to the current method of handling retries.  It would be
+feasible to use a more normal count to not allow non-retryable commands
+to be delayed.
 
-> +#ifdef CONFIG_COMPAT
-> +/* 
-> + * Promote 32 bit apps that call get_next_adapter_fib_ioctl to 64 bit version 
-> + */
-> +int aac_get_next_adapter_fib_ioctl(unsigned int fd, unsigned int cmd, 
-> +		unsigned long arg, struct file *file)
+James
 
-hmm, should probably be static.
-
-> +{
-> +	struct fib_ioctl *f;
-> +	int retval;
-> +
-> +	f = compat_alloc_user_space(sizeof(*f));
-> +	memset (f, 0, sizeof(*f));
-
-superflous space before the opening brace here.
-
-> +	if (copy_from_user((void *)f, (void *)arg, 
-> +				sizeof(struct fib_ioctl) - sizeof(u32)))
-> +		return -EFAULT;
-> +	retval = sys_ioctl(fd, cmd, (unsigned long)f);
-> +	return retval;
-
-No need for retval here.
 
