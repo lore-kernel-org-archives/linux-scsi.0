@@ -1,54 +1,90 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
+From: Matt Domsch <Matt_Domsch@dell.com>
 Subject: Re: How to add/drop SCSI drives from within the driver?
-Date: Wed, 15 Dec 2004 13:55:29 -0500
-Message-ID: <1103136929.5232.8.camel@mulgrave>
-References: <60807403EABEB443939A5A7AA8A7458B7F5071@otce2k01.adaptec.com>
-	 <1102536081.4218.0.camel@localhost.localdomain>
-	 <20041215072453.GB17274@lists.us.dell.com>
-	 <20041215164851.GC31494@lists.us.dell.com>
+Date: Wed, 15 Dec 2004 15:30:01 -0600
+Message-ID: <20041215213001.GA9284@lists.us.dell.com>
+References: <60807403EABEB443939A5A7AA8A7458B7F5071@otce2k01.adaptec.com> <1102536081.4218.0.camel@localhost.localdomain> <20041215072453.GB17274@lists.us.dell.com> <1103136559.5232.1.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat16.steeleye.com ([209.192.50.48]:4770 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S262441AbULOUfm (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 15 Dec 2004 15:35:42 -0500
-In-Reply-To: <20041215164851.GC31494@lists.us.dell.com>
+Received: from linux.us.dell.com ([143.166.224.162]:28504 "EHLO
+	lists.us.dell.com") by vger.kernel.org with ESMTP id S262493AbULOVb0
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 15 Dec 2004 16:31:26 -0500
+Content-Disposition: inline
+In-Reply-To: <1103136559.5232.1.camel@mulgrave>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matt Domsch <Matt_Domsch@Dell.com>
+To: James Bottomley <James.Bottomley@SteelEye.com>
 Cc: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>, "Bagalkote, Sreenivas" <sreenib@lsil.com>, brking@us.ibm.com, Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, bunk@fs.tum.de, Andrew Morton <akpm@osdl.org>, "Ju, Seokmann" <sju@lsil.com>, "Doelfel, Hardy" <hdoelfel@lsil.com>, "Mukker, Atul" <Atulm@lsil.com>
 
-On Wed, 2004-12-15 at 10:48 -0600, Matt Domsch wrote:
-> SCSI LLDDs don't show up in sysfs under /sys/bus/scsi/drivers at
-> present, which is where, I think, you would want to put megaraid_mm
-> with links to show the scsi_host and pci_dev associated with this
-> adapter.  Something like this:
+On Wed, Dec 15, 2004 at 01:49:18PM -0500, James Bottomley wrote:
+> On Wed, 2004-12-15 at 01:24 -0600, Matt Domsch wrote:
+> > James, I've been thinking about this a little more, and you may be on
+> > to something here. Let each driver add files as such:
+> > 
+> > /sys/class/scsi_host
+> >  |-- host0
+> >  |   |-- add_logical_drive
+> >  |   |-- remove_logical_drive
+> >  |   `-- rescan_logical_drive
+> > 
+> > Then we can go 2 ways with this.
+> > 1) driver functions directly call scsi_add_device(),
+> > scsi_remove_device(), and something for rescan (option 2 handles this
+> > one cleanly for us).  ATM, megaraid_mbox doesn't implement a rescan
+> > function, so this point may be moot. 
+> > 
+> > 2) driver functions call a midlayer library function, which invokes
+> >    /sbin/hotplug with appropriate data, and add a new /etc/hotplug.d
+> >    helper app which would then write to these files:
+> > to do likewise.
 > 
-> /sys
-> |-- bus
-> |   `-- drivers
-> |       `-- scsi
-> |           `-- megaraid_mm
-> |               `-- adapter0
-> |                   |-- pci_dev -> ../../../../../devices/pci0000:03/0000:03:06.0
+> I'll buy this (option 2).. it seems like a good way to export the
+> megaraid specific information and at the same time integrate it more
+> fully into the evolving hotplug infrastructure.
 
-Actually, there is a reason why this doesn't happen:  The drivers
-directory shows only drivers belonging to a bus.  The megaraid_mm driver
-is actually a PCI driver, and thus belongs to the PCI bus.  So, you'll
-see this under
+Great, I think that's the right long-term solution.  Can we consider
+other paths for the short term, while we evolve the hotplug
+infrastructure?  I don't know all the details involved in jumping
+straight to option 2 today.
 
-/sys/bus/pci/drivers/megaraid_mm/<pci_id>/host<n>
+Do you plan to apply LSI's driver patch which adds the driver-private
+ioctl to provide the mapping from logical drive address to HCTL value?
+Both Dell and LSI have products which are lined up to use this new
+ioctl because it's the most expedient thing to do, maintains internal
+project schedules, etc, which delaying until this sysfs mechanism hits
+will greatly impact those schedules. (I know, many folks on this list
+don't care about business-side impacts of choices made on-list.)
 
-That should be sufficient to obtain all instances.  Note: the instances
-aren't numerically indexed under this scheme (unlike your adapter<n>)
-they'd be indexed by a unique pci_id.
+If you were to apply LSI's ioctl patch, then that patch becomes stage
+0.
 
-So it looks like all the information is accessible today (if you look
-for it in a slightly different way).  Is there anything currently
-missing?
+Stage 1 is what I posted last night, once tested, and the mgmt apps
+convert to use that.
 
-James
+The above can happen pretty quickly I think, i.e. before the holidays.
+
+Stage 2 is option 2 above, which removes the driver calling
+scsi_add_device() and friends directly.  Userspace apps converted for
+stage 1 are none-the-wiser, as their interface hasn't changed.
+
+This is a Jan-Feb kind of thing, to give proper time for all concerns
+to be voiced and included in the kernel-internal APIs, /sbin/hotplug
+environment, and userspace helper.
+
+Stage 3, convert all other drivers who need a similar mechanism over
+to the new helper functions added in stage 2.
+
+This would be ongoing.
 
 
+Thoughts?
+
+Thanks,
+Matt
+
+-- 
+Matt Domsch
+Sr. Software Engineer, Lead Engineer
+Dell Linux Solutions linux.dell.com & www.dell.com/linux
+Linux on Dell mailing lists @ http://lists.us.dell.com
