@@ -1,55 +1,89 @@
-From: Rolf Eike Beer <eike-kernel@sf-tec.de>
-Subject: Re: [PATCH] clean up drivers/scsi/scsi.h
-Date: Mon, 14 Feb 2005 12:32:29 +0100
-Message-ID: <200502141232.30212@bilbo.math.uni-mannheim.de>
-References: <200502141157.30447@bilbo.math.uni-mannheim.de> <20050214110958.GB2367@infradead.org>
+From: "Ju, Seokmann" <sju@lsil.com>
+Subject: RE: [Bugme-new] [Bug 4201] New: megaraid crashes at random with C
+	ERC ATA100/4ch (DELL Controller) on PowerEdge 600SC
+Date: Mon, 14 Feb 2005 08:29:41 -0500
+Message-ID: <0E3FA95632D6D047BA649F95DAB60E57036626A7@exa-atlanta>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
-Received: from mail.sf-mail.de ([62.27.20.61]:51089 "EHLO mail.sf-mail.de")
-	by vger.kernel.org with ESMTP id S261415AbVBNL1f (ORCPT
+Content-Type: text/plain
+Received: from mail0.lsil.com ([147.145.40.20]:6385 "EHLO mail0.lsil.com")
+	by vger.kernel.org with ESMTP id S261431AbVBNN37 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 14 Feb 2005 06:27:35 -0500
-Received: from bilbo.math.uni-mannheim.de ([::ffff:134.155.88.153]) (auth=eike-kernel@sf-tec.de)
-	by mail.sf-mail.de (Qsmtpd 0.3pre) with (RC4-MD5 encrypted) ESMTPSA
-	for <linux-scsi@vger.kernel.org>; Mon, 14 Feb 2005 12:27:32 +0100
-In-Reply-To: <20050214110958.GB2367@infradead.org>
-Content-Disposition: inline
+	Mon, 14 Feb 2005 08:29:59 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: 'Andrew Morton' <akpm@osdl.org>, linux-scsi@vger.kernel.org
+Cc: Steven_Nash@compuserve.com, "Ju, Seokmann" <sju@lsil.com>
 
-Am Montag, 14. Februar 2005 12:09 schrieb Christoph Hellwig:
-> On Mon, Feb 14, 2005 at 11:57:29AM +0100, Rolf Eike Beer wrote:
-> > Hi,
-> >
-> > this patch removes some useless struct declarations from
-> > drivers/scsi/scsi.h. All this structs are already defined in the header
-> > files included above except Scsi_Host, for which we now directly include
-> > <scsi/scsi_host.h>
->
-> No, this is totally wrong.  If you only use pointers to structs always
-> use forward declarations instead of pulling in a full header.
+On Friday, February 11, 2005 7:29 PM, Andrew wrote:
+> megaraid driver crashing.  I have tried forcing the old megaraid driver in
+> the
+> kernel config and rebuilding but this has no effect.
 
-Ok, this time without include scsi/scsi_host.h. The rest remains untouched,
-"struct Scsi_Host;" is also in scsi/scsi_device.h. The header files for all 
-other structs are already included so no need do declare them again.
+Can you provide details on following,please?
+- The megaraid driver version?
+- Device configuration information on the CERC ATA100/4ch with options
+(cached, WT/WB, or read-ahead?)
+- Size of main memory on PowerEdge 600SC?
+- What are the typical I/O loads has been applied to reach crash?
 
-Signed-off-by: Rolf Eike Beer <eike-kernel@sf-tec.de>
+Thanks,
 
---- linux-2.6.10/drivers/scsi/scsi.h	2004-12-24 22:34:27.000000000 +0100
-+++ linux-2.6.10/drivers/scsi/scsi.h-new	2005-02-14 11:45:54.000000000 +0100
-@@ -40,12 +40,6 @@
- #define FALSE 0
- #endif
- 
--struct Scsi_Host;
--struct scsi_cmnd;
--struct scsi_device;
--struct scsi_target;
--struct scatterlist;
--
- /*
-  * Legacy dma direction interfaces.
-  *
+Seokmann
+LSI Logic Corporation.
+
+> -----Original Message-----
+> From: Andrew Morton [mailto:akpm@osdl.org]
+> Sent: Friday, February 11, 2005 7:29 PM
+> To: linux-scsi@vger.kernel.org
+> Cc: Steven_Nash@compuserve.com
+> Subject: Fw: [Bugme-new] [Bug 4201] New: megaraid crashes at random with
+> CERC ATA100/4ch (DELL Controller) on PowerEdge 600SC
+> 
+> 
+> 
+> Begin forwarded message:
+> 
+> Date: Fri, 11 Feb 2005 16:08:26 -0800
+> From: bugme-daemon@osdl.org
+> To: bugme-new@lists.osdl.org
+> Subject: [Bugme-new] [Bug 4201] New: megaraid crashes at random with CERC
+> ATA100/4ch (DELL Controller) on PowerEdge 600SC
+> 
+> 
+> http://bugme.osdl.org/show_bug.cgi?id=4201
+> 
+>            Summary: megaraid crashes at random with CERC  ATA100/4ch (DELL
+>                     Controller) on PowerEdge 600SC
+>     Kernel Version: 2.6.10
+>             Status: NEW
+>           Severity: high
+>              Owner: andmike@us.ibm.com
+>          Submitter: Steven_Nash@compuserve.com
+> 
+> 
+> Distribution: Fedora Core 3
+> Hardware Environment: x86 (32 bit)
+> Software Environment: Vanilla Kernel & Fedora Build Kernel
+> Problem Description: After a day or two (varies) the system hangs and the
+> only
+> option is to hit the reset button.  Sometimes sda errors appear on the
+> current
+> active VT but nothing appears in the logs after reboot (which is due to
+> the
+> megaraid driver crashing.  I have tried forcing the old megaraid driver in
+> the
+> kernel config and rebuilding but this has no effect.
+> 
+> Steps to reproduce:
+> Run a system for a few days, crashes seem to occure around 3 am approx.
+> The
+> only other SCSI device on the system is a Dell DLT Drive.
+> 
+> This is a serious bug!
+> 
+> ------- You are receiving this mail because: -------
+> You are on the CC list for the bug, or are watching someone who is.
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
