@@ -1,43 +1,52 @@
-From: "Justin T. Gibbs" <gibbs@scsiguy.com>
-Subject: [PATCH] Aic7xxx driver version 6.2.6
-Date: Thu, 11 Apr 2002 22:22:58 -0600
+From: =?iso-8859-1?Q?Rasmus_B=F8g_Hansen?= <moffe@amagerkollegiet.dk>
+Subject: Re: advansys modules fails to compile in 2.5.8-pre3
+Date: Fri, 12 Apr 2002 10:29:59 +0200 (CEST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <200204120422.g3C4Mw950533@aslan.scsiguy.com>
+Message-ID: <Pine.LNX.4.44.0204121018380.1706-100000@grignard.amagerkollegiet.dk>
+References: <3CB654C1.844C9A0B@torque.net>
+Mime-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <3CB654C1.844C9A0B@torque.net>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Marcelo Tosatti <marcelo@conectiva.com.br>, Alan Cox <alan@redhat.com>
+To: Douglas Gilbert <dougg@torque.net>
+Cc: linux-scsi@vger.kernel.org
 
-Patches against marcelo_2.4 as of yesturday can be found here:
+> My advansys fix has been in Dave Jones's tree for nearly
+> 2 months now (along with a lot of other SCSI fixes and
+> enhancements). Maybe if we said we were introducing a
+> new IO subsystem called the "small computer system
+> interface" we might be more successful having our patches
+> accepted :-)
 
-http://people.FreeBSD.org/~gibbs/linux/aic7xxx-6.2.6-marcelo_2.4.patch.gz
+Ah, so it's just me that hasn't discovered the patch yet; I should have=
+=20
+known :-)
 
-6.2.6 corrects the following issues:
+> Then if you go to www.connectcom.net you get told that
+> advansys has been taken over by initio.
 
-1) Correctly deregister our pci_driver entry points on hot-eject.
-   This should allow you to hot-plug the APA1480 again.
+Hm, I was aware of the advansys -> ConnectCom change, but not the initi=
+o=20
+stuff. Nonetheless, the link is outdated, as the page does not exist=20
+anymore. It does not seem obvious to me, if initio has an equivalent=20
+page.
 
-2) Set max_sectors to a sane value.  The aic7xxx driver was not
-   updated when this value was added to the host template structure.
-   In more recent kernels, the default setting for this field, 255,
-   can limit our transaction size to 127K.  This often causes the
-   scsi_merge routines to generate 127k followed by 1k I/Os to complete
-   a client transaction.  The command overhead of such small transactions
-   can severely impact performance.  The driver now sets max_sectors to
-   8192 which equates to the 16MB S/G element limit for these cards as
-   expressed in 2K sectors.  Many thanks to Radio Free Asia for
-   loaning me a box to diagnose this issue.
+Thanks anyway
+/Rasmus
 
-This version also adds the ability to read and write the contents of
-the seeprom from /proc/scsi/aic7xxx/#.
+--=20
+-- [ Rasmus "M=F8ffe" B=F8g Hansen ] ----------------------------------=
+-----
+Mommy, mommy! The garbage man is here!
+Well, tell him we don't want any!
+                       -- Groucho Marx
+----------------------------------[ moffe at amagerkollegiet dot dk ] -=
+-
 
-Marcelo.  The Makefile has been returned to a format conducive
-to adding a second target.  This is in anticipation of the addition
-of the U320 driver in 2-3 weeks time.  I believe this follows the
-template that Keith Owens proposed for a multi-target Makefile,
-but if you have questions about this, feel free to ignore that
-hunk of the patch.  Keith's Makefile version will work with 6.2.6
-as is.
-
---
-Justin
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
