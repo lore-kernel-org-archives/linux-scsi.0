@@ -1,68 +1,84 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: [PATCH] scsi-misc-2.5 remove scsi_scan.c EVPD code
-Date: Mon, 05 May 2003 17:58:28 +1000
-Sender: linux-usb-devel-admin@lists.sourceforge.net
-Message-ID: <3EB619A4.5090407@torque.net>
-References: <UTC200304250047.h3P0lhl03517.aeb@smtp.cwi.nl>
-Reply-To: dougg@torque.net
+From: Mike Anderson <andmike@us.ibm.com>
+Subject: [RFC] scsi host sysfs support again [0/4]
+Date: Mon, 5 May 2003 01:33:15 -0700
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <20030505083315.GB8416@beaverton.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-usb-devel-admin@lists.sourceforge.net>
-In-Reply-To: <UTC200304250047.h3P0lhl03517.aeb@smtp.cwi.nl>
-Errors-To: linux-usb-devel-admin@lists.sourceforge.net
-List-Help: <mailto:linux-usb-devel-request@lists.sourceforge.net?subject=help>
-List-Post: <mailto:linux-usb-devel@lists.sourceforge.net>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-devel>,
-	<mailto:linux-usb-devel-request@lists.sourceforge.net?subject=subscribe>
-List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-devel>,
-	<mailto:linux-usb-devel-request@lists.sourceforge.net?subject=unsubscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=linux-usb-devel>
-To: Andries.Brouwer@cwi.nl
-Cc: James.Bottomley@steeleye.com, linux-scsi@vger.kernel.org, linux-usb-devel@lists.sourceforge.net, mdharm-scsi@one-eyed-alien.net, patmans@us.ibm.com
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from e33.co.us.ibm.com ([32.97.110.131]:8657 "EHLO e33.co.us.ibm.com")
+	by vger.kernel.org with ESMTP id S262057AbTEEISY (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 5 May 2003 04:18:24 -0400
+Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: Patrick Mochel <mochel@osdl.org>
 
-Andries.Brouwer@cwi.nl wrote:
->>Remove the scsi EVPD code.
-> 
-> 
-> Good! That simplifies many things.
+Here is update to the scsi host sysfs support. This patch uses the
+reworked class and class_device support.
 
-Good?? Just because there are millions of brain damaged
-devices that can't implement rule 0 of a protocol,
-Patrick removes one of the best features added to
-the scsi subsystem in the 2.5 development series.
+This patch set is against scsi-misc-2.5.
 
-Patrick's patch is now in lk 2.5.69 .
+This patch set changes the sysfs support for scsi hosts.
+- Removes the previous support of shost_devclass device class.
 
-So we are back to all the fun games of opening/
-querying/closing likely looking device nodes in
-the /dev space (and I speak from experience).
-What a joy.
+- Added support for sysfs class and class_device.
 
-Surely there is a better way. Why not do the VPD=0x83
-query on devices that claim to be SCSI-3 compliant
-or better. The scsi mid level driver (and/or the
-usb-storage + sbp2 LLDs) could have a sysfs parameter
-such as "simple_scan". The filters discussion
-showed more promise than this blunt approach.
+- scsi host now contains a struct device and will have its parent pointer
+  set to the device passed in to scsi_add_host, the device passed in to
+  scsi_set_device, or set to the legacy_bus.
 
-I have contemplated putting the VPD=0x83 code in
-lsscsi but it won't be pretty (e.g. requiring root
-privilege, side effects including locking up
-certain USB storage devices :-) ).
+- scsi_host class children list is now equal to scsi_host_list. scsi host
+  host_gendev children list is not equal to my_devices.
 
-Doug Gilbert
+- Modifies scsi_debug to support the new order of object cleanup and also
+  changes the structure of sdebug_host_info to help in object cleanup.
 
+This change allows for host cleanup when sysfs references drop to zero
+(there still is more work to be done).
 
+I have tested the insmod / rmmod cycle with scsi_debug and booted with the
+ips and aic drivers.
 
+Current Known Issues:
+	- Current users of scsi_remove_host will need to have there
+	  cleanup reordered to support the restoration of the call to the
+	  Scsi_Host_Template release.
+	- Callers of scsi_set_device should be migrated off this interface
+	  if possible.
+	
+Example tree:
 
+# tree /sys/class/scsi_host
+/sys/class/scsi_host
+|-- host0
+|   |-- cmd_per_lun
+|   |-- device -> ../../../devices/pci0/00:09.0/host0
+|   |-- host_busy
+|   |-- sg_tablesize
+|   |-- unchecked_isa_dma
+|   `-- unique_id
+|-- host1
+|   |-- cmd_per_lun
+|   |-- device -> ../../../devices/pci1/01:03.0/host1
+|   |-- host_busy
+|   |-- sg_tablesize
+|   |-- unchecked_isa_dma
+|   `-- unique_id
+`-- host3
+    |-- cmd_per_lun
+    |-- device -> ../../../devices/pci1/01:03.1/host3
+    |-- host_busy
+    |-- sg_tablesize
+    |-- unchecked_isa_dma
+    `-- unique_id
 
--------------------------------------------------------
-This sf.net email is sponsored by:ThinkGeek
-Welcome to geek heaven.
-http://thinkgeek.com/sf
-_______________________________________________
-linux-usb-devel@lists.sourceforge.net
-To unsubscribe, use the last form field at:
-https://lists.sourceforge.net/lists/listinfo/linux-usb-devel
+# tree /sys/bus/scsi/devices
+/sys/bus/scsi/devices
+|-- 0:0:0:0 -> ../../../devices/pci0/00:09.0/host0/0:0:0:0
+
+-andmike
+--
+Michael Anderson
+andmike@us.ibm.com
+
