@@ -1,39 +1,31 @@
-From: "Ulrich Windl" <Ulrich.Windl@rz.uni-regensburg.de>
-Subject: 2.4.20 & gcc-3: bug in aic7xxx_osm.c
-Date: Tue, 29 Apr 2003 09:37:20 +0200
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] scsi_requeuest_fn
+Date: Tue, 29 Apr 2003 08:45:18 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3EAE47CD.15147.4FCF87@localhost>
+Message-ID: <20030429084518.A23295@infradead.org>
+References: <20030427170440.A29493@lst.de> <20030427110711.A21878@beaverton.ibm.com> <20030427205303.A31125@lst.de> <20030428101411.A27787@beaverton.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rrzd2.rz.uni-regensburg.de ([132.199.1.12]:22929 "EHLO
-	rrzd2.rz.uni-regensburg.de") by vger.kernel.org with ESMTP
-	id S261283AbTD2HZe (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 29 Apr 2003 03:25:34 -0400
-Received: from kgate.dvm.klinik.uni-regensburg.de ([132.199.176.18])
-	by rrzd2.rz.uni-regensburg.de (8.12.3/8.12.3/Debian -4) with ESMTP id h3T7bpr0000377
-	for <linux-scsi@vger.kernel.org>; Tue, 29 Apr 2003 09:37:51 +0200
-Received: from rkdvmks1.ngate.uni-regensburg.de (rkdvmks1.dvm.klinik.uni-regensburg.de [132.199.176.1])
-	by kgate.dvm.klinik.uni-regensburg.de (8.11.6/8.11.6/20021112M-1) with ESMTP id h3T7bf601308
-	for <linux-scsi@vger.kernel.org>; Tue, 29 Apr 2003 09:37:41 +0200
-Content-description: Mail message body
+Received: from carisma.slowglass.com ([195.224.96.167]:42001 "EHLO
+	phoenix.infradead.org") by vger.kernel.org with ESMTP
+	id S261989AbTD2HdE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 29 Apr 2003 03:33:04 -0400
+Content-Disposition: inline
+In-Reply-To: <20030428101411.A27787@beaverton.ibm.com>; from patmans@us.ibm.com on Mon, Apr 28, 2003 at 10:14:11AM -0700
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Patrick Mansfield <patmans@us.ibm.com>
+Cc: Christoph Hellwig <hch@lst.de>, James.Bottomley@steeleye.com, linux-scsi@vger.kernel.org
 
-Hi,
+On Mon, Apr 28, 2003 at 10:14:11AM -0700, Patrick Mansfield wrote:
+> I compiled and booted (on one machine with aic driver) with all but the
+> first (the header split up) and last patch (changes to drivers I don't
+> use) applied.
+> 
+> The header split up had a conflict with the nuke externs, plus the
+> missing include mentioned in a separate email.
 
-possibly fixed for a long time, but any way:
-The gcc shipped with SuSE Linux 8.2 cannot compile Linux-2.4.20, because of a 
-syntax problem in aic7xxx_osm.c:
-
-There is a long string like this
-
-"string
-second line
-third line
-"
-
-Regards,
-Ulrich
+oh well, that happens if you need to split up the huge delta of
+your working tree vs the upstream tree manually :P  I'll only hope
+that James could apply some of the patches so this delta gets down a bit..
 
