@@ -1,58 +1,39 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [linux-iscsi-devel] Re: [PATCH RFC] replace ioctl for
-	sysfs	take 2
-Date: 07 Sep 2004 11:35:18 -0400
+From: James Pearson <james-p@moving-picture.com>
+Subject: Re: Problems seeing raid array attached to a qla2312
+Date: Tue, 07 Sep 2004 16:56:54 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1094571319.1716.108.camel@mulgrave>
-References: <413557CB.8010008@cs.wisc.edu>	<20040901162042.GC26753@null.msp.redhat.com>	
-	<20040906143251.GB21646@lst.de>	<20040906163336.GE642@parcelfarce.linux.thep
-	 lanet.co.uk>	<413CA924.8030904@cs.wisc.edu> <413CB265.3070304@cs.wisc.edu>
-	<413CE933.70509@us.ibm.com> <1094512278.1761.63.camel@mulgrave>
-	<413D20F9.6000704@us.ibm.com>
+Message-ID: <413DDA46.4050400@moving-picture.com>
+References: <41248D91.5070100@moving-picture.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat16.steeleye.com ([209.192.50.48]:56782 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S268196AbUIGPgS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 7 Sep 2004 11:36:18 -0400
-In-Reply-To: <413D20F9.6000704@us.ibm.com>
+Received: from mpc-26.sohonet.co.uk ([193.203.82.251]:13786 "EHLO
+	moving-picture.com") by vger.kernel.org with ESMTP id S268196AbUIGP4z
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 7 Sep 2004 11:56:55 -0400
+Received: from minion.mpc.local ([172.16.11.112] helo=moving-picture.com)
+	by moving-picture.com with esmtp (Exim 4.24)
+	id 1C4iL0-0001fZ-Dh
+	for linux-scsi@vger.kernel.org; Tue, 07 Sep 2004 16:56:54 +0100
+In-Reply-To: <41248D91.5070100@moving-picture.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <mikenc@us.ibm.com>
-Cc: Mike Christie <michaelc@cs.wisc.edu>, Matthew Wilcox <willy@debian.org>, Christoph Hellwig <hch@lst.de>, iscsi -devel <linux-iscsi-devel@lists.sourceforge.net>, David Wysochanski <davidw@netapp.com>, "Surekha.PC" <surekhap@cisco.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
 
-On Mon, 2004-09-06 at 22:46, Mike Christie wrote: 
-> In that first target patch you sent it had the target dev's bus set to 
-> scsi_bus_type. That caused my confusion as to what the bus was for. I 
-> see the new patch with this removed. Nevermind.
+James Pearson wrote:
+> I'm having problems seeing a Fibrenetix VP-1242-FC raid array via a 
+> qla2312 HBA on a dual Xeon box running a RHEL3.0 clone - using a 2.4.21 
+> based kernel.
+> 
+> The first port on the qla2312 has a Quantum tape library and two SDLT 
+> tape drives - which the OS can see fine.
+> 
+> The raid array is attached to the 2nd port on the qla2312 - it is 
+> configured with 3 volumes at luns 0, 1 and 2 - unfortunately, the OS 
+> can't 'see' the 3 disk volumes ...
+> 
 
-er, yes, cut and paste error ... 
+This turned out to be a problem with the firmware on the raid array - 
+upgrading to a newer version fixed this issue.
 
-> We just needed something to track the driver's scsi_hosts. It was also 
-> used becuase we used a struct device_driver to hang setup attributes 
-> (non iscsi related attrs needed to setup our driver's devices without an 
-> ioctl) off of like scsi_debug (this is why I asked about a single 
-> virtual bus for both of us to share).
-
-Ah, OK, I see.  So you mean add a bus to the scsi_host->shost_gendev. 
-That's certainly feasible.  With clever matching we could get all LLDs
-that wanted this functionality to add a dummy driver which they could
-then use to traverse their attached hosts.
-
-> Since we followed the suggestion to do a host per transport endpoint 
-> when we rmmod the driver we just need some way to loop over every 
-> scsi_host and free them up. We had a linked list of scsi_hosts. 
-> Christoph suggested a class or bus instead of the linked list, and had 
-> preferred the bus. Now you are suggesting to use a class. It wouldn't be 
-> ok to go back to the single host would it? In that case we would not 
-> need a class, bus, or linked list?
-
-A host is the analogue of a bus.  In iSCSI that's really the other end
-point.  Using abstractions incorrectly (like a single host for the
-entire iSCSI system) is bound to end up with problems due to the concept
-mismatch.
-
-James
-
-
+James Pearson
