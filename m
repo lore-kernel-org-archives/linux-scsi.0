@@ -1,170 +1,80 @@
-From: Greg KH <greg@kroah.com>
-Subject: Re: [RFC] put symbolic links between drivers and modules in the sysfs tree
-Date: Wed, 22 Sep 2004 16:04:23 -0700
+From: Matthias Andree <ma@dt.e-technik.uni-dortmund.de>
+Subject: sym53c8xx parity errors on SuSE 9.1's hwscan?
+Date: Thu, 23 Sep 2004 01:16:51 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040922230423.GA14279@kroah.com>
-References: <1095701390.2016.34.camel@mulgrave>
+Message-ID: <m3y8j1q4gs.fsf@merlin.emma.line.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kroah.org ([69.55.234.183]:28595 "EHLO perch.kroah.org")
-	by vger.kernel.org with ESMTP id S268094AbUIVXH2 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 22 Sep 2004 19:07:28 -0400
-Content-Disposition: inline
-In-Reply-To: <1095701390.2016.34.camel@mulgrave>
+Received: from krusty.dt.E-Technik.Uni-Dortmund.DE ([129.217.163.1]:37036 "EHLO
+	mail.dt.e-technik.uni-dortmund.de") by vger.kernel.org with ESMTP
+	id S268107AbUIVXQz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 22 Sep 2004 19:16:55 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Rusty Russell <rusty@rustcorp.com.au>, Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, linux-usb-devel@lists.sourceforge.net
+To: linux-scsi@vger.kernel.org
+Cc: Matthew Wilcox <matthew@wil.cx>
 
-On Mon, Sep 20, 2004 at 01:29:44PM -0400, James Bottomley wrote:
-> This functionality is essential for us to work out which drivers are
-> supplied by which modules.  We use this in turn to work out which
-> modules are necessary to find the root device (and hence what
-> initrd/initramfs needs to insert).
-> 
-> If you look at debian at the moment, it uses a huge mapping table on
-> /proc/scsi/* to do this.  If we implement the sysfs feature, we can
-> simply go from /sys/block/<device> to the actual device to the driver
-> and then to the module with no need of any fixed tables.
-> 
-> The code is a first cut and introduces two new module APIs:
-> module_add_driver() and module_remove_driver().  We need this because
-> the generic device model driver has no current knowledge of modules.  We
-> could enhance it to have a struct module * in struct device_driver, but
-> once we have the sysfs links which this patch provides, there didn't
-> seem to be a compelling reason to add it to struct device_driver.
-> 
-> Comments?
+Greetings,
 
-I like it.  But I do think that this should be moved into the driver
-core, so I added a "struct module *" to "struct device_driver".  Here's
-the patch that I just applied to my trees, based on yours.  It is only
-the core changes (and yes, I did fix up the location of the functions in
-the module.h file and fixed the bug when modules were not configured
-in.)  I'll post my usb core change after this, to show you how USB can
-be hooked up to it.  I'll let you figure out what the best way to handle
-the scsi code would be.
+SuSE Linux 9.1 (kernel 2.6.5 + SuSE patch set, but also 2.6.7 or a bit
+milder in 2.6.9-rc2-mm1) uses some SuSE-specific "hwprobe" or "hwinfo"
+tool to scan for hardware.
 
-thanks again for the patch.
+Whenever this tool, probing the PCI bus, hits my Tekram DC-390U or
+DC-310U, the box logs a SCSI parity error, some timed out abort
+messages, then the usual reset escalation; device reset (times out), bus
+reset (times out), finally HBA reset (succeeds). The whole procedure
+takes about 1 to 2 minutes before the bus is usable again.
 
-greg k-h
+If the machine is idle and has warm caches, I may occasionally see just
+the parity error message, so it may look a bit like a race in sym53c8xx
+or perhaps the hardware.
 
----------
+The problem seems to persist through current versions, although they can
+_usually_ just fix up a phase error and continue immediately.
 
+The problem did not exist when I was running 2.6.7 on SuSE 8.2.
 
-Put symbolic links between drivers and modules in the sysfs tree
+I find it a bit intimidating that user-space (albeit with root
+permissions) causes "SCSI" parity errors, and given the 2.6.9 logging
+towards the end of the mail, I am wondering if SuSE's hwinfo stuff
+triggers some race condition or manages to bypass the SCSI phase state
+machine or if the probe confuses the chip. I haven't yet managed to
+isolate (with strace) the cause.
 
-This functionality is essential for us to work out which drivers are
-supplied by which modules.  We use this in turn to work out which
-modules are necessary to find the root device (and hence what
-initrd/initramfs needs to insert).
+Is there a useful debug setting for sym53c8xx that could shed some light
+on what the user-space has attempted that led to the SCSI parity error?
 
-If you look at debian at the moment, it uses a huge mapping table on
-/proc/scsi/* to do this.  If we implement the sysfs feature, we can
-simply go from /sys/block/<device> to the actual device to the driver
-and then to the module with no need of any fixed tables.
+Log from SuSE's 2.6.5-7.108-default during system boot-up:
 
-Signed-off-by: James Bottomley <James.Bottomley@SteelEye.com>
-Signed-off-by: Greg Kroah-Hartman <greg@kroah.com>
+Sep 22 15:15:09 merlin kernel: sym0: SCSI parity error detected: SCR1=3 DBC=50000000 SBCL=0
+Sep 22 15:15:39 merlin kernel: sym0:1:0: ABORT operation started.
+Sep 22 15:15:44 merlin kernel: sym0:1:0: ABORT operation timed-out.
+Sep 22 15:15:44 merlin kernel: sym0:1:0: ABORT operation started.
+Sep 22 15:15:49 merlin kernel: sym0:1:0: ABORT operation timed-out.
+Sep 22 15:15:49 merlin kernel: sym0:1:0: DEVICE RESET operation started.
+Sep 22 15:15:54 merlin kernel: sym0:1:0: DEVICE RESET operation timed-out.
+Sep 22 15:15:54 merlin kernel: sym0:1:0: BUS RESET operation started.
+Sep 22 15:15:54 merlin kernel: sym0: SCSI BUS reset detected.
+Sep 22 15:15:54 merlin kernel: sym0: SCSI BUS has been reset.
+Sep 22 15:15:54 merlin kernel: sym0:1:0: BUS RESET operation complete.
 
-diff -Nru a/drivers/base/bus.c b/drivers/base/bus.c
---- a/drivers/base/bus.c	2004-09-22 15:56:32 -07:00
-+++ b/drivers/base/bus.c	2004-09-22 15:56:32 -07:00
-@@ -529,6 +529,7 @@
- 		down_write(&bus->subsys.rwsem);
- 		driver_attach(drv);
- 		up_write(&bus->subsys.rwsem);
-+		module_add_driver(drv->owner, drv);
- 
- 		driver_add_attrs(bus, drv);
- 	}
-@@ -553,6 +554,7 @@
- 		pr_debug("bus %s: remove driver %s\n", drv->bus->name, drv->name);
- 		driver_detach(drv);
- 		up_write(&drv->bus->subsys.rwsem);
-+		module_remove_driver(drv);
- 		kobject_unregister(&drv->kobj);
- 		put_bus(drv->bus);
- 	}
-diff -Nru a/include/linux/device.h b/include/linux/device.h
---- a/include/linux/device.h	2004-09-22 15:56:32 -07:00
-+++ b/include/linux/device.h	2004-09-22 15:56:32 -07:00
-@@ -106,6 +106,8 @@
- 	struct kobject		kobj;
- 	struct list_head	devices;
- 
-+	struct module 		* owner;
-+
- 	int	(*probe)	(struct device * dev);
- 	int 	(*remove)	(struct device * dev);
- 	void	(*shutdown)	(struct device * dev);
-diff -Nru a/include/linux/module.h b/include/linux/module.h
---- a/include/linux/module.h	2004-09-22 15:56:32 -07:00
-+++ b/include/linux/module.h	2004-09-22 15:56:32 -07:00
-@@ -451,6 +451,11 @@
- int unregister_module_notifier(struct notifier_block * nb);
- 
- extern void print_modules(void);
-+
-+struct device_driver;
-+void module_add_driver(struct module *, struct device_driver *);
-+void module_remove_driver(struct device_driver *);
-+
- #else /* !CONFIG_MODULES... */
- #define EXPORT_SYMBOL(sym)
- #define EXPORT_SYMBOL_GPL(sym)
-@@ -540,6 +545,15 @@
- static inline void print_modules(void)
- {
- }
-+
-+static inline void module_add_driver(struct module *, struct device_driver *)
-+{
-+}
-+
-+static inline void module_remove_driver(struct device_driver *)
-+{
-+}
-+
- #endif /* CONFIG_MODULES */
- 
- #define symbol_request(x) try_then_request_module(symbol_get(x), "symbol:" #x)
-diff -Nru a/kernel/module.c b/kernel/module.c
---- a/kernel/module.c	2004-09-22 15:56:32 -07:00
-+++ b/kernel/module.c	2004-09-22 15:56:32 -07:00
-@@ -34,6 +34,7 @@
- #include <linux/vermagic.h>
- #include <linux/notifier.h>
- #include <linux/stop_machine.h>
-+#include <linux/device.h>
- #include <asm/uaccess.h>
- #include <asm/semaphore.h>
- #include <asm/cacheflush.h>
-@@ -2187,6 +2188,26 @@
- 		printk(" %s", mod->name);
- 	printk("\n");
- }
-+
-+void module_add_driver(struct module *mod, struct device_driver *drv)
-+{
-+	if (!mod || !drv)
-+		return;
-+	if (!mod->mkobj)
-+		return;
-+
-+	/* Don't check return code; this call is idempotent */
-+	sysfs_create_link(&drv->kobj, &mod->mkobj->kobj, "module");
-+}
-+EXPORT_SYMBOL(module_add_driver);
-+
-+void module_remove_driver(struct device_driver *drv)
-+{
-+	if (!drv)
-+		return;
-+	sysfs_remove_link(&drv->kobj, "module");
-+}
-+EXPORT_SYMBOL(module_remove_driver);
- 
- #ifdef CONFIG_MODVERSIONS
- /* Generate the signature for struct module here, too, for modversions. */
+and a while later:
+
+Sep 22 15:18:32 merlin kernel: sym0: SCSI parity error detected: SCR1=3 DBC=50000000 SBCL=0
+Sep 22 15:18:32 merlin kernel: sym0: interrupted SCRIPT address not found.
+Sep 22 15:18:32 merlin kernel: sym0: SCSI BUS reset detected.
+Sep 22 15:18:32 merlin kernel: sym0: SCSI BUS has been reset.
+
+2.6.9-rc2-mm1, although otherwise not useful for me (UDP networking)
+logs this instead:
+
+Sep 22 14:00:05 merlin kernel: sym0: SCSI parity error detected: SCR1=3 DBC=50000000 SBCL=0
+Sep 22 14:00:05 merlin kernel: sym0: SCSI phase error fixup: CCB already dequeued.
+Sep 22 14:00:05 merlin kernel: sym0: SCSI BUS reset detected.
+Sep 22 14:00:05 merlin kernel: sym0: SCSI BUS has been reset.
+
+-- 
+Matthias Andree
+
+Encrypted mail welcome: my GnuPG key ID is 0x052E7D95 (PGP/MIME preferred)
