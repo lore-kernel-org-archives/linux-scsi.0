@@ -1,40 +1,38 @@
-From: "Nicholas Berry" <nikberry@med.umich.edu>
-Subject: Re: 2.4.20 scsi problem
-Date: Tue, 03 Dec 2002 07:22:01 -0500
+From: Patrick Mansfield <patmans@us.ibm.com>
+Subject: Re: scsi_scan.c patch
+Date: Tue, 3 Dec 2002 10:39:41 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <sdec5bb0.087@mail-01.med.umich.edu>
+Message-ID: <20021203103941.A29259@eng2.beaverton.ibm.com>
+References: <UTC200211282202.gASM2U808846.aeb@smtp.cwi.nl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
+In-Reply-To: <UTC200211282202.gASM2U808846.aeb@smtp.cwi.nl>; from Andries.Brouwer@cwi.nl on Thu, Nov 28, 2002 at 11:02:30PM +0100
 List-Id: linux-scsi@vger.kernel.org
-To: alan@lxorguk.ukuu.org.uk, eric@rti-zone.org
-Cc: groudier@free.fr, axboe@suse.de, linux-scsi@vger.kernel.org
+To: Andries.Brouwer@cwi.nl
+Cc: linux-scsi@vger.kernel.org
 
-Hi.
+On Thu, Nov 28, 2002 at 11:02:30PM +0100, Andries.Brouwer@cwi.nl wrote:
+> Wondering why my CD-writer did not have a name in sysfs, I saw
+> that when the name is longer than 50 bytes no name at all is used.
+> The (much smaller) code below constructs a truncated name instead.
+> 
+> (A reason not to truncate would be the desire to obtain a unique
+> name, where the unicity is guaranteed by the serial number.
+> However, my HP CD-writer has a serial number that consists of the
+> '[' byte only, not much distinctive here.)
+> 
+> Andries
 
-Do you have an entry like:
+My understanding of sysfs is that the name field is supposed to have
+a description of the device, not an id.
 
-       alias block-major-8 sd_mod 
+We should add a scsi_device char * uid, and put the id there, then we can
+allocate it as large as we want, and set the name to something describing
+the scsi device, most simply something like:
 
-in /etc/modules.conf?
+scsi Direct-Access
 
-Nik
+That is, "scsi" followed by the ascii version of the scsi type.
 
-> >>> Eric GAUDET <eric@rti-zone.org> 12/03/02 02:27AM >>>
-> -- En reponse de "Re: 2.4.20 scsi problem" de Alan Cox, le 02-Dec-2002 :
-> > On Mon, 2002-12-02 at 06:58, Eric GAUDET wrote:
-> >> # SCSI low-level drivers
-> >> #
-> >> (none set)
-> > 
-> > That sounds like your problem to me
->
-> Unfortuately, as I said in my earlier message:
-> >> Compiling sd as a module instead of in the kernel does not seem to change
-> >> anything. Nor compiling with a scsi low-level driver. It seems that I need an
-> >> actual scsi device at boot time in order to see block device 8 (not tested, I
-> >> don t have such a device)
-
-
+-- Patrick Mansfield
