@@ -1,48 +1,60 @@
-From: Andrei Loukinykh <avl@seavenue.net>
-Subject: ide-scsi fails with kernels > 2.4.1
-Date: Thu, 30 Jan 2003 10:47:49 +0200 (EET)
+From: Douglas Gilbert <dougg@torque.net>
+Subject: [PATCH] sg snprintf()s in 2.5.59
+Date: Thu, 30 Jan 2003 16:45:49 +1100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.20.0301301047240.24862-100000@users.evp.sf.ukrtel.net>
+Message-ID: <3E38BC0D.9040608@torque.net>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: multipart/mixed;
+ boundary="------------010204060806090903030403"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from users.evp.sf.ukrtel.net (users.evp.sf.ukrtel.net [195.5.3.162])
-	by users.evp.sf.ukrtel.net (8.11.5/8.11.5) with ESMTP id h0U8lnn27405
-	for <linux-scsi@vger.kernel.org>; Thu, 30 Jan 2003 10:47:49 +0200
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
+Cc: patmans@us.ibm.com
 
+This is a multi-part message in MIME format.
+--------------010204060806090903030403
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 
- Hi all
-  Being a sort of god damn tired (sorry), i decided to ask here
+Patrick Mansfield reminded me that the attached patch
+hasn't made it into the 2.5 series yet. It's absence
+causes some corruption for long sg_driverfs_dev.name
+strings.
 
- In short:
-   My CDRW refuses to work with any kernel bigger than 2.4.1.
+Doug Gilbert
 
-It is IDE-CDRW . I use ide-scsi driver for this.
-With 2.4.1 - all o'k.
- Then I tried 2.4.7 ... 2.4.9 ... 2.4.19.. 2.4.20 ( i dont remember al of
-them) - none works. I get the following:
+--------------010204060806090903030403
+Content-Type: text/plain;
+ name="sg_2559_snpr.diff"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="sg_2559_snpr.diff"
 
-hdc: SAMSUNG CD-R/RW SW-408B, ATAPI CD/DVD-ROM drive
-ide0 at 0x1f0-0x1f7,0x3f6 on irq 14
-ide1 at 0x170-0x177,0x376 on irq 15
-blk: queue c030e544, I/O limit 4095Mb (mask 0xffffffff)
-hda: 12672450 sectors (6488 MB), CHS=788/255/63, UDMA(33)
-hdc: set_drive_speed_status: status=0x51 { DriveReady SeekComplete Error }
-hdc: set_drive_speed_status: error=0x04
+--- linux/drivers/scsi/sg.c	2003-01-14 10:46:58.000000000 +1100
++++ linux/drivers/scsi/sg.c2559snpr	2003-01-30 16:38:47.000000000 +1100
+@@ -19,7 +19,7 @@
+  */
+ #include <linux/config.h>
+ #ifdef CONFIG_PROC_FS
+-static char *sg_version_str = "Version: 3.5.27 (20020812)";
++static char *sg_version_str = "Version: 3.5.27 (20030130)";
+ #endif
+ static int sg_version_num = 30527;	/* 2 digits for each component */
+ /*
+@@ -1455,9 +1455,9 @@
+ 	sdp->sg_tablesize = scsidp->host ? scsidp->host->sg_tablesize : 0;
+ 
+ 	memset(&sdp->sg_driverfs_dev, 0, sizeof (struct device));
+-	sprintf(sdp->sg_driverfs_dev.bus_id, "%s:gen",
++	snprintf(sdp->sg_driverfs_dev.bus_id, BUS_ID_SIZE, "%s:gen",
+ 		scsidp->sdev_driverfs_dev.bus_id);
+-	sprintf(sdp->sg_driverfs_dev.name, "%sgeneric",
++	snprintf(sdp->sg_driverfs_dev.name, DEVICE_NAME_SIZE, "%sgeneric",
+ 		scsidp->sdev_driverfs_dev.name);
+ 	sdp->sg_driverfs_dev.parent = &scsidp->sdev_driverfs_dev;
+ 	sdp->sg_driverfs_dev.bus = scsidp->sdev_driverfs_dev.bus;
 
-
-Someone please help
- I desperately need 2.4.20 for my devices to work, but I also need CDR..
-
-
-
-Best regards,
-Andrei V. Loukinykh , Evpatoria Ukrtelecom ISP, +380 6569 29376
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-"UNIX is like a vigvam - no Windows, no Gates and an Apache inside"
-
-
+--------------010204060806090903030403--
 
 
