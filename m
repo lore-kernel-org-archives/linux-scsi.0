@@ -1,61 +1,48 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [linux-usb-devel] Fw: [Bug 3466] New: Bug while connecting  
- USB-HDD (fwd)
-Date: Wed, 29 Sep 2004 13:31:07 -0400 (EDT)
+From: Mike Anderson <andmike@us.ibm.com>
+Subject: Re: [Patch] Fix oops on rmmod usb-storage
+Date: Wed, 29 Sep 2004 10:36:42 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44L0.0409291320260.1700-100000@ida.rowland.org>
-References: <cjcmtl$knh$1@sea.gmane.org>
+Message-ID: <20040929173642.GB5368@us.ibm.com>
+References: <415A67B8.2080003@suse.de> <20040929130332.A11785@infradead.org> <415AAB0F.2080802@suse.de> <20040929171251.GA5368@us.ibm.com> <1096478376.2123.32.camel@mulgrave> <20040929182204.A15308@infradead.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ida.rowland.org ([192.131.102.52]:13316 "HELO ida.rowland.org")
-	by vger.kernel.org with SMTP id S268742AbUI2RbJ (ORCPT
+Received: from e6.ny.us.ibm.com ([32.97.182.106]:42736 "EHLO e6.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S268746AbUI2RhM (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 29 Sep 2004 13:31:09 -0400
-In-Reply-To: <cjcmtl$knh$1@sea.gmane.org>
+	Wed, 29 Sep 2004 13:37:12 -0400
+Content-Disposition: inline
+In-Reply-To: <20040929182204.A15308@infradead.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Sacher Khoudari <ng04@craesh.net>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, USB development list <linux-usb-devel@lists.sourceforge.net>, SCSI development list <linux-scsi@vger.kernel.org>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, Hannes Reinecke <hare@suse.de>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Andrew Morton <akpm@osdl.org>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, Alan Stern <stern@rowland.harvard.edu>
 
-On Wed, 29 Sep 2004, Sacher Khoudari wrote:
-
-> | OK, I have a definite theory about this, but it hinges on finding the
-> | above message in the logs.
-> |
-> | I think we tried to destroy the command slab while some commands were
-> | still active.  The refcounting only applies to in-flight commands, but
-> | commands can also be allocated and queued in the block layer.
-> |
-> | If I'm right, the attached will close this refcounting hole.
-> |
-> | James
-
-There is some confusion about when active commands should be destroyed.  
-See http://marc.theaimsgroup.com/?l=linux-scsi&m=109647697621208&w=2
-
-
-> Hi!
+Christoph Hellwig [hch@infradead.org] wrote:
+> On Wed, Sep 29, 2004 at 01:19:28PM -0400, James Bottomley wrote:
+> > On Wed, 2004-09-29 at 13:12, Mike Anderson wrote:
+> > > We may want to reconsider a method to distinguish unexpected removals
+> > > from clean removals.
+> > 
+> > Technically we have this: it's the recovery flag to scsi_host_cancel(). 
+> > Unfortunately, scsi_remove_host doesn't have such a flag so it's always
+> > set to zero at the moment.
 > 
-> I think you theory is right. I just found some interesting linesin
-> kern.log (see attachment). I remember I had some problems with my
-> USB-HDD while copying some big files, I had to detach the drive and plug
-> in again. As I can see in the logs there were some errors reading the
-> FAT-filesystem (although the filesytem fscks without errors). Strange...
-> 
-> Greatings!
-> Sacher
+> and ->remove for the bus drivers doesn't know either, so adding such
+> a flag wouldn't help us much.
 
-Your log shows multiple errors, and it's hard to sort them out.
+In some cases the knowledge would be in the driver would it not. When the
+drivers remove function is called the driver knows the state of the
+transport or in the case of the usb storage device it knows it will
+not process anymore commands. 
 
-First of all, try upgrading to 2.6.9-rc2.  There is a problem with Genesys
-interface chips in 2.6.8.1 -- the correct workaround wasn't added until
-2.6.9-rc1.  If I had known before that your device used the Genesys chip I
-would have told you to do this earlier.
+Alan / Matthew / others can correct if I have mis-read something in
+usb_stor_release_resources but it knows that it will not process anymore
+commands prior to calling scsi_remove_host so if we had a method to flag
+this it would help in our shutdown if we want to support both devices
+that can and cannot process commands.
 
-Second, if that doesn't solve all your problems, try turning on the 
-usb-storage verbose debugging option in the kernel configuration.  That 
-will add lots of extra information about failed commands, retries, and so 
-on to your system log.
-
-Alan Stern
+-andmike
+--
+Michael Anderson
+andmike@us.ibm.com
 
