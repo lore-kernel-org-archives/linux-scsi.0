@@ -1,63 +1,48 @@
-From: Matthew Wilcox <willy@debian.org>
-Subject: Re: [PATCH] scsi/Kconfig tidyup
-Date: Wed, 11 Feb 2004 20:14:32 +0000
+From: Andrew Morton <akpm@osdl.org>
+Subject: Re: lots and lots of disks again
+Date: Wed, 11 Feb 2004 13:28:48 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040211201432.GT13351@parcelfarce.linux.theplanet.co.uk>
-References: <20040211194600.GS13351@parcelfarce.linux.theplanet.co.uk> <20040211195109.A23991@infradead.org>
+Message-ID: <20040211132848.49eece0d.akpm@osdl.org>
+References: <20040204024512.5bf68428.akpm@osdl.org>
+	<20040210110417.GB4010@tpkurt.garloff.de>
+	<20040210112658.GC4010@tpkurt.garloff.de>
+	<20040210133932.A3870@infradead.org>
+	<20040210154751.GH4010@tpkurt.garloff.de>
+	<20040210102603.0c835212.akpm@osdl.org>
+	<20040211145614.GA4010@tpkurt.garloff.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:7647 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S266101AbUBKUOd
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 11 Feb 2004 15:14:33 -0500
-Content-Disposition: inline
-In-Reply-To: <20040211195109.A23991@infradead.org>
+Received: from fw.osdl.org ([65.172.181.6]:29846 "EHLO mail.osdl.org")
+	by vger.kernel.org with ESMTP id S266188AbUBKV1F (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 11 Feb 2004 16:27:05 -0500
+In-Reply-To: <20040211145614.GA4010@tpkurt.garloff.de>
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Matthew Wilcox <willy@debian.org>, linux-scsi@vger.kernel.org
+To: Kurt Garloff <garloff@suse.de>
+Cc: hch@infradead.org, linux-scsi@vger.kernel.org, pbadari@us.ibm.com, willy@debian.org, James.Bottomley@steeleye.com
 
-On Wed, Feb 11, 2004 at 07:51:09PM +0000, Christoph Hellwig wrote:
-> On Wed, Feb 11, 2004 at 07:46:00PM +0000, Matthew Wilcox wrote:
-> > 
-> > This patch corrects a couple of typos in drivers/scsi/Kconfig and
-> > makes the SCSI drivers menu depend on SCSI rather than on SCSI!=n.
-> > That has the effect of making every driver depend on SCSI, so we don't
-> > need the explicit dependency for every driver.
+Kurt Garloff <garloff@suse.de> wrote:
+>
+> Hi Andrew,
 > 
-> I'd rather kill that menu then actively using it for depencies..
+> On Tue, Feb 10, 2004 at 10:26:03AM -0800, Andrew Morton wrote:
+> > Kurt Garloff <garloff@suse.de> wrote:
+> > >
+> > > Since when is 4k huge?
+> > >  Sorry, I don't see any benefit in adding complexity to avoid a 4k array.
+> > 
+> > Well yes, but we do have lib/idr.c which I believe does what you need.  It
+> > is simple to use.
+> 
+> It can store a pointer per ID. One that I don't need, unless I overlook
+> some possibility to put an already existing pointer in there.
+> 
+> If we really allocate thousands of disks, the overhead of this solution
+> will be higher than the bitmap, I'm afraid.
 
-I'm not sure that's a great idea.  Looking in menuconfig, there's already
-14 lines in the generic SCSI menu.  Merging the drivers into the same menu
-would add another 56 lines into that menu.  Feels a little big to me.
+Four (or eight) bytes per disk!  I perceive a lack of perspecitve here ;)
 
-Unless you were proposing something like:
-
-   --- SCSI device support
-    [*]   legacy /proc/scsi/ support
-    ---   SCSI support type (disk, tape, CD-ROM)
-    <*>   SCSI disk support
-    < >   SCSI tape support
-    < >   SCSI OnStream SC-x0 tape support
-    <*>   SCSI CDROM support
-    [ ]     Enable vendor-specific extensions (for SCSI CDROM)
-    <*>   SCSI generic support
-    ---   Some SCSI devices (e.g. CD jukebox) support multiple LUNs
-    [*]   Probe all LUNs on each SCSI device
-    [ ]   Build with SCSI REPORT LUNS support
-    [ ]   Verbose SCSI error reporting (kernel size +=12K)
-    [ ]   SCSI logging facility
-          Adaptec drivers  --->
-          NCR/Symbios/LSI drivers  --->
-          Qlogic drivers  --->
-          Other drivers  --->
-
-But I don't think you are.
-
--- 
-"Next the statesmen will invent cheap lies, putting the blame upon 
-the nation that is attacked, and every man will be glad of those
-conscience-soothing falsities, and will diligently study them, and refuse
-to examine any refutations of them; and thus he will by and by convince 
-himself that the war is just, and will thank God for the better sleep 
-he enjoys after this process of grotesque self-deception." -- Mark Twain
+I'd trade clarity of implementation for that.  (As well as, possibly,
+reduced memory use on low-end machines).
