@@ -1,30 +1,31 @@
 From: "Miller, Mike (OS Dev)" <mike.miller@hp.com>
 Subject: RE: [PATCH] cciss: handler scsi_add_host failure
-Date: Wed, 5 Jan 2005 14:16:15 -0600
-Message-ID: <D4CFB69C345C394284E4B78B876C1CF107DC016A@cceexc23.americas.cpqcorp.net>
+Date: Wed, 5 Jan 2005 14:22:22 -0600
+Message-ID: <D4CFB69C345C394284E4B78B876C1CF107DC016C@cceexc23.americas.cpqcorp.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ztxmail04.ztx.compaq.com ([161.114.1.208]:42502 "EHLO
-	ztxmail04.ztx.compaq.com") by vger.kernel.org with ESMTP
-	id S262634AbVAEUQT convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 5 Jan 2005 15:16:19 -0500
+Received: from ztxmail03.ztx.compaq.com ([161.114.1.207]:14099 "EHLO
+	ztxmail03.ztx.compaq.com") by vger.kernel.org with ESMTP
+	id S262576AbVAEUWY convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 5 Jan 2005 15:22:24 -0500
 Content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>, ISS StorageDev <iss_storagedev@hp.com>
+To: Christoph Hellwig <hch@lst.de>
 Cc: jejb@steeleye.com, linux-scsi@vger.kernel.org
 
 > From: Christoph Hellwig [mailto:hch@lst.de]
 > 
 > Mike, is this patch okay?
+
+Christoph,
+BTW, I meant to say thanks.
+
+mikem
+
 > 
-
-Yes, this looks OK. It's something that was on my todo list that kept getting pushed down.
-
-Signed-off-by: Mike Miller <mike.miller@hp.com>
-
 > On Mon, Jan 03, 2005 at 02:24:31PM +0100, Christoph Hellwig wrote:
 > > --- 1.23/drivers/block/cciss_scsi.c	2004-10-14 16:15:25 +02:00
 > > +++ edited/drivers/block/cciss_scsi.c	2004-12-31 
