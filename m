@@ -1,60 +1,43 @@
-From: sullivan <sullivan@austin.ibm.com>
-Subject: Re: Removal of driverfs files in drivers/cdrom/cdrom.c
-Date: Thu, 25 Jul 2002 08:36:49 -0500
+From: Bjorn Helgaas <bjorn_helgaas@hp.com>
+Subject: sym53c8xx duplicate device detection
+Date: Thu, 25 Jul 2002 13:29:22 -0600
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20020725083649.D1757@austin.ibm.com>
-References: <Pine.LNX.4.44.0207241456570.954-100000@cherise.pdx.osdl.net>
+Message-ID: <200207251329.22563.bjorn_helgaas@hp.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.44.0207241456570.954-100000@cherise.pdx.osdl.net>; from mochel@osdl.org on Wed, Jul 24, 2002 at 02:57:11PM -0700
 List-Id: linux-scsi@vger.kernel.org
-To: Patrick Mochel <mochel@osdl.org>
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: groudier@free.fr
 
-On Wed, Jul 24, 2002 at 02:57:11PM -0700, Patrick Mochel wrote:
-> 
-> 
-> So, I'm looking at changing the driverfs API. In doring so, I came across 
-> this code in drivers/cdrom/cdrom.c:unregister_cdrom:
-> 
->         if (atomic_read (&cdi->cdrom_driverfs_dev.refcount)) {
->                 device_remove_file (&cdi->cdrom_driverfs_dev, "name");
->                 device_remove_file (&cdi->cdrom_driverfs_dev, "kdev");
->                 put_device (&cdi->cdrom_driverfs_dev);
->         }
-> 
-> This looks wrong, based on the fact that it wasn't the cdrom layer that 
-> created these files. They were, I believe, created by the SCSI cdrom 
-> layer. So, why are they being removed here, esp. since they are removed at 
-> a more general layer? 
+Hello,
 
-Yes, I struggled with this one. I would prefer the implementation where the
-lower layer (ie. scsi, ide) setup only the parent and bus fields of the
-cdrom_driverfs_dev structure and let the more general layer (cdrom.c) do the
-rest as part of the register_cdrom() call. Similarily, unregister_cdrom() would
-do the removal.
+sym53c8xx.c contains the following code, apparently to work around
+a problem with some HP boxes:
 
-Since there are a lot of drivers that register with the general cdrom layer 
-that don't support driverfs yet, I didn't want to make changes across a whole
-bunch of components needlessly until people got a chance to look at what the
-device tree might look like for the scsi implementation. 
+                /* Some HW as the HP LH4 may report twice PCI devices */
+                for (i = 0; i < count ; i++) {
+                        if (devtbl[i].slot.bus       == PciBusNumber(pcidev) && 
+                            devtbl[i].slot.device_fn == PciDeviceFn(pcidev))
+                                break;
+                }
+                if (i != count) /* Ignore this device if we already have it */
+                        continue;
 
-Maybe a first good step would be to move the cdrom support completely up into
-the general layer and use the presence of a non NULL parent field to indicate
-whether the lower level driver has added support for driverfs. We'd have to
-make sure the cdrom_drverfs_dev structure is initialized with zeros for all of
-the cdrom related driver layers that don't support driverfs yet. Let me know
-what you think. I'll pull a patch together... 
+I'm working on a box with multiple PCI segments, i.e., there are
+several PCI domains, each with its own range of 0-255 bus numbers.
+So if we put an adapter at 10:00.0 on segment 0, and another at
+10:00.0 on segment 1, the driver ignores the second because it
+has the same bus and device/fn as the first.
 
-> 
-> Thanks,
-> 
->         -pat
-> 
-> 
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+So I'm interested in specifics about this problem so I can think
+about possibilities for fixing my segment problem without
+reintroducing an LH4 problem.  For instance, maybe we can
+change the architecture-specific PCI code to deal with the
+"multiple devices" problem for ALL drivers, not just sym53c8xx.
+-- 
+Bjorn Helgaas - bjorn_helgaas at hp.com
+Linux Systems Operation R&D
+Hewlett-Packard Company
