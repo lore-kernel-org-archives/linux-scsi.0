@@ -1,26 +1,42 @@
-From: Andrew Morton <akpm@osdl.org>
-Subject: Re: About ARECA RAID driver for Linux i386/x86-64
-Date: Fri, 11 Mar 2005 16:20:45 -0800
-Message-ID: <20050311162045.3ff73b6f.akpm@osdl.org>
-References: <000001c524bc$d3c546a0$0b02a8c0@kw.de>
-	<000c01c52626$32bae8d0$9300a8c0@erich2003>
+From: Atul Srinivasan <atul@sierra-da.com>
+Subject: kernel 2.6.11.2 / megaraid 2.20.4.5 and /proc question
+Date: Fri, 11 Mar 2005 16:32:15 -0800
+Message-ID: <4232388F.7070505@sierra-da.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
-Received: from fire.osdl.org ([65.172.181.4]:62694 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S261761AbVCLAVA (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 11 Mar 2005 19:21:00 -0500
-In-Reply-To: <000c01c52626$32bae8d0$9300a8c0@erich2003>
+Received: from [209.10.211.37] ([209.10.211.37]:50201 "EHLO
+	localhost.localdomain") by vger.kernel.org with ESMTP
+	id S261526AbVCLAcQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 11 Mar 2005 19:32:16 -0500
+Received: from [127.0.0.1] (localhost [127.0.0.1])
+	by localhost.localdomain (8.12.8/8.12.8) with ESMTP id j2C0WFup011832
+	for <linux-scsi@vger.kernel.org>; Fri, 11 Mar 2005 16:32:16 -0800
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: erich <erich@areca.com.tw>
-Cc: e0815w@onlinehome.de, linux-scsi@vger.kernel.org, James.Bottomley@SteelEye.com, hch@infradead.org, arjan@infradead.org
+To: linux-scsi@vger.kernel.org
 
-"erich" <erich@areca.com.tw> wrote:
->
-> I had modify "arcmsr" as your mention and ran it at 2.6.11 kernel.
+Hi,
 
-Your patch omitted drivers/scsi/arcmsr/Makefile, so it doesn't compile.
+I've just build kernel version 2.6.11.2 with the new lsi megaraiddrivers
+compiled into the kernel. I think the driver version is 2.20.4.5.
 
+I used to be using a 2.6.7 kernel with an older version of the drivers.
+2.00.3.
 
+I'm using a MegaRAID SATA 150-6 card.
+
+With the 2.6.7 kernel there used to be information in /proc/megaraid.
+I do not see the same information using the 2.6.11.2 kernel.
+Is there anything in /proc using the 2.6.11.2 kernel setup ?
+If not there, then anywhere else ?
+
+Also, where might I find information on to forward errors detected bythe
+adapter. e.g send mail to an account
+
+Apologies in advance if any of the above questions are not 
+appropriatefor this
+group, or if they are covered in some doc I have not read.
+
+Thanks,
+Atul
