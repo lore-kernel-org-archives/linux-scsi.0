@@ -1,72 +1,62 @@
 From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: [PATCH] switch scsi upper driver probing to the driver model
-Date: Sat, 17 May 2003 13:59:52 +1000
+Subject: Re: "do ata" scsi command?
+Date: Sat, 17 May 2003 14:17:34 +1000
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3EC5B3B8.9020308@torque.net>
-References: <20030516182039.A7369@lst.de>
+Message-ID: <3EC5B7DE.4060402@torque.net>
+References: <20030515230223.GA516@gtf.org> <20030516060324.GT812@suse.de> <3EC509A1.10503@pobox.com> <20030516160502.GE812@suse.de> <3EC51235.8090701@pobox.com> <20030516163558.GH812@suse.de> <3EC514AD.4000504@pobox.com> <20030516164320.GK812@suse.de>
 Reply-To: dougg@torque.net
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bunyip.cc.uq.edu.au ([130.102.2.1]:61454 "EHLO
-	bunyip.cc.uq.edu.au") by vger.kernel.org with ESMTP id S261190AbTEQDq1
+Received: from bunyip.cc.uq.edu.au ([130.102.2.1]:60943 "EHLO
+	bunyip.cc.uq.edu.au") by vger.kernel.org with ESMTP id S261203AbTEQEEJ
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 16 May 2003 23:46:27 -0400
-In-Reply-To: <20030516182039.A7369@lst.de>
+	Sat, 17 May 2003 00:04:09 -0400
+In-Reply-To: <20030516164320.GK812@suse.de>
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: James.Bottomley@steeleye.com, linux-scsi@vger.kernel.org
+To: Jens Axboe <axboe@suse.de>
+Cc: Jeff Garzik <jgarzik@pobox.com>, linux-scsi@vger.kernel.org
 
-Christoph Hellwig wrote:
-> Upper drivers now use the LDM ->probe/->remove callbacks and the
-> core list code.  Note that this means there is only one driver per
-> scsi device and not multiple, e.g. you can't have sd _and_ sg for
-> the same device.
+Jens Axboe wrote:
+> On Fri, May 16 2003, Jeff Garzik wrote:
+> 
+>>Jens Axboe wrote:
+>>
+>>>How would you shoehorn any given ata command into a scsi
+>>>command?
+>>
+>>
+>>Make up a vendor-specific scsi opcode, say 0x70.  Define this opcode 
+>>such that it carries the ATA taskfile registers as cdb parameters.  Look 
+>>at the taskfile as passed in the cdb to classify it (a la 
+>>req_file->data_phase in drivers/ide).  Then execute it.
+> 
+> 
+> As I wrote in the last email, I think this is about the ugliest idea (or
+> close to) I've ever heard. You can't just go around making up opcodes.
 
-Is that "_and_" symmetric? That is, can one have the sg
-device in preference to the sd device? If so, how is
-that selected?
+Jens,
+This subject is going to come up in the future. I'm
+thinking about Serial Attached SCSI (SAS) which was
+demo-ed at CeBit and various alliances are trying to
+get to market by the end of this year.
 
->  Personally I think that's not a problem anymore
-> with the generic SG_IO in place, but if you scream loud enough I
-> could come up with a hack that makes the sg nodes a property of the
-> scsi midlayer instead of a LDM-style driver and we could get the
-> old behaviour back.
+In SAS we have a pure SCSI command set protocol (SSP),
+a management protocol (SMP) and a protocol for tunnelling
+the ATA/PI command set/task file over an SAS link (STP)**.
+The idea is that users will be able to plug either SAS
+or SATA disks into their RAID backplanes.
 
-Christoph,
-This patch would have some interesting side effects:
-   - no generic interface (apart from SCSI_IOCTL_SEND_COMMAND)
-     for tape devices (st and osst). While the maintainers of
-     st and osst might like this, not all the user apps would :-)
-   - the SG_IO ioctl in the block level
-      - limits maximum transfer size to 65536 bytes
-      - does not support mmap-ed IO [and would need
-        something like a reserved buffer concept to do it]
-      - does not support direct IO
-      - needs work (debuggings)
-      - does not support async IO (either does SG_IO
-        in sg but it can be done other ways in sg)
-   - the extra ioctls that sg defines are either fudged
-     or missing. This might upset programs other than
-     cdrecord; cdparanoia comes to mind
+So we are likely to get a SAS HBA in the SCSI subsystem
+(from Justin??) that is an initiator for those three
+protocols. How do we handle STP??
 
-It was my understanding that the device model has been
-recently modified by Greg KH to cope with the dual nature
-of the interface that sg causes. Evidently similar situations
-occur elsewhere in the kernel.
 
-Whether the sg driver is an upper level SCSI driver or
-part of the mid level actually makes little difference.
-The sgbind patch that I canvassed the other day
-actually fits well into sg's functionality being subsumed
-into the mid level with a single virtual device node
-(e.g. /dev/scsi or /dev/scsibind ?) for access with each
-open file descriptor getting its own state.
-
-But then there is the problem of backward compatibility...
+** devices called expanders placed between the SAS HBA
+and the SATA devices will provide fanout and the
+SATA to STP physical/link mapping.
 
 Doug Gilbert
-
 
 
