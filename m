@@ -1,41 +1,28 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
+From: Christoph Hellwig <hch@infradead.org>
 Subject: Re: [PATCH] SCSI device/adapter/bus address correlation?
-Date: 02 Sep 2004 19:36:15 -0400
+Date: Fri, 3 Sep 2004 00:58:04 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1094168177.2097.154.camel@mulgrave>
-References: <200409021719.15267.bjorn.helgaas@hp.com>
+Message-ID: <20040903005804.A30329@infradead.org>
+References: <200409021719.15267.bjorn.helgaas@hp.com> <1094168177.2097.154.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat16.steeleye.com ([209.192.50.48]:7346 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S269163AbUIBXg1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 2 Sep 2004 19:36:27 -0400
-In-Reply-To: <200409021719.15267.bjorn.helgaas@hp.com>
+Received: from imladris.demon.co.uk ([193.237.130.41]:15877 "EHLO
+	phoenix.infradead.org") by vger.kernel.org with ESMTP
+	id S269403AbUIBX6N (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 2 Sep 2004 19:58:13 -0400
+Content-Disposition: inline
+In-Reply-To: <1094168177.2097.154.camel@mulgrave>; from James.Bottomley@SteelEye.com on Thu, Sep 02, 2004 at 07:36:15PM -0400
 List-Id: linux-scsi@vger.kernel.org
-To: Bjorn Helgaas <bjorn.helgaas@hp.com>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Bjorn Helgaas <bjorn.helgaas@hp.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Thu, 2004-09-02 at 19:19, Bjorn Helgaas wrote:
-> Not being a real SCSI person, I'm sure there's some clever way I'm
-> supposed to figure out which disk is /dev/sda.  But sometimes it's
-> not clear from the kernel boot messages, particularly for drivers
-> that don't print the PCI address of the adapter.
+On Thu, Sep 02, 2004 at 07:36:15PM -0400, James Bottomley wrote:
+> > Is there any interest in a patch like the attached, which makes
+> > things look like this:
+> 
+> Not really, unless it's part of a conversion to dev_printk().
 
-You do it like this:
-
-jejb@gsyprf11> ls -l /sys/block/sda/device
-lrwxrwxrwx  1 root root 0 Aug 22 10:57 /sys/block/sda/device ->
-../../devices/parisc0/parisc0:0/pci0000:00/0000:00:01.1/host1/1:0:15:0/
-
-There you see the full attachment tree of the pci device.
-
-> Is there any interest in a patch like the attached, which makes
-> things look like this:
-
-Not really, unless it's part of a conversion to dev_printk().
-
-James
-
+In addition the patch will crash the box for all the legacy drivers
+that don't set the device field in struct Scsi_Host
 
