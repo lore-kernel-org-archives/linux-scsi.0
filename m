@@ -1,92 +1,64 @@
-From: Mike Anderson <andmike@us.ibm.com>
-Subject: [PATCH] scsi_eh_flush_done_q return status
-Date: Fri, 16 Jan 2004 12:11:17 -0800
+From: "Andrew Vasquez" <andrew.vasquez@qlogic.com>
+Subject: RE: pulling failover out of qla2xxx
+Date: Fri, 16 Jan 2004 12:02:50 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040116201117.GD1053@beaverton.ibm.com>
+Message-ID: <B179AE41C1147041AA1121F44614F0B0598E34@AVEXCH02.qlogic.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e35.co.us.ibm.com ([32.97.110.133]:8610 "EHLO e35.co.us.ibm.com")
-	by vger.kernel.org with ESMTP id S265859AbUAPUGL (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 16 Jan 2004 15:06:11 -0500
-Content-Disposition: inline
+Received: from [198.70.193.2] ([198.70.193.2]:27504 "EHLO avexch01.qlogic.com")
+	by vger.kernel.org with ESMTP id S265841AbUAPUCf convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 16 Jan 2004 15:02:35 -0500
+content-class: urn:content-classes:message
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: ishii.hironobu@jp.fujitsu.com
+To: Christoph Hellwig <hch@lst.de>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, Linux-SCSI <linux-scsi@vger.kernel.org>, Arjan van de Ven <arjanv@redhat.com>
 
-This is a refresh of a patch for a previously reported problem with the
-scsi_eh_flush_done_q. The original thread is located here:
+On Friday, January 16, 2004 4:07 AM, Christoph Hellwig wrote:
+> > 	o Add initial ISP6312/ISP6322 definitions and checks during
+> > 	  board configuration.
+> 
+> > 	o Add new 2300/2322 IPX and 6312/6322 FLX firmwares (3.02.20):
+> > 	  - Remove 2300 TPX firmware from distribution.
+> 
+> Please add a frontend module per firmware variant instead of adding
+> them to qla2300.ko - the whole point of these frontend modules is to
+> avoid having to load unessecary firmware.
+> 
 
-http://marc.theaimsgroup.com/?l=linux-scsi&m=107043398314649&w=2
+One of the common complaints we've received from users of our HBA
+products is that there are currently three _different_ drivers to
+support the current line of ISP chips, ISP2100 - qla2100.o, ISP22XX -
+qla2200.o, and ISP2300/2310/2312 - qla2300.o.
 
-This patch has a one line difference than the one previously posted in
-response to the thread. In the previous patch I was unconditionally
-setting result in the finish case.
+I originally mentioned this problem during early discussions with you
+before you began the qla2xxx lib/isp split.  QLogic's directive then
+and now is that from point-forward (ISP23XX), all future ISP chip
+support would be added and exported in a single driver module rather
+than the previous qlaABXX.o fashion.  Currently that module, while
+perhaps incorrectly named, is qla2300.o.
 
-I verified the patch using scsi_debug + gov, but could only cover the
-retry path of the patch. I ran out of time to tweak scsi_debug to give
-me the right failure signature. If Hironobu has some free time may be
-the patch could be verified on the original failing system.
+I'll open up a request-for-response from the rest of the listers in
+asking if parceling out qlaAB00.ko modules based on firmware types is
+both practical and sensible from a user standpoint.  Especially
+considering that many users aren't really concerned with the ISP chip
+type on their QLAXXXX or OEM-BRANDED ABC host bus adapter.
 
--andmike
---
-Michael Anderson
-andmike@us.ibm.com
+Now from a development and maintenance standpoint, I can understand
+the reluctance of having to accept a 100K file for each ISP type.
+But, let me just say QLogic is looking into other ways of distributing
+firmware images.  Finally, given the addition of some new binary-load
+user->kernel space facilities (namely request_firmware()) the space
+issue becomes moot.
 
-DESC
-This patch fixes a bug in scsi_eh_flush_done_q when the allowed count has
-been exceeded and the command errored for a timeout. The bug is that the
-result will be left at zero and the command finished.
+> Else the update looks okay.
 
-author: Mike Anderson <andmike@us.ibm.com>
-patch_version: Thu Jan 15 20:27:10 UTC 2004
-EDESC
+Thanks again for all your work at shaping the qla2xxx driver for
+inclusion into 2.6.  I'd like to extend a personal thanks to you for
+all your efforts, and, when I'm in the area of EU again, perhaps offer
+to buy you a beer.
 
-
- patched-scsi-misc-2.7-andmike/drivers/scsi/scsi_error.c |   28 +++++++---------
- 1 files changed, 13 insertions(+), 15 deletions(-)
-
-diff -puN drivers/scsi/scsi_error.c~scsi_error_retry drivers/scsi/scsi_error.c
---- patched-scsi-misc-2.7/drivers/scsi/scsi_error.c~scsi_error_retry	Thu Jan 15 22:14:40 2004
-+++ patched-scsi-misc-2.7-andmike/drivers/scsi/scsi_error.c	Thu Jan 15 22:14:40 2004
-@@ -1420,23 +1420,21 @@ static void scsi_eh_flush_done_q(struct 
- 	list_for_each_safe(lh, lh_sf, done_q) {
- 		scmd = list_entry(lh, struct scsi_cmnd, eh_entry);
- 		list_del_init(lh);
--		if (!scmd->device->online) {
--			 scmd->result |= (DRIVER_TIMEOUT << 24);
--		} else {
--			if (++scmd->retries < scmd->allowed) {
--				SCSI_LOG_ERROR_RECOVERY(3,
--					printk("%s: flush retry"
--					       " cmd: %p\n",
--						  current->comm,
--						  scmd));
-+		if (scmd->device->online &&
-+		    	(++scmd->retries < scmd->allowed)) {
-+			SCSI_LOG_ERROR_RECOVERY(3, printk("%s: flush"
-+							  " retry cmd: %p\n",
-+							  current->comm,
-+							  scmd));
- 				scsi_queue_insert(scmd, SCSI_MLQUEUE_EH_RETRY);
--				continue;
--			}
-+		} else {
-+			if (!scmd->result)
-+				scmd->result |= (DRIVER_TIMEOUT << 24);
-+			SCSI_LOG_ERROR_RECOVERY(3, printk("%s: flush finish"
-+							" cmd: %p\n",
-+							current->comm, scmd));
-+			scsi_finish_command(scmd);
- 		}
--		SCSI_LOG_ERROR_RECOVERY(3, printk("%s: flush finish"
--				       " cmd: %p\n",
--					  current->comm, scmd));
--		scsi_finish_command(scmd);
- 	}
- }
- 
-
-_
-
+Thanks,
+Andrew Vasquez
