@@ -1,55 +1,63 @@
-From: torvalds@transmeta.com (Linus Torvalds)
+From: "Martin K. Petersen" <mkp@mkp.net>
 Subject: Re: [RFC] Persistent naming of scsi devices
-Date: Wed, 10 Apr 2002 02:17:05 +0000 (UTC)
+Date: 09 Apr 2002 23:37:44 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <a907b1$rdj$1@penguin.transmeta.com>
-References: <OF8B2F3581.590066BE-ONC1256B95.0068B28C@de.ibm.com> <3CB39285.8000609@vitalstream.com>
+Message-ID: <yq18z7w1awn.fsf@austin.mkp.net>
+References: <OF8B2F3581.590066BE-ONC1256B95.0068B28C@de.ibm.com>
+	<3CB39285.8000609@vitalstream.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: (from root@localhost)
-	by neon-gw.transmeta.com (8.9.3/8.9.3) id TAA20381
-	for <linux-scsi@vger.kernel.org>; Tue, 9 Apr 2002 19:17:45 -0700
-Received: from palladium.transmeta.com (palladium.transmeta.com [10.1.1.46])
-	by deepthought.transmeta.com (8.11.6/8.11.6) with ESMTP id g3A2HfN03547
-	for <linux-scsi@vger.kernel.org>; Tue, 9 Apr 2002 19:17:42 -0700 (PDT)
-Received: (from mail@localhost)
-	by palladium.transmeta.com (8.9.3/8.9.3) id TAA20627
-	for linux-scsi@vger.kernel.org; Tue, 9 Apr 2002 19:17:41 -0700
+In-Reply-To: <3CB39285.8000609@vitalstream.com>
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-In article <3CB39285.8000609@vitalstream.com>,
-Rick Stevens  <rstevens@vitalstream.com> wrote:
->
-> [ Position-based naming ]
->
->As I said, other people smarter than I seem to think it makes sense.
 
-No, those people were probably not smarter than you. In fact, they are
-likely complete morons.
+Rick> E.g. "/dev/dsk/c0t1d2s3" is controller 0 (first SCSI controller
+Rick> seen on the bus), target ID 1, LUN 2, partition (slice) 3.
+Rick> Simple, unambiguous and repeatable.
 
-Position means nothing.  Anybody who bases naming on position is just
-bending over and waiting for it when it comes to hotplugging etc.  It
-solves none of the problems it is claimed to solve (ie the names are
-_not_ constant), and it fundamentally locks you into a mindset that
-simply isn't true. 
+You plug in another SCSI controller and then what happens?  Or one of
+your existing controllers goes up in blue smoke?
 
->Why not Linux?  It's silly to smush things together just to satisfy a
->bizzare craving to have a list of devices with no "holes" in it.
+What we want is (at least) three ways of addressing a device:
 
-No, it's silly to think that you can enumerate the address space: you
-can't. The only thing you get from trying is a horrible mess in /dev
-that adds zero information anywhere.
+1. By content.  This is the persistent naming.  Think
+   filesystem/MD/LVM UUID.  This is what you put in /etc/fstab and
+   what metadisk systems use to assemble logical volumes.
 
-You're much better off just enumerating your SCSI devices the trivial
-way (ie 0, 1, 2 ....  completely independent on position - each device
-gets one unique number that has no inherent meaning and is UNDERSTOOD to
-have no inherent meaning, only an ID) and then having a way to query
-their attibutes.  That way you can use the attributes (which are _NOT_
-identities) to create whatever "convenient mapping" you want. 
+   Content referencing is used for accessing data.
 
-The position of a drive is not its name, it's just one random attribute
-in a sea of other random attributes.  Depending on what you do, it might
-be a useful one, but it's equally likely that it is completely
-meaningless.  Trying to make it inherently meaningful is just *wrong*.
+2. By physical path.  This naming is not persistent.  Not even runtime
+   because hotplug, iSCSI and whatnot may mess things up.
 
-		Linus
+   Path naming is for discovery and recovery.  When you add an
+   unlabeled disk you want to reference it by path to give it a name.
+   When you have a failed disk on your system you want to know which
+   physical device to pull from the array.
+
+3. By enumeration.  This is what the kernel happens to be using to
+   reference the device.  diskN.  Certainly not persistent.
+
+   Enumeration is for the kernel.
+
+Now, some magic needs to be involved at discovery time because we
+can't rely only on neither content addressing, nor path addressing
+alone to do the right thing.  And why is that?
+
+Well, imagine you have a set of mirrored disks.  If you only address
+by content, you will find have two devices that match (or three if MD
+has done autodetection).  What you really want to mount is the MD
+device.
+
+Multipathing has a similar problem.  You'll see two copies of the same
+filesystem/UUID.  And again you really want the metadevice to be
+mounted.
+
+So not only is your proposal a bad idea for persistency reasons.  The
+scheme does not carry enough information to do what is needed.
+
+-- 
+Martin K. Petersen, Principal Linux Consultant, Linuxcare, Inc.
+mkp@linuxcare.com, http://www.linuxcare.com/
+SGI XFS for Linux Developer, http://oss.sgi.com/projects/xfs/
