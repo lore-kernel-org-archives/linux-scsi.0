@@ -1,37 +1,38 @@
-From: Mike Christie <mikenc@us.ibm.com>
+From: Brian King <brking@us.ibm.com>
 Subject: Re: Fw: [Bugme-new] [Bug 3651] New: dell poweredge 4600 aacraidPERC
  3/Di Container goes offline
-Date: Wed, 24 Nov 2004 12:31:36 -0800
-Message-ID: <41A4EFA8.5060209@us.ibm.com>
+Date: Wed, 24 Nov 2004 14:28:25 -0600
+Message-ID: <41A4EEE9.5050506@us.ibm.com>
 References: <60807403EABEB443939A5A7AA8A7458B694FA8@otce2k01.adaptec.com> <20041124130904.GA12830@infradead.org> <41A4A1B3.5070106@us.ibm.com> <41A4EF0D.7020507@us.ibm.com>
+Reply-To: brking@us.ibm.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from zeus.kernel.org ([204.152.189.113]:41099 "EHLO zeus.kernel.org")
-	by vger.kernel.org with ESMTP id S262835AbUKXUcC (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 24 Nov 2004 15:32:02 -0500
-Received: from e32.co.us.ibm.com (e32.co.us.ibm.com [32.97.110.130])
-	by zeus.kernel.org (8.12.11/8.11.6) with ESMTP id iAOKTw8A010080
-	for <linux-scsi@vger.kernel.org>; Wed, 24 Nov 2004 12:31:56 -0800
-Received: from westrelay03.boulder.ibm.com (westrelay03.boulder.ibm.com [9.17.195.12])
-	by e32.co.us.ibm.com (8.12.10/8.12.9) with ESMTP id iAOKQ6FJ052590
-	for <linux-scsi@vger.kernel.org>; Wed, 24 Nov 2004 15:26:06 -0500
-Received: from d03av01.boulder.ibm.com (d03av01.boulder.ibm.com [9.17.195.167])
-	by westrelay03.boulder.ibm.com (8.12.10/NCO/VER6.6) with ESMTP id iAOKQ6FR194838
-	for <linux-scsi@vger.kernel.org>; Wed, 24 Nov 2004 13:26:06 -0700
-Received: from d03av01.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av01.boulder.ibm.com (8.12.11/8.12.11) with ESMTP id iAOKQ5nK026746
-	for <linux-scsi@vger.kernel.org>; Wed, 24 Nov 2004 13:26:05 -0700
+Received: from over.ny.us.ibm.com ([32.97.182.111]:6362 "EHLO
+	over.ny.us.ibm.com") by vger.kernel.org with ESMTP id S262851AbUKXVIg
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 24 Nov 2004 16:08:36 -0500
+Received: from e34.co.us.ibm.com (e34.esmtp.ibm.com [9.14.4.132])
+	by pokfb.esmtp.ibm.com (8.12.10/8.12.9) with ESMTP id iAOKYptE022894
+	(version=TLSv1/SSLv3 cipher=EDH-RSA-DES-CBC3-SHA bits=168 verify=OK)
+	for <linux-scsi@vger.kernel.org>; Wed, 24 Nov 2004 15:34:51 -0500
+Received: from westrelay02.boulder.ibm.com (westrelay02.boulder.ibm.com [9.17.195.11])
+	by e34.co.us.ibm.com (8.12.10/8.12.9) with ESMTP id iAOKSRDP524660
+	for <linux-scsi@vger.kernel.org>; Wed, 24 Nov 2004 15:28:27 -0500
+Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
+	by westrelay02.boulder.ibm.com (8.12.10/NCO/VER6.6) with ESMTP id iAOKSRNM298492
+	for <linux-scsi@vger.kernel.org>; Wed, 24 Nov 2004 13:28:27 -0700
+Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av02.boulder.ibm.com (8.12.11/8.12.11) with ESMTP id iAOKSQk1012588
+	for <linux-scsi@vger.kernel.org>; Wed, 24 Nov 2004 13:28:26 -0700
 In-Reply-To: <41A4EF0D.7020507@us.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Mike Christie <mikenc@us.ibm.com>
-Cc: brking@us.ibm.com, Christoph Hellwig <hch@infradead.org>, "Salyzyn, Mark" <mark_salyzyn@adaptec.com>, Ryan Anderson <ryan@autoweb.net>, linux-scsi@vger.kernel.org
+Cc: Christoph Hellwig <hch@infradead.org>, "Salyzyn, Mark" <mark_salyzyn@adaptec.com>, Ryan Anderson <ryan@autoweb.net>, linux-scsi@vger.kernel.org
 
 Mike Christie wrote:
-
 > Brian King wrote:
 > 
 >>
@@ -70,14 +71,19 @@ Mike Christie wrote:
 > someone
 > can reset this to 5 or 1 sec and there are is chance for the lld to 
 > override
-
-Sorry, that should have been
-
-"there is no chance"
-
 > this if it is invalid. Is this just one of those things where we say
 > only touch the timeout if you know what you are doing, or is it that the 
 > lld
 > should not have that power, or sometihng else?
-> 
+
+Well, personally, I think this is a case of only touch the timeout if you know
+what you are doing, but the infrastructure is certainly there for the LLD to
+override the timeout attribute and do whatever policing might need to be done.
+
+
+
+-- 
+Brian King
+eServer Storage I/O
+IBM Linux Technology Center
 
