@@ -1,65 +1,69 @@
-From: Mark Lord <lkml@rtr.ca>
-Subject: Re: [PATCH] QStor SATA/RAID driver for 2.6.9-rc3
-Date: Thu, 07 Oct 2004 18:03:36 -0400
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <4165BD38.4020403@rtr.ca>
-References: <4161A06D.8010601@rtr.ca> <416547B6.5080505@rtr.ca> <20041007150709.B12688@infradead.org> <4165624C.5060405@rtr.ca> <416565DB.4050006@pobox.com> <4165A45D.2090200@rtr.ca> <4165A766.1040104@pobox.com> <4165A85D.7080704@rtr.ca> <4165AB1B.8000204@pobox.com> <4165ACF8.8060208@rtr.ca> <20041007221537.A17712@infradead.org>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: libata & scsi rescan.
+Date: Thu, 7 Oct 2004 18:21:11 -0400
+Sender: linux-ide-owner@vger.kernel.org
+Message-ID: <20041007222111.GA20023@havoc.gtf.org>
+References: <20041001141244.B23006@florence.linkmargin.com> <415DB03E.5090005@pobox.com> <20041004155647.A9589@florence.linkmargin.com> <4161BB01.5080607@pobox.com> <20041006173656.A18221@florence.linkmargin.com> <416496CC.4090105@pobox.com> <20041006214746.A18793@florence.linkmargin.com> <4164B548.7030700@pobox.com> <4164BDD6.6000404@pobox.com> <20041007171457.B21662@florence.linkmargin.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel=40m.gmane.org-S269827AbUJGWIw@vger.kernel.org>
-In-Reply-To: <20041007221537.A17712@infradead.org>
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Jeff Garzik <jgarzik@pobox.com>, Mark Lord <lsml@rtr.ca>, Linux Kernel <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20041007171457.B21662@florence.linkmargin.com>
+To: Andy Warner <andyw@pobox.com>
+Cc: linux-ide@vger.kernel.org, Doug Ledford <dledford@redhat.com>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-(Christoph Hellwig wrote:
- >
->  - the !dev case in qs_scsi_queuecomman can't happen
+On Thu, Oct 07, 2004 at 05:14:57PM -0500, Andy Warner wrote:
+> Jeff Garzik wrote:
+> > BTW, the SiI folks recommend a debounce timer.
+> 
+> OK, got that. No problem, queue_delayed_work() and some
+> state handles that. Now I've got the following issue,
+> calling scsi_remove_device() seems to try and flush
+> the disk - not a very productive operation:
+> 
+> <drive removed>
+> ata1: drive not present
+> Synchronizing SCSI cache for disk sdb: 
+> ATA: abnormal status 0x7F on port 0xF8A3EC87
+> ATA: abnormal status 0x7F on port 0xF8A3EC87
+> ATA: abnormal status 0x7F on port 0xF8A3EC87
+> ata1: command 0xea timeout, stat 0x50 host_stat 0x0
+> 
+> <drive re-added>
+> ata1: drive present
+>   Vendor: ATA       Model: ST3160023AS       Rev: 3.17
+>   Type:   Direct-Access                      ANSI SCSI revision: 05
+> SCSI device sdb: 312581808 512-byte hdwr sectors (160042 MB)
+> SCSI device sdb: drive cache: write back
+> ATA: abnormal status 0xFF on port 0xF8A3EC87
+> ATA: abnormal status 0xFF on port 0xF8A3EC87
+> ata1: command 0x25 timeout, stat 0x50 host_stat 0x1
+>  unknown partition table
+> Attached scsi disk sdb at scsi14, channel 0, id 0, lun 0
+> Attached scsi generic sg2 at scsi14, channel 0, id 0, lun 0,  type 0
+> 
+> 
+> I'm not too concerned about the errors when the drive
+> appears yet, but trying to access the disk that just
+> vanished is never going to work well. Am I missing
+> something ?
 
-Are you sure?
-I have seen it occur immediately after hot-removal
-of a drive.  There have been other structural changes
-since then, so perhaps it is no longer possible,
-but I'd rather have the test there than have the
-kernel ooops again.  If you feel strongly about it,
-then away it goes.
+(you should probably CC linux-scsi@vger.kernel.org as well, when
+mentioning SCSI-related stuff)
 
->  - never mess with eh_timeout from inside a driver
+I've seen this behavior before.  It's weird, but we must deal with it
+anyway because
 
-Give us an interface for it, please.
-In the meanwhile, gone!
+Since scsi_remove_device() must be called in process context, there will
+ALWAYS be a window where a command could get issued.  Therefore, we must
+create and set a "device is gone" flag in our local structures, and
+check that in the queuecommand handler.
 
->  - please don't implemente the HDIO_ ioctls, Jeff said this can
->    be done via SG_IO
+You must also make sure to clean up any currently-executing commands
+properly, when a device is removed.
 
-SG_IO is incompatible with current user-mode toolsets.
-Once that interface becomes more mature, and the distributions
-gradually get updated with newer versions of the tools,
-then the HDIO_ stuff can go (as per the comments in the source).
-For now, it is essential for hdparm and smartmontools, among others.
+	Jeff
 
-Alternatively, as Jeff has suggested, we may be able to implement
-a generic HDIO_ mechanism in libata that re-issues the commands
-through SG_IO (perhaps that is what you meant).  Is that there now?
 
->  - if ->info return a static string you can just store it into ->name
 
-So just nuke the _info() proc, and use .name = QS_DESC ?
-Okay, done.
-
->  - please use the kernel/kthread.c interface for your kernel thread
-
-Good -- I hadn't noticed that new interface before.
-
-It's quite hard to find all of this stuff first time through,
-as there are practically no existing drivers that don't have
-many of the same comments applicable to them.
-
-Perhaps this will be one of the first/few drivers
-to become totally compliant with the latest kernel APIs.
-
-Cheers
---
-Mark Lord
-(hdparm keeper & the original "Linux IDE Guy")
