@@ -1,63 +1,38 @@
-From: Alex Williamson <alex.williamson@hp.com>
-Subject: RE: mptscsih.c: discarded in section `.exit.text' from drivers/bu
-	ilt-in.o
-Date: Thu, 05 Feb 2004 13:20:02 -0700
+From: Brian King <brking@us.ibm.com>
+Subject: [PATCH] Make retries obey host_self_blocked flag
+Date: Thu, 05 Feb 2004 14:45:08 -0600
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1076012402.3744.97.camel@patsy.fc.hp.com>
-References: <0E3FA95632D6D047BA649F95DAB60E5703D1A5D4@exa-atlanta.se.lsil.com>
+Message-ID: <4022AB54.1020209@us.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from atlrel7.hp.com ([156.153.255.213]:41173 "EHLO atlrel7.hp.com")
-	by vger.kernel.org with ESMTP id S266408AbUBEUUJ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Feb 2004 15:20:09 -0500
-In-Reply-To: <0E3FA95632D6D047BA649F95DAB60E5703D1A5D4@exa-atlanta.se.lsil.com>
+Received: from e35.co.us.ibm.com ([32.97.110.133]:10160 "EHLO
+	e35.co.us.ibm.com") by vger.kernel.org with ESMTP id S266684AbUBEUpN
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 5 Feb 2004 15:45:13 -0500
+Received: from westrelay04.boulder.ibm.com (westrelay04.boulder.ibm.com [9.17.193.32])
+	by e35.co.us.ibm.com (8.12.10/8.12.2) with ESMTP id i15KjCwX466740
+	for <linux-scsi@vger.kernel.org>; Thu, 5 Feb 2004 15:45:12 -0500
+Received: from us.ibm.com (d03av02.boulder.ibm.com [9.17.193.82])
+	by westrelay04.boulder.ibm.com (8.12.10/NCO/VER6.6) with ESMTP id i15Kj9TW064712
+	for <linux-scsi@vger.kernel.org>; Thu, 5 Feb 2004 13:45:09 -0700
 List-Id: linux-scsi@vger.kernel.org
-To: "Moore, Eric Dean" <Emoore@lsil.com>
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-Eric,
+The following patch against 2.6.2 will prevent the midlayer from
+issuing retries if host_self_blocked is set. This was raised as an
+issue here:
 
-   2.6, the very latest in Linus' linux-2.5 bk tree.  Thanks,
+http://marc.theaimsgroup.com/?l=linux-scsi&m=107357742430401&w=2
 
-	Alex
+I'm trying to improve and extend scsi_block_requests, and this is
+the first, and hopefully least controversial, step.
 
-On Thu, 2004-02-05 at 13:15, Moore, Eric Dean wrote:
-> Are you using 2.6 or 2.4 kernel?  I have recently
-> posted different patches against both kernel trees.
-> I need to know with driver version your on.
-> 
-> Eric
-> 
-> On Thursday, February 05, 2004 12:53 PM, Alex Williamson wrote:
-> > 
-> >    The MPT Fusion driver seems to have developed a linker problem on
-> > ia64.  The latest linux-2.5 bk tree gives me the following:
-> > 
-> >   LD      .tmp_vmlinux1
-> > local symbol 0: discarded in section `.exit.text' from 
-> > drivers/built-in.o
-> > make: *** [.tmp_vmlinux1] Error 1
-> > 
-> > Running the reference discard checking tool:
-> > 
-> > $ ~/reference_discarded.pl 
-> > Finding objects, 858 objects, ignoring 0 module(s)
-> > Finding conglomerates, ignoring 81 conglomerate(s)
-> > Scanning objects
-> > Error: ./drivers/message/fusion/mptscsih.o .init.text refers 
-> > to 00000000000001e2 PCREL21B          .exit.text
-> > Done
-> > 
-> > And, sure enough, if I remove the __exits from mptscsih_exit() I get a
-> > linkable kernel.  Looks like the __exits ought to be removed.  Thanks,
-> > 
-> > 	Alex
-> > 
-> > -- 
-> > Alex Williamson                             HP Linux & Open Source Lab
-> > 
+
+
 -- 
-Alex Williamson                             HP Linux & Open Source Lab
+Brian King
+eServer Storage I/O
+IBM Linux Technology Center
 
