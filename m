@@ -1,51 +1,69 @@
-From: "Mukker, Atul" <Atulm@lsil.com>
-Subject: RE: Assistance with an upgraded scsi driver
-Date: Thu, 1 Jul 2004 12:47:30 -0400
+From: Patrick Mansfield <patmans@us.ibm.com>
+Subject: udev naming of st devices [was Re: iSCSI device naming issues]
+Date: Thu, 1 Jul 2004 10:29:00 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <0E3FA95632D6D047BA649F95DAB60E57033BC805@exa-atlanta>
+Message-ID: <20040701172900.GA21262@beaverton.ibm.com>
+References: <!~!UENERkVCMDkAAQACAAAAAAAAAAAAAAAAABgAAAAAAAAANoIxZIFzbEaqwjJgytz2AeKAAAAQAAAAXdSfMOoTnU6X86O4sbqWzAEAAAAA@cisco.com> <20040701155714.GA7172@us.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:45977 "EHLO mail0.lsil.com")
-	by vger.kernel.org with ESMTP id S266079AbUGAQrl (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Jul 2004 12:47:41 -0400
+Received: from e1.ny.us.ibm.com ([32.97.182.101]:36026 "EHLO e1.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S266193AbUGAR36 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Jul 2004 13:29:58 -0400
+Content-Disposition: inline
+In-Reply-To: <20040701155714.GA7172@us.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: "'cgg007@yahoo.com'" <cgg007@yahoo.com>, linux-scsi@vger.kernel.org
+To: "Surekha.PC" <surekhap@cisco.com>, 'SCSI Mailing List' <linux-scsi@vger.kernel.org>, linux-hotplug-devel@lists.sourceforge.net
 
-> New tarball:
-> Makefile     mega_common.h  megaraid_mbox.c  megaraid_mm.c
-> Kconfig.megaraid    mbox_defs.h  megaraid_ioctl.h     
-> megaraid_mbox.h  megaraid_mm.h
-> 
-> ...
-> 
-> I've created a megaraid directory under /usr/src/linux/drivers/scsi
-> 
-> I modified the Makefile and Kconfig in /usr/src/linux/drivers/scsi
-> 
-> I cleaned out the old files
-> 
-> I re-configured to include the new options for compiling the 
-> MEGARAID_NEWGEN as
-> a module
-> 
-> I ran make all
-> 
-> ... ... ...
-> 
-> No new module code was generated. :(
-> 
-Try
-# make drivers/scsi/megaraid/
+[adding linux-hotplug-devel]
 
-or
-# cd drivers/scsi/megaraid
-# make -C /usr/src/linux-.../ SUBDIRS=`pwd` clean
-# make -C /usr/src/linux-.../ SUBDIRS=`pwd` modules
+On Thu, Jul 01, 2004 at 08:57:14AM -0700, Mike Anderson wrote:
+> Surekha.PC [surekhap@cisco.com] wrote:
+> > 3) Make use of scsi_id.
+> > scsi_id can be used to get unique name instead of parsing sysfs
+> > path for device name creation. However scsi_id is helpful only
+> > for block devices, and there is no way to handle unique naming
+> > for tape devices. So this will not make a complete solution.
+> 
+> Well you can still setup a udev rule to use scsi_id for you block
+> devices and then use location naming for the tapes ( some newer
+> generation tape drives also support serial numbers).
 
-Modules megaraid_mm.ko and megaraid_mbox.ko should now be available. Load
-megaraid_mm before loading megaraid_mbox
+Yes, I had no problems running scsi_id on some older DLT drives (DLT
+4000?).
 
--Atul Mukker
-LSI Logic
+There is a naming issue with st, in that unique tape names need to put an
+identifier in the middle of the different names, or at least parse out a
+middle portion of the kernel name.
+
+That is, tape names are of the form:
+
+ st13
+ st13a
+ st13l
+ st13m
+nst13
+nst13a
+nst13l
+nst13m
+
+So if you want a unique name in the above, you would generally want to
+substitute the 13 with a value. 
+
+You can't do this with a one line udev rule, using scsi_id with an eight
+line rule (each one containing the same scsi_id value to match) is ugly,
+and I'm not sure if it would work (udev wildcard pattern matching for
+things like st[0-9]*l).
+
+A script could be written to handle this, it would be passed a kernel
+name, a scsi_id value to match and a name string. It would call scsi_id,
+and if it matches the passed in value, return the name string for the
+device wrapped with pre and post fixes.
+
+Or maybe udev can be changed to better handle this, but I don't have
+suggestions or patches.
+
+Changing st default kernel names would simplify the problem, but is not
+allowed.
+
+-- Patrick Mansfield
