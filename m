@@ -1,34 +1,35 @@
-From: Mark Lord <lkml@rtr.ca>
+From: James Bottomley <James.Bottomley@SteelEye.com>
 Subject: Re: Core scsi layer crashes in 2.6.8.1
-Date: Tue, 05 Oct 2004 11:46:34 -0400
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <4162C1DA.5000808@rtr.ca>
-References: <1096401785.13936.5.camel@localhost.localdomain>	<1096467125.2028.11.camel@m	ulgrave> 	<20041005114951.GD22396@krispykreme.ozlabs.ibm.com>	<1096984590.1765.2.camel@mulgrave>  <4162B345.9000806@rtr.ca> <1096988167.2064.7.camel@mulgrave>
+Date: 05 Oct 2004 10:54:17 -0500
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <1096991666.2064.25.camel@mulgrave>
+References: <1096401785.13936.5.camel@localhost.localdomain>
+	<4162B345.9000806@rtr.ca> <1096988167.2064.7.camel@mulgrave>
+	<200410051749.22245.oliver@neukum.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel=40m.gmane.org-S270063AbUJEPvc@vger.kernel.org>
-In-Reply-To: <1096988167.2064.7.camel@mulgrave>
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Mark Lord <lsml@rtr.ca>, Anton Blanchard <anton@samba.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from stat16.steeleye.com ([209.192.50.48]:64426 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S269970AbUJEPyc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 5 Oct 2004 11:54:32 -0400
+In-Reply-To: <200410051749.22245.oliver@neukum.org>
 List-Id: linux-scsi@vger.kernel.org
+To: Oliver Neukum <oliver@neukum.org>
+Cc: Mark Lord <lsml@rtr.ca>, Anton Blanchard <anton@samba.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-James Bottomley wrote:
->
-> This is expected behaviour.  For orderly removal an cache sync command
-> must be sent to drives with a writeback cache before they're powered
-> down.  For forced ejection, the driver has to error the command.
+On Tue, 2004-10-05 at 10:49, Oliver Neukum wrote:
+> Then let the driver tell the upper layers whether the device is still
+> connected or not.
 
-Yup, that's how it has to be done at present.
+Do we have to go over this again?
 
-Another weirdness I ran into at one point, was that the mid-layer
-could be made to segfault if a LLD asked it to remove a drive that
-had previously been set "offline" -- it complains about an illegal
-state transition during the removal, and then dies.  This sequence
-no longer occurs in the QStor driver, but it might resurface soon
-as more drivers begin to support hot insertion/removal.
+It would add quite a bit of complexity to the reference counted
+aynchronous model to try and force synchronicity between queuecommand
+and scsi_remove_host in the mid-layer.  Therefore it's much easier to
+let the LLD decide what to do with the command.
 
-Cheers
--- 
-Mark Lord
-(hdparm keeper & the original "Linux IDE Guy")
+James
+
+
