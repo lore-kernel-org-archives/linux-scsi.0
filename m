@@ -1,14 +1,14 @@
 From: Kurt Garloff <garloff@suse.de>
-Subject: Patches for SCSI scanning
-Date: Sun, 18 Apr 2004 20:57:51 +0200
+Subject: [PATCH] 1/6: scsi_largelun and scsi_sparselun
+Date: Sun, 18 Apr 2004 20:58:20 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040418185751.GC4868@tpkurt.garloff.de>
+Message-ID: <20040418185820.GD4868@tpkurt.garloff.de>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="LwW0XdcUbUexiWVK"
+	protocol="application/pgp-signature"; boundary="rz+pwK2yUstbofK6"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns.suse.de ([195.135.220.2]:27813 "EHLO Cantor.suse.de")
-	by vger.kernel.org with ESMTP id S263611AbUDRTAG (ORCPT
+Received: from ns.suse.de ([195.135.220.2]:32933 "EHLO Cantor.suse.de")
+	by vger.kernel.org with ESMTP id S263645AbUDRTAG (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
 	Sun, 18 Apr 2004 15:00:06 -0400
 Content-Disposition: inline
@@ -17,48 +17,85 @@ To: Linux SCSI list <linux-scsi@vger.kernel.org>
 Cc: James Bottomley <James.Bottomley@steeleye.com>, Andrew Morton <akpm@osdl.org>
 
 
---LwW0XdcUbUexiWVK
+--rz+pwK2yUstbofK6
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
 Content-Transfer-Encoding: quoted-printable
 
-Hi,
+Feature.
 
-at SUSE, the way that Linux scan SCSI devices has constantly generated
-a certain support load. Not extremely but still astonishing.
-As a consequence, we have created a number of patches to our 2.4 kernels
-that did improve some things, such as the backport of the REPORT_LUNS
-scanning from 2.6 and a number of boot/module parameters that allowed
-users to influence how the scanning is done.
-http://www.suse.de/~garloff/Linux/scsi-scan/scsi-scanning.html
+Three new kernel/module parameters that affect SCSI scanning, all relevant
+for SCSI-2 only, as for SCSI-3, REPORT_LUNS is normally used:
+* scsi_sparselun allows the user to disable the Linux scanning optimization
+  that assumes that LUNs are consecutive. Equivalent to setting BLIST_SPARS=
+ELUN
+  blacklist entry for all devices.
+* scsi_largelun alloes the user to disable the check to need SCSI-3 to allow
+  LUNs >=3D 8. Equivalent to a global BLIST_LARGELUN.
+* max_scsi_sparseluns: Allows to set a different limit for targets with=20
+  sparse LUN numbering.
 
-With kernel 2.6, the REPORT_LUNS is standard for SCSI-3 devices,
-but still many arrays exist that report as SCSI-2 and will require
-BLIST_SPARSELUN|BLIST_LARGELUN.
-
-An alternative to the blacklist is to offer boot/module parameters
-again. This is what the following series of 6 patches do.
-Most don't really depend on each other, but they'll only apply
-cleanly in the order sent.
-
-I did not yet compare our 2.4 blacklist with the 2.6 one; I'll
-port our additional 2.4 entries to 2.6 soon.
-
-Regards,
+--- linux-2.6.5/drivers/scsi/scsi_scan.c.orig	2004-04-04 05:37:41.000000000=
+ +0200
++++ linux-2.6.5/drivers/scsi/scsi_scan.c	2004-04-15 21:47:12.859160471 +0200
+@@ -80,6 +80,21 @@ module_param_named(max_luns, max_scsi_lu
+ MODULE_PARM_DESC(max_luns,
+ 		 "last scsi LUN (should be between 1 and 2^32-1)");
+=20
++static int scsi_sparselun;
++module_param_named(scsi_sparselun, scsi_sparselun, int, S_IRUGO|S_IWUSR);
++MODULE_PARM_DESC(scsi_sparselun,
++		 "Assume sparse LUNs for all SCSI devices");
++
++static int scsi_largelun;
++module_param_named(scsi_largelun, scsi_largelun, int, S_IRUGO|S_IWUSR);
++MODULE_PARM_DESC(scsi_largelun,
++		 "Assume all SCSI-2 devs support more than 8 LUNs");
++
++static unsigned int max_scsi_sparseluns;
++module_param_named(max_scsi_sparseluns, max_scsi_sparseluns, int, S_IRUGO|=
+S_IWUSR);
++MODULE_PARM_DESC(max_scsi_sparseluns,
++		 "Limit LUNs for scanning sparse LUN devices");
++
+ #ifdef CONFIG_SCSI_REPORT_LUNS
+ /*
+  * max_scsi_report_luns: the maximum number of LUNS that will be
+@@ -800,8 +815,9 @@ static void scsi_sequential_lun_scan(str
+ 	 * override the other settings, and scan all of them. Normally,
+ 	 * SCSI-3 devices should be scanned via the REPORT LUNS.
+ 	 */
+-	if (bflags & BLIST_SPARSELUN) {
+-		max_dev_lun =3D shost->max_lun;
++	if (bflags & BLIST_SPARSELUN || scsi_sparselun) {
++		max_dev_lun =3D min(shost->max_lun, max_scsi_sparseluns?=20
++				  max_scsi_sparseluns: max_scsi_luns);
+ 		sparse_lun =3D 1;
+ 	} else
+ 		sparse_lun =3D 0;
+@@ -845,7 +861,7 @@ static void scsi_sequential_lun_scan(str
+ 	 * Do not scan SCSI-2 or lower device past LUN 7, unless
+ 	 * BLIST_LARGELUN.
+ 	 */
+-	if (scsi_level < SCSI_3 && !(bflags & BLIST_LARGELUN))
++	if (scsi_level < SCSI_3 && !(bflags & BLIST_LARGELUN) && !scsi_largelun)
+ 		max_dev_lun =3D min(8U, max_dev_lun);
+=20
+ 	/*
 --=20
 Kurt Garloff  <garloff@suse.de>                            Cologne, DE=20
 SUSE LINUX AG, Nuernberg, DE                          SUSE Labs (Head)
 
---LwW0XdcUbUexiWVK
+--rz+pwK2yUstbofK6
 Content-Type: application/pgp-signature
 Content-Disposition: inline
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v1.2.4 (GNU/Linux)
 
-iD8DBQFAgs+vxmLh6hyYd04RAuqAAKCRrYF/jVmVLMNOTf0BnuGtPxTn9gCfX2Eq
-uVLV8gzjtpcOje1ZA/aaI2E=
-=THHM
+iD8DBQFAgs/MxmLh6hyYd04RAkgQAJ9eylbfS+2J11EQ39izhAm30d8G4gCfW6Q0
+i2F2B1Iv2NrhiOj06Mx8/e0=
+=2qWP
 -----END PGP SIGNATURE-----
 
---LwW0XdcUbUexiWVK--
+--rz+pwK2yUstbofK6--
