@@ -1,40 +1,58 @@
-From: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Subject: PATCH [18/18] qla2xxx: Update driver version
-Date: Mon, 21 Jun 2004 23:01:48 -0700
+From: Arjan van de Ven <arjanv@redhat.com>
+Subject: Re: PATCH [2/18]  qla2xxx: Correct residual counts
+Date: Tue, 22 Jun 2004 09:06:32 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040622060148.GA8538@linux.local.home>
+Message-ID: <1087887992.2704.8.camel@laptop.fenrus.com>
+References: <20040622054946.GA8392@linux.local.home>
+Reply-To: arjanv@redhat.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-FaT4RAaxcbQjGIdgOxnR"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ms-smtp-01-qfe0.socal.rr.com ([66.75.162.133]:42677 "EHLO
-	ms-smtp-01-eri0.socal.rr.com") by vger.kernel.org with ESMTP
-	id S266612AbUFVF6E (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 22 Jun 2004 01:58:04 -0400
-Content-Disposition: inline
+Received: from mx1.redhat.com ([66.187.233.31]:32485 "EHLO mx1.redhat.com")
+	by vger.kernel.org with ESMTP id S261162AbUFVHGr (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 22 Jun 2004 03:06:47 -0400
+In-Reply-To: <20040622054946.GA8392@linux.local.home>
 List-Id: linux-scsi@vger.kernel.org
-To: SCSI Mailing List <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@steeleye.com>
+To: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@steeleye.com>
 
-ChangeSet
-  1.1854 04/06/21 15:35:33 andrew.vasquez@apc.qlogic.com +1 -0
-  Update version number to 8.00.00b14-k.
 
-Signed-off-by: Andrew Vasquez <andrew.vasquez@qlogic.com>
+--=-FaT4RAaxcbQjGIdgOxnR
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
- drivers/scsi/qla2xxx/qla_version.h |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+On Tue, 2004-06-22 at 07:49, Andrew Vasquez wrote:
 
-diff -Nru a/drivers/scsi/qla2xxx/qla_version.h b/drivers/scsi/qla2xxx/qla_version.h
---- a/drivers/scsi/qla2xxx/qla_version.h	2004-06-21 15:40:53 -07:00
-+++ b/drivers/scsi/qla2xxx/qla_version.h	2004-06-21 15:40:53 -07:00
-@@ -19,9 +19,9 @@
- /*
-  * Driver version 
-  */
--#define QLA2XXX_VERSION      "8.00.00b12-k"
-+#define QLA2XXX_VERSION      "8.00.00b14-k"
- 
- #define QLA_DRIVER_MAJOR_VER	8
- #define QLA_DRIVER_MINOR_VER	0
- #define QLA_DRIVER_PATCH_VER	0
--#define QLA_DRIVER_BETA_VER	12
-+#define QLA_DRIVER_BETA_VER	14
+> diff -Nru a/drivers/scsi/qla2xxx/qla_iocb.c b/drivers/scsi/qla2xxx/qla_io=
+cb.c
+> --- a/drivers/scsi/qla2xxx/qla_iocb.c	2004-06-21 15:36:37 -07:00
+> +++ b/drivers/scsi/qla2xxx/qla_iocb.c	2004-06-21 15:36:37 -07:00
+> @@ -43,7 +43,7 @@
+>  	else if (cmd->sc_data_direction =3D=3D DMA_FROM_DEVICE)
+>  		cflags =3D CF_READ;
+>  	else {
+> -		switch (cmd->data_cmnd[0]) {
+> +		switch (cmd->cmnd[0]) {
+>  		case WRITE_6:
+>  		case WRITE_10:
+>  		case WRITE_12:
+
+this sounds wrong. Is there any reason qlogic drivers can't use/trust
+the midlayer instead of doing qla2x00_get_cmd_direction() to reverse
+engineer to direction ??
+
+--=-FaT4RAaxcbQjGIdgOxnR
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.2.4 (GNU/Linux)
+
+iD8DBQBA19p4xULwo51rQBIRAv78AJ9xAmHapmR591yyjId9A5TSvArQYACfRxHG
+7bPic+GjaSsDPtIG2X7m6Q0=
+=kUd2
+-----END PGP SIGNATURE-----
+
+--=-FaT4RAaxcbQjGIdgOxnR--
+
