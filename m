@@ -1,96 +1,86 @@
-From: "Smart, James" <James.Smart@Emulex.com>
-Subject: RE: suspending I/Os to a device
-Date: Wed, 5 May 2004 15:00:43 -0400
+From: "Andrew Vasquez" <andrew.vasquez@qlogic.com>
+Subject: RE: qla2300 at only 1 GBit on kernel 2.6.5
+Date: Wed, 5 May 2004 13:50:03 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3356669BBE90C448AD4645C843E2BF28034F92D1@xbl.ma.emulex.com>
+Message-ID: <B179AE41C1147041AA1121F44614F0B0DD0117@AVEXCH02.qlogic.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emulex.emulex.com ([138.239.112.1]:15298 "EHLO
-	emulex.emulex.com") by vger.kernel.org with ESMTP id S264765AbUEETBA
+Received: from pat.qlogic.com ([198.70.193.2]:4945 "EHLO avexch01.qlogic.com")
+	by vger.kernel.org with ESMTP id S264806AbUEEUvB convert rfc822-to-8bit
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 5 May 2004 15:01:00 -0400
+	Wed, 5 May 2004 16:51:01 -0400
+content-class: urn:content-classes:message
 List-Id: linux-scsi@vger.kernel.org
-To: 'James Bottomley' <James.Bottomley@steeleye.com>, "Infante, Jon" <Jon.Infante@Emulex.com>
-Cc: Linux SCSI Reflector <linux-scsi@vger.kernel.org>
-
-James,
-
-So I'm not clear on how this gets implemented...
-
-I'm assuming that this would mirror the scsi_block/unblock_requests()
-functions - but now on a scsi-device basis. The SUSPEND state would be an
-internal state in the midlayer.  The driver would use the new attribute to
-know when to call the unblock function.   And, wouldn't it make sense to
-have a midlayer function that could be pointed at a scsi_host/scsi target id
-value and have it recurse the block/unblock calls to all the related scsi
-devices ?
-
-How does this move forward ?  If we want to have this functionality, must we
-put together a patch ? Who modifies the mid layer ?  What I'd like to avoid
-is adding error queues that implement the suspend function in our driver.
-
--- James S
+To: Jan-Frode Myklebust <janfrode@parallab.uib.no>
+Cc: linux-scsi@vger.kernel.org
 
 
+On Wednesday, May 05, 2004 10:47 AM, Jan-Frode Myklebust wrote:
+> On Wed, May 05, 2004 at 09:27:10AM -0700, Andrew Vasquez wrote:
+> > 
+> > Or, as you mentioned later in the email when testing
+> > the 8.x driver, did you force 2gig at the RAID box and reload the
+> > 2.4 driver?
+> 
+> Initially I was running kernel 2.6.5  had the connection forced at
+> 2Gbit from the storage device side, then I struggled for a while
+> trying to understand why I didn't get link.  The qla2300 module said
+> "Cable unplugged". 
+> 
 
-> -----Original Message-----
-> From: James Bottomley [mailto:James.Bottomley@steeleye.com]
-> Sent: Friday, April 23, 2004 7:29 PM
-> To: Infante, Jon
-> Cc: Linux SCSI Reflector
-> Subject: RE: suspending I/Os to a device
+Ok, the firmware appears to have some problems negotiating with this
+device at 2Gb.
+ 
+> Then I set the storage device to autodetect speed, rebooted, and then
+> it came up at 1 Gbit. 
 > 
+
+Negotiation problems -- ewww...  Ok, this is going to be challenging,
+could I have try another driver while running 2.4.x?  Download the
+following:
+
+	ftp://ftp.qlogic.com/outgoing/linux/beta/7.x/qla2x00-v7.00.00b24-dist.tgz
+
+tarball to /tmp.
+
+Then perform the following steps to build the driver:
+
+	# cd /tmp
+	# mkdir 70000b24
+	# cd 70000b24
+	# tar xvfz ../qla2x00-v7.00.00b24-dist.tgz
+	# make all
+	
+Unload any previously installed driver:
+
+	# modprobe -r qla2300
+	
+Load the new driver:
+
+	# insmod ./qla2300.o
+
+Then report your results to me along with the var/log/messages file.
+
+> > Hmm, could you go into the BIOS utility (ctrl-q during boot) and
+> > check the 'Data Rate' settings for the HBA?  What is the value set
+> > to -- auto/1gb/2gb?  If it is set to auto, could you set it to 2gb
+> > and retry the test.
 > 
-> On Fri, 2004-04-23 at 18:12, Infante, Jon wrote:
-> > Here is the senerio I am trying to handle within our Fibre 
-> Channel driver.
-> > In Fibre Channel, it is possible for the Target, or HBA, to 
-> be disconnected
-> > from one port on a switch and plugged into another port on 
-> the same (or even
-> > a different) switch. This transitition can happen with live 
-> traffic and the
-> > scsi subsystem / driver is supposed to recover gracefully, 
-> without failing
-> > all I/Os back up to applications that are running. In order 
-> to accomplish
-> > this, there is a configurable timer, that tells the driver 
-> how long to wait
-> > (at the Fibre Channel level), when a device disappears, to 
-> give it a chance
-> > to come back. Some OEMs / environments set this to a couple 
-> seconds, some a
-> > to couple of minutes.
+> During boot it says it has no 'ROM BIOS'. Is this something I can
+> install? 
 > 
-> Actually, there is no interface because no-one has had any prior
-> requirements for this.
+
+No, when you see the 'QLogic...." banner, just hit <ctrl-q> to start
+the utility.
+
+> BTW: here's the log I get with 2.6.6-rc3 when loading the qla2300 with
+> speed=2GHz set on the infortrend:
 > 
-> This is effectively a FC specific thing, and I believe you 
-> know because
-> you get a lip event telling you the target has gone, so it sounds like
-> the ideal thing to handle in the FC transport class (since it would
-> apply to all FC HBAs) The target reconnect timeout would then be a
-> transport class property and we'd start failing I/Os when it 
-> expired.  I
-> would guess there needs to be an additional state in the device state
-> model like SUSPEND (QUIESCE doesn't quite fit because it allows the
-> pending queue to drain and the error handler to operate), but we can
-> accomodate that.
-> 
-> By default, I would think the reconnect timeout should be zero because
-> most FC operates in a multi-path environment and you want path failure
-> notifications as fast as possible, so users requiring this 
-> feature would
-> need to set the timeout.
-> 
-> James
-> 
-> 
-> -
-> To unsubscribe from this list: send the line "unsubscribe 
-> linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+> qla2300 0000:01:05.0: Cable is unplugged...
+
+Yep, can't negotiate with the device at 2Gb.
+
+Regards,
+Andrew Vasquez
