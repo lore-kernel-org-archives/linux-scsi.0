@@ -1,23 +1,42 @@
-From: sai narasimhamurthy <sai_narasi@yahoo.com>
-Subject: test mail
-Date: Sat, 26 Mar 2005 10:42:17 -0800 (PST)
-Message-ID: <20050326184218.68508.qmail@web54108.mail.yahoo.com>
+From: Jeremy Higdon <jeremy@sgi.com>
+Subject: Re: [PATCH 6/7] - MPT FUSION - SPLITTING SCSI HOST DRIVERS
+Date: Sun, 27 Mar 2005 01:16:30 -0800
+Message-ID: <20050327091630.GA938785@sgi.com>
+References: <91888D455306F94EBD4D168954A9457C01B70565@nacos172.co.lsil.com> <1111809137.5541.7.camel@mulgrave>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Received: from web54108.mail.yahoo.com ([206.190.37.243]:20902 "HELO
-	web54108.mail.yahoo.com") by vger.kernel.org with SMTP
-	id S261212AbVCZSmW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 26 Mar 2005 13:42:22 -0500
+Received: from omx2-ext.sgi.com ([192.48.171.19]:64148 "EHLO omx2.sgi.com")
+	by vger.kernel.org with ESMTP id S261504AbVC0JRw (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 27 Mar 2005 04:17:52 -0500
+Content-Disposition: inline
+In-Reply-To: <1111809137.5541.7.camel@mulgrave>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: "Moore, Eric Dean" <Eric.Moore@lsil.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
 
- 
- 
+On Fri, Mar 25, 2005 at 09:52:17PM -0600, James Bottomley wrote:
+> On Thu, 2005-03-24 at 16:57 -0700, Moore, Eric Dean wrote:
+> > +static struct device_attribute mptscsih_queue_depth_attr = {
+> > +       .attr = {
+> > +               .name =         "queue_depth",
+> > +               .mode =         S_IWUSR,
+> > +       },
+> > +       .store = mpt_core_store_queue_depth,
+> > +};
+> 
+> But in the original which you're removing, this was implemented via the
+> change_queue_depth API.
+> 
+> It looks like the patches you're posting are actually an older version
+> of the fusion driver.   Do you have the split done on a current copy?
+> 
+> Thanks,
+> 
+> James
 
+James, actually this queue depth code predates your change_queue_depth
+API.  I don't think it was ever converted to the new API.
 
-		
-__________________________________ 
-Do you Yahoo!? 
-Yahoo! Small Business - Try our new resources site!
-http://smallbusiness.yahoo.com/resources/ 
+jeremy
