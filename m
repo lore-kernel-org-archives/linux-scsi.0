@@ -1,57 +1,70 @@
-From: Linus Torvalds <torvalds@transmeta.com>
-Subject: Re: Why /dev/sdc1 doesn't show up...
-Date: Wed, 20 Nov 2002 07:45:20 -0800 (PST)
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44.0211200737020.12032-100000@home.transmeta.com>
-References: <20021120072653.BC52C2C055@lists.samba.org>
+From: Patrick Mansfield <patmans@us.ibm.com>
+Subject: Re: [PATCH] remove unused includes and misleading comments from scsi_lib.c
+Date: Wed, 20 Nov 2002 08:47:09 -0800
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <20021120084709.A18453@eng2.beaverton.ibm.com>
+References: <20021117235449.B9824@lst.de>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
-In-Reply-To: <20021120072653.BC52C2C055@lists.samba.org>
-To: Rusty Russell <rusty@rustcorp.com.au>
-Cc: Alexander Viro <viro@math.psu.edu>, Doug Ledford <dledford@redhat.com>, Linux Scsi Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <20021117235449.B9824@lst.de>; from hch@lst.de on Sun, Nov 17, 2002 at 11:54:49PM +0100
 List-Id: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>, James.Bottomley@steeleye.com
+Cc: linux-scsi@vger.kernel.org
 
+On Sun, Nov 17, 2002 at 11:54:49PM +0100, Christoph Hellwig wrote:
 
-On Wed, 20 Nov 2002, Rusty Russell wrote:
-> 
-> 	Linus, I would like an answer: how does one register two /proc
-> entries?
+> --- 1.46/drivers/scsi/scsi_lib.c	Thu Nov 14 18:09:17 2002
+> +++ edited/drivers/scsi/scsi_lib.c	Sun Nov 17 21:37:05 2002
+> @@ -7,50 +7,18 @@
+>   *                        of people at Linux Expo.
+>   */
+>  
+> -/*
+> - * The fundamental purpose of this file is to contain a library of utility
+> - * routines that can be used by low-level drivers.   Ultimately the idea
+> - * is that there should be a sufficiently rich number of functions that it
+> - * would be possible for a driver author to fashion a queueing function for
+> - * a low-level driver if they wished.   Note however that this file also
+> - * contains the "default" versions of these functions, as we don't want to
+> - * go through and retrofit queueing functions into all 30 some-odd drivers.
+> - */
+> -
+> -#include <linux/module.h>
+> -
+> -#include <linux/sched.h>
+> -#include <linux/timer.h>
+>  #include <linux/string.h>
+>  #include <linux/slab.h>
+>  #include <linux/bio.h>
+> -#include <linux/ioport.h>
+>  #include <linux/kernel.h>
+> -#include <linux/stat.h>
+>  #include <linux/blk.h>
+> -#include <linux/interrupt.h>
+> -#include <linux/delay.h>
+> -#include <linux/smp_lock.h>
+>  #include <linux/completion.h>
+>  
+> -
+> -#define __KERNEL_SYSCALLS__
+> -
+> -#include <linux/unistd.h>
 
-I think the answer is simple: you don't.
+I had to add back the smp_lock.h include to compile with CONFIG_PREEMPT,
+as kernel_locked was not defined and is used by in_atomic().
 
-In practice this doesn't happen. And even in theory when it does happen, 
-trying to do it right is _worse_ than just letting it be. So what if one 
-of them fails? Big deal. You didn't get the file, because you are playing 
-with modules that do something that they shouldn't have done.
+Patch against the latest scsi-misc-2.5:
 
-	Rule #1: KISS
+--- 1.48/drivers/scsi/scsi_lib.c	Tue Nov 19 17:13:41 2002
++++ edited/drivers/scsi/scsi_lib.c	Wed Nov 20 08:33:50 2002
+@@ -12,6 +12,7 @@
+ #include <linux/bio.h>
+ #include <linux/kernel.h>
+ #include <linux/blk.h>
++#include <linux/smp_lock.h>
+ #include <linux/completion.h>
+ 
+ #include "scsi.h"
 
-	Rule #2: "don't overdesign" aka "perfect is the enemy of the good"
-
-In other words, screw the cases that don't matter, we only need to verify 
-that we don't oops. Which means that the _right_ approach for proc entries 
-is something like this:
-
-	if (register_device(....))
-		return -ENOMEM;
-
-	if (!create_proc_entry("foo"...))
-		printk("Unable to create '/proc/foo'\n");
-	if (!create_proc_entry("bar"...))
-		printk("Unable to create '/proc/bar'\n");
-	return 0;
-
-and simply face the fact that trying to fail the module load at a late 
-time is a bad idea, and if somebody already has registered your /proc 
-entries then the system maintainer is doing something wrong and it is 
-_his_ problem and he can
-
-The kernel shouldn't oops. And if that means that we should just leave the 
-module loaded (not return an error), then so what? Hey, it may work fine 
-without the /proc entries, erroring out might be _worse_.
-
-This is what happens with built-in drivers already. Modules are nothing 
-but a convenience. They're not "worthy" of complexity.
-
-		Linus
+-- Patrick Mansfield
