@@ -1,76 +1,55 @@
-From: "Frank Borich" <Frank_Borich@us.xyratex.com>
-Subject: RE: Scsi midlayer question
-Date: Mon, 16 Aug 2004 09:40:00 -0700
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: growisofs stopped working with 2.6.8
+Date: Mon, 16 Aug 2004 17:01:05 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <47F3C2BE74738E4683574107469DFA204CCD47@XYUSEX01.xyus.xyratex.com>
+Message-ID: <1092672062.20838.29.camel@localhost.localdomain>
+References: <1092674287.3021.19.camel@bony>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: multipart/mixed; boundary="=-/EGprgmmfR379dvl8ul/"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from xyratexus11.xyratex.com ([65.203.33.11]:16646 "EHLO
-	XYUSEX01.xyus.xyratex.com") by vger.kernel.org with ESMTP
-	id S267796AbUHPQkJ convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 16 Aug 2004 12:40:09 -0400
-Content-class: urn:content-classes:message
+Received: from the-village.bc.nu ([81.2.110.252]:485 "EHLO
+	localhost.localdomain") by vger.kernel.org with ESMTP
+	id S267799AbUHPRDU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 16 Aug 2004 13:03:20 -0400
+In-Reply-To: <1092674287.3021.19.camel@bony>
 List-Id: linux-scsi@vger.kernel.org
-To: Marcelo Tosatti <marcelo.tosatti@cyclades.com>, Arjan van de Ven <arjanv@redhat.com>
-Cc: linux-scsi@vger.kernel.org
-
-I was able to try the patch.  
-
-Without the patch, a single 1 MB transfer (dd if=/dev/zero of=/dev/sdb
-bs=1024768 count=1)
-gets broken down into 8 * 128 K chunks
-
-With the patch, the same transfer gets broken down into 4 * 256 K chunks
-
-If you want me to try something else let me know.  
+To: "Tony A. Lambley" <tal@vextech.net>
+Cc: LKML <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
 
 
-Frank Borich
-------------------------------------------------------------------
-Xyratex Inc.
-Systems Engineer
-Direct 630 654 6089
-Fax 630 325 2513
-e-mail frank_borich@us.xyratex.com
- 
- 
+--=-/EGprgmmfR379dvl8ul/
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 
->>-----Original Message-----
->>From: Marcelo Tosatti [mailto:marcelo.tosatti@cyclades.com] 
->>Sent: Tuesday, August 10, 2004 7:40 AM
->>To: Arjan van de Ven
->>Cc: Frank Borich; linux-scsi@vger.kernel.org
->>Subject: Re: Scsi midlayer question
->>
->>On Tue, Aug 10, 2004 at 10:05:57AM +0200, Arjan van de Ven wrote:
->>> On Mon, Aug 09, 2004 at 07:39:56PM -0300, Marcelo Tosatti wrote:
->>> > >  		BUG();
->>> > 
->>> > Arjan, is this a v2.6 based patch? 
->>> 
->>> no a 2.4.21-era patch
->>> 
->>>  
->>> > v2.4 current doesnt contain such code you are patching...
->>> 
->>> it'll have code quite similar, I mean this code hardly 
->>changed since 
->>> 2.4.0 and 2.6.x until this patch got merged.
->>
->>Should have read the code before replying, OK now I see, its 
->>wli's discover to not handle higher order pages in "reverse 
->>order" but instead in "order", yes?
->>
->>Have you done any tests with it on v2.4 based kernels? 
->>
->>I'm a bit skeptic about it though.
->>
->>Frank, can you try this patch?
->>
->>
->>
->>
->>
+On Llu, 2004-08-16 at 17:38, Tony A. Lambley wrote:
+> Hi, burning a dvd iso now fails :(
+> 
+> $ growisofs -Z /dev/hdc=file.iso
+> :-( unable to GET CONFIGURATION: Operation not permitted
+> :-( non-MMC unit?
+
+We fixed some security holes. In doing so we tightened up so a few apps
+that worked before no longer work except as root. Thanks for the error
+message. Thats helpful as it suggests the following patch.
+
+(and does it help K3B ?)
+
+
+
+
+
+
+--=-/EGprgmmfR379dvl8ul/
+Content-Disposition: inline; filename=a1
+Content-Transfer-Encoding: base64
+Content-Type: text/plain; name=a1; charset=UTF-8
+
+LS0tIGRyaXZlcnMvYmxvY2svc2NzaV9pb2N0bC5jfgkyMDA0LTA4LTE2IDE4OjAxOjM2LjYyNzMw
+MTYyNCArMDEwMA0KKysrIGRyaXZlcnMvYmxvY2svc2NzaV9pb2N0bC5jCTIwMDQtMDgtMTYgMTg6
+MDE6MzYuNjI3MzAxNjI0ICswMTAwDQpAQCAtMTQ2LDYgKzE0Niw3IEBADQogCQlzYWZlX2Zvcl9y
+ZWFkKEdQQ01EX1JFQURfVE9DX1BNQV9BVElQKSwNCiAJCXNhZmVfZm9yX3JlYWQoR1BDTURfUkVQ
+T1JUX0tFWSksDQogCQlzYWZlX2Zvcl9yZWFkKEdQQ01EX1NDQU4pLA0KKwkJc2FmZV9mb3JfcmVh
+ZChHUENNRF9HRVRfQ09ORklHVVJBVElPTiksDQogDQogCQkvKiBCYXNpYyB3cml0aW5nIGNvbW1h
+bmRzICovDQogCQlzYWZlX2Zvcl93cml0ZShXUklURV82KSwNCg==
+
+--=-/EGprgmmfR379dvl8ul/--
