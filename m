@@ -1,28 +1,42 @@
-From: Alan Cox <alan@redhat.com>
-Subject: Re: PATCH: Further aacraid work
-Date: Tue, 29 Jun 2004 16:42:07 -0400
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Add time delay in sd_spinup_disk() and get_capabilities()
+Date: Tue, 29 Jun 2004 16:55:23 -0400 (EDT)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040629204207.GA22990@devserv.devel.redhat.com>
-References: <547AF3BD0F3F0B4CBDC379BAC7E4189FF1D6D0@otce2k03.adaptec.com>
+Message-ID: <Pine.LNX.4.44L0.0406291621060.6286-100000@ida.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:58524 "EHLO mx1.redhat.com")
-	by vger.kernel.org with ESMTP id S266038AbUF2Umg (ORCPT
+Received: from ida.rowland.org ([192.131.102.52]:27652 "HELO ida.rowland.org")
+	by vger.kernel.org with SMTP id S266025AbUF2UzY (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 29 Jun 2004 16:42:36 -0400
-Content-Disposition: inline
-In-Reply-To: <547AF3BD0F3F0B4CBDC379BAC7E4189FF1D6D0@otce2k03.adaptec.com>
+	Tue, 29 Jun 2004 16:55:24 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
-Cc: Byron Stanoszek <gandalf@winds.org>, Mark Haverkamp <markh@osdl.org>, Alan Cox <alan@redhat.com>, linux-kernel <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
+To: SCSI development list <linux-scsi@vger.kernel.org>
 
-On Tue, Jun 29, 2004 at 03:27:54PM -0400, Salyzyn, Mark wrote:
-> Although I am gratified that 1.1.5-2345 works, and works well (*many*
-> performance improvements have occurred in this driver, but some of those
-> have reached Alan's patch), I am at a loss because I was sure that the
+I've seen a few USB mass-storage devices that take a few seconds to 
+initialize when they are first plugged in to the computer.  During that 
+warm-up period they respond to TEST UNIT READY with either
 
-I'll have a look what from my tree isnt in Linus tree and what from 2345
-isn't in my tree if you give me a pointer to the current tree you have
-and see if I can spot anything
+	SK=2 (Not ready);  ASC,ASCQ=4,1 (Logical unit in process of
+	becoming ready)
+
+or
+
+	SK=2;  ASC=3a (Medium not present)
+
+The sd_spinup_disk() routine in sd.c and the get_capabilities() routine in
+sr.c both retry the TUR, up to 3 and 5 times respectively (why not the
+same number for both drivers?).  But only when SK=6 (Unit Attention), and
+they don't insert a time delay between retries.
+
+I should think that the "in process of becoming ready" response calls for 
+some extra time, and maybe it's not such a big stretch for "medium not 
+present" as well.
+
+Is there any reason not to add a delay, on the order of 1 second, between 
+retries and to allow retries when either of the two responses above is 
+received?  And to allow up to 5 retries in sd_spinup_disk()?
+
+Alan Stern
+
 
