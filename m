@@ -1,36 +1,30 @@
-From: Scott Merritt <Scsi@PragmaSoft.com>
-Subject: Re: Inhibit auto-attach of scsi disks ?
-Date: Tue, 1 Oct 2002 22:45:24 -0400
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20021001224524.29d5df36.Scsi@PragmaSoft.com>
-References: <20021001080115.A27028@eng2.beaverton.ibm.com>
-	<200210011514.g91FEC703750@localhost.localdomain>
-	<20021001161819.36c43d89.Scsi@PragmaSoft.com>
-	<1033519584.20103.38.camel@irongate.swansea.linux.org.uk>
-	<20021001214937.6eebe5d2.Scsi@PragmaSoft.com>
-	<20021002015838.GE29093@redhat.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: PATCH: scsi device queue depth adjustability patch
+Date: 02 Oct 2002 14:44:25 +0100
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <1033566265.23682.18.camel@irongate.swansea.linux.org.uk>
+References: <20021002002854.GF28265@redhat.com>
+	<1033521367.20103.57.camel@irongate.swansea.linux.org.uk>
+	<20021002014144.GA29093@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <20021002015838.GE29093@redhat.com>
-List-Id: linux-scsi@vger.kernel.org
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+In-Reply-To: <20021002014144.GA29093@redhat.com>
 To: Doug Ledford <dledford@redhat.com>
-Cc: linux-scsi@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 
-On Tue, 1 Oct 2002 21:58:38 -0400
-Doug Ledford <dledford@redhat.com> wrote:
+On Wed, 2002-10-02 at 02:41, Doug Ledford wrote:
+> I didn't provide a lot of details before because this machine doesn't have
+> a serial console host to grab logs and I didn't write all the stuff down.  
+> Then there is the additional fubar stuff but it's mainly in the category
+> of "Red Hat Linux 8.0 made initrd images using nash as the shell blow
+> chunks in regards to actually working with the 2.5.40 kernel, failing
+> simple operations such as mounting /proc, which of course causes damn near
+> everything else it tries to do to fail since the normal /proc files aren't
+> available".
 
-> You are confusing auto attachment with auto mounting.  When you do the low 
-> level things you suggest, the disk should not be *mounted* but it *must* 
-> be attached (or else there won't be a scsi device for you to open and tell 
-> to format itself for instance).
-
-Yes, I would certainly agree that the scsi disk must first be "attached".  However, I'm not entirely clear on the need to *always* read/parse the partition table as an integral part of "attaching" the scsi disk.
-
-Assuming that I understand you correctly, I think this is simply a slightly different "artistic" view.  Under the assumption that an "early" read of the partition table does no "damage", there is clearly no compelling reason to change.  About the best argument I could come up with is some type of hypothetical disk device that would appreciate a firmware/parameter download from the "main" filesystem before being forced to perform it's first data operation.  An admittedly tenuous example ... :)
-
-Best regards, Scott.
-
-
-
+Ok first thing to try - does 2.4.20-pre8-ac3 also lock up. That will
+seperate problems with the 2.5.40 kernel from IDE ones. In paticular I
+notice you mention using initrd which doesnt seem to work in 2.5.40
