@@ -1,89 +1,48 @@
-From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
-Subject: [PATCH, RFC] tmscsim: kernel bugzilla bug #2139
-Date: Wed, 30 Jun 2004 23:33:21 +0200 (CEST)
+From: Bryan Henderson <hbryan@us.ibm.com>
+Subject: Re: RAW I/O
+Date: Wed, 30 Jun 2004 17:26:57 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.60.0406302241200.8236@poirot.grange>
+Message-ID: <OF7D953B6F.8F1EC5DA-ON88256EC4.000175B0-88256EC4.00026E5D@us.ibm.com>
+References: <20040629053446.73235.qmail@web90102.mail.scd.yahoo.com>
 Mime-Version: 1.0
-Content-Type: MULTIPART/MIXED; BOUNDARY="-1463811839-1317591857-1088631201=:8236"
+Content-Type: text/plain; charset="US-ASCII"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pop.gmx.de ([213.165.64.20]:61155 "HELO mail.gmx.net")
-	by vger.kernel.org with SMTP id S262906AbUF3VeM (ORCPT
+Received: from e2.ny.us.ibm.com ([32.97.182.102]:39905 "EHLO e2.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S263413AbUGAA1V (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 30 Jun 2004 17:34:12 -0400
+	Wed, 30 Jun 2004 20:27:21 -0400
+In-Reply-To: <20040629053446.73235.qmail@web90102.mail.scd.yahoo.com>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@steeleye.com>
-Cc: linux-scsi@vger.kernel.org, Kostas Papadopoulos <pkostas22@hotmail.com>
+To: Kernel The <erforschen_linux@yahoo.com>
+Cc: linux-scsi@vger.kernel.org
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
+>I want to do RAW I/O to a disk/partition from my ram
+>disk driver. How I can achieve this?
+>
+>alloc_kiovec(..), map_user_kiobuf(...) and
+>brw_kiovec(...) functions can be used for this? But
+>these function map user space into kernel space
+>memory, but in my driver I will be having only kernel
+>space memory.
 
----1463811839-1317591857-1088631201=:8236
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+(Incidentally, this isn't a SCSI question -- it's a Linux block device 
+question -- the answer below applies to any block device).
 
-Hello
+Yes, kiovecs are all about mapping user space memory; not useful in your 
+case.
 
-Short: The attached patch fixes the bug-report #2139 from kernel bugzilla.
+But if you follow the brw_kiovec() code, you'll eventually come to the 
+basic block I/O submitting interface.  Essentially, 1) fill in the 
+relevant fields of a buffer head: b_state, b_page, b_addr, b_size, b_rdev, 
+b_rsector, b_endio, b_private.  2) find the block request queue that feeds 
+your device, with blk_get_queue(devno).  3) submit the buffer head by 
+calling the queue's make_request_fn function 
+(blk_get_queue()->make_request_fn).
 
-Long: The problem is the following: on the second INQUIRY command sent 
-with a Tag after the DISCONNECT / RESELECT instead of a MESSAGE-IN phase 
-comes directly a DATA-IN phase. This seems a bug in the disk 
-implementation, so, a proper fix would, probably, be just including the 
-disk in the (tmscsim) black-list, along with 2 more disks (1 of which is 
-also SEAGATE), thus disabling Tagged Queues for it. But I wanted to get it 
-working as is. Yes, forgot to say - it works under 2.4, where already the 
-first INQUIRY is sent with a big buffer. So, the attached patch saves the 
-ActiveSRB on RESELECT, for this special case, and then, in DATA-IN phase, 
-if it came without a MSG-IN phase, it is restored.
+Some people prefer to call the higher level submit_bh() or 
+generic_make_request(), but I find that they assume too much that they're 
+being called for buffer cache I/O.  That's not what you're doing.
 
-I tried to see what other drivers would do in this case, but didn't come 
-up with a single recipe.
+All of this information is specific to Linux 2.4, which I can tell you're 
+using because only 2.4 has kiovecs.  The interface is cleaner in 2.6.
 
-Comments are VERY welcome.
-
-Acknowledgements: Kostas Papadopoulos has contributed a disk (SEAGATE 
-ST34555N), that exhibits this problem.
-
-Thanks
-Guennadi
----
-Guennadi Liakhovetski
-
----1463811839-1317591857-1088631201=:8236
-Content-Type: TEXT/PLAIN; charset=US-ASCII; name="tmscsim-bug2139.patch"
-Content-Transfer-Encoding: BASE64
-Content-ID: <Pine.LNX.4.60.0406302333210.8236@poirot.grange>
-Content-Description: 
-Content-Disposition: attachment; filename="tmscsim-bug2139.patch"
-
-ZGlmZiAtdSBhL2RyaXZlcnMvc2NzaS9zY3NpaW9tLmMgYi9kcml2ZXJzL3Nj
-c2kvc2NzaWlvbS5jDQotLS0gYS9kcml2ZXJzL3Njc2kvc2NzaWlvbS5jCVdl
-ZCBKdW4gMzAgMjI6MzY6MTIgMjAwNA0KKysrIGIvZHJpdmVycy9zY3NpL3Nj
-c2lpb20uYwlXZWQgSnVuIDMwIDIyOjI0OjI5IDIwMDQNCkBAIC04OTAsMTQg
-Kzg5MCwyMSBAQA0KIA0KICAgICBpZiAocFNSQiA9PSBwQUNCLT5wVG1wU1JC
-KQ0KICAgICB7DQotCWlmIChwRENCKSBwcmludGsgKEtFUk5fRVJSICJEQzM5
-MDogcFNSQiA9PSBwVG1wU1JCISAoVGFnUSBFcnJvcj8pICglMDJpLSVpKVxu
-IiwNCi0JCQkgIHBEQ0ItPlRhcmdldElELCBwRENCLT5UYXJnZXRMVU4pOw0K
-LQllbHNlIHByaW50ayAoS0VSTl9FUlIgIkRDMzkwOiBwU1JCID09IHBUbXBT
-UkIhIChUYWdRIEVycm9yPykgKERDQiAwISlcbiIpOw0KLQ0KLQlwU1JCLT5w
-U1JCRENCID0gcERDQjsNCi0JZGMzOTBfRW5hYmxlTXNnT3V0X0Fib3J0IChw
-QUNCLCBwU1JCKTsNCi0JaWYgKHBEQ0IpIHBEQ0ItPkRDQkZsYWcgfD0gQUJP
-UlRfREVWOw0KLQlyZXR1cm47DQorCWlmIChwRENCKSB7DQorCQlwcmludGsg
-KEtFUk5fRVJSICJEQzM5MDogcFNSQiA9PSBwVG1wU1JCISAoVGFnUSBFcnJv
-cj8pICglMDJpLSVpKVxuIiwNCisJCQlwRENCLT5UYXJnZXRJRCwgcERDQi0+
-VGFyZ2V0TFVOKTsNCisJCXBTUkIgPSBwU1JCLT5wTmV4dFNSQjsNCisJCXBB
-Q0ItPnBUbXBTUkItPnBOZXh0U1JCID0gTlVMTDsNCisJCXBEQ0ItPnBBY3Rp
-dmVTUkIgPSBwU1JCOw0KKwl9IGVsc2Ugew0KKwkJcHJpbnRrIChLRVJOX0VS
-UiAiREMzOTA6IHBTUkIgPT0gcFRtcFNSQiEgKFRhZ1EgRXJyb3I/KSAoRENC
-IDAhKVxuIik7DQorDQorCQlwU1JCLT5wU1JCRENCID0gcERDQjsNCisJCWRj
-MzkwX0VuYWJsZU1zZ091dF9BYm9ydCAocEFDQiwgcFNSQik7DQorCQlpZiAo
-cERDQikNCisJCQlwRENCLT5EQ0JGbGFnIHw9IEFCT1JUX0RFVjsNCisJCXJl
-dHVybjsNCisJfQ0KICAgICB9DQogDQogICAgIGlmKCBwU1JCLT5TR0luZGV4
-IDwgcFNSQi0+U0djb3VudCApDQpAQCAtMTI0Miw2ICsxMjQ5LDcgQEANCiAg
-ICAgLyogVGFnUTogV2UgZXhwZWN0IGEgbWVzc2FnZSBzb29uLCBzbyBuZXZl
-ciBtaW5kIHRoZSBleGFjdCBTUkIgKi8NCiAgICAgaWYoIHBEQ0ItPlN5bmNN
-b2RlICYgRU5fVEFHX1FVRVVFSU5HICkNCiAgICAgew0KKwlwQUNCLT5wVG1w
-U1JCLT5wTmV4dFNSQiA9IHBEQ0ItPnBBY3RpdmVTUkI7DQogCXBTUkIgPSBw
-QUNCLT5wVG1wU1JCOw0KIAlwRENCLT5wQWN0aXZlU1JCID0gcFNSQjsNCiAg
-ICAgfQ0K
-
----1463811839-1317591857-1088631201=:8236--
