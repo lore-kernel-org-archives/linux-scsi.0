@@ -1,43 +1,44 @@
-From: Mark Haverkamp <markh@osdl.org>
-Subject: Re: aacraid driver question
-Date: Tue, 26 Aug 2003 08:55:36 -0700
+From: Bruce Allen <ballen@gravity.phys.uwm.edu>
+Subject: Re: [2.6.0-test4] blocking access to mounted scsi devices
+Date: Tue, 26 Aug 2003 11:23:19 -0500 (CDT)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1061913336.24155.57.camel@markh1.pdx.osdl.net>
-References: <0998F43EAD645A47B3F6507196DD70EA2568CD@OTCEXC01>
-	 <20030825210836.A11567@infradead.org>
-	 <1061843138.10450.10.camel@markh1.pdx.osdl.net>
-	 <20030825213134.A12085@infradead.org>
+Message-ID: <Pine.GSO.4.21.0308261122020.576-100000@dirac.phys.uwm.edu>
+References: <1061906937.1830.11.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fw.osdl.org ([65.172.181.6]:37535 "EHLO mail.osdl.org")
-	by vger.kernel.org with ESMTP id S262847AbTHZP4B (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 26 Aug 2003 11:56:01 -0400
-In-Reply-To: <20030825213134.A12085@infradead.org>
+Received: from dirac.phys.uwm.edu ([129.89.57.19]:24727 "EHLO
+	dirac.phys.uwm.edu") by vger.kernel.org with ESMTP id S262166AbTHZQXZ
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 26 Aug 2003 12:23:25 -0400
+In-Reply-To: <1061906937.1830.11.camel@mulgrave>
 List-Id: linux-scsi@vger.kernel.org
-To: 'Christoph Hellwig' <hch@infradead.org>
-Cc: Mark Salyzyn <mark_salyzyn@adaptec.com>, linux-scsi <linux-scsi@vger.kernel.org>
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: dougg@torque.net, Christoph Hellwig <hch@infradead.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
 
-On Mon, 2003-08-25 at 13:31, 'Christoph Hellwig' wrote:
-> On Mon, Aug 25, 2003 at 01:25:38PM -0700, Mark Haverkamp wrote:
-> > > unless we find out whether we really meant offlining it.
+
+On 26 Aug 2003, James Bottomley wrote:
+> On Tue, 2003-08-26 at 05:20, Douglas Gilbert wrote:
+> > Christoph Hellwig wrote:
+> > > That's because both mount (or e.g. volume managers) claims
+> > > devices for exclusive use, as does drivers/block/scsi_ioctl.c
 > > 
-> > Correct me if I'm wrong, scsi_rescan_device will not do what we want. 
-> > We need to know whether a device is coming or going and then call either
-> > add or remove device, assuming that it can be determined?
+> > Well it is reasonable that mount should exclude other attempts
+> > to mount. However the device holding the root file system
+> > may be an ATA or SCSI disk and the ide-disk and sd drivers
+> > do not support SMART probing directly.
 > 
-> Yes.  Or keep it as in your patch (at least for the AifEnContainerChange),
-> but I'd rather avoid that.
+> Hang on, that's not the way it's supposed to work.
+> 
+> Mount should be on partition devices (like /dev/sda1) whereas the tools
+> should be on whole disc devices (like /dev/sda).  I thought we'd agreed
+> that even opening a partition exclusively wouldn't affect the ability to
+> open the whole disc device (but opening the whole disc device
+> exclusively would block access to all partitions).
 
-I ran a test where I used afacli to reconfigure a container to make it
-larger.  When it was done, linux still thought that it was 33g instead
-of the 100g that it was now configured.   I am re-running this test with
-some more debug turned on to see what is happening in handle_aif.  It
-takes quite a while for a reconfigure to complete.
+This sounds exactly right -- tools like smartmontools address the whole
+device, not a partition.
 
-Mark.
--- 
-Mark Haverkamp <markh@osdl.org>
+Cheers,
+	Bruce
 
