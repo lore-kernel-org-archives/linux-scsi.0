@@ -1,39 +1,79 @@
-From: "Justin T. Gibbs" <gibbs@scsiguy.com>
+From: James Bottomley <James.Bottomley@steeleye.com>
 Subject: Re: [PATCH] aic7xxx bouncing over 4G
-Date: Sat, 28 Dec 2002 14:02:17 -0700
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <775808112.1041109337@aslan.scsiguy.com>
-References: <200212282016.gBSKGrF03354@localhost.localdomain>
+Date: Sat, 28 Dec 2002 16:24:05 -0600
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <200212282224.gBSMO5h03843@localhost.localdomain>
+References: <gibbs@scsiguy.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
-In-Reply-To: <200212282016.gBSKGrF03354@localhost.localdomain>
-Content-Disposition: inline
-To: James Bottomley <James.Bottomley@steeleye.com>
-Cc: Rik van Riel <riel@conectiva.com.br>, Tomas Szepe <szepe@pinerecords.com>, Marcelo Tosatti <marcelo@conectiva.com.br>, Samuel Flory <sflory@rackable.com>, Janet Morgan <janetmor@us.ibm.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>
+Content-Type: multipart/mixed ;
+	boundary="==_Exmh_8987307530"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: (from root@localhost)
+	by pogo.mtv1.steeleye.com (8.9.3/8.9.3) id OAA17290
+	for <linux-scsi@vger.kernel.org>; Sat, 28 Dec 2002 14:24:12 -0800
+In-Reply-To: Message from "Justin T. Gibbs" <gibbs@scsiguy.com>
+   of "Sat, 28 Dec 2002 13:50:51 MST." <770128112.1041108651@aslan.scsiguy.com>
 List-Id: linux-scsi@vger.kernel.org
+To: "Justin T. Gibbs" <gibbs@scsiguy.com>, Andrew Morton <akpm@digeo.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-> gibbs@scsiguy.com said:
->> That hasn't applied since 6.2.10 or so.  2.5.X is still using 6.2.4. 
-> 
-> The bug report is against 2.5.53 which has 6.2.24 in it, so it still
-> needs  fixing.  At a cursory glance at the code, it looks like you don't
-> call  scsi_set_pci_device early enough in the detect routine.
+This is a multipart MIME message.
 
-I don't see how this enters into it.  The dma mask should be set on
-the PCI device in aic7xxx_osm_pci.c just after we enable the device
-and set it as a bus master.  The pci device is setup in the host
-structure as it is allocated and before it is registered with the
-SCSI subsystem.  I can't imagine that the merge function (and thereby
-the bounce limit) is selected before the host is even registered.
-My guess is that the original call to setup the PCI mask is not happening
-due to either a logic bug in ahc_linux_get_memsize() or the logic that
-interprets its response in aic7xxx_osm_pci.c.
+--==_Exmh_8987307530
+Content-Type: text/plain; charset=us-ascii
 
-I'm not in front of a Linux system to debug this, so all I can do is
-inspect the code right now.  Perhaps someone with an affected machine
-can toss in a few printks and figure this out?
+gibbs@scsiguy.com said:
+> Hmm.  The only previous bug report I had in this area was related to a
+> missing cast.  That was fixed, but I guess it wasn't enough to solve
+> the problem. 
 
---
-Justin
+It looks like possibly a config option that doesn't exist (and a possibly 
+improper reliance on the dma_mask default value---which should work almost all 
+the time, but it's safer to set it).
+
+Andrew, could you try the attached (untested) patch and see if the problem 
+goes away.
+
+James
+
+
+--==_Exmh_8987307530
+Content-Type: text/plain ; name="tmp.diff"; charset=us-ascii
+Content-Description: tmp.diff
+Content-Disposition: attachment; filename="tmp.diff"
+
+===== aic7xxx_osm.c 1.7 vs edited =====
+--- 1.7/drivers/scsi/aic7xxx/aic7xxx_osm.c	Fri Dec 20 18:59:50 2002
++++ edited/aic7xxx_osm.c	Sat Dec 28 16:18:40 2002
+@@ -1297,14 +1297,12 @@
+ 	 */
+ 	.max_sectors		= 8192,
+ #endif
+-#if defined CONFIG_HIGHIO
+ #if LINUX_VERSION_CODE < KERNEL_VERSION(2,4,18)
+ /* Assume RedHat Distribution with its different HIGHIO conventions. */
+ 	.can_dma_32		= 1,
+ 	.single_sg_okay		= 1,
+ #else
+ 	.highmem_io		= 1,
+-#endif
+ #endif
+ #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,5,0)
+ 	.name			= "aic7xxx",
+===== aic7xxx_osm_pci.c 1.3 vs edited =====
+--- 1.3/drivers/scsi/aic7xxx/aic7xxx_osm_pci.c	Thu Dec 12 14:44:00 2002
++++ edited/aic7xxx_osm_pci.c	Sat Dec 28 15:47:14 2002
+@@ -166,6 +166,9 @@
+ 		ahc->flags |= AHC_39BIT_ADDRESSING;
+ 		ahc->platform_data->hw_dma_mask =
+ 		    (bus_addr_t)(0x7FFFFFFFFFULL & (bus_addr_t)~0);
++	} else {
++		ahc_pci_set_dma_mask(pdev, 0xffffffffULL);
++		ahc->platform_data->hw_dma_mask = 0xffffffffULL;
+ 	}
+ #endif
+ 	ahc->dev_softc = pci;
+
+--==_Exmh_8987307530--
+
+
