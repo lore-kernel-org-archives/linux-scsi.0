@@ -1,37 +1,30 @@
 From: James Bottomley <James.Bottomley@steeleye.com>
-Subject: Re: aic7xxx deadlock in 2.6.0-test10
-Date: 24 Nov 2003 09:08:47 -0600
+Subject: Re: Fw: 2.6.0-test9 kernel oops
+Date: 24 Nov 2003 09:23:44 -0600
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1069686529.1836.6.camel@mulgrave>
-References: <20031123230853.0bc8defb.akpm@osdl.org>
-	<20031124081319.A29562@infradead.org>
+Message-ID: <1069687425.1900.9.camel@mulgrave>
+References: <20031123231037.44115c6f.akpm@osdl.org>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nat9.steeleye.com ([65.114.3.137]:6148 "EHLO
+Received: from nat9.steeleye.com ([65.114.3.137]:29190 "EHLO
 	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S263769AbTKXPJh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 24 Nov 2003 10:09:37 -0500
-In-Reply-To: <20031124081319.A29562@infradead.org>
+	id S263766AbTKXPXw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 24 Nov 2003 10:23:52 -0500
+In-Reply-To: <20031123231037.44115c6f.akpm@osdl.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Andrew Morton <akpm@osdl.org>, "Justin T. Gibbs" <gibbs@scsiguy.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Andrew Morton <akpm@osdl.org>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, "Justin T. Gibbs" <gibbs@scsiguy.com>, Tomas Kostrian <kostrian@deepblue.sk>
 
-On Mon, 2003-11-24 at 02:13, Christoph Hellwig wrote:
-> jejb just posted another fix for it on linux-scsi, but in fact your fix
-> looks better to me, ahc_initialize doesn't need the host_lock because
-> ahc can't be reached from an other thread yet.
+On Mon, 2003-11-24 at 01:10, Andrew Morton wrote:
+> Can anyone else with an aic7xxx reproduce (and hence fix) this?
+> /proc/scsi/aic7xxx/0 works happily on my test box.
 
-I don't think so.  This only fixes the boot case for aic7xxx (the boot
-problem is also present in aic79xx). This routine was designed to be
-called also when a driver detects a reset it didn't initiate
-(aic7xxx_old is probably the only driver that actually seems to do
-this).  In that case, the detection is called from the ISR, so you don't
-want to drop the lock
-
-The fix, I think, is to require the lock be held for the bus/device
-reset reporting callbacks and use the unlocked iterator.
+Actually (since I managed to dig out an x86 aic7xxx based machine), I've
+tried this and not seen the problem...it could be because I've been
+testing out with the two SCSI refcount fixes as well...I'll try
+stripping them back.
 
 James
 
