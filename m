@@ -1,42 +1,71 @@
-From: Luben Tuikov <luben@splentec.com>
-Subject: Re: [PATCH] 4/7 cleanup/consolidate code in scsi_request_fn
-Date: Wed, 26 Mar 2003 12:25:03 -0500
+From: =?ISO-8859-1?Q?Gustavo_Mart=EDn?= <gmartin@filmayer.es>
+Subject: Re: Problems with SCSI device
+Date: Wed, 26 Mar 2003 18:55:53 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3E81E26F.6020709@splentec.com>
-References: <20030324175337.A14957@beaverton.ibm.com> <20030324175422.A14996@beaverton.ibm.com> <20030324180227.A15047@beaverton.ibm.com> <20030324180247.B15047@beaverton.ibm.com> <20030324180304.C15047@beaverton.ibm.com> <3E80CB02.8010909@splentec.com> <20030325165822.A1383@beaverton.ibm.com> <3E81DE4D.7060407@splentec.com> <20030326091346.A2940@beaverton.ibm.com>
+Message-ID: <3E81E9A9.5040502@filmayer.es>
+References: <200303261713.h2QHDXLr090443@mail5.mx.voyager.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Patrick Mansfield <patmans@us.ibm.com>
-Cc: linux-scsi@vger.kernel.org
+To: David Horton <dhorton@megsinet.net>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
-Patrick Mansfield wrote:
-> 
-> OK -
-> 
-> 	scsi_sdev_queue_ready 
-> 	scsi_shost_queue_ready
-> or
+Hi again,
 
-**********************************
-*                                *
-*> 	scsi_dev_queue_ready     *
-*> 	scsi_host_queue_ready    *
-*>                               *
-**********************************
+I made some changes on my .def file. The manufacturer, model, etc seems 
+to be correct. I changed the modes and now I recive errno 5, can't open 
+tape device /dev/nst0.
 
--- 
-Luben
-P.S. Even though ``queue ready?'' doesn't quite mean
-the same thing as ``can queue?''.  If I were you, I'd
-use scsi_{dev,host}_canqueue(), or
-scsi_{dev,host}_can_queue(), despite the unfortunate
-choice of ``can_queue'' back in the days.
+I'm getting crazy with this stuff. Any other idea?
 
+Cheers,
+GUSTAVO
 
+David Horton wrote:
 
-
+>>  Hi again,
+>>
+>>thanks Dave. No the conection with the device doesn't hang. But I still 
+>>have problems. When I try to initialize the device I get the following 
+>>error:
+>>
+>>    The SCSI INQUIRY for device '/dev/nst0' failed (power off?)
+>>    Definition for '/dev/st0' failed.
+>>
+>>What it can be this time? I have created and configured the stinit.def   
+>>file (not .conf file 'cause in the man page for stinit is the file that 
+>>sugests)  as you told me. I don't know if it is well configured because 
+>>I don't have the specifications of my drive.
+>>
+>>Does any one of you have any idea of where the problem can be?
+>>
+>>Thanks,
+>>GUSTAVO
+>>    
+>>
+>
+>You are right, it is stinit.def.  Anyway, when I set up my DAT drive I
+>used a combination of info from /proc/scsi and HP's website.
+>
+>You can put in your product number at hp.com's support & driver's
+>section and probably dig up a .PDF manual.  The HP Tape Tools is also
+>helpful, but I think it only runs on Windows.
+>
+>As for /proc/scsi, that's where you can find parameters that you will
+>need for stinit.def such as 'manufacturer' and 'model'.  Wrong info here
+>could be causing some trouble.  For example, even though I have a
+>product labeled "HP SureStore 5000" I have to put model "HP35480A" in
+>stinit.def, because that is the generic name shown in /proc/scsi. 
+>Otherwise stinit never initializes the tape drive because it can't find it.
+>
+>-Dave
+>
+>
+>
+>
+>  
+>
 
 
