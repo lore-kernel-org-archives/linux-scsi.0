@@ -1,51 +1,54 @@
-From: "Andrew Vasquez" <andrew.vasquez@qlogic.com>
-Subject: RE: Re: 2.6.0-test1 and qlogic 8.00.00b4 driver
-Date: Tue, 29 Jul 2003 10:04:51 -0700
+From: Rabeeh Khoury <rabeeh@il.marvell.com>
+Subject: Re: Linux limitation of amount of SCSI buses
+Date: Tue, 29 Jul 2003 20:34:27 +0300
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <B179AE41C1147041AA1121F44614F0B060EC96@AVEXCH02.qlogic.org>
+Message-ID: <3F26B023.7090503@il.marvell.com>
+References: <3F266F60.5070501@il.marvell.com> <20030729155841.GE8407@beaverton.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [198.70.193.2] ([198.70.193.2]:16811 "EHLO AVEXCH01.qlogic.org")
-	by vger.kernel.org with ESMTP id S271883AbTG2REn convert rfc822-to-8bit
+Received: from pop3.galileo.co.il ([199.203.130.130]:20665 "EHLO
+	mail.galileo.co.il") by vger.kernel.org with ESMTP id S271938AbTG2RfH
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 29 Jul 2003 13:04:43 -0400
-content-class: urn:content-classes:message
+	Tue, 29 Jul 2003 13:35:07 -0400
+In-Reply-To: <20030729155841.GE8407@beaverton.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Mike Anderson <andmike@us.ibm.com>
+Cc: linux-scsi@vger.kernel.org
 
-Andy,
+>
+>
+>>I'm connecting few cards with 24 buses and Linux gives me only 15 buses.
+>>Is there any limitation in Linux SCSI subsystem within kernel 2.4.x of 
+>>the number of SCSI buses ?
+>>Each bus has a single target and a single LUN.
+>>    
+>>
+>
+>Does each card have multiple channels (i.e., 24)? If so you may need to
+>set max_channel to a higher value.
+>
+Each card has 8 buses ; total 3 cards. On each bus I have a single 
+target that has single LUN.
+If I work with a single adapter I can see 8 buses.
 
-> > It should be fine with plain -test1, with newer trees you need to
-> > add a call to scsi_scan_host just after scsi_add_host.
-> >
-> I added scsi_scan_host after scsi_add_host and it did not change the
-> situation, the driver still does not see any devices.  Either the
-> driver or the kernel changed since it still works fine in 2.5.69
-> w/qlogic 8.00.00b3 drivers. 
-> 
+>
+>If each card has a single bus there may be a instance limit that the
+>driver you are using will support.
+>
+>What driver are you using?
+>
+Internal driver that is under development.
 
-So there are no entries in the /proc instance file for any
-targets/luns?  For example:
+>
+>-andmike
+>--
+>Michael Anderson
+>andmike@us.ibm.com
+>
+>
+>.
+>  
+>
 
-	SCSI Device Information:
-	scsi-qla0-adapter-node=200000e08b08f73f;
-	scsi-qla0-adapter-port=210000e08b08f73f;
-	scsi-qla0-target-0=210000203715973d;
-	scsi-qla0-target-1=2100002037170202;
-	scsi-qla0-target-2=2100002037c37fe6;
-
-	SCSI LUN Information:
-	(Id:Lun)  * - indicates lun is not registered with the OS.
-	( 0: 0): Total reqs 9, Pending reqs 0, flags 0x0, 0:0:81,
-	( 1: 0): Total reqs 7, Pending reqs 0, flags 0x0, 0:0:82,
-	( 2: 0): Total reqs 9, Pending reqs 0, flags 0x0, 0:0:83,
-
-Could you forward along the information I had previously request
-(output of /proc/scsi/qla2300/<inst#>).  Depending on the info, you
-may need to enable debugging output (qla_settings.h -- enable
-DEBUG_QLA2100 and/or qla_os.h -- enable QL_DEBUG_LEVEL_2).
-
-Regards,
-Andrew Vasquez
