@@ -1,53 +1,51 @@
-From: Clay Haapala <chaapala@cisco.com>
-Subject: Re: [PATCH 2.6.1] Add CRC32C chksums to crypto and lib routines
-Date: Wed, 04 Feb 2004 11:07:45 -0600
+From: Mike Anderson <andmike@us.ibm.com>
+Subject: Re: BUG in sd.c
+Date: Wed, 4 Feb 2004 09:14:01 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <yqujisimepsu.fsf@chaapala-lnx2.cisco.com>
-References: <Xine.LNX.4.44.0402031207330.939-100000@thoron.boston.redhat.com>
+Message-ID: <20040204171401.GA1687@beaverton.ibm.com>
+References: <Pine.LNX.4.44L0.0402041108310.6676-100000@ida.rowland.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sj-iport-5.cisco.com ([171.68.10.87]:35401 "EHLO
-	sj-iport-5.cisco.com") by vger.kernel.org with ESMTP
-	id S263661AbUBDRHu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 4 Feb 2004 12:07:50 -0500
-In-Reply-To: <Xine.LNX.4.44.0402031207330.939-100000@thoron.boston.redhat.com> (James
- Morris's message of "Tue, 3 Feb 2004 12:09:56 -0500 (EST)")
+Received: from e35.co.us.ibm.com ([32.97.110.133]:49034 "EHLO
+	e35.co.us.ibm.com") by vger.kernel.org with ESMTP id S262827AbUBDRJN
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 4 Feb 2004 12:09:13 -0500
+Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.44L0.0402041108310.6676-100000@ida.rowland.org>
 List-Id: linux-scsi@vger.kernel.org
-To: James Morris <jmorris@redhat.com>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, "David S. Miller" <davem@redhat.com>, mpm@selenic.com
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: SCSI development list <linux-scsi@vger.kernel.org>, Frank Pieczynski <pieczy@web.de>
 
-On Tue, 3 Feb 2004, James Morris told this:
-> On Tue, 3 Feb 2004, Clay Haapala wrote:
+Alan Stern [stern@rowland.harvard.edu] wrote:
+> The following Bugzilla entry:
 > 
->> If this patch looks good, I'd like it accepted so we can submit
->> code iSCSI driver code that makes use of it.  This may be a good
->> time, since the crypto SHA code is getting a little scrutiny right
->> now.
+> http://bugme.osdl.org/show_bug.cgi?id=1986
 > 
-> This will need to wait until 2.6.2 is released, and will you also
-> please submit the iSCSI change for review?
+> reports a problem with a USB card reader.  The cause and resolution of
+> that problem are irrelevant to this list, but the manifestation of the
+> problem may have been that the device replied with Check Condition (and no
+> sense data) to every command.
 > 
-Thanks, Dave, for setting me straight on not posting mondo patches to
-lkml. :-)
+> At any rate, this caused an oops as a result of sd.c calling 
+> scsi_disk_get() after the device's reference count had gone to 0.  Can 
+> someone look at this and see if sd.c needs to be fixed?
+> 
+> Alan Stern
 
-The 4.0.0.4 version of the driver, with the crypto CRC calls omitted,
-has been submitted for review by the scsi maintainers.  Here is link
-to a "preview" patch with the calls to the crypto CRC32C module back
-in, but without any of their latest comments incorporated:
+Just a quick look. We are racing scsi_disk_release with sd_open. The
+return code check in scsi_disk_get from the call to kobject_get is
+worthless. The kobject_get will take do a inc even if we may already be
+in release. This will cause a oops as we will fail the scsi_device_get
+call in scsi_disk_get which will cause a call to kobject_put on a struct
+that will most likely be free'd. 
 
-  http://home.mn.rr.com/haapi/iSCSI/iscsi-4.0.0.4-with-crypto.patch.bz2
+Maybe I am still reading the block layer locking wrong, but I do not see a
+method to close the race with blkdev_open. I will look at this some more
+and see if I can get a clue what I am missing.
 
-iscsi-crc.{c,h} are just wrappers for code using the previous private
-implementation.  iscsi-recv-pdu.c and iscsi-xmit-pdu.c have the code
-which processes scatterlists and make calls to the crypto CRC32C
-routines in the other patch.
+-andmike
+--
+Michael Anderson
+andmike@us.ibm.com
 
-This code has been tested successfully on 2.6.1 with udev-0.15 and late-model
-sysfs, hotplug, and klibc.  The patch also contains the iscsi utilities
-code, if you want to go the whole nine yards.
--- 
-Clay Haapala (chaapala@cisco.com) Cisco Systems SRBU +1 763-398-1056
-   6450 Wedgwood Rd, Suite 130 Maple Grove MN 55311 PGP: C89240AD
-    Minnesota is a very agreeable state.  Lately even Celsius and
-                   Fahrenheit have tended to agree.
