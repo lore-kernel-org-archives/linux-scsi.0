@@ -1,38 +1,45 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Question about scsi_device_online() usage in mptscsih
-Date: Sat, 2 Apr 2005 14:35:57 +0900
-Message-ID: <20050402053557.GA22422@htj.dyndns.org>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [2.6 patch] drivers/scsi/dpti.h: remove kernel 2.2 #if's
+Date: Sat, 02 Apr 2005 07:49:38 -0600
+Message-ID: <1112449778.5786.7.camel@mulgrave>
+References: <20050327143421.GF4285@stusta.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rproxy.gmail.com ([64.233.170.201]:61380 "EHLO rproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S261713AbVDBFgB (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 2 Apr 2005 00:36:01 -0500
-Received: by rproxy.gmail.com with SMTP id j1so811918rnf
-        for <linux-scsi@vger.kernel.org>; Fri, 01 Apr 2005 21:36:01 -0800 (PST)
-Content-Disposition: inline
+Received: from stat16.steeleye.com ([209.192.50.48]:53184 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S261487AbVDBNuu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 2 Apr 2005 08:50:50 -0500
+In-Reply-To: <20050327143421.GF4285@stusta.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Eric.Moore@lsil.com, James Bottomley <James.Bottomley@SteelEye.com>
-Cc: linux-scsi@vger.kernel.org
+To: Adrian Bunk <bunk@stusta.de>
+Cc: Andrew Morton <akpm@osdl.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
 
- Hello, Eric.
- Hello, James.
+On Sun, 2005-03-27 at 16:34 +0200, Adrian Bunk wrote:
+> This patch removes #if's for kernel 2.2 .
 
- I've been working on new SCSI state model and was checking on
-scsi_device_online() users.  As the state model is going to change, I
-need to audit device state usages in lldd's and I'm having difficult
-time understanding why scsi_device_online() is used in mptscsih.
+this one looks like it's not quite complete:
 
- In mptscsih.c, mptscsih_flush_running_cmds() uses
-scsi_device_online() to determine whether or not dma-unmap data area
-of active commands.  This was added in the changeset 1.1371.776.1 by
-Eric Moore with the comment "MPT Fusion add back FC909 support".  Can
-you please explain me why and how scsi_device_online() condition is
-used here?
+> -#ifndef LINUX_VERSION_CODE
+>  #include <linux/version.h>
+> -#endif
 
- Thanks a lot. :-)
+Once there are no more KERNEL_VERSION dependencies in a file, it's
+inclusion of linux/version.h can be removed also (and that should
+prevent it getting rebuilt every time the kernel version changes).
 
--- 
-tejun
+So it looks like there's an additional KERNEL_VERSION to remove in
+dpt/dpti_i2o.h version.h includes in dpti_i2o.h and dpt_i2o.c
+
+Then when you have a final patch, could you cc Markus Lidel
+<Markus.Lidel@shadowconnect.com> and  
+
+Mark_Salyzyn@adaptec.com
+
+Thanks,
+
+James
+
 
