@@ -1,505 +1,349 @@
-From: James Bottomley <James.Bottomley@steeleye.com>
-Subject: Re: Transport Attributes -- attempt#4
-Date: 23 Feb 2004 18:17:11 -0600
+From: Alexander Nyberg <alexn@telia.com>
+Subject: Re: 2.6.3 oops at kobject_unregister, alsa & aic7xxx
+Date: Tue, 24 Feb 2004 01:43:50 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1077581832.1833.21.camel@mulgrave>
-References: <20040120215645.GG15871@localhost>
+Message-ID: <1077583430.495.33.camel@boxen>
+References: <1077546633.362.28.camel@boxen>
+	 <20040223160716.799195d0.akpm@osdl.org>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="=-3SAaQYj0WiGEbTPqpFca"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat1.steeleye.com ([65.114.3.130]:54662 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S261626AbUBXARP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 23 Feb 2004 19:17:15 -0500
-In-Reply-To: <20040120215645.GG15871@localhost>
-List-Id: linux-scsi@vger.kernel.org
-To: Martin Hicks <mort@wildopensource.com>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
-
-
---=-3SAaQYj0WiGEbTPqpFca
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mxfep02.bredband.com ([195.54.107.73]:13969 "EHLO
+	mxfep02.bredband.com") by vger.kernel.org with ESMTP
+	id S262112AbUBXAnw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 23 Feb 2004 19:43:52 -0500
+In-Reply-To: <20040223160716.799195d0.akpm@osdl.org>
+List-Id: linux-scsi@vger.kernel.org
+To: Andrew Morton <akpm@osdl.org>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Tue, 2004-01-20 at 15:56, Martin Hicks wrote:
-> Updated patches against Linus' bk tree from earlier today.  The patch
-> that fixes up the scsi_sysfs.c error path, that was sent out by me on
-> Jan 16, is required for the core patch to apply cleanly.
+> Alexander Nyberg <alexn@telia.com> wrote:
+> >
+> > This happens at shutdown when alsa is to close down. I'm running debian
+> > sid. NOTE: I recently removed my aic7xxx out of the motherboard, so the
+> > driver obviously can't find it. But if I remove aic7xxx from the modules
+> > list, this oops does _not_ happen.
 > 
-> I think I've addressed all the comments from the last round with the
-> exception of doing Lazy registration of the transport classes.  I'm
-> still not totally convinced that this is really required.
+> That's useful infomation.  It indicates that the aic7xxx driver is screwing
+> up the kobject lists.
+> 
+> Just to confirm: are you saying that the aic7xxx driver is loaded at the
+> tie of the oops, but there is no aic7xxx hardware present in the machine?
 
-OK, I finally found time to look at all this and try it out.
+I have no aic7xxx card in this machine anymore, yet aic7xxx is still
+loaded at bootup from /etc/modules, which fails. Yes.
 
-My big objection is still that the scsi mid-layer needs to know about
-the transports.  In testing, I recoded this so that no mid-layer
-transport knowledge is necessary (patch attached).  I didn't opt for a
-transport registration API in the mid-layer, but I could see that such a
-thing might have been a better solution.
+The oops itself happens when "alsa is shutting down..." before reboot,
+and it freezes the machine (forgot to mention that).
 
-I also see no necessity to allow hosts to add arbitrary transport
-attributes: they can simply add extra device attributes to the same
-effect.  This means that the attribute list is fixed, and we develop a
-private API between the transport and the device driver to update
-attributes (I didn't code this, but you can see where I'm going with
-it).
+This error is fully reproducible, anyone who wants to send me patches
+just send a message and i'll test them if you wish.
 
-There were a few other initialisation touches (Like making the
-attributes part of the host structure directly), and initialising the
-default transportt correctly in the host_alloc.
+Alex
 
-I did my implementation for the 53c700 which is the driver I can readily
-use.  As you can see, the other half of this is shifting the driver
-internally to use the transport attribute values (so that whatever we
-find there can be directly exported to the user).
-
-James
-
-
---=-3SAaQYj0WiGEbTPqpFca
-Content-Disposition: attachment; filename=xprt.diff
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; name=xprt.diff; charset=ISO-8859-1
-
-=3D=3D=3D=3D=3D drivers/scsi/Kconfig 1.57 vs edited =3D=3D=3D=3D=3D
---- 1.57/drivers/scsi/Kconfig	Mon Feb 23 14:41:38 2004
-+++ edited/drivers/scsi/Kconfig	Mon Feb 23 15:51:15 2004
-@@ -200,14 +200,14 @@
- 	depends on SCSI
-=20
- config SCSI_SPI_ATTRS
--	bool "Parallel SCSI (SPI) Transport Attributes"
-+	tristate "Parallel SCSI (SPI) Transport Attributes"
- 	depends on SCSI
- 	help
- 	  If you wish to export transport-specific information about
- 	  each attached SCSI device to sysfs, say Y.  Otherwise, say N.
-=20
- config SCSI_FC_ATTRS
--	bool "FiberChannel Transport Attributes"
-+	tristate "FiberChannel Transport Attributes"
- 	depends on SCSI
- 	help
- 	  If you wish to export transport-specific information about
-=3D=3D=3D=3D=3D drivers/scsi/Makefile 1.56 vs edited =3D=3D=3D=3D=3D
---- 1.56/drivers/scsi/Makefile	Mon Feb 23 14:59:02 2004
-+++ edited/drivers/scsi/Makefile	Mon Feb 23 15:53:07 2004
-@@ -22,6 +22,14 @@
-=20
- obj-$(CONFIG_SCSI)		+=3D scsi_mod.o
-=20
-+# --- NOTE ORDERING HERE ---
-+# For kernel non-modular link, transport attributes need to
-+# be initialised before drivers
-+# --------------------------
-+obj-$(CONFIG_SCSI_SPI_ATTRS)	+=3D scsi_transport_spi.o
-+obj-$(CONFIG_SCSI_FC_ATTRS) 	+=3D scsi_transport_fc.o
-+
-+
- obj-$(CONFIG_SCSI_AMIGA7XX)	+=3D amiga7xx.o	53c7xx.o
- obj-$(CONFIG_A3000_SCSI)	+=3D a3000.o	wd33c93.o
- obj-$(CONFIG_A2091_SCSI)	+=3D a2091.o	wd33c93.o
-@@ -130,8 +138,6 @@
- scsi_mod-$(CONFIG_SYSCTL)	+=3D scsi_sysctl.o
- scsi_mod-$(CONFIG_SCSI_PROC_FS)	+=3D scsi_proc.o
- scsi_mod-$(CONFIG_X86_PC9800)	+=3D scsi_pc98.o
--scsi_mod-$(CONFIG_SCSI_SPI_ATTRS) +=3D scsi_transport_spi.o
--scsi_mod-$(CONFIG_SCSI_FC_ATTRS)  +=3D scsi_transport_fc.o
-=20
- sd_mod-objs	:=3D sd.o
- sr_mod-objs	:=3D sr.o sr_ioctl.o sr_vendor.o
-=3D=3D=3D=3D=3D drivers/scsi/hosts.c 1.96 vs edited =3D=3D=3D=3D=3D
---- 1.96/drivers/scsi/hosts.c	Mon Dec 29 15:38:10 2003
-+++ edited/drivers/scsi/hosts.c	Mon Feb 23 17:22:26 2004
-@@ -32,6 +32,7 @@
- #include <linux/unistd.h>
-=20
- #include <scsi/scsi_host.h>
-+#include <scsi/scsi_transport.h>
- #include "scsi.h"
-=20
- #include "scsi_priv.h"
-@@ -221,6 +222,11 @@
- 	shost->max_channel =3D 0;
- 	shost->max_id =3D 8;
- 	shost->max_lun =3D 8;
-+
-+	/* Give each shost a default transportt if the driver
-+	 * doesn't yet support Transport Attributes */
-+	if (!shost->transportt)=20
-+		shost->transportt =3D &blank_transport_template;
-=20
- 	/*
- 	 * All drivers right now should be able to handle 12 byte
-=3D=3D=3D=3D=3D drivers/scsi/scsi_scan.c 1.116 vs edited =3D=3D=3D=3D=3D
---- 1.116/drivers/scsi/scsi_scan.c	Mon Feb 23 14:41:38 2004
-+++ edited/drivers/scsi/scsi_scan.c	Mon Feb 23 17:22:08 2004
-@@ -193,7 +193,7 @@
- 	struct scsi_device *sdev, *device;
- 	unsigned long flags;
-=20
--	sdev =3D kmalloc(sizeof(*sdev), GFP_ATOMIC);
-+	sdev =3D kmalloc(sizeof(*sdev) + shost->transportt->size, GFP_ATOMIC);
- 	if (!sdev)
- 		goto out;
-=20
-@@ -237,11 +237,6 @@
- 		if (shost->hostt->slave_alloc(sdev))
- 			goto out_free_queue;
- 	}
--
--	/* Give each shost a default transportt if the driver
--	 * doesn't yet support Transport Attributes */
--	if (!shost->transportt)=20
--		shost->transportt =3D &blank_transport_template;
-=20
- 	if (shost->transportt->setup) {
- 		if (shost->transportt->setup(sdev))
-=3D=3D=3D=3D=3D drivers/scsi/scsi_sysfs.c 1.40 vs edited =3D=3D=3D=3D=3D
---- 1.40/drivers/scsi/scsi_sysfs.c	Mon Feb 23 14:41:38 2004
-+++ edited/drivers/scsi/scsi_sysfs.c	Mon Feb 23 15:34:41 2004
-@@ -14,8 +14,6 @@
-=20
- #include <scsi/scsi_host.h>
- #include <scsi/scsi_transport.h>
--#include <scsi/scsi_transport_spi.h>
--#include <scsi/scsi_transport_fc.h>
- #include "scsi.h"
-=20
- #include "scsi_priv.h"
-@@ -165,31 +163,13 @@
- 	int error;
-=20
- 	error =3D bus_register(&scsi_bus_type);
--	if (error)
--		return error;
--
--	error =3D class_register(&sdev_class);
--	if (error)
--		goto undo_bus;
--
--	error =3D scsi_spi_transport_init();
--	if (error)
--		goto undo_sdev;
--
--	error =3D scsi_fc_transport_init();
--	if (error)
--		goto undo_all;
-+	if (!error) {
-+		error =3D class_register(&sdev_class);
-+		if (error)
-+			bus_unregister(&scsi_bus_type);
-+	}
-=20
-- out:
- 	return error;
--
-- undo_all:
--	scsi_spi_transport_exit();
-- undo_sdev:
--	class_unregister(&sdev_class);
-- undo_bus:
--	bus_unregister(&scsi_bus_type);
--	goto out;
- }
-=20
- void scsi_sysfs_unregister(void)
-@@ -546,4 +526,4 @@
-=20
- /* A blank transport template that is used in drivers that don't
-  * yet implement Transport Attributes */
--struct scsi_transport_template blank_transport_template;
-+struct scsi_transport_template blank_transport_template =3D { 0, };
-=3D=3D=3D=3D=3D drivers/scsi/scsi_transport_spi.c 1.1 vs edited =3D=3D=3D=
-=3D=3D
---- 1.1/drivers/scsi/scsi_transport_spi.c	Mon Feb 23 14:41:41 2004
-+++ edited/drivers/scsi/scsi_transport_spi.c	Mon Feb 23 16:27:08 2004
-@@ -17,7 +17,8 @@
-  *  along with this program; if not, write to the Free Software
-  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  =
-USA
-  */
--
-+#include <linux/module.h>
-+#include <linux/init.h>
- #include <scsi/scsi_device.h>
- #include <scsi/scsi_host.h>
- #include <scsi/scsi_transport.h>
-@@ -30,34 +31,25 @@
- 	.release =3D transport_class_release,
- };
-=20
--int scsi_spi_transport_init(void)
-+static __init int scsi_spi_transport_init(void)
- {
- 	return class_register(&spi_transport_class);
- }
-=20
--void scsi_spi_transport_exit(void)
-+static void __exit scsi_spi_transport_exit(void)
- {
- 	class_unregister(&spi_transport_class);
- }
-=20
--static int spi_alloc_transport_attrs(struct scsi_device *sdev)
-+static int spi_setup_transport_attrs(struct scsi_device *sdev)
- {
--	sdev->transport_attr_values =3D kmalloc(sizeof(struct spi_transport_attrs=
-),
--					      GFP_ATOMIC);
--	if (!sdev->transport_attr_values)
--		return -ENOMEM;
--
--	memcpy(sdev->transport_attr_values, sdev->host->transportt->default_attr_=
-values,
--	       sizeof(struct spi_transport_attrs));
-+	/* FIXME: should callback into the driver to get these values */
-+	spi_period(sdev) =3D -1;
-+	spi_offset(sdev) =3D -1;
-=20
- 	return 0;
- }
-=20
--static void spi_destroy_transport_attrs(struct scsi_device *sdev)
--{
--	kfree(sdev->transport_attr_values);
--}
--
- static void transport_class_release(struct class_device *class_dev)
- {
- 	struct scsi_device *sdev =3D transport_class_to_sdev(class_dev);
-@@ -70,7 +62,7 @@
- {										\
- 	struct scsi_device *sdev =3D transport_class_to_sdev(cdev);		\
- 	struct spi_transport_attrs *tp;						\
--	tp =3D (struct spi_transport_attrs *)sdev->transport_attr_values;		\
-+	tp =3D (struct spi_transport_attrs *)&sdev->transport_data;		\
- 	return snprintf(buf, 20, format_string, tp->field);			\
- }
-=20
-@@ -89,16 +81,18 @@
- 	NULL
- };
-=20
--struct spi_transport_attrs spi_transport_attr_defaults =3D {
--	.period =3D -1,
--	.offset =3D -1,
--};
--
- struct scsi_transport_template spi_transport_template =3D {
- 	.attrs =3D spi_transport_attrs,
- 	.class =3D &spi_transport_class,
--	.setup =3D &spi_alloc_transport_attrs,
--	.cleanup =3D &spi_destroy_transport_attrs,
--	.default_attr_values =3D &spi_transport_attr_defaults,
-+	.setup =3D &spi_setup_transport_attrs,
-+	.cleanup =3D NULL,
-+	.size =3D sizeof(struct spi_transport_attrs) - sizeof(unsigned long),
- };
- EXPORT_SYMBOL(spi_transport_template);
-+
-+MODULE_AUTHOR("Martin Hicks");
-+MODULE_DESCRIPTION("SPI Transport Attributes");
-+MODULE_LICENSE("GPL");
-+
-+module_init(scsi_spi_transport_init);
-+module_exit(scsi_spi_transport_exit);
-
---=-3SAaQYj0WiGEbTPqpFca
-Content-Disposition: attachment; filename=xprt-53c700.diff
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; name=xprt-53c700.diff; charset=ISO-8859-1
-
-=3D=3D=3D=3D=3D drivers/scsi/53c700.c 1.45 vs edited =3D=3D=3D=3D=3D
---- 1.45/drivers/scsi/53c700.c	Wed Nov 12 08:15:46 2003
-+++ edited/drivers/scsi/53c700.c	Mon Feb 23 16:25:03 2004
-@@ -137,6 +137,9 @@
- #include "scsi.h"
- #include "hosts.h"
-=20
-+#include <scsi/scsi_transport.h>
-+#include <scsi/scsi_transport_spi.h>
-+
- #include "53c700.h"
-=20
- /* NOTE: For 64 bit drivers there are points in the code where we use
-@@ -236,6 +239,51 @@
- 	NCR_700_MAX_OFFSET
- };
-=20
-+/* This translates the SDTR message offset and period to a value
-+ * which can be loaded into the SXFER_REG.
-+ *
-+ * NOTE: According to SCSI-2, the true transfer period (in ns) is
-+ *       actually four times this period value */
-+static inline __u8
-+NCR_700_offset_period_to_sxfer(struct NCR_700_Host_Parameters *hostdata,
-+			       __u8 offset, __u8 period)
-+{
-+	int XFERP;
-+
-+	__u8 min_xferp =3D (hostdata->chip710
-+			  ? NCR_710_MIN_XFERP : NCR_700_MIN_XFERP);
-+	__u8 max_offset =3D (hostdata->chip710
-+			   ? NCR_710_MAX_OFFSET : NCR_700_MAX_OFFSET);
-+	/* NOTE: NCR_700_SDTR_msg[3] contains our offer of the minimum
-+	 * period.  It is set in NCR_700_chip_setup() */
-+	if(period < NCR_700_SDTR_msg[3]) {
-+		printk(KERN_WARNING "53c700: Period %dns is less than this chip's minimu=
-m, setting to %d\n", period*4, NCR_700_SDTR_msg[3]*4);
-+		period =3D NCR_700_SDTR_msg[3];
-+	}
-+	XFERP =3D (period*4 * hostdata->sync_clock)/1000 - 4;
-+	if(offset > max_offset) {
-+		printk(KERN_WARNING "53c700: Offset %d exceeds chip maximum, setting to =
-%d\n",
-+		       offset, max_offset);
-+		offset =3D max_offset;
-+	}
-+	if(XFERP < min_xferp) {
-+		printk(KERN_WARNING "53c700: XFERP %d is less than minium, setting to %d=
-\n",
-+		       XFERP,  min_xferp);
-+		XFERP =3D  min_xferp;
-+	}
-+	return (offset & 0x0f) | (XFERP & 0x07)<<4;
-+}
-+
-+static inline __u8
-+NCR_700_get_SXFER(Scsi_Device *SDp)
-+{
-+	struct NCR_700_Host_Parameters *hostdata =3D=20
-+		(struct NCR_700_Host_Parameters *)SDp->host->hostdata[0];
-+
-+	return NCR_700_offset_period_to_sxfer(hostdata, spi_offset(SDp),
-+					      spi_period(SDp));
-+}
-+
- struct Scsi_Host *
- NCR_700_detect(Scsi_Host_Template *tpnt,
- 	       struct NCR_700_Host_Parameters *hostdata)
-@@ -326,6 +374,7 @@
- 	hostdata->cmd =3D NULL;
- 	host->max_id =3D 7;
- 	host->max_lun =3D NCR_700_MAX_LUNS;
-+	host->transportt =3D &spi_transport_template;
- 	host->unique_id =3D hostdata->base;
- 	host->base =3D hostdata->base;
- 	hostdata->eh_complete =3D NULL;
-@@ -520,40 +569,6 @@
- 	hostdata->cmd =3D NULL;
- }
-=20
--/* This translates the SDTR message offset and period to a value
-- * which can be loaded into the SXFER_REG.
-- *
-- * NOTE: According to SCSI-2, the true transfer period (in ns) is
-- *       actually four times this period value */
--STATIC inline __u8
--NCR_700_offset_period_to_sxfer(struct NCR_700_Host_Parameters *hostdata,
--			       __u8 offset, __u8 period)
--{
--	int XFERP;
--	__u8 min_xferp =3D (hostdata->chip710
--			  ? NCR_710_MIN_XFERP : NCR_700_MIN_XFERP);
--	__u8 max_offset =3D (hostdata->chip710
--			   ? NCR_710_MAX_OFFSET : NCR_700_MAX_OFFSET);
--	/* NOTE: NCR_700_SDTR_msg[3] contains our offer of the minimum
--	 * period.  It is set in NCR_700_chip_setup() */
--	if(period < NCR_700_SDTR_msg[3]) {
--		printk(KERN_WARNING "53c700: Period %dns is less than this chip's minimu=
-m, setting to %d\n", period*4, NCR_700_SDTR_msg[3]*4);
--		period =3D NCR_700_SDTR_msg[3];
--	}
--	XFERP =3D (period*4 * hostdata->sync_clock)/1000 - 4;
--	if(offset > max_offset) {
--		printk(KERN_WARNING "53c700: Offset %d exceeds chip maximum, setting to =
-%d\n",
--		       offset, max_offset);
--		offset =3D max_offset;
--	}
--	if(XFERP < min_xferp) {
--		printk(KERN_WARNING "53c700: XFERP %d is less than minium, setting to %d=
-\n",
--		       XFERP,  min_xferp);
--		XFERP =3D  min_xferp;
--	}
--	return (offset & 0x0f) | (XFERP & 0x07)<<4;
--}
--
- STATIC inline void
- NCR_700_unmap(struct NCR_700_Host_Parameters *hostdata, Scsi_Cmnd *SCp,
- 	      struct NCR_700_command_slot *slot)
-@@ -777,19 +792,19 @@
- 		if(SCp !=3D NULL && NCR_700_is_flag_set(SCp->device, NCR_700_DEV_BEGIN_S=
-YNC_NEGOTIATION)) {
- 			__u8 period =3D hostdata->msgin[3];
- 			__u8 offset =3D hostdata->msgin[4];
--			__u8 sxfer;
-=20
--			if(offset !=3D 0 && period !=3D 0)
--				sxfer =3D NCR_700_offset_period_to_sxfer(hostdata, offset, period);
--			else=20
--				sxfer =3D 0;
-+			if(offset =3D=3D 0 || period =3D=3D 0) {
-+				offset =3D 0;
-+				period =3D 0;
-+			}
- 		=09
--			if(sxfer !=3D NCR_700_get_SXFER(SCp->device)) {
-+			if(offset !=3D spi_offset(SCp->device) || period !=3D spi_period(SCp->d=
-evice)) {
- 				printk(KERN_INFO "scsi%d: (%d:%d) Synchronous at offset %d, period %dn=
-s\n",
- 				       host->host_no, pun, lun,
- 				       offset, period*4);
- 			=09
--				NCR_700_set_SXFER(SCp->device, sxfer);
-+				spi_offset(SCp->device) =3D offset;
-+				spi_period(SCp->device) =3D period;
- 			}
- 		=09
-=20
-@@ -870,7 +885,7 @@
- 	case A_REJECT_MSG:
- 		if(SCp !=3D NULL && NCR_700_is_flag_set(SCp->device, NCR_700_DEV_BEGIN_S=
-YNC_NEGOTIATION)) {
- 			/* Rejected our sync negotiation attempt */
--			NCR_700_set_SXFER(SCp->device, 0);
-+			spi_period(SCp->device) =3D spi_offset(SCp->device) =3D 0;
- 			NCR_700_set_flag(SCp->device, NCR_700_DEV_NEGOTIATED_SYNC);
- 			NCR_700_clear_flag(SCp->device, NCR_700_DEV_BEGIN_SYNC_NEGOTIATION);
- 		} else if(SCp !=3D NULL && NCR_700_is_flag_set(SCp->device, NCR_700_DEV_=
-BEGIN_TAG_QUEUEING)) {
-=3D=3D=3D=3D=3D drivers/scsi/53c700.h 1.15 vs edited =3D=3D=3D=3D=3D
---- 1.15/drivers/scsi/53c700.h	Sun Feb 22 12:05:18 2004
-+++ edited/drivers/scsi/53c700.h	Mon Feb 23 16:20:23 2004
-@@ -101,16 +101,6 @@
- #define NCR_700_DEV_TAG_STARVATION_WARNED (1<<19)
-=20
- static inline void
--NCR_700_set_SXFER(Scsi_Device *SDp, __u8 sxfer)
--{
--	SDp->hostdata =3D (void *)(((long)SDp->hostdata & 0xffffff00) |
--				(sxfer & 0xff));
--}
--static inline __u8 NCR_700_get_SXFER(Scsi_Device *SDp)
--{
--	return (((unsigned long)SDp->hostdata) & 0xff);
--}
--static inline void
- NCR_700_set_depth(Scsi_Device *SDp, __u8 depth)
- {
- 	long l =3D (long)SDp->hostdata;
-@@ -437,6 +427,7 @@
- 		       #symbol, A_##symbol##_used[i], val)); \
- 	} \
- }
-+
-=20
- static inline __u8
- NCR_700_mem_readb(struct Scsi_Host *host, __u32 reg)
-
---=-3SAaQYj0WiGEbTPqpFca--
+> > I only had 2.6.3-rc1 available, and it behaved the same way.
+> > 
+> > alex@testme:~$ cat /etc/modules
+> > 3c59x
+> > snd-emu10k1
+> > aha152x io=0x340 irq=9 reconnect=1
+> > sd_mod
+> > aic7xxx
+> > st
+> > 
+> > 
+> > testme:~# Unable to handle kernel paging request at virtual address
+> > e09e16dc
+> >  printing eip:
+> > c01c0c43
+> > *pde = 1fe87067
+> > *pte = 00000000
+> > Oops: 0002 [#1]
+> > CPU:    0
+> > EIP:    0060:[<c01c0c43>]    Not tainted
+> > EFLAGS: 00010246
+> > EIP is at unlink+0x33/0x70
+> > eax: e089c4f8   ebx: e089c4dc   ecx: c02bfed8   edx: e09e16d8
+> > esi: c02b7e20   edi: c02b2238   ebp: 00000000   esp: df7b7f1c
+> > ds: 007b   es: 007b   ss: 0068
+> > Process modprobe (pid: 445, threadinfo=df7b6000 task=de5c8720)
+> > Stack: e089c4dc c02b7e20 c01c0f43 e089c4dc e089c4c4 c01eacce e089c4dc
+> > e089c4c4
+> >        00000080 c01eb0c3 e089c4c4 e089d040 c01c62e2 e089c4c4 e0895baf
+> > e089c4a0
+> >        c012d609 e089d040 0804e320 0000003b 00000000 5f646e73 31756d65
+> > 00316b30
+> > Call Trace:
+> >  [<c01c0f43>] kobject_unregister+0x13/0x30
+> >  [<c01eacce>] bus_remove_driver+0x5e/0x80
+> >  [<c01eb0c3>] driver_unregister+0x13/0x28
+> >  [<c01c62e2>] pci_unregister_driver+0x12/0x20
+> >  [<e0895baf>] alsa_card_emu10k1_exit+0xf/0x35 [snd_emu10k1]
+> >  [<c012d609>] sys_delete_module+0x139/0x1b0
+> >  [<c013f1eb>] do_munmap+0x11b/0x150
+> >  [<c0108c9f>] syscall_call+0x7/0xb
+> >  
+> > Code: 89 4a 04 89 11 89 40 04 89 43 1c 8b 43 28 8b 30 8d 4e 48 89
+> >   
+> > alex@boxen:/home/devel/fixme$ dec.pl 89 4a 04 89 11 89 40 04 89 43 1c 8b
+> > 43 28 8b 30 8d 4e 48 89
+> > (gdb) disass dme
+> > Dump of assembler code for function dme:
+> > 0x08049470 <dme+0>:     mov    %ecx,0x4(%edx)
+> > 0x08049473 <dme+3>:     mov    %edx,(%ecx)
+> > 0x08049475 <dme+5>:     mov    %eax,0x4(%eax)
+> > 0x08049478 <dme+8>:     mov    %eax,0x1c(%ebx)
+> > 0x0804947b <dme+11>:    mov    0x28(%ebx),%eax
+> > 0x0804947e <dme+14>:    mov    (%eax),%esi
+> > 0x08049480 <dme+16>:    lea    0x48(%esi),%ecx
+> > 0x08049483 <dme+19>:    mov    %eax,(%eax)
+> > 0x08049485 <dme+21>:    add    %al,(%eax)
+> > 0x08049487 <dme+23>:    add    %al,(%eax)
+> > End of assembler dump.
+> > (gdb) q
+> > 
+> > 
+> > 
+> > alex@testme:~$ dmesg
+> > Linux version 2.6.3 (alex@testme) (gcc version 3.3.3 20040125
+> > (prerelease) (Debian)) #2 Thu Feb 19 23:37:37 CET 2004
+> > BIOS-provided physical RAM map:
+> >  BIOS-e820: 0000000000000000 - 000000000009fc00 (usable)
+> >  BIOS-e820: 000000000009fc00 - 00000000000a0000 (reserved)
+> >  BIOS-e820: 00000000000f0000 - 0000000000100000 (reserved)
+> >  BIOS-e820: 0000000000100000 - 000000001fff0000 (usable)
+> >  BIOS-e820: 000000001fff0000 - 000000001fff3000 (ACPI NVS)
+> >  BIOS-e820: 000000001fff3000 - 0000000020000000 (ACPI data)
+> >  BIOS-e820: 00000000ffff0000 - 0000000100000000 (reserved)
+> > 511MB LOWMEM available.
+> > On node 0 totalpages: 131056
+> >   DMA zone: 4096 pages, LIFO batch:1
+> >   Normal zone: 126960 pages, LIFO batch:16
+> >   HighMem zone: 0 pages, LIFO batch:1
+> > DMI 2.3 present.
+> > Built 1 zonelists
+> > Kernel command line: root=/dev/hda2 console=tty0 console=ttyS0,19200
+> > console=ttyS1,9600
+> > Local APIC disabled by BIOS -- reenabling.
+> > Found and enabled local APIC!
+> > Initializing CPU#0
+> > PID hash table entries: 2048 (order 11: 16384 bytes)
+> > Detected 1400.299 MHz processor.
+> > Using tsc for high-res timesource
+> > Console: colour VGA+ 80x25
+> > Memory: 515768k/524224k available (1494k kernel code, 7692k reserved,
+> > 463k data, 388k init, 0k highmem)
+> > Checking if this processor honours the WP bit even in supervisor mode...
+> > Ok.
+> > Calibrating delay loop... 2752.51 BogoMIPS
+> > Dentry cache hash table entries: 65536 (order: 6, 262144 bytes)
+> > Inode-cache hash table entries: 32768 (order: 5, 131072 bytes)
+> > Mount-cache hash table entries: 512 (order: 0, 4096 bytes)
+> > CPU:     After generic identify, caps: 0183fbff c1c7fbff 00000000
+> > 00000000
+> > CPU:     After vendor identify, caps: 0183fbff c1c7fbff 00000000
+> > 00000000
+> > CPU: L1 I Cache: 64K (64 bytes/line), D cache 64K (64 bytes/line)
+> > CPU: L2 Cache: 256K (64 bytes/line)
+> > CPU:     After all inits, caps: 0183fbff c1c7fbff 00000000 00000020
+> > Intel machine check architecture supported.
+> > Intel machine check reporting enabled on CPU#0.
+> > CPU: AMD Athlon(tm) processor stepping 04
+> > Enabling fast FPU save and restore... done.
+> > Checking 'hlt' instruction... OK.
+> > POSIX conformance testing by UNIFIX
+> > enabled ExtINT on CPU#0
+> > ESR value before enabling vector: 00000000
+> > ESR value after enabling vector: 00000000
+> > Using local APIC timer interrupts.
+> > calibrating APIC timer ...
+> > ..... CPU clock speed is 1399.0810 MHz.
+> > ..... host bus clock speed is 266.0630 MHz.
+> > NET: Registered protocol family 16
+> > EISA bus registered
+> > PCI: PCI BIOS revision 2.10 entry at 0xfb4e0, last bus=1
+> > PCI: Using configuration type 1
+> > mtrr: v2.0 (20020519)
+> > Linux Plug and Play Support v0.97 (c) Adam Belay
+> > pnp: the driver 'system' has been registered
+> > PCI: Probing PCI hardware
+> > PCI: Probing PCI hardware (bus 00)
+> > Disabling VIA memory write queue (PCI ID 0305, rev 03): [55] 89 & 1f ->
+> > 09
+> > PCI: Using IRQ router VIA [1106/0686] at 0000:00:07.0
+> > spurious 8259A interrupt: IRQ7.
+> > Machine check exception polling timer started.
+> > Initializing Cryptographic API
+> > Applying VIA southbridge workaround.
+> > PCI: Disabling Via external APIC routing
+> > Real Time Clock Driver v1.12
+> > Serial: 8250/16550 driver $Revision: 1.90 $ 8 ports, IRQ sharing
+> > disabled
+> > ttyS0 at I/O 0x3f8 (irq = 4) is a 16550A
+> > ttyS1 at I/O 0x2f8 (irq = 3) is a 16550A
+> > pnp: the driver 'serial' has been registered
+> > PCI: Found IRQ 11 for device 0000:00:0d.0
+> > PCI: Sharing IRQ 11 with 0000:00:0f.0
+> > 3c59x: Donald Becker and others. www.scyld.com/network/vortex.html
+> > 0000:00:0d.0: 3Com PCI 3c905C Tornado at 0xdc00. Vers LK1.1.19
+> > Uniform Multi-Platform E-IDE driver Revision: 7.00alpha2
+> > ide: Assuming 33MHz system bus speed for PIO modes; override with
+> > idebus=xx
+> > VP_IDE: IDE controller at PCI slot 0000:00:07.1
+> > VP_IDE: chipset revision 6
+> > VP_IDE: not 100% native mode: will probe irqs later
+> > ide: Assuming 33MHz system bus speed for PIO modes; override with
+> > idebus=xx
+> > VP_IDE: VIA vt82c686b (rev 40) IDE UDMA100 controller on pci0000:00:07.1
+> >     ide0: BM-DMA at 0xd000-0xd007, BIOS settings: hda:DMA, hdb:DMA
+> >     ide1: BM-DMA at 0xd008-0xd00f, BIOS settings: hdc:pio, hdd:pio
+> > hda: SAMSUNG SV2001H, ATA DISK drive
+> > hdb: CD-ROM 52X/AKH, ATAPI CD/DVD-ROM drive
+> > Using anticipatory io scheduler
+> > ide0 at 0x1f0-0x1f7,0x3f6 on irq 14
+> > hda: max request size: 128KiB
+> > hda: 39179952 sectors (20060 MB) w/2048KiB Cache, CHS=38869/16/63,
+> > UDMA(100)
+> >  hda: hda1 hda2 hda3 hda4
+> > mice: PS/2 mouse device common for all mice
+> > serio: i8042 AUX port at 0x60,0x64 irq 12
+> > input: ImPS/2 Logitech Wheel Mouse on isa0060/serio1
+> > serio: i8042 KBD port at 0x60,0x64 irq 1
+> > input: AT Translated Set 2 keyboard on isa0060/serio0
+> > NET: Registered protocol family 2
+> > IP: routing cache hash table of 4096 buckets, 32Kbytes
+> > TCP: Hash tables configured (established 32768 bind 65536)
+> > NET: Registered protocol family 1
+> > NET: Registered protocol family 17
+> > EXT3-fs: INFO: recovery required on readonly filesystem.
+> > EXT3-fs: write access will be enabled during recovery.
+> > kjournald starting.  Commit interval 5 seconds
+> > EXT3-fs: recovery complete.
+> > EXT3-fs: mounted filesystem with ordered data mode.
+> > VFS: Mounted root (ext3 filesystem) readonly.
+> > Freeing unused kernel memory: 388k freed
+> > Adding 488368k swap on /dev/hda3.  Priority:-1 extents:1
+> > EXT3 FS on hda2, internal journal
+> > PCI: Found IRQ 11 for device 0000:00:0f.0
+> > PCI: Sharing IRQ 11 with 0000:00:0d.0
+> > SCSI subsystem initialized
+> > aha152x: BIOS test: passed, 1 controller(s) configured
+> > aha152x: resetting bus...
+> > aha152x0: vital data: rev=1, io=0x340 (0x340/0x340), irq=9, scsiid=7,
+> > reconnect=enabled, parity=enabled, synchronous=enabled, delay=1000,
+> > extended translation=disabled
+> > aha152x0: trying software interrupt, ok.
+> > scsi0 : Adaptec 152x SCSI driver; $Revision: 2.7 $
+> > st: Version 20040122, fixed bufsize 32768, s/g segs 256
+> > nfs warning: mount version older than kernel
+> > 
+> > 
+> > 
+> > alex@testme:~$ lspci -v
+> > 00:00.0 Host bridge: VIA Technologies, Inc. VT8363/8365 [KT133/KM133]
+> > (rev 03)
+> >         Subsystem: ABIT Computer Corp. KT7/KT7-RAID/KT7A/KT7A-RAID
+> > Mainboard
+> >         Flags: bus master, medium devsel, latency 8
+> >         Memory at d8000000 (32-bit, prefetchable) [size=64M]
+> >         Capabilities: <available only to root>
+> >  
+> > 00:01.0 PCI bridge: VIA Technologies, Inc. VT8363/8365 [KT133/KM133 AGP]
+> > (prog-if 00 [Normal decode])
+> >         Flags: bus master, 66Mhz, medium devsel, latency 0
+> >         Bus: primary=00, secondary=01, subordinate=01, sec-latency=0
+> >         Memory behind bridge: dc000000-ddffffff
+> >         Prefetchable memory behind bridge: d0000000-d7ffffff
+> >         Capabilities: <available only to root>
+> >  
+> > 00:07.0 ISA bridge: VIA Technologies, Inc. VT82C686 [Apollo Super South]
+> > (rev 40)
+> >         Subsystem: ABIT Computer Corp.: Unknown device 0000
+> >         Flags: bus master, stepping, medium devsel, latency 0
+> >         Capabilities: <available only to root>
+> >  
+> > 00:07.1 IDE interface: VIA Technologies, Inc.
+> > VT82C586A/B/VT82C686/A/B/VT8233/A/C/VT8235 PIPC Bus Master IDE (rev 06)
+> > (prog-if 8a [Master SecP PriP])
+> >         Subsystem: VIA Technologies, Inc.
+> > VT82C586/B/VT82C686/A/B/VT8233/A/C/VT8235 PIPC Bus Master IDE
+> >         Flags: bus master, medium devsel, latency 32
+> >         I/O ports at d000 [size=16]
+> >         Capabilities: <available only to root>
+> > 
+> >  
+> > 00:07.2 USB Controller: VIA Technologies, Inc. USB (rev 16) (prog-if 00
+> > [UHCI])
+> >         Subsystem: VIA Technologies, Inc. (Wrong ID) USB Controller
+> >         Flags: bus master, medium devsel, latency 32, IRQ 11
+> >         I/O ports at d400 [size=32]
+> >         Capabilities: <available only to root>
+> >  
+> > 00:07.3 USB Controller: VIA Technologies, Inc. USB (rev 16) (prog-if 00
+> > [UHCI])
+> >         Subsystem: VIA Technologies, Inc. (Wrong ID) USB Controller
+> >         Flags: bus master, medium devsel, latency 32, IRQ 11
+> >         I/O ports at d800 [size=32]
+> >         Capabilities: <available only to root>
+> >  
+> > 00:07.4 Bridge: VIA Technologies, Inc. VT82C686 [Apollo Super ACPI] (rev
+> > 40)
+> >         Subsystem: VIA Technologies, Inc. VT82C686 [Apollo Super ACPI]
+> >         Flags: medium devsel, IRQ 11
+> >         Capabilities: <available only to root>
+> >  
+> > 00:09.0 VGA compatible controller: Matrox Graphics, Inc. MGA 2064W
+> > [Millennium] (rev 01) (prog-if 00 [VGA])
+> >         Flags: stepping, medium devsel, IRQ 5
+> >         Memory at de000000 (32-bit, non-prefetchable) [disabled]
+> > [size=16K]
+> >         Memory at df000000 (32-bit, prefetchable) [disabled] [size=8M]
+> >         Expansion ROM at <unassigned> [disabled] [size=64K]
+> >  
+> > 00:0d.0 Ethernet controller: 3Com Corporation 3c905C-TX/TX-M [Tornado]
+> > (rev 74)
+> >         Subsystem: 3Com Corporation 3C905C-TX Fast Etherlink for PC
+> > Management NIC
+> >         Flags: bus master, medium devsel, latency 32, IRQ 11
+> >         I/O ports at dc00 [size=128]
+> >         Memory at e1000000 (32-bit, non-prefetchable) [size=128]
+> >         Expansion ROM at <unassigned> [disabled] [size=128K]
+> >         Capabilities: <available only to root>
+> >  
+> > 00:0f.0 Multimedia audio controller: Creative Labs SB Live! EMU10k1 (rev
+> > 0a)
+> >         Subsystem: Creative Labs: Unknown device 8066
+> >         Flags: bus master, medium devsel, latency 32, IRQ 11
+> >         I/O ports at e000 [size=32]
+> >         Capabilities: <available only to root>
+> >  
+> > 00:0f.1 Input device controller: Creative Labs SB Live! MIDI/Game Port
+> > (rev 0a)
+> >         Subsystem: Creative Labs Gameport Joystick
+> >         Flags: bus master, medium devsel, latency 32
+> >         I/O ports at e400 [size=8]
+> >         Capabilities: <available only to root>
+> >  
+> > 01:00.0 VGA compatible controller: nVidia Corporation NV15 [GeForce2
+> > GTS/Pro] (rev a3) (prog-if 00 [VGA])
+> >         Subsystem: LeadTek Research Inc. WinFast GeForce2 GTS with TV
+> > output
+> >         Flags: bus master, VGA palette snoop, 66Mhz, medium devsel,
+> > latency 32, IRQ 10
+> >         Memory at dc000000 (32-bit, non-prefetchable) [size=16M]
+> >         Memory at d0000000 (32-bit, prefetchable) [size=128M]
+> >         Expansion ROM at <unassigned> [disabled] [size=64K]
+> >         Capabilities: <available only to root>
+> >  
+> > 
+> > 
+> > 
+> > 
+> > -
+> > To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > Please read the FAQ at  http://www.tux.org/lkml/
+> > 
 
