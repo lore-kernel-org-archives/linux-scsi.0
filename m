@@ -1,138 +1,168 @@
-From: Xose Vazquez Perez <xose@wanadoo.es>
-Subject: Re: [PATCH] 2.4.25-rc2 more devices to  scsi_scan.c's blacklist
-Date: Fri, 13 Feb 2004 00:15:12 +0100
+From: Kurt Garloff <garloff@suse.de>
+Subject: Re: lots and lots of disks again
+Date: Fri, 13 Feb 2004 01:05:39 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <402C0900.6080104@wanadoo.es>
-References: <402BB921.2000808@wanadoo.es>
+Message-ID: <20040213000538.GA2400@tpkurt.garloff.de>
+References: <20040210112658.GC4010@tpkurt.garloff.de> <20040210133932.A3870@infradead.org> <20040210154751.GH4010@tpkurt.garloff.de> <20040210102603.0c835212.akpm@osdl.org> <20040211145614.GA4010@tpkurt.garloff.de> <20040211132848.49eece0d.akpm@osdl.org> <20040211220918.GJ4010@tpkurt.garloff.de> <20040211142933.484ca978.akpm@osdl.org> <20040211225348.GM21151@parcelfarce.linux.theplanet.co.uk> <20040212150035.GN1780@tpkurt.garloff.de>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------080306080801090106080005"
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="XOIedfhf+7KOe/yw"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp14.eresmas.com ([62.81.235.114]:56728 "EHLO
-	smtp14.eresmas.com") by vger.kernel.org with ESMTP id S266660AbUBLXPU
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 12 Feb 2004 18:15:20 -0500
-Received: from [192.168.108.52] (helo=mx02.eresmas.com)
-	by smtp14.eresmas.com with esmtp (Exim 4.10)
-	id 1ArQ3C-0005RJ-00
-	for linux-scsi@vger.kernel.org; Fri, 13 Feb 2004 00:15:18 +0100
-Received: from [80.103.5.172] (helo=wanadoo.es)
-	by mx02.eresmas.com with esmtp (Exim 4.30)
-	id 1ArQ38-0001SB-9I
-	for linux-scsi@vger.kernel.org; Fri, 13 Feb 2004 00:15:14 +0100
-In-Reply-To: <402BB921.2000808@wanadoo.es>
+Received: from ns.suse.de ([195.135.220.2]:64901 "EHLO Cantor.suse.de")
+	by vger.kernel.org with ESMTP id S266585AbUBMAFm (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 12 Feb 2004 19:05:42 -0500
+Content-Disposition: inline
+In-Reply-To: <20040212150035.GN1780@tpkurt.garloff.de>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>
+To: viro@parcelfarce.linux.theplanet.co.uk, Andrew Morton <akpm@osdl.org>, hch@infradead.org, linux-scsi@vger.kernel.org, pbadari@us.ibm.com, willy@debian.org, James.Bottomley@steeleye.com
 
-This is a multi-part message in MIME format.
---------------080306080801090106080005
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
 
-hi,
+--XOIedfhf+7KOe/yw
+Content-Type: multipart/mixed; boundary="huq684BweRXVnRxX"
+Content-Disposition: inline
 
-new and better patch with _additions_ from linux-kernel ml, SLES y RHEL.
 
-There are some _modifications_ from SuSE, but they were not added.
-Does anybody know what are right ? kernel.org vs. SuSE(and one of RH)
+--huq684BweRXVnRxX
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
--       {"COMPAQ", "MSA1000", "*", BLIST_SPARSELUN | BLIST_LARGELUN | BLIST_NOSTARTONADD},
-+       {"COMPAQ", "MSA1000", "*", BLIST_SPARSELUN | BLIST_LARGELUN},
+On Thu, Feb 12, 2004 at 04:00:35PM +0100, Kurt Garloff wrote:
+> Expect a patch later.=20
 
--       {"COMPAQ", "HSV110", "*", BLIST_SPARSELUN | BLIST_LARGELUN | BLIST_NOSTARTONADD},
-+       {"COMPAQ", "HSV110", "*", BLIST_SPARSELUN | BLIST_LARGELUN},
+Attached.
+--=20
+Kurt Garloff  <garloff@suse.de>                            Cologne, DE=20
+SUSE LINUX AG, Nuernberg, DE                          SUSE Labs (Head)
 
--       {"DEC", "HSG80","*", BLIST_FORCELUN | BLIST_NOSTARTONADD},
-+       {"DEC", "HSG80","*", BLIST_SPARSELUN | BLIST_LARGELUN | BLIST_NOSTARTONADD}, -> RH
-+       {"DEC", "HSG80","*", BLIST_FORCELUN | BLIST_LARGELUN}, -> SuSE
+--huq684BweRXVnRxX
+Content-Type: text/plain; charset=us-ascii
+Content-Description: scsi-many-26-4.diff
+Content-Disposition: attachment; filename="scsi-many-26-4.diff"
+Content-Transfer-Encoding: quoted-printable
 
--       {"EMC", "SYMMETRIX", "*", BLIST_SPARSELUN | BLIST_LARGELUN | BLIST_FORCELUN},
-+       {"EMC", "SYMMETRIX", "*", BLIST_SPARSELUN | BLIST_LARGELUN},
-
--       {"HP", "HSV100", "*", BLIST_SPARSELUN | BLIST_LARGELUN | BLIST_NOSTARTONADD},
-+       {"HP", "HSV100", "*", BLIST_SPARSELUN | BLIST_LARGELUN},
-
--       {"HP", "NetRAID-4M", "*", BLIST_FORCELUN},
-+       {"HP", "NetRAID-4M", "*", BLIST_FORCELUN | BLIST_LARGELUN},
-
--thanks-
-
---------------080306080801090106080005
-Content-Type: text/plain;
- name="scsi-blacklist-v2.diff"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="scsi-blacklist-v2.diff"
-
---- linux/drivers/scsi/scsi_scan.c	2004-01-05 15:39:12.000000000 +0100
-+++ n/drivers/scsi/scsi_scan.c	2004-02-12 23:56:32.000000000 +0100
-@@ -112,10 +112,6 @@
- 	{"HP", "C1750A", "3226", BLIST_NOLUN},			/* scanjet iic */
- 	{"HP", "C1790A", "", BLIST_NOLUN},			/* scanjet iip */
- 	{"HP", "C2500A", "", BLIST_NOLUN},			/* scanjet iicx */
--	{"HP", "A6188A", "*", BLIST_SPARSELUN | BLIST_LARGELUN},/* HP Va7100 Array */
--	{"HP", "A6189A", "*", BLIST_SPARSELUN | BLIST_LARGELUN},/* HP Va7400 Array */
--	{"HP", "A6189B", "*", BLIST_SPARSELUN | BLIST_LARGELUN},/* HP Va7110 Array */
--	{"HP", "A6218A", "*", BLIST_SPARSELUN | BLIST_LARGELUN},/* HP Va7410 Array */
- 	{"YAMAHA", "CDR100", "1.00", BLIST_NOLUN},		/* Locks up if polled for lun != 0 */
- 	{"YAMAHA", "CDR102", "1.00", BLIST_NOLUN},		/* Locks up if polled for lun != 0  
- 								 * extra reset */
-@@ -126,6 +122,9 @@
- 	{"RELISYS", "VM3530+", "*", BLIST_NOLUN},		/* responds to all LUN */
- 	{"ACROSS", "", "*", BLIST_NOLUN},			/* responds to all LUN */
- 	{"MICROTEK", "ScanMaker II", "5.61", BLIST_NOLUN},	/* responds to all LUN */
-+	{"IBM", "EXP300", "D014", BLIST_NOLUN},			/* locks up */
-+	{"NEC", "D3856", "0009", BLIST_NOLUN},
-+	{"SUN", "SENA", "*", BLIST_NOLUN},			/* responds to all LUN */
- 
+--- drivers/scsi/sd.c.orig	2004-01-09 07:59:49.000000000 +0100
++++ drivers/scsi/sd.c	2004-02-13 00:58:05.000000000 +0100
+@@ -19,6 +19,9 @@
+  *	   not being read in sd_open. Fix problem where removable media=20
+  *	   could be ejected after sd_open.
+  *	 - Douglas Gilbert <dgilbert@interlog.com> cleanup for lk 2.5.x
++ *	 - Badari Pulavarty <pbadari@us.ibm.com>, Matthew Wilcox=20
++ *	   <willy@debian.org>, Kurt Garloff <garloff@suse.de>:=20
++ *	   Support 32k/1M disks.
+  *
+  *	Logging policy (needs CONFIG_SCSI_LOGGING defined):
+  *	 - setting up transfer: SCSI_LOG_HLQUEUE levels 1 and 2
+@@ -61,7 +64,7 @@
+  * Remaining dev_t-handling stuff
+  */
+ #define SD_MAJORS	16
+-#define SD_DISKS	(SD_MAJORS << 4)
++#define SD_DISKS	32768	/* anything between 256 and 262144 */
+=20
  /*
-  * Other types of devices that have special flags.
-@@ -164,7 +163,10 @@
- 	{"DELL", "PSEUDO DEVICE .",   "*", BLIST_SPARSELUN | BLIST_LARGELUN}, // Dell PV 530F
- 	{"DELL", "PV530F",    "*", BLIST_SPARSELUN | BLIST_LARGELUN}, // Dell PV 530F
- 	{"EMC", "SYMMETRIX", "*", BLIST_SPARSELUN | BLIST_LARGELUN | BLIST_FORCELUN},
--	{"HP", "A6189A", "*", BLIST_SPARSELUN |  BLIST_LARGELUN}, // HP VA7400, by Alar Aun
-+	{"HP", "A6188A", "*", BLIST_SPARSELUN | BLIST_LARGELUN},/* HP Va7100 Array */
-+	{"HP", "A6189A", "*", BLIST_SPARSELUN | BLIST_LARGELUN},/* HP Va7400 Array */
-+	{"HP", "A6189B", "*", BLIST_SPARSELUN | BLIST_LARGELUN},/* HP Va7110 Array */
-+	{"HP", "A6218A", "*", BLIST_SPARSELUN | BLIST_LARGELUN},/* HP Va7410 Array */
- 	{"HP", "OPEN-", "*", BLIST_SPARSELUN | BLIST_LARGELUN},	/* HP XP Arrays */
- 	{"CMD", "CRA-7280", "*", BLIST_SPARSELUN | BLIST_LARGELUN},   // CMD RAID Controller
- 	{"CNSI", "G7324", "*", BLIST_SPARSELUN | BLIST_LARGELUN},     // Chaparral G7324 RAID
-@@ -189,8 +191,8 @@
- 	{"HITACHI", "DF600", "*", BLIST_SPARSELUN},
- 	{"IBM", "ProFibre 4000R", "*", BLIST_SPARSELUN | BLIST_LARGELUN},
- 	{"HITACHI", "OPEN-", "*", BLIST_SPARSELUN | BLIST_LARGELUN},  /* HITACHI XP Arrays */
--	{"WINSYS","FLASHDISK G6", "*", BLIST_SPARSELUN},
--	{"DotHill","SANnet RAID X300", "*", BLIST_SPARSELUN},	
-+	{"WINSYS","FLASHDISK", "*", BLIST_SPARSELUN},
-+	{"DotHill","SANnet", "*", BLIST_SPARSELUN},
- 	{"SUN", "T300", "*", BLIST_SPARSELUN},
- 	{"SUN", "T4", "*", BLIST_SPARSELUN},
- 	{"SGI", "RAID3", "*", BLIST_SPARSELUN | BLIST_LARGELUN},
-@@ -206,6 +208,22 @@
- 	{"SMSC", "USB 2 HS", "*", BLIST_SPARSELUN | BLIST_LARGELUN}, 
- 	{"XYRATEX", "RS", "*", BLIST_SPARSELUN | BLIST_LARGELUN},
- 	{"NEC", "iStorage", "*", BLIST_SPARSELUN | BLIST_LARGELUN | BLIST_FORCELUN},
-+	{"ADIC", "Pathlight 5000", "*", BLIST_SPARSELUN | BLIST_LARGELUN},
-+	{"CNSi", "JSS122", "*", BLIST_SPARSELUN},		// Chaparral SR0812 SR1422
-+	{"CNSi", "JSS224", "*", BLIST_SPARSELUN},		// Chaparral FR1422
-+	{"COMPAQ","FCTC","*", BLIST_FORCELUN | BLIST_SPARSELUN | BLIST_LARGELUN},
-+	{"Crossrds", "4", "*", BLIST_SPARSELUN | BLIST_LARGELUN}, // 4150, 4250, 4450
-+	{"DELL", "PV-136T-FC", "*", BLIST_FORCELUN},
-+	{"EUROLOGC", "FC2502", "*", BLIST_LARGELUN | BLIST_SPARSELUN},
-+	{"IBM", "1742", "*", BLIST_SPARSELUN | BLIST_LARGELUN},
-+	{"IBM", "2145", "*", BLIST_SPARSELUN},
-+	{"IBM", "3542", "*", BLIST_FORCELUN},
-+	{"IBM", "2105800", "*", BLIST_SPARSELUN},
-+	{"IBM", "2105F20", "*", BLIST_SPARSELUN},
-+	{"HITACHI", "DISK-SUBSYSTEM", "*", BLIST_SPARSELUN | BLIST_LARGELUN},  /* HITACHI 9960 */
-+	{"PATHLGHT", "SAN Router", "*", BLIST_SPARSELUN | BLIST_LARGELUN},
-+	{"SUN", "StorEdge", "*", BLIST_SPARSELUN},
-+	{"WINSYS","Flashdisk", "*", BLIST_SPARSELUN},
- 
- 	/*
- 	 * Must be at end of list...
+  * Time out in seconds for disks and Magneto-opticals (which are slower).
+@@ -121,6 +124,20 @@
+ 	.init_command		=3D sd_init_command,
+ };
+=20
++/* Device no to disk mapping:
++ *=20
++ *       major         disc2     disc  p1
++ *   |............|.............|....|....| <- dev_t
++ *    31        20 19          8 7  4 3  0
++ *=20
++ * Inside a major, we have 16k disks, however mapped non-
++ * contiguously. The first 16 disks are for major0, the next
++ * ones with major1, ... Disk 256 is for major0 again, disk 272=20
++ * for major1, ...=20
++ * As we stay compatible with our numbering scheme, we can reuse=20
++ * the well-know SCSI majors 8, 65--71, 136--143.
++ */
++
+ static int sd_major(int major_idx)
+ {
+ 	switch (major_idx) {
+@@ -136,6 +153,14 @@
+ 	}
+ }
+=20
++static unsigned int make_sd_dev(unsigned int sd_nr, unsigned int part)
++{
++	return  (part & 0xf) | ((sd_nr & 0xf) << 4) |
++		(sd_major((sd_nr & 0xf0) >> 4) << 20) | (sd_nr & 0xfff00);
++}
++
++/* reverse mapping dev -> (sd_nr, part) not currently needed */
++
+ #define to_scsi_disk(obj) container_of(obj,struct scsi_disk,kobj);
+=20
+ static inline struct scsi_disk *scsi_disk(struct gendisk *disk)
+@@ -1297,7 +1322,7 @@
+ 	struct scsi_disk *sdkp;
+ 	struct gendisk *gd;
+ 	u32 index;
+-	int error;
++	int error, devno;
+=20
+ 	error =3D -ENODEV;
+ 	if ((sdp->type !=3D TYPE_DISK) && (sdp->type !=3D TYPE_MOD))
+@@ -1315,6 +1340,12 @@
+ 	kobject_init(&sdkp->kobj);
+ 	sdkp->kobj.ktype =3D &scsi_disk_kobj_type;
+=20
++	/* Note: We can accomodate 64 partitions, but the genhd code
++	 * assumes partitions allocate consecutive minors, which they don't.
++	 * So for now stay with max 16 partitions and leave two spare bits.=20
++	 * Later, we may change the genhd code and the alloc_disk() call
++	 * and the ->minors assignment here. 	KG, 2004-02-10
++	 */=20
+ 	gd =3D alloc_disk(16);
+ 	if (!gd)
+ 		goto out_free;
+@@ -1335,16 +1366,23 @@
+ 	sdkp->index =3D index;
+ 	sdkp->openers =3D 0;
+=20
+-	gd->major =3D sd_major(index >> 4);
+-	gd->first_minor =3D (index & 15) << 4;
++	devno =3D make_sd_dev(index, 0);
++	gd->major =3D MAJOR(devno);
++	gd->first_minor =3D MINOR(devno);
+ 	gd->minors =3D 16;
+ 	gd->fops =3D &sd_fops;
+=20
+-	if (index >=3D 26) {
++	if (index < 26) {
++		sprintf(gd->disk_name, "sd%c", 'a' + index % 26);
++	} else if (index < (26*27)) {
+ 		sprintf(gd->disk_name, "sd%c%c",
+-			'a' + index/26-1,'a' + index % 26);
++			'a' + index / 26 - 1,'a' + index % 26);
+ 	} else {
+-		sprintf(gd->disk_name, "sd%c", 'a' + index % 26);
++		const unsigned int m1 =3D (index / 26 - 1) / 26 - 1;
++		const unsigned int m2 =3D (index / 26 - 1) % 26;
++		const unsigned int m3 =3D  index % 26;
++		sprintf(gd->disk_name, "sd%c%c%c",
++			'a' + m1, 'a' + m2, 'a' + m3);
+ 	}
+=20
+ 	strcpy(gd->devfs_name, sdp->devfs_name);
 
---------------080306080801090106080005--
+--huq684BweRXVnRxX--
 
+--XOIedfhf+7KOe/yw
+Content-Type: application/pgp-signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.2.3 (GNU/Linux)
+
+iD8DBQFALBTSxmLh6hyYd04RAnYpAKCQqDsHSkPdEUuZcJR4grY8+JvLXQCeIr/B
+x44wVIGkwBeSVdc70wKb0Ik=
+=CWSL
+-----END PGP SIGNATURE-----
+
+--XOIedfhf+7KOe/yw--
