@@ -1,31 +1,43 @@
-From: James Bottomley <James.Bottomley@steeleye.com>
-Subject: Re: [PATCH] 2.4 use __dma_buffer in scsi.h
-Date: Thu, 13 Jun 2002 13:52:39 -0400
+From: Doug Ledford <dledford@redhat.com>
+Subject: Re: Proposed changes to generic blk tag for use in SCSI (1/3)
+Date: Thu, 13 Jun 2002 17:01:41 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <200206131752.g5DHqdm24049@localhost.localdomain>
-References: <roland@topspin.com>
+Message-ID: <20020613170141.B4609@redhat.com>
+References: <200206110246.g5B2kia06902@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: (from root@localhost)
-	by pogo.mtv1.steeleye.com (8.9.3/8.9.3) id KAA32764
-	for <linux-scsi@vger.kernel.org>; Thu, 13 Jun 2002 10:52:43 -0700
-In-Reply-To: Message from Roland Dreier <roland@topspin.com>
-   of "13 Jun 2002 10:42:16 PDT." <52fzzr2hzb.fsf@topspin.com>
+Content-Disposition: inline
+In-Reply-To: <200206110246.g5B2kia06902@localhost.localdomain>; from James.Bottomley@steeleye.com on Mon, Jun 10, 2002 at 10:46:44PM -0400
 List-Id: linux-scsi@vger.kernel.org
-To: Roland Dreier <roland@topspin.com>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@steeleye.com>
+Cc: axboe@suse.de, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-roland@topspin.com said:
-> Out of curiousity, how do you deal with someone writing to Scsi_Cmnd
-> _before_ the DMA and having that data lost when pci_map_single() with
-> PCI_DMA_FROMDEVICE invalidates the cache before writeback? 
+On Mon, Jun 10, 2002 at 10:46:44PM -0400, James Bottomley wrote:
+> 2) The SCSI queue will stall if it gets an untagged request in the stream, so 
+> once tagged queueing is enabled, all commands (including SPECIALS) must be 
+> tagged.  I altered the check in blk_queue_start_tag to permit this.
 
-The the pci_map_single with PCI_DMA_FROMDEVICE is supposed to do a writeback 
-invalidate cycle on the cache when pci_sync_single is called (at least this is 
-how it is implemented on parisc) so any writes up to the sync point are 
-flushed to memory before the cache line is trashed.
+Hmmm...this seems broken to me.  Switching from tagged to untagged 
+momentarily and then back is perfectly valid.  Can the bio layer 
+handle this and not the scsi layer, or are both layers unable to handle 
+this sort of tag manipulation? 
 
-James
+> There are several shortcomings of the prototype, most notably it doesn't have 
+> tag starvation detection and processing.  However, I think I can re-introduce 
+> this as part of the error handler functions.
 
+If you are using the bio layer tag processing, then it should be 
+doing this part I would think.  If it isn't, then it sounds like either 
+it's design is missing some key elements required to be fully functional 
+or the integration between the scsi layer and the bio layer needs some 
+additional work.
+
+
+-- 
+  Doug Ledford <dledford@redhat.com>     919-754-3700 x44233
+         Red Hat, Inc. 
+         1801 Varsity Dr.
+         Raleigh, NC 27606
+  
 
