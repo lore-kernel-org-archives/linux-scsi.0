@@ -1,40 +1,36 @@
-From: Mike Anderson <andmike@us.ibm.com>
-Subject: Re: [PATCH] scsi_host sysfs updates scsi-misc-2.5 [0/2]
-Date: Mon, 12 May 2003 15:15:10 -0700
+From: Jes Sorensen <jes@wildopensource.com>
+Subject: Re: [ANNOUNCE] QLogic FC Driver for Linux kernel 2.5 available.
+Date: 12 May 2003 18:13:18 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030512221510.GE3226@beaverton.ibm.com>
-References: <1052711864.1768.7.camel@mulgrave> <20030512063833.GA4133@beaverton.ibm.com> <1052761851.2093.55.camel@mulgrave> <1052762365.2148.59.camel@mulgrave> <20030512184140.GB3226@beaverton.ibm.com> <1052770234.1769.75.camel@mulgrave> <20030512203507.GC3226@beaverton.ibm.com> <1052772136.1769.103.camel@mulgrave> <20030512214902.GD3226@beaverton.ibm.com> <1052776222.3600.9.camel@mulgrave>
+Message-ID: <m3he7zstj5.fsf@trained-monkey.org>
+References: <3EC017E1.3050507@wanadoo.es> <m3llxbsu0s.fsf@trained-monkey.org>
+	<3EC01BE4.40607@wanadoo.es>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e31.co.us.ibm.com ([32.97.110.129]:3491 "EHLO e31.co.us.ibm.com")
-	by vger.kernel.org with ESMTP id S262827AbTELWAG (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 12 May 2003 18:00:06 -0400
-Content-Disposition: inline
-In-Reply-To: <1052776222.3600.9.camel@mulgrave>
+Received: from trained-monkey.org ([209.217.122.11]:28683 "EHLO
+	trained-monkey.org") by vger.kernel.org with ESMTP id S262818AbTELWAc
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 12 May 2003 18:00:32 -0400
+In-Reply-To: <3EC01BE4.40607@wanadoo.es>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@steeleye.com>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, mochel@osdl.org
+To: Xose Vazquez Perez <xose@wanadoo.es>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, James.Bottomley@steeleye.com
 
-James Bottomley [James.Bottomley@steeleye.com] wrote:
-> On Mon, 2003-05-12 at 16:49, Mike Anderson wrote:
-> > I am seeing size-512 with my modified version of scsi_debug. I modified
-> > slab.c to store last user for this size and it indicates it was
-> > scsi_free_shost. I am looking at this now.
-> 
-> I found it: you have a use after free in the sysfs code:
-> 
-> scsi_host_put does put_device followed by class_device_put, but the
-> put_device will free the shost containing the class_device in it's
-> release, so the class_device_put touches a freed object.
-> 
-> The solution is just to reverse the order of the puts.
+>>>>> "Xose" == Xose Vazquez Perez <xose@wanadoo.es> writes:
 
-Thanks for finding this. This fixes my slab issue also.
+Xose> qla1x160src-3.23Beta.tgz/qla1x160src-3.12.tgz:
 
--andmike
---
-Michael Anderson
-andmike@us.ibm.com
+Xose> ql12160_fw.h: * Firmware Version 10.04.08 (11:30 May 31, 2000)
+Xose> ql1280_fw.h: * Firmware Version 8.13.08 (10:53 Jan 14, 2000)
 
+The Firmware I am using is this:
+
+ql1280_fw.h: Firmware Version 8.15.00 (14:35 Aug 22, 2000)
+ql12160_fw.h: Firmware Version 10.04.32 (12:03 May 09, 2001)
+
+So no, picking the firmware from the driver on QLogic's web site would
+be a downgrade.
+
+Cheers,
+Jes
