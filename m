@@ -1,46 +1,35 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: Host drivers and conversion of SCSI to the driver model
-Date: Fri, 27 Jun 2003 11:03:00 +0100
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [TRIVIAL] 16) request_region check, 11-20
+Date: 27 Jun 2003 13:53:08 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030627110259.A3751@infradead.org>
-References: <20030620210725.GB18449@beaverton.ibm.com> <Pine.LNX.4.44L0.0306231045060.1043-100000@ida.rowland.org>
+Message-ID: <1056718387.3174.40.camel@dhcp22.swansea.linux.org.uk>
+References: <20030623070136.1F08D2C2E7@lists.samba.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from phoenix.infradead.org ([195.224.96.167]:42249 "EHLO
-	phoenix.infradead.org") by vger.kernel.org with ESMTP
-	id S264104AbTF0Js5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 27 Jun 2003 05:48:57 -0400
-Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.44L0.0306231045060.1043-100000@ida.rowland.org>; from stern@rowland.harvard.edu on Mon, Jun 23, 2003 at 10:57:22AM -0400
+Received: from pc2-cwma1-4-cust86.swan.cable.ntl.com ([213.105.254.86]:62852
+	"EHLO lxorguk.ukuu.org.uk") by vger.kernel.org with ESMTP
+	id S264235AbTF0MmN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 27 Jun 2003 08:42:13 -0400
+In-Reply-To: <20030623070136.1F08D2C2E7@lists.samba.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: Mike Anderson <andmike@us.ibm.com>, James Bottomley <James.Bottomley@steeleye.com>, SCSI development list <linux-scsi@vger.kernel.org>
+To: Rusty Trivial Russell <rusty@rustcorp.com.au>
+Cc: Marcelo Tosatti <marcelo@conectiva.com.br>, linux-scsi@vger.kernel.org, rmk@arm.linux.org.uk
 
-On Mon, Jun 23, 2003 at 10:57:22AM -0400, Alan Stern wrote:
-> 	2. More importantly, the current organization of the code has a
-> serious problem.  The SCSI core does not modify the host driver when the
-> reference count for either shost->class_dev or shost->host_gendev drops to
-> 0.
+On Llu, 2003-06-23 at 08:00, Rusty Trivial Russell wrote:
+> --- trivial-2.4.22-pre1/drivers/acorn/scsi/oak.c.orig	2003-06-23 16:39:46.000000000 +1000
+> +++ trivial-2.4.22-pre1/drivers/acorn/scsi/oak.c	2003-06-23 16:39:46.000000000 +1000
+> @@ -134,7 +134,8 @@
+>  	ecard_claim(ecs[count]);
+>  
+>  	instance->n_io_port = 255;
+> -	request_region (instance->io_port, instance->n_io_port, "Oak SCSI");
+> +	if (!request_region (instance->io_port, instance->n_io_port, "Oak SCSI"))
+> +		break;
+>  
 
-The host driver shouldn't know.
+Doesn't clean up the register etc - so clearly wrong. Actually I suspect
+what needs doing is to request_region first, then register then _check_
+the scsi_register return (it doesnt) and unregister the region.
 
-> Without knowing that, it is unsafe for the driver ever to deallocate a
-> private host data structure, since a user process may continue to hold a 
-> reference to an open attribute file indefinitely, even after 
-> scsi_unregister() has returned.
-
-Right,  And this issue has been discussed on netdev for a long time.
-The solution that they came up with and I plan to implement in scsi
-aswell as soon as their code actually shows up is to have a mark this
-device gone function that makes the struct device never call back
-into driver code.
-
-If you think a bit about this this is what's really needed - even with
-your notification you'd still have module unload races.  With the above
-fix you can just free your private data in your ->remove method
-(or wherever you want) after you marked the struct device / class_device
-gone and be sure it'll never be used again.
-
-Of course for this to fully work with scsi we need a proper
-scsi_set_host_offline..
