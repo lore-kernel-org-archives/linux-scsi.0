@@ -1,56 +1,66 @@
-From: Kurt Garloff <garloff@suse.de>
-Subject: Re: WWID / SerialNo in sysfs?
-Date: Mon, 9 Feb 2004 17:29:06 +0100
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [linux-usb-devel] FW: USB 2.0 external hard drive problem
+Date: Mon, 9 Feb 2004 11:40:36 -0500 (EST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040209162906.GV3944@tpkurt.garloff.de>
-References: <20040209160856.GS3944@tpkurt.garloff.de> <1076343628.1804.19.camel@mulgrave>
+Message-ID: <Pine.LNX.4.44L0.0402091132000.1650-100000@ida.rowland.org>
+References: <20040206205929.GB23264@one-eyed-alien.net>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="NXxBKFTfdeXlAk+N"
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns.suse.de ([195.135.220.2]:29378 "EHLO Cantor.suse.de")
-	by vger.kernel.org with ESMTP id S265242AbUBIQfg (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 9 Feb 2004 11:35:36 -0500
-Content-Disposition: inline
-In-Reply-To: <1076343628.1804.19.camel@mulgrave>
+Received: from ida.rowland.org ([192.131.102.52]:14340 "HELO ida.rowland.org")
+	by vger.kernel.org with SMTP id S265246AbUBIQkg (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 9 Feb 2004 11:40:36 -0500
+In-Reply-To: <20040206205929.GB23264@one-eyed-alien.net>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@steeleye.com>
-Cc: Linux SCSI list <linux-scsi@vger.kernel.org>
+To: Matthew Dharm <mdharm-scsi@one-eyed-alien.net>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, Joerg Schilling <schilling@fokus.fraunhofer.de>, magliery@csb.yale.edu, appro@fy.chalmers.se, USB development list <linux-usb-devel@lists.sourceforge.net>, SCSI development list <linux-scsi@vger.kernel.org>
 
+On Fri, 6 Feb 2004, Matthew Dharm wrote:
 
---NXxBKFTfdeXlAk+N
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+> On Fri, Feb 06, 2004 at 10:24:25AM -0500, James Bottomley wrote:
+> > On Fri, 2004-02-06 at 09:59, Alan Stern wrote:
+> > > Who says it's wrong to retrieve sense information when there is an
+> > > underrun but not Check Condition?  Can you provide a reference to a
+> > > published (or draft) document that states this?
+> > 
+> > It's not wrong according to the SCSI standards, a REQUEST SENSE issued
+> > to a device with no sense data will produce a NO SENSE key.
+> > 
+> > However, because of the way sense is processed in contingent allegiance
+> > conditions (suspending the I_T_L nexus until sense is cleared) it is
+> > dangerous to issue arbitrary request sense commands because you may
+> > receive sense for a different command (and prevent that command from
+> > erroring correctly).
+> 
+> You'll excuse me if I stare at you blankly after you say this?
 
-Hi,
+A surfeit of jargon :-)
 
-On Mon, Feb 09, 2004 at 11:20:26AM -0500, James Bottomley wrote:
-> The SCSI part of udev already has most of this implemented at the user
-> level, so you should just be able to reuse that code.
+> If I'm guessing correctly, this is only an issue with multiple pending
+> commands (i.e. TCQ or somesuch)?
+> 
+> A USB device only ever has one command at a time.
+> 
+> > The SCSI mid-layer definitely does not expect this behaviour.  A driver
+> > either does not do any sense commands at all or it only issues a REQUEST
+> > SENSE in response to a Check Condition status in order not to have the
+> > nexus halted because of a contingent allegiance condition (simulating
+> > ACA if you will).
+> 
+> 'Check Condition' isn't something we can directly observe.  We get 2 status
+> bits back which encode "good", "bad", or "you're screwed -- you are now
+> required to perform a reset".
 
-As you know I have everything in scsidev as well already since long ;-)
-Nice code duplication though ...
+In the absence of anything better, we're forced to assume "bad" status 
+corresponds to Check Condition...
 
-The nontrivial thing was always to make the relation sg/sd/... device
-to C:B:T:U tuple. With sysfs it's at least possible to do that in
-a reliable way.
+What do you think, Matt?  Should we remove the auto-sense for short 
+transfers when we get "good" status?  Bearing in mind that it's 
+technically legal, but other drivers or programs may not expect it?  Also 
+bearing in mind that we have no choice but to auto-sense for non-IN 
+transfers with the CB transport.
 
-Regards,
---=20
-Kurt Garloff  <garloff@suse.de>                            Cologne, DE=20
-SUSE LINUX AG, Nuernberg, DE                          SUSE Labs (Head)
+Maybe we should just log a KERN_DEBUG or _INFO message instead.
 
---NXxBKFTfdeXlAk+N
-Content-Type: application/pgp-signature
-Content-Disposition: inline
+Alan Stern
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.2.3 (GNU/Linux)
-
-iD8DBQFAJ7VRxmLh6hyYd04RAsNEAJ9m8lOM4NpGuPJ/16NIVSg+g4Hs0QCgiDrK
-0xhe4og72WLZbqLNOAHXX4U=
-=RJ/L
------END PGP SIGNATURE-----
-
---NXxBKFTfdeXlAk+N--
