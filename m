@@ -1,36 +1,41 @@
-From: "Moore, Eric Dean" <Emoore@lsil.com>
-Subject: FW: [PATCH] 2.6.2-rc2 - MPT Fusion driver 3.00.02 update
-Date: Tue, 3 Feb 2004 10:59:26 -0500
+From: Matthew Wilcox <willy@debian.org>
+Subject: Re: PATCH: (as141b) Unaligned scatter-gather buffers and usb-storage
+Date: Tue, 3 Feb 2004 16:02:35 +0000
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <0E3FA95632D6D047BA649F95DAB60E5703D1A34C@exa-atlanta.se.lsil.com>
+Message-ID: <20040203160235.GN18725@parcelfarce.linux.theplanet.co.uk>
+References: <1075737065.1897.7.camel@mulgrave> <Pine.LNX.4.44L0.0402031044390.1161-100000@ida.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:32688 "EHLO mail0.lsil.com")
-	by vger.kernel.org with ESMTP id S266031AbUBCP7k (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Feb 2004 10:59:40 -0500
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:8902 "EHLO
+	www.linux.org.uk") by vger.kernel.org with ESMTP id S265954AbUBCQCh
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 3 Feb 2004 11:02:37 -0500
+Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.44L0.0402031044390.1161-100000@ida.rowland.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: James.Bottomley@SteelEye.com
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: James Bottomley <James.Bottomley@steeleye.com>, SCSI development list <linux-scsi@vger.kernel.org>
 
-I have fixed a minor compilation bug in the 3.00.02 MPT Fusion
-driver posted last week.  The bug is shown below in the diff.
+On Tue, Feb 03, 2004 at 10:47:38AM -0500, Alan Stern wrote:
+> On 2 Feb 2004, James Bottomley wrote:
+> > This needs to be unsigned long, otherwise it will print a warning on a
+> > 64 bit compile.
+> 
+> Really?  I'm surprised.  Although I know nothing about the details of 
+> using gcc on a 64-bit platform, it seems odd that an explicit cast would 
+> generate a warning.  Was that done deliberately, to try and catch 
+> inadvertent bugs in address arithmetic?
 
-You can download full source and 3.00.02 patches here:
-ftp://ftp.lsil.com/HostAdapterDrivers/linux/Fusion-MPT/2.6-patches/3.00.02
+Yes, it's something like "Cast from pointer to integer of different
+size".  If you really want to cast a pointer to an int, you have to do
+(int)(long)ptr; or you can use an intermediate variable like "int foo =
+(long)ptr;"
 
-
-diff -uarN fusion-reference/mptbase.c fusion/mptbase.c
---- fusion-reference/mptbase.c	2004-02-02 04:33:27.000000000 -0700
-+++ fusion/mptbase.c	2004-02-02 11:46:15.117682656 -0700
-@@ -1551,7 +1551,7 @@
- 	Q_DEL_ITEM(ioc);
- 	mpt_adapter_dispose(ioc);
- 
--	mptscsih_sync_irq(ioc->irq);
-+	mptscsih_sync_irq(pdev->irq);
- 	pci_set_drvdata(pdev, NULL);
- }
- 
-
+-- 
+"Next the statesmen will invent cheap lies, putting the blame upon 
+the nation that is attacked, and every man will be glad of those
+conscience-soothing falsities, and will diligently study them, and refuse
+to examine any refutations of them; and thus he will by and by convince 
+himself that the war is just, and will thank God for the better sleep 
+he enjoys after this process of grotesque self-deception." -- Mark Twain
