@@ -1,59 +1,42 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: sg3_utils-1.08 released
-Date: Wed, 01 Sep 2004 16:13:58 +1000
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: 3ware queue depth [was: Re: HIGHMEM4G config for 1GB RAM on desktop?]
+Date: Wed, 1 Sep 2004 11:09:44 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <413568A6.2040202@torque.net>
-Reply-To: dougg@torque.net
+Message-ID: <20040901110944.A10160@infradead.org>
+References: <200408021602.34320.swsnyder@insightbb.com> <1094030083l.3189l.2l@traveler> <1094030194l.3189l.3l@traveler> <200409010233.31643.lkml@lpbproductions.com> <1094032735l.3189l.7l@traveler>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from borg.st.net.au ([65.23.158.22]:33228 "EHLO borg.st.net.au")
-	by vger.kernel.org with ESMTP id S268716AbUIAGOm (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Sep 2004 02:14:42 -0400
-Received: from [192.168.48.80] (dsl-51.130.240.220.lns02-wick-bne.dsl.comindico.com.au [220.240.130.51])
-	by borg.st.net.au (Postfix) with ESMTP id E53BC394515
-	for <linux-scsi@vger.kernel.org>; Wed,  1 Sep 2004 16:14:36 +1000 (EST)
+Received: from imladris.demon.co.uk ([193.237.130.41]:26884 "EHLO
+	phoenix.infradead.org") by vger.kernel.org with ESMTP
+	id S265410AbUIAKKH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 1 Sep 2004 06:10:07 -0400
+Content-Disposition: inline
+In-Reply-To: <1094032735l.3189l.7l@traveler>; from miquels@cistron.nl on Wed, Sep 01, 2004 at 09:58:55AM +0000
 List-Id: linux-scsi@vger.kernel.org
-To: SCSI development list <linux-scsi@vger.kernel.org>
+To: Miquel van Smoorenburg <miquels@cistron.nl>
+Cc: lkml@lpbproductions.com, Timothy Miller <miller@techsource.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Tarball, rpm and deb can be found on http://www.torque.net/sg .
-Summary of sg3_utils, sg_utils and other packages are on
-this page: http://www.torque.net/sg/u_index.html
-A release announcement will be sent to freshmeat.net
-shortly.
+On Wed, Sep 01, 2004 at 09:58:55AM +0000, Miquel van Smoorenburg wrote:
+> On 2004.09.01 11:33, Matt Heler wrote:
+> >
+> > I have a 3ware 7000-2 card. And I noticed the same problem. 
+> > 
+> > Actually what I just did now was change the max luns from 254 to 64. 
+> > Recompiled and booted up. This seems to fix all my problems, and the speed 
+> > seems to be quite faster then before.
+> 
+> Yes, that is because the queue_depth parameter gets set from
+> TW_MAX_CMDS_PER_LUN by the 3w-xxxx.c driver ...
+> 
+> I found the 3ware patch. The patch below makes the queue depth
+> an optional module parameter, makes sure that the initial
+> nr_requests is twice the size of the queue_depth, and
+> makes queue_depth writable for the 3ware driver.
 
-Changelog for sg3_utils-1.08 [20040831]
-   - sg_inq: fix noisy message when EVPD and raw modes set
-       - for VPD page 0, list supported page names if known
-       - add '-d' option to list version descriptors
-   - sg_opcodes: numerically sort list of opcodes unless '-u' given
-       - add '-a' to sort alphabetically list of opcode names
-       - add '-t' to report supported task management functions
-   - sg_persist: add 'register and move" PROUT service action
-       - add transportId support, document in sg_persist.8 and example
-   - sg_modes: handle subpage code for known pages (e.g. control
-       extension)
-       - clean up sense buffer handling (allow for descriptor format)
-       - SPC-3 draft revision 20a updates
-   - sg_write_long: new utility to exercise WRITE LONG command
-   - sg_read_long: new utility to exercise READ LONG command
-   - sg_err.c: fix compile errors when SG_KERNEL_INCLUDES defined in
-       lk 2.6
-       - sg_includes.h typedef of u64 for BLKGETSIZE64 ioctl in lk 2.4
-       - add safe_strerror(), sg_scsi_normalize_sense(),
-         sg_normalize_sense()
-         and sg_scsi_sense_desc_find() functions
-       - add more sense data descriptor format decoding
-       - move multiple implementations of dStrHex() into sg_err.c
-   - sg_logs: exit if SCSI INQUIRY fails (e.g. when applied to ATA disk)
-   - sginfo: bug fixes and SPC-3 revision 20a updates
-       - add '-E' option to access Control Extension mode (sub)page
-   - sg_start: change '-d' switch to '-v' (verbose) switch for
-       consistency
-       - document extra power condition states in man page
-   - sg_readcap: output rto_en and prot_en bits from long read
-       capacity data
-   - add COVERAGE file to list SCSI command coverage
+ - the writeable queue_depth sysfs attr is fine,
+ - the reverse_scan option is vetoed because it can't be supported when
+   the driver will be converted to the pci_driver interface (soon)
+ - I'm not so sure about the module parameter, what's the problem of beeing
+   able to only change the queue depth once sysfs is mounted?
 
-Doug Gilbert
