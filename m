@@ -1,62 +1,74 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: RE: [patch 08/10]  scsi/dpt_i2o: replace 	schedule_timeout()
-	withmsleep_interruptible()
-Date: 21 Oct 2004 09:47:15 -0400
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1098366441.1716.12.camel@mulgrave>
-References: <60807403EABEB443939A5A7AA8A7458B40B5E9@otce2k01.adaptec.com>
+From: Paul Clements <paul.clements@steeleye.com>
+Subject: Re: PROBLEM: kernel crashes on RAID1 drive error
+Date: Thu, 21 Oct 2004 09:52:34 -0400
+Sender: linux-raid-owner@vger.kernel.org
+Message-ID: <4177BF22.7060208@steeleye.com>
+References: <8FA83ADB-22E4-11D9-AC9C-0003934F6348@aol.com> <20041021084514.GY10531@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat16.steeleye.com ([209.192.50.48]:45727 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S267362AbUJUNrd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 21 Oct 2004 09:47:33 -0400
-In-Reply-To: <60807403EABEB443939A5A7AA8A7458B40B5E9@otce2k01.adaptec.com>
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20041021084514.GY10531@suse.de>
+To: Mark Rustad <MRustad@aol.com>
+Cc: Jens Axboe <axboe@suse.de>, linux-raid@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
-Cc: janitor@sternwelten.at, SCSI Mailing List <linux-scsi@vger.kernel.org>, nacc@us.ibm.com
 
-On Thu, 2004-10-21 at 09:17, Salyzyn, Mark wrote:
-> The driver does set the state to TASK_INTERRUPTIBLE a handful of lines
-> above, is there some other state that the driver should have set?
+Jens Axboe wrote:
+> On Wed, Oct 20 2004, Mark Rustad wrote:
+> 
+>>Folks,
+>>
+>>I have been having trouble with kernel crashes resulting from RAID1 
+>>component device failures. I have been testing the robustness of an 
+>>embedded system and have been using a drive that is known to fail after 
+>>a time under load. When this device returns a media error, I always 
+>>wind up with either a kernel hang or reboot. In this environment, each 
+>>drive has four partitions, each of which is part of a RAID1 with its 
+>>partner on the other device. Swap is on md2 so even it should be 
+>>robust.
+>>
+>>I have gotten this result with the SuSE standard i386 smp kernels 
+>>2.6.5-7.97 and 2.6.5-7.108. I also get these failures with the 
+>>kernel.org kernels 2.6.8.1, 2.6.9-rc4 and 2.6.9.
+>>
+>>The hardware setup is a two cpu Nacona with an Adaptec 7902 SCSI 
+>>controller with two Seagate drives on a SAF-TE bus. I run three or four 
+>>dd commands copying /dev/md0 to /dev/null to provide the activity that 
+>>stimulates the failure.
+>>
+>>I suspect that something is going wrong in the retry of the failed I/O 
+>>operations, but I'm really not familiar with any of this area of the 
+>>kernel at all.
+>>
+>>In one failure, I get the following messages from kernel 2.6.9:
+>>
+>>raid1: Disk failure on sdb1, disabling device.
+>>raid1: sdb1: rescheduling sector 176
+>>raid1: sda1: redirecting sector 176 to another mirror
+>>raid1: sdb1: rescheduling sector 184
+>>raid1: sda1: redirecting sector 184 to another mirror
+>>Incorrect number of segments after building list
+>>counted 2, received 1
+>>req nr_sec 0, cur_nr_sec 7
+> 
+> 
+> This should be fixed by this patch, can you test it?
 
-No, it should be set to TASK_[UN]INTERRUPTIBLE.  However, you can't just
-do it once.  When the schedule_timeout() returns, the state is once more
-TASK_RUNNING.  If you want to do another schedule_timeout() like you're
-doing in this case, you have to set it to TASK_[UN]INTERRUPTIBLE again.
+There may well be two problems here, but the original problem you're 
+seeing (infinite read retries, and failures) is due to a bug in raid1. 
+Basically the bio handling on read error retry was not quite right. Neil 
+Brown just posted the patch to correct this a couple of days ago:
 
-> We should remove the set_current_state(TASK_INTERRUPTIBLE) line when
-> replacing with the msleep_interruptible(timeout * 1000) line.
+http://marc.theaimsgroup.com/?l=linux-raid&m=109824318202358&w=2
 
-Actually, the whole thing:
+Please try that. (If you need a patch that applies to SUSE 2.6.5, I also 
+have a version of the patch which should apply to that).
 
-	if((status = adpt_i2o_post_this(pHba, msg, len)) == 0){
-		set_current_state(TASK_INTERRUPTIBLE);
-		if(pHba->host)
-			spin_unlock_irq(pHba->host->host_lock);
-		if (!timeout)
-			schedule();
-		else{
-			timeout = schedule_timeout(timeout);
-			if (timeout == 0) {
-				// I/O issued, but cannot get result in
-				// specified time. Freeing resorces is
-				// dangerous.
-				status = -ETIME;
-			}
-			schedule_timeout(timeout*HZ);
-		}
-		if(pHba->host)
-			spin_lock_irq(pHba->host->host_lock);
-	}
+Please be aware that there are several other bugs in the SUSE 2.6.5-7.97 
+kernel in md and raid1 (basically it's a matter of that kernel being 
+somewhat behind mainline, where most of these bugs are now fixed). I've 
+sent several patches to SUSE to fix these issues, that hopefully will 
+get into their SP1 release that should be forthcoming soon...
 
-Looks a bit bogus.  Are the conditional spinlocks really necesary? Why
-is timeout multiplied by HZ in the second case, but not in the first
-case?  The only reason why timeout would be non-zero in the first
-schedule timeout would be if the sleep were interrupted.
-
-James
-
-
+--
+Paul
