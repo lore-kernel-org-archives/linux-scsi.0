@@ -1,87 +1,99 @@
-From: Itai Nahshon <nahshon@actcom.co.il>
-Subject: Re: [PATCH] SCSI host ID assigment overoptimization removal in 2.4.18
-Date: Sun, 21 Jul 2002 04:02:27 +0300
+From: Thomas =?iso-8859-1?Q?Lang=E5s?= <tlan@stud.ntnu.no>
+Subject: Re: Linux Kernel 2.4.18 and 2.4.19 problems
+Date: Sun, 21 Jul 2002 04:46:33 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <200207210402.27373.nahshon@actcom.co.il>
-References: <20020718152242.B4026@j4.msk.systemsix.com>
-Reply-To: nahshon@actcom.co.il
+Message-ID: <20020721024633.GA22280@stud.ntnu.no>
+References: <20020719192607.GA13880@stud.ntnu.no> <20020719140416.A25577@eng2.beaverton.ibm.com>
+Reply-To: linux-kernel@vger.kernel.org
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <20020718152242.B4026@j4.msk.systemsix.com>
+Content-Disposition: inline
+In-Reply-To: <20020719140416.A25577@eng2.beaverton.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Vladislav Bolkhovitine <vlls@hotbox.ru>, linux-scsi@vger.kernel.org
-Cc: Pete Zaitcev <zaitcev@redhat.com>
+To: Patrick Mansfield <patmans@us.ibm.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-This patch is similar to a patch that I sumbitted some time ago.
-It is already in the latest ac tree (I think 2.4.19-rc1-ac7 and above).
+Patrick Mansfield:
+> Also, cat /proc/scsi/scsi and /proc/scsi/qla*/[0-9] and see what they show.
 
-Marcelo answered that it is too late to get it in 2.4.19 final, and
-I should resubmit it for 2.4.20.
+test3:~# cat /proc/scsi/scsi 
+Attached devices: 
+Host: scsi0 Channel: 00 Id: 00 Lun: 00
+  Vendor: DELL     Model: PERCRAID Mirror  Rev: 0001
+  Type:   Direct-Access                    ANSI SCSI revision: 02
+Host: scsi1 Channel: 00 Id: 03 Lun: 00
+  Vendor: CNSi     Model: G7324            Rev: L400
+  Type:   Direct-Access                    ANSI SCSI revision: 03
 
-For 2.5 - the same bug is stil in 2.5.26. I understand that Doug
-is rewriting the scsi mid-level (which is definitely the right thing to do).
+test3:~# cat /proc/scsi/qla2200/1 
+QLogic PCI to Fibre Channel Host Adapter for ISP2100/ISP2200/ISP2200A:
+        Firmware version:  2.01.35, Driver version 5.31.RH1
+Entry address = f8955060
+HBA: QLA2200 , Serial# B50409
+Request Queue = 0x36300000, Response Queue = 0x36ddc000
+Request Queue count= 512, Response Queue count= 64
+Number of pending commands = 0x0
+Number of queued commands = 0x0
+Number of free request entries = 494
+Number of mailbox timeouts = 0
+Number of ISP aborts = 0
+Number of loop resyncs = 0
+Number of retries for empty slots = 0
+Number of reqs in retry_q = 0
+Number of reqs in done_q = 0
+Number of pending in_q reqs = 0
+Host adapter: state = UP, flags= 0x20a0837
 
--- Itai
 
-On Thursday 18 July 2002 14:22 pm, Vladislav Bolkhovitine wrote:
-> There is an overoptimization in SCSI host ID assigment algorithm in 2.4.18
-> and possibly others, which lead to appearance of SCSI hosts with the same
-> IDs.
->
-> Simple scenario:
-> 1. Add one adapter, host_id=0
-> 2. Remove it
-> 3. Add another adapter, its host_id=0
-> 4. Add the adapter 1 again, it reuses its original scsi_host_no_list entry
-> 	and gets host_id=0 as well. Oops.
->
-> When the adapter was being unregistered on step 2, max_scsi_hosts gets
-> decremented to 0. During registration of the new host, it received
-> host_id=max_scsi_hosts. On the step 4, the old entry in scsi_host_no_list
-> was found and reused, thus we have two hosts with the same host_id 0.
->
-> So, it is impossible to use simultaneously scsi_host_no_list and host IDs
-> reusing (i.e. max_scsi_hosts decrementing). I chose to remove the last one.
-> Here is the patch against 2.4.18.
->
-> I was not able to find who is the maintainer of SCSI subsistem at the
-> moment. Who is doing so, please consider the idea of this patch to include
-> in the mainstream kernel.
->
-> Vlad
->
-> diff -urdN linux-2.4.18.orig/drivers/scsi/hosts.c
-> linux-2.4.18.host_fix/drivers/scsi/hosts.c ---
-> linux-2.4.18.orig/drivers/scsi/hosts.c      Mon Feb 25 22:38:04 2002 +++
-> linux-2.4.18.host_fix/drivers/scsi/hosts.c  Wed Jul 17 17:08:47 2002 @@
-> -107,6 +107,17 @@
->      if (shn) shn->host_registered = 0;
->      /* else {} : This should not happen, we should panic here... */
->
-> +    /*
-> +     * With this algorithm together with scsi_host_no_list entry reusage
-> +     * from scsi_register() it is possible really easy to get two
-> +     * hosts with the same host_id. Simple scenario:
-> +     *  - add one adapter, host_id=0
-> +     *  - remove it
-> +     *  - add another adapter, its host_id=0
-> +     *  - add the adapter 1 again, it reuses its scsi_host_no_list entry
-> +     *     and gets host_id=0 as well. Oops.
-> +     */
-> +#if 0
->      /* If we are removing the last host registered, it is safe to reuse
->       * its host number (this avoids "holes" at boot time) (DB)
->       * It is also safe to reuse those of numbers directly below which have
-> @@ -121,6 +132,7 @@
->                 break;
->         }
->      }
-> +#endif
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+SCSI Device Information:
+scsi-qla0-adapter-node=200000e08b02894b;
+scsi-qla0-adapter-port=210000e08b02894b;
+scsi-qla0-port-0=1000005013d01808:2000005013d01808;
+scsi-qla0-port-1=1000005013d016d3:2000005013d016d3;
+scsi-qla0-port-2=1000005013d0158d:2000005013d0158d;
+scsi-qla0-port-3=1000005013d0154b:2000005013d0154b;
 
+SCSI LUN Information:
+(Id:Lun)
+( 3: 0): Total reqs 12, Pending 0, Queued 0, full 0, flags 0x0, 0:0:82,
+
+test3:~# cat /proc/scsi/qla2200/2 
+QLogic PCI to Fibre Channel Host Adapter for ISP2100/ISP2200/ISP2200A:
+        Firmware version:  2.01.35, Driver version 5.31.RH1
+Entry address = f8955060
+HBA: QLA2200 , Serial# B50405
+Request Queue = 0x362e0000, Response Queue = 0x36d86000
+Request Queue count= 512, Response Queue count= 64
+Number of pending commands = 0x0
+Number of queued commands = 0x0
+Number of free request entries = 508
+Number of mailbox timeouts = 0
+Number of ISP aborts = 0
+Number of loop resyncs = 0
+Number of retries for empty slots = 0
+Number of reqs in retry_q = 0
+Number of reqs in done_q = 0
+Number of pending in_q reqs = 0
+Host adapter: state = UP, flags= 0x20a0837
+
+
+SCSI Device Information:
+scsi-qla1-adapter-node=200000e08b02854b;
+scsi-qla1-adapter-port=210000e08b02854b;
+scsi-qla1-port-0=1000005013d01808:2000005013d01808;
+scsi-qla1-port-1=1000005013d016d3:2000005013d016d3;
+scsi-qla1-port-2=1000005013d0158d:2000005013d0158d;
+scsi-qla1-port-3=1000005013d0154b:2000005013d0154b;
+
+SCSI LUN Information:
+(Id:Lun)
+
+
+Both controllers should find a disk now, really, but they don't.
+Swapping to a newer version of the driver (6.0beta or 6.1beta)
+will make it find one drive on each HBA, I'll do that tomorrow
+along with logging stuff.
+
+-- 
+Thomas
