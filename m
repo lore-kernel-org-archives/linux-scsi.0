@@ -1,52 +1,27 @@
-From: Matthew Wilcox <willy@debian.org>
-Subject: Re: Support for LSI 53C1010R
-Date: Tue, 13 Apr 2004 16:09:08 +0100
+From: "Mukker, Atul" <Atulm@lsil.com>
+Subject: RE: megaraid: ABORTING problem
+Date: Tue, 13 Apr 2004 11:09:57 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040413150908.GS18329@parcelfarce.linux.theplanet.co.uk>
-References: <C18BA5DDB58DD511BD0700C0DF0DD45028B295@NTSERVER4>
+Message-ID: <0E3FA95632D6D047BA649F95DAB60E57033BC51F@exa-atlanta.se.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="iso-8859-1"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:47255 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S263551AbUDMPJP
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 13 Apr 2004 11:09:15 -0400
-Content-Disposition: inline
-In-Reply-To: <C18BA5DDB58DD511BD0700C0DF0DD45028B295@NTSERVER4>
+Received: from mail0.lsil.com ([147.145.40.20]:24251 "EHLO mail0.lsil.com")
+	by vger.kernel.org with ESMTP id S263596AbUDMPKF (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 13 Apr 2004 11:10:05 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: Phil Thompson <philt@4bridgeworks.com>
-Cc: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
+To: 'Paul Wagland' <paul@kungfoocoder.org>, Linux SCSI mailing list <linux-scsi@vger.kernel.org>
 
-On Tue, Apr 13, 2004 at 02:21:13PM +0100, Phil Thompson wrote:
-> I'm having problems with the Linux sym53c8xx_2 (sym-2.1.17a) driver on an
-> embedded system with an LSI 53C1010R. Are there any issues with the driver
-> and that revision of the chip - specifically the R suffix?
+ > In trying to do some performance analysis on my LSI Login 
+> SATA-150-6, I
+> 
+> megaraid: ABORTING-188cf36 cmd=2a <c=0 t=5 l=0>
+> megaraid: ABORTING-188cf36[52], fw owner.
+>
+You seem to be running a older version of the driver. Can you upgrade to the
+latest 2.10.3 or 2.20.x.x and re-test. Also, what is the firmware version on
+this controller.
 
-I don't have a 1010R myself, only the data sheet.
-
-> The driver tries to do some things with the chip which (according to the
-> datasheet) aren't supported. For example, the first problem is that it fails
-> to determine the PCI clock frequency - it times out in sym_hipd.c:getfreq()
-> waiting for the GEN flag (almost as if there is no SCSI clock). Just prior
-> to this (in sym_getpciclock()) it tries to set the SCLK bit of STEST1 in
-> order to use the PCI clock as the SCSI clock - but that bit is reserved
-> according to the datasheet.
-
-Yes.  It's reserved for the 1010 too, and this problem doesn't occur
-there.  Does the problem go away if you stop setting that bit?  If so it
-would be straightforward to conditionalise this setting on a feature bit.
-My guess is that it's something else though.
-
-> The same hardware seems to work with a much simpler, internally written,
-> driver.
-
-I'd like to simplify the sym2 driver; it's far too complicated.  It'll
-take a while though.
-
--- 
-"Next the statesmen will invent cheap lies, putting the blame upon 
-the nation that is attacked, and every man will be glad of those
-conscience-soothing falsities, and will diligently study them, and refuse
-to examine any refutations of them; and thus he will by and by convince 
-himself that the war is just, and will thank God for the better sleep 
-he enjoys after this process of grotesque self-deception." -- Mark Twain
+-Atul Mukker
