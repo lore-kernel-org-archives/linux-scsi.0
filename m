@@ -1,66 +1,45 @@
-From: Andrew Vasquez <praka@pobox.com>
-Subject: Re: 2.6.8-rc3-mm2:  Debug: sleeping function called from invalid context at mm/mempool.c:197
-Date: Mon, 9 Aug 2004 13:58:39 -0700
+From: Matthias Andree <matthias.andree@gmx.de>
+Subject: Re: sym53c8xx_2 funkiness...
+Date: Tue, 10 Aug 2004 09:19:53 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040809205839.GA1439@praka.san.rr.com>
-References: <B179AE41C1147041AA1121F44614F0B0DD03A6@AVEXCH02.qlogic.org> <411813F0.9020602@us.ibm.com>
+Message-ID: <20040810071953.GA10247@merlin.emma.line.org>
+References: <20040718030514.GJ1105@eriador.mirkwood.net> <20040724165625.GA1105@eriador.mirkwood.net> <m3zn5nxi6j.fsf@merlin.emma.line.org> <20040726160214.GB1105@eriador.mirkwood.net> <20040726161825.GA14799@merlin.emma.line.org> <20040728124509.GK1105@eriador.mirkwood.net> <20040809223625.GA8782@logos.cnet> <20040810041038.GC5835@eriador.mirkwood.net>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="tThc/1wpZn/ma/RB"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ms-smtp-03-qfe0.socal.rr.com ([66.75.162.135]:53423 "EHLO
-	ms-smtp-03-eri0.socal.rr.com") by vger.kernel.org with ESMTP
-	id S267417AbUHJEPC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 10 Aug 2004 00:15:02 -0400
+Received: from mail.dt.e-technik.Uni-Dortmund.DE ([129.217.163.1]:43409 "EHLO
+	mail.dt.e-technik.uni-dortmund.de") by vger.kernel.org with ESMTP
+	id S267466AbUHJHT4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 10 Aug 2004 03:19:56 -0400
 Content-Disposition: inline
-In-Reply-To: <411813F0.9020602@us.ibm.com>
+In-Reply-To: <20040810041038.GC5835@eriador.mirkwood.net>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: PinkFreud <pf-linux-scsi-20040717@mirkwood.net>
+Cc: Marcelo Tosatti <marcelo.tosatti@cyclades.com>, Matthias Andree <ma@dt.e-technik.uni-dortmund.de>, linux-scsi@vger.kernel.org
 
+On Tue, 10 Aug 2004, PinkFreud wrote:
 
---tThc/1wpZn/ma/RB
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-
-On Mon, 09 Aug 2004, Janet Morgan wrote:
-
-> Andrew Vasquez wrote:
+> I tried Matthias' suggestion of disabling disconnect - didn't seem to
+> do much to alleviate the problem.
 > 
-> >
-> >This allocation should be done with GFP_ATOMIC flags.  The attached 
-> >patch should apply cleanly to any recent kernel
-> >
-> > 
-> >
+> In the end, I just switched my network gateway functions to another
+> box.  Other than a failing IDE disk (damn, I'm having all sorts of fun
+> here...), it's behaving (the scsi disk taken from the other box works,
+> too).
 > 
-> and seems to work fine.
+> I noted that 2.6.x seems to exhibit the same problem.  However, I don't
+> really have the time or inclination to play with this right now - I
+> need something working here at home.  :)
 > 
+> That being said, it *would* be nice to see that driver working again.
+> As I stated, though, I tried emailing Gerard Roudier, only to have my
+> email bounce (mailbox full).
 
-James,
+The 2.6 driver is maintained by Matthew Wilcox; try mailing the
+linux-scsi list again.
 
+-- 
+Matthias Andree
 
-I hope this patch can make it before 2.6.8, please apply.
-
-
-
-Thanks,
-Andrew Vasquez
-
---tThc/1wpZn/ma/RB
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: attachment; filename="mpool_alloc.diff"
-
-===== drivers/scsi/qla2xxx/qla_os.c 1.39 vs edited =====
---- 1.39/drivers/scsi/qla2xxx/qla_os.c	2004-07-12 09:54:49 -07:00
-+++ edited/drivers/scsi/qla2xxx/qla_os.c	2004-08-09 16:48:29 -07:00
-@@ -3590,7 +3590,7 @@
- {
- 	srb_t *sp;
- 
--	sp = mempool_alloc(ha->srb_mempool, GFP_KERNEL);
-+	sp = mempool_alloc(ha->srb_mempool, GFP_ATOMIC);
- 	if (sp)
- 		atomic_set(&sp->ref_count, 1);
- 	return (sp);
-
---tThc/1wpZn/ma/RB--
+NOTE YOU WILL NOT RECEIVE MY MAIL IF YOU'RE USING SPF!
+Encrypted mail welcome: my GnuPG key ID is 0x052E7D95 (PGP/MIME preferred)
