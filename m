@@ -1,52 +1,50 @@
-From: "Mukker, Atul" <Atulm@lsil.com>
-Subject: RE: Megaraid and Linux 2.6 questions
-Date: Tue, 6 Apr 2004 16:56:49 -0400
+From: David Haring <david.haring@billboard.cz>
+Subject: Re: [2.4.25], [aic79xx-2.0.8] problems with aic79xx on 2.4 (fwd)
+Date: Tue, 06 Apr 2004 23:24:35 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <0E3FA95632D6D047BA649F95DAB60E57033BC4F7@exa-atlanta.se.lsil.com>
+Message-ID: <40732013.2080904@billboard.cz>
+References: <20040406212126.A30706@www.goron.de>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:58323 "EHLO mail0.lsil.com")
-	by vger.kernel.org with ESMTP id S264005AbUDFU4y (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Apr 2004 16:56:54 -0400
+Received: from ns.billboard.cz ([194.213.62.38]:24329 "EHLO ns.billboard.cz")
+	by vger.kernel.org with ESMTP id S264025AbUDFVY7 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Apr 2004 17:24:59 -0400
+In-Reply-To: <20040406212126.A30706@www.goron.de>
 List-Id: linux-scsi@vger.kernel.org
-To: 'Jiann-Ming Su' <jsu2@emory.edu>, "Mukker, Atul" <Atulm@lsil.com>
-Cc: Linux SCSI mailing list <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
+Cc: Ari <ari@goron.de>, abba@cs.sunysb.edu
 
-Can you elaborate further on the "latency issue"
+Hello,
 
--Atul Mukker
+I would recommend reducing TCQ depth too - I have also had
+troubles with recent Maxtor Atlas disks / Adaptec / aic79xx
+and reducing TCQ depth solved the problem.
 
-> -----Original Message-----
-> From: Jiann-Ming Su [mailto:jsu2@emory.edu]
-> Sent: Tuesday, April 06, 2004 2:56 PM
-> To: Mukker, Atul
-> Cc: Linux SCSI mailing list
-> Subject: RE: Megaraid and Linux 2.6 questions
+Interesting note though - the troubles only showed with Adaptec
+controller. When I have replaced the Adaptec aic79xx SCSI card
+with Tekram Ultra320 one the system worked without problem.
+
+Ari wrote:
 > 
-> 
-> On Tue, 6 Apr 2004, Mukker, Atul wrote:
-> 
-> > The two driver model, as suggested by many people on the 
-> list, put some
-> > unique conditions in the driver. The driver for most parts 
-> is complete and
-> > currently undergoing the our development testing.
-> > 
-> > I promised a release some weeks ago but we could not make 
-> it because of
-> > stability issues. But it is in much better shape now and 
-> would be available
-> > for review pretty soon.
-> > 
-> 
-> I'll ask again... does the new unified driver solve the latency issues
-> with Dell's PERC/4Di controllers?  If not, how do go about 
-> giving better
-> debugging information for the developers?
-> -- 
-> Jiann-Ming Su  jsu2@emory.edu  404-712-2603
-> Development Team Systems Administrator
-> General Libraries Systems Division
-> 
+> Hi,
+> I've ran into similar problems with the same controller and same disks
+> (Maxtor Atlas 10K4 73G WLS, mine are revision DFV0 however).
+> After a lot of frustration including changing all related hardware,
+> especially the cabling, resultless googling, etc, I found the solution:
+> Speeding down the disks does not really help. It works better, but under
+> stress load (3 bonnie++ at the same time) they quickly produce lost
+> SCB commands, even at 80Mhz.
+> What fixed it for me was limiting the Tagged Queuing depth to 16 (in
+> kernel config). After my raid5 array worked flawlessly under a 24h
+> 3 simultaneous bonnie++ test.
+> I've found some hints googling that there might be a firmware problem
+> related to this (which should be fixed with the DFV0 version on my
+> drives, but obviously is not).
+> Anyhow, try to reduce tagged queuing to 16, if that fixes it, it will
+> also confirm my findings.
+
+David Haring
+
+
