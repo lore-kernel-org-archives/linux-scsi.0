@@ -1,36 +1,41 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: How to add/drop SCSI drives from within the driver?
-Date: Wed, 8 Dec 2004 15:40:10 +0000
-Message-ID: <20041208154010.GK10881@parcelfarce.linux.theplanet.co.uk>
-References: <0E3FA95632D6D047BA649F95DAB60E570230CA8C@exa-atlanta> <20041208140755.GA24779@lists.us.dell.com>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: RE: How to add/drop SCSI drives from within the driver?
+Date: 08 Dec 2004 09:59:35 -0600
+Message-ID: <1102521582.2659.2.camel@mulgrave>
+References: <0E3FA95632D6D047BA649F95DAB60E570230CA8C@exa-atlanta>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:20651 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S261231AbULHPkP
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 8 Dec 2004 10:40:15 -0500
-Content-Disposition: inline
-In-Reply-To: <20041208140755.GA24779@lists.us.dell.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+glk-linux-kernel=40m.gmane.org-S261243AbULHP77@vger.kernel.org>
+In-Reply-To: <0E3FA95632D6D047BA649F95DAB60E570230CA8C@exa-atlanta>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Bagalkote, Sreenivas" <sreenib@lsil.com>
+Cc: Matt Domsch <Matt_Domsch@Dell.com>, "'brking@us.ibm.com'" <brking@us.ibm.com>, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, "'bunk@fs.tum.de'" <bunk@fs.tum.de>, 'Andrew Morton' <akpm@osdl.org>, "Ju, Seokmann" <sju@lsil.com>, "Doelfel, Hardy" <hdoelfel@lsil.com>, "Mukker, Atul" <Atulm@lsil.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Matt Domsch <Matt_Domsch@dell.com>
-Cc: "Bagalkote, Sreenivas" <sreenib@lsil.com>, "'brking@us.ibm.com'" <brking@us.ibm.com>, 'James Bottomley' <James.Bottomley@SteelEye.com>, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, "'bunk@fs.tum.de'" <bunk@fs.tum.de>, 'Andrew Morton' <akpm@osdl.org>, "Ju, Seokmann" <sju@lsil.com>, "Doelfel, Hardy" <hdoelfel@lsil.com>, "Mukker, Atul" <Atulm@lsil.com>
 
-On Wed, Dec 08, 2004 at 08:07:55AM -0600, Matt Domsch wrote:
-> > +} ld_device_address_t;
-> 
-> I would also suggest __attribute__((packed)) since you're sharing with
-> userspace just to ensure you can never get it grown by the compiler
-> (it shouldn't be, but just to be safe).
+On Wed, 2004-12-08 at 01:16, Bagalkote, Sreenivas wrote:
+> Adding a drive:- For application to use sysfs to scan newly added drive,
+> it needs to know the HCTL (SCSI address - Host, Channel, Target & Lun)
+> of the drive. Driver is the only one that knows the mapping between a 
+> drive and the corresponding HCTL.
 
-That's a bad idea, it forces the compiler to pessimise accesses to the
-struct on most hardware.
+The real way I'd like to handle this is via hotplug.  The hotplug event
+would transmit the HCTL in the environment.  Whether the drive actually
+gets incorporated into the system and where is user policy, so it's
+appropriate that it should be in userland.
 
--- 
-"Next the statesmen will invent cheap lies, putting the blame upon 
-the nation that is attacked, and every man will be glad of those
-conscience-soothing falsities, and will diligently study them, and refuse
-to examine any refutations of them; and thus he will by and by convince 
-himself that the war is just, and will thank God for the better sleep 
-he enjoys after this process of grotesque self-deception." -- Mark Twain
+This same infrastructure could be used by fibre channel login, scsi
+enclosure events etc.
+
+We have some of the hotplug infrastructure in SCSI, but not quite enough
+for this ... you'll need an additional API.
+
+> Removing a drive:- There is no sane way for the application to map out
+> drives to /dev/sd<x>. If application has a way of knowing the HCTL of a
+> deleted drive, then using that HCTL, it can match the corresponding SCSI
+> device name (/dev/sd<x>) and use sysfs to remove that drive.
+
+Since The sysfs device name contains H:C:T:L surely you can just do a
+find on /sys?
+
+James
