@@ -1,35 +1,36 @@
-From: mike.miller@hp.com
-Subject: Re: MSI in 2.6.9-rc2-mm1 kernel
-Date: Mon, 20 Sep 2004 14:30:23 -0500
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: fix for cpqarray for 2.6.9-rc2
+Date: Mon, 20 Sep 2004 15:45:59 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040920193023.GB5651@beardog.cca.cpqcorp.net>
-References: <C7AB9DA4D0B1F344BF2489FA165E502406610519@orsmsx404.amr.corp.intel.com>
-Reply-To: mikem@beardog.cca.cpqcorp.net, mike.miller@hp.com
+Message-ID: <414F3377.9080106@pobox.com>
+References: <20040920192420.GA5651@beardog.cca.cpqcorp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ztxmail04.ztx.compaq.com ([161.114.1.208]:17924 "EHLO
-	ztxmail04.ztx.compaq.com") by vger.kernel.org with ESMTP
-	id S267189AbUITTaw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 20 Sep 2004 15:30:52 -0400
-Content-Disposition: inline
-In-Reply-To: <C7AB9DA4D0B1F344BF2489FA165E502406610519@orsmsx404.amr.corp.intel.com>
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:62953 "EHLO
+	www.linux.org.uk") by vger.kernel.org with ESMTP id S266073AbUITTqN
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 20 Sep 2004 15:46:13 -0400
+In-Reply-To: <20040920192420.GA5651@beardog.cca.cpqcorp.net>
 List-Id: linux-scsi@vger.kernel.org
-To: "Nguyen, Tom L" <tom.l.nguyen@intel.com>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: mikem@beardog.cca.cpqcorp.net, mike.miller@hp.com
+Cc: linux-kernel@vger.kernel.org, axboe@suse.de, linux-scsi@vger.kernel.org
 
-On Mon, Sep 20, 2004 at 12:05:23PM -0700, Nguyen, Tom L wrote:
-> 
-> MSI support in 2.6.9-rc2-mm1 kernel works fine for me. It seems that you
-> should check whether MSI is supported by the platform and processors of
-> your system. Also, contact the vendor of your MSI device to see whether
-> a device has any MSI issues, which you are not aware of.
+mike.miller@hp.com wrote:
+> diff -burNp lx269-rc2.orig/drivers/block/ida_cmd.h lx269-rc2/drivers/block/ida_cmd.h
+> --- lx269-rc2.orig/drivers/block/ida_cmd.h	2004-08-14 00:36:44.000000000 -0500
+> +++ lx269-rc2/drivers/block/ida_cmd.h	2004-09-20 14:15:39.782595128 -0500
+> @@ -318,6 +318,8 @@ typedef struct {
+>  	__u8	reserved[510];
+>  } mp_delay_t;
+>  
+> +#define SENSE_SURF_STATUS       0x70
 
-Since you've confirmed the kernel piece works, that narrows my search.
 
-Thanks,
-mikem
+I guess the return codes for this op are along the lines of "calm", 
+"bitchin", and "gnarly"?
 
-> 
-> Thanks,
-> Long  
+	Jeff
+
+
