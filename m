@@ -1,45 +1,78 @@
-From: "Justin T. Gibbs" <gibbs@scsiguy.com>
-Subject: Re: aic7xxx sets CDR offline, how to reset?
-Date: Thu, 05 Sep 2002 07:35:23 -0600
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <122900000.1031232923@aslan.scsiguy.com>
-References: <200209041613.g84GDtv02639@localhost.localdomain>
- <12750000.1031158209@aslan.btc.adaptec.com>
- <10209050239.ZM52086@classic.engr.sgi.com>
+From: Friedrich Lobenstock <fl@fl.priv.at>
+Subject: blocksize limitations in scsi tape driver (st) when used with DLT1
+ tape drives?
+Date: Thu, 05 Sep 2002 21:35:50 +0200
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <3D77B216.8070205@fl.priv.at>
+Reply-To: Linux-SCSI Mailingliste <linux-scsi@vger.kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <10209050239.ZM52086@classic.engr.sgi.com>
-Content-Disposition: inline
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+To: Linux-SCSI Mailingliste <linux-scsi@vger.kernel.org>
+Cc: Linux-Kernel Mailingliste <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Jeremy Higdon <jeremy@classic.engr.sgi.com>, James Bottomley <James.Bottomley@steeleye.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-> On Sep 4, 10:50am, Justin T. Gibbs wrote:
->> 
->>    This of course assumes that all transactions have a serial number and
->>    that requeuing transactions orders them by serial number.  With QErr
->>    set, the device closes the rest if the barrier race for you, but even
->>    without barriers, full transaction ordering is required if you don't
->>    want a read to inadvertantly pass a write to the same location during
->>    recovery.
-> 
-> 
-> The original FCP (SCSI commands over Fibre) profile specified that QERR=1
-> was not available.  Unless that is changed, it would appear that you
-> cannot count on being able to set Qerr.
-> 
-> Qerr was one of those annoying little things in SCSI that forces host
-> adapter drivers to know a mode page setting.
+Hi!
 
-It is not the controllers that know, but the type drivers.  The controller
-drivers should be conduits for commands, nothing more.  With the proper
-events and error codes, the type drivers can maintain mode parameters
-and only the type drivers know what parameters are appropriate for their
-type of service.
+I'm having an odd problem here. I use SuSE Linux 8.0 with kernel
+2.4.18-64GB-SMP, arkeia as backup software and a Tandberg
+VS80 (DLT1) streamer.
 
-For FC, you need to use ECA/ACA anyway as that is the only way to deal with
-inflight commands at the time of an error.
+After some trial and error I found out that I have to use a fixed block
+size for DLT streamers (same applies to LTO ones). This document,
+found at HP, tells you in details about which blocksize to use:
+   http://www.hp.com/cposupport/information_storage/support_doc/lpg50167.html
 
---
-Justin
+Now I told arkeia to use a blocksize of 65536, 32768 and 16384 and it
+could not write to the tape. All I got in the log was:
+
+Sep  4 22:04:50 filesrv kernel: st: Unloaded.
+Sep  4 22:08:40 filesrv kernel: st: Version 20020205, bufsize 32768, wrt 30720, max init. bufs 4, s/g segs 16
+Sep  4 22:08:40 filesrv kernel: st0: Block limits 2 - 16777214 bytes.
+Sep  4 22:08:41 filesrv kernel: st0: Incorrect block size.
+Sep  4 22:08:45 filesrv kernel: st0: Write not multiple of tape block size.
+
+Sep  4 23:20:06 filesrv kernel: st: Unloaded.
+Sep  4 23:20:30 filesrv kernel: st: Version 20020205, bufsize 524288, wrt 522240, max init. bufs 16, s/g segs 64
+Sep  4 23:20:30 filesrv kernel: st0: Block limits 2 - 16777214 bytes.
+Sep  4 23:20:33 filesrv kernel: st0: Incorrect block size.
+Sep  4 23:20:35 filesrv kernel: st0: Write not multiple of tape block size.
+
+(As you might have notice in the second case I'm loading st with buffer_kbs=512,
+max_buffers=16 and max_sg_segs=64 but that makes no difference compared to the
+default values)
+
+
+BUT now comes the cloo: at and below a blocksize of 8192 it was possible
+to write to the tape. At 1024 the backup slowed down from 20 min to 4 hours,
+but at 8192 the backup speed is normal (the later on with the st options
+you can see above, but haven't tested if that makes a difference).
+
+LTO drives in contrast to DLT drives are happy with a blocksize of 1024
+and backup speed is normal at this blocksize.
+
+Everytime when arkeia could not write to the tape I checked with mt to
+display the blocksize and I verified that arkeia set it to the value I
+told it to. Now with arkeia set to a blocksize of 8192:
+
+filesrv:~ # mt -f /dev/st0 status
+drive type = Generic SCSI-2 tape
+drive status = 1073750016
+sense key error = 0
+residue count = 0
+file number = 0
+block number = 0
+Tape block size 8192 bytes. Density code 0x40 (unknown).
+Soft error count since last status=0
+General status bits on (41010000):
+  BOT ONLINE IM_REP_EN
+
+I think there must be something wrong in the scsi tape driver(st).
+Can someone shine some light on this?
+
+PS: Reply-to set to linux-scsi.
+
+-- 
+MfG / Regards
+Friedrich Lobenstock
