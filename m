@@ -1,60 +1,81 @@
-From: Jeremy Higdon <jeremy@sgi.com>
-Subject: Re: [ANNOUNCE] MPT Fusion driver 3.02.06 update
-Date: Tue, 26 Oct 2004 13:29:15 -0700
+From: David Wysochanski <davidw@netapp.com>
+Subject: Re: SNIA iSCSI Management API Public Review
+Date: Tue, 26 Oct 2004 17:04:17 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20041026202915.GC3672@sgi.com>
-References: <0E3FA95632D6D047BA649F95DAB60E57053AF0CB@exa-atlanta> <20041026171525.GA15153@infradead.org>
+Message-ID: <417EBBD1.7090508@netapp.com>
+References: <20041026182914.GA6006@lists.us.dell.com> <20041026194926.GA17456@infradead.org> <417EAC8F.5010109@netapp.com> <20041026202311.GA17844@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from zeus.kernel.org ([204.152.189.113]:24033 "EHLO zeus.kernel.org")
-	by vger.kernel.org with ESMTP id S261447AbUJZUdF (ORCPT
+Received: from mx2.netapp.com ([216.240.18.37]:45482 "EHLO mx2.netapp.com")
+	by vger.kernel.org with ESMTP id S261465AbUJZVEU (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 26 Oct 2004 16:33:05 -0400
-Received: from omx3.sgi.com (omx3-ext.sgi.com [192.48.171.20])
-	by zeus.kernel.org (8.12.11/8.11.6) with ESMTP id i9QKX1Ga019241
-	for <linux-scsi@vger.kernel.org>; Tue, 26 Oct 2004 13:33:01 -0700
-Content-Disposition: inline
-In-Reply-To: <20041026171525.GA15153@infradead.org>
+	Tue, 26 Oct 2004 17:04:20 -0400
+In-Reply-To: <20041026202311.GA17844@infradead.org>
 List-Id: linux-scsi@vger.kernel.org
 To: Christoph Hellwig <hch@infradead.org>
-Cc: "Moore, Eric Dean" <Emoore@lsil.com>, linux-scsi@vger.kernel.org
+Cc: Matt Domsch <Matt_Domsch@dell.com>, linux-scsi@vger.kernel.org
 
-On Tue, Oct 26, 2004 at 06:15:25PM +0100, Christoph Hellwig wrote:
-> > > hooks it needs (e.g. the sas device list)
-> > > 
-> > 
-> > We have to ship with these IOCTLS. Are there any compromise?
-> > Sounds like you shot down my backup idea; e.g putting this code into 
-> > seperate file which isn't provided for inclusion, but can be recompiled 
-> > to link into mptctl?  I don't think we time to pursue your the idea of 
-> > re-invent everything into the sas-transport layer.
+Thanks for taking the time to review and be candid.  More comments
+below.
+
+Christoph Hellwig wrote:
+> On Tue, Oct 26, 2004 at 03:59:11PM -0400, David Wysochanski wrote:
+>  > Christoph Hellwig wrote:
+>  > >On Tue, Oct 26, 2004 at 01:29:14PM -0500, Matt Domsch wrote:
+>  > > > FYI.
+>  > >
+>  > >It has the usual SNIA spec quality - aka totally useless.
+>  > >
+>  >
+>  > What specifically is so bad to describe it as totally useless?
 > 
-> No way.  This is similar to the hbaapi situation with qlogic and emulex.
-> If you had worked with us early on on an API like I told you multiple times
-> we'd have something sane now.
+> it throws far too much things together, own type and object system,
+> functions to deal with firmware.  there's ill suited abstractions like
+> the phba, etc..
 > 
-> Btw, what part of HP badly wants this?  I'm sure Grant and Matthew
-> could explain them internally what a bad idea this is.
+Sounds like you don't like the modelling.  Keep in mind that a
+lot of this came out of the T11 HBA API (for Fibre Channel HBAs
+and FC storage management).  Thus, the "phba" idea really fits
+the model well.  If you're thinking about it from a software
+only perspective, with standard ethernet NICs, it does look
+a little strange.
+
+> as I said it's the usual SNIA design by commitee mess.
 > 
-> >
-> > Jeremy Higdon asked me to add this, not SuSE.
+>  > (Note that this API isn't kernel related.)
 > 
-> Jeremy, can you make sure SuSE has an uptodate transport attribute
-> implementation ?
+> actual it is - as most of the calls end up in an device driver,
+> or because the API is totally messed up with networking bits the
+> networking layer.
+> 
+> to take a very concrete example:
+> 
+> IMA_SetSubnetMask (sets the subnet mask for a specified network port)
+> doesn't make any sense at all in Linux with a software iscsi implementation
+> as IP addresses and thus netmasks aren't bound to network interfaces at 
+> all.
+> 
 
-I doubt it.  It was recently updated from the 2.6.5 to 2.6.9 version,
-and I don't think they'll be updating to the 2.6.10 version.
+Very good point.
+I understand your concern, and I initially had similar ones.
 
-Eric, I guess you'll have to convert to the new 2.6.10 API.  Once
-it's in the tree, any API changes should be made for you.  For the
-drivers that you deliver (as opposed to the distribution), you can
-just #ifdef it out, in much the same way that the drivers on Qlogic's
-website have more #ifdefs.
+For a software initiator, all of these networking type functions
+will not be implemented -- the spec gives you an option to indicate
+whether a particular implementation has the networking options.
 
-It is annoying to have these API changes come in asynchronously.  I
-would have preferred something that didn't break backward compatibility,
-but linking it to the target instead of the lun probably doesn't allow
-that.  Hopefully it will settle down a bit now.
+I and a few others argued a while back these very things -- that
+for a software  initiator and typical ethernet NICs, the model didn't
+fit as well, and things like the IP stuff should be left to the standard
+mechanisms.  As a result, the spec was adjusted a bit to accomodate
+the software only case.
 
-jeremy
+A while back I actually came up with a design for an IMA plugin
+(the OS dependent part of IMA) to the linux-iscsi software initiator.
+As I recall, very little of the plugin, if at all, needed an IOCTL
+call to the iscsi driver, but most of it just interfaced with the
+userspace stuff.
+
+
+
