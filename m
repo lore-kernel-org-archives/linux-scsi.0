@@ -1,94 +1,93 @@
-From: Patrick Mansfield <patmans@us.ibm.com>
-Subject: Re: Warning - running *really* short on DMA buffers while doing file  transfers
-Date: Fri, 27 Sep 2002 15:28:42 -0700
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <20020927152842.A18038@eng2.beaverton.ibm.com>
-References: <200209271721.g8RHLTn05231@localhost.localdomain> <2628736224.1033160295@aslan.btc.adaptec.com> <20020927143841.A17108@eng2.beaverton.ibm.com> <2668366224.1033164502@aslan.btc.adaptec.com>
+From: Michael Ulbrich <mul@rentapacs.de>
+Subject: qlogic and FC to SCSI bridge
+Date: Sat, 28 Sep 2002 00:27:48 +0200
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <3D94DB64.C230016@rentapacs.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
-In-Reply-To: <2668366224.1033164502@aslan.btc.adaptec.com>; from gibbs@scsiguy.com on Fri, Sep 27, 2002 at 04:08:22PM -0600
-To: "Justin T. Gibbs" <gibbs@scsiguy.com>
-Cc: James Bottomley <James.Bottomley@steeleye.com>, Jens Axboe <axboe@suse.de>, Matthew Jacob <mjacob@feral.com>, "Pedro M. Rodrigues" <pmanuel@myrealbox.com>, Mathieu Chouquet-Stringer <mathieu@newview.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Fri, Sep 27, 2002 at 04:08:22PM -0600, Justin T. Gibbs wrote:
-> >> http://people.FreeBSD.org/~gibbs/linux/linux-2.5-aic79xxx.tar.gz
-> >> 
-> >> --
-> >> Justin
-> > 
-> > Any 2.5 patch for the above? Or aic7xxx/Config.in and
-> > aic7xxx/Makefile for 2.5?
-> 
-> Try it now.
-> 
+Hi all,
 
-Great! It boots up fine on my IBM netfinity system with 2.5.37.
+I'm trying to use a Compaq Fibre Channel Tape Controller II as a FC to
+SCSI bridge assuming that it provides general SCSI bridging
+functionality and is not limited (as the name might imply) to SCSI
+tape devices. The FCTC has two wide differential SCSI busses. For
+testing purposes I connected one harddisk to one of the busses.
 
-I see:
+The host bus adapter is a qlogic 2100 in a linux box running RH 7.3 with
+the Qlogic driver qla2xxx updated to version 6.1b5 - to my knowledge the
+latest version from qlogic.
 
-[ boot up stuff deleted ] 
+During boot the qla ROM BIOS detects the device connected to the FCTC:
 
-scsi0 : Adaptec AIC7XXX EISA/VLB/PCI SCSI HBA DRIVER, Rev 6.2.10
-        <Adaptec aic7896/97 Ultra2 SCSI adapter>
-        aic7896/97: Ultra2 Wide Channel A, SCSI Id=7, 32/253 SCBs
+> QLogic Corporation
+> QLA2000,QLA2100 PCI Fibre Channel ROM BIOS Version 1.37
+> ...
+>
+> Press <ALT-Q> for Fast!UTIL
+>
+> ISP2000/2100 Firmware Version 1.15.37
+> QLogic Adapter isung IRQ number 10
+>
+> Device Device Adapter Loop Loop Vendor    Product    Product
+> Number Type   Number   ID  LUN    ID        ID       Revision
+>  82   Disk     0      125  7    Quantum   XP34361WD  HP10
 
-scsi1 : Adaptec AIC7XXX EISA/VLB/PCI SCSI HBA DRIVER, Rev 6.2.10
-        <Adaptec aic7896/97 Ultra2 SCSI adapter>
-        aic7896/97: Ultra2 Wide Channel B, SCSI Id=7, 32/253 SCBs
+Booting with qla2100.o version 6.1b5 gives the following result:
 
-I turned on the debug flags, there were a bunch of odd messages
-in there, but otherwise it seems to be working fine. My .config
-has the following AIC config options:
+> kernel: qla2x00_set_info starts at address = e082e060
+> kernel: PCI: Found IRQ 10 for device 01:02.0
+> kernel: qla2x00: Found  VID=1077 DID=2100 SSVID=1077 SSDID=1
+> kernel: scsi0: Found a QLA2100  @ bus 1, device 0x2, irq 10, iobase 0xb800
+> kernel: scsi(0): Allocated 4096 SRB(s)
+> kernel: scsi(0): Configure NVRAM parameters...
+> kernel: scsi(0): 64 Bit PCI Addressing Enabled
+> kernel: scsi(0): Verifying loaded RISC code...
+> kernel: scsi(0): Verifying chip...
+> kernel: scsi(0): LIP reset occurred
+> kernel: scsi(0): Waiting for LIP to complete...
+> kernel: scsi(0): LIP occurred.
+> kernel: scsi(0): LOOP UP detected
+> kernel: scsi0: Topology - (Loop), Host Loop address 0x0
+> kernel: scsi0 : QLogic QLA2100 PCI to Fibre Channel Host Adapter: bus 1 device 2 irq 10
+> kernel:         Firmware version:  1.19.24, Driver version 6.1b5
 
-CONFIG_SCSI_AIC7XXX=y
-CONFIG_AIC7XXX_CMDS_PER_DEVICE=253
-CONFIG_AIC7XXX_RESET_DELAY_MS=15000
-CONFIG_AIC7XXX_ALLOW_MEMIO=y
-# CONFIG_AIC7XXX_PROBE_EISA_VL is not set
-# CONFIG_AIC7XXX_BUILD_FIRMWARE is not set
-CONFIG_AIC7XXX_DEBUG_ENABLE=y
-CONFIG_AIC7XXX_DEBUG_MASK=0
-CONFIG_AIC7XXX_REG_PRETTY_PRINT=y
-# CONFIG_SCSI_AIC79XX is not set
+Using the qlogic driver (ver. 5.31.RH1) from the RH 7.3 distribution
+results in (this module lists as scsi(3) since it's loaded into the
+running system after scsi(0) has been removed, scsi(1,2) are two onboard
+HAs driven by sym53c8xx):
 
-Weird boot time messages:
+> kernel: PCI: Found IRQ 10 for device 01:02.0
+> kernel: qla2x00: Found  VID=1077 DID=2100 SSVID=1077 SSDID=1
+> kernel: scsi3: Found a QLA2100  @ bus 1, device 0x2, irq 10, iobase 0xb800
+> kernel: scsi(3): Configure NVRAM parameters...
+> kernel: qla2x00: 64 Bit PCI Addressing Enabled
+> kernel: scsi(3): Verifying loaded RISC code...
+> kernel: scsi(3): Verifying chip...
+> kernel: scsi(3): LIP reset occurred
+> kernel: scsi(3): Waiting for LIP to complete...
+> kernel: scsi(3): LIP occurred.
+> kernel: scsi(3): LOOP UP detected
+> kernel: scsi3: Topology - (Loop), Host Loop address  0x0
+> kernel: scsi-qla00-adapter-port=210000e08b0073ca\;
+> kernel: scsi-qla00-tgt-000-di-00-node=100000e00201a2df\;
+> kernel: scsi-qla00-tgt-000-di-00-port=100000e00201a2df\;
+> kernel: scsi-qla00-tgt-000-di-00-control=00\;
+> kernel: scsi-qla00-tgt-000-di-00-preferred=ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff\;
+> kernel: scsi3 : QLogic QLA2100 PCI to Fibre Channel Host Adapter: bus 1 device 2 irq 10
+> kernel:         Firmware version:  1.19.16, Driver version 5.31.RH1
 
-INITIATOR_MSG_OUTINITIATOR_MSG_OUTINITIATOR_MSG_OUTINITIATOR_MSG_OUTINITIATOR_MSG_OUTINITIATOR_MSG_OUTINITIATOR_MSG_OUTINITIATOR_MSG_OUTINITIATOR_MSG_OUTINITIATOR_MSG_OUTINITIATOR_MSG_OUT<5>  Vendor: IBM-PSG   Model: ST318203LC    !#  Rev: B222
-  Type:   Direct-Access                      ANSI SCSI revision: 02
-INITIATOR_MSG_OUTINITIATOR_MSG_OUTINITIATOR_MSG_OUTINITIATOR_MSG_OUTINITIATOR_MSG_OUTINITIATOR_MSG_OUTINITIATOR_MSG_OUTINITIATOR_MSG_OUTINITIATOR_MSG_OUTINITIATOR_MSG_OUTINITIATOR_MSG_OUTINITIATOR_MSG_OUT(scsi0:A:0): 80.000MB/s transfers (40.000MHz, offset 15, 16bit)
-INITIATOR_MSG_OUTINITIATOR_MSG_OUTINITIATOR_MSG_OUTINITIATOR_MSG_OUTINITIATOR_MSG_OUTINITIATOR_MSG_OUTINITIATOR_MSG_OUTINITIATOR_MSG_OUTINITIATOR_MSG_OUTINITIATOR_MSG_OUTINITIATOR_MSG_OUT<5>  Vendor: IBM-PSG   Model: ST318203LC    !#  Rev: B222
-  Type:   Direct-Access                      ANSI SCSI revision: 02
-INITIATOR_MSG_OUTINITIATOR_MSG_OUTINITIATOR_MSG_OUTINITIATOR_MSG_OUTINITIATOR_MSG_OUTINITIATOR_MSG_OUTINITIATOR_MSG_OUTINITIATOR_MSG_OUTINITIATOR_MSG_OUTINITIATOR_MSG_OUTINITIATOR_MSG_OUTINITIATOR_MSG_OUT(scsi0:A:1): 80.000MB/s transfers (40.000MHz, offset 15, 16bit)
-  Vendor: IBM       Model: LN V1.2Rack       Rev: B004
-  Type:   Processor                          ANSI SCSI revision: 02
-scsi0:A:0:0: Tagged Queuing enabled.  Depth 253
-scsi0:A:1:0: Tagged Queuing enabled.  Depth 253
-st: Version 20020822, fixed bufsize 32768, wrt 30720, s/g segs 256
-Attached scsi disk sda at scsi0, channel 0, id 0, lun 0
-Attached scsi disk sdb at scsi0, channel 0, id 1, lun 0
-INITIATOR_MSG_OUTINITIATOR_MSG_OUTINITIATOR_MSG_OUTINITIATOR_MSG_OUTINITIATOR_MSG_OUTINITIATOR_MSG_OUTINITIATOR_MSG_OUTINITIATOR_MSG_OUTINITIATOR_MSG_OUTINITIATOR_MSG_OUTINITIATOR_MSG_OUTINITIATOR_MSG_OUT<5>SCSI device sda: 35548320 512-byte hdwr sectors (18201 MB)
- sda: sda1 sda2
-INITIATOR_MSG_OUTINITIATOR_MSG_OUTINITIATOR_MSG_OUTINITIATOR_MSG_OUTINITIATOR_MSG_OUTINITIATOR_MSG_OUTINITIATOR_MSG_OUTINITIATOR_MSG_OUTINITIATOR_MSG_OUTINITIATOR_MSG_OUTINITIATOR_MSG_OUTINITIATOR_MSG_OUTINITIATOR_MSG_OUTINITIATOR_MSG_OUTINITIATOR_MSG_OUTINITIATOR_MSG_OUTINITIATOR_MSG_OUTINITIATOR_MSG_OUTINITIATOR_MSG_OUTINITIATOR_MSG_OUTINITIATOR_MSG_OUTINITIATOR_MSG_OUTINITIATOR_MSG_OUTINITIATOR_MSG_OUTINITIATOR_MSG_OUTINITIATOR_MSG_OUT<5>SCSI device sdb: 35548320 512-byte hdwr sectors (18201 MB)
- sdb: sdb1 sdb2
-Attached scsi generic sg2 at scsi0, channel 0, id 15, lun 0,  type 3
-mice: PS/2 mouse device common for all mice
-input: PS/2 Generic Mouse on isa0060/serio1
-serio: i8042 AUX port at 0x60,0x64 irq 12
-input: AT Set 2 keyboard on isa0060/serio0
-serio: i8042 KBD port at 0x60,0x64 irq 1
-NET4: Linux TCP/IP 1.0 for NET4.0
-IP Protocols: ICMP, UDP, TCP, IGMP
-IP: routing cache hash table of 2048 buckets, 32Kbytes
-TCP: Hash tables configured (established 16384 bind 21845)
-NET4: Unix domain sockets 1.0/SMP for Linux NET4.0.
-kjournald starting.  Commit interval 5 seconds
-EXT3-fs: mounted filesystem with ordered data mode.
-VFS: Mounted root (ext3 filesystem) readonly.
-Freeing unused kernel memory: 96k freed
-INIT: version 2.78 booting
+In both cases the device attached to the SCSI bridge is not recognized
+by the qlogic driver. The older driver gives obviously some additional
+(debugging?) output. The kernel is configured with
+CONFIG_SCSI_MULTI_LUN=y.
 
-[ more boot up stuff ]
+Maybe someone on this list knows what I'm doing wrong or can give some
+hints in which direction to proceed. Any ideas that might help are
+greatly appreciated.
 
--- Patrick Mansfield
+TIA ... Michael
