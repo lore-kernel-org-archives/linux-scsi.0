@@ -1,32 +1,36 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [linux-usb-devel] Re: [PATCH] USB changes for 2.5.58
-Date: Fri, 17 Jan 2003 10:06:08 -0500 (EST)
+From: Adrian Bunk <bunk@fs.tum.de>
+Subject: [2.5 patch] remove unneeded #define LinuxVersionCode from sym53c416.h
+Date: Fri, 17 Jan 2003 16:53:32 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44L0.0301171003110.739-100000@ida.rowland.org>
-References: <200301171155.36452.oliver@neukum.name>
+Message-ID: <20030117155332.GD2333@fs.tum.de>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <200301171155.36452.oliver@neukum.name>
+Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
-To: Oliver Neukum <oliver@neukum.name>
-Cc: Mike Anderson <andmike@us.ibm.com>, David Brownell <david-b@pacbell.net>, Greg KH <greg@kroah.com>, linux-usb-devel@lists.sourceforge.net, Linux SCSI list <linux-scsi@vger.kernel.org>
+To: lw_linux@hotmail.com
+Cc: linux-scsi@vger.kernel.org
 
-On Fri, 17 Jan 2003, Oliver Neukum wrote:
+The patch below removes the unneeded #define LinuxVersionCode from
+sym53c416.h.
 
-> Am Freitag, 17. Januar 2003 09:50 schrieb Mike Anderson:
-> >
-> > If the device disappears the host needs to return all IOs in flight with
-> > an error, and  we need to ensure new ones do not start ( setting the
-> > device offline and maybe host_self_blocked). This is a start on getting
-> > the scsi_remove_host to succed.
-> 
-> Could you provide some details?
+Please apply
+Adrian
 
-Usb-storage does most of this already.  When the device is unplugged, 
-all current transactions return an error and any new ones return a 
-device-not-ready code.  But that doesn't solve the problem of removing the 
-device's representation within SCSI and sysfs.
-
-Alan Stern
-
+--- linux-2.5.59-full/drivers/scsi/sym53c416.h.old	2003-01-17 11:18:24.000000000 +0100
++++ linux-2.5.59-full/drivers/scsi/sym53c416.h	2003-01-17 11:19:17.000000000 +0100
+@@ -18,14 +18,6 @@
+ #ifndef _SYM53C416_H
+ #define _SYM53C416_H
+ 
+-#if !defined(LINUX_VERSION_CODE)
+-#include <linux/version.h>
+-#endif
+-
+-#ifndef LinuxVersionCode
+-#define LinuxVersionCode(v, p, s) (((v)<<16)+((p)<<8)+(s))
+-#endif
+-
+ #include <linux/types.h>
+ 
+ #define SYM53C416_SCSI_ID 7
