@@ -1,17 +1,31 @@
-From: <sbl-removals@spamhaus.org>
-Subject: (unknown)
-Date: Mon, 23 Aug 2004 19:57:15 -0400
+From: Luben Tuikov <luben_tuikov@adaptec.com>
+Subject: Re: bytes/CDB of SCSI pass thru grossly limited maybe
+Date: Mon, 23 Aug 2004 15:14:06 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <S268979AbUHWX5P/20040823235846Z+547@vger.kernel.org>
+Message-ID: <412A41FE.2070905@adaptec.com>
+References: <20040731141240.GE23697@suse.de> <1092678938.4235.37.camel@patlinux.iomegacorp.com> <20040823154648.GB2301@suse.de> <412A15EC.8040903@pobox.com> <412A3BE5.4090203@adaptec.com> <412A4046.6040007@pobox.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pcp01636458pcs.anaprd01.md.comcast.net ([68.50.245.76]:25862
-	"EHLO pcp01636458pcs.anaprd01.md.comcast.net") by vger.kernel.org
-	with ESMTP id S268979AbUHWX5P (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 23 Aug 2004 19:57:15 -0400
+Received: from magic.adaptec.com ([216.52.22.17]:48347 "EHLO magic.adaptec.com")
+	by vger.kernel.org with ESMTP id S267442AbUHWTOK (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 23 Aug 2004 15:14:10 -0400
+In-Reply-To: <412A4046.6040007@pobox.com>
 List-Id: linux-scsi@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Jens Axboe <axboe@suse.de>, Pat LaVarre <p.lavarre@ieee.org>, linux-scsi@vger.kernel.org
 
-Received=3A from 139=2E206=2E101=2E58 by pcp01636458pcs=2Eanaprd01=2Emd=2Ecomcast=2Enet=3B Mon=2C 23 Aug 2004 18=3A57=3A07 -0500=0D=0AMessage-ID=3A =3CRHBXIWEYPTGKAPRGMNFCKM=40prosig=2Edemon=2Eco=2Euk=3E=0D=0AFrom=3A =22Marlon Hutchinson=22 =3Csbl-removals=40spamhaus=2Eorg=3E=0D=0AReply-To=3A =22Marlon Hutchinson=22 =3Csbl-removals=40spamhaus=2Eorg=3E=0D=0ATo=3A linux-scsi=40vger=2Ekernel=2Eorg=0D=0ASubject=3A The Best Soft=2Eware For Accessible Pric=2Ees =28is=29=0D=0ADate=3A Mon=2C 23 Aug 2004 18=3A57=3A07 -0500=0D=0AMIME-Version=3A 1=2E0=0D=0AContent-Type=3A multipart=2Falternative=3B=0D=0A=09boundary=3D=22--03383000890793600=22=0D=0AX-IP=3A 180=2E157=2E55=2E207=0D=0A=0D=0A----03383000890793600=0D=0AContent-Type=3A text=2Fhtml=3B=0D=0A=09 charset=3D=22ISO-8859-1=22=0D=0AContent-Transfer-Encoding=3A quoted-printable=0D=0A=0D=0A=3Chtml=3E=0D=0A=3Cbody=3E=0D=0A=3Cdiv align=3D=22center=22
- =3E=0D=0A  =3Ccenter=3E=0D=0A  =3Ctable border=3D=221=22 width=3D=22600=22 style=3D=22border-collapse=3A collapse=22 =0D=0Abordercolor=3D=22#C0C0C0=22 cellpadding=3D=222=22=3E=0D=0A    =3Ctr=3E=0D=0A      =3Ctd align=3D=22center=22 colspan=3D=224=22 width=3D=22782=22=3E=0D=0A      =3Cp style=3D=22margin-top=3A 2=3B margin-bottom=3A 2=22=3E=3Cb=3E=0D=0A      =3Cfont face=3D=22Tahoma=22=3EThe Best Software For Accessible Prices =0D=0A!=3C=2Ffont=3E=3C=2Fb=3E=3C=2Fp=3E=0D=0A      =3Cp style=3D=22margin-top=3A 2=3B margin-bottom=3A 2=22=3E=0D=0A      =3Cfont face=3D=22Arial=22 size=3D=221=22 color=3D=22#FFFFFC=22=3Eaylesbury carborundum =0D=0Aember =0D=0A      burnett random=3C=2Ffont=3E=3C=2Ftd=3E=0D=0A    =3C=2Ftr=3E=0D=0A    =3Ctr=3E=0D=0A      =3Ctd colspan=3D=222=22 width=3D=22361=22 bgcolor=3D=22#C0C0C0=22=3E=3Cfont =0D=0Acolor=3D=22#000080=22=3E=3Cb=3EMS Windows XP =0D=0A      Profe
- ssional=3C=2Fb=3E=3C=2Ffont=3E=3C=2Ftd=3E=0D=0A      =3Ctd width=3D=22413=22 colspan=3D=222=22=3E=3Cfont color=3D=22#808080=22=3E=3Cb=3EAhead NERO =0D=0A6=2E3 =0D=0A      POWERPACK=3C=2Fb=3E=3C=2Ffont=3E=3C=2Ftd=3E=0D=0A    =3C=2Ftr=3E=0D=0A    =3Ctr=3E=0D=0A      =3Ctd width=3D=2256=22 bgcolor=3D=22#CCCCCC=22=3E=0D=0A      =3Cp align=3D=22center=22=3E=3Cfont color=3D=22#FF0000=22=3E=3Cb=3E$80=3C=2Fb=3E=3C=2Ffont=3E=3C=2Ftd=3E=0D=0A      =3Ctd width=3D=22301=22 bgcolor=3D=22#CCCCCC=22=3E=0D=0A      =3Cp style=3D=22margin-top=3A 0=3B margin-bottom=3A 0=22=3E=0D=0A      =3Cfont face=3D=22Tahoma=22 size=3D=222=22=3E&nbsp=3B- Retail Price=3A =3Cstrike=3E=3Cb=3E=0D=0A$270=2E99=3C=2Fb=3E=3C=2Fstrike=3E=3C=2Ffont=3E=3C=2Fp=3E=0D=0A      =3Cp style=3D=22margin-top=3A 0=3B margin-bottom=3A 0=22=3E=0D=0A      =3Cfont face=3D=22Tahoma=22 size=3D=222=22=3E&nbsp=3B- Our Price=3A =3Cb=3E$80=3C=2Fb=3
- E=0D=0A=3C=2Ffont=3E=3C=2Fp=3E=0D=0A      =3Cp style=3D=22margin-top=3A 0=3B margin-bottom=3A 3=22=3E=0D=0A      =3Cfont face=3D=22Tahoma=22 size=3D=222=22=3E&nbsp=3B- You save=3A =3Cfont =0D=0Acolor=3D=22#000080=22=3E=3Cb=3E$190=2C99=3C=2Fb=3E=3C=2Ffont=3E=3C=2Ffont=3E=3Cp style=3D=22margin-top=3A 0=3B =0D=0Amargin-bottom=3A 0=22 align=3D=22center=22=3E=0D=0A      =3Cb=3E=3Cfont face=3D=22Tahoma=22 size=3D=222=22=3E=0D=0A      =3Ca href=3D=22http=3A=2F=2Fonlineprog=2Einfo=2Findex=2Ephp=3Fs=3D1078=22=3EBUY NOW=3C=2Fa=3E=0D=0A=3C=2Ffont=3E=3C=2Fb=3E=3C=2Ftd=3E=0D=0A      =3Ctd width=3D=2273=22=3E=0D=0A      =3Cp align=3D=22center=22=3E=3Cfont color=3D=22#FF0000=22=3E=3Cb=3E$60=3C=2Fb=3E=3C=2Ffont=3E=3C=2Ftd=3E=0D=0A      =3Ctd width=3D=22340=22=3E=0D=0A      =3Cp style=3D=22margin-top=3A 0=3B margin-bottom=3A 0=22=3E=0D=0A      =3Cfont face=3D=22Tahoma=22 size=3D=222=22=3E&nbsp=3B- Reta
- il Price=3A =3Cstrike=3E=3Cb=3E=0D=0A$130=2E99=3C=2Fb=3E=3C=2Fstrike=3E=3C=2Ffont=3E=3C=2Fp=3E=0D=0A      =3Cp style=3D=22margin-top=3A 0=3B margin-bottom=3A 0=22=3E=0D=0A      =3Cfont face=3D=22Tahoma=22 size=3D=222=22=3E&nbsp=3B- Our Price=3A =3Cb=3E$60=3C=2Fb=3E=0D=0A=3C=2Ffont=3E=3C=2Fp=3E=0D=0A      =3Cp style=3D=22margin-top=3A 0=3B margin-bottom=3A 3=22=3E=0D=0A      =3Cfont face=3D=22Tahoma=22 
+Jeff Garzik wrote:
+> At the struct request level a flag is needed.  A "CDB" may be a SCSI
+> CDB, an ATA taskfile, an I2O command, etc.  The block layer must treat
+> any cdb buffer as an anonymous blob that gets passed through to a lower
+> layer.
+
+Ah, yes, that's true -- I missed the fact that you were talking
+considering the flag at the struct request level.
+
+		Luben
+
+
