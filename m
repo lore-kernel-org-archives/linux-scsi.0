@@ -1,77 +1,51 @@
-From: Mark Vitnell <kernelml@sinusoid.com>
-Subject: sym53c8xx phase errors
-Date: Wed, 17 Nov 2004 20:45:02 +1100
-Message-ID: <5A516287-387D-11D9-91D3-000393DA18A8@sinusoid.com>
-Mime-Version: 1.0 (Apple Message framework v619)
-Content-Type: text/plain; charset=US-ASCII; format=flowed
-Content-Transfer-Encoding: 7bit
+From: akpm@osdl.org
+Subject: [patch 1/1] iscsi_transport build fix
+Date: Wed, 17 Nov 2004 02:03:10 -0800
+Message-ID: <200411171003.iAHA3M925908@mail.osdl.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from alpha.sinusoid.com ([218.214.7.26]:25472 "EHLO
-	alpha.sinusoid.com") by vger.kernel.org with ESMTP id S262255AbUKQJpL
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 17 Nov 2004 04:45:11 -0500
-Received: from [192.168.100.140] (mac [192.168.100.140])
-	by alpha.sinusoid.com (Postfix) with ESMTP id D2ED3D409F
-	for <linux-scsi@vger.kernel.org>; Wed, 17 Nov 2004 20:45:11 +1100 (EST)
+Received: from fw.osdl.org ([65.172.181.6]:12973 "EHLO mail.osdl.org")
+	by vger.kernel.org with ESMTP id S262258AbUKQKD1 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 17 Nov 2004 05:03:27 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: James.Bottomley@steeleye.com
+Cc: linux-scsi@vger.kernel.org, akpm@osdl.org
 
-I have been having problems with sym53c8xx in recent kernels, with the 
-following errors:
 
-...
-sym0:5:0:phase change 6-7 11@17168b84 resid=2.
-sym0:6:ppr msgout: 1-6-4-a-0-1f-1-0.
-sym0:6:0:phase change 6-7 11@1f860f84 resid=2.
-sym0:6:ppr msgout: 1-6-4-a-0-1f-1-0.
-sym0:6:0:phase change 6-7 11@1f860f84 resid=2.
-sym0:4:ppr msgout: 1-6-4-a-0-1f-1-0.
-sym0:4:0:phase change 6-7 11@1f860f84 resid=2.
-sym1:1:ppr msgout: 1-6-4-a-0-1f-1-0.
-sym1:1:0:phase change 6-7 11@016d4384 resid=2.
-sym0:5:ppr msgout: 1-6-4-a-0-1f-1-0.
-sym0:5:0:phase change 6-7 11@17168b84 resid=2.
-sym1:3:ppr msgout: 1-6-4-a-0-1f-1-0.
-...
 
-The above a small portion of the kernel logs and occurs on every disc 
-access.
+drivers/scsi/scsi_transport_iscsi.c:176: structure has no member named `sin6_addr'
 
-This was from 2.6.10-rc2, but I've had similar errors with 2.6.9 and 
-various 2.6.10-rc1-mm kernels also.
+Older gcc's dont support anonymous unions.
 
-The hardware in question is a Compaq 64-bit  dual channel wide Ultra2 
-SCSI adapter (53c896) and 6x Seagate  SX118202LS/LC  drives in a raid0 
-configuration.
+Signed-off-by: Andrew Morton <akpm@osdl.org>
+---
 
-Throughput is severely affected, typically getting 5MB/s on the raid 
-array, and 2MB/s  on the individual scsi drives. On kernels prior to 
-2.6.9 these figures were 100MB/s  and 18MB/s respectively.
+ 25-akpm/include/scsi/scsi_transport_iscsi.h |    6 +++---
+ 1 files changed, 3 insertions(+), 3 deletions(-)
 
-I have tried the patch mentioned in 
-http://www.spinics.net/lists/kernel/msg314806.html, but it makes no 
-difference with either the phase 6-7 messages, or with the ppr 
-messages. The throughput remains poor.
-
-Note that the bus appears as :
-
-sym0: No NVRAM, ID 7, Fast-40, LVD, parity checking
-sym1: No NVRAM, ID 7, Fast-40, LVD, parity checking
-
-and on the earlier kernels , the drives appear as:
-
-   Vendor: SEAGATE   Model: SX118202LS        Rev: B804
-   Type:   Direct-Access                      ANSI SCSI revision: 02
-sym1:3:0: tagged command queuing enabled, command queue depth 64.
-scsi(1:0:3:0): Beginning Domain Validation
-sym1:3: wide asynchronous.
-sym1:3: FAST-40 WIDE SCSI 80.0 MB/s ST (25.0 ns, offset 15)
-scsi(1:0:3:0): Domain Validation skipping write tests
-scsi(1:0:3:0): Ending Domain Validation
-SCSI device sda: 35566480 512-byte hdwr sectors (18210 MB)
-
-Any suggestions would be appreciated,
-
-Mark
-
+diff -puN include/scsi/scsi_transport_iscsi.h~iscsi_transport-build-fix include/scsi/scsi_transport_iscsi.h
+--- 25/include/scsi/scsi_transport_iscsi.h~iscsi_transport-build-fix	2004-11-17 01:55:06.014731216 -0800
++++ 25-akpm/include/scsi/scsi_transport_iscsi.h	2004-11-17 01:55:50.164019504 -0800
+@@ -36,7 +36,7 @@ struct iscsi_class_session {
+ 	union {
+ 		struct in6_addr sin6_addr;
+ 		struct in_addr sin_addr;
+-	};
++	} u;
+ 	sa_family_t addr_type;		/* must be AF_INET or AF_INET6 */
+ 	uint16_t port;			/* must be in network byte order */
+ 	int initial_r2t;		/* 1 Yes, 0 No */
+@@ -68,9 +68,9 @@ struct iscsi_class_session {
+ #define iscsi_addr_type(x) \
+ 	(((struct iscsi_class_session *)&(x)->starget_data)->addr_type)
+ #define iscsi_sin_addr(x) \
+-	(((struct iscsi_class_session *)&(x)->starget_data)->sin_addr)
++	(((struct iscsi_class_session *)&(x)->starget_data)->u.sin_addr)
+ #define iscsi_sin6_addr(x) \
+-	(((struct iscsi_class_session *)&(x)->starget_data)->sin6_addr)
++	(((struct iscsi_class_session *)&(x)->starget_data)->u.sin6_addr)
+ #define iscsi_tpgt(x) \
+ 	(((struct iscsi_class_session *)&(x)->starget_data)->tpgt)
+ #define iscsi_initial_r2t(x) \
+_
