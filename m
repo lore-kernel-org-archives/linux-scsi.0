@@ -1,29 +1,64 @@
-From: Luben Tuikov <luben@splentec.com>
-Subject: Q: scsi device driver and status byte as per SAM2?
-Date: Fri, 24 May 2002 13:38:47 -0400
+From: Patrick Mansfield <patmans@us.ibm.com>
+Subject: Re: Pb with external RAID controller in lk 2.4
+Date: Fri, 24 May 2002 10:44:50 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3CEE7AA7.AC7E1A51@splentec.com>
+Message-ID: <20020524104450.B22142@eng2.beaverton.ibm.com>
+References: <3CEA83AE.1DCAB7BC@cri74.org> <3CEB4D6D.92C207EE@cri74.org> <20020522100339.A268@eng2.beaverton.ibm.com> <20020524191733.N28936@gum01m.etpnet.phys.tue.nl>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from splentec.com (canoe.splentec.com [209.47.35.250])
-	by pepsi.splentec.com (8.11.6/8.11.0) with ESMTP id g4OGbqu16235
-	for <linux-scsi@vger.kernel.org>; Fri, 24 May 2002 12:37:52 -0400
+In-Reply-To: <20020524191733.N28936@gum01m.etpnet.phys.tue.nl>; from garloff@suse.de on Fri, May 24, 2002 at 07:17:33PM +0200
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>
+To: Kurt Garloff <garloff@suse.de>, Patrick Mansfield <patmans@us.ibm.com>, Fabien Salvi <fabien@cri74.org>, linux-scsi@vger.kernel.org, Lorraine Suschetet <lorraine@ext.cri74.org>
 
-As far as I can see from the sources, 
-scsi device drivers don't set status byte returned
-from the device server (SCSI device).
+On Fri, May 24, 2002 at 07:17:33PM +0200, Kurt Garloff wrote:
+> Hi Patrick,
+> 
+> On Wed, May 22, 2002 at 10:03:39AM -0700, Patrick Mansfield wrote:
+> > The 2.4 kernel won't scan past LUN 7 for SCSI-2 devices - you can try
+> > modifying the code and set the max to 31 in scsi_scan.c.
+> 
+> If you have a FC device (or whatever device that supports LUNs > 7) that
+> reports as SCSI-2, you can flag it with BLIST_LARGELUN in scsi_scan.c
+> to get it treated as SCSI-3.
+> (New in 2.4.18)
 
-Is this true?
+I don't see that in 2.4.18, is it in a 2.4.19-pre? (I can't get to
+any kernel.org or a mirror right now.)
 
-They only set the host_byte in the SCpnt->result.
+> >         /* Use the peripheral qualifier field to determine online/offline */
+> >         if (((scsi_result[0] >> 5) & 7) == 1)   SDpnt->online = FALSE;
+> >         else SDpnt->online = TRUE;
 
-My module sits between the low-level scsi device driver
-and the mid-level. Is there a way I can get the
-status byte as per SAM2?
+> Those fields should not be set by the device, IMHO.
+> Or has their meaning changed for SCSI-3 devs? Then the appropriate check
+> should be added to the code.
+ 
+I don't think anything has changed, SCSI-3 for a peripheral qualifier
+of 001b says:
 
--- 
-Luben
+  The device server is capable of supporting the specified peripheral device
+  type on this logical unit. However, the physical device is not currently
+  connected to this logical unit.
+
+So it seems reasonable to set it to 1. For many disk arrays, this value
+can be modified - the pq or byte one of the INQUIRY result for LUNs with
+with no storage.
+
+-- Patrick Mansfield
+
+> 
+> > The device is probably setting the peripheral-qualifier (PQ) such that the
+> > scan continues but the device is marked offline, this is just annoying
+> > if do not have a lot of them. In scsi_scan.c:
+> > 
+> 
+> But actually the problem is different: Too many LUNs where detected :-(
+> 
+> Regards,
+> -- 
+> Kurt Garloff  <garloff@suse.de>                          Eindhoven, NL
+> GPG key: See mail header, key servers         Linux kernel development
+> SuSE Linux AG, Nuernberg, DE                            SCSI, Security
+
+
