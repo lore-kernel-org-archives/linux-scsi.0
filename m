@@ -1,38 +1,40 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: cciss update [2/2] fixes for Steeleye Lifekeeper
-Date: 18 Oct 2004 14:45:24 -0500
+From: James.Smart@Emulex.Com
+Subject: [Patch] Another Suspend I/O block/unblock fix
+Date: Mon, 18 Oct 2004 16:25:14 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1098128731.2011.296.camel@mulgrave>
-References: <20041013212253.GB9866@beardog.cca.cpqcorp.net>
-	<20041014083900.GB7747@infradead.org> <1097764660.2198.11.camel@mulgrave>
-	<20041014183948.GA12325@infradead.org> <1097852716.1718.9.camel@mulgrave>
-	<20041018163532.GA24511@beardog.cca.cpqcorp.net>
+Message-ID: <0B1E13B586976742A7599D71A6AC733C02F21D@xbl3.ma.emulex.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat16.steeleye.com ([209.192.50.48]:46474 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S267708AbUJRTpz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 18 Oct 2004 15:45:55 -0400
-In-Reply-To: <20041018163532.GA24511@beardog.cca.cpqcorp.net>
+Received: from emulex.emulex.com ([138.239.112.1]:38074 "EHLO
+	emulex.emulex.com") by vger.kernel.org with ESMTP id S267497AbUJRUZQ convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 18 Oct 2004 16:25:16 -0400
+Received: from xbl3.ad.emulex.com (xbl3.ma.emulex.com [138.239.73.12])
+	by emulex.emulex.com (8.12.10/8.12.10) with ESMTP id i9IKPFgI007883
+	for <linux-scsi@vger.kernel.org>; Mon, 18 Oct 2004 13:25:15 -0700 (PDT)
+content-class: urn:content-classes:message
 List-Id: linux-scsi@vger.kernel.org
-To: mikem <mikem@beardog.cca.cpqcorp.net>
-Cc: Christoph Hellwig <hch@infradead.org>, Andrew Morton <akpm@osdl.org>, Jens Axboe <axboe@suse.de>, Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: James.Smart@Emulex.Com, linux-scsi@vger.kernel.org
 
-On Mon, 2004-10-18 at 11:35, mikem wrote:
-> This patch only registers the controller if no logical drives are configured. It will not result in all possible logical drives being added. I added printk's to the driver to show me what I'm registering.
-> What I see is the controller registers every time, and only drives that are phsically configured are registered. That is true for reserved drives, also.
+Further testing is showing that we are having some i/o threads prematurely die with the following message: "rejecting I/O to device being removed"
 
-It also looks like this device is always the one used when the array
-comes on line, so it's only a shadow for as long as the actual array has
-none of it's storage configured.  OK.
+The patch below addresses this issue
 
-The code also seems to imply that we use a single block queue for all of
-the array devices ... isn't that a bit inefficient?
+Note: James, I haven't had any feedback on your workqueue patch yet.
 
-James
+-- James S
 
-
-
-
+--- scsi_lib.c.original	2004-10-18 16:14:20.887007936 -0400
++++ scsi_lib.c.patched	2004-10-18 16:16:45.142077832 -0400
+@@ -1030,7 +1030,8 @@
+ 	} else if (req->flags & (REQ_CMD | REQ_BLOCK_PC)) {
+ 
+ 		if(unlikely(specials_only)) {
+-			if(specials_only == SDEV_QUIESCE)
++			if(specials_only == SDEV_QUIESCE ||
++					specials_only == SDEV_BLOCK)
+ 				return BLKPREP_DEFER;
+ 			
+ 			printk(KERN_ERR "scsi%d (%d:%d): rejecting I/O to device being removed\n",
