@@ -1,64 +1,49 @@
-From: Matthew Dharm <mdharm-scsi@one-eyed-alien.net>
-Subject: Re: [usb-storage] mode sense blacklist how
-Date: Thu, 13 Nov 2003 18:44:30 -0800
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: sg utils sg_io -i 0x24 -y "12 00:00:00 24 00"
+Date: Fri, 14 Nov 2003 13:09:43 +1000
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20031113184430.A6579@one-eyed-alien.net>
-References: <Pine.LNX.4.44L0.0311131638320.949-100000@ida.rowland.org> <1068767049.2851.166.camel@patrh9> <1068768796.3fb41e1c8d075@webmail.netregistry.net> <1068775834.2851.321.camel@patrh9> <20031113181945.I30194@one-eyed-alien.net> <1068777510.2851.359.camel@patrh9>
+Message-ID: <3FB44777.7050104@torque.net>
+References: <1068165515.28505.29.camel@patrh9>	 <20031107095145.A3785@beaverton.ibm.com>  <1068228695.3417.34.camel@patrh9>	 <1068229639.3417.46.camel@patrh9>  <1068229873.3417.51.camel@patrh9> <1068594777.6448.7.camel@patrh9>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-md5;
-	protocol="application/pgp-signature"; boundary="jI8keyz6grp/JLjh"
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ziggy.one-eyed-alien.net ([64.169.228.100]:18952 "EHLO
-	ziggy.one-eyed-alien.net") by vger.kernel.org with ESMTP
-	id S261950AbTKNCod (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 13 Nov 2003 21:44:33 -0500
-Content-Disposition: inline
-In-Reply-To: <1068777510.2851.359.camel@patrh9>; from p.lavarre@ieee.org on Thu, Nov 13, 2003 at 07:38:30PM -0700
+Received: from bunyip.cc.uq.edu.au ([130.102.2.1]:40458 "EHLO
+	bunyip.cc.uq.edu.au") by vger.kernel.org with ESMTP id S264505AbTKNDKB
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 13 Nov 2003 22:10:01 -0500
+In-Reply-To: <1068594777.6448.7.camel@patrh9>
 List-Id: linux-scsi@vger.kernel.org
 To: Pat LaVarre <p.lavarre@ieee.org>
-Cc: usb-storage@one-eyed-alien.net, linux-scsi@vger.kernel.org, dmitrik@users.sourceforge.net, stern@rowland.harvard.edu, patmans@us.ibm.com, james.bottomley@steeleye.com, ronald@kuetemeier.com, idan@idanso.dyndns.org
+Cc: linux-scsi@vger.kernel.org
+
+Pat LaVarre wrote:
+> The SG_IO analogue in BSD may be:
+> 
+> http://www.google.com/search?q=man+SCIOCCOMMAND
+> 
+> The corresponding struct appears in such sources as:
+> 
+> http://cvsup.pt.freebsd.org/cgi-bin/cvsweb/cvsweb.cgi/src/sys/sys/scsiio.h?rev=1.9.4.2&content-type=text/x-cvsweb-markup&cvsroot=NetBSD
+> 
+> Same as ever, again there we see CDB for length, data for expected
+> length returning actual length, sense for expected length returning
+> actual length.
+
+Pat,
+I don't think the above references are correct. FreeBSD has been
+using SCSI's Common Access Method (CAM) for some time. Your can
+find one document at www.t10.org (drafts section under the SCSI-2
+heading). More appropriate is the withdrawn CAM-3 draft standard (see
+www.t10.org/ftp/t10/drafts/cam3/cam3r03.pdf ). That is where you
+will find the structure sg_io_hdr was modelled on (struct ccb_scsiio3).
+
+Another way to find SCSI pass-through mechanisms is to look
+at Joerg Schilling's libscg. A simpler way may be to look at
+smartmontools ( smartmontools.sourceforge.net ) and compare
+os_linux.c , os_freebsd.c and os_solaris.c
+
+Doug Gilbert
 
 
---jI8keyz6grp/JLjh
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
-
-On Thu, Nov 13, 2003 at 07:38:30PM -0700, Pat LaVarre wrote:
-> Ouch, one last thing: tell me again what device/interface descriptors
-> our usb-storage by default tries to support?
->=20
-> Is that bInterfaceClass ...SubClass ...Protocol =3D x 08 XX (00|01|50)?=
-=20
-> Or just x 08 (00..06|FF) (00|01|50)?  (Clearly it's not just the
-> formally defined x 08 (00..06) (00|01|50).)
-
-We support x 08 (00..06) (00|01|50).) plus whatever is listed in the
-unusual_devs.h file.
-
-Matt
-
---=20
-Matthew Dharm                              Home: mdharm-usb@one-eyed-alien.=
-net=20
-Maintainer, Linux USB Mass Storage Driver
-
-G:  Let me guess, you started on the 'net with AOL, right?
-C:  WOW! d00d! U r leet!
-					-- Greg and Customer=20
-User Friendly, 2/12/1999
-
---jI8keyz6grp/JLjh
-Content-Type: application/pgp-signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.0.6 (GNU/Linux)
-Comment: For info see http://www.gnupg.org
-
-iD8DBQE/tEGOIjReC7bSPZARAhUcAKCWx7jiYeSiW6u9XrLlr51PX3PerQCgsOK9
-xfkCqfkYvETtRsFHUvR4cU4=
-=vhKh
------END PGP SIGNATURE-----
-
---jI8keyz6grp/JLjh--
