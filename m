@@ -1,40 +1,38 @@
-From: Jesse Barnes <jbarnes@engr.sgi.com>
-Subject: Re: SCSI QLA not working on latest *-mm SN2
-Date: Tue, 21 Sep 2004 15:10:19 -0400
+From: Mark Lord <lsml@rtr.ca>
+Subject: Re: [PATCH] QStor SATA/RAID v.96 for 2.6.9-rc2
+Date: Tue, 21 Sep 2004 15:21:05 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <200409211510.19330.jbarnes@engr.sgi.com>
-References: <B179AE41C1147041AA1121F44614F0B0DD04DD@AVEXCH02.qlogic.org> <20040921185908.GG11446@parcelfarce.linux.theplanet.co.uk>
+Message-ID: <41507F21.8010800@rtr.ca>
+References: <4150666A.90807@rtr.ca> <41506BBE.2050507@rtr.ca> <4150712F.3080504@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from omx2-ext.sgi.com ([192.48.171.19]:23481 "EHLO omx2.sgi.com")
-	by vger.kernel.org with ESMTP id S267976AbUIUTKa (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 21 Sep 2004 15:10:30 -0400
-In-Reply-To: <20040921185908.GG11446@parcelfarce.linux.theplanet.co.uk>
-Content-Disposition: inline
+Received: from cpu1185.adsl.bellglobal.com ([207.236.110.166]:9123 "EHLO
+	mail.rtr.ca") by vger.kernel.org with ESMTP id S267998AbUIUTWr
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 21 Sep 2004 15:22:47 -0400
+In-Reply-To: <4150712F.3080504@pobox.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: Andrew Vasquez <andrew.vasquez@qlogic.com>, James Bottomley <James.Bottomley@steeleye.com>, Grant Grundler <grundler@parisc-linux.org>, pj@sgi.com, SCSI Mailing List <linux-scsi@vger.kernel.org>, mdr@cthulhu.engr.sgi.com, jeremy@cthulhu.engr.sgi.com, djh@cthulhu.engr.sgi.com, Andrew Morton <akpm@osdl.org>
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Linux Kernel <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
 
-On Tuesday, September 21, 2004 2:59 pm, Matthew Wilcox wrote:
-> On Tue, Sep 21, 2004 at 10:33:36AM -0700, Andrew Vasquez wrote:
-> > Hmm...adding more confusion to the mix.  I apologize -- my reply was
-> > not written correctly, yes, the config-read will flush any pending
-> > writes.  But, the same problem persists -- the RISC will still stop
-> > responding to requests (config or MMIO) during the soft-reset --
-> > potentially resulting in a MAC (as seen by SGI).
+Jeff Garzik wrote:
 >
-> Aha!  SGI's wacky PCI controllers must be able to cope with a PCI
-> config space fail, otherwise they wouldn't be able to do a PCI bus walk.
+> Where is this seperate RAID management module?  :)
+> 
+> Typically we do not add kernel hooks to non-public stuff...
 
-Ok, you got me!  Yes, we need to fail PCI config space read failures, but we 
-don't at the moment.  Our bridge chips generate MCAs when this occurs, so we 
-have to recover from them somehow.  Current PCI discovery code does this by 
-making a PROM call for PCI config space access.  I expect our I/O code 
-rewrite will use the standard SAL config space access routines, which should 
-make this easy.
+It is still under development.  The vendor will likely
+distribute it in source code form with the product installation disk,
+since it is likely to undergo far more frequent updates that the
+base kernel driver.
 
-Jesse
+This allows them to decouple the portion not needed at boot-time,
+from the more difficult to change kernel code that has to be
+there to boot the system on RAID.
+
+Cheers
+-- 
+Mark Lord
+(hdparm keeper & the original "Linux IDE Guy")
