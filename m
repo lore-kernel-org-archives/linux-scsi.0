@@ -1,35 +1,70 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: PATAPI via libata promise 20275 (was: RFC: moving drivers to a new drivers/ata directory)
-Date: Thu, 21 Oct 2004 20:53:34 +0200
-Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <58cb370e041021115367c80c55@mail.gmail.com>
-References: <4176883D.7070905@pobox.com>
-	 <200410211704.i9LH4jMR008268@falcon30.maxeymade.com>
-Reply-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+Subject: [PATCH] tmscsim: scsi device attributes
+Date: Thu, 21 Oct 2004 22:31:25 +0200 (CEST)
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <Pine.LNX.4.60.0410212223120.7042@poirot.grange>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <200410211704.i9LH4jMR008268@falcon30.maxeymade.com>
-To: Doug Maxey <dwm@maxeymade.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, Christoph Hellwig <hch@infradead.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Albert CC Lee <albertcc@tw.ibm.com>
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from pop.gmx.net ([213.165.64.20]:53657 "HELO mail.gmx.net")
+	by vger.kernel.org with SMTP id S270807AbUJUUpP (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 21 Oct 2004 16:45:15 -0400
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@steeleye.com>
+Cc: linux-scsi@vger.kernel.org
 
-ATAPI is working just fine for me (ata_piix) in both PIO/DMA
-and thanks to Jeff all my ATAPI work is now in -linus tree. :)
+A write method to adjust per-device queue-depth
 
-Just enable ATA_ENABLE_ATAPI in <linux/libata.h>.
+Signed-off-by: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
 
-On Thu, 21 Oct 2004 12:04:45 -0500, Doug Maxey <dwm@maxeymade.com> wrote:
-> Continuing down a somewhat related path,  what is the outlook for PATAPI
-> via libata?
-> 
-> There is a high level of interest to have hotplug controllers for ppc64, and
-> the primary (exclusive at this point) application is to drive PATAPI optical.
-> 
-> I know you have indicated that you have some WIP to get there.  I would like
-> to offer any help to reach that goal.
-> 
-> Would you point me to any code available?
-> 
-> ++doug
+diff -u a/drivers/scsi/tmscsim.c b/drivers/scsi/tmscsim.c
+--- a/drivers/scsi/tmscsim.c	Wed Oct 20 21:49:46 2004
++++ b/drivers/scsi/tmscsim.c	Thu Oct 21 22:03:35 2004
+@@ -2275,6 +2275,33 @@
+ 	return 0;
+ }
+ 
++static ssize_t dc390_store_queue_depth(struct device *dev, const char *buf, size_t count)
++{
++	struct scsi_device *sdev = to_scsi_device(dev);
++	struct dc390_acb *acb = (struct dc390_acb *)sdev->host->hostdata;
++	int queue_depth = simple_strtoul(buf, NULL, 0);
++
++	if (queue_depth > acb->TagMaxNum || !sdev->tagged_supported)
++		return -EINVAL;
++
++	scsi_adjust_queue_depth(sdev, MSG_ORDERED_TAG, queue_depth);
++
++	return count;
++}
++
++static struct device_attribute dc390_queue_depth_attr = {
++	.attr = {
++		.name =		"queue_depth",
++		.mode =		S_IRUSR | S_IWUSR,
++	},
++	.store = dc390_store_queue_depth
++};
++
++static struct device_attribute *dc390_dev_attrs[] = {
++	&dc390_queue_depth_attr,
++	NULL,
++};
++
+ static struct scsi_host_template driver_template = {
+ 	.module			= THIS_MODULE,
+ 	.proc_name		= "tmscsim", 
+@@ -2290,6 +2317,7 @@
+ 	.sg_tablesize		= SG_ALL,
+ 	.cmd_per_lun		= 1,
+ 	.use_clustering		= DISABLE_CLUSTERING,
++	.sdev_attrs		= dc390_dev_attrs,
+ };
+ 
+ /***********************************************************************
+
+Thanks
+Guennadi
+---
+Guennadi Liakhovetski
