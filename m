@@ -1,45 +1,64 @@
-From: Mike Anderson <andmike@us.ibm.com>
-Subject: Re: Host drivers and conversion of SCSI to the driver model
-Date: Fri, 27 Jun 2003 12:23:21 -0700
+From: Johnnie Peters <JPeters@JNI.com>
+Subject: Alternate boot devices
+Date: Fri, 27 Jun 2003 12:35:34 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030627192321.GA3338@beaverton.ibm.com>
-References: <20030627110259.A3751@infradead.org> <Pine.LNX.4.44L0.0306271347250.774-100000@ida.rowland.org> <20030627190434.A10771@infradead.org>
+Message-ID: <7A19797C027A6D449D68329C2A094EA0010C06B4@MUSTANG>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="iso-8859-1"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e35.co.us.ibm.com ([32.97.110.133]:64766 "EHLO
-	e35.co.us.ibm.com") by vger.kernel.org with ESMTP id S264736AbTF0THj
+Received: from [204.118.127.253] ([204.118.127.253]:57016 "EHLO
+	mustang.jni.com") by vger.kernel.org with ESMTP id S264689AbTF0TVP
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 27 Jun 2003 15:07:39 -0400
-Content-Disposition: inline
-In-Reply-To: <20030627190434.A10771@infradead.org>
+	Fri, 27 Jun 2003 15:21:15 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Alan Stern <stern@rowland.harvard.edu>, James Bottomley <James.Bottomley@steeleye.com>, SCSI development list <linux-scsi@vger.kernel.org>
+To: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
 
-Christoph Hellwig [hch@infradead.org] wrote:
-> On Fri, Jun 27, 2003 at 01:56:59PM -0400, Alan Stern wrote:
-> > I don't see how you can make that work without modifying parts of the 
-> > driver model core.  After all, calls to a class_device attribute's show() 
-> > and store() methods don't go through the device driver or the bus driver; 
-> > they are demultiplexed within drivers/base/class.c.
-> 
-> Right, the intention is to change the device model cope.  See the dicussion
-> about netdev refcounting on linux-netdev a while ago.  
-> 
+I have managed to create a Red Hat 9.0 install drivers disk for the JNI
+fibre
+channel controller.  I have also created rpms for the driver to match each
+of the posible
+boot kernels that can be installed.
 
-I looked over linux-netdev and can not pick out a thread on this
-subject. Could you point to the thread or at least the subject of the
-thread. I was wanting to see the consensus of the core change.
+I am able to install with a fibre channel disk as the boot disk if I remove
+all other
+fibre channel disks from the system.  When the install completes I boot up
+the
+Red Hat rescue mode.  I then install the associated driver RPMS, create
+initrd
+images and fix the lilo.conf file the way it needs to be.  This includes
+specifying
+root=LABEL=/.  I then sent the bios on the JNI controller to boot from the
+WWPN on the disk I want.
 
-I have a set of patch running right now on top of scsi-misc-2.5
-(1:a:stern_present 2:a:shost_present 3:a:shost_state 4:a:sdev_state)
-that fix some release issues and adds a state attribute to shost and
-sdev. The patch set does still have the show / store issue, but does
-seem to cleanup better post a surprise removal call to scsi_remove_host.
+When I do this I can reattach all the other drives on the fabric and boot.
+The system comes up
+fine.  As I change the fabric layout during testing and reboot the root and
+/boot partitions
+migrate (sometimes root is sdc2 sometimes sdd2 and once with many disks I
+have seen sdq2).
 
--andmike
---
-Michael Anderson
-andmike@us.ibm.com
+This all works fine until I want to run lilo again.  If I first remove all
+the other drives
+so the root disk is the only one in the system and reboot I can change the
+lilo
+parameters all I want (as long as they are correct) and rerun lilo, reattach
+the
+other drives and boot again.  Works great.
+
+I have as many modification to the lilo.conf file as I seen to find docs
+for.  Nothing
+seems to work.  If I change the boot device to what seems to be the current
+root
+(if root is sdc2 the I set boot=/dev/sdc).  No matter what I try I always
+only see the
+first L in the LILO line when the system tries to boot from the fibre
+channel device.
+I do not get the numerical code that normally goes along with this error.
+
+I have tried with and without linear and various other parameter changes.
+Any
+ideas I should try?
+
+Johnnie
 
