@@ -1,26 +1,42 @@
-From: Christoph Hellwig <hch@infradead.org>
+From: Andreas Jellinghaus <aj@leogic.com>
 Subject: Re: [PATCH 2.6 ] MPT Fusion driver 3.01.03 update
-Date: Thu, 25 Mar 2004 14:59:32 +0000
+Date: Thu, 25 Mar 2004 16:12:47 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040325145932.A23971@infradead.org>
+Message-ID: <pan.2004.03.25.15.12.47.472931@leogic.com>
 References: <0E3FA95632D6D047BA649F95DAB60E57040DB6D7@exa-atlanta.se.lsil.com> <pan.2004.03.25.14.54.52.188405@leogic.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from phoenix.infradead.org ([213.86.99.234]:14864 "EHLO
-	phoenix.infradead.org") by vger.kernel.org with ESMTP
-	id S263188AbUCYO7e (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 25 Mar 2004 09:59:34 -0500
-Content-Disposition: inline
-In-Reply-To: <pan.2004.03.25.14.54.52.188405@leogic.com>; from aj@leogic.com on Thu, Mar 25, 2004 at 03:54:52PM +0100
+Received: from main.gmane.org ([80.91.224.249]:39330 "EHLO main.gmane.org")
+	by vger.kernel.org with ESMTP id S263186AbUCYPMt (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 25 Mar 2004 10:12:49 -0500
+Received: from list by main.gmane.org with local (Exim 3.35 #1 (Debian))
+	id 1B6WXH-0008PO-00
+	for <linux-scsi@vger.kernel.org>; Thu, 25 Mar 2004 16:12:47 +0100
+Received: from 62.245.182.10 ([62.245.182.10])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-scsi@vger.kernel.org>; Thu, 25 Mar 2004 16:12:47 +0100
+Received: from aj by 62.245.182.10 with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-scsi@vger.kernel.org>; Thu, 25 Mar 2004 16:12:47 +0100
 List-Id: linux-scsi@vger.kernel.org
-To: Andreas Jellinghaus <aj@leogic.com>
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Thu, Mar 25, 2004 at 03:54:52PM +0100, Andreas Jellinghaus wrote:
-> appart from using a lot of memory, is there any reason
-> not to compile the ISENSE option into the kernel?
+The isence module uses 40 kb of kernel memory.
+I can't test if it is working (how would I create
+an scsi error that the fusion/isence reports?),
+but documenting this difference might be work.
+my arch: x86_64, 
 
-Yes, it's a completely idiotic replacement of drivers/scsi/constant.c.
-Killing the former in favour of the latter sounds like a good janitor task.
+with isence compiled in:
+ Memory: 2050140k/2096576k available
+ (2593k kernel code, 0k reserved, 1238k data, 164k init)
+without:
+ Memory: 2050180k/2096576k available
+ (2593k kernel code, 0k reserved, 1201k data, 164k init)
+
+Andreas
 
