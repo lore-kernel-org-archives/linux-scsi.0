@@ -1,71 +1,36 @@
-From: Dave Olien <dmo@osdl.org>
-Subject: Re: [ANNOUNCE] multipath-tools-0.3.1
-Date: Tue, 12 Oct 2004 11:35:29 -0700
-Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20041012183529.GA27921@osdl.org>
-References: <1096071849.4466.31.camel@zezette> <1097054573.4163b96d1262c@imp5-q.free.fr> <1097495416.416a73787e0ae@imp1-q.free.fr>
+From: Mark Lord <lkml@rtr.ca>
+Subject: Re: [PATCH] QStor SATA/RAID driver for 2.6.9-rc3
+Date: Tue, 12 Oct 2004 14:36:30 -0400
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <416C242E.9010102@rtr.ca>
+References: <4161A06D.8010601@rtr.ca>	<416547B6.5080505@rtr.ca>	<20041007150709.B12688@i				nfradead.org>	<4165624C.5060405@rtr.ca>	<416565DB.4050006@pobox.com>	<416	5	A	4	5D.2090200@rtr.ca>	<4165A766.1040104@pobox.com>	<4165A85D.7080704@rtr.	ca	>		<4	165AB1B.8000204@pobox.com>	<4165ACF8.8060208@rtr.ca>		<200410072215	37.	A17	712@infradead.org>	<1097241583.2412.15.camel@mulgrave>		<4166AF2F.60	7090	4@rtr.ca>	<1097249266.1678.40.camel@mulgrave>		<4166B48E.3020006@rtr.ca>	<1097250465.2	412.49.camel@mulgrave>		<416C0D55.1020603@rtr.ca>	<1097601478.2044.103.camel@mulgrave> 	<416C12CC.1050301@rtr.ca> <1097602220.2044.119.camel@mulgrave>	<416C157A.6030400@rtr.ca> <416C177B.6030504@pobox.com> 	<416C19B9.7000806@rtr.ca> <1097604730.1763.177.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1097495416.416a73787e0ae@imp1-q.free.fr>
-To: christophe.varoqui@free.frf
-Cc: device-mapper development <dm-devel@redhat.com>, linux-raid@vger.kernel.org, linux-hotplug-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from cpu1185.adsl.bellglobal.com ([207.236.110.166]:39875 "EHLO
+	mail.rtr.ca") by vger.kernel.org with ESMTP id S266572AbUJLSiU
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 12 Oct 2004 14:38:20 -0400
+In-Reply-To: <1097604730.1763.177.camel@mulgrave>
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, Christoph Hellwig <hch@infradead.org>, Mark Lord <lsml@rtr.ca>, Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
+James Bottomley wrote:
+..
+> What you need to do is to gather as much information as will reset the
+> interrupt and then process the data as a tasklet.  For your hotplug
+> events, they should be fire and forget as schedule_work().
 
-Christophe,
+Okay.  Good find, thanks.
 
-I compiled and installed your new tarball.  It looks good so far on i386.
-Thanks for the update!
+I'll rework that portion to remove the bh handling completely,
+doing everything possible directly from within the interrupt handler.
 
-Dave
+It will continue to use schedule_work to handle hotplug events.
 
-On Mon, Oct 11, 2004 at 01:50:16PM +0200, christophe.varoqui@free.fr wrote:
-> Hello,
-> 
-> here goes multipath-tools-0.3.1
-> 
-> Early release, to fix a important i386 breakage due to regparm switch in klibc.
-> Release focuses on undusting kpartx.
-> ia64 and woody testers, please redo your thing : I may have got it right this
-> time.
-> 
-> Full ChangeLog for the release :
-> 
->         * [kpartx] move back to getopt, originaly removed from the
->           original partx because of lack of implementation in klibc
->         * [kpartx] don't map extended partitions
->         * [kpartx] add a -p command flag to allow admin to force a
->           delimiting string between disk name and part number. When
->           specified always use it, when unspecified use 'p' as a delim
->           when last char of disk name is a digit, NUL otherwise.
->         * [kpartx] clean up
->         * bump klibc to 0.182
->         * one step further : use klibc MCONFIG for all klibc specific
->           FLAGS definitions, ie massive Makefile.inc cleanup
->         * follow the klibc compilation rules by appending its OPTFLAGS
->           to multipath-tools' CFLAGS. This corrects the segfaults seen
->           on i386 where klibc is built with regparm=3 and tools are not
->         * [multipathd] fall back to fork when clone not available
->           like in Debian Woody
->         * [kpartx] move .start and .size from uint to ulong (Ake)
->         * briefly document system-disk-on-multipath in the FAQ file
-> 
-> As usual, doc and download at :
-> http://christophe.varoqui.free.fr/
-> 
-> regards,
-> --
-> christophe varoqui <christophe.varoqui@free.fr>
-> 
-> 
-> -------------------------------------------------------
-> This SF.net email is sponsored by: IT Product Guide on ITManagersJournal
-> Use IT products in your business? Tell us what you think of them. Give us
-> Your Opinions, Get Free ThinkGeek Gift Certificates! Click to find out more
-> http://productguide.itmanagersjournal.com/guidepromo.tmpl
-> _______________________________________________
-> Linux-hotplug-devel mailing list  http://linux-hotplug.sourceforge.net
-> Linux-hotplug-devel@lists.sourceforge.net
-> https://lists.sourceforge.net/lists/listinfo/linux-hotplug-devel
+Cheers
+-- 
+Mark Lord
+(hdparm keeper & the original "Linux IDE Guy")
