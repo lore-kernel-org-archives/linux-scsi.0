@@ -1,57 +1,67 @@
-From: Patrick Mansfield <patmans@us.ibm.com>
-Subject: Re: [PATCH] SCSI Core patches
-Date: Tue, 14 Jan 2003 14:16:00 -0800
+From: Douglas Gilbert <dougg@torque.net>
+Subject: lsscsi-0.04
+Date: Wed, 15 Jan 2003 09:42:27 +1100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030114141600.A26321@beaverton.ibm.com>
-References: <OF9F3B7202.124F5C84-ONC1256CAE.00739F33@de.ibm.com>
+Message-ID: <3E249253.9000905@torque.net>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <OF9F3B7202.124F5C84-ONC1256CAE.00739F33@de.ibm.com>; from MPESCHKE@de.ibm.com on Tue, Jan 14, 2003 at 10:29:16PM +0100
+Received: from torque.net (dm1-12.triode.net.au [202.147.125.12])
+	by iggy.triode.net.au (8.12.7/8.12.7) with ESMTP id h0EMcwIF030577
+	for <linux-scsi@vger.kernel.org>; Wed, 15 Jan 2003 09:39:06 +1100
 List-Id: linux-scsi@vger.kernel.org
-To: Martin Peschke3 <MPESCHKE@de.ibm.com>
-Cc: Luben Tuikov <luben@splentec.com>, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Tue, Jan 14, 2003 at 10:29:16PM +0100, Martin Peschke3 wrote:
-> 
-> Patrick,
-> 
-> > Yes, so the driver-to-HBA interface does not have to be use 8 byte LUNs
-> > (not that I agree with that approach), but FCP must use 8 bytes.
-> 
-> No. This is a contradiction in terms.
-> Still, I can't see how to have a valid 8 byte LUN at hand for SCSI
-> devices using 8 byte LUNs if we apply a lossy compression to LUNs
-> in the SCSI stack.
+lsscsi is a utility the uses sysfs in kernels >= lk 2.5.50
+to list information about all SCSI devices (including devices
+that use the SCSI stack such as USB mass storage devices).
+Both a compact format (default), one line per device, and
+a "classic" format (like the output of 'cat /proc/scsi/scsi')
+are supported.
 
-As long as the truncated values are to be zero, it is not a problem.
+Version 0.04 is available at
+http://www.torque.net/scsi/lsscsi.html
 
-> > The qlogic uses a 2 byte lun for host -> adapter communication, even
-> > though it sends an 8 byte lun to the target. For most targets, just using
-> > the upper two bytes is OK, I don't know what they do for the different
-> > scsi addressing modes.
-> 
-> However this is done in detail, it is guessing in place of reliable
-> addressing.
-> 
-> I would like to come to an agreement that the method of scsilun_to_int
-> is wrong and that we have to care for 64 bit LUNs in the SCSI core,
-> i.e. store LUNs as they are provided by the REPORT_LUNs response and
-> passing them unchanged to HBA drivers.
+Minor cleanup for SCSI tape devices whose listing
+became untidy in lk 2.5.57 . In lk 2.5.58 the
+scsi_level value is provided by sysfs. Now the
+"classic" lsscsi listing looks equivalent to
+'cat /proc/scsi/scsi':
 
-I agree with that, I'm not planning on creating a patch for it. Someone
-with the proper adapter and storage should probably work on a patch, and
-there is currently (AFAIK!) only one open source driver that can handle an
-8 byte lun :)
- 
-> The discussion about the implementation should be done after that as
-> the second step.
+$ lsscsi --classic
+ttached devices:
+Host: scsi0 Channel: 00 Id: 01 Lun: 00
+   Vendor: FUJITSU  Model: MAM3184MP        Rev: 0105
+   Type:   Direct-Access                    ANSI SCSI revision: 03
+Host: scsi2 Channel: 00 Id: 00 Lun: 00
+   Vendor: Linux    Model: scsi_debug       Rev: 0004
+   Type:   Direct-Access                    ANSI SCSI revision: 03
+Host: scsi3 Channel: 00 Id: 00 Lun: 00
+   Vendor: CREATIVE Model: CD5233E          Rev: 1.00
+   Type:   CD-ROM                           ANSI SCSI revision: 02
+Host: scsi4 Channel: 00 Id: 06 Lun: 00
+   Vendor: SONY     Model: SDT-7000         Rev: 0192
+   Type:   Sequential-Access                ANSI SCSI revision: 02
 
-I'd rather see a patch that has been tested with actual hardware.
+$ cat /proc/scsi/scsi
+Attached devices:
+Host: scsi0 Channel: 00 Id: 01 Lun: 00
+   Vendor: FUJITSU  Model: MAM3184MP        Rev: 0105
+   Type:   Direct-Access                    ANSI SCSI revision: 03
+Host: scsi2 Channel: 00 Id: 00 Lun: 00
+   Vendor: Linux    Model: scsi_debug       Rev: 0004
+   Type:   Direct-Access                    ANSI SCSI revision: 03
+Host: scsi3 Channel: 00 Id: 00 Lun: 00
+   Vendor: CREATIVE Model: CD5233E          Rev: 1.00
+   Type:   CD-ROM                           ANSI SCSI revision: 02
+Host: scsi4 Channel: 00 Id: 06 Lun: 00
+   Vendor: SONY     Model: SDT-7000         Rev: 0192
+   Type:   Sequential-Access                ANSI SCSI revision: 02
 
-Doug Gilbert has pointed out that we could have dual support for short
-(current style) and long luns, and not bother fixing adapters that do not
-or cannot support an 8 byte lun (all of SPI, and the current qlogic ones).
 
--- Patrick Mansfield
+Doug Gilbert
+
+
+
