@@ -1,76 +1,64 @@
-From: Matt Domsch <Matt_Domsch@dell.com>
-Subject: Re: [PATCH][RELEASE]: megaraid unified driver version 2.20.0.B1
-Date: Sun, 18 Apr 2004 09:00:25 -0500
+From: Kurt Garloff <garloff@suse.de>
+Subject: Patches for SCSI scanning
+Date: Sun, 18 Apr 2004 20:57:51 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040418140025.GA3585@lists.us.dell.com>
-References: <0E3FA95632D6D047BA649F95DAB60E57033BC544@exa-atlanta.se.lsil.com>
+Message-ID: <20040418185751.GC4868@tpkurt.garloff.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="LwW0XdcUbUexiWVK"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from lists.us.dell.com ([143.166.224.162]:25519 "EHLO
-	lists.us.dell.com") by vger.kernel.org with ESMTP id S264174AbUDROCl
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 18 Apr 2004 10:02:41 -0400
+Received: from ns.suse.de ([195.135.220.2]:27813 "EHLO Cantor.suse.de")
+	by vger.kernel.org with ESMTP id S263611AbUDRTAG (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 18 Apr 2004 15:00:06 -0400
 Content-Disposition: inline
-In-Reply-To: <0E3FA95632D6D047BA649F95DAB60E57033BC544@exa-atlanta.se.lsil.com>
 List-Id: linux-scsi@vger.kernel.org
-To: "Mukker, Atul" <Atulm@lsil.com>
-Cc: 'Jeff Garzik' <jgarzik@pobox.com>, "Bagalkote, Sreenivas" <sreenib@lsil.com>, 'Christoph Hellwig' <hch@infradead.org>, "'paul@kungfoocoder.org'" <paul@kungfoocoder.org>, "'James.Bottomley@SteelEye.com'" <James.Bottomley@SteelEye.com>, "'arjanv@redhat.com'" <arjanv@redhat.com>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>
-
-On Sat, Apr 17, 2004 at 02:40:36AM -0400, Mukker, Atul wrote:
-> > >>14) the following check doesn't scale, please remove:
-> > >>
-> > >>+       if (subsysvid && (subsysvid != PCI_VENDOR_ID_AMI) &&
-> > >>+                       (subsysvid != PCI_VENDOR_ID_DELL) &&
-> > >>+                       (subsysvid != PCI_VENDOR_ID_HP) &&
-> > >>+                       (subsysvid != PCI_VENDOR_ID_INTEL) &&
-> > >>+                       (subsysvid != PCI_SUBSYS_ID_FSC) &&
-> > >>+                       (subsysvid != PCI_VENDOR_ID_LSI_LOGIC)) {
->
-> Combinig the subsystem id with pci vendor and device id in the device table
-> would result in many permuations and combinations.
-
-That's OK.  See the e100 driver, it's got like 35 entries on its list
-already.
-
-> You are right about future-proofing. But when we do this, we have something
-> else in mind, which is totally opposite. I am sure, it seems abstruse to
-> redundantly check for the subsystem ids, when the vendor and device ids are
-> provided in the device table. This is done, so that we do not try to take
-> ownership of controller, which actually belongs to some other vendor. I know
-> of at least one example, where the qlogic driver loads for an AMI MegaRAID
-> controller - because both share the same vendor and device ids. Now the
-> driver assumes it to be a qlogic controller and tries to start it,
-> eventually hanging the server.
-
-But megaraid doesn't have this problem AFAIK.
-
-And if necessary, a second pci_device_id list of IDs to test against
-and exclude would be appropriate, and analogous to the pci_device_id
-list that's used to accept devices.
+To: Linux SCSI list <linux-scsi@vger.kernel.org>
+Cc: James Bottomley <James.Bottomley@steeleye.com>, Andrew Morton <akpm@osdl.org>
 
 
-> There definitely are other ways we driver simply wants to support a new
-> controller, which should Just Work(tm), e.g., by accepting new PCI vendor
-> id, device id and subsystem id as module parameters.
+--LwW0XdcUbUexiWVK
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-/sys/bus/pci/driver/megaraid/new_id  already does this
+Hi,
 
-> It is unlikely we need this in near future because the frequency at
-> which we update drivers makes it very easy to sneak in another set
-> of PCI ids in the driver :-))
+at SUSE, the way that Linux scan SCSI devices has constantly generated
+a certain support load. Not extremely but still astonishing.
+As a consequence, we have created a number of patches to our 2.4 kernels
+that did improve some things, such as the backport of the REPORT_LUNS
+scanning from 2.6 and a number of boot/module parameters that allowed
+users to influence how the scanning is done.
+http://www.suse.de/~garloff/Linux/scsi-scan/scsi-scanning.html
 
-Wrong.  The issue isn't "how fast can LSI provide an updated driver to
-kernel.org", but "how fast can users themselves add new IDs to a
-driver for their given kernel/distribution at install time without
-needing to wait for LSI to produce a new driver".  Hence the new_id
-trick above was introduced for 2.6 for exactly this purpose.
+With kernel 2.6, the REPORT_LUNS is standard for SCSI-3 devices,
+but still many arrays exist that report as SCSI-2 and will require
+BLIST_SPARSELUN|BLIST_LARGELUN.
 
-Thanks,
-Matt
+An alternative to the blacklist is to offer boot/module parameters
+again. This is what the following series of 6 patches do.
+Most don't really depend on each other, but they'll only apply
+cleanly in the order sent.
 
--- 
-Matt Domsch
-Sr. Software Engineer, Lead Engineer
-Dell Linux Solutions linux.dell.com & www.dell.com/linux
-Linux on Dell mailing lists @ http://lists.us.dell.com
+I did not yet compare our 2.4 blacklist with the 2.6 one; I'll
+port our additional 2.4 entries to 2.6 soon.
+
+Regards,
+--=20
+Kurt Garloff  <garloff@suse.de>                            Cologne, DE=20
+SUSE LINUX AG, Nuernberg, DE                          SUSE Labs (Head)
+
+--LwW0XdcUbUexiWVK
+Content-Type: application/pgp-signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.2.4 (GNU/Linux)
+
+iD8DBQFAgs+vxmLh6hyYd04RAuqAAKCRrYF/jVmVLMNOTf0BnuGtPxTn9gCfX2Eq
+uVLV8gzjtpcOje1ZA/aaI2E=
+=THHM
+-----END PGP SIGNATURE-----
+
+--LwW0XdcUbUexiWVK--
