@@ -1,125 +1,44 @@
-From: Matt Domsch <Matt_Domsch@dell.com>
-Subject: Re: Good afternoon to everyone. Question about PERC 4Di on Dell poweredge 1750
-Date: Thu, 10 Jun 2004 22:01:37 -0500
+From: Jens Axboe <axboe@suse.de>
+Subject: Re: sense visible despite ide-floppy in 2.6 maybe
+Date: Fri, 11 Jun 2004 11:24:16 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040611030137.GA27434@lists.us.dell.com>
-References: <40C8FEF9.5090106@citi.com.mx>
+Message-ID: <20040611092416.GU13836@suse.de>
+References: <1086798154.7074.24.camel@patibmrh9> <1086805796.3741.5.camel@patibmrh9>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="vtzGhvizbBRQ85DL"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from linux.us.dell.com ([143.166.224.162]:9111 "EHLO
-	lists.us.dell.com") by vger.kernel.org with ESMTP id S263740AbUFKDBj
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 10 Jun 2004 23:01:39 -0400
-Content-Disposition: inline
-In-Reply-To: <40C8FEF9.5090106@citi.com.mx>
-List-Id: linux-scsi@vger.kernel.org
-To: David Ramirez Joya <dramirez@citi.com.mx>
-Cc: linux-scsi@vger.kernel.org, mailman-owner@us.dell.com, Juan Antonio Garza Garza <jgarza@citi.com.mx>
-
-
---vtzGhvizbBRQ85DL
 Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from ns.virtualhost.dk ([195.184.98.160]:58053 "EHLO virtualhost.dk")
+	by vger.kernel.org with ESMTP id S262322AbUFKJY2 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 11 Jun 2004 05:24:28 -0400
 Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+In-Reply-To: <1086805796.3741.5.camel@patibmrh9>
+List-Id: linux-scsi@vger.kernel.org
+To: Pat LaVarre <p.lavarre@ieee.org>
+Cc: dougg@torque.net, linux-scsi@vger.kernel.org
 
-On Thu, Jun 10, 2004 at 07:38:17PM -0500, David Ramirez Joya wrote:
-> Dell Moderator: I Subscribed to the linux-scsi mailing list in order to=
-=20
-> send this message maybe it should be sent to another list _please_ help=
-=20
-> me and send it to the porper list if this is not the one.
+On Wed, Jun 09 2004, Pat LaVarre wrote:
+> Jens A:
+> 
+> > a) kernel.org 2.6.7-rc3 plus the patch of this thread,
+> > b) PATAPI drive connected as /dev/hdd,
+> > c) open of /dev/hdd with flags O_NONBLOCK|O_RDWR, ioctl SG_IO
+> > d) cdb = x 1B 00:00:00 00 00 // Stop
+> > e) cdb = x 1B 00:00:00 01 00 // Start
+> 
+> Yes now "Hn" (i.e. expecting no data) works here, every time I try.
 
-linux-scsi is appropriate for general megaraid driver questions.  This is m=
-ore
-related to a particular hardware platform and OS combination, and as
-such, linux-poweredge@dell.com (subscribe at http://lists.us.dell.com)
-is probably more appropriate.  But I'll answer best as I can here.
+Good
 
-> I have a Dell Poweredge 1750 with the PERC 4Di SCSI controller.
+> > For data transfer, it's more tricky. Well actually, if you restrict
+> > yourself to non-bio backed request, then it becomes pretty trivial!
+> > ide-floppy expects a contig buffer, a bio is scattered by nature.
+> 
+> Yes "Hi" (i.e. expecting data in) gives me zeroes.
 
-OK, and thanks for buying Dell. :-)
-=20
-> I HAVE to install redhat 7.3 on this platform.
-> Now, for now I have no option but to install Redhat 7.3 o 7.2 on this=20
-> server. This is because a software product requires the kernel version=20
-> included in this distribution version.
+Not so good... I'll take a 2nd look and get you something to test,
+unfortunately I cannot test here as I have no atapi floppy drives.
 
-Given that the OS vendor no longer officially supports these versions,
-you may wish to have your vendor reconsider on those grounds.
+-- 
+Jens Axboe
 
-> I have downloaded the DKMS megaraid2-2.10.1 driver. I have managed to=20
-> compile it with the kernel version 2.4.18-3.
-
-Cool.  Glad you were able to make DKMS work for you.
-
-> So after I managed for the driver to compile, I mkdriverdisk with dkms,=
-=20
-
-Here's the interesting part.=20
-a) Which kernels did you compile the driver for?  If you didn't
-include the -BOOT variant (dkms -k 2.4.18-3BOOT) in the list you built
-it for, then the driver disk won't work of course.  You'll want to
-build it for the 2.4.18-3smp too I expect, then mkdriverdisk will put
-all you built on the disk.
-
-b) on what system (OS version, compiler) did you build this?  You must
-use the same compiler, gcc 2.96 era from RHL7.3, to compile kernel
-modules for 7.3.  You can't use gcc 3.x and have it work.
-
-> created the driver disk and I tried to make the driver to work with=20
-> "linux dd". The driver diskette was "incompatible with this version of=20
-> RedHat". I found out that there was missing the "- rh73" at the end of=20
-> the modinfo an disk-info line which state the driver name... With this=20
-> modification I managed to make RedHat 7.3 to "accept" the driver disk.=20
-> But the module is not accepted.
->=20
-> I looked on the logs, the problem is RedHat knows that the Megaraid=20
-> Driver needs a "Hardware SCSI" driver (I do not know how to call this)=20
-> which is one of aacraid, aic7xxx then it looks for the megaraid2.o !!!=20
-> driver on the BOOT Image of the redhat 7.3 Installation... Or so I=20
-> think. (please correct me if I am wrong but I guess this is what happens=
-=20
-> on the boot sequence).
-
-It should be looking for that on the floppy, which I expect you didn't
-build it.
-
-> If yes, please send me a clue on how to do it!!! Do I need to recompile=
-=20
-> the megaraid2 driver with special options? Do I have to recreate the=20
-> accraid driver? aic7xxx driver??? A special patch not publicy=20
-> disclosed??? :-S
-
-No, megaraid2 is appropriate.  You're pretty close...  and I'm glad
-you're using DKMS as it's intended to be used, exactly for backporting
-newer drivers to older kernels.
-
-On your build system, do a 'dkms install -m megaraid2 -v 2.10.1 -k
-2.4.18-3BOOT' (you've got that kernel installed on your build system,=20
-right?  Depmod will tell you if that fails, and then you can fix it up
-before making the driver disk.
-
-Good luck.
--Matt
-
---=20
-Matt Domsch
-Sr. Software Engineer, Lead Engineer
-Dell Linux Solutions linux.dell.com & www.dell.com/linux
-Linux on Dell mailing lists @ http://lists.us.dell.com
-
---vtzGhvizbBRQ85DL
-Content-Type: application/pgp-signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.2.1 (GNU/Linux)
-
-iD8DBQFAySCRIavu95Lw/AkRAlZdAJ9JhytF2NJZNJjReR5DQHJC54rkbQCgi1eM
-THcT/2k+omXSeamNHDTqg4g=
-=YE6i
------END PGP SIGNATURE-----
-
---vtzGhvizbBRQ85DL--
