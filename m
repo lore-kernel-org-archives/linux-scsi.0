@@ -1,42 +1,40 @@
-From: Linus Torvalds <torvalds@osdl.org>
-Subject: Re: [linux-usb-devel] Re: USB storage problems on OHCI..
-Date: Mon, 22 Sep 2003 11:40:27 -0700 (PDT)
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44.0309221133220.2153-100000@home.osdl.org>
-References: <3F6F3632.6020300@pacbell.net>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: Re: USB storage problems on OHCI..
+Date: Mon, 22 Sep 2003 19:46:05 +0100
+Sender: linux-usb-devel-admin@lists.sourceforge.net
+Message-ID: <1064256363.8895.11.camel@dhcp23.swansea.linux.org.uk>
+References: <Pine.LNX.4.44.0309220900440.1753-100000@home.osdl.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fw.osdl.org ([65.172.181.6]:59319 "EHLO mail.osdl.org")
-	by vger.kernel.org with ESMTP id S261954AbTIVSkh (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 22 Sep 2003 14:40:37 -0400
-In-Reply-To: <3F6F3632.6020300@pacbell.net>
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-usb-devel-admin@lists.sourceforge.net>
+In-Reply-To: <Pine.LNX.4.44.0309220900440.1753-100000@home.osdl.org>
+Errors-To: linux-usb-devel-admin@lists.sourceforge.net
+List-Help: <mailto:linux-usb-devel-request@lists.sourceforge.net?subject=help>
+List-Post: <mailto:linux-usb-devel@lists.sourceforge.net>
+List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-devel>,
+	<mailto:linux-usb-devel-request@lists.sourceforge.net?subject=subscribe>
+List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-devel>,
+	<mailto:linux-usb-devel-request@lists.sourceforge.net?subject=unsubscribe>
+List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=linux-usb-devel>
+To: Linus Torvalds <torvalds@osdl.org>
+Cc: Patrick Mansfield <patmans@us.ibm.com>, Christoph Hellwig <hch@infradead.org>, Alan Stern <stern@rowland.harvard.edu>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, David Brownell <david-b@pacbell.net>, Greg KH <greg@kroah.com>, USB development list <linux-usb-devel@lists.sourceforge.net>, SCSI development list <linux-scsi@vger.kernel.org>, Andries.Brouwer@cwi.nl
 List-Id: linux-scsi@vger.kernel.org
-To: David Brownell <david-b@pacbell.net>
-Cc: Alan Stern <stern@rowland.harvard.edu>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, Greg KH <greg@kroah.com>, USB development list <linux-usb-devel@lists.sourceforge.net>, SCSI development list <linux-scsi@vger.kernel.org>
+
+On Llu, 2003-09-22 at 17:09, Linus Torvalds wrote:
+>  - page len=1538 (pretty obviously crap)
+>  - header len=8 (correct)
+>  - block descriptor len=0 (correct)
+
+1538 smells like they forgot to clear the top byte
 
 
-On Mon, 22 Sep 2003, David Brownell wrote:
-> > Again, this case worked fine with the sd.c changes, so it does seem to be 
-> > all related to "big" transfers out of the mode page.
-> 
-> Or at any rate, "big enough" to confuse the device.
 
-Yes. Additional testing (making the code just increase the size of the 
-transfer until it fails) shows that a size of 63 still works, but a size 
-of 64 bytes fails.
-
-Actually - with a 64-byte transfer, we appear to get the 64 bytes ok, but 
-the subsequent CSW status word read fails, so the 64-byte case seems to be 
-the one that starts confusing the device.
-
-If I remember right, USB-1 "big packets" are 64 bytes in size, and a 
-64-byte bulk transfer would be two packets (one full-sized one, one 
-zero-sized one). So this seems to support the notion that the device is 
-fine as long as it can fit the whole bulk transfer in just one packet.
-
-Which cleanly explains why EHCI "just worked". 
-
-			Linus
-
+-------------------------------------------------------
+This sf.net email is sponsored by:ThinkGeek
+Welcome to geek heaven.
+http://thinkgeek.com/sf
+_______________________________________________
+linux-usb-devel@lists.sourceforge.net
+To unsubscribe, use the last form field at:
+https://lists.sourceforge.net/lists/listinfo/linux-usb-devel
