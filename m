@@ -1,38 +1,78 @@
-From: John Hasler <john@dhh.gt.org>
-Subject: Re: Binary-only firmware covered by the GPL?
-Date: Thu, 25 Mar 2004 19:39:33 -0600
+From: "David Schwartz" <davids@webmaster.com>
+Subject: RE: Binary-only firmware covered by the GPL?
+Date: Thu, 25 Mar 2004 18:06:37 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <871xngbd4a.fsf@toncho.dhh.gt.org>
-References: <E1B6Izr-0002Ai-00@r063144.stusta.swh.mhn.de>
-	<20040325082949.GA3376@gondor.apana.org.au>
-	<20040325220803.GZ16746@fs.tum.de> <40635DD9.8090809@pobox.com>
-	<20040326003339.GD25059@parcelfarce.linux.theplanet.co.uk>
-	<81ptb0wh45.wl@omega.webmasters.gr.jp>
+Message-ID: <MDEHLPKNGKAHNMBLJOLKAEFILEAA.davids@webmaster.com>
+References: <81ptb0wh45.wl@omega.webmasters.gr.jp>
+Reply-To: davids@webmaster.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sa-2.airstreamcomm.net ([64.33.192.162]:41997 "EHLO
-	sa-2.airstreamcomm.net") by vger.kernel.org with ESMTP
-	id S263812AbUCZBdu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 25 Mar 2004 20:33:50 -0500
-In-Reply-To: <81ptb0wh45.wl@omega.webmasters.gr.jp> (GOTO Masanori's message
- of "Fri, 26 Mar 2004 10:07:38 +0900")
+Received: from mail1.webmaster.com ([216.152.64.168]:29969 "EHLO
+	mail1.webmaster.com") by vger.kernel.org with ESMTP id S263816AbUCZCHM
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 25 Mar 2004 21:07:12 -0500
+In-Reply-To: <81ptb0wh45.wl@omega.webmasters.gr.jp>
 List-Id: linux-scsi@vger.kernel.org
-To: 239952@bugs.debian.org, debian-devel@lists.debian.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Matthew Wilcox <willy@debian.org>
+Cc: Jeff Garzik <jgarzik@pobox.com>, Adrian Bunk <bunk@fs.tum.de>, 239952@bugs.debian.org, debian-devel@lists.debian.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-GOTO Masanori writes:
+
+
+> At Fri, 26 Mar 2004 00:33:39 +0000,
+
+> Matthew Wilcox wrote:
+
+> > I realise there's a grey area between "magic data you write to a device"
+> > and "a program that is executed on a different processor".  For example,
+> > palette data for a frame buffer.  But nobody's arguing for that grey
+> > area here -- it's clearly a program without source code that Debian
+> > can't distribute.
+
+> Well, I also think this is grey area.
+
+	On what basis? How is this file different from an executable?
+
+	The gray area cases are where the code, as orginally written, is obscure.
+Perhaps because it uses 'magic numbers' from data sheets rather than
+symbolic constants. However, the GPL doesn't require you to add comments or
+to write clear code. It simply prohibits deliberate obfuscation by one
+particular means, namely having two forms of the code, one that you
+distribute and one that you use to make modifications. (Other forms of
+obfuscation are the gray areas.)
+
+	But this case is squarely where the GPL says "no". In this case, there is
+one form of the firmware for the purposes of making modifications to it and
+there is another form that's distributed, ostensibly under the GPL.
+
 > But think about: why can we distribute assembler only code in linux
-> kernel?
+> kernel?  It's near to binary form (objdump -d is your friend).
 
-Was it not written in assembler?  If so, there is no problem.
+	We can distribute binaries if we want. The issue is that we cannot
+distribute in any form and withhold the preferred form of the code for the
+purpose of making modifications to it. How easy or hard it is to modify is
+not the issue, one just can't take active steps to make it harder by
+withholding the 'real source'.
 
-> If they insist this source code is GPL, then I think this code is covered
-> under GPL at least for this case.  If it's GPL, then we can derive the
-> newer firmware code from this original ql2100_fw.c freely.
+> If they insist this source code is GPL, then I think this code is
+> covered under GPL at least for this case.  If it's GPL, then we can
+> derive the newer firmware code from this original ql2100_fw.c freely.
 
-I don't follow you.  What source code?
--- 
-John Hasler
-john@dhh.gt.org (John Hasler)
-Dancing Horse Hill
-Elmwood, WI
+	I can't figure out what you're trying to say here. The file claims it is
+GPL'd. If it is, then whoever receives it has a right to a copy of the
+preferred form of that file for the purpose of making modifications to it.
+Anyone who cannot distribute that preferred form cannot, according to the
+GPL, distribute the other form.
+
+	Bluntly, that file is the preferred form of the firmware for the purpose of
+using or executing it. The GPL requires the preferred form for the purpose
+of making modifications.
+
+	IMO, the 'whole work' and 'linking' arguments are not important. The issue
+is clear just from looking at this one file and what is required to
+distribute it itself.
+
+	DS
+
