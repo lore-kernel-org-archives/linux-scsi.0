@@ -1,34 +1,36 @@
-From: Oliver Neukum <oliver@neukum.org>
-Subject: Re: [linux-usb-devel] Re: Unaligned scatter-gather buffers and usb-storage
-Date: Wed, 19 Nov 2003 14:01:34 +0100
+From: 'Christoph Hellwig' <hch@infradead.org>
+Subject: Re: Request for review of Linux iSCSI driver version 4.0.0.1
+Date: Wed, 19 Nov 2003 13:10:01 +0000
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <200311191401.34540.oliver@neukum.org>
-References: <20031110095914.B22518@beaverton.ibm.com> <20031118143720.A6411@beaverton.ibm.com> <20031119084729.GA1106@suse.de>
+Message-ID: <20031119131001.A11902@infradead.org>
+References: <20031027153932.A16679@infradead.org> <012101c3ae9d$b0a3d010$8f074d0a@apac.cisco.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail1.kontent.de ([81.88.34.36]:1480 "EHLO Mail1.KONTENT.De")
-	by vger.kernel.org with ESMTP id S264038AbTKSNCN (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 19 Nov 2003 08:02:13 -0500
-In-Reply-To: <20031119084729.GA1106@suse.de>
+Received: from pub234.cambridge.redhat.com ([213.86.99.234]:15111 "EHLO
+	phoenix.infradead.org") by vger.kernel.org with ESMTP
+	id S264055AbTKSNKC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 19 Nov 2003 08:10:02 -0500
 Content-Disposition: inline
+In-Reply-To: <012101c3ae9d$b0a3d010$8f074d0a@apac.cisco.com>; from smhatre@cisco.com on Wed, Nov 19, 2003 at 06:34:39PM +0530
 List-Id: linux-scsi@vger.kernel.org
-To: Jens Axboe <axboe@suse.de>, Patrick Mansfield <patmans@us.ibm.com>
-Cc: Alan Stern <stern@rowland.harvard.edu>, Douglas Gilbert <dougg@torque.net>, SCSI development list <linux-scsi@vger.kernel.org>, USB development list <linux-usb-devel@lists.sourceforge.net>
+To: "Sachin Mhatre (smhatre)" <smhatre@cisco.com>
+Cc: linux-scsi@vger.kernel.org, davmyers@cisco.com
 
-
-> > You could add a scsi_host fields or bits specifying alignment
-> > restrictions, and enforce them as needed in upper level drivers.
+On Wed, Nov 19, 2003 at 06:34:39PM +0530, Sachin Mhatre (smhatre) wrote:
+> Hi Christopher,
+> 	Could you please elaborate on this review comment? 
+> 	- kill ctl_open/ctl_release and move add an owner to the fops
+> structure for refcounting.
 > 
-> The queue already has such a restriction embedded, see bio_map_user()
-> and queue_dma_alignment().
+> Especially, what do you mean by "move add an owner to the fops structure
+> for refcounting" ? We already use the .owner field in the
+> file_operations template. What else are you refering to?
 
-Very well, as far as sd and sr are concerned, but it doesn't help for
-sg and st, does it?
-
-	Regards
-		Oliver
+I currently do not have the code in front of me, but IIRC ctl_open/ctl_release
+was only doing MOD_INC_USE_COUNT/MOD_DEC_USE_COUNT (or even a broken
+equivalent).  These days all refcounting is done by higher levels if you
+provide a owner (=THIS_MODULE) field in struct file_operations and these
+methods could be removed.  If you already have the owner set that's even
+easier..
 
