@@ -1,35 +1,60 @@
-From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: Linux Kernel 2.4.18 and 2.4.19 problems
-Date: Thu, 25 Jul 2002 08:40:01 -0400 (EDT)
+From: sullivan <sullivan@austin.ibm.com>
+Subject: Re: Removal of driverfs files in drivers/cdrom/cdrom.c
+Date: Thu, 25 Jul 2002 08:36:49 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.3.96.1020725083832.11202A-100000@gatekeeper.tmr.com>
-References: <20020719225507.GC14331@stud.ntnu.no>
+Message-ID: <20020725083649.D1757@austin.ibm.com>
+References: <Pine.LNX.4.44.0207241456570.954-100000@cherise.pdx.osdl.net>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <20020719225507.GC14331@stud.ntnu.no>
+Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.44.0207241456570.954-100000@cherise.pdx.osdl.net>; from mochel@osdl.org on Wed, Jul 24, 2002 at 02:57:11PM -0700
 List-Id: linux-scsi@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: Austin Gonyou <austin@digitalroadkill.net>, Patrick Mansfield <patmans@us.ibm.com>, linux-scsi@vger.kernel.org
+To: Patrick Mochel <mochel@osdl.org>
+Cc: linux-scsi@vger.kernel.org
 
-On Sat, 20 Jul 2002, Thomas [iso-8859-1] Lang=E5s wrote:
+On Wed, Jul 24, 2002 at 02:57:11PM -0700, Patrick Mochel wrote:
+> 
+> 
+> So, I'm looking at changing the driverfs API. In doring so, I came across 
+> this code in drivers/cdrom/cdrom.c:unregister_cdrom:
+> 
+>         if (atomic_read (&cdi->cdrom_driverfs_dev.refcount)) {
+>                 device_remove_file (&cdi->cdrom_driverfs_dev, "name");
+>                 device_remove_file (&cdi->cdrom_driverfs_dev, "kdev");
+>                 put_device (&cdi->cdrom_driverfs_dev);
+>         }
+> 
+> This looks wrong, based on the fact that it wasn't the cdrom layer that 
+> created these files. They were, I believe, created by the SCSI cdrom 
+> layer. So, why are they being removed here, esp. since they are removed at 
+> a more general layer? 
 
-> Why?  The vanilla kernel works fine with what we have in production,
-> but not with the new P4 Dual Xeon.
+Yes, I struggled with this one. I would prefer the implementation where the
+lower layer (ie. scsi, ide) setup only the parent and bus fields of the
+cdrom_driverfs_dev structure and let the more general layer (cdrom.c) do the
+rest as part of the register_cdrom() call. Similarily, unregister_cdrom() would
+do the removal.
 
-I know it's not likely to be related in any way, but did you try bootin=
-g
-with hyperthreading off? I believe I saw four CPUs in the stuff you
-posted, but it's gone now.
+Since there are a lot of drivers that register with the general cdrom layer 
+that don't support driverfs yet, I didn't want to make changes across a whole
+bunch of components needlessly until people got a chance to look at what the
+device tree might look like for the scsi implementation. 
 
---=20
-bill davidsen <davidsen@tmr.com>
-  CTO, TMR Associates, Inc
-Doing interesting things with little computers since 1979.
+Maybe a first good step would be to move the cdrom support completely up into
+the general layer and use the presence of a non NULL parent field to indicate
+whether the lower level driver has added support for driverfs. We'd have to
+make sure the cdrom_drverfs_dev structure is initialized with zeros for all of
+the cdrom related driver layers that don't support driverfs yet. Let me know
+what you think. I'll pull a patch together... 
 
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+> Thanks,
+> 
+>         -pat
+> 
+> 
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
