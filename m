@@ -1,72 +1,89 @@
-From: Brian King <brking@us.ibm.com>
-Subject: [PATCH] Recognize device type 0x0C
-Date: Thu, 22 Jan 2004 17:35:20 -0600
+From: Anton Blanchard <anton@samba.org>
+Subject: Re: [PATCH] qla2xxx - perform proper SNS scans with ISP2200 HBAs.
+Date: Fri, 23 Jan 2004 11:18:17 +1100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <40105E38.4020501@us.ibm.com>
+Message-ID: <20040123001817.GG11236@krispykreme>
+References: <B179AE41C1147041AA1121F44614F0B0598E53@AVEXCH02.qlogic.org>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------040607090504090502070607"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e2.ny.us.ibm.com ([32.97.182.102]:10468 "EHLO e2.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S266453AbUAVXfW (ORCPT
+Received: from dp.samba.org ([66.70.73.150]:59030 "EHLO lists.samba.org")
+	by vger.kernel.org with ESMTP id S266482AbUAWATa (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 22 Jan 2004 18:35:22 -0500
-Received: from northrelay04.pok.ibm.com (northrelay04.pok.ibm.com [9.56.224.206])
-	by e2.ny.us.ibm.com (8.12.10/8.12.2) with ESMTP id i0MNZL4r399092
-	for <linux-scsi@vger.kernel.org>; Thu, 22 Jan 2004 18:35:21 -0500
-Received: from us.ibm.com (d01av02.pok.ibm.com [9.56.224.216])
-	by northrelay04.pok.ibm.com (8.12.10/NCO/VER6.6) with ESMTP id i0MNZKIF123138
-	for <linux-scsi@vger.kernel.org>; Thu, 22 Jan 2004 18:35:21 -0500
+	Thu, 22 Jan 2004 19:19:30 -0500
+Content-Disposition: inline
+In-Reply-To: <B179AE41C1147041AA1121F44614F0B0598E53@AVEXCH02.qlogic.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-
-This is a multi-part message in MIME format.
---------------040607090504090502070607
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+To: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, Andrew Morton <akpm@osdl.org>, linux-scsi@vger.kernel.org
 
 
-Attached is a simple patch to recognize device type 0x0C, since I will
-be creating devices of this type in the ipr driver, I figured it might
-be good if they showed up as RAID devices rather than Unknown.
+Hi Andrew,
 
+> The 2200 firmware doesn't support the MS IOCB interface the driver 
+> uses to issue CT commands to the SNS.  Basically, I had to 
+> forward-port some code from the 6.x driver to get the SNS calls 
+> to go through.  I've had several machines (mixture of 2200s/
+> 2300s/others with loop and fabric connections) running with this
+> patch for the past few days.
 
+I applied your patch to 2.6.2-rc1 and tested it on my ppc64 box. Looks
+like its not happy :) Maybe a 64bit or big endian issue?
 
--- 
-Brian King
-eServer Storage I/O
-IBM Linux Technology Center
+Anton
 
---------------040607090504090502070607
-Content-Type: text/plain;
- name="patch-2.6.1-array_controller"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="patch-2.6.1-array_controller"
-
-diff -Naur linux-2.6.1/drivers/scsi/scsi.c linux-2.6.1-sacl/drivers/scsi/scsi.c
---- linux-2.6.1/drivers/scsi/scsi.c	Fri Jan  9 00:59:34 2004
-+++ linux-2.6.1-sacl/drivers/scsi/scsi.c	Thu Jan 22 14:17:50 2004
-@@ -104,7 +104,7 @@
- 	"Communications   ",
- 	"Unknown          ",
- 	"Unknown          ",
--	"Unknown          ",
-+	"RAID             ",
- 	"Enclosure        ",
- };
- 
-diff -Naur linux-2.6.1/include/scsi/scsi.h linux-2.6.1-sacl/include/scsi/scsi.h
---- linux-2.6.1/include/scsi/scsi.h	Fri Jan  9 01:00:12 2004
-+++ linux-2.6.1-sacl/include/scsi/scsi.h	Thu Jan 22 14:19:03 2004
-@@ -193,6 +193,7 @@
- #define TYPE_MEDIUM_CHANGER 0x08
- #define TYPE_COMM           0x09    /* Communications device */
- #define TYPE_ENCLOSURE      0x0d    /* Enclosure Services Device */
-+#define TYPE_RAID           0x0c
- #define TYPE_NO_LUN         0x7f
- 
- /*
-
---------------040607090504090502070607--
-
+QLogic ISP2xxx PCI/PCI-X Fibre Channel HBA Driver (c00000000063a028)
+PCI: Enabling device: (0003:41:01.0), cmd 143
+qla2200 0003:41:01.0: Found an ISP2200, irq 183, iobase 0xa000000080020000
+qla2200 0003:41:01.0: Configuring PCI space...
+qla2200 0003:41:01.0: Configure NVRAM parameters...
+qla2200 0003:41:01.0: Verifying loaded RISC code...
+qla2200 0003:41:01.0: LIP reset occured (0).
+qla2200 0003:41:01.0: Waiting for LIP to complete...
+qla2200 0003:41:01.0: LOOP UP detected (1 Gbps).
+qla2200 0003:41:01.0: Topology - (F_Port), Host Loop address 0xffff
+scsi0 : qla2xxx
+qla2200 0003:41:01.0:
+ QLogic ISP2xxx PCI/PCI-X Fibre Channel HBA Driver: 8.00.00b8
+  QLogic QLA22xx -
+  ISP2200: PCI (66 MHz) @ 0003:41:01.0 hdma-, host#=0, fw=2.02.06 TP
+qla2200 0003:41:01.0: Invalid ISP SCSI completion handle
+qla2200 0003:41:01.0: Performing ISP error recovery - ha= c00000000fd202e0.
+qla2200 0003:41:01.0: LIP reset occured (0).
+qla2200 0003:41:01.0: LOOP UP detected (1 Gbps).
+qla2200 0003:41:01.0: Invalid ISP SCSI completion handle
+qla2200 0003:41:01.0: Performing ISP error recovery - ha= c00000000fd202e0.
+qla2200 0003:41:01.0: LIP reset occured (f7f7).
+qla2200 0003:41:01.0: LOOP UP detected (1 Gbps).
+qla2200 0003:41:01.0: Invalid ISP SCSI completion handle
+qla2200 0003:41:01.0: Performing ISP error recovery - ha= c00000000fd202e0.
+qla2200 0003:41:01.0: LIP reset occured (f7f7).
+qla2200 0003:41:01.0: LOOP UP detected (1 Gbps).
+qla2200 0003:41:01.0: Invalid ISP SCSI completion handle
+qla2200 0003:41:01.0: Performing ISP error recovery - ha= c00000000fd202e0.
+qla2200 0003:41:01.0: LIP reset occured (f7f7).
+qla2200 0003:41:01.0: LOOP UP detected (1 Gbps).
+qla2200 0003:41:01.0: Invalid ISP SCSI completion handle
+qla2200 0003:41:01.0: Performing ISP error recovery - ha= c00000000fd202e0.
+qla2200 0003:41:01.0: LIP reset occured (f7f7).
+qla2200 0003:41:01.0: LOOP UP detected (1 Gbps).
+qla2200 0003:41:01.0: Invalid ISP SCSI completion handle
+qla2200 0003:41:01.0: Performing ISP error recovery - ha= c00000000fd202e0.
+qla2200 0003:41:01.0: LIP reset occured (f7f7).
+qla2200 0003:41:01.0: LOOP UP detected (1 Gbps).
+qla2200 0003:41:01.0: Invalid ISP SCSI completion handle
+qla2200 0003:41:01.0: Performing ISP error recovery - ha= c00000000fd202e0.
+qla2200 0003:41:01.0: LIP reset occured (f7f7).
+qla2200 0003:41:01.0: LOOP UP detected (1 Gbps).
+qla2200 0003:41:01.0: Invalid ISP SCSI completion handle
+qla2200 0003:41:01.0: Performing ISP error recovery - ha= c00000000fd202e0.
+qla2200 0003:41:01.0: LIP reset occured (f7f7).
+qla2200 0003:41:01.0: LOOP UP detected (1 Gbps).
+qla2200 0003:41:01.0: Invalid ISP SCSI completion handle
+qla2200 0003:41:01.0: Performing ISP error recovery - ha= c00000000fd202e0.
+qla2200 0003:41:01.0: LIP reset occured (f7f7).
+qla2200 0003:41:01.0: LOOP UP detected (1 Gbps).
+qla2200 0003:41:01.0: Invalid ISP SCSI completion handle
+qla2200 0003:41:01.0: Performing ISP error recovery - ha= c00000000fd202e0.
+qla2200 0003:41:01.0: LIP reset occured (f7f7).
+qla2200 0003:41:01.0: LOOP UP detected (1 Gbps).
