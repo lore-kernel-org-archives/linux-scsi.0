@@ -1,93 +1,48 @@
-From: "Moore, Eric Dean" <Eric.Moore@lsil.com>
-Subject: RE: Fusion-MPT much faster as module
-Date: Mon, 21 Mar 2005 16:46:44 -0700
-Message-ID: <91888D455306F94EBD4D168954A9457C01AEAC93@nacos172.co.lsil.com>
+From: adam radford <aradford@gmail.com>
+Subject: Re: [BK PATCH] SCSI updates for 2.6.11
+Date: Mon, 21 Mar 2005 17:48:39 -0800
+Message-ID: <b1bc6a00050321174865144cbf@mail.gmail.com>
+References: <1110934411.5685.39.camel@mulgrave> <42387C7C.9040407@pobox.com>
+	 <1111003679.5635.3.camel@mulgrave> <42389797.7000004@pobox.com>
+	 <1111011693.6544.5.camel@mulgrave>
+Reply-To: adam radford <aradford@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
-Received: from mail0.lsil.com ([147.145.40.20]:20717 "EHLO mail0.lsil.com")
-	by vger.kernel.org with ESMTP id S262195AbVCUXrE (ORCPT
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Received: from wproxy.gmail.com ([64.233.184.194]:49729 "EHLO wproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S262195AbVCVBso (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 21 Mar 2005 18:47:04 -0500
+	Mon, 21 Mar 2005 20:48:44 -0500
+Received: by wproxy.gmail.com with SMTP id 68so1187317wra
+        for <linux-scsi@vger.kernel.org>; Mon, 21 Mar 2005 17:48:39 -0800 (PST)
+In-Reply-To: <1111011693.6544.5.camel@mulgrave>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>, Holger Kiehl <Holger.Kiehl@dwd.de>, augustus@linuxhardware.org
-Cc: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@steeleye.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-Sorry for delay in responding.
-We at LSI Logic are looking into these reports
-of poor performance coming from the U320.
-I will report later.
+I'm in the process of creating a patch that contains Jeff's fixes, and the
+change_queue_depth api change from James, etc.  I will post it shortly.
 
-Eric Moore
-LSI Logic
+-Adam
 
 
-On Monday, March 21, 2005 4:27 PM, Andrew Morton wrote:
+On Wed, 16 Mar 2005 17:21:33 -0500, James Bottomley
+<James.Bottomley@steeleye.com> wrote:
+> On Wed, 2005-03-16 at 15:31 -0500, Jeff Garzik wrote:
+> > More info?  Were they dropped on purpose, or just never arrived?
+> > If dropped on purpose, what was the reason?
+> 
+> You posted substantive updates to a maintained driver.  Adam Radford is
+> the maintainer, but I haven't heard anything from him (neither ACK, NAK
+> or "this is my latest set of updates containing these patches") so could
+> you poke him, please.
+> 
+> James
 > 
 > 
-> Holger Kiehl <Holger.Kiehl@dwd.de> wrote:
-> >
-> > Hello
-> > 
-> > On a four CPU Opteron compiling the Fusion-MPT as module 
-> gives much better
-> > performance when compiling it in, here some bonnie++ results:
-> > 
-> > Version  1.03       ------Sequential Output------ 
-> --Sequential Input- --Random-
-> >                      -Per Chr- --Block-- -Rewrite- -Per 
-> Chr- --Block-- --Seeks--
-> > Machine        Size K/sec %CP K/sec %CP K/sec %CP K/sec %CP 
-> K/sec %CP  /sec %CP
-> > compiled in  15872M 38366 71  65602  22 18348   4 53276 84  
-> 57947   7 905.4   2
-> > module       15872M 51246 96 204914  70 57236  14 59779 96 
-> 264171  33 923.0   2
-> > 
-> > This happens with 2.6.10, 2.6.11 and 2.6.11-bk2. Controller is a
-> > Symbios Logic 53c1030 PCI-X Fusion-MPT Dual Ultra320 SCSI.
-> > 
-> > Why is there such a large difference?
-> > 
-> 
-> Holger, this problem remains unresolved, does it not?  Have 
-> you done any
-> more experimentation?
-> 
-> I must say that something funny seems to be happening here.  
-> I have two
-> MPT-based Dell machines, neither of which is using a modular driver:
-> 
-> 
-> akpm:/usr/src/25> 0 hdparm -t /dev/sda
-> 
-> /dev/sda:
->  Timing buffered disk reads:  64 MB in  5.00 seconds = 12.80 MB/sec
-> 
-> That's a bit disappointing.  Running 2.6.9-rc2-mm2(!) with a
-> 
->  SCSI storage controller: LSI Logic / Symbios Logic 53c1030 (rev 07)
-> 
-> controller on disks which shudl hit 50MB/sec.
-> 
-> 
-> 
-> 
-> And
-> 
-> bix:/home/akpm# hdparm -t /dev/sda
-> 
-> /dev/sda:
->  Timing buffered disk reads:  114 MB in  3.03 seconds =  37.57 MB/sec
-> 
-> with 2.6.11-rc4-mm1 using
-> 
-> Fusion MPT SCSI Host driver 3.01.16
-> scsi0 : ioc0: LSI53C1030, FwRev=01030600h, Ports=1, MaxQ=222, IRQ=25
-> scsi1 : ioc1: LSI53C1030, FwRev=01030600h, Ports=1, MaxQ=222, IRQ=26
-> Vendor: SEAGATE   Model: ST3146807LW       Rev: DS09
-> Type:   Direct-Access                      ANSI SCSI revision: 03
-> 
-> Better, but again I'd expect >50MB/sec.
-> 
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
