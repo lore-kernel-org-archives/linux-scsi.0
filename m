@@ -1,63 +1,65 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: [PATCH] fix cdrom mt rainier probe
-Date: Wed, 14 Jul 2004 07:41:33 +0200
+From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+Subject: BK: scsi-misc cs inconsistencies?
+Date: Wed, 14 Jul 2004 12:24:29 +0200 (CEST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040714054133.GI3055@suse.de>
-References: <1089741428.3806.3.camel@patibmrh9> <1089752141.3786.3.camel@patibmrh9>
+Message-ID: <Pine.LNX.4.60.0407141209450.2892@poirot.grange>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns.virtualhost.dk ([195.184.98.160]:30351 "EHLO virtualhost.dk")
-	by vger.kernel.org with ESMTP id S267219AbUGNFle (ORCPT
+Received: from pop.gmx.net ([213.165.64.20]:27023 "HELO mail.gmx.net")
+	by vger.kernel.org with SMTP id S267353AbUGNK1u (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 14 Jul 2004 01:41:34 -0400
-Content-Disposition: inline
-In-Reply-To: <1089752141.3786.3.camel@patibmrh9>
+	Wed, 14 Jul 2004 06:27:50 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: Pat LaVarre <p.lavarre@ieee.org>
+To: James Bottomley <James.Bottomley@steeleye.com>
 Cc: linux-scsi@vger.kernel.org
 
-On Tue, Jul 13 2004, Pat LaVarre wrote:
-> > > Mt rainier probe must be deferred to media load time, ...
-> > ...
-> > something broke in deciding disc rewritable or not? ...
-> > Only for /dev/hdd PATAPI, not for /dev/scd0 USB?
-> 
-> Can any of us easily sketch a legit fix for this?  By now we know,
-> 
-> a)
-> 
-> The key evil is not getting back 0 0 in reply to the query:
-> 
-> $ sudo blockdev --getro /dev/hdd /dev/scd0
-> 1
-> 0
-> $
-> 
-> b)
-> 
-> A completely bogus hack of a workaround is:
-> 
-> sudo blockdev --setrw /dev/hdd
-> 
-> c)
-> 
-> Below is that same completely bogus hack, expressed as a kernel patch
-> Not suitable for kernel.org.
-> 
-> Pat LaVarre
-> http://linux-pel.blog-city.com/read/728344.htm
-> 
-> --- linux-2.6.8-rc1/drivers/ide/ide-cd.c	2004-07-13 08:26:05.000000000 -0600
-> +++ linux-2.6.8-rc1-pel/drivers/ide/ide-cd.c	2004-07-13 14:33:40.000000000 -0600
-> @@ -3251,6 +3251,7 @@ int ide_cdrom_setup (ide_drive_t *drive)
->  	 * set correct block size and read-only for non-ram media
->  	 */
->  	set_disk_ro(drive->disk, !CDROM_CONFIG_FLAGS(drive)->ram);
-> +	set_disk_ro(drive->disk, 0);
+Hello
 
-Trace that backwards and find out why ->ram isn't getting set.
+I've searched scsi-misc cs-entries on bk, and they don't seem to be quite 
+consistent:
 
--- 
-Jens Axboe
+Linux kernel tree Search results for "tmscsim" in ChangeSet comments
+
+Filename  Rev		Match
+
+ChangeSet 1.1861	[PATCH] tmscsim: kernel bugzilla bug #2139 
+ChangeSet 1.1760.31.6	[PATCH] kill obsolete typedefs and wrappers from tmscsim 
+ChangeSet 1.1760.31.5	[PATCH] some tmscsim consolidation 
+(6)
+ChangeSet 1.1760.31.5	> I've looked through my old tmscsim patch queue and found this one: 
+(7)
+ChangeSet 1.1739.2.17	[PATCH] tmscsim: host_lock use in LLD 
+(1)
+ChangeSet 1.1739.2.17	While reviewing tmscsim, I noticed something, I didn't quite like / 
+(2)
+ChangeSet 1.1739.2.16	[PATCH] tmscsim: init / exit cleanup 
+ChangeSet 1.1722.73.26	[PATCH] tmscsim: 64-bit cleanup 
+(3)
+ChangeSet 1.1722.73.26	tmscsim.c. 
+(4)
+ChangeSet 1.1722.73.5	[PATCH] tmscsim: Store pDCB in device->hostdata 
+ChangeSet 1.1722.45.17	[PATCH] tmscsim: convert to slave_... 
+ChangeSet 1.1722.45.15	[PATCH] tmscsim: remove DeviceCnt 
+ChangeSet 1.1722.45.14	[PATCH] tmscsim: Update version after "new API" 
+ChangeSet 1.1612.6.20	[PATCH] tmscsim: trivial updates 
+ChangeSet 1.1612.6.14	[PATCH] tmscsim: remove legacy and void code 
+ChangeSet 1.1612.6.13	tmscsim: remove procfs write support from tmscsim 
+ChangeSet 1.1612.6.11	[PATCH] tmscsim: no internal queue 
+ChangeSet 1.1612.6.9	[PATCH] tmscsim: 64-bit cleanup 
+(5)
+ChangeSet 1.1371.1.378	[PATCH] Fix tmscsim on amd64 
+ChangeSet 1.1371.94.3	SCSI: Fix tmscsim driver 
+ChangeSet 1.1046.250.59	PCI: remove pci_present() from drivers/scsi/tmscsim.c
+
+Here, (6), (7); (1), (2); and (3), (4) have the same cs-number, (3) and 
+(5) have the same description. Is it a problem with the BK itself, or with 
+the way these entries have been committed? In the former case I can 
+forward this to Larry / BitMover support / whatever. Or is just my 
+understanding wrong and all those fields do not have to be unique?...
+
+Thanks
+Guennadi
+---
+Guennadi Liakhovetski
 
