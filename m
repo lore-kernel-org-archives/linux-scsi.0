@@ -1,39 +1,51 @@
-From: "'Dave Olien'" <dmo@osdl.org>
-Subject: Re: Question about Request Sense case in scsi_lib.c
-Date: Wed, 13 Oct 2004 15:09:07 -0700
+From: Mark Lord <lkml@rtr.ca>
+Subject: Re: [PATCH] QStor SATA/RAID driver for 2.6.9-rc3
+Date: Wed, 13 Oct 2004 18:16:49 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20041013220907.GB30273@osdl.org>
-References: <53CF1076699CD711B7DD0002A51363F1072A6E3A@exw-ks.ks.lsil.com> <20041013214629.GA30273@osdl.org> <1097704592.1714.266.camel@mulgrave>
+Message-ID: <416DA951.2090104@rtr.ca>
+References: <4161A06D.8010601@rtr.ca> <4165B233.9080405@rtr.ca> <416D8A4E.5030106@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fw.osdl.org ([65.172.181.6]:63393 "EHLO mail.osdl.org")
-	by vger.kernel.org with ESMTP id S269875AbUJMWJN (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 13 Oct 2004 18:09:13 -0400
-Content-Disposition: inline
-In-Reply-To: <1097704592.1714.266.camel@mulgrave>
+Received: from cpu1185.adsl.bellglobal.com ([207.236.110.166]:29893 "EHLO
+	mail.rtr.ca") by vger.kernel.org with ESMTP id S269883AbUJMWSj
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 13 Oct 2004 18:18:39 -0400
+In-Reply-To: <416D8A4E.5030106@pobox.com>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: "Qi, Yanling" <yanling.qi@engenio.com>, Douglas Gilbert <dougg@torque.net>, Tim Pepper <tpepper@gmail.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Mark Lord <lsml@rtr.ca>, Linux Kernel <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
 
+ >>
+ >> Right now that's not as easy as it could be, due to the specialized
+ >> libata struct parameters required, but I think it could be harmonized.
+ >
+ >
+ >I recall this but don't see it in my inbox anymore... did I adequately respond?
 
-Sure, I'll get on it right away.
+Well, that makes two of us that have lost the original.  :)
 
-Dave
+No response from you yet, and I don't want to waste the effort
+on patches if they'll be rejected outright, thus the initial query:
 
-On Wed, Oct 13, 2004 at 04:56:25PM -0500, James Bottomley wrote:
-> On Wed, 2004-10-13 at 16:46, 'Dave Olien' wrote:
-> > Now, on to figuring out why some of these requeued commands
-> > fail the requeue.
-> 
-> Yes, I've been wondering that too ... either the second remap is wrong,
-> or something goes awry with the segment recount on a requeue.
-> 
-> In the unit attention, could you print out cmd->use_sg and
-> cmd->request->nr_phys_segments ... just to see what values got set up
-> the first time around, which might give a clue where to look for the
-> problem.
-> 
-> James
-> 
+The change would be as follows:  Export ata_scsi_simulate(),
+and replace the first two parameters (struct ata_port, struct ata_device)
+with a pointer to the 512-byte drive IDENTIFY response data.
+
+That way, ata_scsi_simulate() becomes usable from drivers (like qstor)
+that are not libata based.  The identify data parameter would, of course,
+also be propogated down into all of the associated helper functions
+that get invoked by ata_scsi_simulate() and pals.
+
+At present, this will work, since those routines are only interested
+in the identify data today, but I don't know about any future plans
+there might be for it all.
+
+Of course, even to use this, QStor will still have to create fake
+identify blocks for each RAID device..
+
+Cheers
+-- 
+Mark Lord
+(hdparm keeper & the original "Linux IDE Guy")
