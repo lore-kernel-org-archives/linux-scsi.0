@@ -1,112 +1,48 @@
-From: Neil Horman <nhorman@redhat.com>
-Subject: Re: patch so cciss stats are collected in /proc/stat
-Date: Wed, 29 Sep 2004 15:39:49 -0400
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: BUG: CD driver sends command during host removal
+Date: 29 Sep 2004 15:39:47 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <415B0F85.3090808@redhat.com>
-References: <D4CFB69C345C394284E4B78B876C1CF107DBFE1A@cceexc23.americas.cpqcorp.net>
+Message-ID: <1096486793.2124.129.camel@mulgrave>
+References: <Pine.LNX.4.44L0.0409291239250.1167-100000@ida.rowland.org>
+		<415AF8A6.2080705@adaptec.com> <1096481358.2123.74.camel@mulgrave>
+	<415B05E3.10300@adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:2011 "EHLO mx1.redhat.com")
-	by vger.kernel.org with ESMTP id S268900AbUI2TkC (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 29 Sep 2004 15:40:02 -0400
-In-Reply-To: <D4CFB69C345C394284E4B78B876C1CF107DBFE1A@cceexc23.americas.cpqcorp.net>
+Received: from stat16.steeleye.com ([209.192.50.48]:26337 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S268894AbUI2TkB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 29 Sep 2004 15:40:01 -0400
+In-Reply-To: <415B05E3.10300@adaptec.com>
 List-Id: linux-scsi@vger.kernel.org
-To: "Miller, Mike (OS Dev)" <mike.miller@hp.com>
-Cc: mikem@beardog.cca.cpqcorp.net, marcelo.tosatti@cyclades.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, "Baker, Brian (ISS - Houston)" <brian.b@hp.com>
+To: Luben Tuikov <luben_tuikov@adaptec.com>
+Cc: Alan Stern <stern@rowland.harvard.edu>, SCSI development list <linux-scsi@vger.kernel.org>, Mohammed Sameer <uniball@gmx.net>, USB users list <linux-usb-users@lists.sourceforge.net>
 
-Miller, Mike (OS Dev) wrote:
->>mike.miller@hp.com wrote:
->>
->>>Currently cciss statistics are not collected in /proc/stat. 
->>
->>This patch
->>
->>>bumps DK_MAX_MAJOR to 111 to fix that. This has been a 
->>
->>common complaint
->>
->>>by customers wishing to gather info about cciss devices.
->>>Please consider this for inclusion. Applies to 2.4.28-pre3.
->>>
->>>Thanks,
->>>mikem
->>>
->>
->>--------------------------------------------------------------
->>-----------------
->>
->>>diff -burNp lx2428-pre1.orig/include/linux/kernel_stat.h 
->>
->>lx2428-pre1/include/linux/kernel_stat.h
->>
->>>--- lx2428-pre1.orig/include/linux/kernel_stat.h	
->>
->>2004-08-23 15:41:43.640300000 -0500
->>
->>>+++ lx2428-pre1/include/linux/kernel_stat.h	2004-08-23 
->>
->>15:43:07.097613064 -0500
->>
->>>@@ -12,7 +12,7 @@
->>>  * used by rstatd/perfmeter
->>>  */
->>> 
->>>-#define DK_MAX_MAJOR 16
->>>+#define DK_MAX_MAJOR 111
->>> #define DK_MAX_DISK 16
->>> 
->>> struct kernel_stat {
->>>-
->>>To unsubscribe from this list: send the line "unsubscribe 
->>
->>linux-kernel" in
->>
->>>the body of a message to majordomo@vger.kernel.org
->>>More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>>Please read the FAQ at  http://www.tux.org/lkml/
->>
->>The answer to this is to use the latest sysstat tools.  the latest 
->>version of iostat, sar, etc draw information out of /proc/partitions 
->>rather than out of /proc/stat.  Or are you using some other 
->>home rolled 
->>tool in this case?
->>
->>Neil
-> 
-> 
-> It's customers that are doing this. I think some of them are using their own tools. Others are probably using whatever comes on their distro.
-> 
-> mikem
-> 
-They should probably upgrade their tools, be they from the distro or 
-their own (It was my understanding that /proc/stat was depricated and 
-going to be removed in the not-to-distant future).
+On Wed, 2004-09-29 at 14:58, Luben Tuikov wrote:
+> Does this mean that scsi_device_cancel() should set the result
+> code to DID_NO_CONNECT either?
 
-Neil
+No, I think for in-flight commands, DID_ERROR is the safest.  They
+could, after all have partially deposited their data load before being
+cancelled.  DID_NO_CONNECT means that no processing was ever done.
 
+> > Right.  scsi_remove_host tells the mid-layer that it's OK to trash all
+> > inflight commands because you removed all their users before calling
+> > it.  It also tells us that you won't accept any future commands for this
+> > host (because you'll error any attempt in queuecommand).
 > 
->>-- 
->>/***************************************************
->>  *Neil Horman
->>  *Software Engineer
->>  *Red Hat, Inc.
->>  *nhorman@redhat.com
->>  *gpg keyid: 1024D / 0x92A74FA1
->>  *http://pgp.mit.edu
->>  ***************************************************/
-> 
-> 
+> Do you mean to say that when scsi_remove_host() is called,
+> the LLDD must no own any commands?  This is good, it means
+> that the LLDD plugged queuecommand(), did "recovery" of
+> pending commands and is ready for slave_destroy().
+
+No.  It's up to the LLD.  If it wants to complete all its commands then
+call scsi_remove_host(), that's fine.  However it's also fine for it to
+call  scsi_remove_host() with pending in-flight commands; if it does,
+ownership of these is transferred back to the mid-layer and we cancel
+them all.
+
+James
 
 
--- 
-/***************************************************
-  *Neil Horman
-  *Software Engineer
-  *Red Hat, Inc.
-  *nhorman@redhat.com
-  *gpg keyid: 1024D / 0x92A74FA1
-  *http://pgp.mit.edu
-  ***************************************************/
