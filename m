@@ -1,36 +1,88 @@
-From: Oliver Neukum <oliver@neukum.name>
-Subject: Re: [linux-usb-devel] Re: /proc/scsi/map
-Date: Sun, 16 Jun 2002 22:54:42 +0200
+From: Kurt Garloff <garloff@suse.de>
+Subject: Re: /proc/scsi/map
+Date: Sun, 16 Jun 2002 23:04:26 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <200206162254.42323.oliver@neukum.name>
-References: <200206161725.g5GHP6S23020@localhost.localdomain>
+Message-ID: <20020616210426.GC21461@gum01m.etpnet.phys.tue.nl>
+References: <UTC200206151604.g5FG4JQ26968.aeb@smtp.cwi.nl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="R+My9LyyhiUvIEro"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <200206161725.g5GHP6S23020@localhost.localdomain>
+Content-Disposition: inline
+In-Reply-To: <UTC200206151604.g5FG4JQ26968.aeb@smtp.cwi.nl>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@steeleye.com>, David Brownell <david-b@pacbell.net>
-Cc: Andries.Brouwer@cwi.nl, garloff@suse.de, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, sancho@dauskardt.de, linux-usb-devel@lists.sourceforge.net, linux1394-devel@lists.sourceforge.net, dougg@torque.net
+To: Andries.Brouwer@cwi.nl
+Cc: linux-kernel@vger.kernel.org, Linux SCSI list <linux-scsi@vger.kernel.org>
 
-Am Sonntag, 16. Juni 2002 19:25 schrieb James Bottomley:
-> Since we already have a huge long list of different ways to identify
-> different devices, I don't think coding any one or even a set of such
-> methods into the kernel would satisfy everyone.
->
-> What about a different approach:
->
-> We already (nearly) have the scsimon patches to do hot plug events on
-> SCSI devices incorporated.  Any identification could be done from the
-> scsi device hotplug script (i.e. if you see it's USB, get the GID, if
-> it's enterprise storage get the WWN, try the filesystem UUID etc).  Then
-> all the hotplug script does is plug this device into some type of volume
-> idenfication scheme like /dev/volume/<name>.
 
-How would you find out what a device is ?
-If the kernel has to supply the information anyway, you could
-just as well pass all information to the script or devfs.
+--R+My9LyyhiUvIEro
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-	Regards
-		Oliver
+Hi Andries,
 
+On Sat, Jun 15, 2002 at 06:04:19PM +0200, Andries Brouwer wrote:
+> > How can one assign stable device names to SCSI devices in
+> > case there are devices that may or may not be switched on or connected.
+>=20
+> An interesting unsolved problem.
+> [Your discussion confuses a few things, especially in the context
+> of removable devices: a uuid lives on the disk, the C,B,T,U tends
+> to identify the drive rather than the disk.]
+
+Sure. But those are the things that are normally proposed to relieve the
+situation. (And yes, I got the uuid thing confused.)
+I actually forgot one. LVM. There, signatures are stored on the disks.
+
+> > Life would be easier if the scsi subsystem would just report which
+> > SCSI device (uniquely identified by the controller,bus,target,unit tupl=
+e)
+> > belongs to which high-level device.
+>=20
+> Yes. I took your patch, ported it to 2.5, and tried it out.
+
+Oh, I expected to do it myself if it does not get bashed too much ...
+THANKS!
+And, yes, I agree, I would prefer to know it's accepted in 2.5 before it's
+applied to 2.4. It's just that I develop on 2.4 currently :-(
+
+> Very good - in combination with /proc/scsi/scsi this gives
+> good information. I like it.
+>=20
+> But just "cat /proc/scsi/map" is not good enough.
+
+I did not want to duplicate the information from /proc/scsi/scsi. The=20
+idea was that it should be straightforward to make device nodes from=20
+the information provided in map and to allow more elaborated code in
+userspace to know where to collect information from.
+
+> >From the above output alone one cannot easily guess which is which.
+> One would need a small utility that reads /proc/scsi/map and
+> /proc/scsi/scsi and produces something readable.
+> Will add sth to util-linux in case this gets accepted.
+
+That would be great!=20
+Because the mapping between sg and the other device is known, you can use
+the sg device to do ioctls on it (or even send SCSI commands) or to use
+the information from /proc/scsi/sg/ as well.
+
+Regards,
+--=20
+Kurt Garloff  <garloff@suse.de>                          Eindhoven, NL
+GPG key: See mail header, key servers         Linux kernel development
+SuSE Linux AG, Nuernberg, DE                            SCSI, Security
+
+--R+My9LyyhiUvIEro
+Content-Type: application/pgp-signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.0.7 (GNU/Linux)
+
+iD8DBQE9DP1ZxmLh6hyYd04RAmy9AJsHx2k6sybkFrevDCKhhcrrBPrAPwCfRcIK
+BsYSkXuvir9pEziU4+J4gdY=
+=+Kuk
+-----END PGP SIGNATURE-----
+
+--R+My9LyyhiUvIEro--
