@@ -1,146 +1,46 @@
-From: Matthew Dharm <mdharm-scsi@one-eyed-alien.net>
-Subject: Re: [linux-usb-devel] Re: PATCH: usb-storage: fix typo
-Date: Sat, 25 Jan 2003 12:32:14 -0800
+From: Andries Brouwer <aebr@win.tue.nl>
+Subject: Re: [linux-usb-devel] RE: A different look at block device hotswap in the Linux kernel
+Date: Sun, 26 Jan 2003 12:26:11 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030125123214.A3594@one-eyed-alien.net>
-References: <20030119143058.A31114@one-eyed-alien.net> <20030119171602.D31114@one-eyed-alien.net> <20030123044306.GA6584@kroah.com> <20030125101141.A2506@one-eyed-alien.net>
+Message-ID: <20030126112611.GA2814@win.tue.nl>
+References: <OF73A095F7.76CA02FF-ON87256CB8.0060AF6A-88256CB8.006323FB@us.ibm.com> <20030124100832.Y1605-100000@wonky.in0.lcl>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-md5;
-	protocol="application/pgp-signature"; boundary="tKW2IUtsqtDRztdT"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20030125101141.A2506@one-eyed-alien.net>; from mdharm-scsi@one-eyed-alien.net on Sat, Jan 25, 2003 at 10:11:41AM -0800
+In-Reply-To: <20030124100832.Y1605-100000@wonky.in0.lcl>
 List-Id: linux-scsi@vger.kernel.org
-To: Greg KH <greg@kroah.com>, USB Developers <linux-usb-devel@lists.sourceforge.net>, USB Storage List <usb-storage@one-eyed-alien.net>, Mike Anderson <andmike@us.ibm.com>, Linux SCSI list <linux-scsi@vger.kernel.org>
+To: Matthew Jacob <mjacob@feral.com>
+Cc: Bryan Henderson <hbryan@us.ibm.com>, "Cress, Andrew R" <andrew.r.cress@intel.com>, andmike@us.ibm.com, David Brownell <david-b@pacbell.net>, Greg KH <greg@kroah.com>, Linux SCSI list <linux-scsi@vger.kernel.org>, linux-usb-devel@lists.sourceforge.net, Luben Tuikov <luben@splentec.com>, Matthew Dharm <mdharm-scsi@one-eyed-alien.net>, Oliver Neukum <oliver@neukum.name>, Steven Dake <sdake@mvista.com>, Alan Stern <stern@rowland.harvard.edu>
 
+On Fri, Jan 24, 2003 at 10:09:32AM -0800, Matthew Jacob wrote:
 
---tKW2IUtsqtDRztdT
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+> > It's like when I pull the power plug because my system is totally hosed and
+> > I want to start over.  I know I can cause damage by doing that, but I would
+> > be upset if the new system booted back to the broken state it was in when I
+> > unplugged it.
+> 
+> You may want your device to reattach as totally new. You may, on the other
+> hand, want your device to resume where you left off. I can see valid
+> reasons for wanting either behaviour (but it can't/shouldn't be deduced
+> by the OS).
 
-I finally got 2.5.59 to run, tho without modules.  I can confirm that the
-three patches, taken together, produce a working hotplug system.
+The kernel does not remember this device once it is gone.
+If user space thinks it recognizes it, it must have a means to
+tell the kernel what it should do. What kind of info?
+The only thing that I can think of right now is the name.
+User space may tell the kernel under what name a device should
+be accessible.
 
-So far, it's not 100%.  But I think these patches should go in, because
-there is still some debate going on as to how to make hot-unplug work best.
-That's the last problem area.
+[Today user space can tell the kernel the numbering of the partitions.]
 
-I'm able to attach devices (which then get SCSI /dev/s), use them, then
-hot-unplug the device (only tested for devices in quiet state).  Attaching
-a device (new or the old one) gets a new set of /dev entries.
+More generally, the question of what "same device" means
+depends on the application. Is /dev/fd0 the same device
+as /dev/fd0 also when the floppy is different?
+Yes, the name is the same. The contents not.
 
-In addition, the sysfs entries seem to all be correct.  The lsscsi utility
-likes it all enough, too.
+In all cases user space does not tell the kernel "it is the same as ..."
+since the kernel does not remember anyway. User space just instructs
+the kernel to do certain definite things.
 
-It's a bit odd to see one device as /dev/sda one moment, then another as
-/dev/sda the next (in an unplug-then-replace scenario), but that's for the
-high-level drivers (sd, sg, etc.) to sort out.
-
-You can crash this if you try.  The methods seem to be:
-(1) Lots of plugging, as the unplug cleanup code isn't 100% yet
-(2) Unplug a device that's still in use.
-
-Both of these issues will be addressed once the unplugging technique gets
-worked out (see the copious e-mails on the topic on l-u-d and linux-scsi).
-
-Matt
-
-On Sat, Jan 25, 2003 at 10:11:41AM -0800, Matthew Dharm wrote:
-> On Wed, Jan 22, 2003 at 08:43:06PM -0800, Greg KH wrote:
-> > On Sun, Jan 19, 2003 at 05:16:02PM -0800, Matthew Dharm wrote:
-> > > This patch goes on top of the last one.  It fixes a typo in the test =
-for
-> > > scsi_register() failure.
-> >=20
-> > With these two patches applied, when plugging in a usb-storage device I
-> > get the following oops.  So I've backed the changes out :)
->=20
-> Try this patch on top of the other two.  It should fix the OOPS on attach.
->=20
-> This fixes a silly error where I fail to initialize a pointer early enough
-> for the scanning code.  If this isn't a perfect example of why
-> scsi_register() and scsi_add_host() aren't two separate functions, I don't
-> know what is.  :)
->=20
-> Oh, and I added a couple of comments, too.
->=20
-> Testing and comments are welcome, as always.
->=20
-> Matt
->=20
-> # This is a BitKeeper generated patch for the following project:
-> # Project Name: greg k-h's linux 2.5 USB kernel tree
-> # This patch format is intended for GNU patch command version 2.5 or high=
-er.
-> # This patch includes the following deltas:
-> #	           ChangeSet	1.668   -> 1.669 =20
-> #	drivers/usb/storage/usb.c	1.69    -> 1.70  =20
-> #
-> # The following is the BitKeeper ChangeSet Log
-> # --------------------------------------------
-> # 03/01/25	mdharm@zen.san.one-eyed-alien.net	1.669
-> # Fix an OOPS by moving the setting of the hostdata[] pointer to _before_
-> # the device scan starts.
-> # --------------------------------------------
-> #
-> diff -Nru a/drivers/usb/storage/usb.c b/drivers/usb/storage/usb.c
-> --- a/drivers/usb/storage/usb.c	Sat Jan 25 10:07:43 2003
-> +++ b/drivers/usb/storage/usb.c	Sat Jan 25 10:07:43 2003
-> @@ -926,6 +926,12 @@
->  		goto BadDevice;
->  	}
-> =20
-> +	/* set the hostdata to prepare for scanning */
-> +	ss->host->hostdata[0] =3D (unsigned long)ss;
-> +
-> +	/* associate this host with our interface */
-> +	scsi_set_device(ss->host, &intf->dev);
-> +
->  	/* now add the host */
->  	result =3D scsi_add_host(ss->host, NULL);
->  	if (result) {
-> @@ -941,9 +947,6 @@
->  		down(&ss->dev_semaphore);
->  		goto BadDevice;
->  	}
-> -
-> -	ss->host->hostdata[0] =3D (unsigned long)ss;
-> -	scsi_set_device(ss->host, &intf->dev);
-> =20
->  	printk(KERN_DEBUG=20
->  	       "WARNING: USB Mass Storage data integrity not assured\n");
-> --=20
-> Matthew Dharm                              Home: mdharm-usb@one-eyed-alie=
-n.net=20
-> Maintainer, Linux USB Mass Storage Driver
->=20
-> I need a computer?
-> 					-- Customer
-> User Friendly, 2/19/1998
-
-
-
---=20
-Matthew Dharm                              Home: mdharm-usb@one-eyed-alien.=
-net=20
-Maintainer, Linux USB Mass Storage Driver
-
-It was a new hope.
-					-- Dust Puppy
-User Friendly, 12/25/1998
-
---tKW2IUtsqtDRztdT
-Content-Type: application/pgp-signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.0.6 (GNU/Linux)
-Comment: For info see http://www.gnupg.org
-
-iD8DBQE+MvROIjReC7bSPZARAmxQAKDCql2VugM2tSgRcxGfMKUdG2wUBACfecMT
-di/9waIErYVMNkYdpT9Ezc0=
-=+cyT
------END PGP SIGNATURE-----
-
---tKW2IUtsqtDRztdT--
+Andries
