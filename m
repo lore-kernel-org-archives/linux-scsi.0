@@ -1,69 +1,71 @@
-From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
-Subject: RE: dpt_i2o driver
-Date: Tue, 2 Sep 2003 13:10:04 -0400
+From: 'Christoph Hellwig' <hch@infradead.org>
+Subject: Re: dpt_i2o driver
+Date: Tue, 2 Sep 2003 18:34:08 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <0998F43EAD645A47B3F6507196DD70EA256915@OTCEXC01>
+Message-ID: <20030902183408.A14487@infradead.org>
+References: <0998F43EAD645A47B3F6507196DD70EA256916@OTCEXC01>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from magic-mail.adaptec.com ([216.52.22.10]:59859 "EHLO
-	magic.adaptec.com") by vger.kernel.org with ESMTP id S261221AbTIBRKc
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 2 Sep 2003 13:10:32 -0400
+Received: from pub234.cambridge.redhat.com ([213.86.99.234]:52237 "EHLO
+	phoenix.infradead.org") by vger.kernel.org with ESMTP
+	id S263829AbTIBReP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 2 Sep 2003 13:34:15 -0400
+Content-Disposition: inline
+In-Reply-To: <0998F43EAD645A47B3F6507196DD70EA256916@OTCEXC01>; from mark_salyzyn@adaptec.com on Tue, Sep 02, 2003 at 01:26:53PM -0400
 List-Id: linux-scsi@vger.kernel.org
-To: 'Christoph Hellwig' <hch@infradead.org>
+To: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
 Cc: Mark Haverkamp <markh@osdl.org>, linux-scsi <linux-scsi@vger.kernel.org>
 
-'Christoph Hellwig' [mailto:hch@infradead.org] writes:
->> Hmmm, lets just delete this (mounted) array. I want to take this
-(mounted)
->> drive to expand an array's capacity. This call is used to inform the user
->> that the action that one is about to be asked to perform is being blocked
->> because it would cause damage to the operating system.
->In Linux 2.6 userspace should get hotplug events as soon as the the last
->reference is gone and the device is deleted.  As the device is freed at
->the same time you ioctl won't find it anymore anyway and thus fail..
->
->The hotplug even is picked up by the hotplug script which currently
->unfortunately are distro-specific.
+On Tue, Sep 02, 2003 at 01:26:53PM -0400, Salyzyn, Mark wrote:
+> dpt_i2o holds on to the device structures in the `hostdata' areas of the
+> device in order to speed up TID (I2O Target Identifier) lookup. This code
+> may be in jeopardy as a result:
+> 
+>  (struct adpt_device*)(cmd->device->hostdata) = pDev;
+> . . .
+>  pDev->pScsi_dev = cmd->device;
 
-The DPT application (raidutil and dpteng) sources are now public domain,
-alas this looks like future development changes in this code base. The Busy
-Check is picked up by dpteng for both the CLI and the GUI. Looks like this
-arena is too fluid for us to count on anything or to worry about it at this
-specific instant of time.
+That is bad indeed and I still need to audit all drivers for issues
+like that.  Either we kill this cache (I need to take a look at the
+actual code). OR you need to grab a reference using scsi_device_get
+when you store it and release it in your ->slave_destroy method that's
+called when the device is marked deleted.
 
-When the device is mounted, should we not have a usage count in the kernel,
-or are the hotplug events clearing this? Sorry for showing my ignorance of
-the hotplug needs ...
+> The pScsi_dev references can disappear, a hotplug reaction to clear this
+> needs to be registered to free up the double linked references made like
+> above (this is a plea for help to understand hotplug ;-/ ). Once this double
+> linked reference is cleared, the busy check report ENODEV which is an
+> `adequate' response indicating no longer busy.
 
-Sincerely -- Mark Salyzyn
+Why do you need an ioctl then?  Just wait for the sysfs file to
+disappear..
+
 -
 To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
 the body of a message to majordomo@vger.kernel.org
 More majordomo info at  http://vger.kernel.org/majordomo-info.html
-'Christoph Hellwig' [mailto:hch@infradead.org] writes:
->> Hmmm, lets just delete this (mounted) array. I want to take this
-(mounted)
->> drive to expand an array's capacity. This call is used to inform the user
->> that the action that one is about to be asked to perform is being blocked
->> because it would cause damage to the operating system.
->In Linux 2.6 userspace should get hotplug events as soon as the the last
->reference is gone and the device is deleted.  As the device is freed at
->the same time you ioctl won't find it anymore anyway and thus fail..
->
->The hotplug even is picked up by the hotplug script which currently
->unfortunately are distro-specific.
+On Tue, Sep 02, 2003 at 01:26:53PM -0400, Salyzyn, Mark wrote:
+> dpt_i2o holds on to the device structures in the `hostdata' areas of the
+> device in order to speed up TID (I2O Target Identifier) lookup. This code
+> may be in jeopardy as a result:
+> 
+>  (struct adpt_device*)(cmd->device->hostdata) = pDev;
+> . . .
+>  pDev->pScsi_dev = cmd->device;
 
-The DPT application (raidutil and dpteng) sources are now public domain,
-alas this looks like future development changes in this code base. The Busy
-Check is picked up by dpteng for both the CLI and the GUI. Looks like this
-arena is too fluid for us to count on anything or to worry about it at this
-specific instant of time.
+That is bad indeed and I still need to audit all drivers for issues
+like that.  Either we kill this cache (I need to take a look at the
+actual code). OR you need to grab a reference using scsi_device_get
+when you store it and release it in your ->slave_destroy method that's
+called when the device is marked deleted.
 
-When the device is mounted, should we not have a usage count in the kernel,
-or are the hotplug events clearing this? Sorry for showing my ignorance of
-the hotplug needs ...
+> The pScsi_dev references can disappear, a hotplug reaction to clear this
+> needs to be registered to free up the double linked references made like
+> above (this is a plea for help to understand hotplug ;-/ ). Once this double
+> linked reference is cleared, the busy check report ENODEV which is an
+> `adequate' response indicating no longer busy.
 
-Sincerely -- Mark Salyzyn
+Why do you need an ioctl then?  Just wait for the sysfs file to
+disappear..
+
