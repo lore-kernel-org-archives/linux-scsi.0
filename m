@@ -1,58 +1,80 @@
-From: Michael Clark <michael@metaparadigm.com>
-Subject: Re: [PATCH] blacklist device don't use SYNCHRONIZE_CACHE
-Date: Fri, 29 Oct 2004 17:04:57 +0800
+From: Catalin Muresan <catalin.muresan@astral.ro>
+Subject: Re: Apple Xserve RAID and qlogic ISP2312 (qla2300)
+Date: Fri, 29 Oct 2004 11:58:00 +0300
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <418207B9.20908@metaparadigm.com>
-References: <418206C7.2070908@metaparadigm.com>
+Message-ID: <20041029085800.GF6671@astral.ro>
+References: <20041027233321.GA842@astral.ro> <20041028143734.GA16358@beaverton.ibm.com> <20041028153522.GC1915@astral.ro> <20041028164210.GA16905@beaverton.ibm.com> <20041028172143.GA20949@praka.san.rr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gort.metaparadigm.com ([203.117.131.12]:8090 "EHLO
-	gort.metaparadigm.com") by vger.kernel.org with ESMTP
-	id S261390AbUJ2JEC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 29 Oct 2004 05:04:02 -0400
-Received: from localhost (unknown [127.0.0.1])
-	by gort.metaparadigm.com (Postfix) with ESMTP id 4F7F81ACFD
-	for <linux-scsi@vger.kernel.org>; Fri, 29 Oct 2004 17:04:01 +0800 (SGT)
-Received: from gort.metaparadigm.com ([127.0.0.1])
- by localhost (gort [127.0.0.1]) (amavisd-new, port 10024) with ESMTP
- id 05615-09 for <linux-scsi@vger.kernel.org>;
- Fri, 29 Oct 2004 17:04:00 +0800 (SGT)
-Received: from [10.1.0.59] (monty-ath0.metaparadigm.com [10.1.0.59])
-	by gort.metaparadigm.com (Postfix) with ESMTP id 9E90C1ACCD
-	for <linux-scsi@vger.kernel.org>; Fri, 29 Oct 2004 17:04:00 +0800 (SGT)
-In-Reply-To: <418206C7.2070908@metaparadigm.com>
+Received: from dummy.cluj.astral.ro ([193.230.240.25]:29596 "EHLO
+	cnn.astral.ro") by vger.kernel.org with ESMTP id S263162AbUJ2JEI
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 29 Oct 2004 05:04:08 -0400
+Content-Disposition: inline
+In-Reply-To: <20041028172143.GA20949@praka.san.rr.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>
+To: Andrew Vasquez <andrew.vasquez@qlogic.com>, Patrick Mansfield <patmans@us.ibm.com>, James Bottomley <James.Bottomley@steeleye.com>, linux-scsi@vger.kernel.org, bogdan.luca@astral.ro
 
-Apologies for base64 attachment - if anyone can tell me how
-to stop my Debian Mozilla 1.7 from randomly deciding to base64
-my attached patches (it only decides to do it on some of them).
+On Thu, Oct 28, 2004 at 10:21:43AM -0700, Andrew Vasquez wrote:
+ > Not wanting to go into the history of the qla2xxx driver's internal
+ > port/lun structures, let me just say that the driver should always
+ > create an internal 'lun 0' object so that the mid-layer can perform
+ > its scan.
 
-~mc
+	that sound like fixing hardware bugs in software ;)
 
-On 10/29/04 17:00, Michael Clark wrote:
-> Hi all,
-> 
-> With qla2300 loaded (and sdc a LUN on an external FC RAID controller),
-> I was getting a hang on reboot at:
-> 
->   Synchronizing SCSI cache for disk sdc:
-> 
-> I did some debugging by changing the timeout in sd_sync_cache and
-> found the RAID Controller was just dropping the commands (it's an
-> external battery backed RAID array so the sd_sync_cache is not
-> important anyway).
-> 
-> So, attached patch adds to the SCSI blacklist infrastructure to
-> allow listing devices for which we shouldn't send a SYNCRONIZE_CACHE
-> command and adds in the misbehaving device i have here.
-> 
-> Now I can reboot ;) without waiting 7.5 minutes.
-> 
-> BTW - The default of 15 retries of 30 secs each is insane
-> (3 in sd_sync_cache x 5 in scsi_wait_req) - any real need
-> for the additional outer loop in sd_sync_cache ?
-> 
-> ~mc
+ > > Catalin - does the device support REPORT LUNS? Do you have that
+ > > configured? It would avoid this problem.
+ > > 
+ > 
+ > Yes, Catalin, could you find that out?  I've only had a small amount
+ > of exposure with the XRAID box and know that there were some quirks
+ > about the device not performing an RFT_ID with the SNS, not sure if
+ > that was addressed.
+
+	i don't know how to find that, i'm gonna go and look at the source
+and try to figure it out untill you respond.
+
+ > > > 	my goal is to have a kernel with which I can boot from FC, but i see
+ > > > that can be done only with an ugly patch(for now) or with tricks from
+ > > > initrd.
+ > > 
+ > > What tricks and ugly patch? I haven't tried boot via qlogic on an HS20.
+ > > 
+ > 
+ > Catalin,  could you enable some debug settings:
+ > 
+ > In qla_dbg.h, modify the following line:
+ > 
+ > 	/* #define QL_DEBUG_LEVEL_2  */ /* Output error msgs to COM1 */
+ > 
+ > to read as:
+ > 
+ > 	#define QL_DEBUG_LEVEL_2   /* Output error msgs to COM1 */
+ > 
+ > In qla_settings.h, modify the following line:
+ > 
+ > 	#define DEBUG_QLA2100           0       /* For Debug of qla2x00 */
+ > 
+ > to read as:
+ > 
+ > 	#define DEBUG_QLA2100           1       /* For Debug of qla2x00 */
+ > 
+ > recompile the driver, load, and forward over the relevent
+ > var/log/messages snippet to me.
+
+	will do that asap.
+
+ > BTW: Regarding the internal queues and port/lun objects -- most of our
+ > 'experimental' work with 2.6 is begin done with our iSCSI driver.
+ > This includes removal of the driver's internal queuing mechanism and
+ > dependencies on these port/lun objects being built internally during
+ > the driver scan.  Porting (actually mostly pruning) to the FC driver
+ > will follow shortly.
+ > 
+ > --
+ > Andrew Vasquez
+
+-- 
+Kat
