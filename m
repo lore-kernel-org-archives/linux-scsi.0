@@ -1,121 +1,127 @@
-From: Brian King <brking@us.ibm.com>
-Subject: [PATCH 1/3] ipr abort hang fix - resend
-Date: Wed, 09 Jun 2004 17:10:18 -0500
+From: "Robert T. Johnson" <rtjohnso@eecs.berkeley.edu>
+Subject: PATCH: 2.6.7-rc3 drivers/scsi/cpqfcTSinit.c several user/kernel
+	pointer bugs
+Date: 09 Jun 2004 15:23:34 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <40C78ACA.1040603@us.ibm.com>
+Message-ID: <1086819814.14180.86.camel@dooby.cs.berkeley.edu>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------010100020106050402060604"
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e5.ny.us.ibm.com ([32.97.182.105]:25330 "EHLO e5.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S266007AbUFIWKU (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Jun 2004 18:10:20 -0400
+Received: from relay2.EECS.Berkeley.EDU ([169.229.60.28]:8188 "EHLO
+	relay2.EECS.Berkeley.EDU") by vger.kernel.org with ESMTP
+	id S266016AbUFIWXg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 9 Jun 2004 18:23:36 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: Linux Kernel <linux-kernel@vger.kernel.org>
 
-This is a multi-part message in MIME format.
---------------010100020106050402060604
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Since "ioc" is copied from user-space, vendor_cmd = ioc.argp cannot be trusted,
+so derefing vendor_cmd via expressions like "vendor_cmd->len" is unsafe.
 
-This one didn't seem to come through, so here it is again.
-Apologies if you've already seen it.
+Let me know if you have any questions, and I apologize if I've made a mistake 
+in my analysis.
 
-
--- 
-Brian King
-eServer Storage I/O
-IBM Linux Technology Center
-
---------------010100020106050402060604
-Content-Type: text/plain;
- name="ipr_abort_hang.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="ipr_abort_hang.patch"
+Best,
+Rob
 
 
-The following patch fixes a hang that occurs when an abort
-is issued by the midlayer. The hang is the result of overriding
-a field in the union of the ipr_cmd struct. It is fixed by moving
-this pointer outside of the union, since it is not mutually exclusive
-with the other fields in the union.
-
-
----
-
- linux-2.6.7-rc2-bjking1/drivers/scsi/ipr.c |   15 ++++++++-------
- linux-2.6.7-rc2-bjking1/drivers/scsi/ipr.h |    2 +-
- 2 files changed, 9 insertions(+), 8 deletions(-)
-
-diff -puN drivers/scsi/ipr.c~ipr_abort_hang drivers/scsi/ipr.c
---- linux-2.6.7-rc2/drivers/scsi/ipr.c~ipr_abort_hang	2004-06-07 11:21:15.000000000 -0500
-+++ linux-2.6.7-rc2-bjking1/drivers/scsi/ipr.c	2004-06-07 11:21:15.000000000 -0500
-@@ -448,6 +448,7 @@ static void ipr_init_ipr_cmnd(struct ipr
- {
- 	ipr_reinit_ipr_cmnd(ipr_cmd);
- 	ipr_cmd->u.scratch = 0;
-+	ipr_cmd->sibling = NULL;
- 	init_timer(&ipr_cmd->timer);
- }
+--- linux-2.6.7-rc3-full/drivers/scsi/cpqfcTSinit.c.orig	Wed Jun  9 12:20:15 2004
++++ linux-2.6.7-rc3-full/drivers/scsi/cpqfcTSinit.c	Wed Jun  9 12:18:50 2004
+@@ -556,7 +556,7 @@ int cpqfcTS_ioctl( struct scsi_device *S
+   struct scsi_cmnd *DumCmnd;
+   int i, j;
+   VENDOR_IOCTL_REQ ioc;
+-  cpqfc_passthru_t *vendor_cmd;
++  cpqfc_passthru_t vendor_cmd;
+   Scsi_Device *SDpnt;
+   Scsi_Request *ScsiPassThruReq;
+   cpqfc_passthru_private_t *privatedata;
+@@ -590,12 +590,14 @@ int cpqfcTS_ioctl( struct scsi_device *S
+         if( copy_from_user( &ioc, arg, sizeof( VENDOR_IOCTL_REQ)))
+ 		return( -EFAULT);
  
-@@ -676,8 +677,8 @@ static void ipr_do_req(struct ipr_cmnd *
-  **/
- static void ipr_internal_cmd_done(struct ipr_cmnd *ipr_cmd)
- {
--	if (ipr_cmd->u.sibling)
--		ipr_cmd->u.sibling = NULL;
-+	if (ipr_cmd->sibling)
-+		ipr_cmd->sibling = NULL;
- 	else
- 		complete(&ipr_cmd->completion);
- }
-@@ -3015,10 +3016,10 @@ static void ipr_bus_reset_done(struct ip
- 	 * If abort has not completed, indicate the reset has, else call the
- 	 * abort's done function to wake the sleeping eh thread
- 	 */
--	if (ipr_cmd->u.sibling->u.sibling)
--		ipr_cmd->u.sibling->u.sibling = NULL;
-+	if (ipr_cmd->sibling->sibling)
-+		ipr_cmd->sibling->sibling = NULL;
- 	else
--		ipr_cmd->u.sibling->done(ipr_cmd->u.sibling);
-+		ipr_cmd->sibling->done(ipr_cmd->sibling);
+-	vendor_cmd = ioc.argp;  // i.e., CPQ specific command struct
++        // CPQ specific command struct
++	if (copy_from_user(&vendor_cmd, ioc.argp, sizeof(vendor_cmd)))
++		return (-EFAULT); 
  
- 	list_add_tail(&ipr_cmd->queue, &ioa_cfg->free_q);
- 	LEAVE;
-@@ -3051,8 +3052,8 @@ static void ipr_abort_timeout(struct ipr
+ 	// If necessary, grab a kernel/DMA buffer
+-	if( vendor_cmd->len)
++	if( vendor_cmd.len)
+ 	{
+-  	  buf = kmalloc( vendor_cmd->len, GFP_KERNEL);
++  	  buf = kmalloc( vendor_cmd.len, GFP_KERNEL);
+ 	  if( !buf)
+ 	    return -ENOMEM;
+ 	}
+@@ -613,10 +615,10 @@ int cpqfcTS_ioctl( struct scsi_device *S
+ 		return -ENOMEM;
+ 	}
  
- 	ipr_sdev_err(ipr_cmd->u.sdev, "Abort timed out. Resetting bus\n");
- 	reset_cmd = ipr_get_free_ipr_cmnd(ioa_cfg);
--	ipr_cmd->u.sibling = reset_cmd;
--	reset_cmd->u.sibling = ipr_cmd;
-+	ipr_cmd->sibling = reset_cmd;
-+	reset_cmd->sibling = ipr_cmd;
- 	reset_cmd->ioarcb.res_handle = ipr_cmd->ioarcb.res_handle;
- 	cmd_pkt = &reset_cmd->ioarcb.cmd_pkt;
- 	cmd_pkt->request_type = IPR_RQTYPE_IOACMD;
-diff -puN drivers/scsi/ipr.h~ipr_abort_hang drivers/scsi/ipr.h
---- linux-2.6.7-rc2/drivers/scsi/ipr.h~ipr_abort_hang	2004-06-07 11:21:15.000000000 -0500
-+++ linux-2.6.7-rc2-bjking1/drivers/scsi/ipr.h	2004-06-07 11:21:15.000000000 -0500
-@@ -932,13 +932,13 @@ struct ipr_cmnd {
- 	dma_addr_t sense_buffer_dma;
- 	unsigned short dma_use_sg;
- 	dma_addr_t dma_handle;
-+	struct ipr_cmnd *sibling;
- 	union {
- 		enum ipr_shutdown_type shutdown_type;
- 		struct ipr_hostrcb *hostrcb;
- 		unsigned long time_left;
- 		unsigned long scratch;
- 		struct ipr_resource_entry *res;
--		struct ipr_cmnd *sibling;
- 		struct scsi_device *sdev;
- 	} u;
+-	if (vendor_cmd->rw_flag == VENDOR_WRITE_OPCODE) {
+-		if (vendor_cmd->len) { // Need data from user?
+-        		if (copy_from_user(buf, vendor_cmd->bufp, 
+-						vendor_cmd->len)) {
++	if (vendor_cmd.rw_flag == VENDOR_WRITE_OPCODE) {
++		if (vendor_cmd.len) { // Need data from user?
++        		if (copy_from_user(buf, vendor_cmd.bufp, 
++						vendor_cmd.len)) {
+ 				kfree(buf);
+ 				cpqfc_free_private_data(cpqfcHBAdata, 
+ 					ScsiPassThruReq->upper_private_data);
+@@ -625,7 +627,7 @@ int cpqfcTS_ioctl( struct scsi_device *S
+ 			}
+ 		}
+ 		ScsiPassThruReq->sr_data_direction = SCSI_DATA_WRITE; 
+-	} else if (vendor_cmd->rw_flag == VENDOR_READ_OPCODE) {
++	} else if (vendor_cmd.rw_flag == VENDOR_READ_OPCODE) {
+ 		ScsiPassThruReq->sr_data_direction = SCSI_DATA_READ; 
+ 	} else
+ 		// maybe this means a bug in the user app
+@@ -642,12 +644,12 @@ int cpqfcTS_ioctl( struct scsi_device *S
+ 	// FC Link events with our "worker thread".
  
-
-_
-
---------------010100020106050402060604--
+ 	privatedata = ScsiPassThruReq->upper_private_data;
+-	privatedata->bus = vendor_cmd->bus;
+-	privatedata->pdrive = vendor_cmd->pdrive;
++	privatedata->bus = vendor_cmd.bus;
++	privatedata->pdrive = vendor_cmd.pdrive;
+ 	
+         // eventually gets us to our own _quecommand routine
+ 	scsi_wait_req(ScsiPassThruReq, 
+-		&vendor_cmd->cdb[0], buf, vendor_cmd->len, 
++		&vendor_cmd.cdb[0], buf, vendor_cmd.len, 
+ 		10*HZ,  // timeout
+ 		1);	// retries
+         result = ScsiPassThruReq->sr_result;
+@@ -655,12 +657,12 @@ int cpqfcTS_ioctl( struct scsi_device *S
+         // copy any sense data back to caller
+         if( result != 0 )
+ 	{
+-	  memcpy( vendor_cmd->sense_data, // see struct def - size=40
++	  memcpy( vendor_cmd.sense_data, // see struct def - size=40
+ 		  ScsiPassThruReq->sr_sense_buffer, 
+ 		  sizeof(ScsiPassThruReq->sr_sense_buffer) <
+-                  sizeof(vendor_cmd->sense_data)           ?
++                  sizeof(vendor_cmd.sense_data)           ?
+                   sizeof(ScsiPassThruReq->sr_sense_buffer) :
+-                  sizeof(vendor_cmd->sense_data)
++                  sizeof(vendor_cmd.sense_data)
+                 ); 
+ 	}
+         SDpnt = ScsiPassThruReq->sr_device;
+@@ -669,9 +671,9 @@ int cpqfcTS_ioctl( struct scsi_device *S
+         ScsiPassThruReq = NULL;
+ 
+ 	// need to pass data back to user (space)?
+-	if( (vendor_cmd->rw_flag == VENDOR_READ_OPCODE) &&
+-	     vendor_cmd->len )
+-        if(  copy_to_user( vendor_cmd->bufp, buf, vendor_cmd->len))
++	if( (vendor_cmd.rw_flag == VENDOR_READ_OPCODE) &&
++	     vendor_cmd.len )
++        if(  copy_to_user( vendor_cmd.bufp, buf, vendor_cmd.len))
+ 		result = -EFAULT;
+ 
+         if( buf) 
 
