@@ -1,210 +1,185 @@
 From: Al Viro <viro@parcelfarce.linux.theplanet.co.uk>
-Subject: [PATCH] t128 iomem annotations and isa_-ectomy
-Date: Sun, 28 Nov 2004 14:09:43 +0000
-Message-ID: <20041128140943.GE26051@parcelfarce.linux.theplanet.co.uk>
+Subject: [PATCH] seagate iomem annotations, cleanup and isa_-ectomy
+Date: Sun, 28 Nov 2004 14:16:52 +0000
+Message-ID: <20041128141652.GG26051@parcelfarce.linux.theplanet.co.uk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:48527 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S261490AbUK1OJp
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:11664 "EHLO
+	www.linux.org.uk") by vger.kernel.org with ESMTP id S261478AbUK1OQz
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 28 Nov 2004 09:09:45 -0500
+	Sun, 28 Nov 2004 09:16:55 -0500
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Linus Torvalds <torvalds@osdl.org>
 Cc: linux-scsi@vger.kernel.org
 
-	switched to ioremap() + normal iomem primitives.
+	* switched to ioremap()
+	* switched to normal iomem operations
+	* killed a bunch of phys_to_virt()
+	* killed open-coded (and inferior) instances of memcpy_toio()/
+memcpy_fromio().
+	* fixed a dumb typo introduced in "kill off isa_check_signature()"
+patch (sorry - missed the fact that it was not covered by allmodconfig
+and didn't verify until after sending the patch in question ;-/).
+	
 Signed-off-by: Al Viro <viro@parcelfarce.linux.theplanet.co.uk>
 ----
-diff -urN RC10-rc2-bk9-sent1/drivers/scsi/t128.c RC10-rc2-bk9-t128/drivers/scsi/t128.c
---- RC10-rc2-bk9-sent1/drivers/scsi/t128.c	Sun Nov 28 01:47:38 2004
-+++ RC10-rc2-bk9-t128/drivers/scsi/t128.c	Sun Nov 28 02:05:54 2004
-@@ -199,6 +199,7 @@
-     static int current_override = 0, current_base = 0;
-     struct Scsi_Host *instance;
-     unsigned long base;
-+    void __iomem *p;
-     int sig, count;
+diff -urN RC10-rc2-bk9-dtc/drivers/scsi/seagate.c RC10-rc2-bk9-seagate/drivers/scsi/seagate.c
+--- RC10-rc2-bk9-dtc/drivers/scsi/seagate.c	Sun Nov 28 01:47:38 2004
++++ RC10-rc2-bk9-seagate/drivers/scsi/seagate.c	Sun Nov 28 02:30:40 2004
+@@ -237,13 +237,13 @@
+ 					   calculate memory mapped register
+ 					   location.  */
  
-     tpnt->proc_name = "t128";
-@@ -206,12 +207,15 @@
+-static unsigned long st0x_cr_sr;	/* control register write, status
++static void __iomem *st0x_cr_sr;	/* control register write, status
+ 					   register read.  256 bytes in
+ 					   length.
+ 					   Read is status of SCSI BUS, as per 
+ 					   STAT masks.  */
  
-     for (count = 0; current_override < NO_OVERRIDES; ++current_override) {
- 	base = 0;
-+	p = NULL;
+-static unsigned long st0x_dr;	/* data register, read write 256
++static void __iomem *st0x_dr;	/* data register, read write 256
+ 				   bytes in length.  */
  
--	if (overrides[current_override].address)
-+	if (overrides[current_override].address) {
- 	    base = overrides[current_override].address;
--	else 
-+	    p = ioremap(bases[current_base].address, 0x2000);
-+	    if (!p)
-+		base = 0;
-+	} else 
- 	    for (; !base && (current_base < NO_BASES); ++current_base) {
--		void __iomem *p;
- #if (TDEBUG & TDEBUG_INIT)
-     printk("scsi-t128 : probing address %08x\n", bases[current_base].address);
- #endif
-@@ -228,7 +232,7 @@
- #if (TDEBUG & TDEBUG_INIT)
- 			printk("scsi-t128 : detected board.\n");
- #endif
--			break;
-+			goto found;
- 		    }
- 		iounmap(p);
- 	    }
-@@ -240,11 +244,13 @@
- 	if (!base)
- 	    break;
+ static volatile int st0x_aborted = 0;	/* set when we are aborted, ie by a
+@@ -261,10 +261,10 @@
  
-+found:
- 	instance = scsi_register (tpnt, sizeof(struct NCR5380_hostdata));
- 	if(instance == NULL)
- 		break;
- 		
- 	instance->base = base;
-+	((struct NCR5380_hostdata *)instance->hostdata)->base = p;
  
- 	NCR5380_init(instance, 0);
+ #define retcode(result) (((result) << 16) | (message << 8) | status)
+-#define STATUS ((u8) isa_readb(st0x_cr_sr))
+-#define DATA ((u8) isa_readb(st0x_dr))
+-#define WRITE_CONTROL(d) { isa_writeb((d), st0x_cr_sr); }
+-#define WRITE_DATA(d) { isa_writeb((d), st0x_dr); }
++#define STATUS ((u8) readb(st0x_cr_sr))
++#define DATA ((u8) readb(st0x_dr))
++#define WRITE_CONTROL(d) { writeb((d), st0x_cr_sr); }
++#define WRITE_DATA(d) { writeb((d), st0x_dr); }
  
-@@ -287,12 +293,15 @@
- 
- static int t128_release(struct Scsi_Host *shost)
+ #ifndef OVERRIDE
+ static unsigned int seagate_bases[] = {
+@@ -420,6 +420,7 @@
  {
-+	NCR5380_local_declare();
-+	NCR5380_setup(shost);
- 	if (shost->irq)
- 		free_irq(shost->irq, NULL);
- 	NCR5380_exit(shost);
- 	if (shost->io_port && shost->n_io_port)
- 		release_region(shost->io_port, shost->n_io_port);
- 	scsi_unregister(shost);
-+	iounmap(base);
- 	return 0;
- }
+ 	struct Scsi_Host *instance;
+ 	int i, j;
++	unsigned long cr, dr;
  
-@@ -340,28 +349,30 @@
+ 	tpnt->proc_name = "seagate";
+ /*
+@@ -455,7 +456,7 @@
+  */
  
- static inline int NCR5380_pread (struct Scsi_Host *instance, unsigned char *dst,
-     int len) {
--    unsigned long reg = instance->base + T_DATA_REG_OFFSET;
-+    NCR5380_local_declare();
-+    void __iomem *reg;
-     unsigned char *d = dst;
-     register int i = len;
+ 		for (i = 0; i < (sizeof (seagate_bases) / sizeof (unsigned int)); ++i) {
+-			void __iomem *p = ioremap(seagate_base[i], 0x2000);
++			void __iomem *p = ioremap(seagate_bases[i], 0x2000);
+ 			if (!p)
+ 				continue;
+ 			for (j = 0; j < NUM_SIGNATURES; ++j)
+@@ -477,11 +478,13 @@
+ 		return 0;
+ 	}
  
-+    NCR5380_setup(instance);
-+    reg = base + T_DATA_REG_OFFSET;
+-	st0x_cr_sr = base_address + (controller_type == SEAGATE ? 0x1a00 : 0x1c00);
+-	st0x_dr = st0x_cr_sr + 0x200;
++	cr = base_address + (controller_type == SEAGATE ? 0x1a00 : 0x1c00);
++	dr = cr + 0x200;
++	st0x_cr_sr = ioremap(cr, 0x100);
++	st0x_dr = ioremap(dr, 0x100);
  
- #if 0
-     for (; i; --i) {
--	while (!(isa_readb(instance->base+T_STATUS_REG_OFFSET) & T_ST_RDY)) barrier();
-+	while (!(readb(base+T_STATUS_REG_OFFSET) & T_ST_RDY)) barrier();
- #else
--    while (!(isa_readb(instance->base+T_STATUS_REG_OFFSET) & T_ST_RDY)) barrier();
-+    while (!(readb(base+T_STATUS_REG_OFFSET) & T_ST_RDY)) barrier();
-     for (; i; --i) {
+ 	DANY("%s detected. Base address = %x, cr = %x, dr = %x\n",
+-	      tpnt->name, base_address, st0x_cr_sr, st0x_dr);
++	      tpnt->name, base_address, cr, dr);
+ 
+ 	/*
+ 	 *	At all times, we will use IRQ 5.  Should also check for IRQ3
+@@ -1146,7 +1149,7 @@
  #endif
--	*d++ = isa_readb(reg);
-+	*d++ = readb(reg);
-     }
- 
--    if (isa_readb(instance->base + T_STATUS_REG_OFFSET) & T_ST_TIM) {
-+    if (readb(base + T_STATUS_REG_OFFSET) & T_ST_TIM) {
- 	unsigned char tmp;
--	unsigned long foo;
--	foo = instance->base + T_CONTROL_REG_OFFSET;
--	tmp = isa_readb(foo);
--	isa_writeb(tmp | T_CR_CT, foo);
--	isa_writeb(tmp, foo);
-+	void __iomem *foo = base + T_CONTROL_REG_OFFSET;
-+	tmp = readb(foo);
-+	writeb(tmp | T_CR_CT, foo);
-+	writeb(tmp, foo);
- 	printk("scsi%d : watchdog timer fired in NCR5380_pread()\n",
- 	    instance->host_no);
- 	return -1;
-@@ -384,27 +395,30 @@
- 
- static inline int NCR5380_pwrite (struct Scsi_Host *instance, unsigned char *src,
-     int len) {
--    unsigned long reg = instance->base + T_DATA_REG_OFFSET;
-+    NCR5380_local_declare();
-+    void __iomem *reg;
-     unsigned char *s = src;
-     register int i = len;
- 
-+    NCR5380_setup(instance);
-+    reg = base + T_DATA_REG_OFFSET;
-+
- #if 0
-     for (; i; --i) {
--	while (!(isa_readb(instance->base+T_STATUS_REG_OFFSET) & T_ST_RDY)) barrier();
-+	while (!(readb(base+T_STATUS_REG_OFFSET) & T_ST_RDY)) barrier();
- #else
--    while (!(isa_readb(instance->base+T_STATUS_REG_OFFSET) & T_ST_RDY)) barrier();
-+    while (!(readb(base+T_STATUS_REG_OFFSET) & T_ST_RDY)) barrier();
-     for (; i; --i) {
+ 						 "loop 1b;"
+ 				      /* output */ :
+-				      /* input */ :"D" (phys_to_virt (st0x_dr)),
++				      /* input */ :"D" (st0x_dr),
+ 						 "S"
+ 						 (data),
+ 						 "c" (SCint->transfersize)
+@@ -1154,19 +1157,7 @@
+ 				      :	 "eax", "ecx",
+ 						 "esi");
+ #else				/* SEAGATE_USE_ASM */
+-					{
+-#ifdef FAST32
+-						unsigned int *iop = phys_to_virt (st0x_dr);
+-						const unsigned int *dp =(unsigned int *) data;
+-						int xferlen = transfersize >> 2;
+-#else
+-						unsigned char *iop = phys_to_virt (st0x_dr);
+-						const unsigned char *dp = data;
+-						int xferlen = transfersize;
+-#endif
+-						for (; xferlen; --xferlen)
+-							*iop = *dp++;
+-					}
++					memcpy_toio(st0x_dr, data, transfersize);
+ #endif				/* SEAGATE_USE_ASM */
+ /* SJT: End */
+ 					len -= transfersize;
+@@ -1218,10 +1209,8 @@
+ 							"=D" (__dummy_2)
+ /* input */
+ 				      :		"0" (data), "1" (len),
+-							"2" (phys_to_virt
+-							     (st0x_cr_sr)),
+-							"3" (phys_to_virt
+-							     (st0x_dr))
++							"2" (st0x_cr_sr),
++							"3" (st0x_dr)
+ /* clobbered */
+ 				      :		"eax");
+ #else				/* SEAGATE_USE_ASM */
+@@ -1298,7 +1287,7 @@
  #endif
--	isa_writeb(*s++, reg);
-+	writeb(*s++, reg);
-     }
- 
--    if (isa_readb(instance->base + T_STATUS_REG_OFFSET) & T_ST_TIM) {
-+    if (readb(base + T_STATUS_REG_OFFSET) & T_ST_TIM) {
- 	unsigned char tmp;
--	unsigned long foo;
--	foo = instance->base + T_CONTROL_REG_OFFSET;
--	tmp = isa_readb(foo);
--	isa_writeb(tmp | T_CR_CT, foo);
--	isa_writeb(tmp, foo);
-+	void __iomem *foo = base + T_CONTROL_REG_OFFSET;
-+	tmp = readb(foo);
-+	writeb(tmp | T_CR_CT, foo);
-+	writeb(tmp, foo);
- 	printk("scsi%d : watchdog timer fired in NCR5380_pwrite()\n",
- 	    instance->host_no);
- 	return -1;
-diff -urN RC10-rc2-bk9-sent1/drivers/scsi/t128.h RC10-rc2-bk9-t128/drivers/scsi/t128.h
---- RC10-rc2-bk9-sent1/drivers/scsi/t128.h	Mon Oct 18 17:53:44 2004
-+++ RC10-rc2-bk9-t128/drivers/scsi/t128.h	Sun Nov 28 02:05:57 2004
-@@ -111,28 +111,28 @@
- #ifndef HOSTS_C
- 
- #define NCR5380_implementation_fields \
--    unsigned long base
-+    void __iomem *base
- 
- #define NCR5380_local_declare() \
--    unsigned long base
-+    void __iomem *base
- 
- #define NCR5380_setup(instance) \
--    base = (instance)->base
-+    base = ((struct NCR5380_hostdata *)(instance->hostdata))->base
- 
- #define T128_address(reg) (base + T_5380_OFFSET + ((reg) * 0x20))
- 
- #if !(TDEBUG & TDEBUG_TRANSFER) 
--#define NCR5380_read(reg) isa_readb(T128_address(reg))
--#define NCR5380_write(reg, value) isa_writeb((value),(T128_address(reg)))
-+#define NCR5380_read(reg) readb(T128_address(reg))
-+#define NCR5380_write(reg, value) writeb((value),(T128_address(reg)))
- #else
- #define NCR5380_read(reg)						\
-     (((unsigned char) printk("scsi%d : read register %d at address %08x\n"\
--    , instance->hostno, (reg), T128_address(reg))), isa_readb(T128_address(reg)))
-+    , instance->hostno, (reg), T128_address(reg))), readb(T128_address(reg)))
- 
- #define NCR5380_write(reg, value) {					\
-     printk("scsi%d : write %02x to register %d at address %08x\n", 	\
- 	    instance->hostno, (value), (reg), T128_address(reg));	\
--    isa_writeb((value), (T128_address(reg)));				\
-+    writeb((value), (T128_address(reg)));				\
- }
- #endif
- 
+ 						 "loop 1b\n\t"
+ 				      /* output */ :
+-				      /* input */ :"S" (phys_to_virt (st0x_dr)),
++				      /* input */ :"S" (st0x_dr),
+ 						 "D"
+ 						 (data),
+ 						 "c" (SCint->transfersize)
+@@ -1306,22 +1295,7 @@
+ 				      :	 "eax", "ecx",
+ 						 "edi");
+ #else				/* SEAGATE_USE_ASM */
+-					{
+-#ifdef FAST32
+-						const unsigned int *iop =
+-						    phys_to_virt (st0x_dr);
+-						unsigned int *dp =
+-						    (unsigned int *) data;
+-						int xferlen = len >> 2;
+-#else
+-						const unsigned char *iop =
+-						    phys_to_virt (st0x_dr);
+-						unsigned char *dp = data;
+-						int xferlen = len;
+-#endif
+-						for (; xferlen; --xferlen)
+-							*dp++ = *iop;
+-					}
++					memcpy_fromio(data, st0x_dr, len);
+ #endif				/* SEAGATE_USE_ASM */
+ /* SJT: End */
+ 					len -= transfersize;
+@@ -1387,10 +1361,8 @@
+ 							"=b" (__dummy_4)
+ /* input */
+ 				      :		"0" (data), "1" (len),
+-							"2" (phys_to_virt
+-							     (st0x_cr_sr)),
+-							"3" (phys_to_virt
+-							     (st0x_dr))
++							"2" (st0x_cr_sr),
++							"3" (st0x_dr)
+ /* clobbered */
+ 				      :		"eax");
+ #else				/* SEAGATE_USE_ASM */
