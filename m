@@ -1,65 +1,77 @@
-From: James Bottomley <James.Bottomley@steeleye.com>
-Subject: [PATCH] dma_get_required_mask()
-Date: 25 Jun 2004 10:25:33 -0500
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: PATCH: (as333) BLIST flag for non-lockable devices
+Date: Fri, 25 Jun 2004 12:14:28 -0400 (EDT)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1088177133.1940.26.camel@mulgrave>
+Message-ID: <Pine.LNX.4.44L0.0406251209580.1147-100000@ida.rowland.org>
+References: <20040623191400.GC1387@us.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat1.steeleye.com ([65.114.3.130]:15549 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S266765AbUFYPZa (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 25 Jun 2004 11:25:30 -0400
+Received: from ida.rowland.org ([192.131.102.52]:16132 "HELO ida.rowland.org")
+	by vger.kernel.org with SMTP id S266786AbUFYQO2 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 25 Jun 2004 12:14:28 -0400
+In-Reply-To: <20040623191400.GC1387@us.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
+To: James Bottomley <James.Bottomley@SteelEye.com>, Matthew Wheeler <matt@yurisko.net>
+Cc: Mike Anderson <andmike@us.ibm.com>, Javier Marcet <lists@marcet.info>, USB Storage list <usb-storage@lists.one-eyed-alien.net>, SCSI development list <linux-scsi@vger.kernel.org>
 
-Following the discussion, this is a patch implementing
-dma_get_required_mask().  The default implementation simply works out
-the largest mask covering all of memory and returns the and of that with
-the current dma_mask.  If this looks OK, I'll send out another patch
-including the documentation updates as well.
+On Wed, 23 Jun 2004, Mike Anderson wrote:
 
-I've put the implementation in linux/dma-mapping.h with a
-ARCH_HAS_DMA_GET_REQUIRED_MASK override for those architectures that
-would like to do something different.
+> Since SCSI already has the device list it would seem like we would
+> possibly add a new flag like was done for mode sense. As this is not a
+> transport issue I would assume we would not want to add flags in
+> usb/storage, but handle it in the mid-layer as a SCSI protocol
+> non-compliance.
 
-Any opinions on whether I should also make linux/dma-mapping.h include
-linux/bitops.h now since it requires fls() from there?
+Here is a patch that implements this suggestion.  It's rather similar to 
+the one that Javier Marcet wrote back in January, in
 
-James
+http://marc.theaimsgroup.com/?l=linux-usb-users&m=107345268526718&w=2
 
-===== include/linux/dma-mapping.h 1.3 vs edited =====
---- 1.3/include/linux/dma-mapping.h	2004-03-30 20:53:54 -05:00
-+++ edited/include/linux/dma-mapping.h	2004-06-25 11:12:30 -04:00
-@@ -19,6 +19,29 @@
- #define dma_sync_single		dma_sync_single_for_cpu
- #define dma_sync_sg		dma_sync_sg_for_cpu
- 
-+#ifndef ARCH_HAS_DMA_GET_REQUIRED_MASK
-+static inline u64 dma_get_required_mask(struct device *dev)
-+{
-+	extern unsigned long max_pfn; /* defined in bootmem.h but may
-+					 not be included */
-+	u32 low_totalram = ((max_pfn - 1) << PAGE_SHIFT);
-+	u32 high_totalram = ((max_pfn - 1) >> (32 - PAGE_SHIFT));
-+	u64 mask;
-+
-+	if (!high_totalram) {
-+		/* convert to mask just covering totalram */
-+		low_totalram = (1 << (fls(low_totalram) - 1));
-+		low_totalram += low_totalram - 1;
-+		mask = low_totalram;
-+	} else {
-+		high_totalram = (1 << (fls(high_totalram) - 1));
-+		high_totalram += high_totalram - 1;
-+		mask = (((u64)high_totalram) << 32) + 0xffffffff;
-+	}
-+	return mask & *dev->dma_mask;
-+}
-+#endif
-+		
+Matthew, does this patch work for your digital camera?
+
+Alan Stern
+
+
+
+Signed-off-by: Alan Stern <stern@rowland.harvard.edu>
+
+===== include/scsi/scsi_devinfo.h 1.5 vs edited =====
+--- 1.5/include/scsi/scsi_devinfo.h	Sun May 30 04:51:19 2004
++++ edited/include/scsi/scsi_devinfo.h	Fri Jun 25 11:53:20 2004
+@@ -24,4 +24,5 @@
+ #define BLIST_REPORTLUN2	0x20000	/* try REPORT_LUNS even for SCSI-2 devs
+  					   (if HBA supports more than 8 LUNs) */
+ #define BLIST_NOREPORTLUN	0x40000	/* don't try REPORT_LUNS scan (SCSI-3 devs) */
++#define BLIST_NOT_LOCKABLE	0x80000	/* don't use PREVENT-ALLOW commands */
  #endif
+===== drivers/scsi/scsi_devinfo.c 1.9 vs edited =====
+--- 1.9/drivers/scsi/scsi_devinfo.c	Sat Jun 19 07:49:23 2004
++++ edited/drivers/scsi/scsi_devinfo.c	Fri Jun 25 12:07:06 2004
+@@ -158,8 +158,11 @@
+ 	{"IOMEGA", "Io20S         *F", NULL, BLIST_KEY},
+ 	{"INSITE", "Floptical   F*8I", NULL, BLIST_KEY},
+ 	{"INSITE", "I325VM", NULL, BLIST_KEY},
++	{"iRiver", "iFP Mass Driver", NULL, BLIST_NOT_LOCKABLE | BLIST_INQUIRY_36},
+ 	{"LASOUND", "CDX7405", "3.10", BLIST_MAX5LUN | BLIST_SINGLELUN},
+ 	{"MATSHITA", "PD-1", NULL, BLIST_FORCELUN | BLIST_SINGLELUN},
++	{"MATSHITA", "DMC-LC5", NULL, BLIST_NOT_LOCKABLE | BLIST_INQUIRY_36},
++	{"MATSHITA", "DMC-LC40", NULL, BLIST_NOT_LOCKABLE | BLIST_INQUIRY_36},
+ 	{"Medion", "Flash XL  MMC/SD", "2.6D", BLIST_FORCELUN},
+ 	{"MegaRAID", "LD", NULL, BLIST_FORCELUN},
+ 	{"MICROP", "4110", NULL, BLIST_NOTQ},
+===== drivers/scsi/scsi_scan.c 1.61 vs edited =====
+--- 1.61/drivers/scsi/scsi_scan.c	Mon Jun 21 12:58:41 2004
++++ edited/drivers/scsi/scsi_scan.c	Fri Jun 25 11:56:28 2004
+@@ -661,6 +661,9 @@
+ 	if (*bflags & BLIST_MS_192_BYTES_FOR_3F)
+ 		sdev->use_192_bytes_for_3f = 1;
  
-
++	if (*bflags & BLIST_NOT_LOCKABLE)
++		sdev->lockable = 0;
++
+ 	if(sdev->host->hostt->slave_configure)
+ 		sdev->host->hostt->slave_configure(sdev);
+ 
 
