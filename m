@@ -1,33 +1,48 @@
-From: Patrick Mansfield <patmans@us.ibm.com>
-Subject: Re: [PATCH] fixes and cleanups for the new command allocation code
-Date: Tue, 4 Feb 2003 21:15:16 -0800
+From: Rolf Eike Beer <eike-kernel@sf-tec.de>
+Subject: Re: [PATCH 2.5.59] sim710: cleanup/remove most cli()'s
+Date: Wed, 5 Feb 2003 16:03:48 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030204211516.A30419@beaverton.ibm.com>
-References: <20030204162326.A30755@lst.de> <20030204081616.A24105@beaverton.ibm.com> <20030204175146.A31515@lst.de> <20030204091955.A24785@beaverton.ibm.com> <1044383605.2014.23.camel@mulgrave> <20030204202935.A325@lst.de> <1044399797.3484.15.camel@mulgrave> <20030204172505.A28812@beaverton.ibm.com> <1044410039.3485.61.camel@mulgrave>
+Message-ID: <200302051603.48510@bilbo.math.uni-mannheim.de>
+References: <200302041123.06204@bilbo.math.uni-mannheim.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1044410039.3485.61.camel@mulgrave>; from James.Bottomley@steeleye.com on Tue, Feb 04, 2003 at 07:53:57PM -0600
+In-Reply-To: <200302041123.06204@bilbo.math.uni-mannheim.de>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@steeleye.com>
-Cc: Christoph Hellwig <hch@lst.de>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
 
-On Tue, Feb 04, 2003 at 07:53:57PM -0600, James Bottomley wrote:
-> On Tue, 2003-02-04 at 19:25, Patrick Mansfield wrote:
+Hi again,
 
-> But that's not how the block queue works: prep is actually called from
-> elv_next_request().  Therefore, if you plug the queue in the request
-> function when you're over the queue limit, you only get a single fully
-> prepped request waiting in the queue, which, I think, is the desired
-> behaviour.  Even if the queue is restarted because of I/O pressure, it
-> will begin with the prepped request and re-block.
+I'm now looking for the best way to port this to use 53c700.c. This will 
+surely take a while, should I fix my fix and resend it or better leave this 
+unfixed until I find time to port it?
 
-OK that sounds great, except we should not plug the queue since we
-have outstanding IO.
+For today this fix should be enough. The second one is unneeded because 
+mca_register_driver does it.
 
-> And the slave_{alloc,configure,destroy} needs fixing too.
+Eike
 
-What is broken?
+Note: Please CC me, I'm not ...
 
--- Patrick Mansfield
+--- linux-2.5.59-test/drivers/scsi/53c700.c     Fri Jan 17 03:21:40 2003
++++ linux-2.5.59/drivers/scsi/53c700.c  Wed Feb  5 15:47:00 2003
+@@ -1769,7 +1769,7 @@
+        NCR_700_set_depth(SCp->device, NCR_700_get_depth(SCp->device) + 1);
+
+        /* begin the command here */
+-       /* no need to check for NULL, test for command_slot_cound above
++       /* no need to check for NULL, test for command_slot_count above
+         * ensures a slot is free */
+        slot = find_empty_slot(hostdata);
+
+--- linux-2.5.59-test/drivers/scsi/NCR_D700.c   Fri Jan 17 03:21:39 2003
++++ linux-2.5.59/drivers/scsi/NCR_D700.c        Wed Feb  5 15:47:02 2003
+@@ -340,7 +340,6 @@
+        .id_table = NCR_D700_id_table,
+        .driver = {
+                .name = "NCR_D700",
+-               .bus = &mca_bus_type,
+                .probe = NCR_D700_probe,
+        },
+ };
