@@ -1,108 +1,60 @@
-From: Willem Riede <wrlk@riede.org>
-Subject: 2.5.74-bk2 aic7xxx still doesn't like my disk drives
-Date: Sat, 5 Jul 2003 08:26:20 -0400
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: scsi_forget_host() and scsi_remove_device()
+Date: Sat, 5 Jul 2003 10:11:18 -0400 (EDT)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030705122620.GH31823@linnie.riede.org>
-Reply-To: wrlk@riede.org
+Message-ID: <Pine.LNX.4.44L0.0307050959020.16984-100000@netrider.rowland.org>
+References: <20030704125444.B17588@one-eyed-alien.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rwcrmhc11.comcast.net ([204.127.198.35]:58501 "EHLO
-	rwcrmhc11.comcast.net") by vger.kernel.org with ESMTP
-	id S266332AbTGEMIY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 5 Jul 2003 08:08:24 -0400
-Content-Disposition: inline
+Received: from netrider.rowland.org ([192.131.102.5]:1799 "HELO
+	netrider.rowland.org") by vger.kernel.org with SMTP id S266353AbTGEN4s
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 5 Jul 2003 09:56:48 -0400
+In-Reply-To: <20030704125444.B17588@one-eyed-alien.net>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Matthew Dharm <mdharm-scsi@one-eyed-alien.net>
+Cc: Mike Anderson <andmike@us.ibm.com>, SCSI development list <linux-scsi@vger.kernel.org>
 
-This is what I see at boot time - should I worry about it?
+On Fri, 4 Jul 2003, Matthew Dharm wrote:
 
-(scsi1:A:0:0): CDB: 0x12 0x1 0x80 0x0 0x60 0x0
-(scsi1:A:0:0): Saw underflow (76 of 96 bytes). Treated as error
-(scsi1:A:0:0): CDB: 0x12 0x1 0x80 0x0 0x60 0x0
-(scsi1:A:0:0): Saw underflow (76 of 96 bytes). Treated as error
-(scsi1:A:0:0): CDB: 0x12 0x1 0x80 0x0 0x60 0x0
-(scsi1:A:0:0): Saw underflow (76 of 96 bytes). Treated as error
-(scsi1:A:0:0): CDB: 0x12 0x1 0x80 0x0 0x60 0x0
-(scsi1:A:0:0): Saw underflow (76 of 96 bytes). Treated as error
-(scsi1:A:0:0): CDB: 0x12 0x1 0x80 0x0 0x60 0x0
-(scsi1:A:0:0): Saw underflow (76 of 96 bytes). Treated as error
-(scsi1:A:0:0): CDB: 0x12 0x1 0x80 0x0 0x60 0x0
-(scsi1:A:0:0): Saw underflow (76 of 96 bytes). Treated as error
-(scsi1:A:0:0): CDB: 0x12 0x1 0x80 0x0 0x60 0x0
-(scsi1:A:0:0): Saw underflow (76 of 96 bytes). Treated as error
-(scsi1:A:0:0): CDB: 0x12 0x1 0x80 0x0 0x60 0x0
-(scsi1:A:0:0): Saw underflow (76 of 96 bytes). Treated as error
-(scsi1:A:0:0): CDB: 0x12 0x1 0x80 0x0 0x60 0x0
-(scsi1:A:0:0): Saw underflow (76 of 96 bytes). Treated as error
-(scsi1:A:0:0): CDB: 0x12 0x1 0x80 0x0 0x60 0x0
-(scsi1:A:0:0): Saw underflow (76 of 96 bytes). Treated as error
-(scsi1:A:1:0): CDB: 0x12 0x1 0x80 0x0 0x60 0x0
-(scsi1:A:1:0): Saw underflow (76 of 96 bytes). Treated as error
-(scsi1:A:1:0): CDB: 0x12 0x1 0x80 0x0 0x60 0x0
-(scsi1:A:1:0): Saw underflow (76 of 96 bytes). Treated as error
-(scsi1:A:1:0): CDB: 0x12 0x1 0x80 0x0 0x60 0x0
-(scsi1:A:1:0): Saw underflow (76 of 96 bytes). Treated as error
-(scsi1:A:1:0): CDB: 0x12 0x1 0x80 0x0 0x60 0x0
-(scsi1:A:1:0): Saw underflow (76 of 96 bytes). Treated as error
-(scsi1:A:1:0): CDB: 0x12 0x1 0x80 0x0 0x60 0x0
-(scsi1:A:1:0): Saw underflow (76 of 96 bytes). Treated as error
-(scsi1:A:1:0): CDB: 0x12 0x1 0x83 0x0 0x60 0x0
-(scsi1:A:1:0): Saw underflow (42 of 96 bytes). Treated as error
-(scsi1:A:1:0): CDB: 0x12 0x1 0x83 0x0 0x60 0x0
-(scsi1:A:1:0): Saw underflow (42 of 96 bytes). Treated as error
-(scsi1:A:1:0): CDB: 0x12 0x1 0x83 0x0 0x60 0x0
-(scsi1:A:1:0): Saw underflow (42 of 96 bytes). Treated as error
-(scsi1:A:1:0): CDB: 0x12 0x1 0x83 0x0 0x60 0x0
-(scsi1:A:1:0): Saw underflow (42 of 96 bytes). Treated as error
-(scsi1:A:1:0): CDB: 0x12 0x1 0x83 0x0 0x60 0x0
-(scsi1:A:1:0): Saw underflow (42 of 96 bytes). Treated as error
-(scsi1:A:1:0): CDB: 0x12 0x1 0x80 0x0 0x60 0x0
-(scsi1:A:1:0): Saw underflow (76 of 96 bytes). Treated as error
-(scsi1:A:1:0): CDB: 0x12 0x1 0x80 0x0 0x60 0x0
-(scsi1:A:1:0): Saw underflow (76 of 96 bytes). Treated as error
-(scsi1:A:1:0): CDB: 0x12 0x1 0x80 0x0 0x60 0x0
-(scsi1:A:1:0): Saw underflow (76 of 96 bytes). Treated as error
-(scsi1:A:1:0): CDB: 0x12 0x1 0x80 0x0 0x60 0x0
-(scsi1:A:1:0): Saw underflow (76 of 96 bytes). Treated as error
-(scsi1:A:1:0): CDB: 0x12 0x1 0x80 0x0 0x60 0x0
-(scsi1:A:1:0): Saw underflow (76 of 96 bytes). Treated as error
+> On Fri, Jul 04, 2003 at 03:36:55PM -0400, Alan Stern wrote:
+> > Finally a segmentation violation occurs when __scsi_get_command() tries to
+> > access dev->host->cmd_pool->gfp_mask.  Not surprising since the host
+> > structure is gone.
+> 
+> This could still be our (usb-storage) problem.
+> 
+> We're not supposed to release the host structures until after ->release is
+> called.  I think we're violating that right now.
+
+Although that used to be true, it's not true any longer.  The SCSI 
+midlayer interface changed very recently, and ->release is no longer 
+called for hot-pluggable hosts.  See 
+Documentation/scsi/scsi_mid_low_api.txt in 2.5.74.
+
+> Add a little bit of debugging (a stub ->release() function that printk's)
+> and see if the mid-layer really thinks that everything should have been
+> freed already.
+
+Not necessary.  Furthermore, it has been true for a while that the host 
+structure is not deallocated when the driver calls scsi_unregister() -- or 
+now scsi_host_put() -- but rather when its reference count goes to 0.  
+This is a good example of the sort of thing that Christoph Hellwig says 
+the driver shouldn't even be aware of, it should be completely internal to 
+the SCSI core.
+
+In any case, this particular problem isn't a result of deallocating the 
+host too early; it's a result of trying to access the host (and maybe 
+other related characteristics) of a device that is offline.  Now, I'm not 
+familiar with the plans for completing the integration of the SCSI 
+subsystem with the driver model -- maybe the host _isn't_ supposed to be 
+deallocated until all the device structures have been freed first.  In 
+that case, the problem would be that the device is failing to maintain a 
+reference to the host structure.  Regardless, it will be solved when the 
+driver model integration is completed; I think it's definitely _not_ a 
+failing of usb-storage.
+
+Alan Stern
 
 
-These are my scsi devices:
-
-Loading aic7xxx module
-scsi0 : Adaptec AIC7XXX EISA/VLB/PCI SCSI HBA DRIVER, Rev 6.2.35
-        <Adaptec aic7895 Ultra SCSI adapter>
-        aic7895C: Ultra Wide Channel A, SCSI Id=7, 32/253 SCBs
-                                                                                                    
-(scsi0:A:3): 10.000MB/s transfers (10.000MHz, offset 7)
-(scsi0:A:6): 10.000MB/s transfers (10.000MHz, offset 8)
-  Vendor: OnStream  Model: SC-30             Rev: 1.09
-  Type:   Sequential-Access                  ANSI SCSI revision: 02
-  Vendor: MATSHITA  Model: CD-R   CW-7502    Rev: 4.17
-  Type:   CD-ROM                             ANSI SCSI revision: 02
-scsi1 : Adaptec AIC7XXX EISA/VLB/PCI SCSI HBA DRIVER, Rev 6.2.35
-        <Adaptec aic7895 Ultra SCSI adapter>
-        aic7895C: Ultra Wide Channel B, SCSI Id=7, 32/253 SCBs
-                                                                                                    
-(scsi1:A:0): 40.000MB/s transfers (20.000MHz, offset 8, 16bit)
-(scsi1:A:1): 40.000MB/s transfers (20.000MHz, offset 8, 16bit)
-  Vendor: IBM       Model: DNES-318350W      Rev: SA30
-  Type:   Direct-Access                      ANSI SCSI revision: 03
-scsi1:A:0:0: Tagged Queuing enabled.  Depth 16
-SCSI device sda: 35843670 512-byte hdwr sectors (18352 MB)
-SCSI device sda: drive cache: write through
- sda: sda1 sda2 sda3 sda4
-Attached scsi disk sda at scsi1, channel 0, id 0, lun 0
-  Vendor: IBM       Model: DGHS09U           Rev: 0350
-  Type:   Direct-Access                      ANSI SCSI revision: 03
-scsi1:A:1:0: Tagged Queuing enabled.  Depth 16
-SCSI device sdb: 17916240 512-byte hdwr sectors (9173 MB)
-sdb: asking for cache data failed
-sdb: assuming drive cache: write through
- sdb: sdb1 sdb2 sdb3
-Attached scsi disk sdb at scsi1, channel 0, id 1, lun 0
-
-Thanks, Willem Riede.
