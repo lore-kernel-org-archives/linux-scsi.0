@@ -1,132 +1,70 @@
-From: Badari Pulavarty <pbadari@us.ibm.com>
-Subject: [patch for playing] 2.5.65 patch to support > 256 disks
-Date: Fri, 21 Mar 2003 10:56:04 -0800
+From: Luben Tuikov <luben@splentec.com>
+Subject: Re: [PATCH] 2.5.x add back missing scsi_queue_next_request calls
+Date: Fri, 21 Mar 2003 14:20:48 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <200303211056.04060.pbadari@us.ibm.com>
+Message-ID: <3E7B6610.90707@splentec.com>
+References: <20030319184444.A9694@beaverton.ibm.com> <3E7A317A.702@splentec.com> <3E7A529C.5050607@torque.net>
 Mime-Version: 1.0
-Content-Type: Multipart/Mixed;
-  boundary="------------Boundary-00=_GL44BUSW346PXEXQ8DJ7"
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
-Cc: Andrew Morton <akpm@digeo.com>
+To: dougg@torque.net
+Cc: Patrick Mansfield <patmans@us.ibm.com>, linux-scsi@vger.kernel.org
 
+Douglas Gilbert wrote:
+> 
+> If you don't like what Patrick is proposing, please explain
+> why.
 
---------------Boundary-00=_GL44BUSW346PXEXQ8DJ7
-Content-Type: text/plain;
-  charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+I think I _did_ explain why: contamination of scsi_put_command().
+I also think that I explain it in quite a dry and formal way
+with examples, trying really hard to convey what I meant.
 
-Hi,
+Please feel free to give me pointers on where I ``missed the mark''.
 
-Andries Brouwer recently submitted 32 bit dev_t patches,
-which are in 2.5.65-mm2. This patch applies on those patches to support=20
-more than 256 disks.  This is for playing only.
+> [Rather than re-explain, you could supply a url to the
+> prior post in the marc.theaimsgroup.com archive.]
 
-I tested this with 4000 disks using scsi_debug. I attached my actual
-disks (50) after 4000 scsi_debug disks. I am able to access my disks
-fine and do IO on them.
+On slab allocation:
+http://MARC.10East.com/?l=linux-scsi&m=104438145823604&w=2
+The whole message is about that.
 
-Problems (so far):
+The second ``Point 2'', on ``change'', ``new'' and ``before'':
+http://MARC.10East.com/?l=linux-scsi&m=104387923212007&w=2
+Excerpt:
+	2. This is a pickle and might I mention that Doug's queue depth
+	changes were *for a reason*, so there's no point in saying
+	``the way it was before''.  Furthermore ``the number of outstanding
+	commands'' is ambiguous and any which way it is it, is NOT enough.
+	I.e. outstaning in LLDD, oustanding free, etc. -- it just doesn't
+	compute.
+This was about the ``way it was before'', i.e. we should not improve
+SCSI Core by means of its old workings, but by means of new infrastructure...
+(Here's I'd be repeating myself, as I've said those things before on
+linux-scsi... sorry, no time to search the archives now.)
 
-1) sd.c -  sd_index_bits[] arrys became big - need to be fixed.
+> I don't
+> think boldface exclamations are required.
 
-2) 4000 disks eats up lots of low memory (~460 MB). Here is the
-/proc/meminfo output before & after insmod.
+I was just trying to make myself clear.
 
-Before:
-MemTotal:      3883276 kB
-MemFree:       3808028 kB
-Buffers:          3240 kB
-Cached:          41860 kB
-SwapCached:          0 kB
-Active:          45360 kB
-Inactive:         7288 kB
-HighTotal:     3014616 kB
-HighFree:      2961856 kB
-LowTotal:       868660 kB
-LowFree:        846172 kB
-SwapTotal:     2040244 kB
-SwapFree:      2040244 kB
-Dirty:             192 kB
-Writeback:           0 kB
-Mapped:          14916 kB
-Slab:             7164 kB
-Committed_AS:    12952 kB
-PageTables:        312 kB
-ReverseMaps:      1895
-=3D=3D=3D=3D
-After:
-MemTotal:      3883276 kB
-MemFree:       3224140 kB
-Buffers:          3880 kB
-Cached:         140376 kB
-SwapCached:          0 kB
-Active:          47512 kB
-Inactive:       105508 kB
-HighTotal:     3014616 kB
-HighFree:      2838144 kB
-LowTotal:       868660 kB
-LowFree:        385996 kB
-SwapTotal:     2040244 kB
-SwapFree:      2040244 kB
-Dirty:              92 kB
-Writeback:           0 kB
-Mapped:          16172 kB
-Slab:           464364 kB
-Committed_AS:    14996 kB
-PageTables:        412 kB
-ReverseMaps:      2209
+> Naturally you are at liberty to present another patch which
+> merges what you are trying to do with Patrick's work.
 
---------------Boundary-00=_GL44BUSW346PXEXQ8DJ7
-Content-Type: text/x-diff;
-  charset="us-ascii";
-  name="sd.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment; filename="sd.patch"
+No, I don't want to.  This has to do with managing ppl and the reasons are
+more or less as follows: Patrick is already doing the work -- let him
+continue to do it, he's doing a great job;  I don't believe in taking someone's
+patch (idea) and rewriting it and resubmitting it as my own.  If they step
+out of line, I'd let them know, they can correct it, resubmit the patch, and
+thusly continue to do the great work they've been doing.
 
---- linux/drivers/scsi/sd.c	Thu Mar 20 15:06:00 2003
-+++ linux.new/drivers/scsi/sd.c	Fri Mar 21 11:50:54 2003
-@@ -56,7 +56,9 @@
-  * Remaining dev_t-handling stuff
-  */
- #define SD_MAJORS	16
--#define SD_DISKS	(SD_MAJORS << 4)
-+#define SD_DISKS_PER_MAJOR_SHIFT	(KDEV_MINOR_BITS - 4)
-+#define SD_DISKS_PER_MAJOR	(1 << SD_DISKS_PER_MAJOR_SHIFT)
-+#define SD_DISKS	(SD_MAJORS << SD_DISKS_PER_MAJOR_SHIFT)
- 
- /*
-  * Time out in seconds for disks and Magneto-opticals (which are slower).
-@@ -1328,17 +1330,23 @@ static int sd_attach(struct scsi_device 
- 	sdkp->index = index;
- 
- 	gd->de = sdp->de;
--	gd->major = sd_major(index >> 4);
--	gd->first_minor = (index & 15) << 4;
-+	gd->major = sd_major(index >> SD_DISKS_PER_MAJOR_SHIFT);
-+	gd->first_minor = (index & (SD_DISKS_PER_MAJOR - 1)) << 4;
- 	gd->minors = 16;
- 	gd->fops = &sd_fops;
- 
--	if (index >= 26) {
-+	if (index < 26) {
-+		sprintf(gd->disk_name, "sd%c", 'a' + index % 26);
-+	} else if (index < (26*27)) {
- 		sprintf(gd->disk_name, "sd%c%c",
- 			'a' + index/26-1,'a' + index % 26);
- 	} else {
--		sprintf(gd->disk_name, "sd%c", 'a' + index % 26);
--	}
-+		const unsigned int m1 = (index/ 26 - 1) / 26 - 1;
-+		const unsigned int m2 = (index / 26 - 1) % 26;
-+		const unsigned int m3 = index % 26;
-+		sprintf(gd->disk_name, "sd%c%c%c", 
-+			'a' + m1, 'a' + m2, 'a' + m3);
-+	}	
- 
- 	sd_init_onedisk(sdkp, gd);
- 
+This way they learn, get more enthusiastic and feel really good about themselves
+and next time they'll do an even better job.
 
---------------Boundary-00=_GL44BUSW346PXEXQ8DJ7--
+If you guys were closer, I'd all buy you a beer! :-)
+
+-- 
+Luben
+
 
