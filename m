@@ -1,158 +1,160 @@
-From: Pat LaVarre <p.lavarre@ieee.org>
-Subject: Re: [linux-usb-devel] [2.6-test] Bug in usb-storage or scsi?
-Date: 11 Sep 2003 14:42:33 -0600
+From: Patrick Mansfield <patmans@us.ibm.com>
+Subject: Re: [PATCH] serialize bus scanning
+Date: Thu, 11 Sep 2003 13:34:19 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1063312953.3347.24.camel@patehci2>
-References: <Pine.LNX.4.44L0.0309111551410.2667-100000@ida.rowland.org>
+Message-ID: <20030911133419.A10316@beaverton.ibm.com>
+References: <20030825122416.GE15506@lst.de> <20030827202908.GB7852@krispykreme> <20030827203544.GA27020@lst.de> <20030910075741.GC1532@krispykreme>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="tsOsTdHNUZQcU9Ye"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from email-out2.iomega.com ([147.178.1.83]:54509 "EHLO
-	email.iomega.com") by vger.kernel.org with ESMTP id S261528AbTIKUlc
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 11 Sep 2003 16:41:32 -0400
-In-Reply-To: <Pine.LNX.4.44L0.0309111551410.2667-100000@ida.rowland.org>
+Received: from e5.ny.us.ibm.com ([32.97.182.105]:50335 "EHLO e5.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S261498AbTIKUe4 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 11 Sep 2003 16:34:56 -0400
+Content-Disposition: inline
+In-Reply-To: <20030910075741.GC1532@krispykreme>; from anton@samba.org on Wed, Sep 10, 2003 at 05:57:42PM +1000
 List-Id: linux-scsi@vger.kernel.org
-To: stern@rowland.harvard.edu
-Cc: patmans@us.ibm.com, mdharm-usb@one-eyed-alien.net, usb-storage@one-eyed-alien.net, linux-scsi@vger.kernel.org
-
-> From: Matthew Dharm <mdharm-scsi () one-eyed-alien ! net>
->
-> I think allowing write to read-only media is
-> the only way to go.  I don't see another way
-> to get write-protect status.
-
-Does write-protect work for dvd-ram?
-
-How?
-
-> From: 	Alan Stern <stern@rowland.harvard.edu>
-> ...
-> (Apparently the commands don't present a
-> problem for sr.c.)
-
-sr.c shows this problem by getting the wrong answer.
-
-sr.c is getting cd->device->writeable wrong for all the seven-or-so mmc
-writable profiles except dvd-ram.
-
-Some background from me and patches from Andy Polyakov and Jens Axboe
-appear in:
-Subject: Re: [PATCH] mount -w of dvd+rw etc. in vanilla 2.6
-http://marc.theaimsgroup.com/?t=106123318400007
-
-> From: Matthew Dharm <mdharm-scsi () one-eyed-alien ! net>
-> ... I'm going to have some code that will not
-> apply the filters (any filters) if the request
-> comes from sg,
-
-More old good sense!
-
-Following are relevant posts from me that some archives before now have
-not included in this thread.
-
-Pat LaVarre
-
----
-
-Subject: Re: PATCH: exclude certain commands from emulated SCSI hosts 
-Date: 2003-04-23 14:45:31 PST 
-From: Pat LaVarre (ppaatt@aol.com)
-
-> http://groups.google.com/groups?group=mlist.linux.scsi
-> Subject: Re: PATCH: exclude certain commands from emulated SCSI hosts 
->
-> > From: Patrick Mansfield (patmans@us.ibm.com)
-> > Date: 2003-04-07 15:42:13 PST 
-> >
-> > Would a user ever want to send a MODE SENSE
-> > to USB storage device?)
->
-> From: Matthew Dharm (mdharm-scsi@one-eyed-alien.net)
-> Date: 2003-04-21 17:04:05 PST  
->
-> a very large number of USB devices of TYPE DISK do
-> not  support MODE SENSE in any form.  Apparently,
-> the 'popular' OSes don't use it.
-
-I have some reason to believe Windows often passes thru something like:
--x "1A 00 08 00 18 00" -i x18
-i.e. a ModeSense6 of Cacheing page x08 for the whole 4 byte header plus
-one whole 8 byte block descriptor plus the whole xC byte standard page.
-
-But I haven't studied this closely enough to know if that's precisely
-correct, nor do I know when it gets translated to op x5A ModeSense10,
-nor do I know when it is faked out in the host entirely, never reaching
-the bus.
-
-> From: Alan Stern (stern@rowland.harvard.edu)
-> Date: 2003-04-22 11:21:36 PST ...
->
-> a comment in drivers/storage/usb/protocol.c
-> indicating that 8 is the minimum size for a
-> MODE-SENSE (line 257).
-
-Perhaps we mean:
-http://lxr.linux.no/source/drivers/usb/storage/protocol.c?v=2.5.56#L274
-/* again, for MODE_SENSE_10, we get the minimum (8) */
-
-I don't know of any merely public standard that admits 8 (i.e. the whole
-standard header) is a minimum.
-
-I do know Win 2K kernel dies if a root-privileged app is so rude as to
-express an x5A ModeSense10 ModeSense for less than 8 as op x1A
-ModeSense6:
-http://support.microsoft.com/?kbid=813908
-SCSI Pass-Through Mode Sense Command May Crash the Computer
-
-> > From: Matthew Dharm (mdharm-scsi@one-eyed-alien.net)
-> > Date: 2003-04-05 11:40:24 PST 
-> >
-> > (1) can't filter TEST UNIT READY (opcode 0).
-> > Not a big deal, but a theoretical problem.
-> >
-> From: James Bottomley (James.Bottomley@steeleye.com)
-> Date: 2003-04-05 12:00:18 PST 
->
-> TUR has been mandatory since SCSI-1, ...
-
-A zeroed six byte CDB has been mandatory.  Other forms of TUR are less
-widely supported.
-...
-
------Forwarded Message-----
-
-From: p.lavarre@ieee.org
-To: patmans@us.ibm.com
-Cc: stern@rowland.harvard.edu, mdharm-usb@one-eyed-alien.net,
-usb-storage@one-eyed-alien.net, linux-scsi@vger.kernel.org
-Subject: Re: [usb-storage] Re: [linux-usb-devel] [2.6-test] Bug in
-usb-storage or scsi?
-Date: 11 Sep 2003 14:04:54 -0600
-
-> http://marc.theaimsgroup.com/?t=104839042700001&r=1&w=2
-
-Thanks, there I find 44 posts dated since 2003-03 with Subject's like:
-"PATCH: exclude certain commands from emulated SCSI hosts".
-
-By the way, Google yields [an interestingly] different set of 44 posts:
-http://groups.google.com/groups?threadm=linux.scsi.20030322193705.C17056%40one-eyed-alien.net
-
-In both archives I think I see much sense:
-
-> > From: Matthew Dharm <mdharm-usb () one-eyed-alien ! net> ...
-> >
-> > (a) don't ask for EVPD data, ...
-> > (b) assume ... only 36-bytes of INQUIRY data, ...
-> > (c) ... assume write-enabled for all disk-like media.
->
-> From: Linus Torvalds <torvalds () transmeta ! com>
->
-> suggest ... make the Linux SCSI layer
-> ... use the sequences of commands that "that other OS" uses ...
-> "don't use commands that haven't gotten much testing" ...
-...
+To: Anton Blanchard <anton@samba.org>
+Cc: Christoph Hellwig <hch@lst.de>, James Bottomley <James.Bottomley@SteelEye.com>, linux-scsi@vger.kernel.org
 
 
+--tsOsTdHNUZQcU9Ye
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
+On Wed, Sep 10, 2003 at 05:57:42PM +1000, Anton Blanchard wrote:
+> 
+> How does this look? This restores the ability to do parallel scsi scan
+> via sysfs.
+> 
+
+The patch looks fine to me, I hope James will apply it.
+
+I think we might still have to allow only a scan or delete (per host), and
+not both in parallel - it looks like we could have some races otherwise,
+I'm not sure though (mainly where the driver model points to the parent
+device). Maybe a get of the host device during scanning is enough.
+
+I tested it out, and ran some timings pre and post-patch, mainly out of
+curiousity.
+
+I have:
+
+[root@elm3b79 root]# ls -1d /sysfs/bus/scsi/devices/[01]* | wc
+      6       6     192
+[root@elm3b79 root]# ls -1d /sysfs/bus/scsi/devices/[2-5]* | wc
+    288     288    9428
+
+Really 72 separate LUNs attached to qlogic 2310 (FCP) host adapters (hosts
+2-5), each with four paths. 40 disk drives (10 on a loop per enclosure),
+plus 32 LUNs connected to a disk array. All attached to a 1Gb switch.
+
+I ran a simple script (attached) to scan via sysfs in parallel. Of course
+without the patch scanning is serialized.
+
+System is a 8 cpu (two node) NUMAQ.
+
+--------------------------------------------
+Before the patch:
+
+Rescanning the four qlogic adapters without finding any new devices,
+seemed to vary up to about 34 seconds:
+
+[root@elm3b79 root]# time ./scanall.sh > xx
+
+real    0m31.947s
+user    0m0.007s
+sys     0m0.113s
+
+Rescan in parallel re-discovering all devices:
+
+[root@elm3b79 root]# time ./scanall.sh  > xx
+
+real    0m34.189s
+user    0m0.009s
+sys     0m0.615s
+
+--------------------------------------------
+With the patch:
+
+Generally went from 34 seconds down to 9.
+
+Rescanning the four qlogic adapters without finding any new devices:
+
+[root@elm3b79 root]# time ./scanall.sh > xx
+
+real    0m8.057s
+user    0m0.007s
+sys     0m0.120s
+
+Rescan in parallel re-discovering all devices:
+
+[root@elm3b79 root]# time ./scanall.sh > xx
+
+real    0m9.608s
+user    0m0.008s
+sys     0m0.783s
+
+-----------------------------------------------------------
+
+Also: time to sequentially remove all devices (on host 2-5, patch does not
+matter but I find this interesting):
+
+time ./delall.sh > xx
+
+real    0m7.276s
+user    0m0.823s
+sys     0m3.106s
+
+And time to remove in parallel
+
+[root@elm3b79 root]# time ./delall.sh > xx 
+real    0m4.586s
+user    0m1.336s
+sys     0m7.204s
+
+-- Patrick Mansfield
+
+--tsOsTdHNUZQcU9Ye
+Content-Type: application/x-sh
+Content-Disposition: attachment; filename="scanall.sh"
+
+#! /bin/sh
+
+SYSFS=/sysfs
+# SCANUM="${SYSFS}/class/scsi_host/*/scan"
+SCANUM="${SYSFS}/class/scsi_host/host[2-5]/scan"
+# SCANUM="${SYSFS}/class/scsi_host/host?/scan"
+
+for S in ${SCANUM}
+do
+	(
+	echo ${S}
+	echo "- - -" > ${S}
+	) &
+done
+
+wait
+
+--tsOsTdHNUZQcU9Ye
+Content-Type: application/x-sh
+Content-Disposition: attachment; filename="delall.sh"
+
+#! /bin/sh
+
+SYSFS=/sysfs
+DEVS=
+DEVS="${SYSFS}/bus/scsi/devices/[2-5]*"
+# SCANUM="${SYSFS}/class/scsi_host/host?/scan"
+
+for D in ${DEVS}
+do
+	(
+	ls ${D}/delete
+	echo foo > ${D}/delete
+	) &
+done
+
+wait
+
+--tsOsTdHNUZQcU9Ye--
