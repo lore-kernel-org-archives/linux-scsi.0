@@ -1,65 +1,33 @@
 From: Andrew Morton <akpm@osdl.org>
 Subject: Re: [PATCH][2.6.8-rc1-mm1] drivers/scsi/sg.c gcc341 inlining fix
-Date: Mon, 26 Jul 2004 14:53:19 -0700
+Date: Mon, 26 Jul 2004 15:09:24 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040726145319.7cd97290.akpm@osdl.org>
+Message-ID: <20040726150924.7bc68188.akpm@osdl.org>
 References: <200407141216.i6ECGHxg008332@harpo.it.uu.se>
+	<40F562FC.50806@pobox.com>
+	<20040714165419.GF7308@fs.tum.de>
+	<200407141931.12249.bzolnier@elka.pw.edu.pl>
+	<20040714183335.GG7308@fs.tum.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fw.osdl.org ([65.172.181.6]:54431 "EHLO mail.osdl.org")
-	by vger.kernel.org with ESMTP id S265521AbUGZVzC (ORCPT
+Received: from fw.osdl.org ([65.172.181.6]:20909 "EHLO mail.osdl.org")
+	by vger.kernel.org with ESMTP id S265910AbUGZWMB (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 26 Jul 2004 17:55:02 -0400
-In-Reply-To: <200407141216.i6ECGHxg008332@harpo.it.uu.se>
+	Mon, 26 Jul 2004 18:12:01 -0400
+In-Reply-To: <20040714183335.GG7308@fs.tum.de>
 List-Id: linux-scsi@vger.kernel.org
-To: Mikael Pettersson <mikpe@csd.uu.se>
-Cc: dgilbert@interlog.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Adrian Bunk <bunk@fs.tum.de>
+Cc: B.Zolnierkiewicz@elka.pw.edu.pl, viro@parcelfarce.linux.theplanet.co.uk, jgarzik@pobox.com, mikpe@csd.uu.se, dgilbert@interlog.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Mikael Pettersson <mikpe@csd.uu.se> wrote:
+Adrian Bunk <bunk@fs.tum.de> wrote:
 >
-> gcc-3.4.1 errors out in 2.6.8-rc1-mm1 at drivers/scsi/sg.c:
+> I'm not yet 100% sure whether it's correct, so please double-check it.
 > 
-> drivers/scsi/sg.c: In function `sg_ioctl':
-> drivers/scsi/sg.c:209: sorry, unimplemented: inlining failed in call to 'sg_jif_to_ms': function body not available
-> drivers/scsi/sg.c:930: sorry, unimplemented: called from here
-> make[2]: *** [drivers/scsi/sg.o] Error 1
-> make[1]: *** [drivers/scsi] Error 2
-> make: *** [drivers] Error 2
 > 
-> sg_jif_to_ms() is marked inline but used defore its function
-> body is available. Moving it nearer the top of sg.c (together
-> with sg_ms_to_jif() for consistency) fixes the problem.
 > 
->...
->  static int
-> +sg_ms_to_jif(unsigned int msecs)
-> +{
-> +	if ((UINT_MAX / 2U) < msecs)
-> +		return INT_MAX;	/* special case, set largest possible */
-> +	else
-> +		return ((int) msecs <
-> +			(INT_MAX / 1000)) ? (((int) msecs * HZ) / 1000)
-> +		    : (((int) msecs / 1000) * HZ);
-> +}
-> +
-> +static inline unsigned
-> +sg_jif_to_ms(int jifs)
-> +{
-> +	if (jifs <= 0)
-> +		return 0U;
-> +	else {
-> +		unsigned int j = (unsigned int) jifs;
-> +		return (j <
-> +			(UINT_MAX / 1000)) ? ((j * 1000) / HZ) : ((j / HZ) *
-> +								  1000);
-> +	}
-> +}
-> +
+>  [patch] kill local sg_ms_to_jif/sg_jif_to_ms functions and use
+>          msecs_to_jiffies/jiffies_to_msecs instead
 
-
-We have standard jiffies_to_msecs() and msecs_to_jiffies() functions in
-include/linux/time.h.  Can we please make these sg-private versions go away
-altogether?
-
+Looks good here - thanks.
