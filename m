@@ -1,73 +1,66 @@
-From: Patrick Mansfield <patmans@us.ibm.com>
-Subject: Re: [PATCH scsi-misc-2.6 07/08] scsi: remove bogus	{get|put}_device() calls
-Date: Tue, 29 Mar 2005 09:02:01 -0800
-Message-ID: <20050329170201.GA6787@us.ibm.com>
-References: <20050323021335.960F95F8@htj.dyndns.org> <20050323021335.0D9E25EE@htj.dyndns.org> <1111551355.5520.100.camel@mulgrave> <42413336.2010004@gmail.com>
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH] consolidate timeout defintions in scsi.h
+Date: Tue, 29 Mar 2005 19:23:19 +0200
+Message-ID: <20050329172319.GA2430@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e3.ny.us.ibm.com ([32.97.182.143]:50137 "EHLO e3.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S261243AbVC2RCK (ORCPT
+Received: from verein.lst.de ([213.95.11.210]:40850 "EHLO mail.lst.de")
+	by vger.kernel.org with ESMTP id S261252AbVC2RXX (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 29 Mar 2005 12:02:10 -0500
+	Tue, 29 Mar 2005 12:23:23 -0500
 Content-Disposition: inline
-In-Reply-To: <42413336.2010004@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, Jens Axboe <axboe@suse.de>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
+To: jejb@steeleye.com
+Cc: linux-scsi@vger.kernel.org
 
-On Wed, Mar 23, 2005 at 06:13:26PM +0900, Tejun Heo wrote:
->  Hi,
-> 
-> James Bottomley wrote:
-> >On Wed, 2005-03-23 at 11:14 +0900, Tejun Heo wrote:
-> >
-> >>	So, basically, SCSI high-level object (scsi_disk) and
-> >>	mid-level object (scsi_device) are reference counted by users,
-> >>	not the requests they submit.  Reference count cannot go zero
-> >>	with active users and users cannot access the object once the
-> >>	reference count reaches zero.
-> >
-> >
-> >Actually, no.  Unfortunately we still have some fire and forget APIs, so
-> >the contention that we always have an open refcounted descriptor isn't
-> >always true.
+Adapted from a patch in SuSE's kernel SRPM.
 
-What API's, and what usage?
 
->  Yeap, you're right.  So, what we have is
-
->  * All high-level users have open access to the scsi high-level
->    object on issueing requests, but may close it before its requests
->    complete.
-
->  * All mid-layer users do get_device() before submitting requests,
->    but may put_device() before its requests complete.
-
-Any LLDD's issuing requests should be doing a get/put around the request.
-
-Any upper level drivers calling scsi_device_put() before a request
-completes is likely a bug. sg has code in place to handle the
-post-release/close completion of IO (IMO, a bad design).
-
-Are any upper level drivers calling scsi_device_put() while they have
-outstanding IO?
-
-The scan code never calls upper level drivers probe functions via
-device_add unless we are going to keep the scsi_device (well, there are
-error paths in scsi_sysfs_add_sdev that look bad - we don't check the
-result of scsi_sysfs_add_sdev). But for completeness, we could add
-get/puts to the scan code.
-
-As you pointed out, the current get_device() will never return NULL when
-called via:
-
-	get_device(&sdev->sdev_gendev)
-
-The current code only narrows the window where problems might occur, I
-don't see how it can completely avoid races with removal.
-
-And the patch removes code from the mainline scsi IO paths.
-
--- Patrick Mansfield
+--- 1.65/drivers/block/scsi_ioctl.c	2005-01-20 16:41:57 +01:00
++++ edited/drivers/block/scsi_ioctl.c	2005-03-29 17:54:17 +02:00
+@@ -328,11 +328,6 @@
+ 	return 0;
+ }
+ 
+-#define FORMAT_UNIT_TIMEOUT		(2 * 60 * 60 * HZ)
+-#define START_STOP_TIMEOUT		(60 * HZ)
+-#define MOVE_MEDIUM_TIMEOUT		(5 * 60 * HZ)
+-#define READ_ELEMENT_STATUS_TIMEOUT	(5 * 60 * HZ)
+-#define READ_DEFECT_DATA_TIMEOUT	(60 * HZ )
+ #define OMAX_SB_LEN 16          /* For backward compatibility */
+ 
+ static int sg_scsi_ioctl(struct file *file, request_queue_t *q,
+--- 1.34/drivers/scsi/scsi_ioctl.c	2005-03-14 00:29:46 +01:00
++++ edited/drivers/scsi/scsi_ioctl.c	2005-03-29 17:54:02 +02:00
+@@ -27,11 +27,6 @@
+ 
+ #define NORMAL_RETRIES			5
+ #define IOCTL_NORMAL_TIMEOUT			(10 * HZ)
+-#define FORMAT_UNIT_TIMEOUT		(2 * 60 * 60 * HZ)
+-#define START_STOP_TIMEOUT		(60 * HZ)
+-#define MOVE_MEDIUM_TIMEOUT		(5 * 60 * HZ)
+-#define READ_ELEMENT_STATUS_TIMEOUT	(5 * 60 * HZ)
+-#define READ_DEFECT_DATA_TIMEOUT	(60 * HZ )  /* ZIP-250 on parallel port takes as long! */
+ 
+ #define MAX_BUF PAGE_SIZE
+ 
+--- 1.27/include/scsi/scsi.h	2005-03-08 00:29:09 +01:00
++++ edited/include/scsi/scsi.h	2005-03-29 17:53:44 +02:00
+@@ -360,6 +360,15 @@
+ #define sense_error(sense)  ((sense) & 0xf)
+ #define sense_valid(sense)  ((sense) & 0x80);
+ 
++/*
++ * default timeouts
++*/
++#define FORMAT_UNIT_TIMEOUT		(2 * 60 * 60 * HZ)
++#define START_STOP_TIMEOUT		(60 * HZ)
++#define MOVE_MEDIUM_TIMEOUT		(5 * 60 * HZ)
++#define READ_ELEMENT_STATUS_TIMEOUT	(5 * 60 * HZ)
++#define READ_DEFECT_DATA_TIMEOUT	(60 * HZ )
++
+ 
+ #define IDENTIFY_BASE       0x80
+ #define IDENTIFY(can_disconnect, lun)   (IDENTIFY_BASE |\
