@@ -1,52 +1,97 @@
-From: Patrick Mansfield <patmans@us.ibm.com>
-Subject: Re: Patch from my store of obscure fixes
-Date: Tue, 13 Aug 2002 15:25:33 -0700
+From: James Bottomley <James.Bottomley@steeleye.com>
+Subject: [PATCH 2.5.31] cli clean up for 53c700
+Date: Wed, 14 Aug 2002 09:23:02 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20020813152533.A3259@eng2.beaverton.ibm.com>
-References: <20020809164834.A21474@devserv.devel.redhat.com>
+Message-ID: <200208141423.g7EEN3402521@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/mixed ;
+	boundary="==_Exmh_-2800804480"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <20020809164834.A21474@devserv.devel.redhat.com>; from zaitcev@redhat.com on Fri, Aug 09, 2002 at 04:48:34PM -0400
+Received: (from root@localhost)
+	by pogo.mtv1.steeleye.com (8.9.3/8.9.3) id HAA30728
+	for <linux-scsi@vger.kernel.org>; Wed, 14 Aug 2002 07:23:08 -0700
+Received: from localhost.localdomain (sshppp-200.mtv1.steeleye.com [172.16.1.200])
+	by pogo.mtv1.steeleye.com (8.9.3/8.9.3) with ESMTP id HAA30591
+	for <linux-scsi@vger.kernel.org>; Wed, 14 Aug 2002 07:23:05 -0700
+Received: from mulgrave (jejb@localhost)
+	by localhost.localdomain (8.11.6/linuxconf) with ESMTP id g7EEN3402521
+	for <linux-scsi@vger.kernel.org>; Wed, 14 Aug 2002 09:23:03 -0500
 List-Id: linux-scsi@vger.kernel.org
-To: Pete Zaitcev <zaitcev@redhat.com>
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Fri, Aug 09, 2002 at 04:48:34PM -0400, Pete Zaitcev wrote:
-> Apparently, this patch comes from an expirience with a Clariion array
-> with some volumes disabled by operator. When Linux reboots, it
-> tries to spin them up and for some reason it times out, and
-> generally takes a very long time. I do suspect that START STOP UNIT
-> should return failure immediately, but perhaps it does not.
-> What do you guys think about this? Obviously a workaround, but
-> is it useful?
+This is a multipart MIME message.
 
-It looks good, except the device should be offlined (or ?), and the
-read capacity prevented; the similiar 2.4 patch prevented the read
-capacity since the code is different, and it returned before the
-read capacity.
+--==_Exmh_-2800804480
+Content-Type: text/plain; charset=us-ascii
 
--- Patrick Mansfield
+This is a trivial fix to remove the 53c700 driver's reliance on 
+cli/restore_flags.
 
-> 
-> -- Pete
-> 
-> --- linux-2.5.30/drivers/scsi/sd.c	Thu Aug  1 14:16:13 2002
-> +++ linux-2.5.30-sparc/drivers/scsi/sd.c	Fri Aug  9 13:47:52 2002
-> @@ -847,6 +847,16 @@
->  		}
->  
->  		/*
-> +		 * If the drive requires human intervention,
-> +		 * don't bother to jerk the drive until it happens.
-> +		 */
-> +		if (the_result != 0 &&
-> +		    SRpnt->sr_sense_buffer[2] == NOT_READY &&
-> +		    SRpnt->sr_sense_buffer[12] == 0x04 &&	/* ASC */
-> +		    SRpnt->sr_sense_buffer[13] == 0x03)		/* ASCQ */
-> +			return;
-> +
-> +		/*
->  		 * If the drive has indicated to us that it doesn't have
->  		 * any media in it, don't bother with any of the rest of
->  		 * this crap.
+James
+
+
+--==_Exmh_-2800804480
+Content-Type: text/plain ; name="53c700-2.5.31.diff"; charset=us-ascii
+Content-Description: 53c700-2.5.31.diff
+Content-Disposition: attachment; filename="53c700-2.5.31.diff"
+
+# This is a BitKeeper generated patch for the following project:
+# Project Name: Linux kernel tree
+# This patch format is intended for GNU patch command version 2.5 or higher.
+# This patch includes the following deltas:
+#	           ChangeSet	1.543   -> 1.544  
+#	drivers/scsi/53c700.c	1.11    -> 1.12   
+#
+# The following is the BitKeeper ChangeSet Log
+# --------------------------------------------
+# 02/08/04	jejb@mulgrave.(none)	1.544
+# [SCSI 53c700] clean up cli code
+# --------------------------------------------
+#
+diff -Nru a/drivers/scsi/53c700.c b/drivers/scsi/53c700.c
+--- a/drivers/scsi/53c700.c	Wed Aug 14 09:20:48 2002
++++ b/drivers/scsi/53c700.c	Wed Aug 14 09:20:48 2002
+@@ -1360,6 +1360,8 @@
+ }
+ 
+ 
++/* The queue lock with interrupts disabled must be held on entry to
++ * this function */
+ STATIC int
+ NCR_700_start_command(Scsi_Cmnd *SCp)
+ {
+@@ -1367,17 +1369,13 @@
+ 		(struct NCR_700_command_slot *)SCp->host_scribble;
+ 	struct NCR_700_Host_Parameters *hostdata =
+ 		(struct NCR_700_Host_Parameters *)SCp->host->hostdata[0];
+-	unsigned long flags;
+ 	__u16 count = 1;	/* for IDENTIFY message */
+ 	
+-	save_flags(flags);
+-	cli();
+ 	if(hostdata->state != NCR_700_HOST_FREE) {
+ 		/* keep this inside the lock to close the race window where
+ 		 * the running command finishes on another CPU while we don't
+ 		 * change the state to queued on this one */
+ 		slot->state = NCR_700_SLOT_QUEUED;
+-		restore_flags(flags);
+ 
+ 		DEBUG(("scsi%d: host busy, queueing command %p, slot %p\n",
+ 		       SCp->host->host_no, slot->cmnd, slot));
+@@ -1443,12 +1441,6 @@
+ 		       SCp->host, SXFER_REG);
+ 	NCR_700_writel(slot->temp, SCp->host, TEMP_REG);
+ 	NCR_700_writel(slot->resume_offset, SCp->host, DSP_REG);
+-
+-	/* allow interrupts here so that if we're selected we can take
+-	 * a selection interrupt.  The script start may not be
+-	 * effective in this case, but the selection interrupt will
+-	 * save our command in that case */
+-	restore_flags(flags);
+ 
+ 	return 1;
+ }
+
+--==_Exmh_-2800804480--
+
+
