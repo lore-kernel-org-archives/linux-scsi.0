@@ -1,49 +1,36 @@
-From: Shobhit Mathur <shobhitmmathur@yahoo.com>
-Subject: SCSI Query - cmd_per_lun & can_queue ...
-Date: Tue, 13 Jul 2004 03:40:02 -0700 (PDT)
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: PATCH [3/5]  qla2xxx: TCQ fixes
+Date: 13 Jul 2004 09:27:19 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040713104002.10597.qmail@web52510.mail.yahoo.com>
+Message-ID: <1089728842.2055.11.camel@mulgrave>
+References: <20040712140558.GA6961@praka.san.rr.com>
+	<1089668486.1799.62.camel@mulgrave>  <40F32AAE.5070508@us.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from web52510.mail.yahoo.com ([206.190.39.135]:36768 "HELO
-	web52510.mail.yahoo.com") by vger.kernel.org with SMTP
-	id S264819AbUGMKkF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 13 Jul 2004 06:40:05 -0400
+Received: from stat16.steeleye.com ([209.192.50.48]:13227 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S265237AbUGMO1p (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 13 Jul 2004 10:27:45 -0400
+In-Reply-To: <40F32AAE.5070508@us.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Mike Christie <mikenc@us.ibm.com>
+Cc: Andrew Vasquez <andrew.vasquez@qlogic.com>, Linux-SCSI Mailing List <linux-scsi@vger.kernel.org>, linux-iscsi-devel@lists.sourceforge.net, Krishna Murthy <krmurthy@cisco.com>
 
-Hello,
+On Mon, 2004-07-12 at 19:19, Mike Christie wrote:
+> Depending on the API, we might be able to use it for the linux-iscsi 
+> driver. Today the driver uses scsi_activate_tcq(), but does not uses the 
+> tag numbers. Instead it uses its own initiator task tags values for 
+> session wide identifiers, becuase we need tag values for iscsi ops. For 
+> example if we need to send a ping how should we get a tag from the mid 
+> layer? Or maybe becuase there are some transport specific tag values 
+> should we use someting else or keep it in the driver?
 
-I have a basic query related to the Scsi_Host_Template
-fields namely : cmd_per_lun and can_queue. I would
-like
-to know what is the relation between the per-lun queue
-and the per-HBA queue ?
+The only clean way I can see of doing it is to store the tags map in the
+host structure.  That will pretty much require one host per transport
+end point.  Is the iSCSI driver moving in that direction?
 
-To elaborate my query, I would like to know how are
-the
-I/Os from the upper-layers managed between per-lun and
-the host-queue depth. In most cases the host-queue
-depth
-is very large [128 or more], while the per-lun queue
-is
-a fraction [5 or 2]. I would like to know how is the
-relation between the two queues and how does this
-impact
-io-rate ?
-
-- Kindly let me know as I have a blurred picture of
-the
-role of the 2 queues.
-
-- Thank you very much
-
-- Shobhit Mathur
+James
 
 
-		
-__________________________________
-Do you Yahoo!?
-Yahoo! Mail - 50x more storage than other providers!
-http://promotions.yahoo.com/new_mail
