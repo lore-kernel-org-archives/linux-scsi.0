@@ -1,104 +1,29 @@
 From: Luben Tuikov <luben_tuikov@adaptec.com>
-Subject: [PATCH]: Flexible timeout infrastructure
-Date: Tue, 15 Jun 2004 11:02:55 -0400
+Subject: Signed-off-by: added    [Re: [PATCH]: Flexible timeout infrastructure]
+Date: Tue, 15 Jun 2004 11:08:52 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <40CF0F9F.4050902@adaptec.com>
+Message-ID: <40CF1104.30903@adaptec.com>
+References: <40CF0F9F.4050902@adaptec.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from magic.adaptec.com ([216.52.22.17]:61855 "EHLO magic.adaptec.com")
-	by vger.kernel.org with ESMTP id S265676AbUFOPC5 (ORCPT
+Received: from magic.adaptec.com ([216.52.22.17]:20900 "EHLO magic.adaptec.com")
+	by vger.kernel.org with ESMTP id S265697AbUFOPI5 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 15 Jun 2004 11:02:57 -0400
+	Tue, 15 Jun 2004 11:08:57 -0400
 Received: from redfish.adaptec.com (redfish.adaptec.com [162.62.50.11])
-	by magic.adaptec.com (8.11.6/8.11.6) with ESMTP id i5FF2uX28339
-	for <linux-scsi@vger.kernel.org>; Tue, 15 Jun 2004 08:02:56 -0700
+	by magic.adaptec.com (8.11.6/8.11.6) with ESMTP id i5FF8sX32279
+	for <linux-scsi@vger.kernel.org>; Tue, 15 Jun 2004 08:08:54 -0700
 Received: from rtpe2k01.adaptec.com (rtpe2k01.adaptec.com [10.110.12.40])
-	by redfish.adaptec.com (8.11.6/8.11.6) with ESMTP id i5FF2uo29249
-	for <linux-scsi@vger.kernel.org>; Tue, 15 Jun 2004 08:02:56 -0700
+	by redfish.adaptec.com (8.11.6/8.11.6) with ESMTP id i5FF8so00504
+	for <linux-scsi@vger.kernel.org>; Tue, 15 Jun 2004 08:08:54 -0700
+In-Reply-To: <40CF0F9F.4050902@adaptec.com>
 List-Id: linux-scsi@vger.kernel.org
-To: SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: "Tuikov, Luben" <Luben_Tuikov@adaptec.com>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-Hello,
-
-This patch introduces a flexible command timeout infrastructure
-accomodating completely current behaviour SCSI Core command timeout,
-but also offering the ability to hand command timeout handling to
-a LLDD, _yet_ still have it all go through *SCSI Core*.
-
-This is somewhat similar to Christoph's proposal patch, but I wasn't
-aware of his patch when I thought of this. Interestingly enough it can be
-viewed as an extension to his patch.
-
-The patch is very short (minimal chages indeed), but the text a bit
-lenghty since it outlines the many different a usage of such an
-infrastructure.
-
-New method: 
-  struct scsi_host_template :: int (*eh_cmd_timed_out)(struct scsi_cmnd *);
-This method is marked as OPTIONAL status.
-
-If the driver does not define eh_cmd_timed_out() method in its
-host template, then current behaviour is assumed.
-
-If the driver does define it, then SCSI Core will give the command
-to LLDD without a timer running.  Then when the LLDD notifies the
-transport and before it sends it to the interconnect it start
-the timer *by calling SCSI Core*, scsi_add_timer(<cmd>,<timeout>,scsi_times_out).
-
-Timeline:
----+-------------------------+-------------> t
-   t0                        t1           
-SCSI Core::queuecommand(), LLDD::scsi_add_timer(,,scsi_times_out)
-
-NB: |t1-t0| is *always* bounded! (hint)
-
-SUCCESS: If the command completes, LLDD calls
-scsi_delete_timer(<cmd>), and then scsi_done().  This completes
-the SCSI command transaction.
-
-TO: If the command times out, then *SCSI Core* is called,
-scsi_times_out(), which calls the defined, eh_cmd_timed_out()
-method.
-
-RETURNS: eh_cmd_timed_out() returns:
-  EH_HANDLED:
-          - LLDD has called scsi_done() having set the status/response
-            codes appropriately,
-       XOR
-          - resent the command back to the LU.
-    Either way, there's nothing to do at this point and the timer
-    routine completes.
-
-  EH_NONE:
-          - SCSI Core should do error handling as usual.
-
-Note that after eh_cmd_timed_out() returns, we are in _consistent_
-state:
-- either the command is back out to the LU: timer
-has been rerun by the LLDD, the command belongs to LLDD,
-SCSI Core should do nothing -- just the same as if it never fired,
-XOR
-- scsi_done() is called and SCSI Core will
-be processing the command shortly, no timer is running
-since it fired (since we're executing in this method).
-Consistent as if the command completed.
-Or we returned EH_NONE, and SCSI Core adds it to the
-eh list for recovery.
-
-Let me know your comments, USB, FC, SAS, iSCSI device driver
-writers.  The main point of this patch is complicated
-_recovery_ of protocols for which SCSI Core cannot have
-internal knowlege, but will get notified *at every step*.
-I.e. SAM like.
-
-Note that the driver may also decide to do some processing
-in the eh_cmd_timed_out() method (interrupt context) and still
-return EH_NONE, to get back at that command in process context
-from the eh tread (i.e. if TMF ABORT TASK takes some time to return).
-
-Against scsi-misc-2.6:
+Signed-off-by: Luben Tuikov <luben_tuikov@adaptec.com>
 
 ===== drivers/scsi/scsi.c 1.143 vs edited =====
 --- 1.143/drivers/scsi/scsi.c	2004-04-28 12:32:09 -04:00
@@ -245,9 +170,4 @@ Against scsi-misc-2.6:
  	/*
  	 * Old EH handlers, no longer used. Make them warn the user of old
  	 * drivers by using a wrong type
-
-
--- 
-Luben
-
 
