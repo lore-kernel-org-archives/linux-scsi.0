@@ -1,31 +1,36 @@
-From: "www.satmatic.net" <satmatic@yahoo.com>
-Subject: www.satmatic.net      <-----Telefon Dinleme ve  =?ISO-8859-1?Q?=20kay=FDt?=  =?ISO-8859-1?Q?=20c?=
-	=?ISO-8859-1?Q?ihaz=FD?= & Digital Uydu Sistemleri ----->
-Date: Fri, 25 Jun 2004 16:44:43 +0300
+From: Zwane Mwaikambo <zwane@linuxpower.ca>
+Subject: Re: [PATCH] fix aic7xxx probing
+Date: Fri, 25 Jun 2004 10:35:30 -0400 (EDT)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <200406251355.i5PDk157061757@smtp.hotbox.ru>
-Reply-To: "www.satmatic.net" <satmatic@yahoo.com>
+Message-ID: <Pine.LNX.4.58.0406251034390.2219@montezuma.fsmlabs.com>
+References: <1088117341.2174.67.camel@mulgrave>
+ <Pine.LNX.4.58.0406250036000.3261@montezuma.fsmlabs.com>
+ <1088170181.2217.12.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-9"
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from relay1.hotbox.ru ([194.186.36.181]:33755 "EHLO relay1.hotbox.ru")
-	by vger.kernel.org with ESMTP id S266728AbUFYNo5 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 25 Jun 2004 09:44:57 -0400
-Received: from smtp.hotbox.ru (smtp.hotbox.ru [80.68.244.50])
-	by relay1.hotbox.ru (8.11.6/8.11.6) with ESMTP id i5PDiug14629
-	for <linux-scsi@vger.kernel.org>; Fri, 25 Jun 2004 17:44:56 +0400
-Received: from satmatic (dsl81-215-10490.adsl.ttnet.net.tr [81.215.40.250])
-	(authenticated bits=0)
-	by smtp.hotbox.ru (8.12.9/8.12.9) with SMTP id i5PDk157061757
-	for <linux-scsi@vger.kernel.org>; Fri, 25 Jun 2004 17:55:10 +0400 (MSD)
-	(envelope-from satmatic@yahoo.com)
+Received: from dragnfire.mtl.istop.com ([66.11.160.179]:17024 "EHLO
+	dsl.commfireservices.com") by vger.kernel.org with ESMTP
+	id S266743AbUFYOdO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 25 Jun 2004 10:33:14 -0400
+In-Reply-To: <1088170181.2217.12.camel@mulgrave>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, William Lee Irwin III <wli@holomorphy.com>
 
+On Fri, 25 Jun 2004, James Bottomley wrote:
 
-www.satmatic.net
+> On Thu, 2004-06-24 at 23:56, Zwane Mwaikambo wrote:
+> > This patch applied against 2.6.7-mm2 doesn't detect my PCI HBA whereas
+> > 2.6.7-mm2 currently does.
+>
+> Thanks, had another look at the code and it seems that the meaning of
+> the return value for ahc_linux_pci_init() is different depending on
+> kernel version, sigh.  For < 2.4.0 it means number of boards found,
+> otherwise it's zero or error.
+>
+> We really need to scrub this 2.2 code out of the driver, but in the
+> meantime, can you test the attached? (backing out the original).  It
+> just makes the return of ahc_linux_pci_init() consistent.
 
-Adresinden gerekli bilgilere ulaþabilirsiniz
+Doesn't detect the HBA with that patch either.
