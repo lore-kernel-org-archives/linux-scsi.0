@@ -1,40 +1,176 @@
-From: Patrick Mansfield <patmans@us.ibm.com>
-Subject: Re: [BUG] problems with USB memory pen
-Date: Fri, 10 Oct 2003 08:58:50 -0700
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <20031010085850.A8160@beaverton.ibm.com>
-References: <20031010060350.GA5962@pc11.op.pod.cz>
+From: Brian King <brking@us.ibm.com>
+Subject: Re: [PATCH] sym53c8xx_2 pci_remove cleanup
+Date: Fri, 10 Oct 2003 13:05:42 -0500
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <3F86F4F6.2000302@us.ibm.com>
+References: <3F847EEB.4060306@us.ibm.com> <20031010113636.GX27861@parcelfarce.linux.theplanet.co.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20031010060350.GA5962@pc11.op.pod.cz>; from samel@mail.cz on Fri, Oct 10, 2003 at 08:03:50AM +0200
-To: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
-Cc: James Bottomley <James.Bottomley@steeleye.com>, Christoph Hellwig <hch@lst.de>
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from e31.co.us.ibm.com ([32.97.110.129]:31140 "EHLO
+	e31.co.us.ibm.com") by vger.kernel.org with ESMTP id S262762AbTJJSFs
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 10 Oct 2003 14:05:48 -0400
 List-Id: linux-scsi@vger.kernel.org
+To: Matthew Wilcox <willy@debian.org>
+Cc: linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@steeleye.com>
 
-On Fri, Oct 10, 2003 at 08:03:50AM +0200, Vitezslav Samel wrote:
-> 	Hi!
+Looks good. I loaded it on a machine and it works fine for me. I tried 
+both hot plug and insmod/rmmod.
+
+-Brian
+
+
+Matthew Wilcox wrote:
+> On Wed, Oct 08, 2003 at 04:17:31PM -0500, Brian King wrote:
 > 
->   Since 2.6.0-test6 ther is an annoying problem with my USB memory pen.
-> First time I insert it, kernel gives it "sdc" (which is O.K.). Next time
-> kernel gives it "sdd", "sde" and so on. Seems like someone is not releasing
-> unused SCSI devices.
+>>This is a patch to the sym2 driver to properly cleanup midlayer 
+>>resources both on module unload and pci hot remove.
 > 
->   I narrowed down this problem to linux-2.6.0-test5-bk14. There are no USB
-> changes, but are SCSI changes which I don't understand that well to fix my
-> problem.
+> 
+> Here's the patch I currently have in my tree for doing the same thing.
+> I wanted to test it, but I don't have any machines that don't have their
+> root on it ... and so far I've failed to set up NFSroot on any of them.
+> 
+> I'm not sure whether it applies to the public tree or not, but it also
+> handles scsi_add_host() failure.  If it doesn't apply to your tree, let
+> me know and I'll send you the latest version.
+> 
+> Index: drivers/scsi/sym53c8xx_2/sym_glue.c
+> ===================================================================
+> RCS file: /var/cvs/linux-2.6/drivers/scsi/sym53c8xx_2/sym_glue.c,v
+> retrieving revision 1.34
+> diff -u -p -r1.34 sym_glue.c
+> --- drivers/scsi/sym53c8xx_2/sym_glue.c	21 Sep 2003 04:45:52 -0000	1.34
+> +++ drivers/scsi/sym53c8xx_2/sym_glue.c	6 Oct 2003 12:09:08 -0000
+> @@ -1630,8 +1630,8 @@ out_err32:
+>   *  If all is OK, install interrupt handling and
+>   *  start the timer daemon.
+>   */
+> -static int __devinit 
+> -sym_attach (struct scsi_host_template *tpnt, int unit, struct sym_device *dev)
+> +static struct Scsi_Host * __devinit sym_attach(struct scsi_host_template *tpnt,
+> +		int unit, struct sym_device *dev)
+>  {
+>  	struct host_data *host_data;
+>  	struct sym_hcb *np = NULL;
+> @@ -1821,13 +1821,7 @@ sym_attach (struct scsi_host_template *t
+>  
+>  	spin_unlock_irqrestore(instance->host_lock, flags);
+>  
+> -	/*
+> -	 *  Now let the generic SCSI driver
+> -	 *  look for the SCSI devices on the bus ..
+> -	 */
+> -	scsi_add_host(instance, &dev->pdev->dev); /* XXX: handle failure */
+> -	scsi_scan_host(instance);
+> -	return 0;
+> +	return instance;
+>  
+>   reset_failed:
+>  	printf_err("%s: FATAL ERROR: CHECK SCSI BUS - CABLES, "
+> @@ -1835,13 +1829,13 @@ sym_attach (struct scsi_host_template *t
+>  	spin_unlock_irqrestore(instance->host_lock, flags);
+>   attach_failed:
+>  	if (!instance)
+> -		return -1;
+> +		return NULL;
+>  	printf_info("%s: giving up ...\n", sym_name(np));
+>  	if (np)
+>  		sym_free_resources(np);
+>  	scsi_host_put(instance);
+>  
+> -	return -1;
+> +	return NULL;
+>   }
+>  
+>  
+> @@ -2180,12 +2174,9 @@ sym53c8xx_pci_init(struct pci_dev *pdev,
+>  
+>  
+>  /*
+> - *  Linux release module stuff.
+> - *
+>   *  Called before unloading the module.
+>   *  Detach the host.
+>   *  We have to free resources and halt the NCR chip.
+> - *
+>   */
+>  static int __devexit sym_detach(struct sym_hcb *np)
+>  {
+> @@ -2194,18 +2185,15 @@ static int __devexit sym_detach(struct s
+>  	del_timer_sync(&np->s.timer);
+>  
+>  	/*
+> -	 *  Reset NCR chip.
+> -	 *  We should use sym_soft_reset(), but we donnot want to do 
+> -	 *  so, since we may not be safe if interrupts occur.
+> +	 * Reset NCR chip.
+> +	 * We should use sym_soft_reset(), but we don't want to do 
+> +	 * so, since we may not be safe if interrupts occur.
+>  	 */
+>  	printk("%s: resetting chip\n", sym_name(np));
+>  	OUTB (nc_istat, SRST);
+>  	UDELAY (10);
+>  	OUTB (nc_istat, 0);
+>  
+> -	/*
+> -	 *  Free host resources
+> -	 */
+>  	sym_free_resources(np);
+>  
+>  	return 1;
+> @@ -2314,6 +2302,7 @@ static int __devinit sym2_probe(struct p
+>  {
+>  	struct sym_device sym_dev;
+>  	struct sym_nvram nvram;
+> +	struct Scsi_Host *instance;
+>  
+>  	memset(&sym_dev, 0, sizeof(sym_dev));
+>  	memset(&nvram, 0, sizeof(nvram));
+> @@ -2332,12 +2321,20 @@ static int __devinit sym2_probe(struct p
+>  
+>  	sym_get_nvram(&sym_dev, &nvram);
+>  
+> -	if (sym_attach(&sym2_template, attach_count, &sym_dev))
+> +	instance = sym_attach(&sym2_template, attach_count, &sym_dev);
+> +	if (!instance)
+>  		goto free;
+>  
+> +	if (scsi_add_host(instance, &pdev->dev))
+> +		goto detach;
+> +	scsi_scan_host(instance);
+> +
+>  	attach_count++;
+> +
+>  	return 0;
+>  
+> + detach:
+> +	sym_detach(pci_get_drvdata(pdev));
+>   free:
+>  	pci_release_regions(pdev);
+>   disable:
+> @@ -2347,7 +2344,13 @@ static int __devinit sym2_probe(struct p
+>  
+>  static void __devexit sym2_remove(struct pci_dev *pdev)
+>  {
+> -	sym_detach(pci_get_drvdata(pdev));
+> +	struct sym_hcb *np = pci_get_drvdata(pdev);
+> +	struct Scsi_Host *host = np->s.host;
+> +
+> +	scsi_remove_host(host);
+> +	scsi_host_put(host);
+> +
+> +	sym_detach(np);
+>  
+>  	pci_release_regions(pdev);
+>  	pci_disable_device(pdev);
+> 
 
-This is the third posting of this patch:
 
---- bleed-2.5/drivers/scsi/scsi_sysfs.c-orig	Mon Sep 29 12:21:09 2003
-+++ bleed-2.5/drivers/scsi/scsi_sysfs.c	Mon Sep 29 16:19:22 2003
-@@ -412,7 +412,7 @@
- 		set_bit(SDEV_DEL, &sdev->sdev_state);
- 		if (sdev->host->hostt->slave_destroy)
- 			sdev->host->hostt->slave_destroy(sdev);
--		if (atomic_read(&sdev->access_count))
-+		if (!atomic_read(&sdev->access_count))
- 			device_del(&sdev->sdev_gendev);
- 		up_write(&class->subsys.rwsem);
- 	}
+-- 
+Brian King
+eServer Storage I/O
+IBM Linux Technology Center
+
