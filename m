@@ -1,47 +1,37 @@
-From: "Surekha.PC" <surekhap@cisco.com>
-Subject: RE: Request for review of Linux iSCSI driver version 4.0.0.1
-Date: Wed, 29 Oct 2003 18:53:43 +0530
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH] [v2] aha152x cmnd->device oops
+Date: Wed, 29 Oct 2003 14:42:49 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <018b01c39e1f$e013bab0$a0074d0a@apac.cisco.com>
-References: <20031027153932.A16679@infradead.org>
+Message-ID: <20031029134249.GA28862@lst.de>
+References: <20031027155713.GA28140@lst.de> <20031027160101.76d5291b.rddunlap@osdl.org> <20031028090600.GA7370@lst.de> <20031028124536.3ce82c23.rddunlap@osdl.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="US-ASCII"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from india-ironport-1.cisco.com ([64.104.129.195]:55934 "EHLO
-	india-ironport-1.cisco.com") by vger.kernel.org with ESMTP
-	id S262063AbTJ2NXz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 29 Oct 2003 08:23:55 -0500
-In-Reply-To: <20031027153932.A16679@infradead.org>
+Received: from verein.lst.de ([212.34.189.10]:56726 "EHLO mail.lst.de")
+	by vger.kernel.org with ESMTP id S262066AbTJ2NnA (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 29 Oct 2003 08:43:00 -0500
+Content-Disposition: inline
+In-Reply-To: <20031028124536.3ce82c23.rddunlap@osdl.org>
 List-Id: linux-scsi@vger.kernel.org
-To: 'Christoph Hellwig' <hch@infradead.org>
-Cc: linux-scsi@vger.kernel.org, davmyers@cisco.com
+To: "Randy.Dunlap" <rddunlap@osdl.org>
+Cc: James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org, fischer@norbit.de
+
+On Tue, Oct 28, 2003 at 12:45:36PM -0800, Randy.Dunlap wrote:
+>  			if(!(DONE_SC->SCp.Status & not_issued)) {
+
+Strange variable name..
 
 
-Hi,
+> +					cmnd->device          = ptr->device;
+>  					cmnd->device->host    = ptr->device->host;
+>  					cmnd->device->id      = ptr->device->id;
+>  					cmnd->device->lun     = ptr->device->lun;
 
- I have interspersed my answers below for 2 of your comments.
+You shouldn't touch either of these.
 
->	- kill the is_root_disk special casing.  drivers can't know
->	what the root disks is, there might not even be a single one.
+> -					if(cmnd)
+> -						kfree(cmnd);
 
-This flag is needed for our iSCSI network boot implementation to check
-if we are booted on iSCSI disk. This is used while trying to shutdown
-the iSCSI service.
-	
->	- what the heck is iscsi_set_if_addr?  You have absolutely no
-business
->	messing with network device configuration.
-
-This is again needed for network boot. The n/w driver and iSCSI driver
-are loaded during early boot. Since the n/w interface is not setup at
-that time, we need to bring up the interface through this call in iSCSI
-driver.
-
-Thanks,
-surekha
- 
-
-	
+You need a scsi_put_command here.
 
