@@ -1,63 +1,41 @@
 From: Patrick Mansfield <patmans@us.ibm.com>
-Subject: Re: [PATCH] 3/7 consolidate single_lun code
-Date: Fri, 28 Mar 2003 12:06:44 -0800
+Subject: Re: [PATCH] scsi_set_host_offline (resend)
+Date: Fri, 28 Mar 2003 16:31:09 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030328120644.A20061@beaverton.ibm.com>
-References: <20030324175337.A14957@beaverton.ibm.com> <20030324175422.A14996@beaverton.ibm.com> <20030324180227.A15047@beaverton.ibm.com> <20030324180247.B15047@beaverton.ibm.com> <3E80BDC3.7000503@splentec.com> <20030326111146.A3548@beaverton.ibm.com> <3E822415.2080306@splentec.com> <20030327144326.A14457@beaverton.ibm.com> <3E8465A2.7020501@splentec.com>
+Message-ID: <20030328163109.A22830@beaverton.ibm.com>
+References: <20030325100704.GC3868@beaverton.ibm.com> <1048613872.2070.12.camel@mulgrave> <20030325184530.GA1202@beaverton.ibm.com> <1048618939.1790.29.camel@mulgrave> <20030325232920.GB2692@beaverton.ibm.com> <1048779761.1789.21.camel@mulgrave>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <3E8465A2.7020501@splentec.com>; from luben@splentec.com on Fri, Mar 28, 2003 at 10:09:22AM -0500
+In-Reply-To: <1048779761.1789.21.camel@mulgrave>; from James.Bottomley@steeleye.com on Thu, Mar 27, 2003 at 09:42:39AM -0600
 List-Id: linux-scsi@vger.kernel.org
-To: Luben Tuikov <luben@splentec.com>
-Cc: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@steeleye.com>
+Cc: Mike Anderson <andmike@us.ibm.com>, mochel@osdl.org, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Fri, Mar 28, 2003 at 10:09:22AM -0500, Luben Tuikov wrote:
-> Patrick Mansfield wrote:
-> > On Wed, Mar 26, 2003 at 05:05:09PM -0500, Luben Tuikov wrote:
-
-> You see, all I'm doing is trying to come up with a suitable ADT
-> and algorithm for the premise which _you_ gave.
+On Thu, Mar 27, 2003 at 09:42:39AM -0600, James Bottomley wrote:
+> On Tue, 2003-03-25 at 17:29, Mike Anderson wrote:
+> > I thought we where looking at a solution for all traversals of the list?
+> > There are currently ~52 refs to my_devices, while some traversals can be
+> > evalutated and possibly removed there maybe valid ones that happen
+> > without user context.
 > 
-> The problem is that you have no fixed arbitration criterium between single
-> lun and fully capable targets.  If you did, it's a little thing to get
-> the sinlge list as priority queue working.
+> Sorry, I was thinking both short and long term.
 > 
-> I.e. What I'm asking is this: _even_ if you had 2 lists, one
-> for sinlge lun and another for fully capable targets,
-> how would you arbitrate between the two in scsi_request_fn().
+> Short term, it's probably easiest for the firewire stuff to access the
+> offline and removal functions from user land hotplug scripts (so they
+> don't actually need the in-kernel hook).
+> 
+> Long term we do need to see if we can go to a nice refcounted model for
+> all 50 odd list traversals.  At least auditing them to see if we can use
+> a semaphore everywhere.
+> 
+> James
 
-OK I see your point, and I don't have an answer.
+same_target_siblings has a similiar problem.
 
-So we should be able to put single_lun sdev's on the starved_list, and
-maintain the same priority (current scsi-locking-2.5 with all 7 patches
-applied runs single_lun queue's, and then runs starved queues; it puts all
-devices on the starved_list if the can_queue or other host limits are hit;
-no device is put on the starved_list unless it is unable to send IO).
-
-I'm working on getting rid of the lock hierarchy now, I would rather not
-touch any more of the single_lun code (I would rather such devices go
-away). If you or anyone can submit a patch (against the scsi-lock-2.5) for
-single_lun code to use the starved_list that would be nice :)
-
-I tested the single_lun code by booting with scsi_dev_flags=vend:prod:0x10
-for some of the disks on my system, or you can modify the scsi_scan.c
-table.
-
-I'm not sure if we can ever prioritize the starved_list (holding a list of
-sdev's or their request functions) without locking out one or the other of
-the single lun or starved devices.
-
-We might need a per-target or per-host queue (of requests, not of sdev's)
-to fix it properly. A per-target (or per-host?) queue might also allow an
-easier fix to prevent a one single_lun device from starving all others. I
-would rather leave this as a broken hardware or bad configuration, the fix
-is to get rid of the single_lun hardware, or only attach one of them
-(target) to an adapter.
-
-In any case the starved_list patch is an improvement over previous
-handling for the starved cases, and for single_lun cases we should not be
-any worse than before.
+It is used primarily for the single_lun code, sometimes in softirq context
+(should really not sleep there), and also to get any exisiting scsi_level
+during scan.
 
 -- Patrick Mansfield
