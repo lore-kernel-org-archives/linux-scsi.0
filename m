@@ -1,193 +1,198 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: [BK PATCH] SCSI updates for 2.6.11
-Date: Tue, 15 Mar 2005 18:53:30 -0600
-Message-ID: <1110934411.5685.39.camel@mulgrave>
+From: Jens Axboe <axboe@suse.de>
+Subject: Re: [PATCH] dc395x: Fix support for highmem
+Date: Wed, 16 Mar 2005 08:58:39 +0100
+Message-ID: <20050316075839.GC7842@suse.de>
+References: <200503160209.j2G29cAf010870@hera.kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Received: from stat16.steeleye.com ([209.192.50.48]:56267 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S262171AbVCPAxo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 15 Mar 2005 19:53:44 -0500
+Content-Type: text/plain; charset=us-ascii
+Received: from ns.virtualhost.dk ([195.184.98.160]:26337 "EHLO virtualhost.dk")
+	by vger.kernel.org with ESMTP id S262290AbVCPH6l (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 16 Mar 2005 02:58:41 -0500
+Content-Disposition: inline
+In-Reply-To: <200503160209.j2G29cAf010870@hera.kernel.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
+Cc: g.liakhovetski@gmx.de
 
-This is my current tranch of patches that were waiting the transition
-from -rc to released (sorry it's late ... I've been on holiday).
+On Thu, Mar 03 2005, Linux Kernel Mailing List wrote:
+> ChangeSet 1.1982.29.77, 2005/03/03 10:41:40+02:00, lenehan@twibble.org
+> 
+> 	[PATCH] dc395x: Fix support for highmem
+> 	
+> 	From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+> 	
+> 	Removes the page_to_virt and maps sg lists dynamically.
+> 	This makes the driver work with highmem pages.
+> 	
+> 	Signed-off-by: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+> 	Signed-off-by: Jamie Lenehan <lenehan@twibble.org>
+> 	Signed-off-by: James Bottomley <James.Bottomley@SteelEye.com>
 
-The patch is available here:
+Guys, who reviewed this? It looks completely bogus, using kmap() for tha
+entire sg list is just wrong and can deadlock easily. The proper way is
+of course to skip the virtual address requirement and dma map the sg
+array properly.
 
-bk://linux-scsi.bkbits.net/scsi-for-linus-2.6
+>  dc395x.c |   48 +++++++++++++++++++++++++++++++++++-------------
+>  1 files changed, 35 insertions(+), 13 deletions(-)
+> 
+> 
+> diff -Nru a/drivers/scsi/dc395x.c b/drivers/scsi/dc395x.c
+> --- a/drivers/scsi/dc395x.c	2005-03-15 18:09:50 -08:00
+> +++ b/drivers/scsi/dc395x.c	2005-03-15 18:09:50 -08:00
+> @@ -182,7 +182,7 @@
+>   * cross a page boundy.
+>   */
+>  #define SEGMENTX_LEN	(sizeof(struct SGentry)*DC395x_MAX_SG_LISTENTRY)
+> -
+> +#define VIRTX_LEN	(sizeof(void *) * DC395x_MAX_SG_LISTENTRY)
+>  
+>  struct SGentry {
+>  	u32 address;		/* bus! address */
+> @@ -234,6 +234,7 @@
+>  	u8 sg_count;			/* No of HW sg entries for this request */
+>  	u8 sg_index;			/* Index of HW sg entry for this request */
+>  	u32 total_xfer_length;		/* Total number of bytes remaining to be transfered */
+> +	void **virt_map;
+>  	unsigned char *virt_addr;	/* Virtual address of current transfer position */
+>  
+>  	/*
+> @@ -1020,14 +1021,14 @@
+>  			reqlen, cmd->request_buffer, cmd->use_sg,
+>  			srb->sg_count);
+>  
+> -		srb->virt_addr = page_address(sl->page);
+>  		for (i = 0; i < srb->sg_count; i++) {
+> -			u32 busaddr = (u32)sg_dma_address(&sl[i]);
+> -			u32 seglen = (u32)sl[i].length;
+> -			sgp[i].address = busaddr;
+> +			u32 seglen = (u32)sg_dma_len(sl + i);
+> +			sgp[i].address = (u32)sg_dma_address(sl + i);
+>  			sgp[i].length = seglen;
+>  			srb->total_xfer_length += seglen;
+> +			srb->virt_map[i] = kmap(sl[i].page);
+>  		}
+> +		srb->virt_addr = srb->virt_map[0];
+>  		sgp += srb->sg_count - 1;
+>  
+>  		/*
+> @@ -1964,6 +1965,7 @@
+>  	int segment = cmd->use_sg;
+>  	u32 xferred = srb->total_xfer_length - left; /* bytes transfered */
+>  	struct SGentry *psge = srb->segment_x + srb->sg_index;
+> +	void **virt = srb->virt_map;
+>  
+>  	dprintkdbg(DBG_0,
+>  		"sg_update_list: Transfered %i of %i bytes, %i remain\n",
+> @@ -2003,16 +2005,16 @@
+>  
+>  	/* We have to walk the scatterlist to find it */
+>  	sg = (struct scatterlist *)cmd->request_buffer;
+> +	idx = 0;
+>  	while (segment--) {
+>  		unsigned long mask =
+>  		    ~((unsigned long)sg->length - 1) & PAGE_MASK;
+>  		if ((sg_dma_address(sg) & mask) == (psge->address & mask)) {
+> -			srb->virt_addr = (page_address(sg->page)
+> -					   + psge->address -
+> -					   (psge->address & PAGE_MASK));
+> +			srb->virt_addr = virt[idx] + (psge->address & ~PAGE_MASK);
+>  			return;
+>  		}
+>  		++sg;
+> +		++idx;
+>  	}
+>  
+>  	dprintkl(KERN_ERR, "sg_update_list: sg_to_virt failed\n");
+> @@ -2138,7 +2140,7 @@
+>  				DC395x_read32(acb, TRM_S1040_DMA_CXCNT));
+>  		}
+>  		/*
+> -		 * calculate all the residue data that not yet tranfered
+> +		 * calculate all the residue data that not yet transfered
+>  		 * SCSI transfer counter + left in SCSI FIFO data
+>  		 *
+>  		 * .....TRM_S1040_SCSI_COUNTER (24bits)
+> @@ -3256,6 +3258,7 @@
+>  	struct scsi_cmnd *cmd = srb->cmd;
+>  	enum dma_data_direction dir = cmd->sc_data_direction;
+>  	if (cmd->use_sg && dir != PCI_DMA_NONE) {
+> +		int i;
+>  		/* unmap DC395x SG list */
+>  		dprintkdbg(DBG_SG, "pci_unmap_srb: list=%08x(%05x)\n",
+>  			srb->sg_bus_addr, SEGMENTX_LEN);
+> @@ -3265,6 +3268,8 @@
+>  		dprintkdbg(DBG_SG, "pci_unmap_srb: segs=%i buffer=%p\n",
+>  			cmd->use_sg, cmd->request_buffer);
+>  		/* unmap the sg segments */
+> +		for (i = 0; i < srb->sg_count; i++)
+> +			kunmap(virt_to_page(srb->virt_map[i]));
+>  		pci_unmap_sg(acb->dev,
+>  			     (struct scatterlist *)cmd->request_buffer,
+>  			     cmd->use_sg, dir);
+> @@ -3311,7 +3316,7 @@
+>  
+>  	if (cmd->use_sg) {
+>  		struct scatterlist* sg = (struct scatterlist *)cmd->request_buffer;
+> -		ptr = (struct ScsiInqData *)(page_address(sg->page) + sg->offset);
+> +		ptr = (struct ScsiInqData *)(srb->virt_map[0] + sg->offset);
+>  	} else {
+>  		ptr = (struct ScsiInqData *)(cmd->request_buffer);
+>  	}
+> @@ -4246,8 +4251,9 @@
+>  	const unsigned srbs_per_page = PAGE_SIZE/SEGMENTX_LEN;
+>  
+>  	for (i = 0; i < DC395x_MAX_SRB_CNT; i += srbs_per_page)
+> -		if (acb->srb_array[i].segment_x)
+> -			kfree(acb->srb_array[i].segment_x);
+> +		kfree(acb->srb_array[i].segment_x);
+> +
+> +	vfree(acb->srb_array[0].virt_map);
+>  }
+>  
+>  
+> @@ -4263,9 +4269,12 @@
+>  	int srb_idx = 0;
+>  	unsigned i = 0;
+>  	struct SGentry *ptr;
+> +	void **virt_array;
+>  
+> -	for (i = 0; i < DC395x_MAX_SRB_CNT; i++)
+> +	for (i = 0; i < DC395x_MAX_SRB_CNT; i++) {
+>  		acb->srb_array[i].segment_x = NULL;
+> +		acb->srb_array[i].virt_map = NULL;
+> +	}
+>  
+>  	dprintkdbg(DBG_1, "Allocate %i pages for SG tables\n", pages);
+>  	while (pages--) {
+> @@ -4286,6 +4295,19 @@
+>  		    ptr + (i * DC395x_MAX_SG_LISTENTRY);
+>  	else
+>  		dprintkl(KERN_DEBUG, "No space for tmsrb SG table reserved?!\n");
+> +
+> +	virt_array = vmalloc((DC395x_MAX_SRB_CNT + 1) * DC395x_MAX_SG_LISTENTRY * sizeof(void*));
+> +
+> +	if (!virt_array) {
+> +		adapter_sg_tables_free(acb);
+> +		return 1;
+> +	}
+> +
+> +	for (i = 0; i < DC395x_MAX_SRB_CNT + 1; i++) {
+> +		acb->srb_array[i].virt_map = virt_array;
+> +		virt_array += DC395x_MAX_SG_LISTENTRY;
+> +	}
+> +
+>  	return 0;
+>  }
+>  
+> -
+> To unsubscribe from this list: send the line "unsubscribe bk-commits-head" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
 
-The short log is:
+-- 
+Jens Axboe
 
-Adrian Bunk:
-  o SCSI NCR_D700.c: make some code static
-  o SCSI sim710.c: make some code static
-
-Alan Stern:
-  o Add a NOREPORTLUN blacklist flag
-  o Retry supposedly "unrecoverable" hardware errors
-
-Andi Kleen:
-  o Fix selection of command serial numbers and pids
-  o Add compat_ioctl to mptctl
-  o Convert megaraid2 to compat_ioctl
-  o Add compat_ioctl to SG
-  o Convert aacraid to compat_ioctl
-  o Add compat_ioctl to osst
-  o Add comment for compat_ioctl to SR
-  o Add compat_ioctl to st
-  o Add compat_ioctl to SD
-
-Andrew Morton:
-  o st msleep warning fix
-
-Andrew Vasquez:
-  o target code updates to support scanned targets
-
-Brian King:
-  o ipr: Handle new RAID 6 errors
-  o ipr: Bump driver version to 2.0.13
-  o ipr: Send uevent change notifications
-  o ipr: Sparse fixes
-  o ipr: Use bitwise types
-  o ipr: Remove tcq_active flag from resource entry
-  o ipr: Remove resource qdepth field
-  o ipr: Remove tcq_enable device attribute
-  o ipr: Use change queue type API
-  o ipr: Fast failure module options
-  o ipr: Support dynamic IDs
-  o ipr: Setup max_sectors based on device type
-  o ipr: Device remove cleanup
-  o ipr: New adapter support
-  o ipr: PCI ID table update
-  o PCI: update ipr PCI ids
-
-Christoph Hellwig:
-  o mark qlogicisp broken
-  o mark eata_pio broken
-  o qla1280: update changelog
-  o qla1280: use pci_map_single
-  o qla1280: remove qla1280_proc_info
-  o drop some attibutes from the FC transport class
-
-Dave Jones:
-  o blacklist microtek scanmaker III
-
-Eric Moore:
-  o mptfusion: delete watchdogs timers from mptctl and mptscsih
-
-Guennadi Liakhovetski:
-  o dc395x: Fix support for highmem
-
-James Bottomley:
-  o FC Remote Port Patch
-  o SCSI: dc395x.c add missing #include <linux/vmalloc.h>
-  o SCSI: fix transport statistics mismerge
-  o Add statistics to generic transport class
-  o SCSI: revamp target scanning routines
-  o SCSI: fix io statistics compile warnings
-  o SCSI: Add device io statistics
-  o SCSI: fix compat_ioctl compile warnings
-
-James Smart:
-  o add per scsi-host workqueues for defered processing
-
-Kai M=E4kisara:
-  o SCSI tape security: require CAP_ADMIN for SG_IO etc
-  o SCSI tape fixes: remove f_pos handling
-  o SCSI tape fixes (new version): sense descriptor
-  o SCSI tape fixes: sense descriptor init, bsf->weof, blkno,
-  o SCSI tape: write filemark before rewind etc. when writing
-  o SCSI tape descriptor based sense data support
-
-Kenn Humborg:
-  o NCR5380 delayed work fix and locking fix
-
-Mark Haverkamp:
-  o aacraid: adapter naming fix
-
-Matthew Wilcox:
-  o sym2 version 2.2.0
-  o Use spi_display_xfer_agreement() in 53c700
-  o Display SPI transfer agreement in common code
-  o scsi: remove device_request_lock
-
-Mike Anderson:
-  o SCSI: Add TASK_ABORTED to status_byte macro
-
-And the diffstat is:
-
- b/Documentation/kernel-parameters.txt   |    3=20
- b/Documentation/scsi/st.txt             |    5=20
- b/Documentation/scsi/sym53c8xx_2.txt    |    2=20
- b/drivers/base/transport_class.c        |   24=20
- b/drivers/message/fusion/mptbase.h      |   10=20
- b/drivers/message/fusion/mptctl.c       |  630 +++++---------
- b/drivers/message/fusion/mptscsih.c     |  185 +---
- b/drivers/pci/pci.ids                   |    7=20
- b/drivers/scsi/53c700.c                 |   16=20
- b/drivers/scsi/Kconfig                  |    4=20
- b/drivers/scsi/NCR5380.c                |   15=20
- b/drivers/scsi/NCR_D700.c               |    4=20
- b/drivers/scsi/aacraid/linit.c          |  115 +-
- b/drivers/scsi/dc395x.c                 |   49 -
- b/drivers/scsi/hosts.c                  |   41=20
- b/drivers/scsi/ipr.c                    |  248 +++--
- b/drivers/scsi/ipr.h                    |  201 ++--
- b/drivers/scsi/megaraid/megaraid_mm.c   |   26=20
- b/drivers/scsi/osst.c                   |   19=20
- b/drivers/scsi/qla1280.c                |  146 ---
- b/drivers/scsi/scsi.c                   |  105 ++
- b/drivers/scsi/scsi_devinfo.c           |    4=20
- b/drivers/scsi/scsi_error.c             |   13=20
- b/drivers/scsi/scsi_lib.c               |   61 +
- b/drivers/scsi/scsi_scan.c              |  266 ++++--
- b/drivers/scsi/scsi_sysfs.c             |  188 +---
- b/drivers/scsi/scsi_transport_fc.c      | 1092 ++++++++++++++++++++---=
---
- b/drivers/scsi/scsi_transport_iscsi.c   |   30=20
- b/drivers/scsi/scsi_transport_spi.c     |  213 +++--
- b/drivers/scsi/sd.c                     |   39=20
- b/drivers/scsi/sg.c                     |   26=20
- b/drivers/scsi/sim710.c                 |    6=20
- b/drivers/scsi/sr.c                     |    4=20
- b/drivers/scsi/st.c                     |  426 +++++-----
- b/drivers/scsi/st.h                     |   19=20
- b/drivers/scsi/sym53c8xx_2/Makefile     |    2=20
- b/drivers/scsi/sym53c8xx_2/sym53c8xx.h  |   60 +
- b/drivers/scsi/sym53c8xx_2/sym_defs.h   |    4=20
- b/drivers/scsi/sym53c8xx_2/sym_fw.c     |    2=20
- b/drivers/scsi/sym53c8xx_2/sym_glue.c   |  628 +++++---------
- b/drivers/scsi/sym53c8xx_2/sym_glue.h   |  299 -------
- b/drivers/scsi/sym53c8xx_2/sym_hipd.c   | 1354 +++++++++++++++--------=
----------
- b/drivers/scsi/sym53c8xx_2/sym_hipd.h   |  231 ++---
- b/drivers/scsi/sym53c8xx_2/sym_malloc.c |  124 +-
- b/drivers/scsi/sym53c8xx_2/sym_nvram.c  |   94 +-
- b/drivers/scsi/sym53c8xx_2/sym_nvram.h  |   11=20
- b/include/linux/pci_ids.h               |    1=20
- b/include/linux/transport_class.h       |   18=20
- b/include/scsi/scsi.h                   |    6=20
- b/include/scsi/scsi_cmnd.h              |    3=20
- b/include/scsi/scsi_device.h            |   17=20
- b/include/scsi/scsi_devinfo.h           |    1=20
- b/include/scsi/scsi_host.h              |   33=20
- b/include/scsi/scsi_transport.h         |   14=20
- b/include/scsi/scsi_transport_fc.h      |  207 +++-
- b/include/scsi/scsi_transport_spi.h     |    1=20
- drivers/scsi/sym53c8xx_2/sym_conf.h     |  110 --
- drivers/scsi/sym53c8xx_2/sym_misc.c     |  111 --
- 58 files changed, 3991 insertions(+), 3582 deletions(-)
-
-James
-
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
