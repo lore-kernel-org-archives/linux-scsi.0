@@ -1,27 +1,35 @@
-From: "Tony Battersby" <tonyb@cybernetics.com>
-Subject: ide-scsi data transfer residuals
-Date: Fri, 5 Jul 2002 10:07:49 -0400
+From: kuznet@ms2.inr.ac.ru
+Subject: Re: softscsi patch
+Date: Fri, 5 Jul 2002 18:53:07 +0400 (MSD)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <ag4973$k4k$2@main.gmane.org>
-Reply-To: <tonyb@cybernetics.com>
+Message-ID: <200207051453.SAA05954@sex.inr.ac.ru>
+References: <20020630222043.B29045@parcelfarce.linux.theplanet.co.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <20020630222043.B29045@parcelfarce.linux.theplanet.co.uk> from "Matthew Wilcox" at Jun 30, 2 10:20:43 pm
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
+To: Matthew Wilcox <willy@debian.org>
+Cc: linux-scsi@vger.kernel.org, davem@redhat.com
 
-Hello,
+Hello!
 
-I am using the scsi-generic and ide-scsi drivers together for low-level
-access to an IDE tape drive (vanilla 2.4.17).  I noticed that the data
-transfer residual in sg_io_hdr_t { int resid; } is always zero.  I assume
-that the residual calculation is just a missing feature from the ide-scsi
-driver.  Does anyone know how hard it is to add it?
+> This work shows up a hole in the current softirq API -- there's no support
+> for unregistering a softirq (close_softirq or similar).  We should do
+> this in scsi_exit -- make sure no softirqs are running while we unload.
+> This probably isn't a problem in practice, but it'd be nice to fix it.
 
-Please CC me in any replies.
+Well, it was difficult to make not introducing interaction between
+cpus (which was main goal of softirq core).
 
-Thanks,
-Anthony J. Battersby
-Cybernetics
+I think it is possible using ideas sort of brlock or using detection
+of quiescent intervals introduced with RCU. Anyway, I still do not see
+how to make this in clean way.
 
+BTW are you sure that scsi layer really needs bare softirq?
+Networking is very special in this sense, with local traffic
+the first spinlock is hit at socket level (very high granularity!).
+However, even in this case we are switching to tasklets (NAPI uses
+per-device tasklet in fact). Maybe, scsi will feel better with
+per-controller tasklets too.
+
+Alexey
