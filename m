@@ -1,78 +1,58 @@
-From: James Bottomley <James.Bottomley@steeleye.com>
-Subject: Re: [PATCH] fix for memory leak in scsi_prep_fn
-Date: 28 Jan 2003 12:52:28 -0600
+From: Bryan Henderson <hbryan@us.ibm.com>
+Subject: Re: New model for managing dev_t's for partitionable block devices
+Date: Tue, 28 Jan 2003 17:41:51 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1043779950.2991.101.camel@mulgrave>
-References: <1043778768.2991.74.camel@mulgrave>
+Message-ID: <OFD9CDB238.908E6C3C-ON87256CBD.00070A30-88256CBD.00095D4B@us.ibm.com>
+References: <3E36B946.2050308@mvista.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="=-EYfexEwJWTWwhbl0uz1I"
+Content-Type: text/plain; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: (from root@localhost)
-	by pogo.mtv1.steeleye.com (8.9.3/8.9.3) id KAA03662
-	for <linux-scsi@vger.kernel.org>; Tue, 28 Jan 2003 10:52:32 -0800
-In-Reply-To: <1043778768.2991.74.camel@mulgrave>
+In-Reply-To: <3E36B946.2050308@mvista.com>
 List-Id: linux-scsi@vger.kernel.org
-To: SCSI Mailing List <linux-scsi@vger.kernel.org>, Russell King <rmk@arm.linux.org.uk>
+To: Steven Dake <sdake@mvista.com>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Douglas Gilbert <dougg@torque.net>, Christoph Hellwig <hch@infradead.org>, Joel Becker <Joel.Becker@oracle.com>, Kurt Garloff <kurt@garloff.de>, linux-kernel@kernel.vger.org, Linux SCSI list <linux-scsi@vger.kernel.org>
 
 
---=-EYfexEwJWTWwhbl0uz1I
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-
-On Tue, 2003-01-28 at 12:32, James Bottomley wrote:
-> This should fix the memory leak Russell King spotted if command
-> initialisation fails in the request prep function.
-> 
-> The patch is against the scsi-combined-2.5 bkbits.net repository.
-
-Well, OK, I had a closer look at what scsi_init_io is doing.  I
-obviously don't want to release the command for a defer.  However,
-there's also a bug in scsi_init_io which can cause
-end_that_request_first to be called twice for the request.
-
-This hopefully corrects that problem as well as the command leakage.
-
-James
 
 
---=-EYfexEwJWTWwhbl0uz1I
-Content-Disposition: attachment; filename=tmp.diff
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; name=tmp.diff; charset=ISO-8859-1
 
-=3D=3D=3D=3D=3D drivers/scsi/scsi_lib.c 1.63 vs edited =3D=3D=3D=3D=3D
---- 1.63/drivers/scsi/scsi_lib.c	Tue Jan 28 10:19:35 2003
-+++ edited/drivers/scsi/scsi_lib.c	Tue Jan 28 12:43:38 2003
-@@ -781,11 +781,8 @@
- 	printk(KERN_ERR "req nr_sec %lu, cur_nr_sec %u\n", req->nr_sectors,
- 			req->current_nr_sectors);
-=20
--	/*
--	 * kill it. there should be no leftover blocks in this request
--	 */
--	SCpnt =3D scsi_end_request(SCpnt, 0, req->nr_sectors, 1);
--	BUG_ON(SCpnt);
-+	/* release the command and kill it */
-+	scsi_put_command(SCpnt);
- 	ret =3D BLKPREP_KILL;
- out:
- 	return ret;
-@@ -884,6 +881,7 @@
- 		 * required).
- 		 */
- 		if ((ret =3D scsi_init_io(SCpnt)))
-+			/* BLKPREP_KILL return also releases the command */
- 			return ret;
- 	=09
- 		/*
-@@ -891,6 +889,7 @@
- 		 */
- 		if (!STpnt->init_command(SCpnt)) {
- 			scsi_release_buffers(SCpnt);
-+			scsi_put_command(SCpnt);
- 			return BLKPREP_KILL;
- 		}
- 	}
+>the device
+>mapper code could be used to provide partition devices in another
+>major/group of majors.
 
---=-EYfexEwJWTWwhbl0uz1I--
+If I understand what you're saying, this has been discussed before.  I
+don't know what the device mapper code is, but it's actually quite elegant
+if it is a regular device driver that derives multiple logical disk drives
+from a single physical one in the same way that the md device driver
+derives a single logical disk drive from multiple physical ones.  The
+layering is cleaner that way.
+
+The last time I remember this discussed, it was as a solution to the
+problem of a device driver presuming to access at initialization time a
+partition map that didn't really exist.  I don't remember the details, but
+this particular device wasn't ready to handle data reads until some time
+after initialization.  You ought to be able to initialize a device that you
+plan to use only as a raw device without Linux attempting to make
+partitions on it.
+
+As I recall, there weren't any fundamental objections to this.
+
+>partitions could be dynamically allocated out of the minor list
+
+Doesn't this exacerbate the Linux SCSI drive name binding problem?  It's
+bad enough that when you remove your /dev/sda and reboot, your /dev/sdc
+becomes /dev/sdb.  With this, it sounds like when you delete a partition on
+/dev/sda, your partitions on /dev/sdb change names.
+
+>As an example, Lets assume we want 4096 total disks with 16384 total
+>partitions (4 partitions per disk, where it is likely to be less):
+
+We should keep in mind that as a practical matter, someone with 4096
+physical disks is unlikely to be partitioning at all.  Partitions are for
+the poor person who has only a handful of physical disks and wants to
+divide his data into more pieces than that.  Also note that if you have
+4096 "physical" devices, they probably aren't very physical at all --
+there's some subsystem on the other end of the SCSI link that carves
+variable-size devices out of a pool of storage.  Hence, even less reason
+for Linux to partition them.
 
