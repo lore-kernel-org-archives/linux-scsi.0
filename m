@@ -1,34 +1,29 @@
-From: "Justin T. Gibbs" <gibbs@scsiguy.com>
-Subject: [PATCH] sd.c fixes applied incorectly to 2.4.19-preXX
-Date: Mon, 15 Apr 2002 14:40:39 -0600
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [PATCH] sd.c fixes applied incorectly to 2.4.19-preXX
+Date: Mon, 15 Apr 2002 15:51:24 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <200204152040.g3FKed982111@aslan.scsiguy.com>
+Message-ID: <200204152051.g3FKpOa25340@localhost.localdomain>
+References: <gibbs@scsiguy.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: Your message of "Mon, 11 Mar 2002 12:55:23 MST."
+In-Reply-To: Message from "Justin T. Gibbs" <gibbs@scsiguy.com>
+   of "Mon, 15 Apr 2002 14:40:39 MDT." <200204152040.g3FKed982111@aslan.scsiguy.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Marcelo Tosatti <marcelo@conectiva.com.br>
-Cc: linux-scsi@vger.kernel.org, Alan Cox <alan@redhat.com>
+To: "Justin T. Gibbs" <gibbs@scsiguy.com>
+Cc: Marcelo Tosatti <marcelo@conectiva.com.br>, linux-scsi@vger.kernel.org, Alan Cox <alan@redhat.com>
 
-Marcelo,
+gibbs@scsiguy.com said:
+> Looking at the latest version of your tree via bitkeeper, it seems
+> that the wrong patch has been applied to sd.c.  In its current state,
+> the disk driver will fail to act upon any sense data returned by the
+> low level controller.  The following patch restores correct behavior. 
 
-Looking at the latest version of your tree via bitkeeper, it
-seems that the wrong patch has been applied to sd.c.  In its
-current state, the disk driver will fail to act upon any sense
-data returned by the low level controller.  The following patch
-restores correct behavior.
+Actually, this should be using the scsi_sense_valid() function call in 
+scsi_error.c, shouldn't it?  Especially since the criterion for valid sense is 
+merely that bit 7 be set with the error code (which can be either 0x70 or 
+0x71) in bits 0-6.
 
---
-Justin
+James
 
-===== sd.c 1.21 vs edited =====
---- 1.21/drivers/scsi/sd.c	Fri Apr  5 09:19:03 2002
-+++ edited/sd.c	Mon Apr 15 14:32:51 2002
-@@ -621,7 +621,7 @@
- 
- 	/* An error occurred */
- 	if (driver_byte(result) != 0 && 	/* An error occured */
--	    SCpnt->sense_buffer[0] != 0xF0) {	/* Sense data is valid */
-+	    SCpnt->sense_buffer[0] == 0xF0) {	/* Sense data is valid */
- 		switch (SCpnt->sense_buffer[2]) {
- 		case MEDIUM_ERROR:
- 			error_sector = (SCpnt->sense_buffer[3] << 24) |
+
