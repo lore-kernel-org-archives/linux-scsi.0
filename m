@@ -1,36 +1,56 @@
-From: James Bottomley <James.Bottomley@steeleye.com>
-Subject: Re: [PATCH] [v2] aha152x cmnd->device oops
-Date: 29 Oct 2003 12:10:17 -0600
+From: Clay Haapala <chaapala@cisco.com>
+Subject: Re: Request for review of Linux iSCSI driver version 4.0.0.1
+Date: Wed, 29 Oct 2003 12:45:58 -0600
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1067451264.1829.37.camel@mulgrave>
-References: <20031027155713.GA28140@lst.de>
-	<20031027160101.76d5291b.rddunlap@osdl.org> <20031028090600.GA7370@lst.de>
-	<20031028124536.3ce82c23.rddunlap@osdl.org> <3F9EF2B4.9030708@us.ibm.com>
-	<20031028162610.6dcfd06e.rddunlap@osdl.org>
-	<20031029122008.GA5903@linux-buechse.de> <1067439510.1829.4.camel@mulgrave>
-	 <20031029175621.GB5903@linux-buechse.de>
+Message-ID: <yqujd6cf51cp.fsf@chaapala-lnx2.cisco.com>
+References: <20031027153932.A16679@infradead.org>
+	<018b01c39e1f$e013bab0$a0074d0a@apac.cisco.com>
+	<20031029134557.A17523@infradead.org> <3F9FF8C7.70909@us.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nat9.steeleye.com ([65.114.3.137]:47367 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S261152AbTJ2SOd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 29 Oct 2003 13:14:33 -0500
-In-Reply-To: <20031029175621.GB5903@linux-buechse.de>
+Received: from sj-iport-1-in.cisco.com ([171.71.176.70]:54190 "EHLO
+	sj-iport-1.cisco.com") by vger.kernel.org with ESMTP
+	id S261270AbTJ2SqD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 29 Oct 2003 13:46:03 -0500
+Received: from chaapala-lnx2.cisco.com (chaapala-lnx2.cisco.com [64.101.211.117])
+	by sj-core-1.cisco.com (8.12.9/8.12.6) with ESMTP id h9TIjujP004496
+	for <linux-scsi@vger.kernel.org>; Wed, 29 Oct 2003 10:45:56 -0800 (PST)
+In-Reply-To: <3F9FF8C7.70909@us.ibm.com> (Mike Christie's message of "Wed,
+ 29 Oct 2003 09:28:39 -0800")
 List-Id: linux-scsi@vger.kernel.org
-To: "Juergen E. Fischer" <fischer@linux-buechse.de>
-Cc: "Randy.Dunlap" <rddunlap@osdl.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, fischer@norbit.de
+To: linux-scsi@vger.kernel.org
 
-On Wed, 2003-10-29 at 11:56, Juergen E. Fischer wrote:
-> Why not?  It's a new command after all and if the initialization is
-> done correctly (ie. ->device is setup) it works the way it is now.
+On Wed, 29 Oct 2003, Mike Christie outgrape:
+> Hi Surekha,
+> 
+>>>This is again needed for network boot. The n/w driver and iSCSI
+>>>driver are loaded during early boot. Since the n/w interface is not
+>>>setup at that time, we need to bring up the interface through this
+>>>call in iSCSI driver.
+>> That's bogus.  Look at the ip autoconfig code used by rootnfs and
+>> reuse that instead of creating such bogus hacks.  A driver has no
+>> business dealing with the network configuration.
+>>
+> 
+> Your driver does not even need to mess with that code. Just modify
+> your usersapce tools in the linux-iscsi package that run in the
+> initrd to do this in userspace.
 
-The usual reason is that ACA emulation is turned around in interrupt
-context, so new memory allocations should be avoided if they can be.
+Mike,
 
-for the aha that could eliminate the check for NULL cmnd.
+This may turn out to be a discussion about where this code resides and
+what code is best to (re)use, not if it is needed.  "Early boot" here
+is from PXE -- setting up the iSCSI initiator to reach a target at
+some IP where the rest of the boot (initrd and friends) is.
 
-James
+I have not yet looked at the ip autoconfig code that Chris mentions
+above, though.  Can't comment on that.
+-- 
+Clay Haapala (chaapala@cisco.com) Cisco Systems SRBU +1 763-398-1056
+   6450 Wedgwood Rd, Suite 130 Maple Grove MN 55311 PGP: C89240AD
+      "They're selling independence, Actors in the White House,
+       Acid indigestion, Mortage on my life."
+         -- from "Ramble Tamble" by CCR 
 
-
+ "Vote for me if you want to live" -- the Gubernator
