@@ -1,58 +1,45 @@
-From: Matt Domsch <Matt_Domsch@Dell.com>
-Subject: [PATCH] declare and export scsi_bus_type
-Date: Wed, 11 Dec 2002 19:46:22 -0600 (CST)
+From: SL Baur <steve@kbuxd.necst.nec.co.jp>
+Subject: Is the scsi-misc-2.5 BK tree corrupted?
+Date: Thu, 12 Dec 2002 13:25:49 +0900
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44.0212111943110.13262-100000@humbolt.us.dell.com>
-Reply-To: Matt Domsch <Matt_Domsch@Dell.com>
+Message-ID: <15864.4045.584597.590434@sofia.bsd2.kbnes.nec.co.jp>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mailgate4.nec.co.jp ([10.7.69.195])
+	by TYO202.gate.nec.co.jp (8.11.6/3.7W01080315) with ESMTP id gBC4MBU25454
+	for <linux-scsi@vger.kernel.org>; Thu, 12 Dec 2002 13:22:11 +0900 (JST)
+Received: from mailsv4.nec.co.jp (mailgate51.nec.co.jp [10.7.69.196]) by mailgate4.nec.co.jp (8.11.6/3.7W-MAILGATE-NEC) with ESMTP
+	id gBC4MBx07994 for <linux-scsi@vger.kernel.org>; Thu, 12 Dec 2002 13:22:11 +0900 (JST)
+Received: from sv6l.kb.necst.nec.co.jp (ns1.kb.necst.nec.co.jp [10.108.80.236]) by mailsv4.nec.co.jp (8.11.6/3.7W-MAILSV4-NEC) with ESMTP
+	id gBC4M6q02231 for <linux-scsi@vger.kernel.org>; Thu, 12 Dec 2002 13:22:07 +0900 (JST)
+Received: from mailgw1 (mailgw1.kb.necst.nec.co.jp [172.16.1.207])
+	by sv6l.kb.necst.nec.co.jp (8.11.6/8.11.6) with SMTP id gBC4M5688412
+	for <linux-scsi@vger.kernel.org>; Thu, 12 Dec 2002 13:22:05 +0900 (JST)
+	(envelope-from steve@kbuxd.necst.nec.co.jp)
+Received: from ews-sv.kbuxd.necst.nec.co.jp (ews-sv.kbuxd.necst.nec.co.jp [172.16.28.93])
+	by sv1.kbuxd.necst.nec.co.jp (8.11.6/3.7W) with ESMTP id gBC4M5281091
+	for <linux-scsi@vger.kernel.org>; Thu, 12 Dec 2002 13:22:05 +0900 (JST)
+Received: from sofia.bsd2.kbnes.nec.co.jp ([172.16.28.202])
+	by ews-sv.kbuxd.necst.nec.co.jp (8.9.3/3.7W-02120910) with ESMTP id NAA09556
+	for <linux-scsi@vger.kernel.org>; Thu, 12 Dec 2002 13:21:50 +0900 (JST)
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: mochel@osdl.org
 
-Below please find a patch, written by Pat Mochel, to declare and export
-scsi_bus_type.  My EDD code requires this to be exported in order to walk
-the list of SCSI devices to match what BIOS discovered.
+I am getting the following when attempting to pull from the current
+scsi-misc-2.5 BK tree.
 
-Please apply.
 
-Thanks,
-Matt
+ ...
+drivers/s390/block/dasd.c: 2 deltas
+drivers/s390/block/dasd_eckd.c: 1 deltas
+drivers/s390/char/Makefile: 1 deltas
+drivers/s390/char/con3215.c BAD gzip hdr
+fnext: No such file or directory
 
--- 
-Matt Domsch
-Sr. Software Engineer, Lead Engineer, Architect
-Dell Linux Solutions www.dell.com/linux
-Linux on Dell mailing lists @ http://lists.us.dell.com
-
-===== drivers/scsi/scsi.h 1.50 vs edited =====
---- 1.50/drivers/scsi/scsi.h	Thu Nov 28 08:09:53 2002
-+++ edited/drivers/scsi/scsi.h	Thu Dec  5 19:05:27 2002
-@@ -994,4 +994,6 @@
- extern int scsi_sysfs_register(void);
- extern void scsi_sysfs_unregister(void);
- 
-+extern struct bus_type scsi_bus_type;
-+
- #endif
-===== drivers/scsi/scsi_sysfs.c 1.1 vs edited =====
---- 1.1/drivers/scsi/scsi_sysfs.c	Thu Nov 28 12:54:06 2002
-+++ edited/drivers/scsi/scsi_sysfs.c	Thu Dec  5 19:06:55 2002
-@@ -84,7 +84,7 @@
- }
- 
- 
--static struct bus_type scsi_bus_type = {
-+struct bus_type scsi_bus_type = {
-         .name		= "scsi",
-         .match		= scsi_bus_match,
- };
-@@ -202,3 +202,5 @@
- 	device_remove_file(&sdev->sdev_driverfs_dev, &dev_attr_type);
- 	device_unregister(&sdev->sdev_driverfs_dev);
- }
-+
-+EXPORT_SYMBOL(scsi_bus_type);
+=================================== ERROR ====================================
+takepatch: missing checksum line in patch, aborting.
+==============================================================================
 
 
