@@ -1,100 +1,101 @@
-From: Mark Haverkamp <markh@osdl.org>
-Subject: [PATCH] 2.6 aacraid: rx check health function update
-Date: Thu, 04 Nov 2004 16:09:52 -0800
-Message-ID: <1099613392.6249.16.camel@markh1.pdx.osdl.net>
+From: Douglas Gilbert <dougg@torque.net>
+Subject: CSMI [was: Re: [ANNOUNCE] MPT Fusion driver 3.02.06 update]
+Date: Fri, 05 Nov 2004 10:55:27 +1000
+Message-ID: <418ACF7F.3060809@torque.net>
+References: <0E3FA95632D6D047BA649F95DAB60E57053AF031@exa-atlanta> <20041026103828.GC12026@infradead.org>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fire.osdl.org ([65.172.181.4]:6035 "EHLO fire-1.osdl.org")
-	by vger.kernel.org with ESMTP id S262515AbUKEAJ5 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 4 Nov 2004 19:09:57 -0500
+Received: from borg.st.net.au ([65.23.158.22]:48803 "EHLO borg.st.net.au")
+	by vger.kernel.org with ESMTP id S262527AbUKEAz5 convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 4 Nov 2004 19:55:57 -0500
+In-Reply-To: <20041026103828.GC12026@infradead.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@steeleye.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, Mark Salyzyn <mark_salyzyn@adaptec.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: "Moore, Eric Dean" <Emoore@lsil.com>, linux-scsi@vger.kernel.org
 
-This patch updates the rx check health function.  My previous only
-updated the rkt check health code.  This and the previous patch should
-fix the kmalloc return checking bug:
+Christoph Hellwig wrote:
+> On Mon, Oct 25, 2004 at 07:32:35PM -0400, Moore, Eric Dean wrote:
+>=20
+>>All,
+>>
+>>We are pleased to announce the MPT Fusion release candidate for lk 2.=
+6
+>=20
+>=20
+> Some things that come to mind immediately:
+>=20
+>=20
+>>
+>>Highlights of this release:
+>>=B7	SAS Support - 1064, 1066, 1068
+>=20
+>=20
+> there's still tons of ioc->chip_type checks for SPI vs FC vs SAS -=20
+> please always use the new bus_type member
+>=20
+>=20
+>=20
+>>=B7	csmi ioctl support
+>=20
+>=20
+> rejected, this ioctl interface is completely horrible, even worse tha=
+n
+> the fc hbaapi.  Please help to provide a proper sas transport class s=
+imilar
+> to the fc one.
 
-http://bugme.osdl.org/show_bug.cgi?id=3699 
+Christoph,
+I'm not so sure why you want to reject this ioctl
+at this stage when our existing infrastructure to handle
+the 4 protocols that go through this SAS HBA is weak.
+Those 4 protocols are:
+   a) SSP (SCSI over a SAS transport) we should be able to
+      handle this one ***  ****
+   b) SMP is a packet like protocol meant mainly to probe
+      and control expanders (think device discovery). The
+      "target" is not necessarily a SCSI device and there
+      is no concept of luns. Nice candidate for the sg driver.
+   c) STP: ATA/ATAPI-7 tunnelled through a SAS transport with
+      a SAS/sATA bridge probably hiding in an expander
+   d) sATA: direct connect of a sATA disk to this SAS HBA
 
-Signed-off-by: Mark Haverkamp <markh@osdl.org>
+The t10 meeting next week will be considering the
+"Common Storage Management Interface for SAS" (CSMI)
+proposal. Here is a url for it:
+ftp://ftp.t10.org/t10/document.04/04-284r0.pdf
+This document names 3 target platforms: Windows, Linux
+(2.4 and 2.6 series) and Netware.
+
+This seems like a serious attempt to retrofit a control
+(and passthrough) interface into existing OS SCSI stacks
+at the LLD level. I have no information but I would expect
+the Adaptec SAS HBA (when and if its Open source driver
+becomes public) to follow the same (or a similar) route.
 
 
-===== drivers/scsi/aacraid/rx.c 1.12 vs edited =====
---- 1.12/drivers/scsi/aacraid/rx.c	2004-11-04 09:32:56 -08:00
-+++ edited/drivers/scsi/aacraid/rx.c	2004-11-04 09:37:33 -08:00
-@@ -274,7 +274,7 @@
-  */
- static int aac_rx_check_health(struct aac_dev *dev)
- {
--	long status = rx_readl(dev, IndexRegs.Mailbox[7]);
-+	u32 status = le32_to_cpu(rx_readl(dev, MUnit.OMRx[0]));
- 
- 	/*
- 	 *	Check to see if the board failed any self tests.
-@@ -285,29 +285,39 @@
- 	 *	Check to see if the board panic'd.
- 	 */
- 	if (status & KERNEL_PANIC) {
--		char * buffer = kmalloc(512, GFP_KERNEL);
-+		char * buffer;
- 		struct POSTSTATUS {
- 			u32 Post_Command;
- 			u32 Post_Address;
--		} * post = kmalloc(sizeof(struct POSTSTATUS), GFP_KERNEL);
--		dma_addr_t paddr = pci_map_single(dev->pdev, post, sizeof(struct POSTSTATUS), 2);
--		dma_addr_t baddr = pci_map_single(dev->pdev, buffer, 512, 1);
--		u32 status = -1;
--		int ret = -2;
-+		} * post;
-+		dma_addr_t paddr, baddr;
-+		int ret;
-+
-+		if ((status & 0xFF000000L) == 0xBC000000L)
-+			return (status >> 16) & 0xFF;
-+		buffer = pci_alloc_consistent(dev->pdev, 512, &baddr);
-+		ret = -2;
-+		if (buffer == NULL)
-+			return ret;
-+		post = pci_alloc_consistent(dev->pdev,
-+		  sizeof(struct POSTSTATUS), &paddr);
-+		if (post == NULL) {
-+			pci_free_consistent(dev->pdev, 512, buffer, baddr);
-+			return ret;
-+		}
- 		memset(buffer, 0, 512);
- 		post->Post_Command = cpu_to_le32(COMMAND_POST_RESULTS);
- 		post->Post_Address = cpu_to_le32(baddr);
- 		rx_writel(dev, MUnit.IMRx[0], cpu_to_le32(paddr));
- 		rx_sync_cmd(dev, COMMAND_POST_RESULTS, baddr, &status);
--		pci_unmap_single(dev->pdev, paddr, sizeof(struct POSTSTATUS), 2);
--		kfree(post);
-+		pci_free_consistent(dev->pdev, sizeof(struct POSTSTATUS),
-+		  post, paddr);
- 		if ((buffer[0] == '0') && (buffer[1] == 'x')) {
- 			ret = (buffer[2] <= '9') ? (buffer[2] - '0') : (buffer[2] - 'A' + 10);
- 			ret <<= 4;
- 			ret += (buffer[3] <= '9') ? (buffer[3] - '0') : (buffer[3] - 'A' + 10);
- 		}
--		pci_unmap_single(dev->pdev, baddr, 512, 1);
--		kfree(buffer);
-+		pci_free_consistent(dev->pdev, 512, buffer, baddr);
- 		return ret;
- 	}
- 	/*
-@@ -319,7 +329,7 @@
- 	 *	Everything is OK
- 	 */
- 	return 0;
--} /* aac_rx_check_health */
-+}
- 
- /**
-  *	aac_rx_init	-	initialize an i960 based AAC card
+*** The primary SAS device identifier is a 64 bit SAS address
+(naa 5, world wide unique). CSMI defines mapping functions
+between the <h,c,t> like tuples that most OSes use in their
+SCSI stacks (thanks to SPI) and SAS addresses. In short the CSMI
+proposal looks like the distilled experience of writing real
+SAS HBA drivers for several existing OSes.
 
--- 
-Mark Haverkamp <markh@osdl.org>
+**** Given the BCC (bridge controller commands) draft at t10
+it would appear that SAS disk enclosure designers want to
+command set convert ATA/ATAPI-7 into SPC in the enclosure.
+That way sATA disks will appear as SAS disks (with a SCSI-ATA
+pass-through command for awkward things like SMART). Such a
+move would make the STP protocol superfluous.
 
+Doug Gilbert
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
