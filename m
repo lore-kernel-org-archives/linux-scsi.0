@@ -1,46 +1,69 @@
-From: SL Baur <steve@kbuxd.necst.nec.co.jp>
-Subject: aic7xxx driver in 2.5.44 is older than 2.4.20pre11 (and doesn't work)
-Date: Wed, 23 Oct 2002 11:51:57 +0900
+From: Mike Anderson <andmike@us.ibm.com>
+Subject: Re: [PATCH][RFC] get rid of global array and ->init in sd.c and sr.c
+Date: Wed, 23 Oct 2002 01:28:53 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <15798.3789.10763.181120@sofia.bsd2.kbnes.nec.co.jp>
+Message-ID: <20021023082853.GA9341@beaverton.ibm.com>
+References: <20021022210739.A10079@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mailgate4.nec.co.jp ([10.7.69.197])
-	by TYO201.gate.nec.co.jp (8.11.6/3.7W01080315) with ESMTP id g9N2mxl24541
-	for <linux-scsi@vger.kernel.org>; Wed, 23 Oct 2002 11:48:59 +0900 (JST)
-Received: from mailsv4.nec.co.jp (mailgate51.nec.co.jp [10.7.69.196]) by mailgate4.nec.co.jp (8.11.6/3.7W-MAILGATE-NEC) with ESMTP
-	id g9N2mx808489 for <linux-scsi@vger.kernel.org>; Wed, 23 Oct 2002 11:48:59 +0900 (JST)
-Received: from sv6l.kb.necst.nec.co.jp (ns1.kb.necst.nec.co.jp [10.108.80.236]) by mailsv4.nec.co.jp (8.11.6/3.7W-MAILSV4-NEC) with ESMTP
-	id g9N2mv216336 for <linux-scsi@vger.kernel.org>; Wed, 23 Oct 2002 11:48:57 +0900 (JST)
-Received: from mailgw1 (mailgw1.kb.necst.nec.co.jp [172.16.1.207])
-	by sv6l.kb.necst.nec.co.jp (8.11.6/8.11.6) with SMTP id g9N2mv005246
-	for <linux-scsi@vger.kernel.org>; Wed, 23 Oct 2002 11:48:57 +0900 (JST)
-	(envelope-from steve@kbuxd.necst.nec.co.jp)
-Received: from ews-sv.kbuxd.necst.nec.co.jp (ews-sv.kbuxd.necst.nec.co.jp [172.16.28.93])
-	by sv1.kbuxd.necst.nec.co.jp (8.11.6/3.7W) with ESMTP id g9N2mv195617
-	for <linux-scsi@vger.kernel.org>; Wed, 23 Oct 2002 11:48:57 +0900 (JST)
-Received: from sofia.bsd2.kbnes.nec.co.jp ([172.16.28.191])
-	by ews-sv.kbuxd.necst.nec.co.jp (8.9.3/3.7W-02090510) with ESMTP id LAA20567
-	for <linux-scsi@vger.kernel.org>; Wed, 23 Oct 2002 11:48:56 +0900 (JST)
+Content-Disposition: inline
+In-Reply-To: <20021022210739.A10079@lst.de>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: James Bottomley <James.Bottomley@steeleye.com>, axboe@suse.dk, linux-scsi@vger.kernel.org
 
-Hi,
+Looks good. I ran it on a system with ips, aic, scsi_debug and qla2x00
+as a module. 
 
-I have been unable to boot 2.5.44 because it does not see my disk
-controller (output is from vanilla 2.4.20pre11, which works fine).
+When I applied the patch I got a quite a few rejects on sd.c and sr.c. I
+fixed up sd.c, but did not run sr.c. My view is based off James
+scsi-misc-2.5.
 
-scsi0 : Adaptec AIC7XXX EISA/VLB/PCI SCSI HBA DRIVER, Rev 6.2.8
-        <Adaptec aic7899 Ultra160 SCSI adapter>
-        aic7899: Ultra160 Wide Channel A, SCSI Id=7, 32/253 SCBs
+I noticed the patch seems to include some of your driver_register
+removals (preiously posted) in init_sd and exit_sd, but there are no
+adds to scsi_register_device or scsi_unregister_device.
 
-scsi1 : Adaptec AIC7XXX EISA/VLB/PCI SCSI HBA DRIVER, Rev 6.2.8
-        <Adaptec aic7899 Ultra160 SCSI adapter>
-        aic7899: Ultra160 Wide Channel B, SCSI Id=7, 32/253 SCBs
+Christoph Hellwig [hch@lst.de] wrote:
+> +	list_for_each(p, &sd_devlist) {
+> +		sdkp = list_entry(p, struct scsi_disk, list);
+>  		sdp = sdkp->device;
+>  		if (sdp && (sdp->host == shp) && (sdp->id == scsi_id)) {
+>  			retval = MKDEV_SD(dsk_nr);
+>  			break;
 
-I notice that the driver version in 2.5.44 is 6.2.5 and the one in
-2.4.20pre11 is 6.2.8.  Are there patches around to update the 2.5
-aic7xxx driver to the working version?
+Might consider using list_for_each_entry since you always do both.
+
+> --- linux/drivers/scsi/sd.h	Mon Oct 21 20:34:15 2002
+> +++ linux-scsi/drivers/scsi/sd.h	Tue Oct 22 17:24:02 2002
+> @@ -12,32 +12,20 @@
+>  #ifndef _SD_H
+>  #define _SD_H
+>  
+> -#ifndef _SCSI_H
+> -#include "scsi.h"
+> -#endif
+> -
+> -#ifndef _GENDISK_H
+> -#include <linux/genhd.h>
+> -#endif
+> -
+>  typedef struct scsi_disk {
+> +	struct list_head list;
+>  	sector_t capacity;		/* size in 512-byte sectors */
+>  	Scsi_Device *device;
+> +	struct gendisk *gd;
+>  	unsigned char media_present;
+>  	unsigned char write_prot;
+>  	unsigned WCE:1;         /* state of disk WCE bit */
+>  	unsigned RCD:1;         /* state of disk RCD bit */
+>  } Scsi_Disk;
+
+I received a compile failures on sector_t until I put back the scsi.h
+include.
+
+-andmike
+--
+Michael Anderson
+andmike@us.ibm.com
 
