@@ -1,169 +1,219 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH] fusion: streamline ->queuecommand
-Date: Sat, 2 Oct 2004 10:13:55 +0200
+Subject: [PATCH] fusion: streamline ->slave_alloc/->slave_destroy
+Date: Sat, 2 Oct 2004 10:23:37 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20041002081355.GA13643@lst.de>
+Message-ID: <20041002082337.GA13746@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.210]:38813 "EHLO mail.lst.de")
-	by vger.kernel.org with ESMTP id S267353AbUJBIN7 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 2 Oct 2004 04:13:59 -0400
+Received: from verein.lst.de ([213.95.11.210]:45981 "EHLO mail.lst.de")
+	by vger.kernel.org with ESMTP id S267353AbUJBIXl (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 2 Oct 2004 04:23:41 -0400
 Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
 To: Emoore@lsil.com
 Cc: linux-scsi@vger.kernel.org
 
+In addition the code to free target structures in mptscsih_remove is
+removed as the scsi layer guarantees to call ->slave_destory on
+every life scsi_device before returning from scsi_remove_host.
+
 
 --- 1.50/drivers/message/fusion/mptscsih.c	2004-09-29 01:58:39 +02:00
 +++ edited/drivers/message/fusion/mptscsih.c	2004-10-01 12:45:04 +02:00
-@@ -1863,11 +1844,7 @@
- 	u32	 cmd_len;
- 	int	 my_idx;
- 	int	 ii;
--	int	 rc;
--	int	 did_errcode;
--	int	 issueCmd;
+@@ -1374,7 +1374,7 @@
  
--	did_errcode = 0;
- 	hd = (MPT_SCSI_HOST *) SCpnt->device->host->hostdata;
- 	target = SCpnt->device->id;
- 	lun = SCpnt->device->lun;
-@@ -1966,84 +1943,78 @@
- 	/* Now add the SG list
- 	 * Always have a SGE even if null length.
- 	 */
--	rc = SUCCESS;
- 	if (datalen == 0) {
- 		/* Add a NULL SGE */
- 		mptscsih_add_sge((char *)&pScsiReq->SGL, MPT_SGE_FLAGS_SSIMPLE_READ | 0,
- 			(dma_addr_t) -1);
- 	} else {
- 		/* Add a 32 or 64 bit SGE */
--		rc = mptscsih_AddSGE(hd->ioc, SCpnt, pScsiReq, my_idx);
-+		if (mptscsih_AddSGE(hd->ioc, SCpnt, pScsiReq, my_idx) != SUCCESS)
-+			goto fail;
- 	}
+ 	hd = (MPT_SCSI_HOST *)host->hostdata;
+ 	if (hd != NULL) {
+-		int sz1, sz3, sztarget=0;
++		int sz1, sz3;
  
--
--	if (rc == SUCCESS) {
--		hd->ScsiLookup[my_idx] = SCpnt;
--		SCpnt->host_scribble = NULL;
--
--		/* SCSI specific processing */
--		issueCmd = 1;
--		if (hd->is_spi) {
--			int dvStatus = hd->ioc->spi_data.dvStatus[target];
--
--			if (dvStatus || hd->ioc->spi_data.forceDv) {
-+	hd->ScsiLookup[my_idx] = SCpnt;
-+	SCpnt->host_scribble = NULL;
+ 		mptscsih_shutdown(&pdev->dev);
  
- #ifdef MPTSCSIH_ENABLE_DOMAIN_VALIDATION
--				if ((dvStatus & MPT_SCSICFG_NEED_DV) ||
--					(hd->ioc->spi_data.forceDv & MPT_SCSICFG_NEED_DV)) {
--					unsigned long lflags;
--					/* Schedule DV if necessary */
--					spin_lock_irqsave(&dvtaskQ_lock, lflags);
--					if (!dvtaskQ_active) {
--						dvtaskQ_active = 1;
--						spin_unlock_irqrestore(&dvtaskQ_lock, lflags);
--						INIT_WORK(&mptscsih_dvTask, mptscsih_domainValidation, (void *) hd);
--
--						schedule_work(&mptscsih_dvTask);
--					} else {
--						spin_unlock_irqrestore(&dvtaskQ_lock, lflags);
--					}
--					hd->ioc->spi_data.forceDv &= ~MPT_SCSICFG_NEED_DV;
--				}
--
--				/* Trying to do DV to this target, extend timeout.
--				 * Wait to issue until flag is clear
--				 */
--				if (dvStatus & MPT_SCSICFG_DV_PENDING) {
--					mod_timer(&SCpnt->eh_timeout, jiffies + 40 * HZ);
--					issueCmd = 0;
-+	if (hd->is_spi) {
-+		int dvStatus = hd->ioc->spi_data.dvStatus[target];
-+		int issueCmd = 1;
-+
-+		if (dvStatus || hd->ioc->spi_data.forceDv) {
-+
-+			if ((dvStatus & MPT_SCSICFG_NEED_DV) ||
-+				(hd->ioc->spi_data.forceDv & MPT_SCSICFG_NEED_DV)) {
-+				unsigned long lflags;
-+				/* Schedule DV if necessary */
-+				spin_lock_irqsave(&dvtaskQ_lock, lflags);
-+				if (!dvtaskQ_active) {
-+					dvtaskQ_active = 1;
-+					spin_unlock_irqrestore(&dvtaskQ_lock, lflags);
-+					INIT_WORK(&mptscsih_dvTask, mptscsih_domainValidation, (void *) hd);
-+
-+					schedule_work(&mptscsih_dvTask);
-+				} else {
-+					spin_unlock_irqrestore(&dvtaskQ_lock, lflags);
- 				}
-+				hd->ioc->spi_data.forceDv &= ~MPT_SCSICFG_NEED_DV;
-+			}
- 
--				/* Set the DV flags.
--				 */
--				if (dvStatus & MPT_SCSICFG_DV_NOT_DONE)
--					mptscsih_set_dvflags(hd, pScsiReq);
--#endif
-+			/* Trying to do DV to this target, extend timeout.
-+			 * Wait to issue until flag is clear
-+			 */
-+			if (dvStatus & MPT_SCSICFG_DV_PENDING) {
-+				mod_timer(&SCpnt->eh_timeout, jiffies + 40 * HZ);
-+				issueCmd = 0;
- 			}
--		}
- 
--#ifdef MPTSCSIH_DBG_TIMEOUT
--		if (hd->ioc->timeout_cnt < hd->ioc->timeout_maxcnt) {
--			foo_to[hd->ioc->timeout_cnt] = SCpnt;
--			hd->ioc->timeout_cnt++;
--			//mod_timer(&SCpnt->eh_timeout, jiffies + hd->ioc->timeout_delta);
--			issueCmd = 0;
--			printk(MYIOC_s_WARN_FMT
--				"to pendingQ: (sc=%p, mf=%p, time=%ld)\n",
--				hd->ioc->name, SCpnt, mf, jiffies);
-+			/* Set the DV flags.
-+			 */
-+			if (dvStatus & MPT_SCSICFG_DV_NOT_DONE)
-+				mptscsih_set_dvflags(hd, pScsiReq);
-+
-+			if (!issueCmd)
-+				goto fail;
+@@ -1387,28 +1387,9 @@
  		}
-+	}
- #endif
  
--		if (issueCmd) {
--			mpt_put_msg_frame(ScsiDoneCtx, hd->ioc, mf);
--			dmfprintk((MYIOC_s_INFO_FMT "Issued SCSI cmd (%p) mf=%p idx=%d\n",
--					hd->ioc->name, SCpnt, mf, my_idx));
--			DBG_DUMP_REQUEST_FRAME(mf)
--		} else
--			goto fail;
--	} else
-+#ifdef MPTSCSIH_DBG_TIMEOUT
-+	if (hd->ioc->timeout_cnt < hd->ioc->timeout_maxcnt) {
-+		foo_to[hd->ioc->timeout_cnt] = SCpnt;
-+		hd->ioc->timeout_cnt++;
-+		//mod_timer(&SCpnt->eh_timeout, jiffies + hd->ioc->timeout_delta);
-+		printk(MYIOC_s_WARN_FMT
-+			"to pendingQ: (sc=%p, mf=%p, time=%ld)\n",
-+			hd->ioc->name, SCpnt, mf, jiffies);
- 		goto fail;
-+	}
-+#endif
+ 		if (hd->Targets != NULL) {
+-			int max, ii;
+-
+-			/*
+-			 * Free any target structures that were allocated.
+-			 */
+-			if (hd->is_spi) {
+-				max = MPT_MAX_SCSI_DEVICES;
+-			} else {
+-				max = MPT_MAX_FC_DEVICES<256 ? MPT_MAX_FC_DEVICES : 255;
+-			}
+-			for (ii=0; ii < max; ii++) {
+-				if (hd->Targets[ii]) {
+-					kfree(hd->Targets[ii]);
+-					hd->Targets[ii] = NULL;
+-					sztarget += sizeof(VirtDevice);
+-				}
+-			}
+-
+ 			/*
+ 			 * Free pointer array.
+ 			 */
+-			sz3 = max * sizeof(void *);
+ 			kfree(hd->Targets);
+ 			hd->Targets = NULL;
+ 		}
+@@ -2767,39 +2738,52 @@
+ mptscsih_slave_alloc(struct scsi_device *device)
+ {
+ 	struct Scsi_Host	*host = device->host;
+-	MPT_SCSI_HOST		*hd;
+-	VirtDevice		*vdev;
++	MPT_SCSI_HOST		*hd = (MPT_SCSI_HOST *)host->hostdata;
++	VirtDevice		*vdev = hd->Targets[device->id];
  
-+	mpt_put_msg_frame(ScsiDoneCtx, hd->ioc, mf);
-+	dmfprintk((MYIOC_s_INFO_FMT "Issued SCSI cmd (%p) mf=%p idx=%d\n",
-+			hd->ioc->name, SCpnt, mf, my_idx));
-+	DBG_DUMP_REQUEST_FRAME(mf)
+-	hd = (MPT_SCSI_HOST *)host->hostdata;
++	if (vdev)
++		goto out;
+ 
+-	if (hd == NULL)
+-		return -ENODEV;
+-
+-	if ((vdev = hd->Targets[device->id]) == NULL) {
+-		if ((vdev = kmalloc(sizeof(VirtDevice), GFP_ATOMIC)) == NULL) {
+-			printk(MYIOC_s_ERR_FMT "slave_alloc kmalloc(%d) FAILED!\n",
+-			hd->ioc->name, (int)sizeof(VirtDevice));
+-			return -ENOMEM;
+-		} else {
+-			memset(vdev, 0, sizeof(VirtDevice));
+-			vdev->tflags = MPT_TARGET_FLAGS_Q_YES;
+-			vdev->ioc_id = hd->ioc->id;
+-			vdev->target_id = device->id;
+-			vdev->bus_id = device->channel;
+-			vdev->raidVolume = 0;
+-			hd->Targets[device->id] = vdev;
+-			if (hd->is_spi) {
+-				if (hd->ioc->spi_data.isRaid & (1 << device->id)) {
+-					vdev->raidVolume = 1;
+-					ddvtprintk((KERN_INFO
+-					    "RAID Volume @ id %d\n", device->id));
+-				}
+-			} else {
+-				vdev->tflags |= MPT_TARGET_FLAGS_VALID_INQUIRY;
+-			}
++	vdev = kmalloc(sizeof(VirtDevice), GFP_KERNEL);
++	if (!vdev) {
++		printk(MYIOC_s_ERR_FMT "slave_alloc kmalloc(%zd) FAILED!\n",
++				hd->ioc->name, sizeof(VirtDevice));
++		return -ENOMEM;
++	}
++
++	memset(vdev, 0, sizeof(VirtDevice));
++	vdev->tflags = MPT_TARGET_FLAGS_Q_YES;
++	vdev->ioc_id = hd->ioc->id;
++	vdev->target_id = device->id;
++	vdev->bus_id = device->channel;
++	vdev->raidVolume = 0;
++	hd->Targets[device->id] = vdev;
++	if (hd->is_spi) {
++		if (hd->ioc->spi_data.isRaid & (1 << device->id)) {
++			vdev->raidVolume = 1;
++			ddvtprintk((KERN_INFO
++			    "RAID Volume @ id %d\n", device->id));
+ 		}
++	} else {
++		vdev->tflags |= MPT_TARGET_FLAGS_VALID_INQUIRY;
+ 	}
++
++ out:
+ 	vdev->num_luns++;
++	return 0;
++}
++
++static int mptscsih_is_raid_volume(MPT_SCSI_HOST *hd, uint id)
++{
++	int i;
++
++	if (!hd->ioc->spi_data.isRaid || !hd->ioc->spi_data.pIocPg3)
++		return 0;
++
++	for (i = 0; i < hd->ioc->spi_data.pIocPg3->NumPhysDisks; i++) {
++		if (id == hd->ioc->spi_data.pIocPg3->PhysDisk[i].PhysDiskID)
++			return 1;
++	}
+ 
  	return 0;
+ }
+@@ -2812,59 +2796,33 @@
+ mptscsih_slave_destroy(struct scsi_device *device)
+ {
+ 	struct Scsi_Host	*host = device->host;
+-	MPT_SCSI_HOST		*hd;
+-	VirtDevice		*vdev;
+-	int 			raid_volume=0;
++	MPT_SCSI_HOST		*hd = (MPT_SCSI_HOST *)host->hostdata;
++	VirtDevice		*vdev =  hd->Targets[device->id];
++	uint			target = device->id;
++	uint			lun = device->lun;
  
-  fail:
+-	hd = (MPT_SCSI_HOST *)host->hostdata;
++	mptscsih_search_running_cmds(hd, target, lun);
+ 
+-	if (hd == NULL)
++	vdev->luns[0] &= ~(1 << lun);
++	if (--vdev->num_luns)
+ 		return;
+ 
+-	mptscsih_search_running_cmds(hd, device->id, device->lun);
+-
+-	/* Free memory and reset all flags for this target
+-	 */
+-	if ((vdev = hd->Targets[device->id]) != NULL) {
+-		vdev->num_luns--;
+-
+-		if (vdev->luns[0] & (1 << device->lun))
+-			vdev->luns[0] &= ~(1 << device->lun);
++	kfree(hd->Targets[target]);
++	hd->Targets[target] = NULL;
+ 
+-		/* Free device structure only if number of luns is 0.
+-		 */
+-		if (vdev->num_luns == 0) {
+-			kfree(hd->Targets[device->id]);
+-			hd->Targets[device->id] = NULL;
+-
+-			if (!hd->is_spi)
+-				return;
+-
+-			if((hd->ioc->spi_data.isRaid) && (hd->ioc->spi_data.pIocPg3)) {
+-			int i;
+-				for(i=0;i<hd->ioc->spi_data.pIocPg3->NumPhysDisks &&
+-					raid_volume==0;i++)
+-
+-					if(device->id ==
+-					  hd->ioc->spi_data.pIocPg3->PhysDisk[i].PhysDiskID) {
+-						raid_volume=1;
+-						hd->ioc->spi_data.forceDv |=
+-						  MPT_SCSICFG_RELOAD_IOC_PG3;
+-					}
+-			}
+-
+-			if(!raid_volume){
+-				hd->ioc->spi_data.dvStatus[device->id] =
++	if (hd->is_spi) {
++		if (mptscsih_is_raid_volume(hd, target)) {
++			hd->ioc->spi_data.forceDv |= MPT_SCSICFG_RELOAD_IOC_PG3;
++		} else {
++			hd->ioc->spi_data.dvStatus[target] =
+ 				MPT_SCSICFG_NEGOTIATE;
+ 
+-				if (hd->negoNvram == 0)
+-					hd->ioc->spi_data.dvStatus[device->id]
+-					|= MPT_SCSICFG_DV_NOT_DONE;
++			if (!hd->negoNvram) {
++				hd->ioc->spi_data.dvStatus[target] |=
++					MPT_SCSICFG_DV_NOT_DONE;
+ 			}
+ 		}
+ 	}
+-
+-	return;
+ }
+ 
+ static void
