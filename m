@@ -1,41 +1,41 @@
 From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [PATCH] zfcp: updates for -bk
-Date: Mon, 24 Jan 2005 09:31:13 -0600
-Message-ID: <1106580673.5513.7.camel@mulgrave>
-References: <OF78A719F0.8702D449-ONC1256F93.004FD89C-C1256F93.00516DAD@de.ibm.com>
+Subject: Re: [PATCH] add iSCSI session creation sysfs attributes
+Date: Mon, 24 Jan 2005 09:34:00 -0600
+Message-ID: <1106580841.5513.10.camel@mulgrave>
+References: <41F4D072.5040800@cs.wisc.edu>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat16.steeleye.com ([209.192.50.48]:31934 "EHLO
+Received: from stat16.steeleye.com ([209.192.50.48]:61889 "EHLO
 	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S261232AbVAXPbc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 24 Jan 2005 10:31:32 -0500
-In-Reply-To: <OF78A719F0.8702D449-ONC1256F93.004FD89C-C1256F93.00516DAD@de.ibm.com>
+	id S261283AbVAXPeN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 24 Jan 2005 10:34:13 -0500
+In-Reply-To: <41F4D072.5040800@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Heiko Carstens <Heiko.Carstens@de.ibm.com>
-Cc: Matthew Wilcox <matthew@wil.cx>, Greg KH <greg@kroah.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, willy@www.linux.org.uk
+To: Mike Christie <michaelc@cs.wisc.edu>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Mon, 2005-01-24 at 15:48 +0100, Heiko Carstens wrote:
-> > I thought that having release methods that just called kfree() were
-> > also verboten?
-> 
-> We do a kmalloc(sizeof(struce device),...) somewhere and this 
-> is how we get rid of it again.
-> How are we supposed to free this object otherwise? The release
-> function gets called when there is no more reference to this
-> object and that's the earliest point we may free it.
+On Mon, 2005-01-24 at 02:39 -0800, Mike Christie wrote:
+> The attached patch built against scsi-misc-2.6 moves the
+> target iSCSI attributes to a new structure representing
+> a iSCSI session. The reason for doing this is to
+> create a interface that allows the Sourceforge iSCSI driver
+> to create and setup a session through sysfs (no more
+> IOCTL at all in our driver), display session info, and at the same
+> time share code and use the same interface HW iSCSI drivers would
+> use.
 
-Right, but we've said before this is the wrong way to do it.
+This no longer applies to the iscsi transport class because I converted
+it over to the generic framework.  Could you look at the code in
 
-Originally this generic device was part of your adapter structure.  Now
-you're trying to separate it and causing these problems.  What it's
-apparently telling us is that you have some problem with the object
-lifetime rules in your code.
+bk://linux-scsi.bkbits.net/scsi-rc-fixes-2.6 (or the patch on
+www.parisc-linux.org/~jejb/scsi_diffs)
 
-Why should this generic_services device have different lifetime rules
-from the object in which it used to reside?
+and reroll your patch against that?
+
+Thanks,
 
 James
 
