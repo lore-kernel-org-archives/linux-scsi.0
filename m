@@ -1,87 +1,55 @@
-From: Jan-Benedict Glaw <jbglaw@lug-owl.de>
-Subject: Re: PERC4/SC FW3.41
-Date: Thu, 5 Aug 2004 19:43:07 +0200
+From: bevermurray@jumpy.it
+Subject: Hi PHILIPS NINO PALM
+Date: Thu, 5 Aug 2004 20:38:56 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040805174305.GA30773@lug-owl.de>
-References: <20040805140736.GC17356@lug-owl.de> <20040805172335.96609.qmail@web14203.mail.yahoo.com>
+Message-ID: <40FC745C00016797@mail11.jumpyint.it>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="GvXjxJ+pjyke8COw"
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from dvmwest.gt.owl.de ([62.52.24.140]:35244 "EHLO dvmwest.gt.owl.de")
-	by vger.kernel.org with ESMTP id S267826AbUHERnN (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Aug 2004 13:43:13 -0400
-Content-Disposition: inline
-In-Reply-To: <20040805172335.96609.qmail@web14203.mail.yahoo.com>
+Received: from outgoing1.jumpy.it ([213.215.144.9]:5404 "EHLO mail.jumpy.it")
+	by vger.kernel.org with ESMTP id S267874AbUHESgF convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 5 Aug 2004 14:36:05 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: Luis Trejos <ldtrejos@yahoo.com>
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+
+Hi,
+
+My name is Madam Beverly Murray. I am a citizen of the United State of America
+in God we trust. I inherited a total sum of $10 million united state dollars
+from my late husband this money which is concealed in a consignment metalic
+trunk box is deposited with a diplomatic shipping services keeping stored
+warehouse under a secret arrangement as a personal valuable's content inside.
+
+This mean's that the diplomatic shipping services does not know the content
+of this box that was sent from the United State of America to their company
+keeping store warehouse as a diplomatic coverage is money.
+
+My main purpose of sending your this letter through this mean's is because
+of my condition i needed an urgent attention and also a trustworthy person
+like you to give this priority of shipping this box of money out from the
+diplomatic shipping services keeping store warehouse to any residential
+address that you think is very secure and save in place with
+your percentage of which we shall chat on soon.
+
+There is need for urgent action in this transaction that will benefit both
+of us because I am a deaf and dumb who can not even hear or speak anything,
+as i was born with this problem and i need to use from this money for my
+ear operation treatment at any good specialist hospital in your place because
+i am tired of my self not hearing others and also use this money for an
+investment with you in your place of which you will take full control of
+the management. pls, sorry for using this means to write you as this is
+where i thought is secure and ok for me due to this my condition of health.
+
+I give thank's immensely for the co-operation as I look forward to hear
+from you soonest in this transaction that will benefit both of us.
+
+Best Regard's,
+
+Madam Beverly Murray.
+
+________________________________________
+Crea la tshirt con il tuo nick! http://www.mediasetshop.it/JumpyChat/
 
 
---GvXjxJ+pjyke8COw
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
-
-On Thu, 2004-08-05 12:23:35 -0500, Luis Trejos <ldtrejos@yahoo.com>
-wrote in message <20040805172335.96609.qmail@web14203.mail.yahoo.com>:
->  --- Jan-Benedict Glaw <jbglaw@lug-owl.de> escribi=F3:=20
-> <20040805140324.36869.qmail@web14204.mail.yahoo.com>:
-> > >  The situation is like this. I am trying to
-> > install a
-> > > Red Hat Linux 7.2 OS because I have software that
-> > > requires this particular version.
-> >=20
-> > Gimme names! What do you want to install! Also to
-> > the list. I think we
-> > want to know what to avoid. Any vendor that even
-> > *thinks* about
-> > requiring something as old as RH 7.2 should be
-> > kicked out of the market
-> > instantly!
->=20
-> In my company we use a ERP called INFORMA, is a
-> Colombian software that for now requires to run in Red
-> Hat Linux 7.2, the new version that should be out in a
-> couple of months.
-
-Where does this "requirement" come from? Is it a political/support
-thing, or is there a technical reason for that? Eg. glibc is build to
-actually provide backwards compatibility, so I guess your product would
-actually run fine on a newer system (except they've got some stupid
-checking in place whether or not this is actually a RH7.2 System).
-
-> According to what I know, if I can get the device
-> drivers before the installation I can run the option
-> linux dd which allow me to provide the installer with
-> the necessary drivers for the RAID PERC4/SC.
-
-Possibly. I've only very rarely installed Red Hat (being nearly 100% a
-Debian user, even while a lot of "products" don't "support" Debian).
-
-MfG, JBG
-
---=20
-Jan-Benedict Glaw       jbglaw@lug-owl.de    . +49-172-7608481             =
-_ O _
-"Eine Freie Meinung in  einem Freien Kopf    | Gegen Zensur | Gegen Krieg  =
-_ _ O
- fuer einen Freien Staat voll Freier B=FCrger" | im Internet! |   im Irak! =
-  O O O
-ret =3D do_actions((curr | FREE_SPEECH) & ~(NEW_COPYRIGHT_LAW | DRM | TCPA)=
-);
-
---GvXjxJ+pjyke8COw
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.2.4 (GNU/Linux)
-
-iD8DBQFBEnGoHb1edYOZ4bsRAsF8AJwINRMLmUYeyB2Z0bpp8KjAs1tXSQCcCOuB
-XcMLMpLhmJd2+o5cxvWW9oM=
-=mQys
------END PGP SIGNATURE-----
-
---GvXjxJ+pjyke8COw--
