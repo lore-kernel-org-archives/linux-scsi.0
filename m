@@ -1,59 +1,35 @@
-From: Samuel Flory <sflory@rackable.com>
-Subject: Re: libata update posted (was Re: VIA Serial ATA chipset)
-Date: Fri, 29 Aug 2003 11:09:34 -0700
+From: Adrian Bunk <bunk@fs.tum.de>
+Subject: [2.6 patch] fix advansys.c if !CONFIG_PROC_FS
+Date: Fri, 29 Aug 2003 20:56:31 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3F4F96DE.7030603@rackable.com>
-References: <20030813074535.C3AB427AC8@mail.medav.de> <3F4F6863.4080400@pobox.com> <3F4F8BA7.1080002@rackable.com> <3F4F949B.6030900@pobox.com>
+Message-ID: <20030829185631.GG7038@fs.tum.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 64-60-248-67.cust.telepacific.net ([64.60.248.67]:50837 "EHLO
-	mx.rackable.com") by vger.kernel.org with ESMTP id S261657AbTH2SP5
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 29 Aug 2003 14:15:57 -0400
-In-Reply-To: <3F4F949B.6030900@pobox.com>
+Received: from hermes.fachschaften.tu-muenchen.de ([129.187.202.12]:37618 "HELO
+	hermes.fachschaften.tu-muenchen.de") by vger.kernel.org with SMTP
+	id S261672AbTH2S4m (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 29 Aug 2003 14:56:42 -0400
+Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: support@connectcom.net
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, trivial@rustcorp.com.au
 
-Jeff Garzik wrote:
+The patch below fixes a compile error in drivers/scsi/advansys.c if 
+!CONFIG_PROC_FS.
 
-> Samuel Flory wrote:
->
->> Jeff Garzik wrote:
->>
->>> Changes:
->>> * continue work towards fully async taskfile API:  you call 
->>> submit_tf(), and later on, your callback is called when the taskfile 
->>> completes or times out.   async taskfile API is required for ATAPI 
->>> and supporting more advanced host controllers like Promise or AHCI 
->>> (SATA2).
->>> * some cleanups
->>
->
->>   I'm guessing there is no support for Promise yet?
->
->
-> Not yet.  Once I finish the item mentioned above, "async taskfile 
-> API", Promise support will appear quite rapidly.
->
->
->> PS-  The driver works great on the silcon image chipset.  (Once I 
->> realized that my Seagate drive needed newer firmware.)
->
->
-> Um... libata doesn't support Silicon Image yet?
->
+Please apply
+Adrian
 
-
-  The Intel PIIX/ICH support in the ac kernel seems to work on all my 
-onboard  Silicon Image controllers.  I think that's only your ata-scsi 
-work, however.
-
--- 
-Once you have their hardware. Never give it back.
-(The First Rule of Hardware Acquisition)
-Sam Flory  <sflory@rackable.com>
-
-
+--- linux-2.6.0-test4-mm1/drivers/scsi/advansys.c.old	2003-08-27 16:14:32.000000000 +0200
++++ linux-2.6.0-test4-mm1/drivers/scsi/advansys.c	2003-08-27 16:15:54.000000000 +0200
+@@ -6199,7 +6199,9 @@
+ 
+ static Scsi_Host_Template driver_template = {
+     .proc_name                  = "advansys",
++#ifdef CONFIG_PROC_FS
+     .proc_info                  = advansys_proc_info,
++#endif
+     .name                       = "advansys",
+     .detect                     = advansys_detect, 
+     .release                    = advansys_release,
