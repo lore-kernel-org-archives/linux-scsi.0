@@ -1,89 +1,85 @@
 From: Adrian Bunk <bunk@stusta.de>
-Subject: [2.6 patch] scsi/aic7xxx/aic79xx_osm.c: remove an unused function (fwd)
-Date: Wed, 8 Dec 2004 02:14:32 +0100
-Message-ID: <20041208011432.GG5496@stusta.de>
+Subject: [2.6 patch] scsi/aic7xxx/ : remove two useless variables
+Date: Wed, 8 Dec 2004 02:14:50 +0100
+Message-ID: <20041208011450.GK5496@stusta.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel=40m.gmane.org-S261983AbULHBQc@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from emailhub.stusta.mhn.de ([141.84.69.5]:21266 "HELO
+	mailout.stusta.mhn.de") by vger.kernel.org with SMTP
+	id S261993AbULHBOz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 7 Dec 2004 20:14:55 -0500
 Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
-Cc: James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-
-The patch forwarded below still applies and compiles against 
-2.6.10-rc2-mm4.
-
-Please apply.
-
-
------ Forwarded message from Adrian Bunk <bunk@stusta.de> -----
-
-Date:	Fri, 29 Oct 2004 02:26:46 +0200
-From: Adrian Bunk <bunk@stusta.de>
 To: James.Bottomley@SteelEye.com
 Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [2.6 patch] scsi/aic7xxx/aic79xx_osm.c: remove an unused function
 
-[ this time without the problems due to a digital signature... ]
-
-The patch below removes an unused function from 
-drivers/scsi/aic7xxx/aic79xx_osm.c
+The patch below removes two useless variables.
 
 
 diffstat output:
- drivers/scsi/aic7xxx/aic79xx_osm.c |   26 --------------------------
- 1 files changed, 26 deletions(-)
+ drivers/scsi/aic7xxx/aic79xx_osm.c |   12 ------------
+ drivers/scsi/aic7xxx/aic7xxx_osm.c |   12 ------------
+ 2 files changed, 24 deletions(-)
 
 
 Signed-off-by: Adrian Bunk <bunk@stusta.de>
 
---- linux-2.6.10-rc1-mm1-full/drivers/scsi/aic7xxx/aic79xx_osm.c.old	2004-10-28 23:24:54.000000000 +0200
-+++ linux-2.6.10-rc1-mm1-full/drivers/scsi/aic7xxx/aic79xx_osm.c	2004-10-28 23:25:28.000000000 +0200
-@@ -549,10 +549,6 @@
- static __inline void ahd_linux_run_device_queues(struct ahd_softc *ahd);
- static __inline void ahd_linux_unmap_scb(struct ahd_softc*, struct scb*);
+--- linux-2.6.10-rc2-mm4-full/drivers/scsi/aic7xxx/aic7xxx_osm.c.old	2004-12-08 01:06:02.000000000 +0100
++++ linux-2.6.10-rc2-mm4-full/drivers/scsi/aic7xxx/aic7xxx_osm.c	2004-12-08 01:06:15.000000000 +0100
+@@ -427,12 +427,6 @@
+  * Module information and settable options.
+  */
+ static char *aic7xxx = NULL;
+-/*
+- * Just in case someone uses commas to separate items on the insmod
+- * command line, we define a dummy buffer here to avoid having insmod
+- * write wild stuff into our code segment
+- */
+-static char dummy_buffer[60] = "Please don't trounce on me insmod!!\n";
  
--static __inline int ahd_linux_map_seg(struct ahd_softc *ahd, struct scb *scb,
--		 		      struct ahd_dma_seg *sg,
--				      dma_addr_t addr, bus_size_t len);
--
- static __inline void
- ahd_schedule_completeq(struct ahd_softc *ahd)
- {
-@@ -711,28 +707,6 @@
- 	}
- }
+ MODULE_AUTHOR("Maintainer: Justin T. Gibbs <gibbs@scsiguy.com>");
+ MODULE_DESCRIPTION("Adaptec Aic77XX/78XX SCSI Host Bus Adapter driver");
+@@ -850,12 +844,6 @@
+ 	 */
+ 	if (aic7xxx)
+ 		aic7xxx_setup(aic7xxx);
+-	if (dummy_buffer[0] != 'P')
+-		printk(KERN_WARNING
+-"aic7xxx: Please read the file /usr/src/linux/drivers/scsi/README.aic7xxx\n"
+-"aic7xxx: to see the proper way to specify options to the aic7xxx module\n"
+-"aic7xxx: Specifically, don't use any commas when passing arguments to\n"
+-"aic7xxx: insmod or else it might trash certain memory areas.\n");
  
--static __inline int
--ahd_linux_map_seg(struct ahd_softc *ahd, struct scb *scb,
--		  struct ahd_dma_seg *sg, dma_addr_t addr, bus_size_t len)
--{
--	int	 consumed;
--
--	if ((scb->sg_count + 1) > AHD_NSEG)
--		panic("Too few segs for dma mapping.  "
--		      "Increase AHD_NSEG\n");
--
--	consumed = 1;
--	sg->addr = ahd_htole32(addr & 0xFFFFFFFF);
--	scb->platform_data->xfer_len += len;
--
--	if (sizeof(dma_addr_t) > 4
--	 && (ahd->flags & AHD_39BIT_ADDRESSING) != 0)
--		len |= (addr >> 8) & AHD_SG_HIGH_ADDR_MASK;
--
--	sg->len = ahd_htole32(len);
--	return (consumed);
--}
--
- /******************************** Macros **************************************/
- #define BUILD_SCSIID(ahd, cmd)						\
- 	((((cmd)->device->id << TID_SHIFT) & TID) | (ahd)->our_id)
--
-To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
-Please read the FAQ at  http://www.tux.org/lkml/
+ 	template->proc_name = "aic7xxx";
+ 
+--- linux-2.6.10-rc2-mm4-full/drivers/scsi/aic7xxx/aic79xx_osm.c.old	2004-12-08 01:06:25.000000000 +0100
++++ linux-2.6.10-rc2-mm4-full/drivers/scsi/aic7xxx/aic79xx_osm.c	2004-12-08 01:06:42.000000000 +0100
+@@ -407,12 +407,6 @@
+  * Module information and settable options.
+  */
+ static char *aic79xx = NULL;
+-/*
+- * Just in case someone uses commas to separate items on the insmod
+- * command line, we define a dummy buffer here to avoid having insmod
+- * write wild stuff into our code segment
+- */
+-static char dummy_buffer[60] = "Please don't trounce on me insmod!!\n";
+ 
+ MODULE_AUTHOR("Maintainer: Justin T. Gibbs <gibbs@scsiguy.com>");
+ MODULE_DESCRIPTION("Adaptec Aic790X U320 SCSI Host Bus Adapter driver");
+@@ -835,12 +829,6 @@
+ 	 */
+ 	if (aic79xx)
+ 		aic79xx_setup(aic79xx);
+-	if (dummy_buffer[0] != 'P')
+-		printk(KERN_WARNING
+-"aic79xx: Please read the file /usr/src/linux/drivers/scsi/README.aic79xx\n"
+-"aic79xx: to see the proper way to specify options to the aic79xx module\n"
+-"aic79xx: Specifically, don't use any commas when passing arguments to\n"
+-"aic79xx: insmod or else it might trash certain memory areas.\n");
+ #endif
+ 
+ 	template->proc_name = "aic79xx";
 
------ End forwarded message -----
