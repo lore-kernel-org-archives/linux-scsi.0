@@ -1,55 +1,81 @@
 From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: bCWBCBLength is cb length no when
-Date: Fri, 5 Dec 2003 13:55:15 -0500 (EST)
+Subject: Re: usb storage traces
+Date: Fri, 5 Dec 2003 14:27:45 -0500 (EST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44L0.0312051351420.645-100000@ida.rowland.org>
-References: <1070644705.12411.153.camel@patibmrh9>
+Message-ID: <Pine.LNX.4.44L0.0312051421160.645-100000@ida.rowland.org>
+References: <1070649445.12411.347.camel@patibmrh9>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ida.rowland.org ([192.131.102.52]:2308 "HELO ida.rowland.org")
-	by vger.kernel.org with SMTP id S264351AbTLESzQ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 5 Dec 2003 13:55:16 -0500
-In-Reply-To: <1070644705.12411.153.camel@patibmrh9>
+Received: from ida.rowland.org ([192.131.102.52]:5892 "HELO ida.rowland.org")
+	by vger.kernel.org with SMTP id S264301AbTLET1p (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 5 Dec 2003 14:27:45 -0500
+In-Reply-To: <1070649445.12411.347.camel@patibmrh9>
 List-Id: linux-scsi@vger.kernel.org
 To: Pat LaVarre <p.lavarre@ieee.org>
-Cc: SCSI development list <linux-scsi@vger.kernel.org>, Matthew Dharm <mdharm-scsi@one-eyed-alien.net>, Alex Sanks <alex@netchip.com>, Julian Back <jback@mpc-data.co.uk>, David Brownell <david-b@pacbell.net>
+Cc: SCSI development list <linux-scsi@vger.kernel.org>
 
 On 5 Dec 2003, Pat LaVarre wrote:
 
-> > Incidentally, Pat, can you confirm whether bInterfaceSubClass x01 = RBC 
-> > (Reduced Block Commands, T10 project 1240-D) uses 0-padding of commands to 
-> > 12 bytes or not?  The Linux usb-storage driver seems to think that it 
-> > doesn't.
+> > Anyway, the page x08 data indicates WCE off.  So maybe Windows was just 
+> > trying to turn it on
 > 
-> I can neither concisely confirm, nor concisely deny, sorry.
+> Apparently yes.  Cool, thanks for sharing.  I'm now guessing this occurs
+> only when rmb is clear.
 > 
-> I cannot conclude confidently either way.
+> If so, then we can say msft turns write-behind etc. on when the drive is
+> hot-pluggable, but turns write-behind etc. off when the disk is fully
+> hot-pluggable or even only hot-pluggable while not prevented.  Not good
+> policy, though too late now I suppose.
 
-> By a+b+d I say "cdb" for RBC, as for all forms of T10 SPC SCSI over USB.
+Be careful with your nomenclature.  Hot-pluggable and removable-media are 
+two different things.
+
+> That reality will encourage device folk to virtually unplug the drive
+> when the disk ejects ... else disconnect mode page x08 from reality.
 > 
-> By c+e+f+g+h+i I say "plus pad" for RBC, as for all forms of SFF/ T10
-> MMC SCSI over USB.
+> > There was a prior x1a = MODE-SENSE(6) for page x08.  Here is the returned 
+> > data:
+> > 
+> > 	12 00 00 00 00 00 00 00 08 0a 00 00 00 00 00 00
+> > 	00 00 00 00
+> > 
+> > I read this as: mode data length = 18 (inconsistent with the amount of
+> > returned data, which is 19 bytes not counting the mode data length byte
+> > itself),
 > 
-> I feel a+b+d >= c+e+f+g+h+i.  Perhaps only because of my personal
-> involvement in b.  Perhaps those sums appear less equally balanced to
-> you?
+> Help I'm lost.
+> 
+> Did we get these plain hex bytes via Windows, rather than from a bus
+> trace?  They internally contradict themselves.
+> 
+> Have we unwittingly involved the slightly broken Win mode sense 6/10
+> translator?  This plain hex could be the result from a compliant device
+> if what actually crossed the bus was an op x5A mode sense 10, and then
+> Win gave us the data in unedited, even after Win had helpfully edited
+> the cdb we asked to send.
 
-Since usb-storage uses the a+b+d interpretation, that's what I'm inclined 
-to go with until more evidence arrives.  But to be safe, it might be best 
-to accept commands either with or without padding.
+The trace came from USB Snoopy.  I don't know enough about the internals 
+of Windows to say whether the data have been mangled or not.
 
+> > these plain hex bytes ... internally contradict themselves.
+> 
+> Digital numbers have value and length, not just value.
+> 
+> Yes x 08 0a 00 00 00 00 00 00 00 00 00 00 appears to be an x0C (12) byte
+> mode page.
+> 
+> But x 12 00 00 00 00 00 00 00 appears to be an eight byte header for op
+> x5A mode sense 10, which by ANSI T10 SPC definition contains the
+> additional length x 12 00, which at offset zero fits a total available
+> length of x14 (20), which is the number of data bytes you quote.
+> 
+> But we say we traced op x1A mode sense 6, not op x5A mode sense 10.
+> 
+> Help?
 
-> P.P.S. Once upon a time people here were interested on how impossible it
-> is to defeat the sometimes selected Microsoft Outlook default of
-> uuencoding mail.  I believe the technique I'm using here now can work on
-> any PC, by rebooting via DVD/ CD into Knoppix Linux in place of
-> Windows.  Mind you, I'm not completely confident that this e-mail is not
-> uuencoded, since by now I have also forgotten the url of the web service
-> that bounces a plain text copy of my headers and mail body to me.
-
-I don't know about the original message this postscript came from, but the 
-message that came to me was not uuencoded at all.
+Don't ask me, I don't know.
 
 Alan Stern
+
 
