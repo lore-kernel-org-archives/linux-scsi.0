@@ -1,34 +1,22 @@
-From: Kai Makisara <Kai.Makisara@kolumbus.fi>
-Subject: Re: [PATCH] add SCSI reset ioctls to scsi_ioctl.c (and sd and sr)
-Date: Sat, 18 Sep 2004 22:49:44 +0300 (EEST)
+From: Christoph Hellwig <hch@lst.de>
+Subject: should we remove cpqfc from the Linux 2.6 tree?
+Date: Sat, 18 Sep 2004 22:32:16 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.58.0409182238070.2555@kai.makisara.local>
-References: <1095526671.2483.5.camel@mulgrave>
+Message-ID: <20040918203216.GA29460@lst.de>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fep02-0.kolumbus.fi ([193.229.0.44]:64686 "EHLO
-	fep02-app.kolumbus.fi") by vger.kernel.org with ESMTP
-	id S269620AbUIRTtq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 18 Sep 2004 15:49:46 -0400
-In-Reply-To: <1095526671.2483.5.camel@mulgrave>
+Received: from verein.lst.de ([213.95.11.210]:30874 "EHLO mail.lst.de")
+	by vger.kernel.org with ESMTP id S269627AbUIRUcY (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 18 Sep 2004 16:32:24 -0400
+Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, Jens Axboe <axboe@suse.de>
+To: chirag.kantharia@hp.com, mkp@mkp.net
+Cc: iss_storagedev@hp.com, linux-scsi@vger.kernel.org
 
-On Sat, 18 Sep 2004, James Bottomley wrote:
-
-> The purpose of this patch is to allow a SCSI reset to be issued directly
-> to the devices without having to go via sg.  Because the reset may be
-> issued even while the device is in recovery, this had to be done via a
-> new api (sd won't invoke scsi_ioctl() while the device is in recovery).
-> 
-> Kai, do you want me to plum this into st as well?
-> 
-Yes, please do that. I would like st to have the same generic capabilities 
-as the other high-level drivers as far as possible and I don't see any 
-problems in adding this feature. It is useful to have an easy way to reset 
-a tape drive. Some drives seem to be lock up easily when they see a bad tape.
-
--- 
-Kai
+I remember mkp had some interested in reactivating that driver, is that
+still true?  I'd prefer to kill it from the tree and re-merge it if
+we get a sane one, but the current one is doing far to bad things that
+I'd want to waste any ressources on it when moving the remaining drivers
+over to the current APIs.
