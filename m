@@ -1,69 +1,30 @@
-From: Greg KH <greg@kroah.com>
-Subject: Re: [PATCH] sg driver against lk 2.6.1-bk6
-Date: Wed, 21 Jan 2004 09:16:17 -0800
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040121171617.GB12384@kroah.com>
-References: <400E706A.1050008@torque.net>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [2.6 patch] show "Fusion MPT device support" menu only if BLK _DEV_SD
+Date: Wed, 21 Jan 2004 18:01:54 +0000
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <20040121180154.A32424@infradead.org>
+References: <0E3FA95632D6D047BA649F95DAB60E5703A75F51@exa-atlanta.se.lsil.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kroah.org ([65.200.24.183]:14284 "EHLO perch.kroah.org")
-	by vger.kernel.org with ESMTP id S263868AbUAURZA (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 21 Jan 2004 12:25:00 -0500
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <400E706A.1050008@torque.net>
+In-Reply-To: <0E3FA95632D6D047BA649F95DAB60E5703A75F51@exa-atlanta.se.lsil.com>; from Emoore@lsil.com on Wed, Jan 21, 2004 at 12:00:09PM -0500
+To: "Moore, Eric Dean" <Emoore@lsil.com>
+Cc: Adrian Bunk <bunk@fs.tum.de>, Andrew Morton <akpm@osdl.org>, James.Bottomley@SteelEye.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Douglas Gilbert <dougg@torque.net>
-Cc: linux-scsi@vger.kernel.org, Kai.Makisara@kolumbus.fi, wrlk@riede.org
 
-On Wed, Jan 21, 2004 at 10:28:26PM +1000, Douglas Gilbert wrote:
-> This patch is against the sg driver found in lk 2.6.1-bk6 .
-> It is an update on the sg patch sent in the "devices with more
-> than one node" thread:
-> http://marc.theaimsgroup.com/?l=linux-scsi&m=107415435300783&w=2
+On Wed, Jan 21, 2004 at 12:00:09PM -0500, Moore, Eric Dean wrote:
+> The "config FUSION" entry in Kconfig is handling both mptbase.ko 
+> and mptscsih.ko for some reason?
 > 
-> The "simple_class" interface in the mm tree has mutated to
-> "class_simple" en route to 2.6.1-bk6. There is now an opaque
-> struct class_simple ** which does not seem to allow sg to put
-> its driver parameters under the /sys/class/scsi_generic
-> directory [which is not relevant to st and osst].
+> The mptbase.ko driver is the lower layer driver which configures
+> the adapters and is transport layer to and from the chip. It doesn't
+> depend on anything in the scsi mid layer.  
 > 
-> $ cd /sys/class/scsi_generic/
-> $ tree
-> .
-> `-- sg0
->     |-- dev
->     `-- device -> ../../../devices/pseudo_0/adapter0/host0/0:0:0:0
+> The mptscsih.ko does depend on scsi_mod.ko, but not sd.ko  
 > 
-> $ cd sg0/device/
-> $ tree
-> .
-> |-- delete
-> |-- detach_state
-> |-- device_blocked
-> |-- generic -> ../../../../../class/scsi_generic/sg0
-> |-- model
-> |-- online
-> |-- power
-> |   `-- state
-> |-- queue_depth
-> |-- rescan
-> |-- rev
-> |-- scsi_level
-> |-- type
-> `-- vendor
+> Therefore - maybe we could have separate entries in Kconfig for
+> both mptbase and mptscsih.  mptbase depend on PCI, and mptscsih
+> depend on SCSI. What do you think?
 
-Nice, looks good.
-
-> ** struct class_simple's definition is "hidden" in
-> /drivers/base/class_simple.c
-
-Is this a problem?  I figured that if you want access to a struct class,
-then you need to go through the "hassle" of dealing with class devices
-and classes on your own.  It's a trade off.  Do you find this too
-limiting for you?
-
-thanks,
-
-greg k-h
+Sounds good.  (And mptscsi should depend on mptbase of course)
