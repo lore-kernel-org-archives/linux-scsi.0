@@ -1,90 +1,95 @@
 From: James Bottomley <James.Bottomley@steeleye.com>
-Subject: Re: Calling sd_shutdown when in state SDEV_DEL
-Date: 02 Apr 2004 18:33:04 -0500
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1080948785.1830.157.camel@mulgrave>
-References: <200403241603.23269.heiko.carstens@de.ibm.com>
-	<1080142505.2706.25.camel@mulgrave>
-	<20040324170452.GB1679@beaverton.ibm.com>
-	<1080158975.1783.26.camel@mulgrave>
-	<20040325014859.GA3040@beaverton.ibm.com>
+Subject: Re: bug 2400
+Date: 02 Apr 2004 18:36:55 -0500
+Sender: linux-usb-devel-admin@lists.sourceforge.net
+Message-ID: <1080949016.1804.161.camel@mulgrave>
+References: <20040401131502.41136788.akpm@osdl.org>
+	<1080862354.2118.78.camel@mulgrave>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat1.steeleye.com ([65.114.3.130]:24998 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S261347AbUDBXdc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 2 Apr 2004 18:33:32 -0500
-In-Reply-To: <20040325014859.GA3040@beaverton.ibm.com>
+Return-path: <linux-usb-devel-admin@lists.sourceforge.net>
+In-Reply-To: <1080862354.2118.78.camel@mulgrave>
+Errors-To: linux-usb-devel-admin@lists.sourceforge.net
+List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-devel>,
+	<mailto:linux-usb-devel-request@lists.sourceforge.net?subject=unsubscribe>
+List-Post: <mailto:linux-usb-devel@lists.sourceforge.net>
+List-Help: <mailto:linux-usb-devel-request@lists.sourceforge.net?subject=help>
+List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-devel>,
+	<mailto:linux-usb-devel-request@lists.sourceforge.net?subject=subscribe>
+List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=linux-usb-devel>
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Andrew Morton <akpm@osdl.org>, greg@kroah.com, Jens Axboe <axboe@suse.de>, linux-usb-devel@lists.sourceforge.net, SCSI Mailing List <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Anderson <andmike@us.ibm.com>
-Cc: Heiko Carstens <heiko.carstens@de.ibm.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Wed, 2004-03-24 at 20:48, Mike Anderson wrote:
-> James Bottomley [James.Bottomley@SteelEye.com] wrote:
-> > On Wed, 2004-03-24 at 12:04, Mike Anderson wrote:
-> > > Why setting CANCEL on the device? Future plans for the CANCEL state?
-> > > You are setting the state to cancel, but not going through
-> > > scsi_device_cancel as you want IO to still flow.
-> > 
-> > Mainly because it was there.  Using CANCEL instead of DEL is appealing
-> > since it will still allow special I/O.  Would there be an issue with
-> > refusing new device references in the CANCEL state?
-> 
-> I think this should be ok as this is our (scsi core) own internal
-> solution to keep ref counts from increasing for the purpose of
-> eventually allowing everything to cleanup. 
+On Thu, 2004-04-01 at 18:32, James Bottomley wrote:
+> Now, the questions are, whose issue is this and how do we fix it?  I can
+> see that a driver needs early notification of unplugs so it can deny all
+> access to a gone device.  On the other hand, for a user land open where
+> we still have to hold resources in the driver, we'd like the driver to
+> have a notify when the device reference count drops to zero so we can
+> clean up.
 
-So can we agree on this as the final patch?
+OK, I think this is easily fixable in sr.c by moving around the release
+code to do the right thing (and not drop the reference to sdev_gendev
+until we're completely finished).
+
+Jens, does this look OK (or have I just opened up another race window
+somewhere else)?
 
 James
 
-===== drivers/scsi/scsi.c 1.140 vs edited =====
---- 1.140/drivers/scsi/scsi.c	Tue Mar 16 20:10:09 2004
-+++ edited/drivers/scsi/scsi.c	Fri Apr  2 15:36:08 2004
-@@ -977,7 +977,7 @@
-  */
- int scsi_device_get(struct scsi_device *sdev)
+===== drivers/scsi/sr.c 1.103 vs edited =====
+--- 1.103/drivers/scsi/sr.c	Fri Apr  2 11:30:44 2004
++++ edited/drivers/scsi/sr.c	Fri Apr  2 17:29:06 2004
+@@ -424,8 +424,19 @@
+ 
+ static int sr_block_release(struct inode *inode, struct file *file)
  {
--	if (sdev->sdev_state == SDEV_DEL)
-+	if (sdev->sdev_state == SDEV_DEL || sdev->sdev_state == SDEV_CANCEL)
- 		return -ENXIO;
- 	if (!get_device(&sdev->sdev_gendev))
- 		return -ENXIO;
-===== drivers/scsi/scsi_sysfs.c 1.44 vs edited =====
---- 1.44/drivers/scsi/scsi_sysfs.c	Tue Mar 16 10:00:19 2004
-+++ edited/drivers/scsi/scsi_sysfs.c	Fri Apr  2 17:31:06 2004
-@@ -502,18 +502,19 @@
-  **/
- void scsi_remove_device(struct scsi_device *sdev)
- {
--	if (sdev->sdev_state == SDEV_RUNNING || sdev->sdev_state == SDEV_CANCEL) {
--		scsi_device_set_state(sdev, SDEV_DEL);
--		class_device_unregister(&sdev->sdev_classdev);
--		if (sdev->transport_classdev.class)
--			class_device_unregister(&sdev->transport_classdev);
--		device_del(&sdev->sdev_gendev);
--		if (sdev->host->hostt->slave_destroy)
--			sdev->host->hostt->slave_destroy(sdev);
--		if (sdev->host->transportt->cleanup)
--			sdev->host->transportt->cleanup(sdev);
--		put_device(&sdev->sdev_gendev);
--	}
-+	if (scsi_device_set_state(sdev, SDEV_CANCEL) != 0)
-+		return;
++	int ret;
+ 	struct scsi_cd *cd = scsi_cd(inode->i_bdev->bd_disk);
+-	return cdrom_release(&cd->cdi, file);
++	struct scsi_device *sdev = cd->device;
++	ret = cdrom_release(&cd->cdi, file);
++	if(ret)
++		return ret;
++	
++	unregister_cdrom(&cd->cdi);
++	kfree(cd);
 +
-+	class_device_unregister(&sdev->sdev_classdev);
-+	if (sdev->transport_classdev.class)
-+		class_device_unregister(&sdev->transport_classdev);
-+	device_del(&sdev->sdev_gendev);
-+	scsi_device_set_state(sdev, SDEV_DEL);
-+	if (sdev->host->hostt->slave_destroy)
-+		sdev->host->hostt->slave_destroy(sdev);
-+	if (sdev->host->transportt->cleanup)
-+		sdev->host->transportt->cleanup(sdev);
-+	put_device(&sdev->sdev_gendev);
++	scsi_device_put(sdev);
++
++	return 0;
  }
  
- int scsi_register_driver(struct device_driver *drv)
+ static int sr_block_ioctl(struct inode *inode, struct file *file, unsigned cmd,
+@@ -500,7 +511,6 @@
+ 	if (cd->device->sector_size > 2048)
+ 		sr_set_blocklength(cd, 2048);
+ 
+-	scsi_device_put(cd->device);
+ }
+ 
+ static int sr_probe(struct device *dev)
+@@ -874,9 +884,6 @@
+ 	spin_unlock(&sr_index_lock);
+ 
+ 	put_disk(cd->disk);
+-	unregister_cdrom(&cd->cdi);
+-	kfree(cd);
+-
+ 	return 0;
+ }
+ 
 
+
+
+-------------------------------------------------------
+This SF.Net email is sponsored by: IBM Linux Tutorials
+Free Linux tutorial presented by Daniel Robbins, President and CEO of
+GenToo technologies. Learn everything from fundamentals to system
+administration.http://ads.osdn.com/?ad_id=1470&alloc_id=3638&op=click
+_______________________________________________
+linux-usb-devel@lists.sourceforge.net
+To unsubscribe, use the last form field at:
+https://lists.sourceforge.net/lists/listinfo/linux-usb-devel
