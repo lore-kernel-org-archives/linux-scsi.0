@@ -1,26 +1,64 @@
-From: denebeim@deepthot.org (Jay Denebeim)
-Subject: Re: Porting high level device drivers to 2.6
-Date: Tue, 24 Feb 2004 22:05:02 +0000 (UTC)
+From: Greg KH <greg@kroah.com>
+Subject: Re: [BK PATCH] SCSI update for 2.6.3
+Date: Tue, 24 Feb 2004 14:09:46 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <c1ghqe$90l$1@dent.deepthot.org>
-References: <c1gg8q$84t$1@dent.deepthot.org>
+Message-ID: <20040224220946.GA2389@kroah.com>
+References: <Pine.LNX.4.58.0402240919490.1129@spektro.metla.fi> <20040224170412.GA31268@kroah.com> <1077642529.1804.170.camel@mulgrave> <20040224171629.GA31369@kroah.com> <20040224101512.A19617@beaverton.ibm.com> <Pine.LNX.4.58.0402242028370.3713@kai.makisara.local>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from deepthot.org ([68.14.232.127]:15769 "EHLO dent.deepthot.org")
-	by vger.kernel.org with ESMTP id S262482AbUBXWFD (ORCPT
+Received: from mail.kroah.org ([65.200.24.183]:36795 "EHLO perch.kroah.org")
+	by vger.kernel.org with ESMTP id S262326AbUBXWJx (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 24 Feb 2004 17:05:03 -0500
-Received: from news by dent.deepthot.org with local (Exim 4.30)
-	id 1Avkfm-0002Pj-Eh
-	for linux-scsi@vger.kernel.org; Tue, 24 Feb 2004 15:05:02 -0700
+	Tue, 24 Feb 2004 17:09:53 -0500
+Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.58.0402242028370.3713@kai.makisara.local>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Kai Makisara <Kai.Makisara@kolumbus.fi>
+Cc: Patrick Mansfield <patmans@us.ibm.com>, James Bottomley <James.Bottomley@steeleye.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
 
-Sorry for the double post.  I just set this list up on my news server
-and introduced a loop.  Should be fixed now.
+On Tue, Feb 24, 2004 at 11:48:32PM +0200, Kai Makisara wrote:
+> On Tue, 24 Feb 2004, Patrick Mansfield wrote:
+> 
+> ...
+> > Current 2.6 kernel default names are of the form: st[0-9]m[0-3][n]
+> > 
+> Actually more like  st[0-9]*m[0-9]*[n]
+> 
+> > Current /dev naming is of the form: [n]st[0-9][alm]
+> > 
+> Depends on who's /dev you are looking at.
 
-Jay
--- 
-* Jay Denebeim  Moderator       rec.arts.sf.tv.babylon5.moderated *
-* newsgroup submission address: b5mod@deepthot.org                *
-* moderator contact address:    b5mod-request@deepthot.org        *
-* personal contact address:     denebeim@deepthot.org             *
+How about everyone look at devices.txt as that is the LSB standard.
+
+> > Should the st kernel names be changed to map to current /dev names?
+> > 
+> I don't think we should go back to the old names. The intention with the 
+> "new" names was to make them easier to parse and handle than the old ones. 
+> The number of modes is not always four. Anyone can compile st with more or 
+> less modes. Using a number for the mode is naturally extensible. The 
+> characters at the end of the old names had interpretations that may not be 
+> correct in all cases (a=alternate, l=low density, m=medium density).
+> 
+> n has been put at the end of the name because now the tape names are 
+> grouped together in a listing. I know this is a weak justification ;-)
+> 
+> > For udev, even with that we need differing pre and postfix values wrapped
+> > around a peristent name.
+> > 
+> If I read udev correctly, it can now parse one number at the end of the 
+> name. Something like st%md%n and nst%md%n could be used with eight rules 
+> (where %m is the mode number and %n is the device number). Not very 
+> convenient. Parsing the st names should really be able to extract at 
+> least two fields. With an external program, anything can be done. Maybe 
+> udev can some day do this internally.
+
+Well, udev didn't think that anyone would do such a looney thing in
+nameing devices :)
+
+But yes, I'll be glad to fix up udev if you all fix up the tape sysfs
+names to match device.txt.
+
+thanks,
+
+greg k-h
