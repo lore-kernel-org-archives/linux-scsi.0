@@ -1,18 +1,18 @@
 From: Nick Piggin <piggin@cyberone.com.au>
 Subject: Re: [PATCH] as i/o hang with aacraid driver 2.6.0-test1
-Date: Thu, 17 Jul 2003 21:21:51 +1000
+Date: Thu, 17 Jul 2003 21:29:33 +1000
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3F1686CF.70201@cyberone.com.au>
-References: <20030716132036.GB833@suse.de> <1058364455.1856.28.camel@mulgrave> <20030716170456.GK833@suse.de> <20030717015756.135a3f5a.akpm@osdl.org> <20030717085952.GX833@suse.de> <3F1672D9.7070309@cyberone.com.au> <20030717102926.GE833@suse.de> <3F167F98.60006@cyberone.com.au> <20030717105718.GG833@suse.de> <3F1683B5.6070108@cyberone.com.au> <20030717111043.GH833@suse.de>
+Message-ID: <3F16889D.7060309@cyberone.com.au>
+References: <20030716170456.GK833@suse.de> <20030717015756.135a3f5a.akpm@osdl.org> <20030717085952.GX833@suse.de> <3F1672D9.7070309@cyberone.com.au> <20030717102926.GE833@suse.de> <3F167F98.60006@cyberone.com.au> <20030717105718.GG833@suse.de> <3F1683B5.6070108@cyberone.com.au> <20030717111043.GH833@suse.de> <3F1686CF.70201@cyberone.com.au> <20030717112343.GK833@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from dyn-ctb-210-9-246-41.webone.com.au ([210.9.246.41]:27661 "EHLO
-	chimp.local.net") by vger.kernel.org with ESMTP id S271414AbTGQLHN
+Received: from dyn-ctb-210-9-246-41.webone.com.au ([210.9.246.41]:24078 "EHLO
+	chimp.local.net") by vger.kernel.org with ESMTP id S271431AbTGQLOw
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 17 Jul 2003 07:07:13 -0400
-In-Reply-To: <20030717111043.GH833@suse.de>
+	Thu, 17 Jul 2003 07:14:52 -0400
+In-Reply-To: <20030717112343.GK833@suse.de>
 List-Id: linux-scsi@vger.kernel.org
 To: Jens Axboe <axboe@suse.de>
 Cc: Andrew Morton <akpm@osdl.org>, James.Bottomley@steeleye.com, markh@osdl.org, cliffw@osdl.org, linux-scsi@vger.kernel.org
@@ -30,29 +30,56 @@ Jens Axboe wrote:
 >>>On Thu, Jul 17 2003, Nick Piggin wrote:
 >>>
 >>>
->>>>If the requeue were seperate to the add, it would simply be a call
->>>>to as_completed_request in as-iosched.c.
+>>>>Jens Axboe wrote:
 >>>>
 >>>>
->>>Out of laziness, or what? Just the accounting, not the actual completion
->>>bits.
+>>>>
+>>>>>On Thu, Jul 17 2003, Nick Piggin wrote:
+>>>>>
+>>>>>
+>>>>>
+>>>>>>If the requeue were seperate to the add, it would simply be a call
+>>>>>>to as_completed_request in as-iosched.c.
+>>>>>>
+>>>>>>
+>>>>>>
+>>>>>Out of laziness, or what? Just the accounting, not the actual completion
+>>>>>bits.
+>>>>>
+>>>>>
+>>>>>
+>>>>Well no it would have to because it has nothing to associate
+>>>>the re-add with a re-add and not a new add, if you know what
+>>>>I mean.
+>>>>
+>>>>So it would have to do all the cleanup stuff that
+>>>>as_completed_request does. Its possible I guess, that we could
+>>>>set a flag in the as_rq's state field, to say that the request
+>>>>is a re-add, but thats not very clean IMO.
+>>>>
+>>>>
+>>>Wont that possibly cause it to make bad decisions? From AS pov, it looks
+>>>like an immediate complete of a request. Which it isn't.
 >>>
 >>>
->>Well no it would have to because it has nothing to associate
->>the re-add with a re-add and not a new add, if you know what
->>I mean.
->>
->>So it would have to do all the cleanup stuff that
->>as_completed_request does. Its possible I guess, that we could
->>set a flag in the as_rq's state field, to say that the request
->>is a re-add, but thats not very clean IMO.
+>>Yeah thats correct - AS assumes elv_add_request is an entirely new
+>>request from the process point of view, so yeah the quick fix wasn't
+>>entirely optimal for AS.
 >>
 >
->Wont that possibly cause it to make bad decisions? From AS pov, it looks
->like an immediate complete of a request. Which it isn't.
+>But elv_requeue_req_fn gives you the possibility to do it right, just
+>wondering since you said you'd just make that basically:
+>
+>as_requeue_req_fn()
+>{
+>	as_completed_req();
+>	as_add_req();
+>}
+>
+>which could done a lot better.
 >
 
-Yeah thats correct - AS assumes elv_add_request is an entirely new
-request from the process point of view, so yeah the quick fix wasn't
-entirely optimal for AS.
+Yeah - if its the requeue operation that is responsible for the re add,
+then everything should be fine. See my recent patch in the co-thread.
+
 
