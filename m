@@ -1,49 +1,97 @@
-From: Heiko Carstens <heiko.carstens@de.ibm.com>
-Subject: [PATCH] 2.5.72: set data direction to SCSI_DATA_NONE for START_STOP command
-Date: Tue, 17 Jun 2003 09:45:02 +0200
+From: Adrian Bunk <bunk@fs.tum.de>
+Subject: [patch] 2.5.70-mm2: aha1740.c doesn't compile. (fwd)
+Date: Wed, 18 Jun 2003 00:40:35 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <200306170945.02663.heiko.carstens@de.ibm.com>
+Message-ID: <20030617224035.GG29247@fs.tum.de>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from d12lmsgate-3.de.ibm.com ([194.196.100.236]:53383 "EHLO
-	d12lmsgate-3.de.ibm.com") by vger.kernel.org with ESMTP
-	id S264619AbTFQHhr convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Jun 2003 03:37:47 -0400
-Received: from d12relay01.megacenter.de.ibm.com (d12relay01.megacenter.de.ibm.com [9.149.165.180])
-	by d12lmsgate-3.de.ibm.com (8.12.9/8.12.8) with ESMTP id h5H7pYsn080600
-	for <linux-scsi@vger.kernel.org>; Tue, 17 Jun 2003 09:51:38 +0200
-Received: from osiris (d12av02.megacenter.de.ibm.com [9.149.165.228])
-	by d12relay01.megacenter.de.ibm.com (8.12.9/NCO/VER6.5) with ESMTP id h5H7pVos059682
-	for <linux-scsi@vger.kernel.org>; Tue, 17 Jun 2003 09:51:31 +0200
+Received: from hermes.fachschaften.tu-muenchen.de ([129.187.202.12]:62163 "HELO
+	hermes.fachschaften.tu-muenchen.de") by vger.kernel.org with SMTP
+	id S264975AbTFQW0s (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 17 Jun 2003 18:26:48 -0400
+Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Cc: trivial@rustcorp.com.au
 
-Hi,
+The problem described below still exists in 2.5.72. A patch to fix it 
+is:
 
-while trying to access a disk drive via an FCP bridge we got an FCP_RSP IU
-with the RSP_CODE field set to "FCP_CMND Fields Invalid". This happened
-after sending a START_STOP command to the device. Reason for this was that
-the FCP_CMND IU incorrectly had the RDDATA field set to one, because of a
-bug in sd_spinup_disk(). There the data direction for START_STOP is set
-to SCSI_DATA_READ instead of SCSI_DATA_NONE.
-Please apply the patch below.
-
-Thanks,
-Heiko
-
-diff -urN linux-2.5.72/drivers/scsi/sd.c linux-2.5.72-start/drivers/scsi/sd.c
---- linux-2.5.72/drivers/scsi/sd.c	Tue Jun 17 06:20:19 2003
-+++ linux-2.5.72-start/drivers/scsi/sd.c	Tue Jun 17 09:17:15 2003
-@@ -856,7 +856,7 @@
- 				SRpnt->sr_sense_buffer[0] = 0;
- 				SRpnt->sr_sense_buffer[2] = 0;
+--- linux-2.5.72/drivers/scsi/aha1740.c.old	2003-06-18 00:36:51.000000000 +0200
++++ linux-2.5.72/drivers/scsi/aha1740.c	2003-06-18 00:36:55.000000000 +0200
+@@ -102,6 +102,7 @@
+     if (len > length)
+ 	len = length;
+     return len;
++}
  
--				SRpnt->sr_data_direction = SCSI_DATA_READ;
-+				SRpnt->sr_data_direction = SCSI_DATA_NONE;
- 				scsi_wait_req(SRpnt, (void *)cmd, 
- 					      (void *) buffer, 0/*512*/, 
- 					      SD_TIMEOUT, SD_MAX_RETRIES);
+ 
+ static int aha1740_makecode(unchar *sense, unchar *status)
+
+
+I've tested the compilation with 2.5.72.
+
+Please apply
+Adrian
+
+
+
+----- Forwarded message from Adrian Bunk <bunk@fs.tum.de> -----
+
+Date:	Thu, 29 May 2003 21:40:03 +0200
+From: Adrian Bunk <bunk@fs.tum.de>
+To: Andrew Morton <akpm@digeo.com>,
+    Christoph Hellwig <hch@infradead.org>
+Cc: linux-kernel@vger.kernel.org,
+    llinux-scsi@vger.kernel.org
+Subject: [patch] 2.5.70-mm2: aha1740.c doesn't compile.
+
+It seems the following compile error comes from Linus' tree:
+
+<--  snip  -->
+
+...
+  CC      drivers/scsi/aha1740.o
+...
+drivers/scsi/aha1740.c:613: syntax error at end of input
+...
+make[2]: *** [drivers/scsi/aha1740.o] Error 1
+
+<--  snip  -->
+
+
+The culprit is the following bogus part of a patch (please _revert_ it):
+
+
+linux-2.5.70/drivers/scsi/aha1740.c	2003-05-26 19:16:33.000000000 -0700
+25/drivers/scsi/aha1740.c	2003-05-28 23:52:00.000000000 -0700
+@@ -108,7 +102,6 @@ static int aha1740_proc_info(char *buffe
+     if (len > length)
+ 	len = length;
+     return len;
+-}
+ 
+ 
+ static int aha1740_makecode(unchar *sense, unchar *status)
+
+
+
+cu
+Adrian
+
+-- 
+
+       "Is there not promise of rain?" Ling Tan asked suddenly out
+        of the darkness. There had been need of rain for many days.
+       "Only a promise," Lao Er said.
+                                       Pearl S. Buck - Dragon Seed
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Please read the FAQ at  http://www.tux.org/lkml/
+
+----- End forwarded message -----
 
