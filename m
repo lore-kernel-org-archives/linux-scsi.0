@@ -1,85 +1,73 @@
-From: christophe varoqui <christophe.varoqui@free.fr>
-Subject: [ANNOUNCE] multipath-tools-0.3.6
-Date: Mon, 01 Nov 2004 18:08:37 +0100
-Message-ID: <1099328918.5525.10.camel@zezette>
-References: <1096071849.4466.31.camel@zezette>
-	 <1097054573.4163b96d1262c@imp5-q.free.fr>
-	 <1097495416.416a73787e0ae@imp1-q.free.fr> <1098021787.5433.8.camel@zezette>
-	 <1098269169.417641f18a234@imp1-q.free.fr>
-	 <1098656088.9350.88.camel@zezette>
-	 <1098785191.417e21a7a7c28@imp1-q.free.fr>
+From: Patrick Mansfield <patmans@us.ibm.com>
+Subject: Re: Apple Xserve RAID and qlogic ISP2312 (qla2300)
+Date: Mon, 1 Nov 2004 11:48:45 -0800
+Message-ID: <20041101194845.GA27913@us.ibm.com>
+References: <20041027233321.GA842@astral.ro> <20041028143734.GA16358@beaverton.ibm.com> <20041028153522.GC1915@astral.ro> <20041028164210.GA16905@beaverton.ibm.com> <20041028172143.GA20949@praka.san.rr.com> <20041029085800.GF6671@astral.ro> <20041029180633.GA27267@beaverton.ibm.com> <20041101105611.GJ22603@astral.ro>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1098785191.417e21a7a7c28@imp1-q.free.fr>
-Sender: linux-raid-owner@vger.kernel.org
-To: device-mapper development <dm-devel@redhat.com>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "linux-hotplug-devel@lists.sourceforge.net" <linux-hotplug-devel@lists.sourceforge.net>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from e31.co.us.ibm.com ([32.97.110.129]:5119 "EHLO e31.co.us.ibm.com")
+	by vger.kernel.org with ESMTP id S293154AbUKATs5 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 1 Nov 2004 14:48:57 -0500
+Received: from westrelay04.boulder.ibm.com (westrelay04.boulder.ibm.com [9.17.193.32])
+	by e31.co.us.ibm.com (8.12.10/8.12.9) with ESMTP id iA1JmvLv219972
+	for <linux-scsi@vger.kernel.org>; Mon, 1 Nov 2004 14:48:57 -0500
+Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
+	by westrelay04.boulder.ibm.com (8.12.10/NCO/VER6.6) with ESMTP id iA1JmvBb124116
+	for <linux-scsi@vger.kernel.org>; Mon, 1 Nov 2004 12:48:57 -0700
+Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av02.boulder.ibm.com (8.12.11/8.12.11) with ESMTP id iA1JmsAj010334
+	for <linux-scsi@vger.kernel.org>; Mon, 1 Nov 2004 12:48:55 -0700
+Content-Disposition: inline
+In-Reply-To: <20041101105611.GJ22603@astral.ro>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Catalin Muresan <catalin.muresan@astral.ro>
+Cc: Andrew Vasquez <andrew.vasquez@qlogic.com>, James Bottomley <James.Bottomley@steeleye.com>, linux-scsi@vger.kernel.org, bogdan.luca@astral.ro
 
-Hello,
+[ resending ... not sure if this went out at all ]
 
-here goes multipath-tools-0.3.6
+On Mon, Nov 01, 2004 at 12:56:11PM +0200, Catalin Muresan wrote:
+> 
+> 	I have the attached patch from Andrew which fixes the qla2300 part
+> of the problem (attached) and a patch is still needed for the case where
+> there are LUN0,3 to blacklist the device as BLIST_SPARSELUN.
 
-Another round of changes and bugfixes. A step further to actually use
-the priority framework.
+No attachment ...
 
-I'm glad to announce Patrick Caulfield agreed to take care of Debian
-packaging, thanks again.
+>  > 2) If LUN 0 gets a DID_NO_CONNECT (and we do return the
+>  > SCSI_SCAN_NO_RESPONSE), we won't scan anything, via REPORT LUN or via
+>  > a sequential scan.
+> 
+> 	we need to have something on LUN 0 to be able to send REPORT LUN, in
+> this case we don't.
 
-Thanks to LTP people too : if only I had noticed before they provide
-nice example of clone usage, I would have saved me a lot of headache.
-Still, there are bugreports left in this area.
+You don't need storage configured on LUN 0 to send it a REPORT LUN, if
+there is a target there, you can (well should) be able to send it a REPORT
+LUN.
 
-=46ull ChangeLog for the release :
+You do need the driver to allow commands to be issued to LUN 0 (that is
+what the patch should have fixed).
 
-	* Patrick Caulfield took over debian packaging. Showing
-	  evident expertise, his first wish is to see debian/
-	  disappear. :) So be it.
-	* [libmultipath] add a vector_foreach_slot macro. Still
-	  needs an iterator but saves 1 line per loop occurence and
-	  tame this UPPERCASE MACROS bad taste.
-	* [multipathd] don't load sg anymore on multipathd startup
-	* [multipathd] change killall for kill `cat $PIDFILE` in
-	  init script (Jaime Pe=C3=B1alba & Cesar Solera)
-	* [multipathd] the fork fallback was borked (just exiting)
-	  noticed by Jaime Pe=C3=B1alba & Cesar Solera
-	* [multipathd] try without the FLOATING_STACKS flag. Does
-	  it matter anyway ?
-	* [multipathd] merge clone_platform.h from LTP and cover
-	  the hppa special case.
-	* [multipath] since we will be able to create a devmap with
-	  paths too small, don't rely anymore on the first path's
-	  size blindly : verify the path is up, before assigning its
-	  size to the multipath
-	* [priority] add a path priority fetcher to balance LU accross
-	  controlers based on the controler serial detection. Untested
-	  but provides a good example of what can be done with the
-	  priority framework.
-	* [priority] create subdir and drop a test pp_random
-	* [multipath] add dev_t reporting to print_path() to ease
-	  devmap decoding by humans
-	* [multipath] change default path priority to 1
-	* [multipath] add wits to the sort_by_prio policy, so that
-	  sort_pathvec_by_prio() is now useless. Remove it.
-	* [multipath] invert sort_pg_by_summed_prio sort order :
-	  highest prio leftmost
-	* [libmultipath] add vector_del_slot
-	* revert multipath.rules change : devmap_name still takes
-	  "major minor" and not "major:minor" as argument
-	* Makefile refinement : you can now enter any tool directory
-	  and build from here, deps are solved
+SCSI spec says:
 
-As usual, doc and download at :
-http://christophe.varoqui.free.fr/
+	A SCSI device shall support a REPORT LUNS command that is
+	addressed to logical unit zero. Support of the REPORT LUNS command
+	by logical units other than logical unit zero is optional.
 
-regards,
---=20
-christophe varoqui <christophe.varoqui@free.fr>
+> 	Do you need me to test some other stuff or we can "close" this
+> issue?	
 
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+In order of best to worst solutions:
+
+If device supports REPORT LUNs:
+
+1) configure the array to report as SCSI-3
+
+2) black list as BLIST_REPORTLUN2
+
+If no REPORT LUNs support:
+
+3) black list as BLIST_SPARSELUN
+
+-- Patrick Mansfield
