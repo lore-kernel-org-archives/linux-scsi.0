@@ -1,66 +1,53 @@
-From: Andrew Vasquez <praka@users.sourceforge.net>
-Subject: [PATCH] qla2xxx: sleep while IRQ disabled fix in eh_abort
-Date: Wed, 31 Mar 2004 22:17:40 -0800
+From: Jens Axboe <axboe@suse.de>
+Subject: Re: [PATCH] improvement of fastfail operation
+Date: Thu, 1 Apr 2004 08:47:05 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040401061740.GA14121@praka.local.home>
-References: <opr3u0ffo7l6e53g@us.ibm.com> <20040225134518.A4238@infradead.org> <opr3xta6gbl6e53g@us.ibm.com> <1079027038.2820.57.camel@mulgrave> <opr5qwiyw4l6e53g@us.ibm.com> <406B3FDA.9010507@pobox.com> <opr5q1enb6l6e53g@us.ibm.com> <1080776399.11299.63.camel@mulgrave>
-Reply-To: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Message-ID: <20040401064703.GS24370@suse.de>
+References: <1080696593.2075.120.camel@mulgrave> <Pine.LNX.4.44.0403302108550.7851-200000@dyn319701.beaverton.ibm.com> <20040331220416.GQ24370@suse.de> <1080771068.2071.48.camel@mulgrave> <20040331221241.GR24370@suse.de> <406B512F.9090004@us.ibm.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="FL5UXtIhxfXey3p5"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ms-smtp-03-qfe0.socal.rr.com ([66.75.162.135]:22410 "EHLO
-	ms-smtp-03-eri0.socal.rr.com") by vger.kernel.org with ESMTP
-	id S262712AbUDAGm5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 1 Apr 2004 01:42:57 -0500
-Received: from praka.san.rr.com (66-75-130-8.san.rr.com [66.75.130.8])
-	by ms-smtp-03-eri0.socal.rr.com (8.12.10/8.12.7) with ESMTP id i316gsUL002476
-	for <linux-scsi@vger.kernel.org>; Wed, 31 Mar 2004 22:42:54 -0800 (PST)
+Received: from ns.virtualhost.dk ([195.184.98.160]:60073 "EHLO virtualhost.dk")
+	by vger.kernel.org with ESMTP id S262743AbUDAGsb (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Apr 2004 01:48:31 -0500
 Content-Disposition: inline
-In-Reply-To: <1080776399.11299.63.camel@mulgrave>
+In-Reply-To: <406B512F.9090004@us.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Mike Christie <mikenc@us.ibm.com>
+Cc: James Bottomley <James.Bottomley@steeleye.com>, Masao Fukuchi <fukuchi.masao@jp.fujitsu.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-
---FL5UXtIhxfXey3p5
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-
-On Wed, 31 Mar 2004, James Bottomley wrote:
-> On Wed, 2004-03-31 at 18:12, Dave Boutcher wrote:
-> > OK, two issues.  There are a bunch of SCSI LLDDs that use this same
-> > logic in abort and reset handlers to wait for adapter events to
-> > complete, so I think the logic is OK.  The issue of spin_lock_irq
-> > vs spin_lock is a good one...and points out that there are a bunch
-> > of LLDDs that are broke :-)  I'll resubmit without the _irq
+On Wed, Mar 31 2004, Mike Christie wrote:
+> Jens Axboe wrote:
+> >On Wed, Mar 31 2004, James Bottomley wrote:
+> >
+> >>On Wed, 2004-03-31 at 17:04, Jens Axboe wrote:
+> >>
+> >>>So the new patch you sent with this mail is no good. Your previous one
+> >>>should be adopted ;-)
+> >>
+> >>And the:
+> >>
+> >>
+> >>		if (blk_pc_request(req))
+> >>			leftover = req->data_len - bytes;
+> >>
+> >>Since end_that_request chunk won't muck with that, is that OK?
+> >
+> >
+> >It's a bit messy right now really, but it's up to the drivers to modify
+> >that one. So for partial completions, it should be updated to be
+> >
+> >	leftover = req->data_len;
+> >
+> >as well.
+> >
 > 
-> Actually, no, with the irq is correct.  Wait_for_completion will sleep,
-> and sleeping with interrupts disabled is wrong.
-> 
+> Is that a typo? If drivers are to account for it, scsi should do
+> 	leftover = req->data_len - bytes;
+> ?
 
-Attached is a patch which fixes a problem in qla2xxx_eh_abort() where
-we incorrect use spin_unlock() before calling qla2x00_abort_command()
-- which can of course sleep.
+No, scsi_io_completion() should already have done it.
 
-Please apply.
+-- 
+Jens Axboe
 
-Thanks,
-Andrew Vasquez
-
---FL5UXtIhxfXey3p5
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: attachment; filename="sleep_fix_eh_abort_1.diff"
-
-===== drivers/scsi/qla2xxx/qla_os.c 1.15 vs edited =====
---- 1.15/drivers/scsi/qla2xxx/qla_os.c	Mon Mar 22 01:13:23 2004
-+++ edited/drivers/scsi/qla2xxx/qla_os.c	Wed Mar 31 22:07:14 2004
-@@ -1227,7 +1227,7 @@
- 			sp_get(ha, sp);
- 
- 			spin_unlock_irqrestore(&ha->hardware_lock, flags);
--			spin_unlock(ha->host->host_lock);
-+			spin_unlock_irq(ha->host->host_lock);
- 
- 			if (qla2x00_abort_command(ha, sp)) {
- 				DEBUG2(printk("qla2xxx_eh_abort: abort_command "
-
---FL5UXtIhxfXey3p5--
