@@ -1,191 +1,162 @@
-From: Mike Anderson <andmike@us.ibm.com>
-Subject: Re: Degraded I/O performance, since 2.5.41
-Date: Sat, 12 Oct 2002 10:47:22 -0700
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <20021012174722.GA1793@beaverton.ibm.com>
-References: <A3B9245C291EEF4785A24A1DBE8D852B0376B0@rtpexc01.adaptec.com>
+From: Ingo Oeser <ingo.oeser@informatik.tu-chemnitz.de>
+Subject: Re: 2.5.42-mm2
+Date: Sun, 13 Oct 2002 12:56:56 +0200
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <20021013125656.J7028@nightmaster.csn.tu-chemnitz.de>
+References: <3DA7C3A5.98FCC13E@digeo.com> <20021012182202.A27215@nightmaster.csn.tu-chemnitz.de> <3DA85B54.3E0A122F@digeo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+Content-Type: multipart/mixed; boundary="yEPQxsgoJgBvi8ip"
+Return-path: <linux-scsi-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <A3B9245C291EEF4785A24A1DBE8D852B0376B0@rtpexc01.adaptec.com>
-To: "Jeffery, David" <David_Jeffery@adaptec.com>
-Cc: 'Dave Hansen' <haveblue@us.ibm.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+In-Reply-To: <3DA85B54.3E0A122F@digeo.com>; from akpm@digeo.com on Sat, Oct 12, 2002 at 10:26:44AM -0700
 List-Id: linux-scsi@vger.kernel.org
+To: Andrew Morton <akpm@digeo.com>
+Cc: Kai Makisara <Kai.Makisara@kolumbus.fi>, Douglas Gilbert <dougg@torque.net>, linux-scsi@vger.kernel.org, linux-mm@kvack.org
 
-Sorry if this is a resend it looked this did not make it onto the list
-Friday.
 
-Jeffery, David [David_Jeffery@adaptec.com] wrote:
-> > Yes, they are better, but still about 10% below what I was seeing 
-> > before.  Thank you for getting this out so quickly.  I can do 
-> > reasonable work with this.
+--yEPQxsgoJgBvi8ip
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-Dave H,
+Hi Andrew,
 
-The short term patch will not bring your queue_depth value back up all
-the way. The ips drivers cmd_per_lun value is 16. The old method would
-distribute the queue_depth among the devices on the adapter. I believe
-your system has a ServeRAID 4M which means you could have had a
-queue_depth as high as 95. This seems high but from your numbers a value
-higher than 16 is most likely needed.
+[I cc'ed the people relevant to this issue]
 
-You can check your old and new values post booting the kernel if you have
-sg configured in with:
-
-cat /proc/scsi/sg/device_hdr /proc/scsi/sg/devices
-
+On Sat, Oct 12, 2002 at 10:26:44AM -0700, Andrew Morton wrote:
+> Ingo Oeser wrote:
+> > Stupid question: Would you accept a patch that extends
+> > get_user_pages() to accept an additional "struct scatterlist vector[]"?
 > 
-> I'm using an older 2.5 kernel so I hadn't seen the performance drop.
-> I'll update my kernel and get to work on it next week when I have
-
-David J,
-Here is a quick patch for you to review. I tested and seems to bring my
-system back up to per patch queue depth values. I used a enq value to
-simulate past behavior in the attach function. I tested with one logical
-and two logical devices.
-
-
-Here is some sg output at different kernel and logical driver values.
-
-2.5.40 1 logical drive:
-host    chan    id      lun     type    opens   qdepth  busy    online
-0       0       0       0       0       3       31      0       1
-
-2.5.40 2 logical drives:
-host    chan    id      lun     type    opens   qdepth  busy    online
-0       0       0       0       0       3       15      0       1
-0       0       1       0       0       0       15      0       1
-
-2.5 current 2 logical drives: 
-host    chan    id      lun     type    opens   qdepth  busy    online
-0       0       0       0       0       3       1       0       1
-0       0       1       0       0       0       1       0       1
-
-2.5 current 2 logical drives + patch:
-host    chan    id      lun     type    opens   qdepth  busy    online
-0       0       0       0       0       3       15      0       1
-0       0       1       0       0       0       7       0       1
-
-2.5 current 2 logical drives + patch post some IO:
-host    chan    id      lun     type    opens   qdepth  busy    online
-0       0       0       0       0       3       15      0       1
-0       0       1       0       0       0       15      0       1
-
--andmike
---
-Michael Anderson
-andmike@us.ibm.com
-
- ips.c |   47 ++++++++++++++++-------------------------------
- ips.h |    3 ++-
- 2 files changed, 18 insertions(+), 32 deletions(-)
-------
-
---- 1.26/drivers/scsi/ips.c	Tue Oct  8 00:51:39 2002
-+++ edited/drivers/scsi/ips.c	Fri Oct 11 13:24:08 2002
-@@ -481,7 +481,6 @@
- static void ips_free_flash_copperhead(ips_ha_t *ha);
- static void ips_get_bios_version(ips_ha_t *, int);
- static void ips_identify_controller(ips_ha_t *);
--static void ips_select_queue_depth(struct Scsi_Host *, Scsi_Device *);
- static void ips_chkstatus(ips_ha_t *, IPS_STATUS *);
- static void ips_enable_int_copperhead(ips_ha_t *);
- static void ips_enable_int_copperhead_memio(ips_ha_t *);
-@@ -1087,7 +1086,6 @@
-          sh->n_io_port = io_addr ? 255 : 0;
-          sh->unique_id = (io_addr) ? io_addr : mem_addr;
-          sh->irq = irq;
--         sh->select_queue_depths = ips_select_queue_depth;
-          sh->sg_tablesize = sh->hostt->sg_tablesize;
-          sh->can_queue = sh->hostt->can_queue;
-          sh->cmd_per_lun = sh->hostt->cmd_per_lun;
-@@ -1820,45 +1818,33 @@
+> It's not really my area Ingo.  But I can wave such a patch about
+> on the mailing lists, generally get it some review and attention
+> I guess.
  
- /****************************************************************************/
- /*                                                                          */
--/* Routine Name: ips_select_queue_depth                                     */
-+/* Routine Name: ips_slave_attach                                           */
- /*                                                                          */
- /* Routine Description:                                                     */
- /*                                                                          */
--/*   Select queue depths for the devices on the contoller                   */
-+/*   Configure the device we are attaching to this controller               */
- /*                                                                          */
- /****************************************************************************/
--static void
--ips_select_queue_depth(struct Scsi_Host *host, Scsi_Device *scsi_devs) {
--   Scsi_Device *device;
-+int
-+ips_slave_attach(Scsi_Device *scsi_dev) {
-    ips_ha_t    *ha;
--   int          count = 0;
--   int          min;
-+   int          queue_depth;
-+   int          min, per_logical;
-+
-+   ha = (ips_ha_t *) scsi_dev->host->hostdata;;
- 
--   ha = IPS_HA(host);
-    min = ha->max_cmds / 4;
-+   per_logical = ( ha->max_cmds -1 ) / ha->enq->ucLogDriveCount;
- 
--   for (device = scsi_devs; device; device = device->next) {
--     if (device->host == host) {
--        if ((device->channel == 0) && (device->type == 0))
--           count++;
--     }
-+   if ((scsi_dev->channel == 0) && (scsi_dev->type == 0)) {
-+      queue_depth = max(per_logical, min);
-+   } else {
-+      queue_depth = 2;
-    }
- 
--   for (device = scsi_devs; device; device = device->next) {
--      if (device->host == host) {
--         if ((device->channel == 0) && (device->type == 0)) {
--            device->queue_depth = ( ha->max_cmds - 1 ) / count;
--            if (device->queue_depth < min) 
--               device->queue_depth = min;
--         }
--         else {
--            device->queue_depth = 2;
--         }
--
--         if (device->queue_depth < 2)
--            device->queue_depth = 2;
--      }
--   }
-+   scsi_adjust_queue_depth(scsi_dev, 0, queue_depth);
-+   
-+   return 0;
- }
- 
- /****************************************************************************/
-@@ -7407,7 +7393,6 @@
-     sh->n_io_port = io_addr ? 255 : 0;
-     sh->unique_id = (io_addr) ? io_addr : mem_addr;
-     sh->irq = irq;
--    sh->select_queue_depths = ips_select_queue_depth;
-     sh->sg_tablesize = sh->hostt->sg_tablesize;
-     sh->can_queue = sh->hostt->can_queue;
-     sh->cmd_per_lun = sh->hostt->cmd_per_lun;
---- 1.9/drivers/scsi/ips.h	Tue Oct  8 00:51:39 2002
-+++ edited/drivers/scsi/ips.h	Fri Oct 11 11:39:14 2002
-@@ -62,6 +62,7 @@
-    extern int ips_biosparam(Disk *, struct block_device *, int *);
-    extern const char * ips_info(struct Scsi_Host *);
-    extern void do_ips(int, void *, struct pt_regs *);
-+   extern int ips_slave_attach(Scsi_Device *);
- 
-    /*
-     * Some handy macros
-@@ -481,7 +482,7 @@
-     eh_host_reset_handler : ips_eh_reset, \
-     abort : NULL,                         \
-     reset : NULL,                         \
--    slave_attach : NULL,                  \
-+    slave_attach : ips_slave_attach,      \
-     bios_param : ips_biosparam,           \
-     can_queue : 0,                        \
-     this_id: -1,                          \
+I had waved an example on what is really needed instead of kiobuf
+crap some time ago[1]. This raised a discussion on linux-scsi[2]
+(but I'm not subscribed there) and someone[2] actually successfully
+tested this.
+
+> Such nfrastructure would need something which used it, as a proof-of-concept,
+> testbed, etc...
+
+I would love to test my ideas out, but the special purpose device
+where I need it for has bit-errors on its big SDRAM chips and I can
+only use a small 32K area of storage for testing, which is not
+expected to reveal any noticable performance from that method,
+due to the high setup overhead. I think you know the numbers from
+direct-io.
+
+The video hardware, where you (or Geert?) basically implemented
+the things, we proposed[3] would be a perfect testbed for this.
+
+Thanks & Regards
+
+Ingo Oeser
+
+[1] <20020720003918.G758@nightmaster.csn.tu-chemnitz.de> on lkml
+[2] <Pine.LNX.4.44.0207292045040.770-100000@kai.makisara.local> on linux-scsi
+[3] Attached here.
+-- 
+Science is what we can tell a computer. Art is everything else. --- D.E.Knuth
+
+--yEPQxsgoJgBvi8ip
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: attachment; filename="sgmap.c"
+
+/* Proposal for User space <-> scatterlist mapping
+ * by  Ingo Oeser <ioe@informatik.tu-chemnitz.de>
+ * and Kai Makisara <Kai.Makisara@kolumbus.fi> */
+
+#define SGMAP_MAX_UDMA_PAGES		(1 << (19 - PAGE_SHIFT))
+#define SGMAP_MAX_UDMA_PAGES_INLINE	16
+
+/* An experiment ... */
+/* Pin down user pages and put them into a scatter gather list */
+int sg_map_user_pages(struct scatterlist *sgl, const unsigned int max_pages,
+		      unsigned long uaddr, size_t count, int rw)
+{
+	int res, i;
+	unsigned int nr_pages = ((uaddr & ~PAGE_MASK) + count - 1 + ~PAGE_MASK) >> PAGE_SHIFT;
+	struct page *inline_pages[SGMAP_MAX_UDMA_PAGES_INLINE];
+	struct page **pages = inline_pages;
+
+	/* User attempted Overflow! 
+	 * NOTE: This kind of request must be split by the caller. 
+	 */
+	if ((uaddr + count) < uaddr)
+		return -EINVAL;
+
+	/* To big for provided scatterlist array */
+	if (nr_pages > max_pages)
+		return -ENOMEM;
+
+	/* Hmm? */
+	if (count == 0)
+		return 0;
+
+	if (unlikely(nr_pages > SGMAP_MAX_UDMA_PAGES_INLINE)) {
+		pages = kmalloc(nr_pages * sizeof(pages[0]), GFP_USER);
+		if (!pages)
+			return -ENOMEM;
+	}
+	down_read(&current->mm->mmap_sem);
+	res = get_user_pages(
+		    current,
+		    current->mm,
+		    uaddr,
+		    nr_pages,
+		    rw == READ,	/* logic is perversed^Wreversed here :-( */
+		    0,	/* don't force */
+		    &pages[0],
+		    NULL);
+	up_read(&current->mm->mmap_sem);
+
+	/* Errors and no page mapped should return here */
+	if (res <= 0)
+		goto out_free;
+
+	memset(sgl, 0, sizeof(*sgl) * nr_pages);
+
+	sgl[0].page = pages[0];
+	sgl[0].offset = uaddr & ~PAGE_MASK;
+
+	/* FIXME: flush superflous for rw==READ, 
+	 *  probably wrong function for rw==WRITE
+	 */
+	flush_dcache_page(pages[0]);
+
+	/* Page crossing transfers need these adjustments */
+	if (res > 1) {
+		for (i = 1; i < res; i++) {
+			sgl[i].offset = 0;
+			sgl[i].page = pages[i];
+			sgl[i].length = PAGE_SIZE;
+
+			flush_dcache_page(pages[i]);
+		}
+		sgl[0].length = PAGE_SIZE - sgl[0].offset;
+		count -= sgl[0].length;
+		count -= (res - 2) * PAGE_SIZE;
+	}
+	sgl[res - 1].length = count;
+
+out_free:
+	if (pages != inline_pages)
+		kfree(pages);
+	return res;
+}
+
+/* And unmap them... */
+int sg_unmap_user_pages(struct scatterlist *sgl, const unsigned int nr_pages)
+{
+	int i;
+
+	for (i = 0; i < nr_pages; i++)
+		page_cache_release(sgl[i].page);
+
+	return 0;
+}
+
+
+
+--yEPQxsgoJgBvi8ip--
