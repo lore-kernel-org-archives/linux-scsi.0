@@ -1,37 +1,38 @@
-From: Andi Kleen <ak@muc.de>
-Subject: Re: 2.6.6 + Adaptec I2O
-Date: Tue, 01 Jun 2004 20:20:52 +0200
+From: "Lee Xing" <lxing@Crossroads.com>
+Subject: Help - max_channel, max_id and max_lun
+Date: Tue, 1 Jun 2004 13:21:43 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <m3ekozi1h7.fsf@averell.firstfloor.org>
-References: <547AF3BD0F3F0B4CBDC379BAC7E4189FAD5129@otce2k03.adaptec.com>
+Message-ID: <519672568F040C41B6FAC21ADF51B18FF016@mailnode1.commstor.crossroads.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from zero.aec.at ([193.170.194.10]:4615 "EHLO zero.aec.at")
-	by vger.kernel.org with ESMTP id S264965AbUFASUz (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Jun 2004 14:20:55 -0400
-In-Reply-To: <547AF3BD0F3F0B4CBDC379BAC7E4189FAD5129@otce2k03.adaptec.com> (Mark
- Salyzyn's message of "Tue, 1 Jun 2004 13:25:14 -0400")
+Received: from email.crossroads.com ([65.68.235.6]:4123 "HELO
+	email.crossroads.com") by vger.kernel.org with SMTP id S265107AbUFASVo convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 1 Jun 2004 14:21:44 -0400
+content-class: urn:content-classes:message
 List-Id: linux-scsi@vger.kernel.org
-To: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-"Salyzyn, Mark" <mark_salyzyn@adaptec.com> writes:
+Hi,
 
-> PROC_SEXIUM was reserved by our application software group when we added
-> PROC_PENTIUM. PROC_SEXIUM was simply a `followon' processor of a
-> different feather. The dptsig.h file actually is shared with (many)
-> other sources, so it carries an impact.
->
-> Branching this file, notwithstanding ... sooo ... if it is to change,
-> maybe it should be set to PROC_EM64T ...
+In scsi_register( ) defined in hosts.c of lk 2.4, it says:
 
-Better call it PROC_X86_64 then. That's the standard name for the 
-architecture on Linux.
+    /* These three are default values which can be overridden */
+    retval->max_channel = 0; 
+    retval->max_id = 8;      
+    retval->max_lun = 8;
 
-What is this used for anyways? I'm not really sure why a driver should
-know about the CPU type. How about just dropping it?
+Just wondering where is the right place to modify max_channel, max_id and max_lun in a low-level driver?
 
--Andi
+After low-level driver invokes scsi_register(Scsi_Host_Template *, int), we can get a pointer to Scsi_Host that contains max_channel, max_id and max_lun.  However, I can't see how these numbers take effect if we modify them after scsi_register( ) returns.  I assume we need to pass those numbers to mid-layer when invoking scsi_register( ), but Scsi_Host_Template doesn't contain those three numbers.
+
+The reason I want to modify those three numbers is that I need scan_scsis( ) defined in scsi_scan.c of lk2.4 to scan certain numbers of buses, targets and luns I choose.
+
+Thanks,
+
+
+Lee
 
 
