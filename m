@@ -1,62 +1,73 @@
-From: "Moore, Eric Dean" <Emoore@lsil.com>
-Subject: [PATCH] 2.6.2-bk1 - MPT Fusion driver 3.00.03 update
-Date: Thu, 5 Feb 2004 18:45:10 -0500
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [linux-usb-devel] FW: USB 2.0 external hard drive problem
+Date: Fri, 6 Feb 2004 09:59:49 -0500 (EST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <0E3FA95632D6D047BA649F95DAB60E5703D1A630@exa-atlanta.se.lsil.com>
+Message-ID: <Pine.LNX.4.44L0.0402060946350.830-100000@ida.rowland.org>
+References: <200402061211.i16CBSIw001678@burner.fokus.fraunhofer.de>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:8388 "EHLO mail0.lsil.com")
-	by vger.kernel.org with ESMTP id S267084AbUBEXpW (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Feb 2004 18:45:22 -0500
+Received: from ida.rowland.org ([192.131.102.52]:2052 "HELO ida.rowland.org")
+	by vger.kernel.org with SMTP id S265471AbUBFO7u (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 6 Feb 2004 09:59:50 -0500
+In-Reply-To: <200402061211.i16CBSIw001678@burner.fokus.fraunhofer.de>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: James.Bottomley@SteelEye.com
+To: Joerg Schilling <schilling@fokus.fraunhofer.de>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>
+Cc: magliery@csb.yale.edu, appro@fy.chalmers.se, USB development list <linux-usb-devel@lists.sourceforge.net>, SCSI development list <linux-scsi@vger.kernel.org>
 
-Here is a fix for discarded symbol in mptscsih.c, as
-seen in ia64.
+On Fri, 6 Feb 2004, Joerg Schilling wrote:
 
+> What you see, is that some instance in the Linux kernel completely
+> misshandles this transfer:
+> 
+> -	The drive seems to return only 34 bytes although it did advertise
+> 	to return 36.
+> 
+> 	The correct behavior for Linux would be to set sg_io.resid = 2;
+> 	and _not_ to return any error.
 
-You can download full source and 3.00.03 patches here:
-ftp://ftp.lsil.com/HostAdapterDrivers/linux/Fusion-MPT/2.6-patches/3.00.03
+You're quite right that the residue value should have been set.  This is a
+known bug in the usb-storage driver and a patch (as173) has already been
+submitted, though not yet accepted, to fix it.  For Linux 2.6 that is, 
+although the same fix will work just as well for 2.4.
 
+> But as you may know, there is a Linux bug that causes the status to be 0 when
+> sense data (correctly) is available. Libscg _needs_ to add a workarounf for
+> this bug or nothing would work!
 
-Eric Moore
-Standard Storage Products Division
-LSI Logic Corporation
+What bug is that?  Or rather, under what circumstances is the status equal 
+to 0 when it shouldn't be?
 
+> It is definitely a severe bug in the kernel to retrieve sense data in case
+> of a DMA size error.
 
-diff -uarN linux-2.6.2-bk1-reference/drivers/message/fusion/mptbase.h
-linux-2.6.2-bk1/drivers/message/fusion/mptbase.h
---- linux-2.6.2-bk1-reference/drivers/message/fusion/mptbase.h	2004-02-05
-16:25:01.878794072 -0700
-+++ linux-2.6.2-bk1/drivers/message/fusion/mptbase.h	2004-02-05
-16:26:49.514430968 -0700
-@@ -80,8 +80,8 @@
- #define COPYRIGHT	"Copyright (c) 1999-2003 " MODULEAUTHOR
- #endif
- 
--#define MPT_LINUX_VERSION_COMMON	"3.00.02"
--#define MPT_LINUX_PACKAGE_NAME		"@(#)mptlinux-3.00.02"
-+#define MPT_LINUX_VERSION_COMMON	"3.00.03"
-+#define MPT_LINUX_PACKAGE_NAME		"@(#)mptlinux-3.00.03"
- #define WHAT_MAGIC_STRING		"@" "(" "#" ")"
- 
- #define show_mptmod_ver(s,ver)  \
-diff -uarN linux-2.6.2-bk1-reference/drivers/message/fusion/mptscsih.c
-linux-2.6.2-bk1/drivers/message/fusion/mptscsih.c
---- linux-2.6.2-bk1-reference/drivers/message/fusion/mptscsih.c	2004-02-05
-16:25:01.889792400 -0700
-+++ linux-2.6.2-bk1/drivers/message/fusion/mptscsih.c	2004-02-05
-16:26:32.231058440 -0700
-@@ -1973,7 +1973,6 @@
- 	if (mpt_scsi_hosts > 0)
- 		return 0;
- 
--	mptscsih_exit();
- 	return -ENODEV;
- 
- }
+> -	The Linux kernel issues a REQUEST SENSE command ---> this is the first
+> 	severe bug. It is completely wrong to issue a REQUEST SENSE in
+> 	case of a DMA Size error.
 
+> And there exactly is the bug (which is most likely in usb-storage but
+> definitely in the Linux kernel:
+> 
+>       In case of _only_ a DMA size error, a request sense must not be
+>       issued by the driver.
+> 
+> If you are the maintainer of this piece of software, please fix this.
+
+(I'm not the maintainer; Matthew Dharm is.)
+
+Who says it's wrong to retrieve sense information when there is an
+underrun but not Check Condition?  Can you provide a reference to a
+published (or draft) document that states this?
+
+Bear in mind that there are some transports which do not provide any
+status at all.  The _only_ way for a driver to determine whether an
+error occurred is to get the sense data.
+
+In the absence of any official statement to the contrary, the logical
+conclusion is that whether or not the driver gets the sense data is a
+low-level matter.  It should only be of interest to the driver and the
+device.  Higher-level drivers and user programs should not care one way or
+the other.
+
+Alan Stern
 
