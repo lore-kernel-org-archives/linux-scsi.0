@@ -1,47 +1,39 @@
 From: Jeff Garzik <jgarzik@pobox.com>
 Subject: Re: DPC vs tasklet
-Date: Thu, 20 May 2004 13:08:34 -0400
+Date: Thu, 20 May 2004 13:57:31 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <40ACE612.8020800@pobox.com>
-References: <8D43EFD7CCBDB24980134BE078C227E704E37AEB@xcm.emulex.com>
+Message-ID: <40ACF18B.60708@pobox.com>
+References: <8D43EFD7CCBDB24980134BE078C227E704E37AEB@xcm.emulex.com> <1085073616.2784.14.camel@laptop.fenrus.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:63367 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S265171AbUETRIt
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:9107 "EHLO
+	www.linux.org.uk") by vger.kernel.org with ESMTP id S265230AbUETR5r
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 20 May 2004 13:08:49 -0400
-In-Reply-To: <8D43EFD7CCBDB24980134BE078C227E704E37AEB@xcm.emulex.com>
+	Thu, 20 May 2004 13:57:47 -0400
+In-Reply-To: <1085073616.2784.14.camel@laptop.fenrus.com>
 List-Id: linux-scsi@vger.kernel.org
-To: "Infante, Jon" <Jon.Infante@Emulex.Com>
-Cc: 'Christoph Hellwig' <hch@infradead.org>, "Smart, James" <James.Smart@Emulex.Com>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
+To: arjanv@redhat.com
+Cc: "Infante, Jon" <Jon.Infante@Emulex.Com>, 'Christoph Hellwig' <hch@infradead.org>, "Smart, James" <James.Smart@Emulex.Com>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
 
-Infante, Jon wrote:
-> Christoph,
-> 
-> I was going to take your advice:
-> "usage of tasklet itself is questionable, you probably want a kernel-thread"
-> 
-> and redo our driver bottom half discovery handler to use a DPC. I just
-> wanted to get your opinion of why usage of a tasklet is questionable. Some
-> of the LINUX documentation I've read states "tasklets are the preferred
-> mechanism with which to implement your bottom half for a normal hardware
-> device". I can see, as you stated, being in user context will help with
-> things like allowing the use of GFP_KERNEL for memory allocations or safe
-> calling of del_timer_sync(); but its not real clear to me what all the
-> tradeoffs are and why some people think tasklets are the preferred
-> mechanism. Can you shed some more light on this or direct me to some URLs
-> with more info.
+Arjan van de Ven wrote:
+> well there's a few angles here:
+> 1) For IO completion (eg the common, fastpath case), you don't want to
+> use a tasklet OR kernel-thread, just do the completion right there and
+> then in the ISR, since the scsi layer completion handler you call will
+> queue it for real work, the final completion, by the scsi softirq
+> already.
+
+Agreed, presuming that the IO completion is fairly cheap.
 
 
-There are tradeoffs.  Using a kernel thread increases latency, and is 
-not always the best choice.
+> 2) For management work, I can see the point of doing it in a
+> kernel-thread, since it's 1) rare (eg slowpath) 2) complex 3) code that
+> might want long-ish delays or allocate memory, neither of which you want
+> in irq context.
 
-It really depends on how much "work" you need to do in the interrupt 
-handling and bottom-half phases.
-
-If we are talking per-irq or per-IO, kernel thread is a poor choice.
+Agreed.
 
 	Jeff
 
