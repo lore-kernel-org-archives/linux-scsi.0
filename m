@@ -1,29 +1,27 @@
-From: Gergely KODAJ <gergo@www.oefk.hu>
-Subject: dat
-Date: Mon, 26 May 2003 10:46:53 +0200
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030526084653.GA25666@www>
-References: <20030526064901.247762C283@lists.samba.org>
+From: Rabeeh Khoury <rabeeh@il.marvell.com>
+Subject: Re: [RFR] a new SCSI driver
+Date: Mon, 26 May 2003 18:16:12 +0300
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <3ED22FBC.50405@il.marvell.com>
+References: <20030524195123.GA8394@gtf.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nefi.hu ([195.228.170.137]:4228 "EHLO www") by vger.kernel.org
-	with ESMTP id S264327AbTEZIdq (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 26 May 2003 04:33:46 -0400
-Received: from gergo by www with local (Exim 3.35 #1 (Debian))
-	id 19KDd8-0000It-00
-	for <linux-scsi@vger.kernel.org>; Mon, 26 May 2003 10:46:54 +0200
-Content-Disposition: inline
-In-Reply-To: <20030526064901.247762C283@lists.samba.org>
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+In-Reply-To: <20030524195123.GA8394@gtf.org>
+To: linux-kernel@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-Hi scsi list
+A small correction to the code -
+While translating the GET_CAPACITY to ATA, you are returning the number of sectors the ATA drive but the GET_CAPACITY requests the last addressable sector.
+So you should return (n_sectors-1).
 
-I have an adaptec 2120S controller card, I must install a dat unit
-Compaq SDT-10000. 
 
-/proc/scsi/scsi said only the (whinchesters raid0) attached.
-I have tried compile <st> support to kernel and module too.
-I have tried find a doc or description, but for nothing.
-Can anybody help me pls, it's awful. 
+static void ata_scsiop_read_cap(struct ata_scsi_args *args, u8 *reqbuf,
+			        unsigned int buflen)
+{
+	u64 n_sectors = args->dev->n_sectors;
+	u32 tmp;
++++ n_sectors --;
+	VPRINTK("ENTER\n");
