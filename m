@@ -1,83 +1,261 @@
-From: "Frank Borich" <Frank_Borich@us.xyratex.com>
-Subject: RE: QLA2300, Infortrand and LBD?
-Date: Thu, 29 Jul 2004 06:17:08 -0700
+From: Adrian Bunk <bunk@fs.tum.de>
+Subject: [2.6 patch] SCSI qla2xxx: fix inline compile errors (fwd)
+Date: Thu, 29 Jul 2004 16:10:50 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <47F3C2BE74738E4683574107469DFA204CC8B6@XYUSEX01.xyus.xyratex.com>
+Message-ID: <20040729141050.GV2349@fs.tum.de>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from xyratexus11.xyratex.com ([65.203.33.11]:33325 "EHLO
-	XYUSEX01.xyus.xyratex.com") by vger.kernel.org with ESMTP
-	id S264627AbUG2NRb convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 29 Jul 2004 09:17:31 -0400
-Content-class: urn:content-classes:message
+Received: from hermes.fachschaften.tu-muenchen.de ([129.187.202.12]:25596 "HELO
+	hermes.fachschaften.tu-muenchen.de") by vger.kernel.org with SMTP
+	id S265044AbUG2OK4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 29 Jul 2004 10:10:56 -0400
+Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: "tester7 A." <benew666@hotmail.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, tech@storageone.co.kr
+To: James.Bottomley@SteelEye.com, Andrew Morton <akpm@osdl.org>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Andrew Vasquez <praka@pobox.com>
 
-James,You guessed right, I sent a read capacity 16 cdb to the controller
-and recieved a 
-check condition back: sense 05 illegal request and additional qualifiers
-2000 = invalid 
-command operation. Seems as though controller was not architected to
-support luns greater
-than 2 .1 TB. The size of any lun > than 2 .1 TB will be set as a modulo
-2.1 TB
- 
--Frank
 
-Frank Borich
-------------------------------------------------------------------
-Xyratex Inc.
-Systems Engineer
-Direct 630 654 6089
-Fax 630 325 2513
-e-mail frank_borich@us.xyratex.com
- 
- 
+FYI:
+The patch forwarded below is still required in 2.6.8-rc2-mm1.
 
->>-----Original Message-----
->>From: James Bottomley [mailto:James.Bottomley@SteelEye.com] 
->>Sent: Wednesday, July 28, 2004 9:18 AM
->>To: Frank Borich
->>Cc: tester7 A.; SCSI Mailing List; tech@storageone.co.kr
->>Subject: RE: QLA2300, Infortrand and LBD?
->>
->>On Wed, 2004-07-28 at 09:46, Frank Borich wrote:
->>> Looking at an FC trace on an Infortrend controller I have, 
->>shows that 
->>> for a LUN 3586680 MB in size, the LBA is B5D3BFFF in the "RETURNED 
->>> LOGICAL BLOCK ADDRESS FIELD"
->>> and with in the "BLOCK LENGTH IN BYTES FIELD" field is 200h , ( 
->>> B5D3BFFF
->>> * 200h =  approx. 1.6 TB). Seems that infortrend does NOT respond 
->>> properly to READ_CAPACITY_10, at least in my case.
->>
->>Well 3586680 MB == 0x1b5d3bfff * 0x200
->>
->>so I think you can see where the returned figure is coming from...
->>
->>Infortrends should be made aware of the problem so they can 
->>do a bios upgrade.  I suspect that even if the array returned 
->>the correct capacity it would be unable to process the 
->>READ/WRITE(16) commands necessary to reach it anyway, so 
->>their "fix" may be to tell you that no individual luns can be 
->>configured beyond 2TB.
->>
->>> James, this may be a dumb question, please excuse my 
->>ignorance of the 
->>> internals of the scsi subsystem, but is there a plan to 
->>implement LBD 
->>> support in the 2.4 tree ?
->>
->>The problem is not just in SCSI, it permeates the block 
->>layer.  I don't think there's much point backporting LBD to 
->>2.4, although many vendor trees have it.
->>
->>James
->>
->>
->>
->>
+
+----- Forwarded message from Adrian Bunk <bunk@fs.tum.de> -----
+
+Date:	Thu, 15 Jul 2004 21:11:31 +0200
+From: Adrian Bunk <bunk@fs.tum.de>
+To: James.Bottomley@SteelEye.com
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [2.6 patch] SCSI qla2xxx: fix inline compile errors
+
+Trying to compile the SCSI qla2xxx driver in 2.6.8-rc1-mm1 using gcc 3.4 
+results in the following compile errors:
+
+<--  snip  -->
+
+...
+  CC      drivers/scsi/qla2xxx/qla_os.o
+drivers/scsi/qla2xxx/qla_os.c: In function `qla2x00_queuecommand':
+drivers/scsi/qla2xxx/qla_os.c:315: sorry, unimplemented: inlining failed 
+in call to 'qla2x00_callback': function not considered for inlining
+drivers/scsi/qla2xxx/qla_os.c:269: sorry, unimplemented: called from here
+drivers/scsi/qla2xxx/qla_os.c:315: sorry, unimplemented: inlining failed 
+in call to 'qla2x00_callback': function not considered for inlining
+drivers/scsi/qla2xxx/qla_os.c:269: sorry, unimplemented: called from here
+make[3]: *** [drivers/scsi/qla2xxx/qla_os.o] Error 1
+...
+  CC      drivers/scsi/qla2xxx/qla_rscn.o
+drivers/scsi/qla2xxx/qla_rscn.c: In function `qla2x00_cancel_io_descriptors':
+drivers/scsi/qla2xxx/qla_rscn.c:320: sorry, unimplemented: inlining 
+failed in call to 'qla2x00_remove_iodesc_timer': function not considered for inlining
+drivers/scsi/qla2xxx/qla_rscn.c:257: sorry, unimplemented: called from here
+make[3]: *** [drivers/scsi/qla2xxx/qla_rscn.o] Error 1
+
+<--  snip  -->
+
+
+The patch below moves some inlined functions above the place where they
+are called the first time.
+
+An alternative approach would be to remove the inlines.
+
+
+diffstat output:
+ drivers/scsi/qla2xxx/qla_os.c   |  122 ++++++++++++++++----------------
+ drivers/scsi/qla2xxx/qla_rscn.c |   28 +++----
+ 2 files changed, 75 insertions(+), 75 deletions(-)
+
+
+Signed-off-by: Adrian Bunk <bunk@fs.tum.de>
+
+--- linux-2.6.7-mm6-full-gcc3.4/drivers/scsi/qla2xxx/qla_os.c.old	2004-07-09 01:09:28.000000000 +0200
++++ linux-2.6.7-mm6-full-gcc3.4/drivers/scsi/qla2xxx/qla_os.c	2004-07-09 01:10:10.000000000 +0200
+@@ -235,67 +235,6 @@
+ static __inline__ void
+ qla2x00_delete_from_done_queue(scsi_qla_host_t *, srb_t *); 
+ 
+-/**************************************************************************
+-* sp_put
+-*
+-* Description:
+-*   Decrement reference count and call the callback if we're the last
+-*   owner of the specified sp. Will get the host_lock before calling
+-*   the callback.
+-*
+-* Input:
+-*   ha - pointer to the scsi_qla_host_t where the callback is to occur.
+-*   sp - pointer to srb_t structure to use.
+-*
+-* Returns:
+-*
+-**************************************************************************/
+-static inline void
+-sp_put(struct scsi_qla_host * ha, srb_t *sp)
+-{
+-        if (atomic_read(&sp->ref_count) == 0) {
+-		qla_printk(KERN_INFO, ha,
+-			"%s(): **** SP->ref_count not zero\n",
+-			__func__);
+-                DEBUG2(BUG();)
+-
+-                return;
+-	}
+-
+-        if (!atomic_dec_and_test(&sp->ref_count)) {
+-                return;
+-        }
+-
+-        qla2x00_callback(ha, sp->cmd);
+-}
+-
+-/**************************************************************************
+-* sp_get
+-*
+-* Description:
+-*   Increment reference count of the specified sp.
+-*
+-* Input:
+-*   sp - pointer to srb_t structure to use.
+-*
+-* Returns:
+-*
+-**************************************************************************/
+-static inline void
+-sp_get(struct scsi_qla_host * ha, srb_t *sp)
+-{
+-        atomic_inc(&sp->ref_count);
+-
+-        if (atomic_read(&sp->ref_count) > 2) {
+-		qla_printk(KERN_INFO, ha,
+-			"%s(): **** SP->ref_count greater than two\n",
+-			__func__);
+-                DEBUG2(BUG();)
+-
+-		return;
+-	}
+-}
+-
+ /*
+ * qla2x00_callback
+ *      Returns the completed SCSI command to LINUX.
+@@ -366,6 +305,67 @@
+ 	(*(cmd)->scsi_done)(cmd);
+ }
+ 
++/**************************************************************************
++* sp_put
++*
++* Description:
++*   Decrement reference count and call the callback if we're the last
++*   owner of the specified sp. Will get the host_lock before calling
++*   the callback.
++*
++* Input:
++*   ha - pointer to the scsi_qla_host_t where the callback is to occur.
++*   sp - pointer to srb_t structure to use.
++*
++* Returns:
++*
++**************************************************************************/
++static inline void
++sp_put(struct scsi_qla_host * ha, srb_t *sp)
++{
++        if (atomic_read(&sp->ref_count) == 0) {
++		qla_printk(KERN_INFO, ha,
++			"%s(): **** SP->ref_count not zero\n",
++			__func__);
++                DEBUG2(BUG();)
++
++                return;
++	}
++
++        if (!atomic_dec_and_test(&sp->ref_count)) {
++                return;
++        }
++
++        qla2x00_callback(ha, sp->cmd);
++}
++
++/**************************************************************************
++* sp_get
++*
++* Description:
++*   Increment reference count of the specified sp.
++*
++* Input:
++*   sp - pointer to srb_t structure to use.
++*
++* Returns:
++*
++**************************************************************************/
++static inline void
++sp_get(struct scsi_qla_host * ha, srb_t *sp)
++{
++        atomic_inc(&sp->ref_count);
++
++        if (atomic_read(&sp->ref_count) > 2) {
++		qla_printk(KERN_INFO, ha,
++			"%s(): **** SP->ref_count greater than two\n",
++			__func__);
++                DEBUG2(BUG();)
++
++		return;
++	}
++}
++
+ static inline void 
+ qla2x00_delete_from_done_queue(scsi_qla_host_t *dest_ha, srb_t *sp) 
+ {
+--- linux-2.6.7-mm6-full-gcc3.4/drivers/scsi/qla2xxx/qla_rscn.c.old	2004-07-09 01:10:52.000000000 +0200
++++ linux-2.6.7-mm6-full-gcc3.4/drivers/scsi/qla2xxx/qla_rscn.c	2004-07-09 01:11:23.000000000 +0200
+@@ -242,6 +242,20 @@
+ }
+ 
+ /**
++ * qla2x00_remove_iodesc_timer() - Remove an active timer from an IO descriptor.
++ * @iodesc: io descriptor
++ */
++static inline void
++qla2x00_remove_iodesc_timer(struct io_descriptor *iodesc)
++{
++	if (iodesc->timer.function != NULL) {
++		del_timer_sync(&iodesc->timer);
++		iodesc->timer.data = (unsigned long) NULL;
++		iodesc->timer.function = NULL;
++	}
++}
++
++/**
+  * qla2x00_init_io_descriptors() - Initialize the pool of IO descriptors.
+  * @ha: HA context
+  */
+@@ -311,20 +325,6 @@
+ 	add_timer(&iodesc->timer);
+ }
+ 
+-/**
+- * qla2x00_remove_iodesc_timer() - Remove an active timer from an IO descriptor.
+- * @iodesc: io descriptor
+- */
+-static inline void
+-qla2x00_remove_iodesc_timer(struct io_descriptor *iodesc)
+-{
+-	if (iodesc->timer.function != NULL) {
+-		del_timer_sync(&iodesc->timer);
+-		iodesc->timer.data = (unsigned long) NULL;
+-		iodesc->timer.function = NULL;
+-	}
+-}
+-
+ /** 
+  * IO descriptor support routines.
+  **/
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Please read the FAQ at  http://www.tux.org/lkml/
+
+----- End forwarded message -----
+
