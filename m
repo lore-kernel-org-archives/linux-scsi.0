@@ -1,17 +1,26 @@
 From: Andi Kleen <ak@suse.de>
-Subject: [PATCH] Fix selection of command serial numbers and pids
-Date: Sun, 6 Feb 2005 20:41:23 +0100
-Message-ID: <20050206194123.GF18245@wotan.suse.de>
+Subject: Re: [PATCH] Fix selection of command serial numbers and pids
+Date: Sun, 6 Feb 2005 20:51:41 +0100
+Message-ID: <20050206195141.GA24068@wotan.suse.de>
+References: <20050206194123.GF18245@wotan.suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Received: from mail-ex.suse.de ([195.135.220.2]:2776 "EHLO Cantor.suse.de")
-	by vger.kernel.org with ESMTP id S261288AbVBFTl3 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 6 Feb 2005 14:41:29 -0500
+Received: from news.suse.de ([195.135.220.2]:4317 "EHLO Cantor.suse.de")
+	by vger.kernel.org with ESMTP id S261295AbVBFTvm (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 6 Feb 2005 14:51:42 -0500
 Content-Disposition: inline
+In-Reply-To: <20050206194123.GF18245@wotan.suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org
+To: Andi Kleen <ak@suse.de>
+Cc: James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org
 
+
+[...]
+
+Willy pointed out a bogus hunk in the original patch that should not
+have been there.  Retransmit with that removed. Also mark scsi_cmnd_serial
+inline.
 
 This patch fixes one of Christroph's fixme comments in the SCSI midlayer.
 
@@ -32,7 +41,6 @@ of driver printks use them)
 This should be slight faster on SMP too because the cache line of
 the counter won't bounce around the machine. 
 
-Signed-off-by: Andi Kleen <ak@suse.de>
 
 diff -u linux-2.6.11rc3/drivers/scsi/scsi.c-SCSISER linux-2.6.11rc3/drivers/scsi/scsi.c
 --- linux-2.6.11rc3/drivers/scsi/scsi.c-SCSISER	2005-02-04 09:13:14.000000000 +0100
@@ -58,7 +66,7 @@ diff -u linux-2.6.11rc3/drivers/scsi/scsi.c-SCSISER linux-2.6.11rc3/drivers/scsi
 + * Assign a serial number and pid to the request for error recovery
 + * and debugging purposes.  Protected by the Host_Lock of host.
 + */
-+static void scsi_cmd_get_serial(struct Scsi_Host *host, struct scsi_cmnd *cmd)
++static inline void scsi_cmd_get_serial(struct Scsi_Host *host, struct scsi_cmnd *cmd)
 +{
 +	cmd->serial_number = host->cmd_serial_number++;
 +	if (cmd->serial_number == 0) 
@@ -129,15 +137,6 @@ diff -u linux-2.6.11rc3/include/scsi/scsi_cmnd.h-SCSISER linux-2.6.11rc3/include
 diff -u linux-2.6.11rc3/include/scsi/scsi_host.h-SCSISER linux-2.6.11rc3/include/scsi/scsi_host.h
 --- linux-2.6.11rc3/include/scsi/scsi_host.h-SCSISER	2005-02-04 09:13:50.000000000 +0100
 +++ linux-2.6.11rc3/include/scsi/scsi_host.h	2005-02-05 12:02:17.000000000 +0100
-@@ -468,7 +468,7 @@
- 
- 	/*
- 	 * The maximum length of SCSI commands that this host can accept.
--	 * Probably 12 for most host adapters, but could be 16 for others.
-+	 * Probably 12 for most host adaptersm , but could be 16 for others.
- 	 * For drivers that don't set this field, a value of 12 is
- 	 * assumed.  I am leaving this as a number rather than a bit
- 	 * because you never know what subsequent SCSI standards might do
 @@ -483,7 +483,12 @@
  	short unsigned int sg_tablesize;
  	short unsigned int max_sectors;
