@@ -1,52 +1,43 @@
-From: Arjan van de Ven <arjanv@redhat.com>
+From: Alan Cox <alan@redhat.com>
 Subject: Re: sg driver and Fedora Core 2
-Date: Sat, 29 May 2004 18:24:37 +0200
+Date: Sat, 29 May 2004 12:29:12 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040529162437.GF31365@devserv.devel.redhat.com>
-References: <40B74725.90403@torque.net> <20040528172535.GD13961@devserv.devel.redhat.com> <1085846125.2101.29.camel@mulgrave> <20040529155744.GA32621@devserv.devel.redhat.com>
+Message-ID: <20040529162912.GA5922@devserv.devel.redhat.com>
+References: <40B74725.90403@torque.net> <20040528172535.GD13961@devserv.devel.redhat.com> <1085846125.2101.29.camel@mulgrave> <20040529155744.GA32621@devserv.devel.redhat.com> <1085846840.2103.47.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="8GpibOaaTibBMecb"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:28366 "EHLO mx1.redhat.com")
-	by vger.kernel.org with ESMTP id S265215AbUE2QYp (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 29 May 2004 12:24:45 -0400
-Content-Disposition: inline
-In-Reply-To: <20040529155744.GA32621@devserv.devel.redhat.com>
-List-Id: linux-scsi@vger.kernel.org
-To: Alan Cox <alan@redhat.com>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, Douglas Gilbert <dougg@torque.net>, SCSI Mailing List <linux-scsi@vger.kernel.org>
-
-
---8GpibOaaTibBMecb
 Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([66.187.233.31]:48079 "EHLO mx1.redhat.com")
+	by vger.kernel.org with ESMTP id S264329AbUE2Q3T (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 29 May 2004 12:29:19 -0400
 Content-Disposition: inline
+In-Reply-To: <1085846840.2103.47.camel@mulgrave>
+List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Alan Cox <alan@redhat.com>, Douglas Gilbert <dougg@torque.net>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Arjan van de Ven <arjanv@redhat.com>
 
-On Sat, May 29, 2004 at 11:57:44AM -0400, Alan Cox wrote:
-> On Sat, May 29, 2004 at 10:55:24AM -0500, James Bottomley wrote:
-> > > This is an error. Linus has also vetoed this change. Consider the
-> > > Fedora kernel wrong on this point. It isnt however your SG_IO issue I think
-> > 
-> > I don't necessarily regard this as an error: single attachment of ULDs
-> > would be very helpful.  However, since the mechanics of implementing
+On Sat, May 29, 2004 at 11:07:19AM -0500, James Bottomley wrote:
+> > insmod scsidriver
+> > open /dev/sg0 (a hard disk)
+> > insmod sd
 > 
-> Its most definitely problematic - it breaks a ton of existing tools, and
+> Refuse the insertion or do not attach, I suppose.  It would be the app's
+> fault for not managing the interface correctly.
 
-most of the existing tools take a device as argument, it doesn't (shouldn't)
-matter if that device name is /dev/sg0 or /dev/sda. After all the ioctls are
-the same between sg and SG_IO.
+So you stop users being able to hotplug controllers while doing firmware
+updates. Thats not good either
 
---8GpibOaaTibBMecb
-Content-Type: application/pgp-signature
-Content-Disposition: inline
+> about to make any change like it at this point.  But, if fedora can
+> demonstrate that it can be made to work sanely and easily, that would be
+> a very powerful argument for inclusion.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.2.1 (GNU/Linux)
+Fedora bugzilla has demonstrated it *doesn't* work. There is a long list
+of broken third party apps such as drive firmware tools many of which will
+never include source code. The whole point of sg is arbitary management of
+devices. Its like /dev/mem and so forth, its power is in the fact it can
+always be used. This is why Linus vetoed the entire concept.
 
-iD8DBQFAuLlExULwo51rQBIRAmBjAKCmJnjMsR3q4MosyI7LAjjHHt88wgCcCTAK
-j/KFBmhBo9SGViPech7oQfk=
-=vdY4
------END PGP SIGNATURE-----
+Fedora hasn't solved the open /dev/sg , insmod case either.
 
---8GpibOaaTibBMecb--
+
