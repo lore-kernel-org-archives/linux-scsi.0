@@ -1,100 +1,55 @@
 From: Jesse Barnes <jbarnes@engr.sgi.com>
-Subject: Re: SCSI QLA not working on latest *-mm SN2
-Date: Mon, 20 Sep 2004 17:09:44 -0700
+Subject: Re: Documentation/io_ordering.txt is wrong
+Date: Mon, 20 Sep 2004 17:38:16 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <200409201709.45008.jbarnes@engr.sgi.com>
-References: <20040917183029.GW642@parcelfarce.linux.theplanet.co.uk> <200409201540.02297.jbarnes@engr.sgi.com> <20040920232716.GD19511@colo.lackof.org>
+Message-ID: <200409201738.16746.jbarnes@engr.sgi.com>
+References: <20040917183029.GW642@parcelfarce.linux.theplanet.co.uk> <20040918061001.GC21456@colo.lackof.org> <20040918175714.GD642@parcelfarce.linux.theplanet.co.uk>
 Mime-Version: 1.0
 Content-Type: Multipart/Mixed;
-  boundary="Boundary-00=_IF3TBVShv8BhQGa"
+  boundary="Boundary-00=_4f3TBvD61hDqgvE"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from omx3-ext.sgi.com ([192.48.171.20]:63119 "EHLO omx3.sgi.com")
-	by vger.kernel.org with ESMTP id S266790AbUIUAKH (ORCPT
+Received: from omx3-ext.sgi.com ([192.48.171.20]:17110 "EHLO omx3.sgi.com")
+	by vger.kernel.org with ESMTP id S267415AbUIUAio (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 20 Sep 2004 20:10:07 -0400
-In-Reply-To: <20040920232716.GD19511@colo.lackof.org>
+	Mon, 20 Sep 2004 20:38:44 -0400
+In-Reply-To: <20040918175714.GD642@parcelfarce.linux.theplanet.co.uk>
 List-Id: linux-scsi@vger.kernel.org
-To: Grant Grundler <grundler@parisc-linux.org>
-Cc: Andrew Vasquez <andrew.vasquez@qlogic.com>, pj@sgi.com, linux-scsi@vger.kernel.org, mdr@cthulhu.engr.sgi.com, jeremy@cthulhu.engr.sgi.com, djh@cthulhu.engr.sgi.com, Andrew Morton <akpm@osdl.org>
+To: Matthew Wilcox <willy@debian.org>
+Cc: Grant Grundler <grundler@parisc-linux.org>, Andrew Vasquez <andrew.vasquez@qlogic.com>, pj@sgi.com, linux-scsi@vger.kernel.org, mdr@cthulhu.engr.sgi.com, jeremy@cthulhu.engr.sgi.com, djh@cthulhu.engr.sgi.com, Andrew Morton <akpm@osdl.org>, linux-kernel@vger.kernel.org
 
---Boundary-00=_IF3TBVShv8BhQGa
+--Boundary-00=_4f3TBvD61hDqgvE
 Content-Type: text/plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Content-Disposition: inline
 
-On Monday, September 20, 2004 4:27 pm, Grant Grundler wrote:
-> "write posting" is orthogonal to PCI ordering rules.
-> AFAIK, Write posting is not specific to PCI - but any memory mapped IO.
-
-Right.
-
-> I understand "write posting" as when the CPU posts the write
-> to the chipset and the chipset says the write is done even though
-> it hasn't reached the PCI device. It just means the write has reached
-> the PCI "domain" (which is supposed to be strongly ordered).
-
-That's my understanding too.
-
-> Secondly, I don't recall hearing about problems like this
-> on Intel or HP ia64 machines. I've only run into PCI posted write
-> and DMA syncronization problems where the drivers aren't following
-> all the rules quite right (missing mb() and readl()'s mostly).
-
-Problems like what?  If mmio writes are posted, then the driver has to deal 
-with it with reads like you said.  If the example code was fixed to lose the 
-read() in the second spinlock protected region, I think it would describe 
-mmio write posting accurately, no?
-
-> So far, I still think this document is misnamed and should
-> be called something like "SGI Altix porting issues" and moved
-> under the Documentation/ia64 directory.
-
-But it has nothing to do with Altix at all...
-
->
-> > > [ Is this example broken or am I just staying up too late?
-> > >   The example is doing a readl() in the second critical section.
-> > >   Shouldn't that enforce the write ordering?
-> > > ]
+On Saturday, September 18, 2004 10:57 am, Matthew Wilcox wrote:
+> On Sat, Sep 18, 2004 at 12:10:01AM -0600, Grant Grundler wrote:
+> > Jesse Barnes wrote:
+> > ...
 > >
-> > Yep, that's a bug.  It should just be writes.
->
-> ok. Can you fix that up and post a new version where I can see it?
->
-> > > The reads from safe_register will cause the I/O chipset to flush any
-> > > pending writes before actually posting the read to the chipset,
-> > > preventing possible data corruption.
-> > >
-> > > [ How about interactions with:
-> > >   o read_relaxed()?
-> > >   o DMA?
-> > >   o IO Port space reads?
-> > >   o IO Port space writes?
-> > > ]
+> > > Btw Andrew (Vasquez), there's a small doc I put together that should
+> > > describe when you have to worry about PCI posting.  It's in the tree:
+> > > Documentation/io_ordering.txt.  If it's incomplete or confusing, just
+> > > let me know and I'll update it.
 > >
-> > None that I know of.
+> > Jesse,
+> > Both. incomplete and confusing.
+> > "concrete example of a hypothetical driver" wasn't my first warning
+> > this document needed work. :^)
 >
-> You mean none that are surprising to you?
-> ie writes can pass read_relaxed() transactions or vice versa?
-> DMA read returns can bypass MMIO writes? (parisc chipsets allow this)
+> Not just incomplete and confusing, but actively wrong.  spin_lock/
+> spin_unlock should imply ordering of readb().  What you're describing
+> there is __readb().  See Documentation/DocBook/deviceiobook.tmpl.  Also,
+> rmb() should ensure ordering of io reads; there should be no need to
+> touch the device.
 
-No, as far as mmio ordering goes, read_relaxed is exactly the same as read, so 
-in the example code, a read_relaxed would be sufficient for write ordering.
-
-> IIRC, IO port space writes are NOT posted.
-> So the rules for ordering must be impacted or different somehow.
-> ie Are IO Port space writes strongly ordered WRT MMIO space writes?
-
-Right, they're supposed to be strongly ordered, I think arches are supposed to 
-guarantee that in their in/out routines.
-
-Here's a new version that should be clearer.
+Is this any better?  I just sent it off to Grant too.
 
 Thanks,
 Jesse
 
---Boundary-00=_IF3TBVShv8BhQGa
+--Boundary-00=_4f3TBvD61hDqgvE
 Content-Type: text/plain;
   charset="iso-8859-1";
   name="io_ordering.txt"
@@ -157,4 +112,4 @@ We should probably add a writeflush call or something to deal with the
 above in an easier to read way.  Some platforms could even implement
 such a routine more efficiently than a regular read.
 
---Boundary-00=_IF3TBVShv8BhQGa--
+--Boundary-00=_4f3TBvD61hDqgvE--
