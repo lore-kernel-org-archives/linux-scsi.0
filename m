@@ -1,32 +1,63 @@
-From: Marcelo Tosatti <marcelo.tosatti@cyclades.com>
-Subject: Re: [patch] 2.6 -- add IOI Media Bay to SCSI quirk list
-Date: Fri, 13 Aug 2004 18:32:41 -0300
+From: Kenn Humborg <kenn@linux.ie>
+Subject: AUTOSENSE bug in NCR5380.c
+Date: Sat, 14 Aug 2004 00:54:08 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040813213241.GC30627@logos.cnet>
-References: <200408122137.i7CLbGU13688@ra.tuxdriver.com> <20040812225118.GA20904@beaverton.ibm.com> <411BF6A5.2030306@tuxdriver.com> <20040813002756.GA21763@beaverton.ibm.com> <411C17B4.7030804@tuxdriver.com>
+Message-ID: <20040813235408.GA3547@excalibur.research.wombat.ie>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:14307 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S267656AbUHMW5A
+Received: from mail1.mail.iol.ie ([193.120.142.151]:8918 "EHLO
+	mail1.mail.iol.ie") by vger.kernel.org with ESMTP id S267784AbUHMXyO
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 13 Aug 2004 18:57:00 -0400
+	Fri, 13 Aug 2004 19:54:14 -0400
+Received: from dialup0184.ts005.bmt.esat.net ([212.2.172.184] helo=excalibur.research.wombat.ie)
+	by mail1.mail.iol.ie with esmtp (Exim 3.36 #9)
+	id 1BvlsB-00029Z-00
+	for linux-scsi@vger.kernel.org; Sat, 14 Aug 2004 00:54:13 +0100
+Received: from excalibur.research.wombat.ie (IDENT:jmPJy27Mb0oeVup+8C3P0bm/xAzKg16H@excalibur [127.0.0.1])
+	by excalibur.research.wombat.ie (8.12.10/8.12.10) with ESMTP id i7DNs9QR004320
+	for <linux-scsi@vger.kernel.org>; Sat, 14 Aug 2004 00:54:09 +0100
+Received: (from kenn@localhost)
+	by excalibur.research.wombat.ie (8.12.10/8.12.10/Submit) id i7DNs8HL004319
+	for linux-scsi@vger.kernel.org; Sat, 14 Aug 2004 00:54:08 +0100
 Content-Disposition: inline
-In-Reply-To: <411C17B4.7030804@tuxdriver.com>
 List-Id: linux-scsi@vger.kernel.org
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Patrick Mansfield <patmans@us.ibm.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, James.Bottomley@SteelEye.com
+To: linux-scsi@vger.kernel.org
 
-On Thu, Aug 12, 2004 at 09:21:56PM -0400, John W. Linville wrote:
-> Patrick Mansfield wrote:
-> 
-> >Only add borken devices to the list, so it is a list of bad devices rather
-> >than a list of good ones.
-> > 
-> >
-> 
-> I now see the comments about the list being deprecated.  I withdraw the 
-> 2.6 patch.  I still think the 2.4 patch is wortwhile, unless there is an 
-> overhaul going-on there as well.
 
-Not on 2.4.x, no. Care to write & test a patch?
+Around line 2470 in NCR5380.c, if a command fails, and AUTOSENSE is on,
+the current command is converted into a REQUEST_SENSE command and
+put at the top of the request queue.  Part of this setup, is setting
+up cmd->SCp to point at the sense_buffer, so that the received sense
+data goes straight into the sense buffer.
+
+Around line 1730, NCR5380_select() calls initialize_SCp() which ends
+up clobbering cmd->SCp, and the sense data get written into the 
+original request buffer.
+
+This is what happens if cmd->use_sg = 0.  I haven't looked at what
+happens if use_sg is non-zero, but I expect the effect will be the same.
+
+The attached patch works around the problem for me.  Is there a better
+way to deal with this?
+
+Later,
+Kenn
+
+RCS file: /cvsroot/linux-vax/kernel-2.5/drivers/scsi/NCR5380.c,v
+retrieving revision 1.2
+retrieving revision 1.3
+diff -u -d -r1.2 -r1.3
+--- NCR5380.c	8 Aug 2004 23:32:34 -0000	1.2
++++ NCR5380.c	13 Aug 2004 23:44:24 -0000	1.3
+@@ -1734,8 +1737,9 @@
+ 	hostdata->connected = cmd;
+ 	hostdata->busy[cmd->device->id] |= (1 << cmd->device->lun);
+ 
+-	initialize_SCp(cmd);
+-
++	if (cmd->SCp.ptr != (char *)cmd->sense_buffer) {
++		initialize_SCp(cmd);
++	}
+ 
+ 	return 0;
