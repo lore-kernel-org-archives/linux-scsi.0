@@ -1,67 +1,34 @@
-From: Christoph Hellwig <hch@caldera.de>
-Subject: [PATCH] remove old SCSI-EH methods from Scsi_Host_Template
-Date: Mon, 15 Apr 2002 19:49:29 +0100
+From: "Justin T. Gibbs" <gibbs@scsiguy.com>
+Subject: [PATCH] sd.c fixes applied incorectly to 2.4.19-preXX
+Date: Mon, 15 Apr 2002 14:40:39 -0600
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20020415194929.A8937@infradead.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Message-ID: <200204152040.g3FKed982111@aslan.scsiguy.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
+In-Reply-To: Your message of "Mon, 11 Mar 2002 12:55:23 MST."
 List-Id: linux-scsi@vger.kernel.org
-To: Linus Torvalds <torvalds@transmeta.com>
-Cc: linux-scsi@vger.kernel.org
+To: Marcelo Tosatti <marcelo@conectiva.com.br>
+Cc: linux-scsi@vger.kernel.org, Alan Cox <alan@redhat.com>
 
-Hi Linus,
+Marcelo,
 
-when I removed the old SCSI error handling in 2.5.<early> I accidentally
-left the Scsi_Host_Template methods for it in.  The bloat cause by this
-isn't much so this shouldn't be a real issue, but it allowed the drivers
-not updated to new error handling to still compile and cause bad problems
-in case of the need for error handling.  The patch below nukes it to
-break compilation for the huge number of drivers not yet updated.
+Looking at the latest version of your tree via bitkeeper, it
+seems that the wrong patch has been applied to sd.c.  In its
+current state, the disk driver will fail to act upon any sense
+data returned by the low level controller.  The following patch
+restores correct behavior.
 
-	Christoph
+--
+Justin
 
---- linux/drivers/scsi/hosts.h~	Tue Jan 15 10:59:08 2002
-+++ linux/drivers/scsi/hosts.h	Mon Apr 15 20:35:46 2002
-@@ -166,40 +166,6 @@
-      int (*eh_host_reset_handler)(Scsi_Cmnd *);
+===== sd.c 1.21 vs edited =====
+--- 1.21/drivers/scsi/sd.c	Fri Apr  5 09:19:03 2002
++++ edited/sd.c	Mon Apr 15 14:32:51 2002
+@@ -621,7 +621,7 @@
  
-     /*
--     * Since the mid level driver handles time outs, etc, we want to
--     * be able to abort the current command.  Abort returns 0 if the
--     * abortion was successful.	 The field SCpnt->abort reason
--     * can be filled in with the appropriate reason why we wanted
--     * the abort in the first place, and this will be used
--     * in the mid-level code instead of the host_byte().
--     * If non-zero, the code passed to it
--     * will be used as the return code, otherwise
--     * DID_ABORT  should be returned.
--     *
--     * Note that the scsi driver should "clean up" after itself,
--     * resetting the bus, etc.	if necessary.
--     *
--     * NOTE - this interface is depreciated, and will go away.  Use
--     * the eh_ routines instead.
--     */
--    int (* abort)(Scsi_Cmnd *);
--
--    /*
--     * The reset function will reset the SCSI bus.  Any executing
--     * commands should fail with a DID_RESET in the host byte.
--     * The Scsi_Cmnd  is passed so that the reset routine can figure
--     * out which host adapter should be reset, and also which command
--     * within the command block was responsible for the reset in
--     * the first place.	 Some hosts do not implement a reset function,
--     * and these hosts must call scsi_request_sense(SCpnt) to keep
--     * the command alive.
--     *
--     * NOTE - this interface is depreciated, and will go away.  Use
--     * the eh_ routines instead.
--     */
--    int (* reset)(Scsi_Cmnd *, unsigned int);
--
--    /*
-      * This function is used to select synchronous communications,
-      * which will result in a higher data throughput.  Not implemented
-      * yet.
+ 	/* An error occurred */
+ 	if (driver_byte(result) != 0 && 	/* An error occured */
+-	    SCpnt->sense_buffer[0] != 0xF0) {	/* Sense data is valid */
++	    SCpnt->sense_buffer[0] == 0xF0) {	/* Sense data is valid */
+ 		switch (SCpnt->sense_buffer[2]) {
+ 		case MEDIUM_ERROR:
+ 			error_sector = (SCpnt->sense_buffer[3] << 24) |
