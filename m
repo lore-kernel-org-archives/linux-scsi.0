@@ -1,36 +1,39 @@
-From: Pat LaVarre <p.lavarre@ieee.org>
-Subject: Re: sg utils sg_io -i 0x24 -y "12 00:00:00 24 00"
-Date: 11 Nov 2003 16:52:57 -0700
+From: "Nayak, Samdeep" <Samdeep_Nayak@adaptec.com>
+Subject: Raw IO with High mem support.
+Date: Tue, 11 Nov 2003 23:32:02 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1068594777.6448.7.camel@patrh9>
-References: <1068165515.28505.29.camel@patrh9>
-	 <20031107095145.A3785@beaverton.ibm.com>  <1068228695.3417.34.camel@patrh9>
-	 <1068229639.3417.46.camel@patrh9>  <1068229873.3417.51.camel@patrh9>
+Message-ID: <B38A3B4F283DBA419282705B57A2425B154AC1@aime2k02.adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from email-out1.iomega.com ([147.178.1.82]:10394 "EHLO
-	email.iomega.com") by vger.kernel.org with ESMTP id S263849AbTKKXx1
+Received: from list.adaptec.com ([216.52.22.18]:26276 "EHLO list.adaptec.com")
+	by vger.kernel.org with ESMTP id S261863AbTKLHcG convert rfc822-to-8bit
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 11 Nov 2003 18:53:27 -0500
-In-Reply-To: <1068229873.3417.51.camel@patrh9>
+	Wed, 12 Nov 2003 02:32:06 -0500
+Received: from redfish.adaptec.com (redfish.adaptec.com [162.62.50.11])
+	by list.adaptec.com (8.12.8/8.12.8) with ESMTP id hAC7VQaX023124
+	for <linux-scsi@vger.kernel.org>; Tue, 11 Nov 2003 23:31:26 -0800
+Received: from aime2k02.adaptec.com (aime2k02.adaptec.com [10.25.8.42])
+	by redfish.adaptec.com (8.11.6/8.11.6) with ESMTP id hAC7W2J21332
+	for <linux-scsi@vger.kernel.org>; Tue, 11 Nov 2003 23:32:02 -0800
+content-class: urn:content-classes:message
 List-Id: linux-scsi@vger.kernel.org
-To: patmans@us.ibm.com
-Cc: dougg@torque.net, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-The SG_IO analogue in BSD may be:
+Hi,
 
-http://www.google.com/search?q=man+SCIOCCOMMAND
+I am running into a strange performance issue after I upgraded my system
+ram to 2Gig. Earlier my system had 896MB and I was getting decent
+performance with character raw IO. However after rebuilding the kernel
+to support 4Gig Memory with 3Gig virtual memory on 2.4.X kernel, the
+performance seems to drop drastically. Physically removing the RAM got
+me back to the original performance.  I am still trying to analyze this
+and any pointers to High Memory support with raw device would be greatly
+appreciated.
 
-The corresponding struct appears in such sources as:
-
-http://cvsup.pt.freebsd.org/cgi-bin/cvsweb/cvsweb.cgi/src/sys/sys/scsiio.h?rev=1.9.4.2&content-type=text/x-cvsweb-markup&cvsroot=NetBSD
-
-Same as ever, again there we see CDB for length, data for expected
-length returning actual length, sense for expected length returning
-actual length.
-
-Pat LaVarre
+Thanks in advance,
+-Samdeep
 
 
