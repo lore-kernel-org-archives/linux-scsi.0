@@ -1,84 +1,63 @@
-From: "Surekha.PC" <surekhap@cisco.com>
-Subject: RE: [PATCH][RFC] iSCSI transport class
-Date: Tue, 30 Mar 2004 19:51:52 +0530
+From: "Manish Kumar Bhojasia" <mbhojasi@cisco.com>
+Subject: RE: [PATCH] Updated iscsi driver 4.0.1.2
+Date: Tue, 30 Mar 2004 20:03:12 +0530
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <!~!UENERkVCMDkAAQACAAAAAAAAAAAAAAAAABgAAAAAAAAANoIxZIFzbEaqwjJgytz2AeKAAAAQAAAA2gVe7Un3YUak/sHlj1pNxAEAAAAA@cisco.com>
-References: <4064979E.3020208@cs.wisc.edu>
+Message-ID: <FFEFJMNKOMGHNFBIAHOCAEMEDGAA.mbhojasi@cisco.com>
+References: <1080321647.2031.51.camel@mulgrave>
 Mime-Version: 1.0
 Content-Type: text/plain;
-	charset="us-ascii"
+	charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sj-iport-1-in.cisco.com ([171.71.176.70]:6919 "EHLO
-	sj-iport-1.cisco.com") by vger.kernel.org with ESMTP
-	id S263668AbUC3OV6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 30 Mar 2004 09:21:58 -0500
-In-Reply-To: <4064979E.3020208@cs.wisc.edu>
+Received: from ind-iport-1-sec.cisco.com ([64.104.129.9]:57643 "EHLO
+	ind-iport-1.cisco.com") by vger.kernel.org with ESMTP
+	id S263675AbUC3OdV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 30 Mar 2004 09:33:21 -0500
+In-Reply-To: <1080321647.2031.51.camel@mulgrave>
 List-Id: linux-scsi@vger.kernel.org
-To: 'Mike Christie' <michaelc@cs.wisc.edu>, 'SCSI Mailing List' <linux-scsi@vger.kernel.org>, linux-iscsi-devel@lists.sourceforge.net
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, "Linux-Iscsi-Devel@Lists. Sourceforge. Net" <linux-iscsi-devel@lists.sourceforge.net>
 
+James,
 
- Hi Mike,
+We have taken care of propagating the iscsi-sfnet to various places
+as suggested. Also, the compiler warning is fixed. We are releasing
+4.0.1.3 driver with these changes now.
 
- I have reviewed your changes for iSCSI transport class. The changes look
-fine.
- I have few suggestions on further improvements. The attributes can be
-organised
- under iSCSI transport class in the following structure.
-
-# ls /sys/class/iscsi_transport/*
-
-  /* iSCSI host specific attributes */
-  |-- shutdown
-  |-- host_id
-  |-- ....
-
-  /* iSCSI target specific attributes */
-  |-- 1:0:1/
-           |-- target_addr
-           |-- target_name
-           |-- target_port
-           |-- ....
-
-  /* lun specific attributes */
-  |-- 1:0:1:0/
-             |-- device -> ../../../devices/platform/iscsi/1:0:0:0
-             |-- driver -> ../../../bus/scsi/drivers/sd
-             |-- lun_status
-             |-- ....
-
- This way the relevant attributes can be used from respective paths.
-  
 Thanks,
-surekha
+Manish
 
 > -----Original Message-----
-> From: linux-scsi-owner@vger.kernel.org 
-> [mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of Mike Christie
-> Sent: Saturday, March 27, 2004 2:21 AM
-> To: SCSI Mailing List; linux-iscsi-devel@lists.sourceforge.net
-> Subject: [PATCH][RFC] iSCSI transport class
+> From: James Bottomley [mailto:James.Bottomley@SteelEye.com]
+> Sent: Friday, March 26, 2004 10:51 PM
+> To: Manish Kumar Bhojasia
+> Cc: SCSI Mailing List; Linux-Iscsi-Devel@Lists. Sourceforge. Net
+> Subject: Re: [PATCH] Updated iscsi driver 4.0.1.2
 > 
 > 
-> Attached is the begining of an iSCSI transport class. 
-> Currently, the Cisco driver has some sysfs issues, so the 
-> patch in the next mail will convert their print_info 
-> attribute to use this class instead.
+> On Fri, 2004-03-26 at 11:05, Manish Kumar Bhojasia wrote:
+> > Please review and let us know your comments.
 > 
-> This patch was built against 2.6.5-rc2. And, here is a tree. 
-> Not much yet, so please send comments. Maybe it should be per 
-> session instead of per device?
+> Thanks for moving this to iscsi-sfnet.  I think the config option and
+> the module name need to follow suit (I also note that the printk id
+> strings still say Cisco iSCSI driver).
 > 
-> [mc@minna 1:0:0:0]$ pwd
-> /sys/class/iscsi_transport/1:0:0:0
-> [mc@minna 1:0:0:0]$ tree
-> .
-> |-- device -> ../../../devices/platform/iscsi/1:0:0:0
-> |-- driver -> ../../../bus/scsi/drivers/sd
-> |-- target_addr
-> |-- target_name
-> `-- target_port
+> I still get a compile failure:
 > 
-> Mike Christie
+>   CC [M]  drivers/scsi/iscsi-sfnet/iscsi-debug-attr.o
+> cc1: warnings being treated as errors
+> drivers/scsi/iscsi-sfnet/iscsi-debug-attr.c: In function
+> `iscsi_target_printcmnd':
+> drivers/scsi/iscsi-sfnet/iscsi-debug-attr.c:977: warning: int format,
+> different type arg (arg 4)
+> make[3]: *** [drivers/scsi/iscsi-sfnet/iscsi-debug-attr.o] Error 1
+> make[2]: *** [drivers/scsi/iscsi-sfnet] Error 2
+> make[1]: *** [drivers/scsi] Error 2
+> make: *** [drivers] Error 2
 > 
-
+> This looks to be because of -Werror rather than anything serious.
+> 
+> James
+> 
+> 
+> 
