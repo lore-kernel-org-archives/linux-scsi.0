@@ -1,69 +1,66 @@
-From: Mike Anderson <andmike@us.ibm.com>
-Subject: Re: [PATCH][RFC] get rid of global array and ->init in sd.c and sr.c
-Date: Wed, 23 Oct 2002 01:28:53 -0700
+From: James Bottomley <James.Bottomley@steeleye.com>
+Subject: Re: [PATCH] get rid of ->finish method for highlevel drivers
+Date: Wed, 23 Oct 2002 09:16:49 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20021023082853.GA9341@beaverton.ibm.com>
-References: <20021022210739.A10079@lst.de>
+Message-ID: <200210231416.g9NEGoI01976@localhost.localdomain>
+References: <dledford@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20021022210739.A10079@lst.de>
+Received: (from root@localhost)
+	by pogo.mtv1.steeleye.com (8.9.3/8.9.3) id HAA28665
+	for <linux-scsi@vger.kernel.org>; Wed, 23 Oct 2002 07:16:54 -0700
+In-Reply-To: Message from Doug Ledford <dledford@redhat.com>
+   of "Tue, 22 Oct 2002 19:30:05 EDT." <20021022233005.GD31295@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: James Bottomley <James.Bottomley@steeleye.com>, axboe@suse.dk, linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org
 
-Looks good. I ran it on a system with ips, aic, scsi_debug and qla2x00
-as a module. 
+andmike@us.ibm.com said:
+> It appears after looking at this with Patrick that in drivers where
+> slave_attach is is not calling scsi_adjust_queue_depth the
+> scsi_build_commandblocks will not be called. In my case ips.c and in
+> James case 53c700.c. 
 
-When I applied the patch I got a quite a few rejects on sd.c and sr.c. I
-fixed up sd.c, but did not run sr.c. My view is based off James
-scsi-misc-2.5.
+> If post calling slave_attach the new_queue_depth is 0 and the device
+> is not offline we should ensure there is at least a new_queue_depth of
+> 1 which is what your patch does by later on calling
+> scsi_build_commandblocks directly. 
 
-I noticed the patch seems to include some of your driver_register
-removals (preiously posted) in init_sd and exit_sd, but there are no
-adds to scsi_register_device or scsi_unregister_device.
+> Actually, prior to the scsi_scan changes, the code always made sure
+> that  it was at least 1 after the scan.  Maybe that got lost
+> somehow... 
 
-Christoph Hellwig [hch@lst.de] wrote:
-> +	list_for_each(p, &sd_devlist) {
-> +		sdkp = list_entry(p, struct scsi_disk, list);
->  		sdp = sdkp->device;
->  		if (sdp && (sdp->host == shp) && (sdp->id == scsi_id)) {
->  			retval = MKDEV_SD(dsk_nr);
->  			break;
+This is really exposing our whole detect init attach finish slave_attach mess 
+which Christoph was trying to clean up.
 
-Might consider using list_for_each_entry since you always do both.
+What happens now (after Christoph's removal of finish) is:
 
-> --- linux/drivers/scsi/sd.h	Mon Oct 21 20:34:15 2002
-> +++ linux-scsi/drivers/scsi/sd.h	Tue Oct 22 17:24:02 2002
-> @@ -12,32 +12,20 @@
->  #ifndef _SD_H
->  #define _SD_H
->  
-> -#ifndef _SCSI_H
-> -#include "scsi.h"
-> -#endif
-> -
-> -#ifndef _GENDISK_H
-> -#include <linux/genhd.h>
-> -#endif
-> -
->  typedef struct scsi_disk {
-> +	struct list_head list;
->  	sector_t capacity;		/* size in 512-byte sectors */
->  	Scsi_Device *device;
-> +	struct gendisk *gd;
->  	unsigned char media_present;
->  	unsigned char write_prot;
->  	unsigned WCE:1;         /* state of disk WCE bit */
->  	unsigned RCD:1;         /* state of disk RCD bit */
->  } Scsi_Disk;
+1) call detect to see if anyone will attach.  If yes, call slave attach (we 
+adjust the queue depth here if wanted)
+2) call init (if not inited---done once per upper level driver) --- init is 
+supposed to be for first init of the SCSI upper level device driver to 
+allocate inital resources, so we already have detect called befor init.
+3) call attach but release the commandblocks if sdev->attached comes back zero.
 
-I received a compile failures on sector_t until I put back the scsi.h
-include.
+-> attached, by the way is a semaphore because we can have more than one upper 
+level attachment.  This exposes nicely in the rather icky algorithm of 
+scsi_get_request_dev() which is used to find which upper level driver should 
+process the request in the request function.
 
--andmike
---
-Michael Anderson
-andmike@us.ibm.com
+It looks like what we want to have happen is:
+
+1) init first
+2) detect is currently superfluous (there will probably be a future time when 
+we need a separate detect for lazy attachment---devices don't attach and 
+consume resources until the operator so instructs)
+4) call build commandblocks to get a single working command
+5) attach
+6) if anything attached do the slave attach or cmd_per_lun adjustment.  If 
+not, release the command blocks.
+
+The net effect should be that if a device has no upper level driver, it can 
+appear in /proc/scsi/scsi, but it's consuming no other system resources.
+
+James
+
 
