@@ -1,75 +1,78 @@
-From: Paul Wagland <paul@wagland.net>
-Subject: reiser4 and megaraid problems with debian 2.6.5
-Date: Wed, 14 Apr 2004 08:51:53 +0200
+From: Domenico Andreoli <cavok@libero.it>
+Subject: Re: reiser4 and megaraid problems with debian 2.6.5
+Date: Wed, 14 Apr 2004 11:05:47 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <36927C82-8DE0-11D8-A41D-000A95CD704C@wagland.net>
-Mime-Version: 1.0 (Apple Message framework v613)
-Content-Type: multipart/signed; protocol="application/pgp-signature"; micalg=pgp-sha1; boundary="Apple-Mail-38-539098720"
-Content-Transfer-Encoding: 7bit
+Message-ID: <20040414090547.GB13578@raptus.homelinux.org>
+References: <36927C82-8DE0-11D8-A41D-000A95CD704C@wagland.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp-out1.xs4all.nl ([194.109.24.11]:30213 "EHLO
-	smtp-out1.xs4all.nl") by vger.kernel.org with ESMTP id S263923AbUDNGxm
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 14 Apr 2004 02:53:42 -0400
+Received: from smtp2.libero.it ([193.70.192.52]:22923 "EHLO smtp2.libero.it")
+	by vger.kernel.org with ESMTP id S263987AbUDNJFy (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 14 Apr 2004 05:05:54 -0400
+Content-Disposition: inline
+In-Reply-To: <36927C82-8DE0-11D8-A41D-000A95CD704C@wagland.net>
 List-Id: linux-scsi@vger.kernel.org
-To: Linux mailing list SCSI <linux-scsi@vger.kernel.org>, Linux mailing list kernel <linux-kernel@vger.kernel.org>
-Cc: Hans Reiser <reiser@namesys.com>, Atul Mukker <atulm@lsil.com>
+To: Paul Wagland <paul@wagland.net>
+Cc: Linux mailing list SCSI <linux-scsi@vger.kernel.org>, Linux mailing list kernel <linux-kernel@vger.kernel.org>, Hans Reiser <reiser@namesys.com>, Atul Mukker <atulm@lsil.com>, reiserfs-list@namesys.com
 
+[ bringing this also on reiserfs ml, a great place for this kind
+  of posts.  this is also the reason of the full quoting. sorry ]
 
---Apple-Mail-38-539098720
-Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset=US-ASCII; format=flowed
+On Wed, Apr 14, 2004 at 08:51:53AM +0200, Paul Wagland wrote:
+> Hi all,
+ 
+hi Paul,
 
-Hi all,
+> I would like to report on a problem that I am having. I am just testing 
+> out the new megaraid unified driver, and have been doing some baseline 
+> testing with bonnie++.
+> 
+> My problem is that, although reiserfs, ext2, jfs and xfs all work, 
+> reiser4 fails with the following error:
+> ---
+> Can't write block.
+> Bonnie: drastic I/O error (write(2)): No such file or directory
+> ---
+> 
+> I am using the debian prepared kernel with the debian reiser4 patch. I 
+> made a cursory examination of the patch, and it appears to correlate 
+> fairly closely with the patch from the namesys site.
+ 
+of course it is correlated to that of namesys! i have no skills at all
+to invent reiser4 :))
 
-I would like to report on a problem that I am having. I am just testing 
-out the new megaraid unified driver, and have been doing some baseline 
-testing with bonnie++.
+you forgot to specify version of the patch you are talking about,
+currently debian provides two versions. anyway i suppose you are talking
+about version 20040326-2, aren't you?
 
-My problem is that, although reiserfs, ext2, jfs and xfs all work, 
-reiser4 fails with the following error:
----
-Can't write block.
-Bonnie: drastic I/O error (write(2)): No such file or directory
----
+> Given that this works with reiserfs, ext2, jfs and xfs it would appear 
+> to be a reiser4 problem, however ext3 also fails, though with a 
+> different error, it claims that the disk is full, but it is trying to 
+> write a 2 1GB files onto a 2.5GB filesystem, so it should have enough 
+> room, and indeed it did even work two or three times out of about 10 
+> runs (lots of timing :-). This implies that it might be a megaraid 
+> problem. As you can tell, I really have no idea ;-)
+> 
+> I will try playing around tonight with an official kernel and the 
+> official reiser4 patch to see if that makes any difference, but would 
+> just like to raise this potential problem sooner rather than later.
+ 
+latest reiser4 snapshot provided a patch which applied cleanly on
+2.6.5-rc2 but not to 2.6.5. i had to modify it as suggested on the
+reiserfs ml. if you look at the debian package's changelog you can find
+the reference to that thread.
 
-I am using the debian prepared kernel with the debian reiser4 patch. I 
-made a cursory examination of the patch, and it appears to correlate 
-fairly closely with the patch from the namesys site.
+> If I can help debug this situation (I am probably the only person 
+> trying this combination :-) please let me know how I should go about 
+> it.
 
-Given that this works with reiserfs, ext2, jfs and xfs it would appear 
-to be a reiser4 problem, however ext3 also fails, though with a 
-different error, it claims that the disk is full, but it is trying to 
-write a 2 1GB files onto a 2.5GB filesystem, so it should have enough 
-room, and indeed it did even work two or three times out of about 10 
-runs (lots of timing :-). This implies that it might be a megaraid 
-problem. As you can tell, I really have no idea ;-)
+i'm sorry but i can't help further.
 
-I will try playing around tonight with an official kernel and the 
-official reiser4 patch to see if that makes any difference, but would 
-just like to raise this potential problem sooner rather than later.
+cheers
+domenico
 
-If I can help debug this situation (I am probably the only person 
-trying this combination :-) please let me know how I should go about 
-it.
-
-Cheers,
-Paul
-
---Apple-Mail-38-539098720
-content-type: application/pgp-signature; x-mac-type=70674453;
-	name=PGP.sig
-content-description: This is a digitally signed message part
-content-disposition: inline; filename=PGP.sig
-content-transfer-encoding: 7bit
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.2.4 (Darwin)
-
-iD8DBQFAfN/Gtch0EvEFvxURAjJAAJ9IZWLkegspJPO15jquCWtL5Y3bpwCgp3Qi
-k1qzANrgx1BYYszngh91d5M=
-=JqxC
------END PGP SIGNATURE-----
-
---Apple-Mail-38-539098720--
-
+-----[ Domenico Andreoli, aka cavok
+ --[ http://filibusta.crema.unimi.it/~cavok/gpgkey.asc
+   ---[ 3A0F 2F80 F79C 678A 8936  4FEE 0677 9033 A20E BC50
