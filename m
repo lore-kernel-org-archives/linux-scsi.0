@@ -1,42 +1,41 @@
-From: Mike Anderson <andmike@us.ibm.com>
-Subject: Re: [PATCH] EDD: fix raw_data file and edd_has_edd30(), misc cleanups
-Date: Tue, 7 Jan 2003 16:18:06 -0800
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <20030108001806.GA3669@beaverton.ibm.com>
-References: <Pine.LNX.4.44.0301071728280.3361-100000@humbolt.us.dell.com>
+From: Patrick Mansfield <patmans@us.ibm.com>
+Subject: [PATCH] resend add scsi_level to scsi_device sysfs attributes
+Date: Tue, 7 Jan 2003 16:56:59 -0800
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <20030107165659.A17757@beaverton.ibm.com>
+References: <20030107165324.A17719@beaverton.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.44.0301071728280.3361-100000@humbolt.us.dell.com>
-To: Matt Domsch <Matt_Domsch@Dell.com>
-Cc: linux-kernel@vger.kernel.org, mochel@osdl.org, linux-scsi@vger.kernel.org
+In-Reply-To: <20030107165324.A17719@beaverton.ibm.com>; from patmans@us.ibm.com on Tue, Jan 07, 2003 at 04:53:24PM -0800
 List-Id: linux-scsi@vger.kernel.org
+To: JEJ Bottomley <James.Bottomley@SteelEye.com>, linux-scsi@vger.kernel.org
 
-Matt Domsch [Matt_Domsch@Dell.com] wrote:
->   * use new find_bus() and bus_for_each_dev() to match SCSI devices
+Hi -
 
-.. snip ..
-> +	struct edd_match_data * data = (struct edd_match_data *)d;
-> +	struct edd_info *info = edd_dev_get_info(data->edev);
-> +	struct scsi_device * sd = to_scsi_device(dev);
-> +
-> +	if (info) {
-> +		if ((sd->channel == info->params.interface_path.pci.channel) &&
-> +		    (sd->id == info->params.device_path.scsi.id) &&
-> +		    (sd->lun == info->params.device_path.scsi.lun)) {
-> +			data->sd = sd;
-> +			return 1;
-> +		}
+[Resending and cc-ing linux-scsi properly.]
 
-This change assumes that the scsi sysfs bus only contains struct
-scsi_device's. According to sysfs policy we are suppose to have only one
-type of struct on this list, but this is not the case currently.
+This simple patch adds scsi_level to the scsi_device sysfs attributes,
+mainly for use with Doug Gilbert's lsscsi program.
 
-I will work on a patch tonight to remove these extra nodes so that the
-st, sg, and osst maintainers can review it.
+--- 1.2/drivers/scsi/scsi_sysfs.c	Tue Dec  3 00:53:21 2002
++++ edited/drivers/scsi/scsi_sysfs.c	Mon Dec 30 14:11:10 2002
+@@ -224,6 +224,7 @@
+ sdev_rd_attr (current_queue_depth, "%d\n");
+ sdev_rd_attr (new_queue_depth, "%d\n");
+ sdev_rd_attr (type, "%d\n");
++sdev_rd_attr (scsi_level, "%d\n");
+ sdev_rd_attr (access_count, "%d\n");
+ sdev_rd_attr (vendor, "%.8s\n");
+ sdev_rd_attr (model, "%.16s\n");
+@@ -235,6 +236,7 @@
+ 	&dev_attr_current_queue_depth,
+ 	&dev_attr_new_queue_depth,
+ 	&dev_attr_type,
++	&dev_attr_scsi_level,
+ 	&dev_attr_access_count,
+ 	&dev_attr_vendor,
+ 	&dev_attr_model,
 
--andmike
---
-Michael Anderson
-andmike@us.ibm.com
+-- Patrick Mansfield
