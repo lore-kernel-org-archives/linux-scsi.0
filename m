@@ -1,53 +1,62 @@
-From: Byron Stanoszek <gandalf@winds.org>
-Subject: RE: PATCH: Further aacraid work
-Date: Tue, 29 Jun 2004 15:03:29 -0400 (EDT)
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.60.0406291454370.26639@winds.org>
-References: <547AF3BD0F3F0B4CBDC379BAC7E4189FF1D6BA@otce2k03.adaptec.com>
+From: "Edwards, Scott (MED, Kelly IT Resouces)" <James.Edwards@med.ge.com>
+Subject: RE: PATCH for disabling write cache on SATA drives
+Date: Tue, 29 Jun 2004 14:19:24 -0500
+Sender: linux-ide-owner@vger.kernel.org
+Message-ID: <1F6D1D1660975A4887628A011443A1BC07734C05@uswaumsx13medge.med.ge.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from winds.org ([68.75.195.9]:44436 "EHLO winds.org")
-	by vger.kernel.org with ESMTP id S265956AbUF2TDe (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 29 Jun 2004 15:03:34 -0400
-In-Reply-To: <547AF3BD0F3F0B4CBDC379BAC7E4189FF1D6BA@otce2k03.adaptec.com>
+Content-Type: text/plain
+Return-path: <linux-ide-owner@vger.kernel.org>
+To: 'Jeff Garzik' <jgarzik@pobox.com>
+Cc: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, linux-ide@vger.kernel.org, "'sedwards@xmission.com'" <sedwards@xmission.com>
 List-Id: linux-scsi@vger.kernel.org
-To: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
-Cc: Mark Haverkamp <markh@osdl.org>, Alan Cox <alan@redhat.com>, linux-kernel <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
 
-On Tue, 29 Jun 2004, Salyzyn, Mark wrote:
 
-> I believe this nails the problem too.
+On Monday, June 28, 2004 at 6:12 PM, Jeff Garzik wrote:
+
+> On Fri, Jun 25, 2004 at 06:21:24PM -0500, Edwards, Scott (MED, Kelly
+IT Resouces) wrote:
+>> 
+>> I don't know if this is useful for anyone or if anyone even cares,
+but just
+>> in case someone does, this is the patch I made to disable the write
+cache on
+>> the Serial ATA drives.  It doesn't make the write cache controllable
+from
+>> the user level, it just ALWAYS disables it.  (I tried to make one
+that could
+>> be sent via an ioctl, but there were far too many things that I
+didn't
+>> understand and it didn't work.)  Since I have never done this before
+I don't
+>> know if there is some protocol that I missed, if so I'm sorry.  If
+there are
+>> glaring stupid mistakes (very likely) please let me know.
 >
-> However, there is a corner case condition lurking on this (See my
-> currently unanswered email "error recovery and command completion" on
-> linux-scsi) where I try to deal with completing a command while error
-> recovery is triggered. Scsi_done will return doing *nothing* effectively
-> loosing the command completion.
+> In principle your patch is fine, but I would really like to find a
+> better way of allowing the user to do this.
 >
-> MarkH, I had talked to you about he addition of the scsi_add_timer
-> before calling scsi_done to address this condition. I do not believe
-> this to be the (Reliable and/or performance oriented) solution.
+> My immediate guess would be to use the standard SCSI method of
+disabling
+> write cache, and have that initiate wbcache disable on the SATA side.
 >
-> Sincerely -- Mark Salyzyn
+> Long term, this would be augmented by an "ATA passthru" opcode or
+ioctl.
+>
+>	Jeff
 
-I've tested out both patches sent to me.
+I first tried to make a real scsi ioctl command in libata-scsi.c, so I
+could just use the scsiinfo program to disable the write cache.  I  made
+a xlat_mode_select command but it didn't work and management didn't want
+me
+spending more time trying to figure it out.  And really for it to work
+correctly there would have to be a xlat_mode_sense because now it is
+just 
+simulated (in ata_scsi_simulate).
 
-Test 1: aacraid-1.1.5-2245.tgz
+I'm willing to work on it on my own time as soon as I get a SATA drive, 
+if someone would be willing to advise me on how to send the ATA commands
+to the drive (I think this is where it failed before).
 
-Works flawlessly and speedily! The rsync completes, and doing a sync() (as
-called during a normal lilo update) takes roughly 1 second as opposed to 20
-with the original aacraid patch from Alan Cox. Also, no SCSI hang message ever
-appears.
-
-Test 2: Mark Haverkamp's linit.c patch
-
-The "SCSI hang" console message appears just as before during the 'rsync',
-however (unlike before) the device is still usable for roughly 30 seconds after
-the problem. During these 30 seconds, the 'rsync' process is hung, but I can
-still do a 'df', 'ls', and so on. After 30 seconds, the entire /dev/sda locks
-up and I have no choice but to reboot the system.
-
-  -Byron
+Thanks
+  -Scott
 
