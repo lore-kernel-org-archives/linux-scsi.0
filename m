@@ -1,64 +1,34 @@
-From: Admin <SchoolStaffPersonnelStudents@myschool.par32.com>
-Subject: Attention all School Staff, Personnel, and Students
-Date: Thu, 23 Oct 2003 21:19:46 -0700
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <S261974AbTJXERe/20031024041734Z+3513@vger.kernel.org>
+From: Xose Vazquez Perez <xose@wanadoo.es>
+Subject: Re: [patch] 2.4.23-pre8: link error with both megaraid drivers
+Date: Fri, 24 Oct 2003 05:27:07 +0200
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <3F989C0B.9040309@wanadoo.es>
+References: <3F97F35D.30101@wanadoo.es> <20031023195223.GI11807@fs.tum.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from c-66-41-38-103.mn.client2.attbi.com ([66.41.38.103]:12039 "HELO
-	66.41.38.103") by vger.kernel.org with SMTP id S261974AbTJXERe
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 24 Oct 2003 00:17:34 -0400
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+To: Adrian Bunk <bunk@fs.tum.de>
+Cc: Marcelo Tosatti <marcelo.tosatti@cyclades.com>, linux-kernel <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
+Adrian Bunk wrote:
 
+> On Thu, Oct 23, 2003 at 05:27:25PM +0200, Xose Vazquez Perez wrote:
 
-Attention All School Staff, Personnel, and Students:
+>> IMO this patch makes a better job. It only allows one in kernel,
+>> and it allows two modules at same time.
 
-You Must Respond By 5 P.M. Monday, October 27, 2003 
+> My patch allows this, too, or what did I miss?
 
-Avtech Direct is offering a limited allotment of BRAND NEW,
-top of-the-line, name-brand Desktop computers at 50% off MSRP
-to all Teachers, Students, Faculty and Staff.
+Nothing. But your patch adds too much complex code to do a single thing ;-)
 
-All Desktops are brand-new packed in their original boxes and come
-with a full manufacturer's warranty plus a 100% satisfaction guarantee.
+> The difference between your and my patch is that your patch doesn't 
+> allow one in kernel plus the other one modular.
 
-These professional grade Desktops are fully equipped with 2004
-next generation technology, making these the very best performing
-computers that money can buy.
+Yes. And IMO there is not need to build a module when you get
+the other statically inside the kernel. I can not imagine what will happen
+if one is statically inside the kernel and someone try to load a module :-)
 
-Avtech Direct is offering these feature rich, top performing
-Desktops with the latest technology at an amazing price
-to all Teachers, Students, Faculty and Staff who call:
-
-1-800-884-9510 by 5 P.M. Monday, October 27, 2003 
-
-The fast and powerful AT-2400S Series- Desktop features:
-
-        * 2.0 Ghz Intel Processor for amazing speed and performance
-        * 128 MB SD RAM, Upgradeable to 1024 MB
-        * 20 GB Hard Drive upgradeable to 60 GB
-        * CD-Rom Drive upgradeable to  DVD/CDRW 
-        * Premium Sound and Video
-        * Total Connectivity fax modem/USB 2.0 Ports
-        * Soft Touch Keyboard
-        * Internet Ready
-        * 1 Year warranty with Priority customer service and tech support
-
-MSRP $699 ..................................................Your Cost $347
-
-
-
-How to qualify:
-
-       1. You must be a Teacher or Student or School Staff Member.
-       2. All Desktop computers will be available on a first come first served basis.
-       3. You must call 1-800-884-9510 by 5 P.M. Monday, October 27, 2003    and
-          we will hold the Desktops you request on will call. 
-       4. You are not obligated in any way.
-       5. All computers are 100% Satisfaction Guaranteed
-
-Call  Avtech Direct 1-800-884-9510 by 5 p.m. Monday, October 27, 2003 
+--
+HTML mails are going to trash automatically
