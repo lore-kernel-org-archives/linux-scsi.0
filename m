@@ -1,72 +1,108 @@
-From: "Moore, Eric Dean" <emoore@lsil.com>
-Subject: Re: [PATCH 2.6 ] MPT Fusion driver 3.01.02 update
-Date: Wed, 17 Mar 2004 18:38:51 -0700
+From: Andy Isaacson <adi@hexapodia.org>
+Subject: Re: 2.6.5-rc1 SCSI + st regressions (was: Linux 2.6.5-rc1)
+Date: Wed, 17 Mar 2004 19:45:25 -0600
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <001201c40c89$c4fcef20$221015ac@ericmoore>
-References: <0E3FA95632D6D047BA649F95DAB60E57040DB25E@exa-atlanta.se.lsil.com> <20040318020948.2f884e89.ak@suse.de>
+Message-ID: <20040318014525.GE20793@hexapodia.org>
+References: <Pine.LNX.4.58.0403152154070.19853@ppc970.osdl.org> <20040316211203.GA3679@merlin.emma.line.org> <20040316211700.GA25059@parcelfarce.linux.theplanet.co.uk> <20040316215659.GA3861@merlin.emma.line.org> <Pine.LNX.4.58.0403172145420.1093@kai.makisara.local> <20040317213201.GB5722@merlin.emma.line.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:21733 "EHLO mail0.lsil.com")
-	by vger.kernel.org with ESMTP id S262281AbUCRBkJ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 17 Mar 2004 20:40:09 -0500
+Received: from pirx.hexapodia.org ([65.103.12.242]:56751 "EHLO
+	pirx.hexapodia.org") by vger.kernel.org with ESMTP id S262283AbUCRBp0
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 17 Mar 2004 20:45:26 -0500
+Content-Disposition: inline
+In-Reply-To: <20040317213201.GB5722@merlin.emma.line.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Andi Kleen <ak@suse.de>
-Cc: linux-scsi@vger.kernel.org, James.Bottomley@steeleye.com, Alexander.Stohr@gmx.de, rddunlap@osdl.org
+To: Kai Makisara <Kai.Makisara@kolumbus.fi>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Greg KH <greg@kroah.com>
 
-Andi -
+On Wed, Mar 17, 2004 at 10:32:01PM +0100, Matthias Andree wrote:
+> On Wed, 17 Mar 2004, Kai Makisara wrote:
+> > # ChangeSet
+> > #   2004/03/12 16:22:36-08:00 greg@kroah.com=20
+> > #   remove cdev_set_name completely as it is not needed.
+> >=20
+> > (and editing drivers/char/tty_io.c to get the kernel to compile) so=
+lved=20
+> > the problem for me. st.c is using the name put into kobj.name in ma=
+king=20
+> > the class file names. I will make a patch that removes this depende=
+ncy.
+>=20
+> I had backed out that ChangeSet here as I was suspecting it (about th=
+e
+> only one "new enough" to cause these problems) but bumped into tty_io=
+=2Ec
+> compile failures and didn't have time to investigate.
+>=20
+> > While looking at this problem, I noticed that the naming changes al=
+ready=20
+> > committed to BK had disappeared. Looking at st.c history revealed t=
+hat the=20
+> > following change had been committed (sorry for wrapping) by greg@kr=
+oah.com=20
+> > 46 hours ago:
+>=20
+> This is how the change tree looks like in BitKeeper's histtool,
+> the top line is the date in MM-DD format:
+>=20
+> 02-22  02-24   03-03     03-13        03-13           03-15
+> kai  -> axb=F8 -> kai ------------------------------->  greg
+> 1.78    1.79\   1.80                                  1.81
+>              \                                   /
+>               `----------corbet-------greg------'
+>                          1.79.1.1     1.79.1.2
+>=20
+> ...
+>=20
+> Logs:
+>=20
+> =3D=3D=3D=3D=3D=3D=3D=3D st.c 1.1..1.81 =3D=3D=3D=3D=3D=3D=3D=3D
+> D 1.81 04/03/15 15:02:26-08:00 greg@kroah.com 104 101 0/5/4363
+> P drivers/scsi/st.c
+> C merge
+> ------------------------------------------------
+> D 1.79.1.2 04/03/12 08:22:11-08:00 greg@kroah.com[greg] 103 102 0/1/4=
+350
+> P drivers/scsi/st.c
+> C remove cdev_set_name completely as it is not needed.
+> ------------------------------------------------
+> D 1.79.1.1 04/03/13 00:47:18-08:00 corbet@lwn.net[greg] 102 100 2/3/4=
+349
+> P drivers/scsi/st.c
+> C cdev 2/2: hide cdev->kobj
+> ------------------------------------------------
+> D 1.80 04/02/26 05:24:19-06:00 Kai.Makisara@kolumbus.fi[jejb] 101 100=
+ 28/12/4340
+> P drivers/scsi/st.c
+> C SCSI tape sysfs name fixes
+> ------------------------------------------------
+> D 1.79 04/02/23 06:23:46-08:00 axboe@suse.de[torvalds] 100 99 1/1/435=
+1
+> P drivers/scsi/st.c
+> C fix SCSI non-sector bio backed IO
+>=20
+> > The change comment was "merge" and it resulted in st.c version 1.81=
+=2E (I am=20
+> > not using Bitkeeper but trying to extract information from bkbits.n=
+et.)
+>=20
+> BitKeeper doesn't have more info and this doesn't look like an auto-g=
+enerated
+> comment of BitKeeper's, but seems to have been entered manually. Blam=
+e Greg?
 
-The fix in 3.01.02 was your request for commenting out the
-"queue is full message" which you posted to the
-mailing list earlier in the last week.  This has nothing to do with
-with todays issue.
+That's a pretty nasty merge, so it's not real suprising that Greg didn'=
+t
+get it completely right.
 
-Regarding todays issue.  There is a work around for your
-issue which I have already suggested earlier today. That is
-to modify the mpt fusion Makefile, by uncommenting out
-the FIFO FIX define.  This work around will set a dma mask
-for less 4GB, thus we don't hit the error condition in PrimeFifo's
-when the two memory allocation are on different 4gb boundaries, and
-the failure displays "-3" error code as yours did in the original dmesg.
+Nice ASCII art, BTW.  If you can reduce it to an algorithm I bet Larry
+would like to hire you to add it to BK. :)
 
-I have provided this temp fix to HP a few weeks ago.
-I plan to start work soon to solve this issue by combining these three
-FIFOs into one memory allocation( the third FIFO allocation is
-in mptscsih.c, that is the chain buffers).
-
-Eric Moore
-
-
-
-
------ Original Message ----- 
-From: "Andi Kleen" <ak@suse.de>
-To: "Moore, Eric Dean" <Emoore@lsil.com>
-Cc: <linux-scsi@vger.kernel.org>; <James.Bottomley@steeleye.com>;
-<Alexander.Stohr@gmx.de>; <rddunlap@osdl.org>
-Sent: Wednesday, March 17, 2004 6:09 PM
-Subject: Re: [PATCH 2.6 ] MPT Fusion driver 3.01.02 update
-
-
-> On Wed, 17 Mar 2004 14:43:21 -0500
-> "Moore, Eric Dean" <Emoore@lsil.com> wrote:
->
-> > This is an update for the MPT Fusion drivers 2.6 kernel.
-> > Version 3.01.02.
-> >
-> This doesn't seem to fix the bug I'm running into all the time:
->
-> you set a 64bit consistent dma mask, but assume in PrimeIocFifos
-> that two calls to pci_alloc_consistent() end in the same 4GB
-> segment, which cannot work.
->
-> As a workaround i just reverted it to a 4GB consistent mask for now.
->
-> -Andi
->
->
->
-
+-andy
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
