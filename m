@@ -1,51 +1,92 @@
-From: Mike Anderson <andmike@us.ibm.com>
-Subject: Re: Problem with an USB Stick and kernel 2.6.1
-Date: Fri, 16 Jan 2004 08:55:59 -0800
+From: Martin Hicks <mort@wildopensource.com>
+Subject: [PATCH] Fix error path when adding sysfs attributes
+Date: Fri, 16 Jan 2004 14:28:01 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040116165559.GB2686@beaverton.ibm.com>
-References: <20040116121824.GB10117@paradigm.rfc822.org> <Pine.LNX.4.44L0.0401161102390.843-100000@ida.rowland.org>
+Message-ID: <20040116192801.GT27591@localhost>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/mixed; boundary="zS7rBR6csb6tI2e1"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e32.co.us.ibm.com ([32.97.110.130]:20889 "EHLO
-	e32.co.us.ibm.com") by vger.kernel.org with ESMTP id S261464AbUAPQ5Z
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 16 Jan 2004 11:57:25 -0500
+Received: from galileo.bork.org ([66.11.174.156]:5015 "HELO galileo.bork.org")
+	by vger.kernel.org with SMTP id S265713AbUAPT2C (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 16 Jan 2004 14:28:02 -0500
 Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.44L0.0401161102390.843-100000@ida.rowland.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: SCSI development list <linux-scsi@vger.kernel.org>, Florian Lohoff <flo@rfc822.org>, Alexander Motzkau <a.motzkau@web.de>, USB development list <linux-usb-devel@lists.sourceforge.net>
+To: James Bottomley <James.Bottomley@steeleye.com>
+Cc: linux-scsi@vger.kernel.org
 
-Alan Stern [stern@rowland.harvard.edu] wrote:
-> 
-> Seeing no sense key, usb-storage returns 0 indicating the command
-> succeeded.  But scsi_finish_command() sees that valid sense data is
-> present and sets the driver_byte to DRIVER_SENSE.
-> 
-> > SCSI error : <1 0 0 0> return code = 0x8000000
-> > Current sda: sense key No Sense
-> 
-> This causes scsi_io_completion() to call scsi_end_request() with uptodate 
-> = 0 and results in this error:
-> 
-> > end_request: I/O error, dev sda, sector 32
-> > FAT: unable to read boot sector
-> 
-> How should we handle this?  Should we zero out sense_buffer[0] when 
-> auto-sense shows sense key = NO_SENSE?
-> 
 
-I would think the upper level driver should handle this. We decode
-RECOVERED_ERROR in sd. sd could just handle NO_SENSE the same with /
-without the print_sense. I noticed that st and osst under some
-circumstances look at the NO_SENSE case (the tape people will need to
-comment as this looks like a EOM workaround) so it would seem incorrect
-for the LLDD as a general policy to say it received no sense when it
-did.
+--zS7rBR6csb6tI2e1
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
--andmike
---
-Michael Anderson
-andmike@us.ibm.com
 
+Hi James,
+
+Here is a patch that fixes an error path while adding sysfs attributes
+in drivers/scsi/scsi_sysfs.c
+
+If we encounter an error while registering the sysfs attributes we mark
+the sdev as dead and unregister it from sysfs.  Then we turn around and
+continue to add new attributes.
+
+Thanks to Christoph and Martin for pointing this out.
+
+thanks
+mh
+
+-- 
+Martin Hicks                Wild Open Source Inc.
+mort@wildopensource.com     613-266-2296
+
+--zS7rBR6csb6tI2e1
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: attachment; filename="scsi-sysfs-add-attribute-fix.diff"
+
+# This is a BitKeeper generated patch for the following project:
+# Project Name: Linux kernel tree
+# This patch format is intended for GNU patch command version 2.5 or higher.
+# This patch includes the following deltas:
+#	           ChangeSet	1.1521  -> 1.1522 
+#	drivers/scsi/scsi_sysfs.c	1.38    -> 1.39   
+#
+# The following is the BitKeeper ChangeSet Log
+# --------------------------------------------
+# 04/01/16	mort@green.i.bork.org	1.1522
+# Stop adding sysfs attributes after we call scsi_remove_device()
+# when we encounter an error.
+# --------------------------------------------
+#
+diff -Nru a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+--- a/drivers/scsi/scsi_sysfs.c	Fri Jan 16 13:45:02 2004
++++ b/drivers/scsi/scsi_sysfs.c	Fri Jan 16 13:45:02 2004
+@@ -370,8 +370,10 @@
+ 		for (i = 0; sdev->host->hostt->sdev_attrs[i]; i++) {
+ 			error = attr_add(&sdev->sdev_gendev,
+ 					sdev->host->hostt->sdev_attrs[i]);
+-			if (error)
++			if (error) {
+ 				scsi_remove_device(sdev);
++				goto out;
++			}
+ 		}
+ 	}
+ 	
+@@ -380,11 +382,14 @@
+ 					scsi_sysfs_sdev_attrs[i])) {
+ 			error = device_create_file(&sdev->sdev_gendev,
+ 					scsi_sysfs_sdev_attrs[i]);
+-			if (error)
++			if (error) {
+ 				scsi_remove_device(sdev);
++				goto out;
++			}
+ 		}
+ 	}
+ 
++	out:
+ 	return error;
+ 
+ clean_device:
+
+--zS7rBR6csb6tI2e1--
