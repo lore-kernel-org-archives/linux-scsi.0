@@ -1,38 +1,60 @@
-From: Andi Kleen <ak@muc.de>
-Subject: Re: 2.6.6 + Adaptec I2O
-Date: 1 Jun 2004 22:29:58 +0200
+From: James Bottomley <James.Bottomley@steeleye.com>
+Subject: Re: Requested changes for the SCSI error handler
+Date: 01 Jun 2004 15:46:14 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040601202958.GA97294@colin2.muc.de>
-References: <547AF3BD0F3F0B4CBDC379BAC7E4189FAD5159@otce2k03.adaptec.com>
+Message-ID: <1086122775.2061.87.camel@mulgrave>
+References: <Pine.LNX.4.44L0.0406011617260.1167-100000@ida.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from colin2.muc.de ([193.149.48.15]:49668 "HELO colin2.muc.de")
-	by vger.kernel.org with SMTP id S265213AbUFAU37 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Jun 2004 16:29:59 -0400
-Date: Tue, 1 Jun 2004 22:29:58 +0200
-Content-Disposition: inline
-In-Reply-To: <547AF3BD0F3F0B4CBDC379BAC7E4189FAD5159@otce2k03.adaptec.com>
+Received: from stat1.steeleye.com ([65.114.3.130]:179 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S265089AbUFAUqt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 1 Jun 2004 16:46:49 -0400
+In-Reply-To: <Pine.LNX.4.44L0.0406011617260.1167-100000@ida.rowland.org>
 List-Id: linux-scsi@vger.kernel.org
-To: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
-Cc: Andi Kleen <ak@muc.de>, Matthew Wilcox <willy@debian.org>, linux-scsi@vger.kernel.org
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: Mike Anderson <andmike@us.ibm.com>, SCSI development list <linux-scsi@vger.kernel.org>
 
-On Tue, Jun 01, 2004 at 03:52:26PM -0400, Salyzyn, Mark wrote:
-> The driver reports that if it is an x86_64, that it is an Intel based
-> processor that is *not* an i686 driver. It replaces PROC_PENTIUM with
-> PROC_SEXIUM. Isn't this what you want? Or is it the *name* of this bit
-> that offends you?
+On Tue, 2004-06-01 at 15:29, Alan Stern wrote:
+> You mean, in the hostt->eh_{bus|host}_reset_handler() routines?  That
+> would be fine with me.  Isn't it true that we don't even have to block the
+> host, since this all executes in the error-handler thread?
 
-No, not at all. I like that bit.
+Actually yes.  The block would only have to be implemented in the
+asynchronous report path.
 
-I'm just objecting to having a driver do such useless things,
-especially when it used to #error when the system type is 
-unknown.
+> In addition, the settle-time delays would have to be removed from the
+> error handler -- which means adding it to all the low-level drivers.  Is 
+> that doable?
 
-(I remember having to fix that for some drivers early in the
-x86-64 port and I certainly cursed the inventor of these things
-at that time)
+Well, for 2.6, I think that a simple flag indicating that the driver
+will implement it's own timeout should suffice rather than altering
+every LLD...
 
-But I will shut up on this issue now.
+> > > 	In scsi_eh_ready_devs(), it would be good if some of the resets
+> > > 	could be skipped sometimes.  For example, if the low-level
+> > > 	driver has just done its own bus-device reset (and called
+> > > 	scsi_report_device_reset) then there's no point in doing 
+> > > 	scsi_eh_bus_device_reset().  The same is true for bus resets.
+> > > 	It just adds additional timeout delays to an already-lengthy
+> > > 	recovery process.
+> > 
+> > Well, tidying up the reports could be done.  Really we should treat them
+> > as error conditions: mark all the in-progress commands for the devices
+> > and probe with a TUR before resuming.
+> 
+> In practice the LLD-initiated resets are likely to accompany command 
+> failures or errors anyway.  But this doesn't answer my question: Can the 
+> error-handler's redundant resets be skipped?
 
--Andi
+Well, no.  The reason is that the report interfaces are reporting
+asynchronous events (that the HBA may notice some while after they
+actually occurred).  Even if the host reports a device reset, it is very
+possible that a command went to the device *after* that event occurred,
+so we'd still have to reset the device again to kill that command.
+
+James
+
+
