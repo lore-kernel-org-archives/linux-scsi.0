@@ -1,34 +1,57 @@
-From: James Bottomley <James.Bottomley@steeleye.com>
+From: Christoph Hellwig <hch@lst.de>
 Subject: Re: [PATCH] add scsi_driver.h
-Date: 25 Jun 2003 23:18:16 -0500
+Date: Thu, 26 Jun 2003 09:16:16 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1056601098.1846.47.camel@mulgrave>
-References: <20030624064941.GB26582@lst.de>
+Message-ID: <20030626071616.GA27218@lst.de>
+References: <20030624064941.GB26582@lst.de> <1056601098.1846.47.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nat9.steeleye.com ([65.114.3.137]:37127 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S265411AbTFZEEO convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 26 Jun 2003 00:04:14 -0400
-In-Reply-To: <20030624064941.GB26582@lst.de>
+Received: from verein.lst.de ([212.34.189.10]:55742 "EHLO mail.lst.de")
+	by vger.kernel.org with ESMTP id S265438AbTFZHCN (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 26 Jun 2003 03:02:13 -0400
+Content-Disposition: inline
+In-Reply-To: <1056601098.1846.47.camel@mulgrave>
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
+To: James Bottomley <James.Bottomley@SteelEye.com>
 Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Tue, 2003-06-24 at 01:49, Christoph Hellwig wrote:
-> include/scsi/scsi_driver.h contains =E6verything related to upper
-> level drivers.  Unlike the other header moves there's no compatiblity
-> this time as it's easy to fix up the few users.
+On Wed, Jun 25, 2003 at 11:18:16PM -0500, James Bottomley wrote:
+> On Tue, 2003-06-24 at 01:49, Christoph Hellwig wrote:
+> > include/scsi/scsi_driver.h contains ?verything related to upper
+> > level drivers.  Unlike the other header moves there's no compatiblity
+> > this time as it's easy to fix up the few users.
+> 
+> This patch actually doesn't seem to contain scsi/scsi_driver.h
 
-This patch actually doesn't seem to contain scsi/scsi_driver.h
-
-James
+Looks like I forgot to check it in.  Here it is:
 
 
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+#ifndef _SCSI_SCSI_DRIVER_H
+#define _SCSI_SCSI_DRIVER_H
+
+#include <linux/device.h>
+
+struct module;
+
+
+struct scsi_driver {
+	struct module		*owner;
+	struct device_driver	gendrv;
+
+	int (*init_command)(struct scsi_cmnd *);
+	void (*rescan)(struct device *);
+};
+#define to_scsi_driver(drv) \
+	container_of((drv), struct scsi_driver, gendrv)
+
+extern int scsi_register_driver(struct device_driver *);
+#define scsi_unregister_driver(drv) \
+	driver_unregister(drv);
+
+extern int scsi_register_interface(struct class_interface *);
+#define scsi_unregister_interface(intf) \
+	class_interface_unregister(intf)
+
+#endif /* _SCSI_SCSI_DRIVER_H */
