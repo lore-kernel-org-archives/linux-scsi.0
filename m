@@ -1,67 +1,39 @@
-From: "Heinz, Michael" <mheinz@infiniconsys.com>
-Subject: RE: /proc/scsi/map
-Date: Mon, 17 Jun 2002 08:55:48 -0400
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: 2.5.22 scsi compile error
+Date: Mon, 17 Jun 2002 09:16:34 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <08628CA53C6CBA4ABAFB9E808A5214CB0C4D5D@mercury.infiniconsys.com>
+Message-ID: <3D0DE132.B583D0F6@torque.net>
+References: <200206171755.18256.corporal_pisang@counter-strike.com.my>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-content-class: urn:content-classes:message
 List-Id: linux-scsi@vger.kernel.org
-To: Sancho Dauskardt <sancho@dauskardt.de>, Kurt Garloff <garloff@suse.de>, Linux kernel list <linux-kernel@vger.kernel.org>, Linux SCSI list <linux-scsi@vger.kernel.org>
-Cc: linux-usb-devel@lists.sourceforge.net, linux1394-devel@lists.sourceforge.net
+To: Corporal Pisang <corporal_pisang@counter-strike.com.my>
+Cc: linux-scsi@vger.kernel.org
 
->From an infiniband point of view, this sounds great!
+Corporal Pisang wrote:
+> 
+> Hi,
+> 
+> I get this error compiling 2.5.22
+> 
+> make[2]: Entering directory `/usr/src/linux/drivers/scsi'
+> make[2]: *** No rule to make target `constants.h', needed by `scsi.o'.  Stop.
+> make[2]: Leaving directory `/usr/src/linux/drivers/scsi'
+> make[1]: *** [scsi] Error 2
+> make[1]: Leaving directory `/usr/src/linux/drivers'
+> make: *** [drivers] Error 2
 
---
-Michael Heinz
-Infinicon Systems, Inc.
-http://www.infiniconsys.com 
+The header constants.h was removed in 2.5.22 (as its declarations
+were already in scsi.h). [constants.c has been updated as well
+and now other subsystems access it.]
 
-> -----Original Message-----
-> From: Sancho Dauskardt [mailto:sancho@dauskardt.de]
-> Sent: Saturday, June 15, 2002 3:50 PM
-> To: Kurt Garloff; Linux kernel list; Linux SCSI list
-> Cc: linux-usb-devel@lists.sourceforge.net;
-> linux1394-devel@lists.sourceforge.net
-> Subject: Re: /proc/scsi/map
-> 
-> 
-> 
-> >Life would be easier if the scsi subsystem would just report 
-> which SCSI
-> >device (uniquely identified by the 
-> controller,bus,target,unit tuple) belongs
-> >to which high-level device. The information is available in 
-> the kernel.
-> >
-> >Attached patch does this:
-> >garloff@pckurt:/raid5/Kernel/src $ cat /proc/scsi/map
-> ># C,B,T,U       Type    onl     sg_nm   sg_dev  nm      dev(hex)
-> >0,0,00,00       0x05    1       sg0     c:15:00 sr0     b:0b:00
-> [...]
-> 
-> Great, this was really missing badly.
-> 
-> But how about adding another column: GUID.
-> Most usb-storage and (all?) FireWire devices have such a 
-> unique identitiy.
-> In contrast to native SCSI devices, these emulated SCSI devices on 
-> hot-plugging busses will change their LUNs/IDs. Therefor the 
-> GUID is really 
-> a must to be able to create stable names (laptop suspend, etc.).
-> 
-> Both usb-storage and iee1394-sbp2 know the GUID. It only needs to be 
-> communicated..
-> 
-> I'd guess that FibreChannel has similar problems ?
-> 
-> - sda
-> 
-> -
-> To unsubscribe from this list: send the line "unsubscribe 
-> linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+When header files are removed or renamed you often need to do
+a "make mrproper" before your normal kernel build. Don't forget
+to keep a copy of your ".config" file before executing
+"make mrproper".
+
+lk 2.5.22 builds ok for me.
+
+Doug Gilbert
