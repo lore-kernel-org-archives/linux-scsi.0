@@ -1,263 +1,421 @@
 From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: [PATCH][RFC] iSCSI transport class
-Date: Fri, 26 Mar 2004 12:50:38 -0800
+Subject: [PATCH] convert cisco driver to use transport class
+Date: Fri, 26 Mar 2004 12:50:39 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <4064979E.3020208@cs.wisc.edu>
+Message-ID: <4064979F.4000800@cs.wisc.edu>
 Mime-Version: 1.0
 Content-Type: multipart/mixed;
- boundary="------------020002080301040909030907"
+ boundary="------------080801090706090808070006"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:49676 "EHLO sabe.cs.wisc.edu")
-	by vger.kernel.org with ESMTP id S261239AbUCZUuq (ORCPT
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:50188 "EHLO sabe.cs.wisc.edu")
+	by vger.kernel.org with ESMTP id S261252AbUCZUur (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 26 Mar 2004 15:50:46 -0500
+	Fri, 26 Mar 2004 15:50:47 -0500
 List-Id: linux-scsi@vger.kernel.org
 To: SCSI Mailing List <linux-scsi@vger.kernel.org>, linux-iscsi-devel@lists.sourceforge.net
 
 This is a multi-part message in MIME format.
---------------020002080301040909030907
+--------------080801090706090808070006
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 
-Attached is the begining of an iSCSI transport class. Currently,
-the Cisco driver has some sysfs issues, so the patch in the next
-mail will convert their print_info attribute to use this class
-instead.
+And, here is the conversion patch.
 
-This patch was built against 2.6.5-rc2. And, here is a tree. Not
-much yet, so please send comments. Maybe it should be per session
-instead of per device?
 
-[mc@minna 1:0:0:0]$ pwd
-/sys/class/iscsi_transport/1:0:0:0
-[mc@minna 1:0:0:0]$ tree
-.
-|-- device -> ../../../devices/platform/iscsi/1:0:0:0
-|-- driver -> ../../../bus/scsi/drivers/sd
-|-- target_addr
-|-- target_name
-`-- target_port
+  iscsi-attr.c      |  201 +++++++++++++++---------------------------------------
+  iscsi-attr.h      |    2
+  iscsi-initiator.c |   72 +++++++++++--------
+  3 files changed, 97 insertions(+), 178 deletions(-)
 
 Mike Christie
 
---------------020002080301040909030907
+--------------080801090706090808070006
 Content-Type: text/plain;
- name="iscsi-transport-class.patch"
+ name="cisco-cls.patch"
 Content-Transfer-Encoding: 7bit
 Content-Disposition: inline;
- filename="iscsi-transport-class.patch"
+ filename="cisco-cls.patch"
 
-diff -Naurp linux-2.6.5-rc2/drivers/scsi/Kconfig linux-2.6.5-rc2-iscsi/drivers/scsi/Kconfig
---- linux-2.6.5-rc2/drivers/scsi/Kconfig	2004-03-19 16:11:42.000000000 -0800
-+++ linux-2.6.5-rc2-iscsi/drivers/scsi/Kconfig	2004-03-25 01:26:32.000000000 -0800
-@@ -214,6 +214,14 @@ config SCSI_FC_ATTRS
- 	  each attached FiberChannel device to sysfs, say Y.
- 	  Otherwise, say N.
+diff -aurp linux-2.6.5-rc2/drivers/scsi/iscsi-sfnet/iscsi-attr.c linux-2.6.5-rc2-iscsi/drivers/scsi/iscsi-sfnet/iscsi-attr.c
+--- linux-2.6.5-rc2/drivers/scsi/iscsi-sfnet/iscsi-attr.c	2004-03-26 12:26:55.168007402 -0800
++++ linux-2.6.5-rc2-iscsi/drivers/scsi/iscsi-sfnet/iscsi-attr.c	2004-03-26 12:21:05.000000000 -0800
+@@ -20,6 +20,10 @@
+  */
  
-+config SCSI_ISCSI_ATTRS
-+	tristate "iSCSI Transport Attributes"
-+	depends on SCSI
-+	help
-+	  If you wish to export transport-specific information about
-+	  each attached iSCSI device to sysfs, say Y.
-+	  Otherwise, say N.
-+
- endmenu
- 
- menu "SCSI low-level drivers"
-diff -Naurp linux-2.6.5-rc2/drivers/scsi/Makefile linux-2.6.5-rc2-iscsi/drivers/scsi/Makefile
---- linux-2.6.5-rc2/drivers/scsi/Makefile	2004-03-19 16:11:40.000000000 -0800
-+++ linux-2.6.5-rc2-iscsi/drivers/scsi/Makefile	2004-03-25 01:34:52.000000000 -0800
-@@ -28,6 +28,7 @@ obj-$(CONFIG_SCSI)		+= scsi_mod.o
- # --------------------------
- obj-$(CONFIG_SCSI_SPI_ATTRS)	+= scsi_transport_spi.o
- obj-$(CONFIG_SCSI_FC_ATTRS) 	+= scsi_transport_fc.o
-+obj-$(CONFIG_SCSI_ISCSI_ATTRS)	+= scsi_transport_iscsi.o
- 
- 
- obj-$(CONFIG_SCSI_AMIGA7XX)	+= amiga7xx.o	53c7xx.o
-diff -Naurp linux-2.6.5-rc2/drivers/scsi/scsi_transport_iscsi.c linux-2.6.5-rc2-iscsi/drivers/scsi/scsi_transport_iscsi.c
---- linux-2.6.5-rc2/drivers/scsi/scsi_transport_iscsi.c	1969-12-31 16:00:00.000000000 -0800
-+++ linux-2.6.5-rc2-iscsi/drivers/scsi/scsi_transport_iscsi.c	2004-03-25 01:26:26.000000000 -0800
-@@ -0,0 +1,133 @@
-+/* 
-+ * iSCSI sysfs attributes.
-+ *
-+ * Copyright (C) IBM
-+ *
-+ * All rights reserved.
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License as published by
-+ * the Free Software Foundation; either version 2 of the License, or (at
-+ * your option) any later version.
-+ *
-+ * This program is distributed in the hope that it will be useful, but
-+ * WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE, GOOD TITLE or
-+ * NON INFRINGEMENT.  See the GNU General Public License for more
-+ * details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write to the Free Software
-+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
-+ */
-+
-+#include <linux/module.h>
-+#include <linux/init.h>
-+#include <linux/kernel.h>
-+#include <scsi/scsi.h>
-+#include <scsi/scsi_device.h>
+ #include <linux/device.h>
 +#include <scsi/scsi_host.h>
++#include <scsi/scsi_device.h>
 +#include <scsi/scsi_transport.h>
 +#include <scsi/scsi_transport_iscsi.h>
+ 
+ #include "iscsi-protocol.h"
+ #include "iscsi-session.h"
+@@ -597,143 +601,6 @@ iscsi_change_disk_command_timeout(struct
+ 	}
+ }
+ 
+-static int
+-add_lun_line_info(struct iscsi_session *session, int lun, char **buffer)
+-{
+-	DEBUG_FLOW("iSCSI: add_lun_line iscsi bus %d target id %d, %d \n",
+-		session->iscsi_bus, session->target_id, lun);
+-
+-	/* 2 spaces + (4 * (3-digit field + space)) + 4 spaces = 22 chars */
+-	if (lun >= 0)
+-		*buffer += sprintf(*buffer, " %3.1u %3.1u %3.1u    ",
+-			session->iscsi_bus, session->target_id, lun);
+-	else
+-		*buffer += sprintf(*buffer, " %3.1u %3.1u   ?    ",
+-			session->iscsi_bus, session->target_id);
+-
+-	if (test_bit(SESSION_ESTABLISHED, &session->control_bits)) {
+-		/* up to 15 char IP address + 2 spaces = 17 chars */
+-		*buffer += sprintf(*buffer, "   %u.%u.%u.%u  ",
+-			session->ip_address[0], session->ip_address[1],
+-			session->ip_address[2], session->ip_address[3]);
+-		/* right_justify(*buffer, 17); */
+-
+-		/* 5-digit port + 2 spaces = 7 chars */
+-		*buffer += sprintf(*buffer, " %d  ", session->port);
+-
+-	} else {
+-		/* fill in '?' for each empty field, so that
+-		 * it is easier for processing by tools such as awk and perl.
+-		 */
+-		*buffer += sprintf(*buffer, "              ?      ?  ");
+-
+-	}
+-	*buffer += sprintf(*buffer, "%s ", session->TargetName);
+-	 /* and a newline */
+-	*buffer += sprintf(*buffer, "\n");
+-	return 1;
+-}
+-
+-static int
+-show_session_lun_info(struct iscsi_session *session, char **buffer)
+-{
+-	/* if we've already found LUNs, show them all */
+-	int lfound = 0;
+-	int l;
+-
+-	/* FIXME: IPv6 */
+-	if (session->ip_length != 4)
+-		return 1;
+-
+-	for (l = 0; l < ISCSI_MAX_LUN; l++) {
+-		if (test_bit(l, session->luns_activated)) {
+-			lfound += 1;
+-			if (!add_lun_line_info(session, l, buffer)) {
+-				DEBUG_FLOW("iSCSI: show session luns"
+-					" returning 0 ");
+-				return 0;
+-			}
+-		}
+-	}
+-
+-	/* if we haven't found any LUNs, use ? for a LUN number */
+-	if (!lfound) {
+-		if (!add_lun_line_info(session, -1, buffer)) {
+-			DEBUG_FLOW("iSCSI: show session luns returning 0 \n");
+-			return 0;
+-		}
+-	} else {
+-		DEBUG_FLOW("iSCSI: show session luns returning 1 ");
+-	}
+-	return 1;
+-}
+-
+-static ssize_t
+-iscsi_print_info(struct class_device *class_dev, char *buf)
+-{
+-	struct Scsi_Host *host = class_to_shost(class_dev);
+-	struct iscsi_session *session;
+-	unsigned long noqueue_flags_;
+-	char *build_str = BUILD_STR;
+-	char *bp;
+-
+-	bp = buf;
+-
+-	/* comment header with version number */
+-	/* FIXME: we assume the buffer length is always large 
+-	 * enough for our header 
+-	 */
+-	if (build_str) {
+-		/* developer-built variant of a 4-digit internal 
+-		 * release 
+-		 */
+-		bp +=
+-		    sprintf(bp,
+-			    "# iSCSI driver version: %d.%d.%d.%d%s "
+-			    "variant (%s)\n#\n",
+-			    DRIVER_MAJOR_VERSION, DRIVER_MINOR_VERSION,
+-			    DRIVER_PATCH_VERSION,
+-			    DRIVER_INTERNAL_VERSION,
+-			    DRIVER_EXTRAVERSION, ISCSI_DATE);
+-	} else if (DRIVER_INTERNAL_VERSION > 0) {
+-		/* 4-digit release */
+-		bp +=
+-		    sprintf(bp,
+-			    "# iSCSI driver version: %d.%d.%d.%d%s "
+-			    "(%s)\n#\n",
+-			    DRIVER_MAJOR_VERSION, DRIVER_MINOR_VERSION,
+-			    DRIVER_PATCH_VERSION,
+-			    DRIVER_INTERNAL_VERSION,
+-			    DRIVER_EXTRAVERSION, ISCSI_DATE);
+-	} else {
+-		/* 3-digit release */
+-		bp +=
+-		    sprintf(bp,
+-			    "# iSCSI driver version: %d.%d.%d%s "
+-			    "(%s)\n#\n",
+-			    DRIVER_MAJOR_VERSION, DRIVER_MINOR_VERSION,
+-			    DRIVER_PATCH_VERSION, DRIVER_EXTRAVERSION,
+-			    ISCSI_DATE);
+-	}
+-	bp += sprintf(bp, "# SCSI:               iSCSI:\n");
+-	bp += sprintf(bp, "# Bus Tgt LUN         IP address   Port  "
+-		    "TargetName\n");
+-
+-	if (iscsi_hba) {
+-		spin_lock_irqsave(&iscsi_hba->session_lock, noqueue_flags_);
+-		list_for_each_entry(session, &iscsi_hba->session_head,
+-				    session_link) {
+-			if (!show_session_lun_info(session, &bp))
+-				break;
+-		}
+-		spin_unlock_irqrestore(&iscsi_hba->session_lock,
+-					noqueue_flags_);
+-	} else {
+-		printk("iSCSI: couldn't find HBA %p\n", host);
+-	}
+-	return (bp - buf);
+-}
+-
+ static ssize_t 
+ iscsi_host_id(struct class_device *class_dev, char *buf)
+ {
+@@ -802,14 +669,6 @@ struct class_device_attribute shutdown =
+ 	.store = do_iscsi_shutdown,
+ };
+ 
+-struct class_device_attribute print_info = {
+-	.attr = {
+-		.name =		"print_info",
+-		.mode =		S_IRUGO,
+-	},
+-	.show = iscsi_print_info,
+-};
+-
+ struct class_device_attribute host_id = {
+ 	.attr = {
+ 		.name = "host_no",
+@@ -825,3 +684,55 @@ struct class_device_attribute network_bo
+ 	},
+ 	.show = iscsi_network_boot,
+ };
 +
-+#define ISCSI_NUM_ATTRS 3	/* increase this if you add attributes */
-+
-+struct iscsi_internal {
-+	struct scsi_transport_template t;
-+	struct iscsi_function_template *f;
-+	/* The actual attributes */
-+	struct class_device_attribute private_attrs[ISCSI_NUM_ATTRS];
-+	/* The array of null terminated pointers to attributes 
-+	 * needed by scsi_sysfs.c */
-+	struct class_device_attribute *attrs[ISCSI_NUM_ATTRS + 1];
-+};
-+
-+#define to_iscsi_internal(tmpl) container_of(tmpl, struct iscsi_internal, t)
-+
-+static void transport_class_release(struct class_device *class_dev)
++static ssize_t iscsi_get_tgt_port(struct scsi_device *sdev, char *buf)
 +{
-+	struct scsi_device *sdev = transport_class_to_sdev(class_dev);
-+	put_device(&sdev->sdev_gendev);
++	struct iscsi_session *session;
++
++	if (!sdev->hostdata)
++		return 0;
++
++	session = ((struct iscsi_dev_data *)sdev->hostdata)->session;
++	if (!test_bit(SESSION_ESTABLISHED, &session->control_bits))
++		return 0;
++
++	return sprintf(buf, "%d\n", session->port);
 +}
 +
-+struct class iscsi_transport_class = {
-+	.name = "iscsi_transport",
-+	.release = transport_class_release,
++static ssize_t iscsi_get_tgt_addr(struct scsi_device *sdev, char *buf)
++{
++	struct iscsi_session *session;
++
++	if (!sdev->hostdata)
++		return 0;
++
++	session = ((struct iscsi_dev_data *)sdev->hostdata)->session;
++	if (!test_bit(SESSION_ESTABLISHED, &session->control_bits))
++		return 0;
++
++	if (session->ip_length == 4)
++		return sprintf(buf, "%u.%u.%u.%u",
++			       NIPQUAD(session->ip_address));
++	else
++		return 0;
++}
++
++static ssize_t iscsi_get_tgt_name(struct scsi_device *sdev, char *buf)
++{
++	struct iscsi_session *session;
++
++	if (!sdev->hostdata)
++		return 0;
++
++	session = ((struct iscsi_dev_data *)sdev->hostdata)->session;
++	if (!test_bit(SESSION_ESTABLISHED, &session->control_bits))
++		return 0;
++
++	return snprintf(buf, PAGE_SIZE, "%s\n", session->TargetName);
++}
++
++struct iscsi_function_template iscsi_transport_functions = {
++	.get_target_port = iscsi_get_tgt_port,
++	.get_target_addr = iscsi_get_tgt_addr,
++	.get_target_name = iscsi_get_tgt_name,
 +};
-+
-+#define iscsi_transport_show_function(field)				\
-+									\
-+static ssize_t								\
-+show_iscsi_transport_##field(struct class_device *cdev, char *buf)	\
-+{									\
-+	struct scsi_device *sdev = transport_class_to_sdev(cdev);	\
-+	struct iscsi_internal *i = to_iscsi_internal(sdev->host->transportt); \
-+	return i->f->get_##field(sdev, buf);				\
-+}
-+
-+#define iscsi_transport_rd_attr(field)					\
-+	iscsi_transport_show_function(field)				\
-+static CLASS_DEVICE_ATTR(field, S_IRUGO, show_iscsi_transport_##field, NULL)
-+
-+iscsi_transport_rd_attr(target_port);
-+iscsi_transport_rd_attr(target_name);
-+iscsi_transport_rd_attr(target_addr);
-+
-+#define SETUP_ATTRIBUTE(ft, field)					\
-+	if (ft->get_##field) {						\
-+		i->private_attrs[count] = class_device_attr_##field;	\
-+		i->attrs[count] = &i->private_attrs[count];		\
-+		count++;						\
+diff -aurp linux-2.6.5-rc2/drivers/scsi/iscsi-sfnet/iscsi-attr.h linux-2.6.5-rc2-iscsi/drivers/scsi/iscsi-sfnet/iscsi-attr.h
+--- linux-2.6.5-rc2/drivers/scsi/iscsi-sfnet/iscsi-attr.h	2004-03-26 12:26:55.168007402 -0800
++++ linux-2.6.5-rc2-iscsi/drivers/scsi/iscsi-sfnet/iscsi-attr.h	2004-03-26 12:21:08.000000000 -0800
+@@ -67,7 +67,6 @@ extern struct class_device_attribute tar
+ extern struct class_device_attribute log_status;
+ extern struct class_device_attribute shutdown;
+ extern struct class_device_attribute change_portal;
+-extern struct class_device_attribute print_info;
+ extern struct class_device_attribute host_id;
+ extern struct class_device_attribute network_boot;
+ extern struct class_device_attribute connfailtimeout;
+@@ -77,7 +76,6 @@ struct class_device_attribute *iscsi_hos
+ 	&log_status,
+ 	&shutdown,
+ 	&change_portal,
+-	&print_info,
+ 	&host_id,
+ 	&network_boot,
+ 	&connfailtimeout,
+diff -aurp linux-2.6.5-rc2/drivers/scsi/iscsi-sfnet/iscsi-initiator.c linux-2.6.5-rc2-iscsi/drivers/scsi/iscsi-sfnet/iscsi-initiator.c
+--- linux-2.6.5-rc2/drivers/scsi/iscsi-sfnet/iscsi-initiator.c	2004-03-26 12:26:55.197003735 -0800
++++ linux-2.6.5-rc2-iscsi/drivers/scsi/iscsi-sfnet/iscsi-initiator.c	2004-03-26 12:21:15.000000000 -0800
+@@ -24,6 +24,10 @@
+ #include <linux/blkdev.h>
+ #include <net/sock.h>
+ #include <linux/inet.h>
++#include <scsi/scsi_host.h>
++#include <scsi/scsi_device.h>
++#include <scsi/scsi_transport.h>
++#include <scsi/scsi_transport_iscsi.h>
+ 
+ /* if non-zero, do a TCP Abort when a session drops, 
+  * instead of (attempting) a graceful TCP Close 
+@@ -123,6 +127,7 @@ static struct file_operations control_fo
+ };
+ 
+ struct iscsi_hba *iscsi_hba;
++extern struct iscsi_function_template iscsi_transport_functions;
+ extern struct class_device_attribute *iscsi_host_attrs[];
+ unsigned long init_module_complete;
+ unsigned long iscsi_timer_running;
+@@ -4034,11 +4039,8 @@ iscsi_init(void)
+ 	control_major = register_chrdev(0, control_name, &control_fops);
+ 	if (control_major < 0) {
+ 		printk("iSCSI: failed to register the control device\n");
+-		if (kmem_cache_destroy(task_cache)) {
+-			printk("iSCSI: kmem_cache_destroy failed for task "
+-			       "cache %p at %lu\n", task_cache, jiffies);
+-		}
+-		return control_major;
++		ret = control_major;
++		goto free_cache;
+ 	}
+ 	printk("iSCSI: control device major number %d\n", control_major);
+ 
+@@ -4047,31 +4049,31 @@ iscsi_init(void)
+ 	 */
+ 	iscsictl_sysfs_class = class_simple_create(THIS_MODULE, "iscsi_control");
+ 	if (!iscsictl_sysfs_class) {
+-		kmem_cache_destroy(task_cache);
+-		return control_major;
++		ret = control_major;
++		goto unreg_chrdev;
+ 	}
+ 	if (!class_simple_device_add(iscsictl_sysfs_class, MKDEV(control_major, 0),
+ 					NULL, "iscsictl")) {
+-		kmem_cache_destroy(task_cache);
+-		class_simple_destroy(iscsictl_sysfs_class);
+-		return control_major;
++		ret = control_major;
++		goto destroy_iscsictl_cls;
+ 	}
+ 
+ 	shost = scsi_host_alloc(&iscsi_driver_template,
+ 				sizeof(struct iscsi_hba));
+ 	if (!shost) {
+-		if (kmem_cache_destroy(task_cache)) {
+-			printk("iSCSI: kmem_cache_destroy failed for task "
+-			       "cache %p at %lu\n", task_cache, jiffies);
+-		}
+-		class_simple_device_remove(MKDEV(control_major, 0));
+-		class_simple_destroy(iscsictl_sysfs_class);
+-		return -ENOMEM;
++		ret = -ENOMEM;
++		goto remove_iscsictl_cls;
+ 	}
+ 
+ 	if (shost->hostt->shost_attrs == NULL)
+ 		shost->hostt->shost_attrs = iscsi_host_attrs;
+ 
++	shost->transportt = iscsi_attach_transport(&iscsi_transport_functions);
++	if (!shost->transportt) {
++		ret = -ENODEV;
++		goto dec_host_cnt;
 +	}
 +
-+struct scsi_transport_template *
-+iscsi_attach_transport(struct iscsi_function_template *ft)
-+{
-+	struct iscsi_internal *i = kmalloc(sizeof(struct iscsi_internal),
-+					   GFP_KERNEL);
-+	int count = 0;
-+	if (unlikely(!i))
-+		return NULL;
+ 	snprintf(shost->shost_gendev.bus_id, BUS_ID_SIZE, "iscsi");
+ 	snprintf(shost->shost_classdev.class_id, BUS_ID_SIZE, "iscsi");
+ 
+@@ -4097,21 +4099,28 @@ iscsi_init(void)
+ 	/* for now,there's just one iSCSI HBA */
+ 	iscsi_hba = hba;
+ 	INIT_LIST_HEAD(&hba->session_head);
+-	
+-	ret = scsi_add_host(shost,NULL);
+-	if (ret) {
+-		if (kmem_cache_destroy(task_cache)) {
+-			printk("iSCSI: kmem_cache_destroy failed for task "
+-			       "cache %p at %lu\n", task_cache, jiffies);
+-		}
+-		class_simple_device_remove(MKDEV(control_major, 0));
+-		class_simple_destroy(iscsictl_sysfs_class);
+-		scsi_host_put(shost);
+-		printk("iSCSI: failed to register SCSI HBA driver\n");
+-	} else {
 +
-+	memset(i, 0, sizeof(struct iscsi_internal));
++	if (!scsi_add_host(shost, NULL)) {
+ 		printk("iSCSI:detected HBA host #%d\n",shost->host_no);
++		set_bit(0, &init_module_complete);
++		return 0;
+ 	}
+-	set_bit(0, &init_module_complete);
 +
-+	i->t.attrs = &i->attrs[0];
-+	i->t.class = &iscsi_transport_class;
-+	i->t.size = 0;
-+	i->f = ft;
++	printk("iSCSI: failed to register SCSI HBA driver\n");
++ dec_host_cnt:
++	scsi_host_put(shost);
++ remove_iscsictl_cls:
++	class_simple_device_remove(MKDEV(control_major, 0));
++ destroy_iscsictl_cls:
++	class_simple_destroy(iscsictl_sysfs_class);
++ unreg_chrdev:
++	unregister_chrdev(control_major, control_name);
++ free_cache:
++	if (kmem_cache_destroy(task_cache)) {
++		printk("iSCSI: kmem_cache_destroy failed for task "
++		       "cache %p at %lu\n", task_cache, jiffies);
++	}
 +
-+	SETUP_ATTRIBUTE(ft, target_port);
-+	SETUP_ATTRIBUTE(ft, target_name);
-+	SETUP_ATTRIBUTE(ft, target_addr);
-+	i->attrs[count] = NULL;
+ 	return ret;
+ }
+ 
+@@ -4148,7 +4157,8 @@ iscsi_cleanup(void)
+ 		/* remove all sessions on this HBA, and prevent any from
+ 		 * being added.
+ 		 */
+-		
++		iscsi_release_transport(shost->transportt);
 +
-+	return &i->t;
-+}
-+EXPORT_SYMBOL(iscsi_attach_transport);
-+
-+void iscsi_release_transport(struct scsi_transport_template *t)
-+{
-+	struct iscsi_internal *i = to_iscsi_internal(t);
-+
-+	kfree(i);
-+}
-+EXPORT_SYMBOL(iscsi_release_transport);
-+
-+
-+static __init int iscsi_transport_init(void)
-+{
-+	return class_register(&iscsi_transport_class);
-+}
-+
-+static void __exit iscsi_transport_exit(void)
-+{
-+	class_unregister(&iscsi_transport_class);
-+}
-+
-+module_init(iscsi_transport_init);
-+module_exit(iscsi_transport_exit);
-+
-+MODULE_AUTHOR("Mike Christie");
-+MODULE_DESCRIPTION("iSCSI Transport Attributes");
-+MODULE_LICENSE("GPL");
-+
-diff -Naurp linux-2.6.5-rc2/include/scsi/scsi_transport_iscsi.h linux-2.6.5-rc2-iscsi/include/scsi/scsi_transport_iscsi.h
---- linux-2.6.5-rc2/include/scsi/scsi_transport_iscsi.h	1969-12-31 16:00:00.000000000 -0800
-+++ linux-2.6.5-rc2-iscsi/include/scsi/scsi_transport_iscsi.h	2004-03-25 01:26:02.000000000 -0800
-@@ -0,0 +1,41 @@
-+/* 
-+ * iSCSI sysfs attributes.
-+ *
-+ * Copyright (C) IBM
-+ *
-+ * All rights reserved.
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License as published by
-+ * the Free Software Foundation; either version 2 of the License, or (at
-+ * your option) any later version.
-+ *
-+ * This program is distributed in the hope that it will be useful, but
-+ * WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE, GOOD TITLE or
-+ * NON INFRINGEMENT.  See the GNU General Public License for more
-+ * details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write to the Free Software
-+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
-+ */
-+
-+#ifndef SCSI_TRANSPORT_ISCSI_H
-+#define SCSI_TRANSPORT_ISCSI_H
-+
-+#include <linux/config.h>
-+
-+struct scsi_transport_template;
-+
-+/* The functions by which the transport class and the driver communicate */
-+struct iscsi_function_template {
-+	ssize_t (*get_target_port)(struct scsi_device *, char *);
-+	ssize_t (*get_target_addr)(struct scsi_device *, char *);
-+	ssize_t (*get_target_name)(struct scsi_device *, char *);
-+};
-+
-+struct scsi_transport_template *iscsi_attach_transport(struct iscsi_function_template *);
-+void iscsi_release_transport(struct scsi_transport_template *t);
-+
-+#endif /* SCSI_TRANSPORT_ISCSI_H */
+ 		if (!iscsi_shutdown_hba(hba)) {
+ 			printk("iSCSI:can't release HBA host #%u failed to"
+ 			       "shutdown\n",shost->host_no);
 
---------------020002080301040909030907--
+--------------080801090706090808070006--
 
