@@ -1,181 +1,95 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: [PATCH] [2.4] sym2 module option to behave like 2.6
-Date: Wed, 1 Dec 2004 04:23:09 +0000
-Message-ID: <20041201042309.GD5752@parcelfarce.linux.theplanet.co.uk>
+From: James.Smart@Emulex.Com
+Subject: [Patch] [Repost] Add basic infrastructure for transport host statistics
+Date: Tue, 30 Nov 2004 23:35:43 -0500
+Message-ID: <0B1E13B586976742A7599D71A6AC733C12E7DC@xbl3.ma.emulex.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/mixed;
+	boundary="----_=_NextPart_001_01C4D75F.37D1BA85"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:53205 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S261230AbULAEXN
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 30 Nov 2004 23:23:13 -0500
-Content-Disposition: inline
+Received: from emulex.emulex.com ([138.239.112.1]:4512 "EHLO emulex.emulex.com")
+	by vger.kernel.org with ESMTP id S261237AbULAEfq (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 30 Nov 2004 23:35:46 -0500
+Received: from xbl3.ad.emulex.com (xbl3.ma.emulex.com [138.239.73.12])
+	by emulex.emulex.com (8.12.10/8.12.10) with ESMTP id iB14Zhni027156
+	for <linux-scsi@vger.kernel.org>; Tue, 30 Nov 2004 20:35:44 -0800 (PST)
+content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: kyle@debian.org
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+
+This is a multi-part message in MIME format.
+
+------_=_NextPart_001_01C4D75F.37D1BA85
+Content-Type: text/plain;
+	charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+
+This patch has been updated so that it backs against scsi-misc-2.6 as of =
+2004/11/27
+
+-- James S
+
+> -----Original Message-----
+> From: linux-scsi-owner@vger.kernel.org
+> [mailto:linux-scsi-owner@vger.kernel.org]On Behalf Of Smart, James
+> Sent: Thursday, October 14, 2004 10:43 AM
+> To: linux-scsi@vger.kernel.org
+> Subject: [Patch] Add basic infrastructure for host statistics
+>=20
+>=20
+> This patch adds the basic hooks to the scsi subsystem to=20
+> support transport-specific statistics to be added to a host.=20
+> Its basic nature follows the way in which net devices showed=20
+> their statistics.
+>=20
+> -- James
+>=20
+>=20
 
 
-Several people have expressed dissatisfaction with their scsi drives
-rearranging when they switch between 2.4 and 2.6.  It's particularly
-gruesome for people with an HP A500 as the internal discs swap positions.
+------_=_NextPart_001_01C4D75F.37D1BA85
+Content-Type: application/octet-stream;
+	name="patch.host_stats"
+Content-Transfer-Encoding: base64
+Content-Description: patch.host_stats
+Content-Disposition: attachment;
+	filename="patch.host_stats"
 
-I can't make the 2.6 driver behave like the 2.4 driver, so here's an
-alternative: add an option to make the 2.4 driver detect hosts in the
-same order as the 2.6 driver.  This patch is only compile tested, so is
-probably buggy.
+ZGlmZiAtdU5yIHNjc2ktbWlzYy0yLjYtMjAwNDExMjcvZHJpdmVycy9zY3NpL2hvc3RzLmMgc2Nz
+aS1taXNjLTIuNi0yMDA0MTEyNy5wYXRjaC9kcml2ZXJzL3Njc2kvaG9zdHMuYwotLS0gc2NzaS1t
+aXNjLTIuNi0yMDA0MTEyNy9kcml2ZXJzL3Njc2kvaG9zdHMuYwkyMDA0LTExLTI4IDA4OjAxOjEz
+LjAwMDAwMDAwMCAtMDUwMAorKysgc2NzaS1taXNjLTIuNi0yMDA0MTEyNy5wYXRjaC9kcml2ZXJz
+L3Njc2kvaG9zdHMuYwkyMDA0LTExLTMwIDEzOjU3OjM1LjE5MjEzNzQ0MCAtMDUwMApAQCAtODIs
+OCArODIsMTIgQEAKIAlpZiAoc2hvc3QtPnRyYW5zcG9ydHQtPmhvc3RfZGVzdHJveSkKIAkJc2hv
+c3QtPnRyYW5zcG9ydHQtPmhvc3RfZGVzdHJveShzaG9zdCk7CiAJY2xhc3NfZGV2aWNlX3VucmVn
+aXN0ZXIoJnNob3N0LT5zaG9zdF9jbGFzc2Rldik7Ci0JaWYgKHNob3N0LT50cmFuc3BvcnRfY2xh
+c3NkZXYuY2xhc3MpCi0JCWNsYXNzX2RldmljZV91bnJlZ2lzdGVyKCZzaG9zdC0+dHJhbnNwb3J0
+X2NsYXNzZGV2KTsKKwlpZiAoc2hvc3QtPnRyYW5zcG9ydF9jbGFzc2Rldi5jbGFzcykgeworCQlp
+ZiAoc2hvc3QtPnRyYW5zcG9ydHQtPmhvc3Rfc3RhdGlzdGljcykKKwkJCXN5c2ZzX3JlbW92ZV9n
+cm91cCgmc2hvc3QtPnRyYW5zcG9ydF9jbGFzc2Rldi5rb2JqLAorCQkJCXNob3N0LT50cmFuc3Bv
+cnR0LT5ob3N0X3N0YXRpc3RpY3MpOworIAkJY2xhc3NfZGV2aWNlX3VucmVnaXN0ZXIoJnNob3N0
+LT50cmFuc3BvcnRfY2xhc3NkZXYpOworCX0KIAlkZXZpY2VfZGVsKCZzaG9zdC0+c2hvc3RfZ2Vu
+ZGV2KTsKIH0KIEVYUE9SVF9TWU1CT0woc2NzaV9yZW1vdmVfaG9zdCk7CmRpZmYgLXVOciBzY3Np
+LW1pc2MtMi42LTIwMDQxMTI3L2RyaXZlcnMvc2NzaS9zY3NpX3N5c2ZzLmMgc2NzaS1taXNjLTIu
+Ni0yMDA0MTEyNy5wYXRjaC9kcml2ZXJzL3Njc2kvc2NzaV9zeXNmcy5jCi0tLSBzY3NpLW1pc2Mt
+Mi42LTIwMDQxMTI3L2RyaXZlcnMvc2NzaS9zY3NpX3N5c2ZzLmMJMjAwNC0xMS0yOCAwODowMTox
+NC4wMDAwMDAwMDAgLTA1MDAKKysrIHNjc2ktbWlzYy0yLjYtMjAwNDExMjcucGF0Y2gvZHJpdmVy
+cy9zY3NpL3Njc2lfc3lzZnMuYwkyMDA0LTExLTMwIDEzOjU4OjExLjA5NjY3OTEyMCAtMDUwMApA
+QCAtNzE2LDYgKzcxNiwxNCBAQAogIAkJCWlmIChlcnJvcikKIAkJCQlyZXR1cm4gZXJyb3I7CiAg
+CQl9CisKKwkJaWYgKHNob3N0LT50cmFuc3BvcnR0LT5ob3N0X3N0YXRpc3RpY3MpIHsKKwkJCWVy
+cm9yID0gc3lzZnNfY3JlYXRlX2dyb3VwKAorCQkJCQkmc2hvc3QtPnRyYW5zcG9ydF9jbGFzc2Rl
+di5rb2JqLAorCQkJCQlzaG9zdC0+dHJhbnNwb3J0dC0+aG9zdF9zdGF0aXN0aWNzKTsKKwkJCWlm
+IChlcnJvcikKKwkJCQlyZXR1cm4gZXJyb3I7CisJCX0KICAJfQogCiAJcmV0dXJuIDA7CmRpZmYg
+LXVOciBzY3NpLW1pc2MtMi42LTIwMDQxMTI3L2luY2x1ZGUvc2NzaS9zY3NpX3RyYW5zcG9ydC5o
+IHNjc2ktbWlzYy0yLjYtMjAwNDExMjcucGF0Y2gvaW5jbHVkZS9zY3NpL3Njc2lfdHJhbnNwb3J0
+LmgKLS0tIHNjc2ktbWlzYy0yLjYtMjAwNDExMjcvaW5jbHVkZS9zY3NpL3Njc2lfdHJhbnNwb3J0
+LmgJMjAwNC0xMS0yOCAwODowMjowNy4wMDAwMDAwMDAgLTA1MDAKKysrIHNjc2ktbWlzYy0yLjYt
+MjAwNDExMjcucGF0Y2gvaW5jbHVkZS9zY3NpL3Njc2lfdHJhbnNwb3J0LmgJMjAwNC0xMS0zMCAx
+Mzo1ODozMy41ODAyNjEwOTYgLTA1MDAKQEAgLTMzLDYgKzMzLDcgQEAKIAlzdHJ1Y3QgY2xhc3Mg
+KmRldmljZV9jbGFzczsKIAlzdHJ1Y3QgY2xhc3MgKnRhcmdldF9jbGFzczsKIAlzdHJ1Y3QgY2xh
+c3MgKmhvc3RfY2xhc3M7CisJc3RydWN0IGF0dHJpYnV0ZV9ncm91cCAqaG9zdF9zdGF0aXN0aWNz
+OwogCiAJLyogQ29uc3RydWN0b3IgZnVuY3Rpb25zICovCiAJaW50ICgqZGV2aWNlX3NldHVwKShz
+dHJ1Y3Qgc2NzaV9kZXZpY2UgKik7Cg==
 
-Index: drivers/scsi/sym53c8xx_2/sym53c8xx.h
-===================================================================
-RCS file: /var/cvs/linux-2.4/drivers/scsi/sym53c8xx_2/sym53c8xx.h,v
-retrieving revision 1.4
-diff -u -p -r1.4 sym53c8xx.h
---- drivers/scsi/sym53c8xx_2/sym53c8xx.h	13 Nov 2002 15:15:44 -0000	1.4
-+++ drivers/scsi/sym53c8xx_2/sym53c8xx.h	1 Dec 2004 04:15:56 -0000
-@@ -268,6 +268,7 @@ struct sym_driver_setup {
- 	u_short	debug;
- 	u_char	settle_delay;
- 	u_char	use_nvram;
-+	u_char	probe_26;
- 	u_long	excludes[8];
- 	char	tag_ctrl[100];
- };
-@@ -313,6 +314,7 @@ struct sym_driver_setup {
- 	0,	/* debug */			\
- 	3,	/* settle_delay */		\
- 	1,	/* use_nvram */			\
-+	0,	/* probe_26 */			\
- }
- 
- /*
-@@ -342,6 +344,7 @@ struct sym_driver_setup {
- 	0,	/* debug */			\
- 	10,	/* settle_delay */		\
- 	1,	/* use_nvram */			\
-+	0,	/* probe_26 */			\
- }
- 
- /*
-Index: drivers/scsi/sym53c8xx_2/sym_glue.c
-===================================================================
-RCS file: /var/cvs/linux-2.4/drivers/scsi/sym53c8xx_2/sym_glue.c,v
-retrieving revision 1.6
-diff -u -p -r1.6 sym_glue.c
---- drivers/scsi/sym53c8xx_2/sym_glue.c	16 Nov 2002 06:10:46 -0000	1.6
-+++ drivers/scsi/sym53c8xx_2/sym_glue.c	1 Dec 2004 04:15:57 -0000
-@@ -2282,6 +2282,7 @@ MDELAY(5000);
- #define OPT_USE_NVRAM		19
- #define OPT_EXCLUDE		20
- #define OPT_SAFE_SETUP		21
-+#define OPT_PROBE_26		22
- 
- static char setup_token[] __initdata =
- 	"mpar:"		"spar:"
-@@ -2294,7 +2295,7 @@ static char setup_token[] __initdata =
- 	"revprob:"	"verb:"
- 	"debug:"	"settle:"
- 	"nvram:"	"excl:"
--	"safe:"
-+	"safe:"		"probe26:"
- 	;
- 
- #ifdef MODULE
-@@ -2383,6 +2384,7 @@ int __init sym53c8xx_setup(char *str)
- 		__SIMPLE_OPTION(MAX_LUN, max_lun)
- 		__SIMPLE_OPTION(PCI_FIX_UP, pci_fix_up)
- 		__SIMPLE_OPTION(REVERSE_PROBE, reverse_probe)
-+		__SIMPLE_OPTION(PROBE_26, probe_26)
- 		__SIMPLE_OPTION(VERBOSE, verbose)
- 		__SIMPLE_OPTION(DEBUG, debug)
- 		__SIMPLE_OPTION(SETTLE_DELAY, settle_delay)
-@@ -2721,6 +2723,47 @@ static u_short sym_chip_ids[] __initdata
-  	PCI_ID_LSI53C1010_2
- };
- 
-+static struct pci_dev * sym_get_next_dev_24(struct pci_dev *pdev)
-+{
-+	static int j = 0;
-+	const int chips	= sizeof(sym_chip_ids)	/ sizeof(sym_chip_ids[0]);
-+	while (1) {
-+		int i;
-+		if (j >= chips)
-+			break;
-+		i = sym_driver_setup.reverse_probe ? chips - 1 - j : j;
-+		pdev = pci_find_device(PCI_VENDOR_ID_NCR, sym_chip_ids[i],
-+				pdev);
-+		if (pdev)
-+			break;
-+		++j;
-+		continue;
-+	}
-+	return pdev;
-+}
-+
-+static struct pci_dev * sym_get_next_dev_26(struct pci_dev *pdev)
-+{
-+	const int chips	= sizeof(sym_chip_ids)	/ sizeof(sym_chip_ids[0]);
-+	while (1) {
-+		int i;
-+		pdev = pci_find_device(PCI_VENDOR_ID_NCR, PCI_ANY_ID, pdev);
-+		if (!pdev)
-+			return NULL;
-+		for (i = 0; i < chips; i++) {
-+			if (pdev->device == sym_chip_ids[i])
-+				return pdev;
-+		}
-+	}
-+}
-+
-+static struct pci_dev * sym_get_next_dev(struct pci_dev *pdev)
-+{
-+	if (sym_driver_setup.probe_26)
-+		return sym_get_next_dev_26(pdev);
-+	return sym_get_next_dev_24(pdev);
-+}
-+
- /*
-  *  Detect all 53c8xx hosts and then attach them.
-  *
-@@ -2734,7 +2777,7 @@ static u_short sym_chip_ids[] __initdata
- int __init sym53c8xx_detect(Scsi_Host_Template *tpnt)
- {
- 	pcidev_t pcidev;
--	int i, j, chips, hosts, count;
-+	int i, j, hosts, count;
- 	int attach_count = 0;
- 	sym_device *devtbl, *devp;
- 	sym_nvram  nvram;
-@@ -2793,7 +2836,6 @@ if (sym53c8xx)
- 	 *  Save the first Symbios NVRAM content if any 
- 	 *  for the boot order.
- 	 */
--	chips	= sizeof(sym_chip_ids)	/ sizeof(sym_chip_ids[0]);
- 	hosts	= PAGE_SIZE		/ sizeof(*devtbl);
- #if SYM_CONF_NVRAM_SUPPORT
- 	nvp = (sym_driver_setup.use_nvram & 0x1) ? &nvram0 : 0;
-@@ -2805,15 +2847,9 @@ if (sym53c8xx)
- 		char *msg = "";
- 		if (count >= hosts)
- 			break;
--		if (j >= chips)
-+		pcidev = sym_get_next_dev(pcidev);
-+		if (!pcidev)
- 			break;
--		i = sym_driver_setup.reverse_probe ? chips - 1 - j : j;
--		pcidev = pci_find_device(PCI_VENDOR_ID_NCR, sym_chip_ids[i],
--					 pcidev);
--		if (pcidev == PCIDEV_NULL) {
--			++j;
--			continue;
--		}
- 		/* This one is guaranteed by AC to do nothing :-) */
- 		if (pci_enable_device(pcidev))
- 			continue;
-
--- 
-"Next the statesmen will invent cheap lies, putting the blame upon 
-the nation that is attacked, and every man will be glad of those
-conscience-soothing falsities, and will diligently study them, and refuse
-to examine any refutations of them; and thus he will by and by convince 
-himself that the war is just, and will thank God for the better sleep 
-he enjoys after this process of grotesque self-deception." -- Mark Twain
+------_=_NextPart_001_01C4D75F.37D1BA85--
