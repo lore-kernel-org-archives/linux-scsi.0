@@ -1,36 +1,55 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: usb storage traces
-Date: Fri, 5 Dec 2003 10:01:10 -0500 (EST)
+From: James Bottomley <James.Bottomley@steeleye.com>
+Subject: Re: Request for review of Linux iSCSI driver version 4.0.0.1
+Date: 05 Dec 2003 10:33:09 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44L0.0312050954360.850-100000@ida.rowland.org>
-References: <1070576669.2269.108.camel@patibmrh9>
+Message-ID: <1070594036.1603.34.camel@mulgrave>
+References: <200310231734.10263.krmurthy@cisco.com>
+	<200312011740.09693.krmurthy@cisco.com> <1070292174.2007.14.camel@mulgrave>
+	<200312041800.55663.krmurthy@cisco.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ida.rowland.org ([192.131.102.52]:4100 "HELO ida.rowland.org")
-	by vger.kernel.org with SMTP id S264266AbTLEPBL (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 5 Dec 2003 10:01:11 -0500
-In-Reply-To: <1070576669.2269.108.camel@patibmrh9>
+Received: from nat9.steeleye.com ([65.114.3.137]:28422 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S264591AbTLEPeC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 5 Dec 2003 10:34:02 -0500
+In-Reply-To: <200312041800.55663.krmurthy@cisco.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Pat LaVarre <p.lavarre@ieee.org>
-Cc: linux-scsi@vger.kernel.org, Matthew Dharm <mdharm-scsi@one-eyed-alien.net>, Alex Sanks <alex@netchip.com>, Julian Back <jback@mpc-data.co.uk>, David Brownell <david-b@pacbell.net>
+To: "N.C.Krishna Murthy" <krmurthy@cisco.com>
+Cc: Christoph Hellwig <hch@infradead.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, davmyers@cisco.com
 
-On 4 Dec 2003, Pat LaVarre wrote:
+On Thu, 2003-12-04 at 07:30, N.C.Krishna Murthy wrote:
+> Having user level utility trigger the rescan thru sysfs interfaces will call
+> scsi_scan() which will inturn call scsi_scan_host_selected().
+> Instead wouldn't it be preferable to call scsi_scan_host_selected()
+> from the iSCSI driver itself?
 
-> > Does anybody know what ... mode page x1c do?  Although 
-> > nominally vendor-specific, they must be reasonably standardized if Windows 
-> > can get away with using them on a generic device.
+Well, consider all the ramifications: what happens if the
+reconfiguration is deleting an existing LUN with a mounted filesystem? 
+What happens if the user wants to do something with the new LUN as soon
+as it appears (like fold it into a VM volume, or format it).  The
+hotplug system is designed to propagate events that others might be
+interested in, which it strikes me this is.  So, if you have to trigger
+a hotplug event anyway, you may as well go the whole hog and do the
+reconfiguration as part of the hotplug subsystem.
 
-According to my newly-located source, page x1c is the Timer and Protect
-page.  It includes values for the Inactivity Time Multiplier, Disable
-Media Access, and Software Write Protect.
+> > We could do with a generic infrastructure within SCSI for generating
+> > these events, anyway, if you want to go that route...
+> >
+> I am not much familiar with SCSI hotplug. 
+> 
+> If the generic infrastructure which you mentioned does not exist now and in 
+> case there is a plan to do one such thing is there any framework for that?
+> Wouldn't that require a kernel API which is capable of both 
+> "adding new luns" and "deleting luns which no longer exist"?
 
-Windows may use it to try and set the drive's spin-down time.
+Well, a hotplug event feeds certain information into the environment
+when it triggers the call.  All we really need is a wrapper in SCSI to
+add the SCSI information to the environment and trigger the event in a
+generic fashion.
 
-Incidentally, Pat, can you confirm whether bInterfaceSubClass x01 = RBC 
-(Reduced Block Commands, T10 project 1240-D) uses 0-padding of commands to 
-12 bytes or not?  The Linux usb-storage driver seems to think that it 
-doesn't.
+James
 
-Alan Stern
+
 
