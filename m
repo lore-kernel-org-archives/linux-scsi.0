@@ -1,66 +1,49 @@
-From: Meelis Roos <mroos@linux.ee>
-Subject: scsi disk registration - double messages
-Date: Tue, 15 Feb 2005 12:01:11 +0200 (EET)
-Message-ID: <Pine.SOC.4.61.0502151200470.2239@math.ut.ee>
+From: Douglas Gilbert <dougg@torque.net>
+Subject: [RFC] SCSI Enclosure Services (SES) simulator
+Date: Tue, 15 Feb 2005 22:34:11 +1000
+Message-ID: <4211EC43.3030704@torque.net>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
-Received: from math.ut.ee ([193.40.36.2]:64444 "EHLO math.ut.ee")
-	by vger.kernel.org with ESMTP id S261665AbVBOKBO (ORCPT
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Received: from borg.st.net.au ([65.23.158.22]:52621 "EHLO borg.st.net.au")
+	by vger.kernel.org with ESMTP id S261682AbVBOMdf (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 15 Feb 2005 05:01:14 -0500
-Received: from math.ut.ee (localhost [IPv6:::1])
-	by math.ut.ee (8.12.8+Sun/8.12.8/math-1.2) with ESMTP id j1FA1CaW004285
-	for <linux-scsi@vger.kernel.org>; Tue, 15 Feb 2005 12:01:12 +0200 (EET)
-Received: from localhost (mroos@localhost)
-	by math.ut.ee (8.12.8+Sun/8.12.2/Submit) with ESMTP id j1FA1BxC004270
-	for <linux-scsi@vger.kernel.org>; Tue, 15 Feb 2005 12:01:11 +0200 (EET)
+	Tue, 15 Feb 2005 07:33:35 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
+Cc: sakimathew@yahoo.com
 
-This is 2.6.11-rc4 on Sun SparcStation5 with onbpard ESP scsi, one 2.1G disk 
-and one cdrom.
+SCSI Enclosure Services (SES) permit "the management and
+sense the state of power supplies, cooling devices, displays,
+indicators, individual drives, and other non-SCSI elements
+installed in an enclosure". The scsi_ses adapter driver
+simulates a SES device. The default action is to appear as a
+disk (actually an 8 MB ramdisk) with associated Enclosure
+Services. This is similar to a fibre channel disk with a
+SCA-2 connector which includes an Enclosure Services
+Interface (ESI). Alternatively the scsi_ses driver can
+simulate a simple SES device.
 
-The messages about registration of sda appear tiwice for some reason. This is 
-only cosmetic but still a little strange:
+This SES simulator is closely related to the scsi_debug
+driver. Unlike scsi_debug which can simulate many disks
+(or other scsi device types), scsi_ses simulates a
+single disk with an attached SES device. Alternatively it
+can simulate a freestanding SES device when the "ses_only=1"
+parameter is given.
 
-eth0: LANCE 08:00:20:90:36:e5
-esp0: IRQ 36 SCSI ID 7 Clk 40MHz CCYC=25000 CCF=8 TOut 167 NCR53C9XF(espfast)
-ESP: Total of 1 ESP hosts found, 1 actually in use.
-scsi0 : Sparc ESP100A-FAST
-   Vendor: IBM       Model: DCAS32160SUN2.1G  Rev: S65A
-   Type:   Direct-Access                      ANSI SCSI revision: 02
-   Vendor: TOSHIBA   Model: XM5701TASUN12XCD  Rev: 0997
-   Type:   CD-ROM                             ANSI SCSI revision: 02
-esp0: target 3 [period 100ns offset 15 10.00MHz FAST SCSI-II]
-SCSI device sda: 4226725 512-byte hdwr sectors (2164 MB)
-SCSI device sda: drive cache: write through
-SCSI device sda: 4226725 512-byte hdwr sectors (2164 MB)
-SCSI device sda: drive cache: write through
-  sda: sda1 sda2 sda3 sda4
-Attached scsi disk sda at scsi0, channel 0, id 3, lun 0
+Further information, usage examples and patches against
+lk 2.6.11-rc4 can be found at
+http://sg.torque.net/sg/scsi_ses.html
 
-CONFIG_SCSI=y
-# CONFIG_SCSI_PROC_FS is not set
-CONFIG_BLK_DEV_SD=y
-# CONFIG_CHR_DEV_ST is not set
-# CONFIG_CHR_DEV_OSST is not set
-CONFIG_BLK_DEV_SR=m
-CONFIG_BLK_DEV_SR_VENDOR=y
-CONFIG_CHR_DEV_SG=m
-CONFIG_SCSI_MULTI_LUN=y
-# CONFIG_SCSI_CONSTANTS is not set
-# CONFIG_SCSI_LOGGING is not set
-# CONFIG_SCSI_SPI_ATTRS is not set
-# CONFIG_SCSI_FC_ATTRS is not set
-# CONFIG_SCSI_ISCSI_ATTRS is not set
-# CONFIG_SCSI_SATA is not set
-# CONFIG_SCSI_PPA is not set
-# CONFIG_SCSI_IMM is not set
-# CONFIG_SCSI_QLOGICPTI is not set
-# CONFIG_SCSI_DEBUG is not set
-CONFIG_SCSI_SUNESP=y
+RFC: Does this driver warrant inclusion in the lk 2.6 series?
 
 
--- 
-Meelis Roos (mroos@linux.ee)
+The current scsi_ses patches do not take into account Mike
+Christie's "scsi bus for virtual drivers" changes. These
+can be easily applied and will bring the same advantages
+as they do to the existing scsi_debug and iSCSI drivers.
+
+
+Doug Gilbert + Zacharia Mathew
