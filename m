@@ -1,74 +1,62 @@
-From: Eric GAUDET <eric@rti-zone.org>
-Subject: Re: 2.4.20 scsi problem
-Date: Mon, 02 Dec 2002 23:27:16 -0800 (PST)
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: [RFC] remove IDESCSI_SG_TRANSFORM (compile fix)
+Date: Tue, 03 Dec 2002 19:13:06 +1100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <XFMail.20021202232716.eric@rti-zone.org>
-References: <1038867342.8945.0.camel@irongate.swansea.linux.org.uk>
+Message-ID: <3DEC6792.3060509@torque.net>
+References: <3DEC5B4C.4040208@torque.net>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <1038867342.8945.0.camel@irongate.swansea.linux.org.uk>
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: groudier@free.fr, axboe@suse.de, linux-scsi@vger.kernel.org
+To: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
--- En reponse de "Re: 2.4.20 scsi problem" de Alan Cox, le 02-Dec-2002 =
-:
-> On Mon, 2002-12-02 at 06:58, Eric GAUDET wrote:
->> # SCSI low-level drivers
->> #
->> (none set)
->=20
-> That sounds like your problem to me
+Douglas Gilbert wrote:
+> On Mon, 2002-12-02 at 17:21, Christoph Hellwig wrote:
+>  > On Fri, Nov 29, 2002 at 04:44:35PM -0800, Mike Anderson wrote:
+>  > > Thanks for catching this Christoph I thought the only use was inside
+>  > > SCSI. I could make a patch to scsi-misc to add tag back in. Another
+>  > > option if it is still needed is to switch to "->name == "generic").
+>  > >
+>  > > Though I have not used this interface I thought if one was using
+>  > > an sg
+>  > > device to a ide-scsi device and the flag was set that sg
+>  > > commands that
+>  > > where not 100% the same as ATAP commands where translated.
+>  >
+>  > Well, imho IDESCSI_SG_TRANSFORM is broken in 2.5.  Now that ever block
+>  > driver implements the sg ioctls a sg request can come from sd or sr
+>  > aswell.
+> 
+> Christoph,
+> Thanks for alerting me to the implementation (by Jens) of
+> the sg driver's SG_IO ioctl in drivers/block/scsi_ioctl.c .
+> 
+> It goes by the name SCSI_IOCTL_SEND_COMMAND which is the same
+> name as the old ioctl defined in drivers/scsi/scsi_ioctl.c .
+> As far as I can see if you send that ioctl to a block device
+> (including an ATA disk) you get the new functionality (i.e.
+> similar to sg's SG_IO). However if you send that ioctl to
+> a char device (e.g. st, osst or sg) you get the old
+> interface (i.e. as found in drivers/scsi/scsi_ioctl.c).
+> Somewhat confusing.
+> So old utilities like scsiinfo will now fail for disks
+> but continue to work for tapes.
 
-Unfortuately, as I said in my earlier message:
->> Compiling sd as a module instead of in the kernel does not seem to c=
-hange
->> anything. Nor compiling with a scsi low-level driver. It seems that =
-I need an
->> actual scsi device at boot time in order to see block device 8 (not =
-tested, I
->> don=B4t have such a device)
+Correcting my previous post ...
 
-Just for kicks, I tried with:
-CONFIG_SCSI_AHA152X=3Dy
-but it does not seem to help.
+On reviewing drivers/block/scsi_ioctl.c it supports both
+the SG_IO (i.e. equivalent to the sg driver's SG_IO ioctl)
+and the SCSI_IOCTL_SEND_COMMAND ioctl with the old
+functionality. So the SCSI_IOCTL_SEND_COMMAND ioctl is
+consistent for both block and char (scsi) drivers.
 
-The .config I used for 2.4.18 (the one that is working fine), and the o=
-ne for
-2.4.20 are exactly the same, I just loaded it with make oldconfig witho=
-ut
-changing a thing. I can send those two config files if it helps.
+The SG_IO ioctl first appeared in the lk 2.4 series
+(2.4.0) while the SCSI_IOCTL_SEND_COMMAND ioctl has
+been there for a long time (but has been marked as
+deprecated in the source for some time).
 
-Anyway, just asking for scsi disk support should be enough to see block=
- device
-8 (and it used to work just fine) without needing a low-level driver at=
- boot
-time: I boot on my ide driver and plug my external scsi HD (really a us=
-b HD
-using scsi subsystem) afterwards.
+Doug Gilbert
 
-dmesg used to report:
-SCSI subsystem driver Revision: 1.00
-request_module[scsi_hostadapter]: Root fs not mounted
 
-Now it says:
-SCSI subsystem driver Revision: 1.00
-kmod: failed to exec /sbin/modprobe -s -k scsi_hostadapter, errno =3D 2
-
-Do this mean nobody else is seeing the problem?
-
-Thanks,
------------------------------------------------------------------------=
--
-Eric GAUDET <eric@rti-zone.org>
-Le 02-Dec-2002 a 19:38:34
------------------------------------------------------------------------=
--
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
