@@ -1,55 +1,111 @@
-From: Brian King <brking@us.ibm.com>
-Subject: Re: [PATCH] IBM Power RAID driver (ipr) 2.0.6
-Date: Tue, 04 May 2004 13:24:38 -0500
+From: Jonathan McDowell <noodles@earth.li>
+Subject: Re: Initio INI-9X00U/UW error handling in 2.6
+Date: Tue, 4 May 2004 23:52:54 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <4097DFE6.8080002@us.ibm.com>
-References: <4097D863.8040505@us.ibm.com> <20040504185618.A26003@infradead.org>
+Message-ID: <20040504225254.GQ2360@earth.li>
+References: <opr619y8b4psnffn@mail.mcaserta.com> <20040430183349.GX2360@earth.li> <opr7d7clzzpsnffn@mail.mcaserta.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e1.ny.us.ibm.com ([32.97.182.101]:3230 "EHLO e1.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S264579AbUEDSYy (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 4 May 2004 14:24:54 -0400
+Received: from the.earth.li ([193.201.200.66]:47568 "EHLO the.earth.li")
+	by vger.kernel.org with ESMTP id S261497AbUEDWwz (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 4 May 2004 18:52:55 -0400
+Content-Disposition: inline
+In-Reply-To: <opr7d7clzzpsnffn@mail.mcaserta.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: James.Bottomley@steeleye.com, linux-scsi@vger.kernel.org
+To: Mirko Caserta <mirko@mcaserta.com>
+Cc: Linux Kernel ML <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
 
-Christoph Hellwig wrote:
-> On Tue, May 04, 2004 at 12:52:35PM -0500, Brian King wrote:
-> 
->>James,
->>
->>Here is the latest version of the LLD for the IBM Power RAID family of
->>adapters. This includes several IBM iSeries and pSeries SCSI adapters.
->>Please apply.
-> 
-> 
-> BTW, any plans to add support for the older iSeries models supported by
-> the binary only ibmsis driver?
+On Sun, May 02, 2004 at 11:58:59PM +0200, Mirko Caserta wrote:
+> On Fri, 30 Apr 2004 19:33:49 +0100, Jonathan McDowell <noodles@earth.li>  
+> wrote:
+> >On Mon, Apr 26, 2004 at 01:24:34PM +0200, Mirko Caserta wrote:
+> >>I was just wondering if someone is working on a fix for this:
+> >>
+> >>i91u: PCI Base=0xD000, IRQ=11, BIOS=0xFF000, SCSI ID=7
+> >>i91u: Reset SCSI Bus ...
+> >>ERROR: SCSI host `INI9100U' has no error handling
+> >>ERROR: This is not a safe way to run your SCSI host
+> >...
+> >
+> >Try the attached; I wrote it a while back and made a cleanup based on
+> >comments from James Bottomley, but no one else seemed to be using the
+> >driver. It worked for me however.
+> I had to hack it a little bit to make it cleanly patch my 2.6.6-rc2-mm2  
+> and it works great.
 
-No. The older models have several "issues" with them. First of all, while
-the firmware interface has similarities, there are enough differences to make
-writing a driver to support both somewhat ugly. Yes, ibmsis did both, but it
-was also a pretty bulky driver. Secondly, the way RAID is done on the legacy
-adapters is completely different. It is done how OS/400 needs it done, which
-means data striping is not done in the adapter, but rather by the system, as
-each device is exposed to the system. Thirdly, the adapters based on the
-Chukar chip have lots of "features" with them. To name a few, BIST does not
-work. The only way to reset the card is to assert PCI reset. PCI config space
-can come up in either big endian or little endian mode, which requires creative
-programming to detect and fixup.
+Cool, glad it works for you.
 
-Not supporting the legacy adapters resulted in a *much* cleaner OSS driver.
+> Thanks, could you please let this patch make its way upstream?
 
-ibmsis will continue to be supported for bug fixes, etc. for the older adapters,
-but all new adapters will be supported only by ipr.
+I guess the right people to ask are the folk on linux-scsi; is there
+any chance of it going into the linux-scsi bk patches that akpm is
+pulling into -mm?
 
--Brian
-
+J.
 
 -- 
-Brian King
-eServer Storage I/O
-IBM Linux Technology Center
+Revd. Jonathan McDowell, ULC | noodles is criminal
 
+------------
+diff -ruN linux-2.6.5.orig/drivers/scsi/ini9100u.c linux-2.6.5/drivers/scsi/ini9100u.c
+--- linux-2.6.5.orig/drivers/scsi/ini9100u.c	2004-04-30 19:36:05.000000000 +0100
++++ linux-2.6.5/drivers/scsi/ini9100u.c	2004-04-30 19:40:06.000000000 +0100
+@@ -106,6 +106,8 @@
+  *		- Changed the assumption that HZ = 100
+  * 10/17/03 mc	- v1.04
+  *		- added new DMA API support
++ * 06/01/04 jmd	- v1.04a
++ *		- Re-add reset_bus support
+  **************************************************************************/
+ 
+ #define CVT_LINUX_VERSION(V,P,S)        (V * 65536 + P * 256 + S)
+@@ -149,6 +151,7 @@
+ 	.queuecommand	= i91u_queue,
+ //	.abort		= i91u_abort,
+ //	.reset		= i91u_reset,
++	.eh_bus_reset_handler = i91u_bus_reset,
+ 	.bios_param	= i91u_biosparam,
+ 	.can_queue	= 1,
+ 	.this_id	= 1,
+@@ -161,7 +164,7 @@
+ char *i91uCopyright = "Copyright (C) 1996-98";
+ char *i91uInitioName = "by Initio Corporation";
+ char *i91uProductName = "INI-9X00U/UW";
+-char *i91uVersion = "v1.04";
++char *i91uVersion = "v1.04a";
+ 
+ #define TULSZ(sz)     (sizeof(sz) / sizeof(sz[0]))
+ #define TUL_RDWORD(x,y)         (short)(inl((int)((ULONG)((ULONG)x+(UCHAR)y)) ))
+@@ -550,6 +553,15 @@
+ 		return tul_device_reset(pHCB, (ULONG) SCpnt, SCpnt->device->id, reset_flags);
+ }
+ 
++int i91u_bus_reset(Scsi_Cmnd * SCpnt)
++{
++	HCS *pHCB;
++
++	pHCB = (HCS *) SCpnt->device->host->base;
++	tul_reset_scsi(pHCB, 0);
++	return SUCCESS;
++}
++
+ /*
+  * Return the "logical geometry"
+  */
+diff -ruN linux-2.6.5.orig/drivers/scsi/ini9100u.h linux-2.6.5/drivers/scsi/ini9100u.h
+--- linux-2.6.5.orig/drivers/scsi/ini9100u.h	2003-12-18 02:58:56.000000000 +0000
++++ linux-2.6.5/drivers/scsi/ini9100u.h	2004-04-30 19:39:30.000000000 +0100
+@@ -82,10 +82,11 @@
+ extern int i91u_queue(Scsi_Cmnd *, void (*done) (Scsi_Cmnd *));
+ extern int i91u_abort(Scsi_Cmnd *);
+ extern int i91u_reset(Scsi_Cmnd *, unsigned int);
++extern int i91u_bus_reset(Scsi_Cmnd *);
+ extern int i91u_biosparam(struct scsi_device *, struct block_device *,
+ 		sector_t, int *);
+ 
+-#define i91u_REVID "Initio INI-9X00U/UW SCSI device driver; Revision: 1.03g"
++#define i91u_REVID "Initio INI-9X00U/UW SCSI device driver; Revision: 1.04a"
+ 
+ #define VIRT_TO_BUS(i)  (unsigned int) virt_to_bus((void *)(i))
+ #define ULONG   unsigned long
