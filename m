@@ -1,590 +1,415 @@
-From: "Bagalkote, Sreenivas" <sreenib@lsil.com>
-Subject: [PATCH][RESEND] megaraid 2.10.2.1 Driver
-Date: Fri, 26 Mar 2004 13:02:34 -0500
+From: Eric Sproul <esproul@ntelos.net>
+Subject: [PATCH] gdth driver: selectively enable EISA/ISA/PCI support
+Date: Fri, 26 Mar 2004 13:57:39 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <0E3FA95632D6D047BA649F95DAB60E570230C786@exa-atlanta.se.lsil.com>
+Message-ID: <1080327459.14874.126.camel@thunderbolt.oss.ntelos.net>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
+Content-Type: multipart/mixed; boundary="=-LOqsCaV7bXDNtGbYOngx"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:55039 "EHLO mail0.lsil.com")
-	by vger.kernel.org with ESMTP id S264102AbUCZSJA (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 26 Mar 2004 13:09:00 -0500
+Received: from mailrtr01.ntelos.net ([216.12.0.101]:28376 "EHLO
+	mailrtr01.ntelos.net") by vger.kernel.org with ESMTP
+	id S262138AbUCZS5l (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 26 Mar 2004 13:57:41 -0500
 List-Id: linux-scsi@vger.kernel.org
-To: 'Marcelo Tosatti' <marcelo.tosatti@cyclades.com>, Matthew Wilcox <willy@debian.org>
-Cc: Christoph Hellwig <hch@infradead.org>, 'Jeff Garzik' <jgarzik@pobox.com>, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, "Mukker, Atul" <Atulm@lsil.com>
-
-Hi all,
-
-This is lk 2.4 only patch for megraid 2.10.2.1 driver made against
-2.10.1 driver (lk 2.4.25). Jeff Garzik's feedback is worked into this
-patch. (Thank you Jeff).
-
-The 2.10.2.1 driver is available at:
-ftp://ftp.lsil.com/pub/linux-megaraid/drivers/version-2.10.2.1
-
-Thanks,
-Sreenivas
+To: Linux-SCSI <linux-scsi@vger.kernel.org>
+Cc: PA-RISC Linux <parisc-linux@lists.parisc-linux.org>
 
 
-diff -Naur old/drivers/scsi/megaraid2.c new/drivers/scsi/megaraid2.c
---- old/drivers/scsi/megaraid2.c	Wed Mar 17 01:13:46 2004
-+++ new/drivers/scsi/megaraid2.c	Wed Mar 17 01:30:10 2004
-@@ -14,7 +14,10 @@
-  *	  - speed-ups (list handling fixes, issued_list, optimizations.)
-  *	  - lots of cleanups.
-  *
-- * Version : v2.10.1 (Dec 03, 2003) - Atul Mukker <Atul.Mukker@lsil.com>
-+ * Version : v2.10.2.1 (Mar 26, 2004)
-+ *
-+ * Authors:	Atul Mukker <Atul.Mukker@lsil.com>
-+ *		Sreenivas Bagalkote <Sreenivas.Bagalkote@lsil.com>
-  *
-  * Description: Linux device driver for LSI Logic MegaRAID controller
-  *
-@@ -23,8 +26,6 @@
-  *
-  * This driver is supported by LSI Logic, with assistance from Red Hat,
-Dell,
-  * and others. Please send updates to the public mailing list
-- * linux-megaraid-devel@dell.com, and subscribe to and read archives of
-this
-- * list at http://lists.us.dell.com/.
-  *
-  * For history of changes, see ChangeLog.megaraid.
-  *
-@@ -45,6 +46,10 @@
- 
- #include "megaraid2.h"
- 
-+#ifdef LSI_CONFIG_COMPAT
-+#include <asm/ioctl32.h>
+--=-LOqsCaV7bXDNtGbYOngx
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+
+Hi,
+I'm new here, but I was encouraged to post the following patch which
+helped me get the gdth driver to compile on a PA-RISC system.  The
+original driver assumes that EISA/ISA/PCI are all enabled, but on
+PA-RISC there is no ISA (8237A) support, so compilation broke trying to
+implement ISA-style DMA (DMA_MODE_CASCADE).
+
+The following patch breaks out the bus-dependent portions of the driver
+and only enables them when the corresponding CONFIG_ option is set.  For
+example, this allows the driver to compile when only CONFIG_PCI is set.
+
+ftp://ftp.parisc-linux.org/patches/diff-2.6.5-gdth-01
+This patch was written by Grant Grundler <grundler@parisc-linux.org> and
+tested by me.  Attached is a 2.4.25 version of the patch which I created
+from Grant's 2.6.5 original.  He gets all the credit. ;)
+
+Cheers,
+Eric
+
+
+
+--=-LOqsCaV7bXDNtGbYOngx
+Content-Disposition: attachment; filename=gdth-2.6-noisa.patch
+Content-Type: text/x-patch; name=gdth-2.6-noisa.patch; charset=
+Content-Transfer-Encoding: 7bit
+
+--- a/drivers/scsi/gdth.c	7 Feb 2004 14:02:43 -0000	1.8
++++ b/drivers/scsi/gdth.c	24 Mar 2004 17:19:06 -0000
+@@ -401,16 +401,21 @@ static void gdth_copy_internal_data(int 
+                                     char *buffer,ushort count);
+ static int gdth_internal_cache_cmd(int hanum,Scsi_Cmnd *scp);
+ static int gdth_fill_cache_cmd(int hanum,Scsi_Cmnd *scp,ushort hdrive);
+-
++#ifdef CONFIG_EISA
+ static int gdth_search_eisa(ushort eisa_adr);
++static int gdth_init_eisa(ushort eisa_adr,gdth_ha_str *ha);
 +#endif
-+
- MODULE_AUTHOR ("LSI Logic Corporation");
- MODULE_DESCRIPTION ("LSI Logic MegaRAID driver");
- MODULE_LICENSE ("GPL");
-@@ -206,6 +211,10 @@
- 		 */
- 		major = register_chrdev(0, "megadev", &megadev_fops);
- 
-+		if (major < 0) {
-+			printk(KERN_WARNING
-+				"megaraid: failed to register char
-device.\n");
-+		}
- 		/*
- 		 * Register the Shutdown Notification hook in kernel
- 		 */
-@@ -214,6 +223,13 @@
- 				"MegaRAID Shutdown routine not
-registered!!\n");
- 		}
- 
-+#ifdef LSI_CONFIG_COMPAT
-+		/*
-+		 * Register the 32-bit ioctl conversion
-+		 */
-+		register_ioctl32_conversion(MEGAIOCCMD,
-megadev_compat_ioctl);
++#ifdef CONFIG_ISA
+ static int gdth_search_isa(ulong32 bios_adr);
++static int gdth_init_isa(ulong32 bios_adr,gdth_ha_str *ha);
 +#endif
-+
- 	}
++#ifdef CONFIG_PCI
+ static int gdth_search_pci(gdth_pci_str *pcistr);
++static int gdth_init_pci(gdth_pci_str *pcistr,gdth_ha_str *ha);
++static void gdth_sort_pci(gdth_pci_str *pcistr, int cnt);
++#endif
+ static void gdth_search_dev(gdth_pci_str *pcistr, ushort *cnt, 
+                             ushort vendor, ushort dev);
+-static void gdth_sort_pci(gdth_pci_str *pcistr, int cnt);
+-static int gdth_init_eisa(ushort eisa_adr,gdth_ha_str *ha);
+-static int gdth_init_isa(ulong32 bios_adr,gdth_ha_str *ha);
+-static int gdth_init_pci(gdth_pci_str *pcistr,gdth_ha_str *ha);
  
- 	return hba_count;
-@@ -311,6 +327,7 @@
- 				(subsysvid != DELL_SUBSYS_VID) &&
- 				(subsysvid != HP_SUBSYS_VID) &&
- 				(subsysvid != INTEL_SUBSYS_VID) &&
-+				(subsysvid != FSC_SUBSYS_VID) &&
- 				(subsysvid != LSI_SUBSYS_VID) ) continue;
- 
- 
-@@ -403,7 +420,8 @@
- 		scsi_set_host_lock(&adapter->lock);
- #  endif
- #else
--		/* And this is the remainder of the 2.4 kernel series */
-+		/* And this is the remainder of the 2.4 kernel
-+		series */
- 		adapter->host_lock = &io_request_lock;
+ static void gdth_enable_int(int hanum);
+ static int gdth_get_status(unchar *pIStatus,int irq);
+@@ -617,8 +622,10 @@ static void gdth_munmap(void *addr) 
  #endif
  
-@@ -620,12 +638,15 @@
  
- 		/* Set the Mode of addressing to 64 bit if we can */
- 		if((adapter->flag & BOARD_64BIT)&&(sizeof(dma_addr_t) == 8))
-{
--			pci_set_dma_mask(pdev, 0xffffffffffffffffULL);
--			adapter->has_64bit_addr = 1;
-+			if (pci_set_dma_mask(pdev, 0xffffffffffffffffULL) ==
-0)
-+				adapter->has_64bit_addr = 1;
- 		}
--		else  {
--			pci_set_dma_mask(pdev, 0xffffffff);
--			adapter->has_64bit_addr = 0;
-+		if (!adapter->has_64bit_addr)  {
-+			if (pci_set_dma_mask(pdev, 0xffffffffULL) != 0) {
-+				printk("megaraid%d: DMA not available.\n",
-+					host->host_no);
-+				goto fail_attach;
-+			}
- 		}
- 
- 		init_MUTEX(&adapter->int_mtx);
-@@ -2249,26 +2270,28 @@
- 		break;
- 
- 	case MEGA_BULK_DATA:
--		pci_unmap_page(adapter->dev, scb->dma_h_bulkdata,
--			scb->cmd->request_bufflen, scb->dma_direction);
--
- 		if( scb->dma_direction == PCI_DMA_FROMDEVICE ) {
- 			pci_dma_sync_single(adapter->dev,
-scb->dma_h_bulkdata,
- 					scb->cmd->request_bufflen,
- 					PCI_DMA_FROMDEVICE);
- 		}
- 
-+		pci_unmap_page(adapter->dev, scb->dma_h_bulkdata,
-+			scb->cmd->request_bufflen, scb->dma_direction);
++#if defined(CONFIG_EISA) || defined(CONFIG_ISA)
+ static unchar   gdth_drq_tab[4] = {5,6,7,7};            /* DRQ table */
+ static unchar   gdth_irq_tab[6] = {0,10,11,12,14,0};    /* IRQ table */
++#endif
+ static unchar   gdth_polling;                           /* polling if TRUE */
+ static unchar   gdth_from_wait  = FALSE;                /* gdth_wait() */
+ static int      wait_index,wait_hanum;                  /* gdth_wait() */
+@@ -728,8 +735,11 @@ static int rescan = 0;
+ static int virt_ctr = 0;
+ /* shared access */
+ static int shared_access = 1;
 +
- 		break;
- 
- 	case MEGA_SGLIST:
--		pci_unmap_sg(adapter->dev, scb->cmd->request_buffer,
--			scb->cmd->use_sg, scb->dma_direction);
--
- 		if( scb->dma_direction == PCI_DMA_FROMDEVICE ) {
--			pci_dma_sync_sg(adapter->dev,
-scb->cmd->request_buffer,
--					scb->cmd->use_sg,
-PCI_DMA_FROMDEVICE);
-+			pci_dma_sync_sg(adapter->dev,
-+				(struct scatterlist
-*)scb->cmd->request_buffer,
-+				scb->cmd->use_sg, PCI_DMA_FROMDEVICE);
- 		}
- 
-+		pci_unmap_sg(adapter->dev,
-+			(struct scatterlist *)scb->cmd->request_buffer,
-+			scb->cmd->use_sg, scb->dma_direction);
-+
- 		break;
- 
- 	default:
-@@ -2402,8 +2425,9 @@
- 	*len = (u32)cmd->request_bufflen;
- 
- 	if( scb->dma_direction == PCI_DMA_TODEVICE ) {
--		pci_dma_sync_sg(adapter->dev, cmd->request_buffer,
--				cmd->use_sg, PCI_DMA_TODEVICE);
-+		pci_dma_sync_sg(adapter->dev,
-+			(struct scatterlist *)cmd->request_buffer,
-+			cmd->use_sg, PCI_DMA_TODEVICE);
- 	}
- 
- 	/* Return count of SG requests */
-@@ -2474,7 +2498,9 @@
- 	memset(raw_mbox, 0, sizeof(raw_mbox));
- 	raw_mbox[0] = FLUSH_ADAPTER;
- 
--	irq_disable(adapter);
-+	if (adapter->flag & BOARD_IOMAP)
-+		irq_disable(adapter);
-+
- 	free_irq(adapter->host->irq, adapter);
- 
- 	/* Issue a blocking (interrupts disabled) command to the card */
-@@ -2549,7 +2575,9 @@
- 		/*
- 		 * Unregister the character device interface to the driver.
- 		 */
--		unregister_chrdev(major, "megadev");
-+		if (major >= 0) {
-+			unregister_chrdev(major, "megadev");
-+		}
- 
- 		unregister_reboot_notifier(&mega_notifier);
- 
-@@ -2568,6 +2596,9 @@
- 	 */
- 	scsi_unregister(host);
- 
-+#ifdef LSI_CONFIG_COMPAT
-+	unregister_ioctl32_conversion(MEGAIOCCMD);
++#if defined(CONFIG_EISA) || defined(CONFIG_ISA)
+ /* enable support for EISA and ISA controllers */
+ static int probe_eisa_isa = 0;
 +#endif
  
- 	printk("ok.\n");
+ #ifdef MODULE
+ #if LINUX_VERSION_CODE >= 0x02011A
+@@ -744,7 +754,9 @@ MODULE_PARM(max_ids, "i");
+ MODULE_PARM(rescan, "i");
+ MODULE_PARM(virt_ctr, "i");
+ MODULE_PARM(shared_access, "i");
++#if defined(CONFIG_EISA) || defined(CONFIG_ISA)
+ MODULE_PARM(probe_eisa_isa, "i");
++#endif
+ MODULE_AUTHOR("Achim Leubner");
+ #endif
+ #if LINUX_VERSION_CODE >= 0x02040B
+@@ -818,6 +830,7 @@ static void gdth_eval_mapping(ulong32 si
  
-@@ -3860,153 +3891,6 @@
+ /* controller search and initialization functions */
  
++#ifdef CONFIG_EISA
+ GDTH_INITFUNC(static int, gdth_search_eisa(ushort eisa_adr))
+ {
+     ulong32 id;
+@@ -834,8 +847,9 @@ GDTH_INITFUNC(static int, gdth_search_ei
  
- /**
-- * megaraid_biosparam()
-- * @disk
-- * @dev
-- * @geom
-- *
-- * Return the disk geometry for a particular disk
-- * Input:
-- *	Disk *disk - Disk geometry
-- *	kdev_t dev - Device node
-- *	int *geom  - Returns geometry fields
-- *		geom[0] = heads
-- *		geom[1] = sectors
-- *		geom[2] = cylinders
-- */
--static int
--megaraid_biosparam(Disk *disk, kdev_t dev, int *geom)
--{
--	int heads, sectors, cylinders;
--	adapter_t *adapter;
--
--	/* Get pointer to host config structure */
--	adapter = (adapter_t *)disk->device->host->hostdata;
--
--	if (IS_RAID_CH(adapter, disk->device->channel)) {
--			/* Default heads (64) & sectors (32) */
--			heads = 64;
--			sectors = 32;
--			cylinders = disk->capacity / (heads * sectors);
--
--			/*
--			 * Handle extended translation size for logical
-drives
--			 * > 1Gb
--			 */
--			if (disk->capacity >= 0x200000) {
--				heads = 255;
--				sectors = 63;
--				cylinders = disk->capacity / (heads *
-sectors);
--			}
--
--			/* return result */
--			geom[0] = heads;
--			geom[1] = sectors;
--			geom[2] = cylinders;
--	}
--	else {
--		if( !mega_partsize(disk, dev, geom) )
--			return 0;
--
--		printk(KERN_WARNING
--		"megaraid: invalid partition on this disk on channel %d\n",
--				disk->device->channel);
--
--		/* Default heads (64) & sectors (32) */
--		heads = 64;
--		sectors = 32;
--		cylinders = disk->capacity / (heads * sectors);
--
--		/* Handle extended translation size for logical drives > 1Gb
-*/
--		if (disk->capacity >= 0x200000) {
--			heads = 255;
--			sectors = 63;
--			cylinders = disk->capacity / (heads * sectors);
--		}
--
--		/* return result */
--		geom[0] = heads;
--		geom[1] = sectors;
--		geom[2] = cylinders;
--	}
--
--	return 0;
--}
--
--/*
-- * mega_partsize()
-- * @disk
-- * @geom
-- *
-- * Purpose : to determine the BIOS mapping used to create the partition
-- *	table, storing the results (cyls, hds, and secs) in geom
-- *
-- * Note:	Code is picked from scsicam.h
-- *
-- * Returns : -1 on failure, 0 on success.
-- */
--static int
--mega_partsize(Disk *disk, kdev_t dev, int *geom)
--{
--	struct buffer_head *bh;
--	struct partition *p, *largest = NULL;
--	int i, largest_cyl;
--	int heads, cyls, sectors;
--	int capacity = disk->capacity;
--
--	int ma = MAJOR(dev);
--	int mi = (MINOR(dev) & ~0xf);
--
--	int block = 1024; 
--
--	if (blksize_size[ma])
--		block = blksize_size[ma][mi];
--
--	if (!(bh = bread(MKDEV(ma,mi), 0, block)))
--		return -1;
--
--	if (*(unsigned short *)(bh->b_data + 510) == 0xAA55 ) {
--
--		for (largest_cyl = -1,
--			p = (struct partition *)(0x1BE + bh->b_data), i = 0;
--			i < 4; ++i, ++p) {
--
--			if (!p->sys_ind) continue;
--
--			cyls = p->end_cyl + ((p->end_sector & 0xc0) << 2);
--
--			if (cyls >= largest_cyl) {
--				largest_cyl = cyls;
--				largest = p;
--			}
--		}
--	}
--
--	if (largest) {
--		heads = largest->end_head + 1;
--		sectors = largest->end_sector & 0x3f;
--
--		if (!heads || !sectors) {
--			brelse(bh);
--			return -1;
--		}
--
--		cyls = capacity/(heads * sectors);
--
--		geom[0] = heads;
--		geom[1] = sectors;
--		geom[2] = cyls;
--
--		brelse(bh);
--		return 0;
--	}
--
--	brelse(bh);
--	return -1;
--}
--
--
--/**
-  * megaraid_reboot_notify()
-  * @this - unused
-  * @code - shutdown code
-@@ -4040,7 +3924,9 @@
- 		memset(raw_mbox, 0, sizeof(raw_mbox));
- 		raw_mbox[0] = FLUSH_ADAPTER;
+     return 0;                                   
+ }
++#endif
  
--		irq_disable(adapter);
-+		if (adapter->flag & BOARD_IOMAP)
-+			irq_disable(adapter);
-+
- 		free_irq(adapter->host->irq, adapter);
+-
++#ifdef CONFIG_ISA
+ GDTH_INITFUNC(static int, gdth_search_isa(ulong32 bios_adr))
+ {
+     void *addr;
+@@ -850,8 +864,9 @@ GDTH_INITFUNC(static int, gdth_search_is
+     }
+     return 0;
+ }
++#endif
  
- 		/*
-@@ -4179,6 +4065,18 @@
+-
++#ifdef CONFIG_PCI
+ GDTH_INITFUNC(static int, gdth_search_pci(gdth_pci_str *pcistr))
+ {
+     ushort device, cnt;
+@@ -872,6 +887,7 @@ GDTH_INITFUNC(static int, gdth_search_pc
+                     PCI_DEVICE_ID_INTEL_SRC_XSCALE);
+     return cnt;
+ }
++#endif
+ 
+ #if LINUX_VERSION_CODE >= 0x20363
+ /* Vortex only makes RAID controllers.
+@@ -1081,6 +1097,7 @@ GDTH_INITFUNC(static void, gdth_sort_pci
  }
  
  
-+#ifdef LSI_CONFIG_COMPAT
-+static int
-+megadev_compat_ioctl(unsigned int fd, unsigned int cmd, unsigned long arg,
-+		struct file *filep)
-+{
-+	struct inode *inode = filep->f_dentry->d_inode;
++#ifdef CONFIG_EISA
+ GDTH_INITFUNC(static int, gdth_init_eisa(ushort eisa_adr,gdth_ha_str *ha))
+ {
+     ulong32 retries,id;
+@@ -1170,8 +1187,9 @@ GDTH_INITFUNC(static int, gdth_init_eisa
+     }
+     return 1;
+ }
++#endif
+ 
+-       
++#ifdef CONFIG_ISA
+ GDTH_INITFUNC(static int, gdth_init_isa(ulong32 bios_adr,gdth_ha_str *ha))
+ {
+     register gdt2_dpram_str *dp2_ptr;
+@@ -1268,8 +1286,9 @@ GDTH_INITFUNC(static int, gdth_init_isa(
+     gdth_writeb(0xff, &dp2_ptr->io.irqdel);
+     return 1;
+ }
++#endif
+ 
+-
++#ifdef CONFIG_PCI
+ GDTH_INITFUNC(static int, gdth_init_pci(gdth_pci_str *pcistr,gdth_ha_str *ha))
+ {
+     register gdt6_dpram_str *dp6_ptr;
+@@ -1677,6 +1696,7 @@ GDTH_INITFUNC(static int, gdth_init_pci(
+ 
+     return 1;
+ }
++#endif
+ 
+ 
+ /* controller protocol functions */
+@@ -4145,8 +4165,10 @@ GDTH_INITFUNC(void, internal_setup(char 
+             virt_ctr = val;
+         else if (!strncmp(argv, "shared_access:", 14))
+             shared_access = val;
++#if defined(CONFIG_EISA) || defined(CONFIG_ISA)
+         else if (!strncmp(argv, "probe_eisa_isa:", 15))
+             probe_eisa_isa = val;
++#endif
+         else if (!strncmp(argv, "reserve_list:", 13)) {
+             reserve_list[0] = val;
+             for (i = 1; i < MAX_RES_ARGS; i++) {
+@@ -4193,8 +4215,6 @@ GDTH_INITFUNC(int, gdth_detect(Scsi_Host
+ {
+     struct Scsi_Host *shp;
+     gdth_ha_str *ha;
+-    ulong32 isa_bios;
+-    ushort eisa_slot;
+     int i,hanum,cnt,ctr;
+     unchar b;
+     
+@@ -4227,8 +4247,12 @@ GDTH_INITFUNC(int, gdth_detect(Scsi_Host
+     gdth_polling = TRUE; b = 0;
+     gdth_clear_events();
+ 
++#if defined(CONFIG_EISA) || defined(CONFIG_ISA)
+     /* As default we do not probe for EISA or ISA controllers */
+-    if (probe_eisa_isa) {    
++    if (probe_eisa_isa) {
++	ulong32 isa_bios;
++	ushort eisa_slot;
 +
-+	return megadev_ioctl(inode, filep, cmd, arg);
-+}
+         /* scanning for controllers, at first: ISA controller */
+         for (isa_bios=0xc8000UL; isa_bios<=0xd8000UL; isa_bios+=0x8000UL) {
+             dma_addr_t scratch_dma_handle;
+@@ -4473,6 +4497,7 @@ GDTH_INITFUNC(int, gdth_detect(Scsi_Host
+             }
+         }
+     }
++#endif
+ 
+     /* scanning for PCI controllers */
+ #if LINUX_VERSION_CODE < 0x2015C
+
+--=-LOqsCaV7bXDNtGbYOngx
+Content-Disposition: attachment; filename=gdth-2.4.25-noisa.patch
+Content-Type: text/x-patch; name=gdth-2.4.25-noisa.patch; charset=
+Content-Transfer-Encoding: 7bit
+
+--- drivers/scsi/gdth.c.orig	2003-08-30 02:01:42.000000000 -0400
++++ drivers/scsi/gdth.c	2004-03-25 08:42:07.000000000 -0500
+@@ -380,16 +380,21 @@
+ static void gdth_copy_internal_data(Scsi_Cmnd *scp,char *buffer,ushort count);
+ static int gdth_internal_cache_cmd(int hanum,Scsi_Cmnd *scp);
+ static int gdth_fill_cache_cmd(int hanum,Scsi_Cmnd *scp,ushort hdrive);
+-
++#ifdef CONFIG_EISA
+ static int gdth_search_eisa(ushort eisa_adr);
++static int gdth_init_eisa(ushort eisa_adr,gdth_ha_str *ha);
++#endif
++#ifdef CONFIG_ISA
+ static int gdth_search_isa(ulong32 bios_adr);
++static int gdth_init_isa(ulong32 bios_adr,gdth_ha_str *ha);
++#endif
++#ifdef CONFIG_PCI
+ static int gdth_search_pci(gdth_pci_str *pcistr);
++static int gdth_init_pci(gdth_pci_str *pcistr,gdth_ha_str *ha);
++static void gdth_sort_pci(gdth_pci_str *pcistr, int cnt);
++#endif
+ static void gdth_search_dev(gdth_pci_str *pcistr, ushort *cnt, 
+                             ushort vendor, ushort dev);
+-static void gdth_sort_pci(gdth_pci_str *pcistr, int cnt);
+-static int gdth_init_eisa(ushort eisa_adr,gdth_ha_str *ha);
+-static int gdth_init_isa(ulong32 bios_adr,gdth_ha_str *ha);
+-static int gdth_init_pci(gdth_pci_str *pcistr,gdth_ha_str *ha);
+ 
+ static void gdth_enable_int(int hanum);
+ static int gdth_get_status(unchar *pIStatus,int irq);
+@@ -589,8 +594,10 @@
+ #endif
+ 
+ 
++#if defined(CONFIG_EISA) || defined(CONFIG_ISA)
+ static unchar   gdth_drq_tab[4] = {5,6,7,7};            /* DRQ table */
+ static unchar   gdth_irq_tab[6] = {0,10,11,12,14,0};    /* IRQ table */
++#endif
+ static unchar   gdth_polling;                           /* polling if TRUE */
+ static unchar   gdth_from_wait  = FALSE;                /* gdth_wait() */
+ static int      wait_index,wait_hanum;                  /* gdth_wait() */
+@@ -687,6 +694,11 @@
+ /* shared access */
+ static int shared_access = 1;
+ 
++#if defined(CONFIG_EISA) || defined(CONFIG_ISA)
++/* enable support for EISA and ISA controllers */
++static int probe_eisa_isa = 0;
 +#endif
 +
-+
- /**
-  * megadev_ioctl()
-  * @inode - Our device inode
-@@ -4386,8 +4284,8 @@
- 			/*
- 			 * The user passthru structure
- 			 */
--			upthru = (mega_passthru *)MBOX(uioc)->xferaddr;
--
-+			upthru = (mega_passthru *)
-+					((ulong)(MBOX(uioc)->xferaddr));
- 			/*
- 			 * Copy in the user passthru here.
- 			 */
-@@ -4434,8 +4332,9 @@
- 				/*
- 				 * Get the user data
- 				 */
--				if( copy_from_user(data, (char *)uxferaddr,
--							pthru->dataxferlen)
-) {
-+				if( copy_from_user(data,
-+						(char *)((ulong)uxferaddr),
-+						pthru->dataxferlen) ) {
- 					rval = (-EFAULT);
- 					goto freemem_and_return;
- 				}
-@@ -4460,8 +4359,8 @@
- 			 * Is data going up-stream
- 			 */
- 			if( pthru->dataxferlen && (uioc.flags & UIOC_RD) ) {
--				if( copy_to_user((char *)uxferaddr, data,
--							pthru->dataxferlen)
-) {
-+				if( copy_to_user((char *)((ulong)uxferaddr),
-+						data, pthru->dataxferlen) )
-{
- 					rval = (-EFAULT);
- 				}
- 			}
-@@ -4509,12 +4408,13 @@
- 				/*
- 				 * Get the user data
- 				 */
--				if( copy_from_user(data, (char *)uxferaddr,
--							uioc.xferlen) ) {
-+				if( copy_from_user(data,
-+						(char *)((ulong)uxferaddr),
-+						uioc.xferlen) ) {
- 
- 					pci_free_consistent(pdev,
--							uioc.xferlen,
--							data,
-data_dma_hndl);
-+						uioc.xferlen, data,
-+						data_dma_hndl);
- 
- 					return (-EFAULT);
- 				}
-@@ -4545,8 +4445,8 @@
- 			 * Is data going up-stream
- 			 */
- 			if( uioc.xferlen && (uioc.flags & UIOC_RD) ) {
--				if( copy_to_user((char *)uxferaddr, data,
--							uioc.xferlen) ) {
-+				if( copy_to_user((char *)((ulong)uxferaddr),
-+						data, uioc.xferlen) ) {
- 
- 					rval = (-EFAULT);
- 				}
-@@ -4731,7 +4631,7 @@
- 
- 			umc = MBOX_P(uiocp);
- 
--			upthru = (mega_passthru *)umc->xferaddr;
-+			upthru = (mega_passthru *)((ulong)(umc->xferaddr));
- 
- 			if( put_user(mc->status, (u8 *)&upthru->scsistatus)
-)
- 				return (-EFAULT);
-@@ -4749,7 +4649,7 @@
- 			if (copy_from_user(&kmc, umc, sizeof(megacmd_t)))
- 				return -EFAULT;
- 
--			upthru = (mega_passthru *)kmc.xferaddr;
-+			upthru = (mega_passthru *)((ulong)kmc.xferaddr);
- 
- 			if( put_user(mc->status, (u8 *)&upthru->scsistatus)
-)
- 				return (-EFAULT);
-diff -Naur old/drivers/scsi/megaraid2.h new/drivers/scsi/megaraid2.h
---- old/drivers/scsi/megaraid2.h	Wed Mar 17 01:13:46 2004
-+++ new/drivers/scsi/megaraid2.h	Wed Mar 17 01:29:22 2004
-@@ -6,7 +6,7 @@
- 
- 
- #define MEGARAID_VERSION	\
--	"v2.10.1 (Release Date: Wed Dec  3 15:34:42 EST 2003)\n"
-+	"v2.10.2.1 (Release Date: Fri Mar 26 11:50:00 EST 2004)\n"
- 
- /*
-  * Driver features - change the values to enable or disable features in the
-@@ -44,12 +44,6 @@
-  */
- #define MEGA_HAVE_ENH_PROC	1
- 
--#define MAX_DEV_TYPE	32
--
--#ifndef PCI_VENDOR_ID_LSI_LOGIC
--#define PCI_VENDOR_ID_LSI_LOGIC		0x1000
--#endif
--
- #ifndef PCI_VENDOR_ID_AMI
- #define PCI_VENDOR_ID_AMI		0x101E
+ #ifdef MODULE
+ #if LINUX_VERSION_CODE >= 0x02011A
+ /* parameters for modprobe/insmod */
+@@ -700,6 +712,9 @@
+ MODULE_PARM(rescan, "i");
+ MODULE_PARM(virt_ctr, "i");
+ MODULE_PARM(shared_access, "i");
++#if defined(CONFIG_EISA) || defined(CONFIG_ISA)
++MODULE_PARM(probe_eisa_isa, "i");
++#endif
+ MODULE_AUTHOR("Achim Leubner");
  #endif
-@@ -87,6 +81,7 @@
- #define	HP_SUBSYS_VID			0x103C
- #define LSI_SUBSYS_VID			0x1000
- #define INTEL_SUBSYS_VID		0x8086
-+#define FSC_SUBSYS_VID			0x1734
+ #if LINUX_VERSION_CODE >= 0x02040B
+@@ -764,6 +779,7 @@
  
- #define HBA_SIGNATURE	      		0x3344
- #define HBA_SIGNATURE_471	  	0xCCCC
-@@ -134,7 +129,6 @@
- 	.info =				megaraid_info,		\
- 	.command =			megaraid_command,	\
- 	.queuecommand =			megaraid_queue,		\
--	.bios_param =			megaraid_biosparam,	\
- 	.max_sectors =			MAX_SECTORS_PER_IO,	\
- 	.can_queue =			MAX_COMMANDS,		\
- 	.this_id =			DEFAULT_INITIATOR_ID,	\
-@@ -148,7 +142,8 @@
- 	.eh_device_reset_handler =	megaraid_reset,		\
- 	.eh_bus_reset_handler =		megaraid_reset,		\
- 	.eh_host_reset_handler =	megaraid_reset,		\
--	.highmem_io =			1			\
-+	.highmem_io =			1,			\
-+	.vary_io =			1			\
+ /* controller search and initialization functions */
+ 
++#ifdef CONFIG_EISA
+ GDTH_INITFUNC(static int, gdth_search_eisa(ushort eisa_adr))
+ {
+     ulong32 id;
+@@ -780,8 +796,9 @@
+ 
+     return 0;                                   
+ }
++#endif
+ 
+-
++#ifdef CONFIG_ISA
+ GDTH_INITFUNC(static int, gdth_search_isa(ulong32 bios_adr))
+ {
+     void *addr;
+@@ -796,8 +813,9 @@
+     }
+     return 0;
+ }
++#endif
+ 
+-
++#ifdef CONFIG_PCI
+ GDTH_INITFUNC(static int, gdth_search_pci(gdth_pci_str *pcistr))
+ {
+     ushort device, cnt;
+@@ -816,6 +834,7 @@
+                     PCI_DEVICE_ID_INTEL_SRC);
+     return cnt;
+ }
++#endif
+ 
+ #if LINUX_VERSION_CODE >= 0x20363
+ /* Vortex only makes RAID controllers.
+@@ -1024,6 +1043,7 @@
  }
  
  
-@@ -662,6 +657,9 @@
-  */
- #define MEGAIOC_MAGIC  	'm'
- 
-+/* Mega IOCTL command */
-+#define MEGAIOCCMD     	_IOWR(MEGAIOC_MAGIC, 0, struct uioctl_t)
-+
- #define MEGAIOC_QNADAP		'm'	/* Query # of adapters */
- #define MEGAIOC_QDRVRVER	'e'	/* Query driver version */
- #define MEGAIOC_QADAPINFO   	'g'	/* Query adapter information */
-@@ -1115,7 +1113,6 @@
- static int megaraid_command (Scsi_Cmnd *);
- static int megaraid_abort(Scsi_Cmnd *);
- static int megaraid_reset(Scsi_Cmnd *);
--static int megaraid_biosparam (Disk *, kdev_t, int *);
- 
- static int mega_build_sglist (adapter_t *adapter, scb_t *scb,
- 			      u32 *buffer, u32 *length);
-@@ -1129,6 +1126,16 @@
- static int megaraid_reboot_notify (struct notifier_block *,
- 				   unsigned long, void *);
- static int megadev_open (struct inode *, struct file *);
-+
-+#if defined(CONFIG_COMPAT) || defined( __x86_64__) ||
-defined(IA32_EMULATION)
-+#define LSI_CONFIG_COMPAT
++#ifdef CONFIG_EISA
+ GDTH_INITFUNC(static int, gdth_init_eisa(ushort eisa_adr,gdth_ha_str *ha))
+ {
+     ulong32 retries,id;
+@@ -1113,8 +1133,9 @@
+     }
+     return 1;
+ }
 +#endif
-+
-+#ifdef LSI_CONFIG_COMPAT
-+static int megadev_compat_ioctl(unsigned int, unsigned int, unsigned long,
-+	struct file *);
+ 
+-       
++#ifdef CONFIG_ISA       
+ GDTH_INITFUNC(static int, gdth_init_isa(ulong32 bios_adr,gdth_ha_str *ha))
+ {
+     register gdt2_dpram_str *dp2_ptr;
+@@ -1211,8 +1232,9 @@
+     gdth_writeb(0xff, &dp2_ptr->io.irqdel);
+     return 1;
+ }
 +#endif
+ 
+-
++#ifdef CONFIG_PCI
+ GDTH_INITFUNC(static int, gdth_init_pci(gdth_pci_str *pcistr,gdth_ha_str *ha))
+ {
+     register gdt6_dpram_str *dp6_ptr;
+@@ -1612,6 +1634,7 @@
+ 
+     return 1;
+ }
++#endif
+ 
+ 
+ /* controller protocol functions */
+@@ -3943,6 +3966,10 @@
+             virt_ctr = val;
+         else if (!strncmp(argv, "shared_access:", 14))
+             shared_access = val;
++#if defined(CONFIG_EISA) || defined(CONFIG_ISA)
++	else if (!strncmp(argv, "probe_eisa_isa:", 15))
++	    probe_eisa_isa = val;
++#endif
+         else if (!strncmp(argv, "reserve_list:", 13)) {
+             reserve_list[0] = val;
+             for (i = 1; i < MAX_RES_ARGS; i++) {
+@@ -3989,8 +4016,6 @@
+ {
+     struct Scsi_Host *shp;
+     gdth_ha_str *ha;
+-    ulong32 isa_bios;
+-    ushort eisa_slot;
+     int i,hanum,cnt,ctr;
+     unchar b;
+     
+@@ -4023,6 +4048,12 @@
+     gdth_polling = TRUE; b = 0;
+     gdth_clear_events();
+ 
++#if defined(CONFIG_EISA) || defined(CONFIG_ISA)
++    /* As default we do not probe for EISA or ISA controllers */
++    if (probe_eisa_isa) {
++       ulong32 isa_bios;
++       ushort eisa_slot;
 +
- static int megadev_ioctl (struct inode *, struct file *, unsigned int,
- 		unsigned long);
- static int mega_m_to_n(void *, nitioctl_t *);
-@@ -1172,7 +1179,6 @@
- static mega_ext_passthru* mega_prepare_extpassthru(adapter_t *,
- 		scb_t *, Scsi_Cmnd *, int, int);
- static void mega_enum_raid_scsi(adapter_t *);
--static int mega_partsize(Disk *, kdev_t, int *);
- static void mega_get_boot_drv(adapter_t *);
- static inline int mega_get_ldrv_num(adapter_t *, Scsi_Cmnd *, int);
- static int mega_support_random_del(adapter_t *);
+     /* scanning for controllers, at first: ISA controller */
+     for (isa_bios=0xc8000UL; isa_bios<=0xd8000UL; isa_bios+=0x8000UL) {
+         if (gdth_ctr_count >= MAXHA) 
+@@ -4241,6 +4272,7 @@
+             gdth_enable_int(hanum);
+         }
+     }
++#endif
+ 
+     /* scanning for PCI controllers */
+ #if LINUX_VERSION_CODE >= 0x2015C
+
+--=-LOqsCaV7bXDNtGbYOngx--
+
