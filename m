@@ -1,42 +1,33 @@
 From: Doug Ledford <dledford@redhat.com>
 Subject: Re: [PATCH] Ghost devices being reported with AIC7XXX version 6.2.6
-Date: Thu, 31 Oct 2002 15:43:09 -0500
+Date: Thu, 31 Oct 2002 15:38:32 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20021031204309.GH30047@redhat.com>
-References: <20021031201717.GF30047@redhat.com> <Pine.BSF.4.21.0210311220550.23076-100000@beppo>
+Message-ID: <20021031203832.GG30047@redhat.com>
+References: <20021031200758.GB30047@redhat.com> <Pine.BSF.4.21.0210311225260.23076-100000@beppo>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <Pine.BSF.4.21.0210311220550.23076-100000@beppo>
+In-Reply-To: <Pine.BSF.4.21.0210311225260.23076-100000@beppo>
 List-Id: linux-scsi@vger.kernel.org
 To: Matthew Jacob <mjacob@feral.com>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, "Justin T. Gibbs" <gibbs@scsiguy.com>, Mike Brown <mbrown@emc.com>, bferjul@emc.com, jkrasner@emc.com, conway_heather@emc.com, linux-scsi@vger.kernel.org
+Cc: "Justin T. Gibbs" <gibbs@scsiguy.com>, Mike Brown <mbrown@emc.com>, bferjul@emc.com, jkrasner@emc.com, conway_heather@emc.com, linux-scsi@vger.kernel.org
 
-On Thu, Oct 31, 2002 at 12:27:44PM -0800, Matthew Jacob wrote:
-> > On Thu, Oct 31, 2002 at 12:04:16PM -0800, Matthew Jacob wrote:
-> > > 
-> > > *blush*
-> > > 
-> > > I was actually going to start finally working 2.5 next week (don't hit
-> > > me! don't hit me)
+On Thu, Oct 31, 2002 at 12:26:15PM -0800, Matthew Jacob wrote:
 > > 
-> > Hehehe!  Going to start after the feature freeze is already over, makes it 
-> > kind of hard to get anything new in doesn't it ;-)
+> > We currently only do report luns on SCSI-3 devices.  I didn't think this 
+> > was a supported command on SCSI-2, but I hadn't checked the spec 
+> > recently...hmmm...nope, not supported in SCSI-2, so using report luns on 
+> > SCSI-2 devices is just as much a hack as going above lun 7 on SCSI-2 
+> > devices without specific knowledge of transfer interconnect.
 > 
-> Well, look- doing feature freezes early is all well and swell, but
-> remember that a lot of us out here, if we get any work stuff at all for
-> Linux, has us concentrate on 2.4, or even 2.2.
+> It's transitional in that a number of devices report as SCSI-2 but do
+> things like REPORT LUNs. It's changing very fast though.
 
-Yes, I know, that's why there was a wink-smiley there.
-
-> driver subsystems are candidates for late binding and late changing
-> because they are typically isolated areas.
-
-As well as they are here.  At least driver updates anyway.  Driver 
-subsystem changes are a bit harder to get in, especially if they stand a 
-chance of breaking other working drivers.
-
+And we recently added INQUIRY with the EVPD bit set and an EVPD page 0.  
+>From the reports I've seen, I'm pretty sure it's causing a more than
+trivial number of devices to lock up on boot.  I suspect blindly pulling a
+REPORT_LUNS on SCSI-2 devices would likely cause similar problems.
 
 -- 
   Doug Ledford <dledford@redhat.com>     919-754-3700 x44233
