@@ -1,22 +1,22 @@
-From: Nick Piggin <piggin@cyberone.com.au>
+From: Jens Axboe <axboe@suse.de>
 Subject: Re: [PATCH] SG_IO readcd and various bugs
-Date: Tue, 3 Jun 2003 15:39:51 +1000
+Date: Tue, 3 Jun 2003 10:29:38 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030603053951.GA292@didi>
+Message-ID: <20030603082938.GG482@suse.de>
 References: <3ED86687.6000805@torque.net> <20030531105742.GC9561@suse.de> <3ED9ADC5.7060006@torque.net> <20030602072756.GC2832@suse.de> <3EDC30C7.5060804@torque.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from CPE-203-51-33-237.nsw.bigpond.net.au ([203.51.33.237]:4480 "EHLO
-	didi") by vger.kernel.org with ESMTP id S264943AbTFCGlH (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Jun 2003 02:41:07 -0400
+Received: from ns.suse.de ([213.95.15.193]:43279 "EHLO Cantor.suse.de")
+	by vger.kernel.org with ESMTP id S264609AbTFCIQt (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Jun 2003 04:16:49 -0400
 Content-Disposition: inline
 In-Reply-To: <3EDC30C7.5060804@torque.net>
 List-Id: linux-scsi@vger.kernel.org
 To: Douglas Gilbert <dougg@torque.net>
-Cc: Jens Axboe <axboe@suse.de>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Tue, Jun 03, 2003 at 03:23:19PM +1000, Douglas Gilbert wrote:
+On Tue, Jun 03 2003, Douglas Gilbert wrote:
 > Jens Axboe wrote:
 > >On Sun, Jun 01 2003, Douglas Gilbert wrote:
 > <snip>
@@ -90,22 +90,36 @@ On Tue, Jun 03, 2003 at 03:23:19PM +1000, Douglas Gilbert wrote:
 > usually with LSI or Adaptec HBAs. The max_sectors==8192
 > set by the aic7xxx is the maximum of any driver in the
 > ide or the scsi subsystems (both in lk 2.4 and lk 2.5)
-> currently.
+> currently. Most drivers are picking up the default value.
+> The definition of "max_sectors" states in
+> drivers/scsi/hosts.h:
+>   "if the host adapter has limitations beside segment count"
+> That could be taken to imply if a LLD does not define
+> max_sectors then there is no limit.
+> 
+> In summary, from a HBA drivers point of view, "max_sectors"
+> is misnamed (since they transfer bytes) and not precise
+> enough to describe any limitations on data transfers they
+> may have.
+> 
+> Apologies in advance for propagating further nonsense.
 
-I would just like to add my 2c here, and say that 16MB
-requests are just a bit too big for a general purpose
-installation, and using any of the available IO schedulers.
+Wow, that was a long email. I don't have good connectivity these days,
+so mail collisions are bound to happen.
 
-The grainularity and disparity between large and small
-requests is just too large. I know AS wouldn't cope well
-with requests that large in a general purpose situation
-(general purpose being < 4000 disks :P )
+As I wrote in the last email to you, it might make sense to introduce a
+hard upper limit and a preferred limit. I think you are missing the
+point with the latency requirements. If you allow 16MB sg requests in
+the queue, you will both have pinned down a _lot_ of memory (that's one
+problem) and build up a huge latency queue. And that's not even
+considering that it makes _no_ sense from a performance pov to go as
+high as 16MB, zero.
 
-I would be really interested in seeing benchmarks which
-showed a significant performance improvement when going
-from say 128K requests to say 16MB. Even in the most
-favourable conditions for big request sizes, I'd say
-128K should be getting toward the point of diminishing
-returns.
+The fact is that for some drivers, max_sectors is a hard limit. There's
+no way that scsi_ioctl will pass down requests bigger than this, period.
+If 512KB is too small for some operations (your firmware case, it makes
+sense), then I'm all for fixing that up.
 
-Nick
+-- 
+Jens Axboe
+
