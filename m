@@ -1,43 +1,51 @@
-From: Jean Tourrilhes <jt@hpl.hp.com>
-Subject: Defect list size ?
-Date: Wed, 16 Mar 2005 11:47:09 -0800
-Message-ID: <20050316194709.GA4444@bougret.hpl.hp.com>
-Reply-To: jt@hpl.hp.com
+From: Matt Domsch <Matt_Domsch@dell.com>
+Subject: Re: Defect list size ?
+Date: Wed, 16 Mar 2005 13:56:25 -0600
+Message-ID: <20050316195625.GA12283@lists.us.dell.com>
+References: <20050316194709.GA4444@bougret.hpl.hp.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Received: from palrel12.hp.com ([156.153.255.237]:43199 "EHLO palrel12.hp.com")
-	by vger.kernel.org with ESMTP id S262766AbVCPTrO (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 16 Mar 2005 14:47:14 -0500
-Received: from tomil.hpl.hp.com (tomil.hpl.hp.com [15.0.152.100])
-	by palrel12.hp.com (Postfix) with ESMTP id 25DF1411433
-	for <linux-scsi@vger.kernel.org>; Wed, 16 Mar 2005 11:47:10 -0800 (PST)
-Received: from bougret.hpl.hp.com (Debian-exim@bougret.hpl.hp.com [15.9.72.130])
-	by tomil.hpl.hp.com (8.9.3 (PHNE_29774)/8.9.3 HPLabs Timeshare Server) with ESMTP id LAA05218
-	for <linux-scsi@vger.kernel.org>; Wed, 16 Mar 2005 11:47:22 -0800 (PST)
-Received: from jt by bougret.hpl.hp.com with local (Exim 4.44)
-	id 1DBeU1-00019t-PK
-	for linux-scsi@vger.kernel.org; Wed, 16 Mar 2005 11:47:09 -0800
+Received: from ausc60pc101.us.dell.com ([143.166.85.206]:186 "EHLO
+	ausc60pc101.us.dell.com") by vger.kernel.org with ESMTP
+	id S262771AbVCPT40 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 16 Mar 2005 14:56:26 -0500
 Content-Disposition: inline
+In-Reply-To: <20050316194709.GA4444@bougret.hpl.hp.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Jean Tourrilhes <jt@hpl.hp.com>
+Cc: linux-scsi@vger.kernel.org
 
-	Hi,
+On Wed, Mar 16, 2005 at 11:47:09AM -0800, Jean Tourrilhes wrote:
+> 	Hi,
+> 
+> 	What is a reasonable defect list size for an almost new disk
+> (3 weeks - 146 GB).
+> 	scscinfo -d gives me :
+> --------------------------------------------
+> Data from Defect Lists
+> ----------------------
+> 3060 entries in manufacturer table.
+> ...
+> [truncated]
+> --------------------------------------------
+> 	Which is way more than my older and smaller disk. I'm
+> wondering if this is acceptable or if I have a bad disk.
 
-	What is a reasonable defect list size for an almost new disk
-(3 weeks - 146 GB).
-	scscinfo -d gives me :
---------------------------------------------
-Data from Defect Lists
-----------------------
-3060 entries in manufacturer table.
-...
-[truncated]
---------------------------------------------
-	Which is way more than my older and smaller disk. I'm
-wondering if this is acceptable or if I have a bad disk.
+306184192 sectors (give or take a few) on that disk.
+     3060 sectors bad at low-level format time.
 
-	Thanks...
+While it may feel like a large number, it really isn't for the size
+disk you've got.
 
-	Jean
+Now, if the number of "Grown" defects starts increasing, then yes, be
+worried.
+
+Thanks,
+Matt
+
+-- 
+Matt Domsch
+Software Architect
+Dell Linux Solutions linux.dell.com & www.dell.com/linux
+Linux on Dell mailing lists @ http://lists.us.dell.com
