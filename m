@@ -1,31 +1,53 @@
-From: Rask Ingemann Lambertsen <rask@sygehus.dk>
-Subject: Re: [announce] scsi_id release 0.2
-Date: Fri, 12 Dec 2003 15:27:37 +0100
+From: "Tony Battersby" <tonyb@cybernetics.com>
+Subject: RE: Writing to tape from C system calls
+Date: Fri, 12 Dec 2003 10:14:01 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20031212152737.A1254@sygehus.dk>
-References: <20031205151810.A8891@beaverton.ibm.com> <20031207153802.GA6700@suse.de> <20031207114242.A29572@beaverton.ibm.com> <20031207195915.GA6714@suse.de>
+Message-ID: <03Dec12.101354est.332511@cyborg.cybernetics.com>
+References: <035701c3c0ac$f1ccbae0$aa00a8c0@ASTERIX>
+Reply-To: <tonyb@cybernetics.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 0x50a41c34.albnxx15.adsl-dhcp.tele.dk ([80.164.28.52]:1796 "EHLO
-	0x50a41c34.albnxx15.adsl-dhcp.tele.dk") by vger.kernel.org with ESMTP
-	id S265241AbTLLO1k (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 12 Dec 2003 09:27:40 -0500
-Content-Disposition: inline
-In-Reply-To: <20031207195915.GA6714@suse.de>; from olh@suse.de on Sun, Dec 07, 2003 at 08:59:15PM +0100
+Received: from host02.cybernetics.com ([206.246.200.18]:60681 "EHLO
+	cybernetics.com") by vger.kernel.org with ESMTP id S265261AbTLLPOe
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 12 Dec 2003 10:14:34 -0500
+In-Reply-To: <035701c3c0ac$f1ccbae0$aa00a8c0@ASTERIX>
 List-Id: linux-scsi@vger.kernel.org
-To: Olaf Hering <olh@suse.de>
-Cc: Patrick Mansfield <patmans@us.ibm.com>, linux-scsi@vger.kernel.org, linux-hotplug-devel@lists.sourceforge.net
+To: 'Ujval Lodha' <ujval@gdc-tech.com>, linux-scsi@vger.kernel.org
 
-On Sun, Dec 07, 2003 at 08:59:15PM +0100, Olaf Hering wrote:
+> When I write to it at any block that block becomes the last
+> block on the device. I am unable to seek to any block after
+> that on the tape.
 
-> I need also this patch because gcc decides that a printf("\n"); could be
-> done with a putchar, which is not defined for some reasons.
+> Is this normal? Is it not possible to use the tape device -
+> and modify data at any block by seeking to it and writing?
 
-#include <stdio.h>
+It is completely normal.  All modern tape drives work this way.  Unlike
+a disk drive, a block address on tape does not correspond to a
+predefined location on the medium.  The tape drive (re)formats the
+medium while it writes, which invalidates anything past the last written
+point on tape.  So, you can seek/read/write the tape from the beginning
+of the tape up to just after the last written block, but the tape medium
+after that point is not considered to be formatted and cannot be used
+(again) until it is reached while writing.
 
-must be missing somewhere.
+As you observed, writing to tape in the middle of valid data will cause
+the contents of the tape to be truncated at the write point.  That's the
+way the technology works.  There is no way to update a block in the
+middle of the valid data without losing everything that comes after it.
+The only way around this is to use multiple partitions, but not all tape
+drives support partitions, and changing partitions takes time.
 
--- 
-Regards,
-Rask Ingemann Lambertsen
+> Is there some source of information where I can read about
+> programming tape devices from C? So far, I havent been able
+> to find one.
+
+man st
+
+But that's pretty low-level, of course.
+
+Anthony J. Battersby
+Cybernetics
+
