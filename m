@@ -1,52 +1,143 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: [linux-usb-devel] Re: Unaligned scatter-gather buffers and usb-storage
-Date: Thu, 20 Nov 2003 16:30:26 +0100
+From: Pat LaVarre <p.lavarre@ieee.org>
+Subject: Re: [usb-storage] mode sense blacklist how
+Date: 20 Nov 2003 08:57:15 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20031120153026.GB1106@suse.de>
-References: <20031120065353.GW1106@suse.de> <Pine.LNX.4.44L0.0311201015030.878-100000@ida.rowland.org>
+Message-ID: <1069343835.6663.16.camel@patrh9>
+References: <Pine.LNX.4.44L0.0311131638320.949-100000@ida.rowland.org>
+	 <1068767049.2851.166.camel@patrh9>
+	 <1068768796.3fb41e1c8d075@webmail.netregistry.net>
+	 <1068775834.2851.321.camel@patrh9>
+	 <20031113181945.I30194@one-eyed-alien.net>
+	 <1068777510.2851.359.camel@patrh9>
+	 <1068779468.3fb447ccc6e60@webmail.netregistry.net>
+	 <1068838908.2852.34.camel@patrh9>
+	 <1069246502.3fbb6826955dd@webmail.netregistry.net>
+	 <1069261377.2867.37.camel@patrh9>
+	 <1069337187.3fbcca6395f44@webmail.netregistry.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns.virtualhost.dk ([195.184.98.160]:31874 "EHLO virtualhost.dk")
-	by vger.kernel.org with ESMTP id S261938AbTKTPbb (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 20 Nov 2003 10:31:31 -0500
-Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.44L0.0311201015030.878-100000@ida.rowland.org>
+Received: from email-out2.iomega.com ([147.178.1.83]:39592 "EHLO
+	email.iomega.com") by vger.kernel.org with ESMTP id S262009AbTKTP54
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 20 Nov 2003 10:57:56 -0500
+In-Reply-To: <1069337187.3fbcca6395f44@webmail.netregistry.net>
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: Kai Makisara <Kai.Makisara@kolumbus.fi>, James Bottomley <James.Bottomley@steeleye.com>, Oliver Neukum <oliver@neukum.org>, Patrick Mansfield <patmans@us.ibm.com>, Douglas Gilbert <dougg@torque.net>, SCSI development list <linux-scsi@vger.kernel.org>, USB development list <linux-usb-devel@lists.sourceforge.net>
+To: dmitrik@users.sourceforge.net
+Cc: linux-scsi@vger.kernel.org
 
-On Thu, Nov 20 2003, Alan Stern wrote:
-> On Thu, 20 Nov 2003, Jens Axboe wrote:
+> The only really important question IMHO is
+> how come SG_IO is not interruptible.
+
+Yes, now being pursued by Doug G in this thread.
+
+> > In the log I see this command repeated, time and again.  Did you ask for
+> > this command repeatedly yourself, or is it the code of SG_IO and below
+> > that is so helpfully retrying?
 > 
-> > Then you just cannot do zero-copy dma, if the buffer isn't aligned
-> > properly. It's as simple as that. And surely that wont kill you
-> > performance wise.
+> That wasn't me. I see these commands were sent *after* the device has 
+> been unplugged. It must've been SCSI layer.
+
+This also could matter.  In our kernel code who wrongly thinks we gave
+permission to retry SG_IO?  This evidence echoes someone else's - may
+have been Patrick M - who saw mode sense stuttering.  I don't remember
+if that was different (rude mode sense from the kernel) or the same
+(rude mode sense via SG_IO from plscsi).
+
+> Anyway, it must be obvious by now that the device is broken or shall
+> we say proprietary. There is a quick workaround already in place. I'd
+> say blacklist it in unusual_devs and be done with it.
+
+Not broken.
+
+This device explicitly self-identifies itself as a proprietary kind of
+SCSI via bInterfaceSubClass = xFF and also the almost-proprietary kind
+of SCSI over USB that is bInterfaceProtocol != x50.
+
+No separate blacklist needed.  Recently near here I think I heard:
+
+We of usb-storage are instead choosing to blacklist all the reserved
+bInterfaceSubClass codes altogether.  Already we blacklist such devices
+in that we don't try talking unless they appear in unusual_devs.  Now
+also we won't try non-Microsoft mode sense even if they do appear in
+unusual_devs.
+
+> > the plscsi workaround: -X time 5 0. 
+> > Does that work for you?  
+> 
+> Yes, ... Still, ... device ... must be unplugged ...
+
+Curious.  If the mode senses that work aren't the first mode senses that
+Windows tries, then the resets of Windows must be working ...
+
+> try more MODE SENSE(10) ... finally found some that work:
+> 
+> ./plscsi /dev/sg1 -v -p -X time 10 0 -i xC0 -x "5A 00 3F 00 00 00 00 00 C0 00"
+> produces the following output:
+> 
+> x 00000000 5A 00 3F:00:00:00 00 00:C0 00 .. .. .. .. .. .. "Z@?@@@@@@@"
+> x 00000000 00:32:00:00 00:00:00:00 05:1E:00:12 04:20:02:00 "@2@@@@@@E^@RD B@"
+> x 00000010 01:00:00:00 00:00:00:00 00:00:00:00 00:00:00:00 "A@@@@@@@@@@@@@@@"
+> x 00000020 00:00:00:00 00:B4:00:00 1B:0A:C0:00 00:00:00:00 "@@@@@4@@[J@@@@@@"
+> x 00000030 00:00:00:00 00:00:00:00 00:00:00:00 00:00:00:00 "@@@@@@@@@@@@@@@@"
+> ...
+> x 000000B0 00:00:00:00 00:00:00:00 00:00:00:00 00:00:00:00 "@@@@@@@@@@@@@@@@"
+
+Ah.  Eight byte header claiming x34 bytes available.  No optional block
+descriptor.  x20 bytes of page x05 for boot H:S:C.  x0C bytes of page
+x1B to please Windows.    x 8 + 20 + 0C = 34, good.
+
+> // 0 = plscsi.main exit int
+> 
+> It looks like the device does support MODE SENSE(10) for pages 5 and 1B only.
+
+Perhaps that is all that PC boot BIOS and Windows require.  This could
+be a sample of design-by-test: edit, compile, test, ship when it does
+not crash.  Do you know if the device firmware is upgradable?
+
+> "5A 00 05 00 00 00 00 00 C0 00" and "5A 00 1B 00 00 00 00 00 C0 00" also work.
+> 
+> There is not much useful info on those 2 pages, what was the point 
+> of implementing them I wonder?
+
+t10.org as we speak is hashing over the value or not of reporting a
+fictional C:H:S geometry in the mode page x05 that can report C:H:S up
+to about 8 GiB.
+
+Page x1B I don't remember the t10.org name of but it appears in Windows
+traces, so someone on Earth thinks it can be useful.  Name might be
+something like "power conditions".
+
+> > Have you tried `modprobe -r usb-storage`?
+> "Module in use"
+> Not entirely unexpected since plscsi holds an open handle at this point.
+
+I'm sure I'm enough of a kernelnewbie to be deeply confused here, but I
+don't understand why we can kill the plscsi process without gaining
+permission to kill the SG_IO.
+ 
+> > Adding -v might tell us more.
+>
+> Not really:) It just shows the command going down and that's it.
+
+Thanks for saying, now I feel less bad about not suggesting -v to begin
+with.
+
+> > Here we see "auto-sense" "code: 0x70, key: 0x5, ASC: 0x24, ASCQ: 0x0".
 > > 
-> > Doing bounce buffering to just maintain the use of mapping user pages
-> > into the kernel ls out right silly.
+> > In the t10.org English, x 5 24 means cdb[0] opcode understood, but whole
+> > cdb not understood.  x 5 20 means cdb[0] opcode not understood.
 > > 
-> > So no, I still don't think we have to add anything. Just don't do_dio if
-> > the alignment doesn't allow it. Ditto for sg.
+> > This result suggests, without guaranteeing, that the vendor-specific
+> > bInterfaceSubClass = xFF SCSI of this device includes some cdb's that
+> > begin with op x1A Mode Sense (6).
 > 
-> The answer seems very simple.  There should be a host template entry for
-> dma buffer alignment (there's already a dma_boundary member).  It would be
-> copied into the device's request queue stucture if it is nonzero,
-> overriding the default value of 512.  sg and st should check the user
-> buffer against the request queue's dma_alignment mask and avoid doing
-> direct I/O if the alignment is wrong -- just fall back to normal I/O.
-> 
-> Any objections to this scheme?
+> Hmm, I tried MODE SENSE(6) with the same pages (5,1B and 3F) that worked 
+> with MODE SENSE(10) and I've got the same error: x 5 24.
 
-Well yes, that's what my objection is against - adding that member. Did
-you not read any of my mails? And it's quite simple why - basically
-noone will add it, so it'll end up being 512 anyways.
+Ouch, maybe this device is creatively reporting x 5 24 to mean x 5 20.
 
-I just don't see the point. It's a miniscule optimization. If you need
-that last bit of performance, then align your buffers and noone loses.
-See?
+Pat LaVarre
 
--- 
-Jens Axboe
 
