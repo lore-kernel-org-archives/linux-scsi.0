@@ -1,78 +1,127 @@
-From: Marcelo Tosatti <marcelo.tosatti@cyclades.com>
-Subject: Re: memory leak while reading /proc/scsi/gdth/1
-Date: Thu, 29 Apr 2004 16:51:32 -0300
+From: =?iso-8859-1?q?Liong=20Hoong?= <liongshliongsh@yahoo.com>
+Subject: Re: sg_io_hrd_t - host_status error (0x05)
+Date: Fri, 30 Apr 2004 15:12:34 +0800 (CST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040429195132.GC20141@logos.cnet>
-References: <20040428111004.78451.qmail@web41208.mail.yahoo.com>
+Message-ID: <20040430071234.67120.qmail@web40005.mail.yahoo.com>
+References: <20040427034308.89924.qmail@web40004.mail.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:48345 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S264940AbUD2TuW
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 29 Apr 2004 15:50:22 -0400
-Content-Disposition: inline
-In-Reply-To: <20040428111004.78451.qmail@web41208.mail.yahoo.com>
+Received: from web40005.mail.yahoo.com ([66.218.78.23]:37270 "HELO
+	web40005.mail.yahoo.com") by vger.kernel.org with SMTP
+	id S265100AbUD3HMg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 30 Apr 2004 03:12:36 -0400
+In-Reply-To: <20040427034308.89924.qmail@web40004.mail.yahoo.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Pierre Berthier <berthierp@yahoo.com>
+To: Liong Hoong <liongshliongsh@yahoo.com>, dougg@torque.net
 Cc: linux-scsi@vger.kernel.org
 
-On Wed, Apr 28, 2004 at 04:10:04AM -0700, Pierre Berthier wrote:
-> 
-> Dear Linux-SCSI people,
-> 
-> I noticed a bug in the driver for GDT controler.  It seems to me to be a kind
-> of memory leak, but I am not an expert.  Here is my bug report. 
-> 
-> Pierre
-> 
-> 
-> [1.] One line summary of the problem:    
-> 
-> 'cat /proc/scsi/gdth/1' prints two "__alloc_pages: 0-order allocation failed
-> (gfp=0x21/0)" lines in the log.
-> 
-> [2.] Full description of the problem/report:
-> 
-> I am reading every two minutes the content of '/proc/scsi/gdth/1' to produce a
-> 'status report' of my server.  After doing a 'cat /proc/scsi/gdth/1' ~3300
-> times without problem, each subsequent call prints two lines "__alloc_pages:
-> 0-order allocation failed (gfp=0x21/0)" in the log.  In this case, the result
-> is only:
-> 
-> # cat /proc/scsi/gdth/1 
-> Driver Parameters:
->  reserve_mode:  1               reserve_list:   --
->  max_ids:       127             hdr_channel:    0
-> 
-> Disk Array Controller Information:
->  Number:        0               Name:           GDT6513RS
->  Driver Ver.:   2.05            Firmware Ver.:  2.28.02-R044
->  Serial No.:    0x44C175F1      Cache RAM size: 131072 KB
-> 
-> Physical Devices:
-> 
-> without the list of disks, volumes, etc.
-> 
-> During this, the machine works as good as usually.  After the log message
-> appears, if one goes on reading the proc file ~1000 times, the machine finally
-> hangs.  The problem arises using kernel from 2.4.23 to 2.4.26.  No problems
-> with kernel 2.4.21 (uptime up to 100+ days) -- at least no messages in the log,
-> I think that I remember that the output was also disappearing after some time. 
-> I did not try 2.4.22.
+Hi,
 
-Hi Pierre, 
+Sorry if there is any misunderstanding in my previous
+questions.
+I would like to ask, 
+I am using Linux Red Hat 8.0, kernel 2.4.18. I used
+the SG driver version 3 without any modification of
+the kernel. I encountered host_status error (0x05)
+ONLY on sending opcodes from 0x80 to 0x9f. Can anyone
+give me hints on why or which part of the kernel codes
+that might failed this specific range of opcodes? Or
+is there any work around or patches? Anyone out there
+did experience similar problems and like to share with
+me?
 
-Very nice bug report, thanks.
+Thanks,
+Sean
+ --- Liong Hoong <liongshliongsh@yahoo.com> wrote: >
+Hi Douglas Gilbert,
+> 
+> Thanks for commenting on the problem I am facing. I
+> have few other question,
+> 
+> 1) Is it a common error on kernel 2.4.18 where the
+> host_status error, SG_ERR_DID_ABORT occured whenever
+> pass through opcodes from 0x80 to 0x9f?
+> 
+> 2) Is there any patch to work around this error?
+> 
+> 3) Can you point me to any links or codes that have
+> caused the error?
+> 
+> Thanks for spending time on my doubts.
+> 
+> Best Regards,
+> Sean
+> 
+> --- Douglas Gilbert <dougg@torque.net> wrote: >
+> Liong
+> Hoong wrote:
+> > > Hi all,
+> > > 
+> > > I have set up the main control structure for the
+> > > version 3 SCSI generic driver. I am trying to
+> send
+> > > down some opcodes (vendor specific) to a usb
+> mass
+> > > storage device. Found that I encountered
+> > host_status
+> > > error, SG_ERR_DID_ABORT whenever I send opcodes
+> > from
+> > > 0x80 to 0x9f, but encountered no errors with
+> other
+> > > opcodes. 
+> > > 
+> > > The errors occured even without the device
+> plugged
+> > in,
+> > > which seem the sg driver has exclusively blocked
+> > the
+> > > opcodes from 0x80 to 0x9f. Is it true?? Is there
+> > any
+> > > work around for this??
+> > > 
+> > > Is it because of Group 4 (0x80 to 0x9f) need 16
+> > bytes
+> > > of cdb length? But even I prepare the cdb of 16
+> > bytes,
+> > > it also failed. 
+> > > 
+> > > I am using red hat 8.0, 2.4.18. 
+> > 
+> > The scsi subsystem mid level allowed 16 byte cdbs
+> > through
+> > from and including lk 2.4.15 . The sg driver
+> allows
+> > them
+> > through. That leaves the usb-storage driver (and
+> > drivers
+> > further down the USB stack) and the device itself
+> as
+> > the
+> > cause of your problem.
+> > 
+> > Doug Gilbert
+> > 
+> > -
+> > To unsubscribe from this list: send the line
+> > "unsubscribe linux-scsi" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at 
+> http://vger.kernel.org/majordomo-info.html 
+> 
+> __________________________________________________
+> Do You Yahoo!?
+> Log on to Messenger with your mobile phone!
+> http://sg.messenger.yahoo.com
+> -
+> To unsubscribe from this list: send the line
+> "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at 
+http://vger.kernel.org/majordomo-info.html 
 
-Ill take a look at 2.4.23->2.4.26 changes. In the meantime can you 
-turn VM debugging on
-
-# echo 1 > /sys/vm/vm_gfp_debug
-
-and run "cat /proc/scsi/gdth/1" ? 
-
-There should be some backtraces in dmesg. Copy them (the full output), 
-and run then through ksymoops (using the System.map for this kernel).
-
-Thanks!
+__________________________________________________
+Do You Yahoo!?
+Log on to Messenger with your mobile phone!
+http://sg.messenger.yahoo.com
