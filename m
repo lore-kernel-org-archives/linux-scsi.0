@@ -1,64 +1,64 @@
-From: Douglas Gilbert <dougg@torque.net>
+From: Matthew Wilcox <willy@debian.org>
 Subject: Re: [PATCH][2.6.8-rc1-mm1] drivers/scsi/sg.c gcc341 inlining fix
-Date: Thu, 15 Jul 2004 11:42:59 -0400
+Date: Thu, 15 Jul 2004 16:58:15 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <40F6A603.80503@torque.net>
-References: <200407141751.i6EHprhf009045@harpo.it.uu.se>	<40F57D14.9030005@pobox.com> <20040714143508.3dc25d58.akpm@osdl.org>
-Reply-To: dougg@torque.net
+Message-ID: <20040715155815.GH32326@parcelfarce.linux.theplanet.co.uk>
+References: <200407150946.i6F9kqXn010635@harpo.it.uu.se> <40F68212.2020405@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from tomts13-srv.bellnexxia.net ([209.226.175.34]:15779 "EHLO
-	tomts13-srv.bellnexxia.net") by vger.kernel.org with ESMTP
-	id S266220AbUGOPsH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 15 Jul 2004 11:48:07 -0400
-In-Reply-To: <20040714143508.3dc25d58.akpm@osdl.org>
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:63153 "EHLO
+	www.linux.org.uk") by vger.kernel.org with ESMTP id S266227AbUGOP6T
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 15 Jul 2004 11:58:19 -0400
+Content-Disposition: inline
+In-Reply-To: <40F68212.2020405@pobox.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
-Cc: Jeff Garzik <jgarzik@pobox.com>, mikpe@csd.uu.se, B.Zolnierkiewicz@elka.pw.edu.pl, dgilbert@interlog.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Mikael Pettersson <mikpe@csd.uu.se>, axboe@suse.de, wli@holomorphy.com, B.Zolnierkiewicz@elka.pw.edu.pl, akpm@osdl.org, dgilbert@interlog.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Andrew Morton wrote:
-> Jeff Garzik <jgarzik@pobox.com> wrote:
+On Thu, Jul 15, 2004 at 09:09:38AM -0400, Jeff Garzik wrote:
+> >Compilers for top-down (define-before-use) languages like C
+> >have traditionally also worked in a top-down fashion, processing
+> >one top-level declaration at a time. Forward references are
+> >either errors, or are (when a proper declaration is in scope)
+> >left to the linker to resolve.
+> >
+> >Processing an entire compilation-unit (e.g. whole C file)
+> >as a single unit is typically _only_ done when either the
+> >language semantics requires it (not C, but e.g. Haskell),
+> >or when very high optimisation levels are requested.
 > 
->>Or you could just call it "gcc is dumb" rather than a compiler bug.
-> 
-> 
-> Yeah, but doing:
-> 
-> 	static inline foo(void);
-> 
-> 	bar()
-> 	{
-> 		...
-> 		foo();
-> 	}
-> 
-> 	static inline foo(void)
-> 	{
-> 		...
-> 	}
-> 
-> is pretty dumb too.  I don't see any harm if this compiler feature/problem
-> pushes us to fix the above in the obvious way.
+> Or in the case where you parse the entire file, then generate code for 
+> the entire file in a separate pass.  Which does NOT imply 
+> unit-at-a-time, for the readers at home.  It just implies generation of 
+> the AST.
 
-It might be dumb but C99 (ISO/IEC 9899:1999(E) ) says in
-section 6.7.4 :
-   "function-specifiers shall be used only in the
-    declaration of an identifier for a function"
+... which GCC didn't use to do.  It used to generate RTL directly from
+the source.  From the GCC news and announcements page:
 
-The only "function-specifier" defined in C99 is
-"inline". So that seems to imply "inline" should
-not appear in a function definition. If that is true
-then you must declare an inline function before use
-in order to pass the "inline" hint to the compiler.
+October 5, 2001
+    Alexandre Oliva of Red Hat has generalized the tree inlining
+    infrastructure, formerly in the C++ front end, so that it is now
+    used in the C front end too.
 
-Anyways C99 says very little about "inline" other than
-some restrictions on its usage together with external
-linkage. That seems to imply constructs that are legal
-_without_ "inline" in front of a function declaration
-should also be legal when "inline" is added (modulo
-external linkage restrictions).
+> >In the case of gcc-3.4.1 failing to inline, you are asking
+> >gcc to do something (peeking forward) which it never has
+> >promised to do. And with the kernel using -fno-unit-at-a-time
+> >for stack conservation reasons, gcc is actually being _told_
+> >not to do global compilation.
+> >
+> >This is not a gcc bug, nor is it being "exceedingly dumb".
+> 
+> Actually, yes it is.
 
-Doug Gilbert
+No, it's not.  It's always been this way.  You seemed to ignore that
+message I posted yesterday.
 
+-- 
+"Next the statesmen will invent cheap lies, putting the blame upon 
+the nation that is attacked, and every man will be glad of those
+conscience-soothing falsities, and will diligently study them, and refuse
+to examine any refutations of them; and thus he will by and by convince 
+himself that the war is just, and will thank God for the better sleep 
+he enjoys after this process of grotesque self-deception." -- Mark Twain
