@@ -1,38 +1,38 @@
-From: Matthew Wilcox <willy@debian.org>
-Subject: Re: [ANNOUNCE] QLogic qla2xxx driver update available (v8.00.00b6).
-Date: Wed, 19 Nov 2003 23:18:05 +0000
+From: "Royce Winters" <m94lgytrz@hotmail.com>
+Subject: Need a Re-Fill On Your RX MEds?               . o huvrpqnqezfckeupi
+Date: Wed, 19 Nov 03 22:23:57 GMT
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20031119231805.GG30485@parcelfarce.linux.theplanet.co.uk>
-References: <B179AE41C1147041AA1121F44614F0B060ED75@AVEXCH02.qlogic.org>
+Message-ID: <6zt$b1b$-7eifm3q6-$-$-8a@jxsybfcnf.36f8>
+Reply-To: "Royce Winters" <m94lgytrz@hotmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/alternative;
+	boundary="DF___ABA4AE9._02C3D"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:39072 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S264163AbTKSXSH
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 19 Nov 2003 18:18:07 -0500
-Content-Disposition: inline
-In-Reply-To: <B179AE41C1147041AA1121F44614F0B060ED75@AVEXCH02.qlogic.org>
+Received: from MG021039.user.veloxzone.com.br ([200.165.21.39]:29199 "HELO
+	MG021039.user.veloxzone.com.br") by vger.kernel.org with SMTP
+	id S264171AbTKSX3a (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 19 Nov 2003 18:29:30 -0500
+Received: from [206.150.180.115] by MG021039.user.veloxzone.com.br id <8596689-58907> for <linux-scsi@vger.kernel.org>; Wed, 19 Nov 2003 22:23:57 -0100
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Cc: Jes Sorensen <jes@wildopensource.com>, Linux-SCSI <linux-scsi@vger.kernel.org>, jeremy@sgi.com, jbarnes@sgi.com
+To: linux-scsi@vger.kernel.org
 
-On Wed, Nov 19, 2003 at 03:03:09PM -0800, Andrew Vasquez wrote:
-> > I suggest doing something similar for all architectures that do not
-> > provide x86 BIOS emulation.
-> 
-> I don't believe this is going to be a safe route.  QLogic does offer
-> other methods to modify NVRAM parameters besides the BIOS utility, a
-> GUI (SANsurfer) as well as a command-line tool (SANblade CLI) - the
-> 64bit versions are available here:
-> 
-> 	http://www.qlogic.com/support/os_detail.asp?productid=256&osid=65
 
-Where are the PA-RISC versions?  Where are the Alpha versions?  Where are
-the Sparc versions?  This just isn't a workable solution for many people.
-PCI cards really are supposed to work on all architectures.
+--DF___ABA4AE9._02C3D
+Content-Type: text/plain;
+Content-Transfer-Encoding: quoted-printable
 
--- 
-"It's not Hollywood.  War is real, war is primarily not about defeat or
-victory, it is about death.  I've seen thousands and thousands of dead bodies.
-Do you think I want to have an academic debate on this subject?" -- Robert Fisk
+ATTENTION
+IMPORTANT HEALTH INFORMATION
+
+Wholesale Prescription Medications
+OUR DOCTORS WILL WRITE YOU
+A PRESCRIPTION FOR FREE!
+Buy Your Prescription Meds Online
+
+Check It Out Here
+http://www.pokiusfardsnet.biz/cf640/
+
+ct oavghwfdfpc  p uyj ruzyps yqvvgt mtrn bw
+
+--DF___ABA4AE9._02C3D--
+
