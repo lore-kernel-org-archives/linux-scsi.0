@@ -1,46 +1,41 @@
-From: "melvin" <doug21charity@hotmail.com>
-Subject: Really low rates for prescription drugs
-Date: Tue, 06 Jul 2004 20:31:15 GMT
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: RE: [ANNOUNCE]: megaraid driver version 2.20.0.1
+Date: 06 Jul 2004 15:56:32 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1089145875-2652__24057.4725474746$1089146317$gmane$org@excite.com>
-Content-Type: text/plain;
+Message-ID: <1089147398.2188.689.camel@mulgrave>
+References: <0E3FA95632D6D047BA649F95DAB60E57033BC826@exa-atlanta>
+Mime-Version: 1.0
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from customer160-169.iplannetworks.net ([200.68.86.169]:53966 "HELO
-	vernonlove.com") by vger.kernel.org with SMTP id S264388AbUGFUbF
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 6 Jul 2004 16:31:05 -0400
+Received: from stat16.steeleye.com ([209.192.50.48]:44461 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S264492AbUGFU4v (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 6 Jul 2004 16:56:51 -0400
+In-Reply-To: <0E3FA95632D6D047BA649F95DAB60E57033BC826@exa-atlanta>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-kernel@vger.kernel.org
+To: "Mukker, Atul" <Atulm@lsil.com>
+Cc: 'Christoph Hellwig' <hch@infradead.org>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
 
-What do you pay now?
+On Tue, 2004-07-06 at 13:32, Mukker, Atul wrote:
+> > The biggest structural issue still seems to be the pending queue.  It
+> > looks to me like the driver could be nicely simplified if you 
+> > got rid of
+> > it and simply relied on returning SCSI_MLQUEUE_HOST_BUSY from
+> > queeucommand().  You'd still get the queue restart almost from the ISR
+> This is a very good suggestion and I would be more than willing to include
+> in the driver code. Only one concern though, there are other instances also
+> when we need to stop sending commands to the controllers, but not
+> necessarily stop getting commands from mid-layer. E.g., in case of delete
+> drive operation, driver has to wait till all outstanding commands to the
+> controller are complete, before issuing drive deletion command. In this
+> situation, having a pending list seems natural.
 
-If you pay more than these prices, maybe you should click this link....
-http://www.cutpricerxpills.com/_85924943b9db73ac62baa654773c6a8e/
+We have this type of functionality already in the scsi_device_quiesce()
+interface.  It will not return until all normal commands have completed
+(specials and error handling are still allowed).  It was designed for
+Domain Validation, but it sounds like you could use it as well.
 
-VALIUM - $2 a pill! (Anti-Depressant)
-SOMA - $3 a pill! (Pain Relief)
-XANAX - $1.70 a pill! (Anti-Depressant)
-LIPITOR - $3.50 a pill! (Cholesterol Control)
-ZYBAN - $3 a pill! (Stop Smoking)
-ZOLOFT - $2 a pill! (Anti-Depressant)
-PAXIL - $3 a pill! (Anti-Depressant)
-PROZAC - $2 a pill! (Anti-Depressant)
-GLUCOPHAGE - 70 cents a pill! (Diabetes)
-MERIDIA - $2.50 a pill! (Weight Loss)
-VIOXX - $1 a pill! (Pain Relief)
-CELEBREX - $2 a pill! (Pain Relief)
-XENICAL - $2.50 a pill! (Weight Loss)  
-
-http://www.cutpricerxpills.com/_85924943b9db73ac62baa654773c6a8e/
-
-
-
+James
 
 
-
-
-
-
-hazel charlie1larry lamer robinhoo marcus bridge chiquita 
-gray amelieguinness marvin minou
-cosmos wolverin butch 
