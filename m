@@ -1,60 +1,38 @@
-From: Michael Clark <michael@metaparadigm.com>
+From: "Martin K. Petersen" <mkp@mkp.net>
 Subject: Re: ANNOUNCE: saftemon - SCSI Enclosure monitor for linux
-Date: Thu, 18 Apr 2002 11:19:50 +0800
+Date: 18 Apr 2002 00:04:01 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3CBE3B56.1020408@metaparadigm.com>
-References: <71714C04806CD51193520090272892170452B66C@ausxmrr502.us.dell.com> <3CBE1D51.9050300@metaparadigm.com>
+Message-ID: <yq1elhdwt3i.fsf@austin.mkp.net>
+References: <71714C04806CD51193520090272892170452B66C@ausxmrr502.us.dell.com>
+	<3CBE1D51.9050300@metaparadigm.com>
+	<3CBE3B56.1020408@metaparadigm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <3CBE3B56.1020408@metaparadigm.com>
 List-Id: linux-scsi@vger.kernel.org
 To: Michael Clark <michael@metaparadigm.com>
 Cc: Matt_Domsch@Dell.com, mjacob@feral.com, linux-scsi@vger.kernel.org
 
-The SES command set is supposedly documented in the SFF-8067 specification
-developed by an X3 committee. I assume is different to SAF-TE and have
-removed the reference to it in the readme.
+>>>>> "Michael" == Michael Clark <michael@metaparadigm.com> writes:
 
-Michael Clark wrote:
+Michael> The SES command set is supposedly documented in the SFF-8067
+Michael> specification developed by an X3 committee. I assume is
+Michael> different to SAF-TE and have removed the reference to it in
+Michael> the readme.
 
-> I seem to remember reading somewhere that SAF-TE is component of SES,
-> enough so for me to put it in the readme, but I can't back it up as 
-> I've never
-> had it run on a device that says it is SES capable.
->
-> I'd like to know too so I can correct the readme if need be.
->
-> cheers,
-> ~mc
->
-> Matt_Domsch@Dell.com wrote:
->
->>> will it also drive SES?
->>>
->>
->> Some Dell SCSI backplanes are SES capable, I believe that some 
->> aren't.  I'm
->> not sure off-hand of the matrix which is which.  Once we get some 
->> time to
->> investigate further I'll report back our findings.
->>
->> Thanks,
->> Matt
->>
->> -- 
->> Matt Domsch
->> Sr. Software Engineer
->> Dell Linux Solutions www.dell.com/linux
->> Linux on Dell mailing lists @ http://lists.us.dell.com
->> #1 US Linux Server provider for 2001!
->>
->
->
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Yes.  SES is the successor to SAF-TE.
 
+It's different in the sense that there's no SAF-TE processor device
+visible on the bus.  Instead devices on an SES-capable bus will have
+EnvServ set in the inquiry page.
 
+I have some sample code kicking around, if you're interested.  Also,
+the SES specs are official T10 ones (unlike SAF-TE).  You can download
+them off t10.org.
+
+-- 
+Martin K. Petersen, Principal Linux Consultant, Linuxcare, Inc.
+mkp@linuxcare.com, http://www.linuxcare.com/
+SGI XFS for Linux Developer, http://oss.sgi.com/projects/xfs/
 
