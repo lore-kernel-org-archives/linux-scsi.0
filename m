@@ -1,59 +1,37 @@
-From: "Maciej W. Rozycki" <macro@linux-mips.org>
-Subject: Re: iomapping a big endian area
-Date: Tue, 5 Apr 2005 21:02:24 +0100 (BST)
-Message-ID: <Pine.LNX.4.61L.0504052041250.9632@blysk.ds.pg.gda.pl>
-References: <1112475134.5786.29.camel@mulgrave>
- <20050403013757.GB24234@parcelfarce.linux.theplanet.co.uk>
- <20050402183805.20a0cf49.davem@davemloft.net>
- <20050403031000.GC24234@parcelfarce.linux.theplanet.co.uk>
- <1112499639.5786.34.camel@mulgrave> <20050405084219.A21615@flint.arm.linux.org.uk>
- <1112709915.5764.4.camel@mulgrave> <20050405195506.A16617@flint.arm.linux.org.uk>
+From: |TEcHNO| <techno@punkt.pl>
+Subject: Re: [SCSI] Driver Broken in 2.6.x (attemp 2)
+Date: Tue, 05 Apr 2005 22:22:37 +0200
+Message-ID: <4252F38D.8020408@punkt.pl>
+References: <4252CA25.70803@punkt.pl> <1112723304.6463.17.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-2; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pollux.ds.pg.gda.pl ([153.19.208.7]:54532 "EHLO
-	pollux.ds.pg.gda.pl") by vger.kernel.org with ESMTP id S261925AbVDEUCX
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 5 Apr 2005 16:02:23 -0400
-In-Reply-To: <20050405195506.A16617@flint.arm.linux.org.uk>
+Received: from box3.punkt.pl ([217.8.180.76]:19722 "HELO box.punkt.pl")
+	by vger.kernel.org with SMTP id S261998AbVDEUTO (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Apr 2005 16:19:14 -0400
+In-Reply-To: <1112723304.6463.17.camel@mulgrave>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Russell King <rmk+lkml@arm.linux.org.uk>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, Matthew Wilcox <matthew@wil.cx>, "David S. Miller" <davem@davemloft.net>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Tue, 5 Apr 2005, Russell King wrote:
+Hi,
 
-> > > physical bus:	31...24	23...16	15...8	7...0
-> > > 
-> > > BE version 1 (word invariant)
-> > >   byte access	byte 0	byte 1	byte 2	byte 3
-> > >   word access	31-24	23-16	15-8	7-0
-> > > 
-> > > BE version 2 (byte invariant)
-> > >   byte access	byte 3	byte 2	byte 1	byte 0
-> > >   word access	7-0	15-8	23-16	31-24
-> > 
-> > These are just representations of the same thing.  However, I did
-> > deliberately elect not to try to solve this problem in the accessors.  I
-> > know all about the register relayout, because 53c700 has to do that on
-> > parisc.
-> 
-> They aren't.  On some of our platforms, we have to exclusive-or the address
-> for byte accesses with 3 to convert to the right endian-ness.
+> I don't think anyone has the actual hardware, without which it's quite
+> difficult to fix the problem.
 
- The same with certain MIPS configurations.  And likewise you need to xor 
-addresses with 2 for halfword accesses.
+> What was the last 2.6 kernel version that this worked with?
+I guess I made a jump from 2.4.26 directly to 2.6.9 or maybe even 
+higher, but I can't remember if I used the scanner since then, most 
+probably is that it was last used it in 2.4.x.
 
-> Sure, from the point of view of which byte each byte of a word represents,
-> it's true that they're indentical.  But as far as the hardware is concerned,
-> they're definitely different.
+Is mentioned in previous post, I can do as much as possible to help, 
+including testing patches and/or recompiling the kernel in any way needed.
 
- To clarify it a bit: both big and little endian representations are 
-always the same -- it's going to a domain of the reverse endianness that 
-can be done in two different ways, i.e. by preserving either bit or byte 
-ordering (as described above).  Depending on the interpretation of data 
-being passed you want one or the other.  That's why some systems provide 
-ways of doing both kinds of accesses in hardware (e.g. the host bus to PCI 
-bridge) to save CPU cycles needed for bit shuffling otherwise.
 
-  Maciej
+Sorry for posting to 2 gropus but I'm not subscribed to any, and I'm not 
+sure to which (if any) was this reply sent to too.
+-- 
+pozdrawiam     |"Help me master, I felt the burning twilight behind
+techno@punkt.pl|those gates of stell..." --Perihelion, Prophecy Sequence
