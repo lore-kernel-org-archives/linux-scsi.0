@@ -1,45 +1,33 @@
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Subject: Re: I/O write ordering
-Date: Thu, 23 Sep 2004 00:51:49 +1000
+From: Patrick Mansfield <patmans@us.ibm.com>
+Subject: Re: Using scsi_cmd->request->nr_hw_segments within a LLDD...
+Date: Wed, 22 Sep 2004 08:01:20 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1095864709.6297.5.camel@gaston>
-References: <1095789421.2467.414.camel@mulgrave>
-	 <200409211409.11095.jbarnes@engr.sgi.com>
-	 <20040921190625.GB11708@colo.lackof.org> <20040921210341.GC146363@sgi.com>
-	 <20040921211108.GA16153@parcelfarce.linux.theplanet.co.uk>
-	 <20040921214302.GG146363@sgi.com>
-	 <20040922000211.GE16153@parcelfarce.linux.theplanet.co.uk>
-	 <20040922011652.GD147856@sgi.com> <20040922014428.GD20053@colo.lackof.org>
-	 <20040922025805.GA148414@sgi.com>
-	 <20040922143208.GL16153@parcelfarce.linux.theplanet.co.uk>
-	 <1095864485.2143.1.camel@mulgrave>
+Message-ID: <20040922150120.GA14069@beaverton.ibm.com>
+References: <B179AE41C1147041AA1121F44614F0B0012AD913@AVEXCH02.qlogic.org> <20040922065727.GB2299@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:25298 "EHLO gate.crashing.org")
-	by vger.kernel.org with ESMTP id S266003AbUIVOzb (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 22 Sep 2004 10:55:31 -0400
-In-Reply-To: <1095864485.2143.1.camel@mulgrave>
+Received: from e32.co.us.ibm.com ([32.97.110.130]:36511 "EHLO
+	e32.co.us.ibm.com") by vger.kernel.org with ESMTP id S266009AbUIVPBo
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 22 Sep 2004 11:01:44 -0400
+Content-Disposition: inline
+In-Reply-To: <20040922065727.GB2299@suse.de>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Matthew Wilcox <matthew@wil.cx>, Jeremy Higdon <jeremy@sgi.com>, Grant Grundler <grundler@parisc-linux.org>, Jesse Barnes <jbarnes@engr.sgi.com>, Matthew Wilcox <willy@debian.org>, Andrew Vasquez <andrew.vasquez@qlogic.com>, pj@sgi.com, SCSI Mailing List <linux-scsi@vger.kernel.org>, mdr@cthulhu.engr.sgi.com, jeremy@cthulhu.engr.sgi.com, djh@cthulhu.engr.sgi.com, Andrew Morton <akpm@osdl.org>, Richard Henderson <rth@twiddle.net>, Paul Mackerras <paulus@samba.org>
+To: Jens Axboe <axboe@suse.de>
+Cc: Andrew Vasquez <andrew.vasquez@qlogic.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
+On Wed, Sep 22, 2004 at 08:57:27AM +0200, Jens Axboe wrote:
+> On Tue, Sep 21 2004, Andrew Vasquez wrote:
 
-> I favour 1. iomb; I think, since I/O barriers can be either heavyweight
-> or non-existent depending on the architecture, iomb() should imply mb()
-> but not vice versa.
+> Would this by any chance be from request initiated with SG_IO? This
+> problem should be fixed in 2.6.9-rcX, are you still seeing it?
+> 
+> ->nr_hw_segments was not initialized for some paths earlier, so it
+> contained random crap.
 
-Read & write barriers are different for IO. Actually, as I stated earlier,
-the real issue isn't much with IO barriers proper (which are mostly dealt
-with within the implementation of the IO accessors), but in IO vs. memory
-accesses, at least on PPC. Cacheable and non-cacheable accesses go through
-completely different path on the CPU and can be completely re-ordered one
-to each other unless more heavy barriers are used. That has been a pain
-for ages for us since Linux doesn't provide an abstraction to order those,
-it would be nice to get that in place now ;)
+Jens, 
 
-Ben.
+What code change is it? I thought it was already in 2.6.8.
 
-
+-- Patrick Mansfield
