@@ -1,89 +1,57 @@
-From: "HAYERE Patrick" <patrick.hayere@c-s.fr>
-Subject: [Fwd: Returned mail: User unknown]
-Date: 08 Nov 2002 11:50:45 +0000
+From: MShetty <mranalini.shetty@patni.com>
+Subject: Re: Executing a scsi command
+Date: Fri, 08 Nov 2002 21:52:32 +0530
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1036756247.1366.58.camel@pc2822.si.c-s.fr>
-Reply-To: patrick.hayere@free.fr
+Message-ID: <3DCBE4C7.DB1AEE9F@patni.com>
+References: <3DCA6E46.91894890@patni.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pegase0.si.c-s.fr
-        by pegase1.cie-signaux.fr  with ESMTP id LAA14614
-        for <linux-scsi@vger.kernel.org>; Fri, 8 Nov 2002 11:54:03 +0100 (MET)
-Received: from pegase0.si.c-s.fr
-  by pegase0.si.c-s.fr  with ESMTP id LAA06963
-  for <linux-scsi@vger.kernel.org>; Fri, 8 Nov 2002 11:50:11 +0100 (MET)
-Received: from hermes17.si.c-s.fr
-  by pegase0.si.c-s.fr  with ESMTP id LAA06955
-  for <linux-scsi@vger.kernel.org>; Fri, 8 Nov 2002 11:50:10 +0100 (MET)
+Received: from antivirusgw.patni.com (rakshak.patni.com [203.124.139.54])
+	by pcsbom.patni.com (8.9.3/8.8.8) with SMTP id VAA17280
+	for <linux-scsi@vger.kernel.org>; Fri, 8 Nov 2002 21:43:27 +0530 (IST)
+Received: from akash.patni.com ([192.168.0.12])
+ by antivirusgw.patni.com (NAVGW 2.5.2.12) with SMTP id M2002110821432617938
+ for <linux-scsi@vger.kernel.org>; Fri, 08 Nov 2002 21:43:26 +0530
+Received: from patni.com ([204.165.187.192]) by akash.patni.com (8.9.3/SCO5) with ESMTP id VAA10207 for <linux-scsi@vger.kernel.org>; Fri, 8 Nov 2002 21:43:22 +0530 (IST)
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: linux-scsi <linux-scsi@vger.kernel.org>
 
 Hi,
 
-I sent a bug report to a module author, but the mail addresses no longer exist.
-Please find my message below.
-If I can help, let me know.
+Does request_queue's queuedata contain the Scsi_Device pointer ?? Saw it
+done in scsi_merge.c
 
-Best regards.
+      Scsi_Device *SDpnt;
+      struct Scsi_Host *SHpnt;
 
-Patrick HAYERE
+      SDpnt = (Scsi_Device *) q->queuedata;
+      SHpnt = SDpnt->host;
 
-P.S: what about UDF-write support on SCSI cd writers under Linux ?
+Would help if I could get some comment on the above.
 
-   ----- The following addresses had permanent fatal errors -----
-<ronald.van.cuijlenborg@tip.nl>
-<nutty@dds.nl>:
+Thanks and Regards,
+M Shetty
 
+MShetty wrote:
 
-From: HAYERE Patrick <patrick.hayere@c-s.fr>
-To: nutty@dds.nl, ronald.van.cuijlenborg@tip.nl
-Subject: g_NCR5380 System time desynchronisation and modinfo
-Date: 08 Nov 2002 10:48:20 +0000
-
-Hello,
-
-I recently installed my Mustek ScanExpress 12000 SP scanner with its
-native dtc436p card on Mandrake 8.1 and 9.0, with kernels 2.4:
-modprobe g_NCR5380 ncr_irq=255 ncr_addr=0x220 ncr_3181=1
-and so on
-It works, thank you for your work.
-Nevertheless, I remarked a little problem:
-Each time I scan , my system time is shifted 20 or 30 second in the
-past (ntpdate corrections).
-I suppose this is due to the fact that the card has no irq and that the
-system is suspended while communicating with the card.
-Would-it be possible to re-synchronise the system clock with the
-hardware clock each time your module is called ? Could this be a module
-option ? How pertinent are my questions ?
-
-Another bug is simpler to solve:
-$ /sbin/modinfo  g_NCR5380
-filename:    /lib/modules/2.4.19/kernel/drivers/scsi/g_NCR5380.o
-description: <none>
-author:      <none>
-license:     "GPL"
-parm:        ncr_irq int
-parm:        ncr_dma int
-parm:        ncr_addr int
-parm:        ncr_5380 int
-parm:        ncr_53c400 int
-parm:        ncr_53c400a int
-parm:        dtc_3181e int
-
-As I had difficulties to find the driver for my scanner interface, I
-think it would be interesting to document this a little bit more, for
-example by refering to Mustek or listing supported scanners somewhere.
-http://www.mostang.com/sane has info.
-
-Thank you again for allowing me to use my scnner under Linux.
-
-Best regards.
-Patrick HAYERE
-
-
-
-
-
+> Hi,
+>
+> I want to execute a scsi cmd from my driver. The API's that I found
+> (scsi_do_cmd, scsi_wait_req) require a pointer to the scsi_device or
+> scsi_host structure.. Any idea how I could get them.... given the major
+> and minor no. of the device to which the command is to be sent.
+>
+> Is there an alternative way of executing a scsi_cmd ??
+>
+> Would help if I could get some help on the above.
+>
+> Thanks and Regards,
+> M Shetty
+>
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
