@@ -1,55 +1,41 @@
-From: Pat LaVarre <p.lavarre@ieee.org>
-Subject: Re: sg utils sg_io -i 0x24 -y "12 00:00:00 24 00"
-Date: 26 Nov 2003 09:15:12 -0700
+From: Matthias Andree <ma@dt.e-technik.uni-dortmund.de>
+Subject: Re: 2.6test10: Annoying "CDROM not ready" messages once a second
+Date: Wed, 26 Nov 2003 23:45:23 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1069863312.4325.45.camel@patrh9>
-References: <1068165515.28505.29.camel@patrh9>
-	 <20031107095145.A3785@beaverton.ibm.com>  <1068228695.3417.34.camel@patrh9>
-	 <1068229639.3417.46.camel@patrh9>  <1068229873.3417.51.camel@patrh9>
-	 <1068594777.6448.7.camel@patrh9>
+Message-ID: <m37k1mrbp8.fsf@merlin.emma.line.org>
+References: <20031126134041.25698.qmail@mailshell.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from email-out1.iomega.com ([147.178.1.82]:54445 "EHLO
-	email.iomega.com") by vger.kernel.org with ESMTP id S264240AbTKZQPy convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 26 Nov 2003 11:15:54 -0500
-In-Reply-To: <1068594777.6448.7.camel@patrh9>
+Received: from mail.dt.e-technik.Uni-Dortmund.DE ([129.217.163.1]:1742 "EHLO
+	mail.dt.e-technik.uni-dortmund.de") by vger.kernel.org with ESMTP
+	id S264363AbTKZWp0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 26 Nov 2003 17:45:26 -0500
+Received: from m2a2.dyndns.org (krusty.dt.e-technik.uni-dortmund.de [129.217.163.1])
+	by mail.dt.e-technik.uni-dortmund.de (Postfix) with ESMTP id 1DA65155E6
+	for <linux-scsi@vger.kernel.org>; Wed, 26 Nov 2003 23:45:25 +0100 (CET)
+In-Reply-To: <20031126134041.25698.qmail@mailshell.com> (linux-scsi's
+ message of "Wed, 26 Nov 2003 15:41:38 +0200")
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: linux-scsi-031126@amos.mailshell.com
+Cc: linux-scsi@vger.kernel.org
 
-> again there we see CDB for length, data for expected
-> length returning actual length, sense for expected length returning
-> actual length.
+linux-scsi-031126@amos.mailshell.com writes:
 
-ftp://members.aol.com/plscsi/linux/plscsi.tar.gz
-says g++ rather than gcc in that Makefile for the sake of that minority
-of folk who have gcc/g++ configured so that gcc fails to link after
-compiling .cpp.
+> My system is an AMD Athlon, no SCSI devices (I need generic SCSI only
+> for cd burning software and USB access, I'm aware that it's supposed to
+> be gone in 2.6 but the software I use is still not aware of this).
+> Preemption enabled (no problems from that part).
 
-http://members.aol.com/plscsi/linux/plscsi.tar.gz
-fetches the same, but via http rather than via ftp.
+Updating your CD burning software to a more recent alpha version may rid
+you of the requirement for a non-working ide-scsi emulation. I'm using
+cdrecord 2.01a19 without sg stuff. Worksforme[tm].
 
-Neither, whoops, yet give us the following popular patch that often
-makes such commands work as:
+> Please CC me with replys, I'm not on the list.
 
-plscsi /dev/hdc
-plscsi /dev/hdd
-plscsi /dev/scd0
+done.
 
-Pat LaVarre
+-- 
+Matthias Andree
 
-diff -Nur plscsi.2002-09-21/sgio.cpp plscsi/sgio.cpp
---- plscsi.2002-09-21/sgio.cpp	2002-09-21 13:25:18.000000000 -0600
-+++ plscsi/sgio.cpp	2003-11-26 09:10:59.109906736 -0700
-@@ -116,6 +116,7 @@
-     sgio->theErrFile = stderr;
- 
-     sgio->theOpenMode = O_RDWR; /* O_RDONLY often works */
-+    sgio->theOpenMode = O_RDONLY|O_NONBLOCK;
-     sgio->theFileDescriptor = -1;
-     sgio->theSgVersionNum = 0; /* 0 = unknown */
- 
-
-
+Encrypt your mail: my GnuPG key ID is 0x052E7D95
