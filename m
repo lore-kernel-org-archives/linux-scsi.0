@@ -1,127 +1,76 @@
-From: Lars Marowsky-Bree <lmb@suse.de>
-Subject: Re: [dm-devel] [ANNOUNCE] multipath-tools-0.3.0
-Date: Mon, 11 Oct 2004 14:00:49 +0200
-Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20041011120049.GQ4021@marowsky-bree.de>
-References: <1096071849.4466.31.camel@zezette> <1097054573.4163b96d1262c@imp5-q.free.fr> <20041006095009.GD1542@marowsky-bree.de> <1097057920.4163c680eaee0@imp5-q.free.fr>
+From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
+Subject: RE: what to do with dpt_i2o
+Date: Mon, 11 Oct 2004 08:28:56 -0400
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <60807403EABEB443939A5A7AA8A7458B2FC25E@otce2k01.adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1097057920.4163c680eaee0@imp5-q.free.fr>
-To: device-mapper development <dm-devel@redhat.com>
-Cc: linux-raid@vger.kernel.org, linux-hotplug-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from magic.adaptec.com ([216.52.22.17]:29079 "EHLO magic.adaptec.com")
+	by vger.kernel.org with ESMTP id S268877AbUJKM27 convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 11 Oct 2004 08:28:59 -0400
+content-class: urn:content-classes:message
 List-Id: linux-scsi@vger.kernel.org
+To: Markus Lidel <Markus.Lidel@shadowconnect.com>, Christoph Hellwig <hch@lst.de>
+Cc: linux-scsi@vger.kernel.org
 
-On 2004-10-06T12:18:40, christophe.varoqui@free.fr wrote:
+I have not been submitting an updated patch for the dpt_i2o driver
+because of a handful of customers experiencing problems with >4G of
+memory in certain systems (all Zero Channel RAID). I am still
+investigating.
 
-Sorry for the late reply, I was somewhat busy, but I'm going to be
-working on multipathing during the next couple of days / weeks again.
+The hot-changing of devices is still using a controversial interface
+(busy checks wrapped around calls to driver writes to /proc/scsi/scsi in
+2.4, and the drv->rescan() or scsi_rescan_device in 2.6) and there is
+resistance to the LLD/car Firmware knowing more about device status.
 
-> It all depends on the satisfaction of the testers.
->=20
-> Let's review the current situation with regards to files touched by
-> the package :
+Sincerely -- Mark Salyzyn
 
->=20
-> * /etc/multipathd.conf :
->=20
-> optional
-> you only need to create one if you use multipath aliases or have hard=
-ware not
-> known internaly
+-----Original Message-----
+From: Markus Lidel [mailto:Markus.Lidel@shadowconnect.com] 
+Sent: Monday, October 11, 2004 4:30 AM
+To: Christoph Hellwig
+Cc: Salyzyn, Mark; linux-scsi@vger.kernel.org
+Subject: Re: what to do with dpt_i2o
 
-This is a good point. If we can make it work out of the box, then that'=
-s
-of course best.
+Hello,
 
-> its synthax is not yet fully stabilized : for example, I may decide t=
-o move from
->=20
-> multipath {
->   wwid =3D 00000acdefg123456ff
->   alias =3D system
-> }
->=20
-> to
->=20
-> multipath 00000acdefg123456ff {
->   alias =3D system
-> }
+Christoph Hellwig wrote:
+>>Marcus, you'd been doing a lot of testing with the DPT/Adaptec cards
+for
+>>the new i2o layer, right?  IIRC we now have both support for the
+Adaptec
+>>managment utils and the optimizes sglist format, so there's probably
+no
+>>reason anymore to keep dpt_i2o.
 
-I'd probably leave it in the first form, as a multipath array might be
-identified not only by the wwid but by other means in the future too,
-no?
+Maybe i should list some remaining issues:
 
-> also expect a few keyword additions to cover the new reinstate featur=
-e
-> of the kernel driver.
+- 64 bit Scatter Gather elements
+- supports hot-changing of devices, and array changes without a reboot.
 
-Ok.
-
-> * /etc/hotplug.d/scsi/multipath
->=20
-> dead and to be removed from 0.3.0 and up
-
-Ok.
-
-> * /etc/dev.d/block/multipath.dev
->=20
-> optional
-> this is where we call multipath and kpartx when nodes appear in /sys/=
-block
-> this one should not change too much, but I expect more feedback from =
-testers
-
-I don't think this one will need to be touched by admins on the systems=
-,
-so it's not really a configuration file...
-
-> * /etc/udev/udev.rules
->=20
-> from 0.3.0 and up, we don't touch it anymore
-
-That's very good indeed and actually makes configuration easier! Which
-udev version do you require though?
-
-> these copy udev, multipath tools and config files to initrd when
-> mkinitrd is launched.
-
-Yes. I'm not yet sure how/if we are going to support booting from
-multipath root fs in SLES9, so this doesn't really affect me for the
-time being.
-
-I first will need to do a gap analysis and figure out where to go today
-;-)
-
-> this certainly needs refining, and I expect distrib packagers to show
-> interest in taking them over. Do you ?
-
-We'll certainly need to pull them into our own mkinitrd tools and make
-distribution specific adjustments, and of course where applicable give
-them back to you.
-
-My main job right now is to extend multipath to work with the
-active/passive scenarios, where a special path activation command needs
-to be send down before a new path group can be used. Anything else I ca=
-n
-solve as I go along that one is welcome but optional to me.
-
-Thanks for the explanations, I'll now go and have a real closer look at
-the tools and modules...
+The second one is implemented, but didn't work on my system. I didn't 
+have the time to verify if the dpt_i2o driver recognize it if a drive
+fails.
 
 
-Sincerely,
-    Lars Marowsky-Br=E9e <lmb@suse.de>
+Best regards,
 
---=20
-High Availability & Clustering
-SUSE Labs, Research and Development
-SUSE LINUX AG - A Novell company
 
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Markus Lidel
+------------------------------------------
+Markus Lidel (Senior IT Consultant)
+
+Shadow Connect GmbH
+Carl-Reisch-Weg 12
+D-86381 Krumbach
+Germany
+
+Phone:  +49 82 82/99 51-0
+Fax:    +49 82 82/99 51-11
+
+E-Mail: Markus.Lidel@shadowconnect.com
+URL:    http://www.shadowconnect.com
