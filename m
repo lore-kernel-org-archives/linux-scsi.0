@@ -1,37 +1,37 @@
-From: James Bottomley <James.Bottomley@steeleye.com>
-Subject: Re: [PATCH] tmscsim: 64-bit cleanup
-Date: 05 Jun 2004 16:06:03 -0500
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: Requested changes for the SCSI error handler
+Date: Sat, 5 Jun 2004 18:41:35 -0400 (EDT)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1086469564.2281.23.camel@mulgrave>
-References: <Pine.LNX.4.44.0406052041470.1534-100000@poirot.grange>
+Message-ID: <Pine.LNX.4.44L0.0406051840070.6444-100000@netrider.rowland.org>
+References: <20040604232344.GA3214@us.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat1.steeleye.com ([65.114.3.130]:2014 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S262003AbUFEVGJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 5 Jun 2004 17:06:09 -0400
-In-Reply-To: <Pine.LNX.4.44.0406052041470.1534-100000@poirot.grange>
+Received: from netrider.rowland.org ([192.131.102.5]:5645 "HELO
+	netrider.rowland.org") by vger.kernel.org with SMTP id S262238AbUFEWlg
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 5 Jun 2004 18:41:36 -0400
+In-Reply-To: <20040604232344.GA3214@us.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
-Cc: Linux SCSI list <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>
+To: Mike Anderson <andmike@us.ibm.com>
+Cc: James Bottomley <James.Bottomley@steeleye.com>, SCSI development list <linux-scsi@vger.kernel.org>
 
-On Sat, 2004-06-05 at 15:37, Guennadi Liakhovetski wrote:
-> Thanks for replies and explanations, James! But could you, please, just
-> explain a bit more - what and how do I break with this patch? I just use a
-> driver-private scatterlist struct (SRB.Segmentx) to set up a
-> single-segment sg-list, and call pci_map_sg() on it. If I do it wrong - it
-> could be fixed. But why it is bad in principle? Advantages - no need to
-> check if sg is used for this particular command throughout the code.
+On Fri, 4 Jun 2004, Mike Anderson wrote:
+
+> Alan Stern [stern@rowland.harvard.edu] wrote:
+> > 
+> > How does this look?
+> > 
 > 
-> But no problem. I'll redo the patch without private sg.
+> Looks ok. I know your patch is in line with James requests, but I had a
+> counter idea that allows for setting the settle delays up, down, or to
+> zero post scsi_host_alloc. If the LLDD does nothing behavior should not
+> change. This would allow increasing settle if some LLDD wanted it and
+> also set it through sysfs if we wanted that in the future.  You can
+> throw this patch in the bit bucket if you want to go the previously
+> stated direction.
 
-Actually, I haven't looked at the patch yet.  I was just answering the
-question in the mail which I assumed was "can I alter these three
-fields?" to which the answer is "no".  If the question is "can I read
-these fields directly" the answer's yes.
+Either approach is fine with me.  James?
 
-James
-
+Alan Stern
 
