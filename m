@@ -1,79 +1,58 @@
 From: Sumit Agarwal <aksumit@india.hp.com>
-Subject: Re: Executing a scsi command
-Date: Fri, 08 Nov 2002 11:49:35 -0600
+Subject: Re: building SCSI CDB over FC
+Date: Fri, 08 Nov 2002 11:52:58 -0600
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3DCBF92F.776EDD64@india.hp.com>
-References: <3DCA6E46.91894890@patni.com>
+Message-ID: <3DCBF9FA.AF7B2C19@india.hp.com>
+References: <F393oHMwVN7miR9Odut000000b9@hotmail.com>
 Mime-Version: 1.0
 Content-Type: multipart/mixed;
- boundary="------------760BD982BC04487BC66CF328"
+ boundary="------------082D2F606B5DDA3138B35F8B"
 Return-path: <linux-scsi-owner@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: MShetty <mranalini.shetty@patni.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>
+To: shankar krishna <kshan01@hotmail.com>
+Cc: linux-scsi@vger.kernel.org
 
 This is a multi-part message in MIME format.
---------------760BD982BC04487BC66CF328
+--------------082D2F606B5DDA3138B35F8B
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 
-The best way to go about is to use the ioctl calls. In
-addition during
-   the Initialization or Inquiry you can use IOCTL calls to
-associate
-   the devices with your driver and then later on use them
-at your
-   discretion using scsi_do_cmd etc.
+Check the r_ctl bits of your FCP CDB while generating your
+FCP IU. It should be unsolicited command. The best way to
+send your commands are using ioctl's so try to use them.
 
-If you dont want to do this then an ugly way is as follows
+Thanks
+- Sumit
 
-Most of the block devices have their arrays that can be used
-for this
-purpose as static. you have to employ different methods
-based on major
-number to tackle this. However, it is better if you try not
-to do this.
-for e.g
-for disks you need to hack sd.c to retrieve the value from
-rscsi_disks.
-
-for generic driver you can have your own inode and file
-pointer created
-the invoke sg_open() and get sfp pointer from filp->private
-and then
-use sfp->device for your purpose and so on.
-
-Does anyone else have a better alternative?
-
-Thanks,
-Sumit
-
-
-
-
-
-
-MShetty wrote:
+shankar krishna wrote:
 > 
 > Hi,
 > 
-> I want to execute a scsi cmd from my driver. The API's that I found
-> (scsi_do_cmd, scsi_wait_req) require a pointer to the scsi_device or
-> scsi_host structure.. Any idea how I could get them.... given the major
-> and minor no. of the device to which the command is to be sent.
+> I am trying to send SCSI CDB over Fibre channel HBA.
 > 
-> Is there an alternative way of executing a scsi_cmd ??
+> Using IBM FC disk drive and qlogic HBA(QLA2300).
 > 
-> Would help if I could get some help on the above.
+> I want to build my own CDB (not with 'write' cmd which
+> sends an "ex write" to target) - eventually to build some
+> vendor specific CDBs!
 > 
-> Thanks and Regards,
-> M Shetty
+> Can anybody help me in this?
+> 
+> Rgds,
+> -Shankar.
+> PS: I am using FC analyser(FCacccess) inbetween Drive and HBA to
+> see the frames and their contents. If I do a "write"
+> of my own CDB, it sends it as data not as a command!!
+> 
+> _________________________________________________________________
+> MSN 8 helps eliminate e-mail viruses. Get 2 months FREE*.
+> http://join.msn.com/?page=features/virus
 > 
 > -
 > To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
---------------760BD982BC04487BC66CF328
+--------------082D2F606B5DDA3138B35F8B
 Content-Type: text/x-vcard; charset=us-ascii;
  name="aksumit.vcf"
 Content-Transfer-Encoding: 7bit
@@ -96,5 +75,5 @@ adr;quoted-printable:;;Hewlett-Packard,=0D=0AIndia Software Operation Pvt. Ltd.,
 fn:Sumit Agarwal
 end:vcard
 
---------------760BD982BC04487BC66CF328--
+--------------082D2F606B5DDA3138B35F8B--
 
