@@ -1,29 +1,41 @@
-From: James Bottomley <James.Bottomley@steeleye.com>
-Subject: Re: 2.5.70-mm2: NCR_D700.c doesn't compile
-Date: 29 May 2003 17:01:56 -0400
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1054242118.1819.465.camel@mulgrave>
+From: Adrian Bunk <bunk@fs.tum.de>
+Subject: 2.5.70-mm2: NCR53C9x.c doesn't compile
+Date: Thu, 29 May 2003 23:17:57 +0200
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <20030529211757.GJ5643@fs.tum.de>
 References: <20030529012914.2c315dad.akpm@digeo.com>
-	<20030529205742.GI5643@fs.tum.de>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nat9.steeleye.com ([65.114.3.137]:31495 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S262776AbTE2Uv5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 29 May 2003 16:51:57 -0400
-In-Reply-To: <20030529205742.GI5643@fs.tum.de>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20030529012914.2c315dad.akpm@digeo.com>
+To: Andrew Morton <akpm@digeo.com>, Christoph Hellwig <hch@infradead.org>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Adrian Bunk <bunk@fs.tum.de>
-Cc: Andrew Morton <akpm@digeo.com>, Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Thu, 2003-05-29 at 16:57, Adrian Bunk wrote:
-> It seems the following compile error comes from Linus' tree:
+It seems the following compile error comes from Linus' tree:
 
-Yes, I already have the fix (which is to add the correct argument to the
-function).
+<--  snip  -->
 
-James
+...
+  CC      drivers/scsi/NCR53C9x.o
+drivers/scsi/NCR53C9x.c: In function `esp_proc_info':
+drivers/scsi/NCR53C9x.c:896: `SCpnt' undeclared (first use in this function)
+drivers/scsi/NCR53C9x.c:896: (Each undeclared identifier is reported only once
+drivers/scsi/NCR53C9x.c:896: for each function it appears in.)
+drivers/scsi/NCR53C9x.c: In function `esp_do_data':
+drivers/scsi/NCR53C9x.c:1840: warning: unused variable `flags'
+make[2]: *** [drivers/scsi/NCR53C9x.o] Error 1
+
+<--  snip  -->
 
 
+cu
+Adrian
+
+-- 
+
+       "Is there not promise of rain?" Ling Tan asked suddenly out
+        of the darkness. There had been need of rain for many days.
+       "Only a promise," Lao Er said.
+                                       Pearl S. Buck - Dragon Seed
