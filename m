@@ -1,79 +1,67 @@
 From: Pat LaVarre <p.lavarre@ieee.org>
 Subject: Re: sense visible despite ide-floppy in 2.6 maybe
-Date: 09 Jun 2004 12:29:57 -0600
+Date: 09 Jun 2004 12:51:23 -0600
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1086805796.3741.5.camel@patibmrh9>
+Message-ID: <1086807083.3741.21.camel@patibmrh9>
 References: <1086710016.3647.4.camel@patibmrh9><20040609080013.GS13836@suse
 	.de>  <20040609082045.GT13836@suse.de><1086798154.7074.24.camel@patibmrh9>
+	 <1086805796.3741.5.camel@patibmrh9>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from email-out2.iomega.com ([147.178.1.83]:30387 "EHLO
-	email.iomega.com") by vger.kernel.org with ESMTP id S265906AbUFISaJ
+Received: from email-out2.iomega.com ([147.178.1.83]:52662 "EHLO
+	email.iomega.com") by vger.kernel.org with ESMTP id S265907AbUFISve
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 9 Jun 2004 14:30:09 -0400
-In-Reply-To: <1086798154.7074.24.camel@patibmrh9>
+	Wed, 9 Jun 2004 14:51:34 -0400
+In-Reply-To: <1086805796.3741.5.camel@patibmrh9>
 List-Id: linux-scsi@vger.kernel.org
 To: Jens Axboe <axboe@suse.de>
 Cc: dougg@torque.net, linux-scsi@vger.kernel.org
 
-Jens A:
+> Also something's broken (far far outside of the kernel) in plscsi.  I
+> found success only by patching the trivial sgio.c that I posted in this
+> thread, as shown below.
 
-> a) kernel.org 2.6.7-rc3 plus the patch of this thread,
-> b) PATAPI drive connected as /dev/hdd,
-> c) open of /dev/hdd with flags O_NONBLOCK|O_RDWR, ioctl SG_IO
-> d) cdb = x 1B 00:00:00 00 00 // Stop
-> e) cdb = x 1B 00:00:00 01 00 // Start
+Ah. That is, despite the patch inserting idefloppy_blockpc_cmd,
 
-Yes now "Hn" (i.e. expecting no data) works here, every time I try.
-
-Cool instant demo of how helpful linux-scsi folk are, thank you.
-
-> For data transfer, it's more tricky. Well actually, if you restrict
-> yourself to non-bio backed request, then it becomes pretty trivial!
-> ide-floppy expects a contig buffer, a bio is scattered by nature.
-
-Yes "Hi" (i.e. expecting data in) gives me zeroes.
-
-> ...
-
-Also something's broken (far far outside of the kernel) in plscsi.  I
-found success only by patching the trivial sgio.c that I posted in this
-thread, as shown below.
+ioctl(fd, SG_GET_VERSION_NUM, &vn) returns negative.
 
 Pat LaVarre
 
---- sgio.c	2004-06-08 09:33:33.000000000 -0600
-+++ sgio-up.c	2004-06-09 12:23:28.901649448 -0600
-@@ -17,14 +17,14 @@ static void populate(sg_io_hdr_t * sih)
- 	memset(&static_cdb, '\0', sizeof static_cdb);
- 	sih->cmdp = static_cdb;
- 	sih->cmd_len = 6;
--	memcpy(sih->cmdp, "\x12\0\0\0\x24\0", sih->cmd_len);
-+	memcpy(sih->cmdp, "\x1B\0\0\0\x01\0", sih->cmd_len);
- 
- 	memset(&static_data, '\0', sizeof static_data);
- 	sih->dxferp = static_data;
--	sih->dxfer_len = 0x24;
--	sih->dxfer_direction = SG_DXFER_NONE;
-+	sih->dxfer_len = 0x00;
- 	sih->dxfer_direction = SG_DXFER_TO_DEV;
- 	sih->dxfer_direction = SG_DXFER_FROM_DEV;
-+	sih->dxfer_direction = SG_DXFER_NONE;
- 
- 	memset(&static_sense, '\0', sizeof static_sense);
- 	sih->sbp = static_sense;
---- sgio-up.c	2004-06-09 12:23:28.901649448 -0600
-+++ sgio-dn.c	2004-06-09 12:23:58.069215304 -0600
-@@ -17,7 +17,7 @@ static void populate(sg_io_hdr_t * sih)
- 	memset(&static_cdb, '\0', sizeof static_cdb);
- 	sih->cmdp = static_cdb;
- 	sih->cmd_len = 6;
--	memcpy(sih->cmdp, "\x1B\0\0\0\x01\0", sih->cmd_len);
-+	memcpy(sih->cmdp, "\x1B\0\0\0\x00\0", sih->cmd_len);
- 
- 	memset(&static_data, '\0', sizeof static_data);
- 	sih->dxferp = static_data;
+P.S. More specifically,
+
+plscsi, with perhaps excessively paranoid automagic, therefore chose not
+to try 2.4 style ioctl SG_IO, complaining:
+
+// sgioOpen.ioctl: Invalid argument
+// plscsi.sclOpenNext: "/dev/hdd" not opened
+
+By contrast, my back-of-the-envelope sgio.c was quietly stepping past
+this trouble without complaint, in fact requiring vn at or beyond 30,000
+only from devices that do support ioctl fd SG_GET_VERSION &vn.  The
+trivial patch to get that fragment of code to behave as sensitively as
+plscsi is of course:
+
+--- sgio.was.c	2004-06-08 09:33:33.000000000 -0600
++++ sgio.c	2004-06-09 12:43:16.899046392 -0600
+@@ -61,12 +61,15 @@ int main(int argc, char * argv[])
+ 	--argc; ++argv;
+ 	for (ix = 0; ix < argc; ++ix)
+ 	{
+-		int fd = open(argv[ix], O_NONBLOCK|O_RDWR);
++		int fd = open(argv[ix], O_NONBLOCK);
+ 		if (fd < 0) {
+ 			perror("open");
+ 		} else {
+ 			int vn = 0;
+-			if (0 <= ioctl(fd, SG_GET_VERSION_NUM, &vn)) {
++			if (ioctl(fd, SG_GET_VERSION_NUM, &vn) < 0) {
++				perror("ioctl SG_GET_VERSION_NUM");
++				; /* fallthru to talk anyhow */
++			} else {
+ 				if (vn < 30000) {
+ 					perror("ioctl SG_GET_VERSION_NUM");
+ 					continue;
 
 
