@@ -1,44 +1,36 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: RFC: moving drivers to a new drivers/ata directory
-Date: Fri, 15 Oct 2004 13:20:48 -0400
-Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <417006F0.5040706@pobox.com>
-References: <416F5757.8000306@pobox.com> <416F8C39.6010804@torque.net>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: PATCH: (as373) Let LLD specify INQUIRY length
+Date: Fri, 15 Oct 2004 14:30:59 -0400 (EDT)
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <Pine.LNX.4.44L0.0410151426180.1052-100000@ida.rowland.org>
+References: <20040826201128.A23103@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <416F8C39.6010804@torque.net>
-To: dougg@torque.net
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from ida.rowland.org ([192.131.102.52]:25348 "HELO ida.rowland.org")
+	by vger.kernel.org with SMTP id S268275AbUJOSa7 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 15 Oct 2004 14:30:59 -0400
+In-Reply-To: <20040826201128.A23103@infradead.org>
 List-Id: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: SCSI development list <linux-scsi@vger.kernel.org>
 
-Douglas Gilbert wrote:
-> Jeff Garzik wrote:
-> 
->>
->> Eventually I would like to move libata, and a few non-libata driver 
->> like 3ware, to drivers/ata.  It would appear in the makefile (and link 
->> order) _after_ drivers/ide and drivers/scsi.
->>
->> Comments/objections?
-> 
-> 
-> A comment: if SAS HBAs ever get installed on motherboards then
-> it won't be obvious to the average user which susbsystem they
-> should configure (i.e. ATA/SATA or SCSI/SAS). In both cases an
-> internal SATA disk could be connected via a SATA cable to a
-> plug on the motherboard.
-> 
-> So if you do move the drivers to the ata directory it may be
-> useful to stress that it is the category of HBA that is
-> signficant rather than the device at the far end of the cable.
+On Thu, 26 Aug 2004, Christoph Hellwig wrote:
 
+> Maybe instead of adding gazillions of blacklists for different inquiry
+> lengthes we should just add an max_inquiry_length field to scsi_device
+> that can be set in slave_alloc?
 
-That implies that scsi is an acceptable appelation for ATA controllers?
+Christoph:
 
-Maybe we need a neutral one like 'drivers/storage'.
+I sent in a patch to do this:
 
-	Jeff
+http://marc.theaimsgroup.com/?l=linux-scsi&m=109459028822709&w=2
 
+Nobody has responded to it.  Is there some particular person I should send
+this to?  Or should I change the patch, so that it merely addresses the
+issue at hand without simplifying the entire subroutine?
+
+Alan Stern
 
