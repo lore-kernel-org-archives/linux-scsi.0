@@ -1,81 +1,43 @@
-From: Catalin Muresan <catalin.muresan@astral.ro>
-Subject: Re: Apple Xserve RAID and qlogic ISP2312 (qla2300)
-Date: Sat, 30 Oct 2004 18:44:31 +0300
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20041030154430.GC9629@astral.ro>
-References: <20041027233321.GA842@astral.ro> <20041028143734.GA16358@beaverton.ibm.com> <20041028153522.GC1915@astral.ro> <20041028164210.GA16905@beaverton.ibm.com> <20041028172143.GA20949@praka.san.rr.com> <20041029085800.GF6671@astral.ro> <20041029180633.GA27267@beaverton.ibm.com>
+From: "Jan Peuker" <jan.peuker@janpeuker.de>
+Subject: aacraid as module on 2.4.20
+Date: Sun, 31 Oct 2004 00:19:06 +0200
+Message-ID: <00e101c4bece$78d5e280$6501a8c0@lstzentrale.dom>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	format=flowed;
+	charset="iso-8859-1";
+	reply-type=original
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from dummy.cluj.astral.ro ([193.230.240.25]:60608 "EHLO
-	cnn.astral.ro") by vger.kernel.org with ESMTP id S261303AbUJ3Puv
+Received: from natnoddy.rzone.de ([81.169.145.166]:46271 "EHLO
+	natnoddy.rzone.de") by vger.kernel.org with ESMTP id S261357AbUJ3WTD
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 30 Oct 2004 11:50:51 -0400
-Content-Disposition: inline
-In-Reply-To: <20041029180633.GA27267@beaverton.ibm.com>
+	Sat, 30 Oct 2004 18:19:03 -0400
+Received: from tronic5 (gw-ls6.spacenet.de [195.30.36.13])
+	by post.webmailer.de (8.13.1/8.13.1) with SMTP id i9UMJ1SL010961
+	for <linux-scsi@vger.kernel.org>; Sun, 31 Oct 2004 00:19:01 +0200 (MEST)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Patrick Mansfield <patmans@us.ibm.com>
-Cc: Andrew Vasquez <andrew.vasquez@qlogic.com>, James Bottomley <James.Bottomley@steeleye.com>, linux-scsi@vger.kernel.org, bogdan.luca@astral.ro
+To: linux-scsi@vger.kernel.org
 
-On Fri, Oct 29, 2004 at 11:06:33AM -0700, Patrick Mansfield wrote:
- > I forgot a few things:
- > 
- > 1) The REPORT LUNS is always on in current 2.6.x kernels, I do not remember
- > what kernel version first had the change.
+Good evening everybody,
 
-	from a quick glance at the source it's tried if LUN 0 returns
-TARGET_PRESENT (meaning target is there but no lun), so some changes need to
-be made to have REPORT LUN (also fake the device as scsi-3). 
+   at first, I want to say that I'm really sorry to post to this group 
+without developing anything. But I am faciny really serious problems and in 
+German it's weekend and after midnight - so I wont' get anybody else.
 
- > 2) If LUN 0 gets a DID_NO_CONNECT (and we do return the
- > SCSI_SCAN_NO_RESPONSE), we won't scan anything, via REPORT LUN or via
- > a sequential scan.
+   I already found out what kind of problems I have - I only don't know what 
+to do. I'm using Suse8.2 which has a unstable aacraid driver. I already read 
+that I need some patches - but that's where my problem begins. I cant't 
+install SuSE without these drivers, so I think I have to patch and compile 
+the driver, then send it to the "modules disk". Alternatively I could 
+compile the module and include it into the kernel after installing to a 
+differend drive - and then do a chroot to the new drives. Is there anybody 
+who may help me doing this, beginning from patching? I really don't know how 
+to start. Maybe I forgot to mention that this is our main file server which 
+has to running until tommorow morning.
 
-	yep. what i don't know is how the REPORT LUN command is issued: to a
-LUN or to the target ? if it's to the LUN it's hopeless and only changes in
-the driver can help.
+Any help is greatly appreciated, thank you very much
 
- > 3) We have a problem for REPORT LUN with sparse lun devices, in short,
- > you won't get a REPORT LUN scan if no LUN 0 is configured. I thought Kurt
- > was working on a fix for that, this post:
- > 
- > http://marc.theaimsgroup.com/?t=109545967900002&r=1&w=2
+jan 
 
-	even if not configured, I think the target should respond with
-TARGET_PRESENT but this storage doesn't communicate at all.
-
- > 4) You posted as part of your logs:
- > 
- > Oct 28 02:31:38 zerg-b kernel:   Vendor: APPLE     Model: Xserve RAID Rev: 1.21
- > Oct 28 02:31:38 zerg-b kernel:   Type:   Direct-Access ANSI SCSI revision: 02
- > 
- > For SCSI 2 devices by default the REPORT LUN scan won't be used. Some
- > storage arrays have an option as to what SCSI level to report, try that or
- > use the BLIST_REPORTLUN2 devinfo flag. 
- > 
- > If you had configured in only LUNs 0 1 and 5, the sequential scan (with no
- > sparse lun) will stop scanning after LUN 2 is not seen.
-
-	if I would have LUN 0 configured and any other combinations it would
-have worked because i've already whitelisted the storage as BLIST_SPARSELUN
-
- > In short you need to first figure out why LUN 0 is getting a
- > DID_NO_CONNECT, and after that the sequential scan should work OK for your
-
-	I blame it on the storage for not following the spec now.
-
- > *current* configuration (only LUN 5 configured), though the REPORT LUN
-
-	REPORT LUN is sent to LUN 0 ? if yes it doesn't help because the
-storage is willomg to cdommunicate only with unmasked LUNs. 
-
- > scan or sparse lun scan will be needed to avoid sparse LUNs as noted
- > above.
-
-	I'll continue on this monday when I'll be at work and near the
-equipments.
-
- > -- Patrick Mansfield
-
--- 
-Kat
