@@ -1,115 +1,67 @@
-From: Fabien Salvi <fabien@cri74.org>
-Subject: qlogicfc // qla2x00 parameters and failover
-Date: Thu, 30 May 2002 16:19:32 +0200
+From: Andrew Patterson <andrew@fc.hp.com>
+Subject: Re: Enterprise patch needed - please help
+Date: 30 May 2002 08:40:16 -0600
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3CF634F4.E66E8193@cri74.org>
+Message-ID: <1022769616.2955.23.camel@lvadp.fc.hp.com>
+References: <6BD67FFB937FD411A04F00D0B74FE87807C249F0@xrose06.rose.hp.com>	<1022719300.4
+	 124.312.camel@irongate.swansea.linux.org.uk>
+	<3CF5AEA4.4050404@metaparadigm.com>
+	<1022762307.4123.364.camel@irongate.swansea.linux.org.uk>
+	<3CF61E66.1050600@metaparadigm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <3CF61E66.1050600@metaparadigm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Linux SCSI list <linux-scsi@vger.kernel.org>
-Cc: Lorraine Suschetet <lorraine@ext.cri74.org>
+To: Michael Clark <michael@metaparadigm.com>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, "HINCHMAN,PAUL  (HP-Roseville,ex1)" <paul_hinchman@hp.com>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
 
-Hello, 
+On Thu, 2002-05-30 at 06:43, Michael Clark wrote:
+> 
+> On 05/30/02 20:38, Alan Cox wrote:
+> 
+> >On Thu, 2002-05-30 at 05:46, Michael Clark wrote:
+> >  
+> >
+> >>Also, some devices need a BLIST_SPARSELUN added in scsi_scan.c - even if 
+> >>the device
+> >>reports SCSI-3, the scanning code by defaults stops when it finds a lun 
+> >>that doesn't
+> >>respond. It is quite common with enterpise storage to have sparse 
+> >>between luns.
+> >>    
+> >>
 
+The following entries in the device_list array of scsi_scan.c should do
+the trick for HP arrays.
 
-We have Qlogic 2200 HBAs with a Vixel 2100 hub and a storage
-enclosure with 2 CMD 7240 controllers (redundant in active/active mode).
+   {"HP", "A6188A", "*", BLIST_SPARSELUN},      // HP Va7100 Array
+   {"HP", "A6189A", "*", BLIST_SPARSELUN},      // HP Va7400 Array
+   {"HP", "A6189B", "*", BLIST_SPARSELUN},      // HP Va7410 Array
+   {"HP", "OPEN-", "*", BLIST_SPARSELUN},       // HP XP Arrays
 
-We have tried to use both qlogicfc and qla2x00 drivers to see the better
-driver to use.
+Note that you must have a LUN at LUN number 0, to detect sparse LUN's
+above LUN number 7.  
 
-There are different versions of the qla2x00 driver developped by Qlogic,
-some are available on qlogic website
-(http://www.qlogic.com/support/product_resources.asp?id=113) and others
-elsewhere, for example on the IBM website
-(http://www.pc.ibm.com/qtechinfo/MIGR-42081.html).
+Andrew Patterson
 
+    
 
-=== drivers parameters ===
-
-
-In the qlogicfc, Lorraine has increased the "QLOGICFC_REQ_QUEUE_LEN"
-(see the FibreChannel howto :
-http://tech.sistina.com/gfs/howtos/fibrechannel_howto/node7.html)
-because of problems when under heavy load (lot of IO/s).
-
-It seems not necessary to do it in qlogic driver, the default value
-should be high enough...
-I suppose this is this parameter in qla2x00.h :
-/* Maximum outstanding commands in ISP queues (1-65535) */
-#define MAX_OUTSTANDING_COMMANDS   1024
-
-
-
-However, in the qla2x00 driver, we can found these parameters in
-qla2x00.h (for example with IBM certified v5.38.6) :
-
-/*
- * Fibre Channel device definitions.
- */
-#define WWN_SIZE                8       /* Size of WWPN, WWN & WWNN */
-#define MAX_FIBRE_DEVICES       256
-#define MAX_FIBRE_LUNS          256
-#define MAX_RSCN_COUNT          10
-#define MAX_HOST_COUNT          8
-
-/*
- * Host adapter default definitions.
- */
-#define MAX_BUSES            1  /* We only have one bus today */
-#define MAX_TARGETS_2100     MAX_FIBRE_DEVICES
-#define MAX_TARGETS_2200     MAX_FIBRE_DEVICES
-#define MAX_TARGETS          MAX_FIBRE_DEVICES
-#define MAX_LUNS             MAX_FIBRE_LUNS
-#define MAX_CMDS_PER_LUN     255 
+> >
+> >If we use report luns should we even be checking BLIST_SPARSELUN I
+> >wonder
+> >
+> >  
+> >
+> Oh, is this new or maybe my device doesn't report luns as I've needed
+> the sparse lun hint even though device was correctly detected as SCSI-3.
+> This is with 2.4.18
+> 
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
 
 
-Should we change these parameters according to our controllers specs ?
-In CMD technical documentation, they say that for Queue Depth,
-controllers supports up to 64 commands per lun.
-Should we modify MAX_CMDS_PER_LUN to 64 instead of 255 ?
-Is there any other tuning to do ?
-
-
-Also, we have the same in qlogicfc driver (qlogicfc.h) :
-#define QLOGICFC_CMD_PER_LUN    8
-
-
-
-=== Failover ===
-
-We plan to use the qla2x00 instead of the qlogicfc to use failover
-capabilities of these HBAs.
-We would like to use a switch (for example the Qlogic SANbox2) for the
-active mode and 2 cascaded hubs for the passive mode.
-Do you think we could have problems with this architecture ?
-In fact, we would have the active primary HBA what will use Fabric Login
-and the passive secondary HBA what will use classic LIP.
-
-In your mind, is this something acceptable ?
-
-
-=== 1 Gbits/s <==> 2 Gbits/s ===
-
-Finally, another question (a little off topic, sorry...):
-Does some people have encountered problems mixing 1 and 2Gbits/s
-elements ?
-For example, now, 2 Gbits/s Qlogic switches are cheaper than 1Gbit/s !
-I would like to have a 2Gbit/s switch with a mix of 1 or 2 Gbits/s HBAs
-(qla2200 and qla2300) and 1 Gbit/s link to our storage controllers...
-But, I'm afraid we can't mix 2 sort of card in failover configuration,
-isn't it ?
-
-
-Well, that's a lot of questions, I apologize...
-Thanks in advance for your help !
-
-
-B.R.
-
--------------
-Fabien SALVI      Centre de Ressources Informatiques
-                  Archamps, France -- http://www.cri74.org
-                  PingOO GNU/linux distribution : http://www.pingoo.org
