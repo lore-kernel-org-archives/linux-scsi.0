@@ -1,45 +1,39 @@
-From: Mike Anderson <andmike@us.ibm.com>
-Subject: Re: Notify about errors during initialization
-Date: Tue, 6 Jan 2004 11:04:52 -0800
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: Sysfs attribute file for max_sectors
+Date: Tue, 6 Jan 2004 14:31:10 -0500 (EST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040106190452.GB2119@beaverton.ibm.com>
-References: <20040105021047.GD30408@one-eyed-alien.net> <Pine.LNX.4.44L0.0401051659180.604-100000@ida.rowland.org> <20040105221302.A7678@infradead.org> <20040105233221.GC1936@beaverton.ibm.com> <20040106161731.A17858@infradead.org> <20040106091538.A10957@beaverton.ibm.com> <20040106171843.A18507@infradead.org> <20040106180814.GA2119@beaverton.ibm.com> <20040106180832.A19009@infradead.org>
+Message-ID: <Pine.LNX.4.44L0.0401061427230.6168-100000@ida.rowland.org>
+References: <1073413440.2221.47.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e32.co.us.ibm.com ([32.97.110.130]:41983 "EHLO
-	e32.co.us.ibm.com") by vger.kernel.org with ESMTP id S264604AbUAFTBG
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 6 Jan 2004 14:01:06 -0500
-Content-Disposition: inline
-In-Reply-To: <20040106180832.A19009@infradead.org>
+Received: from ida.rowland.org ([192.131.102.52]:23812 "HELO ida.rowland.org")
+	by vger.kernel.org with SMTP id S264936AbUAFTbK (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Jan 2004 14:31:10 -0500
+In-Reply-To: <1073413440.2221.47.camel@mulgrave>
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Patrick Mansfield <patmans@us.ibm.com>, Alan Stern <stern@rowland.harvard.edu>, James Bottomley <James.Bottomley@steeleye.com>, Matthew Dharm <mdharm-scsi@one-eyed-alien.net>, USB Storage List <usb-storage@one-eyed-alien.net>, SCSI development list <linux-scsi@vger.kernel.org>
+To: James Bottomley <James.Bottomley@steeleye.com>
+Cc: Patrick Mansfield <patmans@us.ibm.com>, Christoph Hellwig <hch@infradead.org>, Matthew Dharm <mdharm-scsi@one-eyed-alien.net>, SCSI development list <linux-scsi@vger.kernel.org>, USB Storage List <usb-storage@one-eyed-alien.net>
 
-Christoph Hellwig [hch@infradead.org] wrote:
-> On Tue, Jan 06, 2004 at 10:08:14AM -0800, Mike Anderson wrote:
-> > > Because some drivers (like the ieee1394) don't want scanning to happen.
-> > > They can easily chose that by not sending a scan event.
-> > > 
+On 6 Jan 2004, James Bottomley wrote:
+
+> > The simplest way to export max_sectors to user processes is as a sysfs 
+> > attribute.  We have code that will do this for USB devices, but perhaps it 
+> > would be better as a general feature available for all SCSI devices.
 > > 
-> > Couldn't the user space also set the policy to scan or not scan? It
-> > would seem that user space would be more flexible and not need a new
-> > api (Just do not call scsi_scan_host).
+> > What's your feeling?  Should max_sectors be exported for all SCSI devices 
+> > or only for USB mass storage devices?
 > 
-> For ieee1394 scanning doesn't make any sense, so I don't see why it should
-> scan at all.
-> 
-> And I don't understand that API argument at all.  With my suggestion
-> scsi_scan_host would be changed to send the hotplug even - not change in
-> API at all.
+> The value is useful to know for all drivers, so exporting it in sysfs
+> should be fine.  If you want to do an attribute override in usb-storage,
+> you can...but I'd be very careful not to let the user set it to an
+> obviously wrong value (like larger than the sg array or something).
 
-ok, I was reading two replies back when you mentioned
-"scsi_scan_host_parallel". I re-read the last reply and see that
-scsi_scan_host would just send a scan event. 
+I was going to have a store() routine that would accept any value greater
+than 0 and <= the value in the host template (or SCSI_DEFAULT_MAX_SECTORS
+if the host template value is 0 -- that's what scsi_host_alloc() does).  
+If this is writeable only by root, would that be acceptable for all SCSI
+devices?
 
--andmike
---
-Michael Anderson
-andmike@us.ibm.com
+Alan Stern
 
