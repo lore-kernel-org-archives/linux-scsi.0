@@ -1,43 +1,24 @@
-From: Xose Vazquez Perez <xose@wanadoo.es>
-Subject: Re: [PATCH] gdth driver for 2.4.23-pre4
-Date: Thu, 08 Jan 2004 19:25:15 +0100
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] ips driver for 2.4.23-pre4
+Date: Thu, 8 Jan 2004 18:21:35 +0000
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3FFDA08B.6030901@wanadoo.es>
-References: <3FFC5644.9060200@wanadoo.es> <20040108171314.A12595@infradead.org>
+Message-ID: <20040108182135.A13623@infradead.org>
+References: <3FFC5B2C.6000302@wanadoo.es> <20040108171531.B12595@infradead.org> <3FFD9F0E.4060604@wanadoo.es>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp12.eresmas.com ([62.81.235.112]:4491 "EHLO
-	smtp12.eresmas.com") by vger.kernel.org with ESMTP id S265784AbUAHS0Z
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 8 Jan 2004 13:26:25 -0500
+Received: from phoenix.infradead.org ([213.86.99.234]:37904 "EHLO
+	phoenix.infradead.org") by vger.kernel.org with ESMTP
+	id S265662AbUAHSVn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 8 Jan 2004 13:21:43 -0500
+Content-Disposition: inline
+In-Reply-To: <3FFD9F0E.4060604@wanadoo.es>; from xose@wanadoo.es on Thu, Jan 08, 2004 at 07:18:54PM +0100
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, Tosatti <marcelo.tosatti@cyclades.com>
+To: Xose Vazquez Perez <xose@wanadoo.es>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi <linux-scsi@vger.kernel.org>, Tosatti <marcelo.tosatti@cyclades.com>
 
-Christoph Hellwig wrote:
+On Thu, Jan 08, 2004 at 07:18:54PM +0100, Xose Vazquez Perez wrote:
+> the maintainer sent this patch _directly_ to Marcelo, again.
 
-> On Wed, Jan 07, 2004 at 07:56:04PM +0100, Xose Vazquez Perez wrote:
-> 
->>hi,
->>
->>latest driver update for 2.4 kernel:
->>
->>- Disabled scan for EISA controllers
->>- Using CACHE_READ_OEM_STRING_RECORD_IOCTL to set vendor
->>  for SCSI inquiry.
->>- Added support for XSCALE based RAID controllers
->>- Reformated some code chunks
-> 
-> 
-> Patch looks ok, but I'd prefer a submission by the maintainer.
-
-*me too*
-
-But if the maintainer only hangs the patch in the vendor web
-and _nobody_ take care for it. what can we do?
-
-againg, ask to them:
-Achim Leubner <Achim_Leubner@adaptec.com> or Johannes Dinner <Johannes_Dinner@adaptec.com>
+Please tell them to go through linux-scsi, again.
 
