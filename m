@@ -1,102 +1,50 @@
-From: Matthew Dharm <mdharm-scsi@one-eyed-alien.net>
-Subject: Re: Fusion-MPT with 53C1030 and no flash?
-Date: Sat, 9 Oct 2004 17:12:09 -0700
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] fix oops when removing scsi_host while IO is outstanding (and when using scsi_target patches)
+Date: Sun, 10 Oct 2004 11:14:06 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20041010001209.GA8117@one-eyed-alien.net>
-References: <BBB2B829DCAA204D9BA39DAE37CD05A1630FEF@mail01.midstream.com> <000c01c4adb3$19aac630$1a1015ac@ericmoore>
+Message-ID: <20041010101406.GB28456@infradead.org>
+References: <416803A4.5000202@cs.wisc.edu>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="cWoXeonUoKmBZSoM"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from multivac.one-eyed-alien.net ([64.169.228.101]:48553 "EHLO
-	multivac.one-eyed-alien.net") by vger.kernel.org with ESMTP
-	id S267765AbUJJAMU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 9 Oct 2004 20:12:20 -0400
-Content-Disposition: inline
-In-Reply-To: <000c01c4adb3$19aac630$1a1015ac@ericmoore>
-List-Id: linux-scsi@vger.kernel.org
-To: "Moore, Eric Dean" <emoore@lsil.com>
-Cc: Brian Eng <brian@midstream.com>, Linux SCSI list <linux-scsi@vger.kernel.org>
-
-
---cWoXeonUoKmBZSoM
 Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from baythorne.infradead.org ([81.187.226.107]:17924 "EHLO
+	phoenix.infradead.org") by vger.kernel.org with ESMTP
+	id S268223AbUJJKOH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 10 Oct 2004 06:14:07 -0400
 Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+In-Reply-To: <416803A4.5000202@cs.wisc.edu>
+List-Id: linux-scsi@vger.kernel.org
+To: Mike Christie <michaelc@cs.wisc.edu>
+Cc: linux-scsi@vger.kernel.org
 
-On Fri, Oct 08, 2004 at 09:50:20PM -0600, Moore, Eric Dean wrote:
-> On Friday, October 08, 2004 12:57 PM, Matthew Dharm wrote:
->=20
-> > Has anyone ever used an LSI 53C1030 chip WITHOUT attached flash?
->=20
-> Yes this works. In embedded environment w/o flash, the firmware is
-> packaged with the system bios, and downloaded to the part via the 1030
-> option rom.
+On Sat, Oct 09, 2004 at 08:28:36AM -0700, Mike Christie wrote:
+> When trying to remove a host while IO is running I will get the folling 
+> warning,
+> and after these messages my log fills up with various oops.
+> 
+> Oct  9 04:54:44 mina kernel:  target0:0:0: Illegal state transition 
+> <NULL>->cancel
+> Oct  9 04:54:44 mina kernel: Badness in scsi_device_set_state at 
+> drivers/scsi/scsi_lib.c:1713
+> Oct  9 04:54:44 mina kernel:  [<c010585e>] dump_stack+0x1e/0x30
+> Oct  9 04:54:44 mina kernel:  [<f8831316>] scsi_device_set_state+0xc6/0x130 
+> [scsi_mod]
+> Oct  9 04:54:44 mina kernel:  [<f88290fc>] scsi_device_cancel+0x3c/0x263 
+> [scsi_mod]
+> Oct  9 04:54:44 mina kernel:  [<c02c280d>] device_for_each_child+0x4d/0x80
+> Oct  9 04:54:44 mina kernel:  [<f88293c2>] scsi_host_cancel+0x32/0xc0 
+> [scsi_mod]
+> Oct  9 04:54:44 mina kernel:  [<f8829472>] scsi_remove_host+0x22/0x70 
+> [scsi_mod]
+> 
+> Note the target dev name and NULL state.
+> 
+> Basically, scsi_host_cancel is doing a device_for_each_child thinking it's
+> children are scsi_devices, but in the scsi-target-2.6 tree they are now
+> targets. The attached patch fixes this by just adding the extra
+> device_for_each_child loop to get to the scsi device. It was built against
+> the current scsi-target-2.6 tree.
 
-That's assuming we have an x86-like BIOS..... as least, given the files
-I've seen on the LSI web page which are all x86-oriented.  I'm working on a
-PPC64 embedded target where by loader/boot code won't (for various reasons
-which are not all technical) touch this chip.
+What about using shost_for_each_device instead, so you don't have to care
+about the extact implementation details?
 
-> > As I read the technical docs, it's possible... but it requires a driver
-> > which can download the firmware to the ARM processor.  It looks like the
-> > current 2.6.x driver can't do that.
->=20
-> Look at mpt_downloadboot in mptbase.c
-> http://lxr.linux.no/source/drivers/message/fusion/mptbase.c?v=3D2.6.8.1
-
-Did that already.  The references to mpt_downloadboot are:
-	1) in the disable routine
-	2) the hard reset routine
-
-If this is called by some code path I don't immediately see (and I'll admit
-that's a very real possibility), mpt_downloadboot wants the firmware in the
-ioc->cached_fw pointer.
-
-I don't see a way to get it there except by downloading it from a running
-adaptor (before doing a reset, I presume).
-
-> > In fact, I can't seem to locate a suitable firmware image anywhere...
-> >
->=20
-> http://www.lsilogic.com/downloads/selectDownload.do
-> Step 1: Storage Adapters
-> Step 2: Ultra 320 Host Bus Adapters
-> Step 3: LSI 22320-R
-
-I've also been to this page before.  The driver download doesn't seem to
-contain the firmware, either.
-
-The BIOS/Firmware download contains a couple of binaries, but no
-information on how to use them except with the DOS tool to program them
-into an option ROM.
-
-Without information on the firmware file map, at the least, I don't see how
-that binary is useful.  Heck, that firmware image might not even be useable
-if loaded directly into the part's internal RAM.
-
-Matt
-
---=20
-Matthew Dharm                              Home: mdharm-usb@one-eyed-alien.=
-net=20
-Maintainer, Linux USB Mass Storage Driver
-
-E:  You run this ship with Windows?!  YOU IDIOT!
-L:  Give me a break, it came bundled with the computer!
-					-- ESR and Lan Solaris
-User Friendly, 12/8/1998
-
---cWoXeonUoKmBZSoM
-Content-Type: application/pgp-signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.2.1 (GNU/Linux)
-
-iD8DBQFBaH5ZIjReC7bSPZARAqgCAKCEf1Q6l8OAbyQsoHP+VwjjRk5NwwCghuAQ
-vLRMozkN2FbwUV5/IKkOpVI=
-=NM3C
------END PGP SIGNATURE-----
-
---cWoXeonUoKmBZSoM--
