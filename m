@@ -1,46 +1,72 @@
-From: Andries.Brouwer@cwi.nl
-Subject: Re: [usb-storage] Re: 2 PATCHES: fix request_tranferlength
-Date: Sun, 28 Jul 2002 00:48:03 +0200 (MEST)
+From: Kurt Garloff <garloff@suse.de>
+Subject: Re: [PATCH] sd_many done right (1/5)
+Date: Sun, 28 Jul 2002 02:42:35 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <UTC200207272248.g6RMm3h14110.aeb@smtp.cwi.nl>
+Message-ID: <20020728004235.GA7691@nbkurt.etpnet.phys.tue.nl>
+References: <20020726154533.GD19721@nbkurt.etpnet.phys.tue.nl> <Pine.GSO.4.21.0207261245070.21586-100000@weyl.math.psu.edu> <20020726165411.GI19721@nbkurt.etpnet.phys.tue.nl> <20020726175027.GC2746@clusterfs.com> <20020726185545.B18629@infradead.org> <20020726223224.GJ19721@nbkurt.etpnet.phys.tue.nl> <20020727104119.A5992@infradead.org>
+Mime-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="n8g4imXOkfNTN/H1"
 Return-path: <linux-scsi-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20020727104119.A5992@infradead.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, mdharm-scsi@one-eyed-alien.net, usb-storage@one-eyed-alien.net
+To: Christoph Hellwig <hch@infradead.org>, Alexander Viro <viro@math.psu.edu>, Linux SCSI list <linux-scsi@vger.kernel.org>, Linux kernel list <linux-kernel@vger.kernel.org>
 
-    I haven't seen these patches integrated into a kernel yet... have I just
-    missed them, or is there some reason they have been rejected?
 
-    > +++ b/drivers/scsi/scsi_scan.c    Sun Jul 21 00:55:37 2002
-    > -              256, SCSI_TIMEOUT+4*HZ, 3);
-    > +              scsi_cmd[4], SCSI_TIMEOUT+4*HZ, 3);
+--n8g4imXOkfNTN/H1
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-    > +++ b/drivers/scsi/sd.c    Sun Jul 21 00:55:44 2002
-    > -              512, SD_TIMEOUT, MAX_RETRIES);
-    > +              255, SD_TIMEOUT, MAX_RETRIES);
+Hi Christoph, Al,
 
-There are many more possibilities.
-Since the number of hours in a day is very finite, Linus cannot
-look at everything, so even if the patch is perfect it can be ignored.
+On Sat, Jul 27, 2002 at 10:41:19AM +0100, Christoph Hellwig wrote:
+> On Sat, Jul 27, 2002 at 12:32:24AM +0200, Kurt Garloff wrote:
+> Linus wants this, and he stated that again on the kernel summit. =20
 
-There is not really a SCSI maintainer, but there are people that are
-well-known as active in the SCSI area. You may try to submit via
-one of them.
+I've not been there :-(
 
-But then the question is whether these are good patches.
+> But to do this porperly (=3D not the EVMS way) it needs preparation. =20
+> Al currently does lots of work in that area to make the block drivers
+> largely independent of the major number.
 
-I booted 2.5.29 earlier this evening and was greeted by
-kernel BUG at transport.c: 351 and
-kernel BUG at scsiglue.c: 150.
-(And the usb-storage module now hangs initializing; rmmod fails,
-reboot is necessary.)
+So he should port my sd patch to 2.5. All the data it uses is in a per-major
+data structure. Currently, in most function it uses the kdev_t passed to fi=
+nd
+the right pointer. But that's very easy to replace.
+Of course, sd still assumes it gets a whole major and not parts of one. Oth=
+er-
+wise, more splitting would be needed.
 
-The former BUG_ON wants to have len == srb->request_bufflen.
-But I don't know whether that is wise. It is less confusing
-when bufflen indicates the size of the buffer available,
-rather than the number of bytes you expect to move.
-It is not unusual to get one byte more than you asked for,
-in case you ask for an odd number of bytes.
+> Once the drivers don't need the major number anymore
+> internally the only that needs sorting out is userlevel backwards-compati=
+nlity.
 
-So, maybe these patches aren't clear improvements.
+That takes more effort than the change itself, I guess.
 
-Andries
+> I'm pretty sure the preparation will be finished for 2.6, also I can't co=
+mment
+> whether the unified disk major will be done. (Al?)
+
+Would certainly be nice.
+
+Regards,
+--=20
+Kurt Garloff  <garloff@suse.de>                          Eindhoven, NL
+GPG key: See mail header, key servers         Linux kernel development
+SuSE Linux AG, Nuernberg, DE                            SCSI, Security
+
+--n8g4imXOkfNTN/H1
+Content-Type: application/pgp-signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.0.7 (GNU/Linux)
+
+iD8DBQE9Qz37xmLh6hyYd04RAjIIAJ9g87rIiH2xsaT88ZD2BOx0LaRq/wCgiyJw
+2X1f1rb+Ll+nar92MwQ6pok=
+=/2ox
+-----END PGP SIGNATURE-----
+
+--n8g4imXOkfNTN/H1--
