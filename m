@@ -1,42 +1,48 @@
-From: Patrick Mansfield <patmans@us.ibm.com>
-Subject: Re: Request for review of Linux iSCSI driver version 4.0.0.1
-Date: Wed, 19 Nov 2003 09:17:17 -0800
+From: Kai Makisara <Kai.Makisara@kolumbus.fi>
+Subject: Re: [linux-usb-devel] Re: Unaligned scatter-gather buffers and
+ usb-storage
+Date: Wed, 19 Nov 2003 18:56:38 +0200 (EET)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20031119091717.A11499@beaverton.ibm.com>
-References: <200310231734.10263.krmurthy@cisco.com> <20031027153932.A16679@infradead.org> <03111920183201.15831@naveenb-lnx.cisco.com>
+Message-ID: <Pine.LNX.4.58.0311191854560.2166@kai.makisara.local>
+References: <20031110095914.B22518@beaverton.ibm.com> <20031118143720.A6411@beaverton.ibm.com>
+ <20031119084729.GA1106@suse.de> <200311191401.34540.oliver@neukum.org>
+ <20031119130400.GG1106@suse.de> <1069252642.10768.7.camel@mulgrave>
+ <20031119143901.GI1106@suse.de> <1069253904.10768.13.camel@mulgrave>
+ <20031119150011.GJ1106@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e35.co.us.ibm.com ([32.97.110.133]:28830 "EHLO
-	e35.co.us.ibm.com") by vger.kernel.org with ESMTP id S263953AbTKSRSM
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 19 Nov 2003 12:18:12 -0500
-Content-Disposition: inline
-In-Reply-To: <03111920183201.15831@naveenb-lnx.cisco.com>; from naveenb@cisco.com on Wed, Nov 19, 2003 at 08:18:32PM +0530
+Received: from fep02-0.kolumbus.fi ([193.229.0.44]:10829 "EHLO
+	fep02-app.kolumbus.fi") by vger.kernel.org with ESMTP
+	id S264060AbTKSUH4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 19 Nov 2003 15:07:56 -0500
+In-Reply-To: <20031119150011.GJ1106@suse.de>
 List-Id: linux-scsi@vger.kernel.org
-To: Naveen Burmi <naveenb@cisco.com>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, davmyers@cisco.com
+To: Jens Axboe <axboe@suse.de>
+Cc: James Bottomley <James.Bottomley@steeleye.com>, Oliver Neukum <oliver@neukum.org>, Patrick Mansfield <patmans@us.ibm.com>, Alan Stern <stern@rowland.harvard.edu>, Douglas Gilbert <dougg@torque.net>, SCSI development list <linux-scsi@vger.kernel.org>, USB development list <linux-usb-devel@lists.sourceforge.net>
 
-On Wed, Nov 19, 2003 at 08:18:32PM +0530, Naveen Burmi wrote:
+On Wed, 19 Nov 2003, Jens Axboe wrote:
 
-> After a device gets detected by iSCSI LLD, it uses iscsi_do_cmnd to send scsi 
-> commands to that device even before registering it with the scsi mid-layer.
->  
-> For example user can configure in iscsi LLD configuration (iscsi.conf) file 
-> what various LUNs of a particular target needs to be activated. To acheive 
-> this we need to execute REPORT LUN command on target, to find out what 
-> various luns are present and selectively issue scsi_add_device for luns that 
-> needs to be activated.
+> On Wed, Nov 19 2003, James Bottomley wrote:
+> > > > Alternatively, we could add this as yet another parameter to the host
+> > > > and template structures.  Any preferences?
+> > >
+> > > I suppose you have to, if you want LLD to be able to pass it down.
+> >
+> > Well, what I was fishing for: Is this property useful enough to want
+> > every device driver writer to think about it (i.e. document and place in
+> > the template),  or is it rare enough that it should only be accessible
+> > to those who know what they're doing (via the direct block queue
+> > interfaces in slave_alloc/configure)?
+>
+> As far as I'm concerned, requiring 512-byte alignment is 'just
+> easier'... Only a select few host adapters will set it differently
+> anyways, so you gain basically nothing.
+>
+As usual, I am against this 512-byte alignment (thinking as st
+maintainer). Don't default to more strict aligment requirements than is
+necessary. It creates hidden performance problems for character device
+drivers.
 
-If you already have the LUN specified, why do you need to issue a REPORT
-LUN command?
-
-I don't know iSCSI specification details, but I would want to specify a
-target, not a LUN, in a configuration file and have all LUNs on the target
-be automatically configured.
-
-The iSCSI target itself, or actual storage (if iSCSI is just passing
-through commands to an actual disk drive) could control what LUNs are seen
-by an individual host.
-
--- Patrick Mansfield
+-- 
+Kai
