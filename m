@@ -1,45 +1,52 @@
-From: James Bottomley <James.Bottomley@steeleye.com>
-Subject: Re: Sysfs attribute file for max_sectors
-Date: 06 Jan 2004 12:23:59 -0600
+From: Adrian Bunk <bunk@fs.tum.de>
+Subject: 2.6.1-rc1: SCSI: `TIMEOUT' redefined
+Date: Tue, 6 Jan 2004 19:33:25 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1073413440.2221.47.camel@mulgrave>
-References: <Pine.LNX.4.44L0.0401061301230.1043-100000@ida.rowland.org>
+Message-ID: <20040106183325.GJ11523@fs.tum.de>
+References: <Pine.LNX.4.58.0312310033110.30995@home.osdl.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat1.steeleye.com ([65.114.3.130]:31636 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S264981AbUAFSYc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 6 Jan 2004 13:24:32 -0500
-In-Reply-To: <Pine.LNX.4.44L0.0401061301230.1043-100000@ida.rowland.org>
+Received: from hermes.fachschaften.tu-muenchen.de ([129.187.202.12]:30699 "HELO
+	hermes.fachschaften.tu-muenchen.de") by vger.kernel.org with SMTP
+	id S264902AbUAFSde (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 6 Jan 2004 13:33:34 -0500
+Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.58.0312310033110.30995@home.osdl.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: Patrick Mansfield <patmans@us.ibm.com>, Christoph Hellwig <hch@infradead.org>, Matthew Dharm <mdharm-scsi@one-eyed-alien.net>, SCSI development list <linux-scsi@vger.kernel.org>, USB Storage List <usb-storage@one-eyed-alien.net>
+To: patmans@ibm.com, neuffer@goofy.zdv.uni-mainz.de, a.arnold@kfa-juelich.de
+Cc: Kernel Mailing List <linux-kernel@vger.kernel.org>, James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org
 
-On Tue, 2004-01-06 at 12:07, Alan Stern wrote:
-> Some USB Mass Storage devices need max_sectors set as low as 64 KB per
-> transfer.  Many devices don't have this restriction, though, and it would
-> be nice to give users an easy way to change the value.  Especially if we
-> play it safe by starting with the default value set low; that way more
-> capable devices wouldn't have to be penalized.
+On Wed, Dec 31, 2003 at 12:36:49AM -0800, Linus Torvalds wrote:
+>...
+> Summary of changes from v2.6.0 to v2.6.1-rc1
+> ============================================
+>...
+> Patrick Mansfield:
+>   o consolidate and log scsi command on send and completion
+>...
 
-This is treading on dangerous ground.  Setting max_sectors too high is a
-sure fire way to hang a driver.  Its value isn't really "policy" which
-belongs in user land, its an expression of a driver constraint.
+This adds a #define TIMEOUT to scsi.h conflicting with a different 
+TIMEOUT #define in drivers/scsi/eata_generic.h:
 
-> The simplest way to export max_sectors to user processes is as a sysfs 
-> attribute.  We have code that will do this for USB devices, but perhaps it 
-> would be better as a general feature available for all SCSI devices.
-> 
-> What's your feeling?  Should max_sectors be exported for all SCSI devices 
-> or only for USB mass storage devices?
+<--  snip  -->
 
-The value is useful to know for all drivers, so exporting it in sysfs
-should be fine.  If you want to do an attribute override in usb-storage,
-you can...but I'd be very careful not to let the user set it to an
-obviously wrong value (like larger than the sg array or something).
+...
+  CC      drivers/scsi/eata_pio.o
+In file included from drivers/scsi/eata_pio.c:69:
+drivers/scsi/eata_generic.h:84: warning: `TIMEOUT' redefined
+include/scsi/scsi.h:305: warning: this is the location of the previous definition
+...
 
-James
+<--  snip  -->
 
+cu
+Adrian
+
+-- 
+
+       "Is there not promise of rain?" Ling Tan asked suddenly out
+        of the darkness. There had been need of rain for many days.
+       "Only a promise," Lao Er said.
+                                       Pearl S. Buck - Dragon Seed
 
