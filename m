@@ -1,82 +1,93 @@
-From: Nishanth Aravamudan <nacc@us.ibm.com>
-Subject: Re: [PATCH] scsi_debug [was: scsi_debug issues]
-Date: Thu, 21 Oct 2004 14:36:49 -0700
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20041021213648.GA3125@us.ibm.com>
-References: <20041015190154.GA3073@us.ibm.com> <4170C505.3000805@torque.net> <1097932370.1962.4.camel@mulgrave> <4173C8DB.8030009@torque.net> <20041018183747.GA3530@us.ibm.com> <41743E41.8020707@torque.net> <20041018232352.GA4747@us.ibm.com> <4174BAE8.50103@torque.net>
+From: Jesse Barnes <jbarnes@engr.sgi.com>
+Subject: [PATCH] use mmiowb in qla1280.c
+Date: Thu, 21 Oct 2004 16:17:14 -0700
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <200410211617.14809.jbarnes@engr.sgi.com>
+References: <200410211613.19601.jbarnes@engr.sgi.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e33.co.us.ibm.com ([32.97.110.131]:5784 "EHLO e33.co.us.ibm.com")
-	by vger.kernel.org with ESMTP id S271004AbUJUVgU (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 21 Oct 2004 17:36:20 -0400
-Received: from westrelay02.boulder.ibm.com (westrelay02.boulder.ibm.com [9.17.195.11])
-	by e33.co.us.ibm.com (8.12.10/8.12.9) with ESMTP id i9LLaJL4502482
-	for <linux-scsi@vger.kernel.org>; Thu, 21 Oct 2004 17:36:19 -0400
-Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
-	by westrelay02.boulder.ibm.com (8.12.10/NCO/VER6.6) with ESMTP id i9LLaJSE312838
-	for <linux-scsi@vger.kernel.org>; Thu, 21 Oct 2004 15:36:19 -0600
-Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av02.boulder.ibm.com (8.12.11/8.12.11) with ESMTP id i9LLaI0Y004390
-	for <linux-scsi@vger.kernel.org>; Thu, 21 Oct 2004 15:36:18 -0600
-Content-Disposition: inline
-In-Reply-To: <4174BAE8.50103@torque.net>
+Content-Type: Multipart/Mixed;
+  boundary="Boundary-00=_6NEeBMBYJqaNBpN"
+Return-path: <linux-kernel-owner+glk-linux-kernel=40m.gmane.org-S271098AbUJUX1S@vger.kernel.org>
+In-Reply-To: <200410211613.19601.jbarnes@engr.sgi.com>
+To: akpm@osdl.org, linux-kernel@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org, jeremy@sgi.com, jes@sgi.com
 List-Id: linux-scsi@vger.kernel.org
-To: Douglas Gilbert <dougg@torque.net>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, hch@infradead.org
 
-On Tue, Oct 19, 2004 at 04:57:44PM +1000, Douglas Gilbert wrote:
-> Nishanth Aravamudan wrote:
-> >On Tue, Oct 19, 2004 at 08:05:53AM +1000, Douglas Gilbert wrote:
-> >
-> >>Nishanth Aravamudan wrote:
-> >>
-> >>>On Mon, Oct 18, 2004 at 11:44:59PM +1000, Douglas Gilbert wrote:
-> >>>
-> >>>
-> >>>>James Bottomley wrote:
-> >>>>
-> >>>>
-> >>>>>On Sat, 2004-10-16 at 01:51, Douglas Gilbert wrote:
-> >>>>>
-> >>>>>
-> >>>>>
-> >>>>>>So this problem seems related to highmem.
-> >>>
-> >>>
-> >>><snip>
-> >>>
-> >>>>The above required a fair few changes to scsi_debug.
-> >>>>Attached is a patch that rolls "kmap" changes with
-> >>>>patches I have sent recently for scsi_debug.
-> >>>>Attachment is gzipped (due to size) and applies against
-> >>>>lk 2.6.8.1 -> lk 2.6.9-rc4 .
-> >>>>
-> >>>>Nishanth, could you test this with highmem?
-> >>>
-> >>>
-> >>>Doug,
-> >>>
-> >>>I ran 2.6.9-rc4 with your patch applied and had several dump_stack()s
-> >>>occur (complaining about sleeping in an invalid context) and a final
-> >>>panic during mkfs :) I think something is still wrong... ;) Output is
-> >>>below and attached.
-> >>
-> >>Ok, it looks like kmap_atomic() is needed.
-> >>Could you try this additional patch.
-> >
-> >
-> >Great! That patch seems to have fixed it. I am able to vi files, sync
-> >the scsi_debug 'disks' and not have any hangs. It is noticeably slower,
-> >though, it seems. Might that just be a side effect of the atomic calls?
-> 
-> One would expect it to be pretty fast since only a
-> ram copy is involved.
+--Boundary-00=_6NEeBMBYJqaNBpN
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
-I agree, and in fact I'm not seeing any perf. related problems anymore.
-Now it's on to debug udev's relation to thousands of disks :)
+There are a few spots in qla1280.c that don't need a full PCI write flush to 
+the device, but rather a simple write ordering guarantee.  This patch changes 
+some of the PIO reads that cause write flushes into mmiowb calls instead, 
+which is a lighter weight way of ensuring ordering.
 
-Thanks for all your help!
+Jes and James, can you ack this and/or push it in via the SCSI BK tree?
 
--Nish
+Thanks,
+Jesse
+
+Signed-off-by: Jeremy Higdon <jeremy@sgi.com>
+Signed-off-by: Jesse Barnes <jbarnes@sgi.com>
+
+
+
+--Boundary-00=_6NEeBMBYJqaNBpN
+Content-Type: text/plain;
+  charset="iso-8859-1";
+  name="qla1280-mmiowb-4.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+	filename="qla1280-mmiowb-4.patch"
+
+===== drivers/scsi/qla1280.c 1.69 vs edited =====
+--- 1.69/drivers/scsi/qla1280.c	2004-10-20 06:46:21 -07:00
++++ edited/drivers/scsi/qla1280.c	2004-10-21 16:06:11 -07:00
+@@ -3400,7 +3400,8 @@
+ 	sp->flags |= SRB_SENT;
+ 	ha->actthreads++;
+ 	WRT_REG_WORD(&reg->mailbox4, ha->req_ring_index);
+-	(void) RD_REG_WORD(&reg->mailbox4); /* PCI posted write flush */
++	/* Enforce mmio write ordering; see comment in qla1280_isp_cmd(). */
++	mmiowb();
+ 
+  out:
+ 	if (status)
+@@ -3668,7 +3669,8 @@
+ 	sp->flags |= SRB_SENT;
+ 	ha->actthreads++;
+ 	WRT_REG_WORD(&reg->mailbox4, ha->req_ring_index);
+-	(void) RD_REG_WORD(&reg->mailbox4); /* PCI posted write flush */
++	/* Enforce mmio write ordering; see comment in qla1280_isp_cmd(). */
++	mmiowb();
+ 
+ out:
+ 	if (status)
+@@ -3778,9 +3780,21 @@
+ 	} else
+ 		ha->request_ring_ptr++;
+ 
+-	/* Set chip new ring index. */
++	/*
++	 * Update request index to mailbox4 (Request Queue In).
++	 * The mmiowb() ensures that this write is ordered with writes by other
++	 * CPUs.  Without the mmiowb(), it is possible for the following:
++	 *    CPUA posts write of index 5 to mailbox4
++	 *    CPUA releases host lock
++	 *    CPUB acquires host lock
++	 *    CPUB posts write of index 6 to mailbox4
++	 *    On PCI bus, order reverses and write of 6 posts, then index 5,
++	 *       causing chip to issue full queue of stale commands
++	 * The mmiowb() prevents future writes from crossing the barrier.
++	 * See Documentation/DocBook/deviceiobook.tmpl for more information.
++	 */
+ 	WRT_REG_WORD(&reg->mailbox4, ha->req_ring_index);
+-	(void) RD_REG_WORD(&reg->mailbox4); /* PCI posted write flush */
++	mmiowb();
+ 
+ 	LEAVE("qla1280_isp_cmd");
+ }
+
+--Boundary-00=_6NEeBMBYJqaNBpN--
