@@ -1,57 +1,36 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: PATCH: (as141b) Unaligned scatter-gather buffers and usb-storage
-Date: Tue, 6 Jan 2004 11:10:43 -0500 (EST)
-Sender: linux-usb-devel-admin@lists.sourceforge.net
-Message-ID: <Pine.LNX.4.44L0.0401061100130.770-100000@ida.rowland.org>
-References: <200401061228.08161.oliver@neukum.org>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: Notify about errors during initialization
+Date: Tue, 6 Jan 2004 16:17:31 +0000
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <20040106161731.A17858@infradead.org>
+References: <20040105021047.GD30408@one-eyed-alien.net> <Pine.LNX.4.44L0.0401051659180.604-100000@ida.rowland.org> <20040105221302.A7678@infradead.org> <20040105233221.GC1936@beaverton.ibm.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-usb-devel-admin@lists.sourceforge.net>
-In-Reply-To: <200401061228.08161.oliver@neukum.org>
-Errors-To: linux-usb-devel-admin@lists.sourceforge.net
-List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-devel>,
-	<mailto:linux-usb-devel-request@lists.sourceforge.net?subject=unsubscribe>
-List-Post: <mailto:linux-usb-devel@lists.sourceforge.net>
-List-Help: <mailto:linux-usb-devel-request@lists.sourceforge.net?subject=help>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-devel>,
-	<mailto:linux-usb-devel-request@lists.sourceforge.net?subject=subscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=linux-usb-devel>
-To: Oliver Neukum <oliver@neukum.org>
-Cc: Jens Axboe <axboe@suse.de>, Kai =?iso-8859-15?q?M=E4kisara?= <kai.makisara@kolumbus.fi>, Douglas Gilbert <dougg@torque.net>, James Bottomley <James.Bottomley@steeleye.com>, Patrick Mansfield <patmans@us.ibm.com>, SCSI development list <linux-scsi@vger.kernel.org>, USB development list <linux-usb-devel@lists.sourceforge.net>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from phoenix.infradead.org ([213.86.99.234]:21262 "EHLO
+	phoenix.infradead.org") by vger.kernel.org with ESMTP
+	id S262050AbUAFQRo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 6 Jan 2004 11:17:44 -0500
+Content-Disposition: inline
+In-Reply-To: <20040105233221.GC1936@beaverton.ibm.com>; from andmike@us.ibm.com on Mon, Jan 05, 2004 at 03:32:21PM -0800
 List-Id: linux-scsi@vger.kernel.org
+To: Alan Stern <stern@rowland.harvard.edu>, James Bottomley <James.Bottomley@steeleye.com>, Matthew Dharm <mdharm-scsi@one-eyed-alien.net>, USB Storage List <usb-storage@one-eyed-alien.net>, SCSI development list <linux-scsi@vger.kernel.org>
 
-On Tue, 6 Jan 2004, Oliver Neukum wrote:
+On Mon, Jan 05, 2004 at 03:32:21PM -0800, Mike Anderson wrote:
+> It would appear that saying the scan requested by scsi_scan_host is
+> completed when the function returns would be the expected result. The
+> LLDD writer should be aware that once scsi_add_host has been called
+> hotplug events to user space could allow the user space to scan and
+> delete devices through sysfs making assumptions on devices found or not
+> found iffy.
 
-> > +	/* Scatter-gather buffers (all but the last) must have a length
-> > +	 * divisible by the bulk maxpacket size.  Otherwise a data packet
-> > +	 * would end up being short, causing a premature end to the data
-> > +	 * transfer.  Since high-speed bulk pipes have a maxpacket size
-> > +	 * of 512, we'll use that as the scsi device queue's DMA alignment
-> > +	 * mask.  Guaranteeing proper alignment of the first buffer will
-> > +	 * have the desired effect because, except at the beginning and
-> > +	 * the end, scatter-gather buffers follow page boundaries. */
-> > +	blk_queue_dma_alignment(sdev->request_queue, (512 - 1));
-> 
-> What about the cacheline of the last buffer? It seems to me that we have
-> to worry about DMA coherency.
+> ...
 
-We don't have to worry about that, at least not here in the low-level
-driver.  These buffers are passed from user processes.  Suppose a process
-wants to write an amount that's smaller than a cacheline.  But that small
-amount might be stored in part of a buffer that does end on a cacheline
-boundary -- there's no way for the driver to know.  Ultimately the user
-process must be responsible for insuring that DMA coherency is maintained.
+> I thought we where moving to not calling a scan api from the LLDD and
+> using hotplug events. Then user space would define the scan policy it
+> wanted.
 
-Alan Stern
-
-
-
--------------------------------------------------------
-This SF.net email is sponsored by: IBM Linux Tutorials.
-Become an expert in LINUX or just sharpen your skills.  Sign up for IBM's
-Free Linux Tutorials.  Learn everything from the bash shell to sys admin.
-Click now! http://ads.osdn.com/?ad_id=1278&alloc_id=3371&op=click
-_______________________________________________
-linux-usb-devel@lists.sourceforge.net
-To unsubscribe, use the last form field at:
-https://lists.sourceforge.net/lists/listinfo/linux-usb-devel
+My idea was that in the brave new hotplug world scsi_scan_host would
+do nothing but simply sending a SCAN hotplug even.  With that design
+we'd have a hard time to find out when the scanning has finished in
+kernelspace.
