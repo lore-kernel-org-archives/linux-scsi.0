@@ -1,54 +1,48 @@
-From: Mike Anderson <andmike@us.ibm.com>
+From: Alan Stern <stern@rowland.harvard.edu>
 Subject: Re: Repeating Scsi_Cmnd serial numbers in the error-handler
-Date: Wed, 30 Apr 2003 09:26:41 -0700
+Date: Wed, 30 Apr 2003 12:44:26 -0400 (EDT)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030430162641.GB2350@beaverton.ibm.com>
-References: <Pine.LNX.4.44L0.0304301014310.762-100000@ida.rowland.org>
+Message-ID: <Pine.LNX.4.44L0.0304301239040.956-100000@ida.rowland.org>
+References: <20030430162641.GB2350@beaverton.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e35.co.us.ibm.com ([32.97.110.133]:1747 "EHLO e35.co.us.ibm.com")
-	by vger.kernel.org with ESMTP id S262195AbTD3QMW (ORCPT
+Received: from ida.rowland.org ([192.131.102.52]:20740 "HELO ida.rowland.org")
+	by vger.kernel.org with SMTP id S261281AbTD3QcF (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 30 Apr 2003 12:12:22 -0400
-Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.44L0.0304301014310.762-100000@ida.rowland.org>
+	Wed, 30 Apr 2003 12:32:05 -0400
+In-Reply-To: <20030430162641.GB2350@beaverton.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
+To: Mike Anderson <andmike@us.ibm.com>
 Cc: linux-scsi@vger.kernel.org
 
-Alan,
+On Wed, 30 Apr 2003, Mike Anderson wrote:
 
-Is the requirement that all serial numbers in flight be unique or that
-once a serial number is used that is not be used again.
-
-I would hope the usb would be supporting auto sense and that it will not
-fall into the case of having the error handler thread do a request sense
-command for it. If it did fall into this case the serial number that was
-used for the command having sense requested would not still be in
-flight.
-
-If the error handler is in the process of aborting / canceling the
-command it will not send a TUR until the command has been canceled.
-
-Alan Stern [stern@rowland.harvard.edu] wrote:
-> While the SCSI error handler is in operation it may issue some commands on
-> its own behalf, in particular REQUEST-SENSE and TEST-UNIT-READY.  These
-> both get transmitted via scsi_send_eh_cmnd(), which does not increment the
-> serial number.  Consequently these commands are issued with the same
-> serial number as the failed command they are trying to recover from.  
-> This makes life difficult for drivers like usb-storage which rely on the
-> serial number to be a unique tag for purposes of matching up requests with
-> responses.
+> Alan,
 > 
-> This ought to be very easy to fix, but I prefer to leave it up to someone
-> who knows more than I do about the details of the SCSI system.
-> 
-> Alan Stern
-> 
+> Is the requirement that all serial numbers in flight be unique or that
+> once a serial number is used that is not be used again.
 
--andmike
---
-Michael Anderson
-andmike@us.ibm.com
+It's actually somewhere in between.  Because of the possibility of the 
+device and the driver getting out-of-sync, we want to be sure that the 
+same serial number is not used twice within a short time period.  Probably 
+not used twice in a row would be sufficient.
+
+> I would hope the usb would be supporting auto sense and that it will not
+> fall into the case of having the error handler thread do a request sense
+> command for it. If it did fall into this case the serial number that was
+> used for the command having sense requested would not still be in
+> flight.
+
+We do support auto sense.  The problem arises with the TUR command, not 
+the REQUEST-SENSE command (which I just included in my previous message 
+for the sake of completeness).
+
+> If the error handler is in the process of aborting / canceling the
+> command it will not send a TUR until the command has been canceled.
+
+Yes.  But the TUR will be the very next command sent after the one that 
+failed.  This is the particular case that I would like to prevent.
+
+Alan Stern
 
