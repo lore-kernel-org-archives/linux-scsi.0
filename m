@@ -1,46 +1,38 @@
-From: Rask Ingemann Lambertsen <rask@sygehus.dk>
-Subject: Re: State of NCR53c7xx based drivers
-Date: Mon, 24 Nov 2003 15:26:57 +0100
+From: James Bottomley <James.Bottomley@steeleye.com>
+Subject: Re: aic7xxx deadlock in 2.6.0-test10
+Date: 24 Nov 2003 09:08:47 -0600
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20031124152653.A1292@sygehus.dk>
-References: <20031123232126.B1657@sygehus.dk> <Pine.LNX.4.44.0311241553080.17702-100000@leo.crm114.net>
+Message-ID: <1069686529.1836.6.camel@mulgrave>
+References: <20031123230853.0bc8defb.akpm@osdl.org>
+	<20031124081319.A29562@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 0x50a144f4.albnxx15.adsl-dhcp.tele.dk ([80.161.68.244]:28164
-	"EHLO 0x50a144f4.albnxx15.adsl-dhcp.tele.dk") by vger.kernel.org
-	with ESMTP id S263734AbTKXO07 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 24 Nov 2003 09:26:59 -0500
-Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.44.0311241553080.17702-100000@leo.crm114.net>; from kent@werple.net.au on Mon, Nov 24, 2003 at 04:12:02PM +1100
+Received: from nat9.steeleye.com ([65.114.3.137]:6148 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S263769AbTKXPJh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 24 Nov 2003 10:09:37 -0500
+In-Reply-To: <20031124081319.A29562@infradead.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Ken Tyler <kent@werple.net.au>
-Cc: Linux/m68k <linux-m68k@lists.linux-m68k.org>, linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Andrew Morton <akpm@osdl.org>, "Justin T. Gibbs" <gibbs@scsiguy.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Mon, Nov 24, 2003 at 04:12:02PM +1100, Ken Tyler wrote:
-> On Sun, 23 Nov 2003, Rask Ingemann Lambertsen wrote:
-> 
-> > I have an Amiga with a CyberStorm PPC board and wouldn't mind having Linux
-> > running on it. What would be a good name for the driver?
-> 
-> Which Amiga and which PPC board?
+On Mon, 2003-11-24 at 02:13, Christoph Hellwig wrote:
+> jejb just posted another fix for it on linux-scsi, but in fact your fix
+> looks better to me, ahc_initialize doesn't need the host_lock because
+> ahc can't be reached from an other thread yet.
 
-Amiga 4000 desktop and CyberStorm PPC with '060@50 MHz and 604e@233 MHz.
+I don't think so.  This only fixes the boot case for aic7xxx (the boot
+problem is also present in aic79xx). This routine was designed to be
+called also when a driver detects a reset it didn't initiate
+(aic7xxx_old is probably the only driver that actually seems to do
+this).  In that case, the detection is called from the ISR, so you don't
+want to drop the lock
 
-> SCSI works on ppc 1200s but not reliably on ppc 4000s.  I tried many, many 
-> times to fix 53c710.c (with endless help from Richard Hirst) all to no 
-> avail.
+The fix, I think, is to require the lock be held for the bus/device
+reset reporting callbacks and use the unlocked iterator.
 
-I'm confused. What SCSI on PPC A4000s is that? Is it the 53c770 on the
-CyberStorm PPC or the 53c710 on the A4000 tower motherboard?
+James
 
-> At this point I decided the driver was probably OK all along and the 
-> problem is else where, either in the logic that connects ZORRO to PPC or a 
-> deadlock in interrupt code but this is stabbing in the dark.
 
-The Zorro<->PPC logic should be out of the equation on the CyberStorm PPC
-since the 53c770 is connected directly to the processor bus.
-
--- 
-Regards,
-Rask Ingemann Lambertsen
