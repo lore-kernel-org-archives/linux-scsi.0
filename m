@@ -1,67 +1,81 @@
-From: "Tony Battersby" <tonyb@cybernetics.com>
-Subject: [PATCH 2.4] fix race condition in sg.c
-Date: Mon, 1 Nov 2004 18:02:12 -0500
-Message-ID: <04Nov1.180150est.332955@cyborg.cybernetics.com>
-Reply-To: <tonyb@cybernetics.com>
+From: Masao Fukuchi <fukuchi.masao@jp.fujitsu.com>
+Subject: [PATCH][RFC]skip_settle_delay support for MPT fusion driver
+Date: Tue, 02 Nov 2004 15:24:51 +0900
+Message-ID: <200411020624.AA03729@fukuchi.jp.fujitsu.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from host02.cybernetics.com ([206.246.200.18]:41485 "EHLO
-	cybernetics.com") by vger.kernel.org with ESMTP id S289804AbUKAXWI
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 1 Nov 2004 18:22:08 -0500
+Received: from fgwmail6.fujitsu.co.jp ([192.51.44.36]:2237 "EHLO
+	fgwmail6.fujitsu.co.jp") by vger.kernel.org with ESMTP
+	id S286506AbUKBGZo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 2 Nov 2004 01:25:44 -0500
+Received: from m2.gw.fujitsu.co.jp ([10.0.50.72]) by fgwmail6.fujitsu.co.jp (8.12.10/Fujitsu Gateway)
+	id iA26PgqK005991 for <linux-scsi@vger.kernel.org>; Tue, 2 Nov 2004 15:25:42 +0900
+	(envelope-from fukuchi.masao@jp.fujitsu.com)
+Received: from s0.gw.fujitsu.co.jp by m2.gw.fujitsu.co.jp (8.12.10/Fujitsu Domain Master)
+	id iA26Pgf1017333 for <linux-scsi@vger.kernel.org>; Tue, 2 Nov 2004 15:25:42 +0900
+	(envelope-from fukuchi.masao@jp.fujitsu.com)
+Received: from s0.gw.fujitsu.co.jp (s0 [127.0.0.1])
+	by s0.gw.fujitsu.co.jp (Postfix) with ESMTP id 46A1EA7D06
+	for <linux-scsi@vger.kernel.org>; Tue,  2 Nov 2004 15:25:42 +0900 (JST)
+Received: from fjmail505.fjmail.jp.fujitsu.com (fjmail505-0.fjmail.jp.fujitsu.com [10.59.80.104])
+	by s0.gw.fujitsu.co.jp (Postfix) with ESMTP id E2347A7D04
+	for <linux-scsi@vger.kernel.org>; Tue,  2 Nov 2004 15:25:41 +0900 (JST)
+Received: from fukuchi.jp.fujitsu.com
+ (fjscan501-0.fjmail.jp.fujitsu.com [10.59.80.120])
+ by fjmail505.fjmail.jp.fujitsu.com
+ (Sun Internet Mail Server sims.4.0.2001.07.26.11.50.p9)
+ with SMTP id <0I6J00CJBGISQC@fjmail505.fjmail.jp.fujitsu.com> for
+ linux-scsi@vger.kernel.org; Tue,  2 Nov 2004 15:25:40 +0900 (JST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: 'Marcelo Tosatti' <marcelo.tosatti@cyclades.com>
-Cc: linux-scsi@vger.kernel.org, dougg@torque.net, coughlan@redhat.com
+To: Emoore@lsil.com, linux-scsi@vger.kernel.org
 
-This patch fixes a command completion race condition in the SCSI generic
-driver.  There are several variations of this patch floating around:
+Eric,
 
-#1: Original patch from me:
-http://marc.theaimsgroup.com/?t=105664088400001&r=1&w=2
+This patch supports skip_settle_delay flag to skip 10 seconds sleep
+at bus reset sequence.
 
-#2: Better patch from Brian King for lk 2.6.x:
-http://marc.theaimsgroup.com/?t=107843139000002&r=1&w=2
+Thanks,
+M.Fukuchi
 
-#3: Patch for a related problem from Brian King for lk 2.6.x:
-http://marc.theaimsgroup.com/?t=108636397100004&r=1&w=2
-
-#4: Port of combined #2 and #3 to lk 2.4.x from Tom Coughlan:
-http://marc.theaimsgroup.com/?t=109657360500004&r=1&w=2
-
-#5: Correction of #4 by me:
-http://marc.theaimsgroup.com/?l=linux-scsi&m=109658140509138&w=2
-
-None of these fixes have made it into lk 2.4.x yet.  Below is a port of patch
-#2 to 2.4.x which has been extensively tested by my company.  Patch #5 which
-includes these changes would be better, but I haven't tested it.  Please
-apply this patch, and the additional changes for patch #5 can be merged later
-if and when they are tested by those interested.
-
---- linux-2.4.28-pre2-vanilla/drivers/scsi/sg.c	Thu Aug 26 14:33:30 2004
-+++ linux-2.4.28-pre2-asp/drivers/scsi/sg.c	Thu Aug 26 14:41:29 2004
-@@ -1253,7 +1253,6 @@
-     SRpnt->sr_request.rq_dev = MKDEV(0, 0);  /* "sg" _disowns_ request blk */
+diff -uarN linux-2.6.9/drivers/message/fusion/mptscsih.c linux-2.6.9-
+reset/drivers/message/fusion/mptscsih.c
+--- linux-2.6.9/drivers/message/fusion/mptscsih.c	2004-10-19 06:55:36.000000000 +0900
++++ linux-2.6.9-reset/drivers/message/fusion/mptscsih.c	2004-11-02 14:56:02.254776796 +0900
+@@ -2510,6 +2510,8 @@
+ {
+ 	MPT_SCSI_HOST	*hd;
+ 	spinlock_t	*host_lock = SCpnt->device->host->host_lock;
++	int             loop_count = 10 * 4; /* Wait 10 seconds */
++	unsigned long   flags;
  
-     srp->my_cmdp = NULL;
--    srp->done = 1;
-     read_unlock(&sg_dev_arr_lock);
- 
-     SCSI_LOG_TIMEOUT(4, printk("sg...bh: dev=%d, pack_id=%d, res=0x%x\n",
-@@ -1316,8 +1315,9 @@
-     }
-     if (sfp && srp) {
- 	/* Now wake up any sg_read() that is waiting for this packet. */
--	wake_up_interruptible(&sfp->read_wait);
- 	kill_fasync(&sfp->async_qp, SIGPOLL, POLL_IN);
-+	srp->done = 1;
-+	wake_up_interruptible(&sfp->read_wait);
-     }
+ 	/* If we can't locate our host adapter structure, return FAILED status.
+ 	 */
+@@ -2543,7 +2545,18 @@
+ 		spin_lock_irq(host_lock);
+ 		return FAILED;
+ 	}
++	do {
++		spin_lock_irqsave(&hd->ioc->FreeQlock, flags);
++		if (hd->tmState == TM_STATE_NONE) {
++			spin_unlock_irqrestore(&hd->ioc->FreeQlock, flags);
++			break;
++		}
++		spin_unlock_irqrestore(&hd->ioc->FreeQlock, flags);
++		msleep(250);
++	} while (--loop_count);
+ 	spin_lock_irq(host_lock);
++	if (loop_count == 0)
++		return FAILED;
+ 	return SUCCESS;
  }
  
-
-Anthony J. Battersby
-Cybernetics
-
+@@ -3322,6 +3335,7 @@
+ 	.max_sectors			= 8192,
+ 	.cmd_per_lun			= 7,
+ 	.use_clustering			= ENABLE_CLUSTERING,
++	.skip_settle_delay		= 1,
+ };
+ 
+ /*=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*/
