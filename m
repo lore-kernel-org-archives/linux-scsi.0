@@ -1,52 +1,107 @@
-From: torvalds@transmeta.com (Linus Torvalds)
+From: David Brownell <david-b@pacbell.net>
 Subject: Re: [linux-usb-devel] Re: [PATCH] USB changes for 2.5.58
-Date: Thu, 16 Jan 2003 20:10:18 +0000 (UTC)
+Date: Thu, 16 Jan 2003 12:40:00 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <b073ja$12i$1@penguin.transmeta.com>
-References: <10426732153816@kroah.com> <20030116173539.GA31235@kroah.com> <20030116114323.C29001@one-eyed-alien.net> <20030116195306.GA32697@kroah.com>
+Message-ID: <3E2718A0.5020905@pacbell.net>
+References: <10426732153816@kroah.com> <10426732212871@kroah.com>
+ <20030116093112.B29001@one-eyed-alien.net> <20030116173539.GA31235@kroah.com>
+ <20030116114323.C29001@one-eyed-alien.net> <20030116195306.GA32697@kroah.com>
+Mime-Version: 1.0
+Content-Type: multipart/mixed; boundary=------------030306080402030805000802
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: (from root@localhost)
-	by neon-gw.transmeta.com (8.9.3/8.9.3) id MAA16759
-	for <linux-scsi@vger.kernel.org>; Thu, 16 Jan 2003 12:10:54 -0800
-Received: from palladium.transmeta.com (palladium.transmeta.com [10.1.1.46])
-	by deepthought.transmeta.com (8.11.6/8.11.6) with ESMTP id h0GKAa327948
-	for <linux-scsi@vger.kernel.org>; Thu, 16 Jan 2003 12:10:36 -0800 (PST)
-Received: (from mail@localhost)
-	by palladium.transmeta.com (8.9.3/8.9.3) id MAA02257
-	for linux-scsi@vger.kernel.org; Thu, 16 Jan 2003 12:10:36 -0800
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Greg KH <greg@kroah.com>
+Cc: linux-usb-devel@lists.sourceforge.net, Linux SCSI list <linux-scsi@vger.kernel.org>
 
-In article <20030116195306.GA32697@kroah.com>, Greg KH  <greg@kroah.com> wrote:
->On Thu, Jan 16, 2003 at 11:43:23AM -0800, Matthew Dharm wrote:
->> Well, we only create the host when the device is first attached.  After
->> that, if it goes away and comes back, we re-connect it to the old SCSI
->> host.
->
->Ick, so when the device is gone, where does the SCSI host go?  Is it
->still represented in sysfs and in the SCSI core properly?
+This is a multi-part message in MIME format.
+--------------030306080402030805000802
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 
-This is pure and utter USB storage stupidity, and nothing else.
+Greg KH wrote:
+> On Thu, Jan 16, 2003 at 11:43:23AM -0800, Matthew Dharm wrote:
+> 
+>>Well, we only create the host when the device is first attached.  After
+>>that, if it goes away and comes back, we re-connect it to the old SCSI
+>>host.
+> 
+> 
+> Ick, so when the device is gone, where does the SCSI host go?  Is it
+> still represented in sysfs and in the SCSI core properly?
 
-When the USB storage device is unplugged, the device should be
-unregistered.  It should be _gone_.  It isn't sleeping, it's dead.  It's
-an ex-device. 
+Just for the record ... I think usb-storage is the only USB driver
+that tries to keep state about devices across disconnect/reconnect.
 
-The fact that USB storage still keeps track of devices that do not exist
-is WRONG. It has resulted in problems in real life multiple times with
-devices that get re-attached and have a new serial number (quite common
-as far as I can tell in cheap flash readers), where the _stupid_ rule of
-trying to keep track of what has been attached results in the device
-moving from /dev/sda to sdb to sdc as it is unplugged and re-plugged.
+I agree with Greg that hotplugging (including unplug/replug) should
+work well with SCSI.  But given the problems of determining "identity"
+of a disk (or volume or whatever) I'm sort of curious what working
+well should really mean.
 
->> Something like this would proabably make sense if the hot-unplugging code
->> for SCSI hosts was really stable -- then we could unregister the host when
->> the device went away, and this relation would be disconnected
->> automatically.
->
->Well, push back on the SCSI people to fix this then, hot-unplug should
->work properly on the SCSI layer too :)
+Have any of the SCSI people been looking much at SCSI hotplug on 2.5?
+I attach "/etc/hotplug/scsi.agent" from one of my desktops; all it
+does is make sure the right drivers are loaded, it doesn't have a
+clue yet about whether/how/where to mount disks or do other stuff.
 
-IT IS NOT A SCSI LAYER PROBLEM! It's purely a USB problem.
+- Dave
 
-		Linus
+
+--------------030306080402030805000802
+Content-Type: text/plain;
+ name="scsi.agent"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="scsi.agent"
+
+#!/bin/bash
+#
+# SCSI hotplug agent for 2.5 kernels 
+#
+#	ACTION=add
+#	DEVPATH=devices/scsi0/0:0:0:0
+#
+
+cd /etc/hotplug
+. hotplug.functions
+
+case $ACTION in
+
+add)
+    # 2.5.50 kernel bug: this happens sometimes
+    if [ ! -d /sys/$DEVPATH ]; then
+	mesg "bogus sysfs DEVPATH=$DEVPATH"
+	exit 1
+    fi
+
+    TYPE=$(cat /sys/$DEVPATH/type)
+    case "$TYPE" in
+    # 2.5.51 style attributes; <scsi/scsi.h> TYPE_* constants
+    0)		TYPE=disk ; MODULE=sd_mod ;;
+    # FIXME some tapes use 'osst' not 'st'
+    1)		TYPE=tape ; MODULE=st ;;
+    2)		TYPE=printer ;;
+    3)		TYPE=processor ;;
+    4)		TYPE=worm ; MODULE=sr_mod ;;
+    5)		TYPE=cdrom ; MODULE=sr_mod ;;
+    6)		TYPE=scanner ;;
+    7)		TYPE=mod ; MODULE=sd_mod ;;
+    8)		TYPE=changer ;;
+    9)		TYPE=comm ;;
+    14)		TYPE=enclosure ;;
+    esac
+    if [ "$MODULE" != "" ]; then
+	mesg "$TYPE at $DEVPATH"
+	modprobe $MODULE
+    else
+	mesg "how to add device type=$TYPE at $DEVPATH ??"
+    fi
+    ;;
+
+*)
+    debug_mesg SCSI $ACTION event not supported
+    exit 1
+    ;;
+
+esac
+
+--------------030306080402030805000802--
+
