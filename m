@@ -1,41 +1,72 @@
-From: Andrew Morton <akpm@osdl.org>
-Subject: Re: [PATCH] 2.6.2, Partition support for SCSI CDROM...
-Date: Sun, 22 Feb 2004 19:13:13 -0800
+From: Bob Doyle <doyle@primenet.com>
+Subject: Re: Fw: [fyi] BusLogic module removal causes an oops, 2.6.3
+Date: Sun, 22 Feb 2004 20:12:48 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040222191313.19231879.akpm@osdl.org>
-References: <40396134.6030906@realitydiluted.com>
-	<20040222190047.01f6f024.akpm@osdl.org>
-	<40396E8F.4050307@realitydiluted.com>
+Message-ID: <40396FB0.51DAB113@primenet.com>
+References: <20040222173815.2f08e469.akpm@osdl.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fw.osdl.org ([65.172.181.6]:60358 "EHLO mail.osdl.org")
-	by vger.kernel.org with ESMTP id S261755AbUBWDMa (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 22 Feb 2004 22:12:30 -0500
-In-Reply-To: <40396E8F.4050307@realitydiluted.com>
+Received: from smtp08.phx.gblx.net ([64.211.219.57]:60577 "EHLO
+	smtp08.phx.gblx.net") by vger.kernel.org with ESMTP id S261790AbUBWDNB
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 22 Feb 2004 22:13:01 -0500
 List-Id: linux-scsi@vger.kernel.org
-To: "Steven J. Hill" <sjhill@realitydiluted.com>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Andrew Morton <akpm@osdl.org>
+Cc: linux-scsi@vger.kernel.org
 
-"Steven J. Hill" <sjhill@realitydiluted.com> wrote:
->
-> Andrew Morton wrote:
-> > 
-> >>+config BLK_DEV_SR_PARTITIONS
-> >>+config BLK_DEV_SR_PARTITIONS_PER_DEVICE
-> > 
-> > 
-> > Do we actually need these config options?  Why not hardwire it to some
-> > reasonable upper bound and be done with it?
-> >
-> I have no problem hardwiring the number of partitions, but the
-> BLK_DEV_SR_PARTITIONS should still be an option to allow the
-> user to decided if they want partitioning support for their
-> SCSI CDROMs. Or are you suggesting that from now on partitions
-> will be supported by default?
+Thanks for the feedback.
 
-Well we need to be able to handle both types at runtime anyway, and the
-amount of added code is tiny.
+I'll look into this.  
 
+Bob.
+
+Andrew Morton wrote:
+> 
+> Begin forwarded message:
+> 
+> Date: Sun, 22 Feb 2004 19:20:32 -0500
+> From: David Ford <david+challenge-response@blue-labs.org>
+> To: linux-kernel mailing list <linux-kernel@vger.kernel.org>
+> Subject: [fyi] BusLogic module removal causes an oops, 2.6.3
+> 
+> Unable to handle kernel paging request at virtual address e098f090
+>  printing eip:
+> e098f090
+> *pde = 1ff70067
+> *pte = 00000000
+> Oops: 0000 [#1]
+> CPU:    0
+> EIP:    0060:[<e098f090>]    Tainted: PF
+> EFLAGS: 00210286
+> EIP is at 0xe098f090
+> eax: 0000001f   ebx: c06e01c4   ecx: 00009000   edx: dffef0c0
+> esi: 00000880   edi: c05dce38   ebp: 00000000   esp: d11f3f3c
+> ds: 007b   es: 007b   ss: 0068
+> Process rmmod (pid: 8235, threadinfo=d11f2000 task=d61fad40)
+> Stack: e0a30c8a c06e01c4 00009000 00000100 c06e01c4 e0a30cea c06e0000
+> e0a35440
+>        c0138789 e0a35440 bffff798 0000003b 00000000 4c737542 6369676f
+> c014e900
+>        d4b90280 d54d0180 d7b49680 40016000 40017000 40017000 d7b49680
+> d4b90280
+> Call Trace:
+>  [<e0a30c8a>] BusLogic_ReleaseHostAdapter+0x4a/0x70 [BusLogic]
+>  [<e0a30cea>] BusLogic_exit+0x3a/0x49 [BusLogic]
+>  [<c0138789>] sys_delete_module+0x139/0x1b0
+>  [<c014e900>] do_munmap+0x50/0x190
+>  [<c0109335>] sysenter_past_esp+0x52/0x71
+> 
+> Code:  Bad EIP value.
+> 
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
+> 
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
