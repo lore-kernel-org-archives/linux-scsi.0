@@ -1,38 +1,38 @@
-From: James Bottomley <James.Bottomley@steeleye.com>
-Subject: Re: [BK PATCH] bug fixes for scsi for linux-2.6.3-rc1
-Date: 08 Feb 2004 12:01:55 -0500
+From: "Ross Macintyre" <raz@macs.hw.ac.uk>
+Subject: interpreting scsi errors (RAID)
+Date: Mon, 9 Feb 2004 10:57:53 -0000 (GMT)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1076259717.2055.11.camel@mulgrave>
-References: <1076256895.2055.6.camel@mulgrave>
-	<20040208161911.GF24334@parcelfarce.linux.theplanet.co.uk>
-	<1076258392.2055.9.camel@mulgrave>
+Message-ID: <2198.137.195.14.4.1076324273.squirrel@www.macs.hw.ac.uk>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat1.steeleye.com ([65.114.3.130]:52894 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S263861AbUBHRCC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 8 Feb 2004 12:02:02 -0500
-In-Reply-To: <1076258392.2055.9.camel@mulgrave>
+Received: from izanami.macs.hw.ac.uk ([137.195.13.6]:21963 "EHLO
+	izanami.macs.hw.ac.uk") by vger.kernel.org with ESMTP
+	id S264605AbUBIK5z (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 9 Feb 2004 05:57:55 -0500
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Matthew Wilcox <willy@debian.org>, Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>, Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
+Cc: ian@eclipsecomputing.co.uk, cos@vger.kernel.org
 
-On Sun, 2004-02-08 at 11:39, James Bottomley wrote:
-> Hmm, missed that.
-> 
-> That would make the safest course of action to leave that in, and redo
-> the true fix after 2.6.3 is released.
-> 
-> Hang on, I'll redo the scsi-for-linus-2.6 tree.
+I have seen this error twice now:
 
-OK, I've reconstituted
+Adapter 1 Channel 1 Target 2: Sense Data: errCode=0x71  valBit=1 
+segMent=0x00  SenseKey=4  ILI=0  EOM=0  FMRK=0  Address=0x00005A8E 
+ASL=0xA  cmdSpec=0x0000  ASC=0x0C  ASCQ=0x00 FRUC Code + Sense Key
+Specific=0x8001
 
-bk://linux-scsi.bkbits.net/scsi-for-linus-2.6
+I have an LSILogic Megaraid SCSI 320-1, running RAID level5, 4 disks, and
+the OS is RedHat8.0.
 
-without that patch.
+What I would like, is to be able to understand these messages.
+In particular I need to know if there is a hardware error which means that
+I can contact the retailer, in confidence, and ask for a replacement, as
+the disk is still under warranty.
+Any pointers at FAQs or READMEs greatly appreciated,
+Thanks in advance,
 
-James
+Ross
 
-
+-- 
+Ross Macintyre (raz@macs.hw.ac.uk)
