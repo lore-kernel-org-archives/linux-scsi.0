@@ -1,33 +1,33 @@
 From: Rusty Trivial Russell <rusty@rustcorp.com.au>
-Subject: [TRIVIAL] [Trivial Patch] scsi_register-003-002
-Date: Fri, 08 Nov 2002 19:25:22 +1100
+Subject: [TRIVIAL] [Trivial Patch] scsi_register-002
+Date: Fri, 08 Nov 2002 19:25:01 +1100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20021108083828.3F0A12C0B6@lists.samba.org>
+Message-ID: <20021108083828.3768D2C44A@lists.samba.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, yokota@netlab.is.tsukuba.ac.jp
+To: linux-scsi@vger.kernel.org, alan@redhat.com
 
 From:  Michael Still <mikal@stillhq.com>
 
   
-  Updated patches to scsi_register patches against the 2.5.45 tree
+  This patch has been generated as part of my scsi_register audit of the 2.5.45 kernel tree. scsi_register() can fail, returning a NULL pointer, and the failure case was not being handled here...
   
   
   
   
 
---- trivial-2.5-bk/drivers/scsi/pcmcia/nsp_cs.c.orig	2002-11-08 18:47:02.000000000 +1100
-+++ trivial-2.5-bk/drivers/scsi/pcmcia/nsp_cs.c	2002-11-08 18:47:02.000000000 +1100
-@@ -1224,6 +1224,9 @@
- 
- 	request_region(data->BaseAddress, data->NumAddress, "nsp_cs");
- 	host		  = scsi_register(sht, 0);
-+	if(host == NULL)
-+		return 0;
+--- trivial-2.5-bk/drivers/scsi/aacraid/linit.c.orig	2002-11-08 18:47:02.000000000 +1100
++++ trivial-2.5-bk/drivers/scsi/aacraid/linit.c	2002-11-08 18:47:02.000000000 +1100
+@@ -204,6 +204,9 @@
+ 			 * specific information.
+ 			 */
+ 			host_ptr = scsi_register( template, sizeof(struct aac_dev) );
++			if(host_ptr == NULL)
++				continue;
 +
- 	host->unique_id	  = data->BaseAddress;
- 	host->io_port	  = data->BaseAddress;
- 	host->n_io_port	  = data->NumAddress;
+ 			/* 
+ 			 * These three parameters can be used to allow for wide SCSI 
+ 			 * and for host adapters that support multiple buses.
 -- 
   Don't blame me: the Monkey is driving
-  File: Michael Still <mikal@stillhq.com>: [Trivial Patch] scsi_register-003-002
+  File: Michael Still <mikal@stillhq.com>: [Trivial Patch] scsi_register-002
