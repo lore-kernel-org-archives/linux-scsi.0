@@ -1,35 +1,41 @@
 From: Matthew Wilcox <willy@debian.org>
-Subject: Re: Sym53c8xx_2
-Date: Mon, 16 Aug 2004 12:12:42 +0100
+Subject: Re: DAC960 + sym53c8xx conflict
+Date: Mon, 16 Aug 2004 12:20:34 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040816111242.GB28995@parcelfarce.linux.theplanet.co.uk>
-References: <1092366037.28144.202254467@webmail.messagingengine.com> <Pine.LNX.4.60.0408132049060.4069@poirot.grange> <1092432298.18813.202307545@webmail.messagingengine.com> <Pine.LNX.4.60.0408150005570.5333@poirot.grange> <Pine.LNX.4.58.0408151008400.6676@kai.makisara.local> <1092624889.15338.202386294@webmail.messagingengine.com>
+Message-ID: <20040816112034.GC28995@parcelfarce.linux.theplanet.co.uk>
+References: <1092628387.2548.14.camel@fs2>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:38322 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S267536AbUHPLMo
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:5306 "EHLO
+	www.linux.org.uk") by vger.kernel.org with ESMTP id S267543AbUHPLUf
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 16 Aug 2004 07:12:44 -0400
+	Mon, 16 Aug 2004 07:20:35 -0400
 Content-Disposition: inline
-In-Reply-To: <1092624889.15338.202386294@webmail.messagingengine.com>
+In-Reply-To: <1092628387.2548.14.camel@fs2>
 List-Id: linux-scsi@vger.kernel.org
-To: Kai OM <epimetreus@fastmail.fm>
-Cc: Kai Makisara <Kai.Makisara@kolumbus.fi>, Guennadi Liakhovetski <g.liakhovetski@gmx.de>, linux-scsi@vger.kernel.org
+To: Michael <mozstuff@yahoo.com>
+Cc: linux-scsi@vger.kernel.org
 
-On Sun, Aug 15, 2004 at 10:54:49PM -0400, Kai OM wrote:
+On Sun, Aug 15, 2004 at 10:53:07PM -0500, Michael wrote:
+> I've got a 4-processor Intel SC450NX-based system with motherboard
+> Sym53c896 dual controller driven a Mylex Acceleraid 200. The motherboard
+> also has a sym53c810a which drives a Sony SDT-9000 tape drive. This
+> combo has always worked well until I tried updating to a 2.6 kernel.
 > 
-> On Sun, 15 Aug 2004 10:21:35 +0300 (EEST), "Kai Makisara"
-> <Kai.Makisara@kolumbus.fi> said:
+> When I load 2.6 (tried 2.6. - 2.6.8-rc4 (mm tree too)) every works OK
+> until I load the sym53c8xx module. When that module is loaded all access
+> to the drives connected to the DAC960 vanishes. I get no errors and the
+> system is not locked up. Any attempt to access the disks on the DAC960
+> simply hangs.
 > 
-> > Domain Validation does not fail in all configurations. I am using 
-> > sym53c8xx_2 in two machines to drive the system disk and some other 
-> > devices. I have had no SCSI problems with these systems.
-> 
-> What chipset is your controller based on?
+> Any ideas? I hacked teh sym driver to remove all support for the 896
+> chip, but it didn't.
 
-I don't think the problem lies with the controller; I think it lies with
-one or more devices on the bus.
+On 2.4, did you get the message:
+
+        printf_info("%s: not initializing, driven by RAID controller.\n",
+                                            sym_name(device));
 
 -- 
 "Next the statesmen will invent cheap lies, putting the blame upon 
