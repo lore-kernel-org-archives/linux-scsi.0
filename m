@@ -1,51 +1,39 @@
-From: Kai Makisara <Kai.Makisara@kolumbus.fi>
-Subject: Re: [usb-storage] Re: 2 PATCHES: fix request_tranferlength
-Date: Mon, 29 Jul 2002 23:50:45 +0300 (EEST)
+From: Mike Anderson <andmike@us.ibm.com>
+Subject: Re: Autosense requirement
+Date: Mon, 29 Jul 2002 14:53:26 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44.0207292313280.1307-100000@kai.makisara.local>
-References: <20020729155059.A20905@redhat.com>
+Message-ID: <20020729145326.A23512@beaverton.ibm.com>
+References: <3D453CE8.5A15FCD6@splentec.com> <3D457FF3.C7A02C57@torque.net> <20020729155518.B20905@redhat.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <20020729155059.A20905@redhat.com>
+Content-Disposition: inline
+In-Reply-To: <20020729155518.B20905@redhat.com>; from dledford@redhat.com on Mon, Jul 29, 2002 at 03:55:18PM -0400
 List-Id: linux-scsi@vger.kernel.org
 To: Doug Ledford <dledford@redhat.com>
-Cc: Matthew Dharm <mdharm-scsi@one-eyed-alien.net>, linux-scsi@vger.kernel.org, usb-storage@one-eyed-alien.net
+Cc: linux-scsi@vger.kernel.org
 
-On Mon, 29 Jul 2002, Doug Ledford wrote:
+Doug Ledford [dledford@redhat.com] wrote:
+> It will be mandatory for the LLDD to do autosense.  All remnants of code 
+> to perform a follow up request sense operation *will* dissappear from the 
+> mid layer.  OTOH, the sense command and sense buffer will be pre-set for 
+> each device so at least the LLDD won't have to build their own command any 
+> longer, they can just change the command pointer from the original command 
+> to the sense command and the data buffer to the sense buffer and reissue 
+> the request.
 
-> On Mon, Jul 29, 2002 at 12:01:24AM +0300, Kai Makisara wrote:
-...
-> > My interpretation is that bufflen in the call should be 255 in this case.
-> > Using 512 is a bug. Is it useful for the lower levels to know how much
-> > excess space the caller has reserved? If it is, I take back my suggestion.
->
-> No, that just confuses the issue needlessly and down that road lies future
-> bugs.
->
-It simplifies the issue. However, note that we are looking at the problem
-from different sides of the scsi_do_req() interface. I am arguing that for
-the _users_ of scsi_do_req() the current situation is confusing and adding
-a new member to Scsi_Request only makes it worse. You are looking at the
-problem as consumer of Scsi_Cmnds.
+Doug,
+	I assume from your message that you are removing the call from
+	scsi_unjam_host to do request sense (which is good). 
+	
+	Does this imply that your reworking all of the eh handling in
+	scsi_error.c?
 
-We are talking about 2.5. Perhaps the scsi_do_req() interface should be
-cleaned. If you don't want to use function arguments, everything
-necessary can be stuffed directly into Scsi_Request and the parameters
-buff, bufflen, cmnd, done, timeout, retries can be removed.
+	I was doing some rework in this area, but it sounds like it might
+	be counter to your work.
 
-...
-> > I think we both agree that the information in dxfer_len must be passed.
-> > The difference is that you suggest adding a new field to Scsi_Request
-> > whereas I suggest clarifying the meaning of the existing bufflen
-> > parameter.
->
-> There really isn't a need to clarify the meaning of the request_bufflen
-                                                          ^^^^^^^^^^^^^^^
-I agree, but I was talking about the bufflen parameter of the
-scsi_do_req() function taking Scsi_Request. request_bufflen is a field in
-struct Scsi_Cmnd.
-
-	Kai
-
+-Mike
+-- 
+Michael Anderson
+andmike@us.ibm.com
 
