@@ -1,85 +1,30 @@
-From: Andrew Morton <akpm@osdl.org>
-Subject: Re: 2.6.10 devfs oops without devfs mounted at all
-Date: Mon, 21 Mar 2005 14:08:09 -0800
-Message-ID: <20050321140809.2612121d.akpm@osdl.org>
-References: <200502082013.50959.rathamahata@ehouse.ru>
-	<20050209163624.44557750.akpm@osdl.org>
-	<200502101249.30878.rathamahata@ehouse.ru>
-	<200502101312.03026.rathamahata@ehouse.ru>
+From: James.Smart@Emulex.Com
+Subject: RE: [PATCH] scsi_mid_low_api doesn't mention scsi_scan_host
+Date: Mon, 21 Mar 2005 17:52:36 -0500
+Message-ID: <9BB4DECD4CFE6D43AA8EA8D768ED51C201AF54@xbl3.ad.emulex.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-Received: from fire.osdl.org ([65.172.181.4]:60605 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S261903AbVCUWIR (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 21 Mar 2005 17:08:17 -0500
-In-Reply-To: <200502101312.03026.rathamahata@ehouse.ru>
+Content-Transfer-Encoding: 7BIT
+Received: from emulex.emulex.com ([138.239.112.1]:48809 "EHLO
+	emulex.emulex.com") by vger.kernel.org with ESMTP id S261977AbVCUWwm convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 21 Mar 2005 17:52:42 -0500
+Content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Sergey S. Kostyliov" <rathamahata@ehouse.ru>
-Cc: admin@list.net.ru, linux-scsi@vger.kernel.org
+To: matthew@wil.cx
+Cc: dgilbert@interlog.com, linux-scsi@vger.kernel.org
 
-
-Sergey, I'm assuming this is a bug in the megaraid driver.
-
-Can you confirm that it's still happening in 2.6.12-rc1?
-
-"Sergey S. Kostyliov" <rathamahata@ehouse.ru> wrote:
->
-> On Thursday 10 February 2005 12:49, Sergey S. Kostyliov wrote:
-> > On Thursday 10 February 2005 03:36, Andrew Morton wrote:
-> > > "Sergey S. Kostyliov" <rathamahata@ehouse.ru> wrote:
-> > > >
-> > > > Here is an oops I've just get on my smp system:
-> > > > 
-> > > > Unable to handle kernel NULL pointer dereference at virtual address 0000001c
-> > > >  printing eip:
-> > > > c01afe5b
-> > > > *pde = 00000000
-> > > > Oops: 0000 [#1]
-> > > > PREEMPT SMP
-> > > > Modules linked in: ipt_REJECT ipt_state ip_conntrack iptable_filter
-> > > > CPU:    2
-> > > > EIP:    0060:[<c01afe5b>]    Not tainted VLI
-> > > > EFLAGS: 00010286   (2.6.10)
-> > > > EIP is at devfsd_close+0x1b/0xc8
-> > > > eax: f7440a00   ebx: 00000000   ecx: c01afe40   edx: ed395280
-> > > > esi: 00000000   edi: f7f17800   ebp: f74f96c8   esp: cdc70f84
-> > > > ds: 007b   es: 007b   ss: 0068
-> > > > Process megamgr.bin (pid: 12844, threadinfo=cdc70000 task=dd81e520)
-> > > > Stack: ed395280 ed395280 00000000 f7f17800 c0150c76 ee9e87f8 ed395280 00000000
-> > > >        f1985c80 cdc70000 c014f50f 00000003 00000003 080caa60 00000000 c01024df
-> > > >        00000003 080cc700 bfffe4f8 080caa60 00000000 bfffe4fc 00000006 0000007b
-> > > > Call Trace:
-> > > >  [<c0150c76>] __fput+0x106/0x120
-> > > >  [<c014f50f>] filp_close+0x4f/0x80
-> > > >  [<c01024df>] syscall_call+0x7/0xb
-> > > 
-> > > Can you work out what file is being closed?  One way of doing that would be
-> > > to work out how megamgr.bin is being invoked and to then run it by hand:
-> > > 
-> > >  strace -f -o log megamgr.bin <args>
-> > > 
-> > > and we can then use the strace output to work out the pathname of the
-> > > offending file.
-> > 
-> > rathamahata@terror rathamahata $ grep 'open(' mg.log
-> > 5255  open("/usr/share/terminfo/l/linux", O_RDONLY) = 3
-> > 5255  open("/dev/megadev0", O_RDONLY)   = 3
-> > rathamahata@terror rathamahata $
-> Sorry, I forgot this part:
-> rathamahata@terror rathamahata $ grep 'close(' mg.log
-> 5255  close(3)                          = 0
-> rathamahata@terror rathamahata $
+> Thanks for the correction.  How does this look?
 > 
-> > 
-> > I guess it's /dev/megadev0 (manually created character device)
-> > 
-> > rathamahata@terror rathamahata $ ls -la /dev/megadev0
-> > crw-r--r--  1 root root 253, 0 Feb  8 16:26 /dev/megadev0
-> > rathamahata@terror rathamahata 
-> > 
-> 
-> -- 
-> Sergey S. Kostyliov <rathamahata@ehouse.ru>
-> Jabber ID: rathamahata@jabber.org
+>  *      Notes: Only required in "hotplug initialization model" after a
+>  *      successful call to scsi_host_alloc().  This function does not
+>  *      scan the bus; this can be done by calling scsi_scan_host() or
+>  *      in some other transport-specific way.  The LLD must set up
+>  *      the transport template before calling this function 
+> and may only
+>  *      access the transport class data after this function 
+> has been called.
+
+a work of art :)
+
