@@ -1,55 +1,64 @@
-From: Andrew Vasquez <praka@users.sourceforge.net>
-Subject: Re: [BUG] modprobe qla2300 doesn't complete
-Date: Thu, 4 Mar 2004 23:17:21 -0800
+From: "Kevin P. Fleming" <kpfleming@backtobasicsmgmt.com>
+Subject: Re: Weird SCSI error, can anyone interpret?
+Date: Fri, 05 Mar 2004 07:47:19 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040305071721.GA9684@praka.local.home>
-References: <20040305041850.GA9124@colo.lackof.org>
-Reply-To: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Message-ID: <404892F7.8010001@backtobasicsmgmt.com>
+References: <4046AB54.9010909@backtobasicsmgmt.com> <20040305060748.GC9315@praka.local.home>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ms-smtp-03-qfe0.socal.rr.com ([66.75.162.135]:57330 "EHLO
-	ms-smtp-03-eri0.socal.rr.com") by vger.kernel.org with ESMTP
-	id S261998AbUCEHiE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 5 Mar 2004 02:38:04 -0500
-Content-Disposition: inline
-In-Reply-To: <20040305041850.GA9124@colo.lackof.org>
+Received: from wsip-68-14-253-125.ph.ph.cox.net ([68.14.253.125]:10375 "EHLO
+	office.labsysgrp.com") by vger.kernel.org with ESMTP
+	id S262612AbUCEOrW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 5 Mar 2004 09:47:22 -0500
+In-Reply-To: <20040305060748.GC9315@praka.local.home>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Grant Grundler <grundler@parisc-linux.org>
+To: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Cc: linux-scsi@vger.kernel.org
 
-On Thu, 04 Mar 2004, Grant Grundler wrote:
+Andrew Vasquez wrote:
 
-> qla2300 driver in 2.6.4-rc1 is showing a robustness problem.
-> When modprobe'ing the driver, it never completes initialization.
-> It continually prints the "Topology - (F_Port), Host Loop address 0xffff"
-> messages.
->
+> Before the deluge of I/O error messages, does the messages file
+> contain any useful bits of information, i.e. the driver posting
+> messages about link failures, devices going away, etc.
 
-I've seen this behaviour before, I thought we fixed this :(
+Nope, there were no other SCSI related messages before these (all the 
+way back to the last kernel boot, about 18 hours before).
 
-> I know I have a bad disk or something connected to
-> the FC switch. And when I power off one of the disk arrays
-> (no raid controllers, just JBOD) the problem goes away...but I
-> expect better behavior from qla2300 driver.
+> Did the driver not recognize the RAID box on the loop?
+
+No, the loop appeared to come up but there were no devices present. 
+Thanks for asking, I hadn't checked the log file to that level of detail 
+yet. That's a pretty important sign that the problem was the RAID 
+controller, given that the ISP2100 and the CMD-7220 are the only devices 
+on the loop (direct cable between them).
+
+> Now that's interesting...
+
+Yes, that's why I think this may be a RAID controller problem (we've 
+already had one of the original two boards die a year or so ago).
+
+> Well given the information that was presented, I'd say it seems rather
+> suspicious that the RAID- box needed a power-cycle to be restored into
+> functioning state.  What type of I/O patterns were being run to the
+> RAID box?  How many concurrent commands were being queued?
+
+At this time of day there would have been almost zero activity. The 
+"flood" of error messages I referred was over the next 56 hours or so, 
+from when the problem occurred until users starting trying to hit the 
+server on Monday morning.
+
+> Could you enable some additional debug in the driver and rerun your
+> test?   Set DEBUG_QLA2100 to 1 in qla_settings.h and define
+> QL_DEBUG_LEVEL_2 in qla_dbg.h.  Recompile the driver, then run your
+> test.  If a failure occurs, send me the resultant /var/log/messages
+> file and the output of the following command:
 > 
+> 	# cat /proc/scsi/qla2xxx/* 
 
-Yes, me too...
+I can try that this afternoon, can't promise when (if) the problem will 
+occur again, and I will have to have the customer ready to issue the cat 
+command but they are capable of that.
 
-> I can make the system remotely available if someone wants to
-> debug this some more.
-> 
-
-That may be useful.  In the interim, could you just enable a couple of
-debug settings in the driver and rerun against the volitile fabric
-(just a short period, say 30 seconds), then send the /var/log/messages
-file.  I believe I know the problem, I just need to be sure the
-stimulus coming from the fabric is what I would expect.
-
-	o Set DEBUG_QLA2100 to 1 in qla_settings.h
-
-	o Define QL_DEBUG_LEVEL_2 in qla_dbg.h.
-
-Regards,
-Andrew Vasquez
-QLogic Corporation
+Thanks for your help.
