@@ -1,39 +1,42 @@
 From: Patrick Mansfield <patmans@us.ibm.com>
-Subject: [PATCH] 2.5 scsi-misc-2.5 remove scsi_host_hn_list
-Date: Tue, 12 Nov 2002 10:47:59 -0800
+Subject: Re: [PATCH] 2.5 scsi-misc-2.5 remove scsi_host_hn_list
+Date: Tue, 12 Nov 2002 12:24:31 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20021112104759.A21739@eng2.beaverton.ibm.com>
+Message-ID: <20021112122431.A23657@eng2.beaverton.ibm.com>
+References: <20021112104759.A21739@eng2.beaverton.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Received: from westrelay03.boulder.ibm.com (westrelay03.boulder.ibm.com [9.17.194.24])
-	by e34.co.us.ibm.com (8.12.2/8.12.2) with ESMTP id gACIm1XP049012
-	for <linux-scsi@vger.kernel.org>; Tue, 12 Nov 2002 13:48:01 -0500
-Received: from gateway.beaverton.ibm.com (gateway.beaverton.ibm.com [138.95.180.1])
-	by westrelay03.boulder.ibm.com (8.12.3/NCO/VER6.4) with ESMTP id gACIm0nU014298
-	for <linux-scsi@vger.kernel.org>; Tue, 12 Nov 2002 11:48:01 -0700
+	by e33.co.us.ibm.com (8.12.2/8.12.2) with ESMTP id gACKOYWR055566
+	for <linux-scsi@vger.kernel.org>; Tue, 12 Nov 2002 15:24:34 -0500
+Received: from gateway1.beaverton.ibm.com (gateway1.beaverton.ibm.com [138.95.180.2])
+	by westrelay03.boulder.ibm.com (8.12.3/NCO/VER6.4) with ESMTP id gACKOWnU064188
+	for <linux-scsi@vger.kernel.org>; Tue, 12 Nov 2002 13:24:33 -0700
 Received: from eng2.beaverton.ibm.com (eng2.beaverton.ibm.com [9.47.57.17])
-	by gateway.beaverton.ibm.com (8.11.6/8.11.6) with ESMTP id gACIm0s25103
-	for <linux-scsi@vger.kernel.org>; Tue, 12 Nov 2002 10:48:00 -0800
+	by gateway1.beaverton.ibm.com (8.11.6/8.11.6) with ESMTP id gACKKFV20211
+	for <linux-scsi@vger.kernel.org>; Tue, 12 Nov 2002 12:20:15 -0800
 Received: (from patman@localhost)
-	by eng2.beaverton.ibm.com (8.10.0.Beta10/8.8.5/token.aware-1.2) id gACIm0h21795
-	for linux-scsi@vger.kernel.org; Tue, 12 Nov 2002 10:48:00 -0800 (PST)
+	by eng2.beaverton.ibm.com (8.10.0.Beta10/8.8.5/token.aware-1.2) id gACKOWp23723
+	for linux-scsi@vger.kernel.org; Tue, 12 Nov 2002 12:24:32 -0800 (PST)
+In-Reply-To: <20021112104759.A21739@eng2.beaverton.ibm.com>; from patmans@us.ibm.com on Tue, Nov 12, 2002 at 10:47:59AM -0800
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-Here is Adam's patch to remove the scsi_host_hn_list, modified to
-skip past the token separator.
+There were two static scsihosts with the previous patch.
 
-Patch is against linux-scsi.bkbits.net/scsi-misc-2.5.
+This version gets rid of the one in scsi.c, and moves all the scsihosts
+related code in scsi.c (except the scsi_host_hn_init) call into hosts.c.
 
- b/drivers/scsi/hosts.h |    1 
- b/drivers/scsi/scsi.c  |    2 
- drivers/scsi/hosts.c   |  211 ++++++++++++++++++++-----------------------------
- 3 files changed, 88 insertions(+), 126 deletions(-)
+ hosts.c |  225 +++++++++++++++++++++++++++++-----------------------------------
+ hosts.h |    3 
+ scsi.c  |   17 ----
+ 3 files changed, 104 insertions(+), 141 deletions(-)
 
---- a/drivers/scsi/hosts.c	Tue Nov 12 08:34:46 2002
-+++ b/drivers/scsi/hosts.c	Tue Nov 12 08:34:46 2002
-@@ -45,13 +45,90 @@
+diff -Nru a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
+--- a/drivers/scsi/hosts.c	Tue Nov 12 12:09:31 2002
++++ b/drivers/scsi/hosts.c	Tue Nov 12 12:09:31 2002
+@@ -45,13 +45,102 @@
  #include "scsi.h"
  #include "hosts.h"
  
@@ -45,6 +48,18 @@ Patch is against linux-scsi.bkbits.net/scsi-misc-2.5.
  static int scsi_hosts_registered;	/* cnt of registered scsi hosts */
  static int scsi_ignore_no_error_handling = 0;
 +static char *scsihosts;
++
++MODULE_PARM(scsihosts, "s");
++MODULE_PARM_DESC(scsihosts, "scsihosts=driver1,driver2,driver3");
++#ifndef MODULE
++int __init scsi_setup(char *str)
++{
++	scsihosts = str;
++	return 1;
++}
++
++__setup("scsihosts=", scsi_setup);
++#endif
 +
 +/**
 +  * scsi_find_host_by_num - get a Scsi_Host by host no
@@ -125,7 +140,7 @@ Patch is against linux-scsi.bkbits.net/scsi-misc-2.5.
  
  /**
   * scsi_tp_for_each_host - call function for each scsi host off a template
-@@ -244,21 +321,11 @@
+@@ -244,21 +333,11 @@
   **/
  void scsi_unregister(struct Scsi_Host *shost)
  {
@@ -147,7 +162,7 @@ Patch is against linux-scsi.bkbits.net/scsi-misc-2.5.
  	/*
  	 * Next, kill the kernel error recovery thread for this host.
  	 */
-@@ -285,43 +352,6 @@
+@@ -285,43 +364,6 @@
  }
  
  /**
@@ -191,7 +206,7 @@ Patch is against linux-scsi.bkbits.net/scsi-misc-2.5.
   * scsi_register - register a scsi host adapter instance.
   * @shost_tp:	pointer to scsi host template
   * @xtr_bytes:	extra bytes to allocate for driver
-@@ -338,28 +368,17 @@
+@@ -338,28 +380,17 @@
  struct Scsi_Host * scsi_register(Scsi_Host_Template *shost_tp, int xtr_bytes)
  {
  	struct Scsi_Host *shost, *shost_scr;
@@ -221,7 +236,7 @@ Patch is against linux-scsi.bkbits.net/scsi-misc-2.5.
  		dump_stack();
          } 
  	gfp_mask = GFP_KERNEL;
-@@ -374,26 +393,7 @@
+@@ -374,26 +405,7 @@
  
  	memset(shost, 0, sizeof(struct Scsi_Host) + xtr_bytes);
  
@@ -249,7 +264,7 @@ Patch is against linux-scsi.bkbits.net/scsi-misc-2.5.
  	scsi_hosts_registered++;
  
  	spin_lock_init(&shost->default_lock);
-@@ -642,22 +642,8 @@
+@@ -642,22 +654,8 @@
   **/
  struct Scsi_Host *scsi_host_hn_get(unsigned short host_no)
  {
@@ -274,10 +289,12 @@ Patch is against linux-scsi.bkbits.net/scsi-misc-2.5.
  }
  
  /**
-@@ -679,33 +665,12 @@
+@@ -677,35 +675,16 @@
+  * scsi_host_hn_init - init scsi host number list from string
+  * @shost_hn:	string of scsi host driver names.
   **/
- void __init scsi_host_hn_init(char *shost_hn)
- {
+-void __init scsi_host_hn_init(char *shost_hn)
+-{
 -	char *temp = shost_hn;
 -
 -	while (temp) {
@@ -296,16 +313,18 @@ Patch is against linux-scsi.bkbits.net/scsi-misc-2.5.
 - * scsi_host_no_release - free all entries in scsi host number list
 - **/
 -void __exit scsi_host_hn_release()
--{
++void __init scsi_host_hn_init(void)
+ {
 -	struct list_head *lh, *next;
 -	Scsi_Host_Name *shn;
--
++	char *shost_hn;
+ 
 -	list_for_each_safe(lh, next, &scsi_host_hn_list) {
 -		shn = list_entry(lh, Scsi_Host_Name, shn_list);
 -		if (shn->name)
 -			kfree(shn->name);
 -		kfree(shn);
-+	scsihosts = shost_hn;
++	shost_hn = scsihosts;
 +	while (shost_hn) {
 +		scsi_host_next_hn++;
 +		shost_hn = strpbrk(shost_hn, ":,");
@@ -315,25 +334,59 @@ Patch is against linux-scsi.bkbits.net/scsi-misc-2.5.
  }
  
 diff -Nru a/drivers/scsi/hosts.h b/drivers/scsi/hosts.h
---- a/drivers/scsi/hosts.h	Tue Nov 12 08:34:46 2002
-+++ b/drivers/scsi/hosts.h	Tue Nov 12 08:34:46 2002
-@@ -579,7 +579,6 @@
+--- a/drivers/scsi/hosts.h	Tue Nov 12 12:09:31 2002
++++ b/drivers/scsi/hosts.h	Tue Nov 12 12:09:31 2002
+@@ -578,8 +578,7 @@
+ extern struct Scsi_Host *scsi_host_get_next(struct Scsi_Host *);
  extern struct Scsi_Host *scsi_host_hn_get(unsigned short);
  extern void scsi_host_put(struct Scsi_Host *);
- extern void scsi_host_hn_init(char *);
+-extern void scsi_host_hn_init(char *);
 -extern void scsi_host_hn_release(void);
++extern void scsi_host_hn_init(void);
  
  /*
   * host_busy inc/dec/test functions
 diff -Nru a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
---- a/drivers/scsi/scsi.c	Tue Nov 12 08:34:46 2002
-+++ b/drivers/scsi/scsi.c	Tue Nov 12 08:34:46 2002
-@@ -2397,8 +2397,6 @@
+--- a/drivers/scsi/scsi.c	Tue Nov 12 12:09:31 2002
++++ b/drivers/scsi/scsi.c	Tue Nov 12 12:09:31 2002
+@@ -2241,22 +2241,9 @@
+ }
+ #endif				/* CONFIG_PROC_FS */
+ 
+-static char *scsihosts;
+-
+-MODULE_PARM(scsihosts, "s");
+ MODULE_DESCRIPTION("SCSI core");
+ MODULE_LICENSE("GPL");
+ 
+-#ifndef MODULE
+-int __init scsi_setup(char *str)
+-{
+-	scsihosts = str;
+-	return 1;
+-}
+-
+-__setup("scsihosts=", scsi_setup);
+-#endif
+-
+ static void *scsi_pool_alloc(int gfp_mask, void *data)
+ {
+ 	return kmem_cache_alloc(data, gfp_mask);
+@@ -2381,7 +2368,7 @@
+ 
+         scsi_devfs_handle = devfs_mk_dir (NULL, "scsi", NULL);
+ 
+-	scsi_host_hn_init(scsihosts);
++	scsi_host_hn_init();
+ 
+ 	bus_register(&scsi_driverfs_bus_type);
+ 
+@@ -2396,8 +2383,6 @@
+ 	int i;
  
          devfs_unregister (scsi_devfs_handle);
- 
--	scsi_host_hn_release();
 -
+-	scsi_host_hn_release();
+ 
  #ifdef CONFIG_PROC_FS
  	/* No, we're not here anymore. Don't show the /proc/scsi files. */
- 	remove_proc_entry ("scsi/scsi", 0);
