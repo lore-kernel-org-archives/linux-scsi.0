@@ -1,47 +1,44 @@
-From: Dave Olien <dmo@osdl.org>
-Subject: Re: Question about Request Sense case in scsi_lib.c
-Date: Tue, 12 Oct 2004 10:59:43 -0700
+From: Mark Lord <lkml@rtr.ca>
+Subject: Re: [PATCH] QStor SATA/RAID driver for 2.6.9-rc3
+Date: Tue, 12 Oct 2004 13:51:53 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20041012175943.GB27526@osdl.org>
-References: <20041012000058.GA26569@osdl.org> <eada2a07041012092973d35415@mail.gmail.com> <20041012165919.GA27526@osdl.org> <1097601199.2044.91.camel@mulgrave>
+Message-ID: <416C19B9.7000806@rtr.ca>
+References: <4161A06D.8010601@rtr.ca>	<416547B6.5080505@rtr.ca>	<20041007150709.B12688@i			nfradead.org>	<4165624C.5060405@rtr.ca>	<416565DB.4050006@pobox.com>	<4165	A	4	5D.2090200@rtr.ca>	<4165A766.1040104@pobox.com>	<4165A85D.7080704@rtr.ca	>		<4	165AB1B.8000204@pobox.com>	<4165ACF8.8060208@rtr.ca>		<20041007221537.	A17	712@infradead.org>	<1097241583.2412.15.camel@mulgrave>		<4166AF2F.607090	4@rtr.ca> <1097249266.1678.40.camel@mulgrave>		<4166B48E.3020006@rtr.ca>	<1097250465.2412.49.camel@mulgrave> 	<416C0D55.1020603@rtr.ca>	<1097601478.2044.103.camel@mulgrave>  <416C12CC.1050301@rtr.ca> <1097602220.2044.119.camel@mulgrave> <416C157A.6030400@rtr.ca> <416C177B.6030504@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fw.osdl.org ([65.172.181.6]:62389 "EHLO mail.osdl.org")
-	by vger.kernel.org with ESMTP id S266538AbUJLR7v (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 12 Oct 2004 13:59:51 -0400
-Content-Disposition: inline
-In-Reply-To: <1097601199.2044.91.camel@mulgrave>
+Received: from cpu1185.adsl.bellglobal.com ([207.236.110.166]:35267 "EHLO
+	mail.rtr.ca") by vger.kernel.org with ESMTP id S266236AbUJLRxn
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 12 Oct 2004 13:53:43 -0400
+In-Reply-To: <416C177B.6030504@pobox.com>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Tim Pepper <tpepper@gmail.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, Christoph Hellwig <hch@infradead.org>, Mark Lord <lsml@rtr.ca>, Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
+Jeff Garzik wrote:
+..
+> The usual way to do what you want is either
 
-James,
+That's how it works already, thanks, except that it
+does have a few calls to in_interrupt() rather than
+simply passing itself a flag parameter to convey the
+same information -- I'll fix that now.
 
-On Tue, Oct 12, 2004 at 12:13:13PM -0500, James Bottomley wrote:
-> 
-> Hang on a minute ... if you're ping pong'ing the drives using AVT, those
-> transfers take time to achieve.  The device is probably returning UNIT
-> ATTENTION, NOT_READY while the transfer is in progress.  This is
-> probably the source of the requeue.
+Except that it uses schedule_work() rather than a tasklet.
+The bottom half is only there for abnormal conditions
+like major chip errors and hotplug events.
 
-	OK, This probably makes sense.  I'm going to see if I can
-	get a theory of operations for this device somewhere.  I'd
-	like to have a better understanding of how the device
-	works and how long it takes to do these transfers.
+So the only new suggestion here is to use a tasklet for
+the bottom-half processing rather than schedule_work()?
 
-> 
-> As for the error, I still don't understand that, but it looks like
-> something went wrong in setting up or tearing down the dma mapping, so
-> that it was incorrectly described when this happened a second time.
+I thought work queues were the preferred mechanism for
+infrequent uses such as this these days?  A tasklet is no
+problem here though, so long as worker threads (schedule_work)
+do not also rely on tasklets.
 
-	I'll dump out some more information about these cases, and
-	see if we can analyze what's going on.
-> 
-> James
-> 
-
-Thanks!
-Dave
+Cheers
+-- 
+Mark Lord
+(hdparm keeper & the original "Linux IDE Guy")
