@@ -1,67 +1,143 @@
-From: James Bottomley <James.Bottomley@steeleye.com>
+From: Doug Ledford <dledford@redhat.com>
 Subject: Re: aic7xxx sets CDR offline, how to reset?
-Date: Tue, 03 Sep 2002 17:02:48 -0500
+Date: Tue, 3 Sep 2002 18:42:16 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <200209032202.g83M2mC09323@localhost.localdomain>
-References: <patmans@us.ibm.com>
+Message-ID: <20020903184216.F12201@redhat.com>
+References: <dledford@redhat.com> <200209032148.g83LmeP09177@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: (from root@localhost)
-	by pogo.mtv1.steeleye.com (8.9.3/8.9.3) id PAA31958
-	for <linux-scsi@vger.kernel.org>; Tue, 3 Sep 2002 15:02:56 -0700
-In-Reply-To: Message from Patrick Mansfield <patmans@us.ibm.com>
-   of "Tue, 03 Sep 2002 14:24:34 PDT." <20020903142434.A2538@eng2.beaverton.ibm.com>
+Content-Disposition: inline
+In-Reply-To: <200209032148.g83LmeP09177@localhost.localdomain>; from James.Bottomley@SteelEye.com on Tue, Sep 03, 2002 at 04:48:39PM -0500
 List-Id: linux-scsi@vger.kernel.org
-To: Patrick Mansfield <patmans@us.ibm.com>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, "Justin T. Gibbs" <gibbs@scsiguy.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: "Justin T. Gibbs" <gibbs@scsiguy.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-patmans@us.ibm.com said:
-> If we only send an abort or reset after a quiesce I don't see why one
-> is better than the other.
+On Tue, Sep 03, 2002 at 04:48:39PM -0500, James Bottomley wrote:
+> dledford@redhat.com said:
+> You are correct.  However, as soon as you abort the problem command (assuming 
+> the device recovers from this), it will go on its merry way processing the 
+> remaining commands in the queue.  Assuming one of these is the barrier, you've 
+> no way now of re-queueing the aborted command so that it comes before the 
+> ordered tag barrier.  You can try using a head of queue tag, but it's still a 
+> nasty race.
 
-Quiesce means from the top (no more commands go from the block layer to the 
-device) not from the bottom (commands can still be completed for the device).
+(Solution to this race was in my next paragraph as you found ;-)
 
-> Not specific to reset or abort - if a single command gets an error, we
-> wait for oustanding commands to complete before starting up the error
-> handler thread. If all the commands (error one and outstanding) have
-> barriers, those that do not error out will complete out of order from
-> the errored command. 
+> > On direct access  devices you are only concerned about ordering around
+> > the barrier, not  ordering of the actual tagged commands, so for abort
+> > you can actually call  abort on all the commands past the REQ_BARRIER
+> > command first, then the  REQ_BARRIER command, then the hung command.
+> > That would do the job and  preserve REQ_BARRIER ordering while still
+> > using aborts.
+> 
+> I agree, but the most likely scenario is that now you're trying to abort 
+> almost every tag for that device in the system.  Isn't reset a simpler 
+> alternative to this?
 
-We don't wait.  The commands may possibly be completing in parallel with 
-recovery.  To address your point, though, that's why the device needs to be 
-reset as fast as possible: to preserve what's left of the command order.  I 
-accept that for a misbehaving device, this may be a race.
+Not really.  It hasn't been done yet, but one of my goals is to change the 
+scsi commands over to reasonable list usage (finally) so that we can avoid 
+all these horrible linear scans it does now looking for an available 
+command (it also means things like SCSI_OWNER_MID_LAYER can go away 
+because ownership is defined implicitly by list membership).  So, 
+basically, you have a list item struct on each command.  When you build 
+the commands, you add them to SDpnt->free_list.  When you need a command, 
+instead of searching for a free one, you just grab the head of 
+SDpnt->free_list and use it.  Once you've built the command and are ready 
+to hand it off to the lldd, you put the command on the tail of the 
+SDpnt->active_list.  When a command completes, you list_remove() it from 
+the SDpnt->active_list and put it on the SDpnt->complete_list to be 
+handled by the tasklet.  When the tasklet actually completes the command, 
+it frees the scsi command struct by simply putting it back on the 
+SDpnt->free_list.  Now, if you do things that way, your reset vs. abort 
+code is actually pretty trivial.
 
-> And what happens if one command gets some sort of check condition
-> (like medium error, or aborted command) that causes a retry? Will IO's
-> still be correctly ordered? 
+Case 1: you want to throw a BDR.  Sample code might end up looking like 
+this,
 
-Retries get eliminated.  It should be up to the upper layers (sd or beyond) to 
-say whether a retry is done.  Since, as you point out, retries automatically 
-violate any barrier, it is probably up to the block layer to judge what should 
-be done about the problem.
+	[ oops we timed out ]
+	hostt->bus_device_reset(cmd);
+	if(!list_empty(cmd->device->active_list)) {
+		[ our commands haven't all been returned, spew chunks! ]
+	}
+	[ do post reset processing ]
 
-> I would like to see error handling occur without quiescing the entire
-> adapter before taking any action. Stopping all adapter IO for a
-> timeout can be a bit expensive - imagine a tape drive and multiple
-> disks on an adapter, any IO disk timeout or failure will wait for the
-> tape IO to complete before allowing any other IO, if the tape
-> operation is long or is going to timeout this could be minutes or
-> hours. 
+Case 2: you want to do an abort, but you need to preserve ordering around 
+any possible REQ_BARRIERs on the bus.  This requires that we keep a 
+REQ_BARRIER count for the device, it is after all possible that we could 
+have multiple barriers active at once, so as each command is put on the 
+active_list, if it is a barrier, then we increment SDpnt->barrier_count 
+and as we complete commands (at the interrupt context completion, not the 
+final completion) if it is a barrier command we decrement the count.
 
-Actually, I do think that quiescing has an important role to play.  A lot of 
-drive errors can be self inflicted indigestion by accepting more tags into the 
-queue than it can process.  Quiescing the queue lets us see if the drive can 
-digest what it currently has or whether we need to apply a strong emetic.
+	[ oops we timed out ]
+	while(SDpnt->barrier_count && cmd) {
+		// when the aborted command is returned via the done()
+		// it will remove it from the active_list, so don't remove
+		// it here
+		abort_cmd = list_get_tail(SDpnt->active_list);
+		if(hostt->abort(abort_cmd) != SUCCESS) {
+			[ oops, go on to more drastic action ]
+		} else {
+			if(abort_cmd->type == BARRIER)
+				SDpnt->barrier_count--;
+			if(abort_cmd == cmd)
+				cmd = NULL;
+		}
+	}
+	if(cmd) {
+		if(hostt->abort(cmd) != SUCCESS)
+			[ oops, go on to more drastic action ]
+	}
 
-I'd actually like to add tag starvation recovery to the error handler's list 
-of things to do.  In that case, all you do on entry to the error handler is 
-quiesce the upper queue and wait a while to see if the commands continue 
-returning.  You only begin more drastic measures if nothing comes back in the 
-designated time period.
-
-James
+Now, granted, that is more complex than going straight to a BDR, but I 
+have to argue that it *isn't* that complex.  It certainly isn't the 
+nightmare you make it sound like ;-)
 
 
+> > > At best, abort probably causes a command to overtake a barrier it shouldn't, 
+> > > at worst we abort the ordered tag that is the barrier and transactional 
+> > > integrity is lost.
+> > > 
+> > > When error correction is needed, we have to return all the commands for that 
+> > > device to the block layer so that ordering and barrier issues can be taken 
+> > > care of in the reissue.
+> 
+> > Not really, this would be easily enough done in the ML_QUEUE area of
+> > the  scsi layer, but it matters not to me.  However, if you throw a
+> > BDR, then  you have cancelled all outstanding commands and (typically)
+> > initiated a  hard reset of the device which then requires a device
+> > settle time.  All of  this is more drastic and typically takes longer
+> > than the individual aborts  which are completed in a single connect->
+> > disconnect cycle without ever  hitting a data phase and without
+> > triggering a full device reset and  requiring a settle time. 
+> 
+> I agree.  I certainly could do it.  I'm just a lazy so-and-so.  However, think 
+> what it does.  Apart from me having to do more work, the code becomes longer 
+> and the error recovery path more convoluted and difficult to follow.  The 
+> benefit?  well, error recovery might be faster in certain circumstances.
+
+Well, as I've laid it out above, I don't really think it's all that much 
+to implement ;-)  At least not in the mid layer.  The low level device 
+drivers are doing *far* more work to support aborts than the mid layer has 
+to do.
+
+>  I 
+> just don't see that it's a cost effective change.
+
+Matter of some question, I'm sure.  I don't see it as all that much work, 
+so it seems reasonably cost effective to me ;-)
+
+>  If you're hitting error 
+> recovery so often that whether it recovers in  half a second or several 
+> seconds makes a difference, I'd say there's something else wrong.
+
+Hehehe, if you are hitting error recovery at all then something else is 
+wrong by definition, the only difference is in how you handle it :-P
+
+-- 
+  Doug Ledford <dledford@redhat.com>     919-754-3700 x44233
+         Red Hat, Inc. 
+         1801 Varsity Dr.
+         Raleigh, NC 27606
+  
