@@ -1,59 +1,48 @@
-From: "Randy.Dunlap" <rddunlap@osdl.org>
-Subject: [PATCH] ppa needs to scsi_unregister(host)
-Date: Fri, 15 Aug 2003 10:14:33 -0700
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: PATCH: (as84) Fix my earlier scsi procdir patch
+Date: Fri, 15 Aug 2003 16:05:49 -0400 (EDT)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030815101433.081e3653.rddunlap@osdl.org>
+Message-ID: <Pine.LNX.4.44L0.0308151542200.1925-100000@ida.rowland.org>
+References: <20030709144410.GA3544@beaverton.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fw.osdl.org ([65.172.181.6]:44219 "EHLO mail.osdl.org")
-	by vger.kernel.org with ESMTP id S270651AbTHORR4 (ORCPT
+Received: from ida.rowland.org ([192.131.102.52]:33796 "HELO ida.rowland.org")
+	by vger.kernel.org with SMTP id S270811AbTHOUFu (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 15 Aug 2003 13:17:56 -0400
+	Fri, 15 Aug 2003 16:05:50 -0400
+In-Reply-To: <20030709144410.GA3544@beaverton.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: campbell@torque.net
+To: Mike Anderson <andmike@us.ibm.com>
+Cc: SCSI development list <linux-scsi@vger.kernel.org>
+
+Mike:
+
+I'm pleased to see that the procdir patch has made it into
+2.6.0-test3-bk2.  But looking at it again, I realized it has a mistake:  
+The semaphore isn't released when an error occurs.  This patch fixes it.
+
+Alan Stern
 
 
-When umounting a ppa device, I see (2.6.0-test3):
-
-Releasing ppa0
-Iomega VPI0 (ppa) interface did not call scsi_unregister
-Call Trace:
- [<f89aeca6>] exit_this_scsi_driver+0xb6/0xfa [ppa]
- [<c013c08d>] sys_delete_module+0x18d/0x1e0
- [<c0155276>] do_munmap+0x136/0x1b0
- [<c0155333>] sys_munmap+0x43/0x70
- [<c0109657>] syscall_call+0x7/0xb
-
-so ppa needs to call scsi_unregister().
-Is this all that's needed?
-
---
-~Randy
-
-
-patch_name:	scsi_ppa_unreg.patch
-patch_version:	2003-08-15.09:46:30
-author:		Randy.Dunlap <rddunlap@osdl.org>
-description:	ppa driver needs to call scsi_unregister(host);
-product:	Linux
-product_versions: 260-815
-maintainer:	campbell@torque.net
-diffstat:	=
- drivers/scsi/ppa.c |    1 +
- 1 files changed, 1 insertion(+)
-
-
-diff -Naurp ./drivers/scsi/ppa.c~unreg ./drivers/scsi/ppa.c
---- ./drivers/scsi/ppa.c~unreg	2003-08-15 08:28:45.000000000 -0700
-+++ ./drivers/scsi/ppa.c	2003-08-15 09:44:43.000000000 -0700
-@@ -76,6 +76,7 @@ int ppa_release(struct Scsi_Host *host)
-     int host_no = host->unique_id;
- 
-     printk("Releasing ppa%i\n", host_no);
-+    scsi_unregister(host);
-     parport_unregister_device(ppa_hosts[host_no].dev);
-     return 0;
+===== scsi_proc.c 1.16 vs edited =====
+--- 1.16/drivers/scsi/scsi_proc.c	Thu Aug 14 18:37:32 2003
++++ edited/drivers/scsi/scsi_proc.c	Fri Aug 15 15:40:28 2003
+@@ -84,12 +84,11 @@
+ 	down(&global_host_template_sem);
+ 	if (!sht->present++) {
+ 		sht->proc_dir = proc_mkdir(sht->proc_name, proc_scsi);
+-        	if (!sht->proc_dir) {
++        	if (!sht->proc_dir)
+ 			printk(KERN_ERR "%s: proc_mkdir failed for %s\n",
+ 			       __FUNCTION__, sht->proc_name);
+-			return;
+-		}
+-		sht->proc_dir->owner = sht->module;
++		else
++			sht->proc_dir->owner = sht->module;
+ 	}
+ 	up(&global_host_template_sem);
  }
+
+
