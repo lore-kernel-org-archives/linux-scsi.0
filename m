@@ -1,41 +1,33 @@
-From: Andries.Brouwer@cwi.nl
-Subject: Re: Feiya 5-in-1 Card Reader
-Date: Thu, 5 Sep 2002 10:41:48 +0200 (MEST)
-Sender: linux-usb-devel-admin@lists.sourceforge.net
-Message-ID: <UTC200209050841.g858fmZ28242.aeb@smtp.cwi.nl>
-Return-path: <linux-usb-devel-admin@lists.sourceforge.net>
-Errors-To: linux-usb-devel-admin@lists.sourceforge.net
-List-Help: <mailto:linux-usb-devel-request@lists.sourceforge.net?subject=help>
-List-Post: <mailto:linux-usb-devel@lists.sourceforge.net>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-devel>,
-	<mailto:linux-usb-devel-request@lists.sourceforge.net?subject=subscribe>
-List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-devel>,
-	<mailto:linux-usb-devel-request@lists.sourceforge.net?subject=unsubscribe>
-List-Archive: <http://www.geocrawler.com/redir-sf.php3?list=linux-usb-devel>
-To: Andries.Brouwer@cwi.nl, alaric@babcom.com, greg@kroah.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-usb-devel@lists.sourceforge.net
+From: Jeremy Higdon <jeremy@classic.engr.sgi.com>
+Subject: Re: aic7xxx sets CDR offline, how to reset?
+Date: Thu, 5 Sep 2002 02:39:41 -0700 (PDT)
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <10209050239.ZM52086@classic.engr.sgi.com>
+References: <200209041613.g84GDtv02639@localhost.localdomain>
+	<12750000.1031158209@aslan.btc.adaptec.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: "Justin T. Gibbs" <gibbs@scsiguy.com>
+        "Re: aic7xxx sets CDR offline, how to reset?" (Sep  4, 10:50am)
 List-Id: linux-scsi@vger.kernel.org
+To: "Justin T. Gibbs" <gibbs@scsiguy.com>, James Bottomley <James.Bottomley@steeleye.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-> Speaking of sddr09 devices (of which I possess one), what's the current
-> state of support for the sddr09?  Last I knew, at the time when I finally
-> got mine working, the sddr09 was only supported read-only
-
-For me it works read-write and out-of-the-box on a vanilla kernel.
-(I added this stuff a few months ago. Found in 2.5 (which I use).
-Am not quite sure about 2.4.)
-
-Andries
-
-
-[In case you try 2.5, a warning: later tens and early twenties
-will eat filesystems if you have the wrong IDE hardware. But
-2.5.32, 2.5.33 are fine here.]
+On Sep 4, 10:50am, Justin T. Gibbs wrote:
+> 
+>    This of course assumes that all transactions have a serial number and
+>    that requeuing transactions orders them by serial number.  With QErr
+>    set, the device closes the rest if the barrier race for you, but even
+>    without barriers, full transaction ordering is required if you don't
+>    want a read to inadvertantly pass a write to the same location during
+>    recovery.
 
 
--------------------------------------------------------
-This sf.net email is sponsored by: OSDN - Tired of that same old
-cell phone?  Get a new here for FREE!
-https://www.inphonic.com/r.asp?r=sourceforge1&refcode1=vs3390
-_______________________________________________
-linux-usb-devel@lists.sourceforge.net
-To unsubscribe, use the last form field at:
-https://lists.sourceforge.net/lists/listinfo/linux-usb-devel
+The original FCP (SCSI commands over Fibre) profile specified that QERR=1
+was not available.  Unless that is changed, it would appear that you cannot
+count on being able to set Qerr.
+
+Qerr was one of those annoying little things in SCSI that forces host
+adapter drivers to know a mode page setting.
+
+jeremy
