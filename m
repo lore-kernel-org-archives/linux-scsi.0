@@ -1,66 +1,41 @@
-From: Andre Hedrick <andre@pyxtechnologies.com>
-Subject: Re: linux-2.4.18-modified-scsi-h.patch
-Date: Tue, 19 Nov 2002 10:48:38 -0800 (PST)
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.10.10211191046110.1342-100000@master.linux-ide.org>
-References: <20021119104004.A21438@eng2.beaverton.ibm.com>
+From: Andries Brouwer <aebr@win.tue.nl>
+Subject: Re: Why /dev/sdc1 doesn't show up...
+Date: Tue, 19 Nov 2002 23:33:56 +0100
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <20021119223356.GA2525@win.tue.nl>
+References: <20021119055636.94C182C088@lists.samba.org> <Pine.GSO.4.21.0211190116420.27757-100000@steklov.math.psu.edu>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
-In-Reply-To: <20021119104004.A21438@eng2.beaverton.ibm.com>
-To: Patrick Mansfield <patmans@us.ibm.com>
-Cc: Douglas Gilbert <dougg@torque.net>, "J. E. J. Bottomley" <James.Bottomley@SteelEye.com>, Linus Torvalds <torvalds@transmeta.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <Pine.GSO.4.21.0211190116420.27757-100000@steklov.math.psu.edu>
 List-Id: linux-scsi@vger.kernel.org
+To: Alexander Viro <viro@math.psu.edu>
+Cc: Rusty Russell <rusty@rustcorp.com.au>, Doug Ledford <dledford@redhat.com>, Linux Scsi Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Linus Torvalds <torvalds@transmeta.com>
 
-On Tue, 19 Nov 2002, Patrick Mansfield wrote:
+On Tue, Nov 19, 2002 at 02:12:54AM -0500, Alexander Viro wrote:
 
-> On Tue, Nov 19, 2002 at 09:11:47PM +1100, Douglas Gilbert wrote:
-> > Andre Hedrick wrote:
-> > > Greetings Doug et al.
-> > > 
-> > > Please consider the addition of this simple void ptr to the scsi_request
-> > > struct.  The addition of this simple void pointer allows one to map any
-> > > and all request execution caller the facility to search for a specific
-> > > operation without having to run in circles.  Hunting for these details
-> > > over the global device list of all HBA's is silly and one of the key
-> > > reasons why there error recovery path is so painful.
-> > > 
-> > > 
-> > > Scsi_Request    *req = sc_cmd->sc_request;
-> > > blah_blah_t     *trace = NULL;
-> > > 
-> > > trace = (blah_blah_t *)req->trace_ptr;
-> > > 
-> > > 
-> > > Therefore the specific transport invoking operations via the midlayer will
-> > > have the ablity to track and trace any operation.
-> > 
-> > Andre,
-> > No need to convince me: I have already put a similar pointer
-> > in that structure in lk 2.5 (for either sd, st, sr or sg to use).
-> > In sg case's it saved some ugly looping in (what was formerly
-> > called) the bottom half handler. Sounds like your motivation is
-> > similar.
-> > 
-> > Doug Gilbert
-> 
-> So we should name it the same in 2.4 as in 2.5: upper_private_data, not
-> trace_ptr (thought it should really have been sr_upper_private_data,
-> like all the other fields in scsi_request).
-> 
-> I don't see why we need the #define, or is that another patch?
+> BTW, remember the flamef^Warguments about turning kdev_t into a pointer
+> and thus avoiding digging through piles and piles of cr^Hode?  Didn't
+> fly for exactly the same reasons - there's no way to do it magically
+> for entire kernel without breaking tons of code and/or creating an
+> impossible-to-debug mess...
 
-Hi Patrick,
+You never convinced me. Maybe we ever meet and can talk..
 
-The #define was as to determine or notify the driver at build time if it
-had an enhanced capablity or legacy restrictions.  Obviously once it is
-adopted regardless of form then a simple version check will work.
+In the meantime:
+Yesterday or so I built versions of 2.5.48 with 32-bit and 64-bit dev_t.
 
-It was for testing purposes.
+The code is full of conversions dev_t -> int -> dev_t -> int.
+Ugly. I gave the mknod method in struct inode_operations type
+	int (*mknod) (struct inode *,struct dentry *,int,dev_t);
+thus avoiding much conversion.
+Do you have objections?
 
+Andries
 
-Cheers,
-
-Andre Hedrick, CTO & Founder 
-iSCSI Software Solutions Provider
-http://www.PyXTechnologies.com/
+# mount /dev/hde6 /fbsd6 -t ufs -o ufstype=44bsd,ro
+# ./ls -l /fbsd6/dev/da2s[34]
+brw-r-----   1     root      disk    4, 0x040012 Oct 31 21:06 /fbsd6/dev/da2s3
+brw-r-----   1     root      disk    4, 0x050012 Oct 31 21:06 /fbsd6/dev/da2s4
+#
