@@ -1,57 +1,46 @@
-From: "Adam Radford" <aradford@amcc.com>
-Subject: RE: [BK-PATCH] 3w-9xxx: proc interface
-Date: Wed, 7 Jul 2004 11:27:55 -0700
+From: Douglas Gilbert <dougg@torque.net>
+Subject: sg3_utils-1.07 released
+Date: Thu, 08 Jul 2004 10:12:23 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <I0HVAW03.QOA@hadar.amcc.com>
+Message-ID: <40ED5647.7060707@torque.net>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hadar.amcc.com ([192.195.69.168]:41386 "EHLO hadar.amcc.com")
-	by vger.kernel.org with ESMTP id S265281AbUGGS2K convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 7 Jul 2004 14:28:10 -0400
+Received: from tomts36.bellnexxia.net ([209.226.175.93]:36828 "EHLO
+	tomts36-srv.bellnexxia.net") by vger.kernel.org with ESMTP
+	id S261378AbUGHOMT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 8 Jul 2004 10:12:19 -0400
+Received: from torque.net ([67.68.52.9]) by tomts36-srv.bellnexxia.net
+          (InterMail vM.5.01.06.10 201-253-122-130-110-20040306) with ESMTP
+          id <20040708141218.FRCD13900.tomts36-srv.bellnexxia.net@torque.net>
+          for <linux-scsi@vger.kernel.org>; Thu, 8 Jul 2004 10:12:18 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: Ricky Beam <jfbeam@bluetronic.net>, Christoph Hellwig <hch@infradead.org>
-Cc: Linux SCSI List <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
 
-Rick,
+Tarball and rpms can be found on http://www.torque.net/sg .
+Summary of sg3_utils, sg_utils and other packages are on
+this page: http://www.torque.net/sg/u_index.html
+A release announcement will be sent to freshmeat.net
+shortly.
 
-There should be a beta version of 3dm2 & tw_cli that will work with the in-kernel
-3w-9xxx driver on the 3ware website sometime this week.  
-I'd rather not re-add deprecated interfaces.
-
--Adam
-
------Original Message-----
-From: Ricky Beam [mailto:jfbeam@bluetronic.net]
-Sent: Friday, July 02, 2004 11:42 AM
-To: Christoph Hellwig
-Cc: Adam Radford; Linux SCSI List
-Subject: Re: [BK-PATCH] 3w-9xxx: proc interface
-
-
-On Fri, 2 Jul 2004, Christoph Hellwig wrote:
->On Fri, Jul 02, 2004 at 12:08:23PM -0400, Ricky Beam wrote:
->> 3dm2 (the currently available one anyway) needs /proc/scsi/3w-9xxx to
->> discover any controllers.  The current in-kernel driver doesn't contain any
->> /proc/scsi support.  The attached patch restores the interface.
->
->I'd rather wait for a new 3dm2 release instead of adding deprecated interfaces.
->Adam, any schedule for a new release?
-
-Well, I'm not the only one who cannot monitor/control their array with the
-current in-kernel driver.  I don't care if the proc interface makes it
-back into the kernel; the systems I assemble with a 9500 will have the
-proc interface restored until I have a 3dm2 in hand that doesn't need it.
-
-Having a non-functioning 3dm2 is a major problem in my book. (technically,
-not have a firmware update interface in the kernel's driver is also a
-concern.)
-
-Locking the door before you have a key to get back in is a bad idea.
-
---Ricky
+Changelog for sg3_utils-1.07 [20040708]
+   - sginfo: clean up inquiry vendor,product,revision strings
+       - '-Fhead': sort defect list by head
+	Tom Steudten <steudten at mx dot ch>
+   - rework sg_err for better command name coverage: service actions,
+     variable length and peripheral device type
+       - update asc,ascq codes to SPC-3 revision 19
+   - move scsi_devfs_scan to archive directory
+   - add sg_opcodes utility to list supported operation codes
+   - add sg_persist utility to support persistent reservations
+   - add '-i' option to sg_inq to decode device identification VPD
+     page (0x83)
+   - sg_inq tries an ATA IDENTITY if SCSI INQUIRY fails
+   - sg_dd, sgm_dd and sgp_dd calculate block device sizes (if count
+     not given)
+   - drop SG_GET_VERSION_NUM ioctl guard in most utilities
 
 
-
+Doug Gilbert
