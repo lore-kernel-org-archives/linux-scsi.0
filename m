@@ -1,57 +1,48 @@
 From: Aristeu Sergio Rozanski Filho <aris@cathedrallabs.org>
-Subject: [patch] qlogic: don't use scsi_{register,unregister} for pcmcia
-Date: Thu, 23 Oct 2003 23:13:41 -0200
+Subject: [patch] qlogic: remove "bad hack"
+Date: Thu, 23 Oct 2003 23:18:29 -0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20031024011341.GF474@cathedrallabs.org>
+Message-ID: <20031024011829.GG474@cathedrallabs.org>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="Qz2CZ664xQdCRdPu"
+Content-Type: multipart/mixed; boundary="0rSojgWGcpz+ezC3"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from panda.sul.com.br ([200.219.150.4]:13837 "EHLO panda.sul.com.br")
-	by vger.kernel.org with ESMTP id S261925AbTJXBOn (ORCPT
+Received: from panda.sul.com.br ([200.219.150.4]:46605 "EHLO panda.sul.com.br")
+	by vger.kernel.org with ESMTP id S261914AbTJXBTc (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 23 Oct 2003 21:14:43 -0400
+	Thu, 23 Oct 2003 21:19:32 -0400
 Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com
 Cc: linux-scsi@vger.kernel.org, Christoph Hellwig <hch@infradead.org>
 
 
---Qz2CZ664xQdCRdPu
+--0rSojgWGcpz+ezC3
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+
+hi,
+	please confirm this. i noticed that __qlogic_detect doesn't call
+request_region() for the pcmcia case and the region remains free.
 
 -- 
 aris
 
 
---Qz2CZ664xQdCRdPu
+--0rSojgWGcpz+ezC3
 Content-Type: text/plain; charset=us-ascii
-Content-Disposition: attachment; filename="qlogic-pcmcia_uses_scsi_host_alloc.patch"
+Content-Disposition: attachment; filename="qlogic-pcmcia_dont_release_region.patch"
 
---- linux/drivers/scsi/qlogicfas.c.orig	2003-10-22 22:25:19.000000000 -0200
-+++ linux/drivers/scsi/qlogicfas.c	2003-10-22 21:26:59.000000000 -0200
-@@ -650,7 +650,11 @@
- 	} else
- 		printk(KERN_INFO "Ql: Using preset IRQ %d\n", qlirq);
+--- linux/drivers/scsi/pcmcia/qlogic_stub.c.orig	2003-10-22 22:31:05.000000000 -0200
++++ linux/drivers/scsi/pcmcia/qlogic_stub.c	2003-10-22 22:31:36.000000000 -0200
+@@ -240,9 +240,6 @@
+ 		outb(0x04, link->io.BasePort1 + 0xd);
+ 	}
  
-+#ifdef PCMCIA
-+	hreg = scsi_host_alloc(host, 0);
-+#else
- 	hreg = scsi_register(host, 0);	/* no host data */
-+#endif
- 	if (!hreg)
- 		goto err_release_mem;
- 	hreg->io_port = qbase;
---- linux/drivers/scsi/pcmcia/qlogic_stub.c.orig	2003-10-20 21:04:02.000000000 -0200
-+++ linux/drivers/scsi/pcmcia/qlogic_stub.c	2003-10-22 22:24:34.000000000 -0200
-@@ -288,7 +288,7 @@
- 	CardServices(ReleaseIO, link->handle, &link->io);
- 	CardServices(ReleaseIRQ, link->handle, &link->irq);
- 
--	scsi_unregister(info->host);
-+	scsi_host_put(info->host);
- 
- 	link->state &= ~DEV_CONFIG;
- }
+-	/* A bad hack... */
+-	release_region(link->io.BasePort1, link->io.NumPorts1);
+-
+ 	/* The KXL-810AN has a bigger IO port window */
+ 	if (link->io.NumPorts1 == 32)
+ 		qlogicfas_preset(link->io.BasePort1 + 16, link->irq.AssignedIRQ);
 
---Qz2CZ664xQdCRdPu--
+--0rSojgWGcpz+ezC3--
