@@ -1,40 +1,24 @@
-From: Matthew Wilcox <willy@debian.org>
-Subject: [PATCH] Compile fix for AIC7xxx
-Date: Sun, 7 Jul 2002 17:29:43 +0100
+From: specialtytools@netzero.net
+Subject: Perfectly clean automotive glass and mirrors
+Date: Mon, 08 Jul 2002 11:40:55 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20020707172943.M27706@parcelfarce.linux.theplanet.co.uk>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Message-ID: <200207081540.g68Fetg10016@zeus.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
+Received: from DKESOVB3.ne1.client2.attbi.com (h0002b3889ac1.ne.client2.attbi.com [66.30.33.81])
+	by zeus.kernel.org (8.11.6/8.11.6) with SMTP id g68Fetg10016
+	for <linux-scsi@vger.kernel.org>; Mon, 8 Jul 2002 08:40:55 -0700
 List-Id: linux-scsi@vger.kernel.org
-To: Linus Torvalds <torvalds@transmeta.com>
-Cc: linux-scsi@vger.kernel.org
 
+Cleaning windows can be a hassle - getting them streak-free and perfectly clean can be 
+almost impossible without the right cleaner.
 
-Trivial missed fix for this driver:
+If you would like to receive more information about how to make your automotive and home
+glass and mirrors so clean they become almost invisible, please REPLY to this email and
+enter "glass cleaner" in the SUBJECT line - make sure it's the SUBJECT line otherwise our
+system will not recognize your request!
 
-diff -urNX dontdiff linux-2.5.25/drivers/scsi/aic7xxx_old.c linux-2.5.25-mm/drivers/scsi/aic7xxx_old.c
---- linux-2.5.25/drivers/scsi/aic7xxx_old.c	Fri Jul  5 16:42:22 2002
-+++ linux-2.5.25-mm/drivers/scsi/aic7xxx_old.c	Sun Jul  7 08:11:24 2002
-@@ -3070,7 +3070,7 @@
-        * we check data_cmnd[0].  This catches the conditions for st.c, but
-        * I'm still not sure if request.cmd is valid for sg devices.
-        */
--      if ( (rq_data_dir(&cmd->request) == WRITE) || (cmd->data_cmnd[0] == WRITE_6) ||
-+      if ( (rq_data_dir(cmd->request) == WRITE) || (cmd->data_cmnd[0] == WRITE_6) ||
-            (cmd->data_cmnd[0] == WRITE_FILEMARKS) )
-       {
-         sp->w_total++;
-@@ -4280,7 +4280,7 @@
-       {
-         printk(INFO_LEAD "Underflow - Wanted %u, %s %u, residual SG "
-           "count %d.\n", p->host_no, CTL_OF_SCB(scb), cmd->underflow,
--          (rq_data_dir(&cmd->request) == WRITE) ? "wrote" : "read", actual,
-+          (rq_data_dir(cmd->request) == WRITE) ? "wrote" : "read", actual,
-           hscb->residual_SG_segment_count);
-         printk(INFO_LEAD "status 0x%x.\n", p->host_no, CTL_OF_SCB(scb),
-           hscb->target_status);
+If you are not interested in these products please accept our apologies for this intrusion. To stop
+further emails from us, please reply to this email and enter "remove" in the subject line.
 
--- 
-Revolutions do not require corporate support.
+Thank you.
