@@ -1,37 +1,48 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: [PATCH] fixes defect with kernel BUG using multipath on 2.6.0-test5
-Date: Sat, 27 Sep 2003 10:33:03 +0200
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <20030927083303.GE3416@suse.de>
-References: <1064541435.4763.51.camel@persist.az.mvista.com> <20030926121703.GG24824@parcelfarce.linux.theplanet.co.uk> <20030926122646.GA15415@suse.de> <1064607249.4779.1.camel@persist.az.mvista.com> <1064622862.4779.38.camel@persist.az.mvista.com>
+From: James Bottomley <James.Bottomley@steeleye.com>
+Subject: Re: zalon/ncr53c720 crashes K460  (parisc port) on bootup.
+Date: 27 Sep 2003 08:45:56 -0500
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <1064670357.2217.18.camel@mulgrave>
+References: <1064634188.641.27.camel@laptop.bradetich.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1064622862.4779.38.camel@persist.az.mvista.com>
-To: Steven Dake <sdake@mvista.com>
-Cc: neilb@cse.unsw.edu.au, Matthew Wilcox <willy@debian.org>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from nat9.steeleye.com ([65.114.3.137]:26118 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S262457AbTI0NqC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 27 Sep 2003 09:46:02 -0400
+In-Reply-To: <1064634188.641.27.camel@laptop.bradetich.net>
 List-Id: linux-scsi@vger.kernel.org
+To: Ryan Bradetich <rbradetich@uswest.net>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, PARISC list <parisc-linux@lists.parisc-linux.org>
 
-On Fri, Sep 26 2003, Steven Dake wrote:
-> Folks,
-> Thanks Matt and Jens for the debug help on the multipath problem.  I now
-> have a patch (attached) which solves the problem and makes multipath
-> work properly.   There are two types of "flags" that are used in a block
-> io request, bi_flags, and bi_rw.  bi_flags is used for flags to the
-> block level code, and bi_rw is used for flags to the low level device
-> drivers.  The code in the multipath driver used the wrong flag in the
-> wrong field.  In this case, the flag FASTFAIL (value 3) was being set to
-> the bi_flags field.  FASTFAIL is a hint to the low level driver that it
-> should try to fail out quickly.  Unfortunately, the value 3 is also
-> BIO_SEG_VALID, which is a flag to the block subsystem that the segments
-> shouldn't be recalculated.  The result was that the wrong field was set,
-> telling the block layer not to recalculate the segments resulting in
-> phys and hw segments of 0.  Not good.
+On Fri, 2003-09-26 at 22:43, Ryan Bradetich wrote:
+> The zalon/ncr53c720 combination is fatal during booting on my K460
+> parisc box.  I believe the scsi termination is correct since I performed
+> a fresh debian install on the scsi disks and I can boot from then every
+> time I use a 2.4 kernel :)  This problem appeared with with the latest
+> cvs kernel from parisc-linux.org.
 > 
-> Neil can you send upstream ?
+> This system does boot and function when I do not compile zalon support
+> into the kernel and use a nfsroot.
+> 
+> I can provide addtional information and test patches (or give access to
+> this system) if requested.
+> 
+> Any thoughts or feedback appreciated!  
 
-Auch good catch! I'm sorry to say this is actually my fault...
+I'm not familiar with how the K class is wired.  However, the ncr53c8xx
+driver that underlies the zalon720 is extremely ratty.  On my C360, I
+can precipitate exactly this panic just by inserting the zalon7xx module
+with an unterminated bluefish card.
 
--- 
-Jens Axboe
+Although we really need to track this down and fix it (which I'll look
+into doing), all it would do would be to detach the driver correctly at
+that point (so you still wouldn't see any devices).  Could you look at
+your SCSI setup to see if the driver has a point (i.e. is there a
+termination or cabling problem)?
+
+James
+
+
