@@ -1,69 +1,49 @@
-From: Matthew Dharm <mdharm-scsi@one-eyed-alien.net>
-Subject: Re: Is scsi_cmnd::underflow still useful?
-Date: Mon, 12 Jul 2004 22:09:20 -0700
+From: Shobhit Mathur <shobhitmmathur@yahoo.com>
+Subject: SCSI Query - cmd_per_lun & can_queue ...
+Date: Tue, 13 Jul 2004 03:40:02 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040713050920.GA31062@one-eyed-alien.net>
-References: <40F2E93B.3040607@torque.net> <1089680114.2074.198.camel@mulgrave>
+Message-ID: <20040713104002.10597.qmail@web52510.mail.yahoo.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="Kj7319i9nmIyA2yE"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from multivac.one-eyed-alien.net ([64.169.228.101]:35729 "EHLO
-	multivac.one-eyed-alien.net") by vger.kernel.org with ESMTP
-	id S263824AbUGMFKa (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 13 Jul 2004 01:10:30 -0400
-Content-Disposition: inline
-In-Reply-To: <1089680114.2074.198.camel@mulgrave>
-List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Douglas Gilbert <dougg@torque.net>, SCSI Mailing List <linux-scsi@vger.kernel.org>, bunk@fs.tum.de
-
-
---Kj7319i9nmIyA2yE
 Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from web52510.mail.yahoo.com ([206.190.39.135]:36768 "HELO
+	web52510.mail.yahoo.com") by vger.kernel.org with SMTP
+	id S264819AbUGMKkF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 13 Jul 2004 06:40:05 -0400
+List-Id: linux-scsi@vger.kernel.org
+To: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Mon, Jul 12, 2004 at 07:55:13PM -0500, James Bottomley wrote:
-> On Mon, 2004-07-12 at 14:40, Douglas Gilbert wrote:
-> > Doesn't look like many LLDs act on scsi_cmnd::underflow.
-> > Seems to me that scsi_cmnd::resid is a more general
-> > replacement.
->=20
-> well, I know I suggested a recent use of it to the USB people , so I
-> don't think it's entirely unused.  resid can't be a replacement because
-> they mean different things:
->=20
-> resid - number of bytes left over after a transaction
-> underflow - driver must return error if less than this amount
-> transferred.
+Hello,
 
-I think the recent USB usage of it was because some mid-level drivers look
-for the error condition related to the underflow value.
+I have a basic query related to the Scsi_Host_Template
+fields namely : cmd_per_lun and can_queue. I would
+like
+to know what is the relation between the per-lun queue
+and the per-HBA queue ?
 
-We don't really use it, other than to trigger an error.
+To elaborate my query, I would like to know how are
+the
+I/Os from the upper-layers managed between per-lun and
+the host-queue depth. In most cases the host-queue
+depth
+is very large [128 or more], while the per-lun queue
+is
+a fraction [5 or 2]. I would like to know how is the
+relation between the two queues and how does this
+impact
+io-rate ?
 
-Matt
+- Kindly let me know as I have a blurred picture of
+the
+role of the 2 queues.
 
---=20
-Matthew Dharm                              Home: mdharm-usb@one-eyed-alien.=
-net=20
-Maintainer, Linux USB Mass Storage Driver
+- Thank you very much
 
-Stef, you just got beaten by a ball of DIRT.
-					-- Greg
-User Friendly, 12/7/1997
+- Shobhit Mathur
 
---Kj7319i9nmIyA2yE
-Content-Type: application/pgp-signature
-Content-Disposition: inline
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.2.1 (GNU/Linux)
-
-iD8DBQFA826AIjReC7bSPZARAg9UAJ0cyE/acBAR/s7zkLzOPFWR4H1BJwCgl+8U
-g9AF4E4PCthEPaXvpk0nKog=
-=U10g
------END PGP SIGNATURE-----
-
---Kj7319i9nmIyA2yE--
+		
+__________________________________
+Do you Yahoo!?
+Yahoo! Mail - 50x more storage than other providers!
+http://promotions.yahoo.com/new_mail
