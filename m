@@ -1,51 +1,66 @@
-From: Arjan van de Ven <arjan@infradead.org>
-Subject: Re: [Iscsitarget-devel] Re: [ANNOUNCE] iSCSI enterprise target
-	software
-Date: Tue, 01 Mar 2005 11:46:32 +0100
-Message-ID: <1109673993.6293.80.camel@laptopd505.fenrus.org>
-References: <1109666441.6293.62.camel@laptopd505.fenrus.org>
-	 <20050301183549J.fujita.tomonori@lab.ntt.co.jp>
-	 <1109670363.6293.70.camel@laptopd505.fenrus.org>
-	 <20050301192257C.fujita.tomonori@lab.ntt.co.jp>
-	 <1109673220.6293.78.camel@laptopd505.fenrus.org>
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: [BUG] Fusion MPT 2.6.8 driver and multi LUN device
+Date: Tue, 01 Mar 2005 20:47:41 +1000
+Message-ID: <4224484D.5090900@torque.net>
+References: <42243E15.5070502@guzu.net>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
-Received: from pentafluge.infradead.org ([213.146.154.40]:59016 "EHLO
-	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S261855AbVCAKqh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 1 Mar 2005 05:46:37 -0500
-In-Reply-To: <1109673220.6293.78.camel@laptopd505.fenrus.org>
+Received: from borg.st.net.au ([65.23.158.22]:13785 "EHLO borg.st.net.au")
+	by vger.kernel.org with ESMTP id S261856AbVCAKqv (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Mar 2005 05:46:51 -0500
+In-Reply-To: <42243E15.5070502@guzu.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: linux-scsi@vger.kernel.org, iscsitarget-devel@lists.sourceforge.net
+To: linux-kernel@guzu.net
+Cc: linux-scsi@vger.kernel.org
 
-On Tue, 2005-03-01 at 11:33 +0100, Arjan van de Ven wrote:
-> On Tue, 2005-03-01 at 19:22 +0900, FUJITA Tomonori wrote:
-> > From: Arjan van de Ven <arjan@infradead.org>
-> > Subject: [Iscsitarget-devel] Re: [ANNOUNCE] iSCSI enterprise target software
-> > Date: Tue, 01 Mar 2005 10:46:03 +0100
-> > 
-> > > fsync or msync() ? I would imagine the target mmaping it's backend in
-> > > userspace and using msync() to kick off IO. At which point it's not that
-> > > much different from the control you do of the pagecache from inside the
-> > > kernel...
-> > 
-> > Can we avoid calling mmap() and munmap() repeatedly with large disk?
+Manu wrote:
 > 
-> my server has 512Gb address space with 2.6.9/2.6.10, and a lot more than
-> that with the 2.6.11 kernel (4 level page tables rock). So the answer
-> would be yes.
+> Under a fresh Mandrake 10.1 with a 2.6.8 kernel, the Fusion MPT driver 
+> do recognize the HP tape autoloader. The autoloader is composed of tape 
+> drive (on LUN 0) and the changer (on LUN 1).
+> The message comes from scsi_scan.c :
+>     printk(KERN_WARNING "scsi: %s lun%d has a LUN larger"
+>            " than allowed by the host adapter\n",
+>            devname, lun);
 > 
-> (and on old servers without 64 bit, you indeed need to mmap/munmap
-> lazily to create a window, but I suspect that the 3 Gb of address space
-> you have there can be managed smart to minimize the number of unmaps if
-> you really try)
+> Playing a bit with printk it looks like the num_luns is well computed 
+> (the value is 2), but the 2 LUN values seems to be miss-aligned.
+> When displaying the 8 bytes raw buffer (through lunp) in the loop :
+>  00 00 00 00 00 00 00 00
+>  00 00 01 00 00 00 00 00
+> 
+> I think the second buffer should be :
+>  00 01 00 00 00 00 00 00
+> 
+> Which, when computed, gives 1 instead of 16777216 (0x1000000).
+> 
+> The autoloader works like a charm under the 2.4.27 kernel provided with 
+> the Mandrake 10.1.
+> 
+> - Emmanuel Varagnat
+> 
+> PS: the 2 harddrives in RAID1 are well working, even with the 2.6.8 kernel.
 
-note that on 32 bit servers the kernel side needs to do kmap() on the
-pages anyway, and that a kmap/kunmap series is very much equivalent to a
-mmap/munmap series in lots of ways, so I doubt that has many additional
-savings for doing it in kernel space.
+Perhaps you could try the sg_luns utility from the
+sg3_utils package ( http://www.torque.net/sg )
+with either the 2.4 or 2.6 kernel. It should be sent
+to lun 0 (i.e. the tape drive), for example:
+   sg_luns /dev/st0
 
+[I'm not sure whether st devices support the SG_IO
+ioctl in lk 2.6.8; they do now. If that fails use the
+sg_map utility to find the corresponding sg device and
+apply sg_luns to that sg device.]
 
+If the sg_luns response shows an offset result for the
+tape changer (lun 1), then you should be looking to see
+if HP has new firmware for that tape autoloader.
+
+The difference between lk 2.4 and lk 2.6 is that 2.6
+uses the REPORT LUNS SCSI command whereas 2.4 just polled
+the possible luns (with INQUIRY).
+
+Doug Gilbert
