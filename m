@@ -1,28 +1,25 @@
-From: Alan Cox <alan@redhat.com>
+From: Christoph Hellwig <hch@infradead.org>
 Subject: Re: [ANNOUNCE]: version 2.00.3 megaraid driver for 2.4.x and 2.5.67 kernels
-Date: Thu, 17 Apr 2003 09:23:34 -0400 (EDT)
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <200304171323.h3HDNYm17322@devserv.devel.redhat.com>
-References: <20030417135719.A13189@infradead.org>
+Date: Thu, 17 Apr 2003 14:56:20 +0100
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <20030417145620.A14452@infradead.org>
+References: <20030417135719.A13189@infradead.org> <200304171323.h3HDNYm17322@devserv.devel.redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nat-pool-rdu.redhat.com ([66.187.233.200]:52667 "EHLO
-	devserv.devel.redhat.com") by vger.kernel.org with ESMTP
-	id S261334AbTDQNOJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 17 Apr 2003 09:14:09 -0400
-In-Reply-To: <20030417135719.A13189@infradead.org> from "Christoph Hellwig" at Ebr 17, 2003 01:57:19 
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <200304171323.h3HDNYm17322@devserv.devel.redhat.com>; from alan@redhat.com on Thu, Apr 17, 2003 at 09:23:34AM -0400
+To: Alan Cox <alan@redhat.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Mukker Atul <atulm@lsil.com>, "'James.Bottomley@steeleye.com'" <James.Bottomley@steeleye.com>, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, "'linux-megaraid-devel@dell.com'" <linux-megaraid-devel@dell.com>, "'linux-megaraid-announce@dell.com'" <linux-megaraid-announce@dell.com>
 List-Id: linux-scsi@vger.kernel.org
-Cc: Alan Cox <alan@redhat.com>, Christoph Hellwig <hch@infradead.org>, Mukker Atul <atulm@lsil.com>, "'James.Bottomley@steeleye.com'" <James.Bottomley@steeleye.com>, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, "'linux-megaraid-devel@dell.com'" <linux-megaraid-devel@dell.com>, "'linux-megaraid-announce@dell.com'" <linux-megaraid-announce@dell.com>
 
-> On Thu, Apr 17, 2003 at 08:52:16AM -0400, Alan Cox wrote:
-> > >     Do you really need this?  Why can you use
-> > >     struct device_driver->shutdown?
-> > 
-> > Not on 2.2
+On Thu, Apr 17, 2003 at 09:23:34AM -0400, Alan Cox wrote:
+> > This is a 2.5-only driver (in fact a 2.5 only patch against a 2.4 driver)
 > 
-> This is a 2.5-only driver (in fact a 2.5 only patch against a 2.4 driver)
+> 2.0 exists for 2.4 as well. I dont know about for 2.2
 
-2.0 exists for 2.4 as well. I dont know about for 2.2
+Is my English that bad? :)
 
+Currently the megaraid2 driver is distributed as a tarball that works _only_
+with Linux 2.4 (and it looks like only with rather recent 2.4 versions), and
+there is a patch against it to make it work with 2.5 and only 2.5.
