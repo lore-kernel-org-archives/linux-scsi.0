@@ -1,33 +1,41 @@
-From: James Bottomley <James.Bottomley@steeleye.com>
-Subject: Re: [PATCH 2.4] sd terabyte disk fix
-Date: 27 May 2004 22:26:30 -0500
+From: Matthew Wilcox <willy@debian.org>
+Subject: Re: [PATCH/RFC 1/2] 3ware 9000 SATA-RAID driver v2.26.00.009
+Date: Fri, 28 May 2004 05:32:44 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1085714794.1811.919.camel@mulgrave>
-References: <40B6ADA9.3010407@us.ibm.com>
+Message-ID: <20040528043244.GK5850@parcelfarce.linux.theplanet.co.uk>
+References: <HYCD4000.31K@hadar.amcc.com> <40B6235B.1080507@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat1.steeleye.com ([65.114.3.130]:54976 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S263640AbUE1D0f (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 27 May 2004 23:26:35 -0400
-In-Reply-To: <40B6ADA9.3010407@us.ibm.com>
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:42402 "EHLO
+	www.linux.org.uk") by vger.kernel.org with ESMTP id S262194AbUE1Ecr
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 28 May 2004 00:32:47 -0400
+Content-Disposition: inline
+In-Reply-To: <40B6235B.1080507@pobox.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Brian King <brking@us.ibm.com>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Adam Radford <aradford@amcc.com>, akpm@osdl.org, james.bottomley@steeleye.com, hch@lst.de, linux-scsi@vger.kernel.org
 
-On Thu, 2004-05-27 at 22:10, Brian King wrote:
-> The following bug was hit when creating a hardware RAID array > 1 TB.
-> Please apply.
+On Thu, May 27, 2004 at 01:20:27PM -0400, Jeff Garzik wrote:
+> Adam Radford wrote:
+> >- The card can take up to 256 io's at a time, but 2 are marked off
+> >  for internal use.  There are no 'per device' limits.  The firmware queue
+> >  depth is 256 total for all devices.
+> 
+> I would therefore recommend not setting device queue depth in 
+> ->slave_configure(), but rather setting the Scsi_Host_Template's 
+> ->can_queue to 256.
+> 
+> This more accurately reflects the hardware.
 
-Well, this is a known failing of 2.4;  It's not safe to promote block to
-unsigned since there are many places in the filesystem and block code
-where it gets used as a signed quantity.
+254, surely?  The midlayer can't be expected to know about the 2 reserved
+ones ;-)
 
-If you want to use arrays >1TB, either use vanilla 2.6 with LBD support
-enabled, or one of the vendor kernels with it backported.
-
-James
-
-
+-- 
+"Next the statesmen will invent cheap lies, putting the blame upon 
+the nation that is attacked, and every man will be glad of those
+conscience-soothing falsities, and will diligently study them, and refuse
+to examine any refutations of them; and thus he will by and by convince 
+himself that the war is just, and will thank God for the better sleep 
+he enjoys after this process of grotesque self-deception." -- Mark Twain
