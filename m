@@ -1,63 +1,87 @@
-From: Pat LaVarre <p.lavarre@ieee.org>
-Subject: Re: aligned /dev/scd$n reads less rare how
-Date: 24 Oct 2003 08:41:16 -0600
+From: "Moore, Eric Dean" <emoore@lsil.com>
+Subject: [PATCH]  2.4.23-pre8 driver udpate for MPT Fusion (2.05.10)
+Date: Fri, 24 Oct 2003 10:53:59 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1067006475.16062.10.camel@patehci2>
-References: <1064271322.4797.9.camel@patehci2>
-	 <1064847281.24854.2.camel@patehci2>  <1064850600.25057.7.camel@patehci2>
-	 <1064858121.4262.0.camel@patehci2>
+Message-ID: <0E3FA95632D6D047BA649F95DAB60E57035A944F@exa-atlanta.se.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="iso-8859-1"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from email-out1.iomega.com ([147.178.1.82]:45253 "EHLO
-	email.iomega.com") by vger.kernel.org with ESMTP id S262228AbTJXOli
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 24 Oct 2003 10:41:38 -0400
-Received: from royntex01.iomegacorp.com (unknown [147.178.90.120])
-	by email.iomega.com (Postfix) with ESMTP id 5522920E8
-	for <linux-scsi@vger.kernel.org>; Fri, 24 Oct 2003 08:41:37 -0600 (MDT)
-In-Reply-To: <1064858121.4262.0.camel@patehci2>
+Received: from mail0.lsil.com ([147.145.40.20]:46822 "EHLO mail0.lsil.com")
+	by vger.kernel.org with ESMTP id S262240AbTJXOyM (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 24 Oct 2003 10:54:12 -0400
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
 
-> Anything easy I can do
-> to make aligned reads more common?
+Here's a patch for 2.4.23-pre8 kernel for MPT Fusion driver, coming from LSI
+Logic.
 
-Instead we first could/ should ask:
+This patch is large, so I have placed it on the LSI ftp site at:
+ftp://ftp.lsil.com/HostAdapterDrivers/linux/Fusion-MPT/2.05.10/mptlinux-2.05
+.10.patch
 
-How does Linux align write/read of cd-rw/dvd+rw?
+A new email address is setup for directing any MPT Fusion questions:
+mpt_linux_developer@lsil.com
 
-We know 2.6 vs. 2.4 newly connects cd-rw as writeable, by
-http://kniggit.net/wwol26.html of l=kernelnewbies.  And "everybody
-knows" cd-rw needs 64 KiB write alignment, dvd+rw needs 32 KiB write
-alignment, and both prefer write alignment in reads, right?  How then
-does Linux hint at the mounted fs to align write/read to something other
-than the 0.5 KiB that was optimal for legacy hdd?
+----------------------------------------------------------------------------
+---------------------
 
-> I ask because often thru /dev/scd$n
-> I see seemingly pointless misalignment,
-> ...
-> $ sudo blockdev --flushbufs /dev/scd0
-> $ time sudo dd if=/dev/scd0 bs=1M
-> ...
-> usb-storage:  x 28 00 00 00 00 00 00 00 20 00
-
-Initially we see aligned in address and length to x20 blocks = 64 KiB.
-
-> usb-storage:  x 28 00 00 00 00 20 00 00 24 00
-
-Soon we see aligned in address but, whoops, not in length.
-
-> usb-storage:  x 28 00 00 00 00 44 00 00 40 00
-> usb-storage:  x 28 00 00 00 00 84 00 00 40 00
-> usb-storage:  x 28 00 00 00 00 C4 00 00 40 00
-> ...
-> usb-storage:  x 28 00 00 07 FE C4 00 00 40 00
-
-Mostly we see contiguous after a misaligned access, so not aligned in
-address though yes aligned in length.  Ouch.
-
-Pat LaVarre
+Here is a list of the changes that have occured since the last release
+of 2.05.05 made to Kernel.org last April.
 
 
+(1)	Check SCSI Port Page 2 DV bits to either
+disable DV or limit DV to Inquiry only checks.
+
+(2)	Added sequence to allow the ID of a SAF-TE 
+device to be stored in IOC Page 4. 
+
+(3)	The driver now checks NVRAM data and performs Level 1 Domain 
+Validation only if requested.  This limitation can be set on a 
+per-device basis via the LSI Configuration Utility.
+
+(4) 	The IOC Page 4 read is now done after the SCSI Port Settings
+and the SCSI Device Page Headers are obtained.
+
+(5)	The return code from pci_map_sg is checked and a FAILED 
+status is returned if the return code indicates that a failure 
+occurred, as Scatter/Gather entries are being obtained.
+
+(6)	If IOCStatus of MPI_IOCSTATUS_STATUS_RESIDUAL_MISMATCH 
+is received, an error status is returned to the SCSI layer.  
+This status is received when the Fibre Channel firmware detects
+a CRC error during a data transfer.
+
+(7)	If the SCSI layer request an abort or bus reset for an 
+IO that is not currently running, an error status is returned 
+and the scsi_done call is not performed.  This prevents problems 
+when the IO has completed before the abort or bus reset is received.
+
+(8)	In a mixed device configuration (Ultra 320 and Non-Ultra 
+320 devices are present on an HBA channel), code was fixed to prevent
+ negotiating for QAS on all Ultra 320 devices on that channel.  
+This keeps the Ultra 320 devices from dominating the SCSI bus, 
+preventing Non-Ultra 320 IO's from executing.
+
+(9)	The SenseBufferLength field is properly set when an IOCTL 
+IO is processed.  This allows sense data to be obtained and returned 
+to the application if a Check Condition occurs on the IO.
+
+(10)	Zero out unused CDB field on SCSI IO commands.
+
+
+
+Eric Moore
+Staff Engineer
+> Standard Storage Products Division
+> LSI Logic Corporation
+> 4420 Arrowswest Drive
+> Colorado Springs, CO 80907
+> Email: emoore@lsil.com
+> Web: http://www.lsilogic.com/
+> 
+> 
+> 
+> 
