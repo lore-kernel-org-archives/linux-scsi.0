@@ -1,42 +1,151 @@
-From: Martin Diehl <lists@mdiehl.de>
-Subject: How to clear bogus WP bit?
-Date: Fri, 4 Mar 2005 17:06:54 +0100 (CET)
-Message-ID: <Pine.LNX.4.44.0503041647420.25272-100000@notebook.home.mdiehl.de>
+From: "Nicholas A. Bellinger" <nick@pyxtechnologies.com>
+Subject: [ANNOUNCE] iSCSI Initiator Core Stack v1.6.1.21 for 2.6.11
+Date: Fri, 04 Mar 2005 17:42:22 -0800
+Message-ID: <1109986942.1786.48.camel@haakon>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Received: from bart.webpack.hosteurope.de ([217.115.142.76]:23173 "EHLO
-	bart.webpack.hosteurope.de") by vger.kernel.org with ESMTP
-	id S262933AbVCDQEZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 4 Mar 2005 11:04:25 -0500
-Received: from notebook.home.mdiehl.de (localhost.localdomain [127.0.0.1])
-	by notebook.home.mdiehl.de (8.12.1/8.12.1) with ESMTP id j24G6uji027852
-	for <linux-scsi@vger.kernel.org>; Fri, 4 Mar 2005 17:06:56 +0100
-Received: from localhost (martin@localhost)
-	by notebook.home.mdiehl.de (8.12.1/8.12.1/Submit) with ESMTP id j24G6tfI027849
-	for <linux-scsi@vger.kernel.org>; Fri, 4 Mar 2005 17:06:55 +0100
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Received: from smtp807.mail.sc5.yahoo.com ([66.163.168.186]:13484 "HELO
+	smtp807.mail.sc5.yahoo.com") by vger.kernel.org with SMTP
+	id S263333AbVCEBqz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 4 Mar 2005 20:46:55 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>, Christoph Hellwig <hch@lst.de>, Mike Christie <mikenc@us.ibm.com>, Andre Hedrick <andre@pyxtechnologies.com>
+Cc: linux-iscsi <linux-scsi@vger.kernel.org>
 
+The following is v1.6.1.21 of the iSCSI Initiator Core Stack for 2.6.11.
+This release includes the conversion of existing readonly proc entries
+to sysfs, as well as exporting out all iSCSI Channel, Session and
+Connection releated attributes.  The procfs entries remain in this
+release, and will be removed in the next release once the userspace
+tools can be converted to use sysfs.  Also in the release are changes
+related to Jeff Garzik's review (Thanks again Jeff!!).
 
-Hi,
+The patch will be appearing shortly at:
 
-my MMC flashcard used to work with my usb card reader right until a 
-boot-crash of an embedded system while the card was in use there. Since 
-then, both Linux and Windows report the card being write-protected. 
-Reading still works without problems.
+http://www.kernel.org/pub/linux/kernel/people/nab/iscsi-initiator-core/
 
-Note, on MMC-Cards there is no write-protect clip so I have no idea how it 
-happened to become write protected and - even more important - how to 
-unprotect it. I've already cheated the sd-driver to ignore the WP-bit so I 
-can rw-mount again. However, when trying to write to the guy it returns 
-command errors due to media protection still effective. So my current 
-conclusion is somehow the MMC really managed to get into a write-protected 
-state without any mechanical switch.
+The same userspace tools (2.0) can be located at:
 
-Any hints how to unprotect it? Is it possible somehow to clear the WP 
-state by software? Or does this probably mean the MMC went south?
+http://www.kernel.org/pub/linux/utils/storage/iscsi/
 
-TIA
-Martin
+This release was diffed, built and packaged using itself over an iSCSI
+SAN and all future release will continue to follow this procedure.  One
+final note before we go into the fun stuff, the mailinglist and website
+will be setup by Monday and will be announced with the release of the
+next version of the userspace tools. I encourage everyone who is
+interested to join the mailing list, now on with the show. :-)
+
+To give the reader an idea of what the /sys/class/iscsi_initiator_core
+hierarchy looks like with two (2) iSCSI Channels (Initiator -> Target)
+defined with two (2) iSCSI connections per iSCSI Session to each of
+those iSCSI Target Nodes.  I am open to discussion on how these entires
+should look.  Please give me your comments!
+
+.
+|-- channel_10
+|   |-- channel_id
+|   |-- iscsi
+|   |-- scsi
+|   `-- sess_8
+|       |-- conn_0
+|       |   |-- cid
+|       |   |-- conn_ops
+|       |   |   |-- DataDigest
+|       |   |   |-- HeaderDigest
+|       |   |   |-- IFMarkInt
+|       |   |   |-- IFMarker
+|       |   |   |-- MaxRecvDataSegmentLength
+|       |   |   |-- OFMarkInt
+|       |   |   `-- OFMarker
+|       |   |-- expstatsn
+|       |   |-- ipv4_address
+|       |   |-- network_transport
+|       |   `-- port
+|       |-- conn_1
+|       |   |-- cid
+|       |   |-- conn_ops
+|       |   |   |-- DataDigest
+|       |   |   |-- HeaderDigest
+|       |   |   |-- IFMarkInt
+|       |   |   |-- IFMarker
+|       |   |   |-- MaxRecvDataSegmentLength
+|       |   |   |-- OFMarkInt
+|       |   |   `-- OFMarker
+|       |   |-- expstatsn
+|       |   |-- ipv4_address
+|       |   |-- network_transport
+|       |   `-- port
+|       |-- isid
+|       |-- sess_ops
+|       |   |-- FirstBurstLength
+|       |   |-- ImmediateData
+|       |   |-- InitialR2T
+|       |   |-- InitiatorAlias
+|       |   |-- InitiatorName
+|       |   |-- MaxBurstLength
+|       |   |-- SessionType
+|       |   |-- TargetAlias
+|       |   `-- TargetName
+|       |-- sid
+|       `-- tsih
+|-- channel_12
+|   |-- channel_id
+|   |-- iscsi
+|   |-- scsi
+|   `-- sess_2
+|       |-- conn_0
+|       |   |-- cid
+|       |   |-- conn_ops
+|       |   |   |-- DataDigest
+|       |   |   |-- HeaderDigest
+|       |   |   |-- IFMarkInt
+|       |   |   |-- IFMarker
+|       |   |   |-- MaxRecvDataSegmentLength
+|       |   |   |-- OFMarkInt
+|       |   |   `-- OFMarker
+|       |   |-- expstatsn
+|       |   |-- ipv4_address
+|       |   |-- network_transport
+|       |   `-- port
+|       |-- conn_1
+|       |   |-- cid
+|       |   |-- conn_ops
+|       |   |   |-- DataDigest
+|       |   |   |-- HeaderDigest
+|       |   |   |-- IFMarkInt
+|       |   |   |-- IFMarker
+|       |   |   |-- MaxRecvDataSegmentLength
+|       |   |   |-- OFMarkInt
+|       |   |   `-- OFMarker
+|       |   |-- expstatsn
+|       |   |-- ipv4_address
+|       |   |-- network_transport
+|       |   `-- port
+|       |-- isid
+|       |-- sess_ops
+|       |   |-- FirstBurstLength
+|       |   |-- ImmediateData
+|       |   |-- InitialR2T
+|       |   |-- InitiatorAlias
+|       |   |-- InitiatorName
+|       |   |-- MaxBurstLength
+|       |   |-- SessionType
+|       |   |-- TargetAlias
+|       |   `-- TargetName
+|       |-- sid
+|       `-- tsih
+|-- initiator_nodename
+`-- version_info
+
+The channel_#/[iscsi,scsi]_info will remain for the time being to
+support the current userspace scripts used to channel management and
+persisant mapping of iSCSI Logical Units.  I am open to discussion on
+how these entires should look.  Please give me your comments!
+
+Thanks!
+
+-- 
+Nicholas A. Bellinger <nick@pyxtechnologies.com>
 
