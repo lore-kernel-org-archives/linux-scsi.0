@@ -1,34 +1,31 @@
-From: James Bottomley <James.Bottomley@steeleye.com>
-Subject: Re: [patches] rq_dev removal
-Date: Thu, 31 Oct 2002 17:57:25 -0500
+From: Stephen Hemminger <shemminger@osdl.org>
+Subject: Megaraid driver on 2.5.45 problem with large devices enabled.
+Date: 31 Oct 2002 15:39:33 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <200210312257.g9VMvQ706240@localhost.localdomain>
-References: <viro@math.psu.edu>
+Message-ID: <1036107574.3365.36.camel@dell_ss3.pdx.osdl.net>
+References: <20BF5713E14D5B48AA289F72BD372D68C1EAAC@AUSXMPC122.aus.amer.dell.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: (from root@localhost)
-	by pogo.mtv1.steeleye.com (8.9.3/8.9.3) id OAA24570
-	for <linux-scsi@vger.kernel.org>; Thu, 31 Oct 2002 14:57:28 -0800
-In-Reply-To: Message from Alexander Viro <viro@math.psu.edu>
-   of "Thu, 31 Oct 2002 17:43:19 EST." <Pine.GSO.4.21.0210311715330.16688-100000@weyl.math.psu.edu>
+In-Reply-To: <20BF5713E14D5B48AA289F72BD372D68C1EAAC@AUSXMPC122.aus.amer.dell.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Alexander Viro <viro@math.psu.edu>
-Cc: linux-scsi@vger.kernel.org
+To: Matt_Domsch@Dell.com
+Cc: linux-megaraid-devel@Dell.com, linux-scsi@vger.kernel.org
 
-viro@math.psu.edu said:
-> 	Please, review.  If somebody has objections - yell, otherwise this
-> stuff goes to Linus tomorrow.  Interesting things are in the small
-> patches - huge pair in the beginning of series is tape_name() stuff,
-> i.e. purely mechanical work. 
+When the config option CONFIG_LBD is enabled, sector_t becomes a 64 bit
+type.  This breaks the megaraid driver because it does:
 
-To facilitate quick review, there's also a BK tree with this in at 
+static int
+mega_partsize(struct block_device *bdev, sector_t capacity, int *geom)
+...
 
-http://linux-scsi.bkbits.net/scsi-viro-2.5
+		cyls = capacity/(heads * sectors);
 
-NOTE: The patches in this tree will not be the official BK ones, so watch out 
-for contaminating your own trees
+which causes gcc to call the helper function which the kernel doesn't
+pull in.  Probably this can be fixed by casting (if device can't support
+huge disks) or changing the math.
 
-James
-
+drivers/built-in.o: In function `mega_partsize':
+drivers/built-in.o(.text+0x6cb22): undefined reference to `__udivdi3'
 
