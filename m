@@ -1,54 +1,28 @@
-From: Doug Ledford <dledford@redhat.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
 Subject: Re: aic7xxx sets CDR offline, how to reset?
-Date: Tue, 3 Sep 2002 18:52:51 -0400
+Date: 04 Sep 2002 00:26:45 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20020903185251.H12201@redhat.com>
-References: <dledford@redhat.com> <200209032148.g83LmeP09177@localhost.localdomain> <20020903184216.F12201@redhat.com>
+Message-ID: <1031095605.21579.44.camel@irongate.swansea.linux.org.uk>
+References: <200209032202.g83M2mC09323@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20020903184216.F12201@redhat.com>; from dledford@redhat.com on Tue, Sep 03, 2002 at 06:42:16PM -0400
+In-Reply-To: <200209032202.g83M2mC09323@localhost.localdomain>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>, "Justin T. Gibbs" <gibbs@scsiguy.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@steeleye.com>
+Cc: Patrick Mansfield <patmans@us.ibm.com>, "Justin T. Gibbs" <gibbs@scsiguy.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Tue, Sep 03, 2002 at 06:42:16PM -0400, Doug Ledford wrote:
+On Tue, 2002-09-03 at 23:02, James Bottomley wrote:
+> > And what happens if one command gets some sort of check condition
+> > (like medium error, or aborted command) that causes a retry? Will IO's
+> > still be correctly ordered? 
 > 
-> Case 2: you want to do an abort, but you need to preserve ordering around 
-> any possible REQ_BARRIERs on the bus.  This requires that we keep a 
-> REQ_BARRIER count for the device, it is after all possible that we could 
-> have multiple barriers active at once, so as each command is put on the 
-> active_list, if it is a barrier, then we increment SDpnt->barrier_count 
-> and as we complete commands (at the interrupt context completion, not the 
-> final completion) if it is a barrier command we decrement the count.
-> 
-> 	[ oops we timed out ]
-> 	while(SDpnt->barrier_count && cmd) {
-> 		// when the aborted command is returned via the done()
-> 		// it will remove it from the active_list, so don't remove
-> 		// it here
-> 		abort_cmd = list_get_tail(SDpnt->active_list);
-> 		if(hostt->abort(abort_cmd) != SUCCESS) {
-> 			[ oops, go on to more drastic action ]
-> 		} else {
-> 			if(abort_cmd->type == BARRIER)
-> 				SDpnt->barrier_count--;
+> Retries get eliminated.  It should be up to the upper layers (sd or beyond) to 
+> say whether a retry is done.  Since, as you point out, retries automatically 
+> violate any barrier, it is probably up to the block layer to judge what should 
+> be done about the problem.
 
-Oops, delete those last two lines....the done() function decrements the 
-barrier_count for us.
+Then we need to give the block layer a lot more information about what
+kind of a problem occurred
 
-> 			if(abort_cmd == cmd)
-> 				cmd = NULL;
-> 		}
-> 	}
-> 	if(cmd) {
-> 		if(hostt->abort(cmd) != SUCCESS)
-> 			[ oops, go on to more drastic action ]
-> 	}
-
--- 
-  Doug Ledford <dledford@redhat.com>     919-754-3700 x44233
-         Red Hat, Inc. 
-         1801 Varsity Dr.
-         Raleigh, NC 27606
-  
