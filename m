@@ -1,107 +1,70 @@
-From: James.Smart@Emulex.Com
-Subject: RE: [PATCH] Another fix for suspend i/o - validate dev state before transition
-Date: Tue, 30 Nov 2004 16:17:30 -0500
-Message-ID: <0B1E13B586976742A7599D71A6AC733C12E7D5@xbl3.ma.emulex.com>
+From: "Richard F. Rebel" <rrebel@whenu.com>
+Subject: Re: Boot order of LSI MPT Fusion devices controllable?
+Date: Tue, 30 Nov 2004 16:55:37 -0500
+Message-ID: <1101851737.1779.1055.camel@rebel.corp.whenu.com>
+References: <200412010331.VAA21676@catalyst.austin.ibm.com>
+	 <1101843791.1779.1048.camel@rebel.corp.whenu.com>
+	 <20041130204848.GC8863@us.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-Un6zrbebC4mT6FJMEJPv"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emulex.emulex.com ([138.239.112.1]:12789 "EHLO
-	emulex.emulex.com") by vger.kernel.org with ESMTP id S262311AbUK3VRe convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 30 Nov 2004 16:17:34 -0500
-Received: from xbl3.ad.emulex.com (xbl3.ma.emulex.com [138.239.73.12])
-	by emulex.emulex.com (8.12.10/8.12.10) with ESMTP id iAULHUni015879
-	for <linux-scsi@vger.kernel.org>; Tue, 30 Nov 2004 13:17:31 -0800 (PST)
-content-class: urn:content-classes:message
+Received: from garibaldi.swishmail.com ([209.10.110.70]:18702 "HELO
+	garibaldi.swishmail.com") by vger.kernel.org with SMTP
+	id S262347AbUK3V7f (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 30 Nov 2004 16:59:35 -0500
+In-Reply-To: <20041130204848.GC8863@us.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Smart@Emulex.Com, linux-scsi@vger.kernel.org
+To: Mike Anderson <andmike@us.ibm.com>
+Cc: kwhite@austin.ibm.com, linux-scsi@vger.kernel.org
 
-James,
 
-I have yet to see this hit scsi-misc-2.6...  hope it didn't get dropped.
+--=-Un6zrbebC4mT6FJMEJPv
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
--- james
+On Tue, 2004-11-30 at 12:48 -0800, Mike Anderson wrote:
+> Richard F. Rebel [rrebel@whenu.com] wrote:
+> > Earlier someone responded to the tune that I needed to change the PCI
+> > boot order, and unless the bios allows me to change that,  I have to
+> > move the cards around in the chassis.  I have a cage monkey trying that
+> > now.
+> >=20
+>=20
+> Relying on pci / device probe order will always leave you open to possibl=
+e
+> name slippage issues in the future. You mentioned that you are running md=
+k
+> so you may want to look at using udev for your device naming.
 
-> -----Original Message-----
-> From: linux-scsi-owner@vger.kernel.org
-> [mailto:linux-scsi-owner@vger.kernel.org]On Behalf Of Smart, James
-> Sent: Wednesday, November 17, 2004 1:40 PM
-> To: linux-scsi@vger.kernel.org
-> Subject: [PATCH] Another fix for suspend i/o - validate dev 
-> state before
-> transition
-> 
-> 
-> The block/unblock patch reports stack dumps and illegal 
-> transitions when the driver continues to call block or 
-> unblock after the device has failed (moved into offline state 
-> due to i/o error, etc). The LLDD/transport is unaware of the 
-> sdev transition, so it doesn't know better.
-> 
-> This patch has the internal device block/unblock routines 
-> validate the state transition before invoking it.
-> 
-> Hopefully this is it for this darn feature...
-> 
-> -- James S
-> 
-> 
-> 
-> 
-> --- scsi_lib.c.2.6.10-rc2	2004-11-16 09:03:58.000000000 -0500
-> +++ scsi_lib.c.NEW	2004-11-17 13:23:22.340667480 -0500
-> @@ -1813,6 +1813,12 @@
->   *	state, all commands are deferred until the scsi lld reenables
->   *	the device with scsi_device_unblock or device_block_tmo fires.
->   *	This routine assumes the host_lock is held on entry.
-> + *
-> + *      As the LLDD/Transport that is calling this function doesn't
-> + *	actually know what the device state is, the function may be
-> + *	called at an inappropriate time. Therefore, before requesting
-> + *	the state change, the function validates that the transition is
-> + *	valid.
->   **/
->  int
->  scsi_internal_device_block(struct scsi_device *sdev)
-> @@ -1821,6 +1827,10 @@
->  	unsigned long flags;
->  	int err = 0;
->  
-> +	if ((sdev->sdev_state != SDEV_CREATED) &&
-> +	    (sdev->sdev_state != SDEV_RUNNING))
-> +		return 0;
-> +
->  	err = scsi_device_set_state(sdev, SDEV_BLOCK);
->  	if (err)
->  		return err;
-> @@ -1853,6 +1863,12 @@
->   *	(which must be a legal transition) allowing the midlayer to
->   *	goose the queue for this device.  This routine assumes the 
->   *	host_lock is held upon entry.
-> + *
-> + *      As the LLDD/Transport that is calling this function doesn't
-> + *	actually know what the device state is, the function may be
-> + *	called at an inappropriate time. Therefore, before requesting
-> + *	the state change, the function validates that the transition is
-> + *	valid.
->   **/
->  int
->  scsi_internal_device_unblock(struct scsi_device *sdev)
-> @@ -1861,6 +1877,9 @@
->  	int err;
->  	unsigned long flags;
->  	
-> +	if (sdev->sdev_state != SDEV_BLOCK)
-> +		return 0;
-> +	
->  	/* 
->  	 * Try to transition the scsi device to SDEV_RUNNING
->  	 * and goose the device queue if successful.  
-> -
-> To unsubscribe from this list: send the line "unsubscribe 
-> linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+Umm, what is udev?  Is this the /dev/scsi/<host>/* mapping???
+
+BTW, I was able to resolve the problem of the fiber channel being
+identified first by moving the pci-x cards around.  Now when the fiber
+fabric is visible my box still boots off the local scsi disks.
+
+
+
+
+>=20
+>=20
+> -andmike
+> --
+> Michael Anderson
+> andmike@us.ibm.com
+>=20
+
+--=-Un6zrbebC4mT6FJMEJPv
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.2.4 (GNU/Linux)
+
+iD8DBQBBrOxZx1ZaISfnBu0RAtMQAJ9u7rBXybJZVIgupj3kQzgUyszsqgCfXEpS
+sdGKmxcNBYmG/bZICYEMt1c=
+=IETe
+-----END PGP SIGNATURE-----
+
+--=-Un6zrbebC4mT6FJMEJPv--
+
