@@ -1,28 +1,28 @@
 From: maximilian attems <janitor@sternwelten.at>
-Subject: [patch-kj] remove old ifdef'd code from aic79xx.h
-Date: Mon, 21 Jun 2004 20:01:41 +0200
+Subject: [patch-kj] remove old ifdef'd code from
+Date: Mon, 21 Jun 2004 20:03:12 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040621180141.GK1545@sputnik.stro.at>
+Message-ID: <20040621180312.GL1545@sputnik.stro.at>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from baikonur.stro.at ([213.239.196.228]:61391 "EHLO
-	baikonur.stro.at") by vger.kernel.org with ESMTP id S266359AbUFUSBj
+Received: from baikonur.stro.at ([213.239.196.228]:59779 "EHLO
+	baikonur.stro.at") by vger.kernel.org with ESMTP id S266357AbUFUSDK
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 21 Jun 2004 14:01:39 -0400
+	Mon, 21 Jun 2004 14:03:10 -0400
 Received: from localhost (localhost [127.0.0.1])
-	by baikonur.stro.at (Postfix) with ESMTP id 0B1B85C0A4
-	for <linux-scsi@vger.kernel.org>; Mon, 21 Jun 2004 20:01:39 +0200 (CEST)
+	by baikonur.stro.at (Postfix) with ESMTP id 7F9F75C0A4
+	for <linux-scsi@vger.kernel.org>; Mon, 21 Jun 2004 20:03:09 +0200 (CEST)
 Received: from baikonur.stro.at ([127.0.0.1])
 	by localhost (baikonur [127.0.0.1]) (amavisd-new, port 10024)
-	with ESMTP id 19600-05 for <linux-scsi@vger.kernel.org>;
-	Mon, 21 Jun 2004 20:01:38 +0200 (CEST)
+	with ESMTP id 22325-06 for <linux-scsi@vger.kernel.org>;
+	Mon, 21 Jun 2004 20:03:09 +0200 (CEST)
 Received: from sputnik (unknown [62.47.144.54])
-	by baikonur.stro.at (Postfix) with ESMTP id 43F615C002
-	for <linux-scsi@vger.kernel.org>; Mon, 21 Jun 2004 20:01:38 +0200 (CEST)
+	by baikonur.stro.at (Postfix) with ESMTP id C27045C002
+	for <linux-scsi@vger.kernel.org>; Mon, 21 Jun 2004 20:03:08 +0200 (CEST)
 Received: from max by sputnik with local (Exim 4.32)
-	id 1BcT6z-0004AN-QE
-	for linux-scsi@vger.kernel.org; Mon, 21 Jun 2004 20:01:41 +0200
+	id 1BcT8S-0004Hk-9n
+	for linux-scsi@vger.kernel.org; Mon, 21 Jun 2004 20:03:12 +0200
 Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
@@ -31,7 +31,6 @@ To: linux-scsi@vger.kernel.org
 
  From: Domen Puncer <domen@coderock.org>
  Patches to remove some old ifdefs.
- remove unused #include <linux/version.h>
  kill compat cruft like #define ahd_pci_set_dma_mask pci_set_dma_mask
 
 Signed-off-by: Maximilian Attems <janitor@sternwelten.at>
@@ -40,40 +39,54 @@ Signed-off-by: Maximilian Attems <janitor@sternwelten.at>
 
 ---
 
- linux-2.6.7-max/drivers/scsi/aic7xxx/aic79xx.h |    8 ++++----
- 1 files changed, 4 insertions(+), 4 deletions(-)
+ linux-2.6.7-max/drivers/scsi/aic7xxx/aic79xx_core.c |   14 +++++++-------
+ 1 files changed, 7 insertions(+), 7 deletions(-)
 
-diff -puN drivers/scsi/aic7xxx/aic79xx.h~remove-old-ifdefs-aic79xx drivers/scsi/aic7xxx/aic79xx.h
---- linux-2.6.7/drivers/scsi/aic7xxx/aic79xx.h~remove-old-ifdefs-aic79xx	2004-06-18 09:13:35.000000000 +0200
-+++ linux-2.6.7-max/drivers/scsi/aic7xxx/aic79xx.h	2004-06-18 09:13:35.000000000 +0200
-@@ -549,7 +549,7 @@ struct ahd_dma64_seg {
+diff -puN drivers/scsi/aic7xxx/aic79xx_core.c~remove-old-ifdefs-aic79xx_core drivers/scsi/aic7xxx/aic79xx_core.c
+--- linux-2.6.7/drivers/scsi/aic7xxx/aic79xx_core.c~remove-old-ifdefs-aic79xx_core	2004-06-18 09:13:42.000000000 +0200
++++ linux-2.6.7-max/drivers/scsi/aic7xxx/aic79xx_core.c	2004-06-18 09:13:42.000000000 +0200
+@@ -5493,9 +5493,9 @@ ahd_probe_scbs(struct ahd_softc *ahd) {
+ static void
+ ahd_dmamap_cb(void *arg, bus_dma_segment_t *segs, int nseg, int error) 
+ {
+-	bus_addr_t *baddr;
++	dma_addr_t *baddr;
  
- struct map_node {
- 	bus_dmamap_t		 dmamap;
--	bus_addr_t		 physaddr;
-+	dma_addr_t		 physaddr;
- 	uint8_t			*vaddr;
- 	SLIST_ENTRY(map_node)	 links;
- };
-@@ -626,8 +626,8 @@ struct scb {
- 	struct map_node	 	 *sense_map;
- 	void			 *sg_list;
- 	uint8_t			 *sense_data;
--	bus_addr_t		  sg_list_busaddr;
--	bus_addr_t		  sense_busaddr;
-+	dma_addr_t		  sg_list_busaddr;
-+	dma_addr_t		  sense_busaddr;
- 	u_int			  sg_count;/* How full ahd_dma_seg is */
- #define	AHD_MAX_LQ_CRC_ERRORS 5
- 	u_int			  crc_retry_count;
-@@ -1198,7 +1198,7 @@ struct ahd_softc {
- 	bus_dma_tag_t		  parent_dmat;
- 	bus_dma_tag_t		  shared_data_dmat;
- 	bus_dmamap_t		  shared_data_dmamap;
--	bus_addr_t		  shared_data_busaddr;
-+	dma_addr_t		  shared_data_busaddr;
+-	baddr = (bus_addr_t *)arg;
++	baddr = (dma_addr_t *)arg;
+ 	*baddr = segs->ds_addr;
+ }
  
- 	/* Information saved through suspend/resume cycles */
- 	struct ahd_suspend_state  suspend_state;
+@@ -5926,9 +5926,9 @@ ahd_alloc_scbs(struct ahd_softc *ahd)
+ 	struct map_node *sense_map;
+ 	uint8_t		*segs;
+ 	uint8_t		*sense_data;
+-	bus_addr_t	 hscb_busaddr;
+-	bus_addr_t	 sg_busaddr;
+-	bus_addr_t	 sense_busaddr;
++	dma_addr_t	 hscb_busaddr;
++	dma_addr_t	 sg_busaddr;
++	dma_addr_t	 sense_busaddr;
+ 	int		 newcount;
+ 	int		 i;
+ 
+@@ -6161,7 +6161,7 @@ ahd_init(struct ahd_softc *ahd)
+ {
+ 	uint8_t		*base_vaddr;
+ 	uint8_t		*next_vaddr;
+-	bus_addr_t	 next_baddr;
++	dma_addr_t	 next_baddr;
+ 	size_t		 driver_data_size;
+ 	int		 i;
+ 	int		 error;
+@@ -6205,7 +6205,7 @@ ahd_init(struct ahd_softc *ahd)
+ 	if (ahd_dma_tag_create(ahd, ahd->parent_dmat, /*alignment*/1,
+ 			       /*boundary*/BUS_SPACE_MAXADDR_32BIT + 1,
+ 			       /*lowaddr*/ahd->flags & AHD_39BIT_ADDRESSING
+-					? (bus_addr_t)0x7FFFFFFFFFULL
++					? (dma_addr_t)0x7FFFFFFFFFULL
+ 					: BUS_SPACE_MAXADDR_32BIT,
+ 			       /*highaddr*/BUS_SPACE_MAXADDR,
+ 			       /*filter*/NULL, /*filterarg*/NULL,
 
 _
