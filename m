@@ -1,101 +1,33 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH] kill aac_io_done
-Date: Sat, 9 Oct 2004 15:46:57 +0200
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: [PATCH] small sym2 sparse fix
+Date: Sat, 9 Oct 2004 14:47:38 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20041009134657.GA20075@lst.de>
+Message-ID: <20041009134738.GT16153@parcelfarce.linux.theplanet.co.uk>
+References: <20041009134354.GA20025@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.210]:17555 "EHLO mail.lst.de")
-	by vger.kernel.org with ESMTP id S266839AbUJINrC (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 9 Oct 2004 09:47:02 -0400
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:21951 "EHLO
+	www.linux.org.uk") by vger.kernel.org with ESMTP id S266864AbUJINrj
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 9 Oct 2004 09:47:39 -0400
 Content-Disposition: inline
+In-Reply-To: <20041009134354.GA20025@lst.de>
 List-Id: linux-scsi@vger.kernel.org
-To: mark_salyzyn@adaptec.com, jejb@steeleye.com
-Cc: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: matthew@wil.cx, jejb@steeleye.com, linux-scsi@vger.kernel.org
 
-there's not need anymore to take the host lock before calling ->done
+On Sat, Oct 09, 2004 at 03:43:54PM +0200, Christoph Hellwig wrote:
+> -	void *ram_ptr;
+> +	void __iomem *ram_ptr;
 
+Thanks, I already got this one from Randolph Chung, it's in my tree and
+I'll be pushing it for 2.6.10.
 
---- 1.29/drivers/scsi/aacraid/aachba.c	2004-10-01 17:10:08 +02:00
-+++ edited/drivers/scsi/aacraid/aachba.c	2004-10-09 14:38:04 +02:00
-@@ -335,15 +335,6 @@
- 	return status;
- }
- 
--static void aac_io_done(struct scsi_cmnd * scsicmd)
--{
--	unsigned long cpu_flags;
--	struct Scsi_Host *host = scsicmd->device->host;
--	spin_lock_irqsave(host->host_lock, cpu_flags);
--	scsicmd->scsi_done(scsicmd);
--	spin_unlock_irqrestore(host->host_lock, cpu_flags);
--}
--
- static void get_container_name_callback(void *context, struct fib * fibptr)
- {
- 	struct aac_get_name_resp * get_name_reply;
-@@ -375,7 +366,8 @@
- 
- 	fib_complete(fibptr);
- 	fib_free(fibptr);
--	aac_io_done(scsicmd);
-+
-+	scsicmd->scsi_done(scsicmd);
- }
- 
- /**
-@@ -735,7 +727,7 @@
- 	fib_complete(fibptr);
- 	fib_free(fibptr);
- 
--	aac_io_done(scsicmd);
-+	scsicmd->scsi_done(scsicmd);
- }
- 
- static void write_callback(void *context, struct fib * fibptr)
-@@ -782,7 +774,7 @@
- 
- 	fib_complete(fibptr);
- 	fib_free(fibptr);
--	aac_io_done(scsicmd);
-+	scsicmd->scsi_done(scsicmd);
- }
- 
- int aac_read(struct scsi_cmnd * scsicmd, int cid)
-@@ -891,7 +883,7 @@
- 	 *	For some reason, the Fib didn't queue, return QUEUE_FULL
- 	 */
- 	scsicmd->result = DID_OK << 16 | COMMAND_COMPLETE << 8 | SAM_STAT_TASK_SET_FULL;
--	aac_io_done(scsicmd);
-+	scsicmd->scsi_done(scsicmd);
- 	fib_complete(cmd_fibcontext);
- 	fib_free(cmd_fibcontext);
- 	return -1;
-@@ -927,7 +919,7 @@
- 	 */
- 	if (!(cmd_fibcontext = fib_alloc(dev))) {
- 		scsicmd->result = DID_ERROR << 16;
--		aac_io_done(scsicmd);
-+		scsicmd->scsi_done(scsicmd);
- 		return -1;
- 	}
- 	fib_init(cmd_fibcontext);
-@@ -1000,7 +992,7 @@
- 	 *	For some reason, the Fib didn't queue, return QUEUE_FULL
- 	 */
- 	scsicmd->result = DID_OK << 16 | COMMAND_COMPLETE << 8 | SAM_STAT_TASK_SET_FULL;
--	aac_io_done(scsicmd);
-+	scsicmd->scsi_done(scsicmd);
- 
- 	fib_complete(cmd_fibcontext);
- 	fib_free(cmd_fibcontext);
-@@ -1568,7 +1560,7 @@
- 
- 	fib_complete(fibptr);
- 	fib_free(fibptr);
--	aac_io_done(scsicmd);
-+	scsicmd->scsi_done(scsicmd);
- }
- 
- /**
+-- 
+"Next the statesmen will invent cheap lies, putting the blame upon 
+the nation that is attacked, and every man will be glad of those
+conscience-soothing falsities, and will diligently study them, and refuse
+to examine any refutations of them; and thus he will by and by convince 
+himself that the war is just, and will thank God for the better sleep 
+he enjoys after this process of grotesque self-deception." -- Mark Twain
