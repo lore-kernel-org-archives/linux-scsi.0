@@ -1,37 +1,44 @@
-From: "Manish Kumar Bhojasia" <mbhojasi@cisco.com>
-Subject: [PATCH] Updated iscsi driver 4.0.1.2
-Date: Fri, 26 Mar 2004 21:35:19 +0530
+From: James Bottomley <James.Bottomley@steeleye.com>
+Subject: Re: [PATCH] Updated iscsi driver 4.0.1.2
+Date: 26 Mar 2004 12:20:46 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <FFEFJMNKOMGHNFBIAHOCOEHPDGAA.mbhojasi@cisco.com>
+Message-ID: <1080321647.2031.51.camel@mulgrave>
+References: <FFEFJMNKOMGHNFBIAHOCOEHPDGAA.mbhojasi@cisco.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ind-iport-1-sec.cisco.com ([64.104.129.9]:39304 "EHLO
-	ind-iport-1.cisco.com") by vger.kernel.org with ESMTP
-	id S264067AbUCZQF0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 26 Mar 2004 11:05:26 -0500
+Received: from stat1.steeleye.com ([65.114.3.130]:39862 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S263500AbUCZRVX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 26 Mar 2004 12:21:23 -0500
+In-Reply-To: <FFEFJMNKOMGHNFBIAHOCOEHPDGAA.mbhojasi@cisco.com>
 List-Id: linux-scsi@vger.kernel.org
-To: SCSI Mailing List <linux-scsi@vger.kernel.org>
-Cc: "Linux-Iscsi-Devel@Lists. Sourceforge. Net" <linux-iscsi-devel@lists.sourceforge.net>
+To: Manish Kumar Bhojasia <mbhojasi@cisco.com>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, "Linux-Iscsi-Devel@Lists.  Sourceforge. Net" <linux-iscsi-devel@lists.sourceforge.net>
 
-Folks,
+On Fri, 2004-03-26 at 11:05, Manish Kumar Bhojasia wrote:
+> Please review and let us know your comments.
 
-We have released the linux-iscsi driver version linux-iscsi-4.0.1.2.
-The driver contains all known bugfixes and changes suggested earlier
-by people in linux-scsi mailing list.
+Thanks for moving this to iscsi-sfnet.  I think the config option and
+the module name need to follow suit (I also note that the printk id
+strings still say Cisco iSCSI driver).
 
-The 4.0.1.2 release of linux-iscsi driver can be downloaded from 
-project home at:
+I still get a compile failure:
 
-http://sourceforge.net/projects/linux-iscsi/
+  CC [M]  drivers/scsi/iscsi-sfnet/iscsi-debug-attr.o
+cc1: warnings being treated as errors
+drivers/scsi/iscsi-sfnet/iscsi-debug-attr.c: In function
+`iscsi_target_printcmnd':
+drivers/scsi/iscsi-sfnet/iscsi-debug-attr.c:977: warning: int format,
+different type arg (arg 4)
+make[3]: *** [drivers/scsi/iscsi-sfnet/iscsi-debug-attr.o] Error 1
+make[2]: *** [drivers/scsi/iscsi-sfnet] Error 2
+make[1]: *** [drivers/scsi] Error 2
+make: *** [drivers] Error 2
 
-The iscsi driver patch has been created against linux kernel 2.6.4.
+This looks to be because of -Werror rather than anything serious.
 
-Please review and let us know your comments.
-
-Thanks,
-Manish
+James
 
 
