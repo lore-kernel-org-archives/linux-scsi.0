@@ -1,151 +1,64 @@
-From: "Justin T. Gibbs" <gibbs@scsiguy.com>
-Subject: Re: [TRIVIAL] fix parallel builds for aic7xxx]
-Date: Wed, 24 Sep 2003 08:39:22 -0600
+From: Pat LaVarre <p.lavarre@ieee.org>
+Subject: Re: printk the cdb's that interest me
+Date: 24 Sep 2003 09:07:02 -0600
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <376620000.1064414362@aslan.scsiguy.com>
-References: <20030924032922.BE68C2C21F@lists.samba.org> <1064412654.2063.3.camel@mulgrave>
+Message-ID: <1064416021.28767.10.camel@patehci2>
+References: <1064331642.10473.23.camel@patehci2>
+	 <20030923095248.A9896@beaverton.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aslan.scsiguy.com ([63.229.232.106]:45584 "EHLO
-	aslan.scsiguy.com") by vger.kernel.org with ESMTP id S261236AbTIXOlS
+Received: from email-out1.iomega.com ([147.178.1.82]:41684 "EHLO
+	email.iomega.com") by vger.kernel.org with ESMTP id S261347AbTIXPGd
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 24 Sep 2003 10:41:18 -0400
-In-Reply-To: <1064412654.2063.3.camel@mulgrave>
-Content-Disposition: inline
+	Wed, 24 Sep 2003 11:06:33 -0400
+In-Reply-To: <20030923095248.A9896@beaverton.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@steeleye.com>, Rusty Trivial Russell <trivial@rustcorp.com.au>
-Cc: Kai Germaschewski <kai@tp1.ruhr-uni-bochum.de>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Jens Axboe <axboe@suse.de>, John Cherry <cherry@osdl.org>
+To: patmans@us.ibm.com
+Cc: linux-scsi@vger.kernel.org
 
-> On Tue, 2003-09-23 at 21:56, Rusty Trivial Russell wrote:
->> [ Sorry, did you guys end up with consensus on this?  Should I forward
->>   or drop?  Thanks, Rusty ]
+> > ... I have no confident idea of what the cdb was, ...
 > 
-> Justin, I think after some discussion you agreed this to be correct. 
+> From: Patrick Mansfield <patmans@us.ibm.com>
+> Date:  Tue, 23 Sep 2003 09:52:48 -0700	
+>
+> It got a DID_NO_CONNECT (host busy 0x01),
+> so there should be no sense data. Or do you mean ...
 
-Actually, no.  Here's the latest information on this issue that I
-sent to both Sam and John:
+Whoops, bonehead newbie error, sorry, specifically:
 
-Date: Wed, 17 Sep 2003 16:09:58 -0600
-From: "Justin T. Gibbs" <gibbs@scsiguy.com>
-Reply-To: "Justin T. Gibbs" <gibbs@scsiguy.com>
-To: John Cherry <cherry@osdl.org>, Sam Ravnborg <sam@ravnborg.org>
-Subject: Re: [TRIVIAL][PATCH] fix parallel builds for aic7xxx]
-Message-ID: <34280000.1063836597@aslan.btc.adaptec.com>
-In-Reply-To: <1063129389.1512.39.camel@cherrypit.pdx.osdl.net>
+!!! I did not know this cdb had not reached the drive. !!!
 
-> Justin,
-> 
-> I assume you are the scsi guy (I can take a clue).  Is Sam's patch for
-> the aic7xxx Makefiles more acceptable to you?  How do we move this
-> forward?
+Yet another reason for me to want a trace of cdb's that do reach the
+drive.
 
-There are still problems with both patches.
+Tuesday I launched a separate linux-scsi thread titled "max GiB written
+per boot" to log my exploration of why, without actually unplugging my
+drive, I reliably end up dying in:
+dd: opening `/dev/scd1': No such device or address
 
-Option 1 looks like this:
+> All scsi core cdb's ...
+> via the host->queuecommand, ...
+> only two callers ... in 2.6 ...
+> ...
+> [most] sent to the LLDD
+> go out via scsi_dispatch_cmd, and
+> come back via scsi_softirq...
 
-$(aic7xxx-gen-y): $(src)/aic7xxx.seq 
+Great nuggets, thanks.
 
-$(src)/aic7xxx.seq: $(obj)/aicasm/aicasm $(src)/aic7xxx.reg
-	run assembler...
+Tuesday [usb-storage] worked out how to trace all cdb's that pass thru
+to usb-storage.ko bInterfaceProtocol = '\x50' = *"Pat".  Here I think I
+have enough clues to trace at the Scsi level as well ... and then the
+Scsi and Usb traces should agree.
 
-The .seq file is not a generated file, so unless you touch it,
-this rule will always be invoked so long as the .seq file
-is older than the .reg file.  This also means that if the .seq
-file is newer than the reg file and aicasm, the assembler will
-not run.
+> Ignoring the non-auto sense request and TUR
+> in scsi_error.c, ...
 
-Option 2 looks like this:
+I'll go discover what this means, unless someone tells me.
 
-$(aic7xxx-gen-y): $(src)/aic7xxx.seq $(src)/aic7xxx.reg
-$(aic7xxx-gen-y): doaic7xasm
+Pat LaVarre
 
-.PHONY: doaic7xasm
-$(aic7xxx-gen-y): doaic7xasm
 
-doaic7xasm: $(obj)/aicasm/aicasm
-	run assembler ...
-
-In this case, the assembler will aways be run since a phony
-target that is a prerequisite to a real target will always
-be executed (the make manual explicitly warns about this).
-Running the assembler guarantees a recompile of the entire
-driver.  Even if this were not the case, the generated files
-would not be rebuilt if only the assembler changed.  This
-strategy also seems to confuse make into attempting to pull
-the generated files out of RCS/SCCS if, for example, you
-have a BK tree.
-
-What we really want is an order only pre-requisite, but not
-all Linux installations have a make new enough to support this.
-(This is the pipe prerequisite syntax).  Baring that, I plan
-to just chain the generated files as a dependency which still
-causes the assembler to be run multiple times if any generated
-file is out of date, but at least the assembler will not be run
-concurrently.  This also avoids having the files rebuilt on
-each build.
-
-It would be really nice if gnu make would grow a .ORDER target
-like bmake so that you can selectively disable parallelism
-on certain targets.
-
---
-Justin
-
-==== //depot/linux-aic79xx-2.4.0/drivers/scsi/aic7xxx/Makefile#15 - /home/gibbs/bk/linux-2.4/drivers/scsi/aic7xxx/Makefile ====
---- /tmp/tmp.12649.0	2003-09-17 16:03:52.000000000 -0600
-+++ /home/gibbs/bk/linux-2.4/drivers/scsi/aic7xxx/Makefile	2003-09-17 15:49:06.000000000 -0600
-@@ -64,8 +64,13 @@
- 	$(LD) $(LD_RFLAG) -r -o $@ $(obj-aic79xx)
- 
- ifeq ($(CONFIG_AIC7XXX_BUILD_FIRMWARE),y)
-+# Create a dependency chain in generated files
-+# to avoid concurrent invocations of the single
-+# rule that builds them all.
-+aic7xxx_seq.h: aic7xxx_reg.h
- aic7xxx_gen = aic7xxx_seq.h aic7xxx_reg.h
- ifeq ($(CONFIG_AIC7XXX_REG_PRETTY_PRINT),y)
-+aic7xxx_reg.h: aic7xxx_reg_print.c
- aic7xxx_gen += aic7xxx_reg_print.c
- aic7xxx_asm_cmd = aicasm/aicasm -I. -r aic7xxx_reg.h		\
- 		 -p aic7xxx_reg_print.c -i aic7xxx_osm.h	\
-@@ -79,8 +84,13 @@
- endif
- 
- ifeq ($(CONFIG_AIC79XX_BUILD_FIRMWARE),y)
-+# Create a dependency chain in generated files
-+# to avoid concurrent invocations of the single
-+# rule that builds them all.
-+aic79xx_seq.h: aic79xx_reg.h
- aic79xx_gen = aic79xx_seq.h aic79xx_reg.h
- ifeq ($(CONFIG_AIC79XX_REG_PRETTY_PRINT),y)
-+aic79xx_reg.h: aic79xx_reg_print.c
- aic79xx_gen += aic79xx_reg_print.c
- aic79xx_asm_cmd = aicasm/aicasm -I. -r aic79xx_reg.h		\
- 		 -p aic79xx_reg_print.c -i aic79xx_osm.h	\
-==== //depot/aic7xxx/linux/drivers/scsi/aic7xxx/aicasm/Makefile#14 - /home/gibbs/bk/linux-2.4/drivers/scsi/aic7xxx/aicasm/Makefile
-====
---- /tmp/tmp.12649.7	2003-09-17 16:03:52.000000000 -0600
-+++ /home/gibbs/bk/linux-2.4/drivers/scsi/aic7xxx/aicasm/Makefile	2003-09-17 15:49:09.000000000 -0600
-@@ -49,11 +49,19 @@
- clean:
- 	rm -f $(clean-files)
- 
-+# Create a dependency chain in generated files
-+# to avoid concurrent invocations of the single
-+# rule that builds them all.
-+aicasm_gram.c: aicasm_gram.h
- aicasm_gram.c aicasm_gram.h: aicasm_gram.y
- 	$(YACC) $(YFLAGS) -b $(<:.y=) $<
- 	mv $(<:.y=).tab.c $(<:.y=.c)
- 	mv $(<:.y=).tab.h $(<:.y=.h)
- 
-+# Create a dependency chain in generated files
-+# to avoid concurrent invocations of the single
-+# rule that builds them all.
-+aicasm_macro_gram.c: aicasm_macro_gram.h
- aicasm_macro_gram.c aicasm_macro_gram.h: aicasm_macro_gram.y
- 	$(YACC) $(YFLAGS) -b $(<:.y=) -p mm $<
- 	mv $(<:.y=).tab.c $(<:.y=.c)
 
