@@ -1,64 +1,43 @@
 From: James Bottomley <James.Bottomley@steeleye.com>
-Subject: [BK PATCH] SCSI bug fixes for 2.6.1
-Date: 19 Jan 2004 19:46:40 -0500
+Subject: Re: [PATCH] aha152x-2.6.1
+Date: 19 Jan 2004 19:46:31 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1074539066.1647.32.camel@mulgrave>
+Message-ID: <1074538162.1647.18.camel@mulgrave>
+References: <Pine.LNX.4.44.0401172318380.963-100000@poirot.grange>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat1.steeleye.com ([65.114.3.130]:27019 "EHLO
+Received: from stat1.steeleye.com ([65.114.3.130]:26251 "EHLO
 	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S265352AbUATAqu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 19 Jan 2004 19:46:50 -0500
+	id S265340AbUATAqn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 19 Jan 2004 19:46:43 -0500
+In-Reply-To: <Pine.LNX.4.44.0401172318380.963-100000@poirot.grange>
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>
-Cc: Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-The attached is specifically bugfixes only for 2.6.1 that I'd like to
-get in before we begin release candidates for 2.6.2.  Some of them are
-bug fix only pieces from driver updates that I'll begin pushing after
-2.6.2 is out.
+On Sat, 2004-01-17 at 17:25, Guennadi Liakhovetski wrote:
+> Below is a patch for aha152x to fix check / request_region, plus make it
+> fail explicitly in the case of busy address-range. Compiles, untested
+> (yet).
 
-The update is available at:
+Actually, the aha152x maintainer has already fixed this (and the fix is
+in mainline---and copying the maintainer on changes to his driver would
+have been polite).
 
-bk://linux-scsi.bkbits.net/scsi-for-linus-2.6
+> While on that - what about the advansys-patch with a similar (check_region
+> vs. request_region) scope, I sent earlier to the list - was it wrong, or
+> just not important enough?
 
-The short changelog is
+Erm, this is what you said about the Advansys patch:
 
-<andrew.vasquez:qlogic.com>:
-  o No LUNs detected with qla2xxx / qla2300
+"Ok, the attached patch (carefully, I hope) does request_region instead of
+check_region for the detection address-range, and then release_region -
+when needed. Hope I got it right. Compiles, otherwise completely untested."
 
-<emoore:lsil.com>:
-  o MPT Fusion x86-64 boot fix
-
-<mort:bork.org>:
-  o Fix error path when adding sysfs attributes
-
-Andrew Morton:
-  o fix qla2xxx build for older gcc's
-
-James Bottomley:
-  o aha152x PCMCIA fix
-
-Jes Sorensen:
-  o qla1280 update
-
-Mike Anderson:
-  o scsi_eh_flush_done_q return status
-
-The diffstats are
-
- message/fusion/mptbase.h  |    4 -
- message/fusion/mptscsih.c |    4 +
- scsi/aha152x.c            |    2 
- scsi/qla1280.c            |  133 ++++++++++++++++++++++++++++++----------------
- scsi/qla1280.h            |   23 ++++---
- scsi/qla2xxx/qla_def.h    |    6 +-
- scsi/qla2xxx/qla_init.c   |    2 
- scsi/scsi_error.c         |   28 ++++-----
- scsi/scsi_sysfs.c         |   11 ++-
- 9 files changed, 134 insertions(+), 79 deletions(-)
+which wasn't exactly a ringing endorsement.  If we don't get any
+comments or complaints, I'll probably add it to the SCSI patch list.
 
 James
 
