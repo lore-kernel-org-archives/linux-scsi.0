@@ -1,463 +1,240 @@
-From: "Adam J. Richter" <adam@yggdrasil.com>
-Subject: Patch(2.5.56): ide-scsi.c hotplug-oriented rearrangement
-Date: Mon, 13 Jan 2003 02:51:11 -0800
+From: William Lee Irwin III <wli@holomorphy.com>
+Subject: Re: Adaptec 39160 / Yamaha CRW8424S CD burning
+Date: Mon, 13 Jan 2003 04:57:23 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030113025111.A3630@baldur.yggdrasil.com>
+Message-ID: <20030113125723.GD940@holomorphy.com>
+References: <20030113071543.GA9558@holomorphy.com> <3E22738D.3020000@torque.net> <20030113091635.GC9558@holomorphy.com> <20030113093833.GD9558@holomorphy.com> <20030113103502.GA940@holomorphy.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="qDbXVdCdHGoSgWSk"
+Content-Type: multipart/mixed; boundary="envbJBWh7q8WU6mo"
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Content-Disposition: inline
+In-Reply-To: <20030113103502.GA940@holomorphy.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, gadio@netvision.net.il
-Cc: andre@linux-ide.org, axboe@suse.de, alan@lxorguk.ukuu.org.uk
+To: Douglas Gilbert <dougg@torque.net>
+Cc: linux-scsi@vger.kernel.org, gibbs@scsiguy.com, axboe@suse.de
 
 
---qDbXVdCdHGoSgWSk
+--envbJBWh7q8WU6mo
 Content-Type: text/plain; charset=us-ascii
+Content-Description: brief message
 Content-Disposition: inline
 
-	The following changes to ide-scsi.c are a recovery of the
-changes that I had in ide-scsi.c in the stock kernel's before
-Martin Dalecki's IDE tree was reverted and a few other changes.
+On Mon, Jan 13, 2003 at 02:35:02AM -0800, William Lee Irwin III wrote:
+> Okay, 2.5.56-mm1 + your SG_IO fixes got the following in the debug stuff
+> with Jens' patched cdrecord:
 
-	The principal change is that each ATAPI device is a Scsi_host
-(which reflects reality), instead of having one fake Scsi_Host with
-that appears to have all of the ATAPI devices on one bus regardless of
-actual hardware topology.  This way it is much easier for software to
-tell that, for example, a scsi copy command will not work between two
-ATAPI devices.  More importantly, hot plugging should theoretically
-work now, since Scsi_hosts are allocated and deallocated as ATAPI
-devices are added or removed. 
+I'm giving up at this point. I got another skipping CD (again, this
+produces playable CD's in 2.4.x, and the only difference is the kernel):
 
-	This change eliminates the idescsi_drives[] array and the
-ide_driver_t.id field that was used to index it.
+Included as a MIME attachment is a compressed log of the following cmd:
 
-	The idescsi_scsi_t data structure is now allocated at
-the end of the struct Scsi_Host rather than being a separate
-memory allocation.  The calculation of various private pointers
-are changed slightly as a result.
+/share/projects/kernel/hacking/misc/axboe/cdrtools-1.11/cdrecord/OBJ/i686-linux-cc/cdrecord -v -pad -swab debug=2 fs=16m timeout=120 speed=0 dev=0,3,0 -audio `cat tracks` >/share/projects/kernel/hacking/cdrecord.log 2>&1
 
-	Other minor nits include making all global routines
-static and adding some missing error branches in
-init_idescsi_module.
+run on 2.5.56-mm1 with your (Doug Gilbert's) SG_IO fixes.
 
-	I've verified that I can at least read raw data
-from a DVD-ROM with with this change.
+If there's some fix for this this, I'd be much obliged if it were
+included in mainline.
 
-	When I unload this ide-scsi module, the stock ide-scsi module
-or the stock ide-cd modules in 2.5.56, I get what appears to be the
-same kernel bad memory reference, apparently due to some generic
-device device added to drivers/ide/ide.c.  It does not appear to
-be due to this patch.
 
-	The patch is a net deletion of one line.
+Thanks,
+Bill
 
-	If nobody sees a problem with this patch, then I'd like to
-move forward on getting it into Linus's releases.  Any help would be
-appreciated.
+--envbJBWh7q8WU6mo
+Content-Type: application/octet-stream
+Content-Description: wli.cdrecord.log.gz
+Content-Disposition: attachment; filename="cdrecord.log.gz"
+Content-Transfer-Encoding: base64
 
--- 
-Adam J. Richter     __     ______________   575 Oroville Road
-adam@yggdrasil.com     \ /                  Milpitas, California 95035
-+1 408 309-6081         | g g d r a s i l   United States of America
-                         "Free Software For The Rest Of Us."
+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
+cNzB4WI5smyB/wyfzD9fnn/4WA3vaHaL5fpGXa264bLql99bdd1t1aru7fCDi27bRJPJ1/df
+5ufzT5Xa1E3j9G6jbKf6duHeEE0er8nLztYrdfXNtv3w9rqZHi7KSqWzWVwWyWy6fzG8Umc6
+1lnuPorttv27KKyfIvib4Be23lp3Sa7bW2X312FtD9dUpXSWmjT3/ZiH67rSJtX7i3xjK53f
+XdXDy8yks0TVu2bZVbFLonr8spy6L8vq8Ee+5umXZb7wwuEvfh90F1x8JLjDfZC7+bm/DzKJ
+uw/SZVRwHwSHS+Wox+WYFS5HY6KUHOHw0X2ZH/d19Lf9hr7gcKkcE88c+S4cHD6+r9SzL/7Q
+CQ4XyzHjuIPDxfrKOe7g8FByLDju4HCxvkqOOzg8kBzjY9sVjjs4/GX6OjFV4biDw183xxNT
+FY47OPyZfflOVTju4HCxHJmqwOFyfTFVgcODyZGpChwu15fvVIW+4HCxHJmqwOFyfflOVegL
+DpfKUTNVgcPl+vKdqtAXHC6WI1MVOFyuL9+pCn3B4WI5MlWBw+X68p2q0BccLpYjUxU4XK4v
+pipweDA5MlWBw+X6YqoCh4eSo2GqAofL9cVUBQ4PJkemKnC4XF9MVeDwYHJkqvJm+OS6Xna/
+ukdTt1v1a/vH0p7N3oX1KcLHVceABQ4PJkcGLHC4XF8MWOCvwCfzz5fnHz5Wwzua3WK5vlFX
+q264Cvvl91Zdd1u1qns7/OCi2zbRZPL1/Zf5+fxTpTZ10zi92yjbqb5duDdEk8dL+LKz9Upd
+fbNtr9z99/RwDVfKlOksMUUydS+yNEnUWZzlZe4+iu22/bsorJ8i+JvgF7beWndJrttbZffX
+YW0P11SldKHNLPP9mIfrutIm1fuLfGMrnd9d1cPLzAxXsqp3zbKrYpdE9fhVPNs/7ebwB8Gx
+fvJVnK/TcPiL3zbdBRcfCe7IbZNJ3G2TLqOC2yY4XCpHPS7HrHA5GhOl5AiHj+7LjOvr4bsE
+CX3B4VI5Jp458k07OHx8X6lnXzxvAw4XyzHjuIPDxfrKOe7g8FByLDju4HCxvkqOOzg8kBzj
+Y9sVjjs4/GX6GjlV4biDw+VzHDlVCfa4k1lyZ6eW3LHO87wskql7USRxps7SxJhXG3J/HT4R
+96kru/y9dcPyOItiU/ST9wOsb9r9L2Or+k3bNve/ZpN/Ltd3H0oNv57X7VZdL1crdVv3bhQ4
++d/lH7X7mFH0tlfo9/8eh58apdM80tmsD+uz9OTT/rd620432+7/hiusn/5/u123q+lvw5U6
+/KtOf1/2i2n9x1XXThfN1nbdqv9lODZj90/7y376+e//mC6zIvtltVzv/vhlsXj4oUrtS/+t
+boba00Krzc72ql7f/+NNa/voFT4Bdx3O9r9ovWp/39hv+8+hLJP48H9e71ar/1G/Dxfxw3Vb
+5n+LJv8CHWtJjholCQA=
 
---qDbXVdCdHGoSgWSk
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: attachment; filename="ide-scsi.diff"
-
---- linux-2.5.56/drivers/scsi/ide-scsi.c	2003-01-10 12:11:59.000000000 -0800
-+++ linux/drivers/scsi/ide-scsi.c	2003-01-13 02:24:48.000000000 -0800
-@@ -96,9 +96,18 @@
- 	unsigned long flags;			/* Status/Action flags */
- 	unsigned long transform;		/* SCSI cmd translation layer */
- 	unsigned long log;			/* log flags */
--	int id;
- } idescsi_scsi_t;
- 
-+static inline idescsi_scsi_t *scsihost_to_idescsi(struct Scsi_Host *host)
-+{
-+	return (idescsi_scsi_t*) (&host[1]);
-+}
-+
-+static inline idescsi_scsi_t *drive_to_idescsi(ide_drive_t *ide_drive)
-+{
-+	return scsihost_to_idescsi(ide_drive->driver_data);
-+}
-+
- /*
-  *	Per ATAPI device status bits.
-  */
-@@ -262,7 +271,7 @@
- 
- static int idescsi_check_condition(ide_drive_t *drive, struct request *failed_command)
- {
--	idescsi_scsi_t *scsi = drive->driver_data;
-+	idescsi_scsi_t *scsi = drive_to_idescsi(drive);
- 	idescsi_pc_t   *pc;
- 	struct request *rq;
- 	u8             *buf;
-@@ -299,7 +308,7 @@
- 
- static int idescsi_end_request (ide_drive_t *drive, int uptodate, int nrsecs)
- {
--	idescsi_scsi_t *scsi = drive->driver_data;
-+	idescsi_scsi_t *scsi = drive_to_idescsi(drive);
- 	struct request *rq = HWGROUP(drive)->rq;
- 	idescsi_pc_t *pc = (idescsi_pc_t *) rq->special;
- 	int log = test_bit(IDESCSI_LOG_CMD, &scsi->log);
-@@ -369,7 +378,7 @@
-  */
- static ide_startstop_t idescsi_pc_intr (ide_drive_t *drive)
- {
--	idescsi_scsi_t *scsi = drive->driver_data;
-+	idescsi_scsi_t *scsi = drive_to_idescsi(drive);
- 	idescsi_pc_t *pc=scsi->pc;
- 	struct request *rq = pc->rq;
- 	atapi_bcount_t bcount;
-@@ -463,7 +472,7 @@
- 
- static ide_startstop_t idescsi_transfer_pc(ide_drive_t *drive)
- {
--	idescsi_scsi_t *scsi = drive->driver_data;
-+	idescsi_scsi_t *scsi = drive_to_idescsi(drive);
- 	idescsi_pc_t *pc = scsi->pc;
- 	atapi_ireason_t ireason;
- 	ide_startstop_t startstop;
-@@ -493,7 +502,7 @@
-  */
- static ide_startstop_t idescsi_issue_pc (ide_drive_t *drive, idescsi_pc_t *pc)
- {
--	idescsi_scsi_t *scsi = drive->driver_data;
-+	idescsi_scsi_t *scsi = drive_to_idescsi(drive);
- 	atapi_feature_t feature;
- 	atapi_bcount_t bcount;
- 	struct request *rq = pc->rq;
-@@ -555,11 +564,9 @@
- 	return ide_stopped;
- }
- 
--static ide_drive_t *idescsi_drives[MAX_HWIFS * MAX_DRIVES];
--
- static void idescsi_add_settings(ide_drive_t *drive)
- {
--	idescsi_scsi_t *scsi = drive->driver_data;
-+	idescsi_scsi_t *scsi = drive_to_idescsi(drive);
- 
- /*
-  *			drive	setting name	read/write	ioctl	ioctl		data type	min	max	mul_factor	div_factor	data pointer		set function
-@@ -574,15 +581,10 @@
- /*
-  *	Driver initialization.
-  */
--static void idescsi_setup (ide_drive_t *drive, idescsi_scsi_t *scsi, int id)
-+static void idescsi_setup (ide_drive_t *drive, idescsi_scsi_t *scsi)
- {
- 	DRIVER(drive)->busy++;
--	idescsi_drives[id] = drive;
--	drive->driver_data = scsi;
- 	drive->ready_stat = 0;
--	memset (scsi, 0, sizeof (idescsi_scsi_t));
--	scsi->drive = drive;
--	scsi->id = id;
- 	if (drive->id && (drive->id->config & 0x0060) == 0x20)
- 		set_bit (IDESCSI_DRQ_INTERRUPT, &scsi->flags);
- 	set_bit(IDESCSI_TRANSFORM, &scsi->transform);
-@@ -596,13 +598,17 @@
- 
- static int idescsi_cleanup (ide_drive_t *drive)
- {
--	idescsi_scsi_t *scsi = drive->driver_data;
-+	struct Scsi_Host *scsihost = drive->driver_data;
- 
- 	if (ide_unregister_subdriver(drive))
- 		return 1;
-+	
-+	/* FIXME?: Are these two statements necessary? */
- 	drive->driver_data = NULL;
- 	drive->disk->fops = ide_fops;
--	kfree(scsi);
-+
-+	scsi_remove_host(scsihost);
-+	scsi_unregister(scsihost);
- 	return 0;
- }
- 
-@@ -654,52 +660,23 @@
- 	.ioctl		= idescsi_ide_ioctl,
- };
- 
--static int idescsi_attach(ide_drive_t *drive)
--{
--	idescsi_scsi_t *scsi;
--	int id;
--
--	if (!strstr("ide-scsi", drive->driver_req))
--		goto failed;
--	if (!drive->present)
--		goto failed;
--	/* we accept everything except ide-disk */
--	if (drive->media == ide_disk)
--		goto failed;
--	if ((scsi = (idescsi_scsi_t *) kmalloc (sizeof (idescsi_scsi_t), GFP_KERNEL)) == NULL) {
--		printk (KERN_ERR "ide-scsi: %s: Can't allocate a scsi structure\n", drive->name);
--		goto failed;
--	}
--	if (ide_register_subdriver (drive, &idescsi_driver, IDE_SUBDRIVER_VERSION)) {
--		printk (KERN_ERR "ide-scsi: %s: Failed to register the driver with ide.c\n", drive->name);
--		kfree (scsi);
--		goto failed;
--	}
--	for (id = 0; id < MAX_HWIFS * MAX_DRIVES && idescsi_drives[id]; id++)
--		;
--	idescsi_setup (drive, scsi, id);
--	drive->disk->fops = &idescsi_ops;
--	return 0;
--failed:
--	return 1;
--}
-+static int idescsi_attach(ide_drive_t *drive);
- 
--int idescsi_slave_configure(Scsi_Device * sdp)
-+static int idescsi_slave_configure(Scsi_Device * sdp)
- {
- 	/* Configure detected device */
- 	scsi_adjust_queue_depth(sdp, MSG_SIMPLE_TAG, sdp->host->cmd_per_lun);
- 	return 0;
- }
- 
--const char *idescsi_info (struct Scsi_Host *host)
-+static const char *idescsi_info (struct Scsi_Host *host)
- {
- 	return "SCSI host adapter emulation for IDE ATAPI devices";
- }
- 
--int idescsi_ioctl (Scsi_Device *dev, int cmd, void *arg)
-+static int idescsi_ioctl (Scsi_Device *dev, int cmd, void *arg)
- {
--	ide_drive_t *drive = idescsi_drives[dev->id];
--	idescsi_scsi_t *scsi = drive->driver_data;
-+	idescsi_scsi_t *scsi = scsihost_to_idescsi(dev->host);
- 
- 	if (cmd == SG_SET_TRANSFORM) {
- 		if (arg)
-@@ -789,7 +766,7 @@
- 
- static inline int should_transform(ide_drive_t *drive, Scsi_Cmnd *cmd)
- {
--	idescsi_scsi_t *scsi = drive->driver_data;
-+	idescsi_scsi_t *scsi = drive_to_idescsi(drive);
- 	struct gendisk *disk = cmd->request->rq_disk;
- 
- 	if (disk) {
-@@ -800,10 +777,10 @@
- 	return test_bit(IDESCSI_TRANSFORM, &scsi->transform);
- }
- 
--int idescsi_queue (Scsi_Cmnd *cmd, void (*done)(Scsi_Cmnd *))
-+static int idescsi_queue (Scsi_Cmnd *cmd, void (*done)(Scsi_Cmnd *))
- {
--	ide_drive_t *drive = idescsi_drives[cmd->target];
--	idescsi_scsi_t *scsi;
-+	idescsi_scsi_t *scsi = scsihost_to_idescsi(cmd->host);
-+	ide_drive_t *drive = scsi->drive;
- 	struct request *rq = NULL;
- 	idescsi_pc_t *pc = NULL;
- 
-@@ -811,7 +788,7 @@
- 		printk (KERN_ERR "ide-scsi: drive id %d not present\n", cmd->target);
- 		goto abort;
- 	}
--	scsi = drive->driver_data;
-+	scsi = drive_to_idescsi(drive);
- 	pc = kmalloc (sizeof (idescsi_pc_t), GFP_ATOMIC);
- 	rq = kmalloc (sizeof (struct request), GFP_ATOMIC);
- 	if (rq == NULL || pc == NULL) {
-@@ -865,43 +842,43 @@
- 	return 1;
- }
- 
--int idescsi_abort (Scsi_Cmnd *cmd)
-+static int idescsi_abort (Scsi_Cmnd *cmd)
- {
- 	int countdown = 8;
- 	unsigned long flags;
--	ide_drive_t *drive = idescsi_drives[cmd->target];
--	idescsi_scsi_t *scsi;
-+	idescsi_scsi_t *scsi = scsihost_to_idescsi(cmd->host);
-+	ide_drive_t *drive = scsi->drive;
- 
- 	printk (KERN_ERR "ide-scsi: abort called for %lu\n", cmd->serial_number);
--	if (drive && (scsi = drive->driver_data))
--		while (countdown--) {
--			/* is cmd active?
--			 *  need to lock so this stuff doesn't change under us */
--			spin_lock_irqsave(&ide_lock, flags);
--			if (scsi->pc && scsi->pc->scsi_cmd && 
--					scsi->pc->scsi_cmd->serial_number == cmd->serial_number) {
--				/* yep - let's give it some more time - 
--				 * we can do that, we're in _our_ error kernel thread */
--				spin_unlock_irqrestore(&ide_lock, flags);
--				scsi_sleep(HZ);
--				continue;
--			}
--			/* no, but is it queued in the ide subsystem? */
--			if (elv_queue_empty(&drive->queue)) {
--				spin_unlock_irqrestore(&ide_lock, flags);
--				return SUCCESS;
--			}
-+	while (countdown--) {
-+		/* is cmd active?
-+		 *  need to lock so this stuff doesn't change under us */
-+		spin_lock_irqsave(&ide_lock, flags);
-+		if (scsi->pc && scsi->pc->scsi_cmd && 
-+				scsi->pc->scsi_cmd->serial_number == cmd->serial_number) {
-+			/* yep - let's give it some more time - 
-+			 * we can do that, we're in _our_ error kernel thread */
-+			spin_unlock_irqrestore(&ide_lock, flags);
-+			scsi_sleep(HZ);
-+			continue;
-+		}
-+		/* no, but is it queued in the ide subsystem? */
-+		if (elv_queue_empty(&drive->queue)) {
- 			spin_unlock_irqrestore(&ide_lock, flags);
--			schedule_timeout(HZ/10);
-+			return SUCCESS;
- 		}
-+		spin_unlock_irqrestore(&ide_lock, flags);
-+		schedule_timeout(HZ/10);
-+	}
- 	return FAILED;
- }
- 
--int idescsi_reset (Scsi_Cmnd *cmd)
-+static int idescsi_reset (Scsi_Cmnd *cmd)
- {
- 	unsigned long flags;
- 	struct request *req;
--	ide_drive_t *drive = idescsi_drives[cmd->target];
-+	idescsi_scsi_t *idescsi = scsihost_to_idescsi(cmd->host);
-+	ide_drive_t *drive = idescsi->drive;
- 
- 	printk (KERN_ERR "ide-scsi: reset called for %lu\n", cmd->serial_number);
- 	/* first null the handler for the drive and let any process
-@@ -919,7 +896,8 @@
- 	}
- 	/* FIXME - this will probably leak memory */
- 	HWGROUP(drive)->rq = NULL;
--	if (drive->driver_data) ((idescsi_scsi_t *)drive->driver_data)->pc = NULL;
-+	if (drive_to_idescsi(drive))
-+		drive_to_idescsi(drive)->pc = NULL;
- 	spin_unlock_irqrestore(&ide_lock, flags);
- 	/* finally, reset the drive (and its partner on the bus...) */
- 	ide_do_reset (drive);	
-@@ -929,7 +907,8 @@
- static int idescsi_bios(struct scsi_device *sdev, struct block_device *bdev,
- 		sector_t capacity, int *parm)
- {
--	ide_drive_t *drive = idescsi_drives[sdev->id];
-+	idescsi_scsi_t *idescsi = scsihost_to_idescsi(sdev->host);
-+	ide_drive_t *drive = idescsi->drive;
- 
- 	if (drive->bios_cyl && drive->bios_head && drive->bios_sect) {
- 		parm[0] = drive->bios_head;
-@@ -956,10 +935,9 @@
- 	.max_sectors		= 128,
- 	.use_clustering		= DISABLE_CLUSTERING,
- 	.emulated		= 1,
-+	.proc_name		= "ide-scsi",
- };
- 
--static struct Scsi_Host *idescsi_host;
--
- static struct device     idescsi_primary = {
- 	.name		= "Ide-scsi Parent",
- 	.bus_id		= "ide-scsi",
-@@ -968,39 +946,60 @@
- 	.name		= "ide-scsi",
- };
- 
--static int __init init_idescsi_module(void)
-+static int idescsi_attach(ide_drive_t *drive)
- {
--	int id;
--	int last_lun = 0;
-+	idescsi_scsi_t *idescsi;
-+	struct Scsi_Host *host;
-+	int err;
- 
--	ide_register_driver(&idescsi_driver);
--	device_register(&idescsi_primary);
--	bus_register   (&idescsi_emu_bus);
--	idescsi_template.proc_name = "ide-scsi";
--	idescsi_host = scsi_register(&idescsi_template, 0);
--	if(idescsi_host == NULL)
-+	if (!strstr("ide-scsi", drive->driver_req) ||
-+	    !drive->present ||
-+	    drive->media == ide_disk ||
-+	    !(host = scsi_register(&idescsi_template,sizeof(idescsi_scsi_t))))
- 		return 1;
--		
--	for (id = 0; id < MAX_HWIFS * MAX_DRIVES && idescsi_drives[id]; id++)
--		last_lun = IDE_MAX(last_lun, idescsi_drives[id]->last_lun);
--	idescsi_host->max_id = id;
--	idescsi_host->max_lun = last_lun + 1;
--	scsi_add_host(idescsi_host, &idescsi_primary);
--	return 0;
-+
-+	host->max_id = 1;
-+	host->max_lun = 1;
-+	drive->driver_data = host;
-+	idescsi = scsihost_to_idescsi(host);
-+	idescsi->drive = drive;
-+	err = ide_register_subdriver (drive, &idescsi_driver,
-+				      IDE_SUBDRIVER_VERSION);
-+	if (!err) {
-+		idescsi_setup (drive, idescsi);
-+		drive->disk->fops = &idescsi_ops;
-+		err = scsi_add_host(host, &idescsi_primary);
-+		if (!err)
-+			return 0;
-+		/* fall through on error */
-+		ide_unregister_subdriver(drive);
-+	}
-+
-+	scsi_unregister(host);
-+	return err;
- }
- 
--static void __exit exit_idescsi_module(void)
-+static int __init init_idescsi_module(void)
- {
--	ide_drive_t *drive;
--	int id;
-+	int err;
- 
--	scsi_remove_host(idescsi_host);
--	for (id = 0; id < MAX_HWIFS * MAX_DRIVES; id++) {
--		drive = idescsi_drives[id];
--		if (drive)
--			DRIVER(drive)->busy = 0;
-+	err = bus_register(&idescsi_emu_bus);
-+	if (!err) {
-+		err = device_register(&idescsi_primary);
-+		if (!err) {
-+			err = ide_register_driver(&idescsi_driver);
-+			if (!err)
-+				return 0;
-+
-+			device_unregister(&idescsi_primary);
-+		}
-+		bus_unregister(&idescsi_emu_bus);
- 	}
--	scsi_unregister   (idescsi_host);
-+	return err;
-+}
-+
-+static void __exit exit_idescsi_module(void)
-+{
- 	device_unregister(&idescsi_primary);
- 	bus_unregister   (&idescsi_emu_bus);
- 	ide_unregister_driver(&idescsi_driver);
-
---qDbXVdCdHGoSgWSk--
+--envbJBWh7q8WU6mo--
