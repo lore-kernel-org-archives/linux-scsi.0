@@ -1,47 +1,34 @@
 From: Brian King <brking@us.ibm.com>
-Subject: Re: [PATCH] Hidden scsi devices
-Date: Thu, 22 Jan 2004 11:33:33 -0600
+Subject: Re: [RFC] IBM Power RAID driver (ipr)
+Date: Thu, 22 Jan 2004 11:33:15 -0600
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <4010096D.4030205@us.ibm.com>
-References: <OF8847A70B.4AA684AE-ONC1256E23.00571E7C-C1256E23.0058163C@de.ibm.com> 	<4010034A.3040903@us.ibm.com> <1074792163.2149.12.camel@mulgrave>
+Message-ID: <4010095B.50608@us.ibm.com>
+References: <40085EDA.4010802@us.ibm.com> <20040119183400.A4182@infradead.org> <400C3E70.9040702@us.ibm.com> <20040120133858.A15671@infradead.org> <400D5A28.1000301@us.ibm.com> <20040120180151.A18616@infradead.org> <400EE5E6.9080709@us.ibm.com> <20040122140248.C11283@infradead.org> <20040122083931.A14612@beaverton.ibm.com> <401003B3.8050805@us.ibm.com> <20040122092751.A14990@beaverton.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e3.ny.us.ibm.com ([32.97.182.103]:63440 "EHLO e3.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S266348AbUAVRdj (ORCPT
+Received: from e2.ny.us.ibm.com ([32.97.182.102]:19677 "EHLO e2.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S266350AbUAVRdk (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 22 Jan 2004 12:33:39 -0500
+	Thu, 22 Jan 2004 12:33:40 -0500
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Martin Peschke3 <MPESCHKE@de.ibm.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Patrick Mansfield <patmans@us.ibm.com>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org
 
-James Bottomley wrote:
-> On Thu, 2004-01-22 at 12:07, Brian King wrote:
-> 
->>Because the device is reported to the LLDD by the adapter as a
->>specific device type. The adapter creates a configuration table
->>describing all attached devices that the LLDD must retrieve. In this
->>configuration table there are several types of devices:
+Patrick Mansfield wrote:
+> On Thu, Jan 22, 2004 at 11:09:07AM -0600, Brian King wrote:
 > 
 > 
-> If you can't ever get access to these devices and you only want sg
-> access for SCSI command ioctls, you could just alter the device type to
-> something like PROCESSOR (or even an unclassified type) which will solve
-> the error messages from sd problem.
+>>We will still get errors logged when the partition table is read,
+>>as the devices are also read protected.
+> 
+> 
+> So it is the hardware and not the driver enforcing the read protection?
+> But other SCSI commands are OK?
 
-I agree that this is a solution as well (requires more code), but
-then sysfs will show the device as a different device type, which
-I would think might be confusing.
-
-> The true solution to this issue looks to be more flexibility in the
-> binding process.  We did discuss this previously, certainly in a SAN
-> environment there are reasons for only actually binding (and allocating
-> resources to) devices you're interested in.
-
-Who generally has this knowledge in your example? The LLDD? Would a
-LLDD host template function that gets called for each disk be more
-palatable?
+Correct. It is the adapter firmware enforcing this protection. Other
+SCSI commands work fine.
 
 
 -- 
