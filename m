@@ -1,61 +1,49 @@
-From: Oliver Xymoron <oxymoron@waste.org>
+From: John Summerfield <summer@os2.ami.com.au>
 Subject: Re: driverfs is not for everything! (was: [PATCH] /proc/scsi/map )
-Date: Mon, 24 Jun 2002 14:23:21 -0500 (CDT)
+Date: Tue, 25 Jun 2002 06:47:16 +0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44.0206241404020.9420-100000@waste.org>
-References: <200206241809.g5OI9Ds02886@localhost.localdomain>
+Message-ID: <200206242247.g5OMlGg32217@skink.Os2.Ami.Com.Au>
+References: <andrew.grover@intel.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <200206241809.g5OI9Ds02886@localhost.localdomain>
+In-Reply-To: Message from "Grover, Andrew" <andrew.grover@intel.com>
+   of "Mon, 24 Jun 2002 10:35:53 MST." <59885C5E3098D511AD690002A5072D3C02AB7F53@orsmsx111.jf.intel.com>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@steeleye.com>
-Cc: "Grover, Andrew" <andrew.grover@intel.com>, 'David Brownell' <david-b@pacbell.net>, 'Nick Bellinger' <nickb@attheoffice.org>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Patrick Mochel <mochel@osdl.org>
+To: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Mon, 24 Jun 2002, James Bottomley wrote:
 
-> andrew.grover@intel.com said:
-> > If a device can be accessed by multiple machines concurrently, it
-> > should not be in driverfs.
->
-> On that argument, we'll eliminate almost all Fibre Channel devices!
->
-> I think the qualification for appearing in driverfs is actually possessing a
-> driver.  Therefore, we accept FC and iSCSI.  Things which appear as
-> FileSystems are debatable, but not anything which has a real device driver.
+> 
+> It's a matter of where to draw the line. Obviously when we're talking
+> physical devices, my tcpip connection to www.yahoo.com is not one. My PS/2
 
-Between iSCSI and filesystems there's still MD, loopback, ramdisk, NBD,
-LVM, and general partitioning. They all expose block devices and try their
-damnedest to look like physical devices. If we're serious about using
-driverfs as a system for unifying device detection ("show me all my disks,
-please"), then these should all be in too.
+I'm far from expert here, but isn't the network card important here?
 
-And they raise some interesting problems. As pointed out earlier, iSCSI is
-potentially multipath, as is LVM, NBD, and software RAID. Hardware RAID is
-already multipath in some cases so our tree really ought to be a DAG.
 
-And let's think about loopback a moment. It's potentially layered on top
-of a filesystem, layered on top of a logical volume layered on top of SCSI
-and ATA. Just from the power management perspective, to quiesce our
-system, we'll have to know that we need to flush loop->fs->lvm->scsi/ata
-before we can shut down whichever drive.
+> 
+> If a device can be accessed by multiple machines concurrently, it should not
+> be in driverfs.
+> 
 
-So to be done right, we need to pull filesystems into the tree too (rather
-than just implicitly correlating against /proc/mounts).
+Back in the 1970s I used a computer where disk drives, tape drives and RAM 
+chould be physically connected to and used by more than one computer at once.
 
-> > We need a device tree to do PM. If driverfs's PM capabilities are hurt
-> > because it doesn't stay true to that, then the featureitis has gone
-> > too far.
->
-> Perhaps it's more a question of whether power management belongs as an every
-> unit item in driverfs.  As you say, we get problems where the device is shared
-> between multiple computers.
+It was an IBM S/370 model 168 MP; you might argue the toss on the RAM, but the 
+disk drives were beyond argument.
 
-And we already have a problem there for local SCSI - see OpenGFS which
-lets you share a filesystem on a single SCSI bus. Admittedly, that's
-rather sick, but not as appalling for FC, iSCSI, or NBD (or GFS's
-internal equivalent).
 
+On which devices should MVS have ignored power cycling?
 -- 
- "Love the dolphins," she advised him. "Write by W.A.S.T.E.."
+Cheers
+John Summerfield
+
+Microsoft's most solid OS: http://www.geocities.com/rcwoolley/
+
+Note: mail delivered to me is deemed to be intended for me, for my disposition.
+
+==============================
+If you don't like being told you're wrong,
+	be right!
+
+
 
