@@ -1,141 +1,104 @@
-From: Krzysztof "Sierota (o2.pl/tlen.pl)" <Krzysztof.Sierota@firma.o2.pl>
-Subject: 21610 & 2810 linux problems
-Date: 29 Jun 2004 21:21:59 +0200
+From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
+Subject: RE: PATCH: Further aacraid work
+Date: Tue, 29 Jun 2004 15:27:54 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1088536919.2221.146.camel@rakieeta>
+Message-ID: <547AF3BD0F3F0B4CBDC379BAC7E4189FF1D6D0@otce2k03.adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gepard.lm.pl ([212.244.46.42]:57233 "EHLO gepard.lm.pl")
-	by vger.kernel.org with ESMTP id S265978AbUF2TYw (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 29 Jun 2004 15:24:52 -0400
+Received: from magic.adaptec.com ([216.52.22.17]:10960 "EHLO magic.adaptec.com")
+	by vger.kernel.org with ESMTP id S265932AbUF2T14 convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 29 Jun 2004 15:27:56 -0400
+content-class: urn:content-classes:message
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Mark Salyzyn <Mark_Salyzyn@adaptec.com>
+To: Byron Stanoszek <gandalf@winds.org>
+Cc: Mark Haverkamp <markh@osdl.org>, Alan Cox <alan@redhat.com>, linux-kernel <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
 
-Hi,
+Although I am gratified that 1.1.5-2345 works, and works well (*many*
+performance improvements have occurred in this driver, but some of those
+have reached Alan's patch), I am at a loss because I was sure that the
+lockup was associated with commands taking longer than 60 seconds to
+complete (a 'can happen' with a complicated RAID card with multiple
+targets, that unfortunately gives the SCSI layer and especially ext3
+some headaches). The workaround in the reset handler is to let the
+commands quiesce to give the Firmware some breathing space to respond to
+the test unit ready command that is issued to the target immediately
+following return from the reset handler.
 
-we are deploying several machines with 2810 and 21610 SATA RAID
-controllers installed. However I see problems I am not able to solve so
-far with the machine where both 21610 and 2810 controllers are
-installed.
+This not solving the problem has the implication, as Alan had noted,
+that this could be an issue with the adapter itself locking up or going
+unresponsive under load. Both reports, this one and "PERC 3/Di broken
+2.6.6-mm5 -> 2.6.7-rc1-mm" now smell of some subtle problems creeping
+in.
 
-on RedHats 2.4.21-15.0.2.EL kernel I get:
+Can we get some additional tests on this?
 
-Red Hat/Adaptec aacraid driver (1.1.2 Jun 29 2004 06:00:44)
-AAC0: kernel 4.1.4 build 7211
-AAC0: monitor 4.1.4 build 7211
-AAC0: bios 4.1.0 build 7244
-AAC0: serial bb1063fafaf001
-AAC1: adapter kernel panic'd.
-aacraid: device initialization failed.
-scsi0 : aacraid
-blk: queue c62f5418, I/O limit 4095Mb (mask 0xffffffff)
-  Vendor: ADAPTEC   Model: AAR-2810SA Mirro  Rev: V1.0
-  Type:   Direct-Access                      ANSI SCSI revision: 02
-blk: queue c62f5218, I/O limit 4095Mb (mask 0xffffffff)
-  Vendor: ADAPTEC   Model: AAR-2810SA Mirro  Rev: V1.0
-  Type:   Direct-Access                      ANSI SCSI revision: 02
-blk: queue c61afe18, I/O limit 4095Mb (mask 0xffffffff)
-  Vendor: ADAPTEC   Model: AAR-2810SA Mirro  Rev: V1.0
-  Type:   Direct-Access                      ANSI SCSI revision: 02
-blk: queue c61afc18, I/O limit 4095Mb (mask 0xffffffff)
-  Vendor: ADAPTEC   Model: AAR-2810SA Mirro  Rev: V1.0
-  Type:   Direct-Access                      ANSI SCSI revision: 02
-blk: queue c61afa18, I/O limit 4095Mb (mask 0xffffffff)
+1) Does this problem occur on a single CPU (Hyperthreading disabled
+too)? I am assuming some locking issues appeared, mainly because of some
+restructuring in that code.
+2) If you turn off Cache (Read & Write), does the problem persist? This
+is the usual condition with older Firmware where the duration could be
+extended as a result of the priority at which a Cache Flush occurs
+blocking commands.
+3) The `Adaptec' driver has a beefed up health checker
+(aac_rx_check_health) in rx.c that may be useful for catching what is
+called a `blinkLED' report from the adapter. If this piece of code is
+moved into the 2.6.7 driver with a single printk reporting the return
+value from the health check in linit.c we may get a clue to the
+conditions of failure if it is in the adapter.
 
-the 21610 controller fails
+Sincerely -- Mark Salyzyn
 
-kernel 2.6.7:
+-----Original Message-----
+From: Byron Stanoszek [mailto:gandalf@winds.org] 
+Sent: Tuesday, June 29, 2004 3:03 PM
+To: Salyzyn, Mark
+Cc: Mark Haverkamp; Alan Cox; linux-kernel; linux-scsi
+Subject: RE: PATCH: Further aacraid work
 
-Red Hat/Adaptec aacraid driver (1.1.2-lk1 Jun 29 2004)
-AAC0: kernel 4.1.4 build 7244
-AAC0: monitor 4.1.4 build 7244
-AAC0: bios 4.1.0 build 7244
-AAC0: serial bb6cebfafaf001
-scsi0 : aacraid
-  Vendor: ADAPTEC   Model: AAR-21610SA Mirr  Rev: V1.0
-  Type:   Direct-Access                      ANSI SCSI revision: 02
-  Vendor: ADAPTEC   Model: AAR-21610SA Mirr  Rev: V1.0
-  Type:   Direct-Access                      ANSI SCSI revision: 02
-  Vendor: ADAPTEC   Model: AAR-21610SA Mirr  Rev: V1.0
-  Type:   Direct-Access                      ANSI SCSI revision: 02
-  Vendor: ADAPTEC   Model: AAR-21610SA Mirr  Rev: V1.0
-  Type:   Direct-Access                      ANSI SCSI revision: 02
-  Vendor: ADAPTEC   Model: AAR-21610SA Mirr  Rev: V1.0
-  Type:   Direct-Access                      ANSI SCSI revision: 02
-  Vendor: ADAPTEC   Model: AAR-21610SA Mirr  Rev: V1.0
-  Type:   Direct-Access                      ANSI SCSI revision: 02
-  Vendor: ADAPTEC   Model: AAR-21610SA Mirr  Rev: V1.0
-  Type:   Direct-Access                      ANSI SCSI revision: 02
-  Vendor: ADAPTEC   Model: AAR-21610SA Mirr  Rev: V1.0
-  Type:   Direct-Access                      ANSI SCSI revision: 02
-AAC1: kernel 4.1.4 build 7211
-AAC1: monitor 4.1.4 build 7211
-AAC1: bios 4.1.0 build 7244
-AAC1: serial bb1063fafaf001
-scsi1 : aacraid
-  Vendor: ADAPTEC   Model: AAR-2810SA Mirro  Rev: V1.0
-  Type:   Direct-Access                      ANSI SCSI revision: 02
-  Vendor: ADAPTEC   Model: AAR-2810SA Mirro  Rev: V1.0
-  Type:   Direct-Access                      ANSI SCSI revision: 02
-  Vendor: ADAPTEC   Model: AAR-2810SA Mirro  Rev: V1.0
-  Type:   Direct-Access                      ANSI SCSI revision: 02
-  Vendor: ADAPTEC   Model: AAR-2810SA Mirro  Rev: V1.0
-  Type:   Direct-Access                      ANSI SCSI revision: 02
-ipr: IBM Power RAID SCSI Device Driver version: 2.0.7 (May 21, 2004)
+On Tue, 29 Jun 2004, Salyzyn, Mark wrote:
 
-I get both controllers, however, when I start adaptecs-smbe daemons the
-system load is 2.0, there's lots of context switches, about 1k/s, and
-iomagrd gets stuck in D state.
+> I believe this nails the problem too.
+>
+> However, there is a corner case condition lurking on this (See my
+> currently unanswered email "error recovery and command completion" on
+> linux-scsi) where I try to deal with completing a command while error
+> recovery is triggered. Scsi_done will return doing *nothing*
+effectively
+> loosing the command completion.
+>
+> MarkH, I had talked to you about he addition of the scsi_add_timer
+> before calling scsi_done to address this condition. I do not believe
+> this to be the (Reliable and/or performance oriented) solution.
+>
+> Sincerely -- Mark Salyzyn
 
-kernel 2.6.7-mm4:
+I've tested out both patches sent to me.
 
-Red Hat/Adaptec aacraid driver (1.1.2-lk2 Jun 29 2004)
-ACPI: PCI interrupt 0000:03:01.0[A] -> GSI 48 (level, low) -> IRQ 48
-AAC0: adapter kernel panic.
-ACPI: PCI interrupt 0000:04:01.0[A] -> GSI 24 (level, low) -> IRQ 24
-AAC0: kernel 4.1.4 build 7211
-AAC0: monitor 4.1.4 build 7211
-AAC0: bios 4.1.0 build 7244
-AAC0: serial bb1063fafaf001
-scsi1 : aacraid
-  Vendor: ADAPTEC   Model: AAR-2810SA Mirro  Rev: V1.0
-  Type:   Direct-Access                      ANSI SCSI revision: 02
-  Vendor: ADAPTEC   Model: AAR-2810SA Mirro  Rev: V1.0
-  Type:   Direct-Access                      ANSI SCSI revision: 02
-  Vendor: ADAPTEC   Model: AAR-2810SA Mirro  Rev: V1.0
-  Type:   Direct-Access                      ANSI SCSI revision: 02
-  Vendor: ADAPTEC   Model: AAR-2810SA Mirro  Rev: V1.0
-  Type:   Direct-Access                      ANSI SCSI revision: 02
-SCSI device sda: 488279040 512-byte hdwr sectors (249999 MB)
+Test 1: aacraid-1.1.5-2245.tgz
 
-yet again only one controller. System load about 2.0, anotyfid daemon,
-looping:
+Works flawlessly and speedily! The rsync completes, and doing a sync()
+(as
+called during a normal lilo update) takes roughly 1 second as opposed to
+20
+with the original aacraid patch from Alan Cox. Also, no SCSI hang
+message ever
+appears.
 
-sched_yield()                           = 0
-ioctl(5, FIONREAD, [0])                 = 0
-time(NULL)                              = 1088470036
-sched_yield()                           = 0
-ioctl(5, FIONREAD, [0])                 = 0
-time(NULL)                              = 1088470036
-sched_yield()                           = 0
-ioctl(5, FIONREAD, [0])                 = 0
-time(NULL)                              = 1088470036
-sched_yield()                           = 0
-ioctl(5, FIONREAD, [0])                 = 0
-time(NULL)                              = 1088470036
-sched_yield()                           = 0
-ioctl(5, FIONREAD, [0])                 = 0
+Test 2: Mark Haverkamp's linit.c patch
 
-iomagrd, seems to be doing sth strange, too.
+The "SCSI hang" console message appears just as before during the
+'rsync',
+however (unlike before) the device is still usable for roughly 30
+seconds after
+the problem. During these 30 seconds, the 'rsync' process is hung, but I
+can
+still do a 'df', 'ls', and so on. After 30 seconds, the entire /dev/sda
+locks
+up and I have no choice but to reboot the system.
 
-
-The system is CentOS-3.1 that is based on RedHats ES 3.0 SRPMS with all
-updates. Could someone give any advice on the subject ? I can provide
-more info.
-
-
+  -Byron
 
