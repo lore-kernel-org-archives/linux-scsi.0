@@ -1,44 +1,43 @@
-From: Grant Grundler <grundler@parisc-linux.org>
-Subject: Re: I/O write ordering
-Date: Wed, 22 Sep 2004 22:26:31 -0600
+From: Olaf Hering <olh@suse.de>
+Subject: Re: sym53c8xx parity errors on SuSE 9.1's hwscan?
+Date: Thu, 23 Sep 2004 09:42:11 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040923042631.GA17910@colo.lackof.org>
-References: <1095864709.6297.5.camel@gaston> <1095865892.1715.5.camel@mulgrave> <1095865863.6340.7.camel@gaston> <1095866530.2295.8.camel@mulgrave> <1095866930.6340.11.camel@gaston> <1095867824.2295.13.camel@mulgrave> <1095898796.6359.18.camel@gaston> <20040923015819.GU16153@parcelfarce.linux.theplanet.co.uk> <1095908479.2295.53.camel@mulgrave> <1095910802.21753.1.camel@gaston>
+Message-ID: <20040923074211.GA5865@suse.de>
+References: <m3y8j1q4gs.fsf@merlin.emma.line.org> <20040923023914.GV16153@parcelfarce.linux.theplanet.co.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from colo.lackof.org ([198.49.126.79]:7586 "EHLO colo.lackof.org")
-	by vger.kernel.org with ESMTP id S268251AbUIWE0d (ORCPT
+Received: from cantor.suse.de ([195.135.220.2]:7886 "EHLO Cantor.suse.de")
+	by vger.kernel.org with ESMTP id S268306AbUIWHmg (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 23 Sep 2004 00:26:33 -0400
+	Thu, 23 Sep 2004 03:42:36 -0400
 Content-Disposition: inline
-In-Reply-To: <1095910802.21753.1.camel@gaston>
+In-Reply-To: <20040923023914.GV16153@parcelfarce.linux.theplanet.co.uk>
 List-Id: linux-scsi@vger.kernel.org
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, Matthew Wilcox <matthew@wil.cx>, Jeremy Higdon <jeremy@sgi.com>, Grant Grundler <grundler@parisc-linux.org>, Jesse Barnes <jbarnes@engr.sgi.com>, Matthew Wilcox <willy@debian.org>, Andrew Vasquez <andrew.vasquez@qlogic.com>, pj@sgi.com, SCSI Mailing List <linux-scsi@vger.kernel.org>, mdr@cthulhu.engr.sgi.com, jeremy@cthulhu.engr.sgi.com, djh@cthulhu.engr.sgi.com, Andrew Morton <akpm@osdl.org>, Richard Henderson <rth@twiddle.net>, Paul Mackerras <paulus@samba.org>
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: Matthias Andree <ma@dt.e-technik.uni-dortmund.de>, linux-scsi@vger.kernel.org
 
-On Thu, Sep 23, 2004 at 01:40:02PM +1000, Benjamin Herrenschmidt wrote:
-> Sounds good, though may be a bit tricky to deal with for things where
-> both the kernel and the device are fiddling at the same time, like
-> the USB OHCI shared area, or ethernet descriptors...
+ On Thu, Sep 23, Matthew Wilcox wrote:
 
-Normally, "ownership" determines access to particular chunks
-of shared data.  Ie the programming model makes it clear when the
-CPU can modify data and when the CPU is done modifying data.
-At a minimum, the host and/or device has to know when it
-lost a race to modify or access data.
-If there are race conditions in the programming model, iomb()
-will not fix them.
+> On Thu, Sep 23, 2004 at 01:16:51AM +0200, Matthias Andree wrote:
+> > SuSE Linux 9.1 (kernel 2.6.5 + SuSE patch set, but also 2.6.7 or a =
+bit
+> > milder in 2.6.9-rc2-mm1) uses some SuSE-specific "hwprobe" or "hwin=
+fo"
+> > tool to scan for hardware.
+>=20
+> Does anyone have the source?  I'd be interested to see what it's up t=
+o.
 
-> But it makes
-> sense. Could probably be built on top of the dma_consistent_sync... &
-> friends actually if driver used the properly (which they don't as
-> nobody really understand their semantics).
+ftp.suse.com/pub/projects/kernel/kotd
 
-Or maybe the other way around?
-ie find a better replacement for dma_consistent_sync()?
-But that's a different rat hole that needs to be hashed out
-on linux-ppc list...or some other place far away from me. :^)
+--=20
+USB is for mice, FireWire is for men!
 
-thanks,
-grant
+sUse lINUX ag, n=C3=9CRNBERG
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
